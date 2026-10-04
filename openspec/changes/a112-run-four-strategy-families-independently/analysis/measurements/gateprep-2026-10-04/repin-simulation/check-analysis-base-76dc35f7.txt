@@ -1,0 +1,21 @@
+[logic-map] a112-run-four-strategy-families-independently: base 76dc35f742f8 → working tree (no landed-commit.txt in HEAD) required 14 function(s) — judged at HEAD 22d1bbadefc6
+[logic-map] a112-run-four-strategy-families-independently: the target is the working tree, so this window also holds 11 commit(s) that landed after the base and every existing function they changed is required here too — run `python3 tools/logic-map/check_analysis.py --change a112-run-four-strategy-families-independently --record-landing` to let the gate compute `landed-commit.txt` from this change's evidence and record it, which narrows it to this change's own work; if no commit on this history is accepted as the landing, the command says so instead of recording
+[logic-map] internal-app-engine--newstrategyriskloaderfixture: AST source hash is stale: internal/app/engine/strategy_risk_authority_test.go
+[logic-map] internal-app-engine--strategyriskauthorityloader.collectmarket: AST source hash is stale: internal/app/engine/strategy_risk_authority.go
+[logic-map] internal-app-engine--strategyrouteauthorityloader.collectmarket: AST source hash is stale: internal/app/engine/strategy_route_authority.go
+[logic-map] internal-riskbucket--bindproductionriskinputs: AST source hash is stale: internal/riskbucket/production_snapshot_authority.go
+[logic-map] internal-riskbucket--loadproductionriskentries: AST source hash is stale: internal/riskbucket/production_snapshot_authority.go
+[logic-map] internal-riskbucket--loadproductionrisksnapshotauthority: AST source hash is stale: internal/riskbucket/production_snapshot_authority.go
+[logic-map] internal-riskbucket--validproductionriskpolicycontents: AST source hash is stale: internal/riskbucket/production_snapshot_authority.go
+[logic-map] internal-strategyrouter--loadproductionrouteauthoritybatch: AST source hash is stale: internal/strategyrouter/production.go
+[logic-map] internal-strategyrouter--productionroutedescriptors: AST source hash is stale: internal/strategyrouter/production.go
+[logic-map] internal-strategyrouter--productionroutefixture.body: AST source hash is stale: internal/strategyrouter/production_test.go
+[logic-map] internal-strategyrouter--testproductionrouteauthoritybatchusesevery: AST source hash is stale: internal/strategyrouter/production_test.go
+[logic-map] internal-strategyrouter--testproductionrouteauthorityfailureismarketlocal: AST source hash is stale: internal/strategyrouter/production_test.go
+[logic-map] internal-strategyrouter--testproductionrouteauthorityselectseverysignedsymbolscope: AST source hash is stale: internal/strategyrouter/production_test.go
+[logic-map] internal-strategyrouter--validproductionroutecandidates: AST source hash is stale: internal/strategyrouter/production.go
+[logic-map] internal-strategyrouter--verifyproductionroutemanifest: AST source hash is stale: internal/strategyrouter/production.go
+[logic-map] missing evidence for modified function internal/app/engine/a112_lane_latency_testseam_test.go:TestAHungLaneDoesNotDelayItsPeersInTheSameWave
+[logic-map] missing evidence for modified function internal/app/engine/a112_lane_operability_test.go:TestAStalledRemoteWaveNeverBlocksTheProjectionRead
+[logic-map] missing evidence for modified function internal/app/engine/a112_lane_operability_test.go:TestSafetyLoopsKeepTheirCadenceWhileEveryEntryQueueIsSaturated
+[logic-map] missing evidence for modified function internal/strategyworker/golden_contract_test.go:TestProductionWorkersAreExactlyTheEightTheGoldenFroze

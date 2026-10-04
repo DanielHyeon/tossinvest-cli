@@ -1,6 +1,6 @@
 # Branch Test Map: `verifyProductionRouteManifest`
 
-- Source: `internal/strategyrouter/production.go`; file SHA-256 `7d60a867a87576cab66d25591d3211b50f1d532efa29166bd71bb5b623cc09f4`. AST branch positions are authoritative.
+- Source: `internal/strategyrouter/production.go`; file SHA-256 `617163a508030dea2768655db66006d52097f17be9c04bb7c9fc300d3adf8a21`. AST branch positions are authoritative.
 - Rows carry measured counts from Go coverage profiles, count mode.
 - untagged package suite: `go test -count=1 -covermode=count ./internal/strategyrouter/`
 - tagged package suite: `go test -count=1 -tags tossos_testseams -covermode=count ./internal/strategyrouter/`
@@ -14,8 +14,8 @@ Mutation receipts for this function (production source mutated, run, restored fr
 
 | Branch | Anchor | Measured disposition |
 |---|---|---|
-| B1 | if at 480:2 | arm not entered (untagged package suite); arm not entered (tagged package suite); no per-test profile in the attribution set entered it |
-| B2 | if at 495:2 | arm not entered (untagged package suite); arm not entered (tagged package suite); no per-test profile in the attribution set entered it |
-| B3 | if at 499:2 | arm not entered (untagged package suite); arm not entered (tagged package suite); no per-test profile in the attribution set entered it |
+| B1 | if at 496:2 | arm not entered (untagged package suite); arm not entered (tagged package suite); no per-test profile in the attribution set entered it |
+| B2 | if at 511:2 | arm not entered (untagged package suite); arm not entered (tagged package suite); no per-test profile in the attribution set entered it |
+| B3 | if at 515:2 | arm not entered (untagged package suite); arm not entered (tagged package suite); no per-test profile in the attribution set entered it |
 
 A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.

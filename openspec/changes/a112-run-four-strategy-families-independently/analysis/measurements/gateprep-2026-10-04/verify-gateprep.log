@@ -1,0 +1,7 @@
+== scratch 895b4534 on cc79c887
+check_analysis lines=150 missing=148 other=2
+make lint exit=0
+make sdd-test exit=0
+harness compile ok
+Change 'a112-run-four-strategy-families-independently' is valid
+== check_analysis in isolation = 150 lines = 2 window summary + 148 missing (all other-change attributed); stale 0

@@ -1,0 +1,33 @@
+# base 82080177 -> working tree at HEAD cc79c887c42d: required 29
+# a112 FRESH: 25
+# other NO-BUNDLE: 4
+file	function	attribution	bundle	freshness
+internal/app/engine/a112_lane_runtime_test.go	TestOnlyThePackageLevelStepEverRunsInsideALane	a112	internal-app-engine--testonlythepackagelevelstepeverrunsinsidealane	FRESH
+internal/app/engine/a112_owner_scope_trading_test.go	TestTheRiskLoaderReadsTheRealJournal	a127	-	NO-BUNDLE
+internal/app/engine/strategy_dispatch_handoff_guard_test.go	TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer	a112	internal-app-engine--testnoproductionsitediscardstheseamsadmissionanswer	FRESH
+internal/app/engine/strategy_entry_supervisor.go	Context.NewPairedStrategyEntryProductionAssembly	a112	internal-app-engine--context.newpairedstrategyentryproductionassembly	FRESH
+internal/app/engine/strategy_lane_runtime.go	strategyLaneRuntime.evaluate	a112	internal-app-engine--strategylaneruntime.evaluate	FRESH
+internal/app/engine/strategy_lane_runtime.go	strategyLaneRuntime.record	a112	internal-app-engine--strategylaneruntime.record	FRESH
+internal/app/engine/strategy_lane_runtime.go	strategyLaneRuntime.runLane	a112	internal-app-engine--strategylaneruntime.runlane	FRESH
+internal/app/engine/strategy_proposal_authority.go	strategyProposalAuthorityLoader.collectMarket	a112	internal-app-engine--strategyproposalauthorityloader.collectmarket	FRESH
+internal/app/engine/strategy_runtime_projection.go	Context.Read	a112	internal-app-engine--context.read	FRESH
+internal/app/engine/strategy_runtime_projection.go	strategyProjectionFromAssembly	a112	internal-app-engine--strategyprojectionfromassembly	FRESH
+internal/breakoutlane/evaluator_test.go	TestAdversarialInvalidUTF8ConfigAndFXDirectionScale	a112	internal-breakoutlane--testadversarialinvalidutf8configandfxdirectionscale	FRESH
+internal/breakoutlane/machine.go	evaluateFresh	a112	internal-breakoutlane--evaluatefresh	FRESH
+internal/breakoutlane/types.go	NewFXSeal	a112	internal-breakoutlane--newfxseal	FRESH
+internal/riskbucket/a127_schema_binding_test.go	TestA127RiskLoaderReadsEverythingInOneReadOnlyTransaction	a127	-	NO-BUNDLE
+internal/strategyprojection/model.go	Clone	a112	internal-strategyprojection--clone	FRESH
+internal/strategyprojection/model.go	DormantSnapshot	a112	internal-strategyprojection--dormantsnapshot	FRESH
+internal/strategyprojection/model.go	UnavailableSnapshot	a112	internal-strategyprojection--unavailablesnapshot	FRESH
+internal/strategyprojection/model.go	Validate	a112	internal-strategyprojection--validate	FRESH
+internal/strategyprojection/projection_test.go	currentPair	a112	internal-strategyprojection--currentpair	FRESH
+internal/strategyprojectionrpc/a112_additive_fields_test.go	TestClientIgnoresAdditiveFieldsFromANewerEngine	a112	internal-strategyprojectionrpc--testclientignoresadditivefieldsfromanewerengine	FRESH
+internal/strategyrouter/a127_real_journal_test.go	TestA127RouteLoaderReadsARealJournalOpenedByJournalOpen	a127	-	NO-BUNDLE
+internal/strategyrouter/a127_schema_binding_test.go	TestA127RouteLoaderRefusesALedgerMissingACampaignColumnEvenWithoutAnActiveOwner	a127	-	NO-BUNDLE
+internal/strategyrouter/production_family_activation.go	FamilyActivationDocument.body	a112	internal-strategyrouter--familyactivationdocument.body	FRESH
+internal/strategyrouter/production_family_activation.go	LoadProductionFamilyActivation	a112	internal-strategyrouter--loadproductionfamilyactivation	FRESH
+internal/strategyrouter/production_family_activation.go	decodeProductionFamilyActivation	a112	internal-strategyrouter--decodeproductionfamilyactivation	FRESH
+internal/strategyrouter/production_family_activation.go	familyActivationRemaining	a112	internal-strategyrouter--familyactivationremaining	FRESH
+internal/strategyrouter/production_family_activation.go	validateProductionFamilyActivation	a112	internal-strategyrouter--validateproductionfamilyactivation	FRESH
+internal/strategyworker/golden_contract_test.go	TestProductionWorkersAreExactlyTheEightTheGoldenFroze	a112	internal-strategyworker--testproductionworkersareexactlytheeightthegoldenfroze	FRESH
+internal/strategyworker/lane.go	Lane.Health	a112	internal-strategyworker--lane.health	FRESH

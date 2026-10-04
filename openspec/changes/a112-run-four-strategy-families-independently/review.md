@@ -6395,3 +6395,20 @@ OS 원인 접힘. 충돌 · 미해결 선택 두 닫힘(B11 · B14)은 입력으
 - 7.3.1 은 열린 채(사용자 결정 대기) — tasks 에 상태 노트. ROADMAP 「SHADOW 런타임」 행(신뢰 앵커 서명 vs digest 핀 · 형식/생성기/골든/문서 · 골든 runtime 어휘 개정 · 재시작 비복구).
 
 **정리 하나.** 0b441270 이 tasks 8.5 의 2.3 노트 한가운데에 8.8.4 노트를 끼워 넣어 2.3 의 증거 줄이 뒤로 밀렸던 것을 바로잡았다(내용 무변경, 순서만).
+
+## 2026-10-04 게이트 준비 — 173 분류 · base 무관 로트(stale 15 수리 · 골든 시험 번들 · 영수증)
+
+**분류(읽기 전용 측정 — Manager 에 보고, 사용자 승인 자료).** `check_analysis` 173 = 창 요약 2 + missing 148 + stale/hash 23(번들 15). 요구 집합은 게이트의 계산
+(`changed_existing_functions`)으로, 귀속은 `git log -L :^func …:file base..HEAD` 의 change 태그로, 후보 base 는 scratch 워크트리에 base-commit.txt 를 두고 `check_analysis` 를
+실제로 돌려 쟀다(영수증 `measurements/gateprep-2026-10-04/` — classification.txt · window-<base>.tsv · repin-simulation/).
+① missing 148 은 전부 타 change 커밋 소관(a112 0) — 이 브랜치 first-parent 에 타 change 커밋 503 이 직접 얹혀 base aeeb209e → 워킹트리 tree diff 창에 들어온다.
+② a112 자가 몫: 현 base 에서 0. 재고정하면 aeeb 창에서는 「새 함수」라 안 보이던 `TestProductionWorkersAreExactlyTheEightTheGoldenFroze`(8.8.4 로트 A 편집)가 요구된다 — 이 로트에서 번들.
+③ stale 15 는 전부 a127 82080177 이 낡게 했고 어느 후보 base 에서도 남는다(모의에서 15 줄 그대로).
+④ 후보: 82080177 → 29(타 change 4) · **1e25b3a3 → 16(타 0, 권고)** · 76dc35f7 → 14(a112 무번들 3). 재고정은 사람 승인 항목 — 실행 안 함(base-commit.txt 무편집).
+
+**수리(이 로트, 생산 코드 0).** stale 15: 줄 이동만 10 → `shift_same_file_bundles.py`(구조 · 호출 동일 확인 후); 분기 · return 구조 같고 a127 이 몸통을 편집한 2(위험 · 경로
+권한 적재기 collectMarket) → `rebase_bundle.py`(좌표 · 호출 표는 새 AST, a112 분기 의미 · 시험 인용 유지 + a127 아카이브 번들 인용); 분기 구조를 a127 이 바꾼 3
+(loadProductionRiskEntries · LoadProductionRiskSnapshotAuthority · LoadProductionRouteAuthorityBatch) → a127 아카이브 번들(ast 해시 == 현재 파일)을 옮기고 RED · 변이 경로를 아카이브
+좌표로, a112 관례인 「Calls and live bindings」 호출 표를 ast.json 에서 생성(옮긴 직후 게이트가 그 표 부재 3 줄을 냈다 — 수리). a112 이전 판은 git 이력 좌표로 머리에 인용.
+골든 시험 경량 번들(`render_gateprep_bundles.py`, 편집 전 FLM 은 7e124a73 워크트리에서). 결과 173 → 150, 권고 base 1e25b3a3 창의 16 함수 전부 FRESH(window-1e25b3a3.tsv) —
+승인 뒤 남는 것은 a071 변형 둘째 갈래의 영수증 생성뿐. 창 영수증 도구의 귀속 대체 경로를 하나 고쳤다(-L 이 성공하고 커밋 0 이면 파일 이력으로) · 파일 없는 번들은 GONE.

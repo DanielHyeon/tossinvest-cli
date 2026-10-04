@@ -1,0 +1,57 @@
+# a112 gate prep 2026-10-04 — classification of check_analysis findings (base aeeb209e → working tree; measured at HEAD cc79c887)
+# tools: harness/gateprep_window_receipt.py (attribution = first change tag in `git log -L :^func…:file base..HEAD`, file-history fallback)
+#        repin-simulation/ = check_analysis with base-commit.txt set to the candidate in a scratch worktree (measured before this lot's bundle fixes)
+
+before: check-analysis-before-HEAD-cc79c887.txt = 173 lines = 2 window summary + 148 missing evidence + 23 stale/hash lines (15 bundles)
+after this lot: check-analysis-after-fixes.txt = 150 lines = 2 window summary + 148 missing evidence; stale 0
+
+(1) what a re-pin removes: the 148 missing-evidence functions — every one attributed to other changes' commits; a112-attributed missing = 0
+    by attribution (a function touched by several changes is listed under the combination):
+      a092                     28
+      a066                     20
+      a094                     15
+      a065                     15
+      a064                     12
+      a063                     9
+      a095                     6
+      a113                     5
+      a124                     4
+      a127                     4
+      a115                     3
+      a066,a126                3
+      a126                     3
+      a114                     2
+      a090,a092                2
+      a066,a092,a094           2
+      a092,a124                2
+      a090                     2
+      a091,a094                2
+      a126,a127                2
+      a114,a115                1
+      a091                     1
+      a091,a092,a094           1
+      a066,a092                1
+      a066,a094                1
+      a091,a092                1
+      a066,a126,a127           1
+    per change (a function counted once per change that touched it):  a092 37, a066 28, a094 21, a065 15, a064 12, a063 9, a126 9, a127 7, a095 6, a124 6, a091 5, a113 5, a115 4, a090 4, a114 3
+    window-aeeb209e.tsv also shows: a112 FRESH 49 · other FRESH 2 · a112 GONE 1 + STALE 1 (revision-base bundles of deleted tests — accepted by the gate)
+
+(2) a112's own share: 0 missing under the current base. A re-pin exposes functions that are new under aeeb but existing at the candidate base:
+    internal/strategyworker/golden_contract_test.go:TestProductionWorkersAreExactlyTheEightTheGoldenFroze (8.8.4 lot A f473d815) — bundle added in this lot
+    76dc35f7 only: three 7.5 tests edited by the 2.x lot (538439ed) — not produced (Manager: unneeded if 1e25b3a3 is approved)
+
+(3) stale 15 bundles — all made stale by a127 82080177; they stay stale under every candidate base (repin-simulation/ shows 15 stale lines at each):
+    shift_same_file_bundles.py, line moves only (10): newStrategyRiskLoaderFixture, bindProductionRiskInputs, validProductionRiskPolicyContents, productionRouteDescriptors,
+      productionRouteFixture.body, TestProductionRouteAuthorityBatchUsesEvery, TestProductionRouteAuthorityFailureIsMarketLocal,
+      TestProductionRouteAuthoritySelectsEverySignedSymbolScope, validProductionRouteCandidates, verifyProductionRouteManifest
+    rebase_bundle.py, same branch/return shape, body edited by a127 (2): strategyRiskAuthorityLoader.collectMarket, strategyRouteAuthorityLoader.collectMarket
+    adopted from the a127 archive bundle, branch structure changed by a127, archive ast hash == current file (3): loadProductionRiskEntries,
+      LoadProductionRiskSnapshotAuthority, LoadProductionRouteAuthorityBatch — RED/mutation paths rewritten to archive coordinates, callee table generated from ast.json
+
+(4) candidate bases (window-<base>.tsv, after this lot):
+    aeeb209e (current)  required 201  a112 FRESH 49 · a112 GONE/STALE(revision-base) 2 · other FRESH 2 · other NO-BUNDLE 148
+    82080177            required 29   a112 FRESH 25 · other NO-BUNDLE 4 (a127 tests)
+    1e25b3a3            required 16   a112 FRESH 16   <- recommended: earliest base with zero foreign obligations; after approval only the receipt remains
+    76dc35f7            required 14   a112 FRESH 11 · a112 NO-BUNDLE 3
+    the re-pin itself is a human approval item — not executed (base-commit.txt untouched).

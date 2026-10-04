@@ -1,15 +1,15 @@
 {
   "file": "internal/strategyrouter/production.go",
-  "source_sha256": "7d60a867a87576cab66d25591d3211b50f1d532efa29166bd71bb5b623cc09f4",
+  "source_sha256": "617163a508030dea2768655db66006d52097f17be9c04bb7c9fc300d3adf8a21",
   "package": "strategyrouter",
   "function": "validProductionRouteCandidates",
   "signature": "validProductionRouteCandidates(params=2, results=1)",
   "start": {
-    "line": 532,
+    "line": 548,
     "column": 1
   },
   "end": {
-    "line": 555,
+    "line": 571,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 534,
+        "line": 550,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "range",
       "at": {
-        "line": 538,
+        "line": 554,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 546,
+        "line": 562,
         "column": 3
       }
     }
@@ -42,21 +42,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 535,
+        "line": 551,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 550,
+        "line": 566,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 554,
+        "line": 570,
         "column": 2
       }
     }
@@ -65,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 533,
+        "line": 549,
         "column": 10
       },
       "text": "productionRouteDescriptors"
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 534,
+        "line": 550,
         "column": 5
       },
       "text": "len"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 534,
+        "line": 550,
         "column": 20
       },
       "text": "len"
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 537,
+        "line": 553,
         "column": 10
       },
       "text": "make"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 537,
+        "line": 553,
         "column": 32
       },
       "text": "len"
@@ -105,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 548,
+        "line": 564,
         "column": 5
       },
       "text": "validDesiredState"
@@ -113,7 +113,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 548,
+        "line": 564,
         "column": 42
       },
       "text": "validDesiredState"
@@ -121,7 +121,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 549,
+        "line": 565,
         "column": 5
       },
       "text": "productionRouteIdentity"
@@ -129,7 +129,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 549,
+        "line": 565,
         "column": 55
       },
       "text": "productionRouteIdentity"
@@ -137,7 +137,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 554,
+        "line": 570,
         "column": 9
       },
       "text": "len"
@@ -145,7 +145,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 554,
+        "line": 570,
         "column": 22
       },
       "text": "len"
@@ -155,28 +155,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 533,
+        "line": 549,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 537,
+        "line": 553,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 539,
+        "line": 555,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 552,
+        "line": 568,
         "column": 3
       }
     }

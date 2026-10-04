@@ -1,15 +1,16 @@
 # Branch Test Map: `LoadProductionRiskSnapshotAuthority`
 
-- Source SHA-256: `3aa9b66c00cdcdedf09e0bea1b0eeeaf56d46d0ba40149f28edf70e73d7e26b4`; AST branch locations are authoritative.
-- Revision: **modified (a112 5.2.2.2 리뷰 수리, 2026-10-01).** 리뷰 수리(J4 = (A)): B6 · B7 의 감싸기를 `%w: %v` → `%w: %w` 로 — 원인의 신원(범위 국소 sentinel · 원장 결함)을 사슬에 보존. 문구 · 분기 · 판정 불변.
-- 편집 전 번들: `analysis/measurements/lot-5.2.2.2-fix/pre-edit/internal-riskbucket--loadproductionrisksnapshotauthority/`. 변이 원장 `analysis/measurements/lot-5.2.2.2-fix/mutation-5.2.2.2-fix.tsv`.
+- **a112 재추출(2026-10-04 게이트 준비).** a127 `82080177`(전략 권한 적재기가 현재 원장을 읽음)이 이 함수의 분기 구조를 바꿔 a112 번들이 낡았다 — 현재 AST 와 같은 a127 아카이브 번들(`openspec/changes/archive/2026-10-01-a127-strategy-authorities-read-the-current-ledger/analysis/function-logic/internal-riskbucket--loadproductionrisksnapshotauthority/`)을 옮겨 왔다(그 판의 RED · 변이 경로는 아카이브 좌표로 고쳐 씀). a127 이전 a112 판(a112 의 편집 기록)은 `git show cc79c887:openspec/changes/a112-run-four-strategy-families-independently/analysis/function-logic/internal-riskbucket--loadproductionrisksnapshotauthority/function-logic-map.md` · `branch-test-map.md`.
 
-| Branch | Scenario anchor | Test | RED observed | GREEN observed |
-|---|---|---|---|---|
-| B1 | if at 146:2 — ctx · 관측 시각 부재 | 편집 전 번들 서술 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B2 | if at 149:2 — ctx 종료 | 편집 전 번들 서술 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B3 | if at 155:2 — 구성 · 소유자 · 경로 · digest 형식 | 편집 전 번들 서술 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B4 | if at 161:2 — 매니페스트 파일 · digest 불일치 | 편집 전 번들 서술 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B5 | if at 165:2 — 매니페스트 해석 · 서명 검증 실패 | 편집 전 번들 서술 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B6 | if at 170:2 — bind 실패 → `ErrProductionRiskSnapshotUnavailable` + **원인 %w**(범위 국소 sentinel 보존) | `a112_owner_scope_trading_test.go` `TestARiskScopeOutsideTheSignedPolicyIsRefusedAloneInEitherOrder` | yes — `analysis/measurements/lot-5.2.2.2-fix/red-fix.log` · 변이 Y05(%v) CAUGHT(`analysis/measurements/lot-5.2.2.2-fix/mutation-5.2.2.2-fix.tsv`) | yes |
-| B7 | if at 174:2 — 원장 항목 적재 실패 → `ErrProductionRiskSnapshotUnavailable` + **원인 %w**(latch sentinel · 원장 결함 원인 보존) | `a112_owner_scope_trading_test.go` `TestACorruptLedgerRowStopsTheCycleWithItsCause` · `TestAScopeLatchIsRefusedAloneButALatchReadFaultStops` | yes — 변이 Y04(결함에도 sentinel) CAUGHT | yes |
+편집 뒤 — RED(`openspec/changes/archive/2026-10-01-a127-strategy-authorities-read-the-current-ledger/analysis/impl/red.log`) → GREEN → 변이(`openspec/changes/archive/2026-10-01-a127-strategy-authorities-read-the-current-ledger/analysis/impl/mutation-1.log`). 편집하지 않은 분기는 기존 시험.
+
+| Branch | 조건 | 진입 실측 | Test | RED observed | GREEN observed |
+|---|---|---|---|---|---|
+| B1 | `:171` `if ctx == nil \ | config.ObservedAt.IsZero() {` | 기존 — production_snapshot_authority_test 시험군 · `TestA127RiskLoaderReadsTheLedgerWhoseSchemaEqualsTheInjectedVersion` | n/a | n/a |
+| B2 | `:174` `if err := ctx.Err(); err != nil {` | 예 | 기존 — production_snapshot_authority_test 시험군 · `TestA127RiskLoaderReadsTheLedgerWhoseSchemaEqualsTheInjectedVersion` | n/a | n/a |
+| B3 | `:178` `if config.JournalSchemaVersion <= 0 {` | 예 | `TestA127RiskLoaderRefusesAMissingInjectionBeforeOpeningTheLedger`(0 · 음수, 존재하지 않는 원장 경로) — 변이 S6a · S6b | yes | yes |
+| B4 | `:184` `if !ownerOK \ | name == "" \ | 기존 — production_snapshot_authority_test 시험군 · `TestA127RiskLoaderReadsTheLedgerWhoseSchemaEqualsTheInjectedVersion` | n/a | n/a |
+| B5 | `:190` `if err != nil \ | productionRiskDigest(data) != config.ManifestDigest {` | 기존 — production_snapshot_authority_test 시험군 · `TestA127RiskLoaderReadsTheLedgerWhoseSchemaEqualsTheInjectedVersion` | n/a | n/a |
+| B6 | `:194` `if err != nil \ | !verifyProductionRiskPolicy(manifest, config) {` | 기존 — production_snapshot_authority_test 시험군 · `TestA127RiskLoaderReadsTheLedgerWhoseSchemaEqualsTheInjectedVersion` | n/a | n/a |
+| B7 | `:199` `if err != nil {` | 예 | 기존 — production_snapshot_authority_test 시험군 · `TestA127RiskLoaderReadsTheLedgerWhoseSchemaEqualsTheInjectedVersion` | n/a | n/a |
+| B8 | `:203` `if err != nil {` | 예 | 기존 — production_snapshot_authority_test 시험군 · `TestA127RiskLoaderReadsTheLedgerWhoseSchemaEqualsTheInjectedVersion` | n/a | n/a |

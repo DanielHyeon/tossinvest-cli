@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/strategy_risk_authority_test.go",
-  "source_sha256": "5e015333560303ac59eef1feab9098ef7b259696f80e9f370e1f292a0d00945c",
+  "source_sha256": "88a27a5175907ac6e3239a4d07a64096b28e72fb41822ddf37b55d6f23b28f23",
   "package": "engine",
   "function": "newStrategyRiskLoaderFixture",
   "signature": "newStrategyRiskLoaderFixture(params=1, results=1)",
   "start": {
-    "line": 128,
+    "line": 130,
     "column": 1
   },
   "end": {
-    "line": 131,
+    "line": 133,
     "column": 2
   },
   "branches": null,
@@ -17,7 +17,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 130,
+        "line": 132,
         "column": 2
       }
     }
@@ -26,7 +26,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 129,
+        "line": 131,
         "column": 2
       },
       "text": "t.Helper"
@@ -34,7 +34,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 130,
+        "line": 132,
         "column": 9
       },
       "text": "newStrategyRiskLoaderFixtureWith"

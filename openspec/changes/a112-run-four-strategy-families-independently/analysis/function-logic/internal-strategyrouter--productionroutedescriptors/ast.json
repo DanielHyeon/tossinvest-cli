@@ -1,15 +1,15 @@
 {
   "file": "internal/strategyrouter/production.go",
-  "source_sha256": "7d60a867a87576cab66d25591d3211b50f1d532efa29166bd71bb5b623cc09f4",
+  "source_sha256": "617163a508030dea2768655db66006d52097f17be9c04bb7c9fc300d3adf8a21",
   "package": "strategyrouter",
   "function": "productionRouteDescriptors",
   "signature": "productionRouteDescriptors(params=1, results=1)",
   "start": {
-    "line": 570,
+    "line": 586,
     "column": 1
   },
   "end": {
-    "line": 588,
+    "line": 604,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 571,
+        "line": 587,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 579,
+        "line": 595,
         "column": 2
       }
     }
@@ -34,21 +34,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 572,
+        "line": 588,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 580,
+        "line": 596,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 587,
+        "line": 603,
         "column": 2
       }
     }
