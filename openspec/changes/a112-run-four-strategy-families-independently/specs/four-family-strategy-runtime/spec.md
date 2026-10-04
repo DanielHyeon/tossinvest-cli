@@ -35,7 +35,7 @@ KR/US market coordinator는 동일 `(account, market, symbol, position_generatio
 
 #### Scenario: singleton score가 uncalibrated
 - **WHEN** 한 owner scope에 eligible proposal이 하나뿐이지만 approved score version 또는 calibration digest가 없다
-- **THEN** production coordinator는 `ARBITRATION_UNCALIBRATED`로 거부하고 SHADOW counterfactual 외 dispatch handoff는 0건이다
+- **THEN** production coordinator는 `ARBITRATION_UNCALIBRATED`로 거부하고 dispatch handoff는 0건이다 (SHADOW counterfactual 포함 — SHADOW는 어떤 dispatch handoff도 만들지 않는다; 개정 2026-10-04 [a112 결정 63-v2], 앞 문구는 SHADOW 반사실을 handoff 의 예외처럼 읽혔다)
 
 #### Scenario: active weekly owner
 - **WHEN** 같은 symbol/generation에 active weekly-value owner가 있고 breakout proposal이 더 높은 score를 제시한다
@@ -88,8 +88,8 @@ Lane OFF, market close, evidence failure, worker queue pressure와 low-priority 
 ### Requirement: SHADOW는 OFF state를 승격하지 않는 read-only runtime이다
 새 설치·migration·restart는 `desired=OFF`, `effective=OFF`, `runtime=UNOBSERVED`를 유지해야 한다 (SHALL). `SHADOW`는 digest 핀(`TOSSOS_STRATEGY_FAMILY_SHADOW_<MARKET>_MANIFEST_SHA256`)으로 결속된 server-owned shadow manifest가 있을 때만 pure evaluation과 counterfactual projection을 허용하며 (SHALL), desired/effective/activation을 ON으로 만들거나 dispatch capability를 소유해서는 안 된다 (MUST NOT). Process-local shadow 상태를 restart에서 자동 복구해서는 안 된다 (MUST NOT). (개정 2026-10-04 [a112 결정 63] — 신뢰 앵커를 "signed"에서 digest 핀으로: 결정 61과 같은 모델, 근거는 design.md 결정 63 문단.)
 
-#### Scenario: shadow manifest 핀이 없는 restart
-- **WHEN** 이전 process가 SHADOW를 관측한 뒤 shadow manifest 핀 없이 restart한다
+#### Scenario: 유효한 shadow manifest가 없는 restart
+- **WHEN** 이전 process가 SHADOW를 관측한 뒤 유효한 shadow manifest 없이 restart한다 — 핀 없음, 또는 핀은 있으나 파일 없음·핀 불일치·만료·폐기·결속 불일치 (개정 2026-10-04 [a112 결정 63-v2] — 63-v1 의 「핀 없이」는 「핀 있는데 못 씀」을 시나리오에서 빠뜨렸다)
 - **THEN** 모든 lane는 OFF/OFF/UNOBSERVED이고 proposal dispatch 또는 activation write는 0건이다
 
 ### Requirement: runtime lineage와 health는 lane 단위로 결정적으로 관측된다
