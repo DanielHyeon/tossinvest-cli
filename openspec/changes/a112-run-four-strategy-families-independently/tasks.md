@@ -574,7 +574,9 @@
 - [ ] 8.5 Complete independent adversarial review for owner uniqueness, score calibration, q_final monotonicity, evidence correction/replay, queue/failure isolation, API quota sharing, OFF defaults and safety-loop independence; resolve all P0/P1 findings.
 
   **8.5 명시 대상 추가(2026-10-01 Manager 판정).** 2.3 (b) 의 `breakoutlane.evaluateFresh` 편집(1.2 반사실 기록 갈래 B7 — High-risk 함수) — 착지 시점 독립 적대 리뷰는
-  비례 원칙으로 생략(기록 전용 · `decisionSeal` 무포함 · 입장 경로 바이트 동일 · 쌍둥이 비교 · 판정 변경 변이 CAUGHT)했으므로 이 리뷰에서 덮는다. 증거: review.md 「2.3 (b)」 절,
+  비례 원칙으로 생략(기록 전용 · `decisionSeal` 무포함 · 입장 경로 바이트 동일 · 쌍둥이 비교 · 판정 변경 변이 CAUGHT)했으므로 이 리뷰에서 덮는다.
+  **8.5 명시 대상 추가(2026-10-04 Manager 판정 — 8.8.4 로트 B).** `strategyrouter` 활성화 적재의 필드명 래핑(LoadProductionFamilyActivation 분기 9 → 10 · validate · decode ·
+  body · familyActivationRemaining · 새 failedFields)과 `strategyProposalAuthorityLoader.collectMarket` 의 관문 계산 이동. 증거: review.md 「8.8.4 로트 B」, `measurements/lot-8.8.4-B/`. 증거: review.md 「2.3 (b)」 절,
   `measurements/lot-2.3/`, `function-logic/internal-breakoutlane--evaluatefresh/`. 리터럴 `1_200_000` 두 자리는 변이 핀(CF-03/04 · CF-10)으로 수용(Manager).
 - [ ] 8.6 If and only if current A100 ProtectionReady and all dependency gates are complete, build/deploy in dormant OFF/UNOBSERVED mode and verify lane/automation/autostart/LIVE approval remain unchanged. Otherwise perform build-only/shadow-fixture verification, record deployment as BLOCKED, and prove exposure-raising broker requests remain zero.
 - [x] 8.7.1 Build the mechanism that *requires* a separate human-approved operating activation: no lane may read effective ON without a verified signed four-family manifest binding the current calibration, market calendar, risk, build and ProtectionReady digests. **(Landed 2026-09-03.)**
@@ -735,7 +737,7 @@
   앵커는 그대로다. 만료·폐기 시의 rollback 자세는 8.7.2 가, 오류 구별은 8.8.4 가
   가져간다.
 
-- [ ] 8.8.4 P1 정리: 오류를 필드 이름과 함께 감싸 스냅샷에 내기(만료·폐기를
+- [x] 8.8.4 P1 정리: 오류를 필드 이름과 함께 감싸 스냅샷에 내기(만료·폐기를
   "배포 안 함"과 구별), 닫힘 갈래 12 중 7 이 영값 활성화를 싣는 것, 골든의
   desired/effective 단언 무효화, 엔진 race 목록에 관문 시험 등록,
   `promotion` 인자를 검증된 활성화로 도는 시험, `*_testseam.go` 빌드 태그 가드,
@@ -746,3 +748,15 @@
   (+ 무태그 생산 `laneStepFor` 경유 시험 실재 확인) · 항목 6 `tools/sdd/test_testseam_build_tags.py` · 항목 7(b) 전파 불변 = 4f49a8eb 의 의도된 결정 문서화 ·
   runMarket FLM 표 ast 기준 수리 — review.md 「8.8.4 로트 A」. 남은 것 = **로트 B**: 항목 1(strategyrouter sentinel 필드명 래핑, errors.Is 보존) · 항목 2((ii) gate
   활성화 carry + 폐포 전수 표 시험) — 생산 편집, 8.5 재리뷰 명시 대상. 잔여(로트 B 에서 등재): 활성화 실패 사유 · `SwallowedCycleErrors` 의 운영자 표면.
+
+  **8.8.4 종결 — 로트 B(2026-10-04, Q-B1=(c) · Q-B2 계산/판정 분리 — 미착지).** 항목 1: `strategyrouter/production_family_activation.go` 의 맨 sentinel
+  반환 18 곳(측정 — 지시의 "10" 정정) 전부 필드명 `%w` 래핑, errors.Is 보존(`==` 비교 0). 복합 결속 셋(설정 결속 · 몸통 결속 · 수명)과 서술자 필드 검사는 분기 하나
+  그대로 `failedFields` 로 어긋난 필드 **전부**를 한 메시지에(단락 평가 의존 항 0 확인). 읽기 결함과 핀 불일치는 갈래를 갈라(Load B5/B6) 결함은 읽기 함수 오류를 사슬에,
+  불일치만 `manifest_digest`. 시험 `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel`(실패 모양 40 — 단일 · 다중 동시 ·
+  결함/불일치 분리) · `TestTheDocumentPathNamesItsRefusalToo`. 항목 2: `collectMarket` 의 관문 **계산만** ROUTE_NOT_READY 가드 직후로 — 13 닫힘 중 첫째만 영값(사유 명명),
+  열둘이 관문 활성화; kind 순서 · FAMILY_GATE_CLOSED 자리 불변. 시험 `a112_proposal_closure_carriage_test.go` `TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness`
+  (AST census — kind 순서 + 관문 자리 + gate.activation 을 싣는 리터럴 수) · `TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady`(닿는 닫힘 여덟 × 관문
+  세 모양 — 사유 · 실은 활성화 · 적재 호출 수). 거짓 전칭 주석 정정. Pre-Edit `lot-8.8.4-B/pre-edit/`(여섯 함수) · RED `red-8.8.4-B.log` · 재번호 `renumber.txt`(difflib) · 편집 뒤 번들
+  일곱(`harness/render_884b_bundles.py`) · 변이 `mutation-8.8.4-B.tsv` 13/13 CAUGHT · 이름 결속 22/22. **잔여(활성화 로트 선행 — ROADMAP):** 활성화 실패 사유 · `SwallowedCycleErrors`
+  의 운영자 표면(snapshot/projection 필드) 0 — 사유는 오류 사슬에만 있다; 공유 읽기 함수 `readProductionRouteFile` 이 OS 원인을 자기 sentinel 하나로 접는다(파일 없음 · 권한 ·
+  소유자 구별 불가).

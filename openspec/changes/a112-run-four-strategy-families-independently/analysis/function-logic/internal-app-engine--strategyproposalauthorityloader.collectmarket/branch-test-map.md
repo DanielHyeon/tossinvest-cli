@@ -1,23 +1,23 @@
 # Branch Test Map: `strategyProposalAuthorityLoader.collectMarket`
 
-- Source SHA-256: `60e0ef9270e3102bb69ce930cdffb41a5c4653dca69efdc94d32374823161bae`; AST branch locations are authoritative.
-- Revision: **modified (a112 5.2.2.2, 2026-10-01).** 편집 전 16 분기 → 15: 제안 집합 digest 를 손으로 적던 순회(편집 전 B16 `range entries`)를 지우고 A-lite 계약과 같은 함수 `strategyProposalSetDigest(entries)` 를 부른다(A#6 — digest 식 단일 출처). B1~B15 는 편집 전과 같은 분기 · 좌표 이동만.
-- 편집 전 번들: `analysis/measurements/lot-5.2.2.2/pre-edit/internal-app-engine--strategyproposalauthorityloader.collectmarket/`. 변이 원장 `analysis/measurements/lot-5.2.2.2/mutation-5.2.2.2.tsv`.
+- Source SHA-256: `dc5fbecc120d415e2c7607f6892741395d555b137e4fe6ad25fbf04c60011fa7`; AST branch locations are authoritative.
+- Revision: **modified (a112 8.8.4-B, 2026-10-01).** 분기 불변(15). 관문 **계산**(`gate = loader.familyGateFor(...)`)만 제안 조정 직전에서 B1(ROUTE_NOT_READY) 뒤로 옮겼다(Manager 판정 Q-B2 — 계산/판정 분리). 13 닫힘의 실패 kind 순서 · FAMILY_GATE_CLOSED 판정 자리는 그대로이고, 옮긴 값은 닫힘 갈래가 싣는 활성화와 조정 관문으로만 쓰인다. 결과: B1 만 영값, 나머지 열두 닫힘이 관문 활성화를 싣는다(앞 판은 일곱이 영값).
+- 편집 전 번들: `analysis/measurements/lot-8.8.4-B/pre-edit/internal-app-engine--strategyproposalauthorityloader.collectmarket/`. 변이 원장 `analysis/measurements/lot-8.8.4-B/mutation-8.8.4-B.tsv`.
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 312:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B2 | if at 315:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B3 | if at 318:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B4 | if at 323:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B5 | if at 327:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B6 | range at 333:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B7 | if at 335:3 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B8 | if at 347:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B9 | if at 352:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B10 | if at 383:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B11 | if at 390:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B12 | if at 399:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B13 | if at 407:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B14 | if at 417:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
-| B15 | if at 425:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B1 | if at 315:2 — 경로 · 스케줄 미준비 → ROUTE_NOT_READY(**영값** — 관문 계산 전; 결속 값이 없거나 믿을 수 없음) | `a112_proposal_closure_carriage_test.go` `TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady`(route not ready — 적재 0 회 · 영값) · `a112_proposal_closure_carriage_test.go` `TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness` | no — 갈래 불변; 변이 E2(관문을 이 가드 앞으로) CAUGHT(`analysis/measurements/lot-8.8.4-B/mutation-8.8.4-B.tsv`) | yes |
+| B2 | if at 326:2 — FX 미준비 → FX_NOT_READY(관문 활성화) | `a112_proposal_closure_carriage_test.go` `TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady`(fx not ready) | yes — 편집 전 영값을 실음(`red-8.8.4-B.log`) | yes |
+| B3 | if at 329:2 — 적재기 설정 결손 → INTERNAL_FAILURE(관문 활성화) | `a112_proposal_closure_carriage_test.go` `TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady`(loader misconfigured) | yes — 편집 전 영값을 실음(`red-8.8.4-B.log`) | yes |
+| B4 | if at 334:2 — 제안 공개 열쇠 무효 → AUTHORITY_INVALID(관문 활성화) | `a112_proposal_closure_carriage_test.go` `TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady`(proposal public key invalid) | yes — 편집 전 영값을 실음(`red-8.8.4-B.log`) | yes |
+| B5 | if at 338:2 — US 시장 env 이름 | `TestStrategyProposalAuthorityLoadsKRUSConcurrently` | no — 갈래 불변 | yes |
+| B6 | range at 344:2 — 경로 항목 순회 | `a112_proposal_closure_carriage_test.go` `TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness` | no — 갈래 불변 | yes |
+| B7 | if at 346:3 — 종목 빈값 · 중복 → INTERNAL_FAILURE(관문 활성화) | `a112_proposal_closure_carriage_test.go` `TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady`(duplicate routed symbol) | yes — 편집 전 영값을 실음(`red-8.8.4-B.log`) | yes |
+| B8 | if at 358:2 — 제안 적재 실패 · digest 불일치 → AUTHORITY_INVALID(관문 활성화) | `a112_proposal_closure_carriage_test.go` `TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady`(proposal load failed) | yes — 편집 전 영값을 실음(`red-8.8.4-B.log`) | yes |
+| B9 | if at 363:2 — 범위가 제안을 잃음 → PROPOSAL_PRODUCTION_FAULT(관문 활성화) | `a112_proposal_closure_carriage_test.go` `TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady`(a scope lost its proposal) · `TestALostProposalClosesTheMarketInsteadOfReleasingTheOtherSymbol` | yes — 편집 전 영값을 실음(`red-8.8.4-B.log`) | yes |
+| B10 | if at 393:2 — 관문이 범위를 통째로 지움 → FAMILY_GATE_CLOSED(판정 자리 불변) | `TestAGatedFamilyMustNotShrinkTheMarketIntoTheExactlyOneValve` · `a112_proposal_closure_carriage_test.go` `TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness` | no — 갈래 불변 | yes |
+| B11 | if at 400:2 — 계보 신원 충돌 → INTERNAL_FAILURE | `a112_proposal_closure_carriage_test.go` `TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness`(입력으로 도달 어려움 — census 만) | no — 갈래 불변 | census |
+| B12 | if at 409:2 — 조정자 넘침 → QUEUE_OVERFLOW | `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne` · `a112_proposal_closure_carriage_test.go` `TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness` | no — 갈래 불변 | yes |
+| B13 | if at 417:2 — 중재 거절 → ARBITRATION_REFUSED | `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol` · `a112_proposal_closure_carriage_test.go` `TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness` | no — 갈래 불변 | yes |
+| B14 | if at 427:2 — 선택을 되돌리지 못함 → INTERNAL_FAILURE | `a112_proposal_closure_carriage_test.go` `TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness`(이 갈래는 census 만 — 술어 `entries()` 는 `TestASelectionWithNoLaneToComeBackToClosesInsteadOfShrinkingTheList` 가 단위로) | no — 갈래 불변 | census |
+| B15 | if at 435:2 — 받아들인 범위 0 → NO_ACCEPTED_SCOPE(관문 뒤 대조군) | `a112_proposal_closure_carriage_test.go` `TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady`(no scope accepted) | no — 갈래 불변 | yes |

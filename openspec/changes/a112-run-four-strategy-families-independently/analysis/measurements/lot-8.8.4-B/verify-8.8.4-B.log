@@ -1,0 +1,20 @@
+== scratch 7bce631d on f473d815
+make lint exit=0
+gofmt listed=0
+make sdd-test exit=0
+go test  strategyrouter+engine+strategyworker exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	1.262s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	183.814s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.321s
+go test -tags tossos_testseams strategyrouter+engine+strategyworker exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	1.514s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	220.108s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.342s
+race strategyrouter exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	8.018s
+race new engine tests exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	1.078s
+make test-race engine line exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	63.408s
+Change 'a112-run-four-strategy-families-independently' is valid
+== check_analysis --change a112: HEAD 173, lot 173, normalized set delta 0/0 (after shifting the same-file ResultAuthority bundle)

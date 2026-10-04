@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"path/filepath"
 	"sort"
@@ -225,12 +226,12 @@ type FamilyActivationDocument struct {
 func (document FamilyActivationDocument) body() (productionFamilyActivationBody, error) {
 	want := productionRouteDescriptors(document.Market)
 	if len(want) == 0 {
-		return productionFamilyActivationBody{}, ErrProductionFamilyActivationUnavailable
+		return productionFamilyActivationBody{}, fmt.Errorf("%w: market %q has no descriptor table", ErrProductionFamilyActivationUnavailable, document.Market)
 	}
 	on := map[Family]bool{}
 	for _, family := range document.On {
 		if !family.Known() {
-			return productionFamilyActivationBody{}, ErrProductionFamilyActivationUnavailable
+			return productionFamilyActivationBody{}, fmt.Errorf("%w: on: unknown family %q", ErrProductionFamilyActivationUnavailable, family)
 		}
 		on[family] = true
 	}
@@ -382,7 +383,8 @@ func (activation FamilyActivation) LeaseCeiling(now time.Time, ceiling time.Dura
 // 시험을 통과시킨다.
 func familyActivationRemaining(expires, now time.Time) (time.Duration, error) {
 	if !now.Before(expires) {
-		return 0, ErrProductionFamilyActivationExpired
+		return 0, fmt.Errorf("%w: expires_at %s is not after %s", ErrProductionFamilyActivationExpired,
+			expires.UTC().Format(time.RFC3339Nano), now.UTC().Format(time.RFC3339Nano))
 	}
 	return expires.Sub(now), nil
 }
@@ -430,10 +432,10 @@ func LoadProductionFamilyActivation(ctx context.Context, config FamilyActivation
 	// 에 따라 "선언했는데 쓸 수 없다" 로 바뀌면, 엔진이 그 시장의 네 가족을 OFF 로
 	// 되돌려 기존 경로를 닫는다. 미배포 여부는 설정 사실 하나로만 정한다.
 	if strings.TrimSpace(config.ManifestDigest) == "" {
-		return FamilyActivation{}, ErrProductionFamilyActivationUndeclared
+		return FamilyActivation{}, fmt.Errorf("%w: manifest_digest pin is empty", ErrProductionFamilyActivationUndeclared)
 	}
 	if ctx == nil {
-		return FamilyActivation{}, ErrProductionFamilyActivationUnavailable
+		return FamilyActivation{}, fmt.Errorf("%w: context is nil", ErrProductionFamilyActivationUnavailable)
 	}
 	if err := ctx.Err(); err != nil {
 		return FamilyActivation{}, err
@@ -442,28 +444,42 @@ func LoadProductionFamilyActivation(ctx context.Context, config FamilyActivation
 	config.ManifestDigest = strings.TrimSpace(config.ManifestDigest)
 	owner, ownerOK := productionRouteOwnerUID()
 	name := ProductionFamilyActivationFileName(config.Market)
-	if !ownerOK || name == "" || !filepath.IsAbs(config.ConfigDir) || config.ObservedAt.IsZero() ||
-		!productionRouteDigestValid(config.ManifestDigest) ||
-		!productionRouteIdentity(config.CalibrationDigest) ||
-		!productionRouteDigestValid(config.RouteManifestDigest) ||
-		!productionRouteDigestValid(config.RiskPolicyDigest) ||
-		!productionRouteIdentity(config.CalendarVersion) || !productionRouteIdentity(config.BuildDigest) {
-		return FamilyActivation{}, ErrProductionFamilyActivationUnavailable
+	// 설정 결속(a112 8.8.4 항목 1, 판정 Q-B1=(c)): 분기는 하나 그대로이고, 그 안에서 결속 필드를 **전부** 비교해 어긋난 이름을 모은다.
+	// 각 항은 순수 비교 · 부작용 없는 검사라(단락 평가에 기대는 항 없음 — 2026-10-04 확인) 무조건 평가해도 판정이 같다.
+	if fields := failedFields(
+		fieldCheck{"owner_uid", !ownerOK},
+		fieldCheck{"market", name == ""},
+		fieldCheck{"config_dir", !filepath.IsAbs(config.ConfigDir)},
+		fieldCheck{"observed_at", config.ObservedAt.IsZero()},
+		fieldCheck{"manifest_digest", !productionRouteDigestValid(config.ManifestDigest)},
+		fieldCheck{"calibration_digest", !productionRouteIdentity(config.CalibrationDigest)},
+		fieldCheck{"route_manifest_digest", !productionRouteDigestValid(config.RouteManifestDigest)},
+		fieldCheck{"risk_policy_digest", !productionRouteDigestValid(config.RiskPolicyDigest)},
+		fieldCheck{"calendar_version", !productionRouteIdentity(config.CalendarVersion)},
+		fieldCheck{"build_digest", !productionRouteIdentity(config.BuildDigest)},
+	); len(fields) != 0 {
+		return FamilyActivation{}, fmt.Errorf("%w: config binding: %s", ErrProductionFamilyActivationUnavailable, strings.Join(fields, ", "))
 	}
 	data, err := readProductionRouteFile(filepath.Join(config.ConfigDir, name), owner, 0o400,
 		productionFamilyActivationMaximumBytes)
-	if err != nil || productionRouteDigest(data) != config.ManifestDigest {
-		return FamilyActivation{}, ErrProductionFamilyActivationUnavailable
+	// 읽기 결함과 핀 불일치는 다른 종류다(Manager 판정 2026-10-04): 결함을 불일치로 보이면 운영자가 I/O 장애를 매니페스트 오류로 읽는다.
+	// 읽기 결함은 읽기 함수의 오류를 사슬에 그대로 싣고, 불일치만 필드 이름으로 말한다.
+	if err != nil {
+		return FamilyActivation{}, fmt.Errorf("%w: manifest file %s: %w", ErrProductionFamilyActivationUnavailable, name, err)
 	}
+	if productionRouteDigest(data) != config.ManifestDigest {
+		return FamilyActivation{}, fmt.Errorf("%w: manifest_digest: the pinned digest does not match the file bytes", ErrProductionFamilyActivationUnavailable)
+	}
+	// 해석 거절은 해석기가 이미 이유를 붙여 sentinel 로 감쌌다 — 그대로 돌려준다.
 	manifest, err := decodeProductionFamilyActivation(data)
 	if err != nil {
-		return FamilyActivation{}, ErrProductionFamilyActivationUnavailable
+		return FamilyActivation{}, err
 	}
 	// 폐기와 만료를 핀·정규성 검사 **뒤에** 본다. 앞에서 보면 배포가 핀하지 않은
 	// 파일이 "폐기됐다" 는 답을 낼 수 있고, 그러면 운영자가 자기가 쓴 적 없는
 	// 결정을 보게 된다. (앞 판본은 이 자리가 서명 뒤였다 — 같은 이유였다.)
 	if manifest.Revoked {
-		return FamilyActivation{}, ErrProductionFamilyActivationRevoked
+		return FamilyActivation{}, fmt.Errorf("%w: revoked=true", ErrProductionFamilyActivationRevoked)
 	}
 	state, err := validateProductionFamilyActivation(manifest, config)
 	if err != nil {
@@ -491,20 +507,21 @@ func LoadProductionFamilyActivation(ctx context.Context, config FamilyActivation
 // (`production_family_activation_golden_test.go`).
 func decodeProductionFamilyActivation(data []byte) (productionFamilyActivationBody, error) {
 	if len(data) == 0 || len(data) > productionFamilyActivationMaximumBytes {
-		return productionFamilyActivationBody{}, ErrProductionFamilyActivationUnavailable
+		return productionFamilyActivationBody{}, fmt.Errorf("%w: manifest size %d bytes is outside 1..%d", ErrProductionFamilyActivationUnavailable,
+			len(data), productionFamilyActivationMaximumBytes)
 	}
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
 	var manifest productionFamilyActivationBody
 	if err := decoder.Decode(&manifest); err != nil {
-		return productionFamilyActivationBody{}, err
+		return productionFamilyActivationBody{}, fmt.Errorf("%w: manifest json: %w", ErrProductionFamilyActivationUnavailable, err)
 	}
 	if err := decoder.Decode(&struct{}{}); err != io.EOF {
-		return productionFamilyActivationBody{}, ErrProductionFamilyActivationUnavailable
+		return productionFamilyActivationBody{}, fmt.Errorf("%w: trailing data after the manifest document", ErrProductionFamilyActivationUnavailable)
 	}
 	canonical, err := json.Marshal(manifest)
 	if err != nil || !bytes.Equal(canonical, data) {
-		return productionFamilyActivationBody{}, ErrProductionFamilyActivationUnavailable
+		return productionFamilyActivationBody{}, fmt.Errorf("%w: manifest bytes are not this build's canonical serialization", ErrProductionFamilyActivationUnavailable)
 	}
 	return manifest, nil
 }
@@ -522,23 +539,37 @@ func decodeProductionFamilyActivation(data []byte) (productionFamilyActivationBo
 func validateProductionFamilyActivation(body productionFamilyActivationBody,
 	config FamilyActivationConfig,
 ) (map[familyLaneKey]productionFamilyActivationDescriptor, error) {
-	if body.SchemaVersion != productionFamilyActivationSchema || body.Domain != productionFamilyActivationDomain ||
-		body.Generation == 0 || body.Market != config.Market || !validMarket(body.Market) ||
-		body.RouteManifestDigest != config.RouteManifestDigest ||
-		body.CalibrationDigest != config.CalibrationDigest || body.CalendarVersion != config.CalendarVersion ||
-		body.BuildDigest != config.BuildDigest ||
-		body.RiskPolicyDigest != config.RiskPolicyDigest ||
-		body.ProtectionReadyMinGeneration == 0 ||
-		!productionRouteIdentity(body.Actor) {
-		return nil, ErrProductionFamilyActivationUnavailable
+	// 몸통 결속(복합 — 분기 하나, 어긋난 필드 전부를 모음; 항은 전부 값 필드의 순수 비교).
+	if fields := failedFields(
+		fieldCheck{"schema_version", body.SchemaVersion != productionFamilyActivationSchema},
+		fieldCheck{"domain", body.Domain != productionFamilyActivationDomain},
+		fieldCheck{"generation", body.Generation == 0},
+		fieldCheck{"market", body.Market != config.Market || !validMarket(body.Market)},
+		fieldCheck{"route_manifest_digest", body.RouteManifestDigest != config.RouteManifestDigest},
+		fieldCheck{"calibration_digest", body.CalibrationDigest != config.CalibrationDigest},
+		fieldCheck{"calendar_version", body.CalendarVersion != config.CalendarVersion},
+		fieldCheck{"build_digest", body.BuildDigest != config.BuildDigest},
+		fieldCheck{"risk_policy_digest", body.RiskPolicyDigest != config.RiskPolicyDigest},
+		fieldCheck{"protection_ready_min_generation", body.ProtectionReadyMinGeneration == 0},
+		fieldCheck{"actor", !productionRouteIdentity(body.Actor)},
+	); len(fields) != 0 {
+		return nil, fmt.Errorf("%w: body binding: %s", ErrProductionFamilyActivationUnavailable, strings.Join(fields, ", "))
 	}
 	approved, okApproved := productionRouteTime(body.ApprovedAt)
 	issued, okIssued := productionRouteTime(body.IssuedAt)
 	expires, okExpires := productionRouteTime(body.ExpiresAt)
 	now := config.ObservedAt.UTC()
-	if !okApproved || !okIssued || !okExpires || issued.Before(approved) || issued.After(now) ||
-		!issued.Before(expires) || expires.Sub(issued) > productionFamilyActivationMaximumLife {
-		return nil, ErrProductionFamilyActivationUnavailable
+	// 수명(복합 — 같은 모양). 해석 실패한 시각은 영값이라 뒤 비교도 순수하다(공황 없음).
+	if fields := failedFields(
+		fieldCheck{"approved_at", !okApproved},
+		fieldCheck{"issued_at", !okIssued},
+		fieldCheck{"expires_at", !okExpires},
+		fieldCheck{"issued_at before approved_at", issued.Before(approved)},
+		fieldCheck{"issued_at after observed_at", issued.After(now)},
+		fieldCheck{"issued_at not before expires_at", !issued.Before(expires)},
+		fieldCheck{"lifetime over maximum", expires.Sub(issued) > productionFamilyActivationMaximumLife},
+	); len(fields) != 0 {
+		return nil, fmt.Errorf("%w: lifetime: %s", ErrProductionFamilyActivationUnavailable, strings.Join(fields, ", "))
 	}
 	// 만료 판정은 lease 상한과 같은 함수 하나다 (태스크 8.7.2).
 	if _, err := familyActivationRemaining(expires, now); err != nil {
@@ -561,24 +592,47 @@ func validateProductionFamilyActivation(body productionFamilyActivationBody,
 	state := make(map[familyLaneKey]productionFamilyActivationDescriptor, len(want))
 	for _, descriptor := range body.Descriptors {
 		table, known := want[descriptor.LaneID]
-		if !known || table.Family != descriptor.Family || table.Horizon != descriptor.Horizon ||
-			table.LaneVersion != descriptor.LaneVersion ||
-			!validDesiredState(descriptor.Desired) || !validDesiredState(descriptor.Effective) {
-			return nil, ErrProductionFamilyActivationUnavailable
+		// 모르는 레인이면 표 값이 영값이라 표 대조 셋은 `known &&` 로 묶는다 — 판정은 앞 판(`!known || …`)과 같고 이름만 정확해진다.
+		if fields := failedFields(
+			fieldCheck{"lane_id", !known},
+			fieldCheck{"family", known && table.Family != descriptor.Family},
+			fieldCheck{"horizon", known && table.Horizon != descriptor.Horizon},
+			fieldCheck{"lane_version", known && table.LaneVersion != descriptor.LaneVersion},
+			fieldCheck{"desired", !validDesiredState(descriptor.Desired)},
+			fieldCheck{"effective", !validDesiredState(descriptor.Effective)},
+		); len(fields) != 0 {
+			return nil, fmt.Errorf("%w: descriptors[lane_id=%s]: %s", ErrProductionFamilyActivationUnavailable, descriptor.LaneID, strings.Join(fields, ", "))
 		}
 		// effective ON 은 desired ON 없이 설 수 없다. 반대는 정당하다 —
 		// 사람이 켜기로 했지만 아직 서지 않은 상태다.
 		if descriptor.Effective == StateOn && descriptor.Desired != StateOn {
-			return nil, ErrProductionFamilyActivationUnavailable
+			return nil, fmt.Errorf("%w: descriptors[lane_id=%s]: effective ON without desired ON", ErrProductionFamilyActivationUnavailable, descriptor.LaneID)
 		}
 		key := familyLaneKey{family: descriptor.Family, laneID: descriptor.LaneID, laneVersion: descriptor.LaneVersion}
 		if _, duplicate := state[key]; duplicate {
-			return nil, ErrProductionFamilyActivationUnavailable
+			return nil, fmt.Errorf("%w: descriptors: duplicate lane_id %s", ErrProductionFamilyActivationUnavailable, descriptor.LaneID)
 		}
 		state[key] = descriptor
 	}
 	if len(state) != len(want) {
-		return nil, ErrProductionFamilyActivationUnavailable
+		return nil, fmt.Errorf("%w: descriptors: %d of %d lanes", ErrProductionFamilyActivationUnavailable, len(state), len(want))
 	}
 	return state, nil
+}
+
+// fieldCheck · failedFields 는 복합 결속의 진단이다(a112 8.8.4 항목 1, Q-B1=(c)). 결속 판정은 호출자의 분기 하나(`len(fields) != 0`)가
+// 하고, 이 함수는 그 분기가 무엇 때문에 섰는지를 모든 어긋난 필드로 말한다 — 첫 실패만 말하면 운영자가 하나를 고치고 다음 거절을 또 만난다.
+type fieldCheck struct {
+	name   string
+	failed bool
+}
+
+func failedFields(checks ...fieldCheck) []string {
+	var fields []string
+	for _, check := range checks {
+		if check.failed {
+			fields = append(fields, check.name)
+		}
+	}
+	return fields
 }

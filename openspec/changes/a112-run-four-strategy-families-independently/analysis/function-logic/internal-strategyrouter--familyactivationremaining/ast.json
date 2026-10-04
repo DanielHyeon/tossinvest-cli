@@ -1,0 +1,102 @@
+{
+  "file": "internal/strategyrouter/production_family_activation.go",
+  "source_sha256": "7842842bc1b1bf9d2be542624169502fcc846a4e60080841887f5072f4fb6507",
+  "package": "strategyrouter",
+  "function": "familyActivationRemaining",
+  "signature": "familyActivationRemaining(params=2, results=2)",
+  "start": {
+    "line": 384,
+    "column": 1
+  },
+  "end": {
+    "line": 390,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 385,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 386,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 389,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 385,
+        "column": 6
+      },
+      "text": "now.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 13
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 4
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 4
+      },
+      "text": "expires.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 44
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 44
+      },
+      "text": "now.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 389,
+        "column": 9
+      },
+      "text": "expires.Sub"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

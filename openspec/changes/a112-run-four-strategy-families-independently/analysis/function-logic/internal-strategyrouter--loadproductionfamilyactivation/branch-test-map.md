@@ -1,24 +1,18 @@
 # Branch Test Map: `LoadProductionFamilyActivation`
 
-- Source: `internal/strategyrouter/production_family_activation.go` (427-478); file SHA-256 `c8e2efb9b1a8243bcec000f0c2fa9e96bd8576c97aa35a694a1e6c053407288f`. AST branch positions are authoritative.
+- Source SHA-256: `7842842bc1b1bf9d2be542624169502fcc846a4e60080841887f5072f4fb6507`; AST branch locations are authoritative.
+- Revision: **modified (a112 8.8.4-B, 2026-10-01).** 편집 전 9 분기 → 10(재번호 `lot-8.8.4-B/renumber.txt`, difflib 정렬): 편집 전 B5(`err != nil || digest != pin`)가 B5(읽기 결함 — 읽기 함수의 오류를 `%w` 사슬에 보존) · B6(새 — 핀 불일치, `manifest_digest`)으로 갈렸다(Manager 판정 — 결함과 불일치는 다른 종류). 편집 전 B6~B9 → B7~B10. B4(설정 결속)는 같은 분기 하나로 조건을 `len(failedFields(...)) != 0` 으로 바꿔 어긋난 필드 전부를 싣는다. 나머지 맨 sentinel 반환은 이유를 `%w` 로 붙였다.
+- 편집 전 번들: `analysis/measurements/lot-8.8.4-B/pre-edit/internal-strategyrouter--loadproductionfamilyactivation/`. 변이 원장 `analysis/measurements/lot-8.8.4-B/mutation-8.8.4-B.tsv`.
 
-- Measurement regime: Go coverage profiles, count mode. arm = 분기 좌표 **뒤에서 처음 시작하는** 커버리지 블록(`if`/`range` 몸통)이며, "arm entered Nx" 는 그 몸통이 N 번 실행됐다는 뜻이다.
-- engine tagged suite (and the strategyrouter tagged suite for the two router bundles, same flags): `go test -c -tags tossos_testseams -covermode=count -coverpkg=./internal/app/engine,./internal/strategyrouter ./internal/app/engine/` 바이너리를 `systemd-run --user --scope -p MemoryMax=16G -p MemorySwapMax=0` 안에서 실행(-trimpath 없이 — 소스를 읽는 시험 둘이 깨진다). 스위트 전체 PASS.
-- Per-test attribution set: 같은 바이너리의 **전체 시험 목록**을 `-test.run '^<Test>$'` 로 하나씩 돈 프로파일(하네스 `analysis/harness/a872_pertest_cover.sh`, 표 생성 `analysis/harness/a872_attribute.py`).
-- **귀속 완전성은 등식이다**: 모든 행에서 시험별 진입 수의 합 == 스위트 진입 수. 깨진 행은 `ATTRIBUTION MISMATCH` 로 찍히며 아래에는 하나도 없다.
-- 이 regime 은 **몸통 진입**을 센다. 같은 change 의 옛 번들 일부(예: dispatch 의 5.x 표)는 조건 평가를 센 값이라 수가 다르다 — 섞어 읽지 말 것.
-
-| Branch | AST kind | Position | Measured disposition |
-|---|---|---|---|
-| B1 | if | 432:2 | arm entered 12x (strategyrouter tagged suite, post-edit); `TestOnlyAnEmptyPinMeansTheActivationWasNeverDeclared` |
-| B2 | if | 435:2 | arm not entered (strategyrouter tagged suite, post-edit); no per-test profile entered it |
-| B3 | if | 438:2 | arm entered 1x (strategyrouter tagged suite, post-edit); `TestACancelledContextPromotesNothing` |
-| B4 | if | 445:2 | arm entered 1x (strategyrouter tagged suite, post-edit); `TestOnlyAnEmptyPinMeansTheActivationWasNeverDeclared` |
-| B5 | if | 455:2 | arm entered 6x (strategyrouter tagged suite, post-edit); `TestAnActivationWhoseBindingsDoNotMatchPromotesNothing`, `TestBytesThatChangedAfterTheDeploymentPinnedThemPromoteNothing`, `TestGoldenBytesThatDriftFromThePinPromoteNothing`, `TestOnlyAnEmptyPinMeansTheActivationWasNeverDeclared`, `TestWithNoActivationFileNothingIsPromoted` |
-| B6 | if | 459:2 | arm entered 4x (strategyrouter tagged suite, post-edit); `TestAnActivationWhoseBytesAreNotCanonicalPromotesNothing` |
-| B7 | if | 465:2 | arm entered 2x (strategyrouter tagged suite, post-edit); `TestAnActivationWhoseBindingsDoNotMatchPromotesNothing`, `TestOnlyAnEmptyPinMeansTheActivationWasNeverDeclared` |
-| B8 | if | 469:2 | arm entered 29x (strategyrouter tagged suite, post-edit); `TestAnActivationOutsideItsApprovedLifetimePromotesNothing`, `TestAnActivationWhoseBindingsDoNotMatchPromotesNothing`, `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing`, `TestLoadingAndLeasingJudgeExpiryAtTheSameInstant`, `TestOnlyAnEmptyPinMeansTheActivationWasNeverDeclared`, `TestTheOtherMarketsWholeManifestInThisMarketsFilePromotesNothing` |
-| B9 | if | 472:2 | arm not entered (strategyrouter tagged suite, post-edit); no per-test profile entered it |
-
-
-A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.
+| Branch | Scenario anchor | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | if at 434:2 — 핀이 비었으면 미선언 → `%w(Undeclared): manifest_digest pin is empty` — **맨 앞 순서 불변**(엔진 판별이 errors.Is 로 의존) | `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel`(undeclared pin) · `TestOnlyAnEmptyPinMeansTheActivationWasNeverDeclared` | yes — 변이 B1(sentinel 탈락) CAUGHT(`analysis/measurements/lot-8.8.4-B/mutation-8.8.4-B.tsv`) | yes |
+| B2 | if at 437:2 — ctx 가 nil → `%w: context is nil` | `a112_activation_error_fields_test.go` `TestTheDocumentPathNamesItsRefusalToo` | yes — 편집 전 메시지에 필드명 없음(`red-8.8.4-B.log`) | yes |
+| B3 | if at 440:2 — ctx 취소 → ctx.Err() 그대로 | `TestACancelledContextPromotesNothing` | no — 갈래 불변 | yes |
+| B4 | if at 449:2 — 설정 결속(복합 — 분기 하나) → `%w: config binding: <어긋난 필드 전부>` | `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel`(config binding: … 아홉 단일 + 세 필드 동시) | yes — 변이 B2 · B3 · B4 · B5 CAUGHT(`analysis/measurements/lot-8.8.4-B/mutation-8.8.4-B.tsv`) | yes |
+| B5 | if at 467:2 — 매니페스트 파일 읽기 결함 → `%w: manifest file …: %w(읽기 함수 오류)` — 불일치와 다른 종류 | `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel`(manifest file missing) | yes — 편집 전에는 불일치와 한 갈래; 변이 B6(%v) · B7(불일치로 위장) CAUGHT(`analysis/measurements/lot-8.8.4-B/mutation-8.8.4-B.tsv`) | yes |
+| B6 | if at 470:2 — **(새)** 핀이 파일 바이트와 다름 → `%w: manifest_digest: …` | `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel`(pin does not match the file bytes) · `TestBytesThatChangedAfterTheDeploymentPinnedThemPromoteNothing` | yes — 편집 전 메시지에 필드명 없음(`red-8.8.4-B.log`) | yes |
+| B7 | if at 475:2 — 해석 거절 → 해석기가 붙인 이유 그대로(sentinel 포함) | `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel`(bytes not canonical · trailing data · unknown field) | yes — 변이 B8(맨 sentinel) CAUGHT(`analysis/measurements/lot-8.8.4-B/mutation-8.8.4-B.tsv`) | yes |
+| B8 | if at 481:2 — 폐기 → `%w(Revoked): revoked=true` | `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel`(revoked) | yes — 편집 전 메시지에 필드명 없음(`red-8.8.4-B.log`) | yes |
+| B9 | if at 485:2 — 검증 거절 → 검증기 오류 그대로 | `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel`(body binding · lifetime · descriptor · expired) | no — 갈래 불변 | yes |
+| B10 | if at 488:2 — 끝의 ctx 취소 재확인 | `TestACancelledContextPromotesNothing` | no — 갈래 불변 | 도달 — 측정은 기존 BTM |

@@ -1,0 +1,63 @@
+{
+  "file": "internal/strategyrouter/production_family_activation.go",
+  "source_sha256": "7842842bc1b1bf9d2be542624169502fcc846a4e60080841887f5072f4fb6507",
+  "package": "strategyrouter",
+  "function": "failedFields",
+  "signature": "failedFields(params=1, results=1)",
+  "start": {
+    "line": 630,
+    "column": 1
+  },
+  "end": {
+    "line": 638,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 632,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 633,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 637,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 634,
+        "column": 13
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 634,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

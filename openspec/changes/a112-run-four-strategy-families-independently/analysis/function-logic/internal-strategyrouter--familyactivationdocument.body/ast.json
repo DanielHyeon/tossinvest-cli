@@ -1,0 +1,263 @@
+{
+  "file": "internal/strategyrouter/production_family_activation.go",
+  "source_sha256": "7842842bc1b1bf9d2be542624169502fcc846a4e60080841887f5072f4fb6507",
+  "package": "strategyrouter",
+  "function": "body",
+  "receiver": "FamilyActivationDocument",
+  "signature": "FamilyActivationDocument.body(params=0, results=2)",
+  "start": {
+    "line": 226,
+    "column": 1
+  },
+  "end": {
+    "line": 266,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 228,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 232,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 233,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 241,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 229,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 234,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 251,
+        "column": 48
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 252,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 10
+      },
+      "text": "productionRouteDescriptors"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 44
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 7
+      },
+      "text": "family.Known"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 45
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 17
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 65
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 17
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 2
+      },
+      "text": "sort.Slice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 33
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 33
+      },
+      "text": "document.ApprovedAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 33
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 33
+      },
+      "text": "document.IssuedAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 33
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 33
+      },
+      "text": "document.ExpiresAt.UTC"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 231,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 236,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 238,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 240,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 242,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 244,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

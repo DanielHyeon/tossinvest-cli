@@ -1,23 +1,16 @@
 # Branch Test Map: `validateProductionFamilyActivation`
 
-- Source: `internal/strategyrouter/production_family_activation.go` (522-584); file SHA-256 `c8e2efb9b1a8243bcec000f0c2fa9e96bd8576c97aa35a694a1e6c053407288f`. AST branch positions are authoritative.
+- Source SHA-256: `7842842bc1b1bf9d2be542624169502fcc846a4e60080841887f5072f4fb6507`; AST branch locations are authoritative.
+- Revision: **modified (a112 8.8.4-B, 2026-10-01).** 분기 불변(8, difflib 정렬 — B1 · B2 · B5 의 조건만 다시 씀). B1(몸통 결속) · B2(수명) · B5(서술자 필드)는 같은 분기 하나로 `len(failedFields(...)) != 0` — 어긋난 필드 전부. B5 의 표 대조 셋은 `known &&` 로 묶어 모르는 레인이 표 필드까지 탓하지 않게 했다(판정은 앞 판 `!known || …` 과 같다). B6 · B7 · B8 은 이유를 `%w` 로.
+- 편집 전 번들: `analysis/measurements/lot-8.8.4-B/pre-edit/internal-strategyrouter--validateproductionfamilyactivation/`. 변이 원장 `analysis/measurements/lot-8.8.4-B/mutation-8.8.4-B.tsv`.
 
-- Measurement regime: Go coverage profiles, count mode. arm = 분기 좌표 **뒤에서 처음 시작하는** 커버리지 블록(`if`/`range` 몸통)이며, "arm entered Nx" 는 그 몸통이 N 번 실행됐다는 뜻이다.
-- engine tagged suite (and the strategyrouter tagged suite for the two router bundles, same flags): `go test -c -tags tossos_testseams -covermode=count -coverpkg=./internal/app/engine,./internal/strategyrouter ./internal/app/engine/` 바이너리를 `systemd-run --user --scope -p MemoryMax=16G -p MemorySwapMax=0` 안에서 실행(-trimpath 없이 — 소스를 읽는 시험 둘이 깨진다). 스위트 전체 PASS.
-- Per-test attribution set: 같은 바이너리의 **전체 시험 목록**을 `-test.run '^<Test>$'` 로 하나씩 돈 프로파일(하네스 `analysis/harness/a872_pertest_cover.sh`, 표 생성 `analysis/harness/a872_attribute.py`).
-- **귀속 완전성은 등식이다**: 모든 행에서 시험별 진입 수의 합 == 스위트 진입 수. 깨진 행은 `ATTRIBUTION MISMATCH` 로 찍히며 아래에는 하나도 없다.
-- 이 regime 은 **몸통 진입**을 센다. 같은 change 의 옛 번들 일부(예: dispatch 의 5.x 표)는 조건 평가를 센 값이라 수가 다르다 — 섞어 읽지 말 것.
-
-| Branch | AST kind | Position | Measured disposition |
-|---|---|---|---|
-| B1 | if | 525:2 | arm entered 12x (strategyrouter tagged suite, post-edit); `TestAnActivationWhoseBindingsDoNotMatchPromotesNothing`, `TestTheOtherMarketsWholeManifestInThisMarketsFilePromotesNothing` |
-| B2 | if | 539:2 | arm entered 4x (strategyrouter tagged suite, post-edit); `TestAnActivationOutsideItsApprovedLifetimePromotesNothing` |
-| B3 | if | 544:2 | arm entered 4x (strategyrouter tagged suite, post-edit); `TestAnActivationOutsideItsApprovedLifetimePromotesNothing`, `TestLoadingAndLeasingJudgeExpiryAtTheSameInstant`, `TestOnlyAnEmptyPinMeansTheActivationWasNeverDeclared` |
-| B4 | range | 562:2 | arm entered 53x (strategyrouter tagged suite, post-edit); `TestAVerifiedActivationCarriesTheProtectionFloorTheOrderPathMustBind`, `TestAVerifiedFourFamilyActivationPromotesExactlyTheLanesItNames`, `TestAnActivationPromotesOnlyTheFamiliesItTurnsOn`, `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing`, `TestLoadingAndLeasingJudgeExpiryAtTheSameInstant`, `TestTheCommittedGoldenManifestMatchesItsPinAndPromotesTheFourLanes`, `TestTheLeaseCeilingOnlyEverShrinks` |
-| B5 | if | 564:3 | arm entered 5x (strategyrouter tagged suite, post-edit); `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing` |
-| B6 | if | 571:3 | arm entered 1x (strategyrouter tagged suite, post-edit); `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing` |
-| B7 | if | 575:3 | arm entered 2x (strategyrouter tagged suite, post-edit); `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing` |
-| B8 | if | 580:2 | arm entered 1x (strategyrouter tagged suite, post-edit); `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing` |
-
-
-A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.
+| Branch | Scenario anchor | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | if at 543:2 — 몸통 결속(복합) → `%w: body binding: <어긋난 필드 전부>` | `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel`(body binding: … 열하나 단일 + 세 필드 동시) · `TestAnActivationWhoseBindingsDoNotMatchPromotesNothing` | yes — 변이 B2 · B3 CAUGHT(`analysis/measurements/lot-8.8.4-B/mutation-8.8.4-B.tsv`) | yes |
+| B2 | if at 563:2 — 수명(복합) → `%w: lifetime: <어긋난 항목 전부>` | `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel`(lifetime: … 넷 + 둘 동시) · `TestAnActivationOutsideItsApprovedLifetimePromotesNothing` | yes — 편집 전 메시지에 필드명 없음(`red-8.8.4-B.log`) | yes |
+| B3 | if at 575:2 — 만료 → familyActivationRemaining 의 Expired 오류 그대로 | `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel`(expired) | no — 갈래 불변 | yes |
+| B4 | range at 593:2 — 서술자 순회 | `TestAVerifiedFourFamilyActivationPromotesExactlyTheLanesItNames` | no — 갈래 불변 | yes |
+| B5 | if at 596:3 — 서술자 필드(복합) → `%w: descriptors[lane_id=…]: <어긋난 필드>` | `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel`(descriptor: unknown lane · horizon drift) | yes — 변이 B9(known 가드 탈락) CAUGHT(`analysis/measurements/lot-8.8.4-B/mutation-8.8.4-B.tsv`) | yes |
+| B6 | if at 608:3 — effective ON 인데 desired ON 아님 → 이유 | `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel`(descriptor: effective without desired) | yes — 편집 전 메시지에 필드명 없음(`red-8.8.4-B.log`) | yes |
+| B7 | if at 612:3 — 중복 레인 → `%w: descriptors: duplicate lane_id …` | `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel`(descriptor: duplicate lane) | yes — 편집 전 메시지에 필드명 없음(`red-8.8.4-B.log`) | yes |
+| B8 | if at 617:2 — 네 레인이 아님 → `%w: descriptors: N of M lanes` | `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel`(descriptor: three of four) · `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing` | yes — 편집 전 메시지에 필드명 없음(`red-8.8.4-B.log`) | yes |

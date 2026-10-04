@@ -1,7 +1,7 @@
 # Function Logic Map: `strategyProposalAuthorityPair.ResultAuthority`
 
 - Source: `internal/app/engine/strategy_proposal_authority.go`
-- Source SHA-256: `60e0ef9270e3102bb69ce930cdffb41a5c4653dca69efdc94d32374823161bae`
+- Source SHA-256: `dc5fbecc120d415e2c7607f6892741395d555b137e4fe6ad25fbf04c60011fa7`
 - Signature: `strategyProposalAuthorityPair.ResultAuthority(params=0, results=1)`
 - Source range: `181:1`–`209:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2).
@@ -48,3 +48,5 @@
 - High-risk 인접(위험 권한 입력). 활성화 없는 시장은 handoff 하나 — `scoped` 없음 → 위험 적재기가 편집 전과 같은 결과 하나를 본다.
 
 a112 7.3 — 같은 파일 편집(관측 필드 · record 인자 / QueueDropCount 주석)으로 줄만 밀림
+
+a112 8.8.4 로트 B: 같은 파일 collectMarket 편집(관문 계산 이동 · 주석)으로 줄만 밀림 — 본문 불변

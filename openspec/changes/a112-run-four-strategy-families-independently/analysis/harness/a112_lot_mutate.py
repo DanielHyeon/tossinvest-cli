@@ -906,13 +906,60 @@ SET_884A_TESTS = [
     ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run", "TestAVerifiedPromotionLetsTheOwningLaneEmitThroughTheLaneRuntime", "./internal/app/engine"],
     ["python3", "-m", "unittest", "tools/sdd/test_testseam_build_tags.py", "tools/sdd/test_race_detector_actually_runs.py"],
 ]
+# 8.8.4 로트 B(Manager 판정 2026-10-04 Q-B1=(c) · Q-B2) — 활성화 거절의 필드명 · sentinel 보존 · 읽기 결함/불일치 분리 · 관문 계산 이동.
+PFA = "internal/strategyrouter/production_family_activation.go"
+SPA = "internal/app/engine/strategy_proposal_authority.go"
+SET_884B = [
+    ("B1 the undeclared wrap drops its sentinel (engine would read it as declared-but-unusable)", PFA,
+     'fmt.Errorf("%w: manifest_digest pin is empty", ErrProductionFamilyActivationUndeclared)', 'fmt.Errorf("undeclared: manifest_digest pin is empty")'),
+    ("B2 failedFields keeps only the first failed field", PFA,
+     "\t\t\tfields = append(fields, check.name)\n", "\t\t\tfields = append(fields, check.name)\n\t\t\tbreak\n"),
+    ("B3 failedFields never reports (every compound binding passes)", PFA,
+     "\t\tif check.failed {", "\t\tif false && check.failed {"),
+    ("B4 a config field is mislabelled (calendar_version says build_digest)", PFA,
+     'fieldCheck{"calendar_version", !productionRouteIdentity(config.CalendarVersion)}', 'fieldCheck{"build_digest", !productionRouteIdentity(config.CalendarVersion)}'),
+    ("B5 a config binding term is dropped from the collection (and so from the decision)", PFA,
+     '\t\tfieldCheck{"build_digest", !productionRouteIdentity(config.BuildDigest)},\n', ""),
+    ("B6 the read fault loses its cause (%v instead of %w)", PFA,
+     '"%w: manifest file %s: %w", ErrProductionFamilyActivationUnavailable, name, err)', '"%w: manifest file %s: %v", ErrProductionFamilyActivationUnavailable, name, err)'),
+    ("B7 the read fault is reported as a digest mismatch (the two kinds merged back)", PFA,
+     'fmt.Errorf("%w: manifest file %s: %w", ErrProductionFamilyActivationUnavailable, name, err)',
+     'fmt.Errorf("%w: manifest_digest: the pinned digest does not match the file bytes", ErrProductionFamilyActivationUnavailable)'),
+    ("B8 the decode refusal is replaced by the bare sentinel", PFA,
+     "\tmanifest, err := decodeProductionFamilyActivation(data)\n\tif err != nil {\n\t\treturn FamilyActivation{}, err\n",
+     "\tmanifest, err := decodeProductionFamilyActivation(data)\n\tif err != nil {\n\t\treturn FamilyActivation{}, ErrProductionFamilyActivationUnavailable\n"),
+    ("B9 an unknown lane also blames its table fields (known guard dropped)", PFA,
+     'fieldCheck{"family", known && table.Family != descriptor.Family}', 'fieldCheck{"family", table.Family != descriptor.Family}'),
+    ("B10 the expiry wrap drops the Expired sentinel", PFA,
+     'return 0, fmt.Errorf("%w: expires_at %s is not after %s", ErrProductionFamilyActivationExpired,',
+     'return 0, fmt.Errorf("%v: expires_at %s is not after %s", ErrProductionFamilyActivationExpired,'),
+    ("E1 the gate computation moves back after the proposal load", SPA,
+     ("\tgate = loader.familyGateFor(ctx, market, schedule, routes, observedAt)\n\tif !fx.snapshot.Ready",
+      "\tarbitration, refused := coordinateMarketProposals("),
+     ("\tif !fx.snapshot.Ready",
+      "\tgate = loader.familyGateFor(ctx, market, schedule, routes, observedAt)\n\tarbitration, refused := coordinateMarketProposals(")),
+    ("E2 the gate is computed before the route-readiness guard (RouteNotReady would carry it)", SPA,
+     ("\tif !routes.snapshot.Ready || len(routes.entries) == 0",
+      "\tgate = loader.familyGateFor(ctx, market, schedule, routes, observedAt)\n\tif !fx.snapshot.Ready"),
+     ("\tgate = loader.familyGateFor(ctx, market, schedule, routes, observedAt)\n\tif !routes.snapshot.Ready || len(routes.entries) == 0",
+      "\tif !fx.snapshot.Ready")),
+    ("E3 the fail closure stops carrying the gate's activation", SPA,
+     "\t\treturn strategyProposalMarketAuthority{market: market, activation: gate.activation,\n\t\t\tsnapshot: StrategyProposalMarketSnapshot{Market: market, Reason: reason,",
+     "\t\treturn strategyProposalMarketAuthority{market: market,\n\t\t\tsnapshot: StrategyProposalMarketSnapshot{Market: market, Reason: reason,"),
+]
+SET_884B_TESTS = [
+    ["go", "test", "-count=1", "./internal/strategyrouter"],
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
+     "TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness|TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady|TestAClosedMarketStillCarriesTheGatesActivation|Undeclared|Declared",
+     "./internal/app/engine"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS), "8.8.4-A": (SET_884A, SET_884A_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS), "8.8.4-A": (SET_884A, SET_884A_TESTS), "8.8.4-B": (SET_884B, SET_884B_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측

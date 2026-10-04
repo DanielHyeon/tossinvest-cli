@@ -6345,3 +6345,30 @@ sentinel 필드명 `%w` 래핑) · 항목 2((ii) 독해 — 계산 가능한 지
 A5 핀 밖 새 testseam 파일 · A6 관문 시험 하나가 race 필터에서 빠짐 — CAUGHT. **A1(lookup 의 시장 대조 삭제) 동등**: 레인 ID 가 시장마다 달라 KR 활성화 상태에 US 키가
 없다 — 그 분리를 시험이 단언해 우연이 아니게 했다(분리가 깨지면 그 단언이 먼저 뒤집힌다). 하네스: 파이썬 가드 명령은 test2json 이 없어 `-json` 대조군 계수를 건너뛰고
 종료 코드로 GREEN 을 잰다(`a112_lot_mutate.py` 수정).
+
+## 2026-10-04 8.8.4 로트 B — 활성화 거절의 필드명 · 관문 계산 이동(생산 편집, 8.5 명시 대상)
+
+**판정(Manager).** Q-B1 = (c) 분기 불변 필드-diff 수집(복합 OR 은 쪼개지 않고 같은 분기 안에서 어긋난 필드 전부를 한 메시지에; 단일 조건은 `%w: <field>`; logic-map 전/후 의무).
+추가 판정: 파일 읽기 결함과 digest 불일치는 접지 말 것 — 결함은 원래 오류를 `%w` 사슬에, 불일치만 필드명. Q-B2 = 관문 **계산만** RouteNotReady 가드 직후로(판정 자리 ·
+13 닫힘 kind 우선순위 불변, 옮긴 값은 실은 활성화로만; RouteNotReady 는 영값 유지 · 사유 명명; familyGateFor 무부작용 근거 명시; 13 닫힘 전수 표 시험).
+
+**측정 · 지시 정정.** 맨 sentinel 반환은 10 곳이 아니라 18 곳(`production_family_activation.go` — body 2 · remaining 1 · Load 6 · decode 3 · validate 6), 복합 결속은 셋(설정 :446-451 ·
+몸통 · 수명) + 서술자 필드 검사. 단락 평가 전제: 모든 항이 값 필드의 순수 비교 또는 부작용 없는 검사(`productionRouteDigestValid` · `productionRouteIdentity` · `validMarket` ·
+`filepath.IsAbs` · `time.IsZero`; `ownerOK` · `name` 은 앞서 계산) — 무조건 평가해도 판정이 같다. 공유 읽기 함수 `readProductionRouteFile`(production_owner_unix.go)은 OS 원인을
+`ErrProductionRouteUnavailable` 하나로 접는다 — 이 로트는 그 오류를 사슬에 보존할 뿐 공유 함수(경로 매니페스트 적재기도 씀)를 넓히지 않았다(잔여, ROADMAP).
+
+**구현.** `failedFields`(새 함수) + 복합 결속 셋과 서술자 검사를 `len(failedFields(...)) != 0` 분기 하나로; Load 의 읽기 갈래를 B5(결함 — `%w: manifest file …: %w`) · B6(새 —
+`manifest_digest`)로 분리(분기 9 → 10); decode 오류는 해석기가 이유를 붙여 sentinel 로 감싸고 Load 가 그대로 돌려줌; 미선언이 맨 앞인 순서 · `errors.Is` 판별 불변(엔진
+`strategy_family_activation.go:132`). `collectMarket`: `gate = loader.familyGateFor(...)` 를 조정 직전에서 B1 뒤로 — 분기 불변(15), 13 닫힘 중 B1(ROUTE_NOT_READY)만 영값,
+열둘이 관문 활성화. 함수 머리의 거짓 전칭 주석(「관문이 서는 순간 모든 닫힘 갈래가」 — 실제로는 일곱이 영값이었다) 정정. familyGateFor 는 env 읽기 · 매니페스트 파일 읽기와
+검증 · 레인 목록 조회뿐(원장 · 브로커 · 토글 쓰기 0) — 조기 실행 비용은 시장당 파도당 소형 파일 1회.
+
+**증거.** Pre-Edit `lot-8.8.4-B/pre-edit/`(여섯 함수, HEAD f473d815). RED `red-8.8.4-B.log`(편집 전 62 실패 — 통과 6 은 RouteNotReady · 관문 뒤 대조군 × 세 모양; 그 뒤 revoked 단언을
+`revoked=true` 로, 서술자 두 모양을 정확 목록으로 조였다 — 둘 다 편집 전 메시지에 없어 RED 그대로). 재번호 `renumber.txt`(편집 전/뒤 ast difflib 정렬 — Load 의 옛 B5 → B5+B6,
+옛 B6~B9 → B7~B10; validate · decode · body · remaining · collectMarket ID 불변). 편집 뒤 번들 일곱(`harness/render_884b_bundles.py` — 함수 여섯 + 새 failedFields).
+변이 `mutation-8.8.4-B.tsv` **13/13 CAUGHT**: B1 미선언 sentinel 탈락 · B2 첫 실패만 · B3 아무것도 안 모음(결속 통과) · B4 필드명 오기 · B5 결속 항 탈락 · B6 읽기 결함 `%v` ·
+B7 결함을 불일치로 위장 · B8 해석 거절을 맨 sentinel 로 · B9 `known` 가드 탈락 · B10 만료 sentinel 탈락 · E1 관문 계산을 적재 뒤로 되돌림 · E2 관문을 경로 가드 앞으로 ·
+E3 fail 클로저가 활성화를 안 실음. 이름 결속 22/22 `named-8.8.4-B.log`.
+
+**잔여(활성화 로트 선행 — ROADMAP 행).** 활성화 실패 사유와 `SwallowedCycleErrors` 의 운영자 표면(snapshot/projection) 0 — 사유는 오류 사슬에만 있다; 공유 읽기 함수의
+OS 원인 접힘. 충돌 · 미해결 선택 두 닫힘(B11 · B14)은 입력으로 닿기 어려워 census 로만 잰다.
