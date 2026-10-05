@@ -128,11 +128,21 @@ does not influence endpoint or attestation success.
    `TriggeredOrderID` 가 비어 있지 않거나 status 가 `COMPLETED` 이면 거절한다. 정정으로 id 가 바뀐 후속이
    발동하면 그것은 **다른 id** 로 CLOSED 에 남으므로(리뷰 P0), 대상 id 만 보면 놓친다. 대상 id 가 CLOSED 에
    `EXPIRED` 로 있으면 부재가 아니라 종결이고, 이 change 는 그것도 거절한다(Q6 — Manager 결정 2026-09-27). 거절 메시지는 "만료된 artifact 는 이 경로로 영구히 대사되지 않는다" 를 적는다.
+   잔여(freeze P2-8): 채택 리더는 첫 다리의 `TriggeredOrderID` 만 싣는다(`protection_reads.go:56`) —
+   정정이 후속을 OCO 로 바꿀 수 있으나(`ConditionalModifyBody.Type/Second`) 둘째 다리 발동도 행의
+   `COMPLETED`/발동 흔적으로 이 조건과 3 에 걸린다. 다리 단위 식별은 하지 않으며 그만큼의 잔여를 적는다.
 3. **그 심볼의 OPEN 일반 주문이 0건이다** — 발동한 child 가 아직 체결되지 않았다면 그것은 일반 주문으로
    호가에 있다. `OrdersPageRaw(OrdersFilter{Status: "OPEN", Symbol: …})` 를 끝까지 읽는다.
 4. **목록에서도 사라진 발동을 배제한다** (Q1 결정 (a) — 사용자 2026-09-28). CLOSED 발동 잔존·보존
    기간의 사람 실측(장중·조회 전용) **전에는 이 조건을 만족시킬 수 없으므로 거절한다**(잠정 (c));
    측정 뒤에는 보존 기간 안의 artifact 에 한해 2·3 이 이 조건을 덮고, 더 오래된 artifact 는 거절한다.
+   **한도의 형태(freeze P0-1 수리, Manager 2026-10-05):** 한도는 **기간**(duration)이다 — 행 수 상한
+   가능성은 페이지 상한 거절(G1-6)이 따로 덮는다. 나이의 기준점은 **대사할 outstanding 줄의
+   `CreatedAt`** 이고, 그 값이 영(zero time)이면 거절한다(cleanup 줄은 영 시각을 실을 수 있다 —
+   `cleanup.go:166-171`). 저장 형태: **비공개(unexported) 값이고 생산 빌드에서는 항상 nil**(측정
+   부재 = 거절) — 시험만 seam 으로 주입하고, 실값은 측정 뒤 **별도 리뷰를 거친 상수 커밋**으로만
+   들어온다(설정·플래그·환경 변수 경로 금지 — 사람이 숫자를 넣어 안전 게이트를 우회하는 문을 열지
+   않는다). 생산 nil 은 구조(AST) 시험으로 핀한다.
    원 근거: 발동한 조건주문이 CLOSED 에 얼마나 오래 남는지
    (보존 기간)도, 발동 뒤 목록에 남는지도 **측정되지 않았다**(발동 측정은 deferred —
    verify-execution-capability 2.5). 2·3 은 목록에 남아 있는 동안만 덮는다. 목록 밖의 발동을 배제할 근거는
@@ -143,14 +153,28 @@ does not influence endpoint or attestation success.
    않은 응답은 거절). `Market` 은 행이 있을 때만 대조된다 — 1·3 이 통과하는 경우 행이 0건일 수 있으므로,
    그때 시장 결속은 기록 파일 이름과 심볼뿐이다(G3-4).
 6. **읽기 집합이 흔들리지 않았다** — 컷 토큰이 없으므로 같은 읽기 집합(1·2·3 의 전 페이지)을 **두 번** 연속
-   수행하고, 두 결과를 (그룹, id, status, triggeredOrderId) 로 **정렬한 집합**으로 비교해 같아야 한다.
-   첫 읽기 시작부터 둘째 읽기 끝까지의 경과가 Q3 한도(처리 2026-09-27: 구현 로트가 이름 있는 보수
-   상수로 제안해 리뷰에서 확정, 확정 전 거절)를 넘으면 거절한다. 페이지 오류·반복
+   수행하고, 두 결과를 (그룹, id, status, triggeredOrderId) 의 **multiset** 으로 비교해 같아야 한다
+   (freeze P1-4 수리: 집합이 아니라 multiset — 페이지 경계 이동이 만든 중복을 집합이 접어 숨긴다).
+   **한 읽기 안에서 (그룹, id) 중복이 나오면 그 자체로 거절**하고, 읽기 순서는 「조건주문 OPEN →
+   일반 OPEN → CLOSED」 로 고정한다(전이 창을 한 방향으로). 첫 읽기 시작부터 둘째 읽기 끝까지의
+   경과가 Q3 한도(처리 2026-09-27: RED 로트가 이름 있는 보수 상수로 **확정**하고 리뷰가 승인 — 확정
+   전 거절)를 넘으면 거절한다. 페이지 오류·반복
    커서·`hasNext` 인데 빈 커서·상한 도달(m0RecoverPending B4·B6·B13·B14 와 같은 모양)이면 거절한다.
 
 **치르는 값(숨기지 않는다).** 페이지 상한이 10 × 100 이므로(`steps.go:61`, limit 100) CLOSED 이력이 그보다
 긴 심볼은 영구히 거절된다. 2 의 `COMPLETED` 거절은 그 심볼에 과거 발동 이력이 하나라도 목록에 남아 있으면
 영구히 거절한다. 둘 다 fail-closed 의 대가다.
+**셋째 대가(freeze P1-5):** Q1(a) 아래에서 **a063 의 artifact 는 사실상 영구 거절일 공산이 크다** —
+artifact 는 2026-09-06 이전 생성이라 측정 시점 나이가 보존 한도를 넘기 쉽고(G1-4 거절), 그 심볼에서
+한도 안의 발동이 있으면 G1-2 가 거절한다. 어느 쪽이든 닫힌다. 그 경우 a063 잔여물의 처분은 **사용자
+재결정 항목**이 된다(proposal a063 절에 동일 기록). 따라서 **Q1 측정 표본은 a063 artifact 의 심볼로
+만들지 않는다**(같은 심볼의 발동 이력을 CLOSED 에 남기는 순간 G1-2 영구 거절을 확정짓는다).
+**빈-응답 양성 대조(freeze P1-3):** 수락 경로는 세 그룹이 모두 비어 있는 상태라 G1-5·G1-6 이 공허하게
+참이 될 수 있다. 통제 둘을 세운다 — (i) 조회 심볼 문자열은 호출자 입력이 아니라 **artifact 줄이 기록한
+심볼 바이트 그대로**를 쓴다(철자 오류로 인한 가짜 부재 제거), (ii) 읽기 전후로 그 심볼의 **종목 조회
+GET(instrument/quote)** 이 성공하고 응답이 같은 심볼을 되돌려야 한다 — 세션·심볼이 산 채로 목록만
+비어 있음을 가른다. 잔여 위험(목록 endpoint 만의 서버측 공벡터)은 이중 읽기와 함께도 0 이 아니며,
+그것은 기록한다 — 증명이 아니라 창 좁히기라는 이 절의 성격과 같다.
 
 이 규칙은 G1 을 **증명**하지 않는다 — 서버가 일관된 컷을 주지 않는 한 증명은 불가능하다. 대신 "살아 있는
 것도 발동한 흔적도 그 심볼에 하나도 없고, 두 번의 읽기가 같다" 로 창을 좁히고, 좁힐 수 없는 모양은 전부
@@ -169,6 +193,9 @@ does not influence endpoint or attestation success.
   종결은 단조다 — terminal 줄 뒤의 비-terminal 줄은 되살리지 않는다(B4 `:552`). 투영은 비-terminal 만
   낸다(B6 `:562`). 종결 술어는 한 곳이다 — `Artifact.terminal()`(`record.go:575`)이고 그 주석이
   "a third ending added later is honoured by all of them at once" 라고 이 확장을 예정해 두었다(`:571-574`).
+  (정확화 — freeze P2-5: `Cancelled`/`Filled` 를 직접 읽는 자리가 셋 있다 — `m0_manual.go:11`·
+  `runner.go:1033`·`steps.go:1152`. 셋 다 원본·진행 중 줄만 훑어 현재는 영향 0 이지만, 「한 곳」은
+  문자 그대로는 아니다.)
 - 줄의 종류는 이미 여럿이다(`KindStep`·`KindApproval`·`KindCleanup`·`KindM0Checkpoint`,
   `record.go:65-88`). `decodeEntry` 는 `FormatVersion > 1` 만 거절한다(AST B2 `:442`) — 모르는 `Kind`
   나 필드는 거절하지 않는다(`json.Unmarshal`, B1).
@@ -186,7 +213,9 @@ does not influence endpoint or attestation success.
 
 - 새 줄 종류 `KindReconcile = "reconcile"` 한 줄이 대상 artifact 하나를 담는다. 그 artifact 의 신원 필드
   (`Kind`·`ID`·`Symbol`·`ChainID`)는 **대사할 outstanding 줄의 값 그대로**이고, 새 종결 필드
-  `ReconciledAbsent bool` · `ReconciledAt time.Time` 을 세운다. `Artifact.terminal()` 이 그것을 셋째
+  `ReconciledAbsent bool` · `ReconciledAt time.Time` 을 세운다. 나머지 필드(freeze P2-6):
+  `Verdict` 빈 값(판정 아님), `Mutating` false(브로커 변이 없음 — CLI 주석 S2 의 mutating=true 와는
+  별개 축), `HeldUntil` 영, `CreatedAt` = 추가 시각, `StepID` 는 카탈로그 밖 고유 값(아래 R1). `Artifact.terminal()` 이 그것을 셋째
   종결로 포함한다 — 그러면 `outstandingLines` 를 쓰는 소비자 전부(`PendingCleanup`, `liveCount`
   `mutate.go:679`, report·status·abort·redo)가 한 번에 따른다. report·status 는 그것을 **reconciled absent**
   로 표시하고 cancelled·filled 로 쓰지 않는다(`BuildReport`·`BuildProgress` 는 task 1.2 의 편집 대상).
@@ -203,7 +232,23 @@ does not influence endpoint or attestation success.
   없음" 으로 거절한다.
 - **동시성**: `verify run` 과 같은 배제를 쥔다 — journal 실행 flock(`acquireVerifyExecutionLock`,
   `cmd/tossctl/verify.go:439`)과 rate-budget lease(`acquireVerifyRateBudget` `:796-807`). 추가 직전에 기록을
-  다시 읽어 첫 읽기와 지문이 같은지 대조하고, 다르면 거절한다.
+  다시 읽어 첫 읽기와 지문이 같은지 대조하고, 다르면 거절한다. 지문의 정의(freeze P2-7): **파일 원문
+  바이트의 sha256**. `LoadEntries` 가 찢긴 마지막 줄을 조용히 버리므로, **파일이 `\n` 으로 끝나지
+  않으면 추가 전에 거절**한다(찢긴 꼬리에 이어 붙어 줄이 사라지는 경로 차단).
+- **브로커 획득(no-live-mutation 봉인 — freeze P1-1)**: 대사 경로는 `verifylive.Broker` 도
+  `*official.Client` 도 받지 않는다. **읽기 전용 좁은 인터페이스**(`ProtectionConditionalOrdersRaw` ·
+  `OrdersPageRaw` · `Accounts` · 종목 조회 GET — 뒤 둘은 G3-2 자체 판정(P1-2)과 양성 대조(P1-3)용)를
+  새로 정의하고, `Broker` 를 절대 반환하지 않는 **전용 좁은 생성자**가 그것을
+  만든다(기존 `verifyBrokerFactory`·type assertion 선례 `m0_recovery.go:129` 재사용 금지 — 단언이
+  가능한 구체 객체가 스코프에 있으면 봉인이 아니다). 구조 시험: 대사 파일들(cmd·verifylive 양쪽)의
+  AST census 가 쓰기 메서드 7개 이름(PlaceOrder·CancelOrder·ModifyOrder·CreateConditionalOrder·
+  ModifyConditionalOrder·ModifyConditionalOrderRef·CancelConditionalOrder) 호출과 **type assertion
+  자체**를 금지한다. 정확화(P2-9): 토큰 갱신 POST(`token.go:138`)는 auth 기반이라 이 경계 밖이며
+  그 사실을 경계 서술에 명시한다 — 「주문·조건주문 변이 도달 0」 이 주장의 전부다.
+- **재개 계획에 주는 효과(freeze P1-6)**: 대사 뒤 `subjectLost`(`redo.go:122`)가 참이 되어
+  `conditional-register` 가 `RedoSet` 으로 돌아갈 수 있다 — 콘솔 재개가 **새 조건주문 설치를 제안**하게
+  된다(여전히 사람 일괄 승인 뒤에만 실행). 이 change 는 그 동작을 바꾸지 않고, RED 가 대사 전/후의
+  `RedoSet` 을 핀한다(tasks 2.3).
 - **구 바이너리**: `FormatVersion` 은 1 그대로다(필드 추가). 구 바이너리는 `reconciled_absent` 를 모르는
   필드로 버리므로 그 줄을 비-terminal 줄로 읽는다 — `outstandingLines` B4 는 terminal 뒤의 비-terminal
   만 막으므로 **구 바이너리에서는 그 artifact 가 여전히 outstanding** 이고, `holdGate` 기본값과 그 줄의 위치
@@ -227,6 +272,11 @@ does not influence endpoint or attestation success.
   (B7 `:947`). seq 가 0 이면 `buildVerifyBroker` 는 헤더 계좌를 클라이언트의 지연 해석에 맡긴다(AST B5
   `:894`). 주석이 두 값을 한 항목에서 가져오는 이유를 적는다: "taking them from different accounts
   would produce a record that names one account and measured another"(`:911-914`).
+  **결정(freeze P1-2, Manager 2026-10-05):** G3-2 의 「계좌가 정확히 하나·seq ≠ 0」 판정은
+  `resolveVerifyAccount`·`buildVerifyBroker` 를 **편집하지 않고**, 대사 전용 경로가 **자체
+  `Accounts()` 호출**로 수행한다 — 후보 전수를 받아 DisplayName 비공란 계좌가 정확히 하나인지 세고,
+  seq 는 그 항목에서 직접 해석하며 0 이면 거절한다(P1-1 의 좁은 생성자가 이 읽기도 소유 — `Broker`
+  경유 금지). 두 함수는 비편집이므로 FLM 대상에서 빠지고, 새 경로는 새 파일의 새 코드다.
 - 기록의 계좌는 줄마다 **마스킹된** `AccountRef` 다 — `maskedAccount(r.accountRef)`(`runner.go:278·688·890`)
   = `attest.Mask`, 끝 4자리만 남긴다(`internal/attest/attest.go:281-291`).
 - 자격 증명은 환경 변수가 파일보다 우선한다 — 단, 실측(로트 1 D4): 우선은 **둘 다** 비어 있지 않을 때만이다
@@ -288,8 +338,10 @@ does not influence endpoint or attestation success.
 - **S2 — 명령 주석.** 새 대사 명령은 `mutating: true` 로 등재한다(보수 — 기록에 영속 이벤트를 쓰고,
   tasks 4.3 이 사람 승인을 요구하는 것과 정합; 대화형 에이전트 자동 실행 금지가 따라온다).
   `TestMutatingAnnotationOnTradeCommands` 의 고정 집합 갱신은 구현 로트 몫이다.
-- **R1 — 대사 줄의 StepID.** `LastEntry`·`heldAfter` 는 `StepID` 만 비교하고 Kind 를 보지 않는다
-  (`ast-evidence/verifylive--{lastentry,heldafter}.ast.json`). 대사 줄의 StepID 는 **step 카탈로그 밖의
-  고유 값**이어야 하며 특히 `conditional-cancel` 재사용 금지 — 구조 시험으로 고정한다(tasks 2.2.2).
+- **R1 — 대사 줄의 StepID.** `StepID` 만 비교하고 Kind 를 보지 않는 소비자는 **넷**이다(freeze P2-4
+  정정): `LastEntry`(`record.go:478`)·`heldAfter`(`cleanup.go:186`)·`m0ManualReconcileIDs`
+  (`m0_manual.go:9`)·`baselineSellable`(`steps.go:1180`). 대사 줄의 StepID 는 **`Steps()` 카탈로그 ∪
+  {cleanup, abort} 밖의 고유 값**이어야 하며 특히 `conditional-cancel` 재사용 금지 — 구조 시험이 그
+  합집합 부재를 단언한다(tasks 2.2.2).
 - **STORY acceptance 2 판독.** "Only … appends" 는 **제약**으로 읽는다(능력 아님) — Q1 측정 전
   거절-전용 상태에서도 충족된다. Story 본문은 수정하지 않는다.

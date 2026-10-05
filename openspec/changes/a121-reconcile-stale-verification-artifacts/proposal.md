@@ -86,8 +86,12 @@ coverage incomplete" 로 시작을 거절했고, 좁은 다음 행동이 사람�
   경로다 — a063 **4.4**(엔진 프로필에 새 attestation 이 쓰이는지 확인)가 확인할 커버리지가 거기서 온다.
   a121 은 그 재실행을 **허가하지 않는다**(사람 승인 몫). 막힌 문 하나를 여는 것뿐이다.
 - 열지 않는다: a063 **4.2** 의 서비스 정의 설치·systemd reload, **4.3** 의 3일 연속 survey — 둘 다 사람 승인
-  운영 작업이고 a121 과 무관하다. a063 의 도구 결함(execution-baseline 채택 경로의 "required commit ancestry
-  is absent" — `tools/logic-map/execution_baseline.py:100`, 기록된 source snapshot `c727ad12` 이 이 브랜치 역사의
-  조상이 아님)도 a121 과 무관하다.
-- 그리고 G1 이 Q1 에 걸려 있는 한, a121 이 구현돼도 대사 명령은 **거절만** 할 수 있다(design Revision 1 G1-3).
-  그 경우 a063 은 계속 막힌다 — 이것은 숨기지 않고 Q1 의 선택지 (c) 로 적었다.
+  운영 작업이고 a121 과 무관하다. a063 의 도구 결함(execution-baseline 채택 경로의 "required commit
+  ancestry is absent" — 당시 `tools/logic-map/execution_baseline.py:100`; 그 파일은 a125 `9e63b681` 로
+  제거됐고 이 기록은 역사 인용이다, freeze P2-1)도 a121 과 무관하다.
+- 그리고 G1 이 Q1 에 걸려 있는 한, a121 이 구현돼도 대사 명령은 **거절만** 할 수 있다(design Revision 1
+  G1-4 — freeze P2-2 정정). 그 경우 a063 은 계속 막힌다 — 이것은 숨기지 않고 Q1 의 선택지 (c) 로 적었다.
+- **freeze P1-5 (2026-10-05): Q1(a) 아래에서도 a063 의 artifact 는 사실상 영구 거절일 공산이 크다.**
+  artifact 는 2026-09-06 이전 생성이라 보존 한도 측정 시점에 이미 그 한도보다 늙기 쉽고(G1-4 거절),
+  한도 안의 같은 심볼 발동은 G1-2 가 거절한다. 그 경우 a063 잔여물의 처분은 a121 경로가 아니라
+  **사용자 재결정 항목**이다(design 「치르는 값」 동일 기록). Q1 측정 표본은 a063 심볼로 만들지 않는다.

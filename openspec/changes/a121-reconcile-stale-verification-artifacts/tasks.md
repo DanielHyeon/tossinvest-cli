@@ -9,7 +9,9 @@
       — 2026-10-05 Manager: 전 결정 반영(Q1=(a)+측정 전 잠정 거절·Q2=(a) 기존 키 재사용·Q3=구현 로트
       보수 상수 이월·Q4/Q5/Q6=거절). design 3자리·spec 3자리 치환, "Q1 is unanswered" 시나리오를
       "retention measurement is absent" 로 재서술. Q1 측정(CLOSED 발동 잔존·보존 기간, 조회 전용)은
-      사람 실측 큐 — M-A 세션이 만드는 발동이 표본이 될 수 있어 동승 후보.
+      사람 실측 큐 — M-A 세션이 만드는 발동이 표본이 될 수 있어 동승 후보. **단(freeze P1-5):
+      Q1 표본 발동은 a063 artifact 의 심볼로 만들지 않는다** — 같은 심볼의 발동 이력이 CLOSED 에
+      남으면 G1-2 가 그 artifact 를 영구 거절한다.
 - [ ] 1.2 Produce CodeGraph and Go AST Function Logic/Branch Test Maps for the existing functions that will
       be edited. By Revision 1 these are at least `verifylive.Artifact.terminal` (third ending), `newVerifyCmd`
       (registering the command), `verifylive.BuildReport` and `verifylive.BuildProgress` (label reconciled
@@ -21,7 +23,8 @@
       BuildProgress 7, BTM 은 base 커버리지 실측), PendingCleanup/M0Unsettled 호출자 증거
       (`analysis/code-context/`), ast-evidence 16/16 바이트 동일 + heldAfter·LastEntry 추가,
       outstandingLines 비편집 확인(Q2=(a)). check_analysis rc=0. **추가 편집 대상(S1 처분):**
-      `Report.WriteText`·`Progress.WriteText` — FLM 은 구현 로트 시작 시 생성. [x] 는 그 유보 포함.
+      `Report.WriteText`·`Progress.WriteText` — FLM 은 구현 로트 시작 시 생성. freeze P2-11: proposal 이
+      주장한 `runCleanup` 분기(AST 미열거)도 같은 시점에 번들로 만든다. [x] 는 두 유보 포함.
 - [ ] 1.3 Complete proposal-freeze adversarial and gstack reviews; record the accepted no-live-mutation boundary.
 
 ## 2. RED
@@ -32,9 +35,15 @@
 - [ ] 2.2.1 Add failing tests for each Revision 1 G1 refusal: a live successor under a new identifier in the
       symbol's OPEN group; the artifact's identifier in CLOSED (`COMPLETED` with `triggeredOrderId`, and
       `EXPIRED`); **a different identifier in CLOSED with a non-empty `triggeredOrderId` or `COMPLETED`**; any
-      OPEN plain order on the symbol; a row whose symbol or market differs; all other conditions true while Q1
-      is unanswered; a status transition between the two reads (compared as sorted sets); the pair exceeding the
-      freshness bound; repeated cursor, empty cursor with `hasNext`, page cap, and a read error in either read.
+      OPEN plain order on the symbol; a row whose symbol or market differs; all other conditions true while the
+      Q1 retention measurement is absent; an artifact older than an injected retention bound (and a zero
+      `CreatedAt` on the outstanding line); the Q3 constant absent; a status transition between the two reads
+      (compared as multisets of (group, id, status, triggeredOrderId)); a duplicate (group, id) within one read;
+      the fixed read order (conditional OPEN → plain OPEN → CLOSED) pinned structurally; the pair exceeding the
+      freshness bound; repeated cursor, empty cursor with `hasNext`, page cap, and a read error in either read;
+      the Q6 refusal message content ("만료된 artifact 는 이 경로로 영구히 대사되지 않는다"); the positive
+      controls (symbol bytes taken from the artifact's record line, instrument GET succeeding and echoing the
+      symbol) and their refusals when the control fails.
 - [ ] 2.2.2 Add failing tests for each Revision 1 G2/G3 refusal: zero or several candidates from
       `PendingCleanup`; a conditional whose hold is not released; an artifact named by `M0Unsettled`; mixed
       `AccountRef`s, or `attest.Mask(current reference)` differing from them; account sequence 0; missing
@@ -43,10 +52,17 @@
       the basis digest carries its version and domain tag and is independent of read order. Also a positive test
       that the a063-shaped artifact (hold released by a failed `conditional-cancel`) is the one candidate.
       로트 1 추가(2026-10-05): `attest.Mask` 경계 — 빈 참조("(none)")·4자 이하(전부 `*`, 길이 비교로
-      퇴화) 자격 참조의 거절 시험; 대사 줄 `StepID` 가 step 카탈로그 밖이고 `conditional-cancel` 이
-      아님을 고정하는 구조 시험(R1 — `LastEntry`·`heldAfter` 는 StepID 만 비교).
+      퇴화) 자격 참조의 거절 시험; 대사 줄 `StepID` 가 `Steps()` 카탈로그 ∪ {cleanup, abort} 밖이고
+      `conditional-cancel` 이 아님을 고정하는 구조 시험(R1 — StepID 만 비교하는 소비자 넷:
+      `LastEntry`·`heldAfter`·`m0ManualReconcileIDs`·`baselineSellable`).
+      freeze 추가(2026-10-05): 계좌 후보 복수(DisplayName 비공란 2+·끝 4자리 충돌) 거절; 환경 변수
+      자격 **하나만** 설정된 상태의 거절; flock·rate-budget lease 획득 실패의 거절; 기록 파일이
+      `\n` 으로 끝나지 않을 때(찢긴 꼬리) 추가 전 거절; 중복/모호 신원 거절을 S7 포괄이 아닌 자기
+      문구로 단언.
 - [ ] 2.3 Add failing tests that reconciliation removes only its exact outstanding artifact from resume cleanup
-      planning while preserving failed cleanup evidence and every verification verdict.
+      planning while preserving failed cleanup evidence and every verification verdict. freeze 추가(P1-6):
+      대사 전/후의 `RedoSet` 을 핀한다 — 대사 뒤 `subjectLost` 가 `conditional-register` 를 되살리는
+      현 동작을 바꾸지 않고 기록으로 고정(설치 실행은 여전히 사람 일괄 승인 뒤).
 - [ ] 2.4 Add failing tests that the reconciliation event cannot enter successful endpoints, soak attestation,
       or engine-interlock coverage, and that no live mutation is reachable.
 - [ ] 2.4.1 Add a structural test that the reconciliation dependency exposes only official GET reads and one

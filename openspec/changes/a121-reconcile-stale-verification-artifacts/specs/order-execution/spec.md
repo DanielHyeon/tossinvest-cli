@@ -4,8 +4,9 @@
 
 A verification artifact that remains outstanding after a failed cleanup SHALL
 remain outstanding unless a dedicated reconciliation operation obtains a fresh,
-complete, account-scoped official read proving that the exact record-owned
-artifact is absent. A cleanup DELETE error, including HTTP 404, and a generic
+complete, account-scoped official read that narrows the absence window for the
+exact record-owned artifact to the refusal rules below (the list API offers no
+snapshot cut, so this is bounded evidence, not proof). A cleanup DELETE error, including HTTP 404, and a generic
 operator observation SHALL NOT by themselves be treated as cancellation, fill,
 or terminal absence.
 
@@ -35,9 +36,12 @@ otherwise:
 - a conditional that fired and has left the lists is excluded by the Q1 rule
   (decided 2026-09-28, option (a)): once the fired-conditional retention of the
   CLOSED group has been measured (human, in-market, read-only), an artifact
-  whose age is within the measured retention bound is covered by the CLOSED
-  checks above, and an older artifact SHALL be refused; until that measurement
-  exists the operation SHALL refuse;
+  whose age (from its outstanding line's creation time, which SHALL be non-zero)
+  is within the measured retention bound is covered by the CLOSED-trace and
+  open-plain-order checks above, and an older artifact SHALL be refused; the
+  bound SHALL live only as a reviewed in-code value that is absent in production
+  until measured, never as configuration; until it exists the operation SHALL
+  refuse;
 - every row read carries the artifact's symbol, and every row read carries the
   requested market;
 - the complete read set above, performed twice in succession, yields the same
@@ -113,8 +117,10 @@ and refuse if it changed since the candidate was selected.
 
 #### Scenario: the two reads disagree
 
-- **WHEN** the second OPEN+CLOSED read differs from the first in any group,
-  identifier, or status, or the pair exceeds the freshness bound
+- **WHEN** the second read of the three groups (conditional OPEN, then plain
+  OPEN, then CLOSED, in that fixed order) differs from the first as a multiset
+  of (group, identifier, status, triggered order identifier), or either read
+  holds a duplicate (group, identifier), or the pair exceeds the freshness bound
 - **THEN** no reconciliation event is appended
 
 #### Scenario: the eligible artifact is not unique
@@ -133,7 +139,8 @@ not full identity); that the selected account sequence is known rather than
 lazily resolved; that the credentials list exactly one account with a non-empty
 display reference (several accounts, including two sharing the retained last
 digits, refuse); that an explicit profile directory is given, credentials are not
-supplied through the environment, and the record path is derived from that
+supplied through the environment (neither environment credential variable is
+set — one being set alone also refuses), and the record path is derived from that
 profile directory rather than supplied as an override; and that the market is
 given explicitly, which selects the record file. Any missing, mixed, or
 mismatched value SHALL refuse without reading or appending.
@@ -152,8 +159,15 @@ mismatched value SHALL refuse without reading or appending.
 
 #### Scenario: credentials from the environment or no explicit profile
 
-- **WHEN** the credentials come from environment variables, or no explicit
-  profile directory is given
+- **WHEN** the credentials come from environment variables, or exactly one of
+  the two environment credential variables is set, or no explicit profile
+  directory is given
+- **THEN** the operation refuses before any official read
+
+#### Scenario: more than one account behind the credentials
+
+- **WHEN** the credentials list several accounts with a non-empty display
+  reference, or two accounts share the retained last digits
 - **THEN** the operation refuses before any official read
 
 #### Scenario: market mismatch

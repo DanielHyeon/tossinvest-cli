@@ -1,6 +1,12 @@
 # Proposal-freeze review
 
-## Status: BLOCKED before implementation
+## Status: freeze 재리뷰 수리 라운드 (2026-10-05 — 아래 「freeze 적대 리뷰 1차」)
+
+(아래 BLOCKED 는 2026-09-06 당시 기록이다. Q1~Q6 결정과 로트 1 착지로 전제가 바뀌었고,
+현 상태는 freeze 적대 리뷰 1차의 P0 1·P1 7 수리 반영 → 같은 리뷰어 재검 대기다.
+RED·구현·계좌 읽기·라이브 명령은 여전히 재검 APPROVE 전에 열리지 않는다.)
+
+## (역사) Status: BLOCKED before implementation
 
 The independent adversarial review at
 [`analysis/proposal-freeze-adversarial-review.md`](analysis/proposal-freeze-adversarial-review.md)
@@ -75,4 +81,27 @@ spec 의 `[비움 — Q4]`·`[비움 — Q6]` 는 위 판정으로 채웠고 Q5 
   S2(mutating=true)·STORY 판독(제약)은 design 「로트 1 처분」으로 닫았다.
 - 다음: 1.3 proposal-freeze 적대 리뷰(+gstack) → RED 로트.
 
+## freeze 적대 리뷰 1차 — 2026-10-05 (독립 Terra Opus, 58870829 고정 사본)
+
+**판정: P0·P1 수리 후 재검**(P0=1 · P1=7 · P2=11). 격리 준수, AST 22/22 sha 일치·표본 3 바이트 동일,
+인용 전수 재검(깨진 것 P2-1 하나). Manager 수리 반영(이 커밋):
+
+- **P0-1** Q1 한도의 형태 부재 → design G1-4: 기간·기준점 outstanding 줄 `CreatedAt`(영이면 거절)·
+  생산 nil 비공개 값(시험만 주입, 실값은 측정 후 리뷰된 상수 커밋, 설정 경로 금지)·AST 핀. spec 동문.
+- **P1-1** no-live-mutation 봉인 불가 → 읽기 전용 좁은 인터페이스+전용 생성자(Broker 비반환),
+  대사 파일 AST census(쓰기 7이름+type assertion 금지), 토큰 POST 는 경계 밖 명시(P2-9).
+- **P1-2** G3-2 미배선 → 대사 경로 자체 `Accounts()` 호출(resolveVerifyAccount·buildVerifyBroker 비편집).
+- **P1-3** 공허한 수락 → 양성 대조 2(심볼 바이트=기록 원문·종목 조회 GET 에코), 잔여 위험 명기.
+- **P1-4** 정렬 집합 → multiset·한 읽기 내 (그룹,id) 중복 거절·읽기 순서 고정.
+- **P1-5** a063 영구 거절 공산 → 치르는 값·proposal 에 기록, **Q1 표본은 a063 심볼 금지**(tasks 1.0).
+- **P1-6** RedoSet 부활 → design 명시 + tasks 2.3 RED 핀.
+- **P1-7** 삼면 불일치 → spec(env 반쪽·복수 계좌 시나리오·S10 multiset 키·proving 문구),
+  tasks 2.2.1/2.2.2 RED 추가(한도 초과·Q3 부재·Q6 문구·중복 신원·flock/lease·찢긴 꼬리 등).
+- **P2** 11건 전부 반영: 인용 2건 정정(P2-1·2), 낡은 상태 표기 주석(P2-3), R1 소비자 4(P2-4),
+  terminal 직접 리더 3 명기(P2-5), 대사 줄 필드 확정(P2-6), 지문=파일 바이트 sha256+`\n` 꼬리(P2-7),
+  OCO 잔여(P2-8), 경계 문구(P2-9), spec proving(P2-10), runCleanup FLM 유보(P2-11).
+
+재검(같은 리뷰어, 표적)은 수리 커밋 좌표로 돈다. gstack 리뷰는 재검 APPROVE 뒤.
+
 **파킹.** a121 은 BLOCKED 로 둔다. 적대 재리뷰는 사용자가 Q1·Q2 에 답한 뒤에 돈다.
+(2026-10-05 해소 — Q1·Q2 는 2026-09-28 사용자 결정, 적대 재리뷰는 아래 freeze 1차로 실행됨.)
