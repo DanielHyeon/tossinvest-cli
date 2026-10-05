@@ -25,7 +25,11 @@
       outstandingLines 비편집 확인(Q2=(a)). check_analysis rc=0. **추가 편집 대상(S1 처분):**
       `Report.WriteText`·`Progress.WriteText` — FLM 은 구현 로트 시작 시 생성. freeze P2-11: proposal 이
       주장한 `runCleanup` 분기(AST 미열거)도 같은 시점에 번들로 만든다. [x] 는 두 유보 포함.
-- [ ] 1.3 Complete proposal-freeze adversarial and gstack reviews; record the accepted no-live-mutation boundary.
+- [x] 1.3 Complete proposal-freeze adversarial and gstack reviews; record the accepted no-live-mutation boundary.
+      — 2026-10-05 종결: Claude 독립 적대 3라운드(P0 2·P1 7 발견→수리→FREEZE-APPROVE) + gstack
+      /review(scope CLEAN·코드 범주 n/a) + codex 외부 적대(r1 무효·발견 7 실측 수용 / clean r2
+      5건 수리) + 리뷰어 이진 확인 3회. no-live-mutation 경계 수용 기록은 review.md 「freeze
+      최종」·「1차 최종」 절.
 
 ## 2. RED
 

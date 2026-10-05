@@ -52,9 +52,10 @@ otherwise:
   record line (never caller-supplied), and an instrument read for that symbol
   succeeds and echoes the same symbol (positive controls against a
   blanket-empty response);
-- every list response passes schema-presence validation: a null result payload
-  or a missing collection or pagination field refuses rather than reading as an
-  empty list;
+- every list response passes schema validation: a null result payload, a
+  missing or null-valued collection or pagination field, or a cursor
+  inconsistent with the has-next flag refuses rather than reading as an empty
+  list;
 - every row read carries a status from the measured terminal vocabulary and all
   required fields; a missing or unknown status, a status inconsistent with its
   group, or any row whose second (OCO) leg is present refuses — OCO-shaped
@@ -175,7 +176,7 @@ supplied through the environment (neither environment credential variable is
 set — one being set alone also refuses), and the record path is derived from that
 profile directory rather than supplied as an override; and that the market is
 given explicitly, which selects the record file. Any missing, mixed, or
-mismatched value SHALL refuse without reading or appending.
+mismatched value SHALL refuse without any list read or append.
 The appended reconciliation line SHALL carry no account identity beyond the
 masked reference the record already uses (an unkeyed digest of the account
 number is guessable and amounts to storing the identifier obfuscated). The
