@@ -84,7 +84,7 @@ func TestTheOnePointTwoCounterfactualSeesALaterBarNotOnlyTheFirst(t *testing.T) 
 
 // ⑩: B7 의 문턱이 골든 `thresholds.rvol_counterfactual_ppm[0]` 과 행동으로 같다 — 그 값에서 참, 1 ppm 아래에서 거짓.
 func TestTheOnePointTwoCounterfactualThresholdIsTheGoldensFirstEntry(t *testing.T) {
-	path := filepath.Join(repoRoot(t), "openspec/changes/a112-run-four-strategy-families-independently/analysis/goldens/breakout-evidence-and-sizing-v1.json")
+	path := filepath.Join(repoRoot(t), "openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently/analysis/goldens/breakout-evidence-and-sizing-v1.json")
 	var golden struct {
 		Thresholds struct {
 			Counterfactual []uint64 `json:"rvol_counterfactual_ppm"`

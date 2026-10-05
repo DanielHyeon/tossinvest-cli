@@ -6594,3 +6594,13 @@ HEAD f02fcc71(0.5 · 7.3.1 · 8.x 체크 커밋) + 미커밋 수리 1줄에서 `
 gate 앞 sdd-check 의 실제 결함 하나: `tools/sdd/test_testseam_build_tags.py` 고정 목록이 7.3.1 의 `strategy_lane_shadow_load_testseam.go` 를 몰랐다(4cbcfb36 부터 — 이 시험은
 sdd-test 에서만 돌아 로트 verify · 8.1/8.3 스위트에 안 걸림). 첫 줄 빌드 태그 확인 뒤 목록 25 로 수리. 다른 하나(fingerprint stale)는 내가 gate 로그를 sync 뒤 저장소에 쓴 탓 —
 로그는 측정 뒤 옮겨 넣었다.
+
+## 2026-10-05 아카이브 수리 — 활성 경로를 읽던 소비자 재지정(Manager 판정 (A))
+
+아카이브(4060cfb2) 뒤 change 디렉터리를 읽던 소비자가 깨졌다(실측 6 패키지 FAIL): 시험 8 파일(`analysis/goldens/*.json` — breakoutlane 3 · strategyarbiter ·
+strategycoordinator · strategyprojection · strategyworker) · 도구 `tools/a112-mb-us-source/identity.go` 두 자리(:584 실행 신원 preflight 의 `base-commit.txt` · :795
+`measurementSourceDigests` 목록). 경로 상수를 `openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently/` 로 재지정 → 6 패키지 무태그 · 태그 ok ·
+`go test ./...` ok 101(`analysis/measurements/gate-2026-10-05/post-archive-*.log`). **도구 신원 핀 대조:** 저장소에 그 도구의 identity · digest 를 고정한 상수 · 골든 없음
+(grep — 64자리 hex 상수 0, `frozen_input_sha256` · `compiled_source_sha256` 는 아카이브 안 과거 실행 영수증 `m-b-us-source/receipt-2026-08-16-run4.json` 뿐) — 핀 없음,
+과거 영수증은 실행 당시 기록으로 유효. a063 ledger 의 옛 경로 문자열 · 다른 Story found_by 산문은 역사 기록이라 불변.
+**교훈: 아카이브는 활성 경로를 읽는 소비자를 깬다 — 아카이브 직후 `git grep openspec/changes/<id>` + 참조 패키지 시험을 닫는 순서에 넣는다**(gate PASS 는 아카이브 전 트리라 못 본다).

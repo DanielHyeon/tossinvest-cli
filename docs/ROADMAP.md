@@ -237,7 +237,7 @@ typed-confirmation을 유지한다 — 이 결정은 UI 표면에만 적용한�
 
 ## a112 이월 · 미배정 후속 (a112 5.2.2.2 에서 발견 — 2026-10-01)
 
-`a112-run-four-strategy-families-independently` 태스크 5.2.2.2 가 실측으로 올린 것. 근거는 a112 `review.md` 「5.2.2.2 잔여」 절과 영수증 `openspec/changes/a112-run-four-strategy-families-independently/analysis/measurements/lot-5.2.2.2/schema-pin-receipt.log`.
+`a112-run-four-strategy-families-independently` 태스크 5.2.2.2 가 실측으로 올린 것. 근거는 a112 `review.md` 「5.2.2.2 잔여」 절과 영수증 `openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently/analysis/measurements/lot-5.2.2.2/schema-pin-receipt.log`.
 
 | 항목 | 사유 | 행선 |
 |---|---|---|

@@ -63,7 +63,7 @@ func TestTheObservedBreakoutEdgesPlusTheReservedSixAreTheGoldenSet(t *testing.T)
 			Allowed []struct{ From, To string } `json:"allowed_transitions"`
 		} `json:"states"`
 	}
-	path := filepath.Join(repoRoot(t), "openspec/changes/a112-run-four-strategy-families-independently/analysis/goldens/four-family-runtime-v1.json")
+	path := filepath.Join(repoRoot(t), "openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently/analysis/goldens/four-family-runtime-v1.json")
 	if err := json.Unmarshal(mustRead(t, path), &golden); err != nil {
 		t.Fatal(err)
 	}

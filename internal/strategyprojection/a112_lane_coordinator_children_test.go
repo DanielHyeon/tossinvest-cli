@@ -16,7 +16,7 @@ import (
 )
 
 // a112GoldenPath 는 동결 골든이다. strategyworker/golden_contract_test.go 와 같은 파일을 직접 읽는다(옮겨 적지 않음).
-const a112GoldenPath = "../../openspec/changes/a112-run-four-strategy-families-independently/analysis/goldens/four-family-runtime-v1.json"
+const a112GoldenPath = "../../openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently/analysis/goldens/four-family-runtime-v1.json"
 
 var a112At = time.Date(2026, 10, 1, 12, 0, 0, 0, time.UTC)
 

@@ -15,7 +15,7 @@ import (
 
 func TestAcceptedL0GoldensMatchManifest(t *testing.T) {
 	root := repoRoot(t)
-	dir := filepath.Join(root, "openspec/changes/a112-run-four-strategy-families-independently/analysis/goldens")
+	dir := filepath.Join(root, "openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently/analysis/goldens")
 	manifest := string(mustRead(t, filepath.Join(dir, "manifest.sha256")))
 	for _, name := range []string{"breakout-evidence-and-sizing-v1.json", "four-family-runtime-v1.json"} {
 		want := ""
@@ -34,7 +34,7 @@ func TestAcceptedL0GoldensMatchManifest(t *testing.T) {
 
 func TestAcceptedL0GoldensBindConfigAndDormantDescriptors(t *testing.T) {
 	root := repoRoot(t)
-	dir := filepath.Join(root, "openspec/changes/a112-run-four-strategy-families-independently/analysis/goldens")
+	dir := filepath.Join(root, "openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently/analysis/goldens")
 	var breakout struct {
 		SetupIdentity struct {
 			Domain           string `json:"domain"`

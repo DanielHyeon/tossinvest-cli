@@ -1,0 +1,17 @@
+HEAD 4060cfb21c3023f287e7e8219bfa49d45475d86e + 경로 재지정(미커밋)
+== untagged
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.325s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	41.588s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	49.271s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-mb-us-source	126.064s
+exit=0
+== tagged
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.273s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	0.096s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	45.229s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	51.594s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-mb-us-source	125.345s
+exit=0

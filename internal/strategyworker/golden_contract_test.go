@@ -14,7 +14,7 @@ import (
 // 구현이 설계 산문만 읽고 계약 이름을 지어낸 적이 있어서, 계약 값은 언제나
 // 이 파일에서 읽어 대조한다. 사람이 옮겨 적을 자리가 없으면 같은 실수가
 // 반복될 수 없다.
-const goldenPath = "../../openspec/changes/a112-run-four-strategy-families-independently/analysis/goldens/four-family-runtime-v1.json"
+const goldenPath = "../../openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently/analysis/goldens/four-family-runtime-v1.json"
 
 type goldenFile struct {
 	Descriptors []struct {
