@@ -113,6 +113,9 @@ func TestMutatingAnnotationOnTradeCommands(t *testing.T) {
 		// the whole reason this command exists is that the objects it reaches are
 		// ones no automatic path may touch (verify-observes-the-trigger).
 		"tossctl verify abort": true,
+		// a121: verify reconcile 은 주문을 내지 않지만(공식 GET 만) 기록에 영속 대사 사건을 쓰고 사람 승인(y/N)을
+		// 요구한다 — 같은 운영자 명령 가족이라 자동 실행 금지 표지를 단다(design 「로트 1 처분」 S2).
+		"tossctl verify reconcile": true,
 		// console drives the same verify runner from a loopback page
 		// (verify-execution-capability task 1.6). It places live orders only
 		// through that runner and only after the typed approval, but it *can*

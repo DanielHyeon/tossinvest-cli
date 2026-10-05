@@ -1,15 +1,15 @@
 {
   "file": "internal/verifylive/report.go",
-  "source_sha256": "4da7dc920d1c4419c203821276c49c74bb5671f3ad255bb111b447a0c0e82f36",
+  "source_sha256": "e96b2103cb0c4d3992027945fe644677dc39e5cf90c5ee784edb91ff6dd9518b",
   "package": "verifylive",
   "function": "BuildProgress",
   "signature": "BuildProgress(params=2, results=1)",
   "start": {
-    "line": 315,
+    "line": 333,
     "column": 1
   },
   "end": {
-    "line": 343,
+    "line": 362,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 317,
+        "line": 335,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 318,
+        "line": 336,
         "column": 3
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "range",
       "at": {
-        "line": 322,
+        "line": 340,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 324,
+        "line": 342,
         "column": 3
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 331,
+        "line": 349,
         "column": 3
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "range",
       "at": {
-        "line": 336,
+        "line": 354,
         "column": 2
       }
     },
@@ -65,7 +65,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 337,
+        "line": 355,
         "column": 3
       }
     }
@@ -74,7 +74,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 342,
+        "line": 361,
         "column": 2
       }
     }
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 318,
+        "line": 336,
         "column": 6
       },
       "text": "strings.TrimSpace"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 322,
+        "line": 340,
         "column": 23
       },
       "text": "Steps"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 323,
+        "line": 341,
         "column": 12
       },
       "text": "LastEntry"
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 325,
+        "line": 343,
         "column": 16
       },
       "text": "append"
@@ -115,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 328,
+        "line": 346,
         "column": 13
       },
       "text": "append"
@@ -123,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 331,
+        "line": 349,
         "column": 7
       },
       "text": "e.Verdict.Terminal"
@@ -131,7 +131,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 333,
+        "line": 351,
         "column": 16
       },
       "text": "append"
@@ -139,7 +139,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 338,
+        "line": 356,
         "column": 22
       },
       "text": "append"
@@ -147,73 +147,88 @@
     {
       "kind": "call",
       "at": {
-        "line": 341,
+        "line": 359,
         "column": 18
       },
       "text": "Outstanding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 360,
+        "column": 17
+      },
+      "text": "ReconciledArtifacts"
     }
   ],
   "assignments": [
     {
       "kind": ":=",
       "at": {
-        "line": 316,
+        "line": 334,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 319,
+        "line": 337,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 323,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 325,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 328,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 332,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 333,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 338,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
         "line": 341,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 343,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 346,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 350,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 351,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 356,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 359,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 360,
         "column": 2
       }
     }

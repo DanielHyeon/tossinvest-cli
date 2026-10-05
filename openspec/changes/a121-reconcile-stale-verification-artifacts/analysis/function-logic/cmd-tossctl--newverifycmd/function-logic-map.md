@@ -1,8 +1,8 @@
 # Function Logic Map: `newVerifyCmd`
 
-- Source: `cmd/tossctl/verify.go` (96-129)
+- Source: `cmd/tossctl/verify.go` (96-130)
 - Qualified function: `newVerifyCmd`
-- Revision: `current` (구현 base `de147cc2`, `source_sha256` 77d33e4d…)
+- Revision: `current` (구현 base `de147cc2`, `source_sha256` d863c1de… (GREEN 편집 뒤 재추출; 편집 전 77d33e4d…))
 - AST evidence: `ast.json` — AST branches 0, 반환 1(128:2), 호출 6
 - Risk scan: `risk-pattern-report.md`
 - 편집 예정: 대사 하위 명령 등록(`cmd.AddCommand` 목록에 한 줄) + `Long` 도움말의 명령 목록 (task 3.2)
@@ -55,3 +55,8 @@ AST 분기 0. 조기 반환 없음 — 단일 경로로 cobra 명령을 만들�
   생성·순서·주석은 그대로.
 - High-risk impact: no (등록만) — 단 등록되는 명령이 계좌 읽기와 기록 추가를 하므로, 그 명령 자체의 경계
   (flock·rate-budget lease·변이 메서드 도달 불가)는 새 함수의 RED 시험(task 2.4.1)이 진다.
+
+## GREEN 로트 재추출 (a121 tasks 3.1·3.2, worktree a99a9059 + GREEN 편집)
+
+- 편집: AddCommand 에 `newVerifyReconcileCmd(root)` 한 줄(분기 0 유지, 호출 6→7). GREEN 관측: TestVerifyReconcileIsRegisteredAsAMutatingOfficialCommand·TestMutatingAnnotationOnTradeCommands PASS; 변이 C-register.
+- AST 재추출: `go run ./tools/logic-map` — 분기 0→0, 편집 전후 분기 열을 difflib 로 정렬한 결과 equal 뿐(재번호 없음), 앵커는 줄 이동만 반영.

@@ -124,6 +124,7 @@ Read ` + "`tossctl verify run --list`" + ` before the first real run.`),
 		newVerifyStatusCmd(root, opts),
 		newVerifyReportCmd(root, opts),
 		newVerifyAbortCmd(root, opts),
+		newVerifyReconcileCmd(root),
 	)
 	return cmd
 }

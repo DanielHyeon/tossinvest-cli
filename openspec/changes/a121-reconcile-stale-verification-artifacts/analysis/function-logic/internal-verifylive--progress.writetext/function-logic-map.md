@@ -1,8 +1,8 @@
 # Function Logic Map: `Progress.WriteText`
 
-- Source: `internal/verifylive/report.go` (346-379)
+- Source: `internal/verifylive/report.go` (365-399)
 - Qualified function: `Progress.WriteText`
-- Revision: `current` (구현 base `de147cc2` = 고정 사본 `2c6ef1ef` 의 같은 파일, `source_sha256` 4da7dc92…)
+- Revision: `current` (구현 base `de147cc2` = 고정 사본 `2c6ef1ef` 의 같은 파일, `source_sha256` e96b2103… (GREEN 편집 뒤 재추출; 편집 전 4da7dc92…))
 - AST evidence: `ast.json` — AST branches 8, 반환 1(351:3 조기 반환), 호출 26
 - Risk scan: `risk-pattern-report.md`
 - 편집 예정: design 「로트 1 처분」 S1 — `verify status` 텍스트가 대사된 artifact 를 **reconciled absent** 로 표시(task 3.1/3.2).
@@ -23,14 +23,14 @@ artifact 가 이 절에 남으면 운영자에게 없는 객체의 취소(=같�
 
 | Branch | AST kind | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|---|
-| B1 | `if at 348:2` | 단계 0 이고 M0 체크포인트 0 | 시작 안내 2줄 | **조기 반환 351:3** | `TestProgressOnAnUnstartedVerification` |
-| B2 | `range at 356:2` | 단계 순회 | 단계·판정·이유 출력 | 없음 | `TestProgressPointsAtTheRestartWhenOneIsPending` |
-| B3 | `if at 359:2` | `len(p.Pending) > 0` | "남은 단계" 줄 | 없음 | `TestProgressPointsAtTheRestartWhenOneIsPending` |
-| B4 | `if at 362:2` | `p.AwaitingRestart != ""` | 재시작 안내 | 없음 | `TestProgressPointsAtTheRestartWhenOneIsPending` |
-| B5 | `if at 366:2` | `len(p.Outstanding) > 0` | "⚠ … 살아 있다" 머리줄 + 취소 권고 꼬리줄 | 없음 | `TestProgressPointsAtTheRestartWhenOneIsPending` |
-| B6 | `range at 368:3` | outstanding 순회 | 종류·id·심볼 | 없음 | 같음 |
-| B7 | `if at 373:2` | `len(p.M0Checkpoints) > 0` | "M0 복구 체크포인트 (취소 대상 아님)" | 없음 | `TestM0CheckpointsAreVisibleInStatusButNeverAbortTargets` |
-| B8 | `range at 375:3` | 체크포인트 순회 | kind·client·parent·child | 없음 | 같음 |
+| B1 | `if at 367:2` | 단계 0 이고 M0 체크포인트 0 | 시작 안내 2줄 | **조기 반환 351:3** | `TestProgressOnAnUnstartedVerification` |
+| B2 | `range at 375:2` | 단계 순회 | 단계·판정·이유 출력 | 없음 | `TestProgressPointsAtTheRestartWhenOneIsPending` |
+| B3 | `if at 378:2` | `len(p.Pending) > 0` | "남은 단계" 줄 | 없음 | `TestProgressPointsAtTheRestartWhenOneIsPending` |
+| B4 | `if at 381:2` | `p.AwaitingRestart != ""` | 재시작 안내 | 없음 | `TestProgressPointsAtTheRestartWhenOneIsPending` |
+| B5 | `if at 385:2` | `len(p.Outstanding) > 0` | "⚠ … 살아 있다" 머리줄 + 취소 권고 꼬리줄 | 없음 | `TestProgressPointsAtTheRestartWhenOneIsPending` |
+| B6 | `range at 387:3` | outstanding 순회 | 종류·id·심볼 | 없음 | 같음 |
+| B7 | `if at 393:2` | `len(p.M0Checkpoints) > 0` | "M0 복구 체크포인트 (취소 대상 아님)" | 없음 | `TestM0CheckpointsAreVisibleInStatusButNeverAbortTargets` |
+| B8 | `range at 395:3` | 체크포인트 순회 | kind·client·parent·child | 없음 | 같음 |
 
 ## Calls and live bindings
 
@@ -58,3 +58,8 @@ artifact 가 이 절에 남으면 운영자에게 없는 객체의 취소(=같�
   추가. B5 의 취소 권고는 `Outstanding` 에 남은 것에만 붙는다.
 - High-risk impact: no(읽기 전용 렌더) — 단 B5 꼬리줄이 운영자 행동(재개=DELETE)을 권하므로 라벨 정확성은 안전 문제.
 - RED(로트 2): `TestReconcileTextLabelsReconciledAbsentInReportAndStatus`(`internal/verifylive/reconcile_projection_test.go`).
+
+## GREEN 로트 재추출 (a121 tasks 3.1·3.2, worktree a99a9059 + GREEN 편집)
+
+- 편집: Outstanding 절 뒤 `writeReconciled(w, p.Reconciled)` 호출 한 줄(분기 8 불변, 번호 불변 — B7·B8 은 한 줄 아래로). GREEN 관측: TestReconcileTextLabelsReconciledAbsentInReportAndStatus PASS; 변이 V-progress-writetext.
+- AST 재추출: `go run ./tools/logic-map` — 분기 8→8, 편집 전후 분기 열을 difflib 로 정렬한 결과 equal 뿐(재번호 없음), 앵커는 줄 이동만 반영.

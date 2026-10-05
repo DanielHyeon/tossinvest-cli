@@ -1,0 +1,903 @@
+{
+ "tree": "848b918617738ef89d5b4b800cf28fc6cad7fc415341814dfd5327ddf917c420",
+ "rows": [
+  {
+   "id": "CONTROL-v",
+   "pkg": "v",
+   "result": "PASS",
+   "detail": "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/verifylive\t7.792s\n"
+  },
+  {
+   "id": "CONTROL-o",
+   "pkg": "o",
+   "result": "PASS",
+   "detail": "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/official\t0.010s\n"
+  },
+  {
+   "id": "CONTROL-c",
+   "pkg": "c",
+   "result": "PASS",
+   "detail": "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/cmd/tossctl\t0.649s\n"
+  },
+  {
+   "id": "V-terminal-third",
+   "pkg": "v",
+   "file": "internal/verifylive/record.go",
+   "result": "CAUGHT",
+   "why": "셋째 종결 제거",
+   "detail": "TestReconcileAppendsOneReconciledAbsentLineWhenEveryConditionHolds,TestReconciledProjectionIsMonotoneLikeOutstanding,TestReconcileOnlyRemovesItsExactArtifactFromCleanupPlanning,TestReconcilePinsRedoSetBeforeAndAfter,TestReconcileLeavesTheRe"
+  },
+  {
+   "id": "V-buildreport-reconciled",
+   "pkg": "v",
+   "file": "internal/verifylive/report.go",
+   "result": "CAUGHT",
+   "why": "BuildReport 칸 제거",
+   "detail": "TestReconcileTextLabelsReconciledAbsentInReportAndStatus"
+  },
+  {
+   "id": "V-buildprogress-reconciled",
+   "pkg": "v",
+   "file": "internal/verifylive/report.go",
+   "result": "CAUGHT",
+   "why": "BuildProgress 칸 제거",
+   "detail": "TestReconcileTextLabelsReconciledAbsentInReportAndStatus"
+  },
+  {
+   "id": "V-report-writetext",
+   "pkg": "v",
+   "file": "internal/verifylive/report.go",
+   "result": "CAUGHT",
+   "why": "Report.WriteText 출력 제거",
+   "detail": "TestReconcileTextLabelsReconciledAbsentInReportAndStatus"
+  },
+  {
+   "id": "V-progress-writetext",
+   "pkg": "v",
+   "file": "internal/verifylive/report.go",
+   "result": "CAUGHT",
+   "why": "Progress.WriteText 출력 제거",
+   "detail": "TestReconcileTextLabelsReconciledAbsentInReportAndStatus"
+  },
+  {
+   "id": "V-label",
+   "pkg": "v",
+   "file": "internal/verifylive/report.go",
+   "result": "CAUGHT",
+   "why": "라벨을 취소로",
+   "detail": "TestReconcileTextLabelsReconciledAbsentInReportAndStatus"
+  },
+  {
+   "id": "V-projection-monotone",
+   "pkg": "v",
+   "file": "internal/verifylive/projection_reconciled.go",
+   "result": "CAUGHT",
+   "why": "투영 단조성 제거",
+   "detail": "TestReconciledProjectionIsMonotoneLikeOutstanding"
+  },
+  {
+   "id": "V-marshal-plain",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_record.go",
+   "result": "CAUGHT",
+   "why": "대사 줄을 일반 모양으로(영 시각 cancelled_at)",
+   "detail": "TestReconcileLineMatchesTheDesignShape,TestReconcileLineCarriesNoHoldEvenWhenTheOutstandingLineHadOne"
+  },
+  {
+   "id": "V-marshal-all",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_record.go",
+   "result": "CAUGHT",
+   "why": "모든 artifact 를 축약형으로",
+   "detail": "TestAbortEndsAHeldChain,TestAbortSendsNothingWhenItIsNotApproved,TestALeftoverOrderIsCancelledOnTheNextRun,TestTheLeftoverCancelIsOnTheApprovedList,TestTheRedoThatWasBlockedByTheLeftoverCanRun,TestTheConditionalLeftForPersistenceIsNotCleane"
+  },
+  {
+   "id": "V-tail-pre",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_record.go",
+   "result": "CAUGHT",
+   "why": "선택 전 개행 검사 제거",
+   "detail": "TestReconcileRefusesACompleteFinalLineWithoutNewline"
+  },
+  {
+   "id": "V-undecodable",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_record.go",
+   "result": "CAUGHT",
+   "why": "엄격 해독 제거",
+   "detail": "TestReconcileRefusesATornFinalLineAtSelection,TestReconcileRefusesABrokenInnerLine,TestReconcileRefusesATornFinalLineBeforeAppend"
+  },
+  {
+   "id": "V-format",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_record.go",
+   "result": "CAUGHT",
+   "why": "형식 판정 제거",
+   "detail": "TestReconcileRefusesANewerRecordFormat"
+  },
+  {
+   "id": "V-unreadable",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_record.go",
+   "result": "CAUGHT",
+   "why": "읽기 오류 무시",
+   "detail": "TestReconcileRefusesAnUnreadableRecord"
+  },
+  {
+   "id": "V-fingerprint",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "지문 비교 제거",
+   "detail": "TestReconcileRefusesARecordThatChangedBeforeAppend,TestReconcileFingerprintIsTheFileBytes"
+  },
+  {
+   "id": "V-tail-append",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "SURVIVED",
+   "why": "추가 직전 개행 검사 제거",
+   "detail": "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/verifylive\t8.177s\n"
+  },
+  {
+   "id": "V-final-window",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "추가 직전 신선도·Q1 재검 제거",
+   "detail": "TestReconcileRechecksTheWindowAtBothContractPoints"
+  },
+  {
+   "id": "V-append-decode",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "추가 직전 엄격 해독 생략",
+   "detail": "TestReconcileRefusesATornFinalLineBeforeAppend,TestReconcileRechecksTheWindowAtBothContractPoints"
+  },
+  {
+   "id": "V-select-kind",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "조건주문 종류 거름 제거",
+   "detail": "TestReconcileRefusesZeroCandidates"
+  },
+  {
+   "id": "V-select-many",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "복수 후보 허용",
+   "detail": "TestReconcileRefusesSeveralCandidates"
+  },
+  {
+   "id": "V-m0-filter",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "M0 제외 제거",
+   "detail": "TestWithoutM0UnsettledDropsTheNamedParentAtItsOwnLayer"
+  },
+  {
+   "id": "V-m0-error",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "M0 오류 무시",
+   "detail": "TestReconcileRefusesAnUnresolvedM0Owner,TestWithoutM0UnsettledRefusesAnAmbiguousOwner"
+  },
+  {
+   "id": "V-mixed",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "mixed 거절 제거",
+   "detail": "TestReconcileRefusesMixedAccountReferences"
+  },
+  {
+   "id": "V-unusable",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "마스크 경계 제거",
+   "detail": "TestReconcileRefusesUnusableAccountReferences"
+  },
+  {
+   "id": "V-mismatch",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "mismatch 제거",
+   "detail": "TestReconcileRefusesACurrentAccountWhoseMaskDiffers"
+  },
+  {
+   "id": "V-approve-ignore",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "승인 거절 무시",
+   "detail": "TestReconcileRefusesWithoutApproval"
+  },
+  {
+   "id": "V-approve-text",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "승인 출력 생략",
+   "detail": "TestReconcileApprovalShowsBothMasksAndTheAccountCountBeforeAnyListRead"
+  },
+  {
+   "id": "V-approval-market",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "승인 시장 생략",
+   "detail": "TestReconcileApprovalShowsBothMasksAndTheAccountCountBeforeAnyListRead"
+  },
+  {
+   "id": "V-q1-nil",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "측정 부재를 무한 한도로",
+   "detail": "TestReconcileRefusesWhileTheRetentionMeasurementIsAbsent,TestReconcileStaticRefusalsComeBeforeTheHumanApproval"
+  },
+  {
+   "id": "V-q1-eviction",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "축출 모형 판정 약화",
+   "detail": "TestReconcileRefusesAnyEvictionModelButDuration"
+  },
+  {
+   "id": "V-q1-zero",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "영 CreatedAt 거절 제거",
+   "detail": "TestReconcileRefusesAZeroCreatedAtOnTheOutstandingLine,TestReconcileStaticRefusalsComeBeforeTheHumanApproval"
+  },
+  {
+   "id": "V-q1-age",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "나이 한도 제거",
+   "detail": "TestReconcileRefusesAnArtifactOlderThanTheRetentionBound,TestReconcileRechecksTheRetentionAgeImmediatelyBeforeAppend,TestReconcileStaticRefusalsComeBeforeTheHumanApproval"
+  },
+  {
+   "id": "V-q3-unfixed",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "Q3 미확정 거절 제거",
+   "detail": "TestReconcileRefusesWhileTheFreshnessBoundIsUnfixed,TestReconcileStaticRefusalsComeBeforeTheHumanApproval"
+  },
+  {
+   "id": "V-q3-exceed",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "신선도 한도 제거",
+   "detail": "TestReconcileRefusesWhenThePairExceedsTheFreshnessBound,TestReconcileFreshnessWindowCoversAppendAdmission"
+  },
+  {
+   "id": "V-q3-start-early",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "순서 교란: 창 시작을 승인 전으로",
+   "detail": "TestReconcileApprovalWaitDoesNotConsumeTheFreshnessWindow"
+  },
+  {
+   "id": "V-instr-echo",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "에코 대조 제거",
+   "detail": "TestReconcileRefusesWhenTheInstrumentControlFails"
+  },
+  {
+   "id": "V-instr-second",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "둘째 종목 조회 제거",
+   "detail": "TestReconcileReadsTheGroupsInTheFixedOrder,TestReconcileRechecksTheRetentionAgeImmediatelyBeforeAppend,TestReconcileFreshnessWindowCoversAppendAdmission,TestReconcileRefusesWhenTheInstrumentControlFails,TestReconcileRefusesATornFinalLineBef"
+  },
+  {
+   "id": "V-window-before-instr2",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "순서 교란: 재검을 둘째 조회 앞으로(최종 재검은 유지)",
+   "detail": "TestReconcileRechecksTheWindowAtBothContractPoints"
+  },
+  {
+   "id": "V-second-read",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "둘째 읽기 생략",
+   "detail": "TestReconcileReadsTheGroupsInTheFixedOrder,TestReconcileRefusesWhenThePairExceedsTheFreshnessBound,TestReconcileRefusesAStatusTransitionBetweenTheTwoReads,TestReconcileRefusesARowAppearingInOnlyOneRead,TestReconcileRefusesADuplicateRowWithi"
+  },
+  {
+   "id": "V-read-order",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "읽기 순서 교란",
+   "detail": "TestReconcileAppendsOneReconciledAbsentLineWhenEveryConditionHolds,TestReconcileAcceptsExactlyThePageCap,TestReconcileApprovalWaitDoesNotConsumeTheFreshnessWindow,TestReconcileQueriesTheRecordLineSymbolBytes,TestReconcileReadsTheGroupsInThe"
+  },
+  {
+   "id": "V-limit",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "limit 변경",
+   "detail": "TestReconcileReadsTheGroupsInTheFixedOrder"
+  },
+  {
+   "id": "V-repeated",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "반복 커서 제거",
+   "detail": "TestReconcileRefusesPaginationFaultsInEitherRead"
+  },
+  {
+   "id": "V-dup",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "읽기 안 중복 제거",
+   "detail": "TestReconcileRefusesADuplicateRowWithinOneRead"
+  },
+  {
+   "id": "V-empty-cursor",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "빈 커서 제거",
+   "detail": "TestReconcileRefusesPaginationFaultsInEitherRead"
+  },
+  {
+   "id": "V-readerr",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "조건주문 읽기 오류 무시",
+   "detail": "TestReconcileRefusesPaginationFaultsInEitherRead,TestReconcileRefusesMalformedListResponsesEvenWhenBothReadsAgree"
+  },
+  {
+   "id": "V-readerr-plain",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "일반 주문 읽기 오류 무시",
+   "detail": "TestReconcileRefusesPaginationFaultsInEitherRead,TestReconcileRefusesMalformedListResponsesEvenWhenBothReadsAgree"
+  },
+  {
+   "id": "V-multiset",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "multiset 비교 제거",
+   "detail": "TestReconcileRefusesAStatusTransitionBetweenTheTwoReads,TestReconcileRefusesARowAppearingInOnlyOneRead"
+  },
+  {
+   "id": "V-multiset-set",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "길이 비교 제거",
+   "detail": "TestReconcileRefusesARowAppearingInOnlyOneRead"
+  },
+  {
+   "id": "V-oco",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "OCO 거절 제거",
+   "detail": "TestReconcileRefusesOCORowsInEitherGroup"
+  },
+  {
+   "id": "V-incomplete",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "필드 결측 제거",
+   "detail": "TestReconcileRefusesARowMissingRequiredFields"
+  },
+  {
+   "id": "V-symbol",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "심볼 대조 제거",
+   "detail": "TestReconcileRefusesARowForAnotherSymbol"
+  },
+  {
+   "id": "V-market",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "시장 대조 제거",
+   "detail": "TestReconcileRefusesARowForAnotherMarket"
+  },
+  {
+   "id": "V-rows-after-absence",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "순서 교란: 행 검사를 부재 뒤로",
+   "detail": "TestReconcileRefusesOCORowsInEitherGroup"
+  },
+  {
+   "id": "V-open-cond",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "OPEN 조건주문 거절 제거",
+   "detail": "TestReconcileRefusesALiveSuccessorInTheOpenConditionalGroup"
+  },
+  {
+   "id": "V-open-plain",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "OPEN 일반 주문 거절 제거",
+   "detail": "TestReconcileRefusesAnyOpenPlainOrderOnTheSymbol"
+  },
+  {
+   "id": "V-q6",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "Q6 분기 제거",
+   "detail": "TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage"
+  },
+  {
+   "id": "V-target",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "CLOSED target 검사 제거",
+   "detail": "TestReconcileRefusesTheTargetFoundInClosed,TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage"
+  },
+  {
+   "id": "V-fired",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "COMPLETED 흔적 제거",
+   "detail": "TestReconcileRefusesAnotherIdentifierThatFiredInClosed"
+  },
+  {
+   "id": "V-fired-trigger",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "triggeredOrderId 흔적 제거",
+   "detail": "TestReconcileRefusesAnotherIdentifierThatFiredInClosed"
+  },
+  {
+   "id": "V-status-allowlist",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "허용 목록 무시",
+   "detail": "TestReconcileRefusesClosedStatusOutsideTheAllowlist"
+  },
+  {
+   "id": "V-status-openfamily",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "OPEN 계열 명시 거절 제거",
+   "detail": "TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt"
+  },
+  {
+   "id": "V-status-before-absence",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "순서 교란: 허용 목록을 부재 앞으로(Q6 가림)",
+   "detail": "TestReconcileRefusesTheTargetFoundInClosed,TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage,TestReconcileRefusesAnotherIdentifierThatFiredInClosed"
+  },
+  {
+   "id": "V-basis-empty",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "근거를 빈 집합으로",
+   "detail": "TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt"
+  },
+  {
+   "id": "V-basis-sort",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_record.go",
+   "result": "CAUGHT",
+   "why": "근거 정렬 제거",
+   "detail": "TestReconcileBasisDigestIsVersionedDomainTaggedAndOrderIndependent"
+  },
+  {
+   "id": "V-basis-domain",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_record.go",
+   "result": "CAUGHT",
+   "why": "도메인 분리 제거",
+   "detail": "TestReconcileBasisDigestIsVersionedDomainTaggedAndOrderIndependent"
+  },
+  {
+   "id": "V-line-createdat",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "CreatedAt 를 추가 시각으로",
+   "detail": "TestReconcileLineMatchesTheDesignShape"
+  },
+  {
+   "id": "V-line-step",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_record.go",
+   "result": "CAUGHT",
+   "why": "StepID 를 카탈로그 값으로",
+   "detail": "TestReconcileLineMatchesTheDesignShape"
+  },
+  {
+   "id": "V-line-mutating",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_record.go",
+   "result": "CAUGHT",
+   "why": "mutating true",
+   "detail": "TestReconcileLineMatchesTheDesignShape"
+  },
+  {
+   "id": "V-line-calls",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_record.go",
+   "result": "CAUGHT",
+   "why": "Calls 탑재",
+   "detail": "TestReconcileLineMatchesTheDesignShape,TestReconcileLineNeverBecomesEndpointEvidence"
+  },
+  {
+   "id": "O-not-object",
+   "pkg": "o",
+   "file": "internal/official/reconcile_reads.go",
+   "result": "CAUGHT",
+   "why": "result 객체 검사 제거",
+   "detail": "TestDecodeReconcilePageNamesTheGuardThatRefused"
+  },
+  {
+   "id": "O-collection-missing",
+   "pkg": "o",
+   "file": "internal/official/reconcile_reads.go",
+   "result": "CAUGHT",
+   "why": "컬렉션 결측 검사 제거",
+   "detail": "TestDecodeReconcilePageNamesTheGuardThatRefused"
+  },
+  {
+   "id": "O-collection-array",
+   "pkg": "o",
+   "file": "internal/official/reconcile_reads.go",
+   "result": "CAUGHT",
+   "why": "컬렉션 배열 검사 제거",
+   "detail": "TestDecodeReconcilePageNamesTheGuardThatRefused,TestDecodeReconcileConditionalPageRefusesSchemaHoles,TestDecodeReconcileOrderPageRefusesSchemaHoles"
+  },
+  {
+   "id": "O-row-object",
+   "pkg": "o",
+   "file": "internal/official/reconcile_reads.go",
+   "result": "CAUGHT",
+   "why": "행 객체 검사 제거",
+   "detail": "TestDecodeReconcilePageNamesTheGuardThatRefused,TestDecodeReconcileConditionalPageRefusesSchemaHoles,TestDecodeReconcileOrderPageRefusesSchemaHoles"
+  },
+  {
+   "id": "O-hasnext-missing",
+   "pkg": "o",
+   "file": "internal/official/reconcile_reads.go",
+   "result": "CAUGHT",
+   "why": "hasNext 결측 검사 제거",
+   "detail": "TestDecodeReconcilePageNamesTheGuardThatRefused"
+  },
+  {
+   "id": "O-hasnext-type",
+   "pkg": "o",
+   "file": "internal/official/reconcile_reads.go",
+   "result": "CAUGHT",
+   "why": "hasNext 형 검사 제거",
+   "detail": "TestDecodeReconcilePageNamesTheGuardThatRefused,TestDecodeReconcilePagesAcceptWellFormedPages,TestDecodeReconcileConditionalPageKeepsTheSecondLegAndTheTrigger,TestReconcileClientReadsSendTheDocumentedGetQueries"
+  },
+  {
+   "id": "O-cursor-missing",
+   "pkg": "o",
+   "file": "internal/official/reconcile_reads.go",
+   "result": "CAUGHT",
+   "why": "nextCursor 결측 검사 제거",
+   "detail": "TestDecodeReconcilePageNamesTheGuardThatRefused"
+  },
+  {
+   "id": "O-cursor-type",
+   "pkg": "o",
+   "file": "internal/official/reconcile_reads.go",
+   "result": "CAUGHT",
+   "why": "nextCursor 형 검사 제거",
+   "detail": "TestDecodeReconcilePageNamesTheGuardThatRefused"
+  },
+  {
+   "id": "O-cursor-consistency",
+   "pkg": "o",
+   "file": "internal/official/reconcile_reads.go",
+   "result": "CAUGHT",
+   "why": "커서 일관성 제거",
+   "detail": "TestDecodeReconcilePageNamesTheGuardThatRefused,TestDecodeReconcileConditionalPageRefusesSchemaHoles,TestDecodeReconcileOrderPageRefusesSchemaHoles"
+  },
+  {
+   "id": "O-second",
+   "pkg": "o",
+   "file": "internal/official/reconcile_reads.go",
+   "result": "CAUGHT",
+   "why": "second 노출 제거",
+   "detail": "TestDecodeReconcileConditionalPageKeepsTheSecondLegAndTheTrigger"
+  },
+  {
+   "id": "O-trigger",
+   "pkg": "o",
+   "file": "internal/official/reconcile_reads.go",
+   "result": "CAUGHT",
+   "why": "triggeredOrderId 누락",
+   "detail": "TestDecodeReconcileConditionalPageKeepsTheSecondLegAndTheTrigger"
+  },
+  {
+   "id": "O-plain-status",
+   "pkg": "o",
+   "file": "internal/official/reconcile_reads.go",
+   "result": "CAUGHT",
+   "why": "일반 주문 해독 우회(빈 페이지)",
+   "detail": "TestReconcileClientReadsRefuseANullResult"
+  },
+  {
+   "id": "O-cond-bypass",
+   "pkg": "o",
+   "file": "internal/official/reconcile_reads.go",
+   "result": "CAUGHT",
+   "why": "조건주문 해독 우회",
+   "detail": "TestReconcileClientReadsRefuseANullResult"
+  },
+  {
+   "id": "O-status-query",
+   "pkg": "o",
+   "file": "internal/official/reconcile_reads.go",
+   "result": "CAUGHT",
+   "why": "일반 주문 OPEN 필터 누락",
+   "detail": "TestReconcileClientReadsSendTheDocumentedGetQueries"
+  },
+  {
+   "id": "O-instrument-echo",
+   "pkg": "o",
+   "file": "internal/official/reconcile_reads.go",
+   "result": "CAUGHT",
+   "why": "에코 대신 입력 반환",
+   "detail": "TestReconcileInstrumentReturnsTheBrokersEchoNotItsInput"
+  },
+  {
+   "id": "C-noconfig",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "config-dir 필수 제거",
+   "detail": "TestReconcilePreflightRefusals"
+  },
+  {
+   "id": "C-env-either",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "환경 변수 반쪽 허용",
+   "detail": "TestReconcilePreflightRefusals,TestReconcileRefusesPreflightBeforeAnyLockOrRead"
+  },
+  {
+   "id": "C-record",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "--record 거절 제거",
+   "detail": "TestReconcilePreflightRefusals"
+  },
+  {
+   "id": "C-market",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "--market 필수 제거",
+   "detail": "TestReconcilePreflightRefusals"
+  },
+  {
+   "id": "C-lock",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "flock 생략",
+   "detail": "TestReconcileHoldsTheExecutionLockAndRateBudgetThroughTheReads,TestReconcileLineDoesNotChangeSupervisedProofs,TestReconcileInteractiveYesLetsTheCommandAppend,TestReconcileRefusesWhenTheExecutionLockIsHeld"
+  },
+  {
+   "id": "C-lease",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "lease 생략",
+   "detail": "TestReconcileHoldsTheExecutionLockAndRateBudgetThroughTheReads,TestReconcileLineDoesNotChangeSupervisedProofs,TestReconcileInteractiveYesLetsTheCommandAppend,TestReconcileRefusesWhenTheRateBudgetLeaseIsHeld"
+  },
+  {
+   "id": "C-lock-after-factory",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "순서 교란: 잠금 전 계좌 읽기",
+   "detail": "TestReconcileRefusesWhenTheExecutionLockIsHeld,TestReconcileRefusesWhenTheRateBudgetLeaseIsHeld"
+  },
+  {
+   "id": "C-malformed",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "기형 행 거절 제거",
+   "detail": "TestReconcileNarrowReaderRefusesAccountShapes"
+  },
+  {
+   "id": "C-count",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "복수 계좌 허용",
+   "detail": "TestReconcileNarrowReaderRefusesAccountShapes"
+  },
+  {
+   "id": "C-seq",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "seq 0 허용",
+   "detail": "TestReconcileNarrowReaderRefusesAccountShapes"
+  },
+  {
+   "id": "C-rebind",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "명시 재결속 제거(새 클라이언트 지연 해석)",
+   "detail": "TestReconcileNarrowReaderBindsTheValidatedSequence"
+  },
+  {
+   "id": "C-rebind-reuse",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "명시 재결속 대신 암묵 캐시(측정 한계)",
+   "detail": "TestReconcileNarrowReaderBindsTheValidatedSequence"
+  },
+  {
+   "id": "C-terminal",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "기본 단말을 대화형으로",
+   "detail": "TestReconcileDefaultTerminalIsNotInteractiveOnAPipeOrDevNull"
+  },
+  {
+   "id": "C-terminal-chardev",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "ModeCharDevice 판정",
+   "detail": "TestReconcileDefaultTerminalIsNotInteractiveOnAPipeOrDevNull"
+  },
+  {
+   "id": "C-approve-noninteractive",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "비대화형 승인 허용",
+   "detail": "TestReconcileDefaultApprovalStopsTheCommandBeforeAnyListRead,TestReconcileDefaultApprovalRefusesANonInteractiveStdin"
+  },
+  {
+   "id": "C-approve-any",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "아무 입력이나 승인",
+   "detail": "TestReconcileDefaultApprovalAcceptsOnlyAnExplicitInteractiveYes"
+  },
+  {
+   "id": "C-approve-default-yes",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "빈 입력을 승인(기본 Y)",
+   "detail": "TestReconcileDefaultApprovalAcceptsOnlyAnExplicitInteractiveYes"
+  },
+  {
+   "id": "C-approve-wired",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "명령이 기본 승인을 우회",
+   "detail": "TestReconcileDefaultApprovalStopsTheCommandBeforeAnyListRead"
+  },
+  {
+   "id": "C-register",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify.go",
+   "result": "CAUGHT",
+   "why": "명령 미등록",
+   "detail": "TestVerifyReconcileIsRegisteredAsAMutatingOfficialCommand"
+  },
+  {
+   "id": "C-annotation",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "mutating 주석 제거",
+   "detail": "TestMutatingAnnotationOnTradeCommands,TestVerifyReconcileIsRegisteredAsAMutatingOfficialCommand"
+  },
+  {
+   "id": "C-symbol-flag",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "--symbol 플래그 추가",
+   "detail": "TestVerifyReconcileOffersNoIdentifierSymbolOrBypassFlag"
+  },
+  {
+   "id": "C-env-creds",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "SURVIVED",
+   "why": "자격을 환경 변수에서도(preflight 가 덮음)",
+   "detail": "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/cmd/tossctl\t0.649s\n"
+  },
+  {
+   "id": "C-adapter-embed",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "클라이언트 임베딩(쓰기 메서드 승격)",
+   "detail": "TestReconcileNarrowReaderNeverYieldsAWriteMethod"
+  },
+  {
+   "id": "V-cap-loop-end",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "상한 도달을 수락으로(조건주문 그룹)",
+   "detail": "TestReconcileRefusesPaginationFaultsInEitherRead"
+  },
+  {
+   "id": "V-cap-loop-end-plain",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_check.go",
+   "result": "CAUGHT",
+   "why": "상한 도달을 수락으로(일반 주문 그룹)",
+   "detail": "TestReconcileRefusesPaginationFaultsInEitherRead"
+  },
+  {
+   "id": "GO2-static-after-approval",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "정적 거절(Q1·Q3)을 승인 뒤로(A-GREEN 리뷰어 변이 GO2)",
+   "detail": "TestReconcileStaticRefusalsComeBeforeTheHumanApproval"
+  },
+  {
+   "id": "MJ10-marshal-held-until",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile_record.go",
+   "result": "CAUGHT",
+   "why": "대사 확정형이 held_until 을 싣게(HeldUntil 중복 대입 삭제 뒤 A-GREEN P2-b 확인)",
+   "detail": "TestReconcileLineCarriesNoHoldEvenWhenTheOutstandingLineHadOne"
+  }
+ ]
+}

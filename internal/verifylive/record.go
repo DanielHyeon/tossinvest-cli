@@ -241,6 +241,12 @@ type Artifact struct {
 	ChainID string `json:"chain_id,omitempty"`
 	// Note explains an artifact whose state needs one.
 	Note string `json:"note,omitempty"`
+	// ReconciledAbsent 는 셋째 종결이다(a121) — 공식 목록 두 번 읽기가 이 객체의 부재를 좁혀 확인했다는 대사 사건.
+	// 취소도 체결도 아니며 `tossctl verify reconcile` 만 쓴다. 이 필드를 모르는 구 바이너리는 그 줄을 비-종결로 읽어
+	// 객체를 다시 보유 상태로 보인다(안전 방향 — design G2 「구 바이너리」).
+	ReconciledAbsent bool `json:"reconciled_absent,omitempty"`
+	// ReconciledAt 은 대사 줄을 추가한 시각이다. 영이면 생략(omitzero)해 다른 줄의 바이트를 바꾸지 않는다.
+	ReconciledAt time.Time `json:"reconciled_at,omitzero"`
 }
 
 // Entry is one line of the record: one step, one verdict.
@@ -364,6 +370,12 @@ func (r *Recorder) Close() error {
 }
 
 var errUnknownFormat = errors.New("the record was written by a newer TossOS")
+
+// readRecordRaw 는 기록 파일의 원문 바이트를 읽음(a121 대사의 엄격 해독·지문 입력). 기록 파일을 여는 일은
+// 이 파일(record.go)이 소유함 — TestNoAutomationBypassExists 의 경계.
+func readRecordRaw(path string) ([]byte, error) {
+	return os.ReadFile(path)
+}
 
 // LoadEntries reads the record.
 //
@@ -568,11 +580,12 @@ func outstandingLines(entries []Entry) []outstandingLine {
 
 // terminal reports that this line says the object has stopped existing.
 //
-// Two ways, and the difference between them is recorded rather than flattened:
-// this tool cancelled it, or it filled. Every consumer of Outstanding asks the
-// same question through this one predicate, so a third ending added later is
-// honoured by all of them at once.
-func (a Artifact) terminal() bool { return a.Cancelled || a.Filled }
+// Three ways, and the difference between them is recorded rather than flattened:
+// this tool cancelled it, it filled, or a reconciliation read established its
+// absence (a121 — reconciled absent, which is neither of the other two). Every
+// consumer of Outstanding asks the same question through this one predicate, so
+// the third ending is honoured by all of them at once.
+func (a Artifact) terminal() bool { return a.Cancelled || a.Filled || a.ReconciledAbsent }
 
 // --- digests ------------------------------------------------------------------
 

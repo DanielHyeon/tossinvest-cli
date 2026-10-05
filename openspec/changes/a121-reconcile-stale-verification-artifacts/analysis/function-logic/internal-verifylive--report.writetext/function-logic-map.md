@@ -1,8 +1,8 @@
 # Function Logic Map: `Report.WriteText`
 
-- Source: `internal/verifylive/report.go` (239-291)
+- Source: `internal/verifylive/report.go` (243-296)
 - Qualified function: `Report.WriteText`
-- Revision: `current` (구현 base `de147cc2` = 고정 사본 `2c6ef1ef` 의 같은 파일, `source_sha256` 4da7dc92…)
+- Revision: `current` (구현 base `de147cc2` = 고정 사본 `2c6ef1ef` 의 같은 파일, `source_sha256` e96b2103… (GREEN 편집 뒤 재추출; 편집 전 4da7dc92…))
 - AST evidence: `ast.json` — AST branches 11, 반환 1(247:3 조기 반환), 호출 28
 - Risk scan: `risk-pattern-report.md`
 - 편집 예정: design 「로트 1 처분」 S1 — 대사된 artifact 를 **reconciled absent** 로 텍스트 출력에 표시(task 3.1/3.2). tasks 1.2 유보 번들.
@@ -23,17 +23,17 @@ absent" 를 **보이게** 하려면 새 칸 + 이 함수의 새 출력 절이 �
 
 | Branch | AST kind | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|---|
-| B1 | `if at 245:2` | `len(rep.Steps) == 0` | "아직 기록된 검증이 없다" 출력 | **조기 반환 247:3** — 뒤의 모든 절(Outstanding 포함) 생략 | `TestBuildReportOnAnEmptyRecord` |
-| B2 | `range at 251:2` | 단계 순회 | 단계·판정·이유·라벨 출력 | 없음 | `TestReportTextNamesTheUnverifiedProperties` |
-| B3 | `range at 256:2` | 그룹 순회 | 그룹 이름 출력 | 없음 | 같음 |
-| B4 | `range at 258:3` | 속성 순회 | — | 없음 | 같음 |
-| B5 | `if at 260:4` | 값이 빈 문자열 | 표시값 `unverified` 로 대체 | 없음 | 같음 |
-| B6 | `if at 264:4` | `!a.Verified` | 표지 `!` | 없음 | 같음 |
-| B7 | `if at 268:4` | `a.Detail != ""` | 세부 줄 출력 | 없음 | 같음 |
-| B8 | `range at 277:2` | 미검증 키 순회 | 키 출력 | 없음 | 같음 |
-| B9 | `if at 281:2` | `len(rep.Outstanding) > 0` | "⚠ … 아직 계좌에 살아 있다" 머리줄 | 없음 | `TestVerifyReportKeepsReplayDisabledWithoutEvidence`(cmd) |
-| B10 | `range at 283:3` | outstanding 순회 | 종류·id·심볼·노트 출력 | 없음 | 같음 |
-| B11 | `if at 285:4` | `a.Deliberate` | 노트 앞에 "존속 측정을 위해 의도적으로 남긴 것" | 없음 | 같음 |
+| B1 | `if at 249:2` | `len(rep.Steps) == 0` | "아직 기록된 검증이 없다" 출력 | **조기 반환 247:3** — 뒤의 모든 절(Outstanding 포함) 생략 | `TestBuildReportOnAnEmptyRecord` |
+| B2 | `range at 255:2` | 단계 순회 | 단계·판정·이유·라벨 출력 | 없음 | `TestReportTextNamesTheUnverifiedProperties` |
+| B3 | `range at 260:2` | 그룹 순회 | 그룹 이름 출력 | 없음 | 같음 |
+| B4 | `range at 262:3` | 속성 순회 | — | 없음 | 같음 |
+| B5 | `if at 264:4` | 값이 빈 문자열 | 표시값 `unverified` 로 대체 | 없음 | 같음 |
+| B6 | `if at 268:4` | `!a.Verified` | 표지 `!` | 없음 | 같음 |
+| B7 | `if at 272:4` | `a.Detail != ""` | 세부 줄 출력 | 없음 | 같음 |
+| B8 | `range at 281:2` | 미검증 키 순회 | 키 출력 | 없음 | 같음 |
+| B9 | `if at 285:2` | `len(rep.Outstanding) > 0` | "⚠ … 아직 계좌에 살아 있다" 머리줄 | 없음 | `TestVerifyReportKeepsReplayDisabledWithoutEvidence`(cmd) |
+| B10 | `range at 287:3` | outstanding 순회 | 종류·id·심볼·노트 출력 | 없음 | 같음 |
+| B11 | `if at 289:4` | `a.Deliberate` | 노트 앞에 "존속 측정을 위해 의도적으로 남긴 것" | 없음 | 같음 |
 
 조기 반환은 B1 한 곳(247:3). 그 외에는 끝까지 흐른다.
 
@@ -68,3 +68,8 @@ absent" 를 **보이게** 하려면 새 칸 + 이 함수의 새 출력 절이 �
   은 `Outstanding` 투영 변화(terminal 편집)로만 달라진다.
 - High-risk impact: no(읽기 전용 렌더) — 단 운영자가 수동 취소를 판단하는 화면이므로 라벨 오류는 안전 문제로 다룬다.
 - RED(로트 2): `TestReconcileTextLabelsReconciledAbsentInReportAndStatus`(`internal/verifylive/reconcile_projection_test.go`).
+
+## GREEN 로트 재추출 (a121 tasks 3.1·3.2, worktree a99a9059 + GREEN 편집)
+
+- 편집: 함수 끝 `writeReconciled(w, rep.Reconciled)` 호출 한 줄(분기 11 불변, 번호 불변, B1 조기 반환 뒤). GREEN 관측: TestReconcileTextLabelsReconciledAbsentInReportAndStatus PASS; 변이 V-report-writetext·V-label.
+- AST 재추출: `go run ./tools/logic-map` — 분기 11→11, 편집 전후 분기 열을 difflib 로 정렬한 결과 equal 뿐(재번호 없음), 앵커는 줄 이동만 반영.

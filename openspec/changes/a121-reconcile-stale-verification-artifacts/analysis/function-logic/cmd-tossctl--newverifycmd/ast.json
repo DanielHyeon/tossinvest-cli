@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/verify.go",
-  "source_sha256": "77d33e4d7375aa6857e0ff69dda5ad4d083ace0f62878a9b1db152967435d4f7",
+  "source_sha256": "d863c1de6b2af55c56a1da9bd0124dcd81a2e8348c7eec4a2a72b662c3ce8ef7",
   "package": "main",
   "function": "newVerifyCmd",
   "signature": "newVerifyCmd(params=1, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 129,
+    "line": 130,
     "column": 2
   },
   "branches": null,
@@ -17,7 +17,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 128,
+        "line": 129,
         "column": 2
       }
     }
@@ -70,6 +70,14 @@
         "column": 3
       },
       "text": "newVerifyAbortCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 3
+      },
+      "text": "newVerifyReconcileCmd"
     }
   ],
   "assignments": [

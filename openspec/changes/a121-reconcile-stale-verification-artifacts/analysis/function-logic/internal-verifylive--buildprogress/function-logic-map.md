@@ -1,8 +1,8 @@
 # Function Logic Map: `BuildProgress`
 
-- Source: `internal/verifylive/report.go` (315-343)
+- Source: `internal/verifylive/report.go` (333-362)
 - Qualified function: `BuildProgress`
-- Revision: `current` (구현 base `de147cc2`, `source_sha256` 4da7dc92…)
+- Revision: `current` (구현 base `de147cc2`, `source_sha256` e96b2103… (GREEN 편집 뒤 재추출; 편집 전 4da7dc92…))
 - AST evidence: `ast.json` — AST branches 7, 반환 1(342:2), 호출 9
 - Risk scan: `risk-pattern-report.md`
 - 편집 예정: design Revision 1 G2 — status 가 대사된 artifact 를 **reconciled absent** 로 표시 (task 3.1/3.2)
@@ -22,13 +22,13 @@
 
 | Branch | AST kind | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|---|
-| B1 | `range at 317:2` | 모든 줄 순회(계좌 참조) | — | 없음 | `TestProgressPointsAtTheRestartWhenOneIsPending` |
-| B2 | `if at 318:3` | 계좌 참조가 비었음 | 첫 줄(종류 무관)의 `AccountRef` 채택 | 없음 | `TestProgressPointsAtTheRestartWhenOneIsPending` |
-| B3 | `range at 322:2` | 카탈로그 단계 순회 | — | 없음 | `TestProgressOnAnUnstartedVerification` |
-| B4 | `if at 324:3` | 그 단계 줄이 없음 | `Pending` 추가 후 `continue` | 없음 | `TestProgressOnAnUnstartedVerification` |
-| B5 | `if at 331:3` | 마지막 판정이 비-종결 | `AwaitingRestart`·`Pending` | 없음 | `TestProgressPointsAtTheRestartWhenOneIsPending` |
-| B6 | `range at 336:2` | 모든 줄 순회(M0 체크포인트) | — | 없음 | `TestM0CheckpointsAreVisibleInStatusButNeverAbortTargets` |
-| B7 | `if at 337:3` | `Kind == KindM0Checkpoint` 이고 값 있음 | `M0Checkpoints` 추가 | 없음 | `TestM0CheckpointsAreVisibleInStatusButNeverAbortTargets` |
+| B1 | `range at 335:2` | 모든 줄 순회(계좌 참조) | — | 없음 | `TestProgressPointsAtTheRestartWhenOneIsPending` |
+| B2 | `if at 336:3` | 계좌 참조가 비었음 | 첫 줄(종류 무관)의 `AccountRef` 채택 | 없음 | `TestProgressPointsAtTheRestartWhenOneIsPending` |
+| B3 | `range at 340:2` | 카탈로그 단계 순회 | — | 없음 | `TestProgressOnAnUnstartedVerification` |
+| B4 | `if at 342:3` | 그 단계 줄이 없음 | `Pending` 추가 후 `continue` | 없음 | `TestProgressOnAnUnstartedVerification` |
+| B5 | `if at 349:3` | 마지막 판정이 비-종결 | `AwaitingRestart`·`Pending` | 없음 | `TestProgressPointsAtTheRestartWhenOneIsPending` |
+| B6 | `range at 354:2` | 모든 줄 순회(M0 체크포인트) | — | 없음 | `TestM0CheckpointsAreVisibleInStatusButNeverAbortTargets` |
+| B7 | `if at 355:3` | `Kind == KindM0Checkpoint` 이고 값 있음 | `M0Checkpoints` 추가 | 없음 | `TestM0CheckpointsAreVisibleInStatusButNeverAbortTargets` |
 
 조기 반환 없음. 반환은 342행 한 곳.
 
@@ -62,3 +62,8 @@ CodeGraph 1.6.0 은 `Outcome`·`Entry` 를 다른 패키지로 잘못 해소했�
   바꾸지 않아야 한다.
 - High-risk impact: no (읽기 전용 표시) — 단 status 의 "아직 살아 있다" 목록은 사람이 수동 취소를 판단하는 화면이므로,
   대사된 artifact 를 "취소됨"·"체결됨" 으로 쓰면 안 되고 Outstanding 에서 빠진 이유를 표시해야 한다.
+
+## GREEN 로트 재추출 (a121 tasks 3.1·3.2, worktree a99a9059 + GREEN 편집)
+
+- 편집: `p.Reconciled = ReconciledArtifacts(entries)` 한 줄(분기 7 불변, 번호 불변). GREEN 관측: TestReconcileTextLabelsReconciledAbsentInReportAndStatus PASS; 변이 V-buildprogress-reconciled.
+- AST 재추출: `go run ./tools/logic-map` — 분기 7→7, 편집 전후 분기 열을 difflib 로 정렬한 결과 equal 뿐(재번호 없음), 앵커는 줄 이동만 반영.

@@ -1,8 +1,8 @@
 # Function Logic Map: `Artifact.terminal`
 
-- Source: `internal/verifylive/record.go` (575-575)
+- Source: `internal/verifylive/record.go` (588-588)
 - Qualified function: `Artifact.terminal`
-- Revision: `current` (구현 base `de147cc2`, `source_sha256` df526d2c…)
+- Revision: `current` (구현 base `de147cc2`, `source_sha256` ac81738d… (GREEN 편집 뒤 재추출; 편집 전 df526d2c…))
 - AST evidence: `ast.json` — AST branches 0, 반환 1(575:37), 호출 0
 - Risk scan: `risk-pattern-report.md`
 - 편집 예정: design Revision 1 G2 — 셋째 종결 `ReconciledAbsent` 를 이 술어에 더함 (task 3.1)
@@ -58,3 +58,8 @@ AST 가 분기 0 을 낸다. 단락 평가(`||`)는 AST 분기가 아니므로 �
   false 인 모든 기존 줄의 판정이 불변이어야 한다(`TestTheRealRecordsAreJudgedExactlyAsBefore`).
 - High-risk impact: yes — 이 술어가 정리(취소) 대상 선택(`cleanupFrom`)과 노출 상한(`liveCount`)을 정한다.
   잘못 넓히면 살아 있는 조건주문이 정리·상한에서 빠진다. 그래서 새 필드를 세우는 경로는 대사 명령 하나뿐이어야 한다.
+
+## GREEN 로트 재추출 (a121 tasks 3.1·3.2, worktree a99a9059 + GREEN 편집)
+
+- 편집: `|| a.ReconciledAbsent` 셋째 종결 추가(분기 0 유지). GREEN 관측: TestReconcileOnlyRemovesItsExactArtifactFromCleanupPlanning·TestReconcilePinsRedoSetBeforeAndAfter·TestReconcileLeavesTheReportAttributesAndVerdictsUnchanged PASS; 변이 V-terminal-third 원장 참조.
+- AST 재추출: `go run ./tools/logic-map` — 분기 0→0, 편집 전후 분기 열을 difflib 로 정렬한 결과 equal 뿐(재번호 없음), 앵커는 줄 이동만 반영.

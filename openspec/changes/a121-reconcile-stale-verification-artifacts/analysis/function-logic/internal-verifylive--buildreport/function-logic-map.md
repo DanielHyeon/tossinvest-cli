@@ -1,8 +1,8 @@
 # Function Logic Map: `BuildReport`
 
-- Source: `internal/verifylive/report.go` (166-216)
+- Source: `internal/verifylive/report.go` (169-220)
 - Qualified function: `BuildReport`
-- Revision: `current` (구현 base `de147cc2`, `source_sha256` 4da7dc92…)
+- Revision: `current` (구현 base `de147cc2`, `source_sha256` e96b2103… (GREEN 편집 뒤 재추출; 편집 전 4da7dc92…))
 - AST evidence: `ast.json` — AST branches 10, 반환 1(215:2), 호출 11
 - Risk scan: `risk-pattern-report.md`
 - 편집 예정: design Revision 1 G2 — report 가 대사된 artifact 를 **reconciled absent** 로 표시하고 cancelled·filled 로
@@ -25,16 +25,16 @@ approval·cleanup·m0-checkpoint, 그리고 장래 `KindReconcile`)은 Steps·�
 
 | Branch | AST kind | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|---|
-| B1 | `range at 177:2` | 모든 줄을 순회 | `rep.AccountRef`·`rep.Steps`·`latest` 누적 | 없음 | `TestUnverifiedValuesAreNotCountedAsAnswers` |
-| B2 | `if at 178:3` | 아직 계좌 참조가 비었음 | 첫 줄(종류 무관)의 `AccountRef` 를 채택 | 없음 | `TestUnverifiedValuesAreNotCountedAsAnswers` |
-| B3 | `if at 181:3` | `!isStepEntry(e)` — 스텝이 아닌 줄 | Steps·관측에 넣지 않고 `continue` | 없음 | `TestAFullRunProducesAReportWithNoIdempotencyGaps` |
-| B4 | `range at 190:3` | 스텝 줄의 관측 순회 | 같은 키는 뒤 줄이 이김(`latest`) | 없음 | `TestReplayStaysDisabledUnlessBothHalvesArePositive` |
-| B5 | `range at 194:2` | 체크리스트 그룹 순회 | `rep.Groups` 추가 | 없음 | `TestEveryChecklistPropertyIsReportedEvenWhenUnmeasured` |
-| B6 | `range at 196:3` | 그룹 속성 순회 | `g.Attributes` 추가 | 없음 | `TestEveryChecklistPropertyIsReportedEvenWhenUnmeasured` |
-| B7 | `if at 198:4` | 관측이 있고 측정값임(`isMeasured`) | 값·Verified=true | 없음 | `TestUnverifiedValuesAreNotCountedAsAnswers` |
-| B8 | `else at 200:11` | B7 거짓 | B9 로 | 없음 | `TestUnverifiedValuesAreNotCountedAsAnswers` |
-| B9 | `if at 200:11` | 관측은 있으나 "unverified" 류 | 값만 싣고 Verified=false | 없음 | `TestUnverifiedValuesAreNotCountedAsAnswers` |
-| B10 | `if at 204:4` | `!a.Verified` | `rep.Unverified` 에 키 추가 | 없음 | `TestBuildReportOnAnEmptyRecord` |
+| B1 | `range at 180:2` | 모든 줄을 순회 | `rep.AccountRef`·`rep.Steps`·`latest` 누적 | 없음 | `TestUnverifiedValuesAreNotCountedAsAnswers` |
+| B2 | `if at 181:3` | 아직 계좌 참조가 비었음 | 첫 줄(종류 무관)의 `AccountRef` 를 채택 | 없음 | `TestUnverifiedValuesAreNotCountedAsAnswers` |
+| B3 | `if at 184:3` | `!isStepEntry(e)` — 스텝이 아닌 줄 | Steps·관측에 넣지 않고 `continue` | 없음 | `TestAFullRunProducesAReportWithNoIdempotencyGaps` |
+| B4 | `range at 193:3` | 스텝 줄의 관측 순회 | 같은 키는 뒤 줄이 이김(`latest`) | 없음 | `TestReplayStaysDisabledUnlessBothHalvesArePositive` |
+| B5 | `range at 197:2` | 체크리스트 그룹 순회 | `rep.Groups` 추가 | 없음 | `TestEveryChecklistPropertyIsReportedEvenWhenUnmeasured` |
+| B6 | `range at 199:3` | 그룹 속성 순회 | `g.Attributes` 추가 | 없음 | `TestEveryChecklistPropertyIsReportedEvenWhenUnmeasured` |
+| B7 | `if at 201:4` | 관측이 있고 측정값임(`isMeasured`) | 값·Verified=true | 없음 | `TestUnverifiedValuesAreNotCountedAsAnswers` |
+| B8 | `else at 203:11` | B7 거짓 | B9 로 | 없음 | `TestUnverifiedValuesAreNotCountedAsAnswers` |
+| B9 | `if at 203:11` | 관측은 있으나 "unverified" 류 | 값만 싣고 Verified=false | 없음 | `TestUnverifiedValuesAreNotCountedAsAnswers` |
+| B10 | `if at 207:4` | `!a.Verified` | `rep.Unverified` 에 키 추가 | 없음 | `TestBuildReportOnAnEmptyRecord` |
 
 조기 반환 없음. 반환은 215행 한 곳.
 
@@ -71,3 +71,8 @@ CodeGraph 1.6.0 callees 는 `Report`·`Outcome`·`Entry` 구조체를 다른 패
   더하는 것만. 대사 줄은 B3 로 계속 걸러져야 하며 Steps·Unverified·ReplayEnabled 를 바꾸면 안 된다.
 - High-risk impact: no (읽기 전용 표시) — 다만 report 는 사람이 자동 진입 금지 목록(Unverified)을 읽는 화면이라
   대사가 Unverified 를 줄이면 안전 경계 위반이다. RED(task 2.4)에서 "대사 뒤 Unverified·ReplayEnabled 불변" 을 단언.
+
+## GREEN 로트 재추출 (a121 tasks 3.1·3.2, worktree a99a9059 + GREEN 편집)
+
+- 편집: `rep.Reconciled = ReconciledArtifacts(entries)` 한 줄(분기 10 불변, 번호 불변 — difflib 정렬 equal, 줄만 이동). GREEN 관측: TestReconcileLeavesTheReportAttributesAndVerdictsUnchanged·TestReconcileTextLabelsReconciledAbsentInReportAndStatus PASS; 변이 V-buildreport-reconciled.
+- AST 재추출: `go run ./tools/logic-map` — 분기 10→10, 편집 전후 분기 열을 difflib 로 정렬한 결과 equal 뿐(재번호 없음), 앵커는 줄 이동만 반영.

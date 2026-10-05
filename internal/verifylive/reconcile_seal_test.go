@@ -49,6 +49,10 @@ var reconcileAllowedOutside = map[string]bool{
 	"(*" + verifylivePath + ".Recorder).Append":                   true,
 	"(*" + verifylivePath + ".Recorder).Close":                    true,
 	"github.com/JungHoonGhae/tossinvest-cli/internal/attest.Mask": true,
+	// 읽기 통로 하나(a121 GREEN 판정 2026-10-05): 엄격 해독·원문 바이트 지문(design F3·P2-7)은 기록 원문을 요구한다.
+	// RED 로트가 추가 통로(Recorder 3이름)만 넣고 읽기 통로를 빠뜨린 누락의 수리. os.ReadFile 잎은 record.go 소유
+	// (TestNoAutomationBypassExists 의 경계). 추가 통로는 Recorder 3이름, 읽기 통로는 readRecordRaw 하나뿐이다.
+	verifylivePath + ".readRecordRaw": true,
 }
 
 // reconcileBannedImports 는 표준 라이브러리여도 reconcile*.go 가 import 하면 안 되는 패키지다(A-RED 재검 P2-a) — 직접

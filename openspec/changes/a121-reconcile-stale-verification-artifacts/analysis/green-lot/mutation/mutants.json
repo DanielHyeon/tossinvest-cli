@@ -1,0 +1,910 @@
+[
+ {
+  "id": "V-terminal-third",
+  "pkg": "v",
+  "file": "internal/verifylive/record.go",
+  "old": "return a.Cancelled || a.Filled || a.ReconciledAbsent",
+  "new": "return a.Cancelled || a.Filled",
+  "why": "셋째 종결 제거"
+ },
+ {
+  "id": "V-buildreport-reconciled",
+  "pkg": "v",
+  "file": "internal/verifylive/report.go",
+  "old": "\trep.Reconciled = ReconciledArtifacts(entries)\n",
+  "new": "",
+  "why": "BuildReport 칸 제거"
+ },
+ {
+  "id": "V-buildprogress-reconciled",
+  "pkg": "v",
+  "file": "internal/verifylive/report.go",
+  "old": "\tp.Reconciled = ReconciledArtifacts(entries)\n",
+  "new": "",
+  "why": "BuildProgress 칸 제거"
+ },
+ {
+  "id": "V-report-writetext",
+  "pkg": "v",
+  "file": "internal/verifylive/report.go",
+  "old": "\twriteReconciled(w, rep.Reconciled)\n",
+  "new": "",
+  "why": "Report.WriteText 출력 제거"
+ },
+ {
+  "id": "V-progress-writetext",
+  "pkg": "v",
+  "file": "internal/verifylive/report.go",
+  "old": "\twriteReconciled(w, p.Reconciled)",
+  "new": "",
+  "why": "Progress.WriteText 출력 제거"
+ },
+ {
+  "id": "V-label",
+  "pkg": "v",
+  "file": "internal/verifylive/report.go",
+  "old": ") reconciled absent\\n\"",
+  "new": ") cancelled\\n\"",
+  "why": "라벨을 취소로"
+ },
+ {
+  "id": "V-projection-monotone",
+  "pkg": "v",
+  "file": "internal/verifylive/projection_reconciled.go",
+  "old": "if seen && prev.terminal() && !a.terminal() {",
+  "new": "if seen && prev.terminal() && !a.terminal() && false {",
+  "why": "투영 단조성 제거"
+ },
+ {
+  "id": "V-marshal-plain",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_record.go",
+  "old": "\tif !a.ReconciledAbsent {\n\t\treturn json.Marshal(plainArtifact(a))",
+  "new": "\tif true {\n\t\treturn json.Marshal(plainArtifact(a))",
+  "why": "대사 줄을 일반 모양으로(영 시각 cancelled_at)"
+ },
+ {
+  "id": "V-marshal-all",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_record.go",
+  "old": "\tif !a.ReconciledAbsent {\n\t\treturn json.Marshal(plainArtifact(a))",
+  "new": "\tif false {\n\t\treturn json.Marshal(plainArtifact(a))",
+  "why": "모든 artifact 를 축약형으로"
+ },
+ {
+  "id": "V-tail-pre",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_record.go",
+  "old": "\tif len(raw) > 0 && raw[len(raw)-1] != '\\n' {\n\t\treturn nil, nil, refuse(RefuseRecordTailNoNewline",
+  "new": "\tif false {\n\t\treturn nil, nil, refuse(RefuseRecordTailNoNewline",
+  "why": "선택 전 개행 검사 제거"
+ },
+ {
+  "id": "V-undecodable",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_record.go",
+  "old": "if err := json.Unmarshal(line, &e); err != nil {",
+  "new": "if err := json.Unmarshal(line, &e); err != nil && false {",
+  "why": "엄격 해독 제거"
+ },
+ {
+  "id": "V-format",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_record.go",
+  "old": "if e.FormatVersion > RecordFormatVersion {",
+  "new": "if false {",
+  "why": "형식 판정 제거"
+ },
+ {
+  "id": "V-unreadable",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_record.go",
+  "old": "\t\treturn nil, nil, refuse(RefuseRecordUnreadable, \"the record cannot be read: \"+err.Error())",
+  "new": "\t\treturn nil, nil, nil",
+  "why": "읽기 오류 무시"
+ },
+ {
+  "id": "V-fingerprint",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "if sha256.Sum256(again) != fingerprint {",
+  "new": "if sha256.Sum256(again) != fingerprint && false {",
+  "why": "지문 비교 제거"
+ },
+ {
+  "id": "V-tail-append",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tif len(again) > 0 && again[len(again)-1] != '\\n' {",
+  "new": "\tif false {",
+  "why": "추가 직전 개행 검사 제거"
+ },
+ {
+  "id": "V-final-window",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tat := now()\n\tif err := checkReconcileWindow(target, start, at); err != nil {",
+  "new": "\tat := now()\n\tif err := error(nil); err != nil {",
+  "why": "추가 직전 신선도·Q1 재검 제거"
+ },
+ {
+  "id": "V-append-decode",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tagain, _, err := readRecordStrictNoTail(p.RecordPath)",
+  "new": "\tagain, err := readRecordRaw(p.RecordPath)",
+  "why": "추가 직전 엄격 해독 생략"
+ },
+ {
+  "id": "V-select-kind",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\t\tif a.Kind == KindConditional {\n\t\t\tconditionals",
+  "new": "\t\tif true {\n\t\t\tconditionals",
+  "why": "조건주문 종류 거름 제거"
+ },
+ {
+  "id": "V-select-many",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tswitch len(candidates) {",
+  "new": "\tswitch min(len(candidates), 1) {",
+  "why": "복수 후보 허용"
+ },
+ {
+  "id": "V-m0-filter",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif !ok || owner.ParentConditionalID == \"\" {",
+  "new": "\tif !ok || owner.ParentConditionalID == \"\" || true {",
+  "why": "M0 제외 제거"
+ },
+ {
+  "id": "V-m0-error",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif err != nil {\n\t\treturn nil, refuse(RefuseM0Unresolved",
+  "new": "\tif false {\n\t\treturn nil, refuse(RefuseM0Unresolved",
+  "why": "M0 오류 무시"
+ },
+ {
+  "id": "V-mixed",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif len(refs) != 1 {",
+  "new": "\tif len(refs) == 0 {",
+  "why": "mixed 거절 제거"
+ },
+ {
+  "id": "V-unusable",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif unusableMask(recordMask) || unusableMask(currentMask) {",
+  "new": "\tif false {",
+  "why": "마스크 경계 제거"
+ },
+ {
+  "id": "V-mismatch",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif currentMask != recordMask {",
+  "new": "\tif false {",
+  "why": "mismatch 제거"
+ },
+ {
+  "id": "V-approve-ignore",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tif err := p.Approve(ctx, approval); err != nil {",
+  "new": "\tif err := p.Approve(ctx, approval); err != nil && false {",
+  "why": "승인 거절 무시"
+ },
+ {
+  "id": "V-approve-text",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tapproval.WriteText(out)\n",
+  "new": "",
+  "why": "승인 출력 생략"
+ },
+ {
+  "id": "V-approval-market",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "Symbol: target.Symbol, Market: p.Market,",
+  "new": "Symbol: target.Symbol,",
+  "why": "승인 시장 생략"
+ },
+ {
+  "id": "V-q1-nil",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif m == nil || m.Bound <= 0 {",
+  "new": "\tif m == nil {\n\t\tm = &retentionMeasurement{Bound: 1 << 62, Eviction: evictionDuration}\n\t}\n\tif m.Bound <= 0 {",
+  "why": "측정 부재를 무한 한도로"
+ },
+ {
+  "id": "V-q1-eviction",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif m.Eviction != evictionDuration {",
+  "new": "\tif m.Eviction == evictionCount {",
+  "why": "축출 모형 판정 약화"
+ },
+ {
+  "id": "V-q1-zero",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif target.CreatedAt.IsZero() {",
+  "new": "\tif false {",
+  "why": "영 CreatedAt 거절 제거"
+ },
+ {
+  "id": "V-q1-age",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif age < 0 || age > m.Bound {",
+  "new": "\tif age < 0 {",
+  "why": "나이 한도 제거"
+ },
+ {
+  "id": "V-q3-unfixed",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tif reconcileFreshnessBound <= 0 {",
+  "new": "\tif false {",
+  "why": "Q3 미확정 거절 제거"
+ },
+ {
+  "id": "V-q3-exceed",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif elapsed < 0 || elapsed > reconcileFreshnessBound {",
+  "new": "\tif elapsed < 0 {",
+  "why": "신선도 한도 제거"
+ },
+ {
+  "id": "V-q3-start-early",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tstart := now()\n\tfirst, err",
+  "new": "\tfirst, err",
+  "why": "순서 교란: 창 시작을 승인 전으로",
+  "edits": [
+   [
+    "\tapproval.WriteText(out)\n",
+    "\tearly := now()\n\tapproval.WriteText(out)\n"
+   ],
+   [
+    "\tstart := now()\n\tfirst, err",
+    "\tstart := early\n\tfirst, err"
+   ]
+  ]
+ },
+ {
+  "id": "V-instr-echo",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif echo != symbol {",
+  "new": "\tif echo != symbol && false {",
+  "why": "에코 대조 제거"
+ },
+ {
+  "id": "V-instr-second",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\t// 8. 양성 대조 ② · 신선도·Q1 재검(F7).\n\tif err := checkReconcileInstrument(ctx, p.Reader, symbol); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}",
+  "new": "\t// 8.",
+  "why": "둘째 종목 조회 제거"
+ },
+ {
+  "id": "V-window-before-instr2",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tif err := checkReconcileInstrument(ctx, p.Reader, symbol); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tif err := checkReconcileWindow(target, start, now()); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}",
+  "new": "\tif err := checkReconcileWindow(target, start, now()); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tif err := checkReconcileInstrument(ctx, p.Reader, symbol); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}",
+  "why": "순서 교란: 재검을 둘째 조회 앞으로(최종 재검은 유지)"
+ },
+ {
+  "id": "V-second-read",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tsecond, err := readReconcileSet(ctx, p.Reader, symbol)",
+  "new": "\tsecond, err := first, error(nil)",
+  "why": "둘째 읽기 생략"
+ },
+ {
+  "id": "V-read-order",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif out.condOpen, err = readReconcileConditionalGroup(ctx, r, \"OPEN\", ReconcileGroupConditionalOpen, symbol); err != nil {\n\t\treturn reconcileRead{}, err\n\t}\n\tif out.plainOpen, err = readReconcilePlainGroup(ctx, r, symbol); err != nil {\n\t\treturn reconcileRead{}, err\n\t}",
+  "new": "\tif out.plainOpen, err = readReconcilePlainGroup(ctx, r, symbol); err != nil {\n\t\treturn reconcileRead{}, err\n\t}\n\tif out.condOpen, err = readReconcileConditionalGroup(ctx, r, \"OPEN\", ReconcileGroupConditionalOpen, symbol); err != nil {\n\t\treturn reconcileRead{}, err\n\t}",
+  "why": "읽기 순서 교란"
+ },
+ {
+  "id": "V-limit",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "const reconcileListLimit = 100",
+  "new": "const reconcileListLimit = 20",
+  "why": "limit 변경"
+ },
+ {
+  "id": "V-repeated",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif p.cursor != \"\" && p.seen[p.cursor] {",
+  "new": "\tif false {",
+  "why": "반복 커서 제거"
+ },
+ {
+  "id": "V-dup",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif p.ids[id] {",
+  "new": "\tif false {",
+  "why": "읽기 안 중복 제거"
+ },
+ {
+  "id": "V-empty-cursor",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif strings.TrimSpace(next) == \"\" {",
+  "new": "\tif false {",
+  "why": "빈 커서 제거"
+ },
+ {
+  "id": "V-readerr",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\t\t\treturn nil, refuse(RefuseReadError, group+\": \"+err.Error())",
+  "new": "\t\t\treturn rows, nil",
+  "why": "조건주문 읽기 오류 무시"
+ },
+ {
+  "id": "V-readerr-plain",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\t\t\treturn nil, refuse(RefuseReadError, ReconcileGroupPlainOpen+\": \"+err.Error())",
+  "new": "\t\t\treturn rows, nil",
+  "why": "일반 주문 읽기 오류 무시"
+ },
+ {
+  "id": "V-multiset",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tif !sameReconcileMultiset(basisRows, second.basis()) {",
+  "new": "\tif !sameReconcileMultiset(basisRows, second.basis()) && false {",
+  "why": "multiset 비교 제거"
+ },
+ {
+  "id": "V-multiset-set",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif len(a) != len(b) {\n\t\treturn false\n\t}",
+  "new": "\tif len(a) != len(b) && false {\n\t\treturn false\n\t}",
+  "why": "길이 비교 제거"
+ },
+ {
+  "id": "V-oco",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\t\tif row.HasSecond {",
+  "new": "\t\tif row.HasSecond && false {",
+  "why": "OCO 거절 제거"
+ },
+ {
+  "id": "V-incomplete",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\t\tif row.ID == \"\" || row.Symbol == \"\" || row.Market == \"\" {",
+  "new": "\t\tif (row.ID == \"\" || row.Symbol == \"\" || row.Market == \"\") && false {",
+  "why": "필드 결측 제거"
+ },
+ {
+  "id": "V-symbol",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\t\tif row.Symbol != symbol {\n\t\t\treturn refuse(RefuseRowSymbol, \"a conditional",
+  "new": "\t\tif row.Symbol != symbol && false {\n\t\t\treturn refuse(RefuseRowSymbol, \"a conditional",
+  "why": "심볼 대조 제거"
+ },
+ {
+  "id": "V-market",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\t\tif row.Market != market {",
+  "new": "\t\tif row.Market != market && false {",
+  "why": "시장 대조 제거"
+ },
+ {
+  "id": "V-rows-after-absence",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tif err := checkReconcileRows(first, symbol, p.Market); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tif err := checkReconcileAbsence(first, target); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}",
+  "new": "\tif err := checkReconcileAbsence(first, target); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tif err := checkReconcileRows(first, symbol, p.Market); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}",
+  "why": "순서 교란: 행 검사를 부재 뒤로"
+ },
+ {
+  "id": "V-open-cond",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif len(r.condOpen) > 0 {",
+  "new": "\tif false {",
+  "why": "OPEN 조건주문 거절 제거"
+ },
+ {
+  "id": "V-open-plain",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\tif len(r.plainOpen) > 0 {",
+  "new": "\tif false {",
+  "why": "OPEN 일반 주문 거절 제거"
+ },
+ {
+  "id": "V-q6",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\t\tif row.Status == \"EXPIRED\" {",
+  "new": "\t\tif false {",
+  "why": "Q6 분기 제거"
+ },
+ {
+  "id": "V-target",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\t\tif row.ID != target.ID {\n\t\t\tcontinue\n\t\t}",
+  "new": "\t\tif true {\n\t\t\tcontinue\n\t\t}",
+  "why": "CLOSED target 검사 제거"
+ },
+ {
+  "id": "V-fired",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\t\tif row.TriggeredOrderID != \"\" || row.Status == \"COMPLETED\" {",
+  "new": "\t\tif row.TriggeredOrderID != \"\" {",
+  "why": "COMPLETED 흔적 제거"
+ },
+ {
+  "id": "V-fired-trigger",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\t\tif row.TriggeredOrderID != \"\" || row.Status == \"COMPLETED\" {",
+  "new": "\t\tif row.Status == \"COMPLETED\" {",
+  "why": "triggeredOrderId 흔적 제거"
+ },
+ {
+  "id": "V-status-allowlist",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\t\tif row.Status == \"\" || reconcileOpenFamily[row.Status] || !reconcileClosedStatusAllowlist[row.Status] {",
+  "new": "\t\tif row.Status == \"\" || reconcileOpenFamily[row.Status] {",
+  "why": "허용 목록 무시"
+ },
+ {
+  "id": "V-status-openfamily",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\t\tif row.Status == \"\" || reconcileOpenFamily[row.Status] || !reconcileClosedStatusAllowlist[row.Status] {",
+  "new": "\t\tif row.Status == \"\" || !reconcileClosedStatusAllowlist[row.Status] {",
+  "why": "OPEN 계열 명시 거절 제거"
+ },
+ {
+  "id": "V-status-before-absence",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tif err := checkReconcileAbsence(first, target); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tif err := checkReconcileClosedStatus(first); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}",
+  "new": "\tif err := checkReconcileClosedStatus(first); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tif err := checkReconcileAbsence(first, target); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}",
+  "why": "순서 교란: 허용 목록을 부재 앞으로(Q6 가림)"
+ },
+ {
+  "id": "V-basis-empty",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tbasis := ReconcileBasisDigest(basisRows)",
+  "new": "\tbasis := ReconcileBasisDigest(nil)",
+  "why": "근거를 빈 집합으로"
+ },
+ {
+  "id": "V-basis-sort",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_record.go",
+  "old": "Rows: sortedReconcileRows(rows)}",
+  "new": "Rows: rows}",
+  "why": "근거 정렬 제거"
+ },
+ {
+  "id": "V-basis-domain",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_record.go",
+  "old": "\treturn ReconcileBasisDomain + \":\" + Digest(struct {",
+  "new": "\treturn ReconcileBasisDomain + \":\" + Digest(rows)\n\t_ = struct {",
+  "why": "도메인 분리 제거",
+  "edits": [
+   [
+    "\treturn ReconcileBasisDomain + \":\" + Digest(struct {",
+    "\treturn ReconcileBasisDomain + \":\" + Digest(sortedReconcileRows(rows))\n\t_ = struct {"
+   ],
+   [
+    "\t}{Domain: ReconcileBasisDomain, Rows: sortedReconcileRows(rows)})",
+    "\t}{Domain: ReconcileBasisDomain, Rows: sortedReconcileRows(rows)}\n\treturn \"\""
+   ]
+  ]
+ },
+ {
+  "id": "V-line-createdat",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\treconciled.ReconciledAt = at.UTC()",
+  "new": "\treconciled.ReconciledAt = at.UTC()\n\treconciled.CreatedAt = at",
+  "why": "CreatedAt 를 추가 시각으로"
+ },
+ {
+  "id": "V-line-step",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_record.go",
+  "old": "\t\tStepID:        StepReconcile,",
+  "new": "\t\tStepID:        StepConditionalCancel,",
+  "why": "StepID 를 카탈로그 값으로"
+ },
+ {
+  "id": "V-line-mutating",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_record.go",
+  "old": "\t\tAccountRef:    accountMask,",
+  "new": "\t\tAccountRef:    accountMask,\n\t\tMutating:      true,",
+  "why": "mutating true"
+ },
+ {
+  "id": "V-line-calls",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_record.go",
+  "old": "\t\tArtifacts: []Artifact{art},",
+  "new": "\t\tArtifacts: []Artifact{art},\n\t\tCalls:     []Call{{Endpoint: \"GET /api/v1/conditional-orders\", At: at}},",
+  "why": "Calls 탑재"
+ },
+ {
+  "id": "O-not-object",
+  "pkg": "o",
+  "file": "internal/official/reconcile_reads.go",
+  "old": "\tif len(trimmed) == 0 || trimmed[0] != '{' {",
+  "new": "\tif len(trimmed) == 0 {",
+  "why": "result 객체 검사 제거"
+ },
+ {
+  "id": "O-collection-missing",
+  "pkg": "o",
+  "file": "internal/official/reconcile_reads.go",
+  "old": "\trawRows, ok := fields[collection]\n\tif !ok {",
+  "new": "\trawRows, ok := fields[collection]\n\tif !ok && false {",
+  "why": "컬렉션 결측 검사 제거"
+ },
+ {
+  "id": "O-collection-array",
+  "pkg": "o",
+  "file": "internal/official/reconcile_reads.go",
+  "old": "\tif t := bytes.TrimSpace(rawRows); len(t) == 0 || t[0] != '[' {",
+  "new": "\tif false {",
+  "why": "컬렉션 배열 검사 제거"
+ },
+ {
+  "id": "O-row-object",
+  "pkg": "o",
+  "file": "internal/official/reconcile_reads.go",
+  "old": "\t\tif t := bytes.TrimSpace(row); len(t) == 0 || t[0] != '{' {",
+  "new": "\t\tif t := bytes.TrimSpace(row); (len(t) == 0 || t[0] != '{') && false {",
+  "why": "행 객체 검사 제거"
+ },
+ {
+  "id": "O-hasnext-missing",
+  "pkg": "o",
+  "file": "internal/official/reconcile_reads.go",
+  "old": "\trawHasNext, ok := fields[\"hasNext\"]\n\tif !ok {",
+  "new": "\trawHasNext, ok := fields[\"hasNext\"]\n\tif !ok && false {",
+  "why": "hasNext 결측 검사 제거"
+ },
+ {
+  "id": "O-hasnext-type",
+  "pkg": "o",
+  "file": "internal/official/reconcile_reads.go",
+  "old": "\tcase \"false\":\n\tdefault:",
+  "new": "\tdefault:",
+  "why": "hasNext 형 검사 제거"
+ },
+ {
+  "id": "O-cursor-missing",
+  "pkg": "o",
+  "file": "internal/official/reconcile_reads.go",
+  "old": "\trawCursor, ok := fields[\"nextCursor\"]\n\tif !ok {",
+  "new": "\trawCursor, ok := fields[\"nextCursor\"]\n\tif !ok && false {",
+  "why": "nextCursor 결측 검사 제거"
+ },
+ {
+  "id": "O-cursor-type",
+  "pkg": "o",
+  "file": "internal/official/reconcile_reads.go",
+  "old": "\t\tif len(t) == 0 || t[0] != '\"' {",
+  "new": "\t\tif false {",
+  "why": "nextCursor 형 검사 제거"
+ },
+ {
+  "id": "O-cursor-consistency",
+  "pkg": "o",
+  "file": "internal/official/reconcile_reads.go",
+  "old": "\tif hasNext && strings.TrimSpace(cursor) == \"\" {",
+  "new": "\tif false {",
+  "why": "커서 일관성 제거"
+ },
+ {
+  "id": "O-second",
+  "pkg": "o",
+  "file": "internal/official/reconcile_reads.go",
+  "old": "HasSecond: o.Second != nil,",
+  "new": "HasSecond: false,",
+  "why": "second 노출 제거"
+ },
+ {
+  "id": "O-trigger",
+  "pkg": "o",
+  "file": "internal/official/reconcile_reads.go",
+  "old": "TriggeredOrderID: o.First.TriggeredOrderID,",
+  "new": "",
+  "why": "triggeredOrderId 누락"
+ },
+ {
+  "id": "O-plain-status",
+  "pkg": "o",
+  "file": "internal/official/reconcile_reads.go",
+  "old": "\treturn DecodeReconcileOrderPage(raw)",
+  "new": "\treturn ReconcileOrderPage{Rows: []ReconcileOrderRow{}}, nil",
+  "why": "일반 주문 해독 우회(빈 페이지)"
+ },
+ {
+  "id": "O-cond-bypass",
+  "pkg": "o",
+  "file": "internal/official/reconcile_reads.go",
+  "old": "\treturn DecodeReconcileConditionalPage(raw)",
+  "new": "\treturn ReconcileConditionalPage{Rows: []ReconcileConditionalRow{}}, nil",
+  "why": "조건주문 해독 우회"
+ },
+ {
+  "id": "O-status-query",
+  "pkg": "o",
+  "file": "internal/official/reconcile_reads.go",
+  "old": "reconcileListQuery(\"OPEN\", symbol, cursor, limit)",
+  "new": "reconcileListQuery(\"\", symbol, cursor, limit)",
+  "why": "일반 주문 OPEN 필터 누락"
+ },
+ {
+  "id": "O-instrument-echo",
+  "pkg": "o",
+  "file": "internal/official/reconcile_reads.go",
+  "old": "\treturn raw[0].Symbol, nil",
+  "new": "\treturn symbol, nil",
+  "why": "에코 대신 입력 반환"
+ },
+ {
+  "id": "C-noconfig",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tif root == nil || strings.TrimSpace(root.configDir) == \"\" {",
+  "new": "\tif root == nil {",
+  "why": "config-dir 필수 제거"
+ },
+ {
+  "id": "C-env-either",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tif getenv(\"TOSSCTL_OPENAPI_KEY\") != \"\" || getenv(\"TOSSCTL_OPENAPI_SECRET\") != \"\" {",
+  "new": "\tif getenv(\"TOSSCTL_OPENAPI_KEY\") != \"\" && getenv(\"TOSSCTL_OPENAPI_SECRET\") != \"\" {",
+  "why": "환경 변수 반쪽 허용"
+ },
+ {
+  "id": "C-record",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tif strings.TrimSpace(opts.record) != \"\" {",
+  "new": "\tif false {",
+  "why": "--record 거절 제거"
+ },
+ {
+  "id": "C-market",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tif !strings.EqualFold(market, verifylive.MarketKR) && !strings.EqualFold(market, verifylive.MarketUS) {",
+  "new": "\tif false {",
+  "why": "--market 필수 제거"
+ },
+ {
+  "id": "C-lock",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tlock, err := acquireVerifyExecutionLock(root)\n\tif err != nil {\n\t\treturn reconcileRefusal(verifylive.RefuseExecutionLock, err.Error())\n\t}\n\tdefer lock.Release()",
+  "new": "",
+  "why": "flock 생략"
+ },
+ {
+  "id": "C-lease",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tlease, err := acquireVerifyRateBudget(ctx, out, root)\n\tif err != nil {\n\t\treturn reconcileRefusal(verifylive.RefuseRateBudget, err.Error())\n\t}\n\tdefer lease.Release()",
+  "new": "",
+  "why": "lease 생략"
+ },
+ {
+  "id": "C-lock-after-factory",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tlock, err := acquireVerifyExecutionLock(root)",
+  "new": "\tverifyReconcileReaderFactory(ctx, root)\n\tlock, err := acquireVerifyExecutionLock(root)",
+  "why": "순서 교란: 잠금 전 계좌 읽기"
+ },
+ {
+  "id": "C-malformed",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\t\tif strings.TrimSpace(a.DisplayName) == \"\" {",
+  "new": "\t\tif strings.TrimSpace(a.DisplayName) == \"\" && false {",
+  "why": "기형 행 거절 제거"
+ },
+ {
+  "id": "C-count",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tif len(accounts) != 1 {",
+  "new": "\tif len(accounts) == 0 {",
+  "why": "복수 계좌 허용"
+ },
+ {
+  "id": "C-seq",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tif err != nil || seq <= 0 {",
+  "new": "\tif err != nil {",
+  "why": "seq 0 허용"
+ },
+ {
+  "id": "C-rebind",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "append(append([]official.Option(nil), opts...), official.WithAccountSeq(seq))...)",
+  "new": "opts...)",
+  "why": "명시 재결속 제거(새 클라이언트 지연 해석)"
+ },
+ {
+  "id": "C-rebind-reuse",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tbound := official.New(creds, tokenFile, append(append([]official.Option(nil), opts...), official.WithAccountSeq(seq))...)",
+  "new": "\tbound := official.New(creds, tokenFile, append(append([]official.Option(nil), opts...), official.WithAccountSeq(seq))...)\n\t_ = bound\n\tbound = official.New(creds, tokenFile, opts...)\n\t_, _ = bound.Accounts(ctx)",
+  "why": "명시 재결속 대신 암묵 캐시(측정 한계)"
+ },
+ {
+  "id": "C-terminal",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "term.IsTerminal(int(os.Stdin.Fd()))",
+  "new": "term.IsTerminal(int(os.Stdin.Fd())) || true",
+  "why": "기본 단말을 대화형으로"
+ },
+ {
+  "id": "C-terminal-chardev",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "term.IsTerminal(int(os.Stdin.Fd()))",
+  "new": "term.IsTerminal(int(os.Stdin.Fd())) || isTerminal(os.Stdin)",
+  "why": "ModeCharDevice 판정"
+ },
+ {
+  "id": "C-approve-noninteractive",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tif !interactive {\n\t\treturn errors.New(",
+  "new": "\tif !interactive && false {\n\t\treturn errors.New(",
+  "why": "비대화형 승인 허용"
+ },
+ {
+  "id": "C-approve-any",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tcase \"y\", \"Y\":\n\t\treturn nil\n\t}",
+  "new": "\t}\n\tif strings.TrimSpace(line) != \"\" {\n\t\treturn nil\n\t}",
+  "why": "아무 입력이나 승인"
+ },
+ {
+  "id": "C-approve-default-yes",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tcase \"y\", \"Y\":",
+  "new": "\tcase \"y\", \"Y\", \"\":",
+  "why": "빈 입력을 승인(기본 Y)"
+ },
+ {
+  "id": "C-approve-wired",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\t\tApprove:    verifyReconcileApprove,",
+  "new": "\t\tApprove:    func(context.Context, verifylive.ReconcileApproval) error { return nil },",
+  "why": "명령이 기본 승인을 우회"
+ },
+ {
+  "id": "C-register",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify.go",
+  "old": "\t\tnewVerifyReconcileCmd(root),\n",
+  "new": "",
+  "why": "명령 미등록"
+ },
+ {
+  "id": "C-annotation",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\"mutating\": \"true\"",
+  "new": "\"mutating\": \"false\"",
+  "why": "mutating 주석 제거"
+ },
+ {
+  "id": "C-symbol-flag",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tcmd.Flags().StringVar(&opts.market,",
+  "new": "\tcmd.Flags().String(\"symbol\", \"\", \"\")\n\tcmd.Flags().StringVar(&opts.market,",
+  "why": "--symbol 플래그 추가"
+ },
+ {
+  "id": "C-env-creds",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tcreds, err := official.LoadCredentials(noEnv, credFile)",
+  "new": "\t_ = noEnv\n\tcreds, err := official.LoadCredentials(os.Getenv, credFile)",
+  "why": "자격을 환경 변수에서도(preflight 가 덮음)"
+ },
+ {
+  "id": "C-adapter-embed",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "type reconcileReads struct {\n\tclient *official.Client\n}",
+  "new": "type reconcileReads struct {\n\tclient *official.Client\n\t*official.Client\n}",
+  "why": "클라이언트 임베딩(쓰기 메서드 승격)"
+ },
+ {
+  "id": "V-cap-loop-end",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\treturn nil, refuse(RefusePageCap, fmt.Sprintf(\"%s: more than %d pages\", group, maxFixturePages))",
+  "new": "\treturn rows, nil",
+  "why": "상한 도달을 수락으로(조건주문 그룹)"
+ },
+ {
+  "id": "V-cap-loop-end-plain",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_check.go",
+  "old": "\treturn nil, refuse(RefusePageCap, fmt.Sprintf(\"%s: more than %d pages\", ReconcileGroupPlainOpen, maxFixturePages))",
+  "new": "\treturn rows, nil",
+  "why": "상한 도달을 수락으로(일반 주문 그룹)"
+ },
+ {
+  "id": "GO2-static-after-approval",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "why": "정적 거절(Q1·Q3)을 승인 뒤로(A-GREEN 리뷰어 변이 GO2)",
+  "edits": [
+   [
+    "\t// 4. 정적 거절 — Q1·Q3 는 로컬 판정이라 사람 승인 **앞**에서 거절함(A-GREEN P2-a: y 를 누른 뒤에 측정 부재로\n\t// 거절당하는 모양 제거). 읽기 뒤의 재검(F7)은 그대로임.\n\tif err := checkReconcileRetention(target, now()); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tif reconcileFreshnessBound <= 0 {\n\t\treturn ReconcileResult{}, refuse(RefuseFreshnessUnfixed, \"the Q3 freshness bound is not fixed\")\n\t}\n\n",
+    ""
+   ],
+   [
+    "\t// 6. 양성 대조 ①",
+    "\tif err := checkReconcileRetention(target, now()); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tif reconcileFreshnessBound <= 0 {\n\t\treturn ReconcileResult{}, refuse(RefuseFreshnessUnfixed, \"the Q3 freshness bound is not fixed\")\n\t}\n\n\t// 6. 양성 대조 ①"
+   ]
+  ]
+ },
+ {
+  "id": "MJ10-marshal-held-until",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile_record.go",
+  "old": "\t\tReconciledAt     time.Time `json:\"reconciled_at,omitzero\"`\n\t}{a.Kind, a.ID, a.Symbol, a.CreatedAt, false, a.Deliberate, a.ChainID, a.Note, true, a.ReconciledAt})",
+  "new": "\t\tReconciledAt     time.Time `json:\"reconciled_at,omitzero\"`\n\t\tHeldUntil        StepID    `json:\"held_until,omitempty\"`\n\t}{a.Kind, a.ID, a.Symbol, a.CreatedAt, false, a.Deliberate, a.ChainID, a.Note, true, a.ReconciledAt, a.HeldUntil})",
+  "why": "대사 확정형이 held_until 을 싣게(HeldUntil 중복 대입 삭제 뒤 A-GREEN P2-b 확인)"
+ }
+]

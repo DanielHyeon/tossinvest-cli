@@ -1,15 +1,14 @@
 package verifylive
 
-// reconcile.go 는 a121(reconcile-stale-verification-artifacts) 대사 경로의 **골격**이다.
+// reconcile.go 는 a121(reconcile-stale-verification-artifacts) 대사 경로다 — 판정 파이프라인과 그 타입.
 //
-// RED 로트 산출물: 타입·상수·시그니처만 세운다. Reconcile 은 언제나 코드 없는 거절을 돌려주고(무동작),
-// 기록·브로커 어느 쪽도 건드리지 않는다. 판정 구현은 GREEN 로트(tasks 3.1·3.2)의 몫이다.
-//
+// 공식 GET 읽기와 기록 추가 한 줄만 함. 브로커 변이 경로는 없음(봉인은 reconcile_seal_test.go 의 세 층이 핀).
 // 설계 정본: openspec/changes/a121-reconcile-stale-verification-artifacts/design.md (G1·G2·G3, 로트 1 처분,
-// freeze·codex 수리). 기존 파일은 편집하지 않는다 — Artifact.terminal() 의 셋째 종결은 GREEN 의 record.go 편집이다.
+// freeze·codex 수리, RED 로트 처분). 판정 보조는 reconcile_check.go, 기록 읽기·쓰기는 reconcile_record.go.
 
 import (
 	"context"
+	"crypto/sha256"
 	"io"
 	"time"
 
@@ -63,9 +62,6 @@ type ReconcileApproval struct {
 	Symbol             string
 	Market             string
 }
-
-// WriteText 는 승인 내용을 운영자 화면에 씀. 골격: 아무것도 쓰지 않음.
-func (a ReconcileApproval) WriteText(w io.Writer) {}
 
 // ReconcileParams 는 대사 한 번의 입력임. 기록 경로는 cmd 가 --config-dir 에서 유도한 값이어야 함(G3-3).
 type ReconcileParams struct {
@@ -158,10 +154,134 @@ func (r *ReconcileRefusal) Error() string {
 	return "verify reconcile: refused (" + string(r.Code) + "): " + r.Detail
 }
 
-// Reconcile 은 기록이 소유한 stale 조건주문 하나를 공식 읽기로 대사함.
-// 골격: 아무것도 읽지·쓰지 않고 코드 없는 거절을 돌려줌.
+// Reconcile 은 기록이 소유한 stale 조건주문 하나를 공식 읽기로 대사함 — 조건이 전부 참일 때만 대사 줄 하나를 추가함.
+//
+// 가드 순서는 design 「RED 로트 처분」 의 계약 그대로임(Q6 도달이 이 순서에 의존 — load-bearing):
+// 사전 검사(기록 → 후보 → 계좌, 목록 읽기 전) → 정적 거절(Q1/Q3, A-GREEN P2-a 로 승인 앞) → 승인 → 종목 조회 → 두 번 읽기(페이지·중복 포함,
+// 조건주문 OPEN → 일반 OPEN → CLOSED) → 종목 조회 → 신선도·Q1 재검 → multiset 비교 → 행 검사(OCO → 필드 결측 →
+// 심볼 → 시장) → 부재 검사(OPEN 조건 → 일반 OPEN → CLOSED target(EXPIRED → Q6) → 발동 흔적) → status 허용 목록 →
+// 추가 직전(엄격 해독 → 지문 → 개행 → 신선도·Q1 재검) → 추가. 거절은 기록에 아무것도 쓰지 않음.
 func Reconcile(ctx context.Context, p ReconcileParams) (ReconcileResult, error) {
-	return ReconcileResult{}, &ReconcileRefusal{Detail: "a121: reconciliation is not implemented (RED skeleton)"}
+	now := p.Now
+	if now == nil {
+		now = time.Now
+	}
+	if p.Reader == nil {
+		return ReconcileResult{}, refuse(RefuseReadError, "reconcile: no read-only official reader was supplied")
+	}
+	if p.Approve == nil {
+		return ReconcileResult{}, refuse(RefuseNotApproved, "reconcile: no human approval step was supplied")
+	}
+	out := p.Out
+	if out == nil {
+		out = io.Discard
+	}
+
+	// 1. 기록 사전 검사 — 엄격 해독·개행 꼬리(F3·R2-3). 지문은 판정한 바이트 그대로의 sha256(P2-7).
+	raw, entries, err := readRecordStrict(p.RecordPath)
+	if err != nil {
+		return ReconcileResult{}, err
+	}
+	fingerprint := sha256.Sum256(raw)
+
+	// 2. 후보 선택 — PendingCleanup 의 조건주문 중 M0 가 가리키지 않는 것, 정확히 하나(G2 「선택」).
+	target, err := selectReconcileCandidate(entries)
+	if err != nil {
+		return ReconcileResult{}, err
+	}
+
+	// 3. 계좌 결속(G3-1) — mixed 가 mismatch 보다 먼저.
+	recordMask, currentMask, err := bindReconcileAccount(entries, target, p.Account.Ref)
+	if err != nil {
+		return ReconcileResult{}, err
+	}
+
+	// 4. 정적 거절 — Q1·Q3 는 로컬 판정이라 사람 승인 **앞**에서 거절함(A-GREEN P2-a: y 를 누른 뒤에 측정 부재로
+	// 거절당하는 모양 제거). 읽기 뒤의 재검(F7)은 그대로임.
+	if err := checkReconcileRetention(target, now()); err != nil {
+		return ReconcileResult{}, err
+	}
+	if reconcileFreshnessBound <= 0 {
+		return ReconcileResult{}, refuse(RefuseFreshnessUnfixed, "the Q3 freshness bound is not fixed")
+	}
+
+	// 5. 사람 승인 — 두 마스크·계좌 수를 보인 뒤, 목록 읽기 전(F1 처분 ①, 승인 순서 freeze 재검 P2).
+	approval := ReconcileApproval{
+		RecordAccountMask: recordMask, CurrentAccountMask: currentMask, AccountCount: p.Account.Count,
+		Kind: target.Kind, ID: target.ID, Symbol: target.Symbol, Market: p.Market,
+	}
+	approval.WriteText(out)
+	if err := p.Approve(ctx, approval); err != nil {
+		return ReconcileResult{}, refuse(RefuseNotApproved, "operator approval was not given: "+err.Error())
+	}
+
+	// 6. 양성 대조 ① — 조회 심볼은 artifact 줄의 바이트 그대로(호출자 입력 아님).
+	symbol := target.Symbol
+	if err := checkReconcileInstrument(ctx, p.Reader, symbol); err != nil {
+		return ReconcileResult{}, err
+	}
+
+	// 7. 두 번 읽기 — 창의 시작은 첫 목록 읽기(승인 대기는 창 밖).
+	start := now()
+	first, err := readReconcileSet(ctx, p.Reader, symbol)
+	if err != nil {
+		return ReconcileResult{}, err
+	}
+	second, err := readReconcileSet(ctx, p.Reader, symbol)
+	if err != nil {
+		return ReconcileResult{}, err
+	}
+
+	// 8. 양성 대조 ② · 신선도·Q1 재검(F7).
+	if err := checkReconcileInstrument(ctx, p.Reader, symbol); err != nil {
+		return ReconcileResult{}, err
+	}
+	if err := checkReconcileWindow(target, start, now()); err != nil {
+		return ReconcileResult{}, err
+	}
+
+	// 9. multiset 비교(P1-4).
+	basisRows := first.basis()
+	if !sameReconcileMultiset(basisRows, second.basis()) {
+		return ReconcileResult{}, refuse(RefuseReadsDiffer, "the two reads disagree as a multiset of (group, id, status, triggeredOrderId)")
+	}
+
+	// 10. 행 검사 · 부재 검사 · status 허용 목록(마지막).
+	if err := checkReconcileRows(first, symbol, p.Market); err != nil {
+		return ReconcileResult{}, err
+	}
+	if err := checkReconcileAbsence(first, target); err != nil {
+		return ReconcileResult{}, err
+	}
+	if err := checkReconcileClosedStatus(first); err != nil {
+		return ReconcileResult{}, err
+	}
+
+	// 11. 추가 직전 — 엄격 해독 → 지문 → 개행 → 신선도·Q1 재검.
+	again, _, err := readRecordStrictNoTail(p.RecordPath)
+	if err != nil {
+		return ReconcileResult{}, err
+	}
+	if sha256.Sum256(again) != fingerprint {
+		return ReconcileResult{}, refuse(RefuseRecordChanged, "the record changed between candidate selection and the append")
+	}
+	if len(again) > 0 && again[len(again)-1] != '\n' {
+		return ReconcileResult{}, refuse(RefuseRecordTailNoNewline, "the record does not end with a newline")
+	}
+	at := now()
+	if err := checkReconcileWindow(target, start, at); err != nil {
+		return ReconcileResult{}, err
+	}
+
+	// 12. 추가 — Calls 없음, 근거는 지문 하나.
+	basis := ReconcileBasisDigest(basisRows)
+	reconciled := target
+	reconciled.ReconciledAbsent = true
+	reconciled.ReconciledAt = at.UTC()
+	if err := appendReconcileLine(p.RecordPath, recordMask, reconciled, basis, start, at); err != nil {
+		return ReconcileResult{}, err
+	}
+	return ReconcileResult{Artifact: reconciled, Basis: basis}, nil
 }
 
 // ReconcileBasisRow 는 근거 multiset 의 원소임 — (그룹, id, status, triggeredOrderId).
@@ -171,9 +291,6 @@ type ReconcileBasisRow struct {
 	Status           string
 	TriggeredOrderID string
 }
-
-// ReconcileBasisDigest 는 읽기 근거를 버전·도메인 태그와 함께 정규 순서로 지문화함. 골격: 빈 문자열.
-func ReconcileBasisDigest(rows []ReconcileBasisRow) string { return "" }
 
 // --- Q1(G1-4) 보존 한도 ----------------------------------------------------------
 
