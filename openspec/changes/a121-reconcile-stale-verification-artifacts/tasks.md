@@ -66,8 +66,12 @@
       시험(F4); `Second` 비공란 행(OPEN·CLOSED 각각)의 거절 시험(F6); 추가 직전 신선도·Q1 나이
       재검사의 시험 — 느린 요청/정지 시뮬레이션으로 Q3 창이 추가 승인까지 덮음을 단언(F7);
       끝 4자리 같은 다른 계좌로의 자격 교체 픽스처에서 사람 승인 출력이 두 마스크·계좌 수를
-      표시하고 대사 줄에 계좌 digest 가 실리는 시험(F1); Q1 측정 기록이 축출 모형을 담지 않으면
-      보존 한도 주입이 거절되는 시험(F5).
+      표시하고 대사 줄에 마스크 외의 계좌 신원이 실리지 **않는** 시험(F1·R2-5 — digest 철회);
+      Q1 측정 기록의 세 거절 사례 — 축출 모형 결측·행 수 기반 판정·판별 불능(F5·R2-4);
+      null 값 필드(컬렉션 null·hasNext null·hasNext 와 커서 모순) 거절 — 조건주문·일반 주문
+      페이지 양쪽(R2-1); 검증 seq 와 transport 캐시 seq 불일치 픽스처(첫 양수 seq 자동 캐시)에서
+      명시 재결속이 없으면 실패하는 시험 + 기형 계좌 행(빈 번호·양수 seq) 거절(R2-2);
+      개행 없는 완전 JSON 꼬리에의 추가 거절 — 엄격 해독과 개행 검사 병존 단언(R2-3).
 - [ ] 2.3 Add failing tests that reconciliation removes only its exact outstanding artifact from resume cleanup
       planning while preserving failed cleanup evidence and every verification verdict. freeze 추가(P1-6):
       대사 전/후의 `RedoSet` 을 핀한다 — 대사 뒤 `subjectLost` 가 `conditional-register` 를 되살리는

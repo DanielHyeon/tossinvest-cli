@@ -39,6 +39,10 @@ otherwise:
   whose age (from its outstanding line's creation time, which SHALL be non-zero)
   is within the measured retention bound is covered by the CLOSED-trace and
   open-plain-order checks above, and an older artifact SHALL be refused; the
+  measurement SHALL also establish the eviction model of the CLOSED history,
+  and a count-based or indeterminate model means this rule cannot be satisfied
+  and the operation SHALL refuse permanently (a duration alone cannot rule out
+  row-count eviction); the
   bound SHALL live only as a reviewed in-code value that is absent in production
   until measured, never as configuration; until it exists the operation SHALL
   refuse;
@@ -86,15 +90,16 @@ and refuse if it changed since the candidate was selected.
 #### Scenario: every condition of authoritative absence holds
 
 - **WHEN** every condition listed above holds for the selected candidate,
-  including the Q1 rule (the measured retention bound exists and covers the
-  artifact)
+  including the Q1 rule (the measured retention bound exists under a measured
+  duration-based eviction model and covers the artifact)
 - **THEN** the tool appends one distinct `reconciled-absent` event and does not
   schedule a new cleanup mutation for that artifact
 
 #### Scenario: the Q1 retention measurement is absent
 
 - **WHEN** every other condition holds but the Q1 fired-conditional retention
-  measurement does not exist yet
+  measurement does not exist yet, or it identifies a count-based eviction
+  model, or it could not determine the eviction model
 - **THEN** no reconciliation event is appended
 
 #### Scenario: a successor fired under a different identifier
@@ -171,8 +176,13 @@ set — one being set alone also refuses), and the record path is derived from t
 profile directory rather than supplied as an override; and that the market is
 given explicitly, which selects the record file. Any missing, mixed, or
 mismatched value SHALL refuse without reading or appending.
-The appended reconciliation line SHALL carry a domain-tagged keyed digest of
-the full current account identity (never a raw account identifier), and the
+The appended reconciliation line SHALL carry no account identity beyond the
+masked reference the record already uses (an unkeyed digest of the account
+number is guessable and amounts to storing the identifier obfuscated). The
+reader SHALL be explicitly pinned to the validated account sequence (the
+transport caches the first positive sequence on its own otherwise), and a
+malformed account row — a blank account number with a positive sequence —
+SHALL refuse rather than be excluded from the count. The
 human-approval output SHALL display the record's masked reference, the current
 credentials' masked reference, and the account count — the retained last
 digits are not identity, and this display is the operator's check against a
