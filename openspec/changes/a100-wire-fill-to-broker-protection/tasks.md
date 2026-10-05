@@ -533,7 +533,9 @@ worker construction/start와 broker mutation 도달 경로를 열지 않는다. 
   명시한다. **침묵한 생략은 금지다.**
 - [ ] 7.9 PM 동기화 — `STORY-TOS-a100.yaml`의 acceptance를 새 범위에 맞게 고치고 증거와 대조한다.
   **원안 acceptance는 `Wired` 생산을 포함하므로 그대로 두면 통과할 수 없다.**
-- [ ] 7.10 a105에 이관 항목을 기록한다(아래 「a105로 이관」 목록 전체). — **a105 등록 대기(Manager).**
+- [x] 7.10 a105에 이관 항목을 기록한다(아래 「a105로 이관」 목록 전체). — **종결(2026-10-05): a105 등록됨**
+  (`a105-protection-supervision-goes-wired`, STORY-TOS-a105, 이관 목록 전체 + flat 창 닫기 선행이
+  proposal·spec 델타로 고정됨 — Manager 작성).
   2026-10-04 Manager 판정: 처분은 a105 신설(예약 번호 그대로 등록, 이관 목록 전체 + 진입 개방 전 flat 포지션
   상주 주문 창 닫기를 선행 조건으로). proposal 작성은 Manager 몫(a112 게이트 뒤). 근거: `review.md` 「R0 — 2026-10-04」 (4).
 

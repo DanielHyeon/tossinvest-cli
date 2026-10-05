@@ -73,6 +73,8 @@
     "STORY-TOS-037",
     "STORY-TOS-038",
     "STORY-TOS-039",
+    "STORY-TOS-CONTAINER-MODE",
+    "STORY-TOS-HTTP2-BODYLESS",
     "STORY-TOS-a040",
     "STORY-TOS-a041",
     "STORY-TOS-a042",
@@ -121,6 +123,7 @@
     "STORY-TOS-a085",
     "STORY-TOS-a087",
     "STORY-TOS-a089",
+    "STORY-TOS-a090",
     "STORY-TOS-a091",
     "STORY-TOS-a092",
     "STORY-TOS-a094",
@@ -133,6 +136,7 @@
     "STORY-TOS-a101",
     "STORY-TOS-a102",
     "STORY-TOS-a103",
+    "STORY-TOS-a105",
     "STORY-TOS-a107",
     "STORY-TOS-a108",
     "STORY-TOS-a109",
@@ -153,9 +157,6 @@
     "STORY-TOS-a124",
     "STORY-TOS-a125",
     "STORY-TOS-a126",
-    "STORY-TOS-a127",
-    "STORY-TOS-a090",
-    "STORY-TOS-HTTP2-BODYLESS",
-    "STORY-TOS-CONTAINER-MODE"
+    "STORY-TOS-a127"
   ]
 }

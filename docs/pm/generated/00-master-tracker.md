@@ -50,6 +50,7 @@
     - STORY-TOS-a059 — Let the console find exactly the engine it owns [archived] → `a059-console-finds-the-engine-it-owns`
     - STORY-TOS-a100 — Holdings leave a stop at the broker [in_progress] → `a100-wire-fill-to-broker-protection`
     - STORY-TOS-a102 — Boot does not starve the engine [archived] → `a102-boot-does-not-starve-the-engine`
+    - STORY-TOS-a105 — Protection supervision goes Wired [in_progress] → `a105-protection-supervision-goes-wired`
     - STORY-TOS-a107 — Retire the second protection core [in_progress] → `a107-retire-the-second-protection-core`
     - STORY-TOS-a108 — Boot recovers from any leftover [archived] → `a108-boot-recovers-from-any-leftover`
     - STORY-TOS-a109 — The sibling endpoints recover too [archived] → `a109-the-sibling-endpoints-recover-too`
