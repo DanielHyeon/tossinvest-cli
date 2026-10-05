@@ -213,9 +213,11 @@ GET(instrument/quote)** 이 성공하고 응답이 같은 심볼을 되돌려야
 
 - 새 줄 종류 `KindReconcile = "reconcile"` 한 줄이 대상 artifact 하나를 담는다. 그 artifact 의 신원 필드
   (`Kind`·`ID`·`Symbol`·`ChainID`)는 **대사할 outstanding 줄의 값 그대로**이고, 새 종결 필드
-  `ReconciledAbsent bool` · `ReconciledAt time.Time` 을 세운다. 나머지 필드(freeze P2-6):
-  `Verdict` 빈 값(판정 아님), `Mutating` false(브로커 변이 없음 — CLI 주석 S2 의 mutating=true 와는
-  별개 축), `HeldUntil` 영, `CreatedAt` = 추가 시각, `StepID` 는 카탈로그 밖 고유 값(아래 R1). `Artifact.terminal()` 이 그것을 셋째
+  `ReconciledAbsent bool` · `ReconciledAt time.Time` 을 세운다. 나머지 필드(freeze P2-6, 재검 P2-c
+  정정): `Verdict` 빈 값(판정 아님), `Mutating` false(브로커 변이 없음 — CLI 주석 S2 의 mutating=true
+  와는 별개 축), `HeldUntil` 영, `CreatedAt` = **대사할 outstanding 줄의 값 그대로**(생성 시각 의미
+  보존 — 추가 시각은 `ReconciledAt` 가 담고, 구 바이너리 되돌림에서도 생성 시각이 바뀌어 보이지
+  않는다), `StepID` 는 카탈로그 밖 고유 값(아래 R1). `Artifact.terminal()` 이 그것을 셋째
   종결로 포함한다 — 그러면 `outstandingLines` 를 쓰는 소비자 전부(`PendingCleanup`, `liveCount`
   `mutate.go:679`, report·status·abort·redo)가 한 번에 따른다. report·status 는 그것을 **reconciled absent**
   로 표시하고 cancelled·filled 로 쓰지 않는다(`BuildReport`·`BuildProgress` 는 task 1.2 의 편집 대상).
@@ -289,7 +291,9 @@ GET(instrument/quote)** 이 성공하고 응답이 같은 심볼을 되돌려야
   (`record.go:247-279`).
 - 원시 행은 브로커가 준 `Market`("KR"/"US")을 그대로 담는다(`conditional_reads.go:111`).
 
-**결정.** 공식 읽기와 로컬 추가 **전에** 아래가 모두 참이어야 한다. 하나라도 아니면 거절한다.
+**결정.** 주문·조건주문 **목록 읽기**와 로컬 추가 **전에** 아래가 모두 참이어야 한다(freeze 재검
+P0-R1 정정: 이 검사 자신이 쓰는 계좌 목록 읽기와 종목 조회 GET 만이 그보다 앞설 수 있는 공식
+읽기다). 하나라도 아니면 거절한다.
 
 1. **계좌**: 대상 artifact 를 언급한 모든 기록 줄의 `AccountRef` 가 서로 같고,
    `attest.Mask(TrimSpace(현재 참조)) == TrimSpace(entry.AccountRef)` 다. 비어 있거나 섞였으면 거절.

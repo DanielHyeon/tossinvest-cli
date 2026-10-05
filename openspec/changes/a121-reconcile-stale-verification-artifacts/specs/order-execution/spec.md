@@ -44,10 +44,15 @@ otherwise:
   refuse;
 - every row read carries the artifact's symbol, and every row read carries the
   requested market;
+- the symbol queried is the byte-exact symbol string of the artifact's own
+  record line (never caller-supplied), and an instrument read for that symbol
+  succeeds and echoes the same symbol (positive controls against a
+  blanket-empty response);
 - the complete read set above, performed twice in succession, yields the same
-  sorted (group, identifier, status, triggered order identifier) set both times,
-  within the Q3 freshness bound (deferred 2026-09-27 to the implementation lot,
-  which SHALL propose a named conservative constant for review; until that
+  same (group, identifier, status, triggered order identifier) multiset both
+  times, with a duplicate (group, identifier) within one read refusing by
+  itself, within the Q3 freshness bound (the RED lot SHALL fix it as a named
+  conservative constant approved in review; until that
   constant exists the operation SHALL refuse).
 
 The operation SHALL select exactly one candidate without accepting a
@@ -123,15 +128,25 @@ and refuse if it changed since the candidate was selected.
   holds a duplicate (group, identifier), or the pair exceeds the freshness bound
 - **THEN** no reconciliation event is appended
 
+#### Scenario: a positive control fails
+
+- **WHEN** every absence condition holds but the instrument read fails, or it
+  echoes a different symbol, or the queried symbol string is not byte-identical
+  to the artifact record line's symbol
+- **THEN** no reconciliation event is appended
+
 #### Scenario: the eligible artifact is not unique
 
 - **WHEN** the record has zero or more than one eligible outstanding conditional
   artifact
-- **THEN** the operation refuses before any official read
+- **THEN** the operation refuses before any order-list or conditional-order-list read (the account-list and instrument reads these checks use are the only permitted earlier reads)
 
 ### Requirement: reconciliation binds account, profile and market before reading
 
-Before any official read or local append, the reconciliation operation SHALL
+The reconciliation operation SHALL, before any order-list or
+conditional-order-list read and before the local append (the account-list read
+and the instrument read these checks themselves use are the only official
+reads permitted earlier),
 require that every record line mentioning the selected artifact carries the same
 masked account reference and that it equals the masked form of the reference
 resolved for the current credentials (this compares the retained last digits,
@@ -149,26 +164,26 @@ mismatched value SHALL refuse without reading or appending.
 
 - **WHEN** the artifact's record lines carry different account references, or
   one that differs from the current credentials' reference
-- **THEN** the operation refuses before any official read
+- **THEN** the operation refuses before any order-list or conditional-order-list read (the account-list and instrument reads these checks use are the only permitted earlier reads)
 
 #### Scenario: record override
 
 - **WHEN** the record path is supplied as an override instead of derived from the
   credentials' profile
-- **THEN** the operation refuses before any official read
+- **THEN** the operation refuses before any order-list or conditional-order-list read (the account-list and instrument reads these checks use are the only permitted earlier reads)
 
 #### Scenario: credentials from the environment or no explicit profile
 
 - **WHEN** the credentials come from environment variables, or exactly one of
   the two environment credential variables is set, or no explicit profile
   directory is given
-- **THEN** the operation refuses before any official read
+- **THEN** the operation refuses before any order-list or conditional-order-list read (the account-list and instrument reads these checks use are the only permitted earlier reads)
 
 #### Scenario: more than one account behind the credentials
 
 - **WHEN** the credentials list several accounts with a non-empty display
   reference, or two accounts share the retained last digits
-- **THEN** the operation refuses before any official read
+- **THEN** the operation refuses before any order-list or conditional-order-list read (the account-list and instrument reads these checks use are the only permitted earlier reads)
 
 #### Scenario: market mismatch
 

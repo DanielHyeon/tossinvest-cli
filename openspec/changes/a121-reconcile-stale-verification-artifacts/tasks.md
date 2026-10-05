@@ -58,7 +58,7 @@
       freeze 추가(2026-10-05): 계좌 후보 복수(DisplayName 비공란 2+·끝 4자리 충돌) 거절; 환경 변수
       자격 **하나만** 설정된 상태의 거절; flock·rate-budget lease 획득 실패의 거절; 기록 파일이
       `\n` 으로 끝나지 않을 때(찢긴 꼬리) 추가 전 거절; 중복/모호 신원 거절을 S7 포괄이 아닌 자기
-      문구로 단언.
+      문구로 단언. 재검 P2-d: 후보가 order-kind artifact 뿐이라 0 이 되는 객체 유형 사례의 거절 시험.
 - [ ] 2.3 Add failing tests that reconciliation removes only its exact outstanding artifact from resume cleanup
       planning while preserving failed cleanup evidence and every verification verdict. freeze 추가(P1-6):
       대사 전/후의 `RedoSet` 을 핀한다 — 대사 뒤 `subjectLost` 가 `conditional-register` 를 되살리는
@@ -71,6 +71,11 @@
       flock and the rate-budget lease; and a test that an older-format reader still reports the reconciled
       artifact as outstanding and held (the safe direction of rollback), simulated with the pre-change
       `Artifact`/`outstandingLines`/`holdGate` pinned by AST or by building the implementation base.
+      freeze 재검 추가(P2-b): 명시 census 내용 — 대사 파일(cmd·verifylive)에서 쓰기 7이름(PlaceOrder·
+      CancelOrder·ModifyOrder·CreateConditionalOrder·ModifyConditionalOrder·ModifyConditionalOrderRef·
+      CancelConditionalOrder) 호출 금지 + type assertion 금지 + `Broker` 를 반환하는 생성자 부재;
+      보존 한도가 **생산 빌드에서 nil** 임을 고정하는 AST 핀 시험; 「one local append」의 예외는
+      토큰 갱신 POST(auth 기반, 경계 밖) 하나뿐임을 경계 서술에 포함.
 
 ## 3. GREEN
 
