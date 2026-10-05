@@ -296,28 +296,43 @@ worker construction/start와 broker mutation 도달 경로를 열지 않는다. 
 
 ### 1.1 `protectionlifecycle.applyFill` — 미실행 5개
 
-- [ ] 1.1.1 **B1** position 취득 실패(비-`InvalidObservation`) — 알 수 없는 포지션 키에 대한 체결이
-  상태를 만들지 않고 typed refusal로 끝난다.
-- [ ] 1.1.2 **B2** state seal 무효 — 봉인이 깨진 상태를 입력하면 전이가 거부되고 어떤 필드도
-  복구·재봉인되지 않는다.
-- [ ] 1.1.3 **B3** fill 식별자 무효 / broker order id 불일치 — **잘못된 체결이 남의 포지션에
+- [x] 1.1.1 **B1** position 취득 실패(비-`InvalidObservation`) — 알 수 없는 포지션 키에 대한 체결이
+  상태를 만들지 않고 typed refusal로 끝난다. — 2026-10-05 T1(30694fe5): 본문 yes.
+- [x] 1.1.2 **B2** state seal 무효 — 봉인이 깨진 상태를 입력하면 전이가 거부되고 어떤 필드도
+  복구·재봉인되지 않는다. — 2026-10-05 T1: **본문 도달 불가(D1)** — 안전 요구는 B1 경로에서
+  충족·시험 고정, 구조 고정 시험 + SHADOWED 변이가 증명(analysis/t1-unreachable-branches.md).
+- [x] 1.1.3 **B3** fill 식별자 무효 / broker order id 불일치 — **잘못된 체결이 남의 포지션에
   귀속되지 않는 유일한 방어선.** 다른 포지션의 broker order id를 실은 체결이 거부된다.
-- [ ] 1.1.4 **B6** 수량 0 또는 claim 초과 — 보호 수량이 보유를 넘는 전이가 거부된다.
-- [ ] 1.1.5 **B7** 잔량 0 → `Terminal` 전이 — **보호주문이 다 채워졌을 때 상태가 닫히는 경로.**
-  종료 후 추가 전이가 멱등하게 거부된다.
+  — 2026-10-05 T1: 본문 yes(교차 포지션·식별자 무효·미등록 7사례).
+- [x] 1.1.4 **B6** 수량 0 또는 claim 초과 — 보호 수량이 보유를 넘는 전이가 거부된다.
+  — 2026-10-05 T1: 본문 yes(0·9·10·11). `> Holdings` 절은 동치 변이(기록 P2-4).
+- [x] 1.1.5 **B7** 잔량 0 → `Terminal` 전이 — **보호주문이 다 채워졌을 때 상태가 닫히는 경로.**
+  종료 후 추가 전이가 멱등하게 거부된다. — 2026-10-05 T1: 본문 yes(전량/부분 후 잔량·종료 후
+  Duplicate 멱등 + 새 체결 B6 거부).
 
 ### 1.2 `protectionlifecycle.prepareRegister` — 미실행 4개
 
-- [ ] 1.2.1 **B2** entry latched / phase 부적합 — 진입이 닫힌 상태의 등록 시도가 거부된다.
-- [ ] 1.2.2 **B3** 이미 pending인 operation — **중복 제출 방지.** 재시도가 두 번째 제출을 만들지 않는다.
-- [ ] 1.2.3 **B4** 보호가 이미 active — 같은 포지션에 두 번째 보호주문이 나가지 않는다.
-- [ ] 1.2.4 **B5** 브로커가 정확한 operation 조회를 못 함 — capability 부재가 실제로 판정을 막는다.
+- [x] 1.2.1 **B2** entry latched / phase 부적합 — 진입이 닫힌 상태의 등록 시도가 거부된다.
+  — 2026-10-05 T1: 본문 yes(시장 latch·포지션 latch 단독(A1 P1-2 수리)·latch+phase).
+- [x] 1.2.2 **B3** 이미 pending인 operation — **중복 제출 방지.** 재시도가 두 번째 제출을 만들지 않는다.
+  — 2026-10-05 T1: **본문 도달 불가(D2)** — 실입력은 전부 B2 `entry_latched` 에 먼저 막혀 두 번째
+  제출 자체가 안 생김(시험 고정). RED 증인 + 양성 대조 + 구조 고정 시험(두 시장).
+- [x] 1.2.3 **B4** 보호가 이미 active — 같은 포지션에 두 번째 보호주문이 나가지 않는다.
+  — 2026-10-05 T1: **본문 도달 불가(D2)** — 위와 동일 기전, 안전 요구 충족·시험 고정.
+- [x] 1.2.4 **B5** 브로커가 정확한 operation 조회를 못 함 — capability 부재가 실제로 판정을 막는다.
+  — 2026-10-05 T1: 본문 yes(같은 코드를 내는 B1 봉인 위조와 문구로 구분).
 
 ### 1.3 측정
 
-- [ ] 1.3.1 `go test -covermode=set -coverprofile`로 **true 결과 본문 행**의 실행 여부를 다시
-  측정한다. 조건 statement의 covered는 근거가 아니다.
-- [ ] 1.3.2 두 `branch-test-map.md`를 측정값으로 갱신한다. 9개 모두 `yes`가 아니면 2절로 가지 않는다.
+- [x] 1.3.1 `go test -covermode=set -coverprofile`로 **true 결과 본문 행**의 실행 여부를 다시
+  측정한다. 조건 statement의 covered는 근거가 아니다. — 2026-10-05 T1: 시험별 프로파일로 측정,
+  6 블록 1 · 3 블록 0, Manager·A1 각자 재측정 일치(86.6%).
+- [x] 1.3.2 두 `branch-test-map.md`를 측정값으로 갱신한다. **판정 기준(2026-10-05 Manager 개정,
+  (나)안 — 근거는 T1 결함 기록 D1·D2):** 각 분기가 「본문 yes」 **또는** 「도달 불가 증명
+  (AST 논증 + 구조 고정 시험 + SHADOWED 변이 실측)」이 아니면 2절로 가지 않는다. 결과:
+  6 yes + 3 도달 불가 증명 = 충족. 원 기준 「9개 모두 yes」는 도달 불가 분기 3개(핵심 가드가
+  앞에서 선점)가 코드에 존재하는 한 충족 불가능했고, core 수정은 T1 예외 한계 밖이다 — 도달
+  불가 분기의 제거/재배열 여부는 M-A 뒤 결정(기록 「반환 사유와 남은 결정」 (가)).
 
 ## 2. 도메인 매핑과 journal 스키마 (Migration 2)
 
@@ -340,6 +355,14 @@ worker construction/start와 broker mutation 도달 경로를 열지 않는다. 
   저장 순서를 「plan → **pending 커밋** → 전송 → 응답 커밋」으로 고정하고, 전송 직후 프로세스가
   죽는 시나리오를 테스트한다. 2.3의 컬럼 목록이 이 레코드를 포함해야 한다. conditional parent의
   canonical owner는 전송 전에 고정하며 응답의 opaque id로 scope를 바꾸지 않는다.
+- [ ] 2.7 **T1 결함 D3 수리(2026-10-05 Manager 편입): REPLACE_PENDING·REPLACE_UNKNOWN 중 부분
+  체결이 상태를 영구 정지시킨다.** `applyFill`이 `Holdings`·`Observed.Quantity`만 줄이고
+  `Pending.Quantity`를 그대로 둔 채 재봉인해 `validPending` 등식(`command.Quantity + other ==
+  Holdings`)을 어긴 유효하지 않은 상태가 봉인되고, 이후 **두 시장의 전이 함수 11개 전부**가
+  `invalid_state`로 거부된다(시장 간 고장 격리 파괴). T1 실측 확인 완료 —
+  `analysis/t1-unreachable-branches.md` D3, probe
+  `analysis/harness/t1_probe_fill_during_replace_pending_test.go.txt`(CANCEL_PENDING 대조군 정상). 수리는 High-risk core 수정이라 FLM 선행 +
+  RED는 probe를 그대로 승격. **T2-A 다른 항목이 이 상태 기계 위에 배선되기 전에 닫는다.**
 
 ## 3. 수렴 워커 (Migration 3)
 
@@ -559,7 +582,12 @@ worker construction/start와 broker mutation 도달 경로를 열지 않는다. 
   — core reviewer ACCEPT(P0=0/P1=0, P2=RED chronology audit note), receipt same-reviewer recheck
   ACCEPT(P0=0/P1=0/P2=0). P2는 첫 trace seam의 독립 재생 가능한 pre-GREEN commit 영수증이 없다는
   과정 기록이며 결과 동작을 약화하지 않는다.
-- [ ] 8.1 T1 구현 Terra 보고 → A1 적대 리뷰 → 수정 → A1 `P0=0/P1=0` → Manager acceptance.
+- [x] 8.1 T1 구현 Terra 보고 → A1 적대 리뷰 → 수정 → A1 `P0=0/P1=0` → Manager acceptance.
+  — 2026-10-05 종결(착지 30694fe5): A1 1차 P0=0/P1=2/P2=6(requireSameState 공유 맵 제자리 변경
+  미검출 · 포지션 latch 절 무시험) → 구현자 수리(snapshotState 선행 스냅숏 11지점·latch 단독
+  사례·구조 시험 2시장·하네스 20항목) → A1 표적 재검 **APPROVE P0=0/P1=0**(ALIAS 변이 6경로
+  일반화 확인). Manager 배터리: 경로 전수 11/11·lifecycle.go sha=번들·race GREEN·커버리지
+  9블록 재측정 일치·하네스 16/16(1차)+구현자 20/20 재확인. 상세는 review.md 「T1 — 2026-10-05」.
 - [ ] 8.2 T2-A 구현 Terra 보고 → A2-A 적대 리뷰 → 수정 → A2-A `P0=0/P1=0` → Manager acceptance.
 - [ ] 8.2b T2-B 구현 Terra 보고 → A2-B 적대 리뷰 → 수정 → A2-B `P0=0/P1=0` → Manager acceptance.
 - [ ] 8.3 T3 구현 Terra 보고 → A3 적대 리뷰 → 수정 → A3 `P0=0/P1=0` → Manager acceptance.

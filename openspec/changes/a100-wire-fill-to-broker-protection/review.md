@@ -650,3 +650,30 @@ Manager 판정(2026-10-04): **신설 방향 승인.** 등록(proposal 작성)은
 4. **base 재고정 — 승인(착지 직전 부모 방식).** 실제 재고정은 착지 직전
    `capture_change_base.py` + 그 사이 Go 커밋 귀속 재계수((6) 방법 그대로).
    `base-commit.txt` 는 그때까지 882a0b49 유지 — 이 커밋에서도 바꾸지 않았다.
+
+## T1 — 2026-10-05 (구현 Terra-1 · 적대 리뷰 A1 2라운드 · 착지 30694fe5)
+
+- **구현**: Terra-1(Opus), 격리 worktree(973dd696 고정). 산출 = 거부 분기 9개 시험
+  (`a100_t1_refusal_branches_test.go` 483줄), BTM 2 갱신, 결함 기록
+  `analysis/t1-unreachable-branches.md`(D1·D2 도달 불가, D3 실측 결함), 보조 AST 4,
+  하네스 3(가드 사슬 변이 20항목·RED 증인·D3 probe). **core 수정 0**(T1 예외 한계 준수 —
+  도달 불가 3개와 D3 는 수정 없이 기록·반환됐다).
+- **A1 1차**(Opus, 독립 — 격리 worktree + 패치 적용, 공유 트리·구현 worktree 비접촉):
+  P0=0 / P1=2 / P2=6. P1-1 `requireSameState` 가 State 값 복사의 공유 맵 때문에 제자리 변경을
+  못 잡음(ALIAS 변이 전판 생존 실측). P1-2 B2 포지션 latch 절(`EntryLatch != ""`)만 잡는
+  시험 부재(절 제거 변이 생존·위조 상태 실측 — 공개 전이 반례는 B6 가 우연히 방어).
+  P2: D1 고정 시험의 check_analysis 의존, D2 고정 시험 KR 한정, D3 기록 축소(REPLACE_UNKNOWN
+  누락), B6 `> Holdings` 절 동치 변이, 하네스 양성 대조 공백, -cover+-overlay 계측 함정.
+- **수리**: snapshotState 선행 스냅숏(봉인·내용 해시·포지션 수) 11개 호출 지점, latch 단독
+  하위 시험, D2 구조 시험 2 phase × 2 시장, D3 증인 확장(REPLACE_UNKNOWN 포함·전이 11개 전부
+  invalid_state·CANCEL_PENDING 대조군), 하네스 20항목(신규 ALIAS_PR_B2·PR_B2_no_poslatch·
+  AF_B1_B2_off·TRUTH_SKIP_US 전부 CAUGHT), 기록 4건 반영.
+- **A1 재검(같은 리뷰어, 표적)**: **APPROVE — P0=0 / P1=0.** 1차 발견 8건 전부 CLOSED 이진
+  확인, ALIAS 변이를 다른 거절 경로 5곳에 일반화해 전부 헬퍼 자체 단언으로 FAIL(우연 아님),
+  커버리지 6블록·race GREEN 재확인.
+- **Manager 배터리**: 경로 전수 11/11(허용 밖 0), `lifecycle.go` sha=번들 ast.json,
+  `-race` GREEN, 커버리지 9블록 독립 재측정 일치(86.6%), 하네스 직접 재실행 16/16(1차 시점,
+  무변이 control·양성 대조 포함·UNEXPECTED 0), 공유 트리 무변 확인 후 착지 창 개방.
+- **Manager acceptance**: 30694fe5 (Co-Authored-By: Claude Opus 5.5) 착지·푸시.
+  처분 — tasks 1.3.2 판정 기준 (나)안 개정(본문 yes 또는 도달 불가 증명), D3 는 tasks 2.7 로
+  T2-A 편입(T2-A 배선 전 수리 필수). 도달 불가 분기 3개의 제거/재배열은 M-A 뒤 결정으로 이월.
