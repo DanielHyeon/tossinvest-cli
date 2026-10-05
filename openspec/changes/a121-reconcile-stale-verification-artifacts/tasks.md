@@ -102,10 +102,16 @@ M14b·TERMINAL·net/http 등 CAUGHT 전환 실측) — review.md 「A-RED」 절
 
 ## 3. GREEN
 
-- [ ] 3.1 Implement the minimal versioned append-only reconciliation event and safe record projection.
-- [ ] 3.2 Implement the bounded official-read reconciliation command with redacted operator output and no
+- [x] 3.1 Implement the minimal versioned append-only reconciliation event and safe record projection.
+- [x] 3.2 Implement the bounded official-read reconciliation command with redacted operator output and no
       mutation path.
-- [ ] 3.3 Preserve backward-compatible record handling or fail closed before write; document the rollback rule.
+- [x] 3.3 Preserve backward-compatible record handling or fail closed before write; document the rollback rule.
+
+3절 종결(2026-10-05, 착지 c9889cb2): RED 82 전부 GREEN·전 저장소 FAIL 0·race 0·기존 함수 편집 6
+(FLM 선행·분기 수 불변·Pre-Edit 6)·변이 원장 110(CAUGHT 108·동등 2 핀 결속)·A-GREEN 적대 리뷰
+APPROVE(P0=0/P1=0, MarshalJSON 바이트 핀·가드 순서 AST 대조·원장 표본 10 재실행 포함). 정적 거절
+승인 선행(P2-a 개정). **생산은 Q1 측정 전 거절 전용(retention-unmeasured)** — 활성화는 사람 실측
+뒤 별도 리뷰 상수 커밋. go.mod: x/term indirect→direct 만.
 
 ## 4. VERIFY and handoff
 

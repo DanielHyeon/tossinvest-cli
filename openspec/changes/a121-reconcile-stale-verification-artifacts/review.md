@@ -191,5 +191,24 @@ codex r1(무효·발견 7 수용) + clean codex r2(5건) + 이진 확인 3회 �
   (커밋 뒤 공유 트리). **Manager acceptance: ffa8eb0d 푸시.** 구체화 판정 7건·가드 순서·Q3
   승인·allowlist 출처는 design 「RED 로트 처분」.
 
+## A-GREEN — 2026-10-05 (GREEN 로트 적대 리뷰, 착지 c9889cb2)
+
+- **구현**(같은 Terra, 리뷰어 분리): RED 82 전부 GREEN, 생산 신규 verifylive 4 + record/report
+  확장·official 해독 3·cmd 명령(등록 포함), 기존 함수 편집 6(Pre-Edit·FLM·분기 수 불변),
+  `Artifact.MarshalJSON`(대사 줄만 확정형·비대사는 base 바이트 동일 핀), x/term direct.
+- **판정 경과**: GREEN 중간 보고에서 census 읽기 통로 누락(RED 로트 결함)이 census FAIL 로 격발 —
+  Manager 승인으로 `readRecordRaw` 한 줄 허용(사유 기록). 변이 원장 과정에서 생존 8 을 새 시험으로
+  잡고 중복 분기 1 제거.
+- **A-GREEN(같은 freeze 리뷰어): APPROVE — P0=0/P1=0, P2=3.** 실측: 시험 약화 0(허용 2줄뿐),
+  MarshalJSON 에 자체 변이 10(8 CAUGHT·1 빌드실패·1 → P2-b), 가드 순서 AST 전수 일치(추가 재검은
+  강화 방향), no-live-mutation 코드 추적(GET 3·seq 재결속 실재), 원장 표본 10/10 재현·동등 2 논증
+  성립, 기존 함수 6 분기 수 불변·AST 바이트 동일, §0 불변식 영향 0, go.mod 선언대로.
+- **P2 처분**: (a) 정적 거절 승인 선행 — 계약 개정 수용(GO2 변이 CAUGHT 핀), (b) 중복 줄 삭제
+  (MJ10 을 새 시험이 잡음 — 기존 fixture 는 HeldUntil 공란이라 못 잡았음), (c) 주석. 최종 원장
+  110 중 CAUGHT 108·동등 2(V-tail-append — 지문이 개행 함의 / C-env-creds — preflight 선행 핀).
+- **Manager 배터리**: 경로 전수 45/45(허용 밖 0), 트레일러 정상, 커밋 뒤 check_analysis·sdd-test·
+  3패키지 무태그 전부 rc=0(구현자 실측). **Manager acceptance: c9889cb2 푸시.**
+  잔여: 4.1 의 sdd-sync/sdd-check(Manager), 4.2 gstack+codex 코드 diff 패스, 4.3(사람)·4.4 gate.
+
 **파킹.** a121 은 BLOCKED 로 둔다. 적대 재리뷰는 사용자가 Q1·Q2 에 답한 뒤에 돈다.
 (2026-10-05 해소 — Q1·Q2 는 2026-09-28 사용자 결정, 적대 재리뷰는 아래 freeze 1차로 실행됨.)
