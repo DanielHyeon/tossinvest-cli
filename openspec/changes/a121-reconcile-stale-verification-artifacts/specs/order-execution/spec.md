@@ -49,7 +49,7 @@ otherwise:
   succeeds and echoes the same symbol (positive controls against a
   blanket-empty response);
 - the complete read set above, performed twice in succession, yields the same
-  same (group, identifier, status, triggered order identifier) multiset both
+  (group, identifier, status, triggered order identifier) multiset both
   times, with a duplicate (group, identifier) within one read refusing by
   itself, within the Q3 freshness bound (the RED lot SHALL fix it as a named
   conservative constant approved in review; until that
