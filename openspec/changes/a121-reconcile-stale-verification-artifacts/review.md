@@ -210,5 +210,24 @@ codex r1(무효·발견 7 수용) + clean codex r2(5건) + 이진 확인 3회 �
   3패키지 무태그 전부 rc=0(구현자 실측). **Manager acceptance: c9889cb2 푸시.**
   잔여: 4.1 의 sdd-sync/sdd-check(Manager), 4.2 gstack+codex 코드 diff 패스, 4.3(사람)·4.4 gate.
 
+## codex GREEN 외부 패스 + CG 수리 — 2026-10-05/06 (착지 cfdf219a)
+
+- **codex(clean, /tmp 격리·메모리 접근 0)**: GREEN 코드에서 FIXABLE 5·INVESTIGATE 1 —
+  CG-1 둘째 스냅숏 미검증(OCO 다리·심볼·시장 탈출, 최강 발견) / CG-2 기록 쓰기 직렬화 부재
+  (inode alias·--record override) / CG-3 자기 부분 쓰기 창 / CG-4 승인 읽기 오류 무시·취소
+  불가·표시 채널 분리 / CG-5 최종 게이트가 쓰기 경계 앞 아님 / CG-6 토큰 캐시 신원 교체.
+  전부 미래 활성 경로(현 생산은 Q1 nil 거절 전용).
+- **수리**: 양 스냅숏 독립 검증·기록 파일 flock+잠근 fd 바이트 판정+크기 재검·단일 Write+fsync+
+  read-back·승인 강건화(완전한 줄·ctx·같은 채널)·게이트 재배치(AST 핀)·읽기 클라이언트 신원
+  재확인. RED 시험 수정 2건은 Manager 승인(census 추가 통로 교체·/accounts 기대 1→2 — 리뷰어가
+  비약화 확인). 원장 130: CAUGHT 127·동등 3(V-tail-append·C-rebind·C-env-creds, 전부 핀 결속).
+- **CG-APPROVE(P0=0/P1=0, 같은 리뷰어)** — 6건 전부 counterexample 재구성 이진으로 CLOSED 확인,
+  flock 플랫폼 거절(비-unix fail-closed)·OpenRecorder 비편집(record.go 삭제 0줄) 확인.
+  P2 2(찢긴 꼬리 제자리 복구 가능성·승인 고루틴 누수 — CLI 수명 내 무해) 기록.
+- **Manager 배터리·acceptance**: 경로 전수 20/20·트레일러 정상·커밋 뒤 3검사 rc=0 — cfdf219a 푸시.
+- **에이전트 트랙 종결.** 잔여 = 4.3(사람 승인 조회 전용 관측 — 현 상태에선 정적 거절
+  retention-unmeasured 가 정상 결과) → 4.4 gate·PM·archive. Q1 사람 실측(CLOSED 어휘 영수증 포함,
+  a063 심볼 금지)이 활성화의 유일 관문.
+
 **파킹.** a121 은 BLOCKED 로 둔다. 적대 재리뷰는 사용자가 Q1·Q2 에 답한 뒤에 돈다.
 (2026-10-05 해소 — Q1·Q2 는 2026-09-28 사용자 결정, 적대 재리뷰는 아래 freeze 1차로 실행됨.)

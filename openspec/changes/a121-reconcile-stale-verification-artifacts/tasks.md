@@ -115,8 +115,15 @@ APPROVE(P0=0/P1=0, MarshalJSON 바이트 핀·가드 순서 AST 대조·원장 �
 
 ## 4. VERIFY and handoff
 
-- [ ] 4.1 Run focused tests, `make test`, `make vet`, `make validate`, `make sdd-sync`, and `make sdd-check`.
-- [ ] 4.2 Complete independent adversarial diff/test review followed by gstack review and Manager verification.
+- [x] 4.1 Run focused tests, `make test`, `make vet`, `make validate`, `make sdd-sync`, and `make sdd-check`.
+- [x] 4.2 Complete independent adversarial diff/test review followed by gstack review and Manager verification.
+4.1·4.2 종결(2026-10-06, 착지 cfdf219a): 4.1 — 전 저장소 무태그 ok 101·tagged ok 98·make test-race
+rc=0·vet/gofmt·openspec validate·sdd-check rc=0(sdd-sync 은 codegraphcontext 기지 advisory 실패).
+4.2 — 적대 리뷰 사슬: A-RED 2.5라운드 + A-GREEN APPROVE + gstack /review + codex 외부 패스(clean)
+6건(CG-1~6) 수리·CG-APPROVE(P0=0/P1=0). 변이 원장 최종 130(CAUGHT 127·동등 3 핀 결속). 상속 결함
+2(Recorder.Append 부분 쓰기 + LoadEntries 꼬리 묵살 연쇄·OpenRecorder 비잠금 작성자)는 후속
+change 후보로 기록(analysis/green-lot/codex-green-repairs.md).
+
 - [ ] 4.3 Record a read-only, redacted reconciliation observation only with explicit human approval for the
       selected profile; do not perform a live order mutation.
 - [ ] 4.4 Synchronize PM, run `make gate CHANGE=a121-reconcile-stale-verification-artifacts`, and archive only
