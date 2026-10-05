@@ -29,7 +29,11 @@ P0/P1을 구현자가 고친 뒤 같은 리뷰어가 재검토해 `P0=0, P1=0`�
 | G | 7.1~7.10 | Terra 검증 실행 + Manager 결과 대조 | gstack 독립 리뷰 | gate PASS, gstack P0/P1=0, Manager acceptance |
 
 M0가 GREEN·A-M0 accepted되기 전에는 M-A의 place를 실행하지 않는다. M-A PASS와 0.11의
-raw-status 판정표 동결 전에는 T1을 포함한 어떤 제품 구현 로트도 시작하지 않는다.
+raw-status 판정표 동결 전에는 제품 구현 로트를 시작하지 않는다. **단, T1(1.1~1.3)은 예외로
+먼저 시작할 수 있다**(2026-10-05 사용자 승인 — 개정 문안·근거 (i)~(iii)은 review.md R0 (5)).
+**예외의 한계:** GREEN 이 core 로직 수정을 요구하면 그 수정은 예외에 포함되지 않는다 —
+수정 없이 RED 와 결함 기록만 남기고 Manager 에게 돌려준다. T2-A 이후 로트의 순서 조건은
+바뀌지 않는다.
 T2-B의 exact lifecycle API seal이 GREEN·A2-B accepted되기 전에는 T3를 시작하지 않는다.
 T4-A의 child 귀속·완전청산 취소·flat 권위 경계가 GREEN·A4-A accepted되기 전에는 T4-B의
 worker construction/start와 broker mutation 도달 경로를 열지 않는다. 번호 순서와 무관하게
@@ -503,6 +507,11 @@ worker construction/start와 broker mutation 도달 경로를 열지 않는다. 
     교체 전에는 broker trigger와 baseline이 다를 수 있으므로 그 delta와 경과 시간을 표시한다.
   - [ ] 6.4.3 포지션이 비-보호 경로로 닫히면 **다음 수렴 주기까지 상주 주문이 남고**, 그 창에
     수동 매수가 들어오면 그 주식에 대해 발동할 수 있다(M13 — 수량 예약 없음).
+  - [ ] 6.4.4 **취소-선행 창**(2026-10-05 (다) 채택): 인프로세스 보호 매도 직전에 상주 주문을
+    취소하므로(4.5.1), 취소 뒤 인프로세스 매도가 거부·미체결이면 그 포지션은 그 순간 상주
+    손절도 체결된 청산도 없다 — 현재 인프로세스 매도는 관측가 LIMIT 라(a087 Phase 2 전)
+    가격을 쫓지 않는다. 이 상태는 a100 이전(상주 주문 부재)과 동일하며 a087 Phase 2 착지 시
+    창이 줄어든다는 사실까지 적는다(design D8 계약 1 개정 주석).
 - [x] 6.5 **`protection.Controller`(824줄) + `Repository`(540줄) 정리 change를 지금 등록한다.**
   a100 완료 후로 미루지 않는다 — 리뷰의 두 보이스가 모두 선행을 권고했고, 등록만이라도
   앞당기는 것이 절충이다(D1).
