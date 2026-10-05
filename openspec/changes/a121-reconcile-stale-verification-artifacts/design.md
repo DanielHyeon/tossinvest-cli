@@ -137,7 +137,7 @@ does not influence endpoint or attestation success.
    (보존 기간)도, 발동 뒤 목록에 남는지도 **측정되지 않았다**(발동 측정은 deferred —
    verify-execution-capability 2.5). 2·3 은 목록에 남아 있는 동안만 덮는다. 목록 밖의 발동을 배제할 근거는
    verify-observes-the-trigger 가 채택한 **보유 수량** 뿐인데, `Artifact` 에는 방향도 수량도 없고
-   (`record.go:182-243`) `raceEvidence` 는 `held < heldBefore` 만 비교한다(`steps_trigger.go:553`).
+   (`record.go:182-244`) `raceEvidence` 는 `held < heldBefore` 만 비교한다(`steps_trigger.go:553`).
    정해지기 전에는 이 조건을 만족시킬 수 없으므로 명령은 거절한다.
 5. **행이 대상과 같은 심볼·시장이다** — 읽은 모든 행의 `Symbol` 이 대상과 같아야 한다(심볼 필터가 지켜지지
    않은 응답은 거절). `Market` 은 행이 있을 때만 대조된다 — 1·3 이 통과하는 경우 행이 0건일 수 있으므로,
@@ -164,7 +164,8 @@ does not influence endpoint or attestation success.
   operator who has to go and cancel something by hand needs it"(`record.go:185-187`). M0 체크포인트
   줄도 "may retain exact broker identifiers"(`record.go:85-88`). 계좌는 반대로 마스킹된 참조만
   담는다(`Entry.AccountRef`, `record.go:265-266`).
-- 투영의 키는 `Kind + "\x00" + ID` 다(AST `verifylive--outstandinglines` B3, `record.go:548`).
+- 투영의 키는 `Kind + "\x00" + ID` 다 — 키는 `record.go:547` 의 대입에서 만들어지고(분기 아님),
+  AST `verifylive--outstandinglines` B3(`:548`)은 처음 본 키의 순서를 적는 분기다(로트 1 정정 D1).
   종결은 단조다 — terminal 줄 뒤의 비-terminal 줄은 되살리지 않는다(B4 `:552`). 투영은 비-terminal 만
   낸다(B6 `:562`). 종결 술어는 한 곳이다 — `Artifact.terminal()`(`record.go:575`)이고 그 주석이
   "a third ending added later is honoured by all of them at once" 라고 이 확장을 예정해 두었다(`:571-574`).
@@ -228,8 +229,10 @@ does not influence endpoint or attestation success.
   would produce a record that names one account and measured another"(`:911-914`).
 - 기록의 계좌는 줄마다 **마스킹된** `AccountRef` 다 — `maskedAccount(r.accountRef)`(`runner.go:278·688·890`)
   = `attest.Mask`, 끝 4자리만 남긴다(`internal/attest/attest.go:281-291`).
-- 자격 증명은 환경 변수가 파일보다 우선한다 — `TOSSCTL_OPENAPI_KEY`·`SECRET` 이 있으면 파일을 읽지 않는다
-  (`internal/official/credentials.go:30-34`).
+- 자격 증명은 환경 변수가 파일보다 우선한다 — 단, 실측(로트 1 D4): 우선은 **둘 다** 비어 있지 않을 때만이다
+  (`internal/official/credentials.go:30-34`, `:32`). G3 의 거절 조건은 보수 쪽으로 고정한다(Manager
+  2026-10-05): **둘 중 하나라도 설정돼 있으면 거절** — 하나만 설정된 반쪽 상태는 어느 자격으로 읽었는지가
+  모호해지는 쪽이므로 fail-closed.
 - 기록 경로는 `resolveVerifyRecordFor` 가 정한다 — `--record` override 가 이기고(AST B1 `:765`),
   아니면 `--config-dir` 프로필 아래(B2 `:769`), 아니면 `journal.DataDir()` 다(자격 증명의 기본 경로와 다른
   뿌리). 시장마다 파일이 다르다(`RecordFileName`, `record.go:55-60`). **`Entry` 에는 시장 필드가 없다**
@@ -274,3 +277,19 @@ does not influence endpoint or attestation success.
 - **Q6 — 대상이 CLOSED 에 `EXPIRED` 로 있을 때.** **결정(Manager, 2026-09-27): 거절. 귀결 — a063 의 artifact 가 EXPIRED 면 이 경로로는 영구히 대사되지 않고, 그때 사용자 재결정 항목이 된다. 거절 메시지와 이 문서 양쪽에 적는다.** 기본은 거절이다(부재가 아니라 종결). a063 의 artifact 가
   만료로 끝났다면 이 change 로는 영영 대사되지 않는다. 만료를 별도의 종결 사건으로 받을 것인가(범위 확장),
   거절로 둘 것인가.
+
+### 로트 1 처분 (Manager, 2026-10-05 — 근거 `analysis/code-context/evidence-reconciliation.md`)
+
+- **S1 — 표시 범위.** `Report.WriteText`(`report.go:239-291`)·`Progress.WriteText`(`:346-379`)를
+  편집 대상에 **추가**한다(reconciled absent 라벨이 텍스트 출력에 닿으려면 필요 — FLM 은 구현 로트
+  시작 시 생성, tasks 1.2 의 "at least" 아래). 콘솔 템플릿(`templates.go:620`·`:700`)은 **비편집**:
+  대사된 artifact 는 새 바이너리에서 outstanding 투영에서 빠지는 것으로 충분하고, UI 에 대사 사건을
+  새로 그리는 것은 범위 밖이다.
+- **S2 — 명령 주석.** 새 대사 명령은 `mutating: true` 로 등재한다(보수 — 기록에 영속 이벤트를 쓰고,
+  tasks 4.3 이 사람 승인을 요구하는 것과 정합; 대화형 에이전트 자동 실행 금지가 따라온다).
+  `TestMutatingAnnotationOnTradeCommands` 의 고정 집합 갱신은 구현 로트 몫이다.
+- **R1 — 대사 줄의 StepID.** `LastEntry`·`heldAfter` 는 `StepID` 만 비교하고 Kind 를 보지 않는다
+  (`ast-evidence/verifylive--{lastentry,heldafter}.ast.json`). 대사 줄의 StepID 는 **step 카탈로그 밖의
+  고유 값**이어야 하며 특히 `conditional-cancel` 재사용 금지 — 구조 시험으로 고정한다(tasks 2.2.2).
+- **STORY acceptance 2 판독.** "Only … appends" 는 **제약**으로 읽는다(능력 아님) — Q1 측정 전
+  거절-전용 상태에서도 충족된다. Story 본문은 수정하지 않는다.

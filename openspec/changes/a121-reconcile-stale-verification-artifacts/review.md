@@ -62,4 +62,17 @@ Manager 지시 뒤에 돈다. `make sdd-check` 차단(위 절)도 그대로 구�
 
 spec 의 `[비움 — Q4]`·`[비움 — Q6]` 는 위 판정으로 채웠고 Q5 거절을 계좌 결속 요구에 넣었다.
 
+## 로트 1 — 2026-10-05 (1.0 집행 · base 재고정 · FLM 증거, 커밋 de147cc2·b81380dd·29a0d745)
+
+- **1.0(Manager, de147cc2)**: Q1~Q6 기결정을 design 3자리·spec 3자리에 반영, placeholder 0.
+- **재고정(Manager, b81380dd)**: 9408fc95 → de147cc2, WORKFLOW 세 요건 전부 — 귀속 실측(자기 Go
+  커밋 0 · 대상 소스 0파일 · 옛 required 242 전부 형제 몫), 승인 기록(tasks 1.1 · 이 절),
+  단독 커밋+영수증(커밋 메시지). 사이 582커밋.
+- **로트 1(Terra Opus, 29a0d745)**: FLM 번들 4 · 호출자 증거 · ast-evidence 16/16 재검증 +2.
+  Manager 배터리: 경로 전수 22/22(허용 밖 0), check_analysis rc=0(HEAD 29a0d745), 공유 트리 잔여
+  기지 untracked 2뿐. 로트가 보고한 어긋남 D1(분기 귀속)·D2(범위 끝행)·D4(env 우선 조건)는 design
+  정정, D3(Mask 경계)·R1(StepID)은 tasks 2.2.2 RED 로, S1(WriteText 편집 대상 추가·콘솔 비편집)·
+  S2(mutating=true)·STORY 판독(제약)은 design 「로트 1 처분」으로 닫았다.
+- 다음: 1.3 proposal-freeze 적대 리뷰(+gstack) → RED 로트.
+
 **파킹.** a121 은 BLOCKED 로 둔다. 적대 재리뷰는 사용자가 Q1·Q2 에 답한 뒤에 돈다.

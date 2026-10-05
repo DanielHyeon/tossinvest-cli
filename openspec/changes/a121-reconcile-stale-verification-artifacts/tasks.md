@@ -1,6 +1,9 @@
 ## 1. Contract and hard evidence
 
-- [ ] 1.1 Reserve `STORY-TOS-a121`, capture the implementation base, and validate this change strictly.
+- [x] 1.1 Reserve `STORY-TOS-a121`, capture the implementation base, and validate this change strictly.
+      — 2026-10-05: STORY 기존재(모순 없음, acceptance 2 는 제약으로 판독 — design 「로트 1 처분」),
+      base 재고정 9408fc95 → de147cc2 단독 커밋 b81380dd(영수증은 커밋 메시지 — 자기 Go 커밋 0,
+      대상 소스 0파일, required 242→0), strict validate 통과. Manager 승인(WORKFLOW 규칙 2) 이 줄이 기록.
 - [x] 1.0 Obtain answers to design Revision 1 Q1–Q5 and write them into design/spec, replacing every
       `[비움 — Qn]`. Until then 1.3 cannot run (Q1 unanswered means the command can only refuse).
       — 2026-10-05 Manager: 전 결정 반영(Q1=(a)+측정 전 잠정 거절·Q2=(a) 기존 키 재사용·Q3=구현 로트
@@ -14,6 +17,11 @@
       `M0Unsettled` are called, not edited; record their caller evidence.
       The branch evidence Revision 1 already cites is in `analysis/ast-evidence/` (HEAD `cb378a63`);
       regenerate it at the implementation base.
+      — 2026-10-05 로트 1 착지(29a0d745): FLM 번들 4(terminal 0분기·newVerifyCmd 0·BuildReport 10·
+      BuildProgress 7, BTM 은 base 커버리지 실측), PendingCleanup/M0Unsettled 호출자 증거
+      (`analysis/code-context/`), ast-evidence 16/16 바이트 동일 + heldAfter·LastEntry 추가,
+      outstandingLines 비편집 확인(Q2=(a)). check_analysis rc=0. **추가 편집 대상(S1 처분):**
+      `Report.WriteText`·`Progress.WriteText` — FLM 은 구현 로트 시작 시 생성. [x] 는 그 유보 포함.
 - [ ] 1.3 Complete proposal-freeze adversarial and gstack reviews; record the accepted no-live-mutation boundary.
 
 ## 2. RED
@@ -34,6 +42,9 @@
       the record changing between selection and append; a second request after reconciliation appends nothing;
       the basis digest carries its version and domain tag and is independent of read order. Also a positive test
       that the a063-shaped artifact (hold released by a failed `conditional-cancel`) is the one candidate.
+      로트 1 추가(2026-10-05): `attest.Mask` 경계 — 빈 참조("(none)")·4자 이하(전부 `*`, 길이 비교로
+      퇴화) 자격 참조의 거절 시험; 대사 줄 `StepID` 가 step 카탈로그 밖이고 `conditional-cancel` 이
+      아님을 고정하는 구조 시험(R1 — `LastEntry`·`heldAfter` 는 StepID 만 비교).
 - [ ] 2.3 Add failing tests that reconciliation removes only its exact outstanding artifact from resume cleanup
       planning while preserving failed cleanup evidence and every verification verdict.
 - [ ] 2.4 Add failing tests that the reconciliation event cannot enter successful endpoints, soak attestation,
