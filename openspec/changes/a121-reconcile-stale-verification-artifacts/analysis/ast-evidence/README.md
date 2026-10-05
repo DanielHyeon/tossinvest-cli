@@ -9,6 +9,10 @@ Function Logic Map·Branch Test Map·risk report 번들은 편집 전 산출물�
 - 생성 시점 HEAD: `cb378a6332dea5ae659590886ba8326effe4b26e` (2026-09-27, 표의 처음 12개) ·
   `0004536c` (gstack 리뷰 반영 때 더한 마지막 4개 — 그 사이 이웃 커밋은 이 파일들을 바꾸지 않았다)
 - 각 파일의 `source_sha256` 이 그 시점 소스를 묶는다. 소스가 바뀌면 이 인용은 낡는다.
+- **재생성 (task 1.2, 2026-10-05)**: 구현 base `de147cc285c5274cad6d6ab7b208513027a70b40` 에서 같은 추출기로 16 개를
+  다시 뽑았다 — **16/16 바이트 동일**(`cmp`). 대상 소스는 옛 base `9408fc95` 이후 바뀌지 않았다. 같은 base 에서
+  마지막 2 개(`heldAfter`·`LastEntry`)를 더했다 — design G2 「구 바이너리 → 다시 보유」 주장과 task 1.2 의 「대사 줄
+  `StepID`」 위험이 그 두 함수의 분기에 기댄다. 대조 결과는 `../code-context/evidence-reconciliation.md`.
 
 | 파일 | 함수 | 분기 | 근거로 쓰는 분기 |
 |---|---|---:|---|
@@ -28,3 +32,5 @@ Function Logic Map·Branch Test Map·risk report 번들은 편집 전 산출물�
 | `verifylive--holdgate.ast.json` | `cleanup.go:155-163` `holdGate` | 2 | B1(`HeldUntil` 이 있으면 그것), B2(없어도 조건주문은 `conditional-cancel` 까지 보유) |
 | `verifylive--cleanupfrom.ast.json` | `cleanup.go:123-136` `cleanupFrom` | 3 | B2(게이트 없음 → 대상), B3(`settled && heldAfter` 일 때만 대상) |
 | `verifylive--succeededendpoints.ast.json` | `endpoints.go:75-112` `SucceededEndpoints` | 8 | B1·B3(**`Kind` 를 보지 않고** 모든 줄의 `Calls` 를 돈다), B4(오류 호출 제외) |
+| `verifylive--heldafter.ast.json` | `cleanup.go:183-191` `heldAfter` | 2 | B1·B2(`StepID == gate` 인 **마지막** 줄의 위치 > artifact 줄 위치 — `Kind` 를 보지 않음) |
+| `verifylive--lastentry.ast.json` | `record.go:476-483` `LastEntry` | 2 | B1·B2(뒤에서부터 `StepID == id` 인 첫 줄 — `Kind` 를 보지 않음; `Settled`·`Passed`·`BuildProgress` 가 씀) |
