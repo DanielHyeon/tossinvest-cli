@@ -47,7 +47,8 @@ func TestReconciledProjectionIsMonotoneLikeOutstanding(t *testing.T) {
 // TestReconcileRechecksTheWindowAtBothContractPoints 는 변이 원장 생존 V-final-window·V-window-before-instr2 의 대체 가드
 // 핀이다(Manager 판정 2026-10-05 — 동등 수용, 심층 방어 유지). 두 재검 사이에는 로컬 기록 읽기뿐이라 행동 시험은
 // 서로를 가린다. 그래서 Reconcile 본문에서 재검 헬퍼 checkReconcileWindow 호출이 정확히 둘이고, 하나는 둘째 종목 조회
-// 뒤·multiset 비교 앞(가드 순서 계약), 다른 하나는 추가 직전 기록 재읽기 뒤·추가 앞(codex F7)임을 AST 로 센다.
+// 뒤·multiset 비교 앞(가드 순서 계약), 다른 하나는 잠근 fd 로 다시 읽어 엄격 해독한 뒤·한 번의 쓰기 앞(codex F7·CG-5)임을
+// AST 로 센다(CG-2/3/5 수리로 재읽기 표지 decodeRecordStrict·쓰기 표지 appendLine 로 갱신).
 func TestReconcileRechecksTheWindowAtBothContractPoints(t *testing.T) {
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, "reconcile.go", nil, 0)
@@ -90,8 +91,8 @@ func TestReconcileRechecksTheWindowAtBothContractPoints(t *testing.T) {
 	}
 	instrument := positions("checkReconcileInstrument")
 	multiset := positions("sameReconcileMultiset")
-	reread := positions("readRecordStrictNoTail")
-	appendLine := positions("appendReconcileLine")
+	reread := positions("decodeRecordStrict")
+	appendLine := positions("appendLine")
 	if len(instrument) != 2 || len(multiset) != 1 || len(reread) != 1 || len(appendLine) != 1 {
 		t.Fatalf("Reconcile's landmarks changed: instrument %v multiset %v reread %v append %v", instrument, multiset, reread, appendLine)
 	}

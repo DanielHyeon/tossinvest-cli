@@ -1,8 +1,8 @@
 # Function Logic Map: `Artifact.terminal`
 
-- Source: `internal/verifylive/record.go` (588-588)
+- Source: `internal/verifylive/record.go` (664-664)
 - Qualified function: `Artifact.terminal`
-- Revision: `current` (구현 base `de147cc2`, `source_sha256` ac81738d… (GREEN 편집 뒤 재추출; 편집 전 df526d2c…))
+- Revision: `current` (구현 base `de147cc2`, `source_sha256` 9b44a5d8… (GREEN 편집 뒤 재추출 — codex CG-2·CG-3 로 record.go 에 새 함수가 붙어 다시 추출; 편집 전 df526d2c…))
 - AST evidence: `ast.json` — AST branches 0, 반환 1(575:37), 호출 0
 - Risk scan: `risk-pattern-report.md`
 - 편집 예정: design Revision 1 G2 — 셋째 종결 `ReconciledAbsent` 를 이 술어에 더함 (task 3.1)

@@ -195,11 +195,15 @@ func TestReconcileNarrowReaderRefusesAccountShapes(t *testing.T) {
 }
 
 // TestReconcileNarrowReaderBindsTheValidatedSequence 는 codex R2-2 다 — 생성자가 자체 Accounts() 로 검증한 seq 로 읽기를
-// 묶는다. 서버의 계좌 목록이 첫 호출 뒤 바뀌어도(seq 5 → 8) 목록 읽기 헤더는 검증한 5 이고 /accounts 는 한 번뿐이다.
+// 묶는다. 목록 읽기 헤더는 검증한 5 이고, /accounts 는 정확히 두 번(계좌 판정 + 읽기용 클라이언트의 첫 범위 읽기 전
+// 신원 재확인, codex CG-6)이다 — 지연 해석이 다시 일어나면 셋 이상이 된다. (CG-6 수리로 개정: 원래는 "한 번뿐" 이었고
+// 서버가 둘째 호출에 다른 계좌(seq 8)를 주는 픽스처였다 — 그 모양은 이제 신원 재확인이 거절한다:
+// TestReconcileReaderRechecksIdentityBeforeItsFirstScopedRead.)
 // 한계(정직하게): 검증 행 = 첫 행인 한(기형 행 거절이 그것을 보장한다), 암묵 캐시 재사용과 명시 재결속은 같은 헤더를
-// 낸다 — 이 시험이 잡는 것은 "재결속 없이 새 클라이언트가 지연 해석을 다시 하는" 모양이다.
+// 낸다.
 func TestReconcileNarrowReaderBindsTheValidatedSequence(t *testing.T) {
 	srv := newReconcileAccountsServer(t,
+		accountsBody(accountRow("123-45-678901", 5)),
 		accountsBody(accountRow("123-45-678901", 5)),
 		accountsBody(accountRow("999-99-990000", 8)))
 	reader, account, err := srv.newReader(t)
@@ -216,8 +220,8 @@ func TestReconcileNarrowReaderBindsTheValidatedSequence(t *testing.T) {
 	if _, err := reader.ReconcileOpenOrdersPage(ctx, "005930", "", 100); err != nil {
 		t.Fatal(err)
 	}
-	if n := srv.accounts.Load(); n != 1 {
-		t.Fatalf("/accounts read %d times; the reads must stay bound to the one validated answer", n)
+	if n := srv.accounts.Load(); n != 2 {
+		t.Fatalf("/accounts read %d times; want 2 (validation + the reading client's identity recheck) — more means lazy re-resolution", n)
 	}
 	srv.mu.Lock()
 	defer srv.mu.Unlock()

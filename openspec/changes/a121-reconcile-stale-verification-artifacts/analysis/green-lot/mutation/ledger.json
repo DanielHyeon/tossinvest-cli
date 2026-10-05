@@ -1,23 +1,23 @@
 {
- "tree": "848b918617738ef89d5b4b800cf28fc6cad7fc415341814dfd5327ddf917c420",
+ "tree": "4f240dec0054684197bace2f43aa43ca3f1092986db5eae87a81a182cc082784",
  "rows": [
   {
    "id": "CONTROL-v",
    "pkg": "v",
    "result": "PASS",
-   "detail": "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/verifylive\t7.792s\n"
+   "detail": "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/verifylive\t7.803s\n"
   },
   {
    "id": "CONTROL-o",
    "pkg": "o",
    "result": "PASS",
-   "detail": "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/official\t0.010s\n"
+   "detail": "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/official\t0.009s\n"
   },
   {
    "id": "CONTROL-c",
    "pkg": "c",
    "result": "PASS",
-   "detail": "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/cmd/tossctl\t0.649s\n"
+   "detail": "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/cmd/tossctl\t0.707s\n"
   },
   {
    "id": "V-terminal-third",
@@ -137,15 +137,15 @@
    "file": "internal/verifylive/reconcile.go",
    "result": "SURVIVED",
    "why": "추가 직전 개행 검사 제거",
-   "detail": "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/verifylive\t8.177s\n"
+   "detail": "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/verifylive\t8.342s\n"
   },
   {
    "id": "V-final-window",
    "pkg": "v",
    "file": "internal/verifylive/reconcile.go",
    "result": "CAUGHT",
-   "why": "추가 직전 신선도·Q1 재검 제거",
-   "detail": "TestReconcileRechecksTheWindowAtBothContractPoints"
+   "why": "최종(쓰기 경계) 재검 호출 제거",
+   "detail": "TestReconcileFinalGateSitsAtTheWriteBoundary,TestReconcileRechecksTheWindowAtBothContractPoints"
   },
   {
    "id": "V-append-decode",
@@ -153,7 +153,7 @@
    "file": "internal/verifylive/reconcile.go",
    "result": "CAUGHT",
    "why": "추가 직전 엄격 해독 생략",
-   "detail": "TestReconcileRefusesATornFinalLineBeforeAppend,TestReconcileRechecksTheWindowAtBothContractPoints"
+   "detail": "TestReconcileRefusesATornFinalLineBeforeAppend"
   },
   {
    "id": "V-select-kind",
@@ -225,7 +225,7 @@
    "file": "internal/verifylive/reconcile.go",
    "result": "CAUGHT",
    "why": "승인 출력 생략",
-   "detail": "TestReconcileApprovalShowsBothMasksAndTheAccountCountBeforeAnyListRead"
+   "detail": "TestReconcileRefusesWhenTheApprovalCannotBeShown,TestReconcileApprovalShowsBothMasksAndTheAccountCountBeforeAnyListRead"
   },
   {
    "id": "V-approval-market",
@@ -321,7 +321,7 @@
    "file": "internal/verifylive/reconcile.go",
    "result": "CAUGHT",
    "why": "둘째 읽기 생략",
-   "detail": "TestReconcileReadsTheGroupsInTheFixedOrder,TestReconcileRefusesWhenThePairExceedsTheFreshnessBound,TestReconcileRefusesAStatusTransitionBetweenTheTwoReads,TestReconcileRefusesARowAppearingInOnlyOneRead,TestReconcileRefusesADuplicateRowWithi"
+   "detail": "TestReconcileValidatesTheSecondSnapshotToo,TestReconcileReadsTheGroupsInTheFixedOrder,TestReconcileRefusesWhenThePairExceedsTheFreshnessBound,TestReconcileRefusesAStatusTransitionBetweenTheTwoReads,TestReconcileRefusesARowAppearingInOnlyOne"
   },
   {
    "id": "V-read-order",
@@ -329,7 +329,7 @@
    "file": "internal/verifylive/reconcile_check.go",
    "result": "CAUGHT",
    "why": "읽기 순서 교란",
-   "detail": "TestReconcileAppendsOneReconciledAbsentLineWhenEveryConditionHolds,TestReconcileAcceptsExactlyThePageCap,TestReconcileApprovalWaitDoesNotConsumeTheFreshnessWindow,TestReconcileQueriesTheRecordLineSymbolBytes,TestReconcileReadsTheGroupsInThe"
+   "detail": "TestReconcileValidatesTheSecondSnapshotToo,TestReconcileRefusesWhileAnotherReconciliationHoldsTheRecordFile,TestReconcileDetectsAWriterInterleavingAtTheAppend,TestReconcileAppendsInOneWriteEndingWithANewline,TestReconcileReportsAPartialAppe"
   },
   {
    "id": "V-limit",
@@ -401,7 +401,7 @@
    "file": "internal/verifylive/reconcile_check.go",
    "result": "CAUGHT",
    "why": "OCO 거절 제거",
-   "detail": "TestReconcileRefusesOCORowsInEitherGroup"
+   "detail": "TestReconcileValidatesTheSecondSnapshotToo,TestReconcileRefusesOCORowsInEitherGroup"
   },
   {
    "id": "V-incomplete",
@@ -409,7 +409,7 @@
    "file": "internal/verifylive/reconcile_check.go",
    "result": "CAUGHT",
    "why": "필드 결측 제거",
-   "detail": "TestReconcileRefusesARowMissingRequiredFields"
+   "detail": "TestReconcileValidatesTheSecondSnapshotToo,TestReconcileRefusesARowMissingRequiredFields"
   },
   {
    "id": "V-symbol",
@@ -417,7 +417,7 @@
    "file": "internal/verifylive/reconcile_check.go",
    "result": "CAUGHT",
    "why": "심볼 대조 제거",
-   "detail": "TestReconcileRefusesARowForAnotherSymbol"
+   "detail": "TestReconcileValidatesTheSecondSnapshotToo,TestReconcileRefusesARowForAnotherSymbol"
   },
   {
    "id": "V-market",
@@ -425,7 +425,7 @@
    "file": "internal/verifylive/reconcile_check.go",
    "result": "CAUGHT",
    "why": "시장 대조 제거",
-   "detail": "TestReconcileRefusesARowForAnotherMarket"
+   "detail": "TestReconcileValidatesTheSecondSnapshotToo,TestReconcileRefusesARowForAnotherMarket"
   },
   {
    "id": "V-rows-after-absence",
@@ -721,7 +721,7 @@
    "file": "cmd/tossctl/verify_reconcile.go",
    "result": "CAUGHT",
    "why": "flock 생략",
-   "detail": "TestReconcileHoldsTheExecutionLockAndRateBudgetThroughTheReads,TestReconcileLineDoesNotChangeSupervisedProofs,TestReconcileInteractiveYesLetsTheCommandAppend,TestReconcileRefusesWhenTheExecutionLockIsHeld"
+   "detail": "TestReconcileShowsTheAccountsOnTheSameChannelAsTheQuestion,TestReconcileHoldsTheExecutionLockAndRateBudgetThroughTheReads,TestReconcileLineDoesNotChangeSupervisedProofs,TestReconcileInteractiveYesLetsTheCommandAppend,TestReconcileRefusesWhe"
   },
   {
    "id": "C-lease",
@@ -729,7 +729,7 @@
    "file": "cmd/tossctl/verify_reconcile.go",
    "result": "CAUGHT",
    "why": "lease 생략",
-   "detail": "TestReconcileHoldsTheExecutionLockAndRateBudgetThroughTheReads,TestReconcileLineDoesNotChangeSupervisedProofs,TestReconcileInteractiveYesLetsTheCommandAppend,TestReconcileRefusesWhenTheRateBudgetLeaseIsHeld"
+   "detail": "TestReconcileShowsTheAccountsOnTheSameChannelAsTheQuestion,TestReconcileHoldsTheExecutionLockAndRateBudgetThroughTheReads,TestReconcileLineDoesNotChangeSupervisedProofs,TestReconcileInteractiveYesLetsTheCommandAppend,TestReconcileRefusesWhe"
   },
   {
    "id": "C-lock-after-factory",
@@ -767,9 +767,9 @@
    "id": "C-rebind",
    "pkg": "c",
    "file": "cmd/tossctl/verify_reconcile.go",
-   "result": "CAUGHT",
+   "result": "SURVIVED",
    "why": "명시 재결속 제거(새 클라이언트 지연 해석)",
-   "detail": "TestReconcileNarrowReaderBindsTheValidatedSequence"
+   "detail": "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/cmd/tossctl\t0.772s\n"
   },
   {
    "id": "C-rebind-reuse",
@@ -825,7 +825,7 @@
    "file": "cmd/tossctl/verify_reconcile.go",
    "result": "CAUGHT",
    "why": "명령이 기본 승인을 우회",
-   "detail": "TestReconcileDefaultApprovalStopsTheCommandBeforeAnyListRead"
+   "detail": "TestReconcileShowsTheAccountsOnTheSameChannelAsTheQuestion,TestReconcileDefaultApprovalStopsTheCommandBeforeAnyListRead"
   },
   {
    "id": "C-register",
@@ -857,7 +857,7 @@
    "file": "cmd/tossctl/verify_reconcile.go",
    "result": "SURVIVED",
    "why": "자격을 환경 변수에서도(preflight 가 덮음)",
-   "detail": "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/cmd/tossctl\t0.649s\n"
+   "detail": "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/cmd/tossctl\t0.740s\n"
   },
   {
    "id": "C-adapter-embed",
@@ -898,6 +898,166 @@
    "result": "CAUGHT",
    "why": "대사 확정형이 held_until 을 싣게(HeldUntil 중복 대입 삭제 뒤 A-GREEN P2-b 확인)",
    "detail": "TestReconcileLineCarriesNoHoldEvenWhenTheOutstandingLineHadOne"
+  },
+  {
+   "id": "CG1-second-rows",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "둘째 스냅숏 행 검사 제거(CG-1)",
+   "detail": "TestReconcileValidatesTheSecondSnapshotToo"
+  },
+  {
+   "id": "CG2-no-flock",
+   "pkg": "v",
+   "file": "internal/verifylive/record.go",
+   "result": "CAUGHT",
+   "why": "기록 파일 flock 무시(CG-2)",
+   "detail": "TestReconcileRefusesWhileAnotherReconciliationHoldsTheRecordFile"
+  },
+  {
+   "id": "CG2-locked-code",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "잠김 거절 코드 뭉갬(CG-2)",
+   "detail": "TestReconcileRefusesWhileAnotherReconciliationHoldsTheRecordFile"
+  },
+  {
+   "id": "CG2-path-reread",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "잠근 fd 대신 경로로 재읽기(CG-2 ABA)",
+   "detail": "TestReconcileFinalGateSitsAtTheWriteBoundary"
+  },
+  {
+   "id": "CG2-size-check",
+   "pkg": "v",
+   "file": "internal/verifylive/record.go",
+   "result": "CAUGHT",
+   "why": "쓰기 직전 크기 검사 제거(CG-2)",
+   "detail": "TestLockedAppendRefusesWhenTheRecordGrewAfterTheLockedRead"
+  },
+  {
+   "id": "CG3-two-writes",
+   "pkg": "v",
+   "file": "internal/verifylive/record.go",
+   "result": "CAUGHT",
+   "why": "줄과 개행을 두 번에 씀(CG-3)",
+   "detail": "TestReconcileAppendsInOneWriteEndingWithANewline"
+  },
+  {
+   "id": "CG3-partial-ignore",
+   "pkg": "v",
+   "file": "internal/verifylive/record.go",
+   "result": "CAUGHT",
+   "why": "부분 쓰기 무시(CG-3)",
+   "detail": "TestReconcileReportsAPartialAppendLoudly"
+  },
+  {
+   "id": "CG3-sync-ignore",
+   "pkg": "v",
+   "file": "internal/verifylive/record.go",
+   "result": "CAUGHT",
+   "why": "fsync 실패 무시(CG-3)",
+   "detail": "TestReconcileReportsAFailedSyncLoudly"
+  },
+  {
+   "id": "CG3-readback",
+   "pkg": "v",
+   "file": "internal/verifylive/record.go",
+   "result": "CAUGHT",
+   "why": "read-back 대조 제거(CG-3)",
+   "detail": "TestReconcileDetectsAWriterInterleavingAtTheAppend,TestReconcileVerifiesTheAppendByReadingItBack"
+  },
+  {
+   "id": "CG4-display-ignore",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "승인 표시 실패 무시(CG-4)",
+   "detail": "TestReconcileRefusesWhenTheApprovalCannotBeShown"
+  },
+  {
+   "id": "CG4-eof",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "불완전 줄 승인(CG-4)",
+   "detail": "TestReconcileApprovalNeedsACompleteLine"
+  },
+  {
+   "id": "CG4-ctx",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "ctx 취소 무시(CG-4)",
+   "detail": "TestReconcileApprovalHonoursCancellation"
+  },
+  {
+   "id": "CG4-question-err",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "질문 표시 실패 무시(CG-4)",
+   "detail": "TestReconcileApprovalRefusesWhenTheQuestionCannotBeShown"
+  },
+  {
+   "id": "CG4-channel",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "승인 표시를 stdout 으로(CG-4)",
+   "detail": "TestReconcileShowsTheAccountsOnTheSameChannelAsTheQuestion"
+  },
+  {
+   "id": "CG5-gate-before-lock",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "순서 교란: 최종 게이트를 잠금 앞으로 추가(CG-5)",
+   "detail": "TestReconcileRechecksTheWindowAtBothContractPoints"
+  },
+  {
+   "id": "CG5-gate-before-encode",
+   "pkg": "v",
+   "file": "internal/verifylive/reconcile.go",
+   "result": "CAUGHT",
+   "why": "순서 교란: 게이트를 직렬화 앞으로(CG-5)",
+   "detail": "TestReconcileFinalGateSitsAtTheWriteBoundary"
+  },
+  {
+   "id": "CG6-no-recheck",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "신원 재확인 생략(CG-6)",
+   "detail": "TestReconcileReaderRechecksIdentityBeforeItsFirstScopedRead,TestReconcileNarrowReaderBindsTheValidatedSequence"
+  },
+  {
+   "id": "CG6-plain-unchecked",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "일반 주문 읽기 앞 재확인 생략(CG-6)",
+   "detail": "TestReconcileReaderRechecksIdentityBeforeItsFirstScopedRead"
+  },
+  {
+   "id": "CG6-seq-ignored",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "seq 재확인 생략(CG-6)",
+   "detail": "TestReconcileReaderRechecksIdentityBeforeItsFirstScopedRead"
+  },
+  {
+   "id": "CG6-count-ignored",
+   "pkg": "c",
+   "file": "cmd/tossctl/verify_reconcile.go",
+   "result": "CAUGHT",
+   "why": "복수 계좌 재확인 생략(CG-6)",
+   "detail": "TestReconcileReaderRechecksIdentityBeforeItsFirstScopedRead"
   }
  ]
 }

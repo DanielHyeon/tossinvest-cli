@@ -22,6 +22,7 @@ package verifylive
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base32"
@@ -29,6 +30,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sync"
@@ -376,6 +378,80 @@ var errUnknownFormat = errors.New("the record was written by a newer TossOS")
 func readRecordRaw(path string) ([]byte, error) {
 	return os.ReadFile(path)
 }
+
+// --- a121 대사 추가의 기록 잠금(codex CG-2·CG-3) -----------------------------------
+
+// recordWrite·recordSync 는 대사 추가의 쓰기·동기화 자리임(시험이 부분 쓰기·교차 쓰기·동기화 실패를 주입).
+var (
+	recordWrite = func(f *os.File, b []byte) (int, error) { return f.Write(b) }
+	recordSync  = func(f *os.File) error { return f.Sync() }
+)
+
+// lockedRecord 는 대사 추가 한 번을 위해 **기록 파일 자체**에 쥔 배타 flock 과 그 fd 임. 판정할 바이트를 이 fd 로
+// 읽고 같은 fd 로 쓰므로, 판정한 바이트와 쓰는 파일이 같다(지문 = 판정한 바이트).
+type lockedRecord struct {
+	path string
+	f    *os.File
+}
+
+// lockRecordForAppend 는 기록 파일을 열고(만들지 않음) 비차단 배타 flock 을 쥠. 이미 잡혀 있으면 errRecordLocked.
+func lockRecordForAppend(path string) (*lockedRecord, error) {
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_APPEND, 0)
+	if err != nil {
+		return nil, fmt.Errorf("verifylive: opening the record %s: %w", path, err)
+	}
+	if err := flockExclusiveNB(f.Fd()); err != nil {
+		_ = f.Close()
+		return nil, err
+	}
+	return &lockedRecord{path: path, f: f}, nil
+}
+
+// contents 는 잠근 fd 로 파일 전체를 처음부터 읽음.
+func (l *lockedRecord) contents() ([]byte, error) {
+	st, err := l.f.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("verifylive: stat %s: %w", l.path, err)
+	}
+	buf := make([]byte, st.Size())
+	if _, err := l.f.ReadAt(buf, 0); err != nil && !errors.Is(err, io.EOF) {
+		return nil, fmt.Errorf("verifylive: reading %s: %w", l.path, err)
+	}
+	return buf, nil
+}
+
+// appendLine 은 개행으로 끝나는 줄을 **한 번의 Write** 로 쓰고 동기화한 뒤 다시 읽어 대조함. 쓰기 직전 파일 크기가
+// 판정한 바이트 길이(judged)와 다르면 쓰지 않음.
+func (l *lockedRecord) appendLine(line []byte, judged int64) error {
+	if len(line) == 0 || line[len(line)-1] != '\n' {
+		return errors.New("verifylive: a record line must end with a newline")
+	}
+	st, err := l.f.Stat()
+	if err != nil {
+		return fmt.Errorf("verifylive: stat %s: %w", l.path, err)
+	}
+	if st.Size() != judged {
+		return errRecordSizeMoved
+	}
+	n, err := recordWrite(l.f, line)
+	if err != nil || n != len(line) {
+		return fmt.Errorf("%w (%d of %d bytes, %v)", errRecordAppendIncomplete, n, len(line), err)
+	}
+	if err := recordSync(l.f); err != nil {
+		return fmt.Errorf("%w (sync: %v)", errRecordAppendIncomplete, err)
+	}
+	back := make([]byte, len(line))
+	if _, err := l.f.ReadAt(back, judged); err != nil && !errors.Is(err, io.EOF) {
+		return fmt.Errorf("%w (read-back: %v)", errRecordAppendUnverified, err)
+	}
+	if !bytes.Equal(back, line) {
+		return errRecordAppendUnverified
+	}
+	return nil
+}
+
+// release 는 잠금과 fd 를 놓음.
+func (l *lockedRecord) release() { _ = l.f.Close() }
 
 // LoadEntries reads the record.
 //

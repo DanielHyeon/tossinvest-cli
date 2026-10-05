@@ -38,21 +38,23 @@ import (
 const verifylivePath = "github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 
 // reconcileAllowedOutside 는 reconcile*.go 밖에 정의됐지만 대사 경로가 써도 되는 함수·메서드다(FullName).
-// 리뷰 허용 목록(LoadEntries·PendingCleanup·M0Unsettled·attest.Mask·Digest)에 「one local append」 를 위한 Recorder
-// 세 이름(OpenRecorder·Append·Close)을 더했다 — 추가는 기록 쓰기 하나뿐이다.
+// 리뷰 허용 목록(LoadEntries·PendingCleanup·M0Unsettled·attest.Mask·Digest)에 기록 통로 둘만 더한다.
+//   - 읽기 통로: readRecordRaw(a121 GREEN 판정 2026-10-05 — 엄격 해독·원문 바이트 지문의 입력, os.ReadFile 잎은 record.go
+//     소유 — TestNoAutomationBypassExists 의 경계).
+//   - 추가 통로: 기록 파일 자체 잠금 lockedRecord 넷(codex CG-2·CG-3 수리 2026-10-05 — 처음의 Recorder 3이름
+//     (OpenRecorder·Append·Close)을 대체: 같은 inode 의 다른 대사와 flock 으로 직렬화, 잠근 fd 로 읽은 바이트가 곧 쓸
+//     파일, 한 번의 Write·fsync·read-back). Recorder 는 더 이상 허용하지 않는다.
 var reconcileAllowedOutside = map[string]bool{
 	verifylivePath + ".LoadEntries":                               true,
 	verifylivePath + ".PendingCleanup":                            true,
 	verifylivePath + ".M0Unsettled":                               true,
 	verifylivePath + ".Digest":                                    true,
-	verifylivePath + ".OpenRecorder":                              true,
-	"(*" + verifylivePath + ".Recorder).Append":                   true,
-	"(*" + verifylivePath + ".Recorder).Close":                    true,
 	"github.com/JungHoonGhae/tossinvest-cli/internal/attest.Mask": true,
-	// 읽기 통로 하나(a121 GREEN 판정 2026-10-05): 엄격 해독·원문 바이트 지문(design F3·P2-7)은 기록 원문을 요구한다.
-	// RED 로트가 추가 통로(Recorder 3이름)만 넣고 읽기 통로를 빠뜨린 누락의 수리. os.ReadFile 잎은 record.go 소유
-	// (TestNoAutomationBypassExists 의 경계). 추가 통로는 Recorder 3이름, 읽기 통로는 readRecordRaw 하나뿐이다.
-	verifylivePath + ".readRecordRaw": true,
+	verifylivePath + ".readRecordRaw":                             true,
+	verifylivePath + ".lockRecordForAppend":                       true,
+	"(*" + verifylivePath + ".lockedRecord).contents":             true,
+	"(*" + verifylivePath + ".lockedRecord).appendLine":           true,
+	"(*" + verifylivePath + ".lockedRecord).release":              true,
 }
 
 // reconcileBannedImports 는 표준 라이브러리여도 reconcile*.go 가 import 하면 안 되는 패키지다(A-RED 재검 P2-a) — 직접

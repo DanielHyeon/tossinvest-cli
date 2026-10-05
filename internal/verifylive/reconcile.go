@@ -9,6 +9,8 @@ package verifylive
 import (
 	"context"
 	"crypto/sha256"
+	"errors"
+	"fmt"
 	"io"
 	"time"
 
@@ -92,6 +94,7 @@ const (
 	RefuseRecordFormat        ReconcileRefusalCode = "record-format"
 	RefuseRecordTailNoNewline ReconcileRefusalCode = "record-tail-no-newline"
 	RefuseRecordChanged       ReconcileRefusalCode = "record-changed"
+	RefuseRecordLocked        ReconcileRefusalCode = "record-locked"
 	// 후보 선택(G2)
 	RefuseNoCandidate        ReconcileRefusalCode = "no-candidate"
 	RefuseMultipleCandidates ReconcileRefusalCode = "multiple-candidates"
@@ -101,7 +104,8 @@ const (
 	RefuseAccountMixed       ReconcileRefusalCode = "account-mixed"
 	RefuseAccountMismatch    ReconcileRefusalCode = "account-mismatch"
 	// 승인
-	RefuseNotApproved ReconcileRefusalCode = "not-approved"
+	RefuseNotApproved     ReconcileRefusalCode = "not-approved"
+	RefuseApprovalDisplay ReconcileRefusalCode = "approval-display"
 	// Q1(G1-4)·Q3(G1-6)
 	RefuseRetentionUnmeasured ReconcileRefusalCode = "retention-unmeasured"
 	RefuseRetentionEviction   ReconcileRefusalCode = "retention-eviction-model"
@@ -160,7 +164,7 @@ func (r *ReconcileRefusal) Error() string {
 // 사전 검사(기록 → 후보 → 계좌, 목록 읽기 전) → 정적 거절(Q1/Q3, A-GREEN P2-a 로 승인 앞) → 승인 → 종목 조회 → 두 번 읽기(페이지·중복 포함,
 // 조건주문 OPEN → 일반 OPEN → CLOSED) → 종목 조회 → 신선도·Q1 재검 → multiset 비교 → 행 검사(OCO → 필드 결측 →
 // 심볼 → 시장) → 부재 검사(OPEN 조건 → 일반 OPEN → CLOSED target(EXPIRED → Q6) → 발동 흔적) → status 허용 목록 →
-// 추가 직전(엄격 해독 → 지문 → 개행 → 신선도·Q1 재검) → 추가. 거절은 기록에 아무것도 쓰지 않음.
+// 추가 준비(기록 파일 flock → 그 fd 로 엄격 해독 → 지문 → 개행 → 줄 직렬화) → 쓰기 경계 직전 신선도·Q1 재검 → 한 번의 쓰기·동기화·read-back. 거절은 기록에 아무것도 쓰지 않음.
 func Reconcile(ctx context.Context, p ReconcileParams) (ReconcileResult, error) {
 	now := p.Now
 	if now == nil {
@@ -210,7 +214,9 @@ func Reconcile(ctx context.Context, p ReconcileParams) (ReconcileResult, error) 
 		RecordAccountMask: recordMask, CurrentAccountMask: currentMask, AccountCount: p.Account.Count,
 		Kind: target.Kind, ID: target.ID, Symbol: target.Symbol, Market: p.Market,
 	}
-	approval.WriteText(out)
+	if err := approval.WriteText(out); err != nil {
+		return ReconcileResult{}, refuse(RefuseApprovalDisplay, "the approval could not be shown to the operator: "+err.Error())
+	}
 	if err := p.Approve(ctx, approval); err != nil {
 		return ReconcileResult{}, refuse(RefuseNotApproved, "operator approval was not given: "+err.Error())
 	}
@@ -246,8 +252,12 @@ func Reconcile(ctx context.Context, p ReconcileParams) (ReconcileResult, error) 
 		return ReconcileResult{}, refuse(RefuseReadsDiffer, "the two reads disagree as a multiset of (group, id, status, triggeredOrderId)")
 	}
 
-	// 10. 행 검사 · 부재 검사 · status 허용 목록(마지막).
+	// 10. 행 검사 — 두 스냅숏 **각각**(codex CG-1: 비교 tuple 에 없는 second·심볼·시장이 둘째 읽기에서만 나타나도
+	// 잡음) · 부재 검사 · status 허용 목록(마지막).
 	if err := checkReconcileRows(first, symbol, p.Market); err != nil {
+		return ReconcileResult{}, err
+	}
+	if err := checkReconcileRows(second, symbol, p.Market); err != nil {
 		return ReconcileResult{}, err
 	}
 	if err := checkReconcileAbsence(first, target); err != nil {
@@ -257,9 +267,21 @@ func Reconcile(ctx context.Context, p ReconcileParams) (ReconcileResult, error) 
 		return ReconcileResult{}, err
 	}
 
-	// 11. 추가 직전 — 엄격 해독 → 지문 → 개행 → 신선도·Q1 재검.
-	again, _, err := readRecordStrictNoTail(p.RecordPath)
+	// 11. 추가 준비 — 기록 파일 자체를 잠그고(codex CG-2: 같은 inode 의 다른 대사와 직렬화) 그 fd 로 다시 읽어
+	// 엄격 해독 → 지문 → 개행. 판정한 바이트가 곧 쓸 파일임.
+	lock, err := lockRecordForAppend(p.RecordPath)
 	if err != nil {
+		if errors.Is(err, errRecordLocked) {
+			return ReconcileResult{}, refuse(RefuseRecordLocked, "another reconciliation holds this record file (the same file, possibly under another path)")
+		}
+		return ReconcileResult{}, refuse(RefuseRecordUnreadable, "the record cannot be opened for the append: "+err.Error())
+	}
+	defer lock.release()
+	again, err := lock.contents()
+	if err != nil {
+		return ReconcileResult{}, refuse(RefuseRecordUnreadable, err.Error())
+	}
+	if _, err := decodeRecordStrict(again); err != nil {
 		return ReconcileResult{}, err
 	}
 	if sha256.Sum256(again) != fingerprint {
@@ -268,18 +290,27 @@ func Reconcile(ctx context.Context, p ReconcileParams) (ReconcileResult, error) 
 	if len(again) > 0 && again[len(again)-1] != '\n' {
 		return ReconcileResult{}, refuse(RefuseRecordTailNoNewline, "the record does not end with a newline")
 	}
+
+	// 12. 줄을 미리 직렬화하고(codex CG-5) 쓰기 경계 바로 앞에서 신선도·Q1 을 다시 잼 — 그 뒤에는 한 번의 쓰기뿐.
+	basis := ReconcileBasisDigest(basisRows)
 	at := now()
+	reconciled := target
+	reconciled.ReconciledAbsent = true
+	reconciled.ReconciledAt = at.UTC()
+	line, err := encodeReconcileLine(recordMask, reconciled, basis, start, at)
+	if err != nil {
+		return ReconcileResult{}, err
+	}
 	if err := checkReconcileWindow(target, start, at); err != nil {
 		return ReconcileResult{}, err
 	}
 
-	// 12. 추가 — Calls 없음, 근거는 지문 하나.
-	basis := ReconcileBasisDigest(basisRows)
-	reconciled := target
-	reconciled.ReconciledAbsent = true
-	reconciled.ReconciledAt = at.UTC()
-	if err := appendReconcileLine(p.RecordPath, recordMask, reconciled, basis, start, at); err != nil {
-		return ReconcileResult{}, err
+	// 13. 추가 — 한 번의 Write(개행 포함) → fsync → 다시 읽어 대조(codex CG-3). 실패는 침묵하지 않음.
+	if err := lock.appendLine(line, int64(len(again))); err != nil {
+		if errors.Is(err, errRecordSizeMoved) {
+			return ReconcileResult{}, refuse(RefuseRecordChanged, "the record grew between the locked read and the append — another writer interleaved")
+		}
+		return ReconcileResult{}, fmt.Errorf("verify reconcile: %w", err)
 	}
 	return ReconcileResult{Artifact: reconciled, Basis: basis}, nil
 }

@@ -96,12 +96,15 @@ func runVerifyReconcile(cmd *cobra.Command, root *rootOptions, opts *verifyRecon
 	if err != nil {
 		return err
 	}
+	// 승인 내용(두 마스크·계좌 수)과 y/N 질문은 같은 단말 채널로 보냄(codex CG-4) — stdout 을 리다이렉트해도
+	// 운영자는 질문과 함께 계좌 대조를 본다.
+	_, terminalOut, _ := verifyReconcileTerminal()
 	res, err := verifylive.Reconcile(ctx, verifylive.ReconcileParams{
 		RecordPath: recordPath,
 		Market:     verifylive.NormalizeMarket(opts.market),
 		Account:    account,
 		Reader:     reader,
-		Out:        out,
+		Out:        terminalOut,
 		Approve:    verifyReconcileApprove,
 		Now:        time.Now,
 	})
@@ -185,21 +188,54 @@ func newVerifyReconcileReader(ctx context.Context, creds official.Credentials, t
 			"the account's sequence is not a positive number — the request header cannot be pinned")
 	}
 	bound := official.New(creds, tokenFile, append(append([]official.Option(nil), opts...), official.WithAccountSeq(seq))...)
-	return &reconcileReads{client: bound},
-		verifylive.ReconcileAccount{Ref: strings.TrimSpace(accounts[0].DisplayName), Seq: seq, Count: len(accounts)}, nil
+	ref := strings.TrimSpace(accounts[0].DisplayName)
+	return &reconcileReads{client: bound, ref: ref, seq: seq},
+		verifylive.ReconcileAccount{Ref: ref, Seq: seq, Count: len(accounts)}, nil
 }
 
 // reconcileReads 는 대사가 받는 유일한 브로커 의존 값임 — 공식 GET 셋만 위임함. 클라이언트는 비공개 필드라
 // type assertion 으로도 쓰기 메서드에 닿지 않음.
+//
+// 첫 계좌 범위 읽기 직전(사람 승인 뒤)에 **읽기용 클라이언트로** Accounts() 를 다시 불러 신원을 재확인함(codex CG-6):
+// 계좌 판정용 클라이언트와 토큰 캐시를 공유하므로, 승인 대기 중 캐시가 다른 자격의 토큰으로 바뀌면 그 목록은 다른
+// 계좌를 말한다. 계좌가 정확히 하나이고 계좌번호·seq 가 생성 때 검증한 값과 같아야 함 — 아니면 읽지 않음.
 type reconcileReads struct {
-	client *official.Client
+	client   *official.Client
+	ref      string
+	seq      int
+	verified bool
+}
+
+// errReconcileIdentityChanged 는 읽기용 클라이언트가 보는 계좌가 생성 때 검증한 계좌와 다름을 뜻함.
+var errReconcileIdentityChanged = errors.New("account identity changed between validation and the reads — the reading credentials no longer name the validated account")
+
+func (r *reconcileReads) ensureIdentity(ctx context.Context) error {
+	if r.verified {
+		return nil
+	}
+	accounts, err := r.client.Accounts(ctx)
+	if err != nil {
+		return fmt.Errorf("re-reading the account list before the reads: %w", err)
+	}
+	if len(accounts) != 1 || strings.TrimSpace(accounts[0].DisplayName) != r.ref ||
+		strings.TrimSpace(accounts[0].ID) != strconv.Itoa(r.seq) {
+		return errReconcileIdentityChanged
+	}
+	r.verified = true
+	return nil
 }
 
 func (r *reconcileReads) ReconcileConditionalOrdersPage(ctx context.Context, status, symbol, cursor string, limit int) (official.ReconcileConditionalPage, error) {
+	if err := r.ensureIdentity(ctx); err != nil {
+		return official.ReconcileConditionalPage{}, err
+	}
 	return r.client.ReconcileConditionalOrdersPage(ctx, status, symbol, cursor, limit)
 }
 
 func (r *reconcileReads) ReconcileOpenOrdersPage(ctx context.Context, symbol, cursor string, limit int) (official.ReconcileOrderPage, error) {
+	if err := r.ensureIdentity(ctx); err != nil {
+		return official.ReconcileOrderPage{}, err
+	}
 	return r.client.ReconcileOpenOrdersPage(ctx, symbol, cursor, limit)
 }
 
@@ -214,17 +250,36 @@ var verifyReconcileTerminal = func() (in io.Reader, out io.Writer, interactive b
 }
 
 // verifyReconcileApprove 는 사람 승인 자리임(목록 읽기 전). 비대화형이면 거절하고, 대화형이면 y/N 을 물어 명시 y 만
-// 진행함 — 기본은 N, 타이핑 확인 문구 없음.
+// 진행함 — 기본은 N, 타이핑 확인 문구 없음. 줄 하나를 **끝까지**(개행까지) 읽어야 하고(EOF·읽기 오류 = 거절), ctx 취소를
+// 존중하며(대기 중 취소 = 거절, 잠금을 오래 쥐지 않음), 질문 표시 실패도 거절함(codex CG-4).
 var verifyReconcileApprove = func(ctx context.Context, approval verifylive.ReconcileApproval) error {
 	in, out, interactive := verifyReconcileTerminal()
 	if !interactive {
 		return errors.New("stdin is not an interactive terminal — reconciliation is approved by a person at a terminal, never by a pipe")
 	}
-	fmt.Fprintf(out, "%s %s 를 reconciled absent 로 기록할까? [y/N] ", approval.Kind, approval.ID)
-	line, _ := bufio.NewReader(in).ReadString('\n')
-	switch strings.TrimSpace(line) {
-	case "y", "Y":
-		return nil
+	if _, err := fmt.Fprintf(out, "%s %s 를 reconciled absent 로 기록할까? [y/N] ", approval.Kind, approval.ID); err != nil {
+		return fmt.Errorf("the approval question could not be shown: %w", err)
 	}
-	return errors.New("the operator did not approve")
+	type answer struct {
+		line string
+		err  error
+	}
+	got := make(chan answer, 1)
+	go func() {
+		line, err := bufio.NewReader(in).ReadString('\n')
+		got <- answer{line, err}
+	}()
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("the approval was interrupted: %w", ctx.Err())
+	case a := <-got:
+		if a.err != nil {
+			return fmt.Errorf("the answer was not a complete line: %w", a.err)
+		}
+		switch strings.TrimSpace(a.line) {
+		case "y", "Y":
+			return nil
+		}
+		return errors.New("the operator did not approve")
+	}
 }

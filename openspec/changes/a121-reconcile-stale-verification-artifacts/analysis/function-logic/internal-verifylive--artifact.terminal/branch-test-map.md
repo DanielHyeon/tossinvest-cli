@@ -1,6 +1,6 @@
 # Branch Test Map: `Artifact.terminal`
 
-- Source: `internal/verifylive/record.go` (588-588)
+- Source: `internal/verifylive/record.go` (664-664)
 - AST branches 0 — 행복 경로 한 행
 
 | Branch | Scenario | Test | RED observed | GREEN observed |

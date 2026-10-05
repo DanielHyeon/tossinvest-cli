@@ -409,11 +409,15 @@ func checkReconcileClosedStatus(r reconcileRead) error {
 // --- 승인 출력 ------------------------------------------------------------------------
 
 // WriteText 는 승인 내용을 운영자 화면에 씀 — 두 마스크와 계좌 수를 반드시 보임(F1 처분 ①). 원문 계좌는 없음.
-func (a ReconcileApproval) WriteText(w io.Writer) {
-	fmt.Fprintf(w, "대사 대상 (공식 목록 조회 전용 · 기록에 사건 한 줄 추가 · 주문 변경 없음)\n")
-	fmt.Fprintf(w, "  artifact         %s %s (%s, %s)\n", a.Kind, a.ID, a.Symbol, a.Market)
-	fmt.Fprintf(w, "  기록의 계좌       %s\n", a.RecordAccountMask)
-	fmt.Fprintf(w, "  현재 자격의 계좌  %s\n", a.CurrentAccountMask)
-	fmt.Fprintf(w, "  자격의 계좌 수    %d\n", a.AccountCount)
-	fmt.Fprintln(w, "  끝 4자리는 신원이 아니다 — 두 마스크가 같아도 다른 계좌일 수 있다. 이 프로필의 자격을 바꾼 적이 있으면 진행하지 말 것.")
+// 쓰기 오류를 돌려줌(codex CG-4 — 보이지 않은 승인 내용으로 진행하지 않음).
+func (a ReconcileApproval) WriteText(w io.Writer) error {
+	var b strings.Builder
+	fmt.Fprintf(&b, "대사 대상 (공식 목록 조회 전용 · 기록에 사건 한 줄 추가 · 주문 변경 없음)\n")
+	fmt.Fprintf(&b, "  artifact         %s %s (%s, %s)\n", a.Kind, a.ID, a.Symbol, a.Market)
+	fmt.Fprintf(&b, "  기록의 계좌       %s\n", a.RecordAccountMask)
+	fmt.Fprintf(&b, "  현재 자격의 계좌  %s\n", a.CurrentAccountMask)
+	fmt.Fprintf(&b, "  자격의 계좌 수    %d\n", a.AccountCount)
+	fmt.Fprintln(&b, "  끝 4자리는 신원이 아니다 — 두 마스크가 같아도 다른 계좌일 수 있다. 이 프로필의 자격을 바꾼 적이 있으면 진행하지 말 것.")
+	_, err := io.WriteString(w, b.String())
+	return err
 }

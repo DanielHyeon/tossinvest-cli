@@ -123,16 +123,16 @@
   "id": "V-final-window",
   "pkg": "v",
   "file": "internal/verifylive/reconcile.go",
-  "old": "\tat := now()\n\tif err := checkReconcileWindow(target, start, at); err != nil {",
-  "new": "\tat := now()\n\tif err := error(nil); err != nil {",
-  "why": "추가 직전 신선도·Q1 재검 제거"
+  "old": "\tif err := checkReconcileWindow(target, start, at); err != nil {",
+  "new": "\tif err := error(nil); err != nil {",
+  "why": "최종(쓰기 경계) 재검 호출 제거"
  },
  {
   "id": "V-append-decode",
   "pkg": "v",
   "file": "internal/verifylive/reconcile.go",
-  "old": "\tagain, _, err := readRecordStrictNoTail(p.RecordPath)",
-  "new": "\tagain, err := readRecordRaw(p.RecordPath)",
+  "old": "\tif _, err := decodeRecordStrict(again); err != nil {",
+  "new": "\tif _, err := decodeRecordStrict(again); err != nil && false {",
   "why": "추가 직전 엄격 해독 생략"
  },
  {
@@ -203,8 +203,8 @@
   "id": "V-approve-text",
   "pkg": "v",
   "file": "internal/verifylive/reconcile.go",
-  "old": "\tapproval.WriteText(out)\n",
-  "new": "",
+  "old": "\tif err := approval.WriteText(out); err != nil {",
+  "new": "\tif err := error(nil); err != nil {",
   "why": "승인 출력 생략"
  },
  {
@@ -272,8 +272,8 @@
   "why": "순서 교란: 창 시작을 승인 전으로",
   "edits": [
    [
-    "\tapproval.WriteText(out)\n",
-    "\tearly := now()\n\tapproval.WriteText(out)\n"
+    "\tif err := approval.WriteText(out); err != nil {",
+    "\tearly := now()\n\tif err := approval.WriteText(out); err != nil {"
    ],
    [
     "\tstart := now()\n\tfirst, err",
@@ -421,9 +421,13 @@
   "id": "V-rows-after-absence",
   "pkg": "v",
   "file": "internal/verifylive/reconcile.go",
-  "old": "\tif err := checkReconcileRows(first, symbol, p.Market); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tif err := checkReconcileAbsence(first, target); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}",
-  "new": "\tif err := checkReconcileAbsence(first, target); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tif err := checkReconcileRows(first, symbol, p.Market); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}",
-  "why": "순서 교란: 행 검사를 부재 뒤로"
+  "why": "순서 교란: 행 검사를 부재 뒤로",
+  "edits": [
+   [
+    "\tif err := checkReconcileRows(first, symbol, p.Market); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tif err := checkReconcileRows(second, symbol, p.Market); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tif err := checkReconcileAbsence(first, target); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}",
+    "\tif err := checkReconcileAbsence(first, target); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tif err := checkReconcileRows(first, symbol, p.Market); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tif err := checkReconcileRows(second, symbol, p.Market); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}"
+   ]
+  ]
  },
  {
   "id": "V-open-cond",
@@ -807,8 +811,8 @@
   "id": "C-approve-any",
   "pkg": "c",
   "file": "cmd/tossctl/verify_reconcile.go",
-  "old": "\tcase \"y\", \"Y\":\n\t\treturn nil\n\t}",
-  "new": "\t}\n\tif strings.TrimSpace(line) != \"\" {\n\t\treturn nil\n\t}",
+  "old": "\t\tswitch strings.TrimSpace(a.line) {\n\t\tcase \"y\", \"Y\":\n\t\t\treturn nil\n\t\t}",
+  "new": "\t\tif strings.TrimSpace(a.line) != \"\" {\n\t\t\treturn nil\n\t\t}",
   "why": "아무 입력이나 승인"
  },
  {
@@ -863,8 +867,8 @@
   "id": "C-adapter-embed",
   "pkg": "c",
   "file": "cmd/tossctl/verify_reconcile.go",
-  "old": "type reconcileReads struct {\n\tclient *official.Client\n}",
-  "new": "type reconcileReads struct {\n\tclient *official.Client\n\t*official.Client\n}",
+  "old": "type reconcileReads struct {\n\tclient   *official.Client",
+  "new": "type reconcileReads struct {\n\t*official.Client\n\tclient   *official.Client",
   "why": "클라이언트 임베딩(쓰기 메서드 승격)"
  },
  {
@@ -906,5 +910,173 @@
   "old": "\t\tReconciledAt     time.Time `json:\"reconciled_at,omitzero\"`\n\t}{a.Kind, a.ID, a.Symbol, a.CreatedAt, false, a.Deliberate, a.ChainID, a.Note, true, a.ReconciledAt})",
   "new": "\t\tReconciledAt     time.Time `json:\"reconciled_at,omitzero\"`\n\t\tHeldUntil        StepID    `json:\"held_until,omitempty\"`\n\t}{a.Kind, a.ID, a.Symbol, a.CreatedAt, false, a.Deliberate, a.ChainID, a.Note, true, a.ReconciledAt, a.HeldUntil})",
   "why": "대사 확정형이 held_until 을 싣게(HeldUntil 중복 대입 삭제 뒤 A-GREEN P2-b 확인)"
+ },
+ {
+  "id": "CG1-second-rows",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tif err := checkReconcileRows(second, symbol, p.Market); err != nil {",
+  "new": "\tif err := checkReconcileRows(second, symbol, p.Market); err != nil && false {",
+  "why": "둘째 스냅숏 행 검사 제거(CG-1)"
+ },
+ {
+  "id": "CG2-no-flock",
+  "pkg": "v",
+  "file": "internal/verifylive/record.go",
+  "old": "\tif err := flockExclusiveNB(f.Fd()); err != nil {",
+  "new": "\tif err := flockExclusiveNB(f.Fd()); err != nil && false {",
+  "why": "기록 파일 flock 무시(CG-2)"
+ },
+ {
+  "id": "CG2-locked-code",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\t\tif errors.Is(err, errRecordLocked) {",
+  "new": "\t\tif false {",
+  "why": "잠김 거절 코드 뭉갬(CG-2)"
+ },
+ {
+  "id": "CG2-path-reread",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tagain, err := lock.contents()",
+  "new": "\tagain, err := readRecordRaw(p.RecordPath)",
+  "why": "잠근 fd 대신 경로로 재읽기(CG-2 ABA)"
+ },
+ {
+  "id": "CG2-size-check",
+  "pkg": "v",
+  "file": "internal/verifylive/record.go",
+  "old": "\tif st.Size() != judged {",
+  "new": "\tif st.Size() != judged && false {",
+  "why": "쓰기 직전 크기 검사 제거(CG-2)"
+ },
+ {
+  "id": "CG3-two-writes",
+  "pkg": "v",
+  "file": "internal/verifylive/record.go",
+  "old": "\tn, err := recordWrite(l.f, line)",
+  "new": "\tn, err := recordWrite(l.f, line[:len(line)-1])\n\tif err == nil {\n\t\tvar m int\n\t\tm, err = recordWrite(l.f, line[len(line)-1:])\n\t\tn += m\n\t}",
+  "why": "줄과 개행을 두 번에 씀(CG-3)"
+ },
+ {
+  "id": "CG3-partial-ignore",
+  "pkg": "v",
+  "file": "internal/verifylive/record.go",
+  "old": "\tif err != nil || n != len(line) {",
+  "new": "\tif false {",
+  "why": "부분 쓰기 무시(CG-3)"
+ },
+ {
+  "id": "CG3-sync-ignore",
+  "pkg": "v",
+  "file": "internal/verifylive/record.go",
+  "old": "\tif err := recordSync(l.f); err != nil {",
+  "new": "\tif err := recordSync(l.f); err != nil && false {",
+  "why": "fsync 실패 무시(CG-3)"
+ },
+ {
+  "id": "CG3-readback",
+  "pkg": "v",
+  "file": "internal/verifylive/record.go",
+  "old": "\tif !bytes.Equal(back, line) {",
+  "new": "\tif !bytes.Equal(back, line) && false {",
+  "why": "read-back 대조 제거(CG-3)"
+ },
+ {
+  "id": "CG4-display-ignore",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tif err := approval.WriteText(out); err != nil {",
+  "new": "\tif err := approval.WriteText(out); err != nil && false {",
+  "why": "승인 표시 실패 무시(CG-4)"
+ },
+ {
+  "id": "CG4-eof",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\t\tif a.err != nil {",
+  "new": "\t\tif false {",
+  "why": "불완전 줄 승인(CG-4)"
+ },
+ {
+  "id": "CG4-ctx",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tcase <-ctx.Done():",
+  "new": "\tcase <-make(chan struct{}):",
+  "why": "ctx 취소 무시(CG-4)"
+ },
+ {
+  "id": "CG4-question-err",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "approval.Kind, approval.ID); err != nil {",
+  "new": "approval.Kind, approval.ID); err != nil && false {",
+  "why": "질문 표시 실패 무시(CG-4)"
+ },
+ {
+  "id": "CG4-channel",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "why": "승인 표시를 stdout 으로(CG-4)",
+  "edits": [
+   [
+    "\t_, terminalOut, _ := verifyReconcileTerminal()",
+    "\t_, terminalOut, _ := verifyReconcileTerminal()\n\t_ = terminalOut"
+   ],
+   [
+    "\t\tOut:        terminalOut,",
+    "\t\tOut:        out,"
+   ]
+  ]
+ },
+ {
+  "id": "CG5-gate-before-lock",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tlock, err := lockRecordForAppend(p.RecordPath)",
+  "new": "\tif err := checkReconcileWindow(target, start, now()); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tlock, err := lockRecordForAppend(p.RecordPath)",
+  "why": "순서 교란: 최종 게이트를 잠금 앞으로 추가(CG-5)"
+ },
+ {
+  "id": "CG5-gate-before-encode",
+  "pkg": "v",
+  "file": "internal/verifylive/reconcile.go",
+  "old": "\tline, err := encodeReconcileLine(recordMask, reconciled, basis, start, at)\n\tif err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tif err := checkReconcileWindow(target, start, at); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}",
+  "new": "\tif err := checkReconcileWindow(target, start, at); err != nil {\n\t\treturn ReconcileResult{}, err\n\t}\n\tline, err := encodeReconcileLine(recordMask, reconciled, basis, start, at)\n\tif err != nil {\n\t\treturn ReconcileResult{}, err\n\t}",
+  "why": "순서 교란: 게이트를 직렬화 앞으로(CG-5)"
+ },
+ {
+  "id": "CG6-no-recheck",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tif r.verified {",
+  "new": "\tif true {",
+  "why": "신원 재확인 생략(CG-6)"
+ },
+ {
+  "id": "CG6-plain-unchecked",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tif err := r.ensureIdentity(ctx); err != nil {\n\t\treturn official.ReconcileOrderPage{}, err\n\t}",
+  "new": "",
+  "why": "일반 주문 읽기 앞 재확인 생략(CG-6)"
+ },
+ {
+  "id": "CG6-seq-ignored",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": " ||\n\t\tstrings.TrimSpace(accounts[0].ID) != strconv.Itoa(r.seq) {",
+  "new": " {",
+  "why": "seq 재확인 생략(CG-6)"
+ },
+ {
+  "id": "CG6-count-ignored",
+  "pkg": "c",
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "old": "\tif len(accounts) != 1 || strings.TrimSpace(accounts[0].DisplayName) != r.ref",
+  "new": "\tif len(accounts) == 0 || strings.TrimSpace(accounts[0].DisplayName) != r.ref",
+  "why": "복수 계좌 재확인 생략(CG-6)"
  }
 ]

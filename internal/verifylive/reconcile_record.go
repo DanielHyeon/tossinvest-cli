@@ -26,12 +26,21 @@ func readRecordStrict(path string) ([]byte, []Entry, error) {
 	return raw, entries, nil
 }
 
-// readRecordStrictNoTail 은 개행 꼬리 검사 없이 읽고 엄격 해독함(추가 직전: 해독 → 지문 → 개행 순서용).
+// readRecordStrictNoTail 은 개행 꼬리 검사 없이 읽고 엄격 해독함.
 func readRecordStrictNoTail(path string) ([]byte, []Entry, error) {
 	raw, err := readRecordRaw(path)
 	if err != nil {
 		return nil, nil, refuse(RefuseRecordUnreadable, "the record cannot be read: "+err.Error())
 	}
+	entries, err := decodeRecordStrict(raw)
+	if err != nil {
+		return nil, nil, err
+	}
+	return raw, entries, nil
+}
+
+// decodeRecordStrict 는 모든 비공백 줄을 엄격 해독함 — LoadEntries 와 달리 해독 불능 마지막 줄을 버리지 않음.
+func decodeRecordStrict(raw []byte) ([]Entry, error) {
 	var entries []Entry
 	for n, line := range bytes.Split(raw, []byte{'\n'}) {
 		if len(bytes.TrimSpace(line)) == 0 {
@@ -39,29 +48,24 @@ func readRecordStrictNoTail(path string) ([]byte, []Entry, error) {
 		}
 		var e Entry
 		if err := json.Unmarshal(line, &e); err != nil {
-			return nil, nil, refuse(RefuseRecordUndecodable, fmt.Sprintf("record line %d does not decode: %v", n+1, err))
+			return nil, refuse(RefuseRecordUndecodable, fmt.Sprintf("record line %d does not decode: %v", n+1, err))
 		}
 		if e.FormatVersion > RecordFormatVersion {
-			return nil, nil, refuse(RefuseRecordFormat,
+			return nil, refuse(RefuseRecordFormat,
 				fmt.Sprintf("record line %d is format %d; this build understands %d", n+1, e.FormatVersion, RecordFormatVersion))
 		}
 		entries = append(entries, e)
 	}
-	return raw, entries, nil
+	return entries, nil
 }
 
-// appendReconcileLine 은 대사 줄 하나를 Recorder 로 추가함 — Calls 없음, 근거는 관측 하나, 계좌는 기록의 마스크.
-func appendReconcileLine(path, accountMask string, art Artifact, basis string, start, at time.Time) error {
-	rec, err := OpenRecorder(path)
-	if err != nil {
-		return err
-	}
-	defer rec.Close()
+// encodeReconcileLine 은 대사 줄 하나를 개행까지 직렬화함 — Calls 없음, 근거는 관측 하나, 계좌는 기록의 마스크.
+func encodeReconcileLine(accountMask string, art Artifact, basis string, start, at time.Time) ([]byte, error) {
 	runID, err := reconcileToken("reconcile")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return rec.Append(Entry{
+	b, err := json.Marshal(Entry{
 		FormatVersion: RecordFormatVersion,
 		Kind:          KindReconcile,
 		RunID:         runID,
@@ -74,6 +78,10 @@ func appendReconcileLine(path, accountMask string, art Artifact, basis string, s
 			Detail: "two complete official list reads narrowed the absence window; not a cancel, fill or endpoint proof"}},
 		Artifacts: []Artifact{art},
 	})
+	if err != nil {
+		return nil, fmt.Errorf("verify reconcile: encoding the reconcile line: %w", err)
+	}
+	return append(b, '\n'), nil
 }
 
 func reconcileToken(prefix string) (string, error) {
@@ -112,3 +120,19 @@ func (a Artifact) MarshalJSON() ([]byte, error) {
 		ReconciledAt     time.Time `json:"reconciled_at,omitzero"`
 	}{a.Kind, a.ID, a.Symbol, a.CreatedAt, false, a.Deliberate, a.ChainID, a.Note, true, a.ReconciledAt})
 }
+
+// --- 기록 잠금·추가의 오류 표지(record.go 의 lockedRecord 가 돌려주고 대사가 가름) ----------------
+
+// errRecordLocked 는 다른 대사가 같은 기록 파일(같은 inode — 하드링크 별칭 포함)을 잡고 있음을 뜻함.
+var errRecordLocked = fmt.Errorf("another reconciliation holds this record file")
+
+// errRecordAppendIncomplete 는 대사 줄 쓰기가 끝까지 가지 못했음을 뜻함 — 기록 끝에 찢긴 줄이 남았을 수 있음.
+var errRecordAppendIncomplete = fmt.Errorf("the reconciliation line was not completely written; the record may now end in a torn line — " +
+	"inspect its tail before any `tossctl verify run --resume`")
+
+// errRecordAppendUnverified 는 쓴 뒤 다시 읽은 바이트가 쓴 줄과 다름을 뜻함(교차 쓰기 등).
+var errRecordAppendUnverified = fmt.Errorf("the reconciliation line read back differently from what was written; " +
+	"another writer may have interleaved — inspect the record before any further run")
+
+// errRecordSizeMoved 는 잠근 뒤 판정한 길이와 쓰기 직전 파일 길이가 다름 — 잠그지 않는 작성자가 끼어들었음.
+var errRecordSizeMoved = fmt.Errorf("the record grew between the locked read and the append")
