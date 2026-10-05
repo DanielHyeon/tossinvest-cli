@@ -32,14 +32,19 @@ otherwise:
   cannot be reconciled through this operation at all;
 - the complete OPEN plain-order group for the symbol contains no order (a fired
   child that has not filled rests there);
-- a conditional that fired and has left the lists is excluded by the rule chosen
-  in design Revision 1 Q1 `[비움 — Q1]`; until that rule exists the operation
-  SHALL refuse;
+- a conditional that fired and has left the lists is excluded by the Q1 rule
+  (decided 2026-09-28, option (a)): once the fired-conditional retention of the
+  CLOSED group has been measured (human, in-market, read-only), an artifact
+  whose age is within the measured retention bound is covered by the CLOSED
+  checks above, and an older artifact SHALL be refused; until that measurement
+  exists the operation SHALL refuse;
 - every row read carries the artifact's symbol, and every row read carries the
   requested market;
 - the complete read set above, performed twice in succession, yields the same
   sorted (group, identifier, status, triggered order identifier) set both times,
-  within the bound chosen in design Revision 1 Q3 `[비움 — Q3]`.
+  within the Q3 freshness bound (deferred 2026-09-27 to the implementation lot,
+  which SHALL propose a named conservative constant for review; until that
+  constant exists the operation SHALL refuse).
 
 The operation SHALL select exactly one candidate without accepting a
 caller-supplied identifier: a conditional artifact that the record's cleanup
@@ -60,14 +65,15 @@ and refuse if it changed since the candidate was selected.
 #### Scenario: every condition of authoritative absence holds
 
 - **WHEN** every condition listed above holds for the selected candidate,
-  including the rule chosen for design Revision 1 Q1
+  including the Q1 rule (the measured retention bound exists and covers the
+  artifact)
 - **THEN** the tool appends one distinct `reconciled-absent` event and does not
   schedule a new cleanup mutation for that artifact
 
-#### Scenario: Q1 is unanswered
+#### Scenario: the Q1 retention measurement is absent
 
-- **WHEN** every other condition holds but no rule for design Revision 1 Q1
-  exists
+- **WHEN** every other condition holds but the Q1 fired-conditional retention
+  measurement does not exist yet
 - **THEN** no reconciliation event is appended
 
 #### Scenario: a successor fired under a different identifier
@@ -162,10 +168,11 @@ mismatched value SHALL refuse without reading or appending.
 bounded official-read basis recorded only as a versioned, domain-tagged digest.
 It SHALL NOT retain a raw account identifier and SHALL NOT carry request call
 records, so the reads it made cannot become successful-endpoint evidence. Its
-representation of the broker
-identifier it reconciles is chosen in design Revision 1 Q2 `[비움 — Q2]`; in
-either choice it SHALL NOT add a broker identifier that the reconciled artifact's
-own record line does not already carry.
+representation of the broker identifier it reconciles follows Q2 decision (a)
+(2026-09-28): the reconciliation line reuses the identifier key the reconciled
+artifact's own record line already carries, and it SHALL NOT add a broker
+identifier that the reconciled artifact's own record line does not already
+carry.
 It SHALL preserve the original cleanup failure and SHALL NOT alter a step
 verdict or count as a cancellation, fill, successful endpoint, soak proof,
 capability-attestation evidence, or engine-interlock satisfaction.

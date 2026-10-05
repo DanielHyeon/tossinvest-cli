@@ -130,7 +130,10 @@ does not influence endpoint or attestation success.
    `EXPIRED` 로 있으면 부재가 아니라 종결이고, 이 change 는 그것도 거절한다(Q6 — Manager 결정 2026-09-27). 거절 메시지는 "만료된 artifact 는 이 경로로 영구히 대사되지 않는다" 를 적는다.
 3. **그 심볼의 OPEN 일반 주문이 0건이다** — 발동한 child 가 아직 체결되지 않았다면 그것은 일반 주문으로
    호가에 있다. `OrdersPageRaw(OrdersFilter{Status: "OPEN", Symbol: …})` 를 끝까지 읽는다.
-4. **목록에서도 사라진 발동을 배제한다** `[비움 — Q1]`. 발동한 조건주문이 CLOSED 에 얼마나 오래 남는지
+4. **목록에서도 사라진 발동을 배제한다** (Q1 결정 (a) — 사용자 2026-09-28). CLOSED 발동 잔존·보존
+   기간의 사람 실측(장중·조회 전용) **전에는 이 조건을 만족시킬 수 없으므로 거절한다**(잠정 (c));
+   측정 뒤에는 보존 기간 안의 artifact 에 한해 2·3 이 이 조건을 덮고, 더 오래된 artifact 는 거절한다.
+   원 근거: 발동한 조건주문이 CLOSED 에 얼마나 오래 남는지
    (보존 기간)도, 발동 뒤 목록에 남는지도 **측정되지 않았다**(발동 측정은 deferred —
    verify-execution-capability 2.5). 2·3 은 목록에 남아 있는 동안만 덮는다. 목록 밖의 발동을 배제할 근거는
    verify-observes-the-trigger 가 채택한 **보유 수량** 뿐인데, `Artifact` 에는 방향도 수량도 없고
@@ -141,7 +144,8 @@ does not influence endpoint or attestation success.
    그때 시장 결속은 기록 파일 이름과 심볼뿐이다(G3-4).
 6. **읽기 집합이 흔들리지 않았다** — 컷 토큰이 없으므로 같은 읽기 집합(1·2·3 의 전 페이지)을 **두 번** 연속
    수행하고, 두 결과를 (그룹, id, status, triggeredOrderId) 로 **정렬한 집합**으로 비교해 같아야 한다.
-   첫 읽기 시작부터 둘째 읽기 끝까지의 경과가 한도 `[비움 — Q3]` 를 넘으면 거절한다. 페이지 오류·반복
+   첫 읽기 시작부터 둘째 읽기 끝까지의 경과가 Q3 한도(처리 2026-09-27: 구현 로트가 이름 있는 보수
+   상수로 제안해 리뷰에서 확정, 확정 전 거절)를 넘으면 거절한다. 페이지 오류·반복
    커서·`hasNext` 인데 빈 커서·상한 도달(m0RecoverPending B4·B6·B13·B14 와 같은 모양)이면 거절한다.
 
 **치르는 값(숨기지 않는다).** 페이지 상한이 10 × 100 이므로(`steps.go:61`, limit 100) CLOSED 이력이 그보다
@@ -204,7 +208,8 @@ does not influence endpoint or attestation success.
   만 막으므로 **구 바이너리에서는 그 artifact 가 여전히 outstanding** 이고, `holdGate` 기본값과 그 줄의 위치
   때문에 **다시 보유 상태**가 된다(다음 `conditional-cancel` 판정 전까지 정리 대상도 아니다). 틀리는 방향이
   "다시 보인다" 이므로 안전 쪽이고, 되돌림은 증거를 지우지 않는다.
-- **원문 id 경계** `[비움 — Q2]`. 위 골격은 대사 줄에 **새 원문 id 를 하나도 더하지 않는다** — 같은
+- **원문 id 경계** (Q2 결정 (a) — 사용자 2026-09-28: spec 경계 문구 수정 + 기존 키 재사용,
+  `outstandingLines` 는 편집 대상 아님). 위 골격은 대사 줄에 **새 원문 id 를 하나도 더하지 않는다** — 같은
   기록이 이미 담은 id 를 같은 키로 반복할 뿐이다. 그러나 현재 delta spec 은 원문 브로커 식별자 경계를 두고
   리뷰는 "a raw ID violates the stated boundary" 라고 읽었다. 둘 중 하나를 골라야 한다 — (a) spec 문구를
   "대사 줄은 대상 artifact 줄이 이미 담은 식별자 외에 새 브로커 식별자를 더하지 않고, 읽기 근거는 지문으로만

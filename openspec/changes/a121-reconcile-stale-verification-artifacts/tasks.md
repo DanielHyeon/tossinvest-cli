@@ -1,8 +1,12 @@
 ## 1. Contract and hard evidence
 
 - [ ] 1.1 Reserve `STORY-TOS-a121`, capture the implementation base, and validate this change strictly.
-- [ ] 1.0 Obtain answers to design Revision 1 Q1–Q5 and write them into design/spec, replacing every
+- [x] 1.0 Obtain answers to design Revision 1 Q1–Q5 and write them into design/spec, replacing every
       `[비움 — Qn]`. Until then 1.3 cannot run (Q1 unanswered means the command can only refuse).
+      — 2026-10-05 Manager: 전 결정 반영(Q1=(a)+측정 전 잠정 거절·Q2=(a) 기존 키 재사용·Q3=구현 로트
+      보수 상수 이월·Q4/Q5/Q6=거절). design 3자리·spec 3자리 치환, "Q1 is unanswered" 시나리오를
+      "retention measurement is absent" 로 재서술. Q1 측정(CLOSED 발동 잔존·보존 기간, 조회 전용)은
+      사람 실측 큐 — M-A 세션이 만드는 발동이 표본이 될 수 있어 동승 후보.
 - [ ] 1.2 Produce CodeGraph and Go AST Function Logic/Branch Test Maps for the existing functions that will
       be edited. By Revision 1 these are at least `verifylive.Artifact.terminal` (third ending), `newVerifyCmd`
       (registering the command), `verifylive.BuildReport` and `verifylive.BuildProgress` (label reconciled
