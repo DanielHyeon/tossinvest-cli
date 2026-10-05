@@ -1,0 +1,132 @@
+{
+  "file": "internal/protectionlifecycle/lifecycle.go",
+  "source_sha256": "de50441bc89c79ec5cfeb8308a837db1cffede7e3ab52c661eccb9515d1688e5",
+  "package": "protectionlifecycle",
+  "function": "mutablePosition",
+  "signature": "mutablePosition(params=3, results=2)",
+  "start": {
+    "line": 296,
+    "column": 1
+  },
+  "end": {
+    "line": 308,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 297,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 300,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 304,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 298,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 301,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 305,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 307,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
+        "column": 6
+      },
+      "text": "validState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 298,
+        "column": 27
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 300,
+        "column": 41
+      },
+      "text": "validCapability"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 301,
+        "column": 27
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 304,
+        "column": 13
+      },
+      "text": "validKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 305,
+        "column": 27
+      },
+      "text": "refuse"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 303,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

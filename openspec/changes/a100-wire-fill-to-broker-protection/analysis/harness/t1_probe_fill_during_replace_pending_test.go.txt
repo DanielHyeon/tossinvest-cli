@@ -1,0 +1,44 @@
+package protectionlifecycle
+
+// a100 T1 부수 관찰 증인(결함 기록 D3) — 저장소 기본 스위트에 넣지 않음(.go.txt). t1_mutation_harness.sh 가 overlay 로 주입함.
+// REPLACE_PENDING·REPLACE_UNKNOWN 중 귀속 가능한(정확한 broker id) 부분 체결이 진리표를 깨는 상태를 재봉인해 돌려주고,
+// 그 뒤 패키지의 어떤 전이 함수도 그 상태를 받아 주지 않는지(영구 정지) 잼. CANCEL_PENDING 은 대조군.
+
+import "testing"
+
+func TestProbeFillDuringPending(t *testing.T) {
+	active, krKey, usKey := registeredKRAndUS(t)
+	krID := active.view(krKey).Observed.BrokerOrderID
+	usID := active.view(usKey).Observed.BrokerOrderID
+	replacePending, replace, err := prepareReplace(active, krKey, 8, 101, fullCapability())
+	if err != nil {
+		t.Fatal(err)
+	}
+	replaceUnknown, err := applyReplaceResult(replacePending, replace, BrokerObservation{Status: BrokerUnknown})
+	if err != nil {
+		t.Fatal(err)
+	}
+	cancelPending, _, err := prepareCancel(active, krKey, fullCapability())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		name  string
+		state State
+	}{{"REPLACE_PENDING", replacePending}, {"REPLACE_UNKNOWN", replaceUnknown}, {"CANCEL_PENDING", cancelPending}} {
+		next, res, err := applyFill(c.state, krKey, Fill{FillID: "f", BrokerOrderID: krID, Quantity: 3, Fingerprint: "p"})
+		t.Logf("%s: partial fill(귀속 가능) res=%+v err=%v validAfter=%v", c.name, res, err, validState(next))
+		if validState(next) {
+			continue
+		}
+		// 무효 상태를 받아 주는 전이가 있는지 — 전부 invalid_state 면 영구 정지.
+		_, _, e1 := applyFill(next, krKey, Fill{FillID: "g", BrokerOrderID: krID, Quantity: 1, Fingerprint: "q"})
+		_, _, e2 := applyFill(next, usKey, Fill{FillID: "h", BrokerOrderID: usID, Quantity: 1, Fingerprint: "r"})
+		_, e3 := recoverReplace(next, krKey, acceptedObservation(replace, krID), fullCapability())
+		_, e4 := applyReplaceResult(next, replace, acceptedObservation(replace, krID))
+		_, _, e5 := prepareCancel(next, usKey, fullCapability())
+		_, _, e6 := recoverSubmit(next, usKey, BrokerObservation{Status: BrokerUnknown}, fullCapability())
+		_, _, e7 := discoverOrphan(next, BrokerObservation{AccountID: "acct", PositionID: "x", Market: MarketKR, BrokerOrderID: "o", Status: BrokerActive})
+		t.Logf("%s: 이후 KR fill=%v | US fill(정확한 id)=%v | recoverReplace=%v | applyReplaceResult=%v | US prepareCancel=%v | US recoverSubmit=%v | discoverOrphan=%v", c.name, e1, e2, e3, e4, e5, e6, e7)
+	}
+}
