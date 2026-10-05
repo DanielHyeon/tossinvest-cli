@@ -1,7 +1,7 @@
 # breakout-retest-strategy-lane Specification
 
 ## Purpose
-TBD - created by archiving change a112-run-four-strategy-families-independently. Update Purpose after archive.
+breakout-retest 전략 레인의 평가기 계약을 정의한다. 레인은 공식 regular-session의 완전히 닫힌 1분봉과 버전 있는 config만 입력받는 결정적 순수 평가기이고, 브로커·쓰기 저널·Guardian·시계에 직접 닿지 않는다. 생산 권위는 setup 하나당 first-leg 하나로 제한되며(재생·중복 전달·정정·재시작이 둘째 first-leg 권위를 만들 수 없다), 증거 생산자가 서기 전까지 생산 breakout 입력은 벽(ErrBreakoutEvidenceUnavailable)에서 전부 거절된다 — 벽 해제는 SetupID 계보 결속(B) 또는 consumed-setup 원장 기록(C) 착지가 선행이다. (출처: change a112 아카이브 2026-10-05)
 ## Requirements
 ### Requirement: breakout-retest lane은 closed-bar pure evaluator다
 KR/US breakout-retest lane은 immutable official evidence와 versioned config를 입력받아 state transition, proposal 또는 typed refusal을 결정적으로 반환해야 하며 (SHALL), broker, writable journal, Guardian, scheduler/activation writer와 system clock을 직접 호출해서는 안 된다 (MUST NOT). Breakout, retest와 reclaim transition은 official regular-session의 완전히 닫힌 1-minute bar만 사용해야 하고 (SHALL), live quote는 ARMED 이후 spread/drift/freshness veto에만 사용할 수 있다 (SHALL).

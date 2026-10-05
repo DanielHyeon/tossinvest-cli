@@ -1,7 +1,7 @@
 # four-family-strategy-runtime Specification
 
 ## Purpose
-TBD - created by archiving change a112-run-four-strategy-families-independently. Update Purpose after archive.
+네 전략군(continuation·reversal·weekly-value·breakout-retest)의 KR/US 레인 8개를 한 생산 런타임이 독립 감독하는 계약을 정의한다. 핵심 축은 넷이다 — ① 레인 격리: 한 레인의 대기·시한·panic·latch가 이웃을 바꾸지 못한다 ② 서명 활성화: digest 핀으로 결속된 4-가족 매니페스트 없이는 어떤 레인도 desired/effective ON이 되지 않고, 새 설치·migration·restart는 OFF/OFF/UNOBSERVED다 ③ 조정·발급 질서: 소유자 범위 단위 중재와 레인 lease가 브로커 호출 앞에 서고, 활성화가 없는 시장은 기존 단일 경로와 동작이 같다(토글 OFF = upstream) ④ SHADOW: digest 핀 shadow manifest가 있을 때만 OFF 레인의 read-only 반사실 관측을 허용하며 dispatch capability를 가질 수 없다. (출처: change a112 아카이브 2026-10-05)
 ## Requirements
 ### Requirement: production runtime은 네 전략군의 여덟 lane instance를 독립 감독한다
 Production strategy runtime은 continuation, reversal, weekly-value와 breakout-retest의 KR/US lane instance 정확히 8개를 `(market, family, lane_id, lane_version)` key로 감독해야 한다 (SHALL). 각 instance는 자체 cadence, bounded queue, deadline, health, consecutive-failure counter와 entry-only latch를 가져야 하며 (SHALL), 한 instance의 wait, timeout, panic, stale evidence 또는 latch가 peer instance의 evaluation cycle이나 state를 변경해서는 안 된다 (MUST NOT).
