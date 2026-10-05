@@ -48,12 +48,24 @@ otherwise:
   record line (never caller-supplied), and an instrument read for that symbol
   succeeds and echoes the same symbol (positive controls against a
   blanket-empty response);
+- every list response passes schema-presence validation: a null result payload
+  or a missing collection or pagination field refuses rather than reading as an
+  empty list;
+- every row read carries a status from the measured terminal vocabulary and all
+  required fields; a missing or unknown status, a status inconsistent with its
+  group, or any row whose second (OCO) leg is present refuses — OCO-shaped
+  conditionals are not reconciled through this operation;
 - the complete read set above, performed twice in succession, yields the same
   (group, identifier, status, triggered order identifier) multiset both
   times, with a duplicate (group, identifier) within one read refusing by
   itself, within the Q3 freshness bound (the RED lot SHALL fix it as a named
   conservative constant approved in review; until that
-  constant exists the operation SHALL refuse).
+  constant exists the operation SHALL refuse). The bound SHALL cover the whole
+  window from the first read's start through append admission, and the
+  operation SHALL recheck freshness and the Q1 age immediately before the
+  append. Before selection and again immediately before the append, every
+  non-blank line of the record SHALL decode strictly; an undecodable line
+  anywhere, including the final line, refuses.
 
 The operation SHALL select exactly one candidate without accepting a
 caller-supplied identifier: a conditional artifact that the record's cleanup
@@ -159,6 +171,12 @@ set — one being set alone also refuses), and the record path is derived from t
 profile directory rather than supplied as an override; and that the market is
 given explicitly, which selects the record file. Any missing, mixed, or
 mismatched value SHALL refuse without reading or appending.
+The appended reconciliation line SHALL carry a domain-tagged keyed digest of
+the full current account identity (never a raw account identifier), and the
+human-approval output SHALL display the record's masked reference, the current
+credentials' masked reference, and the account count — the retained last
+digits are not identity, and this display is the operator's check against a
+credential swap with a colliding suffix.
 
 #### Scenario: mixed or mismatched account reference
 

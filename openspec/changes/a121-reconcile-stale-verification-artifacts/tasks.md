@@ -59,6 +59,15 @@
       자격 **하나만** 설정된 상태의 거절; flock·rate-budget lease 획득 실패의 거절; 기록 파일이
       `\n` 으로 끝나지 않을 때(찢긴 꼬리) 추가 전 거절; 중복/모호 신원 거절을 S7 포괄이 아닌 자기
       문구로 단언. 재검 P2-d: 후보가 order-kind artifact 뿐이라 0 이 되는 객체 유형 사례의 거절 시험.
+      codex 라운드 추가(2026-10-05, F1~F7): `{"result":null}`·`{"result":{}}`·컬렉션 키 결측 응답이
+      빈 목록이 아니라 거절이 되는 시험(F2 — 두 번 같은 기형 응답 + 종목 조회 성공 조합 포함);
+      기록의 깨진 마지막 줄(개행 포함)이 선택·추가 양쪽에서 거절되는 시험과 내부 줄 깨짐 시험(F3);
+      CLOSED status 결측·미지 값·그룹 모순 값의 거절 + allowlist 가 골든/영수증 전사임을 고정하는
+      시험(F4); `Second` 비공란 행(OPEN·CLOSED 각각)의 거절 시험(F6); 추가 직전 신선도·Q1 나이
+      재검사의 시험 — 느린 요청/정지 시뮬레이션으로 Q3 창이 추가 승인까지 덮음을 단언(F7);
+      끝 4자리 같은 다른 계좌로의 자격 교체 픽스처에서 사람 승인 출력이 두 마스크·계좌 수를
+      표시하고 대사 줄에 계좌 digest 가 실리는 시험(F1); Q1 측정 기록이 축출 모형을 담지 않으면
+      보존 한도 주입이 거절되는 시험(F5).
 - [ ] 2.3 Add failing tests that reconciliation removes only its exact outstanding artifact from resume cleanup
       planning while preserving failed cleanup evidence and every verification verdict. freeze 추가(P1-6):
       대사 전/후의 `RedoSet` 을 핀한다 — 대사 뒤 `subjectLost` 가 `conditional-register` 를 되살리는

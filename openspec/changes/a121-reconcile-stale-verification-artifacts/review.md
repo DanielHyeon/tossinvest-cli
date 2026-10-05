@@ -113,12 +113,34 @@ spec 의 `[비움 — Q4]`·`[비움 — Q6]` 는 위 판정으로 채웠고 Q5 
 원본 outstanding 줄 값(추가 시각은 `ReconciledAt`), (d) 양성 대조 spec 요구+시나리오·객체 유형
 0-후보 RED. 리뷰어 선언: 이 수리 뒤 추가 재검 불요 — 최종 이진 확인만 수행.
 
-**최종(2026-10-05): FREEZE-APPROVE — P0=0, P1=0** (같은 리뷰어, ed33a732 이진 확인 3/3 YES —
+**1차 최종(2026-10-05): FREEZE-APPROVE — P0=0, P1=0** (같은 리뷰어, ed33a732 이진 확인 3/3 YES —
 P0-R1 닫힘·P2 a~d 선언대로·새 모순 없음. 잔여: "same" 중복 오타 1 — 이 커밋에서 수리).
 수용된 no-live-mutation 경계(tasks 1.3 요구 기록): **대사 경로에서 주문·조건주문 변이 도달 0** —
 읽기 전용 좁은 인터페이스(목록 2 + 계좌 + 종목 조회)·Broker 비반환 생성자·대사 파일 AST census
 (쓰기 7이름·type assertion 금지)·토큰 갱신 POST 만 경계 밖(auth 기반). 명령은 mutating=true 로
 등재하고 실행은 사람 승인 뒤(4.3).
+
+## gstack 리뷰 + codex 외부 적대 — 2026-10-05 (tasks 1.3 둘째 반쪽)
+
+- gstack /review 실행(대상 d028db60..a56b8481, 문서 28파일 +1585/−49): scope CLEAN(전부 a121),
+  체크리스트 코드 범주 not-applicable(코드 0), 기계 재검(placeholder·모순 문자열 잔존 0),
+  strict validate 통과. Claude 적대 반쪽은 위 freeze 3라운드(독립 에이전트)가 실질 수행 — 재탕
+  대신 그 기록을 매핑.
+- **codex 외부 적대 r1 (gpt-6-astra): 형식상 무효** — 출력 첫 줄에 `~/.codex/memories/MEMORY.md`
+  접근 자가 선언(하네스 메모리가 프롬프트 금지보다 상위로 동작). 선례(a112 8.5)대로 r1 은 패스로
+  셈하지 않되, **발견 7건은 Manager 가 실코드로 검증 후 수용**: F2(`unwrapAndDecode` 가
+  `{"result":null}`/`{}` 를 무오류 빈 페이지로 — client.go:213-227 실측 확인),
+  F3(`LoadEntries` 가 깨진 꼬리 줄을 개행 무관 묵살 — record.go:423-430 실측 확인, 1차 P2-7 의
+  `\n` 규칙 **불충분 판명**), F6(API `Second` 존재·어댑터 탈락 — conditional_reads.go:38-39 확인),
+  F1(마스크 결속 우회: 접미 충돌 자격 교체)·F4(CLOSED denylist)·F5(행 수 축출 미배제)·F7(Q3 창이
+  추가 전 종료) 논증 수용.
+- **수리(이 커밋)**: F2 스키마 존재 검증 / F3 전 줄 엄격 해독(선택 전+추가 직전) / F4 status
+  allowlist(골든 전사)+결측·미지 거절 / F5 Q1 측정에 축출 모형 요구(행 수 기반·판별 불능 =
+  영구 거절) / F6 OCO 행 전면 거절 / F7 Q3 창을 추가 승인까지 연장+직전 재검사 / F1 대사 줄
+  계좌 digest+승인 출력 두-마스크 표시+잔여 기록(작성기 내구 결속은 후속 change — proposal).
+  spec·tasks RED 동기화. 치르는 값 ④⑤⑥ 추가.
+- 다음: 수리 좌표로 **clean codex r2**(격리 사본·메모리 미부착 환경) — r2 가 이 수리의 유효
+  외부 패스다. 그 뒤 freeze 리뷰어 이진 확인.
 
 **파킹.** a121 은 BLOCKED 로 둔다. 적대 재리뷰는 사용자가 Q1·Q2 에 답한 뒤에 돈다.
 (2026-10-05 해소 — Q1·Q2 는 2026-09-28 사용자 결정, 적대 재리뷰는 아래 freeze 1차로 실행됨.)
