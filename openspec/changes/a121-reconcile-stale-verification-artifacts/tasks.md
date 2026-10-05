@@ -33,10 +33,10 @@
 
 ## 2. RED
 
-- [ ] 2.1 Add failing tests that a DELETE 404 or a generic operator observation cannot reconcile an artifact.
-- [ ] 2.2 Add failing tests for complete fresh OPEN+CLOSED pagination, exact opaque identity, profile/account
+- [x] 2.1 Add failing tests that a DELETE 404 or a generic operator observation cannot reconcile an artifact.
+- [x] 2.2 Add failing tests for complete fresh OPEN+CLOSED pagination, exact opaque identity, profile/account
       binding, stale/partial/ambiguous reads, and idempotent append-only reconciliation.
-- [ ] 2.2.1 Add failing tests for each Revision 1 G1 refusal: a live successor under a new identifier in the
+- [x] 2.2.1 Add failing tests for each Revision 1 G1 refusal: a live successor under a new identifier in the
       symbol's OPEN group; the artifact's identifier in CLOSED (`COMPLETED` with `triggeredOrderId`, and
       `EXPIRED`); **a different identifier in CLOSED with a non-empty `triggeredOrderId` or `COMPLETED`**; any
       OPEN plain order on the symbol; a row whose symbol or market differs; all other conditions true while the
@@ -48,7 +48,7 @@
       the Q6 refusal message content ("만료된 artifact 는 이 경로로 영구히 대사되지 않는다"); the positive
       controls (symbol bytes taken from the artifact's record line, instrument GET succeeding and echoing the
       symbol) and their refusals when the control fails.
-- [ ] 2.2.2 Add failing tests for each Revision 1 G2/G3 refusal: zero or several candidates from
+- [x] 2.2.2 Add failing tests for each Revision 1 G2/G3 refusal: zero or several candidates from
       `PendingCleanup`; a conditional whose hold is not released; an artifact named by `M0Unsettled`; mixed
       `AccountRef`s, or `attest.Mask(current reference)` differing from them; account sequence 0; missing
       `--config-dir`; credentials from `TOSSCTL_OPENAPI_KEY`/`SECRET`; `--record` override; missing `--market`;
@@ -76,13 +76,13 @@
       페이지 양쪽(R2-1); 검증 seq 와 transport 캐시 seq 불일치 픽스처(첫 양수 seq 자동 캐시)에서
       명시 재결속이 없으면 실패하는 시험 + 기형 계좌 행(빈 번호·양수 seq) 거절(R2-2);
       개행 없는 완전 JSON 꼬리에의 추가 거절 — 엄격 해독과 개행 검사 병존 단언(R2-3).
-- [ ] 2.3 Add failing tests that reconciliation removes only its exact outstanding artifact from resume cleanup
+- [x] 2.3 Add failing tests that reconciliation removes only its exact outstanding artifact from resume cleanup
       planning while preserving failed cleanup evidence and every verification verdict. freeze 추가(P1-6):
       대사 전/후의 `RedoSet` 을 핀한다 — 대사 뒤 `subjectLost` 가 `conditional-register` 를 되살리는
       현 동작을 바꾸지 않고 기록으로 고정(설치 실행은 여전히 사람 일괄 승인 뒤).
-- [ ] 2.4 Add failing tests that the reconciliation event cannot enter successful endpoints, soak attestation,
+- [x] 2.4 Add failing tests that the reconciliation event cannot enter successful endpoints, soak attestation,
       or engine-interlock coverage, and that no live mutation is reachable.
-- [ ] 2.4.1 Add a structural test that the reconciliation dependency exposes only official GET reads and one
+- [x] 2.4.1 Add a structural test that the reconciliation dependency exposes only official GET reads and one
       local append (no cancel/modify/create/place method reachable); a test that the reconcile line carries no
       `Calls` and changes no `SucceededEndpoints` result; a test that the command holds the journal execution
       flock and the rate-budget lease; and a test that an older-format reader still reports the reconciled
@@ -93,6 +93,12 @@
       CancelConditionalOrder) 호출 금지 + type assertion 금지 + `Broker` 를 반환하는 생성자 부재;
       보존 한도가 **생산 빌드에서 nil** 임을 고정하는 AST 핀 시험; 「one local append」의 예외는
       토큰 갱신 POST(auth 기반, 경계 밖) 하나뿐임을 경계 서술에 포함.
+
+2절 종결(2026-10-05, 착지 ffa8eb0d): RED 82(수락 강제 포함·거절 코드 46 전부 참조·기존 회귀 0),
+무동작 골격 4파일(생산 조립 연결 0), 봉인 3층 census + production-var 핀, 기본 승인 tty 실판정 핀,
+FLM 유보 번들 3, testseam census 25→26. A-RED 적대 리뷰 2.5라운드(P1 5 수리, 변이 M9·M10·M14·
+M14b·TERMINAL·net/http 등 CAUGHT 전환 실측) — review.md 「A-RED」 절. **CLOSED status allowlist
+전사 출처 부재 → Q1 사람 실측이 CLOSED 어휘 영수증을 함께 채집**(design RED 로트 처분).
 
 ## 3. GREEN
 

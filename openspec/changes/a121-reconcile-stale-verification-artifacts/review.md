@@ -171,5 +171,25 @@ F1~F7 수리 자체는 7/7 설계 반영 확인(표 제출), 발견은 수리의
 **∴ tasks 1.3 종결 좌표 = 이 커밋. 유효 리뷰 사슬: Claude 적대 3라운드(19건) + P0-R1 +
 codex r1(무효·발견 7 수용) + clean codex r2(5건) + 이진 확인 3회 — 전부 CLOSED.**
 
+## A-RED — 2026-10-05 (RED 로트 적대 리뷰, 착지 ffa8eb0d)
+
+- **구현**: Terra-RED(Opus), 2c6ef1ef 고정. RED 82·골격 4·봉인 census·FLM 번들 3·Q3 메모.
+- **A-RED 1차**(freeze 리뷰어 — 구현자와 별개): P0=0 / P1=4 / P2=6. P1-1 봉인 census 우회
+  (Broker 필드·New 참조 변이 생존 + glob 탈출) / P1-2 testseam census 미등재(sdd-test FAIL —
+  가드 설계대로 격발) / P1-3 기본 승인 미핀(auto-approve GREEN 이 전판 통과) / P1-4 이름만 있는
+  거절 모양 3. 리뷰어가 구현자 주장 재실측: 29파일 전부 신규·회귀 0·롤백 사본 핀 14/14,
+  계수 정정(RED 74·코드 45).
+- **수리 r2**: 봉인 3층(이름 금지 AST·타입 핀·go/types 도달 census+allowlist+import 금지)·
+  EXPECTED 26·승인 4시험·모양 4시험·Q3 상수 15s production-var 핀·basis digest 값 핀·allowlist
+  주입 수락 시험. 리뷰어 재검: P1-1·2·4·P2 전부 CLOSED, **P1-3 반쪽**(실제 terminal 기본값이
+  tty 미판정 — `echo y |` 자가 승인 변이 생존).
+- **마감**: tty 실판정 RED(os.Pipe·/dev/null 모두 비대화형 단언 — /dev/null 은 문자 장치라
+  기존 isTerminal 로는 오판, GREEN 은 x/term 필요) + import 금지 목록 + 주석. TERMINAL·
+  chardevice·net/http·os/exec 변이 CAUGHT 전환 실측. 리뷰어 선언에 따라 추가 재검 생략.
+- **Manager 배터리**: 경로 전수 31/31(코드 17 신규·openspec 13·tools/sdd 1), 트레일러 정상,
+  RED 수 재실측 일치, 비-RED FAIL 0 재확인(수리 전 라운드), check_analysis rc=0·sdd-test rc=0
+  (커밋 뒤 공유 트리). **Manager acceptance: ffa8eb0d 푸시.** 구체화 판정 7건·가드 순서·Q3
+  승인·allowlist 출처는 design 「RED 로트 처분」.
+
 **파킹.** a121 은 BLOCKED 로 둔다. 적대 재리뷰는 사용자가 Q1·Q2 에 답한 뒤에 돈다.
 (2026-10-05 해소 — Q1·Q2 는 2026-09-28 사용자 결정, 적대 재리뷰는 아래 freeze 1차로 실행됨.)

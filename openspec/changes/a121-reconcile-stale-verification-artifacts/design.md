@@ -408,3 +408,27 @@ P0-R1 정정: 이 검사 자신이 쓰는 계좌 목록 읽기와 종목 조회 
   합집합 부재를 단언한다(tasks 2.2.2).
 - **STORY acceptance 2 판독.** "Only … appends" 는 **제약**으로 읽는다(능력 아님) — Q1 측정 전
   거절-전용 상태에서도 충족된다. Story 본문은 수정하지 않는다.
+
+### RED 로트 처분 (Manager, 2026-10-05 — 착지 ffa8eb0d, A-RED 리뷰 2.5라운드)
+
+- **가드 순서 계약(GREEN 구속, A-RED P2-5 — Q6 도달이 이 순서에 의존하므로 load-bearing):**
+  사전 검사(기록·프로필·계좌, 목록 읽기 전) → 승인(두-마스크, 목록 읽기 전) → 읽기 전 Q1/Q3 →
+  종목 조회 → 두 번 읽기(페이지·중복 검사 포함, 순서 조건 OPEN→일반 OPEN→CLOSED) → 종목 조회 →
+  신선도·Q1 재검 → multiset 비교 → 행 검사(OCO→필드 결측→심볼→시장) → 부재 검사(OPEN 조건 →
+  일반 OPEN → CLOSED target(EXPIRED→Q6) → 발동 흔적) → **status allowlist 는 마지막** →
+  엄격 해독 → 지문 → 개행 → 추가. mixed 가 mismatch 보다 먼저.
+- **Q3 확정: `reconcileFreshnessBoundValue = 15s`, 429 재시도 없음**(한 번의 429 로 한도를 넘게
+  보수 설정 — 거절 후 사람 재실행; 근거 `analysis/red-lot/q3-freshness-and-closed-allowlist.md`).
+  이 절이 코드 주석의 「리뷰 승인」의 원장 기록이다(A-RED P2-c).
+- **RED 구체화 승인(구현자 판정 요청 7건):** ① `Client.Reconcile*` 해독 메서드 신설(기존 어댑터가
+  null 을 접으므로 필연 — 같은 endpoint·새 해독·새 파일) ② `Accounts` 는 cmd 좁은 생성자 소유,
+  verifylive `ReconcileReader` 는 GET 3개 ③ 설계 밖 거절 코드(m0-unresolved·account-ref-unusable)
+  + `RefuseRecordFormat` 추인 — 전부 시험 참조 ④ `second` **키 부재 = 비-OCO 로 규정**(null 과
+  동일 decode; F6 은 비공란만 거절) ⑤ 도달 census allowlist 에 Recorder 3이름(OpenRecorder·
+  Append·Close) 포함 — 설계가 명한 추가 1회의 유일 통로 ⑥ M0 제외가 현 `withoutM0ManualReconcile`
+  와 중복(두 판정 — 한쪽이 가려짐): GREEN 로트에서 층 내려 변이로 가를 것(RED 후보) ⑦ 측정 한계
+  3(암묵 캐시 vs 명시 재결속 동일 헤더·읽기 순서는 호출 열 핀·F7 은 종목 조회 지연 모의) 기록 수용.
+- **F4 allowlist 전사 출처 확정:** 저장소의 어떤 영수증·골든에도 CLOSED 종결 어휘가 없다(RED 로트
+  실측 — verify-execution-capability 에 COMPLETED/EXPIRED 관측 0). **Q1 사람 실측 세션이 CLOSED
+  status 어휘 영수증을 함께 채집**하고 그 전사가 allowlist 가 된다. 전사 전 allowlist 공집합 =
+  CLOSED 행이 하나라도 있으면 거절(치르는 값 — 타 id EXPIRED 하나로도 거절됨을 기록).
