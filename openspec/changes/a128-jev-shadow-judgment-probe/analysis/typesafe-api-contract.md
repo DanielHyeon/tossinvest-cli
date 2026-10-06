@@ -210,3 +210,18 @@
    질문 digest 를 남겨 사후에 잴 수 있게 한다.
 7. **응답 `usage` 이외의 과금 메타(요청당 비용)** — 가격표(per-token)만 있다. 비용은 `usage.input_tokens`
    로 사후 계산하도록 판단 행에 기록한다.
+
+## 7. 실측 추가 영수증 (2026-10-07 06:31 KST, 실 API 1호출)
+
+키 유효성 smoke(무해 state, noul 1문)가 **HTTP 402** 를 돌려줬다 — 미기재 1번(오류 본문 구조)의
+실측 표본 1건:
+
+```json
+{"detail":{"error_type":"billing_error","message":"Your organization has no available TypeSafe API
+credits. Please add more credits and/or set up auto-reload at https://console.typesafe.ai/settings/billing"}}
+```
+
+- 관측: 오류 본문은 `detail.error_type`·`detail.message` 모양이다(이 상태 코드 1건에서만 확인 —
+  다른 코드가 같은 모양이라는 보장은 없다).
+- 인증은 통과했다(401 이 아니라 402) — 키 자체는 유효.
+- 프로브 동작 영향 0: 402 는 재시도 대상이 아니고(4xx), 본문은 여전히 해석하지 않는다.
