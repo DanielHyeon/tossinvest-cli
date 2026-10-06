@@ -126,3 +126,4 @@
 | `a125-the-a063-exception-retires` | STORY-TOS-a125 | archived |
 | `a126-filled-exposure-leaves-the-bucket` | STORY-TOS-a126 | archived |
 | `a127-strategy-authorities-read-the-current-ledger` | STORY-TOS-a127 | archived |
+| `a128-jev-shadow-judgment-probe` | STORY-TOS-a128 | in_progress |

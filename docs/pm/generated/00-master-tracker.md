@@ -123,6 +123,7 @@
     - STORY-TOS-029 — Retire the gainers candidate source [archived] → `retire-gainers-source`
     - STORY-TOS-030 — Refine extended-shadow bands [archived] → `refine-extended-shadow-bands`
     - STORY-TOS-a046 — Approve evidence-backed candidate veto thresholds [archived] → `a046-approve-candidate-veto-thresholds`
+    - STORY-TOS-a128 — Jev semantic judgments earn a calibration receipt before any wiring [in_progress] → `a128-jev-shadow-judgment-probe`
   - FEAT-TOS-010 — Strategy entry and market-aware scheduling [active]
     - STORY-TOS-a047 — Add the strategy entry engine [archived] → `a047-add-strategy-engine`
     - STORY-TOS-a048 — Add market-aware strategy scheduling [archived] → `a048-add-market-aware-scheduler`
