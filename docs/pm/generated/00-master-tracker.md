@@ -10,7 +10,7 @@
     - STORY-TOS-a118 — A sealed test still runs [archived] → `a118-a-sealed-test-still-runs`
     - STORY-TOS-a119 — Codex keeps its handoff fresh and starts GBrain once [archived] → `a119-codex-session-handoff-and-gbrain-startup`
     - STORY-TOS-a120 — Audit legacy execution-baseline adoption [archived] → `a120-audit-legacy-execution-baseline`
-    - STORY-TOS-a121 — Reconcile stale verification artifacts from authoritative reads [in_progress] → `a121-reconcile-stale-verification-artifacts`
+    - STORY-TOS-a121 — Reconcile stale verification artifacts from authoritative reads [implemented] → `a121-reconcile-stale-verification-artifacts`
     - STORY-TOS-a122 — Keep the Function Logic Map gate answerable after a merge [archived] → `a122-the-logic-map-gate-outlives-a-merge`
     - STORY-TOS-a123 — An empty window is derived, not declared [archived] → `a123-an-empty-window-is-derived-not-declared`
     - STORY-TOS-a125 — a063 is judged against its own base like every change [archived] → `a125-the-a063-exception-retires`

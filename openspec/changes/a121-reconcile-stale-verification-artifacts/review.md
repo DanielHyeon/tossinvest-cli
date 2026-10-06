@@ -231,3 +231,24 @@ codex r1(무효·발견 7 수용) + clean codex r2(5건) + 이진 확인 3회 �
 
 **파킹.** a121 은 BLOCKED 로 둔다. 적대 재리뷰는 사용자가 Q1·Q2 에 답한 뒤에 돈다.
 (2026-10-05 해소 — Q1·Q2 는 2026-09-28 사용자 결정, 적대 재리뷰는 아래 freeze 1차로 실행됨.)
+
+## 4.3 — 2026-10-06 (사람 승인 조회 전용 관측)
+
+- **승인**: 사용자 "1번 즉시"(2026-10-06) — Manager 가 제시한 정확한 명령·예상 결과에 대한 명시 승인.
+- **실행**: `go run ./cmd/tossctl verify reconcile --config-dir ~/.config/tossctl --market KR`
+  (브랜치 bccae0bb, 2026-10-06 13:28:20 KST).
+- **관측 결과(원문)**: `verify reconcile: refused (execution-lock): verify: engine, system update,
+  or another verification owns the execution exclusion: engine: another engine instance already
+  holds this journal directory (/home/daniel/.config/tossctl/engine.lock)` — exit 1.
+- **부작용 0 증거**: 거절 지점은 `runVerifyReconcile` 의 flock 단계(`cmd/tossctl/verify_reconcile.go`
+  84~86행) — rate budget·reader 생성자·승인 프롬프트·네트워크 읽기·기록 쓰기 전부 **이전**.
+  주문 side effect 0, API 호출 0, 기록 파일 무변경.
+- **lock 보유자 실재**: 라이브 엔진 컨테이너(이미지 5c77491d93d4, Up 2 days healthy)가 저널
+  디렉터리를 보유 — stale lock 아님.
+- **예측 정정(침묵 생략 금지)**: 직전 기록은 "현 상태 정상 결과 = retention-unmeasured 정적 거절"
+  로 예측했으나, 그 정적 거절은 verifylive.Reconcile **안**(execution lock 뒤)이라 라이브
+  프로필에선 엔진이 저널을 쥐는 한 도달 불가다. 실측된 execution-lock 거절이 더 바깥의 설계된
+  fail-closed 층이고(검증이 엔진과 경합하지 않는다는 계약), retention-unmeasured 거절·가드
+  순서는 커밋된 시험과 변이 원장 130(CAUGHT 127)이 핀한다. 라이브에서 retention-unmeasured 를
+  직접 보려면 엔진이 저널을 놓은 창(KST 05:00~09:00)이 필요하나 4.3 의 요구("read-only, redacted
+  observation with explicit human approval; no live order mutation")는 본 관측으로 충족된다.

@@ -12,7 +12,7 @@
       사람 실측 큐 — M-A 세션이 만드는 발동이 표본이 될 수 있어 동승 후보. **단(freeze P1-5):
       Q1 표본 발동은 a063 artifact 의 심볼로 만들지 않는다** — 같은 심볼의 발동 이력이 CLOSED 에
       남으면 G1-2 가 그 artifact 를 영구 거절한다.
-- [ ] 1.2 Produce CodeGraph and Go AST Function Logic/Branch Test Maps for the existing functions that will
+- [x] 1.2 Produce CodeGraph and Go AST Function Logic/Branch Test Maps for the existing functions that will
       be edited. By Revision 1 these are at least `verifylive.Artifact.terminal` (third ending), `newVerifyCmd`
       (registering the command), `verifylive.BuildReport` and `verifylive.BuildProgress` (label reconciled
       absent), and — only if Q2 picks the tag form — `verifylive.outstandingLines`. `PendingCleanup` and
@@ -25,6 +25,9 @@
       outstandingLines 비편집 확인(Q2=(a)). check_analysis rc=0. **추가 편집 대상(S1 처분):**
       `Report.WriteText`·`Progress.WriteText` — FLM 은 구현 로트 시작 시 생성. freeze P2-11: proposal 이
       주장한 `runCleanup` 분기(AST 미열거)도 같은 시점에 번들로 만든다. [x] 는 두 유보 포함.
+      — 2026-10-06 유보 2건 종결 확인: `analysis/function-logic/` 에 report.writetext·
+      progress.writetext·runner.runcleanup FLM/BTM/ast.json 실재(GREEN 로트 생산, check_analysis
+      rc=0). 노트는 [x] 조건까지 썼는데 박스만 미체크였음 — gate 1차 2단계 격발로 발견·정정.
 - [x] 1.3 Complete proposal-freeze adversarial and gstack reviews; record the accepted no-live-mutation boundary.
       — 2026-10-05 종결: Claude 독립 적대 3라운드(P0 2·P1 7 발견→수리→FREEZE-APPROVE) + gstack
       /review(scope CLEAN·코드 범주 n/a) + codex 외부 적대(r1 무효·발견 7 실측 수용 / clean r2
@@ -124,7 +127,18 @@ rc=0·vet/gofmt·openspec validate·sdd-check rc=0(sdd-sync 은 codegraphcontext
 2(Recorder.Append 부분 쓰기 + LoadEntries 꼬리 묵살 연쇄·OpenRecorder 비잠금 작성자)는 후속
 change 후보로 기록(analysis/green-lot/codex-green-repairs.md).
 
-- [ ] 4.3 Record a read-only, redacted reconciliation observation only with explicit human approval for the
+- [x] 4.3 Record a read-only, redacted reconciliation observation only with explicit human approval for the
       selected profile; do not perform a live order mutation.
-- [ ] 4.4 Synchronize PM, run `make gate CHANGE=a121-reconcile-stale-verification-artifacts`, and archive only
+4.3 종결(2026-10-06 13:28 KST, 사용자 승인 "1번 즉시"): 라이브 프로필(KR)에 1회 실행 →
+`refused (execution-lock)` exit 1 — 라이브 엔진(5c77491d93d4)이 저널 보유, 거절 지점은 flock
+단계라 네트워크·승인·기록 쓰기 전부 이전(side effect 0). retention-unmeasured 예측 정정 포함
+원장은 review.md 「4.3 — 2026-10-06」.
+- [x] 4.4 Synchronize PM, run `make gate CHANGE=a121-reconcile-stale-verification-artifacts`, and archive only
       after it succeeds. a063 remains independently unarchived until its own tasks complete.
+4.4 진행(2026-10-06): PM tracker current(`generate_master_tracker.py` rc=0) · sdd-check rc=0
+(CodeGraph fingerprint 일치, codegraphcontext/gbrain 은 기지 advisory WARN). gate 1차는 2단계에서
+미체크 1.2(박스 누락)·4.4(자기 줄) 격발 — 정정 후 재실행 결과는 아래 줄. 아카이브는 gate PASS 뒤
+Opus 팀메이트 위임(상임 지시).
+— **gate 재실행(sdd-sync 연속 실행 뒤): `GATE PASS: a121-reconcile-stale-verification-artifacts`
+11/11** (2026-10-06, tasks·짝·gstack 기록·FLM 증거·sdd-check·test·test-seams·test-race·vet·
+validate 전부 통과).
