@@ -119,7 +119,7 @@
 | `a118-a-sealed-test-still-runs` | STORY-TOS-a118 | archived |
 | `a119-codex-session-handoff-and-gbrain-startup` | STORY-TOS-a119 | archived |
 | `a120-audit-legacy-execution-baseline` | STORY-TOS-a120 | archived |
-| `a121-reconcile-stale-verification-artifacts` | STORY-TOS-a121 | implemented |
+| `a121-reconcile-stale-verification-artifacts` | STORY-TOS-a121 | archived |
 | `a122-the-logic-map-gate-outlives-a-merge` | STORY-TOS-a122 | archived |
 | `a123-an-empty-window-is-derived-not-declared` | STORY-TOS-a123 | archived |
 | `a124-a-deliverer-that-keeps-failing-blocks-entry` | STORY-TOS-a124 | archived |
