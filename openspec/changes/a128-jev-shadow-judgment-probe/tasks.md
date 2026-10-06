@@ -11,18 +11,38 @@
 
 ## 1. 구현 (Opus 팀메이트 — 새 파일만, 생산 무접촉)
 
-- [ ] 1.1 TypeSafe API 계약 동결 — docs.typesafe.ai/api.md·primitives/noul.md 를 읽고
+- [x] 1.1 TypeSafe API 계약 동결 — docs.typesafe.ai/api.md·primitives/noul.md 를 읽고
       요청/응답 계약을 원문 인용으로 `analysis/typesafe-api-contract.md` 에 기록.
       추측 필드 금지(계약은 영수증에서).
-- [ ] 1.2 `tools/a128-jev-shadow-probe/` — judgment client(stdlib HTTP, env 키,
+      — 2026-10-07 읽음(7 페이지). p = `answers.<id>.noul`. 문서 미기재 7항은 계약 문서 6 절.
+- [x] 1.2 `tools/a128-jev-shadow-probe/` — judgment client(stdlib HTTP, env 키,
       타임아웃·재시도), state 조립기(공개 시장 데이터만 — 계좌 필드 차단),
       수집 루프(rankings→stocks→prices/orderbook, rate limit 백오프, 세션 경계 준수),
       원장 writer(JSONL append, 행 2종), 라벨러(h분 뒤 /prices 재조회),
       보고서 생성기(p 구간표·구간당 n<30 보류 규칙).
-- [ ] 1.3 시험 — mock TypeSafe 서버·mock 시세 픽스처로: 계좌 필드 차단, 뉴스 결손 명시,
+      — 설계와 다른 점: (a) 원장 행이 **3종**(judgment·label·**gap**) — 랭킹/시세 읽기 포기·판단
+      API 포기처럼 판단 행이 생기지 못한 결손은 실을 행이 없어 침묵 생략이 되므로(spec 「결손은 행에
+      명시」). (b) 뉴스는 이 로트에서 미배선 — state `news: "absent"` + `missing_inputs` 와 행
+      `collection_gaps` 에 사유 명시(사람 관문 0.3 전). (c) official 은 복제가 아니라
+      `internal/official` 을 import(L1c 선례) — 토큰 캐시·401 adoption 을 공유해야 엔진과 토큰
+      전쟁(a082)이 안 남. 대신 브로커 표면은 읽기 GET 5개짜리 `marketSource` 인터페이스로만
+      다루고 주문·계좌 이름은 AST 시험이 금지. (d) J1·J2 를 한 요청에 묶음(noul.md 권고) → 판단
+      **요청** 수는 0.2 추정의 절반. (e) 판단 시각 + h 가 장 마감을 넘으면 더 판단하지 않음(라벨이
+      장 밖 가격을 재지 않게) — KR 기본값에서 세션당 34 사이클. 모델 기본값 `jev-1.13.0` 버전 핀.
+- [x] 1.3 시험 — mock TypeSafe 서버·mock 시세 픽스처로: 계좌 필드 차단, 뉴스 결손 명시,
       원장 행 스키마, 라벨 결손 사유, 보고서 보류 규칙, 키 부재 시 시작 거부.
       `go vet`·`make lint` 통과. FLM: not-applicable(새 파일만, High-risk 무접촉 —
       비례 원칙).
+      — 영수증(2026-10-07, go1.26.5, 실 API 호출 0 — httptest 만):
+      `go vet ./tools/a128-jev-shadow-probe/...` rc=0 · `go vet -tags tossos_testseams …` rc=0 ·
+      `gofmt -l tools/a128-jev-shadow-probe/` 빈 출력 · `rtk proxy go test -count=1 ./tools/a128-jev-shadow-probe/...`
+      rc=0 (`-v`: 최상위 29 PASS + 하위 7 PASS, FAIL 0) · 같은 명령 `-race` rc=0.
+      `make lint` 전체는 돌리지 않음 — 그 gofmt 범위는 `./cmd ./internal ./tools/logic-map` 라 이 디렉터리를
+      안 보고, 나머지는 `go vet ./...` 이므로 위 두 vet + gofmt 로 이 패키지 몫을 대신함.
+      변이 점검(제자리 sed → 복원 sha256 대조 OK, 무변이 대조군 GREEN): 바이트 가드 삭제 2(judge·storeState)·
+      기한 초과 검사 삭제·보류 기준 29·4xx 재시도·뉴스 결손 삭제·키 검사 우회·horizon 창 무시·모든 오류 재시도·
+      라벨 불변식 삭제·O_TRUNC·J2 적중 반전 = 12/12 CAUGHT. (모든 오류 재시도는 처음 SURVIVED →
+      503 비재시도 단언 추가 후 CAUGHT; 바이트 가드는 타입이 이미 막아 행동 시험으로 안 잡혀 AST 고정으로 못 박음.)
 - [ ] 1.4 팀메이트 커밋(푸시 금지) — 허용 경로: `tools/a128-jev-shadow-probe/`,
       `openspec/changes/a128-jev-shadow-judgment-probe/`. 그 밖 0.
 
