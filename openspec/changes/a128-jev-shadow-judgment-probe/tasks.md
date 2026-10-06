@@ -43,13 +43,19 @@
       기한 초과 검사 삭제·보류 기준 29·4xx 재시도·뉴스 결손 삭제·키 검사 우회·horizon 창 무시·모든 오류 재시도·
       라벨 불변식 삭제·O_TRUNC·J2 적중 반전 = 12/12 CAUGHT. (모든 오류 재시도는 처음 SURVIVED →
       503 비재시도 단언 추가 후 CAUGHT; 바이트 가드는 타입이 이미 막아 행동 시험으로 안 잡혀 AST 고정으로 못 박음.)
-- [ ] 1.4 팀메이트 커밋(푸시 금지) — 허용 경로: `tools/a128-jev-shadow-probe/`,
+- [x] 1.4 팀메이트 커밋(푸시 금지) — 허용 경로: `tools/a128-jev-shadow-probe/`,
       `openspec/changes/a128-jev-shadow-judgment-probe/`. 그 밖 0.
+      — 451ddba4, 14파일 전수 허용 내, Opus 트레일러 확인(Manager 배터리 2026-10-07).
 
 ## 2. 리뷰·착지
 
-- [ ] 2.1 gstack 리뷰(경량 — 비례 원칙) + Manager 검증(경로 전수·트레일러·시험 재실행).
-- [ ] 2.2 Manager 푸시.
+- [x] 2.1 gstack 리뷰(경량 — 비례 원칙) + Manager 검증(경로 전수·트레일러·시험 재실행).
+      — 2026-10-07 Manager /review: 구현 6파일 정독, critical 0 · informational 2
+      (① input_tokens 요청 단위 의미 — 주석 명기로 수리 d80ae85a ② 원장 꼬리 torn line 시
+      readLedger 가 전체 거부 = fail-closed, 수리 불요·운영 시 꼬리 절단으로 복구).
+      Review Army·적대 다중 리뷰: not-applicable(비례 원칙 — High-risk 무접촉·새 파일만).
+      Manager 재실행 영수증: go vet rc=0 · go test rc=0 · gofmt 빈 출력.
+- [x] 2.2 Manager 푸시 — 451ddba4 + d80ae85a (e67c514a..d80ae85a).
 
 ## 3. 측정 (2일 — 사용자 지시 2026-10-07)
 
