@@ -9,21 +9,27 @@
 > 6.4.4 창 운영 명기), T1 종결(도달 불가 3 증명 + 2.7 D3 실측 결함 편입 — M-A 완전 통과 시
 > T2-A 가 열리고 2.7 수리가 배선 선행), 동승 3건 큐 편성(사용자 2026-10-05 3항 + a121 Q1 결정
 > (a) 2026-09-28 + a112 L1c 결정 46 잔여).
+>
+> **2026-10-07 사용자 동의(권장안 3건 — 날짜 외 사람 결정 종결)**: ① R0-2 = (a) 8-15 설치본
+> 그대로 측정, ② R0-3 잔여 조건주문 = 기본 retain(아래 개정 문구), ③ 대상 심볼 = 당일 §2
+> 유동성 실측으로 확정. 남은 입력은 세션 날짜뿐.
 
 **역할 표기**: κ = 사람 콘솔 클릭, ⌨ = 사람 터미널(mutating 전부), 👁 = 에이전트 read-only 관측·기록.
 
 ## R0. 재발행 preflight — 당일 장 전/직후, 전부 read-only receipt 로 동결
 
 1. 👁 시장: 당일이 KR 정규장(09:00~15:30 KST)인지, expire = 당일로 재동결.
-2. **⌨→사람 결정 — 측정 바이너리.** 설치본(`/home/daniel/.local/bin/tossctl`,
-   SHA `899a74ac…e882`, commit `882a0b49`)은 2026-08-15 설치 게이트 통과본이다. 그 뒤 브랜치가
-   bccae0bb 까지 전진했다(M0 자체는 그 빌드에 있음). 선택지: (a) 설치본 그대로 측정 —
-   재설치 절차 불요, M0 다섯 플래그 검증 완료 / (b) 현 tip 재빌드·재설치 — 별도 명시 승인 +
-   설치 adversary 재실행. **Manager 권장 (a)** — M-A 는 M0 의 transport 증거가 핵심이고
-   그 빌드에 완결돼 있다. 당일 신원 재확인: `sha256sum ~/.local/bin/tossctl`.
+2. **측정 바이너리 — 결정 종결 (a)(2026-10-07 사용자 동의).** 설치본
+   (`/home/daniel/.local/bin/tossctl`, SHA `899a74ac…e882`, commit `882a0b49`,
+   2026-08-15 설치 게이트 통과본)으로 측정한다. 근거: M-A 핵심 증거인 M0 transport 다섯
+   플래그가 그 빌드에 완결, 설치 이후 커밋은 verifylive·문서뿐이라 conditional 주문 경로
+   기여 0. 당일 신원 재확인만 남음: `sha256sum ~/.local/bin/tossctl` = 위 SHA 일치 확인.
 3. 👁 잔여 조건주문: `tossctl order conditional list --status OPEN` — 8-15 관측은 5건
-   (PAUSED 2·WATCHING 3). **사람이 각 건 retain/cancel 을 결정**해야 M-A 객체와 섞이지 않는다
-   (취소는 ⌨ 사람 실행).
+   (PAUSED 2·WATCHING 3). **기본 retain (2026-10-07 사용자 동의)** — WATCHING 건은 실보유의
+   손절 역할일 수 있어 cancel 은 보호 약화(안전 불변식 4). 섞임 방지는 취소가 아니라 분리:
+   M-A 관측은 당일 등록한 주문 id 로 추적하고, 잔여 건과 심볼이 겹치면 그 심볼을 M-A
+   대상에서 제외한다. 당일 재조회 값이 기준 — 5건이 그대로라는 보장은 없으니 재조회 후
+   건별 확정(예외적 cancel 은 ⌨ 사람 실행).
 4. 👁 보유·sellable: official holdings 재조회, 대상 후보(미관리 whole-share KR — 8월 기준
    046890·466100)의 보유·sellable 수량 완결. 후보가 비면 사람과 재선정.
 5. 👁 토글: `trading.conditional=false` 확인(flip 은 §4 에서 사람). `allow_live_order_actions`,
