@@ -225,3 +225,17 @@ credits. Please add more credits and/or set up auto-reload at https://console.ty
   다른 코드가 같은 모양이라는 보장은 없다).
 - 인증은 통과했다(401 이 아니라 402) — 키 자체는 유효.
 - 프로브 동작 영향 0: 402 는 재시도 대상이 아니고(4xx), 본문은 여전히 해석하지 않는다.
+
+## 8. 실측 계약 검증 (2026-10-07 16:40경 KST, HTTP 200)
+
+결제(Add funds) 집행 후 같은 smoke 가 **200** 을 돌려줬다 — 동결 계약의 라이브 검증:
+
+```json
+{"model":"jev-1.13.0","answers":{"smoke":{"type":"noul","noul":0.96}},"usage":{"input_tokens":332,"output_tokens":21}}
+```
+
+- **버전 핀 `jev-1.13.0` 수용 확정** — `/v1/models` 목록에는 alias(jev-latest·jev-preview)만
+  보이지만 POST 는 핀 버전을 받고 응답 `model` 에 그대로 돌려준다.
+- p 경로 `answers.<id>.noul`, `usage.input_tokens` — 2절 동결 계약과 일치.
+- 402 의 원인 실측: 콘솔 "Monthly credit" $5(프로모)는 API available credits 로 집계되지
+  않았고, 실결제 후 즉시 200. billing history 에 구매 행이 없으면 API 는 거부한다.
