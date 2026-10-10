@@ -8,10 +8,13 @@
 ## 0. 게이트 선행
 
 - [x] 0.1 `capture_change_base.py --change a087-a-protective-exit-is-a-market-order`로 base commit 재고정 (디렉터리명이 바뀌었다) — `5491451b`(ec29dc72 → 102d4e99, 2026-09-30, 승인 기록 review.md)
-- [ ] 0.2 `openspec validate a087-a-protective-exit-is-a-market-order --strict --no-interactive`
+- [x] 0.2 `openspec validate a087-a-protective-exit-is-a-market-order --strict --no-interactive` — 2026-10-10 rc=0
+      ("is valid", 문서 수정 없음)
 - [ ] 0.3 **proposal-freeze 재리뷰** 실행 후 `review.md`에 2차 절 추가 (적대적 Eng 필수)
-- [ ] 0.4 `make sdd-sync` 후 `sellIntent`·`checkOrderShape`·`isProtective`·`buildOrderCreate`의
-      definition/callers/impact 확인
+- [x] 0.4 `make sdd-sync` 후 `sellIntent`·`checkOrderShape`·`isProtective`·`buildOrderCreate`의
+      definition/callers/impact 확인 — 2026-10-10 HEAD `6e844e11`, codegraph 1.6.0. `make sdd-sync` rc=2(2회):
+      CodeGraph sync 성공·fingerprint 기록, CodeGraphContext `update` 300초 타임아웃(advisory 미갱신).
+      산출물 `analysis/gate-0.4-codegraph.md`
 
 ## P1. Phase 1 — 가격 사다리 KR 하한가 단 (선행 · 실측 불요 · design D2a)
 
