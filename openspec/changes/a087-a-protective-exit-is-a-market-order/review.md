@@ -364,3 +364,201 @@ production 편집 0. 「문서」= 본문 정정, 「task」= 구현 task 추가
 | P3-1 | 문서 — a088·a089·A1~A14·I2 를 **무소유**로 | proposal 머리말·Non-goals · design D5 · tasks 「후속 change」 |
 | P3-2 | 문서+task — 세 소비자 명시, risk-pattern-report 기재, 술어 불변 시험 | design D1 · tasks 2.1·2.2 |
 | P3-3 | 문서+task — 사본 `PlaceWireBody`·재생 경로를 Impact 표면에, KR market sell 골든 행, 재생 시험, NULL 소비부 전수 열거 | proposal Impact · tasks 4.5·4.6·3.7 |
+
+---
+
+## 3차 proposal-freeze 재리뷰 (2026-10-10, 적대적 Eng)
+
+- **대상**: 문서 수리 `b6ee1e26`(change 디렉터리 6파일) + 실측 도구 `dfebb590`(`tools/a087-market-sell-probe/` 10파일). HEAD `dfebb590`
+- **보이스**: Claude Eng(독립·적대적, 이전 리뷰·수리 미참여) 1. Codex·CEO 미실행 — `[subagent-only]`
+- **판정**
+  - **A. 문서 수리 → freeze 재개 불가.** P1 2 · P2 5 · P3 4. 13건 중 완전 이행 9, 부분 이행 4(P0-1·P2-1·P2-2·P3-1).
+    남은 수리는 좁다 — P1 두 건(I-R1 처분 + 사용자 재확인, §5 「수용」 기준)을 닫으면 전면 재리뷰 없이 Manager 대조로 freeze 가능하다고 본다.
+  - **B. 실측 도구 → 조건부 적합(수리 1건).** P1 1 · P2 1 · P3 6. 이중 주문 경로(재시도·리다이렉트·연결 재사용·토큰 재사용·동시 실행)와
+    영수증 fail-closed 는 **발견 0**. P1 은 도구 본체가 아니라 같은 디렉터리의 변이 하네스가 실돈 도구 소스를 제자리에서 바꾸는 것이다.
+- **I-R1 판정 (한 줄)**: 현 설계(③ 무조건 개방)는 불변식 3 과 **양립 불가**. 완화 = ③ 개방을 엔진이 만드는 `trading.Service` 인스턴스에만
+  두는 생성자 옵션(토글·config 무변경) — 그러면 CLI·ops·MCP 는 upstream 과 바이트 동일하고 a087 의 목표는 그대로다.
+
+### 본 범위·방법·한계
+
+- 읽음: proposal·design·tasks·spec·issues 전문, review.md 2차 절·사용자 결정·처분 대조표, `analysis/gate-0.4-codegraph.md`, 도구 소스·시험 10파일 전문,
+  `internal/trading/service.go`(`placeIntentSupported`·`PreviewPlace`·`Place`·`guard`), `internal/execgw/failclosed.go`(`CheckPlace`·`checkOrderShape`),
+  `internal/official/{client.go,auth_headers.go,orders_write.go}`, `internal/ops/write_operations.go`, `cmd/tossctl/{mcp.go,order.go}`, `internal/orderintent/intent.go`
+  `NormalizePlace`, `docs/migration/openapi.latest.json` `POST /api/v1/orders`(응답 코드·예시·주문 상태 어휘), a100 `ma-runbook.md` 머리·R2,
+  verify-execution-capability `measurements.md` M14·M35.
+- upstream 대조: `git show upstream/main:internal/trading/service.go`(ref `0d49e218`, 2026-08-01) — `placeIntentSupported` 가 HEAD 와 본문 동일(비분수 = limit 전용).
+  함수 이력의 저자는 전부 upstream 저자다(`git log -L`) — ③ 은 upstream 상속 코드다.
+- 실행: `rtk proxy go test -count=1 -race -v ./tools/a087-market-sell-probe/...` → rc=0, 최상위 28 · 부분시험 포함 RUN 51 · PASS 51 · SKIP 0.
+  `openspec validate a087-… --strict --no-interactive` → rc=0.
+- **하지 않은 것**: 실 API 호출 0, 도구 `--execute` 0, `mutants.sh` 미실행(도구 소스를 제자리 편집하므로 — 아래 B-P1; 「13/13 CAUGHT」 주장은 미검증).
+  **AST 산출물 미작성** — `checkOrderShape`·`placeIntentSupported` 의 분기 순서를 근거로 쓴 줄은 손 읽기이며 「검증 필요(AST 미작성)」로 표기한다.
+
+### A. 문서 수리
+
+#### 처분 대조표 실물 대조 (13건)
+
+| # | 대조표 주장 | 실물 | 판정 |
+| --- | --- | --- | --- |
+| P0-1 | 세 곳 정정·③ task·종단 시험·spec Req 2·I-R1 | 전부 있음(proposal 「차단은 세 곳이다」, design D3 ③, tasks 1.5.0~1.5.5·1.6, spec `:33-45`, issues I-R1). 단 ③ 의 상류를 「사람 경로(CLI·운영 쓰기)」로 적었고 **MCP 에이전트 표면이 빠졌다**(A-P1-1) | 부분 |
+| P1-1 | 5.1 수단 = 도구·결과→처분 표 | tasks §5 머리·표 `:170-178`, proposal 「실측 필요」 1 | 이행 (표 내용 결함은 A-P1-2) |
+| P1-2 | 반증 근거 셋 정정 | proposal 「StockOS 대조」·Impact §0.3 취소선·「실측 필요」 2, design 「문제의 형태」·D5, spec Req 1 근거 | 이행 |
+| P1-3 | D6 기각 기록·3.8·I-R3 | 있음. 다만 「사용자 기각」은 추론이다(A-P2-3) | 이행(형식) |
+| P1-4 | `order-type-not-allowed`·D7·0.5·US 한계 | 있음 | 이행 |
+| P2-1 | 「9분 무보호」→ 횟수 | Why·spec 근거는 고침. **`proposal.md:78` 「그 대가가 위의 9분이다」 잔존** | 부분 |
+| P2-2 | 조기 통과 금지·유일한 로컬 확인·1.1a | ② 에만 적용. **③ 의 RED/GREEN(tasks 1.5.2·1.5.3)에는 같은 규칙·통화 행이 없다**(A-P2-2) | 부분 |
+| P2-3 | D8 5행·3.6·I-R4 | 있음 | 이행 |
+| P2-4 | D9·I-R5 | 있음 | 이행 |
+| P2-5 | 좌표 심볼 상대·base 표기·2.1 재생성 | 있음(base 좌표 절마다 표기 확인) | 이행 |
+| P3-1 | a088·a089 → 무소유 | proposal·tasks·D5 는 고침. **`design.md:339` 「호가 그리드 정본화. a088」 잔존** | 부분 |
+| P3-2 | 세 소비자·술어 불변 시험 | design D1·tasks 2.1·2.2 | 이행 |
+| P3-3 | Impact 표면·4.5·4.6·3.7 | 있음(3.7 방법 결함은 A-P3-3) | 이행 |
+
+#### A-P1-1 — I-R1: ③ 무조건 개방은 불변식 3 과 양립하지 않는다. 사용자 결정의 범위도 실제보다 좁게 기록됐다
+
+**사실** (손 읽기 — 술어 내부 순서는 검증 필요, AST 미작성):
+
+- `placeIntentSupported`(`internal/trading/service.go:269-288`)는 upstream 상속 코드이고 upstream 에서도 비분수는 limit 전용이다(upstream/main 동일 본문).
+  이 술어를 거치는 `trading.Service` 인스턴스는 셋이다 — 엔진(`internal/app/engine/engine.go:401`), CLI 앱(`internal/app/app.go:158` → `cmd/tossctl/order.go:229`),
+  **MCP 서버**(`cmd/tossctl/mcp.go:69`). ops `place_order`(`internal/ops/write_operations.go:92-107`, handler `:133-191`)는 MCP 카탈로그로 노출된다
+  (`internal/mcp/catalog.go:26-36`) — 즉 **에이전트가 부르는 표면**이다. `NormalizePlace` 는 `market` 을 이미 받는다(`intent.go:110`), CLI `--type` 도
+  「limit or market」(`order.go:418`). ③ 이 열리면 CLI·`tossctl ops`·MCP 에서 KR/US 비분수 시장가 매도가 브로커에 닿는다.
+- 엔진·CLI·MCP 가 같은 `cfg.Trading` 을 공유한다(`config.Trading`, `internal/config/service.go:23-32`) — config 토글을 새로 만들어도 사람 경로와 엔진을
+  가르지 못한다.
+
+**판정**: 불변식 3 의 취지는 「TossOS 가 더한 동작은 토글 뒤에 있고, 토글이 꺼지면 흔적이 없다」이다. 이 변경은 어떤 토글 뒤에도 없고, 모든 토글이
+OFF 여도 upstream 의 `ErrPlaceUnsupported` 가 브로커 전송으로 바뀐다 — 문언과 취지 모두 위반이다. 사용자 결정(본 문서 「사용자 결정 (2026-10-10)」 1)이
+이것을 알고 수용했으므로 **승인된 예외일 수는 있지만**, 그대로 freeze 할 수 없는 이유가 셋이다.
+
+1. 결정 기록이 범위를 「사람 CLI(`tossctl order place`)」로 적었다. 실제 범위는 **에이전트 MCP `place_order`** 를 포함한다(spec `:37` 도 「사람 경로(CLI·운영 쓰기)」).
+   사람이 동의한 대상과 바뀌는 대상이 다르다.
+2. 결정의 근거 「청산 즉시성 강화 = 보수 방향, 불변식 6」은 **자동 보호 청산**의 논거다. 사람·에이전트가 임의로 내는 시장가 매도는 손절·익절·사이징
+   변경이 아니라 주문 능력 확장이라 불변식 6 이 덮지 않는다.
+3. 같은 목적을 불변식 3 위반 없이 이루는 길이 비용 거의 0 으로 있다.
+
+**완화 조건 (택1, 사람 결정)**:
+
+- **(권장) 인스턴스 한정 개방** — `trading.Service` 에 생성자 옵션(예: `WithProtectiveMarketSell()`)을 두고 엔진(`engine.go:401`)만 켠다. `placeIntentSupported`
+  의 기본 동작·`PreviewPlace` 문구·CLI·ops·MCP 는 upstream 과 동일. 엔진이 꺼져 있으면(기존 엔진 토글) 흔적 0 → 불변식 3 충족. 엔진 경로의 ② 는 그대로
+  `buy+market` 을 막는다. 시험: CLI·MCP 인스턴스에서 `sell+market` 이 여전히 `ErrPlaceUnsupported`(upstream 동등 고정), 엔진 인스턴스에서만 지원.
+  spec Req 2 `:37` 의 「사람 경로에도 적용된다」 삭제, tasks 1.5.5 를 「사람·에이전트 경로 무변화」 시험으로 뒤집는다.
+- **(대안) 명시 예외** — 사용자가 「불변식 3 예외: CLI·`tossctl ops`·**MCP 에이전트** 경로에서 비분수 시장가 매도 허용」을 문언으로 재확인하고, 그 문장을
+  `.claude/CLAUDE.md` 가 아니라 이 change 의 Pre-Edit(1.5.0)·spec Req 2 에 범위째 기록. 이때 1.5.4 문구 갱신 대상에 `ops/write_operations.go:94`
+  `place_order` Summary(「limit or US fractional market」)를 더한다(A-P3-2).
+- **(대안) design D6 원안 재개** — KR 은 ③ 무변경으로 끝난다(A-P2-3).
+
+#### A-P1-2 — §5 표의 「수용 = 2xx 접수」는 거짓 양성을 낸다
+
+openapi 는 주문 상태 어휘에 `REJECTED`(「브로커가 주문을 거부한 상태」)를 두고, **200 으로 생성된 MARKET 주문이 REJECTED 로 끝나는 예시**까지 싣는다
+(`docs/migration/openapi.latest.json` 주문 조회 예시 — `"orderType": "MARKET", … "status": "REJECTED"`). `POST /api/v1/orders` 의 성공 응답은 `200`
+하나뿐이다(응답 키 `200·400·401·409·422·429·500` — `201` 없음). 그런데 tasks §5 표 `:174` 는 「**수용 — 201/2xx 접수** → Phase 2 전제 성립 … §1~§3 착수 가능」이고,
+도구는 설계상 주문 상태를 읽지 않는다(`receipt.go:180-181` 안내문 「fill status is NOT measured here」). 2xx 뒤 비동기 거부가 나면 표는 High-risk production
+변경을 연다. **수리**: 「수용」 = 2xx **그리고** 사람이 `tossctl orders list/completed` 로 읽은 상태가 `PENDING`·`PARTIAL_FILLED`·`FILLED` 중 하나(영수증
+orderId 로 대조). `REJECTED` 는 사유에 따라 「거부」 또는 「판정 불가」 행. `201` 표기는 `200` 으로.
+
+#### A-P2-1 — spec Req 2 의 전칭 「매수 시장가는 모든 관문이 거부」는 현행과 모순
+
+spec `:33` 「매수 시장가 주문은 모든 관문이 계속 거부해야 한다(SHALL)」와 Scenario 「서비스 지원 검사 단독」 `:45` 「매수 시장가는 지원되지 않는 형태」는
+**US 분수 시장가 매수**(금액 기반)를 두 관문이 지금 통과시키는 사실(`service.go:273-276`, `failclosed.go:71-81`, upstream 시험
+`TestPlaceIntentSupportedAcceptsFractionalMarketUS`)과 충돌한다. proposal §2 표는 「US fractional 예외 존치」라 적었으나 spec 에는 없다. 아카이브되면 정본에
+현행이 위반하는 SHALL 이 들어간다. 「비분수」 한정을 넣어라. (이 문장은 수리 전에도 있었으나 수리가 「모든 관문」으로 넓혔다.)
+
+#### A-P2-2 — P2-2 의 「조기 통과 금지」가 ③ 에는 옮겨지지 않았다
+
+검증 필요(AST 미작성). `placeIntentSupported` 는 `OrderType != "limit"` 거부 **뒤에** KR→`KRW`, US→`KRW|USD` 통화 검사를 둔다(`service.go:281-287`).
+tasks 1.5.3 「비분수 비지정가 거부에 `sell+market`·가격 없음 예외 추가」를 조기 `return true` 로 구현하면 그 통화 검사를 건너뛴다 — ② 에서 2차 리뷰가
+지적한 것과 같은 결함이고, CLI·ops·MCP 경로에는 ② 가 없으므로 ③ 이 그 경로의 **유일한** 관문이다. 1.5.2 RED 표에 「`sell+market` + KR 비 KRW → 비지원」·
+「US `sell+market` + 통화 KRW/USD 외 → 비지원」 행을, design D3 ③ 에 「조기 통과 금지」를 더하라. 같은 맥락에서 ② 의 마지막 `intent.Price <= 0` 거부
+(`failclosed.go:96-98` 「a limit order needs a positive price」)는 `sell+market` 에 적용되면 안 되는데 design D3 ② 는 「뒤의 통화·수량 검사는 그대로」만 적었다 —
+그 가격 검사가 limit 전용으로 남아야 함을 명시하라(RED 1.1 의 `sell+market` 통과 행이 잡겠지만 설계가 침묵하면 안 된다).
+
+#### A-P2-3 — D6 「사용자 기각」은 기록이 아니라 추론이다
+
+사용자 결정(`review.md` 「사용자 결정 (2026-10-10)」 `:335-343`)에는 하한가 지정가 원안이 한 번도 나오지 않는다. D6 비교표는 그 결정 **뒤**에 같은 수리 커밋으로
+작성됐고, 「처분: 기각 (사용자 결정 2026-10-10)」은 「(가)를 골랐으니 (다)는 기각」이라는 추론이다. 2차 재리뷰의 재개 조건은 「비교(또는 사용자 기각 기록)」였다.
+A-P1-1 로 ③ 개방의 비용이 커졌으므로(불변식 3), D6 표를 사용자에게 보이고 기각을 문언으로 받아라 — 특히 「세 관문」 행(원안은 ③ 무변경)과 I-R1 의 관계를 함께.
+
+#### A-P2-4 — tasks 3.8 「원장·관측에 남긴다」와 Impact 「Schema: 없음」이 충돌
+
+tasks `:128-129` 는 청산 슬리피지 bps 를 「원장·관측에」 남긴다. proposal Impact `:236` 은 「Schema: 없음」. 원장 기록이면 schema 변경(High-risk change 안의 새
+열/표)이고, 관측 전용이면 「원장」을 지워야 한다. 저장 위치·schema 영향·체결가의 출처(`filldetect` 의 어느 값)를 정하라. 한 change 에 계측 기능을 더하는 것이
+범위인지도 적어라(비례 원칙).
+
+#### A-P2-5 — §5 표가 덮지 않는 결과 셋
+
+1. **5.2 가 2xx 로 접수**되면(장전 동시호가 대기·익일 이월 등) 실주문이 다음 세션에 체결된다 — 표 `:177` 은 「응답 코드 기록만」이고 그 주문의 처리(취소 여부·
+   010170 3주 예산 소진)를 말하지 않는다.
+2. **종목 상태 사유의 거부**(VI 발동 중 단일가·투자경고·단일가 매매 종목 등)는 MARKET 유형 일반의 반증이 아닌데 `:175` 「MARKET 매도 자체를 거부하는 4xx」와
+   구분 규칙이 없다. 「판정 불가」로 보내는 기준을 적어라.
+3. **같은 종목의 상주 SELL 조건주문**(a100 M-A 가 같은 세션·같은 010170 에 SINGLE+MARKET 손절을 건다 — `ma-runbook.md` R0 머리·§5)이 매도가능수량을 묶으면
+   5.1 이 수량 사유로 거부된다. 측정 전 매도가능수량 read-only 스냅숏(👁)을 5.1 선행 조건으로 두라(도구는 이 표면을 일부러 안 읽는다 — `static_test.go:155-162`).
+
+#### A-P3
+
+- **A-P3-1 낡은 문장 둘**: `proposal.md:78` 「그 대가가 위의 9분이다」(P2-1 잔존), `design.md:339` 「호가 그리드 정본화. a088」(P3-1 잔존).
+- **A-P3-2 1.5.4 문구 목록 누락**: `internal/ops/write_operations.go:94` `place_order` Summary 「limit or US fractional market」, `:105`. (A-P1-1 대안 경로일 때만.)
+- **A-P3-3 3.7 방법**: CodeGraph 는 심볼 단위라 SQL 열 `intents.price` 의 읽기 자리를 열거하지 못한다. SQL 문자열 grep + 저널 접근자 호출자(CodeGraph)의 합집합으로.
+- **A-P3-4 D7 의 열린 질문**: 0.5 는 지금 할 수 있는 read-only 작업이고 그 답이 spec Req 1 의 SHALL NOT 을 무효화할 수 있다. freeze 를 0.5 뒤로 두는 편이
+  재개정 비용이 작다(차단 아님 — 착수 조건으로 이미 묶여 있음).
+
+### B. 실측 도구 (`tools/a087-market-sell-probe/`)
+
+#### 발견 0 영역 (본 범위와 근거)
+
+- **재시도**: 전송 호출 자리는 `sendOnce` 의 `.Do` 하나(`send.go:85`, 구조 시험 `static_test.go:61-101`), `execute` 안 1회·반복/고루틴 없음(`:104-133`).
+  `official` 의 401 재전송 `send`(`internal/official/client.go:320-366`)를 쓰지 않음을 확인 — `AuthHeaders`(`auth_headers.go:48-61`)는 토큰·계좌 seq 만 준다.
+- **리다이렉트**: `CheckRedirect → ErrUseLastResponse`(`send.go:63`), 3xx 는 `unknown`(`:159-161`), mock 307 에서 추종 0(`execute_test.go:179-181`).
+- **연결 재사용 재전송**: `DisableKeepAlives`(`send.go:61`) + POST 는 `Idempotency-Key` 헤더가 없어 net/http 의 replayable 조건에도 안 걸림 — 이중 방어 확인(읽기).
+- **토큰 재사용·동시 실행(같은 `--out`)**: `Lstat` 사전 검사(`main.go:202-207`) + `O_EXCL`(`receipt.go:210`) — 둘이 동시에 사전 검사를 지나도 하나만 생성,
+  나머지는 `errAlreadySent`로 전송 0. 층별 시험 `execute_test.go:255-285`.
+- **`--out` 우회(다른 디렉터리·다른 cwd·다른 worktree)**: 같은 토큰 = 같은 키 = 같은 바이트(`order.go:152-155` 토큰이 본문 전체를 묶음)이고, 토큰 창 5분 <
+  브로커 멱등 창 10분이라 둘째 전송은 언제나 창 안이다. KR 멱등 실측 M35(같은 키+같은 본문 → 같은 orderId, 둘째 주문 없음)가 이 방어의 근거 — 단 M35 는
+  LIMIT 표본이고 TTL 끝(`idempotency-ttl-edge`)은 미측정이다(5분 여유로 충분하다고 판단).
+- **영수증 fail-closed**: `sending` 영수증 생성 실패 → 전송 0(`main.go:225-228`), 파일 막힘·읽기 전용 두 경우 시험(`execute_test.go:317-351`), 요청 도착 순간
+  `sending` 이 디스크에 있음(`:289-313`). 최종 영수증 실패 → 화면에 전문 출력 + 종료 3(`main.go:233-237`, `:264-268`).
+- **결과 분류**: 409(`request-in-progress` — openapi 409 예시와 일치)·타임아웃·5xx·3xx·2xx 무 orderId·echo 불일치 → 전부 `unknown`(`send.go:144-163`),
+  본문 읽기 오류는 2xx 여도 `unknown`(`:146` 의 `TransportError` 우선).
+- **시크릿**: 헤더는 이름만(`send.go:166-173`), sentinel 5종이 영수증·출력에 없음(`execute_test.go:355-393`).
+- **계약 대조 강도**: 생산 직렬화기와 바이트 동일(실제 `official.Client.PlaceOrder` → mock, qty 1·2 — `contract_test.go:23-47`) + openapi 원문에서 필드 집합·
+  required·enum·pattern·maxLength·정수 수량·price/TIF 부재·문구 셋을 읽어 대조(`:84-161`). 키 31자 ≤ 36, pattern 일치. 엔진이 a087 뒤 보낼 본문과 같은 모양을
+  재므로 측정 대상이 옳다.
+
+#### B-P1-1 — `mutants.sh` 가 실돈 도구의 소스를 공유 작업 트리에서 제자리로 바꾼다
+
+`mutants.sh:58` `perl -0pi` 로 `tools/a087-market-sell-probe/*.go` 를 직접 고치고 `:69` 에서 되돌린다. `trap cleanup EXIT`(`:27`)는 SIGKILL·전원 단절·OOM 에서
+돌지 않고, 변이 하나가 살아 있는 동안 같은 작업 트리에서 사람이 `go run ./tools/a087-market-sell-probe --execute …`(도구가 안내하는 바로 그 명령, `main.go:175`)를
+치면 **변이체가 컴파일돼 실주문을 낸다.** 변이 목록에 M3(5xx 에 재전송 — `:37`), M7(리다이렉트 추종 = 307 본문 재전송 — `:42`), M4/M4b/M9(확인·만료 우회)가
+있다 — 이중 주문과 확인 없는 전송이 정확히 그 변이들이다. 병행 세션이 같은 체크아웃을 쓰는 것은 이 저장소의 실측 관행이다(기억 「미커밋 로트는 살아 있는 peer
+세션 것일 수 있다」·「병행 세션 게이트 간섭」). **수리(택1 이상)**: 변이를 `go test -overlay` 또는 임시 사본에서 돌린다(a087 P1.5 의 `7bd8f197` 이 이미 overlay 방식);
+그리고 §5 실행 절차에 「`git status --porcelain -- tools/a087-market-sell-probe` 가 비고 HEAD 가 착지 커밋일 때만」(또는 착지 커밋에서 미리 빌드한 바이너리 sha
+대조)을 넣는다. 도구 본체는 이 결함이 없다.
+
+#### B-P2-1 — 영수증이 실계좌 주문 기록(orderId·원 응답 본문)을 git 추적 대상 경로에 쓴다
+
+기본 `--out` 은 `openspec/changes/a087-…/analysis/market-sell-receipts`(`main.go:42`)이고 `.gitignore` 에 없다(`git check-ignore` rc=1). 영수증에는 orderId,
+원 응답 본문 전문(`receipt.go:155-167` — 오류 `data` 칸에 매도가능수량 같은 계좌 값이 실릴 수 있다), 종목·수량·시각이 들어간다. 불변식 8 의 「계좌 개인정보」에
+걸리는지는 사람 판단이지만 **판단 없이 커밋되는 경로**인 것은 결함이다. 처분을 정하라: gitignore + measurements.md 에 필요한 칸만 옮겨 적기, 또는 본문 redaction,
+또는 명시 수용. (measurements.md 기존 M 계열은 orderId 를 적지 않는다 — `M14`·`M35` 확인.)
+
+#### B-P3
+
+- **B-P3-1 「사람만 실행」 주장이 강도보다 크다**: `stdin` TTY 검사(`main.go:184-186`)는 `script -qc` 같은 pty 래퍼로 통과되고, confirm token 은 비밀 없는 해시
+  (`order.go:152-155`)라 미리보기 없이도 계산 가능하다. 실제 성질은 「본문 일치 확인 + 우발 실행 방지」다 — 문구(`main.go:185`, 커밋 메시지 「에이전트 실행 금지」)를
+  그 성질로 고치거나, 에이전트 차단은 권한 체계·불변식 2 가 맡는다고 적어라. (추가 마찰을 넣으라는 권고가 아니다.)
+- **B-P3-2 `refused` 가 §5 표의 「거부」와 같은 말이 아니다**: 401·403·429·매도가능수량 부족도 `refused`·종료 2·「the broker refused」(`send.go:157-158`,
+  `receipt.go:182-184`)다. 표에서는 「판정 불가」다. 안내문에 「refused ≠ MARKET 반증 — error code 로 tasks §5 표를 볼 것」 한 줄을 두라.
+- **B-P3-3 만료를 전송 직전에 다시 보지 않는다**: `verifyConfirm`(`main.go:195`) 뒤 `AuthHeaders`(토큰 교환 + 계좌 조회, `official` 기본 시한 15초씩)가 끼어 실제 전송은
+  창 끝을 수십 초 넘을 수 있다. 브로커 10분 창 안이라 이중 주문 위험은 없음 — 「5분 유효」 문구 정확성 문제.
+- **B-P3-4 키가 다르면 막는 것이 없다**: 결과 `unknown` 뒤 사람이 미리보기를 다시 돌리면 새 키 = 새 실주문이다(안내문 `receipt.go:186-187` 뿐). 5.2 가 의도적 둘째
+  주문이라 전면 잠금은 맞지 않지만, 같은 디렉터리에 `sending`/`no-answer`/`unknown` 영수증이 있으면 실행을 거절하는 정도는 값싸다.
+- **B-P3-5 응답 해석의 계약 고정 없음**: `readAnswer` 의 봉투 모양(`send.go:112-141`)은 mock 에서만 잰다. openapi 200·409 예시와 모양은 일치함을 읽어서 확인 —
+  계약 시험(`contract_test.go`)이 요청만 대조한다는 한계 기록.
+- **B-P3-6 계좌 선택이 암묵적**: `official.New` 에 `WithAccountSeq` 가 없어 `accounts[0]`(`client.go:261-270`)에서 판다 — 엔진(`engine.go:390`)·CLI 와 같은
+  선택이라 결함은 아니나, 010170 이 그 계좌에 있어야 하고 영수증은 계좌를 일부러 적지 않으므로 사전 보유 확인(A-P2-5 3)이 그 공백을 메운다.
+
+### freeze 재개 조건 (3차)
+
+1. A-P1-1: I-R1 처분 — 인스턴스 한정 개방으로 design D3 ③·spec Req 2·tasks 1.5.x 개정, **또는** MCP 에이전트 표면을 명시한 사용자 예외 재확인.
+2. A-P1-2: §5 「수용」에 주문 상태 확인을 넣는다.
+3. B-P1-1: 변이 하네스를 사본/overlay 로 옮기거나 §5 실행 전제(깨끗한 트리·착지 커밋)를 tasks §5 에 적는다 — §5 실행 전까지.
+4. P2 는 같은 개정에서, P3 는 구현 착수 전까지. 위 1~2 는 좁아서 Manager 대조로 닫을 수 있다(전면 Eng 재리뷰 불요 — 단 1 에서 인스턴스 옵션 설계를 택하면
+   그 설계 문단만 독립 확인 1회).
