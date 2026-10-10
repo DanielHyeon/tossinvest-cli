@@ -10,7 +10,12 @@
 - [x] 0.1 `capture_change_base.py --change a087-a-protective-exit-is-a-market-order`로 base commit 재고정 (디렉터리명이 바뀌었다) — `5491451b`(ec29dc72 → 102d4e99, 2026-09-30, 승인 기록 review.md)
 - [x] 0.2 `openspec validate a087-a-protective-exit-is-a-market-order --strict --no-interactive` — 2026-10-10 rc=0
       ("is valid", 문서 수정 없음)
-- [ ] 0.3 **proposal-freeze 재리뷰** 실행 후 `review.md`에 2차 절 추가 (적대적 Eng 필수)
+- [x] 0.3 **proposal-freeze 재리뷰** 실행 후 `review.md`에 2차 절 추가 (적대적 Eng 필수)
+      — 2026-10-10 실행(Opus 독립 리뷰, `[subagent-only]`): **판정 = 수정 필요, freeze 불가.**
+      P0 1·P1 4·P2 5·P3 3. P0-1(`trading/service.go` 셋째 관문 — tasks 대로면 보호 청산 100%
+      로컬 거부)·P1-1(5.1 이 출하 도구로 실행 불가) 은 Manager 가 HEAD 실물 대조로 확인.
+      P0-1·P1-1~4 를 문서로 닫고 Eng 재리뷰 재실행 전 §1~§3 착수 금지. P0-1 처분
+      (internal/trading 수정 = 사람 CLI upstream 동작 동반 변경)은 **사람 결정**.
 - [x] 0.4 `make sdd-sync` 후 `sellIntent`·`checkOrderShape`·`isProtective`·`buildOrderCreate`의
       definition/callers/impact 확인 — 2026-10-10 HEAD `6e844e11`, codegraph 1.6.0. `make sdd-sync` rc=2(2회):
       CodeGraph sync 성공·fingerprint 기록, CodeGraphContext `update` 300초 타임아웃(advisory 미갱신).
@@ -87,6 +92,11 @@
 > 5.1·5.2 를 a100 M-A 의 KR 장중 사람 실측 세션과 같은 큐에 올린다 — 같은 세션에서 측정해도
 > 되고 별도 세션이어도 된다. 주문별 사람 즉시 승인·자동 실행 금지는 그대로다. a100 은 이
 > 실측을 기다리지 않는다(a100 D8 계약 1 (다) 채택 — Phase 2 는 a100 선행 조건이 아니다).
+>
+> **2026-10-10 보류(2차 재리뷰 P1-1):** 5.1 은 출하 도구로 실행 불가 — `tossctl order place`
+> 도 엔진과 같은 `placeIntentSupported`(`internal/trading/service.go:281` `OrderType != "limit"`
+> → `ErrPlaceUnsupported`) 에서 로컬 거부된다(Manager HEAD 실물 대조). 실행 수단(관문 처분
+> 또는 별도 실측 도구)이 **사람 결정**으로 정해지기 전에는 M-A 동승 큐(R2)에서 보류.
 
 - [ ] 5.1 **KR MARKET 매도 1회.** 최소 수량·장중. 스키마는 지원하나 실접수 미측정.
       성공·실패 모두 기록. 절차와 대상 종목은 사용자와 합의한 뒤 실행

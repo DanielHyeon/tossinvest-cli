@@ -232,3 +232,98 @@ LIMIT 전용 오적용 주장은 **독립 확인에서 옳았다** — `CheckAut
   ratchet `positive→nonNegative` CAUGHT · ratchet 가드 제거 CAUGHT · ladder `positive→nonNegative` CAUGHT · ladder 가드 제거 CAUGHT.
 - 문서: design D2a 「반증」 절 · D2b 제거 예약 취소 · proposal 3판 처분 · tasks P1.x 종결 + P1.7.
 - 남은 범위: Phase 2(§1~§3) — §5 실측(§0.7 사람 승인) 대기.
+
+---
+
+## 2차 proposal-freeze 재리뷰 (2026-10-10, 적대적 Eng)
+
+- **대상**: proposal(3판)·design·tasks·`specs/order-execution/spec.md`·issues — HEAD `b3dadd23`(base `102d4e99`, 그 뒤 237 커밋)
+- **보이스**: Claude Eng(독립, 적대적) 1. 교체본에 Eng 보이스가 돈 것은 이번이 처음(2026-08-06 「2차 리뷰」는 CEO 단독, Eng 미실행). Codex·CEO 미실행 — `[subagent-only]`
+- **판정**: **수정 필요 — freeze 불가.** P0 1 · P1 4 · P2 5 · P3 3 (계 13)
+- **본 범위**: 위 다섯 문서 전문; 현재 HEAD 의 `sellIntent`·`isProtective`·`submit`·`record`(exitloop.go), `checkOrderShape`(failclosed.go), `placeIntentSupported`·`Place`(trading/service.go), `Gateway.place`·저널 intent 조립(execgw/gateway.go), `buildOrderCreate`(official/orders_write.go), `PlaceWireBody`(execgw/wirebody.go), `NormalizePlace`(orderintent/intent.go), refusal_code.go·classify.go·indoubt.go 의 가격 소비부, openapi `POST /api/v1/orders` 계약(`docs/migration/openapi.latest.json`), a089·a100 문서의 a087 인용.
+- **방법과 한계**: `rg`/`sed` 로 HEAD 읽기, `git diff` 로 base↔HEAD 함수 본문 대조, CodeGraph **1.6.0** `node`(placeIntentSupported·checkOrderShape 호출자), openapi JSON 추출. **AST 산출물은 만들지 않았다**(task 2.1 소관) — 아래에서 함수 내부 분기·순서를 근거로 쓴 줄은 전부 **손으로 읽은 것이고 「검증 필요(AST 미작성)」**로 표기한다. 시험·실주문은 돌리지 않았다.
+
+### P0-1 — 셋째 관문이 그대로다. tasks 대로 착지하면 보호 청산이 **100% 로컬 거부**된다
+
+2026-08-06 「2차 리뷰」 C1 이 critical 로 적은 결함이 **문서에서 한 줄도 해소되지 않았다.**
+
+- `internal/trading/service.go:281-283` — 비분수 주문은 `OrderType != "limit"` 이면 `false`; `:188-189` `Place` 가 `ErrPlaceUnsupported` 반환. 엔진의 모든 주문은 `execgw/gateway.go:396` `g.trading.Place(...)` 를 지난다(구체 타입 `*trading.Service`, `gateway.go:120`).
+- CodeGraph 1.6.0: `placeIntentSupported` 의 비시험 호출자 = `PreviewPlace`(`service.go:109`)·`Place`(`:186`) 둘. `checkOrderShape` 의 호출자 = `CheckPlace`(`failclosed.go:40`) 하나 — **둘은 독립된 관문이다.**
+- 거부 경로(검증 필요 — AST 미작성): `ErrPlaceUnsupported` → `classify.go:153` `ReasonUnsupportedOrderType`(주석 「all local, all provably unsent」) → `submit` 의 `default` 갈래(`exitloop.go:1480-1486`) → `alertProposalRefused`(dedup 키 `event|position|action|level`, `:1784-1785`) + `release`. 오늘 LIMIT 은 가끔 통과한다(6번째 시도 체결); 이 change 이후는 **0건**이다. §0.3 의 엄격한 약화.
+- 문서 쪽: proposal `:114` 「**차단은 두 줄이다**」가 3판에도 남아 있고, tasks §1·§2 에 `internal/trading` 작업이 없으며, spec 델타 `spec.md:39` Scenario 「통과하고 브로커로 전달된다」는 HEAD 에서 **충족 불가**다.
+- 고치는 길이 공짜가 아니다: `failclosed.go:49-52` 주석이 「internal/trading is not ours to change — design D1」이라 적고, 같은 술어가 사람 CLI(`cmd/tossctl/order.go:229` → `tradingService.Place`)와 `PreviewPlace` 경고 문구(`service.go:112`)를 함께 지배한다. 바꾸면 upstream 상속 동작(제품 fork 규칙·불변식 3)이 엔진 토글과 무관하게 바뀐다. **design 이 (가) internal/trading 수정과 그 upstream 영향 처분, (나) 우회 경로, (다) 아래 P1-3 의 LIMIT 대안 중 무엇인지 정해야 freeze 가 가능하다.**
+
+### P1-1 — §5.1 실측은 출하된 도구로 **실행할 수 없다** (착수 게이트가 교착)
+
+- 사람이 KR MARKET 매도를 낼 수 있는 경로는 `tossctl order place`(`cmd/tossctl/order.go:229`)와 ops 쓰기(`internal/ops/write_operations.go:191`)뿐이고, 둘 다 `trading.Service.Place` → `service.go:188` 에서 **브로커에 닿기 전에** 막힌다. 조건주문(`order.go:538-578`, MARKET 허용)은 다른 endpoint 라 `/api/v1/orders` MARKET 접수를 재지 못한다(M12·M38 은 조건주문 실측).
+- a100 `ma-runbook.md` R2(`:71-78`)는 5.1·5.2 를 사람 세션 큐에 올렸으나 **실행 명령을 적지 않았다.** 그대로 돌리면 「성공·실패 모두 기록」(tasks `:88-89`)이 우리 자신의 로컬 관문을 브로커 응답으로 기록하는 **거짓 음성**이 된다.
+- 즉 착수 조건(tasks `:35-36` 「§1~§3 의 착수 조건은 §5 실측 기록」)이 P0-1 의 변경을 **선행 조건으로 요구**한다. 측정 전용 경로(별도 probe 도구 또는 실측 한정 빌드)와 그 승인 절차를 tasks §5 에 명시해야 한다.
+
+### P1-2 — 이 문서가 서 있는 근거 셋이 이미 반증됐는데 본문에 그대로 있다
+
+3판 머리말(`proposal.md:20-21`)은 Phase 1 처분만 다뤘고, 2026-08-06 「2차 리뷰」가 거짓으로 판정한 주장이 본문에 원문 그대로다.
+
+| 위치 | 주장 | 반증 (2차 리뷰, HEAD 재확인) |
+| --- | --- | --- |
+| `proposal.md:114` | 차단은 두 줄 | P0-1 |
+| `proposal.md:74-90`, design D5 `:187` | StockOS 가 이미 검증 | 2차 C2 — StockOS 의 평범한 손절 1차 제출은 LIMIT, MARKET 은 0.5% 초과 이탈 에스컬레이션. a087 은 임계 없이 1차부터 MARKET 이라 **인용 선례보다 엄격히 공격적** |
+| `proposal.md:192` | 거부가 사라지고 **체결이 보장된다** | 2차 C3 — 시장가는 접수를 보장할 뿐 갭다운·하한가·거래정지·얇은 호가에서 체결을 보장하지 않음 |
+| `proposal.md:209-210` | 엔진 청산 루프는 정규장 기준이라 차단 요소 아님 | 2차 H1 — HEAD 재확인: `InRegularSession`(`clock/market.go:146`) 비시험 호출자 = `verifylive/hours.go:130` 하나, `internal/app/engine` 0 |
+
+High-risk change 가 자기 리뷰가 기각한 정당화를 단 채 얼 수 없다. 정정하거나 철회하라.
+
+### P1-3 — 최강 대안이 한 번도 비교되지 않았고, 비교할 계기도 tasks 에 없다
+
+- 2차 리뷰 C3·「3차 교정 방향」 2 는 **거래소 하한가 지정가를 보호 청산의 가격으로** 쓰라고 했다(`flatten` 이 이미 그렇게 함 — `internal/flatten/liquidate.go:374-377`). D2a 는 이것을 관측가·기준선 **뒤의 셋째 폴백 단**으로 좁혔고(design `:74`), 그 폴백의 도달 불가로 반증됐다. **원안(보호 제안에서 관측가 대신 하한가)은 평가된 적이 없다** — proposal `:143-144` 가 스스로 「9분 사건은 Phase 1 이 고치지 않는다」고 적은 것이 그 증거다.
+- 원안은 (KR 한정) 세 관문을 다 통과하고(여전히 LIMIT — P0-1 소멸), 온그리드라 245,750 사건을 없애며, 원장 가격을 남긴다(D4·§3 화면 작업 불요). 비용도 적어야 한다: KR 전용(`client/marketdata.go:97`), 보호 청산마다 `PriceLimits` GET 1회(§0.4), 시간외단일가 가격 범위 밖일 가능성 `[미측정]`.
+- 「3차 교정」 3(청산측 슬리피지 계기 — 현재 `slippagePct` 는 진입 전용)과 4(MARKET vs 하한가 지정가를 bps 데이터로 결정)가 tasks 에 **없다.** §5.1 은 접수만 재고 체결 품질을 재지 않으므로, 실측이 통과해도 MARKET 을 고를 근거는 생기지 않는다.
+
+### P1-4 — 실측이 반증하면 무엇이 무효가 되는지 문서가 말하지 않는다; 측정 범위 ≠ spec 범위
+
+- **세션 경계의 예상 응답이 틀렸을 가능성.** openapi `POST /api/v1/orders` 422 예시에 `order-type-not-allowed`(「현재 사용할 수 없는 호가 유형」)가 따로 있다. proposal `:209`·tasks `:90-91`·runbook `:76` 은 `order-hours-closed` 만 상정한다. 저장소 Go 코드의 `order-type-not-allowed` 참조 0(`rg`), `refusal_code.go:46-48` 목록에도 없다.
+- **SHALL NOT 지정가의 반대편.** spec `spec.md:11` 이 보호 청산의 지정가를 금지한다. 브로커가 MARKET 은 거부하고 LIMIT 은 받는 구간(KRX 시간외단일가는 시장가 없음 — proposal 스스로 인정; SOR/확장 세션·US 프리/애프터 `[미측정]`)에서 보호 청산은 **제출 가능성이 0** 이 된다. 엔진에는 세션 게이트가 없다(P1-2 표 넷째 줄). 5.2 가 거부를 돌려주면 「세션별 유형(정규장 MARKET, 그 밖 LIMIT)」으로 spec 을 좁혀야 하는데, 그 분기와 무효화 대상(spec Requirement 1 의 SHALL NOT, tasks 2.4 의 「가격을 읽지 않는다」)이 문서에 없다. **실측 결과 → 처분 표를 design 에 넣어라.**
+- **US 는 측정 없이 착지한다.** spec Requirement 1 은 시장을 가리지 않는데 실측은 KR 뿐이고 runbook `:101` 은 「US 는 범위 밖」. `[미측정 — US MARKET 매도 실주문 없음]` 태그(proposal `:160`, design `:198`)는 게이트가 아니다. US 를 Phase 2 에서 빼거나 US 실측을 게이트에 넣어라.
+
+### P2-1 — Why 의 「9분 무보호」는 a089 감사가 반증했다
+
+a089(아카이브 `2026-09-28-a089-an-unserved-stop-is-counted/proposal.md`)가 `exit_events` 15행·`engine.log` 전수로 「말할 수 없는 것: 그 9분 28초가 연속 무보호였다는 것」이라 적었고, 7분 42초 공백은 **주문 가능한 제안이 없었던 구간**이다(`snapshot.go:245` `|| s.Orderable`). a087 은 여전히 「포지션은 9분간 손절 없이 있었고」(`proposal.md:38`), spec 근거 「포지션이 그동안 무보호로 남았다」(`spec.md:13`)라고 쓴다. 척도를 a089 처럼 **횟수(6회 결정 중 5회 미제출)**로 바꿔라. 결론(5회 400 거부)은 그대로 선다.
+
+### P2-2 — D3 게이트 분기의 위치·수량 검사·인용 오독
+
+검증 필요 — AST 미작성(`checkOrderShape` 손 읽기).
+
+- design `:148-153` 의 「sell + market → 통과. 단 Price != 0 이면 거부」를 `failclosed.go:84` 자리에 조기 반환으로 넣으면 그 뒤의 KR 통화 검사(`:88`)와 수량 양수 검사(`:91`)를 건너뛴다. 새 분기는 그 검사들 **뒤**에 서거나 같은 검사를 반복해야 한다고 design 이 명시해야 한다.
+- 비분수 MARKET 의 **정수 수량**을 아무 관문도 검사하지 않는다(openapi: 소수 수량은 US 시장가 매도 전용, 그 외 400). 넣을지, 브로커 400 에 맡길지 적어라.
+- design `:155-158` 은 `checkOrderShape` 주석의 「strict subset filter」(`failclosed.go:51-52`)를 이중 확인의 근거로 인용하는데, 그 주석이 실제로 말하는 것은 「진짜 검사는 서비스에 있다」 — P0-1 이다. 그리고 `orderintent` 정규화(`intent.go:140-142`)는 `NormalizePlace` 안에 있어 `sellIntent` 경로에 **없다**(`sellIntent` 는 구조체 리터럴로 조립 — `exitloop.go:1714-1722`). 그러므로 `Price != 0` 거부는 「두 번째 확인」이 아니라 **이 경로의 유일한 확인**이다. 문구를 고쳐라(결론은 옳다).
+
+### P2-3 — 시장가가 더 나빠지는 경계 조건이 설계에 없다
+
+design 「검증」(`:208-218`)과 본문 어디에도 다음이 없다: 하한가 도달·매수 호가 공백(MARKET 매도도 체결 안 됨 — 하한가 지정가 대비 이득 0), VI 단일가 구간, 부분체결 잔량의 처리(MARKET 잔량이 남는지·`filldetect` 가 어떻게 닫는지), 1억 이상 주문(`orders_write.go:123` `ConfirmHighValueOrder: false` → `400 confirm-high-value-required` — 유형 무관이지만 MARKET 의 금액 평가 기준 `[미측정]`). 각 행을 「다룬다 / 범위 밖 + 사유」로 열거하라. 1차 리뷰 A14(부분체결 잔량)의 행방도 여기서 정해진다.
+
+### P2-4 — a100 D8 이중 매도 계약과의 상호작용이 a087 쪽에 없다
+
+a100 design `:410-430` 은 계약 1 을 「a087 Phase 2 가 착지하면 창은 줄어든다」로 개정해 a087 을 **전제로** 삼았다. 계약 2 는 「상주 조건주문 취소 확인 실패는 인프로세스 매도를 막지 않는다」이다. 인프로세스 매도가 MARKET 이 되면 그 매도는 즉시 체결되고, 취소가 확인되지 않은 상주 SINGLE+MARKET 이 같이 발동하는 창(M13)의 의미가 바뀐다(브로커 매도가능수량 예약 M29 가 둘째 주문을 막는지 `[미측정]`). a100 은 HOLD(`f3a061e5`)라 착지 순서가 열려 있다 — a087 design 이 이 상호작용을 다루거나 a100 으로 명시 이연해야 한다.
+
+### P2-5 — 인용 좌표가 전부 낡았다; FLM 은 재생성 대상
+
+- 측정: `sellIntent`·`isProtective` 본문은 base `102d4e99` 와 HEAD 에서 **바이트 동일**(함수 추출 diff). 내용 주장은 유지된다. `failclosed.go:84` 도 정확(base 이후 `AllReasonCodes` +6 줄뿐).
+- 좌표: proposal `exitloop.go:1452/1251/1486/1217/1571-1578`·design `:765/:1190/:1301/:1382` → HEAD 는 주석 `1683-1696`, `risk.Intent` `1418-1424`, `OrderType: "limit"` `1718`, `isProtective` `1382-1384`, 가격 사다리 `1698-1705`, `observe` `Last <= 0` `808`, `ObservedPrice` `1245`, `submit` 호출 `1360`, `sellIntent` 호출 `1442`. 좌표는 심볼 상대로 바꿔라.
+- `analysis/function-logic/internal-app-engine--exitobserver.sellintent/ast.json` 은 `start.line 1571`·base 의 `source_sha256` 이다. task 2.1 은 이것을 재사용하지 말고 HEAD 에서 재생성해야 한다(본문 동일이라 분기 집합은 같을 것 — 검증 필요).
+
+### P3-1 — 후속 change 장부가 존재하지 않는 대상을 가리킨다
+
+tasks `:104-109`·proposal Non-goals 는 a088(호가 그리드)·a089(재가격)를 후속으로 둔다. a088 은 `openspec/changes`·`archive` 어디에도 없고, a089 는 다른 내용(「나가지 못한 손절은 세어진다」)으로 2026-09-28 불구현 아카이브됐다. 1차 리뷰 A1~A14 와 I2(400 분류)는 소유자가 없다 — a094 R1 이 가져간 것은 `opposite-pending-order-exists` 하나(`refusal_code.go:46-48`). design D5 의 「a089로」 행도 같다. 「무소유」로 고치거나 새 소유자를 적어라.
+
+### P3-2 — `isProtective` 의 소비자가 셋이 됐다
+
+base 이후 `isProtective` 는 재판정 보류 예외(`exitloop.go:1279`)·a091 floor 의미(`:1405`)에 쓰이고, a087 이 유형 결정을 더하면 셋이다. D1 의 「술어 하나」 논거는 더 강해졌다. risk-pattern-report 에 세 소비자를 적고, a087 시험이 술어 자체를 바꾸지 않음을 고정하라.
+
+### P3-3 — 확인된 것(재검증 통과)과 작은 공백
+
+- 전송: `buildOrderCreate`(`orders_write.go:140-150`)와 사본 `PlaceWireBody`(`wirebody.go:91-99`) 모두 MARKET 에 가격·TIF 를 싣지 않는다. 표류 가드 골든은 **US** market sell 만 있다(`decision_test.go:759-766`) — KR market sell 행 추가 권고. proposal 은 사본(`wirebody.go`)과 재생 경로를 표면으로 적지 않았다.
+- 원장: `intents.price` 는 시장가 NULL 허용(`journal/schema.go:212`), `priceString` 빈 값 → NULL(`gateway.go:1041`). NULL 소비부 표본 셋 통과 — `fills.go:1858` `coalesce`, `exit_held_proposal.go:111-116` `workingOrderPrice`(a094 가 「a087 대비」로 명시), `indoubt.go:697` 가격 와일드카드·`:545-555` notional 0(`:491` 가드). **전수 아님** — tasks 3.x 에서 열거할 것.
+- `risk.Intent` 에 가격 없음(`exitloop.go:1418-1424`) — 유지. 자동 매도 조립은 `sellIntent`·`flatten` 둘뿐이고 a112 전략 레인은 매수 전용(`strategydispatch/adapters.go:93-107`) — 범위 누락 없음.
+
+### freeze 재개 조건
+
+P0-1·P1-1~P1-4 를 문서로 닫는다: 셋째 관문 처분 결정(사람 결정 포함 가능), 실측 실행 경로와 결과→처분 표, 반증된 근거 정정, 하한가 지정가 원안과의 비교(또는 사용자 기각 기록), US 처분. P2 는 같은 개정에서, P3 는 구현 착수 전까지. 개정 뒤 Eng 재리뷰 1회.
