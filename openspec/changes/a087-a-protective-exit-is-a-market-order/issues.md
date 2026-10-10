@@ -47,3 +47,40 @@ snapshot 평가-성공-후-생성 두 자리, `:765` 무음 skip, `sellIntent` �
 선택지 2 는 미검증 가상 경로에 주문을 내주므로 보수 방향이 아님(B2 거부가 이미 fail-closed) · 선택지 3 은 a090 표면(중복 금지).
 대체 산출물: 평가기 핀 시험 `internal/exitpolicy/a087_observed_price_pin_test.go`(`7bd8f197`, 변이 4/4 CAUGHT).
 a087 은 Phase 2 사람 게이트(§0.7) 대기로 전환.
+
+---
+
+## 2차 proposal-freeze 재리뷰 처분에서 남긴 미해결 (2026-10-10)
+
+`review.md` 「2차 proposal-freeze 재리뷰」 처분 중 문서 수정·구현 task 어느 쪽으로도 닫히지 않은 것. 처분 대조표는 `review.md` 끝.
+
+### I-R1 — 셋째 관문 개방과 불변식 3(토글 OFF = upstream 동작) (미해결 · 3차 Eng 재리뷰 판정 대상)
+
+사용자 결정(2026-10-10)으로 `internal/trading` `placeIntentSupported` 를 sell+market·가격 없음에 연다. 이 술어는 엔진 토글과
+무관하게 사람 CLI(`tossctl order place`)·ops 쓰기·`PreviewPlace` 를 지배하므로, **엔진 토글이 OFF 여도** 사람 경로의 동작이
+upstream 과 달라진다(시장가 매도 가능). 사용자는 이 동반 변경을 알고 결정했고 방향은 청산 즉시성 강화(불변식 6 보수 방향)다.
+남은 질문: 불변식 3 이 「토글로 가려지지 않는 upstream 동작 변경」을 허용하는가, 아니면 ③의 개방을 엔진 경로 한정(토글 또는
+호출자 구분)으로 좁혀야 하는가. 이 문서는 판정하지 않는다 — 0.7 Eng 재리뷰가 판정하고 1.5.0 Pre-Edit 선언이 그 판정을 인용한다.
+
+### I-R2 — `order-type-not-allowed` 422 분류 (미해결 · 무소유)
+
+openapi `POST /api/v1/orders` 422 예시에 `order-type-not-allowed`(「현재 사용할 수 없는 호가 유형」)가 있다. 저장소 Go 코드
+참조 0, `refusal_code.go` 목록에도 없다(재리뷰 P1-4). a087 이후 세션 밖 MARKET 보호 청산이 이 코드를 받으면 분류되지 않은
+거부가 된다. 분류 필요 여부는 §5.2 결과 뒤 판정. 400/422 분류 전반(1차 리뷰 I2)과 함께 무소유.
+
+### I-R3 — MARKET vs 하한가 지정가의 bps 재비교 (미해결 · 사람 결정)
+
+2차 리뷰 「3차 교정」 4 는 두 방식을 청산 슬리피지 bps 데이터로 결정하라고 했다. 사용자 결정(2026-10-10)이 시장가 방향을
+택했으므로 이 change 는 비교를 기각 기록(design D6)으로 남기고 계측(tasks 3.8)만 둔다. 착지 뒤 bps 데이터로 재비교할지와 그
+임계는 정하지 않았다.
+
+### I-R4 — 경계 조건의 미측정 두 줄 (미해결 · 범위 밖)
+
+design D8: (가) VI 단일가 구간에서 MARKET 접수·체결 거동, (나) 1억 이상 주문에서 MARKET 의 금액 평가 기준
+(`ConfirmHighValueOrder: false` → `400 confirm-high-value-required` 는 유형 무관). 둘 다 §5 측정 항목이 아니다.
+
+### I-R5 — a100 쪽 반영 요청 (Manager — 이 디렉터리 범위 밖)
+
+1. a100 design D8 계약 1·2 와 a087 MARKET 의 상호작용(design D9) — a100 착수 시 재대조 필요.
+2. a100 `ma-runbook.md` R2 의 a087 5.1·5.2 실행 명령 공백(재리뷰 P1-1) — 실행 수단은 `tools/a087-market-sell-probe/`.
+   이번 개정은 a087 디렉터리만 바꿨으므로 a100 문서는 손대지 않았다.

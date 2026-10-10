@@ -8,7 +8,10 @@
 **보호 청산이 왜 가격을 갖는가?**
 
 답은 없었다. 코드가 인용한 근거(`riskcalc`의 LIMIT 전용)는 진입 전용 규칙이었고, 코드가
-실제로 적은 이유는 "원장에 적을 가격이 필요해서"였다. 체결 보장을 원장 표기와 맞바꾼 것이다.
+실제로 적은 이유는 "원장에 적을 가격이 필요해서"였다. 거부되지 않을 주문 형태를 원장 표기와 맞바꾼 것이다.
+(3판까지 「체결 보장을 원장 표기와 맞바꿨다」였다 — **정정(재리뷰 P1-2 · 2차 리뷰 C3)**: 시장가는 체결을 보장하지
+않는다. 경계 조건은 D8.) 그리고 2차 리뷰가 찾은 **셋째 이유**가 있다 — 이 fork 의 서비스 계층
+(`internal/trading` `placeIntentSupported`)이 비분수 주문에 대해 지원하는 유일한 형태가 LIMIT 이다(D3).
 
 가격을 없애면 초안이 풀려던 문제가 **전부 존재하지 않게 된다**:
 
@@ -34,10 +37,16 @@ if isProtective(proposal) {   // BASELINE_BREACH · STOP_LOSS_LADDER
 ```
 
 **`isProtective`를 재사용하는 것이 핵심**이다. 새 술어를 만들면 "보호란 무엇인가"의 정의가
-둘이 되고, 그 둘이 갈라지는 순간 한쪽만 시장가가 된다. [`exitloop.go:1217`](../../../internal/app/engine/exitloop.go)의
-`isProtective`는 이미 §0.3 근거로 존재하고 주석이 그 이유를 적어 뒀다 — "Nothing may
+둘이 되고, 그 둘이 갈라지는 순간 한쪽만 시장가가 된다. [`exitloop.go`](../../../internal/app/engine/exitloop.go)의
+`isProtective`(패키지 함수)는 이미 §0.3 근거로 존재하고 주석이 그 이유를 적어 뒀다 — "Nothing may
 withhold one of these: §0.3 forbids weakening or delaying the immediacy of a stop".
 같은 §0.3이 이 change의 근거이므로 같은 술어여야 한다.
+
+**소비자가 셋이 된다 (재리뷰 P3-2).** base 이후 `isProtective` 는 재판정 보류 예외(`record`)와 a091 floor 의미
+(`submit`)에 쓰인다(CodeGraph 1.6.0 비시험 호출자 = `record`·`submit` — `analysis/gate-0.4-codegraph.md`). a087 의
+유형 결정이 셋째다. 그러므로 a087 은 **술어 자체를 바꾸지 않는다** — 바꾸면 세 소비자가 함께 움직인다. tasks 2.1 의
+risk-pattern-report 가 세 소비자를 적고, 2.2 가 술어 불변을 시험으로 고정한다. (각 소비자 안의 분기 위치는 검증
+필요 — AST 미작성, task 2.1 소관.)
 
 `isFullExit`는 쓰지 않는다. 그것은 익절을 **포함**하고(`ActionLadderTakeProfit`), 익절은
 지정가로 남는다.
@@ -55,7 +64,8 @@ withhold one of these: §0.3 forbids weakening or delaying the immediacy of a st
 > 사람 실측(§0.7) 뒤에만 착지할 수 있으므로, 그 실측을 기다리는 동안 "가격 없음" 거부가
 > 보호를 막는 상태를 두지 않는다.
 
-현재 `sellIntent`(exitloop.go:1571-1578)의 가격 사다리:
+`sellIntent`(base `102d4e99` 좌표 exitloop.go:1571-1578 — HEAD 에서는 함수 머리 뒤 가격 사다리, 본문 바이트 동일
+— 재리뷰 P2-5)의 가격 사다리:
 
 ```go
 price := strings.TrimSpace(observed)
@@ -95,7 +105,8 @@ if price == "" {
 
 #### 반증 (2026-09-30, P1.2 ① 모집단 열거) — D2a 는 세우지 않는다
 
-열거 결과 모집단은 **0** 이다. 위 사다리의 폴백(B1 `:1573`)과 거부(B2 `:1576`)는 생산 경로에서 도달할 수 없다.
+열거 결과 모집단은 **0** 이다(이 절의 줄 좌표는 전부 base `102d4e99` 기준 기록이다). 위 사다리의 폴백(B1 `:1573`)과
+거부(B2 `:1576`)는 생산 경로에서 도달할 수 없다.
 Manager 가 독립 대조해 확인했다(2026-09-30). 영수증(`issues.md` I-P1, `analysis/`):
 
 - **호출 사슬 (CodeGraph 1.6.0)** — `sellIntent` 의 생산 호출 1곳 = `submit` `:1382`, `submit` ← `record` `:1301`,
@@ -132,9 +143,13 @@ D2b 가 보호 분기에서 가격 읽기를 건너뛰면 B1·B2 는 보호 경�
 9분 사건(그리드 불일치 400 — 관측가는 **있었다**)을 고치는 것은 D2a 가 아니라 D2b 다:
 D2a 는 가격 부재 거부만 다룬다.
 
-## D3 — 게이트는 축소에 한해서만 연다
+## D3 — 게이트는 축소에 한해서만 연다 (두 관문 — 2026-10-10 개정)
 
-[`failclosed.go:84`](../../../internal/execgw/failclosed.go):
+> **개정 (재리뷰 P0-1 · 사용자 결정 2026-10-10)**: 3판의 D3 는 `checkOrderShape`(②) 하나만 다뤘다. 엔진 주문은
+> 그 뒤에 `trading.Service.Place` → `placeIntentSupported`(③)를 지나고, ③은 비분수 비지정가를 `ErrPlaceUnsupported`
+> 로 거부한다. **②만 열면 보호 청산은 100% 로컬 거부된다.** 사용자 결정으로 ③도 같은 모양으로 연다.
+
+### ② `checkOrderShape` (`internal/execgw/failclosed.go`, 호출자 `CheckPlace` 1)
 
 ```go
 if orderType != "limit" {
@@ -143,19 +158,52 @@ if orderType != "limit" {
 }
 ```
 
-이 한 줄이 진입과 청산을 구분하지 않는다. 구분을 넣는다.
+이 거부가 진입과 청산을 구분하지 않는다. 구분을 넣는다.
 
 ```text
-fractional          → 기존 분기 그대로 (US market only, 이미 line 70-82)
+fractional          → 기존 분기 그대로 (US market only)
 sell + market       → 통과. 단 Price != 0 이면 거부
 buy  + market       → 거부 (현행 유지)
 그 외 non-limit     → 거부 (현행 유지)
 ```
 
+**새 분기의 위치 (재리뷰 P2-2 — 검증 필요, AST 미작성: task 1.0.1)**: 재리뷰의 손 읽기는 `orderType != "limit"` 거부
+**뒤에** KR 통화 검사와 수량 양수 검사가 온다고 적었다. 그 자리에 `sell+market` 의 **조기 통과 반환**을 넣으면 그 검사들을
+건너뛴다. 그러므로 새 분기는 **통과를 반환하지 않는다** — 비지정가 거부의 예외 조건으로만 서고, 뒤의 통화·수량 검사는
+`sell+market` 에도 그대로 적용돼야 한다(또는 같은 검사를 반복). 실제 순서는 task 1.0.1 의 AST 열거로 확정하고, RED 는
+「`sell+market` + 비 KRW 통화(KR)」·「`sell+market` + 수량 0」이 여전히 거부되는 행을 포함한다(tasks 1.1).
+
 **`Price != 0` 검사를 넣는 이유**: openapi가 `MARKET`에 `price` 전달을 금지하고 전달 시
-`400 invalid-request`를 준다. `orderintent`가 이미 `intent.Price = 0`으로 정규화하지만
-(`intent.go:140`), 게이트는 정규화를 신뢰하지 않는 자리다 — `checkOrderShape`의 주석이
-스스로 "a strict subset filter"라고 말한다. 두 번 확인하는 것이 이 함수의 일이다.
+`400 invalid-request`를 준다. ~~`orderintent`가 이미 정규화하므로 게이트는 두 번째 확인이다~~ — **정정(재리뷰 P2-2)**:
+`orderintent` 의 MARKET → `Price = 0` 정규화는 `NormalizePlace` 안에 있고, `sellIntent` 는 `PlaceIntent` 를 **구조체
+리터럴로 조립**하므로 그 정규화를 지나지 않는다. 그러므로 `checkOrderShape` 의 `Price != 0` 거부는 「두 번째 확인」이 아니라
+**이 경로의 유일한 로컬 확인**이다. (`checkOrderShape` 주석의 「strict subset filter」는 이중 확인의 근거가 아니라
+「진짜 검사는 서비스에 있다」는 뜻이었다 — 그것이 ③이다.) 결론(거부를 넣는다)은 같다.
+
+**비분수 MARKET 의 정수 수량 (재리뷰 P2-2)**: openapi 는 소수 수량을 US 시장가 매도에만 허용하고 그 외는 400 이다.
+현재 어느 관문이 비분수 MARKET 의 정수성을 검사하는지는 **미확인**(검증 필요 — task 1.0.1·1.5.1 AST). 처분은 그 열거
+뒤 tasks 1.1a 에서 정한다 — 로컬 거부를 넣거나, 브로커 400 에 맡기고 그 사실을 시험 이름으로 고정하거나. 어느 쪽이든
+침묵한 생략은 없다.
+
+### ③ `placeIntentSupported` (`internal/trading/service.go`, 비시험 호출자 `PreviewPlace`·`Place`)
+
+```go
+// 비분수 주문 (재리뷰 인용, 검증 필요 — AST 미작성: task 1.5.1)
+if intent.OrderType != "limit" { return false }   // Place → ErrPlaceUnsupported
+```
+
+②와 **같은 모양**으로만 연다: `sell + market + 가격 없음` → 지원. `buy + market` → 비지원(현행 유지, 시험 고정).
+`sell + market + 가격 있음` → 비지원. fractional·limit 분기는 무변화.
+
+**upstream 영향 (사용자 결정으로 수용)**: ③은 엔진 토글과 무관하다. 사람 CLI `tossctl order place`, ops 쓰기
+(`internal/ops/write_operations.go`), `PreviewPlace` 경고 문구가 함께 바뀐다 — 사람이 시장가 **매도**를 낼 수 있게 된다.
+`checkOrderShape` 주석의 「internal/trading is not ours to change — design D1」(이것은 execgw 측 설계의 D1 이다)은
+이 결정으로 사실이 아니게 되므로 같은 커밋에서 고친다(tasks 1.5.4). 불변식 3(토글 OFF = upstream 동작)과의 대조는
+`issues.md` I-R1 — **미해결, 3차 Eng 재리뷰 판정 대상**.
+
+**②와 ③의 판정이 갈라질 위험**: 같은 규칙이 두 자리에 산다. 한쪽만 바뀌면 다른 쪽이 그 시험을 대신 통과시킨다
+([[two-judgements-cover-for-each-other]]). 그러므로 RED 는 두 관문을 **각각 단독으로** 잰다(한 관문을 우회한 직접 호출
+시험 각 1벌) — tasks 1.1·1.5.2.
 
 ### 왜 진입은 계속 막는가
 
@@ -182,25 +230,110 @@ buy  + market       → 거부 (현행 유지)
 
 ## D5 — StockOS 대조 (승계와 미승계)
 
+> **정정 (재리뷰 P1-2 · 2차 리뷰 C2)**: 3판의 첫 행은 「KRX 긴급 청산 = MARKET → **승계**」였다. StockOS 의 평범한
+> 손절 1차 제출은 LIMIT 이고 MARKET 은 0.5% 초과 이탈·EOD 에스컬레이션에서만 쓰인다(`_apply_exit_order_style`).
+> a087 은 1차부터 MARKET 이라 그 행은 승계가 아니라 **이탈**이다. StockOS 는 a087 의 근거가 아니다(proposal 「StockOS 대조」).
+> 「a088로」·「a089로」 행은 대상이 없다(재리뷰 P3-1) — **무소유**로 고친다.
+
 | StockOS | 위치 | a087 판정 |
 | --- | --- | --- |
-| KRX 긴급 청산 = `BrokerOrderType.MARKET` | `auto_exit_execution.py:2952` | **승계** — D1 |
-| 긴급 청산은 지연 게이트 전부 우회 | `auto_exit_execution.py:3130` | **a089로** |
-| N회 후 MARKETABLE_LIMIT → true MARKET 승격 | `auto_exit_execution.py:3160` | **a089로** |
+| 1차 손절 = LIMIT, 0.5% 초과 이탈·EOD 에서만 KRX MARKET | `auto_exit_execution.py` `_apply_exit_order_style`·`_aggressive_exit_order_type` | **이탈** — a087 은 임계 없이 1차부터 MARKET. 근거는 사용자 결정·§5 실측(D6) |
+| 긴급 청산은 지연 게이트 전부 우회 | `auto_exit_execution.py:3130` | **무소유** |
+| N회 후 MARKETABLE_LIMIT → true MARKET 승격 | `auto_exit_execution.py:3160` | **무소유** |
 | US = MARKETABLE_LIMIT | 같은 파일 | **미승계** — KIS 계약 제약이고 토스에는 없다 |
-| 호가 정렬 `Decimal(str(price))` | `auto_exit_execution.py:3001` | **a088로** |
-| 정렬 실패 시 fallback, 거부 없음 | `auto_exit_execution.py:3005-3017` | **a088로** |
-| `TickSizeProvider` + symbol override | `tick_size_provider.py` | **a088로** |
+| 호가 정렬 `Decimal(str(price))` | `auto_exit_execution.py:3001` | **무소유** |
+| 정렬 실패 시 fallback, 거부 없음 | `auto_exit_execution.py:3005-3017` | **무소유** |
+| `TickSizeProvider` + symbol override | `tick_size_provider.py` | **무소유** |
 
 StockOS가 US에 marketable limit을 쓰는 것은 `protective_order_capability`가 기록한 KIS의
 한계 때문이다 — `kis_us_stock_rest_stop_oco_not_supported`. 토스 openapi에는 그 제약이
 없고 US 온주 MARKET 매도를 금지하는 문장이 없다. 그래서 양 시장 모두 MARKET으로 간다.
-`[미측정 — US MARKET 매도 실주문 없음]`.
+`[미측정 — US MARKET 매도 실주문 없음]` — 이 한계의 처분은 proposal What Changes §1 「US 한계」.
+
+## D6 — 거래소 하한가 지정가 원안 (기각 기록 — 재리뷰 P1-3)
+
+**원안은 평가된 적이 없다.** 2026-08-06 2차 리뷰 C3·「3차 교정 방향」 2 는 보호 청산의 가격으로 **거래소 하한가
+지정가**를 쓰라고 했다(`flatten` 이 이미 그렇게 한다 — `internal/flatten/liquidate.go` 「The exchange's own floor」).
+D2a 는 그것을 관측가·기준선 **뒤의 셋째 폴백 단**으로 좁혔고, 그 폴백이 도달 불가로 반증됐다(D2a 「반증」). 원안 —
+보호 제안에서 관측가 **대신** 하한가 — 은 그 반증과 무관하게 비교되지 않은 채 남았다(proposal 이 「9분 사건은 Phase 1 이
+고치지 않는다」고 적은 것이 그 증거다).
+
+재리뷰가 적은 원안의 성질(비교 기록 — 측정하지 않은 값은 표기대로):
+
+| 축 | 하한가 지정가 원안 | 시장가 (a087) |
+| --- | --- | --- |
+| 세 관문 | 전부 통과(여전히 LIMIT — ③ 변경 불요) | ②·③ 변경 필요(D3), upstream 동작 변화 |
+| 245,750 사건 | 해소(거래소 공표값 = 온그리드) | 해소(가격 없음) |
+| 원장 가격 | 남는다 | 비운다(D4·§3 화면 작업 필요) |
+| 시장 | **KR 전용**(`client/marketdata.go` 「미국장은 일일 가격제한 제도가 없음」) | KR·US |
+| 브로커 호출 | 보호 청산마다 `PriceLimits` GET 1회(§0.4) | 추가 0 |
+| 시간외단일가 | 가격 범위 밖일 가능성 `[미측정]` | MARKET 불가(D7) |
+| 체결 품질 | 하한가 도달·매수 호가 공백 시 미체결 | 같음(D8) |
+
+**처분: 기각 (사용자 결정 2026-10-10).** 재리뷰가 P0-1 의 처분으로 (가) ③ 수정 (나) 우회 (다) 이 원안을 제시했고,
+사용자는 (가) — a087 범위 확장으로 **시장가 방향 유지** — 를 택했다. 이 표는 그 결정이 무엇을 포기했는지의 기록이다
+(US 동시 해소·원장 가격 대신 ③ 변경·upstream 동작 변화를 받아들였다). 재개 조건: §5.1 이 MARKET 매도를 거부하면
+(tasks §5 표) 이 원안이 재검토 후보가 된다 — 그 판단은 사람 결정이다.
+
+**계기 (재리뷰 P1-3 · 2차 리뷰 「3차 교정」 3·4)**: 현재 `slippagePct` 는 진입 전용이고 청산 슬리피지를 재는 코드가
+없다(재리뷰 인용). §5.1 은 접수만 재고 체결 품질을 재지 않는다. 그러므로 시장가가 원안보다 나은지는 착지 뒤 데이터로만
+답할 수 있고, 그 데이터를 남기는 계기를 tasks 3.8 에 둔다(보호 청산 체결가 vs 결정 시 관측가, bps). bps 로 두 방식을
+다시 비교할지와 그 임계는 이 change 에서 정하지 않는다(`issues.md` I-R3).
+
+## D7 — 세션 교집합: MARKET 불가 ∩ LIMIT 금지 = 제출 불가 (재리뷰 P1-4)
+
+spec Requirement 1 은 보호 청산의 지정가를 **금지**한다(SHALL NOT). 브로커가 MARKET 은 받지 않고 LIMIT 은 받는
+구간에서는 두 조건의 교집합으로 보호 청산의 **제출 가능성이 0** 이 된다:
+
+| 구간 | MARKET | LIMIT | a087 후 보호 청산 |
+| --- | --- | --- | --- |
+| KRX 정규장 | §5.1 측정 대상 | 가능(오늘) | MARKET — §5.1 결과에 달림 |
+| KRX 시간외단일가 | **없음**(거래소 제도 — proposal 스스로 인정) | 가능 | **제출 불가** |
+| KRX 장 마감 후·SOR/확장 세션 | `[미측정]` — §5.2 | `[미측정]` | §5.2 결과에 달림 |
+| US 정규장 | `[미측정]` | 가능(오늘) | 미측정 착지(proposal 「US 한계」) |
+| US 프리/애프터 | `[미측정]` | `[미측정]` | 미측정 — MARKET 불가이면 **제출 불가** |
+
+**엔진의 세션 게이트 유무: 미해결, §1~§3 착수 전 확인.** 재리뷰는 HEAD 에서 `InRegularSession`(`clock/market.go`)의
+비시험 호출자가 `verifylive/hours.go` 하나뿐이고 `internal/app/engine` 에는 0 이라고 적었다(CodeGraph·`rg`). 그러나
+엔진이 다른 수단(관측 루프 기동 시간대·시세 만료 판정 등)으로 정규장 밖 판정을 사실상 막는지는 **이 문서가 모른다**
+(검증 필요 — 새 분기 주장 아님). 착수 전 확인 방법: 엔진의 청산 판정 상류(`ObserveOnce`·`judge`)를 CodeGraph 로 따라가
+세션·시각 입력이 있는지 열거한다(tasks 0.5).
+
+처분은 그 확인과 §5.2 결과 **둘을 입력으로** 사람이 정한다. 문서가 미리 정하지 않는다. 다만 무효화 대상은 지금 명시한다 —
+교집합 구간이 실재하면(엔진이 그 구간에 판정하고, 브로커가 MARKET 을 거부하면):
+
+- spec Requirement 1 의 「지정가로 제출해서는 안 된다(SHALL NOT)」는 그 구간에서 **보호 청산을 0 으로 만든다** → 세션별
+  유형(정규장 MARKET, 그 밖 LIMIT) 같은 축소가 필요해지고, 그것은 새 설계(세션 입력 배선)라 이 개정이 하지 않는다.
+- tasks 2.4 의 「보호 제안일 때 가격을 읽지 않는다」는 그 구간에서 LIMIT 가격이 필요하므로 무효가 된다.
+- 엔진이 그 구간에 판정하지 않음이 확인되면 교집합은 공집합이고 위 두 줄은 유지된다.
+
+## D8 — 시장가가 지정가보다 낫지 않거나 나빠지는 경계 조건 (재리뷰 P2-3)
+
+| 경계 조건 | 처분 | 사유 |
+| --- | --- | --- |
+| 하한가 도달·매수 호가 공백 | **범위 밖 — 잔존 위험** | MARKET 매도도 체결되지 않는다. 하한가 지정가 대비 이득 0. 체결 보장 주장 철회(proposal §0.3)가 이 행의 기록 |
+| VI(변동성 완화장치) 단일가 구간 | **범위 밖 — `[미측정]`** | 단일가 매매 중 MARKET 접수·체결 거동 실측 없음. §5 측정 항목도 아니다. `issues.md` I-R4 |
+| 부분체결 잔량 (1차 리뷰 A14 의 행방) | **다룬다 — tasks 3.6** | MARKET 잔량이 남는지·`filldetect` 가 그 잔량을 어떻게 닫는지 확인하고, 갭이면 issues 에 기록 |
+| 1억 이상 주문 | **범위 밖 — 유형 무관 기존 위험** | `orders_write.go` `ConfirmHighValueOrder: false` → `400 confirm-high-value-required`(재리뷰 인용)는 LIMIT 에도 같다. MARKET 의 금액 평가 기준 `[미측정]` — `issues.md` I-R4 |
+| 갭다운·거래정지 | **범위 밖 — 잔존 위험** | 접수 ≠ 체결. 거래정지 중 제출 응답 `[미측정]` |
+
+## D9 — a100 D8 이중 매도 계약과의 상호작용 (재리뷰 P2-4 — a100 으로 명시 이연)
+
+a100 design D8 은 계약 1 을 「a087 Phase 2 가 착지하면 창은 줄어든다」로 개정해 a087 을 전제로 삼았고, 계약 2 는 「상주
+조건주문 취소 확인 실패는 인프로세스 매도를 막지 않는다」이다. 인프로세스 보호 매도가 MARKET 이 되면 즉시 체결되고,
+취소가 확인되지 않은 상주 SINGLE+MARKET 이 같이 발동하는 창(M13)의 의미가 바뀐다. 브로커 매도가능수량 예약(M29)이 둘째
+주문을 막는지는 `[미측정]`.
+
+**처분: a100 으로 이연한다.** a100 은 HOLD(`f3a061e5`)라 착지 순서가 열려 있고, 이중 매도 계약의 소유자는 a100 이다.
+a087 은 이 상호작용을 바꾸는 코드를 갖지 않는다(조건주문 경로 무변화 — tasks 4.3). 다만 a087 이 먼저 착지하면 a100 의
+계약 1 전제가 참이 되는 순간이 a100 착지보다 앞서므로, **a100 착수 시 이 절을 재대조**해야 한다. a100 문서 쪽 반영은
+이 개정의 디렉터리 범위 밖이다 — `issues.md` I-R5 에 Manager 반영 요청으로 남긴다.
 
 ## 건드리지 않는 것
 
 - **진입 주문 유형.** riskcalc 규칙이 실제로 적용되는 곳
-- **`flatten`.** 이미 거래소 하한가를 1순위로 쓴다(`liquidate.go:372-378`). 별도 논거
+- **`flatten`.** 이미 거래소 하한가를 1순위로 쓴다(`liquidate.go` 「The exchange's own floor」). 무변경. 하한가를 보호 청산에
+  쓰는 원안은 D6(기각 기록)
 - **`verifylive`.** "체결되면 안 되는 지정가"가 그 도구의 안전 성질이다
 - **조건주문.** 2c 범위
 - **호가 그리드 정본화.** a088
@@ -210,9 +343,14 @@ StockOS가 US에 marketable limit을 쓰는 것은 `protective_order_capability`
 - `sellIntent` 분기: 보호 2종 → market·익절 → limit·시장가에 가격 없음·**보호가 가격
   없음으로 거부되지 않음**
 - `checkOrderShape` 표: `sell+market` 통과 / `buy+market` 거부 / 가격 실린 시장가 거부 /
-  fractional·limit 기존 분기 무변화
-- 진입 시장가 거부가 **살아 있음**을 별도 테스트로 고정
-- 원장: `price` 빈 값, `order_type` market, 관측가·기준선이 제출가로 새지 않음
+  `sell+market` 의 통화·수량 검사 생존 / fractional·limit 기존 분기 무변화
+- `placeIntentSupported` 표(③, 단독 시험): `sell+market`·가격 없음 지원 / `buy+market` 비지원 / 가격 실린 시장가
+  비지원 / fractional·limit 무변화 / `PreviewPlace` 경고 문구 / 사람 CLI `tossctl order place` 의 시장가 매도 거동
+- 엔진 경로 종단 시험: 보호 청산 MARKET 이 ①②③ 을 **모두** 지나 전송 계층에 닿는다(P0-1 의 회귀 시험)
+- 진입 시장가 거부가 **살아 있음**을 별도 테스트로 고정(②·③ 각각)
+- `isProtective` 술어 불변 + 세 소비자(D1)
+- 원장: `price` 빈 값, `order_type` market, 관측가·기준선이 제출가로 새지 않음, 청산 슬리피지 계측(D6)
+- 전송 표류 가드: KR market sell 골든 행(`decision_test.go` — 현재 US 만)
 - `flatten`·`verifylive`·조건주문 무변화
 - 전체 `go test ./... -race` 회귀 0, upstream 650 green 유지
-- **실계좌 1회**(사용자 승인): KR MARKET 매도 접수 + 세션 경계 응답
+- **실계좌 1회**(사용자 승인, `tools/a087-market-sell-probe/`): KR MARKET 매도 접수 + 세션 경계 응답 — 결과 → 처분은 tasks §5

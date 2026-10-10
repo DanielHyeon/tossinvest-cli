@@ -344,3 +344,23 @@ P0-1·P1-1~P1-4 를 문서로 닫는다: 셋째 관문 처분 결정(사람 결�
 
 후속: 문서 수리(P0-1·P1 전부, P2 동일 개정, P3 구현 전) → Eng 재리뷰 1회 → §5 실측(장중,
 사람) → 결과→처분 표에 따라 §1~§3.
+
+### 처분 대조표 (2026-10-10 문서 수리 — tasks 0.6, 3차 Eng 재리뷰 대조용)
+
+production 편집 0. 「문서」= 본문 정정, 「task」= 구현 task 추가, 「issues」= 미해결 기록.
+
+| # | 처분 | 위치 |
+| --- | --- | --- |
+| P0-1 | 문서+task — 「차단은 세 곳」 정정, ③ `placeIntentSupported` sell+market·가격 없음 개방(사용자 결정 1), Pre-Edit·FLM 선행 task, 종단 회귀 시험, spec Requirement 2 를 두 관문으로; 불변식 3 대조는 issues | proposal 「차단은 세 곳이다」·§2·Impact · design D3 ③ · tasks 1.5.0~1.5.5·1.6 · spec Req 2 · issues I-R1 |
+| P1-1 | 문서 — 5.1 실행 수단 = `tools/a087-market-sell-probe/`(사용자 결정 2, 내용 미선취), 보류 블록 갱신, 결과 → 처분 표 | tasks §5 · proposal 「실측 필요」 1 · issues I-R5(runbook) |
+| P1-2 | 문서 — 「StockOS 가 이미 검증」·「체결 보장」·「정규장 기준」을 반증 사실과 함께 정정(D5 첫 행 승계 → 이탈 포함) | proposal 머리말·「StockOS 대조」·Impact §0.3·「실측 필요」 2 · design 「문제의 형태」·D5 · spec Req 1 근거 |
+| P1-3 | 문서+task — 하한가 지정가 원안 미평가 명시, 비교표를 기각 기록으로(사용자 결정이 시장가 택함), 슬리피지 계측 task; bps 재비교는 issues | design D6 · tasks 3.8 · proposal Non-goals flatten · issues I-R3 |
+| P1-4 | 문서+task+issues — `order-type-not-allowed` 를 5.2 예상 집합에, 세션 교집합 표와 무효화 대상 명시, 엔진 세션 게이트 = **미해결, §1~§3 착수 전 확인**(tasks 0.5), US 미측정 착지 한계를 proposal 에 | design D7 · tasks 0.5·5.2·§5 표 US 행 · proposal 「US 한계」 · issues I-R2 |
+| P2-1 | 문서 — 「9분 무보호」→ 「6회 결정 중 5회 미제출」(a089 감사 인용) | proposal Why · spec Req 1 근거 |
+| P2-2 | 문서+task — 새 분기는 조기 통과 금지·통화·수량 검사 생존(검증 필요 표기), 「두 번째 확인」→ 「유일한 로컬 확인」, 정수 수량 처분 task | design D3 ② · tasks 1.0·1.0.1·1.1·1.1a |
+| P2-3 | 문서+task+issues — 경계 조건 5행 「다룬다/범위 밖+사유」, 부분체결 잔량 task(A14 행방), VI·1억 금액 기준 미측정 | design D8 · tasks 3.6 · issues I-R4 |
+| P2-4 | 문서+issues — a100 으로 명시 이연, a100 착수 시 재대조; a100 문서 반영은 범위 밖 | design D9 · issues I-R5 |
+| P2-5 | 문서+task — 현재 인용 좌표를 심볼 상대로, base 좌표 절은 「base 102d4e99 기준」 표기, FLM 은 HEAD 재생성(재사용 금지) | proposal·design 본문 · tasks 2.1 |
+| P3-1 | 문서 — a088·a089·A1~A14·I2 를 **무소유**로 | proposal 머리말·Non-goals · design D5 · tasks 「후속 change」 |
+| P3-2 | 문서+task — 세 소비자 명시, risk-pattern-report 기재, 술어 불변 시험 | design D1 · tasks 2.1·2.2 |
+| P3-3 | 문서+task — 사본 `PlaceWireBody`·재생 경로를 Impact 표면에, KR market sell 골든 행, 재생 시험, NULL 소비부 전수 열거 | proposal Impact · tasks 4.5·4.6·3.7 |
