@@ -9,7 +9,6 @@ import (
 	"go/token"
 	"net/http"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -18,11 +17,9 @@ import (
 
 func nonTestSources(t *testing.T) map[string]*ast.File {
 	t.Helper()
-	_, thisFile, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatal("cannot locate this test file")
-	}
-	paths, err := filepath.Glob(filepath.Join(filepath.Dir(thisFile), "*.go"))
+	// go test 는 패키지 소스 디렉터리를 작업 디렉터리로 두고 돎 — 그 디렉터리의 *.go 를 읽음.
+	// runtime.Caller 경로는 쓰지 않음: -trimpath 빌드(mutants.sh)에서는 모듈 상대 경로라 파일이 안 열림.
+	paths, err := filepath.Glob("*.go")
 	if err != nil {
 		t.Fatal(err)
 	}

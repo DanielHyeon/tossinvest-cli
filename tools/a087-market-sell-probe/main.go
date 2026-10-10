@@ -181,8 +181,11 @@ func preview(o options, d deps) (int, error) {
 // execute 의 순서가 안전 계약임: 로컬 판정 전부 → 자격증명·헤더 → 배타 영수증 → 단 1회 전송 → 최종 영수증.
 // 전송 앞의 어느 단계든 실패하면 아무것도 보내지 않음.
 func execute(ctx context.Context, o options, d deps) (int, error) {
+	// TTY 검사는 우발 실행 방지임 — pty 래퍼로 통과되므로 "사람만 실행" 의 증명이 아님(3차 재리뷰 B-P3-1).
+	// 에이전트 차단은 권한 체계·안전 불변식 2 가 맡음.
 	if !d.stdinIsTerminal() {
-		return exitError, errors.New("--execute refused: stdin is not a terminal — a human runs this, not a script or agent")
+		return exitError, errors.New("--execute refused: stdin is not a terminal — " +
+			"this is an accident guard, not proof of a human; agents are barred by the permission system and invariant 2")
 	}
 	id, err := splitConfirmToken(o.confirm)
 	if err != nil {

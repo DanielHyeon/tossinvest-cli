@@ -11,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -48,11 +47,8 @@ func TestWireBodyIsByteIdenticalToTheOfficialSerializer(t *testing.T) {
 
 func openapiSpec(t *testing.T) map[string]any {
 	t.Helper()
-	_, thisFile, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatal("cannot locate this test file")
-	}
-	data, err := os.ReadFile(filepath.Join(filepath.Dir(thisFile), "..", "..", "docs", "migration", "openapi.latest.json"))
+	// 작업 디렉터리 = 패키지 디렉터리(go test). runtime.Caller 는 -trimpath 에서 실경로가 아니라 안 씀.
+	data, err := os.ReadFile(filepath.Join("..", "..", "docs", "migration", "openapi.latest.json"))
 	if err != nil {
 		t.Fatal(err)
 	}

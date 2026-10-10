@@ -177,11 +177,16 @@ func completeReceipt(pending receipt, result sendResult, sentKey string) receipt
 func guidanceFor(r receipt) string {
 	switch r.Outcome {
 	case outcomeAccepted:
-		return "the broker accepted the order (orderId recorded); fill status is NOT measured here — " +
-			"read it with `tossctl orders list` / `tossctl orders completed`"
+		// 2xx 는 접수일 뿐 a087 §5 의 「수용」이 아님 — 비동기 REJECTED 가 있음(3차 재리뷰 A-P1-2).
+		return "the broker took the request (HTTP 200, orderId recorded) — this is NOT yet the a087 §5 'accepted' row; " +
+			"read this orderId's status with `tossctl orders list` / `tossctl orders completed`: " +
+			"PENDING / PARTIAL_FILLED / FILLED = accepted, REJECTED = refused (fill quality is NOT measured here)"
 	case outcomeRefused:
+		// refused 는 HTTP 4xx 라는 뜻뿐 — 인증·수량·한도 사유는 MARKET 반증이 아님(3차 재리뷰 B-P3-2).
 		return "the broker refused the request (HTTP " + strconv.Itoa(r.Response.HTTPStatus) +
-			"); no order is expected — confirm with `tossctl orders list` before any new attempt"
+			"); no order is expected — confirm with `tossctl orders list` before any new attempt. " +
+			"refused is NOT by itself a MARKET disproof: match the error code against the a087 tasks §5 table " +
+			"(auth, quantity, rate-limit or symbol-state codes are 'undecidable')"
 	default:
 		return "the result is UNKNOWN — an order may exist. Do NOT resend with this tool; " +
 			"check `tossctl orders list` / `tossctl orders completed` for this symbol first"
