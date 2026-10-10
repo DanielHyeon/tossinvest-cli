@@ -573,3 +573,69 @@ tasks `:128-129` 는 청산 슬리피지 bps 를 「원장·관측에」 남긴�
 2026-10-10 1차 결정이 수용했던 「사람 CLI upstream 동작 변경」은 이 처분으로 **불필요해져
 철회**된다 — 사람 측정 수단은 `tools/a087-market-sell-probe/` 가 담당. upstream 동일성은
 시험으로 고정한다(task 에 반영).
+
+### 처분 대조표 (3차분 — 2026-10-10 3차 재리뷰 수리, tasks 0.8)
+
+production 편집 0. 도구 커밋 `45167aa7`(`tools/a087-market-sell-probe/` — 하네스·시험 경로·문구, 전송·가드 로직 무변경).
+「문서」= 본문 정정, 「task」= 구현 task 추가·개정, 「도구」= `45167aa7`, 「issues」= 미해결 기록, 「n/a」= 적용 안 함 + 사유.
+3차 발견 전수 19건(P1 3 · P2 6 · P3 10).
+
+| # | 처분 | 위치 |
+| --- | --- | --- |
+| A-P1-1 | 문서+task+issues — I-R1 = **엔진 인스턴스 한정 개방**(사용자 결정 2차). ③ 개방은 엔진 `trading.Service` 의 생성자 옵션(모양 제안: 기존 빌더 관례 `WithProtectiveMarketSell()`, 술어가 인자로 받아 `PreviewPlace`·`Place` 가 같은 값 사용 — 코드는 1.5.3). CLI·ops·MCP 기본 경로 upstream 바이트 동일. MCP 표면(ops `place_order` → `internal/mcp/catalog.go`, MCP 서버 인스턴스 `cmd/tossctl/mcp.go`)을 proposal Impact·design 에 기록. 1차 결정의 「사람 CLI 도 열림」 문장 전부 2차 결정으로 정정. **upstream 동일성 고정 시험** 1.5.5 — 기본 인스턴스 거부·`PreviewPlace` 문구 바이트 동일·ops `place_order` 거부 + 옵션 호출 자리 = `engine.go` 하나(구조 시험) | proposal 머리말 5판·「차단은 세 곳이다」·§2·Impact · design D3 머리·③ · spec Req 2 + Scenario 「사람·에이전트 경로는 upstream 그대로」 · tasks 1.5·1.5.0~1.5.5 · issues I-R1 **종결** |
+| A-P1-2 | 문서+도구 — §5 「수용」 = HTTP **200** + 사람이 `tossctl orders list/completed` 로 읽은 상태 `PENDING`·`PARTIAL_FILLED`·`FILLED`. 「200 뒤 `REJECTED`」 행(유형 사유 → 거부, 그 밖 → 판정 불가), openapi 상태 enum 10개 각주(표에 없는 상태 = 판정 불가). `201` 표기 제거(openapi POST 응답 키 `200·400·401·409·422·429·500` 재확인). 도구 `accepted` 안내문이 「§5 수용 아님 — 상태 확인」을 말하게 함 | tasks §5 표·각주 · 도구 `receipt.go` `guidanceFor` |
+| B-P1-1 | 도구+문서 — `mutants.sh` 를 **저장소 밖 사본**으로: 대상 커밋을 `git worktree add --detach`(훅 끔)로 `${TMPDIR:-/tmp}/a087-mutants-<pid>-*` 에 꺼내 그 사본만 변이. 시작 sha 단언(사본 HEAD == 대상 커밋·사본 깨끗함·`go env GOMOD` == 사본), 무변이 대조군 GREEN 선행, 변이 대상이 사본 안인지 단언, 사본에서 `git checkout` 복원 + sha 대조, 끝에 공유 트리 도구 소스 sha 불변 단언, 전용 `GOCACHE` + `GOFLAGS=-trimpath`, 종료 시 사본·캐시 제거. 인자 없이 돌 때 도구 디렉터리가 더러우면 거절. 부수 발견: 구 시험 둘(`static_test.go`·`contract_test.go`)이 `runtime.Caller` 경로를 써서 `-trimpath` 에서 대조군이 RED(구 커밋 `77a8e119` 에 새 하네스로 실측 — 「no source files found」) → 패키지 작업 디렉터리 상대 경로로 수리. **재측정 13/13 CAUGHT·전부 닿음**(아래 표). §5 실행 전제 1(깨끗한 트리·착지 커밋) 추가 | 도구 `mutants.sh`·`static_test.go`·`contract_test.go` · tasks §5 「실행 전제」 1 |
+| A-P2-1 | 문서 — spec Req 2 를 「**비분수** 매수 시장가는 모든 관문이 거부」로 한정 + 「미국 분수(금액 기반) 시장가의 기존 허용은 바꾸지 않는다」, Scenario 「서비스 지원 검사 단독」·「매수 시장가」도 비분수로 | spec Req 2 · proposal §2 |
+| A-P2-2 | 문서+task — P2-2 「조기 통과 금지」를 ③ 에 적용(design D3 ③), 1.5.2 RED 에 「`sell+market` + KR 비 KRW」·「US `sell+market` + KRW/USD 외」 행과 조기 `return true` 를 잡는 조건, ② 의 마지막 `Price <= 0` 거부가 limit 전용으로 남아야 함을 design D3 ② 에 명시(검증 필요 — AST 미작성, 1.0.1) | design D3 ②·③ · tasks 1.5.2·1.5.3 |
+| A-P2-3 | 문서+issues — D6 「기각 (사용자 결정)」→ 「시장가 방향 사용자 결정(2026-10-10)에 따른 **미채택** — 원안 자체 평가는 미수행」. 「세 관문」 행 비용이 2차 결정으로 줄었음을 기록. 문언 기각 수령은 사람 판단(0.9 에서 묻는다) | design D6 제목·처분·표 · proposal 「StockOS 대조」·Non-goals `flatten` · issues I-R3 |
+| A-P2-4 | 문서+task — 슬리피지는 **기존 칸 유도**(`exit_events.observed_price`·`proposed_intent_id` ↔ `fill_snapshots.average_price`·`order_id`), schema·production 코드 추가 없음, 「원장에 남긴다」 철회, 읽기 전용 저널 질의를 `analysis/` 에. intent → `order_id` 결속이 기존 칸으로 안 서면 멈추고 Impact 를 schema 변경으로 고쳐 재리뷰. 비례 원칙 문장 | proposal Impact 「Schema」 · tasks 3.8 |
+| A-P2-5 | 문서 — §5 표에 3행: 5.2 가 200 으로 접수(사람이 즉시 상태 확인·취소 여부 결정·5.2 예산 소진 기록), 종목 상태 사유 거부(구분 기준: code·message 가 종목·시장 상태 → 판정 불가, 유형 → 거부, 애매하면 판정 불가), 같은 종목 상주 SELL 조건주문의 매도가능수량 묶음(M-A retain 결정과 교차 — 잔여 조건주문은 취소하지 않으므로 실측 당일 a100 runbook §2 에서 겹침 확인 후 5.1 종목을 바꾼다). 실행 전제 2 = 매도가능수량·상주 조건주문 read-only 스냅숏 | tasks §5 「실행 전제」 2 · 표 |
+| B-P2-1 | 문서 — 영수증 디렉터리 **커밋 의도** 명시(Manager 지시 2026-10-10): orderId 는 계좌 개인정보 아님(허용), 토큰·계좌 번호·API 키는 도구가 쓰지 않음(헤더 값 미기록, sentinel 시험), `error.data` 의 수량 값은 계좌 식별 정보 아님. gitignore 하지 않음 | tasks §5 「영수증 디렉터리는 커밋 의도다」 |
+| A-P3-1 | 문서 — `proposal.md` 「그 대가가 위의 9분이다」→ 「6회 결정 중 5회 미제출」, design 「건드리지 않는 것」 「a088」→ 무소유. 같은 잔재 「9분 사건」 표기 design 두 곳도 정정(proposal Phase 1 기록 블록 안의 한 곳은 「원문은 기록으로 남긴다」 절이라 유지) | proposal Why 뒤 문단 · design D2b·D6·「건드리지 않는 것」 |
+| A-P3-2 | **n/a** — 대안 경로(명시 예외)일 때만의 발견. 2차 결정으로 기본 인스턴스 무변화라 ops `place_order` Summary 「limit or US fractional market」는 사실 그대로 — 무변경을 tasks 1.5.4 에 명시 | tasks 1.5.4 |
+| A-P3-3 | task — 3.7 방법: 비시험 SQL 문자열 `rg`(`intents`·`price`) ∪ 그 질의를 감싼 저널 접근자 호출자(CodeGraph) | tasks 3.7 |
+| A-P3-4 | task+issues — 0.5 를 0.9 freeze 판정 전에 하는 것을 권장으로 적음(차단 아님), 순서는 0.9 Manager 대조에서 결정 | tasks 0.5 · issues I-R8 |
+| B-P3-1 | 도구 — TTY 거절 문구를 「accident guard, not proof of a human; agents are barred by the permission system and invariant 2」로, 같은 뜻의 한글 주석. 추가 마찰 없음 | 도구 `main.go` `execute` |
+| B-P3-2 | 도구+문서 — `refused` 안내문에 「refused ≠ MARKET 반증 — error code 로 a087 tasks §5 표」, §5 표 「판정 불가 — 그 밖」 행에 같은 문장 | 도구 `receipt.go` `guidanceFor` · tasks §5 표 |
+| B-P3-3 | 문서 — 「5분」은 검증 시점 기준이고 헤더 획득 뒤 전송이 창 끝을 넘을 수 있으나 브로커 10분 창 안(이중 주문 위험 없음). 코드 무변경 | tasks §5 「실행 전제」 4 |
+| B-P3-4 | 문서+issues — 도구 잠금 대신 절차: `unknown`/`sending`/`no-answer` 뒤 재미리보기 전 `tossctl orders list/completed` 확인 필수. 도구 가드는 사람이 필요하다고 판단하면 그때 | tasks §5 「실행 전제」 3 · issues I-R7 |
+| B-P3-5 | issues — 응답 봉투 해석은 mock 만 잼(요청만 계약 대조) — 한계 기록, 응답 모양 불일치 시 `unknown` 으로 기울어 fail-closed | issues I-R6 |
+| B-P3-6 | 문서 — 계좌 선택 = `accounts[0]`(엔진·CLI 와 같음, 결함 아님), 영수증은 계좌를 적지 않으므로 실행 전제 2 의 사전 보유 스냅숏이 「그 계좌에 그 종목」의 유일한 확인 | tasks §5 「실행 전제」 2 |
+
+**2차 대조표의 부분 이행 4건**: P0-1(MCP 표면) → A-P1-1 행 · P2-1(`proposal.md:78`) → A-P3-1 행 · P2-2(③ 적용) → A-P2-2 행 ·
+P3-1(`design.md:339`) → A-P3-1 행. 넷 다 이번 개정으로 닫았다.
+
+#### 변이 재측정 (B-P1-1 수리 후, 2026-10-10)
+
+`bash tools/a087-market-sell-probe/mutants.sh` (인자 없음 = HEAD, 도구 디렉터리 깨끗함 확인) — 측정 커밋 `45167aa7`, 사본
+`/tmp/a087-mutants-927332-*/tree`, 소요 19.9 s, rc=0. 무변이 대조군 GREEN · 사후 GREEN · 「shared tree: untouched」. 종료 뒤
+`git worktree list` = 주 작업 트리 하나, `/tmp/a087-mutants-*` 0 개(정리 확인).
+
+| 변이 | 닿음(파일 sha 앞 12자, 전 → 후) | 판정 | 잡은 시험 |
+| --- | --- | --- | --- |
+| M1 sell 가드 삭제 | order.go `6af9ec249c4b → c3504dc979c6` | CAUGHT | `TestAssembleRefusesEachGuard/{buy,uppercase_SELL_is_not_the_fixed_value}` |
+| M2 수량 상한 완화 | order.go `6af9ec249c4b → 476b04ee329a` | CAUGHT | `TestAssembleRefusesEachGuard/quantity_over_the_cap` · `TestPreviewRefusesGuardedShapes` |
+| M2b 상한 상수 3 | order.go `6af9ec249c4b → b515fabffae3` | CAUGHT | `TestAssembleRefusesEachGuard/{negative,zero,over_the_cap}` · `TestPreviewRefusesGuardedShapes` |
+| M3 5xx 재전송 | send.go `ed2cbc3e339e → 29983e0f9533` | CAUGHT | `TestNoRetryOnAnyFailure/{500,503}` · `TestOnlySendOnceCallsDoAndItHasNoLoop` · `TestSecondExecuteWithTheSameTokenIsRefused` |
+| M4 확인 검사 건너뜀 | main.go `bbe091819b19 → 8bdd6453a542` | CAUGHT | `TestExecuteRefusesAnExpiredToken` · `TestExecuteRefusesMismatchedConfirm` |
+| M4b 토큰 비교 우회 | order.go `6af9ec249c4b → 3684a23d97b5` | CAUGHT | `TestConfirmTokenBindsTheWholeBody` · `TestExecuteRefusesMismatchedConfirm` |
+| M5 market 가드 삭제 | order.go `6af9ec249c4b → a4cc1d6a9ba3` | CAUGHT | `TestAssembleRefusesEachGuard/US_market_with_a_KR` |
+| M6 limit 가드 삭제 | order.go `6af9ec249c4b → be05c8f155e1` | CAUGHT | `TestAssembleRefusesEachGuard/limit` |
+| M7 리다이렉트 추종 | send.go `ed2cbc3e339e → d30e07e11b9f` | CAUGHT | `TestNoRetryOnAnyFailure/redirect` · `TestSendClientRefusesRedirectsAndConnectionReuse` |
+| M8 배타 생성 제거 | receipt.go `8f981931593e → d37493e8bd91` | CAUGHT | `TestCreatePendingReceiptIsExclusive` |
+| M9 만료 건너뜀 | order.go `6af9ec249c4b → 616cf611b0bc` | CAUGHT | `TestConfirmWindow` · `TestExecuteRefusesAnExpiredToken` |
+| M10 터미널 검사 건너뜀 | main.go `bbe091819b19 → 589fa51c6eee` | CAUGHT | `TestExecuteNeedsATerminal` |
+| M11 심볼 가드 확장 | order.go `6af9ec249c4b → a79bd1f9f4fb` | CAUGHT | `TestAssembleRefusesEachGuard/{five_digits,seven_digits,US_ticker}` · `TestPreviewRefusesGuardedShapes` |
+
+SURVIVED 0 → 시험 보강 없음. 하네스 자체의 대조: 구 커밋 `77a8e119`(구 시험)에 새 하네스를 돌리면 대조군 RED 로 멈춘다(위 부수 발견),
+미커밋 도구 편집이 있을 때 인자 없이 돌리면 「REFUSED」로 멈춘다 — 둘 다 실측.
+
+도구 시험 배터리(`45167aa7` 착지 직전 작업 트리에서 -v 로 셈, 착지 뒤 깨끗한 트리에서 vet·gofmt·`-race` 재실행 rc=0): `go vet ./tools/a087-market-sell-probe/` rc=0 · `gofmt -l tools/a087-market-sell-probe/`
+빈 출력(양성 대조군 — 일부러 어긋난 파일은 보고됨) · `rtk proxy go test -count=1 -race -v ./tools/a087-market-sell-probe/...` rc=0, 최상위 28 ·
+RUN 51 · PASS 51 · FAIL 0 · SKIP 0.
+
+#### freeze 재개 조건 (3차) 상태
+
+1 A-P1-1 — 인스턴스 한정 개방으로 design D3 ③·spec Req 2·tasks 1.5.x 개정 **완료**. 2 A-P1-2 — **완료**. 3 B-P1-1 — **완료**(사본 실행 + §5
+실행 전제). 4 P2 6·P3 10 — 전부 처분(위 표). **남은 것**: tasks 0.9 — Manager 대조 + ③ 인스턴스 옵션 설계 문단(design D3 ③) 독립 확인 1회.
+그 전 §1~§3 착수 금지는 그대로다.

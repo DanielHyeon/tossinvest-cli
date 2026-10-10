@@ -24,9 +24,16 @@
 > **4판 (2026-10-10, 2차 proposal-freeze 재리뷰 처분 + 사용자 결정)**: `review.md` 「2차 proposal-freeze 재리뷰」의
 > P0 1·P1 4·P2 5·P3 3 을 문서로 처분했다(처분 대조표는 `review.md` 끝). 사용자 결정 두 건이 근거다 —
 > ① **차단은 세 곳**이고 셋째 관문(`internal/trading` `placeIntentSupported`)을 **sell+market·가격 없음**에만 연다
-> (a087 범위 확장, 사람 CLI 동작 동반 변경을 알고 결정), ② 5.1 실측은 **별도 실측 도구**
+> (a087 범위 확장 — 개방 범위는 아래 5판이 정정), ② 5.1 실측은 **별도 실측 도구**
 > `tools/a087-market-sell-probe/` 로 production 변경 **전에** 한다. 반증된 근거(「StockOS 가 이미 검증」·「체결 보장」·
 > 「정규장 기준」·「9분 무보호」)는 아래 본문에서 반증 사실과 함께 정정했다.
+>
+> **5판 (2026-10-10, 3차 proposal-freeze 재리뷰 처분 + 사용자 결정 2차)**: 3차 재리뷰 A-P1-1 이 ③ 무조건 개방을
+> 불변식 3 과 양립 불가로 판정했고(사람 CLI 뿐 아니라 ops `place_order` → **MCP 에이전트 표면**까지 열린다), 사용자가
+> **엔진 인스턴스 한정 개방**을 승인했다(`review.md` 「사용자 결정 (2026-10-10, 2차)」). ③의 sell+market 허용은 엔진이
+> 만드는 `trading.Service` 인스턴스에만 생성자 옵션으로 서고, CLI·ops·MCP 가 쓰는 기본 생성 경로는 upstream 과
+> 바이트 동일하다. 4판까지의 「사람 CLI 도 시장가 매도가 가능해진다」는 **철회된 1차 결정**이며 본문 전부 정정했다.
+> 처분 대조표(3차분)는 `review.md` 끝.
 
 ## Why
 
@@ -75,7 +82,8 @@ ErrMarketEntry = errors.New("riskcalc: automated entries are LIMIT only")
 
 **시장가 매수는 노출을 묶을 가격이 없다. 시장가 매도는 노출을 줄인다.** 근거가 전이되지
 않는다. 청산 경로가 진입 규칙을 자기에게 잘못 적용했고, 실제 이유로는 **원장 편의**를
-적었다. 자본 보호를 원장 표기 편의와 맞바꾼 것이고, 그 대가가 위의 9분이다.
+적었다. 자본 보호를 원장 표기 편의와 맞바꾼 것이고, 그 대가가 위의 「6회 결정 중 5회 미제출」이다.
+(3판까지 「그 대가가 위의 9분이다」 — 3차 재리뷰 A-P3-1 이 P2-1 정정의 잔재로 지적해 고쳤다.)
 
 증거가 코드 구조에도 있다 — 위험 권위는 **이미 가격을 요구하지 않는다**:
 
@@ -103,7 +111,7 @@ StockOS 의 평범한 `STOP_LOSS`·`STOP_LOSS_LADDER` **1차 제출은 LIMIT** �
 에스컬레이션이다. a087 은 임계 없이 1차부터 MARKET 이므로 **인용한 실운영 시스템보다 엄격히 더 공격적**이다.
 그러므로 StockOS 는 a087 의 근거가 아니다. a087 의 근거는 (1) 위 「잘못 인용된 규칙」 — 청산측 LIMIT 강제에
 정당한 이유가 없다는 것, (2) 사용자 결정(2026-10-10 — 범위 확장으로 MARKET 방향 유지), (3) §5 실측이다.
-거래소 하한가 지정가 원안과의 비교는 design D6(기각 기록)에 있다.
+거래소 하한가 지정가 원안과의 비교는 design D6(미채택 기록 — 원안 자체 평가는 미수행)에 있다.
 
 TossOS 의 2c 기본 가설은 **SINGLE+MARKET 손절**이다(measurements M12 — 조건주문 등록 실측). 이것은 일관성
 논거일 뿐 `/api/v1/orders` MARKET 접수의 증거가 아니다(조건주문은 다른 endpoint — 재리뷰 P1-1).
@@ -147,11 +155,17 @@ if intent.OrderType != "limit" { return false }   // → Place 가 ErrPlaceUnsup
 (재리뷰 인용 경로, 검증 필요 — AST 미작성: `ErrPlaceUnsupported` → `ReasonUnsupportedOrderType` → `submit` 의
 `default` 갈래 → `alertProposalRefused` dedup 1건 뒤 침묵).
 
-③은 사람 CLI(`tossctl order place`)·ops 쓰기·`PreviewPlace` 경고 문구를 함께 지배하고, `checkOrderShape` 주석은
-「internal/trading is not ours to change」라 적는다. **사용자 결정(2026-10-10)**: ③을 ②와 같은 모양 —
-**sell+market·가격 없음** — 에만 연다. 사람 CLI 에서도 시장가 **매도**가 가능해지는 upstream 동작 변경을 알고
-결정했다(청산 즉시성 강화 = 보수 방향, 불변식 6). `buy+market` 거부는 시험으로 고정한다. 불변식 3(토글 OFF =
-upstream 동작)과의 대조는 `issues.md` I-R1 에 미해결로 기록한다.
+③은 upstream 상속 코드이고(upstream/main 본문 동일 — 3차 재리뷰), 이 술어를 거치는 `trading.Service` 인스턴스는
+셋이다 — 엔진(`internal/app/engine/engine.go` `OrderPath.Trading`), CLI 앱(`internal/app/app.go` → `tossctl order place`·
+`tossctl ops`), **MCP 서버**(`cmd/tossctl/mcp.go`). ops `place_order`(`internal/ops/write_operations.go`)는 MCP 카탈로그
+(`internal/mcp/catalog.go`)로 노출되는 **에이전트 표면**이다. `checkOrderShape` 주석은 「internal/trading is not ours to
+change」라 적는다.
+
+**사용자 결정 (2026-10-10, 2차 — 1차 결정을 대체)**: ③을 ②와 같은 모양 — **sell+market·가격 없음** — 으로 열되
+**엔진이 만드는 인스턴스에만** 생성자 옵션으로 연다. CLI·ops·MCP 의 기본 생성 경로는 upstream 과 바이트 동일
+(`ErrPlaceUnsupported` 유지)이고, 그 동일성을 시험으로 고정한다. 엔진이 꺼져 있으면 엔진 인스턴스가 없으므로 흔적 0 —
+불변식 3 보존(`issues.md` I-R1 종결). 1차 결정(2026-10-10)이 수용했던 「사람 CLI 에서도 시장가 매도 가능」은 이 처분으로
+**철회**됐다 — 사람의 측정 수단은 `tools/a087-market-sell-probe/` 다. `buy+market` 거부는 엔진 인스턴스에서도 시험으로 고정한다.
 
 ## What Changes
 
@@ -200,8 +214,9 @@ SINGLE+MARKET 등록 실측이라 `/api/v1/orders` MARKET 접수의 증거가 �
 
 ### 2. 게이트를 축소 주문에 한해 연다 — 두 관문 (②·③)
 
-`checkOrderShape`(②)와 `placeIntentSupported`(③)의 `orderType != "limit"` 거부에 **축소(매도) 시장가·가격 없음**
-분기를 추가한다. 진입(매수) 시장가는 두 관문 모두 계속 거부한다 — 그것이 riskcalc의 실제 규칙이고 노출 평가가 없다.
+`checkOrderShape`(②)와 `placeIntentSupported`(③ — 엔진 인스턴스 한정)의 `orderType != "limit"` 거부에 **축소(매도)
+시장가·가격 없음** 분기를 추가한다. **비분수** 진입(매수) 시장가는 두 관문 모두 계속 거부한다 — 그것이 riskcalc의 실제
+규칙이고 노출 평가가 없다. (US 분수 시장가 매수 — 금액 기반 — 는 오늘처럼 기존 fractional 분기가 통과시킨다. 무변경.)
 
 ```text
 side == "sell" && orderType == "market" && price 없음  → 허용
@@ -209,8 +224,9 @@ side == "sell" && orderType == "market" && price 있음  → 거부
 side == "buy"  && orderType == "market"                → 거부 (현행 유지, US fractional 예외 존치)
 ```
 
-③의 변경은 엔진 토글과 무관하게 사람 CLI·ops 쓰기·`PreviewPlace` 에도 적용된다(위 「차단은 세 곳이다」,
-사용자 결정 2026-10-10). 새 분기의 **위치**(기존 통화·수량 검사 뒤)는 design D3 이 정한다.
+③의 개방은 엔진 인스턴스에만 선다 — CLI·ops·MCP·그 인스턴스들의 `PreviewPlace` 는 upstream 과 동일하다(위 「차단은
+세 곳이다」, 사용자 결정 2차 2026-10-10). 새 분기의 **위치**(기존 통화·수량 검사 뒤 — ②·③ 모두 조기 통과 금지)와
+옵션의 모양은 design D3 이 정한다.
 
 ### 3. 원장이 잃는 것을 명시한다
 
@@ -228,12 +244,20 @@ side == "buy"  && orderType == "market"                → 거부 (현행 유지
   Phase 1 의 계약은 코드·시험·design D2a 로만 산다. (2026-09-30: Phase 1 불구현 — 남는 것은 평가기 핀 시험 1개)
 - **Code**: `internal/app/engine/exitloop.go`(`sellIntent`·`submit` 호출부), `internal/execgw/failclosed.go`
   (`checkOrderShape` + 「internal/trading is not ours to change」 주석), **`internal/trading/service.go`
-  (`placeIntentSupported` — 2026-10-10 범위 확장)**, 관측·원장 표시부. ~~Phase 1 은 `PriceLimits` 배선 추가~~
+  (`placeIntentSupported` + 엔진 전용 생성자 옵션 — 기본값은 upstream 동일, 2026-10-10 사용자 결정 2차)**,
+  **`internal/app/engine/engine.go`(엔진 `trading.Service` 생성에서만 옵션을 켠다)**, 관측·원장 표시부.
+  ~~Phase 1 은 `PriceLimits` 배선 추가~~
   (불구현 — Phase 1 의 코드 산출물은 `internal/exitpolicy/a087_observed_price_pin_test.go` 시험 1개)
 - **영향받는 표면 (무변경이어도 시험 대상)**: 전송 `official.buildOrderCreate` 와 그 사본 `execgw.PlaceWireBody`
   (`wirebody.go` — 재생 경로가 쓰는 wire body; 재리뷰 P3-3: 둘 다 MARKET 에 가격·TIF 를 싣지 않음 확인),
-  사람 CLI `tossctl order place`·ops 쓰기·`PreviewPlace`(③ 변경의 upstream 동작 변화)
-- **Schema**: 없음 (`intents.price`는 이미 빈 값 허용)
+  **upstream 동일성 고정 대상** — 사람 CLI `tossctl order place`(`internal/app/app.go` 인스턴스), `tossctl ops`·**MCP
+  `place_order`**(ops 쓰기 `internal/ops/write_operations.go` → MCP 카탈로그 `internal/mcp/catalog.go`; MCP 서버 인스턴스
+  `cmd/tossctl/mcp.go`), 그 인스턴스들의 `PreviewPlace` 문구. 셋 다 기본 생성 경로라 비분수 market 매도는 계속
+  `ErrPlaceUnsupported` 다(3차 재리뷰 A-P1-1)
+- **Schema**: 없음 (`intents.price`는 이미 빈 값 허용). 청산 슬리피지(tasks 3.8)는 **기존 칸에서 유도**한다 — 결정 시
+  관측가 `exit_events.observed_price`(같은 행 `proposed_intent_id`) 와 체결 평균가 `fill_snapshots.average_price`(그 intent 의
+  브로커 `order_id`) — 새 열·표 없음. 그 결속(intent → order_id)이 기존 칸으로 성립하지 않으면 3.8 착수 전에 이 줄을
+  schema 변경으로 고치고 재리뷰를 받는다(3차 재리뷰 A-P2-4)
 - **§0.4**: 관측 루프 무변화. ~~Phase 1 이 더하는 것은 가격 부재 폴백 사건에서만 KR
   `PriceLimits` 읽기 1회~~ (불구현 — 새 브로커 호출 0)
 - **§0.3**: 보호 청산이 호가 그리드·가격 밴드·시세 신선도 때문에 **로컬·브로커에서 거부되는 클래스**를 없앤다.
@@ -252,7 +276,8 @@ side == "buy"  && orderType == "market"                → 거부 (현행 유지
 - **진입 주문 유형.** riskcalc의 규칙이 실제로 적용되는 곳이고 바꾸지 않는다
 - **조건주문(브로커측 보호).** 2c 범위
 - **`flatten`.** 이미 거래소 하한가를 1순위로 쓴다(무변경). 같은 하한가 지정가를 **보호 청산의 가격으로** 쓰는
-  원안은 평가되지 않은 채 남아 있었다 — design D6 에 기각 기록으로 남긴다(사용자 결정 2026-10-10 이 시장가 방향을 택함)
+  원안은 평가되지 않은 채 남아 있었다 — design D6 에 **미채택** 기록으로 남긴다(시장가 방향 사용자 결정 2026-10-10 에 따른
+  미채택 — 사용자가 원안을 보고 기각한 기록은 없고, 원안 자체 평가는 미수행. 3차 재리뷰 A-P2-3)
 
 ## 실측 필요 (사용자 승인 항목, §0.7)
 
