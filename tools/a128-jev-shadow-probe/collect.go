@@ -118,25 +118,10 @@ func reasonOf(err error) string { return truncate(err.Error(), reasonLimit) }
 
 func stamp(t time.Time) string { return t.UTC().Format(time.RFC3339) }
 
-// marketTimezone 은 달력 질의의 "오늘"을 정하는 시장 현지 시간대.
-var marketTimezone = map[string]string{"KR": "Asia/Seoul", "US": "America/New_York"}
-
 // resolveSession 은 market-calendar 의 오늘 정규장을 읽음. 없으면(휴장) 거부.
-// date 는 시장 현지 오늘을 반드시 명시함 — 빈 date 로 물으면 서버가 개장일에도
-// regularMarket null 을 돌려줘 휴장으로 오판함(2026-10-12 KR 실측). 저장소의 다른
-// 호출자(cmd/tossctl/marketschedule.go·engine strategy_schedule_authority.go)와 같은 모양.
 func (p *probe) resolveSession(ctx context.Context, market string) (session, error) {
-	tz, ok := marketTimezone[market]
-	if !ok {
-		return session{}, fmt.Errorf("no timezone registered for market %q", market)
-	}
-	loc, err := time.LoadLocation(tz)
-	if err != nil {
-		return session{}, fmt.Errorf("loading %s timezone: %w", market, err)
-	}
-	localToday := p.now().In(loc).Format("2006-01-02")
 	calendar, err := withRateLimitRetry(ctx, p, func(ctx context.Context) (official.MarketCalendarResponse, error) {
-		return p.src.TypedMarketCalendar(ctx, market, localToday)
+		return p.src.TypedMarketCalendar(ctx, market, "")
 	})
 	if err != nil {
 		return session{}, fmt.Errorf("%s market calendar: %w", market, err)

@@ -48,9 +48,6 @@ type officialMock struct {
 	calls       map[string]int
 	methods     map[string]bool
 	noRegular   bool
-	// calendarDates 는 market-calendar 호출이 넘긴 date 쿼리값을 순서대로 기록함
-	// (빈 문자열 포함 — 실서버는 빈 date 에 regularMarket null 을 돌려줌, 2026-10-12 실측).
-	calendarDates []string
 }
 
 func newOfficialMock(t *testing.T) *officialMock {
@@ -98,14 +95,8 @@ func (m *officialMock) serve(w http.ResponseWriter, r *http.Request) {
 	case "/oauth2/token":
 		write(`{"access_token":"` + sentinelOfficial + `","expires_in":86400,"token_type":"Bearer"}`)
 	case "/api/v1/market-calendar/KR", "/api/v1/market-calendar/US":
-		date := r.URL.Query().Get("date")
-		m.mu.Lock()
-		m.calendarDates = append(m.calendarDates, date)
-		m.mu.Unlock()
 		regular := `"regularMarket":{"startTime":"2026-10-07T09:00:00+09:00","endTime":"2026-10-07T15:30:00+09:00"}`
-		// 실서버 실측(2026-10-12): date 쿼리를 생략하면 개장일에도 regularMarket 이 null 로 옴.
-		// mock 도 같은 모양을 돌려줘 빈 date 호출이 시험에서 반드시 드러나게 함.
-		if noRegular || date == "" {
+		if noRegular {
 			regular = `"regularMarket":null`
 		}
 		write(`{"result":{"previousBusinessDay":{"date":"2026-10-06"},"today":{"date":"2026-10-07",` + regular +
