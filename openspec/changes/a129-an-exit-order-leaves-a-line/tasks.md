@@ -37,7 +37,15 @@ Story: `STORY-TOS-a129` · base `381e73da` · High-risk(주문 제출 경로 · 
 
 ## 3. 사람 · Manager
 
-- [ ] 3.1 Manager `make gate CHANGE=a129-an-exit-order-leaves-a-line` + 독립 검증 + 푸시
-- [ ] 3.2 배포 — 사람이 KST 05:00~09:00 에 `make image CHANGE=a129-an-exit-order-leaves-a-line` → 컨테이너 교체(design 「배포」).
-      교체 뒤 다음 청산 주문에서 `"origin":"exit"` 줄 확인
-- [ ] 3.3 archive + Story 경로 갱신 + PM check
+- [x] 3.1 Manager `make gate CHANGE=a129-an-exit-order-leaves-a-line` + 독립 검증 + 푸시
+      — 2026-10-12 Manager 독립 검증: 커밋 9eea8bc2 47파일 전부 허용 경로 · production 편집 3파일
+      (exitloop.go · exit_order_log.go · engine.go) · ExitObserver 에 `Log` 미배선 유지(UnobservedLog ·
+      ExitOrderLog 둘만, engine.go:672·674 — :706 `Log` 는 편집 전부터 있던 RuntimeOptions) · a129 시험
+      직접 실행 rc 0 · 푸시. 게이트 = 2026-10-12 `make gate` **11/11 PASS**(tasks · 미완료 0 · 짝 없음 · review ·
+      FLM · sdd-check · test · test-seams · test-race · vet · validate). 순서: 3.1 체크 → tracker 재생성 → sdd-sync → gate.
+
+### 게이트 뒤 절차 (체크박스 아님 — a108 선례)
+
+1. archive(Opus) → Story `openspec.path` 를 아카이브 경로로 → tracker 재생성 → PM `--check`.
+2. 배포 — 사람이 KST 05:00~09:00(두 시장 닫힘)에 `make image CHANGE=a129-an-exit-order-leaves-a-line`
+   → 컨테이너 교체(design 「배포」). 교체 뒤 다음 청산 주문에서 `"origin":"exit"` 줄 확인.

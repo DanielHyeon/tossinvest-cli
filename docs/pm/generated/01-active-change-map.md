@@ -127,4 +127,4 @@
 | `a126-filled-exposure-leaves-the-bucket` | STORY-TOS-a126 | archived |
 | `a127-strategy-authorities-read-the-current-ledger` | STORY-TOS-a127 | archived |
 | `a128-jev-shadow-judgment-probe` | STORY-TOS-a128 | in_progress |
-| `a129-an-exit-order-leaves-a-line` | STORY-TOS-a129 | in_progress |
+| `a129-an-exit-order-leaves-a-line` | STORY-TOS-a129 | implemented |
