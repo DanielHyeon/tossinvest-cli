@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a129-an-exit-order-leaves-a-line",
-    "path": "openspec/changes/a129-an-exit-order-leaves-a-line"
+    "path": "openspec/changes/archive/2026-10-12-a129-an-exit-order-leaves-a-line"
   },
   "found_by": {
     "date": "2026-10-12",
     "how": "On 2026-10-07 02:08:08Z the engine fired the 010170 stop correctly (SELL LIMIT 6 @18010, fully filled, position CLOSED), but engine.log held zero lines for the order or the fill, so the operator and the Manager both concluded the stop had not fired; the truth was only in the journal. Cause: ExitObserver.log returns at once when opts.Log is nil, and engineRuntime deliberately does not wire Log because the observer's other Log lines (logErr) carry the account in the clear; only the a090 UnobservedLog is wired.",
-    "record": "openspec/changes/a129-an-exit-order-leaves-a-line/proposal.md"
+    "record": "openspec/changes/archive/2026-10-12-a129-an-exit-order-leaves-a-line/proposal.md"
   },
   "acceptance": [
     "An exit order's confirmation, its fills, and its refusal or failure each write one structured line to a dedicated exit-order logger that the production engine wires; the observer's whole Log stays unwired",
