@@ -1,0 +1,23 @@
+# a129 mutation — HEAD 381e73da + working-tree a129 files · copy /tmp/a129-mutate-3807656-q7c4z709/repo
+CONTROL GREEN 
+CAUGHT M1 whitelist gains the account field — --- FAIL: TestA129ENoLineCarriesTheAccount (2.31s); --- FAIL: TestA129ENoLineCarriesTheAccount/confirmed (0.80s); --- FAIL: TestA129ENoLineCarriesTheAccount/in_doubt (0.79s)
+CAUGHT M2 engineRuntime stops wiring ExitOrderLog — --- FAIL: TestA129EngineRuntimeWiresTheDedicatedExitOrderLogger (0.00s)
+CAUGHT M3 the nil guard on queueing and following is removed — --- FAIL: TestA129FWithoutTheDedicatedLoggerNothingChanges (0.71s)
+CAUGHT M4 the write panic is not recovered — --- FAIL: TestA129GAFailingOrPanickingLoggerDoesNotStopTheExit (0.68s); --- FAIL: TestA129GAFailingOrPanickingLoggerDoesNotStopTheExit/panics/confirmed (0.68s); panic: a129: the log sink panicked [recovered, repanicked]
+CAUGHT M5 an unchanged cumulative fill writes a line — --- FAIL: TestA129AConfirmedStopAndItsFillsEachLeaveALine (0.74s); --- FAIL: TestA129IAnExitOrderThatEndsUnfilledLeavesALine (0.79s)
+CAUGHT M6 the refusal latch is removed — --- FAIL: TestA129JARepeatedRefusalIsWrittenOnceUntilTheOutcomeChanges (0.75s); --- FAIL: TestA129MTheRefusalLatchDoesNotOutliveItsEpisode (0.81s)
+CAUGHT M7 the token filter passes everything — --- FAIL: TestA129ENoLineCarriesTheAccount (2.11s); --- FAIL: TestA129ENoLineCarriesTheAccount/confirmed (0.71s); --- FAIL: TestA129ENoLineCarriesTheAccount/rejected (0.66s)
+CAUGHT M8 the end-of-cycle hook runs before the judgement — --- FAIL: TestA129AConfirmedStopAndItsFillsEachLeaveALine (0.71s); --- FAIL: TestA129BTheFillFollowRunsAfterTheJudgementOfTheSameCycle (0.76s); --- FAIL: TestA129CTheFillFollowRunsOnAYieldedCycle (0.72s); --- FAIL: TestA129DEveryOtherOutcomeLeavesOneLineAfterItsRelease (6.67s); --- FAIL: TestA129DEveryOtherOutcomeLeavesOneLineAfterItsRelease/B12_broker_rejected (0.69s); --- FAIL: TestA129DEveryOtherOutcomeLeavesOneLineAfterItsRelease/B12_not_dispatched (0.72s)
+CAUGHT M9 a terminal fill does not end the follow — --- FAIL: TestA129AConfirmedStopAndItsFillsEachLeaveALine (0.77s); --- FAIL: TestA129IAnExitOrderThatEndsUnfilledLeavesALine (0.80s)
+CAUGHT M10 the fill lookup is unscoped — --- FAIL: TestA129HAReusedOrderIDFromAnEarlierDayIsNotThisOrdersFill (0.52s)
+CAUGHT M11 an unfilled terminal order writes nothing — --- FAIL: TestA129IAnExitOrderThatEndsUnfilledLeavesALine (0.29s)
+CAUGHT M12 the confirmed branch queues no line — --- FAIL: TestA129AConfirmedStopAndItsFillsEachLeaveALine (0.28s); --- FAIL: TestA129BTheFillFollowRunsAfterTheJudgementOfTheSameCycle (0.26s); --- FAIL: TestA129CTheFillFollowRunsOnAYieldedCycle (0.24s); --- FAIL: TestA129ENoLineCarriesTheAccount (0.73s); --- FAIL: TestA129ENoLineCarriesTheAccount/confirmed (0.24s); --- FAIL: TestA129HAReusedOrderIDFromAnEarlierDayIsNotThisOrdersFill (0.27s)
+CAUGHT M1b whitelist gains the account field on the warn path — --- FAIL: TestA129ENoLineCarriesTheAccount (0.79s); --- FAIL: TestA129ENoLineCarriesTheAccount/rejected (0.27s); --- FAIL: TestA129ENoLineCarriesTheAccount/in_doubt (0.26s)
+CAUGHT M13 the latch outlives its episode — --- FAIL: TestA129MTheRefusalLatchDoesNotOutliveItsEpisode (0.29s)
+CAUGHT M14 an endless follow never expires — --- FAIL: TestA129NAFollowThatNeverEndsExpires (0.27s)
+CAUGHT M15 B2 swallows a failed release — --- FAIL: TestA129OAFailedReleaseStillSurfaces (0.97s); --- FAIL: TestA129OAFailedReleaseStillSurfaces/B2_zero_floor (0.24s)
+CAUGHT M16 B3 swallows a failed release — --- FAIL: TestA129OAFailedReleaseStillSurfaces (0.97s); --- FAIL: TestA129OAFailedReleaseStillSurfaces/B3_guardian_refused (0.24s)
+CAUGHT M17 B10 swallows a failed release — --- FAIL: TestA129OAFailedReleaseStillSurfaces (1.00s); --- FAIL: TestA129OAFailedReleaseStillSurfaces/B10_symbol_in_flight (0.23s)
+CAUGHT M18 B13 swallows a failed release — --- FAIL: TestA129OAFailedReleaseStillSurfaces (0.94s); --- FAIL: TestA129OAFailedReleaseStillSurfaces/B13_broker_rejected (0.23s)
+# 19/19 caught
+rc=0

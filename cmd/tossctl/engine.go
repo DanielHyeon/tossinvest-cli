@@ -670,6 +670,8 @@ func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, l
 		// Announcer · Alerts 는 넘기지 않음 — Context.ExitObserver 가 기록 전용으로 묶음(a092 C1).
 		// a090: 미관측 줄(exit.position_unobserved)만 받는 전용 로거. 관측자 전체 Log 는 넣지 않음 — 기존 줄이 계좌 원문을 실음.
 		UnobservedLog: logger,
+		// a129: 청산 주문 생애 줄(확정 · 거부 · 체결 …)만 받는 전용 로거 — 화이트리스트 필드만 씀. 2026-10-07 010170 손절이 이 로그에 0 줄이었음.
+		ExitOrderLog: logger,
 	})
 	if err != nil {
 		return nil, err

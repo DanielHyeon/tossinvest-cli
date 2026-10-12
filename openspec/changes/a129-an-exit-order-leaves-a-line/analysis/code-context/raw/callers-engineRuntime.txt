@@ -1,0 +1,18 @@
+
+Callers of "engineRuntime" (5):
+
+function    TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess
+  cmd/tossctl/engine_runtime_branch_test.go:49
+
+function    TestProductionRuntimeIncludesOneDormantStrategyEntryOuterLoop
+  cmd/tossctl/engine_strategy_entry_dormant_test.go:50
+
+function    TestProductionRuntimeStartsExactlyOneAlertDeliverer
+  cmd/tossctl/a098_the_engine_registers_a_sender_test.go:20
+
+function    TestTheAlertDelivererIsNotASupervisedLoop
+  cmd/tossctl/a098_the_engine_registers_a_sender_test.go:36
+
+file        engine.go
+  cmd/tossctl/engine.go:1
+

@@ -1,0 +1,66 @@
+
+Callees of "ExitObserver.submit" (21):
+
+method      applyFloor
+  internal/app/engine/exitloop.go:1627
+
+function    isProtective
+  internal/app/engine/exitloop.go:1382
+
+function    isZeroQuantity
+  internal/app/engine/exitloop.go:1889
+
+method      IssueReduction
+  internal/app/engine/exitloop.go:131
+
+method      alertProposalRefused
+  internal/app/engine/exitloop.go:1780
+
+method      Error
+  internal/exitpolicy/adoption.go:59
+
+method      AttachExitIntent
+  internal/journal/apply_hook.go:755
+
+method      sellIntent
+  internal/app/engine/exitloop.go:1697
+
+method      alertRefused
+  internal/app/engine/exitloop.go:1748
+
+method      Place
+  internal/app/engine/exitloop.go:138
+
+method      log
+  internal/app/engine/exitloop.go:1841
+
+method      noteDelay
+  internal/app/engine/exitloop.go:1801
+
+method      release
+  internal/app/engine/exitloop.go:1494
+
+struct      ReductionIssuance
+  internal/execgw/riskguardian.go:181
+
+struct      Intent
+  internal/risk/input.go:113
+
+struct      AccountState
+  internal/risk/input.go:141
+
+struct      PlaceRequest
+  internal/execgw/gateway.go:250
+
+struct      Context
+  internal/app/app.go:62
+
+struct      managed
+  internal/app/engine/exitloop.go:512
+
+struct      Proposal
+  internal/exitpolicy/ratchet.go:139
+
+struct      ExitDecisionProvenance
+  internal/journal/exit_state.go:338
+

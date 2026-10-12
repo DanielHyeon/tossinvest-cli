@@ -1,0 +1,36 @@
+
+Callers of "ObserveOnce" (11):
+
+function    TestA110ChangingReconcileDisputesDoNotSuppressAnUncoveredAdoption
+  internal/app/engine/a110_adoption_recovery_test.go:26
+
+method      Run
+  internal/app/engine/tracer.go:273
+
+function    TestAnArmedProposalIsNotProposedTwiceAfterARestart
+  internal/app/engine/exitloop_test.go:1151
+
+function    TestA111AutomaticallyAdoptedCommonLadderEvaluatesItsUnchangedFirstQuote
+  internal/app/engine/a111_flat_exit_observation_test.go:286
+
+function    TestA111FallbackObservationSourceIsDurableAndRestartMonotone
+  internal/app/engine/a111_flat_exit_observation_test.go:784
+
+function    TestA111LeaseIsRecheckedAtTheRecordOrRefreshBoundary
+  internal/app/engine/a111_flat_exit_observation_test.go:1077
+
+function    TestExitObserverConcurrentSameQuoteArmsAndMutatesOnce
+  internal/app/engine/exit_identity_concurrency_test.go:88
+
+function    TestA094AnEpisodeIsOneRowAcrossRestarts
+  internal/app/engine/a094_exit_clear_more_test.go:78
+
+function    TestA094TheCloseWaitEpisodeIsOneRowAcrossRestarts
+  internal/app/engine/a094_review_fixes_test.go:38
+
+function    TestA094TwoStreaksAtTheSameInstantAreTwoEpisodes
+  internal/app/engine/a094_exit_clear_test.go:646
+
+method      Run
+  internal/app/engine/exitloop.go:382
+

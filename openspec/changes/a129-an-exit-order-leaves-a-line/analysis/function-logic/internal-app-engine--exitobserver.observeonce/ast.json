@@ -1,0 +1,415 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "fba676d31e44590ce8a6b3d3a5f06a323b96966b96cb677dc4abd12ace4b5714",
+  "package": "engine",
+  "function": "ObserveOnce",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.ObserveOnce(params=1, results=1)",
+  "start": {
+    "line": 456,
+    "column": 1
+  },
+  "end": {
+    "line": 523,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 462,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 472,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 476,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 489,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 498,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 500,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 508,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 516,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 468,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 474,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 486,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 492,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 522,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 458,
+        "column": 8
+      },
+      "text": "o.endExitOrderCycle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 460,
+        "column": 38
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 460,
+        "column": 38
+      },
+      "text": "o.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 462,
+        "column": 26
+      },
+      "text": "o.opts.SLO.FillDetectionBehind"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 467,
+        "column": 3
+      },
+      "text": "o.checkOutage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 471,
+        "column": 17
+      },
+      "text": "o.workingSet"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 476,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 478,
+        "column": 3
+      },
+      "text": "o.settleUnobserved"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 484,
+        "column": 20
+      },
+      "text": "o.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 488,
+        "column": 17
+      },
+      "text": "o.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 488,
+        "column": 32
+      },
+      "text": "symbolsOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 491,
+        "column": 3
+      },
+      "text": "o.checkOutage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 19
+      },
+      "text": "o.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 496,
+        "column": 19
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 23
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 39
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 505,
+        "column": 4
+      },
+      "text": "o.noteUnobservedCause"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 508,
+        "column": 7
+      },
+      "text": "o.quoteUsable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 511,
+        "column": 4
+      },
+      "text": "o.noteUnobservedCause"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 515,
+        "column": 3
+      },
+      "text": "o.noteJudged"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 516,
+        "column": 13
+      },
+      "text": "o.judge"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 521,
+        "column": 2
+      },
+      "text": "o.settleUnobserved"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 460,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 466,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 471,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 473,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 484,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 485,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 488,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 490,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 494,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 495,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 496,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 499,
+        "column": 3
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 514,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 516,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 517,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 458,
+        "column": 2
+      },
+      "text": "o.endExitOrderCycle"
+    }
+  ]
+}

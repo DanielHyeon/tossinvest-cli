@@ -214,6 +214,10 @@ type ExitObserverOptions struct {
 	// ZeroFloorLog 는 a091 의 0주 보고 줄(B2 의 가린 오류 · 기록 실패)만 받는 전용 로거임 — 계좌 필드 없는 줄만 씀. Log 는 생산에서 nil 이라
 	// 따로 둠(UnobservedLog 와 같은 이유). 생산 배선이 엔진 로거로 덮음. nil 이면 그 줄은 버려짐.
 	ZeroFloorLog *obs.Logger
+	// ExitOrderLog 는 a129 의 청산 주문 생애 줄(확정 · 결과 미상 · 거부 · 브로커 전 거절 · 체결 · 무체결 종결)만 받는 전용 로거임. 선택.
+	// Log 와 따로 둔 이유는 UnobservedLog 와 같음 — 화이트리스트 필드만 씀(exit_order_log.go). nil 이면 줄도 체결 따라가기도 원장 읽기도 0.
+	// 생산 배선은 engineRuntime 이 엔진 로거를 넣음(2026-10-07 010170 손절이 engine.log 에 0 줄이던 원인).
+	ExitOrderLog *obs.Logger
 
 	// AccountRef scopes everything. Required.
 	AccountRef string
@@ -283,6 +287,14 @@ type ExitObserver struct {
 	// cycleUnobserved 는 진행 중인 주기 하나의 표시 · 원인 · 판정 진입 집계임(a090). 주기 신원(owner)으로 묶어,
 	// settle 을 부르지 않은 주기(B4)의 집계가 다음 주기로 새지 않게 함.
 	cycleUnobserved *unobservedCycle
+	// exitOrderQueue 는 이 주기에 submit 이 넣은 a129 줄임 — 주기 끝(endExitOrderCycle)에 씀. ExitOrderLog nil 이면 늘 비어 있음.
+	exitOrderQueue []queuedExitOrderLine
+	// exitOrderRefused 는 포지션별 마지막 거절 줄의 서명임 — 같은 거절이 연속한 주기에 반복될 때 첫 줄만 쓰게 함(a129).
+	exitOrderRefused map[string]string
+	// exitOrderRefusedNow 는 이 주기에 거절 줄이 난 포지션임 — 주기 끝에 이 집합 밖의 래치를 풂(a129).
+	exitOrderRefusedNow map[string]bool
+	// exitFills 는 체결을 따라가는 청산 주문임(intent id → 항목, a129). 지연 초기화 — 재시작하면 잃음.
+	exitFills map[string]*exitFillWatch
 }
 
 // NewExitObserver validates the wiring and snapshots the common selection used
@@ -442,6 +454,8 @@ type ExitCycle struct {
 // ObserveOnce runs one cycle. It is exported for the tests and for a tracer
 // run, which drives the loop by hand rather than by clock.
 func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
+	// a129: 이 주기의 청산 주문 줄 쓰기 · 체결 따라가기는 모든 return 경로에서 판정 · 제출 뒤에 돎(원장 읽기만, 브로커 호출 0).
+	defer o.endExitOrderCycle(ctx)
 	var cycle ExitCycle
 	observation := cycleObservation{at: o.clk.Now().UTC()}
 
@@ -1404,14 +1418,20 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 	// 보호/익절 구분은 호출자가 넘김 — applyFloor 는 제안이 손절인지 모름(a091 D2). 반환값은 그 구분과 무관함.
 	submitQuantity, capped, err := o.applyFloor(ctx, m, quantity, isProtective(proposal))
 	if err != nil {
+		// a129: 하한 산술 실패 — 해제 없음, 줄은 주기 끝에 씀(이하 모든 갈래 같음: noteExitOrder 는 대기열에 넣기만 함).
+		o.noteExitOrder(obs.EventOrderNotDispatched, true, true, false,
+			exitOrderLineFor(m, proposal, quantity, intentID, observed, false).because(exitOrderFloorArithmeticFailed))
 		return err
 	}
+	line := exitOrderLineFor(m, proposal, submitQuantity, intentID, observed, capped)
 	if isZeroQuantity(submitQuantity) {
 		// The confirmed floor authorises nothing — an absent or stale snapshot
 		// while the account is in RECONCILE. Release the proposal so the same
 		// level identity is proposed again once the floor lifts; keeping it armed
 		// would suppress exactly the re-proposal exit-policy asks for.
-		return o.release(ctx, m, intentID, journal.ProposalRefused)
+		releaseErr := o.release(ctx, m, intentID, journal.ProposalRefused)
+		o.noteExitOrder(obs.EventOrderNotDispatched, true, true, false, line.because(exitOrderFloorZero))
+		return releaseErr
 	}
 
 	issued, err := o.opts.Issuer.IssueReduction(ctx, execgw.ReductionIssuance{
@@ -1428,7 +1448,9 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 	})
 	if err != nil {
 		o.alertProposalRefused(ctx, m, proposal, err.Error())
-		return o.release(ctx, m, intentID, journal.ProposalRefused)
+		releaseErr := o.release(ctx, m, intentID, journal.ProposalRefused)
+		o.noteExitOrder(obs.EventOrderNotDispatched, true, true, false, line.because(exitOrderGuardianRefused))
+		return releaseErr
 	}
 
 	// Attach before submitting. The id is already in the judgement transaction;
@@ -1436,13 +1458,16 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 	// exists, so an attach that fails stops the submission rather than leaving an
 	// order nothing can resolve.
 	if err := o.opts.Journal.AttachExitIntent(ctx, m.position.ID, intentID); err != nil {
+		o.noteExitOrder(obs.EventOrderNotDispatched, true, true, false, line.because(exitOrderAttachFailed))
 		return fmt.Errorf("engine: attaching the exit intent of %s: %w", m.position.ID, err)
 	}
 
 	intent, err := o.sellIntent(m, submitQuantity, observed)
 	if err != nil {
 		o.alertRefused(ctx, m, err)
-		return o.release(ctx, m, intentID, journal.ProposalRefused)
+		releaseErr := o.release(ctx, m, intentID, journal.ProposalRefused)
+		o.noteExitOrder(obs.EventOrderNotDispatched, true, true, false, line.because(exitOrderIntentInvalid))
+		return releaseErr
 	}
 	out, err := o.opts.Submit.Place(ctx, execgw.PlaceRequest{
 		Intent:         intent,
@@ -1450,6 +1475,8 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 		IntentID:       intentID,
 		ExitProvenance: &provenance,
 	})
+	// a129: 이 아래 줄은 전부 Place 가 돌아온 뒤임 — 키 · 상태 · 사유만 옮기고 Detail · Result 는 싣지 않음.
+	line = line.placed(out)
 	switch {
 	case out.State == journal.StateConfirmed:
 		o.log(obs.EventOrderConfirmed, false,
@@ -1458,15 +1485,23 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 			"action", string(proposal.Action),
 			"level", proposal.Level,
 			"capped", capped)
+		o.noteExitOrder(obs.EventOrderConfirmed, false, false, true, line)
 		return nil
 	case out.State == journal.StateInDoubt || out.State == journal.StateUnresolvedInDoubt:
 		// The order may exist. The proposal stays armed and the resolver settles
 		// it; releasing here would let the next observation submit a second sell
 		// on top of one that may already be live.
+		doubt := obs.EventOrderInDoubt
+		if out.State == journal.StateUnresolvedInDoubt {
+			doubt = obs.EventOrderUnresolved
+		}
+		o.noteExitOrder(doubt, true, false, true, line)
 		return nil
 	case out.Reason == execgw.ReasonSymbolInFlight:
 		o.noteDelay(ctx, m, "another mutation on the symbol is in flight")
-		return o.release(ctx, m, intentID, journal.ProposalCancelled)
+		releaseErr := o.release(ctx, m, intentID, journal.ProposalCancelled)
+		o.noteExitOrder(obs.EventOrderNotDispatched, true, true, false, line)
+		return releaseErr
 	case out.AttemptID != "" && out.State != journal.StateNotDispatched && out.State != journal.StateFailedConfirmed:
 		// attempt 는 기록됐는데 입증된 비수용이 아님 — 결과를 원장에 쓰지 못해 상태가 빈 경우 포함(gateway 의 결과 쓰기
 		// 실패 · 종료 중 취소). 주문은 나갔을 수 있으므로 발의는 무장된 채 남기고, 재시작 복구와 기동 따라잡기가
@@ -1474,6 +1509,7 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 		if err == nil {
 			err = fmt.Errorf("attempt %s ended in state %q", out.AttemptID, out.State)
 		}
+		o.noteExitOrder(obs.EventOrderInDoubt, true, false, true, line)
 		return fmt.Errorf("engine: the exit order of %s did not settle as unaccepted; the proposal stays armed: %w",
 			m.position.ID, err)
 	default:
@@ -1482,7 +1518,13 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 			detail = err.Error()
 		}
 		o.alertProposalRefused(ctx, m, proposal, detail)
-		return o.release(ctx, m, intentID, journal.ProposalRefused)
+		refusal := obs.EventOrderNotDispatched
+		if out.State == journal.StateFailedConfirmed {
+			refusal = obs.EventOrderRejected
+		}
+		releaseErr := o.release(ctx, m, intentID, journal.ProposalRefused)
+		o.noteExitOrder(refusal, true, true, false, line)
+		return releaseErr
 	}
 }
 
