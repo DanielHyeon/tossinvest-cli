@@ -74,6 +74,18 @@
 > 확인). 세션 밖 자가 지속 예약은 금지 유지(2026-10-07 분류기 차단 outcome) — 측정일
 > 당일 in-harness 기동, 세션을 장 마감+horizon까지 유지하거나 사람이 setsid 로 띄운다.
 
+> **2026-10-12 정정(실측).** 이날 KR 은 **휴장**이다 — official market-calendar 실측:
+> today(10-12) regularMarket=null, 영업일은 previousBusinessDay=10-08·nextBusinessDay=10-13.
+> (한글날 10-09 금 전후 연휴·대체.) 프로브의 "no regular session today" 거부는 **정상 동작**이다.
+> 이날 Manager 가 프로브를 버그로 오판해 "빈 date→null" 가정의 수리를 커밋했다가(6549432c)
+> 되돌림(720e89a9) — 그 가정은 **개장일에서 측정된 적이 없는 거짓**이었다(교훈:
+> [[generated-evidence-must-be-measured]]·[[a-measurement-carries-its-moment]]). 빈 date 는
+> 서버 실제 today 를 앵커해 올바른 데이터를 준다(US today 10-12 는 정상 세션 반환으로 재확인).
+> **US 는 10-12 개장**(Columbus Day — 미 증시 정상, 22:30~05:00 KST). → 1일차 KR 은
+> **10-13(화)로**, US 1일차는 **오늘 밤(10-12)** 가능. 날짜 재배치: KR 1일차 10-13·2일차 10-14,
+> US 1일차 10-12·2일차 10-13. (프로브는 세션 종료와 함께 죽으므로 US 밤 세션은 사람이
+> `setsid nohup ./run-probe.sh US <log> --wait-open &` 로 띄워 장 마감+horizon 까지 유지.)
+
 - [ ] 3.1 1일차: KR 세션 + US 세션 각 1회 프로브 실행(에이전트 가능 — read-only).
       실행 로그·원장 보존.
 - [ ] 3.2 2일차: 동일. 라벨러 완주 확인(마지막 판단 + h분까지).
