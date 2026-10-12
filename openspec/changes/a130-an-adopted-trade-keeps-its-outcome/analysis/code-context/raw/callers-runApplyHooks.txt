@@ -1,0 +1,18 @@
+
+Callers of "runApplyHooks" (5):
+
+method      backfillConfirmedStrategyFillTx
+  internal/journal/strategy_dispatch_runtime.go:1297
+
+function    TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill
+  internal/journal/a066_owner_bind_delta_gap_test.go:17
+
+method      RecordFill
+  internal/journal/fills.go:313
+
+function    TestRiskBucketFillHookLatchesBindGapWithoutReturningError
+  internal/journal/risk_bucket_owner_test.go:277
+
+function    TestRunApplyHooksBindsRiskBucketOwnerAfterCampaignInSameTransaction
+  internal/journal/risk_bucket_owner_test.go:334
+

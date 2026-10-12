@@ -1,0 +1,9 @@
+
+Callers of "computeTradeOutcome" (2):
+
+function    freezeTradeOutcomeTx
+  internal/journal/trade_outcomes.go:129
+
+method      BackfillTradeOutcome
+  internal/journal/trade_outcomes.go:843
+

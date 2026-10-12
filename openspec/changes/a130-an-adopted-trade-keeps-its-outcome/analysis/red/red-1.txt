@@ -1,0 +1,36 @@
+# a130 RED — production 무편집 base 233d5d9c, 2026-10-12T21:16:25Z
+$ go test -count=1 -run A130 ./internal/journal/ ./internal/app/engine/
+# github.com/JungHoonGhae/tossinvest-cli/internal/journal [github.com/JungHoonGhae/tossinvest-cli/internal/journal.test]
+internal/journal/a130_adopted_outcome_test.go:31:9: undefined: TradeOutcomeRefusal
+internal/journal/a130_adopted_outcome_test.go:34:31: undefined: TradeOutcomeRefusal
+internal/journal/a130_adopted_outcome_test.go:40:32: undefined: TradeOutcomeRefusal
+internal/journal/a130_adopted_outcome_test.go:43:18: undefined: TradeOutcomeRefusal
+internal/journal/a130_adopted_outcome_test.go:53:9: hooks.OutcomeRefused undefined (type ApplyHooks has no field or method OutcomeRefused)
+internal/journal/a130_adopted_outcome_test.go:232:10: undefined: TradeOutcomeRefusal
+internal/journal/a130_adopted_outcome_test.go:246:24: undefined: TradeOutcomeRefusal
+internal/journal/a130_adopted_outcome_test.go:311:3: unknown field OutcomeRefused in struct literal of type ApplyHooks
+internal/journal/a130_adopted_outcome_test.go:311:24: undefined: TradeOutcomeRefusal
+internal/journal/a130_trade_outcome_backfill_test.go:67:60: undefined: TradeOutcomeBackfillPlan
+internal/journal/a130_adopted_outcome_test.go:311:3: too many errors
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal [build failed]
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a130_trade_outcome_refusal_log_test.go:55:13: undefined: tradeOutcomeRefusalSink
+internal/app/engine/a130_trade_outcome_refusal_log_test.go:63:10: undefined: tradeOutcomeRefusalSink
+internal/app/engine/a130_trade_outcome_refusal_log_test.go:67:15: undefined: journal.TradeOutcomeRefusal
+internal/app/engine/a130_trade_outcome_refusal_log_test.go:106:10: undefined: tradeOutcomeRefusalSink
+internal/app/engine/a130_trade_outcome_refusal_log_test.go:110:16: undefined: journal.TradeOutcomeRefusal
+internal/app/engine/a130_trade_outcome_refusal_log_test.go:123:12: undefined: bindApplyHooksLogged
+internal/app/engine/a130_trade_outcome_refusal_log_test.go:126:13: logged.OutcomeRefusalBound undefined (type *journal.Journal has no field or method OutcomeRefusalBound)
+internal/app/engine/a130_trade_outcome_refusal_log_test.go:133:11: plain.OutcomeRefusalBound undefined (type *journal.Journal has no field or method OutcomeRefusalBound)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [build failed]
+FAIL
+rc=1
+$ (base 233d5d9c 격리 worktree) go test -count=1 -run "TestA130AQuantityRaised|TestA130AnEngineEntered" ./internal/journal/
+=== RUN   TestA130AQuantityRaisedAfterAdoptionStillFreezesWithOneQuantity
+    a130_red_base_test.go:140: TradeOutcomeOf: journal: no trade outcome for that position: pos-668d39bcb2748489d79dd251 — the grown adopted position must freeze an outcome
+--- FAIL: TestA130AQuantityRaisedAfterAdoptionStillFreezesWithOneQuantity (0.24s)
+=== RUN   TestA130AnEngineEnteredRoundTripIsUnchanged
+--- PASS: TestA130AnEngineEnteredRoundTripIsUnchanged (0.22s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.473s
+FAIL

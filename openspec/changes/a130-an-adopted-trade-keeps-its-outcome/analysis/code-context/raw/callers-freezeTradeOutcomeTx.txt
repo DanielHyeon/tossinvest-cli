@@ -1,0 +1,6 @@
+
+Callers of "freezeTradeOutcomeTx" (1):
+
+function    ApplyExitFill
+  internal/journal/apply_hook.go:961
+

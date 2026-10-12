@@ -1,0 +1,45 @@
+
+Callers of "bindApplyHooks" (14):
+
+function    TestARestartWithAnUndeliveredCriticalAlertKeepsEntryLatched
+  internal/app/engine/a098_restart_does_not_release_the_gate_test.go:99
+
+function    TestAnEmptyOutboxLeavesTheGateUnlatchedOnRestart
+  internal/app/engine/a098_restart_does_not_release_the_gate_test.go:128
+
+function    a098Ops
+  internal/app/engine/a098_the_operator_reads_and_acknowledges_test.go:32
+
+function    TestTheOperatorSurfaceRefusesAnIncompleteEngine
+  internal/app/engine/a098_the_operator_reads_and_acknowledges_test.go:289
+
+function    TestBindingWiresBothApplyHooks
+  internal/app/engine/exit_wiring_internal_test.go:23
+
+function    TestTheBoundExitApplierIsTheJournalsOwn
+  internal/app/engine/exit_wiring_internal_test.go:65
+
+function    TestTheProjectionGuardAsksTheBindingAndNotTheData
+  internal/app/engine/interlock_internal_test.go:177
+
+function    TestA092AssemblyRestoresTheOperatingModeBeforeAnyLoop
+  internal/app/engine/a092_mode_projection_wiring_test.go:19
+
+function    TestA092TransitionsAfterAssemblyReachTheLiveGate
+  internal/app/engine/a092_mode_projection_wiring_test.go:35
+
+function    TestA092AnUnreadableModeLatchesInsteadOfRefusingToStart
+  internal/app/engine/a092_mode_projection_wiring_test.go:63
+
+function    a124ProductionFixture
+  internal/app/engine/a124_the_enforcement_boundary_internal_test.go:109
+
+function    TestTheLedgerModeRowEnforcesEntryOnceProjectionIsWired
+  internal/app/engine/a124_the_enforcement_boundary_internal_test.go:152
+
+function    NewContext
+  internal/app/engine/engine.go:437
+
+function    TestA092ARestoreFailureLatchIsReplacedByTheNextProjection
+  internal/app/engine/a092_m13_restore_latch_test.go:21
+

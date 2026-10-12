@@ -1,0 +1,9 @@
+
+Impact of changing "freezeTradeOutcomeTx" — 2 affected symbols:
+
+internal/journal/trade_outcomes.go
+  function    freezeTradeOutcomeTx:129
+
+internal/journal/apply_hook.go
+  function    ApplyExitFill:961
+

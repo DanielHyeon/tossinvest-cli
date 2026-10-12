@@ -1,0 +1,6 @@
+
+Callers of "adoptedRoundTripLegs" (1):
+
+function    computeTradeOutcome
+  internal/journal/trade_outcomes.go:163
+
