@@ -379,3 +379,27 @@ func TestLedgerIsAppendOnlyAcrossOpens(t *testing.T) {
 		t.Fatal("an unknown row kind must stop the reader")
 	}
 }
+
+// 달력 조회는 시장 현지 "오늘"을 date 로 명시해야 함 — 빈 date 는 개장일에도 regularMarket
+// null 로 와 휴장 오판이 됨(2026-10-12 KR 실측). 저장소 선례(cmd/tossctl/marketschedule.go,
+// internal/app/engine/strategy_schedule_authority.go)와 같은 호출 모양을 고정함.
+func TestResolveSessionPassesMarketLocalDate(t *testing.T) {
+	rig := newTestRig(t)
+	ctx := context.Background()
+
+	if _, err := rig.probe.resolveSession(ctx, "KR"); err != nil {
+		t.Fatalf("KR resolveSession: %v", err)
+	}
+	if _, err := rig.probe.resolveSession(ctx, "US"); err != nil {
+		t.Fatalf("US resolveSession: %v", err)
+	}
+
+	rig.official.mu.Lock()
+	dates := append([]string(nil), rig.official.calendarDates...)
+	rig.official.mu.Unlock()
+	// 시계 2026-10-07 10:00 KST → KR 현지일 10-07, US(뉴욕) 현지일 10-06.
+	want := []string{"2026-10-07", "2026-10-06"}
+	if !reflect.DeepEqual(dates, want) {
+		t.Fatalf("calendar date args = %v, want %v", dates, want)
+	}
+}
