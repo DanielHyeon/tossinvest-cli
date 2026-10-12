@@ -50,8 +50,11 @@ type PublicState struct {
 	TopOfBook            *TopOfBookState `json:"top_of_book,omitempty"`
 	MinutesSinceOpen     int             `json:"minutes_since_open"`
 	MinutesToClose       int             `json:"minutes_to_close"`
-	News                 string          `json:"news"`
-	MissingInputs        []string        `json:"missing_inputs"`
+	// SessionSource 는 세션창 출처("calendar" 또는 "manual-override"). 달력을 사람이 --session 으로
+	// 우회하면 그 사실이 전송 state 와 보관 state 에 남아 보고서가 로트의 혼입을 가려낼 수 있음.
+	SessionSource string   `json:"session_source"`
+	News          string   `json:"news"`
+	MissingInputs []string `json:"missing_inputs"`
 }
 
 // TopOfBookState 는 호가 맨 위 한 줄과 그 나이(브로커 시각 기준).
@@ -94,6 +97,7 @@ func assembleState(in marketInputs) PublicState {
 		TradingVolume:    in.Rank.TradingVolume,
 		MinutesSinceOpen: int(in.ObservedAt.Sub(in.Session.Open) / time.Minute),
 		MinutesToClose:   int(in.Session.Close.Sub(in.ObservedAt) / time.Minute),
+		SessionSource:    in.Session.Source,
 		News:             newsAbsent,
 		MissingInputs:    append([]string{}, in.Gaps...),
 	}

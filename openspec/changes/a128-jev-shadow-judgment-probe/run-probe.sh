@@ -10,6 +10,10 @@
 # 측정일 기동 예 (개장 전 미리 켜 두기 — --wait-open 이 개장까지 대기):
 #   ./run-probe.sh KR /tmp/a128-kr.log --wait-open &
 #
+# 달력 오판 대응 (official market-calendar 가 개장일을 휴장으로 오응답할 때만 — 2026-10-12 KR 실측):
+#   ./run-probe.sh KR /tmp/a128-kr.log --session "09:00-15:30"   # 달력 우회, 시장 현지 시각 세션창
+# 우회는 원장(gap stage=session)·state(session_source=manual-override)에 남는다.
+#
 # 주의: Claude 하네스 background task 는 세션 종료와 함께 죽음("context canceled",
 # 2026-10-07 실증 — 1일차 무산). 측정일에는 세션을 장 마감 + horizon 까지 유지하거나
 # setsid nohup 으로 사람이 직접 띄울 것. 세션 밖 자가 지속 예약은 금지(분류기 차단 outcome).

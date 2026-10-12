@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -34,6 +35,11 @@ const (
 	// 라벨이 기한보다 이만큼 넘게 늦으면 실현가를 쓰지 않고 결손으로 적음(다른 horizon 을 재게 되므로).
 	labelTolerance = 5 * time.Minute
 	reasonLimit    = 160
+
+	// sessionSource* 는 세션창을 어떻게 정했는지 — state·원장에 남겨 보고서가 수동 우회가 섞인
+	// 로트를 가려낼 수 있게 함(달력 오류 대응으로 넣은 --session 수단).
+	sessionSourceCalendar = "calendar"
+	sessionSourceManual   = "manual-override"
 )
 
 // config 는 실행 매개변수. 기본값은 main.go 플래그에 있음.
@@ -45,12 +51,24 @@ type config struct {
 	LabelTick   time.Duration
 	ReadGap     time.Duration   // 브로커 호출 사이 간격
 	RetryDelays []time.Duration // 429 재시도 지연(지수) — 길이가 재시도 횟수
+	// ManualWindow 는 --session 수동 세션창 우회. nil 이면 달력을 씀(기본 동작 불변).
+	ManualWindow *manualWindow
 }
 
-// session 은 정규장 하나의 경계.
+// session 은 정규장 하나의 경계. Source 는 창을 어떻게 정했는지(달력 vs 수동 우회)를 적어
+// state·원장으로 흘려보냄.
 type session struct {
-	Open  time.Time
-	Close time.Time
+	Open   time.Time
+	Close  time.Time
+	Source string
+}
+
+// manualWindow 는 --session 으로 사람이 공급한 세션창(시장 현지 시각). 달력이 틀렸을 때만 씀.
+// 파싱·역전창 검사는 시작 전 parseManualWindow 에서 끝나므로 여기 담긴 값은 이미 유효함.
+type manualWindow struct {
+	StartHour, StartMin int
+	EndHour, EndMin     int
+	Raw                 string // "HH:MM-HH:MM" 원문 — 원장 우회 행에 그대로 적음
 }
 
 // probe 는 한 실행의 상태 전부.
@@ -118,8 +136,13 @@ func reasonOf(err error) string { return truncate(err.Error(), reasonLimit) }
 
 func stamp(t time.Time) string { return t.UTC().Format(time.RFC3339) }
 
-// resolveSession 은 market-calendar 의 오늘 정규장을 읽음. 없으면(휴장) 거부.
+// resolveSession 은 세션창을 정함. 기본은 market-calendar 의 오늘 정규장을 읽음(없으면 휴장으로 거부).
+// --session 수동 우회가 있으면 달력을 전혀 호출하지 않고 그 창을 쓰며, 우회 사실을 원장에 남김
+// (달력이 틀렸을 때 사람이 명시적으로 세션창을 공급하는 수단 — 2026-10-12 KR 달력 오응답 대응).
 func (p *probe) resolveSession(ctx context.Context, market string) (session, error) {
+	if p.cfg.ManualWindow != nil {
+		return p.manualSession(market)
+	}
 	calendar, err := withRateLimitRetry(ctx, p, func(ctx context.Context) (official.MarketCalendarResponse, error) {
 		return p.src.TypedMarketCalendar(ctx, market, "")
 	})
@@ -133,7 +156,72 @@ func (p *probe) resolveSession(ctx context.Context, market string) (session, err
 	if !regular.EndTime.After(regular.StartTime) {
 		return session{}, fmt.Errorf("%s regular session %s..%s is not a forward interval", market, regular.StartTime, regular.EndTime)
 	}
-	return session{Open: regular.StartTime, Close: regular.EndTime}, nil
+	return session{Open: regular.StartTime, Close: regular.EndTime, Source: sessionSourceCalendar}, nil
+}
+
+// manualSession 은 수동 창을 시장 현지 "오늘"(p.now() 의 시장 현지 날짜)에 붙여 세션으로 만들고,
+// 달력 우회를 원장에 1행 남김(침묵 생략 금지). 달력은 한 번도 호출하지 않음.
+func (p *probe) manualSession(market string) (session, error) {
+	loc, err := marketLocation(market)
+	if err != nil {
+		return session{}, err
+	}
+	w := p.cfg.ManualWindow
+	nowLocal := p.now().In(loc)
+	y, m, d := nowLocal.Date()
+	openAt := time.Date(y, m, d, w.StartHour, w.StartMin, 0, 0, loc)
+	closeAt := time.Date(y, m, d, w.EndHour, w.EndMin, 0, 0, loc)
+	// 명시적 우회를 원장에 1행 남김 — 보고서가 gap 단계 "session" 으로 override 혼입을 봄.
+	if err := p.ledger.gap(gapRow{
+		At: stamp(p.now()), Market: market, Stage: "session",
+		Reason: fmt.Sprintf("calendar bypassed by --session, window=%s, reason=operator", w.Raw),
+	}); err != nil {
+		return session{}, err
+	}
+	return session{Open: openAt, Close: closeAt, Source: sessionSourceManual}, nil
+}
+
+// marketLocation 은 수동 창 해석에 쓰는 시장 현지 시간대. US 는 DST(EDT/EST)를 그대로 반영함.
+func marketLocation(market string) (*time.Location, error) {
+	name := map[string]string{"KR": "Asia/Seoul", "US": "America/New_York"}[market]
+	if name == "" {
+		return nil, fmt.Errorf("no timezone known for market %q", market)
+	}
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		return nil, fmt.Errorf("loading %s timezone %q: %w", market, name, err)
+	}
+	return loc, nil
+}
+
+// parseManualWindow 는 "HH:MM-HH:MM"(시장 현지 시각)를 검증해 manualWindow 로 만듦. 시작 전에 부름 —
+// 파싱 실패·역전창(start≥end)은 여기서 거부되어 브로커를 한 번도 부르지 않음.
+func parseManualWindow(raw string) (*manualWindow, error) {
+	start, end, ok := strings.Cut(raw, "-")
+	if !ok {
+		return nil, fmt.Errorf(`--session must be "HH:MM-HH:MM", got %q`, raw)
+	}
+	sh, sm, err := parseHHMM(start)
+	if err != nil {
+		return nil, fmt.Errorf("--session start: %w", err)
+	}
+	eh, em, err := parseHHMM(end)
+	if err != nil {
+		return nil, fmt.Errorf("--session end: %w", err)
+	}
+	if sh*60+sm >= eh*60+em {
+		return nil, fmt.Errorf("--session window %q is not a forward interval (start must precede end)", raw)
+	}
+	return &manualWindow{StartHour: sh, StartMin: sm, EndHour: eh, EndMin: em, Raw: raw}, nil
+}
+
+// parseHHMM 은 "15:04" 레이아웃으로 시·분을 뽑음. 레이아웃이 시(0..23)·분(0..59) 범위를 함께 검증함.
+func parseHHMM(value string) (int, int, error) {
+	t, err := time.Parse("15:04", strings.TrimSpace(value))
+	if err != nil {
+		return 0, 0, fmt.Errorf("invalid HH:MM %q", strings.TrimSpace(value))
+	}
+	return t.Hour(), t.Minute(), nil
 }
 
 // runMarket 은 세션 안에서 간격마다 한 사이클씩 돎. 판단 시각 + horizon 이 장 마감을 넘으면

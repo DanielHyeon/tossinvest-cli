@@ -275,4 +275,6 @@ func (r *testRig) contents(t *testing.T) ledgerContents {
 	return contents
 }
 
-func (r *testRig) session() session { return session{Open: at(9, 0), Close: at(15, 30)} }
+func (r *testRig) session() session {
+	return session{Open: at(9, 0), Close: at(15, 30), Source: sessionSourceCalendar}
+}

@@ -20,7 +20,7 @@ func TestPublicStateKeySetIsPinned(t *testing.T) {
 	want := []string{
 		"base_price", "change_pct_vs_reference", "currency", "horizon_minutes", "listing_market", "market",
 		"minutes_since_open", "minutes_to_close", "missing_inputs", "name", "news", "observed_at",
-		"ranking_rank", "ranking_type", "reference_price", "symbol", "top_of_book", "trading_amount",
+		"ranking_rank", "ranking_type", "reference_price", "session_source", "symbol", "top_of_book", "trading_amount",
 		"trading_volume",
 		"top_of_book.best_ask", "top_of_book.best_ask_volume", "top_of_book.best_bid",
 		"top_of_book.best_bid_volume", "top_of_book.source_age_seconds", "top_of_book.spread_bps",

@@ -56,6 +56,12 @@
   프로브는 `market hours` 를 시작 시 읽어 세션 밖이면 대기하거나 종료한다(플래그).
 - 2일 = 달력 2일의 KR·US 세션 각 2회. 운영: 에이전트가 세션마다 실행(read-only 라 가능),
   장시간 실행은 백그라운드 + 로그 파일.
+- 달력 우회(`--session "HH:MM-HH:MM"`): official market-calendar 가 틀릴 때만 쓰는 수동 수단
+  (2026-10-12 KR 개장일을 휴장으로 오응답한 실측 대응). 지정하면 달력을 전혀 호출하지 않고
+  시장 현지 시각(KR=Asia/Seoul·US=America/New_York)으로 오늘 세션창을 만든다. 명시적 우회이므로
+  침묵 생략 금지 — state `session_source="manual-override"` 와 원장 gap 행(stage=session)에 남겨
+  보고서가 로트의 혼입을 가려낸다. 파싱 실패·역전창은 측정 시작 전에 거부. 판단 종료 규칙
+  (judgment+horizon ≤ close)·라벨 창은 수동 close 를 그대로 쓴다.
 
 ## 임계 판정 보고서
 

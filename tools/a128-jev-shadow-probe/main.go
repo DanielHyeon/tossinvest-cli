@@ -25,6 +25,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	_ "time/tzdata" // 수동 세션창(--session)의 시장 현지 시각 해석이 컨테이너 tz DB 없이도 맞도록 tz 를 바이너리에 포함
 
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
@@ -71,6 +72,8 @@ func runCommand(ctx context.Context, args []string, getenv func(string) string) 
 	out := flags.String("out", defaultLedgerDir, "ledger directory (ledger.jsonl + states/)")
 	configDir := flags.String("config-dir", "", "optional: the tossctl config directory")
 	waitOpen := flags.Bool("wait-open", false, "wait for the regular session to open instead of refusing")
+	sessionWindow := flags.String("session", "",
+		`optional: bypass the market calendar with a market-local window "HH:MM-HH:MM" (e.g. "09:00-15:30"); use only when the calendar is wrong`)
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
@@ -80,6 +83,14 @@ func runCommand(ctx context.Context, args []string, getenv func(string) string) 
 	}
 	if *top < 1 || *top > 100 || *horizon < 1 || *interval < time.Minute {
 		return errors.New("--top must be 1..100, --horizon ≥ 1 minute and --interval ≥ 1m")
+	}
+	// 수동 세션창은 브로커를 부르기 전에 파싱·검증함 — 파싱 실패·역전창은 측정을 시작하기 전에 거부.
+	var manualSess *manualWindow
+	if strings.TrimSpace(*sessionWindow) != "" {
+		manualSess, err = parseManualWindow(*sessionWindow)
+		if err != nil {
+			return err
+		}
 	}
 	judge.model = *model
 
@@ -111,7 +122,8 @@ func runCommand(ctx context.Context, args []string, getenv func(string) string) 
 	p := newProbe(src, judge, l, config{
 		Interval: *interval, TopK: *top, Horizon: time.Duration(*horizon) * time.Minute, WaitOpen: *waitOpen,
 		LabelTick: 30 * time.Second, ReadGap: 250 * time.Millisecond,
-		RetryDelays: []time.Duration{5 * time.Second, 10 * time.Second, 20 * time.Second, 40 * time.Second},
+		RetryDelays:  []time.Duration{5 * time.Second, 10 * time.Second, 20 * time.Second, 40 * time.Second},
+		ManualWindow: manualSess,
 	})
 	existing, err := readLedger(filepath.Join(ledgerDir, ledgerFileName))
 	if err != nil {
@@ -120,6 +132,9 @@ func runCommand(ctx context.Context, args []string, getenv func(string) string) 
 	p.restorePending(existing)
 	p.logf("ledger %s · markets %v · model %s · interval %s · top %d · horizon %dm · restored %d pending",
 		ledgerDir, markets, judge.model, *interval, *top, *horizon, p.pendingCount())
+	if manualSess != nil {
+		p.logf("session: calendar bypassed by --session %s (market-local window; operator override)", manualSess.Raw)
+	}
 	return p.run(ctx, markets)
 }
 
