@@ -114,6 +114,7 @@
     - STORY-TOS-a124 — A deliverer that keeps failing blocks entry [archived] → `a124-a-deliverer-that-keeps-failing-blocks-entry`
     - STORY-TOS-a090 — An unobserved position is counted and made known [archived] → `a090-an-unobserved-position-is-counted`
     - STORY-TOS-a129 — An exit order the engine places leaves a line in the engine log [archived] → `a129-an-exit-order-leaves-a-line`
+    - STORY-TOS-a131 — No log or record file the system writes carries account information [in_progress] → `a131-no-account-in-any-log`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`

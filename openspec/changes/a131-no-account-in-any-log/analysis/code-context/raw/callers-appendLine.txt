@@ -1,0 +1,9 @@
+
+Callers of "appendLine" (2):
+
+function    Reconcile
+  internal/verifylive/reconcile.go:168
+
+function    TestLockedAppendRefusesWhenTheRecordGrewAfterTheLockedRead
+  internal/verifylive/reconcile_codex_test.go:244
+

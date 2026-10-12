@@ -1,0 +1,54 @@
+52bb58774a8bde4d257eed2e14ef9f1293f44596
+# RED-2: redact 패키지(새 leaf)만 있고 싱크 배선 전
+# github.com/JungHoonGhae/tossinvest-cli/internal/audit_test [github.com/JungHoonGhae/tossinvest-cli/internal/audit.test]
+internal/audit/a131_audit_redact_test.go:68:13: undefined: audit.RedactEntry
+# github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl [github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl.test]
+cmd/tossctl/a131_scrub_account_records_test.go:190:14: undefined: scrubBeforeReplace
+cmd/tossctl/a131_scrub_account_records_test.go:191:2: undefined: scrubBeforeReplace
+cmd/tossctl/a131_scrub_account_records_test.go:198:21: undefined: scrubBeforeReplace
+--- FAIL: TestA131NoLoggerOrAppendWriterBypassesRedaction (1.33s)
+    a131_structure_test.go:200: redaction bypasses:
+          internal/audit/audit.go: does not call redact.String
+          internal/soak/record.go: does not call redact.SealRecordLine
+          internal/verifylive/record.go: does not call redact.SealRecordLine
+--- FAIL: TestA131TheSinksCallTheRule (0.59s)
+    a131_structure_test.go:238: internal/obs/log.go .NewLogger calls redact.Handler 0 time(s), want >= 1
+    a131_structure_test.go:238: internal/official/reads.go Client.accountsLocked calls redact.Register 0 time(s), want >= 1
+    a131_structure_test.go:238: cmd/tossctl/engine.go .newEngineRunCmd calls redact.Writer 0 time(s), want >= 2
+    a131_structure_test.go:238: cmd/tossctl/main.go .main calls redact.Writer 0 time(s), want >= 1
+    a131_structure_test.go:233: internal/audit/audit.go Log.Record does not call RedactEntry
+    a131_structure_test.go:238: internal/soak/record.go Recorder.Append calls redact.SealRecordLine 0 time(s), want >= 1
+    a131_structure_test.go:238: internal/verifylive/record.go Recorder.Append calls redact.SealRecordLine 0 time(s), want >= 1
+    a131_structure_test.go:238: internal/verifylive/record.go lockedRecord.appendLine calls redact.SealRecordLine 0 time(s), want >= 1
+    a131_structure_test.go:250: main writes to os.Stderr directly at 214
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/redact	1.942s
+--- FAIL: TestA131EngineLoggerDropsAccountAndScrubsValues (0.00s)
+    a131_redact_test.go:45: engine log leaked [987-65-OBSSENTINEL 98765432109 *******2109 pos-00112233445566778899aabb]:
+        {"time":"2026-10-12T22:08:17.645286441Z","level":"INFO","msg":"reconcile.clean","account":"987-65-OBSSENTINEL","event":"reconcile.clean","subject":"reconcile","severity":"normal","symbol":"005930"}
+        {"time":"2026-10-12T22:08:17.645324989Z","level":"ERROR","msg":"engine.loop_degraded","event":"engine.loop_degraded","subject":"engine","severity":"critical","account":"987-65-OBSSENTINEL","detail":"pos-00112233445566778899aabb","error":"exit: journal: no position for account 98765432109 (masked *******2109)"}
+        {"time":"2026-10-12T22:08:17.645331142Z","level":"WARN","msg":"engine.loop_degraded","event":"engine.loop_degraded","subject":"engine","severity":"critical","claimed_by":"engine:98765432109:42"}
+--- FAIL: TestA131BaseAttrsAreScrubbed (0.00s)
+    a131_redact_test.go:74: base attributes leaked [987-65-OBSSENTINEL 98765432109]: {"time":"2026-10-12T22:08:17.645402342Z","level":"INFO","msg":"reconcile.clean","account":"987-65-OBSSENTINEL","holder":"x98765432109","event":"reconcile.clean","subject":"reconcile","severity":"normal"}
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/obs	0.009s
+--- FAIL: TestA131AccountsRegistersEveryAccountNumber (0.00s)
+    a131_register_test.go:46: "987-65-REGFIRST" not registered: "first=987-65-REGFIRST second=11223344556 dashed=112-23344-556"
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.004s
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/audit [build failed]
+--- FAIL: TestA131SoakRecordSealsTheAccount (0.00s)
+    a131_seal_test.go:45: soak record carries the account in the clear: {"format_version":1,"kind":"cycle","started_at":"2026-07-26T09:00:00Z","finished_at":"2026-07-26T09:00:01Z","account_ref":"98765432188","credential":{"ok":true,"observed":true,"token_expires_at":"2026-07-26T10:00:00Z"},"endpoints":[{"endpoint":"GET /api/v1/accounts","ok":true,"latency_ms":0,"requests":1,"error":"broker said account 98765432188 is busy"}],"completeness":{"evaluated":true,"ok":true,"order_pages":0,"order_ids":0,"open_orders":0,"positions":0,"quotes_requested":0,"quotes_returned":0}}
+--- FAIL: TestA131MissingSealKeyFailsClosed (0.02s)
+    a131_seal_test.go:110: remove /tmp/TestA131MissingSealKeyFailsClosed4010302659/001/account-seal.key: no such file or directory
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/soak	0.046s
+--- FAIL: TestA131VerifyRecordSealsTheAccount (0.00s)
+    a131_seal_test.go:43: verify record carries "98765432177": {"format_version":1,"kind":"step","run_id":"run-1","process":{"pid":0,"instance_id":"","started_at":"0001-01-01T00:00:00Z"},"step_id":"s1","title":"t","started_at":"2026-10-12T22:08:18.209090024Z","finished_at":"2026-10-12T22:08:18.209090024Z","account_ref":"*******2177","mutating":true,"verdict":"pass","reason":"broker echoed account 98765432177","calls":[{"endpoint":"POST /api/v1/orders","at":"2026-10-12T22:08:18.209090024Z","latency_ms":0}],"artifacts":[{"kind":"conditional-order","id":"c-1","symbol":"005930","created_at":"2026-10-12T22:08:18.209090024Z","cancelled_at":"0001-01-01T00:00:00Z","cancelled":false,"filled_at":"0001-01-01T00:00:00Z"}]}
+--- FAIL: TestA131ReconcileLineIsSealedAndStillBinds (0.01s)
+    a131_seal_test.go:112: reconcile line carries the account: {"format_version":1,"kind":"step","run_id":"run-1","process":{"pid":0,"instance_id":"","started_at":"0001-01-01T00:00:00Z"},"step_id":"s1","title":"t","started_at":"2026-10-12T22:08:18.215502262Z","finished_at":"2026-10-12T22:08:18.215502262Z","account_ref":"*******2177","mutating":true,"verdict":"pass","reason":"broker echoed account 98765432177","calls":[{"endpoint":"POST /api/v1/orders","at":"2026-10-12T22:08:18.215502262Z","latency_ms":0}],"artifacts":[{"kind":"conditional-order","id":"c-1","symbol":"005930","created_at":"2026-10-12T22:08:18.215502262Z","cancelled_at":"0001-01-01T00:00:00Z","cancelled":false,"filled_at":"0001-01-01T00:00:00Z"}]}
+        {"format_version":1,"kind":"reconcile","run_id":"reconcile-UZ7PVOLUU2H4GGVZ","process":{"pid":0,"instance_id":"","started_at":"0001-01-01T00:00:00Z"},"step_id":"reconcile-absent","title":"reconciled absent","started_at":"2026-10-12T22:08:18.215502262Z","finished_at":"2026-10-12T22:08:18.215502262Z","account_ref":"*******2177","mutating":false,"verdict":"","observations":[{"key":"reconcile.basis","value":"basis","detail":"two complete official list reads narrowed the absence window; not a cancel, fill or endpoint proof"}],"artifacts":[{"kind":"conditional-order","id":"c-1","symbol":"005930","created_at":"2026-10-12T22:08:18.215502262Z","cancelled_at":"0001-01-01T00:00:00Z","cancelled":false,"filled_at":"0001-01-01T00:00:00Z"}]}
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/verifylive	0.015s
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl [build failed]
+FAIL

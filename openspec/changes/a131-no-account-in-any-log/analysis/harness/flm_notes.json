@@ -1,0 +1,579 @@
+{
+  "internal-obs--newlogger": {
+    "role": "obs.Logger 를 만든다 — 쓰기 대상·레벨·JSON/텍스트·시계·기본 속성을 slog 핸들러로 조립. 생산 호출자 2(`runEngineRun` 엔진 로거 → engine.log, `buildFlattenWiring` → 터미널 stderr).",
+    "inputs": [
+      [
+        "`opts.Writer`",
+        "nil 가능",
+        "호출자",
+        "nil 이면 os.Stderr"
+      ],
+      [
+        "`opts.Clock`",
+        "nil 가능",
+        "호출자",
+        "nil 이면 clock.System"
+      ],
+      [
+        "`opts.JSON`",
+        "bool",
+        "호출자",
+        "—"
+      ],
+      [
+        "`opts.Base`",
+        "속성 목록(비어도 됨)",
+        "호출자",
+        "모든 줄 앞에 붙음 — a131 뒤에는 치환 핸들러를 지남"
+      ]
+    ],
+    "calls": [
+      [
+        "`slog.NewJSONHandler`/`NewTextHandler`",
+        "인코딩",
+        "오류 없음",
+        "AST calls"
+      ],
+      [
+        "`handler.WithAttrs`",
+        "기본 속성",
+        "오류 없음",
+        "AST calls"
+      ],
+      [
+        "`redact.Handler`(a131 신설)",
+        "계좌 키 버림·문자열 치환",
+        "순수 — 오류 없음",
+        "design D2"
+      ]
+    ],
+    "mutations": [
+      "반환 값 외 부작용 없음. a131: 내부 핸들러를 `redact.Handler` 로 감싼 뒤 `Base` 를 붙인다(B6 의 대상이 감싼 핸들러)."
+    ],
+    "edited_branches": [
+      "B6"
+    ],
+    "boundary": "B6 직전에 감싸기 한 줄 추가 — 분기 조건·반환 불변. 줄 내용만 바뀐다(계좌 키 없음·치환).",
+    "highrisk": "no(직접) — 엔진 로그 바이트만. 주문·청산 판정은 로그를 읽지 않는다.",
+    "tests": {
+      "B6": "`TestA131EngineLoggerDropsAccountAndScrubsValues` · `TestA131BaseAttrsAreScrubbed`"
+    },
+    "a131_tests": [
+      "`TestA131EngineLoggerDropsAccountAndScrubsValues` — 센티널 계좌 필드·감싼 오류 원문·With 속성·마스크·pos- id 가 JSON 줄에 없음",
+      "`TestA131BaseAttrsAreScrubbed`",
+      "`TestA131TheSinksCallTheRule` — 구조 핀(go/parser): NewLogger 가 redact.Handler 를 부름"
+    ]
+  },
+  "internal-official--client.accountslocked": {
+    "role": "공식 `/api/v1/accounts` 를 읽어 계좌 목록을 만들고 암묵 accountSeq 를 고정/검증한다. 계좌 번호가 프로세스에 들어오는 유일한 입구(호출자 `Accounts` · `ensureAccountSeq`).",
+    "inputs": [
+      [
+        "`ctx`",
+        "—",
+        "호출자",
+        "c.get 이 존중"
+      ],
+      [
+        "`c.accountSeq`·`accountSeqExplicit`",
+        "0 또는 양수",
+        "클라이언트 상태",
+        "표류면 오류"
+      ]
+    ],
+    "calls": [
+      [
+        "`c.get`",
+        "브로커 읽기",
+        "오류면 그대로 반환(B1)",
+        "AST calls"
+      ],
+      [
+        "`adaptAccounts`",
+        "도메인 변환",
+        "순수",
+        "AST calls"
+      ],
+      [
+        "`redact.Register`(a131 신설)",
+        "받은 계좌 번호를 프로세스 치환 규칙에 등록",
+        "메모리 append — 오류 없음",
+        "design D2 R0"
+      ]
+    ],
+    "mutations": [
+      "`c.accountSeq.Store`(B2). a131: 성공 반환 직전 `redact.Register(accountNo…)` — 반환값·오류·브로커 호출 불변."
+    ],
+    "edited_branches": [],
+    "boundary": "마지막 `return adaptAccounts(raw), nil` 앞에 등록 한 줄. 분기 B1~B5 무편집.",
+    "highrisk": "no — 계좌 조회 경로지만 반환·오류·호출 수 불변. 등록은 메모리 쓰기 하나.",
+    "default_test": "a131 무편집 분기 — `go test ./internal/official/` 전체(영수증 analysis/verify)",
+    "a131_tests": [
+      "`TestA131AccountsRegistersEveryAccountNumber` — httptest 응답의 계좌 번호가 `redact.String` 에서 치환됨"
+    ]
+  },
+  "cmd-tossctl--newengineruncmd": {
+    "role": "`tossctl engine run` cobra 명령을 만든다. RunE 가 `runEngineRun` 을 부른다 — 이 프로세스의 stdout/stderr 가 engine.log 다(`spawnDetachedEngine` · `engine-autostart.sh`).",
+    "inputs": [
+      [
+        "`root`",
+        "rootOptions",
+        "newRootCmd",
+        "—"
+      ]
+    ],
+    "calls": [
+      [
+        "`runEngineRun`",
+        "엔진 실행",
+        "오류 반환",
+        "AST calls"
+      ],
+      [
+        "`redact.Writer`(a131)",
+        "cmd 의 out/err 를 치환 쓰기로 감쌈",
+        "쓰기 오류 전파",
+        "design D3"
+      ]
+    ],
+    "mutations": [
+      "a131: RunE 안에서 `cmd.SetOut(redact.Writer(cmd.OutOrStdout()))` · `cmd.SetErr(…)` 뒤 `runEngineRun` — 엔진 로거도 이 errOut 을 받는다."
+    ],
+    "b1": "분기 없음 — RunE 클로저 본문 편집",
+    "boundary": "RunE 클로저에 감싸기 두 줄. runEngineRun 본문 무편집.",
+    "highrisk": "no(직접) — 엔진 프로세스의 출력 바이트만.",
+    "tests": {
+      "B1": "`TestA131TheSinksCallTheRule` (구조 핀) · `TestA131WriterScrubsEveryWrite`"
+    },
+    "a131_tests": [
+      "`TestA131TheSinksCallTheRule` — newEngineRunCmd 가 redact.Writer 를 두 번 부름(go/parser)"
+    ]
+  },
+  "cmd-tossctl--main": {
+    "role": "프로세스 진입점 — 언어 결정 뒤 루트 명령 실행, 오류면 stderr 에 한 줄 쓰고 exit 1. engine run · soak run · soak attest 의 마지막 오류 줄이 engine.log · soak.log · attest 로그로 간다.",
+    "inputs": [
+      [
+        "`os.Args`·환경",
+        "—",
+        "OS",
+        "—"
+      ]
+    ],
+    "calls": [
+      [
+        "`newRootCmd().Execute`",
+        "명령 실행",
+        "오류 반환",
+        "AST calls"
+      ],
+      [
+        "`fmt.Fprintln`",
+        "마지막 오류 줄",
+        "쓰기 오류 무시(종전)",
+        "AST calls"
+      ],
+      [
+        "`redact.Writer`(a131)",
+        "오류 줄 치환",
+        "—",
+        "design D3"
+      ]
+    ],
+    "mutations": [
+      "a131: B1 의 `fmt.Fprintln(os.Stderr, err)` → `fmt.Fprintln(redact.Writer(os.Stderr), err)`. exit 코드 불변."
+    ],
+    "edited_branches": [
+      "B1"
+    ],
+    "boundary": "B1 본문 한 줄.",
+    "highrisk": "no",
+    "tests": {
+      "B1": "`TestA131TheSinksCallTheRule` (구조 핀 — redact.Writer 호출 · os.Stderr 직접 Fprint 없음)"
+    },
+    "a131_tests": [
+      "`TestA131TheSinksCallTheRule`"
+    ]
+  },
+  "internal-audit--log.record": {
+    "role": "감사 줄 하나를 O_APPEND + fsync 로 쓴다. 감사 기록의 유일한 쓰기 입구(`RecordChange` · `RecordAction` 이 거침).",
+    "inputs": [
+      [
+        "`l`",
+        "nil 가능",
+        "Open",
+        "nil 이면 무동작(B1)"
+      ],
+      [
+        "`e`",
+        "Entry",
+        "호출자",
+        "At·Subject 비면 채움"
+      ]
+    ],
+    "calls": [
+      [
+        "`json.Marshal`",
+        "직렬화",
+        "오류면 반환",
+        "AST calls"
+      ],
+      [
+        "`os.OpenFile`·`Write`·`Sync`",
+        "추가 쓰기",
+        "오류면 반환",
+        "AST calls"
+      ],
+      [
+        "`RedactEntry`(a131 신설)",
+        "Setting·Old·New·Detail·Subject 의 계좌 치환",
+        "순수",
+        "design D3"
+      ]
+    ],
+    "mutations": [
+      "파일 끝에 한 줄. a131: 직렬화 전 `e = RedactEntry(e)` — 행위·시각·주체·설정 이름·값 보존, 계좌 텍스트만 `[account]`."
+    ],
+    "edited_branches": [],
+    "boundary": "B1 뒤 한 줄. 이후 분기 무편집.",
+    "highrisk": "no — 감사 의미 보존(설계 D3-a). §0.5 추적성 유지.",
+    "default_test": "a131 무편집 분기 — `go test ./internal/audit/` 전체",
+    "a131_tests": [
+      "`TestA131AuditRecordReplacesOnlyAccountText` — 센티널 계좌가 detail 에서 치환, action·setting·old·new·subject·at 보존",
+      "`TestA131RecordChangeStillDeduplicates`"
+    ]
+  },
+  "internal-soak--recorder.append": {
+    "role": "soak 주기 하나를 한 줄로 기록 파일에 추가·동기화한다(`soak.go:389` 하나가 부름).",
+    "inputs": [
+      [
+        "`c`",
+        "Cycle",
+        "Runner",
+        "FormatVersion·Kind 비면 채움"
+      ],
+      [
+        "`r.f`",
+        "열린 파일 또는 nil",
+        "OpenRecorder",
+        "nil 이면 오류"
+      ]
+    ],
+    "calls": [
+      [
+        "`json.Marshal`",
+        "직렬화",
+        "오류면 반환",
+        "AST calls"
+      ],
+      [
+        "`redact.SealRecordLine`(a131 신설)",
+        "account_ref 봉인 + 문자열 치환",
+        "키 파일 생성 실패면 오류 반환",
+        "design D4"
+      ],
+      [
+        "`r.f.Write`·`Sync`",
+        "추가 쓰기",
+        "오류면 반환",
+        "AST calls"
+      ]
+    ],
+    "mutations": [
+      "파일 끝에 한 줄. a131: 직렬화 직후 봉인 — 기록 줄에 계좌 원문 없음."
+    ],
+    "edited_branches": [
+      "B3"
+    ],
+    "boundary": "B3(직렬화 오류) 뒤 봉인 호출과 그 오류 반환 하나 추가. 잠금·쓰기·동기화 무편집.",
+    "highrisk": "yes(간접) — 인터록 증거 기록. 봉인/열기 왕복으로 결속 값 불변.",
+    "tests": {
+      "B3": "`TestA131SoakRecordSealsTheAccount` · `TestA131SealedSoakRecordStillAttestsTheSameAccount`"
+    },
+    "a131_tests": [
+      "`TestA131SoakRecordSealsTheAccount`",
+      "`TestA131SealedSoakRecordStillAttestsTheSameAccount`",
+      "`TestA131MissingSealKeyFailsClosed`"
+    ]
+  },
+  "internal-soak--loadcycles": {
+    "role": "soak 기록을 읽어 주기 목록을 만든다 — 마지막 줄 찢김만 관용. 호출자 `loadSoakSummary`(attest) · console `readSoak`.",
+    "inputs": [
+      [
+        "`path`",
+        "파일 경로",
+        "호출자",
+        "없으면 빈 결과"
+      ]
+    ],
+    "calls": [
+      [
+        "`decodeCycle`",
+        "줄 해독",
+        "오류면 위치와 함께 반환",
+        "AST calls"
+      ],
+      [
+        "`openCycleAccount`(a131 신설)",
+        "봉인된 계좌 열기",
+        "열 수 없으면 빈 계좌(fail-closed)",
+        "design D4"
+      ]
+    ],
+    "mutations": [
+      "반환 슬라이스. a131: 해독한 주기마다 봉인을 열어 `AccountRef` 를 채움(두 자리 — flush 와 마지막 줄)."
+    ],
+    "edited_branches": [],
+    "boundary": "해독 직후 열기 호출 두 자리. 분기 조건·반환 불변.",
+    "highrisk": "yes(간접) — attestation 계좌 출처. 왕복 시험이 값 불변을 고정.",
+    "default_test": "a131 무편집 분기 — `go test ./internal/soak/` 전체",
+    "a131_tests": [
+      "`TestA131SealedSoakRecordStillAttestsTheSameAccount`",
+      "`TestA131LegacyAndSealedLinesReadTheSame`",
+      "`TestA131MissingSealKeyFailsClosed`"
+    ]
+  },
+  "internal-verifylive--recorder.append": {
+    "role": "검증 단계 줄 하나를 기록 파일에 추가·동기화한다(runner · abort · cleanup 이 부름).",
+    "inputs": [
+      [
+        "`e`",
+        "Entry(계좌는 마스크)",
+        "Runner",
+        "FormatVersion·Kind 비면 채움"
+      ],
+      [
+        "`r.f`",
+        "열린 파일 또는 nil",
+        "OpenRecorder",
+        "nil 이면 오류"
+      ]
+    ],
+    "calls": [
+      [
+        "`json.Marshal`",
+        "직렬화",
+        "오류면 반환",
+        "AST calls"
+      ],
+      [
+        "`redact.SealRecordLine`(a131 신설)",
+        "account_ref 봉인 + 문자열 치환",
+        "키 생성 실패면 오류",
+        "design D4"
+      ],
+      [
+        "`r.f.Write`·`Sync`",
+        "추가 쓰기",
+        "오류면 반환",
+        "AST calls"
+      ]
+    ],
+    "mutations": [
+      "파일 끝에 한 줄. a131: 직렬화 직후 봉인."
+    ],
+    "edited_branches": [
+      "B3"
+    ],
+    "boundary": "B3 뒤 봉인 호출과 오류 반환 하나 추가.",
+    "highrisk": "yes(간접) — 감독 증거 기록. 마스크 값 왕복 불변.",
+    "tests": {
+      "B3": "`TestA131VerifyRecordSealsTheAccount` · `TestA131SealedVerifyProofStillBinds`"
+    },
+    "a131_tests": [
+      "`TestA131VerifyRecordSealsTheAccount`",
+      "`TestA131SealedVerifyProofStillBinds`"
+    ]
+  },
+  "internal-verifylive--lockedrecord.appendline": {
+    "role": "대사 줄 하나를 잠근 fd 로 한 번에 쓰고 동기화한 뒤 다시 읽어 대조한다(호출자 `Reconcile`).",
+    "inputs": [
+      [
+        "`line`",
+        "개행으로 끝나는 줄",
+        "encodeReconcileLine",
+        "아니면 오류(B1)"
+      ],
+      [
+        "`judged`",
+        "판정한 바이트 길이",
+        "Reconcile",
+        "크기가 다르면 errRecordSizeMoved"
+      ]
+    ],
+    "calls": [
+      [
+        "`redact.SealRecordLine`(a131 신설)",
+        "account_ref(마스크) 봉인 + 치환",
+        "키 생성 실패면 오류 — 쓰기 전",
+        "design D4"
+      ],
+      [
+        "`recordWrite`·`recordSync`·`ReadAt`",
+        "쓰기·대조",
+        "불완전·미확인 오류",
+        "AST calls"
+      ]
+    ],
+    "mutations": [
+      "파일 끝에 한 줄. a131: B1 검사 뒤 봉인한 줄을 쓰고 대조한다(대조 대상도 봉인 줄)."
+    ],
+    "edited_branches": [],
+    "boundary": "B1 뒤 봉인 한 줄 + 오류 반환. 크기 판정·쓰기·대조 무편집.",
+    "highrisk": "yes(간접) — 검증 대사 기록. 동시성 지문은 원본 바이트 그대로.",
+    "default_test": "a131 무편집 분기 — `go test ./internal/verifylive/` 전체",
+    "a131_tests": [
+      "`TestA131ReconcileLineIsSealedAndStillBinds`"
+    ]
+  },
+  "internal-verifylive--loadentries": {
+    "role": "검증 기록을 읽어 단계 줄 목록을 만든다 — 마지막 줄 찢김만 관용. 호출자 7(attest 감독 증거 · console · verify).",
+    "inputs": [
+      [
+        "`path`",
+        "파일 경로",
+        "호출자",
+        "없으면 빈 결과"
+      ]
+    ],
+    "calls": [
+      [
+        "`decodeEntry`",
+        "줄 해독",
+        "오류면 위치와 함께 반환",
+        "AST calls"
+      ],
+      [
+        "`openEntryAccount`(a131 신설)",
+        "봉인된 계좌 열기",
+        "열 수 없으면 빈 값(fail-closed)",
+        "design D4"
+      ]
+    ],
+    "mutations": [
+      "반환 슬라이스. a131: 해독한 줄마다 봉인을 열어 `AccountRef` 를 채움(두 자리)."
+    ],
+    "edited_branches": [],
+    "boundary": "해독 직후 열기 호출 두 자리.",
+    "highrisk": "yes(간접) — 감독 증거 결속 입력.",
+    "default_test": "a131 무편집 분기 — `go test ./internal/verifylive/` 전체",
+    "a131_tests": [
+      "`TestA131SealedVerifyProofStillBinds`"
+    ]
+  },
+  "internal-verifylive--readrecordstrictnotail": {
+    "role": "대사 전 기록을 한 번 읽어 엄격 해독한다 — 반환한 원본 바이트는 동시성 지문 입력.",
+    "inputs": [
+      [
+        "`path`",
+        "파일 경로",
+        "Reconcile",
+        "못 읽으면 refuse"
+      ]
+    ],
+    "calls": [
+      [
+        "`readRecordRaw`",
+        "원본 읽기",
+        "refuse",
+        "AST calls"
+      ],
+      [
+        "`decodeRecordStrict`",
+        "엄격 해독",
+        "refuse",
+        "AST calls"
+      ],
+      [
+        "`openEntryAccount`(a131)",
+        "봉인 열기",
+        "빈 값이면 계좌 결속이 거절(fail-closed)",
+        "design D4"
+      ]
+    ],
+    "mutations": [
+      "a131: 해독한 항목의 계좌를 연다. **원본 바이트(raw)는 바꾸지 않는다** — 지문 대조 불변."
+    ],
+    "edited_branches": [],
+    "boundary": "마지막 return 앞 열기 루프. 분기 B1·B2 무편집.",
+    "highrisk": "yes(간접) — 대사 계좌 결속 입력.",
+    "default_test": "a131 무편집 분기 — `go test ./internal/verifylive/` 전체",
+    "a131_tests": [
+      "`TestA131ReconcileLineIsSealedAndStillBinds`"
+    ]
+  },
+  "cmd-tossctl--runsoakattest": {
+    "role": "`soak attest` — 요약·감독 증거로 attestation 을 만들고 저장, 결과를 출력. 출력은 tossos-attest 타이머의 로그(attest-autorun.log · journald)로 간다.",
+    "inputs": [
+      [
+        "`opts`",
+        "플래그",
+        "cobra",
+        "충돌 플래그는 거절"
+      ],
+      [
+        "기록 파일들",
+        "—",
+        "디스크",
+        "읽기 오류 반환"
+      ]
+    ],
+    "calls": [
+      [
+        "`loadSoakSummary`·`supervisedProofs`·`soak.BuildAttestation`·`attest.Save`",
+        "발급",
+        "오류 반환",
+        "AST calls"
+      ],
+      [
+        "`fmt.Fprintf`",
+        "결과 출력",
+        "—",
+        "AST calls"
+      ]
+    ],
+    "mutations": [
+      "attestation 파일·갱신 상태 파일 쓰기(무편집). a131: 출력의 `account` 줄 하나 삭제."
+    ],
+    "edited_branches": [],
+    "boundary": "출력 한 줄 삭제 — 분기·반환·파일 쓰기 불변.",
+    "highrisk": "no(직접) — 출력 텍스트만.",
+    "default_test": "a131 무편집 분기 — `go test ./cmd/tossctl/` 전체",
+    "a131_tests": [
+      "`TestA131SoakAttestOutputCarriesNoAccount`"
+    ]
+  },
+  "cmd-tossctl--newrootcmd": {
+    "role": "루트 명령 — 전역 플래그와 하위 명령 등록.",
+    "inputs": [
+      [
+        "없음",
+        "—",
+        "—",
+        "—"
+      ]
+    ],
+    "calls": [
+      [
+        "`cmd.AddCommand`",
+        "하위 명령 등록",
+        "—",
+        "AST calls"
+      ],
+      [
+        "`newScrubAccountRecordsCmd`(a131 신설)",
+        "정리 명령",
+        "—",
+        "design D5"
+      ]
+    ],
+    "mutations": [
+      "a131: AddCommand 목록에 정리 명령 하나 추가."
+    ],
+    "edited_branches": [],
+    "boundary": "AddCommand 인자 하나 추가 — 분기 무편집.",
+    "highrisk": "no",
+    "default_test": "a131 무편집 분기 — `go test ./cmd/tossctl/` 전체(명령 표면 시험 포함)",
+    "a131_tests": [
+      "`TestA131ScrubPreviewWritesNothing` · `TestA131ScrubApplyReplacesAtomically` · `TestA131ScrubApplyAbortsWhenTheFileMoved` · `TestA131ScrubApplyRefusesWhileAVerificationRuns`"
+    ]
+  }
+}

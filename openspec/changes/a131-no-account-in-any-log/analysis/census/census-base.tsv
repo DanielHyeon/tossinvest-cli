@@ -1,0 +1,159 @@
+errtext	internal/app/engine/interlock.go:417	acceptanceDetail	fmt.Sprintf
+errtext	internal/app/engine/strategy_account_first_leg_authority.go:334	productionStrategyFirstLegAuthorityLoader.collectStrategyFirstLegAuthority	fmt.Errorf
+errtext	internal/attest/attest.go:229	Attestation.Verify	fmt.Errorf
+errtext	internal/execgw/riskguardian.go:671	RiskGuardian.scopedIntent	fmt.Errorf
+errtext	internal/filldetect/detect.go:470	canonicalOrderKey.String	fmt.Sprintf
+errtext	internal/filldetect/detect.go:489	trackedOrderKey	fmt.Errorf
+errtext	internal/journal/account_views.go:196	ReadOnly.LivePositionExits	fmt.Errorf
+errtext	internal/journal/account_views.go:225	ReadOnly.LivePositionExits	fmt.Errorf
+errtext	internal/journal/account_views.go:248	ReadOnly.accountActiveQuarantines	fmt.Errorf
+errtext	internal/journal/account_views.go:262	ReadOnly.accountActiveQuarantines	fmt.Errorf
+errtext	internal/journal/account_views.go:276	ReadOnly.accountExitStates	fmt.Errorf
+errtext	internal/journal/account_views.go:292	ReadOnly.accountExitStates	fmt.Errorf
+errtext	internal/journal/account_views.go:326	ReadOnly.AccountExitEvents	fmt.Errorf
+errtext	internal/journal/account_views.go:344	ReadOnly.AccountExitEvents	fmt.Errorf
+errtext	internal/journal/account_views.go:355	ReadOnly.AccountExitEvents	fmt.Errorf
+errtext	internal/journal/account_views.go:608	ReadOnly.AccountTradeTrips	fmt.Errorf
+errtext	internal/journal/account_views.go:623	ReadOnly.AccountTradeTrips	fmt.Errorf
+errtext	internal/journal/account_views.go:636	ReadOnly.AccountTradeTrips	fmt.Errorf
+errtext	internal/journal/apply_hook.go:628	Journal.OpenExitStates	fmt.Errorf
+errtext	internal/journal/apply_hook.go:641	Journal.OpenExitStates	fmt.Errorf
+errtext	internal/journal/decision.go:457	checkDecisionBinding	fmt.Errorf
+errtext	internal/journal/durability.go:244	PrepareRequest.validateDecisionBinding	fmt.Errorf
+errtext	internal/journal/exit_state.go:915	exitContextForFill	fmt.Errorf
+errtext	internal/journal/exit_state.go:923	exitContextForFill	fmt.Errorf
+errtext	internal/journal/fills.go:1799	Journal.guardTrackedFillIdentity	fmt.Errorf
+errtext	internal/journal/issuance.go:233	IssueRequest.build	fmt.Errorf
+errtext	internal/journal/lane_performance.go:93	ReadOnly.ClosedStrategyTradeSources	fmt.Errorf
+errtext	internal/journal/lane_performance.go:111	ReadOnly.ClosedStrategyTradeSources	fmt.Errorf
+errtext	internal/journal/lineage.go:443	Journal.recordScopedLineageConflict	fmt.Errorf
+errtext	internal/journal/lineage.go:447	Journal.recordScopedLineageConflict	fmt.Sprintf
+errtext	internal/journal/operating_mode.go:400	Journal.TransitionOperatingMode	fmt.Errorf
+errtext	internal/journal/operating_mode.go:456	Journal.TransitionOperatingMode	fmt.Errorf
+errtext	internal/journal/operating_mode.go:463	Journal.TransitionOperatingMode	fmt.Errorf
+errtext	internal/journal/operating_mode.go:484	Journal.TransitionOperatingMode	fmt.Errorf
+errtext	internal/journal/operating_mode.go:706	modeRowCount	fmt.Errorf
+errtext	internal/journal/position_adjustments.go:96	StaleAdjustmentError.Error	fmt.Sprintf
+errtext	internal/journal/position_adjustments.go:327	Journal.ApplyPositionAdjustment	fmt.Errorf
+errtext	internal/journal/position_campaign.go:432	Journal.CreatePositionCampaign	fmt.Errorf
+errtext	internal/journal/position_projection.go:278	currentInstance	fmt.Errorf
+errtext	internal/journal/position_projection.go:285	currentInstance	fmt.Errorf
+errtext	internal/journal/position_projection.go:295	currentInstance	fmt.Errorf
+errtext	internal/journal/position_projection.go:356	insertInstance	fmt.Errorf
+errtext	internal/journal/position_projection.go:391	enterReconcileScopeInTx	fmt.Errorf
+errtext	internal/journal/position_projection.go:398	enterReconcileScopeInTx	fmt.Errorf
+errtext	internal/journal/position_projection.go:414	enterReconcileScopeInTx	fmt.Errorf
+errtext	internal/journal/position_projection.go:473	Journal.Positions	fmt.Errorf
+errtext	internal/journal/position_projection.go:486	Journal.Positions	fmt.Errorf
+errtext	internal/journal/reconcile_states.go:219	Journal.EnterReconcile	fmt.Errorf
+errtext	internal/journal/reconcile_states.go:223	Journal.EnterReconcile	fmt.Errorf
+errtext	internal/journal/reconcile_states.go:360	Journal.ReleaseReconciles	fmt.Errorf
+errtext	internal/journal/reconcile_states.go:377	Journal.ReleaseReconciles	fmt.Errorf
+errtext	internal/journal/reconcile_states.go:384	Journal.ReleaseReconciles	fmt.Errorf
+errtext	internal/journal/reservation_release.go:608	sweepOrphanedTerminals	fmt.Sprintf
+errtext	internal/journal/reservations.go:238	reservationVersion	fmt.Errorf
+errtext	internal/journal/reservations.go:761	checkDecisionReservable	fmt.Errorf
+errtext	internal/journal/reservations.go:795	heldTotals	fmt.Errorf
+errtext	internal/journal/reservations.go:803	heldTotals	fmt.Errorf
+errtext	internal/journal/reservations.go:811	heldTotals	fmt.Errorf
+errtext	internal/journal/reservations.go:824	heldTotals	fmt.Errorf
+errtext	internal/journal/risk_bucket_entry_loss_lock.go:149	refuseEntryUnderLossLock	fmt.Errorf
+errtext	internal/journal/risk_bucket_relaxation.go:197	Journal.ReleaseEntryLossLock	fmt.Errorf
+errtext	internal/journal/risk_bucket_relaxation.go:219	Journal.ReleaseEntryLossLock	fmt.Sprintf
+errtext	internal/journal/trade_analytics.go:70	Journal.ClassifiedTradeOutcomes	fmt.Errorf
+errtext	internal/journal/trade_analytics.go:87	Journal.ClassifiedTradeOutcomes	fmt.Errorf
+errtext	internal/journal/trade_outcomes.go:793	Journal.TradeOutcomes	fmt.Errorf
+errtext	internal/journal/trade_outcomes.go:806	Journal.TradeOutcomes	fmt.Errorf
+errtext	internal/reconcile/converge.go:157	Converger.ConvergeQuantities	fmt.Errorf
+errtext	internal/reconcile/external.go:198	Ingestor.IngestExternalPositions	fmt.Errorf
+errtext	internal/reconcile/mismatch.go:429	permanentPromotionDetail	fmt.Sprintf
+errtext	internal/reconcile/mismatch.go:433	permanentPromotionDetail	fmt.Sprintf
+errtext	internal/reversallane/plan.go:99	planDigest	fmt.Sprintf
+errtext	internal/risk/chain.go:242	evaluateReduction	fmt.Sprintf
+errtext	internal/risk/chain.go:266	checkOperatingMode	fmt.Sprintf
+errtext	internal/risk/chain.go:271	checkOperatingMode	fmt.Sprintf
+errtext	internal/risk/chain.go:300	checkSymbolAllowlist	fmt.Sprintf
+errtext	internal/soak/attest.go:325	acceptSupervised	fmt.Errorf
+obs	cmd/tossctl/verify_reconcile.go:102	runVerifyReconcile	verifylive.Reconcile
+obs	internal/app/engine/adoption.go:412	ReconcileDriver.adoptOne	map key obs.FieldAccount
+obs	internal/app/engine/adoption.go:470	ReconcileDriver.alertUnmanaged	map key obs.FieldAccount
+obs	internal/app/engine/adoption.go:499	ReconcileDriver.alertAdoptionFailed	map key obs.FieldAccount
+obs	internal/app/engine/adoption.go:577	ReconcileDriver.checkExternalIncrease	map key obs.FieldAccount
+obs	internal/app/engine/adoption.go:620	ReconcileDriver.checkEngineOpenedIncrease	map key obs.FieldAccount
+obs	internal/app/engine/adoption.go:662	ReconcileDriver.logDeferred	….Event
+obs	internal/app/engine/exit_stop_sold_nothing.go:210	ExitObserver.logZeroFloor	….Error
+obs	internal/app/engine/exitloop.go:895	ExitObserver.checkOutage	map key obs.FieldAccount
+obs	internal/app/engine/exitloop.go:1898	ExitObserver.logErr	….Error
+obs	internal/app/engine/exitwiring.go:112	notifierAlerter.ExternalPositionFound	map key obs.FieldAccount
+obs	internal/app/engine/exitwiring.go:150	notifierAlerter.ManagedPositionClosedExternally	map key obs.FieldAccount
+obs	internal/app/engine/exitwiring.go:423	Context.sweepAnalyticsRetention	….Error
+obs	internal/app/engine/exitwiring.go:428	Context.sweepAnalyticsRetention	….Event
+obs	internal/app/engine/modeops.go:173	ModeOperations.logFailure	….Error
+obs	internal/app/engine/reconcileloop.go:537	ReconcileDriver.logCycle	….Error
+obs	internal/app/engine/reconcileloop.go:542	ReconcileDriver.logCycle	….Event
+obs	internal/app/engine/reconcileloop.go:564	ReconcileDriver.alert	….Error
+obs	internal/app/engine/runtime.go:371	Runtime.Run	map key obs.FieldAccount
+obs	internal/app/engine/runtime.go:451	Runtime.escalate	map key obs.FieldAccount
+obs	internal/obs/notifier.go:434	Notifier.escalate	….Error
+obs	internal/obs/record_only.go:143	Notifier.recordCritical	….Error
+print	cmd/tossctl/engine.go:368	runEngineRun	fmt.Fprintf
+print	cmd/tossctl/soak.go:549	runSoakAttest	fmt.Fprintf
+print	internal/flatten/confirm.go:109	Confirmation.Prompt	fmt.Fprintf
+print	internal/output/account.go:46	WriteAccounts	fmt.Fprintf
+print	internal/reconcile/snapshot.go:184	Snapshot.Digest	fmt.Fprintf
+print	internal/reversallane/structural.go:47	structuralDigest	fmt.Fprintf
+print	internal/soak/attest.go:395	Summary.WriteText	fmt.Fprintf
+print	internal/verifylive/confirm.go:135	Mutation.Prompt	fmt.Fprintf
+print	internal/verifylive/confirm.go:227	Batch.Summary	fmt.Fprintf
+print	internal/verifylive/report.go:246	Report.WriteText	fmt.Fprintf
+print	internal/verifylive/report.go:372	Progress.WriteText	fmt.Fprintf
+print	internal/verifylive/runner.go:600	Runner.writeBanner	fmt.Fprintf
+record	internal/attest/attest.go:82		`json:"account_ref"`
+record	internal/attest/attest.go:133		`json:"account_ref"`
+record	internal/attest/protection_matrix.go:137		`json:"account_ref"`
+record	internal/client/account.go:17		`json:"accountList"`
+record	internal/client/account.go:18		`json:"accountNo"`
+record	internal/client/account.go:33		`json:"accountNo"`
+record	internal/client/account.go:43		`json:"accountNo"`
+record	internal/client/account_detail.go:22		`json:"accountName"`
+record	internal/execgw/guardian.go:92	Bound	`json:"account_base_fx,omitempty"`
+record	internal/execgw/guardian.go:102	Bound	`json:"account_currency"`
+record	internal/httpapi/model.go:80	errorResponseBody	`json:"accountLabel"`
+record	internal/httpapi/model.go:208	ExitLineFrom	`json:"accountLabel"`
+record	internal/journal/account_views.go:96		`json:"account_ref"`
+record	internal/journal/decision.go:64		`json:"account_ref"`
+record	internal/journal/decision.go:127	RiskIntent.Canonical	`json:"account_ref"`
+record	internal/journal/risk_bucket_owner.go:203	riskBucketOfficialZeroCapability.valid	`json:"account_ref"`
+record	internal/official/reads.go:19		`json:"accountNo"`
+record	internal/official/reads.go:20		`json:"accountSeq"`
+record	internal/official/reads.go:21		`json:"accountType"`
+record	internal/officialfx/production.go:55		`json:"account_id"`
+record	internal/officialfx/production.go:56		`json:"account_currency"`
+record	internal/protection/domain.go:377	EvaluateArm	`json:"account_ref"`
+record	internal/protectionreadiness/attestation.go:20		`json:"account_id"`
+record	internal/protectionreadiness/production.go:92		`json:"account_id"`
+record	internal/reconcile/snapshot.go:479	Stabiliser.Last	`json:"accountRef"`
+record	internal/reversallane/types.go:73		`json:"account_ref"`
+record	internal/riskbucket/production_snapshot_authority.go:119		`json:"account_id"`
+record	internal/riskbucket/production_snapshot_authority.go:120		`json:"account_currency"`
+record	internal/riskrelaxation/riskrelaxation.go:32		`json:"account_ref"`
+record	internal/riskrelaxation/riskrelaxation.go:45		`json:"account_ref"`
+record	internal/soak/record.go:142		`json:"account_ref"`
+record	internal/soak/summary.go:100		`json:"account_ref"`
+record	internal/soak/summary.go:101		`json:"account_refs"`
+record	internal/strategyaccount/production.go:55		`json:"account_ref"`
+record	internal/strategyaccount/production.go:56		`json:"account_currency"`
+record	internal/strategyaccount/production.go:73		`json:"account_equity_base"`
+record	internal/strategyflow/canonical_projection.go:45	AcceptedProjection.ExecutionTerms	`json:"account_ref"`
+record	internal/strategyflow/canonical_projection.go:77	AcceptedProjection.ExecutionTerms	`json:"account_ref"`
+record	internal/strategyproposal/production.go:241	ProductionBatchAuthority.LanesFor	`json:"account_currency"`
+record	internal/strategyproposal/production.go:277	ProductionBatchAuthority.LanesFor	`json:"account_ref"`
+record	internal/strategyrouter/production.go:120		`json:"account_ref"`
+record	internal/verifylive/plan.go:351	PlannedMutation.shape	`json:"account"`
+record	internal/verifylive/record.go:274	NewProcess	`json:"account_ref"`
+record	internal/verifylive/report.go:54		`json:"account_ref"`
+record	internal/verifylive/report.go:319	replayVerdict	`json:"account_ref"`
+# total errtext 76
+# total obs 22
+# total print 12
+# total record 45

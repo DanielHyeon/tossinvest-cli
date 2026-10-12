@@ -1,0 +1,87 @@
+{
+  "file": "cmd/tossctl/main.go",
+  "source_sha256": "c092c51acf38b96b996373e8f901dc5bb436386f4a4ed8df513008c03d60e26a",
+  "package": "main",
+  "function": "main",
+  "signature": "main(params=0, results=0)",
+  "start": {
+    "line": 10,
+    "column": 1
+  },
+  "end": {
+    "line": 17,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 13,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 11,
+        "column": 2
+      },
+      "text": "i18n.SetLang"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 11,
+        "column": 15
+      },
+      "text": "i18n.Resolve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 13,
+        "column": 12
+      },
+      "text": "Execute"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 13,
+        "column": 12
+      },
+      "text": "newRootCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 14,
+        "column": 3
+      },
+      "text": "fmt.Fprintln"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 15,
+        "column": 3
+      },
+      "text": "os.Exit"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 13,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

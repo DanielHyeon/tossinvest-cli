@@ -1,0 +1,51 @@
+
+Callers of "LoadCycles" (16):
+
+function    TestSoakRunAnnouncesTheMarkerAndIgnoresAStaleOne
+  cmd/tossctl/runlock_test.go:144
+
+function    loadSoakSummary
+  cmd/tossctl/soak.go:602
+
+function    TestSoakRunSurveysTheProtectionReads
+  cmd/tossctl/soak_protection_test.go:92
+
+function    TestSoakRunSurveysEveryRequiredEndpoint
+  cmd/tossctl/soak_test.go:186
+
+method      readSoak
+  internal/console/data.go:234
+
+function    TestRecorderReopensWithoutTruncating
+  internal/soak/record_test.go:68
+
+function    TestLoadCyclesSkipsATruncatedFinalLine
+  internal/soak/record_test.go:124
+
+function    TestLoadCyclesRefusesAMalformedInteriorLine
+  internal/soak/record_test.go:158
+
+function    TestLoadCyclesRefusesANewerFormat
+  internal/soak/record_test.go:179
+
+function    TestLoadCyclesOnAMissingFileIsEmptyNotAnError
+  internal/soak/record_test.go:198
+
+function    TestRunRecordsEveryCycleAndStopsAtTheLimit
+  internal/soak/soak_test.go:711
+
+function    TestRunSleepsTheIntervalBetweenCycles
+  internal/soak/soak_test.go:741
+
+function    TestRunStopsWhenTheContextIsCancelled
+  internal/soak/soak_test.go:785
+
+function    TestEveryCycleStampsTheBuildThatWroteIt
+  internal/soak/upgrade_test.go:96
+
+function    TestTheUpgradeHappensAtACycleBoundaryAndNotInsideOne
+  internal/soak/upgrade_test.go:158
+
+function    TestTheRecordAndTheStreakSurviveAnUpgrade
+  internal/soak/upgrade_test.go:214
+
