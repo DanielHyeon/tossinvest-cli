@@ -46,8 +46,10 @@ const (
 // config 는 실행 매개변수. 기본값은 main.go 플래그에 있음.
 type config struct {
 	Interval time.Duration
-	// TopK 는 사이클당 판단 종목 수(상위 100 중 상한 이하 후보에서 무작위 추출하는 표본 크기).
-	TopK        int
+	// TopK 는 사이클당 결선 수 — 풀 판단 뒤 J2 악재 제외·J1 내림차순 상위 K(screen.go).
+	TopK int
+	// Pool 은 사이클당 판단하는 풀 크기(상위 100 중 상한 이하 후보에서 무작위 추출). TopK ≤ Pool ≤ 100.
+	Pool        int
 	Horizon     time.Duration
 	WaitOpen    bool
 	LabelTick   time.Duration
@@ -267,9 +269,13 @@ func (p *probe) runMarket(ctx context.Context, market string) error {
 	}
 }
 
-// cycle 은 상한·환율 → rankings(상위 100) → 상한 필터·무작위 추출 → stocks → prices →
-// orderbook(종목별) → 판단 → 원장. 원장 쓰기 실패만 오류로 올림(측정 자체가 무너진 것).
-// 읽기·판단 실패는 결손 행으로 남기고 계속함.
+// cycle 은 상한·환율 → rankings(상위 100) → 상한 필터·무작위 풀 → stocks → prices →
+// orderbook(종목별) → 풀 전체 판단 → 선별(결선 표시) → 원장. 원장 쓰기 실패만 오류로 올림(측정 자체가
+// 무너진 것). 읽기·판단 실패는 결손 행으로 남기고 계속함.
+//
+// 판단 행은 풀 전체를 판단한 뒤에 한꺼번에 씀 — 결선 여부와 사이클의 선별 수(selection)가 판단이 다
+// 끝나야 정해지기 때문. 그래서 사이클 도중 프로세스가 죽으면 그 사이클의 판단 행은 남지 않음
+// (state 파일과 판단 gap 행은 이미 쓰였을 수 있음 — 판단 행 없는 state 파일은 측정에 무해함).
 func (p *probe) cycle(ctx context.Context, market string, sess session, at time.Time) error {
 	gap := func(stage, symbol string, err error) error {
 		p.logf("%s %s %s: %s", market, stage, symbol, reasonOf(err))
@@ -296,10 +302,11 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 	}
 	candidates, overCap, unknownPrice := filterByCap(received, inputs)
 	selection := &selectionRecord{
-		Rule: selectionRuleFor(p.cfg.TopK), Seed: p.seed(), CapValue: inputs.cap.Value, CapCurrency: inputs.cap.Currency,
+		Rule: selectionRuleFor(p.cfg.TopK, p.cfg.Pool), Seed: p.seed(), CapValue: inputs.cap.Value, CapCurrency: inputs.cap.Currency,
 		PriceCurrency: inputs.priceCurrency, PriceSource: selectionPriceSource,
 		RankingRequested: rankingFetch, RankingReceived: len(received),
 		ExcludedOverCap: overCap, ExcludedUnknownPrice: unknownPrice, Candidates: len(candidates),
+		Pool: p.cfg.Pool, FinalistsRequested: p.cfg.TopK,
 	}
 	if inputs.fxPair != "" {
 		selection.FXRate, selection.FXPair = inputs.fxRate, inputs.fxPair
@@ -308,7 +315,7 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 		return gap("selection", "", fmt.Errorf("no ranking row within the order cap %v %s (received %d, over cap %d, unknown price %d)",
 			inputs.cap.Value, inputs.cap.Currency, len(received), overCap, unknownPrice))
 	}
-	items := pickSample(candidates, p.cfg.TopK, selection.Seed)
+	items := pickSample(candidates, p.cfg.Pool, selection.Seed)
 	selection.Selected = len(items)
 	symbols := make([]string, 0, len(items))
 	for _, item := range items {
@@ -340,6 +347,16 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 		last[quote.Symbol] = quote.Last
 	}
 
+	// judgedSymbol 은 판단에 성공한 풀 종목 하나 — 선별이 끝날 때까지 메모리에 둠(랭킹 순서 유지).
+	type judgedSymbol struct {
+		symbol string
+		base   float64
+		digest string
+		state  PublicState
+		result judgeResult
+	}
+	var judged []judgedSymbol
+	var screenInputs []screenInput
 	for _, item := range items {
 		base := last[item.Symbol]
 		if base <= 0 {
@@ -380,17 +397,43 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 			}
 			continue
 		}
-		due := at.Add(p.cfg.Horizon)
-		pending := pendingLabel{Market: market, Symbol: item.Symbol, BasePrice: base, Due: due}
+		// 선별 입력 p 가 응답에 없으면(질문 집합이 바뀐 경우) 0 으로 읽지 않고 측정을 멈춤.
+		j1, haveJ1 := result.P[screenUpQuestion]
+		j2, haveJ2 := result.P[screenRedFlagQuestion]
+		if !haveJ1 || !haveJ2 {
+			return fmt.Errorf("screen inputs %q/%q missing from the judgment of %s", screenUpQuestion, screenRedFlagQuestion, item.Symbol)
+		}
+		judged = append(judged, judgedSymbol{symbol: item.Symbol, base: base, digest: digest, state: state, result: result})
+		screenInputs = append(screenInputs, screenInput{J1: j1, J2: j2})
+	}
+
+	// 선별은 판단이 다 끝난 뒤 한 번 — 사이클의 selection 수치를 행을 쓰기 전에 확정함.
+	screens := screenFinalists(screenInputs, p.cfg.TopK)
+	selection.Judged = len(judged)
+	for _, screen := range screens {
+		if screen.RedFlagExcluded {
+			selection.RedFlagExcluded++
+		}
+		if screen.Finalist {
+			selection.Finalists++
+		}
+	}
+
+	// 결선·비결선 모두 행을 쓰고 라벨 대기에 올림 — 비결선은 보고서의 대조군.
+	due := at.Add(p.cfg.Horizon)
+	for index, entry := range judged {
+		screen := screens[index]
+		pending := pendingLabel{Market: market, Symbol: entry.symbol, BasePrice: entry.base, Due: due}
 		for _, q := range p.questions {
-			id := fmt.Sprintf("%s-%s-%s-%s", at.UTC().Format("20060102T150405Z"), market, item.Symbol, q.ID)
+			id := fmt.Sprintf("%s-%s-%s-%s", at.UTC().Format("20060102T150405Z"), market, entry.symbol, q.ID)
 			if err := p.ledger.judgment(judgmentRow{
-				ID: id, At: stamp(at), Market: market, Symbol: item.Symbol,
+				ID: id, At: stamp(at), Market: market, Symbol: entry.symbol,
 				QuestionID: q.ID, QuestionRev: q.Rev, QuestionDigest: q.digest(),
-				ModelRequested: p.judge.model, ModelAnswered: result.Model,
-				StateDigest: digest, P: result.P[q.ID], BasePrice: base, Currency: state.Currency,
-				HorizonMinutes: state.HorizonMinutes, LabelDueAt: stamp(due),
-				InputTokens: result.InputTokens, CollectionGaps: state.MissingInputs, Selection: selection,
+				ModelRequested: p.judge.model, ModelAnswered: entry.result.Model,
+				StateDigest: entry.digest, P: entry.result.P[q.ID], BasePrice: entry.base, Currency: entry.state.Currency,
+				HorizonMinutes: entry.state.HorizonMinutes, LabelDueAt: stamp(due),
+				InputTokens: entry.result.InputTokens, CollectionGaps: entry.state.MissingInputs,
+				Selection: selection, Screen: &screen,
 			}); err != nil {
 				return err
 			}

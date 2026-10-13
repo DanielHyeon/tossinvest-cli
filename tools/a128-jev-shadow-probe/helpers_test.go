@@ -195,6 +195,10 @@ type typeSafeMock struct {
 	auth     []string
 	statuses []int // 앞에서부터 하나씩 소비, 비면 200
 	answer   func(questionID string) string
+	// answerFor 가 nil 이 아니면 answer 대신 종목별 답을 줌(1.6 선별 시험 — state.symbol 로 가름).
+	answerFor func(symbol, questionID string) string
+	// failSymbols 의 종목은 422(비재시도)로 거절함 — 판단 실패가 gap 행이 되고 선별 대상에서 빠짐을 봄.
+	failSymbols map[string]bool
 }
 
 func newTypeSafeMock(t *testing.T) *typeSafeMock {
@@ -212,7 +216,7 @@ func newTypeSafeMock(t *testing.T) *typeSafeMock {
 		if len(m.statuses) > 0 {
 			status, m.statuses = m.statuses[0], m.statuses[1:]
 		}
-		answer := m.answer
+		answer, answerFor, failSymbols := m.answer, m.answerFor, m.failSymbols
 		m.mu.Unlock()
 		if r.Method != http.MethodPost || r.URL.Path != systemOnePath {
 			w.WriteHeader(http.StatusNotFound)
@@ -224,11 +228,23 @@ func newTypeSafeMock(t *testing.T) *typeSafeMock {
 			return
 		}
 		var request struct {
+			State struct {
+				Symbol string `json:"symbol"`
+			} `json:"state"`
 			Questions map[string]json.RawMessage `json:"questions"`
 		}
 		_ = json.Unmarshal(body, &request)
+		if failSymbols[request.State.Symbol] {
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			_, _ = io.WriteString(w, `{"detail":"mock refusal for the symbol"}`)
+			return
+		}
 		var answers []string
 		for id := range request.Questions {
+			if answerFor != nil {
+				answers = append(answers, `"`+id+`":`+answerFor(request.State.Symbol, id))
+				continue
+			}
 			answers = append(answers, `"`+id+`":`+answer(id))
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -303,7 +319,7 @@ func newTestRig(t *testing.T) *testRig {
 	t.Cleanup(func() { _ = l.Close() })
 	clock := &fakeClock{now: at(10, 0)}
 	p := newProbe(officialServer.client(t), typeSafeServer.judgeClient(t), l, config{
-		Interval: 10 * time.Minute, TopK: 10, Horizon: 60 * time.Minute, LabelTick: 30 * time.Second,
+		Interval: 10 * time.Minute, TopK: 10, Pool: 30, Horizon: 60 * time.Minute, LabelTick: 30 * time.Second,
 		RetryDelays: []time.Duration{time.Second, 2 * time.Second},
 		CapSource:   fixedCap(500000, "KRW"),
 	})

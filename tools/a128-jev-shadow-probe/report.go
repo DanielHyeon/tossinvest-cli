@@ -9,6 +9,8 @@ package main
 //     (작은 표본의 비율이 임계 근거로 인용되는 일을 양식에서 막음).
 //   - 표본 선택 로트(selection.rule, 없는 옛 행 = top10)마다 표를 따로 만듦 — 상위 10 고정과
 //     상한 이하 무작위 10 은 모집단이 다르므로 한 표에 섞지 않음(tasks.md 1.5).
+//   - 선별 기록(screen, 1.6)이 있는 로트는 J1 에 대해 결선 vs 비결선(대조군) 비교 표를 추가로 냄 —
+//     같은 적중 규칙·같은 n<30 보류 규칙. 비교는 적중 빈도만 싣고 수익성 결론은 내지 않음.
 //   - 결정은 사람이 함. 보고서는 예비 권고만 냄.
 
 import (
@@ -138,7 +140,80 @@ func renderCalibrationReport(contents ledgerContents, ledgerPath string) string 
 			}
 		}
 	}
+	if questionIDs[screenUpQuestion] {
+		rule := hitRules[screenUpQuestion]
+		for _, lot := range sortedKeys(screenedLots(contents)) {
+			for _, market := range marketList {
+				renderScreenComparison(&out, contents, lot, market, rule.rule, rule.hit)
+			}
+		}
+	}
 	return out.String()
+}
+
+// screenedLots 는 선별 기록이 있는 행을 가진 로트 — 옛 로트(top10·random10)는 비교 대상이 아님.
+func screenedLots(contents ledgerContents) map[string]bool {
+	lots := map[string]bool{}
+	for _, row := range contents.Judgments {
+		if row.Screen != nil {
+			lots[selectionLot(row)] = true
+		}
+	}
+	return lots
+}
+
+// renderScreenComparison 은 한 로트·한 시장의 J1 행을 결선 / 비결선(악재 제외 + 생존·순위 밖)으로 나눠 셈.
+// 비결선은 같은 사이클에서 같은 질문으로 판단·라벨된 대조군임.
+func renderScreenComparison(out *strings.Builder, contents ledgerContents, lot, market, rule string, hit func(float64) bool) {
+	line := func(format string, args ...any) { fmt.Fprintf(out, format+"\n", args...) }
+	var finalist, redFlag, outranked binStats
+	for _, row := range contents.Judgments {
+		if row.Screen == nil || selectionLot(row) != lot || row.QuestionID != screenUpQuestion ||
+			(market != allMarketsLabel && row.Market != market) {
+			continue
+		}
+		stats := &outranked
+		switch {
+		case row.Screen.Finalist:
+			stats = &finalist
+		case row.Screen.RedFlagExcluded:
+			stats = &redFlag
+		}
+		stats.judgments++
+		label, found := contents.Labels[row.ID]
+		if !found || label.RealizedReturn == nil {
+			continue
+		}
+		stats.labeled++
+		if hit(*label.RealizedReturn) {
+			stats.hits++
+		}
+	}
+	control := binStats{
+		judgments: redFlag.judgments + outranked.judgments,
+		labeled:   redFlag.labeled + outranked.labeled,
+		hits:      redFlag.hits + outranked.hits,
+	}
+
+	line("")
+	line("## 결선 vs 비결선 (%s) — %s · 로트 %s", screenUpQuestion, market, lot)
+	line("")
+	line("적중 규칙: %s. 결선 = J2 p < %.1f 생존 중 J1 p 상위; 비결선 = 같은 풀의 나머지(대조군). "+
+		"적중 빈도 비교일 뿐 수익성 판단이 아니다.", rule, redFlagExclusionP)
+	line("")
+	line("| 집단 | 판단 n | 실현 라벨 n | 적중 | 적중률 | 판정 |")
+	line("|---|---:|---:|---:|---:|---|")
+	for _, group := range []struct {
+		name  string
+		stats binStats
+	}{{"결선", finalist}, {"비결선 전체", control}, {"└ J2 악재 제외", redFlag}, {"└ 생존·순위 밖", outranked}} {
+		rate, verdict := "—", fmt.Sprintf("보류(n<%d)", minBinSamples)
+		if group.stats.labeled >= minBinSamples {
+			rate = fmt.Sprintf("%.3f", float64(group.stats.hits)/float64(group.stats.labeled))
+			verdict = "판정 가능"
+		}
+		line("| %s | %d | %d | %d | %s | %s |", group.name, group.stats.judgments, group.stats.labeled, group.stats.hits, rate, verdict)
+	}
 }
 
 func keysOf(counts map[string]int) map[string]bool {

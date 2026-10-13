@@ -177,3 +177,71 @@ func TestReportSeparatesSelectionLots(t *testing.T) {
 		t.Fatalf("the two selection lots were mixed in one table:\n%s", report)
 	}
 }
+
+// screenedLedger 는 선별 로트(1.6) 행: 결선 n 개는 전부 적중, 비결선(순위 밖) m 개·악재 제외 r 개는 전부 빗나감.
+func screenedLedger(finalists, outranked, redFlagged int) ledgerContents {
+	contents := ledgerContents{Labels: map[string]labelRow{}}
+	record := &selectionRecord{Rule: selectionRule, Seed: 1, CapValue: 500000, CapCurrency: "KRW"}
+	add := func(prefix string, count int, screen screenRecord, realized float64) {
+		for index := 0; index < count; index++ {
+			for _, questionID := range []string{screenUpQuestion, screenRedFlagQuestion} {
+				id := fmt.Sprintf("%s-%d-%s", prefix, index, questionID)
+				s := screen
+				contents.Judgments = append(contents.Judgments, judgmentRow{
+					ID: id, Market: "KR", QuestionID: questionID, QuestionRev: questionRev, QuestionDigest: "sha256:q",
+					ModelAnswered: "jev-1.13.0", P: 0.6, Selection: record, Screen: &s,
+				})
+				contents.Labels[id] = labelRow{JudgmentID: id, RealizedReturn: ret(realized)}
+			}
+		}
+	}
+	add("fin", finalists, screenRecord{Finalist: true, Rank: 1}, 0.01)
+	add("out", outranked, screenRecord{Rank: 11}, -0.01)
+	add("red", redFlagged, screenRecord{RedFlagExcluded: true}, -0.01)
+	return contents
+}
+
+// TestReportComparesFinalistsWithTheControlGroup 는 선별 로트에서 J1 의 결선 vs 비결선 비교 표를 냄:
+// 집단별 n·적중·적중률, 같은 n<30 보류 규칙. 비결선 = 순위 밖 + 악재 제외.
+func TestReportComparesFinalistsWithTheControlGroup(t *testing.T) {
+	t.Parallel()
+	report := renderCalibrationReport(screenedLedger(30, 20, 10), "ledger.jsonl")
+	for _, want := range []string{
+		"## 결선 vs 비결선 (" + screenUpQuestion + ") — KR · 로트 " + selectionRule,
+		"| 결선 | 30 | 30 | 30 | 1.000 | 판정 가능 |",
+		"| 비결선 전체 | 30 | 30 | 0 | 0.000 | 판정 가능 |",
+		"| └ J2 악재 제외 | 10 | 10 | 0 | — | 보류(n<30) |",
+		"| └ 생존·순위 밖 | 20 | 20 | 0 | — | 보류(n<30) |",
+	} {
+		if !strings.Contains(report, want) {
+			t.Fatalf("report lacks %q:\n%s", want, report)
+		}
+	}
+	// 비교는 J1 만 — J2 행은 결선 비교에 섞이지 않음(섞이면 n 이 60 이 됨).
+	if strings.Contains(report, "| 결선 | 60 |") || strings.Contains(report, "결선 vs 비결선 ("+screenRedFlagQuestion) {
+		t.Fatalf("the finalist comparison must count J1 rows only:\n%s", report)
+	}
+	held := renderCalibrationReport(screenedLedger(29, 1, 0), "l")
+	if !strings.Contains(held, "| 결선 | 29 | 29 | 29 | — | 보류(n<30) |") {
+		t.Fatalf("a finalist group below 30 labels must be held:\n%s", held)
+	}
+}
+
+// TestReportLegacyLotsHaveNoScreenComparison 는 선별 기록이 없는 옛 로트(top10·random10)는 비교 표 없이
+// 예전과 같은 구간표만 냄.
+func TestReportLegacyLotsHaveNoScreenComparison(t *testing.T) {
+	t.Parallel()
+	legacy := syntheticLedger(screenUpQuestion, rowsAt(0.95, 30, 0))
+	for index := range legacy.Judgments[:10] {
+		legacy.Judgments[index].Selection = &selectionRecord{Rule: legacyRandomRule}
+	}
+	report := renderCalibrationReport(legacy, "l")
+	if strings.Contains(report, "결선 vs 비결선") {
+		t.Fatalf("legacy lots have no screen record and must not get a comparison:\n%s", report)
+	}
+	for _, want := range []string{"표본 선택 로트: " + legacyRandomRule + "=10, top10=20", "· 로트 top10", "· 로트 " + legacyRandomRule} {
+		if !strings.Contains(report, want) {
+			t.Fatalf("report lacks %q:\n%s", want, report)
+		}
+	}
+}

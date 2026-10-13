@@ -1,15 +1,19 @@
 package main
 
-// selection.go 는 사이클마다 판단할 종목을 고르는 표본 선택 규칙을 담당함(tasks.md 1.5).
+// selection.go 는 사이클마다 판단할 종목을 고르는 표본 선택 규칙을 담당함(tasks.md 1.5·1.6).
 //
-// 규칙 random10_of_top100_le_order_cap:
+// 규칙 jev_screen<K>_of_random<POOL>_of_top100_le_order_cap (1.6, 기본 K=10·POOL=30):
 //  1. official MARKET_TRADING_AMOUNT 랭킹 상위 100 을 받음.
 //  2. 1주 가격(랭킹 행의 lastPrice)을 주문 상한 통화로 환산해 상한 이하인 종목만 남김 —
 //     엔진이 실제로 살 수 있는 집합에서 표본을 뜨기 위함. 상한 = config
 //     `engine.automation_gate.max_order_notional`(+ `limit_currency`), Guardian 이 1회 주문에 거는
 //     금액 상한. 환산 방향도 Guardian 과 같음: 가격 × 환율(시세 통화 → 상한 통화) ≤ 상한.
-//  3. 남은 후보 중 무작위 K(기본 10, 후보가 K 이하이면 전부). 시드는 사이클마다 새로 뽑아
-//     judgment 행의 selection 에 적음 — 같은 후보 목록과 시드로 같은 선택을 재현할 수 있음.
+//  3. 남은 후보 중 무작위 POOL(후보가 POOL 이하이면 전부). 시드는 사이클마다 새로 뽑아
+//     judgment 행의 selection 에 적음 — 같은 후보 목록과 시드로 같은 풀을 재현할 수 있음.
+//  4. 풀 전체를 Jev 로 판단하고 J2 악재 제외 → J1 상위 K 를 결선으로 표시함(screen.go).
+//
+// 1.5 규칙 random10_of_top100_le_order_cap(무작위 10 을 그대로 판단)과 그 이전 top10 은 더 만들지 않지만,
+// 원장의 옛 행은 그 이름의 로트로 보고서에 그대로 남음.
 //
 // 상한·환율을 못 읽으면 조용히 옛 규칙(상위 10)으로 돌아가지 않고 그 사이클을 gap 행
 // (stage=selection)으로 남기고 판단하지 않음. 계좌 API 는 쓰지 않음 — config 파일 읽기만.
@@ -28,9 +32,11 @@ import (
 )
 
 const (
-	// selectionRule 은 기본 표본 크기(--top 10)의 규칙 id. 다른 K 는 selectionRuleFor 가 id 에 K 를 넣어
+	// selectionRule 은 기본값(--top 10 · --pool 30)의 규칙 id. 다른 K·POOL 은 selectionRuleFor 가 id 에 넣어
 	// 다른 로트로 갈라짐(모집단이 다르므로 같은 이름을 쓰면 안 됨).
-	selectionRule = "random10_of_top100_le_order_cap"
+	selectionRule = "jev_screen10_of_random30_of_top100_le_order_cap"
+	// legacyRandomRule 은 1.5 규칙(선별 없이 무작위 10 을 판단)의 로트 이름 — 더 만들지 않고 옛 행만 이 이름.
+	legacyRandomRule = "random10_of_top100_le_order_cap"
 	// legacySelectionLot 는 selection 필드가 없는 옛 행(1.5 이전, 상위 10 고정)의 로트 이름.
 	legacySelectionLot = "top10"
 	// rankingFetch 는 필터 전에 받는 랭킹 행 수(상위 100).
@@ -69,7 +75,15 @@ type selectionRecord struct {
 	// ExcludedUnknownPrice 는 가격이 0 이하·비유한이거나 통화가 비었거나 시장 통화와 달라 상한 비교를 못 한 행 수.
 	ExcludedUnknownPrice int `json:"excluded_unknown_price"`
 	Candidates           int `json:"candidates"`
-	Selected             int `json:"selected"`
+	// Pool 은 요청한 풀 크기(--pool), Selected 는 실제로 뽑은 풀(후보가 적으면 Pool 미만).
+	Pool     int `json:"pool"`
+	Selected int `json:"selected"`
+	// Judged 는 풀 중 판단에 성공한 종목 수(선별 대상). 실패 종목은 gap(judgment) 행.
+	Judged          int `json:"judged"`
+	RedFlagExcluded int `json:"red_flag_excluded"`
+	// FinalistsRequested 는 --top, Finalists 는 실제 결선 수(생존이 적으면 미만).
+	FinalistsRequested int `json:"finalists_requested"`
+	Finalists          int `json:"finalists"`
 }
 
 // loadOrderCap 은 tossctl config 파일에서 주문 상한을 읽음(읽기 전용 — Status 는 파일을 쓰지 않음).
@@ -162,7 +176,7 @@ func filterByCap(items []domain.RankingItem, in selectionInputs) (candidates []d
 	return candidates, overCap, unknown
 }
 
-// pickSample 은 후보에서 k 개를 시드로 무작위 추출함. 후보가 k 이하이면 전부(순서 유지).
+// pickSample 은 후보에서 k 개를 시드로 무작위 추출함(1.6 에서는 k = 풀 크기). 후보가 k 이하이면 전부(순서 유지).
 // 재현 절차: 후보(랭킹 순) → rand.New(rand.NewPCG(seed, selectionPCGStream)).Perm(n) 앞 k 개 →
 // 지표 오름차순 정렬(처리 순서가 랭킹 순이 되게).
 func pickSample(candidates []domain.RankingItem, k int, seed uint64) []domain.RankingItem {
@@ -178,9 +192,9 @@ func pickSample(candidates []domain.RankingItem, k int, seed uint64) []domain.Ra
 	return picked
 }
 
-// selectionRuleFor 는 표본 크기 k 의 규칙 id — k=10 이면 selectionRule 과 같음.
-func selectionRuleFor(k int) string {
-	return fmt.Sprintf("random%d_of_top%d_le_order_cap", k, rankingFetch)
+// selectionRuleFor 는 결선 k·풀 pool 의 규칙 id — (10, 30) 이면 selectionRule 과 같음.
+func selectionRuleFor(k, pool int) string {
+	return fmt.Sprintf("jev_screen%d_of_random%d_of_top%d_le_order_cap", k, pool, rankingFetch)
 }
 
 // newSelectionSeed 는 사이클마다 새 시드를 뽑음(전역 생성기는 프로세스마다 무작위 시드됨).

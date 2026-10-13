@@ -108,6 +108,37 @@
       프로세스를 띄우면 남의 시장 판단까지 라벨링(이중 라벨). 한 원장에 미라벨이 남은 동안 프로세스는 하나만
       (시장이 달라도). 수리는 필요해지면 후속(시장 필터 또는 원장 잠금).
 
+- [x] 1.6 Jev 선별 후 결선(사용자 결정 2026-10-14, 권고안 전부): 상한 필터 통과 상위 100 후보에서 **무작위 풀 30**
+      (기존 `pickSample`·시드, 후보 ≤ 30 이면 전부)을 뜨고 풀 **전 종목**에 J1·J2 를 물음(종목당 요청 1 — 기존과 같음).
+      J2 p ≥ 0.5 제외 → 나머지 J1 p 내림차순(동률 = 랭킹 순) 상위 **K=10** 이 결선. 생존 < K 이면 결선도 그만큼(수 기록).
+      판단 실패 = gap 행, 선별 대상 아님. horizon 60m·질문 불변(`questionRev` a128-r1 그대로). 프로브 전용 — `internal/`·엔진 무접촉.
+      - 측정 설계: 풀 전체 판단을 메모리에 모은 뒤 선별하고 **모든** 판단 행을 쓰고 전부 라벨 대기에 올림 — 비결선 = 같은
+        사이클·같은 질문의 대조군. 행마다 `screen{finalist, screen_rank(생존 중 J1 순위, 악재 제외 = 0), red_flag_excluded}`.
+        `selection` 에 `pool`·`judged`·`red_flag_excluded`·`finalists_requested`·`finalists` 추가, `selected` = 실제 뽑은 풀.
+        규칙 id = `jev_screen<K>_of_random<POOL>_of_top100_le_order_cap`(기본 `jev_screen10_of_random30_of_top100_le_order_cap`)
+        — 자기 로트. 옛 로트(`top10`·`random10_of_top100_le_order_cap`)는 그대로 보고됨.
+      - 사이클 도중 크래시: 그 사이클 판단 행은 안 남음(state 파일·판단 gap 행은 남을 수 있음 — 판단 행 없는 state 는 무해). 수용.
+      - 플래그: `--pool`(기본 30, `--top` ≤ `--pool` ≤ 100, 위반은 자격증명 읽기 전 거부), `--top` = 결선 수. 시작 로그에 풀·결선·규칙 id.
+      - 보고서: 선별 기록이 있는 로트 × 시장마다 J1 「결선 vs 비결선」 표(결선 / 비결선 전체 / └ J2 악재 제외 / └ 생존·순위 밖 —
+        판단 n·실현 라벨 n·적중·적중률, 같은 n<30 보류). 평균 실현 수익률은 보고서가 원래 계산하지 않으므로 넣지 않음.
+        수익성 결론 없음.
+      — 영수증(2026-10-14, go1.26.5, 실 API 호출 0 — httptest 만, `run` 미실행, .env 미열람):
+      `gofmt -l tools/a128-jev-shadow-probe/` 빈 출력 · `go vet ./tools/a128-jev-shadow-probe/...` rc=0 ·
+      `go vet -tags tossos_testseams …` rc=0 · `rtk proxy go test -count=1 -v ./tools/a128-jev-shadow-probe/...` rc=0
+      (최상위 49 PASS + 하위 19 PASS, FAIL 0) · 같은 명령 `-race` rc=0.
+      새 시험(`screen_test.go`): `TestScreenFinalistsRules`(경계 0.5 제외·0.4999 생존, J1 내림차순·K 절단, 동률 랭킹 순,
+      생존 < K, 빈 입력) · `TestScreenQuestionsAreAsked` · `TestCycleJudgesTheWholePoolAndFlagsOnlyTheFinalists`(풀 30, 판단 실패 1 →
+      58 행·gap 1·대기 29·라벨 58, 결선 정확히 10 종목, 순위 핀) · `TestCycleRecordsFewerFinalistsWhenFewSurvive` ·
+      `TestPoolSamplingDrawsThePoolNotTheTop` · `TestRunFlagsValidatePoolAgainstTop`; `report_test.go`:
+      `TestReportComparesFinalistsWithTheControlGroup` · `TestReportLegacyLotsHaveNoScreenComparison`. 기존 시험 갱신:
+      `TestLedgerRowSchema`(screen·selection 열쇠), `TestSelectionCapBoundaryAndUnknownPrices`(새 수치), `TestSelectionSeedReproduces`
+      (풀 10 으로 골든 유지, 규칙 id), 1.5 의 K 추출 시험은 풀 추출 시험으로 대체.
+      변이 점검: 결선 플래그 항상 true(제자리 sed → 3 시험 FAIL → 원본 복원, sha256 일치·grep 으로 변이 줄 0 확인) + `-overlay`
+      11건(무변이 대조군 GREEN, 전후 소스 sha256 동일): `<`→`<=`·악재 `>=`→`>`·비안정 정렬·동률 역전·비결선 행 누락·비결선 라벨
+      대기 누락·풀=K·보고서 집단 뒤바꿈·보고서 J2 혼입·`--pool < --top` 허용·규칙 id 의 풀 무시 = 12/12 CAUGHT.
+      FLM·변이 원장·다중 적대 리뷰: Function Logic Map: not-applicable — 측정 도구 경로만(`tools/`), High-risk 경로 무접촉·게이트 판정 변경 0
+      (비례 원칙). 비용: 사이클당 Jev 요청 10 → 30(3배), 호가 GET 도 10 → 30.
+
 ## 2. 리뷰·착지
 
 - [x] 2.1 gstack 리뷰(경량 — 비례 원칙) + Manager 검증(경로 전수·트레일러·시험 재실행).

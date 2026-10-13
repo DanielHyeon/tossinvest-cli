@@ -78,7 +78,8 @@ func TestSelectionCapBoundaryAndUnknownPrices(t *testing.T) {
 	want := selectionRecord{
 		Rule: selectionRule, Seed: testSeed, CapValue: 500000, CapCurrency: "KRW", PriceCurrency: "KRW",
 		PriceSource: selectionPriceSource, RankingRequested: 100, RankingReceived: 6,
-		ExcludedOverCap: 1, ExcludedUnknownPrice: 3, Candidates: 2, Selected: 2,
+		ExcludedOverCap: 1, ExcludedUnknownPrice: 3, Candidates: 2,
+		Pool: 30, Selected: 2, Judged: 2, FinalistsRequested: 10, Finalists: 2,
 	}
 	if got != want {
 		t.Fatalf("selection = %+v\nwant        %+v", got, want)
@@ -118,48 +119,6 @@ func TestSelectionConvertsUSPricesWithTheOfficialRate(t *testing.T) {
 	query, _ := url.ParseQuery(rig.official.query("/api/v1/exchange-rate"))
 	if query.Get("baseCurrency") != "USD" || query.Get("quoteCurrency") != "KRW" {
 		t.Fatalf("exchange rate asked for %v, want USD → KRW", query)
-	}
-}
-
-// TestSelectionSamplesKOfManyAndTakesAllBelowK 는 후보가 K 초과면 정확히 K 개(후보의 부분집합),
-// 이하면 전부를 판단함.
-func TestSelectionSamplesKOfManyAndTakesAllBelowK(t *testing.T) {
-	t.Parallel()
-	var rows []rankingRow
-	for index := 0; index < 25; index++ {
-		rows = append(rows, rankingRow{fmt.Sprintf("S%02d", index), "1000", "KRW"})
-	}
-	rig := newTestRig(t)
-	rig.official.setRanking(rows...)
-	if err := rig.probe.cycle(context.Background(), "KR", rig.session(), at(10, 0)); err != nil {
-		t.Fatal(err)
-	}
-	contents := rig.contents(t)
-	symbols := judgedSymbols(contents)
-	if len(symbols) != 10 {
-		t.Fatalf("judged %d symbols, want 10 of 25 candidates", len(symbols))
-	}
-	first10 := make([]string, 10)
-	for index := range first10 {
-		first10[index] = rows[index].symbol
-	}
-	if reflect.DeepEqual(symbols, first10) {
-		t.Fatalf("the sample is the ranking top 10 — selection is not random: %v", symbols)
-	}
-	if got := onlySelection(t, contents); got.Candidates != 25 || got.Selected != 10 {
-		t.Fatalf("selection = %+v, want 25 candidates / 10 selected", got)
-	}
-
-	few := newTestRig(t)
-	few.official.setRanking(rows[:7]...)
-	if err := few.probe.cycle(context.Background(), "KR", few.session(), at(10, 0)); err != nil {
-		t.Fatal(err)
-	}
-	if got := judgedSymbols(few.contents(t)); len(got) != 7 {
-		t.Fatalf("below K every candidate is judged; judged %v", got)
-	}
-	if got := onlySelection(t, few.contents(t)); got.Candidates != 7 || got.Selected != 7 {
-		t.Fatalf("selection = %+v, want 7/7", got)
 	}
 }
 
@@ -207,6 +166,7 @@ func TestSelectionSeedReproduces(t *testing.T) {
 	for range 2 {
 		rig := newTestRig(t)
 		rig.probe.seed = func() uint64 { return 7 }
+		rig.probe.cfg.Pool = 10 // 풀 10 = 골든의 K — 풀 추출이 같은 pickSample 절차임을 사이클 단위로 봄
 		rig.official.setRanking(rows...)
 		if err := rig.probe.cycle(context.Background(), "KR", rig.session(), at(10, 0)); err != nil {
 			t.Fatal(err)
@@ -219,8 +179,9 @@ func TestSelectionSeedReproduces(t *testing.T) {
 	if !reflect.DeepEqual(runs[0], runs[1]) || strings.Join(runs[0], ",") != goldenSeed7 {
 		t.Fatalf("cycle selections = %v, want both %s", runs, goldenSeed7)
 	}
-	if selectionRuleFor(10) != selectionRule || selectionRuleFor(5) != "random5_of_top100_le_order_cap" {
-		t.Fatalf("rule ids = %q / %q", selectionRuleFor(10), selectionRuleFor(5))
+	if selectionRuleFor(10, 30) != selectionRule || selectionRule != "jev_screen10_of_random30_of_top100_le_order_cap" ||
+		selectionRuleFor(5, 20) != "jev_screen5_of_random20_of_top100_le_order_cap" {
+		t.Fatalf("rule ids = %q / %q", selectionRuleFor(10, 30), selectionRuleFor(5, 20))
 	}
 	if newSelectionSeed() > seedMask {
 		t.Fatal("seeds must fit in 53 bits so JSON readers keep them exact")

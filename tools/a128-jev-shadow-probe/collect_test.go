@@ -30,7 +30,7 @@ func TestLedgerRowSchema(t *testing.T) {
 	}
 	wantJudgment := []string{"at", "base_price", "collection_gaps", "currency", "horizon_minutes", "id", "input_tokens",
 		"kind", "label_due_at", "market", "model_answered", "model_requested", "p", "question_digest", "question_id",
-		"question_rev", "schema", "selection", "state_digest", "symbol"}
+		"question_rev", "schema", "screen", "selection", "state_digest", "symbol"}
 	wantLabel := []string{"at", "due_at", "judgment_id", "kind", "realized_price", "realized_return", "schema"}
 	kinds := map[string]int{}
 	for _, line := range strings.Split(strings.TrimSpace(string(raw)), "\n") {
@@ -70,9 +70,20 @@ func TestLedgerRowSchema(t *testing.T) {
 			}
 			sort.Strings(selectionKeys)
 			wantSelection := []string{"candidates", "cap_currency", "cap_value", "excluded_over_cap", "excluded_unknown_price",
-				"price_currency", "price_source", "ranking_received", "ranking_requested", "rule", "seed", "selected"}
+				"finalists", "finalists_requested", "judged", "pool", "price_currency", "price_source", "ranking_received",
+				"ranking_requested", "red_flag_excluded", "rule", "seed", "selected"}
 			if !reflect.DeepEqual(selectionKeys, wantSelection) || selection["rule"] != selectionRule {
 				t.Fatalf("selection keys = %v (rule %v)", selectionKeys, selection["rule"])
+			}
+			// screen 열쇠 집합(1.6) — 결선 여부가 행마다 명시돼야 보고서가 대조군과 비교할 수 있음.
+			screen, _ := row["screen"].(map[string]any)
+			screenKeys := make([]string, 0, len(screen))
+			for key := range screen {
+				screenKeys = append(screenKeys, key)
+			}
+			sort.Strings(screenKeys)
+			if !reflect.DeepEqual(screenKeys, []string{"finalist", "red_flag_excluded", "screen_rank"}) {
+				t.Fatalf("screen keys = %v", screenKeys)
 			}
 		case kindLabel:
 			if !reflect.DeepEqual(keys, wantLabel) {

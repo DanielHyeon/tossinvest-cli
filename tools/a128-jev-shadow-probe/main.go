@@ -3,9 +3,11 @@
 // 무엇을 하는가 (openspec/changes/a128-jev-shadow-judgment-probe)
 //
 // 정규장 동안 간격마다 official rankings 상위 100 중 1주 가격이 주문 상한(config
-// engine.automation_gate.max_order_notional) 이하인 종목에서 무작위 K 개를 골라(selection.go)
+// engine.automation_gate.max_order_notional) 이하인 종목에서 무작위 풀(기본 30)을 골라(selection.go)
 // 그 공개 시장 데이터로 state 를 조립하고,
 // TypeSafe Jev(Noul)에 J1(h분 뒤 상승?)·J2(매수 보류할 악재?)를 물어 p 를 JSONL 원장에 적음.
+// 풀 전체의 판단을 적되, J2 p ≥ 0.5 를 빼고 J1 p 내림차순 상위 K(기본 10)를 결선으로 표시함(screen.go) —
+// 비결선은 같은 사이클의 대조군으로 함께 라벨링됨.
 // h분 뒤 /prices 재조회로 실현 수익률을 같은 원장에 라벨로 적고, report 가 p 구간표를 만듦.
 //
 // 하지 않는 것: 주문·정정·취소·토글·설정 변경 전부. 브로커에는 공개 시장 데이터 GET 만
@@ -33,7 +35,11 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
-const defaultLedgerDir = "openspec/changes/a128-jev-shadow-judgment-probe/analysis/shadow-ledger"
+const (
+	defaultLedgerDir = "openspec/changes/a128-jev-shadow-judgment-probe/analysis/shadow-ledger"
+	defaultInterval  = 10 * time.Minute
+	defaultPool      = 30
+)
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -67,9 +73,12 @@ func runCommand(ctx context.Context, args []string, getenv func(string) string) 
 
 	flags := flag.NewFlagSet("run", flag.ContinueOnError)
 	market := flags.String("market", "", `required: "KR", "US" or "BOTH"`)
-	interval := flags.Duration("interval", 10*time.Minute, "sampling interval")
+	interval := flags.Duration("interval", defaultInterval, "sampling interval")
 	top := flags.Int("top", 10,
-		"symbols judged per market per cycle — a random sample of the ranking top 100 priced within the order cap")
+		"finalists per market per cycle — the pool symbols without a J2 red flag (p ≥ 0.5) ranked by J1 p, top N")
+	pool := flags.Int("pool", defaultPool,
+		"symbols judged per market per cycle — a random sample of the ranking top 100 priced within the order cap; "+
+			"every pool judgment is written and labeled (non-finalists are the control group); --top ≤ --pool ≤ 100")
 	horizon := flags.Int("horizon", 60, "label horizon in minutes")
 	model := flags.String("model", defaultJudgeModel, "TypeSafe model id (pinned version by default)")
 	out := flags.String("out", defaultLedgerDir, "ledger directory (ledger.jsonl + states/)")
@@ -85,8 +94,8 @@ func runCommand(ctx context.Context, args []string, getenv func(string) string) 
 	if err != nil {
 		return err
 	}
-	if *top < 1 || *top > 100 || *horizon < 1 || *interval < time.Minute {
-		return errors.New("--top must be 1..100, --horizon ≥ 1 minute and --interval ≥ 1m")
+	if err := validateRunFlags(*top, *pool, *horizon, *interval); err != nil {
+		return err
 	}
 	// 수동 세션창은 브로커를 부르기 전에 파싱·검증함 — 파싱 실패·역전창은 측정을 시작하기 전에 거부.
 	var manualSess *manualWindow
@@ -132,7 +141,7 @@ func runCommand(ctx context.Context, args []string, getenv func(string) string) 
 	defer l.Close()
 
 	p := newProbe(src, judge, l, config{
-		Interval: *interval, TopK: *top, Horizon: time.Duration(*horizon) * time.Minute, WaitOpen: *waitOpen,
+		Interval: *interval, TopK: *top, Pool: *pool, Horizon: time.Duration(*horizon) * time.Minute, WaitOpen: *waitOpen,
 		LabelTick: 30 * time.Second, ReadGap: 250 * time.Millisecond,
 		RetryDelays:  []time.Duration{5 * time.Second, 10 * time.Second, 20 * time.Second, 40 * time.Second},
 		ManualWindow: manualSess, CapSource: capSource,
@@ -142,12 +151,24 @@ func runCommand(ctx context.Context, args []string, getenv func(string) string) 
 		return err
 	}
 	p.restorePending(existing)
-	p.logf("ledger %s · markets %v · model %s · interval %s · sample %d of top %d within the order cap (%s) · horizon %dm · restored %d pending",
-		ledgerDir, markets, judge.model, *interval, *top, rankingFetch, configFile, *horizon, p.pendingCount())
+	p.logf("ledger %s · markets %v · model %s · interval %s · pool %d random of top %d within the order cap (%s) · "+
+		"finalists %d by J1 after excluding J2 ≥ %.1f · rule %s · horizon %dm · restored %d pending",
+		ledgerDir, markets, judge.model, *interval, *pool, rankingFetch, configFile,
+		*top, redFlagExclusionP, selectionRuleFor(*top, *pool), *horizon, p.pendingCount())
 	if manualSess != nil {
 		p.logf("session: calendar bypassed by --session %s (market-local window; operator override)", manualSess.Raw)
 	}
 	return p.run(ctx, markets)
+}
+
+// validateRunFlags 는 측정 매개변수 범위를 검사함 — 결선(--top)은 풀(--pool) 안에서만 뽑히므로 top ≤ pool,
+// 풀은 랭킹 상위 100 안에서 뜨므로 pool ≤ 100.
+func validateRunFlags(top, pool, horizon int, interval time.Duration) error {
+	if top < 1 || pool < top || pool > rankingFetch || horizon < 1 || interval < time.Minute {
+		return fmt.Errorf("--top must be ≥ 1, --pool must be --top..%d (got --top %d --pool %d), "+
+			"--horizon ≥ 1 minute and --interval ≥ 1m", rankingFetch, top, pool)
+	}
+	return nil
 }
 
 func parseMarkets(value string) ([]string, error) {
