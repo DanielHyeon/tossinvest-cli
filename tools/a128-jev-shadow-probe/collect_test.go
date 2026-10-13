@@ -30,7 +30,7 @@ func TestLedgerRowSchema(t *testing.T) {
 	}
 	wantJudgment := []string{"at", "base_price", "collection_gaps", "currency", "horizon_minutes", "id", "input_tokens",
 		"kind", "label_due_at", "market", "model_answered", "model_requested", "p", "question_digest", "question_id",
-		"question_rev", "schema", "state_digest", "symbol"}
+		"question_rev", "schema", "selection", "state_digest", "symbol"}
 	wantLabel := []string{"at", "due_at", "judgment_id", "kind", "realized_price", "realized_return", "schema"}
 	kinds := map[string]int{}
 	for _, line := range strings.Split(strings.TrimSpace(string(raw)), "\n") {
@@ -61,6 +61,18 @@ func TestLedgerRowSchema(t *testing.T) {
 			}
 			if _, err := time.Parse(time.RFC3339, row["at"].(string)); err != nil {
 				t.Fatalf("at is not RFC3339: %s", line)
+			}
+			// selection 열쇠 집합(같은 통화 KR 이라 fx_rate·fx_pair 는 생략됨).
+			selection, _ := row["selection"].(map[string]any)
+			selectionKeys := make([]string, 0, len(selection))
+			for key := range selection {
+				selectionKeys = append(selectionKeys, key)
+			}
+			sort.Strings(selectionKeys)
+			wantSelection := []string{"candidates", "cap_currency", "cap_value", "excluded_over_cap", "excluded_unknown_price",
+				"price_currency", "price_source", "ranking_received", "ranking_requested", "rule", "seed", "selected"}
+			if !reflect.DeepEqual(selectionKeys, wantSelection) || selection["rule"] != selectionRule {
+				t.Fatalf("selection keys = %v (rule %v)", selectionKeys, selection["rule"])
 			}
 		case kindLabel:
 			if !reflect.DeepEqual(keys, wantLabel) {

@@ -57,6 +57,8 @@ type judgmentRow struct {
 	// InputTokens 는 요청 단위 값임 — 한 요청이 J1·J2 두 행을 만들므로 행 합산은 비용을 2배로 셈.
 	InputTokens    int      `json:"input_tokens"`
 	CollectionGaps []string `json:"collection_gaps"`
+	// Selection 은 이 판단의 종목이 어떤 표본 선택 규칙으로 뽑혔는지(1.5 이후). 없는 옛 행 = top10 로트.
+	Selection *selectionRecord `json:"selection,omitempty"`
 }
 
 // labelRow — 라벨 행. 실현값이 없으면 LabelGap 이 비어 있지 않아야 함(둘 중 하나는 반드시).

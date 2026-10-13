@@ -3,8 +3,8 @@ package main
 // collect.go 는 수집 루프·세션 경계·rate limit 백오프·라벨러를 담당함.
 //
 // 브로커에는 읽기(GET)만 보냄: marketSource 인터페이스가 이 도구가 부를 수 있는 브로커 표면
-// 전부이고, 그 메서드 다섯은 모두 공개 시장 데이터 GET 임. 주문·계좌 메서드는 인터페이스에
-// 없으므로 수집 코드에서 도달 불가(static_test.go 가 메서드 집합을 고정함).
+// 전부이고, 그 메서드 여섯은 모두 공개 시장 데이터 GET 임(환율 포함 — 1.5 표본 선택의 상한 환산).
+// 주문·계좌 메서드는 인터페이스에 없으므로 수집 코드에서 도달 불가(static_test.go 가 메서드 집합을 고정함).
 
 import (
 	"context"
@@ -27,6 +27,7 @@ type marketSource interface {
 	Prices(ctx context.Context, symbols []string) ([]domain.Quote, error)
 	StrictOrderbookTop(ctx context.Context, market, symbol string) (official.StrictTopOfBook, error)
 	TypedMarketCalendar(ctx context.Context, country, date string) (official.MarketCalendarResponse, error)
+	ExchangeRate(ctx context.Context, base, quote string) (domain.ExchangeRate, error)
 }
 
 const (
@@ -44,7 +45,8 @@ const (
 
 // config 는 실행 매개변수. 기본값은 main.go 플래그에 있음.
 type config struct {
-	Interval    time.Duration
+	Interval time.Duration
+	// TopK 는 사이클당 판단 종목 수(상위 100 중 상한 이하 후보에서 무작위 추출하는 표본 크기).
 	TopK        int
 	Horizon     time.Duration
 	WaitOpen    bool
@@ -53,6 +55,8 @@ type config struct {
 	RetryDelays []time.Duration // 429 재시도 지연(지수) — 길이가 재시도 횟수
 	// ManualWindow 는 --session 수동 세션창 우회. nil 이면 달력을 씀(기본 동작 불변).
 	ManualWindow *manualWindow
+	// CapSource 는 표본 선택의 주문 상한 출처(운영 = config 파일 읽기). nil 이면 선택을 거부함.
+	CapSource func(context.Context) (orderCap, error)
 }
 
 // session 은 정규장 하나의 경계. Source 는 창을 어떻게 정했는지(달력 vs 수동 우회)를 적어
@@ -81,6 +85,7 @@ type probe struct {
 	now       func() time.Time
 	sleep     func(context.Context, time.Duration) error
 	logf      func(format string, args ...any)
+	seed      func() uint64 // 사이클별 표본 선택 시드(시험이 고정함)
 
 	mu      sync.Mutex
 	pending []pendingLabel
@@ -98,7 +103,7 @@ type pendingLabel struct {
 func newProbe(src marketSource, judge *judgeClient, l *ledger, cfg config) *probe {
 	return &probe{
 		src: src, judge: judge, ledger: l, cfg: cfg, questions: probeQuestions(),
-		now: time.Now, sleep: sleepContext,
+		now: time.Now, sleep: sleepContext, seed: newSelectionSeed,
 		logf: func(format string, args ...any) { fmt.Fprintf(os.Stderr, format+"\n", args...) },
 	}
 }
@@ -262,30 +267,52 @@ func (p *probe) runMarket(ctx context.Context, market string) error {
 	}
 }
 
-// cycle 은 rankings → stocks → prices → orderbook(종목별) → 판단 → 원장. 원장 쓰기 실패만
-// 오류로 올림(측정 자체가 무너진 것). 읽기·판단 실패는 결손 행으로 남기고 계속함.
+// cycle 은 상한·환율 → rankings(상위 100) → 상한 필터·무작위 추출 → stocks → prices →
+// orderbook(종목별) → 판단 → 원장. 원장 쓰기 실패만 오류로 올림(측정 자체가 무너진 것).
+// 읽기·판단 실패는 결손 행으로 남기고 계속함.
 func (p *probe) cycle(ctx context.Context, market string, sess session, at time.Time) error {
 	gap := func(stage, symbol string, err error) error {
 		p.logf("%s %s %s: %s", market, stage, symbol, reasonOf(err))
 		return p.ledger.gap(gapRow{At: stamp(at), Market: market, Stage: stage, Symbol: symbol, Reason: reasonOf(err)})
 	}
 
+	// 상한·환율을 못 읽으면 옛 규칙으로 폴백하지 않고 이 사이클을 판단 없이 gap 으로 남김.
+	inputs, err := p.resolveSelectionInputs(ctx, market)
+	if err != nil {
+		return gap("selection", "", err)
+	}
 	ranking, err := withRateLimitRetry(ctx, p, func(ctx context.Context) (domain.Ranking, error) {
-		return p.src.Rankings(ctx, rankingType, market, rankingDuration, false, p.cfg.TopK)
+		return p.src.Rankings(ctx, rankingType, market, rankingDuration, false, rankingFetch)
 	})
 	if err != nil {
 		return gap("rankings", "", err)
 	}
-	items := ranking.Items
-	if len(items) > p.cfg.TopK {
-		items = items[:p.cfg.TopK]
+	received := ranking.Items
+	if len(received) > rankingFetch {
+		received = received[:rankingFetch]
 	}
+	if len(received) == 0 {
+		return gap("rankings", "", errors.New("ranking returned no symbols"))
+	}
+	candidates, overCap, unknownPrice := filterByCap(received, inputs)
+	selection := &selectionRecord{
+		Rule: selectionRuleFor(p.cfg.TopK), Seed: p.seed(), CapValue: inputs.cap.Value, CapCurrency: inputs.cap.Currency,
+		PriceCurrency: inputs.priceCurrency, PriceSource: selectionPriceSource,
+		RankingRequested: rankingFetch, RankingReceived: len(received),
+		ExcludedOverCap: overCap, ExcludedUnknownPrice: unknownPrice, Candidates: len(candidates),
+	}
+	if inputs.fxPair != "" {
+		selection.FXRate, selection.FXPair = inputs.fxRate, inputs.fxPair
+	}
+	if len(candidates) == 0 {
+		return gap("selection", "", fmt.Errorf("no ranking row within the order cap %v %s (received %d, over cap %d, unknown price %d)",
+			inputs.cap.Value, inputs.cap.Currency, len(received), overCap, unknownPrice))
+	}
+	items := pickSample(candidates, p.cfg.TopK, selection.Seed)
+	selection.Selected = len(items)
 	symbols := make([]string, 0, len(items))
 	for _, item := range items {
 		symbols = append(symbols, item.Symbol)
-	}
-	if len(symbols) == 0 {
-		return gap("rankings", "", errors.New("ranking returned no symbols"))
 	}
 
 	// 메타 결손은 판단을 막지 않음 — 이름 없이도 판단은 가능하고, 결손은 행과 state 양쪽에 남음.
@@ -363,7 +390,7 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 				ModelRequested: p.judge.model, ModelAnswered: result.Model,
 				StateDigest: digest, P: result.P[q.ID], BasePrice: base, Currency: state.Currency,
 				HorizonMinutes: state.HorizonMinutes, LabelDueAt: stamp(due),
-				InputTokens: result.InputTokens, CollectionGaps: state.MissingInputs,
+				InputTokens: result.InputTokens, CollectionGaps: state.MissingInputs, Selection: selection,
 			}); err != nil {
 				return err
 			}

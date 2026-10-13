@@ -36,7 +36,12 @@ var kst = time.FixedZone("KST", 9*3600)
 
 func at(hour, minute int) time.Time { return time.Date(2026, 10, 7, hour, minute, 0, 0, kst) }
 
-// officialMock 은 official Open API 의 공개 읽기 다섯 경로 + 토큰 경로를 흉내냄.
+// rankingRow 는 랭킹 응답 한 행을 시험이 지정할 때 씀(표본 선택 시험).
+type rankingRow struct {
+	symbol, price, currency string
+}
+
+// officialMock 은 official Open API 의 공개 읽기 여섯 경로(환율 포함) + 토큰 경로를 흉내냄.
 type officialMock struct {
 	t      *testing.T
 	server *httptest.Server
@@ -47,7 +52,12 @@ type officialMock struct {
 	failStatus  map[string]int    // path → 고정 실패 상태
 	calls       map[string]int
 	methods     map[string]bool
+	queries     map[string]string // path → 마지막 요청의 query 원문
 	noRegular   bool
+	// rankingRows 가 nil 이 아니면 기본 두 행(계좌 표식 섞인 응답) 대신 이 행들로 랭킹을 답함.
+	rankingRows []rankingRow
+	// fx* 는 /api/v1/exchange-rate 응답의 짝과 매수 환율.
+	fxBase, fxQuote, fxRate string
 }
 
 func newOfficialMock(t *testing.T) *officialMock {
@@ -58,6 +68,8 @@ func newOfficialMock(t *testing.T) *officialMock {
 		failStatus:  map[string]int{},
 		calls:       map[string]int{},
 		methods:     map[string]bool{},
+		queries:     map[string]string{},
+		fxBase:      "USD", fxQuote: "KRW", fxRate: "1250",
 	}
 	m.server = httptest.NewServer(http.HandlerFunc(m.serve))
 	t.Cleanup(m.server.Close)
@@ -68,6 +80,7 @@ func (m *officialMock) serve(w http.ResponseWriter, r *http.Request) {
 	m.mu.Lock()
 	m.calls[r.URL.Path]++
 	m.methods[r.Method+" "+r.URL.Path] = true
+	m.queries[r.URL.Path] = r.URL.RawQuery
 	if n := m.rateLimited[r.URL.Path]; n > 0 {
 		m.rateLimited[r.URL.Path] = n - 1
 		m.mu.Unlock()
@@ -85,6 +98,10 @@ func (m *officialMock) serve(w http.ResponseWriter, r *http.Request) {
 		prices[symbol] = price
 	}
 	noRegular := m.noRegular
+	rankingRows := append([]rankingRow(nil), m.rankingRows...)
+	customRanking := m.rankingRows != nil
+	fxBody := `{"result":{"baseCurrency":"` + m.fxBase + `","quoteCurrency":"` + m.fxQuote + `","rate":"` + m.fxRate +
+		`","midRate":"` + m.fxRate + `","basisPoint":"0","rateChangeType":"EQUAL"}}`
 	m.mu.Unlock()
 
 	write := func(body string) {
@@ -101,7 +118,18 @@ func (m *officialMock) serve(w http.ResponseWriter, r *http.Request) {
 		}
 		write(`{"result":{"previousBusinessDay":{"date":"2026-10-06"},"today":{"date":"2026-10-07",` + regular +
 			`},"nextBusinessDay":{"date":"2026-10-08"}}}`)
+	case "/api/v1/exchange-rate":
+		write(fxBody)
 	case "/api/v1/rankings":
+		if customRanking {
+			var rows []string
+			for index, row := range rankingRows {
+				rows = append(rows, fmt.Sprintf(`{"rank":%d,"symbol":"%s","currency":"%s","price":{"lastPrice":"%s","basePrice":"%s"},`+
+					`"tradingVolume":"10","tradingAmount":"1000"}`, index+1, row.symbol, row.currency, row.price, row.price))
+			}
+			write(`{"result":{"rankedAt":"2026-10-07T10:00:00+09:00","rankings":[` + strings.Join(rows, ",") + `]}}`)
+			return
+		}
 		// 계좌 모양 필드를 일부러 섞음 — 공개 어댑터가 버려야 함.
 		write(`{"result":{"rankedAt":"2026-10-07T10:00:00+09:00","accountNo":"` + sentinelAccount + `","rankings":[` +
 			`{"rank":1,"symbol":"005930","currency":"KRW","price":{"lastPrice":"70000","basePrice":"69000","changeRate":"1.45"},` +
@@ -133,6 +161,23 @@ func (m *officialMock) serve(w http.ResponseWriter, r *http.Request) {
 func (m *officialMock) client(t *testing.T) *official.Client {
 	return official.New(official.Credentials{APIKey: "mock-key", SecretKey: "mock-secret"},
 		filepath.Join(t.TempDir(), "openapi-token.json"), official.WithBaseURL(m.server.URL))
+}
+
+func (m *officialMock) query(path string) string {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.queries[path]
+}
+
+// setRanking 은 랭킹 행을 지정하고, 각 행의 가격을 /prices 에도 넣음(기준가가 있어야 판단까지 감).
+func (m *officialMock) setRanking(rows ...rankingRow) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.rankingRows = append([]rankingRow{}, rows...)
+	m.prices = map[string]string{}
+	for _, row := range rows {
+		m.prices[row.symbol] = row.price
+	}
 }
 
 func (m *officialMock) callCount(path string) int {
@@ -260,10 +305,19 @@ func newTestRig(t *testing.T) *testRig {
 	p := newProbe(officialServer.client(t), typeSafeServer.judgeClient(t), l, config{
 		Interval: 10 * time.Minute, TopK: 10, Horizon: 60 * time.Minute, LabelTick: 30 * time.Second,
 		RetryDelays: []time.Duration{time.Second, 2 * time.Second},
+		CapSource:   fixedCap(500000, "KRW"),
 	})
 	p.now, p.sleep = clock.Now, clock.Sleep
+	p.seed = func() uint64 { return testSeed }
 	p.logf = func(string, ...any) {}
 	return &testRig{official: officialServer, typeSafe: typeSafeServer, clock: clock, probe: p, dir: dir}
+}
+
+// testSeed 는 시험 rig 의 고정 표본 선택 시드.
+const testSeed uint64 = 42
+
+func fixedCap(value float64, currency string) func(context.Context) (orderCap, error) {
+	return func(context.Context) (orderCap, error) { return orderCap{Value: value, Currency: currency}, nil }
 }
 
 func (r *testRig) contents(t *testing.T) ledgerContents {

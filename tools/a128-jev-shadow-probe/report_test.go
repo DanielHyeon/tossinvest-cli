@@ -141,3 +141,39 @@ func TestReportCommandReadsARealLedger(t *testing.T) {
 		}
 	}
 }
+
+// TestReportSeparatesSelectionLots 는 selection 이 없는 옛 행(top10)과 1.5 이후 행을 다른 표로 나누고
+// 한 표에 섞지 않음을 봄. 두 로트를 섞으면 0.95 구간이 60건·적중 30 이 되어 드러남.
+func TestReportSeparatesSelectionLots(t *testing.T) {
+	t.Parallel()
+	old := syntheticLedger("j1_up_within_horizon", rowsAt(0.95, 30, 0)) // 옛 로트: 전부 적중
+	fresh := syntheticLedger("j1_up_within_horizon", rowsAt(0.95, 0, 30))
+	contents := ledgerContents{Labels: map[string]labelRow{}}
+	contents.Judgments = append(contents.Judgments, old.Judgments...)
+	for id, label := range old.Labels {
+		contents.Labels[id] = label
+	}
+	record := &selectionRecord{Rule: selectionRule, Seed: 1, CapValue: 500000, CapCurrency: "KRW"}
+	for _, row := range fresh.Judgments {
+		label := fresh.Labels[row.ID]
+		row.ID, label.JudgmentID = "new-"+row.ID, "new-"+row.ID
+		row.Selection = record
+		contents.Judgments = append(contents.Judgments, row)
+		contents.Labels[row.ID] = label
+	}
+	report := renderCalibrationReport(contents, "ledger.jsonl")
+	for _, want := range []string{
+		"표본 선택 로트: " + selectionRule + "=30, top10=30",
+		"## j1_up_within_horizon — KR · 로트 top10",
+		"## j1_up_within_horizon — KR · 로트 " + selectionRule,
+		"| 0.95–1.00 | 30 | 30 | 30 | 1.000 | 판정 가능 |",
+		"| 0.95–1.00 | 30 | 30 | 0 | 0.000 | 판정 가능 |",
+	} {
+		if !strings.Contains(report, want) {
+			t.Fatalf("report lacks %q:\n%s", want, report)
+		}
+	}
+	if strings.Contains(report, "| 0.95–1.00 | 60 |") {
+		t.Fatalf("the two selection lots were mixed in one table:\n%s", report)
+	}
+}

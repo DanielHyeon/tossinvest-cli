@@ -43,8 +43,9 @@ func nonTestSources(t *testing.T) []*ast.File {
 	return files
 }
 
-// TestMarketSourceIsTheFiveReadOnlyGets 는 브로커 표면(인터페이스)의 메서드 집합을 고정함.
-func TestMarketSourceIsTheFiveReadOnlyGets(t *testing.T) {
+// TestMarketSourceIsTheSixReadOnlyGets 는 브로커 표면(인터페이스)의 메서드 집합을 고정함.
+// ExchangeRate 는 1.5 표본 선택의 US 가격 → 상한 통화 환산용 공개 GET(/api/v1/exchange-rate)으로 추가됨.
+func TestMarketSourceIsTheSixReadOnlyGets(t *testing.T) {
 	t.Parallel()
 	var methods []string
 	for _, file := range nonTestSources(t) {
@@ -62,14 +63,15 @@ func TestMarketSourceIsTheFiveReadOnlyGets(t *testing.T) {
 		})
 	}
 	sort.Strings(methods)
-	want := []string{"Prices", "Rankings", "Stocks", "StrictOrderbookTop", "TypedMarketCalendar"}
+	want := []string{"ExchangeRate", "Prices", "Rankings", "Stocks", "StrictOrderbookTop", "TypedMarketCalendar"}
 	if !reflect.DeepEqual(methods, want) {
 		t.Fatalf("marketSource methods = %v, want exactly the public-market GETs %v", methods, want)
 	}
 }
 
 // TestNoMutatingOrAccountSurfaceIsNamed 는 주문·계좌 메서드 이름이 어떤 selector 로도 나오지 않고,
-// official 패키지에서 쓰는 이름이 허용 목록 안에 있음을 봄.
+// official 패키지에서 쓰는 이름이 허용 목록 안에 있음을 봄. config 패키지도 같은 방식으로 묶음 —
+// 주문 상한은 파일 읽기(NewService → Status)로만 얻고, 쓰기 메서드(Init·Save*)는 이름조차 못 나옴.
 func TestNoMutatingOrAccountSurfaceIsNamed(t *testing.T) {
 	t.Parallel()
 	forbidden := map[string]bool{
@@ -80,12 +82,17 @@ func TestNoMutatingOrAccountSurfaceIsNamed(t *testing.T) {
 		"OrderByID": true, "OrdersRaw": true, "OrdersPageRaw": true, "OrderRawByID": true, "AuthHeaders": true,
 		"VerifyAuthoritativeAccountIdentity": true, "SelectedAccountSeq": true, "WithAccountSeq": true,
 		"ConditionalOrders": true, "ConditionalOrder": true, "SaveCredentials": true, "DeleteCredentials": true,
+		// config 쓰기 표면 — 프로브는 config 를 읽기만 함.
+		"Init": true, "SaveEngineAdoption": true, "SaveEngineExitPolicy": true, "SaveEngineGateLimits": true,
+		"SaveNotifications": true, "SaveNotificationsEnabled": true, "SaveTradingPolicy": true,
+		"SaveEngineGateEnabled": true, "SaveEngineAutostart": true, "SaveSoakAutostart": true,
 	}
 	allowedOfficial := map[string]bool{
 		"New": true, "LoadCredentials": true, "Client": true, "Credentials": true,
 		"StrictTopOfBook": true, "MarketCalendarResponse": true, "ErrRateLimited": true,
 	}
-	sawOfficial := false
+	allowedConfig := map[string]bool{"NewService": true}
+	sawOfficial, sawConfig := false, false
 	for _, file := range nonTestSources(t) {
 		ast.Inspect(file, func(node ast.Node) bool {
 			selector, ok := node.(*ast.SelectorExpr)
@@ -101,11 +108,17 @@ func TestNoMutatingOrAccountSurfaceIsNamed(t *testing.T) {
 					t.Errorf("source uses official.%s, outside the read-only allowlist", selector.Sel.Name)
 				}
 			}
+			if pkg, ok := selector.X.(*ast.Ident); ok && pkg.Name == "tossconfig" {
+				sawConfig = true
+				if !allowedConfig[selector.Sel.Name] {
+					t.Errorf("source uses tossconfig.%s, outside the read-only allowlist", selector.Sel.Name)
+				}
+			}
 			return true
 		})
 	}
-	if !sawOfficial {
-		t.Fatal("the guard saw no official.* use at all — it is measuring nothing")
+	if !sawOfficial || !sawConfig {
+		t.Fatalf("the guard saw official.* %v / tossconfig.* %v — a side it saw nothing of is measured by nothing", sawOfficial, sawConfig)
 	}
 }
 
@@ -141,19 +154,21 @@ func TestOutboundBytesPassTheStateGuard(t *testing.T) {
 	}
 }
 
-// TestImportsStayInsideTheAllowlist 는 생산 패키지 import 를 읽기 표면 셋으로 묶고 새 외부 의존을 막음.
+// TestImportsStayInsideTheAllowlist 는 생산 패키지 import 를 읽기 표면 넷으로 묶고 새 외부 의존을 막음.
+// internal/config 는 1.5 의 주문 상한 읽기용(config 파일 읽기만 — 쓰기 이름은 위 시험이 금지).
 func TestImportsStayInsideTheAllowlist(t *testing.T) {
 	t.Parallel()
 	allowedModule := map[string]bool{
 		"github.com/JungHoonGhae/tossinvest-cli/internal/official":  true,
 		"github.com/JungHoonGhae/tossinvest-cli/internal/domain":    true,
 		"github.com/JungHoonGhae/tossinvest-cli/internal/app/paths": true,
+		"github.com/JungHoonGhae/tossinvest-cli/internal/config":    true,
 	}
 	for _, file := range nonTestSources(t) {
 		for _, spec := range file.Imports {
 			path, _ := strconv.Unquote(spec.Path.Value)
 			if strings.Contains(path, ".") && !allowedModule[path] {
-				t.Errorf("import %q is outside the allowlist (stdlib + official/domain/app-paths only)", path)
+				t.Errorf("import %q is outside the allowlist (stdlib + official/domain/app-paths/config only)", path)
 			}
 		}
 	}

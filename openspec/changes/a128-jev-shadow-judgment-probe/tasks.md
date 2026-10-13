@@ -54,6 +54,53 @@
       `openspec/changes/a128-jev-shadow-judgment-probe/`. 그 밖 0.
       — 451ddba4, 14파일 전수 허용 내, Opus 트레일러 확인(Manager 배터리 2026-10-07).
 
+- [x] 1.5 표본 선택 규칙 교체(사용자 지시 2026-10-14): 사이클마다 랭킹 **상위 100** 을 받아
+      **1주 가격이 매수 가능 예산 이하**인 종목만 남기고 그중 **무작위 10**(10 미만이면 전부).
+      - 이유: 상위 10 고정은 같은 종목을 반복 측정(10-12 KR 30슬롯에 고유 12) — 표본이 독립이
+        아니고, veto 가 실제로 걸릴 집합(엔진이 살 수 있는 종목)과도 다름.
+      - 예산 출처(사용자 결정 1=b, 자동 추종): config `engine.automation_gate.max_order_notional`
+        (+ `limit_currency`) — Guardian 이 1회 주문에 거는 금액 상한(execgw/guardian.go `MaxNotional`),
+        사용자 표현 「1일 구매 예산」의 코드상 대응(이 이름의 키는 config 에 없음, 2026-10-14 실측).
+        **계좌 API 는 여전히 0** — config 파일 읽기만. US 는 official `ExchangeRate`(GET)로
+        limit_currency 환산(Guardian 과 같은 방향: 가격×환율 ≤ 상한). 환율·config 를 못 읽으면
+        그 사이클은 gap 행(stage=selection)으로 남기고 판단하지 않음(조용한 폴백 금지).
+      - 원장 judgment 행에 `selection` 필드: 규칙 id(`random10_of_top100_le_order_cap`)·시드·
+        예산값·통화·후보 수(100 중 통과 수). 기존 행(필드 없음)= `top10` 로트로 보고서가 분리.
+      - 보고서: selection 로트별로 표를 나눔(섞지 않음).
+      - 시험: 필터 경계(=상한 통과, 초과 탈락), 10 미만 전부, 시드 고정 재현, 환율 실패 gap,
+        config 부재 gap, 계좌 표면 AST 금지 유지, 보고서 로트 분리.
+      — 2026-10-14 구현(새 파일 `selection.go`·`selection_test.go` + collect/ledger/main/report/시험 편집).
+      상한은 `internal/config` 로더(`NewService(<config dir>/config.json).Status`, 읽기 전용)로
+      **사이클마다** 읽음 — 파일 부재(로더가 기본값을 돌려주므로 `Exists` 로 거름)·상한 ≤0/비유한·
+      통화가 KRW/USD 아님·출처 미배선은 gap(selection)이고 랭킹도 판단도 부르지 않음. 경로는
+      `--config-dir`(없으면 기본 해석 `~/.config/tossctl/config.json`, 실측 값 500000 KRW — 두 키만 읽음).
+      `marketSource` 에 `ExchangeRate`(GET `/api/v1/exchange-rate`) 추가, 시세 통화 ≠ 상한 통화일 때만
+      `ExchangeRate(시세, 상한)` 의 `rate`(매수 환율 = Guardian `RateQuoteToBase` 와 같은 필드)를 곱함;
+      응답 짝 불일치·0 이하도 gap. 시드 = `math/rand/v2` 전역 생성기 53비트, 추출 =
+      `rand.New(rand.NewPCG(seed, 0xa128_0105)).Perm(n)[:k]` 정렬.
+      — 설계와 다른 점: (a) 필터 가격 = **랭킹 응답의 lastPrice**(`price_source: rankings.last_price`) —
+      100 종목 `/prices` 한 번을 더 부르지 않으려는 선택, 기준가(base_price)는 그대로 `/prices`.
+      (b) 랭킹 행 통화가 비었거나 시장 통화와 다르면 「가격 모름」으로 제외·계수(추정 금지).
+      (c) 규칙 id 에 K 를 넣음(`random%d_of_top100_le_order_cap`) — `--top 10` 기본값이면 지시된 id 와
+      같고, 다른 K 는 다른 로트로 갈라짐. (d) selection 레코드 필드: rule·seed·cap_value·cap_currency·
+      price_currency·price_source·fx_rate/fx_pair(환산 시만)·ranking_requested(100)·ranking_received·
+      excluded_over_cap·excluded_unknown_price·candidates·selected. (e) 후보 목록 자체는 원장에 없음 —
+      시드는 같은 후보 목록이 주어질 때의 재현만 보장함(랭킹 원문은 보관하지 않음). (f) 환산은 Guardian 의
+      haircut·올림을 적용하지 않음(표본 필터이지 주문 가드가 아님).
+      — 영수증(2026-10-14, go1.26.5, 실 API 호출 0 — httptest·임시 config 만, `run` 미실행, .env 미열람):
+      `gofmt -l tools/a128-jev-shadow-probe/` 빈 출력 · `go vet ./tools/a128-jev-shadow-probe/...` rc=0 ·
+      `go vet -tags tossos_testseams …` rc=0 · `rtk proxy go test -count=1 -v ./tools/a128-jev-shadow-probe/...`
+      rc=0 (최상위 42 PASS + 하위 14 PASS, FAIL 0) · 같은 명령 `-race` rc=0.
+      `report` 하위 명령을 실 원장에 읽기 전용으로 돌림 → `표본 선택 로트: top10=160`, 표 제목 `· 로트 top10`.
+      변이 점검 — 행동 10건은 `go test -overlay`(디스크 무변경, 무변이 대조군 GREEN, 전후 sha256 동일):
+      필터 `<=`→`<`·환율 곱 삭제·selection gap 쓰기 삭제·표본=상위 k·보고서 로트 필터 삭제·config Exists 검사
+      삭제·환율 짝 검사 삭제·시드 미기록·규칙 id 의 K 무시·통화 불일치 허용 = 10/10 CAUGHT.
+      정적 가드 4건은 제자리 편집 → 복원 sha256 일치: `(*tossconfig.Service).SaveEngineAutostart` 명명·
+      `tossconfig.DefaultFile`(허용 목록 밖)·`marketSource` 에 `BuyingPower` 추가·`(*official.Client).BuyingPower`
+      명명 = 4/4 CAUGHT. 골든(시드 7)은 pickSample 이 아니라 절차를 따로 짠 프로그램으로 계산해 넣음.
+      FLM·변이 원장·다중 적대 리뷰: not-applicable(비례 원칙 — 측정 도구 코드만, High-risk 경로 무접촉,
+      주문·계좌 표면 0 은 AST 시험이 유지).
+
 ## 2. 리뷰·착지
 
 - [x] 2.1 gstack 리뷰(경량 — 비례 원칙) + Manager 검증(경로 전수·트레일러·시험 재실행).

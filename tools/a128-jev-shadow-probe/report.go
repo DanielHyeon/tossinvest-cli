@@ -7,6 +7,8 @@ package main
 //   - 적중: J1 = 실현 수익률 > 0, J2 = 실현 수익률 < 0(악재 판단 뒤 h분 수익률이 음수).
 //   - 구간의 실현 라벨 n < 30 이면 그 구간은 「보류」 — 적중률 숫자를 싣지 않음
 //     (작은 표본의 비율이 임계 근거로 인용되는 일을 양식에서 막음).
+//   - 표본 선택 로트(selection.rule, 없는 옛 행 = top10)마다 표를 따로 만듦 — 상위 10 고정과
+//     상한 이하 무작위 10 은 모집단이 다르므로 한 표에 섞지 않음(tasks.md 1.5).
 //   - 결정은 사람이 함. 보고서는 예비 권고만 냄.
 
 import (
@@ -71,7 +73,9 @@ func renderCalibrationReport(contents ledgerContents, ledgerPath string) string 
 
 	realized, labelGaps, unlabeled := 0, 0, 0
 	revs, models, markets, questionIDs := map[string]bool{}, map[string]bool{}, map[string]bool{}, map[string]bool{}
+	lots := map[string]int{}
 	for _, row := range contents.Judgments {
+		lots[selectionLot(row)]++
 		revs[row.QuestionRev+" "+row.QuestionDigest] = true
 		models[row.ModelAnswered] = true
 		markets[row.Market] = true
@@ -99,6 +103,9 @@ func renderCalibrationReport(contents ledgerContents, ledgerPath string) string 
 	if len(gapStages) > 0 {
 		line("- gap 단계별: %s", joinCounts(gapStages))
 	}
+	if len(lots) > 0 {
+		line("- 표본 선택 로트: %s — 로트마다 표를 따로 둠(섞지 않음)", joinCounts(lots))
+	}
 	line("- 질문 rev·digest: %s", joinKeys(revs))
 	line("- 답한 모델: %s", joinKeys(models))
 	if len(revs) > len(questionIDs) || len(models) > 1 {
@@ -125,19 +132,30 @@ func renderCalibrationReport(contents ledgerContents, ledgerPath string) string 
 			line("적중 규칙이 정의되지 않은 질문 — 표를 만들지 않음.")
 			continue
 		}
-		for _, market := range marketList {
-			renderQuestionSection(&out, contents, questionID, market, rule.rule, rule.hit)
+		for _, lot := range sortedKeys(keysOf(lots)) {
+			for _, market := range marketList {
+				renderQuestionSection(&out, contents, lot, questionID, market, rule.rule, rule.hit)
+			}
 		}
 	}
 	return out.String()
 }
 
-func renderQuestionSection(out *strings.Builder, contents ledgerContents, questionID, market, rule string, hit func(float64) bool) {
+func keysOf(counts map[string]int) map[string]bool {
+	set := make(map[string]bool, len(counts))
+	for key := range counts {
+		set[key] = true
+	}
+	return set
+}
+
+// renderQuestionSection 은 한 로트·한 질문·한 시장의 표 하나. lot 이 다른 행은 세지 않음.
+func renderQuestionSection(out *strings.Builder, contents ledgerContents, lot, questionID, market, rule string, hit func(float64) bool) {
 	line := func(format string, args ...any) { fmt.Fprintf(out, format+"\n", args...) }
 	bins := make([]binStats, binCount+1) // [0] = p < 0.50, [1..] = 구간 0..9
 	var above binStats
 	for _, row := range contents.Judgments {
-		if row.QuestionID != questionID || (market != allMarketsLabel && row.Market != market) {
+		if selectionLot(row) != lot || row.QuestionID != questionID || (market != allMarketsLabel && row.Market != market) {
 			continue
 		}
 		stats := &bins[binIndex(row.P)+1]
@@ -163,7 +181,7 @@ func renderQuestionSection(out *strings.Builder, contents ledgerContents, questi
 	}
 
 	line("")
-	line("## %s — %s", questionID, market)
+	line("## %s — %s · 로트 %s", questionID, market, lot)
 	line("")
 	line("적중 규칙: %s", rule)
 	line("")

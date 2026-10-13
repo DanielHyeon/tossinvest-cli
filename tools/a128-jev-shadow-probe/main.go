@@ -2,7 +2,9 @@
 //
 // 무엇을 하는가 (openspec/changes/a128-jev-shadow-judgment-probe)
 //
-// 정규장 동안 간격마다 official rankings 상위 K 종목의 공개 시장 데이터로 state 를 조립하고,
+// 정규장 동안 간격마다 official rankings 상위 100 중 1주 가격이 주문 상한(config
+// engine.automation_gate.max_order_notional) 이하인 종목에서 무작위 K 개를 골라(selection.go)
+// 그 공개 시장 데이터로 state 를 조립하고,
 // TypeSafe Jev(Noul)에 J1(h분 뒤 상승?)·J2(매수 보류할 악재?)를 물어 p 를 JSONL 원장에 적음.
 // h분 뒤 /prices 재조회로 실현 수익률을 같은 원장에 라벨로 적고, report 가 p 구간표를 만듦.
 //
@@ -66,11 +68,13 @@ func runCommand(ctx context.Context, args []string, getenv func(string) string) 
 	flags := flag.NewFlagSet("run", flag.ContinueOnError)
 	market := flags.String("market", "", `required: "KR", "US" or "BOTH"`)
 	interval := flags.Duration("interval", 10*time.Minute, "sampling interval")
-	top := flags.Int("top", 10, "symbols per market per cycle (official MARKET_TRADING_AMOUNT ranking)")
+	top := flags.Int("top", 10,
+		"symbols judged per market per cycle — a random sample of the ranking top 100 priced within the order cap")
 	horizon := flags.Int("horizon", 60, "label horizon in minutes")
 	model := flags.String("model", defaultJudgeModel, "TypeSafe model id (pinned version by default)")
 	out := flags.String("out", defaultLedgerDir, "ledger directory (ledger.jsonl + states/)")
-	configDir := flags.String("config-dir", "", "optional: the tossctl config directory")
+	configDir := flags.String("config-dir", "",
+		"optional: the tossctl config directory (Open API credentials + config.json, read only, for the order cap)")
 	waitOpen := flags.Bool("wait-open", false, "wait for the regular session to open instead of refusing")
 	sessionWindow := flags.String("session", "",
 		`optional: bypass the market calendar with a market-local window "HH:MM-HH:MM" (e.g. "09:00-15:30"); use only when the calendar is wrong`)
@@ -109,6 +113,14 @@ func runCommand(ctx context.Context, args []string, getenv func(string) string) 
 	// 토큰을 무효화하는 토큰 전쟁이 남(a082). 이 도구는 이 값을 marketSource 로만 다룸.
 	var src marketSource = official.New(*credentials, tokenFile)
 
+	// 주문 상한은 사이클마다 config 파일에서 읽음(읽기 전용) — 못 읽으면 그 사이클은 gap(selection).
+	paths, err := apppaths.Resolve(*configDir, "")
+	if err != nil {
+		return fmt.Errorf("resolving the config path: %w", err)
+	}
+	configFile := paths.ConfigFile
+	capSource := func(ctx context.Context) (orderCap, error) { return loadOrderCap(ctx, configFile) }
+
 	ledgerDir, err := filepath.Abs(*out)
 	if err != nil {
 		return err
@@ -123,15 +135,15 @@ func runCommand(ctx context.Context, args []string, getenv func(string) string) 
 		Interval: *interval, TopK: *top, Horizon: time.Duration(*horizon) * time.Minute, WaitOpen: *waitOpen,
 		LabelTick: 30 * time.Second, ReadGap: 250 * time.Millisecond,
 		RetryDelays:  []time.Duration{5 * time.Second, 10 * time.Second, 20 * time.Second, 40 * time.Second},
-		ManualWindow: manualSess,
+		ManualWindow: manualSess, CapSource: capSource,
 	})
 	existing, err := readLedger(filepath.Join(ledgerDir, ledgerFileName))
 	if err != nil {
 		return err
 	}
 	p.restorePending(existing)
-	p.logf("ledger %s · markets %v · model %s · interval %s · top %d · horizon %dm · restored %d pending",
-		ledgerDir, markets, judge.model, *interval, *top, *horizon, p.pendingCount())
+	p.logf("ledger %s · markets %v · model %s · interval %s · sample %d of top %d within the order cap (%s) · horizon %dm · restored %d pending",
+		ledgerDir, markets, judge.model, *interval, *top, rankingFetch, configFile, *horizon, p.pendingCount())
 	if manualSess != nil {
 		p.logf("session: calendar bypassed by --session %s (market-local window; operator override)", manualSess.Raw)
 	}
