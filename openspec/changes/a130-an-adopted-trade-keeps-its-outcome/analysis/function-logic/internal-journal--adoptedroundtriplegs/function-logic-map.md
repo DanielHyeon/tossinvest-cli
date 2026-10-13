@@ -40,11 +40,11 @@ Live config binding: 없음.
 
 - 없음. buy.quantity = adopted, buy.notional = adopted × observed.
 
-## a130 편집 계획 (3판)
+## a130 편집 계획 (4판)
 
-결함 자리 = B5 의 등식이 **편입 시점 수량**과 비교. 3판(사용자 결정 2026-10-13 2차): B1 뒤에 `adoptionEpoch`(새 함수, 새 파일 — 재편입 · 편입 뒤 감소 거절, 편입 뒤 증가 묶음마다 조정 뒤 383초 안 첫 엔진 관측가)를 부르고, 매수 다리 = 편입 수량 × 편입 관측가 + Σ 묶음 × 관측가, B5 는 `sell_unpriced` 와 `sell.quantity.Cmp(buy.quantity) != 0` → `sell_quantity_mismatch` 로 가름. 반환형 bool → 사유. 편입 뒤 증가가 없으면 a130 이전과 같은 값.
+결함 자리 = B5 의 등식이 **편입 시점 수량**과 비교. 4판(사용자 결정 2026-10-13 3차): 시그니처에 `prices IntakePrices` 를 더함. B1 뒤에 `adoptionEpoch`(새 파일 — 재편입 · 편입 뒤 감소 거절, 편입 뒤 증가 묶음 목록) → `priceLots`(묶음마다 그 분 1분봉 종가; prices nil → needs_intake_price, 봉 없음 → no_intake_candle). 매수 다리 = 편입 수량 × 편입 관측가 + Σ 묶음 × 종가. B4 뒤 `instanceSellIntegrity`(foreign · unattributed). B5 는 `sell_unpriced` 와 `sell.quantity.Cmp(buy.quantity)` → `sell_quantity_mismatch`. 편입 뒤 증가가 없으면 a130 이전과 같은 값.
 
 ## Safety conclusion
 
 - Safe edit boundary: 위 「a130 편집 계획」 만. 주문 · 손절 · 체결 반영의 동작 무변경.
-- High-risk impact: yes(원장 / 엔진 기동) — 편입 뒤 증가 포지션은 묶음별 편입가로 새로 동결, 감소 · 재편입 · 관측 없음은 거절, 거절 기록 추가.
+- High-risk impact: yes(원장 / 엔진 기동) — 체결 트랜잭션은 편입 뒤 증가 · 감소 · 재편입 · 인스턴스 밖 매도를 거절(보수), 증가 포지션의 행은 backfill 만, 거절 기록 추가.

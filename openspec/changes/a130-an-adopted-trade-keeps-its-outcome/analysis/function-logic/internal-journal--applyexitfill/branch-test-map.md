@@ -22,5 +22,5 @@
 
 ## a130 시나리오 (3판)
 
-- B14 — CLOSED + 거절 → ctx 목록에 쌓임, 커밋 뒤 1회 보고 — `TestA130AnUnobservedLotIsRefusedWithItsReason` · `TestA130ARolledBackCloseReportsNothing` · `TestA130APanickingRefusalSinkDoesNotRollBackTheClose`
+- B14 — CLOSED + 거절 → ctx 목록에 쌓임, 커밋 뒤 1회 보고 — `TestA130AGrownPositionIsRefusedInsideTheFillTransaction` · `TestA130ARolledBackCloseReportsNothing` · `TestA130APanickingRefusalSinkDoesNotRollBackTheClose`
 - 그 밖 — 무편집

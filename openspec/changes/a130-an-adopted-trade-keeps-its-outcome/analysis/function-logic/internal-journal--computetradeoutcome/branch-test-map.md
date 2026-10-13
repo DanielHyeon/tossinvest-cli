@@ -20,4 +20,4 @@
 ## a130 시나리오 (3판)
 
 - 사유 반환 — `TestA130EachReachableRefusalSiteNamesItsOwnReason` · `TestA130TheReasonSetIsClosedAndTokenShaped` · 기존 거절 시험
-- B12 — 분모 = 위험 × (편입 + 묶음) — `TestA130AQuantityRaisedAfterAdoptionFreezesWithPerLotIntake`(2배 아님) · `TestA130AnEngineEnteredRoundTripIsUnchanged`
+- B12 — 분모 = 위험 × (편입 + 묶음) — `TestA130AGrownPositionPricesEachLotAtItsMinuteBar`(2배 아님) · `TestA130AnEngineEnteredRoundTripIsUnchanged`

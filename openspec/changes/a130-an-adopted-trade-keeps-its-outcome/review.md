@@ -1,6 +1,6 @@
 # a130 review
 
-## Pre-Edit Gate (3판, 2026-10-13, 구현 팀메이트 Opus — 1판 선언을 대체)
+## Pre-Edit Gate (4판, 2026-10-13, 구현 팀메이트 Opus — 1판 · 3판 선언을 대체)
 
 ```text
 Pre-Edit Gate:
@@ -9,7 +9,8 @@ Pre-Edit Gate:
   journal.Journal.BackfillTradeOutcome · journal.ApplyExitFill · journal.Journal.runApplyHooks(핸들 리터럴 한 필드) ·
   journal.Journal.RecordFill(ctx 수집 목록 · 커밋 뒤 보고) · engine.bindApplyHooks(선택 인자) · engine.NewContext(바인딩 호출 한 줄)
   + 타입 journal.ApplyHooks · journal.ApplyTx 필드 하나씩, 새 파일 journal/trade_outcome_refusal.go · journal/trade_outcome_backfill.go ·
-  engine/trade_outcome_refusal_log.go · tools/a130-outcome-backfill(새 leaf), console/templates_portfolio.go 상수 문자열,
+  engine/trade_outcome_refusal_log.go · official/a130_intake_candle.go(공식 1분봉 읽기 전용 GET) · tools/a130-outcome-backfill(새 leaf),
+  console/templates_portfolio.go 상수 문자열,
   journal/adoption_static_test.go 패키지 변수(읽기 허용 목록 두 줄)
 - 무편집 인용 근거: ApplyPositionAdjustment · Converger.ConvergeQuantities · resetExitStateForReadoptTx · engineSellOrders · roundTripLegs ·
   backfillConfirmedStrategyFillTx(번들 있음)
@@ -20,11 +21,11 @@ Pre-Edit Gate:
   interlock_internal_test.go · position_campaign_hardening_test.go · adoption_static_test.go · readonly_test.go · portfolio_test.go:752
 - Function Logic Map / Branch Test Map: analysis/function-logic/ 15 번들(편집 전)
 - upstream 상속 테스트 영향: no — journal 성과 · 엔진 기동 · 콘솔 안내문은 TossOS 고유. journal · engine · console 전체 go test 로 회귀 확인
-- 실패 테스트 선행 작성: yes — analysis/red/red-1.txt(컴파일) · red-2.txt(base 행동 RED: F-9 · F-3 조작 행 · 재편입) · red-3.txt(3판)
-- 설정·DB·journal 변경과 rollback: 스키마 무변경(35). 원장 쓰기 동작: 편입 뒤 증가 포지션 중 관측 있는 것은 새로 동결, 편입 뒤 감소 · 재편입은
-  더 이상 동결 안 함(보수). 롤백 = 이미지 핀 되돌림(쓴 행은 불변 트리거로 남음). backfill 은 사람 실행(스키마 동일 가드).
+- 실패 테스트 선행 작성: yes — analysis/red/red-1.txt(컴파일) · red-2.txt(base 행동 RED: F-9 · F-3 조작 행 · 재편입) · red-4.txt(4판)
+- 설정·DB·journal 변경과 rollback: 스키마 무변경(35). 원장 쓰기 동작: 체결 트랜잭션은 편입 뒤 증가(needs_intake_price) · 감소 · 재편입 ·
+  인스턴스 밖 매도를 거절(보수), 증가 포지션의 행은 사람이 돌리는 backfill 만 씀. 공식 API: candles 1m 읽기 전용 GET(도구만, 1.2초 간격, 초당 5회 묶음 아래). 롤백 = 이미지 핀 되돌림(쓴 행은 불변 트리거로 남음). backfill 은 사람 실행(스키마 동일 가드).
 - 안전 불변식 §0 위반 여부 검토: 통과 — 주문 · 손절 · 판정 무접촉, 성과 실패는 체결을 되돌리지 않음(거절은 쌓기만 · 커밋 뒤 보고 · recover),
-  로그 쓰기는 goroutine(체결 루프 비차단), 계좌 참조 · 포지션 id 미기록, 토글 flip 없음, 운영 저널 쓰기 0(에이전트), backfill 쓰기 잠금은 항목 하나 동안만
+  체결 트랜잭션 안 네트워크 0, 로그 쓰기는 goroutine(체결 루프 비차단), 계좌 참조 · 포지션 id 미기록, 토글 flip 없음, 운영 저널 쓰기 0(에이전트), backfill 쓰기 잠금은 항목 하나 동안만
 ```
 
 ## Proposal-freeze review (2026-10-13)
@@ -112,3 +113,22 @@ Pre-Edit Gate:
 | R3-12 | P3 | census 시험이 사본을 Open 으로 열면 32→35 이관 | 확인 — census 는 OpenReadOnly 로 엶(이관 없음). 초안 도구 미리보기도 OpenReadOnly |
 | R3-13 | P3 | 토큰에 비용 모델 지문 · 스키마 · 빌드 포함 | 수용 |
 | R3-14 | P3 | 동결 뒤 하네스 미커밋 수정 | 확인 — 3판 초안 변이 하네스(dry-run 20/22, 생존 2: 커밋 전 보고 → 구조 핀 추가 · ADJUSTMENT_CLOSED 필터는 COMPLETED 와 상호배타라 동등 변이) |
+
+### 3차 발견의 4판 처분 (사용자 결정 2026-10-13 3차 — 브로커 공식 1분봉)
+
+| # | 4판 처분 |
+|---|---|
+| R3-1 | 해소 — 가격 출처를 원장 밖 브로커 공식 1분봉(adjusted=false, 그 조정 시각이 든 봉의 종가)으로. 그 분 봉 없음 → `no_intake_candle`. 체결 트랜잭션 안 네트워크 0(`needs_intake_price`) |
+| R3-2 | 해소 — 허용 간격 상수 삭제(그 분의 봉만 받음). 정규장 밖 조정은 실측(23 묶음 중 21 에 그 분 봉, 2 없음)으로 「그 분만」 결정(design D1.4) |
+| R3-3 | 수용 — `instanceSellIntegrity`(새 파일): 귀속 주문 확정이 인스턴스 열림 전 → `foreign_instance_sell`, 열린 뒤 확정된 귀속 밖 로컬 매도 → `unattributed_local_sell`. 시각은 `settled_at`(committed_at 은 밀려 적혀 고정 시계 시험에서 헛거절 — 실측), 거절 조건에만. RED 시험 둘(base 에선 조작 행) |
+| R3-4 | 수용 — 도구: 읽기 전용 열기 → 버전 = 빌드 → 같을 때만 `Open`. 스키마 32 파일 실행 거절 + 바이트 동일 시험 |
+| R3-5 | 수용 — 이관한 사본에서 항목별 쓰기 잠금 실측(최대 22.17 ms), 실행 창 KST 05:00~09:00 를 tasks 게이트 뒤 절차 · spec 에 |
+| R3-6 | 수용 — MODIFIED 「성과 원시 지표」: 조건부 동결 · 복구 절차로만 나중 쓰기 · 초기 수량 정의(편입 = 편입 + 묶음, 매도 수량과 같음) |
+| R3-7 | 해소 — exit_events 관측을 쓰지 않음. 남은 시각(조정 · 편입 · 주문 확정 · 수명)은 RFC3339Nano 파싱 비교 |
+| R3-8 | 해소 — exit 판정 기록 함수들을 근거로 쓰지 않으므로 번들 불요. adoptedBasis 는 무편집(편입 시각은 adoptionEpoch 의 자체 조인) |
+| R3-9 | 수용 — D7 시험 · 변이 목록 4판 |
+| R3-10 | 수용 — 줄은 best-effort 로 spec · D3 에 명시 |
+| R3-11 | 명명 — 쌓인 change 검사는 Manager 판단 |
+| R3-12 | 확인 — census · 미리보기 모두 OpenReadOnly |
+| R3-13 | 수용 — 토큰에 쓴 분봉 · 비용 모델(`%#v`) · 빌드 스키마 버전 |
+| R3-14 | 확인 |
