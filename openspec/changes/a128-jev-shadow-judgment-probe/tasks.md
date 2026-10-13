@@ -100,6 +100,13 @@
       명명 = 4/4 CAUGHT. 골든(시드 7)은 pickSample 이 아니라 절차를 따로 짠 프로그램으로 계산해 넣음.
       FLM·변이 원장·다중 적대 리뷰: not-applicable(비례 원칙 — 측정 도구 코드만, High-risk 경로 무접촉,
       주문·계좌 표면 0 은 AST 시험이 유지).
+      — Manager 검증(2026-10-14): 경로 11 전수 허용 내·트레일러 확인·vet/test 재실행 rc=0·경량 리뷰
+      critical 0. 실측 보강(read-only GET): KR·US 랭킹 count=100 각 100행, currency(KRW/USD)·last_price 전 행
+      존재 → 상한 500000 KRW 통과 KR 88·US ≈64(환율 ≈1345). official ExchangeRate 실응답 짝은 미측정 —
+      첫 US 사이클의 gap(stage=selection) 유무로 확인. 푸시 b5654298.
+      **운영 제약(리뷰 발견)**: `restorePending` 은 시장을 거르지 않음 — 미라벨 판단이 있는 원장에 두 번째
+      프로세스를 띄우면 남의 시장 판단까지 라벨링(이중 라벨). 한 원장에 미라벨이 남은 동안 프로세스는 하나만
+      (시장이 달라도). 수리는 필요해지면 후속(시장 필터 또는 원장 잠금).
 
 ## 2. 리뷰·착지
 
