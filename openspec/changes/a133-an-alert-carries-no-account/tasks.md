@@ -29,7 +29,8 @@ Story: `STORY-TOS-a133` · High-risk 인접(alert 전달 결과 → 진입 래�
       — round1 10/11(M3 빌드 실패 — 하네스 결함) → round2 11/11 → 구현 리뷰 변이 4 추가 → **round3 CONTROL GREEN · 15/15 CAUGHT**
 - [x] 2.2 `make lint` · 관련 패키지 `go test -race -timeout 45m` · `make test-seams` · openspec validate
       — 격리 worktree 영수증 `analysis/verify/receipts.md`. test-seams 의 실패 1(`internal/position` `TestExitEligibilityHasOneSpelling`)은 base 의 a130 파일 원인 — a133 무관
-- [ ] 2.3 `make sdd-sync` · `make sdd-check`
+- [x] 2.3 `make sdd-sync` · `make sdd-check`
+      — sdd-sync: CodeGraph 완료 · CGC 300s 타임아웃 · GBrain busy(advisory). sdd-check rc 0(receipts). landed-commit `2c2daae7`
 - [x] 2.4 구현 리뷰(분리된 리뷰 패스, 적대적) → `review.md`
       — APPROVE-WITH-FIXES(P2 1 · P3 7) 전부 수용 · I-1 은 `redact.String` 고정점 수리(FLM 편집 전)
 
