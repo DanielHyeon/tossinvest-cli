@@ -1,0 +1,13 @@
+CONTROL GREEN
+M1 critical 경계 >= 로: CAUGHT (rc=1)
+M2 보낸 단계 기록 삭제: CAUGHT (rc=1)
+M3 알림 꺼짐 무시: CAUGHT (rc=1)
+M4 판정 패닉 회수 삭제: CAUGHT (rc=1)
+M5 키에서 날수 삭제: CAUGHT (rc=1)
+M6 범위 상실을 normal 로: CAUGHT (rc=1)
+M7 신원 재설정 삭제(리뷰 P2): CAUGHT (rc=1)
+M8 outbox 키에서 신원 삭제(리뷰 P2): CAUGHT (rc=1)
+M9 Notify 를 회수 경계 안에서 직접 부름(리뷰 P1): CAUGHT (rc=1)
+M10 무효 상태 날짜 리마인드 삭제: CAUGHT (rc=1)
+M11 endpoint 별 최신 대신 전체 최소: CAUGHT (rc=1)
+11/11 CAUGHT, 원복 sha256 29252ace6e7338ab 일치

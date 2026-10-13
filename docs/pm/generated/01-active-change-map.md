@@ -131,4 +131,5 @@
 | `a130-an-adopted-trade-keeps-its-outcome` | STORY-TOS-a130 | archived |
 | `a131-no-account-in-any-log` | STORY-TOS-a131 | archived |
 | `a133-an-alert-carries-no-account` | STORY-TOS-a133 | archived |
-| `a134-a-dead-engine-is-noticed` | STORY-TOS-a134 | designed |
+| `a134-a-dead-engine-is-noticed` | STORY-TOS-a134 | in_progress |
+| `a135-attestation-expiry-is-announced` | STORY-TOS-a135 | in_progress |

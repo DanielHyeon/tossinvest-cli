@@ -1,0 +1,23 @@
+{
+  "id": "STORY-TOS-a135",
+  "title": "Capability attestation expiry and scope loss are announced before a restart",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a135-attestation-expiry-is-announced",
+    "path": "openspec/changes/a135-attestation-expiry-is-announced"
+  },
+  "found_by": {
+    "date": "2026-10-14",
+    "how": "The Manager confirmed that the live capability attestation (covering POST orders and cancel) expires on 2026-10-23T01:39Z, that an engine restarted on an expired or narrowed attestation refuses to arm and runs no exit loop, that renewal keeping the POST scope is unverified, and that nothing warns the operator before expiry; obs.EventCredentialExpiring is declared critical but has no producer.",
+    "record": "openspec/changes/a135-attestation-expiry-is-announced/proposal.md"
+  },
+  "acceptance": [
+    "A running engine with the automation gate on re-reads the attestation it would load at restart, at most hourly, and judges it with the startup interlock's own predicate (expiry, account, required endpoints)",
+    "D-7 to D-3 produce one normal alert a day; D-2 and D-1 produce a critical alert each; D-8 or more produces nothing",
+    "An expired attestation, a missing required endpoint (POST orders or cancel included), an account mismatch, or a missing or unreadable file produces a critical alert at once; scope loss names the missing endpoints",
+    "Each stage is announced once per attestation identity, a renewal starts the count again, and a failed record is retried",
+    "An engine with notifications off records the critical stages at normal grade only; no alert text carries account information",
+    "The check runs as an auxiliary executor: a failing or panicking check never stops the engine, the exit loop or the entry gate, and it calls no broker and triggers no renewal"
+  ]
+}

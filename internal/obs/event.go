@@ -79,6 +79,10 @@ const (
 	// lapse. CRITICAL, because the alternative is finding out at the next
 	// restart, which is too late.
 	EventCredentialExpiring EventType = "broker.credential_expiring"
+	// EventCredentialExpiryNotice 는 capability attestation 만료가 다가온다는 사전 통지임(a135, D-7~D-3). Normal —
+	// 등급표(criticalEvents)에 넣지 않음: 며칠 남은 만료는 아직 경보가 아니고, D-2 부터는 EventCredentialExpiring 이 알림.
+	// 알림이 꺼진 엔진은 critical 단계도 이 타입으로 기록만 함 — 보낼 수 없는 critical 행이 진입을 멈추지 않게(a091 · a095 규칙).
+	EventCredentialExpiryNotice EventType = "broker.credential_expiry_notice"
 
 	// --- reconciliation -----------------------------------------------------
 
@@ -164,6 +168,9 @@ const (
 	// one is the critical delivery executor's, and a filter on it must not pick up
 	// a best-effort relay (a092 K13). Log only — no latch.
 	EventNormalAlertRelayStopped EventType = "engine.normal_alert_relay_stopped"
+	// EventAttestationWatchFailed 는 a135 attestation 감시의 판정 한 번이 실패했거나(패닉 · 알림 기록 실패) 그 보조 실행자가
+	// 멈춘 줄임. Normal · 로그만 — 래치 없음. 감시의 결함이 진입 · 청산에 닿으면 안 됨(EventNormalAlertRelayStopped 와 같은 규칙).
+	EventAttestationWatchFailed EventType = "engine.attestation_watch_failed"
 	// EventEngineLoopFailed is a supervised loop that returned for a reason other
 	// than the runtime being cancelled (add-engine-runtime: 방어적 종료 계약).
 	// CRITICAL: the landed loops do not return, so one that did has hit a state
