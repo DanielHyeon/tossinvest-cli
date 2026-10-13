@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a134",
+  "title": "A dead engine is noticed from outside the engine",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a134-a-dead-engine-is-noticed",
+    "path": "openspec/changes/a134-a-dead-engine-is-noticed"
+  },
+  "found_by": {
+    "date": "2026-10-14",
+    "how": "The Manager confirmed that the engine is the only process that executes stop-losses while protection is UNWIRED, that it runs as a child process of the console container so the container restart policy does not react to its death, and that obs.Heartbeat has no production constructor and rests on a receiver-side ntfy alarm that ntfy does not provide.",
+    "record": "openspec/changes/a134-a-dead-engine-is-noticed/proposal.md"
+  },
+  "acceptance": [
+    "A host-side check outside the engine reads the engine's active marker and judges the engine down when the marker is older than the threshold, or absent while engine.autostart is on",
+    "Each outage produces exactly one critical ntfy alert and each recovery exactly one recovery alert; a failed send does not advance the state, so the next run sends again",
+    "The check uses the engine's own notification resolution and the a133 transport boundary, and exits non-zero with a stated reason when notifications are off or unconfigured",
+    "The check needs neither the engine nor the journal, and the liveness file carries no account field",
+    "Systemd user units are shipped under deploy/systemd and installed by a human"
+  ]
+}
