@@ -129,4 +129,4 @@
 | `a128-jev-shadow-judgment-probe` | STORY-TOS-a128 | in_progress |
 | `a129-an-exit-order-leaves-a-line` | STORY-TOS-a129 | archived |
 | `a130-an-adopted-trade-keeps-its-outcome` | STORY-TOS-a130 | in_progress |
-| `a131-no-account-in-any-log` | STORY-TOS-a131 | in_progress |
+| `a131-no-account-in-any-log` | STORY-TOS-a131 | implemented |

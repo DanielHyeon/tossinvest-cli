@@ -35,7 +35,9 @@ Story: `STORY-TOS-a131` · High-risk(인터록 증거의 계좌 결속 경로 ·
 
 ## 3. 사람 · Manager
 
-- [ ] 3.1 Manager `make gate CHANGE=a131-no-account-in-any-log` + 독립 검증 + 푸시
+- [x] 3.1 Manager `make gate CHANGE=a131-no-account-in-any-log` + 독립 검증 + 푸시
+      — 2026-10-13 Manager 독립 검증: 커밋 6613e3ba·f269c615·dfa348ff 의 a130 파일 0 · 트레일러 확인 · redact/obs/audit 시험 직접 실행 rc 0.
+      position_id 를 `pos-[redacted]` 로 가리는 결정(a129 화이트리스트 뒤집음) 수용 — 사용자 결정 「계좌정보는 로그에 남기지 않음」, pos- 는 소금 없는 해시라 대입으로 되돌릴 수 있음; 상관은 symbol·intent_id 로. 게이트 = 2026-10-13 `make gate` **11/11 PASS**(sdd-sync 는 CGC 300s 타임아웃 advisory, CodeGraph 최신 — 6단계 sdd-check 통과).
 
 ### 게이트 뒤 절차 (체크박스 아님 — a108 선례)
 
