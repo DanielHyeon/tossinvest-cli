@@ -1,0 +1,63 @@
+
+Callers of "MarkerPath" (20):
+
+function    TestTheConsoleReadinessSeamCombinesTheMarkerAndTheProcessList
+  cmd/tossctl/a102_engine_ready_test.go:847
+
+function    TestTheBootSurveyNeverBlocksTheConsole
+  cmd/tossctl/a102_engine_ready_test.go:1059
+
+function    TestTheBootSurveyReportsItsNote
+  cmd/tossctl/a102_engine_ready_test.go:1094
+
+function    TestAnAutostartThatIsOffStartsNothingAndSaysNothing
+  cmd/tossctl/a102_engine_ready_test.go:1122
+
+function    TestTheReadySignalReachesTheMarkerThroughTheRuntimeSeam
+  cmd/tossctl/a102_ready_wiring_test.go:34
+
+function    TestTheDegradedBootLeavesReadyToTheRuntimeSeam
+  cmd/tossctl/a108_the_engine_outlives_its_read_endpoint_test.go:513
+
+function    TestA111RealPositionsRouteUsesPostReadClockForFreshnessAndMarkerLiveness
+  cmd/tossctl/a111_httpapi_exit_freshness_test.go:276
+
+function    TestA111RealPositionsRouteUsesPostProjectionReadClockForFreshnessAndMarkerLiveness
+  cmd/tossctl/a111_httpapi_exit_freshness_test.go:336
+
+function    TestA111RealPositionsRouteUsesPostMarkerResponseClock
+  cmd/tossctl/a111_httpapi_exit_freshness_test.go:408
+
+function    TestA111PostMarkerClockRollbackCannotResurrectAStoppedEngine
+  cmd/tossctl/a111_httpapi_exit_freshness_test.go:478
+
+function    TestA111CachedPositionsObserveRealEngineStopAndResumeWithoutContamination
+  cmd/tossctl/a111_httpapi_exit_freshness_test.go:525
+
+function    TestA111RunningCachedPositionsRecheckTheExactPerPositionAgeBoundary
+  cmd/tossctl/a111_httpapi_exit_freshness_test.go:595
+
+function    candidateEngineProbe
+  cmd/tossctl/candidate.go:400
+
+function    startEngine
+  cmd/tossctl/engineproc.go:177
+
+function    stopEngine
+  cmd/tossctl/engineproc.go:230
+
+function    TestAGhostMarkerDoesNotRefuseAStart
+  cmd/tossctl/engineproc_test.go:174
+
+function    TestAFreshMarkerWithALiveProcessStillRefuses
+  cmd/tossctl/engineproc_test.go:200
+
+function    TestEnumerationFailureKeepsTheRefusal
+  cmd/tossctl/engineproc_test.go:233
+
+function    TestAStaleMarkerDoesNotBlockAStart
+  cmd/tossctl/engineproc_test.go:322
+
+function    openHTTPAPIResources
+  cmd/tossctl/httpapi.go:616
+

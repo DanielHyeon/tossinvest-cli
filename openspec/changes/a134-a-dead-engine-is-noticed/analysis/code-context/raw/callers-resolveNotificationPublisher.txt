@@ -1,0 +1,42 @@
+
+Callers of "resolveNotificationPublisher" (13):
+
+function    TestNotificationSettingsAreAudited
+  internal/app/engine/a074_notification_audit_test.go:49
+
+function    TestTheAuditTrailCarriesNoNotificationSecret
+  internal/app/engine/a074_notification_audit_test.go:78
+
+function    TestARefusedNotificationBlockIsAudited
+  internal/app/engine/a074_notification_audit_test.go:101
+
+function    TestExistingAuditEntriesKeepTheirOrder
+  internal/app/engine/a074_notification_audit_test.go:119
+
+function    TestNoPublisherWhenNotificationsAreOff
+  internal/app/engine/a074_notification_resolve_test.go:22
+
+function    TestAConfiguredChannelBecomesAPublisher
+  internal/app/engine/a074_notification_resolve_test.go:37
+
+function    TestTheEnvironmentTopicWinsOverTheFile
+  internal/app/engine/a074_notification_resolve_test.go:60
+
+function    TestAnEnabledBlockWithNoChannelIsRefused
+  internal/app/engine/a074_notification_resolve_test.go:79
+
+function    TestARefusedConfigBlockStaysRefused
+  internal/app/engine/a074_notification_resolve_test.go:95
+
+function    TestADisabledBlockWithAChannelStaysOff
+  internal/app/engine/a074_notification_resolve_test.go:107
+
+function    TestTheResolutionCarriesNoSecret
+  internal/app/engine/a074_notification_resolve_test.go:122
+
+function    TestANilGetenvFallsBackToTheProcessEnvironment
+  internal/app/engine/a074_notification_resolve_test.go:136
+
+function    NewContext
+  internal/app/engine/engine.go:437
+

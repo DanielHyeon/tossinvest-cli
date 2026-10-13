@@ -128,6 +128,8 @@ func newEngineCmd(root *rootOptions) *cobra.Command {
 	cmd.AddCommand(newEngineModeReleaseCmd(root))
 	// a094 D−4.5: park(UNRESOLVED_IN_DOUBT) 해동 — 운영자 해소(mutating, audit 먼저) 뒤 같은 명령 안에서 발의 해제.
 	cmd.AddCommand(newEngineAttemptResolveCmd(root))
+	// a134: 엔진 밖 감시 명령(호스트 타이머가 매 분 부름) — 마커 침묵을 판정해 한 번만 알림. 엔진 · 저널을 열지 않음.
+	cmd.AddCommand(newEngineHeartbeatCheckCmd(root))
 	return cmd
 }
 

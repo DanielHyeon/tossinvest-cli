@@ -1,0 +1,134 @@
+{
+  "file": "cmd/tossctl/engine.go",
+  "source_sha256": "f311f5ad47438819a25fe1dbace0e279b11a2ccab1686f85d4fd454658811aaf",
+  "package": "main",
+  "function": "newEngineCmd",
+  "signature": "newEngineCmd(params=1, results=1)",
+  "start": {
+    "line": 115,
+    "column": 1
+  },
+  "end": {
+    "line": 134,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 133,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 2
+      },
+      "text": "cmd.AddCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 17
+      },
+      "text": "newEngineRunCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 40
+      },
+      "text": "newEngineReconcileResolveCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 3
+      },
+      "text": "newEngineAlertsCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 2
+      },
+      "text": "cmd.AddCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 17
+      },
+      "text": "newEngineRiskRelaxationCmds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 2
+      },
+      "text": "cmd.AddCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 17
+      },
+      "text": "newEngineModeReleaseCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 2
+      },
+      "text": "cmd.AddCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 17
+      },
+      "text": "newEngineAttemptResolveCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 2
+      },
+      "text": "cmd.AddCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 17
+      },
+      "text": "newEngineHeartbeatCheckCmd"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

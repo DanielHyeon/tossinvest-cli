@@ -1,0 +1,11 @@
+[Unit]
+Description=Check the TossOS engine liveness marker every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+AccuracySec=5s
+Persistent=false
+Unit=tossos-heartbeat.service
+
+[Install]
+WantedBy=timers.target
