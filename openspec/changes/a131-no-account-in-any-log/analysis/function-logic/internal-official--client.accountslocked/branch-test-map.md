@@ -1,6 +1,6 @@
 # Branch Test Map: `Client.accountsLocked`
 
-- Source: `internal/official/reads.go` (38-55) — 편집 전(base)
+- Source: `internal/official/reads.go` (38-57) — 편집 뒤
 
 | Branch | Anchor | Scenario | Test | a131 |
 |---|---|---|---|---|

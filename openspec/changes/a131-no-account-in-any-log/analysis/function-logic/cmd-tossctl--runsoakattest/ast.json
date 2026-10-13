@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/soak.go",
-  "source_sha256": "5602b691caadfdf4694fabe6f475e4a8fbc5e5195a4a4cd87ad63132c783a4c2",
+  "source_sha256": "12399e6d9acffc7ac2e4e035e9dfdc9ff9a5aa404bd4637fe106924ebef20963",
   "package": "main",
   "function": "runSoakAttest",
   "signature": "runSoakAttest(params=3, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 582,
+    "line": 581,
     "column": 2
   },
   "branches": [
@@ -145,7 +145,7 @@
       "id": "B17",
       "kind": "range",
       "at": {
-        "line": 555,
+        "line": 554,
         "column": 2
       }
     },
@@ -153,7 +153,7 @@
       "id": "B18",
       "kind": "if",
       "at": {
-        "line": 557,
+        "line": 556,
         "column": 3
       }
     },
@@ -161,7 +161,7 @@
       "id": "B19",
       "kind": "if",
       "at": {
-        "line": 565,
+        "line": 564,
         "column": 2
       }
     },
@@ -169,7 +169,7 @@
       "id": "B20",
       "kind": "range",
       "at": {
-        "line": 568,
+        "line": 567,
         "column": 3
       }
     }
@@ -234,14 +234,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 571,
+        "line": 570,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 581,
+        "line": 580,
         "column": 2
       }
     }
@@ -489,14 +489,6 @@
     {
       "kind": "call",
       "at": {
-        "line": 549,
-        "column": 42
-      },
-      "text": "attest.Mask"
-    },
-    {
-      "kind": "call",
-      "at": {
         "line": 550,
         "column": 2
       },
@@ -505,15 +497,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 551,
-        "column": 2
-      },
-      "text": "fmt.Fprintf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 551,
+        "line": 550,
         "column": 42
       },
       "text": "attestation.ExpiresAt.Format"
@@ -521,7 +505,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 552,
+        "line": 551,
         "column": 2
       },
       "text": "fmt.Fprintf"
@@ -529,7 +513,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 552,
+        "line": 551,
         "column": 42
       },
       "text": "strings.Join"
@@ -537,7 +521,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 553,
+        "line": 552,
         "column": 2
       },
       "text": "fmt.Fprintf"
@@ -545,7 +529,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 560,
+        "line": 559,
         "column": 3
       },
       "text": "fmt.Fprintf"
@@ -553,7 +537,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 561,
+        "line": 560,
         "column": 34
       },
       "text": "Format"
@@ -561,7 +545,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 561,
+        "line": 560,
         "column": 34
       },
       "text": "p.At.UTC"
@@ -569,7 +553,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 564,
+        "line": 563,
         "column": 13
       },
       "text": "attestation.MissingEndpoints"
@@ -577,7 +561,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 564,
+        "line": 563,
         "column": 42
       },
       "text": "soak.LiveOnlyEndpoints"
@@ -585,10 +569,18 @@
     {
       "kind": "call",
       "at": {
-        "line": 565,
+        "line": 564,
         "column": 5
       },
       "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 565,
+        "column": 3
+      },
+      "text": "fmt.Fprintln"
     },
     {
       "kind": "call",
@@ -601,18 +593,18 @@
     {
       "kind": "call",
       "at": {
-        "line": 567,
-        "column": 3
+        "line": 568,
+        "column": 4
       },
-      "text": "fmt.Fprintln"
+      "text": "fmt.Fprintf"
     },
     {
       "kind": "call",
       "at": {
-        "line": 569,
-        "column": 4
+        "line": 576,
+        "column": 2
       },
-      "text": "fmt.Fprintf"
+      "text": "fmt.Fprintln"
     },
     {
       "kind": "call",
@@ -634,14 +626,6 @@
       "kind": "call",
       "at": {
         "line": 579,
-        "column": 2
-      },
-      "text": "fmt.Fprintln"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 580,
         "column": 2
       },
       "text": "fmt.Fprintln"
@@ -826,21 +810,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 556,
+        "line": 555,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 558,
+        "line": 557,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 564,
+        "line": 563,
         "column": 2
       }
     }

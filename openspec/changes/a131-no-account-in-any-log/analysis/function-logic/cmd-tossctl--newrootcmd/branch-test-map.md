@@ -1,6 +1,6 @@
 # Branch Test Map: `newRootCmd`
 
-- Source: `cmd/tossctl/root.go` (52-198) — 편집 전(base)
+- Source: `cmd/tossctl/root.go` (52-202) — 편집 뒤
 
 | Branch | Anchor | Scenario | Test | a131 |
 |---|---|---|---|---|

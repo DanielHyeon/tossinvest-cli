@@ -166,8 +166,13 @@ func TestRecordCarriesNoUnmaskedAccountNumber(t *testing.T) {
 	if strings.Contains(string(data), "123-45-678901") {
 		t.Error("the record contains the unmasked account number")
 	}
-	if !strings.Contains(string(data), "8901") {
-		t.Error("the record contains no masked account reference at all")
+	// a131: 마스크도 계좌 정보 — 기록에는 봉인 값만 있고, 읽는 쪽이 열면 마스크임.
+	if strings.Contains(string(data), "8901") {
+		t.Error("the record contains the masked account reference in the clear")
+	}
+	entries, err := LoadEntries(h.record)
+	if err != nil || len(entries) == 0 || !strings.HasSuffix(entries[0].AccountRef, "8901") {
+		t.Errorf("the opened record does not carry the masked account: %v", err)
 	}
 }
 

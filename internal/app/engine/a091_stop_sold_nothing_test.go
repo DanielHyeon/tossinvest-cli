@@ -34,6 +34,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/redact"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
 
@@ -260,7 +261,7 @@ func TestA091WithAlertsOffNothingChangesButTheWording(t *testing.T) {
 			t.Fatalf("capped lines = %d, want exactly 1:\n%s", len(lines), r.log.String())
 		}
 		l := lines[0]
-		if l["level"] != "ERROR" || l["cause"] != "floor_unknown" || l["symbol"] != "005930" || l["position_id"] != p.ID {
+		if l["level"] != "ERROR" || l["cause"] != "floor_unknown" || l["symbol"] != "005930" || l["position_id"] != redact.String(p.ID) {
 			t.Errorf("B2 line = %v, want level ERROR, cause floor_unknown, the symbol and the position", l)
 		}
 		if _, ok := l["account"]; ok || strings.Contains(fmt.Sprint(l), exitAccount) {

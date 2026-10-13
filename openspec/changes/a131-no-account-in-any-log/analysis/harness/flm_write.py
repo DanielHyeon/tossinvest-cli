@@ -27,7 +27,7 @@ for bundle in sorted(CHANGE.iterdir()):
     a = json.loads(ast_path.read_text())
     key = bundle.name
     note = NOTES[key]
-    if PHASE == "before":
+    if PHASE == "before" and note.get("source") != "worktree":
         # 편집 전 번들의 좌표는 base 의 줄 — 소스 줄 원문도 base 에서 읽음(작업 트리는 이미 밀렸을 수 있음).
         base = (ROOT / "openspec/changes/a131-no-account-in-any-log/base-commit.txt").read_text().strip()
         src = subprocess.run(["git", "-C", str(ROOT), "show", f"{base}:{a['file']}"], capture_output=True,

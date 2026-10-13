@@ -1,8 +1,8 @@
 # Function Logic Map: `newEngineRunCmd`
 
-- Source: `cmd/tossctl/engine.go` (133-172)
+- Source: `cmd/tossctl/engine.go` (134-176)
 - Qualified: `newEngineRunCmd`
-- AST evidence: `ast.json` (편집 전(base), `source_sha256` de6bcd1329628b5e…) — AST branches 0 · returns 2
+- AST evidence: `ast.json` (편집 뒤, `source_sha256` 446e27a347768b0b…) — AST branches 0 · returns 2
 - Risk scan: `risk-pattern-report.md`
 - 작성기: `analysis/harness/flm_write.py`(좌표는 ast.json 에서 옮김)
 
@@ -18,9 +18,9 @@
 
 | Branch | AST kind | Source line | a131 |
 |---|---|---|---|
-| B1 | branchless happy path at 133:1 | `func newEngineRunCmd(root *rootOptions) *cobra.Command {` | 분기 없음 — RunE 클로저 본문 편집 |
+| B1 | branchless happy path at 134:1 | `func newEngineRunCmd(root *rootOptions) *cobra.Command {` | 분기 없음 — RunE 클로저 본문 편집 |
 
-Exact AST return positions: 168:4, 171:2
+Exact AST return positions: 172:4, 175:2
 
 ## Calls and live bindings
 

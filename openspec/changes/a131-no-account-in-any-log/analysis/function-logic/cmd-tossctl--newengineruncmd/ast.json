@@ -1,15 +1,15 @@
 {
   "file": "cmd/tossctl/engine.go",
-  "source_sha256": "de6bcd1329628b5e9cb9a27d3735cfd07b50a3a00d0a9cbffafb1c2abc5a972a",
+  "source_sha256": "446e27a347768b0b2402ccff7fec368edb7f5d4b55913550619abafe91bce813",
   "package": "main",
   "function": "newEngineRunCmd",
   "signature": "newEngineRunCmd(params=1, results=1)",
   "start": {
-    "line": 133,
+    "line": 134,
     "column": 1
   },
   "end": {
-    "line": 172,
+    "line": 176,
     "column": 2
   },
   "branches": null,
@@ -17,14 +17,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 168,
+        "line": 172,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 171,
+        "line": 175,
         "column": 2
       }
     }
@@ -33,7 +33,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 137,
+        "line": 138,
         "column": 9
       },
       "text": "strings.TrimSpace"
@@ -41,7 +41,55 @@
     {
       "kind": "call",
       "at": {
-        "line": 168,
+        "line": 170,
+        "column": 4
+      },
+      "text": "cmd.SetOut"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 15
+      },
+      "text": "redact.Writer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 29
+      },
+      "text": "cmd.OutOrStdout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 4
+      },
+      "text": "cmd.SetErr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 15
+      },
+      "text": "redact.Writer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 29
+      },
+      "text": "cmd.ErrOrStderr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
         "column": 11
       },
       "text": "runEngineRun"
@@ -51,7 +99,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 134,
+        "line": 135,
         "column": 2
       }
     }

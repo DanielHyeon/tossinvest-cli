@@ -10,12 +10,14 @@ Story: `STORY-TOS-a131` · High-risk(인터록 증거의 계좌 결속 경로 ·
 - [x] 0.4 CodeGraph hard evidence(`analysis/code-context/`) — 편집 대상의 정의·호출자·피호출자, `affected --filter '*_test.go'`
       — codegraph 1.6.0, `affected --filter` 1119 줄. CodeGraphContext 색인 0 · `make sdd-sync` 의 CGC update 300s 타임아웃(advisory, a129 선례) — census 로 대신
 - [x] 0.5 Function Logic Map + Branch Test Map(편집 전) — 편집하는 기존 함수 전부(13 번들, 작성기 `analysis/harness/flm_write.py`)
-- [ ] 0.6 proposal-freeze 적대 리뷰(분리된 컨텍스트) + Pre-Edit 선언 → `review.md`
+- [x] 0.6 proposal-freeze 적대 리뷰(분리된 컨텍스트) + Pre-Edit 선언 → `review.md`
+      — APPROVE-WITH-FIXES(P1 4 · P2 9 · P3 7), 전부 GREEN 전에 design 2판 · spec 2판 · 시험으로 처리(review.md 표)
 
 ## 1. 구현 (RED → GREEN → REFACTOR)
 
-- [ ] 1.1 RED — 센티널 · 왕복 · 구조 · 정리 명령 시험(design D7)이 base 에서 실패함을 확인(`analysis/red/`)
-- [ ] 1.2 GREEN — `internal/redact`(규칙 · Handler · Writer · 봉인), `obs.NewLogger`, `official.accountsLocked` 등록, `runEngineRun`·`main` Writer,
+- [x] 1.1 RED — 센티널 · 왕복 · 구조 · 정리 명령 시험(design D7)이 base 에서 실패함을 확인(`analysis/red/`)
+      — red-1(base + 시험만: 빌드 실패) · red-2(새 leaf 만: 행동 실패 9 + 구조 2). 2판 시험(R-1~R-4)은 같은 판에서 추가 — 변이 원장이 각 가드를 잼
+- [x] 1.2 GREEN — `internal/redact`(규칙 · Handler · Writer · 봉인), `obs.NewLogger`, `official.accountsLocked` 등록, `runEngineRun`·`main` Writer,
       `audit.Record`, soak·검증 기록 쓰기·읽기, `runSoakAttest` 계좌 줄 삭제, 정리 명령 `scrub-account-records`
 - [ ] 1.3 REFACTOR + 편집 뒤 AST 재추출 · FLM/BTM 갱신 · `check_analysis.py --change` 통과
 

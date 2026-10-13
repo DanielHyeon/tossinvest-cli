@@ -23,6 +23,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/redact"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
 
@@ -229,7 +230,7 @@ func TestA129AConfirmedStopAndItsFillsEachLeaveALine(t *testing.T) {
 		"origin": "exit", "symbol": "005930", "market": "kr", "side": "SELL", "order_type": "LIMIT",
 		"quantity": "10", "price": "67900", "observed_price": "67900", "baseline": "68000",
 		"action": string(exitpolicy.ActionBaselineBreach), "exit_level": state.PendingLevel,
-		"intent_id": place.IntentID, "position_id": p.ID,
+		"intent_id": place.IntentID, "position_id": redact.String(p.ID),
 		"to_state": string(journal.StateConfirmed), "capped": false, "level": "INFO",
 	})
 	// 줄의 지정가는 실제로 제출된 지정가와 같아야 함(sellIntent 의 규칙을 옮겨 적은 값 — 둘이 갈리면 여기서 잡힘).
@@ -253,7 +254,7 @@ func TestA129AConfirmedStopAndItsFillsEachLeaveALine(t *testing.T) {
 	}
 	a129Want(t, fills[0], map[string]any{
 		"origin": "exit", "symbol": "005930", "side": "SELL", "order_id": orderID, "intent_id": place.IntentID,
-		"position_id": p.ID, "action": string(exitpolicy.ActionBaselineBreach),
+		"position_id": redact.String(p.ID), "action": string(exitpolicy.ActionBaselineBreach),
 		"filled_quantity": "4", "average_price": "67900", "order_quantity": "10", "terminal": false,
 	})
 
@@ -302,7 +303,7 @@ func TestA129BTheFillFollowRunsAfterTheJudgementOfTheSameCycle(t *testing.T) {
 	f := a129Setup(t, nil)
 	f.breach()
 	first := orderOf(f)
-	b := f.entry("000660", "4", "120000", "118000", "120000")
+	_ = f.entry("000660", "4", "120000", "118000", "120000")
 	f.quote("000660", 120100)
 	f.clk.Advance(5 * time.Second)
 	f.observe()
@@ -314,7 +315,7 @@ func TestA129BTheFillFollowRunsAfterTheJudgementOfTheSameCycle(t *testing.T) {
 	lines := f.lines()
 	confirmAt, fillAt := -1, -1
 	for i, l := range lines {
-		if l["event"] == string(obs.EventOrderConfirmed) && l["position_id"] == b.ID {
+		if l["event"] == string(obs.EventOrderConfirmed) && l["symbol"] == "000660" {
 			confirmAt = i
 		}
 		if l["event"] == string(obs.EventFillObserved) && l["order_id"] == first {
@@ -435,7 +436,7 @@ func TestA129DEveryOtherOutcomeLeavesOneLineAfterItsRelease(t *testing.T) {
 			line := lines[0]
 			a129Want(t, line, map[string]any{
 				"event": string(tc.event), "origin": "exit", "symbol": "005930", "side": "SELL",
-				"position_id": p.ID, "level": "WARN",
+				"position_id": redact.String(p.ID), "level": "WARN",
 			})
 			if tc.reason != "" {
 				a129Want(t, line, map[string]any{"reason": tc.reason})
@@ -768,7 +769,7 @@ func TestA129MTheRefusalLatchDoesNotOutliveItsEpisode(t *testing.T) {
 	f.clk.Advance(5 * time.Second)
 	f.observe()
 	f.clk.Advance(5 * time.Second)
-	f.observe() // 같은 에피소드 — 줄 없음
+	f.observe()              // 같은 에피소드 — 줄 없음
 	f.quote("005930", 70200) // 회복 — 발의 없음
 	f.clk.Advance(5 * time.Second)
 	f.observe()

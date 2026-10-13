@@ -1,8 +1,8 @@
 # Function Logic Map: `Recorder.Append`
 
-- Source: `internal/verifylive/record.go` (335-360)
+- Source: `internal/verifylive/record.go` (349-383)
 - Qualified: `Recorder.Append`
-- AST evidence: `ast.json` (편집 전(base), `source_sha256` 9b44a5d8afd7a4dc…) — AST branches 6 · returns 5
+- AST evidence: `ast.json` (편집 뒤, `source_sha256` 9a289d21048578d8…) — AST branches 8 · returns 7
 - Risk scan: `risk-pattern-report.md`
 - 작성기: `analysis/harness/flm_write.py`(좌표는 ast.json 에서 옮김)
 
@@ -19,14 +19,16 @@
 
 | Branch | AST kind | Source line | a131 |
 |---|---|---|---|
-| B1 | if at 336:2 | `if e.FormatVersion == 0 {` | 무편집 |
-| B2 | if at 339:2 | `if e.Kind == "" {` | 무편집 |
-| B3 | if at 343:2 | `if err != nil {` | 편집 영향 |
-| B4 | if at 350:2 | `if r.f == nil {` | 무편집 |
-| B5 | if at 353:2 | `if _, err := r.f.Write(line); err != nil {` | 무편집 |
-| B6 | if at 356:2 | `if err := r.f.Sync(); err != nil {` | 무편집 |
+| B1 | if at 350:2 | `if e.FormatVersion == 0 {` | 무편집 |
+| B2 | if at 353:2 | `if e.Kind == "" {` | 무편집 |
+| B3 | if at 357:2 | `if err != nil {` | 무편집 |
+| B4 | if at 362:2 | `if err != nil {` | 편집 영향 |
+| B5 | if at 369:2 | `if r.f == nil {` | 무편집 |
+| B6 | if at 373:2 | `if err := reopenIfReplaced(r); err != nil {` | 편집 영향 |
+| B7 | if at 376:2 | `if _, err := r.f.Write(line); err != nil {` | 무편집 |
+| B8 | if at 379:2 | `if err := r.f.Sync(); err != nil {` | 무편집 |
 
-Exact AST return positions: 344:3, 351:3, 354:3, 357:3, 359:2
+Exact AST return positions: 358:3, 363:3, 370:3, 374:3, 377:3, 380:3, 382:2
 
 ## Calls and live bindings
 
@@ -38,9 +40,9 @@ Exact AST return positions: 344:3, 351:3, 354:3, 357:3, 359:2
 
 ## State mutations and fallbacks
 
-- 파일 끝에 한 줄. a131: 직렬화 직후 봉인.
+- 파일 끝에 한 줄. a131: 직렬화 직후 메모리 키로 봉인(redact.SealRecordLineWithKey) · 쓰기 전 경로와 fd 의 inode 대조, 다르면 다시 엶(R-4a).
 
 ## Safety conclusion
 
-- Safe edit boundary: B3 뒤 봉인 호출과 오류 반환 하나 추가.
+- Safe edit boundary: B3 뒤 봉인 호출·오류 반환, B4 뒤 inode 대조·재열기. 쓰기·동기화 무편집.
 - High-risk impact: yes(간접) — 감독 증거 기록. 마스크 값 왕복 불변.

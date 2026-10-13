@@ -2,6 +2,6 @@
 
 | Rule | Location | Message |
 |---|---|---|
-| go-panic | `internal/verifylive/record.go:690` | panic can bypass normal error and shutdown handling; map the recovery boundary. |
+| go-panic | `internal/verifylive/record.go:762` | panic can bypass normal error and shutdown handling; map the recovery boundary. |
 
 > Findings are review candidates, not automatic defect verdicts.

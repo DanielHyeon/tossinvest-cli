@@ -1,15 +1,15 @@
 {
   "file": "cmd/tossctl/main.go",
-  "source_sha256": "c092c51acf38b96b996373e8f901dc5bb436386f4a4ed8df513008c03d60e26a",
+  "source_sha256": "bca4951a332de1a2a67bedb75a476db5e5b6f09668987c37dfc0b6240ef47746",
   "package": "main",
   "function": "main",
   "signature": "main(params=0, results=0)",
   "start": {
-    "line": 10,
+    "line": 11,
     "column": 1
   },
   "end": {
-    "line": 17,
+    "line": 22,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 13,
+        "line": 18,
         "column": 2
       }
     }
@@ -27,7 +27,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 11,
+        "line": 12,
         "column": 2
       },
       "text": "i18n.SetLang"
@@ -35,7 +35,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 11,
+        "line": 12,
         "column": 15
       },
       "text": "i18n.Resolve"
@@ -43,23 +43,39 @@
     {
       "kind": "call",
       "at": {
-        "line": 13,
-        "column": 12
-      },
-      "text": "Execute"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 13,
-        "column": 12
+        "line": 14,
+        "column": 10
       },
       "text": "newRootCmd"
     },
     {
       "kind": "call",
       "at": {
-        "line": 14,
+        "line": 17,
+        "column": 2
+      },
+      "text": "root.SetErr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 17,
+        "column": 14
+      },
+      "text": "redact.Writer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 18,
+        "column": 12
+      },
+      "text": "root.Execute"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
         "column": 3
       },
       "text": "fmt.Fprintln"
@@ -67,7 +83,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 15,
+        "line": 19,
+        "column": 16
+      },
+      "text": "redact.Writer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 20,
         "column": 3
       },
       "text": "os.Exit"
@@ -77,7 +101,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 13,
+        "line": 14,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 18,
         "column": 5
       }
     }

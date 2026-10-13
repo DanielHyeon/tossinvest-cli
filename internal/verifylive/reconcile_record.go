@@ -36,6 +36,10 @@ func readRecordStrictNoTail(path string) ([]byte, []Entry, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	// a131: 봉인된 계좌(마스크)를 엶 — 계좌 결속이 종전 값을 봄. 열 수 없으면 해독 불가로 거절. raw 는 그대로(지문 입력).
+	if err := openRecordEntries(entries, path); err != nil {
+		return nil, nil, refuse(RefuseRecordUndecodable, err.Error())
+	}
 	return raw, entries, nil
 }
 

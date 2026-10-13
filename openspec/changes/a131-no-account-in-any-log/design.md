@@ -2,6 +2,7 @@
 
 기준: base 는 `base-commit.txt`. 줄 번호는 base 의 것이다. 운영 파일 수치는 2026-10-12~13 실측(값은 읽지 않고 개수·모양만 셈).
 분기 주장은 이 change 의 AST 번들(`analysis/function-logic/*/ast.json`)을 근거로 한다.
+**2판(2026-10-13)**: proposal-freeze 적대 리뷰(review.md R-1~R-20) 반영 — P1 넷(cobra 오류 줄 · 섞인 기록의 fail-closed · 키 준비 시점 · rename 안전)을 설계에 넣음.
 
 ## D0. 무엇이 「계좌 정보」인가
 
@@ -9,17 +10,19 @@
 |---|---|---|
 | 계좌 번호 원문 | `99999999999`, `999-99-999999` | 계좌 정보 |
 | 마스크 | `*******9999`(`attest.Mask`) | 계좌 정보 — 끝 4자리가 남는다 |
-| 소금 없는 저엔트로피 유도 해시 | `pos-`·`rec-`·`mode-` + 24 hex(`journal.PositionID` · `reconcileStateID` · `operatingModeID`) | 계좌 정보 — 나머지 입력(시장·종목·작은 순번·초 단위 시각)이 같은 줄에 있거나 추측 가능, 11자리는 대입 가능 |
+| 소금 없는 저엔트로피 유도 해시 | `pos-`·`rec-`·`mode-`·`adj-` + 24 hex(`journal.PositionID` · `reconcileStateID` · `operatingModeID` · `adjustmentID`), `corr-` + 32 hex(`correctionID`) | 계좌 정보 — 나머지 입력(시장·종목·작은 순번·초 단위 시각)이 같은 줄에 있거나 추측 가능, 11자리는 대입 가능 |
 | 고엔트로피 유도 해시 | `obs_`/`eld_`/`exit_` + 64 hex, `strategy-attempt:v1:sha256:` | 계좌 정보 아님 — 입력에 나노초 시각·관측가·결정 신원이 들어가 대입 불가. intent/attempt id 는 원장 대조에 필요해 남김 |
-| `accountSeq` | 사용자 계좌 목록 안의 작은 순번(1, 2 …) | 계좌 정보 아님 — 계좌를 식별하지 않는 서수. 치환하지 않는다(Manager 가 뒤집을 수 있음) |
+| `accountSeq` | 사용자 계좌 목록 안의 작은 순번(1, 2 …) | 값은 계좌를 식별하지 않는 서수라 문자열 치환은 하지 않는다. 다만 이름이 `account_seq` 인 구조화 필드는 계좌 키로 버린다(R-15). Manager 가 뒤집을 수 있음 |
+| 접두 없는 64 hex(`fillObservationID`) | `position_campaign.go:2063` | 로그 0(실측) · 입력에 관측 시각 포함 — 규칙 밖 잔재로 명명(R-7) |
 | 알림 본문 | `notificationFor` 가 `Fields` 를 본문에 펼침(`account: …`) | **범위 밖 발견** — 로그가 아니라 ntfy 로 나가는 외부 전송이다. 후속 change 권고(완료 보고) |
 
 ## D1. 유출 자리 전수 (역할 기준)
 
-census 는 `analysis/harness/account_census.go`(go/parser, 비시험 Go 전체)를 base 에서 돌린 `analysis/census/census-base.tsv` 다 — 계좌를 뜻하는
+census 는 `analysis/harness/account_census.go`(go/parser, 비시험 Go 전체 — 클로저 포함, `DisplayName` 포함)를 base 에서 돌린 `analysis/census/census-base.tsv` 다 — 계좌를 뜻하는
 식별자·필드(`AccountRef` · `accountRef` · `account` · `AccountNo` · `AccountSeq` · 마스크 변수 · `obs.FieldAccount`)가 **싱크 호출의 인자**로 들어가는 자리를 센다.
 합계: obs 싱크 22 · 오류 문자열 구성 76 · 직접 출력 12 · 계좌 json 태그 45. 여기에 `git grep` 보강(`obs.FieldAccount` 참조 전수 20, `"position_id"` 키 35)을 더했다.
-존재 검사가 아니라 역할 검사다: 오류 문자열에 감싼 계좌(`fmt.Errorf(… %s …, accountRef)`)도 「어느 싱크로든 흐를 수 있는 자리」로 센다.
+census 의 판별은 **이름 정규식 + 싱크 호출 인자 위치**다(R-6 정정 — 1판의 「역할 검사」는 과장). 오류 문자열에 감싼 계좌(`fmt.Errorf(… %s …, accountRef)`)도
+「어느 싱크로든 흐를 수 있는 자리」로 센다. 그래서 **완전성은 census 가 아니라 싱크 쪽 규칙이 보장한다** — 이름이 무엇이든 등록된 값·마스크 꼴·유도 id 꼴은 싱크에서 치환된다.
 
 | # | 싱크(파일) | 자리 | 필드/경로 | 수 | 현재 유출(실측) | a131 처리 |
 |---|---|---|---|---|---|---|
@@ -34,6 +37,8 @@ census 는 `analysis/harness/account_census.go`(go/parser, 비시험 Go 전체)�
 | L9 | audit.log | 게이트 수락 `interlock.go:418` `account=%s …` → `audit.Log.Record` | `detail` | 1 | **예** — 78 줄 | R5 Record 가 치환 |
 | L10 | attest-autorun.log · journald | `runSoakAttest` `soak.go:549` `account %s`(마스크) | stdout | 1 | **예** — 147 줄 | 줄 삭제 |
 | L11 | attest-autorun.log · journald | `soak attest` 실패 문구(`evaluateIssues` 계좌 모호 · `acceptSupervised` 계좌 다름 — 마스크) | stderr(L6 경로) | 2 | 잠재 | R3(main) + R2 마스크 꼴 |
+| L13 | engine.log JSON | 선행 부분 마스커 `obs.MaskAccount`(`record_only.go:196`) — 호출 4(`exit_stop_sold_nothing.go:210` · `modeops.go:173` · `notifier.go:434` · `record_only.go:143`), 넘겨받은 계좌 하나만 `[account]` | `error` | 4 | 아니오(그 계좌는 가려짐) | 편집 안 함 — 출력이 R1·R2 를 지남(R-5) |
+| L14 | 모든 명령의 stderr(engine.log · soak.log · journald) | cobra 가 루트 `ErrOrStderr()` 에 `Error: <err>` 를 한 번 더 씀(`root.go` 에 `SilenceErrors` 없음, cobra `command.go:1159`) | stderr | 1 | 잠재 | R3 — `main` 이 루트 `SetErr(redact.Writer(os.Stderr))`(R-1) |
 | L12 | soak.log(soak run 의 출력) | 계좌 출력 자리 0(census `print` 에 `runSoakRun` 없음) | — | 0 | 아니오 — 0 줄 | L6 경로(main)만 |
 
 **범위 밖(로그가 아님).** `capability-attestation.json`(인터록이 대조하는 상태 파일) · `journal.db`(정본 원장) · 설정 · 갱신 상태 파일(`RenewalStatus` 는
@@ -47,10 +52,12 @@ census `record` 의 나머지 43 태그(원장·API·서명 다이제스트 입�
 - `Register(refs ...string)` — 프로세스 전역 집합(뮤텍스). 원문(공백 제거)과, 숫자가 8자리 이상이면 숫자열 정규식(자리 사이 `-`·공백 허용, 앞뒤 숫자 아님)을 넣는다.
   짧은 참조(시험의 `123-45`)는 원문 그대로만 — 숫자 정규식은 가격·수량을 지울 수 있어 8자리 미만엔 쓰지 않는다.
 - `String(s)` — 순서대로: 등록 원문(긴 것부터) → 등록 숫자열 → 마스크 꼴 `\*{3,}[0-9]{1,8}` → `\b(pos|rec|mode)-[0-9a-f]{24}\b` 를 각각
-  `[account]` · `[account]` · `[account]` · `$1-[redacted]` 로 바꾼다.
+  `[account]` · `[account]` · `[account]` · `$1-[redacted]` 로 바꾼다. 마스크 꼴 정규식은 `\*{3,}[0-9](?:-?[0-9])*`(끝 4자리에 구분자가 껴도 꼬리를 남기지 않음, R-16),
+  유도 id 는 `\b(?:(pos|rec|mode|adj)-[0-9a-f]{24}|(corr)-[0-9a-f]{32})\b`(R-7).
 - `IsAccountKey(k)` — 소문자·밑줄 제거 뒤 `account` · `accountref` · `accountrefs` · `accountno` · `accountnumber` · `accountseq` · `maskedaccount`.
 - `Handler(h slog.Handler)` — R1·R2: 계좌 키 속성을 버리고(그룹 안까지) 문자열·오류·Stringer 값과 메시지를 `String` 으로 바꾼다. 그 밖의 `Any` 값은 JSON 으로
   만들어 치환이 생기면 치환된 문자열로 바꾼다(안 생기면 원래 값). 미리 묶은 속성(`With`)은 **Handle 시점에** 치환한다 — `With` 가 등록보다 먼저 불려도 새지 않음.
+  속성 하나의 치환은 recover 로 감싼다 — 값의 `MarshalJSON`·`String`·`Error` 가 패닉하면 그 속성만 `[unloggable]` 이 되고 줄과 루프는 산다(R-8).
 - `Writer(w io.Writer)` — R3: 쓰기마다 `String` 을 적용한다(줄 단위 쓰기 전제 — fmt · slog 모두 한 줄 한 번 쓰기).
 - `SealRecordLine(line, dir)` · `OpenAccount(sealed, dir)` — R4(D4).
 
@@ -65,8 +72,8 @@ census `record` 의 나머지 43 태그(원장·API·서명 다이제스트 입�
 |---|---|---|
 | R1·R2 obs 로거 | `obs.NewLogger`: 내부 핸들러를 `redact.Handler` 로 감싼 **뒤** `Base` 를 붙임 | 줄의 키 집합에서 `account` 가 빠지고 문자열 값이 치환됨. 레벨·이벤트·시각 불변 |
 | R3 엔진 출력 | `runEngineRun`: `out, errOut` 을 `redact.Writer` 로 감쌈(로거도 `errOut` 을 받으므로 이중 적용 — 무해) | 비JSON 줄의 계좌 → `[account]` |
-| R3 마지막 오류 | `main`: `fmt.Fprintln(redact.Writer(os.Stderr), err)` | 모든 명령의 마지막 오류 줄 — 대화형 사용자에게도 계좌가 `[account]` 로 보임(수용: 사용자 결정) |
-| R5 audit | `audit.Log.Record`: `Setting` · `Old` · `New` · `Detail` 을 `redact.Redact` 로 치환(같은 함수를 정리 명령이 씀 — `audit.RedactEntry`) | 행위·설정 이름·이전/이후 값·시각·주체 보존. `account=…` 는 `account=[account]` |
+| R3 마지막 오류 | `main`: 루트에 `SetErr(redact.Writer(os.Stderr))`(cobra 의 `Error:` 줄 포함, R-1) + `fmt.Fprintln(redact.Writer(os.Stderr), err)` | 모든 명령의 stderr 경로 — 대화형 사용자에게도 계좌가 `[account]` 로 보임(수용: 사용자 결정). stdout 은 감싸지 않음(`account list` 등 사람이 요청한 표시) |
+| R5 audit | `audit.Log.Record`: `Detail` 만 `audit.RedactEntry` 로 치환(같은 함수를 정리 명령이 씀, R-11) | 행위·설정 이름·이전/이후 값·시각·주체 그대로. `account=…` 는 `account=[account]` |
 | L10 | `runSoakAttest`: `account` 줄 삭제 | 출력 한 줄 감소 |
 
 **audit 의미 보존(D3-a).** 감사 기록의 질문은 「누가(Subject) 언제(At) 무엇을(Action·Setting) 무엇에서 무엇으로(Old→New) 바꿨나」이다. 실측 audit.log 603 줄에서
@@ -98,12 +105,23 @@ census `record` 의 나머지 43 태그(원장·API·서명 다이제스트 입�
 키를 가진 사람은 이미 계좌를 가진다. 그래서 「되돌릴 수 있음」이 노출을 더하지 않고, 로그만 새면(복사·공유) 계좌는 나가지 않는다. 봉인은 무작위 nonce 라
 같은 계좌도 줄마다 다른 값 — 줄 사이 상관도 남지 않는다. 결속이 꼭 필요함은 위 다섯 읽는 자리가 증명한다(YAGNI 시험 통과).
 
-- 쓰기: 구조체를 종전대로 직렬화한 줄을 `redact.SealRecordLine(line, dir)` 에 넣는다 — `account_ref` 를 떼어 봉인해 `account_ref_sealed` 로 두고, 나머지 모든 문자열 값을
-  `String` 으로 치환한다(줄 안 오류 원문 등). 숫자는 `json.Number` 로 원문 보존, HTML 이스케이프 끔. 키가 없으면 만든다(임시 파일 + `link` — 경합 시 먼저 만든 쪽 키를 읽음).
-- 읽기: 해독 뒤 `AccountRefSealed` 가 있으면 `redact.OpenAccount` 로 열어 `AccountRef` 를 채운다. 키가 없거나 열기 실패면 빈 값 — 읽는 쪽 판정이 「계좌 없음」으로
-  fail-closed(attestation 발급 거절 · 감독 증거 거절 · 대사 거절). 평문 `account_ref` 만 있는 옛 줄은 그대로 읽는다(전환기 호환).
-- 자리: `soak.Recorder.Append` · `verifylive.Recorder.Append` · `lockedRecord.appendLine`(대사 줄 — 쓴 뒤 다시 읽어 대조하는 바이트는 봉인된 줄) /
-  `soak.LoadCycles` · `verifylive.LoadEntries` · `readRecordStrictNoTail`(대사 엄격 해독). `reconcile.go:284` 의 `decodeRecordStrict(again)` 는 해독 가능성만 보므로 무편집.
+- **키 준비는 브로커 호출 전(R-3).** `OpenRecorder`(soak · verifylive)가 키를 읽거나 만들고 시험 봉인을 한 번 해 본다. 실패하면 기록을 열지 못하므로
+  soak 주기·검증 단계가 시작되지 않는다 — 실주문 뒤 `Append` 에서 키 오류가 나는 일이 없다. `Append` 는 메모리 키만 쓴다.
+- **키를 새로 만들지 않는 경우(R-2b).** 키 파일이 없는데 기록에 이미 봉인 줄(`account_ref_sealed`)이 있으면 만들지 않고 거절한다 — 새 키로 쓰면 옛 줄이 영영
+  안 열리고, 새 줄만 계좌를 가진 기록이 된다. 키는 32 무작위 바이트의 hex 64자(+개행)이고 다른 길이·문자는 거절(R-20).
+- 쓰기: 구조체를 종전대로 직렬화한 줄을 봉인 함수에 넣는다 — `account_ref` 를 떼어 봉인해 `account_ref_sealed` 로 두고, 봉인한 줄의 `format_version` 을
+  `redact.SealedFormatVersion`(2) 이상으로 올리며, 나머지 문자열 값을 `String` 으로 치환한다. 키 이름이 `id`·`_id`·`ids` 로 끝나거나 `digest` 를 포함하면 그 값은
+  치환하지 않는다(식별자·다이제스트 불변, R-9). 숫자는 `json.Number` 로 원문 보존, HTML 이스케이프 끔. 바뀐 것이 없으면 받은 바이트 그대로.
+- **기록 형식 2(R-2c).** `soak.RecordFormatVersion` · `verifylive.RecordFormatVersion` 을 2 로 올린다(= `redact.SealedFormatVersion`, 시험이 같음을 고정).
+  옛 읽기(형식 1 까지만 앎)는 새 줄을 「written by a newer TossOS」로 **거절**한다 — 평문 옛 줄 + 봉인 새 줄이 섞인 기록으로 옛 attest 가 발급하는 길이 닫힌다.
+- 읽기: 해독 뒤 `AccountRefSealed` 가 있으면 연다. **열 수 없으면(키 없음·손상·다른 키) 그 줄은 해독 오류**다(R-2a) — 빈 값으로 두면 빈 계좌 주기가 연속일수·endpoint
+  증거에 섞여 다른 줄의 계좌로 셈해진다(`summary.go` `daysOf` · `endpoints.go` `SucceededEndpoints`). 마지막 줄 찢김 관용도 이 오류에는 적용하지 않는다.
+  평문 `account_ref` 만 있는 옛 줄은 그대로 읽는다(전환기 호환).
+- **rename 에 안전한 쓰기(R-4a).** soak · verifylive `Append` 는 쓰기 전에 경로의 파일과 열린 fd 가 같은 inode 인지(`os.SameFile`) 보고, 다르면 경로를 다시 연다 —
+  정리 명령이 파일을 원자 교체해도 다음 줄은 새 파일로 간다.
+- 자리: `soak.OpenRecorder` · `soak.Recorder.Append` · `verifylive.OpenRecorder` · `verifylive.Recorder.Append` · `lockedRecord.appendLine`(대사 줄 — 쓰기 전 봉인,
+  쓴 뒤 다시 읽어 대조하는 바이트는 봉인된 줄) / `soak.LoadCycles` · `verifylive.LoadEntries` · `readRecordStrictNoTail`. `reconcile.go:284` 의
+  `decodeRecordStrict(again)` 는 해독 가능성만 보므로 무편집.
 - 구조체 필드 추가: `Cycle.AccountRefSealed` · `Entry.AccountRefSealed`(`json:"account_ref_sealed,omitempty"`). 쓰기 때는 비어 있고 줄 변환이 채운다.
 
 ## D5. 일회성 정리 명령 `tossctl scrub-account-records`
@@ -113,10 +131,14 @@ census `record` 의 나머지 43 태그(원장·API·서명 다이제스트 입�
 - 같은 함수: 기록 줄은 `redact.SealRecordLine`(쓰기 경로와 같은 함수), audit 줄은 `audit.RedactEntry`(= `Record` 가 부르는 함수). 규칙 사본 없음.
 - audit 의 원문 치환에는 등록 값이 필요하다 — 명령은 먼저 soak·검증 기록의 평문 `account_ref` 와 attestation 의 `account_ref` 를 읽어 `redact.Register` 한다
   (읽기만). 마스크 꼴은 등록 없이 치환된다.
-- 미리보기(기본): 파일별 「줄 수 · 바뀔 줄 수」만 출력. 쓰기 0(키 파일도 만들지 않음 — 미리보기는 봉인하지 않고 변환 필요 여부만 셈).
-- `--apply`(사람): 같은 디렉터리 임시 파일(0600)에 쓰고 fsync → 원본의 크기·수정 시각이 읽은 때와 같은지 다시 보고 다르면 중단(원본 무변경) →
-  `rename` 으로 원자 교체 → 디렉터리 fsync. 백업 없음(사용자 결정). 손상(해독 불가) 줄은 그대로 두고 수를 보고(마지막 줄 찢김 등).
-- 거절: 검증 실행 잠금이 신선하거나 이 기록에 붙은 soak 프로세스가 보이면 `--apply` 거절 — `soak run` 은 기록 fd 를 쥐고 있어 교체 뒤의 쓰기가 사라진 inode 로 간다.
+- 미리보기(기본): 파일별 「줄 수 · 바뀔 줄 수」만 출력. 쓰기 0(키 파일도 만들지 않음 — 같은 변환 함수에 봉인 대신 표지만 끼워 바뀔지만 셈).
+- `--apply`(사람): 원본을 **열어 둔 fd** 로 읽고 → 같은 디렉터리 임시 파일(0600)에 쓰고 fsync → 원본 크기·수정 시각이 읽은 때와 같은지 다시 보고 다르면 중단(원본 무변경) →
+  `rename` 으로 원자 교체 → 디렉터리 fsync → **교체 창에 옛 inode 로 들어온 줄**(이미 연 fd 로 쓰던 쓰기)을 열어 둔 fd 로 읽어 같은 규칙으로 새 파일에 덧붙임 —
+  옛 inode 크기가 두 번 연속(200ms 간격) 같을 때까지(R-4c). 백업 없음(사용자 결정). 손상(해독 불가) 줄은 그대로 두고 수를 보고(마지막 줄 찢김 등).
+- `--apply` 는 실행 uid 가 대상 디렉터리 소유자와 다르면 거절(root 로 돌려 root 소유 키를 만들면 컨테이너 soak 이 못 읽음, R-10).
+- 거절(자문): 검증 실행 잠금이 신선하거나 이 기록에 붙은 soak 프로세스가 보이면 `--apply` 거절. 이 감지는 컨테이너 안 프로세스의 경로가 달라 못 맞힐 수 있다(R-4) —
+  그래서 안전의 근거는 감지가 아니라 위 「rename 에 안전한 쓰기」와 옛 inode 꼬리 옮기기다. 단 **옛 바이너리**(재열기 없음)가 기록을 쥔 동안은 안전하지 않으므로
+  절차는 새 바이너리로 교체한 **뒤**(배포 3).
 - 주석 `mutating: true`, `source: local` — 대화형 에이전트는 자동 실행하지 않는다. 시험은 임시 디렉터리에서만 돈다.
 
 ## D6. 동작 불변 · 손절 즉시성
@@ -128,6 +150,8 @@ census `record` 의 나머지 43 태그(원장·API·서명 다이제스트 입�
 
 ## D7. 시험 전략
 
+0. 2판 추가(리뷰): cobra `Error:` 줄이 감싼 stderr 로 감(구조 핀 — `main` 의 `SetErr`) · 섞인 기록에서 열 수 없는 봉인 줄은 해독 오류 · 봉인 줄이 있는데 키가 없으면
+   `OpenRecorder` 거절 · 기록 형식 2 · 교체 뒤 `Append` 재열기 · 정리 명령 꼬리 옮기기 · 핸들러 패닉 값 · 식별자 불변 · 키 길이 거절.
 1. 센티널 `987-65-SENTINEL` · 숫자형 `98765432101` · 그 마스크 · `pos-` id 를 계좌 참조 · 오류 원문(감싼 오류 포함) · 브로커 응답(httptest `/api/v1/accounts`) ·
    알림 Fields · `With` 속성에 심고: obs JSON 줄 · 엔진 Writer · audit 파일 · soak/검증 기록 파일 · 정리 명령 결과 어디에도 없음을 단언.
 2. 왕복: 봉인한 soak 기록으로 `Summarize` → `BuildAttestation` 의 계좌가 원문과 같음 · 감독 증거의 마스크 비교 통과 · 대사 계좌 결속 통과 · 키 없음이면 fail-closed.
@@ -143,18 +167,21 @@ census `record` 의 나머지 43 태그(원장·API·서명 다이제스트 입�
 
 ## 배포 (범위 밖 — 사람 절차)
 
-1. **읽는 쪽과 쓰는 쪽을 함께 교체.** 새 쓰기(봉인)를 옛 읽기가 만나면 계좌 없음으로 attestation 갱신이 거절된다(fail-closed, 갱신 창 30일 중 하루치).
+1. **읽는 쪽과 쓰는 쪽을 함께 교체.** 새 쓰기(형식 2)를 옛 읽기가 만나면 「newer format」으로 attestation 갱신이 거절된다(fail-closed — 발급하지 않음, 갱신 창 30일 중 하루치).
    호스트 `~/.local/bin/tossctl`(tossos-attest.timer)과 컨테이너 이미지(`make image CHANGE=a131-…`)를 같은 KST 05:00~09:00 창에 바꾼다.
 2. 교체 뒤 engine.log 새 줄에 `account` 키 0 · `pos-` 0 을 사람이 확인(`grep -c`).
-3. 정리 — 사람이 `tossctl --config-dir ~/.config/tossctl scrub-account-records`(미리보기) → soak 정지 → `… --apply` → soak 재시작.
+3. 정리 — 1 의 교체 **뒤**(soak·verify 가 재열기하는 새 바이너리) 사람이 같은 uid 로 `tossctl --config-dir ~/.config/tossctl scrub-account-records`(미리보기) →
+   `… --apply`. 옛 `~/.local/share/tossos/capability-*` 잔재는 `--config-dir` 없이 한 번 더(데이터 디렉터리 기본 경로).
    다음 `tossos-attest.timer` 실행이 발급(또는 종전과 같은 사유로 거절)하는지 확인.
 4. 과거 engine.log 는 Manager 가 사람 승인으로 따로 처리.
 
-롤백: 이미지·호스트 바이너리 핀을 되돌리면 옛 읽기가 봉인 줄의 계좌를 못 본다 — 롤백 시 soak 기록을 새로 시작해야 attestation 이 다시 발급된다(정리 뒤라면 같음).
+롤백: 이미지·호스트 바이너리 핀을 되돌리면 옛 읽기가 형식 2 줄에서 거절한다 — 롤백 시 soak 기록을 새로 시작해야(형식 2 줄을 치운 기록) attestation 이 다시 발급된다(정리 뒤라면 같음).
 원장·설정·attestation 형식 변경 없음.
 
 ## 잔재(명명)
 
 ① 계좌 조회 실패 문구에 브로커가 계좌를 되돌려 주면 등록 전이라 치환되지 않는다. ② 런타임 패닉의 스택(fd 2 직접)은 Writer 를 지나지 않는다.
-③ 알림 본문(ntfy)은 범위 밖. ④ 대화형 터미널 출력은 범위 밖. ⑤ `accountSeq` 는 치환하지 않음(D0). ⑥ 콘솔 프로세스는 계좌를 등록하지 않는다 —
+③ 알림 본문(ntfy)은 범위 밖. ④ 대화형 터미널 출력(stdout)은 범위 밖. ⑦ 콘솔·httpapi 컨테이너의 docker json-file 로그(`compose.yaml` logging)는 그 프로세스의
+표준 출력이며 계좌를 등록하지 않는다 — 범위 밖. ⑧ attest-autorun.log 의 과거 147 줄과 journald 의 과거 줄 — engine.log 와 같이 Manager · 사람 처리.
+⑨ 핸들러는 `WithGroup` 뒤에 묶은 속성을 묶는 시점에 치환한다(생산 사용 0). ⑤ `accountSeq` 는 치환하지 않음(D0). ⑥ 콘솔 프로세스는 계좌를 등록하지 않는다 —
 콘솔이 쓰는 audit 줄에 계좌가 0 임은 실측(D3-a)이고, 그 판정이 바뀌면 다시 볼 것.

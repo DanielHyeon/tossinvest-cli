@@ -1,6 +1,6 @@
 {
   "file": "internal/official/reads.go",
-  "source_sha256": "722b9846047d6e37d67f3cc85d4ab635a5d7cc365bd1aa3401f8d6c26450c8f3",
+  "source_sha256": "c7a24ed74925c48e00214ce29a405e50d3ffcf3fded04e906e9436e7a6990ce9",
   "package": "official",
   "function": "accountsLocked",
   "receiver": "Client",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 55,
+    "line": 57,
     "column": 2
   },
   "branches": [
@@ -73,7 +73,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 54,
+        "line": 56,
         "column": 2
       }
     }
@@ -146,7 +146,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 54,
+        "line": 55,
+        "column": 2
+      },
+      "text": "registerAccountNumbers"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
         "column": 9
       },
       "text": "adaptAccounts"

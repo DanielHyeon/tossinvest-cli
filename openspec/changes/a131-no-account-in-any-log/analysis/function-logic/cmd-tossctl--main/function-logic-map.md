@@ -1,8 +1,8 @@
 # Function Logic Map: `main`
 
-- Source: `cmd/tossctl/main.go` (10-17)
+- Source: `cmd/tossctl/main.go` (11-22)
 - Qualified: `main`
-- AST evidence: `ast.json` (편집 전(base), `source_sha256` c092c51acf38b96b…) — AST branches 1 · returns 0
+- AST evidence: `ast.json` (편집 뒤, `source_sha256` bca4951a332de1a2…) — AST branches 1 · returns 0
 - Risk scan: `risk-pattern-report.md`
 - 작성기: `analysis/harness/flm_write.py`(좌표는 ast.json 에서 옮김)
 
@@ -18,7 +18,7 @@
 
 | Branch | AST kind | Source line | a131 |
 |---|---|---|---|
-| B1 | if at 13:2 | `if err := newRootCmd().Execute(); err != nil {` | 편집 영향 |
+| B1 | if at 18:2 | `if err := root.Execute(); err != nil {` | 편집 영향 |
 
 반환문 없음(AST returns 0).
 
@@ -32,9 +32,9 @@
 
 ## State mutations and fallbacks
 
-- a131: B1 의 `fmt.Fprintln(os.Stderr, err)` → `fmt.Fprintln(redact.Writer(os.Stderr), err)`. exit 코드 불변.
+- a131: 루트 명령에 `SetErr(redact.Writer(os.Stderr))`(cobra 의 `Error:` 줄, R-1) · B1 의 마지막 오류 줄도 `redact.Writer(os.Stderr)`. exit 코드 불변.
 
 ## Safety conclusion
 
-- Safe edit boundary: B1 본문 한 줄.
+- Safe edit boundary: 루트 생성과 Execute 사이에 SetErr 한 줄, B1 본문 한 줄.
 - High-risk impact: no

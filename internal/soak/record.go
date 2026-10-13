@@ -24,13 +24,16 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/binstamp"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/redact"
 )
 
 // FileName is the record's default name inside the data directory.
 const FileName = "capability-soak.jsonl"
 
 // RecordFormatVersion is the record format this build writes and understands.
-const RecordFormatVersion = 1
+// a131: 2 = 계좌를 봉인해 쓰는 형식(redact.SealedFormatVersion 과 같아야 함 — 시험이 고정). 형식 1 까지만 아는 옛 읽기는
+// 새 줄을 「newer format」으로 거절함(평문 옛 줄 + 봉인 새 줄 기록으로 옛 판본이 판정하는 길을 닫음).
+const RecordFormatVersion = 2
 
 // KindCycle marks a survey record. The field exists so a later change can append
 // a different kind of line to the same file without every old reader mistaking
@@ -140,6 +143,9 @@ type Cycle struct {
 
 	// AccountRef is the account the reads resolved to.
 	AccountRef string `json:"account_ref"`
+	// AccountRefSealed 는 a131 부터 기록 줄에 실리는 봉인된 계좌임(redact.SealRecordLine). 쓰기 때는 비어 있고 줄 변환이
+	// 채움; 읽을 때 LoadCycles 가 열어 AccountRef 를 채움 — 결속 판정은 종전과 같은 값을 봄.
+	AccountRefSealed string `json:"account_ref_sealed,omitempty"`
 
 	// Credential, Endpoints and Completeness are the three measurements.
 	Credential   Credential       `json:"credential"`
@@ -165,6 +171,8 @@ type Recorder struct {
 	mu   sync.Mutex
 	path string
 	f    *os.File
+	// key 는 OpenRecorder 가 브로커 호출 전에 준비한 봉인 키임(a131) — Append 는 이 메모리 키만 씀.
+	key *redact.SealKey
 }
 
 // OpenRecorder opens (or creates) the record for appending, owner-only.
@@ -177,7 +185,13 @@ func OpenRecorder(path string) (*Recorder, error) {
 	if err != nil {
 		return nil, fmt.Errorf("soak: opening the record %s: %w", path, err)
 	}
-	return &Recorder{path: path, f: f}, nil
+	// a131: 봉인 키 준비는 여기서 — 측정·실주문보다 먼저 실패해야 함(Append 에서 나면 실주문 뒤의 기록 실패가 됨).
+	key, err := redact.PrepareSealKey(path)
+	if err != nil {
+		_ = f.Close()
+		return nil, fmt.Errorf("soak: preparing the record's seal key: %w", err)
+	}
+	return &Recorder{path: path, f: f, key: key}, nil
 }
 
 // Path returns the record's location.
@@ -195,6 +209,11 @@ func (r *Recorder) Append(c Cycle) error {
 	if err != nil {
 		return fmt.Errorf("soak: encoding a cycle: %w", err)
 	}
+	// a131: 계좌는 봉인해 씀(같은 규칙 — redact.SealRecordLine, 키는 OpenRecorder 가 준비).
+	line, err = redact.SealRecordLine(line, r.key)
+	if err != nil {
+		return fmt.Errorf("soak: sealing the record line: %w", err)
+	}
 	line = append(line, '\n')
 
 	r.mu.Lock()
@@ -202,12 +221,35 @@ func (r *Recorder) Append(c Cycle) error {
 	if r.f == nil {
 		return errors.New("soak: the record is closed")
 	}
+	// a131: 정리 명령이 경로를 원자 교체했으면 다시 엶 — 열린 fd 는 사라진 inode 를 가리켜 그 뒤 줄이 소리 없이 사라짐.
+	if err := reopenIfReplaced(r); err != nil {
+		return err
+	}
 	if _, err := r.f.Write(line); err != nil {
 		return fmt.Errorf("soak: appending to %s: %w", r.path, err)
 	}
 	if err := r.f.Sync(); err != nil {
 		return fmt.Errorf("soak: syncing %s: %w", r.path, err)
 	}
+	return nil
+}
+
+// reopenIfReplaced 는 기록 경로의 파일이 열린 fd 와 다른 inode 면(정리 명령의 원자 교체) 경로를 다시 엶. 호출자가 r.mu 를 쥠.
+func reopenIfReplaced(r *Recorder) error {
+	open, err := r.f.Stat()
+	if err != nil {
+		return fmt.Errorf("soak: stat the open record %s: %w", r.path, err)
+	}
+	now, err := os.Stat(r.path)
+	if err == nil && os.SameFile(open, now) {
+		return nil
+	}
+	f, oerr := os.OpenFile(r.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+	if oerr != nil {
+		return fmt.Errorf("soak: reopening the replaced record %s: %w", r.path, oerr)
+	}
+	_ = r.f.Close()
+	r.f = f
 	return nil
 }
 
@@ -241,6 +283,8 @@ func LoadCycles(path string) ([]Cycle, error) {
 		cycles []Cycle
 		lineNo int
 	)
+	// a131: 봉인된 계좌는 이 기록 옆의 키로 엶(키는 한 번만 읽음, 만들지 않음).
+	opener := redact.NewOpener(filepath.Dir(path))
 	scanner := bufio.NewScanner(f)
 	// Order pages make a cycle line longer than bufio's default 64KiB ceiling on
 	// a busy account.
@@ -258,6 +302,9 @@ func LoadCycles(path string) ([]Cycle, error) {
 		}
 		c, err := decodeCycle(pending)
 		if err != nil {
+			return fmt.Errorf("soak: %s line %d: %w", path, pendingLine, err)
+		}
+		if c, err = openCycleAccount(c, opener); err != nil {
 			return fmt.Errorf("soak: %s line %d: %w", path, pendingLine, err)
 		}
 		cycles = append(cycles, c)
@@ -289,6 +336,10 @@ func LoadCycles(path string) ([]Cycle, error) {
 			// A torn final line is what a crash during an append leaves behind.
 			// Everything before it is intact and is still evidence.
 			return cycles, nil
+		}
+		// a131: 열 수 없는 봉인은 찢긴 줄이 아님 — 관용 없이 오류.
+		if c, err = openCycleAccount(c, opener); err != nil {
+			return nil, fmt.Errorf("soak: %s line %d: %w", path, pendingLine, err)
 		}
 		cycles = append(cycles, c)
 	}

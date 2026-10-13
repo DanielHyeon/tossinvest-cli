@@ -1,0 +1,257 @@
+{
+  "file": "internal/app/engine/a090_unobserved_position_test.go",
+  "source_sha256": "89841eae7562f6ca75a121929024762919479f108514b0e38a7863f0e0773bad",
+  "package": "engine_test",
+  "function": "TestA090R4AJudgementEndsTheStreakWithOneReleaseLine",
+  "signature": "TestA090R4AJudgementEndsTheStreakWithOneReleaseLine(params=1, results=0)",
+  "start": {
+    "line": 742,
+    "column": 1
+  },
+  "end": {
+    "line": 769,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 749,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 753,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 757,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 760,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 766,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 743,
+        "column": 7
+      },
+      "text": "a090Setup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 744,
+        "column": 15
+      },
+      "text": "f.a090Pair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 745,
+        "column": 2
+      },
+      "text": "delete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 746,
+        "column": 2
+      },
+      "text": "f.cycles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 747,
+        "column": 2
+      },
+      "text": "f.quote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 748,
+        "column": 11
+      },
+      "text": "f.cycles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 750,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 752,
+        "column": 11
+      },
+      "text": "f.lines"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 753,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 754,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 757,
+        "column": 31
+      },
+      "text": "redact.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 758,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 761,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 764,
+        "column": 2
+      },
+      "text": "delete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 765,
+        "column": 2
+      },
+      "text": "f.cycles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 766,
+        "column": 12
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 766,
+        "column": 16
+      },
+      "text": "f.lines"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 767,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 743,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 744,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 748,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 752,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 756,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 760,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 766,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -30,6 +30,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/redact"
 	"io"
 	"os"
 	"path/filepath"
@@ -62,7 +63,9 @@ func RecordFileName(market string) string {
 }
 
 // RecordFormatVersion is the format this build writes and understands.
-const RecordFormatVersion = 1
+// a131: 2 = 계좌를 봉인해 쓰는 형식(redact.SealedFormatVersion 과 같아야 함 — 시험이 고정). 형식 1 까지만 아는 옛 읽기는
+// 새 줄을 「newer format」으로 거절함(평문 옛 줄 + 봉인 새 줄 기록으로 옛 판본이 판정하는 길을 닫음).
+const RecordFormatVersion = 2
 
 // KindStep marks a step record. The field exists so a later change can append a
 // different kind of line without every old reader mistaking it for a step.
@@ -272,6 +275,9 @@ type Entry struct {
 
 	// AccountRef is masked. The unmasked number never enters this file.
 	AccountRef string `json:"account_ref"`
+	// AccountRefSealed 는 a131 부터 기록 줄에 실리는 봉인된 계좌(마스크)임(redact.SealRecordLine). 읽을 때 LoadEntries ·
+	// 대사 엄격 해독이 열어 AccountRef 를 채움.
+	AccountRefSealed string `json:"account_ref_sealed,omitempty"`
 
 	// Mutating repeats the catalogue's flag on the line itself, so a reader
 	// grepping the record for "what did this touch" does not need the catalogue.
@@ -313,6 +319,8 @@ type Recorder struct {
 	mu   sync.Mutex
 	path string
 	f    *os.File
+	// key 는 OpenRecorder 가 브로커 호출 전에 준비한 봉인 키임(a131) — Append 는 이 메모리 키만 씀.
+	key *redact.SealKey
 }
 
 // OpenRecorder opens (or creates) the record for appending, owner-only.
@@ -325,7 +333,13 @@ func OpenRecorder(path string) (*Recorder, error) {
 	if err != nil {
 		return nil, fmt.Errorf("verifylive: opening the record %s: %w", path, err)
 	}
-	return &Recorder{path: path, f: f}, nil
+	// a131: 봉인 키 준비는 여기서 — 측정·실주문보다 먼저 실패해야 함(Append 에서 나면 실주문 뒤의 기록 실패가 됨).
+	key, err := redact.PrepareSealKey(path)
+	if err != nil {
+		_ = f.Close()
+		return nil, fmt.Errorf("verifylive: preparing the record's seal key: %w", err)
+	}
+	return &Recorder{path: path, f: f, key: key}, nil
 }
 
 // Path returns the record's location.
@@ -343,6 +357,11 @@ func (r *Recorder) Append(e Entry) error {
 	if err != nil {
 		return fmt.Errorf("verifylive: encoding a step entry: %w", err)
 	}
+	// a131: 계좌는 봉인해 씀(같은 규칙 — redact.SealRecordLine, 키는 OpenRecorder 가 준비).
+	line, err = redact.SealRecordLine(line, r.key)
+	if err != nil {
+		return fmt.Errorf("verifylive: sealing the record line: %w", err)
+	}
 	line = append(line, '\n')
 
 	r.mu.Lock()
@@ -350,12 +369,35 @@ func (r *Recorder) Append(e Entry) error {
 	if r.f == nil {
 		return errors.New("verifylive: the record is closed")
 	}
+	// a131: 정리 명령이 경로를 원자 교체했으면 다시 엶 — 열린 fd 는 사라진 inode 를 가리켜 그 뒤 줄이 소리 없이 사라짐.
+	if err := reopenIfReplaced(r); err != nil {
+		return err
+	}
 	if _, err := r.f.Write(line); err != nil {
 		return fmt.Errorf("verifylive: appending to %s: %w", r.path, err)
 	}
 	if err := r.f.Sync(); err != nil {
 		return fmt.Errorf("verifylive: syncing %s: %w", r.path, err)
 	}
+	return nil
+}
+
+// reopenIfReplaced 는 기록 경로의 파일이 열린 fd 와 다른 inode 면(정리 명령의 원자 교체) 경로를 다시 엶. 호출자가 r.mu 를 쥠.
+func reopenIfReplaced(r *Recorder) error {
+	open, err := r.f.Stat()
+	if err != nil {
+		return fmt.Errorf("verifylive: stat the open record %s: %w", r.path, err)
+	}
+	now, err := os.Stat(r.path)
+	if err == nil && os.SameFile(open, now) {
+		return nil
+	}
+	f, oerr := os.OpenFile(r.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+	if oerr != nil {
+		return fmt.Errorf("verifylive: reopening the replaced record %s: %w", r.path, oerr)
+	}
+	_ = r.f.Close()
+	r.f = f
 	return nil
 }
 
@@ -426,6 +468,14 @@ func (l *lockedRecord) appendLine(line []byte, judged int64) error {
 	if len(line) == 0 || line[len(line)-1] != '\n' {
 		return errors.New("verifylive: a record line must end with a newline")
 	}
+	// a131: 대사 줄의 계좌(마스크)도 봉인해 씀 — 쓰기 전, 키 준비 실패면 아무것도 안 씀. 아래 대조는 봉인된 줄과 함.
+	key, err := redact.PrepareSealKey(l.path)
+	if err != nil {
+		return fmt.Errorf("verifylive: preparing the record's seal key: %w", err)
+	}
+	if line, err = redact.SealRecordLine(line, key); err != nil {
+		return fmt.Errorf("verifylive: sealing the reconcile line: %w", err)
+	}
 	st, err := l.f.Stat()
 	if err != nil {
 		return fmt.Errorf("verifylive: stat %s: %w", l.path, err)
@@ -472,6 +522,8 @@ func LoadEntries(path string) ([]Entry, error) {
 		entries []Entry
 		lineNo  int
 	)
+	// a131: 봉인된 계좌(마스크)는 이 기록 옆의 키로 엶(키는 한 번만 읽음, 만들지 않음).
+	opener := redact.NewOpener(filepath.Dir(path))
 	scanner := bufio.NewScanner(f)
 	scanner.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
 
@@ -486,6 +538,9 @@ func LoadEntries(path string) ([]Entry, error) {
 		}
 		e, err := decodeEntry(pending)
 		if err != nil {
+			return fmt.Errorf("verifylive: %s line %d: %w", path, pendingLine, err)
+		}
+		if e, err = openEntryAccount(e, opener); err != nil {
 			return fmt.Errorf("verifylive: %s line %d: %w", path, pendingLine, err)
 		}
 		entries = append(entries, e)
@@ -517,9 +572,26 @@ func LoadEntries(path string) ([]Entry, error) {
 			// A torn final line is what a crash during an append leaves behind.
 			return entries, nil
 		}
+		// a131: 열 수 없는 봉인은 찢긴 줄이 아님 — 관용 없이 오류.
+		if e, err = openEntryAccount(e, opener); err != nil {
+			return nil, fmt.Errorf("verifylive: %s line %d: %w", path, pendingLine, err)
+		}
 		entries = append(entries, e)
 	}
 	return entries, nil
+}
+
+// openRecordEntries 는 대사 엄격 해독이 읽은 항목들의 봉인 계좌를 엶(a131). 기록 파일을 다루는 일은 record.go 가 소유함 —
+// reconcile*.go 는 이 함수 하나로만 봉인 규칙에 닿음(TestReconcileVerifyliveFilesReachOnlyAllowlistedCode).
+func openRecordEntries(entries []Entry, path string) error {
+	opener := redact.NewOpener(filepath.Dir(path))
+	for i := range entries {
+		var err error
+		if entries[i], err = openEntryAccount(entries[i], opener); err != nil {
+			return fmt.Errorf("record entry %d: %w", i+1, err)
+		}
+	}
+	return nil
 }
 
 func decodeEntry(line []byte) (Entry, error) {

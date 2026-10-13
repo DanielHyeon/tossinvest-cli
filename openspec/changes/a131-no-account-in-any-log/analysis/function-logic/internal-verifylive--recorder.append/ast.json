@@ -1,16 +1,16 @@
 {
   "file": "internal/verifylive/record.go",
-  "source_sha256": "9b44a5d8afd7a4dc6d13650c01e65a136f6e855d6fd7d13c5af9bcd458f20514",
+  "source_sha256": "9a289d21048578d838450ed55f418e1c7b57ad0890b5ca1effc958b0b21f8ad6",
   "package": "verifylive",
   "function": "Append",
   "receiver": "Recorder",
   "signature": "Recorder.Append(params=1, results=1)",
   "start": {
-    "line": 335,
+    "line": 349,
     "column": 1
   },
   "end": {
-    "line": 360,
+    "line": 383,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 336,
+        "line": 350,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 339,
+        "line": 353,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 343,
+        "line": 357,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 350,
+        "line": 362,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 353,
+        "line": 369,
         "column": 2
       }
     },
@@ -58,7 +58,23 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 356,
+        "line": 373,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 376,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 379,
         "column": 2
       }
     }
@@ -67,35 +83,49 @@
     {
       "kind": "return",
       "at": {
-        "line": 344,
+        "line": 358,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 351,
+        "line": 363,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 354,
+        "line": 370,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 357,
+        "line": 374,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 359,
+        "line": 377,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 380,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 382,
         "column": 2
       }
     }
@@ -104,7 +134,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 342,
+        "line": 356,
         "column": 15
       },
       "text": "json.Marshal"
@@ -112,7 +142,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 344,
+        "line": 358,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -120,7 +150,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 346,
+        "line": 361,
+        "column": 14
+      },
+      "text": "redact.SealRecordLine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 363,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 365,
         "column": 9
       },
       "text": "append"
@@ -128,7 +174,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 348,
+        "line": 367,
         "column": 2
       },
       "text": "r.mu.Lock"
@@ -136,7 +182,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 349,
+        "line": 368,
         "column": 8
       },
       "text": "r.mu.Unlock"
@@ -144,7 +190,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 351,
+        "line": 370,
         "column": 10
       },
       "text": "errors.New"
@@ -152,7 +198,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 353,
+        "line": 373,
+        "column": 12
+      },
+      "text": "reopenIfReplaced"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 376,
         "column": 15
       },
       "text": "r.f.Write"
@@ -160,7 +214,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 354,
+        "line": 377,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -168,7 +222,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 356,
+        "line": 379,
         "column": 12
       },
       "text": "r.f.Sync"
@@ -176,7 +230,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 357,
+        "line": 380,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -186,42 +240,56 @@
     {
       "kind": "=",
       "at": {
-        "line": 337,
+        "line": 351,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 340,
+        "line": 354,
         "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 342,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 346,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 353,
-        "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
         "line": 356,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 361,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 365,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 373,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 376,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 379,
         "column": 5
       }
     }
@@ -231,7 +299,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 349,
+        "line": 368,
         "column": 2
       },
       "text": "r.mu.Unlock"

@@ -11,7 +11,7 @@ a129 리뷰와 Manager 실측(2026-10-12, 운영 파일을 값 없이 개수만 
 | `~/.config/tossctl/engine.log` | 85,394 | 원문 80,127 줄 · 마스크 149 줄 | `account` 필드 80,195 · `claimed_by` 13 · `error` 1 · 비JSON `account …` 줄 69 |
 | `~/.config/tossctl/capability-soak.jsonl` | 5,139 | 5,082 | `account_ref`(원문) |
 | `~/.config/tossctl/capability-verify.jsonl` | 25 | 25 | `account_ref`(마스크 `*******1234` 꼴) |
-| `~/.local/share/tossos/audit.log` | 603 | 78 | `detail` 의 `account=<원문>`(게이트 수락 줄) |
+| `~/.local/share/tossos/audit.log` | 603 | 78 | `detail` 의 `account=<원문>`(게이트 수락 줄 — 옛 빌드가 원문을 썼고 HEAD 는 마스크를 씀, `interlock.go:420`) |
 | `~/.local/share/tossos/attest-autorun.log` | 5,383 | 147 | `soak attest` 출력의 `account <마스크>` 줄 |
 
 그리고 `position_id`(`journal.PositionID`)는 계좌·시장·종목·작은 순번을 소금 없이 sha256 한 앞 24 hex 이고, 같은 줄에 시장·종목이 있으므로
@@ -46,7 +46,8 @@ a129 리뷰와 Manager 실측(2026-10-12, 운영 파일을 값 없이 개수만 
 ## Impact
 
 - Affected specs: `engine-safety`(요구 1개 추가).
-- Affected code: 새 `internal/redact/`, `internal/obs/log.go`(`NewLogger`), `internal/official/reads.go`(`accountsLocked`),
+- Affected code(2판): 새 `internal/redact/`, `internal/obs/log.go`(`NewLogger`), `soak.OpenRecorder` · `verifylive.OpenRecorder`(키 준비) ·
+  `soak.RecordFormatVersion` · `verifylive.RecordFormatVersion` 2, `internal/official/reads.go`(`accountsLocked`),
   `cmd/tossctl/engine.go`(`runEngineRun`), `cmd/tossctl/main.go`(`main`), `internal/audit/audit.go`(`Record`),
   `internal/soak/record.go`(`Append` · `LoadCycles` · `Cycle` 필드 하나), `internal/verifylive/record.go`(`Append` · `appendLine` · `LoadEntries` ·
   `Entry` 필드 하나), `internal/verifylive/reconcile_record.go`(`readRecordStrictNoTail`), `cmd/tossctl/soak.go`(`runSoakAttest`),

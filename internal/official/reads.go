@@ -51,6 +51,8 @@ func (c *Client) accountsLocked(ctx context.Context) ([]domain.Account, error) {
 			)
 		}
 	}
+	// a131: 계좌 번호가 프로세스에 들어오는 유일한 입구 — 받은 번호를 로그 치환 규칙에 등록(메모리 쓰기 하나, 반환·오류 불변).
+	registerAccountNumbers(raw)
 	return adaptAccounts(raw), nil
 }
 

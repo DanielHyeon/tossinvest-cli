@@ -1,8 +1,8 @@
 # Function Logic Map: `NewLogger`
 
-- Source: `internal/obs/log.go` (98-131)
+- Source: `internal/obs/log.go` (99-135)
 - Qualified: `NewLogger`
-- AST evidence: `ast.json` (편집 전(base), `source_sha256` 23d747c66cfeff5e…) — AST branches 6 · returns 3
+- AST evidence: `ast.json` (편집 뒤, `source_sha256` 8ca3cd8c3a878117…) — AST branches 6 · returns 3
 - Risk scan: `risk-pattern-report.md`
 - 작성기: `analysis/harness/flm_write.py`(좌표는 ast.json 에서 옮김)
 
@@ -21,14 +21,14 @@
 
 | Branch | AST kind | Source line | a131 |
 |---|---|---|---|
-| B1 | if at 100:2 | `if w == nil {` | 무편집 |
-| B2 | if at 104:2 | `if clk == nil {` | 무편집 |
-| B3 | if at 114:4 | `if len(groups) == 0 && a.Key == slog.TimeKey {` | 무편집 |
-| B4 | if at 122:2 | `if opts.JSON {` | 무편집 |
-| B5 | else at 124:9 | `} else {` | 무편집 |
-| B6 | if at 127:2 | `if len(opts.Base) > 0 {` | 편집 영향 |
+| B1 | if at 101:2 | `if w == nil {` | 무편집 |
+| B2 | if at 105:2 | `if clk == nil {` | 무편집 |
+| B3 | if at 115:4 | `if len(groups) == 0 && a.Key == slog.TimeKey {` | 무편집 |
+| B4 | if at 123:2 | `if opts.JSON {` | 무편집 |
+| B5 | else at 125:9 | `} else {` | 무편집 |
+| B6 | if at 131:2 | `if len(opts.Base) > 0 {` | 편집 영향 |
 
-Exact AST return positions: 115:5, 117:4, 130:2
+Exact AST return positions: 116:5, 118:4, 134:2
 
 ## Calls and live bindings
 

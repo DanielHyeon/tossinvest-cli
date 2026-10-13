@@ -1,8 +1,8 @@
 # Function Logic Map: `Client.accountsLocked`
 
-- Source: `internal/official/reads.go` (38-55)
+- Source: `internal/official/reads.go` (38-57)
 - Qualified: `Client.accountsLocked`
-- AST evidence: `ast.json` (편집 전(base), `source_sha256` 722b9846047d6e37…) — AST branches 5 · returns 3
+- AST evidence: `ast.json` (편집 뒤, `source_sha256` c7a24ed74925c48e…) — AST branches 5 · returns 3
 - Risk scan: `risk-pattern-report.md`
 - 작성기: `analysis/harness/flm_write.py`(좌표는 ast.json 에서 옮김)
 
@@ -25,7 +25,7 @@
 | B4 | if at 46:9 | `} else if selected > 0 && !c.accountSeqExplicit {` | 무편집 |
 | B5 | if at 47:3 | `if len(raw) == 0 \|\| raw[0].AccountSeq <= 0 \|\| int64(raw[0].AccountSeq) != selected {` | 무편집 |
 
-Exact AST return positions: 41:3, 48:4, 54:2
+Exact AST return positions: 41:3, 48:4, 56:2
 
 ## Calls and live bindings
 

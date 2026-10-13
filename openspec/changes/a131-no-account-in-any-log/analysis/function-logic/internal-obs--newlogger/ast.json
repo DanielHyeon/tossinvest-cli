@@ -1,15 +1,15 @@
 {
   "file": "internal/obs/log.go",
-  "source_sha256": "23d747c66cfeff5eda339a3c21516d8213c64e2506375f67ea62fd1345969f94",
+  "source_sha256": "8ca3cd8c3a8781173f06756b266bd05df9529822f7ee123fa66de2d3f5d14d04",
   "package": "obs",
   "function": "NewLogger",
   "signature": "NewLogger(params=1, results=1)",
   "start": {
-    "line": 98,
+    "line": 99,
     "column": 1
   },
   "end": {
-    "line": 131,
+    "line": 135,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 100,
+        "line": 101,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 104,
+        "line": 105,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 114,
+        "line": 115,
         "column": 4
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 122,
+        "line": 123,
         "column": 2
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "else",
       "at": {
-        "line": 124,
+        "line": 125,
         "column": 9
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 127,
+        "line": 131,
         "column": 2
       }
     }
@@ -66,21 +66,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 115,
+        "line": 116,
         "column": 5
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 117,
+        "line": 118,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 130,
+        "line": 134,
         "column": 2
       }
     }
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 105,
+        "line": 106,
         "column": 9
       },
       "text": "clock.System"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 114,
+        "line": 115,
         "column": 7
       },
       "text": "len"
@@ -105,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 115,
+        "line": 116,
         "column": 12
       },
       "text": "slog.Time"
@@ -113,7 +113,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 115,
+        "line": 116,
         "column": 36
       },
       "text": "UTC"
@@ -121,7 +121,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 115,
+        "line": 116,
         "column": 36
       },
       "text": "clk.Now"
@@ -129,7 +129,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 123,
+        "line": 124,
         "column": 13
       },
       "text": "slog.NewJSONHandler"
@@ -137,7 +137,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 125,
+        "line": 126,
         "column": 13
       },
       "text": "slog.NewTextHandler"
@@ -145,7 +145,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 127,
+        "line": 130,
+        "column": 12
+      },
+      "text": "redact.Handler"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
         "column": 5
       },
       "text": "len"
@@ -153,7 +161,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 128,
+        "line": 132,
         "column": 13
       },
       "text": "handler.WithAttrs"
@@ -161,7 +169,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 130,
+        "line": 134,
         "column": 22
       },
       "text": "slog.New"
@@ -171,56 +179,63 @@
     {
       "kind": ":=",
       "at": {
-        "line": 99,
+        "line": 100,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 101,
+        "line": 102,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 103,
+        "line": 104,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 105,
+        "line": 106,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 108,
+        "line": 109,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 123,
+        "line": 124,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 125,
+        "line": 126,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 128,
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 132,
         "column": 3
       }
     }

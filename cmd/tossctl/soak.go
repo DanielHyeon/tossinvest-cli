@@ -546,7 +546,6 @@ func runSoakAttest(cmd *cobra.Command, root *rootOptions, opts *soakOptions) (re
 	out := cmd.OutOrStdout()
 	fmt.Fprintf(out, "capability attestation written to %s\n", path)
 	fmt.Fprintf(out, "  record       %s\n", recordPath)
-	fmt.Fprintf(out, "  account      %s\n", attest.Mask(attestation.AccountRef))
 	fmt.Fprintf(out, "  soak days    %d\n", attestation.SoakDays)
 	fmt.Fprintf(out, "  expires      %s\n", attestation.ExpiresAt.Format(time.RFC3339))
 	fmt.Fprintf(out, "  endpoints    %s\n", strings.Join(attestation.Endpoints, "\n               "))

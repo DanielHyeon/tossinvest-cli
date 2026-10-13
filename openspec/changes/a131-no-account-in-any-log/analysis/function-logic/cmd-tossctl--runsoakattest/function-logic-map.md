@@ -1,8 +1,8 @@
 # Function Logic Map: `runSoakAttest`
 
-- Source: `cmd/tossctl/soak.go` (476-582)
+- Source: `cmd/tossctl/soak.go` (476-581)
 - Qualified: `runSoakAttest`
-- AST evidence: `ast.json` (편집 전(base), `source_sha256` 5602b691caadfdf4…) — AST branches 20 · returns 10
+- AST evidence: `ast.json` (편집 뒤, `source_sha256` 12399e6d9acffc7a…) — AST branches 20 · returns 10
 - Risk scan: `risk-pattern-report.md`
 - 작성기: `analysis/harness/flm_write.py`(좌표는 ast.json 에서 옮김)
 
@@ -35,12 +35,12 @@
 | B14 | if at 535:3 | `if err != nil {` | 무편집 |
 | B15 | if at 539:2 | `if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {` | 무편집 |
 | B16 | if at 542:2 | `if err := attest.Save(path, attestation); err != nil {` | 무편집 |
-| B17 | range at 555:2 | `for _, p := range attestation.SupervisedBy {` | 무편집 |
-| B18 | if at 557:3 | `if market == "" {` | 무편집 |
-| B19 | if at 565:2 | `if len(missing) > 0 {` | 무편집 |
-| B20 | range at 568:3 | `for _, e := range missing {` | 무편집 |
+| B17 | range at 554:2 | `for _, p := range attestation.SupervisedBy {` | 무편집 |
+| B18 | if at 556:3 | `if market == "" {` | 무편집 |
+| B19 | if at 564:2 | `if len(missing) > 0 {` | 무편집 |
+| B20 | range at 567:3 | `for _, e := range missing {` | 무편집 |
 
-Exact AST return positions: 481:4, 485:4, 508:3, 522:3, 528:3, 536:4, 540:3, 543:3, 571:3, 581:2
+Exact AST return positions: 481:4, 485:4, 508:3, 522:3, 528:3, 536:4, 540:3, 543:3, 570:3, 580:2
 
 ## Calls and live bindings
 

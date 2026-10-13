@@ -1,15 +1,15 @@
 # Branch Test Map: `NewLogger`
 
-- Source: `internal/obs/log.go` (98-131) — 편집 전(base)
+- Source: `internal/obs/log.go` (99-135) — 편집 뒤
 
 | Branch | Anchor | Scenario | Test | a131 |
 |---|---|---|---|---|
-| B1 | if at 100:2 | `if w == nil {` | a131 무편집 분기 — 패키지 기존 시험 전체(`go test` 영수증 analysis/verify) | 무편집 |
-| B2 | if at 104:2 | `if clk == nil {` | a131 무편집 분기 — 패키지 기존 시험 전체(`go test` 영수증 analysis/verify) | 무편집 |
-| B3 | if at 114:4 | `if len(groups) == 0 && a.Key == slog.TimeKey {` | a131 무편집 분기 — 패키지 기존 시험 전체(`go test` 영수증 analysis/verify) | 무편집 |
-| B4 | if at 122:2 | `if opts.JSON {` | a131 무편집 분기 — 패키지 기존 시험 전체(`go test` 영수증 analysis/verify) | 무편집 |
-| B5 | else at 124:9 | `} else {` | a131 무편집 분기 — 패키지 기존 시험 전체(`go test` 영수증 analysis/verify) | 무편집 |
-| B6 | if at 127:2 | `if len(opts.Base) > 0 {` | `TestA131EngineLoggerDropsAccountAndScrubsValues` · `TestA131BaseAttrsAreScrubbed` | 편집 영향 |
+| B1 | if at 101:2 | `if w == nil {` | a131 무편집 분기 — 패키지 기존 시험 전체(`go test` 영수증 analysis/verify) | 무편집 |
+| B2 | if at 105:2 | `if clk == nil {` | a131 무편집 분기 — 패키지 기존 시험 전체(`go test` 영수증 analysis/verify) | 무편집 |
+| B3 | if at 115:4 | `if len(groups) == 0 && a.Key == slog.TimeKey {` | a131 무편집 분기 — 패키지 기존 시험 전체(`go test` 영수증 analysis/verify) | 무편집 |
+| B4 | if at 123:2 | `if opts.JSON {` | a131 무편집 분기 — 패키지 기존 시험 전체(`go test` 영수증 analysis/verify) | 무편집 |
+| B5 | else at 125:9 | `} else {` | a131 무편집 분기 — 패키지 기존 시험 전체(`go test` 영수증 analysis/verify) | 무편집 |
+| B6 | if at 131:2 | `if len(opts.Base) > 0 {` | `TestA131EngineLoggerDropsAccountAndScrubsValues` · `TestA131BaseAttrsAreScrubbed` | 편집 영향 |
 
 ## a131 시험
 

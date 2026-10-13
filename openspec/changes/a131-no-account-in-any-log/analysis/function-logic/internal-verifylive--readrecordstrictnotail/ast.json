@@ -1,6 +1,6 @@
 {
   "file": "internal/verifylive/reconcile_record.go",
-  "source_sha256": "38b04f1fa9e219707b8b73da8be334e0c73854bc89d0c1e66ceb6e4f53e32b58",
+  "source_sha256": "84baeb1173ccb0d7bf193383d79815823102d52d377d2988a411957962350987",
   "package": "verifylive",
   "function": "readRecordStrictNoTail",
   "signature": "readRecordStrictNoTail(params=1, results=3)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 40,
+    "line": 44,
     "column": 2
   },
   "branches": [
@@ -26,6 +26,14 @@
       "kind": "if",
       "at": {
         "line": 36,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 40,
         "column": 2
       }
     }
@@ -48,7 +56,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 39,
+        "line": 41,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 43,
         "column": 2
       }
     }
@@ -85,6 +100,30 @@
         "column": 18
       },
       "text": "decodeRecordStrict"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 12
+      },
+      "text": "openRecordEntries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 20
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 52
+      },
+      "text": "err.Error"
     }
   ],
   "assignments": [
@@ -100,6 +139,13 @@
       "at": {
         "line": 35,
         "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 40,
+        "column": 5
       }
     }
   ],

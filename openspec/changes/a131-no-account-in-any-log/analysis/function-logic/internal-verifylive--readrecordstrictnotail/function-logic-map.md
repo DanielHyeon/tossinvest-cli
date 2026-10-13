@@ -1,8 +1,8 @@
 # Function Logic Map: `readRecordStrictNoTail`
 
-- Source: `internal/verifylive/reconcile_record.go` (30-40)
+- Source: `internal/verifylive/reconcile_record.go` (30-44)
 - Qualified: `readRecordStrictNoTail`
-- AST evidence: `ast.json` (편집 전(base), `source_sha256` 38b04f1fa9e21970…) — AST branches 2 · returns 3
+- AST evidence: `ast.json` (편집 뒤, `source_sha256` 84baeb1173ccb0d7…) — AST branches 3 · returns 4
 - Risk scan: `risk-pattern-report.md`
 - 작성기: `analysis/harness/flm_write.py`(좌표는 ast.json 에서 옮김)
 
@@ -20,8 +20,9 @@
 |---|---|---|---|
 | B1 | if at 32:2 | `if err != nil {` | 무편집 |
 | B2 | if at 36:2 | `if err != nil {` | 무편집 |
+| B3 | if at 40:2 | `if err := openRecordEntries(entries, path); err != nil {` | 편집 영향 |
 
-Exact AST return positions: 33:3, 37:3, 39:2
+Exact AST return positions: 33:3, 37:3, 41:3, 43:2
 
 ## Calls and live bindings
 
@@ -33,7 +34,7 @@ Exact AST return positions: 33:3, 37:3, 39:2
 
 ## State mutations and fallbacks
 
-- a131: 해독한 항목의 계좌를 연다. **원본 바이트(raw)는 바꾸지 않는다** — 지문 대조 불변.
+- a131: 해독한 항목의 계좌를 엶 — 열 수 없으면 refuse(RefuseRecordUndecodable). **원본 바이트(raw)는 바꾸지 않음** — 지문 대조 불변.
 
 ## Safety conclusion
 

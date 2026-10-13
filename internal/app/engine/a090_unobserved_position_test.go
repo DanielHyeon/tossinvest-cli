@@ -25,6 +25,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/redact"
 )
 
 // --- 고정물 ---------------------------------------------------------------------
@@ -258,7 +259,7 @@ func TestA090R1AZeroQuoteSiblingIsCountedAndLoggedAtNormalGrade(t *testing.T) {
 	if len(lines) != 1 {
 		t.Fatalf("unobserved log lines = %d (%v), want the streak's start line", len(lines), lines)
 	}
-	if lines[0]["position_id"] != target.ID || lines[0]["cause"] != "no_quote" ||
+	if lines[0]["position_id"] != redact.String(target.ID) || lines[0]["cause"] != "no_quote" ||
 		lines[0]["severity"] != string(obs.SeverityNormal) {
 		t.Fatalf("start line = %v, want position %s cause no_quote at normal grade", lines[0], target.ID)
 	}
@@ -277,7 +278,7 @@ func TestA090R2AnAbsentSiblingIsCountedLikeAZeroQuote(t *testing.T) {
 		t.Fatalf("cycle = %+v, want judged 1 · unobserved 1", cycle)
 	}
 	lines := f.lines()
-	if len(lines) != 1 || lines[0]["position_id"] != target.ID || lines[0]["cause"] != "no_quote" {
+	if len(lines) != 1 || lines[0]["position_id"] != redact.String(target.ID) || lines[0]["cause"] != "no_quote" {
 		t.Fatalf("start lines = %v", lines)
 	}
 	// 매 주기 반복하지 않음.
@@ -753,7 +754,7 @@ func TestA090R4AJudgementEndsTheStreakWithOneReleaseLine(t *testing.T) {
 		t.Fatalf("lines = %v, want start + release", lines)
 	}
 	release := lines[1]
-	if release["position_id"] != target.ID {
+	if release["position_id"] != redact.String(target.ID) {
 		t.Fatalf("release = %v", release)
 	}
 	if secs, ok := release["unobserved_seconds"].(float64); !ok || secs < 15 {
@@ -826,7 +827,7 @@ func TestA090R7AQuoteThatExpiredMidCycleIsCountedAsExpired(t *testing.T) {
 		t.Fatalf("cycle = %+v, want first judged and later unobserved", cycle)
 	}
 	lines := f.lines()
-	if len(lines) != 1 || lines[0]["position_id"] != later.ID || lines[0]["cause"] != "quote_expired" {
+	if len(lines) != 1 || lines[0]["position_id"] != redact.String(later.ID) || lines[0]["cause"] != "quote_expired" {
 		t.Fatalf("lines = %v, want later's start with cause quote_expired", lines)
 	}
 	if len(f.outageRows()) != 0 {

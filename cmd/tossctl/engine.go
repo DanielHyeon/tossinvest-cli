@@ -67,6 +67,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/redact"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/runlock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc"
 	"github.com/spf13/cobra"
@@ -165,6 +166,9 @@ raises exposure. Reduce-only exits remain available.`),
 		Annotations:  map[string]string{"source": "official", "mutating": "true"},
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			// a131: 이 프로세스의 stdout/stderr 가 engine.log 임 — 엔진 로거·직접 출력이 모두 계좌 규칙을 지남.
+			cmd.SetOut(redact.Writer(cmd.OutOrStdout()))
+			cmd.SetErr(redact.Writer(cmd.ErrOrStderr()))
 			return runEngineRun(cmd, root)
 		},
 	}

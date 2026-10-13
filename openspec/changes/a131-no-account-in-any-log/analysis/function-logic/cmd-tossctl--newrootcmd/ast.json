@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/root.go",
-  "source_sha256": "06cc29024979e0a29489fd397a8fe33a2741a218105b5fe7a7028e8a182e3c72",
+  "source_sha256": "6146622f5e142a62e6e58ec1117c534dda57d19ea1de9995f82cba8ebbd94ce9",
   "package": "main",
   "function": "newRootCmd",
   "signature": "newRootCmd(params=0, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 198,
+    "line": 202,
     "column": 2
   },
   "branches": [
@@ -88,7 +88,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 197,
+        "line": 201,
         "column": 2
       }
     }
@@ -669,6 +669,14 @@
         "column": 3
       },
       "text": "newPerformanceCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 3
+      },
+      "text": "newScrubAccountRecordsCmd"
     }
   ],
   "assignments": [

@@ -4,11 +4,14 @@ package verifylive
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/redact"
 )
 
 // --- 선택 -------------------------------------------------------------------------
@@ -219,8 +222,13 @@ func TestReconcileLineMatchesTheDesignShape(t *testing.T) {
 	if line["step_id"] != string(StepReconcile) {
 		t.Fatalf("step_id %v, want %q", line["step_id"], StepReconcile)
 	}
-	if line["account_ref"] != rcMask() {
-		t.Fatalf("account_ref %v, want the record's mask %q", line["account_ref"], rcMask())
+	// a131: 계좌(마스크)는 봉인되어 줄에 평문으로 없고, 이 기록의 키로 열면 기록의 마스크임.
+	if _, plain := line["account_ref"]; plain {
+		t.Fatalf("account_ref %v is in the clear; a131 seals it", line["account_ref"])
+	}
+	sealed, _ := line["account_ref_sealed"].(string)
+	if got, ok := redact.OpenAccount(sealed, filepath.Dir(h.path)); !ok || got != rcMask() {
+		t.Fatalf("sealed account opens to %q (%v), want the record's mask %q", got, ok, rcMask())
 	}
 	if v, ok := line["verdict"]; ok && v != "" {
 		t.Fatalf("verdict %v: a reconcile line is not a verdict", v)
@@ -281,6 +289,9 @@ func TestReconcileLineMatchesTheDesignShape(t *testing.T) {
 	for k := range hand {
 		if k == "run_id" || k == "process" || k == "title" || k == "started_at" || k == "finished_at" {
 			continue
+		}
+		if k == "account_ref" {
+			k = "account_ref_sealed" // a131: 손으로 만든 줄은 옛 평문 모양(읽기 호환), 실제 줄은 봉인
 		}
 		if _, ok := line[k]; !ok && k != "verdict" {
 			t.Fatalf("real line lacks %q that the projection tests assume", k)
@@ -344,7 +355,7 @@ func TestReconcileBasisDigestIsVersionedDomainTaggedAndOrderIndependent(t *testi
 // TestReconcileRefusesANewerRecordFormat 는 spec 「unsupported record schema SHALL fail closed」 다 — format_version 2
 // 줄이 꼬리든 중간이든 해독 가능한 JSON 이어도 이 빌드가 이해하는 형식이 아니므로 거절(LoadEntries 의 errUnknownFormat 과 같은 판정).
 func TestReconcileRefusesANewerRecordFormat(t *testing.T) {
-	newer := `{"format_version":2,"kind":"step","step_id":"costs","verdict":"skipped"}` + "\n"
+	newer := fmt.Sprintf(`{"format_version":%d,"kind":"step","step_id":"costs","verdict":"skipped"}`, RecordFormatVersion+1) + "\n"
 	for name, write := range map[string]func(h *rcHarness){
 		"tail": func(h *rcHarness) {
 			rcWriteEntries(t, h.path, rcA063Entries())

@@ -1,8 +1,8 @@
 # Function Logic Map: `Recorder.Append`
 
-- Source: `internal/soak/record.go` (187-212)
+- Source: `internal/soak/record.go` (201-235)
 - Qualified: `Recorder.Append`
-- AST evidence: `ast.json` (편집 전(base), `source_sha256` 583ceb9012f979bd…) — AST branches 6 · returns 5
+- AST evidence: `ast.json` (편집 뒤, `source_sha256` 9cd4b2d86043c177…) — AST branches 8 · returns 7
 - Risk scan: `risk-pattern-report.md`
 - 작성기: `analysis/harness/flm_write.py`(좌표는 ast.json 에서 옮김)
 
@@ -19,14 +19,16 @@
 
 | Branch | AST kind | Source line | a131 |
 |---|---|---|---|
-| B1 | if at 188:2 | `if c.FormatVersion == 0 {` | 무편집 |
-| B2 | if at 191:2 | `if c.Kind == "" {` | 무편집 |
-| B3 | if at 195:2 | `if err != nil {` | 편집 영향 |
-| B4 | if at 202:2 | `if r.f == nil {` | 무편집 |
-| B5 | if at 205:2 | `if _, err := r.f.Write(line); err != nil {` | 무편집 |
-| B6 | if at 208:2 | `if err := r.f.Sync(); err != nil {` | 무편집 |
+| B1 | if at 202:2 | `if c.FormatVersion == 0 {` | 무편집 |
+| B2 | if at 205:2 | `if c.Kind == "" {` | 무편집 |
+| B3 | if at 209:2 | `if err != nil {` | 무편집 |
+| B4 | if at 214:2 | `if err != nil {` | 편집 영향 |
+| B5 | if at 221:2 | `if r.f == nil {` | 무편집 |
+| B6 | if at 225:2 | `if err := reopenIfReplaced(r); err != nil {` | 편집 영향 |
+| B7 | if at 228:2 | `if _, err := r.f.Write(line); err != nil {` | 무편집 |
+| B8 | if at 231:2 | `if err := r.f.Sync(); err != nil {` | 무편집 |
 
-Exact AST return positions: 196:3, 203:3, 206:3, 209:3, 211:2
+Exact AST return positions: 210:3, 215:3, 222:3, 226:3, 229:3, 232:3, 234:2
 
 ## Calls and live bindings
 
@@ -38,9 +40,9 @@ Exact AST return positions: 196:3, 203:3, 206:3, 209:3, 211:2
 
 ## State mutations and fallbacks
 
-- 파일 끝에 한 줄. a131: 직렬화 직후 봉인 — 기록 줄에 계좌 원문 없음.
+- 파일 끝에 한 줄. a131: 직렬화 직후 메모리 키로 봉인(redact.SealRecordLineWithKey) · 쓰기 전 경로와 fd 의 inode 대조, 다르면 다시 엶(R-4a).
 
 ## Safety conclusion
 
-- Safe edit boundary: B3(직렬화 오류) 뒤 봉인 호출과 그 오류 반환 하나 추가. 잠금·쓰기·동기화 무편집.
+- Safe edit boundary: B3 뒤 봉인 호출·오류 반환, B4 뒤 inode 대조·재열기. 쓰기·동기화 무편집.
 - High-risk impact: yes(간접) — 인터록 증거 기록. 봉인/열기 왕복으로 결속 값 불변.

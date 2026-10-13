@@ -1,6 +1,6 @@
 # Branch Test Map: `runSoakAttest`
 
-- Source: `cmd/tossctl/soak.go` (476-582) — 편집 전(base)
+- Source: `cmd/tossctl/soak.go` (476-581) — 편집 뒤
 
 | Branch | Anchor | Scenario | Test | a131 |
 |---|---|---|---|---|
@@ -20,10 +20,10 @@
 | B14 | if at 535:3 | `if err != nil {` | a131 무편집 분기 — `go test ./cmd/tossctl/` 전체 | 무편집 |
 | B15 | if at 539:2 | `if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {` | a131 무편집 분기 — `go test ./cmd/tossctl/` 전체 | 무편집 |
 | B16 | if at 542:2 | `if err := attest.Save(path, attestation); err != nil {` | a131 무편집 분기 — `go test ./cmd/tossctl/` 전체 | 무편집 |
-| B17 | range at 555:2 | `for _, p := range attestation.SupervisedBy {` | a131 무편집 분기 — `go test ./cmd/tossctl/` 전체 | 무편집 |
-| B18 | if at 557:3 | `if market == "" {` | a131 무편집 분기 — `go test ./cmd/tossctl/` 전체 | 무편집 |
-| B19 | if at 565:2 | `if len(missing) > 0 {` | a131 무편집 분기 — `go test ./cmd/tossctl/` 전체 | 무편집 |
-| B20 | range at 568:3 | `for _, e := range missing {` | a131 무편집 분기 — `go test ./cmd/tossctl/` 전체 | 무편집 |
+| B17 | range at 554:2 | `for _, p := range attestation.SupervisedBy {` | a131 무편집 분기 — `go test ./cmd/tossctl/` 전체 | 무편집 |
+| B18 | if at 556:3 | `if market == "" {` | a131 무편집 분기 — `go test ./cmd/tossctl/` 전체 | 무편집 |
+| B19 | if at 564:2 | `if len(missing) > 0 {` | a131 무편집 분기 — `go test ./cmd/tossctl/` 전체 | 무편집 |
+| B20 | range at 567:3 | `for _, e := range missing {` | a131 무편집 분기 — `go test ./cmd/tossctl/` 전체 | 무편집 |
 
 ## a131 시험
 

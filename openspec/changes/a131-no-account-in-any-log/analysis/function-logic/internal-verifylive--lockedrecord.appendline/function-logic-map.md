@@ -1,8 +1,8 @@
 # Function Logic Map: `lockedRecord.appendLine`
 
-- Source: `internal/verifylive/record.go` (425-451)
+- Source: `internal/verifylive/record.go` (467-501)
 - Qualified: `lockedRecord.appendLine`
-- AST evidence: `ast.json` (편집 전(base), `source_sha256` 9b44a5d8afd7a4dc…) — AST branches 7 · returns 8
+- AST evidence: `ast.json` (편집 뒤, `source_sha256` 9a289d21048578d8…) — AST branches 9 · returns 10
 - Risk scan: `risk-pattern-report.md`
 - 작성기: `analysis/harness/flm_write.py`(좌표는 ast.json 에서 옮김)
 
@@ -19,15 +19,17 @@
 
 | Branch | AST kind | Source line | a131 |
 |---|---|---|---|
-| B1 | if at 426:2 | `if len(line) == 0 \|\| line[len(line)-1] != '\n' {` | 무편집 |
-| B2 | if at 430:2 | `if err != nil {` | 무편집 |
-| B3 | if at 433:2 | `if st.Size() != judged {` | 무편집 |
-| B4 | if at 437:2 | `if err != nil \|\| n != len(line) {` | 무편집 |
-| B5 | if at 440:2 | `if err := recordSync(l.f); err != nil {` | 무편집 |
-| B6 | if at 444:2 | `if _, err := l.f.ReadAt(back, judged); err != nil && !errors.Is(err, io.EOF) {` | 무편집 |
-| B7 | if at 447:2 | `if !bytes.Equal(back, line) {` | 무편집 |
+| B1 | if at 468:2 | `if len(line) == 0 \|\| line[len(line)-1] != '\n' {` | 무편집 |
+| B2 | if at 473:2 | `if err != nil {` | 편집 영향 |
+| B3 | if at 476:2 | `if line, err = redact.SealRecordLine(line, key); err != nil {` | 편집 영향 |
+| B4 | if at 480:2 | `if err != nil {` | 무편집 |
+| B5 | if at 483:2 | `if st.Size() != judged {` | 무편집 |
+| B6 | if at 487:2 | `if err != nil \|\| n != len(line) {` | 무편집 |
+| B7 | if at 490:2 | `if err := recordSync(l.f); err != nil {` | 무편집 |
+| B8 | if at 494:2 | `if _, err := l.f.ReadAt(back, judged); err != nil && !errors.Is(err, io.EOF) {` | 무편집 |
+| B9 | if at 497:2 | `if !bytes.Equal(back, line) {` | 무편집 |
 
-Exact AST return positions: 427:3, 431:3, 434:3, 438:3, 441:3, 445:3, 448:3, 450:2
+Exact AST return positions: 469:3, 474:3, 477:3, 481:3, 484:3, 488:3, 491:3, 495:3, 498:3, 500:2
 
 ## Calls and live bindings
 

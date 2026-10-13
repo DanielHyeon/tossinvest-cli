@@ -5,11 +5,14 @@
 // 들어가는 자리를 셈. 존재가 아니라 역할(싱크 인자인가)로 셈.
 //
 // 싱크 분류:
-//   obs     — obs.Logger 의 Event/Warn/Error/OrderTransition/Reconcile/With 및 o.log/logErr 류 래퍼 호출,
-//             그리고 map 리터럴 키가 obs.FieldAccount 인 자리(알림 Fields → 로그 줄)
-//   errtext — fmt.Errorf / fmt.Sprintf / errors.New 로 문자열에 계좌를 넣는 자리(어느 싱크로든 흘러갈 수 있음)
-//   print   — fmt.Fprintf/Fprintln/Printf 로 쓰기 대상에 계좌를 직접 쓰는 자리
-//   record  — json 태그가 계좌를 뜻하는 구조체 필드(기록 파일 직렬화)
+//
+//	obs     — obs.Logger 의 Event/Warn/Error/OrderTransition/Reconcile/With 및 o.log/logErr 류 래퍼 호출,
+//	          그리고 map 리터럴 키가 obs.FieldAccount 인 자리(알림 Fields → 로그 줄)
+//	errtext — fmt.Errorf / fmt.Sprintf / errors.New 로 문자열에 계좌를 넣는 자리(어느 싱크로든 흘러갈 수 있음)
+//	print   — fmt.Fprintf/Fprintln/Printf 로 쓰기 대상에 계좌를 직접 쓰는 자리
+//	record  — json 태그가 계좌를 뜻하는 구조체 필드(기록 파일 직렬화)
+//
+// 판별은 이름 정규식 + 싱크 호출 인자 위치다(역할 판정이 아님 — a131 리뷰 R-6). 2판: DisplayName 추가 · 클로저 포함.
 //
 // 사용: go run account_census.go <repo-root>
 package main
@@ -26,9 +29,13 @@ import (
 	"strings"
 )
 
-var accountName = regexp.MustCompile(`(?i)^(account|accountref|accountno|accountnumber|accountseq|accountmask|maskedaccount|currentref|recordmask|currentmask)$`)
+var accountName = regexp.MustCompile(`(?i)^(account|accountref|accountno|accountnumber|accountseq|accountmask|maskedaccount|currentref|recordmask|currentmask|displayname)$`)
 
-type hit struct{ file, kind, fn string; line int; text string }
+type hit struct {
+	file, kind, fn string
+	line           int
+	text           string
+}
 
 func main() {
 	root := os.Args[1]
@@ -139,8 +146,6 @@ func carriesAccount(e ast.Expr) bool {
 			if accountName.MatchString(x.Name) {
 				found = true
 			}
-		case *ast.FuncLit:
-			return false
 		}
 		return !found
 	})

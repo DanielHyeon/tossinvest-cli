@@ -1,8 +1,8 @@
 # Function Logic Map: `newRootCmd`
 
-- Source: `cmd/tossctl/root.go` (52-198)
+- Source: `cmd/tossctl/root.go` (52-202)
 - Qualified: `newRootCmd`
-- AST evidence: `ast.json` (편집 전(base), `source_sha256` 06cc29024979e0a2…) — AST branches 7 · returns 3
+- AST evidence: `ast.json` (편집 뒤, `source_sha256` 6146622f5e142a62…) — AST branches 7 · returns 3
 - Risk scan: `risk-pattern-report.md`
 - 작성기: `analysis/harness/flm_write.py`(좌표는 ast.json 에서 옮김)
 
@@ -26,7 +26,7 @@
 | B6 | if at 88:6 | `if creds, err := official.LoadCredentials(os.Getenv, credFile); err == nil && creds != nil {` | 무편집 |
 | B7 | if at 96:5 | `if shouldHintOnboarding(state, tui.IsInteractive(os.Stdin, os.Stdout), cmd.Name()) {` | 무편집 |
 
-Exact AST return positions: 63:5, 101:4, 197:2
+Exact AST return positions: 63:5, 101:4, 201:2
 
 ## Calls and live bindings
 
