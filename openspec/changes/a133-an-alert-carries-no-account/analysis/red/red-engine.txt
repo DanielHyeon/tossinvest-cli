@@ -1,0 +1,26 @@
+--- FAIL: TestA133TheDelivererRedeliversWithoutTheAccount (0.56s)
+    a133_redelivery_carries_no_account_internal_test.go:96: request 0 leaked "987-65-A133ENGSENTINEL":
+        /tossos-a133engine
+        attempt for account 98765432134 (*******2134) position pos-aabbccddeeff001122334455
+        Tags: execgw.order_unresolved
+        Title: UNRESOLVED_IN_DOUBT 987-65-A133ENGSENTINEL
+        Accept-Encoding: gzip
+        User-Agent: Go-http-client/1.1
+        Content-Length: 83
+        Content-Type: text/plain; charset=utf-8
+        Priority: 5
+--- FAIL: TestA133TheDelivererStillLatchesOnRefusal (0.63s)
+    a133_redelivery_carries_no_account_internal_test.go:110: request 0 leaked "987-65-A133ENGSENTINEL":
+        /tossos-a133engine
+        attempt for account 98765432134 (*******2134) position pos-aabbccddeeff001122334455
+        Title: UNRESOLVED_IN_DOUBT 987-65-A133ENGSENTINEL
+        Accept-Encoding: gzip
+        User-Agent: Go-http-client/1.1
+        Content-Length: 83
+        Content-Type: text/plain; charset=utf-8
+        Priority: 5
+        Tags: execgw.order_unresolved
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	1.207s
+FAIL
+rc=1

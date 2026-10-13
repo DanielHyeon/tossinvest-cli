@@ -1,15 +1,15 @@
 {
   "file": "internal/obs/notifier.go",
-  "source_sha256": "408579d5040890724062fa007c4ec36ee882c673c1eeb5aa3c09d6684a322a1b",
+  "source_sha256": "780cd20d29ecbc3d20a1e76d876449db3c6195f5df1332e1a8d4505b140f02fd",
   "package": "obs",
   "function": "renderFields",
   "signature": "renderFields(params=1, results=1)",
   "start": {
-    "line": 1028,
+    "line": 1029,
     "column": 1
   },
   "end": {
-    "line": 1040,
+    "line": 1046,
     "column": 2
   },
   "branches": [
@@ -17,15 +17,23 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 1030,
+        "line": 1031,
         "column": 2
       }
     },
     {
       "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1034,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
       "kind": "range",
       "at": {
-        "line": 1036,
+        "line": 1042,
         "column": 2
       }
     }
@@ -34,7 +42,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 1039,
+        "line": 1045,
         "column": 2
       }
     }
@@ -43,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1029,
+        "line": 1030,
         "column": 10
       },
       "text": "make"
@@ -51,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1029,
+        "line": 1030,
         "column": 28
       },
       "text": "len"
@@ -59,7 +67,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 1031,
+        "line": 1034,
+        "column": 6
+      },
+      "text": "redact.IsAccountKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1037,
         "column": 10
       },
       "text": "append"
@@ -67,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1033,
+        "line": 1039,
         "column": 2
       },
       "text": "sortStrings"
@@ -75,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1037,
+        "line": 1043,
         "column": 3
       },
       "text": "fmt.Fprintf"
@@ -83,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1039,
+        "line": 1045,
         "column": 9
       },
       "text": "strings.TrimRight"
@@ -91,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1039,
+        "line": 1045,
         "column": 27
       },
       "text": "b.String"
@@ -101,14 +117,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 1029,
+        "line": 1030,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 1031,
+        "line": 1037,
         "column": 3
       }
     }

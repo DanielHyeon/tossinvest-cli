@@ -1,8 +1,8 @@
 # Function Logic Map: `renderFields`
 
-- Source: `internal/obs/notifier.go` (1028-1040, base)
+- Source: `internal/obs/notifier.go` (1029-1046, 편집 뒤 — base 1028-1040)
 - Qualified: `renderFields`
-- AST evidence: `ast.json` (편집 전, `source_sha256` 408579d504089072…) — AST branches 2 · returns 1
+- AST evidence: `ast.json` (편집 뒤 재추출, `source_sha256` 780cd20d29ecbc3d… · 편집 전 408579d504089072…) — AST branches 3(편집 전 2) · returns 1
 - Risk scan: `risk-pattern-report.md`
 
 **역할.** 알림 문맥 필드(`Event.Fields`)를 키 순서대로 `k: v` 줄로 만들어 알림 본문 끝에 붙일 문자열을 돌려줌. 호출자 1(`notificationFor`, CodeGraph) —
@@ -18,10 +18,11 @@
 
 | Branch | AST kind | Source line | a133 |
 |---|---|---|---|
-| B1 | range at 1030:2 | `for k := range fields {` (키 모으기) | 편집 — `redact.IsAccountKey(k)` 이면 건너뜀(새 if) |
-| B2 | range at 1036:2 | `for _, k := range keys {` (쓰기) | 무편집 — 계좌 키는 이미 빠짐 |
+| B1 | range at 1031:2 | `for k := range fields {` (키 모으기) | 편집 영향 — 안에 B2 |
+| B2 | if at 1034:3 | `if redact.IsAccountKey(k) {` → `continue` | **신설**(a133) |
+| B3 | range at 1042:2 | `for _, k := range keys {` (쓰기) | 무편집 — 편집 전 B2(옛 ID), 새 if 가 앞에 끼어 번호가 하나 밀림 |
 
-Exact AST return positions: 1039:2
+Exact AST return positions(편집 뒤): 1045:2
 
 ## Calls and live bindings
 

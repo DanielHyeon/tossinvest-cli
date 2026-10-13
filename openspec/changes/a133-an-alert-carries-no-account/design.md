@@ -17,6 +17,7 @@ a131 D0 과 같다: 등록된 계좌 원문 · 등록 숫자열 꼴(8자리 이�
 (`rg 'func \([^)]*\) Publish\('` — 다른 하나 `httpapi.(*Stream).Publish` 는 로컬 SSE 스트림이고 시그니처가 다르다). 생산 구성 자리는 둘:
 `engine.resolveNotificationPublisher`(`notifications.go:101`, 엔진 프로세스의 유일한 전송 수단) · `publishNotificationTest`(`notificationsettings.go:151`, 콘솔 「알림 테스트」 버튼).
 알림이 아닌 외부 호출(브로커 API · 갱신 확인 · 릴리스 · 모니터 프로브 · push 수신)은 사건 내용을 싣지 않으므로 범위 밖이다.
+**httpapi SSE(범위 밖 — 리뷰 F-5).** `httpapi.(*Stream).Publish` 는 시그니처만 다른 게 아니라 역할이 다르다: 모바일 앱이 인증해 읽는 조회 API 의 스냅숏 푸시다(`cmd/tossctl/httpapi.go:166-195` · `:732`). 그 스냅숏에 `AccountLabel`(마스크)과 `PositionID`(`pos-…`)가 실린다(`httpapi_reader.go:184` · `:381`). 알림이 아니고 마스크 표기는 그 API 를 만든 앞선 change(a051 계열)의 표시 결정이므로 a133 은 바꾸지 않는다 — Manager 에게 후속 후보로 올린다(완료 보고).
 
 **발행 호출 자리 7** (CodeGraph `callers Publish` + CGC `analyze callers Publish` + HEAD grep 대조 — `analysis/code-context/`):
 
@@ -31,7 +32,7 @@ a131 D0 과 같다: 등록된 계좌 원문 · 등록 숫자열 꼴(8자리 이�
 | P7 | `publishNotificationTest` `notificationsettings.go:152` | 고정 문구 | 없음(고정) |
 
 일곱 모두 `Ntfy.Publish` 하나로 모인다. Tags 를 채우는 생산 자리는 0(모든 알림의 태그 = 사건 유형 하나). 요청 URL 은 `base + "/" + topic` 뿐이고
-쿼리가 없다 — 서버와 토픽은 설정값이며 토픽은 기계가 만든 무작위 값이다(a075 `NewTopic`). 헤더는 Title · Tags · Priority · Content-Type · Authorization(설정 토큰).
+쿼리가 없다 — 서버와 토픽은 설정값이며 콘솔이 만드는 토픽은 기계가 만든 무작위 값이다(a075 `NewTopic`). 환경 변수 `TOSSCTL_NTFY_TOPIC` 은 설정 토픽을 덮으며 운영자가 고른 임의 문자열일 수 있다(`notifications.go:89-92`) — URL 은 일부러 치환하지 않으므로 운영자가 고른 토픽 이름은 운영자의 책임이다(잔재, 리뷰 F-11). 헤더는 Title · Tags · Priority · Content-Type · Authorization(설정 토큰).
 
 ## D2. 치환 지점 — 전송 경계 한 곳(`Ntfy.Publish` 의 첫 문장)
 
@@ -45,8 +46,9 @@ a131 D0 과 같다: 등록된 계좌 원문 · 등록 숫자열 꼴(8자리 이�
 - 구성 자리(`resolveNotificationPublisher`)에서 감싸는 발행자를 두면 P7(콘솔이 `&obs.Ntfy{}` 를 직접 만듦)이 빠진다.
 - 토픽 · 서버 · 토큰은 치환하지 않는다 — 사건 내용이 아니라 설정이고, 바꾸면 전달이 깨진다(토픽은 비밀 경로). 시험이 「URL = 서버 + /토픽, 쿼리 없음」을 고정한다.
 
-**구조 핀(새 전송 수단 대비).** go/parser 시험이 고정한다: ① 비시험 `cmd/` · `internal/` 에서 `Publish(context.Context, Notification) error` 메서드를 가진 타입은 `Ntfy` 하나
-② `Ntfy.Publish` 의 첫 문장이 `redactForTransport` 호출이고 `http.NewRequestWithContext` 보다 앞 ③ `renderFields` 가 `redact.IsAccountKey` 를 부름.
+**구조 핀(새 전송 수단 대비).** go/parser 시험이 고정한다: ① 비시험 `cmd/` · `internal/` 에서 `Publish(context.Context, obs.Notification) error` 메서드를 가진 타입은 `Ntfy` 하나 — `obs` 를 별칭으로 import 한 꼴 포함, `obs.Notification` 의 타입 별칭 · 정의 타입은 금지
+② `Ntfy.Publish` 의 첫 문장이 `redactForTransport` 호출이고 `http.NewRequestWithContext` 보다 앞 ③ `renderFields` 가 `redact.IsAccountKey` 를 부름 ④ `redactForTransport` 가 `redact.String` 을 부름 ⑤ `internal/obs` 안에서 `net/http` 를 import 하는 파일은 `ntfy.go` 하나.
+핀의 범위(리뷰 F-2): `obs.Publisher` 를 채우는 생산 타입과 obs 패키지 안의 전송. obs 밖에서 알림 문구를 http 로 직접 보내는 코드는 핀 밖이고 spec 시나리오도 이 범위로 좁혔다. 문자열 칸 완전성(새 `Notification` 칸이 생기면 실패)은 리플렉션 시험이 잰다(리뷰 F-3).
 새 발행자를 추가하는 사람은 ①에서 실패하고, 그 발행자도 같은 함수를 부르게 고친 뒤 목록을 늘린다.
 
 ## D3. 필드 펼침에서 계좌 키 버림 — `renderFields`
@@ -78,23 +80,26 @@ a131 D0 과 같다: 등록된 계좌 원문 · 등록 숫자열 꼴(8자리 이�
    재무장뿐이고 재무장은 내용을 **새 값으로 덮는다**(`recordAlertTx` UPDATE). 따라서 옛 행의 저장 내용이 재전송될 길이 없다 — 처리할 것 없음.
    payload 계좌 4 · pos- 12 와 event_key 계좌 2 · pos- 12 는 로컬 정본에 남는다(전송 안 됨).
 
+**기각한 다른 안(리뷰 F-6).** ①을 저장 시점이 아니라 경계 설계 안에서 읽기 전용으로 닫는 길도 있다 — 기동 때 원장에 있는 모든 `account_ref`(포지션 · intent · 운영 모드)를 `redact.Register` 한다(원장 쓰기 · High-risk 편집 없음). Manager 결정으로 채택하지 않았고(YAGNI — PENDING 0 · 드문 사람 작업), 필요해지면 이것이 후속 안이다.
+
 **잔재(명명).** ① 경계의 원문 · 숫자열 규칙은 **등록된** 계좌만 안다. 엔진은 계좌 해석(`Build` 1단계 `resolveAccountRef` → `accountsLocked` → `redact.Register`)이
 원장 열기와 전달기 구성보다 앞이라 같은 프로세스의 알림은 덮인다. 그러나 자격 증명을 **다른 계좌**로 바꾼 뒤 재시작했고 옛 계좌의 PENDING 행이 본문에 옛 계좌 원문을
 담고 있으면, 새 프로세스는 옛 계좌를 등록하지 않았으므로 그 원문이 나간다(마스크 꼴 · 유도 id 는 등록 없이 덮임). 실측 PENDING 0 · 본문 계좌 0 이고, 저장 시점
-치환으로 막으려면 2 의 원장 편집이 필요하다 — Manager 판단. ② 브로커 응답 본문이 감싼 오류 문구에 등록 전 계좌가 실리는 경우(a131 잔재 ①)와 같다.
+치환으로 막으려면 2 의 원장 편집이 필요하다. **Manager 결정(2026-10-13): 잔재로 수용** — 지금 PENDING 0 이고 계좌 자격 증명 교체는 드문 사람 작업이다. 코드로 막지 않고(YAGNI) 운영 절차 한 줄로 둔다: 「계좌 자격 증명을 바꾸기 전에 `alert_outbox` 의 PENDING 이 0 인지 확인하고, 아니면 먼저 전달 · 정리한다」(배포 절 · tasks 게이트 뒤 절차). ② 브로커 응답 본문이 감싼 오류 문구에 등록 전 계좌가 실리는 경우(a131 잔재 ①)와 같다.
 
 ## D5. 운영 의미 · 전달 판정 · 손절 즉시성 불변
 
 - `Ntfy.Publish` 의 분기 B1~B9(AST)는 그대로다 — 치환은 B1 앞 대입 한 문장이고 오류를 만들지 않는다. 같은 서버 응답에 같은 오류 · nil 을 돌려주므로
   outbox 정산(`MarkAlertDelivered` · `MarkAlertAttemptFailed`) · 시도 수 · a124 한도(3) 판정 · 진입 래치 · 모드 승격 · 임차 · 승인 해제의 입력이 같다.
 - `renderFields` 는 반환 문자열에서 계좌 키 줄만 빠진다. 호출자 `notificationFor` 의 분기(필드 유무)는 바뀌지 않는다. `eventKey`(중복 제거)는 `renderFields` 를 쓰지 않는다.
-- 잠금: 치환은 `Ntfy.Publish` 안 — 모든 호출자에서 알림기 뮤텍스 밖(a092 단위 ③ · a124 D7)이다. 기록 전용 입구(`RecordCritical` · `RecordOperatingMode`, a092)는
-  전송이 없어 무관하다. 청산 · 손절 경로는 이 함수를 기다리지 않는다.
+- 잠금: 치환은 `Ntfy.Publish` 안 — 모든 호출자에서 알림기 뮤텍스 밖(a092 단위 ③ · a124 D7)이다.
+- 청산 · 손절을 늦추지 않는 근거는 치환의 위치가 아니라 a092 구조다(리뷰 F-7 정정): exit 루프는 기록 전용 입구(`RecordCritical` · `RecordOperatingMode` — 전송 없음)와 일반 등급 이관(`NormalRelay` — 별도 실행자)만 쓰고, 동기 `Notify` 의 P1(`publishBestEffort`)은 그것을 부른 쪽에서 돌지만 exit 경로가 아니다. 치환은 이미 네트워크 왕복을 하는 호출에 CPU 몇 마이크로초를 더할 뿐이다.
+- 분기 불변의 근거(리뷰 F-8): `redact.String("") == ""` 이고 치환 결과는 비지 않으므로(대체 문자열이 비어 있지 않음) B5(`title != ""`)의 참 · 거짓이 같다. 대체 문자열 `[account]` · `pos-[redacted]` 는 ASCII 이고 제어 문자가 없어 Title 헤더가 무효가 되지 않는다(B4 요청 구성 실패 경로 불변). 등록 참조가 9자보다 짧으면 본문이 길어질 수 있으나 생산 계좌는 11자리이고 길이는 판정 입력이 아니다.
 - 비용: 알림 하나당 문자열 넷 정도의 정규식 치환 — 네트워크 왕복(기본 시한 수 초)에 비해 무시할 수 있다.
 
 ## D6. 시험 전략
 
-센티널: 등록 원문 `987-65-SENTINEL` · 등록 숫자열 `98765432107` · 그 마스크 `*******2107` · 유도 id `pos-<24 hex>` · `mode-<24 hex>` ·
+센티널(리뷰 F-4 반영 — 계좌 키 필드 다섯 모두 **등록 안 된** 값이라 값 치환이 필드 버림 누락을 가리지 못함): 등록 원문 `987-65-SENTINEL` · 등록 숫자열 `98765432107` · 그 마스크 `*******2107` · 유도 id `pos-<24 hex>` · `mode-<24 hex>` ·
 등록 안 된 계좌 값(필드 버림 전용) `UNREGISTERED-ACCT-77`.
 
 1. **경계(obs, httptest ntfy):** `Ntfy.Publish` 에 센티널을 Title · Body · Tags · Type 에 심고 서버가 받은 본문 · 모든 헤더 값 · URL 에 없음. URL 은 `/<topic>` 이고 쿼리 없음.
@@ -107,7 +112,8 @@ a131 D0 과 같다: 등록된 계좌 원문 · 등록 숫자열 꼴(8자리 이�
 5. 기존 시험 전부 green(`internal/obs` · `internal/app/engine` · `cmd/tossctl` · `internal/redact` · `internal/flatten`). 기대값을 바꾼 기존 시험은 목록으로 남긴다(바뀌면 그 시험 함수도 FLM 대상).
 
 변이(사본 · 무변이 대조군 GREEN 먼저, `analysis/mutation/`): M1 치환 우회(`Ntfy.Publish` 의 치환 문장 삭제) · M2 발행 경로 하나 누락(치환을 경계에서 `notificationFor` 로 옮김 —
-재전송 P4 · P5 가 샘) · M3 필드 버림 삭제 · M4 Title 만 치환 안 함 · M5 Tags/Type 치환 안 함 · M6 치환된 사본 대신 원본으로 요청 구성 · M7 치환 없는 두 번째 생산 발행자 추가(구조 핀).
+재전송 P4 · P5 가 샘) · M3 필드 버림 삭제 · M4 Title 만 치환 안 함 · M5 Tags/Type 치환 안 함 · M6 치환된 사본 대신 원본으로 요청 구성 · M7 치환 없는 두 번째 생산 발행자 추가(구조 핀) · M9 좁힌 필드 버림(`account` 하나만 버림, 리뷰 F-4) · M10 obs 안 새 http 파일(구조 핀 ⑤) · M11 새 `Notification` 문자열 칸(리플렉션 시험).
+청산 · 손절을 막지 않음은 기존 a092 시험이 다시 증명한다(리뷰 F-13): `internal/obs` 의 `a092_record_only_test.go` · `a092_lock_scope_test.go` · `a092_normal_relay_test.go`, `internal/app/engine` 의 `a092_exit_cycle_records_only_test.go` · `a124_judging_does_not_delay_protection_test.go` · `a098_the_backlog_does_not_delay_protection_test.go` — 2.2 배터리에 포함.
 
 ## 배포 (범위 밖 — 사람 절차)
 
@@ -117,4 +123,5 @@ a131 D0 과 같다: 등록된 계좌 원문 · 등록 숫자열 꼴(8자리 이�
 - 충돌: a133 편집 파일은 `internal/obs/{ntfy,notifier}.go` + 새 obs 파일 · 새 시험 파일뿐이다. a130(`internal/journal/trade_outcomes.go` · `apply_hook.go` · 콘솔 portfolio 템플릿 · backfill 도구)과
   파일 겹침 0. a131 은 이미 HEAD(`internal/redact` 를 쓰므로 a131 이 먼저 있어야 함 — 같은 이미지에 함께 실리므로 충족).
 - 교체 뒤 확인(사람): 콘솔 「알림 테스트」 한 번 — 도착하면 전송 경로가 산다. 다음 critical 알림의 본문에 `account:` 줄이 없고 포지션 id 가 `pos-[redacted]` 임을 휴대폰에서 확인.
+- 운영 절차(D4 ①, Manager 결정): 계좌 자격 증명을 바꾸기 전에 `alert_outbox` PENDING 0 을 확인한다 — 아니면 먼저 전달 · 정리(승인)한다.
 - 롤백: 이미지 핀을 되돌리면 알림 본문이 base 와 같아진다(원장 · 형식 영향 없음).

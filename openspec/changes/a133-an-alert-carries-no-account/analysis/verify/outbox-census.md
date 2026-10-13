@@ -26,3 +26,5 @@ pending_types_count 0 0
 - title · body 에 계좌 0. 계좌는 `payload`(원문 4 · pos- 12)와 `event_key`(원문 2 · pos- 12)에만 있다. payload 와 event_key 는 **전송되지 않는다**
   (재전송 경로는 title · body 만 씀 — `alertdelivery.go` `deliverOne` · `notifier.go` `Flush`). 다만 실시간 경로 `deliver` 는 같은 사건의 `Fields` 를 본문에 펼쳐
   보냈으므로, payload 에 계좌가 있는 4 행과 pos- 가 있는 12 행의 그 값은 처음 전달 때 ntfy 로 나갔을 수 있다.
+
+- 모집단 한계(리뷰 F-12): 원문 · 숫자열 판정은 attestation 의 계좌 **하나**만 안다. 다른 계좌의 원문이 든 행은 0 으로 셈해진다. D4 ①의 근거(PENDING 0)는 이 한계와 무관하다.

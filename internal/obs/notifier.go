@@ -33,6 +33,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/redact"
 )
 
 // DefaultCriticalAttempts is how many times one critical alert is published
@@ -1028,6 +1029,11 @@ func encodeFields(fields map[string]any) string {
 func renderFields(fields map[string]any) string {
 	keys := make([]string, 0, len(fields))
 	for k := range fields {
+		// 계좌 키 필드는 본문에 쓰지 않음(a133 D3) — 필드 이름은 문자열로 펼치기 전인 여기서만 알 수 있음.
+		// 나머지 값의 계좌 텍스트는 전송 경계(redactForTransport)가 치환함.
+		if redact.IsAccountKey(k) {
+			continue
+		}
 		keys = append(keys, k)
 	}
 	sortStrings(keys)

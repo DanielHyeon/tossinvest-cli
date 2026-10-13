@@ -1,0 +1,100 @@
+--- FAIL: TestA133NtfyBoundaryScrubsEveryByte (0.00s)
+    a133_alert_redact_test.go:170: request 0 leaked [987-65-A133SENTINEL 98765432133 *******2133 pos-00112233445566778899aabb mode-ffeeddccbbaa998877665544]:
+        /tossos-a133topic
+        attempt a1b2 for account 98765432133 (*******2133) position pos-00112233445566778899aabb mode mode-ffeeddccbbaa998877665544
+        Priority: 5
+        Tags: order.in_doubt.pos-00112233445566778899aabb,warning,acct-987-65-A133SENTINEL
+        Title: IN_DOUBT on 005930 for 987-65-A133SENTINEL
+        Accept-Encoding: gzip
+        User-Agent: Go-http-client/1.1
+        Content-Length: 123
+        Content-Type: text/plain; charset=utf-8
+--- FAIL: TestA133CriticalFieldsLeaveNoAccount (0.60s)
+    a133_alert_redact_test.go:192: request 0 leaked [987-65-A133SENTINEL 98765432133 *******2133 pos-00112233445566778899aabb UNREGISTERED-ACCT-77]:
+        /tossos-a133topic
+        account 98765432133 masked *******2133
+        account: UNREGISTERED-ACCT-77
+        account_ref: 987-65-A133SENTINEL
+        attempt_id: a1b2c3d4e5f60718293a4b5c6d7e8f90
+        position_id: pos-00112233445566778899aabb
+        quantity: 7
+        reason: BROKER_STATE_UNKNOWN
+        symbol: 005930
+        Content-Length: 244
+        Content-Type: text/plain; charset=utf-8
+        Priority: 5
+        Tags: order.in_doubt
+        Title: IN_DOUBT 987-65-A133SENTINEL
+        Accept-Encoding: gzip
+        User-Agent: Go-http-client/1.1
+--- FAIL: TestA133BestEffortPathLeavesNoAccount (0.56s)
+    a133_alert_redact_test.go:209: request 0 leaked [987-65-A133SENTINEL *******2133 pos-00112233445566778899aabb UNREGISTERED-ACCT-77]:
+        /tossos-a133topic
+        *******2133
+        account: UNREGISTERED-ACCT-77
+        account_ref: 987-65-A133SENTINEL
+        attempt_id: a1b2c3d4e5f60718293a4b5c6d7e8f90
+        position_id: pos-00112233445566778899aabb
+        quantity: 7
+        reason: BROKER_STATE_UNKNOWN
+        symbol: 005930
+        Priority: 3
+        Tags: a133.normal_grade
+        Title: fill 987-65-A133SENTINEL
+        Accept-Encoding: gzip
+        User-Agent: Go-http-client/1.1
+        Content-Length: 217
+        Content-Type: text/plain; charset=utf-8
+--- FAIL: TestA133NormalRelayLeavesNoAccount (0.58s)
+    a133_alert_redact_test.go:226: request 0 leaked [987-65-A133SENTINEL 98765432133 pos-00112233445566778899aabb UNREGISTERED-ACCT-77]:
+        /tossos-a133topic
+        98765432133
+        account: UNREGISTERED-ACCT-77
+        account_ref: 987-65-A133SENTINEL
+        attempt_id: a1b2c3d4e5f60718293a4b5c6d7e8f90
+        position_id: pos-00112233445566778899aabb
+        quantity: 7
+        reason: BROKER_STATE_UNKNOWN
+        symbol: 005930
+        Content-Type: text/plain; charset=utf-8
+        Priority: 3
+        Tags: a133.normal_grade
+        Title: 987-65-A133SENTINEL
+        Accept-Encoding: gzip
+        User-Agent: Go-http-client/1.1
+        Content-Length: 217
+--- FAIL: TestA133FlushRedeliveryLeavesNoAccount (0.61s)
+    a133_alert_redact_test.go:245: request 0 leaked [987-65-A133SENTINEL 98765432133 *******2133 pos-00112233445566778899aabb]:
+        /tossos-a133topic
+        detail 98765432133 *******2133 pos-00112233445566778899aabb
+        Tags: order.unresolved_in_doubt
+        Title: UNRESOLVED 987-65-A133SENTINEL
+        Accept-Encoding: gzip
+        User-Agent: Go-http-client/1.1
+        Content-Length: 59
+        Content-Type: text/plain; charset=utf-8
+        Priority: 5
+--- FAIL: TestA133DeliveryJudgementIsUnchanged (0.66s)
+    a133_alert_redact_test.go:261: request 0 leaked [987-65-A133SENTINEL 98765432133 pos-00112233445566778899aabb UNREGISTERED-ACCT-77]:
+        /tossos-a133topic
+        98765432133
+        account: UNREGISTERED-ACCT-77
+        account_ref: 987-65-A133SENTINEL
+        attempt_id: a1b2c3d4e5f60718293a4b5c6d7e8f90
+        position_id: pos-00112233445566778899aabb
+        quantity: 7
+        reason: BROKER_STATE_UNKNOWN
+        symbol: 005930
+        Accept-Encoding: gzip
+        User-Agent: Go-http-client/1.1
+        Content-Length: 217
+        Content-Type: text/plain; charset=utf-8
+        Priority: 5
+        Tags: order.unresolved_in_doubt
+        Title: UNRESOLVED 987-65-A133SENTINEL
+--- FAIL: TestA133TheOnlyTransportPassesTheBoundary (3.93s)
+    a133_structure_test.go:187: Ntfy.Publish's first statement does not reassign its notification parameter "msg"
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/obs	6.952s
+FAIL
+rc=1

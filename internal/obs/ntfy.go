@@ -83,6 +83,9 @@ var ErrNtfyNotConfigured = errors.New("obs: ntfy has no topic configured")
 // decides what that means; this function's only job is to be honest about
 // whether the message left.
 func (n *Ntfy) Publish(ctx context.Context, msg Notification) error {
+	// 전송 경계(a133): 이 아래에서 만드는 모든 바이트(본문 · Title · Tags 헤더)는 계좌 규칙을 지난 값에서 나옴.
+	// 반드시 첫 문장 — 구조 시험(TestA133TheOnlyTransportPassesTheBoundary)이 위치를 고정함.
+	msg = redactForTransport(msg)
 	topic := strings.TrimSpace(n.Topic)
 	if topic == "" {
 		return ErrNtfyNotConfigured
