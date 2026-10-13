@@ -36,6 +36,7 @@ DELIVERED. `payload`(= 그 알림의 `Fields`)에 계좌 원문 4 행 · `pos-` 
 
 - Affected specs: `engine-safety`(요구 1개 추가).
 - Affected code: `internal/obs/ntfy.go`(`Ntfy.Publish`), `internal/obs/notifier.go`(`renderFields`), 새 `internal/obs/a133_transport_redact.go`(치환 leaf).
+  `internal/redact/redact.go`(`String` — 붙은 유도 id 둘째를 놓치던 결함 수리, 구현 리뷰 I-1).
   시험: 새 `internal/obs/a133_*_test.go` · `internal/app/engine/a133_*_test.go` · `cmd/tossctl/a133_*_test.go`.
-- High-risk 인접(alert · operating mode 승격의 입력인 전달 결과): 편집하는 기존 함수 2개 모두 Function Logic Map + Branch Test Map 을 편집 전에 만든다.
+- High-risk 인접(alert · operating mode 승격의 입력인 전달 결과): 편집하는 기존 함수 3개(구현 리뷰 뒤) 모두 Function Logic Map + Branch Test Map 을 편집 전에 만든다.
 - 배포: a129 · a131 · a130 과 한 번에(사용자 결정 「다 완료 후 배포」). 형식 · 스키마 변경이 없어 순서 의존을 더하지 않는다(design 「배포」).

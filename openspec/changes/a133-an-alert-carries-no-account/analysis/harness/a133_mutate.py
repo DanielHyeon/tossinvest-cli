@@ -18,13 +18,15 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[5]
-PACKAGES = ["./internal/obs/", "./internal/app/engine/", "./cmd/tossctl/"]
+PACKAGES = ["./internal/obs/", "./internal/redact/", "./internal/app/engine/", "./cmd/tossctl/"]
 RUN = "TestA133|TestNtfy"
 # a133 표면 — 병행 a130 의 파일(journal · 콘솔 · 도구)은 사본에 넣지 않음.
 SURFACE = (
     "internal/obs/ntfy.go",
     "internal/obs/notifier.go",
     "internal/obs/a133_",
+    "internal/redact/redact.go",
+    "internal/redact/a133_",
     "internal/app/engine/a133_",
     "cmd/tossctl/a133_",
 )
@@ -42,7 +44,8 @@ MUTANTS = [
     ("M2 one send path is missed (redaction moved from the boundary into notificationFor)", "internal/obs/ntfy.go",
      "\tmsg = redactForTransport(msg)\n", ""),
     ("M3 account-key fields are rendered (field drop removed)", "internal/obs/notifier.go",
-     "\t\tif redact.IsAccountKey(k) {\n\t\t\tcontinue\n\t\t}\n", ""),
+     # 호출은 남기고 효과만 지움 — import 미사용 빌드 실패(round1)를 피하고, 구조 핀 ③(호출 존재)이 아닌 행동 시험이 잡는지 잼.
+     "\t\tif redact.IsAccountKey(k) {\n\t\t\tcontinue\n\t\t}\n", "\t\tif false && redact.IsAccountKey(k) {\n\t\t\tcontinue\n\t\t}\n"),
     ("M4 the title is sent unredacted", "internal/obs/a133_transport_redact.go",
      "\tmsg.Title = redact.String(msg.Title)\n", ""),
     ("M5 tags and the type tag are sent unredacted", "internal/obs/a133_transport_redact.go",
@@ -62,10 +65,28 @@ MUTANTS = [
      "import (\n", "import (\n\t_ \"net/http\"\n"),
     ("M11 Notification gains a text field the boundary does not cover", "internal/obs/ntfy.go",
      "\t// Priority is ntfy's 1-5 scale.", "\t// Click is a new header field (mutation).\n\tClick string\n\t// Priority is ntfy's 1-5 scale."),
+    # --- round3: 구현 리뷰 I-1 · I-2 · I-3 · I-5 ---
+    ("M12 derived ids are redacted in one pass (adjacent second id leaks)", "internal/redact/redact.go",
+     "\t\tif next == s {\n\t\t\treturn s\n\t\t}\n\t\ts = next\n", "\t\treturn next\n"),
+    ("M13 a Publisher outside obs with an aliased context import", "internal/app/engine/notifications.go",
+     "import (\n\t\"os\"\n", "import (\n\tctxpkg \"context\"\n\t\"os\"\n"),
+    ("M14 a second send method inside ntfy.go skips the boundary", "internal/obs/ntfy.go",
+     "// priorityFor maps a severity",
+     "func (n *Ntfy) PublishRaw(ctx context.Context, body string) error {\n"
+     "\treq, err := http.NewRequestWithContext(ctx, http.MethodPost, n.BaseURL+\"/\"+n.Topic, strings.NewReader(body))\n"
+     "\tif err != nil {\n\t\treturn err\n\t}\n\t_, err = http.DefaultClient.Do(req)\n\treturn err\n}\n\n"
+     "// priorityFor maps a severity"),
+    ("M15 the boundary is skipped for pinned-priority notifications", "internal/obs/ntfy.go",
+     "\tmsg = redactForTransport(msg)\n", "\tif msg.Priority == 0 {\n\t\tmsg = redactForTransport(msg)\n\t}\n"),
 ]
 
 # M2 는 경계의 치환을 지우고 notificationFor 에 같은 치환을 넣음 — 실시간 경로(P1~P3)는 덮이고 재전송(P4 · P5)만 샘.
 EXTRA = {
+    "M13": ("internal/app/engine/notifications.go",
+            "// resolveNotificationPublisher builds the alert transport",
+            "type a133AliasedPublisher struct{}\n\n"
+            "func (a133AliasedPublisher) Publish(_ ctxpkg.Context, _ obs.Notification) error { return nil }\n\n"
+            "// resolveNotificationPublisher builds the alert transport"),
     "M2": ("internal/obs/notifier.go",
            "\treturn Notification{Type: e.Type, Severity: severity, Title: title, Body: body}\n",
            "\treturn redactForTransport(Notification{Type: e.Type, Severity: severity, Title: title, Body: body})\n"),

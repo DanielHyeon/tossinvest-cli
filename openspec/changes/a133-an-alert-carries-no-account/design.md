@@ -7,6 +7,7 @@
 
 a131 D0 과 같다: 등록된 계좌 원문 · 등록 숫자열 꼴(8자리 이상) · 마스크 꼴 · 소금 없는 저엔트로피 유도 id(`pos-`·`rec-`·`mode-`·`adj-` + 24 hex,
 `corr-` + 32 hex). 판정 함수는 `redact.String`(값) · `redact.IsAccountKey`(필드 이름) 둘이다.
+**규칙 수리 하나(구현 리뷰 I-1).** a131 의 `redact.String` 은 유도 id 둘이 구분자 한 글자로 붙으면(`pos-A pos-B`, `%v` 로 펼친 목록) 둘째를 놓쳤다 — 뒤 경계 그룹이 구분자를 먹기 때문. 규칙 하나를 유지하려고 사본을 만들지 않고 `redact.String` 안에서 고정점까지 되풀이하도록 고쳤다(로그 · 기록 · 알림이 같이 고쳐짐). 편집 전 FLM: `analysis/function-logic/internal-redact--string/`.
 
 운영자에게 필요한 것은 남는다(규칙이 건드리지 않는 꼴): 종목 코드 · 종목 이름 · 사유 코드 · 시장 · 수량 · 사건 유형 · intent/attempt id
 (`execgw.randomID` = 접두 없는 128비트 hex — 유도 id 꼴의 접두가 없고, 등록 숫자열과 같을 수 없음) · 운영 모드 이름 · 행위자.

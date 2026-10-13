@@ -94,6 +94,13 @@ func TestA133TheDelivererRedeliversWithoutTheAccount(t *testing.T) {
 	id := a133EngRow(t, f)
 	f.cycles(t, 1)
 	srv.mustBeClean(t, 1)
+	// 비우지 않고 치환해서 보냈음(구현 리뷰 I-7).
+	srv.mu.Lock()
+	sent := srv.seen[0]
+	srv.mu.Unlock()
+	if !strings.Contains(sent, "Title: UNRESOLVED_IN_DOUBT [account]") || !strings.Contains(sent, "position pos-[redacted]") {
+		t.Fatalf("the stored alert was not redelivered redacted:\n%s", sent)
+	}
 	if got := a124State(t, f, id); got != journal.AlertDelivered {
 		t.Fatalf("state after a delivered redelivery = %s, want DELIVERED", got)
 	}

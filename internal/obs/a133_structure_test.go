@@ -9,8 +9,9 @@ package obs_test
 //   ③ renderFields 가 redact.IsAccountKey 를 부름(필드 이름은 펼치기 전에만 앎).
 //   ④ redactForTransport 가 redact.String 을 부름(규칙 사본 금지 — 규칙은 internal/redact 하나).
 //   ⑤ internal/obs 안에서 net/http 를 import 하는 파일은 ntfy.go 하나.
-// 이 핀이 증명하는 범위: obs.Publisher 를 채우는 생산 타입(별칭 import · 타입 별칭 포함)과 obs 패키지 안의 전송. obs 밖에서
-// 알림 문구를 http 로 직접 보내는 코드는 이 핀 밖이다(spec 시나리오는 이 범위로 좁힘 — 리뷰 F-2).
+//   ⑥ ntfy.go 안의 요청 구성 · 전송 호출은 Ntfy.Publish 안에만. obs 의 점 import 금지.
+// 이 핀이 증명하는 범위: obs.Publisher 를 채우는 생산 타입(별칭 import · 타입 별칭 포함)과 obs 패키지 안의 전송.
+// obs 밖에서 알림 문구를 http 로 직접 보내는 코드는 이 핀의 범위 밖(spec 시나리오는 이 범위로 좁힘 — 리뷰 F-2).
 
 import (
 	"go/ast"
@@ -107,7 +108,8 @@ func a133IsPublisherMethod(f a133File, fd *ast.FuncDecl) bool {
 			params = append(params, p.Type)
 		}
 	}
-	if len(params) != 2 || a133TypeName(params[0]) != "context.Context" {
+	// 첫 매개변수의 타입 이름은 보지 않음 — context 를 별칭으로 import 해도 같은 발행자임(구현 리뷰 I-2).
+	if len(params) != 2 {
 		return false
 	}
 	return a133IsNotificationType(f, params[1])
@@ -196,6 +198,15 @@ func TestA133TheOnlyTransportPassesTheBoundary(t *testing.T) {
 			}
 		}
 	}
+	// obs 를 점(.) import 하면 맨 이름 Notification 이 obs 밖에서도 그 타입이 되어 ① 이 못 셈 — 생산 코드에서 금지(구현 리뷰 I-2).
+	for _, f := range files {
+		for _, imp := range f.file.Imports {
+			if imp.Name != nil && imp.Name.Name == "." && strings.Trim(imp.Path.Value, `"`) == "github.com/JungHoonGhae/tossinvest-cli/internal/obs" {
+				t.Errorf("%s dot-imports internal/obs — the transport census cannot see a Publisher written there", f.rel)
+			}
+		}
+	}
+
 	// 같은 모양을 다른 이름으로 만드는 길(타입 별칭 · 정의 타입)도 막음 — 그 이름으로 Publish 를 만들면 ① 이 못 셈(리뷰 F-2).
 	for _, f := range files {
 		ast.Inspect(f.file, func(n ast.Node) bool {
@@ -254,6 +265,30 @@ func TestA133TheOnlyTransportPassesTheBoundary(t *testing.T) {
 	}
 	if strings.Join(httpFiles, " ") != "internal/obs/ntfy.go" {
 		t.Fatalf("internal/obs files importing net/http = %v, want only internal/obs/ntfy.go", httpFiles)
+	}
+
+	// ⑥ ntfy.go 안에서도 요청을 만들고 보내는 호출은 Ntfy.Publish 안에만 — 같은 파일의 다른 발송 메서드가 경계를 건너뛰지 못하게(구현 리뷰 I-3).
+	for _, f := range files {
+		if f.rel != "internal/obs/ntfy.go" {
+			continue
+		}
+		for _, d := range f.file.Decls {
+			fd, ok := d.(*ast.FuncDecl)
+			if !ok || (fd.Name.Name == "Publish" && a133RecvName(fd) == "Ntfy") {
+				continue
+			}
+			ast.Inspect(fd, func(n ast.Node) bool {
+				if c, ok := n.(*ast.CallExpr); ok {
+					if sel, ok := c.Fun.(*ast.SelectorExpr); ok {
+						switch sel.Sel.Name {
+						case "Do", "Post", "PostForm", "Get", "Head", "NewRequest", "NewRequestWithContext":
+							t.Errorf("internal/obs/ntfy.go: %s calls %s outside Ntfy.Publish — every send must pass the boundary", fd.Name.Name, sel.Sel.Name)
+						}
+					}
+				}
+				return true
+			})
+		}
 	}
 
 	// ④ 치환 함수는 a131 규칙을 부름.

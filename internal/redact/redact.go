@@ -96,7 +96,16 @@ func String(s string) string {
 	}
 	reg.mu.RUnlock()
 	s = maskPattern.ReplaceAllString(s, Placeholder)
-	return derivedIDPattern.ReplaceAllString(s, "${1}${2}${3}-[redacted]${4}")
+	// 유도 식별자는 결과가 안 바뀔 때까지 되풀이해 치환함(a133 구현 리뷰 I-1).
+	// 뒤 경계 그룹이 구분자 한 글자를 먹으므로, 그 글자 하나로 붙은 다음 식별자는 앞 경계를 잃어 한 판에서 빠짐
+	// (`pos-A pos-B` · `%v` 로 펼친 목록). 대체 문자열 `-[redacted]` 는 hex 가 아니라 다시 일치하지 않으므로 판마다 일치가 줄어 끝남.
+	for {
+		next := derivedIDPattern.ReplaceAllString(s, "${1}${2}${3}-[redacted]${4}")
+		if next == s {
+			return s
+		}
+		s = next
+	}
 }
 
 // IsAccountKey 는 구조화 필드 이름이 계좌를 싣는 필드인지 판정함. 대소문자·밑줄을 무시함.

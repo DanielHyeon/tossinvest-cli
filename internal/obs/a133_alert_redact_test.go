@@ -180,6 +180,19 @@ func TestA133NtfyBoundaryScrubsEveryByte(t *testing.T) {
 	if !strings.Contains(reqs[0].body, "attempt a1b2") || !strings.Contains(reqs[0].headers.Get("Tags"), "warning") {
 		t.Fatalf("non-account content changed: body=%q tags=%q", reqs[0].body, reqs[0].headers.Get("Tags"))
 	}
+
+	// 우선순위를 고정한 알림(Heartbeat 꼴, P6)도 같은 경계를 지남(구현 리뷰 I-5).
+	if err := pub.Publish(context.Background(), obs.Notification{
+		Type: obs.EventEngineHeartbeat, Severity: obs.SeverityNormal, Priority: 1,
+		Title: "tossos engine alive " + a133Account, Body: "status " + a133Digits + " " + a133PositionID,
+	}); err != nil {
+		t.Fatalf("Publish(priority 1): %v", err)
+	}
+	reqs = srv.requests()
+	a133MustBeClean(t, reqs)
+	if len(reqs) != 2 || reqs[1].headers.Get("Priority") != "1" {
+		t.Fatalf("the pinned-priority notification did not arrive as priority 1: %d requests", len(reqs))
+	}
 }
 
 // TestA133CriticalFieldsLeaveNoAccount — P2(실시간 critical): 필드의 계좌 키 줄이 없고 포지션 id 는 가려지며 운영 정보는 남음.
@@ -248,7 +261,13 @@ func TestA133FlushRedeliveryLeavesNoAccount(t *testing.T) {
 	if err != nil || delivered != 1 || remaining != 0 {
 		t.Fatalf("Flush = %d, %d, %v", delivered, remaining, err)
 	}
-	a133MustBeClean(t, srv.requests())
+	reqs := srv.requests()
+	a133MustBeClean(t, reqs)
+	// 비우지 않고 치환해서 보냈음(구현 리뷰 I-7) — 빈 제목 · 본문도 센티널 없음은 통과하므로 내용을 확인.
+	if reqs[0].headers.Get("Title") != "UNRESOLVED [account]" || !strings.Contains(reqs[0].body, "pos-[redacted]") ||
+		!strings.Contains(reqs[0].body, "detail [account] [account]") {
+		t.Fatalf("the stored alert was not sent redacted: title=%q body=%q", reqs[0].headers.Get("Title"), reqs[0].body)
+	}
 }
 
 // TestA133DeliveryJudgementIsUnchanged — 계좌를 심은 critical 알림도 거절 3회면 진입이 전달 실패로 잠기고 행은 PENDING 3 시도로 남음.
@@ -278,8 +297,15 @@ func TestA133DeliveryJudgementIsUnchanged(t *testing.T) {
 // TestA133TheBoundaryCoversEveryTextField — 리뷰 F-3: Notification 에 문자열 칸이 늘면 이 시험이 실패해 경계 목록을 다시 보게 함.
 // 지금의 문자열 칸 전부(Type · Title · Body · Tags)에 센티널을 심어 redactForTransport 가 지우는지 리플렉션으로 잼.
 func TestA133TheBoundaryCoversEveryTextField(t *testing.T) {
-	var textFields []string
+	var textFields, allFields []string
 	typ := reflect.TypeOf(obs.Notification{})
+	for i := 0; i < typ.NumField(); i++ {
+		allFields = append(allFields, typ.Field(i).Name)
+	}
+	// 칸 전체를 고정함 — map · 구조체 · []byte 칸이 늘어도 문자열 칸 목록만 보면 조용히 통과하므로(구현 리뷰 I-4).
+	if got := strings.Join(allFields, ","); got != "Type,Severity,Title,Body,Tags,Priority" {
+		t.Fatalf("Notification fields = %s — a new field may be sent by Ntfy.Publish; make redactForTransport cover it, then update this list", got)
+	}
 	msg := reflect.New(typ).Elem()
 	for i := 0; i < typ.NumField(); i++ {
 		f := typ.Field(i)

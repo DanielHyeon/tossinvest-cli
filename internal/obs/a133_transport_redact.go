@@ -12,7 +12,7 @@ import "github.com/JungHoonGhae/tossinvest-cli/internal/redact"
 // redactForTransport 는 알림 하나를 계좌 규칙에 통과시킨 사본을 돌려줌.
 //
 // 바꾸는 칸: 사건 유형(Tags 헤더의 첫 원소) · 제목(Title 헤더) · 본문 · 태그 각 원소 — 요청 바이트가 되는 문자열 전부.
-// 바꾸지 않는 칸: 등급 · 우선순위(숫자 판정 입력). 순수 함수라 오류 · 패닉 경로가 없어 Publish 의 반환(전달 판정 입력)을 바꾸지 않음.
+// 바꾸지 않는 칸: 등급(사건 등급 열거값 — 헤더로 안 나가고 priorityFor 의 입력) · 우선순위(숫자). 순수 함수라 오류 · 패닉 경로가 없어 Publish 의 반환(전달 판정 입력)을 바꾸지 않음.
 // Tags 는 새 슬라이스에 씀 — 호출자가 넘긴 슬라이스를 고치지 않게.
 func redactForTransport(msg Notification) Notification {
 	msg.Type = EventType(redact.String(string(msg.Type)))
