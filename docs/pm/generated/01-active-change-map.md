@@ -128,6 +128,6 @@
 | `a127-strategy-authorities-read-the-current-ledger` | STORY-TOS-a127 | archived |
 | `a128-jev-shadow-judgment-probe` | STORY-TOS-a128 | in_progress |
 | `a129-an-exit-order-leaves-a-line` | STORY-TOS-a129 | archived |
-| `a130-an-adopted-trade-keeps-its-outcome` | STORY-TOS-a130 | implemented |
+| `a130-an-adopted-trade-keeps-its-outcome` | STORY-TOS-a130 | archived |
 | `a131-no-account-in-any-log` | STORY-TOS-a131 | archived |
 | `a133-an-alert-carries-no-account` | STORY-TOS-a133 | implemented |
