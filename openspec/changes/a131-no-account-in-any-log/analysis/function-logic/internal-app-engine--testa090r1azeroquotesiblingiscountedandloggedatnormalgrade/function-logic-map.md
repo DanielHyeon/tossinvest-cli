@@ -2,7 +2,7 @@
 
 - Source: `internal/app/engine/a090_unobserved_position_test.go` (246-269)
 - Qualified: `TestA090R1AZeroQuoteSiblingIsCountedAndLoggedAtNormalGrade`
-- AST evidence: `ast.json` (편집 뒤, `source_sha256` 89841eae7562f6ca…) — AST branches 5 · returns 0
+- AST evidence: `ast.json` (편집 뒤, `source_sha256` 692d0efcd2399acf…) — AST branches 5 · returns 0
 - Risk scan: `risk-pattern-report.md`
 - 작성기: `analysis/harness/flm_write.py`(좌표는 ast.json 에서 옮김)
 
@@ -21,7 +21,7 @@
 | B1 | if at 252:2 | `if cycle.Err != nil \|\| cycle.Judged != 1 {` | 무편집 |
 | B2 | if at 255:2 | `if cycle.Unobserved != 1 {` | 무편집 |
 | B3 | if at 259:2 | `if len(lines) != 1 {` | 무편집 |
-| B4 | if at 262:2 | `if lines[0]["position_id"] != redact.String(target.ID) \|\| lines[0]["cause"] != "no_quote" \|\|` | 무편집 |
+| B4 | if at 262:2 | `if lines[0]["position_id"] != redact.String(target.ID) \|\| lines[0]["symbol"] != target.Symbol \|\| lines[0][` | 무편집 |
 | B5 | if at 266:2 | `if rows := f.outageRows(); len(rows) != 0 {` | 무편집 |
 
 반환문 없음(AST returns 0).

@@ -58,3 +58,25 @@ Pre-Edit Gate:
 | R-18 | P3 | Writer 반환 길이 | 확인 — `len(p)` 반환(시험 고정) |
 | R-19 | P3 | docker json-file 로그 · 런타임 크래시 출력 잔재 | 수용(잔재 목록) |
 | R-20 | P3 | 키 형식 모호 | 수용 — 32 무작위 바이트의 hex 64자, 다른 길이 거절(시험) |
+
+## 구현 리뷰 (2026-10-13, 분리된 컨텍스트 — code-reviewer 서브에이전트, overlay 로 탐침·변이, 저장소 무편집)
+
+판정: **APPROVE-WITH-FIXES** — P1 1 · P2 3 · P3 11. 주문·청산·대사·손절 동작 변화 없음 확인.
+
+| # | 등급 | 발견 | 처리 |
+|---|---|---|---|
+| I-1 | P1 | `transformRecordLine` 이 첫 JSON 값만 읽어 붙은 두 객체·꼬리 쓰레기 줄을 고쳐 씀(읽는 쪽이 거절하던 줄이 줄 하나를 잃고 읽힘) | **수용** — 첫 값 뒤에 EOF 가 아니면 해독 불가(그대로 남김). 시험 `TestA131AFusedOrTrailingLineIsNotRewritten` · `TestA131ScrubLeavesAFusedLineAsIs` |
+| I-2 | P2 | 문서는 audit Detail 만 치환, 코드는 문자열 칸 전부 — 코드가 맞음(`operating_mode:<account>` 설정 이름) | **수용** — spec · design D3 · audit 주석을 코드에 맞춤(R-11 뒤집힘), 시험 `TestA131AuditSettingThatNamesTheAccountIsRedacted`. RecordChange 중복 판정 잔재 명명 |
+| I-3 | P2 | a090 시험이 `pos-[redacted]` 비교만 해 어느 포지션 줄인지 못 가림 | **수용** — 종목 대조 추가(R1 · R2 · R4 · R7) |
+| I-4 | P2 | 키 게시 뒤 디렉터리 fsync 없음 | **수용** — link 뒤 디렉터리 Sync(실패면 오류) |
+| I-5 | P3 | 키 없음 거절이 여는 기록 하나만 봄(세 기록이 키 하나를 나눔) | **수용** — 같은 디렉터리 `*.jsonl` 전부 확인, 시험 `TestA131PrepareSealKeyLooksAtSiblingRecords` |
+| I-6 | P3 | 텍스트 핸들러에서 `[]byte` · 내보내지 않은 필드 · 실수가 샘 | **수용** — `[]byte` 문자열화, Any 는 `%+v` 도 대조, 실수는 정수 꼴로 대조. 시험 `TestA131HandlerCatchesBytesHiddenFieldsFloatsAndUnderscoredIDs` |
+| I-7 | P3 | 공백 숫자열 · `pos-<hex>_lane` · 대시 덩어리 꼬리 | 부분 수용 — 유도 id 경계를 명시 그룹으로(밑줄 포함 잡음). 공백·꼬리는 설계 문구를 실제에 맞추고 잔재로 |
+| I-8 | P3 | `appendLine` 키 준비가 대사의 브로커 읽기 뒤 | 수용(문구) — spec 을 「브로커 변경 요청보다 먼저」로, 잔재 ⑭ |
+| I-9 | P3 | 살아남은 변이: uid 확인 호출 삭제 · soak 프로세스 거절 무력화 · link→rename | **수용** — 시험 `TestA131ScrubApplyRefusesAForeignOwner` · `TestA131ScrubApplyRefusesWhileASoakAppends` · `TestA131ConcurrentKeyPreparationAgreesOnOneKey`, 변이 원장 round3 에 셋 추가 |
+| I-10 | P3 | spec 「키 없음 → 계좌 없음 사유」가 코드와 다름 | 수용 — 시나리오를 「읽기 오류로 발급 안 됨」으로 |
+| I-11 | P3 | 꼬리 옮기기 상한 없음 · 반쪽 줄 · 순서 | **수용** — 50 판(약 10초) 상한 뒤 오류, 완성된 줄만 옮김. 순서 뒤바뀜은 잔재 ⑫ |
+| I-12 | P3 | 정리 명령이 이미 봉인된 기록에서 계좌를 등록 못 함 | **수용** — 봉인 값도 열어 등록, 등록 0 이면 경고 줄 |
+| I-13 | P3 | 구조 시험 허용 목록의 낡은 두 항목 | 수용 — 삭제 |
+| I-14 | P3 | `soak run` stdout 미감쌈 | 기각(잔재 ⑩) — 계좌 출력 자리 0, 감싸려면 `runSoakRun` 편집(분기 다수) — YAGNI |
+| I-15 | P3 | 모든 position_id 가 같아져 상관 불가 | 잔재 ⑪ — 상관 필요 여부는 Manager 판단(HMAC 짧은 태그가 후속 안) |

@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/redact"
@@ -292,5 +293,84 @@ func TestA131EmptyAccountRefIsLeftAlone(t *testing.T) {
 	changed, err := redact.RecordLineNeedsRewrite(line)
 	if err != nil || changed {
 		t.Fatalf("an empty account_ref is not account information: changed=%v err=%v", changed, err)
+	}
+}
+
+// 구현 리뷰 I-1: 붙은 두 객체 · 꼬리 쓰레기 줄은 해독 불가 — 줄 하나를 잃으며 고쳐 쓰지 않음.
+func TestA131AFusedOrTrailingLineIsNotRewritten(t *testing.T) {
+	key := prepare(t, t.TempDir())
+	for _, line := range []string{
+		`{"account_ref":"` + sentinelRef + `","n":1}{"account_ref":"` + sentinelRef + `","n":2}`,
+		`{"account_ref":"` + sentinelRef + `"} trailing-garbage`,
+	} {
+		if _, err := redact.SealRecordLine([]byte(line), key); err == nil {
+			t.Fatalf("SealRecordLine accepted %q", line)
+		}
+		if _, err := redact.RecordLineNeedsRewrite([]byte(line)); err == nil {
+			t.Fatalf("RecordLineNeedsRewrite accepted %q", line)
+		}
+	}
+}
+
+// 구현 리뷰 I-5: 같은 디렉터리의 다른 기록에 봉인 줄이 있으면 키를 새로 만들지 않음.
+func TestA131PrepareSealKeyLooksAtSiblingRecords(t *testing.T) {
+	dir := t.TempDir()
+	sealed, err := redact.SealRecordLine([]byte(`{"account_ref":"`+sentinelRef+`"}`+"\n"), prepare(t, dir))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = os.WriteFile(filepath.Join(dir, "capability-soak.jsonl"), sealed, 0o600)
+	_ = os.Remove(filepath.Join(dir, redact.KeyFileName))
+	if _, err := redact.PrepareSealKey(filepath.Join(dir, "capability-verify.jsonl")); err == nil {
+		t.Fatal("a new key was started while a sibling record holds sealed lines")
+	}
+}
+
+// 구현 리뷰 I-9(m): 동시에 키를 만드는 두 준비가 같은 키를 씀(link 게시 — rename 이면 서로 덮음).
+func TestA131ConcurrentKeyPreparationAgreesOnOneKey(t *testing.T) {
+	for round := 0; round < 20; round++ {
+		dir := t.TempDir()
+		const n = 8
+		keys := make([]*redact.SealKey, n)
+		var wg sync.WaitGroup
+		for i := 0; i < n; i++ {
+			wg.Add(1)
+			go func(i int) {
+				defer wg.Done()
+				k, err := redact.PrepareSealKey(filepath.Join(dir, "record.jsonl"))
+				if err != nil {
+					t.Error(err)
+				}
+				keys[i] = k
+			}(i)
+		}
+		wg.Wait()
+		for i := 0; i < n; i++ {
+			sealed, err := redact.SealRecordLine([]byte(`{"account_ref":"x-1"}`), keys[i])
+			if err != nil {
+				t.Fatal(err)
+			}
+			var obj map[string]string
+			_ = json.Unmarshal(sealed, &obj)
+			if got, ok := redact.OpenAccount(obj[redact.SealedField], dir); !ok || got != "x-1" {
+				t.Fatalf("round %d: preparer %d sealed with a key that is not the published one", round, i)
+			}
+		}
+	}
+}
+
+type hidden struct{ n int64 }
+
+// 구현 리뷰 I-6 · I-7: 바이트 · 내보내지 않은 필드 · 실수 · 밑줄이 붙은 유도 id.
+func TestA131HandlerCatchesBytesHiddenFieldsFloatsAndUnderscoredIDs(t *testing.T) {
+	var buf bytes.Buffer
+	log := slog.New(redact.Handler(slog.NewTextHandler(&buf, nil)))
+	log.Info("m", "b", []byte("acct "+sentinelDigits), "h", hidden{n: 98765432101}, "f", float64(98765432101),
+		"lane", positionID+"_lane")
+	if l := leaks(buf.String()); len(l) != 0 {
+		t.Fatalf("text handler leaked %v: %s", l, buf.String())
+	}
+	if got := redact.String("x_" + positionID + "_y"); strings.Contains(got, positionID) {
+		t.Fatalf("an underscored derived id survived: %q", got)
 	}
 }

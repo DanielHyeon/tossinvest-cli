@@ -19,14 +19,19 @@ Story: `STORY-TOS-a131` · High-risk(인터록 증거의 계좌 결속 경로 ·
       — red-1(base + 시험만: 빌드 실패) · red-2(새 leaf 만: 행동 실패 9 + 구조 2). 2판 시험(R-1~R-4)은 같은 판에서 추가 — 변이 원장이 각 가드를 잼
 - [x] 1.2 GREEN — `internal/redact`(규칙 · Handler · Writer · 봉인), `obs.NewLogger`, `official.accountsLocked` 등록, `runEngineRun`·`main` Writer,
       `audit.Record`, soak·검증 기록 쓰기·읽기, `runSoakAttest` 계좌 줄 삭제, 정리 명령 `scrub-account-records`
-- [ ] 1.3 REFACTOR + 편집 뒤 AST 재추출 · FLM/BTM 갱신 · `check_analysis.py --change` 통과
+- [x] 1.3 REFACTOR + 편집 뒤 AST 재추출 · FLM/BTM 갱신 · `check_analysis.py --change` 통과
+      — 번들 28(생산 함수 15 + 기대값을 바꾼 기존 시험 함수 13), `evidence complete`. 새 함수는 이미 번들이 있는 함수 뒤로 옮겨 이웃 함수 오검출 0
 
 ## 2. 검증
 
-- [ ] 2.1 변이(사본, 무변이 대조군 GREEN 먼저) — design D7 목록, 최소 4 CAUGHT(필터 우회 · 싱크 누락 · 마스킹 삭제 · 봉인 대신 평문 포함), 원장 `analysis/mutation/`
-- [ ] 2.2 `make lint` · 관련 패키지 `go test -race` · `make test-seams` · openspec validate
-- [ ] 2.3 `make sdd-sync` · `make sdd-check`
-- [ ] 2.4 구현 리뷰(분리된 리뷰 패스, 적대적) → `review.md`
+- [x] 2.1 변이(사본, 무변이 대조군 GREEN 먼저) — design D7 목록, 최소 4 CAUGHT(필터 우회 · 싱크 누락 · 마스킹 삭제 · 봉인 대신 평문 포함), 원장 `analysis/mutation/`
+      — 최종 round4: CONTROL GREEN · **31/31 CAUGHT**(round1 23/25 + 하네스 변이 컴파일 오류 2 → round2 25/25 → 구현 리뷰 변이 6 추가 → round3 29/31 미도달 2 → round4)
+- [x] 2.2 `make lint` · 관련 패키지 `go test -race` · `make test-seams` · openspec validate
+      — 영수증 `analysis/verify/receipts.md`(engine 패키지 race 2502s rc 0 · test-seams 의 a112 도구 2 실패는 미추적 파일 원인 — 커밋 뒤 rc 0)
+- [x] 2.3 `make sdd-sync` · `make sdd-check`
+      — sdd-sync: CodeGraph sync 완료 · CGC update 300s 타임아웃(advisory) · GBrain busy(advisory). sdd-check rc 0(최종 커밋 뒤 재실행, receipts)
+- [x] 2.4 구현 리뷰(분리된 리뷰 패스, 적대적) → `review.md`
+      — APPROVE-WITH-FIXES(P1 1 · P2 3 · P3 11), 처리 표 review.md(I-14 기각 · I-15 Manager 판단)
 
 ## 3. 사람 · Manager
 

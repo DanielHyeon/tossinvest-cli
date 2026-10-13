@@ -302,3 +302,56 @@ func TestA131ScrubCarriesTheReplacedTail(t *testing.T) {
 		t.Fatalf("the carried tail was not scrubbed: %s", raw)
 	}
 }
+
+// 구현 리뷰 I-1: 붙은 두 객체 줄은 「해독 불가 — 그대로」로 세고 고쳐 쓰지 않음.
+func TestA131ScrubLeavesAFusedLineAsIs(t *testing.T) {
+	f := a131LegacyFiles(t)
+	fused := `{"format_version":1,"kind":"cycle","account_ref":"` + a131ScrubAccount + `"}{"format_version":1,"kind":"cycle"}` + "\n"
+	fh, _ := os.OpenFile(f.soakPath, os.O_WRONLY|os.O_APPEND, 0)
+	_, _ = fh.WriteString(fused)
+	_ = fh.Close()
+	out, _, err := runCLI(t, "--config-dir", f.configDir, "scrub-account-records", "--apply")
+	if err != nil {
+		t.Fatalf("apply: %v", err)
+	}
+	if !strings.Contains(out, f.soakPath+": 5 line(s), 3 to rewrite, 1 undecodable left as is") {
+		t.Fatalf("the fused line was not reported as undecodable:\n%s", out)
+	}
+	raw, _ := os.ReadFile(f.soakPath)
+	if !strings.Contains(string(raw), fused) {
+		t.Fatalf("the fused line was rewritten: %s", raw)
+	}
+}
+
+// 구현 리뷰 I-9(a): 대상 디렉터리 소유자가 아니면 적용을 거절.
+func TestA131ScrubApplyRefusesAForeignOwner(t *testing.T) {
+	f := a131LegacyFiles(t)
+	previous := scrubFileOwner
+	scrubFileOwner = func(string) (int, bool) { return os.Geteuid() + 1, true }
+	t.Cleanup(func() { scrubFileOwner = previous })
+	before, _ := os.ReadFile(f.soakPath)
+	if _, _, err := runCLI(t, "--config-dir", f.configDir, "scrub-account-records", "--apply"); err == nil ||
+		!strings.Contains(err.Error(), "belongs to uid") {
+		t.Fatalf("apply as a foreign uid = %v; want a refusal", err)
+	}
+	if after, _ := os.ReadFile(f.soakPath); string(after) != string(before) {
+		t.Fatal("the record was rewritten by a foreign uid")
+	}
+}
+
+// 구현 리뷰 I-9(h): 기록에 붙은 soak 프로세스가 보이면 적용을 거절.
+func TestA131ScrubApplyRefusesWhileASoakAppends(t *testing.T) {
+	f := a131LegacyFiles(t)
+	previous := soakFindProcesses
+	soakFindProcesses = func(path string) ([]int, error) {
+		if path == f.soakPath {
+			return []int{4242}, nil
+		}
+		return nil, nil
+	}
+	t.Cleanup(func() { soakFindProcesses = previous })
+	if _, _, err := runCLI(t, "--config-dir", f.configDir, "scrub-account-records", "--apply"); err == nil ||
+		!strings.Contains(err.Error(), "4242") {
+		t.Fatalf("apply while a soak appends = %v; want a refusal naming the pid", err)
+	}
+}

@@ -1,6 +1,6 @@
 {
   "file": "internal/audit/audit.go",
-  "source_sha256": "29886e7a4d031757e9a045847fc5ee116b2304e76131a9877917c813b5b0d201",
+  "source_sha256": "d8eb29e9d59280ea0d05035ab5baffafec65b33363b1ea9f2dd5087178126655",
   "package": "audit",
   "function": "Record",
   "receiver": "Log",

@@ -2,7 +2,7 @@
 
 - Source: `internal/app/engine/a090_unobserved_position_test.go` (742-769)
 - Qualified: `TestA090R4AJudgementEndsTheStreakWithOneReleaseLine`
-- AST evidence: `ast.json` (편집 뒤, `source_sha256` 89841eae7562f6ca…) — AST branches 5 · returns 0
+- AST evidence: `ast.json` (편집 뒤, `source_sha256` 692d0efcd2399acf…) — AST branches 5 · returns 0
 - Risk scan: `risk-pattern-report.md`
 - 작성기: `analysis/harness/flm_write.py`(좌표는 ast.json 에서 옮김)
 
@@ -20,7 +20,7 @@
 |---|---|---|---|
 | B1 | if at 749:2 | `if cycle.Unobserved != 0 \|\| cycle.Judged != 2 {` | 무편집 |
 | B2 | if at 753:2 | `if len(lines) != 2 {` | 무편집 |
-| B3 | if at 757:2 | `if release["position_id"] != redact.String(target.ID) {` | 무편집 |
+| B3 | if at 757:2 | `if release["position_id"] != redact.String(target.ID) \|\| release["symbol"] != target.Symbol {` | 무편집 |
 | B4 | if at 760:2 | `if secs, ok := release["unobserved_seconds"].(float64); !ok \|\| secs < 15 {` | 무편집 |
 | B5 | if at 766:2 | `if got := len(f.lines()); got != 3 {` | 무편집 |
 

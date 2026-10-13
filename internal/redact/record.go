@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -55,10 +56,12 @@ func PrepareSealKey(recordPath string) (*SealKey, error) {
 	dir := filepath.Dir(recordPath)
 	key, err := loadKey(dir, false)
 	if errors.Is(err, fs.ErrNotExist) {
-		if data, rerr := os.ReadFile(recordPath); rerr == nil && bytes.Contains(data, []byte(`"`+SealedField+`"`)) {
-			return nil, fmt.Errorf("redact: %s has sealed lines but its seal key %s is missing — refusing to start a new key "+
-				"(the old lines could never be opened again); restore the key or start a fresh record",
-				recordPath, filepath.Join(dir, KeyFileName))
+		// 같은 디렉터리의 기록들(soak · verify KR · verify US)은 키 하나를 나눠 씀 — 어느 기록에든 봉인 줄이 있으면 새 키를 만들지 않음
+		// (구현 리뷰 I-5: 여는 기록 하나만 보면 다른 기록의 봉인 줄이 영영 안 열림).
+		if sealed := sealedRecordIn(dir, recordPath); sealed != "" {
+			return nil, fmt.Errorf("redact: %s has sealed lines but the seal key %s is missing — refusing to start a new key "+
+				"(the old lines could never be opened again); restore the key or start fresh records",
+				sealed, filepath.Join(dir, KeyFileName))
 		}
 		key, err = loadKey(dir, true)
 	}
@@ -73,6 +76,18 @@ func PrepareSealKey(recordPath string) (*SealKey, error) {
 		return nil, fmt.Errorf("redact: the seal key in %s does not round-trip", dir)
 	}
 	return &SealKey{key: key}, nil
+}
+
+// sealedRecordIn 은 dir 안 기록 파일(recordPath 와 *.jsonl) 중 봉인 줄이 있는 첫 경로를 돌려줌. 없으면 "".
+func sealedRecordIn(dir, recordPath string) string {
+	candidates, _ := filepath.Glob(filepath.Join(dir, "*.jsonl"))
+	candidates = append([]string{recordPath}, candidates...)
+	for _, c := range candidates {
+		if data, err := os.ReadFile(c); err == nil && bytes.Contains(data, []byte(`"`+SealedField+`"`)) {
+			return c
+		}
+	}
+	return ""
 }
 
 // SealRecordLine 은 기록 한 줄(JSON 객체, 끝 개행 선택)을 규칙에 통과시킴: 평문 `account_ref` 를 떼어 봉인해 `account_ref_sealed` 로
@@ -104,6 +119,11 @@ func transformRecordLine(line []byte, sealer func(string) (string, error)) ([]by
 	}
 	if obj == nil {
 		return line, false, errors.New("redact: the record line is not a JSON object")
+	}
+	// 줄 하나는 객체 하나 — 붙은 두 번째 객체나 꼬리 쓰레기를 버리면 읽는 쪽(json.Unmarshal)이 거절하던 줄이 줄 하나를 잃은 채
+	// 읽히게 됨(구현 리뷰 I-1). 그런 줄은 해독 불가로 두고 그대로 남김.
+	if _, err := dec.Token(); err != io.EOF {
+		return line, false, errors.New("redact: the record line holds more than one JSON value")
 	}
 	changed := false
 	if plain, ok := obj[PlainField].(string); ok && strings.TrimSpace(plain) != "" {
@@ -285,6 +305,14 @@ func loadKey(dir string, create bool) ([]byte, error) {
 			return readKey(path)
 		}
 		return nil, fmt.Errorf("redact: publishing the seal key %s: %w", path, err)
+	}
+	// 디렉터리 항목도 동기화 — 정전 뒤 봉인 줄만 남고 키가 없으면 그 기록은 영영 못 염(구현 리뷰 I-4).
+	if d, err := os.Open(dir); err == nil {
+		serr := d.Sync()
+		_ = d.Close()
+		if serr != nil {
+			return nil, fmt.Errorf("redact: syncing %s after publishing the seal key: %w", dir, serr)
+		}
 	}
 	return key, nil
 }

@@ -30,8 +30,14 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 )
 
-// scrubDrainInterval 은 교체 뒤 옛 inode 꼬리를 다시 보는 간격임.
-var scrubDrainInterval = 200 * time.Millisecond
+// scrubDrainInterval 은 교체 뒤 옛 inode 꼬리를 다시 보는 간격, scrubDrainRounds 는 그 상한(약 10초)임.
+var (
+	scrubDrainInterval = 200 * time.Millisecond
+	scrubDrainRounds   = 50
+)
+
+// scrubFileOwner 는 디렉터리 소유자 uid 를 읽는 자리임(시험이 다른 소유자를 흉내 냄).
+var scrubFileOwner = fileOwner
 
 // scrubBeforeReplace · scrubAfterReplace 는 시험이 「읽은 뒤 교체 전」·「교체 직후」 순간에 파일에 써 보는 자리임. 생산에서는 아무것도 안 함.
 var (
@@ -131,8 +137,11 @@ func runScrubAccountRecords(out io.Writer, root *rootOptions, files []string, au
 	if err != nil {
 		return err
 	}
-	// 감사 줄의 원문 치환에는 등록 값이 필요함 — 기록의 평문 계좌와 attestation 의 계좌를 읽어 등록(읽기만).
-	registerKnownAccounts(root, targets)
+	// 감사 줄의 원문 치환에는 등록 값이 필요함 — 기록의 계좌(평문·봉인)와 attestation 의 계좌를 읽어 등록(읽기만).
+	if registerKnownAccounts(root, targets) == 0 {
+		fmt.Fprintln(out, "note: no full account reference was found in the records or the attestation — audit lines are scrubbed "+
+			"by the mask and derived-id rules only; raw account numbers in them would be left")
+	}
 
 	if apply {
 		if err := refuseForeignOwner(targets); err != nil {
@@ -173,7 +182,14 @@ func runScrubAccountRecords(out io.Writer, root *rootOptions, files []string, au
 }
 
 // registerKnownAccounts 는 평문 계좌가 남아 있는 곳(기록의 account_ref · attestation)에서 계좌를 읽어 치환 규칙에 등록함.
-func registerKnownAccounts(root *rootOptions, targets []scrubTarget) {
+func registerKnownAccounts(root *rootOptions, targets []scrubTarget) int {
+	known := map[string]bool{}
+	note := func(ref string) {
+		if ref = strings.TrimSpace(ref); ref != "" && !strings.Contains(ref, "*") {
+			known[ref] = true
+			redact.Register(ref)
+		}
+	}
 	for _, t := range targets {
 		if t.audit {
 			continue
@@ -182,12 +198,21 @@ func registerKnownAccounts(root *rootOptions, targets []scrubTarget) {
 		if err != nil {
 			continue
 		}
+		// 이미 봉인된 줄도 엶 — 기록이 먼저 정리됐어도 감사 줄의 원문을 치환할 수 있게(구현 리뷰 I-12).
+		opener := redact.NewOpener(filepath.Dir(t.path))
 		for _, line := range bytes.Split(data, []byte{'\n'}) {
 			var probe struct {
-				AccountRef string `json:"account_ref"`
+				AccountRef       string `json:"account_ref"`
+				AccountRefSealed string `json:"account_ref_sealed"`
 			}
-			if json.Unmarshal(line, &probe) == nil {
-				redact.Register(probe.AccountRef)
+			if json.Unmarshal(line, &probe) != nil {
+				continue
+			}
+			note(probe.AccountRef)
+			if probe.AccountRefSealed != "" {
+				if ref, ok := opener.Open(probe.AccountRefSealed); ok {
+					note(ref)
+				}
 			}
 		}
 	}
@@ -197,10 +222,11 @@ func registerKnownAccounts(root *rootOptions, targets []scrubTarget) {
 				AccountRef string `json:"account_ref"`
 			}
 			if json.Unmarshal(data, &a) == nil {
-				redact.Register(a.AccountRef)
+				note(a.AccountRef)
 			}
 		}
 	}
+	return len(known)
 }
 
 // refuseForeignOwner 는 실행 uid 가 대상 디렉터리 소유자와 다르면 거절함 — root 로 돌려 root 소유 봉인 키를 만들면 같은 디렉터리의
@@ -208,7 +234,7 @@ func registerKnownAccounts(root *rootOptions, targets []scrubTarget) {
 func refuseForeignOwner(targets []scrubTarget) error {
 	uid := os.Geteuid()
 	for _, t := range targets {
-		owner, ok := fileOwner(filepath.Dir(t.path))
+		owner, ok := scrubFileOwner(filepath.Dir(t.path))
 		if ok && owner != uid {
 			return fmt.Errorf("scrub: %s belongs to uid %d but this runs as uid %d — run it as the directory's owner",
 				filepath.Dir(t.path), owner, uid)
@@ -376,7 +402,12 @@ func replaceScrubbed(plan *scrubPlan) error {
 func drainReplacedTail(plan *scrubPlan) error {
 	offset := plan.info.Size()
 	stable := 0
-	for stable < 2 {
+	// 상한: 옛 inode 가 계속 자라면(재열기 없는 옛 바이너리가 fd 를 쥠) 끝없이 돌지 않고 멈춰 알림(구현 리뷰 I-11).
+	for rounds := 0; stable < 2; rounds++ {
+		if rounds >= scrubDrainRounds {
+			return fmt.Errorf("scrub: %s kept growing on the replaced file — a writer without the a131 reopen is holding it; "+
+				"stop it, then run the cleanup again", plan.target.path)
+		}
 		time.Sleep(scrubDrainInterval)
 		st, err := plan.file.Stat()
 		if err != nil {
@@ -391,7 +422,14 @@ func drainReplacedTail(plan *scrubPlan) error {
 		if err != nil {
 			return fmt.Errorf("scrub: reading the replaced tail of %s: %w", plan.target.path, err)
 		}
-		offset = st.Size()
+		// 완성된 줄만 옮김 — 쓰는 중인 줄의 앞부분을 옮기면 나머지가 다음 판에 따로 붙어 치환되지 않은 조각이 됨.
+		end := bytes.LastIndexByte(tail, '\n')
+		if end < 0 {
+			stable = 0
+			continue
+		}
+		tail = tail[:end+1]
+		offset += int64(len(tail))
 		moved, _, _, _ := scrubLines(plan.target, tail, plan.key, true)
 		f, err := os.OpenFile(plan.target.path, os.O_WRONLY|os.O_APPEND, 0)
 		if err != nil {

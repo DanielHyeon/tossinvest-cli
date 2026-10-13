@@ -2,7 +2,7 @@
 
 - Source: `internal/app/engine/a090_unobserved_position_test.go` (271-289)
 - Qualified: `TestA090R2AnAbsentSiblingIsCountedLikeAZeroQuote`
-- AST evidence: `ast.json` (편집 뒤, `source_sha256` 89841eae7562f6ca…) — AST branches 3 · returns 0
+- AST evidence: `ast.json` (편집 뒤, `source_sha256` 692d0efcd2399acf…) — AST branches 3 · returns 0
 - Risk scan: `risk-pattern-report.md`
 - 작성기: `analysis/harness/flm_write.py`(좌표는 ast.json 에서 옮김)
 
@@ -19,7 +19,7 @@
 | Branch | AST kind | Source line | a131 |
 |---|---|---|---|
 | B1 | if at 277:2 | `if cycle.Err != nil \|\| cycle.Judged != 1 \|\| cycle.Unobserved != 1 {` | 무편집 |
-| B2 | if at 281:2 | `if len(lines) != 1 \|\| lines[0]["position_id"] != redact.String(target.ID) \|\| lines[0]["cause"] != "no_quot` | 무편집 |
+| B2 | if at 281:2 | `if len(lines) != 1 \|\| lines[0]["position_id"] != redact.String(target.ID) \|\| lines[0]["symbol"] != target.` | 무편집 |
 | B3 | if at 286:2 | `if got := len(f.lines()); got != 1 {` | 무편집 |
 
 반환문 없음(AST returns 0).

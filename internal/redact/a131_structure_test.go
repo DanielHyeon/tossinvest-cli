@@ -144,8 +144,6 @@ func TestA131NoLoggerOrAppendWriterBypassesRedaction(t *testing.T) {
 		"cmd/tossctl/engineproc.go":            "엔진 자식 stdout/stderr — 자식 안에서 치환(newEngineRunCmd · main · obs)",
 		"cmd/tossctl/soakproc.go":              "soak 자식 stdout/stderr — 자식 안에서 치환(main)",
 		"cmd/tossctl/scrub_account_records.go": "a131 정리 명령의 교체 창 꼬리 옮기기 — 같은 규칙",
-		"internal/soak/account_seal.go":        "교체된 soak 기록 다시 열기 — 쓰기는 Recorder.Append(SealRecordLine)",
-		"internal/verifylive/account_seal.go":  "교체된 검증 기록 다시 열기 — 쓰기는 Recorder.Append(SealRecordLine)",
 	}
 	var problems []string
 	for _, g := range files {

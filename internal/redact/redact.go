@@ -29,7 +29,8 @@ var (
 	maskPattern = regexp.MustCompile(`\*{3,}[0-9](?:-?[0-9])*`)
 	// derivedIDPattern 은 소금 없는 저엔트로피 유도 식별자임(journal.PositionID · reconcileStateID · operatingModeID ·
 	// adjustmentID 의 24 hex, correctionID 의 32 hex).
-	derivedIDPattern = regexp.MustCompile(`\b(?:(pos|rec|mode|adj)-[0-9a-f]{24}|(corr)-[0-9a-f]{32})\b`)
+	// 앞뒤 경계는 명시적 그룹(RE2 에 lookaround 없음) — `\b` 는 `_` 를 단어 글자로 보아 `pos-<hex>_lane` 을 놓침(구현 리뷰 I-7).
+	derivedIDPattern = regexp.MustCompile(`(^|[^A-Za-z0-9])(?:(pos|rec|mode|adj)-[0-9a-f]{24}|(corr)-[0-9a-f]{32})([^0-9a-f]|$)`)
 	// digitRun 은 대시로만 끊긴 숫자 덩어리임 — 덩어리의 숫자만 모은 값이 등록 번호와 같으면 그 덩어리 전체를 지움.
 	digitRun = regexp.MustCompile(`[0-9]+(?:-[0-9]+)*`)
 )
@@ -95,7 +96,7 @@ func String(s string) string {
 	}
 	reg.mu.RUnlock()
 	s = maskPattern.ReplaceAllString(s, Placeholder)
-	return derivedIDPattern.ReplaceAllString(s, "${1}${2}-[redacted]")
+	return derivedIDPattern.ReplaceAllString(s, "${1}${2}${3}-[redacted]${4}")
 }
 
 // IsAccountKey 는 구조화 필드 이름이 계좌를 싣는 필드인지 판정함. 대소문자·밑줄을 무시함.

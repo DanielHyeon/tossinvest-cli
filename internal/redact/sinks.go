@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"strconv"
 )
 
 // Unloggable 은 치환 중 패닉한 값을 대신하는 문자열임.
@@ -114,16 +115,27 @@ func scrubAttr(a slog.Attr) (out slog.Attr, keep bool) {
 			return slog.String(a.Key, String(x.Error())), true
 		case fmt.Stringer:
 			return slog.String(a.Key, String(x.String())), true
+		case []byte:
+			return slog.String(a.Key, String(string(x))), true
 		default:
+			// JSON 과 %+v 둘 다 봄 — 내보내지 않은 필드는 JSON 에 안 나오지만 텍스트 핸들러는 %+v 로 찍음(구현 리뷰 I-6).
 			text, err := json.Marshal(x)
 			if err != nil {
 				text = []byte(fmt.Sprint(x))
 			}
-			if scrubbed := String(string(text)); scrubbed != string(text) {
-				return slog.String(a.Key, scrubbed), true
+			plain := fmt.Sprintf("%+v", x)
+			if scrubbed := String(string(text)); scrubbed != string(text) || String(plain) != plain {
+				return slog.String(a.Key, String(plain)), true
 			}
 			return slog.Attr{Key: a.Key, Value: v}, true
 		}
+	case slog.KindFloat64:
+		// 실수는 지수 꼴로 찍히면 숫자열 규칙이 못 봄 — 정수 꼴로도 대조.
+		f := v.Float64()
+		if text := strconv.FormatFloat(f, 'f', -1, 64); String(text) != text {
+			return slog.String(a.Key, String(text)), true
+		}
+		return slog.Attr{Key: a.Key, Value: v}, true
 	default:
 		text := v.String()
 		if scrubbed := String(text); scrubbed != text {

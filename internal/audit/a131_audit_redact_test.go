@@ -70,3 +70,23 @@ func TestA131RedactEntryIsTheRecordRule(t *testing.T) {
 		t.Fatalf("RedactEntry = %+v", e)
 	}
 }
+
+// 구현 리뷰 I-2: 설정 이름에 계좌가 들어가는 생산 자리가 있음(journal operating_mode:<account> · entry_loss_lock:<account>/…) —
+// Setting 도 치환되고 Action · At 은 그대로.
+func TestA131AuditSettingThatNamesTheAccountIsRedacted(t *testing.T) {
+	path := filepath.Join(t.TempDir(), audit.FileName)
+	log, _ := audit.Open(audit.Options{Path: path, Subject: "op"})
+	at := time.Date(2026, 10, 13, 1, 0, 0, 0, time.UTC)
+	if err := log.Record(audit.Entry{At: at, Action: "operating_mode.release", Setting: "operating_mode:" + a131AuditAccount,
+		Old: "ENTRY_BLOCKED", New: "NORMAL"}); err != nil {
+		t.Fatal(err)
+	}
+	raw, _ := os.ReadFile(path)
+	if strings.Contains(string(raw), a131AuditAccount) {
+		t.Fatalf("setting carried the account: %s", raw)
+	}
+	got, _ := log.Entries()
+	if got[0].Action != "operating_mode.release" || got[0].Setting != "operating_mode:[account]" || !got[0].At.Equal(at) {
+		t.Fatalf("audit meaning changed: %+v", got[0])
+	}
+}

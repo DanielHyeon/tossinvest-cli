@@ -2,7 +2,7 @@
 
 - Source: `internal/audit/audit.go` (173-210)
 - Qualified: `Log.Record`
-- AST evidence: `ast.json` (편집 뒤, `source_sha256` 29886e7a4d031757…) — AST branches 8 · returns 6
+- AST evidence: `ast.json` (편집 뒤, `source_sha256` d8eb29e9d59280ea…) — AST branches 8 · returns 6
 - Risk scan: `risk-pattern-report.md`
 - 작성기: `analysis/harness/flm_write.py`(좌표는 ast.json 에서 옮김)
 
