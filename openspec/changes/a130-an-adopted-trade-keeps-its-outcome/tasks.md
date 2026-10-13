@@ -38,7 +38,7 @@ Story: `STORY-TOS-a130` · base `233d5d9c` · High-risk(원장 — 체결 반영
 ## 3. 사람 · Manager
 
 - [x] 3.1 Manager `make gate CHANGE=a130-an-adopted-trade-keeps-its-outcome` + 독립 검증 + 푸시
-      — 2026-10-13 Manager 독립 검증: a130 커밋 dbb0681c·727a841e·38ae382f 의 a133 파일 0 · High-risk diff 확인(apply_hook.go 는 버리던 거절 사유를 noteOutcomeRefusal 콜백으로 넘기는 3줄 — 체결 트랜잭션 네트워크 0, journal 생산 코드 net import 0) · A130 시험(journal·engine·official) 직접 실행 rc 0 · base 재고정 af0c0ce7 승인(review.md). 게이트 결과는 아래 줄에.
+      — 2026-10-13 Manager 독립 검증: a130 커밋 dbb0681c·727a841e·38ae382f 의 a133 파일 0 · High-risk diff 확인(apply_hook.go 는 버리던 거절 사유를 noteOutcomeRefusal 콜백으로 넘기는 3줄 — 체결 트랜잭션 네트워크 0, journal 생산 코드 net import 0) · A130 시험(journal·engine·official) 직접 실행 rc 0 · base 재고정 af0c0ce7 승인(review.md). 게이트 = 2026-10-14 `make gate` **11/11 PASS**(겹친 change FLM 번들 b7a0d18c + landed-commit 재기록; 6단계는 /mnt/D ntfs-3g 부하로 codegraph status 15s 한도 2회 초과 후 통과).
 
 ### 게이트 뒤 절차 (체크박스 아님 — a108 · a129 선례)
 

@@ -36,7 +36,8 @@ Story: `STORY-TOS-a133` · High-risk 인접(alert 전달 결과 → 진입 래�
 
 ## 3. 사람 · Manager
 
-- [ ] 3.1 Manager `make gate CHANGE=a133-an-alert-carries-no-account` + 독립 검증 + 푸시
+- [x] 3.1 Manager `make gate CHANGE=a133-an-alert-carries-no-account` + 독립 검증 + 푸시
+      — 2026-10-14 Manager 독립 검증: 커밋 4개 a130 파일 0 · obs/redact 시험 직접 실행 rc 0 · `Ntfy.Publish` 첫 문장 = redactForTransport(구조 시험 고정) · check_analysis rc 0. D4 ① 잔재 수용(Manager). 게이트 결과는 아래 줄에.
 
 ### 게이트 뒤 절차 (체크박스 아님 — a108 선례)
 
