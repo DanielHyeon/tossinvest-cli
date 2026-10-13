@@ -52,9 +52,16 @@ type PublicState struct {
 	MinutesToClose       int             `json:"minutes_to_close"`
 	// SessionSource 는 세션창 출처("calendar" 또는 "manual-override"). 달력을 사람이 --session 으로
 	// 우회하면 그 사실이 전송 state 와 보관 state 에 남아 보고서가 로트의 혼입을 가려낼 수 있음.
-	SessionSource string   `json:"session_source"`
-	News          string   `json:"news"`
-	MissingInputs []string `json:"missing_inputs"`
+	SessionSource string `json:"session_source"`
+	// 1.7(state_rev a128-s2) 블록 — features.go. 못 읽은 블록은 생략되고 missing_inputs 에 이름이 남음.
+	Intraday      *IntradayState      `json:"intraday,omitempty"`
+	Daily         *DailyState         `json:"daily,omitempty"`
+	MarketContext *MarketContextState `json:"market_context,omitempty"`
+	// WarningTypes 는 활성 매수 유의 유형(openapi StockWarning.warningType). 읽었고 0 건이면 빈 목록 — 「없음」과 「못 읽음」을 가름.
+	WarningTypes  *[]string        `json:"warning_types,omitempty"`
+	PriceLimits   *PriceLimitState `json:"price_limits,omitempty"`
+	News          string           `json:"news"`
+	MissingInputs []string         `json:"missing_inputs"`
 }
 
 // TopOfBookState 는 호가 맨 위 한 줄과 그 나이(브로커 시각 기준).
@@ -78,7 +85,13 @@ type marketInputs struct {
 	Meta        *domain.Quote             // /stocks — nil 이면 결손
 	LastPrice   float64                   // /prices — 0 초과만 여기까지 옴
 	Book        *official.StrictTopOfBook // /orderbook — nil 이면 결손
-	Gaps        []string                  // 수집 단계에서 이미 난 결손
+	Gaps        []string                  // 수집 단계에서 이미 난 결손(읽기 실패의 이름은 수집 단계가 적음)
+	// 1.7 입력 — nil = 못 읽음(이름은 Gaps 에), 빈 슬라이스 = 읽었고 0 개.
+	MinuteBars []minuteBar           // /candles 1m(엄격 리더)
+	DailyBars  []domain.Candle       // /candles 1d(수정주가)
+	Warnings   *domain.StockWarnings // /stocks/{symbol}/warnings
+	Limits     *domain.PriceLimits   // /price-limits(KR 만)
+	Context    *MarketContextState   // 사이클당 한 번 읽은 시장 맥락(KR 만)
 }
 
 // assembleState 는 입력을 PublicState 로 옮기고, 빠진 입력을 MissingInputs 에 이름으로 남김.
@@ -119,6 +132,26 @@ func assembleState(in marketInputs) PublicState {
 		} else {
 			state.MissingInputs = append(state.MissingInputs, "top_of_book: decimal not parseable")
 		}
+	}
+	if in.MinuteBars != nil {
+		state.Intraday = intradayFeatures(in.MinuteBars, in.Session.Open, in.ObservedAt, in.LastPrice)
+	}
+	if in.DailyBars != nil {
+		state.Daily = dailyFeatures(in.DailyBars, in.Session.Open, in.LastPrice)
+	}
+	if in.Warnings != nil {
+		types := []string{}
+		for _, warning := range in.Warnings.Warnings {
+			types = append(types, warning.Type)
+		}
+		state.WarningTypes = &types
+	}
+	if in.Limits != nil {
+		state.PriceLimits = priceLimitFeatures(*in.Limits, in.LastPrice)
+	}
+	state.MarketContext = in.Context
+	if in.Market == "KR" {
+		state.MissingInputs = append(state.MissingInputs, perStockInvestorNA)
 	}
 	state.MissingInputs = append(state.MissingInputs, newsGapReason)
 	sort.Strings(state.MissingInputs)

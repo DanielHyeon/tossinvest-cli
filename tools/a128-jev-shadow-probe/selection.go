@@ -84,6 +84,36 @@ type selectionRecord struct {
 	// FinalistsRequested 는 --top, Finalists 는 실제 결선 수(생존이 적으면 미만).
 	FinalistsRequested int `json:"finalists_requested"`
 	Finalists          int `json:"finalists"`
+	// 1.7 — 공유 Open API 예산 관측: 사이클의 브로커 GET 수(재시도 포함, rate-limit 그룹별)·하루 캐시 적중 수·
+	// 상한 읽기부터 판단 끝까지의 수집 시간·간격.
+	BrokerReads     int        `json:"broker_reads"`
+	ReadsByGroup    readGroups `json:"broker_reads_by_group"`
+	CacheHits       int        `json:"day_cache_hits"`
+	CollectSeconds  float64    `json:"collect_seconds"`
+	IntervalSeconds int        `json:"interval_seconds"`
+}
+
+// readGroups 는 rate-limit 그룹별 GET 수. 고정 필드라 selectionRecord 가 비교 가능하게 남음.
+type readGroups struct {
+	Ranking              int `json:"RANKING"`
+	Stock                int `json:"STOCK"`
+	MarketData           int `json:"MARKET_DATA"`
+	MarketDataChart      int `json:"MARKET_DATA_CHART"`
+	MarketInfo           int `json:"MARKET_INFO"`
+	MarketIndicator      int `json:"MARKET_INDICATOR"`
+	MarketIndicatorChart int `json:"MARKET_INDICATOR_CHART"`
+}
+
+func readGroupsOf(counts map[string]int) readGroups {
+	return readGroups{
+		Ranking: counts[groupRanking], Stock: counts[groupStock], MarketData: counts[groupMarketData],
+		MarketDataChart: counts[groupMarketDataChart], MarketInfo: counts[groupMarketInfo],
+		MarketIndicator: counts[groupMarketIndicator], MarketIndicatorChart: counts[groupMarketIndicatorChart],
+	}
+}
+
+func (g readGroups) total() int {
+	return g.Ranking + g.Stock + g.MarketData + g.MarketDataChart + g.MarketInfo + g.MarketIndicator + g.MarketIndicatorChart
 }
 
 // loadOrderCap 은 tossctl config 파일에서 주문 상한을 읽음(읽기 전용 — Status 는 파일을 쓰지 않음).
@@ -139,7 +169,7 @@ func (p *probe) resolveSelectionInputs(ctx context.Context, market string) (sele
 		return in, nil
 	}
 	// ExchangeRate(base, quote) 는 "1 base = rate quote" — 시세 통화 1 단위가 상한 통화로 얼마인지.
-	rate, err := withRateLimitRetry(ctx, p, func(ctx context.Context) (domain.ExchangeRate, error) {
+	rate, err := withRateLimitRetry(ctx, p, groupMarketInfo, func(ctx context.Context) (domain.ExchangeRate, error) {
 		return p.src.ExchangeRate(ctx, priceCurrency, limit.Currency)
 	})
 	if err != nil {
@@ -200,10 +230,15 @@ func selectionRuleFor(k, pool int) string {
 // newSelectionSeed 는 사이클마다 새 시드를 뽑음(전역 생성기는 프로세스마다 무작위 시드됨).
 func newSelectionSeed() uint64 { return rand.Uint64() & seedMask }
 
-// selectionLot 은 보고서 로트 이름 — selection 이 없는 옛 행은 상위 10 고정 로트.
+// selectionLot 은 보고서 로트 이름 — selection 이 없는 옛 행은 상위 10 고정 로트. state_rev 가 있으면
+// 「규칙@state_rev」(1.7) — 같은 규칙이라도 Jev 가 본 state 모양이 다르면 p 의 모집단이 다름.
 func selectionLot(row judgmentRow) string {
-	if row.Selection == nil {
-		return legacySelectionLot
+	lot := legacySelectionLot
+	if row.Selection != nil {
+		lot = row.Selection.Rule
 	}
-	return row.Selection.Rule
+	if row.StateRev != "" {
+		lot += "@" + row.StateRev
+	}
+	return lot
 }

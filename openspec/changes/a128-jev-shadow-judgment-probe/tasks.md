@@ -139,6 +139,58 @@
       FLM·변이 원장·다중 적대 리뷰: Function Logic Map: not-applicable — 측정 도구 경로만(`tools/`), High-risk 경로 무접촉·게이트 판정 변경 0
       (비례 원칙). 비용: 사이클당 Jev 요청 10 → 30(3배), 호가 GET 도 10 → 30.
 
+- [x] 1.7 Jev 에 충분한 정보(사용자 지시 2026-10-14 「Jev에게 충분한 정보를 줘서 올바른 판단을 할 수 있도록 해」 +
+      Manager 수정 「API 호출 최소화·묶음」): state 를 공개 시장 데이터로 넓힘 — `state_rev = a128-s2`(원장 judgment 행
+      `state_rev`, 보고서 로트 = `규칙@a128-s2` 로 갈라짐; 질문 불변 → `questionRev` a128-r1 그대로). 기존 `official.Client`
+      공개 읽기만, 새 전송 경로 0, `internal/` 무접촉. 주문·계좌·보유·매수가능 이름은 AST 시험이 계속 금지.
+      - 새 블록(features.go): `intraday`(오늘 세션 1분봉 최근 30 + 5/15/30/60분 수익률(N분 전 봉 허용폭 5분)·창 고저와 그 안
+        위치·창 근사 VWAP 거리·거래량 가속 5/30 봉) · `daily`(수정주가 직전 거래일 봉: 1/5/20일 수익률·20일 고저 거리·20일 평균
+        거래량) · `market_context`(KR: KOSPI·KOSDAQ 오늘·30분 등락 + 시장 전체 투자자별 순매수 원) · `warning_types`(활성 매수 유의,
+        0 건 = 빈 목록) · `price_limits`(KR 상하한가 거리). 못 읽은 블록은 생략 + `missing_inputs` 에 이름(판단은 계속, stocks_meta 정책).
+      - 계약 근거(영수증): 지표 카탈로그 = KOSPI·KOSDAQ·KR_BOND_* 8종뿐(openapi Market Indicators) → **US 지수 없음** →
+        US 는 `market_context:` 결손 이름. investor-trading = KOSPI/KOSDAQ 시장 단위만, 금액 원화 정수, 당일 = 잠정치(openapi) →
+        **종목별 투자자 매매는 공식에 없음** → KR state 에 `investor_trading_per_stock:` 상시 이름. 1분봉 timestamp = 닫는 시각
+        (a112 결정 30) → `before = 판단 시각` 으로 자라는 봉 제외. 일봉 timestamp 의미는 미실측 — 「시각 < 오늘 개장 = 직전
+        거래일」 경계는 닫는 시각·개장 시각 해석 모두에서 같고, 「자기 날짜 자정」 표기만 틀림 → `last_prior_bar_at` 을 state 에 남김.
+      - 넣지 않은 것: 호가 깊이 — `StrictOrderbookTop` 은 맨 위 한 줄만 내주고 깊이를 얻으려면 `/orderbook` 을 한 번 더 부르거나
+        `internal/official` 을 고쳐야 함(엄격 경로 약화 없이 불가) → 제외. 체결(tape) — 공식 Trade 에 매수/매도 구분 없음 + 1분봉이
+        거래량을 실음 → 제외. 「오늘 거래량/20일 평균」 — 일봉 캐시와 맞지 않아 제외(오늘은 intraday 가 실음).
+        KRX 거래정지(`koreanMarketDetail.krxTradingSuspended`)는 공식 스키마에 있으나 `adaptStocks` 가 버림 → `/stocks` `status`
+        (ACTIVE 외 = SCHEDULED·DELISTED)로만 종목별 읽기 생략(`per_symbol_reads: skipped …`). 정지 플래그는 열린 항목.
+      - 호출 예산(풀 30, 시험 실측 — mock 의 경로·rate-limit 그룹별 계수): **KR 정상 사이클 = 96 GET**(RANKING 1·STOCK 31·
+        MARKET_DATA 31·MARKET_DATA_CHART 30·MARKET_INDICATOR 1·MARKET_INDICATOR_CHART 2 = Manager 추정치와 같음), **그날 처음 보는 종목**
+        은 일봉 1·가격제한폭 1 추가(첫 사이클 30 종목 전부 처음 = 160 GET, `TestCycleJudgesTheWholePoolAndFlagsOnlyTheFinalists`).
+        2 종목 시험: 첫 사이클 20 GET·둘째 12 GET·캐시 적중 8(`TestCycleReadsTheRicherStateWithinItsCallBudget`). 하루 캐시 =
+        (시장|현지 날짜|종류|심볼): 종목 일봉·가격제한폭·지수 일봉·시장 투자자 매매. 묶음: `/stocks`·`/prices`·지수 시세는 풀/지수
+        전체 한 번. 사이클 원장 `selection` 에 `broker_reads`·`broker_reads_by_group`·`day_cache_hits`·`collect_seconds`·
+        `interval_seconds`, 로그에 사이클마다 같은 수 + 수집 시간이 간격 절반을 넘으면 WARNING, 보고서에 로트별 「사이클 예산」 줄
+        (GET 중앙·최대·수집 중앙·최대·간격 절반 초과 사이클 수).
+      - 속도: 모든 브로커 GET 앞에 `ReadGap` 250ms(기존) → 한 시장 프로세스의 전체 GET ≤ 4/s, 종목 루프가 MARKET_DATA·CHART·STOCK
+        를 번갈아 부르므로 MARKET_DATA 는 대략 ≤ 1.5/s(엔진과 공유하는 10/s 의 절반 아래). KR·US 세션은 겹치지 않음.
+        추정 수집 시간(실측 아님): 96 GET × (0.25s + 지연) + Jev 30 요청 ≈ 1~2.5 분 < 간격 절반 5 분. 첫 장중 사이클의 로그·
+        `collect_seconds` 로 확인할 것.
+      - **입력 토큰(추정, 실측 아님)**: s1 실측 — 원장 j1 요청 90 건 median `input_tokens` **734.5**(726~751), state 파일 median
+        659.5 B, 선형 적합 tokens ≈ 357 + 0.576 × state bytes. s2 state(시험 mock, KR 1분봉 30 개) = **3,869 B** → 추정 **≈ 2,590
+        tokens/요청(약 3.5 배)**, 사이클(30 요청) ≈ 7.8 만, KR 세션(34 사이클) ≈ 260 만 토큰. 적합이 좁은 크기 범위(약 650~700 B)에서
+        나와 외삽 오차가 큼 — 실제 median 은 첫 s2 사이클 원장의 `input_tokens` 로 다시 적을 것. 크기의 약 절반이 1분봉 30 개.
+      — 영수증(2026-10-14, go1.26.5, 실 API 호출 0 — httptest 만, `run` 미실행, .env 미열람; 원장·states 는 **읽기만**):
+      `gofmt -l` 빈 출력 · `go vet ./tools/a128-jev-shadow-probe/...` rc=0 · `go vet -tags tossos_testseams …` rc=0 ·
+      `rtk proxy go test -count=1 -v ./tools/a128-jev-shadow-probe/...` rc=0(최상위 60 PASS + 하위 23 PASS, FAIL 0) · `-race` rc=0.
+      새 시험(`features_test.go`, RED 먼저 — 컴파일 실패 확인 후 구현): `TestIntradayFeaturesOnAHandComputedSession`(60 봉 손계산 —
+      개장 전·판단 뒤 봉 거름) · `TestIntradayFeaturesBoundaries`(빈 봉·봉 1 개·거래량 0·허용폭 5분 경계) ·
+      `TestDailyFeaturesOnHandComputedBars`(21 직전 봉 + 오늘 봉 + 시각 없는 봉, 6 봉·0 봉) · `TestLimitsAndIndexFeatures` ·
+      `TestAssembleStateCarriesEachNewInputOrNamesItsAbsence` · `TestCycleReadsTheRicherStateWithinItsCallBudget`(경로·그룹별 수, 둘째 사이클
+      캐시, US 무호출) · `TestInactiveListingSkipsPerSymbolReads` · `TestReadFailuresBecomeMissingInputsNotGaps` ·
+      `TestReportSplitsLotsByStateRev` · `TestReportShowsCycleBudgetPerLot` · `TestMarketContextGapDoesNotMaskAMissingStockMeta`
+      (자기 리뷰에서 찾은 결손 가림 — RED 확인 후 수리). 갱신: `TestPublicStateKeySetIsPinned`(슬라이스 안 구조체까지 열쇠 고정,
+      새 열쇠 전부 금지 정규식 비통과 확인 — 처음 쓴 `imbalance_pct` 가 `balance` 에 걸려 가드가 막음 → 깊이 블록과 함께 제거),
+      `TestMarketSourceIsTheReadOnlyGets`(13 메서드), 계좌 표식 mock(새 읽기 응답 봉투·행에 `accountNo`·`holdingQuantity`·
+      `accountBalance` 표식) 으로 `TestAccountFieldsInBrokerResponsesNeverReachTypeSafe` 통과.
+      변이(`-overlay`, 무변이 대조군 GREEN, 전후 소스 sha256 동일): 캐시 무력화·상장 상태 관문 삭제·허용폭 삭제·세션 거름 삭제·
+      오늘 봉을 직전으로·state_rev 미기록·US 가격제한폭 호출·종목별 투자자 결손 이름 삭제·GET 계수 삭제·보고서 절반 기준 → 간격·
+      경고 0 건을 nil 로·US 0 띠 허용·로트가 state_rev 무시·거래량 0 나눗셈 = 14/14 CAUGHT.
+      Function Logic Map: not-applicable — 측정 도구 경로만(`tools/`), High-risk 경로 무접촉·게이트 판정 변경 0(비례 원칙).
+
 ## 2. 리뷰·착지
 
 - [x] 2.1 gstack 리뷰(경량 — 비례 원칙) + Manager 검증(경로 전수·트레일러·시험 재실행).

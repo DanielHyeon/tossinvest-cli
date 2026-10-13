@@ -24,6 +24,22 @@ func TestPublicStateKeySetIsPinned(t *testing.T) {
 		"trading_volume",
 		"top_of_book.best_ask", "top_of_book.best_ask_volume", "top_of_book.best_bid",
 		"top_of_book.best_bid_volume", "top_of_book.source_age_seconds", "top_of_book.spread_bps",
+		// 1.7(state_rev a128-s2) — features.go.
+		"intraday", "intraday.bars_available", "intraday.bars_1m", "intraday.bars_1m.t", "intraday.bars_1m.o",
+		"intraday.bars_1m.h", "intraday.bars_1m.l", "intraday.bars_1m.c", "intraday.bars_1m.v",
+		"intraday.return_5m_pct", "intraday.return_15m_pct", "intraday.return_30m_pct", "intraday.return_60m_pct",
+		"intraday.window_high", "intraday.window_low", "intraday.price_in_window_range_pct", "intraday.window_vwap_typical",
+		"intraday.vs_window_vwap_pct", "intraday.volume_last_5_bars_vs_earlier_avg", "intraday.volume_last_30_bars_vs_earlier_avg",
+		"daily", "daily.prior_bars", "daily.last_prior_bar_at", "daily.return_1d_pct", "daily.return_5d_pct",
+		"daily.return_20d_pct", "daily.high_20d", "daily.low_20d", "daily.vs_high_20d_pct", "daily.vs_low_20d_pct",
+		"daily.avg_volume_20d",
+		"market_context", "market_context.indices", "market_context.indices.symbol", "market_context.indices.last",
+		"market_context.indices.change_today_pct", "market_context.indices.change_30m_pct",
+		"market_context.investor_flows", "market_context.investor_flows.market", "market_context.investor_flows.date",
+		"market_context.investor_flows.updated_at", "market_context.investor_flows.individual_net_krw",
+		"market_context.investor_flows.foreigner_net_krw", "market_context.investor_flows.institution_net_krw",
+		"warning_types", "price_limits", "price_limits.upper_limit", "price_limits.lower_limit",
+		"price_limits.to_upper_pct", "price_limits.to_lower_pct",
 	}
 	var got []string
 	var collect func(prefix string, typ reflect.Type)
@@ -39,7 +55,8 @@ func TestPublicStateKeySetIsPinned(t *testing.T) {
 			}
 			got = append(got, prefix+name)
 			inner := field.Type
-			for inner.Kind() == reflect.Pointer {
+			// 포인터·슬라이스 안의 구조체까지 내려감 — 1분봉·지수 목록의 열쇠도 고정 목록에 들어야 함.
+			for inner.Kind() == reflect.Pointer || inner.Kind() == reflect.Slice {
 				inner = inner.Elem()
 			}
 			if inner.Kind() == reflect.Struct {

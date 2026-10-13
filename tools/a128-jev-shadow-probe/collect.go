@@ -3,15 +3,18 @@ package main
 // collect.go 는 수집 루프·세션 경계·rate limit 백오프·라벨러를 담당함.
 //
 // 브로커에는 읽기(GET)만 보냄: marketSource 인터페이스가 이 도구가 부를 수 있는 브로커 표면
-// 전부이고, 그 메서드 여섯은 모두 공개 시장 데이터 GET 임(환율 포함 — 1.5 표본 선택의 상한 환산).
-// 주문·계좌 메서드는 인터페이스에 없으므로 수집 코드에서 도달 불가(static_test.go 가 메서드 집합을 고정함).
+// 전부이고, 그 메서드는 모두 공개 시장 데이터 GET 임(환율 — 1.5 상한 환산, 봉·유의·
+// 가격제한폭·지수·시장 투자자 매매 — 1.7 state 확장). 주문·계좌·보유·매수가능 메서드는 인터페이스에 없으므로
+// 수집 코드에서 도달 불가(static_test.go 가 메서드 집합을 고정함).
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -28,6 +31,51 @@ type marketSource interface {
 	StrictOrderbookTop(ctx context.Context, market, symbol string) (official.StrictTopOfBook, error)
 	TypedMarketCalendar(ctx context.Context, country, date string) (official.MarketCalendarResponse, error)
 	ExchangeRate(ctx context.Context, base, quote string) (domain.ExchangeRate, error)
+	// 1.7 — state 확장용 공개 읽기.
+	StrictMinuteCandles(ctx context.Context, market, symbol string, count int, before string) (official.StrictMinutePage, error)
+	Candles(ctx context.Context, symbol, interval string, count int, before string, adjusted bool) (domain.Chart, error)
+	Warnings(ctx context.Context, symbol string) (domain.StockWarnings, error)
+	PriceLimits(ctx context.Context, symbol string) (domain.PriceLimits, error)
+	MarketIndicatorPrices(ctx context.Context, symbols []string) (domain.MarketIndicatorPrices, error)
+	MarketIndicatorCandles(ctx context.Context, symbol, interval string, count int, before string) (domain.MarketIndicatorCandles, error)
+	MarketInvestorTrading(ctx context.Context, symbol, interval string, count int, until string) (domain.InvestorTrading, error)
+}
+
+// rate-limit 그룹(openapi 각 엔드포인트 description 의 「Rate Limits Group」, docs/migration/open-api.md 한도표).
+const (
+	groupRanking              = "RANKING"
+	groupStock                = "STOCK"                  // 초당 5
+	groupMarketData           = "MARKET_DATA"            // 초당 10 — 엔진의 /prices·/orderbook 과 공유
+	groupMarketDataChart      = "MARKET_DATA_CHART"      // 초당 5
+	groupMarketInfo           = "MARKET_INFO"            // 초당 3
+	groupMarketIndicator      = "MARKET_INDICATOR"       // 지수 시세·시장 투자자 매매
+	groupMarketIndicatorChart = "MARKET_INDICATOR_CHART" // 지수 봉
+)
+
+// readCounterKey 는 사이클 하나의 브로커 GET 수(그룹별)와 하루 캐시 적중 수를 세는 계수기를 ctx 에 싣는 열쇠 —
+// 두 시장이 병렬로 돌 수 있으므로 probe 전역이 아니라 사이클 ctx 에 둠. 라벨러·달력 읽기는 세지 않음.
+type readCounterKey struct{}
+
+type cycleReads struct {
+	mu        sync.Mutex
+	byGroup   map[string]int
+	cacheHits int
+}
+
+func countRead(ctx context.Context, group string) {
+	if counter, ok := ctx.Value(readCounterKey{}).(*cycleReads); ok {
+		counter.mu.Lock()
+		counter.byGroup[group]++
+		counter.mu.Unlock()
+	}
+}
+
+func countCacheHit(ctx context.Context) {
+	if counter, ok := ctx.Value(readCounterKey{}).(*cycleReads); ok {
+		counter.mu.Lock()
+		counter.cacheHits++
+		counter.mu.Unlock()
+	}
 }
 
 const (
@@ -91,6 +139,10 @@ type probe struct {
 
 	mu      sync.Mutex
 	pending []pendingLabel
+
+	// dayCache 는 하루 동안 변하지 않는 읽기(일봉·가격제한폭·지수 일봉·시장 투자자 매매)의 프로세스 안 캐시(dayCached).
+	cacheMu  sync.Mutex
+	dayCache map[string]any
 }
 
 // pendingLabel 은 한 종목·한 사이클의 판단들(J1·J2)이 공유하는 라벨 대기 항목.
@@ -105,7 +157,7 @@ type pendingLabel struct {
 func newProbe(src marketSource, judge *judgeClient, l *ledger, cfg config) *probe {
 	return &probe{
 		src: src, judge: judge, ledger: l, cfg: cfg, questions: probeQuestions(),
-		now: time.Now, sleep: sleepContext, seed: newSelectionSeed,
+		now: time.Now, sleep: sleepContext, seed: newSelectionSeed, dayCache: map[string]any{},
 		logf: func(format string, args ...any) { fmt.Fprintf(os.Stderr, format+"\n", args...) },
 	}
 }
@@ -114,7 +166,7 @@ func newProbe(src marketSource, judge *judgeClient, l *ledger, cfg config) *prob
 // 포기하면 errRateLimitGaveUp 로 감싸 원장 사유가 "포기"임을 분명히 함.
 var errRateLimitGaveUp = errors.New("rate_limited_gave_up")
 
-func withRateLimitRetry[T any](ctx context.Context, p *probe, call func(context.Context) (T, error)) (T, error) {
+func withRateLimitRetry[T any](ctx context.Context, p *probe, group string, call func(context.Context) (T, error)) (T, error) {
 	var zero T
 	for attempt := 0; ; attempt++ {
 		if attempt > 0 || p.cfg.ReadGap > 0 {
@@ -126,6 +178,7 @@ func withRateLimitRetry[T any](ctx context.Context, p *probe, call func(context.
 				return zero, err
 			}
 		}
+		countRead(ctx, group)
 		value, err := call(ctx)
 		if err == nil {
 			return value, nil
@@ -150,7 +203,7 @@ func (p *probe) resolveSession(ctx context.Context, market string) (session, err
 	if p.cfg.ManualWindow != nil {
 		return p.manualSession(market)
 	}
-	calendar, err := withRateLimitRetry(ctx, p, func(ctx context.Context) (official.MarketCalendarResponse, error) {
+	calendar, err := withRateLimitRetry(ctx, p, groupMarketInfo, func(ctx context.Context) (official.MarketCalendarResponse, error) {
 		return p.src.TypedMarketCalendar(ctx, market, "")
 	})
 	if err != nil {
@@ -277,6 +330,9 @@ func (p *probe) runMarket(ctx context.Context, market string) error {
 // 끝나야 정해지기 때문. 그래서 사이클 도중 프로세스가 죽으면 그 사이클의 판단 행은 남지 않음
 // (state 파일과 판단 gap 행은 이미 쓰였을 수 있음 — 판단 행 없는 state 파일은 측정에 무해함).
 func (p *probe) cycle(ctx context.Context, market string, sess session, at time.Time) error {
+	reads := &cycleReads{byGroup: map[string]int{}}
+	ctx = context.WithValue(ctx, readCounterKey{}, reads)
+	collectStarted := p.now()
 	gap := func(stage, symbol string, err error) error {
 		p.logf("%s %s %s: %s", market, stage, symbol, reasonOf(err))
 		return p.ledger.gap(gapRow{At: stamp(at), Market: market, Stage: stage, Symbol: symbol, Reason: reasonOf(err)})
@@ -287,7 +343,7 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 	if err != nil {
 		return gap("selection", "", err)
 	}
-	ranking, err := withRateLimitRetry(ctx, p, func(ctx context.Context) (domain.Ranking, error) {
+	ranking, err := withRateLimitRetry(ctx, p, groupRanking, func(ctx context.Context) (domain.Ranking, error) {
 		return p.src.Rankings(ctx, rankingType, market, rankingDuration, false, rankingFetch)
 	})
 	if err != nil {
@@ -306,7 +362,7 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 		PriceCurrency: inputs.priceCurrency, PriceSource: selectionPriceSource,
 		RankingRequested: rankingFetch, RankingReceived: len(received),
 		ExcludedOverCap: overCap, ExcludedUnknownPrice: unknownPrice, Candidates: len(candidates),
-		Pool: p.cfg.Pool, FinalistsRequested: p.cfg.TopK,
+		Pool: p.cfg.Pool, FinalistsRequested: p.cfg.TopK, IntervalSeconds: int(p.cfg.Interval / time.Second),
 	}
 	if inputs.fxPair != "" {
 		selection.FXRate, selection.FXPair = inputs.fxRate, inputs.fxPair
@@ -325,7 +381,7 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 	// 메타 결손은 판단을 막지 않음 — 이름 없이도 판단은 가능하고, 결손은 행과 state 양쪽에 남음.
 	var cycleGaps []string
 	meta := map[string]domain.Quote{}
-	if stocks, err := withRateLimitRetry(ctx, p, func(ctx context.Context) ([]domain.Quote, error) {
+	if stocks, err := withRateLimitRetry(ctx, p, groupStock, func(ctx context.Context) ([]domain.Quote, error) {
 		return p.src.Stocks(ctx, symbols)
 	}); err != nil {
 		cycleGaps = append(cycleGaps, "stocks_meta: "+reasonOf(err))
@@ -336,7 +392,7 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 	}
 
 	// 기준가가 없으면 라벨을 만들 수 없으므로 판단(비용)을 쓰지 않고 결손으로 남김.
-	prices, err := withRateLimitRetry(ctx, p, func(ctx context.Context) ([]domain.Quote, error) {
+	prices, err := withRateLimitRetry(ctx, p, groupMarketData, func(ctx context.Context) ([]domain.Quote, error) {
 		return p.src.Prices(ctx, symbols)
 	})
 	if err != nil {
@@ -346,6 +402,9 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 	for _, quote := range prices {
 		last[quote.Symbol] = quote.Last
 	}
+	// 시장 맥락은 사이클당 한 번 — 풀 30 종목이 같은 값을 공유함(호출 예산).
+	// 맥락 결손은 cycleGaps(/stocks 실패 표시)와 따로 둠 — 섞으면 종목별 「stocks_meta 응답에 없음」 이름이 가려짐.
+	marketContext, contextGaps := p.readMarketContext(ctx, market, sess, at)
 
 	// judgedSymbol 은 판단에 성공한 풀 종목 하나 — 선별이 끝날 때까지 메모리에 둠(랭킹 순서 유지).
 	type judgedSymbol struct {
@@ -373,7 +432,7 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 			gaps = append(gaps, "stocks_meta: symbol missing from the response")
 		}
 		var bookPtr *official.StrictTopOfBook
-		book, err := withRateLimitRetry(ctx, p, func(ctx context.Context) (official.StrictTopOfBook, error) {
+		book, err := withRateLimitRetry(ctx, p, groupMarketData, func(ctx context.Context) (official.StrictTopOfBook, error) {
 			return p.src.StrictOrderbookTop(ctx, market, item.Symbol)
 		})
 		if err != nil {
@@ -382,10 +441,14 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 			bookPtr = &book
 		}
 
-		state := assembleState(marketInputs{
+		in := marketInputs{
 			Market: market, ObservedAt: at, Horizon: p.cfg.Horizon, Session: sess,
-			RankingType: rankingType, Rank: item, Meta: metaPtr, LastPrice: base, Book: bookPtr, Gaps: gaps,
-		})
+			RankingType: rankingType, Rank: item, Meta: metaPtr, LastPrice: base, Book: bookPtr, Context: marketContext,
+		}
+		gaps = append(gaps, contextGaps...)
+		gaps = append(gaps, p.readSymbolContext(ctx, market, item.Symbol, at, metaPtr, &in)...)
+		in.Gaps = gaps
+		state := assembleState(in)
 		digest, err := p.ledger.storeState(state)
 		if err != nil {
 			return err
@@ -410,6 +473,10 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 	// 선별은 판단이 다 끝난 뒤 한 번 — 사이클의 selection 수치를 행을 쓰기 전에 확정함.
 	screens := screenFinalists(screenInputs, p.cfg.TopK)
 	selection.Judged = len(judged)
+	collect := p.now().Sub(collectStarted)
+	selection.ReadsByGroup = readGroupsOf(reads.byGroup)
+	selection.BrokerReads, selection.CacheHits = selection.ReadsByGroup.total(), reads.cacheHits
+	selection.CollectSeconds = round(collect.Seconds(), 1)
 	for _, screen := range screens {
 		if screen.RedFlagExcluded {
 			selection.RedFlagExcluded++
@@ -433,7 +500,7 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 				StateDigest: entry.digest, P: entry.result.P[q.ID], BasePrice: entry.base, Currency: entry.state.Currency,
 				HorizonMinutes: entry.state.HorizonMinutes, LabelDueAt: stamp(due),
 				InputTokens: entry.result.InputTokens, CollectionGaps: entry.state.MissingInputs,
-				Selection: selection, Screen: &screen,
+				Selection: selection, Screen: &screen, StateRev: stateRev,
 			}); err != nil {
 				return err
 			}
@@ -441,7 +508,190 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 		}
 		p.addPending(pending)
 	}
+	// 공유 Open API 예산 관측: 사이클당 GET 수·수집 시간. 간격의 절반을 넘으면 경고(다음 사이클이 밀리기 시작함).
+	p.logf("%s cycle %s: pool %d · judged %d · finalists %d · broker GETs %d %+v · day-cache hits %d · collect %s",
+		market, stamp(at), selection.Selected, selection.Judged, selection.Finalists, selection.BrokerReads,
+		selection.ReadsByGroup, selection.CacheHits, collect.Round(time.Second))
+	if p.cfg.Interval > 0 && collect > p.cfg.Interval/2 {
+		p.logf("%s WARNING: cycle collect time %s exceeds half the interval %s", market, collect.Round(time.Second), p.cfg.Interval)
+	}
 	return nil
+}
+
+// readSymbolContext 는 종목 하나의 1.7 공개 읽기(1분봉·유의 — 사이클마다, 일봉·가격제한폭 — 하루 한 번 캐시)를
+// in 에 채우고, 실패한 읽기의 이름을 돌려줌 — 판단은 막지 않음(stocks_meta 와 같은 정책).
+// /stocks 의 상장 상태가 ACTIVE 가 아니면(SCHEDULED·DELISTED) 종목별 읽기를 건너뛰고 이름으로 남김.
+func (p *probe) readSymbolContext(ctx context.Context, market, symbol string, at time.Time, meta *domain.Quote, in *marketInputs) []string {
+	if meta != nil && meta.Status != "" && meta.Status != "ACTIVE" {
+		return []string{"per_symbol_reads: skipped, /stocks listing status is " + meta.Status}
+	}
+	loc, err := marketLocation(market)
+	if err != nil {
+		return []string{"minute_bars: " + reasonOf(err)}
+	}
+	var gaps []string
+	day := at.In(loc).Format("2006-01-02")
+	// before = 판단 시각(시장 현지 오프셋 표기) — 1분봉 timestamp 는 닫는 시각이고 before 는 포함 상한이라
+	// 아직 자라는 봉은 저절로 빠짐(official.StrictMinuteCandles 주석).
+	if page, err := withRateLimitRetry(ctx, p, groupMarketDataChart, func(ctx context.Context) (official.StrictMinutePage, error) {
+		return p.src.StrictMinuteCandles(ctx, market, symbol, minuteFetchCount, at.In(loc).Format("2006-01-02T15:04:05-07:00"))
+	}); err != nil {
+		gaps = append(gaps, "minute_bars: "+reasonOf(err))
+	} else if bars, err := parseMinuteBars(page); err != nil {
+		gaps = append(gaps, "minute_bars: "+reasonOf(err))
+	} else {
+		in.MinuteBars = bars
+	}
+	// 일봉은 수정주가(adjusted=true) — 20일 수익률이 분할·배당락에 끊기지 않게. 1분봉·기준가는 미수정이라
+	// return_1d_pct 는 배당락일에 그만큼 어긋날 수 있음. 과거 봉은 하루 동안 변하지 않으므로 하루 캐시.
+	if daily, err := dayCached(ctx, p, market+"|"+day+"|daily|"+symbol, func() ([]domain.Candle, error) {
+		chart, err := withRateLimitRetry(ctx, p, groupMarketDataChart, func(ctx context.Context) (domain.Chart, error) {
+			return p.src.Candles(ctx, symbol, "1d", dailyFetchCount, "", true)
+		})
+		return append([]domain.Candle{}, chart.Candles...), err
+	}); err != nil {
+		gaps = append(gaps, "daily_bars: "+reasonOf(err))
+	} else {
+		in.DailyBars = daily
+	}
+	if warnings, err := withRateLimitRetry(ctx, p, groupStock, func(ctx context.Context) (domain.StockWarnings, error) {
+		return p.src.Warnings(ctx, symbol)
+	}); err != nil {
+		gaps = append(gaps, "warnings: "+reasonOf(err))
+	} else {
+		in.Warnings = &warnings
+	}
+	// 가격제한폭은 KR 만(US 는 공식 응답이 null) — 하루 동안 고정이므로 하루 캐시.
+	if market == "KR" {
+		if limits, err := dayCached(ctx, p, market+"|"+day+"|limits|"+symbol, func() (domain.PriceLimits, error) {
+			return withRateLimitRetry(ctx, p, groupMarketData, func(ctx context.Context) (domain.PriceLimits, error) {
+				return p.src.PriceLimits(ctx, symbol)
+			})
+		}); err != nil {
+			gaps = append(gaps, "price_limits: "+reasonOf(err))
+		} else {
+			in.Limits = &limits
+		}
+	}
+	return gaps
+}
+
+// dayCached 는 (시장|현지 날짜|종류|심볼) 열쇠로 성공한 읽기만 프로세스 안에 보관함 — 실패는 보관하지 않아 다음
+// 사이클이 다시 읽음. 날짜가 열쇠에 있으므로 다음 거래일에는 저절로 새로 읽음.
+func dayCached[T any](ctx context.Context, p *probe, key string, read func() (T, error)) (T, error) {
+	p.cacheMu.Lock()
+	if value, found := p.dayCache[key]; found {
+		p.cacheMu.Unlock()
+		countCacheHit(ctx)
+		return value.(T), nil
+	}
+	p.cacheMu.Unlock()
+	value, err := read()
+	if err != nil {
+		return value, err
+	}
+	p.cacheMu.Lock()
+	p.dayCache[key] = value
+	p.cacheMu.Unlock()
+	return value, nil
+}
+
+// parseMinuteBars 는 엄격 리더의 원본 문자열을 숫자로 바꿈. 하나라도 못 읽으면 페이지 전체를 결손으로 봄
+// (일부 봉만 빠진 창은 수익률·VWAP 을 조용히 바꾸므로).
+func parseMinuteBars(page official.StrictMinutePage) ([]minuteBar, error) {
+	bars := make([]minuteBar, 0, len(page.Candles))
+	for _, candle := range page.Candles {
+		closeAt, err := time.Parse(time.RFC3339, candle.Timestamp)
+		if err != nil {
+			return nil, fmt.Errorf("timestamp %q: %w", candle.Timestamp, err)
+		}
+		var values [5]float64
+		for index, text := range []string{candle.Open, candle.High, candle.Low, candle.Close, candle.Volume} {
+			value, err := strconv.ParseFloat(text, 64)
+			if err != nil || math.IsNaN(value) || math.IsInf(value, 0) {
+				return nil, fmt.Errorf("decimal %q at %s is not parseable", text, candle.Timestamp)
+			}
+			values[index] = value
+		}
+		bars = append(bars, minuteBar{CloseAt: closeAt, Open: values[0], High: values[1], Low: values[2], Last: values[3], Volume: values[4]})
+	}
+	return bars, nil
+}
+
+// readMarketContext 는 KR 지수 맥락을 사이클당 한 번 읽음: 지수 시세 1 회(두 지수 묶음) + 지수별 1분봉 1 회,
+// 지수별 일봉(직전 종가)과 시장 투자자 매매는 하루 캐시. US 는 공식 지표 카탈로그에 지수가 없어 부르지 않고
+// 이름으로 남김. 일부 실패는 그 부분만 빠지고 이름이 남음.
+func (p *probe) readMarketContext(ctx context.Context, market string, sess session, at time.Time) (*MarketContextState, []string) {
+	symbols := marketIndices[market]
+	if len(symbols) == 0 {
+		return nil, []string{"market_context: the official market-indicator catalog has no " + market +
+			" index and the investor flow is KRX-only"}
+	}
+	prices, err := withRateLimitRetry(ctx, p, groupMarketIndicator, func(ctx context.Context) (domain.MarketIndicatorPrices, error) {
+		return p.src.MarketIndicatorPrices(ctx, symbols)
+	})
+	if err != nil {
+		return nil, []string{"market_context: index prices: " + reasonOf(err)}
+	}
+	lastBySymbol := map[string]float64{}
+	for _, indicator := range prices.Indicators {
+		lastBySymbol[indicator.Symbol] = indicator.LastPrice
+	}
+	loc, err := marketLocation(market)
+	if err != nil {
+		return nil, []string{"market_context: " + reasonOf(err)}
+	}
+	var gaps []string
+	out := &MarketContextState{Indices: []IndexState{}, InvestorFlows: []InvestorFlowState{}}
+	day := at.In(loc).Format("2006-01-02")
+	for _, symbol := range symbols {
+		last := lastBySymbol[symbol]
+		if last <= 0 {
+			gaps = append(gaps, "market_context: "+symbol+" price missing from the response")
+			continue
+		}
+		var daily, minute []domain.MarketIndicatorCandle
+		if candles, err := dayCached(ctx, p, market+"|"+day+"|index-daily|"+symbol, func() ([]domain.MarketIndicatorCandle, error) {
+			page, err := withRateLimitRetry(ctx, p, groupMarketIndicatorChart, func(ctx context.Context) (domain.MarketIndicatorCandles, error) {
+				return p.src.MarketIndicatorCandles(ctx, symbol, "1d", 3, "")
+			})
+			return page.Candles, err
+		}); err != nil {
+			gaps = append(gaps, "market_context: "+symbol+" daily candles: "+reasonOf(err))
+		} else {
+			daily = candles
+		}
+		if page, err := withRateLimitRetry(ctx, p, groupMarketIndicatorChart, func(ctx context.Context) (domain.MarketIndicatorCandles, error) {
+			return p.src.MarketIndicatorCandles(ctx, symbol, "1m", 40, at.In(loc).Format("2006-01-02T15:04:05-07:00"))
+		}); err != nil {
+			gaps = append(gaps, "market_context: "+symbol+" minute candles: "+reasonOf(err))
+		} else {
+			minute = page.Candles
+		}
+		out.Indices = append(out.Indices, indexFeatures(symbol, last, daily, minute, sess.Open, at))
+
+		// 시장 투자자 매매(1d)는 하루 한 번 — 당일 기록은 장중 잠정치라 하루 첫 읽기의 값이 남음. 기록 날짜를
+		// state 에 싣어 Jev 가 어느 날의 흐름인지 알게 함(첫 읽기가 개장 직후면 전일 기록일 수 있음).
+		flow, err := dayCached(ctx, p, market+"|"+day+"|investor|"+symbol, func() (domain.InvestorTrading, error) {
+			return withRateLimitRetry(ctx, p, groupMarketIndicator, func(ctx context.Context) (domain.InvestorTrading, error) {
+				return p.src.MarketInvestorTrading(ctx, symbol, "1d", 1, "")
+			})
+		})
+		switch {
+		case err != nil:
+			gaps = append(gaps, "market_context: "+symbol+" investor trading: "+reasonOf(err))
+		case len(flow.Records) == 0:
+			gaps = append(gaps, "market_context: "+symbol+" investor trading returned no record")
+		default:
+			record := flow.Records[0]
+			out.InvestorFlows = append(out.InvestorFlows, InvestorFlowState{
+				Market: symbol, Date: record.Date, UpdatedAt: record.UpdatedAt,
+				IndividualNetKRW: record.Individual.NetAmount, ForeignerNetKRW: record.Foreigner.NetAmount,
+				InstitutionNetKRW: record.Institution.NetAmount,
+			})
+		}
+	}
+	return out, gaps
 }
 
 func (p *probe) addPending(item pendingLabel) {
@@ -533,7 +783,7 @@ func (p *probe) labelTick(ctx context.Context) error {
 				symbols = append(symbols, item.Symbol)
 			}
 		}
-		prices, err := withRateLimitRetry(ctx, p, func(ctx context.Context) ([]domain.Quote, error) {
+		prices, err := withRateLimitRetry(ctx, p, groupMarketData, func(ctx context.Context) ([]domain.Quote, error) {
 			return p.src.Prices(ctx, symbols)
 		})
 		readAt := p.now()

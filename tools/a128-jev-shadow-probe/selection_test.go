@@ -81,6 +81,9 @@ func TestSelectionCapBoundaryAndUnknownPrices(t *testing.T) {
 		ExcludedOverCap: 1, ExcludedUnknownPrice: 3, Candidates: 2,
 		Pool: 30, Selected: 2, Judged: 2, FinalistsRequested: 10, Finalists: 2,
 	}
+	// 예산 관측 필드(GET 수·캐시 적중·수집 시간)는 TestCycleReadsTheRicherStateWithinItsCallBudget 가 잼.
+	want.BrokerReads, want.ReadsByGroup, want.CacheHits, want.CollectSeconds = got.BrokerReads, got.ReadsByGroup, got.CacheHits, got.CollectSeconds
+	want.IntervalSeconds = 600
 	if got != want {
 		t.Fatalf("selection = %+v\nwant        %+v", got, want)
 	}

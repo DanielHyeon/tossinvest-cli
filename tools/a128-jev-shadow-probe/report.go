@@ -108,6 +108,9 @@ func renderCalibrationReport(contents ledgerContents, ledgerPath string) string 
 	if len(lots) > 0 {
 		line("- 표본 선택 로트: %s — 로트마다 표를 따로 둠(섞지 않음)", joinCounts(lots))
 	}
+	for _, budget := range cycleBudgets(contents) {
+		line("%s", budget)
+	}
 	line("- 질문 rev·digest: %s", joinKeys(revs))
 	line("- 답한 모델: %s", joinKeys(models))
 	if len(revs) > len(questionIDs) || len(models) > 1 {
@@ -149,6 +152,62 @@ func renderCalibrationReport(contents ledgerContents, ledgerPath string) string 
 		}
 	}
 	return out.String()
+}
+
+// cycleBudgets 는 예산 관측 필드(1.7)가 있는 로트마다 사이클(시장·시각) 단위의 GET 수·수집 시간 요약 한 줄.
+// 간격 절반을 넘은 사이클은 다음 사이클이 밀리기 시작한 신호(공유 Open API 예산을 사람이 판단할 재료).
+func cycleBudgets(contents ledgerContents) []string {
+	type cycle struct{ reads, seconds, interval float64 }
+	byLot := map[string]map[string]cycle{}
+	for _, row := range contents.Judgments {
+		if row.Selection == nil || row.Selection.IntervalSeconds == 0 {
+			continue
+		}
+		lot := selectionLot(row)
+		if byLot[lot] == nil {
+			byLot[lot] = map[string]cycle{}
+		}
+		byLot[lot][row.Market+"|"+row.At] = cycle{float64(row.Selection.BrokerReads), row.Selection.CollectSeconds, float64(row.Selection.IntervalSeconds)}
+	}
+	lots := make([]string, 0, len(byLot))
+	for lot := range byLot {
+		lots = append(lots, lot)
+	}
+	sort.Strings(lots)
+	var lines []string
+	for _, lot := range lots {
+		var reads, seconds []float64
+		over := 0
+		for _, c := range byLot[lot] {
+			reads, seconds = append(reads, c.reads), append(seconds, c.seconds)
+			if c.seconds > c.interval/2 {
+				over++
+			}
+		}
+		lines = append(lines, fmt.Sprintf("- 사이클 예산 %s: 사이클 %d · broker GET 중앙 %.0f · 최대 %.0f · 수집 중앙 %.0fs · 최대 %.0fs · 간격 절반 초과 %d",
+			lot, len(reads), median(reads), maxOf(reads), median(seconds), maxOf(seconds), over))
+	}
+	return lines
+}
+
+func median(values []float64) float64 {
+	sorted := append([]float64(nil), values...)
+	sort.Float64s(sorted)
+	if len(sorted) == 0 {
+		return 0
+	}
+	if len(sorted)%2 == 1 {
+		return sorted[len(sorted)/2]
+	}
+	return (sorted[len(sorted)/2-1] + sorted[len(sorted)/2]) / 2
+}
+
+func maxOf(values []float64) float64 {
+	out := math.Inf(-1)
+	for _, value := range values {
+		out = math.Max(out, value)
+	}
+	return out
 }
 
 // screenedLots 는 선별 기록이 있는 행을 가진 로트 — 옛 로트(top10·random10)는 비교 대상이 아님.

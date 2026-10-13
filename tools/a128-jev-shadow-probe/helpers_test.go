@@ -58,6 +58,10 @@ type officialMock struct {
 	rankingRows []rankingRow
 	// fx* 는 /api/v1/exchange-rate 응답의 짝과 매수 환율.
 	fxBase, fxQuote, fxRate string
+	// stockStatus 는 /stocks 의 상장 상태(기본 ACTIVE).
+	stockStatus map[string]string
+	// now 는 1분봉 mock 이 「아직 안 닫힌 봉」을 만들지 않게 before 가 없을 때 쓰는 기준 시각.
+	now time.Time
 }
 
 func newOfficialMock(t *testing.T) *officialMock {
@@ -70,6 +74,7 @@ func newOfficialMock(t *testing.T) *officialMock {
 		methods:     map[string]bool{},
 		queries:     map[string]string{},
 		fxBase:      "USD", fxQuote: "KRW", fxRate: "1250",
+		now: at(10, 0),
 	}
 	m.server = httptest.NewServer(http.HandlerFunc(m.serve))
 	t.Cleanup(m.server.Close)
@@ -98,6 +103,13 @@ func (m *officialMock) serve(w http.ResponseWriter, r *http.Request) {
 		prices[symbol] = price
 	}
 	noRegular := m.noRegular
+	status := func(symbol string) string {
+		if value := m.stockStatus[symbol]; value != "" {
+			return value
+		}
+		return "ACTIVE"
+	}
+	statusSamsung, statusHynix := status("005930"), status("000660")
 	rankingRows := append([]rankingRow(nil), m.rankingRows...)
 	customRanking := m.rankingRows != nil
 	fxBody := `{"result":{"baseCurrency":"` + m.fxBase + `","quoteCurrency":"` + m.fxQuote + `","rate":"` + m.fxRate +
@@ -107,6 +119,16 @@ func (m *officialMock) serve(w http.ResponseWriter, r *http.Request) {
 	write := func(body string) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = io.WriteString(w, body)
+	}
+	// 1.7 공개 읽기 — 계좌 모양 필드를 봉투에 섞어 넣음(어댑터·엄격 리더가 버려야 함).
+	if strings.HasPrefix(r.URL.Path, "/api/v1/stocks/") && strings.HasSuffix(r.URL.Path, "/warnings") {
+		write(`{"result":[{"warningType":"VI_STATIC","startDate":"2026-10-07","endDate":null,"exchange":"KRX","accountNo":"` +
+			sentinelAccount + `"}]}`)
+		return
+	}
+	if body, ok := mockIndicatorBody(r); ok {
+		write(body)
+		return
 	}
 	switch r.URL.Path {
 	case "/oauth2/token":
@@ -138,8 +160,8 @@ func (m *officialMock) serve(w http.ResponseWriter, r *http.Request) {
 			`"tradingVolume":"500","tradingAmount":"60000000","accountBalance":"` + sentinelBalance + `"}]}}`)
 	case "/api/v1/stocks":
 		write(`{"result":[` +
-			`{"symbol":"005930","name":"삼성전자","market":"KOSPI","currency":"KRW","status":"ACTIVE","accountNo":"` + sentinelAccount + `"},` +
-			`{"symbol":"000660","name":"SK하이닉스","market":"KOSPI","currency":"KRW","status":"ACTIVE","holdingQuantity":"` + sentinelHolding + `"}]}`)
+			`{"symbol":"005930","name":"삼성전자","market":"KOSPI","currency":"KRW","status":"` + statusSamsung + `","accountNo":"` + sentinelAccount + `"},` +
+			`{"symbol":"000660","name":"SK하이닉스","market":"KOSPI","currency":"KRW","status":"` + statusHynix + `","holdingQuantity":"` + sentinelHolding + `"}]}`)
 	case "/api/v1/prices":
 		var rows []string
 		for _, symbol := range strings.Split(r.URL.Query().Get("symbols"), ",") {
@@ -149,6 +171,11 @@ func (m *officialMock) serve(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		write(`{"result":[` + strings.Join(rows, ",") + `]}`)
+	case "/api/v1/candles":
+		write(mockCandleBody(r, m.now))
+	case "/api/v1/price-limits":
+		write(`{"result":{"upperLimitPrice":"91000","lowerLimitPrice":"49000","currency":"KRW","timestamp":null,` +
+			`"accountBalance":"` + sentinelBalance + `"}}`)
 	case "/api/v1/orderbook":
 		write(`{"result":{"timestamp":"2026-10-07T09:59:58+09:00","currency":"KRW",` +
 			`"asks":[{"price":"70100","volume":"12"}],"bids":[{"price":"70000","volume":"30"}]}}`)
@@ -347,4 +374,71 @@ func (r *testRig) contents(t *testing.T) ledgerContents {
 
 func (r *testRig) session() session {
 	return session{Open: at(9, 0), Close: at(15, 30), Source: sessionSourceCalendar}
+}
+
+// mockCandleBody 는 /api/v1/candles 의 1m(엄격 리더 계약: 봉 일곱 열쇠·최신이 앞·분 경계·before 이하)과
+// 1d 응답을 만듦. 1분봉은 09:01 KST 부터 before(없으면 now) 까지 닫힌 봉, 종가 = 70000 + 분 × 10.
+func mockCandleBody(r *http.Request, now time.Time) string {
+	query := r.URL.Query()
+	symbol := query.Get("symbol")
+	currency := "USD"
+	if len(symbol) == 6 && strings.Trim(symbol, "0123456789") == "" {
+		currency = "KRW"
+	}
+	count := 100
+	if value := query.Get("count"); value != "" {
+		fmt.Sscanf(value, "%d", &count)
+	}
+	var rows []string
+	if query.Get("interval") == "1d" {
+		// 일봉: 앞 22 일(시각 09:00 KST — 문서 예시 모양) + 오늘 봉, 최신이 앞.
+		for day := 0; day <= 22 && len(rows) < count; day++ {
+			stamp := time.Date(2026, 10, 7-day, 9, 0, 0, 0, kst).Format(time.RFC3339)
+			close := 70000 - day*100
+			rows = append(rows, fmt.Sprintf(`{"timestamp":"%s","openPrice":"%d","highPrice":"%d","lowPrice":"%d","closePrice":"%d",`+
+				`"volume":"1000","currency":"%s"}`, stamp, close, close+200, close-200, close, currency))
+		}
+		return `{"result":{"candles":[` + strings.Join(rows, ",") + `],"nextBefore":null},"accountNo":"` + sentinelAccount + `"}`
+	}
+	before := now
+	if value := query.Get("before"); value != "" {
+		if parsed, err := time.Parse(time.RFC3339, value); err == nil {
+			before = parsed
+		}
+	}
+	open := time.Date(before.In(kst).Year(), before.In(kst).Month(), before.In(kst).Day(), 9, 0, 0, 0, kst)
+	for closeAt := before.Truncate(time.Minute); closeAt.After(open) && len(rows) < count; closeAt = closeAt.Add(-time.Minute) {
+		minute := int(closeAt.Sub(open) / time.Minute)
+		price := 70000 + minute*10
+		rows = append(rows, fmt.Sprintf(`{"timestamp":"%s","openPrice":"%d","highPrice":"%d","lowPrice":"%d","closePrice":"%d",`+
+			`"volume":"100","currency":"%s"}`, closeAt.In(kst).Format("2006-01-02T15:04:05-07:00"), price, price+10, price-10, price, currency))
+	}
+	return `{"result":{"candles":[` + strings.Join(rows, ",") + `],"nextBefore":null},"holdingQuantity":"` + sentinelHolding + `"}`
+}
+
+// mockIndicatorBody 는 market-indicators 경로(지수 시세·지수 봉·시장 투자자별 매매대금)를 답함.
+func mockIndicatorBody(r *http.Request) (string, bool) {
+	path := r.URL.Path
+	if !strings.HasPrefix(path, "/api/v1/market-indicators/") {
+		return "", false
+	}
+	switch {
+	case path == "/api/v1/market-indicators/prices":
+		return `{"result":[{"symbol":"KOSPI","timestamp":"2026-10-07T10:00:00+09:00","lastPrice":"2600"},` +
+			`{"symbol":"KOSDAQ","timestamp":"2026-10-07T10:00:00+09:00","lastPrice":"800"}],"accountNo":"` + sentinelAccount + `"}`, true
+	case strings.HasSuffix(path, "/candles") && r.URL.Query().Get("interval") == "1d":
+		return `{"result":{"candles":[{"timestamp":"2026-10-07T09:00:00+09:00","openPrice":"2550","highPrice":"2610","lowPrice":"2540",` +
+			`"closePrice":"2600","volume":"1"},{"timestamp":"2026-10-06T09:00:00+09:00","openPrice":"2490","highPrice":"2510",` +
+			`"lowPrice":"2480","closePrice":"2500","volume":"1"}],"nextBefore":null}}`, true
+	case strings.HasSuffix(path, "/candles"):
+		return `{"result":{"candles":[{"timestamp":"2026-10-07T09:31:00+09:00","openPrice":"2595","highPrice":"2596","lowPrice":"2594",` +
+			`"closePrice":"2595","volume":"1"},{"timestamp":"2026-10-07T09:30:00+09:00","openPrice":"2590","highPrice":"2591",` +
+			`"lowPrice":"2589","closePrice":"2590","volume":"1"}],"nextBefore":null}}`, true
+	case strings.HasSuffix(path, "/investor-trading"):
+		return `{"result":{"nextUntil":null,"records":[{"date":"2026-10-07","updatedAt":"2026-10-07T10:00:00+09:00",` +
+			`"individual":{"buyAmount":"300","sellAmount":"100"},"foreigner":{"buyAmount":"100","sellAmount":"250"},` +
+			`"institution":{"buyAmount":"80","sellAmount":"30"},"otherCorporation":{"buyAmount":"0","sellAmount":"0"},` +
+			`"accountBalance":"` + sentinelBalance + `"}]}}`, true
+	}
+	return "", false
 }

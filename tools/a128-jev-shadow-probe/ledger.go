@@ -61,6 +61,8 @@ type judgmentRow struct {
 	Selection *selectionRecord `json:"selection,omitempty"`
 	// Screen 은 1.6 Jev 선별 결과(결선 여부·J1 순위·악재 제외). 없는 옛 행 = 선별 없는 로트.
 	Screen *screenRecord `json:"screen,omitempty"`
+	// StateRev 는 Jev 에 보낸 state 모양의 판본(1.7 이후 a128-s2). 없는 옛 행 = s1.
+	StateRev string `json:"state_rev,omitempty"`
 }
 
 // labelRow — 라벨 행. 실현값이 없으면 LabelGap 이 비어 있지 않아야 함(둘 중 하나는 반드시).

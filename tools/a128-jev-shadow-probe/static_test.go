@@ -43,9 +43,9 @@ func nonTestSources(t *testing.T) []*ast.File {
 	return files
 }
 
-// TestMarketSourceIsTheSixReadOnlyGets 는 브로커 표면(인터페이스)의 메서드 집합을 고정함.
+// TestMarketSourceIsTheReadOnlyGets 는 브로커 표면(인터페이스)의 메서드 집합을 고정함.
 // ExchangeRate 는 1.5 표본 선택의 US 가격 → 상한 통화 환산용 공개 GET(/api/v1/exchange-rate)으로 추가됨.
-func TestMarketSourceIsTheSixReadOnlyGets(t *testing.T) {
+func TestMarketSourceIsTheReadOnlyGets(t *testing.T) {
 	t.Parallel()
 	var methods []string
 	for _, file := range nonTestSources(t) {
@@ -63,7 +63,9 @@ func TestMarketSourceIsTheSixReadOnlyGets(t *testing.T) {
 		})
 	}
 	sort.Strings(methods)
-	want := []string{"ExchangeRate", "Prices", "Rankings", "Stocks", "StrictOrderbookTop", "TypedMarketCalendar"}
+	// 1.7: 봉(1m 엄격·1d)·유의·가격제한폭·지수 시세·지수 봉·시장 투자자 매매 — 전부 공개 시장 데이터 GET.
+	want := []string{"Candles", "ExchangeRate", "MarketIndicatorCandles", "MarketIndicatorPrices", "MarketInvestorTrading",
+		"PriceLimits", "Prices", "Rankings", "Stocks", "StrictMinuteCandles", "StrictOrderbookTop", "TypedMarketCalendar", "Warnings"}
 	if !reflect.DeepEqual(methods, want) {
 		t.Fatalf("marketSource methods = %v, want exactly the public-market GETs %v", methods, want)
 	}
@@ -89,7 +91,7 @@ func TestNoMutatingOrAccountSurfaceIsNamed(t *testing.T) {
 	}
 	allowedOfficial := map[string]bool{
 		"New": true, "LoadCredentials": true, "Client": true, "Credentials": true,
-		"StrictTopOfBook": true, "MarketCalendarResponse": true, "ErrRateLimited": true,
+		"StrictTopOfBook": true, "MarketCalendarResponse": true, "ErrRateLimited": true, "StrictMinutePage": true,
 	}
 	allowedConfig := map[string]bool{"NewService": true}
 	sawOfficial, sawConfig := false, false
