@@ -1,21 +1,15 @@
 # Branch Test Map: `adoptedRoundTripLegs`
 
-편집 전 좌표(base `233d5d9c`). RED/GREEN 은 구현 뒤 갱신(아래 「a130 시나리오」).
+편집 뒤 좌표(4판 GREEN). 분기별 RED 는 따로 재지 않았음(no) — 4판 시험 전체가 base 에서 컴파일 RED(`analysis/red/red-4.txt`), 조작 행 모양은 행동 RED(red-2 · red-4). GREEN = 패키지 시험 통과(`analysis/verify/receipts.md`). Test 칸은 그 함수의 a130 시험 · 기존 시험 묶음(무편집 갈래는 기존 시험).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:494` adoptedBasis 실패 | 없음 | no | no |
-| B2 | `:501` engineSellOrders 실패 | 없음 | no | no |
-| B3 | `:504` 엔진 매도 주문 0 | TestAnAdoptedPositionWithNoEngineSellFreezesNothing | no | no |
-| B4 | `:509` sumSellFills 실패 | 없음 | no | no |
-| B5 | `:512` `!sell.priced \|\| sell.quantity.Cmp(adopted) != 0` | TestAPartlyEngineSoldAdoptedPositionFreezesNothing(수량 부족); 미관측 매도 시험 없음 | no | no |
-
-## a130 시나리오 (4판)
-
-- B1 — adoption_unreadable — 무편집 의미
-- (신규, B1 뒤) adoptionEpoch · priceLots — readopted · post_adoption_disposal · needs_intake_price · no_intake_candle · 묶음 종가 — `TestA130AReadoptedPositionIsRefused` · `TestA130TheGrowThenShrinkRoundTripIsRefusedAsADisposal` · `TestA130APostAdoptionDisposalBlocksASweptFlatten` · `TestA130AGrownPositionIsRefusedInsideTheFillTransaction` · `TestA130AMissingOrWrongMinuteBarIsRefused` · `TestA130TheSameSecondBoundaryFailsClosed`
-- B2/B4 — engine_sell_unreadable — 없음
-- B3 — no_engine_sell — `TestA130EachReachableRefusalSiteNamesItsOwnReason/no_engine_sell`
-- (신규, B4 뒤) instanceSellIntegrity — `TestA130AnUnattributedLocalSellIsRefused` · `TestA130ALocalSellOffsetBySweptFlattenIsNoLongerFrozen` · `TestA130AnOverAttributedSellWithoutAnyAdjustmentIsAForeignSell`
-- B5 — sell_unpriced / sell_quantity_mismatch — `TestA130AnUnpricedEngineSellIsReportedAsSuch` · same-second increase · TestAPartlyEngineSoldAdoptedPositionFreezesNothing
-- 성공 — `TestA130AGrownPositionPricesEachLotAtItsMinuteBar` · `TestA130APreAdoptionAdjustmentStillFreezes` · `TestA130AFoldInBeforeOrAtTheAdoptionIsNotALot` · 기존 adoption_outcome_test · trade_analytics_test
+| B1 | `:526` `if !ok {` | `TestA130AGrownPositionPricesEachLotAtItsMinuteBar` · `TestA130AMissingOrWrongMinuteBarIsRefused` · `TestA130AReadoptedPositionIsRefused` · `TestA130APostAdoptionDisposalBlocksASweptFlatten` · `TestA130AnUnattributedLocalSellIsRefused` · `TestA130ALaterInstanceFlattenIsNotThisTripsSell` · `TestA130AnUnpricedEngineSellIsReportedAsSuch` · 기존 adoption_outcome_test | no | yes |
+| B2 | `:530` `if reason != "" {` | `TestA130AGrownPositionPricesEachLotAtItsMinuteBar` · `TestA130AMissingOrWrongMinuteBarIsRefused` · `TestA130AReadoptedPositionIsRefused` · `TestA130APostAdoptionDisposalBlocksASweptFlatten` · `TestA130AnUnattributedLocalSellIsRefused` · `TestA130ALaterInstanceFlattenIsNotThisTripsSell` · `TestA130AnUnpricedEngineSellIsReportedAsSuch` · 기존 adoption_outcome_test | no | yes |
+| B3 | `:534` `if reason != "" {` | `TestA130AGrownPositionPricesEachLotAtItsMinuteBar` · `TestA130AMissingOrWrongMinuteBarIsRefused` · `TestA130AReadoptedPositionIsRefused` · `TestA130APostAdoptionDisposalBlocksASweptFlatten` · `TestA130AnUnattributedLocalSellIsRefused` · `TestA130ALaterInstanceFlattenIsNotThisTripsSell` · `TestA130AnUnpricedEngineSellIsReportedAsSuch` · 기존 adoption_outcome_test | no | yes |
+| B4 | `:541` `if !ok {` | `TestA130AGrownPositionPricesEachLotAtItsMinuteBar` · `TestA130AMissingOrWrongMinuteBarIsRefused` · `TestA130AReadoptedPositionIsRefused` · `TestA130APostAdoptionDisposalBlocksASweptFlatten` · `TestA130AnUnattributedLocalSellIsRefused` · `TestA130ALaterInstanceFlattenIsNotThisTripsSell` · `TestA130AnUnpricedEngineSellIsReportedAsSuch` · 기존 adoption_outcome_test | no | yes |
+| B5 | `:544` `if len(orders) == 0 {` | `TestA130AGrownPositionPricesEachLotAtItsMinuteBar` · `TestA130AMissingOrWrongMinuteBarIsRefused` · `TestA130AReadoptedPositionIsRefused` · `TestA130APostAdoptionDisposalBlocksASweptFlatten` · `TestA130AnUnattributedLocalSellIsRefused` · `TestA130ALaterInstanceFlattenIsNotThisTripsSell` · `TestA130AnUnpricedEngineSellIsReportedAsSuch` · 기존 adoption_outcome_test | no | yes |
+| B6 | `:549` `if !sumSellFills(ctx, r, orders, account, market, symbol, &sell) {` | `TestA130AGrownPositionPricesEachLotAtItsMinuteBar` · `TestA130AMissingOrWrongMinuteBarIsRefused` · `TestA130AReadoptedPositionIsRefused` · `TestA130APostAdoptionDisposalBlocksASweptFlatten` · `TestA130AnUnattributedLocalSellIsRefused` · `TestA130ALaterInstanceFlattenIsNotThisTripsSell` · `TestA130AnUnpricedEngineSellIsReportedAsSuch` · 기존 adoption_outcome_test | no | yes |
+| B7 | `:552` `if !sell.priced {` | `TestA130AGrownPositionPricesEachLotAtItsMinuteBar` · `TestA130AMissingOrWrongMinuteBarIsRefused` · `TestA130AReadoptedPositionIsRefused` · `TestA130APostAdoptionDisposalBlocksASweptFlatten` · `TestA130AnUnattributedLocalSellIsRefused` · `TestA130ALaterInstanceFlattenIsNotThisTripsSell` · `TestA130AnUnpricedEngineSellIsReportedAsSuch` · 기존 adoption_outcome_test | no | yes |
+| B8 | `:555` `if reason := instanceSellIntegrity(ctx, r, positionID, account, market, symbol, ` | `TestA130AGrownPositionPricesEachLotAtItsMinuteBar` · `TestA130AMissingOrWrongMinuteBarIsRefused` · `TestA130AReadoptedPositionIsRefused` · `TestA130APostAdoptionDisposalBlocksASweptFlatten` · `TestA130AnUnattributedLocalSellIsRefused` · `TestA130ALaterInstanceFlattenIsNotThisTripsSell` · `TestA130AnUnpricedEngineSellIsReportedAsSuch` · 기존 adoption_outcome_test | no | yes |
+| B9 | `:558` `if sell.quantity.Cmp(buy.quantity) != 0 {` | `TestA130AGrownPositionPricesEachLotAtItsMinuteBar` · `TestA130AMissingOrWrongMinuteBarIsRefused` · `TestA130AReadoptedPositionIsRefused` · `TestA130APostAdoptionDisposalBlocksASweptFlatten` · `TestA130AnUnattributedLocalSellIsRefused` · `TestA130ALaterInstanceFlattenIsNotThisTripsSell` · `TestA130AnUnpricedEngineSellIsReportedAsSuch` · 기존 adoption_outcome_test | no | yes |

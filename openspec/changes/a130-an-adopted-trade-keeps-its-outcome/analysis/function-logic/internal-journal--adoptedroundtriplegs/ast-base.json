@@ -1,0 +1,237 @@
+{
+  "file": "internal/journal/trade_outcomes.go",
+  "source_sha256": "0bd43abf96107b9998ea7c9bc6c6655f162b1af3ae96490daadc78fb354a4958",
+  "package": "journal",
+  "function": "adoptedRoundTripLegs",
+  "signature": "adoptedRoundTripLegs(params=6, results=3)",
+  "start": {
+    "line": 488,
+    "column": 1
+  },
+  "end": {
+    "line": 519,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 494,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 501,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 504,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 509,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 512,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 495,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 502,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 507,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 510,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 516,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 518,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 28
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 52
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 491,
+        "column": 29
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 491,
+        "column": 53
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 493,
+        "column": 27
+      },
+      "text": "adoptedBasis"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 17
+      },
+      "text": "Mul"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 17
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 500,
+        "column": 16
+      },
+      "text": "engineSellOrders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 504,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 509,
+        "column": 6
+      },
+      "text": "sumSellFills"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 512,
+        "column": 21
+      },
+      "text": "sell.quantity.Cmp"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 490,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 491,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 493,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 497,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 498,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 500,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

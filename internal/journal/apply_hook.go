@@ -187,6 +187,14 @@ type ApplyHooks struct {
 	// whereas pricing a round trip as free would report every trade as better
 	// than it was, permanently, in a row nothing rewrites.
 	Costs costs.Model
+	// OutcomeRefused receives each close whose outcome could not be frozen (a130,
+	// design D3) — symbol, market, instance and a fixed reason code, never the
+	// account or the position id. It is called only after the fill transaction
+	// has committed (RecordFill), never for a rolled-back one; it returns
+	// nothing and its panic is recovered, so it cannot fail a fill. A sink that
+	// does I/O should hand it off so a blocked writer does not hold the fill
+	// path. Nil, the shipped state, reads and calls nothing on the refusal path.
+	OutcomeRefused func(TradeOutcomeRefusal)
 }
 
 // SetApplyHooks binds the domain's apply functions. It is called once, at
@@ -269,7 +277,7 @@ func (j *Journal) runApplyHooks(ctx context.Context, tx *sql.Tx, fill AppliedFil
 		return nil
 	}
 
-	handle := &ApplyTx{tx: tx, now: fill.CommittedAt, costs: hooks.Costs}
+	handle := &ApplyTx{tx: tx, now: fill.CommittedAt, costs: hooks.Costs, outcomeRefused: hooks.OutcomeRefused}
 	defer handle.invalidate()
 
 	if hooks.Project != nil {
@@ -310,6 +318,8 @@ type ApplyTx struct {
 	now    string
 	costs  costs.Model
 	closed atomic.Bool
+	// outcomeRefused is ApplyHooks.OutcomeRefused (a130). Nil collects nothing.
+	outcomeRefused func(TradeOutcomeRefusal)
 }
 
 func (a *ApplyTx) invalidate() { a.closed.Store(true) }
@@ -1020,7 +1030,12 @@ func ApplyExitFill(ctx context.Context, tx *ApplyTx, fill AppliedFill) error {
 		//    trade this cannot price leaves no row rather than rolling back a fill
 		//    the broker has already reported. BackfillTradeOutcome recovers it from
 		//    data that, the position being CLOSED, cannot move any more.
-		freezeTradeOutcomeTx(ctx, tx, where.PositionID, tx.costs)
+		//    a130: the refusal is no longer dropped — its reason is noted on the
+		//    handle and reported after the transaction commits. Noting returns
+		//    nothing, so it is still unable to turn into a rollback.
+		if reason := freezeTradeOutcomeTx(ctx, tx, where.PositionID, tx.costs); reason != "" {
+			tx.noteOutcomeRefusal(ctx, where.PositionID, reason)
+		}
 	}
 	return nil
 }

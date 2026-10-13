@@ -12,15 +12,19 @@ Story: `STORY-TOS-a130` · base `233d5d9c` · High-risk(원장 — 체결 반영
       `adoptedRoundTripLegs` · `Journal.BackfillTradeOutcome` · `ApplyExitFill` · `Journal.runApplyHooks` · `Journal.RecordFill` · `bindApplyHooks` ·
       `NewContext`) + 무편집 인용 근거 6(F-5: `ApplyPositionAdjustment` · `Converger.ConvergeQuantities` · `resetExitStateForReadoptTx` ·
       `engineSellOrders` · `roundTripLegs`, 그리고 `Journal.backfillConfirmedStrategyFillTx`)
-- [ ] 0.6 proposal-freeze 리뷰(적대적 Eng 보이스, 분리된 컨텍스트) + Pre-Edit 선언 → `review.md`
-      — 1차 REJECT(F-1~F-13) · 2차 APPROVE-WITH-FIXES(R2) · 3차 REJECT(R3-1 가격 출처 원장에 없음) → 사용자 결정 3차(브로커 1분봉) → 4판 · 4차 리뷰
+- [x] 0.6 proposal-freeze 리뷰(적대적 Eng 보이스, 분리된 컨텍스트) + Pre-Edit 선언 → `review.md`
+      — 1차 REJECT(F-1~F-13) · 2차 APPROVE-WITH-FIXES(R2) · 3차 REJECT(R3-1 가격 출처 원장에 없음) → 사용자 결정 3차(브로커 1분봉) → 4판 ·
+      4차 **APPROVE-WITH-FIXES**(R4-1~R4-13 — GREEN 커밋에 전부 반영, review.md)
 
 ## 1. 구현 (RED → GREEN → REFACTOR)
 
-- [ ] 1.1 RED — design D7 시험이 base 에서 실패함을 확인(`analysis/red/red-4.txt`; 이력 red-1 · red-2)
-- [ ] 1.2 GREEN — 사유 코드 타입 · 묶음별 1분봉 산식 · 편입 시기 · 인스턴스 매도 거절 · `ApplyHooks.OutcomeRefused` · 커밋 뒤 보고 · 엔진 싱크 ·
+- [x] 1.1 RED — design D7 시험이 base 에서 실패함을 확인(`analysis/red/red-4.txt` — 컴파일 RED + 로컬 매도 · flatten 쓸어 담기 조작 행 행동 RED; 이력 red-1 · red-2)
+- [x] 1.2 GREEN — 사유 코드 타입 · 묶음별 1분봉 산식 · 편입 시기 · 인스턴스 매도 거절 · `ApplyHooks.OutcomeRefused` · 커밋 뒤 보고 · 엔진 싱크 ·
       공식 1분봉 읽기 · backfill 계획/실행 · 도구 · 콘솔 안내문(실제로 렌더해 확인)
-- [ ] 1.3 REFACTOR + 편집 뒤 AST 재추출 · FLM/BTM 갱신 · `check_analysis.py --change` 통과
+- [x] 1.3 REFACTOR + 편집 뒤 AST 재추출 · FLM/BTM 갱신 · `check_analysis.py --change` 통과
+      — a130 번들 오류 0. 남은 요구는 base 233d5d9c 뒤 착지한 a131 커밋 9개의 함수(쌓인 change) — **base 재고정 필요(사람 · Manager 승인 절차,
+      WORKFLOW 「사람 승인 base 재고정」)**: 옛 base 이후 이 change 의 자기 Go 커밋 = 이 GREEN 하나(재고정은 이 커밋의 부모 af0c0ce7 로 — a130 FLM 번들의
+      편집 전 AST 8 파일은 233d5d9c = af0c0ce7, 리뷰 4차 확인)
 
 ## 2. 검증
 
@@ -40,6 +44,6 @@ Story: `STORY-TOS-a130` · base `233d5d9c` · High-risk(원장 — 체결 반영
 1. archive → Story `openspec.path` 를 아카이브 경로로 → tracker 재생성 → PM `--check`.
 2. 배포 — 사람이 KST 05:00~09:00(두 시장 닫힘)에 `make image CHANGE=a130-an-adopted-trade-keeps-its-outcome` → 컨테이너 교체.
    스키마 불변(35)이라 롤백은 이미지 핀 되돌림.
-3. backfill — 배포(스키마 35) 뒤 **사람이 KST 05:00~09:00(두 시장 닫힘)에** 운영 저널에:
-   `go run ./tools/a130-outcome-backfill --journal ~/.config/tossctl/journal.db`(미리보기, 원장 쓰기 0, 1분봉 읽기 전용 GET) → 출력 확인 →
-   `... --execute --confirm <토큰>`. 에이전트는 실행하지 않는다. 스키마가 빌드와 다르면 도구가 거절한다. 앞으로 생기는 편입 뒤 증가 종결도 같은 절차로(자동화는 issues I-4).
+3. backfill — 배포(스키마 35) 뒤 곧 **사람이 두 시장이 닫힌 시간에** 운영 저널에:
+   `go run ./tools/a130-outcome-backfill --journal ~/.config/tossctl/journal.db --config-dir ~/.config/tossctl`(미리보기, 원장 쓰기 0, 1분봉 읽기 전용 GET,
+   엔진과 같은 토큰 캐시 — 출력의 `token cache:` 경로가 엔진의 것인지 확인) → 출력 확인 → `... --execute --confirm <토큰>`. 에이전트는 실행하지 않는다. 스키마가 빌드와 다르면 도구가 거절한다. 앞으로 생기는 편입 뒤 증가 종결도 같은 절차로(자동화는 issues I-4).

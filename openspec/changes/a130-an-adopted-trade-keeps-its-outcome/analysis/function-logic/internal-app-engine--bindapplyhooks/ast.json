@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/gateway.go",
-  "source_sha256": "3d6dabe90a54dd3fb1f21bcec316ac44cfb1a006d44a72da5304effc0b98abcd",
+  "source_sha256": "497ec967c114b5e7a9c1f9a80f129b381b160252dc0296ff71f95aca983d57e1",
   "package": "engine",
   "function": "bindApplyHooks",
-  "signature": "bindApplyHooks(params=1, results=1)",
+  "signature": "bindApplyHooks(params=2, results=1)",
   "start": {
-    "line": 187,
+    "line": 191,
     "column": 1
   },
   "end": {
-    "line": 202,
+    "line": 213,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,15 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 188,
+        "line": 193,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 196,
         "column": 2
       }
     }
@@ -26,14 +34,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 199,
+        "line": 210,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 201,
+        "line": 212,
         "column": 2
       }
     }
@@ -42,7 +50,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 188,
+        "line": 193,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
         "column": 12
       },
       "text": "j.SetApplyHooks"
@@ -50,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 197,
+        "line": 205,
         "column": 10
       },
       "text": "costs.DefaultModel"
@@ -58,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 199,
+        "line": 210,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -66,9 +82,16 @@
   ],
   "assignments": [
     {
+      "kind": "=",
+      "at": {
+        "line": 194,
+        "column": 3
+      }
+    },
+    {
       "kind": ":=",
       "at": {
-        "line": 188,
+        "line": 196,
         "column": 5
       }
     }

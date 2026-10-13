@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/fills.go",
-  "source_sha256": "6214babe8bfa3047a3bb1a15cb60283df27124179f3e98996be0e2db811321d6",
+  "source_sha256": "92bc44f947eead2a045815b29358122d2fd0dd2ffd3e5bada4f2dc44eaa5c4c5",
   "package": "journal",
   "function": "RecordFill",
   "receiver": "Journal",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 558,
+    "line": 563,
     "column": 2
   },
   "branches": [
@@ -298,7 +298,7 @@
       "id": "B36",
       "kind": "if",
       "at": {
-        "line": 547,
+        "line": 550,
         "column": 2
       }
     },
@@ -306,7 +306,7 @@
       "id": "B37",
       "kind": "if",
       "at": {
-        "line": 548,
+        "line": 551,
         "column": 3
       }
     },
@@ -314,7 +314,7 @@
       "id": "B38",
       "kind": "if",
       "at": {
-        "line": 553,
+        "line": 556,
         "column": 2
       }
     }
@@ -484,21 +484,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 549,
+        "line": 552,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 554,
+        "line": 557,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 557,
+        "line": 562,
         "column": 2
       }
     }
@@ -963,7 +963,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 548,
+        "line": 551,
         "column": 13
       },
       "text": "j.runApplyHooks"
@@ -971,7 +971,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 553,
+        "line": 551,
+        "column": 29
+      },
+      "text": "withOutcomeRefusals"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 556,
         "column": 12
       },
       "text": "tx.Commit"
@@ -979,10 +987,18 @@
     {
       "kind": "call",
       "at": {
-        "line": 554,
+        "line": 557,
         "column": 15
       },
       "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 560,
+        "column": 2
+      },
+      "text": "j.reportOutcomeRefusals"
     }
   ],
   "assignments": [
@@ -1311,21 +1327,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 548,
+        "line": 551,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 553,
+        "line": 556,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 556,
+        "line": 561,
         "column": 2
       }
     }

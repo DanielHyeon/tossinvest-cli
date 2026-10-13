@@ -132,3 +132,29 @@ Pre-Edit Gate:
 | R3-12 | 확인 — census · 미리보기 모두 OpenReadOnly |
 | R3-13 | 수용 — 토큰에 쓴 분봉 · 비용 모델(`%#v`) · 빌드 스키마 버전 |
 | R3-14 | 확인 |
+
+## 4차 proposal-freeze review (2026-10-13, 4판 bc928a29) — APPROVE-WITH-FIXES
+
+- 보이스: 적대적 Eng 1(분리된 컨텍스트, code-reviewer, 읽기 전용 · 네트워크 0 — 저장소 무편집, 스크래치에서 bc928a29 + wip/a130-4 + apply_edits4.py 로 재구성해
+  build · vet · 시험 통과 확인). 판정: **APPROVE-WITH-FIXES** — P1 둘은 GREEN 전에, P2 는 구현 task 안에서(계약 동결 불변).
+- 성립 확인: R · 체결 트랜잭션 네트워크 0(journal 이 official 을 import 안 함) · 커밋 뒤 보고 · COMPLETED/ADJUSTMENT_CLOSED 배타 · BarLabel · `%#v` 결정성 ·
+  BEGIN IMMEDIATE · 가드 순서 · 엔진 싱크 · 번들 15 sha.
+- 처분(전부 GREEN 커밋에 반영 — 아래 시험 이름은 커밋된 파일):
+
+| # | 등급 | 발견 | 처리 |
+|---|---|---|---|
+| R4-1 | **P1** | 문서대로(config-dir 없이) 돌리면 도구가 엔진과 **다른 토큰 캐시**를 써 새 토큰 발급 → 엔진 토큰 무효화(a082) | **수용** — 묶음이 있으면 `--config-dir` 필수(client 열기 전 거절) · 토큰 파일 경로 출력 · 런북에 `--config-dir ~/.config/tossctl`. 시험 `TestBarsAreNotReadWithoutTheEngineConfigDir` · `TestFetchPricesKeepsOnlyTheExactMinuteAndPaces`(경로 출력). **사고 기록**: 이 change 의 사본 미리보기 · 실행(05:10~05:11Z)과 `ops call` 실측(04:32Z~)은 기본값 토큰 캐시를 썼고, 05:11:33Z 캐시 토큰 · 05:11:35Z 엔진 config 토큰이 2초 차로 다시 쓰였음 — 엔진이 그 직후 재발급했을 가능성이 큼(장 마감 후, 주문 없음). Manager 보고 |
+| R4-2 | **P1** | 「그 분만」 가드가 시험 0 이고 둘째 가드는 요청 이름을 적어 항등 | **수용** — 리더가 돌려받은 이름을 돌려주고 도구가 그것을 적음(priceLots 가 실제 둘째 가드), httptest 시험 `TestA130TheMinuteCandleIsReadUnadjustedAndOnlyForItsOwnMinute`(질의값 · 정확한 분 · 이른 봉 · 빈 봉) · `TestA130ARateLimitedCandleReadFailsAfterOneRequest`(429 1회), 변이 추가 |
+| R4-3 | P2 | 앞으로 쪽 flatten 쓸어 담기(닫힌 뒤 확정) 미검사 | **수용** — 닫힌 뒤 확정도 `foreign_instance_sell`, 시험 `TestA130ALaterInstanceFlattenIsNotThisTripsSell`, spec 「열리기 전 또는 닫힌 뒤」 |
+| R4-4 | P2 | 체결 트랜잭션 안 추가 시간 미측정 | **수용 · 실측으로 수리** — 판정 소요 사본 측정: READOPTED 를 exit_events 에서 훑던 판정이 최대 20~27 ms(포지션 하나에 27,071 이벤트). exit 상태 `lifecycle_generation > 1` 한 줄 읽기로 바꿔 최대 2.4~2.9 ms(a130 이전 최대 1.7~2.4 ms) — `analysis/verify/receipts.md` |
+| R4-5 | P2 | 기존 `StrictMinuteCandles` 를 두고 약한 리더를 새로 만듦 · design 사실 오류 | **수용** — 리더를 `StrictMinuteCandles(count=1, 서울 오프셋 before)` 감싸기로, design 사실 정정 |
+| R4-6 | P2 | 규칙 5: `closeExitStateOnAdjustmentTx` · `journalTimeStrictlyAfter` · `sumSellFills` · `Client.send` 번들 없음 | **수용** — 인용 근거 번들 넷 추가 |
+| R4-7 | P2 | 실측 하네스 미커밋 | **수용** — `analysis/harness/a130_intake_candles.py`(1분봉 실측) 커밋, census 는 커밋된 시험, 잠금 시간은 도구 출력 |
+| R4-8 | P3 | 귀속 밖 매도 창의 시작이 fold-in 시각 | **수용** — 편입 관측 시각으로, 시험 `TestA130ALocalSellBeforeTheAdoptionIsNotThisTripsDisposal` |
+| R4-9 | P3 | D2 표 `exit_state_unreadable` 은 체결 트랜잭션에서도 나옴 | **수용** — 표 정정 |
+| R4-10 | P3 | FLM 의 무결 검사 · sell_unpriced 순서 | **수용** — FLM 편집 뒤 절 · BTM 좌표가 코드 순서(sell_unpriced 먼저) |
+| R4-11 | P3 | KST 05:00~09:00 고정 문구는 서머타임에 틀림 | **수용** — 「두 시장이 닫힌 시간」 으로, 창은 운영 절차가 정함 |
+| R4-12 | P3 | 체결 트랜잭션 네트워크 0 이 구성으로만 | **수용** — `TestA130TheJournalCannotReachTheNetwork`(go list -deps: net/http · internal/official 없음) |
+| R4-13 | P3 | 합성 R 구분 집계에 세 번째 출처 | **수용** — spec · design 에 유도 조건 명시 |
+
+- spec 요구 수정(R4-3 「닫힌 뒤」 · R4-1 config 디렉터리 · 이름 대조 · R4-13)은 이 리뷰의 제안을 그대로 반영한 것이고, 구현 리뷰가 requirement 변경 리뷰를 겸한다.

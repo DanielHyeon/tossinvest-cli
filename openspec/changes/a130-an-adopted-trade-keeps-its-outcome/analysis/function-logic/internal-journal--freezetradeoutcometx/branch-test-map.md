@@ -1,12 +1,8 @@
 # Branch Test Map: `freezeTradeOutcomeTx`
 
-편집 전 좌표(base `233d5d9c`). RED/GREEN 은 구현 뒤 갱신(아래 「a130 시나리오」).
+편집 뒤 좌표(4판 GREEN). 분기별 RED 는 따로 재지 않았음(no) — 4판 시험 전체가 base 에서 컴파일 RED(`analysis/red/red-4.txt`), 조작 행 모양은 행동 RED(red-2 · red-4). GREEN = 패키지 시험 통과(`analysis/verify/receipts.md`). Test 칸은 그 함수의 a130 시험 · 기존 시험 묶음(무편집 갈래는 기존 시험).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:131` `!ok`(computeTradeOutcome 거절) | 거절 시험(TestAnAnalyticsFailureDoesNotRollBackTheClose · TestAnUnpricedFillLeavesNoOutcome · TestAPartlyEngineSoldAdoptedPositionFreezesNothing) | no | no |
-
-## a130 시나리오(편집 계획에 묶인 시험)
-
-- B1 — 거절 → 사유 반환 — 새 시험 a130(거절 사유) + 기존 거절 시험
-- fallthrough — INSERT 성공 → "" / 실패 → insert_failed — 기존 TestTheOutcomeIsFrozenInTheClosingTransaction; insert_failed 는 변이로만(시험 픽스처로 INSERT 실패를 만들 길 없음 — UNIQUE 위반은 CLOSED 가 한 번뿐이라 도달 불가)
+| B1 | `:131` `if reason != "" {` | 기존 거절 시험 · `TestA130AGrownPositionIsRefusedInsideTheFillTransaction` · `TestA130AnUnconfiguredModelIsReportedWithItsReason` | no | yes |
+| B2 | `:144` `if err != nil {` | 기존 거절 시험 · `TestA130AGrownPositionIsRefusedInsideTheFillTransaction` · `TestA130AnUnconfiguredModelIsReportedWithItsReason` | no | yes |

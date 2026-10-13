@@ -544,8 +544,11 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 	//    A hook error aborts everything above: the deferred rollback leaves the
 	//    snapshot un-advanced, and the next observation measures its delta from
 	//    the last quantity the projection actually saw.
+	// a130: the closes this transaction cannot freeze are collected here and
+	// reported only after the commit below succeeds.
+	var refusals []TradeOutcomeRefusal
 	if locallyOwned {
-		if err := j.runApplyHooks(ctx, tx, applied); err != nil {
+		if err := j.runApplyHooks(withOutcomeRefusals(ctx, &refusals), tx, applied); err != nil {
 			return res, err
 		}
 	}
@@ -553,6 +556,8 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 	if err := tx.Commit(); err != nil {
 		return res, fmt.Errorf("journal: committing the fill snapshot of %s: %w", orderID, err)
 	}
+	// a130: an outcome refusal is reported only for a close that committed.
+	j.reportOutcomeRefusals(refusals)
 	res.Changed = true
 	return res, nil
 }

@@ -1,7 +1,7 @@
 # Function Logic Map: `computeTradeOutcome`
 
 - Source: `internal/journal/trade_outcomes.go` (편집 전 `163`–`250`, base `233d5d9c`)
-- AST evidence: `ast.json` (편집 전 `source_sha256` 0bd43abf96107b99…) — branches 12 · returns 10 · defers 0 · go 0
+- AST evidence: `ast.json`(편집 뒤 `source_sha256` ff51203717c0ed3c…) — branches 14 · returns 11 · defers 0 · go 0; 편집 전 `ast-base.json`(`source_sha256` 0bd43abf96107b99…, branches 12 · returns 10)
 - Risk scan: `risk-pattern-report.md`
 - 작성 시점: **편집 전**(tasks 0.5).
 
@@ -55,3 +55,8 @@ Live config binding: 없음.
 
 - Safe edit boundary: 위 「a130 편집 계획」 만. 주문 · 손절 · 체결 반영의 동작 무변경.
 - High-risk impact: yes(원장 / 엔진 기동) — 체결 트랜잭션은 편입 뒤 증가 · 감소 · 재편입 · 인스턴스 밖 매도를 거절(보수), 증가 포지션의 행은 backfill 만, 거절 기록 추가.
+
+## 편집 뒤 (a130 4판)
+
+- 편집 뒤 `169`–`266` · `source_sha256` ff51203717c0ed3c… — branches 14 · returns 11
+  (편집 전 12 · 10, 편집 전 AST 는 `ast-base.json`). 위 분기 표의 좌표는 편집 전, 아래 BTM 은 편집 뒤 좌표.

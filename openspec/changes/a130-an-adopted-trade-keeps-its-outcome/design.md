@@ -17,8 +17,8 @@ base `233d5d9c`. 분기 주장은 전부 `analysis/function-logic/*/ast.json`(�
 - 공식 `GET /api/v1/candles`: interval `1m`, `count` ≤ 200, `before` = 포함 상한, `adjusted` 플래그. 분봉 `timestamp` 는 **봉 종료 시각**이고 t 봉은 [t−1분, t)
   를 덮는다(internal/official/candle_reads.go 주석, a112 결정 30 · 31 실측). 2026-10-13 읽기 실측: 사건 조정 00:18:54Z 는 **00:19:00Z(09:19 KST) 봉**
   (open 18540 · close 18430)에 든다 — 09:18 KST 라는 봉은 09:17~09:18 을 덮으므로 그 분이 아니다.
-- 기존 읽기 메서드: `Client.Candles`(float64 로 바꿈) · `RawMinuteCandles`(KR 전용). 가격을 문자열 소수 그대로 받는 시장 공통 1분봉 하나 읽기는 없다 —
-  새 파일로 둔다.
+- 기존 읽기 메서드: `Client.Candles`(float64 로 바꿈) · `RawMinuteCandles`(KR 전용) · **`StrictMinuteCandles`**(strict_minute_candles.go:131 — KR/US, 소수 문자열 그대로,
+  `adjusted=false`, 응답 문법 · 통화 · 소수 · 분 경계 검증, before 는 숫자 오프셋). 4판의 1분봉 읽기는 이것을 count=1 로 감싼다(리뷰 4차 P2-5 — 1판의 「없다」 는 틀렸음).
 - `trade_outcomes` 에는 가격 출처 칼럼이 없다.
 
 ## D1. 편입 포지션의 매수 다리 — 묶음별 브로커 1분봉 (사용자 결정 2026-10-13 3차)
@@ -51,14 +51,17 @@ R     = pnl ÷ (r × Q_sell)          분자 · 분모가 같은 Q_sell(= Q_buy)
    US 장 후 17:09 · 19:03 ET 2). 같은 분 봉 실측: 23 중 **21 있음**(정규장 17 + 정규장 밖 4 — NXT 장 전 · 장 후, US 장 후 체결이 있는 분), **2 없음**(15:40 KST
    — KRX 마감 뒤 NXT 체결 없음, 20:02 KST — NXT 마감 뒤). 결정: **그 분의 봉만 받는다.** 직전 정규장 마지막 봉을 허용하면 15:40 은 10분 전, 20:02 는 2분 전
    가격을 쓰게 되고, 그 시각 수량이 언제 산 것인지는 원장에 없다 — 가격을 지어내는 쪽이므로 받지 않는다(`no_intake_candle`).
-5. **인스턴스 매도 무결(R3-3)**: 귀속된 매도 주문 중 이 인스턴스가 열리기(opened_at) 전에 확정된 것이 있으면 `foreign_instance_sell`(심볼 단위 flatten 갈래가
-   이전 인스턴스 매도를 쓸어 담음), 열린 뒤(엄격) · 닫히기 전에 확정된, 체결 있는 같은 계좌 · 시장 · 심볼의 로컬 매도 주문이 귀속 밖이면
-   `unattributed_local_sell`(사람이 낸 로컬 매도). 시각은 주문 확정 시각(`mutation_attempts.settled_at`, 원장 시계)이고 체결 `committed_at` 이 아니다 —
+5. **인스턴스 매도 무결(R3-3 · 리뷰 4차 P2-3 · P3-8)**: 귀속된 매도 주문 중 이 인스턴스가 열리기(opened_at) 전 **또는 닫힌(closed_at) 뒤**에 확정된 것이 있으면
+   `foreign_instance_sell`(심볼 단위 flatten 갈래가 이전 · 이후 인스턴스 매도를 쓸어 담음 — 이후 쪽은 backfill 이 늦게 돌 때), **편입 관측 시각 뒤**(엄격) ·
+   닫히기 전에 확정된, 체결 있는 같은 계좌 · 시장 · 심볼의 로컬 매도 주문이 귀속 밖이면 `unattributed_local_sell`(사람이 낸 로컬 매도; fold-in 과 편입 사이의
+   매도는 편입 수량에 이미 반영돼 세지 않음). 시각은 주문 확정 시각(`mutation_attempts.settled_at`, 원장 시계)이고 체결 `committed_at` 이 아니다 —
    committed_at 은 소유 확정보다 엄격히 뒤로 밀려 적힐 수 있다(`journalTimeStrictlyAfter`). **시각은 거절 조건에만 쓰고 숫자를 귀속하지 않는다**(시간창
    귀속 금지 계약). 실측: 기존 고정 시계 시험(`TestOutcomesAreSplitByWhatJustifiedThePosition`)에서 committed_at 기준은 앞 인스턴스 매도를 1초 뒤로 읽어 헛거절,
    settled_at 기준은 통과.
 6. **편입 뒤 감소(F-3)** `created_at ≥ t_a` → `post_adoption_disposal`. **이름 붙인 회귀(F-9)**: 편입 3 → +3 → −3 → 엔진 3주 매도는 a130 이전엔 동결, 뒤엔 거절.
-   **재편입(I-2)** → `readopted`.
+   **재편입(I-2)** → `readopted` — 판정은 exit 상태 한 줄의 `lifecycle_generation > 1`(재편입이 READOPTED 이벤트와 같은 트랜잭션에서 씀). exit_events 를 훑는
+   판정은 포지션 하나에 이벤트가 27,071 줄(사본 최대)이라 체결 트랜잭션 안 판정을 최대 20 ms 대로 늘렸음(리뷰 4차 P2-4 실측) — 한 줄 읽기로 바꿔 최대 2.4~2.9 ms
+   (a130 이전 판정 최대 1.7~2.4 ms, 같은 사본).
 7. **같은 초 경계**: 증가는 엄격(`>`, fold-in 0→q 와 편입 직전 증가는 편입 수량에 들어 있음), 감소는 포함(`>=`). 시각은 RFC3339Nano 로 파싱해 비교한다(문자열 비교 아님).
 8. 편입 뒤 증가가 없으면 Q_buy = q_a, N_buy = q_a·p_a — **a130 이전 산식과 같다**(사본 동결 31행 재계산 31/31).
 
@@ -70,7 +73,8 @@ R     = pnl ÷ (r × Q_sell)          분자 · 분모가 같은 Q_sell(= Q_buy)
 | 코드 | 자리 | 체결 트랜잭션 줄에 나올 수 있나 |
 |---|---|---|
 | `cost_model_unconfigured` · `position_unreadable` · `empty_buy_leg` · `cost_estimate_failed` | computeTradeOutcome | 예 |
-| `unmanaged_position` · `exit_state_unreadable` | :197 · :202 | 아니오(exit 상태 없음 → ApplyExitFill B3) — census · backfill 만 |
+| `unmanaged_position` | :197 | 아니오(exit 상태 없음 → ApplyExitFill B3) — census · backfill 만 |
+| `exit_state_unreadable` | :202 | 예 — `PendingState` 는 읽혔지만 `frozenExitFacts` 의 읽기 · 해석이 실패한 경우(리뷰 4차 P3-9) |
 | `round_trip_unpriceable` | 결정 경로 | 예(진입 체결 없음 · 미관측 평균가 · 읽기 실패를 묶음) |
 | `adoption_unreadable` · `readopted` · `post_adoption_disposal` · `adoption_epoch_unreadable` | 편입 기록 · 편입 시기 | 예 |
 | `needs_intake_price` | 늘어난 묶음이 있는데 분봉 집합이 nil(체결 트랜잭션 — 네트워크 금지) | **예 — 4판의 주 거절** |
@@ -95,8 +99,12 @@ R     = pnl ÷ (r × Q_sell)          분자 · 분모가 같은 Q_sell(= Q_buy)
 - **모집단**: `state = 'CLOSED'` ∧ 편입 기록 ∧ `COMPLETED` exit 이벤트(체결로 닫힘 — 대사로 닫히면 `ADJUSTMENT_CLOSED` 가 completed=1 을 먼저 써서 COMPLETED 는
   생기지 않음, 둘은 배타적) ∧ 성과 행 없음. 보존 기간(180일) 밖은 `outside_retention` 표시만. 엔진 진입 포지션 제외(F-2). 엔진 귀속은 판정의 매도 검사가 강제.
 - **⓪ 묶음 목록** `IntakeLotsForBackfill(ctx, *ReadOnly)` — 늘어난 묶음마다 시장 · 종목 · 봉 이름(L_k) · 불투명 열쇠(포지션 id 를 감춘 해시).
-- **분봉 읽기(도구)**: `official.Client.MinuteCandleClosingAt(ctx, symbol, label)` — `GET /api/v1/candles?interval=1m&count=1&before=<label>&adjusted=false`, 돌려받은
-  봉의 이름이 label 과 **같을 때만** 종가(소수 문자열 그대로). 생산 client 를 a087 · a128 과 같은 방식으로 연다 — 같은 토큰 캐시 파일, 별도 토큰 발급 없음(a082).
+- **분봉 읽기(도구)**: `official.Client.MinuteCandleClosingAt(ctx, market, symbol, label)` — `StrictMinuteCandles(market, symbol, 1, before = label 의 서울 오프셋 표기)`
+  를 감싸고, 돌려받은 봉의 이름이 label 과 **같을 때만** 종가(소수 문자열 그대로)와 **돌려받은 이름**을 돌려준다. 도구는 그 이름을 `IntakeCandle.Label` 로 적고
+  원장 판정 `priceLots` 가 묶음의 분과 다시 대조한다(두 번째 가드 — 리뷰 4차 P1-2). 생산 client 는 a087 · a128 과 같은 방식으로 열되 **`--config-dir` 를 엔진의 config
+  디렉터리로 꼭 넘겨야** 한다: 엔진은 `--config-dir`(compose 의 TOSSOS_CONFIG_DIR)로 돌고 토큰 캐시가 그 안에 있다. 빼면 apppaths 기본값(사용자 캐시 디렉터리)의
+  다른 토큰 파일로 새 토큰을 발급받아 엔진 토큰을 무효화한다(a082 — 리뷰 4차 P1-1; 2026-10-13 실측: 이 change 의 기본값 미리보기 직후 두 토큰 파일이 2초 차이로 다시
+  쓰였음). 도구는 묶음이 있는데 `--config-dir` 가 없으면 client 를 열기 전에 거절하고, 쓰는 토큰 파일 경로를 출력한다.
   **예산**: candles 는 초당 5회 묶음(internal/candidate veto.go 주석); 도구는 1.2초에 1회, 429 · 오류는 재시도 없이 쓰기 전에 멈춘다. 모집단 12 → 23회(약 28초).
 - **① 미리보기** `PreviewTradeOutcomeBackfill(ctx, *ReadOnly, model, now, prices)` — 쓰기 0. 항목마다 판정 · 계산 결과 · 쓴 분봉(이름 · 종가) · 거절 사유, 확인 토큰
   (채움 대상 값 + 쓴 분봉 + 비용 모델(`%#v`) + 빌드 스키마 버전의 SHA-256 앞 16 hex, R3-13).
@@ -104,13 +112,15 @@ R     = pnl ÷ (r × Q_sell)          분자 · 분모가 같은 Q_sell(= Q_buy)
   바뀌어도 다름). 같으면 채움 대상마다 짧은 BEGIN IMMEDIATE 하나: 행 존재 확인 → 같은 분봉으로 재계산 → 계획 값과 모든 칸 대조(다르면 `ErrBackfillItemMoved`,
   그 항목과 뒤는 안 씀) → INSERT → 커밋. 트랜잭션 안에 네트워크 없음.
 - **쓰기 잠금 시간(R3-5, 실측)**: 이관한 사본(스키마 35)에서 9 항목 실행 — 항목당 9.8~22.2 ms(최대 22.17 ms). 손절 기록이 기다릴 수 있는 상한이 항목당 이 정도다.
-  그래도 실행 창은 두 시장이 닫힌 **KST 05:00~09:00**(tasks 게이트 뒤 절차)로 한다 — 「분석 경로의 격리」.
+  그래도 실행은 두 시장이 닫힌 시간에 한다(KST 기준 창은 미국 서머타임에 따라 달라짐 — 운영 절차가 그날의 창을 정함, 리뷰 4차 P3-11) — 「분석 경로의 격리」.
 - **스키마 가드 순서(R3-4)**: 읽기 전용으로 열기 → `SchemaVersion()` = 빌드(35) 확인 → 같을 때만 `journal.Open`(이관 · 무결성 검사를 함). 다르면 쓰기 연결을 열지
   않는다(시험: 스키마 32 파일 실행 거절 뒤 바이트 동일).
 - **출처 기록**: `trade_outcomes` 에 출처 칼럼이 없고 **스키마를 바꾸지 않는다**. 근거: ① 출처는 유도 가능하다 — 편입 뒤 증가 묶음이 있는 편입 포지션의 행은
   이 도구로만 생긴다(체결 트랜잭션은 그 경우 늘 `needs_intake_price`). ② 쓴 분봉은 다시 읽을 수 있다(과거 1분봉, adjusted=false). ③ 스키마 변경은 이미지
   롤백을 백업 복원으로 만든다(운영은 10-14 에 32→35 이관 예정 — 그 위에 36 을 더 쌓지 않음). 도구 출력이 항목마다 분봉 이름 · 종가 · 출처(`broker_candle_1m`)를 보인다.
 - **사본 미리보기(실측, 저장소에는 수 · 사유만)**: 모집단 12 → fill 9 · `no_intake_candle` 2 · `sell_unpriced` 1. 묶음 23 · 분봉 있음 21 · 없음 2.
+- **집계의 세 번째 출처(리뷰 4차 P3-13)**: backfill 이 쓴 행(편입 뒤 증가 묶음이 분봉으로 매겨진 편입 행)은 유도 가능하다 — 편입 포지션이면서 `created_at > observed_at` ·
+  `new > prev` 인 조정이 있는 행. 「합성 R 의 구분 집계」 는 그것을 편입(합성 R) 쪽으로 세며, 따로 나눠 보려면 그 조건으로 가른다.
 - 도구는 `--journal` 경로 필수(기본값 없음), 비용 모델은 엔진과 같은 `costs.DefaultModel()`, 출력에 계좌 참조 · 포지션 id 없음. ⚠ mutating — 사람만 실행.
 
 ## D5. 잔여 (명명)
@@ -119,7 +129,8 @@ R     = pnl ÷ (r × Q_sell)          분자 · 분모가 같은 Q_sell(= Q_buy)
   시차는 1분 이하.
 - 앞으로 생기는 편입 뒤 증가 종결은 체결 트랜잭션에서 `needs_intake_price` 로 거절되고 사람이 backfill 을 돌릴 때까지 행이 없다 — 주기적 읽기 전용 자동화는
   범위 밖(issues.md I-4 후속).
-- 인스턴스 매도 무결의 같은 초 경계: 인스턴스가 열린 그 초에 확정된 귀속 밖 매도는 못 보고 매도 수량 검사만 남는다. `AdoptPosition` 은 요청 수량이 그 순간
+- 인스턴스 매도 무결의 같은 초 경계: 편입 관측과 같은 초에 확정된 귀속 밖 매도는 못 보고 매도 수량 검사만 남는다. 엔진 BUY 추가 매수 · 모호한 소유는 수량 불일치 ·
+  귀속 밖 매도로 거절된다(fail-closed). backfill 은 늦을수록 뒤 인스턴스 flatten 과 겹쳐 `foreign_instance_sell` 로 거절될 수 있으니 배포 뒤 곧 돌린다. `AdoptPosition` 은 요청 수량이 그 순간
   인스턴스 수량과 같은지 확인하지 않는다(감소 규칙의 시각 경계는 fold-in · 수렴 · 편입이 한 goroutine 에서 차례로 도는 것에 기댐).
 - 일시 실패와 구조 거절이 섞인 사유(`round_trip_unpriceable` · `*_unreadable`). `roundTripLegs`(결정 경로)의 트랜잭션 밖 부정확(F-2)과 생산 호출자 0 인
   `BackfillTradeOutcome` 의 그 위험은 그대로 — a130 backfill 은 그 경로를 쓰지 않는다.

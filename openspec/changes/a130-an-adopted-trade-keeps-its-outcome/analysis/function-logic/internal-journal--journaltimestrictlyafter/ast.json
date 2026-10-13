@@ -1,0 +1,163 @@
+{
+  "file": "internal/journal/fills.go",
+  "source_sha256": "92bc44f947eead2a045815b29358122d2fd0dd2ffd3e5bada4f2dc44eaa5c4c5",
+  "package": "journal",
+  "function": "journalTimeStrictlyAfter",
+  "signature": "journalTimeStrictlyAfter(params=2, results=2)",
+  "start": {
+    "line": 639,
+    "column": 1
+  },
+  "end": {
+    "line": 657,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 641,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 644,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 645,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 649,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 652,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 642,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 650,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 656,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 640,
+        "column": 18
+      },
+      "text": "time.Parse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 645,
+        "column": 6
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 648,
+        "column": 28
+      },
+      "text": "time.Parse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 652,
+        "column": 7
+      },
+      "text": "current.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 653,
+        "column": 14
+      },
+      "text": "predecessor.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 656,
+        "column": 9
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 656,
+        "column": 9
+      },
+      "text": "current.UTC"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 640,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 648,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 653,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

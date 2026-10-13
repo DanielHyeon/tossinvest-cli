@@ -1,26 +1,21 @@
 # Branch Test Map: `NewContext`
 
-편집 전 좌표(base `233d5d9c`). RED/GREEN 은 구현 뒤 갱신(아래 「a130 시나리오」).
+편집 뒤 좌표(4판 GREEN). 분기별 RED 는 따로 재지 않았음(no) — 4판 시험 전체가 base 에서 컴파일 RED(`analysis/red/red-4.txt`), 조작 행 모양은 행동 RED(red-2 · red-4). GREEN = 패키지 시험 통과(`analysis/verify/receipts.md`). Test 칸은 그 함수의 a130 시험 · 기존 시험 묶음(무편집 갈래는 기존 시험).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:439` resolveEnginePaths 오류 | 무편집 | no | no |
-| B2 | `:446` 감사 로그 열기 오류 | 무편집 | no | no |
-| B3 | `:450` clk nil | 무편집 | no | no |
-| B4 | `:464` Publisher 주입 | 무편집 | no | no |
-| B5 | `:472` 감사 기록 오류 | 무편집 | no | no |
-| B6 | `:487` 계좌 해석 오류 | 무편집 | no | no |
-| B7 | `:494` 저널 열기 오류 | 무편집 | no | no |
-| B8 | `:503` bindApplyHooks 오류 | a130 편집 자리 — 호출 하나를 `bindApplyHooks(jrn, tradeOutcomeRefusalSink(opts.Logger))` 로 | no | no |
-| B9 | `:522` 게이트웨이 오류 | 무편집 | no | no |
-| B10 | `:537` Guardian 생성 조건 | 무편집 | no | no |
-| B11 | `:539` factory nil | 무편집 | no | no |
-| B12 | `:545` Guardian 오류 | 무편집 | no | no |
-| B13 | `:565` 인터록 오류 | 무편집 | no | no |
-| B14 | `:569` 미검증 | 무편집 | no | no |
-| B15 | `:574` 오류 | 무편집 | no | no |
-
-## a130 시나리오(편집 계획에 묶인 시험)
-
-- B1~B7 · B9~B15 — 무편집 갈래 — 기존 엔진 기동 시험(a129 와 같은 관례로 무편집 갈래는 인용만)
-- B8 — 바인딩 호출이 로거를 넘김 / 바인딩 실패 거절 유지 — a130 구조 핀 · 기존 interlock 시험
+| B1 | `:439` `if err != nil {` | `TestA130NewContextBindsTheHooksWithTheEngineLogger` · 기존 엔진 기동 시험 | no | yes |
+| B2 | `:446` `if err != nil {` | `TestA130NewContextBindsTheHooksWithTheEngineLogger` · 기존 엔진 기동 시험 | no | yes |
+| B3 | `:450` `if clk == nil {` | `TestA130NewContextBindsTheHooksWithTheEngineLogger` · 기존 엔진 기동 시험 | no | yes |
+| B4 | `:464` `if opts.Publisher != nil {` | `TestA130NewContextBindsTheHooksWithTheEngineLogger` · 기존 엔진 기동 시험 | no | yes |
+| B5 | `:472` `if err := recordGateSettings(auditLog, gate, cfg.Engine.Adoption, notifications,` | `TestA130NewContextBindsTheHooksWithTheEngineLogger` · 기존 엔진 기동 시험 | no | yes |
+| B6 | `:487` `if err != nil {` | `TestA130NewContextBindsTheHooksWithTheEngineLogger` · 기존 엔진 기동 시험 | no | yes |
+| B7 | `:494` `if err != nil {` | `TestA130NewContextBindsTheHooksWithTheEngineLogger` · 기존 엔진 기동 시험 | no | yes |
+| B8 | `:503` `if err := bindApplyHooks(jrn, tradeOutcomeRefusalSink(opts.Logger)); err != nil ` | `TestA130NewContextBindsTheHooksWithTheEngineLogger` · 기존 엔진 기동 시험 | no | yes |
+| B9 | `:522` `if err != nil {` | `TestA130NewContextBindsTheHooksWithTheEngineLogger` · 기존 엔진 기동 시험 | no | yes |
+| B10 | `:537` `if gate.Enabled && guardian == nil && !opts.disableProductionGuardian {` | `TestA130NewContextBindsTheHooksWithTheEngineLogger` · 기존 엔진 기동 시험 | no | yes |
+| B11 | `:539` `if factory == nil {` | `TestA130NewContextBindsTheHooksWithTheEngineLogger` · 기존 엔진 기동 시험 | no | yes |
+| B12 | `:545` `if err != nil {` | `TestA130NewContextBindsTheHooksWithTheEngineLogger` · 기존 엔진 기동 시험 | no | yes |
+| B13 | `:565` `if err != nil {` | `TestA130NewContextBindsTheHooksWithTheEngineLogger` · 기존 엔진 기동 시험 | no | yes |
+| B14 | `:569` `if !automation.Verified {` | `TestA130NewContextBindsTheHooksWithTheEngineLogger` · 기존 엔진 기동 시험 | no | yes |
+| B15 | `:574` `if err != nil {` | `TestA130NewContextBindsTheHooksWithTheEngineLogger` · 기존 엔진 기동 시험 | no | yes |

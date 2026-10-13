@@ -1,16 +1,16 @@
 {
   "file": "internal/journal/apply_hook.go",
-  "source_sha256": "8daed316f087979ff3e29dde337cb9f47fb35755b9c9c29c9b39dd0986e770fc",
+  "source_sha256": "b39d23a138a071f9e0e06f1ad7640b3ea49b48f99567112df79144a5a065878e",
   "package": "journal",
   "function": "runApplyHooks",
   "receiver": "Journal",
   "signature": "Journal.runApplyHooks(params=3, results=1)",
   "start": {
-    "line": 264,
+    "line": 272,
     "column": 1
   },
   "end": {
-    "line": 296,
+    "line": 304,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 268,
+        "line": 276,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 275,
+        "line": 283,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 276,
+        "line": 284,
         "column": 3
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 280,
+        "line": 288,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 281,
+        "line": 289,
         "column": 3
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 285,
+        "line": 293,
         "column": 3
       }
     },
@@ -66,7 +66,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 289,
+        "line": 297,
         "column": 2
       }
     },
@@ -74,7 +74,7 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 290,
+        "line": 298,
         "column": 3
       }
     }
@@ -83,42 +83,42 @@
     {
       "kind": "return",
       "at": {
-        "line": 269,
+        "line": 277,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 277,
+        "line": 285,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 282,
+        "line": 290,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 286,
+        "line": 294,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 291,
+        "line": 299,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 295,
+        "line": 303,
         "column": 2
       }
     }
@@ -127,7 +127,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 265,
+        "line": 273,
         "column": 2
       },
       "text": "j.applyMu.RLock"
@@ -135,7 +135,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 267,
+        "line": 275,
         "column": 2
       },
       "text": "j.applyMu.RUnlock"
@@ -143,7 +143,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 273,
+        "line": 281,
         "column": 8
       },
       "text": "handle.invalidate"
@@ -151,7 +151,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 276,
+        "line": 284,
         "column": 13
       },
       "text": "hooks.Project"
@@ -159,7 +159,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 277,
+        "line": 285,
         "column": 11
       },
       "text": "fmt.Errorf"
@@ -167,7 +167,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 281,
+        "line": 289,
         "column": 13
       },
       "text": "hooks.Campaign"
@@ -175,7 +175,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 282,
+        "line": 290,
         "column": 11
       },
       "text": "fmt.Errorf"
@@ -183,7 +183,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 285,
+        "line": 293,
         "column": 13
       },
       "text": "j.applyRiskBucketOwnerBindingInTx"
@@ -191,7 +191,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 286,
+        "line": 294,
         "column": 11
       },
       "text": "fmt.Errorf"
@@ -199,7 +199,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 290,
+        "line": 298,
         "column": 13
       },
       "text": "hooks.Exit"
@@ -207,7 +207,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 291,
+        "line": 299,
         "column": 11
       },
       "text": "fmt.Errorf"
@@ -217,42 +217,42 @@
     {
       "kind": ":=",
       "at": {
-        "line": 266,
+        "line": 274,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 272,
+        "line": 280,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 276,
+        "line": 284,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 281,
+        "line": 289,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 285,
+        "line": 293,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 290,
+        "line": 298,
         "column": 6
       }
     }
@@ -262,7 +262,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 273,
+        "line": 281,
         "column": 2
       },
       "text": "handle.invalidate"

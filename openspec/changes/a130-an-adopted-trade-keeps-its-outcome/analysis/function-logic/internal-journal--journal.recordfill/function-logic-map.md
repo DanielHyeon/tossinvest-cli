@@ -73,3 +73,8 @@ B36 앞에 `var refusals []TradeOutcomeRefusal`, B37(:548) 호출의 ctx 인자�
 
 - Safe edit boundary: 위 계획만.
 - High-risk impact: yes(체결 반영 트랜잭션) — 커밋 뒤 보고 한 줄 / 호출 모양만.
+
+## 편집 뒤 (a130 4판)
+
+- 편집 뒤 `313`–`563` · `source_sha256` 92bc44f947eead2a… — branches 38 · returns 26
+  (편집 전 38 · 26, 편집 전 AST 는 `ast-base.json`). 위 분기 표의 좌표는 편집 전, 아래 BTM 은 편집 뒤 좌표.

@@ -1,19 +1,12 @@
-# Branch Test Map: `BackfillTradeOutcome`
+# Branch Test Map: `Journal.BackfillTradeOutcome`
 
-편집 전 좌표(base `233d5d9c`). RED/GREEN 은 구현 뒤 갱신(아래 「a130 시나리오」).
+편집 뒤 좌표(4판 GREEN). 분기별 RED 는 따로 재지 않았음(no) — 4판 시험 전체가 base 에서 컴파일 RED(`analysis/red/red-4.txt`), 조작 행 모양은 행동 RED(red-2 · red-4). GREEN = 패키지 시험 통과(`analysis/verify/receipts.md`). Test 칸은 그 함수의 a130 시험 · 기존 시험 묶음(무편집 갈래는 기존 시험).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:846` 이미 행 있음 | TestABackfillRecoversTheGapAndRefusesToRewriteIt | no | no |
-| B2 | `:848` else | — | no | no |
-| B3 | `:848` 조회 오류(NotFound 아님) | 없음 | no | no |
-| B4 | `:853` compute 거절 | TestAnAdoptedPositionWithNoEngineSellFreezesNothing · TestAPartlyEngineSoldAdoptedPositionFreezesNothing | no | no |
-| B5 | `:857` INSERT 오류 | 없음 | no | no |
-| B6 | `:867` UNIQUE 위반 | 없음 | no | no |
-
-## a130 시나리오(편집 계획에 묶인 시험)
-
-- B1 — 재실행 → Exists — TestABackfillRecoversTheGapAndRefusesToRewriteIt
-- B3 — 조회 오류 — 없음 — 무편집
-- B4 — 거절 → 사유 코드가 오류 문장에 — a130 backfill 거절 시험 + 기존 둘
-- B5/B6 — INSERT 오류 — 없음 — 무편집
+| B1 | `:892` `if _, err := j.TradeOutcomeOf(ctx, id); err == nil {` | 기존 `TestABackfillRecoversTheGapAndRefusesToRewriteIt` · `TestAPartlyEngineSoldAdoptedPositionFreezesNothing` | no | yes |
+| B2 | `:894` `} else if !errors.Is(err, ErrTradeOutcomeNotFound) {` | 기존 `TestABackfillRecoversTheGapAndRefusesToRewriteIt` · `TestAPartlyEngineSoldAdoptedPositionFreezesNothing` | no | yes |
+| B3 | `:894` `} else if !errors.Is(err, ErrTradeOutcomeNotFound) {` | 기존 `TestABackfillRecoversTheGapAndRefusesToRewriteIt` · `TestAPartlyEngineSoldAdoptedPositionFreezesNothing` | no | yes |
+| B4 | `:899` `if reason != "" {` | 기존 `TestABackfillRecoversTheGapAndRefusesToRewriteIt` · `TestAPartlyEngineSoldAdoptedPositionFreezesNothing` | no | yes |
+| B5 | `:903` `if _, err := j.db.ExecContext(ctx, `` | 기존 `TestABackfillRecoversTheGapAndRefusesToRewriteIt` · `TestAPartlyEngineSoldAdoptedPositionFreezesNothing` | no | yes |
+| B6 | `:913` `if isUniqueViolation(err) {` | 기존 `TestABackfillRecoversTheGapAndRefusesToRewriteIt` · `TestAPartlyEngineSoldAdoptedPositionFreezesNothing` | no | yes |

@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/trade_outcomes.go",
-  "source_sha256": "0bd43abf96107b9998ea7c9bc6c6655f162b1af3ae96490daadc78fb354a4958",
+  "source_sha256": "ff51203717c0ed3cfc3e353257dd057acafea312f35d72f0bfe1a6f181ad65e1",
   "package": "journal",
   "function": "freezeTradeOutcomeTx",
   "signature": "freezeTradeOutcomeTx(params=4, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 145,
+    "line": 148,
     "column": 2
   },
   "branches": [
@@ -18,6 +18,14 @@
       "kind": "if",
       "at": {
         "line": 131,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 144,
         "column": 2
       }
     }
@@ -33,7 +41,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 144,
+        "line": 145,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 147,
         "column": 2
       }
     }
@@ -43,7 +58,7 @@
       "kind": "call",
       "at": {
         "line": 130,
-        "column": 17
+        "column": 21
       },
       "text": "computeTradeOutcome"
     },

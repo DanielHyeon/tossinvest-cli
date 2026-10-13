@@ -500,7 +500,7 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 	// Between opening the journal and anything that could record a fill. The
 	// projection is what reconciliation compares the account against, and a fill
 	// recorded before the hook is bound is a fill the projection never sees.
-	if err := bindApplyHooks(jrn); err != nil {
+	if err := bindApplyHooks(jrn, tradeOutcomeRefusalSink(opts.Logger)); err != nil {
 		_ = jrn.Close()
 		return nil, refuseStartup(auditLog, gate, err)
 	}

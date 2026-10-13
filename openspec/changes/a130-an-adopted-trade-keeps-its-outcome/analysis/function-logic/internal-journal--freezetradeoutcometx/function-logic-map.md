@@ -1,7 +1,7 @@
 # Function Logic Map: `freezeTradeOutcomeTx`
 
 - Source: `internal/journal/trade_outcomes.go` (편집 전 `129`–`145`, base `233d5d9c`)
-- AST evidence: `ast.json` (편집 전 `source_sha256` 0bd43abf96107b99…) — branches 1 · returns 2 · defers 0 · go 0
+- AST evidence: `ast.json`(편집 뒤 `source_sha256` ff51203717c0ed3c…) — branches 2 · returns 3 · defers 0 · go 0; 편집 전 `ast-base.json`(`source_sha256` 0bd43abf96107b99…, branches 1 · returns 2)
 - Risk scan: `risk-pattern-report.md`
 - 작성 시점: **편집 전**(tasks 0.5).
 
@@ -44,3 +44,8 @@ Live config binding: 없음.
 
 - Safe edit boundary: 위 「a130 편집 계획」 만. 주문 · 손절 · 체결 반영의 동작 무변경.
 - High-risk impact: yes(원장 / 엔진 기동) — 성과 산식 무변경, 거절 셋 추가(보수 방향), 거절 기록 추가.
+
+## 편집 뒤 (a130 4판)
+
+- 편집 뒤 `129`–`148` · `source_sha256` ff51203717c0ed3c… — branches 2 · returns 3
+  (편집 전 1 · 2, 편집 전 AST 는 `ast-base.json`). 위 분기 표의 좌표는 편집 전, 아래 BTM 은 편집 뒤 좌표.

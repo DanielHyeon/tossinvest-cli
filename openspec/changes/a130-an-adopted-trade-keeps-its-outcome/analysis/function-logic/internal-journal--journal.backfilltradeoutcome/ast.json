@@ -1,16 +1,16 @@
 {
   "file": "internal/journal/trade_outcomes.go",
-  "source_sha256": "0bd43abf96107b9998ea7c9bc6c6655f162b1af3ae96490daadc78fb354a4958",
+  "source_sha256": "ff51203717c0ed3cfc3e353257dd057acafea312f35d72f0bfe1a6f181ad65e1",
   "package": "journal",
   "function": "BackfillTradeOutcome",
   "receiver": "Journal",
   "signature": "Journal.BackfillTradeOutcome(params=3, results=2)",
   "start": {
-    "line": 843,
+    "line": 889,
     "column": 1
   },
   "end": {
-    "line": 873,
+    "line": 919,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 846,
+        "line": 892,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "else",
       "at": {
-        "line": 848,
+        "line": 894,
         "column": 9
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 848,
+        "line": 894,
         "column": 9
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 853,
+        "line": 899,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 857,
+        "line": 903,
         "column": 2
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 867,
+        "line": 913,
         "column": 3
       }
     }
@@ -67,42 +67,42 @@
     {
       "kind": "return",
       "at": {
-        "line": 847,
+        "line": 893,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 849,
+        "line": 895,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 854,
+        "line": 900,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 868,
+        "line": 914,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 870,
+        "line": 916,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 872,
+        "line": 918,
         "column": 2
       }
     }
@@ -111,7 +111,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 845,
+        "line": 891,
         "column": 8
       },
       "text": "strings.TrimSpace"
@@ -119,7 +119,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 846,
+        "line": 892,
         "column": 15
       },
       "text": "j.TradeOutcomeOf"
@@ -127,7 +127,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 847,
+        "line": 893,
         "column": 26
       },
       "text": "fmt.Errorf"
@@ -135,7 +135,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 848,
+        "line": 894,
         "column": 13
       },
       "text": "errors.Is"
@@ -143,15 +143,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 852,
-        "column": 17
+        "line": 898,
+        "column": 21
       },
       "text": "computeTradeOutcome"
     },
     {
       "kind": "call",
       "at": {
-        "line": 854,
+        "line": 900,
         "column": 26
       },
       "text": "fmt.Errorf"
@@ -159,7 +159,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 857,
+        "line": 903,
         "column": 15
       },
       "text": "j.db.ExecContext"
@@ -167,7 +167,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 865,
+        "line": 911,
         "column": 3
       },
       "text": "nullableString"
@@ -175,7 +175,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 865,
+        "line": 911,
         "column": 45
       },
       "text": "nullableRung"
@@ -183,7 +183,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 867,
+        "line": 913,
         "column": 6
       },
       "text": "isUniqueViolation"
@@ -191,7 +191,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 868,
+        "line": 914,
         "column": 27
       },
       "text": "fmt.Errorf"
@@ -199,7 +199,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 870,
+        "line": 916,
         "column": 26
       },
       "text": "fmt.Errorf"
@@ -209,28 +209,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 845,
+        "line": 891,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 846,
+        "line": 892,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 852,
+        "line": 898,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 857,
+        "line": 903,
         "column": 5
       }
     }

@@ -39,15 +39,17 @@ var exactEntryDecisionID = regexp.MustCompile(`\bentry_decision_id\b`)
 // adoptionIDReaders are the production files allowed to name `adoption_id` at
 // all. Everything here reads it; adoption.go is additionally the sole writer.
 var adoptionIDReaders = map[string]bool{
-	"adoption.go":            true, // the DDL, the writer, the reads
-	"position_projection.go": true, // the projection's select list
-	"exit_state.go":          true, // the eligibility read inside the opening tx
-	"trade_outcomes.go":      true, // the adopted-position freeze branch
-	"provenance.go":          true, // the ADOPTION lineage arm
-	"trade_analytics.go":     true, // the split-by-source join
-	"apply_hook.go":          true, // re-adopt eligibility/readopt reset source read
-	"position_policy.go":     true, // management-list eligibility projection
-	"lane_performance.go":    true, // excludes adopted outcomes from strategy attribution
+	"adoption.go":               true, // the DDL, the writer, the reads
+	"position_projection.go":    true, // the projection's select list
+	"exit_state.go":             true, // the eligibility read inside the opening tx
+	"trade_outcomes.go":         true, // the adopted-position freeze branch
+	"trade_outcome_refusal.go":  true, // a130: the adoption-epoch read (observed_at) for the freeze refusal
+	"trade_outcome_backfill.go": true, // a130: the backfill population (adopted, engine-closed) — reads only
+	"provenance.go":             true, // the ADOPTION lineage arm
+	"trade_analytics.go":        true, // the split-by-source join
+	"apply_hook.go":             true, // re-adopt eligibility/readopt reset source read
+	"position_policy.go":        true, // management-list eligibility projection
+	"lane_performance.go":       true, // excludes adopted outcomes from strategy attribution
 }
 
 // productionSources returns every non-test .go file in this package, with its

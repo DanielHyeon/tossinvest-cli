@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/engine.go",
-  "source_sha256": "52b6273fe6b3d08de42c01b1056fae92ef90f0f69b273c477a8896f4a2390155",
+  "source_sha256": "1dbd3380bc47936549251d256f2caec71502d8938c4e057b1c0c21f06afd6261",
   "package": "engine",
   "function": "NewContext",
   "signature": "NewContext(params=2, results=2)",
@@ -325,6 +325,14 @@
         "column": 12
       },
       "text": "bindApplyHooks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 503,
+        "column": 32
+      },
+      "text": "tradeOutcomeRefusalSink"
     },
     {
       "kind": "call",

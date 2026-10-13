@@ -1,7 +1,7 @@
 # Function Logic Map: `Journal.runApplyHooks`
 
 - Source: `internal/journal/apply_hook.go` (편집 전 `264`–`296`, base `233d5d9c`)
-- AST evidence: `ast.json` (편집 전 `source_sha256` 8daed316f087979f…) — branches 8 · returns 6 · defers 1 · go 0
+- AST evidence: `ast.json`(편집 뒤 `source_sha256` b39d23a138a071f9…) — branches 8 · returns 6 · defers 1 · go 0; 편집 전 `ast-base.json`(`source_sha256` 8daed316f087979f…, branches 8 · returns 6)
 - Risk scan: `risk-pattern-report.md`
 - 작성 시점: **편집 전**(tasks 0.5).
 
@@ -50,3 +50,8 @@ Live config binding: 없음.
 
 - Safe edit boundary: 위 「a130 편집 계획」 만. 주문 · 손절 · 체결 반영의 동작 무변경.
 - High-risk impact: yes(원장 / 엔진 기동) — 성과 산식 무변경, 거절 셋 추가(보수 방향), 거절 기록 추가.
+
+## 편집 뒤 (a130 4판)
+
+- 편집 뒤 `272`–`304` · `source_sha256` b39d23a138a071f9… — branches 8 · returns 6
+  (편집 전 8 · 6, 편집 전 AST 는 `ast-base.json`). 위 분기 표의 좌표는 편집 전, 아래 BTM 은 편집 뒤 좌표.

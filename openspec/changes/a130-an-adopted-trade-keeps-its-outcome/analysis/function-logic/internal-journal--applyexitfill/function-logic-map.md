@@ -1,7 +1,7 @@
 # Function Logic Map: `ApplyExitFill`
 
 - Source: `internal/journal/apply_hook.go` (편집 전 `961`–`1026`, base `233d5d9c`)
-- AST evidence: `ast.json` (편집 전 `source_sha256` 8daed316f087979f…) — branches 15 · returns 11 · defers 0 · go 0
+- AST evidence: `ast.json`(편집 뒤 `source_sha256` b39d23a138a071f9…) — branches 16 · returns 11 · defers 0 · go 0; 편집 전 `ast-base.json`(`source_sha256` 8daed316f087979f…, branches 15 · returns 11)
 - Risk scan: `risk-pattern-report.md`
 - 작성 시점: **편집 전**(tasks 0.5).
 
@@ -55,3 +55,8 @@ B14 안 :1023 한 자리만: 사유가 비어 있지 않으면 `tx.noteOutcomeRe
 
 - Safe edit boundary: 위 「a130 편집 계획」 만. 주문 · 손절 · 체결 반영의 동작 무변경.
 - High-risk impact: yes(원장 / 엔진 기동) — 편입 뒤 증가 포지션은 묶음별 편입가로 새로 동결, 감소 · 재편입 · 관측 없음은 거절, 거절 기록 추가.
+
+## 편집 뒤 (a130 4판)
+
+- 편집 뒤 `971`–`1041` · `source_sha256` b39d23a138a071f9… — branches 16 · returns 11
+  (편집 전 15 · 11, 편집 전 AST 는 `ast-base.json`). 위 분기 표의 좌표는 편집 전, 아래 BTM 은 편집 뒤 좌표.
