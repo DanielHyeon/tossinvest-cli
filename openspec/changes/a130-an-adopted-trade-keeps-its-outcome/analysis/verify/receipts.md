@@ -14,6 +14,8 @@ GREEN 커밋 `dbb0681c`, 구현 리뷰 수리는 그 뒤 커밋(아래 「수리
 | race(a130 범위) | `go test -count=1 -race -timeout 45m -run 'TestA130\|Outcome\|Backfill\|Adopt' ./internal/journal/ ./internal/app/engine/` | 0 | 2026-10-13T11:38:10Z~11:42:22Z · HEAD 2c2daae7 + 수리 워킹트리 (journal 240s · engine 185s) |
 | race(저장소 정본) | `make test-race` | 0 | 2026-10-13T11:42Z~11:48:06Z · 같은 트리 |
 | openspec | `openspec validate a130-an-adopted-trade-keeps-its-outcome --strict` | 0 | 2026-10-13 · 수리 워킹트리 |
+| sdd-sync | `make sdd-sync` | 2 | 2026-10-13 12:5x~13:2xZ, 3회 — CodeGraph 갱신은 매번 성공, `codegraphcontext update` 만 300초 시한 초과(같은 시각 `cgc mcp start` 서버가 떠 있음, advisory). GBrain advisory busy |
+| sdd-check | `make sdd-check` | 0 | 2026-10-13T13:25:12Z · HEAD 0e4b3fc9(a130 수리 커밋 727a841e 포함) — 직전 1회는 `codegraph status` 15초 시한 초과로 rc 2(부하, 재시도로 통과) |
 
 `-skip TestA133`(BTM 커버리지 하네스의 전체 판): 병행 change a133 의 미커밋 RED 시험이 `internal/app/engine` 에 있어 전체 판을 그것으로 실패시킴(2026-10-13 실측, a130 무관).
 첫 test-seams 판(dbb0681c)은 `TestExitEligibilityHasOneSpelling` 하나로 실패 — 새 파일 둘이 `adoption_id` 를 읽음; 허용 목록에 사유와 함께 추가(`internal/position/eligibility_drift_test.go`).
