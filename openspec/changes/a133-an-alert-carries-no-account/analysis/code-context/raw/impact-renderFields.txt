@@ -1,0 +1,12 @@
+
+Impact of changing "renderFields" — 5 affected symbols:
+
+internal/obs/notifier.go
+  function    renderFields:1028
+  function    notificationFor:1003
+  method      publishBestEffort:179
+  method      deliver:476
+
+internal/obs/normal_relay.go
+  method      publish:103
+

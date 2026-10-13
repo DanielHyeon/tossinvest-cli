@@ -1,0 +1,33 @@
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+
+Functions that call 'Publish':
+╭────────────────────────────────┬────────────────────────────────┬────────────╮
+│ Caller Function                │ Location                       │ Call Type  │
+├────────────────────────────────┼────────────────────────────────┼────────────┤
+│ publishHTTPAPISnapshots        │ /mnt/D/Axipient/workspace/Tos… │ 📝 Project │
+│ publishNotificationTest        │ /mnt/D/Axipient/workspace/Tos… │ 📝 Project │
+│ deliverOne                     │ /mnt/D/Axipient/workspace/Tos… │ 📝 Project │
+│ Beat                           │ /mnt/D/Axipient/workspace/Tos… │ 📝 Project │
+│ publishBestEffort              │ /mnt/D/Axipient/workspace/Tos… │ 📝 Project │
+│ deliver                        │ /mnt/D/Axipient/workspace/Tos… │ 📝 Project │
+│ Flush                          │ /mnt/D/Axipient/workspace/Tos… │ 📝 Project │
+│ Beat                           │ /mnt/D/project/axipient/TossO… │ 📝 Project │
+│ publishBestEffort              │ /mnt/D/project/axipient/TossO… │ 📝 Project │
+│ deliver                        │ /mnt/D/project/axipient/TossO… │ 📝 Project │
+│ Flush                          │ /mnt/D/project/axipient/TossO… │ 📝 Project │
+│ TestNtfyPublishesToTheTopic    │ /mnt/D/project/axipient/TossO… │ 📝 Project │
+│ TestNtfyNormalPriority         │ /mnt/D/project/axipient/TossO… │ 📝 Project │
+│ TestNtfySendsTheBearerToken    │ /mnt/D/project/axipient/TossO… │ 📝 Project │
+│ TestNtfyReportsARefusal        │ /mnt/D/project/axipient/TossO… │ 📝 Project │
+│ TestNtfyWithoutATopicIsNotCon… │ /mnt/D/project/axipient/TossO… │ 📝 Project │
+│ Beat                           │ /mnt/D/project/axipient/TossO… │ 📝 Project │
+│ publishBestEffort              │ /mnt/D/project/axipient/TossO… │ 📝 Project │
+│ deliver                        │ /mnt/D/project/axipient/TossO… │ 📝 Project │
+│ Flush                          │ /mnt/D/project/axipient/TossO… │ 📝 Project │
+╰────────────────────────────────┴────────────────────────────────┴────────────╯
+
+Total: 20 caller(s)

@@ -1,0 +1,21 @@
+
+Impact of changing "notificationFor" — 10 affected symbols:
+
+internal/obs/notifier.go
+  function    notificationFor:1003
+  method      publishBestEffort:179
+  method      Notify:148
+  method      notifyCritical:195
+  method      deliver:476
+  method      claimAndDeliver:288
+
+internal/obs/normal_relay.go
+  method      publish:103
+  method      Run:63
+
+internal/strategyprojectionrpc/a108_publication_is_total_test.go
+  function    TestDescriptorPublicationIsAtomic:323
+
+internal/obs/a092_r26b_internal_test.go
+  function    TestA092DropAndNoJournalLinesKeepTheirOwnEventKey:144
+

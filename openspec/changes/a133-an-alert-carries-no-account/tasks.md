@@ -1,0 +1,38 @@
+# a133 Tasks
+
+Story: `STORY-TOS-a133` · High-risk 인접(alert 전달 결과 → 진입 래치 · 운영 모드 승격의 입력) — 알림 바이트만 바꾸는 방향.
+
+## 0. 계약·증거
+
+- [x] 0.1 Story 등록(`docs/pm/portfolio/stories/STORY-TOS-a133.yaml`, `_registry.yaml`, `FEAT-TOS-009` 역링크) + tracker 재생성
+- [x] 0.2 proposal · design(발행 경로 전수 D1 · 치환 지점 D2 · outbox 결정 D4) · spec 델타 · tasks, `openspec validate a133-an-alert-carries-no-account --strict --no-interactive` rc=0
+- [x] 0.3 `capture_change_base.py` 로 base 고정
+- [x] 0.4 CodeGraph hard evidence(`analysis/code-context/`) — 편집 대상의 정의·호출자·영향, `affected --filter '*_test.go'`, CGC 대조 · 운영 outbox 실측(수만)
+      — codegraph 1.6.0, `affected --filter` 1127 · CGC 색인 5023 파일. 불일치 R1~R6(`evidence-reconciliation.md`), 실측 16 행 전부 DELIVERED(`analysis/verify/outbox-census.md`)
+- [x] 0.5 Function Logic Map + Branch Test Map(편집 전) — `Ntfy.Publish` · `renderFields`
+      — 번들 2(편집 전). BTM 이 인용한 신설 시험 3 은 1.1 에서 생김(그 전 `check_analysis` 는 미존재 시험 인용으로 rc 1 — 예상)
+- [ ] 0.6 proposal-freeze 적대 리뷰(분리된 컨텍스트) + Pre-Edit 선언 → `review.md`
+
+## 1. 구현 (RED → GREEN → REFACTOR)
+
+- [ ] 1.1 RED — 경계 · 경로별 · 필드 버림 · 구조 시험이 base 에서 실패함을 확인(`analysis/red/`)
+- [ ] 1.2 GREEN — `redactForTransport`(새 leaf) · `Ntfy.Publish` 첫 문장 · `renderFields` 계좌 키 건너뜀
+- [ ] 1.3 REFACTOR + 편집 뒤 AST 재추출 · FLM/BTM 갱신 · `check_analysis.py --change` 통과
+
+## 2. 검증
+
+- [ ] 2.1 변이(사본, 무변이 대조군 GREEN 먼저) — design D6 목록, 최소 3 CAUGHT(치환 우회 · 발행 경로 하나 누락 · 필드 버림 삭제), 원장 `analysis/mutation/`
+- [ ] 2.2 `make lint` · 관련 패키지 `go test -race -timeout 45m` · `make test-seams` · openspec validate
+- [ ] 2.3 `make sdd-sync` · `make sdd-check`
+- [ ] 2.4 구현 리뷰(분리된 리뷰 패스, 적대적) → `review.md`
+
+## 3. 사람 · Manager
+
+- [ ] 3.1 Manager `make gate CHANGE=a133-an-alert-carries-no-account` + 독립 검증 + 푸시
+
+### 게이트 뒤 절차 (체크박스 아님 — a108 선례)
+
+1. archive(Opus) → Story `openspec.path` 를 아카이브 경로로 → tracker 재생성 → PM `--check`.
+2. 배포 — a129 · a131 · a130 과 한 번에, 사람이 KST 05:00~09:00 에 호스트 `tossctl` 과 이미지를 함께 교체(a131 design 「배포」 1 · a133 design 「배포」).
+3. 교체 뒤 사람이 콘솔 「알림 테스트」 한 번 + 다음 critical 알림 본문에 `account:` 줄 없음 · `pos-[redacted]` 확인.
+4. 잔재 D4 ①(계좌 전환 뒤 옛 계좌 PENDING 행) — Manager 판단.
