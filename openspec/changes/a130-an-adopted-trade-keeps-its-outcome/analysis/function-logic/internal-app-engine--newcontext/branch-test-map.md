@@ -11,7 +11,7 @@
 | B5 | `:472` 감사 기록 오류 | 무편집 | no | no |
 | B6 | `:487` 계좌 해석 오류 | 무편집 | no | no |
 | B7 | `:494` 저널 열기 오류 | 무편집 | no | no |
-| B8 | `:503` bindApplyHooks 오류 | a130 편집 자리 — 호출 하나를 `bindApplyHooksLogged(jrn, opts.Logger)` 로 | no | no |
+| B8 | `:503` bindApplyHooks 오류 | a130 편집 자리 — 호출 하나를 `bindApplyHooks(jrn, tradeOutcomeRefusalSink(opts.Logger))` 로 | no | no |
 | B9 | `:522` 게이트웨이 오류 | 무편집 | no | no |
 | B10 | `:537` Guardian 생성 조건 | 무편집 | no | no |
 | B11 | `:539` factory nil | 무편집 | no | no |

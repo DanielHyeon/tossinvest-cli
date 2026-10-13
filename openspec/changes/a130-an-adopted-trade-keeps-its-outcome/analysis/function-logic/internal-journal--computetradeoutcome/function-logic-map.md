@@ -47,11 +47,11 @@ Live config binding: 없음.
 
 - 없음(읽기 · 계산만). 실현 R 분모 = `initial_risk × buy.quantity`(:232).
 
-## a130 편집 계획
+## a130 편집 계획 (3판)
 
-반환형 (TradeOutcome, bool) → (TradeOutcome, 사유). 거절 return 9개가 design D2 의 코드를 돌려준다. B7 편입 경로는 adoptedRoundTripLegs 의 사유를 그대로 올린다. B9 는 다리 거절(편입 = 그 사유 / 결정 = `round_trip_unpriceable`)과 `empty_buy_leg` 로 갈린다. 산식 · 분모(`initial_risk × buy.quantity`)는 그대로 — 편입 경로에서 buy.quantity 가 Q_buy(= Q_sell) 가 되어 분모 수량이 매도 수량과 같아진다.
+반환형 (TradeOutcome, bool) → (TradeOutcome, TradeOutcomeRefusalReason). 거절 return 9개가 design D2 의 코드. B7 편입 경로는 adoptedRoundTripLegs 의 사유를 올림. 분모 `initial_risk × buy.quantity` 는 그대로 — 편입 경로에서 buy.quantity 가 편입 수량 + 묶음 합(= 매도 수량)이 되어 분자 · 분모가 같은 수량.
 
 ## Safety conclusion
 
 - Safe edit boundary: 위 「a130 편집 계획」 만. 주문 · 손절 · 체결 반영의 동작 무변경.
-- High-risk impact: yes(원장 / 엔진 기동) — 거절이던 성과가 행이 되는 방향, 거절 기록 추가.
+- High-risk impact: yes(원장 / 엔진 기동) — 편입 뒤 증가 포지션은 묶음별 편입가로 새로 동결, 감소 · 재편입 · 관측 없음은 거절, 거절 기록 추가.

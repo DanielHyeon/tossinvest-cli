@@ -6,7 +6,7 @@
 |---|---|---|---|---|
 | B1 | `:188` SetApplyHooks 오류 | TestTheProjectionGuardAsksTheBindingAndNotTheData(두 번째 바인딩 거절, interlock_internal_test.go:202) | no | no |
 
-## a130 시나리오(편집 계획에 묶인 시험)
+## a130 시나리오 (2판)
 
-- B1 — 두 번째 바인딩 거절 — 기존 interlock_internal_test(계속 green — 위임 뒤에도 같은 오류)
-- fallthrough — 성공 바인딩 — TestBindingWiresBothApplyHooks + a130 바인딩 시험(싱크 유무)
+- 성공 — 인자 없으면 싱크 없음 · 싱크 인자면 있음 — `TestA130TheLoggedBindingCarriesTheSink` · TestBindingWiresBothApplyHooks
+- B1 — 두 번째 바인딩 거절 — 기존 interlock_internal_test

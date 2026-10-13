@@ -47,11 +47,11 @@ Live config binding: 없음.
 
 - exit_states taken · pending · completed, exit_events, trade_outcomes(성과).
 
-## a130 편집 계획
+## a130 편집 계획 (3판)
 
-B14 안 :1023 한 자리만: 성과 함수가 돌려준 사유가 비어 있지 않으면 `tx.reportOutcomeRefusal(ctx, positionID, reason)`(새 메서드, 새 파일). nil 반환 · 오류 반환 경로 · 다른 분기 무변경 — 보고는 오류를 돌려주지 않으므로 트랜잭션을 되돌릴 수 없다.
+B14 안 :1023 한 자리만: 사유가 비어 있지 않으면 `tx.noteOutcomeRefusal(ctx, positionID, reason)`(새 메서드, 새 파일) — RecordFill 이 ctx 에 실은 목록에 쌓기만, 오류 · 반환 없음. 다른 분기 · 반환 무변경.
 
 ## Safety conclusion
 
 - Safe edit boundary: 위 「a130 편집 계획」 만. 주문 · 손절 · 체결 반영의 동작 무변경.
-- High-risk impact: yes(원장 / 엔진 기동) — 거절이던 성과가 행이 되는 방향, 거절 기록 추가.
+- High-risk impact: yes(원장 / 엔진 기동) — 편입 뒤 증가 포지션은 묶음별 편입가로 새로 동결, 감소 · 재편입 · 관측 없음은 거절, 거절 기록 추가.

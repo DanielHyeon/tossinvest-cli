@@ -36,11 +36,11 @@ Live config binding: 없음.
 
 - trade_outcomes INSERT 한 줄(같은 트랜잭션). 실패는 삼킨다 — 반환 bool 로만 알림(그 bool 을 호출자가 버린다).
 
-## a130 편집 계획
+## a130 편집 계획 (2판)
 
-반환형 bool → 사유 문자열("" = 성공). B1 은 compute 의 사유를, INSERT 오류는 `insert_failed` 를 돌려준다. 행을 쓰는 조건은 그대로.
+반환형 bool → `TradeOutcomeRefusalReason`("" = 동결). B1 은 compute 의 사유, INSERT 오류는 `insert_failed`. 행을 쓰는 조건 · 값 무변경.
 
 ## Safety conclusion
 
 - Safe edit boundary: 위 「a130 편집 계획」 만. 주문 · 손절 · 체결 반영의 동작 무변경.
-- High-risk impact: yes(원장 / 엔진 기동) — 거절이던 성과가 행이 되는 방향, 거절 기록 추가.
+- High-risk impact: yes(원장 / 엔진 기동) — 성과 산식 무변경, 거절 셋 추가(보수 방향), 거절 기록 추가.

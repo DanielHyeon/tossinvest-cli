@@ -40,11 +40,11 @@ Live config binding: 없음.
 
 - trade_outcomes INSERT(트리거가 UPDATE 금지).
 
-## a130 편집 계획
+## a130 편집 계획 (2판)
 
-compute 의 반환형이 사유가 되므로 B4 조건은 `reason != ""`, 오류 문장에 사유 코드를 덧붙인다(감싸는 ErrInvalidRequest 그대로). 그 밖 무변경.
+compute 반환형이 사유가 되므로 B4 조건은 `reason != ""`, 오류 문장에 사유 코드를 덧붙임(감싸는 ErrInvalidRequest 그대로). 그 밖 무변경. 생산 호출자 0 그대로(2판은 backfill 도구 없음 — design D4).
 
 ## Safety conclusion
 
 - Safe edit boundary: 위 「a130 편집 계획」 만. 주문 · 손절 · 체결 반영의 동작 무변경.
-- High-risk impact: yes(원장 / 엔진 기동) — 거절이던 성과가 행이 되는 방향, 거절 기록 추가.
+- High-risk impact: yes(원장 / 엔진 기동) — 성과 산식 무변경, 거절 셋 추가(보수 방향), 거절 기록 추가.

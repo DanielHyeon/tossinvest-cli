@@ -40,11 +40,11 @@ Live config binding: 없음.
 
 - 없음. buy.quantity = adopted, buy.notional = adopted × observed.
 
-## a130 편집 계획
+## a130 편집 계획 (3판)
 
-결함 자리 = B5 의 `adopted`(편입 시점 수량). a130: B1 뒤에 편입 뒤 양의 조정 읽기(새 함수, 새 파일)를 더해 buy.quantity · notional 에 Δ · Δ×new_avg 를 더하고, B5 는 `sell.priced` 거절(`sell_unpriced`)과 `sell.quantity.Cmp(buy.quantity) != 0`(`sell_quantity_mismatch`) 둘로 가른다. 반환형 bool → 사유.
+결함 자리 = B5 의 등식이 **편입 시점 수량**과 비교. 3판(사용자 결정 2026-10-13 2차): B1 뒤에 `adoptionEpoch`(새 함수, 새 파일 — 재편입 · 편입 뒤 감소 거절, 편입 뒤 증가 묶음마다 조정 뒤 383초 안 첫 엔진 관측가)를 부르고, 매수 다리 = 편입 수량 × 편입 관측가 + Σ 묶음 × 관측가, B5 는 `sell_unpriced` 와 `sell.quantity.Cmp(buy.quantity) != 0` → `sell_quantity_mismatch` 로 가름. 반환형 bool → 사유. 편입 뒤 증가가 없으면 a130 이전과 같은 값.
 
 ## Safety conclusion
 
 - Safe edit boundary: 위 「a130 편집 계획」 만. 주문 · 손절 · 체결 반영의 동작 무변경.
-- High-risk impact: yes(원장 / 엔진 기동) — 거절이던 성과가 행이 되는 방향, 거절 기록 추가.
+- High-risk impact: yes(원장 / 엔진 기동) — 편입 뒤 증가 포지션은 묶음별 편입가로 새로 동결, 감소 · 재편입 · 관측 없음은 거절, 거절 기록 추가.

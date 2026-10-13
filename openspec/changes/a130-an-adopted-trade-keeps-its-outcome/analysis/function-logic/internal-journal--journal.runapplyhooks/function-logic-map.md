@@ -42,11 +42,11 @@ Live config binding: 없음.
 
 - 핸들 `&ApplyTx{tx, now, costs}` 생성(:273) · defer invalidate.
 
-## a130 편집 계획
+## a130 편집 계획 (2판)
 
-핸들 리터럴(:273)에 `outcomeRefused: hooks.OutcomeRefused` 필드 하나. 분기 · 순서 · 반환 무변경.
+핸들 리터럴(:273)에 `outcomeRefused: hooks.OutcomeRefused` 필드 하나. 시그니처 · 분기 · 순서 · 반환 무변경(수집 목록은 ctx 로 — RecordFill 만 실음).
 
 ## Safety conclusion
 
 - Safe edit boundary: 위 「a130 편집 계획」 만. 주문 · 손절 · 체결 반영의 동작 무변경.
-- High-risk impact: yes(원장 / 엔진 기동) — 거절이던 성과가 행이 되는 방향, 거절 기록 추가.
+- High-risk impact: yes(원장 / 엔진 기동) — 성과 산식 무변경, 거절 셋 추가(보수 방향), 거절 기록 추가.

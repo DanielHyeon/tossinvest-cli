@@ -17,14 +17,7 @@
 | B11 | `:221` 매도 비용 추정 오류 | 없음 | no | no |
 | B12 | `:234` 분모 ≠ 0 | TestRealizedRIsNotThePriceR · TestAnAdoptedPositionTheEngineLiquidatedFreezesAnOutcome | no | no |
 
-## a130 시나리오(편집 계획에 묶인 시험)
+## a130 시나리오 (3판)
 
-- B1 — 미구성 모델 → cost_model_unconfigured — a130 사유 시험(미리보기 항목) + 기존
-- B2~B4 — 포지션 읽기 실패 → position_unreadable — 없음 — 무편집 의미(연결 결함만)
-- B5 — 비관리 → unmanaged_position — a130 backfill 미리보기 사유 시험(첫 도달)
-- B6 — exit 상태 없음 → exit_state_unreadable — 없음
-- B7 — 편입 경로 — a130 수량 증가 시험 · 기존 adoption_outcome_test
-- B8 — 결정 경로 — 기존 trade_outcomes_test(불변)
-- B9 — 다리 거절 / 빈 매수 — TestAnUnpricedFillLeavesNoOutcome(round_trip_unpriceable) · a130 교차 시험
-- B10/B11 — 비용 추정 실패 — 없음 — 무편집 의미
-- B12 — R 계산 — a130 R 정확값 시험(분모 = r × 6)
+- 사유 반환 — `TestA130EachReachableRefusalSiteNamesItsOwnReason` · `TestA130TheReasonSetIsClosedAndTokenShaped` · 기존 거절 시험
+- B12 — 분모 = 위험 × (편입 + 묶음) — `TestA130AQuantityRaisedAfterAdoptionFreezesWithPerLotIntake`(2배 아님) · `TestA130AnEngineEnteredRoundTripIsUnchanged`

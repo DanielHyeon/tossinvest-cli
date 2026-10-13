@@ -26,7 +26,7 @@
 | B5 | `:472` 감사 기록 오류 | — | `:477` | 무편집 |
 | B6 | `:487` 계좌 해석 오류 | — | `:488` | 무편집 |
 | B7 | `:494` 저널 열기 오류 | — | `:495` | 무편집 |
-| B8 | `:503` bindApplyHooks 오류 | jrn.Close | refuseStartup `:505` | a130 편집 자리 — 호출 하나를 `bindApplyHooksLogged(jrn, opts.Logger)` 로 |
+| B8 | `:503` bindApplyHooks 오류 | jrn.Close | refuseStartup `:505` | a130 편집 자리 — 호출 하나를 `bindApplyHooks(jrn, tradeOutcomeRefusalSink(opts.Logger))` 로 |
 | B9 | `:522` 게이트웨이 오류 | — | `:524` | 무편집 |
 | B10 | `:537` Guardian 생성 조건 | — | — | 무편집 |
 | B11 | `:539` factory nil | — | — | 무편집 |
@@ -39,7 +39,7 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `bindApplyHooks` → `bindApplyHooksLogged` | 훅 바인딩 | 오류 → B8 | AST `:503` |
+| `bindApplyHooks`(+ `tradeOutcomeRefusalSink`) | 훅 바인딩 | 오류 → B8 | AST `:503` |
 
 Live config binding: 없음.
 
@@ -47,11 +47,11 @@ Live config binding: 없음.
 
 - 없음(조립). a130: B8 의 조건식 안 호출 하나가 로거를 넘긴다.
 
-## a130 편집 계획
+## a130 편집 계획 (2판)
 
-B8 조건식의 호출 `bindApplyHooks(jrn)` → `bindApplyHooksLogged(jrn, opts.Logger)`. 분기 · 순서 · 반환 무변경. 구조 핀(go/parser)이 NewContext 의 바인딩 호출이 `opts.Logger` 를 넘김을 잰다.
+B8 조건식의 호출 `bindApplyHooks(jrn)` → `bindApplyHooks(jrn, tradeOutcomeRefusalSink(opts.Logger))`. 분기 · 순서 · 반환 무변경. 구조 핀(go/parser)이 이 호출을 잼.
 
 ## Safety conclusion
 
 - Safe edit boundary: 위 「a130 편집 계획」 만. 주문 · 손절 · 체결 반영의 동작 무변경.
-- High-risk impact: yes(원장 / 엔진 기동) — 거절이던 성과가 행이 되는 방향, 거절 기록 추가.
+- High-risk impact: yes(원장 / 엔진 기동) — 성과 산식 무변경, 거절 셋 추가(보수 방향), 거절 기록 추가.

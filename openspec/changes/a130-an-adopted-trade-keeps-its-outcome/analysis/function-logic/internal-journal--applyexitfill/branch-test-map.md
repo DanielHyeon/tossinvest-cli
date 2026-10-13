@@ -20,7 +20,7 @@
 | B14 | `:1013` CLOSED ∧ 미완료 | TestTheOutcomeIsFrozenInTheClosingTransaction · TestAnAnalyticsFailureDoesNotRollBackTheClose | no | no |
 | B15 | `:1014` markExitCompletedTx 오류 | 없음 | no | no |
 
-## a130 시나리오(편집 계획에 묶인 시험)
+## a130 시나리오 (3판)
 
-- B1~B13 · B15 — 무편집 갈래 — 기존 시험(위 표) — a130 무편집
-- B14 — CLOSED + 동결 거절 → 싱크 1회 / 성공 → 0회 / 싱크 패닉 → 커밋 유지 — a130 거절 싱크 시험 · 패닉 비롤백 시험 · 기존 TestAnAnalyticsFailureDoesNotRollBackTheClose
+- B14 — CLOSED + 거절 → ctx 목록에 쌓임, 커밋 뒤 1회 보고 — `TestA130AnUnobservedLotIsRefusedWithItsReason` · `TestA130ARolledBackCloseReportsNothing` · `TestA130APanickingRefusalSinkDoesNotRollBackTheClose`
+- 그 밖 — 무편집

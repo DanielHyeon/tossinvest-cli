@@ -33,11 +33,11 @@ Live config binding: 없음.
 
 - 저널의 훅 바인딩(한 번).
 
-## a130 편집 계획
+## a130 편집 계획 (2판)
 
-본문을 새 함수 `bindApplyHooksLogged(j, log)`(새 파일)로 옮기고 `bindApplyHooks(j)` 는 `bindApplyHooksLogged(j, nil)` 를 돌려준다(시험 14곳 시그니처 유지). 새 함수의 리터럴에 `OutcomeRefused: tradeOutcomeRefusalSink(log)` — log nil 이면 nil(이전과 같은 바인딩).
+시그니처에 선택 인자 `refused ...func(journal.TradeOutcomeRefusal)` 를 더하고(시험 14곳 그대로 컴파일), 리터럴에 `OutcomeRefused: outcomeRefused` 한 필드. 리터럴은 gateway.go 에 남음. B1 · 반환 무변경.
 
 ## Safety conclusion
 
 - Safe edit boundary: 위 「a130 편집 계획」 만. 주문 · 손절 · 체결 반영의 동작 무변경.
-- High-risk impact: yes(원장 / 엔진 기동) — 거절이던 성과가 행이 되는 방향, 거절 기록 추가.
+- High-risk impact: yes(원장 / 엔진 기동) — 성과 산식 무변경, 거절 셋 추가(보수 방향), 거절 기록 추가.
