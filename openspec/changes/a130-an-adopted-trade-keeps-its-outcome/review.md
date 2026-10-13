@@ -180,3 +180,10 @@ Pre-Edit Gate:
 | P3-4c | P3 | 엔진 시험 주석 「체결 트랜잭션 안」 | **수용** — 「커밋 뒤 RecordFill 안」 |
 | P3-4d | P3 | 의존 검사에 `net` 도 | **측정으로 기각** — `net` 은 기존 의존(github.com/google/uuid · crypto/x509)이 끌어와 거르면 a130 이전 트리도 실패. 검사는 `net/http` · `internal/official` 유지, 시험 주석에 근거 |
 | P3-5 | P3 | 스크래치패드의 운영 저널 사본(불변식 8) | **수용** — 측정 기록 뒤 삭제(receipts.md 에 삭제 순간) |
+
+## Manager 승인 — base 재고정 233d5d9c → af0c0ce7 (2026-10-13)
+
+- 요청: 구현자 보고 「보류 2」. 233d5d9c 기준으로는 check_analysis 가 a131·a133 커밋의 함수 30개를 a130 증거로 요구.
+- 판정 근거(Manager 실측): `git log 233d5d9c..af0c0ce7 -- <a130 production 편집 파일 6개>` 결과 0 커밋 — a130 의 production 편집은 전부
+  af0c0ce7 이후(dbb0681c 등). 따라서 재고정이 a130 자신의 편집을 base 안으로 숨기지 않는다.
+- 방법: `capture_change_base.py` 는 `git rev-parse HEAD` 를 기록할 뿐이므로 af0c0ce7 전체 sha 를 같은 파일에 직접 기록(HEAD 로 잡으면 a130 편집이 base 에 들어감).
