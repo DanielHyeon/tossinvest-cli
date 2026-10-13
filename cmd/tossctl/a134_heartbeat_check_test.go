@@ -142,7 +142,7 @@ func TestA134HeartbeatCheckAlertsOnceThroughNtfy(t *testing.T) {
 	}
 
 	now := time.Now()
-	if err := os.WriteFile(enginelock.MarkerPath(dir), []byte("{}\n"), 0o600); err != nil {
+	if err := os.WriteFile(enginelock.MarkerPath(dir), []byte(`{"ready_at":"`+now.UTC().Format(time.RFC3339)+`"}`+"\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	_ = os.Chtimes(enginelock.MarkerPath(dir), now, now)
@@ -171,5 +171,52 @@ func TestA134HeartbeatCheckRefusesATooShortThreshold(t *testing.T) {
 	}
 	if ntfy.count() != 0 {
 		t.Fatalf("a refused run sent %d requests", ntfy.count())
+	}
+}
+
+// TestA134HeartbeatCheckWithAutostartOffLeavesAStoppedEngineAlone: autostart OFF + 마커 없음 → idle · 요청 0 (cmd 가 설정의 autostart 를 넘김).
+func TestA134HeartbeatCheckWithAutostartOffLeavesAStoppedEngineAlone(t *testing.T) {
+	ntfy := &a134Ntfy{}
+	server := httptest.NewServer(http.HandlerFunc(ntfy.handler))
+	defer server.Close()
+	dir := t.TempDir()
+	a134Config(t, dir, `{"engine":{"autostart":false,"notifications":{"enabled":true,"base_url":"`+
+		server.URL+`","topic":"a134-watch-topic"}}}`)
+	out, _, err := a134RunCheck(t, dir)
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if ntfy.count() != 0 || !strings.Contains(out, "idle") {
+		t.Fatalf("autostart off sent %d requests, output %q; want idle and none", ntfy.count(), out)
+	}
+}
+
+// TestA134HeartbeatCheckSendTestReachesTheChannelAndNamesFailure: --send-test 는 판정 없이 한 건 보내고, 서버가 거절하면 실패로 끝남 · 상태 파일 무변경.
+func TestA134HeartbeatCheckSendTestReachesTheChannelAndNamesFailure(t *testing.T) {
+	ntfy := &a134Ntfy{}
+	server := httptest.NewServer(http.HandlerFunc(ntfy.handler))
+	defer server.Close()
+	dir := t.TempDir()
+	a134Config(t, dir, `{"engine":{"autostart":true,"notifications":{"enabled":true,"base_url":"`+
+		server.URL+`","topic":"a134-watch-topic"}}}`)
+	if _, _, err := a134RunCheck(t, dir, "--send-test"); err != nil {
+		t.Fatalf("send-test: %v", err)
+	}
+	if ntfy.count() != 1 || ntfy.requests[0].priority != "3" ||
+		!strings.HasPrefix(ntfy.requests[0].tags, string(enginewatch.EventWatchTest)) {
+		t.Fatalf("send-test sent %+v, want one normal test notification", ntfy.requests)
+	}
+	if _, serr := os.Stat(filepath.Join(dir, enginewatch.StateFileName)); serr == nil {
+		t.Fatal("send-test judged the engine and wrote state")
+	}
+
+	refusing := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+	}))
+	defer refusing.Close()
+	a134Config(t, dir, `{"engine":{"autostart":true,"notifications":{"enabled":true,"base_url":"`+
+		refusing.URL+`","topic":"a134-watch-topic"}}}`)
+	if _, _, err := a134RunCheck(t, dir, "--send-test"); err == nil {
+		t.Fatal("an undelivered send-test reported success")
 	}
 }

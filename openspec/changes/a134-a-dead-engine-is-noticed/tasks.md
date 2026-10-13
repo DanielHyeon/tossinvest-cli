@@ -25,7 +25,8 @@ Story: `STORY-TOS-a134` · 알림 · 생존 관측 경로(주문 · 손절 · �
 
 - [x] 2.1 `gofmt -l`(빈 출력) · `go vet ./...` · `rtk proxy go test -count=1` (`internal/enginewatch` · `internal/obs` · `internal/app/engine` · `cmd/tossctl`) · `openspec validate --strict`
       — `analysis/verify/receipts.md`: 전부 rc 0, 단 cmd/tossctl 전체의 실패 1 은 병행 a135 의 미커밋 시험(a134 무관). 경량 변이 4/4 CAUGHT
-- [ ] 2.2 경량 독립 리뷰(분리된 컨텍스트) → `review.md`
+- [x] 2.2 경량 독립 리뷰(분리된 컨텍스트) → `review.md`
+      — APPROVE-WITH-FIXES(P0 0 · P1 1 · P2 3 · P3 5) — P1-1 · P2-1 · P3-3 · P3-4 수리(시험 6 추가, 변이 M5~M7 CAUGHT), P2-2 · P2-3 · P3-1 · P3-2 · P3-5 는 design 잔재로 명시
 
 ## 3. 사람 · Manager
 
@@ -36,21 +37,24 @@ Story: `STORY-TOS-a134` · 알림 · 생존 관측 경로(주문 · 손절 · �
 감시자 설치는 **사람이 한다**. 에이전트는 단위를 설치 · 활성화하지 않는다.
 
 1. 이 change 를 담은 빌드로 호스트 `~/.local/bin/tossctl` 을 교체한다(엔진 이미지 교체 불요 — 엔진 코드 무편집).
-2. 한 번 손으로 돌려 본다: `~/.local/bin/tossctl --config-dir ~/.config/tossctl engine heartbeat-check`
-   - 기대: `engine heartbeat  up · …` 한 줄, 종료 코드 0. 알림은 가지 않는다(UP 이고 이전 상태가 끊김이 아님).
-   - `알림을 보낼 수 없음 …` 오류면 알림 설정(콘솔 [알림 켜기])부터 한다. 감시자는 알릴 수 없으면 매번 실패한다(D4).
-3. 보호된 토픽(토큰)이거나 토픽을 환경 변수로만 준 배포면 drop-in 을 만든다:
+2. 보호된 토픽(토큰)이거나 토픽을 환경 변수로만 준 배포면 drop-in 을 만든다:
    `systemctl --user edit tossos-heartbeat.service` → `[Service]` 아래 `EnvironmentFile=%h/.config/tossctl/ntfy.env`
    (파일 안 `TOSSCTL_NTFY_TOKEN=…` · 필요하면 `TOSSCTL_NTFY_TOPIC=…`, 권한 0600, 저장소에 넣지 않음).
-4. 설치 · 활성화:
+3. 단위 파일을 놓는다: `install -m 0644 deploy/systemd/tossos-heartbeat.service deploy/systemd/tossos-heartbeat.timer ~/.config/systemd/user/`
+   → `systemctl --user daemon-reload`.
+4. **전달 실측(필수, 리뷰 P1-1)** — 단위와 같은 환경으로 시험 알림 한 건:
+   `systemd-run --user --wait --pipe -p EnvironmentFile=-$HOME/.config/tossctl/ntfy.env $HOME/.local/bin/tossctl --config-dir ~/.config/tossctl engine heartbeat-check --send-test`
+   (drop-in 이 없으면 그냥 `~/.local/bin/tossctl --config-dir ~/.config/tossctl engine heartbeat-check --send-test`).
+   - 기대: 휴대폰에 「TossOS 엔진 생존 감시 시험」 도착 + 종료 코드 0. 실패(비정상 종료)면 토큰 · 토픽부터 고친다 — 고치기 전에는 타이머를 켜지 않는다.
+   - `알림을 보낼 수 없음 …` 오류면 알림 설정(콘솔 [알림 켜기])부터 한다. 감시자는 알릴 수 없으면 매번 실패한다(D4).
+   - 이어서 판정 한 번: `… engine heartbeat-check` → `engine heartbeat  up · …` 한 줄, 종료 코드 0, 알림 없음.
+5. 활성화:
    ```bash
-   install -m 0644 deploy/systemd/tossos-heartbeat.service deploy/systemd/tossos-heartbeat.timer ~/.config/systemd/user/
-   systemctl --user daemon-reload
    systemctl --user enable --now tossos-heartbeat.timer
    systemctl --user list-timers tossos-heartbeat.timer
    loginctl show-user "$USER" -p Linger   # Linger=yes 여야 로그아웃 뒤에도 돈다(tossos-attest 와 같음)
    ```
-5. 확인: `journalctl --user -u tossos-heartbeat.service -n 5` 에 1분마다 `engine heartbeat  up` 줄.
-6. 계획된 정지(배포 · KST 05:00~09:00 교체) 동안 autostart ON 이면 「끊김」 1건 + 「복구」 1건이 온다 — 정상. 원치 않으면 그 동안
+6. 확인: `journalctl --user -u tossos-heartbeat.service -n 5` 에 1분마다 `engine heartbeat  up` 줄.
+7. 계획된 정지(배포 · KST 05:00~09:00 교체) 동안 autostart ON 이면 「끊김」 1건 + 「복구」 1건이 온다 — 정상. 원치 않으면 그 동안
    `systemctl --user stop tossos-heartbeat.timer` 후 다시 `start`.
-7. (선택, 기본 OFF — design D7) 기계 전체 정지까지 잡으려면 외부 박동 서비스 URL 을 drop-in 의 `ExecStartPost=/usr/bin/curl -fsS -m 10 --retry 2 <url>` 로 붙인다.
+8. (선택, 기본 OFF — design D7) 기계 전체 정지까지 잡으려면 외부 박동 서비스 URL 을 drop-in 의 `ExecStartPost=/usr/bin/curl -fsS -m 10 --retry 2 <url>` 로 붙인다.

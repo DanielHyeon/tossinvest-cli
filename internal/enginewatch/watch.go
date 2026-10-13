@@ -84,6 +84,10 @@ type Observation struct {
 	LastBeat time.Time
 	// Age 는 now - LastBeat. 미래 시각이면 음수일 수 있음.
 	Age time.Duration
+	// Ready 는 마커 본문에 ready_at 이 있다는 뜻 — 재시작 복구(Recover)를 마친 엔진만 씀(a102).
+	// 복구 판정(끊김 → 정상)은 이것까지 요구함: 마커는 부팅 6단계(Recover 전)에 쓰이고 오류 종료 때 지워지므로,
+	// 재기동 루프의 몇 초짜리 마커 하나를 「복구」로 읽으면 거짓 안심 알림이 됨(리뷰 P2-1).
+	Ready bool
 }
 
 // Observe 는 마커의 수정 시각으로 판정함(design D2 표).
@@ -104,11 +108,25 @@ func Observe(markerPath string, now time.Time, staleAfter time.Duration, expecte
 	}
 	beat := info.ModTime()
 	age := now.Sub(beat)
+	ready := markerReady(markerPath)
 	// 미래 시각(age < 0)은 시계 불일치이지 죽음이 아님 — 기준 이하로 떨어져 Up 이 됨(runlock.Fresh 선례).
 	if age > staleAfter {
-		return Observation{Verdict: VerdictDown, Reason: ReasonStale, LastBeat: beat, Age: age}, nil
+		return Observation{Verdict: VerdictDown, Reason: ReasonStale, LastBeat: beat, Age: age, Ready: ready}, nil
 	}
-	return Observation{Verdict: VerdictUp, LastBeat: beat, Age: age}, nil
+	return Observation{Verdict: VerdictUp, LastBeat: beat, Age: age, Ready: ready}, nil
+}
+
+// markerReady 는 마커 본문의 ready_at 유무를 읽음. 읽기 · 해석 실패는 「준비 안 됨」 — 복구를 늦추는 방향(거짓 안심 금지).
+func markerReady(markerPath string) bool {
+	body, err := os.ReadFile(markerPath)
+	if err != nil {
+		return false
+	}
+	var m enginelock.Marker
+	if json.Unmarshal(body, &m) != nil {
+		return false
+	}
+	return m.ReadyAt != nil
 }
 
 // State 는 감시자가 기억하는 것 — 「이번 끊김을 이미 알렸는가」뿐. 계좌 칸 없음(시험이 고정).
@@ -221,6 +239,11 @@ func (c Check) Run(ctx context.Context) (Outcome, error) {
 	if down == prev.Down {
 		return out, nil
 	}
+	// 끊김에서 벗어나는 것은 복구를 마친(ready_at) 엔진의 신선한 마커 또는 감시 대상 아님(IDLE)일 때만 —
+	// 신선하지만 준비 안 된 마커는 끊김을 유지함(재기동 루프 · Recover 에서 멈춘 엔진, 리뷰 P2-1).
+	if prev.Down && obsv.Verdict == VerdictUp && !obsv.Ready {
+		return out, nil
+	}
 
 	var msg obs.Notification
 	var next State
@@ -240,6 +263,28 @@ func (c Check) Run(ctx context.Context) (Outcome, error) {
 	return out, nil
 }
 
+// EventWatchTest 는 설치 때 사람이 보내는 전달 확인 알림의 타입임(--send-test, 리뷰 P1-1).
+const EventWatchTest obs.EventType = "engine.liveness_watch_test"
+
+// SendTest 는 감시자의 전송 수단으로 normal 알림 한 건을 보냄 — 판정 · 상태와 무관.
+//
+// 판정은 상태가 바뀔 때만 보내므로, 토큰 누락 · 잘못된 토픽 · 401 같은 「수단은 있는데 전달이 안 됨」은 첫 끊김 때에야 드러남.
+// 설치 단계에서 단위와 같은 환경으로 이것을 한 번 돌려 전달을 실측함. 실패는 오류(성공으로 끝나지 않음).
+func SendTest(ctx context.Context, publisher obs.Publisher) error {
+	if publisher == nil {
+		return ErrNoPublisher
+	}
+	if err := publisher.Publish(ctx, obs.Notification{
+		Type:     EventWatchTest,
+		Severity: obs.SeverityNormal,
+		Title:    "TossOS 엔진 생존 감시 시험",
+		Body:     "이 메시지가 보이면 엔진 생존 감시(tossctl engine heartbeat-check)의 끊김 · 복구 알림이 이 채널로 도착함.",
+	}); err != nil {
+		return fmt.Errorf("enginewatch: 시험 알림 전송 실패 — 감시자가 끊김을 알릴 수 없음: %w", err)
+	}
+	return nil
+}
+
 // kst 는 알림 본문의 시각 표기용 고정 시간대(사람이 읽는 운영 시각).
 var kst = time.FixedZone("KST", 9*60*60)
 
@@ -247,10 +292,10 @@ var kst = time.FixedZone("KST", 9*60*60)
 func lostNotification(o Observation, staleAfter time.Duration) obs.Notification {
 	var cause string
 	if o.Reason == ReasonStale {
-		cause = fmt.Sprintf("엔진 활성 마커(%s)가 %s 동안 갱신되지 않음 — 마지막 갱신 %s, 기준 %s. 엔진 프로세스가 마커를 지우지 못하고 멈춘 흔적(OOM · 강제 종료 · 호스트 정지).",
+		cause = fmt.Sprintf("엔진 활성 마커(%s)가 %s 동안 갱신되지 않음 — 마지막 갱신 %s, 기준 %s. 엔진 프로세스가 마커를 지우지 못하고 멈췄거나(OOM · 강제 종료 · 호스트 정지) 마커 쓰기가 실패하는 중(디스크).",
 			enginelock.MarkerFileName, o.Age.Round(time.Second), o.LastBeat.In(kst).Format("2006-01-02 15:04:05 MST"), staleAfter)
 	} else {
-		cause = fmt.Sprintf("엔진 활성 마커(%s)가 없음 — 자동 기동(engine.autostart)이 켜져 있는데 엔진이 돌고 있지 않음.",
+		cause = fmt.Sprintf("엔진 활성 마커(%s)가 없음 — 자동 기동(engine.autostart)이 켜져 있는데 엔진이 돌고 있지 않거나 마커를 쓰지 못함.",
 			enginelock.MarkerFileName)
 	}
 	return obs.Notification{
@@ -266,7 +311,7 @@ func lostNotification(o Observation, staleAfter time.Duration) obs.Notification 
 func restoredNotification(o Observation, prev State) obs.Notification {
 	var now string
 	if o.Verdict == VerdictUp {
-		now = fmt.Sprintf("엔진 활성 마커가 다시 갱신됨 — 마지막 갱신 %s.", o.LastBeat.In(kst).Format("2006-01-02 15:04:05 MST"))
+		now = fmt.Sprintf("엔진 활성 마커가 다시 갱신되고 재시작 복구를 마침 — 마지막 갱신 %s.", o.LastBeat.In(kst).Format("2006-01-02 15:04:05 MST"))
 	} else {
 		now = "엔진이 정상 정지 상태이고 자동 기동이 꺼져 있어 감시 대상에서 벗어남."
 	}

@@ -24,3 +24,20 @@
 | M4 | Publisher nil 검사 제거 | CAUGHT(`TestA134NoPublisherFailsLoudly`) |
 
 복원 확인: `restored OK`.
+
+## 구현 리뷰 수리 뒤 (2026-10-14)
+
+| 명령 | 결과 |
+|---|---|
+| `/usr/local/go/bin/gofmt -l internal/enginewatch cmd/tossctl` | 빈 출력 |
+| `rtk proxy go vet ./internal/enginewatch/ ./cmd/tossctl/` | rc 0 |
+| `rtk proxy go test -count=1 -v ./internal/enginewatch/` | 18/18 PASS |
+| `rtk proxy go test -count=1 -run 'TestA134\|…규약 3' -v ./cmd/tossctl/` | 9/9 PASS(a134 6 + 규약 3) |
+
+| # | 변이 | 결과 |
+|---|---|---|
+| M5 | 복구의 `ready_at` 요구 제거 | CAUGHT(`TestA134RecoveryNeedsAnEngineThatFinishedItsRecovery`) |
+| M6 | 복구 문구를 언제나 Up 갈래로(리뷰어 생존 변이 a) | CAUGHT(`TestA134RecoveryToIdleSaysTheWatchEnded`) |
+| M7 | cmd `Expected: true` 고정(리뷰어 생존 변이 b) | CAUGHT(`TestA134HeartbeatCheckWithAutostartOffLeavesAStoppedEngineAlone`) |
+
+복원 확인: 두 파일 sha256 앞 16자 일치(`restored OK`).

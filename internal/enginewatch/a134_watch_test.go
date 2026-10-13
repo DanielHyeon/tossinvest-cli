@@ -38,11 +38,17 @@ func (p *a134Publisher) Publish(_ context.Context, n obs.Notification) error {
 	return nil
 }
 
-// a134Marker 는 엔진이 쓰는 그 경로에 마커를 두고 수정 시각을 at 으로 맞춤(엔진 write 와 같은 사실 = mtime).
+// a134Marker 는 엔진이 쓰는 그 경로에 복구를 마친(ready_at) 마커를 두고 수정 시각을 at 으로 맞춤(엔진 write 와 같은 사실 = mtime).
 func a134Marker(t *testing.T, dir string, at time.Time) string {
 	t.Helper()
+	return a134MarkerBody(t, dir, at, `{"pid":1,"ready_at":"`+at.UTC().Format(time.RFC3339)+`"}`)
+}
+
+// a134MarkerBody 는 본문을 지정해 마커를 둠(복구 전 마커 = ready_at 없음).
+func a134MarkerBody(t *testing.T, dir string, at time.Time, body string) string {
+	t.Helper()
 	path := enginelock.MarkerPath(dir)
-	if err := os.WriteFile(path, []byte(`{"pid":1}`+"\n"), 0o600); err != nil {
+	if err := os.WriteFile(path, []byte(body+"\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.Chtimes(path, at, at); err != nil {
@@ -419,8 +425,12 @@ func TestA134TheEventTypesAreTheirOwn(t *testing.T) {
 	if len(matches) < 20 {
 		t.Fatalf("only %d obs event constants were read; the census is blind", len(matches))
 	}
+	if enginewatch.EventWatchTest != "engine.liveness_watch_test" {
+		t.Fatalf("test event value moved: %q", enginewatch.EventWatchTest)
+	}
 	for _, m := range matches {
-		for _, mine := range []obs.EventType{enginewatch.EventLivenessLost, enginewatch.EventLivenessRestored} {
+		for _, mine := range []obs.EventType{enginewatch.EventLivenessLost, enginewatch.EventLivenessRestored,
+			enginewatch.EventWatchTest} {
 			if m[2] == string(mine) {
 				t.Errorf("%s already publishes %q; the watcher's event would be indistinguishable", m[1], mine)
 			}
@@ -429,5 +439,109 @@ func TestA134TheEventTypesAreTheirOwn(t *testing.T) {
 	if obs.SeverityOf(enginewatch.EventLivenessLost) == obs.SeverityCritical {
 		// 감시자는 엔진 Notifier 를 거치지 않으므로 등급표에 오를 이유가 없음 — 오르면 엔진 안 누군가가 이 값으로 outbox 를 쓸 수 있게 됨.
 		t.Error("the watcher's event is in obs' critical table; it must stay outside the engine's outbox")
+	}
+}
+
+// TestA134RecoveryNeedsAnEngineThatFinishedItsRecovery: 끊김 뒤 신선하지만 ready_at 없는 마커(재기동 루프 · Recover 중)는 복구가 아님 —
+// 끊김을 유지하고 알림 0, ready_at 이 생긴 뒤에만 복구 1건(리뷰 P2-1).
+func TestA134RecoveryNeedsAnEngineThatFinishedItsRecovery(t *testing.T) {
+	dir := t.TempDir()
+	pub := &a134Publisher{}
+	ctx := context.Background()
+	if _, err := a134Check(dir, pub, true, a134Now).Run(ctx); err != nil { // 마커 없음 → 끊김
+		t.Fatalf("run 1: %v", err)
+	}
+	booting := a134Now.Add(2 * time.Minute)
+	a134MarkerBody(t, dir, booting, `{"pid":7}`)
+	out, err := a134Check(dir, pub, true, booting).Run(ctx)
+	if err != nil {
+		t.Fatalf("run 2: %v", err)
+	}
+	if len(pub.sent) != 1 || out.Observation.Verdict != enginewatch.VerdictUp || out.Observation.Ready {
+		t.Fatalf("a booting engine (no ready_at) produced %d alerts / %+v; want the outage kept", len(pub.sent), out.Observation)
+	}
+	if s, _ := a134State(t, dir); !s.Down {
+		t.Fatal("a booting engine cleared the outage")
+	}
+	// 해석할 수 없는 본문도 준비 안 됨.
+	a134MarkerBody(t, dir, booting, `{not json`)
+	if _, err := a134Check(dir, pub, true, booting).Run(ctx); err != nil || len(pub.sent) != 1 {
+		t.Fatalf("an unparseable marker was read as recovered: err=%v sent=%d", err, len(pub.sent))
+	}
+	a134Marker(t, dir, booting.Add(time.Minute))
+	if _, err := a134Check(dir, pub, true, booting.Add(time.Minute)).Run(ctx); err != nil {
+		t.Fatalf("run 3: %v", err)
+	}
+	if len(pub.sent) != 2 || pub.sent[1].Type != enginewatch.EventLivenessRestored {
+		t.Fatalf("a recovered engine sent %+v, want the restored alert", pub.sent)
+	}
+}
+
+// TestA134RecoveryToIdleSaysTheWatchEnded: 끊김 뒤 autostart OFF · 마커 없음 → 복구 1건(감시 대상에서 벗어남) · 상태 해제.
+func TestA134RecoveryToIdleSaysTheWatchEnded(t *testing.T) {
+	dir := t.TempDir()
+	pub := &a134Publisher{}
+	ctx := context.Background()
+	a134Marker(t, dir, a134Now.Add(-10*time.Minute))
+	if _, err := a134Check(dir, pub, false, a134Now).Run(ctx); err != nil {
+		t.Fatalf("run 1: %v", err)
+	}
+	if err := os.Remove(enginelock.MarkerPath(dir)); err != nil {
+		t.Fatal(err)
+	}
+	out, err := a134Check(dir, pub, false, a134Now.Add(time.Minute)).Run(ctx)
+	if err != nil {
+		t.Fatalf("run 2: %v", err)
+	}
+	if out.Observation.Verdict != enginewatch.VerdictIdle || len(pub.sent) != 2 ||
+		pub.sent[1].Type != enginewatch.EventLivenessRestored || !strings.Contains(pub.sent[1].Body, "감시 대상에서 벗어남") {
+		t.Fatalf("recovery to idle = %q, %+v", out.Observation.Verdict, pub.sent)
+	}
+	if s, _ := a134State(t, dir); s.Down {
+		t.Fatal("recovery to idle kept the outage")
+	}
+}
+
+// TestA134TheRealMarkerLifecycleIsWhatTheWatcherReads: 엔진이 실제로 쓰는 enginelock.Hold/Ready/Release 를 그대로 읽음 —
+// Hold 직후 = Up · 복구 전, Ready 뒤 = Up · 복구 끝, Release(정상 정지) 뒤 = 마커 없음(autostart ON 이면 끊김).
+func TestA134TheRealMarkerLifecycleIsWhatTheWatcherReads(t *testing.T) {
+	dir := t.TempDir()
+	path := enginelock.MarkerPath(dir)
+	now := time.Now()
+	held, err := enginelock.Hold(context.Background(), path, now)
+	if err != nil {
+		t.Fatalf("Hold: %v", err)
+	}
+	defer held.Release()
+	o, err := enginewatch.Observe(path, now, enginewatch.DefaultStaleAfter, true)
+	if err != nil || o.Verdict != enginewatch.VerdictUp || o.Ready {
+		t.Fatalf("after Hold: %+v err=%v, want up and not ready", o, err)
+	}
+	held.Ready(now)
+	o, err = enginewatch.Observe(path, now, enginewatch.DefaultStaleAfter, true)
+	if err != nil || o.Verdict != enginewatch.VerdictUp || !o.Ready {
+		t.Fatalf("after Ready: %+v err=%v, want up and ready", o, err)
+	}
+	held.Release()
+	o, err = enginewatch.Observe(path, now, enginewatch.DefaultStaleAfter, true)
+	if err != nil || o.Verdict != enginewatch.VerdictDown || o.Reason != enginewatch.ReasonMissing {
+		t.Fatalf("after Release: %+v err=%v, want down/missing", o, err)
+	}
+}
+
+// TestA134TheSendTestProvesDelivery: --send-test 의 몸통 — 전달 실패는 오류, 수단 없음은 ErrNoPublisher, 성공은 normal 한 건.
+func TestA134TheSendTestProvesDelivery(t *testing.T) {
+	if err := enginewatch.SendTest(context.Background(), nil); !errors.Is(err, enginewatch.ErrNoPublisher) {
+		t.Fatalf("nil publisher: %v", err)
+	}
+	if err := enginewatch.SendTest(context.Background(), &a134Publisher{fail: errors.New("401")}); err == nil {
+		t.Fatal("an undelivered test reported success")
+	}
+	pub := &a134Publisher{}
+	if err := enginewatch.SendTest(context.Background(), pub); err != nil {
+		t.Fatal(err)
+	}
+	if len(pub.sent) != 1 || pub.sent[0].Type != enginewatch.EventWatchTest || pub.sent[0].Severity != obs.SeverityNormal {
+		t.Fatalf("test alert = %+v", pub.sent)
 	}
 }
