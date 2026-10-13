@@ -24,7 +24,9 @@ FILES = [
     "internal/journal/apply_hook.go",
     "internal/journal/fills.go",
     "internal/journal/trade_outcome_refusal.go",
+    "internal/journal/trade_outcome_backfill.go",
     "internal/journal/a130_adopted_outcome_test.go",
+    "internal/journal/a130_trade_outcome_backfill_test.go",
     "internal/journal/a130_journal_copy_census_test.go",
     "internal/journal/adoption_static_test.go",
     "internal/app/engine/gateway.go",
@@ -33,54 +35,73 @@ FILES = [
     "internal/app/engine/a130_trade_outcome_refusal_log_test.go",
     "internal/console/templates_portfolio.go",
     "internal/console/a130_history_note_test.go",
+    "tools/a130-outcome-backfill/main.go",
+    "tools/a130-outcome-backfill/main_test.go",
 ]
 RUNS = [
-    ("./internal/journal/", "TestA130|Adopt|Outcome|Backfill|TestRealized|TestAnAnalytics|TestAdoptionID"),
+    ("./internal/journal/", "TestA130|Adopt|Outcome|Backfill|TestRealized|TestAnAnalytics|TestAdoptionID|TestCampaignCore"),
     ("./internal/app/engine/", "TestA130|TestBinding|TestTheBoundExit|TestTheProjectionGuard"),
     ("./internal/console/", "TestA130|TestTheHistoryScreen"),
+    ("./tools/a130-outcome-backfill/", "."),
 ]
 R = "internal/journal/trade_outcome_refusal.go"
 T = "internal/journal/trade_outcomes.go"
+B = "internal/journal/trade_outcome_backfill.go"
 MUTANTS = [
-    ("M1 the post-adoption increase check is removed", R,
-     "\t\t\tif createdAt.After(adoptedAt) {\n\t\t\t\tincreased = true",
-     "\t\t\tif false && createdAt.After(adoptedAt) {\n\t\t\t\tincreased = true"),
-    ("M2 the post-adoption disposal check is removed", R,
+    ("M1 a post-adoption increase is not a lot", R,
+     "\t\t\tif createdAt.After(adoptedAt) {\n\t\t\t\tincreases = append(",
+     "\t\t\tif false && createdAt.After(adoptedAt) {\n\t\t\t\tincreases = append("),
+    ("M2 an observation past the tolerance is accepted", R,
+     "if i == len(observations) || observations[i].at.Sub(inc.at) > intakeObservationTolerance {",
+     "if i == len(observations) {"),
+    ("M3 the tolerance boundary excludes 383s", R,
+     "observations[i].at.Sub(inc.at) > intakeObservationTolerance {",
+     "observations[i].at.Sub(inc.at) >= intakeObservationTolerance {"),
+    ("M4 an observation before the adjustment is accepted", R,
+     "return !observations[i].at.Before(inc.at)", "return true"),
+    ("M5 a same-second increase (the fold-in) becomes a lot", R,
+     "\t\t\tif createdAt.After(adoptedAt) {\n\t\t\t\tincreases = append(",
+     "\t\t\tif !createdAt.Before(adoptedAt) {\n\t\t\t\tincreases = append("),
+    ("M6 the post-adoption disposal check is removed", R,
      "\t\t\tif !createdAt.Before(adoptedAt) {\n\t\t\t\tdisposed = true",
      "\t\t\tif false && !createdAt.Before(adoptedAt) {\n\t\t\t\tdisposed = true"),
-    ("M3 the re-adoption check is removed", R,
-     "\tif found {\n\t\treturn OutcomeRefusalReadopted", "\tif false && found {\n\t\treturn OutcomeRefusalReadopted"),
-    ("M4 a same-second increase counts as post-adoption", R,
-     "\t\t\tif createdAt.After(adoptedAt) {\n\t\t\t\tincreased = true",
-     "\t\t\tif !createdAt.Before(adoptedAt) {\n\t\t\t\tincreased = true"),
-    ("M5 a same-second decrease is not post-adoption", R,
+    ("M7 a same-second decrease is not post-adoption", R,
      "\t\t\tif !createdAt.Before(adoptedAt) {\n\t\t\t\tdisposed = true",
      "\t\t\tif createdAt.After(adoptedAt) {\n\t\t\t\tdisposed = true"),
-    ("M6 the adoption-epoch refusal is not consulted", T,
-     "if reason := adoptionEpochRefusal(ctx, r, positionID); reason != \"\" {",
-     "if reason := adoptionEpochRefusal(ctx, r, positionID); false && reason != \"\" {"),
-    ("M7 the sell-quantity comparison is reverted to always-equal", T,
-     "\tif sell.quantity.Cmp(adopted) != 0 {", "\tif sell.quantity.Cmp(sell.quantity) != 0 {"),
-    ("M8 the denominator quantity is swapped for one share", T,
+    ("M8 the re-adoption check is removed", R,
+     "\tif found {\n\t\treturn intake, OutcomeRefusalReadopted", "\tif false && found {\n\t\treturn intake, OutcomeRefusalReadopted"),
+    ("M9 the sell is compared with the adoption-time quantity again", T,
+     "\tif sell.quantity.Cmp(buy.quantity) != 0 {", "\tif sell.quantity.Cmp(adopted) != 0 {"),
+    ("M10 the lots' notional is dropped", T,
+     "buy.notional = new(big.Rat).Add(new(big.Rat).Mul(adopted, observed), intake.notional)",
+     "buy.notional = new(big.Rat).Mul(adopted, observed)"),
+    ("M11 the denominator quantity is swapped for one share", T,
      "denominator := new(big.Rat).Mul(ratOf(risk), buy.quantity)",
      "denominator := new(big.Rat).Mul(ratOf(risk), new(big.Rat).SetInt64(1))"),
-    ("M9 the refusal is not noted (silent again)", "internal/journal/apply_hook.go",
+    ("M12 the refusal is not noted (silent again)", "internal/journal/apply_hook.go",
      "\t\t\ttx.noteOutcomeRefusal(ctx, where.PositionID, reason)", "\t\t\t_ = reason"),
-    ("M10 the refusal is reported before the commit", "internal/journal/fills.go",
+    ("M13 the refusal is reported before the commit", "internal/journal/fills.go",
      "\tif err := tx.Commit(); err != nil {\n\t\treturn res, fmt.Errorf(\"journal: committing the fill snapshot of %s: %w\", orderID, err)\n\t}\n\t// a130: an outcome refusal is reported only for a close that committed.\n\tj.reportOutcomeRefusals(refusals)\n",
      "\tj.reportOutcomeRefusals(refusals)\n\tif err := tx.Commit(); err != nil {\n\t\treturn res, fmt.Errorf(\"journal: committing the fill snapshot of %s: %w\", orderID, err)\n\t}\n"),
-    ("M11 the sink panic is not recovered", R,
+    ("M14 the sink panic is not recovered", R,
      "\t\t\tdefer func() { _ = recover() }()\n\t\t\tsink(r)", "\t\t\tsink(r)"),
-    ("M12 the engine sink writes on the caller's goroutine", "internal/app/engine/trade_outcome_refusal_log.go",
+    ("M15 the engine sink writes on the caller's goroutine", "internal/app/engine/trade_outcome_refusal_log.go",
      "\t\tgo func() {", "\t\tfunc() {"),
-    ("M13 NewContext binds without the sink", "internal/app/engine/engine.go",
+    ("M16 NewContext binds without the sink", "internal/app/engine/engine.go",
      "bindApplyHooks(jrn, tradeOutcomeRefusalSink(opts.Logger))", "bindApplyHooks(jrn)"),
-    ("M14 the handle never carries the sink", "internal/journal/apply_hook.go",
+    ("M17 the handle never carries the sink", "internal/journal/apply_hook.go",
      ", outcomeRefused: hooks.OutcomeRefused}", "}"),
-    ("M15 the engine line gains a position id field", "internal/app/engine/trade_outcome_refusal_log.go",
-     "\t\t\t\t\"reason\", string(r.Reason))", "\t\t\t\t\"reason\", string(r.Reason), \"position_id\", r.Symbol)"),
-    ("M16 sell_unpriced is reported as a mismatch", T,
+    ("M18 the backfill population admits engine-entered positions", B,
+     "\t\t   AND p.adoption_id IS NOT NULL\n", ""),
+    ("M19 the backfill population admits adjustment-closed positions", B,
+     "\t\t   AND NOT EXISTS (SELECT 1 FROM exit_events e WHERE e.position_id = p.id AND e.action = ?)\n",
+     "\t\t   AND NOT EXISTS (SELECT 1 FROM exit_events e WHERE e.position_id = p.id AND e.action = ? AND 0)\n"),
+    ("M20 a moved item is written anyway", B,
+     "if reason != \"\" || !sameOutcome(outcome, item.Outcome) {", "if reason != \"\" {"),
+    ("M21 sell_unpriced is reported as a mismatch", T,
      "\t\treturn buy, sell, OutcomeRefusalSellUnpriced", "\t\treturn buy, sell, OutcomeRefusalSellQuantityMismatch"),
+    ("M22 the engine line gains a position id field", "internal/app/engine/trade_outcome_refusal_log.go",
+     "\t\t\t\t\"reason\", string(r.Reason))", "\t\t\t\t\"reason\", string(r.Reason), \"position_id\", r.Symbol)"),
 ]
 
 
@@ -103,22 +124,28 @@ def tests(copy: Path) -> tuple[str, str]:
 
 
 def main() -> int:
+    # --tree <dir>: 이미 조립된 트리 사본(저장소 밖)을 대상으로 함 — 사본을 다시 복사해 그 복사본에서 변이함(원본 무접촉).
+    tree = sys.argv[sys.argv.index("--tree") + 1] if "--tree" in sys.argv else ""
     head = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"],
                           capture_output=True, text=True, check=True).stdout.strip()
     copy = Path(tempfile.mkdtemp(prefix=f"a130-mutate-{os.getpid()}-"))
     try:
-        archive = copy / "head.tar"
-        subprocess.run(["git", "-C", str(ROOT), "archive", "--format=tar", "-o", str(archive), "HEAD"], check=True)
-        with tarfile.open(archive) as tf:
-            tf.extractall(copy / "repo", filter="data")
-        archive.unlink()
         repo = copy / "repo"
-        for rel in FILES:
-            src = ROOT / rel
-            if src.exists():
-                (repo / rel).parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(src, repo / rel)
-        print(f"# a130 mutation — HEAD {head} + working-tree a130 files · copy {repo}", flush=True)
+        if tree:
+            shutil.copytree(tree, repo, symlinks=True)
+            print(f"# a130 mutation — tree copy of {tree} · copy {repo}", flush=True)
+        else:
+            archive = copy / "head.tar"
+            subprocess.run(["git", "-C", str(ROOT), "archive", "--format=tar", "-o", str(archive), "HEAD"], check=True)
+            with tarfile.open(archive) as tf:
+                tf.extractall(repo, filter="data")
+            archive.unlink()
+            for rel in FILES:
+                src = ROOT / rel
+                if src.exists():
+                    (repo / rel).parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(src, repo / rel)
+            print(f"# a130 mutation — HEAD {head} + working-tree a130 files · copy {repo}", flush=True)
         state, why = tests(repo)
         print(f"CONTROL {state} {why}", flush=True)
         if state != "GREEN":

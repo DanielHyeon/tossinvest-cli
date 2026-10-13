@@ -89,3 +89,26 @@ Pre-Edit Gate:
 | R2-9 | P3 | 목록 없이 싱크만 있는 호출자는 거절을 조용히 버림 | **명명** — D3 · D5 잔여 |
 | R2-10 | P3 | 일시 · 구조 실패가 섞인 사유 | **명명** — D5 |
 | R2-11 | P3 | AdoptPosition 수량 미검사 · 감소 규칙의 시각 의존 | **명명** — D5. 감소 규칙을 시각 무관으로 바꾸는 대안은 편입 전 부분 처분을 거절하므로 채택 안 함 |
+
+## 3차 proposal-freeze review (2026-10-13, 3판 621e2eb4) — REJECT
+
+- 보이스: 적대적 Eng 1(분리된 컨텍스트, code-reviewer, 읽기 전용 — 종료 시 `git status` 무편집 확인, 스크래치 삭제). AST 인용 파일 8개 base = HEAD sha 동일 확인.
+- 성립 확인: R 산식(분모 = 위험 × Q_buy = Q_sell, 2배 없음) · CLOSED 인스턴스에 조정 불가(새 인스턴스) · 종결 뒤 판정 기록 불가(ErrExitStateCompleted).
+- 판정: **REJECT** (P0 1 · P1 2 · P2 6 · P3 5). 구현 착수 전(production 편집 0, 3판 초안은 트리 밖 · wip 브랜치).
+
+| # | 등급 | 발견 | 처분 |
+|---|---|---|---|
+| R3-1 | **P0** | 결정한 가격 출처(조정 시각 뒤 엔진 관측)가 원장에 없음 — `exit_events` 는 exit 선이 바뀐 관측만 담음. 평평한 선은 `refreshObservation`(exitloop.go:1109) → `RefreshExitObservation`(exit_observation_refresh.go:37 「exit event 를 붙이지 않음」, 882a0b49 a111)으로 exit_states 만 덮어씀. 수량 증가는 이벤트를 강제하지 않음(ProjectedQuantity · SameExitOperationalLine · ChangedFromState 가 남은 수량을 안 봄). 그래서 p_k 는 「조정 뒤 첫 관측」 이 아니라 「조정 뒤 첫 **선 변경** 관측」(신고가 틱 또는 손절 무장 관측) — 손절 직전이면 손절가로 매겨져 손실이 0 쪽으로 당겨짐 | **수용 · BLOCKED** — HEAD 로 확인(exit_observation_refresh.go:37-38 · exitloop.go:1105-1114). 사용자 결정 2차의 전제가 원장 사실과 다름 → **사람 결정 필요**(issues.md I-3) |
+| R3-2 | P1 | 383초는 관측 주기가 아니라 「선 변경 이벤트」 간격의 p99(모집단 · 방법 · 하네스 미커밋) | 수용 — I-3 결정에 따름(코드 상수 유도 또는 조정→첫 이벤트 분포 직접 측정, 스크립트 커밋) |
+| R3-3 | P1 | 조정이 아닌 처분(엔진 제안 · flatten 이 아닌 로컬 SELL 체결)은 감소 규칙에 안 걸림 + 심볼 단위 flatten 쓸어 담기(F)로 상쇄되어 조작 행 가능 | 수용 — flatten 갈래를 인스턴스 창(opened_at, closed_at] 으로 묶고, 그 창의 귀속 밖 로컬 SELL 체결이 있으면 거절, RED 시험 |
+| R3-4 | P2 | `journal.Open` 은 항상 이관 — 스키마 가드 순서 명시 · 32 파일 바이트 불변 시험 | 수용 — 초안 도구는 이미 OpenReadOnly → 버전 비교 → Open 순서. spec · D4 에 순서 명시, 시험 추가 |
+| R3-5 | P2 | backfill 항목 잠금 시간 미측정 · 「분석 경로의 격리」 와 경합 | 수용 — 사본에서 항목 최대 잠금 시간 측정 · 실행 창(KST 05:00~09:00) 요구 또는 잠금 안 재대조를 지문(최대 id)으로 |
+| R3-6 | P2 | MODIFIED 「성과 원시 지표」 자기모순(첫 문장 무조건 · CLOSED 트랜잭션 · 초기 수량 정의) | 수용 — 문장 정리 |
+| R3-7 | P2 | 시각 정밀도 · 문자열 정렬 · READOPTED 의 observed_price · a042 이전 created_at 대체 | 수용 — RFC3339Nano 파싱 양쪽, 판정 행만(action 필터), NULL observed_at 은 거절, 소수 초 경계 시험 |
+| R3-8 | P2 | FLM 규칙 5: `recordExitJudgementTx` · `appendExitEventTx` · `requiresFullJudgement` · `RefreshExitObservation` · `OpenAdoptedExitState` 번들 없음, R2-8 처분 문구 오류(adoptedBasis 는 observed_at 을 안 돌려줌) | 수용 |
+| R3-9 | P2 | 시험 · 변이 보강(평평한 선 · 제안 이벤트 선택 · 소수 초 · NULL · READOPTED/OPENED 제외 · 로컬 SELL+flatten · 스키마 32 바이트 불변 / 문자열 비교 · created_at 대체 · 필터 · flatten 경계 · 지문) | 수용 |
+| R3-10 | P3 | 거절 줄은 goroutine 이라 유실 가능 — spec 은 SHALL | 수용 — best-effort 명시 |
+| R3-11 | P3 | base 233d5d9c 가 a131(f269c615) 이전 | 명명 — 게이트의 쌓인 change 검사에서 Manager 판단(재고정은 사람 절차) |
+| R3-12 | P3 | census 시험이 사본을 Open 으로 열면 32→35 이관 | 확인 — census 는 OpenReadOnly 로 엶(이관 없음). 초안 도구 미리보기도 OpenReadOnly |
+| R3-13 | P3 | 토큰에 비용 모델 지문 · 스키마 · 빌드 포함 | 수용 |
+| R3-14 | P3 | 동결 뒤 하네스 미커밋 수정 | 확인 — 3판 초안 변이 하네스(dry-run 20/22, 생존 2: 커밋 전 보고 → 구조 핀 추가 · ADJUSTMENT_CLOSED 필터는 COMPLETED 와 상호배타라 동등 변이) |

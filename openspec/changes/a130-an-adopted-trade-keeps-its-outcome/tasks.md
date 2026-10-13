@@ -13,7 +13,8 @@ Story: `STORY-TOS-a130` · base `233d5d9c` · High-risk(원장 — 체결 반영
       `NewContext`) + 무편집 인용 근거 6(F-5: `ApplyPositionAdjustment` · `Converger.ConvergeQuantities` · `resetExitStateForReadoptTx` ·
       `engineSellOrders` · `roundTripLegs`, 그리고 `Journal.backfillConfirmedStrategyFillTx`)
 - [ ] 0.6 proposal-freeze 리뷰(적대적 Eng 보이스, 분리된 컨텍스트) + Pre-Edit 선언 → `review.md`
-      — 1차 REJECT(F-1~F-13) · 2차 APPROVE-WITH-FIXES(R2-1~R2-11, 2판) → 사용자 결정 변경(재계산) → 3판 · 3차 리뷰
+      — 1차 REJECT(F-1~F-13) · 2차 APPROVE-WITH-FIXES(R2-1~R2-11, 2판) → 사용자 결정 변경(재계산) → 3판 · 3차 **REJECT**(R3-1 P0:
+      결정한 가격 출처가 원장에 없음) → **[blocked]** issues.md I-3 사람 결정 대기
 
 ## 1. 구현 (RED → GREEN → REFACTOR)
 
