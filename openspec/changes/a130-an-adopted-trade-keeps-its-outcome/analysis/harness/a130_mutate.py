@@ -74,9 +74,19 @@ MUTANTS = [
     ("M11 the denominator quantity is swapped for one share", T,
      "denominator := new(big.Rat).Mul(ratOf(risk), buy.quantity)", "denominator := new(big.Rat).Mul(ratOf(risk), new(big.Rat).SetInt64(1))"),
     ("M12 the foreign-instance check is removed", R,
-     "\t\tcase isAttributed && settled.Before(opened):", "\t\tcase false && isAttributed && settled.Before(opened):"),
+     "\t\tcase isAttributed && (settled.Before(opened) || !notAfterClose(settled)):",
+     "\t\tcase false && isAttributed && (settled.Before(opened) || !notAfterClose(settled)):"),
+    ("M12b the foreign check forgets the after-close side", R,
+     "\t\tcase isAttributed && (settled.Before(opened) || !notAfterClose(settled)):",
+     "\t\tcase isAttributed && settled.Before(opened):"),
     ("M13 the unattributed-local-sell check is removed", R,
-     "\t\tcase !isAttributed && settled.After(opened) && notAfterClose(settled):", "\t\tcase false && !isAttributed && settled.After(opened) && notAfterClose(settled):"),
+     "\t\tcase !isAttributed && settled.After(unattributedFrom) && notAfterClose(settled):",
+     "\t\tcase false && !isAttributed && settled.After(unattributedFrom) && notAfterClose(settled):"),
+    ("M13b the unattributed window starts at the fold-in again", R,
+     "\t\tcase !isAttributed && settled.After(unattributedFrom) && notAfterClose(settled):",
+     "\t\tcase !isAttributed && settled.After(opened) && notAfterClose(settled):"),
+    ("M8b re-adoption is read from nowhere (the generation filter is dropped)", R,
+     "coalesce(lifecycle_generation, 1) > 1`, positionID)", "coalesce(lifecycle_generation, 1) > 99`, positionID)"),
     ("M14 the integrity check reads the fill commit time", R,
      "\t\tSELECT f.order_id, TRIM(f.trading_day), MIN(a.settled_at)", "\t\tSELECT f.order_id, TRIM(f.trading_day), MIN(f.committed_at)"),
     ("M15 the refusal is not noted (silent again)", "internal/journal/apply_hook.go",
@@ -110,7 +120,14 @@ MUTANTS = [
     ("M27 the engine line gains a position id field", "internal/app/engine/trade_outcome_refusal_log.go",
      "\t\t\t\t\"reason\", string(r.Reason))", "\t\t\t\t\"reason\", string(r.Reason), \"position_id\", r.Symbol)"),
     ("M28 the tool keeps a bar from another minute", "internal/official/a130_intake_candle.go",
-     "\t\tif at.UTC().Equal(label) {", "\t\tif true || at.UTC().Equal(label) {"),
+     "\t\tif at.Equal(label) {", "\t\tif true || at.Equal(label) {"),
+    # 구현 리뷰 P3-3 이 짚은 생존 후보(2026-10-13 추가).
+    ("M32 a zero-close bar prices the lot", R,
+     "if !okPrice || !okDelta || price.Sign() <= 0 {", "if !okPrice || !okDelta || price.Sign() < 0 {"),
+    ("M33 an unconfirmed attempt dates a local sell", R,
+     "AND a.state = 'CONFIRMED' AND a.kind IN ('PLACE','AMEND')", "AND a.kind IN ('PLACE','AMEND')"),
+    ("M34 the nil-sink guard is gone", R,
+     "if a == nil || a.outcomeRefused == nil || reason == \"\" {", "if a == nil || reason == \"\" {"),
 ]
 
 
@@ -161,7 +178,11 @@ def main() -> int:
             print("# control is not GREEN — no mutant is judged")
             return 2
         caught = 0
+        # --only <접두사>: 그 이름으로 시작하는 변이만 돎(원장의 한 줄을 다시 잴 때).
+        only = sys.argv[sys.argv.index("--only") + 1] if "--only" in sys.argv else ""
         for name, rel, old, new in MUTANTS:
+            if only and not name.startswith(only + " "):
+                continue
             path = repo / rel
             text = path.read_text()
             n = text.count(old)

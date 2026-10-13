@@ -158,3 +158,25 @@ Pre-Edit Gate:
 | R4-13 | P3 | 합성 R 구분 집계에 세 번째 출처 | **수용** — spec · design 에 유도 조건 명시 |
 
 - spec 요구 수정(R4-3 「닫힌 뒤」 · R4-1 config 디렉터리 · 이름 대조 · R4-13)은 이 리뷰의 제안을 그대로 반영한 것이고, 구현 리뷰가 requirement 변경 리뷰를 겸한다.
+
+## 구현 리뷰 (분리된 리뷰 패스, 2026-10-13, 대상 GREEN dbb0681c) — APPROVE-WITH-FIXES
+
+- 리뷰어: 독립 code-reviewer 에이전트(사본 · 격리 base worktree, 자체 변이 16 — CAUGHT 13 · 생존 3). P0 · P1 없음.
+- 확인된 것: 체결 트랜잭션 안 네트워크 0(원장이 net/http · official 미의존, 도구가 `journal.Open` 전에 분봉을 읽음) · 거절이 체결을 되돌릴 수 없음
+  (반환 오류 없음, 보고는 `tx.Commit()` 뒤 · 패닉 회수 · 엔진 싱크는 goroutine) · 줄 · 도구 출력에 계좌 · 포지션 id 없음 · 엔진 진입 경로 무편집.
+- 처분(수리는 이 리뷰 뒤 커밋 — 아래 시험 이름은 커밋된 파일):
+
+| # | 등급 | 발견 | 처리 |
+|---|---|---|---|
+| P2-1 | P2 | BTM 이 없는 `analysis/verify/receipts.md` 를 인용 · R4-4 · D4 잠금 시간 영수증 미커밋 · census 에 GREEN sha 없음 | **수용** — `analysis/verify/receipts.md`(명령 · rc · sha · 순간), census 를 dbb0681c 로 재측정해 sha 기록. R4-4 의 「20~27 ms」 는 미커밋 초안 판정의 측정이라 재현 불가로 적고, 현재 값은 census(최대 2.694 ms) |
+| P2-2 | P2 | BTM 이 함수마다 같은 시험 목록을 베낀 것 | **수용** — `analysis/harness/a130_btm_coverage.py`: 시험 하나씩 커버리지 프로필로 분기 몸체를 실행한 시험을 적고, 미도달은 원천을 읽은 사유(`not-applicable: …`)를 적어야 rc 0. 영수증 `analysis/verify/btm-coverage.md` |
+| P3-1 | P3 | 로컬 매도 질의가 색인을 못 쓰는 전체 훑기(합성 20만 체결 102 → 198 ms) | **잔여로 명명** — design D5(운영 체결 67 행, 판정 최대 2.694 ms; 수만 행이면 정규화 등식 비교로) |
+| P3-2 | P3 | spec 문구가 코드보다 넓음(귀속 밖 창 · 체결 조건 · 「산식 불변」 · 유도 SHALL 무시험 · 「only」 와 기존 `BackfillTradeOutcome`) | **수용** — spec 문구에 창(편입 관측 < 가장 이른 확정 시각 ≤ 종결) · 체결 · 확정 신규/정정 조건, 「산식 불변 · 자격만 좁아짐」, 「생산 경로의」 한정 + D5 잔여. 유도 SHALL 은 시험 `TestA130BarPricedRowsAreDerivableFromTheLedger` |
+| P3-3a | P3 | 종가 0 봉 가드 생존 | **수용** — `TestA130AZeroCloseBarIsRefused`, 변이 M32 CAUGHT |
+| P3-3b | P3 | `a.state = 'CONFIRMED'` 필터 생존 | **수용** — `TestA130AFailedAmendDoesNotDateALocalSell`(실패한 정정 시도의 이른 settled_at 이 로컬 매도를 편입 전으로 끌지 않음), M33 첫 판 SURVIVED → 시험 추가 뒤 CAUGHT |
+| P3-3c | P3 | 싱크 없음 가드 생존 | **수용** — AST 핀 `TestA130ANilSinkReadsNothingOnTheRefusalPath`, M34 CAUGHT |
+| P3-4a | P3 | `LockHeld` 가 잠금 대기를 포함 | **수용** — 시계를 `BeginTx` 반환 뒤로. D4 의 22.17 ms 는 수리 전 측정(경쟁 없는 사본이라 대기 ≈ 0 — 상한으로 유효) |
+| P3-4b | P3 | 도구 도움말 「optional」 | **수용** — 「묶음이 있으면 필수」 |
+| P3-4c | P3 | 엔진 시험 주석 「체결 트랜잭션 안」 | **수용** — 「커밋 뒤 RecordFill 안」 |
+| P3-4d | P3 | 의존 검사에 `net` 도 | **측정으로 기각** — `net` 은 기존 의존(github.com/google/uuid · crypto/x509)이 끌어와 거르면 a130 이전 트리도 실패. 검사는 `net/http` · `internal/official` 유지, 시험 주석에 근거 |
+| P3-5 | P3 | 스크래치패드의 운영 저널 사본(불변식 8) | **수용** — 측정 기록 뒤 삭제(receipts.md 에 삭제 순간) |

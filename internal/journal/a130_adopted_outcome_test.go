@@ -12,6 +12,7 @@ import (
 	"errors"
 	"go/ast"
 	"go/parser"
+	"go/printer"
 	"go/token"
 	"math/big"
 	"os/exec"
@@ -866,7 +867,8 @@ func TestA130ALocalSellBeforeTheAdoptionIsNotThisTripsDisposal(t *testing.T) {
 }
 
 // TestA130TheJournalCannotReachTheNetwork(리뷰 4차 P3-12): 원장 패키지는 net/http 도 공식 API client 도 의존하지 않음 — 체결 트랜잭션 안
-// 네트워크 0 이 구성으로만이 아니라 의존 그래프로 막힘.
+// 네트워크 0 이 구성으로만이 아니라 의존 그래프로 막힘. "net" 자체는 거르지 않음 — 기존 의존(github.com/google/uuid 의 MAC 읽기 ·
+// crypto/x509)이 이미 끌어옴(구현 리뷰 P3-4 제안을 측정으로 기각, 2026-10-13). HTTP 클라이언트(net/http)가 없으면 브로커 호출 경로가 없음.
 func TestA130TheJournalCannotReachTheNetwork(t *testing.T) {
 	out, err := exec.Command("go", "list", "-deps", ".").Output()
 	if err != nil {
@@ -877,4 +879,63 @@ func TestA130TheJournalCannotReachTheNetwork(t *testing.T) {
 			t.Errorf("internal/journal depends on %s", dep)
 		}
 	}
+}
+
+// TestA130AZeroCloseBarIsRefused(구현 리뷰 P3-3a): 종가 0 의 봉은 가격이 아님 — 묶음을 0 원에 매입한 것으로 치지 않고 no_intake_candle.
+func TestA130AZeroCloseBarIsRefused(t *testing.T) {
+	j, fake, _ := a130Journal(t, nil)
+	id := a130Grown(t, j, fake)
+	if _, reason := computeTradeOutcome(context.Background(), journalReader{j: j}, id, costs.DefaultModel(),
+		a130Prices(t, j, id, "0")); reason != OutcomeRefusalNoIntakeCandle {
+		t.Errorf("reason = %q, want no_intake_candle", reason)
+	}
+}
+
+// TestA130ANilSinkReadsNothingOnTheRefusalPath(구현 리뷰 P3-3c): noteOutcomeRefusal 은 싱크가 없으면 어떤 읽기보다 먼저 돌아감 — 「싱크가 없으면
+// 거절 경로의 읽기는 이전과 같다」 를 구조로 고정(첫 문장이 outcomeRefused == nil 을 보는 return).
+func TestA130ANilSinkReadsNothingOnTheRefusalPath(t *testing.T) {
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, "trade_outcome_refusal.go", nil, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, decl := range file.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Name.Name != "noteOutcomeRefusal" {
+			continue
+		}
+		first, ok := fn.Body.List[0].(*ast.IfStmt)
+		if !ok {
+			t.Fatal("noteOutcomeRefusal does not start with the nil-sink guard")
+		}
+		_, returns := first.Body.List[0].(*ast.ReturnStmt)
+		var buf strings.Builder
+		_ = printer.Fprint(&buf, fset, first.Cond)
+		if !returns || !strings.Contains(buf.String(), "a.outcomeRefused == nil") {
+			t.Errorf("first statement = if %s (returns=%v), want an early return on a.outcomeRefused == nil", buf.String(), returns)
+		}
+		return
+	}
+	t.Fatal("noteOutcomeRefusal not found")
+}
+
+// TestA130AFailedAmendDoesNotDateALocalSell(구현 리뷰 P3-3b · 변이 M33): 로컬 매도 주문의 시각은 확정된 시도의 settled_at 으로만 매김 —
+// 같은 주문에 실패한 정정 시도가 편입보다 이른 settled_at 을 달고 있어도, 그 매도는 편입 뒤의 귀속 밖 매도로 남음(이른 시각에 끌려가
+// 「편입 전 처분」 으로 빠지면 원인이 수량 불일치로 바뀌어 사람이 다른 곳을 봄).
+func TestA130AFailedAmendDoesNotDateALocalSell(t *testing.T) {
+	refusals := &a130Refusals{}
+	j, fake, _ := a130Journal(t, refusals)
+	a130Adjust(t, j, "acct-1", AdjustmentExternal, "0", "5", "70100")
+	id := a130Adopt(t, j, "acct-1", "5", "70000", "66500")
+	fake.Advance(time.Minute)
+	a130LocalSell(t, j, "hand", "2", "71000")
+	if _, err := j.db.Exec(`INSERT INTO mutation_attempts(id, intent_id, kind, state, attempt_no, broker_order_id, fingerprint,
+		recorded_at, settled_at) VALUES ('a-hand-amend', 'i-hand', 'AMEND', 'FAILED', 2, 'o-hand', 'fp',
+		'2000-01-01T00:00:00Z', '2000-01-01T00:00:00Z')`); err != nil {
+		t.Fatal(err)
+	}
+	fake.Advance(time.Minute)
+	a130Sell(t, j, "acct-1", id, "stop", "3", "72000")
+	a130NoRow(t, j, id)
+	a130Only(t, refusals, OutcomeRefusalUnattributedLocalSell)
 }

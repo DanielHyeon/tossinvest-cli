@@ -149,11 +149,12 @@ func (j *Journal) BackfillTradeOutcomes(ctx context.Context, model costs.Model, 
 // backfillPlannedOutcome 은 항목 하나를 쓰기 트랜잭션 하나에서 다시 계산해 계획 값과 같을 때만 쓰고, 잠금을 쥔 시간을 돌려줌.
 func (j *Journal) backfillPlannedOutcome(ctx context.Context, item TradeOutcomeBackfillItem, model costs.Model,
 	prices IntakePrices) (time.Duration, error) {
-	start := time.Now()
 	tx, err := j.db.BeginTx(ctx, nil) // BEGIN IMMEDIATE — 항목 하나 동안만
 	if err != nil {
 		return 0, err
 	}
+	// 잠금을 얻은 뒤부터 잼 — 잠금을 기다린 시간은 쥔 시간이 아님(리뷰 구현 P3-4).
+	start := time.Now()
 	defer tx.Rollback()
 	reader := txReader{tx: tx}
 	if _, found, err := storedTradeOutcome(ctx, reader, item.positionID); err != nil {

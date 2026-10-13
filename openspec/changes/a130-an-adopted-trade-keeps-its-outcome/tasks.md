@@ -28,12 +28,12 @@ Story: `STORY-TOS-a130` · base `233d5d9c` · High-risk(원장 — 체결 반영
 
 ## 2. 검증
 
-- [ ] 2.1 변이(사본, 무변이 대조군 GREEN 먼저) — design D7 변이 목록, 원장 `analysis/mutation/`
-- [ ] 2.2 `make lint` · 관련 패키지 `go test -race -timeout 45m` · `make test-seams` · openspec validate
-- [ ] 2.3 운영 저널 **사본**(읽기 전용) — census(동결 행 회귀 · 사유 분포) + 도구 미리보기(브로커 1분봉 읽기 전용 GET) + 이관한 사본에서 실행해 항목별 쓰기
+- [x] 2.1 변이(사본, 무변이 대조군 GREEN 먼저) — design D7 변이 목록, 원장 `analysis/mutation/` (round1 31 중 30 CAUGHT · M24 동등; round2 M32 · M33 · M34 CAUGHT)
+- [x] 2.2 `make lint` · 관련 패키지 `go test -race -timeout 45m` · `make test-seams` · openspec validate (`analysis/verify/receipts.md` — journal 전체 -race 는 45분 상한에 닿아 a130 범위 -race + `make test-race` 로 잼)
+- [x] 2.3 운영 저널 **사본**(읽기 전용) — census(동결 행 회귀 · 사유 분포) + 도구 미리보기(브로커 1분봉 읽기 전용 GET) + 이관한 사본에서 실행해 항목별 쓰기
       잠금 시간 → `analysis/verify/`(수 · 사유만, F-6), GREEN 커밋 sha 기록. 항목별 결과(종목 · R · 분봉)는 완료 보고에만
 - [ ] 2.4 `make sdd-sync` · `make sdd-check`
-- [ ] 2.5 구현 리뷰(분리된 리뷰 패스) → `review.md`
+- [x] 2.5 구현 리뷰(분리된 리뷰 패스) → `review.md` (APPROVE-WITH-FIXES, P0 · P1 0, P2 · P3 처분 표)
 
 ## 3. 사람 · Manager
 

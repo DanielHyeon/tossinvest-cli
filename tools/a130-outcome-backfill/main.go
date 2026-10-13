@@ -100,7 +100,7 @@ func parseOptions(args []string) (options, error) {
 	var o options
 	flags := flag.NewFlagSet("a130-outcome-backfill", flag.ContinueOnError)
 	flags.StringVar(&o.journal, "journal", "", "required: the journal file (production: ~/.config/tossctl/journal.db)")
-	flags.StringVar(&o.configDir, "config-dir", "", "optional: the tossctl config directory (Open API credentials · token cache)")
+	flags.StringVar(&o.configDir, "config-dir", "", "the engine's tossctl config directory (Open API credentials · token cache) — required when there are lots to price")
 	flags.BoolVar(&o.execute, "execute", false, "write the planned rows (needs --confirm from the preview)")
 	flags.StringVar(&o.confirm, "confirm", "", "the confirmation token the preview printed")
 	if err := flags.Parse(args); err != nil {

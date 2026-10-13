@@ -99,7 +99,8 @@ func (w a130BlockingWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// TestA130ABlockedLogWriterDoesNotHoldTheFillTransaction: 싱크는 체결 트랜잭션 안에서 불림 — 쓰기가 막혀도 호출은 곧바로 돌아와야 함.
+// TestA130ABlockedLogWriterDoesNotHoldTheFillTransaction: 싱크는 체결 트랜잭션 커밋 뒤 RecordFill 안에서 불림 — 쓰기가 막혀도 호출은 곧바로
+// 돌아와야 함(체결 감지 루프를 붙잡지 않음).
 func TestA130ABlockedLogWriterDoesNotHoldTheFillTransaction(t *testing.T) {
 	w := a130BlockingWriter{release: make(chan struct{})}
 	defer close(w.release)
@@ -113,7 +114,7 @@ func TestA130ABlockedLogWriterDoesNotHoldTheFillTransaction(t *testing.T) {
 	select {
 	case <-done:
 	case <-time.After(2 * time.Second):
-		t.Fatal("the sink blocked on the log writer; it would hold the SQLite write lock the stop-loss path waits on")
+		t.Fatal("the sink blocked on the log writer; it would hold the fill-detection loop")
 	}
 }
 

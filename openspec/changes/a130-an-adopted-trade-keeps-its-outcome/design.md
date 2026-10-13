@@ -135,6 +135,12 @@ R     = pnl ÷ (r × Q_sell)          분자 · 분모가 같은 Q_sell(= Q_buy)
 - 일시 실패와 구조 거절이 섞인 사유(`round_trip_unpriceable` · `*_unreadable`). `roundTripLegs`(결정 경로)의 트랜잭션 밖 부정확(F-2)과 생산 호출자 0 인
   `BackfillTradeOutcome` 의 그 위험은 그대로 — a130 backfill 은 그 경로를 쓰지 않는다.
 - 엔진 줄은 best-effort. 목록 없이 싱크만 있는 `runApplyHooks` 호출자는 거절을 버린다.
+- **인스턴스 매도 무결 읽기의 규모(구현 리뷰 P3-1)**: 로컬 매도 질의는 `UPPER(TRIM(f.symbol))` · `TRIM(f.account_ref)` 로 비교해 체결 표 색인을 못 쓴다(전체
+  훑기, 기존 `engineSellOrders` · `sumSellFills` 와 같은 꼴). 리뷰 실측: 합성 체결 20만 행에서 종결 하나의 판정 102 → 198 ms. 운영 체결 행은 67(사본 실측,
+  2026-10-13) — 판정 최대 2.694 ms. 체결 표가 수만 행에 이르면 체결 트랜잭션의 쓰기 잠금 시간에 더해지므로(불변식 4 쪽 비용) 그때 정규화 값 등식 비교로
+  바꾼다 — 지금은 바꾸지 않는다(정규화 저장 여부를 전수 확인해야 하는 별도 변경).
+- `BackfillTradeOutcome`(기존 단건 수동 채움, 생산 호출자 0)은 모집단 한정이 없고 오류 문구에 포지션 id 를 싣는다(a130 이전부터). a130 은 거절 사유만 문구에
+  더했다. 제거 · 한정은 별도 변경(시험 고정 다수).
 
 ## D6. 콘솔 안내문
 
@@ -158,6 +164,10 @@ R     = pnl ÷ (r × Q_sell)          분자 · 분모가 같은 Q_sell(= Q_buy)
 6. backfill: 모집단(편입 · 체결 종결 · 행 없음만), 묶음 목록 순서, 미리보기 쓰기 0(db · -wal), 토큰 불일치 · 분봉 값 변경 → 0 행, 일치 → 미리 본 행, 재사용 0,
    항목 이동 → 안 씀, 보존 밖.
 7. 도구: 경로 · 확인 없이 거절, 묶음 없으면 브로커 client 를 열지 않음, 스키마 32 실행 거절 + 바이트 동일, 분봉은 그 분만 · 간격 두고 읽음.
+8. 구현 리뷰 보강(2026-10-13): 종가 0 봉 거절(`TestA130AZeroCloseBarIsRefused`, 변이 M32) · 싱크 없음 가드 AST 핀(`TestA130ANilSinkReadsNothingOnTheRefusalPath`,
+   M34) · 실패한 정정 시도가 로컬 매도 시각을 앞당기지 않음(`TestA130AFailedAmendDoesNotDateALocalSell`, M33) · 분봉 행의 유도 구분
+   (`TestA130BarPricedRowsAreDerivableFromTheLedger`). 원장 의존 그래프 검사는 `net/http` · `internal/official` 만 거름 — `net` 은 기존 의존
+   (github.com/google/uuid · crypto/x509)이 이미 끌어와 거르면 a130 이전 트리도 실패(측정).
 8. 엔진 · 콘솔: 싱크 nil · 줄 키 · 막힌 writer · NewContext 구조 핀 · 안내문 문구.
 
 변이(사본 · 무변이 대조군 GREEN 먼저, `analysis/harness/a130_mutate.py`): 묶음 무시 · 봉 이름 앞 분 · 다른 분 봉 허용 · nil 분봉에서 묶음 무시 · 증가 엄격 `>`→`>=` ·

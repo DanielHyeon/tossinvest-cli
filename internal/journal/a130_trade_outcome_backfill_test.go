@@ -229,3 +229,46 @@ func TestA130TheBackfillDoesNotRecreateWhatRetentionPruned(t *testing.T) {
 		t.Errorf("rows %d → %d", rows, got)
 	}
 }
+
+// TestA130BarPricedRowsAreDerivableFromTheLedger(구현 리뷰 P3-2 · spec 「묶음 분봉으로 매긴 행은 … 유도해 따로 가를 수 있어야 한다」):
+// 스키마에 출처 열을 더하지 않으므로(design D3), 성과 행 중 분봉으로 매긴 것은 「편입 포지션 ∧ 편입 뒤 양의 조정 묶음이 있음」 으로만
+// 가려져야 함 — 채운 뒤 원장의 편입 행 전부를 그 유도로 갈랐을 때 정확히 backfill 이 쓴 행만 나옴(손으로 채운 편입 행 frozen 은 빠짐).
+func TestA130BarPricedRowsAreDerivableFromTheLedger(t *testing.T) {
+	j, path, grown, _ := a130BackfillFixture(t)
+	ctx := context.Background()
+	now := j.clk.Now()
+	prices := a130BrokerBars(t, path)
+	plan := a130Preview(t, path, now, prices)
+	if _, err := j.BackfillTradeOutcomes(ctx, costs.DefaultModel(), now, prices, plan.Token); err != nil {
+		t.Fatal(err)
+	}
+	rows, err := j.db.QueryContext(ctx, `SELECT o.position_id FROM trade_outcomes o
+		JOIN positions p ON p.id = o.position_id WHERE p.adoption_id IS NOT NULL AND TRIM(p.adoption_id) <> ''`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var adopted []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			t.Fatal(err)
+		}
+		adopted = append(adopted, id)
+	}
+	if err := rows.Close(); err != nil {
+		t.Fatal(err)
+	}
+	var derived []string
+	for _, id := range adopted {
+		lots, reason := adoptionEpoch(ctx, journalReader{j: j}, id)
+		if reason != "" {
+			t.Fatalf("adoptionEpoch(%s) = %q", id, reason)
+		}
+		if len(lots) > 0 {
+			derived = append(derived, id)
+		}
+	}
+	if len(adopted) < 2 || len(derived) != 1 || derived[0] != grown {
+		t.Errorf("adopted rows %d, derived bar-priced %v, want exactly the backfilled grown position", len(adopted), derived)
+	}
+}

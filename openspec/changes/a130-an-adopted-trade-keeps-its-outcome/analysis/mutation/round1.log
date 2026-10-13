@@ -1,0 +1,41 @@
+# a130 4판 변이 원장 — 2026-10-13, HEAD dbb0681c 사본(무변이 대조군 GREEN 먼저), harness analysis/harness/a130_mutate.py
+# a130 mutation — HEAD dbb0681c + working-tree a130 files · copy <copy>/repo
+CONTROL GREEN 
+CAUGHT M1 a post-adoption increase is not a lot :: --- FAIL: TestA130AGrownPositionIsRefusedInsideTheFillTransaction (0.70s); --- FAIL: TestA130AGrownPositionPricesEachLotAtItsMinuteBar (0.71s); --- FAIL: TestA130AMissingOrWrongMinuteBarIsRefused (0.74s); --- FAIL: TestA130ARolledBackCloseReportsNothing (0.67s); --- FAIL: TestA130ALaterInstanceFlattenIsNotThisTripsSell (0.69s); --- FAIL: TestA130ThePreviewNamesOnlyTheAdoptedEngineClosesAndWritesNothing (1.18s)
+CAUGHT M2 the bar label is the minute the adjustment started in :: --- FAIL: TestA130TheBarLabelIsTheMinuteThatClosesAfterTheAdjustment (0.00s); --- FAIL: TestFetchPricesKeepsOnlyTheExactMinuteAndPaces (0.02s)
+CAUGHT M3 a bar of another minute is accepted :: --- FAIL: TestA130AMissingOrWrongMinuteBarIsRefused (0.70s)
+CAUGHT M4 nil prices ignore the lots :: --- FAIL: TestA130AGrownPositionIsRefusedInsideTheFillTransaction (0.68s); --- FAIL: TestA130ARolledBackCloseReportsNothing (0.68s)
+CAUGHT M5 a same-second increase (the fold-in) becomes a lot :: --- FAIL: TestA130AGrownPositionPricesEachLotAtItsMinuteBar (0.66s); --- FAIL: TestA130TheSameSecondBoundaryFailsClosed (1.23s); --- FAIL: TestA130TheSameSecondBoundaryFailsClosed/increase (0.61s); --- FAIL: TestA130AnUnpricedEngineSellIsReportedAsSuch (0.63s); --- FAIL: TestA130AFoldInBeforeOrAtTheAdoptionIsNotALot (1.30s); --- FAIL: TestA130AnOverAttributedSellWithoutAnyAdjustmentIsAForeignSell (0.83s)
+CAUGHT M6 the post-adoption disposal check is removed :: --- FAIL: TestA130TheGrowThenShrinkRoundTripIsRefusedAsADisposal (0.66s); --- FAIL: TestA130APostAdoptionDisposalBlocksASweptFlatten (0.84s); --- FAIL: TestA130TheSameSecondBoundaryFailsClosed (1.25s); --- FAIL: TestA130TheSameSecondBoundaryFailsClosed/decrease (0.63s)
+CAUGHT M7 a same-second decrease is not post-adoption :: --- FAIL: TestA130TheSameSecondBoundaryFailsClosed (0.81s); --- FAIL: TestA130TheSameSecondBoundaryFailsClosed/decrease (0.40s)
+CAUGHT M8 the re-adoption check is removed :: --- FAIL: TestA130AReadoptedPositionIsRefused (0.41s)
+CAUGHT M9 the sell is compared with the adoption-time quantity again :: --- FAIL: TestA130AGrownPositionPricesEachLotAtItsMinuteBar (0.66s); --- FAIL: TestA130ALaterInstanceFlattenIsNotThisTripsSell (0.41s); --- FAIL: TestA130ThePreviewNamesOnlyTheAdoptedEngineClosesAndWritesNothing (0.69s); --- FAIL: TestA130TheBackfillWritesOnlyWithTheConfirmedToken (0.70s)
+CAUGHT M10 the lots' notional is dropped :: --- FAIL: TestA130AGrownPositionPricesEachLotAtItsMinuteBar (0.42s); --- FAIL: TestA130ThePreviewNamesOnlyTheAdoptedEngineClosesAndWritesNothing (0.36s)
+CAUGHT M11 the denominator quantity is swapped for one share :: --- FAIL: TestA130AGrownPositionPricesEachLotAtItsMinuteBar (0.23s); --- FAIL: TestA130APreAdoptionAdjustmentStillFreezes (0.22s); --- FAIL: TestA130AnEngineEnteredRoundTripIsUnchanged (0.36s); --- FAIL: TestA130AFoldInBeforeOrAtTheAdoptionIsNotALot (0.61s); --- FAIL: TestA130ThePreviewNamesOnlyTheAdoptedEngineClosesAndWritesNothing (0.54s); --- FAIL: TestAnAdoptedPositionTheEngineLiquidatedFreezesAnOutcome (0.32s)
+CAUGHT M12 the foreign-instance check is removed :: --- FAIL: TestA130AnOverAttributedSellWithoutAnyAdjustmentIsAForeignSell (0.43s); --- FAIL: TestA130ALocalSellOffsetBySweptFlattenIsNoLongerFrozen (0.45s); --- FAIL: TestA130ALaterInstanceFlattenIsNotThisTripsSell (0.44s)
+CAUGHT M12b the foreign check forgets the after-close side :: --- FAIL: TestA130ALaterInstanceFlattenIsNotThisTripsSell (0.92s)
+CAUGHT M13 the unattributed-local-sell check is removed :: --- FAIL: TestA130AnUnattributedLocalSellIsRefused (0.75s)
+CAUGHT M13b the unattributed window starts at the fold-in again :: --- FAIL: TestA130ALocalSellBeforeTheAdoptionIsNotThisTripsDisposal (0.72s)
+CAUGHT M8b re-adoption is read from nowhere (the generation filter is dropped) :: --- FAIL: TestA130AReadoptedPositionIsRefused (0.67s)
+CAUGHT M14 the integrity check reads the fill commit time :: --- FAIL: TestOutcomesAreSplitByWhatJustifiedThePosition (0.84s); panic: runtime error: index out of range [0] with length 0 [recovered, repanicked]
+CAUGHT M15 the refusal is not noted (silent again) :: --- FAIL: TestA130AGrownPositionIsRefusedInsideTheFillTransaction (0.72s); --- FAIL: TestA130TheGrowThenShrinkRoundTripIsRefusedAsADisposal (0.73s); --- FAIL: TestA130APostAdoptionDisposalBlocksASweptFlatten (0.87s); --- FAIL: TestA130AReadoptedPositionIsRefused (0.69s); --- FAIL: TestA130TheSameSecondBoundaryFailsClosed (1.36s); --- FAIL: TestA130TheSameSecondBoundaryFailsClosed/increase (0.68s)
+CAUGHT M16 the refusal is reported before the commit :: --- FAIL: TestA130RecordFillReportsRefusalsOnlyAfterItsCommit (0.00s)
+CAUGHT M17 the sink panic is not recovered :: --- FAIL: TestA130APanickingRefusalSinkDoesNotRollBackTheClose (0.65s); panic: sink exploded [recovered, repanicked]
+CAUGHT M18 the engine sink writes on the caller's goroutine :: --- FAIL: TestA130ABlockedLogWriterDoesNotHoldTheFillTransaction (2.00s)
+CAUGHT M19 NewContext binds without the sink :: --- FAIL: TestA130NewContextBindsTheHooksWithTheEngineLogger (0.00s)
+CAUGHT M20 the handle never carries the sink :: --- FAIL: TestA130AGrownPositionIsRefusedInsideTheFillTransaction (0.65s); --- FAIL: TestA130TheGrowThenShrinkRoundTripIsRefusedAsADisposal (0.68s); --- FAIL: TestA130APostAdoptionDisposalBlocksASweptFlatten (0.81s); --- FAIL: TestA130AReadoptedPositionIsRefused (0.67s); --- FAIL: TestA130TheSameSecondBoundaryFailsClosed (1.30s); --- FAIL: TestA130TheSameSecondBoundaryFailsClosed/increase (0.63s)
+CAUGHT M21 the backfill population admits engine-entered positions :: --- FAIL: TestA130ThePreviewNamesOnlyTheAdoptedEngineClosesAndWritesNothing (1.12s); --- FAIL: TestA130TheBackfillWritesOnlyWithTheConfirmedToken (1.13s)
+CAUGHT M22 the backfill population admits adjustment-closed positions :: --- FAIL: TestA130ThePreviewNamesOnlyTheAdoptedEngineClosesAndWritesNothing (1.12s)
+CAUGHT M23 a moved item is written anyway :: --- FAIL: TestA130AMovedItemIsNotWritten (1.13s)
+SURVIVED M24 the token ignores the bars used (equivalent — see comment) :: 
+CAUGHT M25 the tool opens the writer without the schema guard :: --- FAIL: TestAnOlderSchemaJournalIsLeftByteIdentical (0.47s)
+CAUGHT M26 sell_unpriced is reported as a mismatch :: --- FAIL: TestA130AnUnpricedEngineSellIsReportedAsSuch (0.44s)
+CAUGHT M27 the engine line gains a position id field :: --- FAIL: TestA130TheRefusalLineCarriesOnlyItsFields (0.01s)
+UNREACHED M28 the tool keeps a bar from another minute (fragment occurs 0 times)
+# 29/31 CAUGHT
+rc=0
+
+## M28 재측정(조각 정정 뒤, --only M28)
+CAUGHT M28 the tool keeps a bar from another minute :: --- FAIL: TestA130TheMinuteCandleIsReadUnadjustedAndOnlyForItsOwnMinute
+
+## 결과: 31 중 CAUGHT 30, SURVIVED 1(M24 — 동등 변이: 쓴 분봉 종가가 결과 값을 정하고 결과 값이 토큰에 들어감, 분봉 값 변경은 TestA130TheBackfillWritesOnlyWithTheConfirmedToken 이 잡음), BUILD-FAILED 0

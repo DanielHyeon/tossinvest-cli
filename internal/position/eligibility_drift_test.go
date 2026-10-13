@@ -47,9 +47,13 @@ var eligibilitySpellers = map[string]string{
 		"adopted policy identity; lifecycle eligibility was already enforced by the command and journal boundaries",
 	"internal/journal/position_adjustments.go": "the INSERT that folds an external holding in with " +
 		"entry_decision_id NULL",
-	"internal/journal/core_domain.go":     "the DDL",
-	"internal/journal/provenance.go":      "the lineage query's join path",
-	"internal/journal/trade_outcomes.go":  "the freeze's read of which record justifies the position",
+	"internal/journal/core_domain.go":    "the DDL",
+	"internal/journal/provenance.go":     "the lineage query's join path",
+	"internal/journal/trade_outcomes.go": "the freeze's read of which record justifies the position",
+	"internal/journal/trade_outcome_refusal.go": "a130: the outcome freeze's adoption-epoch read joins the adoption record " +
+		"(observed_at) for an already-adopted position; it does not decide exit eligibility",
+	"internal/journal/trade_outcome_backfill.go": "a130: the human-run backfill selects its population (adopted positions " +
+		"closed by a fill) — a read of which record justified a closed position, not an exit-eligibility test",
 	"internal/journal/trade_analytics.go": "the analytics join that splits measured R from synthetic R",
 	"internal/journal/strategy_lineage.go": "the strategy-only entry_decision_identity primary key; it stores " +
 		"canonical strategy provenance and does not read or decide position exit eligibility",
