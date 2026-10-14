@@ -441,13 +441,13 @@ func (g *RiskGuardian) IssueEntry(ctx context.Context, req EntryIssuance) (Issue
 	}
 	// The chain, once. Everything after this point is the ledger's answer, not a
 	// second judgement of the intent.
-	if verdict := evaluateChainWithDailyLoss(in, measureErr); !verdict.Allowed {
+	if verdict, unmeasured := evaluateChainWithDailyLoss(in, measureErr); !verdict.Allowed {
 		// The refusal population's first persistence. It has no decision and no
 		// preimage, so this is the only record that will ever exist of it —
 		// design D6's asymmetry, and why a lost refusal is counted under its own
 		// kind.
 		g.observeEntry(g.entryObservation(in, journal.OutcomeRefusedChain, verdict))
-		return Issued{}, errors.Join(dailyLossChainRefusal(verdict, measureErr), g.escalateFor(ctx, verdict))
+		return Issued{}, errors.Join(dailyLossChainRefusal(verdict, unmeasured), g.escalateFor(ctx, verdict))
 	}
 	exposure, verdict := risk.EntryExposureValue(in)
 	if !verdict.Allowed {

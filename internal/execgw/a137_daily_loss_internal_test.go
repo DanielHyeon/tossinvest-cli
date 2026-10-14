@@ -5,6 +5,10 @@ package execgw
 import (
 	"context"
 	"errors"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -354,5 +358,61 @@ func TestA137EscalationSucceedsAsABlockAndFailsLoudly(t *testing.T) {
 	var issue *IssueRefusal
 	if !errors.As(err, &issue) {
 		t.Fatalf("the refusal must stay in the joined error: %v", err)
+	}
+}
+
+// 재리뷰 P2-N1: 자본이 무효이고 측정도 실패하면 거절의 원인은 자본 — 측정 불가 표지를 달지 않고 상세도 자본 원인을 지킴(오늘처럼 결함).
+func TestA137AnInvalidEquityWithAMeasurementFailureStaysUnmarked(t *testing.T) {
+	g, _, _ := a137Guardian(t)
+	g.dailyLossRows = a137Rows(nil, errors.New("read failed"), nil)
+	account := a137Account("0")
+	account.AccountEquity.Amount = "lots"
+	err := a137Issue(t, g, account)
+	refusal := a137Refusal(t, err)
+	var unmeasurable *DailyLossUnmeasurable
+	if refusal.Reason != string(risk.ReasonInputUnavailable) || errors.As(err, &unmeasurable) ||
+		strings.Contains(refusal.Detail, "cannot be measured") || !strings.Contains(refusal.Detail, "equity") {
+		t.Fatalf("refusal=%+v marked=%v — want an unmarked equity INPUT_UNAVAILABLE", refusal, errors.As(err, &unmeasurable))
+	}
+}
+
+// 재리뷰 P3-1: 두 표지는 이 change 의 한 파일에서만 만들어짐(AST — 다른 생산 자리가 표지를 지어내면 레인 잠금을 우회함).
+func TestA137TheQuietMarkersAreMadeOnlyInTheirOwnFile(t *testing.T) {
+	root := filepath.Join("..", "..")
+	var sites []string
+	for _, dir := range []string{"cmd", "internal"} {
+		err := filepath.Walk(filepath.Join(root, dir), func(path string, info os.FileInfo, err error) error {
+			if err != nil || info.IsDir() || !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+				return err
+			}
+			file, err := parser.ParseFile(token.NewFileSet(), path, nil, 0)
+			if err != nil {
+				return err
+			}
+			ast.Inspect(file, func(n ast.Node) bool {
+				lit, ok := n.(*ast.CompositeLit)
+				if !ok {
+					return true
+				}
+				name := ""
+				switch typ := lit.Type.(type) {
+				case *ast.Ident:
+					name = typ.Name
+				case *ast.SelectorExpr:
+					name = typ.Sel.Name
+				}
+				if (name == "DailyLossUnmeasurable" || name == "DailyLossEntryBlock") && filepath.Base(path) != "a137_daily_loss.go" {
+					sites = append(sites, path+":"+name)
+				}
+				return true
+			})
+			return nil
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	if len(sites) != 0 {
+		t.Fatalf("daily-loss markers are constructed outside a137_daily_loss.go: %v", sites)
 	}
 }

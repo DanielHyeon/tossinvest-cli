@@ -52,6 +52,13 @@ MUTANTS = [
  ("M31 루프가 측정 불가를 결함으로", G+"strategy_market_handoff_delivery.go", "if errors.As(err, &blocked) || errors.As(err, &unmeasurable) {", "if errors.As(err, &blocked) {\n\t\t\t_ = unmeasurable", G, "TestA137TheDailyLossStopsNeverLatchOrSwallowOnEitherLaneKind", "tossos_testseams"),
  ("M32 승인의 측정 불가 갈래 삭제", G+"strategy_first_leg_admission.go", "if unmeasurable := (*execgw.DailyLossUnmeasurable)(nil); errors.As(err, &unmeasurable) {", "if unmeasurable := (*execgw.DailyLossUnmeasurable)(nil); false && errors.As(err, &unmeasurable) {", G, "TestA137AnUnmeasurableDayIsAPolicyOutcomeNotALaneFault", "tossos_testseams"),
  ("M33 승인이 토큰을 버림", G+"strategy_first_leg_admission.go", "authority.Entry.DailyLoss = b.guardian.MeasureDailyLoss(ctx)", "_ = b.guardian.MeasureDailyLoss(ctx)", G, "TestA137AdmissionCarriesTheMeasuredTokenIntoThePrecheck", "tossos_testseams"),
+ ("M38 측정 불가 계수 미증가", G+"a137_daily_loss_notice.go", "\t\tworker.dailyLossUnmeasurable++", "\t\t_ = worker.dailyLossUnmeasurable", G, "TestA137AnUnmeasurableDayIsCountedAndAnnouncedOncePerAccountDay", "tossos_testseams"),
+ ("M39 알림이 주기마다", G+"a137_daily_loss_notice.go", "announce := day != \"\" && worker.dailyLossNoticeDay != day", "announce := day != \"\"", G, "TestA137AnUnmeasurableDayIsCountedAndAnnouncedOncePerAccountDay", "tossos_testseams"),
+ ("M40 전달 자리 기록 삭제", G+"strategy_market_handoff_delivery.go", "\t\t\trecordStrategyDailyLossUnmeasurable(ctx, unmeasurable)", "\t\t\t_ = unmeasurable", G, "TestA137AnUnmeasurableDayIsCountedAndAnnouncedOncePerAccountDay", "tossos_testseams"),
+ ("M41 원인 판정 재실행 삭제", E+"a137_daily_loss.go", "if again := evaluateChain(probe); !again.Allowed", "if again := evaluateChain(probe); false && !again.Allowed", E, "TestA137AnInvalidEquityWithAMeasurementFailureStaysUnmarked", ""),
+ ("M42 주기 ctx 기록자 미부착", G+"strategy_entry_supervisor.go", "cycleCtx := withStrategyDailyLossRecorder(ctx, func(cause error) { s.recordDailyLossUnmeasurable(worker, cause) })", "cycleCtx := ctx", G, "TestA137AnUnmeasurableDayIsCountedAndAnnouncedOncePerAccountDay", "tossos_testseams"),
+ ("M43 생산 알림 배선 삭제", G+"strategy_entry_supervisor.go", "DailyLossNotice: c.strategyDailyLossNotice(),", "DailyLossNotice: nil,", G, "TestA137TheProductionSupervisorCarriesTheNotice", "tossos_testseams"),
+ ("M44 표지를 다른 파일에서 지어냄", G+"strategy_first_leg_admission.go", "\t\t// a137 F8: 원인을 실음 — 하류가 errors.As 로 거절 타입을 볼 수 있게(문구 · 분류는 그대로).\n\t\trefusal.cause = err\n", "\t\trefusal.cause = errors.Join(err, &execgw.DailyLossEntryBlock{})\n", E, "TestA137TheQuietMarkersAreMadeOnlyInTheirOwnFile", ""),
 ]
 
 def test(pkg, name, tags):

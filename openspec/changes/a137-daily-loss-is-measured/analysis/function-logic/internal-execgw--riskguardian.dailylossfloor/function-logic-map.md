@@ -2,7 +2,7 @@
 
 - Source: `internal/execgw/a137_daily_loss.go` (145-165, 편집 뒤)
 - Qualified: `RiskGuardian.dailyLossFloor`
-- AST evidence: `ast.json`(편집 뒤, `source_sha256` d0869728c1f8f72d…) · `ast-base.json`(편집 전, base `63fd0c92`, `source_sha256` 5ebfb6c220c7568b…, 편집 전 분기수 3) — 현재 branches 4 · returns 4
+- AST evidence: `ast.json`(편집 뒤, `source_sha256` d49003643c5f13fb…) · `ast-base.json`(편집 전, base `63fd0c92`, `source_sha256` 5ebfb6c220c7568b…, 편집 전 분기수 3) — 현재 branches 4 · returns 4
 - Risk scan: `risk-pattern-report.md`
 
 **역할.** 측정값과 호출자 값으로 체인에 넣을 계좌 상태를 만듦(a137 바닥 규칙).

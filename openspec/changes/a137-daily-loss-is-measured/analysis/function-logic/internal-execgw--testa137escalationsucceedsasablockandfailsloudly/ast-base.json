@@ -1,0 +1,226 @@
+{
+  "file": "internal/execgw/a137_daily_loss_internal_test.go",
+  "source_sha256": "bca3eba9aebc69d6a6e4d9678384d564edf5c38130f8dce4dc105e869d118689",
+  "package": "execgw",
+  "function": "TestA137EscalationSucceedsAsABlockAndFailsLoudly",
+  "signature": "TestA137EscalationSucceedsAsABlockAndFailsLoudly(params=1, results=0)",
+  "start": {
+    "line": 328,
+    "column": 1
+  },
+  "end": {
+    "line": 346,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 331,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 334,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 339,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 343,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 329,
+        "column": 13
+      },
+      "text": "a137Guardian"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 330,
+        "column": 13
+      },
+      "text": "chainRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 12
+      },
+      "text": "g.EscalateDailyLossLimit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 37
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 70
+      },
+      "text": "a137IsAccountBlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 332,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 334,
+        "column": 18
+      },
+      "text": "j.CurrentOperatingMode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 334,
+        "column": 41
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 337,
+        "column": 6
+      },
+      "text": "j.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 338,
+        "column": 9
+      },
+      "text": "g.EscalateDailyLossLimit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 338,
+        "column": 34
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 339,
+        "column": 19
+      },
+      "text": "a137IsAccountBlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 340,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 343,
+        "column": 6
+      },
+      "text": "errors.As"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 344,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 329,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 330,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 331,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 334,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 337,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 338,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

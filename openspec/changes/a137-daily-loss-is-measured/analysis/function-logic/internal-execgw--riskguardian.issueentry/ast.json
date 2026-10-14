@@ -1,6 +1,6 @@
 {
   "file": "internal/execgw/riskguardian.go",
-  "source_sha256": "09cf2f1a1123b6fa9d66ab3eaed7088bd55f3ac230b9044493fb93a616635eb8",
+  "source_sha256": "7bf1bbe7623c179edcf67ed9daecab96105ef64be3495f0a7fd1bf23882ed5e4",
   "package": "execgw",
   "function": "IssueEntry",
   "receiver": "RiskGuardian",
@@ -289,7 +289,7 @@
       "kind": "call",
       "at": {
         "line": 444,
-        "column": 16
+        "column": 28
       },
       "text": "evaluateChainWithDailyLoss"
     },

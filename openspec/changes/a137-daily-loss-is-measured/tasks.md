@@ -33,7 +33,7 @@ Story: `STORY-TOS-a137` · **High-risk**(Guardian · 위험 입력) — FLM/BTM 
       짝 FX 검증 · US 환산 올림 · 체인 없는 `Issuer.IssueEntry` 생산 호출자 0 고정
 - [x] 1.2 GREEN — 대상 시험 통과(`go test` execgw · dailyloss · risk · riskcalc · clock rc 0, `-tags tossos_testseams` execgw rc 0, engine a137 rc 0). P3 셋 적용(§4.2: 조용한 경로 = trigger 일일 손실 AND Actor AUTO · 형식 결함 = 정규 RFC3339 UTC `Z` 아님 · 보호 필터 = 수명과 겹침) · `internal/dailyloss`(Collect · Total) · 원장 읽기 새 파일 · Guardian `MeasureDailyLoss` · 강화 입구 새 파일 · precheck/IssueEntry 바닥 적용 ·
       첫 다리 분류 · riskcalc `RealizedPnL.AsOf` 주석 정정 · 일 키는 a136 공유 함수 호출
-- [ ] 1.3 REFACTOR · 편집 뒤 AST 재추출 · `check_analysis.py --change`
+- [x] 1.3 REFACTOR · 편집 뒤 AST 재추출 · `check_analysis.py --change` — 추가 리팩터 없음. 편집 뒤 AST 는 a1cfe0c2 · c83241ff · 4ddb081b · bd723b7f 에서 재추출, 새 base 63fd0c92 기준 `check_analysis` rc 0(bd723b7f, required 9 — evidence complete)
 
 ## 2. 검증
 
@@ -42,9 +42,10 @@ Story: `STORY-TOS-a137` · **High-risk**(Guardian · 위험 입력) — FLM/BTM 
       성과 부재 무시 · 토큰 신선도/일 키 무시 · 매도 경로 측정 호출 · 강화 누락 · `Stage` 검사 삭제 · 원인 버림 · 차단 결과를 오류로 · 다른 관문 거절도 조용히 · 다른 trigger 모드 차단도 조용히 · 펜스 원인 무시 · 건너뛴 범위 보고 삭제 ·
       보호 주문 검사 삭제 · 형식 결함 행 검사 삭제 · 환산 내림)
 - [x] 2.3a 구현 적대 리뷰(a1cfe0c2) APPROVE-WITH-FIXES — P1×3 · P2×3 · P3 수리(review.md §6) — `c83241ff` · `3d48c22b`, 전 스위트 · race · 변이 37/37(receipts.md)
+- [x] 2.3b 수리 재확인(470324ce) APPROVE-WITH-FIXES — P1-N1 · P2-N1 · P3-1 · P3-2 수리(review.md §7)
 - [ ] 2.3 적대적 독립 리뷰(분리된 컨텍스트) → `review.md`
 
-- [ ] 2.4 원장 읽기 지연 측정 — 현실 크기 픽스처(관리 포지션 수천 · 일 키 창 안 수십)에서 측정 질의 1회의 시간과 단일 연결 점유 시간.
+- [x] 2.4 원장 읽기 지연 측정 — `analysis/verify/latency.md`(bd723b7f 사본: 5,000 행 6.1 ms p95 · 20,000 행 25.9 ms p95 · 50,000 행 70.3 ms p95, 전수 스캔 별도). 원문: 원장 읽기 지연 측정 — 현실 크기 픽스처(관리 포지션 수천 · 일 키 창 안 수십)에서 측정 질의 1회의 시간과 단일 연결 점유 시간.
       `countMalformedClosedAt` 은 계좌의 CLOSED 행 전체를 positionSelect 로 훑음(형식 결함은 범위 사전 필터로 못 거르므로) — 그 전수 스캔 시간을 따로 잴 것
 
 ## 3. 사람 · Manager

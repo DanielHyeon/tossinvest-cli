@@ -42,6 +42,10 @@ func dispatchStrategyMarketHandoffs(ctx context.Context, campaigns strategyCampa
 			return nil
 		}
 		_, err = dispatcher.dispatch(ctx, delivered)
+		// a137 재리뷰 P1-N1: 측정 불가는 전달 루프가 조용히 끝내므로(레인 결함 아님) 여기서 그 시장의 계수 · 알림에 남김.
+		if unmeasurable := (*execgw.DailyLossUnmeasurable)(nil); errors.As(err, &unmeasurable) {
+			recordStrategyDailyLossUnmeasurable(ctx, unmeasurable)
+		}
 		if errors.Is(err, journal.ErrStrategyDispatchLeaseConsumed) {
 			return nil
 		}

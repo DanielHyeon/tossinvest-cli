@@ -124,6 +124,9 @@ type StrategyEntrySupervisorOptions struct {
 	// 결정 (6)). 할 수 있는 일은 `Block` 하나뿐이다 — 감독자는 진입을 닫을 수만 있고 열 수 없다. nil 이면 그 고장은
 	// 기존의 프로세스 전체 fail-closed 로 올라간다(조용히 삼키지 않는다).
 	EntryGate StrategyEntryBlocker
+	// DailyLossNotice 는 측정 불가로 전략 진입이 막힌 것을 계좌 일 키마다 한 번 알리는 자리(a137 재리뷰 P1-N1). nil 이면 스냅숏 계수만.
+	// cause 는 계좌 값 · 원문 오류가 없는 측정 불가 문구(dailyloss 고정 문구 + 시장 · 심볼 · pos- 손잡이)다.
+	DailyLossNotice func(market StrategyMarket, day, cause string)
 }
 
 // StrategyEntryBlocker 는 감독자가 진입 게이트에 쓸 수 있는 유일한 동작이다. `*execgw.EntryGate` 가 만족한다.
@@ -190,6 +193,10 @@ type strategyMarketRuntime struct {
 	// 않고, 그 구별이야말로 운영자가 알아야 하는 것이다.
 	swallowedCount uint64
 	firstSwallowed string
+	// a137: 측정 불가 계수 · 첫 원인 · 마지막으로 알린 계좌 일 키(g.mu 아래).
+	dailyLossUnmeasurable uint64
+	firstDailyLossCause   string
+	dailyLossNoticeDay    string
 }
 
 // StrategyWorkerSnapshot is a read-only, market-keyed operational view. It
@@ -220,6 +227,11 @@ type StrategyWorkerSnapshot struct {
 	// 안 나가는데 아무도 그 이유를 모른다" 는 상태가 실제로 일어나고 있다는 뜻이다.
 	SwallowedCycleErrors  uint64
 	FirstSwallowedFailure string
+
+	// DailyLossUnmeasurableCycles 는 그날의 손실을 잴 수 없어 진입이 거절된 채 **조용히** 끝난 주기의 수(a137 재리뷰 P1-N1 — 잠금 ·
+	// 삼킴이 아닌 정책 결과라 다른 칸에는 남지 않으므로 여기 셈). FirstDailyLossUnmeasurable 은 그 첫 원인(계좌 값 · 원문 오류 없음).
+	DailyLossUnmeasurableCycles uint64
+	FirstDailyLossUnmeasurable  string
 }
 
 type StrategyTriggerResult string
@@ -239,6 +251,8 @@ type StrategyEntrySupervisor struct {
 
 	// entry 는 중앙 무결성 고장의 진입 차단 자리(5.6.2.1). nil 이면 프로세스 전체 fail-closed 로 올린다.
 	entry StrategyEntryBlocker
+	// dailyLossNotice 는 측정 불가 알림 자리(a137, nil 허용).
+	dailyLossNotice func(market StrategyMarket, day, cause string)
 
 	mu        sync.RWMutex
 	workers   map[StrategyMarket]*strategyMarketRuntime
@@ -402,6 +416,7 @@ func (c *Context) NewRefreshingPairedStrategyEntrySupervisor(clk clock.Clock) (*
 	}
 	supervisor, err := NewStrategyEntrySupervisor(StrategyEntrySupervisorOptions{
 		Clock: clk, CycleLimit: MaximumStrategyCycleLimit, Workers: workers, EntryGate: c.Entry,
+		DailyLossNotice: c.strategyDailyLossNotice(),
 	})
 	if err != nil {
 		return nil, err
@@ -705,7 +720,7 @@ func NewStrategyEntrySupervisor(opts StrategyEntrySupervisorOptions) (*StrategyE
 
 	return &StrategyEntrySupervisor{
 		clk: clk, cycleLimit: cycleLimit, workers: workers, ready: make(chan struct{}), faults: make(chan StrategyWorkerFault, 2),
-		entry: opts.EntryGate,
+		entry: opts.EntryGate, dailyLossNotice: opts.DailyLossNotice,
 	}, nil
 }
 
@@ -784,6 +799,7 @@ func (s *StrategyEntrySupervisor) Snapshot(market StrategyMarket) (StrategyWorke
 		RestartAttempt:      worker.restartAttempt, RestartNotBefore: worker.restartNotBefore,
 		QueueDepth: len(worker.queue), QueueCapacity: cap(worker.queue),
 		SwallowedCycleErrors: worker.swallowedCount, FirstSwallowedFailure: worker.firstSwallowed,
+		DailyLossUnmeasurableCycles: worker.dailyLossUnmeasurable, FirstDailyLossUnmeasurable: worker.firstDailyLossCause,
 	}, true
 }
 
@@ -925,7 +941,9 @@ func (s *StrategyEntrySupervisor) runMarket(ctx context.Context, start <-chan st
 			if !allowed {
 				continue
 			}
-			err, abnormal, cancelled, abandoned := invokeBoundedStrategyCycle(ctx, s.clk, s.cycleLimit, worker.descriptor.Cycle)
+			// a137 재리뷰 P1-N1: 주기 ctx 에 이 시장의 측정 불가 기록자를 실음 — 전달 자리가 조용히 끝낸 주기도 흔적을 남기게.
+			cycleCtx := withStrategyDailyLossRecorder(ctx, func(cause error) { s.recordDailyLossUnmeasurable(worker, cause) })
+			err, abnormal, cancelled, abandoned := invokeBoundedStrategyCycle(cycleCtx, s.clk, s.cycleLimit, worker.descriptor.Cycle)
 			if abandoned {
 				s.markAbandoned(worker)
 			}

@@ -103,6 +103,12 @@ codegraph 1.6.0(`analysis/code-context/raw/`)이다. 「정정」 행은 두 번
   표지를 원인으로 실어(`dailyLossChainRefusal`) 첫 다리 승인이 `DAILY_LOSS_UNMEASURABLE` 로 분류하고, 전달 루프는 계좌 차단과 같은 자리에서 주기를
   조용히 끝낸다. 강화는 없고, 진입은 잴 수 있을 때까지 매 주기 다시 거절된다(fail-closed 유지). 표지가 없는 입력 불가는 오늘처럼 결함(서명 활성화
   레인은 잠김). 두 레인 종류 모두 시험으로 고정.
+- **측정 불가의 흔적(재리뷰 P1-N1)**: 조용한 종료는 레인 잠금 · 삼킴 계수 · 운영 모드를 건드리지 않으므로, 감독자 스냅숏에 시장별
+  `DailyLossUnmeasurableCycles`(조용히 끝난 측정 불가 주기 수) · `FirstDailyLossUnmeasurable`(첫 원인 — dailyloss 고정 문구 + 시장 · 심볼 · `pos-`
+  손잡이, 계좌 값 · 원문 오류 없음)을 두고, 경고 줄 `engine.daily_loss_unmeasurable` 를 **계좌 일 키마다 한 번** 낸다. 기록은 주기 ctx 에 실린 기록자를
+  `dispatchStrategyMarketHandoffs` 가 부르는 방식(전달 루프 반환값 불변).
+- **원인 판정(재리뷰 P2-N1)**: daily_loss 단은 자본도 해석하므로, 측정 실패로 그 단이 입력 불가면 손실만 0(기준 통화)으로 바꿔 체인을 한 번 더 돌린다.
+  여전히 입력 불가면 원인은 손실이 아니다 — 상세를 바꾸지 않고 측정 불가 표지도 달지 않는다(오늘처럼 결함, 서명 활성화 레인은 잠김).
 - **자본 ≤ 0(구현 리뷰 P2-3)**: 체인 B3 은 자본이 0 이하면 `DAILY_LOSS_LIMIT_REACHED` 로 거절한다(기존). 살아 있는 문에서도 같은 사유이므로 첫 다리
   승인이 ENTRY_BLOCKED 로 강화한다 — 보수 방향이고 그대로 둔다.
 - **강화 통지 실패**: `escalateFor` 는 전이가 커밋됐어도 통지 기록이 실패하면(`ErrModeAnnouncementFailed`) 오류를 돌려준다. 그 경우 첫 다리 승인은

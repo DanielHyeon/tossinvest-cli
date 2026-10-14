@@ -180,12 +180,22 @@ func validDailyLoss(m riskcalc.Money, base string) (string, bool) {
 }
 
 // evaluateChainWithDailyLoss 는 체인을 한 번 돌리고, 측정 실패로 daily_loss 단이 입력 불가로 멈췄으면 그 상세를 측정 실패 문구로 바꿈.
-func evaluateChainWithDailyLoss(in risk.Input, measureErr error) risk.Decision {
+//
+// 두 번째 반환값은 그 거절이 **손실 입력 때문**일 때만 측정 오류(아니면 nil) — daily_loss 단은 자본도 같은 단에서 해석하므로(chain.go
+// checkDailyLoss B1 · B2), 손실만 0(기준 통화)으로 바꿔 체인을 한 번 더 돌려 여전히 입력 불가면 원인은 손실이 아니다(재리뷰 P2-N1).
+// 그때는 상세를 바꾸지 않고 표지도 달지 않는다 — 오늘처럼 결함.
+func evaluateChainWithDailyLoss(in risk.Input, measureErr error) (risk.Decision, error) {
 	verdict := evaluateChain(in)
-	if !verdict.Allowed && measureErr != nil && verdict.Step == "daily_loss" && verdict.Reason == risk.ReasonInputUnavailable {
-		verdict.Detail = "today's realised loss cannot be measured: " + strings.TrimPrefix(measureErr.Error(), dailyloss.ErrUnmeasurable.Error()+": ")
+	if verdict.Allowed || measureErr == nil || verdict.Step != "daily_loss" || verdict.Reason != risk.ReasonInputUnavailable {
+		return verdict, nil
 	}
-	return verdict
+	probe := in
+	probe.Account.DailyRealizedLoss = riskcalc.Money{Amount: "0", Currency: in.Policy.LimitCurrency()}
+	if again := evaluateChain(probe); !again.Allowed && again.Step == "daily_loss" && again.Reason == risk.ReasonInputUnavailable {
+		return verdict, nil
+	}
+	verdict.Detail = "today's realised loss cannot be measured: " + strings.TrimPrefix(measureErr.Error(), dailyloss.ErrUnmeasurable.Error()+": ")
+	return verdict, measureErr
 }
 
 // dailyLossChainRefusal 은 체인 거절을 IssueRefusal 로 만들고, 그것이 측정 실패로 daily_loss 단에서 멈춘 입력 불가면

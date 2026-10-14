@@ -1,0 +1,153 @@
+{
+  "file": "internal/app/engine/strategy_market_handoff_delivery.go",
+  "source_sha256": "26dda1be3cce793e09cf6e3d8305a34b2ab6c0ddef38ea86ff39f19eb9a4569c",
+  "package": "engine",
+  "function": "dispatchStrategyMarketHandoffs",
+  "signature": "dispatchStrategyMarketHandoffs(params=4, results=1)",
+  "start": {
+    "line": 32,
+    "column": 1
+  },
+  "end": {
+    "line": 50,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 38,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 41,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 45,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 35,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 39,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 42,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 46,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 48,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 9
+      },
+      "text": "deliverEachStrategyHandoff"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 14
+      },
+      "text": "delivered.Result"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 15
+      },
+      "text": "campaigns.CurrentPositionCampaignCAS"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 77
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 12
+      },
+      "text": "dispatcher.dispatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 6
+      },
+      "text": "errors.Is"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 37,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 44,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

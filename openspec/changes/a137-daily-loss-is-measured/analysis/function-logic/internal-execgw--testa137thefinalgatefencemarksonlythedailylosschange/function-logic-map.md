@@ -1,8 +1,8 @@
 # Function Logic Map: `TestA137TheFinalGateFenceMarksOnlyTheDailyLossChange`
 
-- Source: `internal/execgw/a137_daily_loss_internal_test.go` (283-337, 편집 뒤)
+- Source: `internal/execgw/a137_daily_loss_internal_test.go` (287-341, 편집 뒤)
 - Qualified: `TestA137TheFinalGateFenceMarksOnlyTheDailyLossChange`
-- AST evidence: `ast.json`(편집 뒤, `source_sha256` 807ab509173c9d16…) · `ast-base.json`(편집 전, base `63fd0c92`, `source_sha256` bca3eba9aebc69d6…, 편집 전 분기수 8) — 현재 branches 10 · returns 4
+- AST evidence: `ast.json`(편집 뒤, `source_sha256` 486545ca9d8ea620…) · `ast-base.json`(편집 전, base `63fd0c92`, `source_sha256` bca3eba9aebc69d6…, 편집 전 분기수 8) — 현재 branches 10 · returns 4
 - Risk scan: `risk-pattern-report.md`
 
 **역할.** 제출 직전 펜스의 일일 손실 표지 분류 시험.
@@ -19,18 +19,18 @@
 
 | Branch | Condition (소스 줄 인용) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `if err != nil {` (if 287) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
-| B2 | `if !a137IsAccountBlock(err) {` (if 292) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
-| B3 | `if fenced.Reason != ReasonStrategyDispatchFenced \|\| !a137IsAccountBlock(fenced) {` (if 296) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
-| B4 | `if err != nil {` (if 303) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
-| B5 | `if err := gw3.withStrategyEntryGateAuthority(ctx, expected3, "kr", "005930", func() error { return nil }); err == nil \|\| a137IsAccountBlock(err) {` (if 308) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
-| B6 | `if err != nil {` (if 315) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
-| B7 | `if err := gw4.withStrategyEntryGateAuthority(ctx, expected4, "kr", "005930", func() error { return nil }); err == nil \|\| a137IsAccountBlock(err) {` (if 320) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
-| B8 | `if err != nil {` (if 326) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
-| B9 | `if err == nil \|\| a137IsAccountBlock(err) {` (if 331) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
-| B10 | `if fenced := strategyFenceRejection(err); a137IsAccountBlock(fenced) \|\| fenced.Reason != ReasonStrategyDispatchFenced {` (if 334) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
+| B1 | `if err != nil {` (if 291) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
+| B2 | `if !a137IsAccountBlock(err) {` (if 296) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
+| B3 | `if fenced.Reason != ReasonStrategyDispatchFenced \|\| !a137IsAccountBlock(fenced) {` (if 300) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
+| B4 | `if err != nil {` (if 307) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
+| B5 | `if err := gw3.withStrategyEntryGateAuthority(ctx, expected3, "kr", "005930", func() error { return nil }); err == nil \|\| a137IsAccountBlock(err) {` (if 312) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
+| B6 | `if err != nil {` (if 319) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
+| B7 | `if err := gw4.withStrategyEntryGateAuthority(ctx, expected4, "kr", "005930", func() error { return nil }); err == nil \|\| a137IsAccountBlock(err) {` (if 324) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
+| B8 | `if err != nil {` (if 330) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
+| B9 | `if err == nil \|\| a137IsAccountBlock(err) {` (if 335) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
+| B10 | `if fenced := strategyFenceRejection(err); a137IsAccountBlock(fenced) \|\| fenced.Reason != ReasonStrategyDispatchFenced {` (if 338) | — | 분기 본문 참조 | `go test ./internal/execgw -run TestA137TheFinalGate` |
 
-Exact AST return positions: 291 · 308 · 320 · 330
+Exact AST return positions: 295 · 312 · 324 · 334
 
 ## Calls and live bindings
 

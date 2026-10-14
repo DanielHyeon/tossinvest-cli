@@ -197,3 +197,17 @@ WORKFLOW 「사람 승인 base 재고정」 세 조건:
    `RiskGuardian.dailyLossFloor` · `evaluateChainWithDailyLoss` · `TestA137ClassificationIsUnchangedForEveryPrecheckRefusal` ·
    `firstLegGuardianSpy.MeasureDailyLoss` · `TestA137TheFinalGateFenceMarksOnlyTheDailyLossChange`(편집 전 AST = `63fd0c92` blob, 편집 뒤 = 현재).
 3. **단독 커밋 + 영수증** — `base-commit.txt` 한 파일만 담은 커밋(메시지에 옛→새 sha · 귀속 실측 · 옛 required 24 의 형제 몫).
+
+## 7. 수리 재확인 (470324ce 대상, 분리된 읽기 전용 컨텍스트 — 판정은 Manager 가 전달)
+
+판정: **APPROVE-WITH-FIXES**, P0 없음. P1-1 · P1-2 · P1-3 · P2-1 CLOSED(M2c · M20 · M1b · M3b · M30~M34 · M37 CAUGHT). 새 발견과 처분(대괄호 = Manager 결정):
+
+| 발견 | 내용 | 처분 |
+|---|---|---|
+| P1-N1 | 측정 불가의 조용한 종료가 흔적을 남기지 않음(잠금 · 삼킴 계수 · 모드 · 로그 모두 없음) | [결정 ① 유지 + 잠그지 않는 관측 하나] 감독자 스냅숏 `DailyLossUnmeasurableCycles` · `FirstDailyLossUnmeasurable`(계좌 값 · 원문 오류 없음), 알림은 계좌 일 키마다 한 번(`EventDailyLossUnmeasurable` 경고 줄, `DailyLossNotice`). 주기 ctx 기록자(`withStrategyDailyLossRecorder`) → `dispatchStrategyMarketHandoffs` 가 측정 불가 dispatch 오류를 넘김. 시험: `TestA137AnUnmeasurableDayIsCountedAndAnnouncedOncePerAccountDay`(두 레인 종류, 계수 > 0 · 일 키마다 1 회 · 다음 일 키에 1 회 더) · `TestA137TheProductionNoticeIsOneWarningLine` |
+| P2-N1 | 자본은 daily_loss 단에서만 해석되므로 측정 실패 + 무효 자본이면 자본 입력 불가에 표지가 붙고 상세가 덮임 | [손실을 0 으로 바꿔 다시 돌려 여전히 입력 불가면 표지 없음] `evaluateChainWithDailyLoss` 가 원인 판정(둘째 반환값). 시험 `TestA137AnInvalidEquityWithAMeasurementFailureStaysUnmarked`(표지 없음 · 상세는 자본 원인 — 오늘처럼 결함) |
+| P3-1 | 표지 합성 리터럴의 자리 | AST census `TestA137TheQuietMarkersAreMadeOnlyInTheirOwnFile`(`DailyLossUnmeasurable{` · `DailyLossEntryBlock{` 는 a137_daily_loss.go 에만) |
+| P3-2 | `DailyLossRows` 가 N+1(후보마다 성과 · 조정 점 질의) | `analysis/verify/latency.md` 에 오늘 후보 20 · 200 재측정 추가(후보 하나당 ≈ 14 µs) |
+
+RED: 수리 전 사본(`bd723b7f`)에서 `TestA137AnInvalidEquityWithAMeasurementFailureStaysUnmarked` 행동 FAIL(표지 붙음 · 상세 덮임), 엔진 시험 컴파일 RED
+(`DailyLossNotice` · 스냅숏 칸 미정의) — `analysis/red/red-rereview-*.txt`.

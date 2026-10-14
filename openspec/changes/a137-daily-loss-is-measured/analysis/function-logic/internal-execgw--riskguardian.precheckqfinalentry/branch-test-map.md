@@ -19,5 +19,5 @@
 | B13 | if 147 | 기존 동작 | `go test -tags tossos_testseams ./internal/execgw -run QFinal` | 무편집 분기 |
 | B14 | if 151 | 기존 동작 | `go test -tags tossos_testseams ./internal/execgw -run QFinal` | 무편집 분기 |
 | B15 | if 156 | 기존 동작 | `go test -tags tossos_testseams ./internal/execgw -run QFinal` | 무편집 분기 |
-| B16 | if 168 | a137 편집 | `TestA137ThePrecheckDoorRefusesAMeasuredLossAtTheLimit` · `TestA137ThePrecheckDoorRefusesAnUnmeasurableDayAsTyped` · `TestA137ThePrecheckDoorConvertsAUSLossOnlyWithThePairedAuthority` · `TestA137ThePrecheckDoorReportsNoCapitalAsTheDailyLossLimit` · `TestA137TheAccountDayWindowHoldsThroughTheRealJournalRead` · `TestA137APrecheckMeasurementMustBeThisGuardiansFreshTodaysOne` | 편집 분기 |
+| B16 | if 168 | a137 편집 | `TestA137ThePrecheckDoorRefusesAMeasuredLossAtTheLimit` · `TestA137ThePrecheckDoorRefusesAnUnmeasurableDayAsTyped` · `TestA137ThePrecheckDoorConvertsAUSLossOnlyWithThePairedAuthority` · `TestA137ThePrecheckDoorReportsNoCapitalAsTheDailyLossLimit` · `TestA137TheAccountDayWindowHoldsThroughTheRealJournalRead` · `TestA137APrecheckMeasurementMustBeThisGuardiansFreshTodaysOne` · `TestA137AnInvalidEquityWithAMeasurementFailureStaysUnmarked` | 편집 분기 |
 | B17 | if 171 | 기존 동작 | `go test -tags tossos_testseams ./internal/execgw -run QFinal` | 무편집 분기 |

@@ -174,6 +174,9 @@ const (
 	// EventManualBuyRefreshFailed 는 a136 수동 매수 refresher 의 읽기 한 번이 실패했거나(조회 실패 · 산정 불가) 그 보조 실행자가
 	// 멈춘 줄임. 로그만 — 래치 없음. 실패한 읽기는 보드에 산정 불가로 게시되어 **매수만** 거부되고 매도 · 청산에는 닿지 않음.
 	EventManualBuyRefreshFailed EventType = "engine.manual_buy_refresh_failed"
+	// EventDailyLossUnmeasurable 은 그날의 실현 손실을 잴 수 없어 전략 신규 진입이 매 주기 거절되는 중이라는 줄(a137). 로그만 —
+	// 래치 · 운영 모드 변화 없음, 계좌 일 키마다 한 번. 매도 · 손절 · 청산에는 닿지 않음.
+	EventDailyLossUnmeasurable EventType = "engine.daily_loss_unmeasurable"
 	// EventEngineLoopFailed is a supervised loop that returned for a reason other
 	// than the runtime being cancelled (add-engine-runtime: 방어적 종료 계약).
 	// CRITICAL: the landed loops do not return, so one that did has hit a state
