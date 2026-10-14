@@ -47,7 +47,9 @@ var eligibilitySpellers = map[string]string{
 		"adopted policy identity; lifecycle eligibility was already enforced by the command and journal boundaries",
 	"internal/journal/position_adjustments.go": "the INSERT that folds an external holding in with " +
 		"entry_decision_id NULL",
-	"internal/journal/core_domain.go":    "the DDL",
+	"internal/journal/core_domain.go": "the DDL",
+	"internal/journal/a137_testseam.go": "a137 tossos_testseams-only seam: the INSERT that writes a CLOSED " +
+		"engine-entered position (entry_decision_id set) for cross-package daily-loss tests; never compiled into the product",
 	"internal/journal/provenance.go":     "the lineage query's join path",
 	"internal/journal/trade_outcomes.go": "the freeze's read of which record justifies the position",
 	"internal/journal/trade_outcome_refusal.go": "a130: the outcome freeze's adoption-epoch read joins the adoption record " +
