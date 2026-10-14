@@ -102,7 +102,7 @@ P3 셋 — Manager 가 모두 수용, **GREEN 에서 적용**:
 
 ## 5. FX 조항의 자리 — Manager 조정 요청
 
-**결정됨(Manager, 2026-10-14): 조항은 a136 델타에 둔다.** a136 이 문구를 옮겼다는 전달이 오면 a137 델타의 MODIFIED 블록을 지우고 a136 요구를 인용한다. 그때까지는 둔다.
+**결정됨(Manager, 2026-10-14): 조항은 a136 델타에 둔다.** a136 이 문구를 옮겼다(Manager 전달) — a137 델타의 MODIFIED 블록을 지우고 a136 요구를 인용함(이 커밋).
 
 a136 이 같은 조항을 US 수동 매수 금액에 쓰고 a136 이 먼저 archive 한다. 같은 requirement 를 두 델타가 MODIFIED 하면 뒤에 archive 되는 델타가 앞의 것을 통째로
 덮는다. **권장: 조항을 a136 델타로 옮기고, a137 델타에서는 그 MODIFIED 를 지운다**(a137 은 조항을 인용만). 옮기기 전까지는 a137 델타에 둔다 — 옮김이 정해지면
@@ -110,12 +110,50 @@ a137 쪽 MODIFIED 블록을 지우는 커밋을 하겠다.
 
 ## Function Logic Map / Pre-Edit
 
-- 분기 근거 = `analysis/ast-evidence/`(12 함수, 읽기 전용 증거) · `analysis/function-logic/` 셋(편집 전 좌표): `admit`(편집 대상) · `dispatch`(편집 대상 — 주기 끝내기) · `runMarket`(무편집 근거, P1-3).
-- `riskguardian.go` · `riskguardian_qfinal.go` · `riskguardian_first_leg.go` 의 편집 대상 함수 FLM 은 a136 커밋 뒤 재추출해 쓴다(파일 sha 가 a136 편집으로 바뀜).
-- 새 파일(`internal/dailyloss/*`, 원장 읽기 새 파일, Guardian 측정 새 파일): Function Logic Map: not-applicable — base 에 같은 qualified 함수가 없는 새 leaf.
-- Pre-Edit 선언은 production 편집 직전(tasks 0.8).
+### Pre-Edit Gate (2026-10-14, 구현 팀메이트 Opus)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a137-daily-loss-is-measured / 1.1–1.2
+- 대상 심볼(편집하는 기존 함수 11 — check_analysis 가 base a000cf29 → 워킹트리로 계산한 목록과 같음):
+  execgw.RiskGuardian.IssueEntry · execgw.RiskGuardian.PrecheckQFinalEntry · execgw.EntryGate.ProjectOperatingMode ·
+  execgw.Gateway.ObserveStrategyEntryGate · execgw.Gateway.withStrategyEntryGateAuthority · execgw.Gateway.checkEntry ·
+  execgw.Gateway.submit(펜스 한 줄) · engine.strategyFirstLegAdmissionBridge.admit · engine.deliverEachStrategyHandoff ·
+  시험 fixture execgw_test.qFinalKRRequest · 시험 engine.TestStrategyFirstLegAdmissionUsesGuardianOnlyAllEightLanes.
+  구조체 칸 추가(함수 아님): RejectedError.cause · EntryGate.modeDailyLossDetail · RiskGuardian.dailyLossRows · QFinalEntryIssuance.DailyLoss ·
+  strategyFirstLegGuardian 인터페이스 메서드 둘. 주석: riskcalc.RealizedPnL(TradingDay · AsOf 계약 문장 — Q1).
+  새 파일: internal/dailyloss/measure.go · internal/journal/a137_daily_loss_rows.go · internal/execgw/a137_daily_loss.go(+ 시험 5 파일)
+- CodeGraph definition/callers/callees/impact: analysis/code-context/(codegraph 1.6.0, R1~R9) + design D0 F1~F14
+- CodeGraphContext 후보와 evidence reconciliation: analysis/code-context/{codegraphcontext-context,evidence-reconciliation}.md
+- 기존 동작 파악 근거: HEAD 직접 읽기 + 편집 전 AST(각 번들 ast-base.json, base a000cf29 와 sha 일치 확인) + 기존 시험
+  (escalation_test · riskguardian_qfinal_test · strategy_gateway_account_base_test · a112_scope_refusal_census_test · strategy_first_leg_admission_test)
+- Function Logic Map / Branch Test Map: analysis/function-logic/ 11 번들(편집 뒤 ast.json + 편집 전 ast-base.json). 무편집 근거 둘(dispatch · runMarket)은
+  analysis/ast-evidence/flm-unedited/
+- upstream 상속 테스트 영향: no — 진입 판정에 원장 측정 바닥을 더함. 원장에 오늘 닫힌 관리 포지션이 없는 기존 시험은 측정 0 이라 결과 불변;
+  q_final fixture 는 토큰을 실어야 함(qFinalKRRequest 한 줄), 승인 사건 열 기대값 하나가 바뀜(measure 추가)
+- 실패 테스트 선행 작성: yes — analysis/red/(dailyloss · journal · execgw · engine 컴파일 RED, engine 「조용한 종료」 행동 RED,
+  펜스 운반을 되돌린 사본에서의 행동 RED)
+- 설정·DB·journal 변경과 rollback: 설정 키 0 · 스키마 0 · 원장 쓰기 0(읽기 질의 셋 추가). 강화는 기존 escalateFor 경로.
+  rollback = 이 change 의 커밋 되돌림(데이터 이관 없음)
+- 안전 불변식 §0 위반 여부 검토: 통과 — 위험 축소(IssueReduction · evaluateReduction) · flatten · 손절 · 청산 경로는 측정기를 부르지 않음
+  (TestA137RiskReductionNeverMeasures). 진입을 더 막는 방향만. 게이트 OFF 면 Guardian 이 없어 측정 없음(engine.go:536).
+  precheck 의 원장·브로커 무호출 계약 유지(측정은 승인 함수가 precheck 앞에서, 환산은 봉인 권한 산술뿐). 실 주문 시험 0.
+```
+
+**순서 기록(정직하게).** 편집 전 AST 는 편집 대상 9 함수에 대해 편집 **전에** 뽑았다(IssueEntry · PrecheckQFinalEntry 는 a136 1.5 커밋 de9617ab 뒤
+커밋된 리비전에서). `checkEntry` · `qFinalKRRequest` · `TestStrategyFirstLegAdmissionUsesGuardianOnlyAllEightLanes` 셋은 편집 계획에 늦게 들어와
+편집 **뒤에** HEAD blob 에서 편집 전 AST 를 재구성했다. 이 Pre-Edit 선언 블록은 편집과 RED 뒤, 첫 Go 커밋 **전에** 썼다 — 선언 내용(대상 · 근거 ·
+불변식)은 design D2 · D3 와 freeze 리뷰(§4)에서 편집 전에 고정되어 있었다.
+
+- 새 파일(dailyloss · 원장 읽기 · execgw 측정/표지): Function Logic Map: not-applicable — base 에 같은 qualified 함수가 없는 새 leaf.
 
 ## RED
 
-- `internal/dailyloss/measure_test.go`(빌드 태그 `a137red`, **미커밋** — base 규칙 때문에 첫 Go 커밋을 a136 뒤로 미룸) — 12 시험(리뷰 P1-1 · P1-2 반영), base 에서 컴파일 RED
-  (`analysis/red/red-dailyloss.txt`: `undefined: Closed · Collect …`). 기본 빌드는 그 디렉터리를 건너뛴다(`go list ./...` rc 0).
+| 영수증 | 내용 |
+|---|---|
+| `red-dailyloss.txt` | 측정기 순수 함수 12 시험 — 태그 `a137red` 아래 컴파일 RED(`undefined: Closed · Collect`) |
+| `red-journal-rows.txt` | 원장 읽기 5 시험 — 구현 파일을 치운 상태의 컴파일 RED(`undefined: DailyLossRow`) |
+| `red-execgw.txt` · `red-execgw-testseams.txt` | Guardian · 관문 · 펜스 시험 — 컴파일 RED(`dailyLossRows` · `MeasureDailyLoss` 미정의) |
+| `red-engine.txt` | 엔진 시험 — 컴파일 RED(`execgw.DailyLossMeasurement` 미정의) |
+| `red-engine-behaviour.txt` | freeze 조건 ① `TestA137ADailyLossModeBlockEndsTheCycleQuietly` **행동 FAIL**(전달 루프 편집 전) — 나머지는 오늘 동작 고정이라 PASS |
+| `red-fence-behaviour.txt` | freeze 조건 펜스 시험 — 펜스 운반(`gateway.go` · `strategy_entry_gate_authority.go`)을 HEAD 로 되돌린 사본에서 `TestA137AFenceCausedByTheDailyLossEscalationIsAnAccountBlock` **행동 FAIL**, `TestA137OtherFencesBehaveAsBefore` PASS(오늘 동작) |

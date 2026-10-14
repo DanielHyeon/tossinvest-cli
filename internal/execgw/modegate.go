@@ -52,6 +52,7 @@ func (g *EntryGate) ProjectOperatingMode(rec journal.OperatingModeRecord) {
 	g.modeSeq = rec.Seq
 	_, had := g.latches[ReasonOperatingModeBlocked]
 	if !rec.BlocksEntry() {
+		g.modeDailyLossDetail = ""
 		if had {
 			delete(g.latches, ReasonOperatingModeBlocked)
 			g.revision++
@@ -59,6 +60,11 @@ func (g *EntryGate) ProjectOperatingMode(rec journal.OperatingModeRecord) {
 		return
 	}
 	g.latches[ReasonOperatingModeBlocked] = detail
+	// a137: AUTO · 일일 손실 trigger 의 ENTRY_BLOCKED 만 「계좌 진입 차단」 분류의 후보(사람 전이의 사유 문구가 trigger 철자와 같아도 아님).
+	g.modeDailyLossDetail = ""
+	if rec.Mode == journal.ModeEntryBlocked && rec.Actor == journal.ModeActorAuto && rec.Cause == journal.ModeTriggerDailyLossLimit {
+		g.modeDailyLossDetail = detail
+	}
 	// 상태 세대는 모드 사유의 **존재**가 바뀔 때만 +1(a092 C20 — a124 「실제로 상태가 바뀐 때만」). 설명만 바뀌는 교체는 +0.
 	// 해제 세대(clearEpochs)는 건드리지 않음 — 그것은 그 사유의 Clear 만 바꿈(a124).
 	if !had {

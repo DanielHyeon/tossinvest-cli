@@ -1,0 +1,17 @@
+=== RUN   TestA137AFenceCausedByTheDailyLossEscalationIsAnAccountBlock
+=== RUN   TestA137AFenceCausedByTheDailyLossEscalationIsAnAccountBlock/KR
+    a137_fence_test.go:65: KR state=NOT_DISPATCHED places=0 err=execgw: rejected (operating_mode_blocked): ENTRY_BLOCKED (AUTO): DAILY_LOSS_LIMIT_REACHED — want a not-dispatched account block
+=== RUN   TestA137AFenceCausedByTheDailyLossEscalationIsAnAccountBlock/US
+    a137_fence_test.go:65: US state=NOT_DISPATCHED places=0 err=execgw: rejected (operating_mode_blocked): ENTRY_BLOCKED (AUTO): DAILY_LOSS_LIMIT_REACHED — want a not-dispatched account block
+--- FAIL: TestA137AFenceCausedByTheDailyLossEscalationIsAnAccountBlock (0.58s)
+    --- FAIL: TestA137AFenceCausedByTheDailyLossEscalationIsAnAccountBlock/KR (0.28s)
+    --- FAIL: TestA137AFenceCausedByTheDailyLossEscalationIsAnAccountBlock/US (0.30s)
+=== RUN   TestA137OtherFencesBehaveAsBefore
+=== RUN   TestA137OtherFencesBehaveAsBefore/reconcile
+=== RUN   TestA137OtherFencesBehaveAsBefore/operator_entry_block
+--- PASS: TestA137OtherFencesBehaveAsBefore (0.59s)
+    --- PASS: TestA137OtherFencesBehaveAsBefore/reconcile (0.30s)
+    --- PASS: TestA137OtherFencesBehaveAsBefore/operator_entry_block (0.29s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	1.172s
+FAIL

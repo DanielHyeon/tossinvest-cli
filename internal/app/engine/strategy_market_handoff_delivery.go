@@ -71,6 +71,12 @@ func deliverEachStrategyHandoff(handoffs []strategyhandoff.Handoff, body func(st
 			skipped = append(skipped, err)
 			continue
 		}
+		// a137: 일일 손실 한도로 계좌의 신규 진입이 막혔음(타입으로 — execgw.DailyLossEntryBlock). 레인 결함이 아니므로 주기를 오류 없이
+		// 끝내고 뒤 범위는 전달하지 않음(어차피 같은 차단). 앞서 건너뛴 범위 거절의 보고는 그대로 — 있으면 지금처럼 주기의 오류(J4).
+		var blocked *execgw.DailyLossEntryBlock
+		if errors.As(err, &blocked) {
+			return errors.Join(skipped...)
+		}
 		// 멈추는 오류 앞에서 건너뛴 범위 거절도 잃지 않음(J4 ③ — 각각 기록). 건너뛴 것이 없으면 값을 감싸지 않음(분류 보존).
 		if len(skipped) == 0 {
 			return err

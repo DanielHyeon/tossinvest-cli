@@ -249,6 +249,8 @@ type RiskGuardian struct {
 	newID         func() string
 	observer      EntryObserver
 	manualBuys    *ManualBuyBoard
+	// dailyLossRows 는 일일 손실 측정의 원장 읽기 자리(a137). nil 이면 journal.DailyLossRows — 시험만 바꿈.
+	dailyLossRows func(context.Context, string, time.Time, time.Time) ([]journal.DailyLossRow, error)
 }
 
 // NewRiskGuardian validates the configuration and derives the limit snapshot.
@@ -426,16 +428,20 @@ func (g *RiskGuardian) IssueEntry(ctx context.Context, req EntryIssuance) (Issue
 			string(intent.Side))
 	}
 
+	// a137: 원장에서 잰 그날의 손실을 바닥으로 씀 — 이 문은 FX 권한이 없어 다른 통화 손실이 있으면 측정 불가(진입 거절).
+	measurement := g.MeasureDailyLoss(ctx)
+	now := g.clk.Now().UTC()
+	account, measureErr := g.dailyLossFloor(req.Account, measurement, now, nil)
 	in := risk.Input{
-		Now:     g.clk.Now().UTC(),
+		Now:     now,
 		Intent:  intent,
-		Account: req.Account,
+		Account: account,
 		Policy:  g.policy,
 		Costs:   g.costs,
 	}
 	// The chain, once. Everything after this point is the ledger's answer, not a
 	// second judgement of the intent.
-	if verdict := evaluateChain(in); !verdict.Allowed {
+	if verdict := evaluateChainWithDailyLoss(in, measureErr); !verdict.Allowed {
 		// The refusal population's first persistence. It has no decision and no
 		// preimage, so this is the only record that will ever exist of it —
 		// design D6's asymmetry, and why a lost refusal is counted under its own

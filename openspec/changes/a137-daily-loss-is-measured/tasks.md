@@ -15,13 +15,13 @@ Story: `STORY-TOS-a137` · **High-risk**(Guardian · 위험 입력) — FLM/BTM 
 - [x] 0.6 proposal-freeze 리뷰(4보이스) → review.md §4: APPROVE-WITH-FIXES(P1×5 · P2×6 · P3×4), 전부 문서 · RED 에 반영
 - [x] 0.6.1 P1 다섯 닫힘의 독립 재확인 — **BLOCKED**(P1-3 미닫힘 + 새 (b) · (a) · (c) · P2 셋) → 문서 · RED 수리 반영(review.md §4.1)
 - [x] 0.6.2 §4.1 수리의 재확인 — **FREEZE-OK**(review.md §4.2). 조건: P1-3 RED 다섯을 GREEN 전에 실패 관찰. P3 셋은 GREEN 에서 적용
-- [ ] 0.7 FLM/BTM — 완료(편집 전 좌표): `admit` · `dispatch` · `runMarket`(무편집 근거, P1-3 — 먼저 작성). a136 커밋 뒤: `RiskGuardian.PrecheckQFinalEntry` ·
+- [x] 0.7 FLM/BTM — 편집 함수 11 번들(편집 전 ast-base.json + 편집 뒤 ast.json, check_analysis 계산 목록과 일치) · 무편집 근거 dispatch · runMarket 은 `analysis/ast-evidence/flm-unedited/`. 이전 기록: 완료(편집 전 좌표): `admit` · `dispatch` · `runMarket`(무편집 근거, P1-3 — 먼저 작성). a136 커밋 뒤: `RiskGuardian.PrecheckQFinalEntry` ·
       `RiskGuardian.IssueEntry` · 전달 루프(`deliverEachStrategyHandoff` · `dispatchStrategyMarketHandoffs`) · 첫 다리 조립(토큰 · 짝 FX 운반 지점)
-- [ ] 0.8 a136 공유 파일 커밋 확인(`git log -1 -- <file>` · `git diff`) → `capture_change_base.py` 로 base 고정 → Pre-Edit 선언(review.md)
+- [x] 0.8 a136 공유 파일 커밋 확인(c8783ad9 · de9617ab · 3685583d · a000cf29) → base = `a000cf29`(이 change 첫 Go 커밋의 부모) → Pre-Edit(review.md). 원문: a136 공유 파일 커밋 확인(`git log -1 -- <file>` · `git diff`) → `capture_change_base.py` 로 base 고정 → Pre-Edit 선언(review.md)
 
 ## 1. 구현 (RED → GREEN → REFACTOR)
 
-- [ ] 1.1 RED — 완료분: 측정기 순수 함수 12 시험(`internal/dailyloss/measure_test.go`, 태그 `a137red`, `analysis/red/red-dailyloss.txt` — **미커밋**:
+- [x] 1.1 RED — `analysis/red/` 8 영수증(컴파일 RED 5 · 행동 RED 2 — freeze 조건 ① · 펜스). 완료분: 측정기 순수 함수 12 시험(`internal/dailyloss/measure_test.go`, 태그 `a137red`, `analysis/red/red-dailyloss.txt` — **미커밋**:
       손실만 · 계좌 일 키 귀속 · 늦은 기록 · 조정 종결 제외 · 엔진 SELL 섞인 조정 종결 측정 불가 · 성과 부재 · 해석 불가 · 환산 · 0 일).
       **freeze 조건(§4.2) — GREEN 전에 실패 관찰 필수**: `TestA137ADailyLossModeBlockEndsTheCycleQuietly` · `TestA137OtherModeBlocksBehaveAsBefore`(기동 복원 실패 포함) ·
       `TestA137AMixedCycleStillReportsItsSkippedScopes` · `TestA137AFenceCausedByTheDailyLossEscalationIsAnAccountBlock` · `TestA137OtherFencesBehaveAsBefore`.
@@ -31,7 +31,7 @@ Story: `STORY-TOS-a137` · **High-risk**(Guardian · 위험 입력) — FLM/BTM 
       trigger 일일 손실 모드 차단만 조용 · 다른 trigger · 기동 복원 실패 · 다른 관문은 오늘과 같음(양방향) · 강화 경합 펜스 · 혼합 주기(건너뛴 범위 보고 유지) ·
       보호 주문 CREATE/REPLACE 가 있던 조정 종결 측정 불가 · 형식 결함 `closed_at` 행이 사전 필터를 지나도 측정 불가 ·
       짝 FX 검증 · US 환산 올림 · 체인 없는 `Issuer.IssueEntry` 생산 호출자 0 고정
-- [ ] 1.2 GREEN — P3 셋 적용(§4.2: 조용한 경로 = trigger 일일 손실 AND Actor AUTO · 형식 결함 = 정규 RFC3339 UTC `Z` 아님 · 보호 필터 = 수명과 겹침) · `internal/dailyloss`(Collect · Total) · 원장 읽기 새 파일 · Guardian `MeasureDailyLoss` · 강화 입구 새 파일 · precheck/IssueEntry 바닥 적용 ·
+- [x] 1.2 GREEN — 대상 시험 통과(`go test` execgw · dailyloss · risk · riskcalc · clock rc 0, `-tags tossos_testseams` execgw rc 0, engine a137 rc 0). P3 셋 적용(§4.2: 조용한 경로 = trigger 일일 손실 AND Actor AUTO · 형식 결함 = 정규 RFC3339 UTC `Z` 아님 · 보호 필터 = 수명과 겹침) · `internal/dailyloss`(Collect · Total) · 원장 읽기 새 파일 · Guardian `MeasureDailyLoss` · 강화 입구 새 파일 · precheck/IssueEntry 바닥 적용 ·
       첫 다리 분류 · riskcalc `RealizedPnL.AsOf` 주석 정정 · 일 키는 a136 공유 함수 호출
 - [ ] 1.3 REFACTOR · 편집 뒤 AST 재추출 · `check_analysis.py --change`
 

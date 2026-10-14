@@ -123,8 +123,7 @@ codegraph 1.6.0(`analysis/code-context/raw/`)이다. 「정정」 행은 두 번
 - 빈도(재확인 P2 로 정정): US 정규장 손실은 대개 KST 08:00 **전**에 원장에 반영되어 전 일 키에 속하므로 보통 KR 진입은 USD 환산을 요구하지 않는다. 그러나
   US 손실이 KST 08:00 **뒤**에 반영되면(05:00~09:00 배포 · 재시작 창에서 체결 감지가 늦게 따라잡는 경우, 또는 US 확장 시간대 청산) 그 손실은 오늘 일 키에 들어가고,
   KR 정규장 동안 US 권한은 봉인되지 않으므로 **그날 KR 진입 전부가 fail-closed** 된다(거부 목록 (e)). 사용자가 fail-closed 를 골랐으므로 동작은 유지한다(관찰, 측정 아님).
-- **조항의 자리**: a136 이 같은 조항을 US 수동 매수 금액에 쓰고 a136 이 먼저 archive 한다. 같은 requirement 를 두 델타가 MODIFIED 하면 뒤의 archive 가 앞을
-  덮으므로 조항은 **a136 델타 하나**에 두는 것이 맞다(Manager 조정 요청 — review.md §5). 옮겨지기 전까지는 이 델타에 둔다.
+- **조항의 자리(결정됨)**: 조항은 a136 델타의 risk-management MODIFIED 「KR과 US는 하나의 account-base Guardian 권위를 공유한다」에 있다(a137 문구 + 수동 매수 시나리오 하나). a137 델타는 그 MODIFIED 를 두지 않고 인용만 한다 — 같은 요구를 두 델타가 MODIFIED 하면 뒤의 archive 가 앞을 덮는다. 구현은 a136 의 `PairedFXAuthority` · `qFinalManualBuyFX` 를 그대로 재사용한다.
 
 ## Fail-closed 가 거부하는 정상 입력 (진입만, P2-5)
 

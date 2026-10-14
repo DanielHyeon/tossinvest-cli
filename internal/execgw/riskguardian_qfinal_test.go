@@ -345,6 +345,8 @@ func qFinalKRRequest(t *testing.T, rig *guardianRig, suffix string, candidate ui
 		ExpectedPolicyVersion: rig.guardian.PolicyVersion(), ExpectedLimitsDigest: rig.guardian.LimitsDigest(),
 	}
 	request.SetFXAuthorityForTest(policy.FX)
+	// a137: precheck 는 이 Guardian 이 잰 일일 손실 토큰을 요구함(없으면 daily_loss 단 거절) — 생산의 첫 다리 승인과 같은 자리.
+	request.DailyLoss = rig.guardian.MeasureDailyLoss(context.Background())
 	return request
 }
 

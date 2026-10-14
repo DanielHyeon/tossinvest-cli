@@ -711,8 +711,7 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 		if plan.strategy != nil && !g.skipStrategyEntryABAForTest {
 			if err := g.withStrategyEntryGateAuthority(dctx, plan.strategy.entryGateAuthority,
 				plan.market, plan.symbol, call); err != nil {
-				return notSent(reject(ReasonStrategyDispatchFenced,
-					"strategy final authority changed before transport: %v", err))
+				return notSent(strategyFenceRejection(err))
 			}
 		} else {
 			if err := call(); err != nil {
@@ -852,7 +851,12 @@ func (g *Gateway) checkEntry(plan mutationPlan) *RejectedError {
 	if g.entry == nil || !plan.raisesExposure {
 		return nil
 	}
-	return g.entry.CheckEntryFor(plan.market, plan.symbol)
+	rejected := g.entry.CheckEntryFor(plan.market, plan.symbol)
+	if plan.strategy != nil {
+		// a137: 전략 진입만 — AUTO 일일 손실 모드만 남은 차단이면 계좌 진입 차단 표지를 닮(문구 · 사유는 그대로).
+		return g.entry.markStrategyRefusal(rejected, plan.market, plan.symbol)
+	}
+	return rejected
 }
 
 // checkReservation is the gateway's half of "예약이 총계 한도의 권위" (task 5.1,

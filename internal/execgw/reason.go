@@ -278,6 +278,8 @@ const (
 type RejectedError struct {
 	Reason ReasonCode
 	Detail string
+	// cause 는 a137 의 계좌 진입 차단 표지(*DailyLossEntryBlock)만 실음 — 그 밖의 거절은 언제나 nil(오늘과 같음).
+	cause error
 }
 
 func (e *RejectedError) Error() string {

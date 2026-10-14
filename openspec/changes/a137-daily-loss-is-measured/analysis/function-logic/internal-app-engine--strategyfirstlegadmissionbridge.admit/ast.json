@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_first_leg_admission.go",
-  "source_sha256": "254b4a6abb0d95febd036b0f437829c391e61000fa71b9b9abac1241ee14444c",
+  "source_sha256": "fd50f34c7a6915cff57cc69838077319261b6e5908da8243a7180f5a0c10fc67",
   "package": "engine",
   "function": "admit",
   "receiver": "strategyFirstLegAdmissionBridge",
   "signature": "strategyFirstLegAdmissionBridge.admit(params=2, results=1)",
   "start": {
-    "line": 74,
+    "line": 80,
     "column": 1
   },
   "end": {
-    "line": 110,
+    "line": 128,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 76,
+        "line": 82,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 79,
+        "line": 85,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 83,
+        "line": 89,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 88,
+        "line": 94,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 92,
+        "line": 100,
         "column": 2
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 98,
+        "line": 103,
         "column": 3
       }
     },
@@ -66,15 +66,23 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 99,
-        "column": 4
+        "line": 116,
+        "column": 3
       }
     },
     {
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 106,
+        "line": 117,
+        "column": 4
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 124,
         "column": 2
       }
     }
@@ -83,14 +91,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 77,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 80,
+        "line": 83,
         "column": 3
       }
     },
@@ -104,14 +105,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 89,
+        "line": 92,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 103,
+        "line": 95,
         "column": 3
       }
     },
@@ -119,13 +120,27 @@
       "kind": "return",
       "at": {
         "line": 107,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 121,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 109,
+        "line": 125,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 127,
         "column": 2
       }
     }
@@ -134,7 +149,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 75,
+        "line": 81,
         "column": 23
       },
       "text": "validateStrategyFirstLegResult"
@@ -142,7 +157,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 80,
+        "line": 86,
         "column": 10
       },
       "text": "strategyFirstLegRefusal"
@@ -150,7 +165,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 82,
+        "line": 88,
         "column": 20
       },
       "text": "b.loader.collectStrategyFirstLegAuthority"
@@ -158,7 +173,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 84,
+        "line": 90,
         "column": 14
       },
       "text": "strategyFirstLegRefusal"
@@ -166,7 +181,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 84,
+        "line": 90,
         "column": 98
       },
       "text": "err.Error"
@@ -174,7 +189,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 88,
+        "line": 94,
         "column": 12
       },
       "text": "validateStrategyFirstLegAuthority"
@@ -182,7 +197,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 89,
+        "line": 95,
         "column": 10
       },
       "text": "strategyFirstLegRefusal"
@@ -190,7 +205,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 89,
+        "line": 95,
         "column": 86
       },
       "text": "err.Error"
@@ -198,7 +213,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 91,
+        "line": 98,
+        "column": 30
+      },
+      "text": "b.guardian.MeasureDailyLoss"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
         "column": 19
       },
       "text": "b.guardian.PrecheckQFinalCampaignFirstLeg"
@@ -206,7 +229,54 @@
     {
       "kind": "call",
       "at": {
-        "line": 93,
+        "line": 103,
+        "column": 15
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 44
+      },
+      "text": "errors.As"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 20
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 15
+      },
+      "text": "strategyFirstLegRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 88
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 20
+      },
+      "text": "b.guardian.EscalateDailyLossLimit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
         "column": 14
       },
       "text": "strategyFirstLegRefusal"
@@ -214,7 +284,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 93,
+        "line": 109,
         "column": 90
       },
       "text": "err.Error"
@@ -222,14 +292,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 98,
+        "line": 116,
         "column": 16
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 98,
+        "line": 116,
         "column": 46
       },
       "text": "errors.As"
@@ -237,7 +307,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 99,
+        "line": 117,
         "column": 21
       },
       "text": "strategyOwnerKeyOf"
@@ -245,7 +315,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 105,
+        "line": 123,
         "column": 18
       },
       "text": "b.guardian.IssuePrecheckedQFinalCampaignFirstLeg"
@@ -253,7 +323,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 107,
+        "line": 125,
         "column": 10
       },
       "text": "strategyFirstLegRefusal"
@@ -261,7 +331,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 107,
+        "line": 125,
         "column": 90
       },
       "text": "err.Error"
@@ -269,7 +339,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 109,
+        "line": 127,
         "column": 81
       },
       "text": "string"
@@ -279,77 +349,112 @@
     {
       "kind": ":=",
       "at": {
-        "line": 75,
+        "line": 81,
         "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 82,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 84,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 85,
-        "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
         "line": 88,
-        "column": 5
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 91,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 93,
+        "line": 90,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 91,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
+        "line": 94,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
         "line": 98,
-        "column": 6
+        "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
         "line": 99,
-        "column": 7
+        "column": 2
       }
     },
     {
-      "kind": "=",
+      "kind": ":=",
       "at": {
-        "line": 100,
-        "column": 5
+        "line": 103,
+        "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
         "line": 105,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 106,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 109,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 111,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 116,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 117,
+        "column": 7
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 118,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 123,
         "column": 2
       }
     }

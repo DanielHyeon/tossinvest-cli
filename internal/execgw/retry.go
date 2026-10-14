@@ -489,6 +489,9 @@ type EntryGate struct {
 	clearEpochs map[ReasonCode]uint64
 	// modeSeq 는 마지막으로 적용한 운영 모드 투영의 커밋 순번(journal rowid)임(a092 C5 울타리). 0 에서 시작, g.mu 아래에서만.
 	modeSeq int64
+	// modeDailyLossDetail 은 AUTO · 일일 손실 trigger 의 ENTRY_BLOCKED 투영이 쓴 모드 latch 문구(a137). 그 밖의 투영은 "" 로 지움.
+	// 계좌 진입 차단 분류는 latch 문구가 이 값과 같을 때만 참 — 기동 복원 실패(Block)가 쓴 문구는 같을 수 없음. g.mu 아래에서만.
+	modeDailyLossDetail string
 }
 
 // SetAuthorityRefresh binds the durable RECONCILE recheck used by the sealed

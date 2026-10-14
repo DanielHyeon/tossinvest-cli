@@ -61,7 +61,7 @@ Guardian 판정 체인의 `daily_loss` 단(`risk.checkDailyLoss`)은 있지만, 
 
 ## Impact
 
-- Affected specs: `risk-management` — 요구 1개 추가(「일일 손실 한도의 입력은 원장에서 측정된다」) · 1개 수정(「KR과 US는 하나의 account-base Guardian 권위를 공유한다」에 환산 조항 — a136 델타로 옮김 권장, review.md §5). `trade-analytics` — 1개 수정(「분석 경로의 격리」: 성과 행 = Guardian 입력).
+- Affected specs: `risk-management` — 요구 1개 추가(「일일 손실 한도의 입력은 원장에서 측정된다」). FX 환산 조항은 같은 요구를 a136 델타가 MODIFIED 로 소유한다(사용자 승인 원문 그대로 — a136 이 먼저 archive). `trade-analytics` — 1개 수정(「분석 경로의 격리」: 성과 행 = Guardian 입력).
 - Affected code(예정): `internal/execgw/riskguardian.go`(`IssueEntry`) · `riskguardian_qfinal.go`(`PrecheckQFinalEntry` · `QFinalEntryIssuance`) ·
   `strategy_first_leg_admission.go`(`admit`) · `strategy_dispatch_cycle.go`(`dispatch`) · 전달 루프 · 첫 다리 조립(토큰 · 짝 FX 운반) ·
   새 파일(`internal/dailyloss` · 원장 읽기 · Guardian 측정/강화 입구) · riskcalc 주석.
