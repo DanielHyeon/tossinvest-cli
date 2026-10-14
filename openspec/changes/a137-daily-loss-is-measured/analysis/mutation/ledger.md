@@ -1,6 +1,6 @@
 # a137 변이 원장
 
-- 사본: 연결 워크트리 `4fc5d4a4` (시작 sha 단언 · 깨끗함 확인 · 무변이 대조군 28 시험 GREEN)
+- 사본: 연결 워크트리 `3d48c22b` (시작 sha 단언 · 깨끗함 확인 · 무변이 대조군 37 시험 GREEN)
 
 | 변이 | 파일 | 시험 | 결과 |
 |---|---|---|---|
@@ -32,5 +32,16 @@
 | M26 원장 NOT_DISPATCHED 포함 | `internal/journal/a137_daily_loss_rows.go` | `TestA137AnOverlappingDispatchedEngineSellIsSeen` | CAUGHT |
 | M27 원장 조정 종결 decimal 0 → 문자 비교 | `internal/journal/a137_daily_loss_rows.go` | `TestA137AnAdjustmentToDecimalZeroIsAnAdjustmentClose` | CAUGHT |
 | M28 환산 권한 없이 1:1 | `internal/execgw/a137_daily_loss.go` | `TestA137AForeignLossConvertsOnlyThroughThePairedAuthority` | CAUGHT |
+| M2c 살아 있는 문 바닥 미적용 | `internal/execgw/riskguardian_qfinal.go` | `TestA137ThePrecheckDoorRefusesAMeasuredLossAtTheLimit` | CAUGHT |
+| M1b 창 롤오버 삭제 | `internal/execgw/a137_daily_loss.go` | `TestA137TheAccountDayWindowHoldsThroughTheRealJournalRead` | CAUGHT |
+| M1c 읽기 여유 음수 | `internal/execgw/a137_daily_loss.go` | `TestA137TheAccountDayWindowHoldsThroughTheRealJournalRead` | CAUGHT |
+| M3b 펜스 단일 latch 무시 | `internal/execgw/a137_daily_loss.go` | `TestA137TheFinalGateFenceMarksOnlyTheDailyLossChange` | CAUGHT |
+| M29 살아 있는 문 FX 없음 | `internal/execgw/riskguardian_qfinal.go` | `TestA137ThePrecheckDoorConvertsAUSLossOnlyWithThePairedAuthority` | CAUGHT |
+| M30 측정 불가 표지 미부착 | `internal/execgw/a137_daily_loss.go` | `TestA137ThePrecheckDoorRefusesAnUnmeasurableDayAsTyped` | CAUGHT |
+| M31 루프가 측정 불가를 결함으로 | `internal/app/engine/strategy_market_handoff_delivery.go` | `TestA137TheDailyLossStopsNeverLatchOrSwallowOnEitherLaneKind` | CAUGHT |
+| M32 승인의 측정 불가 갈래 삭제 | `internal/app/engine/strategy_first_leg_admission.go` | `TestA137AnUnmeasurableDayIsAPolicyOutcomeNotALaneFault` | CAUGHT |
+| M33 승인이 토큰을 버림 | `internal/app/engine/strategy_first_leg_admission.go` | `TestA137AdmissionCarriesTheMeasuredTokenIntoThePrecheck` | CAUGHT |
 
-1회차(`a1cfe0c2`): 26 CAUGHT · M16 NOT-REACHED(변이 문자열 2회 — 하네스 수정) · **M20 SURVIVED**(관측 경로는 latchOrder 가 우연히 지킴 — 단일 latch 규칙 시험 2 추가, `4fc5d4a4`). 2회차(`4fc5d4a4`): 28/28 CAUGHT.
+이력: 1회차 `a1cfe0c2` 26 CAUGHT · M16 NOT-REACHED · **M20 SURVIVED**(→ `4fc5d4a4` 단일 latch 시험). 2회차 `4fc5d4a4` 28/28.
+3회차 `c83241ff`(구현 리뷰 수리 + 리뷰 변이 M1b · M1c · M2c · M3b · M29~M33): 35 CAUGHT · M15 · M17 NOT-REACHED(수리로 대상 줄이 바뀜 — 문자열 갱신).
+4회차 `3d48c22b`: **37/37 CAUGHT**. 리뷰어가 동등(관측 불가)으로 판정한 M6 · M10 · M27b 는 리뷰 기록대로 동등으로 둠(review.md §6).
