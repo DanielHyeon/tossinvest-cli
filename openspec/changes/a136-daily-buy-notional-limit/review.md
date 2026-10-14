@@ -66,10 +66,79 @@ Pre-Edit Gate:
 - 잔재(기록, Manager 판단):
   - P2-4 쓰기 잠금 안 Z3 후보 질의의 `mutation_attempts.target_order_id` 무색인 스캔 · 30초마다 `EngineBrokerOrderIDs` 전체 스캔 — 시간 `[미측정]`. 색인 추가는 스키마 변경이라 이 change 에서
     하지 않음. 후보는 「오늘 발급 · RELEASED · BROKER_TERMINAL · CONFIRMED PLACE」 행에만 돔.
-  - P3-2 FX 검증이 precheck 가 아니라 발급 시점(design D9 구현 기록) — 조항 문구와 위치 차이.
+  - P3-2 FX 검증이 precheck 가 아니라 발급 시점(design D9 구현 기록) — 조항 문구와 위치 차이. **Manager 수용(2026-10-14): 발급 시점 검증은 더 늦고 더 엄격하므로 잔재로 받아들임.**
   - P3-4 발급일 ≠ 커밋일 거부가 LIMIT_REACHED 로 관측되어 실제 한도 도달과 sub-reason 이 같음(detail 은 다름).
 - 변이: `analysis/mutation/round5.log` · `round5-m37.log` · `round5-console.log` — 새 변이 M33~M40 전부 CAUGHT(M37 은 컴파일되는 형태로 재측정).
 - 착지 주의: a137 이 a136 착지 뒤 `riskguardian.go` · `riskguardian_qfinal.go` · `riskguardian_qfinal_test.go` · `strategy_entry_gate_authority.go` 를 고쳤다
   (a1cfe0c2). a136 번들은 그 파일들을 **a136 의 마지막 Go 커밋 시점 소스**로 고정해 두었으므로(재추출하지 않음), 게이트는 a136 착지 기록
   (`--record-landing`)이나 사람 승인 base 재고정이 필요함 — Manager 절차.
 
+## 사람 승인 base 재고정 (2026-10-14)
+
+- 승인: **Manager, 2026-10-14**(docs/WORKFLOW.md 「사람 승인 base 재고정」 2 — Manager 승인으로 충분).
+- 옛 base `f504cc52` → 새 base `6cd36e6d2f70`(a136 의 844a042c 직전 a137 마지막 커밋). 커밋 `1539c675`(base-commit.txt 단독, 영수증 포함).
+- 귀속 실측(Manager, 옛 base 에서): required **68** · missing **10** — 빠진 10 은 전부 a137 형제 착지 몫(a1cfe0c2 가 고친 riskguardian.go · riskguardian_qfinal.go ·
+  riskguardian_qfinal_test.go · strategy_entry_gate_authority.go 의 함수). 옛 base..새 base 사이 a136 자기 Go 커밋 5(82edde52 · c8783ad9 · de9617ab · 3685583d ·
+  a000cf29)가 고친 기존 함수는 전부 fresh 번들로 덮여 있음.
+- 새 base 에서의 수리: 844a042c 가 고친 함수 11(생산 5: recordDailyBuySave · manualBuyRefresh.collect · Journal.EngineBrokerOrderIDs · Summarize · valueOf,
+  시험 6)에 번들을 만듦(편집 전 AST = 새 base 6cd36e6d). 이웃 편집만 받은 셋(Summarize · 시험 둘)은 검사기 규칙대로 `revision: base`. a137 이 고친 파일의
+  번들 다섯은 현재 소스로 재추출(모양 비교: 넷은 분기 · 반환 · 호출 동일, IssueEntry 는 a137 의 일일 손실 측정 호출이 늘었고 a136 편집 지점은 무변경).
+- `python3 tools/logic-map/check_analysis.py --change a136-daily-buy-notional-limit` → **rc 0**(「evidence complete or diff-proven exempt」, required 13).
+
+## 없는 시험을 인용했던 기록 (정정)
+
+`RiskGuardian.IssueEntry` · `IssuePrecheckedQFinalEntry` · `IssuePrecheckedQFinalCampaignFirstLeg` 번들의 BTM 이 `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` 을
+인용했는데 **그 시험은 어디에도 없었다**(`git log -S` 빈 결과). 번들을 쓰던 때 계획한 이름을 적고 실제 시험은 문별 이름으로 만들었으며, 검사기의
+「tracked file 에 없는 시험」 경고를 「커밋하면 풀린다」고 보고 걸러 냈다 — 그 경고 하나는 커밋으로 풀릴 수 없는 것이었다. 인용을 실제 시험으로 바꿈:
+`TestA136IssueEntryRefusesTheBuyThatReachesTheDailyCeiling` · `TestA136QFinalEntryRefusesTheBuyThatReachesTheDailyCeiling` · `TestA136QFinalCampaignFirstLegRefusesTheBuyThatReachesTheDailyCeiling`
+(tossos_testseams). 세 시험이 문을 실제로 묶는다는 증거는 변이 M11(문이 다른 상한을 싣게 함) CAUGHT — 세 시험 모두 실패(round4.log).
+
+## P1-3 재대조 — FLM 전에 편집된 4 함수 (base 리비전 FLM/BTM 대 편집 뒤 AST)
+
+`ast-base.json`(base f504cc52 트리 `git archive` 에서 추출) 과 `ast.json`(현재) 의 분기 목록을 순서 정렬(difflib)로 맞추고 조건은 소스 줄 그대로 비교함.
+기존 분기는 전부 조건 문자열이 같고, 바뀐 분기는 0, 새 분기는 `reserveRows` 의 B4(`checkDailyBuyNotional`) 하나 — 그 함수의 BTM 은 편집 전 → 뒤 번호 대응과
+B4 「a136 신규」 를 적고 있음.
+
+#### `reserveRows` (internal/journal/reservations.go) — base 분기 6 → 편집 뒤 7
+
+| base | 편집 뒤 | 조건(소스 줄) | 판정 |
+|---|---|---|---|
+| B1 | B1 | `if err := checkDecisionReservable(ctx, tx, plan, now); err != nil {` | 같음(조건 문자열 동일) |
+| B2 | B2 | `if err != nil {` | 같음(조건 문자열 동일) |
+| B3 | B3 | `if err := plan.checkLimits(held); err != nil {` | 같음(조건 문자열 동일) |
+| — | B4 | `if err := checkDailyBuyNotional(ctx, tx, req, plan, now); err != nil {` | **a136 신규** |
+| B4 | B5 | `for _, row := range plan.rows {` | 같음(조건 문자열 동일) |
+| B5 | B6 | `if _, err := tx.ExecContext(ctx,` | 같음(조건 문자열 동일) |
+| B6 | B7 | `if err != nil {` | 같음(조건 문자열 동일) |
+
+#### `DefaultPolicy` (internal/risk/input.go) — base 분기 0 → 편집 뒤 0
+
+| base | 편집 뒤 | 조건(소스 줄) | 판정 |
+|---|---|---|---|
+| — | — | 직선 함수(분기 0) | 분기 없음 — 편집은 필드 대입 |
+
+#### `Validate` (internal/risk/input.go) — base 분기 11 → 편집 뒤 11
+
+| base | 편집 뒤 | 조건(소스 줄) | 판정 |
+|---|---|---|---|
+| B1 | B1 | `if err != nil {` | 같음(조건 문자열 동일) |
+| B2 | B2 | `for _, m := range []struct {` | 같음(조건 문자열 동일) |
+| B3 | B3 | `if _, err := requirePositiveMoney(m.label, m.value, currency); err != nil {` | 같음(조건 문자열 동일) |
+| B4 | B4 | `if err != nil {` | 같음(조건 문자열 동일) |
+| B5 | B5 | `if quantity.Sign() <= 0 {` | 같음(조건 문자열 동일) |
+| B6 | B6 | `if err != nil {` | 같음(조건 문자열 동일) |
+| B7 | B7 | `if ratio.Sign() <= 0 || ratio.Cmp(big.NewRat(1, 1)) > 0 {` | 같음(조건 문자열 동일) |
+| B8 | B8 | `if err != nil {` | 같음(조건 문자열 동일) |
+| B9 | B9 | `if minRR.Sign() <= 0 {` | 같음(조건 문자열 동일) |
+| B10 | B10 | `if p.Reentry.MaxEntriesPerSymbol < 1 {` | 같음(조건 문자열 동일) |
+| B11 | B11 | `if p.Reentry.Cooldown < 0 {` | 같음(조건 문자열 동일) |
+
+#### `mergeEngine` (internal/config/engine.go) — base 분기 5 → 편집 뒤 5
+
+| base | 편집 뒤 | 조건(소스 줄) | 판정 |
+|---|---|---|---|
+| B1 | B1 | `if raw == nil {` | 같음(조건 문자열 동일) |
+| B2 | B2 | `if raw.Autostart != nil {` | 같음(조건 문자열 동일) |
+| B3 | B3 | `if raw.ExitPolicy != nil {` | 같음(조건 문자열 동일) |
+| B4 | B4 | `if raw.AutomationGate == nil {` | 같음(조건 문자열 동일) |
+| B5 | B5 | `if gate.Enabled != nil {` | 같음(조건 문자열 동일) |

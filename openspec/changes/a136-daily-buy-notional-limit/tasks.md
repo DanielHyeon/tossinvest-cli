@@ -52,3 +52,10 @@ Story: `STORY-TOS-a136` · **High-risk**(Guardian 발급 · 예약 트랜잭션 
 
 - [ ] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a136-daily-buy-notional-limit` + 독립 검증
 - 배포(체크박스 아님): 엔진 이미지 교체는 사람이 KST 05:00~09:00 창에서. 실계좌 한도 값 변경 · 토글 flip 은 사람이 직접.
+
+## 사람 승인 base 재고정 (2026-10-14)
+
+- 승인: Manager(2026-10-14). 옛 base `f504cc52` → 새 base `6cd36e6d2f70` — 커밋 `1539c675`(base-commit.txt 단독).
+- 귀속 실측: 옛 base 에서 required 68 · missing 10 = 전부 a137 형제 착지 몫(a1cfe0c2). 옛 base..새 base 의 a136 자기 Go 커밋 5 가 고친 기존 함수는 전부 fresh 번들로 덮임.
+- 새 base 에서 `check_analysis.py --change` rc 0(review.md).
+

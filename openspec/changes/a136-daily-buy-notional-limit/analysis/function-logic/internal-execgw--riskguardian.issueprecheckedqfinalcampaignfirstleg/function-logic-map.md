@@ -19,19 +19,19 @@
 
 | Branch | Condition (소스 줄 인용) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `if g == nil \|\| precheck.entry.decision.QFinal == 0 \|\| precheck.entry.request.Collect == nil \|\|` (if 118) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
-| B2 | `if precheck.issuedAt.IsZero() \|\| now.Before(precheck.issuedAt) \|\| !now.Before(precheck.issuedAt.Add(g.ttl)) {` (if 124) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
-| B3 | `if (err != nil && !legacyTestIdentity) \|\| (!legacyTestIdentity && !sameAccountBaseFX(precheck.entry.accountFX, accountFX)) {` (if 131) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
-| B4 | `if err != nil {` (if 136) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
-| B5 | `if !legacyTestIdentity {` (if 140) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
-| B6 | `if err != nil {` (if 142) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
-| B7 | `if err != nil {` (if 160) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
-| B8 | `if !legacyTestIdentity && !sameQFinalFXAuthority(accountFX, policy) {` (if 164) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
-| B9 | `if err != nil {` (if 176) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
-| B10 | `if !verdict.Allowed {` (if 183) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
-| B11 | `if err != nil {` (if 187) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
-| B12 | `if err != nil {` (if 191) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
-| B13 | `if err != nil {` (if 209) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
+| B1 | `if g == nil \|\| precheck.entry.decision.QFinal == 0 \|\| precheck.entry.request.Collect == nil \|\|` (if 118) | — | 분기 본문 참조 | `TestA136QFinalCampaignFirstLegRefusesTheBuyThatReachesTheDailyCeiling`(tossos_testseams) · 기존 발급 시험군 |
+| B2 | `if precheck.issuedAt.IsZero() \|\| now.Before(precheck.issuedAt) \|\| !now.Before(precheck.issuedAt.Add(g.ttl)) {` (if 124) | — | 분기 본문 참조 | `TestA136QFinalCampaignFirstLegRefusesTheBuyThatReachesTheDailyCeiling`(tossos_testseams) · 기존 발급 시험군 |
+| B3 | `if (err != nil && !legacyTestIdentity) \|\| (!legacyTestIdentity && !sameAccountBaseFX(precheck.entry.accountFX, accountFX)) {` (if 131) | — | 분기 본문 참조 | `TestA136QFinalCampaignFirstLegRefusesTheBuyThatReachesTheDailyCeiling`(tossos_testseams) · 기존 발급 시험군 |
+| B4 | `if err != nil {` (if 136) | — | 분기 본문 참조 | `TestA136QFinalCampaignFirstLegRefusesTheBuyThatReachesTheDailyCeiling`(tossos_testseams) · 기존 발급 시험군 |
+| B5 | `if !legacyTestIdentity {` (if 140) | — | 분기 본문 참조 | `TestA136QFinalCampaignFirstLegRefusesTheBuyThatReachesTheDailyCeiling`(tossos_testseams) · 기존 발급 시험군 |
+| B6 | `if err != nil {` (if 142) | — | 분기 본문 참조 | `TestA136QFinalCampaignFirstLegRefusesTheBuyThatReachesTheDailyCeiling`(tossos_testseams) · 기존 발급 시험군 |
+| B7 | `if err != nil {` (if 160) | — | 분기 본문 참조 | `TestA136QFinalCampaignFirstLegRefusesTheBuyThatReachesTheDailyCeiling`(tossos_testseams) · 기존 발급 시험군 |
+| B8 | `if !legacyTestIdentity && !sameQFinalFXAuthority(accountFX, policy) {` (if 164) | — | 분기 본문 참조 | `TestA136QFinalCampaignFirstLegRefusesTheBuyThatReachesTheDailyCeiling`(tossos_testseams) · 기존 발급 시험군 |
+| B9 | `if err != nil {` (if 176) | — | 분기 본문 참조 | `TestA136QFinalCampaignFirstLegRefusesTheBuyThatReachesTheDailyCeiling`(tossos_testseams) · 기존 발급 시험군 |
+| B10 | `if !verdict.Allowed {` (if 183) | — | 분기 본문 참조 | `TestA136QFinalCampaignFirstLegRefusesTheBuyThatReachesTheDailyCeiling`(tossos_testseams) · 기존 발급 시험군 |
+| B11 | `if err != nil {` (if 187) | — | 분기 본문 참조 | `TestA136QFinalCampaignFirstLegRefusesTheBuyThatReachesTheDailyCeiling`(tossos_testseams) · 기존 발급 시험군 |
+| B12 | `if err != nil {` (if 191) | — | 분기 본문 참조 | `TestA136QFinalCampaignFirstLegRefusesTheBuyThatReachesTheDailyCeiling`(tossos_testseams) · 기존 발급 시험군 |
+| B13 | `if err != nil {` (if 209) | — | 분기 본문 참조 | `TestA136QFinalCampaignFirstLegRefusesTheBuyThatReachesTheDailyCeiling`(tossos_testseams) · 기존 발급 시험군 |
 
 Exact AST return positions: 120 · 125 · 132 · 137 · 143 · 161 · 165 · 177 · 184 · 188 · 192 · 194 · 210 · 212
 

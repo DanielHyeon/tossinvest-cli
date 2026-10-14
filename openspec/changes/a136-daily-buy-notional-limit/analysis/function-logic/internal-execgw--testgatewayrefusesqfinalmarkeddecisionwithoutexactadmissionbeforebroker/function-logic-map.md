@@ -7,7 +7,7 @@
 
 **역할.** 시험 fixture/시험 함수(생산 코드 아님).
 
-**a136 편집.** 시험 fixture 에 a136 의 새 필수 칸을 채움 — EXPOSURE_RAISING 예약에 넉넉한 `DailyBuyLimit`(이 시험이 재는 것과 무관)
+**a136 편집.** 시험 fixture 에 a136 의 새 필수 칸을 채움 — EXPOSURE_RAISING 예약에 넉넉한 `DailyBuyLimit`(이 시험이 재는 것과 무관) (재추출 2026-10-14: a137 a1cfe0c2 가 같은 파일을 고쳐 소스 해시만 바뀜 — 이 함수의 분기 · 반환 · 호출 모양은 그대로.)
 
 ## Inputs and invariants
 
