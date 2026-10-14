@@ -46,7 +46,7 @@ Story: `STORY-TOS-a136` · **High-risk**(Guardian 발급 · 예약 트랜잭션 
       — `analysis/verify/receipts.md`
 - [x] 2.2 변이 원장(`analysis/mutation/`): ≥→> · 체결분 제외 · 경계 오프셋 0 · 매도 경로에 판정 삽입 · 합계 오류를 0 으로 대체 · 동시성(트랜잭션 밖 합산)
       — round1~4, 최종 32/32 CAUGHT
-- [ ] 2.3 독립 적대 리뷰(분리된 컨텍스트, 적대 Eng 포함) → review.md
+- [x] 2.3 독립 적대 리뷰(분리된 컨텍스트, 적대 Eng 포함) → review.md — APPROVE-WITH-FIXES(P1 2 · P2 4 · P3 6), P1 둘 · P2 셋 수리, 잔재 3 기록(review.md)
 
 ## 3. 사람 · Manager
 

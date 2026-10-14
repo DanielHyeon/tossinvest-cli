@@ -75,3 +75,29 @@ func TestA136TheScreenSaysWhatAnUnsetDailyBuyCeilingDoes(t *testing.T) {
 		t.Error("no typed confirmation may guard the daily buy ceiling")
 	}
 }
+
+// 구현 리뷰 P1-1: 칸이 미리 채워진 채로 통화만 바꾸면 옛 숫자를 보내지 않아 writer 가 지움 — 새 통화로 다른 숫자를 치면 그 값이 이김.
+func TestA136ACurrencySwitchDoesNotCarryThePrefilledFigure(t *testing.T) {
+	post := func(seam *fakeLimits, currency, daily string) config.GuardianLimits {
+		h := limitsHarness(t, seam)
+		h.authenticate(t)
+		h.post(t, "/settings/limits", url.Values{
+			"csrf": {h.csrf}, "max_order_quantity": {"5"}, "max_order_notional": {"100"},
+			"max_total_exposure": {"300"}, "max_daily_loss_amount": {"10"}, "max_daily_loss_ratio": {"0.01"},
+			"limit_currency": {currency}, "max_daily_buy_notional": {daily},
+		})
+		writes := seam.writes()
+		if len(writes) != 1 {
+			t.Fatalf("writes = %+v", writes)
+		}
+		return writes[0]
+	}
+	prefilled := post(&fakeLimits{gate: config.AutomationGate{LimitCurrency: "KRW", MaxDailyBuyNotional: 5_000_000}}, "USD", "5000000")
+	if prefilled.DailyBuy != nil {
+		t.Fatalf("a KRW figure left in the box must not become a USD ceiling, got %v", *prefilled.DailyBuy)
+	}
+	typed := post(&fakeLimits{gate: config.AutomationGate{LimitCurrency: "KRW", MaxDailyBuyNotional: 5_000_000}}, "USD", "3000")
+	if typed.DailyBuy == nil || *typed.DailyBuy != 3000 {
+		t.Fatalf("a figure typed for the new currency must be kept, got %v", typed.DailyBuy)
+	}
+}

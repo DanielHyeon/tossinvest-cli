@@ -16,7 +16,7 @@ for item in ("go.mod", "go.sum", "internal", "cmd", "schemas"):  # a137 의 미�
     src = os.path.join(ROOT, item)
     (shutil.copytree if os.path.isdir(src) else shutil.copy2)(src, os.path.join(COPY, item))
 
-shutil.rmtree(os.path.join(COPY, "internal", "dailyloss"), ignore_errors=True)  # 다른 change 의 미커밋 패키지 — 이 측정 밖
+# (round3~4 에서는 a137 의 미커밋 internal/dailyloss 를 사본에서 지웠음 — a137 착지 뒤에는 execgw 가 그 패키지를 쓰므로 지우지 않음)
 J = ("./internal/journal/", "TestA136")
 E = ("./internal/execgw/", "TestA136")
 A = ("./internal/app/engine/", "TestA136")
@@ -83,6 +83,22 @@ MUTANTS = [
     ("M31 form drops the daily field", "internal/console/settings_limits.go", "next.DailyBuy = &dailyBuy", "next.DailyBuy = nil", [CON]),
     ("M32 explicit new-currency value cleared", "internal/config/limits_io.go",
      "} else if prev != next.Currency && next.DailyBuy == nil {", "} else if prev != next.Currency {", [C]),
+    # --- 구현 리뷰 수리(P1-1 · P1-2 · P2-1 · P2-2 · P2-3) ---
+    ("M33 Z3 snapshot may predate the attempt", "internal/journal/daily_buy.go",
+     "\t\t    AND a.settled_at < f.committed_at\n\t\t    AND f.account_ref", "\t\t    AND f.account_ref", [J]),
+    ("M34 Z3 ignores a second owner", "internal/journal/daily_buy.go",
+     "terminal != 1 || failClosed != 0 || owners != 1 {", "terminal != 1 || failClosed != 0 {", [J]),
+    ("M35 staleness bound 30m", "internal/journal/daily_buy.go",
+     "const ManualBuyStaleness = 2 * time.Minute", "const ManualBuyStaleness = 30 * time.Minute", [J]),
+    ("M36 future snapshot allowed", "internal/journal/daily_buy.go", "\tif age < 0 {\n", "\tif age < -time.Hour {\n", [J]),
+    ("M37 terminal statuses still count the remainder", "internal/manualbuy/summary.go",
+     "\tif terminalStatuses[status] {\n", "\tif false && terminalStatuses[status] {\n", [M]),
+    ("M38 orderAmount ignored", "internal/manualbuy/summary.go",
+     "if strings.TrimSpace(o.OrderAmount) != \"\" {", "if false && strings.TrimSpace(o.OrderAmount) != \"\" {", [M]),
+    ("M39 currency switch carries the prefilled figure", "internal/console/settings_limits.go",
+     "\t\tnext.DailyBuy = nil\n\t\tdailyBuy = 0\n", "\t\tdailyBuy = dailyBuy + 0\n", [CON]),
+    ("M40 cancel targets counted as engine orders", "internal/journal/daily_buy.go",
+     "a.broker_order_id <> '' AND a.kind IN (?, ?)`,", "a.broker_order_id <> '' AND a.kind NOT IN (?, ?, 'X')`,", [J]),
 ]
 
 def run(targets, tags):

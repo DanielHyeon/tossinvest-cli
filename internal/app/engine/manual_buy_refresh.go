@@ -33,6 +33,8 @@ const (
 	manualBuyRefreshInterval = 30 * time.Second
 	// manualBuyClosedPageCap 은 CLOSED 조회 페이지 상한. 넘으면 끝을 못 본 것이므로 산정 불가.
 	manualBuyClosedPageCap = 20
+	// manualBuyClosedPageLimit 은 CLOSED 페이지 크기 — 문서상 최대(기본 20, 최대 100). 20 페이지 × 100 = 3일치 종결 2,000 건.
+	manualBuyClosedPageLimit = 100
 )
 
 // manualBuyOrderPages 는 이 실행자가 쓰는 유일한 브로커 읽기(OfficialReads 의 부분집합 — 시험이 대신 넣을 수 있게).
@@ -137,7 +139,7 @@ func (r *manualBuyRefresh) collect(ctx context.Context, day string) (map[string]
 		if page >= manualBuyClosedPageCap {
 			return nil, fmt.Errorf("%w: closed orders run past %d pages", manualbuy.ErrUnvaluable, manualBuyClosedPageCap)
 		}
-		closed, err := r.reads.OrdersPageRaw(ctx, official.OrdersFilter{Status: "CLOSED", From: from, To: to}, cursor)
+		closed, err := r.reads.OrdersPageRaw(ctx, official.OrdersFilter{Status: "CLOSED", From: from, To: to, Limit: manualBuyClosedPageLimit}, cursor)
 		if err != nil {
 			return nil, fmt.Errorf("reading closed orders: %w", err)
 		}
@@ -153,8 +155,8 @@ func (r *manualBuyRefresh) collect(ctx context.Context, day string) (map[string]
 	return manualbuy.Summarize(raws, engineOrders, day)
 }
 
-// manualBuyDateRange 는 CLOSED 조회의 from/to — 라벨 D 의 하루(서울 D 08:00 ~ D+1 08:00)를 어떤 시간대 날짜로 읽든 덮도록
-// 앞뒤 하루씩 넓힘(from/to 의 시간대는 [미측정]). 정확한 귀속은 Summarize 가 주문 시각으로 다시 함.
+// manualBuyDateRange 는 CLOSED 조회의 from/to(OpenAPI: orderedAt 의 KST 날짜) — 라벨 D 의 하루(서울 D 08:00 ~ D+1 08:00)는 KST 날짜
+// D · D+1 에 걸치므로 D 는 반드시, 여유로 앞뒤 하루씩 넓힘. 정확한 귀속은 Summarize 가 주문 시각으로 다시 함.
 func manualBuyDateRange(day string) (string, string, error) {
 	d, err := time.Parse("2006-01-02", day)
 	if err != nil {

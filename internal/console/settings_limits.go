@@ -326,6 +326,15 @@ func (c *Console) handleSettingsLimits(w http.ResponseWriter, r *http.Request) {
 		dailyBuy = v
 	}
 	next.DailyBuy = &dailyBuy
+	// 구현 리뷰 P1-1: 칸은 현재 값으로 미리 채워지므로, 통화를 바꾸면서 칸을 그대로 두면 옛 통화의 숫자가 새 통화 상한으로 넘어감
+	// (예: 5,000,000 KRW → 5,000,000 USD). 저장 전 파일과 비교해 「통화가 바뀌었는데 숫자는 파일 그대로」면 값을 보내지 않아
+	// writer 가 지우게 함(통화 전환 = 지움, spec). 운영자가 새 통화로 다른 숫자를 쳤으면 그 값이 이김.
+	if current, err := c.opts.Limits.Load(); err == nil &&
+		!strings.EqualFold(strings.TrimSpace(current.LimitCurrency), strings.TrimSpace(next.Currency)) &&
+		current.MaxDailyBuyNotional > 0 && current.MaxDailyBuyNotional == dailyBuy {
+		next.DailyBuy = nil
+		dailyBuy = 0
+	}
 
 	if err := next.Validate(); err != nil {
 		c.redirectSettings(w, r, "저장 안 됨 — 엔진이 이 한도로는 기동을 거부한다: "+err.Error())

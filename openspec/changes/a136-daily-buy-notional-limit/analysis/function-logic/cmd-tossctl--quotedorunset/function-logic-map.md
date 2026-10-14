@@ -19,7 +19,7 @@
 
 | Branch | Condition (소스 줄 인용) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `_, _ = log.RecordChange(audit.ActionLimitChange, field.setting, field.to,` (if 100) | — | 분기 본문 참조 | `TestTheLimitSeamSavesAuditsAndLeavesTheSwitchAlone` |
+| B1 | `} {` (if 100) | — | 분기 본문 참조 | `TestTheLimitSeamSavesAuditsAndLeavesTheSwitchAlone` |
 
 Exact AST return positions: 101 · 103
 

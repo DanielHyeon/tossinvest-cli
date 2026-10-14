@@ -345,11 +345,13 @@ func manualBuyAmount(manual *ManualBuyTotal, today string, now time.Time) (strin
 }
 
 // EngineBrokerOrderIDs 는 이 계좌의 엔진 attempt 가 브로커에서 받은 주문 id 집합임(a136 수동 매수 중복 제거).
+// PLACE · AMEND 만 — 엔진이 **취소**한 수동 주문(flatten 등)의 CANCEL attempt 가 그 주문 id 를 가져도 엔진 주문이 되지 않게(구현 리뷰 P2-2).
 // 이 집합에 있는 주문은 예약 원장이 이미 세므로 수동 매수 스냅숏에서 빠짐. AMEND 가 만든 자식 주문 id 도 attempt 에 있으므로 포함됨.
 func (j *Journal) EngineBrokerOrderIDs(ctx context.Context, accountRef string) (map[string]bool, error) {
 	rows, err := j.db.QueryContext(ctx,
 		`SELECT DISTINCT a.broker_order_id FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
-		  WHERE TRIM(i.account_ref) = ? AND a.broker_order_id <> ''`, strings.TrimSpace(accountRef))
+		  WHERE TRIM(i.account_ref) = ? AND a.broker_order_id <> '' AND a.kind IN (?, ?)`,
+		strings.TrimSpace(accountRef), string(KindPlace), string(KindAmend))
 	if err != nil {
 		return nil, fmt.Errorf("journal: listing engine broker order ids: %w", err)
 	}

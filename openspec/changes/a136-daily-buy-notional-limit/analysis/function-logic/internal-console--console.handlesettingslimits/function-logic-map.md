@@ -1,8 +1,8 @@
 # Function Logic Map: `handleSettingsLimits`
 
-- Source: `internal/console/settings_limits.go` (283-363, 편집 뒤)
+- Source: `internal/console/settings_limits.go` (283-372, 편집 뒤)
 - Qualified: `Console.handleSettingsLimits`
-- AST evidence: `ast.json`(편집 뒤) · `ast-base.json`(편집 전, base f504cc52, `source_sha256` 021a96457d9b0b17…, 편집 전 분기 수 9) — 현재 branches 11 · returns 7
+- AST evidence: `ast.json`(편집 뒤) · `ast-base.json`(편집 전, base f504cc52, `source_sha256` 021a96457d9b0b17…, 편집 전 분기 수 9) — 현재 branches 12 · returns 7
 - Risk scan: `risk-pattern-report.md`
 
 **역할.** 고급 폼 저장.
@@ -25,13 +25,14 @@
 | B4 | `if err != nil {` (if 312) | — | 분기 본문 참조 | `TestA136TheAdvancedFormSavesTheDailyBuyCeiling` · `TestTheAdvancedFormSavesIndividualValues` |
 | B5 | `if raw := strings.TrimSpace(r.PostFormValue("max_daily_buy_notional")); raw != "" {` (if 320) | — | 분기 본문 참조 | `TestA136TheAdvancedFormSavesTheDailyBuyCeiling` · `TestTheAdvancedFormSavesIndividualValues` |
 | B6 | `if err != nil {` (if 322) | — | 분기 본문 참조 | `TestA136TheAdvancedFormSavesTheDailyBuyCeiling` · `TestTheAdvancedFormSavesIndividualValues` |
-| B7 | `if err := next.Validate(); err != nil {` (if 330) | — | 분기 본문 참조 | `TestA136TheAdvancedFormSavesTheDailyBuyCeiling` · `TestTheAdvancedFormSavesIndividualValues` |
-| B8 | `if _, err := config.GuardianCeiling(next.Currency); err != nil {` (if 339) | — | 분기 본문 참조 | `TestA136TheAdvancedFormSavesTheDailyBuyCeiling` · `TestTheAdvancedFormSavesIndividualValues` |
-| B9 | `if violations := next.CeilingViolations(); len(violations) > 0 {` (if 347) | — | 분기 본문 참조 | `TestA136TheAdvancedFormSavesTheDailyBuyCeiling` · `TestTheAdvancedFormSavesIndividualValues` |
-| B10 | `if err := c.opts.Limits.Save(next); err != nil {` (if 352) | — | 분기 본문 참조 | `TestA136TheAdvancedFormSavesTheDailyBuyCeiling` · `TestTheAdvancedFormSavesIndividualValues` |
-| B11 | `if id := config.MatchingGuardianTier(next); id != "" {` (if 358) | — | 분기 본문 참조 | `TestA136TheAdvancedFormSavesTheDailyBuyCeiling` · `TestTheAdvancedFormSavesIndividualValues` |
+| B7 | `if current, err := c.opts.Limits.Load(); err == nil &&` (if 332) | — | 분기 본문 참조 | `TestA136TheAdvancedFormSavesTheDailyBuyCeiling` · `TestTheAdvancedFormSavesIndividualValues` |
+| B8 | `if err := next.Validate(); err != nil {` (if 339) | — | 분기 본문 참조 | `TestA136TheAdvancedFormSavesTheDailyBuyCeiling` · `TestTheAdvancedFormSavesIndividualValues` |
+| B9 | `if _, err := config.GuardianCeiling(next.Currency); err != nil {` (if 348) | — | 분기 본문 참조 | `TestA136TheAdvancedFormSavesTheDailyBuyCeiling` · `TestTheAdvancedFormSavesIndividualValues` |
+| B10 | `if violations := next.CeilingViolations(); len(violations) > 0 {` (if 356) | — | 분기 본문 참조 | `TestA136TheAdvancedFormSavesTheDailyBuyCeiling` · `TestTheAdvancedFormSavesIndividualValues` |
+| B11 | `if err := c.opts.Limits.Save(next); err != nil {` (if 361) | — | 분기 본문 참조 | `TestA136TheAdvancedFormSavesTheDailyBuyCeiling` · `TestTheAdvancedFormSavesIndividualValues` |
+| B12 | `if id := config.MatchingGuardianTier(next); id != "" {` (if 367) | — | 분기 본문 참조 | `TestA136TheAdvancedFormSavesTheDailyBuyCeiling` · `TestTheAdvancedFormSavesIndividualValues` |
 
-Exact AST return positions: 287 · 314 · 324 · 332 · 342 · 350 · 354
+Exact AST return positions: 287 · 314 · 324 · 341 · 351 · 359 · 363
 
 ## Calls and live bindings
 

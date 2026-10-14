@@ -57,11 +57,11 @@ func (o a136EngineOrders) EngineBrokerOrderIDs(context.Context, string) (map[str
 func TestA136TheRefresherPublishesTodaysManualBuys(t *testing.T) {
 	now := time.Date(2026, 10, 14, 2, 0, 0, 0, time.UTC) // KST 11:00 — 라벨 2026-10-14
 	pages := &a136Pages{
-		open: []string{`{"orderId":"m-open","side":"BUY","status":"OPEN","quantity":"2","price":"1000","currency":"KRW","orderedAt":"2026-10-14T01:00:00Z"}`,
-			`{"orderId":"engine-1","side":"BUY","status":"OPEN","quantity":"9","price":"9999","currency":"KRW","orderedAt":"2026-10-14T01:00:00Z"}`},
+		open: []string{`{"orderId":"m-open","side":"BUY","status":"PENDING","quantity":"2","price":"1000","currency":"KRW","orderedAt":"2026-10-14T01:00:00Z"}`,
+			`{"orderId":"engine-1","side":"BUY","status":"PENDING","quantity":"9","price":"9999","currency":"KRW","orderedAt":"2026-10-14T01:00:00Z"}`},
 		closed: [][]string{
-			{`{"orderId":"m-c1","side":"BUY","status":"CLOSED","quantity":"1","price":"500","currency":"KRW","orderedAt":"2026-10-14T01:30:00Z","execution":{"filledQuantity":"1","filledAmount":"500"}}`},
-			{`{"orderId":"m-c2","side":"BUY","status":"CLOSED","quantity":"1","price":"3","currency":"USD","orderedAt":"2026-10-14T01:40:00Z","execution":{"filledQuantity":"1","filledAmount":"3"}}`},
+			{`{"orderId":"m-c1","side":"BUY","status":"FILLED","quantity":"1","price":"500","currency":"KRW","orderedAt":"2026-10-14T01:30:00Z","execution":{"filledQuantity":"1","filledAmount":"500"}}`},
+			{`{"orderId":"m-c2","side":"BUY","status":"FILLED","quantity":"1","price":"3","currency":"USD","orderedAt":"2026-10-14T01:40:00Z","execution":{"filledQuantity":"1","filledAmount":"3"}}`},
 		},
 	}
 	board := execgw.NewManualBuyBoard()

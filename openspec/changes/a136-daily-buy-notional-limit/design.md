@@ -77,7 +77,7 @@ HELD 인 예약은 발급 날짜와 무관하게 센다(어제 걸린 미체결 
 | Z3 `broker_order_id` 의 scoped 스냅숏이 (계좌 · `side='BUY'`) 범위에서 **정확히 1행**, `terminal=1` · `fail_closed=0` · `filled_quantity` = 0, 그리고 그 주문의 `fill_events` 행 0 | 누적 체결 모델의 종결 관측(fills.go RecordFill). fail-closed 관측은 `terminal=0 · fail_closed=1` 로 쓰여(fills.go:811-815) Z3 에 안 걸림. 주문 id 재사용으로 2행 이상이면 귀속 불가 → 센다 |
 
 그 밖(HELD · in-doubt · UNRESOLVED · 부분 체결 · 스냅숏 없음 · OPERATOR 해제 · 귀속 불가)은 **전부 센다**. 거부 쪽(과대 집계)으로만 틀린다.
-정상 입력 중 과대 집계로 거절될 수 있는 것: 오늘 체결 없이 취소됐지만 체결 감지가 아직 종결을 관측하지 않은 주문(관측 뒤 해소), 운영자가 수동 해제한
+정상 입력 중 과대 집계로 거절될 수 있는 것(+ 구현 리뷰 P3-5: 같은 날 한도 통화를 바꾸고 재시작하면 옛 통화의 오늘 행 때문에 합계가 계산 불가 → 그날 매수 전부 거부): 오늘 체결 없이 취소됐지만 체결 감지가 아직 종결을 관측하지 않은 주문(관측 뒤 해소), 운영자가 수동 해제한
 보유(OPERATOR — 센다), 영구 UNRESOLVED_IN_DOUBT 보유(매일 센다 — 운영자 해제 전까지).
 
 ## D3. 판정 위치 — 체인 rung 이 아니라 원자 트랜잭션
@@ -111,7 +111,7 @@ proposal 안(`execgw.Limits` 여섯째 칸)은 결정 `limits_json` · `LimitsDi
 - `riskPolicyFromAutomationGate` 가 그 값으로 `risk.Policy.MaxDailyBuyNotional` 을 채우고, `Policy.Validate` 가 양수 · 같은 통화를 요구한다 → USD 무값은
   `ErrLimitsRequired` 로 기동 거부(D5).
 - Guardian 은 `DailyBuyNotionalLimit()` 로 자기 값을 진술하고, 인터록 `checkGuardianLimits` 가 같은 해석 값과 대조한다(진술 없음 · 불일치 → 거부).
-- 결과: `LimitsDigest` 불변 → 전략 바인딩 · 서명 매니페스트 영향 0.
+- 결과: 결정 `limits_json` 5필드는 불변. `LimitsDigest` 는 freeze 리뷰 P2-4 로 상한을 입력에 포함하므로 **값이 한 번 바뀜** — 생산 전략 바인딩은 Guardian 에서 자기 유도라 재서명 불요(구현 리뷰 P3-1 정정).
 
 ## D7. 변경 경로 · 감사 · 콘솔
 
@@ -149,7 +149,14 @@ proposal 안(`execgw.Limits` 여섯째 칸)은 결정 `limits_json` · `LimitsDi
 - 환산: base 통화는 그대로, 다른 통화는 `qFinalManualBuyFX` 가 모은 요청 자기 authority 와 `PairedFXAuthority`(같은 파도 짝 FX 의 다른 시장)만으로
   `risk.BindAccountBaseFX` + `AccountBaseOrderNotional`(올림). `IssueEntry`(트레이서 · 전략 dispatch KR) 문은 FX authority 가 없으므로
   다른 통화 수동 매수가 있는 날 그 문의 매수는 전부 거부됨.
-- 브로커 호출 예산(§0.4): 30초마다 OPEN 1 + CLOSED 페이지(평소 1), 페이지 상한 20. from/to 는 라벨 앞뒤 하루씩(시간대 `[미측정]`), 귀속은 주문 시각.
+- 브로커 호출 예산(§0.4): 30초마다 OPEN 1 + CLOSED 페이지(평소 1, 페이지 크기 100 — 문서 최대), 페이지 상한 20. from/to 는 OpenAPI 상 orderedAt 의 KST 날짜이므로
+  라벨 D 의 하루는 KST D · D+1 — 앞뒤 하루씩 넓혀 덮고, 귀속은 주문 시각. Rate Limits Group 은 `ORDER_HISTORY`.
+- 금액(구현 리뷰 P1-2 · P2-1): 잔량은 세부 상태(`orders[].status` — OpenAPI OrderStatus 열거, OPEN/CLOSED 그룹 라벨이 아님)로 판정 — 종결
+  {FILLED · CANCELED · REJECTED · REPLACED · CANCEL_REJECTED · REPLACE_REJECTED}은 체결분만, PARTIAL_FILLED · 대기 상태 · 모르는 상태는 잔량 × 지정가까지.
+  금액 기반 US 시장가(`orderAmount`)는 max(orderAmount, 체결액). 지정가도 orderAmount 도 없는 미체결만 산정 불가.
+- 중복 제거는 PLACE · AMEND attempt 의 주문 id 만(구현 리뷰 P2-2 — 엔진이 취소한 수동 주문은 수동으로 셈).
+- FX 검증 자리(구현 리뷰 P3-2): spec 조항은 「precheck 에서 검증」이지만 구현은 발급(예약 요청을 만드는) 시점에 `risk.BindAccountBaseFX` 로 검증함 — 더 늦은
+  시점이라 더 엄격하고 거부 결과는 같음. 조항 문구(a137 승인 원문)는 바꾸지 않고 이 차이를 Manager 확인 사항으로 남김.
 - 중복 제거는 attempt 에 `broker_order_id` 가 적힌 주문만 뺌 — 전송됐지만 아직 ACK 전(DISPATCH_STARTED · IN_DOUBT)인 엔진 주문은 수동으로도 한 번 더 셀 수 있음(과대 집계 = 거부 방향, 다음 게시에서 해소).
 - 잔재: 30초 주기 사이의 수동 매수 한 건은 다음 게시까지 합계에 늦게 들어감(최대 한 주기 + 재수집). US 정규장 동안 KR 후보가 Ready 가 아니면
   US 요청의 짝(KR) authority 가 없지만, base 가 KRW 면 KRW 수동 매수는 환산이 필요 없으므로 영향 없음.

@@ -28,7 +28,9 @@ type order struct {
 	Price     string `json:"price"`
 	Currency  string `json:"currency"`
 	OrderedAt string `json:"orderedAt"`
-	Execution *struct {
+	// OrderAmount 는 금액 기반 US 시장가 매수에만 있음(OpenAPI Order.orderAmount).
+	OrderAmount string `json:"orderAmount"`
+	Execution   *struct {
 		FilledQuantity     string `json:"filledQuantity"`
 		AverageFilledPrice string `json:"averageFilledPrice"`
 		FilledAmount       string `json:"filledAmount"`
@@ -40,7 +42,9 @@ type order struct {
 // 규칙:
 //   - side 가 BUY 가 아니면 셈에서 뺌. orderId 가 engineOrders 에 있으면 뺌(예약 원장이 이미 셈).
 //   - 귀속은 주문 시각(orderedAt)의 clock.AccountTradingDay — 엔진 매수가 발급일에 귀속되는 것과 같은 규칙.
-//   - 금액 = 체결액(filledAmount, 없으면 filledQuantity × averageFilledPrice) + 미체결 잔량 × 지정가(status 가 CLOSED 가 아닐 때).
+//   - 금액 = 체결액(filledAmount, 없으면 filledQuantity × averageFilledPrice) + 미체결 잔량 × 지정가. 잔량은 세부 상태
+//     (`orders[].status` — OpenAPI OrderStatus 열거, 그룹 라벨 OPEN/CLOSED 가 아님)가 종결이면 0, 그 밖(모르는 값 포함)이면 셈.
+//     지정가 없는 미체결은 금액 기반 시장가(orderAmount)면 max(orderAmount, 체결액), 아니면 산정 불가.
 //   - 한 행이라도 orderId · 시각 · 통화 · 수량 · 가격을 해석할 수 없으면 ErrUnvaluable(지정가 없는 미체결 시장가 주문 포함).
 //
 // 같은 주문 id 가 두 번 오면(OPEN · CLOSED 조회가 겹침) 한 번만 셈 — 두 금액 중 큰 쪽(과대 집계 방향)을 씀.
@@ -106,14 +110,20 @@ func Summarize(raws []json.RawMessage, engineOrders map[string]bool, day string)
 	return out, nil
 }
 
+// terminalStatuses 는 잔량이 더 체결되지 않는 세부 상태(OpenAPI OrderStatus). CANCEL_REJECTED · REPLACE_REJECTED 는 거부된 취소 · 정정의
+// 별도 레코드이고 원주문은 이전 상태로 돌아가 따로 나오므로 이 레코드 자체는 새 매수가 아님(체결분만, 보통 0).
+// PARTIAL_FILLED 는 CLOSED 그룹에도 나오지만 잔량이 아직 살아 있을 수 있으므로 종결로 보지 않음(과대 집계 방향).
+var terminalStatuses = map[string]bool{
+	"FILLED": true, "CANCELED": true, "REJECTED": true, "REPLACED": true,
+	"CANCEL_REJECTED": true, "REPLACE_REJECTED": true,
+}
+
 // valueOf 는 한 매수 주문이 오늘 쓴(또는 쓸) 금액임.
 func valueOf(o order) (*big.Rat, error) {
-	quantity, err := decimal("quantity", o.Quantity, false)
-	if err != nil {
-		return nil, err
-	}
+	status := strings.ToUpper(strings.TrimSpace(o.Status))
 	filled := new(big.Rat)
 	value := new(big.Rat)
+	var err error
 	if o.Execution != nil {
 		if filled, err = decimal("execution.filledQuantity", o.Execution.FilledQuantity, true); err != nil {
 			return nil, err
@@ -131,15 +141,31 @@ func valueOf(o order) (*big.Rat, error) {
 			value = new(big.Rat).Mul(filled, price)
 		}
 	}
-	if !strings.EqualFold(strings.TrimSpace(o.Status), "CLOSED") {
-		remaining := new(big.Rat).Sub(quantity, filled)
-		if remaining.Sign() > 0 {
-			price, err := decimal("price", o.Price, false)
-			if err != nil {
-				return nil, fmt.Errorf("a pending buy without a limit price cannot be valued: %w", err)
-			}
-			value.Add(value, new(big.Rat).Mul(remaining, price))
+	if terminalStatuses[status] {
+		return value, nil
+	}
+	// 미체결이 남을 수 있는 주문. 금액 기반 시장가(orderAmount)는 수량이 아니라 금액으로 셈 — 수량이 0 · 빈 값이어도 과소 집계 안 함.
+	if strings.TrimSpace(o.OrderAmount) != "" {
+		amount, err := decimal("orderAmount", o.OrderAmount, false)
+		if err != nil {
+			return nil, err
 		}
+		if amount.Cmp(value) > 0 {
+			return amount, nil
+		}
+		return value, nil
+	}
+	quantity, err := decimal("quantity", o.Quantity, false)
+	if err != nil {
+		return nil, err
+	}
+	remaining := new(big.Rat).Sub(quantity, filled)
+	if remaining.Sign() > 0 {
+		price, err := decimal("price", o.Price, false)
+		if err != nil {
+			return nil, fmt.Errorf("a pending buy without a limit price or order amount cannot be valued: %w", err)
+		}
+		value.Add(value, new(big.Rat).Mul(remaining, price))
 	}
 	return value, nil
 }

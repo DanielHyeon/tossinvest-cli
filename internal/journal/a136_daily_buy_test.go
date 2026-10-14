@@ -400,3 +400,84 @@ func TestA136TheManualBuySnapshotCountsAndMustBeFresh(t *testing.T) {
 		t.Fatalf("a fresh zero snapshot must let the buy through: %v", err)
 	}
 }
+
+// 구현 리뷰 P2-3: 신선도 경계와 미래 시각은 상수가 아니라 리터럴로 고정함(상수를 바꾸면 시험도 따라가 변이를 못 잡던 것).
+func TestA136TheManualBuyFreshnessBoundIsTwoMinutes(t *testing.T) {
+	ctx := context.Background()
+	try := func(id string, offset time.Duration) error {
+		j, _ := openReservationJournal(t)
+		recordEntryDecision(t, j, id, "acct-1")
+		req := exposureReserve(j, id, "acct-1", "1", "0", "1000000000", mustVersion(t, j, "acct-1"))
+		manual := a136ZeroManualBuy(j.Now())
+		manual.AsOf = j.Now().Add(offset)
+		req.DailyBuyLimit = &DailyBuyLimit{Amount: a136Ceiling, Currency: "KRW", ManualBuy: manual}
+		_, err := j.Reserve(ctx, req)
+		return err
+	}
+	if err := try("d-fresh", -(time.Minute + 59*time.Second)); err != nil {
+		t.Fatalf("a 1m59s-old snapshot is fresh: %v", err)
+	}
+	if err := try("d-old", -(2*time.Minute + time.Second)); !errors.Is(err, ErrSnapshotStale) {
+		t.Fatalf("a 2m1s-old snapshot is stale, got %v", err)
+	}
+	if err := try("d-future", time.Second); !errors.Is(err, ErrSnapshotStale) {
+		t.Fatalf("a snapshot dated in the future is refused, got %v", err)
+	}
+}
+
+// 구현 리뷰 P2-3: Z3 의 「attempt 확정 뒤 커밋」 · 「소유 intent 하나」 를 따로 고정함.
+func TestA136Z3NeedsASnapshotAfterTheAttemptAndOneOwner(t *testing.T) {
+	ctx := context.Background()
+	t.Run("snapshot not after the attempt settled", func(t *testing.T) {
+		j, _ := openReservationJournal(t)
+		dec := a136MustReserve(t, j, "d-early", "600")
+		confirmAttempt(t, j, dec, "attempt-early", "order-early")
+		if _, err := j.db.ExecContext(ctx,
+			`INSERT INTO scoped_fill_snapshots (order_id, account_ref, market, trading_day, symbol, side,
+			   state, terminal, quantity, filled_quantity, committed_at)
+			 VALUES ('order-early','acct-1','kr','2026-03-30','005930','BUY','CANCELED',1,'10','0','2026-03-29T00:00:00Z')`); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := j.db.ExecContext(ctx,
+			`UPDATE risk_reservations SET state='RELEASED', released_at=?, release_reason='BROKER_TERMINAL' WHERE decision_id=?`,
+			j.nowString(), dec.ID); err != nil {
+			t.Fatal(err)
+		}
+		a136RequireRefused(t, j, "d-next", "400")
+	})
+	t.Run("two intents own the order id in scope", func(t *testing.T) {
+		j, _ := openReservationJournal(t)
+		dec := a136MustReserve(t, j, "d-own", "600")
+		confirmAttempt(t, j, dec, "attempt-own", "order-own")
+		other := recordEntryDecision(t, j, "d-other", "acct-1")
+		confirmAttempt(t, j, other, "attempt-other", "order-own") // 같은 범위 · 같은 주문 id 의 두 번째 소유자
+		a136Fill(t, j, "order-own", "CANCELED", "0", true)
+		if _, err := j.db.ExecContext(ctx,
+			`UPDATE risk_reservations SET state='RELEASED', released_at=?, release_reason='BROKER_TERMINAL' WHERE decision_id=?`,
+			j.nowString(), dec.ID); err != nil {
+			t.Fatal(err)
+		}
+		a136RequireRefused(t, j, "d-next", "400")
+	})
+}
+
+// 구현 리뷰 P2-2: 엔진이 취소한 수동 주문(CANCEL attempt)은 엔진 주문이 아님.
+func TestA136EngineOrderIDsExcludeCancelTargets(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	ctx := context.Background()
+	dec := a136MustReserve(t, j, "d-place", "1")
+	confirmAttempt(t, j, dec, "attempt-place", "order-engine")
+	if _, err := j.db.ExecContext(ctx,
+		`INSERT INTO mutation_attempts (id, intent_id, kind, state, attempt_no, target_order_id, broker_order_id, fingerprint, recorded_at)
+		 VALUES ('attempt-cancel','intent-attempt-place','CANCEL','CONFIRMED',2,'order-manual','order-manual','fp-c',?)`,
+		j.nowString()); err != nil {
+		t.Fatal(err)
+	}
+	ids, err := j.EngineBrokerOrderIDs(ctx, "acct-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ids["order-engine"] || ids["order-manual"] {
+		t.Fatalf("ids = %v, want the PLACE order only", ids)
+	}
+}

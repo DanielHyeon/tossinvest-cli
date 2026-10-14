@@ -1,16 +1,16 @@
 {
   "file": "cmd/tossctl/limitsettings.go",
-  "source_sha256": "8e4690b6126a248bf6c0cfd43d0a28146ca5c08ecd2a59d98ead3501d1ebcf61",
+  "source_sha256": "2e04bcffd343777ee25ae8cc6f23438fd657cb70e5bc9c59a693d1187c78abef",
   "package": "main",
   "function": "Save",
   "receiver": "consoleLimitSettings",
   "signature": "consoleLimitSettings.Save(params=1, results=1)",
   "start": {
-    "line": 48,
+    "line": 49,
     "column": 1
   },
   "end": {
-    "line": 71,
+    "line": 72,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 50,
+        "line": 51,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 56,
+        "line": 57,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "else",
       "at": {
-        "line": 58,
+        "line": 59,
         "column": 9
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 63,
+        "line": 64,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 65,
+        "line": 66,
         "column": 3
       }
     }
@@ -59,14 +59,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 51,
+        "line": 52,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 70,
+        "line": 71,
         "column": 2
       }
     }
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 49,
+        "line": 50,
         "column": 23
       },
       "text": "s.svc.LoadRawEngineGate"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 50,
+        "line": 51,
         "column": 12
       },
       "text": "s.svc.SaveEngineGateLimits"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 57,
+        "line": 58,
         "column": 3
       },
       "text": "recordLimitSave"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 57,
+        "line": 58,
         "column": 19
       },
       "text": "before.Limits"
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 59,
+        "line": 60,
         "column": 3
       },
       "text": "recordLimitSave"
@@ -115,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 63,
+        "line": 64,
         "column": 19
       },
       "text": "s.svc.LoadRawEngineGate"
@@ -123,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 68,
+        "line": 69,
         "column": 3
       },
       "text": "recordDailyBuySave"
@@ -133,21 +133,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 49,
+        "line": 50,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 50,
-        "column": 5
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 63,
+        "line": 51,
         "column": 5
       }
     },
@@ -155,13 +148,20 @@
       "kind": ":=",
       "at": {
         "line": 64,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 65,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 66,
+        "line": 67,
         "column": 4
       }
     }

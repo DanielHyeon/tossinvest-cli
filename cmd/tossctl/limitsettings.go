@@ -15,6 +15,7 @@ package main
 import (
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
@@ -61,11 +62,11 @@ func (s consoleLimitSettings) Save(l config.GuardianLimits) error {
 	// a136: 하루 매수 상한은 다섯 칸과 달리 프리셋이 쓰지 않고, 통화 전환 저장이 쓰기도 함(지움) — 그래서 저장 **뒤** 파일 값으로
 	// 실제 변화를 적음(폼 값이 아니라 파일 값이 audit 의 대상).
 	if after, err := s.svc.LoadRawEngineGate(); err == nil {
-		from := 0.0
+		from, fromCurrency := 0.0, ""
 		if beforeErr == nil {
-			from = before.MaxDailyBuyNotional
+			from, fromCurrency = before.MaxDailyBuyNotional, before.LimitCurrency
 		}
-		recordDailyBuySave(from, after.MaxDailyBuyNotional)
+		recordDailyBuySave(from, fromCurrency, after.MaxDailyBuyNotional, after.LimitCurrency)
 	}
 	return nil
 }
@@ -113,7 +114,7 @@ func quotedOrUnset(v string) string {
 }
 
 // recordDailyBuySave 는 하루 매수 상한의 콘솔 저장 audit 한 줄(값이 바뀐 때만 RecordChange 가 남김).
-func recordDailyBuySave(before, after float64) {
+func recordDailyBuySave(before float64, beforeCurrency string, after float64, afterCurrency string) {
 	dir, err := journal.DataDir()
 	if err != nil {
 		return
@@ -122,7 +123,14 @@ func recordDailyBuySave(before, after float64) {
 	if err != nil {
 		return
 	}
-	number := func(v float64) string { return strconv.FormatFloat(v, 'f', -1, 64) }
-	_, _ = log.RecordChange(audit.ActionLimitChange, "console.automation_gate.max_daily_buy_notional", number(after),
-		"saved from the console settings screen (0 = unset); file value before this save was "+quotedOrUnset(number(before)))
+	// 값에 통화를 붙여 적음 — 숫자가 같아도 통화가 바뀌면 다른 상한이므로 RecordChange 가 변화로 남김(구현 리뷰 P1-1).
+	number := func(v float64, currency string) string {
+		if v == 0 {
+			return "0"
+		}
+		return strconv.FormatFloat(v, 'f', -1, 64) + " " + strings.ToUpper(strings.TrimSpace(currency))
+	}
+	_, _ = log.RecordChange(audit.ActionLimitChange, "console.automation_gate.max_daily_buy_notional", number(after, afterCurrency),
+		"saved from the console settings screen (0 = unset); file value before this save was "+
+			quotedOrUnset(number(before, beforeCurrency)))
 }

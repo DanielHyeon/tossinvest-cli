@@ -1,6 +1,6 @@
 {
   "file": "internal/console/settings_limits.go",
-  "source_sha256": "2473ea7e32b24d9916a158c39065c9900eb0797043213681d7a3044ebac1165a",
+  "source_sha256": "f3c64ef418118fb86f802df755694837450b5cc21bbe55ab4ff30306513a497e",
   "package": "console",
   "function": "handleSettingsLimitPreset",
   "receiver": "Console",
