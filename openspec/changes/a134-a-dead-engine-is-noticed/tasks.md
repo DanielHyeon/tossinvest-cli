@@ -31,7 +31,7 @@ Story: `STORY-TOS-a134` · 알림 · 생존 관측 경로(주문 · 손절 · �
 ## 3. 사람 · Manager
 
 - [x] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a134-a-dead-engine-is-noticed` + 독립 검증
-      — 2026-10-14 Manager 독립 검증: enginewatch 시험 · TestA134 직접 실행 ok · 운영 engine.autostart=true · engine-run.json 1분 갱신 실측 · sdd-sync 는 advisory CodeGraphContext 만 타임아웃, `make sdd-check` rc 0 · base ecf9fb3f
+      — 2026-10-14 Manager 독립 검증: enginewatch 시험 · TestA134 직접 실행 ok · 운영 engine.autostart=true · engine-run.json 1분 갱신 실측 · sdd-sync 는 advisory CodeGraphContext 만 타임아웃, `make sdd-check` rc 0 · base ecf9fb3f · 게이트 = 2026-10-14 `make gate` **11/11 PASS** (HEAD f8af7cf2)
 
 ### 게이트 뒤 절차 — 사람 게이트 (체크박스 아님 — a108 선례)
 

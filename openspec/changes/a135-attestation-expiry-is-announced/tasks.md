@@ -35,7 +35,7 @@ Story: `STORY-TOS-a135` · 관측 · 알림 경로(주문 · 손절 · 사이징
 ## 3. 사람 · Manager
 
 - [x] 3.1 Manager `make gate CHANGE=a135-attestation-expiry-is-announced` + 독립 검증
-      — 2026-10-14 Manager 독립 검증: 커밋 6da63b2f 경로 33 전부 a135 · cmd/tossctl · internal/obs 전체 시험 직접 실행 ok · base 870baed6 격리 워크트리 check_analysis rc 0(required 2)
+      — 2026-10-14 Manager 독립 검증: 커밋 6da63b2f 경로 33 전부 a135 · cmd/tossctl · internal/obs 전체 시험 직접 실행 ok · base 870baed6 격리 워크트리 check_analysis rc 0(required 2) · 게이트 = 2026-10-14 `make gate` **11/11 PASS** (HEAD f8af7cf2)
 
 ### 게이트 뒤 절차 — 사람 게이트 (체크박스 아님 — a108 선례)
 
