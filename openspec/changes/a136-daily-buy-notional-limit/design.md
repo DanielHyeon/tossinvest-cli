@@ -3,6 +3,16 @@
 근거 표기: 「AST:」는 `analysis/ast-evidence/<번들>/` 의 `tools/logic-map` 산출물(base 7b073f55, 편집 전)이다. 그 밖의 줄 번호는
 같은 base 의 HEAD 를 읽은 것이다.
 
+## 사람 결정 (2026-10-14, final — Manager 전달 원문 그대로)
+
+> - D1 = D (KST 08:00 rollover = each market's own trading date D; KR date D + US NY-date D regular sessions form one day; sum across markets). Shared with a137 (its day boundary uses the same definition) — put the day-key function in ONE place both can call (prefer existing clock package; one new constant only).
+> - D2 = c (count from the reservation ledger: today's issued entry reservations minus those proven to have zero fill, plus still-HELD). Measure the zero-fill provability (tasks 0.7) BEFORE coding; if it can't be proven from attempt→order→fill, stop and report.
+> - D4 = ≥ (reach → reject). D5 = refuse to start when base currency USD and limit absent.
+> - D9 = **b (CHANGED from your recommendation): manual buys placed outside the engine (Toss app etc.) are NOT blocked but ARE counted in today's total.** Design how to read them with existing official read paths only (e.g. /api/v1/orders ORDER_HISTORY for today's buys, filled + pending), dedupe against the engine's own orders (by broker order id from attempts), and convert US amounts with the same frozen-FX approach decided for a137 (reuse the USD/KRW authority already sealed in the same wave — no new FX read inside the request; check spec risk-management 「KR과 US는 하나의 account-base Guardian 권위를 공유한다」 MUST NOT and state how you comply). Constraint: PrecheckQFinalCampaignFirstLeg has a "no journal mutation and no broker call" contract and PrecheckQFinalEntry has no ctx → the broker read must happen OUTSIDE the precheck (e.g. a refresher producing a timestamped snapshot); stale/missing snapshot → fail closed for buys only, and name which normal inputs that rejects. If this makes a136 too big, propose splitting manual-buy counting into a136b and say so before coding.
+
+반영: D1 → 일 라벨 함수 `clock.AccountTradingDay`(새 파일 `internal/clock/account_day.go`, 새 상수 `AccountDayRollover = 8h` 하나 — a137 도 이것을 부른다).
+D2 → 아래 D2-c 실측(0.7)이 증명 가능 판정. D4 · D5 → spec 그대로. D9 → 아래 「D9 — a136b 분리 제안」(manual 집계는 a136 에서 코딩하지 않음).
+
 ## D0. 저장소가 이미 가진 것
 
 | 사실 | 근거 |
@@ -47,6 +57,21 @@ BROKER_TERMINAL 해제. 그 밖은 전부 센다(부분 체결 · 상태 불명 
 attempt → 주문 → 체결 수량 결합이 믿을 만한지 **구현 전 실측** 후 정한다(기본: 줄이지 않음 = 과대 집계, 안전 방향).
 HELD 인 예약은 발급 날짜와 무관하게 센다(어제 걸린 미체결 매수가 아직 살아 있으면 그것도 「미체결 매수」).
 
+### D2-c 실측 (tasks 0.7, 2026-10-14) — 체결 없음은 attempt → 주문 → 체결로 **증명 가능**
+
+결합 경로(전부 기존 칼럼): `risk_reservations.attempt_id` → `mutation_attempts(id, state, broker_order_id)` → `scoped_fill_snapshots`
+(PK `account_ref, market, trading_day, symbol, side, order_id`, `terminal`, `fail_closed`, `filled_quantity` 누적) · `fill_events(order_id, account_ref)`.
+
+| 제외 규칙 | 증명 근거 |
+|---|---|
+| Z1 `attempt_id IS NULL` · RELEASED · `EXPIRED_UNCONSUMED` | attempt 가 없으면 Prepare 가 없었고(`bindReservationsToAttempt` 는 Prepare tx 에서만), 미소비 만료 해제는 nonce 미사용일 때만(reservation_release.go:349-356) 또는 전략 dispatch claim 거절(strategy_dispatch_runtime.go:446-451, 전송 전) |
+| Z2 attempt `NOT_DISPATCHED` · `FAILED_CONFIRMED` | durability.go:39-42 — 「never left the process」 · 「broker definitively rejected it」 |
+| Z3 `broker_order_id` 의 scoped 스냅숏이 (계좌 · `side='BUY'`) 범위에서 **정확히 1행**, `terminal=1` · `fail_closed=0` · `filled_quantity` = 0, 그리고 그 주문의 `fill_events` 행 0 | 누적 체결 모델의 종결 관측(fills.go RecordFill). fail-closed 관측은 `terminal=0 · fail_closed=1` 로 쓰여(fills.go:811-815) Z3 에 안 걸림. 주문 id 재사용으로 2행 이상이면 귀속 불가 → 센다 |
+
+그 밖(HELD · in-doubt · UNRESOLVED · 부분 체결 · 스냅숏 없음 · OPERATOR 해제 · 귀속 불가)은 **전부 센다**. 거부 쪽(과대 집계)으로만 틀린다.
+정상 입력 중 과대 집계로 거절될 수 있는 것: 오늘 체결 없이 취소됐지만 체결 감지가 아직 종결을 관측하지 않은 주문(관측 뒤 해소), 운영자가 수동 해제한
+보유(OPERATOR — 센다), 영구 UNRESOLVED_IN_DOUBT 보유(매일 센다 — 운영자 해제 전까지).
+
 ## D3. 판정 위치 — 체인 rung 이 아니라 원자 트랜잭션
 
 체인은 발급 시점에 한 번, 호출자가 모은 값으로 돈다(AST `riskguardian.issueentry` B4). 그 값으로 「오늘 합계」를 넘기면 동시 발급 둘이
@@ -69,11 +94,16 @@ HELD 인 예약은 발급 날짜와 무관하게 센다(어제 걸린 미체결 
   (운영자가 USD 값을 명시). 대안: 사용자가 USD 기본값을 명시 승인(provenance 요구상 사람 승인 + 기록 필요).
 - 값의 provenance: 사용자 결정 2026-10-14(이 change). 이전에는 상한이 없었으므로 어떤 값도 완화가 아니다(새 검사).
 
-## D6. 단일 출처 — 한도 스냅샷 여섯째 칸
+## D6. 단일 출처 — 한도 스냅샷은 그대로, 인터록이 따로 대조 (proposal 대비 변경)
 
-`execgw.Limits` 에 `max_daily_buy_notional` 을 더하고 `ExposureLimitsFor` · 인터록 감사가 같은 값을 진술하게 한다(engine-safety 인터록 단일 출처).
-결과: 결정 `limits_json` 과 `LimitsDigest` 가 바뀐다. 기동 때 in-flight 결정은 없고(TTL 60초), 생산 전략 바인딩은 Guardian 에서 유도한다
-(`strategy_account_first_leg_authority.go:391`) — 구현 단계에서 서명 매니페스트가 digest 를 묶는지 실측.
+proposal 안(`execgw.Limits` 여섯째 칸)은 결정 `limits_json` · `LimitsDigest` · Gateway 재검증 · engine-safety 「5필드」 · 시험의 Limits 리터럴 전부를
+흔든다. 그런데 이 한도는 Gateway 가 재는 것이 아니라 예약 트랜잭션이 잰다(D3). 그래서 **Limits 는 5필드 그대로** 두고:
+
+- `config.AutomationGate.EffectiveMaxDailyBuyNotional()` 한 곳이 기본값 해석(없음 · 0 → KRW 면 10,000,000, 아니면 0 = 미설정)을 한다.
+- `riskPolicyFromAutomationGate` 가 그 값으로 `risk.Policy.MaxDailyBuyNotional` 을 채우고, `Policy.Validate` 가 양수 · 같은 통화를 요구한다 → USD 무값은
+  `ErrLimitsRequired` 로 기동 거부(D5).
+- Guardian 은 `DailyBuyNotionalLimit()` 로 자기 값을 진술하고, 인터록 `checkGuardianLimits` 가 같은 해석 값과 대조한다(진술 없음 · 불일치 → 거부).
+- 결과: `LimitsDigest` 불변 → 전략 바인딩 · 서명 매니페스트 영향 0.
 
 ## D7. 변경 경로 · 감사 · 콘솔
 
@@ -88,10 +118,24 @@ HELD 인 예약은 발급 날짜와 무관하게 센다(어제 걸린 미체결 
 
 계산 불가(경계 계산 실패 · 금액 해석 실패 · 통화 불일치) → **그 매수만** 거부. 매도 · 보호 · 청산 · 대사 · 체결 감지는 이 코드를 지나지 않는다(D0).
 
-## D9. 수동 주문
+## D9 — 사용자 결정 b(수동 매수도 합계에 넣음) · **a136b 분리 제안**
 
-Guardian 밖의 수동 주문(upstream `tossctl order place` 등 `mutating: true`)은 막지 않는다(OFF = upstream). D2-c 는 Guardian 발급분만 센다 —
-수동 매수는 합계에 들어가지 않는다. 수동분까지 세려면 브로커 주문 이력을 읽어야 하고 그것은 D2-b 의 FX 문제를 다시 연다. **사용자 확인 요청**.
+결정: 수동 매수(토스 앱 등)는 막지 않되 오늘 합계에 넣는다. 필요한 것을 세어 보면 a136 핵심(원장 집계)과 같은 크기의 두 번째 작업이다:
+
+1. **읽기** — 기존 공식 경로 `official.Client.Orders`/`OrdersPageRaw`(GET /api/v1/orders)로 두 시장의 오늘(라벨 D: 서울 날짜 D · 뉴욕 날짜 D) 매수 주문
+   (체결분 + 미체결 잔량 × 지정가). 새 broker 호출이므로 retry matrix · rate budget 계상(§0.4) 필요.
+2. **위치** — `PrecheckQFinalCampaignFirstLeg` 는 「journal 변경 · 브로커 호출 없음」 계약, `PrecheckQFinalEntry` 는 ctx 가 없다 → 읽기는 precheck 밖
+   **refresher**(엔진 보조 실행자)가 시각이 찍힌 스냅숏을 만들고, 발급은 그 스냅숏을 `SnapshotUsage` 처럼 넘겨 예약 tx 가 나이를 판정한다.
+3. **중복 제거** — `mutation_attempts.broker_order_id`(이 계좌 · PLACE) 에 있는 주문은 빼고(원장 집계가 이미 셈), 나머지를 수동으로 센다.
+4. **US 환산** — 「KR과 US는 하나의 account-base Guardian 권위를 공유한다」: 요청은 official source 가 mint 한 request-scoped frozen FX 만 쓰고 caller 가 준
+   raw rate 를 권한으로 승격하면 안 된다(MUST NOT), 중간 재조회 금지(MUST NOT). KR 요청은 identity FX 뿐이라 US 수동 매수(USD)를 KRW 로 바꿀 권한이
+   요청 안에 없다. 준수 방법 후보: 같은 wave 에서 봉인된 US→KRW authority 를 그대로 재사용(a137 Q5 결정과 같은 방식 — a137 미확정) — 그 authority 가
+   없거나 만료면 **US 수동 매수가 있는 날 KR 매수 전부 거절**(정상 입력 거절, fail-closed).
+5. **fail-closed 범위** — 스냅숏 없음 · 오래됨 → 매수만 거절. 거절되는 정상 입력: 엔진 기동 직후 첫 refresh 전의 매수, 브로커 주문 조회 장애 동안의 매수,
+   rate budget 소진 시의 매수, (4)의 FX 권한 부재 시 KR 매수.
+
+(4)가 a137 의 미확정 결정(Q5)에 묶이고 (1)·(2)가 새 broker 호출 · 보조 실행자를 더하므로, **manual 집계를 a136b 로 분리**하자고 제안한다(Manager 승인
+대기). a136 은 spec 에 「수동 매수 합산은 a136b 가 이 요구를 MODIFIED 해 더한다 — 그 전까지 Guardian 발급분만」이라고 적고 manual 코드는 쓰지 않는다.
 
 ## 잔재 · 비목표
 

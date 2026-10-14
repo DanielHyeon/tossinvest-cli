@@ -26,20 +26,25 @@
 
 ### Requirement: Automation gate limits are the production Guardian policy source
 The production `RiskGuardian` policy SHALL be derived from the automation gate's
-five configured limits, the resolved daily buy notional ceiling, and one normalized
-currency. The Guardian's maximum quantity, maximum order notional, maximum open
-exposure, maximum daily loss, maximum daily loss ratio, and maximum daily buy
-notional SHALL produce a limit snapshot byte-for-byte equivalent
+five configured limits and one normalized currency. The Guardian's maximum
+quantity, maximum order notional, maximum open exposure, maximum daily loss, and
+maximum daily loss ratio SHALL produce a limit snapshot byte-for-byte equivalent
 to the interlock's audited snapshot, including configured/set bits and currency.
 The per-trade risk budget SHALL equal the configured maximum daily-loss amount in
-the same currency.
+the same currency. The Guardian's daily buy notional ceiling SHALL equal the gate's
+resolved `max_daily_buy_notional` (absent or zero resolves to 10,000,000 only when the
+currency is KRW) in the same currency, and the startup interlock SHALL compare the
+Guardian's declared ceiling with that resolved value; a Guardian that does not declare
+one, or declares a different one, SHALL be refused. The ceiling is not part of the
+five-field limit snapshot a decision carries, because the reservation transaction —
+not the Gateway — is where it is measured.
 
 #### Scenario: USD policy construction
 - **WHEN** the gate contains valid USD limits
 - **THEN** every Guardian money field and its audited limit snapshot use USD and the configured values without falling back to KRW defaults
 
 #### Scenario: One configured value differs
-- **WHEN** any one of the six policy values or the currency differs from the gate
+- **WHEN** any one of the five policy values, the resolved daily buy notional ceiling, or the currency differs from the gate
 - **THEN** the startup interlock refuses the Guardian as a single-source mismatch
 
 #### Scenario: Risk budget derivation
@@ -78,19 +83,22 @@ Guardian은 계좌 하나의 하루 매수 총액에 상한을 두어야 한다(
 `limit_currency`)이며, 키가 없거나 0이면 기본값 10,000,000 KRW를 적용한다(SHALL — 기존 관례: 0은 미설정). 음수·NaN·Inf는 기동 거부다(SHALL).
 `limit_currency`가 KRW가 아닌데 값이 없으면 게이트 ON 기동을 거부한다(SHALL — 승인된 다른 통화 기본값이 없고 코드 환율은 금지다).
 
-하루의 경계는 두 시장에 공통인 하나여야 하며(SHALL), **KST 08:00에 넘어간다**(일 라벨 = `clock.MarketKR.TradingDay(now − 8시간)`):
-KR 정규장과 그날 밤 US 정규장이 같은 하루에 속하고 어느 정규장도 둘로 나뉘지 않는다. 시장별 하루 또는 시장별 별도 한도를 두어서는 안 된다(SHALL NOT).
+하루의 경계는 두 시장에 공통인 하나여야 하며(SHALL), **KST 08:00에 넘어간다**: 일 라벨은 `clock.AccountTradingDay(t)` =
+`clock.MarketKR.TradingDay(t − 8시간)` 한 곳에서만 계산한다(SHALL — 계좌 단위 일일 판정이 모두 이 함수를 쓴다). 라벨 D 의 하루에는 서울 날짜 D 의
+KR 정규장과 뉴욕 날짜 D 의 US 정규장이 함께 들어가며 어느 정규장도 둘로 나뉘지 않는다. 시장별 하루 또는 시장별 별도 한도를 두어서는 안 된다(SHALL NOT).
 
 판정은 체인 단계가 아니라 **결정 영속과 예약 삽입의 원자 journal 트랜잭션 안**에서 해야 한다(SHALL). 오늘의 합계는 같은 트랜잭션에서 읽은
-① 오늘 발급된 EXPOSURE_RAISING 결정의 OPEN_EXPOSURE 예약 금액 중 체결이 없었음이 증명되지 않은 것(미전송 종결·미소비 만료·체결 수량 0 종결만
-제외), ② 발급일과 무관하게 아직 HELD인 OPEN_EXPOSURE 예약의 합이며, 새 진입의 예약 금액을 더한 값이 한도에 **도달하면** 발급을 거부하고
+① 오늘 발급된 EXPOSURE_RAISING 결정의 OPEN_EXPOSURE 예약 금액 중 체결이 없었음이 증명되지 않은 것 — 제외는 셋뿐이다: attempt 없이 미소비 만료로
+해제됨, attempt 가 NOT_DISPATCHED 또는 FAILED_CONFIRMED, attempt 의 브로커 주문에 대한 체결 스냅숏이 계좌·매수 범위에서 정확히 한 행이고 그 행이
+종결(fail-closed 아님)·누적 체결 수량 0 이며 체결 이벤트가 없음, ② 발급일과 무관하게 아직 HELD인 OPEN_EXPOSURE 예약의 합이며, 새 진입의 예약 금액을 더한 값이 한도에 **도달하면** 발급을 거부하고
 LIMIT_REACHED로 기록한다(SHALL — 총계 경계 ≥와 같다). 금액은 예약 금액 그대로(`risk.EntryExposureValue` — 비용 포함, account base, US는 요청 단위
 frozen FX로 환산·ceil)를 쓰며 새 환율 경로를 만들어서는 안 된다(SHALL NOT). 합계를 계산할 수 없으면 그 매수의 결정과 예약은 함께 롤백된다(SHALL —
-fail-closed).
+fail-closed). EXPOSURE_RAISING 결정의 예약 트랜잭션이 이 한도를 함께 받지 않으면 그 요청은 거부된다(SHALL — 한도를 빠뜨린 발급 문이 조용히 통과하지 못한다).
 
 이 한도는 EXPOSURE_RAISING 진입 발급에만 적용된다(SHALL). RISK_REDUCING 발급, 손절, 익절, 비상 청산, flatten, 보호 주문, 대사, 체결 감지는 이 판정을
-지나서는 안 되며 지연되어서도 안 된다(SHALL NOT — §0.3). Guardian 밖의 수동 주문은 이 한도로 막지 않으며(SHALL NOT — OFF = upstream) 합계에도 들어가지
-않는다.
+지나서는 안 되며 지연되어서도 안 된다(SHALL NOT — §0.3). Guardian 밖의 수동 주문(토스 앱 등)은 이 한도로 막지 않는다(SHALL NOT — OFF = upstream). 수동 매수를 오늘 합계에 **넣는 것**은 사용자 결정
+(2026-10-14, D9=b)이며, 그 집계(공식 주문 조회 · 엔진 주문과의 중복 제거 · US 금액 환산)는 후속 change(a136b, Manager 승인 대기)가 이 요구를
+MODIFIED 해 더한다 — 그 전까지 합계는 Guardian 발급분만이다.
 
 한도 변경은 기존 한도 설정 seam(키 단위 쓰기, `enabled` 비기록)으로만 하며 필드별 이전·새 값이 audit 로그에 남아야 한다(SHALL). 콘솔 편집에 타이핑
 확인이나 추가 승인 단계를 두지 않는다(SHALL NOT). 가동 중인 엔진은 기동 시점 값으로 동작하고 재시작 때 새 값을 쓴다.

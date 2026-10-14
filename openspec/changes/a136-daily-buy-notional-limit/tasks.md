@@ -3,20 +3,20 @@
 Story: `STORY-TOS-a136` · **High-risk**(Guardian 발급 · 예약 트랜잭션 · 사이징 인접) — Pre-Edit 선언 · 편집 함수 FLM/BTM · RED 선행 · 변이 원장 ·
 독립 적대 리뷰 의무(docs/WORKFLOW.md 비례 원칙의 의무 범위).
 
-> **NOT READY(2026-10-14)** — 0.3 의 사용자 결정 전에는 1.x 이후를 시작하지 않는다. spec 델타는 추천안으로 적혀 있고, 다른 안을 고르면 0.4 에서 고친다.
+> 사용자 결정 2026-10-14 수신(design 「사람 결정」 원문). D9=b 의 수동 매수 집계는 **a136b 분리 제안**(Manager 승인 대기) — a136 은 원장 집계만 코딩한다.
 
 ## 0. 계약 · 증거
 
 - [x] 0.1 Story 등록(`docs/pm/portfolio/stories/STORY-TOS-a136.yaml`, `_registry.yaml`, `FEAT-TOS-003` 역링크) + tracker 재생성 + proposal
 - [x] 0.2 design(D0 근거표 · D1 경계 4안 · D2 집계 3안 · D3 위치 · D4 경계 · D5 설정 · D6 스냅샷 · D7 seam · D8 · D9) · spec 델타 · tasks,
       `openspec validate a136-daily-buy-notional-limit --strict --no-interactive` rc=0 — proposal 단계 AST 근거 5건(`analysis/ast-evidence/`, 게이트 번들 아님)
-- [ ] 0.3 **사용자 결정**: D1(하루 경계) · D2(집계 출처) · D4(≥) · D5(USD base 무값) · D9(수동 주문) — 결정과 날짜를 review.md 에 기록
+- [x] 0.3 **사용자 결정**: D1=D · D2=c · D4=≥ · D5=기동 거부 · D9=b(수동 매수 합산 — a136b 분리 제안) — design 「사람 결정」 원문 · review.md
 - [ ] 0.4 결정 반영(spec · design 수정 시 requirement 변경 리뷰) + proposal-freeze 리뷰(autoplan 4관점 + 적대 Eng) → review.md
 - [ ] 0.5 `capture_change_base.py --change a136-daily-buy-notional-limit` 로 구현 직전 base 고정(병행 a137 착지 뒤가 되도록 Manager 와 순서 조정)
 - [ ] 0.6 CodeGraph hard evidence · CodeGraphContext · evidence reconciliation(`analysis/code-context/`) — 발급 문 셋 · `reserveRows` · `recordLimitSave` · 인터록,
       `codegraph affected <files> --filter '*_test.go'`
-- [ ] 0.7 D2-c 실측: 결정 → attempt → 주문 → 체결 수량 결합으로 「체결 수량 0 종결」을 판정할 수 있는지, NOT_DISPATCHED · EXPIRED_UNCONSUMED 의
-      해제 사유 행 모양(시험 픽스처 전수 포함)
+- [x] 0.7 D2-c 실측: 결정 → attempt → 주문 → 체결 수량 결합으로 「체결 수량 0 종결」을 판정할 수 있는지, NOT_DISPATCHED · EXPIRED_UNCONSUMED 의
+      해제 사유 행 모양 — **증명 가능**(design 「D2-c 실측」 Z1~Z3, 그 밖은 전부 센다)
 - [ ] 0.8 편집할 기존 함수의 FLM/BTM 번들(`analysis/function-logic/`): `RiskGuardian.IssueEntry` · `IssuePrecheckedQFinalEntry` ·
       `IssuePrecheckedQFinalCampaignFirstLeg` · `reserveRows`(또는 그 호출 자리) · `ExposureLimitsFor` · `riskPolicyFromAutomationGate` ·
       `risk.Policy.Validate` · `DefaultPolicy` · 인터록 대조 함수 · `SaveEngineGateLimits` · `recordLimitSave` · `AutomationGate.Limits` + Pre-Edit 선언(review.md)
