@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/a137_daily_loss_cycle_test.go",
-  "source_sha256": "9f1fa83e44763f4251ccf0598f63049f2d5565ce28f104d68b1da1873667b5d0",
+  "source_sha256": "b465b2d519f1525a85ac8a29c1ef61fceec8aa78fde202c495160ade8a3b7e88",
   "package": "engine",
   "function": "TestA137ClassificationIsUnchangedForEveryPrecheckRefusal",
   "signature": "TestA137ClassificationIsUnchangedForEveryPrecheckRefusal(params=1, results=0)",
   "start": {
-    "line": 145,
+    "line": 138,
     "column": 1
   },
   "end": {
-    "line": 168,
+    "line": 161,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 159,
+        "line": 152,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 164,
+        "line": 157,
         "column": 3
       }
     }
@@ -35,7 +35,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 146,
+        "line": 139,
         "column": 12
       },
       "text": "pairedStrategyFirstLegResults"
@@ -43,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 152,
+        "line": 145,
         "column": 95
       },
       "text": "string"
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 153,
+        "line": 146,
         "column": 98
       },
       "text": "string"
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 154,
+        "line": 147,
         "column": 95
       },
       "text": "string"
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 155,
+        "line": 148,
         "column": 95
       },
       "text": "string"
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 156,
+        "line": 149,
         "column": 40
       },
       "text": "errors.New"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 160,
+        "line": 153,
         "column": 52
       },
       "text": "firstLegBridgeIssuanceFixture"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 162,
+        "line": 155,
         "column": 14
       },
       "text": "admit"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 162,
+        "line": 155,
         "column": 14
       },
       "text": "newStrategyFirstLegAdmissionBridge"
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 162,
+        "line": 155,
         "column": 71
       },
       "text": "context.Background"
@@ -115,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 164,
+        "line": 157,
         "column": 75
       },
       "text": "errors.As"
@@ -123,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 164,
+        "line": 157,
         "column": 111
       },
       "text": "isCentralStrategyIntegrity"
@@ -131,7 +131,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 165,
+        "line": 158,
         "column": 4
       },
       "text": "t.Errorf"
@@ -141,39 +141,40 @@
     {
       "kind": ":=",
       "at": {
-        "line": 146,
+        "line": 139,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 147,
+        "line": 140,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 160,
+        "line": 153,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 161,
+        "line": 154,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 162,
+        "line": 155,
         "column": 3
       }
     }
   ],
   "go_statements": null,
-  "defers": null
+  "defers": null,
+  "revision": "base"
 }
