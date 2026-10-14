@@ -56,7 +56,7 @@
     - STORY-TOS-a109 — The sibling endpoints recover too [archived] → `a109-the-sibling-endpoints-recover-too`
     - STORY-TOS-a113 — The projection probe proves death [archived] → `a113-the-projection-probe-proves-death`
     - STORY-TOS-a136 — A day's buying has a ceiling [archived] → `a136-daily-buy-notional-limit`
-    - STORY-TOS-a137 — The daily-loss limit is measured from the journal [in_progress] → `a137-daily-loss-is-measured`
+    - STORY-TOS-a137 — The daily-loss limit is measured from the journal [implemented] → `a137-daily-loss-is-measured`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [archived] → `console-click-approval`
