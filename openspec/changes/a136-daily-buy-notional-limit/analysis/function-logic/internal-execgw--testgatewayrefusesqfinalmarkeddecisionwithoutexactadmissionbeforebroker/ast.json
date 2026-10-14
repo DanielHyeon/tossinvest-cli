@@ -1,6 +1,6 @@
 {
   "file": "internal/execgw/riskguardian_qfinal_test.go",
-  "source_sha256": "1be6399c5efa3a76c930d65fd39619685e6d8a0c2cd5fba0b32ae5d7b8a48cc4",
+  "source_sha256": "76e4a5487df45d5eb02a8b71606dae94ee7205136a0cb7a69dc0ae5b2a10f6c8",
   "package": "execgw_test",
   "function": "TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker",
   "signature": "TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker(params=1, results=0)",
@@ -173,6 +173,22 @@
       "at": {
         "line": 234,
         "column": 91
+      },
+      "text": "clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 95
+      },
+      "text": "a136ZeroManualBuy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 113
       },
       "text": "clk.Now"
     },

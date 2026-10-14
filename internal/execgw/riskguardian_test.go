@@ -98,6 +98,8 @@ func newGuardian(t *testing.T, mutate func(*execgw.RiskGuardianOptions)) *guardi
 		Policy:        guardianPolicy(),
 		Costs:         costs.DefaultModel(),
 		PolicyVersion: "add-core-domain/4.1",
+		// a136: 「엔진 밖 수동 매수 0」 보드 — 수동 매수를 재지 않는 시험의 필수 입력(nil 이면 진입 전부 거부).
+		ManualBuys: a136ZeroManualBuyBoard(clk),
 	}
 	if mutate != nil {
 		mutate(&opts)
@@ -365,6 +367,10 @@ func TestARefusedReservationLeavesNoSubmittableDecision(t *testing.T) {
 
 func mustGuardian(t *testing.T, opts execgw.RiskGuardianOptions) *execgw.RiskGuardian {
 	t.Helper()
+	if opts.ManualBuys == nil && opts.Clock != nil {
+		// a136: 수동 매수를 재지 않는 시험은 「수동 매수 0」 보드를 씀(nil 이면 진입 전부 거부).
+		opts.ManualBuys = a136ZeroManualBuyBoard(opts.Clock)
+	}
 	g, err := execgw.NewRiskGuardian(opts)
 	if err != nil {
 		t.Fatalf("NewRiskGuardian: %v", err)

@@ -1,0 +1,94 @@
+{
+  "file": "internal/execgw/riskguardian_test.go",
+  "source_sha256": "0ad8042923695c0c47c8f32ff1283e12e0ea5892ea62d88346df67155f7e6727",
+  "package": "execgw_test",
+  "function": "mustGuardian",
+  "signature": "mustGuardian(params=2, results=1)",
+  "start": {
+    "line": 368,
+    "column": 1
+  },
+  "end": {
+    "line": 379,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 370,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 375,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 378,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 369,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 372,
+        "column": 21
+      },
+      "text": "a136ZeroManualBuyBoard"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 12
+      },
+      "text": "execgw.NewRiskGuardian"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 376,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 372,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 374,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -46,7 +46,11 @@ type QFinalEntryIssuance struct {
 	Admission                journal.RiskBucketAdmissionPlan
 	// FXAuthority is opaque and must remain attached through final issuance.
 	// Caller-created riskbucket.FXEvidence in Admission is always overwritten.
-	FXAuthority           officialfx.Evidence
+	FXAuthority officialfx.Evidence
+	// PairedFXAuthority 는 같은 파도의 짝 FX 수집(같은 observedAt)에서 꺼낸 **다른 시장**의 봉인 authority(a136 D9=b · a137).
+	// 하루 매수 합계에 든 다른 통화 수동 매수(또는 손실)를 환산하는 데만 쓰고, 요청의 sizing · exposure · reservation ·
+	// envelope FX 는 FXAuthority 그대로임. 비어 있으면 다른 통화 금액이 있는 날 이 진입은 거부됨.
+	PairedFXAuthority     officialfx.Evidence
 	ExpectedPolicyVersion string
 	ExpectedLimitsDigest  string
 	testFXAuthority       riskbucket.FXEvidence
@@ -238,13 +242,17 @@ func (g *RiskGuardian) IssuePrecheckedQFinalEntry(ctx context.Context, precheck 
 		if err != nil {
 			return journal.QFinalIssueRequest{}, err
 		}
+		daily, err := g.dailyBuyLimit(now, qFinalManualBuyFX(precheck.request, precheck.market))
+		if err != nil {
+			return journal.QFinalIssueRequest{}, err
+		}
 		return journal.QFinalIssueRequest{
 			Issue: journal.IssueRequest{Decision: decision, Reserve: journal.ReserveRequest{
 				SnapshotAsOf: snapshot.AsOf, ObservedVersion: snapshot.Version,
 				SnapshotUsage: []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: usage, Currency: exposure.Currency}},
 				Limits:        []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: g.policy.MaxOpenExposure.Amount, Currency: exposure.Currency}},
 				Reservations:  []journal.ReservationRequest{{ID: reservationID, Kind: journal.ReservationKindOpenExposure, Amount: exposure.Amount, Currency: exposure.Currency}},
-				DailyBuyLimit: g.dailyBuyLimit(),
+				DailyBuyLimit: daily,
 			}}, Admission: admission,
 		}, nil
 	}

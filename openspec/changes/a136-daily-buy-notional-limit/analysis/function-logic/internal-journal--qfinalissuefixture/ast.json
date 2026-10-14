@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/risk_bucket_issuance_test.go",
-  "source_sha256": "c53ccb86fcd71d4180aba5a4ee3a929d36eed473d9d76f867ccfb5a9e79ad580",
+  "source_sha256": "b3a7cb2940b448a2d13076fc80c6b53affe568879f5762abfb9df295e0a71205",
   "package": "journal",
   "function": "qFinalIssueFixture",
   "signature": "qFinalIssueFixture(params=3, results=1)",
@@ -111,6 +111,14 @@
         "column": 101
       },
       "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 88
+      },
+      "text": "a136ZeroManualBuy"
     }
   ],
   "assignments": [

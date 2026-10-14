@@ -234,7 +234,7 @@ func TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker(t *
 			LimitsJSON: limitsJSON, Nonce: "qfinal-gateway-nonce", IssuedAt: clk.Now(), ExpiresAt: clk.Now().Add(time.Minute),
 		},
 		Reserve: journal.ReserveRequest{
-			DailyBuyLimit: &journal.DailyBuyLimit{Amount: "1000000000000", Currency: "KRW"}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
+			DailyBuyLimit: &journal.DailyBuyLimit{Amount: "1000000000000", Currency: "KRW", ManualBuy: a136ZeroManualBuy(clk.Now())}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
 			SnapshotAsOf:  clk.Now(), ObservedVersion: version,
 			SnapshotUsage: []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: "0", Currency: "KRW"}},
 			Limits:        []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: "5000000", Currency: "KRW"}},

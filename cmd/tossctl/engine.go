@@ -743,7 +743,9 @@ func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, l
 		},
 		// a092 C8: exit 관측 goroutine 의 일반 등급 알림을 비우는 보조 실행자 — 배달 실행자와 따로(그 사이클에 얹지 않음).
 		// a135: attestation 만료 · 범위 상실 감시 — 감독 밖이라 그 결함이 손절 루프를 내리지 않음.
-		Auxiliary: []engine.AuxiliaryExecutor{alertDelivery, ectx.NormalAlertRelayExecutor(), ectx.AttestationWatch(clk)},
+		Auxiliary: []engine.AuxiliaryExecutor{alertDelivery, ectx.NormalAlertRelayExecutor(), ectx.AttestationWatch(clk),
+			ectx.ManualBuyRefresher(clk)}, // a136 D9=b: 엔진 밖 수동 매수 읽기
+
 	})
 }
 

@@ -1,8 +1,8 @@
 # Function Logic Map: `IssuePrecheckedQFinalCampaignFirstLeg`
 
-- Source: `internal/execgw/riskguardian_first_leg.go` (117-209, 편집 뒤)
+- Source: `internal/execgw/riskguardian_first_leg.go` (117-213, 편집 뒤)
 - Qualified: `RiskGuardian.IssuePrecheckedQFinalCampaignFirstLeg`
-- AST evidence: `ast.json`(편집 뒤) · `ast-base.json`(편집 전, base f504cc52, `source_sha256` 45de8eaa98ad293b…, 편집 전 분기 수 12) — 현재 branches 12 · returns 13
+- AST evidence: `ast.json`(편집 뒤) · `ast-base.json`(편집 전, base f504cc52, `source_sha256` 45de8eaa98ad293b…, 편집 전 분기 수 12) — 현재 branches 13 · returns 14
 - Risk scan: `risk-pattern-report.md`
 
 **역할.** 전략 첫 다리 발급 문(생산 전략 경로).
@@ -30,9 +30,10 @@
 | B9 | `if err != nil {` (if 176) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
 | B10 | `if !verdict.Allowed {` (if 183) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
 | B11 | `if err != nil {` (if 187) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
-| B12 | `if err != nil {` (if 205) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
+| B12 | `if err != nil {` (if 191) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
+| B13 | `if err != nil {` (if 209) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` |
 
-Exact AST return positions: 120 · 125 · 132 · 137 · 143 · 161 · 165 · 177 · 184 · 188 · 190 · 206 · 208
+Exact AST return positions: 120 · 125 · 132 · 137 · 143 · 161 · 165 · 177 · 184 · 188 · 192 · 194 · 210 · 212
 
 ## Calls and live bindings
 

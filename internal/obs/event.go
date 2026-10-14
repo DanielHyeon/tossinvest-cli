@@ -171,6 +171,9 @@ const (
 	// EventAttestationWatchFailed 는 a135 attestation 감시의 판정 한 번이 실패했거나(패닉 · 알림 기록 실패) 그 보조 실행자가
 	// 멈춘 줄임. Normal · 로그만 — 래치 없음. 감시의 결함이 진입 · 청산에 닿으면 안 됨(EventNormalAlertRelayStopped 와 같은 규칙).
 	EventAttestationWatchFailed EventType = "engine.attestation_watch_failed"
+	// EventManualBuyRefreshFailed 는 a136 수동 매수 refresher 의 읽기 한 번이 실패했거나(조회 실패 · 산정 불가) 그 보조 실행자가
+	// 멈춘 줄임. 로그만 — 래치 없음. 실패한 읽기는 보드에 산정 불가로 게시되어 **매수만** 거부되고 매도 · 청산에는 닿지 않음.
+	EventManualBuyRefreshFailed EventType = "engine.manual_buy_refresh_failed"
 	// EventEngineLoopFailed is a supervised loop that returned for a reason other
 	// than the runtime being cancelled (add-engine-runtime: 방어적 종료 계약).
 	// CRITICAL: the landed loops do not return, so one that did has hit a state

@@ -1,6 +1,6 @@
 {
   "file": "internal/execgw/a066_entry_loss_lock_red_test.go",
-  "source_sha256": "0f2f348fba48e95b00562e28ca299e723d614a12cc17ddab78b8e6102f6ce19e",
+  "source_sha256": "8e40c50d9aab168a478a5774c1176bace86dab3ed5e745e2adbed1f18bb51244",
   "package": "execgw_test",
   "function": "TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths",
   "signature": "TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths(params=1, results=0)",
@@ -293,6 +293,22 @@
       "at": {
         "line": 243,
         "column": 100
+      },
+      "text": "clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 96
+      },
+      "text": "a136ZeroManualBuy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 114
       },
       "text": "clk.Now"
     },

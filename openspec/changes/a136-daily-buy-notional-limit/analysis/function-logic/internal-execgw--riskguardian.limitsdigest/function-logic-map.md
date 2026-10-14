@@ -1,6 +1,6 @@
 # Function Logic Map: `LimitsDigest`
 
-- Source: `internal/execgw/riskguardian.go` (321-327, 편집 뒤)
+- Source: `internal/execgw/riskguardian.go` (326-332, 편집 뒤)
 - Qualified: `RiskGuardian.LimitsDigest`
 - AST evidence: `ast.json`(편집 뒤) · `ast-base.json`(편집 전, base f504cc52, `source_sha256` 88cf7c183018aae8…, 편집 전 분기 수 0) — 현재 branches 0 · returns 1
 - Risk scan: `risk-pattern-report.md`
@@ -21,7 +21,7 @@
 |---|---|---|---|---|
 | (없음) | 직선 함수 — AST branches 0 | — | — | `TestA136TheLimitsDigestBindsTheDailyBuyCeiling` |
 
-Exact AST return positions: 326
+Exact AST return positions: 331
 
 ## Calls and live bindings
 

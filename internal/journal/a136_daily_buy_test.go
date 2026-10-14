@@ -7,6 +7,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 )
 
 // a136_daily_buy_test.go 는 하루 매수 총액 상한(risk-management 「하루 매수 총액 한도」)의 원장 판정을 고정함.
@@ -16,12 +18,21 @@ import (
 
 const a136Ceiling = "1000"
 
+// a136ZeroManualBuy 는 「엔진 밖 수동 매수 0」 스냅숏(그 순간 신선) — 수동 매수를 재지 않는 시험의 필수 칸.
+func a136ZeroManualBuy(at time.Time) *ManualBuyTotal {
+	day, err := clock.AccountTradingDay(at)
+	if err != nil {
+		panic(err)
+	}
+	return &ManualBuyTotal{Amount: "0", AsOf: at, Day: day}
+}
+
 // a136Reserve 는 진입 결정을 기록하고 하루 매수 상한 1000 KRW 를 실어 예약함.
 func a136Reserve(t *testing.T, j *Journal, id, amount string) (ReserveResult, error) {
 	t.Helper()
 	recordEntryDecision(t, j, id, "acct-1")
 	req := exposureReserve(j, id, "acct-1", amount, "0", "1000000000", mustVersion(t, j, "acct-1"))
-	req.DailyBuyLimit = &DailyBuyLimit{Amount: a136Ceiling, Currency: "KRW"}
+	req.DailyBuyLimit = &DailyBuyLimit{Amount: a136Ceiling, Currency: "KRW", ManualBuy: a136ZeroManualBuy(j.Now())}
 	return j.Reserve(context.Background(), req)
 }
 
@@ -265,7 +276,7 @@ func TestA136TheAccountDayRollsOverAtEightKST(t *testing.T) {
 		recordEntryDecision(t, j, "d-edge", "acct-1")
 		fake.Set(time.Date(2026, 3, 30, 23, 0, 5, 0, time.UTC)) // 08:00:05 KST — 라벨 3-31
 		req := exposureReserve(j, "d-edge", "acct-1", "1", "0", "1000000000", mustVersion(t, j, "acct-1"))
-		req.DailyBuyLimit = &DailyBuyLimit{Amount: a136Ceiling, Currency: "KRW"}
+		req.DailyBuyLimit = &DailyBuyLimit{Amount: a136Ceiling, Currency: "KRW", ManualBuy: a136ZeroManualBuy(j.Now())}
 		if _, err := j.Reserve(ctx, req); !errors.Is(err, ErrReservationLimitExceeded) {
 			t.Fatalf("a buy decided on one account day cannot reserve on the next, got %v", err)
 		}
@@ -338,7 +349,7 @@ func TestA136ConcurrentBuysCannotBothFitUnderTheCeiling(t *testing.T) {
 					return ReserveRequest{}, err
 				}
 				req := exposureReserve(j, decision, "acct-1", "400", "0", "1000000000", version)
-				req.DailyBuyLimit = &DailyBuyLimit{Amount: a136Ceiling, Currency: "KRW"}
+				req.DailyBuyLimit = &DailyBuyLimit{Amount: a136Ceiling, Currency: "KRW", ManualBuy: a136ZeroManualBuy(j.Now())}
 				return req, nil
 			}, RecollectPolicy{})
 			mu.Lock()
@@ -354,5 +365,38 @@ func TestA136ConcurrentBuysCannotBothFitUnderTheCeiling(t *testing.T) {
 	// 300 + 400 + 400 = 1100 ≥ 1000 — 둘 중 하나만.
 	if okCount != 1 || len(errs) != 1 || !errors.Is(errs[0], ErrReservationLimitExceeded) {
 		t.Fatalf("exactly one of two concurrent buys may fit, ok=%d errs=%v", okCount, errs)
+	}
+}
+
+func TestA136TheManualBuySnapshotCountsAndMustBeFresh(t *testing.T) {
+	ctx := context.Background()
+	reserveWith := func(j *Journal, id string, manual *ManualBuyTotal) error {
+		recordEntryDecision(t, j, id, "acct-1")
+		req := exposureReserve(j, id, "acct-1", "600", "0", "1000000000", mustVersion(t, j, "acct-1"))
+		req.DailyBuyLimit = &DailyBuyLimit{Amount: a136Ceiling, Currency: "KRW", ManualBuy: manual}
+		_, err := j.Reserve(ctx, req)
+		return err
+	}
+	j, _ := openReservationJournal(t)
+	counted := a136ZeroManualBuy(j.Now())
+	counted.Amount = "400" // 수동 400 + 새 600 = 1000 ≥ 1000
+	if err := reserveWith(j, "d-manual", counted); !errors.Is(err, ErrReservationLimitExceeded) {
+		t.Fatalf("manual buys must count toward the ceiling, got %v", err)
+	}
+	stale := a136ZeroManualBuy(j.Now().Add(-ManualBuyStaleness - time.Second))
+	stale.Day = counted.Day
+	if err := reserveWith(j, "d-stale", stale); !errors.Is(err, ErrSnapshotStale) {
+		t.Fatalf("a manual buy snapshot past its bound must be refused as stale, got %v", err)
+	}
+	other := a136ZeroManualBuy(j.Now())
+	other.Day = "2026-03-29"
+	if err := reserveWith(j, "d-day", other); !errors.Is(err, ErrSnapshotStale) {
+		t.Fatalf("a manual buy snapshot of another account day must be refused, got %v", err)
+	}
+	if err := reserveWith(j, "d-nil", nil); !errors.Is(err, ErrInvalidRequest) {
+		t.Fatalf("a missing manual buy total must be refused, got %v", err)
+	}
+	if err := reserveWith(j, "d-ok", a136ZeroManualBuy(j.Now())); err != nil {
+		t.Fatalf("a fresh zero snapshot must let the buy through: %v", err)
 	}
 }

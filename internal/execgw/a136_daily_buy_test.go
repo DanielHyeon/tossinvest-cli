@@ -72,3 +72,22 @@ func TestA136TheLimitsDigestBindsTheDailyBuyCeiling(t *testing.T) {
 		t.Fatalf("declared ceiling = %+v", got)
 	}
 }
+
+func TestA136AManualBuyOutsideTheEngineCountsTowardTheDay(t *testing.T) {
+	// 수동 매수 400,000 KRW + 진입 700,700 = 1,100,700 ≥ 1,000,000 → 거부. 수동 매수 자체는 막히지 않음(엔진 밖).
+	rig := newGuardian(t, smallDailyBuy("1000000"))
+	board := rig.guardian.ManualBuyBoard()
+	day := a136ZeroManualBuy(rig.clock.Now()).Day
+	board.Publish(execgw.ManualBuySnapshot{AsOf: rig.clock.Now(), Day: day, ByCurrency: map[string]string{"KRW": "400000"}})
+	_, err := rig.issue(context.Background())
+	requireDailyBuyRefusal(t, err)
+}
+
+func TestA136IssueEntryRefusesWhenForeignManualBuysCannotBeConverted(t *testing.T) {
+	rig := newGuardian(t, nil)
+	day := a136ZeroManualBuy(rig.clock.Now()).Day
+	rig.guardian.ManualBuyBoard().Publish(execgw.ManualBuySnapshot{AsOf: rig.clock.Now(), Day: day, ByCurrency: map[string]string{"USD": "10"}})
+	if _, err := rig.issue(context.Background()); !errors.Is(err, execgw.ErrManualBuyUnknown) {
+		t.Fatalf("a door with no FX authority must refuse when USD manual buys exist, got %v", err)
+	}
+}

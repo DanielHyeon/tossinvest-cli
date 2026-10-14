@@ -1,6 +1,6 @@
 {
   "file": "internal/measure/reconstruct_test.go",
-  "source_sha256": "7718f539ac133f4346017c106c0513167fe26ce4bf59119795e1fd45dd3f132d",
+  "source_sha256": "ae5c73dcf1be91b0911124b4fb508d6fea277009a4f315f5ace8d5ef2b8ab4c1",
   "package": "measure_test",
   "function": "issueEntry",
   "signature": "issueEntry(params=3, results=0)",
@@ -87,6 +87,14 @@
         "column": 16
       },
       "text": "issued.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 97
+      },
+      "text": "a136ZeroManualBuy"
     },
     {
       "kind": "call",

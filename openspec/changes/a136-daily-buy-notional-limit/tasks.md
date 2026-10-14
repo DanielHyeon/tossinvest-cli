@@ -28,7 +28,10 @@ Story: `STORY-TOS-a136` · **High-risk**(Guardian 발급 · 예약 트랜잭션 
       서머타임 양쪽) · 계산 불가 fail-closed · 매도 무관(reduce-only · 손절) · US frozen FX 금액 · 기본값/0/음수/USD 무값 · 인터록 상한 진술 불일치 거부
 - [x] 1.2 GREEN(핵심) — 설정 필드 · Policy · 원자 트랜잭션 안 합산(`journal/daily_buy.go`) · 발급 문 셋 · 인터록 · 기동 audit · digest · 통화 전환 지움
       — RED `analysis/red/red-{clock,journal,risk,config,execgw,app-engine}.txt`(base + 시험 = 기호 미정의), 변이 round2 18/18 CAUGHT
-- [ ] 1.5 수동 매수 합산(D9=b) — refresher · 스냅숏 · 중복 제거 · paired FX · fail-closed(design D9) + RED · 변이
+- [x] 1.5 수동 매수 합산(D9=b) — refresher · 스냅숏 · 중복 제거 · paired FX · fail-closed(design D9) + RED · 변이
+      — `internal/manualbuy`(순수 합산) · `app/engine/manual_buy_refresh.go`(보조 실행자 30초) · `execgw/manual_buy.go`(보드 · base 환산) ·
+      journal 신선도 2분 · 하루 라벨 검사 · `QFinalEntryIssuance.PairedFXAuthority`(첫 다리 조립이 짝 FX 에서 채움).
+      RED `analysis/red/red-1.5-*.txt`(핵심 c8783ad9 + 시험 = 기호 미정의), 변이 round3
 - [ ] 1.3 콘솔 한도 편집기 숫자 칸(규칙 12 · 13 — ui-skills 1~3개, 렌더 확인, 버튼 미클릭, 확인 문구 없음). 2차 결정으로 a136 안 — 분리하지 않음
 - [ ] 1.4 REFACTOR · 편집 뒤 AST 재추출 · `check_analysis.py --change`
 

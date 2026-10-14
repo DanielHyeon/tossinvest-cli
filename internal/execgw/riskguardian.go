@@ -225,6 +225,9 @@ type RiskGuardianOptions struct {
 	// It is called after the ledger has answered and it must not block — see
 	// observation.go.
 	Observer EntryObserver
+	// ManualBuys 는 엔진 밖 수동 매수 스냅숏 보드(a136 D9=b). nil 이면 모든 진입이 거부됨 — 수동 매수를 셀 수 없는 하루
+	// 매수 총액은 모르는 값이므로(fail-closed). 생산 Guardian 은 newProductionRiskGuardian 이 보드를 만들어 넣음.
+	ManualBuys *ManualBuyBoard
 }
 
 // RiskGuardian is the risk authority. Its fields are unexported because two of
@@ -245,6 +248,7 @@ type RiskGuardian struct {
 	announcer     journal.ModeAnnouncer
 	newID         func() string
 	observer      EntryObserver
+	manualBuys    *ManualBuyBoard
 }
 
 // NewRiskGuardian validates the configuration and derives the limit snapshot.
@@ -305,6 +309,7 @@ func NewRiskGuardian(opts RiskGuardianOptions) (*RiskGuardian, error) {
 		announcer:     opts.Announcer,
 		newID:         newID,
 		observer:      opts.Observer,
+		manualBuys:    opts.ManualBuys,
 	}, nil
 }
 
@@ -481,6 +486,11 @@ func (g *RiskGuardian) IssueEntry(ctx context.Context, req EntryIssuance) (Issue
 		if err != nil {
 			return journal.IssueRequest{}, err
 		}
+		// a136: 이 문은 FX authority 를 갖지 않으므로 수동 매수는 base 통화 금액만 셀 수 있음(다른 통화가 있으면 거부).
+		daily, err := g.dailyBuyLimit(in.Now, nil)
+		if err != nil {
+			return journal.IssueRequest{}, err
+		}
 		return journal.IssueRequest{
 			Decision: decision,
 			Reserve: journal.ReserveRequest{
@@ -504,7 +514,7 @@ func (g *RiskGuardian) IssueEntry(ctx context.Context, req EntryIssuance) (Issue
 						Currency: currency,
 					},
 				},
-				DailyBuyLimit: g.dailyBuyLimit(),
+				DailyBuyLimit: daily,
 			},
 		}, nil
 	}

@@ -1,8 +1,8 @@
 # Function Logic Map: `IssueEntry`
 
-- Source: `internal/execgw/riskguardian.go` (411-559, 편집 뒤)
+- Source: `internal/execgw/riskguardian.go` (416-569, 편집 뒤)
 - Qualified: `RiskGuardian.IssueEntry`
-- AST evidence: `ast.json`(편집 뒤) · `ast-base.json`(편집 전, base f504cc52, `source_sha256` 88cf7c183018aae8…, 편집 전 분기 수 13) — 현재 branches 13 · returns 12
+- AST evidence: `ast.json`(편집 뒤) · `ast-base.json`(편집 전, base f504cc52, `source_sha256` 88cf7c183018aae8…, 편집 전 분기 수 13) — 현재 branches 14 · returns 13
 - Risk scan: `risk-pattern-report.md`
 
 **역할.** 일반 진입 발급 문(체인 1회 → 원자 발급).
@@ -19,21 +19,22 @@
 
 | Branch | Condition (소스 줄 인용) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `if req.Collect == nil {` (if 412) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
-| B2 | `if err != nil {` (if 416) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
-| B3 | `if intent.Side != risk.SideBuy {` (if 419) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
-| B4 | `if verdict := evaluateChain(in); !verdict.Allowed {` (if 433) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
-| B5 | `if !verdict.Allowed {` (if 442) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
-| B6 | `if err != nil {` (if 477) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
-| B7 | `if err != nil {` (if 481) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
-| B8 | `if req.strategyPlan == nil {` (if 513) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
-| B9 | `} else {` (else 515) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
-| B10 | `if collectErr != nil {` (if 519) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
-| B11 | `if strategyErr == nil {` (if 524) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
-| B12 | `if err != nil {` (if 530) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
-| B13 | `if refused, ok := refusal.(*IssueRefusal); ok && refused.Stage == StageIssuance {` (if 537) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
+| B1 | `if req.Collect == nil {` (if 417) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
+| B2 | `if err != nil {` (if 421) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
+| B3 | `if intent.Side != risk.SideBuy {` (if 424) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
+| B4 | `if verdict := evaluateChain(in); !verdict.Allowed {` (if 438) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
+| B5 | `if !verdict.Allowed {` (if 447) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
+| B6 | `if err != nil {` (if 482) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
+| B7 | `if err != nil {` (if 486) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
+| B8 | `if err != nil {` (if 491) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
+| B9 | `if req.strategyPlan == nil {` (if 523) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
+| B10 | `} else {` (else 525) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
+| B11 | `if collectErr != nil {` (if 529) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
+| B12 | `if strategyErr == nil {` (if 534) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
+| B13 | `if err != nil {` (if 540) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
+| B14 | `if refused, ok := refusal.(*IssueRefusal); ok && refused.Stage == StageIssuance {` (if 547) | — | 분기 본문 참조 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run RiskGuardian` |
 
-Exact AST return positions: 413 · 417 · 420 · 439 · 444 · 478 · 482 · 484 · 520 · 522 · 541 · 552
+Exact AST return positions: 418 · 422 · 425 · 444 · 449 · 483 · 487 · 492 · 494 · 530 · 532 · 551 · 562
 
 ## Calls and live bindings
 

@@ -140,6 +140,19 @@ proposal 안(`execgw.Limits` 여섯째 칸)은 결정 `limits_json` · `LimitsDi
    전의 매수, 브로커 주문 조회 장애 동안의 매수, rate budget 소진 시의 매수, US 수동 매수가 있는 날 US authority 가 없는 KR 매수(일반 `IssueEntry` 경로는
    FX authority 를 갖지 않으므로 그날 그 경로의 매수 전부).
 
+### D9 구현 기록 (1.5)
+
+- 보드(`execgw.ManualBuyBoard`)는 생산 Guardian 생성 때 만들어지고, 보조 실행자 `manual-buy-refresh`(30초)가 게시함. 첫 게시 전 · 읽기 실패 ·
+  산정 불가 → 그 스냅숏으로는 매수 거부(`execgw.ErrManualBuyUnknown`). 실패한 읽기도 게시함 — 옛 성공 값이 낡을 때까지 쓰이지 않게.
+- journal 은 스냅숏의 하루 라벨 ≠ 오늘 · 나이 > 2분 · 미래 시각을 `ErrSnapshotStale`(재수집 → 끝내 낡으면 SNAPSHOT_RECOLLECTION_EXHAUSTED)로,
+  수동 합계 없음을 `ErrInvalidRequest` 로 거부함.
+- 환산: base 통화는 그대로, 다른 통화는 `qFinalManualBuyFX` 가 모은 요청 자기 authority 와 `PairedFXAuthority`(같은 파도 짝 FX 의 다른 시장)만으로
+  `risk.BindAccountBaseFX` + `AccountBaseOrderNotional`(올림). `IssueEntry`(트레이서 · 전략 dispatch KR) 문은 FX authority 가 없으므로
+  다른 통화 수동 매수가 있는 날 그 문의 매수는 전부 거부됨.
+- 브로커 호출 예산(§0.4): 30초마다 OPEN 1 + CLOSED 페이지(평소 1), 페이지 상한 20. from/to 는 라벨 앞뒤 하루씩(시간대 `[미측정]`), 귀속은 주문 시각.
+- 잔재: 30초 주기 사이의 수동 매수 한 건은 다음 게시까지 합계에 늦게 들어감(최대 한 주기 + 재수집). US 정규장 동안 KR 후보가 Ready 가 아니면
+  US 요청의 짝(KR) authority 가 없지만, base 가 KRW 면 KRW 수동 매수는 환산이 필요 없으므로 영향 없음.
+
 ## D10 — freeze 리뷰 수리 기록
 
 - P1-1 Z3 를 정확한 주문 범위(intent scope · BROKER_TERMINAL · CONFIRMED PLACE · 소유 intent 하나 · settled_at < committed_at · 계보 두 표)로 좁힘 —

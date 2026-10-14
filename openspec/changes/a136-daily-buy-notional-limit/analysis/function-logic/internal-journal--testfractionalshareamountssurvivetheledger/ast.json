@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/reservations_test.go",
-  "source_sha256": "63cf1c439b1d6520a6dc9c85cda77f027189c106d9d208aeb187a991823edb15",
+  "source_sha256": "83dc4732cbd12f851e16c484d494b9a8983e32e82f07da3db1fcbba33f84afe2",
   "package": "journal",
   "function": "TestFractionalShareAmountsSurviveTheLedger",
   "signature": "TestFractionalShareAmountsSurviveTheLedger(params=1, results=0)",

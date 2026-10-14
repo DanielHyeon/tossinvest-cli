@@ -24,7 +24,7 @@ func TestProductionRuntimeStartsExactlyOneAlertDeliverer(t *testing.T) {
 	}
 	// a092 C8: exit 일반 등급 이관 실행자가 둘째 보조 실행자 — 배달 실행자는 여전히 하나.
 	// a135: attestation 만료 감시가 셋째 — 감독 밖이라 그 결함이 다른 루프를 내리지 않음.
-	want := []string{"alert-delivery", "normal-alert-relay", "attestation-watch"}
+	want := []string{"alert-delivery", "normal-alert-relay", "attestation-watch", "manual-buy-refresh"} // a136: 수동 매수 읽기
 	if got := runtime.AuxiliaryNames(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("production auxiliary names=%v want=%v — 밀린 알림을 보내는 주체가 없다", got, want)
 	}

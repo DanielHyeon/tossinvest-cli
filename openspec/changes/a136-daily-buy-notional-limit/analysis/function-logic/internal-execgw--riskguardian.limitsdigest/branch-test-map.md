@@ -1,6 +1,6 @@
 # Branch Test Map: `LimitsDigest`
 
-- Source: `internal/execgw/riskguardian.go` (321-327, 편집 뒤)
+- Source: `internal/execgw/riskguardian.go` (326-332, 편집 뒤)
 
 | Branch | Anchor | Scenario | Test | a136 |
 |---|---|---|---|---|

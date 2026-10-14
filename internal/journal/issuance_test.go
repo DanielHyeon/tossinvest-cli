@@ -36,7 +36,7 @@ func issueRequest(j *Journal, id, account, amount, usage, limit string, version 
 			ExpiresAt:  issued.Add(60 * time.Second),
 		},
 		Reserve: ReserveRequest{
-			DailyBuyLimit:   &DailyBuyLimit{Amount: "1000000000000", Currency: "KRW"}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
+			DailyBuyLimit:   &DailyBuyLimit{Amount: "1000000000000", Currency: "KRW", ManualBuy: a136ZeroManualBuy(issued)}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
 			SnapshotAsOf:    issued,
 			ObservedVersion: version,
 			SnapshotUsage: []AggregateAmount{

@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/issuance_test.go",
-  "source_sha256": "565c6d43095764df6160ef465d4ad18e0c9f32e2a0794c5de642e51536cbe4fc",
+  "source_sha256": "2740ad2fccb7e828387eab93286834762260d8e7be9399af0f293500fcdf4d39",
   "package": "journal",
   "function": "issueRequest",
   "signature": "issueRequest(params=7, results=1)",
@@ -38,6 +38,14 @@
         "column": 16
       },
       "text": "issued.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 89
+      },
+      "text": "a136ZeroManualBuy"
     }
   ],
   "assignments": [

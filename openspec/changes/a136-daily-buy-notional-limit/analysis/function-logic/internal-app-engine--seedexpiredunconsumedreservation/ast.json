@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/engine_test.go",
-  "source_sha256": "6802d0eb0474231ab364947a326f0a7096b9947254935102c40be4b3bcdd0b2d",
+  "source_sha256": "92ff107c69a985f02fa8d74f5ba1b27f569bac32c80be3facb8711a70f6447a7",
   "package": "engine_test",
   "function": "seedExpiredUnconsumedReservation",
   "signature": "seedExpiredUnconsumedReservation(params=2, results=1)",
@@ -198,6 +198,14 @@
         "column": 15
       },
       "text": "j.Reserve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 520,
+        "column": 94
+      },
+      "text": "a136ZeroManualBuy"
     },
     {
       "kind": "call",

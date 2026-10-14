@@ -1,6 +1,6 @@
 {
   "file": "internal/execgw/riskguardian_first_leg.go",
-  "source_sha256": "74a48253419342e9364822a42eaf4ea503d505b8c6c45df4e4532f667336a289",
+  "source_sha256": "2afe54a55664d8af7bc05e6995bd6fc1a0529e07c307d1d5fd7e3371a2850e0f",
   "package": "execgw",
   "function": "IssuePrecheckedQFinalCampaignFirstLeg",
   "receiver": "RiskGuardian",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 209,
+    "line": 213,
     "column": 2
   },
   "branches": [
@@ -106,7 +106,15 @@
       "id": "B12",
       "kind": "if",
       "at": {
-        "line": 205,
+        "line": 191,
+        "column": 3
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 209,
         "column": 2
       }
     }
@@ -185,21 +193,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 190,
+        "line": 192,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 194,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 206,
+        "line": 210,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 208,
+        "line": 212,
         "column": 2
       }
     }
@@ -416,15 +431,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 197,
-        "column": 21
+        "line": 190,
+        "column": 17
       },
       "text": "g.dailyBuyLimit"
     },
     {
       "kind": "call",
       "at": {
-        "line": 200,
+        "line": 190,
+        "column": 38
+      },
+      "text": "qFinalManualBuyFX"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
         "column": 61
       },
       "text": "cloneGuardianWeeklyBinding"
@@ -432,7 +455,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 208,
         "column": 18
       },
       "text": "g.journal.RecordQFinalCampaignFirstLegWithRecollection"
@@ -440,7 +463,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 206,
+        "line": 210,
         "column": 51
       },
       "text": "fmt.Errorf"
@@ -590,7 +613,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 204,
+        "line": 190,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 208,
         "column": 2
       }
     }

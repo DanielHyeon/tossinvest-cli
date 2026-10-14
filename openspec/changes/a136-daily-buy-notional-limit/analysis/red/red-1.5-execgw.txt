@@ -1,0 +1,15 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/execgw [github.com/JungHoonGhae/tossinvest-cli/internal/execgw.test]
+internal/execgw/a136_manual_buy_internal_testseam_test.go:19:26: undefined: ManualBuyBoard
+internal/execgw/a136_manual_buy_internal_testseam_test.go:20:53: unknown field manualBuys in struct literal of type RiskGuardian
+internal/execgw/a136_manual_buy_internal_testseam_test.go:23:58: undefined: ManualBuyBoard
+internal/execgw/a136_manual_buy_internal_testseam_test.go:24:7: undefined: NewManualBuyBoard
+internal/execgw/a136_manual_buy_internal_testseam_test.go:25:12: undefined: ManualBuySnapshot
+internal/execgw/a136_manual_buy_internal_testseam_test.go:35:18: g.manualBuyTotal undefined (type *RiskGuardian has no field or method manualBuyTotal)
+internal/execgw/a136_manual_buy_internal_testseam_test.go:35:42: undefined: manualBuyFX
+internal/execgw/a136_manual_buy_internal_testseam_test.go:44:17: g.manualBuyTotal undefined (type *RiskGuardian has no field or method manualBuyTotal)
+internal/execgw/a136_manual_buy_internal_testseam_test.go:44:63: undefined: ErrManualBuyUnknown
+internal/execgw/a136_manual_buy_internal_testseam_test.go:48:17: g.manualBuyTotal undefined (type *RiskGuardian has no field or method manualBuyTotal)
+internal/execgw/a136_manual_buy_internal_testseam_test.go:48:17: too many errors
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw [build failed]
+FAIL
+rc=1 (core c8783ad9 + 1.5 시험 파일, -tags tossos_testseams)

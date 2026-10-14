@@ -1,6 +1,6 @@
 {
   "file": "internal/execgw/gateway_test.go",
-  "source_sha256": "6425de9aa912f6fc9c47d8649c08e6214b1feb88a7abab2f512ff066980cd004",
+  "source_sha256": "e7861a53bb5258f2b6703e7470b17375b281d032a66f3625f5e2582ba0a6bc8c",
   "package": "execgw_test",
   "function": "holdExposure",
   "signature": "holdExposure(params=6, results=0)",
@@ -95,6 +95,22 @@
         "column": 25
       },
       "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 99
+      },
+      "text": "a136ZeroManualBuy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 117
+      },
+      "text": "clk.Now"
     },
     {
       "kind": "call",

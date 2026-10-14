@@ -16,7 +16,8 @@ D2=c(예약 원장 집계, 0.7 실측으로 체결 없음 증명 가능 확인) 
 - 잔재(기록만): P2-5(a137 과 일 키 적용 시각 — 같은 함수, 적용 시각은 각 change 정의), P2-6(계산 불가 거부의 관측 sub-reason 없음), P3 「오늘 합계/한도」 읽기 전용 표시.
 - **P1-3 단계 순서 위반 — 사실로 인정.** `reserveRows` · `DefaultPolicy` · `Policy.Validate` · `mergeEngine` 은 FLM 전에 편집됐다. 수리: base 트리(f504cc52
   `git archive`)에서 편집 전 AST(`ast-base.json`)를 뽑아 번들을 만들고, 그 뒤의 편집(설정 쓰기 · 인터록 · 발급 문 셋 · digest · gridPolicy)은 번들 뒤에 했다.
-  편집 전 AST 와 편집 뒤 AST 의 분기 차이는 각 번들 머리에 적었다.
+  편집 전 AST 와 편집 뒤 AST 의 분기 차이는 각 번들 머리에 적었다. **Manager 지시(2026-10-14): 게이트 전 독립 리뷰가 이 4 함수를 base 리비전 FLM/BTM
+  (`ast-base.json`) 기준으로 다시 대조한다.**
 
 ## Pre-Edit Gate
 

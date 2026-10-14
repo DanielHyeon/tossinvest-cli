@@ -221,7 +221,7 @@ func holdExposure(t *testing.T, j *journal.Journal, clk clock.Clock,
 		t.Fatalf("ReservationVersion: %v", err)
 	}
 	if _, err := j.Reserve(context.Background(), journal.ReserveRequest{
-		DailyBuyLimit:   &journal.DailyBuyLimit{Amount: "1000000000000", Currency: currency}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
+		DailyBuyLimit:   &journal.DailyBuyLimit{Amount: "1000000000000", Currency: currency, ManualBuy: a136ZeroManualBuy(clk.Now())}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
 		DecisionID:      decision.ID,
 		AccountRef:      "acct-7",
 		SnapshotAsOf:    clk.Now(),

@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/a126_filled_exposure_leaves_the_bucket_test.go",
-  "source_sha256": "c76a48b3cf7139e2654604167c1f5db244f84cf069852c3ae65c4cc064e479f5",
+  "source_sha256": "f8c59f635191c501b4f906992963ffaaa99258c3ad48628b75c9a4247ebec13d",
   "package": "journal",
   "function": "a126IssueFor",
   "signature": "a126IssueFor(params=6, results=1)",
@@ -135,6 +135,14 @@
         "column": 106
       },
       "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 675,
+        "column": 88
+      },
+      "text": "a136ZeroManualBuy"
     }
   ],
   "assignments": [

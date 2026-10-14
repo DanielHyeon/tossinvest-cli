@@ -1,0 +1,8 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/manualbuy [github.com/JungHoonGhae/tossinvest-cli/internal/manualbuy.test]
+internal/manualbuy/summary_test.go:23:14: undefined: Summarize
+internal/manualbuy/summary_test.go:59:16: undefined: Summarize
+internal/manualbuy/summary_test.go:59:58: undefined: ErrUnvaluable
+internal/manualbuy/summary_test.go:66:14: undefined: Summarize
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/manualbuy [build failed]
+FAIL
+rc=1 (core c8783ad9 + 1.5 시험 파일, -tags tossos_testseams)

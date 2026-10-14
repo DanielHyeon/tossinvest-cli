@@ -1,6 +1,6 @@
 # Branch Test Map: `IssuePrecheckedQFinalCampaignFirstLeg`
 
-- Source: `internal/execgw/riskguardian_first_leg.go` (117-209, 편집 뒤)
+- Source: `internal/execgw/riskguardian_first_leg.go` (117-213, 편집 뒤)
 
 | Branch | Anchor | Scenario | Test | a136 |
 |---|---|---|---|---|
@@ -15,4 +15,5 @@
 | B9 | if 176 | 기존 동작 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` | 무편집 분기 |
 | B10 | if 183 | 기존 동작 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` | 무편집 분기 |
 | B11 | if 187 | 기존 동작 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` | 무편집 분기 |
-| B12 | if 205 | 기존 동작 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` | 무편집 분기 |
+| B12 | if 191 | 기존 동작 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` | 무편집 분기 |
+| B13 | if 209 | 기존 동작 | `TestA136EveryEntryDoorCarriesTheDailyBuyCeiling` · `go test ./internal/execgw -run FirstLeg` | 무편집 분기 |

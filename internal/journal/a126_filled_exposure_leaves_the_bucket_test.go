@@ -672,7 +672,7 @@ func a126IssueFor(t *testing.T, j *Journal, suffix, symbol, limit string, q uint
 				LimitsJSON: `{"test":"opaque-to-journal"}`, Nonce: "nonce-a126-" + suffix, IssuedAt: now, ExpiresAt: now.Add(time.Hour),
 			},
 			Reserve: ReserveRequest{
-				DailyBuyLimit: &DailyBuyLimit{Amount: "1000000000000", Currency: "KRW"}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
+				DailyBuyLimit: &DailyBuyLimit{Amount: "1000000000000", Currency: "KRW", ManualBuy: a136ZeroManualBuy(now)}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
 				SnapshotAsOf:  now, ObservedVersion: version,
 				SnapshotUsage: []AggregateAmount{{Kind: ReservationKindOpenExposure, Amount: "0", Currency: "KRW"}},
 				Limits:        []AggregateAmount{{Kind: ReservationKindOpenExposure, Amount: "100000", Currency: "KRW"}},

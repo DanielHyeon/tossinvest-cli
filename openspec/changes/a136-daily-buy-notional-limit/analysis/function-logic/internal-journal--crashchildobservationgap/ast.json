@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/observation_crash_linux_test.go",
-  "source_sha256": "36733b089eeae34afb63c930f957297aa03b5e00001c8d3eb6e591799971681c",
+  "source_sha256": "63e9b3e795ba833173b690ae67f0ee262160860ba816b4d1071484c54c989946",
   "package": "journal",
   "function": "crashChildObservationGap",
   "signature": "crashChildObservationGap(params=0, results=0)",
@@ -95,6 +95,14 @@
         "column": 16
       },
       "text": "issued.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 89
+      },
+      "text": "a136ZeroManualBuy"
     },
     {
       "kind": "call",

@@ -38,7 +38,22 @@ import (
 type DailyBuyLimit struct {
 	Amount   string
 	Currency string
+	// ManualBuy 는 엔진 밖 수동 매수(토스 앱 등)의 오늘 합계(사용자 결정 D9=b). 필수 — 없으면 거부.
+	ManualBuy *ManualBuyTotal
 }
+
+// ManualBuyTotal 은 엔진 보조 실행자가 공식 주문 조회로 만든 수동 매수 스냅숏을 발급자가 base 로 환산한 값임.
+type ManualBuyTotal struct {
+	// Amount 는 account base 통화(= DailyBuyLimit.Currency) 의 decimal 문자열, 음수 불가.
+	Amount string
+	// AsOf 는 스냅숏이 브로커에서 읽힌 시각, Day 는 그 스냅숏이 센 계좌 하루 라벨.
+	AsOf time.Time
+	Day  string
+}
+
+// ManualBuyStaleness 는 수동 매수 스냅숏의 신선도 상한임. refresher 주기(30초)의 네 배 — 주기 한두 번 실패까지는 견디고,
+// 그보다 오래 못 읽으면 매수를 거부함(fail-closed). 그 사이의 수동 매수 한 건은 늦게 반영될 수 있음(design D9 잔재).
+const ManualBuyStaleness = 2 * time.Minute
 
 // dailyBuyLookback 은 「오늘 발급」 후보를 거르는 거친 하한임. 계좌 하루는 24시간이라 48시간이면 넉넉한 상위집합이고,
 // 정확한 소속은 행마다 clock.AccountTradingDay 로 다시 판정함.
@@ -112,6 +127,13 @@ func checkDailyBuyNotional(ctx context.Context, tx *sql.Tx, req ReserveRequest, 
 	spent, err := dailyBuyTotal(ctx, tx, plan.accountRef, currency, today, now)
 	if err != nil {
 		return err
+	}
+	manual, err := manualBuyAmount(req.DailyBuyLimit.ManualBuy, today, now)
+	if err != nil {
+		return err
+	}
+	if spent, err = riskcalc.AddDecimal(spent, manual); err != nil {
+		return fmt.Errorf("journal: adding the manual buy total: %w", err)
 	}
 	total, err := riskcalc.AddDecimal(spent, added)
 	if err != nil {
@@ -295,4 +317,53 @@ func proveZeroFill(ctx context.Context, tx *sql.Tx, accountRef, decisionID, atte
 		return false, fmt.Errorf("journal: reading the fill history of order %s: %w", orderID, err)
 	}
 	return others == 0, nil
+}
+
+// manualBuyAmount 는 수동 매수 스냅숏을 판정에 쓸 수 있는지 확인하고 금액을 돌려줌.
+//
+// 없음 → 요청 결함(ErrInvalidRequest — 발급 문이 빠뜨림). 다른 하루 · 상한보다 오래됨 · 미래 시각 → ErrSnapshotStale
+// (재수집 루프가 발급자의 최신 스냅숏으로 다시 시도하고, 끝내 낡으면 SNAPSHOT_RECOLLECTION_EXHAUSTED 로 거부).
+func manualBuyAmount(manual *ManualBuyTotal, today string, now time.Time) (string, error) {
+	if manual == nil {
+		return "", fmt.Errorf("%w: the daily buy ceiling carries no manual buy total; buys outside the engine "+
+			"count toward the day and an unknown amount is not zero", ErrInvalidRequest)
+	}
+	if strings.TrimSpace(manual.Day) != today {
+		return "", fmt.Errorf("%w: the manual buy snapshot counts account day %q, not %s", ErrSnapshotStale, manual.Day, today)
+	}
+	if manual.AsOf.IsZero() {
+		return "", fmt.Errorf("%w: the manual buy snapshot carries no as-of", ErrSnapshotStale)
+	}
+	age := now.Sub(manual.AsOf.UTC())
+	if age < 0 {
+		return "", fmt.Errorf("%w: the manual buy snapshot is dated %s in the future", ErrSnapshotStale, -age)
+	}
+	if age > ManualBuyStaleness {
+		return "", fmt.Errorf("%w: the manual buy snapshot is %s old, past the %s bound", ErrSnapshotStale, age, ManualBuyStaleness)
+	}
+	return nonNegativeDecimal("manual buy total", manual.Amount)
+}
+
+// EngineBrokerOrderIDs 는 이 계좌의 엔진 attempt 가 브로커에서 받은 주문 id 집합임(a136 수동 매수 중복 제거).
+// 이 집합에 있는 주문은 예약 원장이 이미 세므로 수동 매수 스냅숏에서 빠짐. AMEND 가 만든 자식 주문 id 도 attempt 에 있으므로 포함됨.
+func (j *Journal) EngineBrokerOrderIDs(ctx context.Context, accountRef string) (map[string]bool, error) {
+	rows, err := j.db.QueryContext(ctx,
+		`SELECT DISTINCT a.broker_order_id FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
+		  WHERE TRIM(i.account_ref) = ? AND a.broker_order_id <> ''`, strings.TrimSpace(accountRef))
+	if err != nil {
+		return nil, fmt.Errorf("journal: listing engine broker order ids: %w", err)
+	}
+	defer rows.Close()
+	out := map[string]bool{}
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("journal: listing engine broker order ids: %w", err)
+		}
+		out[id] = true
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("journal: listing engine broker order ids: %w", err)
+	}
+	return out, nil
 }

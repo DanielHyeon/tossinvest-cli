@@ -12,16 +12,18 @@ import os, shutil, subprocess, sys, tempfile
 ROOT = os.path.abspath(sys.argv[1])
 LOG = sys.argv[2] if len(sys.argv) > 2 else None
 COPY = tempfile.mkdtemp(prefix=f"a136-mut-{os.getpid()}-")
-for item in ("go.mod", "go.sum", "internal", "cmd", "schemas"):
+for item in ("go.mod", "go.sum", "internal", "cmd", "schemas"):  # a137 의 미커밋 internal/dailyloss 는 아래에서 지움
     src = os.path.join(ROOT, item)
     (shutil.copytree if os.path.isdir(src) else shutil.copy2)(src, os.path.join(COPY, item))
 
+shutil.rmtree(os.path.join(COPY, "internal", "dailyloss"), ignore_errors=True)  # 다른 change 의 미커밋 패키지 — 이 측정 밖
 J = ("./internal/journal/", "TestA136")
 E = ("./internal/execgw/", "TestA136")
 A = ("./internal/app/engine/", "TestA136")
 C = ("./internal/config/", "TestA136")
 K = ("./internal/clock/", "TestA136")
 R = ("./internal/risk/", "TestA136")
+M = ("./internal/manualbuy/", "TestA136")
 
 MUTANTS = [
     ("M1 ≥ → >", "internal/journal/daily_buy.go", "if cmp >= 0 {", "if cmp > 0 {", [J]),
@@ -41,7 +43,7 @@ MUTANTS = [
     ("M10 unreadable amount read as zero", "internal/journal/daily_buy.go",
      "amount, err := riskcalc.CanonicalDecimal(c.amount)\n", "amount, err := riskcalc.CanonicalDecimal(c.amount)\n\t\tif err != nil {\n\t\t\tamount, err = \"0\", nil\n\t\t}\n", [J]),
     ("M11 doors carry a huge ceiling", "internal/execgw/daily_buy.go",
-     "Amount:   g.policy.MaxDailyBuyNotional.Amount,", "Amount:   \"999999999999\",", [E]),
+     "Amount:    g.policy.MaxDailyBuyNotional.Amount,", "Amount:    \"999999999999\",", [E]),
     ("M12 interlock daily-buy check skipped", "internal/app/engine/interlock.go",
      "if err := checkGuardianDailyBuyLimit(facts.guardian, *status); err != nil {", "if err := error(nil); err != nil {", [A]),
     ("M13 default applied to every currency", "internal/config/daily_buy.go",
@@ -57,6 +59,19 @@ MUTANTS = [
      "return releaseReason == ReleaseReasonExpiredUnconsumed, nil", "return true, nil", [J]),
     ("M18 Z2 includes CONFIRMED", "internal/journal/daily_buy.go",
      "case StateNotDispatched, StateFailedConfirmed:", "case StateNotDispatched, StateFailedConfirmed, StateConfirmed:", [J]),
+    # --- 1.5 수동 매수(D9=b) ---
+    ("M19 manual total not added", "internal/journal/daily_buy.go",
+     "if spent, err = riskcalc.AddDecimal(spent, manual); err != nil {", "if _, err = riskcalc.AddDecimal(spent, manual); err != nil {", [J, E]),
+    ("M20 manual staleness ignored", "internal/journal/daily_buy.go", "if age > ManualBuyStaleness {", "if false {", [J]),
+    ("M21 missing manual total accepted", "internal/journal/daily_buy.go", "if manual == nil {",
+     "if manual == nil {\n\t\treturn \"0\", nil\n\t}\n\tif false {", [J]),
+    ("M22 manual day ignored", "internal/journal/daily_buy.go", "if strings.TrimSpace(manual.Day) != today {", "if false {", [J]),
+    ("M23 foreign manual buys skipped without authority", "internal/execgw/manual_buy.go",
+     "authority, ok := fx[market]\n\t\tif !ok {", "authority, ok := fx[market]\n\t\tif !ok {\n\t\t\tcontinue\n\t\t}\n\t\tif false {", [E]),
+    ("M24 engine orders counted as manual", "internal/manualbuy/summary.go", "if engineOrders[id] {", "if false && engineOrders[id] {", [M, A]),
+    ("M25 pending remainder dropped", "internal/manualbuy/summary.go", "if remaining.Sign() > 0 {", "if false && remaining.Sign() > 0 {", [M, A]),
+    ("M26 failed read published as known", "internal/app/engine/manual_buy_refresh.go", "snapshot.Err = err\n", "snapshot.Err = nil\n", [A]),
+    ("M27 no board accepted", "internal/execgw/manual_buy.go", "if g.manualBuys == nil {", "if g.manualBuys == nil {\n\t\treturn &journal.ManualBuyTotal{Amount: \"0\", AsOf: now, Day: \"\"}, nil\n\t}\n\tif false {", [E]),
 ]
 
 def run(targets, tags):
@@ -80,7 +95,7 @@ def say(line):
     print(line, flush=True)
     out.append(line)
 
-ok, why = run([J, E, A, C, K, R], True)
+ok, why = run([J, E, A, C, K, R, M], True)
 say(f"CONTROL (무변이) {'GREEN' if ok else 'RED — 중단: ' + why}")
 if ok is not True:
     sys.exit(1)

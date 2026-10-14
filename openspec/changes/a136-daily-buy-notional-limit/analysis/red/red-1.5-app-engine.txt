@@ -1,0 +1,9 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a136_manual_buy_refresh_internal_test.go:67:18: undefined: execgw.NewManualBuyBoard
+internal/app/engine/a136_manual_buy_refresh_internal_test.go:68:8: undefined: manualBuyRefresh
+internal/app/engine/a136_manual_buy_refresh_internal_test.go:85:18: undefined: execgw.NewManualBuyBoard
+internal/app/engine/a136_manual_buy_refresh_internal_test.go:86:23: undefined: execgw.ManualBuySnapshot
+internal/app/engine/a136_manual_buy_refresh_internal_test.go:87:8: undefined: manualBuyRefresh
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [build failed]
+FAIL
+rc=1 (core c8783ad9 + 1.5 시험 파일, -tags tossos_testseams)

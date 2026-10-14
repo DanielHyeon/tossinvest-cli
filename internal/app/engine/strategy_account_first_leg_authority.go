@@ -388,6 +388,8 @@ func (loader *productionStrategyFirstLegAuthorityLoader) collectStrategyFirstLeg
 		Account: accountAuthority.AccountState(), Collect: collect, Admission: journal.RiskBucketAdmissionPlan{TransactionID: transactionID,
 			Admission: riskbucket.AdmissionRequest{QCandidate: result.Quantity, Policy: riskBundle.Policy(), Buckets: buckets},
 			Owner:     owner, Snapshots: references, CreatedAt: observedAt}, FXAuthority: fx.read.evidence,
+		// a136 D9=b · FX 조항: 같은 파도의 짝 FX 에서 다른 시장 authority — 하루 매수 합계의 다른 통화 수동 매수 환산용.
+		PairedFXAuthority:     loader.fx.forMarket(otherStrategyMarket(market)).read.evidence,
 		ExpectedPolicyVersion: loader.guardian.PolicyVersion(), ExpectedLimitsDigest: loader.guardian.LimitsDigest()},
 		Result: result, ActivationManifestDigest: schedule.snapshot.ActivationManifestDigest, AttemptID: attemptID, Revision: 1,
 		Campaign: journal.FirstLegCampaignRequest{CampaignID: result.Lineage.CampaignID, ExpectedPositionGeneration: cas.Generation,
@@ -404,3 +406,15 @@ func strategyFirstLegBindingDigest(result strategyflow.Result, account strategya
 }
 
 var _ strategyFirstLegAuthorityLoader = (*productionStrategyFirstLegAuthorityLoader)(nil)
+
+// otherStrategyMarket 은 짝의 다른 시장(KR ↔ US). 모르는 시장은 그대로 돌려줘 forMarket 이 빈 authority 를 내게 함.
+func otherStrategyMarket(market StrategyMarket) StrategyMarket {
+	switch market {
+	case StrategyMarketKR:
+		return StrategyMarketUS
+	case StrategyMarketUS:
+		return StrategyMarketKR
+	default:
+		return market
+	}
+}

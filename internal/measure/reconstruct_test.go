@@ -62,7 +62,7 @@ func issueEntry(t *testing.T, j *journal.Journal, id string) {
 			ExpiresAt:  issued.Add(60 * time.Second),
 		},
 		Reserve: journal.ReserveRequest{
-			DailyBuyLimit:   &journal.DailyBuyLimit{Amount: "1000000000000", Currency: "KRW"}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
+			DailyBuyLimit:   &journal.DailyBuyLimit{Amount: "1000000000000", Currency: "KRW", ManualBuy: a136ZeroManualBuy(issued)}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
 			SnapshotAsOf:    issued,
 			ObservedVersion: version,
 			SnapshotUsage: []journal.AggregateAmount{

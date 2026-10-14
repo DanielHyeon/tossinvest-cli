@@ -85,6 +85,9 @@ func newProductionRiskGuardian(
 		Costs:         costs.DefaultModel(),
 		PolicyVersion: productionGuardianPolicyVersion,
 		Announcer:     announcer,
+		// a136 D9=b: 엔진 밖 수동 매수 보드 — 보조 실행자 manual-buy-refresh 가 게시함(Context.ManualBuyRefresher).
+		// 첫 게시 전에는 진입이 전부 거부됨(fail-closed).
+		ManualBuys: execgw.NewManualBuyBoard(),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("engine: constructing the production Guardian: %w", err)
