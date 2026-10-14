@@ -1,0 +1,15 @@
+
+Callers of "StrategyEntryQuantity" (4):
+
+function    TestStrategyEntryQuantityUsesExactMinimumOfGuardianCaps
+  internal/risk/contract_test.go:93
+
+function    TestStrategyEntryQuantityRefusesZeroCapacity
+  internal/risk/contract_test.go:131
+
+method      IssueStrategyEntry
+  internal/execgw/riskguardian.go:349
+
+method      PrecheckQFinalEntry
+  internal/execgw/riskguardian_qfinal.go:89
+

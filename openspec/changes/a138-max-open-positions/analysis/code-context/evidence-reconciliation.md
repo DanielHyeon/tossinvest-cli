@@ -9,4 +9,7 @@
 | 인터록 | `checkGuardianDailyBuyLimit` 호출자 `verifyGate` | AST `engine--verifygate` B1~B10, 7b(하루 매수)가 B8(534) | 일치 — B8 다음에 한 단 |
 | 정책 검증 | — | AST `risk--policy.validate` B1~B11 | 정수 상한 검사는 새 분기(편집 시 FLM) |
 
-불일치 0.
+불일치 0(아래 정정 1 건 추가).
+
+정정(2026-10-15, a139 조사 중 발견): baseline 표의 `risk.DefaultPolicy` 「생산 2(guardian_wiring · measure)」는 HEAD grep 근거다 — CodeGraph callers(raw/callers-DefaultPolicy.txt)는
+`riskPolicyFromAutomationGate`(guardian_wiring.go:47)의 호출을 빠뜨리고 `gridPolicy` 하나만 낸다. 불일치 1, HEAD 가 권위.

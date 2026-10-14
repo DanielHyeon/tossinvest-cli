@@ -1,0 +1,96 @@
+internal/risk/account_base.go:219:	budget, err := parseDecimal("risk budget", policy.RiskBudget.Amount)
+internal/risk/account_base.go:221:		return "", fmt.Errorf("risk budget %q is invalid", policy.RiskBudget.Amount)
+internal/risk/chain.go:344:			in.Policy.RiskBudget.Amount, in.Policy.LimitCurrency(), in.Intent.LimitPrice, in.Intent.StopPrice))
+internal/risk/chain.go:349:			in.Intent.Quantity, sized, in.Policy.RiskBudget.Amount, in.Policy.LimitCurrency(),
+internal/risk/contract.go:131:	if policy.RiskBudget.Currency != policy.MaxOrderNotional.Currency {
+internal/risk/contract.go:134:	riskRaw, err := RiskBasedQuantity(policy.RiskBudget.Amount, entryPrice, stopPrice)
+internal/risk/input.go:208:	// RiskBudget is what one trade may lose if its stop is hit: the numerator of
+internal/risk/input.go:210:	RiskBudget riskcalc.Money
+internal/risk/input.go:228://   - RiskBudget = MaxDailyLoss. Not a sizing recommendation: it is the largest
+internal/risk/input.go:243:		RiskBudget:        riskcalc.Money{Amount: "100000", Currency: "KRW"},
+internal/risk/input.go:268:		{"per-trade risk budget", p.RiskBudget},
+internal/app/engine/guardian_wiring.go:31:// RiskBudget is not a sixth operator permission: using the configured daily-loss
+internal/app/engine/guardian_wiring.go:59:	policy.RiskBudget = dailyLoss
+internal/app/engine/strategy_first_leg_admission.go:169:		lineage.RiskBudgetDigest == "" || lineage.ExecutionPolicyDigest == "" || lineage.PositionGeneration > math.MaxInt64 ||
+internal/breakoutlane/arithmetic.go:80:		u(input.Sizing.ProposedEntryMinor), u(input.Sizing.StopMinor), u(input.Sizing.TargetMinor), u(input.Sizing.EntrySlippageMinor), u(input.Sizing.ExitSlippageMinor), u(input.Sizing.RoundTripCostAccountMinor), u(input.Sizing.RiskBudgetAccountMinor), u(input.Sizing.NotionalCapAccountMinor), u(input.Sizing.FinalCap), u(input.Sizing.MinRiskRewardPPM)}
+internal/breakoutlane/sizing.go:76:	budget, r := convertCapacity(in.RiskBudgetAccountMinor, f, evaluated)
+internal/breakoutlane/types.go:171:type SizingInput struct{ ProposedEntryMinor, StopMinor, TargetMinor, EntrySlippageMinor, ExitSlippageMinor, RoundTripCostAccountMinor, RiskBudgetAccountMinor, NotionalCapAccountMinor, FinalCap, MinRiskRewardPPM uint64 }
+internal/config/limits.go:168:		//                    is RiskBudget's job (risk/input.go:223).
+internal/continuationlane/allocation.go:54:	RiskBudgetMinor    string
+internal/continuationlane/allocation.go:72:	RiskBudgetMinor    string
+internal/continuationlane/allocation.go:82:	RiskBudgetDigest   string
+internal/continuationlane/allocation.go:102:	budget, err := parseUnsigned(request.RiskBudgetMinor)
+internal/continuationlane/allocation.go:121:		PositionGeneration: request.PositionGeneration, RiskBudgetMinor: budget.String(), PerShareRiskMinor: perShare.String(),
+internal/continuationlane/allocation.go:129:	plan.RiskBudgetDigest = planDigest(plan)
+internal/continuationlane/allocation.go:134:	if plan.Weights != [3]uint64{8, 4, 2} || plan.LegCeilings != AllocateEightFourTwo(plan.PlannedQuantity) || plan.RiskBudgetDigest == "" {
+internal/continuationlane/allocation.go:138:	copyPlan.RiskBudgetDigest = ""
+internal/continuationlane/allocation.go:139:	return plan.RiskBudgetDigest == planDigest(copyPlan)
+internal/continuationlane/allocation.go:145:		strconv.FormatInt(plan.PositionGeneration, 10), plan.RiskBudgetMinor, plan.PerShareRiskMinor, canonicalUint(plan.PlannedQuantity),
+internal/continuationlane/evaluator.go:67:	cap.planDigest = plan.RiskBudgetDigest
+internal/continuationlane/evaluator.go:165:	RiskBudgetDigest   string
+internal/continuationlane/evaluator.go:269:	if context.Risk.RiskBudgetDigest != context.Plan.RiskBudgetDigest || context.Risk.BudgetMinor != context.Plan.RiskBudgetMinor {
+internal/continuationlane/evaluator.go:316:	budget, err := parseUnsigned(context.Plan.RiskBudgetMinor)
+internal/continuationlane/evaluator.go:322:		outcome.Code = RefusalRiskBudgetExceeded
+internal/continuationlane/evaluator.go:349:		ConfigDigest: envelope.ConfigDigest, CampaignID: context.Plan.CampaignID, RiskBudgetDigest: context.Plan.RiskBudgetDigest,
+internal/continuationlane/evaluator.go:356:		cap.planDigest == "" || cap.planDigest != plan.RiskBudgetDigest || cap.PolicyDigest != plan.PolicyDigest || cap.ReservationQuantity != quantity || quantity > cap.QFinal {
+internal/continuationlane/execution_terms.go:42:	value := ExecutionTermsPreimage{planDigest: plan.RiskBudgetDigest, evidenceDigest: envelope.SourceDigest}
+internal/continuationlane/execution_terms.go:53:	return validatePlan(plan) && value.planDigest == plan.RiskBudgetDigest && value.evidenceDigest == envelope.SourceDigest &&
+internal/continuationlane/execution_terms.go:88:	value := savedStopAuthority{planDigest: plan.RiskBudgetDigest, evidenceDigest: envelope.SourceDigest,
+internal/continuationlane/execution_terms.go:89:		provenance: PriceProvenance{PriceMinor: price, Source: "saved-effective-stop", Version: "stop-state-v1", Digest: plan.RiskBudgetDigest,
+internal/continuationlane/execution_terms.go:96:	return validatePlan(plan) && value.planDigest == plan.RiskBudgetDigest && value.evidenceDigest == envelope.SourceDigest &&
+internal/continuationlane/production_proposal.go:26:	RiskBudgetMinor, PerShareRiskMinor             string
+internal/continuationlane/production_proposal.go:210:		PositionGeneration: input.PositionGeneration, RiskBudgetMinor: input.RiskBudgetMinor, PerShareRiskMinor: input.PerShareRiskMinor,
+internal/continuationlane/risk.go:28:	RiskBudgetDigest string
+internal/continuationlane/risk.go:69:	return RiskState{RiskBudgetDigest: plan.RiskBudgetDigest, BudgetMinor: plan.RiskBudgetMinor, FilledMinor: "0", HeldMinor: "0", Latches: make(map[Latch]bool), Fills: make(map[string]FillRiskRecord), Cancels: make(map[string]CancelRiskRecord)}
+internal/continuationlane/risk.go:188:	budget, budgetErr := parseUnboundedUnsigned(plan.RiskBudgetMinor)
+internal/continuationlane/risk.go:271:	return validatePlan(plan) && state.RiskBudgetDigest == plan.RiskBudgetDigest && state.BudgetMinor == plan.RiskBudgetMinor
+internal/continuationlane/strategyflow_testseam.go:56:		CampaignID: "campaign-" + string(market), PositionGeneration: 1, RiskBudgetMinor: "1000", PerShareRiskMinor: "10", PlannedQuantity: 14,
+internal/continuationlane/types.go:40:	RefusalRiskBudgetExceeded    RefusalCode = "CAMPAIGN_RISK_BUDGET_EXCEEDED"
+internal/journal/strategyflow_projection.go:147:		Quantity: risk.Quantity, PolicyVersion: risk.PolicyVersion, SettingsDigest: lineage.RiskBudgetDigest,
+internal/measure/counterfactual.go:367:	policy.RiskBudget = money(headroom, currency)
+internal/reversallane/evaluate.go:129:	budget, budgetOK := parseMinor(plan.request.RiskBudgetMinor)
+internal/reversallane/evaluate.go:138:		return RefusalRiskBudgetExceeded
+internal/reversallane/evaluate.go:183:		RiskBudgetDigest: riskBudgetDigest(context.Plan), LegOrdinal: context.Leg.Ordinal, PlannedCeiling: ceiling,
+internal/reversallane/evaluate.go:192:	preimage := fmt.Sprintf("%s\x00%s\x00%s\x00%d\x00%s", plan.Digest(), plan.request.RiskBudgetMinor, plan.request.PerShareRiskMinor, plan.request.PlannedQuantity, plan.request.PolicyDigest)
+internal/reversallane/plan.go:18:	RiskBudgetMinor    string
+internal/reversallane/plan.go:55:	if budget, ok := parseMinor(request.RiskBudgetMinor); !ok || budget.Sign() <= 0 || request.PlannedQuantity == 0 {
+internal/reversallane/plan.go:100:		r.LaneID, r.LaneVersion, r.Market, r.AccountRef, r.Symbol, r.CampaignID, r.PositionGeneration, r.RiskBudgetMinor, r.PerShareRiskMinor, r.PlannedQuantity,
+internal/reversallane/production_proposal.go:26:	RiskBudgetMinor, PerShareRiskMinor           string
+internal/reversallane/production_proposal.go:215:		PositionGeneration: input.PositionGeneration, RiskBudgetMinor: input.RiskBudgetMinor, PerShareRiskMinor: input.PerShareRiskMinor,
+internal/reversallane/risk.go:108:	budget, ok := parseMinor(plan.request.RiskBudgetMinor)
+internal/reversallane/risk.go:118:		return RefusalRiskBudgetExceeded
+internal/reversallane/risk.go:239:	budget, budgetOK := parseMinor(plan.request.RiskBudgetMinor)
+internal/reversallane/strategyflow_testseam.go:75:		CampaignID: "campaign-" + string(market), PositionGeneration: 1, RiskBudgetMinor: "1000", PerShareRiskMinor: "10", PlannedQuantity: 14,
+internal/reversallane/types.go:55:	RefusalRiskBudgetExceeded    RefusalCode = "CAMPAIGN_RISK_BUDGET_EXCEEDED"
+internal/reversallane/types.go:248:	RiskBudgetDigest     string
+internal/strategyflow/adapters.go:64:			RiskBudgetDigest: lineage.RiskBudgetDigest,
+internal/strategyflow/adapters.go:97:			RiskBudgetDigest: lineage.RiskBudgetDigest,
+internal/strategyflow/adapters.go:126:			RiskBudgetDigest: weeklyRiskBudgetDigest(lineage.PlanDigest, lineage.RiskBudgetMinor),
+internal/strategyflow/adapters.go:143:func weeklyRiskBudgetDigest(planDigest, riskBudgetMinor string) string {
+internal/strategyflow/authority_testseam.go:42:		RiskBudgetDigest: "sha256:" + strings.Repeat("9", 64), ExecutionPolicyDigest: policy.identity, Complete: true})
+internal/strategyflow/breakout.go:56:	RiskBudgetDigest   string
+internal/strategyflow/breakout.go:128:			RiskBudgetDigest:   request.RiskBudgetDigest,
+internal/strategyflow/canonical_projection.go:70:	RiskBudgetDigest        string `json:"risk_budget_digest"`
+internal/strategyflow/canonical_projection.go:209:		CampaignID: v.CampaignID, LegOrdinal: v.LegOrdinal, PlannedCeiling: v.PlannedCeiling, RiskBudgetDigest: v.RiskBudgetDigest,
+internal/strategyflow/canonical_projection.go:240:		LegOrdinal: v.Lineage.LegOrdinal, PlannedCeiling: v.Lineage.PlannedCeiling, RiskBudgetDigest: v.Lineage.RiskBudgetDigest,
+internal/strategyflow/canonical_projection_testseam.go:41:		CampaignID: campaignID, LegOrdinal: 1, PlannedCeiling: quantity, RiskBudgetDigest: "sha256:" + strings.Repeat("9", 64),
+internal/strategyflow/flow.go:103:	lineage.RiskBudgetDigest = evaluated.lineage.RiskBudgetDigest
+internal/strategyflow/flow.go:106:		evaluated.lineage.PlannedCeiling == 0 || evaluated.lineage.RiskBudgetDigest == "" || evaluated.policy.identity == "" {
+internal/strategyflow/registry.go:76:	RiskBudgetDigest   string
+internal/strategyflow/types.go:88:	RiskBudgetDigest        string
+internal/strategyflow/types.go:413:	writeLineageString(h, lineage.RiskBudgetDigest)
+internal/strategyproposal/production.go:237:	RiskBudgetMinor          string                 `json:"risk_budget_minor"`
+internal/strategyproposal/production.go:453:			CandidateID: scope.CandidateID, CampaignID: scope.CampaignID, PositionGeneration: int64(scope.PositionGeneration), RiskBudgetMinor: scope.RiskBudgetMinor,
+internal/strategyproposal/production.go:493:			CandidateID: scope.CandidateID, CampaignID: scope.CampaignID, PositionGeneration: scope.PositionGeneration, RiskBudgetMinor: scope.RiskBudgetMinor,
+internal/strategyproposal/production.go:526:		CandidateID: scope.CandidateID, CampaignID: scope.CampaignID, PositionGeneration: scope.PositionGeneration, RiskBudgetMinor: scope.RiskBudgetMinor,
+internal/weeklyvaluelane/evaluate.go:78:	RiskBudgetMinor                    string
+internal/weeklyvaluelane/evaluate.go:142:		PositionGeneration: request.Plan.positionGeneration, RiskBudgetMinor: request.Plan.riskBudgetMinor, PlannedLegOrdinal: request.Leg.Ordinal}
+internal/weeklyvaluelane/evaluate.go:312:		return RefusalRiskBudgetExceeded
+internal/weeklyvaluelane/plan.go:23:	RiskBudgetMinor, PerShareRiskMinor                  string
+internal/weeklyvaluelane/plan.go:46:	budget, budgetOK := parseUnsigned(request.RiskBudgetMinor)
+internal/weeklyvaluelane/production_proposal.go:37:	RiskBudgetMinor, PerShareRiskMinor          string
+internal/weeklyvaluelane/production_proposal.go:234:		PositionGeneration: input.PositionGeneration, RiskBudgetMinor: input.RiskBudgetMinor, PerShareRiskMinor: input.PerShareRiskMinor,
+internal/weeklyvaluelane/risk.go:71:		return RefusalRiskBudgetExceeded
+internal/weeklyvaluelane/risk.go:74:		return RefusalRiskBudgetExceeded
+internal/weeklyvaluelane/strategyflow_testseam.go:53:		CampaignID: "campaign-" + string(evidence.Market), PositionGeneration: 1, RiskBudgetMinor: "1000", PerShareRiskMinor: "10", PlannedQuantity: 14,
+internal/weeklyvaluelane/types.go:54:	RefusalRiskBudgetExceeded    RefusalCode = "CAMPAIGN_RISK_BUDGET_EXCEEDED"

@@ -1,0 +1,25 @@
+{
+  "id": "STORY-TOS-a139",
+  "title": "One trade risks a third of the day's loss allowance",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a139-per-trade-risk-budget",
+    "path": "openspec/changes/a139-per-trade-risk-budget"
+  },
+  "found_by": {
+    "date": "2026-10-15",
+    "how": "The a137 review noted that the production Guardian sets the per-trade risk budget to the whole configured daily-loss amount, so one stopped-out trade could spend the day's allowance. The user decided on 2026-10-15 that the budget is one third of the daily-loss amount.",
+    "record": "openspec/changes/a139-per-trade-risk-budget/proposal.md"
+  },
+  "acceptance": [
+    "The production Guardian's per-trade risk budget is one third of the configured daily-loss amount, rounded down to the currency's minor unit",
+    "The default policy follows the same derivation through the same function",
+    "A daily-loss amount whose third rounds to zero, or a currency with no known minor unit, refuses the gate-on start",
+    "Sells, stop-losses, emergency exits and reconciliation are not evaluated against the budget",
+    "The derived budget is recorded in the startup audit"
+  ],
+  "limits": [
+    "Registered with the proposal on 2026-10-15. Production edits wait until a138 is committed (shared policy derivation) and archive waits until a138 is archived (the spec delta is written on a138's text)."
+  ]
+}
