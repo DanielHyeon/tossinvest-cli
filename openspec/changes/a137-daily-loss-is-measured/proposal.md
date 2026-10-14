@@ -41,15 +41,16 @@ Guardian 판정 체인의 `daily_loss` 단(`risk.checkDailyLoss`)은 있지만, 
 
 ## What Changes (사용자 결정 2026-10-14 반영 — design.md)
 
-1. **원장 기반 측정** — 일 키 D(a136 의 공유 함수, KST 08:00 롤오버)에 대해, 계좌의 관리 포지션 중 **자기 시장 현지일 D 에 닫힌 것**의
-   `trade_outcomes.realized_pnl_after_costs` 에서 **손실만**(이익은 상쇄하지 않음) 모아 기준 통화로 환산하고 `riskcalc.DailyLoss` 로 계산한다.
-   조정(사람의 앱 매도)으로 닫힌 포지션 · 관리 대상이 아닌 포지션 · 열린 포지션의 부분 청산 · 미실현은 세지 않는다(명시 한계).
+1. **원장 기반 측정** — 일 키 D(a136 의 공유 함수 `clock.AccountTradingDay`, KST 08:00 롤오버)에 대해, 계좌의 관리 포지션 중 **`AccountTradingDay(closed_at) == D` 인 것**의
+   `trade_outcomes.realized_pnl_after_costs` 에서 **손실만**(포지션 사이 이익은 상쇄하지 않음) 모아 기준 통화로 환산하고 `riskcalc.DailyLoss` 로 계산한다.
+   엔진 SELL 발송이 없는 조정(사람의 앱 매도)으로 닫힌 포지션 · 관리 대상이 아닌 포지션 · 열린 포지션의 부분 청산 · 미실현은 세지 않는다(명시 한계).
    성과 행이 없는 그날의 청산은 측정 불가 → 진입 fail-closed.
 2. **Guardian 이 측정값을 바닥으로 쓴다** — 진입 입구 둘(`PrecheckQFinalEntry` · `IssueEntry`)에서 체인 직전 `max(호출자 값, 측정값)`.
    측정 실패는 `daily_loss` 단의 `INPUT_UNAVAILABLE`(앞 단 사유 보존). precheck 에서 한 번만 잰다.
-3. **전략 경로의 한도 도달 = 계좌 단위 진입 차단 + ENTRY_BLOCKED 강화**, 원인(`*IssueRefusal`)을 타입으로 보존한다.
+3. **전략 경로의 한도 도달 = 계좌 단위 진입 차단 + ENTRY_BLOCKED 강화**, 원인(`*IssueRefusal`)을 타입으로 보존한다. 그 거절과 뒤따르는 운영 모드 투영 거절은
+   오류가 아닌 결과로 주기를 끝내 레인을 잠그지 않는다(서명 활성화된 레인 포함).
 4. **매도 · 손절 · 비상 청산 · 대사 · 체결 감지는 측정기를 부르지 않는다** — 시험으로 고정.
-5. riskcalc `RealizedPnL.AsOf` 주석을 원장 원천에 맞게 고친다. Q5 환율은 risk-management 의 FX 요구를 좁게 고쳐야 준수된다(design D5 — 사람 승인).
+5. riskcalc `RealizedPnL.AsOf` 주석을 원장 원천에 맞게 고친다. Q5 환율은 risk-management 의 FX 요구를 좁게 고친 조항으로 준수한다(design D5 — 사용자 승인 2026-10-14).
 
 ## What Does NOT Change
 
@@ -60,9 +61,10 @@ Guardian 판정 체인의 `daily_loss` 단(`risk.checkDailyLoss`)은 있지만, 
 
 ## Impact
 
-- Affected specs: `risk-management` — 요구 1개 추가(「일일 손실 한도의 입력은 원장에서 측정된다」) · 1개 수정(「KR과 US는 하나의 account-base Guardian 권위를 공유한다」에 일일 손실 환산 조항).
-- Affected code(예정): `internal/execgw/riskguardian.go`(`IssueEntry`) · `riskguardian_qfinal.go`(`PrecheckQFinalEntry`) ·
-  `internal/app/engine/guardian_wiring.go`(측정기 주입) · 새 파일(측정기) · 필요 시 `strategy_first_leg_admission.go`(Q6).
+- Affected specs: `risk-management` — 요구 1개 추가(「일일 손실 한도의 입력은 원장에서 측정된다」) · 1개 수정(「KR과 US는 하나의 account-base Guardian 권위를 공유한다」에 환산 조항 — a136 델타로 옮김 권장, review.md §5). `trade-analytics` — 1개 수정(「분석 경로의 격리」: 성과 행 = Guardian 입력).
+- Affected code(예정): `internal/execgw/riskguardian.go`(`IssueEntry`) · `riskguardian_qfinal.go`(`PrecheckQFinalEntry` · `QFinalEntryIssuance`) ·
+  `strategy_first_leg_admission.go`(`admit`) · `strategy_dispatch_cycle.go`(`dispatch`) · 전달 루프 · 첫 다리 조립(토큰 · 짝 FX 운반) ·
+  새 파일(`internal/dailyloss` · 원장 읽기 · Guardian 측정/강화 입구) · riskcalc 주석.
   **병행 a136(Guardian 일일 매수 notional 한도)과 같은 파일 표면** — a136 착지 뒤에 base 를 고정한다.
 - 위험 등급: **High-risk**(Guardian · 위험 입력). FLM/BTM 선행 · Pre-Edit 선언 · 변이 원장 · 적대적 독립 리뷰 의무.
-- 상태: 사용자 결정 반영(2026-10-14). 남은 사람 승인 하나 — D5 의 FX 요구 수정. 구현은 a136 이 공유 파일을 커밋한 뒤(design 「구현 순서」).
+- 상태: 사용자 결정 · FX 조항 승인 반영, proposal-freeze APPROVE-WITH-FIXES 수리 반영(2026-10-14). 구현은 a136 이 공유 파일을 커밋한 뒤, archive 는 a136 뒤.

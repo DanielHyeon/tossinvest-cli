@@ -29,28 +29,60 @@
 > offset (conservative; measured total never decreases within a day). NEW Q13 = managed positions closed by the human selling in the app
 > (adjustment-closed) are NOT counted as loss and do NOT fail closed (stated limit) — consistent with "manual orders' losses not counted".
 
+Q5 FX 조항 승인(2026-10-14, 사용자 선택 「1」 — Manager 전달 원문):
+
+> the user APPROVED (2026-10-14, choice "1") the narrowed FX MODIFIED clause for risk-management 「KR과 US는 하나의 account-base Guardian 권위를
+> 공유한다」: base-currency losses need no conversion/authority; another market's loss/buy amount may be converted only with that market's authority
+> carried in the same paired FX collection (same observedAt) and validated by Guardian at precheck (official source, pair, freshness); absent → fail
+> closed for entries; re-read, caller-supplied rate, other-wave authority remain forbidden; request sizing/exposure/reservation/envelope FX rules unchanged.
+
 순서 지시: a136 이 먼저 구현하고 공유 production 파일(`risk.Policy` · `guardian_wiring.go` · `riskguardian_first_leg.go` · a136 이 MODIFY 하는
 risk-management 요구)을 소유한다. a137 은 그 커밋 전에는 새 파일만 만든다. base 는 a137 첫 Go 커밋의 부모.
 
-## 3. Q5 스펙 준수 판정 — 남은 사람 승인
+## 3. Q5 스펙 준수 판정 — 승인됨
 
-**지금 문장 그대로는 준수하지 못하고, 좁은 MODIFIED 하나로 준수한다**(design D5). KR 요청의 일일 손실에 US 손실을 같은 파도의 US 권한으로 환산하면
-「같은 authority … aggregate … 다른 환율 사용 금지」에 걸린다. spec 델타가 「KR과 US는 하나의 account-base Guardian 권위를 공유한다」에 일일 손실 환산 조항
-(같은 파도 · 공식 원천 · 봉인 권한만, 없으면 fail-closed, 재조회 · 호출자 환율 · 다른 파도 금지, 요청의 sizing/exposure/reservation 권한은 불변)과
-시나리오 둘을 더한다. **이 requirement 수정은 사람 승인이 필요하다.** 승인 전에는 그 조항에 의존하는 코드를 쓰지 않는다.
+지금 문장 그대로는 준수하지 못했고(KR 요청의 aggregate 가 「다른 환율」을 씀), 좁은 MODIFIED 로 준수한다. 그 조항이 위 §2 원문대로 **승인되었다**(2026-10-14).
+델타의 문구는 승인 원문에 맞췄다(base 통화 무환산 · 같은 paired FX collection · precheck 검증 · 없으면 fail-closed · 재조회/호출자 환율/다른 파도 금지 · 요청 FX 규칙 불변).
+이제 이 조항에 기대는 코드를 써도 된다(구현은 여전히 a136 공유 파일 커밋 뒤).
 
-## 4. proposal-freeze 리뷰
+## 4. proposal-freeze 리뷰 (2026-10-14, 분리된 읽기 전용 컨텍스트 4보이스 — 적대적 Eng · 스펙 · 범위 · 운영; 판정은 Manager 가 전달)
 
-(분리된 컨텍스트에 4보이스 리뷰 — 적대적 Eng · 스펙 · 범위 · 운영 — 를 맡겼다. 판정은 아래에 기록한다.)
+판정: **APPROVE-WITH-FIXES — P1 다섯이 닫힐 때까지 freeze 차단.** 아래는 전부 사용자 결정 안의 수리다(새 사람 결정 없음, P1-5 는 위 승인으로 해소).
+
+| 발견 | 내용 | 처분 |
+|---|---|---|
+| P1-1 (fail-open) | 시장 현지일 귀속은 늦게 기록된 손실을 끝난 날로 떨어뜨린다(`closed_at` = 원장 커밋 시각, position_projection.go:316-318 · fills.go:174) | design D1-1 · F10: `clock.AccountTradingDay(closed_at) == D` 로 귀속. RED 두 행 뒤집음(US 03:00Z · KR 15:00Z → 들어감) + 경계 행 · 늦은 기록 시험 |
+| P1-2 (fail-open) | Q13 제외는 사람의 앱 매도에만 — 수명 안에 발송된 엔진 SELL 이 있으면 측정 불가, `new_quantity` 는 decimal 비교 | design D1-4 · spec 시나리오 · RED `TestA137AnAdjustmentCloseWithADispatchedEngineSellIsUnmeasurable` |
+| P1-3 | 서명 활성화된 레인은 `refreshOnly` 거짓 → (966) durable 레인 잠금, ENTRY_BLOCKED 뒤 `ObserveStrategyEntryGate` 거절로 다른 레인도 잠김 | design F7 · D3: `dispatch` 가 「계좌 진입 차단」 타입 결과로 주기를 끝냄(오류 아님). `runMarket` FLM 먼저 작성(`function-logic/…runmarket`), BTM 에 두 조립 모두 잠금 0 시험 |
+| P1-4 | `max` 의미: 무효 호출자 값은 대체 없이 거절 유지, 측정 실패는 호출자 값으로 떨어지지 않음 | design D2 「바닥 규칙」 · spec 문장 + 시나리오 2 |
+| P1-5 (FX 조항) | base 통화 손실은 무환산 · 무권한, 「같은 파도」 = 같은 paired FX collection(같은 observedAt) + precheck 검증 | 델타 문구 갱신 · 승인됨(§2 · §3) |
+| P2-1 | 분류 불변 표 시험(`isCentralStrategyIntegrity` · `*strategyScopeRefusal`) + `IssueRefusal.Stage == StageChain` 요구 | design D3 · admit BTM |
+| P2-2 | 측정 실패는 봉인된 오류 토큰으로 운반(권한 수집 오류 아님 — kill switch 우선), `MeasureDailyLoss` 는 조립의 마지막 단계 | design D2 |
+| P2-3 | Q12 는 포지션 **사이**에서만 참 | spec 문장 축소 · design D1-6 · U8 |
+| P2-4 | trade-analytics MODIFIED 델타(성과 행 = Guardian 입력, 부재는 진입만 막음) | `specs/trade-analytics/spec.md` 「분석 경로의 격리」 |
+| P2-5 | fail-closed 거부 목록 (a)~(g) + 빈도 추정 + 사람이 잴 읽기 전용 질의 | design 「Fail-closed 가 거부하는 정상 입력」(에이전트는 실 원장에 돌리지 않음) |
+| P2-6 | Detail = 시장 · 심볼 · `pos-` 해시 · 사유 / Q7 재강화 함정 | design D2 「Detail」 · D3 |
+| P3-1 | US 환산 올림 | design D1-7 · spec 시나리오 |
+| P3-2 | KR/US 외 시장은 측정 불가로 통일 | design D1-2 |
+| P3-3 | spec SHALL 문구 · 문서 일관성 · archive 는 a136 뒤 | spec · design 머리 |
+| P3-4 | tasks 0.4 체크 · 변이 목록 추가 | tasks.md |
+
+P1 다섯의 닫힘은 문서 · RED 수준이다. 코드로 닫히는 것은 GREEN 뒤이고, 닫힘의 독립 재확인은 Manager 몫이다(tasks 0.6.1).
+
+## 5. FX 조항의 자리 — Manager 조정 요청
+
+a136 이 같은 조항을 US 수동 매수 금액에 쓰고 a136 이 먼저 archive 한다. 같은 requirement 를 두 델타가 MODIFIED 하면 뒤에 archive 되는 델타가 앞의 것을 통째로
+덮는다. **권장: 조항을 a136 델타로 옮기고, a137 델타에서는 그 MODIFIED 를 지운다**(a137 은 조항을 인용만). 옮기기 전까지는 a137 델타에 둔다 — 옮김이 정해지면
+a137 쪽 MODIFIED 블록을 지우는 커밋을 하겠다.
 
 ## Function Logic Map / Pre-Edit
 
-- 분기 근거 = `analysis/ast-evidence/`(12 함수, 읽기 전용 증거) · `analysis/function-logic/internal-app-engine--strategyfirstlegadmissionbridge.admit/`(편집 대상, 편집 전 좌표).
+- 분기 근거 = `analysis/ast-evidence/`(12 함수, 읽기 전용 증거) · `analysis/function-logic/` 셋(편집 전 좌표): `admit`(편집 대상) · `dispatch`(편집 대상 — 주기 끝내기) · `runMarket`(무편집 근거, P1-3).
 - `riskguardian.go` · `riskguardian_qfinal.go` · `riskguardian_first_leg.go` 의 편집 대상 함수 FLM 은 a136 커밋 뒤 재추출해 쓴다(파일 sha 가 a136 편집으로 바뀜).
 - 새 파일(`internal/dailyloss/*`, 원장 읽기 새 파일, Guardian 측정 새 파일): Function Logic Map: not-applicable — base 에 같은 qualified 함수가 없는 새 leaf.
 - Pre-Edit 선언은 production 편집 직전(tasks 0.8).
 
 ## RED
 
-- `internal/dailyloss/measure_test.go`(빌드 태그 `a137red`, **미커밋** — base 규칙 때문에 첫 Go 커밋을 a136 뒤로 미룸) — 10 시험, base 에서 컴파일 RED
+- `internal/dailyloss/measure_test.go`(빌드 태그 `a137red`, **미커밋** — base 규칙 때문에 첫 Go 커밋을 a136 뒤로 미룸) — 12 시험(리뷰 P1-1 · P1-2 반영), base 에서 컴파일 RED
   (`analysis/red/red-dailyloss.txt`: `undefined: Closed · Collect …`). 기본 빌드는 그 디렉터리를 건너뛴다(`go list ./...` rc 0).
