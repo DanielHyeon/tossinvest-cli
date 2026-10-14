@@ -9,8 +9,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/costs"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/risk"
@@ -158,4 +165,63 @@ func TestA137ClassificationIsUnchangedForEveryPrecheckRefusal(t *testing.T) {
 			t.Errorf("%s: outcome=%+v escalations=%d", name, outcome, issuer.escalations)
 		}
 	}
+}
+
+// 구현 리뷰 P1-3(Manager 결정 ①): 측정 불가(타입 표지)는 강화 없이 DAILY_LOSS_UNMEASURABLE — 레인 결함이 아님. 표지 없는 입력 불가는 오늘처럼.
+func TestA137AnUnmeasurableDayIsAPolicyOutcomeNotALaneFault(t *testing.T) {
+	market := pairedStrategyFirstLegResults(t)[0]
+	refusal := &execgw.IssueRefusal{Stage: execgw.StageChain, Reason: string(risk.ReasonInputUnavailable), Detail: "cannot be measured"}
+	marked := errors.Join(refusal, &execgw.DailyLossUnmeasurable{Cause: errors.New("closed today without a frozen outcome row")})
+	issuer := &firstLegGuardianSpy{precheckErr: marked}
+	loader := &firstLegAuthorityLoaderStub{issuance: firstLegBridgeIssuanceFixture(market.result)}
+	outcome := newStrategyFirstLegAdmissionBridge(issuer, loader).admit(context.Background(), market.result)
+	var unmeasurable *execgw.DailyLossUnmeasurable
+	if outcome.Code != StrategyFirstLegDailyLossUnmeasurable || issuer.escalations != 0 || !errors.As(outcome.cause, &unmeasurable) {
+		t.Fatalf("outcome=%+v escalations=%d", outcome, issuer.escalations)
+	}
+	seen, err := a137Deliver(t, map[string]error{"a": fmt.Errorf("engine: first-leg admission %s: %w", outcome.Code, outcome.cause)})
+	if err != nil || strings.Join(seen, ",") != "a" {
+		t.Fatalf("delivered=%v err=%v — want the cycle ended quietly", seen, err)
+	}
+
+	plain := &execgw.IssueRefusal{Stage: execgw.StageChain, Reason: string(risk.ReasonInputUnavailable), Detail: "equity missing"}
+	loader = &firstLegAuthorityLoaderStub{issuance: firstLegBridgeIssuanceFixture(market.result)}
+	outcome = newStrategyFirstLegAdmissionBridge(&firstLegGuardianSpy{precheckErr: plain}, loader).admit(context.Background(), market.result)
+	if outcome.Code != StrategyFirstLegAuthorityMismatch {
+		t.Fatalf("an unmarked INPUT_UNAVAILABLE must stay AUTHORITY_MISMATCH, got %+v", outcome)
+	}
+	seen, err = a137Deliver(t, map[string]error{"a": fmt.Errorf("engine: first-leg admission %s: %w", outcome.Code, outcome.cause)})
+	if err == nil || strings.Join(seen, ",") != "a" {
+		t.Fatalf("delivered=%v err=%v — want today's stopping error", seen, err)
+	}
+}
+
+// 구현 리뷰 P3: 승인은 Guardian 이 잰 토큰을 그대로 precheck 요청에 실음.
+func TestA137AdmissionCarriesTheMeasuredTokenIntoThePrecheck(t *testing.T) {
+	market := pairedStrategyFirstLegResults(t)[0]
+	token := a137RealToken(t)
+	issuer := &firstLegGuardianSpy{token: token, precheckErr: errors.New("stop after precheck")}
+	loader := &firstLegAuthorityLoaderStub{issuance: firstLegBridgeIssuanceFixture(market.result)}
+	newStrategyFirstLegAdmissionBridge(issuer, loader).admit(context.Background(), market.result)
+	if len(issuer.requests) != 1 || !reflect.DeepEqual(issuer.requests[0].Entry.DailyLoss, token) {
+		t.Fatalf("the precheck request did not carry the measured token")
+	}
+}
+
+// a137RealToken 은 실제 Guardian 이 빈 원장에서 잰 토큰 — 엔진 패키지는 토큰을 만들 수 없음(불투명).
+func a137RealToken(t *testing.T) execgw.DailyLossMeasurement {
+	t.Helper()
+	clk := clock.NewFake(time.Date(2026, 10, 14, 1, 30, 0, 0, time.UTC))
+	j, err := journal.Open(context.Background(), journal.Options{Path: filepath.Join(t.TempDir(), journal.DBFileName), Clock: clk,
+		FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt})})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = j.Close() })
+	g, err := execgw.NewRiskGuardian(execgw.RiskGuardianOptions{Journal: j, Clock: clk, AccountRef: "acct", Policy: risk.DefaultPolicy(),
+		Costs: costs.DefaultModel(), PolicyVersion: "a137/test", ManualBuys: a136ZeroManualBuyBoardInternal(clk)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return g.MeasureDailyLoss(context.Background())
 }

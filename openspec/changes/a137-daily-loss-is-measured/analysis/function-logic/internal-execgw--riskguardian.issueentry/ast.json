@@ -1,6 +1,6 @@
 {
   "file": "internal/execgw/riskguardian.go",
-  "source_sha256": "5d974c97acfb2f1ccfdf8083762abe393aca98de424ce54d6557d075fbd3d36a",
+  "source_sha256": "09cf2f1a1123b6fa9d66ab3eaed7088bd55f3ac230b9044493fb93a616635eb8",
   "package": "execgw",
   "function": "IssueEntry",
   "receiver": "RiskGuardian",
@@ -323,13 +323,13 @@
         "line": 450,
         "column": 32
       },
-      "text": "chainRefusal"
+      "text": "dailyLossChainRefusal"
     },
     {
       "kind": "call",
       "at": {
         "line": 450,
-        "column": 55
+        "column": 76
       },
       "text": "g.escalateFor"
     },

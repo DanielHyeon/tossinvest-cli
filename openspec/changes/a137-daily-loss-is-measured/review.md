@@ -158,6 +158,27 @@ Pre-Edit Gate:
 | `red-engine-behaviour.txt` | freeze 조건 ① `TestA137ADailyLossModeBlockEndsTheCycleQuietly` **행동 FAIL**(전달 루프 편집 전) — 나머지는 오늘 동작 고정이라 PASS |
 | `red-fence-behaviour.txt` | freeze 조건 펜스 시험 — 펜스 운반(`gateway.go` · `strategy_entry_gate_authority.go`)을 HEAD 로 되돌린 사본에서 `TestA137AFenceCausedByTheDailyLossEscalationIsAnAccountBlock` **행동 FAIL**, `TestA137OtherFencesBehaveAsBefore` PASS(오늘 동작) |
 
-## 6. 구현 적대적 독립 리뷰 (a1cfe0c2 대상, 분리된 읽기 전용 컨텍스트)
+## 6. 구현 적대적 독립 리뷰 (a1cfe0c2 대상, 분리된 읽기 전용 컨텍스트 — 판정은 Manager 가 전달)
 
-- 실행 중 — 이 커밋 시점에 판정 **미수신**. 미수신은 「검증됨」이 아니다. 판정 · 수리는 다음 커밋에 기록한다(tasks 2.3).
+판정: **APPROVE-WITH-FIXES**, P0 없음. 수리는 RED 먼저(새 시험은 지목한 변이에서 실패해야 함 — `analysis/mutation/ledger.md` 3회차).
+
+| 발견 | 내용 | 처분 |
+|---|---|---|
+| P1-1 | 변이 M2c(`PrecheckQFinalEntry` 의 `Account: account` → `request.Account`) SURVIVED — 살아 있는 문의 바닥을 재는 시험 없음 | `a137_precheck_test.go`: 실제 `PrecheckQFinalEntry` 로 한도 도달 · 측정 불가(타입 표지) · 짝 FX 없는 US 손실 거절 / 있으면 통과(fx=nil 변이도 잡음) |
+| P1-2 | 변이 M1b(`dailyLossWindow` 의 롤오버 삭제) SURVIVED — fail-open | `TestA137TheAccountDayWindowHoldsThroughTheRealJournalRead`: 시험 자리 없이 실제 원장 읽기(태그 seam `InsertClosedManagedPositionForTest`)로 네 경계(D 07:59:59 밖 · D 08:00 안 · D+1 07:59:59 안 · D+1 08:00 밖) — 여유(margin) · SQL 범위도 고정 |
+| P1-3 | 측정 불가 · 토큰 만료 INPUT_UNAVAILABLE 이 AUTHORITY_MISMATCH 결함 → 서명 활성화 레인 durable 잠금(supervisor :962-966) — design 표 · Q3/Q8 의도와 모순 | **Manager 결정 ①**: 측정기 · 토큰 기원만 타입 표지 `*execgw.DailyLossUnmeasurable`(`dailyLossChainRefusal`), 승인 `DAILY_LOSS_UNMEASURABLE`, 전달 루프 조용히 종료 · 강화 없음 · 진입은 매 주기 재거절. 시험: `TestA137AnUnmeasurableDayIsAPolicyOutcomeNotALaneFault`(표지 없는 입력 불가는 오늘처럼) · `TestA137TheDailyLossStopsNeverLatchOrSwallowOnEitherLaneKind`(effective · refreshOnly) · `TestA137AnUnmarkedFaultStillLatchesOrIsSwallowedAsToday` |
+| P2-1 | 변이 M3b SURVIVED — 단일 latch 조건 | 펜스 시험에 순서 반대(reconcile latch 먼저, 일일 손실 투영 뒤) 경우 추가 — 표지 없음 |
+| P2-2 | 일일 손실 모드 차단 동안 query-stale 이 가려짐 | design D3 에 의도로 명시 |
+| P2-3 | 자본 ≤ 0 이 살아 있는 문에서 ENTRY_BLOCKED 로 강화됨 | 보수 방향 — spec 문장 · 시나리오 + `TestA137ThePrecheckDoorReportsNoCapitalAsTheDailyLossLimit` |
+| P3 | `dailyLossFloor` 의 CompareDecimal 오류 → fail closed | 수리(측정 실패로) |
+| P3 | 승인이 잰 토큰을 실어 나르는지 | `TestA137AdmissionCarriesTheMeasuredTokenIntoThePrecheck`(실제 Guardian 토큰, reflect.DeepEqual) |
+| P3 | ErrModeAnnouncementFailed 의 시끄러움 | design D3 에 문서화 |
+| P3 | 오래 묵은 IN_DOUBT SELL(settled_at NULL) | 거부 목록 (d) 에 추가(끝이 없는 구간 → 겹침, 기존 시험 `in-doubt sell in lifetime`) |
+| P3 | `countMalformedClosedAt` 전수 스캔 | tasks 2.4 지연 측정에 포함 |
+| P3 | 동등 변이 M6 · M10 · M27b | 리뷰어 판정대로 동등(관측 불가)으로 기록 — ledger.md |
+
+### base 창 문제 (Manager 판단 필요)
+
+base `a000cf29` 뒤에 a136 커밋 셋(844a042c · 1539c675 · 63fd0c92)이 이 change 의 첫 수리 커밋 **앞에** 들어왔다. 그래서 착지를 이 change 의
+마지막 커밋에 기록해도 창(base..landing)에 a136 의 수정 함수 13 개가 들어온다(`check_analysis` 2026-10-14 실측: required 24 = a137 11 + a136 13,
+a137 11 은 모두 통과). 닫는 길은 WORKFLOW 「사람 승인 base 재고정」(귀속 실측 · 승인 기록 · 단독 커밋)뿐이다 — 이 팀메이트는 base 를 옮기지 않는다.

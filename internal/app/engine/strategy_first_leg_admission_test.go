@@ -171,11 +171,12 @@ type firstLegGuardianSpy struct {
 	// a137: 측정 · 강화 호출 기록.
 	escalations int
 	escalateErr error
+	token       execgw.DailyLossMeasurement
 }
 
 func (s *firstLegGuardianSpy) MeasureDailyLoss(context.Context) execgw.DailyLossMeasurement {
 	s.events = strings.TrimPrefix(s.events+",measure", ",")
-	return execgw.DailyLossMeasurement{}
+	return s.token
 }
 
 func (s *firstLegGuardianSpy) EscalateDailyLossLimit(_ context.Context, refusal error) error {

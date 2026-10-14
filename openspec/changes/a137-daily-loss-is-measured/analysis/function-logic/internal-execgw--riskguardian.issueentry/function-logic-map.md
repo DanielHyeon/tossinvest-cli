@@ -2,12 +2,12 @@
 
 - Source: `internal/execgw/riskguardian.go` (418-575, 편집 뒤)
 - Qualified: `RiskGuardian.IssueEntry`
-- AST evidence: `ast.json`(편집 뒤, `source_sha256` 5d974c97acfb2f1c…) · `ast-base.json`(편집 전, base `a000cf29`, `source_sha256` edad4839b273c2b0…, 편집 전 분기수 14) — 현재 branches 14 · returns 13
+- AST evidence: `ast.json`(편집 뒤, `source_sha256` 09cf2f1a1123b6fa…) · `ast-base.json`(편집 전, base `a000cf29`, `source_sha256` edad4839b273c2b0…, 편집 전 분기수 14) — 현재 branches 14 · returns 13
 - Risk scan: `risk-pattern-report.md`
 
 **역할.** 레거시 진입 발급 문(체인 1회 → 원자 발급). 생산 호출 경로 0(Tracer · GuardianAdapter 생산 생성 0) — 잠든 문이지만 깨어나도 0 을 믿지 않게 같은 바닥을 건다.
 
-**a137 편집.** 체인 앞에 `g.MeasureDailyLoss(ctx)` → `g.dailyLossFloor(req.Account, m, now, nil)` 로 `Account.DailyRealizedLoss` 를 바닥으로 바꾸고, 체인은 `evaluateChainWithDailyLoss` 로 돈다(측정 실패면 daily_loss 단 INPUT_UNAVAILABLE 상세를 측정 실패 문구로). 이 문은 FX 권한이 없어 다른 통화 손실이 있으면 측정 불가. 분기 수 불변(14), B4 의 조건 식만 바뀜.
+**a137 편집.** 체인 앞에 `g.MeasureDailyLoss(ctx)` → `g.dailyLossFloor(req.Account, m, now, nil)` 로 `Account.DailyRealizedLoss` 를 바닥으로 바꾸고, 체인은 `evaluateChainWithDailyLoss` 로 돈다(측정 실패면 daily_loss 단 INPUT_UNAVAILABLE 상세를 측정 실패 문구로). 이 문은 FX 권한이 없어 다른 통화 손실이 있으면 측정 불가. 분기 수 불변(14), B4 의 조건 식만 바뀜. 구현 리뷰: 체인 거절은 `dailyLossChainRefusal` 로(측정 실패 표지 — 잠든 문이라 소비자 없음, 일관성).
 
 ## Inputs and invariants
 

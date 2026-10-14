@@ -309,6 +309,18 @@ func TestA137TheFinalGateFenceMarksOnlyTheDailyLossChange(t *testing.T) {
 		t.Fatalf("err = %v, want an ordinary fence when another latch joins the daily-loss mode", err)
 	}
 
+	// P2-1: 순서를 바꿔도(reconcile latch 가 먼저, 일일 손실 투영이 뒤) 표지 없음 — 오늘처럼 시끄러운 펜스.
+	gw4, gate4 := a137Gate(t)
+	expected4, err := gw4.ObserveStrategyEntryGate(ctx, "kr", "005930")
+	if err != nil {
+		t.Fatal(err)
+	}
+	gate4.Block(ReasonReconcileMismatch, "reconcile")
+	a137Project(gate4, 1, journal.ModeEntryBlocked, journal.ModeActorAuto, journal.ModeTriggerDailyLossLimit)
+	if err := gw4.withStrategyEntryGateAuthority(ctx, expected4, "kr", "005930", func() error { return nil }); err == nil || a137IsAccountBlock(err) {
+		t.Fatalf("err = %v, want an ordinary fence (reconcile latch before the daily-loss projection)", err)
+	}
+
 	gw2, gate2 := a137Gate(t)
 	expected2, err := gw2.ObserveStrategyEntryGate(ctx, "kr", "005930")
 	if err != nil {

@@ -152,7 +152,13 @@ func (g *RiskGuardian) dailyLossFloor(account risk.AccountState, m DailyLossMeas
 	if !ok {
 		return account, nil // 무효한 호출자 값은 대체하지 않음 — 체인이 지금처럼 거절
 	}
-	if cmp, err := riskcalc.CompareDecimal(measured.Amount, caller); err == nil && cmp > 0 {
+	cmp, err := riskcalc.CompareDecimal(measured.Amount, caller)
+	if err != nil {
+		// 비교할 수 없으면 큰 쪽을 모름 — 측정 실패로(호출자 값으로 떨어지지 않음).
+		account.DailyRealizedLoss = riskcalc.Money{}
+		return account, fmt.Errorf("%w: the measured and caller values cannot be compared", dailyloss.ErrUnmeasurable)
+	}
+	if cmp > 0 {
 		account.DailyRealizedLoss = riskcalc.Money{Amount: measured.Amount, Currency: measured.Currency}
 	}
 	return account, nil
@@ -180,6 +186,37 @@ func evaluateChainWithDailyLoss(in risk.Input, measureErr error) risk.Decision {
 		verdict.Detail = "today's realised loss cannot be measured: " + strings.TrimPrefix(measureErr.Error(), dailyloss.ErrUnmeasurable.Error()+": ")
 	}
 	return verdict
+}
+
+// dailyLossChainRefusal 은 체인 거절을 IssueRefusal 로 만들고, 그것이 측정 실패로 daily_loss 단에서 멈춘 입력 불가면
+// 「측정 불가」 표지(*DailyLossUnmeasurable)를 원인으로 이어 붙임 — 전략 경로가 그것을 레인 결함이 아닌 정책 결과로 읽게(Manager 결정 ①).
+// 그 밖의 거절(다른 단 · 다른 입력 불가)은 표지 없이 오늘과 같음.
+func dailyLossChainRefusal(verdict risk.Decision, measureErr error) *IssueRefusal {
+	refusal := chainRefusal(verdict)
+	if measureErr != nil && verdict.Step == "daily_loss" && verdict.Reason == risk.ReasonInputUnavailable {
+		refusal.cause = &DailyLossUnmeasurable{Cause: measureErr}
+	}
+	return refusal
+}
+
+// DailyLossUnmeasurable 은 「그날의 손실을 잴 수 없어 신규 진입이 막혔다」는 표지임(측정기 · 토큰에서만 생김). 진입은 잴 수 있을 때까지
+// 매 주기 거절되고(fail-closed 유지), 전략 레인은 이것을 결함으로 잠그지 않음 — 운영 모드도 바꾸지 않음.
+type DailyLossUnmeasurable struct {
+	Cause error
+}
+
+func (e *DailyLossUnmeasurable) Error() string {
+	if e == nil || e.Cause == nil {
+		return "execgw: new entries are blocked because today's realised loss cannot be measured"
+	}
+	return "execgw: new entries are blocked because today's realised loss cannot be measured: " + e.Cause.Error()
+}
+
+func (e *DailyLossUnmeasurable) Unwrap() error {
+	if e == nil {
+		return nil
+	}
+	return e.Cause
 }
 
 // EscalateDailyLossLimit 은 전략 경로의 일일 손실 한도 거절을 운영 모드 강화(ENTRY_BLOCKED)로 영속함 — precheck 는 원장을 바꾸지 않는

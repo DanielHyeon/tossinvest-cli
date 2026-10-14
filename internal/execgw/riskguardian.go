@@ -447,7 +447,7 @@ func (g *RiskGuardian) IssueEntry(ctx context.Context, req EntryIssuance) (Issue
 		// design D6's asymmetry, and why a lost refusal is counted under its own
 		// kind.
 		g.observeEntry(g.entryObservation(in, journal.OutcomeRefusedChain, verdict))
-		return Issued{}, errors.Join(chainRefusal(verdict), g.escalateFor(ctx, verdict))
+		return Issued{}, errors.Join(dailyLossChainRefusal(verdict, measureErr), g.escalateFor(ctx, verdict))
 	}
 	exposure, verdict := risk.EntryExposureValue(in)
 	if !verdict.Allowed {

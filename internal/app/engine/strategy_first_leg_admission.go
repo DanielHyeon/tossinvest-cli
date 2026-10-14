@@ -28,6 +28,9 @@ const (
 	StrategyFirstLegAtomicAdmissionFailed     StrategyFirstLegAdmissionCode = "ATOMIC_ADMISSION_FAILED"
 	// StrategyFirstLegDailyLossLimit 은 일일 손실 한도로 계좌의 신규 진입이 막힌 것(a137) — 레인 결함이 아닌 정책 결과.
 	StrategyFirstLegDailyLossLimit StrategyFirstLegAdmissionCode = "DAILY_LOSS_LIMIT"
+	// StrategyFirstLegDailyLossUnmeasurable 은 그날의 손실을 잴 수 없어 신규 진입이 막힌 것(a137, Manager 결정 ①) — 매 주기 거절은
+	// 유지하되 레인 결함이 아님.
+	StrategyFirstLegDailyLossUnmeasurable StrategyFirstLegAdmissionCode = "DAILY_LOSS_UNMEASURABLE"
 )
 
 // StrategyFirstLegAdmissionResult exposes no reusable authority. Receipt is
@@ -100,6 +103,15 @@ func (b *strategyFirstLegAdmissionBridge) admit(ctx context.Context, result stra
 	if err != nil {
 		// a137: 일일 손실 한도 체인 거절은 타입 · 단계로만 가름(문구 아님) — 강화에 성공하면 계좌 진입 차단(레인 결함 아님),
 		// 실패하면 거절과 강화 오류를 함께 든 결함으로 남음(조용히 삼켜지지 않게).
+		// 측정 불가(측정기 · 토큰에서만 생기는 타입 표지)는 강화 없이 계좌 단위 진입 차단 결과 — 그 밖의 입력 불가는 오늘처럼 결함.
+		if unmeasurable := (*execgw.DailyLossUnmeasurable)(nil); errors.As(err, &unmeasurable) {
+			if issue := (*execgw.IssueRefusal)(nil); errors.As(err, &issue) && issue.Stage == execgw.StageChain &&
+				issue.Reason == string(risk.ReasonInputUnavailable) {
+				refusal := strategyFirstLegRefusal(StrategyFirstLegDailyLossUnmeasurable, accepted.market, err.Error())
+				refusal.cause = err
+				return refusal
+			}
+		}
 		if issue := (*execgw.IssueRefusal)(nil); errors.As(err, &issue) && issue.Stage == execgw.StageChain &&
 			issue.Reason == string(risk.ReasonDailyLossLimitReached) {
 			refusal := strategyFirstLegRefusal(StrategyFirstLegDailyLossLimit, accepted.market, err.Error())

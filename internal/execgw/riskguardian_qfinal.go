@@ -166,7 +166,7 @@ func (g *RiskGuardian) PrecheckQFinalEntry(request QFinalEntryIssuance) (QFinalE
 	account, measureErr := g.dailyLossFloor(request.Account, request.DailyLoss, now, qFinalManualBuyFX(request, market))
 	in := risk.Input{Now: now, Intent: intent, Account: account, Policy: g.policy, Costs: g.costs, AccountBaseFX: accountFX}
 	if verdict := evaluateChainWithDailyLoss(in, measureErr); !verdict.Allowed {
-		return QFinalEntryPrecheck{}, chainRefusal(verdict)
+		return QFinalEntryPrecheck{}, dailyLossChainRefusal(verdict, measureErr)
 	}
 	if _, verdict := risk.EntryExposureValue(in); !verdict.Allowed {
 		return QFinalEntryPrecheck{}, chainRefusal(verdict)

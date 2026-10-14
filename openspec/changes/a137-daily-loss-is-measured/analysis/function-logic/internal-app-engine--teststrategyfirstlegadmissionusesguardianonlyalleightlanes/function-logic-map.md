@@ -2,7 +2,7 @@
 
 - Source: `internal/app/engine/strategy_first_leg_admission_test.go` (32-58, 편집 뒤)
 - Qualified: `TestStrategyFirstLegAdmissionUsesGuardianOnlyAllEightLanes`
-- AST evidence: `ast.json`(편집 뒤, `source_sha256` 608c815a0bd96c02…) · `ast-base.json`(편집 전, base `a000cf29`, `source_sha256` 7b2eca4d50c6fb8a…, 편집 전 분기수 4) — 현재 branches 4 · returns 0
+- AST evidence: `ast.json`(편집 뒤, `source_sha256` ae208ecf8187b894…) · `ast-base.json`(편집 전, base `a000cf29`, `source_sha256` 7b2eca4d50c6fb8a…, 편집 전 분기수 4) — 현재 branches 4 · returns 0
 - Risk scan: `risk-pattern-report.md`
 
 **역할.** 첫 다리 승인이 Guardian 경계만 쓰는지 여덟 레인으로 확인하는 시험.

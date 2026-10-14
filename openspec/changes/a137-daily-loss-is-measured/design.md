@@ -93,10 +93,20 @@ codegraph 1.6.0(`analysis/code-context/raw/`)이다. 「정정」 행은 두 번
   3. 경합: 레인 B 가 강화 **전에** 승인되어 Gateway 의 `withStrategyEntryGateAuthority` 재확인(strategy_entry_gate_authority.go:62-71)에서 세대/모드가 바뀌어
      `ReasonStrategyDispatchFenced`(gateway.go:712-716)로 거절될 때, 그 변경의 원인이 trigger `ModeTriggerDailyLossLimit` 인 모드 변경이면 같은 「계좌 진입 차단」 결과.
      그 밖의 원인(심볼 latch · 다른 모드 trigger · 세대 변화만)은 오늘과 같다.
+  (P2-2) 일일 손실 모드 latch 가 서 있는 동안에는 모드가 latchOrder 맨 끝이어도 조회 신선도(query-stale) 거절은 가려진다 — latch 가
+  stale 판정보다 먼저 읽히기 때문이며 의도된 것이다(어차피 진입은 막혀 있다). 모드가 풀리면 stale 은 다음 관측에서 다시 보인다.
   전달 루프는 그 결과를 보면 그 주기의 나머지 범위 전달을 멈춘다. **앞서 건너뛴 범위 거절의 보고는 오늘과 같다**: 같은 주기에 이미 `*strategyScopeRefusal`
   (예: 버킷 고갈, admission.go:99-101)로 건너뛴 범위가 있으면 `deliverEachStrategyHandoff` 는 지금처럼 `errors.Join(skipped...)` 를 돌려준다(J4 — 조용한 건너뛰기 금지).
   그 경우 주기는 오류로 끝나고 effective 레인은 오늘과 같은 길을 간다 — 이것은 명시된 · 시험되는 동작이다(혼합 경우). `runMarket` 은 편집하지 않는다.
 - 분류 불변(P2-1): 모든 precheck 거절과 강화의 `errors.Join` 에 대해 `isCentralStrategyIntegrity` · `*strategyScopeRefusal` 판정이 편집 전과 같음을 표 시험으로 고정한다.
+- **측정 불가(구현 리뷰 P1-3, Manager 결정 ①)**: 측정기 · 토큰에서 생긴 daily_loss 단 INPUT_UNAVAILABLE 은 `*execgw.DailyLossUnmeasurable`
+  표지를 원인으로 실어(`dailyLossChainRefusal`) 첫 다리 승인이 `DAILY_LOSS_UNMEASURABLE` 로 분류하고, 전달 루프는 계좌 차단과 같은 자리에서 주기를
+  조용히 끝낸다. 강화는 없고, 진입은 잴 수 있을 때까지 매 주기 다시 거절된다(fail-closed 유지). 표지가 없는 입력 불가는 오늘처럼 결함(서명 활성화
+  레인은 잠김). 두 레인 종류 모두 시험으로 고정.
+- **자본 ≤ 0(구현 리뷰 P2-3)**: 체인 B3 은 자본이 0 이하면 `DAILY_LOSS_LIMIT_REACHED` 로 거절한다(기존). 살아 있는 문에서도 같은 사유이므로 첫 다리
+  승인이 ENTRY_BLOCKED 로 강화한다 — 보수 방향이고 그대로 둔다.
+- **강화 통지 실패**: `escalateFor` 는 전이가 커밋됐어도 통지 기록이 실패하면(`ErrModeAnnouncementFailed`) 오류를 돌려준다. 그 경우 첫 다리 승인은
+  계좌 차단 표지 대신 거절 + 오류를 join 한 결함으로 남긴다(시끄러운 쪽) — 모드는 이미 ENTRY_BLOCKED 라 다음 주기부터는 모드 차단 표지로 조용해진다.
 - Q7: ENTRY_BLOCKED 는 사람 해제까지 유지된다. **재강화 함정(P2-6)**: 같은 일 키 안에서 사람이 풀어도 측정 합계는 줄지 않으므로(D1-6) 다음 진입이 곧바로 다시
   강화한다. 같은 날 다시 진입하려면 한도를 올리거나(완화 — 사람 승인 · audit) 일 경계를 기다려야 한다. 운영 문서에 적는다.
 
@@ -134,7 +144,7 @@ codegraph 1.6.0(`analysis/code-context/raw/`)이다. 「정정」 행은 두 번
 | (a) | 원장 읽기 오류(busy · 잠금 · 닫힌 핸들) | 그 시도 한 번 | 드묾(단일 연결 경합 시) |
 | (b) | 그날 체결로 닫힌 관리 포지션의 성과 행 부재 — 편입 포지션 | 그 일 키 전체, a130 backfill 로 해제 | 편입 포지션을 엔진이 판 날의 일부(`needs_intake_price` 등) |
 | (c) | 같은 부재 — 엔진 진입 포지션(`cost_estimate_failed` · `insert_failed` · `round_trip_unpriceable` · `sell_unpriced` · `sell_quantity_mismatch` …) | 그 일 키 전체, **다음 일 경계까지 복구 경로 없음** | 미측정 — 아래 질의로 사람이 잴 것 |
-| (d) | 엔진 매도(SELL PLACE 발송 또는 브로커 대기 보호 주문 CREATE/REPLACE)가 있던 수명의 조정 종결 | 그 일 키 전체 | 보호 주문이 WIRED 면 드물지 않을 수 있음(관리 포지션 대부분이 보호 주문을 가짐) |
+| (d) | 엔진 매도(SELL PLACE 발송 — 오래 묵은 IN_DOUBT SELL(settled_at NULL)도 끝이 없으므로 포함 — 또는 브로커 대기 보호 주문 CREATE/REPLACE)가 있던 수명의 조정 종결 | 그 일 키 전체 | 보호 주문이 WIRED 면 드물지 않을 수 있음(관리 포지션 대부분이 보호 주문을 가짐) |
 | (e) | KR 진입에 같은 일 키의 US 손실이 있는데 짝 FX 의 US 권한 없음 | **그 KR 세션 내내**(KR 정규장 동안 US 후보가 Ready 가 아니라 US 권한이 봉인되지 않음) | 드물지 않을 수 있음: US 손실이 KST 08:00 **뒤**에 원장에 반영되면(05:00~09:00 배포 · 재시작 창의 늦은 체결 반영) 그날 KR 진입 전부가 막힘. 동작은 유지(사용자 fail-closed 선택) |
 | (f) | `closed_at`(NULL · 빈 값 · 비 RFC3339 포함 — 사전 필터에 걸리지 않아도 셈) · 성과 금액 · 시장 해석 불가 | 그 일 키 전체(원장 값 결함, 사람 조사) — 형식 결함 행은 일 키와 무관하게 **매일** 막음 | 매우 드묾 |
 | (g) | 측정 토큰 부재 · 만료(10초) · 미래 · 일 키 불일치 · 다른 Guardian | 그 시도 | 조립 결함 또는 KST 08:00 경계를 걸친 precheck |

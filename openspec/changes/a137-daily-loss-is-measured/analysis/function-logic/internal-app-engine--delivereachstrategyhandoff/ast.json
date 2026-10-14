@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_market_handoff_delivery.go",
-  "source_sha256": "26dda1be3cce793e09cf6e3d8305a34b2ab6c0ddef38ea86ff39f19eb9a4569c",
+  "source_sha256": "e972e7224635b825dc91972d210f23ecc4a503f125a346da3f325c75c54fb0d5",
   "package": "engine",
   "function": "deliverEachStrategyHandoff",
   "signature": "deliverEachStrategyHandoff(params=2, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 87,
+    "line": 89,
     "column": 2
   },
   "branches": [
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 77,
+        "line": 78,
         "column": 3
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 81,
+        "line": 83,
         "column": 3
       }
     }
@@ -58,14 +58,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 78,
-        "column": 4
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 82,
+        "line": 80,
         "column": 4
       }
     },
@@ -73,13 +66,20 @@
       "kind": "return",
       "at": {
         "line": 84,
-        "column": 3
+        "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
         "line": 86,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 88,
         "column": 2
       }
     }
@@ -112,7 +112,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 77,
+        "line": 78,
         "column": 6
       },
       "text": "errors.As"
@@ -121,6 +121,14 @@
       "kind": "call",
       "at": {
         "line": 78,
+        "column": 34
+      },
+      "text": "errors.As"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
         "column": 11
       },
       "text": "errors.Join"
@@ -128,7 +136,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 81,
+        "line": 83,
         "column": 6
       },
       "text": "len"
@@ -136,7 +144,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 84,
+        "line": 86,
         "column": 10
       },
       "text": "errors.Join"
@@ -144,7 +152,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 84,
+        "line": 86,
         "column": 22
       },
       "text": "append"
@@ -152,7 +160,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 86,
+        "line": 88,
         "column": 9
       },
       "text": "errors.Join"

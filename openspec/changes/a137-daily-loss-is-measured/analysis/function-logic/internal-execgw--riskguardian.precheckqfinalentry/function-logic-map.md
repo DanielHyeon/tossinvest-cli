@@ -2,12 +2,12 @@
 
 - Source: `internal/execgw/riskguardian_qfinal.go` (89-177, 편집 뒤)
 - Qualified: `RiskGuardian.PrecheckQFinalEntry`
-- AST evidence: `ast.json`(편집 뒤, `source_sha256` 201f9a1b04a9ecfd…) · `ast-base.json`(편집 전, base `a000cf29`, `source_sha256` cc8dcaf1c7a196af…, 편집 전 분기수 17) — 현재 branches 17 · returns 16
+- AST evidence: `ast.json`(편집 뒤, `source_sha256` 777d6b0dc57e6a71…) · `ast-base.json`(편집 전, base `a000cf29`, `source_sha256` cc8dcaf1c7a196af…, 편집 전 분기수 17) — 현재 branches 17 · returns 16
 - Risk scan: `risk-pattern-report.md`
 
 **역할.** 생산 전략 첫 다리의 mutation-free precheck(q_final 계산 → 체인 1회). 살아 있는 유일한 진입 입구.
 
-**a137 편집.** 체인 앞에서 `g.dailyLossFloor(request.Account, request.DailyLoss, now, qFinalManualBuyFX(request, market))` — 토큰(첫 다리 승인이 precheck 직전에 잼)과 요청의 봉인 FX(자기 시장 + 같은 파도 짝 FX, a136 PairedFXAuthority 재사용). 원장 · 브로커 호출 없음(계약 유지). B16 조건 식만 바뀜, 분기 수 불변(17).
+**a137 편집.** 체인 앞에서 `g.dailyLossFloor(request.Account, request.DailyLoss, now, qFinalManualBuyFX(request, market))` — 토큰(첫 다리 승인이 precheck 직전에 잼)과 요청의 봉인 FX(자기 시장 + 같은 파도 짝 FX, a136 PairedFXAuthority 재사용). 원장 · 브로커 호출 없음(계약 유지). B16 조건 식만 바뀜, 분기 수 불변(17). 구현 리뷰: B16 거절은 `dailyLossChainRefusal(verdict, measureErr)` — 측정 실패로 daily_loss 단 INPUT_UNAVAILABLE 이면 `*DailyLossUnmeasurable` 표지를 원인으로.
 
 ## Inputs and invariants
 
@@ -35,7 +35,7 @@
 | B13 | `if err != nil {` (if 147) | — | 분기 본문 참조 | `go test -tags tossos_testseams ./internal/execgw -run QFinal` |
 | B14 | `if err != nil \|\| guardianCap == 0 {` (if 151) | — | 분기 본문 참조 | `go test -tags tossos_testseams ./internal/execgw -run QFinal` |
 | B15 | `if decision.Refusal != nil {` (if 156) | — | 분기 본문 참조 | `go test -tags tossos_testseams ./internal/execgw -run QFinal` |
-| B16 | `if verdict := evaluateChainWithDailyLoss(in, measureErr); !verdict.Allowed {` (if 168) | — | 분기 본문 참조 | `TestA137APrecheckMeasurementMustBeThisGuardiansFreshTodaysOne` · `TestA137AForeignLossConvertsOnlyThroughThePairedAuthority` · `TestA137AFenceCausedByTheDailyLossEscalationIsAnAccountBlock`(fixture 토큰 경유) · 기존 q_final 시험(fixture 가 토큰을 실음) |
+| B16 | `if verdict := evaluateChainWithDailyLoss(in, measureErr); !verdict.Allowed {` (if 168) | — | 분기 본문 참조 | `TestA137ThePrecheckDoorRefusesAMeasuredLossAtTheLimit` · `TestA137ThePrecheckDoorRefusesAnUnmeasurableDayAsTyped` · `TestA137ThePrecheckDoorConvertsAUSLossOnlyWithThePairedAuthority` · `TestA137ThePrecheckDoorReportsNoCapitalAsTheDailyLossLimit` · `TestA137TheAccountDayWindowHoldsThroughTheRealJournalRead` · `TestA137APrecheckMeasurementMustBeThisGuardiansFreshTodaysOne` |
 | B17 | `if _, verdict := risk.EntryExposureValue(in); !verdict.Allowed {` (if 171) | — | 분기 본문 참조 | `go test -tags tossos_testseams ./internal/execgw -run QFinal` |
 
 Exact AST return positions: 91 · 94 · 100 · 104 · 107 · 121 · 125 · 129 · 135 · 138 · 148 · 152 · 157 · 169 · 172 · 176
