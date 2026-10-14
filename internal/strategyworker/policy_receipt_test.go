@@ -399,10 +399,15 @@ func TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter(t *testi
 	// 그래서 임계값 1 의 유도 — **잠금은 세지 않고 첫 실패에 일어난다** — 는
 	// 그대로다. 그것이 무너지는 날은 삼킨 수가 잠금 판정에 들어가는 날이고, 그때는
 	// 이 목록이 아니라 임계값을 다시 정해야 한다.
+	//
+	// `dailyLossUnmeasurable`·`firstDailyLossCause`·`dailyLossNoticeDay` 는 a137(재리뷰 P1-N1)이 더했고 역시 **임계값을 건드리지
+	// 않는다**: 쓰는 곳은 `recordDailyLossUnmeasurable` 하나(a137_daily_loss_notice.go), 읽는 곳은 `Snapshot` 하나와 같은 함수의
+	// 일 키 비교뿐이며 `latchMarket` 은 셋 중 어느 것도 보지 않는다. 세는 것은 실패가 아니라 측정 불가로 조용히 끝난 주기(정책 결과)다.
 	want := []string{
 		"descriptor", "queue", "effective", "latched", "firstFailure", "firstRefusal",
 		"firstAbnormal", "latchID", "latchRevision", "abandoned", "restartAttempt", "restartNotBefore",
 		"swallowedCount", "firstSwallowed",
+		"dailyLossUnmeasurable", "firstDailyLossCause", "dailyLossNoticeDay",
 	}
 	if strings.Join(fields, ",") != strings.Join(want, ",") {
 		t.Fatalf("the engine's per-market runtime state changed.\n got: %v\nwant: %v\n\n"+
