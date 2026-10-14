@@ -1,0 +1,36 @@
+
+Callers of "LoadProductionAuthorityBatch" (11):
+
+function    TestAProposalLostAfterAdmissionIsRecordedAsATypedFault
+  internal/strategyproposal/lost_proposal_test.go:26
+
+function    TestAScopeTheCurrentCandidateDoesNotMatchIsAbsenceNotFault
+  internal/strategyproposal/lost_proposal_test.go:60
+
+function    TestAHealthyBatchCarriesNoFault
+  internal/strategyproposal/lost_proposal_test.go:78
+
+function    TestABreakoutLaneWithNoEvidenceYetIsAbsenceNotFault
+  internal/strategyproposal/lost_proposal_test.go:107
+
+function    TestAnEvaluationRefusalIsAbsenceNotFault
+  internal/strategyproposal/lost_proposal_test.go:135
+
+function    TestAnUnusableRouteAuthorityIsAFault
+  internal/strategyproposal/lost_proposal_test.go:156
+
+function    TestProductionProposalAuthorityLoadsPairedSignedKRUSSnapshots
+  internal/strategyproposal/production_test.go:58
+
+function    TestProductionProposalAuthorityFailureIsMarketLocal
+  internal/strategyproposal/production_test.go:88
+
+function    TestReversalAndWeeklyProposalsLoadThroughTheRealProductionLoaderInBothMarkets
+  internal/strategyproposal/a112_paired_lane_batch_test.go:237
+
+function    TestAWeeklyScopeWithoutItsDurableReservationProposesNothing
+  internal/strategyproposal/a112_paired_lane_batch_test.go:292
+
+function    TestABreakoutScopeIsAbsenceNotFaultInBothMarkets
+  internal/strategyproposal/a112_paired_lane_batch_test.go:321
+

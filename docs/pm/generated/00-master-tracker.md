@@ -155,3 +155,4 @@
     - STORY-TOS-a112 — Run four strategy families as independent evaluators [archived] → `a112-run-four-strategy-families-independently`
     - STORY-TOS-a126 — Filled exposure leaves the bucket when its position does [archived] → `a126-filled-exposure-leaves-the-bucket`
     - STORY-TOS-a127 — Strategy authorities read the ledger the engine opened [archived] → `a127-strategy-authorities-read-the-current-ledger`
+    - STORY-TOS-a140 — Breakout signals are measured in shadow before any entry wiring [in_progress] → `a140-breakout-signals-are-measured-in-shadow`

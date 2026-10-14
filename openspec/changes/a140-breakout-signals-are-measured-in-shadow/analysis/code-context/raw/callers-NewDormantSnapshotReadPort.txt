@@ -1,0 +1,18 @@
+
+Callers of "NewDormantSnapshotReadPort" (5):
+
+function    TestDormantSnapshotReadReplaysKRAndUSIndependentlyByIDAndDigest
+  internal/strategyevidence/consumer_test.go:12
+
+function    TestDormantSnapshotReadHasNoFallbackForMissingOrMalformedReference
+  internal/strategyevidence/consumer_test.go:69
+
+function    TestDormantSnapshotReadRejectsTamperedHeaderScopeAndCutoffs
+  internal/strategyevidence/consumer_test.go:79
+
+function    TestOpenReadOnlyReplaysButCannotCreateSnapshotOrAppend
+  internal/strategyevidence/readonly_test.go:13
+
+function    LoadProductionAuthorityBatch
+  internal/strategyproposal/production.go:307
+

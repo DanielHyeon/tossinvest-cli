@@ -1,0 +1,63 @@
+
+Callers of "Evaluate" (20):
+
+function    TestParkerSyntheticAcceptAndDerivedEvidence
+  internal/strategyengine/lane_test.go:150
+
+function    TestParkerTranslatedStockOSHappyPathParity
+  internal/strategyengine/lane_test.go:173
+
+function    TestMintDecisionRefusesEveryForgedRecordBoundary
+  internal/strategyengine/lane_test.go:206
+
+function    TestMintDecisionNormalizesNegativeDriftAndAllowsAbsentOptionalEvidence
+  internal/strategyengine/lane_test.go:249
+
+function    TestParkerFrozenGateBoundaries
+  internal/strategyengine/lane_test.go:294
+
+function    TestParkerIlliquidAndFakeBreakoutGatesPreserveFrozenPrecedence
+  internal/strategyengine/lane_test.go:342
+
+function    TestParkerEMA9TouchCeilingUsesInclusiveQuarterPercentBoundary
+  internal/strategyengine/lane_test.go:386
+
+function    TestParkerRejectsForgedOpaqueIndicatorDecimalsWithoutPanic
+  internal/strategyengine/lane_test.go:409
+
+function    TestParkerFrozenRefusalPrecedence
+  internal/strategyengine/lane_test.go:430
+
+function    TestParkerConservativeRRFloorIsDominatedByFrozenLVNGate
+  internal/strategyengine/lane_test.go:457
+
+function    TestParkerSessionUsesInjectedEvaluationTimeAndInclusiveCutoff
+  internal/strategyengine/lane_test.go:472
+
+function    TestParkerRejectsBarClosedAfterEvaluation
+  internal/strategyengine/lane_test.go:500
+
+function    TestParkerTranslatedStockOSSessionRefusalParity
+  internal/strategyengine/lane_test.go:510
+
+function    TestParkerAuctionAndAfterHoursBoundariesAreHalfOpen
+  internal/strategyengine/lane_test.go:541
+
+function    TestParkerTranslatedStockOSEarlyCloseCutoffIsInclusive
+  internal/strategyengine/lane_test.go:565
+
+function    TestParkerSignalAgeUsesNanosecondHalfOpenExpiry
+  internal/strategyengine/lane_test.go:645
+
+function    TestParkerRequiresApprovalActivatedAndCandidateCurrentlyActive
+  internal/strategyengine/lane_test.go:665
+
+function    TestParkerRejectsApprovedUnsupportedMarketBeforeSource
+  internal/strategyengine/lane_test.go:689
+
+function    TestParkerRejectsZeroAndForgedProofsWithoutPanic
+  internal/strategyengine/lane_test.go:699
+
+method      Evaluate
+  internal/strategyengine/contracts.go:255
+
