@@ -1,0 +1,39 @@
+
+Callers of "IssueEntry" (12):
+
+function    raisingDecision
+  internal/execgw/gateway_test.go:181
+
+function    TestAnEntryDecisionWithNoHeldReservationIsRefused
+  internal/execgw/reservation_gate_test.go:41
+
+method      IssueEntry
+  internal/app/engine/tracer.go:76
+
+method      submitEntry
+  internal/app/engine/tracer.go:406
+
+function    TestReachingTheDailyLossLimitTightensTheOperatingMode
+  internal/execgw/escalation_test.go:185
+
+function    TestAnAccountWithNoCapitalTightensTheSameWay
+  internal/execgw/escalation_test.go:227
+
+function    TestOtherChainRefusalsAreNotTriggers
+  internal/execgw/escalation_test.go:261
+
+function    TestTheGuardiansOwnIssuanceSubmits
+  internal/execgw/reservation_gate_test.go:177
+
+function    TestConcurrentIssuancesCannotExceedTheAggregateLimit
+  internal/execgw/riskguardian_race_test.go:50
+
+function    TestATighteningBetweenIssuanceAndSubmissionIsRefusedAtTheGateway
+  internal/execgw/riskguardian_race_test.go:168
+
+function    TestA092AnUnannouncedDailyLossTighteningIsReportedAsTightened
+  internal/execgw/a092_announcement_failed_test.go:46
+
+method      IssueStrategyEntry
+  internal/execgw/riskguardian.go:339
+

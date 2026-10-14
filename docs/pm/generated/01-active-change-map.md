@@ -133,3 +133,4 @@
 | `a133-an-alert-carries-no-account` | STORY-TOS-a133 | archived |
 | `a134-a-dead-engine-is-noticed` | STORY-TOS-a134 | archived |
 | `a135-attestation-expiry-is-announced` | STORY-TOS-a135 | archived |
+| `a136-daily-buy-notional-limit` | STORY-TOS-a136 | in_progress |

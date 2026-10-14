@@ -1,0 +1,6 @@
+
+Callers of "IssuePrecheckedQFinalEntry" (1):
+
+method      IssueQFinalEntry
+  internal/execgw/riskguardian_qfinal.go:306
+

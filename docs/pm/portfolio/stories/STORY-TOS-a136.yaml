@@ -1,0 +1,26 @@
+{
+  "id": "STORY-TOS-a136",
+  "title": "A day's buying has a ceiling",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a136-daily-buy-notional-limit",
+    "path": "openspec/changes/a136-daily-buy-notional-limit"
+  },
+  "found_by": {
+    "date": "2026-10-14",
+    "how": "The user asked for a daily buy notional limit (default 10,000,000 KRW, user-configurable, buys only). The Manager confirmed that risk-management excludes DAILY_TURNOVER as P3 and that the Guardian has per-order, open-exposure and daily-loss ceilings but no ceiling on how much it may buy in one day.",
+    "record": "openspec/changes/a136-daily-buy-notional-limit/proposal.md"
+  },
+  "acceptance": [
+    "Every exposure-raising Guardian issuance is refused when today's filled buy notional plus held buy reservations plus the new entry would reach the configured daily buy ceiling",
+    "The ceiling is optional in config; absent means the default 10,000,000 KRW applies in the account base currency",
+    "If today's buy total cannot be computed the buy is refused (fail-closed); sells, stop-losses, emergency exits and reduce-only issuance are never evaluated against the ceiling",
+    "US buys are converted to the account base currency through the existing request-scoped frozen FX authority; no new FX path",
+    "Changing the ceiling goes through the audited limit settings seam and leaves an audit line with old and new values",
+    "The day boundary is the one the user approves in design D1; no boundary is introduced without that approval"
+  ],
+  "limits": [
+    "Registered with the proposal on 2026-10-14. Implementation is blocked on the user's choice of day boundary (design D1) and on the counting source for filled buys (design D2)."
+  ]
+}
