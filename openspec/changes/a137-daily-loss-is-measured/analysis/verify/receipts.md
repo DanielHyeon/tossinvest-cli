@@ -18,3 +18,14 @@
 ## 이전(`4fc5d4a4`)
 
 test ok 108 · seams ok 109 · make test-race rc 0 · 변이 28/28.
+
+## 수리 재확인 반영 뒤 (격리 사본 `b88d9f17` · `df5dc288` — 공유 브랜치에서는 cherry-pick `29a3ea78` · `b36416dc`, 전용 GOCACHE)
+
+| 명령 | 결과 |
+|---|---|
+| `go test -timeout 30m ./...`(b88d9f17) | ok 107 · FAIL 1 = `internal/strategyworker` 런타임 칸 구조 가드(새 칸 셋) → `df5dc288` 등재 후 두 태그 ok |
+| `go test -timeout 45m -tags tossos_testseams ./...`(b88d9f17) | ok 108 · FAIL 1 = 같은 가드 → `df5dc288` ok |
+| `make test-race`(df5dc288) | rc 0 |
+| `go test -race -tags tossos_testseams -run TestA137 …`(b88d9f17) | rc 0 |
+| 변이 원장(df5dc288) | 44/44 CAUGHT |
+| `check_analysis.py --change`(df5dc288 커밋 상태) | rc 0 — required 16, evidence complete |
