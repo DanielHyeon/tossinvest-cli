@@ -56,6 +56,9 @@ func (f *fakeLimits) Save(l config.GuardianLimits) error {
 	f.gate.MaxDailyLossAmount = l.MaxDailyLossAmount
 	f.gate.MaxDailyLossRatio = l.MaxDailyLossRatio
 	f.gate.LimitCurrency = l.Currency
+	if l.DailyBuy != nil { // a136: 폼이 보낸 하루 매수 상한만 씀(nil = 그대로)
+		f.gate.MaxDailyBuyNotional = *l.DailyBuy
+	}
 	return nil
 }
 
@@ -339,8 +342,14 @@ func TestTheAdvancedFormSavesIndividualValues(t *testing.T) {
 		MaxOrderQuantity: 5, MaxOrderNotional: 200_000, MaxTotalExposure: 400_000,
 		MaxDailyLossAmount: 20_000, MaxDailyLossRatio: 0.005, Currency: "KRW",
 	}
-	if writes[0] != want {
-		t.Errorf("wrote %+v, want %+v", writes[0], want)
+	got := writes[0]
+	// a136: 이 폼은 하루 매수 상한 칸도 늘 보냄 — 비어 있으면 0(미설정). 포인터라 따로 대조.
+	if got.DailyBuy == nil || *got.DailyBuy != 0 {
+		t.Errorf("an empty daily buy field must be saved as 0 (unset), got %v", got.DailyBuy)
+	}
+	got.DailyBuy = nil
+	if got != want {
+		t.Errorf("wrote %+v, want %+v", got, want)
 	}
 }
 

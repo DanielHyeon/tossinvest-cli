@@ -66,8 +66,37 @@ func (p settingsPage) LimitRows() []limitRow {
 		{"계좌 개방 노출 상한", limitValueText(p.Gate.MaxTotalExposure), currency},
 		{"일일 손실 한도(금액)", limitValueText(p.Gate.MaxDailyLossAmount), currency},
 		{"일일 손실 한도(비율)", limitRatioText(p.Gate.MaxDailyLossRatio), ""},
+		{"하루 매수 총액 상한", dailyBuyText(p.Gate), dailyBuyUnit(p.Gate)},
 	}
 }
+
+// dailyBuyText 는 하루 매수 총액 상한의 표시(a136). 미설정이면 엔진이 실제로 할 일을 평이하게 말함 — KRW 는 기본값 적용,
+// 그 밖의 통화는 기동 거부(사용자 결정: USD 프리셋 값을 만들지 않고, 값이 없으면 엔진이 기동을 거부한다고 말함).
+func dailyBuyText(g config.AutomationGate) string {
+	if g.MaxDailyBuyNotional > 0 {
+		return decimalText(g.MaxDailyBuyNotional)
+	}
+	switch strings.ToUpper(strings.TrimSpace(g.LimitCurrency)) {
+	case "KRW":
+		return "미설정 — 기본값 " + decimalText(config.DefaultMaxDailyBuyNotionalKRW) + " KRW 가 적용된다"
+	case "":
+		return "미설정"
+	default:
+		return "미설정 — " + strings.ToUpper(strings.TrimSpace(g.LimitCurrency)) +
+			" 계좌에는 기본값이 없어 엔진이 기동을 거부한다. 값을 넣어야 한다"
+	}
+}
+
+// dailyBuyUnit 은 값이 있을 때만 통화를 붙임(미설정 문장은 통화를 스스로 말함).
+func dailyBuyUnit(g config.AutomationGate) string {
+	if g.MaxDailyBuyNotional > 0 {
+		return strings.TrimSpace(g.LimitCurrency)
+	}
+	return ""
+}
+
+// FieldDailyBuy 는 고급 폼의 하루 매수 상한 칸 값 — 미설정은 빈 칸(다른 칸과 같은 규칙).
+func (p settingsPage) FieldDailyBuy() string { return limitFieldText(p.Gate.MaxDailyBuyNotional) }
 
 // limitValueText is the two-state rendering the whole design rests on: a
 // number, or the honest absence of one.
@@ -241,7 +270,12 @@ func (c *Console) handleSettingsLimitPreset(w http.ResponseWriter, r *http.Reque
 	// Recorded, not applied: a running engine keeps the limits it started with,
 	// and the Guardian's snapshot is taken from them. effectNotice is the one
 	// place that says when this bites (design D9).
-	c.redirectSettings(w, r, tier.Label+" 한도 기록됨 — "+limitSummary(tier.Limits)+". "+
+	// a136: 프리셋은 하루 매수 상한을 쓰지 않음. 통화가 바뀌었으면 writer 가 그 값을 지웠으므로 그 결과를 말함.
+	daily := ""
+	if gate, err := c.opts.Limits.Load(); err == nil {
+		daily = " " + dailyBuyNotice(gate.LimitCurrency, gate.MaxDailyBuyNotional)
+	}
+	c.redirectSettings(w, r, tier.Label+" 한도 기록됨 — "+limitSummary(tier.Limits)+"."+daily+" "+
 		currencyConsequence(tier.Limits.Currency)+" "+effectNotice(c.engineRunning()))
 }
 
@@ -281,6 +315,17 @@ func (c *Console) handleSettingsLimits(w http.ResponseWriter, r *http.Request) {
 		}
 		target.set(&next, v)
 	}
+	// a136: 하루 매수 총액 상한 — 이 폼은 늘 보내므로 빈 칸은 「미설정(0)」으로 씀(KRW 는 기본값, 그 밖은 기동 거부).
+	dailyBuy := 0.0
+	if raw := strings.TrimSpace(r.PostFormValue("max_daily_buy_notional")); raw != "" {
+		v, err := strconv.ParseFloat(strings.ReplaceAll(raw, ",", ""), 64)
+		if err != nil {
+			c.redirectSettings(w, r, "저장 안 됨 — max_daily_buy_notional이(가) 숫자가 아니다: "+raw)
+			return
+		}
+		dailyBuy = v
+	}
+	next.DailyBuy = &dailyBuy
 
 	if err := next.Validate(); err != nil {
 		c.redirectSettings(w, r, "저장 안 됨 — 엔진이 이 한도로는 기동을 거부한다: "+err.Error())
@@ -314,5 +359,13 @@ func (c *Console) handleSettingsLimits(w http.ResponseWriter, r *http.Request) {
 		applied = id + "와 일치"
 	}
 	c.redirectSettings(w, r, "한도 기록됨("+applied+") — "+limitSummary(next)+". "+
-		currencyConsequence(next.Currency)+" "+effectNotice(c.engineRunning()))
+		dailyBuyNotice(next.Currency, dailyBuy)+" "+currencyConsequence(next.Currency)+" "+effectNotice(c.engineRunning()))
+}
+
+// dailyBuyNotice 는 저장 뒤 하루 매수 상한이 실제로 무엇이 되는지 한 문장으로 말함(a136).
+func dailyBuyNotice(currency string, value float64) string {
+	if value > 0 {
+		return "하루 매수 총액 상한 " + decimalText(value) + " " + strings.ToUpper(strings.TrimSpace(currency)) + "."
+	}
+	return "하루 매수 총액 상한: " + dailyBuyText(config.AutomationGate{LimitCurrency: currency}) + "."
 }

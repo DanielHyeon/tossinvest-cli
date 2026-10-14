@@ -57,6 +57,10 @@ type GuardianLimits struct {
 	MaxDailyLossAmount float64
 	MaxDailyLossRatio  float64
 	Currency           string
+	// DailyBuy 는 하루 매수 총액 상한(a136, `max_daily_buy_notional`). nil 이면 이 저장은 그 키를 **건드리지 않음** — 티어 프리셋은
+	// 이 값을 갖지 않으므로(USD 프리셋 값을 만들지 않음 — 사용자 결정) 프리셋 적용이 운영자가 넣은 값을 지우지 않음.
+	// 0 은 미설정(KRW 면 기본 10,000,000, 다른 통화면 엔진 기동 거부). 다섯 한도의 티어 대조 · 상한 검사 대상이 아님.
+	DailyBuy *float64
 }
 
 // GuardianTier is one registered set of ceilings.
@@ -336,6 +340,10 @@ func (l GuardianLimits) Validate() error {
 	}
 	if strings.TrimSpace(l.Currency) == "" {
 		return errors.New("the limit block names no currency, so its money bounds mean nothing")
+	}
+	// a136: 하루 매수 상한은 0(미설정)까지 허용 — 0 의 의미는 통화가 정함(EffectiveMaxDailyBuyNotional).
+	if l.DailyBuy != nil && (math.IsNaN(*l.DailyBuy) || math.IsInf(*l.DailyBuy, 0) || *l.DailyBuy < 0) {
+		return fmt.Errorf("max_daily_buy_notional is %v; it must be a finite non-negative number (0 = unset)", *l.DailyBuy)
 	}
 	return nil
 }

@@ -67,7 +67,8 @@ func (s *Service) LoadRawEngineGate() (AutomationGate, error) {
 		MaxDailyLossRatio:  raw.MaxDailyLossRatio,
 		// The file's own spelling, not normalised: this is a read of what is
 		// written, and the screen shows what is written.
-		LimitCurrency: raw.LimitCurrency,
+		LimitCurrency:       raw.LimitCurrency,
+		MaxDailyBuyNotional: raw.MaxDailyBuyNotional, // a136: 화면이 적힌 그대로 보여 줌
 	}
 	if raw.Enabled != nil {
 		gate.Enabled = *raw.Enabled
@@ -127,6 +128,9 @@ func (s *Service) SaveEngineGateLimits(l GuardianLimits) error {
 		file.Engine.AutomationGate.MaxDailyLossAmount = next.MaxDailyLossAmount
 		file.Engine.AutomationGate.MaxDailyLossRatio = next.MaxDailyLossRatio
 		file.Engine.AutomationGate.LimitCurrency = next.Currency
+		if next.DailyBuy != nil {
+			file.Engine.AutomationGate.MaxDailyBuyNotional = *next.DailyBuy
+		}
 		skeleton, err := json.MarshalIndent(file, "", "  ")
 		if err != nil {
 			return err
@@ -147,7 +151,8 @@ func (s *Service) SaveEngineGateLimits(l GuardianLimits) error {
 	var extra []gateMember
 	if prev, err := documentGateCurrency(data); err != nil {
 		return err
-	} else if prev != next.Currency {
+	} else if prev != next.Currency && next.DailyBuy == nil {
+		// 같은 저장이 새 통화로 값을 함께 보냈으면 그 값이 이김(gateMembersOf 가 씀).
 		extra = append(extra, gateMember{"max_daily_buy_notional", []byte("0")})
 	}
 	out, err := spliceGateLimits(data, next, extra...)
@@ -188,14 +193,19 @@ func gateMembersOf(l GuardianLimits) ([]gateMember, error) {
 	if err != nil {
 		return nil, err
 	}
-	return []gateMember{
+	members := []gateMember{
 		{"max_order_quantity", []byte(formatLimit(l.MaxOrderQuantity))},
 		{"max_order_notional", []byte(formatLimit(l.MaxOrderNotional))},
 		{"max_total_exposure", []byte(formatLimit(l.MaxTotalExposure))},
 		{"max_daily_loss_amount", []byte(formatLimit(l.MaxDailyLossAmount))},
 		{"max_daily_loss_ratio", []byte(formatLimit(l.MaxDailyLossRatio))},
 		{"limit_currency", currency},
-	}, nil
+	}
+	if l.DailyBuy != nil {
+		// a136: 폼이 값을 보냈을 때만 씀(nil = 그 키를 그대로 둠).
+		members = append(members, gateMember{"max_daily_buy_notional", []byte(formatLimit(*l.DailyBuy))})
+	}
+	return members, nil
 }
 
 // spliceGateLimits replaces or inserts each member inside

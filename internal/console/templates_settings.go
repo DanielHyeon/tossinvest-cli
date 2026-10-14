@@ -322,6 +322,11 @@ const settingsTemplates = `
       <input type="text" name="max_daily_loss_amount" value="{{.FieldDailyLoss}}"></label></p>
       <p><label>일일 손실 한도(비율 — 0.01 = 1%)<br>
       <input type="text" name="max_daily_loss_ratio" value="{{.FieldRatio}}"></label></p>
+      <p><label>하루 매수 총액 상한 (계좌 기준 통화)<br>
+      <input type="text" inputmode="decimal" name="max_daily_buy_notional" value="{{.FieldDailyBuy}}"
+        aria-describedby="daily-buy-help"></label></p>
+      <p class="muted" id="daily-buy-help">KST 08:00 에 넘어가는 하루 동안 두 시장 매수 합계(엔진 밖 수동 매수 포함)의 상한.
+      비우면 미설정 — KRW 는 기본 10,000,000 KRW, USD 는 기본값이 없어 엔진이 기동을 거부한다. 프리셋은 이 값을 바꾸지 않는다.</p>
       <p><label>계좌 기준 통화 (KRW 또는 USD)<br>
       <input type="text" name="limit_currency" value="{{.FieldCurrency}}"></label></p>
       <p><button type="submit">한도 저장</button></p>

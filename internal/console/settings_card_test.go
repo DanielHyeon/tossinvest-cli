@@ -318,7 +318,8 @@ func TestTheSettingsScreensAskForNoTyping(t *testing.T) {
 		"exclude_symbols": true, "include_symbols": true, "default_stop_percent": true,
 		"max_order_quantity": true, "max_order_notional": true, "max_total_exposure": true,
 		"max_daily_loss_amount": true, "max_daily_loss_ratio": true, "limit_currency": true,
-		"enabled": true, "place": true, "sell": true, "cancel": true,
+		"max_daily_buy_notional": true, // a136: 화면이 소유한 설정(하루 매수 총액 상한) — 사유 · 확인 문구가 아님
+		"enabled":                true, "place": true, "sell": true, "cancel": true,
 		"allow_live_order_actions": true,
 	}
 	for _, path := range settingsTabPaths {

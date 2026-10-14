@@ -1,0 +1,87 @@
+{
+  "file": "internal/console/settings_limits.go",
+  "source_sha256": "021a96457d9b0b1796e13db78872d57bfbc616b59d45d52cfc6edde7b8825516",
+  "package": "console",
+  "function": "LimitRows",
+  "receiver": "settingsPage",
+  "signature": "settingsPage.LimitRows(params=0, results=1)",
+  "start": {
+    "line": 61,
+    "column": 1
+  },
+  "end": {
+    "line": 70,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 14
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 33
+      },
+      "text": "limitValueText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 33
+      },
+      "text": "limitValueText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 35
+      },
+      "text": "limitValueText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 36
+      },
+      "text": "limitValueText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 36
+      },
+      "text": "limitRatioText"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 62,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

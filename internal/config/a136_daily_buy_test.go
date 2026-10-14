@@ -79,3 +79,41 @@ func TestA136ACurrencyChangingSaveClearsTheDailyBuyCeiling(t *testing.T) {
 		t.Fatalf("after switching to USD the ceiling must be unset (startup refusal), got %v", got)
 	}
 }
+
+// a136: 한도 저장은 DailyBuy 가 있을 때만 그 키를 쓰고, nil 이면 그대로 둠(프리셋이 운영자 값을 지우지 않게).
+func TestA136TheLimitWriterTouchesTheDailyBuyKeyOnlyWhenAsked(t *testing.T) {
+	body := `{"schema_version":4,"engine":{"automation_gate":{"limit_currency":"KRW","max_daily_buy_notional":3000000}}}`
+	untouched := writeConfig(t, body)
+	if err := untouched.SaveEngineGateLimits(limitsFor(t, "kr-smoke")); err != nil {
+		t.Fatal(err)
+	}
+	if got := gateOf(t, readBack(t, untouched))["max_daily_buy_notional"]; got != float64(3000000) {
+		t.Fatalf("a save without DailyBuy must leave the key alone, got %v", got)
+	}
+	asked := writeConfig(t, body)
+	l := limitsFor(t, "kr-smoke")
+	v := 4_500_000.0
+	l.DailyBuy = &v
+	if err := asked.SaveEngineGateLimits(l); err != nil {
+		t.Fatal(err)
+	}
+	if got := gateOf(t, readBack(t, asked))["max_daily_buy_notional"]; got != float64(4500000) {
+		t.Fatalf("a save with DailyBuy must write it, got %v", got)
+	}
+	bad := -1.0
+	l.DailyBuy = &bad
+	if err := asked.SaveEngineGateLimits(l); err == nil {
+		t.Fatal("a negative daily buy ceiling must be refused before writing")
+	}
+	// 통화를 바꾸면서 새 통화 값을 함께 보내면 그 값이 이김(지우지 않음).
+	switched := writeConfig(t, body)
+	us := limitsFor(t, "us-smoke")
+	two := 2000.0
+	us.DailyBuy = &two
+	if err := switched.SaveEngineGateLimits(us); err != nil {
+		t.Fatal(err)
+	}
+	if got := gateOf(t, readBack(t, switched))["max_daily_buy_notional"]; got != float64(2000) {
+		t.Fatalf("an explicit value in the new currency must be written, got %v", got)
+	}
+}

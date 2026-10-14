@@ -58,6 +58,15 @@ func (s consoleLimitSettings) Save(l config.GuardianLimits) error {
 	} else {
 		recordLimitSave(config.GuardianLimits{}, l)
 	}
+	// a136: 하루 매수 상한은 다섯 칸과 달리 프리셋이 쓰지 않고, 통화 전환 저장이 쓰기도 함(지움) — 그래서 저장 **뒤** 파일 값으로
+	// 실제 변화를 적음(폼 값이 아니라 파일 값이 audit 의 대상).
+	if after, err := s.svc.LoadRawEngineGate(); err == nil {
+		from := 0.0
+		if beforeErr == nil {
+			from = before.MaxDailyBuyNotional
+		}
+		recordDailyBuySave(from, after.MaxDailyBuyNotional)
+	}
 	return nil
 }
 
@@ -101,4 +110,19 @@ func quotedOrUnset(v string) string {
 		return "미설정"
 	}
 	return v
+}
+
+// recordDailyBuySave 는 하루 매수 상한의 콘솔 저장 audit 한 줄(값이 바뀐 때만 RecordChange 가 남김).
+func recordDailyBuySave(before, after float64) {
+	dir, err := journal.DataDir()
+	if err != nil {
+		return
+	}
+	log, err := audit.Open(audit.Options{Path: filepath.Join(dir, audit.FileName)})
+	if err != nil {
+		return
+	}
+	number := func(v float64) string { return strconv.FormatFloat(v, 'f', -1, 64) }
+	_, _ = log.RecordChange(audit.ActionLimitChange, "console.automation_gate.max_daily_buy_notional", number(after),
+		"saved from the console settings screen (0 = unset); file value before this save was "+quotedOrUnset(number(before)))
 }

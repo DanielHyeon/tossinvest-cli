@@ -24,6 +24,8 @@ C = ("./internal/config/", "TestA136")
 K = ("./internal/clock/", "TestA136")
 R = ("./internal/risk/", "TestA136")
 M = ("./internal/manualbuy/", "TestA136")
+CON = ("./internal/console/", "TestA136")
+CMD = ("./cmd/tossctl/", "TestA136")
 
 MUTANTS = [
     ("M1 ≥ → >", "internal/journal/daily_buy.go", "if cmp >= 0 {", "if cmp > 0 {", [J]),
@@ -72,6 +74,15 @@ MUTANTS = [
     ("M25 pending remainder dropped", "internal/manualbuy/summary.go", "if remaining.Sign() > 0 {", "if false && remaining.Sign() > 0 {", [M, A]),
     ("M26 failed read published as known", "internal/app/engine/manual_buy_refresh.go", "snapshot.Err = err\n", "snapshot.Err = nil\n", [A]),
     ("M27 no board accepted", "internal/execgw/manual_buy.go", "if g.manualBuys == nil {", "if g.manualBuys == nil {\n\t\treturn &journal.ManualBuyTotal{Amount: \"0\", AsOf: now, Day: \"\"}, nil\n\t}\n\tif false {", [E]),
+    # --- 1.3 콘솔 칸 ---
+    ("M28 every save writes the daily key", "internal/config/limits_io.go", "\tif l.DailyBuy != nil {\n\t\t// a136",
+     "\tif l.DailyBuy == nil {\n\t\tzero := 0.0\n\t\tl.DailyBuy = &zero\n\t}\n\tif l.DailyBuy != nil {\n\t\t// a136", [C, CON, CMD]),
+    ("M29 negative daily ceiling accepted", "internal/config/limits.go", "*l.DailyBuy < 0)", "*l.DailyBuy < -1e18)", [C]),
+    ("M30 USD unset says nothing", "internal/console/settings_limits.go",
+     "\" 계좌에는 기본값이 없어 엔진이 기동을 거부한다. 값을 넣어야 한다\"", "\" 계좌\"", [CON]),
+    ("M31 form drops the daily field", "internal/console/settings_limits.go", "next.DailyBuy = &dailyBuy", "next.DailyBuy = nil", [CON]),
+    ("M32 explicit new-currency value cleared", "internal/config/limits_io.go",
+     "} else if prev != next.Currency && next.DailyBuy == nil {", "} else if prev != next.Currency {", [C]),
 ]
 
 def run(targets, tags):
@@ -95,7 +106,7 @@ def say(line):
     print(line, flush=True)
     out.append(line)
 
-ok, why = run([J, E, A, C, K, R, M], True)
+ok, why = run([J, E, A, C, K, R, M, CON, CMD], True)
 say(f"CONTROL (무변이) {'GREEN' if ok else 'RED — 중단: ' + why}")
 if ok is not True:
     sys.exit(1)

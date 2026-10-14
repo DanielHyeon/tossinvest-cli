@@ -1,8 +1,8 @@
 # Function Logic Map: `SaveEngineGateLimits`
 
-- Source: `internal/config/limits_io.go` (97-158, 편집 뒤)
+- Source: `internal/config/limits_io.go` (98-163, 편집 뒤)
 - Qualified: `Service.SaveEngineGateLimits`
-- AST evidence: `ast.json`(편집 뒤) · `ast-base.json`(편집 전, base f504cc52, `source_sha256` 9d08b616b9a8c621…, 편집 전 분기 수 9) — 현재 branches 12 · returns 10
+- AST evidence: `ast.json`(편집 뒤) · `ast-base.json`(편집 전, base f504cc52, `source_sha256` 9d08b616b9a8c621…, 편집 전 분기 수 9) — 현재 branches 13 · returns 10
 - Risk scan: `risk-pattern-report.md`
 
 **역할.** 콘솔 한도 편집기의 키 단위 쓰기(enabled 비기록).
@@ -20,20 +20,21 @@
 
 | Branch | Condition (소스 줄 인용) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `if err := next.Validate(); err != nil {` (if 101) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
-| B2 | `if violations := next.CeilingViolations(); len(violations) > 0 {` (if 105) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
-| B3 | `if err != nil {` (if 111) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
-| B4 | `switch {` (switch 117) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
-| B5 | `case errors.Is(err, os.ErrNotExist):` (case 118) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
-| B6 | `if err != nil {` (if 131) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
-| B7 | `case err != nil:` (case 135) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
-| B8 | `if !json.Valid(data) {` (if 139) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
-| B9 | `if prev, err := documentGateCurrency(data); err != nil {` (if 148) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
-| B10 | `} else if prev != next.Currency {` (else 150) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
-| B11 | `} else if prev != next.Currency {` (if 150) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
-| B12 | `if err != nil {` (if 154) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
+| B1 | `if err := next.Validate(); err != nil {` (if 102) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
+| B2 | `if violations := next.CeilingViolations(); len(violations) > 0 {` (if 106) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
+| B3 | `if err != nil {` (if 112) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
+| B4 | `switch {` (switch 118) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
+| B5 | `case errors.Is(err, os.ErrNotExist):` (case 119) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
+| B6 | `if next.DailyBuy != nil {` (if 131) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
+| B7 | `if err != nil {` (if 135) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
+| B8 | `case err != nil:` (case 139) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
+| B9 | `if !json.Valid(data) {` (if 143) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
+| B10 | `if prev, err := documentGateCurrency(data); err != nil {` (if 152) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
+| B11 | `} else if prev != next.Currency && next.DailyBuy == nil {` (else 154) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
+| B12 | `} else if prev != next.Currency && next.DailyBuy == nil {` (if 154) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
+| B13 | `if err != nil {` (if 159) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limit / TestA136'` |
 
-Exact AST return positions: 102 · 106 · 112 · 132 · 134 · 136 · 140 · 149 · 155 · 157
+Exact AST return positions: 103 · 107 · 113 · 136 · 138 · 140 · 144 · 153 · 160 · 162
 
 ## Calls and live bindings
 

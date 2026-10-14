@@ -1,0 +1,137 @@
+{
+  "file": "internal/config/limits_io.go",
+  "source_sha256": "9d08b616b9a8c6212f4fe1acbc1de04435b1e2fce2bcd7dcea3b81999c795c26",
+  "package": "config",
+  "function": "gateMembersOf",
+  "signature": "gateMembersOf(params=1, results=2)",
+  "start": {
+    "line": 162,
+    "column": 1
+  },
+  "end": {
+    "line": 175,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 164,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 165,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 19
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 26
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 33
+      },
+      "text": "formatLimit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 26
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 33
+      },
+      "text": "formatLimit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 26
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 33
+      },
+      "text": "formatLimit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 29
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 36
+      },
+      "text": "formatLimit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 28
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 35
+      },
+      "text": "formatLimit"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 163,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
