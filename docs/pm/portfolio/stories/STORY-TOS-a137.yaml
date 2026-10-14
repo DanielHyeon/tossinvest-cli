@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a137-daily-loss-is-measured",
-    "path": "openspec/changes/a137-daily-loss-is-measured"
+    "path": "openspec/changes/archive/2026-10-14-a137-daily-loss-is-measured"
   },
   "found_by": {
     "date": "2026-10-14",
     "how": "The Manager's gap analysis found that riskcalc.DailyLoss has no production caller; the change's AST and CodeGraph evidence showed that the Guardian's daily_loss rung refuses a missing value but passes a zero, and that its only production inputs are a tracer literal zero and a signed account manifest field with no producer in the repository.",
-    "record": "openspec/changes/a137-daily-loss-is-measured/proposal.md"
+    "record": "openspec/changes/archive/2026-10-14-a137-daily-loss-is-measured/proposal.md"
   },
   "acceptance": [
     "Before judging an automated entry the production Guardian measures today's realised loss after costs from the engine journal using the existing riskcalc.DailyLoss contract",
