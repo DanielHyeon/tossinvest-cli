@@ -29,13 +29,18 @@ Story: `STORY-TOS-a135` · 관측 · 알림 경로(주문 · 손절 · 사이징
       (`TestSupervisedEvidenceOlderThanTheValidityIsNotEvidence` 포함 — 「기간 밖 감독 증거로 갱신하면 POST 누락」 실행 고정)
 - [x] 2.3 배선 · 리뷰 반영 뒤 `go test -count=1`(engine · obs · cmd/tossctl) + `-tags tossos_testseams`(같은 셋) → `analysis/verify/receipts.md`
 - [x] 2.4 구현 리뷰(분리된 패스, 적대적) → `review.md` — APPROVE-WITH-FIXES(P1 1 · P2 2 · P3 7), P1 · P2 전부 수용, P3 5 수용 · 2 기각(사유)
-- [ ] 2.5 `make sdd-sync` · `make sdd-check`
+- [x] 2.5 `make sdd-sync` · `make sdd-check`
+      — 2026-10-14 Manager: sdd-sync 는 advisory CodeGraphContext 만 300s 타임아웃 2회(incomplete, 재시도 동일) · `make sdd-check` rc 0
 
 ## 3. 사람 · Manager
 
-- [ ] 3.1 Manager `make gate CHANGE=a135-attestation-expiry-is-announced` + 독립 검증
-- [ ] 3.2 배포(사람) — 이미지 재빌드 + 엔진 재시작, KST 05:00~09:00. D-7 경계 10-16T01:39Z 전에 해야 D-7 통지가 나감
-- [ ] 3.3 운영(사람, 이 change 밖) — 10-23T01:39Z 전에 감독하 실주문 검증 재실행(먼저) + soak 판독 완전성 회복 뒤 갱신.
+- [x] 3.1 Manager `make gate CHANGE=a135-attestation-expiry-is-announced` + 독립 검증
+      — 2026-10-14 Manager 독립 검증: 커밋 6da63b2f 경로 33 전부 a135 · cmd/tossctl · internal/obs 전체 시험 직접 실행 ok · base 870baed6 격리 워크트리 check_analysis rc 0(required 2)
+
+### 게이트 뒤 절차 — 사람 게이트 (체크박스 아님 — a108 선례)
+
+1. 배포(사람) — 이미지 재빌드 + 엔진 재시작, KST 05:00~09:00. D-7 경계 10-16T01:39Z 전에 해야 D-7 통지가 나감
+2. 운영(사람, 이 change 밖) — 10-23T01:39Z 전에 감독하 실주문 검증 재실행(먼저) + soak 판독 완전성 회복 뒤 갱신.
       a063 4.2(거절을 가리지 않는 단위 설치)
 
 ## 사람 승인 base 재고정 (2026-10-14)
