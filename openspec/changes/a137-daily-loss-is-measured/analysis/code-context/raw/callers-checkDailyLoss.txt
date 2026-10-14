@@ -1,0 +1,9 @@
+
+Callers of "checkDailyLoss" (2):
+
+variable    entryChain
+  internal/risk/chain.go:96
+
+file        chain.go
+  internal/risk/chain.go:1
+

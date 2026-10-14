@@ -1,0 +1,6 @@
+
+Callers of "IssueStrategyEntry" (1):
+
+method      IssueAndPlan
+  internal/strategydispatch/adapters.go:29
+

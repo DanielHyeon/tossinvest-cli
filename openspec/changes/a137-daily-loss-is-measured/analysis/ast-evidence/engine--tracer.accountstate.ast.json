@@ -1,0 +1,87 @@
+{
+  "file": "internal/app/engine/tracer.go",
+  "source_sha256": "9ff5f408f73ae451679e8b94f5554d7d3a1cc30cb6405bd2e4ed5b19c9b6aad9",
+  "package": "engine",
+  "function": "accountState",
+  "receiver": "Tracer",
+  "signature": "Tracer.accountState(params=0, results=1)",
+  "start": {
+    "line": 467,
+    "column": 1
+  },
+  "end": {
+    "line": 480,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 469,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 472,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 469,
+        "column": 5
+      },
+      "text": "strings.EqualFold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 469,
+        "column": 23
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 474,
+        "column": 31
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 474,
+        "column": 47
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 468,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 470,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

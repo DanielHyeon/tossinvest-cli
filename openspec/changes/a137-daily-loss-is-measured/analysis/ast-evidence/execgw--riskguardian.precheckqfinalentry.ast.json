@@ -1,0 +1,809 @@
+{
+  "file": "internal/execgw/riskguardian_qfinal.go",
+  "source_sha256": "3e5cc7b86303b4587e18375547e194b9bedbf7c84dd0e6e005a5d856d492b586",
+  "package": "execgw",
+  "function": "PrecheckQFinalEntry",
+  "receiver": "RiskGuardian",
+  "signature": "RiskGuardian.PrecheckQFinalEntry(params=1, results=2)",
+  "start": {
+    "line": 82,
+    "column": 1
+  },
+  "end": {
+    "line": 167,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 127,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "else",
+      "at": {
+        "line": 137,
+        "column": 9
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 140,
+        "column": 2
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 144,
+        "column": 2
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 149,
+        "column": 2
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 158,
+        "column": 2
+      }
+    },
+    {
+      "id": "B17",
+      "kind": "if",
+      "at": {
+        "line": 161,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 84,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 87,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 93,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 97,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 100,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 114,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 118,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 122,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 128,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 131,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 141,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 145,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 150,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 159,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 162,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 166,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 33
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 89
+      },
+      "text": "g.LimitsDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 33
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 16
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 32
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 14
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 30
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 46
+      },
+      "text": "qFinalMarketCurrency"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 12
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 28
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 33
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 33
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 19
+      },
+      "text": "g.policy.LimitCurrency"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 15
+      },
+      "text": "cloneRiskBucketAdmissionPlan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 43
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 43
+      },
+      "text": "g.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 34
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 33
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 33
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 16
+      },
+      "text": "qFinalPolicyAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 40
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 40
+      },
+      "text": "g.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 33
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 20
+      },
+      "text": "qFinalAccountBaseFXAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 51
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 51
+      },
+      "text": "g.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 33
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 29
+      },
+      "text": "sameQFinalFXAuthority"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 33
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 25
+      },
+      "text": "risk.StrategyEntryQuantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 25
+      },
+      "text": "risk.AccountBaseStrategyEntryQuantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 33
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 109
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 22
+      },
+      "text": "strconv.ParseUint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 33
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 14
+      },
+      "text": "riskbucket.CalculateAdmission"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 33
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 94
+      },
+      "text": "decision.Refusal.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 13
+      },
+      "text": "strconv.FormatUint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 24
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 24
+      },
+      "text": "g.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 16
+      },
+      "text": "evaluateChain"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 33
+      },
+      "text": "chainRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 19
+      },
+      "text": "risk.EntryExposureValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 162,
+        "column": 33
+      },
+      "text": "chainRefusal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 112,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 120,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 124,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 125,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 136,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 138,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 143,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 147,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 148,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 152,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 157,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 158,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 161,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 164,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 165,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

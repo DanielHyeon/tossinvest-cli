@@ -134,3 +134,4 @@
 | `a134-a-dead-engine-is-noticed` | STORY-TOS-a134 | archived |
 | `a135-attestation-expiry-is-announced` | STORY-TOS-a135 | archived |
 | `a136-daily-buy-notional-limit` | STORY-TOS-a136 | in_progress |
+| `a137-daily-loss-is-measured` | STORY-TOS-a137 | in_progress |
