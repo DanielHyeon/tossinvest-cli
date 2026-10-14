@@ -1,4 +1,4 @@
-// a137 측정기 순수 함수 시험. RED 는 태그 a137red 아래의 컴파일 실패로 관찰함(openspec/changes/a137-daily-loss-is-measured/analysis/red/red-dailyloss.txt).
+// a137 측정기 순수 함수 시험. RED 는 태그 a137red 아래의 컴파일 실패로 관찰함(openspec/changes/archive/2026-10-14-a137-daily-loss-is-measured/analysis/red/red-dailyloss.txt).
 // GREEN 에서 태그를 지움.
 package dailyloss
 
