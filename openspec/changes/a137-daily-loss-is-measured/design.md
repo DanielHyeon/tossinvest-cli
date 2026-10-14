@@ -42,7 +42,7 @@ codegraph 1.6.0(`analysis/code-context/raw/`)이다. 「정정」 행은 두 번
    단 그 인스턴스의 수명(`opened_at` 이후) 안에 **엔진 매도가 브로커에 나갔을 수 있으면** 측정 불가(fail-closed). Q13 의 제외는 사람의 앱 매도에만 준다.
    「엔진 매도가 나갔을 수 있음」은 둘 중 하나다(재확인 P2 — 보호 주문 포함):
    - 같은 계좌 · 시장 · 심볼의 엔진 SELL **PLACE** attempt 로 상태가 NOT_DISPATCHED · FAILED_CONFIRMED 가 아닌 것(취소 · 정정 attempt 는 그 자체로 매도가 아니므로 세지 않음).
-   - 같은 범위의 브로커 대기 보호 주문: `protection_sagas`(수명 안에 생성) 의 `protection_mutation_attempts` 중 kind 가 **CREATE · REPLACE** 이고 state 가
+   - 같은 범위의 브로커 대기 보호 주문: 인스턴스 수명과 **겹치는** `protection_sagas` · `protection_mutation_attempts`(수명 안 생성만이 아님 — §4.2 P3-3) 중 kind 가 **CREATE · REPLACE** 이고 state 가
      PLANNED 가 아닌 것(DISPATCHED · ACKNOWLEDGED · IN_DOUBT · CLOSED — 브로커에 놓였을 수 있는 보호 매도). CANCEL 은 세지 않는다.
 5. 남은 각 포지션: 성과 행이 있으면 `realized_pnl_after_costs`, 없으면 **측정 불가**(Q3).
 6. **Q12(정정 P2-3 — 범위 축소)**: 포지션 **사이에서** 이익은 손실을 상쇄하지 않는다 — 음수 행만 남긴다. 한 포지션 수명 안의 순실현(부분 익절 이익이
@@ -70,7 +70,8 @@ codegraph 1.6.0(`analysis/code-context/raw/`)이다. 「정정」 행은 두 번
 - precheck 에서 **한 번** 잰다. `IssuePrecheckedQFinal*` 은 다시 재지 않는다 — precheck 와 발급 사이에 닫힌 손실은 그 한 건이 못 보고 다음 진입이 본다(U7).
 - **원장 읽기(재확인 P2 — 단일 연결).** 계좌 · `state = CLOSED` 로 한정하고 `closed_at` 범위(일 키 창 ± 작은 여유, RFC3339 UTC 문자열 비교)로 미리 거른
   색인 읽기 한 번이다. 문자열 범위는 **사전 필터일 뿐**이고 귀속은 Go 에서 `closed_at` 을 해석해 정한다. 사전 필터가 형식이 어긋난 행을 떨어뜨리지 않도록
-  **같은 질의 안에서** 계좌의 CLOSED 관리 행 중 `closed_at` 이 NULL · 빈 값 · RFC3339 패턴이 아닌 것의 존재를 따로 세고, 하나라도 있으면 측정 불가로 한다.
+  **같은 질의 안에서** 계좌의 CLOSED 관리 행 중 `closed_at` 이 **`Z` 로 끝나는 정규 RFC3339 UTC 가 아닌 것**(NULL · 빈 값 포함 — 사전 필터와 같은 정의, §4.2 P3-2)의
+  존재를 따로 세고, 하나라도 있으면 측정 불가로 한다.
   행을 연 채 환산 · 네트워크를 하지 않는다(F12). 환산은 봉인된 권한의 산술뿐이라 브로커 호출이 없다. 현실 크기 픽스처에서 지연을 잰다(tasks 2.4).
 - `IssueEntry`(잠든 입구)에도 같은 바닥을 건다 — 나중에 깨어나도 0 을 믿지 않게. 체인 없는 `execgw.Issuer.IssueEntry` 는 생산 호출자 0 을 시험으로 고정한다.
 - `IssueReduction` · `evaluateReduction` · 청산 · 손절 경로는 측정기를 부르지 않는다(시험으로 고정).
@@ -84,7 +85,8 @@ codegraph 1.6.0(`analysis/code-context/raw/`)이다. 「정정」 행은 두 번
 - **주기 끝내기 — 좁게(재확인 판정 BLOCKED 수리, Manager 결정).** `runMarket` 의 `if err == nil { continue }`(:935)는 삼킴(:938)과 잠금(:966)보다 앞이므로
   nil 주기 반환이 둘 다 피한다. 그래서 `dispatch` 는 아래 셋**만** 오류가 아닌 「계좌 진입 차단」 결과로 돌려준다:
   1. 첫 다리 승인의 `DAILY_LOSS_LIMIT`(D3 첫 항목).
-  2. `ObserveStrategyEntryGate` 의 운영 모드 투영 거절 중 **차단 중인 모드 행의 trigger 가 `ModeTriggerDailyLossLimit`** 인 것. 오늘의 거절은
+  2. `ObserveStrategyEntryGate` 의 운영 모드 투영 거절 중 **차단 중인 모드 행의 trigger 가 `ModeTriggerDailyLossLimit` 이고 `Actor == AUTO`** 인 것(§4.2 P3-1 —
+     `Cause` 는 문자열이라 사람 전이의 사유 문구가 trigger 철자와 같아도 조용한 경로에 들지 않게). 오늘의 거절은
      `ReasonOperatingModeBlocked` 하나(modegate.go:61)이고 기동 복원 실패 latch(mode_projection_wiring.go:33)도 같은 코드이며 `RejectedError` 는 Reason/Detail 뿐이다.
      그래서 모드 투영이 trigger 를 **타입으로** 실어야 한다(새 칸 — 문구로 가르지 않음). trigger 를 모르거나 다른 trigger(다른 ENTRY_BLOCKED · HALT_ALL 사유 ·
      기동 복원 실패)면 **오늘과 바이트 단위로 같은 동작**(오류 → effective 레인은 durable 잠금)이다.

@@ -84,6 +84,22 @@ P1 다섯의 닫힘은 문서 · RED 수준이다. 코드로 닫히는 것은 GR
 | P2 단일 연결 | journal.go:174 — 색인 범위 읽기(`closed_at` 범위 + 작은 여유), Go 에서 해석, 행을 연 채 네트워크 없음. P3: 문자열 범위 사전 필터가 형식 결함 행을 떨어뜨리면 안 됨 | design D2 「원장 읽기」: 같은 질의에서 NULL · 빈 값 · 비 RFC3339 `closed_at` 의 CLOSED 관리 행 존재를 세어 측정 불가. 지연 측정 task 2.4 · RED 행 추가 |
 | §5 | FX 조항은 a136 델타로 옮김(계획 불변) | §5 |
 
+### 4.2 §4.1 수리의 재확인 (2026-10-14, 분리된 읽기 전용 컨텍스트 — 판정은 Manager 가 전달)
+
+판정: **FREEZE-OK** — P1-3 은 문서 · BTM 수준에서 CLOSED, 새 P0/P1 없음.
+
+조건: dispatch BTM 에 이름 붙은 P1-3 RED 시험 — `TestA137ADailyLossModeBlockEndsTheCycleQuietly` · `TestA137OtherModeBlocksBehaveAsBefore`(기동 복원 실패 포함) ·
+`TestA137AMixedCycleStillReportsItsSkippedScopes` · BTM 220 의 펜스 시험 둘(`TestA137AFenceCausedByTheDailyLossEscalationIsAnAccountBlock` ·
+`TestA137OtherFencesBehaveAsBefore`) — 을 **GREEN 전에 쓰고 실패를 관찰**해야 한다(tasks 1.1).
+
+P3 셋 — Manager 가 모두 수용, **GREEN 에서 적용**:
+
+| P3 | 내용 | 처분 |
+|---|---|---|
+| 1 | 조용한 경로는 `trigger == ModeTriggerDailyLossLimit` **그리고** `Actor == AUTO` 일 때만(operating_mode.go:245-258 — `Cause` 는 문자열: AUTO 면 열거 trigger, 사람이면 사유 + 승인 참조) | GREEN 에서 적용 — design D3-2 에 조건 추가 |
+| 2 | 형식 결함 `closed_at` = 「Z 로 끝나는 정규 RFC3339 UTC 가 아님」(문자열 사전 필터와 같은 정의) | GREEN 에서 적용 — design D2 「원장 읽기」 정의 고정 |
+| 3 | 보호 주문 필터 = 인스턴스 수명과 **겹치는** saga · attempt(수명 안에 생성된 것만이 아님) | GREEN 에서 적용 — design D1-4 정정 |
+
 ## 5. FX 조항의 자리 — Manager 조정 요청
 
 **결정됨(Manager, 2026-10-14): 조항은 a136 델타에 둔다.** a136 이 문구를 옮겼다는 전달이 오면 a137 델타의 MODIFIED 블록을 지우고 a136 요구를 인용한다. 그때까지는 둔다.

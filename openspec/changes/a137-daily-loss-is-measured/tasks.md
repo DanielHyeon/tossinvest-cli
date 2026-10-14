@@ -14,7 +14,7 @@ Story: `STORY-TOS-a137` · **High-risk**(Guardian · 위험 입력) — FLM/BTM 
 - [x] 0.5 사람 승인 — Q5 를 위한 risk-management FX 요구 MODIFIED: 2026-10-14 사용자 선택 「1」 승인(review.md §2 · §3). 조항의 자리는 a136 델타로 옮김 권장(§5, Manager 조정 대기)
 - [x] 0.6 proposal-freeze 리뷰(4보이스) → review.md §4: APPROVE-WITH-FIXES(P1×5 · P2×6 · P3×4), 전부 문서 · RED 에 반영
 - [x] 0.6.1 P1 다섯 닫힘의 독립 재확인 — **BLOCKED**(P1-3 미닫힘 + 새 (b) · (a) · (c) · P2 셋) → 문서 · RED 수리 반영(review.md §4.1)
-- [ ] 0.6.2 §4.1 수리의 재확인(Manager)
+- [x] 0.6.2 §4.1 수리의 재확인 — **FREEZE-OK**(review.md §4.2). 조건: P1-3 RED 다섯을 GREEN 전에 실패 관찰. P3 셋은 GREEN 에서 적용
 - [ ] 0.7 FLM/BTM — 완료(편집 전 좌표): `admit` · `dispatch` · `runMarket`(무편집 근거, P1-3 — 먼저 작성). a136 커밋 뒤: `RiskGuardian.PrecheckQFinalEntry` ·
       `RiskGuardian.IssueEntry` · 전달 루프(`deliverEachStrategyHandoff` · `dispatchStrategyMarketHandoffs`) · 첫 다리 조립(토큰 · 짝 FX 운반 지점)
 - [ ] 0.8 a136 공유 파일 커밋 확인(`git log -1 -- <file>` · `git diff`) → `capture_change_base.py` 로 base 고정 → Pre-Edit 선언(review.md)
@@ -23,13 +23,15 @@ Story: `STORY-TOS-a137` · **High-risk**(Guardian · 위험 입력) — FLM/BTM 
 
 - [ ] 1.1 RED — 완료분: 측정기 순수 함수 12 시험(`internal/dailyloss/measure_test.go`, 태그 `a137red`, `analysis/red/red-dailyloss.txt` — **미커밋**:
       손실만 · 계좌 일 키 귀속 · 늦은 기록 · 조정 종결 제외 · 엔진 SELL 섞인 조정 종결 측정 불가 · 성과 부재 · 해석 불가 · 환산 · 0 일).
+      **freeze 조건(§4.2) — GREEN 전에 실패 관찰 필수**: `TestA137ADailyLossModeBlockEndsTheCycleQuietly` · `TestA137OtherModeBlocksBehaveAsBefore`(기동 복원 실패 포함) ·
+      `TestA137AMixedCycleStillReportsItsSkippedScopes` · `TestA137AFenceCausedByTheDailyLossEscalationIsAnAccountBlock` · `TestA137OtherFencesBehaveAsBefore`.
       남은 RED: 원장 읽기(관리 · 조정 종결 decimal 0 · 수명 안 발송 엔진 SELL · 성과 조인 · 계좌 한정) · Guardian 토큰(위조 · 만료 · 미래 · 일 키 불일치 · 부재 ·
       봉인 오류) · 바닥 규칙(무효 호출자 값 대체 금지 · 측정 실패의 호출자 값 낙하 금지 · 둘 다 유효할 때 max) · kill switch 사유 보존 · 매도/손절 측정 미호출 ·
       첫 다리 강화 + cause + `Stage == StageChain` · 분류 불변 표 · 계좌 진입 차단 결과로 주기 끝(refreshOnly · effective 두 조립 모두 잠금 0) ·
       trigger 일일 손실 모드 차단만 조용 · 다른 trigger · 기동 복원 실패 · 다른 관문은 오늘과 같음(양방향) · 강화 경합 펜스 · 혼합 주기(건너뛴 범위 보고 유지) ·
       보호 주문 CREATE/REPLACE 가 있던 조정 종결 측정 불가 · 형식 결함 `closed_at` 행이 사전 필터를 지나도 측정 불가 ·
       짝 FX 검증 · US 환산 올림 · 체인 없는 `Issuer.IssueEntry` 생산 호출자 0 고정
-- [ ] 1.2 GREEN — `internal/dailyloss`(Collect · Total) · 원장 읽기 새 파일 · Guardian `MeasureDailyLoss` · 강화 입구 새 파일 · precheck/IssueEntry 바닥 적용 ·
+- [ ] 1.2 GREEN — P3 셋 적용(§4.2: 조용한 경로 = trigger 일일 손실 AND Actor AUTO · 형식 결함 = 정규 RFC3339 UTC `Z` 아님 · 보호 필터 = 수명과 겹침) · `internal/dailyloss`(Collect · Total) · 원장 읽기 새 파일 · Guardian `MeasureDailyLoss` · 강화 입구 새 파일 · precheck/IssueEntry 바닥 적용 ·
       첫 다리 분류 · riskcalc `RealizedPnL.AsOf` 주석 정정 · 일 키는 a136 공유 함수 호출
 - [ ] 1.3 REFACTOR · 편집 뒤 AST 재추출 · `check_analysis.py --change`
 
