@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a136-daily-buy-notional-limit",
-    "path": "openspec/changes/a136-daily-buy-notional-limit"
+    "path": "openspec/changes/archive/2026-10-14-a136-daily-buy-notional-limit"
   },
   "found_by": {
     "date": "2026-10-14",
     "how": "The user asked for a daily buy notional limit (default 10,000,000 KRW, user-configurable, buys only). The Manager confirmed that risk-management excludes DAILY_TURNOVER as P3 and that the Guardian has per-order, open-exposure and daily-loss ceilings but no ceiling on how much it may buy in one day.",
-    "record": "openspec/changes/a136-daily-buy-notional-limit/proposal.md"
+    "record": "openspec/changes/archive/2026-10-14-a136-daily-buy-notional-limit/proposal.md"
   },
   "acceptance": [
     "Every exposure-raising Guardian issuance is refused when today's filled buy notional plus held buy reservations plus the new entry would reach the configured daily buy ceiling",
