@@ -2,23 +2,33 @@
 
 ### Requirement: 일일 손실 한도의 입력은 원장에서 측정된다
 
-생산 Guardian 은 자동 진입 의도를 판정하기 전에 엔진 원장에서 오늘의 실현 손실을 직접 측정해야 한다 (SHALL). 측정은 `riskcalc.DailyLoss` 의 기존 계약(비용 차감 후 실현 손익, 손실 = max(0, −순실현), 미실현 제외)을 따르며 새 공식을 만들어서는 안 된다 (SHALL NOT). 측정일은 진입 의도 시장의 현지 거래일이고, 계좌의 모든 시장에서 그 날짜에 청산된 성과를 계좌 기준 통화로 환산해 합산한다 (SHALL).
-체인이 비교하는 값은 호출자가 넘긴 값과 측정값 중 큰 쪽이어야 한다 (SHALL). 호출자 값이 측정값보다 작아도 측정값을 낮춰서는 안 된다 (SHALL NOT).
-측정을 할 수 없으면 — 원장 읽기 실패, 오늘 청산된 관리 포지션의 성과 행 부재, 외화 성과의 신선한 환율 부재, 원장 값 해석 불가 — 그 진입은 일일 손실 단에서 입력 불가로 거절되어야 하며 (SHALL), 앞 단의 거절 사유를 가려서는 안 된다 (SHALL NOT).
-측정은 진입에만 적용된다: 위험 축소 결정 · 손절 · 비상 청산 · 대사 · 체결 감지는 측정을 호출하거나 기다려서는 안 된다 (MUST NOT).
-측정이 한도 도달을 판정하면 모든 생산 진입 경로가 같은 자동 강화(ENTRY_BLOCKED)를 영속해야 하며 (SHALL), 전략 경로에서 그 거절을 레인 결함으로 분류해서는 안 된다 (SHALL NOT).
+생산 Guardian 은 자동 진입 의도를 판정하기 전에 엔진 원장에서 그날의 실현 손실을 직접 측정해야 한다 (SHALL). 그날은 하루 매수 총액 한도와 같은 일 키 D(KST 08:00 에 넘어가는 하루)이고, 계좌의 각 시장에서 **그 시장 현지일 D 에 닫힌** 관리 포지션을 시장을 가로질러 합산한다 (SHALL). 일 키 함수는 하나만 두어야 한다 (SHALL NOT — 두 한도가 다른 하루를 써서는 안 된다).
+측정은 닫힌 포지션의 비용 차감 후 실현 손익 중 **손실만** 센다 (SHALL). 이익은 손실을 상쇄해서는 안 되며 (SHALL NOT), 그날 안에서 측정 합계는 줄지 않는다. 합산은 `riskcalc.DailyLoss` 의 계약으로 하며 새 공식을 만들어서는 안 된다 (SHALL NOT).
+관리 대상이 아닌 포지션, 사람이 앱에서 팔아 조정으로 닫힌 포지션, 아직 열린 포지션의 부분 청산, 미실현 손익은 측정에 들어가지 않는다 (SHALL — 명시 한계).
+체인이 비교하는 값은 호출자가 넘긴 값과 측정값 중 큰 쪽이어야 한다 (SHALL). 호출자 값으로 측정값을 낮춰서는 안 된다 (SHALL NOT).
+측정을 할 수 없으면 — 원장 읽기 실패, 그날 체결로 닫힌 관리 포지션의 성과 행 부재, 다른 시장 손실의 환산 authority 부재, 원장 값 해석 불가 — 그 진입은 일일 손실 단에서 입력 불가로 거절되어야 하며 (SHALL), 앞 단의 거절 사유를 가려서는 안 된다 (SHALL NOT).
+측정은 진입에만 적용된다: 위험 축소 결정 · 손절 · 비상 청산 · 대사 · 체결 감지는 측정을 호출하거나 기다려서는 안 된다 (MUST NOT). 측정은 원장 행을 연 채 네트워크를 타서는 안 되고 (MUST NOT), mutation-free precheck 의 브로커 호출 금지를 깨서는 안 된다 (MUST NOT).
+측정이 한도 도달을 판정하면 생산 진입 경로는 운영 모드를 ENTRY_BLOCKED 로 강화·영속해야 하며 (SHALL), 전략 경로에서 그 거절을 레인 결함이나 원인 없는 문자열 오류로 다뤄서는 안 된다 (SHALL NOT — 거절 원인은 타입으로 보존된다).
 
 #### Scenario: 서명 매니페스트가 0 을 적은 손실일
-- **WHEN** 계좌 매니페스트의 일일 손실이 0 이고 원장에 오늘 청산된 손실 합계가 한도 이상이다
+- **WHEN** 계좌 매니페스트의 일일 손실이 0 이고 원장에 그날 닫힌 손실 합계가 한도 이상이다
 - **THEN** 진입은 `DAILY_LOSS_LIMIT_REACHED` 로 거절되고 운영 모드는 ENTRY_BLOCKED 로 강화된다
+
+#### Scenario: 이익은 상쇄하지 않는다
+- **WHEN** 그날 닫힌 포지션이 −60,000 과 +80,000 이고 한도가 50,000 이다
+- **THEN** 측정값은 60,000 이고 진입은 거절된다
 
 #### Scenario: 호출자 값이 더 크다
 - **WHEN** 호출자가 넘긴 일일 손실이 원장 측정값보다 크다
 - **THEN** 체인은 호출자 값으로 판정한다
 
-#### Scenario: 성과 행이 없는 오늘의 청산
-- **WHEN** 오늘 청산된 관리 포지션 하나의 성과 동결이 거절되어 성과 행이 없다
-- **THEN** 진입은 일일 손실 단에서 `INPUT_UNAVAILABLE` 로 거절되고, 그 포지션의 매도 · 손절 경로와 다른 포지션의 청산은 영향받지 않는다
+#### Scenario: 성과 행이 없는 그날의 청산
+- **WHEN** 그날 체결로 닫힌 관리 포지션 하나의 성과 동결이 거절되어 성과 행이 없다
+- **THEN** 그 일 키의 진입은 일일 손실 단에서 `INPUT_UNAVAILABLE` 로 거절되고, 매도 · 손절 경로와 다른 포지션의 청산은 영향받지 않는다
+
+#### Scenario: 사람이 앱에서 판 관리 포지션
+- **WHEN** 관리 포지션이 조정으로 수량 0 이 되어 닫혔고 성과 행이 없다
+- **THEN** 그 포지션은 측정에 들어가지 않고 진입을 막지도 않는다
 
 #### Scenario: 측정 실패 중 손절
 - **WHEN** 원장 측정이 실패하는 상태에서 손절 · 비상 청산 위험 축소 결정이 요청된다
@@ -27,3 +37,71 @@
 #### Scenario: kill switch 가 켜진 상태의 측정 실패
 - **WHEN** kill switch 가 켜져 있고 원장 측정도 실패한다
 - **THEN** 거절 사유는 kill switch 단의 것이다
+
+#### Scenario: 일 경계
+- **WHEN** KST 08:00 을 지나 일 키가 바뀐다
+- **THEN** 이전 일 키에 닫힌 손실과 성과 행 부재는 새 일 키의 측정에 들어가지 않는다. 이미 강화된 ENTRY_BLOCKED 는 사람이 풀 때까지 유지된다
+
+## MODIFIED Requirements
+
+### Requirement: KR과 US는 하나의 account-base Guardian 권위를 공유한다
+
+Production strategy runtime은 계좌마다 정확히 하나의 account-base-currency Guardian을 사용해야 한다 (SHALL).
+그 Guardian은 하나의 account-wide exposure/daily-loss 권위를 소유한다. KR과 US에 quote-currency별
+Guardian 또는 독립 account-wide cap을 만들어서는 안 된다 (MUST NOT). `limit_currency`는
+account base currency를 뜻하고, 주문 notional·총 노출·일일 손실·equity·risk budget은 그 base
+minor unit으로 비교해야 한다 (SHALL). Market cash와 broker order cost는 market quote minor
+unit으로 비교해야 하며 base와 quote 숫자를 직접 비교해서는 안 된다 (MUST NOT).
+
+각 exposure-raising 요청은 official source가 mint한 request-scoped frozen FX authority를 사용해야
+한다 (SHALL). Authority는 base/quote pair, exact decimal rate, conservative haircut,
+source/version/digest, observed-at/fresh-until을 봉인해야 하며 (SHALL), caller가 제공한 raw rate나
+digest를 authority로 승격해서는 안 된다 (MUST NOT). KR same-currency path도 봉인된 identity FX를
+사용하고 US path는 official quote-to-base FX를 사용해야 한다 (SHALL). 같은 authority가 Guardian
+sizing, aggregate와 다섯 bucket reservation, decision limits envelope와 Gateway last-moment
+validation에 끝까지 사용되어야 하며 중간 재조회나 다른 환율 사용은 금지한다 (MUST NOT).
+
+일일 손실 측정(「일일 손실 한도의 입력은 원장에서 측정된다」)에서 요청 시장과 같은 quote currency 의 실현 손실은 그 요청 자신의 authority 로 환산한다 (SHALL).
+요청 시장과 다른 시장의 실현 손실은 **같은 파도에서 official source 가 그 시장 쪽에 이미 봉인한 authority** 로만 환산해야 하며 (SHALL), 그 authority 가 없거나
+만료·불일치이면 그 요청의 신규 exposure 를 fail-closed 로 거부해야 한다 (SHALL). 이 환산을 위해 FX 를 재조회하거나, caller 환율 또는 다른 파도의 authority 를
+써서는 안 된다 (MUST NOT). 이 환산은 측정된 손실에만 쓰이며 그 요청의 sizing·aggregate exposure·bucket reservation·envelope·Gateway 검증의 authority 를 바꾸지 않는다 (SHALL NOT).
+
+Base reservation은 exposure를 작게 계산하지 않도록 ceil하고 admissible quantity는 floor해야 한다
+(SHALL). FX 없음, stale, 역방향, market/quote/base/digest 불일치 또는 완화된 haircut은 해당
+시장의 신규 exposure만 거부하고 (SHALL), protection, fill, reconciliation과 reduce-only exit를
+차단해서는 안 된다 (MUST NOT).
+
+#### Scenario: KR identity와 US official conversion의 동시 admission
+
+- **WHEN** 같은 account-base Guardian에 KR identity-FX 요청과 US official quote-to-base 요청이 동시에 들어온다
+- **THEN** 두 요청은 commit 순서와 무관하게 하나의 base exposure 잔여를 공유하며 합산 cap을 초과하지 않고 어느 시장도 peer 안정화를 기다리지 않는다
+
+#### Scenario: US FX 만료
+
+- **WHEN** US q_final precheck에 사용한 official FX가 issue 또는 Gateway 직전 만료된다
+- **THEN** US exposure-raising authority는 broker request와 부분 reservation 없이 거부되고 KR eligible work와 양 시장 safety lifecycle은 계속된다
+
+#### Scenario: quote cash와 base limit 분리
+
+- **WHEN** US 주문 비용은 USD이고 Guardian exposure limit은 account base currency다
+- **THEN** cash는 USD order cost와, exposure는 동일 frozen FX로 환산한 base amount와 비교되며 USD 숫자를 base limit 숫자와 직접 비교하지 않는다
+
+#### Scenario: cross-currency concurrent cap race
+
+- **WHEN** KR과 US 요청이 동시에 마지막 account-wide capacity를 예약하려 한다
+- **THEN** aggregate와 다섯 bucket의 base reservation transaction은 합산 cap 안의 요청만 commit하고 loser는 bounded fresh recollection 또는 atomic refusal이며 중복 권한은 0건이다
+
+#### Scenario: FX outage 중 exit
+
+- **WHEN** entry용 official FX authority를 만들 수 없지만 기존 US 포지션의 reduce-only exit가 필요하다
+- **THEN** 신규 US entry만 닫히고 exit, protection, reconciliation과 fill 처리는 계속된다
+
+#### Scenario: KR 진입의 일일 손실에 든 US 손실
+
+- **WHEN** KR 진입 precheck 의 일일 손실 측정에 그날 닫힌 US 손실(USD)이 있고 같은 파도의 US FX authority 가 봉인되어 있다
+- **THEN** 그 손실은 US authority 로 base 환산되어 측정에 들어가고 KR 요청의 sizing·exposure·reservation 은 KR identity authority 를 그대로 쓴다
+
+#### Scenario: 다른 시장 authority 부재
+
+- **WHEN** KR 진입의 일일 손실 측정에 US 손실이 있는데 같은 파도의 US FX authority 가 없다
+- **THEN** 그 KR 진입은 일일 손실 단에서 입력 불가로 거부되고 FX 재조회는 일어나지 않으며 exit·protection·reconciliation 은 계속된다
