@@ -69,7 +69,24 @@ risk-management 요구)을 소유한다. a137 은 그 커밋 전에는 새 파�
 
 P1 다섯의 닫힘은 문서 · RED 수준이다. 코드로 닫히는 것은 GREEN 뒤이고, 닫힘의 독립 재확인은 Manager 몫이다(tasks 0.6.1).
 
+### 4.1 P1 닫힘 독립 재확인 (2026-10-14, 분리된 읽기 전용 컨텍스트 — 판정은 Manager 가 전달)
+
+판정: **BLOCKED** — P1-1 · P1-2 · P1-4 · P1-5 는 문서 · RED 수준에서 CLOSED, **P1-3 NOT-CLOSED**. 수리(대괄호는 Manager 결정 — 각각 좁거나 보수적인 쪽이라 사람 결정 불요):
+
+| 발견 | 내용 | 처분 |
+|---|---|---|
+| P1-3 핵심 | `runMarket` :935 `if err == nil { continue }` 가 :938 · :966 보다 앞 — nil 주기 반환이 삼킴과 잠금을 모두 피한다(참) | design D3 유지 |
+| (b) 새 P1 | 모드 투영 거절은 `ReasonOperatingModeBlocked` 하나(modegate.go:61)이고 기동 복원 실패 latch(mode_projection_wiring.go:33)도 같은 코드, `RejectedError` 는 Reason/Detail 뿐 | [좁게] 조용한 「계좌 진입 차단」은 차단 모드 행의 trigger 가 `ModeTriggerDailyLossLimit` 일 때만(trigger 를 타입으로 운반). 다른 모드 차단 · 기동 복원 실패는 바이트 단위로 오늘과 같음(durable 잠금 포함). 양방향 시험 — design D3-2 · spec · dispatch BTM |
+| (a) | 앞서 건너뛴 범위(`*strategyScopeRefusal`, admission.go:99-101)가 있으면 `deliverEachStrategyHandoff` 는 `errors.Join(skipped...)` | [보고 유지] 계좌 차단 결과는 앞선 건너뜀 보고를 바꾸지 않음. spec 시나리오를 「앞서 건너뛴 범위 거절이 없을 때」로 좁히고 혼합 경우를 명시 · 시험(J4 유지) |
+| (c) | 경합: 강화 전 승인된 레인 B → `withStrategyEntryGateAuthority` 재확인(strategy_entry_gate_authority.go:62-71) → `ReasonStrategyDispatchFenced`(gateway.go:712-716) → :966 잠금 | [좁게] 펜스 원인이 trigger 일일 손실 모드 변경이면 같은 결과, 아니면 무변경. 열거 · 시험 — design D3-3 · spec · dispatch BTM |
+| P2 보호 주문 | 브로커 대기 보호 주문(`protection_sagas` · `protection_mutation_attempts`, protection_orders.go:37-49)을 「수명 안 엔진 매도」에 포함(fail-closed), PLACE 대 CANCEL/AMEND 명시 | design D1-4: SELL PLACE 발송 + 보호 CREATE · REPLACE(PLANNED 아님). CANCEL · 정정 자체는 세지 않음. spec 시나리오 · 거부 목록 (d) |
+| P2 (e) | 빈도 문구 오류 — 05:00~09:00 배포 · 재시작 창에서 KST 08:00 뒤에 반영된 US 손실은 그 KR 세션 내내 KR 진입을 막음(KR 동안 US 권한 미봉인) | design D5 · 거부 목록 (e) 정정, 동작 유지(사용자 fail-closed) |
+| P2 단일 연결 | journal.go:174 — 색인 범위 읽기(`closed_at` 범위 + 작은 여유), Go 에서 해석, 행을 연 채 네트워크 없음. P3: 문자열 범위 사전 필터가 형식 결함 행을 떨어뜨리면 안 됨 | design D2 「원장 읽기」: 같은 질의에서 NULL · 빈 값 · 비 RFC3339 `closed_at` 의 CLOSED 관리 행 존재를 세어 측정 불가. 지연 측정 task 2.4 · RED 행 추가 |
+| §5 | FX 조항은 a136 델타로 옮김(계획 불변) | §5 |
+
 ## 5. FX 조항의 자리 — Manager 조정 요청
+
+**결정됨(Manager, 2026-10-14): 조항은 a136 델타에 둔다.** a136 이 문구를 옮겼다는 전달이 오면 a137 델타의 MODIFIED 블록을 지우고 a136 요구를 인용한다. 그때까지는 둔다.
 
 a136 이 같은 조항을 US 수동 매수 금액에 쓰고 a136 이 먼저 archive 한다. 같은 requirement 를 두 델타가 MODIFIED 하면 뒤에 archive 되는 델타가 앞의 것을 통째로
 덮는다. **권장: 조항을 a136 델타로 옮기고, a137 델타에서는 그 MODIFIED 를 지운다**(a137 은 조항을 인용만). 옮기기 전까지는 a137 델타에 둔다 — 옮김이 정해지면

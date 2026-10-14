@@ -13,7 +13,8 @@ Story: `STORY-TOS-a137` · **High-risk**(Guardian · 위험 입력) — FLM/BTM 
 - [x] 0.4 사용자 결정 Q1~Q8 · Q12 · Q13 기록(review.md §2) · D0 증거 독립 대조(ACCURATE-WITH-CORRECTIONS) 정정 반영(review.md §1)
 - [x] 0.5 사람 승인 — Q5 를 위한 risk-management FX 요구 MODIFIED: 2026-10-14 사용자 선택 「1」 승인(review.md §2 · §3). 조항의 자리는 a136 델타로 옮김 권장(§5, Manager 조정 대기)
 - [x] 0.6 proposal-freeze 리뷰(4보이스) → review.md §4: APPROVE-WITH-FIXES(P1×5 · P2×6 · P3×4), 전부 문서 · RED 에 반영
-- [ ] 0.6.1 P1 다섯 닫힘의 독립 재확인(Manager)
+- [x] 0.6.1 P1 다섯 닫힘의 독립 재확인 — **BLOCKED**(P1-3 미닫힘 + 새 (b) · (a) · (c) · P2 셋) → 문서 · RED 수리 반영(review.md §4.1)
+- [ ] 0.6.2 §4.1 수리의 재확인(Manager)
 - [ ] 0.7 FLM/BTM — 완료(편집 전 좌표): `admit` · `dispatch` · `runMarket`(무편집 근거, P1-3 — 먼저 작성). a136 커밋 뒤: `RiskGuardian.PrecheckQFinalEntry` ·
       `RiskGuardian.IssueEntry` · 전달 루프(`deliverEachStrategyHandoff` · `dispatchStrategyMarketHandoffs`) · 첫 다리 조립(토큰 · 짝 FX 운반 지점)
 - [ ] 0.8 a136 공유 파일 커밋 확인(`git log -1 -- <file>` · `git diff`) → `capture_change_base.py` 로 base 고정 → Pre-Edit 선언(review.md)
@@ -25,7 +26,9 @@ Story: `STORY-TOS-a137` · **High-risk**(Guardian · 위험 입력) — FLM/BTM 
       남은 RED: 원장 읽기(관리 · 조정 종결 decimal 0 · 수명 안 발송 엔진 SELL · 성과 조인 · 계좌 한정) · Guardian 토큰(위조 · 만료 · 미래 · 일 키 불일치 · 부재 ·
       봉인 오류) · 바닥 규칙(무효 호출자 값 대체 금지 · 측정 실패의 호출자 값 낙하 금지 · 둘 다 유효할 때 max) · kill switch 사유 보존 · 매도/손절 측정 미호출 ·
       첫 다리 강화 + cause + `Stage == StageChain` · 분류 불변 표 · 계좌 진입 차단 결과로 주기 끝(refreshOnly · effective 두 조립 모두 잠금 0) ·
-      모드 투영 거절 vs 다른 관문 거절 · 짝 FX 검증 · US 환산 올림 · 체인 없는 `Issuer.IssueEntry` 생산 호출자 0 고정
+      trigger 일일 손실 모드 차단만 조용 · 다른 trigger · 기동 복원 실패 · 다른 관문은 오늘과 같음(양방향) · 강화 경합 펜스 · 혼합 주기(건너뛴 범위 보고 유지) ·
+      보호 주문 CREATE/REPLACE 가 있던 조정 종결 측정 불가 · 형식 결함 `closed_at` 행이 사전 필터를 지나도 측정 불가 ·
+      짝 FX 검증 · US 환산 올림 · 체인 없는 `Issuer.IssueEntry` 생산 호출자 0 고정
 - [ ] 1.2 GREEN — `internal/dailyloss`(Collect · Total) · 원장 읽기 새 파일 · Guardian `MeasureDailyLoss` · 강화 입구 새 파일 · precheck/IssueEntry 바닥 적용 ·
       첫 다리 분류 · riskcalc `RealizedPnL.AsOf` 주석 정정 · 일 키는 a136 공유 함수 호출
 - [ ] 1.3 REFACTOR · 편집 뒤 AST 재추출 · `check_analysis.py --change`
@@ -34,8 +37,11 @@ Story: `STORY-TOS-a137` · **High-risk**(Guardian · 위험 입력) — FLM/BTM 
 
 - [ ] 2.1 `go vet` · `rtk proxy go test -count=1`(dailyloss · risk · riskcalc · execgw · journal · app/engine) · `-tags tossos_testseams` · `-race`(make test-race 대상) · `openspec validate --strict`
 - [ ] 2.2 변이 원장(max → 호출자만 · 측정 실패 시 호출자 값 낙하 · 무효 호출자 값 대체 · 이익 상쇄 · 시장 현지일 귀속 · 조정 종결 무조건 제외 · 엔진 SELL 검사 삭제 ·
-      성과 부재 무시 · 토큰 신선도/일 키 무시 · 매도 경로 측정 호출 · 강화 누락 · `Stage` 검사 삭제 · 원인 버림 · 차단 결과를 오류로 · 다른 관문 거절도 조용히 · 환산 내림)
+      성과 부재 무시 · 토큰 신선도/일 키 무시 · 매도 경로 측정 호출 · 강화 누락 · `Stage` 검사 삭제 · 원인 버림 · 차단 결과를 오류로 · 다른 관문 거절도 조용히 · 다른 trigger 모드 차단도 조용히 · 펜스 원인 무시 · 건너뛴 범위 보고 삭제 ·
+      보호 주문 검사 삭제 · 형식 결함 행 검사 삭제 · 환산 내림)
 - [ ] 2.3 적대적 독립 리뷰(분리된 컨텍스트) → `review.md`
+
+- [ ] 2.4 원장 읽기 지연 측정 — 현실 크기 픽스처(관리 포지션 수천 · 일 키 창 안 수십)에서 측정 질의 1회의 시간과 단일 연결 점유 시간
 
 ## 3. 사람 · Manager
 
