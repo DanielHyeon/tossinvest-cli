@@ -34,7 +34,7 @@ HEAD 를 읽은 것이다. CodeGraph 근거는 `analysis/code-context/`.
 | 관리 여부 단일 술어 `position.ExitEligible`(= 진입 결정 또는 편입) | position_projection.go:517 · a137 `a137_daily_loss_rows.go` 주석(정적 시험이 지킴) |
 | 투영은 FLAT 행을 쓰지 않음 — 살아 있는 행 = CLOSED 가 아닌 행(OPENING · OPEN · SCALING · CLOSING) | position/position.go:21-31 |
 | 결정 preimage 에 `market`(소문자) · `symbol`(대문자) 이 정규화돼 저장됨 | decision.go:63-73 · `canonicalVenue`(556) |
-| 종결 체결은 같은 tx 에서 HELD 예약을 해제한 뒤(RecordFill B28 512) 투영 훅을 부르고(B37 551), 투영이 전이를 거절하면 포지션 행 없이 종목 범위 RECONCILE 만 남김(ProjectPosition B5 101 → `enterReconcileInTx`) — 그 종목은 ① · ② 어디에도 없음 | AST `journal--journal.recordfill` · `journal--projectposition`, reconcile_states DDL(execution_contract.go:202 — 시장 칸 없음) |
+| 종결 체결은 같은 tx 에서 HELD 예약을 해제한 뒤(RecordFill B28 512) 투영 훅을 부르고(B37 551), 투영이 전이를 거절하면 포지션 행 없이 종목 범위 RECONCILE 만 남김(ProjectPosition B5 101 → `enterReconcileInTx`) — 그 종목은 ① · ② 어디에도 없음 | AST `journal--journal.recordfill` · `journal--projectposition`, reconcile_states DDL(execution_contract.go:202) + `scope_market`(risk_bucket_owner.go:57, 투영 거절은 NULL 로 씀) |
 | Gateway 는 EXPOSURE_RAISING 결정에 종류와 무관하게 HELD 예약이 하나라도 있으면 제출을 인가함 | gateway.go `checkReservation`(freeze 리뷰 P1-2) |
 | 미소비 만료 · 일 경계 보유는 예약 tx 앞단(`reservePrecheck` 3)이 같은 tx 에서 해제 | reservations.go:300-317 |
 | 정책 유도는 직선 함수 하나 | AST `engine--riskpolicyfromautomationgate`(분기 0, 반환 2 — 39 는 `number` 클로저) |
@@ -63,8 +63,10 @@ HEAD 를 읽은 것이다. CodeGraph 근거는 `analysis/code-context/`.
 - 세는 단위는 서로 다른 (시장, 종목) 하나다. 같은 종목의 여러 인스턴스 · 부분 체결 중인 진입과 그 포지션은 하나로 센다.
 - 판정: 집합 S = ① 살아 있는 포지션(D1) ∪ ② HELD 예약을 **종류와 무관하게**(닫힌 집합 OPEN_EXPOSURE · DAILY_LOSS · CASH 를 `IN` 으로 — 색인
   `idx_reservations_held` 를 그대로 탐) 가진 EXPOSURE_RAISING 결정의 종목(Gateway 인가 술어와 같음, freeze 리뷰 P1-2 (a)) ∪ ③ 이번 결정의 종목
-  ∪ ④ 종목 범위 활성 RECONCILE(`reconcile_states.symbol` 이 있고 `released_at` 이 NULL) 중 그 종목이 ①~③ 의 어느 원소와도 종목이 같지 않은 것 — 한 칸씩
-  (freeze 리뷰 P1-1: 투영이 거절된 종결 체결은 예약을 해제하고 포지션 행을 남기지 않음. 시장 칸이 없어 종목 문자열로만 맞추므로 과대 집계 쪽).
+  ∪ ④ 종목 범위 활성 RECONCILE(`reconcile_states.symbol` 이 있고 `released_at` 이 NULL) 중 ①~③ 에 없는 것 — 한 칸씩
+  (freeze 리뷰 P1-1: 투영이 거절된 종결 체결은 예약을 해제하고 포지션 행을 남기지 않음). `scope_market`(KR/US, risk_bucket_owner.go:57 이 더한 칸)이 있으면
+  (시장, 종목)으로 맞추고, NULL(전역 종목 범위 — 투영 거절이 쓰는 모양, position_projection.go `enterReconcileScopeInTx`)이면 종목만으로 ①~③ 의 어느 원소와 맞춤 —
+  맞는 것이 없으면 한 칸(과대 집계 쪽). 리뷰는 「시장 칸 없음」이라 했으나 v5 뒤 칸이 더해졌음(HEAD 정정).
   **|S| > 상한이면 거부**.
 - 귀결: 이미 6 개를 든 계좌에서 그중 한 종목에 더 사는 진입(scale-in · 캠페인 추가 다리)은 |S| = 6 이라 허용. 문구 「6 개보다 많이 들게 될 진입」 그대로다
   (사람 결정 D2 = 허용, 2026-10-15).
@@ -119,7 +121,7 @@ insert 앞) 한 줄, 판정 함수는 새 파일 `internal/journal/open_position
 - UNRESOLVED_IN_DOUBT · UNKNOWN_BROKER_STATE · NONCE_SPENT_EXPIRED 로 운영자 해제를 기다리는 HELD 예약 — 기한 없이 한 칸(`OperatorReleaseReservation` 뒤 해소).
 - CLOSING(청산 주문이 나갔지만 아직 수량이 남은) 포지션, 엔진 밖에서 팔았거나 매도 체결이 아직 관측되지 않은 포지션(대사 수렴 전), 소수 잔량(dust) 포지션 — 한 칸씩.
 - D1-B: 손으로 든 종목 — 한 칸씩. 외부 보유가 상한 이상이면 신규 종목 진입 전부 거부.
-- 종목 범위 RECONCILE(투영 거절 · 수량 불일치 등 원인 무관) — 그 종목이 S 에 없으면 한 칸(④, 시장 칸이 없어 과대 집계 쪽).
+- 종목 범위 RECONCILE(투영 거절 · 수량 불일치 등 원인 무관) — S 에 없으면 한 칸(④, 시장 없는 범위는 종목만으로 맞춰 과대 집계 쪽).
 - KR 과 US 는 한 계좌에서 합산 — 두 시장 합계 6.
 - 옛 결정 하나의 preimage 가 해석 불가 — 그 결정이 HELD 예약을 들고 있는 동안 모든 진입 거부(원장 결함이 조용히 0 이 되지 않게).
 - 원장 읽기 오류 — 그 진입 거부.
