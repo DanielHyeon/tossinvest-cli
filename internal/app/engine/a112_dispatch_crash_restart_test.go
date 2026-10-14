@@ -89,7 +89,7 @@ func (fixture *a112TradingFixture) restart(t *testing.T) *clock.Fake {
 		t.Fatalf("reopening the journal after the crash: %v", err)
 	}
 	t.Cleanup(func() { _ = handle.Close() })
-	guardian, err := execgw.NewRiskGuardian(execgw.RiskGuardianOptions{Journal: handle, Clock: fixture.clk, AccountRef: "acct-risk-loader",
+	guardian, err := execgw.NewRiskGuardian(execgw.RiskGuardianOptions{ManualBuys: a136ZeroManualBuyBoardInternal(fixture.clk), Journal: handle, Clock: fixture.clk, AccountRef: "acct-risk-loader",
 		Policy: risk.DefaultPolicy(), Costs: costs.DefaultModel(), PolicyVersion: "engine.automation_gate/risk-policy-v1"})
 	if err != nil {
 		t.Fatal(err)

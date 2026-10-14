@@ -37,13 +37,15 @@ Story: `STORY-TOS-a136` · **High-risk**(Guardian 발급 · 예약 트랜잭션 
       파일 값으로. 규칙 12: `ui-skills-root` → `fixing-accessibility` 1개(label · aria-describedby · inputmode). 규칙 13: 격리 config(USD 무값)로 로컬 콘솔을
       띄워 `/settings/daily` 를 chrome-devtools 로 렌더 — 행 문구 「USD 계좌에는 기본값이 없어 엔진이 기동을 거부한다」, 칸 · 도움말 연결, 콘솔 오류 0, 요청 1(200).
       접힌 고급 폼은 스크립트로 열어 확인했고 저장 · 토글 · 승인 버튼은 누르지 않음. 티어 레지스트리는 USD 값을 구조적으로 요구하지 않음(티어는 이 칸을 갖지 않음)
-- [ ] 1.4 REFACTOR · 편집 뒤 AST 재추출 · `check_analysis.py --change`
+- [x] 1.4 REFACTOR · 편집 뒤 AST 재추출 · `check_analysis.py --change` — 58 번들(편집 전 `ast-base.json` + 편집 뒤 `ast.json`), 남은 경고는 미추적 시험 이름(커밋으로 해소) · 착지 기록 전 창 안내뿐
 
 ## 2. 검증
 
-- [ ] 2.1 `gofmt -l` · `go vet ./...` · `rtk proxy go test -count=1`(`internal/journal` · `internal/execgw` · `internal/risk` · `internal/config` ·
+- [x] 2.1 `gofmt -l` · `go vet ./...` · `rtk proxy go test -count=1`(`internal/journal` · `internal/execgw` · `internal/risk` · `internal/config` ·
       `internal/app/engine` · `cmd/tossctl` · `internal/console`) · `-tags tossos_testseams` · `make test-race` 대상 · `openspec validate --strict`
-- [ ] 2.2 변이 원장(`analysis/mutation/`): ≥→> · 체결분 제외 · 경계 오프셋 0 · 매도 경로에 판정 삽입 · 합계 오류를 0 으로 대체 · 동시성(트랜잭션 밖 합산)
+      — `analysis/verify/receipts.md`
+- [x] 2.2 변이 원장(`analysis/mutation/`): ≥→> · 체결분 제외 · 경계 오프셋 0 · 매도 경로에 판정 삽입 · 합계 오류를 0 으로 대체 · 동시성(트랜잭션 밖 합산)
+      — round1~4, 최종 32/32 CAUGHT
 - [ ] 2.3 독립 적대 리뷰(분리된 컨텍스트, 적대 Eng 포함) → review.md
 
 ## 3. 사람 · Manager

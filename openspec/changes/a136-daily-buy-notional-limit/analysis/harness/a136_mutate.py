@@ -51,7 +51,7 @@ MUTANTS = [
     ("M13 default applied to every currency", "internal/config/daily_buy.go",
      "if strings.EqualFold(strings.TrimSpace(g.LimitCurrency), \"KRW\") {", "if strings.EqualFold(strings.TrimSpace(g.LimitCurrency), \"KRW\") || true {", [C, A]),
     ("M14 currency change keeps the old figure", "internal/config/limits_io.go",
-     "} else if prev != next.Currency {", "} else if prev != next.Currency && false {", [C]),
+     "} else if prev != next.Currency && next.DailyBuy == nil {", "} else if prev != next.Currency && next.DailyBuy == nil && false {", [C]),
     ("M15 digest ignores the ceiling", "internal/execgw/riskguardian.go",
      "sum := sha256.Sum256([]byte(g.limitsJSON + \"\\ndaily_buy_notional=\" +\n\t\tg.policy.MaxDailyBuyNotional.Amount + \" \" + g.policy.MaxDailyBuyNotional.Currency))",
      "sum := sha256.Sum256([]byte(g.limitsJSON))", [E]),
@@ -110,7 +110,10 @@ ok, why = run([J, E, A, C, K, R, M, CON, CMD], True)
 say(f"CONTROL (무변이) {'GREEN' if ok else 'RED — 중단: ' + why}")
 if ok is not True:
     sys.exit(1)
+ONLY = os.environ.get("A136_ONLY", "")  # 쉼표로 고른 변이만(예: "M14") — 재측정용
 for name, rel, old, new, targets in MUTANTS:
+    if ONLY and name.split()[0] not in ONLY.split(","):
+        continue
     path = os.path.join(COPY, rel)
     original = open(path).read()
     if original.count(old) != 1:

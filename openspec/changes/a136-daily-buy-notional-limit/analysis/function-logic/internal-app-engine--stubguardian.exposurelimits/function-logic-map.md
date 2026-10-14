@@ -2,7 +2,7 @@
 
 - Source: `internal/app/engine/interlock_test.go` (49-49, 편집 뒤)
 - Qualified: `stubGuardian.ExposureLimits`
-- AST evidence: `ast.json` (revision: base) — 검사기가 이 메서드를 「교체된 base 함수」로 분류(같은 파일의 stubGuardian 타입 선언이 바뀜)해 편집 전 AST 를 요구함. 본문은 편집 전후 같음.
+- AST evidence: `ast.json` (revision: base) — 본문 무편집, 같은 파일의 이웃 선언 편집으로 검사기가 교체된 base 함수로 분류해 편집 전 AST 를 요구함.
 - Risk scan: `risk-pattern-report.md`
 
 **역할.** 시험 fixture/시험 함수(생산 코드 아님).

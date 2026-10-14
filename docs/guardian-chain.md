@@ -41,6 +41,7 @@
 |---|---|---|
 | 주문당 수량·notional | **포함 상한** — 같으면 통과, 초과면 차단 | design D2, issues.md 판정 유지 |
 | 총 개방 노출·일일 손실 | **도달 시 차단(≥)** | 예약 트랜잭션 실장과 일치 — `riskcalc.WithinLimit`(동률 fail-closed)을 그대로 소비 |
+| 하루 매수 총액(a136) | **도달 시 차단(≥)** | 예약 tx 의 총계 경계와 같음. 하루는 KST 08:00 경계(`clock.AccountTradingDay`) |
 | 현금 | 포함 상한 — notional+비용이 현금과 같으면 통과 | 원본 `>` 비교와 동일 |
 | 최소 RR | **미달만 거부** — 정확히 2.0은 통과 | "미달"의 문언. 유리수 정확 비교라 경계가 부동소수점 산물이 아니다. **이 정밀도 근거는 총 RR 게이트에만 성립한다** — 순 RR 관측값은 `BreakEvenSellPrice`의 float64 산술에서 온 본전을 물려받으므로 마지막 유효자리에 상대오차가 있다(관측값이므로 결함이 아니라 기록 대상). 순 기준으로 게이트를 옮기는 change는 본전을 위로 올림하거나 유리수 end-to-end로 바꾸는 것을 **선행**해야 한다 — `internal/risk/netrr_test.go`가 반례 둘(요율 0에서 등호, 고정밀 진입가에서 순 > 총)을 고정한다 |
 | 재진입 쿨다운 | 경과 시각 도달이면 통과 | 초 해상도 시계에서 쿨다운이 무한정 늘어나지 않게 |
@@ -88,7 +89,7 @@ risk-management의 열거를 코드 위치와 함께 옮긴다.
 | `ARM_EXPIRED` · `DASHBOARD_CONFIRMATION_REQUIRED` | guardian.py:436-441 | 운영 UI 소관 — 게이트 flip 사람 승인(§0.7)이 대체 |
 | `BUY_PAUSED` · `SELL_ONLY_MODE` | guardian.py:420-433 | 운영 모드가 대체(구조 대체, §3 아래) |
 | `TIME_WINDOW_BLOCKED` (미국장 진입 시간창) | guardian.py:616-656 | 미이식. 세션 판정은 `internal/clock`에 있으나 진입 시간창 정책은 이 change 범위 밖 |
-| `DAILY_TURNOVER_EXCEEDED` | guardian.py:490-492 | P3 |
+| `DAILY_TURNOVER_EXCEEDED` | guardian.py:490-492 | **매수 측만 이식(a136)** — 체인 단계가 아니라 결정 · 예약 원자 트랜잭션의 하루 매수 총액 상한(`journal/daily_buy.go`, LIMIT_REACHED · detail `DAILY_BUY_NOTIONAL`). 매도 회전율은 미이식 |
 | `MAX_POSITIONS_EXCEEDED` | guardian.py:493-495 | P3 |
 | `CANCEL_RATE_EXCEEDED` | guardian.py:505-506 | P3 |
 | `SELL_COST_BUFFER_EXCEEDED` | guardian.py:467-468 | **§0.3** — 비용은 청산 게이트가 아니다. 매도가 비싸 보인다는 이유로 청산을 막는 것은 위험 통제가 실패해서는 안 되는 유일한 방향이다. `internal/costs/sellgate_test.go`가 이 식별자가 트리에 없음을 AST 스캔으로 고정한다 |

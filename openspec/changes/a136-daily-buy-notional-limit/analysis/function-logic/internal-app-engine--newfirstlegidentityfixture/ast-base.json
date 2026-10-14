@@ -1,0 +1,379 @@
+{
+  "file": "internal/app/engine/strategy_first_leg_identity_backstop_test.go",
+  "source_sha256": "59499491805c7ddf7ca252dbf3cc177443dc4691e51d552dbbb5d4088af512f5",
+  "package": "engine",
+  "function": "newFirstLegIdentityFixture",
+  "signature": "newFirstLegIdentityFixture(params=1, results=1)",
+  "start": {
+    "line": 55,
+    "column": 1
+  },
+  "end": {
+    "line": 102,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 62,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 67,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 75,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 86,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "else",
+      "at": {
+        "line": 88,
+        "column": 10
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 17
+      },
+      "text": "newStrategyRiskLoaderFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 14
+      },
+      "text": "riskFixture.loader.collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 41
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 13
+      },
+      "text": "riskFixture.results.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 12
+      },
+      "text": "strategyproposal.ProductionBatchAuthorityForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 80
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 20
+      },
+      "text": "batch.For"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 23
+      },
+      "text": "strategyaccount.AuthorityForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 85
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 108
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 18
+      },
+      "text": "a112ScopedAccount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 12
+      },
+      "text": "openTestJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 15
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 19
+      },
+      "text": "execgw.NewRiskGuardian"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 43
+      },
+      "text": "risk.DefaultPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 72
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 57,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 59,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 63,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 64,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 66,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 70,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 73,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 74,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 76,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 78,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 81,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 83,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 85,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 87,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 89,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

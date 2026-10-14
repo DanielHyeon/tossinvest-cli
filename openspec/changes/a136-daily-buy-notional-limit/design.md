@@ -150,6 +150,7 @@ proposal 안(`execgw.Limits` 여섯째 칸)은 결정 `limits_json` · `LimitsDi
   `risk.BindAccountBaseFX` + `AccountBaseOrderNotional`(올림). `IssueEntry`(트레이서 · 전략 dispatch KR) 문은 FX authority 가 없으므로
   다른 통화 수동 매수가 있는 날 그 문의 매수는 전부 거부됨.
 - 브로커 호출 예산(§0.4): 30초마다 OPEN 1 + CLOSED 페이지(평소 1), 페이지 상한 20. from/to 는 라벨 앞뒤 하루씩(시간대 `[미측정]`), 귀속은 주문 시각.
+- 중복 제거는 attempt 에 `broker_order_id` 가 적힌 주문만 뺌 — 전송됐지만 아직 ACK 전(DISPATCH_STARTED · IN_DOUBT)인 엔진 주문은 수동으로도 한 번 더 셀 수 있음(과대 집계 = 거부 방향, 다음 게시에서 해소).
 - 잔재: 30초 주기 사이의 수동 매수 한 건은 다음 게시까지 합계에 늦게 들어감(최대 한 주기 + 재수집). US 정규장 동안 KR 후보가 Ready 가 아니면
   US 요청의 짝(KR) authority 가 없지만, base 가 KRW 면 KRW 수동 매수는 환산이 필요 없으므로 영향 없음.
 

@@ -92,3 +92,15 @@ func TestA136AFailedReadIsPublishedAsUnknown(t *testing.T) {
 		t.Fatal("a failed read must replace the previous snapshot with an unknown one, never keep the old value")
 	}
 }
+
+// a136ZeroManualBuyBoardInternal 은 시계의 현재 순간에 「수동 매수 0」 을 게시한 보드(수동 매수를 재지 않는 내부 시험용).
+func a136ZeroManualBuyBoardInternal(clk interface{ Now() time.Time }) *execgw.ManualBuyBoard {
+	board := execgw.NewManualBuyBoard()
+	now := clk.Now()
+	day, err := clock.AccountTradingDay(now)
+	if err != nil {
+		panic(err)
+	}
+	board.Publish(execgw.ManualBuySnapshot{AsOf: now, Day: day, ByCurrency: map[string]string{}})
+	return board
+}

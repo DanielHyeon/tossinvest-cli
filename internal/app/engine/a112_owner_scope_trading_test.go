@@ -134,7 +134,7 @@ func newA112TradingFixture(t *testing.T, options a112TradingOptions) a112Trading
 	if options.riskBudget != "" {
 		policy.RiskBudget = riskcalc.Money{Amount: options.riskBudget, Currency: "KRW"}
 	}
-	guardian, err := execgw.NewRiskGuardian(execgw.RiskGuardianOptions{Journal: handle, Clock: fakeClock, AccountRef: "acct-risk-loader",
+	guardian, err := execgw.NewRiskGuardian(execgw.RiskGuardianOptions{ManualBuys: a136ZeroManualBuyBoardInternal(fakeClock), Journal: handle, Clock: fakeClock, AccountRef: "acct-risk-loader",
 		Policy: policy, Costs: costs.DefaultModel(), PolicyVersion: "engine.automation_gate/risk-policy-v1"})
 	if err != nil {
 		t.Fatal(err)

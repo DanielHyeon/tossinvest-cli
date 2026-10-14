@@ -282,7 +282,7 @@ func pairedStrategyDispatchCycleFixture(t *testing.T) (*strategyDispatchCycle, s
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = j.Close() })
-	guardian, err := execgw.NewRiskGuardian(execgw.RiskGuardianOptions{Journal: j, Clock: fakeClock, AccountRef: "acct-risk-loader",
+	guardian, err := execgw.NewRiskGuardian(execgw.RiskGuardianOptions{ManualBuys: a136ZeroManualBuyBoardInternal(fakeClock), Journal: j, Clock: fakeClock, AccountRef: "acct-risk-loader",
 		Policy: risk.DefaultPolicy(), Costs: costs.DefaultModel(), PolicyVersion: "engine.automation_gate/risk-policy-v1"})
 	if err != nil {
 		t.Fatal(err)

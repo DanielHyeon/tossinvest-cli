@@ -1,8 +1,8 @@
 # Function Logic Map: `quotedOrUnset`
 
-- Source: `cmd/tossctl/limitsettings.go` (108-113, 편집 뒤)
+- Source: `cmd/tossctl/limitsettings.go` (99-104, 편집 뒤)
 - Qualified: `quotedOrUnset`
-- AST evidence: `ast.json` (revision: base) — 본문 무편집, 바로 뒤에 새 함수가 붙어 검사기가 교체된 base 함수로 분류.
+- AST evidence: `ast.json` (revision: base) — 본문 무편집, 같은 파일의 이웃 선언 편집으로 검사기가 교체된 base 함수로 분류해 편집 전 AST 를 요구함.
 - Risk scan: `risk-pattern-report.md`
 
 **역할.** audit 이전 값 표기.
@@ -19,9 +19,9 @@
 
 | Branch | Condition (소스 줄 인용) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `if v == "" \|\| v == "0" {` (if 109) | — | 분기 본문 참조 | `TestTheLimitSeamSavesAuditsAndLeavesTheSwitchAlone` |
+| B1 | `_, _ = log.RecordChange(audit.ActionLimitChange, field.setting, field.to,` (if 100) | — | 분기 본문 참조 | `TestTheLimitSeamSavesAuditsAndLeavesTheSwitchAlone` |
 
-Exact AST return positions: 110 · 112
+Exact AST return positions: 101 · 103
 
 ## Calls and live bindings
 
