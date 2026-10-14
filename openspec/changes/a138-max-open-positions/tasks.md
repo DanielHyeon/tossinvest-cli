@@ -11,7 +11,7 @@ Story: `STORY-TOS-a138` · **High-risk**(Guardian 발급 · 예약 트랜잭션 
 - [x] 0.2 design(D0 근거표 · D1 세는 범위 3안 · D2 경계 · D3 위치 · D4 설정 · D5 단일 출처 · D6 · D7 거절되는 정상 입력 · D8 · D9) · spec 델타 · tasks,
       `openspec validate a138-max-open-positions --strict --no-interactive` rc=0 — proposal 단계 AST 근거 6건(`analysis/ast-evidence/`, 게이트 번들 아님)
 - [x] 0.3 CodeGraph hard evidence · CodeGraphContext(not-applicable 사유) · evidence reconciliation(`analysis/code-context/`)
-- [ ] 0.4 **사용자 결정**: D1(세는 범위 A/B/C) · D2(6 개 보유 중 scale-in 허용 여부) — design 「사람 결정」 원문으로 기록
+- [x] 0.4 **사용자 결정**(2026-10-15 「권장대로」): D1 = B(계좌 전체) · D2 = scale-in 허용 — design 「사람 결정」 원문 · review.md
 - [ ] 0.5 결정 반영(spec · design 수정 시 requirement 변경 리뷰) + proposal-freeze 리뷰(적대 Eng + CEO 범위 + DX, 분리 컨텍스트) → review.md
 - [ ] 0.6 편집할 기존 함수의 FLM/BTM 번들(`analysis/function-logic/`, 편집 전 `ast-base.json` + 편집 뒤 `ast.json`) + Pre-Edit 선언(review.md)
 - [ ] 0.7 base 고정 — `base-commit.txt` = 이 change 첫 Go 커밋의 부모

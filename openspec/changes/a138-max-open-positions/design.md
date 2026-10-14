@@ -13,6 +13,14 @@ HEAD 를 읽은 것이다. CodeGraph 근거는 `analysis/code-context/`.
 > - Configurable like other automation_gate limits (config field, default 6, audited settings seam, startup interlock cross-check — follow how a136 did
 >   max_daily_buy_notional …). Fail closed for entries if the count can't be computed.
 
+사람 결정(2026-10-15, Manager 전달 — 사용자 답 「권장대로」):
+
+> User decided a138 (2026-10-15, "권장대로"): D1 = B (count the whole account: managed + reconciled external holdings + HELD entry reservations + this
+> symbol, distinct (market, symbol)); D2 = scale-in ALLOWED at the cap (an entry for an already-held symbol does not raise the count).
+
+반영: D1 → D1-B(spec 델타 「최대 보유 포지션 수 한도」 ① 그대로). D2 → 허용(같은 요구의 「이미 집합에 있는 종목에 더 사는 진입은 … 거부되지 않는다」 문장 ·
+시나리오 「든 종목에 더 사는 진입」 그대로).
+
 ## D0. 저장소가 이미 가진 것
 
 | 사실 | 근거 |
@@ -30,7 +38,7 @@ HEAD 를 읽은 것이다. CodeGraph 근거는 `analysis/code-context/`.
 | 정책 유도는 직선 함수 하나 | AST `engine--riskpolicyfromautomationgate`(분기 0, 반환 2 — 39 는 `number` 클로저) |
 | 인터록 단일 출처 검사는 `verifyGate` 7(B7) · 7b(B8 — 하루 매수) | AST `engine--verifygate` B7(530) · B8(534) |
 
-## D1. 무엇을 「보유 포지션」으로 세나 — **사람 결정**
+## D1. 무엇을 「보유 포지션」으로 세나 — **사람 결정: B(2026-10-15)**
 
 저장소는 세 종류를 칼럼으로 구별하고, 계좌 단위 한도의 두 최근 선례가 반대로 답한다.
 
@@ -53,7 +61,7 @@ HEAD 를 읽은 것이다. CodeGraph 근거는 `analysis/code-context/`.
 - 세는 단위는 서로 다른 (시장, 종목) 하나다. 같은 종목의 여러 인스턴스 · 부분 체결 중인 진입과 그 포지션은 하나로 센다.
 - 판정: 집합 S = ① 살아 있는 포지션(D1) ∪ ② HELD OPEN_EXPOSURE 예약을 가진 EXPOSURE_RAISING 결정의 종목 ∪ ③ 이번 결정의 종목. **|S| > 상한이면 거부**.
 - 귀결: 이미 6 개를 든 계좌에서 그중 한 종목에 더 사는 진입(scale-in · 캠페인 추가 다리)은 |S| = 6 이라 허용. 문구 「6 개보다 많이 들게 될 진입」 그대로다
-  (사람 결정 D2 로 확인 요청 — 거부 쪽을 원하면 「|S| ≥ 상한 이고 이번 종목이 S 에 이미 있어도 거부」로 바꾼다).
+  (사람 결정 D2 = 허용, 2026-10-15).
 - 돈 한도의 「도달 시 거부(≥)」 규칙과 다른 이유: 그 규칙은 금액 총계의 경계이고, 이 상한은 **허용되는 최대 개수**다(max 6 = 6 은 허용). spec 은 이 차이를 요구 안에 적는다.
 
 ## D3. 판정 위치 — 예약 트랜잭션 안
