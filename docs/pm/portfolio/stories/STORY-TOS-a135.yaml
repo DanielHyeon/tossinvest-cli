@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a135-attestation-expiry-is-announced",
-    "path": "openspec/changes/a135-attestation-expiry-is-announced"
+    "path": "openspec/changes/archive/2026-10-14-a135-attestation-expiry-is-announced"
   },
   "found_by": {
     "date": "2026-10-14",
     "how": "The Manager confirmed that the live capability attestation (covering POST orders and cancel) expires on 2026-10-23T01:39Z, that an engine restarted on an expired or narrowed attestation refuses to arm and runs no exit loop, that renewal keeping the POST scope is unverified, and that nothing warns the operator before expiry; obs.EventCredentialExpiring is declared critical but has no producer.",
-    "record": "openspec/changes/a135-attestation-expiry-is-announced/proposal.md"
+    "record": "openspec/changes/archive/2026-10-14-a135-attestation-expiry-is-announced/proposal.md"
   },
   "acceptance": [
     "A running engine with the automation gate on re-reads the attestation it would load at restart, at most hourly, and judges it with the startup interlock's own predicate (expiry, account, required endpoints)",

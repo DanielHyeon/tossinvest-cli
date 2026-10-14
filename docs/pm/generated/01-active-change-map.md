@@ -132,4 +132,4 @@
 | `a131-no-account-in-any-log` | STORY-TOS-a131 | archived |
 | `a133-an-alert-carries-no-account` | STORY-TOS-a133 | archived |
 | `a134-a-dead-engine-is-noticed` | STORY-TOS-a134 | archived |
-| `a135-attestation-expiry-is-announced` | STORY-TOS-a135 | implemented |
+| `a135-attestation-expiry-is-announced` | STORY-TOS-a135 | archived |
