@@ -406,7 +406,14 @@ func riskBucketOwnerKey(account, prospective string) riskbucket.OwnerKey {
 func seedExistingRiskReservation(t *testing.T, j *Journal, id, account string) {
 	t.Helper()
 	decisionID := "decision-" + id
-	if _, err := j.db.Exec(`INSERT INTO decisions(id,account_ref,generation,safety_class,preimage_kind,risk_preimage,risk_hash,nonce,issued_at,expires_at) VALUES(?,?,0,'EXPOSURE_RAISING','RISK_INTENT','{}',?,?,?,?)`, decisionID, account, "hash-"+id, "nonce-"+id, "2026-03-30T00:29:00Z", "2026-03-30T01:30:00Z"); err != nil {
+	// a138: 개수 상한 판정이 HELD 예약의 결정 preimage 에서 종목을 읽으므로, 생산 RecordDecision 이 쓰는 정규형 preimage 를 씀
+	// (옛 '{}' 는 생산이 만들 수 없는 모양이라 판정이 셀 수 없음으로 거부함).
+	preimage, err := RiskIntent{AccountRef: account, Market: "kr", Symbol: "SEED-" + id, Side: "BUY", Quantity: "1",
+		EntryPrice: "100", StopPrice: "90", PolicyVersion: "test-1"}.Canonical()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := j.db.Exec(`INSERT INTO decisions(id,account_ref,generation,safety_class,preimage_kind,risk_preimage,risk_hash,nonce,issued_at,expires_at) VALUES(?,?,0,'EXPOSURE_RAISING','RISK_INTENT',?,?,?,?,?)`, decisionID, account, preimage, "hash-"+id, "nonce-"+id, "2026-03-30T00:29:00Z", "2026-03-30T01:30:00Z"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := j.db.Exec(`INSERT INTO risk_reservations(id,decision_id,account_ref,kind,amount,currency,snapshot_as_of,state) VALUES(?,?,?,'OPEN_EXPOSURE','1','KRW','2026-03-30T00:29:00Z','HELD')`, id, decisionID, account); err != nil {

@@ -45,6 +45,8 @@ type stubGuardian struct {
 	limits execgw.Limits
 	// dailyBuy 는 진술할 하루 매수 상한(a136). 비어 있으면 KRW 게이트의 해석 기본값(10,000,000 KRW).
 	dailyBuy riskcalc.Money
+	// maxOpenPositions 는 진술할 최대 보유 포지션 수(a138). 0 이면 해석 기본값 6.
+	maxOpenPositions int
 }
 
 func (stubGuardian) Authorize(context.Context, execgw.AuthorizationRequest) (execgw.GuardianDecision, error) {
@@ -58,6 +60,13 @@ func (g stubGuardian) DailyBuyNotionalLimit() riskcalc.Money {
 		return riskcalc.Money{Amount: "10000000", Currency: "KRW"}
 	}
 	return g.dailyBuy
+}
+
+func (g stubGuardian) MaxOpenPositionsLimit() int {
+	if g.maxOpenPositions == 0 {
+		return 6
+	}
+	return g.maxOpenPositions
 }
 
 // silentGuardian authorises nothing and says nothing about its limits. It is the

@@ -1,0 +1,6 @@
+# a138 RED testseams
+# github.com/JungHoonGhae/tossinvest-cli/internal/execgw_test [github.com/JungHoonGhae/tossinvest-cli/internal/execgw.test]
+internal/execgw/a138_open_positions_test.go:17:56: o.Policy.MaxOpenPositions undefined (type risk.Policy has no field or method MaxOpenPositions)
+internal/execgw/a138_open_positions_test.go:90:14: a.MaxOpenPositionsLimit undefined (type *execgw.RiskGuardian has no field or method MaxOpenPositionsLimit)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw [build failed]
+FAIL

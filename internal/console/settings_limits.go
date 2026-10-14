@@ -67,8 +67,32 @@ func (p settingsPage) LimitRows() []limitRow {
 		{"일일 손실 한도(금액)", limitValueText(p.Gate.MaxDailyLossAmount), currency},
 		{"일일 손실 한도(비율)", limitRatioText(p.Gate.MaxDailyLossRatio), ""},
 		{"하루 매수 총액 상한", dailyBuyText(p.Gate), dailyBuyUnit(p.Gate)},
+		{"최대 보유 포지션 수", openPositionsText(p.Gate.MaxOpenPositions), openPositionsUnit(p.Gate.MaxOpenPositions)},
 	}
 }
+
+// openPositionsText 는 최대 보유 포지션 수의 표시(a138). 미설정이면 엔진이 실제로 쓸 기본값을 평이하게 말함 — 통화와 무관하게 6.
+// 쓸 수 없는 값(음수 · 소수)이면 엔진이 기동을 거부한다고 말함(판정은 config.WholeOpenPositions 한 곳).
+func openPositionsText(v float64) string {
+	if v == 0 {
+		return "미설정 — 기본값 " + strconv.Itoa(config.DefaultMaxOpenPositions) + " 종목이 적용된다"
+	}
+	if n, ok := config.WholeOpenPositions(v); ok {
+		return strconv.Itoa(n)
+	}
+	return decimalText(v) + " — 1 이상의 정수가 아니어서 엔진이 기동을 거부한다"
+}
+
+// openPositionsUnit 은 값이 쓸 수 있을 때만 단위를 붙임(미설정 · 무효 문장은 스스로 말함).
+func openPositionsUnit(v float64) string {
+	if _, ok := config.WholeOpenPositions(v); ok {
+		return "종목"
+	}
+	return ""
+}
+
+// FieldOpenPositions 는 고급 폼의 최대 보유 포지션 수 칸 값 — 미설정은 빈 칸(다른 칸과 같은 규칙).
+func (p settingsPage) FieldOpenPositions() string { return limitFieldText(p.Gate.MaxOpenPositions) }
 
 // dailyBuyText 는 하루 매수 총액 상한의 표시(a136). 미설정이면 엔진이 실제로 할 일을 평이하게 말함 — KRW 는 기본값 적용,
 // 그 밖의 통화는 기동 거부(사용자 결정: USD 프리셋 값을 만들지 않고, 값이 없으면 엔진이 기동을 거부한다고 말함).
@@ -336,6 +360,23 @@ func (c *Console) handleSettingsLimits(w http.ResponseWriter, r *http.Request) {
 		dailyBuy = 0
 	}
 
+	// a138: 최대 보유 포지션 수 — 칸이 폼에 **있을 때만** 씀(없는 옛 폼이 운영자 값을 기본값으로 되돌리지 않게). 빈 칸은 미설정(0 → 기본 6).
+	// 통화를 바꾸는 저장도 이 값을 지우지 않음(개수는 통화로 재해석되지 않음).
+	openPositions := -1.0
+	if _, present := r.PostForm["max_open_positions"]; present {
+		v := 0.0
+		if raw := strings.TrimSpace(r.PostFormValue("max_open_positions")); raw != "" {
+			parsed, err := strconv.ParseFloat(strings.ReplaceAll(raw, ",", ""), 64)
+			if err != nil {
+				c.redirectSettings(w, r, "저장 안 됨 — max_open_positions이(가) 숫자가 아니다: "+raw)
+				return
+			}
+			v = parsed
+		}
+		next.OpenPositions = &v
+		openPositions = v
+	}
+
 	if err := next.Validate(); err != nil {
 		c.redirectSettings(w, r, "저장 안 됨 — 엔진이 이 한도로는 기동을 거부한다: "+err.Error())
 		return
@@ -367,8 +408,12 @@ func (c *Console) handleSettingsLimits(w http.ResponseWriter, r *http.Request) {
 	if id := config.MatchingGuardianTier(next); id != "" {
 		applied = id + "와 일치"
 	}
+	positions := ""
+	if openPositions >= 0 {
+		positions = " 최대 보유 포지션 수: " + openPositionsText(openPositions) + "."
+	}
 	c.redirectSettings(w, r, "한도 기록됨("+applied+") — "+limitSummary(next)+". "+
-		dailyBuyNotice(next.Currency, dailyBuy)+" "+currencyConsequence(next.Currency)+" "+effectNotice(c.engineRunning()))
+		dailyBuyNotice(next.Currency, dailyBuy)+positions+" "+currencyConsequence(next.Currency)+" "+effectNotice(c.engineRunning()))
 }
 
 // dailyBuyNotice 는 저장 뒤 하루 매수 상한이 실제로 무엇이 되는지 한 문장으로 말함(a136).

@@ -1,0 +1,29 @@
+{
+  "file": "internal/risk/input.go",
+  "source_sha256": "b9a9188f871c8cafe906018cf1322a13b67196ae37242ca6c6ae475dee324fd1",
+  "package": "risk",
+  "function": "DefaultPolicy",
+  "signature": "DefaultPolicy(params=0, results=1)",
+  "start": {
+    "line": 236,
+    "column": 1
+  },
+  "end": {
+    "line": 249,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 237,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

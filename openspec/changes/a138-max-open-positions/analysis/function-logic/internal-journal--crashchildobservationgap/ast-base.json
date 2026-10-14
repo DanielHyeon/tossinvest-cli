@@ -1,0 +1,171 @@
+{
+  "file": "internal/journal/observation_crash_linux_test.go",
+  "source_sha256": "63e9b3e795ba833173b690ae67f0ee262160860ba816b4d1071484c54c989946",
+  "package": "journal",
+  "function": "crashChildObservationGap",
+  "signature": "crashChildObservationGap(params=0, results=0)",
+  "start": {
+    "line": 166,
+    "column": 1
+  },
+  "end": {
+    "line": 214,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 171,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 176,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 7
+      },
+      "text": "openCrashChildJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 18
+      },
+      "text": "j.ReservationVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 3
+      },
+      "text": "os.Exit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 12
+      },
+      "text": "j.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 176,
+        "column": 15
+      },
+      "text": "j.RecordDecisionAndReserve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 16
+      },
+      "text": "issued.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 89
+      },
+      "text": "a136ZeroManualBuy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 3
+      },
+      "text": "os.Exit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 2
+      },
+      "text": "kill"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 168,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 170,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 175,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 176,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

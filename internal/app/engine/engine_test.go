@@ -517,8 +517,9 @@ func seedExpiredUnconsumedReservation(t *testing.T, dir string) string {
 	}
 	const reservationID = "startup-expired-reservation"
 	if _, err := j.Reserve(ctx, journal.ReserveRequest{
-		DailyBuyLimit: &journal.DailyBuyLimit{Amount: "1000000000000", Currency: "KRW", ManualBuy: a136ZeroManualBuy(issued)}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
-		DecisionID:    decision.ID, AccountRef: accountRef, SnapshotAsOf: issued,
+		DailyBuyLimit:     &journal.DailyBuyLimit{Amount: "1000000000000", Currency: "KRW", ManualBuy: a136ZeroManualBuy(issued)}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
+		OpenPositionLimit: &journal.OpenPositionLimit{Max: 1000},                                                                  // a138: 이 시험이 재는 것과 무관한 넉넉한 상한
+		DecisionID:        decision.ID, AccountRef: accountRef, SnapshotAsOf: issued,
 		ObservedVersion: version, Staleness: time.Minute,
 		SnapshotUsage: []journal.AggregateAmount{{
 			Kind: journal.ReservationKindOpenExposure, Amount: "0", Currency: "KRW",

@@ -195,10 +195,11 @@ func (g *RiskGuardian) IssuePrecheckedQFinalCampaignFirstLeg(ctx context.Context
 			Issue: journal.QFinalIssueRequest{
 				Issue: journal.IssueRequest{Decision: decision, Reserve: journal.ReserveRequest{
 					SnapshotAsOf: snapshot.AsOf, ObservedVersion: snapshot.Version,
-					SnapshotUsage: []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: usage, Currency: exposure.Currency}},
-					Limits:        []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: g.policy.MaxOpenExposure.Amount, Currency: exposure.Currency}},
-					Reservations:  []journal.ReservationRequest{{ID: reservationID, Kind: journal.ReservationKindOpenExposure, Amount: exposure.Amount, Currency: exposure.Currency}},
-					DailyBuyLimit: daily,
+					SnapshotUsage:     []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: usage, Currency: exposure.Currency}},
+					Limits:            []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: g.policy.MaxOpenExposure.Amount, Currency: exposure.Currency}},
+					Reservations:      []journal.ReservationRequest{{ID: reservationID, Kind: journal.ReservationKindOpenExposure, Amount: exposure.Amount, Currency: exposure.Currency}},
+					DailyBuyLimit:     daily,
+					OpenPositionLimit: g.openPositionLimit(),
 				}}, Admission: admission,
 			},
 			Strategy: strategy, Campaign: precheck.campaign, Weekly: cloneGuardianWeeklyBinding(precheck.weekly),

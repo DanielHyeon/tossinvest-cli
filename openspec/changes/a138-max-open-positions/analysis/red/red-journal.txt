@@ -1,0 +1,12 @@
+# a138 RED — base 4a19f755 + a138 시험(production 무편집), 2026-10-14T20:51:38Z
+$ go test -count=1 ./internal/journal -run 'A138'
+# github.com/JungHoonGhae/tossinvest-cli/internal/journal [github.com/JungHoonGhae/tossinvest-cli/internal/journal.test]
+internal/journal/a138_open_positions_test.go:54:6: req.OpenPositionLimit undefined (type ReserveRequest has no field or method OpenPositionLimit)
+internal/journal/a138_open_positions_test.go:54:27: undefined: OpenPositionLimit
+internal/journal/a138_open_positions_test.go:236:9: req.OpenPositionLimit undefined (type ReserveRequest has no field or method OpenPositionLimit)
+internal/journal/a138_open_positions_test.go:236:30: undefined: OpenPositionLimit
+internal/journal/a138_open_positions_test.go:258:6: req.OpenPositionLimit undefined (type ReserveRequest has no field or method OpenPositionLimit)
+internal/journal/a138_open_positions_test.go:263:7: req.OpenPositionLimit undefined (type ReserveRequest has no field or method OpenPositionLimit)
+internal/journal/a138_open_positions_test.go:263:28: undefined: OpenPositionLimit
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal [build failed]
+FAIL

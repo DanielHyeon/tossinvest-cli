@@ -215,6 +215,9 @@ type Policy struct {
 	// MaxDailyBuyNotional 은 계좌 단위 하루(clock.AccountTradingDay) 매수 총액 상한임(a136). 체인 단계가 아니라
 	// 결정·예약 원자 트랜잭션이 재므로 체인은 읽지 않고, 발급자가 예약 요청에 그대로 실어 보냄. 경계는 도달 시 거부(≥).
 	MaxDailyBuyNotional riskcalc.Money
+	// MaxOpenPositions 는 계좌가 동시에 드는 서로 다른 (시장, 종목) 의 최대 개수임(a138). 체인 단계가 아니라 결정 · 예약 원자 트랜잭션이
+	// 재므로 체인은 읽지 않고, 발급자가 예약 요청에 그대로 실어 보냄. 상한은 허용되는 최대 개수 — 그 개수를 넘게 될 때 거부(>).
+	MaxOpenPositions int
 }
 
 // DefaultPolicy is the conservative default set risk-management specifies for an
@@ -245,6 +248,8 @@ func DefaultPolicy() Policy {
 		Reentry:           ReentryPolicy{MaxEntriesPerSymbol: 2, Cooldown: 30 * time.Minute},
 		// 사용자 결정 2026-10-14(a136) — 이전에는 상한이 없던 새 검사라 완화가 아님.
 		MaxDailyBuyNotional: riskcalc.Money{Amount: "10000000", Currency: "KRW"},
+		// 사용자 결정 2026-10-15(a138) — 이전에는 보유 종목 수에 상한이 없던 새 검사라 완화가 아님. config.DefaultMaxOpenPositions 와 같은 값.
+		MaxOpenPositions: 6,
 	}
 }
 
@@ -304,6 +309,10 @@ func (p Policy) Validate() error {
 	}
 	if p.Reentry.Cooldown < 0 {
 		return fmt.Errorf("same-day cooldown %s is negative", p.Reentry.Cooldown)
+	}
+	// a138: 0 은 「무제한」이 아니라 미설정 — 상한 없는 정책으로 Guardian 이 만들어지지 않게 함.
+	if p.MaxOpenPositions < 1 {
+		return fmt.Errorf("maximum open positions %d is below one; an unset maximum is not an unlimited one", p.MaxOpenPositions)
 	}
 	return nil
 }

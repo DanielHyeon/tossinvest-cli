@@ -243,8 +243,9 @@ func TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths(t *testing.T) {
 				LimitsJSON: limitsJSON, Nonce: "lossl-raising-nonce-" + stage, IssuedAt: clk.Now(), ExpiresAt: clk.Now().Add(time.Minute),
 			},
 			Reserve: journal.ReserveRequest{
-				DailyBuyLimit: &journal.DailyBuyLimit{Amount: "1000000000000", Currency: "KRW", ManualBuy: a136ZeroManualBuy(clk.Now())}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
-				SnapshotAsOf:  clk.Now(), ObservedVersion: version,
+				DailyBuyLimit:     &journal.DailyBuyLimit{Amount: "1000000000000", Currency: "KRW", ManualBuy: a136ZeroManualBuy(clk.Now())}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
+				OpenPositionLimit: &journal.OpenPositionLimit{Max: 1000},                                                                     // a138: 이 시험이 재는 것과 무관한 넉넉한 상한
+				SnapshotAsOf:      clk.Now(), ObservedVersion: version,
 				SnapshotUsage: []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: "0", Currency: "KRW"}},
 				Limits:        []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: "5000000", Currency: "KRW"}},
 				Reservations:  []journal.ReservationRequest{{ID: "lossl-raising-hold-" + stage, Kind: journal.ReservationKindOpenExposure, Amount: "140000", Currency: "KRW"}},

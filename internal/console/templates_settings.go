@@ -327,6 +327,11 @@ const settingsTemplates = `
         aria-describedby="daily-buy-help"></label></p>
       <p class="muted" id="daily-buy-help">KST 08:00 에 넘어가는 하루 동안 두 시장 매수 합계(엔진 밖 수동 매수 포함)의 상한.
       비우면 미설정 — KRW 는 기본 10,000,000 KRW, USD 는 기본값이 없어 엔진이 기동을 거부한다. 프리셋은 이 값을 바꾸지 않는다.</p>
+      <p><label>최대 보유 포지션 수 (종목)<br>
+      <input type="text" inputmode="numeric" name="max_open_positions" value="{{.FieldOpenPositions}}"
+        aria-describedby="open-positions-help"></label></p>
+      <p class="muted" id="open-positions-help">계좌가 동시에 드는 서로 다른 종목 수의 상한(엔진 진입 · 편입 · 손으로 산 보유와 진행 중 진입을 두 시장 합쳐 셈).
+      넘게 될 신규 종목 진입만 거부되고, 이미 든 종목의 추가 매수와 매도 · 손절은 막지 않는다. 비우면 미설정 — 기본 6. 프리셋 · 통화 변경은 이 값을 바꾸지 않는다.</p>
       <p><label>계좌 기준 통화 (KRW 또는 USD)<br>
       <input type="text" name="limit_currency" value="{{.FieldCurrency}}"></label></p>
       <p><button type="submit">한도 저장</button></p>

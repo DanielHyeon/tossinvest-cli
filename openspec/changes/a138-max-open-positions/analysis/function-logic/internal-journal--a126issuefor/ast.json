@@ -1,0 +1,215 @@
+{
+  "file": "internal/journal/a126_filled_exposure_leaves_the_bucket_test.go",
+  "source_sha256": "63ea57195eb52b369f7cf388ac7bc05d403de9b1c6a465c34890bc1ee44e5ce1",
+  "package": "journal",
+  "function": "a126IssueFor",
+  "signature": "a126IssueFor(params=6, results=1)",
+  "start": {
+    "line": 647,
+    "column": 1
+  },
+  "end": {
+    "line": 685,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 656,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 663,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 666,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 648,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 649,
+        "column": 10
+      },
+      "text": "riskBucketAdmissionFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 652,
+        "column": 2
+      },
+      "text": "rebindRiskBucket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 653,
+        "column": 2
+      },
+      "text": "rebindRiskBucket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 655,
+        "column": 24
+      },
+      "text": "QFinalPolicyVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 657,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 661,
+        "column": 9
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 662,
+        "column": 18
+      },
+      "text": "j.ReservationVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 662,
+        "column": 39
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 664,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 670,
+        "column": 104
+      },
+      "text": "strconv.FormatUint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 672,
+        "column": 106
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 675,
+        "column": 92
+      },
+      "text": "a136ZeroManualBuy"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 649,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 650,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 651,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 654,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 655,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 659,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 660,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 661,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 662,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

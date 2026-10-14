@@ -1,0 +1,220 @@
+{
+  "file": "internal/config/limits_io.go",
+  "source_sha256": "859b26386b74f4de6d99c333c7546b4770e928c23d282a7c4bacb398ac2521bb",
+  "package": "config",
+  "function": "gateMembersOf",
+  "signature": "gateMembersOf(params=1, results=2)",
+  "start": {
+    "line": 192,
+    "column": 1
+  },
+  "end": {
+    "line": 214,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 205,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 209,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 195,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 213,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 19
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 26
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 33
+      },
+      "text": "formatLimit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 26
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 33
+      },
+      "text": "formatLimit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 26
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 33
+      },
+      "text": "formatLimit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 29
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 36
+      },
+      "text": "formatLimit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 28
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 35
+      },
+      "text": "formatLimit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 13
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 66
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 73
+      },
+      "text": "formatLimit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 13
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 62
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 69
+      },
+      "text": "formatLimit"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 193,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 197,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 207,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 211,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

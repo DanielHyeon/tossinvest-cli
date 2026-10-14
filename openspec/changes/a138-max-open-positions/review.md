@@ -23,10 +23,12 @@ Pre-Edit Gate:
     internal/journal/reservations.go          ErrReservationLimitExceeded 문서(변수 — 함수 아님, freeze P3-2)
     internal/app/engine/interlock.go          newAutomationStatus · acceptanceDetail · verifyGate(7c 한 단) · recordGateSettings(끝에 한 줄)
     internal/config/engine.go                 mergeEngine (복사 한 줄)
-    internal/config/limits_io.go              Service.LoadRawEngineGate · AutomationGate.Limits · gateMembersOf (멤버 분기 하나)
+    internal/config/limits_io.go              Service.LoadRawEngineGate · gateMembersOf (멤버 분기 하나)
     internal/config/limits.go                 GuardianLimits.Validate (분기 하나)
     (internal/measure/counterfactual.go gridPolicy 는 편집하지 않음 — 체인은 개수 상한을 읽지 않고 DefaultPolicy 의 6 이 검증을 통과함)
     시험 fixture: internal/app/engine/interlock_test.go stubGuardian(칸 · 메서드) — 그 밖의 fixture 는 검사기가 요구하는 대로 번들 추가
+      (추가됨: 예약 요청 fixture 10 곳 · seedExistingRiskReservation · console census 시험 둘 · defaultProductionGuardianFactory · stubGuardian.DailyBuyNotionalLimit(둘 다 revision: base))
+    콘솔: cmd/tossctl/limitsettings.go consoleLimitSettings.Save · internal/console/settings_limits.go settingsPage.LimitRows · Console.handleSettingsLimits
   판정이 새로 읽는 표: positions · risk_reservations(+decisions) · reconcile_states(④, freeze P1-1) — 읽기만, 스키마 무변경
   새 파일(새 leaf): internal/journal/open_positions.go · internal/execgw/open_positions.go · internal/config/open_positions.go ·
                    internal/app/engine/open_positions_interlock.go
@@ -59,3 +61,13 @@ Pre-Edit Gate:
   - P3-6 절차: 리뷰가 본 워킹트리의 a138 시험 · RED 영수증 · Pre-Edit · base-commit.txt 는 **이 저자(같은 change 의 teammate)**가 D1/D2 결정 뒤 리뷰와 병행해 만든 것이다
     (리뷰어가 「peer 세션」으로 본 것은 오인). 사실: proposal-freeze 리뷰 완료 **전**에 RED 시험을 썼다 — production 파일은 리뷰 전 0 편집. 리뷰 반영으로 RED · Pre-Edit 를
     다시 맞춘다(아래 갱신). base-commit.txt 는 첫 Go 커밋 직전 HEAD 로 다시 고정한다.
+
+## 구현 기록 (GREEN, 2026-10-15)
+
+- 순서: freeze 리뷰 반영(문서) → base `ab5edc48` 고정 → 컴파일 RED(`analysis/red/red-*.txt`) → 판정 함수 빈 몸 행동 RED(`red-journal-behaviour.txt`, 9 FAIL) → GREEN.
+- 순서 역전 둘(사실 기록): ① RED 시험 파일은 freeze 리뷰가 끝나기 전에 썼다(production 편집은 리뷰 뒤). ② 콘솔 시험은 콘솔 GREEN 뒤에 썼고, RED 는 콘솔 · tossctl
+  production 세 파일을 HEAD 로 되돌린 상태로 따로 관찰했다(`red-console.txt`).
+- fixture 정정: `seedExistingRiskReservation` 이 `'{}'` preimage 로 결정을 직접 심었다 — 생산 RecordDecision 은 정규형만 쓰므로 생산에 없는 모양이다. 개수 판정은 그 HELD 예약의 종목을
+  셀 수 없어 fail-closed 로 거부했고(A066 시험 8 FAIL), fixture 를 정규형 RiskIntent 로 바꿨다. 다른 원시 결정 삽입(`insertDecision`)은 HELD 예약을 만들지 않아 영향 없음(전체 journal ok).
+- 판정 ②의 종류는 닫힌 집합 셋을 `IN` 으로 — 색인 `idx_reservations_held` 를 그대로 탐. ④ 는 `scope_market` 이 있으면 (시장, 종목), 없으면 종목만으로 맞춤.
+- gridPolicy 는 편집하지 않음(체인은 개수 상한을 읽지 않고 DefaultPolicy 의 6 이 검증을 통과 — measure 전체 ok).

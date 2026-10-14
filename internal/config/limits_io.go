@@ -69,6 +69,7 @@ func (s *Service) LoadRawEngineGate() (AutomationGate, error) {
 		// written, and the screen shows what is written.
 		LimitCurrency:       raw.LimitCurrency,
 		MaxDailyBuyNotional: raw.MaxDailyBuyNotional, // a136: 화면이 적힌 그대로 보여 줌
+		MaxOpenPositions:    raw.MaxOpenPositions,    // a138: 〃
 	}
 	if raw.Enabled != nil {
 		gate.Enabled = *raw.Enabled
@@ -204,6 +205,10 @@ func gateMembersOf(l GuardianLimits) ([]gateMember, error) {
 	if l.DailyBuy != nil {
 		// a136: 폼이 값을 보냈을 때만 씀(nil = 그 키를 그대로 둠).
 		members = append(members, gateMember{"max_daily_buy_notional", []byte(formatLimit(*l.DailyBuy))})
+	}
+	if l.OpenPositions != nil {
+		// a138: 폼이 값을 보냈을 때만 씀(nil = 그 키를 그대로 둠).
+		members = append(members, gateMember{"max_open_positions", []byte(formatLimit(*l.OpenPositions))})
 	}
 	return members, nil
 }

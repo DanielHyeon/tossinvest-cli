@@ -432,7 +432,7 @@ func TestTheSubmitContractIsUnchanged(t *testing.T) {
 	}
 	for action, want := range map[string][]string{
 		"/settings/save":                   {"csrf", "enabled", "default_stop_percent", "exclude_symbols", "include_symbols"},
-		"/settings/limits":                 {"csrf", "max_order_quantity", "max_order_notional", "max_total_exposure", "max_daily_loss_amount", "max_daily_loss_ratio", "limit_currency", "max_daily_buy_notional"},
+		"/settings/limits":                 {"csrf", "max_order_quantity", "max_order_notional", "max_total_exposure", "max_daily_loss_amount", "max_daily_loss_ratio", "limit_currency", "max_daily_buy_notional", "max_open_positions"},
 		"/settings/limits/preset":          {"csrf", "tier"},
 		"/settings/trading":                {"csrf", "place", "sell", "cancel", "allow_live_order_actions"},
 		"/settings/gate":                   {"csrf", "enabled"},

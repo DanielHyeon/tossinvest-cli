@@ -67,8 +67,35 @@ func (s consoleLimitSettings) Save(l config.GuardianLimits) error {
 			from, fromCurrency = before.MaxDailyBuyNotional, before.LimitCurrency
 		}
 		recordDailyBuySave(from, fromCurrency, after.MaxDailyBuyNotional, after.LimitCurrency)
+		// a138: 최대 보유 포지션 수도 저장 뒤 파일 값으로 적음(폼이 그 칸을 보내지 않았으면 값이 그대로라 RecordChange 가 남기지 않음).
+		openFrom := 0.0
+		if beforeErr == nil {
+			openFrom = before.MaxOpenPositions
+		}
+		recordOpenPositionsSave(openFrom, after.MaxOpenPositions)
 	}
 	return nil
+}
+
+// recordOpenPositionsSave 는 최대 보유 포지션 수의 콘솔 저장 audit 한 줄(a138, 값이 바뀐 때만 RecordChange 가 남김). best-effort —
+// 기동 audit(engine.automation_gate.max_open_positions, 해석 값)가 둘째 기록임. 0 은 「미설정 — 기본 6」으로 적어 의미가 드러나게 함.
+func recordOpenPositionsSave(before, after float64) {
+	dir, err := journal.DataDir()
+	if err != nil {
+		return
+	}
+	log, err := audit.Open(audit.Options{Path: filepath.Join(dir, audit.FileName)})
+	if err != nil {
+		return
+	}
+	number := func(v float64) string {
+		if v == 0 {
+			return "0 (미설정 — 기본 " + strconv.Itoa(config.DefaultMaxOpenPositions) + ")"
+		}
+		return strconv.FormatFloat(v, 'f', -1, 64)
+	}
+	_, _ = log.RecordChange(audit.ActionLimitChange, "console.automation_gate.max_open_positions", number(after),
+		"saved from the console settings screen; file value before this save was "+number(before))
 }
 
 // recordLimitSave appends one entry per field, with the value it moved from.

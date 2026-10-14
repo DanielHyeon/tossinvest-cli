@@ -92,6 +92,9 @@ var (
 	// configured limit. Reaching it counts: risk-management refuses when a
 	// limit is *reached* (한도 중 하나라도 도달한 상태 → 거부), unlike the
 	// per-order maxima, which are inclusive ceilings.
+	//
+	// a138: 최대 보유 포지션 수도 이 sentinel(LIMIT_REACHED)로 거부하되, 그 상한은 허용되는 최대 개수라 **넘을 때(>)** 거부함.
+	// 총 노출 · 하루 매수 · 개수 셋이 이 sentinel 을 공유하고, 원인은 상세 문구(DAILY_BUY_NOTIONAL · MAX_OPEN_POSITIONS)로 갈림.
 	ErrReservationLimitExceeded = errors.New("journal: the reservation would reach an aggregate limit")
 
 	// ErrRecollectionExhausted means the attempt cap or the deadline was spent
@@ -197,6 +200,8 @@ type ReserveRequest struct {
 	Reservations []ReservationRequest
 	// DailyBuyLimit 은 하루 매수 총액 상한(a136). EXPOSURE_RAISING 결정의 예약에는 필수 — 없으면 거부(daily_buy.go).
 	DailyBuyLimit *DailyBuyLimit
+	// OpenPositionLimit 은 최대 보유 포지션 수(a138). EXPOSURE_RAISING 결정의 예약에는 필수 — 없으면 거부(open_positions.go).
+	OpenPositionLimit *OpenPositionLimit
 }
 
 // ReserveResult is what one successful reservation transaction did.
@@ -337,6 +342,10 @@ func reserveRows(ctx context.Context, tx *sql.Tx, req ReserveRequest, plan reser
 	}
 	// 5b. 하루 매수 총액(a136) — 같은 tx 에서 원장을 다시 읽으므로 동시 매수가 함께 넘지 못함.
 	if err := checkDailyBuyNotional(ctx, tx, req, plan, now); err != nil {
+		return ReserveResult{}, err
+	}
+	// 5c. 최대 보유 포지션 수(a138) — 같은 tx 에서 포지션 · HELD 예약 · RECONCILE 을 다시 읽으므로 동시 진입이 함께 넘지 못함.
+	if err := checkOpenPositions(ctx, tx, req, plan); err != nil {
 		return ReserveResult{}, err
 	}
 

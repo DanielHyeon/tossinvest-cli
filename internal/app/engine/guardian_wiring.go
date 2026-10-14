@@ -63,6 +63,8 @@ func riskPolicyFromAutomationGate(gate config.AutomationGate) risk.Policy {
 		Amount:   number(gate.EffectiveMaxDailyBuyNotional()),
 		Currency: currency,
 	}
+	// a138: 최대 보유 포지션 수 — 해석 · 정수 판정은 config 한 곳. 쓸 수 없는 값이면 0 이 되어 Policy.Validate 가 거부함.
+	policy.MaxOpenPositions, _ = config.WholeOpenPositions(gate.EffectiveMaxOpenPositions())
 	return policy
 }
 
@@ -73,6 +75,11 @@ func newProductionRiskGuardian(
 	accountRef string,
 	announcer journal.ModeAnnouncer,
 ) (*execgw.RiskGuardian, error) {
+	// a138(freeze 리뷰 P2-3): 개수 상한은 정책으로 옮기며 0 으로 바뀌므로, 그 전에 운영자가 적은 값을 담아 거부함.
+	if v := gate.EffectiveMaxOpenPositions(); !wholeOpenPositions(v) {
+		return nil, fmt.Errorf("%w: production Guardian policy: max_open_positions is %v; it must be a whole number of at least 1",
+			ErrLimitsRequired, v)
+	}
 	policy := riskPolicyFromAutomationGate(gate)
 	if err := policy.Validate(); err != nil {
 		return nil, fmt.Errorf("%w: production Guardian policy: %v", ErrLimitsRequired, err)
@@ -103,4 +110,10 @@ func defaultProductionGuardianFactory(
 	announcer journal.ModeAnnouncer,
 ) (execgw.Guardian, error) {
 	return newProductionRiskGuardian(gate, jrn, clk, accountRef, announcer)
+}
+
+// wholeOpenPositions 는 config.WholeOpenPositions 의 참거짓 반쪽 — 판정은 그 한 곳.
+func wholeOpenPositions(v float64) bool {
+	_, ok := config.WholeOpenPositions(v)
+	return ok
 }

@@ -1,0 +1,139 @@
+{
+  "file": "internal/app/engine/guardian_wiring.go",
+  "source_sha256": "6acfab5929684cce5b0bdffe6069aa363fe5c5b06605f7ca155631fcd9a0e203",
+  "package": "engine",
+  "function": "newProductionRiskGuardian",
+  "signature": "newProductionRiskGuardian(params=5, results=2)",
+  "start": {
+    "line": 69,
+    "column": 1
+  },
+  "end": {
+    "line": 96,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 78,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 93,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 12
+      },
+      "text": "riskPolicyFromAutomationGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 12
+      },
+      "text": "policy.Validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 19
+      },
+      "text": "execgw.NewRiskGuardian"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 18
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 15
+      },
+      "text": "execgw.NewManualBuyBoard"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 77,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 80,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

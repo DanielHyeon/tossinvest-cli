@@ -1,0 +1,8 @@
+# a138 RED — base 4a19f755 + a138 시험(production 무편집), 2026-10-14T20:51:46Z
+$ go test -count=1 ./internal/risk -run 'A138'
+# github.com/JungHoonGhae/tossinvest-cli/internal/risk [github.com/JungHoonGhae/tossinvest-cli/internal/risk.test]
+internal/risk/a138_open_positions_policy_test.go:11:7: p.MaxOpenPositions undefined (type Policy has no field or method MaxOpenPositions)
+internal/risk/a138_open_positions_policy_test.go:12:60: p.MaxOpenPositions undefined (type Policy has no field or method MaxOpenPositions)
+internal/risk/a138_open_positions_policy_test.go:22:5: p.MaxOpenPositions undefined (type Policy has no field or method MaxOpenPositions)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/risk [build failed]
+FAIL

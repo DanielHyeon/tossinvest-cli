@@ -1,0 +1,335 @@
+{
+  "file": "internal/execgw/riskguardian_qfinal_test.go",
+  "source_sha256": "bd96b1d10a1d2f2dfb0c1576cc6f3c776d13d08446145f097333606bb906efa3",
+  "package": "execgw_test",
+  "function": "TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker",
+  "signature": "TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker(params=1, results=0)",
+  "start": {
+    "line": 215,
+    "column": 1
+  },
+  "end": {
+    "line": 258,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 219,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 245,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 249,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 255,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 16
+      },
+      "text": "newGateway"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 18
+      },
+      "text": "j.ReservationVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 39
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 24
+      },
+      "text": "journal.QFinalPolicyVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 21
+      },
+      "text": "execgw.EncodeLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 41
+      },
+      "text": "testLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 17
+      },
+      "text": "j.RecordDecisionAndReserve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 44
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 69
+      },
+      "text": "clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 91
+      },
+      "text": "Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 91
+      },
+      "text": "clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 99
+      },
+      "text": "a136ZeroManualBuy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 117
+      },
+      "text": "clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 23
+      },
+      "text": "clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 17
+      },
+      "text": "orderintent.NormalizePlace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 11
+      },
+      "text": "gw.Place"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 20
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 18
+      },
+      "text": "broker.totals"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 6
+      },
+      "text": "errors.As"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 256,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 216,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 217,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 218,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 222,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 230,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 248,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 252,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 254,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
