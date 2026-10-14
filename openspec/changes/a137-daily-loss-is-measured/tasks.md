@@ -53,7 +53,7 @@ Story: `STORY-TOS-a137` · **High-risk**(Guardian · 위험 입력) — FLM/BTM 
 
 - [x] 2.5 사람 승인 base 재고정 `a000cf29` → `63fd0c92`(Manager 승인 2026-10-15, review.md §6) — 귀속: 자기 Go 커밋 a1cfe0c2 · 4fc5d4a4 의 11 함수 전부 fresh 번들, 옛 창 required 24 = a137 11 + a136 13(형제 착지 몫). 새 base 기준 수리 커밋 함수 5 번들 추가
 - [x] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a137-daily-loss-is-measured` + 독립 검증
-      — 2026-10-15 Manager 독립 검증: 별도 리뷰어 3회(분리 컨텍스트 · 사본 하네스 변이) · base 재고정 a000cf29→63fd0c92(Manager 승인) · 착지 b36416dc(격리 워크트리 계산) · a136 archive 뒤 델타 충돌 0 확인
+      — 2026-10-15 Manager 독립 검증: 별도 리뷰어 3회(분리 컨텍스트 · 사본 하네스 변이) · base 재고정 a000cf29→63fd0c92(Manager 승인) · 착지 b36416dc(격리 워크트리 계산) · a136 archive 뒤 델타 충돌 0 확인 · 게이트 = 2026-10-15 `make gate` **11/11 PASS** (HEAD 9e452dfe)
 ### 게이트 뒤 절차 (체크박스 아님 — a108 선례)
 
 1. archive — a136 archive(435d00cc) 뒤
