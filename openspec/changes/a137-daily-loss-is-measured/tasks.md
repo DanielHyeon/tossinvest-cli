@@ -37,8 +37,8 @@ Story: `STORY-TOS-a137` · **High-risk**(Guardian · 위험 입력) — FLM/BTM 
 
 ## 2. 검증
 
-- [ ] 2.1 `go vet` · `rtk proxy go test -count=1`(dailyloss · risk · riskcalc · execgw · journal · app/engine) · `-tags tossos_testseams` · `-race`(make test-race 대상) · `openspec validate --strict`
-- [ ] 2.2 변이 원장(max → 호출자만 · 측정 실패 시 호출자 값 낙하 · 무효 호출자 값 대체 · 이익 상쇄 · 시장 현지일 귀속 · 조정 종결 무조건 제외 · 엔진 SELL 검사 삭제 ·
+- [x] 2.1 `analysis/verify/receipts.md`(연결 워크트리 4fc5d4a4: test 108 ok · seams 109 ok · make test-race · A137 race 전부 rc 0) — `go vet` · `rtk proxy go test -count=1`(dailyloss · risk · riskcalc · execgw · journal · app/engine) · `-tags tossos_testseams` · `-race`(make test-race 대상) · `openspec validate --strict`
+- [x] 2.2 변이 원장 28/28 CAUGHT(`analysis/mutation/ledger.md`, 1회차 M20 SURVIVED → 시험 추가로 닫음) — 변이 원장(max → 호출자만 · 측정 실패 시 호출자 값 낙하 · 무효 호출자 값 대체 · 이익 상쇄 · 시장 현지일 귀속 · 조정 종결 무조건 제외 · 엔진 SELL 검사 삭제 ·
       성과 부재 무시 · 토큰 신선도/일 키 무시 · 매도 경로 측정 호출 · 강화 누락 · `Stage` 검사 삭제 · 원인 버림 · 차단 결과를 오류로 · 다른 관문 거절도 조용히 · 다른 trigger 모드 차단도 조용히 · 펜스 원인 무시 · 건너뛴 범위 보고 삭제 ·
       보호 주문 검사 삭제 · 형식 결함 행 검사 삭제 · 환산 내림)
 - [ ] 2.3 적대적 독립 리뷰(분리된 컨텍스트) → `review.md`

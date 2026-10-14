@@ -157,3 +157,7 @@ Pre-Edit Gate:
 | `red-engine.txt` | 엔진 시험 — 컴파일 RED(`execgw.DailyLossMeasurement` 미정의) |
 | `red-engine-behaviour.txt` | freeze 조건 ① `TestA137ADailyLossModeBlockEndsTheCycleQuietly` **행동 FAIL**(전달 루프 편집 전) — 나머지는 오늘 동작 고정이라 PASS |
 | `red-fence-behaviour.txt` | freeze 조건 펜스 시험 — 펜스 운반(`gateway.go` · `strategy_entry_gate_authority.go`)을 HEAD 로 되돌린 사본에서 `TestA137AFenceCausedByTheDailyLossEscalationIsAnAccountBlock` **행동 FAIL**, `TestA137OtherFencesBehaveAsBefore` PASS(오늘 동작) |
+
+## 6. 구현 적대적 독립 리뷰 (a1cfe0c2 대상, 분리된 읽기 전용 컨텍스트)
+
+- 실행 중 — 이 커밋 시점에 판정 **미수신**. 미수신은 「검증됨」이 아니다. 판정 · 수리는 다음 커밋에 기록한다(tasks 2.3).
