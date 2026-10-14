@@ -116,7 +116,7 @@
     - STORY-TOS-a129 — An exit order the engine places leaves a line in the engine log [archived] → `a129-an-exit-order-leaves-a-line`
     - STORY-TOS-a131 — No log or record file the system writes carries account information [archived] → `a131-no-account-in-any-log`
     - STORY-TOS-a133 — No alert that leaves the system carries account information [archived] → `a133-an-alert-carries-no-account`
-    - STORY-TOS-a134 — A dead engine is noticed from outside the engine [implemented] → `a134-a-dead-engine-is-noticed`
+    - STORY-TOS-a134 — A dead engine is noticed from outside the engine [archived] → `a134-a-dead-engine-is-noticed`
     - STORY-TOS-a135 — Capability attestation expiry and scope loss are announced before a restart [implemented] → `a135-attestation-expiry-is-announced`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
