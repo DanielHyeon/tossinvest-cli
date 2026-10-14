@@ -1,0 +1,46 @@
+{
+  "file": "internal/app/engine/interlock.go",
+  "source_sha256": "a2277d4bd3a76152d91c9feb46309b7e07d74a1689d736b6a9020c55ecc20baf",
+  "package": "engine",
+  "function": "newAutomationStatus",
+  "signature": "newAutomationStatus(params=3, results=1)",
+  "start": {
+    "line": 322,
+    "column": 1
+  },
+  "end": {
+    "line": 331,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 325,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 20
+      },
+      "text": "attestationPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 20
+      },
+      "text": "gateLimits"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -141,11 +141,35 @@ func (s *Service) SaveEngineGateLimits(l GuardianLimits) error {
 			"a hand-edit in progress", s.path)
 	}
 
-	out, err := spliceGateLimits(data, next)
+	// a136(freeze 리뷰 P1-2): 하루 매수 상한은 이 편집기의 칸이 아니라서 통화와 함께 바뀌지 않음. 통화가 바뀌면 옛 통화로
+	// 넣은 숫자가 새 통화로 재해석되므로(예: 5,000,000 KRW → 5,000,000 USD) 그 키를 0(미설정)으로 지움 —
+	// KRW 로 바뀌면 기본값, 다른 통화로 바뀌면 운영자가 값을 넣을 때까지 기동 거부.
+	var extra []gateMember
+	if prev, err := documentGateCurrency(data); err != nil {
+		return err
+	} else if prev != next.Currency {
+		extra = append(extra, gateMember{"max_daily_buy_notional", []byte("0")})
+	}
+	out, err := spliceGateLimits(data, next, extra...)
 	if err != nil {
 		return err
 	}
 	return s.installBytes(out)
+}
+
+// documentGateCurrency 는 저장 전 문서에 적힌 limit_currency 를 정규화해 돌려줌(없으면 "").
+func documentGateCurrency(data []byte) (string, error) {
+	var doc struct {
+		Engine struct {
+			Gate struct {
+				LimitCurrency string `json:"limit_currency"`
+			} `json:"automation_gate"`
+		} `json:"engine"`
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return "", fmt.Errorf("config: reading the current limit currency: %w", err)
+	}
+	return normaliseCurrency(doc.Engine.Gate.LimitCurrency), nil
 }
 
 // gateMember is one key/value pair the writer is allowed to touch.
@@ -180,11 +204,14 @@ func gateMembersOf(l GuardianLimits) ([]gateMember, error) {
 // The block's span is re-located before each member because the previous
 // member's edit moved the offsets. Re-scanning six times is not the fast way to
 // do this; it is the way that cannot write into a stale offset.
-func spliceGateLimits(data []byte, l GuardianLimits) ([]byte, error) {
+func spliceGateLimits(data []byte, l GuardianLimits, extra ...gateMember) ([]byte, error) {
 	members, err := gateMembersOf(l)
 	if err != nil {
 		return nil, err
 	}
+	// extra 는 저장 규칙이 덧붙이는 멤버(a136: 통화 변경 시 하루 매수 상한 지움). enabled 는 여기로도 들어올 수 없음 —
+	// 호출자는 SaveEngineGateLimits 하나뿐.
+	members = append(members, extra...)
 
 	for _, m := range members {
 		gStart, gEnd, found, err := gateValueSpan(data)

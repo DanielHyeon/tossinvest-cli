@@ -75,6 +75,80 @@ not the Gateway — is where it is measured.
 - **WHEN** 새 통화 축의 어떤 수치가 이미 승인된 다른 통화의 선호를 넘으면
 - **THEN** 그 수치는 등재되지 않고 기존 값이 유지된다
 
+### Requirement: KR과 US는 하나의 account-base Guardian 권위를 공유한다
+
+Production strategy runtime은 계좌마다 정확히 하나의 account-base-currency Guardian을 사용해야 한다 (SHALL).
+그 Guardian은 하나의 account-wide exposure/daily-loss 권위를 소유한다. KR과 US에 quote-currency별
+Guardian 또는 독립 account-wide cap을 만들어서는 안 된다 (MUST NOT). `limit_currency`는
+account base currency를 뜻하고, 주문 notional·총 노출·일일 손실·equity·risk budget은 그 base
+minor unit으로 비교해야 한다 (SHALL). Market cash와 broker order cost는 market quote minor
+unit으로 비교해야 하며 base와 quote 숫자를 직접 비교해서는 안 된다 (MUST NOT).
+
+각 exposure-raising 요청은 official source가 mint한 request-scoped frozen FX authority를 사용해야
+한다 (SHALL). Authority는 base/quote pair, exact decimal rate, conservative haircut,
+source/version/digest, observed-at/fresh-until을 봉인해야 하며 (SHALL), caller가 제공한 raw rate나
+digest를 authority로 승격해서는 안 된다 (MUST NOT). KR same-currency path도 봉인된 identity FX를
+사용하고 US path는 official quote-to-base FX를 사용해야 한다 (SHALL). 같은 authority가 Guardian
+sizing, aggregate와 다섯 bucket reservation, decision limits envelope와 Gateway last-moment
+validation에 끝까지 사용되어야 하며 중간 재조회나 다른 환율 사용은 금지한다 (MUST NOT).
+
+일일 손실 측정(「일일 손실 한도의 입력은 원장에서 측정된다」)과 하루 매수 총액 한도의 금액 중 account base currency 로 이미 표시된 것은 환산하지 않으며 authority 도 요구하지 않는다 (SHALL).
+다른 시장의 손실 또는 매수 금액은 **그 요청과 같은 paired FX collection(같은 observedAt)에 실린 그 시장의 authority** 로만 환산해야 하며 (SHALL), Guardian 은 precheck 에서
+그 authority 의 official source · base/quote pair · 신선도를 검증해야 한다 (SHALL). 그 authority 가 없거나 검증에 실패하면 그 요청의 신규 exposure 를 fail-closed 로 거부해야 한다 (SHALL).
+이 환산을 위해 FX 를 재조회하거나, caller 가 제공한 환율 또는 다른 파도의 authority 를 써서는 안 된다 (MUST NOT). 이 조항은 요청의 sizing · aggregate exposure · bucket reservation ·
+decision limits envelope · Gateway last-moment validation 이 쓰는 FX 규칙을 바꾸지 않는다 (SHALL NOT).
+
+Base reservation은 exposure를 작게 계산하지 않도록 ceil하고 admissible quantity는 floor해야 한다
+(SHALL). FX 없음, stale, 역방향, market/quote/base/digest 불일치 또는 완화된 haircut은 해당
+시장의 신규 exposure만 거부하고 (SHALL), protection, fill, reconciliation과 reduce-only exit를
+차단해서는 안 된다 (MUST NOT).
+
+#### Scenario: KR identity와 US official conversion의 동시 admission
+
+- **WHEN** 같은 account-base Guardian에 KR identity-FX 요청과 US official quote-to-base 요청이 동시에 들어온다
+- **THEN** 두 요청은 commit 순서와 무관하게 하나의 base exposure 잔여를 공유하며 합산 cap을 초과하지 않고 어느 시장도 peer 안정화를 기다리지 않는다
+
+#### Scenario: US FX 만료
+
+- **WHEN** US q_final precheck에 사용한 official FX가 issue 또는 Gateway 직전 만료된다
+- **THEN** US exposure-raising authority는 broker request와 부분 reservation 없이 거부되고 KR eligible work와 양 시장 safety lifecycle은 계속된다
+
+#### Scenario: quote cash와 base limit 분리
+
+- **WHEN** US 주문 비용은 USD이고 Guardian exposure limit은 account base currency다
+- **THEN** cash는 USD order cost와, exposure는 동일 frozen FX로 환산한 base amount와 비교되며 USD 숫자를 base limit 숫자와 직접 비교하지 않는다
+
+#### Scenario: cross-currency concurrent cap race
+
+- **WHEN** KR과 US 요청이 동시에 마지막 account-wide capacity를 예약하려 한다
+- **THEN** aggregate와 다섯 bucket의 base reservation transaction은 합산 cap 안의 요청만 commit하고 loser는 bounded fresh recollection 또는 atomic refusal이며 중복 권한은 0건이다
+
+#### Scenario: FX outage 중 exit
+
+- **WHEN** entry용 official FX authority를 만들 수 없지만 기존 US 포지션의 reduce-only exit가 필요하다
+- **THEN** 신규 US entry만 닫히고 exit, protection, reconciliation과 fill 처리는 계속된다
+
+#### Scenario: KR 진입의 일일 손실에 든 US 손실
+
+- **WHEN** KR 진입 precheck 의 일일 손실 측정에 같은 일 키의 US 손실(USD)이 있고 같은 paired FX collection 에 검증되는 US authority 가 있다
+- **THEN** 그 손실은 US authority 로 base 환산(올림)되어 측정에 들어가고 KR 요청의 sizing · exposure · reservation 은 KR identity authority 를 그대로 쓴다
+
+#### Scenario: 다른 시장 authority 부재
+
+- **WHEN** KR 진입의 일일 손실 측정에 US 손실이 있는데 같은 paired FX collection 에 US authority 가 없다
+- **THEN** 그 KR 진입은 일일 손실 단에서 입력 불가로 거부되고 FX 재조회는 일어나지 않으며 exit · protection · reconciliation 은 계속된다
+
+#### Scenario: base 통화 손실
+
+- **WHEN** account base 가 KRW 이고 측정할 손실이 모두 KR(KRW)이다
+- **THEN** 환산과 authority 없이 측정된다
+
+#### Scenario: KR 진입의 하루 매수 합계에 든 US 수동 매수
+
+- **WHEN** KR 진입의 하루 매수 합계에 오늘 US 수동 매수(USD)가 있고 같은 paired FX collection 에 검증되는 US authority 가 있다
+- **THEN** 그 금액은 US authority 로 base 환산(올림)되어 합계에 들어가고, authority 가 없으면 그 KR 진입은 거부되며 FX 재조회는 일어나지 않는다
+
+
 ## ADDED Requirements
 
 ### Requirement: 하루 매수 총액 한도
@@ -88,20 +162,27 @@ Guardian은 계좌 하나의 하루 매수 총액에 상한을 두어야 한다(
 KR 정규장과 뉴욕 날짜 D 의 US 정규장이 함께 들어가며 어느 정규장도 둘로 나뉘지 않는다. 시장별 하루 또는 시장별 별도 한도를 두어서는 안 된다(SHALL NOT).
 
 판정은 체인 단계가 아니라 **결정 영속과 예약 삽입의 원자 journal 트랜잭션 안**에서 해야 한다(SHALL). 오늘의 합계는 같은 트랜잭션에서 읽은
-① 오늘 발급된 EXPOSURE_RAISING 결정의 OPEN_EXPOSURE 예약 금액 중 체결이 없었음이 증명되지 않은 것 — 제외는 셋뿐이다: attempt 없이 미소비 만료로
-해제됨, attempt 가 NOT_DISPATCHED 또는 FAILED_CONFIRMED, attempt 의 브로커 주문에 대한 체결 스냅숏이 계좌·매수 범위에서 정확히 한 행이고 그 행이
-종결(fail-closed 아님)·누적 체결 수량 0 이며 체결 이벤트가 없음, ② 발급일과 무관하게 아직 HELD인 OPEN_EXPOSURE 예약의 합이며, 새 진입의 예약 금액을 더한 값이 한도에 **도달하면** 발급을 거부하고
-LIMIT_REACHED로 기록한다(SHALL — 총계 경계 ≥와 같다). 금액은 예약 금액 그대로(`risk.EntryExposureValue` — 비용 포함, account base, US는 요청 단위
+① 오늘(발급일 기준 — 체결일이 아님) 발급된 EXPOSURE_RAISING 결정의 OPEN_EXPOSURE 예약 중 **RELEASED** 이고 체결이 없었음이 증명되지 않은 것 — 제외는 셋뿐이다:
+attempt 없이 미소비 만료(EXPIRED_UNCONSUMED)로 해제됨, attempt 가 NOT_DISPATCHED 또는 FAILED_CONFIRMED, 또는 체결 경로 해제(BROKER_TERMINAL)이고 attempt 가 그 결정의
+CONFIRMED PLACE 이며 그 주문의 체결 스냅숏이 attempt 의 intent 범위(계좌·시장·거래일·종목·매수)와 attempt 확정 뒤 커밋으로 정확히 한 행 · 종결(fail-closed 아님) ·
+누적 체결 0 이고 소유 intent 가 하나이며 그 주문에 체결 이벤트·대체 계보·AMEND 시도가 없음, ② 발급일과 무관하게 아직 HELD인 OPEN_EXPOSURE 예약의 합이며, 새 진입의 예약 금액을 더한 값이 한도에 **도달하면** 발급을 거부하고
+LIMIT_REACHED로 기록한다(SHALL — 총계 경계 ≥와 같다). 결정의 발급일과 예약 커밋 순간의 하루가 다르면 그 예약은 거부된다(SHALL — 매수는 발급일에 귀속되므로). 금액은 예약 금액 그대로(`risk.EntryExposureValue` — 비용 포함, account base, US는 요청 단위
 frozen FX로 환산·ceil)를 쓰며 새 환율 경로를 만들어서는 안 된다(SHALL NOT). 합계를 계산할 수 없으면 그 매수의 결정과 예약은 함께 롤백된다(SHALL —
 fail-closed). EXPOSURE_RAISING 결정의 예약 트랜잭션이 이 한도를 함께 받지 않으면 그 요청은 거부된다(SHALL — 한도를 빠뜨린 발급 문이 조용히 통과하지 못한다).
 
 이 한도는 EXPOSURE_RAISING 진입 발급에만 적용된다(SHALL). RISK_REDUCING 발급, 손절, 익절, 비상 청산, flatten, 보호 주문, 대사, 체결 감지는 이 판정을
-지나서는 안 되며 지연되어서도 안 된다(SHALL NOT — §0.3). Guardian 밖의 수동 주문(토스 앱 등)은 이 한도로 막지 않는다(SHALL NOT — OFF = upstream). 수동 매수를 오늘 합계에 **넣는 것**은 사용자 결정
-(2026-10-14, D9=b)이며, 그 집계(공식 주문 조회 · 엔진 주문과의 중복 제거 · US 금액 환산)는 후속 change(a136b, Manager 승인 대기)가 이 요구를
-MODIFIED 해 더한다 — 그 전까지 합계는 Guardian 발급분만이다.
+지나서는 안 되며 지연되어서도 안 된다(SHALL NOT — §0.3). Guardian 밖의 수동 주문(토스 앱 등)은 이 한도로 막지 않는다(SHALL NOT — OFF = upstream). 그러나 수동 매수는 오늘 합계에 **들어간다**(SHALL —
+사용자 결정 2026-10-14 D9=b): 엔진 보조 실행자가 기존 공식 주문 조회(GET /api/v1/orders)로 라벨 D 의 매수 주문을 읽어 시각이 찍힌 스냅숏을 만들고,
+이 계좌 attempt 의 `broker_order_id` 와 같은 주문(엔진 자신의 주문 — 예약 원장이 이미 셈)은 뺀다(SHALL). 수동 매수 금액은 체결액과 미체결 잔량 × 지정가의
+합이며, 지정가 없는 미체결 주문처럼 금액을 정할 수 없는 행이 있으면 그 스냅숏은 산정 불가다(SHALL). 브로커 조회는 precheck 밖에서만 하며(SHALL — 첫 다리
+precheck 의 「journal 변경·브로커 호출 없음」 계약), 스냅숏이 없거나 · 신선도 상한을 넘었거나 · 산정 불가이거나 · 다른 하루의 것이면 **매수만** 거부한다(SHALL).
+US 수동 매수의 base 환산은 「KR과 US는 하나의 account-base Guardian 권위를 공유한다」의 paired FX 규칙을 따른다(SHALL).
 
-한도 변경은 기존 한도 설정 seam(키 단위 쓰기, `enabled` 비기록)으로만 하며 필드별 이전·새 값이 audit 로그에 남아야 한다(SHALL). 콘솔 편집에 타이핑
-확인이나 추가 승인 단계를 두지 않는다(SHALL NOT). 가동 중인 엔진은 기동 시점 값으로 동작하고 재시작 때 새 값을 쓴다.
+한도 변경은 기존 한도 설정 seam(콘솔 한도 편집기 → 키 단위 쓰기, `enabled` 비기록)으로 하며 필드별 이전·새 값이 audit 로그에 남아야 한다(SHALL).
+설정 파일 수동 편집은 기동 audit 가 해석 값의 변화를 남긴다(SHALL). 콘솔 칸은 현재 한도 통화의 자유 숫자 입력이고 USD 프리셋 값을 만들지 않으며(SHALL NOT),
+KRW 에서 미설정이면 적용될 기본값 10,000,000 을, USD 에서 미설정이면 「엔진이 기동을 거부함」을 평이하게 보여 준다(SHALL). 저장이 한도 통화를 바꾸면
+`max_daily_buy_notional` 은 0(미설정)으로 지워진다(SHALL — 옛 통화의 숫자가 새 통화로 재해석되지 않게). 콘솔 편집에 타이핑 확인이나 추가 승인 단계를
+두지 않는다(SHALL NOT). 가동 중인 엔진은 기동 시점 값으로 동작하고 재시작 때 새 값을 쓴다.
 
 #### Scenario: 동시 매수가 함께 넘지 못한다
 
@@ -142,3 +223,23 @@ MODIFIED 해 더한다 — 그 전까지 합계는 Guardian 발급분만이다.
 
 - **WHEN** 설정에 키가 없는 KRW 게이트로 기동했다가 운영자가 콘솔에서 한도를 5,000,000으로 바꾸면
 - **THEN** 기동 때는 10,000,000 KRW가 적용되고, 변경은 이전·새 값이 audit 로그에 남으며 재시작 뒤 5,000,000이 적용된다
+
+#### Scenario: 엔진 밖 수동 매수도 합계에 든다
+
+- **WHEN** 오늘 토스 앱으로 4,000,000 KRW 를 산 계좌에서 엔진 합계가 5,000,000 KRW 이고 상한이 10,000,000 KRW 일 때 1,500,000 KRW 진입이 평가되면
+- **THEN** 수동 매수는 막히지 않았고, 진입은 4,000,000 + 5,000,000 + 1,500,000 ≥ 10,000,000 으로 LIMIT_REACHED 거부된다
+
+#### Scenario: 수동 매수 스냅숏이 낡음
+
+- **WHEN** 수동 매수 스냅숏이 신선도 상한보다 오래되었거나 없으면
+- **THEN** 진입만 거부되고 매도·손절·청산은 영향을 받지 않는다
+
+#### Scenario: 콘솔 통화 전환
+
+- **WHEN** KRW 로 5,000,000 을 넣어 둔 계좌에서 운영자가 콘솔로 한도 통화를 USD 로 저장하면
+- **THEN** `max_daily_buy_notional` 은 0 으로 지워지고 콘솔은 USD 미설정이면 엔진이 기동을 거부한다고 보여 준다
+
+#### Scenario: 상한 없는 예약
+
+- **WHEN** EXPOSURE_RAISING 결정의 예약 요청에 하루 매수 상한이 없으면
+- **THEN** 그 예약과 결정은 거부되어 남지 않는다

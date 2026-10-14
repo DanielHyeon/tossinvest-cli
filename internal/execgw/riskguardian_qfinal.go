@@ -244,6 +244,7 @@ func (g *RiskGuardian) IssuePrecheckedQFinalEntry(ctx context.Context, precheck 
 				SnapshotUsage: []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: usage, Currency: exposure.Currency}},
 				Limits:        []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: g.policy.MaxOpenExposure.Amount, Currency: exposure.Currency}},
 				Reservations:  []journal.ReservationRequest{{ID: reservationID, Kind: journal.ReservationKindOpenExposure, Amount: exposure.Amount, Currency: exposure.Currency}},
+				DailyBuyLimit: g.dailyBuyLimit(),
 			}}, Admission: admission,
 		}, nil
 	}

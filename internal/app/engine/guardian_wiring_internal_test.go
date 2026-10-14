@@ -21,6 +21,8 @@ func TestAutomationGateRiskPolicyUsesEveryConfiguredUSDLimit(t *testing.T) {
 		MaxDailyLossAmount: 50.75,
 		MaxDailyLossRatio:  0.01,
 		LimitCurrency:      " usd ",
+		// a136 D5: USD 게이트에는 하루 매수 상한 기본값이 없으므로 명시해야 함.
+		MaxDailyBuyNotional: 2000,
 	}
 
 	got := riskPolicyFromAutomationGate(gate)
@@ -31,6 +33,7 @@ func TestAutomationGateRiskPolicyUsesEveryConfiguredUSDLimit(t *testing.T) {
 	want.MaxDailyLoss = riskcalc.Money{Amount: "50.75", Currency: "USD"}
 	want.MaxDailyLossRatio = "0.01"
 	want.RiskBudget = riskcalc.Money{Amount: "50.75", Currency: "USD"}
+	want.MaxDailyBuyNotional = riskcalc.Money{Amount: "2000", Currency: "USD"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("policy = %#v\nwant   = %#v", got, want)
 	}

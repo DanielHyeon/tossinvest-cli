@@ -1,0 +1,121 @@
+{
+  "file": "internal/risk/chain_test.go",
+  "source_sha256": "a1a1c73922c6a8c975a440622e70466077589e1470e488f6cfbb2386928f9197",
+  "package": "risk",
+  "function": "usdPolicy",
+  "signature": "usdPolicy(params=0, results=1)",
+  "start": {
+    "line": 61,
+    "column": 1
+  },
+  "end": {
+    "line": 69,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 68,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 7
+      },
+      "text": "DefaultPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 23
+      },
+      "text": "usd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 22
+      },
+      "text": "usd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 19
+      },
+      "text": "usd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 17
+      },
+      "text": "usd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 26
+      },
+      "text": "usd"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 62,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 65,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

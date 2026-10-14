@@ -68,6 +68,7 @@ func recordEntryDecision(t *testing.T, j *Journal, id, account string) Decision 
 // exposureReserve builds a one-row OPEN_EXPOSURE request.
 func exposureReserve(j *Journal, decisionID, account, amount, usage, limit string, version int64) ReserveRequest {
 	return ReserveRequest{
+		DailyBuyLimit:   &DailyBuyLimit{Amount: "1000000000000", Currency: "KRW"}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
 		DecisionID:      decisionID,
 		AccountRef:      account,
 		SnapshotAsOf:    j.Now(),
@@ -230,6 +231,7 @@ func TestFractionalShareAmountsSurviveTheLedger(t *testing.T) {
 	req.Reservations[0].Currency = "USD"
 	req.SnapshotUsage[0].Currency = "USD"
 	req.Limits[0].Currency = "USD"
+	req.DailyBuyLimit.Currency = "USD" // a136: 하루 매수 상한도 같은 통화
 
 	out, err := j.Reserve(ctx, req)
 	if err != nil {

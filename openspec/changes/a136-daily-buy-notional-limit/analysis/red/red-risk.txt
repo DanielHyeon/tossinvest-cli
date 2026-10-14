@@ -1,0 +1,7 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/risk [github.com/JungHoonGhae/tossinvest-cli/internal/risk.test]
+internal/risk/a136_daily_buy_policy_test.go:13:7: p.MaxDailyBuyNotional undefined (type Policy has no field or method MaxDailyBuyNotional)
+internal/risk/a136_daily_buy_policy_test.go:14:68: p.MaxDailyBuyNotional undefined (type Policy has no field or method MaxDailyBuyNotional)
+internal/risk/a136_daily_buy_policy_test.go:31:5: p.MaxDailyBuyNotional undefined (type Policy has no field or method MaxDailyBuyNotional)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/risk [build failed]
+FAIL
+rc=1 (base f504cc52 + a136 시험 파일, -tags tossos_testseams)

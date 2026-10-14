@@ -1,0 +1,13 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/journal [github.com/JungHoonGhae/tossinvest-cli/internal/journal.test]
+internal/journal/a136_daily_buy_test.go:24:6: req.DailyBuyLimit undefined (type ReserveRequest has no field or method DailyBuyLimit)
+internal/journal/a136_daily_buy_test.go:24:23: undefined: DailyBuyLimit
+internal/journal/a136_daily_buy_test.go:246:7: req.DailyBuyLimit undefined (type ReserveRequest has no field or method DailyBuyLimit)
+internal/journal/a136_daily_buy_test.go:246:24: undefined: DailyBuyLimit
+internal/journal/a136_daily_buy_test.go:264:6: req.DailyBuyLimit undefined (type ReserveRequest has no field or method DailyBuyLimit)
+internal/journal/a136_daily_buy_test.go:268:24: undefined: DailyBuyLimit
+internal/journal/a136_daily_buy_test.go:270:7: req.DailyBuyLimit undefined (type ReserveRequest has no field or method DailyBuyLimit)
+internal/journal/a136_daily_buy_test.go:319:9: req.DailyBuyLimit undefined (type ReserveRequest has no field or method DailyBuyLimit)
+internal/journal/a136_daily_buy_test.go:319:26: undefined: DailyBuyLimit
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal [build failed]
+FAIL
+rc=1 (base f504cc52 + a136 시험 파일, -tags tossos_testseams)

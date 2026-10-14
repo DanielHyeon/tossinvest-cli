@@ -218,6 +218,10 @@ type AutomationGate struct {
 	// quote currency and exposure-raising KR/US paths require frozen official
 	// quote-to-base authority.
 	LimitCurrency string `json:"limit_currency,omitempty"`
+
+	// MaxDailyBuyNotional 은 계좌 단위 하루(clock.AccountTradingDay) 매수 총액 상한, LimitCurrency 기준(a136).
+	// 0 = 미설정이며 실제 적용값은 EffectiveMaxDailyBuyNotional 이 해석함(KRW 면 기본값, 아니면 미설정 그대로).
+	MaxDailyBuyNotional float64 `json:"max_daily_buy_notional,omitempty"`
 }
 
 // LimitsSet reports whether the gate carries any usable limit at all.
@@ -246,6 +250,8 @@ type rawAutomationGate struct {
 	MaxDailyLossAmount float64 `json:"max_daily_loss_amount"`
 	MaxDailyLossRatio  float64 `json:"max_daily_loss_ratio"`
 	LimitCurrency      string  `json:"limit_currency"`
+	// a136: 선택 키 — 없으면 0(미설정).
+	MaxDailyBuyNotional float64 `json:"max_daily_buy_notional"`
 }
 
 type rawEngine struct {
@@ -340,4 +346,5 @@ func mergeEngine(cfg *Engine, raw *rawEngine) {
 	cfg.AutomationGate.MaxDailyLossAmount = gate.MaxDailyLossAmount
 	cfg.AutomationGate.MaxDailyLossRatio = gate.MaxDailyLossRatio
 	cfg.AutomationGate.LimitCurrency = gate.LimitCurrency
+	cfg.AutomationGate.MaxDailyBuyNotional = gate.MaxDailyBuyNotional
 }

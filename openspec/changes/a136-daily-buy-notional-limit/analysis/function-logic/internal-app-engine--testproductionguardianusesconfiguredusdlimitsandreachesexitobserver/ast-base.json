@@ -1,0 +1,356 @@
+{
+  "file": "internal/app/engine/guardian_production_test.go",
+  "source_sha256": "c8cd70cefb442b717f107abeb44a9055ecc6fb58a1a4c533aea36c224127a842",
+  "package": "engine_test",
+  "function": "TestProductionGuardianUsesConfiguredUSDLimitsAndReachesExitObserver",
+  "signature": "TestProductionGuardianUsesConfiguredUSDLimitsAndReachesExitObserver(params=1, results=0)",
+  "start": {
+    "line": 62,
+    "column": 1
+  },
+  "end": {
+    "line": 103,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 82,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 9
+      },
+      "text": "isolate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 10
+      },
+      "text": "smallLiveGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 2
+      },
+      "text": "writeGateConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 2
+      },
+      "text": "writeCredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 2
+      },
+      "text": "writeAttestation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 12
+      },
+      "text": "interlockServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 14
+      },
+      "text": "openProtectedGateEngine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 5
+      },
+      "text": "guardian.AccountRef"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 4
+      },
+      "text": "guardian.AccountRef"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 23
+      },
+      "text": "execgw.Bound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 23
+      },
+      "text": "execgw.Bound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 23
+      },
+      "text": "execgw.Bound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 23
+      },
+      "text": "execgw.Bound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 23
+      },
+      "text": "execgw.Bound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 12
+      },
+      "text": "guardian.ExposureLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 40
+      },
+      "text": "reflect.DeepEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 6
+      },
+      "text": "reflect.DeepEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 15
+      },
+      "text": "eng.ExitObserver"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 66
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 65,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 68,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 72,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 94,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 100,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

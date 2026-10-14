@@ -1,0 +1,21 @@
+
+Callers of "reserveRows" (6):
+
+method      RecordDecisionAndReserve
+  internal/journal/issuance.go:106
+
+method      Reserve
+  internal/journal/reservations.go:249
+
+method      RecordQFinalCampaignFirstLeg
+  internal/journal/strategy_first_leg_atomic.go:101
+
+method      RecordStrategyDecisionAndReserve
+  internal/journal/strategy_lineage.go:315
+
+function    seedFirstLegUpstreamWithoutBinding
+  internal/journal/strategy_first_leg_atomic_test.go:657
+
+method      RecordQFinalDecisionAndReserve
+  internal/journal/risk_bucket_issuance.go:70
+

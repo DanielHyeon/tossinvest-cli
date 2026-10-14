@@ -195,6 +195,8 @@ type ReserveRequest struct {
 	Limits []AggregateAmount
 	// Reservations are the rows to insert.
 	Reservations []ReservationRequest
+	// DailyBuyLimit 은 하루 매수 총액 상한(a136). EXPOSURE_RAISING 결정의 예약에는 필수 — 없으면 거부(daily_buy.go).
+	DailyBuyLimit *DailyBuyLimit
 }
 
 // ReserveResult is what one successful reservation transaction did.
@@ -331,6 +333,10 @@ func reserveRows(ctx context.Context, tx *sql.Tx, req ReserveRequest, plan reser
 		return ReserveResult{}, err
 	}
 	if err := plan.checkLimits(held); err != nil {
+		return ReserveResult{}, err
+	}
+	// 5b. 하루 매수 총액(a136) — 같은 tx 에서 원장을 다시 읽으므로 동시 매수가 함께 넘지 못함.
+	if err := checkDailyBuyNotional(ctx, tx, req, plan, now); err != nil {
 		return ReserveResult{}, err
 	}
 

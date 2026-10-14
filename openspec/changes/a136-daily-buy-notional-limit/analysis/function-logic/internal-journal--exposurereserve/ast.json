@@ -1,0 +1,38 @@
+{
+  "file": "internal/journal/reservations_test.go",
+  "source_sha256": "5c95ba80ef2ed76b6668387ee76fb15086599aaacfe9fc635c40e5b60ef65be1",
+  "package": "journal",
+  "function": "exposureReserve",
+  "signature": "exposureReserve(params=7, results=1)",
+  "start": {
+    "line": 69,
+    "column": 1
+  },
+  "end": {
+    "line": 86,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 20
+      },
+      "text": "j.Now"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

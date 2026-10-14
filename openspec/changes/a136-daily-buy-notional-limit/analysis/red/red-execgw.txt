@@ -1,0 +1,6 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/execgw_test [github.com/JungHoonGhae/tossinvest-cli/internal/execgw.test]
+internal/execgw/a136_daily_buy_test.go:19:12: o.Policy.MaxDailyBuyNotional undefined (type risk.Policy has no field or method MaxDailyBuyNotional)
+internal/execgw/a136_daily_buy_test.go:71:14: a.DailyBuyNotionalLimit undefined (type *execgw.RiskGuardian has no field or method DailyBuyNotionalLimit)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw [build failed]
+FAIL
+rc=1 (base f504cc52 + a136 시험 파일, -tags tossos_testseams)

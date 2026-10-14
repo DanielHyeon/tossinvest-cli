@@ -250,6 +250,9 @@ type AutomationStatus struct {
 	AttestationExpiresAt time.Time
 	// Limits is the snapshot the Guardian was injected with.
 	Limits execgw.Limits
+	// DailyBuyNotional 은 설정의 하루 매수 총액 상한 해석 값(a136, Limits.Currency 기준). 5필드 스냅샷 밖이라 따로 운반하고
+	// 인터록이 Guardian 의 진술과 대조함. Set 이 false 면 미설정(USD base 무값) — 게이트 ON 기동 거부.
+	DailyBuyNotional execgw.Limit
 	// Protection is the profile's broker-side protective execution readiness.
 	// Reported on every start, gate or no gate.
 	Protection ProtectionReadiness
@@ -326,7 +329,9 @@ func newAutomationStatus(gate config.AutomationGate, paths config.Paths,
 		Enabled:         gate.Enabled,
 		AttestationFile: attestationPath(gate, paths),
 		Limits:          gateLimits(gate),
-		Protection:      protection,
+		// 해석은 config 한 곳(EffectiveMaxDailyBuyNotional) — Guardian 정책 유도와 같은 함수.
+		DailyBuyNotional: boundIfPositive(gate.EffectiveMaxDailyBuyNotional()),
+		Protection:       protection,
 	}
 }
 
@@ -416,7 +421,7 @@ func acceptanceDetail(status *AutomationStatus) string {
 	l := status.Limits
 	return fmt.Sprintf(
 		"account=%s attestation_expires=%s currency=%s max_order_quantity=%s max_order_notional=%s "+
-			"max_total_exposure=%s max_daily_loss_amount=%s max_daily_loss_ratio=%s",
+			"max_total_exposure=%s max_daily_loss_amount=%s max_daily_loss_ratio=%s max_daily_buy_notional=%s",
 		status.MaskedAccount(),
 		status.AttestationExpiresAt.UTC().Format(time.RFC3339),
 		l.Currency,
@@ -425,6 +430,7 @@ func acceptanceDetail(status *AutomationStatus) string {
 		limitString(l.MaxTotalExposure.Value),
 		limitString(l.MaxDailyLossAmount.Value),
 		limitString(l.MaxDailyLossRatio.Value),
+		limitString(status.DailyBuyNotional.Value),
 	)
 }
 
@@ -523,6 +529,10 @@ func verifyGate(status *AutomationStatus, facts gateFacts) error {
 	//    just audited, or the audit trail describes a gate that does not exist.
 	if err := checkGuardianLimits(facts.guardian, status.Limits); err != nil {
 		return fmt.Errorf("%w: %w: %w", ErrAutomationGateRefused, ErrGuardianLimitsMismatch, err)
+	}
+	//    7b. 하루 매수 총액 상한(a136) — 미설정이면 한도 부재, Guardian 진술이 없거나 다르면 단일 출처 불일치.
+	if err := checkGuardianDailyBuyLimit(facts.guardian, *status); err != nil {
+		return fmt.Errorf("%w: %w", ErrAutomationGateRefused, err)
 	}
 
 	// 8. The gateway, and the transport underneath it.
@@ -766,6 +776,9 @@ func recordGateSettings(log *audit.Log, gate config.AutomationGate,
 			strconv.FormatBool(notifications.TopicConfigured), ""},
 		{audit.ActionNotificationSetting, "engine.notifications.token_configured",
 			strconv.FormatBool(notifications.TokenConfigured), ""},
+		// a136 — 끝에 덧붙임(위 순서 무변경). 해석 값을 적으므로 config 수동 편집의 이전·새 값이 여기 남음.
+		{audit.ActionLimitChange, "engine.automation_gate.max_daily_buy_notional",
+			limitString(gate.EffectiveMaxDailyBuyNotional()), ""},
 	}
 	for _, c := range changes {
 		if _, err := log.RecordChange(c.action, c.setting, c.value, c.detail); err != nil {

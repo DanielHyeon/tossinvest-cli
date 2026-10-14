@@ -10,8 +10,16 @@
 > - D4 = ≥ (reach → reject). D5 = refuse to start when base currency USD and limit absent.
 > - D9 = **b (CHANGED from your recommendation): manual buys placed outside the engine (Toss app etc.) are NOT blocked but ARE counted in today's total.** Design how to read them with existing official read paths only (e.g. /api/v1/orders ORDER_HISTORY for today's buys, filled + pending), dedupe against the engine's own orders (by broker order id from attempts), and convert US amounts with the same frozen-FX approach decided for a137 (reuse the USD/KRW authority already sealed in the same wave — no new FX read inside the request; check spec risk-management 「KR과 US는 하나의 account-base Guardian 권위를 공유한다」 MUST NOT and state how you comply). Constraint: PrecheckQFinalCampaignFirstLeg has a "no journal mutation and no broker call" contract and PrecheckQFinalEntry has no ctx → the broker read must happen OUTSIDE the precheck (e.g. a refresher producing a timestamped snapshot); stale/missing snapshot → fail closed for buys only, and name which normal inputs that rejects. If this makes a136 too big, propose splitting manual-buy counting into a136b and say so before coding.
 
+2차 결정(2026-10-14, Manager 전달 원문 그대로):
+
+> user decision (2026-10-14): "별도 change 로 나눌 필요 없음" — implement BOTH manual-buy counting (D9=b) and the console limit edit field inside a136; no a136b, no separate console change. Record verbatim in design 「사람 결정」.
+> Console USD handling — apply existing decisions, no new tier values: the field is a free numeric input in the current limit currency (no preset USD tier is invented); KRW shows default 10,000,000 when unset; USD with no value keeps D5 (engine refuses to start) and the console must say so plainly; currency switch clears max_daily_buy_notional (your P1-2 fix). Changes go through the existing audited settings seam; no typed-confirmation friction (memory rule); follow .claude/CLAUDE.md rules 12–13 (ui-skills-root pick 1–3, render and verify the page — do not click order/toggle/approve buttons). If the tier registry structurally forces a USD tier value, stop and report exactly what it requires.
+
+FX 조항(사용자 승인 2026-10-14, Manager 전달): risk-management 「KR과 US는 하나의 account-base Guardian 권위를 공유한다」 MODIFIED 를 a137 델타의 문구 그대로
+a136 델타 한 곳에 둠(a137 은 사본을 뺌). 수동 매수 US 금액 환산에 씀.
+
 반영: D1 → 일 라벨 함수 `clock.AccountTradingDay`(새 파일 `internal/clock/account_day.go`, 새 상수 `AccountDayRollover = 8h` 하나 — a137 도 이것을 부른다).
-D2 → 아래 D2-c 실측(0.7)이 증명 가능 판정. D4 · D5 → spec 그대로. D9 → 아래 「D9 — a136b 분리 제안」(manual 집계는 a136 에서 코딩하지 않음).
+D2 → 아래 D2-c 실측(0.7)이 증명 가능 판정, freeze 리뷰 P1-1 로 Z3 를 정확한 주문 범위로 좁힘. D4 · D5 → spec 그대로. D9 → 2차 결정으로 a136 안(아래 D9 설계).
 
 ## D0. 저장소가 이미 가진 것
 
@@ -109,8 +117,8 @@ proposal 안(`execgw.Limits` 여섯째 칸)은 결정 `limits_json` · `LimitsDi
 
 - `config.GuardianLimits` 에 필드 하나, `SaveEngineGateLimits` 의 키 단위 쓰기 목록에 하나(`enabled` 는 계속 목록 밖), `recordLimitSave` 가 필드별
   이전 → 새 값 audit. CLI `tossctl` 쪽 쓰기 명령은 새로 만들지 않는다(기존 seam 재사용).
-- 콘솔 한도 편집기에 숫자 칸 하나. 확인 문구 · 추가 승인 마찰 없음(기억 규칙). 규칙 12(ui-skills 1~3개) · 13(렌더 확인, 버튼은 누르지 않음).
-  편집기 작업이 커지면 콘솔 칸을 후속 change 로 분리한다.
+- 콘솔 한도 편집기에 숫자 칸 하나(2차 결정 — a136 안). 현재 한도 통화의 자유 입력, 티어는 이 칸에 값을 쓰지 않음(USD 프리셋을 만들지 않음).
+  확인 문구 · 추가 승인 마찰 없음(기억 규칙). 규칙 12(ui-skills 1~3개) · 13(렌더 확인, 버튼은 누르지 않음).
 - 적용: 다른 한도처럼 엔진 재시작 때. 콘솔의 기존 안내(settings_card.go:67 「저장은 즉시 파일에 기록되지만 가동 중인 엔진은 기동 시점
   설정으로 계속 동작한다 — 반영하려면 재시작한다.」)를 그대로 따른다.
 
@@ -118,24 +126,29 @@ proposal 안(`execgw.Limits` 여섯째 칸)은 결정 `limits_json` · `LimitsDi
 
 계산 불가(경계 계산 실패 · 금액 해석 실패 · 통화 불일치) → **그 매수만** 거부. 매도 · 보호 · 청산 · 대사 · 체결 감지는 이 코드를 지나지 않는다(D0).
 
-## D9 — 사용자 결정 b(수동 매수도 합계에 넣음) · **a136b 분리 제안**
+## D9 — 수동 매수 합산(사용자 결정 b, a136 안)
 
-결정: 수동 매수(토스 앱 등)는 막지 않되 오늘 합계에 넣는다. 필요한 것을 세어 보면 a136 핵심(원장 집계)과 같은 크기의 두 번째 작업이다:
+수동 매수(토스 앱 등)는 막지 않되 오늘 합계에 넣는다. 설계(구현 단계 1.5 에서 확정 · 시험):
 
-1. **읽기** — 기존 공식 경로 `official.Client.Orders`/`OrdersPageRaw`(GET /api/v1/orders)로 두 시장의 오늘(라벨 D: 서울 날짜 D · 뉴욕 날짜 D) 매수 주문
-   (체결분 + 미체결 잔량 × 지정가). 새 broker 호출이므로 retry matrix · rate budget 계상(§0.4) 필요.
-2. **위치** — `PrecheckQFinalCampaignFirstLeg` 는 「journal 변경 · 브로커 호출 없음」 계약, `PrecheckQFinalEntry` 는 ctx 가 없다 → 읽기는 precheck 밖
-   **refresher**(엔진 보조 실행자)가 시각이 찍힌 스냅숏을 만들고, 발급은 그 스냅숏을 `SnapshotUsage` 처럼 넘겨 예약 tx 가 나이를 판정한다.
-3. **중복 제거** — `mutation_attempts.broker_order_id`(이 계좌 · PLACE) 에 있는 주문은 빼고(원장 집계가 이미 셈), 나머지를 수동으로 센다.
-4. **US 환산** — 「KR과 US는 하나의 account-base Guardian 권위를 공유한다」: 요청은 official source 가 mint 한 request-scoped frozen FX 만 쓰고 caller 가 준
-   raw rate 를 권한으로 승격하면 안 된다(MUST NOT), 중간 재조회 금지(MUST NOT). KR 요청은 identity FX 뿐이라 US 수동 매수(USD)를 KRW 로 바꿀 권한이
-   요청 안에 없다. 준수 방법 후보: 같은 wave 에서 봉인된 US→KRW authority 를 그대로 재사용(a137 Q5 결정과 같은 방식 — a137 미확정) — 그 authority 가
-   없거나 만료면 **US 수동 매수가 있는 날 KR 매수 전부 거절**(정상 입력 거절, fail-closed).
-5. **fail-closed 범위** — 스냅숏 없음 · 오래됨 → 매수만 거절. 거절되는 정상 입력: 엔진 기동 직후 첫 refresh 전의 매수, 브로커 주문 조회 장애 동안의 매수,
-   rate budget 소진 시의 매수, (4)의 FX 권한 부재 시 KR 매수.
+1. **읽기** — 기존 공식 경로 `OfficialReads.OrdersPageRaw`(GET /api/v1/orders, 엔진이 이미 가진 읽기 면)만. 새 broker 호출이므로 rate budget 계상(§0.4).
+2. **위치** — `PrecheckQFinalCampaignFirstLeg` 「journal 변경 · 브로커 호출 없음」 · `PrecheckQFinalEntry` ctx 없음 → 읽기는 precheck 밖 엔진 보조 실행자
+   (refresher)가 시각 찍힌 스냅숏을 만들고, 발급 문은 그 스냅숏을 예약 요청에 실어 예약 tx 가 나이 · 하루 라벨을 판정한다.
+3. **중복 제거** — 이 계좌 `mutation_attempts.broker_order_id` 에 있는 주문은 빼고(원장 집계가 이미 셈), 나머지 매수 주문만 센다.
+4. **금액** — 체결액 + 미체결 잔량 × 지정가(통화별). 지정가 없는 미체결 · 해석 불가 행 → 스냅숏 산정 불가.
+5. **US 환산** — FX 조항: 같은 paired FX collection 의 US authority 로만, precheck 에서 검증, 없으면 매수 거부, 재조회 · caller 환율 · 다른 파도 금지.
+6. **fail-closed 범위와 거절되는 정상 입력** — 스냅숏 없음 · 낡음 · 산정 불가 · 다른 하루 → **매수만** 거부. 거절되는 정상 입력: 엔진 기동 직후 첫 refresh
+   전의 매수, 브로커 주문 조회 장애 동안의 매수, rate budget 소진 시의 매수, US 수동 매수가 있는 날 US authority 가 없는 KR 매수(일반 `IssueEntry` 경로는
+   FX authority 를 갖지 않으므로 그날 그 경로의 매수 전부).
 
-(4)가 a137 의 미확정 결정(Q5)에 묶이고 (1)·(2)가 새 broker 호출 · 보조 실행자를 더하므로, **manual 집계를 a136b 로 분리**하자고 제안한다(Manager 승인
-대기). a136 은 spec 에 「수동 매수 합산은 a136b 가 이 요구를 MODIFIED 해 더한다 — 그 전까지 Guardian 발급분만」이라고 적고 manual 코드는 쓰지 않는다.
+## D10 — freeze 리뷰 수리 기록
+
+- P1-1 Z3 를 정확한 주문 범위(intent scope · BROKER_TERMINAL · CONFIRMED PLACE · 소유 intent 하나 · settled_at < committed_at · 계보 두 표)로 좁힘 —
+  `sweepOrphanedTerminals` 의 범위 술어와 같은 조건을 질의로 옮김(함수 공유는 그 High-risk 함수 편집이 따라오므로 하지 않음 — 변이 M3 · M4 가 두 조건을 따로 고정).
+- P1-2 콘솔 저장이 통화를 바꾸면 `max_daily_buy_notional` 을 0 으로 지움(`SaveEngineGateLimits`).
+- P2-1 발급일 ≠ 커밋일이면 거부. P2-2 spec ① 을 RELEASED 로 한정. P2-3 engine-safety MODIFIED. P2-4 `LimitsDigest` 에 상한 포함.
+  P2-8 후보 질의를 HELD · 최근 발급 두 갈래 UNION 으로. P2-9 `measure.gridPolicy` 수리. P3 기본값 두 곳 대조 시험.
+- 잔재: P2-5(a137 과 일 키 적용 시각 — a137 은 closed_at, a136 은 발급 시각; 둘 다 같은 함수), P2-6(계산 불가 거부의 관측 sub-reason · 알림 — 현재 오류는 호출자에게
+  그대로 감, 엔진 로그에 남음), `mutation_attempts.target_order_id` 무색인(Z3 후보에만 돎).
 
 ## 잔재 · 비목표
 

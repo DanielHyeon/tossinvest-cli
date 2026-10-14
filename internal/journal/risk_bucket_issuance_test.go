@@ -153,7 +153,8 @@ func qFinalIssueFixture(t *testing.T, j *Journal, suffix string) QFinalIssueRequ
 				LimitsJSON: `{"test":"opaque-to-journal"}`, Nonce: "nonce-" + suffix, IssuedAt: now, ExpiresAt: now.Add(time.Minute),
 			},
 			Reserve: ReserveRequest{
-				SnapshotAsOf: now, ObservedVersion: version,
+				DailyBuyLimit: &DailyBuyLimit{Amount: "1000000000000", Currency: "KRW"}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
+				SnapshotAsOf:  now, ObservedVersion: version,
 				SnapshotUsage: []AggregateAmount{{Kind: ReservationKindOpenExposure, Amount: "0", Currency: "KRW"}},
 				Limits:        []AggregateAmount{{Kind: ReservationKindOpenExposure, Amount: "100000", Currency: "KRW"}},
 				Reservations:  []ReservationRequest{{ID: reservationID, Kind: ReservationKindOpenExposure, Amount: "50", Currency: "KRW"}},

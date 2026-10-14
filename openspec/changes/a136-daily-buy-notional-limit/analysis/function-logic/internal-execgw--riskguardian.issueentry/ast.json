@@ -1,0 +1,631 @@
+{
+  "file": "internal/execgw/riskguardian.go",
+  "source_sha256": "4034f29ee0dacdd4f6f12a2f10e96a86faf41307bc889cd0420066ad59c5f4c6",
+  "package": "execgw",
+  "function": "IssueEntry",
+  "receiver": "RiskGuardian",
+  "signature": "RiskGuardian.IssueEntry(params=2, results=2)",
+  "start": {
+    "line": 411,
+    "column": 1
+  },
+  "end": {
+    "line": 559,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 412,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 416,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 419,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 433,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 442,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 477,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 481,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 513,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "else",
+      "at": {
+        "line": 515,
+        "column": 9
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 519,
+        "column": 5
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 524,
+        "column": 3
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 530,
+        "column": 2
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 537,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 413,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 417,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 420,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 439,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 444,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 478,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 482,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 484,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 520,
+        "column": 6
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 522,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 541,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 552,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 20
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 415,
+        "column": 17
+      },
+      "text": "g.scopedIntent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 420,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 421,
+        "column": 4
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 425,
+        "column": 12
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 425,
+        "column": 12
+      },
+      "text": "g.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 433,
+        "column": 16
+      },
+      "text": "evaluateChain"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 438,
+        "column": 3
+      },
+      "text": "g.observeEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 438,
+        "column": 18
+      },
+      "text": "g.entryObservation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 439,
+        "column": 20
+      },
+      "text": "errors.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 439,
+        "column": 32
+      },
+      "text": "chainRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 439,
+        "column": 55
+      },
+      "text": "g.escalateFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 23
+      },
+      "text": "risk.EntryExposureValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 3
+      },
+      "text": "g.observeEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 18
+      },
+      "text": "g.entryObservation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 20
+      },
+      "text": "chainRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 451,
+        "column": 16
+      },
+      "text": "g.newID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 458,
+        "column": 19
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 460,
+        "column": 19
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 468,
+        "column": 15
+      },
+      "text": "g.newID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 470,
+        "column": 15
+      },
+      "text": "in.Now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 476,
+        "column": 20
+      },
+      "text": "req.Collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 480,
+        "column": 17
+      },
+      "text": "exposureUsage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 507,
+        "column": 20
+      },
+      "text": "g.dailyBuyLimit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 514,
+        "column": 14
+      },
+      "text": "g.journal.RecordDecisionAndReserveWithRecollection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 516,
+        "column": 31
+      },
+      "text": "g.journal.RecordStrategyDecisionAndReserveWithRecollection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 518,
+        "column": 26
+      },
+      "text": "collectIssue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 531,
+        "column": 14
+      },
+      "text": "issuanceRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 536,
+        "column": 10
+      },
+      "text": "g.entryObservation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 539,
+        "column": 4
+      },
+      "text": "g.observeEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 547,
+        "column": 12
+      },
+      "text": "g.entryObservation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 550,
+        "column": 2
+      },
+      "text": "g.observeEntry"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 415,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 424,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 433,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 441,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 450,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 472,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 473,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 475,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 476,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 480,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 514,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 516,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 518,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 525,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 526,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 528,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 531,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 536,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 537,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 538,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 547,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 548,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 549,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

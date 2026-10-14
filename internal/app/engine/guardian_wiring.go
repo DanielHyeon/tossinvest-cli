@@ -57,6 +57,12 @@ func riskPolicyFromAutomationGate(gate config.AutomationGate) risk.Policy {
 	policy.MaxDailyLoss = dailyLoss
 	policy.MaxDailyLossRatio = number(gate.MaxDailyLossRatio)
 	policy.RiskBudget = dailyLoss
+	// a136: 하루 매수 총액 상한 — 해석(없음·0 → KRW 기본값, 다른 통화는 미설정)은 config 한 곳. 미설정·음수·NaN 은
+	// Policy.Validate 가 거부해 기동이 ErrLimitsRequired 로 멈춤(D5).
+	policy.MaxDailyBuyNotional = riskcalc.Money{
+		Amount:   number(gate.EffectiveMaxDailyBuyNotional()),
+		Currency: currency,
+	}
 	return policy
 }
 

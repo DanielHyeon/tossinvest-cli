@@ -64,6 +64,7 @@ func usdPolicy() Policy {
 	p.MaxOpenExposure = usd("100000")
 	p.MaxDailyLoss = usd("1000")
 	p.RiskBudget = usd("1000")
+	p.MaxDailyBuyNotional = usd("100000") // a136: 모든 돈 한도는 한 통화
 	return p
 }
 

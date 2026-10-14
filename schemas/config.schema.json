@@ -127,6 +127,12 @@
             "limit_currency": {
               "type": "string",
               "enum": ["KRW", "USD"]
+            },
+            "max_daily_buy_notional": {
+              "description": "Ceiling on one account day's buy notional (the day rolls over at 08:00 KST), in limit_currency. Absent or 0 means 10,000,000 when limit_currency is KRW; with any other currency the engine refuses to start until a value is set.",
+              "type": "number",
+              "minimum": 0,
+              "default": 0
             }
           }
         },

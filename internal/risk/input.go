@@ -212,6 +212,9 @@ type Policy struct {
 	MinRewardRisk string
 	// Reentry bounds same-day re-entry.
 	Reentry ReentryPolicy
+	// MaxDailyBuyNotional 은 계좌 단위 하루(clock.AccountTradingDay) 매수 총액 상한임(a136). 체인 단계가 아니라
+	// 결정·예약 원자 트랜잭션이 재므로 체인은 읽지 않고, 발급자가 예약 요청에 그대로 실어 보냄. 경계는 도달 시 거부(≥).
+	MaxDailyBuyNotional riskcalc.Money
 }
 
 // DefaultPolicy is the conservative default set risk-management specifies for an
@@ -240,6 +243,8 @@ func DefaultPolicy() Policy {
 		RiskBudget:        riskcalc.Money{Amount: "100000", Currency: "KRW"},
 		MinRewardRisk:     DefaultMinRewardRisk,
 		Reentry:           ReentryPolicy{MaxEntriesPerSymbol: 2, Cooldown: 30 * time.Minute},
+		// 사용자 결정 2026-10-14(a136) — 이전에는 상한이 없던 새 검사라 완화가 아님.
+		MaxDailyBuyNotional: riskcalc.Money{Amount: "10000000", Currency: "KRW"},
 	}
 }
 
@@ -261,6 +266,7 @@ func (p Policy) Validate() error {
 		{"maximum open exposure", p.MaxOpenExposure},
 		{"maximum daily loss", p.MaxDailyLoss},
 		{"per-trade risk budget", p.RiskBudget},
+		{"maximum daily buy notional", p.MaxDailyBuyNotional},
 	} {
 		if _, err := requirePositiveMoney(m.label, m.value, currency); err != nil {
 			return err

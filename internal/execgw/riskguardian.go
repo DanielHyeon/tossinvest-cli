@@ -319,7 +319,10 @@ func (g *RiskGuardian) AccountRef() string { return g.accountRef }
 func (g *RiskGuardian) PolicyVersion() string { return g.policyVersion }
 
 func (g *RiskGuardian) LimitsDigest() string {
-	sum := sha256.Sum256([]byte(g.limitsJSON))
+	// 하루 매수 상한은 5필드 스냅샷(limitsJSON) 밖에 있으므로 digest 입력에 따로 더함 — 이 한도만 바꿔도 다른 한도처럼
+	// 전략 바인딩이 무효화됨(a136 freeze 리뷰 P2-4).
+	sum := sha256.Sum256([]byte(g.limitsJSON + "\ndaily_buy_notional=" +
+		g.policy.MaxDailyBuyNotional.Amount + " " + g.policy.MaxDailyBuyNotional.Currency))
 	return "sha256:" + hex.EncodeToString(sum[:])
 }
 
@@ -501,6 +504,7 @@ func (g *RiskGuardian) IssueEntry(ctx context.Context, req EntryIssuance) (Issue
 						Currency: currency,
 					},
 				},
+				DailyBuyLimit: g.dailyBuyLimit(),
 			},
 		}, nil
 	}
