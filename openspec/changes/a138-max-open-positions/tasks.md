@@ -12,13 +12,14 @@ Story: `STORY-TOS-a138` · **High-risk**(Guardian 발급 · 예약 트랜잭션 
       `openspec validate a138-max-open-positions --strict --no-interactive` rc=0 — proposal 단계 AST 근거 6건(`analysis/ast-evidence/`, 게이트 번들 아님)
 - [x] 0.3 CodeGraph hard evidence · CodeGraphContext(not-applicable 사유) · evidence reconciliation(`analysis/code-context/`)
 - [x] 0.4 **사용자 결정**(2026-10-15 「권장대로」): D1 = B(계좌 전체) · D2 = scale-in 허용 — design 「사람 결정」 원문 · review.md
-- [ ] 0.5 결정 반영(spec · design 수정 시 requirement 변경 리뷰) + proposal-freeze 리뷰(적대 Eng + CEO 범위 + DX, 분리 컨텍스트) → review.md
+- [x] 0.5 결정 반영 + proposal-freeze 리뷰(적대 Eng + CEO 범위 + DX, 분리 컨텍스트) → review.md — APPROVE-WITH-FIXES(P1 2 · P2 3 · P3 7), 전부 문서에 반영(④ RECONCILE · ② 종류 무관 · 정수 헬퍼 등)
 - [ ] 0.6 편집할 기존 함수의 FLM/BTM 번들(`analysis/function-logic/`, 편집 전 `ast-base.json` + 편집 뒤 `ast.json`) + Pre-Edit 선언(review.md)
 - [ ] 0.7 base 고정 — `base-commit.txt` = 이 change 첫 Go 커밋의 부모
 
 ## 1. 구현 (RED → GREEN → REFACTOR)
 
-- [ ] 1.1 RED — spec 시나리오 각각의 시험이 base 에서 실패(`analysis/red/`): 일곱 번째 종목 거부 · 든 종목 scale-in · 동시 진입 · 편입/외부 셈(D1 답) ·
+- [ ] 1.1 RED — spec 시나리오 각각의 시험이 base 에서 실패(`analysis/red/`): 일곱 번째 종목 거부 · 든 종목 scale-in · 동시 진입(최종 거부가 MAX_OPEN_POSITIONS) · 편입/외부 셈(D1 = B) ·
+      투영 거절 갭(④) · DAILY_LOSS 전용 HELD 셈(②) · RELEASED 미셈 · 같은 종목 다른 시장 두 칸 · 정수 헬퍼(+Inf · 1e300 · 2^63) · 생산 factory 거부 문구 ·
       셀 수 없음 fail-closed · 매도 무관 · 기본값/0/음수/비정수 · 인터록 진술 불일치 · 상한 없는 예약 · digest 결속
 - [ ] 1.2 GREEN — 설정 필드 · 해석 · Policy · 예약 tx 판정(`journal/open_positions.go`) · 발급 문 셋 · 인터록 · 기동 audit · digest · 격자 정책
 - [ ] 1.3 콘솔 한도 편집기 정수 칸(규칙 12 · 13 — ui-skills 1~3개, 렌더 확인, 버튼 미클릭, 확인 문구 없음)
@@ -29,7 +30,8 @@ Story: `STORY-TOS-a138` · **High-risk**(Guardian 발급 · 예약 트랜잭션 
 - [ ] 2.1 `gofmt -l` · `go vet ./...` · `rtk proxy go test -count=1`(journal · execgw · risk · config · app/engine · cmd/tossctl · console · measure) ·
       `-tags tossos_testseams` · `make test-race` 대상 · `openspec validate --strict` → `analysis/verify/receipts.md`
 - [ ] 2.2 변이 원장(`analysis/mutation/`): `>`→`>=` · 종목 중복 제거 제거 · HELD 예약 갈래 제거 · 외부/편입 갈래 제거 · 노출 미증가 조기 통과 반전 ·
-      상한 nil 통과 · preimage 오류를 0 으로 · 발급 문 하나 상한 누락 · 인터록 대조 제거 · digest 입력 제거
+      상한 nil 통과 · preimage 오류를 0 으로 · 발급 문 하나 상한 누락 · 인터록 대조 제거 · digest 입력 제거 · ③ 제거 · CLOSED 필터 제거 · 시장 차원 무시 ·
+      state=HELD 필터 제거 · kind 필터 OPEN_EXPOSURE 만 · ② safety_class 필터 제거(구조 시험) · ④ RECONCILE 갈래 제거 · 정수 판정 IsInf 제거
 - [ ] 2.3 독립 적대 리뷰(분리된 컨텍스트, 적대 Eng 포함) → review.md
 
 ## 3. 사람 · Manager

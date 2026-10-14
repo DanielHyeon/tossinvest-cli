@@ -30,10 +30,12 @@ HEAD 를 읽은 것이다. CodeGraph 근거는 `analysis/code-context/`.
 | 하루 매수 판정은 노출을 올리지 않는 결정을 통과시키고, 상한 없는 EXPOSURE_RAISING 예약을 거부 | AST `journal--checkdailybuynotional` B2(73) · B3(77) |
 | 위험 축소 발급은 예약 tx 를 지나지 않음 | AST `execgw--riskguardian.issuereduction` 호출 목록(`g.journal.RecordDecision` 만) |
 | 포지션 투영의 세 종류: 엔진 진입(`entry_decision_id`) · 편입(`adoption_id`) · 외부(둘 다 NULL) | core_domain.go:127-151 · adoption.go:77-95 |
-| 외부 보유는 대사가 조정 이벤트로 접어 넣음(30초 루프), 발견 시 알림 | reconcile/external.go 머리 주석 · `ApplyPositionAdjustment` |
+| 외부 보유는 대사가 조정 이벤트로 접어 넣음(기본 주기 60초 `DefaultReconcilePeriod`, 안정 스냅숏이 잡힌 사이클에서만 — reconcileloop.go:95 · :414 · :431), 발견 시 알림 | reconcile/external.go 머리 주석 · `ApplyPositionAdjustment` |
 | 관리 여부 단일 술어 `position.ExitEligible`(= 진입 결정 또는 편입) | position_projection.go:517 · a137 `a137_daily_loss_rows.go` 주석(정적 시험이 지킴) |
 | 투영은 FLAT 행을 쓰지 않음 — 살아 있는 행 = CLOSED 가 아닌 행(OPENING · OPEN · SCALING · CLOSING) | position/position.go:21-31 |
 | 결정 preimage 에 `market`(소문자) · `symbol`(대문자) 이 정규화돼 저장됨 | decision.go:63-73 · `canonicalVenue`(556) |
+| 종결 체결은 같은 tx 에서 HELD 예약을 해제한 뒤(RecordFill B28 512) 투영 훅을 부르고(B37 551), 투영이 전이를 거절하면 포지션 행 없이 종목 범위 RECONCILE 만 남김(ProjectPosition B5 101 → `enterReconcileInTx`) — 그 종목은 ① · ② 어디에도 없음 | AST `journal--journal.recordfill` · `journal--projectposition`, reconcile_states DDL(execution_contract.go:202 — 시장 칸 없음) |
+| Gateway 는 EXPOSURE_RAISING 결정에 종류와 무관하게 HELD 예약이 하나라도 있으면 제출을 인가함 | gateway.go `checkReservation`(freeze 리뷰 P1-2) |
 | 미소비 만료 · 일 경계 보유는 예약 tx 앞단(`reservePrecheck` 3)이 같은 tx 에서 해제 | reservations.go:300-317 |
 | 정책 유도는 직선 함수 하나 | AST `engine--riskpolicyfromautomationgate`(분기 0, 반환 2 — 39 는 `number` 클로저) |
 | 인터록 단일 출처 검사는 `verifyGate` 7(B7) · 7b(B8 — 하루 매수) | AST `engine--verifygate` B7(530) · B8(534) |
@@ -50,16 +52,20 @@ HEAD 를 읽은 것이다. CodeGraph 근거는 `analysis/code-context/`.
 | 안 | 세는 포지션 | 장점 | 단점 · 거절되는 정상 입력 |
 |---|---|---|---|
 | D1-A | 관리 포지션(`ExitEligible` — 엔진 진입 + 편입) + 진행 중 엔진 진입 | 엔진이 손절로 보호하는 범위와 같음(a137 과 같은 경계). 운영자가 손으로 오래 든 종목이 자동 진입을 막지 않음 | 계좌는 6 개보다 많이 들 수 있음(외부 보유 + 엔진 6). 「계좌가 들게 될」 문구와 다름 |
-| **D1-B (추천)** | 계좌 전체의 살아 있는 포지션(관리 + 외부 — 대사가 접어 넣은 것) + 진행 중 엔진 진입 | 문구(「the account would hold」) 그대로. a136 D9=b(수동 활동도 계좌 한도에 셈)와 같은 방향. 더 보수적(D1-A 가 허용하는 진입의 부분집합만 허용) | 손으로 든 종목이 칸을 차지 — **외부 보유가 6 개 이상이면 자동 진입이 전부 거부됨**(LIMIT_REACHED 상세에 개수가 남음, 운영자가 상한을 올리거나 편입/정리). 외부 매수는 대사(≤30초) 뒤에야 보임 — 그 사이 한 칸 과소 집계 가능 |
+| **D1-B (추천)** | 계좌 전체의 살아 있는 포지션(관리 + 외부 — 대사가 접어 넣은 것) + 진행 중 엔진 진입 | 문구(「the account would hold」) 그대로. a136 D9=b(수동 활동도 계좌 한도에 셈)와 같은 방향. 더 보수적(D1-A 가 허용하는 진입의 부분집합만 허용) | 손으로 든 종목이 칸을 차지 — **외부 보유가 6 개 이상이면 자동 진입이 전부 거부됨**(LIMIT_REACHED 상세에 개수가 남음, 운영자가 상한을 올리거나 편입/정리). 외부 매수는 대사(60초 이상, 안정 스냅숏 사이클) 뒤에야 보임 — 그 사이 한 칸 과소 집계 가능 |
 | D1-C | D1-B + 미체결 수동 매수 주문의 종목(a136 수동 매수 스냅숏을 종목 단위로 확장) | 대사 전 수동 매수까지 셈 | 수동 매수 보드를 종목 단위로 바꿔야 함(a136 refresher · 보드 · journal 칸 편집 — 표면 큼). 수동 주문은 어차피 막지 않으므로 얻는 것이 작음 |
 
 추천 이유: 사용자 문구와 a136 의 선택(계좌 한도는 엔진 밖 활동도 셈)에 맞고, 두 안 중 거부 쪽(보수)이다. D1-A 를 고르면 바뀌는 것은 포지션 질의의
-술어 하나(`Position.ExitEligible` 로 거름)뿐이고 나머지 설계는 같다. **spec 델타는 D1-B 로 써 두었고, 다른 답이면 「최대 보유 포지션 수」 요구의 ① 문장만 바꾼다.**
+술어 하나(`Position.ExitEligible` 로 거름)뿐이고 나머지 설계는 같다. **spec 델타는 D1-B 로 써 두었고, 다른 답이면 「최대 보유 포지션 수 한도」 요구의 ① 문장만 바꾼다.**
 
 ## D2. 경계 — 「6 개보다 많이」
 
 - 세는 단위는 서로 다른 (시장, 종목) 하나다. 같은 종목의 여러 인스턴스 · 부분 체결 중인 진입과 그 포지션은 하나로 센다.
-- 판정: 집합 S = ① 살아 있는 포지션(D1) ∪ ② HELD OPEN_EXPOSURE 예약을 가진 EXPOSURE_RAISING 결정의 종목 ∪ ③ 이번 결정의 종목. **|S| > 상한이면 거부**.
+- 판정: 집합 S = ① 살아 있는 포지션(D1) ∪ ② HELD 예약을 **종류와 무관하게**(닫힌 집합 OPEN_EXPOSURE · DAILY_LOSS · CASH 를 `IN` 으로 — 색인
+  `idx_reservations_held` 를 그대로 탐) 가진 EXPOSURE_RAISING 결정의 종목(Gateway 인가 술어와 같음, freeze 리뷰 P1-2 (a)) ∪ ③ 이번 결정의 종목
+  ∪ ④ 종목 범위 활성 RECONCILE(`reconcile_states.symbol` 이 있고 `released_at` 이 NULL) 중 그 종목이 ①~③ 의 어느 원소와도 종목이 같지 않은 것 — 한 칸씩
+  (freeze 리뷰 P1-1: 투영이 거절된 종결 체결은 예약을 해제하고 포지션 행을 남기지 않음. 시장 칸이 없어 종목 문자열로만 맞추므로 과대 집계 쪽).
+  **|S| > 상한이면 거부**.
 - 귀결: 이미 6 개를 든 계좌에서 그중 한 종목에 더 사는 진입(scale-in · 캠페인 추가 다리)은 |S| = 6 이라 허용. 문구 「6 개보다 많이 들게 될 진입」 그대로다
   (사람 결정 D2 = 허용, 2026-10-15).
 - 돈 한도의 「도달 시 거부(≥)」 규칙과 다른 이유: 그 규칙은 금액 총계의 경계이고, 이 상한은 **허용되는 최대 개수**다(max 6 = 6 은 허용). spec 은 이 차이를 요구 안에 적는다.
@@ -74,17 +80,21 @@ insert 앞) 한 줄, 판정 함수는 새 파일 `internal/journal/open_position
 - EXPOSURE_RAISING 인데 요청에 상한이 없으면 `ErrInvalidRequest`(한도를 빠뜨린 발급 문이 조용히 통과하지 못함 — a136 B3 와 같은 규칙).
 - 이번 결정의 종목은 tx 안에서 `decisions.risk_preimage` 를 다시 읽어 얻음(호출자 값 불신). preimage 종류가 RISK_INTENT 가 아니거나 해석 불가면 오류(거부).
 - ② 의 종목도 각 결정의 preimage 에서 얻음. 해석 불가 행이 하나라도 있으면 판정 실패(거부) — 0 으로 두지 않음.
-- 결과: |S| > 상한 → `ErrReservationLimitExceeded`(LIMIT_REACHED, 재수집 안 함). 상세 문구에 개수 · 상한 · 이번 종목이 새 종목인지.
+- 결과: |S| > 상한 → `ErrReservationLimitExceeded`(LIMIT_REACHED, 재수집 안 함). 상세 문구 `MAX_OPEN_POSITIONS` · 개수 · 상한 · 이번 종목.
+  LIMIT_REACHED 는 총 노출 · 하루 매수 · 개수 셋이 공유하고 원인은 상세 문구로만 갈림(a136 선례와 같은 모양 — sentinel 문서에 개수 상한은 「초과(>)」임을 적음).
 
 ## D4. 설정 · 정책
 
 - `config.AutomationGate.MaxOpenPositions float64 \`json:"max_open_positions,omitempty"\``. 숫자를 float 로 받는 이유: 형제 칸과 같고, `int` 로 받으면
   `6.5` 같은 값이 **게이트 OFF 에서도** config 읽기 전체를 실패시켜 OFF = upstream(§0.2)을 깸. 정수성은 게이트 ON 정책 검증이 봄.
+  한정(freeze 리뷰 P3-5): 이것은 **소수** 값에 대해서만 참 — `"6"`(문자열) · `1e400` 은 형제 칸과 똑같이 OFF 에서도 config 해석을 실패시킴(기존 선례).
 - 해석 `EffectiveMaxOpenPositions()`(새 파일 `internal/config/open_positions.go`): 0 이 아니면 그대로(음수 · 비정수 · NaN · Inf 도 그대로 넘겨 검증이 거부), 0 이면 기본값 6.
   통화와 무관. Guardian 정책 유도와 인터록 대조가 모두 이 함수를 씀(단일 출처).
 - `risk.Policy.MaxOpenPositions int`, `DefaultPolicy` = 6(출처: 사용자 결정 2026-10-15, a138 — 이전에 상한이 없던 새 검사라 완화 아님),
-  `Validate` 는 `< 1` 거부. 유도(`riskPolicyFromAutomationGate`)는 해석 값이 정수이고 1 이상이며 int 범위일 때만 그 값을 쓰고, 아니면 0 을 넣어
-  `Validate` 가 `ErrLimitsRequired` 로 기동을 멈추게 함(a136 이 음수를 넘겨 검증이 거부하게 한 것과 같은 길).
+  `Validate` 는 `< 1` 거부. 정수 판정은 **한 헬퍼** `config.WholeOpenPositions(v) (int, bool)`(NaN · ±Inf · 소수 · < 1 · int32 범위 밖 → false — `math.Trunc(+Inf) == +Inf`
+  이므로 IsInf 를 먼저 봄, freeze 리뷰 P2-3)이고 정책 유도 · 인터록 · 콘솔 검증이 모두 그것을 씀. 유도(`riskPolicyFromAutomationGate`)는 false 면 0 을 넣어
+  `Validate` 가 거부하게 하고, 생산 factory(`newProductionRiskGuardian`)는 Validate 앞에서 같은 헬퍼로 먼저 거부해 **운영자가 적은 값**을 문구에 담음
+  (`ErrLimitsRequired`). 생산 기동은 factory 가 인터록보다 먼저라(engine.go:536-558) 7c 의 정수 거부는 주입 Guardian seam 에서만 닿음 — 그래도 두는 이유는 단일 출처 대조.
 - 판정은 체인이 읽지 않음(체인 단계 아님) — 발급자가 예약 요청에 그대로 실음.
 
 ## D5. 단일 출처 · 감사 · 콘솔
@@ -106,16 +116,23 @@ insert 앞) 한 줄, 판정 함수는 새 파일 `internal/journal/open_position
 ## D7. 거절되는 정상 입력 (fail-closed 가 무엇을 거부하는가)
 
 - 브로커에서 이미 취소됐지만 체결 감지가 종결을 아직 관측하지 않은 진입 주문 — 그 HELD 예약이 한 칸을 차지(관측 뒤 해소).
-- CLOSING(청산 주문이 나갔지만 아직 수량이 남은) 포지션 — 한 칸으로 셈.
+- UNRESOLVED_IN_DOUBT · UNKNOWN_BROKER_STATE · NONCE_SPENT_EXPIRED 로 운영자 해제를 기다리는 HELD 예약 — 기한 없이 한 칸(`OperatorReleaseReservation` 뒤 해소).
+- CLOSING(청산 주문이 나갔지만 아직 수량이 남은) 포지션, 엔진 밖에서 팔았거나 매도 체결이 아직 관측되지 않은 포지션(대사 수렴 전), 소수 잔량(dust) 포지션 — 한 칸씩.
 - D1-B: 손으로 든 종목 — 한 칸씩. 외부 보유가 상한 이상이면 신규 종목 진입 전부 거부.
+- 종목 범위 RECONCILE(투영 거절 · 수량 불일치 등 원인 무관) — 그 종목이 S 에 없으면 한 칸(④, 시장 칸이 없어 과대 집계 쪽).
+- KR 과 US 는 한 계좌에서 합산 — 두 시장 합계 6.
 - 옛 결정 하나의 preimage 가 해석 불가 — 그 결정이 HELD 예약을 들고 있는 동안 모든 진입 거부(원장 결함이 조용히 0 이 되지 않게).
 - 원장 읽기 오류 — 그 진입 거부.
-- 거부하지 **않는** 것(permissive 쪽): D1-B 에서 대사 전의 외부 매수(≤30초 창), 미체결 수동 매수 주문(D1-C 를 고르지 않으면).
+- 거부하지 **않는** 것(permissive 쪽): 대사가 접어 넣기 전의 외부 매수(60초 이상, 안정 스냅숏 사이클까지 — 상한 없음), 미체결 수동 매수 주문(D1-C 를 고르지 않음),
+  운영자가 HELD 예약을 해제했지만 주문이 살아 있거나 체결된 경우(체결 감지 전), 엔진 진입 주문을 엔진 밖에서 정정한 경우(자식 주문에 로컬 attempt 가 없어 부모 종결 시
+  예약이 해제되고 대사 전까지 빈 창). 투영 거절 갭(P1-1)은 ④ 로 닫음.
 
 ## D8. 원장 · 스키마 · 성능
 
-스키마 변경 0. 질의는 `positions`(색인 `idx_positions_symbol` 의 선두 account_ref) 와 HELD 예약(`idx_reservations_held`) 두 범위 — 쓰기 잠금 안에서
-계좌 평생 행을 훑지 않음(§0.3 간접: 진입 tx 가 잠금을 잡는 동안 매도 기록이 기다림). 결정 preimage 는 HELD 예약의 결정 수만큼(상한 근처라 작음) 읽음.
+스키마 변경 0. 질의 셋: `positions` 는 색인 `idx_positions_symbol`(account_ref, market, symbol, state) 의 선두 account_ref 범위라 **그 계좌의 CLOSED 이력 인스턴스까지**
+훑는다(freeze 리뷰 P3-1 정정 — 행 수는 계좌가 거쳐 간 인스턴스 수, 작음). HELD 예약은 `idx_reservations_held`(account_ref, kind IN 셋, state) 범위, 활성 RECONCILE 은
+`idx_reconcile_active`(부분 색인) 범위. 결정 preimage 는 HELD 예약의 결정 수만큼(상한 근처라 작음) 읽음. 진입 tx 가 잠금을 잡는 동안 매도 기록이 기다리므로(§0.3 간접)
+지연 실측을 검증 영수증에 남김.
 
 ## D9. 공유 파일 순서 (a139)
 
