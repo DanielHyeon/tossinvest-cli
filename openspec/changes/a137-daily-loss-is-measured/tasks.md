@@ -49,5 +49,6 @@ Story: `STORY-TOS-a137` · **High-risk**(Guardian · 위험 입력) — FLM/BTM 
 
 ## 3. 사람 · Manager
 
+- [x] 2.5 사람 승인 base 재고정 `a000cf29` → `63fd0c92`(Manager 승인 2026-10-15, review.md §6) — 귀속: 자기 Go 커밋 a1cfe0c2 · 4fc5d4a4 의 11 함수 전부 fresh 번들, 옛 창 required 24 = a137 11 + a136 13(형제 착지 몫). 새 base 기준 수리 커밋 함수 5 번들 추가
 - [ ] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a137-daily-loss-is-measured` + 독립 검증
 - [ ] 3.2 archive — a136 archive 뒤

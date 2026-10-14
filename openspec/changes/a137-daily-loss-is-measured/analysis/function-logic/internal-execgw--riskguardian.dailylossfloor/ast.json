@@ -1,0 +1,168 @@
+{
+  "file": "internal/execgw/a137_daily_loss.go",
+  "source_sha256": "d0869728c1f8f72d8700e04a9432735c06752babd9d56e27736562fef56a2e01",
+  "package": "execgw",
+  "function": "dailyLossFloor",
+  "receiver": "RiskGuardian",
+  "signature": "RiskGuardian.dailyLossFloor(params=4, results=2)",
+  "start": {
+    "line": 145,
+    "column": 1
+  },
+  "end": {
+    "line": 165,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 147,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 152,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 156,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 161,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 149,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 153,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 159,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 164,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 19
+      },
+      "text": "g.measuredDailyLoss"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 16
+      },
+      "text": "validDailyLoss"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 58
+      },
+      "text": "g.policy.LimitCurrency"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 14
+      },
+      "text": "riskcalc.CompareDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 19
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 148,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 151,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 155,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 158,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 162,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

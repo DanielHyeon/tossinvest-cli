@@ -182,3 +182,18 @@ Pre-Edit Gate:
 base `a000cf29` 뒤에 a136 커밋 셋(844a042c · 1539c675 · 63fd0c92)이 이 change 의 첫 수리 커밋 **앞에** 들어왔다. 그래서 착지를 이 change 의
 마지막 커밋에 기록해도 창(base..landing)에 a136 의 수정 함수 13 개가 들어온다(`check_analysis` 2026-10-14 실측: required 24 = a137 11 + a136 13,
 a137 11 은 모두 통과). 닫는 길은 WORKFLOW 「사람 승인 base 재고정」(귀속 실측 · 승인 기록 · 단독 커밋)뿐이다 — 이 팀메이트는 base 를 옮기지 않는다.
+
+### 사람 승인 base 재고정 — `a000cf29` → `63fd0c92` (Manager 승인 2026-10-15)
+
+WORKFLOW 「사람 승인 base 재고정」 세 조건:
+
+1. **귀속 실측** — 옛 base `a000cf29` 와 새 base `63fd0c92` 사이의 이 change 자기 Go 커밋(이 change 디렉터리를 만지며 `.go` 를 고친 비병합 커밋)은
+   `a1cfe0c2` · `4fc5d4a4` 둘이다(0 이 아님). 그 두 커밋이 고친 기존 함수 11 개(IssueEntry · PrecheckQFinalEntry · ProjectOperatingMode ·
+   ObserveStrategyEntryGate · withStrategyEntryGateAuthority · checkEntry · submit · admit · deliverEachStrategyHandoff · qFinalKRRequest ·
+   TestStrategyFirstLegAdmissionUsesGuardianOnlyAllEightLanes)는 **전부 fresh 번들로 덮였다** — 옛 base 기준 `check_analysis` 실측(2026-10-14,
+   working tree): required 24 = **a137 11(전부 통과)** + **a136 13(형제 착지 몫 — 844a042c · 1539c675 · 63fd0c92 가 a137 창 안에 끼어듦)**.
+2. **승인 기록** — Manager 가 2026-10-15 새 base `63fd0c92`(a136 의 마지막 커밋, a136 착지 = 63fd0c92 · bd7cb53f 기록) 를 승인했다. Manager 가 버림
+   워크트리에서 새 base 로 잰 결과 required 9, 그중 수리 커밋 `c83241ff` 가 고친 5 함수(이제 새 base 의 기존 함수)가 번들 없음 → 이 커밋에서 5 번들을 씀:
+   `RiskGuardian.dailyLossFloor` · `evaluateChainWithDailyLoss` · `TestA137ClassificationIsUnchangedForEveryPrecheckRefusal` ·
+   `firstLegGuardianSpy.MeasureDailyLoss` · `TestA137TheFinalGateFenceMarksOnlyTheDailyLossChange`(편집 전 AST = `63fd0c92` blob, 편집 뒤 = 현재).
+3. **단독 커밋 + 영수증** — `base-commit.txt` 한 파일만 담은 커밋(메시지에 옛→새 sha · 귀속 실측 · 옛 required 24 의 형제 몫).

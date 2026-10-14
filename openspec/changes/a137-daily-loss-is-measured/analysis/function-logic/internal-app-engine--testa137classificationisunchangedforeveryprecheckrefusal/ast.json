@@ -1,0 +1,179 @@
+{
+  "file": "internal/app/engine/a137_daily_loss_cycle_test.go",
+  "source_sha256": "9f1fa83e44763f4251ccf0598f63049f2d5565ce28f104d68b1da1873667b5d0",
+  "package": "engine",
+  "function": "TestA137ClassificationIsUnchangedForEveryPrecheckRefusal",
+  "signature": "TestA137ClassificationIsUnchangedForEveryPrecheckRefusal(params=1, results=0)",
+  "start": {
+    "line": 145,
+    "column": 1
+  },
+  "end": {
+    "line": 168,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 159,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 164,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 12
+      },
+      "text": "pairedStrategyFirstLegResults"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 95
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 98
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 95
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 95
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 40
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 52
+      },
+      "text": "firstLegBridgeIssuanceFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 162,
+        "column": 14
+      },
+      "text": "admit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 162,
+        "column": 14
+      },
+      "text": "newStrategyFirstLegAdmissionBridge"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 162,
+        "column": 71
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 75
+      },
+      "text": "errors.As"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 111
+      },
+      "text": "isCentralStrategyIntegrity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 165,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 147,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 160,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 161,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 162,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
