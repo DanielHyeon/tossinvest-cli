@@ -58,3 +58,10 @@ Pre-Edit Gate:
 | P3-3 | P3 | oneshot 시작 시간 상한 없음 | **수용** — `TimeoutStartSec=50s` |
 | P3-4 | P3 | 시험 공백: 복구 → IDLE, cmd autostart OFF, 실제 Hold/Release 수명 | **수용** — `TestA134RecoveryToIdleSaysTheWatchEnded` · `TestA134HeartbeatCheckWithAutostartOffLeavesAStoppedEngineAlone` · 수명 시험. 리뷰어 생존 변이 둘을 M6 · M7 로 재현 → CAUGHT |
 | P3-5 | P3 | 호스트 바이너리가 낡거나 없으면 단위가 매 분 실패 — 감시자 자체는 아무도 안 봄 | **수용(명시)** — design D7 의 선택적 외부 박동이 그 답. 설치 절차 4 가 바이너리를 실측 |
+
+## 사람 승인 base 재고정 (2026-10-14)
+
+- 승인: 사용자(2026-10-14, Manager 제시안 「1. 둘 다 승인」 선택).
+- 옛 base `421bf53c` → 새 base `ecf9fb3fdeaa`(이 change 첫 Go 커밋의 부모).
+- 귀속 실측: 옛 base..새 base 에서 이 change 디렉터리를 만지고 `.go` 를 고친 비병합 커밋 0.
+- 옛 base 에서 required 26 함수 — 거의 전부 형제 착지 몫(a128 1.6·1.7(7c16a776·ecf9fb3f)). 새 base 격리 워크트리 실측: check_analysis rc 0, evidence complete.

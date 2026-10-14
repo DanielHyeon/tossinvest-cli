@@ -58,3 +58,10 @@ Story: `STORY-TOS-a134` · 알림 · 생존 관측 경로(주문 · 손절 · �
 7. 계획된 정지(배포 · KST 05:00~09:00 교체) 동안 autostart ON 이면 「끊김」 1건 + 「복구」 1건이 온다 — 정상. 원치 않으면 그 동안
    `systemctl --user stop tossos-heartbeat.timer` 후 다시 `start`.
 8. (선택, 기본 OFF — design D7) 기계 전체 정지까지 잡으려면 외부 박동 서비스 URL 을 drop-in 의 `ExecStartPost=/usr/bin/curl -fsS -m 10 --retry 2 <url>` 로 붙인다.
+
+## 사람 승인 base 재고정 (2026-10-14)
+
+- 승인: 사용자(2026-10-14, Manager 제시안 「1. 둘 다 승인」 선택).
+- 옛 base `421bf53c` → 새 base `ecf9fb3fdeaa`(이 change 첫 Go 커밋의 부모).
+- 귀속 실측: 옛 base..새 base 에서 이 change 디렉터리를 만지고 `.go` 를 고친 비병합 커밋 0.
+- 옛 base 에서 required 26 함수 — 거의 전부 형제 착지 몫(a128 1.6·1.7(7c16a776·ecf9fb3f)). 새 base 격리 워크트리 실측: check_analysis rc 0, evidence complete.

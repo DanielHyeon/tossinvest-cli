@@ -28,3 +28,10 @@ Function Logic Map: not-applicable — `internal/app/engine/attestation_watch.go
   실행자가 critical Notify 를 회수 경계 아래에서 부르기 시작하면 같은 교착이 생김.
 - 콘솔 72시간 경고와 알림 D-2 의 기준 통일(design D5).
 - a134 의 호스트 알림 입구가 서면 attest 타이머 실행 뒤 결과 보고 검토(design D3).
+
+## 사람 승인 base 재고정 (2026-10-14)
+
+- 승인: 사용자(2026-10-14, Manager 제시안 「1. 둘 다 승인」 선택).
+- 옛 base `421bf53c` → 새 base `870baed68359`(이 change 첫 Go 커밋의 부모).
+- 귀속 실측: 옛 base..새 base 에서 이 change 디렉터리를 만지고 `.go` 를 고친 비병합 커밋 0.
+- 옛 base 에서 required 28 함수 — 거의 전부 형제 착지 몫(a128 1.6·1.7·a134(85752cd6·0d16eaa5)). 새 base 격리 워크트리 실측: check_analysis rc 0, evidence complete.
