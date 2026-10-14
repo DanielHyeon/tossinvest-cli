@@ -50,7 +50,8 @@ Story: `STORY-TOS-a136` · **High-risk**(Guardian 발급 · 예약 트랜잭션 
 
 ## 3. 사람 · Manager
 
-- [ ] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a136-daily-buy-notional-limit` + 독립 검증
+- [x] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a136-daily-buy-notional-limit` + 독립 검증
+      — 2026-10-15 Manager 독립 검증: 격리 워크트리(63fd0c92)에서 vet · execgw/manualbuy/console/config/risk/clock 시험 ok · `-tags tossos_testseams -run A136` execgw/journal/app·engine/cmd·tossctl ok · checkDailyBuyNotional 직접 읽음(위험 증가 결정만 판정 · 상한 부재/≤0 거절 · 합계(엔진+수동+이번) ≥ 상한 거절) · base 재고정 6cd36e6d(Manager 승인) · 착지 63fd0c92(bd7cb53f) · P3-2 Manager 수용
 - 배포(체크박스 아님): 엔진 이미지 교체는 사람이 KST 05:00~09:00 창에서. 실계좌 한도 값 변경 · 토글 flip 은 사람이 직접.
 
 ## 사람 승인 base 재고정 (2026-10-14)
