@@ -211,3 +211,10 @@ WORKFLOW 「사람 승인 base 재고정」 세 조건:
 
 RED: 수리 전 사본(`bd723b7f`)에서 `TestA137AnInvalidEquityWithAMeasurementFailureStaysUnmarked` 행동 FAIL(표지 붙음 · 상세 덮임), 엔진 시험 컴파일 RED
 (`DailyLossNotice` · 스냅숏 칸 미정의) — `analysis/red/red-rereview-*.txt`.
+
+## §8 3차 확인 (1789f022) — Manager 가 받아 옮김 (2026-10-15)
+
+- 판정: **APPROVE** — P0/P1 없음. P1-N1(측정 불가 흔적: 계수 · 첫 원인 · 일 키당 경고 1회) 닫힘 — 변이 N1 · N2 · N5 · N6 · N7 CAUGHT.
+  P2-N1(자본 무효 + 측정 실패 표지) 닫힘 — N3 · N4 CAUGHT. 알림 · 스냅숏에 계좌 참조 · 원문 오류 없음(a131/a133 경계).
+- P3 잔재(Manager 수용): N8 생존 — 「첫 원인」 대신 매번 덮어써도 시험이 못 잡음(원인 문자열 하나뿐). 관측 칸 정확성 문제이고 진입 판정 무영향 → 후속에서 원인 둘 시험 추가.
+- 리뷰어 실행: engine 전체 FAIL 2 는 `-trimpath` 로 소스 경로를 못 찾는 A111 시험 — `-trimpath` 없이 ok(회귀 아님).

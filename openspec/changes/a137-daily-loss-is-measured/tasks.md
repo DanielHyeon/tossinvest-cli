@@ -43,7 +43,8 @@ Story: `STORY-TOS-a137` · **High-risk**(Guardian · 위험 입력) — FLM/BTM 
       보호 주문 검사 삭제 · 형식 결함 행 검사 삭제 · 환산 내림)
 - [x] 2.3a 구현 적대 리뷰(a1cfe0c2) APPROVE-WITH-FIXES — P1×3 · P2×3 · P3 수리(review.md §6) — `c83241ff` · `3d48c22b`, 전 스위트 · race · 변이 37/37(receipts.md)
 - [x] 2.3b 수리 재확인(470324ce) APPROVE-WITH-FIXES — P1-N1 · P2-N1 · P3-1 · P3-2 수리(review.md §7)
-- [ ] 2.3 적대적 독립 리뷰(분리된 컨텍스트) → `review.md`
+- [x] 2.3 적대적 독립 리뷰(분리된 컨텍스트) → `review.md`
+      — 구현 리뷰 1차 APPROVE-WITH-FIXES → 재확인 APPROVE-WITH-FIXES → 3차 APPROVE(review.md §6~§8), N8 P3 잔재 수용
 
 - [x] 2.4 원장 읽기 지연 측정 — `analysis/verify/latency.md`(bd723b7f 사본: 5,000 행 6.1 ms p95 · 20,000 행 25.9 ms p95 · 50,000 행 70.3 ms p95, 전수 스캔 별도). 원문: 원장 읽기 지연 측정 — 현실 크기 픽스처(관리 포지션 수천 · 일 키 창 안 수십)에서 측정 질의 1회의 시간과 단일 연결 점유 시간.
       `countMalformedClosedAt` 은 계좌의 CLOSED 행 전체를 positionSelect 로 훑음(형식 결함은 범위 사전 필터로 못 거르므로) — 그 전수 스캔 시간을 따로 잴 것
@@ -51,5 +52,6 @@ Story: `STORY-TOS-a137` · **High-risk**(Guardian · 위험 입력) — FLM/BTM 
 ## 3. 사람 · Manager
 
 - [x] 2.5 사람 승인 base 재고정 `a000cf29` → `63fd0c92`(Manager 승인 2026-10-15, review.md §6) — 귀속: 자기 Go 커밋 a1cfe0c2 · 4fc5d4a4 의 11 함수 전부 fresh 번들, 옛 창 required 24 = a137 11 + a136 13(형제 착지 몫). 새 base 기준 수리 커밋 함수 5 번들 추가
-- [ ] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a137-daily-loss-is-measured` + 독립 검증
+- [x] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a137-daily-loss-is-measured` + 독립 검증
+      — 2026-10-15 Manager 독립 검증: 별도 리뷰어 3회(분리 컨텍스트 · 사본 하네스 변이) · base 재고정 a000cf29→63fd0c92(Manager 승인) · 착지 b36416dc(격리 워크트리 계산) · a136 archive 뒤 델타 충돌 0 확인
 - [ ] 3.2 archive — a136 archive 뒤
