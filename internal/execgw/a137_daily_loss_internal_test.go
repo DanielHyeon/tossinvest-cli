@@ -260,6 +260,11 @@ func TestA137OnlyTheAutomaticDailyLossModeIsAQuietAccountBlock(t *testing.T) {
 			a137Project(g, 1, journal.ModeEntryBlocked, journal.ModeActorAuto, journal.ModeTriggerDailyLossLimit)
 			g.Block(ReasonReconcileMismatch, "reconcile")
 		},
+		// latchOrder 밖의 사유는 모드보다 **뒤**에 읽히므로 관측 거절은 모드 문구가 됨 — 그래도 latch 가 둘이면 조용한 차단이 아님.
+		"daily loss plus a latch outside latchOrder": func(g *EntryGate) {
+			a137Project(g, 1, journal.ModeEntryBlocked, journal.ModeActorAuto, journal.ModeTriggerDailyLossLimit)
+			g.Block(ReasonCode("A137_UNLISTED_LATCH"), "unlisted")
+		},
 		"daily loss plus a symbol latch": func(g *EntryGate) {
 			a137Project(g, 1, journal.ModeEntryBlocked, journal.ModeActorAuto, journal.ModeTriggerDailyLossLimit)
 			g.BlockSymbol("kr", "005930", ReasonReconcileMismatch, "symbol")
@@ -290,6 +295,18 @@ func TestA137TheFinalGateFenceMarksOnlyTheDailyLossChange(t *testing.T) {
 	fenced := strategyFenceRejection(err)
 	if fenced.Reason != ReasonStrategyDispatchFenced || !a137IsAccountBlock(fenced) {
 		t.Fatalf("fenced = %+v, want a fenced rejection that keeps the account-block cause", fenced)
+	}
+
+	// 일일 손실 모드와 다른 latch 가 함께 생기면 펜스는 오늘처럼(조용한 차단 아님).
+	gw3, gate3 := a137Gate(t)
+	expected3, err := gw3.ObserveStrategyEntryGate(ctx, "kr", "005930")
+	if err != nil {
+		t.Fatal(err)
+	}
+	a137Project(gate3, 1, journal.ModeEntryBlocked, journal.ModeActorAuto, journal.ModeTriggerDailyLossLimit)
+	gate3.Block(ReasonReconcileMismatch, "reconcile")
+	if err := gw3.withStrategyEntryGateAuthority(ctx, expected3, "kr", "005930", func() error { return nil }); err == nil || a137IsAccountBlock(err) {
+		t.Fatalf("err = %v, want an ordinary fence when another latch joins the daily-loss mode", err)
 	}
 
 	gw2, gate2 := a137Gate(t)

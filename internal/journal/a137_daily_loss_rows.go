@@ -4,7 +4,7 @@ package journal
 //
 // # 무엇을 돌려주는가
 //
-// 계좌의 CLOSED **관리** 포지션(진입 결정 또는 편입이 있는 것) 중 closed_at 이 [from, to) 인 것, 그리고 행마다
+// 계좌의 CLOSED **관리** 포지션(Position.ExitEligible) 중 closed_at 이 [from, to) 인 것, 그리고 행마다
 //   - 동결된 성과(realized_pnl_after_costs, 없으면 nil),
 //   - 조정으로 닫혔는지(마지막 조정의 new_quantity 가 decimal 0),
 //   - 조정으로 닫혔다면 그 인스턴스 수명과 겹쳐 엔진 매도가 브로커에 나갔을 수 있는지
@@ -46,9 +46,9 @@ type DailyLossRow struct {
 	EngineSellDispatched bool
 }
 
-// managedClosedWhere 는 계좌의 CLOSED 관리 포지션 조건임(position.ExitEligible 과 같은 술어 — 진입 결정 또는 편입).
-const managedClosedWhere = `p.account_ref = ? AND p.state = 'CLOSED'
-	   AND (coalesce(p.entry_decision_id, '') <> '' OR coalesce(p.adoption_id, '') <> '')`
+// 관리 여부는 이 파일이 열 이름으로 다시 쓰지 않음 — positionSelect 로 읽고 Position.ExitEligible(position.ExitEligible 한 곳)로 가름
+// (eligibility_drift_test · adoption_static_test 가 그 단일 철자를 지킴).
+const closedPositionsWhere = " WHERE account_ref = ? AND state = 'CLOSED'"
 
 // DailyLossRows 는 계좌의 측정 후보 행을 돌려줌. from · to 는 사전 필터 창(호출자가 일 키 창에 여유를 더해 넘김).
 func (j *Journal) DailyLossRows(ctx context.Context, accountRef string, from, to time.Time) ([]DailyLossRow, error) {
@@ -81,45 +81,61 @@ func (j *Journal) DailyLossRows(ctx context.Context, accountRef string, from, to
 }
 
 func (j *Journal) countMalformedClosedAt(ctx context.Context, accountRef string) (int, error) {
-	var n int
-	err := j.db.QueryRowContext(ctx, `SELECT count(*) FROM positions p WHERE `+managedClosedWhere+`
-	   AND (p.closed_at IS NULL OR p.closed_at NOT GLOB
-	        '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9]*Z')`, accountRef).Scan(&n)
+	positions, err := j.closedPositions(ctx, closedPositionsWhere+` AND (closed_at IS NULL OR closed_at NOT GLOB
+	        '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9]*Z')`, accountRef)
 	if err != nil {
 		return 0, fmt.Errorf("journal: checking closed_at shapes for the daily loss: %w", err)
+	}
+	n := 0
+	for _, p := range positions {
+		if p.ExitEligible() {
+			n++
+		}
 	}
 	return n, nil
 }
 
+// closedPositions 는 positionSelect 로 읽고 커서를 닫은 뒤 돌려줌(단일 연결 — 다음 질의 전에 행을 다 읽음).
+func (j *Journal) closedPositions(ctx context.Context, where string, args ...any) ([]Position, error) {
+	rows, err := j.db.QueryContext(ctx, positionSelect+where, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Position
+	for rows.Next() {
+		p, err := scanPosition(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
+}
+
 func (j *Journal) dailyLossCandidates(ctx context.Context, accountRef, from, to string) ([]DailyLossRow, error) {
-	rows, err := j.db.QueryContext(ctx, `
-		SELECT p.id, p.market, p.symbol, coalesce(p.opened_at, ''), p.closed_at, o.realized_pnl_after_costs,
-		       (SELECT a.new_quantity FROM position_adjustments a WHERE a.position_id = p.id
-		         ORDER BY a.created_at DESC, a.rowid DESC LIMIT 1)
-		  FROM positions p LEFT JOIN trade_outcomes o ON o.position_id = p.id
-		 WHERE `+managedClosedWhere+` AND p.closed_at >= ? AND p.closed_at < ?
-		 ORDER BY p.closed_at, p.id`, accountRef, from, to)
+	positions, err := j.closedPositions(ctx, closedPositionsWhere+` AND closed_at >= ? AND closed_at < ? ORDER BY closed_at, id`,
+		accountRef, from, to)
 	if err != nil {
 		return nil, fmt.Errorf("journal: reading the daily-loss candidates: %w", err)
 	}
-	defer rows.Close()
 	var out []DailyLossRow
-	for rows.Next() {
-		var (
-			r        DailyLossRow
-			outcome  *string
-			lastAdjQ *string
-		)
-		if err := rows.Scan(&r.PositionID, &r.Market, &r.Symbol, &r.OpenedAt, &r.ClosedAt, &outcome, &lastAdjQ); err != nil {
-			return nil, fmt.Errorf("journal: reading the daily-loss candidates: %w", err)
+	for _, p := range positions {
+		if !p.ExitEligible() {
+			continue // 관리 대상이 아님(외부 · 수동 보유) — 세지 않음
+		}
+		r := DailyLossRow{PositionID: p.ID, Market: p.Market, Symbol: p.Symbol, OpenedAt: p.OpenedAt, ClosedAt: p.ClosedAt}
+		var outcome, lastAdjQ *string
+		if err := j.db.QueryRowContext(ctx, `SELECT
+		        (SELECT realized_pnl_after_costs FROM trade_outcomes WHERE position_id = ?),
+		        (SELECT new_quantity FROM position_adjustments WHERE position_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1)`,
+			p.ID, p.ID).Scan(&outcome, &lastAdjQ); err != nil {
+			return nil, fmt.Errorf("journal: reading the daily-loss facts of a close: %w", err)
 		}
 		r.Outcome = outcome
 		// 조정 종결: 마지막 조정이 수량을 decimal 0 으로 만듦(「0.000」 도 0). 그 조정이 포지션을 CLOSED 로 만든 것임(convergedState).
 		r.AdjustmentClosed = lastAdjQ != nil && isZeroDecimal(*lastAdjQ)
 		out = append(out, r)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("journal: reading the daily-loss candidates: %w", err)
 	}
 	return out, nil
 }
