@@ -135,3 +135,4 @@
 | `a135-attestation-expiry-is-announced` | STORY-TOS-a135 | archived |
 | `a136-daily-buy-notional-limit` | STORY-TOS-a136 | archived |
 | `a137-daily-loss-is-measured` | STORY-TOS-a137 | archived |
+| `a138-max-open-positions` | STORY-TOS-a138 | in_progress |

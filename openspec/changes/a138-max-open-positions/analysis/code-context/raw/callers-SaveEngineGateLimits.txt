@@ -1,0 +1,45 @@
+
+Callers of "SaveEngineGateLimits" (14):
+
+function    TestSavingLimitsNeverRewritesEnabled
+  internal/config/limits_io_test.go:58
+
+function    TestTheSaveCarriesNoEnabledKeyOfItsOwn
+  internal/config/limits_io_test.go:88
+
+function    TestUnknownKeysSurviveToTheByte
+  internal/config/limits_io_test.go:100
+
+function    TestTheAdoptionBlockIsUntouched
+  internal/config/limits_io_test.go:123
+
+function    TestSavingRefusesWhatTheInterlockWouldRefuse
+  internal/config/limits_io_test.go:149
+
+function    TestSavingRefusesAboveTheCeiling
+  internal/config/limits_io_test.go:179
+
+function    TestSavingRefusesAnUnregisteredCurrency
+  internal/config/limits_io_test.go:194
+
+function    TestTheGateBlockIsCreatedWhenAbsent
+  internal/config/limits_io_test.go:204
+
+function    TestSavingIntoNoFileCreatesASkeleton
+  internal/config/limits_io_test.go:225
+
+function    TestSavingRefusesAFileThatIsNotJSON
+  internal/config/limits_io_test.go:244
+
+function    TestConcurrentAutostartAndLimitSavesPreserveBoth
+  internal/config/operating_io_test.go:182
+
+function    TestTheLimitSaveStillCannotMoveTheSwitch
+  internal/config/operating_io_test.go:245
+
+function    TestA136ACurrencyChangingSaveClearsTheDailyBuyCeiling
+  internal/config/a136_daily_buy_test.go:54
+
+function    TestA136TheLimitWriterTouchesTheDailyBuyKeyOnlyWhenAsked
+  internal/config/a136_daily_buy_test.go:84
+

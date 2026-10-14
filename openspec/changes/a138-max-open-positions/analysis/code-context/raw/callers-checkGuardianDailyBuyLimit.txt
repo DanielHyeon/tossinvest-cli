@@ -1,0 +1,6 @@
+
+Callers of "checkGuardianDailyBuyLimit" (1):
+
+function    verifyGate
+  internal/app/engine/interlock.go:484
+

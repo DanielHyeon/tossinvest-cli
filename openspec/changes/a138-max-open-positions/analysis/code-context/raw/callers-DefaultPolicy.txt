@@ -1,0 +1,63 @@
+
+Callers of "DefaultPolicy" (20):
+
+function    buildE2EStack
+  internal/app/engine/exit_e2e_test.go:242
+
+function    TestTheRealGuardianClearsEveryClause
+  internal/app/engine/guardian_test.go:97
+
+function    TestTheRealGuardianIsPublishedWhenTheGateVerifies
+  internal/app/engine/guardian_test.go:143
+
+function    TestAGuardianSizedAgainstOtherNumbersIsRefused
+  internal/app/engine/guardian_test.go:188
+
+function    TestTheMoneyCeilingsAlsoHaveToAgree
+  internal/app/engine/guardian_test.go:213
+
+function    accountBaseTestPolicy
+  internal/risk/account_base_test.go:276
+
+function    TestStrategyEntryQuantityUsesExactMinimumOfGuardianCaps
+  internal/risk/contract_test.go:93
+
+function    TestStrategyEntryQuantityRefusesZeroCapacity
+  internal/risk/contract_test.go:131
+
+function    TestDefaultMinimumRewardRiskIsTwo
+  internal/risk/contract_test.go:401
+
+function    TestPolicyRejectsInvalidThresholds
+  internal/risk/contract_test.go:504
+
+function    TestDefaultPolicyIsTheConservativeDefaultSet
+  internal/risk/contract_test.go:537
+
+function    exitPolicy
+  internal/app/engine/exitloop_test.go:312
+
+function    TestA136DefaultPolicyCarriesTheDailyBuyCeiling
+  internal/risk/a136_daily_buy_policy_test.go:11
+
+function    TestA136PolicyValidationRefusesAnUnusableDailyBuyCeiling
+  internal/risk/a136_daily_buy_policy_test.go:21
+
+function    usdPolicy
+  internal/risk/chain_test.go:61
+
+function    entryInput
+  internal/risk/chain_test.go:75
+
+function    TestAutomationGateRiskPolicyUsesEveryConfiguredUSDLimit
+  internal/app/engine/guardian_wiring_internal_test.go:15
+
+function    gridPolicy
+  internal/measure/counterfactual.go:353
+
+function    TestA136ProductionPolicyResolvesTheDailyBuyCeiling
+  internal/app/engine/a136_daily_buy_wiring_internal_test.go:12
+
+function    guardianPolicy
+  internal/execgw/riskguardian_test.go:34
+

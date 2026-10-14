@@ -1,0 +1,15 @@
+
+Callers of "LimitsDigest" (4):
+
+method      IssueAndPlan
+  internal/strategydispatch/adapters.go:29
+
+function    TestA136TheLimitsDigestBindsTheDailyBuyCeiling
+  internal/execgw/a136_daily_buy_test.go:62
+
+method      IssueStrategyEntry
+  internal/execgw/riskguardian.go:349
+
+method      PrecheckQFinalEntry
+  internal/execgw/riskguardian_qfinal.go:89
+

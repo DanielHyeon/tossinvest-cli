@@ -1,0 +1,25 @@
+{
+  "id": "STORY-TOS-a138",
+  "title": "The account holds at most a configured number of positions",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a138-max-open-positions",
+    "path": "openspec/changes/a138-max-open-positions"
+  },
+  "found_by": {
+    "date": "2026-10-15",
+    "how": "The user asked for a maximum of 6 open positions (decision 2026-10-15). The Manager confirmed that risk-management excludes MAX_POSITIONS as P3 and that no Guardian limit counts how many positions the account holds.",
+    "record": "openspec/changes/a138-max-open-positions/proposal.md"
+  },
+  "acceptance": [
+    "Every exposure-raising Guardian issuance is refused when the distinct symbols of live positions, held entry reservations and the new entry would exceed the configured maximum",
+    "The maximum is optional in config; absent or zero means the default 6 applies in every currency",
+    "If the count cannot be computed the entry is refused (fail-closed); sells, stop-losses, emergency exits, flatten and reconciliation are never evaluated against the maximum",
+    "The startup interlock refuses a Guardian that does not declare the resolved maximum, and the value is bound into the limits digest",
+    "Changing the maximum goes through the audited limit settings seam and leaves an audit line with old and new values"
+  ],
+  "limits": [
+    "Registered with the proposal on 2026-10-15. Implementation is blocked on the user's choice of which positions count (design D1) and on scale-in at the maximum (design D2)."
+  ]
+}
