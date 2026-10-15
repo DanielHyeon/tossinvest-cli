@@ -110,6 +110,7 @@ func TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest(t *testing.T) {
 		{"kr symbol whitespace", "KR", " 0101N0", 200, ""},
 		{"kr symbol non-ascii", "KR", "가101N0", 200, ""},
 		{"kr symbol too short", "KR", "00593", 200, ""},
+		{"kr symbol too long", "KR", "0101N00", 200, ""},
 		{"us symbol lower case", "US", "aapl", 200, ""},
 		{"us symbol too long", "US", "ABCDEFGHIJK", 200, ""},
 		{"us symbol leading digit", "US", "1AAPL", 200, ""},
