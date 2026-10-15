@@ -20,8 +20,8 @@ func TestListWatchlistFromFixtures(t *testing.T) {
 		method, path = r.Method, r.URL.RequestURI()
 		_, _ = w.Write([]byte(`{"result":{"watchlists":[
 			{"id":2,"name":"later","ordering":1,"items":[{"code":"CODE2","symbol":"TICK2","name":"two","ordering":2,"prices":{"currency":"USD","base":2,"close":3}}]},
-			{"id":1,"name":"first","ordering":1,"items":[{"code":"CODE1A","symbol":"TICK1A","name":"one-a","ordering":3,"prices":{"currency":"KRW","base":1,"close":2}},{"code":"CODE1B","name":"one-b","ordering":1,"prices":null},{"code":"CODE1C","name":"one-c","ordering":2,"prices":{"currency":"USD","base":4,"close":5}}]},
-			{"id":3,"name":"third","ordering":2,"items":[{"code":"CODE3","name":"three","ordering":1,"prices":{"currency":"USD","base":7,"close":8}}]}
+			{"id":3,"name":"third","ordering":2,"items":[{"code":"CODE3","name":"three","ordering":1}]},
+			{"id":1,"name":"first","ordering":1,"items":[{"code":"CODE1A","symbol":"TICK1A","name":"one-a","ordering":3,"prices":{"currency":"KRW","base":1,"close":2}},{"code":"CODE1B","name":"one-b","ordering":1,"prices":null},{"code":"CODE1C","name":"one-c","ordering":1,"prices":{"currency":"USD","base":0,"close":0}}]}
 		]}}`))
 	}))
 	defer srv.Close()
@@ -36,9 +36,9 @@ func TestListWatchlistFromFixtures(t *testing.T) {
 	want := []domain.WatchlistItem{
 		{Group: "later", Symbol: "CODE2", Name: "two", Currency: "USD", Base: 2, Last: 3},
 		{Group: "first", Symbol: "CODE1B", Name: "one-b"},
-		{Group: "first", Symbol: "CODE1C", Name: "one-c", Currency: "USD", Base: 4, Last: 5},
+		{Group: "first", Symbol: "CODE1C", Name: "one-c", Currency: "USD"},
 		{Group: "first", Symbol: "CODE1A", Name: "one-a", Currency: "KRW", Base: 1, Last: 2},
-		{Group: "third", Symbol: "CODE3", Name: "three", Currency: "USD", Base: 7, Last: 8},
+		{Group: "third", Symbol: "CODE3", Name: "three"},
 	}
 	if !reflect.DeepEqual(items, want) {
 		t.Fatalf("items=%+v want=%+v", items, want)

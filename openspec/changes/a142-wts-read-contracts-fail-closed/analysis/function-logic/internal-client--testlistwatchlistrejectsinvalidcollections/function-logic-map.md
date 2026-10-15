@@ -1,7 +1,7 @@
 # Function Logic Map: `TestListWatchlistRejectsInvalidCollections`
 
 - Source: `internal/client/watchlist_test.go`
-- AST evidence: `ast.json` (`4b44cbef53c966a7b38b4c1b13861c16881edc3f5c297b6f3188706784ef215c`)
+- AST evidence: `ast.json` (`de3ec778a43b365513e8d9ae4070f3bd19a039c6ac5c5bf397d46af9288e7bf7`)
 
 ## Intent
 

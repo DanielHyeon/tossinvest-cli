@@ -1,6 +1,6 @@
 {
   "file": "internal/client/watchlist_test.go",
-  "source_sha256": "4b44cbef53c966a7b38b4c1b13861c16881edc3f5c297b6f3188706784ef215c",
+  "source_sha256": "de3ec778a43b365513e8d9ae4070f3bd19a039c6ac5c5bf397d46af9288e7bf7",
   "package": "client",
   "function": "TestListWatchlistRejectsInvalidCollections",
   "signature": "TestListWatchlistRejectsInvalidCollections(params=1, results=0)",
