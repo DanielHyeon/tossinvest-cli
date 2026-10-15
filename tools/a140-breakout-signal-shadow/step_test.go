@@ -11,6 +11,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/scheduler"
 )
 
 // movingClock 은 시험이 분 단위로 옮기는 시계.
@@ -388,5 +389,106 @@ func TestALabelSeesPastAGapAfterTheProposal(t *testing.T) {
 	}
 	if labels != 1 {
 		t.Fatalf("target labels = %d; want 1 — the 09:20 bar past the gap reaches the target", labels)
+	}
+}
+
+// TestPolicyChangeRefusesBeforeAnyRestartRead fixes the lot boundary: policy changes must never reuse a
+// same-session universe or make a ranking/quote request before refusal.
+func TestPolicyChangeRefusesBeforeAnyRestartRead(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name   string
+		mutate func(*probeConfig)
+	}{
+		{"risk budget", func(c *probeConfig) { c.Params.RiskBudgetKRW++ }},
+		{"cost", func(c *probeConfig) { c.Params.CostPPM++ }},
+		{"label grace", func(c *probeConfig) { c.LabelGrace += time.Minute }},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			clk := &movingClock{now: testOpen}
+			dir := t.TempDir()
+			first := newTestProbe(t, newFakeSource(nil, clk.Now), clk, dir)
+			if err := first.startSession(context.Background(), testCalendar(t), sessionSourceCalendar); err != nil {
+				t.Fatal(err)
+			}
+			restartSource := newFakeSource(nil, clk.Now)
+			restart := newTestProbe(t, restartSource, clk, dir)
+			tc.mutate(&restart.cfg)
+			if err := restart.startSession(context.Background(), testCalendar(t), sessionSourceCalendar); err == nil || !strings.Contains(err.Error(), "lot") {
+				t.Fatalf("changed policy joined existing lot: %v", err)
+			}
+			if restartSource.count("Rankings") != 0 || restartSource.count("StrictOrderbookTop") != 0 {
+				t.Fatalf("changed policy reached source before refusal: rankings=%d quotes=%d", restartSource.count("Rankings"), restartSource.count("StrictOrderbookTop"))
+			}
+		})
+	}
+}
+
+// TestSessionIdentityChangeRefusesBeforeAnyRestartRead prevents same-date manual/calendar
+// corrections from silently sharing a lot with a different session window or calendar version.
+func TestSessionIdentityChangeRefusesBeforeAnyRestartRead(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name   string
+		mutate func(*scheduler.CalendarSnapshot)
+	}{
+		{"window", func(cal *scheduler.CalendarSnapshot) {
+			window := *cal.Today.Regular
+			window.Open = window.Open.Add(time.Minute)
+			cal.Today.Regular = &window
+		}},
+		{"calendar version", func(cal *scheduler.CalendarSnapshot) { cal.Version += "-corrected" }},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			clk := &movingClock{now: testOpen}
+			dir := t.TempDir()
+			calendar := testCalendar(t)
+			first := newTestProbe(t, newFakeSource(nil, clk.Now), clk, dir)
+			if err := first.startSession(context.Background(), calendar, sessionSourceManual); err != nil {
+				t.Fatal(err)
+			}
+			changed := calendar
+			tc.mutate(&changed)
+			restartSource := newFakeSource(nil, clk.Now)
+			restart := newTestProbe(t, restartSource, clk, dir)
+			if err := restart.startSession(context.Background(), changed, sessionSourceManual); err == nil || !strings.Contains(err.Error(), "session identity") {
+				t.Fatalf("changed session identity joined existing universe: %v", err)
+			}
+			if restartSource.count("Rankings") != 0 || restartSource.count("StrictOrderbookTop") != 0 {
+				t.Fatalf("changed session identity reached source before refusal: rankings=%d quotes=%d", restartSource.count("Rankings"), restartSource.count("StrictOrderbookTop"))
+			}
+		})
+	}
+}
+
+// TestMissingUniverseSessionIdentityFailsClosed keeps old rows as evidence but never reuses their universe.
+func TestMissingUniverseSessionIdentityFailsClosed(t *testing.T) {
+	t.Parallel()
+	clk := &movingClock{now: testOpen}
+	dir := t.TempDir()
+	cfg := defaultProbeConfig()
+	cfg.Params = testParams()
+	cfg.ReadGap, cfg.RetryDelays = 0, []time.Duration{0, 0}
+	calendar := testCalendar(t)
+	policy := effectivePolicyFor(cfg, sessionSourceCalendar)
+	led, err := openLedger(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := led.write(ledgerRow{Kind: kindUniverse, Session: "KRX:" + calendar.Today.Date, Lot: lotForPolicy(policy.digest()), Symbols: []string{"005930"}, Policy: &policy, PolicyDigest: policy.digest()}); err != nil {
+		t.Fatal(err)
+	}
+	if err := led.Close(); err != nil {
+		t.Fatal(err)
+	}
+	src := newFakeSource(nil, clk.Now)
+	p := newTestProbe(t, src, clk, dir)
+	if err := p.startSession(context.Background(), calendar, sessionSourceCalendar); err == nil || !strings.Contains(err.Error(), "session identity") {
+		t.Fatalf("unidentified universe was reused: %v", err)
+	}
+	if src.count("Rankings") != 0 || src.count("StrictOrderbookTop") != 0 {
+		t.Fatalf("missing identity reached source before refusal: rankings=%d quotes=%d", src.count("Rankings"), src.count("StrictOrderbookTop"))
 	}
 }

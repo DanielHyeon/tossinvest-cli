@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"math"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -168,7 +167,10 @@ func (p *probe) startSession(ctx context.Context, cal scheduler.CalendarSnapshot
 	}
 	p.calendar, p.sessionSource = cal, source
 	p.sess = sessionInfo{ID: "KRX:" + cal.Today.Date, CalendarVersion: cal.Version, Open: cal.Today.Regular.Open, Close: cal.Today.Regular.Close}
-	p.lot = breakoutsignal.Version + "@retest_tolerance_ppm=" + strconv.FormatUint(p.cfg.Params.RetestTolerancePPM, 10)
+	policy := effectivePolicyFor(p.cfg, source)
+	policyDigest := policy.digest()
+	sessionIdentity := sessionIdentityFor(p.sess)
+	p.lot = lotForPolicy(policyDigest)
 	p.lastBudget = p.now()
 
 	all, err := readLedger(p.ledgerPath)
@@ -184,10 +186,16 @@ func (p *probe) startSession(ctx context.Context, cal scheduler.CalendarSnapshot
 		if row.Lot != p.lot {
 			return fmt.Errorf("the ledger already holds %s rows of lot %q; this run is lot %q — use another --out instead of mixing", p.sess.ID, row.Lot, p.lot)
 		}
-		rows = append(rows, row)
 		if row.Kind == kindUniverse {
+			if row.Policy == nil || row.PolicyDigest != policyDigest || row.Policy.digest() != policyDigest {
+				return fmt.Errorf("the ledger universe policy for %s is missing or does not match lot %q", p.sess.ID, p.lot)
+			}
+			if row.SessionIdentity == nil || *row.SessionIdentity != sessionIdentity {
+				return fmt.Errorf("the ledger universe session identity for %s is missing or does not match this restart", p.sess.ID)
+			}
 			universe = row.Symbols
 		}
+		rows = append(rows, row)
 	}
 	if universe == nil {
 		universe, err = p.selectUniverse(ctx)
@@ -200,7 +208,7 @@ func (p *probe) startSession(ctx context.Context, cal scheduler.CalendarSnapshot
 		}
 		params := p.cfg.Params
 		if err := p.write(ledgerRow{Kind: kindUniverse, Symbols: universe, SessionSource: source, Params: &params,
-			ParamsSource: p.cfg.ParamsSource}); err != nil {
+			ParamsSource: p.cfg.ParamsSource, Policy: &policy, PolicyDigest: policyDigest, SessionIdentity: &sessionIdentity}); err != nil {
 			return err
 		}
 	}

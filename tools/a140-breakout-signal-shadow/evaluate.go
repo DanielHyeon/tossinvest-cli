@@ -4,7 +4,6 @@ package main
 
 import (
 	"errors"
-	"math"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane"
@@ -79,9 +78,9 @@ func evaluateSetup(series strategyevidence.BarSeries, sess sessionInfo, symbol s
 	}
 	// 틱은 opening range 저항의 호가 단위로 세션 동안 고정(§2.1-2) — 장중에 바꾸면 config digest → setupID 가 갈림.
 	tick := krTickMinor(resistance)
-	cfgIn := breakoutlane.V1ConfigInput{Version: breakoutlane.LaneVersionV1, TickMinor: tick, OpeningRangeMinutes: 15,
-		BreakoutBufferPPM: 100_000, RetestTolerancePPM: p.RetestTolerancePPM, TimeoutKR: 8, TimeoutUS: 10,
-		RVOLMinPPM: 1_500_000, UpperWickRangeMaxPPM: 350_000,
+	cfgIn := breakoutlane.V1ConfigInput{Version: breakoutlane.LaneVersionV1, TickMinor: tick, OpeningRangeMinutes: policyOpeningRangeMinutes,
+		BreakoutBufferPPM: policyBreakoutBufferPPM, RetestTolerancePPM: p.RetestTolerancePPM, TimeoutKR: policyTimeoutKR, TimeoutUS: policyTimeoutUS,
+		RVOLMinPPM: policyRVOLMinPPM, UpperWickRangeMaxPPM: policyUpperWickRangeMaxPPM,
 		MaxQuoteAgeMS: p.MaxQuoteAgeMS, MaxSpreadPPM: p.MaxSpreadPPM, MaxEntryDriftPPM: p.MaxEntryDriftPPM}
 	cfgIn.Digest = breakoutlane.V1ConfigDigest(cfgIn)
 	cfg, err := breakoutlane.NewV1Config(cfgIn)
@@ -144,7 +143,7 @@ func evaluateSetup(series strategyevidence.BarSeries, sess sessionInfo, symbol s
 			out.Plan = plan
 			decision, err = decide(lane, breakoutlane.SizingInput{ProposedEntryMinor: entry, StopMinor: stop, TargetMinor: plan.Target,
 				RoundTripCostAccountMinor: plan.RoundTrip, RiskBudgetAccountMinor: p.RiskBudgetKRW,
-				NotionalCapAccountMinor: p.NotionalCapKRW, FinalCap: math.MaxUint64, MinRiskRewardPPM: p.MinRRPPM})
+				NotionalCapAccountMinor: p.NotionalCapKRW, FinalCap: policyFinalCap, MinRiskRewardPPM: p.MinRRPPM})
 			if err != nil {
 				return evaluation{}, err
 			}

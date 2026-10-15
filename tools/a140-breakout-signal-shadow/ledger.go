@@ -38,10 +38,13 @@ type ledgerRow struct {
 	Symbol  string `json:"symbol,omitempty"`
 
 	// universe
-	Symbols       []string      `json:"symbols,omitempty"`
-	SessionSource string        `json:"session_source,omitempty"`
-	Params        *shadowParams `json:"params,omitempty"`
-	ParamsSource  string        `json:"params_source,omitempty"`
+	Symbols         []string         `json:"symbols,omitempty"`
+	SessionSource   string           `json:"session_source,omitempty"`
+	Params          *shadowParams    `json:"params,omitempty"`
+	ParamsSource    string           `json:"params_source,omitempty"`
+	Policy          *effectivePolicy `json:"effective_policy,omitempty"`
+	PolicyDigest    string           `json:"policy_digest,omitempty"`
+	SessionIdentity *sessionIdentity `json:"session_identity,omitempty"`
 
 	// signal
 	Phase          string   `json:"phase,omitempty"`
