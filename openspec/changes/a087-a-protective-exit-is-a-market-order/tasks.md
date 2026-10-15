@@ -221,6 +221,7 @@
 
 - [ ] 5.1 **KR MARKET 매도 1회.** 최소 수량(1주)·장중. 스키마는 지원하나 실접수 미측정.
       수단 `tools/a087-market-sell-probe/`. 성공·실패 모두 응답 코드·본문 code·주문 상태를 기록. 처분은 아래 표
+      — 2026-10-15 시도 2회(15:13 · 15:16 KST, 010170 1주, 사람 터미널): 둘 다 **HTTP 401 `invalid-token`** → 처분 「판정 불가(인증)」, MARKET 반증 아님. 주문 미접수 예상(401). 영수증 `analysis/market-sell-receipts/a087ms-20261015T151103-0a2582f5.json` · `…T151445-9157ce87.json`. 토큰 캐시 mtime 15:26:58 — 같은 OpenAPI 키 공유 이웃 제품의 토큰 재발급 정황(기억 「공유 credential 토큰 전쟁」), 미검증. 재시도는 다음 장중
 - [ ] 5.2 **세션 경계.** 정규장 밖 KR MARKET 매도(1주)의 응답 코드 관측. **예상 응답 집합**(재리뷰 P1-4):
       `422 order-hours-closed` · **`422 order-type-not-allowed`**(openapi `POST /api/v1/orders` 422 예시 「현재 사용할 수 없는
       호가 유형」 — 저장소 Go 코드 참조 0, `refusal_code.go` 목록에도 없음) · 그 밖의 코드(있는 그대로 기록).

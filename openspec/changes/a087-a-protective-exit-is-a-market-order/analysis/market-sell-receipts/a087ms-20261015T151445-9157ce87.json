@@ -1,0 +1,42 @@
+{
+  "schema": "a087-market-sell-receipt/v1",
+  "tool": "a087-market-sell-probe",
+  "state": "answered",
+  "outcome": "refused",
+  "client_order_id": "a087ms-20261015T151445-9157ce87",
+  "confirm_token": "a087ms-20261015T151445-9157ce87.570e5ebc12351580",
+  "issued_at_kst": "2026-10-15T15:14:45+09:00",
+  "sent_at_kst": "2026-10-15T15:16:04.557070897+09:00",
+  "answered_at_kst": "2026-10-15T15:16:04.660395692+09:00",
+  "session_context": {
+    "kst_weekday": "Thursday",
+    "clock_phase": "krx-regular-by-clock",
+    "basis": "KST wall clock against KRX regular 09:00-15:30 only; no market calendar was read, so holidays are not detected"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/api/v1/orders",
+    "wire_body": "{\"symbol\":\"010170\",\"side\":\"SELL\",\"orderType\":\"MARKET\",\"quantity\":\"1\",\"clientOrderId\":\"a087ms-20261015T151445-9157ce87\",\"confirmHighValueOrder\":false}",
+    "wire_body_sha256": "2d76a81d9feb37483f9c90e4f3494ee96ae0ee3a32b0736c953a31d61ff9f469",
+    "header_names": [
+      "Authorization",
+      "Content-Type",
+      "X-Tossinvest-Account"
+    ]
+  },
+  "response": {
+    "http_status": 401,
+    "body": "{\"error\":{\"requestId\":\"fEM5szg3xK3a97hL\",\"code\":\"invalid-token\",\"message\":\"유효하지 않은 토큰입니다.\"}}",
+    "body_sha256": "e9607e0b250f7b44d27fdfa7cc76a5614c2f7dce1996cdff9e5d7366e7c53725",
+    "body_json": {
+      "error": {
+        "requestId": "fEM5szg3xK3a97hL",
+        "code": "invalid-token",
+        "message": "유효하지 않은 토큰입니다."
+      }
+    },
+    "error_code": "invalid-token",
+    "error_message": "유효하지 않은 토큰입니다."
+  },
+  "guidance": "the broker refused the request (HTTP 401); no order is expected — confirm with `tossctl orders list` before any new attempt. refused is NOT by itself a MARKET disproof: match the error code against the a087 tasks §5 table (auth, quantity, rate-limit or symbol-state codes are 'undecidable')"
+}
