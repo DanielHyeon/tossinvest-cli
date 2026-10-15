@@ -6,7 +6,7 @@
 
 ## Inputs and invariants
 
-Inputs retain existing JSON and backend contracts; no network or persistent state is changed.
+Input is an omission marker value. Accept only nonnegative bounded counts from json.Number, integral finite in-range float64, or int. This function has no backend or credential inputs.
 
 ## Branches and early returns
 

@@ -6,46 +6,46 @@
 
 ## Inputs and invariants
 
-| Input/state | Valid range | Source of truth | Failure behavior |
-|---|---|---|---|
-| `cfg.OpenAPI` and `opts.backend` | Existing config/flag contract | `resolveBackend` → `internal/app.ResolveBackend` | Invalid backend returns before server construction |
-| Official credentials | present or absent | `official.LoadCredentials` | Load error returns; absent credentials may still permit authenticated WTS only |
-| WTS session | present, absent, or unreadable | `session.FileStore.Load` | Unexpected load error returns; absent session is ordinary |
-| Official capability | credentials AND enabled AND effective backend != `wts` | CLI-equivalent predicate in `internal/app.New` | Official client, trading service, auth status, and direct catalog capability must remain absent |
+| Input | Contract |
+|---|---|
+| cfg.OpenAPI and opts.backend | Existing resolver determines preference before constructing clients |
+| Credentials | Loaded through official.LoadCredentials; errors return; absent is permitted with WTS session |
+| WTS session | Missing session is ordinary; unexpected read error returns |
+| Official capability | Requires credentials AND Enabled AND non-WTS preference; otherwise client/trading dependencies remain nil |
 
 ## Branches and early returns
 
-| Branch | Condition | Mutation/side effect | Return/error | Required test |
-|---|---|---|---|---|
-| B1 | `loadConfig` fails | none | return config error | Existing config error coverage |
-| B2 | OpenAPI path resolution fails | none | return path error | Existing resolver coverage |
-| B3 | credential loading fails | none | return credential error | Existing credential coverage |
-| B4 | eligibility permits credentials, enabled OpenAPI, and non-WTS preference | constructs direct official read/write capability | no error | guarded matrix: disabled/WTS deny; enabled auto/openapi retain |
-| B5 | session loading fails other than `ErrNoSession` | none | return session error | Existing session coverage |
-| B6 | session exists | builds WTS client | continue | WTS operation remains available |
-| B7 | both effective capabilities absent | none | login guidance error | Offline no-credentials regression |
-| B8 | no WTS session | builds sessionless router only | continue; catalog auth gate must refuse WTS operations | Existing WTS missing-session regression |
-| B9 | backend resolution fails before credential paths and construction | none | return before any client construction | Invalid override regression |
-| B10 | update-cache path resolves | bounded update probe | probe failure is silent | Existing behavior preserved |
-| B11 | update exists | appends instruction text | continue | Existing behavior preserved |
+| Branch | Condition (AST source line) | Effect | Focused evidence |
+|---|---|---|---|
+| B1 | config load error (47) | return error | unchanged error path; no individual branch-hit claim |
+| B2 | backend resolution error (51) | return before paths/client construction | resolver semantics unchanged; moved earlier |
+| B3 | credential/token path error (58) | return error | unchanged error path |
+| B4 | credential load error (62) | return error | unchanged error path |
+| B5 | mcpOfficialEligible (67) | construct official and trading dependencies only when true | TestMCPCmdWTSDoesNotWireOfficialDependencies; TestMCPCmdDisabledAndEnabledBackendWiring |
+| B6 | unexpected session load error (81) | return error | unchanged error path |
+| B7 | session exists (85) | construct authenticated WTS client | synthetic session in guarded command tests |
+| B8 | both effective clients absent (89) | return login guidance error | unchanged; no focused branch-hit claim |
+| B9 | routedWTS nil (99) | construct sessionless client for hybrid embedding | unchanged; no focused branch-hit claim |
+| B10 | update-cache path resolves (114) | bounded/cached update probe | guarded child denies external transport |
+| B11 | latest version is newer (119) | append initialization instructions | unchanged; no focused branch-hit claim |
 
 ## Calls and live bindings
 
-| Callee | Why called | Error/timeout/retry contract | Evidence |
-|---|---|---|---|
-| `resolveBackend` | Obtain effective policy before capability construction | invalid value returns | AST `B9`, delegated resolver |
-| `official.LoadCredentials` | Load capability material without exposing it | read failure returns | AST `B3` |
-| `official.New` | Construct official direct client only under eligibility predicate | no network at construction | AST `B4`; `internal/app.New` parity |
-| `trading.NewService` | Bind official-only mutation broker only with official client | config/preview/confirm gate retained | AST `B4`; MCP server contract |
-| `hybrid.New` | Route allowed read capability | WTS-only when official capability absent | AST `B8-B9` |
-| `mcp.NewServer` / `SetAuthStatus` | Publish only allowed dependencies and status | no secret values | AST calls 104/108 |
+| Call | Purpose / error contract | AST evidence |
+|---|---|---|
+| resolveBackend | determine preference before construction; error returns | B2 |
+| official.LoadCredentials | load configured material; error returns | B4 |
+| official.New / trading.NewService | eligible direct dependencies; existing lineage/confirmation retained | B5 |
+| FileStore.Load / tossclient.New | optional WTS session; unexpected load error returns | B6/B7/B9 |
+| hybrid.New | bind routed reads to permitted official pointer and WTS client | call after B9 |
+| mcp.NewServer / SetAuthStatus | publish dependencies and auth snapshot | calls after hybrid.New |
+| updatecheck.New(...).LatestStable | cached update metadata; 2-second context; silent network failure | B10/B11 |
+| Serve | serve stdio until EOF; return its error | terminal return |
 
 ## State mutations and fallbacks
 
-- Constructs clients and a local lineage service; starts the stdio server only at `Serve`.
-- No order is placed by construction. The changed boundary controls whether the server receives any direct official-read or official-trading capability.
+Constructs local clients and lineage service. Construction does not place an order. The new gate controls direct official-read/trading reachability; existing WTS fallback, journal and trading checks are unchanged. Update metadata probing remains bounded and is denied external access in guarded tests.
 
 ## Safety conclusion
 
-- Safe edit boundary: construction ordering and eligibility predicate in `cmd/tossctl/mcp.go`; do not change engine wiring, catalog registry, WTS client, or confirmation flow.
-- High-risk impact: yes. A direct official dependency can make financial reads or official mutation tooling reachable despite disabled/WTS policy.
+High-risk capability boundary. Focused tests cover denied and allowed dependency publication; mutations demonstrate enabled/WTS predicates are required. Unchanged error branches above are not falsely claimed as individually executed. Full-suite and gate receipts are separate completion requirements.

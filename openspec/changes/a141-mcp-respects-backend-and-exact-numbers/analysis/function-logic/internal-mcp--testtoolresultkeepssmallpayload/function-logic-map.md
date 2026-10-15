@@ -18,9 +18,9 @@ Uses only standard numeric/JSON helpers; no transport, credential, or session ca
 
 ## State mutations and fallbacks
 
-Returns a derived value only. Invalid omission markers fail closed to a fresh count.
+Returns a derived value only. This test compares the small response text with its expected JSON; it does not exercise omission-marker handling.
 
 ## Safety conclusion
 
 - Safe edit boundary: local validation only.
-- High-risk impact: numeric truncation metadata; covered by focused offline tests.
+- High-risk impact: none in the test function itself; it protects unchanged small-response serialization.

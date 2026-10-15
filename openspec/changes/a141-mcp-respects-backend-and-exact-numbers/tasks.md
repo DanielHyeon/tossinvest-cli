@@ -11,8 +11,8 @@
 
 ## 3. Independent verification
 
-- [ ] 3.1 Complete separate adversarial review and resolve every actionable finding.
-- [ ] 3.2 Complete additional gstack review and record actual reviewer/model and unresolved findings in review.md.
+- [x] 3.1 Complete separate adversarial review and resolve every actionable finding.
+- [x] 3.2 Complete additional gstack review and record actual reviewer/model and unresolved findings in review.md.
 - [ ] 3.3 Pass required offline checks; Manager inspect final diff, test receipts and user constraints before the completion gate.
 
 Completion requires an additional successful `make gate CHANGE=a141-mcp-respects-backend-and-exact-numbers` receipt after all tasks are complete. Manager verifies that receipt before declaring completion. No deploy tasks are authorized.

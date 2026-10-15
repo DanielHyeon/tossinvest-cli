@@ -21,4 +21,4 @@ None.
 
 ## Impact
 
-Expected code boundary: `cmd/tossctl/mcp.go`, `internal/hybrid`, `internal/mcp` and directly associated tests. No development-tool MCP configuration changes. No deployment, credential/token refresh against real services, live orders, toggles, restarts or operating configuration changes. Backend authorization is high risk and requires branch/logic maps and negative tests. Story: STORY-TOS-a141, feature: FEAT-TOS-014. Implementation: Terra; Manager: specification and review only.
+Expected code boundary: `cmd/tossctl/mcp.go`, `internal/hybrid`, `internal/mcp` and directly associated tests; README MCP authentication wording will be aligned with this eligibility rule (gstack documentation finding, no behavior expansion). No development-tool MCP configuration changes. No deployment, credential/token refresh against real services, live orders, toggles, restarts or operating configuration changes. Backend authorization is high risk and requires branch/logic maps and negative tests. Story: STORY-TOS-a141, feature: FEAT-TOS-014. Implementation: Terra; Manager: specification and review only.

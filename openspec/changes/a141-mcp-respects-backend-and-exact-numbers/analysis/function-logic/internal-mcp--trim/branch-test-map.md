@@ -1,8 +1,8 @@
 # Branch Test Map: `trim`
 
-| Branch | Scenario | Test | RED observed | GREEN observed |
+| Branch | Scenario | Test / evidence | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | No existing marker | Existing cap regression | no | existing green |
-| B2 | Existing marker uses `json.Number`; malformed, fractional, negative, or overflowing values stay non-panicking | New repeated-trim and failure-safe regressions | pending | pending |
-| B3 | Rounding would keep every real item | Existing cap regression proves at least one removal | no | existing green |
-| B4 | Excess larger than size | New nested oversized-item regression | pending | pending |
+| B1 | force progress when proportional keep >= n | TestToolResultCapsOversizedPayload exercises cap behavior; exact hit not measured | not claimed | package focused PASS |
+| B2 | clamp negative keep to zero | unchanged expression; static AST comparison | not claimed | no focused branch-hit claim |
+| B3 | prior marker present/absent | TestTrimAcceptsExactAndMalformedOmissionMarkers first/repeated trims | pre-existing numeric marker regression | Terra focused PASS |
+| B4 | valid prior count versus malformed/overflow count | TestTrimAcceptsExactAndMalformedOmissionMarkers | exact marker accumulation regression | Terra focused PASS |

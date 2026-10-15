@@ -16,17 +16,17 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | Existing omission placeholder is present | attempts cumulative count recovery | no error return available | exact-number decoder changes marker dynamic type |
-| B2 | Marker is json.Number, compatible integral float64, or int | validates before adding prior count | malformed/overflow values fail closed | exact, repeated, malformed regressions |
-| B3 | proportional keep would retain all elements | force one removal | continue | Existing cap test |
-| B4 | calculated keep is negative | clamp to zero | continue | Oversized-item regression |
+| B1 | proportional keep >= n (330) | keep becomes n-1 | continue | cap regression; no individual branch-hit claim |
+| B2 | keep < 0 (333) | keep becomes zero | continue | unchanged clamp; no focused branch-hit claim |
+| B3 | n < len(s), so a prior marker exists (336) | inspect final marker | continue | repeated and pre-existing marker cases |
+| B4 | omittedCount valid AND prior count fits after new drops (337) | recover prior count; otherwise use zero | continue | exact/repeated/malformed marker tests |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `keepable` | Exclude an existing marker from real-item count | no error return | AST B1 |
-| numeric marker parser | Recover count safely from preserved JSON number | malformed/overflowing value becomes safe non-panicking fallback | AST B2 edit target |
+| `keepable` | Exclude an existing marker from real-item count | no error return | call before B1 |
+| `omittedCount` | Recover count safely from preserved JSON number | malformed/overflowing value becomes safe non-panicking fallback | B3/B4 |
 | `fmt.Sprintf` | Render compatible marker note | no network/retry | AST return |
 
 ## State mutations and fallbacks
