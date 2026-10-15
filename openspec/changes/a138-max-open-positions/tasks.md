@@ -29,10 +29,11 @@ Story: `STORY-TOS-a138` · **High-risk**(Guardian 발급 · 예약 트랜잭션 
 
 - [x] 2.1 `gofmt -l` · `go vet ./...` · `rtk proxy go test -count=1`(journal · execgw · risk · config · app/engine · cmd/tossctl · console · measure) ·
       `-tags tossos_testseams` · `make test-race` 대상 · `openspec validate --strict` → `analysis/verify/receipts.md`
-- [ ] 2.2 변이 원장(`analysis/mutation/`): `>`→`>=` · 종목 중복 제거 제거 · HELD 예약 갈래 제거 · 외부/편입 갈래 제거 · 노출 미증가 조기 통과 반전 ·
+- [x] 2.2 변이 원장(`analysis/mutation/`): `>`→`>=` · 종목 중복 제거 제거 · HELD 예약 갈래 제거 · 외부/편입 갈래 제거 · 노출 미증가 조기 통과 반전 ·
       상한 nil 통과 · preimage 오류를 0 으로 · 발급 문 하나 상한 누락 · 인터록 대조 제거 · digest 입력 제거 · ③ 제거 · CLOSED 필터 제거 · 시장 차원 무시 ·
       state=HELD 필터 제거 · kind 필터 OPEN_EXPOSURE 만 · ② safety_class 필터 제거(구조 시험) · ④ RECONCILE 갈래 제거 · 정수 판정 IsInf 제거
-- [ ] 2.3 독립 적대 리뷰(분리된 컨텍스트, 적대 Eng 포함) → review.md
+      — 하네스 `analysis/mutation/a138_mutate.py`, round1(86442ad7) 28/30 · **round2(7e292659) 37/39 CAUGHT, 생존 2 = 동등 변이(IsInf · IsNaN)** — `round1.md` · `round2.md`
+- [x] 2.3 독립 적대 리뷰(분리된 컨텍스트, 적대 Eng 포함) → review.md — APPROVE-WITH-FIXES(P0 0 · P1 0 · P2 1 · P3 6), P2 · P3-1~4 수리(7e292659), 잔재 P3-5 · P3-6(배포 전 사람 확인) 기록
 
 ## 3. 사람 · Manager
 
