@@ -1,0 +1,192 @@
+{
+  "file": "internal/client/watchlist_manage.go",
+  "source_sha256": "8513134797ea2a2d448e65bc6f8adbe195afd06ec055ff45049637510041b404",
+  "package": "client",
+  "function": "ListWatchlistGroups",
+  "receiver": "Client",
+  "signature": "Client.ListWatchlistGroups(params=1, results=2)",
+  "start": {
+    "line": 41,
+    "column": 1
+  },
+  "end": {
+    "line": 62,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 47,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 53,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 43,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 48,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 12
+      },
+      "text": "c.requireSession"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 12
+      },
+      "text": "c.getJSON"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 9
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 42
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 16
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 11
+      },
+      "text": "coalesceMoney"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 48
+      },
+      "text": "coalesceMoney"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 9
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 42,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 46,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 47,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 52,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 54,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 59,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

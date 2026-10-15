@@ -1,0 +1,147 @@
+{
+  "file": "internal/client/account.go",
+  "source_sha256": "0c8f47e783ee5bf16b47ae6ad68bc3f7f43f2617c5a4cc7e7871470f51e8b16e",
+  "package": "client",
+  "function": "ListPendingOrders",
+  "receiver": "Client",
+  "signature": "Client.ListPendingOrders(params=1, results=2)",
+  "start": {
+    "line": 154,
+    "column": 1
+  },
+  "end": {
+    "line": 170,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 155,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 165,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 156,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 161,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 169,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 12
+      },
+      "text": "c.requireSession"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 12
+      },
+      "text": "c.getJSON"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 12
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 36
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 12
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 27
+      },
+      "text": "parsePendingOrder"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 155,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 160,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 164,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 166,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
