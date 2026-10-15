@@ -31,9 +31,25 @@ CodeGraph 근거는 `analysis/code-context/`.
 | `engine.riskPolicyFromAutomationGate` | `= dailyLoss` | AST `engine--riskpolicyfromautomationgate`(분기 0), guardian_wiring.go:59 |
 | `measure.gridPolicy` | `= headroom`(측정 격자 — 생산 사이징 아님) | counterfactual.go:367 |
 
-읽지 **않는** 곳(매니저가 지목한 표면): `LimitsDigest`(AST `execgw--riskguardian.limitsdigest` — 입력은 `limitsJSON` + 하루 매수 상한뿐), 결정 `limits_json`
+읽지 **않는** 곳(매니저가 지목한 표면): `LimitsDigest`(AST `execgw--riskguardian.limitsdigest` — 입력은 `limitsJSON` + 하루 매수 상한 + 최대 보유 포지션 수(a138), RiskBudget 없음), 결정 `limits_json`
 5필드(`execgw.ExposureLimitsFor` — 다섯 칸), 인터록 `checkGuardianLimits`(다섯 칸), 콘솔(`internal/console` · `cmd/tossctl` grep 0). envelope(q_final
 `riskbucket` 정책)은 서명 위험 번들의 정책이고 `Policy.RiskBudget` 을 읽지 않는다(grep 0).
+
+### D0 보강 — 출력의 소비자 (freeze 리뷰 P1-1)
+
+Guardian 상한이 0 이 되는 출력은 진입 거부로 끝나지 않는다. 사슬(HEAD 044b7b94):
+
+| 단계 | 근거 |
+|---|---|
+| `StrategyEntryQuantity` · `AccountBaseStrategyEntryQuantity` 의 min 이 0 → `ErrStrategyQuantityZero` | contract.go:166-167 · account_base.go 같은 min |
+| q_final precheck 가 `EXISTING_GUARDIAN_CAP` 거절로 바꿈 | AST `execgw--riskguardian.precheckqfinalentry` B12(144) → B13(147) |
+| 첫 다리 승인이 precheck 거절을 분류 — 범위 거절은 `RefusalBucketCapExhausted` 하나(B9 128 · B10 129), 그 밖은 `AUTHORITY_MISMATCH` | AST `engine--strategyfirstlegadmissionbridge.admit` B5(103) · B9(128) |
+| 범위 거절이 아니면 전달 루프가 멈추고 레인 실패 → `failureThreshold: 1` 이라 첫 실패에 잠김(a112 5.3.3 뒤 원장 잠금 — 재시작으로 안 풀림) | strategy_market_handoff_delivery.go:73-90 · strategyworker/bounded.go:243 · policy.go:86 |
+
+1/3 이 되면 이 출력이 더 자주 나온다: KRW 기본 집합에서 주당 위험이 33,333 원을 넘는 진입(예: 70 만 원 주식의 5 % 손절), USD 50 집합에서 주당 16.66 달러 초과.
+진입은 일어나지 않으므로(보수) a139 는 분류를 바꾸지 않는다 — `EXISTING_GUARDIAN_CAP`(원인 `ErrStrategyQuantityZero`)을 범위 거절로 옮길지는 High-risk 분류 변경이라 **a139 밖의
+사람 결정**으로 남긴다(잔여). 현재 생산 레인은 DORMANT(서명 매니페스트 0)라 지금 동작 변화는 없다. 같은 순서의 부수 효과: guardianCap 거절은 체인(daily_loss 단)보다 앞이라 그
+시도는 일일 손실 강화에 닿지 않는다.
 
 ## D1. 내림의 단위 — 통화의 최소 단위
 
@@ -53,7 +69,11 @@ console `currencyConsequence`). 1/3 이 0 으로 내려가는 값(KRW < 3, USD <
 
 RiskBudget 은 digest · 결정 스냅숏 · 인터록 대조 어디에도 없다(D0). 그래서 이 change 는 서명 매니페스트 · 전략 바인딩을 무효화하지 않는다. 대신 유도 값이
 **감사에** 남게 한다: `recordGateSettings` 끝에 `engine.automation_gate.per_trade_risk_budget` 한 줄(a136 · a138 과 같은 덧붙임 규칙 — 기존 순서 무변경),
-`acceptanceDetail` 에 `per_trade_risk_budget=`. 인터록에 새 대조 단은 두지 않는다 — 생산 Guardian 은 정책을 이 유도에서만 얻고(`newProductionRiskGuardian`), 주입된 다른
+`acceptanceDetail` 에 `per_trade_risk_budget=`. 값은 생산 정책 유도(`riskPolicyFromAutomationGate(gate).RiskBudget`)와 **같은 함수의 답**이고, audit detail 에 규칙
+(「floor(max_daily_loss_amount / 3, minor unit) — a139」)을 적어 「일일 손실이 바뀜」과 「규칙이 바뀜」을 가른다. 유도가 불가능하면(게이트 OFF 설정의 일일 손실 0 · 표에 없는 통화)
+값은 빈 문자열, detail 에 사유 — `recordGateSettings` 는 게이트 ON/OFF 와 무관하게 Guardian 생성 전에 돌고 실패하면 기동을 거부하므로(engine.go:472-478) 이 줄이 오류를
+돌려주면 게이트 OFF 기동까지 막혀 §0.2 를 깬다(freeze 리뷰 P1-2). 게이트 ON 의 유도 실패는 생산 factory 가 Validate 앞에서 이름으로 밝힌 `ErrLimitsRequired` 로 멈춤
+(a138 P2-3 와 같은 모양). 인터록에 새 대조 단은 두지 않는다 — 생산 Guardian 은 정책을 이 유도에서만 얻고(`newProductionRiskGuardian`), 주입된 다른
 Guardian 의 예산은 지금도 대조하지 않는다(잔재로 기록, 이 change 가 넓히지 않음).
 
 ## D3. 기본 정책도 같은 규칙
@@ -62,13 +82,17 @@ Guardian 의 예산은 지금도 대조하지 않는다(잔재로 기록, 이 ch
 두 곳이 다른 규칙을 말하게 둘 수 없다(문서 · 코드 · 시험 일치). 값은 33,333 KRW 로 적고, 시험이 `DefaultPolicy().RiskBudget == PerTradeRiskBudget(DefaultPolicy().MaxDailyLoss)` 를
 못 박는다(사본이 갈라지지 않게). DefaultPolicy 에 기대는 시험의 기대 수량이 바뀌는지는 RED 단계에서 세어 기록한다.
 
-## D4. 정책 버전은 올리지 않음
+## D4. 정책 버전을 올림 — `engine.automation_gate/risk-policy-v2` (freeze 리뷰 P2-3 수용)
 
-`productionGuardianPolicyVersion`(risk-policy-v1)은 결정 preimage 와 q_final 정책 버전에 들어간다. 생산 첫 다리 경로는 기대 버전을 Guardian 자신에게서 읽고
-(strategy_account_first_leg_authority.go:393), 휴면 어댑터만 매니페스트 값과 비교한다(strategydispatch/adapters.go:33). 올리면 문자열만 바뀌고 안전 판정은 그대로이며,
-휴면 경로의 매니페스트를 깨는 비용이 생긴다. 사이징 규칙의 변경 기록은 이미지 · 커밋 · 기동 audit 한 줄(D2)이 맡는다. — freeze 리뷰가 다르게 보면 바꾼다.
+버전 문자열은 결정 preimage 의 PolicyVersion 이라(riskguardian_qfinal.go:197 · riskguardian_first_leg.go:56) 결정 행이 「어떤 사이징 규칙으로 나왔나」를 스스로 말하는 유일한 기록이다.
+올릴 때의 비용 실측(리뷰): 생산 첫 다리는 기대 버전을 Guardian 에서 읽고(strategy_account_first_leg_authority.go:393), journal 은 base 버전을 상수와 대조하지 않고
+(`splitQFinalPolicyVersion` 은 표지 · tx 만), 생산 상수를 참조하는 시험은 0 — 휴면 어댑터(strategydispatch/adapters.go:33)만 매니페스트 값 불일치로 fail-closed 거부.
+a136 · a138 이 값을 바꿀 때 바인딩을 일부러 무효화한 것과 같은 방향.
 
 ## D5. 거절되는 정상 입력
+
+- 위의 D0 보강 — Guardian 상한 0 인 전략 첫 다리는 거부되고 **그 레인이 잠긴다**(분류 무변경, 사람 결정 잔여).
+- 체인에서 같은 의도가 MAX_ORDER_EXCEEDED 대신 INVALID_ORDER_SIZE 로 거부될 수 있음(위험 상한 검사가 설정 상한보다 앞 — chain.go:341-351 · :353). 두 사유를 가르는 생산 소비자 0(reason.go 외 grep 0).
 
 - 손절 폭이 넓어 1/3 예산이 한 단위 위험도 못 덮는 진입 — 체인 INVALID_ORDER_SIZE / q_final `q_existing_guardian` 0 → 거부(이전에는 통과하던 것 일부).
 - 전략이 제안한 수량이 1/3 예산 상한보다 큰 진입 — 체인 경로는 INVALID_ORDER_SIZE 거부, Guardian-owned 사이징 경로는 수량이 줄어듦.
