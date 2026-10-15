@@ -1,5 +1,5 @@
-# Branch Test Map: `cmd-tossctl--mcpofficialeligible`
+# Branch Test Map: `mcpOfficialEligible`
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | valid and denied inputs | `TestMCPOfficialEligibilityMatchesCLI; TestMCPCmdWTSDoesNotWireOfficialDependencies` | yes | yes |
+| B1 | enabled auto/openapi and denied WTS/disabled/no-creds | `TestMCPOfficialEligibilityMatchesCLI` | yes | yes |

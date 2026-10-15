@@ -1,3 +1,4 @@
-# Risk Pattern Report: `cmd-tossctl--mcpofficialeligible`
+# Risk Pattern Report: `mcpOfficialEligible`
 
-No new network, file-write, panic, or unchecked conversion path.
+- Source: `cmd/tossctl/mcp.go`
+- Classification: reviewed-safe; no file write, network, panic, or unbounded conversion path.

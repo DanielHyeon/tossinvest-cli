@@ -1,3 +1,4 @@
-# Risk Pattern Report: `internal-mcp--omittedcount`
+# Risk Pattern Report: `omittedCount`
 
-No new network, file-write, panic, or unchecked conversion path.
+- Source: `internal/mcp/server.go`
+- Classification: reviewed-safe; no file write, network, panic, or unbounded conversion path.

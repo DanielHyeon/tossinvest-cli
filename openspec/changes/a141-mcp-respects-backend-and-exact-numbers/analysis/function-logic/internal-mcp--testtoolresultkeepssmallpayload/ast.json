@@ -1,0 +1,125 @@
+{
+  "file": "internal/mcp/server_test.go",
+  "source_sha256": "5070aa556d2a60970eba786852f118bc4d0ba728262194afafafdaeb0840e152",
+  "package": "mcp",
+  "function": "TestToolResultKeepsSmallPayload",
+  "signature": "TestToolResultKeepsSmallPayload(params=1, results=0)",
+  "start": {
+    "line": 393,
+    "column": 1
+  },
+  "end": {
+    "line": 407,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 396,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 400,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 404,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 395,
+        "column": 15
+      },
+      "text": "json.MarshalIndent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 397,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 15
+      },
+      "text": "toolResult"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 401,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 404,
+        "column": 12
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 405,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 394,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 395,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 399,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 403,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}
