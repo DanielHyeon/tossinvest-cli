@@ -37,5 +37,5 @@ Story: `STORY-TOS-a138` · **High-risk**(Guardian 발급 · 예약 트랜잭션 
 
 ## 3. 사람 · Manager
 
-- [ ] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a138-max-open-positions` + 독립 검증
+- [x] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a138-max-open-positions` + 독립 검증
 - 배포(체크박스 아님): 엔진 이미지 교체는 사람이 KST 05:00~09:00 창에서. 실계좌 한도 값 변경 · 토글 flip 은 사람이 직접.
