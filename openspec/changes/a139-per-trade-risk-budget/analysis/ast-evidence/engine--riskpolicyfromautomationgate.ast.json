@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/guardian_wiring.go",
-  "source_sha256": "6acfab5929684cce5b0bdffe6069aa363fe5c5b06605f7ca155631fcd9a0e203",
+  "source_sha256": "c21b52d0ebb66586fa24c7a31b31b975c6740d41ddce1b3a1bf0f3ec2b8deff8",
   "package": "engine",
   "function": "riskPolicyFromAutomationGate",
   "signature": "riskPolicyFromAutomationGate(params=1, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 67,
+    "line": 69,
     "column": 2
   },
   "branches": null,
@@ -24,7 +24,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 66,
+        "line": 68,
         "column": 2
       }
     }
@@ -117,6 +117,22 @@
         "column": 20
       },
       "text": "gate.EffectiveMaxDailyBuyNotional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 31
+      },
+      "text": "config.WholeOpenPositions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 57
+      },
+      "text": "gate.EffectiveMaxOpenPositions"
     }
   ],
   "assignments": [
@@ -194,6 +210,13 @@
       "kind": "=",
       "at": {
         "line": 62,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 67,
         "column": 2
       }
     }

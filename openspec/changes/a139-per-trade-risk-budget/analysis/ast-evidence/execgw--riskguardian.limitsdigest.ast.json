@@ -1,6 +1,6 @@
 {
   "file": "internal/execgw/riskguardian.go",
-  "source_sha256": "7bf1bbe7623c179edcf67ed9daecab96105ef64be3495f0a7fd1bf23882ed5e4",
+  "source_sha256": "2b33f38749c9a909d19ce016f8c276a667ecce2e625790bc55f1ef0d831b8cce",
   "package": "execgw",
   "function": "LimitsDigest",
   "receiver": "RiskGuardian",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 334,
+    "line": 336,
     "column": 2
   },
   "branches": null,
@@ -18,7 +18,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 333,
+        "line": 335,
         "column": 2
       }
     }
@@ -27,7 +27,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 331,
+        "line": 332,
         "column": 9
       },
       "text": "sha256.Sum256"
@@ -35,14 +35,22 @@
     {
       "kind": "call",
       "at": {
-        "line": 331,
+        "line": 332,
         "column": 23
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 333,
+        "line": 334,
+        "column": 29
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
         "column": 21
       },
       "text": "hex.EncodeToString"
@@ -52,7 +60,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 331,
+        "line": 332,
         "column": 2
       }
     }

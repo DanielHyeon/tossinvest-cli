@@ -1,6 +1,6 @@
 # a139 design — 건당 위험 예산 = 일일 손실 / 3
 
-근거 표기: 「AST:」는 `analysis/ast-evidence/<번들>.ast.json`(`tools/logic-map`, HEAD 050d092f — 코드는 a1d66f13 과 동일, 편집 전).
+근거 표기: 「AST:」는 `analysis/ast-evidence/<번들>.ast.json`(`tools/logic-map`, HEAD ddd2f2b3 — a138 착지 · archive 뒤 재추출, 편집 전).
 CodeGraph 근거는 `analysis/code-context/`.
 
 ## 사용자 결정 (2026-10-15 — Manager 전달 원문)
@@ -13,6 +13,8 @@ CodeGraph 근거는 `analysis/code-context/`.
 
 ## D0. `Policy.RiskBudget` 의 소비자 전수
 
+(a138 착지 뒤 재확인 — a138 은 `Policy` 에 `MaxOpenPositions` 를 더했을 뿐 `RiskBudget` 소비자를 바꾸지 않음. 전수 grep 재실행 결과 같음.)
+
 `rtk proxy grep -rn RiskBudget --include=*.go`(시험 제외)에서 `risk.Policy.RiskBudget` 을 읽는 생산 자리만 추림(레인의 `RiskBudgetMinor` · `RiskBudgetDigest` 는
 서명 제안서의 캠페인 예산 — 다른 값, 이 change 밖).
 
@@ -24,8 +26,8 @@ CodeGraph 근거는 `analysis/code-context/`.
 | `risk.AccountBaseStrategyEntryQuantity` | 같은 min, KR/US 짝 FX 경로 | AST `risk--accountbasestrategyentryquantity`(호출 `accountBaseRiskQuantity`) |
 | `execgw.RiskGuardian.IssueStrategyEntry` | `StrategyEntryQuantity` 로 수량 | riskguardian.go:357 |
 | `execgw.RiskGuardian.PrecheckQFinalEntry` | Guardian 상한(`q_existing_guardian`) = 위 둘 중 하나 | AST `execgw--riskguardian.precheckqfinalentry` B11(142) · B12(144), qfinal.go:141-149 |
-| `risk.Policy.Validate` | 예산이 양수 · 통화 일치여야 함 | AST `risk--policy.validate` B2 · B3(262 · 271 — 돈 칸 목록 순회) |
-| `risk.DefaultPolicy` | 100,000 KRW(= 일일 손실) | AST `risk--defaultpolicy`(분기 0) · input.go:228-243 |
+| `risk.Policy.Validate` | 예산이 양수 · 통화 일치여야 함 | AST `risk--policy.validate` B2 · B3(267 · 276 — 돈 칸 목록 순회) |
+| `risk.DefaultPolicy` | 100,000 KRW(= 일일 손실) | AST `risk--defaultpolicy`(분기 0) · input.go:228-254 |
 | `engine.riskPolicyFromAutomationGate` | `= dailyLoss` | AST `engine--riskpolicyfromautomationgate`(분기 0), guardian_wiring.go:59 |
 | `measure.gridPolicy` | `= headroom`(측정 격자 — 생산 사이징 아님) | counterfactual.go:367 |
 
@@ -43,8 +45,8 @@ CodeGraph 근거는 `analysis/code-context/`.
 | **통화 최소 단위로 내림(채택)** | 33,333 | 16.66 | 16.91 | spec 「KR과 US …」가 risk budget 을 「base minor unit 으로 비교」하라고 적음. 저장소 관례 `minor-v1`(KRW 0 · USD 2자리) |
 | 입력 소수 자릿수로 내림 | 33,333 | 16(「50」) | 16.91 | 철자 의존(50 과 50.00 이 다른 답) — 기각 |
 
-채택: 최소 단위 내림. 표는 `risk` 안의 작은 사본(KRW 0 · USD 2)이며 continuationlane `currencyMinorScale` 과 같은 값이다(그 함수는 비공개 · 다른 패키지라
-옮기지 않음 — 시험이 두 표의 일치를 못 박는다). 표에 없는 통화는 오류 → 기동 거부(그 통화는 지금도 KR/US FX authority 가 없어 자동 진입 권위가 없다 —
+채택: 최소 단위 내림. 표는 `risk` 안의 작은 사본(KRW 0 · USD 2)이며 continuationlane `currencyMinorScale` 과 같은 값이다(그 함수는 비공개 · 다른 패키지이고
+그 레인의 호가 단위 표라 옮기지 않음 — 두 표는 서로를 대조하지 않는다. `risk` 쪽 값은 시험이 고정한다). 표에 없는 통화는 오류 → 기동 거부(그 통화는 지금도 KR/US FX authority 가 없어 자동 진입 권위가 없다 —
 console `currencyConsequence`). 1/3 이 0 으로 내려가는 값(KRW < 3, USD < 0.03)도 오류 → 기동 거부(`unsupported` 극단 입력, 명시).
 
 ## D2. 바인딩 · digest · 인터록

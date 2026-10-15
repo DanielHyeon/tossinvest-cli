@@ -12,12 +12,12 @@ Story: `STORY-TOS-a139` · **High-risk**(사이징) — Pre-Edit 선언 · 편�
 - [x] 0.3 CodeGraph hard evidence · CodeGraphContext(not-applicable 사유) · evidence reconciliation(불일치 1 — CodeGraph 가 DefaultPolicy 호출 하나 누락, HEAD 로 해소)
 - [ ] 0.4 proposal-freeze 리뷰(적대 Eng + CEO 범위, 분리 컨텍스트) → review.md — D1 · D3 · D4 판단 포함
 - [ ] 0.5 편집할 기존 함수의 FLM/BTM 번들(`riskPolicyFromAutomationGate` · `DefaultPolicy` · `recordGateSettings` · `acceptanceDetail`) + Pre-Edit 선언(review.md)
-- [ ] 0.6 base 고정 — `base-commit.txt` = 이 change 첫 Go 커밋의 부모(a138 마지막 Go 커밋 뒤)
+- [ ] 0.6 base 고정 — `base-commit.txt` = 이 change 첫 Go 커밋의 부모(a138 archive ddd2f2b3 뒤)
 
 ## 1. 구현 (RED → GREEN → REFACTOR)
 
 - [ ] 1.1 RED — 유도(100,000 KRW → 33,333 · 50 USD → 16.66 · 50.75 USD → 16.91 · 0.02 USD → 오류 · 표에 없는 통화 → 오류 · 음수/NaN → 오류) · 생산 정책 ·
-      기본 정책 = 유도 · 표 일치(continuationlane) · 체인 사이징 상한 1/3(경계: 예산이 정확히 한 단위를 덮음) · q_final Guardian 상한 1/3 · audit 한 줄 · 매도 무관
+      기본 정책 = 유도 · 체인 사이징 상한 1/3(경계: 예산이 정확히 한 단위를 덮음) · q_final Guardian 상한 1/3 · audit 한 줄 · 매도 무관
 - [ ] 1.2 GREEN — `risk/risk_budget.go` · `riskPolicyFromAutomationGate` · `DefaultPolicy` · `recordGateSettings` · `acceptanceDetail`
 - [ ] 1.3 REFACTOR · 편집 뒤 AST 재추출 · `check_analysis.py --change a139-per-trade-risk-budget`
 

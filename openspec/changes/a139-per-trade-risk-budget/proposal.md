@@ -1,7 +1,7 @@
 # a139 — 한 거래의 위험 예산은 일일 손실 한도의 1/3 (per-trade-risk-budget)
 
-> **상태(2026-10-15):** proposal 단계, 문서만. 사용자 결정 「RiskBudget = MaxDailyLoss / 3」 수신(Manager 전달). production 파일은 a138 의 Go · spec 이
-> 전부 커밋된 뒤에 만진다(Manager 지시 — 공유: `riskPolicyFromAutomationGate` · `risk.DefaultPolicy` · risk-management 「Automation gate limits …」).
+> **상태(2026-10-15):** 사용자 결정 「RiskBudget = MaxDailyLoss / 3」 수신(Manager 전달). a138 착지 · 게이트 PASS · archive(ddd2f2b3) 뒤 착수 —
+> 델타는 정본이 된 a138 문장 위에 쓰였음. 공유 파일(`riskPolicyFromAutomationGate` · `risk.DefaultPolicy` · `interlock.go`)은 이제 a139 단독.
 
 ## Why
 

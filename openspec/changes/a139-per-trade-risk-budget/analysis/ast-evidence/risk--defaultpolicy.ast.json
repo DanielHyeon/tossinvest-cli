@@ -1,15 +1,15 @@
 {
   "file": "internal/risk/input.go",
-  "source_sha256": "b9a9188f871c8cafe906018cf1322a13b67196ae37242ca6c6ae475dee324fd1",
+  "source_sha256": "4aa64adbb3ba22c6460e9246f509caa7bdd59e310e72ff84a5612a92fe1e508e",
   "package": "risk",
   "function": "DefaultPolicy",
   "signature": "DefaultPolicy(params=0, results=1)",
   "start": {
-    "line": 236,
+    "line": 239,
     "column": 1
   },
   "end": {
-    "line": 249,
+    "line": 254,
     "column": 2
   },
   "branches": null,
@@ -17,7 +17,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 237,
+        "line": 240,
         "column": 2
       }
     }
