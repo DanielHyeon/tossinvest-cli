@@ -49,8 +49,8 @@ func TestMCPCmdWTSDoesNotWireOfficialDependencies(t *testing.T) {
 		http.Error(w, "a141 outbound request denied", http.StatusBadGateway)
 	}))
 	defer proxy.Close()
-	child := exec.Command(os.Args[0], "-test.run=^TestMCPCmdWTSDoesNotWireOfficialDependencies$", "-test.count=1")
-	child.Env = append(os.Environ(), "A141_MCP_GUARDED_CHILD=1", "HTTP_PROXY="+proxy.URL, "HTTPS_PROXY="+proxy.URL, "ALL_PROXY="+proxy.URL)
+	child := exec.Command(os.Args[0], "-test.run=^(TestMCPCmdWTSDoesNotWireOfficialDependencies|TestMCPCmdDisabledAndEnabledBackendWiring)$", "-test.count=1")
+	child.Env = append(os.Environ(), "A141_MCP_GUARDED_CHILD=1", "HTTP_PROXY="+proxy.URL, "HTTPS_PROXY="+proxy.URL, "ALL_PROXY="+proxy.URL, "http_proxy="+proxy.URL, "https_proxy="+proxy.URL, "all_proxy="+proxy.URL, "NO_PROXY=", "no_proxy=")
 	if out, err := child.CombinedOutput(); err != nil {
 		t.Fatalf("guarded MCP subprocess failed: %v\n%s", err, out)
 	}
@@ -118,5 +118,56 @@ func testMCPCmdWTSDoesNotWireOfficialDependencies(t *testing.T) {
 		if !isError || !strings.Contains(got, tc.want) {
 			t.Fatalf("official denial = %q, isError=%v, want %q", got, isError, tc.want)
 		}
+	}
+}
+
+func TestMCPCmdDisabledAndEnabledBackendWiring(t *testing.T) {
+	if os.Getenv("A141_MCP_GUARDED_CHILD") != "1" {
+		return
+	}
+	for _, tc := range []struct {
+		name         string
+		enabled      bool
+		backend      string
+		wantOfficial bool
+	}{
+		{"disabled explicit openapi", false, "openapi", false},
+		{"enabled auto", true, "auto", true},
+		{"enabled openapi", true, "openapi", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := isolate(t)
+			cfg := config.DefaultFile()
+			cfg.OpenAPI = config.OpenAPI{Enabled: tc.enabled, Prefer: "auto"}
+			writeConfigFile(t, dir, cfg)
+			writeCredentials(t, dir)
+			if !tc.enabled {
+				if err := session.WriteFile(filepath.Join(dir, "session.json"), &session.Session{Cookies: map[string]string{"SESSION": "fixture"}}); err != nil {
+					t.Fatal(err)
+				}
+			}
+			cmd := newMCPCmd(&rootOptions{configDir: dir, backend: tc.backend})
+			cmd.SetIn(strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"call_operation","arguments":{"operation":"auth_status"}}}` + "\n"))
+			var out bytes.Buffer
+			cmd.SetOut(&out)
+			cmd.SetErr(&bytes.Buffer{})
+			if err := cmd.Execute(); err != nil {
+				t.Fatal(err)
+			}
+			var response map[string]any
+			if err := json.Unmarshal([]byte(strings.TrimSpace(out.String())), &response); err != nil {
+				t.Fatal(err)
+			}
+			text := response["result"].(map[string]any)["content"].([]any)[0].(map[string]any)["text"].(string)
+			var status struct {
+				Official struct{ Connected bool } `json:"official"`
+			}
+			if err := json.Unmarshal([]byte(text), &status); err != nil {
+				t.Fatal(err)
+			}
+			if status.Official.Connected != tc.wantOfficial {
+				t.Fatalf("official=%v want %v", status.Official.Connected, tc.wantOfficial)
+			}
+		})
 	}
 }
