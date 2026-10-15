@@ -13,6 +13,6 @@
 
 - [ ] 3.1 Complete separate adversarial review and resolve actionable findings.
 - [ ] 3.2 Complete additional gstack review; record actual reviewers and disposition in review.md.
-- [ ] 3.3 Pass required offline checks; Manager inspect final diff, test receipts and user constraints before the completion gate.
+- [ ] 3.3 Pass focused offline checks; Manager inspect final diff, test receipts and user constraints before the completion gate.
 
 Completion additionally requires a successful `make gate CHANGE=a142-wts-read-contracts-fail-closed` receipt, verified by Manager after the tasks complete. No deployment or operating settings change is authorized.

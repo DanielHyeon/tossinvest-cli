@@ -14,6 +14,6 @@
 
 - [ ] 3.1 Complete separate adversarial review and resolve actionable findings.
 - [ ] 3.2 Complete additional gstack review and record actual review identities and findings in review.md.
-- [ ] 3.3 Pass required offline checks; Manager inspect final diff, receipts and preserved execution/settings boundaries.
+- [ ] 3.3 Pass focused offline checks; Manager inspect final diff, receipts and preserved execution/settings boundaries.
 
 Completion additionally requires successful `make gate CHANGE=a143-official-read-compatibility`, verified by Manager after tasks complete. No deployment, live API execution or operating-setting change is authorized.

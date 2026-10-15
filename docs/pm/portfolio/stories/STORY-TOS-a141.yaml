@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a141-mcp-respects-backend-and-exact-numbers",
-    "path": "openspec/changes/a141-mcp-respects-backend-and-exact-numbers"
+    "path": "openspec/changes/archive/2026-10-16-a141-mcp-respects-backend-and-exact-numbers"
   },
   "found_by": {
     "date": "2026-10-15",
     "how": "User-authorized correctness and compatibility review against upstream tossinvest-cli and published Toss Invest API contracts.",
-    "record": "openspec/changes/a141-mcp-respects-backend-and-exact-numbers/proposal.md"
+    "record": "openspec/changes/archive/2026-10-16-a141-mcp-respects-backend-and-exact-numbers/proposal.md"
   },
   "acceptance": [
     "Frozen OpenSpec acceptance scenarios pass with offline regression tests.",
