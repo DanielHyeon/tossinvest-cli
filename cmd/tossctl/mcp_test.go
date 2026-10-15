@@ -3,6 +3,10 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -37,6 +41,22 @@ func TestMCPOfficialEligibilityMatchesCLI(t *testing.T) {
 }
 
 func TestMCPCmdWTSDoesNotWireOfficialDependencies(t *testing.T) {
+	if os.Getenv("A141_MCP_GUARDED_CHILD") == "1" {
+		testMCPCmdWTSDoesNotWireOfficialDependencies(t)
+		return
+	}
+	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		http.Error(w, "a141 outbound request denied", http.StatusBadGateway)
+	}))
+	defer proxy.Close()
+	child := exec.Command(os.Args[0], "-test.run=^TestMCPCmdWTSDoesNotWireOfficialDependencies$", "-test.count=1")
+	child.Env = append(os.Environ(), "A141_MCP_GUARDED_CHILD=1", "HTTP_PROXY="+proxy.URL, "HTTPS_PROXY="+proxy.URL, "ALL_PROXY="+proxy.URL)
+	if out, err := child.CombinedOutput(); err != nil {
+		t.Fatalf("guarded MCP subprocess failed: %v\n%s", err, out)
+	}
+}
+
+func testMCPCmdWTSDoesNotWireOfficialDependencies(t *testing.T) {
 	dir := isolate(t)
 	cfg := config.DefaultFile()
 	cfg.OpenAPI = config.OpenAPI{Enabled: true, Prefer: "wts"}
@@ -87,9 +107,16 @@ func TestMCPCmdWTSDoesNotWireOfficialDependencies(t *testing.T) {
 	if statusError || !status.WTS.Connected || status.Official.Connected {
 		t.Fatalf("auth status = %s, want WTS only", statusText)
 	}
-	for _, response := range responses[1:] {
-		if _, isError := text(t, response); !isError {
-			t.Fatalf("official operation unexpectedly available: %v", response)
+	for _, tc := range []struct {
+		response map[string]any
+		want     string
+	}{
+		{responses[1], "needs official Open API credentials"},
+		{responses[2], "needs official Open API credentials"},
+	} {
+		got, isError := text(t, tc.response)
+		if !isError || !strings.Contains(got, tc.want) {
+			t.Fatalf("official denial = %q, isError=%v, want %q", got, isError, tc.want)
 		}
 	}
 }
