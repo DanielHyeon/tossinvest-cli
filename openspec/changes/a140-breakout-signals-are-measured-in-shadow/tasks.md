@@ -14,7 +14,7 @@ Story: `STORY-TOS-a140` · **Low**(새 파일만 · High-risk 경로 무접촉 �
 - [x] 0.4 사람 결정 기록(review §1, 2026-10-15 「권장대로」 · D16 변경 · D17 후속). 남은 확인: D3 정밀화(ATR 창 고정) · D21 기본값 — Manager 에 보고
 - [x] 0.5 CodeGraphContext — not-applicable 유지(새 파일만; import 할 심볼은 CodeGraph callers + 리뷰어 재확인으로 닫음, codegraphcontext-context.md)
 - [x] 0.6 proposal-freeze 경량 리뷰 → review §2 APPROVE-WITH-FIXES, P1 셋 · P2 아홉 문서 반영
-- [ ] 0.7 `python3 tools/sdd/capture_change_base.py --change a140-breakout-signals-are-measured-in-shadow` (READY)
+- [x] 0.7 base 고정 — `5266374` (`capture_change_base.py`, READY)
 
 ## 1. 구현 (RED → GREEN → REFACTOR, 새 파일만)
 
