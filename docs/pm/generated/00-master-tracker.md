@@ -58,7 +58,7 @@
     - STORY-TOS-a136 — A day's buying has a ceiling [archived] → `a136-daily-buy-notional-limit`
     - STORY-TOS-a137 — The daily-loss limit is measured from the journal [archived] → `a137-daily-loss-is-measured`
     - STORY-TOS-a138 — The account holds at most a configured number of positions [archived] → `a138-max-open-positions`
-    - STORY-TOS-a139 — One trade risks a third of the day's loss allowance [in_progress] → `a139-per-trade-risk-budget`
+    - STORY-TOS-a139 — One trade risks a third of the day's loss allowance [implemented] → `a139-per-trade-risk-budget`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [archived] → `console-click-approval`

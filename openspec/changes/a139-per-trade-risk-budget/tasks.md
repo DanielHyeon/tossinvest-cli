@@ -40,5 +40,6 @@ Story: `STORY-TOS-a139` · **High-risk**(사이징) — Pre-Edit 선언 · 편�
 
 ## 3. 사람 · Manager
 
-- [ ] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a139-per-trade-risk-budget` + 독립 검증 (a138 archive 뒤)
+- [x] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a139-per-trade-risk-budget` + 독립 검증 (a138 archive 뒤)
+      — 2026-10-15 Manager 독립 검증: 격리 워크트리(91776455) 시험 재실행(risk · execgw · config · measure · strategydispatch 948 ok · app/engine A139 ok) · `PerTradeRiskBudget` 직접 판독(big.Rat 양수 Quo = 내림, 0 거부, 표 밖 통화 거부) · 착지 e7302fdb(격리 워크트리 계산)
 - 배포(체크박스 아님): 엔진 이미지 교체는 사람이 KST 05:00~09:00 창에서.
