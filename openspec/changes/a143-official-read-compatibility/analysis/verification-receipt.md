@@ -22,3 +22,7 @@ An external detached worktree at `/tmp/a143-mutant` was used; the product worktr
 REST source: `https://openapi.tossinvest.com/openapi-docs/latest/openapi.json`; local stored document is version 1.2.24 with 38 paths. Its `jq -S .` SHA-256, including the trailing newline emitted by jq, is `91f9e02f79df606f9a02db23f391ff993f8e634417a57fd2f5ef9d9d188308bd`.
 
 AsyncAPI source was independently fetched from `https://openapi.tossinvest.com/openapi-docs/latest/asyncapi.json` at `2026-10-15T16:44:26Z`; HTTP status was 200. The response byte-compares equal to `docs/migration/asyncapi.latest.json`, reports version 1.2.2 and 4 channels, and has `jq -S .` SHA-256 `176595a3abbba3c1b84576e3c1b6806b75ec6d507a2efee26a24021a55531a63` with the jq trailing newline. AsyncAPI is snapshot evidence only; automated monitoring and WebSocket client implementation remain unimplemented.
+
+## Final strict-invariant focused pass
+
+Test-only commit e6718bc1 adds the pure seven-character KR refusal case. `/tmp/a143-focused-adapt.exit`, `/tmp/a143-focused-strict.exit`, and `/tmp/a143-focused-officialbars.exit` are each 0. The strict command selects all TestStrictMinuteCandles tests, including the existing two-candle canonical query/page/cursor regression, observer chaining, malformed-body and transport refusals. This establishes the named fixture results cited in the final maps; it is not instrumented branch coverage. Manager independently inspected the raw exit files. Product and snapshot bytes remain unchanged.

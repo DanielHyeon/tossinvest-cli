@@ -24,10 +24,13 @@ Only B3 dependency may change. Query carries supplied symbol unchanged, returned
 | B2 | invalid market | none | market refusal | existing argument table |
 | B3 | lexical invalid symbol | none; must precede request | `SYMBOL_INVALID` | invalid KR boundary table |
 | B4 | count outside 1..200 | none | `COUNT_INVALID` | existing argument table |
-| B5/B6 | nonempty invalid before | none | `BEFORE_INVALID` | existing argument table |
+| B5 | before nonempty | parse before into comparison instant | proceeds to B6 | argument table and canonical-query fixture |
+| B6 | before parse fails | none | `BEFORE_INVALID` | argument table |
 | B7 | nonempty before | request contains unchanged cursor | none | canonical-query test |
 | B8 | outer observer present | invokes outer observer | none | observer chaining test |
-| B9/B10/B11 | transport/final-attempt/decode error | no page returned | propagated/typed error | existing transport/body tests |
+| B9 | transport error | no page returned | propagated error | transport-classification fixture |
+| B10 | final-attempt extraction error | no page returned | typed error | preserved path; no isolated error-branch receipt |
+| B11 | strict decoder error | no page returned | typed error | malformed-body fixtures |
 
 ## Calls and live bindings
 
@@ -41,7 +44,7 @@ Only B3 dependency may change. Query carries supplied symbol unchanged, returned
 ## State mutations and fallbacks
 
 - Captures response traces and returns page data; no order, token, setting, journal, or broker write.
-- Planned edit: KR regex only. Do not normalize/case-fold, alter US regex, cursor, decoder, or returned-page propagation.
+- Implemented dependency change: KR regex only. This method body, US regex, cursor, decoder and returned-page propagation remain unchanged.
 
 ## Safety conclusion
 

@@ -15,8 +15,8 @@
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
 | B1 | subtest iteration | no mutation | test failure | named test |
-| B2 | expected refusal | no mutation | test failure | named test |
-| B3 | zero requests | no mutation | test failure | named test |
+| B2 | err == nil would violate refusal | no mutation | test failure | named test |
+| B3 | hitCount != 0 would violate no-request contract | no mutation | test failure | named test |
 
 ## Calls and live bindings
 

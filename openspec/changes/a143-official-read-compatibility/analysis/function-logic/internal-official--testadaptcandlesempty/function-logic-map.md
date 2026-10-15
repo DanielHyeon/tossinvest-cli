@@ -1,7 +1,7 @@
 # Function Logic Map: `TestAdaptCandlesEmpty`
 
 - Source: `internal/official/candle_reads_test.go`
-- AST evidence: `ast.json`
+- AST evidence: `ast.json`, explicitly revision=base at immutable baseline 71e9bae1. This unchanged test body is retained as historical pre-edit evidence because neighboring tests changed; its file hash intentionally differs from the current file.
 - Risk scan: `risk-pattern-report.md`
 
 ## Inputs and invariants
