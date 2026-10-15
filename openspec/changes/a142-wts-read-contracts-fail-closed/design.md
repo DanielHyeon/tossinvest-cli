@@ -15,6 +15,8 @@ Pre-edit AST at baseline 6765858a identifies ListPendingOrders and ListCompleted
 3. Required watchlist collection fields missing/null/wrong-type must produce an error; explicit empty arrays succeed. Validate bulk watchlists and each items array only. Do not import simple/groups route validation, itemCount checks or positive-ID mutation reconciliation rules. Do not alter any mutation payload or shared mutation semantics.
 4. Test responses through local HTTP fixtures. Include existing consumers' error propagation in branch maps without changing their policy. Only existing token/session setup may be mocked; no real-account API calls.
 
+5. Additional gstack review found the existing watchlist health probe still checks the retired dashboard POST. Align only that watchlist ProbeSpec method, URL/query, empty body and shape check with the dedicated read contract. Reject absent/null/wrong-type bulk watchlists and per-group items; accept explicit empty arrays and preserve status errors. Keep watchlist operation ID/handler, all other probes, monitoring schedules, configuration and live execution unchanged. Capture fresh pre-edit evidence for the containing registry function before editing; prove the probe contract through offline fixtures.
+
 ## Risks / Trade-offs
 
 - Stricter errors can expose upstream drift → intentional fail-closed behavior, stable descriptive schema errors and explicit-empty tests.

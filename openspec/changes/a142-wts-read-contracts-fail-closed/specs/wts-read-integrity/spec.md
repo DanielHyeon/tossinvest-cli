@@ -35,3 +35,7 @@ Flat watchlist reads SHALL use the dedicated new-watchlists GET endpoint and ret
 #### Scenario: Optional values and sorting ties
 - **WHEN** groups/items are out of ordering sequence with equal ordering values, missing currency or nullable prices
 - **THEN** stable ascending sorting preserves wire-order ties, Symbol remains the product code, missing currency is empty and nullable prices remain zero
+
+#### Scenario: Existing health probe follows the read contract
+- **WHEN** the registered watchlist health probe definition is inspected and its check is evaluated with local response fixtures
+- **THEN** it uses GET /api/v1/new-watchlists?includePrice=true&lazyLoad=false with no legacy POST body, rejects non-success status and malformed required collections, and accepts explicit empty arrays; operation identity, other probes and monitoring schedules remain unchanged

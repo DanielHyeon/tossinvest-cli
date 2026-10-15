@@ -6,4 +6,4 @@
 | B2 | dedicated GET route and query asserted | `TestListWatchlistFromFixtures` | no | yes |
 | B3 | full retained fields, stable ties, ordering, and code symbols asserted | `TestListWatchlistFromFixtures` | no | yes |
 
-Executed in `go test ./internal/client -count=1`.
+Named test PASS is confirmed by the final focused receipt. Assertion conditions are evaluated; passing does not execute their fatal branches. No instrumented branch-hit claim is made.

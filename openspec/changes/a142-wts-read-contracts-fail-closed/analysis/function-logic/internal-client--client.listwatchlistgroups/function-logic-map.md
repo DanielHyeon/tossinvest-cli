@@ -1,7 +1,7 @@
 # Function Logic Map: `Client.ListWatchlistGroups`
 
 - Source: `internal/client/watchlist_manage.go`
-- AST evidence: `ast.json` (`e9c35060197ae08deeebe28f370aaff0c047c65d1fe9bb9ff155fb452f3ffb35`)
+- AST evidence: `ast.json` (`de925d43fbf32a246efaf6c6df56fbf6a2f7158d00188818dcbc6dbb39dca4f1`)
 - Risk scan: `risk-pattern-report.md` (no configured match)
 
 ## Inputs and invariants
@@ -17,7 +17,7 @@
 
 | Branch | Condition | Return/error | Test |
 |---|---|---|---|
-| B1 | session failure | error | existing client coverage |
+| B1 | session failure | error | static preserved branch; no isolated fixture receipt |
 | B2 | bulk GET/decode failure | propagated error | `TestListWatchlistRejectsInvalidCollections` |
 
 `mapBulkWatchlistGroups` validates the decoded collections, stable-sorts groups and items, and maps `Symbol` from `code`. It is called only after B2 succeeds.

@@ -7,4 +7,4 @@
 | B3 | empty collection result is non-nil and successful | `TestListWatchlistRejectsInvalidCollections` | no | yes |
 | B4 | missing/null/wrong-type collection returns error and nil | `TestListWatchlistRejectsInvalidCollections` | no | yes |
 
-Executed in `go test ./internal/client -count=1`.
+Named test PASS is confirmed by the final focused receipt. Assertion conditions are evaluated; passing does not execute their fatal branches. No instrumented branch-hit claim is made.

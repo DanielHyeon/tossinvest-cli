@@ -16,7 +16,7 @@
 
 | Branch | Condition | Return/error | Test |
 |---|---|---|---|
-| B1 | session missing | error | existing client coverage |
+| B1 | session missing | error | static preserved branch; no isolated fixture receipt |
 | B2 | GET/decode failure | propagated error | `TestListPendingOrdersRejectsAbsentOrNullResult` |
 | B3 | decoded result is nil | schema error | `TestListPendingOrdersRejectsAbsentOrNullResult` |
 | B4 | collection present | parsed results, including empty non-nil slice | `TestListPendingOrdersAcceptsExplicitEmptyResult`; `TestListPendingOrdersParsesStructuredFields` |

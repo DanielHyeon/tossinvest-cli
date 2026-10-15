@@ -10,7 +10,18 @@ Local fixture test baseline.
 
 ## Branches and early returns
 
-Assertions are enumerated below.
+| Branch | Baseline condition |
+|---|---|
+| B1 | request path mismatch |
+| B2 | range.from mismatch |
+| B3 | range.to mismatch |
+| B4 | read error |
+| B5 | count != 1 |
+| B6 | order ID mismatch |
+| B7 | symbol mismatch |
+| B8 | market mismatch |
+| B9 | status mismatch |
+
 
 ## Calls and live bindings
 
@@ -22,4 +33,4 @@ No production mutation.
 
 ## Safety conclusion
 
-Preserved baseline test evidence for a function changed only by adjacent edits or renamed.
+Historical AST from the immutable baseline; file hash is intentionally the baseline hash. The test body remains unchanged; adjacent tests changed its source file. Named current test PASS does not mean fatal assertion branches execute.

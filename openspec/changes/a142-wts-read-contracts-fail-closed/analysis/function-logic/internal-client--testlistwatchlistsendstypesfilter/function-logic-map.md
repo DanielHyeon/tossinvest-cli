@@ -10,7 +10,12 @@ Local fixture test baseline.
 
 ## Branches and early returns
 
-Assertions are enumerated below.
+| Branch | Baseline condition |
+|---|---|
+| B1 | legacy dashboard path selects body capture |
+| B2 | legacy read error |
+| B3 | legacy types/WATCHLIST body assertion fails |
+
 
 ## Calls and live bindings
 
@@ -22,4 +27,4 @@ No production mutation.
 
 ## Safety conclusion
 
-Preserved baseline test evidence for a function changed only by adjacent edits or renamed.
+Historical AST from the immutable baseline; file hash is intentionally the baseline hash. This test was removed with the legacy route; current tests have separate bundles.

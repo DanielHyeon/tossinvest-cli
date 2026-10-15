@@ -13,14 +13,13 @@ Local `httptest` fixture coverage for the a142 read contract. No live endpoint i
 |---|---|
 | B1 | client call returns no error |
 | B2 | dedicated GET route and query asserted |
-| B3 | group/item ordering and code symbols asserted |
-| B4 | empty currency and nil prices map to zero |
+| B3 | full DeepEqual checks group/item sorting, both stable ties, code identity, group/name, currency and positive/zero/null/omitted prices |
 
 ## Inputs and invariants
 Evidence is local and source-bound.
 
 ## Branches and early returns
-See the branch table below.
+The table above matches AST B1 through B3. Passing tests evaluate these assertions without entering their fatal branches.
 
 ## Calls and live bindings
 Calls are listed in `ast.json`; fixture tests use only local `httptest`.

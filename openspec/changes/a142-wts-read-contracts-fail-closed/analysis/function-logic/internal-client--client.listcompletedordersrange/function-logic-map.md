@@ -17,16 +17,16 @@
 
 | Branch | Condition | Return/error | Test |
 |---|---|---|---|
-| B1 | session failure | error | existing client coverage |
-| B2 | metadata failure | error | existing client coverage |
-| B3 | invalid market | error | existing normalization coverage |
+| B1 | session failure | error | static preserved branch; no isolated fixture receipt |
+| B2 | metadata failure | error | static preserved branch; no isolated fixture receipt |
+| B3 | invalid market | error | static preserved branch; no isolated fixture receipt |
 | B4 | normalized market iteration | one GET per market | partial-market fixture |
 | B5 | GET/decode error | error; discard aggregate | `TestListCompletedOrdersRangeRejectsMissingCollections` |
 | B6 | decoded body is nil | schema error; discard aggregate | `TestListCompletedOrdersRangeRejectsMissingCollections`; `TestListCompletedOrdersRangeRejectsPartialMarketResult` |
 | B7 | body range | append parsed orders | parse and empty-body tests |
-| B8 | both sort timestamps nil | ID ordering | existing ordering coverage |
-| B9 | left timestamp nil | timestamped order first | existing ordering coverage |
-| B10 | right timestamp nil | timestamped order first | existing ordering coverage |
+| B8 | both sort timestamps nil | ID ordering | static preserved branch; no isolated fixture receipt |
+| B9 | left timestamp nil | timestamped order first | static preserved branch; no isolated fixture receipt |
+| B10 | right timestamp nil | timestamped order first | static preserved branch; no isolated fixture receipt |
 
 ## Safety conclusion
 

@@ -1,13 +1,13 @@
 # Branch Test Map: `TestListCompletedOrdersParsesStructuredFields`
 
-| Branch | Scenario | Test | RED observed | GREEN observed |
+| Branch | Scenario | Test / evidence | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | baseline assertion | `TestListCompletedOrdersParsesStructuredFields` | no | yes |
-| B2 | baseline assertion | `TestListCompletedOrdersParsesStructuredFields` | no | yes |
-| B3 | baseline assertion | `TestListCompletedOrdersParsesStructuredFields` | no | yes |
-| B4 | baseline assertion | `TestListCompletedOrdersParsesStructuredFields` | no | yes |
-| B5 | baseline assertion | `TestListCompletedOrdersParsesStructuredFields` | no | yes |
-| B6 | baseline assertion | `TestListCompletedOrdersParsesStructuredFields` | no | yes |
-| B7 | baseline assertion | `TestListCompletedOrdersParsesStructuredFields` | no | yes |
-| B8 | baseline assertion | `TestListCompletedOrdersParsesStructuredFields` | no | yes |
-| B9 | baseline assertion | `TestListCompletedOrdersParsesStructuredFields` | no | yes |
+| B1 | request path mismatch | TestListCompletedOrdersParsesStructuredFields | not claimed | named current test PASS; fatal branch not taken |
+| B2 | range.from mismatch | TestListCompletedOrdersParsesStructuredFields | not claimed | named current test PASS; fatal branch not taken |
+| B3 | range.to mismatch | TestListCompletedOrdersParsesStructuredFields | not claimed | named current test PASS; fatal branch not taken |
+| B4 | read error | TestListCompletedOrdersParsesStructuredFields | not claimed | named current test PASS; fatal branch not taken |
+| B5 | count != 1 | TestListCompletedOrdersParsesStructuredFields | not claimed | named current test PASS; fatal branch not taken |
+| B6 | order ID mismatch | TestListCompletedOrdersParsesStructuredFields | not claimed | named current test PASS; fatal branch not taken |
+| B7 | symbol mismatch | TestListCompletedOrdersParsesStructuredFields | not claimed | named current test PASS; fatal branch not taken |
+| B8 | market mismatch | TestListCompletedOrdersParsesStructuredFields | not claimed | named current test PASS; fatal branch not taken |
+| B9 | status mismatch | TestListCompletedOrdersParsesStructuredFields | not claimed | named current test PASS; fatal branch not taken |
