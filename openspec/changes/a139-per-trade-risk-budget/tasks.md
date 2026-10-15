@@ -22,7 +22,10 @@ Story: `STORY-TOS-a139` · **High-risk**(사이징) — Pre-Edit 선언 · 편�
       `ErrLimitsRequired`(factory 사전 검사, audit 단계 아님) · 정책 버전 v2.
       기존 시험 5 건(실측): `TestOrderAboveThePerOrderCapIsRefused`(손절 폭을 좁혀 notional 단에 계속 닿게 — 기대 사유 유지) · `TestQuantityAboveTheRiskBudgetIsRefused`(새 예산의
       수량으로) · `TestAutomationGateRiskPolicyUsesEveryConfiguredUSDLimit`(50.75 → 16.91) · testseams `TestQFinalAccountBaseGuardianPairedKRUS` ·
-      `TestQFinalCampaignFirstLegProjectsGuardianOwnedLineageAllEightLanes`(Guardian 소유 수량이 의도대로 줄어든 값으로 — 시험이 재는 것이 Guardian 사이징)
+      `TestQFinalCampaignFirstLegProjectsGuardianOwnedLineageAllEightLanes`(실제 처리: rig 예산을 옛 값으로 명시 — 두 시험은 짝 계약을 재므로. account-base 경로의 1/3 사이징은
+      새 시험 `TestA139TheAccountBasePathSizesWithAThirdOfTheDailyLoss` 가 KR 10 · US 4 로 박음, 구현 리뷰 P2-1)
+      + 구현 리뷰: 생산 Guardian 객체 사이징(`TestA139TheProductionGuardianSizesWithAThirdOfTheDailyLoss`) · 체인 경계 한 단위(`TestA139TheChainRiskCapBoundaryIsExactlyOneUnit`) ·
+      매도 무관(`TestA139ASellNeverReadsTheRiskBudget`) · 게이트 OFF audit 줄 존재 단언
 - [x] 1.2 GREEN — `risk/risk_budget.go` · `riskPolicyFromAutomationGate` · `DefaultPolicy` · `recordGateSettings` · `acceptanceDetail`
 - [x] 1.3 REFACTOR · 편집 뒤 AST 재추출 · `check_analysis.py --change a139-per-trade-risk-budget`
 
@@ -33,7 +36,7 @@ Story: `STORY-TOS-a139` · **High-risk**(사이징) — Pre-Edit 선언 · 편�
 - [x] 2.2 변이 원장(`analysis/mutation/`): 나눗수 3→2 · 내림→올림 · 최소 단위 USD 2→3 · KRW 0→2 · 0 허용 · 유도 우회(= dailyLoss) · 유도 실패 시 dailyLoss 로 폴백 · DefaultPolicy 값 ·
       audit 줄 제거 · audit 만 dailyLoss · factory 사전 검사 제거 · 버전 v1 되돌림
       — 하네스 `analysis/mutation/a139_mutate.py`, round1(6f4f7cd3) 14/15 · **round2(dadc386a) 15/15 CAUGHT** — `round1.md` · `round2.md`
-- [ ] 2.3 독립 적대 리뷰(분리된 컨텍스트, 적대 Eng 포함) → review.md
+- [x] 2.3 독립 적대 리뷰(분리된 컨텍스트, 적대 Eng 포함) → review.md — APPROVE-WITH-FIXES(P0 0 · P1 1 · P2 2 · P3 4), 전부 수리 · 잔여 2(사람 결정) 기록
 
 ## 3. 사람 · Manager
 

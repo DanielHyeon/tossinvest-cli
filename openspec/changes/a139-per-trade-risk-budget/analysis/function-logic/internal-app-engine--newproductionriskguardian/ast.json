@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/guardian_wiring.go",
-  "source_sha256": "35e143d4b22632d500a7d7648052bf09b359788786175eb47b397886cd7ce4df",
+  "source_sha256": "af898702da124649c9ec45d7754c17b8e127084b3aa3db1bf9f1bdee173677b1",
   "package": "engine",
   "function": "newProductionRiskGuardian",
   "signature": "newProductionRiskGuardian(params=5, results=2)",

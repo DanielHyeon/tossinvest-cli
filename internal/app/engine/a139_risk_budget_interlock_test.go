@@ -41,7 +41,7 @@ func TestA139AGateOffStartWithoutADailyLossStillStarts(t *testing.T) {
 		t.Fatalf("a gate-off engine with no daily loss must start as before: %v", err)
 	}
 	line := lastEntryFor(readAudit(t, filepath.Join(dir, "audit.log")), "engine.automation_gate.per_trade_risk_budget", audit.ActionLimitChange)
-	if line != nil && (line.New != "" || !strings.Contains(line.Detail, "cannot be derived")) {
+	if line == nil || line.New != "" || !strings.Contains(line.Detail, "cannot be derived") {
 		t.Fatalf("an underivable budget must be audited as empty with its reason, got %+v", line)
 	}
 }

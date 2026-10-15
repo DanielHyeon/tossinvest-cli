@@ -1,6 +1,7 @@
 package risk
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
@@ -73,4 +74,28 @@ func TestA139TheRiskCapIsAThirdOfTheDailyLoss(t *testing.T) {
 	if got != "33" {
 		t.Fatalf("Guardian sizing at a 1,000 stop = %s, want 33 (a third of the daily loss over the stop)", got)
 	}
+}
+
+// 구현 리뷰 P2-1: 체인 위험 상한의 경계 — 예산(33,333)이 정확히 한 단위 위험을 덮으면 1 주 허용, 한 원이라도 넘으면 0 주 → 거부.
+func TestA139TheChainRiskCapBoundaryIsExactlyOneUnit(t *testing.T) {
+	in := entryInput()
+	in.Intent.Quantity = "1"
+	in.Intent.LimitPrice = "50000"
+	in.Intent.StopPrice = "16667" // 폭 33,333 = 예산 → floor(33,333 / 33,333) = 1
+	in.Intent.TargetPrice = "130000"
+	in.Account.CashAvailable = krw("1000000")
+	requireAllowed(t, in)
+
+	in.Intent.StopPrice = "16666" // 폭 33,334 > 예산 → 0 주
+	got := requireRefused(t, in, ReasonInvalidOrderSize)
+	if !strings.Contains(got.Detail, "33333") {
+		t.Fatalf("the refusal must name the derived budget, got %q", got.Detail)
+	}
+}
+
+// 구현 리뷰 P2-1: 매도(위험 축소)는 예산을 읽지 않음 — 예산이 비어 있어도(유도 불가 정책) 보유 이하 매도는 통과(설계 D6, AST Evaluate B2).
+func TestA139ASellNeverReadsTheRiskBudget(t *testing.T) {
+	in := reductionInput()
+	in.Policy.RiskBudget = riskcalc.Money{}
+	requireAllowed(t, in)
 }

@@ -152,5 +152,6 @@ func perTradeRiskBudgetAudit(gate config.AutomationGate) riskBudgetAudit {
 		}
 		return riskBudgetAudit{detail: "cannot be derived: " + reason + " (rule " + perTradeRiskBudgetRule + ")"}
 	}
-	return riskBudgetAudit{value: budget.Amount, detail: "derived by " + perTradeRiskBudgetRule}
+	// 첫 기록의 이전 값은 "" 이므로(RecordChange) 옛 규칙을 detail 에 적어 「일일 손실 전부 → 1/3」 축소를 읽을 수 있게 함(구현 리뷰 P3-4).
+	return riskBudgetAudit{value: budget.Amount, detail: "derived by " + perTradeRiskBudgetRule + " (previously = max_daily_loss_amount, risk-policy-v1)"}
 }

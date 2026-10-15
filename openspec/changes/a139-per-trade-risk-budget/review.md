@@ -39,3 +39,18 @@ Pre-Edit Gate:
 - 설정 · DB · journal 변경: 없음(새 키 0 · 스키마 0). rollback = 이전 이미지. 정책 버전 문자열 v1 → v2(결정 preimage 기록만 — 기대 버전은 Guardian 자기 유도)
 - §0 검토: 통과 — 사이징만 줄임(§0.9), 매도 · 손절은 사이징 단 전에 분기(AST Evaluate B2 · preflight B6)
 ```
+
+## 구현 독립 적대 리뷰 (2026-10-15, tasks 2.3)
+
+- 보이스: 분리된 컨텍스트 적대 리뷰어 1(code-reviewer — 적대 Eng · 안전 불변식 · 시험 반증), 자기 격리 worktree(dadc386a)에서 전체 시험 · 자체 변이 · 산술 속성 시험(무작위 · 경계 float 약 20 만, 0 실패).
+- 판정: **APPROVE-WITH-FIXES** — P0 0 · P1 1 · P2 2 · P3 4. 생산 산술 · 배선 정확, 방향은 사이징 축소뿐.
+- 수용 · 수리(이 커밋):
+  - P1-1 생산 Guardian **객체**의 예산을 재는 시험 0 — 생성자에서 예산을 되돌리는 변이가 스위트를 통과(audit 는 여전히 1/3 을 적음) → 실제 journal 로 생산 Guardian 을 만들어
+    IssueEntry 위험 상한 66 · 67 을 재는 시험(변이 N16).
+  - P2-1 RED 목록의 빈칸 — 체인 경계 한 단위 · account-base(FX) 경로 KR 10 / US 4 · 매도 무관 시험 추가(변이 N18 · N19), tasks 문구를 실제 처리(짝 시험의 예산 고정)에 맞춤.
+  - P2-2 잔여 서술 정정 — 재분류만으로 잠금을 피하는지는 미검증(범위 거절도 주기 오류 → latchMarket, 코드 읽기). design D0 보강.
+  - P3-1 게이트 OFF 시험이 줄 부재를 통과 → 줄 존재 단언(변이 N17). P3-2 spec 「한 함수」 문구 정정(기본 정책은 같은 규칙의 값을 시험이 대조). P3-3 「한 거래가 그날 손실 한도 전부」를
+    「금액 상한」으로 한정(비율 상한은 이 규칙이 보지 않음). P3-4 audit detail 에 옛 규칙(「previously = max_daily_loss_amount, risk-policy-v1」).
+- 잔여(사람 결정 후보, a139 밖):
+  1. Guardian 상한 0 → `EXISTING_GUARDIAN_CAP` → 레인 잠금(design D0 보강) — 재분류 전에 `latchMarket` 까지의 특성 시험 필요. 현재 생산 레인 DORMANT.
+  2. 예산을 min(금액, 비율 × 자본)/3 로 — 보수 방향 후속 후보(런타임 자본 필요).

@@ -11,10 +11,11 @@ amount in the same currency, rounded down to the currency's minor unit (KRW 1, U
 0.01); a currency with no known minor unit, or a third that rounds to zero, SHALL leave
 the policy invalid so the gate refuses to start. The divisor's source is the user's
 decision of 2026-10-15 (change a139); before it the budget equalled the whole daily-loss
-amount, so one stopped-out trade could spend the day's loss allowance. The change is in
+amount ceiling, so one stopped-out trade could spend the whole amount ceiling (the
+ratio-of-equity ceiling, which can be lower, is not considered by this rule). The change is in
 the conservative direction only (§0.9) and SHALL NOT be relaxed without a new decision.
-The budget is derived in one function shared by the production policy and the default
-policy, and the startup audit SHALL record the derived value with the rule in its detail;
+The production policy derives the budget in one function, the default policy carries the
+same rule's value pinned equal by a test, and the startup audit SHALL record the derived value with the rule in its detail;
 when the budget cannot be derived (for example a gate-off configuration with no daily-loss
 amount) the audit line SHALL record an empty value with the reason and SHALL NOT fail the
 start, so a gate-off start stays the upstream behaviour. The production Guardian's policy
