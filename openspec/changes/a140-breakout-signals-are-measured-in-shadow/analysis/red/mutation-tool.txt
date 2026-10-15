@@ -1,0 +1,18 @@
+# a140 도구 변이 점검(경량, 제자리 변이 → 사본 복원 · sha256 대조) — HEAD 69fc3896 · 2026-10-15T10:07:52Z
+control: GREEN
+M1-samefile CAUGHT
+M2-suspend CAUGHT
+M3-attempt-cap CAUGHT
+M4-stop-first CAUGHT
+M5-lowerbound CAUGHT
+M6-restore-done CAUGHT
+M7-cost-noise CAUGHT
+M8-armed-index CAUGHT
+M9-journal-sibling CAUGHT
+M10-universe-restore CAUGHT
+M11-gap-prefix CAUGHT
+M12-tick-resistance CAUGHT
+M13-gap-once SURVIVED
+M14-name-guard CAUGHT
+restore OK
+M13-gap-once (시험 추가 뒤 재실행): CAUGHT

@@ -1,0 +1,16 @@
+# a140 RED 3 — 도구 시험만(구현 파일 0) · HEAD e076649d · 2026-10-15T08:31:39Z
+# 구현은 이 실행 뒤에 작성함.
+# github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow [github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow.test]
+tools/a140-breakout-signal-shadow/helpers_test.go:73:24: undefined: sessionInfo
+tools/a140-breakout-signal-shadow/helpers_test.go:77:19: undefined: shadowParams
+tools/a140-breakout-signal-shadow/helpers_test.go:83:31: undefined: quoteSnap
+tools/a140-breakout-signal-shadow/step_test.go:23:87: undefined: probe
+tools/a140-breakout-signal-shadow/step_test.go:38:34: undefined: probe
+tools/a140-breakout-signal-shadow/step_test.go:48:41: undefined: ledgerRow
+tools/a140-breakout-signal-shadow/evaluate_test.go:22:13: undefined: krTickMinor
+tools/a140-breakout-signal-shadow/evaluate_test.go:30:14: undefined: costRatePPM
+tools/a140-breakout-signal-shadow/evaluate_test.go:39:15: undefined: planSizing
+tools/a140-breakout-signal-shadow/evaluate_test.go:48:14: undefined: planSizing
+tools/a140-breakout-signal-shadow/evaluate_test.go:48:14: too many errors
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow [build failed]
+FAIL

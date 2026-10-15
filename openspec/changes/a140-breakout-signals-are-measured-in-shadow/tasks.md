@@ -21,14 +21,14 @@ Story: `STORY-TOS-a140` · **Low**(새 파일만 · High-risk 경로 무접촉 �
 - [x] 1.1 RED — `analysis/red/red-1-compile.txt` · `red-2-behaviour.txt`(구현 초안이 먼저 있었음을 영수증에 기록). `internal/breakoutsignal` 시험: 네 지표의 경계값(직전 봉 14/15 · ATR 13/14 봉 · high = low · 분모 0 · 거래량 0 봉) ·
       결정성(같은 묶음 = 같은 바이트) · 올림/내림 방향 · typed 거절(0 대체 금지) · float 미사용(AST 시험)
 - [x] 1.2 GREEN — `analysis/red/green-breakoutsignal.txt`(17 PASS · -race ok · vet · gofmt). 리뷰 반영: lane 봉 ID = `LaneBarID`(판 무관). `internal/breakoutsignal`: `strategyevidence.BarSeries` → `breakoutlane.ClosedBarInput` 목록 + `ATRMinor` + 지표 digest
-- [ ] 1.3 RED — 도구 시험(mock 브로커 · mock 달력): 생산 `evidence.db` 경로 거절(직접 · 심링크) · 주문/계좌 이름 금지(AST) ·
+- [x] 1.3 RED — `analysis/red/red-3-tool-compile.txt`(시험만 · 구현 0). 도구 시험(mock 브로커 · mock 달력): 생산 `evidence.db` 경로 거절(직접 · 심링크) · 주문/계좌 이름 금지(AST) ·
       ARMED 에서만 호가 재조회 · setup 당 PROPOSED 1 회 · 결손 행 · 라벨(손절 선착 · 한 봉 동시 = 손절 · 마감 R) · 보고서 n<30 보류 ·
       그룹별 GET 계수
-- [ ] 1.4 GREEN — `tools/a140-breakout-signal-shadow/`: 랭킹 → 종목 집합(D8) · 분 단위 `PollClosedBars` · `SealBarSeries` ·
+- [x] 1.4 GREEN — 도구 9 파일(main · source · guard · evaluate · sizing · label · ledger · report · shadow), 시험 21. 리뷰 반영 규칙 §2.1 전부(ARMED 5 분 재판정 · 틱 고정 · 앞부분 평가 · 폴 하한 · 재시작 복원 · MARKET_DATA 정지). 경량 변이 14/14 CAUGHT(`analysis/red/mutation-tool.txt`, M13 은 시험 추가 뒤). `tools/a140-breakout-signal-shadow/`: 랭킹 → 종목 집합(D8) · 분 단위 `PollClosedBars` · `SealBarSeries` ·
       `breakoutsignal` · `breakoutlane.Evaluate(prior=nil)` · `PollQuoteL1`(시작 · ARMED) · 원장 · 라벨러 · 보고서
-- [ ] 1.5 VERIFY — `go vet ./internal/breakoutsignal/... ./tools/a140-breakout-signal-shadow/...` · 태그 vet · `gofmt -l` 빈 출력 ·
+- [x] 1.5 VERIFY — `analysis/red/verify.txt`: gofmt 빈 · vet · 태그 vet rc=0 · 38 PASS / 0 FAIL · -race ok · `make lint` rc=0. `go vet ./internal/breakoutsignal/... ./tools/a140-breakout-signal-shadow/...` · 태그 vet · `gofmt -l` 빈 출력 ·
       `rtk proxy go test -count=1` 두 패키지 · `-race` · `make lint`(gofmt 범위가 `./internal` 을 포함)
-- [ ] 1.6 팀메이트 커밋(푸시 금지) — 허용 경로 전수 확인 후 `git commit -- <paths>`
+- [x] 1.6 팀메이트 커밋(푸시 금지) — 허용 경로 전수 확인 후 `git commit -- <paths>`
 
 ## 2. 리뷰 · 착지
 
