@@ -1,12 +1,12 @@
 ## 1. Freeze and evidence
 
-- [ ] 1.1 Register Story and generated PM tracker; freeze proposal through recorded four-perspective review.
-- [ ] 1.2 Capture and commit immutable baseline; collect current CodeGraph/caller evidence and AST/logic/branch maps before code changes.
+- [x] 1.1 Register Story and generated PM tracker; freeze proposal through recorded four-perspective review.
+- [x] 1.2 Capture and commit immutable baseline; collect current CodeGraph/caller evidence and AST/logic/branch maps before code changes.
 
 ## 2. Implementation and regression tests
 
-- [ ] 2.1 Demonstrate routing regressions with offline tests and implement effective-backend dependency enforcement.
-- [ ] 2.2 Demonstrate exact-number truncation regression and preserve retained JSON numbers with minimal decoding changes.
+- [x] 2.1 Demonstrate routing regressions with offline tests and implement effective-backend dependency enforcement.
+- [x] 2.2 Demonstrate exact-number truncation regression and preserve retained JSON numbers with minimal decoding changes.
 - [ ] 2.3 Refresh final AST/branch mappings and test negative paths, enabled behavior and unchanged safety boundaries.
 
 ## 3. Independent verification

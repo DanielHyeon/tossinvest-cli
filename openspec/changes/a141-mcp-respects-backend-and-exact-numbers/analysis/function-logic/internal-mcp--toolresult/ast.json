@@ -1,15 +1,15 @@
 {
   "file": "internal/mcp/server.go",
-  "source_sha256": "f4fc54655fce7e62de9dd1af16bcb409f85e1c761c4a06c0e9709fe1bf25e84d",
+  "source_sha256": "a621b9b36b040e9afdf193be32281b9950417bff998155d9c2a23dc31a1f876f",
   "package": "mcp",
   "function": "toolResult",
   "signature": "toolResult(params=2, results=2)",
   "start": {
-    "line": 250,
+    "line": 251,
     "column": 1
   },
   "end": {
-    "line": 267,
+    "line": 270,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 252,
+        "line": 253,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 255,
+        "line": 256,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 257,
+        "line": 260,
         "column": 3
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 258,
+        "line": 261,
         "column": 4
       }
     }
@@ -50,14 +50,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 253,
+        "line": 254,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 263,
+        "line": 266,
         "column": 2
       }
     }
@@ -66,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 251,
+        "line": 252,
         "column": 15
       },
       "text": "json.MarshalIndent"
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 253,
+        "line": 254,
         "column": 81
       },
       "text": "err.Error"
@@ -82,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 255,
+        "line": 256,
         "column": 5
       },
       "text": "len"
@@ -90,15 +90,39 @@
     {
       "kind": "call",
       "at": {
-        "line": 257,
-        "column": 6
+        "line": 258,
+        "column": 10
       },
-      "text": "json.Unmarshal"
+      "text": "json.NewDecoder"
     },
     {
       "kind": "call",
       "at": {
         "line": 258,
+        "column": 26
+      },
+      "text": "bytes.NewReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 3
+      },
+      "text": "dec.UseNumber"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 6
+      },
+      "text": "dec.Decode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
         "column": 24
       },
       "text": "json.MarshalIndent"
@@ -106,7 +130,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 258,
+        "line": 261,
         "column": 43
       },
       "text": "shrinkToCap"
@@ -114,7 +138,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 264,
+        "line": 267,
         "column": 56
       },
       "text": "string"
@@ -124,7 +148,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 251,
+        "line": 252,
         "column": 2
       }
     },
@@ -132,13 +156,20 @@
       "kind": ":=",
       "at": {
         "line": 258,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 261,
         "column": 7
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 259,
+        "line": 262,
         "column": 5
       }
     }
