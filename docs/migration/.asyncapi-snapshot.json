@@ -1,6 +1,6 @@
 {
   "phase": "spec-public",
-  "spec_url": "https://openapi-ws.tossinvest.com/asyncapi.json",
+  "spec_url": "https://openapi.tossinvest.com/openapi-docs/latest/asyncapi.json",
   "spec_file": "docs/migration/asyncapi.latest.json",
   "spec_version": "1.2.2",
   "spec_channel_count": 4,
