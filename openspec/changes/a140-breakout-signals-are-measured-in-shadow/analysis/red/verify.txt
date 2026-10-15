@@ -1,19 +1,13 @@
-# a140 VERIFY — HEAD 69fc3896 · 2026-10-15T10:13:28Z · go version go1.26.5 linux/amd64
+# a140 VERIFY (코드 리뷰 수리 뒤) — base 52663746 · 작업 트리 · 2026-10-15T11:17:49Z · go version go1.26.5 linux/amd64
 ## gofmt -l (빈 = 통과)
-## go vet
-Go vet: No issues found
+## go vet rc
 rc=0
-## go vet -tags tossos_testseams
-Go vet: No issues found
-rc=0
+tagged rc=0
 ## go test -v
-      2 PASS
-      1 --- PASS: TestVolumeExpandedIsRVOLAtLeastOne (0.00s)
-      1 --- PASS: TestUpperWickRoundsUpAndIsZeroOnAFlatBar (0.00s)
-ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutsignal	0.007s
-ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow	0.366s
-PASS lines: 38  FAIL lines: 0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutsignal	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow	0.449s
+PASS lines: 45  FAIL lines: 0
 ## -race
-ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutsignal	1.025s
-ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow	2.326s
-## make lint (gofmt ./cmd ./internal ./tools/logic-map + go vet ./... + 태그 vet) rc=0 — 2026-10-15T10:22:29Z
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutsignal	1.019s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow	2.647s
+## make lint rc=0 — 2026-10-15T11:22:14Z

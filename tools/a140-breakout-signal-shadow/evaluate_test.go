@@ -218,24 +218,38 @@ func TestTheLabelerTakesTheFirstTouchAndPrefersTheStopOnATie(t *testing.T) {
 	t.Parallel()
 	plan := sizingPlan{Entry: 10070, Ask: 10070, Worst: 10070, Stop: 9950, RoundTrip: 51, Risk: 171, Target: 10378}
 	bars := breakoutScenario()
-	got, ok := labelProposal(seriesOf(bars), 18, plan, false)
+	got, ok := labelProposal(seriesOf(bars), openMS(18), plan, false)
 	if !ok || got.Outcome != "target" || got.ExitMinor != 10378 || got.RPPM != 1_502_923 {
 		t.Fatalf("target label = %+v, %v; want target at 10,378 and R 1,502,923 ppm", got, ok)
 	}
 	tie := append(append([]ohlcv(nil), bars[:18]...), ohlcv{10070, 10400, 9900, 10000, 100})
-	got, ok = labelProposal(seriesOf(tie), 18, plan, false)
+	got, ok = labelProposal(seriesOf(tie), openMS(18), plan, false)
 	if !ok || got.Outcome != "stop" || got.ExitMinor != 9950 || got.RPPM >= 0 {
 		t.Fatalf("tie label = %+v, %v; want stop", got, ok)
 	}
 	flatAfter := append(append([]ohlcv(nil), bars[:18]...), ohlcv{10070, 10100, 10060, 10090, 100})
-	if _, ok := labelProposal(seriesOf(flatAfter), 18, plan, false); ok {
+	if _, ok := labelProposal(seriesOf(flatAfter), openMS(18), plan, false); ok {
 		t.Fatal("an untouched proposal was labeled before the session end")
 	}
-	got, ok = labelProposal(seriesOf(flatAfter), 18, plan, true)
+	got, ok = labelProposal(seriesOf(flatAfter), openMS(18), plan, true)
 	// 마감가 10,090: (10090 − 10070 − 51)/171 = −0.181… → −181,287 ppm(내림).
 	if !ok || got.Outcome != "close" || got.ExitMinor != 10090 || got.RPPM != -181_287 {
 		t.Fatalf("close label = %+v, %v", got, ok)
 	}
+}
+
+func TestTheLabelerIgnoresBarsThatOpenedBeforeTheProposal(t *testing.T) {
+	t.Parallel()
+	plan := sizingPlan{Entry: 10070, Ask: 10070, Worst: 10070, Stop: 9950, RoundTrip: 51, Risk: 171, Target: 10378}
+	// 봉 18 이 목표를 넘었지만 제안은 봉 19 가 연 뒤 — 봉 18 은 진입 전 가격.
+	bars := append(append([]ohlcv(nil), breakoutScenario()...), ohlcv{10360, 10370, 10350, 10360, 100})
+	if got, ok := labelProposal(seriesOf(bars), openMS(19), plan, false); ok {
+		t.Fatalf("a bar that opened before the proposal labeled it: %+v", got)
+	}
+}
+
+func openMS(index int) uint64 {
+	return uint64(testOpen.Add(time.Duration(index) * time.Minute).UnixMilli())
 }
 
 // ---- 보고서 ----
@@ -260,6 +274,24 @@ func TestTheReportWithholdsOutcomeVerdictsBelowThirtyAndNamesTheVacuousRR(t *tes
 	}
 	if strings.Contains(report, "승률 100") {
 		t.Errorf("report gave a win rate on one label:\n%s", report)
+	}
+}
+
+func TestTheReportJudgesALotOnlyAcrossSessionsWithThirtyLabels(t *testing.T) {
+	t.Parallel()
+	var rows []ledgerRow
+	for i := 0; i < 30; i++ {
+		session := "KRX:2026-08-1" + string(rune('0'+i%5))
+		outcome, r := "stop", int64(-1_000_000)
+		if i%3 == 0 {
+			outcome, r = "target", 1_500_000
+		}
+		rows = append(rows, ledgerRow{Kind: kindLabel, Session: session, Lot: "v1@x", Outcome: outcome, RPPM: r})
+	}
+	report := renderReport(rows)
+	// 세션마다 6 라벨 → 세션별은 보류, 판 합계 30 → 판정(목표 10/30 = 33.3%, 평균 R (10×1.5 − 20)/30 = −0.167).
+	if !strings.Contains(report, "v1@x: 라벨 30 · 목표 선착 33.3% · 평균 R -0.167") {
+		t.Fatalf("the lot total was not judged:\n%s", report)
 	}
 }
 

@@ -42,6 +42,7 @@ type probeConfig struct {
 	RetryDelays   []time.Duration
 	QuoteSuspend  time.Duration
 	ArmedAttempts int
+	ArmedWindow   time.Duration
 	GapPersist    time.Duration
 	LabelGrace    time.Duration
 	BudgetEvery   time.Duration
@@ -51,8 +52,8 @@ type probeConfig struct {
 func defaultProbeConfig() probeConfig {
 	return probeConfig{Top: 30, ReadGap: 250 * time.Millisecond,
 		RetryDelays:  []time.Duration{5 * time.Second, 10 * time.Second, 20 * time.Second},
-		QuoteSuspend: 5 * time.Minute, ArmedAttempts: 5, GapPersist: 3 * time.Minute, LabelGrace: 30 * time.Minute,
-		BudgetEvery: 10 * time.Minute, PollLookback: 5 * time.Minute}
+		QuoteSuspend: 5 * time.Minute, ArmedAttempts: 5, ArmedWindow: 5 * time.Minute, GapPersist: 3 * time.Minute,
+		LabelGrace: 30 * time.Minute, BudgetEvery: 10 * time.Minute, PollLookback: 5 * time.Minute}
 }
 
 // recordingStore 는 evidence 저장소에 마지막으로 넘긴 봉투를 기억함 — PollQuoteL1 이 호가 값을 돌려주지 않으므로
@@ -84,6 +85,7 @@ type symbolState struct {
 	lastPhase, lastRefusal string
 	done                   string
 	attempts               int
+	armedSince             time.Time
 	proposal               *ledgerRow
 	labeled                bool
 	newestOpenMS           uint64
@@ -108,6 +110,7 @@ type probe struct {
 	counts        map[string]int
 	lastBudget    time.Time
 	collect       time.Duration
+	barsSkipped   bool // 이번 분에 봉 그룹 재시도를 다 썼음 — 나머지 종목의 봉 폴을 건너뜀(§2.1-10)
 }
 
 func newProbe(src marketSource, store *strategyevidence.Store, led *ledger, cfg probeConfig, now func() time.Time) *probe {
@@ -133,19 +136,21 @@ func (p *probe) write(row ledgerRow) error {
 	return p.ledger.write(row)
 }
 
-// gap 은 결손 행 — (종목, 단계, 사유 앞부분)마다 세션에 한 번만 적고 나머지는 계수(조용한 생략 금지 · 원장 폭주 금지).
+// gap 은 결손 행 — 종목 · 단계 · 분마다 한 행(spec 「그 종목 · 그 분의 결손 행」). 같은 분의 같은 결손만 접고, 계수는
+// 10 분마다 budget 행에 실려 중간에 죽어도 남음.
 func (p *probe) gap(symbol, stage string, err error) error {
 	reason := err.Error()
 	if len(reason) > reasonLimit {
 		reason = reason[:reasonLimit]
 	}
 	p.counts["gap:"+stage]++
-	key := symbol + "\x00" + stage + "\x00" + firstWords(reason)
+	minute := p.now().UTC().Truncate(time.Minute).Format(time.RFC3339)
+	key := symbol + "\x00" + stage + "\x00" + minute
 	if p.gapsSeen[key] {
 		return nil
 	}
 	p.gapsSeen[key] = true
-	return p.write(ledgerRow{Kind: kindGap, Symbol: symbol, Stage: stage, Reason: reason})
+	return p.write(ledgerRow{Kind: kindGap, Symbol: symbol, Stage: stage, Reason: reason, Minute: minute})
 }
 
 func firstWords(s string) string {
@@ -156,7 +161,7 @@ func firstWords(s string) string {
 }
 
 // startSession 은 세션 신원을 정하고, 종목 집합을 랭킹에서 고르거나(처음) 원장에서 되살리고(재시작), 끝난 setup · 라벨 대기를 복원하고,
-// 끝나지 않은 종목마다 구조용 호가 봉인 하나를 읽음.
+// 끝나지 않은 종목마다 구조용 호가 봉인 하나를 읽음. 같은 세션의 다른 판(lot) 행이 원장에 있으면 섞지 않고 거부함.
 func (p *probe) startSession(ctx context.Context, cal scheduler.CalendarSnapshot, source string) error {
 	if cal.Today.Regular == nil {
 		return fmt.Errorf("the calendar carries no regular session for %s", cal.Today.Date)
@@ -166,19 +171,31 @@ func (p *probe) startSession(ctx context.Context, cal scheduler.CalendarSnapshot
 	p.lot = breakoutsignal.Version + "@retest_tolerance_ppm=" + strconv.FormatUint(p.cfg.Params.RetestTolerancePPM, 10)
 	p.lastBudget = p.now()
 
-	rows, err := readLedger(p.ledgerPath)
+	all, err := readLedger(p.ledgerPath)
 	if err != nil {
 		return err
 	}
+	var rows []ledgerRow
 	var universe []string
-	for _, row := range rows {
-		if row.Session == p.sess.ID && row.Kind == kindUniverse {
+	for _, row := range all {
+		if row.Session != p.sess.ID || row.Kind == kindGap && row.Lot == "" {
+			continue
+		}
+		if row.Lot != p.lot {
+			return fmt.Errorf("the ledger already holds %s rows of lot %q; this run is lot %q — use another --out instead of mixing", p.sess.ID, row.Lot, p.lot)
+		}
+		rows = append(rows, row)
+		if row.Kind == kindUniverse {
 			universe = row.Symbols
 		}
 	}
 	if universe == nil {
 		universe, err = p.selectUniverse(ctx)
 		if err != nil {
+			// 랭킹 포기도 결손 행으로 남김(spec) — 그다음 시작을 거부.
+			if gapErr := p.gap("", "ranking", err); gapErr != nil {
+				return gapErr
+			}
 			return err
 		}
 		params := p.cfg.Params
@@ -196,19 +213,22 @@ func (p *probe) startSession(ctx context.Context, cal scheduler.CalendarSnapshot
 	}
 	labeled := map[string]bool{}
 	for _, row := range rows {
-		if row.Session == p.sess.ID && row.Kind == kindLabel {
+		if row.Kind == kindLabel {
 			labeled[row.SetupID] = true
 		}
 	}
 	for i := range rows {
 		row := rows[i]
 		state := states[row.Symbol]
-		if row.Session != p.sess.ID || row.Kind != kindSignal || state == nil {
+		if row.Kind != kindSignal || state == nil {
 			continue
 		}
 		state.lastPhase, state.lastRefusal = row.Phase, row.Refusal
 		if row.Attempt > state.attempts {
 			state.attempts = row.Attempt
+		}
+		if row.ArmedSince != "" && state.armedSince.IsZero() {
+			state.armedSince, _ = time.Parse(time.RFC3339, row.ArmedSince)
 		}
 		if row.Done != "" {
 			state.done = row.Done
@@ -256,7 +276,7 @@ func (p *probe) selectUniverse(ctx context.Context) ([]string, error) {
 	return out, nil
 }
 
-// fetchQuote 는 호가 한 줄(GET 2)을 tool evidence 에 봉인하고 그 정수 값을 돌려줌.
+// fetchQuote 는 호가 한 줄(GET 2)을 도구 evidence 에 봉인하고 그 정수 값을 돌려줌.
 func (p *probe) fetchQuote(ctx context.Context, symbol string) (quoteSnap, error) {
 	result, err := officialbars.PollQuoteL1(ctx, p.paced, p.store, officialbars.QuotePollInput{Market: marketclock.MarketKR, Symbol: symbol})
 	if err != nil {
@@ -273,6 +293,7 @@ func (p *probe) fetchQuote(ctx context.Context, symbol string) (quoteSnap, error
 	if err != nil {
 		return quoteSnap{}, err
 	}
+	// KRW 의 price_scale 은 소수 자리 수 0(strategyevidence marketMoney) — 원 단위 정수.
 	if payload.Symbol != symbol || payload.Currency != "KRW" || payload.PriceScale != 0 {
 		return quoteSnap{}, fmt.Errorf("the stored quote is %s %s at scale %d, not a whole-won KRW quote for %s",
 			payload.Symbol, payload.Currency, payload.PriceScale, symbol)
@@ -284,12 +305,16 @@ func (p *probe) fetchQuote(ctx context.Context, symbol string) (quoteSnap, error
 // step 은 분 하나 — 종목마다 봉을 적재 · 평가 · 라벨.
 func (p *probe) step(ctx context.Context) error {
 	started := p.now()
+	p.barsSkipped = false
 	for _, state := range p.symbols {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
 		if state.done != "" && (state.proposal == nil || state.labeled) {
 			continue // 끝났고 라벨도 끝남 — 더 폴하지 않음
+		}
+		if !p.now().Before(p.sess.Close) && (state.proposal == nil || state.labeled) {
+			continue // 마감 뒤에는 라벨 대기만 폴함(§2.1 리뷰 — 새 setup 평가 금지)
 		}
 		if err := p.stepSymbol(ctx, state); err != nil {
 			return err
@@ -307,16 +332,23 @@ func (p *probe) writeBudget() error {
 	reads := p.paced.readsByGroup()
 	seconds := p.collect.Seconds()
 	p.collect = 0
-	return p.write(ledgerRow{Kind: kindBudget, Reads: reads, CollectSeconds: seconds})
+	counts := make(map[string]int, len(p.counts))
+	for k, v := range p.counts {
+		counts[k] = v
+	}
+	return p.write(ledgerRow{Kind: kindBudget, Reads: reads, CollectSeconds: seconds, Counts: counts})
 }
 
+// loadSeries 는 at 시점까지 적재된 정규장 봉 — 컷오프는 폴 **뒤** 시각이어야 방금 적재한 봉이 보임(리뷰 P2-1).
 func (p *probe) loadSeries(ctx context.Context, symbol string, at time.Time) (strategyevidence.BarSeries, error) {
 	return p.store.SealBarSeries(ctx, strategyevidence.BarSeriesQuery{Market: "KR", Symbol: symbol, SessionID: p.sess.ID,
 		IntervalMS: strategyevidence.ClosedBar1mIntervalMS, EvaluationAt: at, IngestionCutoff: at, RegularSessionOnly: true})
 }
 
 func (p *probe) stepSymbol(ctx context.Context, state *symbolState) error {
-	now := p.now()
+	if p.barsSkipped {
+		return p.gap(state.symbol, "bars", errors.New("skipped: the bar group gave up on a rate limit earlier this minute"))
+	}
 	// 폴 하한 = 가장 새 저장 봉 − 5 분(§2.1-4) — 평소 1 페이지, 놓친 분은 5 분 안이면 소급 적재.
 	lower := p.sess.Open
 	if state.newestOpenMS > 0 {
@@ -326,13 +358,17 @@ func (p *probe) stepSymbol(ctx context.Context, state *symbolState) error {
 		}
 	}
 	if _, err := officialbars.PollClosedBars(ctx, p.paced, p.store, officialbars.BarPollInput{Market: marketclock.MarketKR,
-		Symbol: state.symbol, Calendar: p.calendar, PollAt: now, LowerBound: lower, MaxPages: 2}); err != nil {
+		Symbol: state.symbol, Calendar: p.calendar, PollAt: p.now(), LowerBound: lower, MaxPages: 2}); err != nil {
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
+		if errors.Is(err, errRateLimitGaveUp) {
+			p.barsSkipped = true
+		}
 		return p.gap(state.symbol, "bars", err)
 	}
-	series, err := p.loadSeries(ctx, state.symbol, now)
+	afterPoll := p.now()
+	series, err := p.loadSeries(ctx, state.symbol, afterPoll)
 	if err != nil {
 		return p.gap(state.symbol, "series", err)
 	}
@@ -340,15 +376,16 @@ func (p *probe) stepSymbol(ctx context.Context, state *symbolState) error {
 		state.newestOpenMS = series.Bars[n-1].Payload.OpenAtMS
 	}
 	prefix, missing, gapped := contiguousPrefix(series, p.sess.Open)
-	if err := p.trackGap(state, missing, gapped, now); err != nil {
+	if err := p.trackGap(state, missing, gapped, afterPoll); err != nil {
 		return err
 	}
 	if state.proposal != nil && !state.labeled {
-		if err := p.label(state, prefix, false); err != nil {
+		// 라벨은 연속성이 필요 없음 — 전체 묶음에서 제안 뒤에 연 봉만 봄(리뷰 P2-6).
+		if err := p.label(state, series, false); err != nil {
 			return err
 		}
 	}
-	if state.done != "" || len(prefix.Bars) < breakoutsignal.OpeningRangeBars {
+	if state.done != "" || !afterPoll.Before(p.sess.Close) || len(prefix.Bars) < breakoutsignal.OpeningRangeBars {
 		return nil
 	}
 	if state.quote == nil {
@@ -358,8 +395,7 @@ func (p *probe) stepSymbol(ctx context.Context, state *symbolState) error {
 		}
 		state.quote = &quote
 	}
-	nowMS := uint64(now.UnixMilli())
-	ev, err := evaluateSetup(prefix, p.sess, state.symbol, p.cfg.Params, *state.quote, nowMS)
+	ev, err := evaluateSetup(prefix, p.sess, state.symbol, p.cfg.Params, *state.quote, uint64(p.now().UnixMilli()))
 	if err != nil {
 		var refusal *breakoutsignal.Refusal
 		if errors.As(err, &refusal) {
@@ -368,7 +404,7 @@ func (p *probe) stepSymbol(ctx context.Context, state *symbolState) error {
 		return p.gap(state.symbol, "evaluate", err)
 	}
 	if ev.Phase == "ARMED" || ev.Phase == "PROPOSED" {
-		return p.armedAttempt(ctx, state, prefix, nowMS)
+		return p.armedAttempt(ctx, state, prefix, ev)
 	}
 	if ev.Phase == state.lastPhase && ev.Refusal == state.lastRefusal {
 		return nil
@@ -385,22 +421,39 @@ func (p *probe) stepSymbol(ctx context.Context, state *symbolState) error {
 }
 
 // armedAttempt 는 ARMED 시도 하나 — 새 호가로 다시 판정하고 시도마다 원장에 적음(§2.1-1).
-func (p *probe) armedAttempt(ctx context.Context, state *symbolState, prefix strategyevidence.BarSeries, nowMS uint64) error {
+//
+// 창은 시간이다: ARMED 를 처음 본 순간부터 ArmedWindow(5 분) 안에서만 시도하고, 창이 지나면 시도 없이도 armed_expired 로
+// 끝냄(호가가 정지 · 실패해 시도가 모자라도 묵은 진입가로 계속 시도하지 않게 — 리뷰 P2-2). 시도 수 상한(5)은 그 안의 분 수.
+func (p *probe) armedAttempt(ctx context.Context, state *symbolState, prefix strategyevidence.BarSeries, stale evaluation) error {
+	if state.armedSince.IsZero() {
+		state.armedSince = p.now()
+	}
+	if p.now().Sub(state.armedSince) >= p.cfg.ArmedWindow {
+		row := signalRow(state.symbol, stale, *state.quote)
+		row.Done, row.Refusal, row.ArmedSince = doneArmedExpired, state.lastRefusal, state.armedSince.UTC().Format(time.RFC3339)
+		state.done = doneArmedExpired
+		return p.write(row)
+	}
 	fresh, err := p.fetchQuote(ctx, state.symbol)
 	if err != nil {
-		return p.gap(state.symbol, "armed_quote", err) // 시도로 세지 않음 — 다음 분에 다시
+		return p.gap(state.symbol, "armed_quote", err) // 시도로 세지 않음 — 창 안이면 다음 분에 다시
 	}
 	state.quote = &fresh
-	ev, err := evaluateSetup(prefix, p.sess, state.symbol, p.cfg.Params, fresh, nowMS)
+	// 평가 시각은 호가를 **읽은 뒤**의 지금 — 호가의 received_at 은 본문을 다 읽은 순간이라 그 앞 시각으로 평가하면
+	// 평가기가 언제나 QUOTE_STALE 로 읽음(리뷰 P1-1).
+	evaluatedMS := max(uint64(p.now().UnixMilli()), fresh.ReceivedMS)
+	ev, err := evaluateSetup(prefix, p.sess, state.symbol, p.cfg.Params, fresh, evaluatedMS)
 	if err != nil {
 		return p.gap(state.symbol, "evaluate", err)
 	}
 	state.attempts++
 	row := signalRow(state.symbol, ev, fresh)
-	row.Attempt = state.attempts
+	row.Attempt, row.ArmedSince = state.attempts, state.armedSince.UTC().Format(time.RFC3339)
 	switch {
 	case ev.Phase == "PROPOSED":
 		row.Done = doneProposed
+		// 라벨은 제안 시각 뒤에 **연** 봉부터 — 그 앞 봉은 진입 전 가격(리뷰 P1-2).
+		row.LabelFromMS = uint64(time.UnixMilli(int64(evaluatedMS)).UTC().Truncate(time.Minute).Add(time.Minute).UnixMilli())
 	case state.attempts >= p.cfg.ArmedAttempts:
 		row.Done = doneArmedExpired
 	}
@@ -428,10 +481,10 @@ func (p *probe) trackGap(state *symbolState, missing time.Time, gapped bool, now
 	return nil
 }
 
-func (p *probe) label(state *symbolState, prefix strategyevidence.BarSeries, final bool) error {
+func (p *probe) label(state *symbolState, series strategyevidence.BarSeries, final bool) error {
 	row := state.proposal
 	plan := sizingPlan{Entry: row.Entry, Ask: row.Ask, Worst: row.Worst, Stop: row.Stop, RoundTrip: row.RoundTrip, Risk: row.Risk, Target: row.Target}
-	result, ok := labelProposal(prefix, row.ArmedIndex+1, plan, final)
+	result, ok := labelProposal(series, row.LabelFromMS, plan, final)
 	if !ok {
 		return nil
 	}
@@ -440,7 +493,7 @@ func (p *probe) label(state *symbolState, prefix strategyevidence.BarSeries, fin
 		ExitMinor: result.ExitMinor, ExitOpenAt: time.UnixMilli(int64(result.ExitOpenMS)).UTC().Format(time.RFC3339), RPPM: result.RPPM})
 }
 
-// finish 는 세션 끝 — 남은 제안을 마감가로 라벨하고, 끝까지 메워지지 않은 빈 분을 퍼널 GAP 으로 세고, 요약 행을 씀.
+// finish 는 세션 끝 — 남은 제안을 마감가로 라벨하고, 끝까지 메워지지 않은 빈 분 · 끝나지 않은 ARMED 를 퍼널에 세고, 요약 행을 씀.
 func (p *probe) finish(ctx context.Context) error {
 	now := p.now()
 	for _, state := range p.symbols {
@@ -451,11 +504,14 @@ func (p *probe) finish(ctx context.Context) error {
 			}
 			continue
 		}
-		prefix, missing, gapped := contiguousPrefix(series, p.sess.Open)
+		_, missing, gapped := contiguousPrefix(series, p.sess.Open)
 		if state.proposal != nil && !state.labeled {
-			if err := p.label(state, prefix, true); err != nil {
+			if err := p.label(state, series, true); err != nil {
 				return err
 			}
+		}
+		if state.done == "" && state.lastPhase == "ARMED" {
+			p.counts["funnel_armed_unfinished"]++
 		}
 		if gapped && state.done == "" {
 			p.counts["funnel_gap"]++

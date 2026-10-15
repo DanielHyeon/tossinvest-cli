@@ -76,6 +76,10 @@ type ledgerRow struct {
 	DriftPPM       uint64   `json:"drift_ppm,omitempty"`
 	QuoteAgeMS     uint64   `json:"quote_age_ms,omitempty"`
 	QuoteDigest    string   `json:"quote_digest,omitempty"`
+	// LabelFromMS 는 라벨이 보기 시작하는 첫 봉의 여는 시각 — 제안 시각 뒤에 연 봉부터(진입 전 가격으로 결과를 매기지 않게).
+	LabelFromMS uint64 `json:"label_from_ms,omitempty"`
+	// ArmedSince 는 이 setup 이 ARMED 를 처음 본 시각(5 분 창의 시작 — 재시작 때 복원).
+	ArmedSince string `json:"armed_since,omitempty"`
 
 	// label
 	Outcome    string `json:"outcome,omitempty"`
@@ -86,6 +90,7 @@ type ledgerRow struct {
 	// gap
 	Stage  string `json:"stage,omitempty"`
 	Reason string `json:"reason,omitempty"`
+	Minute string `json:"minute,omitempty"` // 결손이 난 분(그 분의 step 시각을 분으로 내림)
 
 	// budget · session
 	Reads          map[string]int `json:"reads,omitempty"`

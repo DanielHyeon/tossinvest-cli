@@ -96,17 +96,30 @@ type fakeSource struct {
 	rateOnce map[string]bool // 이 메서드는 첫 호출에 rate limit 을 한 번 냄
 	bid, ask string
 	pageSize int // 0 = 한 페이지에 전부(마지막 페이지)
+	// tick 은 브로커 호출마다 시계를 조금 옮김 — 실제처럼 호가의 received_at 이 그 앞에 잡은 시각보다 늦고,
+	// 적재 시각이 폴 전 시각보다 늦게 함(같은 순간에 멈춘 시계는 평가 시각 결함을 가림 — 코드 리뷰 P1-3).
+	tick func()
+	// failAlways 는 이 메서드가 언제나 rate limit 을 냄(재시도를 다 쓰는 경우).
+	failAlways map[string]bool
+	// missing 은 브로커가 내주지 않는 봉 번호(VI 단일가처럼 빈 분).
+	missing map[int]bool
 }
 
 func newFakeSource(bars []ohlcv, now func() time.Time) *fakeSource {
-	return &fakeSource{bars: bars, now: now, calls: map[string]int{}, rateOnce: map[string]bool{}, bid: "10060", ask: "10070",
+	return &fakeSource{bars: bars, now: now, calls: map[string]int{}, rateOnce: map[string]bool{}, failAlways: map[string]bool{}, bid: "10060", ask: "10070",
 		ranking: []domain.RankingItem{{Rank: 1, Symbol: "005930", Currency: "KRW", LastPrice: 10000}}}
 }
 
 func (f *fakeSource) hit(name string) error {
+	if f.tick != nil {
+		f.tick()
+	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.calls[name]++
+	if f.failAlways[name] {
+		return fmt.Errorf("fake: %w", official.ErrRateLimited)
+	}
 	if f.rateOnce[name] {
 		f.rateOnce[name] = false
 		return fmt.Errorf("fake: %w", official.ErrRateLimited)
@@ -161,11 +174,12 @@ func (f *fakeSource) StrictMinuteCandles(ctx context.Context, market, symbol str
 	}
 	var candles []official.RawMinuteCandle
 	terminal := true
-	// 닫힌 봉 + 지금 자라는 봉 하나(생산자는 가장 새 봉을 적재하지 않음). 이름표(닫는 시각) ≤ before 인 봉만, 최신이 앞.
+	// 이름표(닫는 시각) ≤ before 인 봉만, 최신이 앞(엄격 리더 계약 「모든 봉 ≤ before」 — officialbars checkOverlap 주석).
+	// 그래서 자라는 봉은 오지 않고, 생산자는 받은 것 중 가장 새 봉도 적재하지 않으므로 봉 k 는 k+2 분에 적재됨.
 	for i := len(f.bars) - 1; i >= 0; i-- {
 		openAt := testOpen.Add(time.Duration(i) * time.Minute)
 		label := openAt.Add(time.Minute)
-		if openAt.After(now) || label.After(bound) {
+		if openAt.After(now) || label.After(bound) || f.missing[i] {
 			continue
 		}
 		if f.pageSize > 0 && len(candles) == f.pageSize {

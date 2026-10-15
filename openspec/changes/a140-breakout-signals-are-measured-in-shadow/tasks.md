@@ -32,7 +32,7 @@ Story: `STORY-TOS-a140` · **Low**(새 파일만 · High-risk 경로 무접촉 �
 
 ## 2. 리뷰 · 착지
 
-- [ ] 2.1 gstack 경량 리뷰 + Manager 검증(경로 전수 · 시험 재실행 · 생산 import 0: `rtk proxy grep -rn "breakoutsignal" internal cmd` 비시험이
+- [ ] 2.1 경량 코드 리뷰(독립 1 — review §3: BLOCK → P1 3 · P2 6 · P3 4 전부 수리, 변이 2 판 생존 0) 완료. **남은 것: Manager 검증** — 경량 리뷰 + Manager 검증(경로 전수 · 시험 재실행 · 생산 import 0: `rtk proxy grep -rn "breakoutsignal" internal cmd` 비시험이
       새 패키지 자신뿐)
 - [ ] 2.2 Manager 푸시
 

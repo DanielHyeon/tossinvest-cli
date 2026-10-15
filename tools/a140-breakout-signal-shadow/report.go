@@ -37,6 +37,12 @@ func newTally() *sessionTally {
 }
 
 func renderReport(rows []ledgerRow) string {
+	type lotTally struct {
+		sessions, labels, targets int
+		rSum                      int64
+	}
+	lots := map[string]*lotTally{}
+	var lotOrder []string
 	tallies := map[string]*sessionTally{}
 	var order []string
 	get := func(session string) *sessionTally {
@@ -78,6 +84,17 @@ func renderReport(rows []ledgerRow) string {
 				}
 			}
 		case kindLabel:
+			lt, ok := lots[row.Lot]
+			if !ok {
+				lt = &lotTally{}
+				lots[row.Lot] = lt
+				lotOrder = append(lotOrder, row.Lot)
+			}
+			lt.labels++
+			lt.rSum += row.RPPM
+			if row.Outcome == "target" {
+				lt.targets++
+			}
 			t.labels++
 			t.outcomes[row.Outcome]++
 			t.rSum += row.RPPM
@@ -115,6 +132,20 @@ func renderReport(rows []ledgerRow) string {
 		}
 		fmt.Fprintf(&b, "- 결손: %s\n", joinCounts(t.gaps))
 		fmt.Fprintf(&b, "- 호출 예산(그룹별 GET 합): %s · 10 분 창 수집 시간 최대 %.1f 초\n", joinCounts(t.reads), t.collectMax)
+	}
+	// 판(lot) 합계 — 세션당 표본은 종목 수(기본 30) 이하라 세션별 판정은 사실상 늘 보류. 같은 정의(lot)의 세션을 합쳐서만 판정함.
+	b.WriteString("\n## 판(lot) 합계\n\n")
+	if len(lotOrder) == 0 {
+		b.WriteString("- 라벨 없음\n")
+	}
+	for _, lot := range lotOrder {
+		lt := lots[lot]
+		if lt.labels < minVerdictSamples {
+			fmt.Fprintf(&b, "- %s: 라벨 %d — 결과 판정 보류(n<30)\n", lot, lt.labels)
+			continue
+		}
+		fmt.Fprintf(&b, "- %s: 라벨 %d · 목표 선착 %.1f%% · 평균 R %.3f\n", lot, lt.labels,
+			100*float64(lt.targets)/float64(lt.labels), float64(lt.rSum)/float64(lt.labels)/ppmScale)
 	}
 	return b.String()
 }

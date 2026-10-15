@@ -16,3 +16,22 @@ M13-gap-once SURVIVED
 M14-name-guard CAUGHT
 restore OK
 M13-gap-once (시험 추가 뒤 재실행): CAUGHT
+
+# round 2 — 코드 리뷰(BLOCK) 수리 뒤 · 2026-10-15T11:12:19Z
+control: GREEN
+R1-eval-before-quote CAUGHT
+R2-label-from-proposal CAUGHT
+R3-cutoff-before-poll CAUGHT
+R4-armed-window CAUGHT
+R5-bar-skip CAUGHT
+R6-label-full-series SURVIVED
+R7-ranking-gap CAUGHT
+R8-lot-check CAUGHT
+R9-gap-per-minute CAUGHT
+R10-lot-total CAUGHT
+M1-samefile CAUGHT
+M3-attempt-cap CAUGHT
+M5-lowerbound CAUGHT
+M6-restore-done CAUGHT
+restore OK
+R6-label-full-series (시험 추가 뒤 재실행): CAUGHT
