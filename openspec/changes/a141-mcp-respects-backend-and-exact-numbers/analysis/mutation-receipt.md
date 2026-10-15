@@ -19,3 +19,16 @@ after `auth_status`, an official read, and an order preview; WTS remains
 connected while both official operations return tool errors. No live account
 or order was used; separate guarded reruns are required before claiming an
 offline transport receipt.
+
+## Final rerun
+
+Final runs used `/tmp/a141-final-mutant.jOJOz0`, copied from source snapshot
+`24b2d3f69f90`. All mutants were killed. The WTS-gate mutant used the guarded
+fresh-subprocess test, which injects the local deny proxy through upper- and
+lower-case proxy variables and clears `NO_PROXY`/`no_proxy`. The enabled-gate
+mutant is a pure eligibility function test and makes no transport call; the
+number mutant is an in-process JSON test and makes no transport call.
+
+Focused WTS availability receipt: `TestCallOperationWTSDispatches` uses an
+`httptest` fixture for `stock_ranking` and asserts its local request path and
+returned `005930` payload.
