@@ -35,7 +35,7 @@ Story: `STORY-TOS-a139` · **High-risk**(사이징) — Pre-Edit 선언 · 편�
       → `analysis/verify/receipts.md`
 - [x] 2.2 변이 원장(`analysis/mutation/`): 나눗수 3→2 · 내림→올림 · 최소 단위 USD 2→3 · KRW 0→2 · 0 허용 · 유도 우회(= dailyLoss) · 유도 실패 시 dailyLoss 로 폴백 · DefaultPolicy 값 ·
       audit 줄 제거 · audit 만 dailyLoss · factory 사전 검사 제거 · 버전 v1 되돌림
-      — 하네스 `analysis/mutation/a139_mutate.py`, round1(6f4f7cd3) 14/15 · **round2(dadc386a) 15/15 CAUGHT** — `round1.md` · `round2.md`
+      — 하네스 `analysis/mutation/a139_mutate.py`, round1(6f4f7cd3) 14/15 · round2(dadc386a) 15/15 · **round3(e7302fdb) 19/19 CAUGHT**(구현 리뷰 생존 자리 넷 추가) — `round1.md` · `round2.md` · `round3.md`
 - [x] 2.3 독립 적대 리뷰(분리된 컨텍스트, 적대 Eng 포함) → review.md — APPROVE-WITH-FIXES(P0 0 · P1 1 · P2 2 · P3 4), 전부 수리 · 잔여 2(사람 결정) 기록
 
 ## 3. 사람 · Manager

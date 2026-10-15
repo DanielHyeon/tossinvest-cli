@@ -19,3 +19,12 @@
 `TestAutomationGateRiskPolicyUsesEveryConfiguredUSDLimit` 16.91 · testseams `TestQFinalAccountBaseGuardianPairedKRUS` · `TestQFinalCampaignFirstLegProjectsGuardianOwnedLineageAllEightLanes`
 는 rig 예산을 옛 값으로 명시(짝 계약을 재는 시험 — 1/3 은 US 위험 상한만 묶어 짝을 깸; 1/3 사이징은 a139 시험이 잼).
 RED: `analysis/red/red-risk.txt`(컴파일 RED) · `red-app-engine.txt`(컴파일 RED) · `red-app-engine-behaviour.txt`(행동 RED — 예산 100000 · acceptance 칸 없음).
+
+## 구현 리뷰 수리 뒤 (e7302fdb, 2026-10-15)
+
+| 명령 | 결과 |
+|---|---|
+| `go test -count=1 -timeout 30m ./internal/app/engine ./internal/risk ./internal/execgw` | ok 340.8s · ok · ok 113.2s |
+| `go test -count=1 -tags tossos_testseams ./internal/execgw ./internal/app/engine` | ok 193.2s · ok 434.6s |
+| 변이 round3(격리 worktree e7302fdb) | 19/19 CAUGHT |
+| `check_analysis.py --change a139-per-trade-risk-budget` | evidence complete or diff-proven exempt(required 12) |
