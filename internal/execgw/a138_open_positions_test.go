@@ -90,4 +90,8 @@ func TestA138TheLimitsDigestBindsTheOpenPositionMaximum(t *testing.T) {
 	if got := a.MaxOpenPositionsLimit(); got != 6 {
 		t.Fatalf("declared maximum = %d, want 6", got)
 	}
+	// 구현 리뷰 P3-2: 기본값이 아닌 정책도 그대로 진술해야 함(「6 을 돌려줌」 변이를 잡음).
+	if got := b.MaxOpenPositionsLimit(); got != 7 {
+		t.Fatalf("declared maximum = %d, want 7", got)
+	}
 }

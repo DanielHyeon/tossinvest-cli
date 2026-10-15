@@ -359,3 +359,86 @@ func TestA138EveryHeldReservationKindCountsAndReleasedOnesDoNot(t *testing.T) {
 		t.Fatalf("a released reservation must not hold a slot, got %v", err)
 	}
 }
+
+// 변이 M16 이 살아남은 자리를 못 박음: 원장은 노출을 올리지 않는 결정의 예약도 받으므로(checkDecisionReservable 는 종류를 묻지 않음),
+// ② 의 safety_class 거름이 없으면 그런 결정의 종목이 칸을 차지함. Gateway 는 EXPOSURE_RAISING 결정의 예약만 매수 인가로 쓰므로 세지 않는 것이 맞음.
+func TestA138AHeldReservationOfANonEntryDecisionTakesNoSlot(t *testing.T) {
+	ctx := context.Background()
+	j := a138Journal(t)
+	for i, symbol := range a138Symbols[:5] {
+		a138Hold(t, j, fmt.Sprintf("d-%d", i), "kr", symbol, 6)
+	}
+	issued := j.Now()
+	if _, err := j.RecordDecision(ctx, DecisionRequest{
+		ID: "d-reduce", AccountRef: "acct-1", SafetyClass: SafetyClassRiskReducing, Kind: KindPlace,
+		Preimage: ReductionIntent{AccountRef: "acct-1", Market: "kr", Symbol: "444444", Side: "SELL", MaxQuantity: "1", Reason: "test"},
+		Nonce:    "nonce-d-reduce", IssuedAt: issued, ExpiresAt: issued.Add(10 * time.Minute),
+	}); err != nil {
+		t.Fatalf("RecordDecision(RISK_REDUCING): %v", err)
+	}
+	req := exposureReserve(j, "d-reduce", "acct-1", "1", "0", "1000000000", mustVersion(t, j, "acct-1"))
+	if _, err := j.Reserve(ctx, req); err != nil {
+		t.Fatalf("fixture: the journal accepts a reservation of a non-entry decision: %v", err)
+	}
+	if err := a138Try(t, j, "d-sixth", "kr", a138Symbols[5], 6); err != nil {
+		t.Fatalf("a non-entry decision's hold must not take a slot, got %v", err)
+	}
+}
+
+// 구현 리뷰 P3-1: ④ 의 맞춤 규칙을 갈래마다 못 박음 — 해제된 상태 · 시장 범위가 이미 든 종목과 겹침 · 이번 종목 자신 · 다른 시장의 같은 종목.
+func TestA138ReconcileScopesMatchExactlyWhatTheyCover(t *testing.T) {
+	ctx := context.Background()
+	enter := func(t *testing.T, j *Journal, symbol, market string) {
+		t.Helper()
+		if _, _, err := j.EnterReconcile(ctx, EnterReconcileRequest{AccountRef: "acct-1", Symbol: symbol, ScopeMarket: market,
+			Cause: ReconcileCauseQuantityMismatch, Evidence: "mismatch"}); err != nil {
+			t.Fatalf("EnterReconcile(%s %s): %v", market, symbol, err)
+		}
+	}
+	five := func(t *testing.T, j *Journal) {
+		t.Helper()
+		for i, symbol := range a138Symbols[:5] {
+			a138Hold(t, j, fmt.Sprintf("d-%d", i), "kr", symbol, 6)
+		}
+	}
+
+	t.Run("released RECONCILE takes no slot", func(t *testing.T) {
+		j := a138Journal(t)
+		five(t, j)
+		enter(t, j, "777777", "")
+		if _, _, err := j.ReleaseReconcile(ctx, ReleaseReconcileRequest{AccountRef: "acct-1", Symbol: "777777",
+			Cause: ReconcileReleaseRecheckMatched, Evidence: "recheck matched"}); err != nil {
+			t.Fatalf("ReleaseReconcile: %v", err)
+		}
+		if err := a138Try(t, j, "d-sixth", "kr", a138Symbols[5], 6); err != nil {
+			t.Fatalf("a released RECONCILE must not hold a slot, got %v", err)
+		}
+	})
+	t.Run("KR scope over a held kr symbol counts once", func(t *testing.T) {
+		j := a138Journal(t)
+		five(t, j)
+		enter(t, j, a138Symbols[0], "KR") // 시장 범위 'KR' 과 결정 시장 'kr' 가 같은 칸이어야 함(정규화).
+		if err := a138Try(t, j, "d-sixth", "kr", a138Symbols[5], 6); err != nil {
+			t.Fatalf("a KR-scoped RECONCILE on a held kr symbol must not count twice, got %v", err)
+		}
+	})
+	t.Run("this symbol's own RECONCILE is this slot", func(t *testing.T) {
+		for _, market := range []string{"", "KR"} {
+			j := a138Journal(t)
+			five(t, j)
+			enter(t, j, a138Symbols[5], market)
+			if err := a138Try(t, j, "d-sixth", "kr", a138Symbols[5], 6); err != nil {
+				t.Fatalf("scope %q: the entry's own RECONCILE symbol is the entry's slot, not another one, got %v", market, err)
+			}
+		}
+	})
+	t.Run("KR scope beside a held us symbol is another slot", func(t *testing.T) {
+		j := a138Journal(t)
+		for i, symbol := range a138Symbols[:4] {
+			a138Hold(t, j, fmt.Sprintf("d-%d", i), "kr", symbol, 6)
+		}
+		a138Hold(t, j, "d-us", "us", "888888", 6)
+		enter(t, j, "888888", "KR") // (kr, 888888) 은 (us, 888888) 과 다른 칸.
+		a138RequireRefused(t, j, "d-new", "kr", a138Symbols[5], 6)
+	})
+}

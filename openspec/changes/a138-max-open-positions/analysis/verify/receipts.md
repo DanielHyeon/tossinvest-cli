@@ -20,3 +20,11 @@
 
 RED 영수증: `analysis/red/red-*.txt`(컴파일 RED — base + a138 시험), `red-journal-behaviour.txt`(판정 함수 빈 몸 — 9 시험 FAIL), `red-console.txt`(콘솔 · tossctl 세 파일만 HEAD 로 되돌린 상태 — 콘솔 시험 2 · tossctl 1 FAIL).
 절차 기록: 콘솔 시험은 콘솔 GREEN 뒤에 썼다 — RED 는 production 세 파일을 HEAD 로 되돌린 상태로 따로 관찰했다(순서 역전, review.md).
+
+## 구현 리뷰 수리 뒤 (2026-10-15)
+
+| 명령 | 대상 | 결과 |
+|---|---|---|
+| 지연 실측(임시 시험, 격리 worktree `86442ad7` — 커밋 안 함) | `checkOpenPositions` 를 원장 tx 안에서 100회, CLOSED 포지션 3000 + 해제 RECONCILE 3000 + HELD 5 | 평균 **0.97 ms/회**(리뷰어 측정 0.85 ms 와 같은 크기) — 쓰기 잠금 영향 무시 수준 |
+| `go test ./internal/config -run A138` | P2-1 새 파일 갈래 | RED(`analysis/red/red-review-p2-1.txt` — limits_io.go 만 HEAD) → GREEN |
+| `go test ./internal/journal -run A138` · `./internal/execgw -run A138` | ④ 맞춤 갈래 4 · 진술 7 단언 · 비진입 결정 HELD | ok · ok |

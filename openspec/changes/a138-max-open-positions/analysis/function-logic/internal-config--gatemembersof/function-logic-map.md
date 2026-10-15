@@ -1,6 +1,6 @@
 # Function Logic Map: `gateMembersOf`
 
-- Source: `internal/config/limits_io.go` (192-214)
+- Source: `internal/config/limits_io.go` (196-218)
 - Qualified: `gateMembersOf`
 - AST evidence: `ast.json`(현재) — 현재 AST branches 3 · returns 2
 - 편집 전 기준: `ast-base.json`(base, `source_sha256` 6c8fdc5d37028679…) — 편집 전 갈래 수 2
@@ -20,11 +20,11 @@
 
 | Branch | Condition (소스 줄 인용) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `if err != nil {` (if 194) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limits|Save|A138'` · `TestA138TheLimitWriterTouchesTheOpenPositionKeyOnlyWhenAsked` |
-| B2 | `if l.DailyBuy != nil {` (if 205) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limits|Save|A138'` · `TestA138TheLimitWriterTouchesTheOpenPositionKeyOnlyWhenAsked` |
-| B3 | `if l.OpenPositions != nil {` (if 209) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limits|Save|A138'` · `TestA138TheLimitWriterTouchesTheOpenPositionKeyOnlyWhenAsked` |
+| B1 | `if err != nil {` (if 198) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limits|Save|A138'` · `TestA138TheLimitWriterTouchesTheOpenPositionKeyOnlyWhenAsked` |
+| B2 | `if l.DailyBuy != nil {` (if 209) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limits|Save|A138'` · `TestA138TheLimitWriterTouchesTheOpenPositionKeyOnlyWhenAsked` |
+| B3 | `if l.OpenPositions != nil {` (if 213) | — | 분기 본문 참조 | `go test ./internal/config -run 'Limits|Save|A138'` · `TestA138TheLimitWriterTouchesTheOpenPositionKeyOnlyWhenAsked` |
 
-Exact AST return positions: 195 · 213
+Exact AST return positions: 199 · 217
 
 ## Calls and live bindings
 

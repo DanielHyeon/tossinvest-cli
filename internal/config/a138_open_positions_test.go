@@ -2,6 +2,7 @@ package config
 
 import (
 	"math"
+	"path/filepath"
 	"testing"
 )
 
@@ -99,6 +100,18 @@ func TestA138TheLimitWriterTouchesTheOpenPositionKeyOnlyWhenAsked(t *testing.T) 
 	l.OpenPositions = &zero
 	if err := asked.SaveEngineGateLimits(l); err != nil {
 		t.Fatalf("0 (unset → default 6) must be writable, got %v", err)
+	}
+
+	// 구현 리뷰 P2-1: config 파일이 없을 때의 새 파일 갈래도 그 값을 씀(키 단위 쓰기를 타지 않는 갈래).
+	fresh := NewService(filepath.Join(t.TempDir(), "config.json"))
+	four := 4.0
+	skeleton := limitsFor(t, "kr-smoke")
+	skeleton.OpenPositions = &four
+	if err := fresh.SaveEngineGateLimits(skeleton); err != nil {
+		t.Fatal(err)
+	}
+	if gate, err := fresh.LoadRawEngineGate(); err != nil || gate.MaxOpenPositions != 4 {
+		t.Fatalf("a save that creates the file must keep the open position maximum, got %v (%v)", gate.MaxOpenPositions, err)
 	}
 }
 

@@ -31,7 +31,7 @@ MUTANTS = [
  ("M13 시장 차원 무시", OP, "return positionVenue{market: normaliseMarket(market), symbol: normaliseSymbol(symbol)}", "return positionVenue{market: \"\", symbol: normaliseSymbol(symbol)}", J, "TestA138PositionsAndHoldsOfOneSymbolCountOnceAndClosedOnesNotAtAll", ""),
  ("M14 HELD 필터 삭제", OP, "AND r.state = ? AND d.safety_class = ?", "AND r.state <> '' AND ? <> '' AND d.safety_class = ?", J, "TestA138EveryHeldReservationKindCountsAndReleasedOnesDoNot", ""),
  ("M15 종류를 OPEN_EXPOSURE 만", OP, "r.kind IN (?, ?, ?)", "r.kind IN (?, ?, ?) AND r.kind = 'OPEN_EXPOSURE'", J, "TestA138EveryHeldReservationKindCountsAndReleasedOnesDoNot", ""),
- ("M16 ② safety_class 필터 삭제", OP, "AND r.state = ? AND d.safety_class = ?`,", "AND r.state = ? AND ? <> ''`,", J, "TestA138TheSeventhSymbolIsRefused", ""),
+ ("M16 ② safety_class 필터 삭제", OP, "AND r.state = ? AND d.safety_class = ?`,", "AND r.state = ? AND ? <> ''`,", J, "TestA138AHeldReservationOfANonEntryDecisionTakesNoSlot", ""),
  ("M17 ④ RECONCILE 칸 버림", OP, "\tif count := len(held) + reconciled + 1;", "\treconciled = 0\n\tif count := len(held) + reconciled + 1;", J, "TestA138AReconciledSymbolWithoutAPositionRowCounts", ""),
  ("M18 정수 판정 IsInf 삭제", C+"open_positions.go", "math.IsNaN(v) || math.IsInf(v, 0) || v < 1", "math.IsNaN(v) || v < 1", C, "TestA138WholeOpenPositionsIsTheOneIntegerJudgement", ""),
  ("M19 정수 판정 소수 검사 삭제", C+"open_positions.go", " || v != math.Trunc(v) {", " {", C, "TestA138WholeOpenPositionsIsTheOneIntegerJudgement", ""),
@@ -46,6 +46,15 @@ MUTANTS = [
  ("M28 콘솔 행 삭제", K+"settings_limits.go", "\t\t{\"최대 보유 포지션 수\", openPositionsText(p.Gate.MaxOpenPositions), openPositionsUnit(p.Gate.MaxOpenPositions)},\n", "", K, "TestA138TheScreenSaysWhatTheOpenPositionMaximumIs", ""),
  ("M29 콘솔 저장 audit 삭제", "cmd/tossctl/limitsettings.go", "\t\trecordOpenPositionsSave(openFrom, after.MaxOpenPositions)\n", "\t\t_ = openFrom\n", "cmd/tossctl/", "TestA138TheOpenPositionMaximumSaveIsAuditedFromTheFile", ""),
  ("M30 매도가 판정을 지남(IssueReduction 에 판정 삽입)", E+"riskguardian.go", "func (g *RiskGuardian) IssueReduction(ctx context.Context, req ReductionIssuance) (Issued, error) {\n", "func (g *RiskGuardian) IssueReduction(ctx context.Context, req ReductionIssuance) (Issued, error) {\n\tif g.policy.MaxOpenPositions > 0 {\n\t\treturn Issued{}, errors.New(\"MAX_OPEN_POSITIONS\")\n\t}\n", E, "TestA138IssueEntryRefusesTheEntryThatExceedsTheMaximum", ""),
+ ("M31 ④ 해제 필터 삭제", OP, "AND symbol IS NOT NULL AND released_at IS NULL", "AND symbol IS NOT NULL", J, "TestA138ReconcileScopesMatchExactlyWhatTheyCover", ""),
+ ("M32 ④ 이번 종목 동일 삭제(시장 범위)", OP, "if _, counted := held[v]; counted || v == this {", "if _, counted := held[v]; counted {", J, "TestA138ReconcileScopesMatchExactlyWhatTheyCover", ""),
+ ("M33 ④ 이미 센 종목 무시(시장 범위)", OP, "if _, counted := held[v]; counted || v == this {", "if _, counted := held[v]; false && counted || v == this {", J, "TestA138ReconcileScopesMatchExactlyWhatTheyCover", ""),
+ ("M34 ④ 이번 종목 동일 삭제(전역 범위)", OP, "if this.symbol == symbol || symbolHeld(held, symbol) {", "if symbolHeld(held, symbol) {", J, "TestA138ReconcileScopesMatchExactlyWhatTheyCover", ""),
+ ("M35 시장 정규화 삭제", OP, "return positionVenue{market: normaliseMarket(market), symbol: normaliseSymbol(symbol)}", "return positionVenue{market: market, symbol: normaliseSymbol(symbol)}", J, "TestA138ReconcileScopesMatchExactlyWhatTheyCover", ""),
+ ("M36 시장 범위를 전역으로", OP, "if strings.TrimSpace(s.market) != \"\" {", "if false {", J, "TestA138ReconcileScopesMatchExactlyWhatTheyCover", ""),
+ ("M37 진술 6 고정", E+"open_positions.go", "func (g *RiskGuardian) MaxOpenPositionsLimit() int { return g.policy.MaxOpenPositions }", "func (g *RiskGuardian) MaxOpenPositionsLimit() int { return 6 }", E, "TestA138TheLimitsDigestBindsTheOpenPositionMaximum", ""),
+ ("M38 새 파일 갈래 값 버림", C+"limits_io.go", "\t\t\tfile.Engine.AutomationGate.MaxOpenPositions = *next.OpenPositions", "\t\t\t_ = next.OpenPositions", C, "TestA138TheLimitWriterTouchesTheOpenPositionKeyOnlyWhenAsked", ""),
+ ("M39 정수 판정 IsNaN 삭제", C+"open_positions.go", "if math.IsNaN(v) || math.IsInf(v, 0) ||", "if math.IsInf(v, 0) ||", C, "TestA138WholeOpenPositionsIsTheOneIntegerJudgement", ""),
 ]
 
 def test(pkg, name, tags):

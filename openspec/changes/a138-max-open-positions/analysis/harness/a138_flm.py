@@ -74,6 +74,10 @@ TARGETS = [
      "콘솔이 보여 줄 적힌 그대로의 게이트 블록 읽기.",
      "`MaxOpenPositions` 한 칸.",
      "go test ./internal/config -run 'Limits|A138'"),
+    ("internal/config/limits_io.go", "Service.SaveEngineGateLimits",
+     "편집기 저장 — 검증 · 잠금 · 새 파일 갈래 · 키 단위 쓰기.",
+     "새 파일(skeleton) 갈래에 `OpenPositions` 를 옮기는 분기 하나(구현 리뷰 P2-1 — 빠뜨리면 운영자 값이 기본 6 으로 사라짐).",
+     "go test ./internal/config -run 'Limits|Save|A138'"),
     ("internal/config/limits_io.go", "gateMembersOf",
      "편집기 저장이 건드리는 키 목록.",
      "`OpenPositions != nil` 이면 `max_open_positions` 멤버 — 새 분기 하나.",
@@ -130,7 +134,7 @@ TARGETS = [
 
 # 함수마다 그 함수를 실제로 지나는 a138 시험(행마다 덧붙임 — 검사기가 이름의 존재를 대조함).
 FN_TESTS = {
-    "reserveRows": ["TestA138TheSeventhSymbolIsRefused", "TestA138AnExposureRaisingReservationWithoutTheMaximumIsRefused", "TestA138ConcurrentEntriesCannotBothTakeTheLastSlot"],
+    "reserveRows": ["TestA138ReconcileScopesMatchExactlyWhatTheyCover", "TestA138TheSeventhSymbolIsRefused", "TestA138AnExposureRaisingReservationWithoutTheMaximumIsRefused", "TestA138ConcurrentEntriesCannotBothTakeTheLastSlot"],
     "RiskGuardian.IssueEntry": ["TestA138IssueEntryRefusesTheEntryThatExceedsTheMaximum"],
     "RiskGuardian.LimitsDigest": ["TestA138TheLimitsDigestBindsTheOpenPositionMaximum"],
     "RiskGuardian.IssuePrecheckedQFinalEntry": ["TestA138QFinalEntryRefusesTheEntryThatExceedsTheMaximum"],
@@ -146,6 +150,7 @@ FN_TESTS = {
     "recordGateSettings": ["TestA138TheInterlockAuditsTheOpenPositionMaximum"],
     "mergeEngine": ["TestA138OpenPositionMaximumIsParsedFromTheGateBlock"],
     "Service.LoadRawEngineGate": ["TestA138OpenPositionMaximumIsParsedFromTheGateBlock"],
+    "Service.SaveEngineGateLimits": ["TestA138TheLimitWriterTouchesTheOpenPositionKeyOnlyWhenAsked"],
     "gateMembersOf": ["TestA138TheLimitWriterTouchesTheOpenPositionKeyOnlyWhenAsked"],
     "GuardianLimits.Validate": ["TestA138TheLimitWriterTouchesTheOpenPositionKeyOnlyWhenAsked", "TestA138TheAdvancedFormSavesTheOpenPositionMaximum"],
     "consoleLimitSettings.Save": ["TestA138TheOpenPositionMaximumSaveIsAuditedFromTheFile"],

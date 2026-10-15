@@ -93,8 +93,8 @@ insert 앞) 한 줄, 판정 함수는 새 파일 `internal/journal/open_position
 - 해석 `EffectiveMaxOpenPositions()`(새 파일 `internal/config/open_positions.go`): 0 이 아니면 그대로(음수 · 비정수 · NaN · Inf 도 그대로 넘겨 검증이 거부), 0 이면 기본값 6.
   통화와 무관. Guardian 정책 유도와 인터록 대조가 모두 이 함수를 씀(단일 출처).
 - `risk.Policy.MaxOpenPositions int`, `DefaultPolicy` = 6(출처: 사용자 결정 2026-10-15, a138 — 이전에 상한이 없던 새 검사라 완화 아님),
-  `Validate` 는 `< 1` 거부. 정수 판정은 **한 헬퍼** `config.WholeOpenPositions(v) (int, bool)`(NaN · ±Inf · 소수 · < 1 · int32 범위 밖 → false — `math.Trunc(+Inf) == +Inf`
-  이므로 IsInf 를 먼저 봄, freeze 리뷰 P2-3)이고 정책 유도 · 인터록 · 콘솔 검증이 모두 그것을 씀. 유도(`riskPolicyFromAutomationGate`)는 false 면 0 을 넣어
+  `Validate` 는 `< 1` 거부. 정수 판정은 **한 헬퍼** `config.WholeOpenPositions(v) (int, bool)`(NaN · ±Inf · 소수 · < 1 · int32 범위 밖 → false — `math.Trunc(+Inf) == +Inf` 라
+  소수부 검사만으로는 +Inf 가 통과하므로 상한(int32) 검사가 그것을 막음. 이름 붙인 IsNaN · IsInf 는 읽기용이고 판정상 중복 — 구현 리뷰 P3-3, 변이 원장 「동등」)이고 정책 유도 · 인터록 · 콘솔 검증이 모두 그것을 씀. 유도(`riskPolicyFromAutomationGate`)는 false 면 0 을 넣어
   `Validate` 가 거부하게 하고, 생산 factory(`newProductionRiskGuardian`)는 Validate 앞에서 같은 헬퍼로 먼저 거부해 **운영자가 적은 값**을 문구에 담음
   (`ErrLimitsRequired`). 생산 기동은 factory 가 인터록보다 먼저라(engine.go:536-558) 7c 의 정수 거부는 주입 Guardian seam 에서만 닿음 — 그래도 두는 이유는 단일 출처 대조.
 - 판정은 체인이 읽지 않음(체인 단계 아님) — 발급자가 예약 요청에 그대로 실음.
@@ -132,8 +132,9 @@ insert 앞) 한 줄, 판정 함수는 새 파일 `internal/journal/open_position
 ## D8. 원장 · 스키마 · 성능
 
 스키마 변경 0. 질의 셋: `positions` 는 색인 `idx_positions_symbol`(account_ref, market, symbol, state) 의 선두 account_ref 범위라 **그 계좌의 CLOSED 이력 인스턴스까지**
-훑는다(freeze 리뷰 P3-1 정정 — 행 수는 계좌가 거쳐 간 인스턴스 수, 작음). HELD 예약은 `idx_reservations_held`(account_ref, kind IN 셋, state) 범위, 활성 RECONCILE 은
-`idx_reconcile_active`(부분 색인) 범위. 결정 preimage 는 HELD 예약의 결정 수만큼(상한 근처라 작음) 읽음. 진입 tx 가 잠금을 잡는 동안 매도 기록이 기다리므로(§0.3 간접)
+훑는다(freeze 리뷰 P3-1 정정 — 행 수는 계좌가 거쳐 간 인스턴스 수, 작음). HELD 예약은 `idx_reservations_held`(account_ref, kind IN 셋, state) 범위. RECONCILE 은 부분 색인
+`idx_reconcile_active` 가 risk_bucket_owner.go:58 에서 DROP 되어 `idx_reconcile_account`(account_ref) 범위로 그 계좌의 **해제된 이력까지** 훑음(구현 리뷰 P3-4 정정).
+실측(구현 리뷰 · 저자 재측정, analysis/verify/receipts.md): CLOSED 포지션 3000 + 해제 RECONCILE 3000 + HELD 5 에서 판정 한 번 1 ms 안팎 — 쓰기 잠금 영향 무시 수준. 결정 preimage 는 HELD 예약의 결정 수만큼(상한 근처라 작음) 읽음. 진입 tx 가 잠금을 잡는 동안 매도 기록이 기다리므로(§0.3 간접)
 지연 실측을 검증 영수증에 남김.
 
 ## D9. 공유 파일 순서 (a139)

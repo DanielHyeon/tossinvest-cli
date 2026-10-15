@@ -71,3 +71,18 @@ Pre-Edit Gate:
   셀 수 없어 fail-closed 로 거부했고(A066 시험 8 FAIL), fixture 를 정규형 RiskIntent 로 바꿨다. 다른 원시 결정 삽입(`insertDecision`)은 HELD 예약을 만들지 않아 영향 없음(전체 journal ok).
 - 판정 ②의 종류는 닫힌 집합 셋을 `IN` 으로 — 색인 `idx_reservations_held` 를 그대로 탐. ④ 는 `scope_market` 이 있으면 (시장, 종목), 없으면 종목만으로 맞춤.
 - gridPolicy 는 편집하지 않음(체인은 개수 상한을 읽지 않고 DefaultPolicy 의 6 이 검증을 통과 — measure 전체 ok).
+
+## 구현 독립 적대 리뷰 (2026-10-15, tasks 2.3)
+
+- 보이스: 분리된 컨텍스트 적대 리뷰어 1(code-reviewer — 적대 Eng · 안전 불변식 · 시험 반증), 자기 격리 worktree(86442ad7)에서 전체 시험 · 자체 변이 · 쿼리 계획 · 지연 실측, 저장소 무변경.
+- 판정: **APPROVE-WITH-FIXES** — P0 0 · P1 0 · P2 1 · P3 6. 판정 코드의 undercount 경로 없음, 매도 · 손절 · 청산 · 대사 · 체결 감지가 판정을 지나는 경로 없음.
+- 수용 · 수리(이 커밋):
+  - P2-1 config 파일이 없을 때의 새 파일 갈래(`SaveEngineGateLimits` skeleton)가 `OpenPositions` 를 버림(운영자 4 → 엔진 6, 화면 문장과 audit 불일치) → 그 갈래에 옮김.
+    RED `analysis/red/red-review-p2-1.txt`, 시험 갈래 추가, 변이 M38.
+  - P3-1 ④ 맞춤 갈래 시험 4(해제된 상태 · KR 범위가 든 kr 종목과 겹침 · 이번 종목 자신 · (us,X) 보유 옆 (KR,X) RECONCILE) — 변이 M31~M36.
+  - P3-2 진술 7 단언 — 변이 M37. P3-3 IsInf · IsNaN 제거는 동등 변이로 분류, 주석 · design 정정(상한 검사가 +Inf 를 막음).
+  - P3-4 D8 정정(`idx_reconcile_active` 는 risk_bucket_owner.go:58 에서 DROP — 실제는 `idx_reconcile_account` 로 해제 이력까지 훑음) + 지연 실측 0.97 ms/회(영수증).
+- 잔재(기록):
+  - P3-5 ④ 시험은 `EnterReconcile` 로 상태를 심음 — 생산 경로(RecordFill 해제 → 투영 거절 → `enterReconcileScopeInTx`)를 끝까지 몰지 않음. 그 경로의 행 모양(scope_market NULL)은 전역 범위 시험이 덮음.
+  - P3-6 **배포 전 사람 확인 권장**: 생산 원장에 해석 불가 preimage 의 결정이 HELD 예약을 들고 있으면 교체 직후 모든 진입이 fail-closed 로 막힘(안전 방향). 교체 창 전에 읽기 전용 질의로 확인.
+- 리뷰어가 본 미커밋 파일(시험 하나 · 하네스 · round1.md)은 저자의 변이 단계 산출물(리뷰어 「내 것 아님」 기록과 일치).

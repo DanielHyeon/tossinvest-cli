@@ -1,6 +1,6 @@
 {
   "file": "internal/config/limits_io.go",
-  "source_sha256": "859b26386b74f4de6d99c333c7546b4770e928c23d282a7c4bacb398ac2521bb",
+  "source_sha256": "e27eed4df73b561d69e8d107d7a4b4c59999ce1c4a0a91f9ccb639253027f77e",
   "package": "config",
   "function": "LoadRawEngineGate",
   "receiver": "Service",

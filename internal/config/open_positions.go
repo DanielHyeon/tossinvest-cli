@@ -24,8 +24,9 @@ func (g AutomationGate) EffectiveMaxOpenPositions() float64 {
 
 // WholeOpenPositions 는 개수 상한으로 쓸 수 있는 값인지 판정하는 **한 곳**임(정책 유도 · 인터록 · 콘솔 검증이 모두 이것을 씀).
 //
-// 1 이상의 정수이고 int 로 담을 수 있으면 (값, true), 아니면 (0, false). 무한대를 먼저 거르는 이유: math.Trunc(+Inf) == +Inf 라
-// 「소수부가 없다」 검사만으로는 무한대가 정수로 통과함(freeze 리뷰 P2-3).
+// 1 이상의 정수이고 int 로 담을 수 있으면 (값, true), 아니면 (0, false). NaN · ±Inf 를 이름으로 먼저 거르는 것은 읽는 사람을 위한 것이고,
+// 판정만 보면 범위(< 1 · > 상한)와 소수부 검사가 이미 거부함 — math.Trunc(+Inf) == +Inf 라 소수부 검사만으로는 무한대가 통과하므로
+// 상한 검사가 그 몫을 맡음(freeze 리뷰 P2-3, 구현 리뷰 P3-3: IsInf · IsNaN 제거는 동등 변이).
 func WholeOpenPositions(v float64) (int, bool) {
 	if math.IsNaN(v) || math.IsInf(v, 0) || v < 1 || v > maxOpenPositionsCeiling || v != math.Trunc(v) {
 		return 0, false

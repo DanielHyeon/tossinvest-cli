@@ -132,6 +132,10 @@ func (s *Service) SaveEngineGateLimits(l GuardianLimits) error {
 		if next.DailyBuy != nil {
 			file.Engine.AutomationGate.MaxDailyBuyNotional = *next.DailyBuy
 		}
+		// a138(구현 리뷰 P2-1): 새 파일 갈래는 키 단위 쓰기(gateMembersOf)를 타지 않으므로 여기서 옮김 — 빠뜨리면 운영자 값이 기본 6 으로 사라짐.
+		if next.OpenPositions != nil {
+			file.Engine.AutomationGate.MaxOpenPositions = *next.OpenPositions
+		}
 		skeleton, err := json.MarshalIndent(file, "", "  ")
 		if err != nil {
 			return err
