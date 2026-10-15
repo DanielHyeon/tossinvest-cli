@@ -85,6 +85,20 @@ func TestAdaptCandlesEmpty(t *testing.T) {
 	}
 }
 
+func TestAdaptCandlesOrdersNewestFirstWireChronologically(t *testing.T) {
+	raw := apiCandlePage{Candles: []apiCandle{
+		{Timestamp: "2026-03-25T09:02:00+09:00", ClosePrice: "102"},
+		{Timestamp: "2026-03-25T09:01:00+09:00", ClosePrice: "101"},
+	}}
+	got := adaptCandles("005930", "1m", raw)
+	if len(got.Candles) != 2 || got.Candles[0].Close != 101 || got.Candles[1].Close != 102 {
+		t.Fatalf("candles = %+v, want chronological unchanged values", got.Candles)
+	}
+	if !got.Candles[0].Time.Before(got.Candles[1].Time) {
+		t.Fatalf("times = %v, %v, want oldest to newest", got.Candles[0].Time, got.Candles[1].Time)
+	}
+}
+
 // TestAdaptCandlesBadTimestamp verifies that an unparseable timestamp yields
 // a zero time.Time rather than a hard error.
 func TestAdaptCandlesBadTimestamp(t *testing.T) {

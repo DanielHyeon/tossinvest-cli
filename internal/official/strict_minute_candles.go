@@ -48,7 +48,7 @@ const (
 )
 
 var (
-	strictMinuteKRSymbol  = regexp.MustCompile(`^[0-9]{6}$`)
+	strictMinuteKRSymbol  = regexp.MustCompile(`^[A-Z0-9]{6}$`)
 	strictMinuteUSSymbol  = regexp.MustCompile(`^[A-Z][A-Z0-9.]{0,9}$`)
 	strictMinuteTimestamp = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?[+-]\d{2}:\d{2}$`)
 )
