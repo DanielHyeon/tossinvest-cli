@@ -56,3 +56,9 @@ Each guard was independently changed to `if false` in a repository-external temp
 | per-group `items` | `/tmp/tossos-a142-items.log` | missing items no longer error |
 
 These logs are local temporary evidence, not tracked source inputs. No full aggregate suite was run at this stage; it remains the final-gate responsibility.
+
+## Aggregate gate — 2026-10-16
+
+Final `make gate CHANGE=a142-wts-read-contracts-fail-closed` PASS, all 11 stages including test/test-seams/test-race/vet/validate. Raw log `/tmp/a142-full-final/make-gate-rerun.log`, exit `/tmp/a142-full-final/rerun-exit-code.txt` = 0. Strict validation 49 passed/0 failed; engine race subset 270.331s. Terra observed execution; Manager independently read the final receipt.
+
+The first gate stopped at hard CodeGraph freshness (exit 2), before full tests; see `/tmp/a142-full-final/make-gate.log`. An unfinished initial sync and a redundant remediation sync were both allowed to terminate before retry. Remediation sync exit 0 is retained in `/tmp/a142-full-final/sdd-sync-remediation.exit`; final gate hard freshness passed. No services/settings were changed. This does not assert full advisory knowledge-index coverage.

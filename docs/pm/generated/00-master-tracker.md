@@ -128,7 +128,7 @@
     - STORY-TOS-CONTAINER-MODE — Pin the container entrypoint executable mode [archived] → `fix-container-entrypoint-permission`
   - FEAT-TOS-014 — Upstream correctness and API compatibility [active]
     - STORY-TOS-a141 — MCP honors backend policy and preserves exact JSON numbers [archived] → `a141-mcp-respects-backend-and-exact-numbers`
-    - STORY-TOS-a142 — WTS order lists fail closed and watchlists use dedicated reads [implemented] → `a142-wts-read-contracts-fail-closed`
+    - STORY-TOS-a142 — WTS order lists fail closed and watchlists use dedicated reads [archived] → `a142-wts-read-contracts-fail-closed`
     - STORY-TOS-a143 — Official chart reads and public API snapshots remain compatible [in_progress] → `a143-official-read-compatibility`
 - EPIC-TOS-004 — Candidate discovery and entry quality [active]
   - FEAT-TOS-006 — Candidate discovery and signal refinement [active]

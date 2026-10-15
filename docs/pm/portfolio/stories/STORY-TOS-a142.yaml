@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a142-wts-read-contracts-fail-closed",
-    "path": "openspec/changes/a142-wts-read-contracts-fail-closed"
+    "path": "openspec/changes/archive/2026-10-16-a142-wts-read-contracts-fail-closed"
   },
   "found_by": {
     "date": "2026-10-15",
     "how": "User-authorized correctness and compatibility review against upstream tossinvest-cli and published Toss Invest API contracts.",
-    "record": "openspec/changes/a142-wts-read-contracts-fail-closed/proposal.md"
+    "record": "openspec/changes/archive/2026-10-16-a142-wts-read-contracts-fail-closed/proposal.md"
   },
   "acceptance": [
     "Frozen OpenSpec acceptance scenarios pass with offline regression tests.",
