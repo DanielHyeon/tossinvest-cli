@@ -220,9 +220,9 @@ func TestAssembleStateCarriesEachNewInputOrNamesItsAbsence(t *testing.T) {
 			t.Fatalf("%s absence is not named: %v", name, bare.MissingInputs)
 		}
 	}
-	// KR 종목별 투자자 매매는 공식 표면에 없음 — 언제나 이름으로 남김.
-	if !hasPrefix(bare.MissingInputs, "investor_trading_per_stock:") {
-		t.Fatalf("KR states must name the per-stock investor flow as unavailable: %v", bare.MissingInputs)
+	// KR 종목별 투자자 매매(s3 = WTS)·뉴스를 수집 단계가 이름 없이 비워 넘겨도 조립기가 이름을 남김.
+	if !contains(bare.MissingInputs, "investor_flows_per_stock: not read") || !contains(bare.MissingInputs, "news: not read") {
+		t.Fatalf("KR states must name an unread per-stock investor flow and news: %v", bare.MissingInputs)
 	}
 }
 

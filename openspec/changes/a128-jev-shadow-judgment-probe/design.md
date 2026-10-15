@@ -14,7 +14,8 @@
 | 랭킹 `market rankings`(MARKET_TRADING_AMOUNT 등) | official | 작동 확인(100행 수신) |
 | 시세 `/prices`·호가 `/orderbook` | official | a112 L1c 프로브 선례(leader 재사용 가능) |
 | 종목 메타 `/api/v1/stocks` | official | 작동 확인(5심볼 이름 수신) |
-| 뉴스 `market news` | **WTS-only** | 세션 만료 관측 — 사람 `auth extend` 후에만, 없어도 동작 |
+| 뉴스 `market news` | **WTS-only** | 세션 만료 관측 — 사람 `auth extend` 후에만, 없어도 동작 (1.8: 배선, 2026-10-15 세션 유효·피드 48+5 건 수신) |
+| 종목 수급 `trading-trend`·주요 지수 `overview/indicator/index` | **WTS-only** | 1.8 배선, 2026-10-15 dry run 수신(종목 5/5·지수 6 종) |
 
 주의: official 호출에 rate limit 간헐(실측 2026-10-07, 45초 대기로 해소) — 수집 루프는
 호출 간 간격과 429/limited 재시도(지수 백오프, 포기 시 그 샘플만 결손 기록)를 가진다.
@@ -84,6 +85,43 @@
   `/orderbook` 은 엄격 맨 위 한 줄 한 번(깊이 제외) + 체결 제외 → KR 정상 96 GET/사이클, US 94(지수 맥락 0 · 환율 1 · 가격제한폭 0). 엔진과 공유하는 Open API
   키이므로 사이클의 그룹별 GET 수와 수집 시간을 원장·로그·보고서에 남긴다. Jev 입력 토큰은 요청당 약 3.5 배로 추정(tasks 1.7) —
   첫 s2 사이클에서 실측해 다시 적는다.
+
+## Jev 가 보는 state (s3, tasks 1.8, 2026-10-15)
+
+- 이유: s2 판단 전부가 같은 결손 셋을 달고 있었음(원장 실측) — 뉴스(KR·US 100%), KR 종목별 투자자 매매(공식은 시장 단위뿐),
+  US 시장 맥락(공식 카탈로그에 US 지수 없음). 셋 다 **기존 WTS 조회 함수**로 채움(사용자 승인 2026-10-15). WTS 는 조회 전용
+  (주문 경로 0) — `wtsSource` 인터페이스 = `GetMarketNews`·`GetMarketIndices`·`GetTradingFlows` 셋뿐이고, 나머지 `*client.Client`
+  공개 메서드 전부(주문·계좌·보유·관심종목 쓰기)는 AST 시험이 이름조차 금지(`internal/client` 소스에서 자동 열거). 뉴스 피드는
+  POST 이지만 읽기 엔드포인트(대시보드 피드)임.
+- 새 필드(`wts.go`):
+  - `news` = `present`|`absent` + `news_headlines{symbol[], market[]}` — 피드 범위 `ALL_HIGHLIGHT`·`SOARING_STOCK`(계좌 맥락
+    없는 범위만; 보유·관심·추천 개인화 범위는 계좌의 종목을 드러내므로 소스 문자열·요청 본문 양쪽 시험으로 금지). 사이클마다
+    읽어 프로세스 안 보관소(24 시간)에 쌓고 종목 기사(관련 종목 코드 = `A`+심볼 또는 이름 = 공식 `/stocks` 이름; ≤3, 제목 ≤120자·
+    요약 ≤120자)와 시장 기사(국적 = 시장, ≤5, 제목만)를 고름. **판단 시각보다 늦은 기사는 넣지 않음**(라벨이 재는 미래 차단).
+    시각 없는 createdAt 은 Asia/Seoul 로 읽음(클라이언트 fixture 모양 `2006-01-02 15:04:05` — 가정, 첫 s3 사이클 로그의
+    `newest raw` 를 벽시계와 대조할 것). 받은 피드의 기사가 전부 시각 해석 실패면 그 범위는 못 읽은 것으로 침(`news=present`·빈
+    목록을 내보내지 않음 — dry run 에서 실제로 난 결함).
+  - `investor_flows_per_stock`(KR) — 직전 거래일까지 최신 5 일의 개인·외국인·기관 순매수 **주 수**(WTS `*BuyVolume`). 오늘 행은
+    장중 잠정치이고 하루 캐시가 그 값을 얼리므로 버림 → 캐시가 정확함. 날짜 하나라도 못 읽으면 전체 결손.
+  - `market_context.major_indices`(양 시장) — 코스피·코스닥·나스닥·S&P 500·필라델피아 반도체·VIX(실측 6 종), `last` +
+    `change_pct_vs_base`. base = 직전 종가(KR 두 지수에서 공식 지수 직전 종가 기준 등락과 소수 넷째 자리까지 일치 실측). US 는
+    이것이 유일한 지수 맥락. `indices`·`investor_flows`(공식, KR)는 그대로이고 빈 목록이면 생략으로 바뀜(s3).
+- 결손 정책: 각 소스 실패 → 그 블록 생략 + `missing_inputs` 이름(`news: <범위>: …`, `investor_flows_per_stock: …`,
+  `market_context: major_indices: …`), 사이클·판단은 계속. 지어낸 0·빈 목록 없음(빈 목록 = 읽었고 0 건). 한 사이클에서 WTS 가
+  세션을 거절(401/403)하면 그 사이클의 나머지 WTS 읽기는 부르지 않고 `skipped, the WTS session was rejected …` 로 이름을 남김
+  (만료 세션에 종목마다 실패 요청 금지) — 다음 사이클은 다시 시도. 세션 파일이 없으면 클라이언트는 세션 없이 만들어지고
+  세션을 요구하는 뉴스만 결손(`no active session`, 요청 0). 리뷰 수리(2026-10-15): 피드에 쓸 수 있는 기사(시각 해석 성공 +
+  받은 순간 + 5분 이전)가 0 이면(0 건 응답 포함) 그 범위는 결손 — 받은 순간보다 늦은 기사는 시간대 오류 신호로 보관하지 않고
+  셈 · 직전 거래일 수급 0 행은 결손(하루 캐시하지 않음) · 서버 쪽 수급 실패(HTTP 상태·전송)가 연속 3 번이면 그 사이클의 나머지
+  수급 읽기를 멈춤(종목별 클라이언트 오류는 세지 않음) · 값 0 인 주요 지수는 이름으로 남김 · 24 시간 창은 보관소 정리(메모리)와
+  고르는 쪽(이 판단의 at) 양쪽 — 두 시장이 보관소를 공유하므로. 남는 구조적 결손: US `market_context: no US market-wide investor
+  flow …`, 그리고 영숫자 KR 코드(예 0167A0 — WTS 클라이언트가 국내 종목으로 보지 않음, 공식 심볼 검증도 거부; 후속 change).
+- 세션·비밀: 세션은 기존 세션 저장소(`session.NewFileStore(paths.SessionFile)`)를 기존 클라이언트가 읽음. 로그에는 `loaded`/
+  `not found`/`unreadable` 낱말만. 쿠키 표식·WTS 응답의 계좌 모양 표식이 TypeSafe 요청·원장 어느 파일에도 없음을 시험이 강제.
+- 비용: Open API GET 수는 s2 와 같음(시험 단언). WTS 요청(HTTP 단위 — `GetTradingFlows` 는 종목 정보 + 수급 2 요청)은
+  `selection.wts_requests` 로 따로 셈: KR = 지수 1 + 뉴스 2 + 2 × (그날 처음 보는 종목), US = 3. 보고서 「사이클 예산」 줄에
+  `WTS 요청 중앙·최대` 가 붙음. WTS 는 엔진과 공유하는 Open API 키가 아님(다른 서버).
+- state_rev = `a128-s3`; 질문 원문 불변(`questionRev` a128-r1). 원장은 s1(빈 값)·s2·s3 로트로 갈라짐.
 
 ## 임계 판정 보고서
 

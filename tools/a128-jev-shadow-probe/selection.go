@@ -91,6 +91,9 @@ type selectionRecord struct {
 	CacheHits       int        `json:"day_cache_hits"`
 	CollectSeconds  float64    `json:"collect_seconds"`
 	IntervalSeconds int        `json:"interval_seconds"`
+	// WTSRequests 는 1.8 WTS 조회 요청 수(HTTP 요청 단위 — 뉴스 피드·주요 지수·종목 수급). Open API 예산(broker_reads)과
+	// 서버가 달라 따로 셈.
+	WTSRequests int `json:"wts_requests,omitempty"`
 }
 
 // readGroups 는 rate-limit 그룹별 GET 수. 고정 필드라 selectionRecord 가 비교 가능하게 남음.

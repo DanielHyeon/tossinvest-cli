@@ -8,6 +8,7 @@ package main
 //   - daily: 직전 거래일 봉으로 1/5/20일 수익률·20일 고저 거리·20일 평균 거래량 — 일 단위 맥락.
 //     과거 봉은 하루 동안 변하지 않으므로 (시장 현지 날짜, 종목) 단위로 프로세스 안에 캐시함(호출 예산).
 //   - market_context(KR): KOSPI·KOSDAQ 오늘 등락·30분 등락, 시장 전체 투자자별 순매수(원).
+//     1.8(s3): 양 시장에 WTS 주요 지수(major_indices) — 뉴스·KR 종목 수급과 함께 wts.go.
 //
 // 넣지 않은 것: 호가 깊이 — 엄격 리더(StrictOrderbookTop)는 맨 위 한 줄만 내주고, 깊이를 얻으려면 같은
 // /orderbook 을 한 번 더 부르거나 internal/official 을 고쳐야 함(이 change 는 internal/ 무접촉). 체결(tape) —
@@ -28,15 +29,13 @@ import (
 
 const (
 	// stateRev 는 state 모양의 판본 — 바뀌면 p 의 모집단이 달라지므로 원장 행에 적고 보고서가 로트를 가름.
-	// s1(필드 없음) = 1.6 까지의 state, s2 = 1.7 확장.
-	stateRev = "a128-s2"
+	// s1(필드 없음) = 1.6 까지의 state, s2 = 1.7 확장, s3 = 1.8 WTS 조회 입력(뉴스·KR 종목 수급·주요 지수 — wts.go).
+	stateRev = "a128-s3"
 
-	recentBarCount     = 30  // state 에 싣는 최근 1분봉 수
-	minuteFetchCount   = 120 // 1분봉 요청 수(60분 수익률 + 창 고저·VWAP 용)
-	dailyFetchCount    = 25  // 일봉 요청 수(직전 20 거래일 + 오늘 + 여유) — 하루 한 번(캐시)
-	lookbackTolerance  = 5 * time.Minute
-	perStockInvestorNA = "investor_trading_per_stock: the official investor-trading endpoint is market-wide only " +
-		"(KOSPI/KOSDAQ); market_context.investor_flows carries the market-wide flow"
+	recentBarCount    = 30  // state 에 싣는 최근 1분봉 수
+	minuteFetchCount  = 120 // 1분봉 요청 수(60분 수익률 + 창 고저·VWAP 용)
+	dailyFetchCount   = 25  // 일봉 요청 수(직전 20 거래일 + 오늘 + 여유) — 하루 한 번(캐시)
+	lookbackTolerance = 5 * time.Minute
 )
 
 // marketIndices 는 공식 지표 카탈로그(openapi Market Indicators 「심볼 카탈로그」 8종)의 지수 — US 지수는 카탈로그에 없음.
@@ -99,10 +98,12 @@ type PriceLimitState struct {
 	ToLowerPct *float64 `json:"to_lower_pct,omitempty"`
 }
 
-// MarketContextState 는 사이클당 한 번 읽는 시장 맥락(KR 만 — 공식 카탈로그에 US 지수가 없음).
+// MarketContextState 는 사이클당 한 번 읽는 시장 맥락. Indices·InvestorFlows = 공식(KR 만 — 공식 카탈로그에 US 지수가
+// 없음), MajorIndices = WTS 주요 지수(양 시장, 1.8). 못 읽은 목록은 생략되고 missing_inputs 에 이름이 남음.
 type MarketContextState struct {
-	Indices       []IndexState        `json:"indices"`
-	InvestorFlows []InvestorFlowState `json:"investor_flows"`
+	Indices       []IndexState        `json:"indices,omitempty"`
+	InvestorFlows []InvestorFlowState `json:"investor_flows,omitempty"`
+	MajorIndices  []MajorIndexState   `json:"major_indices,omitempty"`
 }
 
 // IndexState 는 지수 하나 — 오늘 등락(직전 거래일 종가 대비)과 30분 등락.

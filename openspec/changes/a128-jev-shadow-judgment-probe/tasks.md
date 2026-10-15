@@ -191,6 +191,49 @@
       경고 0 건을 nil 로·US 0 띠 허용·로트가 state_rev 무시·거래량 0 나눗셈 = 14/14 CAUGHT.
       Function Logic Map: not-applicable — 측정 도구 경로만(`tools/`), High-risk 경로 무접촉·게이트 판정 변경 0(비례 원칙).
 
+- [x] 1.8 Jev 가 모르는 정보 채우기(사용자 승인 2026-10-15 「권장대로」): s2 판단 전부의 결손 셋(뉴스 KR·US 100% ·
+      KR 종목별 투자자 매매 · US 시장 맥락)을 **기존 WTS 조회 함수**로 채움 — `state_rev = a128-s3`(질문 불변, `questionRev`
+      a128-r1). 새 파일 `wts.go`·`wts_test.go`, 기존 파일은 배선만. `internal/` 무접촉(client·session 은 import 만).
+      - 새 필드(design.md 「s3」): `news`(present|absent) + `news_headlines{symbol ≤3(제목·요약·시각·출처), market ≤5(제목)}` —
+        범위 `ALL_HIGHLIGHT`·`SOARING_STOCK`(계좌 맥락 없는 범위만), 판단 시각 뒤 기사 제외, 24 시간 보관소 · KR
+        `investor_flows_per_stock`(직전 거래일까지 5 일, 순매수 주 수, 하루 캐시) · `market_context.major_indices`(양 시장, WTS
+        주요 지수 6 종 + 직전 종가 대비 %).
+      - 결손 정책: 소스 실패 → 블록 생략 + `missing_inputs` 이름, 사이클 계속. 401/403 이면 그 사이클 나머지 WTS 읽기 생략
+        (`skipped, the WTS session was rejected …`). 세션 없음 → 뉴스만 결손(요청 0). 피드를 받았어도 시각 해석 0 건이면 결손.
+      - 호출(사이클당): **Open API GET 은 s2 와 같음**(시험 단언 — KR 2 종목 20/12). s2 원장 실측(2026-10-15, KR 42 사이클·US 33):
+        KR GET 중앙 105(97~164) · US 99(94~124). **WTS 요청(별도 서버, `selection.wts_requests`)**: KR = 지수 1 + 뉴스 2 + 2 × (그날
+        처음 보는 종목), US = 3. 풀 30 추정(s2 의 새 종목 수 중앙 4 로 계산 — 실측 아님): KR 첫 사이클 63 · 정상 중앙 ≈ 11, US 3.
+      - **입력 토큰**: s2 원장 median KR **3,517** · US 3,184(전체 3,260). s3 dry run(아래, KR 5 요청) median **4,204**(4,134~4,213,
+        state 5.0~5.1 KB, 약 +20%) — 단 이 dry run 의 뉴스 블록은 비었음(시각 해석 결함, 아래에서 수리) → **뉴스 포함 토큰은 미실측**.
+        상한: 종목 기사 3 × (제목 ≤120 + 요약 ≤120 자) + 시장 기사 5 × 제목 ≤120 자. 첫 s3 사이클 원장 `input_tokens` 로 다시 적을 것.
+      - dry run 1 회(2026-10-15 15:58 KST, 장 마감 뒤 — `run-probe.sh KR … --out <scratch> --pool 5 --top 2 --session 00:00-23:59`,
+        공유 원장 밖, 사이클 1 회 후 SIGINT): Open API GET 35 · WTS 13(= 1 + 2 + 5×2 일치) · 수집 18s · 세션 `loaded`. 수급 5/5 종목
+        수신, 오늘 행 제외 확인(최신 2026-10-14). 주요 지수 6 종, KR 두 지수의 base 등락이 공식 직전 종가 등락과 소수 넷째 자리까지
+        일치(-7.5654 / -7.654) → base = 직전 종가. **뉴스: 피드 48+5 건 수신, createdAt 53/53 이 RFC3339 해석 실패 → `news=present`·
+        빈 목록**(결함) → 수리: 시간대 없는 모양(`2006-01-02 15:04:05` 등 — 클라이언트 fixture 모양)을 Asia/Seoul 로 읽고, 받은
+        기사가 전부 해석 실패면 그 범위를 결손으로(`TestFeedWithNoParseableTimeIsAGapNotEmptyNews`). 시간대는 가정 — 첫 s3 사이클
+        로그 `news feed …: newest raw "…"` 를 벽시계와 대조할 것. 두 번째 dry run 은 지시(1 회)대로 하지 않음.
+      - 남은 결손: US 시장 단위 투자자 매매(어느 표면에도 없음 — 이름으로 남김) · 영숫자 KR 코드(0167A0 등: WTS 클라이언트가 국내
+        종목으로 보지 않고 공식 심볼 검증도 거부 — 후속 change, `internal/official` 검증은 이 task 에서 안 고침) · US 종목 기사는
+        관련 종목 이름 = 공식 `/stocks` 이름 일치로만 맞음(US 상품 코드는 티커 아님, 일치율 미실측).
+      — 영수증(2026-10-15, go1.26.5, 시험은 httptest·in-process fake 만): `gofmt -l` 빈 출력 · `go vet ./tools/a128-jev-shadow-probe/...`
+      rc=0 · `go vet -tags tossos_testseams …` rc=0 · `rtk proxy go test -count=1 -v …` rc=0(최상위 75 PASS + 하위 23 PASS, FAIL 0) ·
+      `-race` rc=0(리뷰 수리 뒤 재실행). 새 시험(`wts_test.go`): `TestWTSInputsReachTheStateWithinTheirBudget`(선행·24h 밖·시각 없는 기사 제외, 오늘 수급
+      행 제외, 둘째 사이클 수급 캐시, Open API 20 불변) · `TestUSStateCarriesMajorIndicesAndNoStockFlow` ·
+      `TestWTSFailuresBecomeNamedGapsNotFabrications`(5xx → 생략 + 이름, 다음 사이클 회복) · `TestWTSSessionRejectionStopsTheCycleWTSReads`
+      · `TestNoSessionStillReadsWhatNeedsNoSession` · `TestWTSAccountFieldsAndSessionNeverLeave`(쿠키·계좌 표식) ·
+      `TestPriorDayFlowsAndClip` · `TestFeedWithNoParseableTimeIsAGapNotEmptyNews` · `TestReportShowsWTSRequestsInTheCycleBudget` ·
+      (리뷰 수리) `TestEmptyFeedAndEmptyFlowsAreGaps` · `TestConsecutiveServerFailuresStopTheCycleFlowReads` ·
+      `TestFlowFailureCountIsConsecutive` · `TestHeadlinesApplyTheWindowAtTheirOwnJudgment`.
+      정적: `TestWTSSourceIsTheThreeReads`(인터페이스 = 셋, `internal/client` 의 `*Client` 나머지 공개 메서드 전부 이름 금지 —
+      AST 자동 열거) · `TestNoPersonalizedNewsScopeInSource` · import 허용 목록에 client·session. 갱신: 열쇠 고정 목록, 뉴스·수급
+      결손 이름. 빠른 변이(사본 복원, 전후 sha 동일): 선행 기사 필터·오늘 수급 행·거절 차단기·수급 캐시·개인화 범위·이름 일치·
+      시장 목록 중복 제거·0 지수·보관소 24h 정리 = 9/9 CAUGHT(처음 「24h 창」이 살아남음 → 한 곳으로 합쳤다가, 리뷰 7 로 고르는 쪽
+      창을 되살리며 시험을 따로 세움). 리뷰 수리 뒤 2 판: headlinesFor 선행 필터·창·보관소 정리·받은 순간 뒤 기사·쓸 수 있는 기사 0
+      결손·빈 수급 결손·연속 실패 멈춤·연속 수 되돌림·0 지수 이름·거절 차단기 = 10/10 CAUGHT(처음 「연속 수 되돌림」 생존 → 시험 추가).
+      Function Logic Map: not-applicable — 측정 도구 경로만(`tools/`), High-risk 경로 무접촉·게이트 판정 변경 0(비례 원칙).
+      리뷰: review.md 「1.8」(경량).
+
 ## 2. 리뷰·착지
 
 - [x] 2.1 gstack 리뷰(경량 — 비례 원칙) + Manager 검증(경로 전수·트레일러·시험 재실행).

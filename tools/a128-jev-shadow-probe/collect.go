@@ -140,9 +140,15 @@ type probe struct {
 	mu      sync.Mutex
 	pending []pendingLabel
 
-	// dayCache 는 하루 동안 변하지 않는 읽기(일봉·가격제한폭·지수 일봉·시장 투자자 매매)의 프로세스 안 캐시(dayCached).
+	// dayCache 는 하루 동안 변하지 않는 읽기(일봉·가격제한폭·지수 일봉·시장 투자자 매매·종목 수급)의 프로세스 안 캐시(dayCached).
 	cacheMu  sync.Mutex
 	dayCache map[string]any
+
+	// wts 는 1.8 WTS 조회 표면(wts.go) — nil 이면 WTS 블록은 전부 결손 이름으로 남음.
+	wts wtsSource
+	// newsStore 는 사이클마다 읽은 피드 기사의 보관소(24 시간) — 두 시장이 병렬로 쓰므로 newsMu 로 보호.
+	newsMu    sync.Mutex
+	newsStore map[string]storedNews
 }
 
 // pendingLabel 은 한 종목·한 사이클의 판단들(J1·J2)이 공유하는 라벨 대기 항목.
@@ -157,7 +163,7 @@ type pendingLabel struct {
 func newProbe(src marketSource, judge *judgeClient, l *ledger, cfg config) *probe {
 	return &probe{
 		src: src, judge: judge, ledger: l, cfg: cfg, questions: probeQuestions(),
-		now: time.Now, sleep: sleepContext, seed: newSelectionSeed, dayCache: map[string]any{},
+		now: time.Now, sleep: sleepContext, seed: newSelectionSeed, dayCache: map[string]any{}, newsStore: map[string]storedNews{},
 		logf: func(format string, args ...any) { fmt.Fprintf(os.Stderr, format+"\n", args...) },
 	}
 }
@@ -332,6 +338,7 @@ func (p *probe) runMarket(ctx context.Context, market string) error {
 func (p *probe) cycle(ctx context.Context, market string, sess session, at time.Time) error {
 	reads := &cycleReads{byGroup: map[string]int{}}
 	ctx = context.WithValue(ctx, readCounterKey{}, reads)
+	wtsState := &wtsCycle{}
 	collectStarted := p.now()
 	gap := func(stage, symbol string, err error) error {
 		p.logf("%s %s %s: %s", market, stage, symbol, reasonOf(err))
@@ -404,7 +411,9 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 	}
 	// 시장 맥락은 사이클당 한 번 — 풀 30 종목이 같은 값을 공유함(호출 예산).
 	// 맥락 결손은 cycleGaps(/stocks 실패 표시)와 따로 둠 — 섞으면 종목별 「stocks_meta 응답에 없음」 이름이 가려짐.
-	marketContext, contextGaps := p.readMarketContext(ctx, market, sess, at)
+	marketContext, contextGaps := p.readMarketContext(ctx, market, sess, at, wtsState)
+	// 뉴스 피드도 사이클당 한 번(전역 피드) — 종목별 기사는 보관소에서 고름(추가 호출 0).
+	newsRead, newsGaps := p.refreshNews(ctx, wtsState, at)
 
 	// judgedSymbol 은 판단에 성공한 풀 종목 하나 — 선별이 끝날 때까지 메모리에 둠(랭킹 순서 유지).
 	type judgedSymbol struct {
@@ -446,7 +455,15 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 			RankingType: rankingType, Rank: item, Meta: metaPtr, LastPrice: base, Book: bookPtr, Context: marketContext,
 		}
 		gaps = append(gaps, contextGaps...)
-		gaps = append(gaps, p.readSymbolContext(ctx, market, item.Symbol, at, metaPtr, &in)...)
+		gaps = append(gaps, newsGaps...)
+		if newsRead {
+			name := ""
+			if metaPtr != nil {
+				name = metaPtr.Name
+			}
+			in.News = p.headlinesFor(market, item.Symbol, name, at)
+		}
+		gaps = append(gaps, p.readSymbolContext(ctx, market, item.Symbol, at, metaPtr, &in, wtsState)...)
 		in.Gaps = gaps
 		state := assembleState(in)
 		digest, err := p.ledger.storeState(state)
@@ -476,6 +493,7 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 	collect := p.now().Sub(collectStarted)
 	selection.ReadsByGroup = readGroupsOf(reads.byGroup)
 	selection.BrokerReads, selection.CacheHits = selection.ReadsByGroup.total(), reads.cacheHits
+	selection.WTSRequests = reads.byGroup[groupWTS]
 	selection.CollectSeconds = round(collect.Seconds(), 1)
 	for _, screen := range screens {
 		if screen.RedFlagExcluded {
@@ -509,19 +527,20 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 		p.addPending(pending)
 	}
 	// 공유 Open API 예산 관측: 사이클당 GET 수·수집 시간. 간격의 절반을 넘으면 경고(다음 사이클이 밀리기 시작함).
-	p.logf("%s cycle %s: pool %d · judged %d · finalists %d · broker GETs %d %+v · day-cache hits %d · collect %s",
+	p.logf("%s cycle %s: pool %d · judged %d · finalists %d · broker GETs %d %+v · WTS requests %d · day-cache hits %d · collect %s",
 		market, stamp(at), selection.Selected, selection.Judged, selection.Finalists, selection.BrokerReads,
-		selection.ReadsByGroup, selection.CacheHits, collect.Round(time.Second))
+		selection.ReadsByGroup, selection.WTSRequests, selection.CacheHits, collect.Round(time.Second))
 	if p.cfg.Interval > 0 && collect > p.cfg.Interval/2 {
 		p.logf("%s WARNING: cycle collect time %s exceeds half the interval %s", market, collect.Round(time.Second), p.cfg.Interval)
 	}
 	return nil
 }
 
-// readSymbolContext 는 종목 하나의 1.7 공개 읽기(1분봉·유의 — 사이클마다, 일봉·가격제한폭 — 하루 한 번 캐시)를
-// in 에 채우고, 실패한 읽기의 이름을 돌려줌 — 판단은 막지 않음(stocks_meta 와 같은 정책).
+// readSymbolContext 는 종목 하나의 1.7 공개 읽기(1분봉·유의 — 사이클마다, 일봉·가격제한폭 — 하루 한 번 캐시)와
+// 1.8 KR 종목 수급(WTS — 하루 한 번 캐시)을 in 에 채우고, 실패한 읽기의 이름을 돌려줌 — 판단은 막지 않음(stocks_meta 와 같은 정책).
 // /stocks 의 상장 상태가 ACTIVE 가 아니면(SCHEDULED·DELISTED) 종목별 읽기를 건너뛰고 이름으로 남김.
-func (p *probe) readSymbolContext(ctx context.Context, market, symbol string, at time.Time, meta *domain.Quote, in *marketInputs) []string {
+func (p *probe) readSymbolContext(ctx context.Context, market, symbol string, at time.Time, meta *domain.Quote, in *marketInputs,
+	wtsState *wtsCycle) []string {
 	if meta != nil && meta.Status != "" && meta.Status != "ACTIVE" {
 		return []string{"per_symbol_reads: skipped, /stocks listing status is " + meta.Status}
 	}
@@ -572,6 +591,12 @@ func (p *probe) readSymbolContext(ctx context.Context, market, symbol string, at
 		} else {
 			in.Limits = &limits
 		}
+		// 종목별 투자자 매매는 공식 표면에 없어 WTS 로 읽음(KRX 전용 — US 는 부르지 않음).
+		if flows, err := p.readStockFlows(ctx, wtsState, symbol, day); err != nil {
+			gaps = append(gaps, "investor_flows_per_stock: "+reasonOf(err))
+		} else {
+			in.StockFlows = &flows
+		}
 	}
 	return gaps
 }
@@ -618,20 +643,31 @@ func parseMinuteBars(page official.StrictMinutePage) ([]minuteBar, error) {
 	return bars, nil
 }
 
-// readMarketContext 는 KR 지수 맥락을 사이클당 한 번 읽음: 지수 시세 1 회(두 지수 묶음) + 지수별 1분봉 1 회,
-// 지수별 일봉(직전 종가)과 시장 투자자 매매는 하루 캐시. US 는 공식 지표 카탈로그에 지수가 없어 부르지 않고
-// 이름으로 남김. 일부 실패는 그 부분만 빠지고 이름이 남음.
-func (p *probe) readMarketContext(ctx context.Context, market string, sess session, at time.Time) (*MarketContextState, []string) {
+// readMarketContext 는 시장 맥락을 사이클당 한 번 읽음. 양 시장: WTS 주요 지수 1 회(코스피·나스닥·VIX 등 — 1.8,
+// US 의 유일한 지수 맥락). KR 만: 공식 지수 시세 1 회(두 지수 묶음) + 지수별 1분봉 1 회, 지수별 일봉(직전 종가)과
+// 시장 투자자 매매는 하루 캐시. US 시장 단위 투자자 매매는 어느 표면에도 없어 이름으로 남김. 일부 실패는 그 부분만
+// 빠지고 이름이 남음.
+func (p *probe) readMarketContext(ctx context.Context, market string, sess session, at time.Time, wtsState *wtsCycle) (*MarketContextState, []string) {
+	var gaps []string
+	major, majorGaps := p.readMajorIndices(ctx, wtsState)
+	gaps = append(gaps, majorGaps...)
+	// withMajor 는 공식 지수 쪽이 실패해도 WTS 주요 지수는 남기는 결과를 만듦(둘 다 없으면 블록 생략).
+	withMajor := func(extra ...string) (*MarketContextState, []string) {
+		gaps = append(gaps, extra...)
+		if major == nil {
+			return nil, gaps
+		}
+		return &MarketContextState{MajorIndices: major}, gaps
+	}
 	symbols := marketIndices[market]
 	if len(symbols) == 0 {
-		return nil, []string{"market_context: the official market-indicator catalog has no " + market +
-			" index and the investor flow is KRX-only"}
+		return withMajor("market_context: no " + market + " market-wide investor flow on any surface (official investor-trading is KOSPI/KOSDAQ only)")
 	}
 	prices, err := withRateLimitRetry(ctx, p, groupMarketIndicator, func(ctx context.Context) (domain.MarketIndicatorPrices, error) {
 		return p.src.MarketIndicatorPrices(ctx, symbols)
 	})
 	if err != nil {
-		return nil, []string{"market_context: index prices: " + reasonOf(err)}
+		return withMajor("market_context: index prices: " + reasonOf(err))
 	}
 	lastBySymbol := map[string]float64{}
 	for _, indicator := range prices.Indicators {
@@ -639,10 +675,9 @@ func (p *probe) readMarketContext(ctx context.Context, market string, sess sessi
 	}
 	loc, err := marketLocation(market)
 	if err != nil {
-		return nil, []string{"market_context: " + reasonOf(err)}
+		return withMajor("market_context: " + reasonOf(err))
 	}
-	var gaps []string
-	out := &MarketContextState{Indices: []IndexState{}, InvestorFlows: []InvestorFlowState{}}
+	out := &MarketContextState{Indices: []IndexState{}, InvestorFlows: []InvestorFlowState{}, MajorIndices: major}
 	day := at.In(loc).Format("2006-01-02")
 	for _, symbol := range symbols {
 		last := lastBySymbol[symbol]

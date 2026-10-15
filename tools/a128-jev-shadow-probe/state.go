@@ -17,17 +17,18 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
-// newsAbsent 는 뉴스 소스가 없음을 모델에 알리는 값 — 조용히 빼면 p 의 의미가 달라짐(design.md).
-// 이 로트는 WTS 뉴스를 배선하지 않음(WTS 세션 = 사람 관문 0.3) → 언제나 이 값.
+// news 는 뉴스 블록의 상태 — 조용히 빼면 p 의 의미가 달라지므로 언제나 명시함(design.md). s3(1.8)부터 WTS 피드를
+// 읽음: 이 사이클에 피드를 읽었으면 present(+ news_headlines), 못 읽었으면 absent(+ missing_inputs 의 "news: …").
 const (
-	newsAbsent    = "absent"
-	newsGapReason = "news: absent (WTS news source is not wired in this probe)"
+	newsPresent = "present"
+	newsAbsent  = "absent"
 )
 
 // PublicState 는 판단 요청의 state 전부임. 필드를 더하려면 state_test.go 의 고정 목록도
@@ -58,10 +59,13 @@ type PublicState struct {
 	Daily         *DailyState         `json:"daily,omitempty"`
 	MarketContext *MarketContextState `json:"market_context,omitempty"`
 	// WarningTypes 는 활성 매수 유의 유형(openapi StockWarning.warningType). 읽었고 0 건이면 빈 목록 — 「없음」과 「못 읽음」을 가름.
-	WarningTypes  *[]string        `json:"warning_types,omitempty"`
-	PriceLimits   *PriceLimitState `json:"price_limits,omitempty"`
-	News          string           `json:"news"`
-	MissingInputs []string         `json:"missing_inputs"`
+	WarningTypes *[]string        `json:"warning_types,omitempty"`
+	PriceLimits  *PriceLimitState `json:"price_limits,omitempty"`
+	// 1.8(state_rev a128-s3) 블록 — wts.go. KR 종목 수급은 읽었고 0 행이면 빈 목록.
+	StockFlows    *[]StockFlowState `json:"investor_flows_per_stock,omitempty"`
+	News          string            `json:"news"`
+	NewsHeadlines *NewsState        `json:"news_headlines,omitempty"`
+	MissingInputs []string          `json:"missing_inputs"`
 }
 
 // TopOfBookState 는 호가 맨 위 한 줄과 그 나이(브로커 시각 기준).
@@ -91,7 +95,10 @@ type marketInputs struct {
 	DailyBars  []domain.Candle       // /candles 1d(수정주가)
 	Warnings   *domain.StockWarnings // /stocks/{symbol}/warnings
 	Limits     *domain.PriceLimits   // /price-limits(KR 만)
-	Context    *MarketContextState   // 사이클당 한 번 읽은 시장 맥락(KR 만)
+	Context    *MarketContextState   // 사이클당 한 번 읽은 시장 맥락
+	// 1.8 입력 — nil = 못 읽음(이름은 Gaps 에).
+	StockFlows *[]StockFlowState // WTS 종목 수급(KR 만)
+	News       *NewsState        // WTS 피드에서 고른 기사
 }
 
 // assembleState 는 입력을 PublicState 로 옮기고, 빠진 입력을 MissingInputs 에 이름으로 남김.
@@ -112,6 +119,8 @@ func assembleState(in marketInputs) PublicState {
 		MinutesToClose:   int(in.Session.Close.Sub(in.ObservedAt) / time.Minute),
 		SessionSource:    in.Session.Source,
 		News:             newsAbsent,
+		NewsHeadlines:    in.News,
+		StockFlows:       in.StockFlows,
 		MissingInputs:    append([]string{}, in.Gaps...),
 	}
 	// 변화율은 단위가 확실한 값만 — ranking 의 lastPrice/basePrice 로 직접 계산(changeRate 의 단위는 미확인).
@@ -150,12 +159,28 @@ func assembleState(in marketInputs) PublicState {
 		state.PriceLimits = priceLimitFeatures(*in.Limits, in.LastPrice)
 	}
 	state.MarketContext = in.Context
-	if in.Market == "KR" {
-		state.MissingInputs = append(state.MissingInputs, perStockInvestorNA)
+	if in.News != nil {
+		state.News = newsPresent
 	}
-	state.MissingInputs = append(state.MissingInputs, newsGapReason)
+	// 수집 단계가 이름을 주지 않은 결손도 반드시 이름을 남김(조립기 직접 호출 — 침묵 생략 금지).
+	nameIfAbsent := func(absent bool, prefix string) {
+		if absent && !hasGapPrefix(state.MissingInputs, prefix) {
+			state.MissingInputs = append(state.MissingInputs, prefix+" not read")
+		}
+	}
+	nameIfAbsent(in.News == nil, "news:")
+	nameIfAbsent(in.Market == "KR" && in.StockFlows == nil, "investor_flows_per_stock:")
 	sort.Strings(state.MissingInputs)
 	return state
+}
+
+func hasGapPrefix(gaps []string, prefix string) bool {
+	for _, gap := range gaps {
+		if strings.HasPrefix(gap, prefix) {
+			return true
+		}
+	}
+	return false
 }
 
 func topOfBookState(book official.StrictTopOfBook, observedAt time.Time) (*TopOfBookState, bool) {

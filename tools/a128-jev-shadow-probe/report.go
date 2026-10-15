@@ -157,7 +157,7 @@ func renderCalibrationReport(contents ledgerContents, ledgerPath string) string 
 // cycleBudgets 는 예산 관측 필드(1.7)가 있는 로트마다 사이클(시장·시각) 단위의 GET 수·수집 시간 요약 한 줄.
 // 간격 절반을 넘은 사이클은 다음 사이클이 밀리기 시작한 신호(공유 Open API 예산을 사람이 판단할 재료).
 func cycleBudgets(contents ledgerContents) []string {
-	type cycle struct{ reads, seconds, interval float64 }
+	type cycle struct{ reads, seconds, interval, wts float64 }
 	byLot := map[string]map[string]cycle{}
 	for _, row := range contents.Judgments {
 		if row.Selection == nil || row.Selection.IntervalSeconds == 0 {
@@ -167,7 +167,8 @@ func cycleBudgets(contents ledgerContents) []string {
 		if byLot[lot] == nil {
 			byLot[lot] = map[string]cycle{}
 		}
-		byLot[lot][row.Market+"|"+row.At] = cycle{float64(row.Selection.BrokerReads), row.Selection.CollectSeconds, float64(row.Selection.IntervalSeconds)}
+		byLot[lot][row.Market+"|"+row.At] = cycle{float64(row.Selection.BrokerReads), row.Selection.CollectSeconds,
+			float64(row.Selection.IntervalSeconds), float64(row.Selection.WTSRequests)}
 	}
 	lots := make([]string, 0, len(byLot))
 	for lot := range byLot {
@@ -176,16 +177,21 @@ func cycleBudgets(contents ledgerContents) []string {
 	sort.Strings(lots)
 	var lines []string
 	for _, lot := range lots {
-		var reads, seconds []float64
+		var reads, seconds, wts []float64
 		over := 0
 		for _, c := range byLot[lot] {
-			reads, seconds = append(reads, c.reads), append(seconds, c.seconds)
+			reads, seconds, wts = append(reads, c.reads), append(seconds, c.seconds), append(wts, c.wts)
 			if c.seconds > c.interval/2 {
 				over++
 			}
 		}
-		lines = append(lines, fmt.Sprintf("- 사이클 예산 %s: 사이클 %d · broker GET 중앙 %.0f · 최대 %.0f · 수집 중앙 %.0fs · 최대 %.0fs · 간격 절반 초과 %d",
-			lot, len(reads), median(reads), maxOf(reads), median(seconds), maxOf(seconds), over))
+		line := fmt.Sprintf("- 사이클 예산 %s: 사이클 %d · broker GET 중앙 %.0f · 최대 %.0f · 수집 중앙 %.0fs · 최대 %.0fs · 간격 절반 초과 %d",
+			lot, len(reads), median(reads), maxOf(reads), median(seconds), maxOf(seconds), over)
+		// 1.8(s3) 로트만 WTS 요청이 있음 — 공유 Open API 예산과 다른 서버라 따로 적음.
+		if maxOf(wts) > 0 {
+			line += fmt.Sprintf(" · WTS 요청 중앙 %.0f · 최대 %.0f", median(wts), maxOf(wts))
+		}
+		lines = append(lines, line)
 	}
 	return lines
 }

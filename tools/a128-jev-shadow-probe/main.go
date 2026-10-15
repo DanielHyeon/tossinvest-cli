@@ -10,8 +10,11 @@
 // 비결선은 같은 사이클의 대조군으로 함께 라벨링됨.
 // h분 뒤 /prices 재조회로 실현 수익률을 같은 원장에 라벨로 적고, report 가 p 구간표를 만듦.
 //
+// 1.8(state_rev a128-s3): WTS 조회 셋(뉴스 피드·주요 지수·KR 종목 수급 — wts.go)을 더함. 세션은 기존 세션 저장소를
+// 기존 클라이언트가 읽고, 실패는 그 블록만 결손 이름으로 남음.
+//
 // 하지 않는 것: 주문·정정·취소·토글·설정 변경 전부. 브로커에는 공개 시장 데이터 GET 만
-// 보냄(marketSource). 외부로 나가는 state 는 공개 시장 데이터뿐(PublicState).
+// 보냄(marketSource), WTS 에는 조회 셋만(wtsSource). 외부로 나가는 state 는 공개 시장 데이터뿐(PublicState).
 //
 //	TYPESAFE_API_KEY=… go run ./tools/a128-jev-shadow-probe run --market BOTH --wait-open
 //	go run ./tools/a128-jev-shadow-probe report
@@ -33,6 +36,7 @@ import (
 
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	wtssession "github.com/JungHoonGhae/tossinvest-cli/internal/session"
 )
 
 const (
@@ -130,6 +134,10 @@ func runCommand(ctx context.Context, args []string, getenv func(string) string) 
 	configFile := paths.ConfigFile
 	capSource := func(ctx context.Context) (orderCap, error) { return loadOrderCap(ctx, configFile) }
 
+	// 1.8 WTS 조회 입력: 기존 세션 저장소를 기존 클라이언트가 읽음(이 도구는 세션 내용을 로그·원장에 쓰지 않음).
+	// 세션이 없거나 못 읽어도 시작함 — 세션이 필요한 읽기는 사이클마다 결손 이름으로 남음.
+	wtsSess, wtsStatus := loadWTSSession(ctx, paths.SessionFile)
+
 	ledgerDir, err := filepath.Abs(*out)
 	if err != nil {
 		return err
@@ -150,15 +158,31 @@ func runCommand(ctx context.Context, args []string, getenv func(string) string) 
 	if err != nil {
 		return err
 	}
+	p.wts = newWTSClient(wtsSess, "")
 	p.restorePending(existing)
 	p.logf("ledger %s · markets %v · model %s · interval %s · pool %d random of top %d within the order cap (%s) · "+
 		"finalists %d by J1 after excluding J2 ≥ %.1f · rule %s · horizon %dm · restored %d pending",
 		ledgerDir, markets, judge.model, *interval, *pool, rankingFetch, configFile,
 		*top, redFlagExclusionP, selectionRuleFor(*top, *pool), *horizon, p.pendingCount())
+	p.logf("WTS read-only inputs (news feed %v · major indices · KR per-stock investor flows): session %s",
+		newsFeedScopes, wtsStatus)
 	if manualSess != nil {
 		p.logf("session: calendar bypassed by --session %s (market-local window; operator override)", manualSess.Raw)
 	}
 	return p.run(ctx, markets)
+}
+
+// loadWTSSession 은 세션 파일을 기존 저장소로 읽고, 로그용 상태 낱말만 돌려줌(쿠키·헤더 값은 절대 돌려주지 않음).
+func loadWTSSession(ctx context.Context, sessionFile string) (*wtssession.Session, string) {
+	sess, err := wtssession.NewFileStore(sessionFile).Load(ctx)
+	switch {
+	case err == nil && sess != nil:
+		return sess, "loaded"
+	case errors.Is(err, wtssession.ErrNoSession):
+		return nil, "not found (WTS reads that need it become missing inputs)"
+	default:
+		return nil, "unreadable (WTS reads that need it become missing inputs)"
+	}
 }
 
 // validateRunFlags 는 측정 매개변수 범위를 검사함 — 결선(--top)은 풀(--pool) 안에서만 뽑히므로 top ≤ pool,

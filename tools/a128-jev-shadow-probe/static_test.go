@@ -7,6 +7,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -165,13 +166,134 @@ func TestImportsStayInsideTheAllowlist(t *testing.T) {
 		"github.com/JungHoonGhae/tossinvest-cli/internal/domain":    true,
 		"github.com/JungHoonGhae/tossinvest-cli/internal/app/paths": true,
 		"github.com/JungHoonGhae/tossinvest-cli/internal/config":    true,
+		// 1.8: WTS 조회 셋(wts.go — 표면은 아래 시험이 고정)과 그 세션 저장소 읽기.
+		"github.com/JungHoonGhae/tossinvest-cli/internal/client":  true,
+		"github.com/JungHoonGhae/tossinvest-cli/internal/session": true,
 	}
 	for _, file := range nonTestSources(t) {
 		for _, spec := range file.Imports {
 			path, _ := strconv.Unquote(spec.Path.Value)
 			if strings.Contains(path, ".") && !allowedModule[path] {
-				t.Errorf("import %q is outside the allowlist (stdlib + official/domain/app-paths/config only)", path)
+				t.Errorf("import %q is outside the allowlist (stdlib + official/domain/app-paths/config/client/session only)", path)
 			}
+		}
+	}
+}
+
+// TestWTSSourceIsTheThreeReads 는 WTS 표면(인터페이스)의 메서드 집합을 조회 셋으로 고정하고, WTS 클라이언트의 나머지
+// 공개 메서드(주문·계좌·보유·관심종목 쓰기 등 — internal/client 소스에서 AST 로 뽑음)가 어떤 selector 로도 나오지 않으며,
+// tossclient·wtssession 패키지에서 쓰는 이름이 허용 목록 안에 있음을 봄. 새 WTS 메서드가 생겨도 이 목록이 자동으로 막음.
+func TestWTSSourceIsTheThreeReads(t *testing.T) {
+	t.Parallel()
+	allowedMethods := map[string]bool{"GetMarketNews": true, "GetMarketIndices": true, "GetTradingFlows": true}
+	var methods []string
+	for _, file := range nonTestSources(t) {
+		ast.Inspect(file, func(node ast.Node) bool {
+			spec, ok := node.(*ast.TypeSpec)
+			if !ok || spec.Name.Name != "wtsSource" {
+				return true
+			}
+			for _, field := range spec.Type.(*ast.InterfaceType).Methods.List {
+				for _, name := range field.Names {
+					methods = append(methods, name.Name)
+				}
+			}
+			return false
+		})
+	}
+	sort.Strings(methods)
+	if want := []string{"GetMarketIndices", "GetMarketNews", "GetTradingFlows"}; !reflect.DeepEqual(methods, want) {
+		t.Fatalf("wtsSource methods = %v, want exactly the read-only trio %v", methods, want)
+	}
+
+	// internal/client 의 *Client 공개 메서드 전부 — 허용 셋 밖은 이름조차 나오면 안 됨.
+	_, thisFile, _, _ := runtime.Caller(0)
+	clientDir := filepath.Join(filepath.Dir(thisFile), "..", "..", "internal", "client")
+	paths, err := filepath.Glob(filepath.Join(clientDir, "*.go"))
+	if err != nil || len(paths) == 0 {
+		t.Fatalf("cannot list internal/client sources: %v", err)
+	}
+	forbidden := map[string]bool{}
+	for _, path := range paths {
+		if strings.HasSuffix(path, "_test.go") {
+			continue
+		}
+		parsed, err := parser.ParseFile(token.NewFileSet(), path, nil, 0)
+		if err != nil {
+			t.Fatalf("parsing %s: %v", path, err)
+		}
+		for _, decl := range parsed.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok || fn.Recv == nil || len(fn.Recv.List) != 1 || !fn.Name.IsExported() || allowedMethods[fn.Name.Name] {
+				continue
+			}
+			// *Client 의 메서드만 — 오류 타입의 Error 같은 메서드는 WTS 표면이 아님.
+			star, isStar := fn.Recv.List[0].Type.(*ast.StarExpr)
+			if !isStar {
+				continue
+			}
+			if ident, isIdent := star.X.(*ast.Ident); !isIdent || ident.Name != "Client" {
+				continue
+			}
+			forbidden[fn.Name.Name] = true
+		}
+	}
+	for _, name := range []string{"PlacePendingOrder", "CancelPendingOrder", "AmendPendingOrder", "ListPositions", "GetAccountSummary"} {
+		if !forbidden[name] {
+			t.Fatalf("the WTS method census missed %s — the guard would measure nothing", name)
+		}
+	}
+	allowedPackage := map[string]map[string]bool{
+		"tossclient": {"New": true, "Config": true, "Client": true, "AuthError": true, "StatusError": true, "MaxNewsLimit": true},
+		"wtssession": {"NewFileStore": true, "ErrNoSession": true, "Session": true},
+	}
+	saw := map[string]bool{}
+	for _, file := range nonTestSources(t) {
+		ast.Inspect(file, func(node ast.Node) bool {
+			selector, ok := node.(*ast.SelectorExpr)
+			if !ok {
+				return true
+			}
+			if forbidden[selector.Sel.Name] {
+				t.Errorf("source names WTS method %s; the probe reaches only the read-only trio", selector.Sel.Name)
+			}
+			if pkg, ok := selector.X.(*ast.Ident); ok && allowedPackage[pkg.Name] != nil {
+				saw[pkg.Name] = true
+				if !allowedPackage[pkg.Name][selector.Sel.Name] {
+					t.Errorf("source uses %s.%s, outside the read-only allowlist", pkg.Name, selector.Sel.Name)
+				}
+			}
+			return true
+		})
+	}
+	if !saw["tossclient"] || !saw["wtssession"] {
+		t.Fatalf("the guard saw tossclient %v / wtssession %v — a side it saw nothing of is measured by nothing", saw["tossclient"], saw["wtssession"])
+	}
+}
+
+// TestNoPersonalizedNewsScopeInSource 는 계좌 맥락 뉴스 범위(PERSONALIZED·PERSONALIZE_WATCH·PERSONALIZE_HOLD — 보유·관심
+// 종목을 드러냄)와 별칭이 소스 어디에도 없음을 봄. 피드 범위 목록은 계좌 맥락이 없는 범위만.
+func TestNoPersonalizedNewsScopeInSource(t *testing.T) {
+	t.Parallel()
+	_, thisFile, _, _ := runtime.Caller(0)
+	paths, _ := filepath.Glob(filepath.Join(filepath.Dir(thisFile), "*.go"))
+	for _, path := range paths {
+		if strings.HasSuffix(path, "_test.go") {
+			continue
+		}
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, word := range []string{"PERSONALIZ", "GetNewsBriefing", `"holdings"`, `"watchlist"`, `"recommended"`} {
+			if strings.Contains(string(raw), word) {
+				t.Errorf("%s mentions %s — account-context news never feeds the state", filepath.Base(path), word)
+			}
+		}
+	}
+	for _, scope := range newsFeedScopes {
+		if scope != "ALL_HIGHLIGHT" && scope != "SOARING_STOCK" && scope != "HOT" {
+			t.Errorf("news scope %q is outside the account-free set", scope)
 		}
 	}
 }

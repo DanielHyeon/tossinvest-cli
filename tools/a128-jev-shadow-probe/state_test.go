@@ -40,6 +40,15 @@ func TestPublicStateKeySetIsPinned(t *testing.T) {
 		"market_context.investor_flows.foreigner_net_krw", "market_context.investor_flows.institution_net_krw",
 		"warning_types", "price_limits", "price_limits.upper_limit", "price_limits.lower_limit",
 		"price_limits.to_upper_pct", "price_limits.to_lower_pct",
+		// 1.8(state_rev a128-s3) — wts.go.
+		"market_context.major_indices", "market_context.major_indices.code", "market_context.major_indices.name",
+		"market_context.major_indices.nation", "market_context.major_indices.last", "market_context.major_indices.change_pct_vs_base",
+		"investor_flows_per_stock", "investor_flows_per_stock.date", "investor_flows_per_stock.individual_net_shares",
+		"investor_flows_per_stock.foreigner_net_shares", "investor_flows_per_stock.institution_net_shares",
+		"news_headlines", "news_headlines.symbol", "news_headlines.symbol.title", "news_headlines.symbol.summary",
+		"news_headlines.symbol.created_at", "news_headlines.symbol.source", "news_headlines.market",
+		"news_headlines.market.title", "news_headlines.market.summary", "news_headlines.market.created_at",
+		"news_headlines.market.source",
 	}
 	var got []string
 	var collect func(prefix string, typ reflect.Type)
@@ -158,7 +167,7 @@ func TestNewsAbsenceIsExplicitInStateAndRow(t *testing.T) {
 		if err := json.Unmarshal(body, &request); err != nil {
 			t.Fatal(err)
 		}
-		if request.State.News != newsAbsent || !contains(request.State.MissingInputs, newsGapReason) {
+		if request.State.News != newsAbsent || request.State.NewsHeadlines != nil || !hasPrefix(request.State.MissingInputs, "news:") {
 			t.Fatalf("outbound state does not name the news gap: news=%q missing=%v", request.State.News, request.State.MissingInputs)
 		}
 	}
@@ -167,7 +176,7 @@ func TestNewsAbsenceIsExplicitInStateAndRow(t *testing.T) {
 		t.Fatalf("expected 4 judgment rows (2 symbols × 2 questions), got %d", len(contents.Judgments))
 	}
 	for _, row := range contents.Judgments {
-		if !contains(row.CollectionGaps, newsGapReason) {
+		if !hasPrefix(row.CollectionGaps, "news:") {
 			t.Fatalf("judgment row %s does not name the news gap: %v", row.ID, row.CollectionGaps)
 		}
 	}
@@ -183,7 +192,7 @@ func TestAssembleStateNamesMissingInputs(t *testing.T) {
 	if state.TopOfBook != nil || state.Name != "" {
 		t.Fatalf("absent inputs must stay absent: %+v", state)
 	}
-	if !contains(state.MissingInputs, "top_of_book: rate_limited_gave_up") || !contains(state.MissingInputs, newsGapReason) {
+	if !contains(state.MissingInputs, "top_of_book: rate_limited_gave_up") || !contains(state.MissingInputs, "news: not read") {
 		t.Fatalf("missing inputs not named: %v", state.MissingInputs)
 	}
 	if state.ChangePctVsReference == nil || *state.ChangePctVsReference != 0 {
