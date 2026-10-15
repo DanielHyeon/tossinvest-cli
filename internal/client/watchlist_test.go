@@ -5,9 +5,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"testing"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/session"
 )
 
@@ -17,8 +19,9 @@ func TestListWatchlistFromFixtures(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		method, path = r.Method, r.URL.RequestURI()
 		_, _ = w.Write([]byte(`{"result":{"watchlists":[
-			{"id":2,"name":"later","ordering":2,"items":[{"code":"CODE2","symbol":"TICK2","name":"two","ordering":0,"prices":{"currency":"USD","base":2,"close":3}}]},
-			{"id":1,"name":"first","ordering":1,"items":[{"code":"CODE1A","symbol":"TICK1A","name":"one-a","ordering":0,"prices":{"currency":"KRW","base":1,"close":2}},{"code":"CODE1B","name":"one-b","ordering":0,"prices":null}]}
+			{"id":2,"name":"later","ordering":1,"items":[{"code":"CODE2","symbol":"TICK2","name":"two","ordering":2,"prices":{"currency":"USD","base":2,"close":3}}]},
+			{"id":1,"name":"first","ordering":1,"items":[{"code":"CODE1A","symbol":"TICK1A","name":"one-a","ordering":3,"prices":{"currency":"KRW","base":1,"close":2}},{"code":"CODE1B","name":"one-b","ordering":1,"prices":null},{"code":"CODE1C","name":"one-c","ordering":2,"prices":{"currency":"USD","base":4,"close":5}}]},
+			{"id":3,"name":"third","ordering":2,"items":[{"code":"CODE3","name":"three","ordering":1,"prices":{"currency":"USD","base":7,"close":8}}]}
 		]}}`))
 	}))
 	defer srv.Close()
@@ -30,17 +33,21 @@ func TestListWatchlistFromFixtures(t *testing.T) {
 	if method != http.MethodGet || path != "/api/v1/new-watchlists?includePrice=true&lazyLoad=false" {
 		t.Fatalf("route=%s %s", method, path)
 	}
-	if len(items) != 3 || items[0].Symbol != "CODE1A" || items[1].Symbol != "CODE1B" || items[2].Symbol != "CODE2" {
-		t.Fatalf("items=%+v", items)
+	want := []domain.WatchlistItem{
+		{Group: "later", Symbol: "CODE2", Name: "two", Currency: "USD", Base: 2, Last: 3},
+		{Group: "first", Symbol: "CODE1B", Name: "one-b"},
+		{Group: "first", Symbol: "CODE1C", Name: "one-c", Currency: "USD", Base: 4, Last: 5},
+		{Group: "first", Symbol: "CODE1A", Name: "one-a", Currency: "KRW", Base: 1, Last: 2},
+		{Group: "third", Symbol: "CODE3", Name: "three", Currency: "USD", Base: 7, Last: 8},
 	}
-	if items[0].Currency != "KRW" || items[1].Currency != "" || items[1].Base != 0 || items[1].Last != 0 {
-		t.Fatalf("optional mapping=%+v", items[1])
+	if !reflect.DeepEqual(items, want) {
+		t.Fatalf("items=%+v want=%+v", items, want)
 	}
 }
 
 func TestListWatchlistRejectsInvalidCollections(t *testing.T) {
 	t.Parallel()
-	for name, body := range map[string]string{"missing": `{}`, "null": `{"result":{"watchlists":null}}`, "watchlists object": `{"result":{"watchlists":{}}}`, "items missing": `{"result":{"watchlists":[{"id":1}]}}`, "items object": `{"result":{"watchlists":[{"id":1,"items":{}}]}}`, "empty": `{"result":{"watchlists":[]}}`, "empty items": `{"result":{"watchlists":[{"id":1,"items":[]}]}}`} {
+	for name, body := range map[string]string{"missing": `{}`, "null": `{"result":{"watchlists":null}}`, "watchlists object": `{"result":{"watchlists":{}}}`, "items missing": `{"result":{"watchlists":[{"id":1}]}}`, "items null": `{"result":{"watchlists":[{"id":1,"items":null}]}}`, "items object": `{"result":{"watchlists":[{"id":1,"items":{}}]}}`, "later items missing": `{"result":{"watchlists":[{"id":1,"items":[{"code":"OK"}]},{"id":2}]}}`, "empty": `{"result":{"watchlists":[]}}`, "empty items": `{"result":{"watchlists":[{"id":1,"items":[]}]}}`} {
 		t.Run(name, func(t *testing.T) {
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte(body)) }))
 			defer srv.Close()

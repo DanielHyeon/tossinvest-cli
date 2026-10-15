@@ -1,15 +1,15 @@
 {
   "file": "internal/client/watchlist_test.go",
-  "source_sha256": "cd9d991e892165066410a61d2046d8ebfa96d0827bc4202e04b1f4ea44fd87a4",
+  "source_sha256": "4b44cbef53c966a7b38b4c1b13861c16881edc3f5c297b6f3188706784ef215c",
   "package": "client",
   "function": "TestListWatchlistFromFixtures",
   "signature": "TestListWatchlistFromFixtures(params=1, results=0)",
   "start": {
-    "line": 14,
+    "line": 16,
     "column": 1
   },
   "end": {
-    "line": 39,
+    "line": 46,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 27,
+        "line": 30,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 30,
+        "line": 33,
         "column": 2
       }
     },
@@ -33,15 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 33,
-        "column": 2
-      }
-    },
-    {
-      "id": "B4",
-      "kind": "if",
-      "at": {
-        "line": 36,
+        "line": 43,
         "column": 2
       }
     }
@@ -51,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 15,
+        "line": 17,
         "column": 2
       },
       "text": "t.Parallel"
@@ -59,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 17,
+        "line": 19,
         "column": 9
       },
       "text": "httptest.NewServer"
@@ -67,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 17,
+        "line": 19,
         "column": 28
       },
       "text": "http.HandlerFunc"
@@ -75,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 18,
+        "line": 20,
         "column": 28
       },
       "text": "r.URL.RequestURI"
@@ -83,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 19,
+        "line": 21,
         "column": 10
       },
       "text": "w.Write"
@@ -91,14 +83,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 19,
+        "line": 21,
         "column": 18
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 24,
+        "line": 27,
         "column": 8
       },
       "text": "srv.Close"
@@ -106,7 +98,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 25,
+        "line": 28,
         "column": 7
       },
       "text": "New"
@@ -114,7 +106,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 25,
+        "line": 28,
         "column": 30
       },
       "text": "srv.Client"
@@ -122,7 +114,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 26,
+        "line": 29,
         "column": 16
       },
       "text": "c.ListWatchlist"
@@ -130,7 +122,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 26,
+        "line": 29,
         "column": 32
       },
       "text": "context.Background"
@@ -138,26 +130,10 @@
     {
       "kind": "call",
       "at": {
-        "line": 28,
-        "column": 3
-      },
-      "text": "t.Fatal"
-    },
-    {
-      "kind": "call",
-      "at": {
         "line": 31,
         "column": 3
       },
-      "text": "t.Fatalf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 33,
-        "column": 5
-      },
-      "text": "len"
+      "text": "t.Fatal"
     },
     {
       "kind": "call",
@@ -170,7 +146,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 37,
+        "line": 43,
+        "column": 6
+      },
+      "text": "reflect.DeepEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
         "column": 3
       },
       "text": "t.Fatalf"
@@ -180,35 +164,42 @@
     {
       "kind": ":=",
       "at": {
-        "line": 17,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 18,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
         "line": 19,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 20,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 21,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 25,
+        "line": 28,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 26,
+        "line": 29,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
         "column": 2
       }
     }
@@ -218,7 +209,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 24,
+        "line": 27,
         "column": 2
       },
       "text": "srv.Close"

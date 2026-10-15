@@ -1,7 +1,7 @@
 # Function Logic Map: `TestListWatchlistFromFixtures`
 
 - Source: `internal/client/watchlist_test.go`
-- AST evidence: `ast.json` (`fb67a940c20d8bc5ce74f43f255d9e29944680d5e1804574bbfc77095cad1f42`)
+- AST evidence: `ast.json` (`4b44cbef53c966a7b38b4c1b13861c16881edc3f5c297b6f3188706784ef215c`)
 
 ## Intent
 

@@ -1,15 +1,15 @@
 {
   "file": "internal/client/watchlist_test.go",
-  "source_sha256": "cd9d991e892165066410a61d2046d8ebfa96d0827bc4202e04b1f4ea44fd87a4",
+  "source_sha256": "4b44cbef53c966a7b38b4c1b13861c16881edc3f5c297b6f3188706784ef215c",
   "package": "client",
   "function": "TestListWatchlistRejectsInvalidCollections",
   "signature": "TestListWatchlistRejectsInvalidCollections(params=1, results=0)",
   "start": {
-    "line": 41,
+    "line": 48,
     "column": 1
   },
   "end": {
-    "line": 60,
+    "line": 67,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 43,
+        "line": 50,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 49,
+        "line": 56,
         "column": 4
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 50,
+        "line": 57,
         "column": 5
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 55,
+        "line": 62,
         "column": 4
       }
     }
@@ -50,7 +50,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 53,
+        "line": 60,
         "column": 5
       }
     }
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 42,
+        "line": 49,
         "column": 2
       },
       "text": "t.Parallel"
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 44,
+        "line": 51,
         "column": 3
       },
       "text": "t.Run"
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 45,
+        "line": 52,
         "column": 11
       },
       "text": "httptest.NewServer"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 45,
+        "line": 52,
         "column": 30
       },
       "text": "http.HandlerFunc"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 45,
+        "line": 52,
         "column": 101
       },
       "text": "w.Write"
@@ -99,14 +99,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 45,
+        "line": 52,
         "column": 109
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 46,
+        "line": 53,
         "column": 10
       },
       "text": "srv.Close"
@@ -114,7 +114,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 47,
+        "line": 54,
         "column": 9
       },
       "text": "New"
@@ -122,7 +122,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 47,
+        "line": 54,
         "column": 32
       },
       "text": "srv.Client"
@@ -130,7 +130,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 48,
+        "line": 55,
         "column": 18
       },
       "text": "c.ListWatchlist"
@@ -138,7 +138,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 48,
+        "line": 55,
         "column": 34
       },
       "text": "context.Background"
@@ -146,7 +146,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 50,
+        "line": 57,
         "column": 38
       },
       "text": "len"
@@ -154,7 +154,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 51,
+        "line": 58,
         "column": 6
       },
       "text": "t.Fatalf"
@@ -162,7 +162,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 56,
+        "line": 63,
         "column": 5
       },
       "text": "t.Fatalf"
@@ -172,28 +172,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 45,
+        "line": 52,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 45,
+        "line": 52,
         "column": 94
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 47,
+        "line": 54,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 48,
+        "line": 55,
         "column": 4
       }
     }
@@ -203,7 +203,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 46,
+        "line": 53,
         "column": 4
       },
       "text": "srv.Close"
