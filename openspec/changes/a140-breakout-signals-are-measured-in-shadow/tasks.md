@@ -11,9 +11,9 @@ Story: `STORY-TOS-a140` · **Low**(새 파일만 · High-risk 경로 무접촉 �
 - [x] 0.1 proposal · design · spec 델타 · tasks · Story 등록(FEAT-TOS-013)
 - [x] 0.2 분기 주장의 AST 근거 — `analysis/ast-evidence/`(11 함수, HEAD `050d092f`)
 - [x] 0.3 CodeGraph hard evidence · 증거 조정 — `analysis/code-context/`(codegraph 1.6.0, R1~R8; 브리프의 「4/8」을 8/8 인스턴스 · 0/8 생산자로 정정)
-- [ ] 0.4 사람 결정 D1~D12 기록(design §9) — 권고와 다르면 spec 델타 · design 의 해당 문장을 같이 고친다
-- [ ] 0.5 CodeGraphContext 질의(새 패키지가 import 할 심볼) → `analysis/code-context/codegraphcontext-context.md` 갱신
-- [ ] 0.6 proposal-freeze 경량 리뷰(gstack) → `review.md`
+- [x] 0.4 사람 결정 기록(review §1, 2026-10-15 「권장대로」 · D16 변경 · D17 후속). 남은 확인: D3 정밀화(ATR 창 고정) · D21 기본값 — Manager 에 보고
+- [x] 0.5 CodeGraphContext — not-applicable 유지(새 파일만; import 할 심볼은 CodeGraph callers + 리뷰어 재확인으로 닫음, codegraphcontext-context.md)
+- [x] 0.6 proposal-freeze 경량 리뷰 → review §2 APPROVE-WITH-FIXES, P1 셋 · P2 아홉 문서 반영
 - [ ] 0.7 `python3 tools/sdd/capture_change_base.py --change a140-breakout-signals-are-measured-in-shadow` (READY)
 
 ## 1. 구현 (RED → GREEN → REFACTOR, 새 파일만)
