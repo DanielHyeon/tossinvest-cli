@@ -104,10 +104,10 @@ one-shot nonce 저장소는 journal 기반이어야 한다(SHALL). 프로세스 
 ### Requirement: 자동화 게이트 기동 인터록
 자동 주문 게이트는 기본 OFF이며(SHALL), 게이트 ON 설정 시 다음이 모두 검증되지 않으면 기동을 거부한다(SHALL):
 
-1. 필수 한도 전부가 명시적으로 설정되고 양수·유한하며 통화 일치 — 주문 수량, 주문 notional, 총 개방 노출, 일일 손실 절대액, 일일 손실 자본 비율 중 **하나라도** 누락·0·NaN·Inf이면 거부(부분적으로 무제한인 게이트는 허가된 게이트가 아니다). 하루 매수 총액 상한(`max_daily_buy_notional`)은 **해석 값**으로 검사한다 — 없음·0 은 통화가 KRW 일 때만 기본값 10,000,000 으로 해석되고, 다른 통화에서 없음·0 이거나 해석 값이 음수·NaN·Inf 이면 거부(SHALL, risk-management 「하루 매수 총액 한도」)
+1. 필수 한도 전부가 명시적으로 설정되고 양수·유한하며 통화 일치 — 주문 수량, 주문 notional, 총 개방 노출, 일일 손실 절대액, 일일 손실 자본 비율 중 **하나라도** 누락·0·NaN·Inf이면 거부(부분적으로 무제한인 게이트는 허가된 게이트가 아니다). 하루 매수 총액 상한(`max_daily_buy_notional`)은 **해석 값**으로 검사한다 — 없음·0 은 통화가 KRW 일 때만 기본값 10,000,000 으로 해석되고, 다른 통화에서 없음·0 이거나 해석 값이 음수·NaN·Inf 이면 거부(SHALL, risk-management 「하루 매수 총액 한도」). 최대 보유 포지션 수(`max_open_positions`)도 **해석 값**으로 검사한다 — 없음·0 은 모든 통화에서 기본값 6 으로 해석되고, 해석 값이 1 이상의 정수가 아니면(음수·소수·NaN·Inf) 거부(SHALL, risk-management 「최대 보유 포지션 수 한도」)
 2. 유효한 capability attestation(만료·계좌 식별·성공 endpoint 집합 — verify-execution-capability change가 생성) 존재·미만료·계좌 일치. attestation endpoint 집합은 엔진 자동 경로가 실제 사용하는 호출 전부와 drift 가드로 동기화한다(SHALL — 목록을 확장하는 change는 가드를 함께 갱신한다)
 3. 거래 정책이 **청산 경로가 실제로 요구하는 것 전부**를 허용 — `place`·`sell`·`cancel`·`allow_live_order_actions`(SHALL). 매수는 가능한데 청산이 불가능한 조합으로는 기동할 수 없다(SHALL NOT)는 이 절이 처음부터 주장한 것이고, 검사 대상이 그 주장에 미치지 못했다 — 매도 제출도 `place`이며(`internal/trading` 정책 검사가 side와 무관하게 요구한다), exit 관측 루프는 자기 발의를 취소하므로 `cancel`도 쓴다. 둘이 꺼진 채 기동하면 엔진은 뜨고 **첫 손절에서 거부된다**. 검사에 넣지 않은 요구는 요구가 아니다
-4. Guardian이 인터록이 감사한 설정 한도와 같은 출처에서 구성됨 — 동등성 검증은 EXPOSURE_RAISING 결정의 한도와, 결정 스냅숏 밖에서 예약 트랜잭션이 재는 하루 매수 총액 상한에 적용한다(SHALL — Guardian 이 그 상한을 진술하지 않거나 해석 값과 다르면 거부)
+4. Guardian이 인터록이 감사한 설정 한도와 같은 출처에서 구성됨 — 동등성 검증은 EXPOSURE_RAISING 결정의 한도와, 결정 스냅숏 밖에서 예약 트랜잭션이 재는 하루 매수 총액 상한과 최대 보유 포지션 수에 적용한다(SHALL — Guardian 이 그 상한을 진술하지 않거나 해석 값과 다르면 거부)
 5. 엔진 프로필에 ExecutionGateway가 구성됨(round-trip용 주문 조회 배선 포함)
 
 게이트 flip은 사람 승인 절차(§0.7)와 audit 기록을 요구한다(SHALL).
@@ -173,6 +173,16 @@ ProtectionReady 미충족 프로필에서:
 
 - **WHEN** 주입된 Guardian 이 하루 매수 상한을 진술하지 않거나 해석 값과 다른 값·통화를 진술하면
 - **THEN** 단일 출처 불일치로 기동이 거부된다
+
+#### Scenario: Guardian 이 최대 보유 포지션 수를 다르게 진술
+
+- **WHEN** 주입된 Guardian 이 최대 보유 포지션 수를 진술하지 않거나 해석 값과 다른 값을 진술하면
+- **THEN** 단일 출처 불일치로 기동이 거부된다
+
+#### Scenario: 정수가 아닌 최대 보유 포지션 수
+
+- **WHEN** 게이트 ON 설정의 `max_open_positions` 가 음수이거나 정수가 아니면
+- **THEN** 인터록이 기동을 거부하고 게이트 OFF 설정의 읽기는 영향을 받지 않는다
 
 ### Requirement: Flatten Saga
 `tossctl` flatten-all은 durable saga로 구현되어야 한다(SHALL): (1) 신규 진입 차단 → (2) 미체결 각각 취소 + 결과 확정(IN_DOUBT 규칙 적용) → (3) 계좌 재조회 안정화 → (4) 최신 매도가능수량 기준 reduce-only 청산 주문(비-fractional은 공격적 limit) → (5) 반복 reconcile로 잔여 확인. `--dry-run` 모드는 제출할 주문 목록을 mutation 0건으로 출력해야 한다(SHALL). 확인 문자열은 마스킹된 계좌 식별·포지션 수·예상 청산 수량·만료 nonce를 포함하고, TTY 직접 입력만 허용하며 자동화 플래그는 금지된다(SHALL NOT). 크래시 후 재실행 시 saga는 journal 기록에서 안전하게 재개된다(SHALL).

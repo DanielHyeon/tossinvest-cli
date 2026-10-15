@@ -135,6 +135,6 @@
 | `a135-attestation-expiry-is-announced` | STORY-TOS-a135 | archived |
 | `a136-daily-buy-notional-limit` | STORY-TOS-a136 | archived |
 | `a137-daily-loss-is-measured` | STORY-TOS-a137 | archived |
-| `a138-max-open-positions` | STORY-TOS-a138 | implemented |
+| `a138-max-open-positions` | STORY-TOS-a138 | archived |
 | `a139-per-trade-risk-budget` | STORY-TOS-a139 | in_progress |
 | `a140-breakout-signals-are-measured-in-shadow` | STORY-TOS-a140 | in_progress |

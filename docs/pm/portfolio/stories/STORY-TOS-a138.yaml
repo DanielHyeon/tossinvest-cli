@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a138-max-open-positions",
-    "path": "openspec/changes/a138-max-open-positions"
+    "path": "openspec/changes/archive/2026-10-15-a138-max-open-positions"
   },
   "found_by": {
     "date": "2026-10-15",
     "how": "The user asked for a maximum of 6 open positions (decision 2026-10-15). The Manager confirmed that risk-management excludes MAX_POSITIONS as P3 and that no Guardian limit counts how many positions the account holds.",
-    "record": "openspec/changes/a138-max-open-positions/proposal.md"
+    "record": "openspec/changes/archive/2026-10-15-a138-max-open-positions/proposal.md"
   },
   "acceptance": [
     "Every exposure-raising Guardian issuance is refused when the distinct symbols of live positions, held entry reservations and the new entry would exceed the configured maximum",
