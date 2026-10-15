@@ -64,3 +64,33 @@ func TestListPendingOrdersParsesStructuredFields(t *testing.T) {
 		t.Fatalf("expected parsed status, got %q", orders[0].Status)
 	}
 }
+
+func TestListPendingOrdersRejectsAbsentOrNullResult(t *testing.T) {
+	t.Parallel()
+	for name, body := range map[string]string{
+		"absent": `{}`,
+		"null":   `{"result":null}`,
+		"object": `{"result":{}}`,
+		"scalar": `{"result":1}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte(body)) }))
+			defer srv.Close()
+			c := New(Config{HTTPClient: srv.Client(), CertBaseURL: srv.URL, Session: &session.Session{Cookies: map[string]string{"SESSION": "x"}}})
+			if orders, err := c.ListPendingOrders(context.Background()); err == nil || orders != nil {
+				t.Fatalf("orders=%v err=%v, want schema error and nil orders", orders, err)
+			}
+		})
+	}
+}
+
+func TestListPendingOrdersAcceptsExplicitEmptyResult(t *testing.T) {
+	t.Parallel()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte(`{"result":[]}`)) }))
+	defer srv.Close()
+	c := New(Config{HTTPClient: srv.Client(), CertBaseURL: srv.URL, Session: &session.Session{Cookies: map[string]string{"SESSION": "x"}}})
+	orders, err := c.ListPendingOrders(context.Background())
+	if err != nil || orders == nil || len(orders) != 0 {
+		t.Fatalf("orders=%v err=%v, want non-nil empty", orders, err)
+	}
+}

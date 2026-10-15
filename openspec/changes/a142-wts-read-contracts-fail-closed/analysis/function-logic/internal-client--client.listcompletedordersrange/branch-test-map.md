@@ -2,17 +2,15 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | session error preserves behavior | existing client coverage | no | no |
-| B2 | metadata error preserves behavior | existing client coverage | no | no |
-| B3 | invalid market rejects | existing normalization coverage | no | no |
-| B4 | each normalized market is requested | planned multi-market local-server test | no | no |
-| B5 | GET/decode error after first market succeeds | planned local-server test | no | no |
-| B6 | valid body items parse; explicit `body:[]` stays a successful non-nil empty list | existing parse test; planned empty-table test | no | no |
-| planned guard | `result` absent/null | planned table test | no | no |
-| planned guard | `result.body` absent/null | planned table test | no | no |
-| B7 | both submitted times nil preserve ID order | existing completed-order ordering coverage | no | no |
-| B8 | left submitted time nil sorts after timestamped order | existing completed-order ordering coverage | no | no |
-| B9 | right submitted time nil sorts after timestamped order | existing completed-order ordering coverage | no | no |
-| planned guard | body object/scalar | planned table test | no | no |
+| B1 | session error preserves behavior | existing client coverage | no | yes |
+| B2 | metadata error preserves behavior | existing client coverage | no | yes |
+| B3 | invalid market rejects | existing normalization coverage | no | yes |
+| B4 | each normalized market is requested | `TestListCompletedOrdersRangeRejectsPartialMarketResult` | yes | yes |
+| B5 | GET/decode failure discards aggregate | `TestListCompletedOrdersRangeRejectsMissingCollections` | yes | yes |
+| B6 | missing/null body fails closed | `TestListCompletedOrdersRangeRejectsMissingCollections`; `TestListCompletedOrdersRangeRejectsPartialMarketResult` | yes | yes |
+| B7 | valid body parses; `body:[]` is non-nil empty | `TestListCompletedOrdersParsesStructuredFields`; `TestListCompletedOrdersRangeAcceptsExplicitEmptyBody` | yes | yes |
+| B8 | both sort timestamps nil | existing ordering coverage | no | yes |
+| B9 | left timestamp nil | existing ordering coverage | no | yes |
+| B10 | right timestamp nil | existing ordering coverage | no | yes |
 
-No test executed during pre-edit preparation.
+Focused local fixtures passed after implementation.

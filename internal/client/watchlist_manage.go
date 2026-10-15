@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 )
@@ -18,23 +19,30 @@ const watchlistBase = "/api/v1/new-watchlists"
 
 type newWatchlistEnvelope struct {
 	Result struct {
-		MaxWatchlistCount int `json:"maxWatchlistCount"`
-		Watchlists        []struct {
-			ID        int64  `json:"id"`
-			Name      string `json:"name"`
-			Type      string `json:"type"`
-			ItemCount int    `json:"itemCount"`
-			Items     []struct {
-				Code     string `json:"code"`
-				Name     string `json:"name"`
-				ItemType string `json:"itemType"`
-				Prices   struct {
-					Base  *float64 `json:"base"`
-					Close *float64 `json:"close"`
-				} `json:"prices"`
-			} `json:"items"`
-		} `json:"watchlists"`
+		MaxWatchlistCount int                 `json:"maxWatchlistCount"`
+		Watchlists        []newWatchlistGroup `json:"watchlists"`
 	} `json:"result"`
+}
+
+type newWatchlistGroup struct {
+	ID        int64              `json:"id"`
+	Name      string             `json:"name"`
+	Ordering  int                `json:"ordering"`
+	Type      string             `json:"type"`
+	ItemCount int                `json:"itemCount"`
+	Items     []newWatchlistItem `json:"items"`
+}
+
+type newWatchlistItem struct {
+	Code     string `json:"code"`
+	Name     string `json:"name"`
+	Ordering int    `json:"ordering"`
+	ItemType string `json:"itemType"`
+	Prices   struct {
+		Currency string   `json:"currency"`
+		Base     *float64 `json:"base"`
+		Close    *float64 `json:"close"`
+	} `json:"prices"`
 }
 
 // ListWatchlistGroups returns watchlist folders with their items (관심종목 폴더 목록).
@@ -47,13 +55,27 @@ func (c *Client) ListWatchlistGroups(ctx context.Context) ([]domain.WatchlistGro
 	if err := c.getJSON(ctx, url, &env); err != nil {
 		return nil, err
 	}
-	out := make([]domain.WatchlistGroup, 0, len(env.Result.Watchlists))
-	for _, g := range env.Result.Watchlists {
+	return mapBulkWatchlistGroups(env)
+}
+
+func mapBulkWatchlistGroups(env newWatchlistEnvelope) ([]domain.WatchlistGroup, error) {
+	if env.Result.Watchlists == nil {
+		return nil, fmt.Errorf("invalid watchlist response: result.watchlists must be an array")
+	}
+	groups := env.Result.Watchlists
+	sort.SliceStable(groups, func(i, j int) bool { return groups[i].Ordering < groups[j].Ordering })
+	out := make([]domain.WatchlistGroup, 0, len(groups))
+	for _, g := range groups {
+		if g.Items == nil {
+			return nil, fmt.Errorf("invalid watchlist response: watchlist items must be an array")
+		}
 		grp := domain.WatchlistGroup{ID: g.ID, Name: g.Name, Type: g.Type, ItemCount: g.ItemCount}
-		for _, it := range g.Items {
+		items := g.Items
+		sort.SliceStable(items, func(i, j int) bool { return items[i].Ordering < items[j].Ordering })
+		for _, it := range items {
 			grp.Items = append(grp.Items, domain.WatchlistItem{
 				Group: g.Name, Symbol: it.Code, Name: it.Name,
-				Base: coalesceMoney(it.Prices.Base), Last: coalesceMoney(it.Prices.Close),
+				Currency: it.Prices.Currency, Base: coalesceMoney(it.Prices.Base), Last: coalesceMoney(it.Prices.Close),
 			})
 		}
 		out = append(out, grp)

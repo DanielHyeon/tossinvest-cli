@@ -1,46 +1,39 @@
 # Function Logic Map: `Client.ListCompletedOrdersRange`
 
 - Source: `internal/client/completed_orders.go`
-- AST evidence: `ast.json` (`8ff2baf9106ab18ee8b721758f9354b886bf5b9b74df35193b265d1aa841a5ae`)
+- AST evidence: `ast.json` (`2c389d043a94552ec5dd4e0179f3f5c3cdbd1eb26eaefec8cbbfcae5959cc486`)
 - Risk scan: `risk-pattern-report.md` (no configured match)
 
 ## Inputs and invariants
 
-| Input/state | Valid range | Source of truth | Failure behavior |
-|---|---|---|---|
-| session / trading metadata | valid existing session and metadata | `requireSession`, `ensureTradingMetadata` | propagate error |
-| market | `us`, `kr`, or `all` | `normalizeHistoryMarkets` | reject unsupported market |
-| each response `result.body` | required JSON array; `[]` valid | a142 spec | missing/null/wrong type errors; never return partial aggregate |
-| orders | existing parser/sort semantics | `parseCompletedOrder`, stable sort | preserve behavior |
+| Input/state | Valid range | Failure behavior |
+|---|---|---|
+| session and metadata | existing authenticated WTS contract | propagated error |
+| market | `us`, `kr`, or `all` | invalid market errors |
+| each `result.body` | JSON array; `[]` valid | absent/null errors; incompatible JSON errors; no partial aggregate |
+| order mapping/order | existing parser and stable sort | preserve behavior |
 
 ## Branches and early returns
 
-| Branch | Condition | Mutation/side effect | Return/error | Required test |
-|---|---|---|---|---|
-| B1 | session failure | none | error | existing no-session coverage |
-| B2 | metadata failure | read-only metadata discovery | error | existing metadata coverage |
-| B3 | invalid market | none | error | existing normalization tests |
-| B4 | each normalized market | one read-only GET per market | continue | valid US/KR fixtures |
-| B5 | GET/decode error | none beyond attempted GET | error, discard accumulated orders | partial-market HTTP/wrong-type test |
-| B6 | response body range | no mutation | append parsed orders | existing parse test |
-| B7-B9 | sort comparator nil/non-nil time branches | local ordering only | sorted output | existing ordering tests |
-| planned guard | `result.body == nil` after a successful decode | none | descriptive schema error, discard aggregate | missing/null body tests |
-
-## Calls and live bindings
-
-| Callee | Why called | Error/timeout/retry contract | Evidence |
+| Branch | Condition | Return/error | Test |
 |---|---|---|---|
-| `requireSession`, `ensureTradingMetadata` | authenticated WTS access | propagated | AST B1-B2; CodeGraph |
-| `normalizeHistoryMarkets` | determine required markets | propagated | AST B3 |
-| `getJSON` | per-market completed-order GET | propagated; no partial successful return | AST B5 |
-| `parseCompletedOrder`, `sort.SliceStable` | preserve current mapping/order | no remote mutation | AST B6-B9 |
-
-## State mutations and fallbacks
-
-- Local aggregate only. It must be abandoned on every required-market schema/transport failure.
-- No order, ledger, reconciliation, or live setting mutation.
+| B1 | session failure | error | existing client coverage |
+| B2 | metadata failure | error | existing client coverage |
+| B3 | invalid market | error | existing normalization coverage |
+| B4 | normalized market iteration | one GET per market | partial-market fixture |
+| B5 | GET/decode error | error; discard aggregate | `TestListCompletedOrdersRangeRejectsMissingCollections` |
+| B6 | decoded body is nil | schema error; discard aggregate | `TestListCompletedOrdersRangeRejectsMissingCollections`; `TestListCompletedOrdersRangeRejectsPartialMarketResult` |
+| B7 | body range | append parsed orders | parse and empty-body tests |
+| B8 | both sort timestamps nil | ID ordering | existing ordering coverage |
+| B9 | left timestamp nil | timestamped order first | existing ordering coverage |
+| B10 | right timestamp nil | timestamped order first | existing ordering coverage |
 
 ## Safety conclusion
 
-- Safe edit boundary: validate `envelope.Result.Body` immediately after each successful decode and before append.
-- High-risk impact: yes. Completion lookup and delayed-cancel recovery consume this data; false absence is forbidden.
+Read-only aggregate. Every successful decode now proves its required collection exists before any append.
+
+## Calls and live bindings
+Calls are listed in `ast.json`; fixture tests use only local `httptest`.
+
+## State mutations and fallbacks
+No mutation or fallback is introduced by this evidence.

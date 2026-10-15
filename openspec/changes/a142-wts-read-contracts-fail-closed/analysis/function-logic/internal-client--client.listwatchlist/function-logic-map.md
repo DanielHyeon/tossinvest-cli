@@ -1,43 +1,29 @@
 # Function Logic Map: `Client.ListWatchlist`
 
 - Source: `internal/client/watchlist.go`
-- AST evidence: `ast.json` (`9992281d395fc5ba71ea8033e10e9e819062d614d04761c55aef80ac66028c73`)
+- AST evidence: `ast.json` (`9da13ccf13a0fec5c4c019deeb2d19624bc7c5d18809dcbfb466980b5cb8020e`)
 - Risk scan: `risk-pattern-report.md` (no configured match)
 
 ## Inputs and invariants
 
-| Input/state | Valid range | Source of truth | Failure behavior |
-|---|---|---|---|
-| session | stored cookies exist | `requireSession` | return `ErrNoSession` |
-| flat output | group, `Symbol=item.code`, name, currency, base, last | a142 spec | preserve current public shape |
-| read route | bulk GET `/api/v1/new-watchlists?includePrice=true&lazyLoad=false` | a142 spec | no legacy dashboard POST |
-| required collections | `result.watchlists` and every group `items` are arrays | a142 spec | missing/null/wrong type error; explicit empty valid |
+| Input/state | Valid range | Failure behavior |
+|---|---|---|
+| grouped read | delegated to `ListWatchlistGroups` | propagated error |
+| flat output | group-order then item-order flattening | empty input yields non-nil empty slice |
 
-## Branches and early returns
+## Control flow
 
-| Branch | Condition | Mutation/side effect | Return/error | Required test |
-|---|---|---|---|---|
-| B1 | session failure | none | error | existing session coverage |
-| B2 | legacy POST/decode failure | legacy POST only at baseline | error | replaced by dedicated GET test |
-| B3-B5 | find/decode WATCHLIST section | no mutation | section or error | removed with legacy adapter |
-| B6-B8 | flatten legacy groups/items | local construction only | flat slice | replaced by shared dedicated decoder test |
-| planned wrapper | dedicated bulk helper returns | one read-only GET indirectly | fields/order/error preserved | multi-group contract test |
-
-## Calls and live bindings
-
-| Callee | Why called | Error/timeout/retry contract | Evidence |
-|---|---|---|---|
-| `requireSession` | preserve session gate | propagated | AST B1 |
-| baseline `postJSON`, `json.Unmarshal` | legacy dashboard adapter | propagated; retired from this function | AST B2-B5 |
-| planned read-only helper | shared dedicated endpoint mapping | propagated; no fallback to legacy route | a142 design |
-| `coalesceMoney` | nullable money to current zero default | no inference | AST B8 / shared decoder |
-
-## State mutations and fallbacks
-
-- Read-only route replacement. No watchlist mutation method, payload, operation ID, domain field, token, or setting change.
-- No fallback to the legacy endpoint after dedicated collection-schema failure.
+This branchless wrapper reads grouped data through the existing dedicated bulk read, then flattens its mapped items. It performs no HTTP or mutation itself.
 
 ## Safety conclusion
 
-- Safe edit boundary: replace this adapter with a narrow call to the dedicated bulk read/flatten helper.
-- High-risk impact: no direct trade mutation. Compatibility-sensitive output and shared decoder require mutation regression coverage.
+The retired dashboard adapter and legacy POST are not reachable. Schema validation, stable ordering, code symbols, and optional-money defaults remain in the grouped reader.
+
+## Branches and early returns
+See the branch table below.
+
+## Calls and live bindings
+Calls are listed in `ast.json`; fixture tests use only local `httptest`.
+
+## State mutations and fallbacks
+No mutation or fallback is introduced by this evidence.

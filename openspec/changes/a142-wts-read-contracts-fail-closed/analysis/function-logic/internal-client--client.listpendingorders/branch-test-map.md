@@ -3,10 +3,8 @@
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
 | B1 | stored session absent | existing auth/client coverage | no | no |
-| B2 | wrong-type `result` decode error propagates | planned table test in `account_test.go` or `orders_parse_test.go` | no | no |
-| B3 | valid order item remains parsed | `TestListPendingOrdersParsesStructuredFields` | no | no |
-| planned guard | result absent | planned table test | no | no |
-| planned guard | `result:null` | planned table test | no | no |
-| planned guard | `result:[]` is successful non-nil empty list | planned table test | no | no |
+| B2 | wrong-type `result` decode error propagates | `TestListPendingOrdersRejectsAbsentOrNullResult` | yes | yes |
+| B3 | absent/null result fails closed | `TestListPendingOrdersRejectsAbsentOrNullResult` | yes | yes |
+| B4 | explicit `result:[]` is successful non-nil empty list; valid items remain parsed | `TestListPendingOrdersAcceptsExplicitEmptyResult`; `TestListPendingOrdersParsesStructuredFields` | yes | yes |
 
-No test executed during pre-edit preparation.
+Focused local fixtures passed after implementation.

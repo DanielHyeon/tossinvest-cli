@@ -2,12 +2,10 @@ package client
 
 import (
 	"context"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/session"
@@ -15,67 +13,49 @@ import (
 
 func TestListWatchlistFromFixtures(t *testing.T) {
 	t.Parallel()
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/api/v2/dashboard/asset/sections/all":
-			http.ServeFile(w, r, watchlistFixturePath(t))
-		default:
-			t.Fatalf("unexpected request path: %s", r.URL.Path)
-		}
+	var method, path string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		method, path = r.Method, r.URL.RequestURI()
+		_, _ = w.Write([]byte(`{"result":{"watchlists":[
+			{"id":2,"name":"later","ordering":2,"items":[{"code":"CODE2","symbol":"TICK2","name":"two","ordering":0,"prices":{"currency":"USD","base":2,"close":3}}]},
+			{"id":1,"name":"first","ordering":1,"items":[{"code":"CODE1A","symbol":"TICK1A","name":"one-a","ordering":0,"prices":{"currency":"KRW","base":1,"close":2}},{"code":"CODE1B","name":"one-b","ordering":0,"prices":null}]}
+		]}}`))
 	}))
-	defer server.Close()
-
-	client := New(Config{
-		HTTPClient:  server.Client(),
-		APIBaseURL:  server.URL,
-		InfoBaseURL: server.URL,
-		CertBaseURL: server.URL,
-		Session: &session.Session{
-			Cookies: map[string]string{"SESSION": "test-session"},
-		},
-	})
-
-	items, err := client.ListWatchlist(context.Background())
+	defer srv.Close()
+	c := New(Config{HTTPClient: srv.Client(), CertBaseURL: srv.URL, Session: &session.Session{Cookies: map[string]string{"SESSION": "x"}}})
+	items, err := c.ListWatchlist(context.Background())
 	if err != nil {
-		t.Fatalf("ListWatchlist returned error: %v", err)
+		t.Fatal(err)
 	}
-	if len(items) == 0 {
-		t.Fatal("expected at least one watchlist item")
+	if method != http.MethodGet || path != "/api/v1/new-watchlists?includePrice=true&lazyLoad=false" {
+		t.Fatalf("route=%s %s", method, path)
 	}
-	if items[0].Symbol == "" {
-		t.Fatal("expected first watchlist item to have a symbol")
+	if len(items) != 3 || items[0].Symbol != "CODE1A" || items[1].Symbol != "CODE1B" || items[2].Symbol != "CODE2" {
+		t.Fatalf("items=%+v", items)
+	}
+	if items[0].Currency != "KRW" || items[1].Currency != "" || items[1].Base != 0 || items[1].Last != 0 {
+		t.Fatalf("optional mapping=%+v", items[1])
 	}
 }
 
-// Issue #29 mirror: watchlist also routes through /sections/all and needs the
-// types filter to avoid empty-section regression.
-func TestListWatchlistSendsTypesFilter(t *testing.T) {
+func TestListWatchlistRejectsInvalidCollections(t *testing.T) {
 	t.Parallel()
-
-	var capturedBody string
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/api/v2/dashboard/asset/sections/all" {
-			body, _ := io.ReadAll(r.Body)
-			capturedBody = string(body)
-		}
-		http.ServeFile(w, r, watchlistFixturePath(t))
-	}))
-	defer server.Close()
-
-	client := New(Config{
-		HTTPClient:  server.Client(),
-		APIBaseURL:  server.URL,
-		InfoBaseURL: server.URL,
-		CertBaseURL: server.URL,
-		Session:     &session.Session{Cookies: map[string]string{"SESSION": "test-session"}},
-	})
-
-	if _, err := client.ListWatchlist(context.Background()); err != nil {
-		t.Fatalf("ListWatchlist returned error: %v", err)
-	}
-	if !strings.Contains(capturedBody, `"types"`) || !strings.Contains(capturedBody, `"WATCHLIST"`) {
-		t.Fatalf("expected wire body to carry types filter for WATCHLIST, got %q", capturedBody)
+	for name, body := range map[string]string{"missing": `{}`, "null": `{"result":{"watchlists":null}}`, "watchlists object": `{"result":{"watchlists":{}}}`, "items missing": `{"result":{"watchlists":[{"id":1}]}}`, "items object": `{"result":{"watchlists":[{"id":1,"items":{}}]}}`, "empty": `{"result":{"watchlists":[]}}`, "empty items": `{"result":{"watchlists":[{"id":1,"items":[]}]}}`} {
+		t.Run(name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte(body)) }))
+			defer srv.Close()
+			c := New(Config{HTTPClient: srv.Client(), CertBaseURL: srv.URL, Session: &session.Session{Cookies: map[string]string{"SESSION": "x"}}})
+			items, err := c.ListWatchlist(context.Background())
+			if name == "empty" || name == "empty items" {
+				if err != nil || items == nil || len(items) != 0 {
+					t.Fatalf("items=%v err=%v", items, err)
+				}
+				return
+			}
+			if err == nil || items != nil {
+				t.Fatalf("items=%v err=%v, want schema error", items, err)
+			}
+		})
 	}
 }
 

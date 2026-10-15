@@ -1,6 +1,6 @@
 {
   "file": "internal/client/completed_orders.go",
-  "source_sha256": "8ff2baf9106ab18ee8b721758f9354b886bf5b9b74df35193b265d1aa841a5ae",
+  "source_sha256": "2c389d043a94552ec5dd4e0179f3f5c3cdbd1eb26eaefec8cbbfcae5959cc486",
   "package": "client",
   "function": "ListCompletedOrdersRange",
   "receiver": "Client",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 75,
+    "line": 78,
     "column": 2
   },
   "branches": [
@@ -56,17 +56,17 @@
     },
     {
       "id": "B6",
-      "kind": "range",
+      "kind": "if",
       "at": {
-        "line": 56,
+        "line": 55,
         "column": 3
       }
     },
     {
       "id": "B7",
-      "kind": "if",
+      "kind": "range",
       "at": {
-        "line": 62,
+        "line": 59,
         "column": 3
       }
     },
@@ -83,6 +83,14 @@
       "kind": "if",
       "at": {
         "line": 68,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 71,
         "column": 3
       }
     }
@@ -119,7 +127,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 63,
+        "line": 56,
         "column": 4
       }
     },
@@ -140,14 +148,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 71,
-        "column": 3
+        "line": 72,
+        "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
         "line": 74,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 77,
         "column": 2
       }
     }
@@ -220,7 +235,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 57,
+        "line": 56,
+        "column": 16
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
         "column": 13
       },
       "text": "append"
@@ -228,7 +251,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 57,
+        "line": 60,
         "column": 28
       },
       "text": "parseCompletedOrder"
@@ -236,7 +259,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 61,
+        "line": 64,
         "column": 2
       },
       "text": "sort.SliceStable"
@@ -244,7 +267,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 71,
+        "line": 74,
         "column": 10
       },
       "text": "orders.SubmittedAt.After"
@@ -296,7 +319,7 @@
     {
       "kind": "=",
       "at": {
-        "line": 57,
+        "line": 60,
         "column": 4
       }
     }
