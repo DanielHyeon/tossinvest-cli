@@ -12,6 +12,16 @@ Exit: `1`.
 
 Observed failures included `TestListPendingOrdersRejectsAbsentOrNullResult` (absent/null returned nil error), `TestListCompletedOrdersRangeRejectsMissingCollections` and `TestListCompletedOrdersRangeRejectsPartialMarketResult` (nil collection returned nil error), and the dedicated watchlist tests because the baseline still searched the legacy dashboard section. This RED output was observed in the implementation terminal; it was not retained as a file.
 
+## Retrospective baseline verification
+
+To retain a reviewable current artifact without relabeling it as the historical TDD run, baseline `b36798f0` production files were checked out in a repository-external worktree and the current three affected client test files were overlaid. The focused command below exited `1`; raw output is `/tmp/tossos-a142-retrospective-baseline.log`.
+
+```text
+go test ./internal/client -run 'Test(ListPendingOrders|HasPendingOrder|FindOrderRejectsUnknownPendingCollection|ListCompletedOrdersRange|ListWatchlist)' -count=1
+```
+
+The log records the intended baseline failures: nil collections became successful empty reads, an accumulated US order was returned after a KR schema failure, the legacy watchlist adapter rejected the dedicated fixture, and `FindOrder` reached completed history after malformed pending data.
+
 ## GREEN: final focused fixtures
 
 ```text
@@ -19,6 +29,8 @@ go test ./internal/client -run 'Test(ListPendingOrders|HasPendingOrder|FindOrder
 ```
 
 Exit: `0` (`ok github.com/JungHoonGhae/tossinvest-cli/internal/client`). This covers explicit empty arrays, missing/null/wrong-type failures, nonempty partial all-market failures, stable watchlist ordering/ties and retained fields, consumer error propagation, and unchanged watchlist mutation contracts. The command was last run after the equal-tie fixture repair.
+
+The same final command was rerun after the retrospective check, exited `0`, and its raw output is `/tmp/tossos-a142-final-focused-green.log`.
 
 ```text
 go test ./cmd/tossctl -run 'Watchlist|Order.*(List|Pending|Completed)|FindOrder' -count=1
