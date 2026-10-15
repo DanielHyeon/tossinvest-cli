@@ -1,0 +1,158 @@
+{
+  "file": "internal/official/strict_minute_candles_test.go",
+  "source_sha256": "d5312e14348516437f5852f5e5b0f94096bb71f843d2eeb78173b4ffb7062f77",
+  "package": "official",
+  "function": "TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest",
+  "signature": "TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest(params=1, results=0)",
+  "start": {
+    "line": 98,
+    "column": 1
+  },
+  "end": {
+    "line": 140,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 131,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 135,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 2
+      },
+      "text": "t.Parallel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 4
+      },
+      "text": "t.Parallel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 15
+      },
+      "text": "newStrictMinuteBodyHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 45
+      },
+      "text": "strictMinuteBody"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 17
+      },
+      "text": "harness.client.StrictMinuteCandles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 52
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 4
+      },
+      "text": "strictMinuteRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 7
+      },
+      "text": "harness.hitCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 74
+      },
+      "text": "harness.hitCount"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 128,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 129,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

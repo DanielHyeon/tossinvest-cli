@@ -1,0 +1,93 @@
+{
+  "file": "internal/official/strict_minute_candles.go",
+  "source_sha256": "d511149cbf1bdd7f83646fd7863507a74840a38c69fa6c6a68705b72b1549163",
+  "package": "official",
+  "function": "strictMinuteCheckSymbol",
+  "signature": "strictMinuteCheckSymbol(params=2, results=1)",
+  "start": {
+    "line": 209,
+    "column": 1
+  },
+  "end": {
+    "line": 219,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 211,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 214,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 215,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 218,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 6
+      },
+      "text": "pattern.MatchString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 10
+      },
+      "text": "strictMinuteRefuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 14
+      },
+      "text": "strconv.Quote"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 210,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 212,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

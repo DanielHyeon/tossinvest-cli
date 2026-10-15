@@ -1,0 +1,166 @@
+{
+  "file": "internal/official/strict_minute_candles_test.go",
+  "source_sha256": "b4f7298806af2c9703784aa9bad7de9ce7834bc9d6701dd7114110ac3d48ad05",
+  "package": "official",
+  "function": "TestStrictMinuteCandlesAcceptsTheKoreanMarket",
+  "signature": "TestStrictMinuteCandlesAcceptsTheKoreanMarket(params=1, results=0)",
+  "start": {
+    "line": 175,
+    "column": 1
+  },
+  "end": {
+    "line": 190,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 181,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 184,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 187,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 176,
+        "column": 2
+      },
+      "text": "t.Parallel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 10
+      },
+      "text": "strictMinuteBody"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 3
+      },
+      "text": "strictMinuteCandleJSON"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 13
+      },
+      "text": "newStrictMinuteBodyHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 15
+      },
+      "text": "harness.client.StrictMinuteCandles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 50
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 48
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 5
+      },
+      "text": "harness.lastQuery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 26
+      },
+      "text": "harness.lastQuery"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}
