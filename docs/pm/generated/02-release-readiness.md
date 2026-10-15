@@ -138,3 +138,6 @@
 | STORY-TOS-a138 | 5 |
 | STORY-TOS-a139 | 5 |
 | STORY-TOS-a140 | 5 |
+| STORY-TOS-a141 | 3 |
+| STORY-TOS-a142 | 3 |
+| STORY-TOS-a143 | 3 |

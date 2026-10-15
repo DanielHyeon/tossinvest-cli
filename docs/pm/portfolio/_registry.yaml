@@ -31,7 +31,8 @@
     "FEAT-TOS-010",
     "FEAT-TOS-011",
     "FEAT-TOS-012",
-    "FEAT-TOS-013"
+    "FEAT-TOS-013",
+    "FEAT-TOS-014"
   ],
   "stories": [
     "STORY-TOS-001",
@@ -169,6 +170,9 @@
     "STORY-TOS-a137",
     "STORY-TOS-a138",
     "STORY-TOS-a139",
-    "STORY-TOS-a140"
+    "STORY-TOS-a140",
+    "STORY-TOS-a141",
+    "STORY-TOS-a142",
+    "STORY-TOS-a143"
   ]
 }

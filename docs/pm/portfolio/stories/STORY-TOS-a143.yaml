@@ -1,0 +1,20 @@
+{
+  "id": "STORY-TOS-a143",
+  "title": "Official chart reads and public API snapshots remain compatible",
+  "feature": "FEAT-TOS-014",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a143-official-read-compatibility",
+    "path": "openspec/changes/a143-official-read-compatibility"
+  },
+  "found_by": {
+    "date": "2026-10-15",
+    "how": "User-authorized correctness and compatibility review against upstream tossinvest-cli and published Toss Invest API contracts.",
+    "record": "openspec/changes/a143-official-read-compatibility/proposal.md"
+  },
+  "acceptance": [
+    "Frozen OpenSpec acceptance scenarios pass with offline regression tests.",
+    "Journal, Guardian, shared-token lifecycle and operating settings remain unchanged.",
+    "Independent adversarial review, additional gstack review and required repository gates pass."
+  ]
+}
