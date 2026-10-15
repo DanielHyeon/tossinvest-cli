@@ -46,3 +46,12 @@ The correction restores shared `strictMinuteCheckSymbol` to numeric-only KR vali
 - `/tmp/a143-full-final/fix-green-quote-numeric.exit`: `0`; `TestStrictOrderbookTopAsksForExactlyOneSymbol` proves the shared numeric KR path remains accepted.
 - `/tmp/a143-full-final/fix-green-a087-package.exit`: `0`; the complete a087 market-sell-probe package ran offline.
 - `/tmp/a143-full-final/fix-check-analysis-evidence.exit`: `0`; analysis reports complete or diff-proven-exempt evidence. Its only advisory is that Manager's uncommitted OpenSpec edits prevent recording a new landing until they are committed.
+
+## Final aggregate receipts
+
+- `/tmp/a143-full-final/make-sdd-sync-rerun.exit`: 0, before gate.
+- `/tmp/a143-full-final/make-gate-a143-rerun.exit`: 2; stages 1–7 passed, unchanged a091 performance fixture failed stage 8; stages 9–11 were not run.
+- `/tmp/a143-full-final/a091-current.exit` and `a091-base.exit`: both 0 for one sequential focused run each. Passing non-verbose output does not supply worst-cycle timing. These runs are not aggregate-gate substitutes.
+- `/tmp/a143-full-final/make-gate-a143-final.exit`: 0; frozen 63ea2ad2, all 11 stages passed, including full tests, test-seams, race, vet and strict OpenSpec validation (49/49). No settings, thresholds, cache policy or parallelism were changed for this final retry.
+
+Manager independently read the final raw exit and stage summary. Prior failures remain authoritative historical evidence.
