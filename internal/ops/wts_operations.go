@@ -576,28 +576,29 @@ func wtsOperations() []Operation {
 		{
 			ID: "watchlist", Method: "GET", Path: "wts:watchlist", Backend: "wts",
 			Category: "watchlist", Summary: "Watchlist items (with change/change-rate). WTS-only.",
-			Probe: &ProbeSpec{Name: "watchlist", Method: "POST",
-				URL:  probeCert + "/api/v2/dashboard/asset/sections/all",
-				Body: `{"types":["WATCHLIST"]}`,
+			Probe: &ProbeSpec{Name: "watchlist", Method: "GET",
+				URL: probeCert + "/api/v1/new-watchlists?includePrice=true&lazyLoad=false",
 				Check: func(status int, body []byte) error {
 					if err := ExpectStatus(status, 200); err != nil {
 						return err
 					}
 					var env struct {
 						Result struct {
-							Sections []struct {
-								Type string `json:"type"`
-							} `json:"sections"`
+							Watchlists []struct {
+								Items []json.RawMessage `json:"items"`
+							} `json:"watchlists"`
 						} `json:"result"`
 					}
 					if err := json.Unmarshal(body, &env); err != nil {
-						return fmt.Errorf("decode sections: %v", err)
+						return fmt.Errorf("decode watchlists: %v", err)
 					}
-					if len(env.Result.Sections) == 0 {
-						return fmt.Errorf("result.sections is empty — likely body-contract regression")
+					if env.Result.Watchlists == nil {
+						return fmt.Errorf("result.watchlists must be an array")
 					}
-					if env.Result.Sections[0].Type != "WATCHLIST" {
-						return fmt.Errorf("expected section[0].type=WATCHLIST, got %q", env.Result.Sections[0].Type)
+					for _, watchlist := range env.Result.Watchlists {
+						if watchlist.Items == nil {
+							return fmt.Errorf("watchlist items must be an array")
+						}
 					}
 					return nil
 				}},
