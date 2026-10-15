@@ -5,8 +5,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"reflect"
 	"testing"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 )
 
 // TestAdaptCandlesUnit verifies the pure adapter for Candles.
@@ -87,15 +90,25 @@ func TestAdaptCandlesEmpty(t *testing.T) {
 
 func TestAdaptCandlesOrdersNewestFirstWireChronologically(t *testing.T) {
 	raw := apiCandlePage{Candles: []apiCandle{
-		{Timestamp: "2026-03-25T09:02:00+09:00", ClosePrice: "102"},
-		{Timestamp: "2026-03-25T09:01:00+09:00", ClosePrice: "101"},
+		{Timestamp: "2026-03-25T09:03:00+09:00", OpenPrice: "301", HighPrice: "302", LowPrice: "300", ClosePrice: "301.5", Volume: "3000"},
+		{Timestamp: "2026-03-25T09:02:00+09:00", OpenPrice: "201", HighPrice: "202", LowPrice: "200", ClosePrice: "201.5", Volume: "2000"},
+		{Timestamp: "2026-03-25T09:01:00+09:00", OpenPrice: "101", HighPrice: "102", LowPrice: "100", ClosePrice: "101.5", Volume: "1000"},
 	}}
 	got := adaptCandles("005930", "1m", raw)
-	if len(got.Candles) != 2 || got.Candles[0].Close != 101 || got.Candles[1].Close != 102 {
-		t.Fatalf("candles = %+v, want chronological unchanged values", got.Candles)
+	parse := func(value string) time.Time {
+		parsed, err := time.Parse(time.RFC3339, value)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return parsed
 	}
-	if !got.Candles[0].Time.Before(got.Candles[1].Time) {
-		t.Fatalf("times = %v, %v, want oldest to newest", got.Candles[0].Time, got.Candles[1].Time)
+	want := []domain.Candle{
+		{Time: parse("2026-03-25T09:01:00+09:00"), Open: 101, High: 102, Low: 100, Close: 101.5, Volume: 1000},
+		{Time: parse("2026-03-25T09:02:00+09:00"), Open: 201, High: 202, Low: 200, Close: 201.5, Volume: 2000},
+		{Time: parse("2026-03-25T09:03:00+09:00"), Open: 301, High: 302, Low: 300, Close: 301.5, Volume: 3000},
+	}
+	if !reflect.DeepEqual(got.Candles, want) {
+		t.Fatalf("candles = %+v, want %+v", got.Candles, want)
 	}
 }
 
