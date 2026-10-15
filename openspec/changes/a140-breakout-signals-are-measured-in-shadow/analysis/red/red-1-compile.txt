@@ -1,0 +1,17 @@
+# a140 RED 1 — 시험만 있고 구현 없음 (HEAD d7d8a021, 2026-10-15T07:32:54Z, go version go1.26.5 linux/amd64)
+# 주의(정직 기록): 구현 초안은 이 RED 실행 전에 같은 세션에서 작성됐다. RED 는 구현 파일을 치워(1) · 빈 구현으로 바꿔(2) 시험이 실패함을 관찰한 것이며, 복원은 sha256 대조 OK.
+# github.com/JungHoonGhae/tossinvest-cli/internal/breakoutsignal [github.com/JungHoonGhae/tossinvest-cli/internal/breakoutsignal.test]
+internal/breakoutsignal/signal_test.go:60:43: undefined: RefusalCode
+internal/breakoutsignal/signal_test.go:62:15: undefined: Refusal
+internal/breakoutsignal/signal_test.go:90:15: undefined: UpperWickRangePPM
+internal/breakoutsignal/signal_test.go:90:33: undefined: Bar
+internal/breakoutsignal/signal_test.go:99:24: undefined: Bar
+internal/breakoutsignal/signal_test.go:104:16: undefined: UpperWickRangePPM
+internal/breakoutsignal/signal_test.go:104:63: undefined: RefusalBarInvalid
+internal/breakoutsignal/signal_test.go:105:46: undefined: RefusalBarInvalid
+internal/breakoutsignal/signal_test.go:118:14: undefined: OpeningRangeATR
+internal/breakoutsignal/signal_test.go:445:50: undefined: Bar
+internal/breakoutsignal/signal_test.go:118:14: too many errors
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutsignal [build failed]
+FAIL
+rc=1

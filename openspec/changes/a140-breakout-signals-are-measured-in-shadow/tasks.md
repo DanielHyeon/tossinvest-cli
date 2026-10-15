@@ -18,9 +18,9 @@ Story: `STORY-TOS-a140` · **Low**(새 파일만 · High-risk 경로 무접촉 �
 
 ## 1. 구현 (RED → GREEN → REFACTOR, 새 파일만)
 
-- [ ] 1.1 RED — `internal/breakoutsignal` 시험: 네 지표의 경계값(직전 봉 14/15 · ATR 13/14 봉 · high = low · 분모 0 · 거래량 0 봉) ·
+- [x] 1.1 RED — `analysis/red/red-1-compile.txt` · `red-2-behaviour.txt`(구현 초안이 먼저 있었음을 영수증에 기록). `internal/breakoutsignal` 시험: 네 지표의 경계값(직전 봉 14/15 · ATR 13/14 봉 · high = low · 분모 0 · 거래량 0 봉) ·
       결정성(같은 묶음 = 같은 바이트) · 올림/내림 방향 · typed 거절(0 대체 금지) · float 미사용(AST 시험)
-- [ ] 1.2 GREEN — `internal/breakoutsignal`: `strategyevidence.BarSeries` → `breakoutlane.ClosedBarInput` 목록 + `ATRMinor` + 지표 digest
+- [x] 1.2 GREEN — `analysis/red/green-breakoutsignal.txt`(17 PASS · -race ok · vet · gofmt). 리뷰 반영: lane 봉 ID = `LaneBarID`(판 무관). `internal/breakoutsignal`: `strategyevidence.BarSeries` → `breakoutlane.ClosedBarInput` 목록 + `ATRMinor` + 지표 digest
 - [ ] 1.3 RED — 도구 시험(mock 브로커 · mock 달력): 생산 `evidence.db` 경로 거절(직접 · 심링크) · 주문/계좌 이름 금지(AST) ·
       ARMED 에서만 호가 재조회 · setup 당 PROPOSED 1 회 · 결손 행 · 라벨(손절 선착 · 한 봉 동시 = 손절 · 마감 R) · 보고서 n<30 보류 ·
       그룹별 GET 계수

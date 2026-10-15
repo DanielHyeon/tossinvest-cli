@@ -1,0 +1,11 @@
+# a140 RED 2 — 같은 API 의 빈 구현(0 · nil 반환) — 행동 RED
+--- FAIL: TestUpperWickRoundsUpAndIsZeroOnAFlatBar (0.00s)
+--- FAIL: TestRVOLRefusesAZeroVolumeWindowAndSurvivesHugeVolumes (0.00s)
+--- FAIL: TestACorrectedBarKeepsItsLaneIdentity (0.00s)
+--- FAIL: TestLaneBarsAreAcceptedByTheFrozenEvaluator (0.00s)
+--- FAIL: TestDeriveCarriesNoRVOLForOpeningRangeBars (0.00s)
+--- FAIL: TestRVOLIsUndefinedInsideTheOpeningRange (0.00s)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutsignal	0.012s
+FAIL
+FAIL count: 5
+PASS count: 0
