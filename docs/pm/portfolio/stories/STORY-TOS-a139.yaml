@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a139-per-trade-risk-budget",
-    "path": "openspec/changes/a139-per-trade-risk-budget"
+    "path": "openspec/changes/archive/2026-10-15-a139-per-trade-risk-budget"
   },
   "found_by": {
     "date": "2026-10-15",
     "how": "The a137 review noted that the production Guardian sets the per-trade risk budget to the whole configured daily-loss amount, so one stopped-out trade could spend the day's allowance. The user decided on 2026-10-15 that the budget is one third of the daily-loss amount.",
-    "record": "openspec/changes/a139-per-trade-risk-budget/proposal.md"
+    "record": "openspec/changes/archive/2026-10-15-a139-per-trade-risk-budget/proposal.md"
   },
   "acceptance": [
     "The production Guardian's per-trade risk budget is one third of the configured daily-loss amount, rounded down to the currency's minor unit",
