@@ -38,4 +38,5 @@ Story: `STORY-TOS-a138` · **High-risk**(Guardian 발급 · 예약 트랜잭션 
 ## 3. 사람 · Manager
 
 - [x] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a138-max-open-positions` + 독립 검증
+      — 2026-10-15 Manager 독립 검증: 격리 워크트리(9d48f13e) 시험 재실행(journal A138 · config · risk · execgw · console ok) · `checkOpenPositions` 직접 판독(D1=B · D2 scale-in · fail-closed 일치) · 착지 7e292659(격리 워크트리 계산) · 게이트 = 2026-10-15 `make gate` **PASS** (HEAD 486735ff; 1차는 codegraph status 15s 시간 초과로 FAIL → 재시도 PASS)
 - 배포(체크박스 아님): 엔진 이미지 교체는 사람이 KST 05:00~09:00 창에서. 실계좌 한도 값 변경 · 토글 flip 은 사람이 직접.
