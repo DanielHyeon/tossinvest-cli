@@ -25,3 +25,17 @@ Manager independently inspected product changes: only a local converted-candle r
 Manager read initial RED failures, three final focused exit-0 files (all general adapter tests, all strict-minute tests, and two named officialbars invariant tests), fixture assertions, mutation evidence and independent review dispositions. Actual final test is e6718bc1; earlier historical RED and later test strengthening are distinguished. Raw strict-page/cursor evidence is the existing canonical two-candle test, not the one-candle alphanumeric fixture.
 
 REST 1.2.24/38 paths and AsyncAPI 1.2.2/4 channels, canonical jq hashes and metadata schema were independently verified. AsyncAPI actual public retrieval URL was corrected without snapshot byte changes; snapshots do not implement new endpoints, WebSockets or automated monitoring. Final repository gate must run against fixed source/documents; Terra runs tests and Manager inspects the results.
+
+## Full-gate regression and review withdrawal
+
+The first aggregate gate exited 2 at make test. Both failures are retained in /tmp/a143-full-final/make-gate-a143.log: strict quote readers reached the broker for a formerly invalid KR symbol because the minute validator is shared; a087 description assertion expected the old public wording. Prior PASS statements above describe the reviewed snapshot and are superseded by CHANGES_REQUIRED. Manager inspected both failures independently; neither is a completed gate.
+
+Approved correction restores the shared numeric-only validator, adds a minute-only wrapper and preserves strict quote no-request policy. Quote fixtures must reject the same 0101N0 that minute fixtures accept, with the exact symbol reason. Only the a087 test description expectation changes; its executable policy remains untouched. Independent and gstack re-review plus full gate rerun are required. No operating or live action is authorized.
+
+## Corrected final Manager pre-gate verification
+
+For code dafa324b and analysis a447ccf0 plus reviewer-corrected maps, independent adversarial review and additional gstack review are PASS. The earlier shared-caller omission and aggregate failure remain recorded above. The final implementation restores the shared numeric-only predicate and adds a pure minute-only wrapper; strict quote production source and a087 executable order policy are byte-unchanged from the baseline. Original quote refusals remain, with the additional same-symbol 0101N0 exact-reason/zero-request fixture. The a087 test changes only its published-description expectation.
+
+Manager inspected the final code diff, wrapper/shared-helper maps and raw exit files for minute fixtures, all strict-quote fixtures, numeric quote success, complete a087 package and analysis validation: each is 0. Named fixture success is not instrumented branch coverage. Independent review corrected unreachable minute-test citations in the shared helper maps and added explicit wrapper branch evidence. No journal, risk controls, shared-token implementation, strategy activation, operating configuration or workflow changes are in scope.
+
+All implementation/review tasks are complete. A fresh landing record, completed SDD synchronization and successful aggregate gate against this frozen source/doc state are still required; archive/integration are not yet complete.

@@ -59,3 +59,35 @@ No outstanding actionable code/test finding. Snapshot hashes/counts were indepen
 Also inspected `2d8b5f86`: only AsyncAPI metadata source URL changes to `https://openapi.tossinvest.com/openapi-docs/latest/asyncapi.json`. Snapshot bytes, version, count and canonical hash remain unchanged. Read Terra's verification receipt reporting HTTP 200 at `2026-10-15T16:44:26Z` and byte equality to stored AsyncAPI. This is reviewed implementer retrieval evidence, not a new reviewer network fetch. Final strict/adapt/officialbars focused success is recorded in that receipt; earlier independent reviewer adapter execution remains the independent test evidence.
 
 No new actionable finding. Verdict covers final code/tests and metadata correction through `e6718bc1`; it does not substitute for additional gstack review, full gates or Manager completion verification.
+
+## Aggregate-gate failure supersedes earlier PASS
+
+The full gate exposed a missed shared caller: strictQuoteIdentity calls strictMinuteCheckSymbol. Earlier review incorrectly inferred behavioral isolation from a small file diff and minute-only focused tests. Earlier PASS is withdrawn; the gate failure is authoritative. The a087 snapshot-description assertion also failed. This review records the omission rather than treating previous focused passes as completion.
+
+## Amendment implementation re-review — dafa324b70a6c4191f2b91f562766f79acdfb169
+
+Production correction is sound: shared numeric-only KR predicate is restored; only StrictMinuteCandles calls strictMinuteCheckCandleSymbol, whose valid KR branch accepts uppercase ASCII alphanumeric and whose fallback delegates unchanged shared validation. Repository-wide Go symbol search confirms strictQuoteIdentity still directly calls the shared helper. Quote production source is unchanged. The quote fixture retains earlier refusals and adds identical `0101N0` with exact StrictQuoteReasonSymbol for both readers plus combined zero-request assertion. a087 changes only the snapshot description expectation; executable order policy and request-body assertions are unchanged. General reversal and raw candle/time/cursor logic are unchanged by this correction.
+
+Independent reviewer execution:
+
+```text
+go test ./internal/official ./tools/a087-market-sell-probe -run 'TestStrictMinuteCandles|TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest|TestAdaptCandles|TestWireBodyFitsTheOpenAPIRequestSchema' -count=1
+ok github.com/JungHoonGhae/tossinvest-cli/internal/official 0.043s
+ok github.com/JungHoonGhae/tossinvest-cli/tools/a087-market-sell-probe 0.009s
+exit 0
+```
+
+**Code/test verdict: PASS. Evidence verdict: CHANGES REQUESTED (P2).**
+
+- Shared-helper BTM cites TestStrictMinuteCandlesAcceptsTheKoreanMarket for KR numeric match success. That test now returns from the new wrapper and never reaches the shared helper. Replace with an actual numeric quote success fixture or mark that individual branch unisolated; passing minute test is not shared-helper success evidence.
+- New high-risk lexical wrapper has no own AST/branch map in reviewed analysis tree. Add current AST and map valid KR early return, invalid KR fallback, and US fallback to actual named fixtures. Caller AST alone does not enumerate wrapper internals.
+
+These are evidence corrections, not reasons to expand production scope. Pre-edit records must remain historical, never claim post-edit artifacts were pre-edit. Full gate and additional gstack re-review remain required after final evidence correction.
+
+## Evidence closure — a447ccf0 plus reviewer-authorized documentation correction
+
+**Final independent adversarial verdict: PASS.** Production remains `dafa324b`; no product/test edit was made during this closure. Wrapper AST source SHA `8f6c64f5f72feff0579de6f42045d8861e710209da2f8ef5376fe827cd047185` matches current strict_minute_candles.go. Its single AST branch B1 has valid-KR true and invalid-KR/US false paths; separate invented fallback branch IDs are unnecessary.
+
+Manager explicitly authorized correcting the remaining map wording. Reviewer replaced bypassed minute-success references in shared-helper BTM with `TestStrictOrderbookTopAsksForExactlyOneSymbol` (inspected fixture: KR 005930 succeeds and query is exact). Wrapper false-path mappings now name `TestStrictMinuteCandlesSendsTheCanonicalQueryAndReturnsThePage` (inspected fixture: US AAPL with descending two-candle page and exact before/nextBefore values). FLM/BTM label fallback as B1 false, not a distinct AST branch. Invalid-KR refusal remains mapped to the named bad-arguments test. These edits correct semantic evidence attribution only.
+
+Read raw numeric-quote and analysis-check exit files: both 0. New wrapper current evidence and historical/base market-currency evidence are distinguished. Earlier focused reviewer tests remain the independent execution receipt; full quote/a087 package results are Terra receipts, not newly repeated reviewer runs. Both P2 evidence findings are closed. Full gate and additional gstack/Manager acceptance remain separate completion obligations; this PASS does not erase the recorded earlier gate failure or review omission.

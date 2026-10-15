@@ -10,6 +10,8 @@
 - [x] 2.3 Save public REST/AsyncAPI snapshots and verify source/version/count/hash metadata without workflow changes.
 - [x] 2.4 Refresh final analysis; pass general, strict reader and officialbars invariant regressions offline.
 
+- [x] 2.5 Restore shared numeric-only validation and route minute reads through a dedicated wrapper; add exact quote no-request refusals and align only the a087 description expectation. Capture pre-edit evidence and pass joint minute/quote/a087 offline regressions.
+
 ## 3. Review and verification
 
 - [x] 3.1 Complete separate adversarial review and resolve actionable findings.

@@ -16,14 +16,14 @@
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
 | B1 | `KR` and uppercase-alphanumeric six chars | none | nil, no normalization | TestStrictMinuteCandlesAcceptsDomesticAlphanumericAndPreservesRequestSymbol |
-| fallback | invalid KR or every US input | delegates unchanged shared validator | existing typed refusal or US decision | TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest; existing US minute fixture |
+| B1 false | invalid KR or every US input | delegates unchanged shared validator | existing typed refusal or US decision | TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest; TestStrictMinuteCandlesSendsTheCanonicalQueryAndReturnsThePage |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
 | `strictMinuteCandleKRSymbol.MatchString` | full-form KR minute acceptance | pure lexical check | AST B1 |
-| `strictMinuteCheckSymbol` | retain shared numeric KR and US policy on fallback | no I/O/retry | AST fallback |
+| `strictMinuteCheckSymbol` | retain shared numeric KR and US policy on fallback | no I/O/retry | AST B1 false path |
 
 ## State mutations and fallbacks
 

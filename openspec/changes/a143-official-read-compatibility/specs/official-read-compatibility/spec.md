@@ -43,3 +43,15 @@ Repository documentation SHALL contain official REST and AsyncAPI snapshots with
 #### Scenario: Scope claims
 - **WHEN** the compatibility receipt is produced
 - **THEN** it distinguishes stored AsyncAPI evidence from unimplemented WebSocket clients or automated AsyncAPI monitoring
+
+### Requirement: Minute symbol compatibility does not widen quote or order policy
+
+Only the minute-candle reader SHALL accept KR uppercase alphanumeric six-character symbols. The existing shared validator and both strict quote readers MUST retain numeric-only KR validation and reject alphanumeric KR input before a request. Published-description tests MAY reflect the new snapshot wording but MUST NOT widen the a087 executable order probe policy.
+
+#### Scenario: Same alphanumeric input reaches only the minute reader
+- **WHEN** KR 0101N0 is passed to the minute reader and each strict quote reader using offline fixtures
+- **THEN** the minute reader accepts its lexical form while both strict quote readers return their symbol refusal with zero requests
+
+#### Scenario: Updated published symbol wording
+- **WHEN** the a087 request-schema test reads the refreshed snapshot
+- **THEN** it recognizes the current published description while its existing numeric-only production inputs, request body and execution guards remain unchanged

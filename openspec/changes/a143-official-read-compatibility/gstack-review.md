@@ -4,7 +4,7 @@
 
 ## Verdict
 
-**PASS REVIEW — P2 analysis finding CLOSED.** No introduced production defect found. Final semantic closure is recorded below; original finding is retained as history. Full gate/completion and live API behavior are not asserted.
+**PASS REVIEW for corrected dafa324b implementation and final evidence.** Shared-caller regression and snapshot-test mismatch are corrected and re-reviewed below. Earlier withdrawn PASS and failed aggregate gate remain in this record. Full gate/completion is not asserted.
 
 ## P2 finding — final analysis does not match AST/test evidence
 
@@ -60,3 +60,29 @@ Final strict test SHA-256 at e6718bc1:
 ```text
 internal/official/strict_minute_candles_test.go a8b64d26d5ed9ac7c0d92cbd8f3afd9297d9e8736c92c2d45ea95b08321e49c8
 ```
+
+## Full-gate regression — prior PASS withdrawn
+
+Manager reports full gate failures after the above focused review: strict quote's existing numeric-only KR symbol contract changed through its call to the shared strictMinuteCheckSymbol helper (`internal/official/strict_quote_reads.go:201`), and the a087 public-contract text assertion failed against the refreshed snapshot. The previous review's caller analysis was incomplete: it established general/strict candle separation but did not trace all callers of the shared lexical helper. Its statements that the lexical expansion affected only the minute reader must not be used as verified facts. Focused strict-minute/officialbars PASS receipts did not prove unchanged strict-quote behavior.
+
+Current blocking issue: isolate the minute-only lexical expansion while preserving strict quote's established numeric-only KR contract, under Manager's amended specification, then run the affected quote/minute fixtures and full gate. The a087 assertion requires separate examination of whether only public description wording changed; no behavior-policy weakening is authorized by this review. Terra owns fixes/tests and the dedicated reviewer must inspect them before additional gstack re-review. Reviewer has changed only this review record, not product/tests. Earlier source hashes identify the reviewed-but-regressing snapshot, not approved final implementation.
+
+## Corrected implementation final re-review — dafa324b / a447ccf0
+
+**Regression CLOSED; PASS REVIEW restored for this corrected snapshot only.** Read the correction diff and searched all repository Go references to strictMinuteCheckSymbol, strictMinuteCheckCandleSymbol, strictMinuteKRSymbol and strictMinuteCandleKRSymbol. StrictMinuteCandles alone calls the new minute wrapper. The wrapper accepts KR six-character uppercase ASCII alphanumeric inputs and otherwise delegates to the restored shared numeric-KR/unchanged-US helper. strictQuoteIdentity still calls that shared helper directly; strict quote production code is unchanged. The same 0101N0 is accepted by minute fixtures but refused with exact StrictQuoteReasonSymbol by both quote readers, with zero broker requests. Numeric quote success is proven by the actual KR 005930 fixture, not by a minute fixture that bypasses the shared helper.
+
+The a087 diff changes one public-description expectation string only. Existing request-body assertions and executable order policy are unchanged; no new order permission follows from the documentation string. Read final minute, full strict-quote, numeric-quote, complete a087 package and analysis exit files: all 0. These are Terra/reviewer-produced receipts; this gstack reviewer did not repeat tests or access services.
+
+Read current wrapper AST/FLM/BTM and corrected shared-helper mappings. Wrapper has one B1 with true/false paths, not invented separate fallback branch IDs. Valid US fallback cites the actual canonical query/page test. Historical artifacts remain historical; earlier missed caller and failed gate are not relabeled. General candle reversal, raw strict/time/cursor handling, officialbars, US policy and snapshot bytes remain unchanged by this fix.
+
+Final Go scope: two production files, three official-package test files and one a087 test file. No quote production, strategy/order execution, Guardian, journal, token, workflow or operating configuration changes. Final changed hashes versus the earlier record:
+
+```text
+internal/official/strict_minute_candles.go 8f6c64f5f72feff0579de6f42045d8861e710209da2f8ef5376fe827cd047185
+internal/official/strict_quote_reads_test.go 5ac17738f04cd6b633b6e8d1bd12a9d6147ad81b9f6a9bd100a56491508e51f2
+tools/a087-market-sell-probe/contract_test.go 5864c940884a26000327d5c0a442ab133274c74803ab17d95aa0d9affdfa521f
+```
+
+The additional independent specialist also explicitly withdrew its earlier incorrect NO FINDINGS for the missed quote caller, then re-reviewed dafa324b with repository-wide references and returned NO FINDINGS for the corrected scope. This was static review only, with no tests/network/writes.
+
+Current candle source/test and strict-minute test hashes remain as recorded in the previous final-target section. No actionable new finding in the corrected scope. Required full aggregate gate must run successfully against the corrected final state; previous failed gate and focused successes cannot substitute. This review does not certify live API behavior, deployment or completed integration.

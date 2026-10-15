@@ -2,6 +2,6 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | KR `0101N0` is accepted without rewriting | TestStrictMinuteCandlesAcceptsDomesticAlphanumericAndPreservesRequestSymbol | original numeric predicate rejected it | final minute suite PASS |
-| fallback | invalid KR form delegates and refuses before request | TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest | not targeted | final minute suite PASS |
-| fallback | US `AAPL` delegates to unchanged US policy | existing US minute fixtures | not targeted | final minute suite PASS |
+| B1 | true: KR `0101N0` accepted unchanged; false: invalid KR delegates and refuses before request, US `AAPL` delegates unchanged | TestStrictMinuteCandlesAcceptsDomesticAlphanumericAndPreservesRequestSymbol; TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest; TestStrictMinuteCandlesSendsTheCanonicalQueryAndReturnsThePage | original numeric predicate rejected 0101N0; other paths not targeted | final minute suite PASS |
+
+One AST branch, both outcomes. Named fixture success is not instrumented branch coverage.
