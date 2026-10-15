@@ -50,8 +50,10 @@ func TestA139AnUnderivableBudgetRefusesTheProductionGuardianByName(t *testing.T)
 		t.Fatalf("an underivable budget must not fall back to any amount, got %+v", got)
 	}
 	_, err := newProductionRiskGuardian(jpy, nil, nil, "acct", nil)
-	if !errors.Is(err, ErrLimitsRequired) || !strings.Contains(err.Error(), "per-trade risk budget") {
-		t.Fatalf("want ErrLimitsRequired naming the per-trade risk budget, got %v", err)
+	// 사전 검사의 문구(「cannot be derived」와 원인)를 단언 — Validate 의 빈 금액 문구로 대신 거부되는 것과 갈라짐(변이 N12).
+	if !errors.Is(err, ErrLimitsRequired) || !strings.Contains(err.Error(), "per-trade risk budget cannot be derived") ||
+		!strings.Contains(err.Error(), "JPY") {
+		t.Fatalf("want ErrLimitsRequired naming why the per-trade risk budget cannot be derived, got %v", err)
 	}
 	// 기동 audit 값은 생산 유도의 답 — 같은 함수(66666 = floor(200000 / 3)).
 	if got := perTradeRiskBudgetAudit(config.AutomationGate{MaxDailyLossAmount: 200_000, LimitCurrency: "KRW"}); got.value != "66666" {
