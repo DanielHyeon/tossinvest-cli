@@ -30,8 +30,9 @@ Story: `STORY-TOS-a139` · **High-risk**(사이징) — Pre-Edit 선언 · 편�
 
 - [x] 2.1 `gofmt -l` · `go vet ./...` · `rtk proxy go test -count=1`(risk · execgw · app/engine · measure · journal) · `-tags tossos_testseams` · `openspec validate --strict`
       → `analysis/verify/receipts.md`
-- [ ] 2.2 변이 원장(`analysis/mutation/`): 나눗수 3→2 · 내림→올림 · 최소 단위 USD 2→3 · KRW 0→2 · 0 허용 · 유도 우회(= dailyLoss) · 유도 실패 시 dailyLoss 로 폴백 · DefaultPolicy 값 ·
+- [x] 2.2 변이 원장(`analysis/mutation/`): 나눗수 3→2 · 내림→올림 · 최소 단위 USD 2→3 · KRW 0→2 · 0 허용 · 유도 우회(= dailyLoss) · 유도 실패 시 dailyLoss 로 폴백 · DefaultPolicy 값 ·
       audit 줄 제거 · audit 만 dailyLoss · factory 사전 검사 제거 · 버전 v1 되돌림
+      — 하네스 `analysis/mutation/a139_mutate.py`, round1(6f4f7cd3) 14/15 · **round2(dadc386a) 15/15 CAUGHT** — `round1.md` · `round2.md`
 - [ ] 2.3 독립 적대 리뷰(분리된 컨텍스트, 적대 Eng 포함) → review.md
 
 ## 3. 사람 · Manager
