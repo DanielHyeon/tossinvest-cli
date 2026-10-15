@@ -19,8 +19,8 @@
 |---|---|---|---|---|
 | B1 | initial `json.MarshalIndent` fails | no output construction | RPC invalid-params error | Existing error behavior retained |
 | B2 | encoded bytes exceed cap | enter decode/trim/re-encode path | fall through if decoding cannot proceed | RED: oversized nested exact-number payload |
-| B3 | decode succeeds | feeds generic tree to `shrinkToCap` | current default number decoding rounds >2^53 | RED: exact token retention |
-| B4 | trimmed value re-encodes | replaces text | current compatible cap/marker behavior | Existing cap test plus exact-number regression |
+| B3 | `Decoder.UseNumber` decode succeeds | feeds exact-number tree to `shrinkToCap` | retained tokens remain json.Number | exact-token regression |
+| B4 | trimmed exact-number value re-encodes | replaces text | cap and marker behavior retained | cap and exact-number regressions |
 
 ## Calls and live bindings
 

@@ -20,12 +20,12 @@
 | B1 | `loadConfig` fails | none | return config error | Existing config error coverage |
 | B2 | OpenAPI path resolution fails | none | return path error | Existing resolver coverage |
 | B3 | credential loading fails | none | return credential error | Existing credential coverage |
-| B4 | credentials are present | Current code constructs direct official read/write capability; edit boundary | no error | RED: disabled/WTS must not construct or expose official capability; GREEN: enabled non-WTS remains available |
+| B4 | eligibility permits credentials, enabled OpenAPI, and non-WTS preference | constructs direct official read/write capability | no error | guarded matrix: disabled/WTS deny; enabled auto/openapi retain |
 | B5 | session loading fails other than `ErrNoSession` | none | return session error | Existing session coverage |
 | B6 | session exists | builds WTS client | continue | WTS operation remains available |
 | B7 | both effective capabilities absent | none | login guidance error | Offline no-credentials regression |
 | B8 | no WTS session | builds sessionless router only | continue; catalog auth gate must refuse WTS operations | Existing WTS missing-session regression |
-| B9 | backend resolution fails | none | return before router/server construction | Invalid override regression |
+| B9 | backend resolution fails before credential paths and construction | none | return before any client construction | Invalid override regression |
 | B10 | update-cache path resolves | bounded update probe | probe failure is silent | Existing behavior preserved |
 | B11 | update exists | appends instruction text | continue | Existing behavior preserved |
 

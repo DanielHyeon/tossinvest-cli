@@ -17,7 +17,7 @@
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
 | B1 | Existing omission placeholder is present | attempts cumulative count recovery | no error return available | exact-number decoder changes marker dynamic type |
-| B2 | Marker count has expected numeric representation | adds previous count | current assertion accepts only float64 | New `json.Number`, malformed, and overflow regressions |
+| B2 | Marker is json.Number, compatible integral float64, or int | validates before adding prior count | malformed/overflow values fail closed | exact, repeated, malformed regressions |
 | B3 | proportional keep would retain all elements | force one removal | continue | Existing cap test |
 | B4 | calculated keep is negative | clamp to zero | continue | Oversized-item regression |
 
