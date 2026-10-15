@@ -39,3 +39,10 @@ The correction restores shared `strictMinuteCheckSymbol` to numeric-only KR vali
 - `/tmp/a143-full-final/fix-green-a087-final.exit`: `0`; the schema-contract fixture accepted the refreshed public description.
 
 `/tmp/a143-full-final/fix-check-analysis-current.exit` records the expected stale-landing refusal after refreshed current AST evidence. The existing landing record must be removed in a commit and recorded again after this correction is committed; no landing value is hand-written.
+
+## Correction final focused scope
+
+- `/tmp/a143-full-final/fix-green-quote-package.exit`: `0`; all strict quote reader fixtures ran offline.
+- `/tmp/a143-full-final/fix-green-quote-numeric.exit`: `0`; `TestStrictOrderbookTopAsksForExactlyOneSymbol` proves the shared numeric KR path remains accepted.
+- `/tmp/a143-full-final/fix-green-a087-package.exit`: `0`; the complete a087 market-sell-probe package ran offline.
+- `/tmp/a143-full-final/fix-check-analysis-evidence.exit`: `0`; analysis reports complete or diff-proven-exempt evidence. Its only advisory is that Manager's uncommitted OpenSpec edits prevent recording a new landing until they are committed.
