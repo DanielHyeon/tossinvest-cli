@@ -296,7 +296,8 @@ func TestOrderAboveThePerOrderCapIsRefused(t *testing.T) {
 	overNotional := entryInput()
 	overNotional.Intent.Quantity = "100"
 	overNotional.Intent.LimitPrice = "20000"
-	overNotional.Intent.StopPrice = "19500"
+	// a139: 위험 상한(33,333 / 손절 폭)이 수량 100 을 넘게 손절 폭을 200 으로 좁힘 — 그래야 이 의도가 notional 단에 닿음(기대 사유 유지).
+	overNotional.Intent.StopPrice = "19800"
 	overNotional.Intent.TargetPrice = "21500"
 	overNotional.Account.CashAvailable = krw("100000000")
 	requireRefused(t, overNotional, ReasonMaxOrderExceeded)

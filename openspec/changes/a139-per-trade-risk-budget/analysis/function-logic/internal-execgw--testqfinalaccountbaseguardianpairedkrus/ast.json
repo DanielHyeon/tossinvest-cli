@@ -1,0 +1,374 @@
+{
+  "file": "internal/execgw/riskguardian_account_base_testseam_test.go",
+  "source_sha256": "d8957d6dd35f7e472eaa88ac923e9a6d327d23bedab36b9a11fff7a4bf9721b9",
+  "package": "execgw_test",
+  "function": "TestQFinalAccountBaseGuardianPairedKRUS",
+  "signature": "TestQFinalAccountBaseGuardianPairedKRUS(params=1, results=0)",
+  "start": {
+    "line": 25,
+    "column": 1
+  },
+  "end": {
+    "line": 72,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 26,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 43,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 48,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 51,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 55,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 59,
+        "column": 4
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 63,
+        "column": 4
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 66,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 43
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 11
+      },
+      "text": "newGuardian"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 21
+      },
+      "text": "fixedIDs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 15
+      },
+      "text": "qFinalAccountBaseRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 48
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 15
+      },
+      "text": "risk.TestOnlySealAccountBaseFX"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 73
+      },
+      "text": "guardianPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 4
+      },
+      "text": "bindPairedAccountBaseFXForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 21
+      },
+      "text": "rig.guardian.PrecheckQFinalEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 7
+      },
+      "text": "precheck.QCandidate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 38
+      },
+      "text": "precheck.QFinal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 84
+      },
+      "text": "precheck.QCandidate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 107
+      },
+      "text": "precheck.QFinal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 19
+      },
+      "text": "rig.guardian.IssuePrecheckedQFinalEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 59
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 21
+      },
+      "text": "rig.journal.LookupDecision"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 48
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 19
+      },
+      "text": "execgw.DecodeLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 93
+      },
+      "text": "fx.Digest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 34,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 35,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 36,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 39,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 41,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 42,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 47,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 54,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 58,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 62,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

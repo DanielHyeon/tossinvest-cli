@@ -1,0 +1,7 @@
+# a139 행동 RED — base 044b7b94 + 첫 a139 engine 시험 둘(production 무편집), 2026-10-15 — freeze 반영 시험을 더하기 전 관찰(그 뒤 영수증은 컴파일 RED 로 바뀜)
+$ go test -count=1 ./internal/app/engine -run A139
+--- FAIL: TestA139ProductionPolicyDerivesAThirdOfTheDailyLoss (0.00s)
+    a139_risk_budget_wiring_internal_test.go:18: KRW risk budget = {Amount:100000 Currency:KRW}, want 33333 KRW
+--- FAIL: TestA139TheInterlockAuditsTheDerivedRiskBudget (0.25s)
+    a139_risk_budget_interlock_test.go:24: the acceptance must name the derived risk budget, got &{... Detail:account=**3-45 ... max_daily_loss_amount=200000 ... max_daily_buy_notional=10000000 max_open_positions=6}
+FAIL

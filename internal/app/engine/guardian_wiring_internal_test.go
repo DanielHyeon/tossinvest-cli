@@ -32,7 +32,7 @@ func TestAutomationGateRiskPolicyUsesEveryConfiguredUSDLimit(t *testing.T) {
 	want.MaxOpenExposure = riskcalc.Money{Amount: "1000.5", Currency: "USD"}
 	want.MaxDailyLoss = riskcalc.Money{Amount: "50.75", Currency: "USD"}
 	want.MaxDailyLossRatio = "0.01"
-	want.RiskBudget = riskcalc.Money{Amount: "50.75", Currency: "USD"}
+	want.RiskBudget = riskcalc.Money{Amount: "16.91", Currency: "USD"} // a139: floor(50.75 / 3, 0.01)
 	want.MaxDailyBuyNotional = riskcalc.Money{Amount: "2000", Currency: "USD"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("policy = %#v\nwant   = %#v", got, want)

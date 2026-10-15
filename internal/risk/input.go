@@ -228,11 +228,9 @@ type Policy struct {
 // **derived** rather than measured — both are recorded here because a number
 // with no provenance is a number nobody can review:
 //
-//   - RiskBudget = MaxDailyLoss. Not a sizing recommendation: it is the largest
-//     per-trade risk the daily limit already implies, so using it as the chain's
-//     ceiling adds no permission that was not there. An issuer that sizes
-//     smaller is free to (§0.9 conservative direction); one that sizes larger is
-//     refused.
+//   - RiskBudget = PerTradeRiskBudget(MaxDailyLoss) = floor(MaxDailyLoss / 3) 를 통화 최소 단위로(a139, 사용자 결정 2026-10-15).
+//     그 전에는 MaxDailyLoss 전부였어서 손절에 걸린 거래 하나가 그날의 손실 한도를 다 쓸 수 있었음 — 1/3 은 사이징을 줄이는 방향(§0.9)만.
+//     생산 정책(riskPolicyFromAutomationGate)과 같은 함수의 답이어야 하며, 시험이 그 일치를 못 박음.
 //   - Reentry = 2 entries, 30-minute cooldown `[미검증]`, the values
 //     risk-management names. StockOS's own defaults are stricter still
 //     (guardian.py:24-29: 1 entry, 30 minutes).
@@ -243,7 +241,7 @@ func DefaultPolicy() Policy {
 		MaxOpenExposure:   riskcalc.Money{Amount: "10000000", Currency: "KRW"},
 		MaxDailyLoss:      riskcalc.Money{Amount: "100000", Currency: "KRW"},
 		MaxDailyLossRatio: "0.01",
-		RiskBudget:        riskcalc.Money{Amount: "100000", Currency: "KRW"},
+		RiskBudget:        riskcalc.Money{Amount: "33333", Currency: "KRW"}, // a139: = PerTradeRiskBudget(MaxDailyLoss)
 		MinRewardRisk:     DefaultMinRewardRisk,
 		Reentry:           ReentryPolicy{MaxEntriesPerSymbol: 2, Cooldown: 30 * time.Minute},
 		// 사용자 결정 2026-10-14(a136) — 이전에는 상한이 없던 새 검사라 완화가 아님.

@@ -168,7 +168,7 @@ var guardianTiers = []GuardianTier{
 		//                    axis stays the stricter of the two. Below: the
 		//                    measured $300 share, with room for a market fill.
 		//                    Rounded, because a ceiling is a backstop and sizing
-		//                    is RiskBudget's job (risk/input.go:223).
+		//                    is RiskBudget's job (risk/input.go `Policy.RiskBudget`).
 		//   exposure $1,500 — 3x notional, the stricter of the two registered US
 		//                    shapes (us-smoke 3.00x, us-small-live 3.33x).
 		//   daily loss $50  — us-small-live's, deliberately NOT raised. $75 would

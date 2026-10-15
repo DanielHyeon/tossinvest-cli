@@ -1,0 +1,171 @@
+{
+  "file": "internal/risk/chain_test.go",
+  "source_sha256": "a1a1c73922c6a8c975a440622e70466077589e1470e488f6cfbb2386928f9197",
+  "package": "risk",
+  "function": "TestOrderAboveThePerOrderCapIsRefused",
+  "signature": "TestOrderAboveThePerOrderCapIsRefused(params=1, results=0)",
+  "start": {
+    "line": 281,
+    "column": 1
+  },
+  "end": {
+    "line": 303,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 285,
+        "column": 19
+      },
+      "text": "entryInput"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 40
+      },
+      "text": "krw"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 2
+      },
+      "text": "requireAllowed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 18
+      },
+      "text": "entryInput"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 2
+      },
+      "text": "requireRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 296,
+        "column": 18
+      },
+      "text": "entryInput"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 301,
+        "column": 39
+      },
+      "text": "krw"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 2
+      },
+      "text": "requireRefused"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 285,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 286,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 287,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 288,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 291,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 292,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 296,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 297,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 298,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 299,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 300,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 301,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

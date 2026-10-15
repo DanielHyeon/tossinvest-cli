@@ -1,0 +1,129 @@
+{
+  "file": "internal/risk/contract_test.go",
+  "source_sha256": "d3a7732cc28898708d95611d79b612d7bb211ece25613f9ab01619ceb4f6bac2",
+  "package": "risk",
+  "function": "TestQuantityAboveTheRiskBudgetIsRefused",
+  "signature": "TestQuantityAboveTheRiskBudgetIsRefused(params=1, results=0)",
+  "start": {
+    "line": 346,
+    "column": 1
+  },
+  "end": {
+    "line": 364,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 358,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 352,
+        "column": 8
+      },
+      "text": "entryInput"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 356,
+        "column": 29
+      },
+      "text": "krw"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 357,
+        "column": 9
+      },
+      "text": "requireRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 358,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 359,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 363,
+        "column": 2
+      },
+      "text": "requireAllowed"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 352,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 353,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 354,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 355,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 356,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 357,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 362,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

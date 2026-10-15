@@ -18,3 +18,24 @@ RiskBudget 을 정의하는 요구를 provenance 와 함께 MODIFIED, 모든 소
   - P2-3 정책 버전 v2 로 올림(D4 뒤집음 — 비용 실측 0, 휴면 어댑터만 fail-closed). audit detail 에 규칙. P2-4 「정책 수치의 provenance」 MODIFIED.
   - P3 digest 서술 갱신(a138 의 개수 상한 포함) · guardian_wiring 주석 · config/limits.go 낡은 줄 참조 · factory 사전 검사 · audit 값 = 생산 유도의 답 대조 시험.
 - 리뷰어가 본 미커밋 a139 RED 시험 · 번들 · 하네스는 이 저자의 것(리뷰와 병행 — production 편집은 리뷰 뒤).
+
+## Pre-Edit Gate
+
+```text
+Pre-Edit Gate:
+- change id / task id: a139-per-trade-risk-budget / 1.1~1.3
+- 대상 심볼(편집하는 기존 함수 — 번들 analysis/function-logic/, ast-base.json = base 소스):
+    internal/risk/input.go                  DefaultPolicy (값 · 주석)
+    internal/app/engine/guardian_wiring.go  riskPolicyFromAutomationGate (유도 분기 하나) · newProductionRiskGuardian (사전 검사 분기 하나) · 버전 상수 · 주석
+                                            (wholeOpenPositions 는 이웃 편집만 — revision: base)
+    internal/app/engine/interlock.go        newAutomationStatus · acceptanceDetail · recordGateSettings (칸 · 줄 하나씩)
+    시험 fixture 5: guardian_wiring_internal_test · riskguardian_account_base_testseam_test 둘 · chain_test · contract_test
+  새 파일(새 leaf): internal/risk/risk_budget.go (PerTradeRiskBudget) · guardian_wiring.go 끝의 perTradeRiskBudgetAudit
+  주석만: internal/config/limits.go (var 블록 안 낡은 줄 참조 — 함수 아님)
+- CodeGraph: analysis/code-context/ (DefaultPolicy 호출자 누락 1 — HEAD 로 해소) · RiskBudget 소비자 전수 design D0
+- 기존 동작 근거: HEAD 읽기 + analysis/ast-evidence/ 13 · freeze 리뷰 실측(시험 5 건)
+- upstream 상속 시험 영향: no — 게이트 OFF 는 Guardian 을 만들지 않음, 유도 불가 audit 는 빈 값으로 기동을 막지 않음(시험)
+- 실패 시험 선행: yes (analysis/red/)
+- 설정 · DB · journal 변경: 없음(새 키 0 · 스키마 0). rollback = 이전 이미지. 정책 버전 문자열 v1 → v2(결정 preimage 기록만 — 기대 버전은 Guardian 자기 유도)
+- §0 검토: 통과 — 사이징만 줄임(§0.9), 매도 · 손절은 사이징 단 전에 분기(AST Evaluate B2 · preflight B6)
+```

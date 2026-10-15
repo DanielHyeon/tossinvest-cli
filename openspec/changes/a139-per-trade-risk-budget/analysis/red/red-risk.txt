@@ -1,0 +1,9 @@
+# a139 RED — base 5bbbdc23 + a139 시험(production 무편집, freeze 반영 뒤), 2026-10-15T09:04:29Z
+$ go test -count=1 ./internal/risk -run A139
+internal/risk/a139_risk_budget_test.go:26:15: undefined: PerTradeRiskBudget
+internal/risk/a139_risk_budget_test.go:42:18: undefined: PerTradeRiskBudget
+internal/risk/a139_risk_budget_test.go:46:5: undefined: PerTradeRiskBudgetDivisor
+internal/risk/a139_risk_budget_test.go:47:75: undefined: PerTradeRiskBudgetDivisor
+internal/risk/a139_risk_budget_test.go:54:15: undefined: PerTradeRiskBudget
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/risk [build failed]
+FAIL

@@ -1,0 +1,265 @@
+{
+  "file": "internal/app/engine/guardian_wiring.go",
+  "source_sha256": "35e143d4b22632d500a7d7648052bf09b359788786175eb47b397886cd7ce4df",
+  "package": "engine",
+  "function": "riskPolicyFromAutomationGate",
+  "signature": "riskPolicyFromAutomationGate(params=1, results=1)",
+  "start": {
+    "line": 37,
+    "column": 1
+  },
+  "end": {
+    "line": 78,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "else",
+      "at": {
+        "line": 66,
+        "column": 9
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 42,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 10
+      },
+      "text": "strconv.FormatFloat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 14
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 30
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 13
+      },
+      "text": "number"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 12
+      },
+      "text": "risk.DefaultPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 28
+      },
+      "text": "number"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 13
+      },
+      "text": "number"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 13
+      },
+      "text": "number"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 29
+      },
+      "text": "number"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 20
+      },
+      "text": "risk.PerTradeRiskBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 13
+      },
+      "text": "number"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 20
+      },
+      "text": "gate.EffectiveMaxDailyBuyNotional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 31
+      },
+      "text": "config.WholeOpenPositions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 57
+      },
+      "text": "gate.EffectiveMaxOpenPositions"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 38,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 52,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 64,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 65,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 67,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
