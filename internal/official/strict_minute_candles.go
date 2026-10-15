@@ -48,9 +48,10 @@ const (
 )
 
 var (
-	strictMinuteKRSymbol  = regexp.MustCompile(`^[A-Z0-9]{6}$`)
-	strictMinuteUSSymbol  = regexp.MustCompile(`^[A-Z][A-Z0-9.]{0,9}$`)
-	strictMinuteTimestamp = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?[+-]\d{2}:\d{2}$`)
+	strictMinuteKRSymbol       = regexp.MustCompile(`^[0-9]{6}$`)
+	strictMinuteCandleKRSymbol = regexp.MustCompile(`^[A-Z0-9]{6}$`)
+	strictMinuteUSSymbol       = regexp.MustCompile(`^[A-Z][A-Z0-9.]{0,9}$`)
+	strictMinuteTimestamp      = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?[+-]\d{2}:\d{2}$`)
 )
 
 // 봉 하나가 반드시 가져야 하는 일곱 개의 열쇠. 더도 덜도 안 된다.
@@ -136,7 +137,7 @@ func (c *Client) StrictMinuteCandles(ctx context.Context, market, symbol string,
 	if err != nil {
 		return StrictMinutePage{}, err
 	}
-	if err := strictMinuteCheckSymbol(market, symbol); err != nil {
+	if err := strictMinuteCheckCandleSymbol(market, symbol); err != nil {
 		return StrictMinutePage{}, err
 	}
 	if count < 1 || count > strictMinuteMaxCount {
@@ -204,6 +205,15 @@ func strictMinuteMarketCurrency(market string) (string, error) {
 	default:
 		return "", strictMinuteRefuse(StrictReasonMarket, `market must be exactly "KR" or "US", got `+strconv.Quote(market))
 	}
+}
+
+// strictMinuteCheckCandleSymbol widens only the minute-candle KR lexical contract.
+// The shared validator remains numeric-only for strict quote readers.
+func strictMinuteCheckCandleSymbol(market, symbol string) error {
+	if market == "KR" && strictMinuteCandleKRSymbol.MatchString(symbol) {
+		return nil
+	}
+	return strictMinuteCheckSymbol(market, symbol)
 }
 
 func strictMinuteCheckSymbol(market, symbol string) error {

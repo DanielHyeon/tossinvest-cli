@@ -75,28 +75,30 @@ func TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest(t *testing.T) {
 	for _, testCase := range []struct {
 		name           string
 		market, symbol string
+		wantReason     string
 	}{
-		{"lower case market", "us", "AAPL"},
-		{"unknown market", "JP", "AAPL"},
-		{"empty market", "", "AAPL"},
-		{"kr symbol with letters", "KR", "00593A"},
-		{"kr symbol too short", "KR", "00593"},
-		{"us symbol lower case", "US", "aapl"},
-		{"us symbol too long", "US", "ABCDEFGHIJK"},
-		{"empty symbol", "US", ""},
+		{"lower case market", "us", "AAPL", ""},
+		{"unknown market", "JP", "AAPL", ""},
+		{"empty market", "", "AAPL", ""},
+		{"kr symbol with letters", "KR", "00593A", ""},
+		{"kr alphanumeric minute-only symbol", "KR", "0101N0", StrictQuoteReasonSymbol},
+		{"kr symbol too short", "KR", "00593", ""},
+		{"us symbol lower case", "US", "aapl", ""},
+		{"us symbol too long", "US", "ABCDEFGHIJK", ""},
+		{"empty symbol", "US", "", ""},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 			harness := newStrictMinuteBodyHarness(t, strictQuoteUSOrderbook())
 			if _, err := harness.client.StrictOrderbookTop(context.Background(), testCase.market, testCase.symbol); err == nil {
 				t.Fatal("StrictOrderbookTop accepted an argument it must refuse")
-			} else {
-				strictQuoteRefusal(t, err)
+			} else if refusal := strictQuoteRefusal(t, err); testCase.wantReason != "" && refusal.Reason != testCase.wantReason {
+				t.Fatalf("StrictOrderbookTop reason = %q, want %q", refusal.Reason, testCase.wantReason)
 			}
 			if _, err := harness.client.StrictLastPrice(context.Background(), testCase.market, testCase.symbol); err == nil {
 				t.Fatal("StrictLastPrice accepted an argument it must refuse")
-			} else {
-				strictQuoteRefusal(t, err)
+			} else if refusal := strictQuoteRefusal(t, err); testCase.wantReason != "" && refusal.Reason != testCase.wantReason {
+				t.Fatalf("StrictLastPrice reason = %q, want %q", refusal.Reason, testCase.wantReason)
 			}
 			if harness.hitCount() != 0 {
 				t.Fatalf("the broker was called %d times for an argument the reader must refuse", harness.hitCount())

@@ -145,7 +145,7 @@ func TestWireBodyFitsTheOpenAPIRequestSchema(t *testing.T) {
 	if _, ok := body["timeInForce"]; ok {
 		t.Error("a MARKET body carries timeInForce")
 	}
-	if desc := props["symbol"].(map[string]any)["description"].(string); !strings.Contains(desc, "KRX: 6자리 숫자") {
+	if desc := props["symbol"].(map[string]any)["description"].(string); !strings.Contains(desc, "KRX: 6자리 종목코드 (숫자 또는 영문·숫자 조합)") {
 		t.Errorf("the openapi symbol rule changed: %q", desc)
 	}
 	if desc := props["clientOrderId"].(map[string]any)["description"].(string); !strings.Contains(desc, "10분간 유효") {

@@ -4,7 +4,7 @@
 |---|---|---|---|---|
 | B1 | nil receiver refusal | TestStrictMinuteCandlesRefusesANilClient | not targeted | see final strict-suite receipt |
 | B2 | market/currency helper error | TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest | not targeted | named test PASS |
-| B3 | symbol helper error; valid exact symbol proceeds | TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest; TestStrictMinuteCandlesAcceptsDomesticAlphanumericAndPreservesRequestSymbol; TestStrictMinuteCandlesAcceptsTheKoreanMarket | 0101N0 initial RED and old-KR-predicate mutant FAIL | named tests PASS |
+| B3 | minute-only symbol wrapper error; valid exact symbol proceeds | TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest; TestStrictMinuteCandlesAcceptsDomesticAlphanumericAndPreservesRequestSymbol; TestStrictMinuteCandlesAcceptsTheKoreanMarket | 0101N0 initial RED and old-KR-predicate mutant FAIL | named tests PASS |
 | B4 | count outside 1..200 refused | TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest | not targeted | named test PASS |
 | B5 | nonempty before enters timestamp validation | TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest; TestStrictMinuteCandlesSendsTheCanonicalQueryAndReturnsThePage | not targeted | see final strict-suite receipt |
 | B6 | invalid before timestamp refused | TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest | not targeted | named test PASS |

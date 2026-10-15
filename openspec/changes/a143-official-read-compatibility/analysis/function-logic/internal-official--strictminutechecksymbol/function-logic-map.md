@@ -9,7 +9,7 @@
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
 | market | `KR` or `US`, checked by caller | `StrictMinuteCandles` | selects predicate |
-| KR symbol | exactly six `[A-Z0-9]` ASCII characters | public REST snapshot example `0101N0` | `SYMBOL_INVALID` |
+| KR symbol | exactly six `[0-9]` ASCII characters | established shared strict-quote policy | `SYMBOL_INVALID` |
 | US symbol | existing `[A-Z][A-Z0-9.]{0,9}` | current strict contract | unchanged |
 
 No normalization, Unicode folding, whitespace trimming, response identity validation, or return-value mutation. Regex anchors validate full input.
@@ -36,5 +36,5 @@ No normalization, Unicode folding, whitespace trimming, response identity valida
 
 ## Safety conclusion
 
-- Safe edit boundary: KR regular-expression literal only.
+- Shared numeric-only contract restored; minute-only widening is implemented by its caller wrapper, not here.
 - High-risk impact: yes by caller role. Preserve refusal code and no-request property.

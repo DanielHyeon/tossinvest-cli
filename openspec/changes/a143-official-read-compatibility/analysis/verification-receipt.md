@@ -26,3 +26,16 @@ AsyncAPI source was independently fetched from `https://openapi.tossinvest.com/o
 ## Final strict-invariant focused pass
 
 Test-only commit e6718bc1 adds the pure seven-character KR refusal case. `/tmp/a143-focused-adapt.exit`, `/tmp/a143-focused-strict.exit`, and `/tmp/a143-focused-officialbars.exit` are each 0. The strict command selects all TestStrictMinuteCandles tests, including the existing two-candle canonical query/page/cursor regression, observer chaining, malformed-body and transport refusals. This establishes the named fixture results cited in the final maps; it is not instrumented branch coverage. Manager independently inspected the raw exit files. Product and snapshot bytes remain unchanged.
+
+## Aggregate-gate regression correction (2026-10-16 KST)
+
+The first aggregate gate is retained as a failure, not a completion receipt: `/tmp/a143-full-final/make-gate-a143.exit` is `2`. Stages 1–6 passed; stage 7 (`make test`) failed and stages 8–11 did not run. The raw log records two independent failures: `TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/kr_symbol_with_letters` sent two requests because strict quote shared the widened minute predicate, and `TestWireBodyFitsTheOpenAPIRequestSchema` retained the old published symbol-description expectation.
+
+The correction restores shared `strictMinuteCheckSymbol` to numeric-only KR validation and gives `StrictMinuteCandles` a minute-only uppercase-alphanumeric wrapper. The original quote-letter refusal remains; an added `0101N0` fixture requires both strict quote readers to return `StrictQuoteReasonSymbol` with zero requests, while the existing minute fixture accepts the exact same request symbol. Only the a087 test assertion now recognizes the verified published description; its executable numeric-only order policy is unchanged.
+
+- `/tmp/a143-full-final/fix-red-quote.exit`: `1`; before the wrapper, the new `0101N0` quote case reached the broker twice.
+- `/tmp/a143-full-final/fix-green-minute-final.exit`: `0`; all `TestStrictMinuteCandles*` fixtures passed.
+- `/tmp/a143-full-final/fix-green-quote-final.exit`: `0`; the quote refusal fixture passed, including both exact symbol-reason assertions and zero-request check for `0101N0`.
+- `/tmp/a143-full-final/fix-green-a087-final.exit`: `0`; the schema-contract fixture accepted the refreshed public description.
+
+`/tmp/a143-full-final/fix-check-analysis-current.exit` records the expected stale-landing refusal after refreshed current AST evidence. The existing landing record must be removed in a commit and recorded again after this correction is committed; no landing value is hand-written.

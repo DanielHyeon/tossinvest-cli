@@ -1,15 +1,15 @@
 {
   "file": "internal/official/strict_minute_candles.go",
-  "source_sha256": "d511149cbf1bdd7f83646fd7863507a74840a38c69fa6c6a68705b72b1549163",
+  "source_sha256": "8f6c64f5f72feff0579de6f42045d8861e710209da2f8ef5376fe827cd047185",
   "package": "official",
   "function": "strictMinuteCheckSymbol",
   "signature": "strictMinuteCheckSymbol(params=2, results=1)",
   "start": {
-    "line": 209,
+    "line": 219,
     "column": 1
   },
   "end": {
-    "line": 219,
+    "line": 229,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 211,
+        "line": 221,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 214,
+        "line": 224,
         "column": 2
       }
     }
@@ -34,14 +34,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 215,
+        "line": 225,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 218,
+        "line": 228,
         "column": 2
       }
     }
@@ -50,7 +50,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 214,
+        "line": 224,
         "column": 6
       },
       "text": "pattern.MatchString"
@@ -58,7 +58,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 215,
+        "line": 225,
         "column": 10
       },
       "text": "strictMinuteRefuse"
@@ -66,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 216,
+        "line": 226,
         "column": 14
       },
       "text": "strconv.Quote"
@@ -76,14 +76,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 210,
+        "line": 220,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 212,
+        "line": 222,
         "column": 3
       }
     }

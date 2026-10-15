@@ -9,7 +9,7 @@
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
 | client | non-nil | receiver | `CLIENT_MISSING`, no request |
-| market/symbol | exact market and lexical predicate | market helper and `strictMinuteCheckSymbol` | typed refusal before request |
+| market/symbol | exact market and lexical predicate | market helper and `strictMinuteCheckCandleSymbol` | typed refusal before request |
 | count | 1..200 | constant | `COUNT_INVALID`, no request |
 | before | empty or valid RFC3339 | strict timestamp parser | `BEFORE_INVALID`, no request |
 | response | latest-first raw page, close-time labels | strict decoder | contract refusal / propagated transport error |
@@ -36,7 +36,7 @@ Only B3 dependency may change. Query carries supplied symbol unchanged, returned
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `strictMinuteCheckSymbol` | preflight lexical refusal | no request on invalid input | AST B3 |
+| `strictMinuteCheckCandleSymbol` | minute-only KR lexical widening, otherwise shared preflight refusal | no request on invalid input | AST B3 |
 | `c.get` | official read | existing transport/retry classification | AST B9 |
 | `strictMinuteDecode` | validates raw order/cursor/data | typed strict refusal | AST B11 |
 | `RateBudget` | attaches observed budget | unchanged | AST return |
@@ -44,9 +44,9 @@ Only B3 dependency may change. Query carries supplied symbol unchanged, returned
 ## State mutations and fallbacks
 
 - Captures response traces and returns page data; no order, token, setting, journal, or broker write.
-- Implemented dependency change: KR regex only. This method body, US regex, cursor, decoder and returned-page propagation remain unchanged.
+- Implemented dependency change: this method calls the minute-only wrapper. The shared numeric-only validator remains unchanged for strict quote readers; US regex, cursor, decoder and returned-page propagation remain unchanged.
 
 ## Safety conclusion
 
-- Safe edit boundary: `strictMinuteKRSymbol` declaration only.
+- Safe edit boundary: this method call site plus the minute-only wrapper and its KR predicate.
 - High-risk impact: yes by evidence-reader role. Preserve every non-lexical refusal.
