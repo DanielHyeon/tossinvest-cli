@@ -274,7 +274,12 @@
       --session, …, reason=operator")에 남아 보고서가 혼입을 가려낸다. 파싱 실패·역전창(start≥end)은 시작 전 거부.
       (run-probe.sh 가 그대로 전달: `./run-probe.sh KR <log> --session "09:00-15:30"`.)
 - [ ] 3.2 2일차: 동일. 라벨러 완주 확인(마지막 판단 + h분까지).
-- [ ] 3.3 원장·state 파일 커밋(계좌 데이터 0 확인 후).
+- [x] 3.3 원장·state 파일 커밋(계좌 데이터 0 확인 후).
+      — 2026-10-17 offline audit: 9,000 judgment·9,000 label·6 explicit gap,
+      4,500 referenced state files with link/hash/JSON errors 0 and no
+      credential-shaped scan hit. Raw snapshot hashes and aggregate are
+      `analysis/audit-2026-10-17.md`; independent review와 staged-index scan
+      통과 후 evidence-only commit. 이 기록은 3.1/3.2 또는 4.x 완료를 뜻하지 않는다.
 
 ## 4. 판정·종결
 
