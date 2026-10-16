@@ -91,12 +91,13 @@ func M0Unsettled(entries []Entry) (M0Checkpoint, bool, error) {
 }
 
 // M0ExactPrerequisites keeps trigger-only mode from becoming a fresh full
-// verification run. Every other procedure step must already be a positive
-// record fact; in particular no earlier mutating step may be reached after the
-// operator approved the irreversible trigger redo.
+// verification run. The opt-in TTL measurement is not a trigger input, so every
+// procedure step other than trigger and TTL-edge must already be a positive record
+// fact; no earlier mutating step may be reached after the operator approved the
+// irreversible trigger redo.
 func M0ExactPrerequisites(entries []Entry) error {
 	for _, step := range Steps() {
-		if step.ID == StepConditionalTrigger {
+		if step.ID == StepConditionalTrigger || step.ID == StepIdempotencyTTLEdge {
 			continue
 		}
 		if !Passed(entries, step.ID) {

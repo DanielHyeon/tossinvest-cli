@@ -618,7 +618,7 @@ worker construction/start와 broker mutation 도달 경로를 열지 않는다. 
 
 ## 범위 밖 (확인용)
 
-- 레인 활성화(a105 — 예약 번호·미등록), threshold 승인 · 라이브 평가(소유 change 없음 — 옛 판의 a101 · a103 표기는 그 번호가 각각 soak autostart · rollback pin 으로 land 되어 낡았다, R0 정정 2026-10-04), 사이징 역산(a104 — 예약 번호·미등록).
+- 레인 활성화(a105 — 등록 완료, 구현 및 `Wired` 개방 미착수), threshold 승인 · 라이브 평가(소유 change 없음 — 옛 판의 a101 · a103 표기는 그 번호가 각각 soak autostart · rollback pin 으로 land 되어 낡았다, R0 정정 2026-10-04), 사이징 역산(a104 — 예약 번호·미등록).
 - 전략적 실계좌 주문 1회는 a106이다. 0절의 M-A는 전제 확인이며 별개다.
 - attestation 스키마·서명·키 수명·trusted-time floor는 a071이 만들었다. a100은 소비도 하지 않는다.
 - a071이 openspec `engine-safety`에서 MODIFY 중인 요구사항은 **건드리지 않는다.**

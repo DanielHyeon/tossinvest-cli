@@ -32,8 +32,7 @@ Story: `STORY-TOS-a140` · **Low**(새 파일만 · High-risk 경로 무접촉 �
 
 ## 2. 리뷰 · 착지
 
-- [ ] 2.1 경량 코드 리뷰(독립 1 — review §3: BLOCK → P1 3 · P2 6 · P3 4 전부 수리, 변이 2 판 생존 0) 완료. **남은 것: Manager 검증** — 경량 리뷰 + Manager 검증(경로 전수 · 시험 재실행 · 생산 import 0: `rtk proxy grep -rn "breakoutsignal" internal cmd` 비시험이
-      새 패키지 자신뿐)
+- [x] 2.1 경량 코드 리뷰(독립 1 — review §3: BLOCK → P1 3 · P2 6 · P3 4 전부 수리, 변이 2 판 생존 0) 및 Manager 검증 완료. 검증 근거는 1.5의 focused/race/vet 영수증과 2.2의 경로 전수·시험 재실행·생산 import 0 대조다. **3절 측정 완료를 뜻하지 않는다.**
 - [x] 2.2 Manager 푸시 — 2026-10-15 Manager 검증: `go test` breakoutsignal·도구 45 PASS 재실행 · 생산 import 0(grep) · marketSource = 읽기 GET 다섯(Rankings·TypedMarketCalendar·StrictMinuteCandles·StrictOrderbookTop·StrictLastPrice) 직접 판독 · D3 opening-range ATR 고정(소급 뒤집힘 방지)과 D21 기본값은 Manager 수용(그림자 측정 한정, 실측값 원장 병기)
 
 ## 3. 측정 (D9 — 기본 KR 5 세션)

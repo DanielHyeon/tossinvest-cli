@@ -1,9 +1,11 @@
 package verifylive
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
@@ -169,3 +171,165 @@ func officialRawForPending(p M0Checkpoint, id string) official.RawConditionalOrd
 		Type: "SINGLE", Status: "WATCHING", FirstStatus: "WATCHING", OrderType: "MARKET", OrderSide: "SELL",
 		Quantity: "1", TriggerPrice: p.Trigger, ConditionType: "STOP", ExpireDate: p.ExpireDate}
 }
+
+func seedM0PrerequisitesWithTTL(t *testing.T, h *harness, ttl *Verdict) {
+	t.Helper()
+	recorder, err := OpenRecorder(h.record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, step := range Steps() {
+		if step.ID == StepConditionalTrigger || (step.ID == StepIdempotencyTTLEdge && ttl == nil) {
+			continue
+		}
+		verdict := VerdictPass
+		if step.ID == StepIdempotencyTTLEdge {
+			verdict = *ttl
+		}
+		if err := recorder.Append(Entry{Kind: KindStep, StepID: step.ID, Verdict: verdict}); err != nil {
+			_ = recorder.Close()
+			t.Fatal(err)
+		}
+	}
+	if err := recorder.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestM0TriggerAdmitsEveryTTLVerdictWithoutTTLMutation(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		ttl  *Verdict
+	}{
+		{name: "pass", ttl: verdictPtr(VerdictPass)},
+		{name: "skipped", ttl: verdictPtr(VerdictSkipped)},
+		{name: "failed", ttl: verdictPtr(VerdictFail)},
+		{name: "refused", ttl: verdictPtr(VerdictRefused)},
+		{name: "missing"},
+		{name: "nonterminal", ttl: verdictPtr(VerdictAwaitingRestart)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := triggerHarness(t, func(f *fakeBroker) { f.firesOnRead(1, 1, 1) })
+			seedM0PrerequisitesWithTTL(t, h, tc.ttl)
+			runner := h.runner(t, triggerOptions(t, time.Minute))
+			if runner.Plan(context.Background()).Covers(StepIdempotencyTTLEdge) {
+				t.Fatal("M0 trigger plan includes a TTL mutation")
+			}
+			if _, err := runner.Run(context.Background()); err != nil {
+				t.Fatalf("M0 trigger run = %v", err)
+			}
+			if n := h.broker.countRequests("POST /conditional-orders 005930 key=TRIGGER-"); n != 1 {
+				t.Fatalf("trigger conditional registrations = %d, want 1", n)
+			}
+			if got := h.verdict(StepConditionalTrigger); got != VerdictPass {
+				t.Fatalf("trigger verdict = %q, want PASS", got)
+			}
+			if n := h.broker.countRequests("POST /orders "); n != 0 {
+				t.Fatalf("TTL order placement requests = %d, want 0", n)
+			}
+			if n := h.broker.countRequests("POST /orders/"); n != 0 {
+				t.Fatalf("TTL order cancel/modify requests = %d, want 0", n)
+			}
+			if entry, ok := LastEntry(h.entries(), StepIdempotencyTTLEdge); !ok {
+				t.Fatal("TTL entry disappeared")
+			} else if tc.ttl == nil || *tc.ttl == VerdictAwaitingRestart {
+				if entry.Verdict != VerdictSkipped {
+					t.Fatalf("unsettled TTL verdict = %q, want ordinary skipped", entry.Verdict)
+				}
+			} else if entry.Verdict != *tc.ttl {
+				t.Fatalf("TTL verdict = %q, want preserved %q", entry.Verdict, *tc.ttl)
+			}
+		})
+	}
+}
+
+func TestM0ExactPrerequisitesStillRejectsEveryNonTTLNonPass(t *testing.T) {
+	for _, step := range Steps() {
+		if step.ID == StepConditionalTrigger || step.ID == StepIdempotencyTTLEdge {
+			continue
+		}
+		for _, tc := range []struct {
+			name    string
+			verdict Verdict
+			omit    bool
+		}{
+			{name: "missing", omit: true},
+			{name: string(VerdictFail), verdict: VerdictFail},
+			{name: string(VerdictSkipped), verdict: VerdictSkipped},
+			{name: string(VerdictRefused), verdict: VerdictRefused},
+			{name: string(VerdictAwaitingRestart), verdict: VerdictAwaitingRestart},
+		} {
+			t.Run(string(step.ID)+"/"+tc.name, func(t *testing.T) {
+				entries := make([]Entry, 0, len(Steps()))
+				for _, candidate := range Steps() {
+					if candidate.ID == StepConditionalTrigger || (tc.omit && candidate.ID == step.ID) {
+						continue
+					}
+					verdict := VerdictPass
+					if candidate.ID == step.ID {
+						verdict = tc.verdict
+					}
+					entries = append(entries, Entry{Kind: KindStep, StepID: candidate.ID, Verdict: verdict})
+				}
+				if err := M0ExactPrerequisites(entries); err == nil || !strings.Contains(err.Error(), string(step.ID)) {
+					t.Fatalf("M0ExactPrerequisites err = %v, want %s HOLD", err, step.ID)
+				}
+			})
+		}
+	}
+}
+
+func TestM0NewStillRejectsEveryNonTTLVerdictBeforeBrokerWork(t *testing.T) {
+	for _, step := range Steps() {
+		if step.ID == StepConditionalTrigger || step.ID == StepIdempotencyTTLEdge {
+			continue
+		}
+		for _, tc := range []struct {
+			name    string
+			verdict Verdict
+			omit    bool
+		}{
+			{name: "missing", omit: true},
+			{name: string(VerdictFail), verdict: VerdictFail},
+			{name: string(VerdictSkipped), verdict: VerdictSkipped},
+			{name: string(VerdictRefused), verdict: VerdictRefused},
+			{name: string(VerdictAwaitingRestart), verdict: VerdictAwaitingRestart},
+		} {
+			t.Run(string(step.ID)+"/"+tc.name, func(t *testing.T) {
+				h := triggerHarness(t, nil)
+				recorder, err := OpenRecorder(h.record)
+				if err != nil {
+					t.Fatal(err)
+				}
+				for _, candidate := range Steps() {
+					if candidate.ID == StepConditionalTrigger || (tc.omit && candidate.ID == step.ID) {
+						continue
+					}
+					verdict := VerdictPass
+					if candidate.ID == step.ID {
+						verdict = tc.verdict
+					}
+					if err := recorder.Append(Entry{Kind: KindStep, StepID: candidate.ID, Verdict: verdict}); err != nil {
+						_ = recorder.Close()
+						t.Fatal(err)
+					}
+				}
+				if err := recorder.Close(); err != nil {
+					t.Fatal(err)
+				}
+				_, closeRecord, err := h.build(triggerOptions(t, time.Minute))
+				if closeRecord != nil {
+					closeRecord()
+				}
+				if err == nil || !strings.Contains(err.Error(), string(step.ID)) {
+					t.Fatalf("New err = %v, want %s HOLD", err, step.ID)
+				}
+				if got := len(h.broker.seen()); got != 0 {
+					t.Fatalf("New made %d broker request(s), want 0", got)
+				}
+			})
+		}
+	}
+}
+
+func verdictPtr(v Verdict) *Verdict { return &v }

@@ -600,3 +600,52 @@ func seedVerifyRecord(t *testing.T, path string) {
 		}
 	}
 }
+
+func TestM0CLIValidationTreatsOnlyTTLAsNonPrerequisite(t *testing.T) {
+	base := func() []verifylive.Entry {
+		entries := make([]verifylive.Entry, 0, len(verifylive.Steps()))
+		for _, step := range verifylive.Steps() {
+			if step.ID != verifylive.StepConditionalTrigger {
+				entries = append(entries, verifylive.Entry{Kind: verifylive.KindStep, StepID: step.ID, Verdict: verifylive.VerdictPass})
+			}
+		}
+		return entries
+	}
+	options := func() *verifyOptions {
+		dir := t.TempDir()
+		if err := os.Chmod(dir, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		return &verifyOptions{market: verifylive.MarketKR, includeTrigger: true, confirmEach: true, resume: true,
+			redo: []string{string(verifylive.StepConditionalTrigger)}, triggerReceiptDir: dir}
+	}
+	for _, tc := range []struct {
+		name    string
+		verdict verifylive.Verdict
+		missing bool
+	}{
+		{name: string(verifylive.VerdictPass), verdict: verifylive.VerdictPass},
+		{name: string(verifylive.VerdictSkipped), verdict: verifylive.VerdictSkipped},
+		{name: string(verifylive.VerdictFail), verdict: verifylive.VerdictFail},
+		{name: string(verifylive.VerdictRefused), verdict: verifylive.VerdictRefused},
+		{name: "missing", missing: true},
+		{name: string(verifylive.VerdictAwaitingRestart), verdict: verifylive.VerdictAwaitingRestart},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			prior := base()
+			for i := len(prior) - 1; i >= 0; i-- {
+				if prior[i].StepID != verifylive.StepIdempotencyTTLEdge {
+					continue
+				}
+				if tc.missing {
+					prior = append(prior[:i], prior[i+1:]...)
+				} else {
+					prior[i].Verdict = tc.verdict
+				}
+			}
+			if err := validateM0TriggerMode(options(), prior); err != nil {
+				t.Fatalf("validateM0TriggerMode = %v, want TTL non-prerequisite", err)
+			}
+		})
+	}
+}

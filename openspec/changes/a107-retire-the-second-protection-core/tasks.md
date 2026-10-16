@@ -14,8 +14,9 @@
 ## 1. 제거
 
 - [ ] 1.1 `controller.go`·`repository.go`와 이 둘만 검증하는 테스트를 제거한다.
-- [ ] 1.2 `protection_sagas`·`protection_mutation_attempts` 스키마 생성 경로가 어떤 바이너리에서도
-  실행되지 않음을 확인한 뒤 제거한다.
+- [ ] 1.2 obsolete `internal/protection.Repository`의 `protection_sagas`·`protection_mutation_attempts`
+  스키마 생성 경로가 어떤 바이너리에서도 실행되지 않음을 확인한 뒤 제거한다. canonical
+  `internal/journal` 스키마 생성과 그 활성 소비자는 이 task의 제거 대상이 아니다.
 - [ ] 1.3 domain 타입 소비자(`execgw`·`app/engine`)가 무변경으로 컴파일되고 기존 테스트가 GREEN이다.
 
 ## 2. 봉인 재조정
