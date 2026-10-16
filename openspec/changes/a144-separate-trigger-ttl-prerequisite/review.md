@@ -1,4 +1,4 @@
-# Review — separate-trigger-ttl-prerequisite
+# Review — a144-separate-trigger-ttl-prerequisite
 
 ## Scope
 
@@ -22,7 +22,7 @@ order path changed.
   prerequisites.
 - Focused GREEN and package regression: `go test ./internal/verifylive
   ./cmd/tossctl -count=1` passed (17.461s and 61.905s).
-- `openspec validate separate-trigger-ttl-prerequisite --strict --no-interactive`
+- `openspec validate a144-separate-trigger-ttl-prerequisite --strict --no-interactive`
   and `git diff --check` passed.
 - Final analysis evidence is under `analysis/function-logic/`; its checker
   passed before repository-level SDD checks.

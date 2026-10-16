@@ -1,0 +1,21 @@
+{
+  "id": "STORY-TOS-a144",
+  "title": "Trigger verification does not require a TTL-edge measurement",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a144-separate-trigger-ttl-prerequisite",
+    "path": "openspec/changes/a144-separate-trigger-ttl-prerequisite"
+  },
+  "found_by": {
+    "date": "2026-10-17",
+    "how": "A user-supervised conditional-trigger verification was blocked because the optional idempotency TTL-edge measurement had no PASS verdict, although TTL does not supply trigger input and is a separate measurement.",
+    "record": "openspec/changes/a144-separate-trigger-ttl-prerequisite/proposal.md"
+  },
+  "acceptance": [
+    "Only idempotency-ttl-edge is excluded from M0 trigger prerequisite PASS admission; every other procedure step remains required to pass.",
+    "Trigger-only mode never dispatches TTL, sends a TTL broker mutation, or synthesizes a TTL PASS.",
+    "Outstanding and M0 checkpoint holds, exact trigger redo, receipt, confirmation, engine exclusion, and raw-read requirements remain unchanged.",
+    "Offline focused regressions, independent review, gstack review, repository gate, PM synchronization, and formal OpenSpec archive pass before completion is reported."
+  ]
+}

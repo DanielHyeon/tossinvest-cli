@@ -1,3 +1,8 @@
+# Story Mapping
+
+- Story: `STORY-TOS-a144`
+- Feature: `FEAT-TOS-003`
+
 ## Why
 
 현재 M0 trigger-only 검증은 기본 생략된 `idempotency-ttl-edge`까지 PASS를 요구한다. TTL 관측은 trigger·child 주문·체결 귀속의 입력이 아니므로, 별도 두 번째 라이브 주문을 요구하는 TTL 측정이 단일 1주 trigger 측정을 불필요하게 차단한다.
