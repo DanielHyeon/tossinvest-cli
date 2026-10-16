@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a144-separate-trigger-ttl-prerequisite",
-    "path": "openspec/changes/a144-separate-trigger-ttl-prerequisite"
+    "path": "openspec/changes/archive/2026-10-16-a144-separate-trigger-ttl-prerequisite"
   },
   "found_by": {
     "date": "2026-10-17",
     "how": "A user-supervised conditional-trigger verification was blocked because the optional idempotency TTL-edge measurement had no PASS verdict, although TTL does not supply trigger input and is a separate measurement.",
-    "record": "openspec/changes/a144-separate-trigger-ttl-prerequisite/proposal.md"
+    "record": "openspec/changes/archive/2026-10-16-a144-separate-trigger-ttl-prerequisite/proposal.md"
   },
   "acceptance": [
     "Only idempotency-ttl-edge is excluded from M0 trigger prerequisite PASS admission; every other procedure step remains required to pass.",

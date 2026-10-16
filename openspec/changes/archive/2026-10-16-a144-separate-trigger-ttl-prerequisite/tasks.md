@@ -12,5 +12,5 @@
 ## 3. Verification
 
 - [x] 3.1 Run focused CLI and `internal/verifylive` tests with fake-broker request logs for TTL PASS/skipped/failed/refused/missing/nonterminal and assert zero TTL broker mutation, TTL step-body dispatch, and TTL planned-mutation line in M0 mode, while allowing ordinary skipped append and `Plan.Excluded` metadata.
-- [ ] 3.2 Run focused negative tests for each non-TTL prerequisite and Outstanding/non-pending M0Unsettled HOLD and pending-create read-only recovery HOLD, then run required repository checks.
+- [x] 3.2 Run focused negative tests for each non-TTL prerequisite and Outstanding/non-pending M0Unsettled HOLD and pending-create read-only recovery HOLD, then run required repository checks.
 - [x] 3.3 Update final AST/logic/branch maps and review evidence; record that this change does not run a live verification or alter operating settings.
