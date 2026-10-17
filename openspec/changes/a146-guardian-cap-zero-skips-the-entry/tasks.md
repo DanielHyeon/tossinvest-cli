@@ -25,7 +25,8 @@ Story: `STORY-TOS-a146` · **High-risk**(Guardian · 전략 진입 · 레인 잠
 - [x] 1.2 GREEN — `a146_entry_skip.go` · `admit` · `deliverEachStrategyHandoff` · `runMarket` · `Snapshot` · `NewStrategyEntrySupervisor` ·
       `NewRefreshingPairedStrategyEntrySupervisor` · obs 이벤트; 특성 시험 F1/F4/F5 를 새 동작으로 뒤집음, `TestAnExistingGuardianCapRefusalIsNotAScopeRefusal` 고침,
       `TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter` 칸 목록 + 근거(a137 선례)
-- [ ] 1.3 REFACTOR · 편집 뒤 AST 재추출 · `check_analysis.py --change a146-guardian-cap-zero-skips-the-entry`
+- [x] 1.3 REFACTOR · 편집 뒤 AST 재추출 · `check_analysis.py --change a146-guardian-cap-zero-skips-the-entry`
+      — 2026-10-18 Manager 확인: 격리 워크트리(34ffe3c93)에서 `check_analysis --change a146…` = evidence complete(번들 9) · 리뷰 수리 커밋 f6038a784·35db12b7c·34ffe3c93 포함
 
 ## 2. 검증
 
@@ -37,7 +38,8 @@ Story: `STORY-TOS-a146` · **High-risk**(Guardian · 전략 진입 · 레인 잠
 
 ## 3. 사람 · Manager
 
-- [ ] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a146-guardian-cap-zero-skips-the-entry` + 독립 검증 · PM tracker 재생성 · archive
+- [x] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a146-guardian-cap-zero-skips-the-entry` + 독립 검증 · PM tracker 재생성 · archive
+      — 2026-10-18 Manager 독립 검증: 독립 적대 리뷰 2건(APPROVE-WITH-FIXES, P0·P1 0) 지적 전부 수리 확인 · 격리 워크트리 A146|A137 태그 시험 32 ok · 착지 34ffe3c93(격리 워크트리 계산) · 게이트는 격리 워크트리에서(공유 트리에 병행 세션 a147 미커밋 편집)
 - 배포(체크박스 아님): 엔진 이미지 교체는 사람이 KST 05:00~09:00 창에서.
 
 ## 후속 (체크박스 아님 — 사람 결정 2026-10-18)
