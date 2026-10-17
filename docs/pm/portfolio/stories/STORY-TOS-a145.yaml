@@ -1,0 +1,21 @@
+{
+  "id": "STORY-TOS-a145",
+  "title": "Evaluate Jev input quality and a separate J2 question revision offline",
+  "feature": "FEAT-TOS-006",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a145-separate-jev-input-quality-and-j2-evaluation",
+    "path": "openspec/changes/archive/2026-10-17-a145-separate-jev-input-quality-and-j2-evaluation"
+  },
+  "found_by": {
+    "date": "2026-10-17",
+    "how": "The user requested an input-quality analysis followed by a separately versioned J2 question comparison without changing the existing shadow probe or production behavior.",
+    "record": "openspec/changes/archive/2026-10-17-a145-separate-jev-input-quality-and-j2-evaluation/proposal.md"
+  },
+  "acceptance": [
+    "Classify input quality using a reproducible immutable snapshot and compare candidate groups within the same cycle and market session.",
+    "Keep the existing J1 and r1 intact; compare a separately versioned J2 only with matching frozen inputs and model provenance.",
+    "Report missing compatible saved r2 responses as blocked; synthetic fixtures do not establish real-world performance.",
+    "Document offline verification, independent review and repository gates before implementation or completion is claimed."
+  ]
+}

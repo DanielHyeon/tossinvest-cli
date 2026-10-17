@@ -1,0 +1,7 @@
+# Design evidence and limits
+
+The independently reviewed prior diagnosis is `outputs/jev-selection-diagnosis-20261017.md` in the chat workspace. Its fixed snapshot identifies ledger SHA-256 `c5d654705db7268a06e066a5fbf03fe70571dc5f08612a3eeed75aba47afd4d1` and 4,710-state manifest SHA-256 `bf3003df99299dc514afb32f39022977c2eae5db1f912d488e7797247f216a30`. These identify that earlier analysis, not a claim that current live evidence has remained unchanged. The prior report separates markets and sessions and notes incomplete labels, overlapping windows and non-causal interpretation.
+
+Existing contract reference: `openspec/changes/a128-jev-shadow-judgment-probe/specs/semantic-judgment-shadow/spec.md` is an active delta; the same capability has not yet been synchronized into main specs. This change adds requirements rather than overwriting a128. Resolve the formal synchronization order before archive.
+
+This is a design-only proposal and asserts no existing function-level branch or side-effect behavior. AST/logic maps are therefore not applicable to the present documents. No implementation target or fresh graph query has been selected, so CodeGraph is not claimed as current evidence. Fresh CodeGraph and, when editing an existing function, AST/logic-map evidence are explicitly required before implementation. No source, evidence, runtime configuration or API has been modified or invoked here. Schema artifact completion is not repository READY or experimental completion.

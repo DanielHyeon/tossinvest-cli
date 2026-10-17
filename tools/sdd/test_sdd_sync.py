@@ -34,6 +34,20 @@ class SourceProbeTest(unittest.TestCase):
             stderr="",
         )
 
+    def test_context_stats_timeout_preserves_only_successful_hard_index(self) -> None:
+        for hard_ok in (True, False):
+            with self.subTest(hard_ok=hard_ok), \
+                 mock.patch.object(sdd_sync.shutil, "which", return_value="tool"), \
+                 mock.patch.object(sdd_sync.subprocess, "run", side_effect=subprocess.TimeoutExpired("stats", 15)), \
+                 mock.patch.object(sdd_sync, "run", return_value=hard_ok) as run, \
+                 mock.patch.object(sdd_sync, "record_index_state") as record, \
+                 mock.patch.object(sdd_sync.Path, "exists", return_value=True):
+                failures = sdd_sync.sync(include_gbrain=False)
+            self.assertIn("codegraphcontext", failures)
+            self.assertEqual("codegraph" in failures, not hard_ok)
+            run.assert_called_once()
+            record.assert_called_once_with({"codegraph"} if hard_ok else set())
+
     def test_a_timed_out_probe_is_not_read_as_a_missing_source(self) -> None:
         listed = self.completed("gbrain sources: connect timed out.\n")
         self.assertFalse(sdd_sync.source_registered(listed, "tossos-x"))

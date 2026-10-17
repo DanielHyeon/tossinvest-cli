@@ -1,0 +1,44 @@
+# Implementation review and evidence
+
+Current verdict: isolated aggregate gate 11/11 PASS, formal archive and main-spec synchronization complete. Real r2 comparison remains BLOCKED; commit and push await final review.
+
+## Historical attempts (superseded by final verification below)
+
+Implementation is an offline leaf under `tools/a145-jev-offline-analysis/`; no a128 evidence, production code, operations or network/API calls are changed. The existing a128 Story is not an implementation predecessor; shared-spec synchronization remains a lifecycle dependency. The 2026-10-17 user approval authorizes implementing this offline leaf and local tests; the original proposal was design-only. No API request, network collection, commit or archive is authorized.
+
+Baseline: `base-commit.txt` records `9a1cab670f625355118a38b4dd882144bf7a2cbc`; a145 proposal and PM registration existed as approved working-tree changes, not in that commit. Existing unrelated dirty files are preserved. Existing functions are not edited; function AST/FLM/BTM are not applicable to the new leaf. CodeGraph baseline queried the existing `screenFinalists` and `probeQuestions` symbols, with `screenFinalists` callers `cycle` and `TestScreenFinalistsRules`. `sdd_sync.py --no-gbrain` performed hard CodeGraph sync but exited 1 because CodeGraphContext timed out at 300s (`/tmp/a145-sdd-sync.log`); GBrain was omitted. Implementation continued during its advisory wait, so this does not establish fresh final-worktree index state.
+
+Offline focused tests: `/tmp/a145-focused.log`, 13 tests pass, including snapshot path overlap, digests, label timing and consistency, missing/unknown inputs, temporal leakage, model and provenance mismatch, incomplete cycle, K and fixed J1 synthetic replay. Actual local CLI run: `/home/daniel/.codex/.chatgpt-projects/g-p-6a6a11adcde48191ab0a385cd9e910c4/outputs/a145-input-quality-20261017/`, exit 0 (`/tmp/a145-final-cli.exit`); its r2 result is BLOCKED. Invalid overlapping output was rejected (exit 1, `/tmp/a145-cli-invalid.stderr`). Input snapshot 4,711 files matched pre/post byte manifest `/tmp/a145-source-before.txt` and `/tmp/a145-source-finalcheck.txt`. CLI side effects outside observed input/output roots and transient writes were not monitored independently; no network code is present.
+
+No real r2 response or baseline request anchor/model-version evidence was supplied; fixture execution is not a real model comparison. Outcome and task completion depend on independent review, final hard index/checks and remaining lifecycle work. Full repository gate has not passed; do not mark archive ready.
+
+Independent review verified stage1 four metrics in all three s3 market sessions and validated the path, model-version and missing-label fixes; hashes: implementation `0e433cd95a58fbb285f6ae4c21c3b446314a2f1237ec690f8fc28946572f8bae`, tests `50eb29bad292cdbe567195ffd327b854d5386866bbfdda4533160e060a91d744`. User-facing aggregate is `outputs/a145-input-quality-results-20261017.md` in the chat workspace.
+
+Final `codegraph sync .` exited 0 (`/tmp/a145-hardgraph-final.log`); `make sdd-check` exited 2 (`/tmp/a145-sdd-check-final.log`) because the required CodeGraph freshness record/status did not pass. `make gate` exited 2 at stage 2 of 11 because tasks remained open (`/tmp/a145-gate-final.log`); later gate stages were not run. The original `.claude/CLAUDE.md` dirty change was not modified. These results do not establish repository READY or a passing full gate.
+
+Independent review and gstack review both PASS for source `0e433cd9` and final tests `50eb29ba`. The review does not convert the failed repository gate or unavailable r2 comparison into PASS.
+
+After completed tasks and reviews were recorded, the current gate was retried once: `/tmp/a145-gate-current.log`, exit 2, stage 2/11 with tasks 1.1, 1.2, 4.2 and 4.3 still open. This is the current task-state result; no later gate steps ran. PM generation/check, scoped strict validation and diff check passed. The user did not request commit, push or archive.
+
+The original task 4.3 required archive before the gate, while the repository requires archive after the gate and the gate requires every task checked. Task 4.3 now records verification of the formal synchronization and archive plan; actual archive, PM path update, commit and push remain post-gate actions, not completed claims. The previous no-commit request was superseded by the user’s later approval, subject to final review and gate success.
+Task 4.2 records execution of individual gate components and actual failures, corrections and targeted rechecks; the aggregate gate is executed and reported separately. A targeted pass does not substitute for the final full gate.
+
+Function Logic Map: not-applicable
+
+The Go-only logic-map extractor finds no changed Go function in this change. The existing Python `sync` function is covered by the separate Python AST and branch evidence in `analysis/sdd-sync-repair.md`; this marker does not exempt that repair from review or tests.
+
+Formal archive plan assessed in the isolated checkout: `semantic-judgment-shadow` has no current main spec. This change adds four named requirements; the still-active a128 delta adds three differently named requirements. Archive a145 through the official CLI with spec synchronization, leave a128 and its evidence unchanged, update the a145 Story archive path and regenerate PM trackers, then run strict and PM checks. The plan is not evidence that these post-gate actions happened.
+
+Isolated checkout at `befea6ee`: the initial sync aborted on a 15-second `codegraphcontext stats` timeout before the successful hard index could be recorded. The narrowly scoped repair catches only that timeout, preserves the advisory failure and records only indexes that succeeded. Python before/after AST and branch evidence is `analysis/sdd-sync-repair.md`; 14 SDD tests passed after a failing regression test. Independent and gstack reviews approved the repair. A subsequent official sync exited 0 with CodeGraph and CodeGraphContext; GBrain was omitted by the supported `--no-gbrain` option. `make sdd-check` then exited 0, warning that GBrain is stale.
+
+Initial parallel test and seams runs each failed a p95 performance test and two a112 identity tests. The 2.405s observed p95 exceeded 2s; the test passed alone after the concurrent suites stopped, but this does not prove the cause. The identity failures were caused by an untracked `.sdd/.venv` symlink created only in this checkout. It was removed and the two no-follow identity tests passed unchanged. Development Python is supplied via the documented process-only `SDD_PYTHON`; no gate or safety requirement changed. `GOFLAGS=-buildvcs=false` is process-scoped for isolated tests because Go VCS stamping reported status 128; tests remain enabled. Initial race passed under that option. Full aggregate gate remains pending and its result must be recorded after execution.
+
+The full isolated `make test` subsequently passed with process-only GOFLAGS and SDD_PYTHON (`/tmp/a145-isolated-make-test-final.log`, exit 0); engine 429.143s, journal cached. Initial seams failed for the same two causes and its full corrected execution is pending in the aggregate gate. Targeted p95 and the two a112 tests passed after removing the symlink and concurrent load. The aggregate gate has not yet run at this frozen state.
+
+## Final verification and archive
+
+Final isolated aggregate gate PASS: all 11 stages, exit 0, strict validation 49 passed and 0 failed (`/tmp/a145-isolated-full-gate.log`, `/tmp/a145-isolated-full-gate.exit`). The verification checkout was based on `befea6ee`; process-only `GOFLAGS=-buildvcs=false` addressed Go VCS stamping status 128, and documented `SDD_PYTHON` pointed to the existing development interpreter. Final sync exited 0 with CodeGraph and CodeGraphContext; GBrain was not run. This does not establish a passing gate for other dirty or later work. The earlier test and seams failures and targeted reruns remain recorded above. Independent and gstack reviewers and Manager accepted the gate evidence. No real r2 result exists.
+
+Official OpenSpec archive and main-spec synchronization completed after the gate; the a145 Story path and PM trackers were updated. Commit and push remain pending review. The independent a128 change and its evidence were not modified.
+
+Post-gate staged diff checking found whitespace on one otherwise empty Python line and a trailing empty line in the generated main spec. Only that whitespace was removed. Python SHA changed from `0e433cd95a58fbb285f6ae4c21c3b446314a2f1237ec690f8fc28946572f8bae` to `fa28c8ee364ff534fdad0d3109cf5dc7252a6266942b414b5a74afc5a4b45368`; ASTs are identical (`/tmp/a145-whitespace-evidence.txt`). All 13 focused tests subsequently passed (`/tmp/a145-post-whitespace-focused.log`, exit 0). The full gate result above is for the pre-whitespace hash.

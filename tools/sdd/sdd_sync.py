@@ -160,27 +160,32 @@ def sync(full: bool = False, include_gbrain: bool = True) -> list[str]:
         failures.append("codegraph missing")
 
     if shutil.which("codegraphcontext"):
-        stats = subprocess.run(
-            ["codegraphcontext", "stats", "."],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            timeout=15,
-            check=False,
-        )
-        missing = stats.returncode != 0 or "Repository not found" in (
-            stats.stdout + stats.stderr
-        )
-        if missing:
-            command = ["codegraphcontext", "index", "."]
-        elif full:
-            command = ["codegraphcontext", "index", ".", "--force"]
-        else:
-            command = ["codegraphcontext", "update", ".", "--quiet"]
-        if not run(command, timeout=300):
+        try:
+            stats = subprocess.run(
+                ["codegraphcontext", "stats", "."],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                timeout=15,
+                check=False,
+            )
+        except subprocess.TimeoutExpired:
+            print("  codegraphcontext stats timed out")
             failures.append("codegraphcontext")
         else:
-            successes.add("codegraphcontext")
+            missing = stats.returncode != 0 or "Repository not found" in (
+                stats.stdout + stats.stderr
+            )
+            if missing:
+                command = ["codegraphcontext", "index", "."]
+            elif full:
+                command = ["codegraphcontext", "index", ".", "--force"]
+            else:
+                command = ["codegraphcontext", "update", ".", "--quiet"]
+            if not run(command, timeout=300):
+                failures.append("codegraphcontext")
+            else:
+                successes.add("codegraphcontext")
     else:
         failures.append("codegraphcontext missing")
 
