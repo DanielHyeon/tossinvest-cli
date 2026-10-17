@@ -142,3 +142,4 @@
 | `a142-wts-read-contracts-fail-closed` | STORY-TOS-a142 | archived |
 | `a143-official-read-compatibility` | STORY-TOS-a143 | archived |
 | `a144-separate-trigger-ttl-prerequisite` | STORY-TOS-a144 | archived |
+| `a145-separate-jev-input-quality-and-j2-evaluation` | STORY-TOS-a145 | archived |
