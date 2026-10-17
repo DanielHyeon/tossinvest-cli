@@ -1,6 +1,6 @@
 # Function Logic Map: `Snapshot`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (782-804)
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (797-820)
 - Qualified: `StrategyEntrySupervisor.Snapshot`
 - AST evidence: `ast.json`(현재) — 현재 AST branches 2 · returns 3
 - 편집 전 기준: `ast-base.json`(base, `source_sha256` 6f7c999a13c4abdc…) — 편집 전 갈래 수 2
@@ -20,10 +20,10 @@
 
 | Branch | Condition (소스 줄 인용) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `if s == nil \|\| !validStrategyMarket(market) {` (if 783) | — | 편집 전과 같음(소스 줄 참조) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|Snapshot'` · `TestA146ASkipIsCountedAndAnnouncedOncePerDayAndSymbol` |
-| B2 | `if worker == nil {` (if 789) | — | 편집 전과 같음(소스 줄 참조) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|Snapshot'` · `TestA146ASkipIsCountedAndAnnouncedOncePerDayAndSymbol` |
+| B1 | `if s == nil \|\| !validStrategyMarket(market) {` (if 798) | — | 편집 전과 같음(소스 줄 참조) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|Snapshot'` · `TestA146ASkipIsCountedAndAnnouncedOncePerDayAndSymbol` |
+| B2 | `if worker == nil {` (if 804) | — | 편집 전과 같음(소스 줄 참조) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|Snapshot'` · `TestA146ASkipIsCountedAndAnnouncedOncePerDayAndSymbol` |
 
-Exact AST return positions: 784 · 790 · 792
+Exact AST return positions: 799 · 805 · 807
 
 ## Calls and live bindings
 

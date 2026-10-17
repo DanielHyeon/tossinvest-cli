@@ -19,16 +19,17 @@ Story: `STORY-TOS-a146` · **High-risk**(Guardian · 전략 진입 · 레인 잠
 
 ## 1. 구현 (RED → GREEN → REFACTOR)
 
-- [ ] 1.1 RED — 분류 표(상한 0 · 해석 실패 · nil 원인 · FX 오류 · 다른 코드 + 같은 sentinel) · 전달(스킵 뒤 다음 범위 · 범위 거절과 섞임 · 스킵 뒤 결함 ·
+- [x] 1.1 RED — 분류 표(상한 0 · 해석 실패 · nil 원인 · FX 오류 · 다른 코드 + 같은 sentinel) · 전달(스킵 뒤 다음 범위 · 범위 거절과 섞임 · 스킵 뒤 결함 ·
       스킵 뒤 일일 손실) · 감독자 두 종류(잠금 0 · 삼킴 0 · 계수) · 알림(일 키 · 종목 dedup) · 생산 배선 · 실제 경로(fixture: precheck 2 회 · 오류 없음 · 브로커 0) ·
-      census(만드는 자리 하나)
-- [ ] 1.2 GREEN — `a146_entry_skip.go` · `admit` · `deliverEachStrategyHandoff` · `runMarket` · `Snapshot` · `NewStrategyEntrySupervisor` ·
-      `NewRefreshingPairedStrategyEntrySupervisor` · obs 이벤트; 특성 시험 F1/F4/F5 를 새 동작으로 뒤집음, `TestAnExistingGuardianCapRefusalIsNotAScopeRefusal` 고침
+      census(만드는 자리 하나) + freeze 리뷰: 상한 0 이 가린 체인 결함(양쪽) · 실제 Guardian 거절 표본 · 곁 Join 음성 행 — 영수증 `analysis/red/red-compile.txt`
+- [x] 1.2 GREEN — `a146_entry_skip.go` · `admit` · `deliverEachStrategyHandoff` · `runMarket` · `Snapshot` · `NewStrategyEntrySupervisor` ·
+      `NewRefreshingPairedStrategyEntrySupervisor` · obs 이벤트; 특성 시험 F1/F4/F5 를 새 동작으로 뒤집음, `TestAnExistingGuardianCapRefusalIsNotAScopeRefusal` 고침,
+      `TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter` 칸 목록 + 근거(a137 선례)
 - [ ] 1.3 REFACTOR · 편집 뒤 AST 재추출 · `check_analysis.py --change a146-guardian-cap-zero-skips-the-entry`
 
 ## 2. 검증
 
-- [ ] 2.1 `gofmt -l` · `go vet ./...` · `rtk proxy go test -count=1`(app/engine · execgw · risk · strategyworker · obs) · `-tags tossos_testseams` · `-race` 대상 ·
+- [x] 2.1 `gofmt -l` · `go vet ./...` · `rtk proxy go test -count=1`(app/engine · execgw · risk · strategyworker · obs) · `-tags tossos_testseams` · `-race` 대상 ·
       `openspec validate --strict` → `analysis/verify/receipts.md`
 - [ ] 2.2 변이 원장(`analysis/mutation/`, 저장소 밖 사본 · pid 접미 · 무변이 대조군 GREEN)
 - [ ] 2.3 독립 적대 리뷰(분리 컨텍스트) → review.md → 수리

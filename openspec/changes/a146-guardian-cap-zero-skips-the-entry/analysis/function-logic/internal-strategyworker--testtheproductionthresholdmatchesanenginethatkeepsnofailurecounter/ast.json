@@ -1,6 +1,6 @@
 {
   "file": "internal/strategyworker/policy_receipt_test.go",
-  "source_sha256": "a768c56c186c7d7794eed306bfc37412498d54d3498aea5050a6216db0cc910e",
+  "source_sha256": "957f5fe850db3972749ef646f089af9af68ee0c0d8eee8230580ee8455add169",
   "package": "strategyworker",
   "function": "TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter",
   "signature": "TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter(params=1, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 422,
+    "line": 427,
     "column": 2
   },
   "branches": [
@@ -65,7 +65,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 412,
+        "line": 417,
         "column": 2
       }
     },
@@ -73,7 +73,7 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 418,
+        "line": 423,
         "column": 2
       }
     }
@@ -145,7 +145,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 412,
+        "line": 417,
         "column": 5
       },
       "text": "strings.Join"
@@ -153,7 +153,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 412,
+        "line": 417,
         "column": 34
       },
       "text": "strings.Join"
@@ -161,7 +161,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 413,
+        "line": 418,
         "column": 3
       },
       "text": "t.Fatalf"
@@ -169,7 +169,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 418,
+        "line": 423,
         "column": 18
       },
       "text": "FailureThreshold"
@@ -177,7 +177,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 418,
+        "line": 423,
         "column": 18
       },
       "text": "ProductionRuntimePolicy"
@@ -185,7 +185,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 419,
+        "line": 424,
         "column": 3
       },
       "text": "t.Fatalf"
@@ -223,14 +223,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 406,
+        "line": 410,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 418,
+        "line": 423,
         "column": 5
       }
     }

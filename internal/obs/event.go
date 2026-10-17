@@ -177,6 +177,9 @@ const (
 	// EventDailyLossUnmeasurable 은 그날의 실현 손실을 잴 수 없어 전략 신규 진입이 매 주기 거절되는 중이라는 줄(a137). 로그만 —
 	// 래치 · 운영 모드 변화 없음, 계좌 일 키마다 한 번. 매도 · 손절 · 청산에는 닿지 않음.
 	EventDailyLossUnmeasurable EventType = "engine.daily_loss_unmeasurable"
+	// EventStrategyEntrySkipped 은 Guardian 상한이 한 단위도 허용하지 않아 전략 진입 하나를 건너뛰었다는 줄(a146). 로그만 — 래치 · 운영 모드
+	// 변화 없음, (계좌 일 키, 시장, 종목)마다 한 번. 매도 · 손절 · 청산에는 닿지 않음.
+	EventStrategyEntrySkipped EventType = "engine.strategy_entry_skipped"
 	// EventEngineLoopFailed is a supervised loop that returned for a reason other
 	// than the runtime being cancelled (add-engine-runtime: 방어적 종료 계약).
 	// CRITICAL: the landed loops do not return, so one that did has hit a state

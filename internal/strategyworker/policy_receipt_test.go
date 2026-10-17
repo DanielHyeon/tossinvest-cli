@@ -403,11 +403,16 @@ func TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter(t *testi
 	// `dailyLossUnmeasurable`·`firstDailyLossCause`·`dailyLossNoticeDay` 는 a137(재리뷰 P1-N1)이 더했고 역시 **임계값을 건드리지
 	// 않는다**: 쓰는 곳은 `recordDailyLossUnmeasurable` 하나(a137_daily_loss_notice.go), 읽는 곳은 `Snapshot` 하나와 같은 함수의
 	// 일 키 비교뿐이며 `latchMarket` 은 셋 중 어느 것도 보지 않는다. 세는 것은 실패가 아니라 측정 불가로 조용히 끝난 주기(정책 결과)다.
+	//
+	// `guardianCapZeroSkips`·`firstGuardianCapZeroSkip`·`entrySkipNoticeDay`·`entrySkipNoticed` 는 a146 이 더했고 역시 **임계값을 건드리지
+	// 않는다**: 쓰는 곳은 `recordGuardianCapZeroSkip` 하나(a146_entry_skip.go), 읽는 곳은 `Snapshot`(앞 둘)과 같은 함수의 일 키 · 종목
+	// 비교(뒤 둘)뿐이며 `latchMarket` 은 넷 중 어느 것도 보지 않는다. 세는 것은 실패가 아니라 Guardian 상한 0 으로 건너뛴 진입(정책 결과)이다.
 	want := []string{
 		"descriptor", "queue", "effective", "latched", "firstFailure", "firstRefusal",
 		"firstAbnormal", "latchID", "latchRevision", "abandoned", "restartAttempt", "restartNotBefore",
 		"swallowedCount", "firstSwallowed",
 		"dailyLossUnmeasurable", "firstDailyLossCause", "dailyLossNoticeDay",
+		"guardianCapZeroSkips", "firstGuardianCapZeroSkip", "entrySkipNoticeDay", "entrySkipNoticed",
 	}
 	if strings.Join(fields, ",") != strings.Join(want, ",") {
 		t.Fatalf("the engine's per-market runtime state changed.\n got: %v\nwant: %v\n\n"+

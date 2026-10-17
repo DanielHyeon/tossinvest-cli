@@ -1,6 +1,6 @@
 # Function Logic Map: `NewRefreshingPairedStrategyEntrySupervisor`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (399-428)
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (414-443)
 - Qualified: `Context.NewRefreshingPairedStrategyEntrySupervisor`
 - AST evidence: `ast.json`(현재) — 현재 AST branches 4 · returns 4
 - 편집 전 기준: `ast-base.json`(base, `source_sha256` 6f7c999a13c4abdc…) — 편집 전 갈래 수 4
@@ -20,18 +20,18 @@
 
 | Branch | Condition (소스 줄 인용) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `if c == nil \|\| clk == nil {` (if 400) | — | 편집 전과 같음(소스 줄 참조) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|ProductionStrategySupervisor'` · `TestA146TheProductionSupervisorCarriesTheSkipNotice` · `TestA137TheProductionSupervisorCarriesTheNotice` |
-| B2 | `if c.Entry == nil {` (if 404) | — | 편집 전과 같음(소스 줄 참조) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|ProductionStrategySupervisor'` · `TestA146TheProductionSupervisorCarriesTheSkipNotice` · `TestA137TheProductionSupervisorCarriesTheNotice` |
-| B3 | `for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {` (range 408) | — | 편집 전과 같음(소스 줄 참조) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|ProductionStrategySupervisor'` · `TestA146TheProductionSupervisorCarriesTheSkipNotice` · `TestA137TheProductionSupervisorCarriesTheNotice` |
-| B4 | `if err != nil {` (if 421) | — | 편집 전과 같음(소스 줄 참조) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|ProductionStrategySupervisor'` · `TestA146TheProductionSupervisorCarriesTheSkipNotice` · `TestA137TheProductionSupervisorCarriesTheNotice` |
+| B1 | `if c == nil \|\| clk == nil {` (if 415) | — | 편집 전과 같음(소스 줄 참조) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|ProductionStrategySupervisor'` · `TestA146TheProductionSupervisorCarriesTheSkipNotice` · `TestA137TheProductionSupervisorCarriesTheNotice` |
+| B2 | `if c.Entry == nil {` (if 419) | — | 편집 전과 같음(소스 줄 참조) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|ProductionStrategySupervisor'` · `TestA146TheProductionSupervisorCarriesTheSkipNotice` · `TestA137TheProductionSupervisorCarriesTheNotice` |
+| B3 | `for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {` (range 423) | — | 편집 전과 같음(소스 줄 참조) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|ProductionStrategySupervisor'` · `TestA146TheProductionSupervisorCarriesTheSkipNotice` · `TestA137TheProductionSupervisorCarriesTheNotice` |
+| B4 | `if err != nil {` (if 436) | — | 편집 전과 같음(소스 줄 참조) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|ProductionStrategySupervisor'` · `TestA146TheProductionSupervisorCarriesTheSkipNotice` · `TestA137TheProductionSupervisorCarriesTheNotice` |
 
-Exact AST return positions: 401 · 405 · 422 · 427
+Exact AST return positions: 416 · 420 · 437 · 442
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| (호출 9종 — 대표: `NewStrategyEntrySupervisor`, `append`, `c.productionStrategyCycle`, `c.strategyDailyLossNotice`, `c.strategyProjectionMu.Lock`, `c.strategyProjectionMu.Unlock`) | 본문 참조 | 소스 참조 | AST |
+| (호출 10종 — 대표: `NewStrategyEntrySupervisor`, `append`, `c.productionStrategyCycle`, `c.strategyDailyLossNotice`, `c.strategyEntrySkipNotice`, `c.strategyProjectionMu.Lock`) | 본문 참조 | 소스 참조 | AST |
 
 ## State mutations and fallbacks
 

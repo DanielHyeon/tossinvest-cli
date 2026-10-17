@@ -127,6 +127,9 @@ type StrategyEntrySupervisorOptions struct {
 	// DailyLossNotice 는 측정 불가로 전략 진입이 막힌 것을 계좌 일 키마다 한 번 알리는 자리(a137 재리뷰 P1-N1). nil 이면 스냅숏 계수만.
 	// cause 는 계좌 값 · 원문 오류가 없는 측정 불가 문구(dailyloss 고정 문구 + 시장 · 심볼 · pos- 손잡이)다.
 	DailyLossNotice func(market StrategyMarket, day, cause string)
+	// EntrySkipNotice 는 Guardian 상한 0 으로 건너뛴 전략 진입을 (계좌 일 키, 종목)마다 한 번 알리는 자리(a146). nil 이면 스냅숏 계수만.
+	// cause 는 고정 문구 + 시장 · 종목 · 코드(계좌 값 · 금액 없음)다.
+	EntrySkipNotice func(market StrategyMarket, day, symbol, cause string)
 }
 
 // StrategyEntryBlocker 는 감독자가 진입 게이트에 쓸 수 있는 유일한 동작이다. `*execgw.EntryGate` 가 만족한다.
@@ -197,6 +200,11 @@ type strategyMarketRuntime struct {
 	dailyLossUnmeasurable uint64
 	firstDailyLossCause   string
 	dailyLossNoticeDay    string
+	// a146: Guardian 상한 0 스킵 계수 · 첫 원인 · 알림 기억(일 키 · 그날 알린 종목, g.mu 아래).
+	guardianCapZeroSkips     uint64
+	firstGuardianCapZeroSkip string
+	entrySkipNoticeDay       string
+	entrySkipNoticed         map[string]struct{}
 }
 
 // StrategyWorkerSnapshot is a read-only, market-keyed operational view. It
@@ -232,6 +240,11 @@ type StrategyWorkerSnapshot struct {
 	// 삼킴이 아닌 정책 결과라 다른 칸에는 남지 않으므로 여기 셈). FirstDailyLossUnmeasurable 은 그 첫 원인(계좌 값 · 원문 오류 없음).
 	DailyLossUnmeasurableCycles uint64
 	FirstDailyLossUnmeasurable  string
+
+	// GuardianCapZeroSkips 는 Guardian 상한 0 으로 건너뛴 전략 진입의 수(a146 — 결함이 아닌 정책 결과라 잠금 · 삼킴 칸에는 남지 않으므로
+	// 여기 셈, 포화). FirstGuardianCapZeroSkip 은 그 첫 원인(고정 문구 + 시장 · 종목 · 코드, 계좌 값 · 금액 없음).
+	GuardianCapZeroSkips     uint64
+	FirstGuardianCapZeroSkip string
 }
 
 type StrategyTriggerResult string
@@ -253,6 +266,8 @@ type StrategyEntrySupervisor struct {
 	entry StrategyEntryBlocker
 	// dailyLossNotice 는 측정 불가 알림 자리(a137, nil 허용).
 	dailyLossNotice func(market StrategyMarket, day, cause string)
+	// entrySkipNotice 는 Guardian 상한 0 스킵 알림 자리(a146, nil 허용).
+	entrySkipNotice func(market StrategyMarket, day, symbol, cause string)
 
 	mu        sync.RWMutex
 	workers   map[StrategyMarket]*strategyMarketRuntime
@@ -416,7 +431,7 @@ func (c *Context) NewRefreshingPairedStrategyEntrySupervisor(clk clock.Clock) (*
 	}
 	supervisor, err := NewStrategyEntrySupervisor(StrategyEntrySupervisorOptions{
 		Clock: clk, CycleLimit: MaximumStrategyCycleLimit, Workers: workers, EntryGate: c.Entry,
-		DailyLossNotice: c.strategyDailyLossNotice(),
+		DailyLossNotice: c.strategyDailyLossNotice(), EntrySkipNotice: c.strategyEntrySkipNotice(),
 	})
 	if err != nil {
 		return nil, err
@@ -720,7 +735,7 @@ func NewStrategyEntrySupervisor(opts StrategyEntrySupervisorOptions) (*StrategyE
 
 	return &StrategyEntrySupervisor{
 		clk: clk, cycleLimit: cycleLimit, workers: workers, ready: make(chan struct{}), faults: make(chan StrategyWorkerFault, 2),
-		entry: opts.EntryGate, dailyLossNotice: opts.DailyLossNotice,
+		entry: opts.EntryGate, dailyLossNotice: opts.DailyLossNotice, entrySkipNotice: opts.EntrySkipNotice,
 	}, nil
 }
 
@@ -800,6 +815,7 @@ func (s *StrategyEntrySupervisor) Snapshot(market StrategyMarket) (StrategyWorke
 		QueueDepth: len(worker.queue), QueueCapacity: cap(worker.queue),
 		SwallowedCycleErrors: worker.swallowedCount, FirstSwallowedFailure: worker.firstSwallowed,
 		DailyLossUnmeasurableCycles: worker.dailyLossUnmeasurable, FirstDailyLossUnmeasurable: worker.firstDailyLossCause,
+		GuardianCapZeroSkips: worker.guardianCapZeroSkips, FirstGuardianCapZeroSkip: worker.firstGuardianCapZeroSkip,
 	}, true
 }
 
@@ -943,6 +959,8 @@ func (s *StrategyEntrySupervisor) runMarket(ctx context.Context, start <-chan st
 			}
 			// a137 재리뷰 P1-N1: 주기 ctx 에 이 시장의 측정 불가 기록자를 실음 — 전달 자리가 조용히 끝낸 주기도 흔적을 남기게.
 			cycleCtx := withStrategyDailyLossRecorder(ctx, func(cause error) { s.recordDailyLossUnmeasurable(worker, cause) })
+			// a146: 같은 주기 ctx 에 Guardian 상한 0 스킵 기록자 — 스킵은 주기 오류가 아니므로 흔적은 이 기록자로만 남음.
+			cycleCtx = withStrategyEntrySkipRecorder(cycleCtx, func(skip *strategyEntrySkip) { s.recordGuardianCapZeroSkip(worker, skip) })
 			err, abnormal, cancelled, abandoned := invokeBoundedStrategyCycle(cycleCtx, s.clk, s.cycleLimit, worker.descriptor.Cycle)
 			if abandoned {
 				s.markAbandoned(worker)

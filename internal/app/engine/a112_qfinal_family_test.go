@@ -241,19 +241,25 @@ func TestAPrecheckRefusalOtherThanBucketExhaustionStillStopsTheCycle(t *testing.
 	t.Logf("non-exhaustion precheck refusal: %v", err)
 }
 
-// 경계(조건 ② — 같은 q_final 타입의 다른 코드): 버킷 고갈이 아닌 q_final 거절(거래당 위험 예산 1 KRW → q_existing_guardian 0)은 계좌 단위 Guardian 판정이다 —
-// 범위 거절로 넓히지 않는다(주기 멈춤 · 타입 없음). 코드 분류를 「고갈」 밖으로 넓히는 변이가 여기서 잡힌다.
+// 경계(조건 ② — 같은 q_final 타입의 다른 코드): 버킷 고갈이 아닌 q_final 거절(거래당 위험 예산 1 KRW → q_existing_guardian 0)은 범위 거절로
+// 넓히지 않는다(타입 없음). 코드 분류를 「고갈」 밖으로 넓히는 변이가 여기서 잡힌다.
+// a146(사용자 결정 2026-10-15): 이 거절은 이제 결함도 아니다 — 그 진입만 건너뛰는 타입 결과라 주기는 오류 없이 끝나고 두 범위가 다 평가된다
+// (편집 전에는 첫 범위에서 주기가 멈췄음). 브로커에 닿는 것은 여전히 없다.
 func TestAnExistingGuardianCapRefusalIsNotAScopeRefusal(t *testing.T) {
 	fixture := newA112TradingFixture(t, a112TradingOptions{riskBudget: "1"})
-	err := fixture.deliverKR(t)
+	var skips []*strategyEntrySkip
+	ctx := withStrategyEntrySkipRecorder(context.Background(), func(skip *strategyEntrySkip) { skips = append(skips, skip) })
+	err := dispatchStrategyMarketHandoffs(ctx, fixture.journal, fixture.cycle, fixture.proposals.kr.dispatchHandoffs())
 	if placed := fixture.placedSymbols(); len(placed) != 0 {
-		t.Fatalf("placed=%v err=%v, want the cycle stopped at the first scope's guardian-cap refusal", placed, err)
+		t.Fatalf("placed=%v err=%v, want no first leg for a guardian-cap-zero entry", placed, err)
+	}
+	if err != nil || a112ScopeRefusalOf(err) != nil {
+		t.Fatalf("err=%v — want no cycle error and no scope refusal for guardian-cap-zero skips", err)
 	}
 	var qFinal *execgw.QFinalRefusal
-	if err == nil || a112ScopeRefusalOf(err) != nil || !strings.Contains(err.Error(), string(riskbucket.RefusalExistingGuardianCap)) ||
-		!errors.As(err, &qFinal) && !strings.Contains(err.Error(), "q_final refused") {
-		t.Fatalf("err=%v — want the untyped q_existing_guardian refusal (a q_final code other than bucket exhaustion)", err)
+	if len(skips) != 2 || !errors.As(skips[0], &qFinal) || qFinal.Code != riskbucket.RefusalExistingGuardianCap ||
+		!strings.Contains(skips[0].Unwrap().Error(), "q_final refused") {
+		t.Fatalf("skips=%v — want both scopes skipped, each carrying the q_existing_guardian refusal", skips)
 	}
-	_ = qFinal
-	t.Logf("guardian-cap refusal: %v", err)
+	t.Logf("guardian-cap skip: %v (cause %v)", skips[0], skips[0].Unwrap())
 }

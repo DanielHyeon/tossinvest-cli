@@ -2,39 +2,67 @@
 
 package engine
 
-// a146 특성 시험(편집 전 HEAD 의 동작을 실제 경로로 못 박음 — design F1~F5).
+// a146 실제 경로 시험 — 편집 전 HEAD 의 특성 시험(design F5 · F6 · F8, 영수증 `analysis/red/characterization-head.txt`)을 a146 동작으로 뒤집은 것과,
+// a146 이 바꾸지 않는 범위 거절 특성(F8) 하나.
 //
 // 실제 경로: a112 거래 fixture(생산 적재기 · 실제 Guardian · 실제 원장 · 실제 dispatch 주기 · 생산 전달 몸통
 // `dispatchStrategyMarketHandoffs`, Gateway 만 스파이 — 실주문 아님)를 감독자 `runMarket` 의 주기 함수로 돌림.
 //
-//   - Guardian 상한 0(거래당 위험 예산 1 KRW → 한 주도 못 덮음): 서명 활성화(effective) 시장은 첫 주기에 latchMarket 으로 잠기고,
-//     권한 갱신 전용(refreshOnly — 오늘 생산 감독자의 유일한 모양) 시장은 매 주기 삼킴 계수만 오름. 어느 쪽이든 그 주기의 뒤 범위는
-//     평가되지 않음(precheck 1 회).
+//   - Guardian 상한 0(거래당 위험 예산 1 KRW → 한 주도 못 덮음): 편집 전에는 effective 시장이 첫 주기에 latchMarket 으로 잠기고 refreshOnly
+//     (오늘 생산 감독자의 유일한 모양) 시장은 매 주기 삼킴 계수만 오르며 그 주기의 뒤 범위가 평가되지 않았음. a146 뒤: 둘 다 잠금 · 삼킴 0,
+//     매 주기 두 범위 모두 평가 · 스킵으로 셈.
 //   - 범위 거절(버킷 고갈): 같은 주기의 다른 범위는 발급되지만 건너뛴 거절이 주기 오류로 돌아와 effective 시장은 잠김 — a146 범위 밖
-//     (design F6, 별도 발견). 이 둘은 a146 뒤에도 그대로여야 함.
+//     (design F8 · D7, 별도 발견). a146 뒤에도 그대로여야 함.
 
 import (
 	"context"
+	"errors"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/risk"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 )
 
-// a146CountingGuardian 은 실제 Guardian 을 그대로 쓰되 precheck 횟수만 셈(주기가 몇 범위를 평가했는지 보는 계측기).
+// a146CountingGuardian 은 실제 Guardian 을 그대로 쓰되 precheck 횟수를 세고 첫 거절을 보관함(주기가 몇 범위를 평가했는지 보는 계측기 ·
+// 실제 Guardian 이 낸 거절 모양의 표본).
 type a146CountingGuardian struct {
 	*execgw.RiskGuardian
 	prechecks atomic.Int32
+	mu        sync.Mutex
+	firstErr  error
 }
 
 func (g *a146CountingGuardian) PrecheckQFinalCampaignFirstLeg(request execgw.QFinalCampaignFirstLegIssuance) (execgw.QFinalCampaignFirstLegPrecheck, error) {
 	g.prechecks.Add(1)
-	return g.RiskGuardian.PrecheckQFinalCampaignFirstLeg(request)
+	precheck, err := g.RiskGuardian.PrecheckQFinalCampaignFirstLeg(request)
+	g.mu.Lock()
+	if g.firstErr == nil {
+		g.firstErr = err
+	}
+	g.mu.Unlock()
+	return precheck, err
+}
+
+// a146RealCapZeroRefusal 은 실제 Guardian 이 예산 1 KRW 에서 낸 precheck 거절 — 원인 사슬 안에 sentinel 이 든 진짜 모양(엔진 패키지는
+// QFinalRefusal 의 원인 칸을 채울 수 없음).
+func a146RealCapZeroRefusal(t *testing.T) error {
+	t.Helper()
+	fixture, counter := a146CapZeroFixture(t)
+	_ = fixture.deliverKR(t)
+	counter.mu.Lock()
+	defer counter.mu.Unlock()
+	var qFinal *execgw.QFinalRefusal
+	if !errors.As(counter.firstErr, &qFinal) || qFinal.Code != riskbucket.RefusalExistingGuardianCap || !errors.Is(qFinal, risk.ErrStrategyQuantityZero) {
+		t.Fatalf("arrangement: the real Guardian refusal is %v, not the cap-zero shape", counter.firstErr)
+	}
+	return counter.firstErr
 }
 
 // a146CapZeroFixture 는 거래당 위험 예산 1 KRW 의 거래 fixture — 두 KR 범위(005930 · 000660, 둘 다 손절 폭 5 KRW)의 Guardian 상한이 0.
@@ -119,49 +147,32 @@ func a146RunMarket(t *testing.T, fixture a112TradingFixture, effective bool, n i
 	return snapshot, calls.Load(), len(supervisor.Faults())
 }
 
-// F1 · F3: 전달 몸통 한 번 — Guardian 상한 0 은 AUTHORITY_MISMATCH(EXISTING_GUARDIAN_CAP) 오류로 주기를 멈추고 둘째 범위는 평가되지 않음.
-func TestA146CharacterizationACapZeroEntryStopsTheCycleAtItsScope(t *testing.T) {
+// F4 뒤집힘(a146): 서명 활성화(effective) 시장 — 상한 0 스킵만 있는 주기는 잠그지 않음. 매 주기 두 범위가 다 스킵으로 세어지고 브로커 0.
+// (편집 전 HEAD 에서는 첫 주기에 잠겼음 — `analysis/red/characterization-head.txt` 의 `…LatchesAnEffectiveMarket`.)
+func TestA146ACapZeroEntryNoLongerLatchesAnEffectiveMarket(t *testing.T) {
 	fixture, counter := a146CapZeroFixture(t)
-	err := fixture.deliverKR(t)
-	if err == nil || a112ScopeRefusalOf(err) != nil || !strings.Contains(err.Error(), string(StrategyFirstLegAuthorityMismatch)) ||
-		!strings.Contains(err.Error(), string(riskbucket.RefusalExistingGuardianCap)) {
-		t.Fatalf("err=%v — want today's untyped AUTHORITY_MISMATCH carrying EXISTING_GUARDIAN_CAP", err)
-	}
-	if got := counter.prechecks.Load(); got != 1 {
-		t.Fatalf("prechecks=%d — want 1: today the cycle stops at the first scope and the second is never evaluated", got)
-	}
-	if placed := fixture.placedSymbols(); len(placed) != 0 {
-		t.Fatalf("placed=%v — a cap-0 entry must never reach the broker", placed)
-	}
-}
-
-// F4: 서명 활성화(effective) 시장 — 그 오류가 첫 주기에 latchMarket 으로 시장을 잠금(감독자 메모리 잠금, fault 하나).
-func TestA146CharacterizationACapZeroEntryLatchesAnEffectiveMarket(t *testing.T) {
-	fixture, _ := a146CapZeroFixture(t)
 	snapshot, calls, faults := a146RunMarket(t, fixture, true, 3)
-	if !snapshot.Latched || snapshot.FirstRefusal != StrategyWorkerRefusalFailure || faults != 1 ||
-		!strings.Contains(snapshot.FirstFailure, string(riskbucket.RefusalExistingGuardianCap)) {
-		t.Fatalf("cycles=%d faults=%d snapshot=%+v — want the effective market latched by the cap-0 refusal", calls, faults, snapshot)
+	if snapshot.Latched || faults != 0 || calls < 3 || snapshot.FirstFailure != "" {
+		t.Fatalf("cycles=%d faults=%d snapshot=%+v — want the effective market never latched by cap-0 skips", calls, faults, snapshot)
 	}
-	if calls != 1 {
-		t.Fatalf("cycles=%d — a latched market must not evaluate again", calls)
+	if got := counter.prechecks.Load(); got != 2*calls || snapshot.GuardianCapZeroSkips != uint64(2*calls) {
+		t.Fatalf("prechecks=%d skips=%d cycles=%d — want both scopes evaluated and skipped every cycle", got, snapshot.GuardianCapZeroSkips, calls)
 	}
 	if placed := fixture.placedSymbols(); len(placed) != 0 {
 		t.Fatalf("placed=%v", placed)
 	}
 }
 
-// F5: 권한 갱신 전용(refreshOnly — 오늘 생산 감독자) 시장 — 잠기지 않고 매 주기 삼킨 오류로 셈.
-func TestA146CharacterizationACapZeroEntryIsASwallowedFaultOnARefreshOnlyMarket(t *testing.T) {
+// F5 뒤집힘(a146): 권한 갱신 전용(refreshOnly — 오늘 생산 감독자) 시장 — 삼킴 계수가 오르지 않고, 뒤 범위가 굶지 않음.
+// (편집 전 HEAD 에서는 매 주기 삼킴 + precheck 1 회였음.)
+func TestA146ACapZeroEntryIsNotASwallowedFaultOnARefreshOnlyMarket(t *testing.T) {
 	fixture, counter := a146CapZeroFixture(t)
 	snapshot, calls, _ := a146RunMarket(t, fixture, false, 3)
-	if snapshot.Latched || calls < 3 || snapshot.SwallowedCycleErrors < 2 ||
-		!strings.Contains(snapshot.FirstSwallowedFailure, string(riskbucket.RefusalExistingGuardianCap)) {
-		t.Fatalf("cycles=%d snapshot=%+v — want not latched and every cycle counted as a swallowed fault", calls, snapshot)
+	if snapshot.Latched || calls < 3 || snapshot.SwallowedCycleErrors != 0 || snapshot.FirstSwallowedFailure != "" {
+		t.Fatalf("cycles=%d snapshot=%+v — want nothing swallowed for cap-0 skips", calls, snapshot)
 	}
-	// 매 주기 첫 범위에서 멈춤 — precheck 수 = 주기 수(둘째 범위는 한 번도 평가되지 않음).
-	if got := counter.prechecks.Load(); got != calls {
-		t.Fatalf("prechecks=%d cycles=%d — want one precheck per cycle (the second scope starves)", got, calls)
+	if got := counter.prechecks.Load(); got != 2*calls || snapshot.GuardianCapZeroSkips != uint64(2*calls) {
+		t.Fatalf("prechecks=%d skips=%d cycles=%d — want the second scope evaluated every cycle", got, snapshot.GuardianCapZeroSkips, calls)
 	}
 }
 

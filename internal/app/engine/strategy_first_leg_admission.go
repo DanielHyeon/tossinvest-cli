@@ -31,6 +31,9 @@ const (
 	// StrategyFirstLegDailyLossUnmeasurable 은 그날의 손실을 잴 수 없어 신규 진입이 막힌 것(a137, Manager 결정 ①) — 매 주기 거절은
 	// 유지하되 레인 결함이 아님.
 	StrategyFirstLegDailyLossUnmeasurable StrategyFirstLegAdmissionCode = "DAILY_LOSS_UNMEASURABLE"
+	// StrategyFirstLegGuardianCapZero 는 Guardian 상한이 한 단위도 허용하지 않아 그 진입 하나를 건너뛴 것(a146, 사용자 결정 2026-10-15) —
+	// 레인 결함이 아닌 정책 결과이고 다음 주기에 다시 판정됨.
+	StrategyFirstLegGuardianCapZero StrategyFirstLegAdmissionCode = "GUARDIAN_CAP_ZERO"
 )
 
 // StrategyFirstLegAdmissionResult exposes no reusable authority. Receipt is
@@ -116,6 +119,20 @@ func (b *strategyFirstLegAdmissionBridge) admit(ctx context.Context, result stra
 			issue.Reason == string(risk.ReasonDailyLossLimitReached) {
 			refusal := strategyFirstLegRefusal(StrategyFirstLegDailyLossLimit, accepted.market, err.Error())
 			refusal.cause = b.guardian.EscalateDailyLossLimit(ctx, err)
+			return refusal
+		}
+		// a146(사용자 결정 2026-10-15): Guardian 상한 0 — 한 단위도 못 사는 진입은 레인 결함이 아니라 그 진입 하나의 건너뜀. 거절 타입 · 코드 ·
+		// 그 거절 **자신의** 원인 sentinel 셋이 모두 맞을 때만(문구 아님). 같은 코드의 해석 실패 · 원인 없는 0 · FX/정책 오류, 그리고 sentinel 이
+		// 거절 곁에만 있는 모양은 아래 AUTHORITY_MISMATCH 그대로(결함). 흔적은 주기 ctx 의 기록자가 남김(계수 · 하루 한 줄).
+		if qFinal := (*execgw.QFinalRefusal)(nil); errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalExistingGuardianCap &&
+			errors.Is(qFinal, risk.ErrStrategyQuantityZero) {
+			// 가격은 validateStrategyFirstLegAuthority 가 이미 해석해 결속한 봉인 조건의 값(여기서는 표시용).
+			entryMajor, _ := accepted.result.ExecutionTerms.Entry().MajorDecimal()
+			stopMajor, _ := accepted.result.ExecutionTerms.EffectiveStop().MajorDecimal()
+			skip := &strategyEntrySkip{market: accepted.market, symbol: accepted.result.Lineage.Symbol, entry: entryMajor, stop: stopMajor, cause: err}
+			refusal := strategyFirstLegRefusal(StrategyFirstLegGuardianCapZero, accepted.market, err.Error())
+			refusal.cause = skip
+			recordStrategyEntrySkip(ctx, skip)
 			return refusal
 		}
 		refusal := strategyFirstLegRefusal(StrategyFirstLegAuthorityMismatch, accepted.market, err.Error())

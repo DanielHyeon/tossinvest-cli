@@ -1,6 +1,6 @@
 # Function Logic Map: `TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter`
 
-- Source: `internal/strategyworker/policy_receipt_test.go` (362-422)
+- Source: `internal/strategyworker/policy_receipt_test.go` (362-427)
 - Qualified: `TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter`
 - AST evidence: `ast.json`(현재) — 현재 AST branches 8 · returns 3
 - 편집 전 기준: `ast-base.json`(base, `source_sha256` a768c56c186c7d77…) — 편집 전 갈래 수 8
@@ -26,8 +26,8 @@
 | B4 | `for _, field := range structure.Fields.List {` (range 375) | — | 편집 전과 같음(소스 줄 참조) | `go test ./internal/strategyworker -run TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter` · `TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter` |
 | B5 | `for _, name := range field.Names {` (range 376) | — | 편집 전과 같음(소스 줄 참조) | `go test ./internal/strategyworker -run TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter` · `TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter` |
 | B6 | `if fields == nil {` (if 383) | — | 편집 전과 같음(소스 줄 참조) | `go test ./internal/strategyworker -run TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter` · `TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter` |
-| B7 | `if strings.Join(fields, ",") != strings.Join(want, ",") {` (if 412) | — | 편집 전과 같음(소스 줄 참조) | `go test ./internal/strategyworker -run TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter` · `TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter` |
-| B8 | `if threshold := ProductionRuntimePolicy().FailureThreshold(); threshold != 1 {` (if 418) | — | 편집 전과 같음(소스 줄 참조) | `go test ./internal/strategyworker -run TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter` · `TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter` |
+| B7 | `if strings.Join(fields, ",") != strings.Join(want, ",") {` (if 417) | — | 편집 전과 같음(소스 줄 참조) | `go test ./internal/strategyworker -run TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter` · `TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter` |
+| B8 | `if threshold := ProductionRuntimePolicy().FailureThreshold(); threshold != 1 {` (if 423) | — | 편집 전과 같음(소스 줄 참조) | `go test ./internal/strategyworker -run TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter` · `TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter` |
 
 Exact AST return positions: 368 · 372 · 380
 

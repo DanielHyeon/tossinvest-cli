@@ -18,7 +18,7 @@ TARGETS = [
     ("internal/app/engine/strategy_first_leg_admission.go", "strategyFirstLegAdmissionBridge.admit",
      "전략 첫 다리 승인 — 결과 검증 → 권한 수집 → 결속 검증 → 일일 손실 측정 → q_final precheck(거절 분류) → 원자 발급.",
      "precheck 거절 갈래에서 a137 두 갈래 뒤 · `AUTHORITY_MISMATCH` 앞에 분류 하나: `QFinalRefusal` 코드 `EXISTING_GUARDIAN_CAP` 이고 "
-     "원인 사슬에 `risk.ErrStrategyQuantityZero` 면 `GUARDIAN_CAP_ZERO` + 원인 `*strategyEntrySkip` + ctx 기록자 호출. 새 분기 하나.",
+     "그 거절 **자신의** 원인 사슬에 `risk.ErrStrategyQuantityZero` 면 `GUARDIAN_CAP_ZERO` + 원인 `*strategyEntrySkip` + ctx 기록자 호출. 새 분기 하나.",
      f"{ENGINE} -run 'A146|A137|StrategyFirstLegAdmission'"),
     ("internal/app/engine/strategy_market_handoff_delivery.go", "deliverEachStrategyHandoff",
      "한 시장 주기의 handoff 를 조정자 순서대로 몸통에 건넴 — 범위 거절은 건너뛰어 모으고, 일일 손실 표지는 주기를 조용히 끝내며, 그 밖은 멈춤.",
