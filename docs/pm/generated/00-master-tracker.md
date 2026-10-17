@@ -87,6 +87,7 @@
     - STORY-TOS-a101 — The capability survey outlives a deploy [archived] → `a101-the-soak-outlives-a-deploy`
     - STORY-TOS-a114 — The console reattaches its lifecycle [archived] → `a114-the-console-reattaches-its-lifecycle`
     - STORY-TOS-a115 — The console strategy screen reattaches [archived] → `a115-the-console-strategy-screen-reattaches`
+    - STORY-TOS-a154 — 검증된 손절 정책 사용자 선택 [in_progress] → `a154-preview-validated-stop-policy-options`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [archived] → `add-common-exit-optimization`
@@ -142,13 +143,18 @@
     - STORY-TOS-a128 — Jev semantic judgments earn a calibration receipt before any wiring [in_progress] → `a128-jev-shadow-judgment-probe`
     - STORY-TOS-a145 — Evaluate Jev input quality and a separate J2 question revision offline [archived] → `a145-separate-jev-input-quality-and-j2-evaluation`
     - STORY-TOS-a147 — Validate Jev MFI trend on separately registered shadow sessions [archived] → `a147-validate-jev-mfi-trend`
+    - STORY-TOS-a152 — Volume Profile 데이터 적합성 평가 [in_progress] → `a152-qualify-volume-profile-evidence`
   - FEAT-TOS-010 — Strategy entry and market-aware scheduling [active]
     - STORY-TOS-a047 — Add the strategy entry engine [archived] → `a047-add-strategy-engine`
     - STORY-TOS-a048 — Add market-aware strategy scheduling [archived] → `a048-add-market-aware-scheduler`
     - STORY-TOS-a117 — The minute timestamp is the bar's close [archived] → `a117-the-minute-timestamp-is-the-bars-close`
+    - STORY-TOS-a148 — Parker RR 계약 분리 [in_progress] → `a148-clarify-parker-risk-reward-contract`
+    - STORY-TOS-a149 — 세션 VWAP와 확정봉 EMA9 계산 [in_progress] → `a149-compute-session-vwap-and-ema9`
   - FEAT-TOS-011 — Lane performance and strategy optimization [active]
     - STORY-TOS-a049 — Add deterministic lane performance attribution [archived] → `a049-add-lane-performance`
     - STORY-TOS-a050 — Add versioned strategy optimization lifecycle [archived] → `a050-add-strategy-optimization`
+    - STORY-TOS-a151 — 손절 정책 오프라인 비교 [in_progress] → `a151-compare-stop-policies-offline`
+    - STORY-TOS-a153 — 비용 반영 통합 비교 실험 [in_progress] → `a153-evaluate-cost-aware-strategy-variants`
   - FEAT-TOS-013 — Concurrent KR and US multi-horizon strategy lanes [active]
     - STORY-TOS-a064 — Establish authoritative KR and US strategy evidence [archived] → `a064-add-multi-market-strategy-evidence`
     - STORY-TOS-a065 — Add the strategy-neutral position campaign and leg core [archived] → `a065-add-position-campaign-leg-core`
@@ -164,3 +170,6 @@
     - STORY-TOS-a126 — Filled exposure leaves the bucket when its position does [archived] → `a126-filled-exposure-leaves-the-bucket`
     - STORY-TOS-a127 — Strategy authorities read the ledger the engine opened [archived] → `a127-strategy-authorities-read-the-current-ledger`
     - STORY-TOS-a140 — Breakout signals are measured in shadow before any entry wiring [in_progress] → `a140-breakout-signals-are-measured-in-shadow`
+    - STORY-TOS-a150 — 전략별 초기 손절 수량 원장 청산 일관성 [in_progress] → `a150-bind-strategy-stop-sizing-and-exit`
+    - STORY-TOS-a155 — 버전 전략 관측 전용 연결 [in_progress] → `a155-observe-versioned-strategy-decisions`
+    - STORY-TOS-a156 — 실거래 연결과 후속 진입 마감 복구 승인 [in_progress] → `a156-gate-live-strategy-policy-rollout`

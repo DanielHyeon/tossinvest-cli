@@ -1,0 +1,20 @@
+{
+  "id": "STORY-TOS-a150",
+  "title": "전략별 초기 손절 수량 원장 청산 일관성",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a150-bind-strategy-stop-sizing-and-exit",
+    "path": "openspec/changes/a150-bind-strategy-stop-sizing-and-exit"
+  },
+  "found_by": {
+    "date": "2026-10-18",
+    "how": "User requested Astra-authored priority 1–9 OpenSpecs with Terra implementation and independent completion gates.",
+    "record": "openspec/changes/a150-bind-strategy-stop-sizing-and-exit/proposal.md"
+  },
+  "acceptance": [
+    "Complete the scoped acceptance scenarios and dependency gates without changing operating settings.",
+    "Preserve frozen v1, r1 and existing a128/a147 evidence.",
+    "Require independent review, gstack review, Manager verification and scoped lifecycle actions."
+  ]
+}

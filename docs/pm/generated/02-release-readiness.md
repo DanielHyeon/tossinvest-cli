@@ -145,3 +145,12 @@
 | STORY-TOS-a145 | 4 |
 | STORY-TOS-a146 | 5 |
 | STORY-TOS-a147 | 4 |
+| STORY-TOS-a148 | 3 |
+| STORY-TOS-a149 | 3 |
+| STORY-TOS-a150 | 3 |
+| STORY-TOS-a151 | 3 |
+| STORY-TOS-a152 | 3 |
+| STORY-TOS-a153 | 3 |
+| STORY-TOS-a154 | 3 |
+| STORY-TOS-a155 | 3 |
+| STORY-TOS-a156 | 3 |

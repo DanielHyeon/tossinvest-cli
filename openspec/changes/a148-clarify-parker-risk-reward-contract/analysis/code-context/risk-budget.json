@@ -1,0 +1,326 @@
+{
+  "file": "internal/risk/risk_budget.go",
+  "source_sha256": "a6c3c89002f76c30f87d63a1400c91a32051b5be6ceb78ee7651248f796f9db8",
+  "package": "risk",
+  "function": "PerTradeRiskBudget",
+  "signature": "PerTradeRiskBudget(params=1, results=2)",
+  "start": {
+    "line": 34,
+    "column": 1
+  },
+  "end": {
+    "line": 55,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 38,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 42,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 45,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 52,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 14
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 30
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 28
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 17
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 28
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 5
+      },
+      "text": "amount.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 28
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 10
+      },
+      "text": "Exp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 10
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 27
+      },
+      "text": "big.NewInt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 43
+      },
+      "text": "big.NewInt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 54
+      },
+      "text": "int64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 11
+      },
+      "text": "Mul"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 11
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 36
+      },
+      "text": "SetFrac"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 36
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 63
+      },
+      "text": "big.NewInt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 13
+      },
+      "text": "Quo"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 13
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 30
+      },
+      "text": "minor.Num"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 43
+      },
+      "text": "minor.Denom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 5
+      },
+      "text": "floored.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 28
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 32
+      },
+      "text": "minorText"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 35,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

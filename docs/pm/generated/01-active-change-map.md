@@ -145,3 +145,12 @@
 | `a145-separate-jev-input-quality-and-j2-evaluation` | STORY-TOS-a145 | archived |
 | `a146-guardian-cap-zero-skips-the-entry` | STORY-TOS-a146 | implemented |
 | `a147-validate-jev-mfi-trend` | STORY-TOS-a147 | archived |
+| `a148-clarify-parker-risk-reward-contract` | STORY-TOS-a148 | in_progress |
+| `a149-compute-session-vwap-and-ema9` | STORY-TOS-a149 | in_progress |
+| `a150-bind-strategy-stop-sizing-and-exit` | STORY-TOS-a150 | in_progress |
+| `a151-compare-stop-policies-offline` | STORY-TOS-a151 | in_progress |
+| `a152-qualify-volume-profile-evidence` | STORY-TOS-a152 | in_progress |
+| `a153-evaluate-cost-aware-strategy-variants` | STORY-TOS-a153 | in_progress |
+| `a154-preview-validated-stop-policy-options` | STORY-TOS-a154 | in_progress |
+| `a155-observe-versioned-strategy-decisions` | STORY-TOS-a155 | in_progress |
+| `a156-gate-live-strategy-policy-rollout` | STORY-TOS-a156 | in_progress |
