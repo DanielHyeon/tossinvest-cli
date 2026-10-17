@@ -1,0 +1,12 @@
+# 편집 전 HEAD 7ce7e411 (= base) 에서 특성 시험 — 2026-10-17T21:51:46+09:00
+$ rtk proxy go test -count=1 -tags tossos_testseams -run TestA146Characterization -v ./internal/app/engine/
+=== RUN   TestA146CharacterizationACapZeroEntryStopsTheCycleAtItsScope
+--- PASS: TestA146CharacterizationACapZeroEntryStopsTheCycleAtItsScope (0.30s)
+=== RUN   TestA146CharacterizationACapZeroEntryLatchesAnEffectiveMarket
+--- PASS: TestA146CharacterizationACapZeroEntryLatchesAnEffectiveMarket (0.37s)
+=== RUN   TestA146CharacterizationACapZeroEntryIsASwallowedFaultOnARefreshOnlyMarket
+--- PASS: TestA146CharacterizationACapZeroEntryIsASwallowedFaultOnARefreshOnlyMarket (0.44s)
+=== RUN   TestA146CharacterizationABucketExhaustedScopeStillLatchesAnEffectiveMarket
+--- PASS: TestA146CharacterizationABucketExhaustedScopeStillLatchesAnEffectiveMarket (1.78s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	2.897s
