@@ -39,7 +39,7 @@ Story: `STORY-TOS-a146` · **High-risk**(Guardian · 전략 진입 · 레인 잠
 ## 3. 사람 · Manager
 
 - [x] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a146-guardian-cap-zero-skips-the-entry` + 독립 검증 · PM tracker 재생성 · archive
-      — 2026-10-18 Manager 독립 검증: 독립 적대 리뷰 2건(APPROVE-WITH-FIXES, P0·P1 0) 지적 전부 수리 확인 · 격리 워크트리 A146|A137 태그 시험 32 ok · 착지 34ffe3c93(격리 워크트리 계산) · 게이트는 격리 워크트리에서(공유 트리에 병행 세션 a147 미커밋 편집)
+      — 2026-10-18 Manager 독립 검증: 독립 적대 리뷰 2건(APPROVE-WITH-FIXES, P0·P1 0) 지적 전부 수리 확인 · 격리 워크트리 A146|A137 태그 시험 32 ok · 착지 34ffe3c93(격리 워크트리 계산) · 게이트는 격리 워크트리에서(공유 트리에 병행 세션 a147 미커밋 편집) · 게이트 = 2026-10-18 `make gate` **PASS** (격리 워크트리, HEAD 055f47f78, 04:03→04:35; 1차 FAIL = 빈 `/tmp/.git` 으로 go VCS status 128 — 제거, 2차 FAIL = A091 시간 시험 부하 flake(load 11~12, 단독 3/3 통과))
 - 배포(체크박스 아님): 엔진 이미지 교체는 사람이 KST 05:00~09:00 창에서.
 
 ## 후속 (체크박스 아님 — 사람 결정 2026-10-18)
