@@ -44,6 +44,10 @@ TARGETS = [
      "시험 — 버킷 고갈이 아닌 q_final 거절(예산 1 KRW → Guardian 상한 0)은 범위 거절이 아님.",
      "기대를 새 동작으로: 범위 거절이 아님은 그대로, 대신 주기가 멈추지 않고(오류 없음) 두 범위가 다 평가되며 브로커 0.",
      f"{ENGINE} -run TestAnExistingGuardianCapRefusalIsNotAScopeRefusal"),
+    ("internal/app/engine/a112_owner_scope_trading_test.go", "newA112TradingFixture",
+     "시험 fixture — 생산 적재기 · 실제 Guardian · 실제 원장 · dispatch 주기.",
+     "옵션 `maxOrderNotional`(주문 금액 상한) 분기 하나 — notional 상한 0 실제 경로 시험용(a146 사람 결정 1).",
+     f"{ENGINE} -run 'A146|A112'"),
     ("internal/strategyworker/policy_receipt_test.go", "TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter",
      "시험 — 엔진 시장 런타임 칸 목록이 「실패를 세지 않는다」는 임계값 1 의 영수증.",
      "목록에 a146 칸 넷(`guardianCapZeroSkips` · `firstGuardianCapZeroSkip` · `entrySkipNoticeDay` · `entrySkipNoticed`)과 근거 주석 — 쓰는 곳은 "
@@ -58,6 +62,7 @@ FN_TESTS = {
         "TestA137ClassificationIsUnchangedForEveryPrecheckRefusal", "TestA146TheRealPathEvaluatesEveryScopeAndPlacesNothing"],
     "deliverEachStrategyHandoff": [
         "TestA146ASkipContinuesToTheNextScopeWithoutAnError", "TestA146ASkipIsNeverJoinedIntoTheCycleError",
+        "TestA146OnlyAPureSkipIsSkippedEveryLookalikeStops",
         "TestOnlyATypedScopeRefusalIsSkippedEveryOtherFaultStops", "TestA137AMixedCycleStillReportsItsSkippedScopes"],
     "StrategyEntrySupervisor.runMarket": [
         "TestA146ASkipNeverLatchesOrSwallowsOnEitherLaneKind", "TestA137AnUnmarkedFaultStillLatchesOrIsSwallowedAsToday",
@@ -67,6 +72,7 @@ FN_TESTS = {
     "Context.NewRefreshingPairedStrategyEntrySupervisor": ["TestA146TheProductionSupervisorCarriesTheSkipNotice",
                                                            "TestA137TheProductionSupervisorCarriesTheNotice"],
     "TestAnExistingGuardianCapRefusalIsNotAScopeRefusal": ["TestAnExistingGuardianCapRefusalIsNotAScopeRefusal"],
+    "newA112TradingFixture": ["TestA146ANotionalCapZeroIsTheSameSkipOnTheRealPath", "TestAnExistingGuardianCapRefusalIsNotAScopeRefusal"],
     "TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter": ["TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter"],
 }
 

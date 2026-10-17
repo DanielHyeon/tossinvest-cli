@@ -53,7 +53,7 @@ Pre-Edit Gate:
 - upstream 상속 시험 영향: no — 게이트 OFF 는 Guardian · 전략 감독자 경로를 만들지 않음, 엔진 패키지 밖 동작 무변경
 - 실패 시험 선행: yes (analysis/red/ — 컴파일 RED + census 행동 RED + 특성 시험의 편집 전 반대 동작)
 - 설정 · DB · journal 변경: 없음(새 키 0 · 스키마 0 · 원장 쓰기 0). rollback = 이전 이미지
-- §0 검토: 통과 — 주문을 늘리는 판정 없음(건너뛴 진입 브로커 0, 뒤 범위는 전체 Guardian 판정 그대로), 손절 · 청산 경로 무관(F9), 토글 OFF 무관,
+- §0 검토: 통과 — 건너뛴 진입의 브로커 0. 다만 굶음이 풀려 같은 주기의 뒤 범위가 주문까지 갈 수 있음(design D5 — 각 범위는 전체 Guardian 판정 그대로, 구현 리뷰 2 P3-4 정정), 손절 · 청산 경로 무관(F9), 토글 OFF 무관,
   사이징 무편집(§0.9), 잠금 저장소 무편집(사용자 기각 안 회피). 명시 한계 F10(상한 0 이 결함을 가림 — 주문 0)
 ```
 
@@ -67,3 +67,20 @@ Pre-Edit Gate:
 
 round1(7395cc02) 21 중 CAUGHT 17 · build 2 · SURVIVED 2 → round2(01ca7ff1, 저장소 밖 pid 사본, 무변이 대조군 GREEN): **비동등 20/20 CAUGHT**, M1 동등(사전 선언).
 `analysis/mutation/round1.md` · `round2.md`.
+
+## 구현 독립 적대 리뷰 (Manager 가 띄운 분리 컨텍스트 둘, tasks 2.3)
+
+- 리뷰 1(7395cc02): **APPROVE-WITH-FIXES** — P0 0 · P1 0 · P2 1 · P3 6. 리뷰 2(01ca7ff1 + 936d7e0d): **APPROVE-WITH-FIXES** — P0 0 · P1 0 · P2 1(1 의 P2-1 과 같은 자리) · P3.
+- 수용 · 수리(이 커밋):
+  - P2-1(둘 다) 전달 루프가 타입만 보고 모양을 못 박지 않음 — 문구 흉내 · `|| errors.As(QFinalRefusal)` · 「원인 무관 EXISTING_GUARDIAN_CAP」 변이가 생존 →
+    `strategyEntrySkipOf` 로 **두 모양만** 인정(스킵 자체 · dispatch 감싸개 하나), 음성 시험 `TestA146OnlyAPureSkipIsSkippedEveryLookalikeStops`(감싼 상한 거절 ·
+    문구 흉내 · Join 두 순서 · 결함이 감싼 스킵 · 다른 코드 감싸개 · 이중 감싸개).
+  - 승격 P3-1(리뷰 2) `errors.As` 가 Join/감싸개 트리를 뒤져 결함이 사라짐 — 위 판정이 다중 오류를 어느 자리든 거절, 탐침 두 모양을 시험으로.
+  - P3-1(리뷰 1) 시장 귀속 — US 주기도 기록, US 알림 · 스냅숏에만 남음을 단언. P3-2 표 행 이름 정정(「sentinel beside another q_final code」), M1 동등 유지(grep 근거).
+  - P3-3 문서 표류 — design D1 판정식 · proposal F 번호. P3-4 알림에 FX 권위(통화 쌍 · digest — 봉인 권위는 율을 내보이지 않아 율 대신), 값 결함 → 조용한 스킵을 알려진 한계로.
+  - P3-6 일 키 seam 은 패키지 변수 유지 + t.Parallel 금지 · t.Cleanup 주석.
+  - 리뷰 2 P3-2 경합 — 스킵 계수 · refreshOnly 시험을 `a146_entry_skip_race_test.go` 로 옮겨 `RACE_ENGINE_FILES/TESTS` 에 등록(완전성 가드 통과).
+  - 리뷰 2 P3-3 notional 상한 0 — spec 시나리오 + `TestA146ANotionalCapBelowOneUnitIsTheSameZeroSentinel`(risk, KR · US FX, 경계 한 단위) +
+    `TestA146ANotionalCapZeroIsTheSameSkipOnTheRealPath`(엔진 실제 경로, KR · US, 한 주 대조군은 주문까지).
+  - 리뷰 2 P3-4 문서 — F7 · proposal 에 굶음 조건(검증된 4-가족 활성화), Pre-Edit §0 문장 정정. shadow 단계 시작은 design D5 · proposal Impact 에 이미 적힘(확인).
+  - 리뷰 1 P3-5 조립 감독자(strategy_entry_supervisor.go:379 — Effective 가능, 오늘 Run 안 됨)에 알림 옵션 없음 — tasks 후속 메모.

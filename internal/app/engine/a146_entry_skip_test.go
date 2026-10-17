@@ -10,8 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -22,12 +20,13 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyaccount"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 )
 
 // a146Skip 은 전달 · 감독자 시험용 스킵 값 — 그 단계들은 원인 모양을 보지 않고 타입만 봄(원인 모양은 승인 시험이 실제 Guardian 거절로 잼).
 func a146Skip(symbol string) *strategyEntrySkip {
-	return &strategyEntrySkip{market: strategyrouter.MarketKR, symbol: symbol, entry: "100", stop: "95",
+	return &strategyEntrySkip{market: strategyrouter.MarketKR, symbol: symbol, entry: "100", stop: "95", fx: "KRW->KRW sha256:fx",
 		cause: errors.New("execgw: q_final refused: EXISTING_GUARDIAN_CAP")}
 }
 
@@ -79,7 +78,7 @@ func TestA146OtherGuardianCapRefusalsStayFaults(t *testing.T) {
 		"cap code with no cause":                  {&execgw.QFinalRefusal{Code: riskbucket.RefusalExistingGuardianCap}, StrategyFirstLegAuthorityMismatch},
 		"cap code with an FX cause":               {capCode(risk.ErrAccountBaseFXUnavailable), StrategyFirstLegAuthorityMismatch},
 		"cap code with a parse cause":             {capCode(errors.New("strconv.ParseUint: invalid syntax")), StrategyFirstLegAuthorityMismatch},
-		"sentinel under another q_final code":     {errors.Join(&execgw.QFinalRefusal{Code: riskbucket.RefusalZeroQuantity}, risk.ErrStrategyQuantityZero), StrategyFirstLegAuthorityMismatch},
+		"sentinel beside another q_final code":    {errors.Join(&execgw.QFinalRefusal{Code: riskbucket.RefusalZeroQuantity}, risk.ErrStrategyQuantityZero), StrategyFirstLegAuthorityMismatch},
 		"sentinel under a chain refusal":          {errors.Join(&execgw.IssueRefusal{Stage: execgw.StageChain, Reason: string(risk.ReasonInvalidOrderSize)}, risk.ErrStrategyQuantityZero), StrategyFirstLegAuthorityMismatch},
 		"bare sentinel":                           {risk.ErrStrategyQuantityZero, StrategyFirstLegAuthorityMismatch},
 		"sentinel beside, not under, the refusal": {capCode(risk.ErrStrategyQuantityZero), StrategyFirstLegAuthorityMismatch},
@@ -143,86 +142,42 @@ func TestA146ASkipIsNeverJoinedIntoTheCycleError(t *testing.T) {
 	}
 }
 
+// 구현 리뷰 P2-1 · 승격 P3-1: 전달 루프가 스킵으로 받는 것은 strategyEntrySkipOf 의 두 모양뿐 — 스킵을 흉내 내거나 결함이 스킵을 품은 모양은
+// 오늘처럼 주기를 멈추고 그 오류를 그대로 돌려줌(스킵은 결함을 가릴 수 없음).
+func TestA146OnlyAPureSkipIsSkippedEveryLookalikeStops(t *testing.T) {
+	fault := errors.New("engine: strategy dispatch lease could not be issued")
+	capRefusal := &execgw.QFinalRefusal{Code: riskbucket.RefusalExistingGuardianCap, Field: "q_existing_guardian"}
+	stopping := map[string]error{
+		"cap refusal wrapped as a mismatch":  fmt.Errorf("engine: first-leg admission %s: %w", StrategyFirstLegAuthorityMismatch, capRefusal),
+		"phrase lookalike without the type":  fmt.Errorf("engine: first-leg admission %s: %s", StrategyFirstLegGuardianCapZero, a146Skip("005930").Error()),
+		"skip joined with a fault":           errors.Join(a146Skip("005930"), fault),
+		"fault joined with a skip":           errors.Join(fault, a146Skip("005930")),
+		"fault wrapping a skip":              fmt.Errorf("lease failed after %w", a146Skip("005930")),
+		"dispatch wrapper with another code": fmt.Errorf("engine: first-leg admission %s: %w", StrategyFirstLegAuthorityMismatch, a146Skip("005930")),
+		"double wrap of the dispatch shape":  fmt.Errorf("x: %w", fmt.Errorf("engine: first-leg admission %s: %w", StrategyFirstLegGuardianCapZero, a146Skip("005930"))),
+	}
+	for name, err := range stopping {
+		seen, got := a137Deliver(t, map[string]error{"a": err})
+		if strings.Join(seen, ",") != "a" || got != err {
+			t.Errorf("%s: delivered=%v err=%v — want the cycle stopped at a with that error unchanged", name, seen, got)
+		}
+	}
+	for name, err := range map[string]error{
+		"bare skip":        a146Skip("005930"),
+		"dispatch wrapper": fmt.Errorf("engine: first-leg admission %s: %w", StrategyFirstLegGuardianCapZero, a146Skip("005930")),
+	} {
+		if skip, ok := strategyEntrySkipOf(err); !ok || skip.symbol != "005930" {
+			t.Errorf("%s: want accepted as a pure skip", name)
+		}
+	}
+}
+
 // D2 · F6: 스킵만 있는 주기는 두 레인 종류 모두에서 잠금 0 · 삼킴 0(대조군: 표지 없는 결함은 a137 시험이 오늘처럼 잼).
 func TestA146ASkipNeverLatchesOrSwallowsOnEitherLaneKind(t *testing.T) {
 	for _, effective := range []bool{true, false} {
 		snapshot, calls := a137RunCycles(t, effective, fmt.Errorf("engine: first-leg admission %s: %w", StrategyFirstLegGuardianCapZero, a146Skip("005930")), 3)
 		if calls < 3 || snapshot.Latched || snapshot.SwallowedCycleErrors != 0 {
 			t.Errorf("effective=%v: cycles=%d snapshot=%+v — want ≥3 cycles, no latch and nothing swallowed", effective, calls, snapshot)
-		}
-	}
-}
-
-// D3: 감독자가 주기 ctx 에 실은 기록자로 스킵을 세고(주기마다), 첫 원인을 지키며, 알림은 (계좌 일 키, 종목)마다 한 번.
-func TestA146ASkipIsCountedAndAnnouncedOncePerDayAndSymbol(t *testing.T) {
-	for _, effective := range []bool{true, false} {
-		var calls atomic.Int32
-		var mu sync.Mutex
-		var notices []string
-		cycle := func(ctx context.Context) error {
-			calls.Add(1)
-			recordStrategyEntrySkip(ctx, a146Skip("005930"))
-			recordStrategyEntrySkip(ctx, a146Skip("000660"))
-			return nil
-		}
-		fake := clock.NewFake(time.Date(2026, 10, 17, 1, 0, 0, 0, time.UTC)) // KST 10:00 — 일 키 10-17
-		// US 는 아무것도 하지 않는 주기 — calls 가 KR 주기만 세게.
-		idle := func(context.Context) error { return nil }
-		worker := func(market StrategyMarket, cycle StrategyCycle) StrategyMarketWorker {
-			if !effective {
-				return StrategyMarketWorker{Market: market, PollInterval: DefaultStrategyCycleLimit, RefreshesAuthority: true, Cycle: cycle}
-			}
-			return StrategyMarketWorker{Market: market, Effective: true, Cycle: cycle, AuthorityGeneration: 7,
-				AuthorityExpiresAt: time.Date(2099, 1, 1, 0, 0, 0, 0, time.UTC),
-				EvidenceDigest:     "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-				LatchRevision:      1, PollInterval: DefaultStrategyCycleLimit}
-		}
-		supervisor, err := NewStrategyEntrySupervisor(StrategyEntrySupervisorOptions{Clock: fake, CycleLimit: MaximumStrategyCycleLimit,
-			Workers: []StrategyMarketWorker{worker(StrategyMarketKR, cycle), worker(StrategyMarketUS, idle)},
-			EntrySkipNotice: func(market StrategyMarket, day, symbol, cause string) {
-				mu.Lock()
-				defer mu.Unlock()
-				if market == StrategyMarketKR {
-					notices = append(notices, day+" "+symbol+" "+cause)
-				}
-			}})
-		if err != nil {
-			t.Fatal(err)
-		}
-		ctx, cancel := context.WithCancel(context.Background())
-		done := make(chan error, 1)
-		go func() { done <- supervisor.Run(ctx) }()
-		<-supervisor.Ready()
-		advance := func(until int32) {
-			deadline := time.Now().Add(3 * time.Second)
-			for calls.Load() < until && time.Now().Before(deadline) {
-				fake.Advance(DefaultStrategyCycleLimit)
-				time.Sleep(time.Millisecond)
-			}
-			time.Sleep(20 * time.Millisecond)
-		}
-		advance(4)
-		snapshot, _ := supervisor.Snapshot(StrategyMarketKR)
-		mu.Lock()
-		first := append([]string(nil), notices...)
-		mu.Unlock()
-		if snapshot.Latched || snapshot.SwallowedCycleErrors != 0 || snapshot.GuardianCapZeroSkips < 6 ||
-			!strings.Contains(snapshot.FirstGuardianCapZeroSkip, "005930") || strings.Contains(snapshot.FirstGuardianCapZeroSkip, "000660") {
-			t.Fatalf("effective=%v snapshot=%+v — want ≥6 skips counted, the first cause kept, no latch, nothing swallowed", effective, snapshot)
-		}
-		if len(first) != 2 || !strings.HasPrefix(first[0], "2026-10-17 005930 ") || !strings.HasPrefix(first[1], "2026-10-17 000660 ") {
-			t.Fatalf("effective=%v notices=%v — want exactly one per symbol for account day 2026-10-17", effective, first)
-		}
-		// KST 08:00 을 넘겨 다음 일 키 → 종목마다 한 번 더.
-		fake.Set(time.Date(2026, 10, 17, 23, 0, 0, 0, time.UTC))
-		advance(calls.Load() + 3)
-		mu.Lock()
-		second := append([]string(nil), notices...)
-		mu.Unlock()
-		cancel()
-		<-done
-		if len(second) != 4 || !strings.HasPrefix(second[2], "2026-10-18 005930 ") || !strings.HasPrefix(second[3], "2026-10-18 000660 ") {
-			t.Fatalf("effective=%v notices=%v — want one more per symbol for account day 2026-10-18", effective, second)
 		}
 	}
 }
@@ -237,7 +192,7 @@ func TestA146TheProductionNoticeIsOneWarningLine(t *testing.T) {
 	c.strategyEntrySkipNotice()(StrategyMarketKR, "2026-10-17", "005930", a146Skip("005930").Error())
 	line := buf.String()
 	for _, want := range []string{string(obs.EventStrategyEntrySkipped), `"market":"KR"`, `"symbol":"005930"`, `"account_day":"2026-10-17"`,
-		string(StrategyFirstLegGuardianCapZero), "at entry 100 stop 95", "sells, stops and exits are unaffected"} {
+		string(StrategyFirstLegGuardianCapZero), "at entry 100 stop 95 fx KRW->KRW sha256:fx", "sells, stops and exits are unaffected"} {
 		if !strings.Contains(line, want) {
 			t.Fatalf("line %q lacks %q", line, want)
 		}
@@ -348,5 +303,36 @@ func TestA146AnUncountableAccountDayStillAnnouncesTheSkip(t *testing.T) {
 	}
 	if strings.Join(notices, ",") != "|005930,|000660" || worker.guardianCapZeroSkips != 6 {
 		t.Fatalf("notices=%v skips=%d — want one notice per symbol with an empty day and every skip counted", notices, worker.guardianCapZeroSkips)
+	}
+}
+
+// a146 사람 결정 1(2026-10-18): 예산은 넉넉하지만 한 주 가격(KR 100 KRW · US 100 USD × 1400 × 1.05 = 147,000 KRW)이 주문 금액 상한보다 큰
+// 진입도 실제 경로에서 같은 스킵 — 주기 오류 없음 · 브로커 0. 상한이 정확히 한 주면 같은 경로가 주문까지 감(대조군).
+func TestA146ANotionalCapZeroIsTheSameSkipOnTheRealPath(t *testing.T) {
+	for _, market := range []struct {
+		name          string
+		below, oneLot string
+		handoffs      func(a112TradingFixture) []strategyhandoff.Handoff
+	}{
+		{"KR", "99", "100", func(f a112TradingFixture) []strategyhandoff.Handoff { return f.proposals.kr.dispatchHandoffs() }},
+		{"US with FX", "146999", "147000", func(f a112TradingFixture) []strategyhandoff.Handoff { return f.proposals.us.dispatchHandoffs() }},
+	} {
+		t.Run(market.name, func(t *testing.T) {
+			fixture := newA112TradingFixture(t, a112TradingOptions{maxOrderNotional: market.below})
+			var skips []*strategyEntrySkip
+			ctx := withStrategyEntrySkipRecorder(context.Background(), func(skip *strategyEntrySkip) { skips = append(skips, skip) })
+			err := dispatchStrategyMarketHandoffs(ctx, fixture.journal, fixture.cycle, market.handoffs(fixture))
+			var qFinal *execgw.QFinalRefusal
+			if err != nil || len(skips) == 0 || len(fixture.placedSymbols()) != 0 || !errors.As(skips[0], &qFinal) ||
+				qFinal.Code != riskbucket.RefusalExistingGuardianCap || !errors.Is(qFinal, risk.ErrStrategyQuantityZero) {
+				t.Fatalf("notional %s: err=%v skips=%v placed=%v — want a notional-cap-0 skip, no cycle error, no order", market.below, err, skips, fixture.placedSymbols())
+			}
+			control := newA112TradingFixture(t, a112TradingOptions{maxOrderNotional: market.oneLot})
+			skips = nil
+			_ = dispatchStrategyMarketHandoffs(ctx, control.journal, control.cycle, market.handoffs(control))
+			if len(skips) != 0 || len(control.placedSymbols()) == 0 {
+				t.Fatalf("notional %s (one unit): skips=%v placed=%v — want the same path to reach an order", market.oneLot, skips, control.placedSymbols())
+			}
+		})
 	}
 }

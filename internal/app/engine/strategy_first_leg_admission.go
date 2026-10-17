@@ -129,7 +129,11 @@ func (b *strategyFirstLegAdmissionBridge) admit(ctx context.Context, result stra
 			// 가격은 validateStrategyFirstLegAuthority 가 이미 해석해 결속한 봉인 조건의 값(여기서는 표시용).
 			entryMajor, _ := accepted.result.ExecutionTerms.Entry().MajorDecimal()
 			stopMajor, _ := accepted.result.ExecutionTerms.EffectiveStop().MajorDecimal()
-			skip := &strategyEntrySkip{market: accepted.market, symbol: accepted.result.Lineage.Symbol, entry: entryMajor, stop: stopMajor, cause: err}
+			fx := "unavailable"
+			if digest := authority.Entry.FXAuthority.Digest(); digest != "" {
+				fx = authority.Entry.FXAuthority.QuoteCurrency() + "->" + authority.Entry.FXAuthority.AccountCurrency() + " " + digest
+			}
+			skip := &strategyEntrySkip{market: accepted.market, symbol: accepted.result.Lineage.Symbol, entry: entryMajor, stop: stopMajor, fx: fx, cause: err}
 			refusal := strategyFirstLegRefusal(StrategyFirstLegGuardianCapZero, accepted.market, err.Error())
 			refusal.cause = skip
 			recordStrategyEntrySkip(ctx, skip)

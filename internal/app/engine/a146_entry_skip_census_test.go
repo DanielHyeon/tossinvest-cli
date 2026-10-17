@@ -25,9 +25,10 @@ var strategyEntrySkipMentions = map[string]int{
 	"a146_entry_skip.go:recordGuardianCapZeroSkip":     1,
 	// **만드는 자리는 여기 하나뿐**: q_final 거절 타입 + 코드 EXISTING_GUARDIAN_CAP + 원인 sentinel risk.ErrStrategyQuantityZero(design D1).
 	"strategy_first_leg_admission.go:admit": 1,
-	// 운반: 전달 몸통의 errors.As 대상, 감독자 주기 ctx 의 기록자 클로저.
-	"strategy_market_handoff_delivery.go:deliverEachStrategyHandoff": 1,
-	"strategy_entry_supervisor.go:runMarket":                         1,
+	// 전달 루프가 스킵으로 받는 모양의 판정(두 모양만 — 결함을 품은 모양은 아님). 전달 몸통은 이 함수만 부르고 타입을 언급하지 않음.
+	"a146_entry_skip.go:strategyEntrySkipOf": 3,
+	// 운반: 감독자 주기 ctx 의 기록자 클로저.
+	"strategy_entry_supervisor.go:runMarket": 1,
 }
 
 func TestTheEntrySkipTypeIsMadeOnlyWhereTheCensusSaysItIs(t *testing.T) {

@@ -1,8 +1,8 @@
 # Function Logic Map: `admit`
 
-- Source: `internal/app/engine/strategy_first_leg_admission.go` (86-157)
+- Source: `internal/app/engine/strategy_first_leg_admission.go` (86-161)
 - Qualified: `strategyFirstLegAdmissionBridge.admit`
-- AST evidence: `ast.json`(현재) — 현재 AST branches 12 · returns 10
+- AST evidence: `ast.json`(현재) — 현재 AST branches 13 · returns 10
 - 편집 전 기준: `ast-base.json`(base, `source_sha256` 70815fb4533715dd…) — 편집 전 갈래 수 11
 - Risk scan: `risk-pattern-report.md`
 
@@ -29,17 +29,18 @@
 | B7 | `if issue := (*execgw.IssueRefusal)(nil); errors.As(err, &issue) && issue.Stage == execgw.StageChain &&` (if 111) | a137 강화(한도 갈래만) | a137 DAILY_LOSS_UNMEASURABLE / DAILY_LOSS_LIMIT(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|StrategyFirstLegAdmission'` · `TestA146ACapZeroPrecheckIsATypedSkip` · `TestA146OtherGuardianCapRefusalsStayFaults` · `TestA137ClassificationIsUnchangedForEveryPrecheckRefusal` · `TestA146TheRealPathEvaluatesEveryScopeAndPlacesNothing` |
 | B8 | `if issue := (*execgw.IssueRefusal)(nil); errors.As(err, &issue) && issue.Stage == execgw.StageChain &&` (if 118) | a137 강화(한도 갈래만) | a137 DAILY_LOSS_UNMEASURABLE / DAILY_LOSS_LIMIT(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|StrategyFirstLegAdmission'` · `TestA146ACapZeroPrecheckIsATypedSkip` · `TestA146OtherGuardianCapRefusalsStayFaults` · `TestA137ClassificationIsUnchangedForEveryPrecheckRefusal` · `TestA146TheRealPathEvaluatesEveryScopeAndPlacesNothing` |
 | B9 | `if qFinal := (*execgw.QFinalRefusal)(nil); errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalExistingGuardianCap &&` (if 127) | ctx 기록자 호출(`recordStrategyEntrySkip`) | **a146** GUARDIAN_CAP_ZERO + 원인 `*strategyEntrySkip` — 코드 · sentinel 둘 다 맞을 때만, 나머지는 아래 AUTHORITY_MISMATCH | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|StrategyFirstLegAdmission'` · `TestA146ACapZeroPrecheckIsATypedSkip` · `TestA146OtherGuardianCapRefusalsStayFaults` · `TestA137ClassificationIsUnchangedForEveryPrecheckRefusal` · `TestA146TheRealPathEvaluatesEveryScopeAndPlacesNothing` |
-| B10 | `if qFinal := (*execgw.QFinalRefusal)(nil); errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalBucketCapExhausted {` (if 145) | — | 버킷 고갈 → 원인을 범위 거절로(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|StrategyFirstLegAdmission'` · `TestA146ACapZeroPrecheckIsATypedSkip` · `TestA146OtherGuardianCapRefusalsStayFaults` · `TestA137ClassificationIsUnchangedForEveryPrecheckRefusal` · `TestA146TheRealPathEvaluatesEveryScopeAndPlacesNothing` |
-| B11 | `if key, keyed := strategyOwnerKeyOf(authority.Result.Lineage); keyed {` (if 146) | — | 범위 키가 있을 때만 범위 거절(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|StrategyFirstLegAdmission'` · `TestA146ACapZeroPrecheckIsATypedSkip` · `TestA146OtherGuardianCapRefusalsStayFaults` · `TestA137ClassificationIsUnchangedForEveryPrecheckRefusal` · `TestA146TheRealPathEvaluatesEveryScopeAndPlacesNothing` |
-| B12 | `if err != nil {` (if 153) | — | 편집 전과 같음(소스 줄 참조) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|StrategyFirstLegAdmission'` · `TestA146ACapZeroPrecheckIsATypedSkip` · `TestA146OtherGuardianCapRefusalsStayFaults` · `TestA137ClassificationIsUnchangedForEveryPrecheckRefusal` · `TestA146TheRealPathEvaluatesEveryScopeAndPlacesNothing` |
+| B10 | `if digest := authority.Entry.FXAuthority.Digest(); digest != "" {` (if 133) | — | 편집 전과 같음(소스 줄 참조) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|StrategyFirstLegAdmission'` · `TestA146ACapZeroPrecheckIsATypedSkip` · `TestA146OtherGuardianCapRefusalsStayFaults` · `TestA137ClassificationIsUnchangedForEveryPrecheckRefusal` · `TestA146TheRealPathEvaluatesEveryScopeAndPlacesNothing` |
+| B11 | `if qFinal := (*execgw.QFinalRefusal)(nil); errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalBucketCapExhausted {` (if 149) | — | 버킷 고갈 → 원인을 범위 거절로(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|StrategyFirstLegAdmission'` · `TestA146ACapZeroPrecheckIsATypedSkip` · `TestA146OtherGuardianCapRefusalsStayFaults` · `TestA137ClassificationIsUnchangedForEveryPrecheckRefusal` · `TestA146TheRealPathEvaluatesEveryScopeAndPlacesNothing` |
+| B12 | `if key, keyed := strategyOwnerKeyOf(authority.Result.Lineage); keyed {` (if 150) | — | 범위 키가 있을 때만 범위 거절(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|StrategyFirstLegAdmission'` · `TestA146ACapZeroPrecheckIsATypedSkip` · `TestA146OtherGuardianCapRefusalsStayFaults` · `TestA137ClassificationIsUnchangedForEveryPrecheckRefusal` · `TestA146TheRealPathEvaluatesEveryScopeAndPlacesNothing` |
+| B13 | `if err != nil {` (if 157) | — | 편집 전과 같음(소스 줄 참조) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|StrategyFirstLegAdmission'` · `TestA146ACapZeroPrecheckIsATypedSkip` · `TestA146OtherGuardianCapRefusalsStayFaults` · `TestA137ClassificationIsUnchangedForEveryPrecheckRefusal` · `TestA146TheRealPathEvaluatesEveryScopeAndPlacesNothing` |
 
-Exact AST return positions: 89 · 92 · 98 · 101 · 115 · 122 · 136 · 150 · 154 · 156
+Exact AST return positions: 89 · 92 · 98 · 101 · 115 · 122 · 140 · 154 · 158 · 160
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| (호출 17종 — 대표: `MajorDecimal`, `accepted.result.ExecutionTerms.EffectiveStop`, `accepted.result.ExecutionTerms.Entry`, `b.guardian.EscalateDailyLossLimit`, `b.guardian.IssuePrecheckedQFinalCampaignFirstLeg`, `b.guardian.MeasureDailyLoss`) | 본문 참조 | 소스 참조 | AST |
+| (호출 20종 — 대표: `MajorDecimal`, `accepted.result.ExecutionTerms.EffectiveStop`, `accepted.result.ExecutionTerms.Entry`, `authority.Entry.FXAuthority.AccountCurrency`, `authority.Entry.FXAuthority.Digest`, `authority.Entry.FXAuthority.QuoteCurrency`) | 본문 참조 | 소스 참조 | AST |
 
 ## State mutations and fallbacks
 

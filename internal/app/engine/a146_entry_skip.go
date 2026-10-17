@@ -7,6 +7,7 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 
@@ -22,20 +23,46 @@ type strategyEntrySkip struct {
 	// entry · stop 은 봉인된 실행 조건의 시장 가격(major 표기 — 계좌 값 아님). 가격 단위 결함(예: ×100)이 조용한 스킵이 된 경우를 운영자가
 	// 가를 수 있게 알림 줄에 실음(freeze 리뷰 P3-2).
 	entry, stop string
-	cause       error
+	// fx 는 그 진입의 봉인 FX 권위 식별(통화 쌍 · digest — 시장 자료, 계좌 값 아님). 봉인 권위는 율을 밖에 내보이지 않으므로 율 대신 digest 를
+	// 싣는다(구현 리뷰 P3-4 — 단위 결함으로 생긴 상한 0 을 그 권위의 원문과 맞춰 가를 수 있게).
+	fx    string
+	cause error
 }
 
 // Error 는 고정 문구 + 시장 · 종목 · 코드 · 진입가 · 손절가만 — 계좌 값 · 금액 없음(스냅숏 · 알림 줄에 그대로 실림). 원래 거절은 Unwrap 으로 닿음.
 func (s *strategyEntrySkip) Error() string {
-	return fmt.Sprintf("engine: %s %s strategy entry skipped (%s) at entry %s stop %s: the Guardian cap permits fewer than one unit; "+
-		"it is judged again next cycle", s.market, s.symbol, StrategyFirstLegGuardianCapZero, s.entry, s.stop)
+	return fmt.Sprintf("engine: %s %s strategy entry skipped (%s) at entry %s stop %s fx %s: the Guardian cap permits fewer than one unit; "+
+		"it is judged again next cycle", s.market, s.symbol, StrategyFirstLegGuardianCapZero, s.entry, s.stop, s.fx)
 }
 
 func (s *strategyEntrySkip) Unwrap() error { return s.cause }
 
+// strategyEntrySkipOf 는 전달 루프가 「그 진입만 건너뜀」으로 받는 **두 모양만** 인정함(구현 리뷰 P2-1 · Manager 승격 P3-1):
+//  1. 오류 자체가 *strategyEntrySkip,
+//  2. dispatch 의 승인 감싸개 하나(`engine: first-leg admission GUARDIAN_CAP_ZERO: %w`)가 스킵 하나를 곧바로 감싼 것 — 문구가 정확히 그 감싸개이고
+//     단일 Unwrap 이 스킵이어야 함.
+//
+// errors.As 로 트리 전체를 뒤지지 않는 이유: Join(스킵, 결함) 이나 「lease failed after %w(스킵)」처럼 결함이 스킵을 품은 모양에서 결함이 사라지면
+// 안 됨 — 스킵은 결함을 가릴 수 없어야 함. 다중 오류(`Unwrap() []error`)는 어느 자리에 있든 스킵이 아님. 감싸개 문구는 dispatch 의
+// `fmt.Errorf("engine: first-leg admission %s: %w", …)` 와 같아야 하고, 실제 경로 시험이 그 짝을 잼(문구가 갈라지면 스킵이 결함으로 — 막는 쪽).
+func strategyEntrySkipOf(err error) (*strategyEntrySkip, bool) {
+	if skip, ok := err.(*strategyEntrySkip); ok {
+		return skip, true
+	}
+	if _, multi := err.(interface{ Unwrap() []error }); multi || err == nil {
+		return nil, false
+	}
+	skip, ok := errors.Unwrap(err).(*strategyEntrySkip)
+	if !ok || err.Error() != fmt.Sprintf("engine: first-leg admission %s: %s", StrategyFirstLegGuardianCapZero, skip.Error()) {
+		return nil, false
+	}
+	return skip, true
+}
+
 type strategyEntrySkipRecorderKey struct{}
 
 // strategyEntrySkipAccountDay 는 알림 dedup 의 계좌 일 키 함수(시험이 시간대 자료 결함을 흉내 내려고 바꿀 수 있는 유일한 자리).
+// 패키지 변수라 바꾸는 시험은 t.Parallel 을 쓰면 안 되고 t.Cleanup 으로 되돌려야 함(구현 리뷰 P3-6).
 var strategyEntrySkipAccountDay = clock.AccountTradingDay
 
 // withStrategyEntrySkipRecorder 는 한 시장 주기의 ctx 에 스킵 기록자를 실음(감독자 runMarket 만 부름).

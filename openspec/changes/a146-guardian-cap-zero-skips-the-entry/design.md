@@ -31,7 +31,7 @@
 | F4 | 첫 다리 승인은 precheck 거절을 a137 표지(측정 불가 B6 · 한도 B8) → **버킷 고갈만 범위 거절**(B9 128) 순으로 가르고, 나머지는 원인을 실은 `AUTHORITY_MISMATCH` 다(121-123). dispatch 는 원인을 `%w` 로 감싸 돌려준다 | AST `engine--strategyfirstlegadmissionbridge.admit` B5~B10, `engine--strategydispatchcycle.dispatch` B12 · B13(152 · 155) |
 | F5 | 전달 루프는 범위 거절만 건너뛰고(B3 74 — 모아서 끝에 오류로 돌려줌), 일일 손실 표지는 주기를 오류 없이 끝내며(B4 82), **그 밖의 오류에서 멈춘다**(B5 87 · return). 그래서 상한 0 범위 뒤의 범위는 그 주기에 평가되지 않는다 — 특성: precheck 1 회(두 범위) | AST `engine--delivereachstrategyhandoff`; 특성 `…StopsTheCycleAtItsScope` |
 | F6 | 감독자 `runMarket`: 오류 없는 주기는 B11(953) `continue`. `refreshOnly`(= `!effective && RefreshesAuthority`, 923)면 B12(956) 삼킴 계수 + `continue`(중앙 무결성은 B13 진입 차단). 아니면 중앙 무결성 B14(980), 그 밖은 `latchMarket`(984) — `latched = true`(1139) · fault 하나(1164). `evaluationState` B1(1059)이 잠긴 시장을 다시 평가하지 않는다. **잠금은 메모리 칸이다**: `Faults()` 를 읽는 생산 코드 0(raw `grep-Faults-readers.txt`), 원장의 durable 잠금은 전략군 레인 `persistMarketLatches` 만 쓴다(raw `grep-durable-lane-latch-writers.txt`) — a139 의 「원장 잠금 · 재시작으로 안 풀림」은 이 경로에서 사실이 아니고, 잠긴 시장은 **프로세스 재시작까지** 닫힌다. 특성: effective → 첫 주기에 잠김 · fault 1 · 재평가 0, refreshOnly → 매 주기 삼킴 | AST `engine--strategyentrysupervisor.runmarket` · `.latchmarket` · `.evaluationstate`; 특성 `…LatchesAnEffectiveMarket` · `…IsASwallowedFaultOnARefreshOnlyMarket` |
-| F7 | **오늘 생산은 F6 의 refreshOnly 갈래다.** 실행되는 감독자는 `NewRefreshingPairedStrategyEntrySupervisor` 하나(cmd/tossctl/engine.go:690 · :742)이고 그 worker 는 둘 다 `RefreshesAuthority: true`, `Effective` 없음(AST B3 408 루프). `Effective: true` 서술자를 만드는 `buildProductionStrategyMarketWorker`(:526)의 감독자는 투영(`publishStrategyRuntime`)에만 쓰이고 `Run` 되지 않는다(raw `grep-production-supervisor.txt`). 그래서 생산에서 상한 0 은 잠금이 아니라 (i) 삼킴 계수 증가, (ii) 그 주기의 뒤 범위 굶음(결정적 순서라 매 주기 반복), (iii) 그 시장 shadow 관측 무효화(`strategyCycleWithShadow` B3 79)다 | AST `engine--context.newrefreshingpairedstrategyentrysupervisor`, `engine--strategycyclewithshadow` |
+| F7 | **오늘 생산은 F6 의 refreshOnly 갈래다.** (뒤 범위 굶음은 서명된 4-가족 활성화가 검증된 시장에서만 — 그 밖은 `dispatchHandoffs` 가 시장 단위 handoff 하나, strategy_dispatch_handoff.go:38.) 실행되는 감독자는 `NewRefreshingPairedStrategyEntrySupervisor` 하나(cmd/tossctl/engine.go:690 · :742)이고 그 worker 는 둘 다 `RefreshesAuthority: true`, `Effective` 없음(AST B3 408 루프). `Effective: true` 서술자를 만드는 `buildProductionStrategyMarketWorker`(:526)의 감독자는 투영(`publishStrategyRuntime`)에만 쓰이고 `Run` 되지 않는다(raw `grep-production-supervisor.txt`). 그래서 생산에서 상한 0 은 잠금이 아니라 (i) 삼킴 계수 증가, (ii) 그 주기의 뒤 범위 굶음(결정적 순서라 매 주기 반복), (iii) 그 시장 shadow 관측 무효화(`strategyCycleWithShadow` B3 79)다 | AST `engine--context.newrefreshingpairedstrategyentrysupervisor`, `engine--strategycyclewithshadow` |
 | F8 | 범위 거절(버킷 고갈 · 범위 국소 위험 권한 부재)은 같은 주기의 다른 범위 발급을 막지 않지만, 건너뛴 거절이 주기 오류로 돌아와(B3 → 92 `errors.Join(skipped...)`) effective 시장을 잠근다(refreshOnly 는 삼킴). 이것은 a112 J4(「감독자가 사이클 오류로 센다」)와 a137 의 명시 시나리오(risk-management 「앞서 건너뛴 범위 거절과 섞인 한도 도달」)가 정한 동작이다. 특성: `…ABucketExhaustedScopeStillLatchesAnEffectiveMarket` | AST `engine--delivereachstrategyhandoff` B3; openspec/specs/risk-management/spec.md:618-621 |
 | F10 | **상한 0 이 가리는 판정(freeze 리뷰 P1-1).** 상한 거절은 `PrecheckQFinalEntry` 안에서 버킷 · 체인 · 노출 판정(B15 155 · B16 168 · B17 171) **앞**에서 돌아오고, `PrecheckQFinalCampaignFirstLeg` 는 그 오류를 B1(51)에서 바로 돌려줘 정책 버전 · 결속 · 주간 예약 · 투영 판정(B2~B9)을 하지 않는다. 그중 엔진의 `validateStrategyFirstLegAuthority`(precheck 앞)가 다시 막는 것: B3 소유자 prospective 세대 · B4 가격 단위 · B5 계보 · 가격 · 소유자 결속 · B6 포지션 세대 · B7 attempt/활성화. **엔진이 다시 막지 않는 것**: B2 정책 버전(`QFinalPolicyVersion` — 거래 id 모양), B8 주간 예약 결속, B9 계보 투영(q_final 이 있어야 돌 수 있음 — 상한 0 에서는 원리상 불가), 그리고 진입 판정의 버킷(B15) · 체인(B16 — kill switch · 일일 손실 · 손절 계약 · 재진입 · **입력 불가**) · 노출(B17). 오늘도 이것들은 상한 0 뒤에 가려진다(결과가 잠금/삼킴이었을 뿐) — a146 뒤에는 그 가려진 결함이 조용한 스킵이 되고, 상한이 1 이상이 되는 주기에 드러난다. 주문은 어느 쪽이든 0 | AST `execgw--riskguardian.precheckqfinalcampaignfirstleg` B1~B9, `execgw--riskguardian.precheckqfinalentry` B13~B17, `engine--validatestrategyfirstlegauthority` B1~B5; 리뷰 실측(주간 결속 주입 + 예산 1 → 상한 0 삼중) |
 | F9 | 편집할 함수는 전부 첫 다리(매수) 진입 경로에만 있다: `admit` 의 생산 호출자는 `dispatch` 하나(raw `grep-bridge-admit-nontest.txt` — CodeGraph 는 이름이 같은 다른 `admit` 들과 섞음, reconciliation), `deliverEachStrategyHandoff` 는 `dispatchStrategyMarketHandoffs` 하나, `runMarket` 은 `Run` 하나(raw callers). 매도 · 손절 · 비상 청산 · 대사 · 체결 감지 루프는 이 셋을 부르지 않는다 — 스펙 「entry worker 장애는 safety lifecycle을 지연하지 않는다」가 그 분리를 정한다 | raw `callers-*.txt` · `impact-*.txt` |
@@ -42,7 +42,7 @@
 
 ```go
 if qFinal := (*execgw.QFinalRefusal)(nil); errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalExistingGuardianCap &&
-	errors.Is(err, risk.ErrStrategyQuantityZero) {
+	errors.Is(qFinal, risk.ErrStrategyQuantityZero) { // sentinel 은 그 거절 자신의 원인 사슬에(freeze 리뷰 P3-1)
 	// → 코드 GUARDIAN_CAP_ZERO, cause = &strategyEntrySkip{market, symbol, cause: err}, 기록자 호출
 }
 ```
@@ -61,7 +61,9 @@ if qFinal := (*execgw.QFinalRefusal)(nil); errors.As(err, &qFinal) && qFinal.Cod
 
 ## D2. 전달 — 건너뛰되 모으지 않음
 
-`deliverEachStrategyHandoff` 에서 범위 거절 판정 다음에 `errors.As(err, &skip)` 이면 `continue`. `skipped` 에 넣지 **않는다** — 넣으면 주기 오류가 되어 F6 의
+`deliverEachStrategyHandoff` 에서 범위 거절 판정 다음에 `strategyEntrySkipOf(err)` 가 참이면 `continue`. 그 판정은 **두 모양만** 받는다(구현 리뷰 P2-1 · 승격 P3-1):
+오류 자체가 `*strategyEntrySkip` 이거나, dispatch 의 승인 감싸개 하나(`engine: first-leg admission GUARDIAN_CAP_ZERO: …`, 문구 일치 + 단일 Unwrap 이 스킵)가 스킵을
+곧바로 감싼 것. `errors.As` 로 트리를 뒤지지 않는다 — Join(스킵, 결함) · 「결함 문구 %w 스킵」 · 다중 오류는 결함으로 멈춘다(스킵은 결함을 가릴 수 없다). `skipped` 에 넣지 **않는다** — 넣으면 주기 오류가 되어 F6 의
 잠금 · 삼킴으로 돌아간다(결정 위반). 흔적은 D3 이 남긴다(조용한 건너뛰기 금지 J4 의 취지는 기록이지 오류가 아님 — a137 이 같은 이유로 일일 손실 표지를 오류 밖에 둠).
 
 결과 표(편집 뒤):
@@ -107,6 +109,9 @@ a137 측정 불가의 모양을 그대로 쓴다: `runMarket` 이 주기 ctx 에
   「평가될 기회」뿐이고 판정은 그대로).
 - 스킵만 있던 주기의 shadow 관측이 무효화되지 않는다(측정 전용 — 주문 경로 무관).
 - effective 시장이 상한 0 하나로 재시작까지 닫히지 않는다.
+- **값 결함도 조용한 스킵이 될 수 있음(구현 리뷰 P3-4 — F10 옆의 알려진 한계).** 봉인 조건을 통과한 가격 · FX 의 **단위** 결함(예: ×100)은 위험 · notional
+  상한을 0 으로 만들어 결함이 아닌 스킵으로 끝날 수 있다(주문 0). 알림 줄에 진입가 · 손절가 · FX 권위(통화 쌍 · digest — 봉인 권위는 율을 내보이지 않음)를 실어
+  운영자가 가를 수 있게 한다.
 - 상한 0 이 진짜 결함을 가리는 경우(정정 — freeze 리뷰 P1-1): precheck 는 상한 계산 **앞**의 결함(정책 버전 · 소유자 · 통화 · FX — `PrecheckQFinalEntry` B2~B10)을
   먼저 거절하므로 그것들은 가려지지 않는다. 상한 계산 **뒤**의 판정은 F10 이 열거한다 — 오늘도 상한 0 뒤에서 돌지 않지만, 오늘은 그 주기가 잠금/삼킴으로 끝나고
   a146 뒤에는 조용한 스킵으로 끝난다. 그래서 「상한 0 과 동시에 있는 결함」(F10 의 엔진이 다시 막지 않는 것)은 상한이 1 이상이 되는 주기까지 결함으로 드러나지

@@ -1,6 +1,6 @@
 # Function Logic Map: `deliverEachStrategyHandoff`
 
-- Source: `internal/app/engine/strategy_market_handoff_delivery.go` (66-99)
+- Source: `internal/app/engine/strategy_market_handoff_delivery.go` (66-98)
 - Qualified: `deliverEachStrategyHandoff`
 - AST evidence: `ast.json`(현재) — 현재 AST branches 6 · returns 4
 - 편집 전 기준: `ast-base.json`(base, `source_sha256` 44ed84069d5204e7…) — 편집 전 갈래 수 5
@@ -20,20 +20,20 @@
 
 | Branch | Condition (소스 줄 인용) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `for _, handoff := range handoffs {` (range 68) | — | 조정자 순서대로 하나씩 | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|Scope|Handoff|Delivery'` · `TestA146ASkipContinuesToTheNextScopeWithoutAnError` · `TestA146ASkipIsNeverJoinedIntoTheCycleError` · `TestOnlyATypedScopeRefusalIsSkippedEveryOtherFaultStops` · `TestA137AMixedCycleStillReportsItsSkippedScopes` |
-| B2 | `if err == nil {` (if 70) | — | 다음 범위 | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|Scope|Handoff|Delivery'` · `TestA146ASkipContinuesToTheNextScopeWithoutAnError` · `TestA146ASkipIsNeverJoinedIntoTheCycleError` · `TestOnlyATypedScopeRefusalIsSkippedEveryOtherFaultStops` · `TestA137AMixedCycleStillReportsItsSkippedScopes` |
-| B3 | `if errors.As(err, &scope) {` (if 74) | skipped 에 모음 | 다음 범위(끝에 Join 으로 보고 — 무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|Scope|Handoff|Delivery'` · `TestA146ASkipContinuesToTheNextScopeWithoutAnError` · `TestA146ASkipIsNeverJoinedIntoTheCycleError` · `TestOnlyATypedScopeRefusalIsSkippedEveryOtherFaultStops` · `TestA137AMixedCycleStillReportsItsSkippedScopes` |
-| B4 | `if errors.As(err, &skip) {` (if 81) | — (흔적은 admit 의 기록자가 남김) | **a146** 다음 범위 — skipped 에 넣지 않음 | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|Scope|Handoff|Delivery'` · `TestA146ASkipContinuesToTheNextScopeWithoutAnError` · `TestA146ASkipIsNeverJoinedIntoTheCycleError` · `TestOnlyATypedScopeRefusalIsSkippedEveryOtherFaultStops` · `TestA137AMixedCycleStillReportsItsSkippedScopes` |
-| B5 | `if errors.As(err, &blocked) \|\| errors.As(err, &unmeasurable) {` (if 88) | — | Join(skipped) — 일일 손실 계좌 차단은 주기를 조용히 끝냄(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|Scope|Handoff|Delivery'` · `TestA146ASkipContinuesToTheNextScopeWithoutAnError` · `TestA146ASkipIsNeverJoinedIntoTheCycleError` · `TestOnlyATypedScopeRefusalIsSkippedEveryOtherFaultStops` · `TestA137AMixedCycleStillReportsItsSkippedScopes` |
-| B6 | `if len(skipped) == 0 {` (if 93) | — | 멈추는 결함 그대로 / skipped 와 Join(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|Scope|Handoff|Delivery'` · `TestA146ASkipContinuesToTheNextScopeWithoutAnError` · `TestA146ASkipIsNeverJoinedIntoTheCycleError` · `TestOnlyATypedScopeRefusalIsSkippedEveryOtherFaultStops` · `TestA137AMixedCycleStillReportsItsSkippedScopes` |
+| B1 | `for _, handoff := range handoffs {` (range 68) | — | 조정자 순서대로 하나씩 | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|Scope|Handoff|Delivery'` · `TestA146ASkipContinuesToTheNextScopeWithoutAnError` · `TestA146ASkipIsNeverJoinedIntoTheCycleError` · `TestA146OnlyAPureSkipIsSkippedEveryLookalikeStops` · `TestOnlyATypedScopeRefusalIsSkippedEveryOtherFaultStops` · `TestA137AMixedCycleStillReportsItsSkippedScopes` |
+| B2 | `if err == nil {` (if 70) | — | 다음 범위 | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|Scope|Handoff|Delivery'` · `TestA146ASkipContinuesToTheNextScopeWithoutAnError` · `TestA146ASkipIsNeverJoinedIntoTheCycleError` · `TestA146OnlyAPureSkipIsSkippedEveryLookalikeStops` · `TestOnlyATypedScopeRefusalIsSkippedEveryOtherFaultStops` · `TestA137AMixedCycleStillReportsItsSkippedScopes` |
+| B3 | `if errors.As(err, &scope) {` (if 74) | skipped 에 모음 | 다음 범위(끝에 Join 으로 보고 — 무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|Scope|Handoff|Delivery'` · `TestA146ASkipContinuesToTheNextScopeWithoutAnError` · `TestA146ASkipIsNeverJoinedIntoTheCycleError` · `TestA146OnlyAPureSkipIsSkippedEveryLookalikeStops` · `TestOnlyATypedScopeRefusalIsSkippedEveryOtherFaultStops` · `TestA137AMixedCycleStillReportsItsSkippedScopes` |
+| B4 | `if _, isSkip := strategyEntrySkipOf(err); isSkip {` (if 80) | — | 편집 전과 같음(소스 줄 참조) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|Scope|Handoff|Delivery'` · `TestA146ASkipContinuesToTheNextScopeWithoutAnError` · `TestA146ASkipIsNeverJoinedIntoTheCycleError` · `TestA146OnlyAPureSkipIsSkippedEveryLookalikeStops` · `TestOnlyATypedScopeRefusalIsSkippedEveryOtherFaultStops` · `TestA137AMixedCycleStillReportsItsSkippedScopes` |
+| B5 | `if errors.As(err, &blocked) \|\| errors.As(err, &unmeasurable) {` (if 87) | — | Join(skipped) — 일일 손실 계좌 차단은 주기를 조용히 끝냄(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|Scope|Handoff|Delivery'` · `TestA146ASkipContinuesToTheNextScopeWithoutAnError` · `TestA146ASkipIsNeverJoinedIntoTheCycleError` · `TestA146OnlyAPureSkipIsSkippedEveryLookalikeStops` · `TestOnlyATypedScopeRefusalIsSkippedEveryOtherFaultStops` · `TestA137AMixedCycleStillReportsItsSkippedScopes` |
+| B6 | `if len(skipped) == 0 {` (if 92) | — | 멈추는 결함 그대로 / skipped 와 Join(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A146|A137|Scope|Handoff|Delivery'` · `TestA146ASkipContinuesToTheNextScopeWithoutAnError` · `TestA146ASkipIsNeverJoinedIntoTheCycleError` · `TestA146OnlyAPureSkipIsSkippedEveryLookalikeStops` · `TestOnlyATypedScopeRefusalIsSkippedEveryOtherFaultStops` · `TestA137AMixedCycleStillReportsItsSkippedScopes` |
 
-Exact AST return positions: 90 · 94 · 96 · 98
+Exact AST return positions: 89 · 93 · 95 · 97
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| (호출 5종 — 대표: `append`, `errors.As`, `errors.Join`, `handoff.Deliver`, `len`) | 본문 참조 | 소스 참조 | AST |
+| (호출 6종 — 대표: `append`, `errors.As`, `errors.Join`, `handoff.Deliver`, `len`, `strategyEntrySkipOf`) | 본문 참조 | 소스 참조 | AST |
 
 ## State mutations and fallbacks
 

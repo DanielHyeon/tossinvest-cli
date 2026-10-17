@@ -163,19 +163,6 @@ func TestA146ACapZeroEntryNoLongerLatchesAnEffectiveMarket(t *testing.T) {
 	}
 }
 
-// F5 뒤집힘(a146): 권한 갱신 전용(refreshOnly — 오늘 생산 감독자) 시장 — 삼킴 계수가 오르지 않고, 뒤 범위가 굶지 않음.
-// (편집 전 HEAD 에서는 매 주기 삼킴 + precheck 1 회였음.)
-func TestA146ACapZeroEntryIsNotASwallowedFaultOnARefreshOnlyMarket(t *testing.T) {
-	fixture, counter := a146CapZeroFixture(t)
-	snapshot, calls, _ := a146RunMarket(t, fixture, false, 3)
-	if snapshot.Latched || calls < 3 || snapshot.SwallowedCycleErrors != 0 || snapshot.FirstSwallowedFailure != "" {
-		t.Fatalf("cycles=%d snapshot=%+v — want nothing swallowed for cap-0 skips", calls, snapshot)
-	}
-	if got := counter.prechecks.Load(); got != 2*calls || snapshot.GuardianCapZeroSkips != uint64(2*calls) {
-		t.Fatalf("prechecks=%d skips=%d cycles=%d — want the second scope evaluated every cycle", got, snapshot.GuardianCapZeroSkips, calls)
-	}
-}
-
 // F6(a146 범위 밖 — 별도 발견): 버킷 고갈 범위 거절은 같은 주기의 다른 범위 발급을 막지 않지만, 건너뛴 거절이 주기 오류로 돌아와
 // effective 시장을 잠금(refreshOnly 는 삼킴). a146 은 이것을 바꾸지 않음 — 편집 뒤에도 이 시험은 그대로 통과해야 함.
 func TestA146CharacterizationABucketExhaustedScopeStillLatchesAnEffectiveMarket(t *testing.T) {

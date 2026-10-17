@@ -33,7 +33,7 @@ Story: `STORY-TOS-a146` · **High-risk**(Guardian · 전략 진입 · 레인 잠
       `openspec validate --strict` → `analysis/verify/receipts.md`
 - [x] 2.2 변이 원장(`analysis/mutation/`, 저장소 밖 사본 · pid 접미 · 무변이 대조군 GREEN) — round1(7395cc02) 21 중 CAUGHT 17 · build 2 · SURVIVED 2 →
       **round2(01ca7ff1) 비동등 20/20 CAUGHT**, M1 동등(사전 선언) — `round1.md` · `round2.md`
-- [ ] 2.3 독립 적대 리뷰(분리 컨텍스트) → review.md → 수리 — Manager 가 독립 리뷰어를 띄움 — 결과 전달 대기
+- [x] 2.3 독립 적대 리뷰(분리 컨텍스트 둘 — Manager) → review.md → 수리 — 둘 다 APPROVE-WITH-FIXES(P0 0 · P1 0), 전부 수리(review.md · 변이 `round3.md`)
 
 ## 3. 사람 · Manager
 
@@ -44,3 +44,5 @@ Story: `STORY-TOS-a146` · **High-risk**(Guardian · 전략 진입 · 레인 잠
 
 - **execgw 결속 판정을 사이징 앞으로**(design F10 · D5): `PrecheckQFinalCampaignFirstLeg` 의 정책 버전 · 주간 예약 결속 등 순수 판정을 `PrecheckQFinalEntry` 앞으로
   옮기는 별도 change — **어떤 전략 레인을 켜기 전(P2 S5/S6)에 착지해야 함.**
+- **조립 감독자 알림 배선**(구현 리뷰 1 P3-5): `NewPairedStrategyEntryProductionAssembly` 의 감독자(Effective 서술자를 가질 수 있음, 오늘은 투영에만 쓰이고 Run 되지 않음)에는
+  `DailyLossNotice` · `EntrySkipNotice` 가 없다 — 그 감독자를 Run 하게 되는 change 가 두 옵션을 배선해야 함.

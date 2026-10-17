@@ -75,10 +75,9 @@ func deliverEachStrategyHandoff(handoffs []strategyhandoff.Handoff, body func(st
 			skipped = append(skipped, err)
 			continue
 		}
-		// a146: Guardian 상한 0 으로 그 진입만 건너뜀(타입으로 — strategyEntrySkip). 결함이 아니므로 모으지 않고(주기 오류가 되면 잠금 ·
-		// 삼킴으로 돌아감) 다음 범위로 감. 흔적은 첫 다리 승인이 주기 ctx 의 기록자에 이미 남겼음.
-		var skip *strategyEntrySkip
-		if errors.As(err, &skip) {
+		// a146: Guardian 상한 0 으로 그 진입만 건너뜀(타입 + 모양으로 — strategyEntrySkipOf 가 인정하는 두 모양뿐, 결함을 품은 모양은 아님).
+		// 결함이 아니므로 모으지 않고(주기 오류가 되면 잠금 · 삼킴으로 돌아감) 다음 범위로 감. 흔적은 첫 다리 승인이 주기 ctx 의 기록자에 이미 남겼음.
+		if _, isSkip := strategyEntrySkipOf(err); isSkip {
 			continue
 		}
 		// a137: 일일 손실 한도로 계좌의 신규 진입이 막혔음(타입으로 — execgw.DailyLossEntryBlock). 레인 결함이 아니므로 주기를 오류 없이

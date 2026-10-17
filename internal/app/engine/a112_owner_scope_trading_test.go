@@ -59,6 +59,8 @@ type a112TradingOptions struct {
 	disallowFor string
 	// riskBudget 은 Guardian 정책의 거래당 위험 예산(KRW) — 아주 작으면 q_existing_guardian 0(버킷 고갈이 아닌 q_final 코드).
 	riskBudget string
+	// maxOrderNotional 은 Guardian 정책의 주문 금액 상한(KRW) — 한 주 가격(× FX)보다 작으면 notional 상한 0(a146 사람 결정 1).
+	maxOrderNotional string
 }
 
 type a112TradingFixture struct {
@@ -133,6 +135,9 @@ func newA112TradingFixture(t *testing.T, options a112TradingOptions) a112Trading
 	}
 	if options.riskBudget != "" {
 		policy.RiskBudget = riskcalc.Money{Amount: options.riskBudget, Currency: "KRW"}
+	}
+	if options.maxOrderNotional != "" {
+		policy.MaxOrderNotional = riskcalc.Money{Amount: options.maxOrderNotional, Currency: "KRW"}
 	}
 	guardian, err := execgw.NewRiskGuardian(execgw.RiskGuardianOptions{ManualBuys: a136ZeroManualBuyBoardInternal(fakeClock), Journal: handle, Clock: fakeClock, AccountRef: "acct-risk-loader",
 		Policy: policy, Costs: costs.DefaultModel(), PolicyVersion: "engine.automation_gate/risk-policy-v1"})
