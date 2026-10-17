@@ -144,3 +144,4 @@
 | `a144-separate-trigger-ttl-prerequisite` | STORY-TOS-a144 | archived |
 | `a145-separate-jev-input-quality-and-j2-evaluation` | STORY-TOS-a145 | archived |
 | `a146-guardian-cap-zero-skips-the-entry` | STORY-TOS-a146 | implemented |
+| `a147-validate-jev-mfi-trend` | STORY-TOS-a147 | archived |
