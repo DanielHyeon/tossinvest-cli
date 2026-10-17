@@ -13,8 +13,9 @@ Story: `STORY-TOS-a146` · **High-risk**(Guardian · 전략 진입 · 레인 잠
 - [x] 0.3 CodeGraph hard evidence(`analysis/code-context/`, codegraph 1.6.0) · CodeGraphContext(not-applicable 사유) · evidence reconciliation
 - [x] 0.4 특성 시험(편집 전 HEAD 에서 통과 — 상한 0: 주기 멈춤 · effective 잠금 · refreshOnly 삼킴, 범위 거절: effective 잠금) + `base-commit.txt`
       = `7ce7e411`(첫 Go 커밋의 부모) — 영수증 `analysis/red/characterization-head.txt`(4/4 PASS, `-count=5` · `-race -count=2` 도 통과)
-- [ ] 0.5 proposal-freeze 적대 리뷰(분리 컨텍스트) → review.md → 수리
-- [ ] 0.6 편집할 기존 함수의 FLM/BTM 번들 + Pre-Edit 선언(review.md)
+- [x] 0.5 proposal-freeze 적대 리뷰(분리 컨텍스트) → review.md → 수리 — APPROVE-WITH-FIXES(P0 0 · P1 1 · P2 3 · P3 7), 전부 문서에 반영(P1-1 은 명시 한계 + 시험,
+      결속 판정 이동 안은 사람 결정 잔여)
+- [x] 0.6 편집할 기존 함수의 FLM/BTM 번들(8 — 하네스 `analysis/harness/a146_flm.py base`, ast-base = base 7ce7e411) + Pre-Edit 선언(review.md)
 
 ## 1. 구현 (RED → GREEN → REFACTOR)
 

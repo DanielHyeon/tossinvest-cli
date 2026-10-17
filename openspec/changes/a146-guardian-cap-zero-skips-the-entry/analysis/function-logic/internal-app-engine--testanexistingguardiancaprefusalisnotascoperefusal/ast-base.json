@@ -1,0 +1,180 @@
+{
+  "file": "internal/app/engine/a112_qfinal_family_test.go",
+  "source_sha256": "84abf4ec7ba8d3a859a4411a39b29c88db7f6581ee52b102bae0623bbbae6983",
+  "package": "engine",
+  "function": "TestAnExistingGuardianCapRefusalIsNotAScopeRefusal",
+  "signature": "TestAnExistingGuardianCapRefusalIsNotAScopeRefusal(params=1, results=0)",
+  "start": {
+    "line": 246,
+    "column": 1
+  },
+  "end": {
+    "line": 259,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 249,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 253,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 13
+      },
+      "text": "newA112TradingFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 9
+      },
+      "text": "fixture.deliverKR"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 15
+      },
+      "text": "fixture.placedSymbols"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 40
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 19
+      },
+      "text": "a112ScopeRefusalOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 54
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 71
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 84
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 4
+      },
+      "text": "errors.As"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 32
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 49
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 258,
+        "column": 2
+      },
+      "text": "t.Logf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 247,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 248,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 249,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 257,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
