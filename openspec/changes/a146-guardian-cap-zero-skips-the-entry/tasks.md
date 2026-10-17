@@ -31,12 +31,16 @@ Story: `STORY-TOS-a146` · **High-risk**(Guardian · 전략 진입 · 레인 잠
 
 - [x] 2.1 `gofmt -l` · `go vet ./...` · `rtk proxy go test -count=1`(app/engine · execgw · risk · strategyworker · obs) · `-tags tossos_testseams` · `-race` 대상 ·
       `openspec validate --strict` → `analysis/verify/receipts.md`
-- [ ] 2.2 변이 원장(`analysis/mutation/`, 저장소 밖 사본 · pid 접미 · 무변이 대조군 GREEN) — round1(7395cc02): 21 중 CAUGHT 17 · CAUGHT(build) 2(M14 · M20 — 변이식 고침) ·
-      SURVIVED 2(M1 코드 조건 = 동등 선언 — 원인에 sentinel 을 싣는 q_final 거절은 EXISTING_GUARDIAN_CAP 하나 · M16 빈 일 키 = 일 키 seam + `TestA146AnUncountableAccountDayStillAnnouncesTheSkip` 로 닫음).
-      **남음: round2 재실행**(이 커밋 위에서)
-- [ ] 2.3 독립 적대 리뷰(분리 컨텍스트) → review.md → 수리 — **진행 중 상태로 중단**: 리뷰어가 7395cc02 를 검토 중이었고 결과는 이 tasks 에 아직 없음(Manager 가 재실행 또는 결과 반영)
+- [x] 2.2 변이 원장(`analysis/mutation/`, 저장소 밖 사본 · pid 접미 · 무변이 대조군 GREEN) — round1(7395cc02) 21 중 CAUGHT 17 · build 2 · SURVIVED 2 →
+      **round2(01ca7ff1) 비동등 20/20 CAUGHT**, M1 동등(사전 선언) — `round1.md` · `round2.md`
+- [ ] 2.3 독립 적대 리뷰(분리 컨텍스트) → review.md → 수리 — Manager 가 독립 리뷰어를 띄움 — 결과 전달 대기
 
 ## 3. 사람 · Manager
 
 - [ ] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a146-guardian-cap-zero-skips-the-entry` + 독립 검증 · PM tracker 재생성 · archive
 - 배포(체크박스 아님): 엔진 이미지 교체는 사람이 KST 05:00~09:00 창에서.
+
+## 후속 (체크박스 아님 — 사람 결정 2026-10-18)
+
+- **execgw 결속 판정을 사이징 앞으로**(design F10 · D5): `PrecheckQFinalCampaignFirstLeg` 의 정책 버전 · 주간 예약 결속 등 순수 판정을 `PrecheckQFinalEntry` 앞으로
+  옮기는 별도 change — **어떤 전략 레인을 켜기 전(P2 S5/S6)에 착지해야 함.**

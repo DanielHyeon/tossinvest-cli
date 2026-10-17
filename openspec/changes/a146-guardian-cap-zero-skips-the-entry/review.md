@@ -56,3 +56,14 @@ Pre-Edit Gate:
 - §0 검토: 통과 — 주문을 늘리는 판정 없음(건너뛴 진입 브로커 0, 뒤 범위는 전체 Guardian 판정 그대로), 손절 · 청산 경로 무관(F9), 토글 OFF 무관,
   사이징 무편집(§0.9), 잠금 저장소 무편집(사용자 기각 안 회피). 명시 한계 F10(상한 0 이 결함을 가림 — 주문 0)
 ```
+
+## 사람 결정 (2026-10-18 — Manager 전달, 사용자 「권장대로」)
+
+1. 주문 금액(notional) 상한 0 포함 — 구현 유지, 문구 「Guardian 상한 0 (위험 예산 또는 주문 금액 상한으로 1주도 안 되는 진입)」(freeze P2-2 종결).
+2. F10 은 알려진 한계로 수용 — execgw 결속 판정을 사이징 앞으로 옮기는 별도 후속 change 가 전략 레인 활성화(P2 S5/S6) 전에 착지해야 함(freeze P1-1 종결).
+3. 범위 거절의 effective 잠금 유지(a112 J4 · a137 spec) — 특성 시험 유지(design D7 종결).
+
+## 변이 원장 (tasks 2.2)
+
+round1(7395cc02) 21 중 CAUGHT 17 · build 2 · SURVIVED 2 → round2(01ca7ff1, 저장소 밖 pid 사본, 무변이 대조군 GREEN): **비동등 20/20 CAUGHT**, M1 동등(사전 선언).
+`analysis/mutation/round1.md` · `round2.md`.

@@ -14,6 +14,13 @@
 > is visible (audit/outcome reason), while genuine abnormal failures latch exactly as today. Decide the scope-refusal path with evidence (it may be a
 > separate finding — report, don't silently widen).
 
+## 사람 결정 (2026-10-18 — Manager 전달, 사용자 「권장대로」)
+
+1. notional 상한 0(한 주 가격 > 주문 금액 상한)도 스킵에 포함 — 구현 유지. 범위 문구: 「Guardian 상한 0 (위험 예산 또는 주문 금액 상한으로 1주도 안 되는 진입)」.
+2. F10(상한 0 이 뒤의 Guardian 판정을 가림)은 지금은 **알려진 한계로 수용**. execgw 결속 판정을 사이징 앞으로 옮기는 **별도 후속 change 가 어떤 전략 레인을
+   켜기 전(P2 S5/S6)에 착지해야 한다.**
+3. 범위 거절이 effective 시장을 잠그는 것은 **그대로 유지**(a112 J4 · a137 spec) — 특성 시험 유지.
+
 ## F. 편집 전 사실 (HEAD `befea6ee`)
 
 | # | 사실 | 근거 |
@@ -44,8 +51,7 @@ if qFinal := (*execgw.QFinalRefusal)(nil); errors.As(err, &qFinal) && qFinal.Cod
   같은 sentinel 을 실은 경우를 받는다. 문구는 보지 않는다(a137 P2-1 과 같은 규칙).
 - 다루는 것(F2): **위험 상한 0** 과 **notional 상한 0** 둘 다 — 사용자 결정의 「Guardian 상한」은 세 상한의 min 이고, 둘을 가르는 타입이 `risk` 에 없다.
   가르려면 `risk` 사이징 함수의 반환을 바꿔야 하므로(High-risk 사이징 편집) 하지 않는다. 다만 결정 원문의 괄호(「even 1 share exceeds the per-trade budget」)는
-  위험 예산만 말하므로 **notional 포함은 확인이 필요한 해석이다**(freeze 리뷰 P2-2) — Manager 보고에 질문으로 올리고, 답이 「위험 예산만」이면 `risk` 에 별도
-  sentinel 을 두는 후속이 필요하다. 지금 구현은 결정 문면의 「Guardian 상한 0」을 따른다.
+  위험 예산만 말했으므로 freeze 리뷰 P2-2 가 확인을 요구했고 — **사람 결정(2026-10-18, 「권장대로」): 포함한다.** 범위는 「Guardian 상한 0 (위험 예산 또는 주문 금액 상한으로 1주도 안 되는 진입)」.
 - 판정식은 `errors.As(err, &qFinal) && qFinal.Code == EXISTING_GUARDIAN_CAP && errors.Is(qFinal, risk.ErrStrategyQuantityZero)` — sentinel 은 그 q_final 거절
   **자신의** 원인 사슬에 있어야 한다(sentinel 이 거절 곁에 Join 된 모양은 결함, freeze 리뷰 P3-1). 엔진 시험은 거절의 원인 칸을 채울 수 없으므로 양성 표본은
   실제 Guardian 이 낸 거절을 쓴다.
