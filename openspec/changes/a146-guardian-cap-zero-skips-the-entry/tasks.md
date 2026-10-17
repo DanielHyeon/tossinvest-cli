@@ -31,8 +31,10 @@ Story: `STORY-TOS-a146` · **High-risk**(Guardian · 전략 진입 · 레인 잠
 
 - [x] 2.1 `gofmt -l` · `go vet ./...` · `rtk proxy go test -count=1`(app/engine · execgw · risk · strategyworker · obs) · `-tags tossos_testseams` · `-race` 대상 ·
       `openspec validate --strict` → `analysis/verify/receipts.md`
-- [ ] 2.2 변이 원장(`analysis/mutation/`, 저장소 밖 사본 · pid 접미 · 무변이 대조군 GREEN)
-- [ ] 2.3 독립 적대 리뷰(분리 컨텍스트) → review.md → 수리
+- [ ] 2.2 변이 원장(`analysis/mutation/`, 저장소 밖 사본 · pid 접미 · 무변이 대조군 GREEN) — round1(7395cc02): 21 중 CAUGHT 17 · CAUGHT(build) 2(M14 · M20 — 변이식 고침) ·
+      SURVIVED 2(M1 코드 조건 = 동등 선언 — 원인에 sentinel 을 싣는 q_final 거절은 EXISTING_GUARDIAN_CAP 하나 · M16 빈 일 키 = 일 키 seam + `TestA146AnUncountableAccountDayStillAnnouncesTheSkip` 로 닫음).
+      **남음: round2 재실행**(이 커밋 위에서)
+- [ ] 2.3 독립 적대 리뷰(분리 컨텍스트) → review.md → 수리 — **진행 중 상태로 중단**: 리뷰어가 7395cc02 를 검토 중이었고 결과는 이 tasks 에 아직 없음(Manager 가 재실행 또는 결과 반영)
 
 ## 3. 사람 · Manager
 

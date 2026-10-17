@@ -332,3 +332,21 @@ func TestA146ACapZeroSkipHidesTheChecksAfterSizingUntilTheCapRises(t *testing.T)
 			err, surfaced.placedSymbols())
 	}
 }
+
+// freeze 리뷰 P2-3: 계좌 일 키를 셀 수 없어도(시간대 자료 결함) 알림은 침묵하지 않음 — 빈 일 키로 종목마다 한 번.
+func TestA146AnUncountableAccountDayStillAnnouncesTheSkip(t *testing.T) {
+	saved := strategyEntrySkipAccountDay
+	strategyEntrySkipAccountDay = func(time.Time) (string, error) { return "", errors.New("time zone data unavailable") }
+	t.Cleanup(func() { strategyEntrySkipAccountDay = saved })
+	var notices []string
+	supervisor := &StrategyEntrySupervisor{clk: clock.NewFake(time.Date(2026, 10, 17, 1, 0, 0, 0, time.UTC)),
+		entrySkipNotice: func(market StrategyMarket, day, symbol, cause string) { notices = append(notices, day+"|"+symbol) }}
+	worker := &strategyMarketRuntime{descriptor: StrategyMarketWorker{Market: StrategyMarketKR}}
+	for range 3 {
+		supervisor.recordGuardianCapZeroSkip(worker, a146Skip("005930"))
+		supervisor.recordGuardianCapZeroSkip(worker, a146Skip("000660"))
+	}
+	if strings.Join(notices, ",") != "|005930,|000660" || worker.guardianCapZeroSkips != 6 {
+		t.Fatalf("notices=%v skips=%d — want one notice per symbol with an empty day and every skip counted", notices, worker.guardianCapZeroSkips)
+	}
+}

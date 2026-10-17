@@ -35,6 +35,9 @@ func (s *strategyEntrySkip) Unwrap() error { return s.cause }
 
 type strategyEntrySkipRecorderKey struct{}
 
+// strategyEntrySkipAccountDay 는 알림 dedup 의 계좌 일 키 함수(시험이 시간대 자료 결함을 흉내 내려고 바꿀 수 있는 유일한 자리).
+var strategyEntrySkipAccountDay = clock.AccountTradingDay
+
 // withStrategyEntrySkipRecorder 는 한 시장 주기의 ctx 에 스킵 기록자를 실음(감독자 runMarket 만 부름).
 func withStrategyEntrySkipRecorder(ctx context.Context, record func(*strategyEntrySkip)) context.Context {
 	return context.WithValue(ctx, strategyEntrySkipRecorderKey{}, record)
@@ -57,7 +60,7 @@ func (s *StrategyEntrySupervisor) recordGuardianCapZeroSkip(worker *strategyMark
 	if s == nil || worker == nil || skip == nil {
 		return
 	}
-	day, err := clock.AccountTradingDay(s.clk.Now())
+	day, err := strategyEntrySkipAccountDay(s.clk.Now())
 	if err != nil {
 		day = ""
 	}

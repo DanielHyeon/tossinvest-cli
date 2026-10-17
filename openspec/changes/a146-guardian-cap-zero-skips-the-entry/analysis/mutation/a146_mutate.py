@@ -21,7 +21,8 @@ def run(args):
 G = "internal/app/engine/"
 AD, DL, SV, SK = G + "strategy_first_leg_admission.go", G + "strategy_market_handoff_delivery.go", G + "strategy_entry_supervisor.go", G + "a146_entry_skip.go"
 MUTANTS = [
-    ("M1 코드 조건 제거", AD, "errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalExistingGuardianCap &&", "errors.As(err, &qFinal) && true &&"),
+    # M1 은 동등 변이로 선언(원장 round2 머리말): 원인 사슬에 sentinel 을 싣는 q_final 거절은 EXISTING_GUARDIAN_CAP 하나뿐이라 코드 조건은 방어용.
+    ("M1 코드 조건 제거(동등 — 선언)", AD, "errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalExistingGuardianCap &&", "errors.As(err, &qFinal) && true &&"),
     ("M2 sentinel 조건 제거", AD, "\t\t\terrors.Is(qFinal, risk.ErrStrategyQuantityZero) {", "\t\t\ttrue {"),
     ("M3 다른 sentinel", AD, "errors.Is(qFinal, risk.ErrStrategyQuantityZero)", "errors.Is(qFinal, risk.ErrAccountBaseFXUnavailable)"),
     ("M4 sentinel 을 오류 전체에서 찾음", AD, "errors.Is(qFinal, risk.ErrStrategyQuantityZero)", "errors.Is(err, risk.ErrStrategyQuantityZero)"),
@@ -35,13 +36,13 @@ MUTANTS = [
     ("M11 감독자 기록자 설치 무력화", SV, "func(skip *strategyEntrySkip) { s.recordGuardianCapZeroSkip(worker, skip) }", "func(skip *strategyEntrySkip) {}"),
     ("M12 계수 증가 제거", SK, "\t\tworker.guardianCapZeroSkips++\n", ""),
     ("M13 첫 원인 덮어쓰기", SK, "\tif worker.firstGuardianCapZeroSkip == \"\" {", "\tif true {"),
-    ("M14 종목 dedup 제거", SK, "\tannounce := !noticed\n", "\tannounce := true\n"),
+    ("M14 종목 dedup 제거", SK, "\tannounce := !noticed\n", "\tannounce := noticed || !noticed\n"),
     ("M15 일 키 바뀜에 기억 비우기 제거", SK, "if worker.entrySkipNoticed == nil || worker.entrySkipNoticeDay != day {", "if worker.entrySkipNoticed == nil {"),
     ("M16 빈 일 키에서 침묵(a137 모양)", SK, "\tannounce := !noticed\n", "\tannounce := day != \"\" && !noticed\n"),
     ("M17 생산 알림 배선 제거", SV, " EntrySkipNotice: c.strategyEntrySkipNotice(),", ""),
     ("M18 감독자가 알림 옵션을 버림", SV, " entrySkipNotice: opts.EntrySkipNotice,", ""),
     ("M19 스냅숏 계수 칸 제거", SV, "GuardianCapZeroSkips: worker.guardianCapZeroSkips, ", ""),
-    ("M20 알림 줄에서 가격 제거", SK, " at entry %s stop %s:", ":"),
+    ("M20 알림 줄에서 가격 제거", SK, "StrategyFirstLegGuardianCapZero, s.entry, s.stop)", "StrategyFirstLegGuardianCapZero, \"\", \"\")"),
     ("M21 알림 이벤트 이름 바꿈", SK, "log.Warn(obs.EventStrategyEntrySkipped,", "log.Warn(obs.EventDailyLossUnmeasurable,"),
 ]
 
