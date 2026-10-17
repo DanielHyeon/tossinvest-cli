@@ -49,9 +49,7 @@ func strategyEntrySkipOf(err error) (*strategyEntrySkip, bool) {
 	if skip, ok := err.(*strategyEntrySkip); ok {
 		return skip, true
 	}
-	if _, multi := err.(interface{ Unwrap() []error }); multi || err == nil {
-		return nil, false
-	}
+	// 다중 오류(`Unwrap() []error`)는 errors.Unwrap 이 nil 을 돌려주므로 아래에서 스킵이 아님 — 따로 거르지 않음(변이 round3 P1: 같은 판정의 중복).
 	skip, ok := errors.Unwrap(err).(*strategyEntrySkip)
 	if !ok || err.Error() != fmt.Sprintf("engine: first-leg admission %s: %s", StrategyFirstLegGuardianCapZero, skip.Error()) {
 		return nil, false

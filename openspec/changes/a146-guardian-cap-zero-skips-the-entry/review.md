@@ -84,3 +84,5 @@ round1(7395cc02) 21 중 CAUGHT 17 · build 2 · SURVIVED 2 → round2(01ca7ff1, 
     `TestA146ANotionalCapZeroIsTheSameSkipOnTheRealPath`(엔진 실제 경로, KR · US, 한 주 대조군은 주문까지).
   - 리뷰 2 P3-4 문서 — F7 · proposal 에 굶음 조건(검증된 4-가족 활성화), Pre-Edit §0 문장 정정. shadow 단계 시작은 design D5 · proposal Impact 에 이미 적힘(확인).
   - 리뷰 1 P3-5 조립 감독자(strategy_entry_supervisor.go:379 — Effective 가능, 오늘 Run 안 됨)에 알림 옵션 없음 — tasks 후속 메모.
+- 변이 round3(35db12b7): 비동등 8/8 CAUGHT(R10 · R12 · M35 · M36 · M31 · P2 · P3 · P4). P1(다중 오류 거름)은 `errors.Unwrap` 이 다중 오류에서 nil 이라 중복 → 지움(시험 행이 같은 모양을 계속 잡음).
+  `make test-race` rc 0, a146/a137 집중 시험 `-race` · 태그 통과. `round3.md`.
