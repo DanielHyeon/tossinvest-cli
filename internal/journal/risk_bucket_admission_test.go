@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -156,23 +157,32 @@ func TestReadRiskBucketStateReturnsStableMismatchInsteadOfRepairingDrift(t *test
 
 func TestRiskBucketAdmissionRejectsImmutablePolicyAndSnapshotCollision(t *testing.T) {
 	j := openTestJournal(t)
+	// a066 6.5: 셋째 진입이 공유 bucket 의 기록된 최소 한도 cap(원장 대조 자리)을 통과해야 뒤의 snapshot 충돌 가드에 닿음 —
+	// 그래서 첫 두 진입의 한도를 300 으로 둠(셋째: 원장 100 + 50 ≤ 300). 이 시험의 주제(snapshot ID 충돌)는 그대로.
 	seedExistingRiskReservation(t, j, "existing-collision-a", "acct-1")
-	first := riskBucketAdmissionFixture(t, "collision-a", "acct-1", "lane-short", "campaign-1", "prospective-1", "100", "0")
+	first := riskBucketAdmissionFixture(t, "collision-a", "acct-1", "lane-short", "campaign-1", "prospective-1", "300", "0")
 	if _, err := j.CommitRiskBucketAdmission(context.Background(), first); err != nil {
 		t.Fatal(err)
 	}
+	// a066 5.6.1 F2 계약 변경(2026-09-27): 같은 bucket key 에 **다른** 예약 가격 정책 record 가 오는 것은 더 이상 충돌이
+	// 아님 — 공유 bucket 의 두 번째 진입·새 가격 scale-in 이 정확히 이 모양이고, v34 부터 예약은 자기 record 를 가리킴.
+	// 이 시험은 원래 그것을 거절로 고정했었음(그 거절이 F2 결함). 지금은 받아들이고 **자기 record 에 결속됨**을 고정함.
 	seedExistingRiskReservation(t, j, "existing-collision-b", "acct-1")
-	second := riskBucketAdmissionFixture(t, "collision-b", "acct-1", "lane-short", "campaign-1", "prospective-1", "100", "0")
+	second := riskBucketAdmissionFixture(t, "collision-b", "acct-1", "lane-short", "campaign-1", "prospective-1", "300", "50")
 	second.Admission.Policy.Price.Digest = "different-price-digest"
-	if _, err := j.CommitRiskBucketAdmission(context.Background(), second); !errors.Is(err, ErrRiskBucketSnapshotMismatch) {
-		t.Fatalf("policy collision error=%v", err)
+	receipt, err := j.CommitRiskBucketAdmission(context.Background(), second)
+	if err != nil {
+		t.Fatalf("a second policy record under the same bucket keys was refused: %v", err)
 	}
-	if got := countRiskBucketRows(t, j, "risk_bucket_final_decisions"); got != 1 {
-		t.Fatalf("decisions=%d", got)
+	var distinctRecords int
+	if err := j.db.QueryRow(`SELECT count(DISTINCT policy_record_digest) FROM risk_bucket_reservations WHERE bucket_dimension='horizon'`).Scan(&distinctRecords); err != nil || distinctRecords != 2 || receipt.QFinal == 0 {
+		t.Fatalf("each admission must bind its own policy record: distinct=%d q_final=%d err=%v", distinctRecords, receipt.QFinal, err)
 	}
-	second = riskBucketAdmissionFixture(t, "collision-b", "acct-1", "lane-short", "campaign-1", "prospective-1", "100", "0")
+	seedExistingRiskReservation(t, j, "existing-collision-c", "acct-1")
+	second = riskBucketAdmissionFixture(t, "collision-c", "acct-1", "lane-short", "campaign-1", "prospective-1", "200", "100")
 	second.Snapshots[0].SnapshotID = first.Snapshots[0].SnapshotID
-	if _, err := j.CommitRiskBucketAdmission(context.Background(), second); !errors.Is(err, ErrRiskBucketSnapshotMismatch) {
+	// 공유 sentinel 이 아니라 **이** 가드의 문장으로 단언함(다섯 가드가 ErrRiskBucketSnapshotMismatch 를 감쌈).
+	if _, err := j.CommitRiskBucketAdmission(context.Background(), second); !errors.Is(err, ErrRiskBucketSnapshotMismatch) || !strings.Contains(err.Error(), "immutable snapshot collision") {
 		t.Fatalf("snapshot collision error=%v", err)
 	}
 }
@@ -396,7 +406,14 @@ func riskBucketOwnerKey(account, prospective string) riskbucket.OwnerKey {
 func seedExistingRiskReservation(t *testing.T, j *Journal, id, account string) {
 	t.Helper()
 	decisionID := "decision-" + id
-	if _, err := j.db.Exec(`INSERT INTO decisions(id,account_ref,generation,safety_class,preimage_kind,risk_preimage,risk_hash,nonce,issued_at,expires_at) VALUES(?,?,0,'EXPOSURE_RAISING','RISK_INTENT','{}',?,?,?,?)`, decisionID, account, "hash-"+id, "nonce-"+id, "2026-03-30T00:29:00Z", "2026-03-30T01:30:00Z"); err != nil {
+	// a138: 개수 상한 판정이 HELD 예약의 결정 preimage 에서 종목을 읽으므로, 생산 RecordDecision 이 쓰는 정규형 preimage 를 씀
+	// (옛 '{}' 는 생산이 만들 수 없는 모양이라 판정이 셀 수 없음으로 거부함).
+	preimage, err := RiskIntent{AccountRef: account, Market: "kr", Symbol: "SEED-" + id, Side: "BUY", Quantity: "1",
+		EntryPrice: "100", StopPrice: "90", PolicyVersion: "test-1"}.Canonical()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := j.db.Exec(`INSERT INTO decisions(id,account_ref,generation,safety_class,preimage_kind,risk_preimage,risk_hash,nonce,issued_at,expires_at) VALUES(?,?,0,'EXPOSURE_RAISING','RISK_INTENT',?,?,?,?,?)`, decisionID, account, preimage, "hash-"+id, "nonce-"+id, "2026-03-30T00:29:00Z", "2026-03-30T01:30:00Z"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := j.db.Exec(`INSERT INTO risk_reservations(id,decision_id,account_ref,kind,amount,currency,snapshot_as_of,state) VALUES(?,?,?,'OPEN_EXPOSURE','1','KRW','2026-03-30T00:29:00Z','HELD')`, id, decisionID, account); err != nil {

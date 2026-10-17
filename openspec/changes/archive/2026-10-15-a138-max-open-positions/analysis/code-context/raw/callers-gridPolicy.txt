@@ -1,0 +1,9 @@
+
+Callers of "gridPolicy" (2):
+
+function    Population
+  internal/measure/population.go:121
+
+function    Grid
+  internal/measure/counterfactual.go:160
+

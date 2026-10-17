@@ -1,0 +1,369 @@
+{
+  "file": "internal/risk/input.go",
+  "source_sha256": "4aa64adbb3ba22c6460e9246f509caa7bdd59e310e72ff84a5612a92fe1e508e",
+  "package": "risk",
+  "function": "Validate",
+  "receiver": "Policy",
+  "signature": "Policy.Validate(params=0, results=1)",
+  "start": {
+    "line": 262,
+    "column": 1
+  },
+  "end": {
+    "line": 318,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 264,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 267,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 276,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 282,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 285,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 291,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 294,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 299,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 302,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 306,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 310,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 314,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 265,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 277,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 283,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 286,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 292,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 295,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 300,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 303,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 307,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 311,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 315,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 317,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 263,
+        "column": 19
+      },
+      "text": "requirePositiveMoney"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 16
+      },
+      "text": "requirePositiveMoney"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 19
+      },
+      "text": "parseWholeNumber"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 285,
+        "column": 5
+      },
+      "text": "quantity.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 16
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 294,
+        "column": 5
+      },
+      "text": "ratio.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 294,
+        "column": 26
+      },
+      "text": "ratio.Cmp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 294,
+        "column": 36
+      },
+      "text": "big.NewRat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 295,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 298,
+        "column": 16
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 5
+      },
+      "text": "minRR.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 303,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 307,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 311,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 315,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 263,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 276,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 281,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 290,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 298,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

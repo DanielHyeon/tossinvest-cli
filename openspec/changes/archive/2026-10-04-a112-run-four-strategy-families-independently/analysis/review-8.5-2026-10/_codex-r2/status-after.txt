@@ -1,0 +1,3 @@
+?? .reticle-setup-crash.log
+?? openspec/changes/a112-run-four-strategy-families-independently/analysis/review-8.5-2026-10/
+?? w4.log

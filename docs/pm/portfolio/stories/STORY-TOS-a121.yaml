@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a121-reconcile-stale-verification-artifacts",
-    "path": "openspec/changes/a121-reconcile-stale-verification-artifacts"
+    "path": "openspec/changes/archive/2026-10-06-a121-reconcile-stale-verification-artifacts"
   },
   "found_by": {
     "date": "2026-09-06",

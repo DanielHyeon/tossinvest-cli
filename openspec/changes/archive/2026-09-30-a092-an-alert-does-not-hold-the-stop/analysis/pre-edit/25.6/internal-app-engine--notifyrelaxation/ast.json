@@ -1,0 +1,162 @@
+{
+  "file": "internal/app/engine/risk_relaxation_command.go",
+  "source_sha256": "3f976552ce400d0ce1245e0c72bce0943f252e93335d236d881b76ac20ce47d3",
+  "package": "engine",
+  "function": "notifyRelaxation",
+  "signature": "notifyRelaxation(params=9, results=1)",
+  "start": {
+    "line": 161,
+    "column": 1
+  },
+  "end": {
+    "line": 183,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 179,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 182,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 79
+      },
+      "text": "journal.RFC3339"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 16
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 15
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 12
+      },
+      "text": "repo.EnqueueAlert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 30
+      },
+      "text": "context.WithoutCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 54
+      },
+      "text": "strconv.FormatInt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 9
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 4
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 12
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 24
+      },
+      "text": "err.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 163,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 164,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 168,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 178,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 181,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

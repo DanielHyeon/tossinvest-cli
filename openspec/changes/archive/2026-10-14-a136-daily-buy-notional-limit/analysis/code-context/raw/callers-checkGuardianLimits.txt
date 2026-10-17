@@ -1,0 +1,6 @@
+
+Callers of "checkGuardianLimits" (1):
+
+function    verifyGate
+  internal/app/engine/interlock.go:478
+

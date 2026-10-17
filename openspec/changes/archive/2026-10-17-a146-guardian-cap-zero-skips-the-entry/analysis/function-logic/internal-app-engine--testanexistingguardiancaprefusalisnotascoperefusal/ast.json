@@ -1,0 +1,235 @@
+{
+  "file": "internal/app/engine/a112_qfinal_family_test.go",
+  "source_sha256": "fa7a22453d8d0da3de0824f9e56b5b902824fdccb74f5b64c43f963012cd705b",
+  "package": "engine",
+  "function": "TestAnExistingGuardianCapRefusalIsNotAScopeRefusal",
+  "signature": "TestAnExistingGuardianCapRefusalIsNotAScopeRefusal(params=1, results=0)",
+  "start": {
+    "line": 248,
+    "column": 1
+  },
+  "end": {
+    "line": 265,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 253,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 256,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 260,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 13
+      },
+      "text": "newA112TradingFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 9
+      },
+      "text": "withStrategyEntrySkipRecorder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 39
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 101
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 9
+      },
+      "text": "dispatchStrategyMarketHandoffs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 77
+      },
+      "text": "fixture.proposals.kr.dispatchHandoffs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 15
+      },
+      "text": "fixture.placedSymbols"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 40
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 256,
+        "column": 19
+      },
+      "text": "a112ScopeRefusalOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 25
+      },
+      "text": "errors.As"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 4
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 21
+      },
+      "text": "Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 21
+      },
+      "text": "skips.Unwrap"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 264,
+        "column": 2
+      },
+      "text": "t.Logf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 264,
+        "column": 55
+      },
+      "text": "skips.Unwrap"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 249,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 251,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 251,
+        "column": 93
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 252,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 253,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

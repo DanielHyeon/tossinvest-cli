@@ -162,8 +162,10 @@ func TestTheAlertCommandsAreWiredUnderEngine(t *testing.T) {
 		t.Errorf("--operator defaults to %q — 아무도 안 고른 이름이 원장에 들어간다 (R5)",
 			operator.DefValue)
 	}
-	if ack.Annotations["mutating"] == "true" {
-		t.Error("ack declares mutating=true; 이 명령은 주문 경로에 안 닿는다")
+	// a092 C17(Manager 판정 4, frozen 24판 22.3): ack 는 원장 쓰기(행 정착 · 운영자 이름)이고 진입 래치를 풂 → mutating=true.
+	// 대화형 에이전트가 자동 실행하지 않게 하는 표지이지 주문 경로라는 뜻이 아님 — 추가 확인 마찰이 없다는 위 단언은 그대로.
+	if ack.Annotations["mutating"] != "true" {
+		t.Error("ack does not declare mutating=true; 승인은 원장을 쓰고 진입 래치를 푼다 (a092 C17)")
 	}
 }
 

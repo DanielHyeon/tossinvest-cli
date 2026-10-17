@@ -1,0 +1,92 @@
+{
+  "file": "cmd/tossctl/engine_alerts.go",
+  "source_sha256": "0b1df1ebe19b495c2995cbd74e956bccfd4302e9f6ccf8f477aa1d9aa441d761",
+  "package": "main",
+  "function": "newEngineAlertsAckCmd",
+  "signature": "newEngineAlertsAckCmd(params=1, results=1)",
+  "start": {
+    "line": 74,
+    "column": 1
+  },
+  "end": {
+    "line": 109,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 102,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 108,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 9
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 11
+      },
+      "text": "runEngineAlertsAck"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 6
+      },
+      "text": "cmd.MarkFlagRequired"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

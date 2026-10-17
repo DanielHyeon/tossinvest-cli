@@ -12,6 +12,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 )
 
 // 이 파일이 재는 것은 하나다: **어떤 고장이 어디까지 번지는가.**
@@ -367,22 +368,19 @@ func TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError(t *testing.T
 	}
 }
 
-// TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo 는 위 갈래의
+// TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning 은 위 갈래의
 // **날카로운 쪽**이다. `runMarket` 의 순서는 `refreshOnly` 판정이
-// `isCentralStrategyIntegrity` 판정보다 **앞**이다(813:4 가 816:4 보다 앞).
-// 그래서 오늘 생산이 실제로 돌리는 유일한 구성에서는 중앙 무결성 오류조차
-// 삼켜진다.
+// `isCentralStrategyIntegrity` 판정보다 **앞**이다. 5.6.1 은 그 순서 때문에 오늘
+// 생산이 도는 유일한 구성에서 중앙 무결성 오류조차 삼켜진다는 것을 값으로 고정하고,
+// 두 권위(design.md:198 고장표 대 spec 「lane worker 가 safety loop 를 취소해서는
+// 안 된다」)의 충돌을 사람에게 올렸다.
 //
-// **이것은 사람이 정할 것이지 리뷰가 정할 것이 아니다.** 두 권위가 갈린다:
-//   - `design.md:198` 의 고장표는 "journal/Gateway/fence/owner integrity fault →
-//     모든 신규 entry fail-closed" 라고 쓴다.
-//   - 같은 절의 "lane context 와 safety context 를 분리한다" 와 spec 의
-//     "lane worker 가 safety loop 를 취소해서는 안 된다 (MUST NOT)" 는 반대쪽을 가리킨다.
-//
-// 오늘 코드는 뒤쪽을 따른다. 순서를 뒤집으면 전략 평가 하나가 엔진을 세우고
-// **손절을 놓는 loop 까지 끈다.** 그래서 이 시험은 현재 순서를 값으로 고정하고,
-// 바꾸려면 사람의 승인이 필요하다는 것을 실패 문구에 적어 둔다.
-func TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo(t *testing.T) {
+// **사람 결정 (6)(2026-09-30): fail-closed 의 수단은 EntryGate 다.** 그래서 5.6.2.1 은
+// 순서를 그대로 두고(루프 생존), 이 갈래에서 삼키지 않고 신규 진입을 닫는다. 이 시험이
+// 계속 못 박는 것은 **엔진이 서지 않는다**는 절반이고, 진입이 닫힌다는 절반은
+// a112_central_integrity_entry_gate_test.go 가 잰다. (이름은 5.6.1 의
+// `…SwallowsACentralIntegrityErrorToo` 에서 바뀌었다 — 이제 삼키지 않는다.)
+func TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning(t *testing.T) {
 	base := time.Date(2026, 9, 3, 0, 0, 0, 0, time.UTC)
 	fake := clock.NewFake(base)
 	var calls atomic.Int32
@@ -397,7 +395,8 @@ func TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo(t *testing.T) {
 		Cycle: func(context.Context) error { return nil }}
 	supervisor := mustStrategySupervisor(t, engine.StrategyEntrySupervisorOptions{
 		Clock: fake, CycleLimit: engine.MaximumStrategyCycleLimit,
-		Workers: []engine.StrategyMarketWorker{kr, us},
+		Workers:   []engine.StrategyMarketWorker{kr, us},
+		EntryGate: execgw.NewEntryGate(fake, map[execgw.RequiredQuery]time.Duration{}),
 	})
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

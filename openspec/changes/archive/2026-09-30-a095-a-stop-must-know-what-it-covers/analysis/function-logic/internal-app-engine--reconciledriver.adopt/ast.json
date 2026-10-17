@@ -1,0 +1,319 @@
+{
+  "file": "internal/app/engine/adoption.go",
+  "source_sha256": "3d66976f07a50aa7e98447cc17c943d394c67694025ad665765d39562ec0bc9d",
+  "package": "engine",
+  "function": "adopt",
+  "receiver": "ReconcileDriver",
+  "signature": "ReconcileDriver.adopt(params=3, results=1)",
+  "start": {
+    "line": 210,
+    "column": 1
+  },
+  "end": {
+    "line": 257,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 213,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 218,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 220,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 230,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 233,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 239,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 248,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 214,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 223,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 246,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 256,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 25
+      },
+      "text": "d.observeCandidates"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 21
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 10
+      },
+      "text": "adoptionQuoteKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 13
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 13
+      },
+      "text": "d.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 22
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 40
+      },
+      "text": "adoptedCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 4
+      },
+      "text": "d.logDeferred"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 30
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 6
+      },
+      "text": "d.adoptOne"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 66
+      },
+      "text": "d.clk.Now"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 217,
+        "column": 2
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 219,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 221,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 228,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 231,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 232,
+        "column": 3
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 236,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 239,
+        "column": 6
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 243,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 249,
+        "column": 4
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 250,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 253,
+        "column": 3
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 254,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

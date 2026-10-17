@@ -1,0 +1,910 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/app/engine",
+ "tests_run": 29,
+ "failed_tests": [],
+ "union_passed": false,
+ "failures": {
+  "<union>": "--- FAIL: TestA111ObserverUsesClockLeaseHelpersForTheUseLease (0.00s)\n--- FAIL: TestA111FallbackSequenceRecoveryIsLazyAndPriceEvidenceUsesTheGateDuration (0.00s)\nFAIL"
+ },
+ "bundles": {
+  "internal-app-engine--context.newpairedstrategyentryproductionassembly": {
+   "B1": {
+    "kind": "if",
+    "line": 297,
+    "column": 2,
+    "block": "297.14-299.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B2": {
+    "kind": "if",
+    "line": 303,
+    "column": 2,
+    "block": "303.67-306.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B3": {
+    "kind": "if",
+    "line": 314,
+    "column": 2,
+    "block": "314.23-316.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B4": {
+    "kind": "if",
+    "line": 324,
+    "column": 2,
+    "block": "324.16-326.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B5": {
+    "kind": "if",
+    "line": 345,
+    "column": 2,
+    "block": "345.16-347.3",
+    "entered_by": [],
+    "union": true
+   },
+   "B6": {
+    "kind": "range",
+    "line": 361,
+    "column": 2,
+    "block": "361.78-364.3",
+    "entered_by": [],
+    "union": true
+   },
+   "B7": {
+    "kind": "if",
+    "line": 366,
+    "column": 2,
+    "block": "366.16-368.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B8": {
+    "kind": "if",
+    "line": 373,
+    "column": 2,
+    "block": "373.59-375.3",
+    "entered_by": [],
+    "union": false
+   }
+  },
+  "internal-app-engine--context.newrefreshingpairedstrategyentrysupervisor": {
+   "B1": {
+    "kind": "if",
+    "line": 386,
+    "column": 2,
+    "block": "386.28-388.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B2": {
+    "kind": "if",
+    "line": 390,
+    "column": 2,
+    "block": "390.20-392.3",
+    "entered_by": [],
+    "union": true
+   },
+   "B3": {
+    "kind": "range",
+    "line": 394,
+    "column": 2,
+    "block": "394.78-402.3",
+    "entered_by": [],
+    "union": true
+   },
+   "B4": {
+    "kind": "if",
+    "line": 406,
+    "column": 2,
+    "block": "406.16-408.3",
+    "entered_by": [],
+    "union": false
+   }
+  },
+  "internal-app-engine--context.productionstrategyworker": {
+   "B1": {
+    "kind": "if",
+    "line": 420,
+    "column": 2,
+    "block": "420.14-422.3",
+    "entered_by": [],
+    "union": false
+   }
+  },
+  "internal-app-engine--context.read": {
+   "B1": {
+    "kind": "if",
+    "line": 25,
+    "column": 2,
+    "block": "25.28-27.3",
+    "entered_by": [],
+    "union": true
+   },
+   "B2": {
+    "kind": "if",
+    "line": 31,
+    "column": 2,
+    "block": "31.18-33.3",
+    "entered_by": [],
+    "union": true
+   },
+   "B3": {
+    "kind": "if",
+    "line": 35,
+    "column": 2,
+    "block": "35.16-37.3",
+    "entered_by": [],
+    "union": true
+   },
+   "B4": {
+    "kind": "if",
+    "line": 56,
+    "column": 2,
+    "block": "56.18-58.3",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestAFailingShadowStepChangesNothingButItsOwnObservation",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   },
+   "B5": {
+    "kind": "if",
+    "line": 59,
+    "column": 2,
+    "block": "59.23-61.3",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestAFailingShadowStepChangesNothingButItsOwnObservation",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   },
+   "B6": {
+    "kind": "range",
+    "line": 62,
+    "column": 2,
+    "block": "62.78-66.39",
+    "entered_by": [
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow"
+    ],
+    "union": true
+   },
+   "B7": {
+    "kind": "if",
+    "line": 66,
+    "column": 3,
+    "block": "66.39-68.4",
+    "entered_by": [
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow"
+    ],
+    "union": true
+   },
+   "B8": {
+    "kind": "if",
+    "line": 69,
+    "column": 3,
+    "block": "69.29-70.12",
+    "entered_by": [
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow"
+    ],
+    "union": true
+   },
+   "B9": {
+    "kind": "if",
+    "line": 73,
+    "column": 3,
+    "block": "73.104-76.4",
+    "entered_by": [],
+    "union": true
+   }
+  },
+  "internal-app-engine--context.runproductionstrategymarketcycle": {
+   "B1": {
+    "kind": "if",
+    "line": 518,
+    "column": 2,
+    "block": "518.16-520.3",
+    "entered_by": [
+     "TestTheShadowDeferNeverRewritesAFirstCycleError"
+    ],
+    "union": true
+   },
+   "B2": {
+    "kind": "if",
+    "line": 542,
+    "column": 2,
+    "block": "542.16-544.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B3": {
+    "kind": "if",
+    "line": 548,
+    "column": 2,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 555,
+    "column": 2,
+    "block": "555.27-557.3",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestNeitherTheStepNorTheProjectionShadowsAnOnLane",
+     "TestOnlyOneShadowStepRunsPerMarket",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   }
+  },
+  "internal-app-engine--coordinatemarketproposals": {
+   "B1": {
+    "kind": "range",
+    "line": 66,
+    "column": 2,
+    "block": "66.31-68.22",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestAFailingShadowStepChangesNothingButItsOwnObservation",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestAStuckShadowStepNeitherLatchesNorRefreshesTheOtherMarket",
+     "TestCentralIntegrityKeepsItsIdentityThroughTheShadowDefer",
+     "TestCollectMarketCarriesTheShadowBatchOnlyFromCoordination",
+     "TestCollectReturnsTheShadowPairBesideTheAuthorityPair",
+     "TestNeitherTheStepNorTheProjectionShadowsAnOnLane",
+     "TestOnlyOneShadowStepRunsPerMarket",
+     "TestTheCoordinatorCarriesEveryPreGateProposalAsTheShadowBatch",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   },
+   "B2": {
+    "kind": "if",
+    "line": 68,
+    "column": 3,
+    "block": "68.22-70.12",
+    "entered_by": [],
+    "union": true
+   },
+   "B3": {
+    "kind": "range",
+    "line": 77,
+    "column": 3,
+    "block": "77.30-96.11",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestAFailingShadowStepChangesNothingButItsOwnObservation",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestAStuckShadowStepNeitherLatchesNorRefreshesTheOtherMarket",
+     "TestCentralIntegrityKeepsItsIdentityThroughTheShadowDefer",
+     "TestCollectMarketCarriesTheShadowBatchOnlyFromCoordination",
+     "TestCollectReturnsTheShadowPairBesideTheAuthorityPair",
+     "TestNeitherTheStepNorTheProjectionShadowsAnOnLane",
+     "TestOnlyOneShadowStepRunsPerMarket",
+     "TestTheCoordinatorCarriesEveryPreGateProposalAsTheShadowBatch",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   },
+   "B4": {
+    "kind": "if",
+    "line": 96,
+    "column": 4,
+    "block": "96.11-99.13",
+    "entered_by": [
+     "TestCollectMarketCarriesTheShadowBatchOnlyFromCoordination",
+     "TestTheCoordinatorCarriesEveryPreGateProposalAsTheShadowBatch"
+    ],
+    "union": true
+   },
+   "B5": {
+    "kind": "if",
+    "line": 101,
+    "column": 4,
+    "block": "101.48-103.5",
+    "entered_by": [],
+    "union": true
+   },
+   "B6": {
+    "kind": "if",
+    "line": 105,
+    "column": 4,
+    "block": "105.27-107.13",
+    "entered_by": [],
+    "union": true
+   },
+   "B7": {
+    "kind": "if",
+    "line": 109,
+    "column": 4,
+    "block": "109.76-121.5",
+    "entered_by": [],
+    "union": false
+   },
+   "B8": {
+    "kind": "if",
+    "line": 124,
+    "column": 3,
+    "block": "124.33-126.4",
+    "entered_by": [
+     "TestCollectMarketCarriesTheShadowBatchOnlyFromCoordination",
+     "TestTheCoordinatorCarriesEveryPreGateProposalAsTheShadowBatch"
+    ],
+    "union": true
+   }
+  },
+  "internal-app-engine--newstrategylaneruntime": {
+   "B1": {
+    "kind": "if",
+    "line": 106,
+    "column": 2,
+    "block": "106.16-108.3",
+    "entered_by": [],
+    "union": false
+   }
+  },
+  "internal-app-engine--strategylaneprojection": {
+   "B1": {
+    "kind": "if",
+    "line": 74,
+    "column": 2,
+    "block": "74.15-76.3",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestAFailingShadowStepChangesNothingButItsOwnObservation",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   },
+   "B2": {
+    "kind": "if",
+    "line": 81,
+    "column": 2,
+    "block": "81.59-84.56",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestAFailingShadowStepChangesNothingButItsOwnObservation",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   },
+   "B3": {
+    "kind": "if",
+    "line": 84,
+    "column": 3,
+    "block": "84.56-86.33",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestAFailingShadowStepChangesNothingButItsOwnObservation",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   },
+   "B4": {
+    "kind": "if",
+    "line": 86,
+    "column": 4,
+    "block": "86.33-89.5",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestAFailingShadowStepChangesNothingButItsOwnObservation",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   },
+   "B5": {
+    "kind": "if",
+    "line": 92,
+    "column": 4,
+    "block": "92.60-94.5",
+    "entered_by": [
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged"
+    ],
+    "union": true
+   },
+   "B6": {
+    "kind": "if",
+    "line": 99,
+    "column": 2,
+    "block": "99.121-102.3",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   }
+  },
+  "internal-app-engine--strategylaneruntime.evaluate": {
+   "B1": {
+    "kind": "if",
+    "line": 221,
+    "column": 2,
+    "block": "221.20-223.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B2": {
+    "kind": "if",
+    "line": 227,
+    "column": 2,
+    "block": "227.86-229.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B3": {
+    "kind": "range",
+    "line": 247,
+    "column": 2,
+    "block": "247.33-249.36",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestAFailingShadowStepChangesNothingButItsOwnObservation",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestAStuckShadowStepNeitherLatchesNorRefreshesTheOtherMarket",
+     "TestNeitherTheStepNorTheProjectionShadowsAnOnLane",
+     "TestOnlyOneShadowStepRunsPerMarket",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   },
+   "B4": {
+    "kind": "range",
+    "line": 249,
+    "column": 3,
+    "block": "249.36-250.37",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestAFailingShadowStepChangesNothingButItsOwnObservation",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestAStuckShadowStepNeitherLatchesNorRefreshesTheOtherMarket",
+     "TestNeitherTheStepNorTheProjectionShadowsAnOnLane",
+     "TestOnlyOneShadowStepRunsPerMarket",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   },
+   "B5": {
+    "kind": "if",
+    "line": 250,
+    "column": 4,
+    "block": "250.37-252.10",
+    "entered_by": [],
+    "union": true
+   },
+   "B6": {
+    "kind": "range",
+    "line": 263,
+    "column": 2,
+    "block": "263.35-264.23",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestAFailingShadowStepChangesNothingButItsOwnObservation",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestAStuckShadowStepNeitherLatchesNorRefreshesTheOtherMarket",
+     "TestNeitherTheStepNorTheProjectionShadowsAnOnLane",
+     "TestOnlyOneShadowStepRunsPerMarket",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   },
+   "B7": {
+    "kind": "if",
+    "line": 264,
+    "column": 3,
+    "block": "264.23-265.20",
+    "entered_by": [],
+    "union": true
+   },
+   "B8": {
+    "kind": "if",
+    "line": 271,
+    "column": 2,
+    "block": "271.107-273.3",
+    "entered_by": [],
+    "union": true
+   }
+  },
+  "internal-app-engine--strategylaneruntime.projection": {
+   "B1": {
+    "kind": "if",
+    "line": 33,
+    "column": 2,
+    "block": "33.20-35.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B2": {
+    "kind": "range",
+    "line": 42,
+    "column": 2,
+    "block": "42.37-47.121",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestAFailingShadowStepChangesNothingButItsOwnObservation",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   },
+   "B3": {
+    "kind": "if",
+    "line": 47,
+    "column": 3,
+    "block": "47.121-49.4",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   }
+  },
+  "internal-app-engine--strategylaneruntime.record": {
+   "B1": {
+    "kind": "if",
+    "line": 347,
+    "column": 2,
+    "block": "347.46-349.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B2": {
+    "kind": "if",
+    "line": 352,
+    "column": 2,
+    "block": "352.26-354.3",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestAFailingShadowStepChangesNothingButItsOwnObservation",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestAStuckShadowStepNeitherLatchesNorRefreshesTheOtherMarket",
+     "TestNeitherTheStepNorTheProjectionShadowsAnOnLane",
+     "TestOnlyOneShadowStepRunsPerMarket",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   },
+   "B3": {
+    "kind": "if",
+    "line": 355,
+    "column": 2,
+    "block": "355.40-357.3",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestAFailingShadowStepChangesNothingButItsOwnObservation",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestAStuckShadowStepNeitherLatchesNorRefreshesTheOtherMarket",
+     "TestNeitherTheStepNorTheProjectionShadowsAnOnLane",
+     "TestOnlyOneShadowStepRunsPerMarket",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   },
+   "B4": {
+    "kind": "range",
+    "line": 359,
+    "column": 2,
+    "block": "359.43-362.3",
+    "entered_by": [
+     "TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive",
+     "TestAFailingShadowStepChangesNothingButItsOwnObservation",
+     "TestALateNilCycleIsAFailureAtTheLimit",
+     "TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow",
+     "TestARestartNeverRestoresShadow",
+     "TestAStuckShadowStepNeitherLatchesNorRefreshesTheOtherMarket",
+     "TestNeitherTheStepNorTheProjectionShadowsAnOnLane",
+     "TestOnlyOneShadowStepRunsPerMarket",
+     "TestTheGapBetweenRecordAndPublishIsUnobservedByDesign",
+     "TestTheNextWaveClearsAnUnusableShadow",
+     "TestTheShadowPinLeavesTheDispatchTraceUnchanged",
+     "TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle",
+     "TestWithoutANewWaveExpiryAndAgeStillEndTheShadow"
+    ],
+    "union": true
+   }
+  },
+  "internal-app-engine--strategyproposalauthorityloader.collect": {
+   "B1": {
+    "kind": "if",
+    "line": 259,
+    "column": 2,
+    "block": "259.159-261.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B2": {
+    "kind": "range",
+    "line": 268,
+    "column": 2,
+    "block": "268.78-270.13",
+    "entered_by": [
+     "TestCollectReturnsTheShadowPairBesideTheAuthorityPair"
+    ],
+    "union": true
+   },
+   "B3": {
+    "kind": "if",
+    "line": 275,
+    "column": 6,
+    "block": "275.26-279.7",
+    "entered_by": [],
+    "union": false
+   },
+   "B4": {
+    "kind": "range",
+    "line": 288,
+    "column": 2,
+    "block": "288.14-290.40",
+    "entered_by": [
+     "TestCollectReturnsTheShadowPairBesideTheAuthorityPair"
+    ],
+    "union": true
+   },
+   "B5": {
+    "kind": "if",
+    "line": 290,
+    "column": 3,
+    "block": "290.40-292.4",
+    "entered_by": [
+     "TestCollectReturnsTheShadowPairBesideTheAuthorityPair"
+    ],
+    "union": true
+   },
+   "B6": {
+    "kind": "else",
+    "line": 292,
+    "column": 10,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   }
+  },
+  "internal-app-engine--strategyproposalauthorityloader.collectmarket": {
+   "B1": {
+    "kind": "if",
+    "line": 325,
+    "column": 2,
+    "block": "325.122-329.3",
+    "entered_by": [],
+    "union": true
+   },
+   "B2": {
+    "kind": "if",
+    "line": 338,
+    "column": 2,
+    "block": "338.42-340.3",
+    "entered_by": [
+     "TestCollectMarketCarriesTheShadowBatchOnlyFromCoordination"
+    ],
+    "union": true
+   },
+   "B3": {
+    "kind": "if",
+    "line": 341,
+    "column": 2,
+    "block": "341.161-343.3",
+    "entered_by": [],
+    "union": true
+   },
+   "B4": {
+    "kind": "if",
+    "line": 346,
+    "column": 2,
+    "block": "346.106-348.3",
+    "entered_by": [],
+    "union": true
+   },
+   "B5": {
+    "kind": "if",
+    "line": 350,
+    "column": 2,
+    "block": "350.32-352.3",
+    "entered_by": [
+     "TestCollectReturnsTheShadowPairBesideTheAuthorityPair"
+    ],
+    "union": true
+   },
+   "B6": {
+    "kind": "range",
+    "line": 356,
+    "column": 2,
+    "block": "356.39-358.56",
+    "entered_by": [
+     "TestCollectMarketCarriesTheShadowBatchOnlyFromCoordination",
+     "TestCollectReturnsTheShadowPairBesideTheAuthorityPair"
+    ],
+    "union": true
+   },
+   "B7": {
+    "kind": "if",
+    "line": 358,
+    "column": 3,
+    "block": "358.56-360.4",
+    "entered_by": [],
+    "union": true
+   },
+   "B8": {
+    "kind": "if",
+    "line": 370,
+    "column": 2,
+    "block": "370.52-372.3",
+    "entered_by": [],
+    "union": true
+   },
+   "B9": {
+    "kind": "if",
+    "line": 375,
+    "column": 2,
+    "block": "375.42-381.3",
+    "entered_by": [],
+    "union": true
+   },
+   "B10": {
+    "kind": "if",
+    "line": 412,
+    "column": 2,
+    "block": "412.35-418.3",
+    "entered_by": [
+     "TestCollectMarketCarriesTheShadowBatchOnlyFromCoordination"
+    ],
+    "union": true
+   },
+   "B11": {
+    "kind": "if",
+    "line": 419,
+    "column": 2,
+    "block": "419.27-426.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B12": {
+    "kind": "if",
+    "line": 428,
+    "column": 2,
+    "block": "428.22-435.3",
+    "entered_by": [],
+    "union": true
+   },
+   "B13": {
+    "kind": "if",
+    "line": 436,
+    "column": 2,
+    "block": "436.52-444.3",
+    "entered_by": [],
+    "union": true
+   },
+   "B14": {
+    "kind": "if",
+    "line": 446,
+    "column": 2,
+    "block": "446.15-453.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B15": {
+    "kind": "if",
+    "line": 454,
+    "column": 2,
+    "block": "454.23-460.3",
+    "entered_by": [],
+    "union": true
+   }
+  }
+ }
+}

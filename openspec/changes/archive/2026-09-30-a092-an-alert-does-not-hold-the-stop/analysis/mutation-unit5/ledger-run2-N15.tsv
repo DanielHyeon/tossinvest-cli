@@ -1,0 +1,3 @@
+TREE	HEAD e55102f04de29a29ca156196f65565cdb2f79c3c	uncommitted tracked: none	own untracked: none
+CONTROL	GREEN	
+N15 normal grade published synchronously (C8 reverted — capped RED)	CAUGHT	3 failing: TestA092ANormalAlertIsHandedOffNotSent, TestA092AFullRelayDropsAndSaysWhat, TestA092ACappedLiquidationDoesNotWaitForTheTransport

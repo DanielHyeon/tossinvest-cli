@@ -1,0 +1,41 @@
+{
+  "symbol": "ExitObserver.quoteUsable",
+  "callers": [
+    {
+      "name": "ObserveOnce",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 413
+    },
+    {
+      "name": "judge",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 857
+    },
+    {
+      "name": "judgeRatchet",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 914
+    },
+    {
+      "name": "judgeLadder",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 968
+    },
+    {
+      "name": "refreshObservation",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 1047
+    },
+    {
+      "name": "record",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 1177
+    }
+  ]
+}

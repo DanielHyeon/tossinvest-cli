@@ -1,0 +1,32 @@
+{
+  "id": "STORY-TOS-a105",
+  "title": "Protection supervision goes Wired",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a105-protection-supervision-goes-wired",
+    "path": "openspec/changes/a105-protection-supervision-goes-wired"
+  },
+  "found_by": {
+    "date": "2026-08-11",
+    "how": "a100 proposal-freeze review carved the Wired-production half out of a100's original scope and parked it under reserved number a105. The transfer list was preserved verbatim in a100 tasks.md (\"a105로 이관\"). The 2026-10-04 a100 R0 audit found the reservation had never been registered, leaving a100 task 7.10 with no receiving change; the Manager ruled to register it (a100 review.md R0 (4)).",
+    "record": "openspec/changes/a100-wire-fill-to-broker-protection/tasks.md (a105로 이관, 7.10), openspec/changes/a100-wire-fill-to-broker-protection/review.md (R0 2026-10-04)"
+  },
+  "prior_art": {
+    "note": "a100 lands the protection lifecycle core, convergence worker and journal schema in dormant form; a105 is the change that turns supervision Wired in production. The stale label \"a105 = lane activation\" in older a100 prose was corrected in R0: lane (strategy-family) activation authority went to a112 (archived 2026-10-05).",
+    "why_not_a_reversal": "Keeping Wired production out of a100 held a100's blast radius to the dormant core; the carve-out list was preserved as an explicit transfer, not dropped scope."
+  },
+  "acceptance": [
+    "This story is registered ahead of implementation per a100 task 7.10; implementation starts only after a100 lands",
+    "The flat-position resting-order window is closed before any automated entry opens (non-exemptable precondition, spec delta protection-orders)",
+    "internal/protectionsupervisor exists with per-market Wired judgement; a signing tool for supervisor_digest exists (today the repo is verify-only)",
+    "Wired ON is a human-approved action, treated as an operating toggle flip",
+    "make gate CHANGE=a105-protection-supervision-goes-wired passes"
+  ],
+  "measured": null,
+  "deviations": [],
+  "limits": [
+    "Registration only as of 2026-10-05: no code is touched until a100 lands.",
+    "Task granularity is a skeleton; the a105 freeze refines it with design and full spec deltas."
+  ]
+}

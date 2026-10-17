@@ -1,0 +1,3 @@
+[logic-map] a112-run-four-strategy-families-independently: base 1e25b3a31b71 → working tree (no landed-commit.txt in HEAD) required 59 function(s) — judged at HEAD 9e5f3ccfda48
+[logic-map] a112-run-four-strategy-families-independently: the target is the working tree, so this window also holds 34 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits
+[logic-map] a112-run-four-strategy-families-independently: evidence complete or diff-proven exempt

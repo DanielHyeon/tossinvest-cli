@@ -1,0 +1,12 @@
+
+Callers of "riskPolicyFromAutomationGate" (3):
+
+function    newProductionRiskGuardian
+  internal/app/engine/guardian_wiring.go:63
+
+function    TestAutomationGateRiskPolicyUsesEveryConfiguredUSDLimit
+  internal/app/engine/guardian_wiring_internal_test.go:15
+
+function    TestAutomationGateRiskPolicyPreservesInvalidNumbersForFailClosedValidation
+  internal/app/engine/guardian_wiring_internal_test.go:47
+

@@ -1,0 +1,26 @@
+TREE	HEAD 0cca8fc37f56755102a52184a17ec5e97fbb5740	uncommitted tracked: cmd/tossctl/engine.go,cmd/tossctl/engine_test.go,internal/app/engine/exitwiring.go,internal/obs/mode.go	own untracked: internal/journal/record_alert.go,internal/journal/a092_record_alert_test.go,internal/obs/record_only.go,internal/obs/a092_record_only_test.go,internal/app/engine/exit_record_only.go,internal/app/engine/a092_export_test.go,internal/app/engine/a092_exit_record_only_wiring_test.go,cmd/tossctl/a092_exit_options_pin_test.go
+CONTROL	GREEN	
+U01 RecordAlert never re-arms (remindAfter ignored)	CAUGHT	2 failing: TestA092RecordAlertRearmsASettledRowPastTheWindow, TestA092RecordOnlyRearmsPastTheReminderWindow
+U02 RecordAlert takes a lease	CAUGHT	4 failing: TestA092RecordAlertTakesNoLease, TestA092RecordAlertRearmsASettledRowPastTheWindow, TestA092RecordAlertIsOneTransactionWithoutAClaim, TestA092RecordOnlyCriticalNeverPublishes
+U03 critical Notify goes through the sync path	CAUGHT	3 failing: TestA092RecordOnlyCriticalNeverPublishes, TestA092RecordOnlyRearmsPastTheReminderWindow, TestA092RecordOnlyWithoutAJournalDoesNotPublish
+U04 announcer goes through the sync path	CAUGHT	2 failing: TestA092RecordOnlyWithoutAJournalDoesNotPublish, TestA092RecordOnlyAnnouncementIsARowNotASend
+U05 exit record passes a zero reminder window	CAUGHT	1 failing: TestA092RecordOnlyRearmsPastTheReminderWindow
+U06 no journal falls back to a publish	CAUGHT	2 failing: TestA092RecordOnlyWithoutAJournalDoesNotPublish, TestA092RecordEntryRecordsUnderTheNotifierLock
+U07 record failure does not latch	CAUGHT	2 failing: TestA092RecordOnlyFailureLatchesAndEscalates/notify, TestA092RecordOnlyFailureLatchesAndEscalates/announce
+U08 record failure does not escalate	CAUGHT	1 failing: TestA092RecordOnlyFailureLatchesAndEscalates/notify
+U09 record failure is swallowed	CAUGHT	2 failing: TestA092RecordOnlyFailureLatchesAndEscalates/notify, TestA092RecordOnlyFailureLatchesAndEscalates/announce
+U10 record failure is not logged	CAUGHT	2 failing: TestA092RecordOnlyFailureLatchesAndEscalates/notify, TestA092RecordOnlyFailureLatchesAndEscalates/announce
+U11 record outside the notifier lock	CAUGHT	1 failing: TestA092RecordEntryRecordsUnderTheNotifierLock
+U12 nil notifier guard dropped (Notify)	CAUGHT	1 failing: TestA092RecordOnlyNilNotifierIsANoOp
+U13 key drops the transition id	CAUGHT	3 failing: TestA092RecordOnlyAnnouncementIsARowNotASend, TestA092BothAnnouncersBuildTheSameEvent, TestA092EachTransitionIsItsOwnAnnouncement
+U14 the two announcers diverge	CAUGHT	1 failing: TestA092BothAnnouncersBuildTheSameEvent
+U15 sync announcer keeps the old key	CAUGHT	2 failing: TestA092BothAnnouncersBuildTheSameEvent, TestA092EachTransitionIsItsOwnAnnouncement
+U16 exit loop shares the engine Retrier	CAUGHT	1 failing: TestA092ExitObserverGetsRecordOnlyAlertPaths
+U17 exit Retrier keeps the sync announcer	CAUGHT	1 failing: TestA092ExitObserverGetsRecordOnlyAlertPaths
+U18 exit floor keeps the shared retrier	CAUGHT	1 failing: TestA092ExitObserverGetsRecordOnlyAlertPaths
+U19 exit floor is the shared floor	CAUGHT	1 failing: TestA092ExitObserverGetsRecordOnlyAlertPaths
+U20 exit alerts are the sync notifier	CAUGHT	1 failing: TestA092ExitObserverGetsRecordOnlyAlertPaths
+U21 exit announcer default dropped	CAUGHT	1 failing: TestA092ExitObserverGetsRecordOnlyAlertPaths
+U22 exit retrier is the shared one	CAUGHT	1 failing: TestA092ExitObserverGetsRecordOnlyAlertPaths
+U23 assembly hands the exit loop the sync notifier	CAUGHT	1 failing: TestA092EngineRuntimeDoesNotHandTheExitLoopASyncAlertPath
+U24 exit retrier copy mutates the shared one	CAUGHT	1 failing: TestA092ExitObserverGetsRecordOnlyAlertPaths

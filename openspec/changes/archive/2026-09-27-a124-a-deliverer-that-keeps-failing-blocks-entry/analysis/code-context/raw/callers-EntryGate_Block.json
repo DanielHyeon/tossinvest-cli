@@ -1,0 +1,113 @@
+{
+  "symbol": "EntryGate.Block",
+  "callers": [
+    {
+      "name": "TestEntryGateRefreshesDurableAuthorityBeforeEveryEntryDecision",
+      "kind": "function",
+      "filePath": "internal/execgw/a061_authority_refresh_test.go",
+      "startLine": 12
+    },
+    {
+      "name": "TestSymbolScopeSurvivesTheProjection",
+      "kind": "function",
+      "filePath": "internal/execgw/entrylatch_test.go",
+      "startLine": 174
+    },
+    {
+      "name": "TestTheProjectionReplacesRatherThanMerges",
+      "kind": "function",
+      "filePath": "internal/execgw/reconcile_projection_test.go",
+      "startLine": 97
+    },
+    {
+      "name": "TestTheProjectionLeavesOtherProducersAlone",
+      "kind": "function",
+      "filePath": "internal/execgw/reconcile_projection_test.go",
+      "startLine": 115
+    },
+    {
+      "name": "TestStrategyEntryGateAuthorityRejectsAllowedBlockedAllowedABAKRUS",
+      "kind": "function",
+      "filePath": "internal/execgw/strategy_entry_gate_authority_internal_test.go",
+      "startLine": 11
+    },
+    {
+      "name": "RebuildReconcileProjection",
+      "kind": "method",
+      "filePath": "internal/execgw/symbolgate.go",
+      "startLine": 183
+    },
+    {
+      "name": "TestSymbolBlockStopsOnlyThatSymbol",
+      "kind": "function",
+      "filePath": "internal/execgw/symbolgate_test.go",
+      "startLine": 31
+    },
+    {
+      "name": "TestCheckEntryStaysAccountWide",
+      "kind": "function",
+      "filePath": "internal/execgw/symbolgate_test.go",
+      "startLine": 53
+    },
+    {
+      "name": "TestAccountReasonWinsOverSymbolReason",
+      "kind": "function",
+      "filePath": "internal/execgw/symbolgate_test.go",
+      "startLine": 84
+    },
+    {
+      "name": "TestMarketlessBlockAppliesEverywhere",
+      "kind": "function",
+      "filePath": "internal/execgw/symbolgate_test.go",
+      "startLine": 97
+    },
+    {
+      "name": "TestBlockSymbolWithoutASymbolLatchesTheAccount",
+      "kind": "function",
+      "filePath": "internal/execgw/symbolgate_test.go",
+      "startLine": 113
+    },
+    {
+      "name": "TestReblockingKeepsTheOriginalObservation",
+      "kind": "function",
+      "filePath": "internal/execgw/symbolgate_test.go",
+      "startLine": 124
+    },
+    {
+      "name": "TestClearSymbolReleasesOnlyThatBlock",
+      "kind": "function",
+      "filePath": "internal/execgw/symbolgate_test.go",
+      "startLine": 144
+    },
+    {
+      "name": "TestClearSymbolReason",
+      "kind": "function",
+      "filePath": "internal/execgw/symbolgate_test.go",
+      "startLine": 163
+    },
+    {
+      "name": "TestGatewayAsksTheSymbolQuestion",
+      "kind": "function",
+      "filePath": "internal/execgw/symbolgate_test.go",
+      "startLine": 207
+    },
+    {
+      "name": "TestGatewayNeverGatesAnExitOnASymbolBlock",
+      "kind": "function",
+      "filePath": "internal/execgw/symbolgate_test.go",
+      "startLine": 253
+    },
+    {
+      "name": "TestSymbolBlocksAreConcurrencySafe",
+      "kind": "function",
+      "filePath": "internal/execgw/symbolgate_test.go",
+      "startLine": 289
+    },
+    {
+      "name": "syncGate",
+      "kind": "method",
+      "filePath": "internal/reconcile/mismatch.go",
+      "startLine": 1448
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+TREE	HEAD 588928bd + working tree	copy /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a066-relax-mut-2673974-1grakm12/tree
+CONTROL-M	GREEN	./internal/journal/ ^(TestA066|TestEntryLossLock|TestMigrationV3[2-5]|TestJournalAuditActions|TestRefuseEntryUnderLossLock|TestSchemaTablesAndColumns|TestTheReadOnlyHandleHasNoWriteMethods)
+M09	CAUGHT	internal/journal/risk_bucket_relaxation.go	entry release commits although the audit line failed	rc=1
+M10	CAUGHT	internal/journal/risk_bucket_relaxation.go	entry release audited under the wrong action	rc=1
+M16	CAUGHT	internal/journal/risk_bucket_relaxation.go	latch release commits although the audit line failed	rc=1

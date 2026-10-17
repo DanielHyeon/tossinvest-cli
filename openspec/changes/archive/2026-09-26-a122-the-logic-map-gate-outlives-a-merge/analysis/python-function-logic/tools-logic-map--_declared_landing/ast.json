@@ -1,0 +1,100 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "73cc6bdc299d54d631a8639030fbc8e05ef1eba1",
+  "source_sha256": "a5ee9c6febc7d18cf8cf0d853d2213fd873136edf368c1a4b40e40da50e63fbc",
+  "function": "_declared_landing",
+  "signature": "_declared_landing(change_dir, root)",
+  "start": {
+    "line": 359,
+    "column": 1
+  },
+  "end": {
+    "line": 377,
+    "column": 77
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 367,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 369,
+      "inherited_line": false,
+      "source": "except ValueError:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 372,
+      "inherited_line": false,
+      "source": "if raw is None:"
+    },
+    {
+      "id": "B4",
+      "kind": "Try",
+      "line": 374,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B5",
+      "kind": "ExceptHandler",
+      "line": 376,
+      "inherited_line": false,
+      "source": "except UnicodeDecodeError as exc:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 370,
+      "value": "None"
+    },
+    {
+      "line": 373,
+      "value": "None"
+    },
+    {
+      "line": 375,
+      "value": "raw.decode('utf-8').strip()"
+    }
+  ],
+  "raises": [
+    {
+      "line": 377,
+      "source": "raise ValueError(f'landing point is not UTF-8: {relative}') from exc"
+    }
+  ],
+  "calls": [
+    {
+      "line": 368,
+      "callee": "(change_dir / LANDING_FILE).relative_to"
+    },
+    {
+      "line": 368,
+      "callee": "(change_dir / LANDING_FILE).relative_to(root).as_posix"
+    },
+    {
+      "line": 371,
+      "callee": "_committed_bytes"
+    },
+    {
+      "line": 375,
+      "callee": "raw.decode('utf-8').strip"
+    },
+    {
+      "line": 375,
+      "callee": "raw.decode"
+    },
+    {
+      "line": 377,
+      "callee": "ValueError"
+    }
+  ]
+}

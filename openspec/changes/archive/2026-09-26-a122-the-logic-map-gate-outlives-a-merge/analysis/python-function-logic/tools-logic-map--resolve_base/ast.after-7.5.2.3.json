@@ -1,0 +1,217 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d12520c97b800f234f5c25483068a2bd70bd19b",
+  "source_sha256": "487708dc51fe19f322275b49e31a7edc49025fd4fd28a04d4b728a41a4f7b70c",
+  "function": "resolve_base",
+  "signature": "resolve_base(change_dir, root, context)",
+  "start": {
+    "line": 304,
+    "column": 1
+  },
+  "end": {
+    "line": 356,
+    "column": 21
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 309,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 313,
+      "inherited_line": false,
+      "source": "except FileNotFoundError as exc:"
+    },
+    {
+      "id": "B3",
+      "kind": "ExceptHandler",
+      "line": 319,
+      "inherited_line": false,
+      "source": "except (OSError, UnicodeDecodeError) as exc:"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 331,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B5",
+      "kind": "BoolOp",
+      "line": 333,
+      "inherited_line": false,
+      "source": "process.stderr.strip() or f'invalid Function Logic Map base: {value}'"
+    },
+    {
+      "id": "B6",
+      "kind": "Try",
+      "line": 338,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B7",
+      "kind": "ExceptHandler",
+      "line": 343,
+      "inherited_line": false,
+      "source": "except AdoptionError as exc:"
+    },
+    {
+      "id": "B8",
+      "kind": "IfExp",
+      "line": 345,
+      "inherited_line": false,
+      "source": "str(adoption['effective_base']) if adoption else persisted"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 346,
+      "inherited_line": false,
+      "source": "if context is not None:"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 349,
+      "inherited_line": false,
+      "source": "if adoption:"
+    },
+    {
+      "id": "B11",
+      "kind": "BoolOp",
+      "line": 354,
+      "inherited_line": false,
+      "source": "override and resolve(override) != effective"
+    },
+    {
+      "id": "B12",
+      "kind": "If",
+      "line": 354,
+      "inherited_line": false,
+      "source": "if override and resolve(override) != effective:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 335,
+      "value": "process.stdout.strip()"
+    },
+    {
+      "line": 356,
+      "value": "effective"
+    }
+  ],
+  "raises": [
+    {
+      "line": 314,
+      "source": "raise ValueError('missing base-commit.txt; run `python3 tools/sdd/capture_change_base.py --change <change-id>` at proposal freeze') from exc"
+    },
+    {
+      "line": 320,
+      "source": "raise ValueError(UNREADABLE.format(what='base-commit.txt', why=_why(exc))) from exc"
+    },
+    {
+      "line": 332,
+      "source": "raise ValueError(process.stderr.strip() or f'invalid Function Logic Map base: {value}')"
+    },
+    {
+      "line": 344,
+      "source": "raise ValueError(f'invalid execution-baseline adoption: {exc}') from exc"
+    },
+    {
+      "line": 355,
+      "source": "raise ValueError('SDD_BASE_REF must resolve to the selected effective comparison base')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 312,
+      "callee": "_decoded"
+    },
+    {
+      "line": 312,
+      "callee": "_decoded(_read_regular(path)).strip"
+    },
+    {
+      "line": 312,
+      "callee": "_read_regular"
+    },
+    {
+      "line": 314,
+      "callee": "ValueError"
+    },
+    {
+      "line": 320,
+      "callee": "UNREADABLE.format"
+    },
+    {
+      "line": 320,
+      "callee": "ValueError"
+    },
+    {
+      "line": 320,
+      "callee": "_why"
+    },
+    {
+      "line": 323,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 332,
+      "callee": "ValueError"
+    },
+    {
+      "line": 333,
+      "callee": "process.stderr.strip"
+    },
+    {
+      "line": 335,
+      "callee": "process.stdout.strip"
+    },
+    {
+      "line": 337,
+      "callee": "resolve"
+    },
+    {
+      "line": 342,
+      "callee": "validate_execution_baseline"
+    },
+    {
+      "line": 344,
+      "callee": "ValueError"
+    },
+    {
+      "line": 345,
+      "callee": "str"
+    },
+    {
+      "line": 352,
+      "callee": "str"
+    },
+    {
+      "line": 353,
+      "callee": "os.environ.get('SDD_BASE_REF', '').strip"
+    },
+    {
+      "line": 353,
+      "callee": "os.environ.get"
+    },
+    {
+      "line": 354,
+      "callee": "resolve"
+    },
+    {
+      "line": 355,
+      "callee": "ValueError"
+    }
+  ]
+}

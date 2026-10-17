@@ -1,0 +1,152 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/app/engine",
+ "tests_run": 20,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-app-engine--notifyrelaxation": {
+   "B1": {
+    "kind": "if",
+    "line": 173,
+    "column": 2,
+    "block": "173.20-177.3",
+    "entered_by": [
+     "TestA092RelaxationWithoutANotifierIsNotNotified"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 190,
+    "column": 2,
+    "block": "190.16-193.3",
+    "entered_by": [
+     "TestA066ReleaseStandsWhenTheNoticeFails",
+     "TestA092RelaxationNoticeFailureLatchesEntries"
+    ],
+    "union": null
+   }
+  },
+  "internal-app-engine--positionpolicycommandservice.releaseentrylosslock": {
+   "B1": {
+    "kind": "if",
+    "line": 72,
+    "column": 2,
+    "block": "72.16-74.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 76,
+    "column": 2,
+    "block": "76.16-78.3",
+    "entered_by": [
+     "TestA066RelaxationRefusedWithoutAnEngineAuditLog"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 80,
+    "column": 2,
+    "block": "80.16-82.3",
+    "entered_by": [
+     "TestA066RelaxationRequestRefusals"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 90,
+    "column": 2,
+    "block": "90.16-92.3",
+    "entered_by": [
+     "TestA066EntryLockReleaseThroughTheEngineEndpoint",
+     "TestA066JournalRefusalsCrossTheWireAsRefusals",
+     "TestA066RelaxationRequestRefusals"
+    ],
+    "union": null
+   }
+  },
+  "internal-app-engine--positionpolicycommandservice.releaseriskoveragelatch": {
+   "B1": {
+    "kind": "if",
+    "line": 105,
+    "column": 2,
+    "block": "105.16-107.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 109,
+    "column": 2,
+    "block": "109.16-111.3",
+    "entered_by": [
+     "TestA066LatchReleaseRefusedWithoutAnEngineAuditLog"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 113,
+    "column": 2,
+    "block": "113.16-115.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 123,
+    "column": 2,
+    "block": "123.16-125.3",
+    "entered_by": [],
+    "union": null
+   }
+  },
+  "internal-app-engine--newpositionpolicycommandservice": {
+   "B1": {
+    "kind": "if",
+    "line": 94,
+    "column": 2,
+    "block": "94.40-96.3",
+    "entered_by": [
+     "TestPositionPolicyCommandServiceRequiresEngineOwnedJournal"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 97,
+    "column": 2,
+    "block": "97.16-99.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 108,
+    "column": 2,
+    "block": "108.26-110.3",
+    "entered_by": [
+     "TestA066EntryLockReleaseThroughTheEngineEndpoint",
+     "TestA066JournalRefusalsCrossTheWireAsRefusals",
+     "TestA066LatchReleaseCarriesTheBindingIntoTheEngine",
+     "TestA066LatchReleaseRefusedWithoutAnEngineAuditLog",
+     "TestA066NoticeSurvivesTheCallerHangingUp",
+     "TestA066RelaxationRefusedWithoutAnEngineAuditLog",
+     "TestA066RelaxationRequestRefusals",
+     "TestA066RelaxationRoutesRequireTheBearerToken",
+     "TestA066ReleaseStandsWhenTheNoticeFails",
+     "TestA092CommandServiceTakesTheEngineNotifier",
+     "TestA092RelaxationNoticeFailureLatchesEntries",
+     "TestA092RelaxationNoticeRowShapeIsUnchanged",
+     "TestA092RelaxationWithoutANotifierIsNotNotified"
+    ],
+    "union": null
+   }
+  }
+ }
+}

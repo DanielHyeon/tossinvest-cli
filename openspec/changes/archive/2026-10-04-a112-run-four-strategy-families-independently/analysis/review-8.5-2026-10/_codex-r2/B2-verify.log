@@ -1,0 +1,70 @@
+=== RUN   TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached
+--- PASS: TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached (0.78s)
+=== RUN   TestAClosedMarketStillCarriesTheGatesActivation
+--- PASS: TestAClosedMarketStillCarriesTheGatesActivation (0.00s)
+=== RUN   TestTheOrderLeaseCannotOutliveTheFamilyActivation
+--- PASS: TestTheOrderLeaseCannotOutliveTheFamilyActivation (4.22s)
+=== RUN   TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission
+=== RUN   TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission/실시계_없음_+_검증된_활성화_—_fail-closed
+=== RUN   TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission/실시계_없음_+_활성화_없음_—_기존_경로_그대로
+=== RUN   TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission/파도_뒤_만료_—_실시계가_만료를_넘었다
+--- PASS: TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission (2.55s)
+    --- PASS: TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission/실시계_없음_+_검증된_활성화_—_fail-closed (0.81s)
+    --- PASS: TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission/실시계_없음_+_활성화_없음_—_기존_경로_그대로 (0.87s)
+    --- PASS: TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission/파도_뒤_만료_—_실시계가_만료를_넘었다 (0.87s)
+=== RUN   TestTheLaneDesiredAndEffectiveAreTheActivationTheWaveRanWith
+--- PASS: TestTheLaneDesiredAndEffectiveAreTheActivationTheWaveRanWith (0.83s)
+=== RUN   TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness
+--- PASS: TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness (0.00s)
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/route_not_ready
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/fx_not_ready
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/loader_misconfigured
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/proposal_public_key_invalid
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/duplicate_routed_symbol
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/proposal_load_failed
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/a_scope_lost_its_proposal
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/no_scope_accepted_(post-gate_control)
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/route_not_ready
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/fx_not_ready
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/loader_misconfigured
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/proposal_public_key_invalid
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/duplicate_routed_symbol
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/proposal_load_failed
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/a_scope_lost_its_proposal
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/no_scope_accepted_(post-gate_control)
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/route_not_ready
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/fx_not_ready
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/loader_misconfigured
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/proposal_public_key_invalid
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/duplicate_routed_symbol
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/proposal_load_failed
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/a_scope_lost_its_proposal
+=== RUN   TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/no_scope_accepted_(post-gate_control)
+--- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/route_not_ready (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/fx_not_ready (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/loader_misconfigured (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/proposal_public_key_invalid (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/duplicate_routed_symbol (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/proposal_load_failed (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/a_scope_lost_its_proposal (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/no_scope_accepted_(post-gate_control) (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/route_not_ready (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/fx_not_ready (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/loader_misconfigured (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/proposal_public_key_invalid (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/duplicate_routed_symbol (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/proposal_load_failed (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/a_scope_lost_its_proposal (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/no_scope_accepted_(post-gate_control) (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/route_not_ready (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/fx_not_ready (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/loader_misconfigured (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/proposal_public_key_invalid (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/duplicate_routed_symbol (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/proposal_load_failed (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/a_scope_lost_its_proposal (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/no_scope_accepted_(post-gate_control) (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	8.398s

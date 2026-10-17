@@ -1,0 +1,71 @@
+{
+ "HEAD": "76d0816a8569a88e31b946e027dab67993aa1395",
+ "base": "da80ce31b6a1ab5d443016768f970a82bab102db",
+ "landing": "",
+ "required": 341,
+ "errors": 332,
+ "attributed_commits": [
+  "676bd4b46d520fb75cbb034e2751bccb634d7b47"
+ ],
+ "own_functions": [
+  {
+   "function": "cmd/tossctl/soak.go:newSoakAttestCmd",
+   "bundle": "cmd-tossctl--newsoakattestcmd",
+   "revision": "current",
+   "window_requires": "current"
+  },
+  {
+   "function": "cmd/tossctl/soak.go:runSoakAttest",
+   "bundle": "cmd-tossctl--runsoakattest",
+   "revision": "current",
+   "window_requires": "current"
+  },
+  {
+   "function": "cmd/tossctl/soak_test.go:TestSoakAttestRefusesAnUnfinishedSoakAndWritesNothing",
+   "bundle": "cmd-tossctl--testsoakattestrefusesanunfinishedsoakandwritesnothing",
+   "revision": "base",
+   "window_requires": "base"
+  },
+  {
+   "function": "cmd/tossctl/soak_test.go:TestSoakAttestWritesAVerifiableAttestation",
+   "bundle": "cmd-tossctl--testsoakattestwritesaverifiableattestation",
+   "revision": "base",
+   "window_requires": "base"
+  },
+  {
+   "function": "internal/console/console_test.go:TestTheDashboardReportsAnUnstartedMachineWithoutFailing",
+   "bundle": "internal-console--testthedashboardreportsanunstartedmachinewithoutfailing",
+   "revision": "base",
+   "window_requires": "base"
+  },
+  {
+   "function": "internal/console/data.go:Console.readAttestation",
+   "bundle": "internal-console--console.readattestation",
+   "revision": "current",
+   "window_requires": "current"
+  },
+  {
+   "function": "internal/soak/attest.go:BuildAttestation",
+   "bundle": "internal-soak--buildattestation",
+   "revision": "current",
+   "window_requires": "current"
+  },
+  {
+   "function": "internal/soak/attest.go:Summary.Evaluate",
+   "bundle": "internal-soak--summary.evaluate",
+   "revision": "current",
+   "window_requires": "current"
+  },
+  {
+   "function": "internal/soak/attest_test.go:TestBuildAttestationRefusesAnIncompleteSoak",
+   "bundle": "internal-soak--testbuildattestationrefusesanincompletesoak",
+   "revision": "current",
+   "window_requires": "current"
+  }
+ ],
+ "own_bundle_errors": [],
+ "sibling_missing": 332,
+ "unclassified": [],
+ "failures": [],
+ "verdict": "PASS"
+}

@@ -1,0 +1,62 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "ff6142a55df06eaa2565d09e358c5b6b626dbc05513a88db9989410a83961fa5",
+  "function": "_recording_moved",
+  "signature": "_recording_moved(change, change_dir, root, head, book)",
+  "start": {
+    "line": 3138,
+    "column": 1
+  },
+  "end": {
+    "line": 3164,
+    "column": 60
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 3159,
+      "inherited_line": false,
+      "source": "if moved:"
+    },
+    {
+      "id": "B2",
+      "kind": "BoolOp",
+      "line": 3164,
+      "inherited_line": false,
+      "source": "_judged_state_moved(root, head, book) or refusal"
+    }
+  ],
+  "returns": [
+    {
+      "line": 3160,
+      "value": "moved"
+    },
+    {
+      "line": 3164,
+      "value": "_judged_state_moved(root, head, book) or refusal"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 3158,
+      "callee": "_head_moved"
+    },
+    {
+      "line": 3162,
+      "callee": "_recording_refusal"
+    },
+    {
+      "line": 3163,
+      "callee": "_read_evidence"
+    },
+    {
+      "line": 3164,
+      "callee": "_judged_state_moved"
+    }
+  ]
+}

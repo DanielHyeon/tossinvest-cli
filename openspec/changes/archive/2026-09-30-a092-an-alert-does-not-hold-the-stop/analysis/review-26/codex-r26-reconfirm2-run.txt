@@ -1,0 +1,5 @@
+start 2026-09-30 14:36:30 KST sha f59f87b5a0b977ce
+rc 0 end 2026-09-30 14:38:54 KST
+session 01a0f09c-6c07-74b0-9f28-29ded0cbb7a5 (resume — 1차 재확인과 같은 세션), gpt-6-astra, read-only, tokens 163,753, 401 없음(err 의 401 문자열 2건은 시험 코드 인용 줄)
+tree = git archive 55b435ea + R26B-FIX.diff(d8769cfb..b910173a internal cmd)
+prompt = prompt-codex-reconfirm2.md

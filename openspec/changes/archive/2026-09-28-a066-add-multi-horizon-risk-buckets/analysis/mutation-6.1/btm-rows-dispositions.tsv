@@ -1,0 +1,9 @@
+row	result at a22a2c05	disposition
+internal-journal--commitfreshriskbucketadmissiontx B15 if@442	SURVIVED at a22a2c05	closed by bfaeb2bf TestA066FreshScaleInReusesTheOwnerOnlyAfterStateAndBucketIdentityMatch (fresh-scale-in-ledger.tsv 3/3 CAUGHT)
+internal-journal--journal.revalidateqfinaladmission B15 range@616	SURVIVED at a22a2c05	three-layer shadowing (state digest / dimension loop / len(seen)); pinned by 4e5edffd TestA066RevalidateDimensionGuardsAreLayered + behavior test (revalidate-ledger.tsv)
+internal-journal--loadriskbucketfilltransition B10 else@800	SURVIVED at a22a2c05	closed by 306bc872 TestA066FillTransitionUsesTheSmallestDecisionLimitPerBucket (re-run in copy at 4e5edffd: CAUGHT)
+internal-journal--loadriskbucketfilltransition B18 range@837	SURVIVED at a22a2c05	four-layer shadowing (state digest / per-decision count / total count / ApplyFill validateFillBuckets); pinned by TestA066FillTransitionBucketCountGuardsAreLayered + behavior test (fill-layers-ledger.tsv)
+internal-riskbucket--applyfill B2 if@108	SURVIVED at a22a2c05	later parse guards refused the same inputs under other reasons; closed by TestA066ApplyFillValidatesBucketShapeBeforeAnyArithmetic (reason field pinned) — fill-shape-ledger.tsv CAUGHT
+internal-riskbucket--applyfill B5 range@115	SURVIVED at a22a2c05	B6/B32 pair; layer pin v1 missed a head `continue`; v2 CAUGHT — fill-shape-ledger.tsv
+internal-riskbucket--applyfill B25 if@210	SURVIVED at a22a2c05	write-only field (no production reader); return contract pinned by TestA066ApplyFillRecordKeepsTheActualEvidenceItWasValuedWith — fill-evidence-record-ledger.tsv 2/2 CAUGHT
+internal-riskbucket--applyfill B36 if@256	SURVIVED at a22a2c05	shadowed by recomputeOverageLatches parse (overage_filled); reason pinned by TestA066ApplyFillFirstApplyOverflowIsRefusedAtTheAddition — fill-overflow-ledger.tsv CAUGHT

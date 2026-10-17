@@ -25,7 +25,8 @@ func (g *Gateway) ObserveStrategyEntryGate(ctx context.Context, market, symbol s
 		return StrategyEntryGateAuthority{}, errors.New("execgw: strategy entry-gate authority unavailable")
 	}
 	if refusal := g.entry.CheckEntryFor(market, symbol); refusal != nil {
-		return StrategyEntryGateAuthority{}, refusal
+		// a137: AUTO 일일 손실 모드만 남은 차단이면 계좌 진입 차단 표지를 닮(레인 결함이 아님). 그 밖은 그대로.
+		return StrategyEntryGateAuthority{}, g.entry.markStrategyRefusal(refusal, market, symbol)
 	}
 	g.entry.mu.Lock()
 	generation := g.entry.revision
@@ -61,9 +62,16 @@ func (g *Gateway) withStrategyEntryGateAuthority(ctx context.Context, expected S
 	defer g.entry.mu.Unlock()
 	current := sealStrategyEntryGateAuthority(g.accountRef, market, symbol, g.entry.revision)
 	if current != expected {
+		// a137: 바뀐 상태가 AUTO 일일 손실 모드만 남은 차단이면 그 표지로(강화와 경합한 승인), 아니면 그대로.
+		if marked := g.entry.dailyLossOnlyRejectionLocked(market, symbol); marked != nil {
+			return marked
+		}
 		return errors.New("execgw: strategy entry-gate authority changed")
 	}
 	if rejected := g.entry.checkAccountEntryLocked(); rejected != nil {
+		if marked := g.entry.dailyLossOnlyRejectionLocked(market, symbol); marked != nil && marked.Detail == rejected.Detail {
+			return marked
+		}
 		return rejected
 	}
 	if rejected := g.entry.checkSymbolEntryLocked(market, symbol); rejected != nil {

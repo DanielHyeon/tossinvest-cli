@@ -1,0 +1,9 @@
+--- FAIL: TestA092AFailedEscalationLatchKeepsTheAccountOut (0.53s)
+    --- FAIL: TestA092AFailedEscalationLatchKeepsTheAccountOut/unrecorded (0.28s)
+        a092_lock_scope_test.go:336: the gate description carries the account: "a critical exit.proposal_refused alert could not be delivered and the operating mode could not be tightened: journal: starting the operating-mode transition for acct-a092: context canceled"
+    --- FAIL: TestA092AFailedEscalationLatchKeepsTheAccountOut/exhausted (0.25s)
+        a092_lock_scope_test.go:336: the gate description carries the account: "a critical exit.proposal_refused alert could not be delivered and the operating mode could not be tightened: journal: starting the operating-mode transition for acct-a092: context canceled"
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/obs	0.531s
+FAIL
+rc=1

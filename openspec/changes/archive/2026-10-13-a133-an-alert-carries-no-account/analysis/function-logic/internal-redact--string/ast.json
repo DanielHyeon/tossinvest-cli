@@ -1,0 +1,216 @@
+{
+  "file": "internal/redact/redact.go",
+  "source_sha256": "aff3b9a6e1a809b7abddacba2557c1f65d1d84f70668be42418e128c0f8ff31e",
+  "package": "redact",
+  "function": "String",
+  "signature": "String(params=1, results=1)",
+  "start": {
+    "line": 79,
+    "column": 1
+  },
+  "end": {
+    "line": 109,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 80,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 84,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 85,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 91,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "for",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 81,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 92,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 94,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 105,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 2
+      },
+      "text": "reg.mu.RLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 8
+      },
+      "text": "strings.ReplaceAll"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 7
+      },
+      "text": "digitRun.ReplaceAllStringFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 18
+      },
+      "text": "onlyDigits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 2
+      },
+      "text": "reg.mu.RUnlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 6
+      },
+      "text": "maskPattern.ReplaceAllString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 11
+      },
+      "text": "derivedIDPattern.ReplaceAllString"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 86,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 90,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 98,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 103,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 107,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

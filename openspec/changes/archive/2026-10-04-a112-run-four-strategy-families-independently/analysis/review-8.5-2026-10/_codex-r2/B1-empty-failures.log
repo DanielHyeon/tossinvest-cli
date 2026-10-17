@@ -1,0 +1,62 @@
+--- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel (0.01s)
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_generation_zero (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_calendar (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_approved_at_not_a_canonical_instant (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_issued_in_the_future (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_zero_observed_instant (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_unknown_market (0.00s)
+        a112_activation_error_fields_test.go:197: config binding fields=[] (message "strategyrouter: four-family activation unavailable: manifest file : strategyrouter: production route authority unavailable"), want exactly ["market"]
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_malformed_risk_policy_digest (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_route_manifest (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_risk_policy (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_issued_before_approved (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_three_fields_at_once (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_actor (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_three_fields_at_once (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_longer_than_the_ceiling (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_empty_calibration (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_domain (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_unknown_lane (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_relative_config_dir (0.00s)
+        a112_activation_error_fields_test.go:197: config binding fields=[] (message "strategyrouter: four-family activation unavailable: manifest file strategy-family-activation-KR.json: strategyrouter: production route authority unavailable"), want exactly ["config_dir"]
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_malformed_route_manifest_digest (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_market (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_empty_calendar (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_calibration (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_build (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_protection_floor (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_horizon_drift (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_schema (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_two_faults_at_once (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_malformed_digest_pin (0.00s)
+        a112_activation_error_fields_test.go:197: config binding fields=[] (message "strategyrouter: four-family activation unavailable: manifest_digest: the pinned digest does not match the file bytes"), want exactly ["manifest_digest"]
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_empty_build (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	0.014s
+FAIL

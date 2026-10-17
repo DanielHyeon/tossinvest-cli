@@ -1,0 +1,252 @@
+{
+  "file": "internal/app/engine/a129_exit_order_log_test.go",
+  "source_sha256": "a89249db4c0a3586fb750373f947a357930975a74adfbe62ff19356ae7c51185",
+  "package": "engine_test",
+  "function": "TestA129MTheRefusalLatchDoesNotOutliveItsEpisode",
+  "signature": "TestA129MTheRefusalLatchDoesNotOutliveItsEpisode(params=1, results=0)",
+  "start": {
+    "line": 762,
+    "column": 1
+  },
+  "end": {
+    "line": 786,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 780,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 783,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 763,
+        "column": 7
+      },
+      "text": "a129Setup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 764,
+        "column": 2
+      },
+      "text": "f.entry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 765,
+        "column": 2
+      },
+      "text": "f.quote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 766,
+        "column": 2
+      },
+      "text": "f.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 768,
+        "column": 2
+      },
+      "text": "f.quote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 769,
+        "column": 2
+      },
+      "text": "f.clk.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 770,
+        "column": 2
+      },
+      "text": "f.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 771,
+        "column": 2
+      },
+      "text": "f.clk.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 772,
+        "column": 2
+      },
+      "text": "f.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 773,
+        "column": 2
+      },
+      "text": "f.quote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 774,
+        "column": 2
+      },
+      "text": "f.clk.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 775,
+        "column": 2
+      },
+      "text": "f.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 776,
+        "column": 18
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 777,
+        "column": 2
+      },
+      "text": "f.quote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 778,
+        "column": 2
+      },
+      "text": "f.clk.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 779,
+        "column": 2
+      },
+      "text": "f.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 780,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 781,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 783,
+        "column": 12
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 783,
+        "column": 16
+      },
+      "text": "a129Of"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 783,
+        "column": 23
+      },
+      "text": "f.lines"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 784,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 784,
+        "column": 81
+      },
+      "text": "f.sink.String"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 763,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 767,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 776,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 783,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,369 @@
+{
+  "file": "internal/app/engine/strategy_entry_supervisor.go",
+  "source_sha256": "9e24e93028b2728071d71d1d6ccea2c2a83fe768f6efe2dc09a57906c435a373",
+  "package": "engine",
+  "function": "buildProductionStrategyMarketWorker",
+  "signature": "buildProductionStrategyMarketWorker(params=13, results=1)",
+  "start": {
+    "line": 432,
+    "column": 1
+  },
+  "end": {
+    "line": 504,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 438,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 451,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 460,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 462,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 468,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 471,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 477,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 498,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 439,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 453,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 478,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 499,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 501,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 447,
+        "column": 27
+      },
+      "text": "schedule.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 447,
+        "column": 55
+      },
+      "text": "candidate.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 447,
+        "column": 84
+      },
+      "text": "route.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 448,
+        "column": 3
+      },
+      "text": "fx.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 448,
+        "column": 25
+      },
+      "text": "proposal.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 448,
+        "column": 53
+      },
+      "text": "riskAuthority.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 448,
+        "column": 86
+      },
+      "text": "account.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 460,
+        "column": 26
+      },
+      "text": "p.dispatchHandoffs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 461,
+        "column": 24
+      },
+      "text": "handoff.Single"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 462,
+        "column": 21
+      },
+      "text": "result.ValidProposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 468,
+        "column": 16
+      },
+      "text": "gateway.ObserveStrategyProtection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 468,
+        "column": 55
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 468,
+        "column": 71
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 471,
+        "column": 16
+      },
+      "text": "gateway.ObserveStrategyEntryGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 471,
+        "column": 54
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 471,
+        "column": 70
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 12
+      },
+      "text": "strategyWorkerEvidenceDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 6
+      },
+      "text": "validStrategyDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 64
+      },
+      "text": "IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 64
+      },
+      "text": "a.authority.FreshUntil"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 502,
+        "column": 23
+      },
+      "text": "a.authority.FreshUntil"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 437,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 444,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 445,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 446,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 447,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 459,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 461,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 468,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 471,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 474,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 495,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

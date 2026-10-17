@@ -1,0 +1,62 @@
+{
+  "file": "internal/app/engine/interlock.go",
+  "source_sha256": "389371bc84e21e83408c9eb89cc1e62064691fb0dca72c0f2b5998790e5aa884",
+  "package": "engine",
+  "function": "newAutomationStatus",
+  "signature": "newAutomationStatus(params=3, results=1)",
+  "start": {
+    "line": 325,
+    "column": 1
+  },
+  "end": {
+    "line": 336,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 328,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 330,
+        "column": 20
+      },
+      "text": "attestationPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 20
+      },
+      "text": "gateLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 21
+      },
+      "text": "boundIfPositive"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 37
+      },
+      "text": "gate.EffectiveMaxDailyBuyNotional"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,156 @@
+{
+  "file": "internal/app/engine/a112_lane_dependency_test.go",
+  "source_sha256": "48c82734876cae38abe05263bdd539c3ab55df16667c99641ae7e8b378e07b8e",
+  "package": "engine",
+  "function": "TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes",
+  "signature": "TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes(params=1, results=0)",
+  "start": {
+    "line": 111,
+    "column": 1
+  },
+  "end": {
+    "line": 124,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 18
+      },
+      "text": "pairedStrategyDispatchCycleFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 13
+      },
+      "text": "laneRuntimeForDependency"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 6
+      },
+      "text": "runtime.evaluate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 23
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 101
+      },
+      "text": "laneOwnedInputs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 2
+      },
+      "text": "spy.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 22
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 38
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 2
+      },
+      "text": "spy.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 112,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 114,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

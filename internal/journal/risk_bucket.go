@@ -22,6 +22,11 @@ var (
 	ErrRiskBucketSnapshotMismatch = errors.New("journal: risk bucket snapshot mismatch")
 	ErrRiskBucketReplayMismatch   = errors.New("journal: risk bucket replay mismatch")
 	ErrRiskBucketStateUnknown     = errors.New("journal: risk bucket state unknown")
+	// ErrRiskBucketUsageStale: admission 의 bucket snapshot 이 원장보다 적은 사용량을 주장함(a066 5.6.1 F1).
+	// **재시도 대상이 아님**(Manager 판정 2026-09-28): 생산 collect 는 bucket snapshot 을 wave 앞에서 고정하고 예약 버전만
+	// 다시 읽으므로 같은 wave 안의 재수집은 같은 snapshot 을 다시 들고 옴. 그래서 ErrSnapshotStale 을 감싸지 않음 — 이 진입은
+	// 이 wave 에서 거절되고, 다음 wave 가 원장에서 새로 모은 snapshot 으로 다시 평가함.
+	ErrRiskBucketUsageStale = errors.New("journal: risk bucket usage snapshot is behind the ledger; refused for this cycle and re-evaluated on the next snapshot wave")
 )
 
 // RiskBucketSnapshotReference identifies the immutable authority record whose
@@ -133,6 +138,10 @@ func (j *Journal) CommitRiskBucketAdmission(ctx context.Context, plan RiskBucket
 	if err := ensureRiskBucketEntryScopeClean(ctx, tx, plan.Owner.Key); err != nil {
 		return RiskBucketAdmissionReceipt{}, err
 	}
+	// a066 5.5: 진입 손실 잠금 판정 — 잠금 읽기가 이 admission 트랜잭션 안이라 TOCTOU 없음.
+	if err := refuseEntryUnderLossLock(ctx, tx, plan.Owner.Key.AccountID, plan.Owner.Key.Market, admissionHorizon(decision)); err != nil {
+		return RiskBucketAdmissionReceipt{}, err
+	}
 
 	ownerReused := false
 	var prospective, lane, campaign string
@@ -184,6 +193,12 @@ func (j *Journal) CommitRiskBucketAdmission(ctx context.Context, plan RiskBucket
 		}
 	}
 
+	// a066 5.6.1 F1: snapshot 이 원장보다 적은 사용량을 주장하면 stale — 같은 트랜잭션에서 생산 reader 와 같은 함수로 대조.
+	// owner·scale-in 판정 **뒤**, 이 진입의 예약을 쓰기 **앞**: 기존 가드(owner 충돌 등)가 이 가드에 가려지지 않고,
+	// 대조하는 원장 합에 이 진입 자신의 예약이 섞이지 않음.
+	if err := refuseStaleBucketUsage(ctx, tx, plan.Owner.Key.AccountID, plan.Admission.Buckets, decision.Caps); err != nil {
+		return RiskBucketAdmissionReceipt{}, err
+	}
 	var ownerSequence int64
 	if err := tx.QueryRowContext(ctx, `SELECT COALESCE(MAX(owner_sequence),0)+1 FROM risk_bucket_final_decisions WHERE account_ref=? AND market=? AND symbol=? AND owner_prospective_generation=?`, plan.Owner.Key.AccountID, string(plan.Owner.Key.Market), plan.Owner.Key.Symbol, plan.Owner.Key.ProspectiveGeneration).Scan(&ownerSequence); err != nil {
 		return RiskBucketAdmissionReceipt{}, err
@@ -202,21 +217,9 @@ func (j *Journal) CommitRiskBucketAdmission(ctx context.Context, plan RiskBucket
 		bucket := plan.Admission.Buckets[i]
 		ref := plan.Snapshots[i]
 		bound := bucket.BoundEvidence()
-		policyRecordDigest, err := riskBucketRecordDigest(struct {
-			Key      riskbucket.BucketKey
-			Evidence riskbucket.Evidence
-			Policy   riskbucket.ReservePolicy
-		}{bound.Key, bound.PolicyEvidence, p})
+		policyRecordDigest, err := storeRiskBucketPolicyRecord(ctx, tx, cap.Key, ref.PolicyDigest, bound, p, plan.CreatedAt)
 		if err != nil {
 			return RiskBucketAdmissionReceipt{}, err
-		}
-		_, err = tx.ExecContext(ctx, `INSERT OR IGNORE INTO risk_bucket_policies(bucket_dimension,bucket_value,policy_version,policy_digest,policy_source,policy_observed_at,policy_fresh_until,record_digest,account_currency,quote_currency,evaluated_at,worst_price_quote,price_source,price_version,price_digest,price_observed_at,price_fresh_until,fee_fixed_base_minor,fee_per_unit_base_minor,fee_minimum_base_minor,fee_version,fee_digest,fx_rate_quote_to_base,fx_haircut,fx_source,fx_version,fx_digest,fx_observed_at,fx_fresh_until,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, string(cap.Key.Dimension), cap.Key.Value, cap.Key.PolicyVersion, ref.PolicyDigest, bound.PolicyEvidence.Source, canonicalRiskTime(bound.PolicyEvidence.ObservedAt), canonicalRiskTime(bound.PolicyEvidence.FreshUntil), policyRecordDigest, p.AccountCurrency, p.QuoteCurrency, canonicalRiskTime(p.EvaluatedAt), p.Price.WorstExecutableQuote, p.Price.Source, p.Price.Version, p.Price.Digest, canonicalRiskTime(p.Price.ObservedAt), canonicalRiskTime(p.Price.FreshUntil), p.Fee.FixedBaseMinor, p.Fee.PerUnitBaseMinor, p.Fee.MinimumBaseMinor, p.Fee.Version, p.Fee.Digest, p.FX.RateQuoteToBase, p.FX.Haircut, p.FX.Source, p.FX.Version, p.FX.Digest, canonicalRiskTime(p.FX.ObservedAt), canonicalRiskTime(p.FX.FreshUntil), canonicalRiskTime(plan.CreatedAt))
-		if err != nil {
-			return RiskBucketAdmissionReceipt{}, err
-		}
-		var storedPolicyDigest string
-		if err := tx.QueryRowContext(ctx, `SELECT record_digest FROM risk_bucket_policies WHERE bucket_dimension=? AND bucket_value=? AND policy_version=?`, string(cap.Key.Dimension), cap.Key.Value, cap.Key.PolicyVersion).Scan(&storedPolicyDigest); err != nil || storedPolicyDigest != policyRecordDigest {
-			return RiskBucketAdmissionReceipt{}, fmt.Errorf("%w: immutable policy collision", ErrRiskBucketSnapshotMismatch)
 		}
 		snapshotRecordDigest, err := riskBucketRecordDigest(struct {
 			Reference           RiskBucketSnapshotReference
@@ -235,7 +238,7 @@ func (j *Journal) CommitRiskBucketAdmission(ctx context.Context, plan RiskBucket
 			return RiskBucketAdmissionReceipt{}, fmt.Errorf("%w: immutable snapshot collision", ErrRiskBucketSnapshotMismatch)
 		}
 		reservationID := riskBucketReservationID(plan.TransactionID, cap.Key.Dimension)
-		_, err = tx.ExecContext(ctx, `INSERT INTO risk_bucket_reservations(reservation_id,decision_id,existing_reservation_id,account_ref,market,symbol,owner_prospective_generation,bucket_dimension,bucket_value,policy_version,snapshot_id,reserved_minor,held_minor,filled_minor,overage_minor,state,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'0','0','HELD',?,?)`, reservationID, plan.DecisionID, plan.ExistingReservationID, plan.Owner.Key.AccountID, string(plan.Owner.Key.Market), plan.Owner.Key.Symbol, plan.Owner.Key.ProspectiveGeneration, string(cap.Key.Dimension), cap.Key.Value, cap.Key.PolicyVersion, ref.SnapshotID, cap.ReservationAtFinal, cap.ReservationAtFinal, canonicalRiskTime(plan.CreatedAt), canonicalRiskTime(plan.CreatedAt))
+		_, err = tx.ExecContext(ctx, `INSERT INTO risk_bucket_reservations(reservation_id,decision_id,existing_reservation_id,account_ref,market,symbol,owner_prospective_generation,bucket_dimension,bucket_value,policy_version,snapshot_id,reserved_minor,held_minor,filled_minor,overage_minor,state,created_at,updated_at,policy_record_digest) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'0','0','HELD',?,?,?)`, reservationID, plan.DecisionID, plan.ExistingReservationID, plan.Owner.Key.AccountID, string(plan.Owner.Key.Market), plan.Owner.Key.Symbol, plan.Owner.Key.ProspectiveGeneration, string(cap.Key.Dimension), cap.Key.Value, cap.Key.PolicyVersion, ref.SnapshotID, cap.ReservationAtFinal, cap.ReservationAtFinal, canonicalRiskTime(plan.CreatedAt), canonicalRiskTime(plan.CreatedAt), policyRecordDigest)
 		if err != nil {
 			return RiskBucketAdmissionReceipt{}, fmt.Errorf("journal: insert %s risk bucket reservation: %w", cap.Key.Dimension, err)
 		}
@@ -262,24 +265,48 @@ func (j *Journal) CommitRiskBucketAdmission(ctx context.Context, plan RiskBucket
 	return riskBucketReceipt(plan, decision, ownerReused, false), nil
 }
 
-func ensureRiskBucketEntryScopeClean(ctx context.Context, tx *sql.Tx, key riskbucket.OwnerKey) error {
-	var ownerLatches, scopeLatches, activeReconciles int
-	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_owners WHERE account_ref=? AND market=?
-		AND symbol=? AND released_at IS NULL AND (risk_overage_latched=1 OR unknown_actual_latched=1)`,
-		key.AccountID, string(key.Market), key.Symbol).Scan(&ownerLatches); err != nil {
+// ensureRiskBucketEntryScopeClean 은 한 owner 범위(account, market, symbol)의 진입을 막는 상태 — 활성 owner 의 latch,
+// scope latch, 활성 대사 — 를 판정하는 **단일 규칙**임. admission(CRA · 발급) 트랜잭션과 제출 재검증
+// (RevalidateQFinalAdmission, a066 6.5)이 같은 함수를 부름. 거절은 원인과 범위를 이름으로 말함(원장 행이 그 이름으로
+// 조회 가능하므로 Gateway 사유 코드를 새로 두지 않음 — Manager 판정 2026-09-28).
+func ensureRiskBucketEntryScopeClean(ctx context.Context, q riskBucketQueryer, key riskbucket.OwnerKey) error {
+	var causes []string
+	var overage, unknown int
+	if err := q.QueryRowContext(ctx, `SELECT COALESCE(MAX(risk_overage_latched),0),COALESCE(MAX(unknown_actual_latched),0)
+		FROM risk_bucket_owners WHERE account_ref=? AND market=? AND symbol=? AND released_at IS NULL`,
+		key.AccountID, string(key.Market), key.Symbol).Scan(&overage, &unknown); err != nil {
 		return err
 	}
-	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_scope_latches WHERE account_ref=?
-		AND market=? AND symbol=?`, key.AccountID, string(key.Market), key.Symbol).Scan(&scopeLatches); err != nil {
+	if overage != 0 {
+		causes = append(causes, "owner RISK_OVERAGE")
+	}
+	if unknown != 0 {
+		causes = append(causes, "owner UNKNOWN_ACTUAL_RISK")
+	}
+	var scopeLatches string
+	if err := q.QueryRowContext(ctx, `SELECT COALESCE(GROUP_CONCAT(latch, ','),'') FROM (SELECT DISTINCT latch FROM risk_bucket_scope_latches
+		WHERE account_ref=? AND market=? AND symbol=? ORDER BY latch)`, key.AccountID, string(key.Market), key.Symbol).Scan(&scopeLatches); err != nil {
 		return err
 	}
-	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM reconcile_states WHERE account_ref=? AND released_at IS NULL
-		AND (symbol IS NULL OR symbol=?) AND (scope_market IS NULL OR scope_market=?)`,
-		key.AccountID, key.Symbol, string(key.Market)).Scan(&activeReconciles); err != nil {
+	if scopeLatches != "" {
+		causes = append(causes, "scope latch "+scopeLatches)
+	}
+	// 막는 근거는 활성 행의 **존재**(count)이고 원인 문자열은 이름일 뿐임 — 원인이 빈 옛 행에서도 막음(좁힌 재리뷰 P3).
+	var activeReconciles int
+	var reconciles string
+	if err := q.QueryRowContext(ctx, `SELECT count(*),COALESCE(GROUP_CONCAT(DISTINCT cause),'') FROM reconcile_states
+		WHERE account_ref=? AND released_at IS NULL AND (symbol IS NULL OR symbol=?) AND (scope_market IS NULL OR scope_market=?)`,
+		key.AccountID, key.Symbol, string(key.Market)).Scan(&activeReconciles, &reconciles); err != nil {
 		return err
 	}
-	if ownerLatches != 0 || scopeLatches != 0 || activeReconciles != 0 {
-		return ErrRiskBucketEntryBlocked
+	if activeReconciles != 0 {
+		if reconciles == "" {
+			reconciles = "(no cause recorded)"
+		}
+		causes = append(causes, "active RECONCILE "+reconciles)
+	}
+	if len(causes) != 0 {
+		return fmt.Errorf("%w: %s/%s: %s", ErrRiskBucketEntryBlocked, key.Market, key.Symbol, strings.Join(causes, "; "))
 	}
 	return nil
 }

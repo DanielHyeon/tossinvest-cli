@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
@@ -69,6 +70,12 @@ type PositionPolicyCommandService struct {
 	// untouched. See exit_quarantine_command.go for why it is not shared with
 	// capabilities above.
 	quarantineGrants []exitQuarantineCapability
+	// audit 는 a066 5.5 운영자 해제(risk_relaxation_command.go)가 쓰는 엔진 audit 로그임. nil 이면 해제를 거절함
+	// ((*audit.Log)(nil).RecordAction 이 nil 을 돌려주므로 nil 로그를 Auditor 로 넘기면 audit 줄 없이 커밋됨).
+	audit *audit.Log
+	// notices 는 a066 완화 통지를 남기는 알림기의 기록 전용 입구임(a092 25.6). 엔진 알림기가 없으면 nil — 그때 해제 결과는
+	// 「통지되지 않음」을 말함.
+	notices relaxationNoticeRecorder
 }
 
 type positionPolicyCapability struct {
@@ -90,12 +97,18 @@ func NewPositionPolicyCommandService(ectx *Context, clk clock.Clock) (*PositionP
 	if clk == nil {
 		clk = clock.System()
 	}
-	return &PositionPolicyCommandService{
+	service := &PositionPolicyCommandService{
 		j: ectx.Journal, prices: ectx.Official, retrier: ectx.Retrier,
 		adoption:     ectx.Config.Engine.Adoption,
 		blocks:       ectx.Reconcile,
 		commonPolicy: strings.TrimSpace(ectx.Config.Engine.ExitPolicy.CommonPolicy), clk: clk,
-	}, nil
+		audit: ectx.Audit,
+	}
+	// 타입 있는 nil 포인터를 인터페이스에 넣으면 nil 판정이 거짓이 되므로 알림기가 있을 때만 넣음.
+	if ectx.Notifier != nil {
+		service.notices = ectx.Notifier
+	}
+	return service, nil
 }
 
 // Runtime returns the engine instance's immutable startup adoption settings

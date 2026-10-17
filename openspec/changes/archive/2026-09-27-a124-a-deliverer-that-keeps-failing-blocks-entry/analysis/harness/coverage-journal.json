@@ -1,0 +1,494 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/journal",
+ "tests_run": 158,
+ "failed_tests": [],
+ "union_passed": true,
+ "failures": {},
+ "bundles": {
+  "internal-journal--journal.settleunderclaim": {
+   "B1": {
+    "kind": "if",
+    "line": 317,
+    "column": 2,
+    "block": "317.36-319.3",
+    "entered_by": [
+     "TestSettlingWithoutAClaimIsRefused"
+    ],
+    "union": true
+   },
+   "B2": {
+    "kind": "if",
+    "line": 321,
+    "column": 2,
+    "block": "321.16-323.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B3": {
+    "kind": "if",
+    "line": 327,
+    "column": 2,
+    "block": "327.16-329.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B4": {
+    "kind": "if",
+    "line": 331,
+    "column": 2,
+    "block": "331.16-333.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B5": {
+    "kind": "if",
+    "line": 334,
+    "column": 2,
+    "block": "334.12-338.17",
+    "entered_by": [
+     "TestAFailedAttemptReturnsTheAttemptsItCommitted",
+     "TestAFailedAttemptsReadLeavesTheLedgerAsItWas",
+     "TestARearmedRowCountsFromZero",
+     "TestARecordOnlyCallerDoesNotReArmADeliveredRow",
+     "TestAResultThatWroteNothingCarriesNoAttempts",
+     "TestASettledStampInTheFutureStillOwesDelivery",
+     "TestASettlementFromALostLeaseLeavesTheNewHolderAlone",
+     "TestAnUnrecognisedAlertStateOwesDelivery",
+     "TestClaimingADeliveredAlertInsideTheWindowOwesNothing",
+     "TestClaimingADeliveredAlertPastTheWindowIsReArmed",
+     "TestClaimingAnUndeliveredAlertStillOwesDelivery",
+     "TestDeliveryAndAcknowledgementAreDistinctStates",
+     "TestDeliverySelectionPutsRowsBelowTheLimitFirst",
+     "TestFailedAttemptsAccumulateAndTheRowStaysPending",
+     "TestMarkingANonPendingAlertIsRefused",
+     "TestOneSenderAloneDecidesExactlyAsBefore",
+     "TestReArmingClearsTheLeaseOfThePreviousEpisode",
+     "TestReArmingResetsTheAttemptCount",
+     "TestRecordingAFailedAttemptKeepsTheLease",
+     "TestReleasingAClaimTwiceNamesNoHolder"
+    ],
+    "union": true
+   },
+   "B6": {
+    "kind": "if",
+    "line": 338,
+    "column": 3,
+    "block": "338.17-340.4",
+    "entered_by": [
+     "TestAFailedAttemptsReadLeavesTheLedgerAsItWas"
+    ],
+    "union": true
+   },
+   "B7": {
+    "kind": "if",
+    "line": 341,
+    "column": 3,
+    "block": "341.37-343.4",
+    "entered_by": [
+     "TestAFailedAttemptsReadLeavesTheLedgerAsItWas"
+    ],
+    "union": true
+   },
+   "B8": {
+    "kind": "if",
+    "line": 348,
+    "column": 2,
+    "block": "348.16-350.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B9": {
+    "kind": "if",
+    "line": 351,
+    "column": 2,
+    "block": "351.36-353.3",
+    "entered_by": [],
+    "union": false
+   }
+  },
+  "internal-journal--journal.transitionoperatingmode": {
+   "B1": {
+    "kind": "switch",
+    "line": 353,
+    "column": 2,
+    "block": "346.126-353.9",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestAFailedAuditWriteAbortsTheRelaxation",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestARefusedTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestAnAutomaticRelaxationIsRefused",
+     "TestAnOperatorTighteningNeedsNoApproval",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestRelaxationRequiresAnApproval",
+     "TestRelaxationRequiresAnAuditLog",
+     "TestTheApprovedRelaxationIsAuditedWithBothValues",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond",
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": true
+   },
+   "B2": {
+    "kind": "case",
+    "line": 354,
+    "column": 2,
+    "block": "354.21-356.87",
+    "entered_by": [
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": true
+   },
+   "B3": {
+    "kind": "case",
+    "line": 357,
+    "column": 2,
+    "block": "357.33-359.86",
+    "entered_by": [
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": true
+   },
+   "B4": {
+    "kind": "case",
+    "line": 360,
+    "column": 2,
+    "block": "360.30-363.37",
+    "entered_by": [
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": true
+   },
+   "B5": {
+    "kind": "case",
+    "line": 364,
+    "column": 2,
+    "block": "364.19-367.22",
+    "entered_by": [
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": true
+   },
+   "B6": {
+    "kind": "if",
+    "line": 371,
+    "column": 2,
+    "block": "371.28-372.15",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestAFailedAuditWriteAbortsTheRelaxation",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestARefusedTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestAnAutomaticRelaxationIsRefused",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestModesAreScopedToTheirAccount",
+     "TestRelaxationRequiresAnApproval",
+     "TestRelaxationRequiresAnAuditLog",
+     "TestTheApprovedRelaxationIsAuditedWithBothValues",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": true
+   },
+   "B7": {
+    "kind": "switch",
+    "line": 372,
+    "column": 3,
+    "block": "371.28-372.15",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestAFailedAuditWriteAbortsTheRelaxation",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestARefusedTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestAnAutomaticRelaxationIsRefused",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestModesAreScopedToTheirAccount",
+     "TestRelaxationRequiresAnApproval",
+     "TestRelaxationRequiresAnAuditLog",
+     "TestTheApprovedRelaxationIsAuditedWithBothValues",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": true
+   },
+   "B8": {
+    "kind": "case",
+    "line": 373,
+    "column": 3,
+    "block": "373.20-374.67",
+    "entered_by": [
+     "TestARefusedTransitionIsNotAnnounced",
+     "TestTheFullTransitionMatrix"
+    ],
+    "union": true
+   },
+   "B9": {
+    "kind": "case",
+    "line": 375,
+    "column": 3,
+    "block": "375.19-379.89",
+    "entered_by": [
+     "TestAnAutomaticRelaxationIsRefused",
+     "TestTheFullTransitionMatrix"
+    ],
+    "union": true
+   },
+   "B10": {
+    "kind": "if",
+    "line": 381,
+    "column": 3,
+    "block": "381.31-385.4",
+    "entered_by": [],
+    "union": false
+   },
+   "B11": {
+    "kind": "if",
+    "line": 392,
+    "column": 2,
+    "block": "392.16-395.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B12": {
+    "kind": "if",
+    "line": 399,
+    "column": 2,
+    "block": "399.16-401.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B13": {
+    "kind": "if",
+    "line": 406,
+    "column": 2,
+    "block": "406.16-408.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B14": {
+    "kind": "switch",
+    "line": 409,
+    "column": 2,
+    "block": "409.2-409.9",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestAFailedAuditWriteAbortsTheRelaxation",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestAnAutomaticRelaxationIsRefused",
+     "TestAnOperatorTighteningNeedsNoApproval",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestRelaxationRequiresAnApproval",
+     "TestRelaxationRequiresAnAuditLog",
+     "TestTheApprovedRelaxationIsAuditedWithBothValues",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": true
+   },
+   "B15": {
+    "kind": "case",
+    "line": 410,
+    "column": 2,
+    "block": "410.22-415.43",
+    "entered_by": [
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestTheFullTransitionMatrix"
+    ],
+    "union": true
+   },
+   "B16": {
+    "kind": "case",
+    "line": 417,
+    "column": 2,
+    "block": "417.47-421.43",
+    "entered_by": [
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestTheFullTransitionMatrix"
+    ],
+    "union": true
+   },
+   "B17": {
+    "kind": "case",
+    "line": 423,
+    "column": 2,
+    "block": "423.21-424.21",
+    "entered_by": [
+     "TestAFailedAuditWriteAbortsTheRelaxation",
+     "TestRelaxationRequiresAnApproval",
+     "TestRelaxationRequiresAnAuditLog",
+     "TestTheApprovedRelaxationIsAuditedWithBothValues",
+     "TestTheFullTransitionMatrix",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": true
+   },
+   "B18": {
+    "kind": "if",
+    "line": 424,
+    "column": 3,
+    "block": "424.21-427.4",
+    "entered_by": [
+     "TestRelaxationRequiresAnApproval"
+    ],
+    "union": true
+   },
+   "B19": {
+    "kind": "if",
+    "line": 428,
+    "column": 3,
+    "block": "428.25-432.4",
+    "entered_by": [
+     "TestRelaxationRequiresAnAuditLog"
+    ],
+    "union": true
+   },
+   "B20": {
+    "kind": "if",
+    "line": 437,
+    "column": 2,
+    "block": "437.16-439.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B21": {
+    "kind": "if",
+    "line": 441,
+    "column": 2,
+    "block": "441.14-443.3",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestAFailedAuditWriteAbortsTheRelaxation",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestAnAutomaticRelaxationIsRefused",
+     "TestAnOperatorTighteningNeedsNoApproval",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestRelaxationRequiresAnApproval",
+     "TestRelaxationRequiresAnAuditLog",
+     "TestTheApprovedRelaxationIsAuditedWithBothValues",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": true
+   },
+   "B22": {
+    "kind": "if",
+    "line": 444,
+    "column": 2,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B23": {
+    "kind": "if",
+    "line": 460,
+    "column": 2,
+    "block": "460.24-462.70",
+    "entered_by": [
+     "TestAFailedAuditWriteAbortsTheRelaxation",
+     "TestAnOperatorTighteningNeedsNoApproval",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheApprovedRelaxationIsAuditedWithBothValues",
+     "TestTheFullTransitionMatrix",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": true
+   },
+   "B24": {
+    "kind": "if",
+    "line": 461,
+    "column": 3,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B25": {
+    "kind": "if",
+    "line": 468,
+    "column": 2,
+    "block": "468.36-471.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B26": {
+    "kind": "if",
+    "line": 475,
+    "column": 2,
+    "block": "475.41-477.3",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestAFailedAuditWriteAbortsTheRelaxation",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestAnAutomaticRelaxationIsRefused",
+     "TestAnOperatorTighteningNeedsNoApproval",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestRelaxationRequiresAnApproval",
+     "TestRelaxationRequiresAnAuditLog",
+     "TestTheApprovedRelaxationIsAuditedWithBothValues",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": true
+   },
+   "B27": {
+    "kind": "if",
+    "line": 478,
+    "column": 2,
+    "block": "478.26-479.88",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced"
+    ],
+    "union": true
+   },
+   "B28": {
+    "kind": "if",
+    "line": 479,
+    "column": 3,
+    "block": "479.88-482.4",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition"
+    ],
+    "union": true
+   }
+  }
+ }
+}

@@ -1,0 +1,15 @@
+
+Callers of "latchMarket" (4):
+
+function    recoverSubmit
+  internal/protectionlifecycle/lifecycle.go:63
+
+function    recoverReplace
+  internal/protectionlifecycle/lifecycle.go:157
+
+function    discoverOrphan
+  internal/protectionlifecycle/lifecycle.go:273
+
+method      runMarket
+  internal/app/engine/strategy_entry_supervisor.go:910
+

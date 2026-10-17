@@ -1,0 +1,12 @@
+# a129 RED — 2026-10-12T11:25:16Z · HEAD 381e73da · production 무편집
+$ go vet ./internal/app/engine/
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a129_export_test.go:5:71: o.exitFills undefined (type *ExitObserver has no field or method exitFills)
+rc=1
+$ go test -count=1 ./cmd/tossctl/ -run TestA129
+--- FAIL: TestA129EngineRuntimeWiresTheDedicatedExitOrderLogger (0.00s)
+    a129_engine_runtime_exit_order_log_test.go:50: engineRuntime does not wire ExitOrderLog — an exit order leaves no line in engine.log (2026-10-07 010170)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.010s
+FAIL
+rc=1

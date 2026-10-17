@@ -1,0 +1,375 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "9bc103fa196cd5fdba61bb4dadd79aa77eaa7a35",
+  "source_sha256": "898a78bee26845486a44c75ee463624637c8a11f045a1a5ccb59b45813c602a0",
+  "function": "_worktree_snapshot",
+  "signature": "_worktree_snapshot(root)",
+  "start": {
+    "line": 133,
+    "column": 1
+  },
+  "end": {
+    "line": 218,
+    "column": 36
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 157,
+      "inherited_line": false,
+      "source": "if described.returncode:"
+    },
+    {
+      "id": "B2",
+      "kind": "BoolOp",
+      "line": 160,
+      "inherited_line": false,
+      "source": "len(answer) < 2 or not answer[0] or (not answer[1])"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 160,
+      "inherited_line": false,
+      "source": "if len(answer) < 2 or not answer[0] or (not answer[1]):"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 167,
+      "inherited_line": false,
+      "source": "if listed.returncode:"
+    },
+    {
+      "id": "B5",
+      "kind": "For",
+      "line": 174,
+      "inherited_line": false,
+      "source": "for entry in listed.stdout.split(b'\\x00'):"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 175,
+      "inherited_line": false,
+      "source": "if not entry:"
+    },
+    {
+      "id": "B7",
+      "kind": "BoolOp",
+      "line": 179,
+      "inherited_line": false,
+      "source": "len(fields) != 4 or not raw_path"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 179,
+      "inherited_line": false,
+      "source": "if len(fields) != 4 or not raw_path:"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 183,
+      "inherited_line": false,
+      "source": "if stage != b'0':"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 185,
+      "inherited_line": false,
+      "source": "if mode not in GO_FILE_MODES:"
+    },
+    {
+      "id": "B11",
+      "kind": "Try",
+      "line": 187,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B12",
+      "kind": "ExceptHandler",
+      "line": 189,
+      "inherited_line": false,
+      "source": "except (FileNotFoundError, NotADirectoryError):"
+    },
+    {
+      "id": "B13",
+      "kind": "If",
+      "line": 191,
+      "inherited_line": false,
+      "source": "if tag.upper() == b'S':"
+    },
+    {
+      "id": "B14",
+      "kind": "If",
+      "line": 196,
+      "inherited_line": false,
+      "source": "if digest != oid.decode('ascii'):"
+    },
+    {
+      "id": "B15",
+      "kind": "BoolOp",
+      "line": 201,
+      "inherited_line": false,
+      "source": "os.pathsep in str(objects) or '\"' in str(objects)"
+    },
+    {
+      "id": "B16",
+      "kind": "If",
+      "line": 201,
+      "inherited_line": false,
+      "source": "if os.pathsep in str(objects) or '\"' in str(objects):"
+    },
+    {
+      "id": "B17",
+      "kind": "If",
+      "line": 216,
+      "inherited_line": false,
+      "source": "if built.returncode:"
+    }
+  ],
+  "returns": [],
+  "raises": [
+    {
+      "line": 158,
+      "source": "raise RuntimeError(_first_line(described.stderr.decode('utf-8', 'replace'), 'git rev-parse failed'))"
+    },
+    {
+      "line": 161,
+      "source": "raise RuntimeError('cannot read git rev-parse output')"
+    },
+    {
+      "line": 168,
+      "source": "raise RuntimeError(_first_line(listed.stderr.decode('utf-8', 'replace'), 'git ls-files failed'))"
+    },
+    {
+      "line": 180,
+      "source": "raise RuntimeError('cannot read git ls-files -s -v record')"
+    },
+    {
+      "line": 184,
+      "source": "raise RuntimeError(f'Go file is unmerged: {path} — resolve the conflict before the gate')"
+    },
+    {
+      "line": 186,
+      "source": "raise RuntimeError(f'tracked Go path is not a regular file in the index (mode {mode.decode()}): {path}')"
+    },
+    {
+      "line": 202,
+      "source": "raise RuntimeError(f'object directory cannot be named as a git alternate: {objects}')"
+    },
+    {
+      "line": 217,
+      "source": "raise RuntimeError(_first_line(built.stderr.decode('utf-8', 'replace'), 'git update-index failed'))"
+    }
+  ],
+  "calls": [
+    {
+      "line": 153,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 158,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 158,
+      "callee": "_first_line"
+    },
+    {
+      "line": 158,
+      "callee": "described.stderr.decode"
+    },
+    {
+      "line": 159,
+      "callee": "described.stdout.decode('utf-8', 'strict').split"
+    },
+    {
+      "line": 159,
+      "callee": "described.stdout.decode"
+    },
+    {
+      "line": 160,
+      "callee": "len"
+    },
+    {
+      "line": 161,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 162,
+      "callee": "(root / answer[1]).resolve"
+    },
+    {
+      "line": 163,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 168,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 168,
+      "callee": "_first_line"
+    },
+    {
+      "line": 168,
+      "callee": "listed.stderr.decode"
+    },
+    {
+      "line": 169,
+      "callee": "tempfile.TemporaryDirectory"
+    },
+    {
+      "line": 170,
+      "callee": "Path"
+    },
+    {
+      "line": 171,
+      "callee": "store.mkdir"
+    },
+    {
+      "line": 174,
+      "callee": "listed.stdout.split"
+    },
+    {
+      "line": 177,
+      "callee": "entry.partition"
+    },
+    {
+      "line": 178,
+      "callee": "head.split"
+    },
+    {
+      "line": 179,
+      "callee": "len"
+    },
+    {
+      "line": 180,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 182,
+      "callee": "raw_path.decode"
+    },
+    {
+      "line": 184,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 186,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 186,
+      "callee": "mode.decode"
+    },
+    {
+      "line": 188,
+      "callee": "_read_regular"
+    },
+    {
+      "line": 191,
+      "callee": "tag.upper"
+    },
+    {
+      "line": 192,
+      "callee": "lines.append"
+    },
+    {
+      "line": 194,
+      "callee": "hashlib.new(algorithm, b'blob %d\\x00' % len(data) + data).hexdigest"
+    },
+    {
+      "line": 194,
+      "callee": "hashlib.new"
+    },
+    {
+      "line": 194,
+      "callee": "len"
+    },
+    {
+      "line": 196,
+      "callee": "oid.decode"
+    },
+    {
+      "line": 197,
+      "callee": "_write_loose_blob"
+    },
+    {
+      "line": 199,
+      "callee": "digest.encode"
+    },
+    {
+      "line": 199,
+      "callee": "lines.append"
+    },
+    {
+      "line": 200,
+      "callee": "os.environ.get"
+    },
+    {
+      "line": 201,
+      "callee": "str"
+    },
+    {
+      "line": 201,
+      "callee": "str"
+    },
+    {
+      "line": 202,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 205,
+      "callee": "Path"
+    },
+    {
+      "line": 205,
+      "callee": "str"
+    },
+    {
+      "line": 206,
+      "callee": "str"
+    },
+    {
+      "line": 207,
+      "callee": "filter"
+    },
+    {
+      "line": 207,
+      "callee": "os.pathsep.join"
+    },
+    {
+      "line": 207,
+      "callee": "str"
+    },
+    {
+      "line": 211,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 214,
+      "callee": "b''.join"
+    },
+    {
+      "line": 217,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 217,
+      "callee": "_first_line"
+    },
+    {
+      "line": 217,
+      "callee": "built.stderr.decode"
+    }
+  ]
+}

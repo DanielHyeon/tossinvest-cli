@@ -1,0 +1,9 @@
+
+Callers of "accountBaseRiskQuantity" (2):
+
+function    AccountBaseStrategyEntryQuantity
+  internal/risk/account_base.go:244
+
+function    checkOrderSize
+  internal/risk/chain.go:319
+

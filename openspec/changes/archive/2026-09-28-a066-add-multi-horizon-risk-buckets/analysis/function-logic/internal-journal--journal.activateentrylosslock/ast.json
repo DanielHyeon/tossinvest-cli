@@ -1,0 +1,455 @@
+{
+  "file": "internal/journal/risk_bucket_entry_loss_lock.go",
+  "source_sha256": "e9f833b39036c48924fc395c7ec1880389d3da13e1deb72903348ace28650394",
+  "package": "journal",
+  "function": "ActivateEntryLossLock",
+  "receiver": "Journal",
+  "signature": "Journal.ActivateEntryLossLock(params=2, results=3)",
+  "start": {
+    "line": 72,
+    "column": 1
+  },
+  "end": {
+    "line": 117,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 92,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 96,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 74,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 78,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 82,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 87,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 94,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 97,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 99,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 108,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 111,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 34
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 6
+      },
+      "text": "validEntryLossLockScope"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 3
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 42
+      },
+      "text": "lock.ActivatedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 34
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 13
+      },
+      "text": "j.db.BeginTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 34
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 8
+      },
+      "text": "tx.Rollback"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 26
+      },
+      "text": "activeEntryLossLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 16
+      },
+      "text": "tx.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 30
+      },
+      "text": "formatJournalTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 35
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 13
+      },
+      "text": "tx.Commit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 35
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 17
+      },
+      "text": "tx.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 40
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 61
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 95
+      },
+      "text": "formatJournalTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 34
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 14
+      },
+      "text": "result.LastInsertId"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 34
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 12
+      },
+      "text": "tx.Commit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 34
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 21
+      },
+      "text": "Truncate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 21
+      },
+      "text": "lock.ActivatedAt.UTC"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 80,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 92,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 96,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 110,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 115,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 84,
+        "column": 2
+      },
+      "text": "tx.Rollback"
+    }
+  ]
+}

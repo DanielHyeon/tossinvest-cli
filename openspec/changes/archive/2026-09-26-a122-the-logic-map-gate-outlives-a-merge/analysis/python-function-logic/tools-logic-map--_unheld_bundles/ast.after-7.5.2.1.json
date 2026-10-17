@@ -1,0 +1,152 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "fc35eb2d013dccd0700836f857ad9d3e65bff0dc",
+  "source_sha256": "6acf286c58f08f4e5be3cb3f5cc54140373b0ec3013cb6d10862883314761903",
+  "function": "_unheld_bundles",
+  "signature": "_unheld_bundles(root, candidate, bundles, held)",
+  "start": {
+    "line": 816,
+    "column": 1
+  },
+  "end": {
+    "line": 865,
+    "column": 31
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 844,
+      "inherited_line": false,
+      "source": "for ast_path, _, _ in bundles:"
+    },
+    {
+      "id": "B2",
+      "kind": "Try",
+      "line": 845,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B3",
+      "kind": "ExceptHandler",
+      "line": 847,
+      "inherited_line": false,
+      "source": "except ValueError:"
+    },
+    {
+      "id": "B4",
+      "kind": "comprehension",
+      "line": 851,
+      "inherited_line": true,
+      "source": " for _, relative, before in watched"
+    },
+    {
+      "id": "B5",
+      "kind": "comprehension",
+      "line": 851,
+      "inherited_line": true,
+      "source": " for path in ((relative, before) if before else (relative,))"
+    },
+    {
+      "id": "B6",
+      "kind": "IfExp",
+      "line": 852,
+      "inherited_line": false,
+      "source": "(relative, before) if before else (relative,)"
+    },
+    {
+      "id": "B7",
+      "kind": "For",
+      "line": 855,
+      "inherited_line": false,
+      "source": "for ast_path, relative, before in watched:"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 857,
+      "inherited_line": false,
+      "source": "if judged is None:"
+    },
+    {
+      "id": "B9",
+      "kind": "BoolOp",
+      "line": 861,
+      "inherited_line": false,
+      "source": "committed is None and before"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 861,
+      "inherited_line": false,
+      "source": "if committed is None and before:"
+    },
+    {
+      "id": "B11",
+      "kind": "BoolOp",
+      "line": 863,
+      "inherited_line": false,
+      "source": "committed is None or committed != judged"
+    },
+    {
+      "id": "B12",
+      "kind": "If",
+      "line": 863,
+      "inherited_line": false,
+      "source": "if committed is None or committed != judged:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 865,
+      "value": "sorted(set(unheld))"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 846,
+      "callee": "ast_path.relative_to"
+    },
+    {
+      "line": 846,
+      "callee": "ast_path.relative_to(root).as_posix"
+    },
+    {
+      "line": 849,
+      "callee": "_pre_archive_path"
+    },
+    {
+      "line": 849,
+      "callee": "watched.append"
+    },
+    {
+      "line": 850,
+      "callee": "_committed_many"
+    },
+    {
+      "line": 856,
+      "callee": "held.get"
+    },
+    {
+      "line": 858,
+      "callee": "unheld.append"
+    },
+    {
+      "line": 864,
+      "callee": "unheld.append"
+    },
+    {
+      "line": 865,
+      "callee": "set"
+    },
+    {
+      "line": 865,
+      "callee": "sorted"
+    }
+  ]
+}

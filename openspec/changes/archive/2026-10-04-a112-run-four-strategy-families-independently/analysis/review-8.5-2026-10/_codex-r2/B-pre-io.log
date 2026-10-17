@@ -1,0 +1,5 @@
+=== RUN   TestReviewB2ProductionReadDelay
+    review_io_test.go:15: PRODUCTION_IO entered=false reason=FX_NOT_READY
+--- PASS: TestReviewB2ProductionReadDelay (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.006s

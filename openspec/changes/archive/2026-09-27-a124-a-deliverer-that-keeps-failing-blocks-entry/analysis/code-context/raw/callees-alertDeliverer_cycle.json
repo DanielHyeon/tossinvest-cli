@@ -1,0 +1,35 @@
+{
+  "symbol": "alertDeliverer.cycle",
+  "callees": [
+    {
+      "name": "forgetLapsedHeld",
+      "kind": "method",
+      "filePath": "internal/app/engine/alertdelivery.go",
+      "startLine": 283
+    },
+    {
+      "name": "batch",
+      "kind": "method",
+      "filePath": "internal/app/engine/alertdelivery.go",
+      "startLine": 298
+    },
+    {
+      "name": "Err",
+      "kind": "method",
+      "filePath": "internal/app/engine/a112_watchdog_cancellation_test.go",
+      "startLine": 34
+    },
+    {
+      "name": "deliverOne",
+      "kind": "method",
+      "filePath": "internal/app/engine/alertdelivery.go",
+      "startLine": 167
+    },
+    {
+      "name": "Context",
+      "kind": "struct",
+      "filePath": "internal/app/app.go",
+      "startLine": 62
+    }
+  ]
+}

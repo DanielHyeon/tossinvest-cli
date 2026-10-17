@@ -1,0 +1,65 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "fc35eb2d",
+  "head_commit": "fc35eb2d013dccd0700836f857ad9d3e65bff0dc",
+  "source_sha256": "98845ce2dea180b8ab813180a51e9076ae1f787dea664362a61e8312675b135b",
+  "function": "_landing_record",
+  "signature": "_landing_record(change_dir, root)",
+  "start": {
+    "line": 560,
+    "column": 1
+  },
+  "end": {
+    "line": 573,
+    "column": 52
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 568,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 570,
+      "inherited_line": false,
+      "source": "except ValueError:"
+    },
+    {
+      "id": "B3",
+      "kind": "IfExp",
+      "line": 573,
+      "inherited_line": false,
+      "source": "None if raw is None else (relative, raw)"
+    }
+  ],
+  "returns": [
+    {
+      "line": 571,
+      "value": "None"
+    },
+    {
+      "line": 573,
+      "value": "None if raw is None else (relative, raw)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 569,
+      "callee": "(change_dir / LANDING_FILE).relative_to"
+    },
+    {
+      "line": 569,
+      "callee": "(change_dir / LANDING_FILE).relative_to(root).as_posix"
+    },
+    {
+      "line": 572,
+      "callee": "_committed_bytes"
+    }
+  ]
+}

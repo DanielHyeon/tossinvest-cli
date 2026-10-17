@@ -67,7 +67,9 @@ func (s *Service) LoadRawEngineGate() (AutomationGate, error) {
 		MaxDailyLossRatio:  raw.MaxDailyLossRatio,
 		// The file's own spelling, not normalised: this is a read of what is
 		// written, and the screen shows what is written.
-		LimitCurrency: raw.LimitCurrency,
+		LimitCurrency:       raw.LimitCurrency,
+		MaxDailyBuyNotional: raw.MaxDailyBuyNotional, // a136: 화면이 적힌 그대로 보여 줌
+		MaxOpenPositions:    raw.MaxOpenPositions,    // a138: 〃
 	}
 	if raw.Enabled != nil {
 		gate.Enabled = *raw.Enabled
@@ -127,6 +129,13 @@ func (s *Service) SaveEngineGateLimits(l GuardianLimits) error {
 		file.Engine.AutomationGate.MaxDailyLossAmount = next.MaxDailyLossAmount
 		file.Engine.AutomationGate.MaxDailyLossRatio = next.MaxDailyLossRatio
 		file.Engine.AutomationGate.LimitCurrency = next.Currency
+		if next.DailyBuy != nil {
+			file.Engine.AutomationGate.MaxDailyBuyNotional = *next.DailyBuy
+		}
+		// a138(구현 리뷰 P2-1): 새 파일 갈래는 키 단위 쓰기(gateMembersOf)를 타지 않으므로 여기서 옮김 — 빠뜨리면 운영자 값이 기본 6 으로 사라짐.
+		if next.OpenPositions != nil {
+			file.Engine.AutomationGate.MaxOpenPositions = *next.OpenPositions
+		}
 		skeleton, err := json.MarshalIndent(file, "", "  ")
 		if err != nil {
 			return err
@@ -141,11 +150,36 @@ func (s *Service) SaveEngineGateLimits(l GuardianLimits) error {
 			"a hand-edit in progress", s.path)
 	}
 
-	out, err := spliceGateLimits(data, next)
+	// a136(freeze 리뷰 P1-2): 하루 매수 상한은 이 편집기의 칸이 아니라서 통화와 함께 바뀌지 않음. 통화가 바뀌면 옛 통화로
+	// 넣은 숫자가 새 통화로 재해석되므로(예: 5,000,000 KRW → 5,000,000 USD) 그 키를 0(미설정)으로 지움 —
+	// KRW 로 바뀌면 기본값, 다른 통화로 바뀌면 운영자가 값을 넣을 때까지 기동 거부.
+	var extra []gateMember
+	if prev, err := documentGateCurrency(data); err != nil {
+		return err
+	} else if prev != next.Currency && next.DailyBuy == nil {
+		// 같은 저장이 새 통화로 값을 함께 보냈으면 그 값이 이김(gateMembersOf 가 씀).
+		extra = append(extra, gateMember{"max_daily_buy_notional", []byte("0")})
+	}
+	out, err := spliceGateLimits(data, next, extra...)
 	if err != nil {
 		return err
 	}
 	return s.installBytes(out)
+}
+
+// documentGateCurrency 는 저장 전 문서에 적힌 limit_currency 를 정규화해 돌려줌(없으면 "").
+func documentGateCurrency(data []byte) (string, error) {
+	var doc struct {
+		Engine struct {
+			Gate struct {
+				LimitCurrency string `json:"limit_currency"`
+			} `json:"automation_gate"`
+		} `json:"engine"`
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return "", fmt.Errorf("config: reading the current limit currency: %w", err)
+	}
+	return normaliseCurrency(doc.Engine.Gate.LimitCurrency), nil
 }
 
 // gateMember is one key/value pair the writer is allowed to touch.
@@ -164,14 +198,23 @@ func gateMembersOf(l GuardianLimits) ([]gateMember, error) {
 	if err != nil {
 		return nil, err
 	}
-	return []gateMember{
+	members := []gateMember{
 		{"max_order_quantity", []byte(formatLimit(l.MaxOrderQuantity))},
 		{"max_order_notional", []byte(formatLimit(l.MaxOrderNotional))},
 		{"max_total_exposure", []byte(formatLimit(l.MaxTotalExposure))},
 		{"max_daily_loss_amount", []byte(formatLimit(l.MaxDailyLossAmount))},
 		{"max_daily_loss_ratio", []byte(formatLimit(l.MaxDailyLossRatio))},
 		{"limit_currency", currency},
-	}, nil
+	}
+	if l.DailyBuy != nil {
+		// a136: 폼이 값을 보냈을 때만 씀(nil = 그 키를 그대로 둠).
+		members = append(members, gateMember{"max_daily_buy_notional", []byte(formatLimit(*l.DailyBuy))})
+	}
+	if l.OpenPositions != nil {
+		// a138: 폼이 값을 보냈을 때만 씀(nil = 그 키를 그대로 둠).
+		members = append(members, gateMember{"max_open_positions", []byte(formatLimit(*l.OpenPositions))})
+	}
+	return members, nil
 }
 
 // spliceGateLimits replaces or inserts each member inside
@@ -180,11 +223,14 @@ func gateMembersOf(l GuardianLimits) ([]gateMember, error) {
 // The block's span is re-located before each member because the previous
 // member's edit moved the offsets. Re-scanning six times is not the fast way to
 // do this; it is the way that cannot write into a stale offset.
-func spliceGateLimits(data []byte, l GuardianLimits) ([]byte, error) {
+func spliceGateLimits(data []byte, l GuardianLimits, extra ...gateMember) ([]byte, error) {
 	members, err := gateMembersOf(l)
 	if err != nil {
 		return nil, err
 	}
+	// extra 는 저장 규칙이 덧붙이는 멤버(a136: 통화 변경 시 하루 매수 상한 지움). enabled 는 여기로도 들어올 수 없음 —
+	// 호출자는 SaveEngineGateLimits 하나뿐.
+	members = append(members, extra...)
 
 	for _, m := range members {
 		gStart, gEnd, found, err := gateValueSpan(data)

@@ -1,0 +1,8 @@
+    a066_owner_bind_delta_gap_test.go:74: delta "not-a-quantity": owner unknown_actual_latched=0 scope latches=0 FILL_UNACCOUNTED=0 bound=0, want 1/>0/1/0
+    a066_owner_bind_delta_gap_test.go:74: delta "-1": owner unknown_actual_latched=0 scope latches=0 FILL_UNACCOUNTED=0 bound=0, want 1/>0/1/0
+--- FAIL: TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill (0.50s)
+    --- FAIL: TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill/not-a-quantity (0.27s)
+    --- FAIL: TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill/-1 (0.24s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.508s
+FAIL

@@ -1,0 +1,217 @@
+{
+  "file": "internal/measure/counterfactual.go",
+  "source_sha256": "9127b9737f4fe1de92593131188dfc96ecd4525014ee484c8d34fbc76935ff31",
+  "package": "measure",
+  "function": "gridPolicy",
+  "signature": "gridPolicy(params=1, results=3)",
+  "start": {
+    "line": 353,
+    "column": 1
+  },
+  "end": {
+    "line": 373,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 358,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 369,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 370,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 372,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 354,
+        "column": 12
+      },
+      "text": "risk.DefaultPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 364,
+        "column": 28
+      },
+      "text": "money"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 365,
+        "column": 27
+      },
+      "text": "money"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 366,
+        "column": 24
+      },
+      "text": "money"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 367,
+        "column": 22
+      },
+      "text": "money"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 31
+      },
+      "text": "money"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 369,
+        "column": 12
+      },
+      "text": "policy.Validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 370,
+        "column": 29
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 354,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 355,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 356,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 357,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 359,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 360,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 361,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 363,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 364,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 365,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 366,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 367,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 368,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 369,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

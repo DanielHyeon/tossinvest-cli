@@ -1,0 +1,187 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "fc35eb2d013dccd0700836f857ad9d3e65bff0dc",
+  "source_sha256": "6acf286c58f08f4e5be3cb3f5cc54140373b0ec3013cb6d10862883314761903",
+  "function": "_recording_refusal",
+  "signature": "_recording_refusal(change, change_dir, root, head, evidence)",
+  "start": {
+    "line": 1918,
+    "column": 1
+  },
+  "end": {
+    "line": 2002,
+    "column": 20
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 1943,
+      "inherited_line": false,
+      "source": "if landing_file.is_symlink():"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 1953,
+      "inherited_line": false,
+      "source": "if _landing_record(change_dir, root, head) is not None:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 1957,
+      "inherited_line": false,
+      "source": "if landing_file.exists():"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 1967,
+      "inherited_line": false,
+      "source": "if (change_dir / 'analysis' / 'function-logic-reference.txt').exists():"
+    },
+    {
+      "id": "B5",
+      "kind": "Try",
+      "line": 1972,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B6",
+      "kind": "ExceptHandler",
+      "line": 1974,
+      "inherited_line": false,
+      "source": "except GATE_FAULTS as exc:"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 1976,
+      "inherited_line": false,
+      "source": "if facts.get('execution_baseline_adoption'):"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 1979,
+      "inherited_line": false,
+      "source": "if why:"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 1989,
+      "inherited_line": false,
+      "source": "if dirty.returncode not in (0, 1):"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 1996,
+      "inherited_line": false,
+      "source": "if dirty.returncode:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1948,
+      "value": "(f'`{LANDING_FILE}` is a symlink — not followed: the record must be a regular file in the change directory, or the value the gate reads back is not the value it wrote', '')"
+    },
+    {
+      "line": 1956,
+      "value": "(f'`{LANDING_FILE}` already exists — not overwritten; {LANDING_RECOVERY}', '')"
+    },
+    {
+      "line": 1963,
+      "value": "(f'`{relative}` already exists on disk but not in HEAD — not overwritten: the gate reads the record from the commit, so commit it', '')"
+    },
+    {
+      "line": 1970,
+      "value": "(BORROWED_REFUSES_A_LANDING, '')"
+    },
+    {
+      "line": 1975,
+      "value": "(f'cannot resolve the comparison base: {exc}', '')"
+    },
+    {
+      "line": 1977,
+      "value": "(ADOPTION_REFUSES_A_LANDING, '')"
+    },
+    {
+      "line": 1980,
+      "value": "(f'no landing recorded — {why}', '')"
+    },
+    {
+      "line": 1997,
+      "value": "('the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits', '')"
+    },
+    {
+      "line": 2002,
+      "value": "('', base)"
+    }
+  ],
+  "raises": [
+    {
+      "line": 1992,
+      "source": "raise RuntimeError(f'cannot tell whether the working tree matches {head[:12]}: ' + _first_line(dirty.stderr, 'git diff failed'))"
+    }
+  ],
+  "calls": [
+    {
+      "line": 1943,
+      "callee": "landing_file.is_symlink"
+    },
+    {
+      "line": 1953,
+      "callee": "_landing_record"
+    },
+    {
+      "line": 1957,
+      "callee": "landing_file.exists"
+    },
+    {
+      "line": 1962,
+      "callee": "landing_file.relative_to"
+    },
+    {
+      "line": 1962,
+      "callee": "landing_file.relative_to(root).as_posix"
+    },
+    {
+      "line": 1967,
+      "callee": "(change_dir / 'analysis' / 'function-logic-reference.txt').exists"
+    },
+    {
+      "line": 1973,
+      "callee": "resolve_base"
+    },
+    {
+      "line": 1976,
+      "callee": "facts.get"
+    },
+    {
+      "line": 1978,
+      "callee": "_select_pinning"
+    },
+    {
+      "line": 1978,
+      "callee": "_walk_floor"
+    },
+    {
+      "line": 1985,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 1992,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 1994,
+      "callee": "_first_line"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "file": "internal/strategyworker/lane.go",
+  "source_sha256": "b869921551c2058b80fa03d2bc9c601f3ea306234d918ee41cde019312d529ab",
+  "package": "strategyworker",
+  "function": "Health",
+  "receiver": "Lane",
+  "signature": "Lane.Health(params=0, results=1)",
+  "start": {
+    "line": 185,
+    "column": 1
+  },
+  "end": {
+    "line": 189,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 188,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 2
+      },
+      "text": "lane.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 8
+      },
+      "text": "lane.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 9
+      },
+      "text": "lane.healthLocked"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 187,
+        "column": 2
+      },
+      "text": "lane.mu.Unlock"
+    }
+  ]
+}

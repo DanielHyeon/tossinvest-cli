@@ -1,0 +1,30 @@
+{
+  "file": "internal/verifylive/m0_recovery_test.go",
+  "source_sha256": "7c54604109de5e44065e357eedc69a9eaf76ca5f084ba97082b8907ad3c99846",
+  "package": "verifylive",
+  "function": "officialRawForPending",
+  "signature": "officialRawForPending(params=2, results=1)",
+  "start": {
+    "line": 169,
+    "column": 1
+  },
+  "end": {
+    "line": 173,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 170,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

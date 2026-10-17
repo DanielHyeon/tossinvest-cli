@@ -1,0 +1,14 @@
+bash tools/gate.sh a066-add-multi-horizon-risk-buckets
+GATE: a066-add-multi-horizon-risk-buckets
+repo: /mnt/D/Axipient/workspace/TossOS-worktrees/a066-gate
+
+==> 1/11 tasks.md 확인
+OK: openspec/changes/a066-add-multi-horizon-risk-buckets/tasks.md
+
+==> 2/11 미완료 태스크 확인
+미완료 태스크 1 건:
+53:- [ ] 6.5 Complete adversarial independent review for reservation atomicity, quantity monotonicity, single-owner races and exit bypass, resolve findings and run `make gate CHANGE=a066-add-multi-horizon-risk-buckets` without activating live trading. (2026-09-28: four-voice review plus a narrowed re-review. P1 #1/#4 and #3(a) were repaired (28629ec6, cb16367d); #2 usage lifecycle is a user decision; #3(b) and #5–#14 are named residuals — see review.md "6.5". **Unchecked**: the `make gate` part stops at 2/11 until 5.5 relaxation, a user decision, is resolved.)
+
+GATE FAIL: a066-add-multi-horizon-risk-buckets — 미완료 태스크 1 건이 남아 있습니다
+make: *** [Makefile:169: gate] Error 1
+gate rc=2

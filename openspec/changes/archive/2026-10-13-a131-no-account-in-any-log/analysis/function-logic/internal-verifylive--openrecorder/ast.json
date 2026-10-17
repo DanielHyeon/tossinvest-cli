@@ -1,0 +1,176 @@
+{
+  "file": "internal/verifylive/record.go",
+  "source_sha256": "9a289d21048578d838450ed55f418e1c7b57ad0890b5ca1effc958b0b21f8ad6",
+  "package": "verifylive",
+  "function": "OpenRecorder",
+  "signature": "OpenRecorder(params=1, results=2)",
+  "start": {
+    "line": 327,
+    "column": 1
+  },
+  "end": {
+    "line": 343,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 329,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 333,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 338,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 330,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 334,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 340,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 342,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 9
+      },
+      "text": "filepath.Dir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 329,
+        "column": 12
+      },
+      "text": "os.MkdirAll"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 330,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 332,
+        "column": 12
+      },
+      "text": "os.OpenFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 334,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 337,
+        "column": 14
+      },
+      "text": "redact.PrepareSealKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 339,
+        "column": 7
+      },
+      "text": "f.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 340,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 328,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 329,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 332,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 337,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 339,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

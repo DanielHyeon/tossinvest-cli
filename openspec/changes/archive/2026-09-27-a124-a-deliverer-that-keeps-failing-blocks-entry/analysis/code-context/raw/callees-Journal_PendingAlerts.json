@@ -1,0 +1,41 @@
+{
+  "symbol": "Journal.PendingAlerts",
+  "callees": [
+    {
+      "name": "scanAlerts",
+      "kind": "function",
+      "filePath": "internal/journal/outbox.go",
+      "startLine": 559
+    },
+    {
+      "name": "Close",
+      "kind": "method",
+      "filePath": "internal/journal/readonly_schema_arms_test.go",
+      "startLine": 84
+    },
+    {
+      "name": "AlertPending",
+      "kind": "constant",
+      "filePath": "internal/journal/outbox.go",
+      "startLine": 74
+    },
+    {
+      "name": "alertSelect",
+      "kind": "constant",
+      "filePath": "internal/journal/outbox.go",
+      "startLine": 510
+    },
+    {
+      "name": "Context",
+      "kind": "struct",
+      "filePath": "internal/app/app.go",
+      "startLine": 62
+    },
+    {
+      "name": "Alert",
+      "kind": "struct",
+      "filePath": "internal/journal/outbox.go",
+      "startLine": 86
+    }
+  ]
+}

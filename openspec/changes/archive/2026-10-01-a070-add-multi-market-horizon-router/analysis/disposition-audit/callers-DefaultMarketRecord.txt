@@ -1,0 +1,27 @@
+
+Callers of "DefaultMarketRecord" (8):
+
+function    TestExternalCallersCannotForgeOwnerMarketOrQuotaAttestation
+  internal/strategyrouter/external_api_test.go:35
+
+function    TestGenerationRolloverAndMarketFailureIsolation
+  internal/strategyrouter/router_test.go:59
+
+function    TestOFFOwnerReturnsDisabledWithoutMutationAuthority
+  internal/strategyrouter/router_test.go:82
+
+function    TestDurableMarketRecordCannotBeBypassedByONCandidate
+  internal/strategyrouter/router_test.go:94
+
+function    TestKROFFDoesNotGateEligibleUSRoute
+  internal/strategyrouter/router_test.go:121
+
+function    mustActiveRecord
+  internal/strategyrouter/router_test.go:181
+
+function    NewSchedulerState
+  internal/strategyrouter/scheduler.go:123
+
+function    mustLegacyRecord
+  internal/strategyrouter/scheduler_test.go:148
+

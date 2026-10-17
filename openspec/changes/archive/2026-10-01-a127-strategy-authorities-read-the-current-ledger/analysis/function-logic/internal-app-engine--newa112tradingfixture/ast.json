@@ -1,0 +1,728 @@
+{
+  "file": "internal/app/engine/a112_owner_scope_trading_test.go",
+  "source_sha256": "9f190f0d322445926d8a123ea2cda04db121bad516ec7586c1d00a7c0b09dd4f",
+  "package": "engine",
+  "function": "newA112TradingFixture",
+  "signature": "newA112TradingFixture(params=2, results=1)",
+  "start": {
+    "line": 83,
+    "column": 1
+  },
+  "end": {
+    "line": 166,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 98,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "else",
+      "at": {
+        "line": 106,
+        "column": 10
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 112,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 119,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 125,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 131,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 134,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 139,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 154,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 155,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 159,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 165,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 17
+      },
+      "text": "newStrategyRiskLoaderFixtureFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 13
+      },
+      "text": "riskFixture.results.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 12
+      },
+      "text": "strategyproposal.ProductionBatchAuthorityForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 77
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 20
+      },
+      "text": "batch.For"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 38
+      },
+      "text": "strategyProposalSetDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 16
+      },
+      "text": "riskLoaderDescriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 9
+      },
+      "text": "a112ExtraEntryKRWith"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 19
+      },
+      "text": "strategyrouter.FamilyActivationForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 86
+      },
+      "text": "strategyrouter.AllFourFamiliesForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 17
+      },
+      "text": "journal.Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 30
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 74
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 88
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 10
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 40
+      },
+      "text": "journal.FixedFSProber"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 2
+      },
+      "text": "t.Cleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 25
+      },
+      "text": "handle.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 15
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 12
+      },
+      "text": "risk.DefaultPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 19
+      },
+      "text": "execgw.NewRiskGuardian"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 26
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 27
+      },
+      "text": "handle.Path"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 19
+      },
+      "text": "a112AccountLoaderWith"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 22
+      },
+      "text": "load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 13
+      },
+      "text": "authority.AccountState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 11
+      },
+      "text": "strategyaccount.AuthorityForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 59
+      },
+      "text": "authority.QuoteCurrency"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 93
+      },
+      "text": "authority.ObservedAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 117
+      },
+      "text": "authority.FreshUntil"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 5
+      },
+      "text": "authority.Generation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 29
+      },
+      "text": "authority.ManifestDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 21
+      },
+      "text": "accountLoader.collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 43
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 2
+      },
+      "text": "fixture.wave"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 87,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 95,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 96,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 97,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 101,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 103,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 105,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 107,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 113,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 115,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 120,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 128,
+        "column": 21
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 129,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 132,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 135,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 144,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 145,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 147,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 149,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 151,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 152,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 153,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 157,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 158,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 163,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

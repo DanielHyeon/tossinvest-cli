@@ -1,6 +1,6 @@
 # Function Logic Map: `engineRuntime`
 
-- Source: `cmd/tossctl/engine.go` (491-578)
+- Source: `cmd/tossctl/engine.go` (649-739)
 - AST evidence: `ast.json` — branches 6
 - Risk scan: `risk-pattern-report.md`
 

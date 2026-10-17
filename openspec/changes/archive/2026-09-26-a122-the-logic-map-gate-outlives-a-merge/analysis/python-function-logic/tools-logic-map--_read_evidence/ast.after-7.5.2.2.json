@@ -1,0 +1,106 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "908a8a3621efa5c6fd891c3c73d27db6ac0e7e49",
+  "source_sha256": "b24e77d5e8f9de4208db0dbd4c85daae108896f1a3771ad6e155357c7a3f23fc",
+  "function": "_read_evidence",
+  "signature": "_read_evidence(analysis)",
+  "start": {
+    "line": 678,
+    "column": 1
+  },
+  "end": {
+    "line": 703,
+    "column": 51
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 691,
+      "inherited_line": false,
+      "source": "if not analysis.is_dir():"
+    },
+    {
+      "id": "B2",
+      "kind": "comprehension",
+      "line": 693,
+      "inherited_line": true,
+      "source": " for path in analysis.iterdir() if path.is_dir()"
+    },
+    {
+      "id": "B3",
+      "kind": "For",
+      "line": 695,
+      "inherited_line": false,
+      "source": "for target in targets:"
+    },
+    {
+      "id": "B4",
+      "kind": "Try",
+      "line": 697,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B5",
+      "kind": "ExceptHandler",
+      "line": 699,
+      "inherited_line": false,
+      "source": "except FileNotFoundError:"
+    },
+    {
+      "id": "B6",
+      "kind": "ExceptHandler",
+      "line": 701,
+      "inherited_line": false,
+      "source": "except OSError:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 692,
+      "value": "Evidence(analysis, False, (), {})"
+    },
+    {
+      "line": 703,
+      "value": "Evidence(analysis, True, targets, held)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 691,
+      "callee": "analysis.is_dir"
+    },
+    {
+      "line": 692,
+      "callee": "Evidence"
+    },
+    {
+      "line": 693,
+      "callee": "analysis.iterdir"
+    },
+    {
+      "line": 693,
+      "callee": "path.is_dir"
+    },
+    {
+      "line": 693,
+      "callee": "sorted"
+    },
+    {
+      "line": 693,
+      "callee": "tuple"
+    },
+    {
+      "line": 698,
+      "callee": "_read_regular"
+    },
+    {
+      "line": 703,
+      "callee": "Evidence"
+    }
+  ]
+}

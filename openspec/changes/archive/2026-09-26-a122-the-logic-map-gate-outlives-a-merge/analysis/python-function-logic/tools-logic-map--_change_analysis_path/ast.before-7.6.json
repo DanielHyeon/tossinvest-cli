@@ -1,0 +1,86 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/execution_baseline.py",
+  "revision": "2b5b05c1c69dd3fcf9c64a6df60c6b8cd3df871d",
+  "head_commit": "2b5b05c1c69dd3fcf9c64a6df60c6b8cd3df871d",
+  "source_sha256": "28a7f91588d5bc185e1839e2df3f9cbd6742a6aaa3452035e49aeb1b384cf805",
+  "function": "_change_analysis_path",
+  "signature": "_change_analysis_path(value, analysis, field)",
+  "start": {
+    "line": 74,
+    "column": 1
+  },
+  "end": {
+    "line": 80,
+    "column": 17
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 75,
+      "inherited_line": false,
+      "source": "if not isinstance(value, str):"
+    },
+    {
+      "id": "B2",
+      "kind": "BoolOp",
+      "line": 78,
+      "inherited_line": false,
+      "source": "candidate.is_absolute() or '..' in candidate.parts or value == analysis.rstrip('/') or (not value.startswith(analysis))"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 78,
+      "inherited_line": false,
+      "source": "if candidate.is_absolute() or '..' in candidate.parts or value == analysis.rstrip('/') or (not value.startswith(analysis"
+    }
+  ],
+  "returns": [
+    {
+      "line": 80,
+      "value": "value"
+    }
+  ],
+  "raises": [
+    {
+      "line": 76,
+      "source": "raise AdoptionError(f'{field} must be a string')"
+    },
+    {
+      "line": 79,
+      "source": "raise AdoptionError('adoption evidence path is outside current change analysis')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 75,
+      "callee": "isinstance"
+    },
+    {
+      "line": 76,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 77,
+      "callee": "Path"
+    },
+    {
+      "line": 78,
+      "callee": "analysis.rstrip"
+    },
+    {
+      "line": 78,
+      "callee": "candidate.is_absolute"
+    },
+    {
+      "line": 78,
+      "callee": "value.startswith"
+    },
+    {
+      "line": 79,
+      "callee": "AdoptionError"
+    }
+  ]
+}

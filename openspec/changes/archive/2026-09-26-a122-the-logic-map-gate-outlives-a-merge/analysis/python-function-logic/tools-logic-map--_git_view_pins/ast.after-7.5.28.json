@@ -1,0 +1,135 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "4de485020dd0e128645b283a03d95c4b30378f96",
+  "source_sha256": "90b232ab9efd6f522ac52592c7232fe20ce8df0c72e94d07d5d4104d1b34d78d",
+  "function": "_git_view_pins",
+  "signature": "_git_view_pins(root)",
+  "start": {
+    "line": 107,
+    "column": 1
+  },
+  "end": {
+    "line": 144,
+    "column": 16
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 125,
+      "inherited_line": false,
+      "source": "if process.returncode not in (0, 1):"
+    },
+    {
+      "id": "B2",
+      "kind": "For",
+      "line": 132,
+      "inherited_line": false,
+      "source": "for raw in process.stdout.split(b'\\x00'):"
+    },
+    {
+      "id": "B3",
+      "kind": "BoolOp",
+      "line": 134,
+      "inherited_line": false,
+      "source": "not name.startswith('filter.') or name.count('.') < 2"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 134,
+      "inherited_line": false,
+      "source": "if not name.startswith('filter.') or name.count('.') < 2:"
+    },
+    {
+      "id": "B5",
+      "kind": "For",
+      "line": 137,
+      "inherited_line": false,
+      "source": "for driver in sorted(drivers):"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 140,
+      "inherited_line": false,
+      "source": "if '=' in driver:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 144,
+      "value": "pins"
+    }
+  ],
+  "raises": [
+    {
+      "line": 126,
+      "source": "raise RuntimeError(_first_line(process.stderr.decode('utf-8', 'replace'), 'git config failed'))"
+    },
+    {
+      "line": 141,
+      "source": "raise RuntimeError(f'git filter driver {driver!r} cannot be neutralized on the command line')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 121,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 126,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 126,
+      "callee": "_first_line"
+    },
+    {
+      "line": 126,
+      "callee": "process.stderr.decode"
+    },
+    {
+      "line": 131,
+      "callee": "set"
+    },
+    {
+      "line": 132,
+      "callee": "process.stdout.split"
+    },
+    {
+      "line": 133,
+      "callee": "raw.decode"
+    },
+    {
+      "line": 134,
+      "callee": "name.count"
+    },
+    {
+      "line": 134,
+      "callee": "name.startswith"
+    },
+    {
+      "line": 136,
+      "callee": "name[len('filter.'):].rsplit"
+    },
+    {
+      "line": 136,
+      "callee": "drivers.add"
+    },
+    {
+      "line": 136,
+      "callee": "len"
+    },
+    {
+      "line": 137,
+      "callee": "sorted"
+    },
+    {
+      "line": 141,
+      "callee": "RuntimeError"
+    }
+  ]
+}

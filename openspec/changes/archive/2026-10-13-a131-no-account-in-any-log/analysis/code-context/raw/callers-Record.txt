@@ -1,0 +1,72 @@
+
+Callers of "Record" (23):
+
+method      IssueAndPlan
+  internal/strategydispatch/adapters.go:29
+
+method      PlaceStrategyEntry
+  internal/strategydispatch/adapters.go:92
+
+function    Dispatch
+  internal/strategydispatch/dispatch.go:251
+
+method      IssueAndPlan
+  internal/strategydispatch/dispatch_test.go:166
+
+function    TestMintDecisionRefusesEveryForgedRecordBoundary
+  internal/strategyengine/lane_test.go:206
+
+function    TestMintDecisionNormalizesNegativeDriftAndAllowsAbsentOptionalEvidence
+  internal/strategyengine/lane_test.go:249
+
+method      Record
+  internal/execgw/observation.go:133
+
+method      Record
+  internal/trading/service.go:45
+
+method      IssueStrategyEntry
+  internal/execgw/riskguardian.go:339
+
+method      lost
+  internal/execgw/observation.go:223
+
+function    TestRecordAndResolveFollowRolloverChain
+  internal/orderlineage/service_test.go:8
+
+function    TestRecordKeepsUnresolvedRecoveryHint
+  internal/orderlineage/service_test.go:44
+
+method      recordLineage
+  internal/trading/service.go:77
+
+function    TestDegradationCountSurvivesAFullObservationStore
+  internal/journal/observation_degradation_test.go:31
+
+function    TestRefusalLossIsCountedAsUnrecoverable
+  internal/journal/observation_degradation_test.go:105
+
+function    TestRefusalAndIssuedLossesAreCountedApart
+  internal/measure/degrade/degrade_test.go:35
+
+function    TestDegradesToLogAndMemoryWhenEvenTheFileFails
+  internal/measure/degrade/degrade_test.go:96
+
+function    TestRecordNeverPanicsWithoutAStore
+  internal/measure/degrade/degrade_test.go:136
+
+function    TestCorruptStoreStartsCleanRatherThanRefusing
+  internal/measure/degrade/degrade_test.go:152
+
+function    TestCounterIsConcurrencySafe
+  internal/measure/degrade/degrade_test.go:177
+
+function    Run
+  internal/measure/reconstruct.go:113
+
+method      RecordChange
+  internal/audit/audit.go:215
+
+method      RecordAction
+  internal/audit/audit.go:247
+

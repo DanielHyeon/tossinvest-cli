@@ -1,0 +1,72 @@
+{
+  "file": "internal/riskbucket/production_snapshot_authority.go",
+  "source_sha256": "5f26bf28bbf8207f41772c9a5a079faef80d2f8a6f7fe09d143e0171bad34cd0",
+  "package": "riskbucket",
+  "function": "ReadJournalBucketUsage",
+  "signature": "ReadJournalBucketUsage(params=5, results=2)",
+  "start": {
+    "line": 444,
+    "column": 1
+  },
+  "end": {
+    "line": 450,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 446,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 447,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 449,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 445,
+        "column": 15
+      },
+      "text": "readProductionRiskUsage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 449,
+        "column": 9
+      },
+      "text": "aggregateProductionRiskUsage"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 445,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base",
+  "base_commit": "989ab031a9177041da1ebb79fd1ed1209347ed30"
+}

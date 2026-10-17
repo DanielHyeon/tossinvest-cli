@@ -1,0 +1,30 @@
+start 3d66976f07a50aa7 internal/app/engine/adoption.go
+start 9ca090f75ee95da0 internal/app/engine/reconcileloop.go
+start 54fa38e5a7040659 internal/obs/event.go
+control GREEN
+G1 CAUGHT — critical 판정이 알림 켜짐을 보지 않음
+G2 CAUGHT — && → ||
+G16 CAUGHT — include 지정 시도 실패를 normal 로(Q2(b) 정정 되돌림)
+G17 CAUGHT — 실패 시각을 싣지 않음 — 보고 순간으로 대체(codex P2 되돌림)
+G3 CAUGHT — critical 이 메모리 래치를 거침(5판 이전 모양)
+G4 CAUGHT — normal key 를 옛 철자(exit 자리와 같음)로
+G5 CAUGHT — key 에서 조건 칸 제거
+G6 CAUGHT — 편입 켜짐 칸이 결과를 무시 — 연기도 시도 실패로
+G7 CAUGHT — 편입 켜짐 ∧ include 지정 종목이 켜짐 칸을 벗어남
+G8 CAUGHT — normal 래치가 포지션 단위(사실 무시)
+G9 CAUGHT — normal 래치 제거
+G10 CAUGHT — 시도 실패를 기록하지 않음(연기로 읽힘)
+G12 CAUGHT — critical 문장에서 시각을 뺌(Q8)
+G13 CAUGHT — 생산 조립이 로드된 켜짐을 넘기지 않음
+G14 CAUGHT — 생산 조립이 호출자 값을 남김
+G15 CAUGHT — 등급 표 등재 제거
+I1 CAUGHT — 엔진 개설 포지션 검사 호출 제거
+I2 CAUGHT — 순증 부호 반대(열 바꿔치기)
+I3 CAUGHT — 순증 0 을 증가로(off-by-one)
+I4 SURVIVED — prev 열을 expected_prev 로(동등 후보)
+I5 CAUGHT — 최대 수량 래치 off-by-one(같은 수량 재보고)
+I6 CAUGHT — 최대 수량 래치를 옮기지 않음
+I7 CAUGHT — 편입 포지션 자리의 래치 제거
+I8 SURVIVED — 조정 0 조기 반환 제거(동등 후보)
+B2 CAUGHT — R2-B2 부활 — 조회 오류를 무관리 보고로(3.1 이 막아야 함)
+caught 23 · survived 2

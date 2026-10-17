@@ -1,0 +1,4 @@
+[logic-map] a112-run-four-strategy-families-independently: base 1e25b3a31b71 → working tree (no landed-commit.txt in HEAD) required 20 function(s) — judged at HEAD 675c8e7eb021
+[logic-map] a112-run-four-strategy-families-independently: the target is the working tree, so this window also holds 28 commit(s) that landed after the base and every existing function they changed is required here too — run `python3 tools/logic-map/check_analysis.py --change a112-run-four-strategy-families-independently --record-landing` to let the gate compute `landed-commit.txt` from this change's evidence and record it, which narrows it to this change's own work; if no commit on this history is accepted as the landing, the command says so instead of recording
+[logic-map] a112-run-four-strategy-families-independently: evidence complete or diff-proven exempt
+rc=0

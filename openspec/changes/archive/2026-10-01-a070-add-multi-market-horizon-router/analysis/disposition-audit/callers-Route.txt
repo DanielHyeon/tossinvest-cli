@@ -1,0 +1,39 @@
+
+Callers of "Route" (12):
+
+function    TestExternalCallersCannotForgeOwnerMarketOrQuotaAttestation
+  internal/strategyrouter/external_api_test.go:35
+
+function    TestProductionRouteAuthorityRestoresExactActiveOwner
+  internal/strategyrouter/production_test.go:142
+
+function    TestProductionRouteCandidatesCarryNoRawArbitrationScore
+  internal/strategyrouter/production_test.go:405
+
+function    TestExistingOwnerIsPreservedAcrossAllHorizons
+  internal/strategyrouter/router_test.go:27
+
+function    TestMultipleOwnersStaleSnapshotAndTieFailClosed
+  internal/strategyrouter/router_test.go:40
+
+function    TestGenerationRolloverAndMarketFailureIsolation
+  internal/strategyrouter/router_test.go:59
+
+function    TestOFFOwnerReturnsDisabledWithoutMutationAuthority
+  internal/strategyrouter/router_test.go:82
+
+function    TestDurableMarketRecordCannotBeBypassedByONCandidate
+  internal/strategyrouter/router_test.go:94
+
+function    TestMarketRecordBindingRequiresExactMarketAndRevision
+  internal/strategyrouter/router_test.go:107
+
+function    TestKROFFDoesNotGateEligibleUSRoute
+  internal/strategyrouter/router_test.go:121
+
+function    TestInactiveRowsDoNotCompeteButAnyCrossScopeRowCorruptsSnapshot
+  internal/strategyrouter/router_test.go:139
+
+function    TestRouteSetDoesNotRefuseOnAScoreTie
+  internal/strategyrouter/routeset_test.go:52
+

@@ -1,0 +1,131 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "5406cac16a439266f3d3cdee90728df5b9d90a66",
+  "head_commit": "5406cac16a439266f3d3cdee90728df5b9d90a66",
+  "source_sha256": "8d2a3338fdab86d66367020e8dfca3c832027a304c1c489a2f7124c1f19a8f17",
+  "function": "resolve_test_file",
+  "signature": "resolve_test_file(cited, package_dir, root, files)",
+  "start": {
+    "line": 2326,
+    "column": 1
+  },
+  "end": {
+    "line": 2357,
+    "column": 53
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 2343,
+      "inherited_line": false,
+      "source": "if '/' in cited:"
+    },
+    {
+      "id": "B2",
+      "kind": "Try",
+      "line": 2348,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B3",
+      "kind": "ExceptHandler",
+      "line": 2350,
+      "inherited_line": false,
+      "source": "except ValueError:"
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 2352,
+      "inherited_line": false,
+      "source": "qualified in files and _kind(qualified) == 'reg'"
+    },
+    {
+      "id": "B5",
+      "kind": "IfExp",
+      "line": 2352,
+      "inherited_line": false,
+      "source": "qualified if qualified in files and _kind(qualified) == 'reg' else None"
+    },
+    {
+      "id": "B6",
+      "kind": "BoolOp",
+      "line": 2354,
+      "inherited_line": false,
+      "source": "local in files and _kind(local) == 'reg'"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 2354,
+      "inherited_line": false,
+      "source": "if local in files and _kind(local) == 'reg':"
+    },
+    {
+      "id": "B8",
+      "kind": "comprehension",
+      "line": 2356,
+      "inherited_line": true,
+      "source": " for path in files if path.name == cited"
+    },
+    {
+      "id": "B9",
+      "kind": "IfExp",
+      "line": 2357,
+      "inherited_line": false,
+      "source": "matches[0] if len(matches) == 1 else None"
+    }
+  ],
+  "returns": [
+    {
+      "line": 2351,
+      "value": "None"
+    },
+    {
+      "line": 2352,
+      "value": "qualified if qualified in files and _kind(qualified) == 'reg' else None"
+    },
+    {
+      "line": 2355,
+      "value": "local"
+    },
+    {
+      "line": 2357,
+      "value": "matches[0] if len(matches) == 1 else None"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 2349,
+      "callee": "Path"
+    },
+    {
+      "line": 2349,
+      "callee": "Path(os.path.realpath(root / cited)).relative_to"
+    },
+    {
+      "line": 2349,
+      "callee": "os.path.realpath"
+    },
+    {
+      "line": 2349,
+      "callee": "os.path.realpath"
+    },
+    {
+      "line": 2352,
+      "callee": "_kind"
+    },
+    {
+      "line": 2354,
+      "callee": "_kind"
+    },
+    {
+      "line": 2357,
+      "callee": "len"
+    }
+  ]
+}

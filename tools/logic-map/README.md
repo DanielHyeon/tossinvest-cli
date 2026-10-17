@@ -22,39 +22,239 @@ python3 tools/logic-map/check_analysis.py --change <change-id>
 `base-commit.txt`와 같은 commit으로 resolve되어야 한다.
 ast-grep 발견은 자동 결함 판정이 아니다.
 
-## a063 execution-baseline adoption exception
+## 요구 git 버전
 
-`execution_baseline.py`는 일반적인 baseline 재설정 도구가 아니다. a063의 고정된
-planning/execution commit 쌍만 검증하며, `execution-baseline.json`이 없으면 기존
-`base-commit.txt` 정책을 그대로 쓴다. 레코드가 있으면 검증 worktree는 detached HEAD여야
-하고, schema는 JSON 정수 `1`(boolean 불가), 정확한 키 집합, SHA-256 digest, change-local
-ledger와 서로 다른 adversarial/gstack review를 모두 가져야 한다. ledger도 정확한 schema,
-키 집합 및 inherited-history debt 문구를 요구한다. 잘못된 레코드는 P로 fallback하지 않는다.
+`check_analysis.py` 는 blob 을 `git cat-file --batch -Z` 로 읽는다. `-Z` 는 입력과 출력을
+**둘 다** NUL 로 끊어 개행이 든 경로와 tree 의 raw NUL 을 견딘다. 그 옵션은 **git 2.42**
+부터다(정본 값은 `check_analysis.GIT_BATCH_MINIMUM`).
 
-고정 P는 `da80ce31b6a1ab5d443016768f970a82bab102db`, E는
-`e65e394bf84b3c6e4559a219e816af96d341d75d`이다. 일반 change의 `SDD_BASE_REF`는 persisted
-P와 같아야 하며, 유효한 a063 record가 선택한 경우에만 E와 같아야 한다. `SDD_BASE_REF`는
-effective base를 선택하지 못한다. 이 결과는 `execution-baseline adoption exception`일 뿐,
-inherited history의 pre-edit compliance를 증명하거나 historical debt를 완료/면제로 바꾸지 않는다.
+더 낮은 git 에서는 blob 읽기가 실패하고, 게이트는 그것을 **결함으로** 멈추며 git 이 한
+말을 그대로 전한다. 착지 기록을 읽는 자리가 모든 change 에 있으므로 **모든 change** 가 멈춘다
+(문서만 고친 change 도). 예:
 
-검증은 S와 H의 tracked Go path/blob/Git executable mode 및 실제 worktree bytes/mode를 직접
-대조한다. 따라서 `core.filemode=false` 상태의 chmod, symlink, source substitution도 거절한다.
-Unified diff가 losslessly 나타낼 수 없는 탭·개행 Go 파일명도 Function Logic Map inventory
-생성 전에 거절한다.
-
-초안만 만들 때는 다음을 쓴다. 기존 출력은 덮어쓰지 않으며, review digest/approval은 생성하지
-않는다.
-
-```bash
-python3 tools/logic-map/execution_baseline.py \
-  --change a063-align-attestation-renewal-profile --source <full-SHA1>
+```text
+[logic-map] cannot derive modified Go functions: cannot read blobs at 1a2b3c4d5e6f: `git cat-file --batch -Z` failed (rc 129: error: unknown switch `Z') — `-Z` needs git 2.42 or newer
 ```
 
-## External doctor interpreter for adoption worktrees
+(`at` 뒤는 게이트가 시작할 때 푼 `HEAD` 의 sha 앞 12자리다 — 2026-09-20 `-Z` 를 모르는 git 을 흉내 내어
+실제로 찍어 본 줄에서 sha 만 바꿨다.)
 
-The adoption source guard intentionally rejects a repository-local `.sdd/.venv`.
-For an adoption worktree, keep that environment outside the checkout and use the
-exact repository pin:
+버전 조언(`needs git 2.42`)은 git 이 **옵션을 모른다**(rc 129)고 할 때만 붙는다 — 저장소가 아닌
+루트(rc 128) 같은 다른 실패에는 git 의 말만 나간다. 영수증은 git 자신의 릴리스 노트
+`RelNotes/2.42.0.txt` 다.
+
+예전(2026-09-18 까지)에는 실패를 "파일 없음"과 같게 다뤄서 **사유를 오진했고**(저자의 증거를
+탓했다), 가드 하나는 그 혼동 때문에 **편집 전 커밋을 착지로 기록했다**. 2026-09-19 gstack 리뷰가
+찾았고 a122 task 7.5.1 이 고쳤다 — "git 이 못 돌았다"와 "그 커밋에 그 파일이 없다"는 이제 다른 답이다.
+
+## 착지 지점 — `landed-commit.txt`
+
+`check_analysis.py` 의 5단계는 `base-commit.txt` 부터 **워킹트리**까지를 비교한다. 그
+창 안에서 바뀐 기존 Go 함수는 전부 증거를 요구받으므로, base 뒤에 남이 고친 함수까지
+이 change 의 몫이 된다. Go 작업이 끝난 change 는 창의 끝을 착지 커밋으로 좁힐 수 있다.
+
+```bash
+python3 tools/logic-map/check_analysis.py --change <change-id> --record-landing
+```
+
+`openspec/changes/<change-id>/landed-commit.txt` 에 40자리 커밋 id 하나를 쓴다. 기록은
+**커밋해야** 효력이 있다 — 게이트는 워킹트리가 아니라 HEAD 에서 읽는다(안 그러면 untracked
+파일로 통과한 뒤 지울 수 있다).
+
+**값은 저자가 고르지 않는다.** 도구가 이 change 의 `revision: current` 번들로 계산하고,
+게이트는 적힌 값이 자기가 계산하는 값과 같은지 확인한다. 유효 조건을 통과하는 커밋은
+대개 여럿이라(실측: 착지를 얻는 76건 중 65건, 최대 516개) 조건만으로는 값이 안 정해진다.
+
+받는 착지는 다음 **여덟**을 전부 만족하는 **가장 낮은** 커밋이다: base 의 자손 · 고정
+번들이 있음 · 그 소스 해시가 전부 맞음 · 그 번들을 역사에 넣은 **보통(비병합) 커밋이 있음** ·
+번들이 역사에 들어온 커밋 이후 · 판정이 디스크에서 읽은 번들 바이트를 그 커밋이 들고 있음 ·
+고정 소스 중 하나 이상이 base 와 다름 · 그 뒤에 이 change 자신의 Go 작업이 더 없음.
+
+기록은 **덮어쓰이지 않는다.** 증거를 갱신해 기록이 낡으면: 번들을 갱신 → `landed-commit.txt`
+를 지우는 커밋 → 다시 기록. 거절 문장이 이 길을 같이 말한다.
+
+증거를 **빌리는** change 와 고정 번들이 **0** 인 change 는 기록을 받지
+않는다(a063 이관 예외는 a125 에서 폐기 — a063 도 이 규칙을 받는다). 5단계는 그때 워킹트리를 대상으로 삼고 명령을 권하지 않으며, 왜 못 좁히는지를 적는다.
+
+**판정은 역사 하나 위에서, 한 번 읽은 바이트로 선다.** 명령(5단계 · `--record-landing`)은 시작할 때 `HEAD` 를
+sha 로 한 번 풀고, 증거 디렉터리를 한 번 읽고, 그 뒤의 역사 읽기는 전부 그 sha다.
+
+**판정을 내놓기(기록을 쓰기) 직전에 판정이 읽은 것을 전부 다시 읽는다.** 대조 집합은 손으로 고르지 않는다 —
+`check_analysis.py` 가 **파이썬으로** 디스크를 읽는 자리가 깔때기 셋(파일 · 디렉터리 목록 · 종류)과 추적 목록
+(`git ls-files -z` — 시험 색인과 인용 해소가 보는 집합, task 7.5.9 전에는 트리 순회 `rglob` 이었다)
+뿐이고 그 깔때기가 읽은 결과를 원장에 적으므로, 재확인의 집합은 그 원장이다(a112 한 판 실측: 경로 1,739 — 7.5.9 전의 값).
+원장의 지문은 **단사**다(task 7.5.10): 목록은 항목마다 이름 길이 · 이름 · 종류를 잇고, 추적 목록은 git 이 낸 바이트 그대로를
+해시한다 — `\n` 으로 잇던 판본은 탭 · 개행이 든 이름으로 서로 다른 두 상태가 같은 지문을 냈다.
+**시험 인용은 추적 파일로만 충족된다 (task 7.5.9).** `git add` 안 한 시험 파일과 gitignore 된 사본은 색인에도 좌표
+해소에도 안 든다(인덱스에 올린 파일은 든다). **멤버십은 인덱스, 바이트는 워킹트리**다 — 추적(인덱스에 오른) 경로만 고르고 그 경로의 **지금 디스크 바이트**를 읽는다. 머지된 트리의 답이 아니다: 인덱스에 올린 빈 스텁과 워킹트리의 시험 이름으로도 통과한다(편집 전에도 통과 — 회귀 아님, 독립 주장정확성 리뷰 실측). 좌표의 경로는 `..` · 심링크 디렉터리를 풀어서 추적 목록과 대조한다. 거절 문장이 "in any tracked file" 이라고 말한다.
+**범위는 거기까지다 (2026-09-22 정정 · 2026-09-26 갱신).** 자식 프로세스가 읽는 것은 원장에 **하나만** 남는다(추적 목록).
+7.5.22 에 센 `check_analysis.py` 의 `subprocess.run` 은 **열여섯 자리**였고 원장 항목은 **0** 이었다 — 앞 판본이
+넷만 대고 그친 것은 열거가 아니라 예시였다(7.5.22 정정). 판정 입력을 읽는 것만 꼽아도 바뀐 함수를 정하는
+`git diff`, base 소스를 꺼내는 `git show`, 워킹트리 Go 바이트를 읽는 `go run ./tools/logic-map`,
+앞단 가드의 `git diff --numstat`, 커밋된 번들을 꺼내는 `git cat-file`, 더러운 트리를 묻는
+`git diff --quiet`, 역사를 걷는 **열** 자리, 그리고 `execution_baseline.py` 의 읽기가 있었다(그 모듈은 a125 에서 삭제)
+(7.5.23 정정: "아홉" 이라고 적었는데 6 + 9 가 16 이 안 된다). 자리 수는 그 뒤로 움직였다 — AST 로 센
+`subprocess.run` 은 1d1e5ca7 **22**, task 7.5.9 뒤 **23** 이고, 더해진 하나(`git ls-files -z`)는 대답을 원장에 적는다.
+판정 도중 나머지 22 가 읽는 것을 건드리면 재확인이 통과한다. a112 실측: `required` 를 정하는 Go 파일 **32** 중
+**13** 은 원장에 이름조차 없고, 나머지 19 도 인용·시험 색인 때문에 있는 것이지 `go run` 때문이 아니다.
+전 판본의 "디스크를 읽는 자리가 깔때기 넷뿐 · 재확인의 집합은 **구조적으로** 판정의 집합" 은 거짓이었다 —
+그 열거의 모집단이 이 모듈의 AST 였고 자식 프로세스는 모집단에 없었다. 실패도 적는다 —
+없음 · 정규 파일 아님 · 권한 · 너무 큼. 하나라도 달라졌으면 판정 대신
+`<무엇> changed while this change was being judged — …; run it again` 을 낸다. `HEAD` 는 그 재확인의 **앞뒤로**
+묻는다(다시 읽는 동안에도 역사는 설 수 있다). 이 워크트리는 병행 세션이 같이 쓰므로 그때는 다시 돌리면 된다.
+창 줄 끝의 `judged at HEAD <sha>` 가 그 판정이 어느 역사의 것인지 말한다.
+`--record-landing` 은 쓰기 직전에 **거절 사유 전부**를 다시 묻는다 — 순회 도중 워킹트리가 더러워지면
+(추적 Go 파일 편집) 기록을 만들지 않는다. 말하는 순서는 역사 → 원장 → 거절이다(task 7.5.16): 판정이 읽은 입력이
+움직였으면 그 편집이 부른 거절보다 "다시 돌려라" 가 먼저다. 도구는 그 기록을 **덮어쓰지 않으므로**(지우려면 위의 "지우는
+커밋" 을 거쳐야 한다) 잘못 쓰인 기록은 사람 손이 들고, 그 편집이 든 분기는 창 밖에 남는다.
+
+**읽기는 조용히 건너뛰지 않는다.** 번들 파일이 정규 파일이 아니거나(FIFO · 장치 · 소켓) 폴더이거나
+16 MiB를 넘거나 UTF-8이 아니면 **이름 댄 판정 줄**이다. 목록을 못 여는 번들도 그렇다. 조용히 넘기면 그 파일의
+표가 열거형 호출 감사에서 빠지는데, 목록과 열기는 다른 syscall이라 "저장소에 그런 파일이 없다"는 여는 순간에
+대한 진술이 아니다(게이트가 여는 순간에만 FIFO로 바꿨다 되돌리는 것으로 감사를 끌 수 있었다 — 타이밍이고
+그 판의 하네스는 안 남겼다).
+**남아 있는 건너뛰기는 셋이다 (2026-09-26, task 7.5.9 · 7.5.11).** 사라진 파일 · 증거 디렉터리 안에서
+디렉터리가 아닌 항목 · `_verdict` 가 이름으로 거르는 항목. 앞의 것은 원장에 남아 되돌려 놓으면 재확인이 잡는다. 뒤의 둘은
+그렇지 않다. 넷째였던 트리 순회의 `OSError` 삼킴은 순회가 추적 목록으로 바뀌며 없어졌다. **종류를 못 묻는 항목**(끊긴
+심링크 · 심링크 고리 · 권한)은 건너뛰지 않는다 — 목록이 `os.stat` 으로 직접 묻고 못 물으면 그 이름을 댄다(`cannot tell
+what \`<이름>\` is`). 옛 `Path.is_dir()` 은 3.12.3 에서 앞의 둘을 "파일" 로 삼켰고 3.14 는 권한까지 삼킨다
+(`openspec/changes/a122-…/analysis/harness/7511_isdir.py`). 못 읽는 **추적** 시험 파일은 여전히 `test_spans` 가 빈 것으로 둔다 —
+그 시험은 "추적 파일 어디에도 없다" 로 거절된다(막는 쪽이지만 사유가 틀린다).
+필수 파일이 그런 것이면 그 대상의 `could not be read` · `is not UTF-8 text` 다.
+
+## 이 게이트가 **안** 하는 것 (2026-09-22)
+
+- **CI 는 이 게이트를 안 돈다.** 생산 호출자는 `tools/gate.sh:321` 하나다. CI(`.github/workflows/ci.yml`)
+  는 이 도구의 **시험**은 돌리지만 `check_analysis.py --change <id>` 자체는 안 돈다(:94 가 그렇게 적어 뒀다).
+  그러니까 이 판정은 사람이 `make gate` 를 돌릴 때만 선다.
+- **재확인 뒤에도 창은 열려 있다.** 재확인은 판정을 내놓기 직전에 서고, 그 뒤 `gate.sh` 가 다음 줄로
+  넘어갈 때까지의 시간은 아무도 안 본다. 재확인은 "판정이 읽은 것이 판정하는 동안 안 바뀌었다" 이지
+  "게이트가 끝날 때까지 안 바뀐다" 가 아니다.
+- **비용.** 7.5.2.3 의 원장 때문에 파일 열기가 늘었다 — a112 2,407 → 3,854(+60%) · a066 1,203 → 2,246(+87%),
+  **2026-09-20 · `845471a1` 에서 잰 값**이다. 이 수는 저장소의 파일 모집단(번들 · 시험 파일 · 인용)의
+  함수라 커밋마다 움직인다 — 앞 판본이 적은 "±1" 은 **거짓 헤지**였다(실제로 이틀에 8·16 움직였다,
+  7.5.22 정정). 다시 쓸 때는 커밋을 적고 그 커밋에서 다시 잰다. git 호출은 20,249 → 20,365.
+- **새 거절이 오늘 거절하는 정상 입력은 0 이다 — 세어서 하는 말이다.** 정규 파일 아님 · 목록 실패 ·
+  16 MiB 초과 · UTF-8 아님의 네 거절이 저장소의 번들 파일 **전수**에서 거절하는 것은 없다
+  (`analysis/harness/7524_census.py` 가 다시 찍는다 — **총 개수는 여기 안 적는다**, 번들을 더하는
+  커밋마다 바뀌어서 적는 순간 낡는다). 7.5.22 가 더한 다섯째(본문 없는 `*.go`)와 7.5.23 이 더한
+  여섯째(본문이 사라진 `*.go`)도 0 이다 — `base-commit.txt` 를 가진 change **117** 전부에서
+  `*.go` 파일 줄 **97,235** 를 세어 `-`/`-` 가 **0** 이었고, 저장소에 `.gitattributes` 가 **0 개**다.
+  "0" 은 **측정**이지 수리의 성질이 아니다.
+
+## 바뀐 기존 함수는 diff **문법**으로 센다 (2026-09-22)
+
+`required` 는 `git diff --unified=0 <base> [<target>] -- '*.go'` 를 읽어 정한다. `--unified=0` 이면
+문맥 줄이 없어 본문은 전부 `-`·`+`·`\` 로 시작하므로, 열 0 의 `diff --git ` 과 `@@` 는 모호하지 않지만
+`--- `·`+++ ` 는 **모호하다** — 지워진 소스 줄 `-- x` 가 `--- x` 로, 더한 소스 줄 `++ x` 가 `+++ x` 로 나온다.
+그래서 파일 이름은 **첫 훅 앞에서만** 읽는다. 상태 없이 읽던 판본은 파일 중간에서 이름을 바꿔, 그 파일의
+요구를 통째로 지우거나(`/dev/null` 모양) 편집 전 논리의 지도를 요구하게 만들었다(`revision: base` 모양).
+이 저장소의 추적 `*.go` 에 그 모양의 줄은 **111 줄 / 10 파일** 있다(전부 raw string 안의 SQL 주석).
+
+**그리고 git 이 본문을 안 내면 그 파일의 요구는 통째로 사라진다 (7.5.22).** `required` 를 훅으로 세므로,
+워킹트리에 `.gitattributes` 한 줄(`*.go binary` 또는 `*.go -diff`)만 있으면 git 이 `Binary files … differ`
+를 내고 훅이 0 개가 되어 판정 줄 없이 요구가 0 건이 된다 — 그 파일은 **추적될 필요조차 없다**.
+"훅이 0 개면 거절" 은 답이 아니다(정상인 mode-only 변경도 훅이 0 개다). 그래서 앞단 가드가
+`--name-only` 이 아니라 `--numstat` 을 읽는다: 이진 취급은 `-`/`-`, mode-only 는 `0`/`0` 이다.
+같은 이유로 그 가드는 rename 의 **양쪽 이름**을 본다 — 파서가 `base_file` 에 넘기는 것은 **옛** 이름인데
+`--name-only` 은 그것을 내지 않았다.
+
+**그리고 `--numstat` 만으로는 부족하다 (7.5.23).** 7.5.22 가 적은 "`--numstat` 이 정확히 가른다" 는
+**거짓**이었다 — `--numstat` 이 가르는 것은 "본문을 냈는가" 가 아니라 "이진으로 다루는가" 다.
+`diff=<드라이버>` 의 **textconv** 는 원본 blob 을 세는 `--numstat` 에 `1`/`1` 을 내면서 판정 diff 의
+본문을 통째로 지운다(추적 안 된 `.gitattributes` 한 줄 + config 키 하나로 실물 게이트가 다시
+`required 0 · evidence complete` 였다). 그래서 판정 diff 가 `--no-textconv` 를 주고, **두 투영을
+맞춰 본다**: numstat 이 내용이 바뀌었다고 한 파일이 훅을 하나도 안 냈으면 거절한다. 문을 하나씩
+세는 대신 **어긋남**을 보므로 `--no-ext-diff`·`--no-textconv` 가 사라져도 런타임에 잡힌다.
+
+**그리고 게이트는 git 의 워킹트리 시야를 믿지 않는다 (7.5.25).** 게이트의 기본 대상은 워킹트리다. `git diff <base>`
+는 워킹트리를 **git 의 투영**으로 본다 — clean·process 필터 · `ident` · `working-tree-encoding` 이 비교 전에 바이트를
+다시 쓰고, fsmonitor · stat 캐시 · `assume-unchanged`·`skip-worktree` 는 git 이 파일을 아예 안 읽게 한다. 그러면
+`--numstat` 도 판정 diff 도 아무것도 안 내므로 위의 교차 검사가 원리상 못 본다. 7.5.27 · 7.5.28 은 이 문들을 명령줄
+고정과 이름 댄 거절로 하나씩 닫았는데 재리뷰가 매번 하나를 더 찾았고(마지막은 UTF-7 의 이중 표현), **설정이 하나도
+없어도** stat 캐시만으로 편집이 감춰졌다(같은 inode · 같은 크기 · mtime 되돌림 · 같은 초의 ctime — 10/10 실측).
+
+그래서 게이트가 투영을 **안 쓴다**(`_worktree_entries`, 7.5.25 에는 `_worktree_snapshot`). 인덱스가 추적하는 `*.go`
+마다 디스크 바이트를 깔때기(`_read_regular`, 원장에 남아 끝의 재확인이 다시 읽는다)로 읽어 Python 이 oid 를 계산하고,
+base 와 **다른** 경로의 blob 만 **임시** 객체 저장소에 쓴다(7.5.35 정정 — 앞 판본은 "그 바이트의 blob 을 쓴다" 라 적어
+`*.go` 전부를 쓰는 것처럼 읽혔다; 같은 oid 는 diff 가 안 읽는다, 주장정확성 재리뷰). 판정의 현재 쪽도 디스크를 다시 읽지 않고 **같은 바이트**로 함수 지도를 뽑는다. 실제 인덱스와 객체
+저장소에는 아무것도 쓰지 않는다 — 임시 인덱스를 쓰는 git 에 `core.splitIndex=false` · `core.hooksPath=/dev/null` ·
+`core.fsmonitor=false` 를 주는 까닭이다(각각 `sharedindex.*` 쓰기 · `post-index-change` 훅 · fsmonitor 명령을 실측 —
+`write-tree` 도 인덱스를 다시 쓰므로 같은 고정을 받는다, 7.5.34).
+
+**그런데 git 은 그 blob 을 oid 로 다시 찾는다 (7.5.31).** 스냅숏이 바이트를 바르게 읽어도, 두 diff 는 blob 을 **oid 로**
+찾고 그때 저장소를 믿는다. 7.5.25 재리뷰가 둘을 보였다: `refs/replace/<편집 blob>` 참조 **하나**면 편집 blob 이 base blob
+으로 읽히고(base 쪽도 같다), 실제 저장소에 편집 oid 로 base 바이트를 담은 객체(loose, 또는 git 이 먼저 보는 pack)가
+있으면 git 은 그것을 읽는다 — 둘 다 요구가 조용히 비었다. 그래서 (1) 게이트 프로세스의 모든 git 이 교체 참조를 안 따르고
+(`GIT_NO_REPLACE_OBJECTS=1`, 모듈이 한 번 둔다), (2) `_snapshot_disagreement` 가 **git 밖에서** 대조한다: 게이트가 Python 으로
+해시한 oid 가 base 트리(`ls-tree`)의 oid 와 다른 경로는 diff 에 내용 변경으로 나와야 하고, 지운 경로는 옛 이름으로
+나와야 한다. base 트리와 base blob 자체의 위조는 이 대조가 못 본다(7.5.33).
+
+**그래서 게이트의 git 은 판정 blob 을 실제 저장소에서 찾지 않는다 (7.5.34).** 7.5.31 의 대조는 **있음**만 봤다 — 편집
+oid 에 base 도 디스크도 아닌 바이트를 심거나, `git mv` 뒤 새 이름의 blob 에 base 바이트를 심으면(100% rename `0`/`0`)
+규칙이 다 통과하고 요구가 비었다(7.5.31 재리뷰). 문을 하나씩 닫지 않고 출처를 둘로 줄였다: **디스크**(게이트가
+해시한다)와 **검증한 객체**. base(와 커밋 대상 · sparse 로 안 꺼낸 인덱스 blob)는 커밋 → 트리 → blob 을 `cat-file --batch`
+로 읽어 `"<종류> <크기>\0" + 바이트` 를 Python 이 해시해 oid 와 같아야 받는다(`_verified_objects` · `_verified_go_entries`
+— git 은 **하위 트리를 해시 없이 읽어** 하위 트리 위조로 그 아래 파일이 `ls-tree -r` 에서도 사라진다, 2.43 실측). 두
+쪽의 `*.go` 만 담은 트리를 **대체 저장소가 없는** 임시 저장소에 세우고(`_isolated_comparison`, 물려받은
+`GIT_ALTERNATE_OBJECT_DIRECTORIES` 도 지운다) 두 diff 는 그 두 트리를 견준다. 거기 있는 blob 은 게이트가 쓴 것뿐이다.
+위조는 이름 대고 멈추거나(`STORE_LIES` — base 쪽) 판정에 닿지 않는다(워킹트리 쪽). git 밖 대조는 지킬 것이 없어져
+지웠다. 목록과 두 diff 가 pathspec 을 안 받으므로 `GIT_*_PATHSPECS` 도 판정에 안 닿는다. 커밋 대상(착지)도
+같은 비교를 쓴다.
+
+**해시가 맞는 트리도 git 이 쓰는 모양이어야 받는다 (7.5.35).** 검증은 "이 바이트가 그 트리다" 만 말한다. 7.5.34 의 걷기는
+정확히 `40000` 만 하위 트리로 따라가고 같은 이름은 뒤의 것만 남겼는데, git 은 `040000` 도 디렉터리로 읽고(`canon_mode`,
+`fsck` 는 경고뿐) 같은 이름 둘은 git 도 순서에 따라 다르게 낸다(`ls-tree -r` 은 둘 다 — 7.5.35 정정: 첫 판은 "git 은 앞의 것을 본다" 라 적었다) — base 에 그런 트리를 두면 `sub/` 의 요구가 통째로 비었다(7.5.34 가 연
+회귀, 적대 재리뷰). 읽는 법을 git 에 맞추지 않고 모양을 **이름 대고** 거절한다(`NOT_CANONICAL`): 기본 `git fsck` 가 받는 모드
+여섯(`40000` · `100644` · `100664` · `100755` · `120000` · `160000` — `100664` 는 초기 git 이 쓴 것이라 받는다, 첫 판이
+거절해 옛 저장소를 헛거절했다) · git 의 정렬(하위 트리는 이름 뒤에 `/` 를 붙여 견준다) · 유일한 이름 · 비지
+않고 `/` 가 들지 않고 `.` · `..` 가 아닌 이름. 이 저장소의 모든 ref 에서 닿는 트리에 거절 0(2026-09-25 12 시 무렵 13,749 · 항목
+218,464, 20:47 에 다시 13,980 · 222,112 — 규칙은 측정 스크립트가 옮겨 적은 것이다). 판정 diff 의 **형식**도 게이트가
+정한다: `--src-prefix=a/ --dst-prefix=b/`(파서가 떼는 글자) · `--no-color` · `--inter-hunk-context=0`, 그리고 자식 환경에서
+`GIT_DIFF_OPTS` 를 지운다(`--unified=0` 을 이긴다) — `diff.noprefix` 는 `b/x.go` 의 요구를 `x.go` 로 옮기고 `a/x.go` 는
+헛거절했으며(이 change 이전부터), 색 설정은 이 change 의 base 에서 요구를 **조용히** 비웠고 7.5.23 의 교차 검사가 그것을
+헛거절로 바꿨다(7.5.35 에서 base 7f8b1ae7 로 다시 쟀다), 훅 합치기와 `-u3` 는 편집 안 한 함수까지 요구했다(이 change 이전부터, 7.5.26).
+
+**이것이 바꾸는 것.** 판정의 대상이 git 이 정규화한 글이 아니라 **디스크의 바이트**가 된다. CRLF 체크아웃
+(`core.autocrlf=true`)이면 **손대지 않은** 함수까지 요구된다(실측: 함수 둘인 파일을 편집 없이 다시 꺼냈더니 요구 2).
+`*.go` 에 **바이트를 바꾸는** clean 필터를 쓰는 저장소에서는 blob 과 디스크 바이트가 달라 추적 `*.go` 전부가 바뀐 것으로
+읽힌다(항등 필터면 같다 — 7.5.31 정정: 앞 판본은 "늘" 이라 적었다). 체크아웃 때 `ident` · `working-tree-encoding` 이 바이트를
+바꾼 저장소도 같다(편집 없는 `ident` 체크아웃에서 손대지 않은 함수가 요구됨, 주장정확성 재리뷰 실측) —
+blob 이 Go 가 아니면(git-crypt) base 쪽 함수 지도를 못 뽑는다. 둘 다 덜 막는 방향이 아니고, 오늘 이 저장소의 노출은
+0 이다(`core.autocrlf` 미설정 · 필터 설정 0 · `.gitattributes`·`.git/info/attributes` 없음 · 추적 `*.go` 중 `\r` 든 것 0).
+비용은 판정마다 추적 `*.go` 전수를 읽고 해시하는 것과 base 의 트리 전부를 검증해 읽는 것이다(걷기가 방문하는 트리는
+a122 의 base 에서 1 + 3,999, a112 의 base 에서 1 + 3,894 — 같은 트리가 여러 경로에 있으므로 해시를 검증하는 **고유** 트리
+객체는 1 + 3,821 · 1 + 3,716; `cat-file` 한 번. 7.5.35 정정: 앞 판본의 "이 저장소 트리 4,093" 은 ff19be01 — 7.5.34 의 기준 —
+의 하위 트리 수였고 0ece1074 의 4,099 도, 걷는 수도 아니었다; 두 번째 판의 "어느 커밋의 수도 아니다" 도 틀렸다, 주장정확성 재리뷰 둘). git 호출 수는 바뀐 파일 수와 무관해졌다 — 바뀐 것이 없으면 10, 있으면 blob 을 읽는 `cat-file` 이 하나
+더 돌아 11 이다(a122 · a112 실측; a112 는 7.5.31 에서 워킹트리 대상 43 · 커밋 대상 75 였다 — 바뀐 파일마다 `git show`). 그리고
+이름 대고 거절하는 것이
+있다: 충돌 중인 `*.go` · 인덱스가 일반 파일이라 하지 않는 `*.go`(심링크 · gitlink, 저장소 전수 0 / 1,762) · 16 MiB 를
+넘는 추적 `*.go`(깔때기의 상한 — **안 바뀐** 파일이어도 멈춘다, 저장소 최대 97 KB) · 해시가 안 맞는 base 객체 · base 에서
+지운 gitlink `*.go`(옛 쪽에 Go 바이트가 없다). 7.5.25 는 객체 디렉터리 경로에 `:`·`"` 가 든 저장소도 거절했는데 7.5.31 이
+C 인용으로 풀었고 7.5.34 부터는 대체 저장소가 없다. 이름이 UTF-8 이 아닌 안 바뀐 파일도 멈추지 않는다. `skip-worktree` 인데 파일이 없으면 sparse 로 **안 꺼낸** 것으로 읽고
+인덱스 blob 을 쓴다 — 그 자리에서 파일을 지운 것은 sparse 와 구별되지 않는다(7.5.25 의 잔여).
+
+**안 닫는 것.** diff 의 출력 형식은 7.5.35 가 닫았고 pathspec 환경 변수는 7.5.34 가 닫았다 — 7.5.26 에 남은 것은 이름에
+`"` 나 `\` 가 든 `*.go` 의 거짓 차단이다(git 이 머리 줄을 인용해 `cannot load existing base file "a/we\"ird.go"`, 7.5.35 실측). `diff.algorithm` · `diff.indentHeuristic` 은 훅의 자리를 바꿀 수 있지만 모호한 편집 셋에서
+판정이 같아(7.5.35 실측) 고정하지 않았다. 함수 지도를 뽑는
+파서(`extract_go_ast.go`)를 **워킹트리에서** 빌드하므로 파서를 고친 편집이 자기를 감춘다 — 7.5.32. 부분 클론에서 base
+blob 이 없으면 `cat-file` 이 promisor 로 가져와 실제 저장소에 pack 을 쓴다(판정은 맞다) — 7.5.33.
+
+**7.5.28 이 더한 것 중 남은 것**: 판정 diff 를 바이트로 받아 **`\n` 에서만** 자름(`str.splitlines()` 는 U+2028 등에서도
+잘라 경로 하나가 diff 를 부쉈다) · 머리 줄 끝에 git 이 붙이는 탭을 뗌(공백 든 `*.go` 가 거짓 차단됐다). 그 로트의
+stat 고정과 `ident` 거절은 7.5.25 가 지웠다.
+
+## a063 execution-baseline adoption exception — 폐기 (a125)
+
+a120 이 만든 a063 전용 실행 기준선 이관 특례(`execution_baseline.py`, 고정 P/E 쌍, detached HEAD 감사)는 a125 에서
+지웠다. 모든 change 는 `base-commit.txt` 하나로 판정하고, `SDD_BASE_REF` 는 그 커밋과 같을 때만 받는다. 변경 디렉터리에
+남은 `execution-baseline.json` 은 게이트가 읽지 않는다. 기준을 옮겨야 하면 `docs/WORKFLOW.md` 「사람 승인 base 재고정」
+절차를 쓴다.
+
+## External doctor interpreter
+
+When a worktree must not hold a repository-local `.sdd/.venv`, keep that environment
+outside the checkout and use the exact repository pin:
 
 ```bash
 uv venv /tmp/tossos-sdd-venv
@@ -65,5 +265,5 @@ SDD_PYTHON=/tmp/tossos-sdd-venv/bin/python make sdd-doctor
 `SDD_PYTHON` affects only the doctor's `typedb-driver` probe. An explicitly supplied
 path must be absolute, executable, and outside the checkout both lexically and after
 resolution; invalid selections and dependency failures do not fall back to a local
-venv. The adoption validator itself remains unchanged, as does the advisory
-`tools/sdd-history/refresh_indexes.py` interpreter behavior.
+venv. It never chooses a comparison base, and the advisory
+`tools/sdd-history/refresh_indexes.py` interpreter behavior is unchanged.

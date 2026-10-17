@@ -1,0 +1,285 @@
+{
+  "file": "internal/risk/account_base.go",
+  "source_sha256": "da1816489ce63e0c4163fc145581f226dc2f734fd3f44a3dd16dc54e7c763549",
+  "package": "risk",
+  "function": "accountBaseRiskQuantity",
+  "signature": "accountBaseRiskQuantity(params=6, results=2)",
+  "start": {
+    "line": 214,
+    "column": 1
+  },
+  "end": {
+    "line": 238,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 216,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 220,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 224,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 228,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 232,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 217,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 221,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 225,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 229,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 233,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 237,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 30
+      },
+      "text": "accountBaseMultiplier"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 17
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 19
+      },
+      "text": "budget.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 221,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 16
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 15
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 11
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 11
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 5
+      },
+      "text": "width.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 2
+      },
+      "text": "width.Mul"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 14
+      },
+      "text": "Quo"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 14
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 9
+      },
+      "text": "String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 9
+      },
+      "text": "Quo"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 9
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 26
+      },
+      "text": "quantity.Num"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 42
+      },
+      "text": "quantity.Denom"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 215,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 219,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 231,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 236,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

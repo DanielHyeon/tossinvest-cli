@@ -1,0 +1,545 @@
+python3 tools/sdd/sdd_sync.py
+┌  Initializing CodeGraph
+│
+◆  Initialized in /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a090-gate
+│
+Scanning files...
+Parsing code...
+Resolving refs...
+Linking dynamic dispatch...
+│
+◆  Indexed 2,389 files
+│
+●  42,443 nodes, 159,262 edges in 2.5s
+│
+└  Done
+
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+Starting indexing for: 
+/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a0
+3d8e82/scratchpad/a090-gate
+
+Skipped 369 unresolved call relationship(s): ambiguous_function_target=369
+┏━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Call         ┃ Reason                    ┃ Location                          ┃
+┡━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ text.count   │ ambiguous_function_target │ /tmp/claude-1000/-mnt-D-Axipient- │
+│              │                           │ workspace-TossOS/4b178b0a-b918-44 │
+│              │                           │ 19-8142-f266a03d8e82/scratchpad/a │
+│              │                           │ 090-gate/openspec/changes/a095-a- │
+│              │                           │ stop-must-know-what-it-covers/ana │
+│              │                           │ lysis/impl/mutate.py:137          │
+│ text.count   │ ambiguous_function_target │ /tmp/claude-1000/-mnt-D-Axipient- │
+│              │                           │ workspace-TossOS/4b178b0a-b918-44 │
+│              │                           │ 19-8142-f266a03d8e82/scratchpad/a │
+│              │                           │ 090-gate/openspec/changes/a095-a- │
+│              │                           │ stop-must-know-what-it-covers/ana │
+│              │                           │ lysis/impl/mutate.py:138          │
+│ s.count      │ ambiguous_function_target │ /tmp/claude-1000/-mnt-D-Axipient- │
+│              │                           │ workspace-TossOS/4b178b0a-b918-44 │
+│              │                           │ 19-8142-f266a03d8e82/scratchpad/a │
+│              │                           │ 090-gate/openspec/changes/archive │
+│              │                           │ /2026-09-25-a115-the-console-stra │
+│              │                           │ tegy-screen-reattaches/analysis/h │
+│              │                           │ arness/apply.py:4                 │
+│ s.count      │ ambiguous_function_target │ /tmp/claude-1000/-mnt-D-Axipient- │
+│              │                           │ workspace-TossOS/4b178b0a-b918-44 │
+│              │                           │ 19-8142-f266a03d8e82/scratchpad/a │
+│              │                           │ 090-gate/openspec/changes/archive │
+│              │                           │ /2026-09-25-a115-the-console-stra │
+│              │                           │ tegy-screen-reattaches/analysis/h │
+│              │                           │ arness/apply.py:4                 │
+│ advice.count │ ambiguous_function_target │ /tmp/claude-1000/-mnt-D-Axipient- │
+│              │                           │ workspace-TossOS/4b178b0a-b918-44 │
+│              │                           │ 19-8142-f266a03d8e82/scratchpad/a │
+│              │                           │ 090-gate/tools/logic-map/test_che │
+│              │                           │ ck_analysis.py:4119               │
+└──────────────┴───────────────────────────┴───────────────────────────────────┘
+Successfully finished indexing: . in 84.17 seconds
+  Schema version 1 → 119 (114 migration(s) pending)
+  [2] slugify_existing_pages...
+  [2] ✓ slugify_existing_pages
+  [3] unique_chunk_index...
+  [3] ✓ unique_chunk_index
+  [4] access_tokens_and_mcp_log...
+  [4] ✓ access_tokens_and_mcp_log
+  [5] minion_jobs_table...
+  [5] ✓ minion_jobs_table
+  [6] agent_orchestration_primitives...
+  [6] ✓ agent_orchestration_primitives
+  [7] agent_parity_layer...
+  [7] ✓ agent_parity_layer
+  [8] multi_type_links_constraint...
+  [8] ✓ multi_type_links_constraint
+  [9] timeline_dedup_index...
+  [9] ✓ timeline_dedup_index
+  [10] drop_timeline_search_trigger...
+  [10] ✓ drop_timeline_search_trigger
+  [11] links_provenance_columns...
+  [11] ✓ links_provenance_columns
+  [12] budget_ledger...
+  [12] ✓ budget_ledger
+  [13] minion_quiet_hours_stagger...
+  [13] ✓ minion_quiet_hours_stagger
+  [14] pages_updated_at_index...
+  [14] ✓ pages_updated_at_index
+  [15] minion_jobs_max_stalled_default_5...
+  [15] ✓ minion_jobs_max_stalled_default_5
+  [16] cycle_locks_table...
+  [16] ✓ cycle_locks_table
+  [20] sources_table_additive...
+  [20] ✓ sources_table_additive
+  [21] pages_source_id_composite_unique...
+  [21] ✓ pages_source_id_composite_unique
+  [22] links_resolution_type...
+  [22] ✓ links_resolution_type
+  [23] files_source_id_page_id_ledger...
+  [23] ✓ files_source_id_page_id_ledger
+  [24] rls_backfill_missing_tables...
+  [24] ✓ rls_backfill_missing_tables
+  [25] pages_page_kind...
+  [25] ✓ pages_page_kind
+  [26] content_chunks_code_metadata...
+  [26] ✓ content_chunks_code_metadata
+  [27] cathedral_ii_foundation...
+  [27] ✓ cathedral_ii_foundation
+  [28] cathedral_ii_chunk_fts_backfill...
+  [28] ✓ cathedral_ii_chunk_fts_backfill
+  [29] cathedral_ii_code_edges_rls...
+  [29] ✓ cathedral_ii_code_edges_rls
+  [30] dream_verdicts_table...
+  [30] ✓ dream_verdicts_table
+  [31] eval_capture_tables...
+  [31] ✓ eval_capture_tables
+  [32] oauth_infrastructure...
+  [32] ✓ oauth_infrastructure
+  [33] admin_dashboard_columns_v0_26_3...
+  [33] ✓ admin_dashboard_columns_v0_26_3
+  [34] destructive_guard_columns...
+  [34] ✓ destructive_guard_columns
+  [35] auto_rls_event_trigger...
+  [35] ✓ auto_rls_event_trigger
+  [36] subagent_provider_neutral_persistence_v0_27...
+  [36] ✓ subagent_provider_neutral_persistence_v0_27
+  [37] takes_and_synthesis_evidence...
+  [37] ✓ takes_and_synthesis_evidence
+  [38] access_tokens_permissions...
+  [38] ✓ access_tokens_permissions
+  [39] multimodal_dual_column_v0_27_1...
+  [39] ✓ multimodal_dual_column_v0_27_1
+  [40] pages_emotional_weight...
+  [40] ✓ pages_emotional_weight
+  [41] pages_recency_columns...
+  [41] ✓ pages_recency_columns
+  [42] eval_candidates_recency_capture...
+  [42] ✓ eval_candidates_recency_capture
+  [43] takes_resolved_quality_and_drift_decisions...
+  [43] ✓ takes_resolved_quality_and_drift_decisions
+  [44] pages_emotional_weight_recomputed_at...
+  [44] ✓ pages_emotional_weight_recomputed_at
+  [45] facts_hot_memory_v0_31...
+  [45] ✓ facts_hot_memory_v0_31
+  [46] mcp_request_log_params_jsonb_normalize...
+  [46] ✓ mcp_request_log_params_jsonb_normalize
+  [47] facts_notability_alter...
+  [47] ✓ facts_notability_alter
+  [48] takes_weight_round_to_grid...
+  [48] ✓ takes_weight_round_to_grid
+  [49] eval_takes_quality_runs...
+  [49] ✓ eval_takes_quality_runs
+  [50] ingest_log_source_id...
+  [50] ✓ ingest_log_source_id
+  [51] facts_fence_columns...
+  [51] ✓ facts_fence_columns
+  [52] eval_contradictions_cache...
+  [52] ✓ eval_contradictions_cache
+  [53] eval_contradictions_runs...
+  [53] ✓ eval_contradictions_runs
+  [54] cjk_wave_pages_chunker_version_and_source_path...
+  [54] ✓ cjk_wave_pages_chunker_version_and_source_path
+  [55] query_cache_search_lite...
+  [55] ✓ query_cache_search_lite
+  [56] query_cache_knobs_hash...
+  [56] ✓ query_cache_knobs_hash
+  [57] search_telemetry_rollup...
+  [57] ✓ search_telemetry_rollup
+  [58] edges_backfilled_at_v0_33_2...
+  [58] ✓ edges_backfilled_at_v0_33_2
+  [59] code_traversal_cache_v0_34...
+  [59] ✓ code_traversal_cache_v0_34
+  [60] oauth_clients_source_id_fk...
+  [60] ✓ oauth_clients_source_id_fk
+  [61] oauth_clients_federated_read_column...
+  [61] ✓ oauth_clients_federated_read_column
+  [62] oauth_clients_federated_read_backfill...
+  [62] ✓ oauth_clients_federated_read_backfill
+  [63] oauth_clients_federated_read_validate...
+  [63] ✓ oauth_clients_federated_read_validate
+  [64] oauth_clients_source_id_fk_restrict...
+  [64] ✓ oauth_clients_source_id_fk_restrict
+  [65] oauth_clients_federated_read_gin_index...
+  [65] ✓ oauth_clients_federated_read_gin_index
+  [66] embed_stale_partial_index...
+  [66] ✓ embed_stale_partial_index
+  [67] facts_typed_claim_columns...
+  [67] ✓ facts_typed_claim_columns
+  [68] calibration_profiles_v0_36...
+  [68] ✓ calibration_profiles_v0_36
+  [69] take_proposals_v0_36...
+  [69] ✓ take_proposals_v0_36
+  [70] take_grade_cache_v0_36...
+  [70] ✓ take_grade_cache_v0_36
+  [71] take_nudge_log_v0_36...
+  [71] ✓ take_nudge_log_v0_36
+  [72] takes_resolved_at_trend_idx_v0_36...
+  [72] ✓ takes_resolved_at_trend_idx_v0_36
+  [73] think_ab_results_v0_36...
+  [73] ✓ think_ab_results_v0_36
+  [74] eval_candidates_embedding_column...
+  [74] ✓ eval_candidates_embedding_column
+  [75] op_checkpoints_table...
+  [75] ✓ op_checkpoints_table
+  [76] minion_jobs_doctor_run_id_index...
+  [76] ✓ minion_jobs_doctor_run_id_index
+  [77] mcp_spend_log...
+  [77] ✓ mcp_spend_log
+  [78] embedding_multimodal_column...
+  [78] ✓ embedding_multimodal_column
+  [79] pages_last_retrieved_at...
+  [79] ✓ pages_last_retrieved_at
+  [80] takes_unresolvable_quality_v0_37_2_0...
+  [80] ✓ takes_unresolvable_quality_v0_37_2_0
+  [81] pages_provenance_columns...
+  [81] ✓ pages_provenance_columns
+  [82] subagent_tool_executions_stable_id...
+  [82] ✓ subagent_tool_executions_stable_id
+  [83] mcp_spend_reservations...
+  [83] ✓ mcp_spend_reservations
+  [84] oauth_clients_budget_usd_per_day...
+  [84] ✓ oauth_clients_budget_usd_per_day
+  [85] oauth_clients_agent_binding...
+  [85] ✓ oauth_clients_agent_binding
+  [86] page_links_view_alias...
+  [86] ✓ page_links_view_alias
+  [87] takes_kind_drop_check...
+  [87] ✓ takes_kind_drop_check
+  [88] eval_candidates_schema_pack_per_source...
+  [88] ✓ eval_candidates_schema_pack_per_source
+  [89] facts_event_type_column...
+  [89] ✓ facts_event_type_column
+  [90] contextual_retrieval_columns...
+  [90] ✓ contextual_retrieval_columns
+  [91] pages_generation_trigger_and_bookmark...
+  [91] ✓ pages_generation_trigger_and_bookmark
+  [92] sources_github_repo_index...
+  [92] ✓ sources_github_repo_index
+  [93] minions_v0_41_audit_and_budget...
+  [93] ✓ minions_v0_41_audit_and_budget
+  [94] take_domain_assignments...
+  [94] ✓ take_domain_assignments
+  [95] links_link_source_check_includes_mentions...
+  [95] ✓ links_link_source_check_includes_mentions
+  [96] facts_extract_conversation_session_index...
+  [96] ✓ facts_extract_conversation_session_index
+  [97] pages_dedup_partial_index...
+  [97] ✓ pages_dedup_partial_index
+  [98] gbrain_cycle_locks_last_refreshed_at...
+  [98] ✓ gbrain_cycle_locks_last_refreshed_at
+  [99] conversation_parser_llm_cache_table...
+  [99] ✓ conversation_parser_llm_cache_table
+  [101] links_link_kind_column...
+  [101] ✓ links_link_kind_column
+  [102] timeline_entries_source_in_dedup...
+  [102] ✓ timeline_entries_source_in_dedup
+  [103] migration_impact_log_and_priority_recent_idx...
+  [103] ✓ migration_impact_log_and_priority_recent_idx
+  [104] pages_atom_source_hash_idx...
+  [104] ✓ pages_atom_source_hash_idx
+  [105] slug_aliases...
+  [105] ✓ slug_aliases
+  [106] extract_rollup_7d_table...
+  [106] ✓ extract_rollup_7d_table
+  [107] page_generation_clock_and_statement_trigger...
+  [107] ✓ page_generation_clock_and_statement_trigger
+  [108] pages_embedding_signature...
+  [108] ✓ pages_embedding_signature
+  [109] sources_newest_content_at...
+  [109] ✓ sources_newest_content_at
+  [110] page_aliases...
+  [110] ✓ page_aliases
+  [111] search_telemetry_rank1_columns...
+  [111] ✓ search_telemetry_rank1_columns
+  [112] pages_links_extracted_at...
+  [112] ✓ pages_links_extracted_at
+  [113] links_link_source_widen_for_wikilink_basename...
+  [113] ✓ links_link_source_widen_for_wikilink_basename
+  [114] links_link_source_check_kebab_regex...
+  [114] ✓ links_link_source_check_kebab_regex
+  [115] op_checkpoint_paths_append_table...
+  [115] ✓ op_checkpoint_paths_append_table
+  [116] code_edges_source_backfill_and_callee_index...
+  [116] ✓ code_edges_source_backfill_and_callee_index
+  [117] context_volunteer_events_table...
+  [117] ✓ context_volunteer_events_table
+  [118] page_generation_clock_sequence_swap...
+  [118] ✓ page_generation_clock_sequence_swap
+  [119] op_checkpoints_completed_keys_array_check...
+  [119] ✓ op_checkpoints_completed_keys_array_check
+  114 migration(s) applied
+[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)
+
+========================================================================
+gbrain 0.42.51.0 — RECOMMENDED SKILLS FOR THE AGENT TO INSTALL
+========================================================================
+
+The user just installed gbrain 0.42.51.0. 9 skills are recommended but not yet installed.
+
+(NOTE: no workspace detected at the default location — pass --workspace to scaffold.)
+
+THE SKILLS:
+
+  - book-mirror
+      FLAGSHIP. Take any book (EPUB/PDF), produce a personalized
+      two-column chapter-by-chapter analysis that maps every idea to your
+      life using brain context.
+
+  - article-enrichment
+      Turn raw article dumps into structured pages with executive summary,
+      verbatim quotes, key insights, and why-it-matters.
+
+  - strategic-reading
+      Read a book / article / case study through ONE specific
+      problem-lens. Output: an applied playbook with do / avoid /
+      watch-for.
+
+  - concept-synthesis
+      Deduplicate raw concept stubs into a tiered intellectual map (T1
+      Canon to T4 Riff). Trace idea evolution across years.
+
+  - perplexity-research
+      Brain-augmented web research. Sends brain context to the search so
+      it focuses on what is NEW vs already-known.
+
+  - archive-crawler
+      Universal archivist for personal file archives. REFUSES to run
+      without a gbrain.yml allow-list — safe-by-default.
+
+  - academic-verify
+      Trace a research claim through publication → methodology → raw data
+      → independent replication. Verdict-shaped brain page.
+
+  - brain-pdf
+      Render any brain page to publication-quality PDF via the gstack
+      make-pdf binary.
+
+  - voice-note-ingest
+      Capture voice notes with EXACT-PHRASING preservation (never
+      paraphrased). Routes content to the right page types.
+
+ACTION FOR THE AGENT:
+  1. Show this list to the user. Briefly explain each skill.
+  2. Ask the user explicitly: "Want me to install these now?"
+  3. If YES:
+
+         gbrain skillpack scaffold --all
+
+  Do NOT scaffold without asking. The user owns this decision.
+========================================================================
+UPGRADE_AVAILABLE 0.42.51.0 0.60.12.0
+gbrain 0.42.51.0 -> 0.60.12.0 available. Run: gbrain self-upgrade
+UPGRADE_AVAILABLE 0.42.51.0 0.60.12.0
+gbrain 0.42.51.0 -> 0.60.12.0 available. Run: gbrain self-upgrade
+[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); disable with --no-hard-deadline
+[gbrain phase] sync.resolve_repo
+[gbrain phase] sync.load_active_pack
+[gbrain phase] sync.validate_repo_state
+[gbrain phase] sync.detect_head
+Detached HEAD on /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a090-gate; skipping git pull. Syncing from local working tree.
+[gbrain phase] sync.fullsync.import start strategy=code
+[gbrain phase] import.collect_files start dir=/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a090-gate strategy=code
+[gbrain phase] import.collect_files done 95ms files=6514
+[import.files] start
+[import.files] 50/6514 (0%) imported=50 skipped=0 errors=0
+[import.files] 87/6514 (1%) imported=87 skipped=0 errors=0
+  Warning: skipped tools/logic-map/sgconfig.yml: undefined is not an object (evaluating 'row.deleted_at')
+  Warning: skipped tools/logic-map/scaffold_analysis.py: undefined is not an object (evaluating 'row.deleted_at')
+  Warning: skipped tools/logic-map/role_check.py: undefined is not an object (evaluating 'row.deleted_at')
+  Warning: skipped tools/logic-map/risk_patterns/go-panic.yml: undefined is not an object (evaluating 'row.deleted_at')
+  Warning: skipped tools/logic-map/risk_patterns/go-http-request.yml: undefined is not an object (evaluating 'row.deleted_at')
+  (suppressing further "undefined is not an object (evaluating 'row.deleted_at')..." errors)
+[import.files] 153/6514 (2%) imported=87 skipped=66 errors=66
+[import.files] 219/6514 (3%) imported=87 skipped=132 errors=132
+[import.files] 285/6514 (4%) imported=87 skipped=198 errors=198
+[import.files] 351/6514 (5%) imported=87 skipped=264 errors=264
+[import.files] 417/6514 (6%) imported=87 skipped=330 errors=330
+[import.files] 483/6514 (7%) imported=87 skipped=396 errors=396
+[import.files] 549/6514 (8%) imported=87 skipped=462 errors=462
+[import.files] 615/6514 (9%) imported=87 skipped=528 errors=528
+[import.files] 681/6514 (10%) imported=87 skipped=594 errors=594
+[import.files] 747/6514 (11%) imported=87 skipped=660 errors=660
+[import.files] 813/6514 (12%) imported=87 skipped=726 errors=726
+[import.files] 879/6514 (13%) imported=87 skipped=792 errors=792
+[import.files] 945/6514 (14%) imported=87 skipped=858 errors=858
+[import.files] 1011/6514 (15%) imported=87 skipped=924 errors=924
+[import.files] 1077/6514 (16%) imported=87 skipped=990 errors=990
+[import.files] 1143/6514 (17%) imported=87 skipped=1056 errors=1056
+[import.files] 1209/6514 (18%) imported=87 skipped=1122 errors=1122
+[import.files] 1275/6514 (19%) imported=87 skipped=1188 errors=1188
+[import.files] 1341/6514 (20%) imported=87 skipped=1254 errors=1254
+[import.files] 1407/6514 (21%) imported=87 skipped=1320 errors=1320
+[import.files] 1473/6514 (22%) imported=87 skipped=1386 errors=1386
+[import.files] 1539/6514 (23%) imported=87 skipped=1452 errors=1452
+[import.files] 1605/6514 (24%) imported=87 skipped=1518 errors=1518
+[import.files] 1671/6514 (25%) imported=87 skipped=1584 errors=1584
+[import.files] 1737/6514 (26%) imported=87 skipped=1650 errors=1650
+[import.files] 1803/6514 (27%) imported=87 skipped=1716 errors=1716
+[import.files] 1869/6514 (28%) imported=87 skipped=1782 errors=1782
+[import.files] 1935/6514 (29%) imported=87 skipped=1848 errors=1848
+[import.files] 2001/6514 (30%) imported=87 skipped=1914 errors=1914
+[import.files] 2067/6514 (31%) imported=87 skipped=1980 errors=1980
+[import.files] 2133/6514 (32%) imported=87 skipped=2046 errors=2046
+[import.files] 2199/6514 (33%) imported=87 skipped=2112 errors=2112
+[import.files] 2265/6514 (34%) imported=87 skipped=2178 errors=2178
+[import.files] 2331/6514 (35%) imported=87 skipped=2244 errors=2244
+[import.files] 2397/6514 (36%) imported=87 skipped=2310 errors=2310
+[import.files] 2463/6514 (37%) imported=87 skipped=2376 errors=2376
+[import.files] 2529/6514 (38%) imported=87 skipped=2442 errors=2442
+[import.files] 2595/6514 (39%) imported=87 skipped=2508 errors=2508
+[import.files] 2661/6514 (40%) imported=87 skipped=2574 errors=2574
+[import.files] 2727/6514 (41%) imported=87 skipped=2640 errors=2640
+[import.files] 2793/6514 (42%) imported=87 skipped=2706 errors=2706
+[import.files] 2859/6514 (43%) imported=87 skipped=2772 errors=2772
+[import.files] 2925/6514 (44%) imported=87 skipped=2838 errors=2838
+[import.files] 2991/6514 (45%) imported=87 skipped=2904 errors=2904
+[import.files] 3057/6514 (46%) imported=87 skipped=2970 errors=2970
+[import.files] 3123/6514 (47%) imported=87 skipped=3036 errors=3036
+[import.files] 3189/6514 (48%) imported=87 skipped=3102 errors=3102
+[import.files] 3255/6514 (49%) imported=87 skipped=3168 errors=3168
+[import.files] 3321/6514 (50%) imported=87 skipped=3234 errors=3234
+[import.files] 3387/6514 (51%) imported=87 skipped=3300 errors=3300
+[import.files] 3453/6514 (53%) imported=87 skipped=3366 errors=3366
+[import.files] 3519/6514 (54%) imported=87 skipped=3432 errors=3432
+[import.files] 3585/6514 (55%) imported=87 skipped=3498 errors=3498
+[import.files] 3651/6514 (56%) imported=87 skipped=3564 errors=3564
+[import.files] 3717/6514 (57%) imported=87 skipped=3630 errors=3630
+[import.files] 3783/6514 (58%) imported=87 skipped=3696 errors=3696
+[import.files] 3849/6514 (59%) imported=87 skipped=3762 errors=3762
+[import.files] 3915/6514 (60%) imported=87 skipped=3828 errors=3828
+[import.files] 3981/6514 (61%) imported=87 skipped=3894 errors=3894
+[import.files] 4047/6514 (62%) imported=87 skipped=3960 errors=3960
+[import.files] 4113/6514 (63%) imported=87 skipped=4026 errors=4026
+[import.files] 4179/6514 (64%) imported=87 skipped=4092 errors=4092
+[import.files] 4245/6514 (65%) imported=87 skipped=4158 errors=4158
+[import.files] 4311/6514 (66%) imported=87 skipped=4224 errors=4224
+[import.files] 4377/6514 (67%) imported=87 skipped=4290 errors=4290
+  Skipped openspec/changes/a063-align-attestation-renewal-profile/analysis/execution-baseline-ledger.json: File too large (6469224 bytes)
+[import.files] 4443/6514 (68%) imported=87 skipped=4356 errors=4355
+[import.files] 4509/6514 (69%) imported=87 skipped=4422 errors=4421
+[import.files] 4575/6514 (70%) imported=87 skipped=4488 errors=4487
+[import.files] 4641/6514 (71%) imported=87 skipped=4554 errors=4553
+[import.files] 4707/6514 (72%) imported=87 skipped=4620 errors=4619
+[import.files] 4773/6514 (73%) imported=87 skipped=4686 errors=4685
+[import.files] 4839/6514 (74%) imported=87 skipped=4752 errors=4751
+[import.files] 4905/6514 (75%) imported=87 skipped=4818 errors=4817
+[import.files] 4971/6514 (76%) imported=87 skipped=4884 errors=4883
+[import.files] 5037/6514 (77%) imported=87 skipped=4950 errors=4949
+[import.files] 5103/6514 (78%) imported=87 skipped=5016 errors=5015
+[import.files] 5169/6514 (79%) imported=87 skipped=5082 errors=5081
+[import.files] 5235/6514 (80%) imported=87 skipped=5148 errors=5147
+[import.files] 5289/6514 (81%) imported=87 skipped=5202 errors=5201
+[import.files] 5355/6514 (82%) imported=87 skipped=5268 errors=5267
+[import.files] 5421/6514 (83%) imported=87 skipped=5334 errors=5333
+[import.files] 5487/6514 (84%) imported=87 skipped=5400 errors=5399
+[import.files] 5553/6514 (85%) imported=87 skipped=5466 errors=5465
+[import.files] 5619/6514 (86%) imported=87 skipped=5532 errors=5531
+[import.files] 5685/6514 (87%) imported=87 skipped=5598 errors=5597
+[import.files] 5751/6514 (88%) imported=87 skipped=5664 errors=5663
+[import.files] 5817/6514 (89%) imported=87 skipped=5730 errors=5729
+[import.files] 5883/6514 (90%) imported=87 skipped=5796 errors=5795
+[import.files] 5949/6514 (91%) imported=87 skipped=5862 errors=5861
+[import.files] 6015/6514 (92%) imported=87 skipped=5928 errors=5927
+[import.files] 6081/6514 (93%) imported=87 skipped=5994 errors=5993
+[import.files] 6147/6514 (94%) imported=87 skipped=6060 errors=6059
+[import.files] 6213/6514 (95%) imported=87 skipped=6126 errors=6125
+[import.files] 6279/6514 (96%) imported=87 skipped=6192 errors=6191
+[import.files] 6345/6514 (97%) imported=87 skipped=6258 errors=6257
+[import.files] 6411/6514 (98%) imported=87 skipped=6324 errors=6323
+[import.files] 6477/6514 (99%) imported=87 skipped=6390 errors=6389
+[import.files] 6514/6514 (100%) imported=87 skipped=6427 errors=6426
+[import.files] 6514/6514 (100%) done
+  6426 files failed: undefined is not an object (evaluating 'row.deleted_at')
+[gbrain phase] sync.fullsync.import done 53449ms imported=87 skipped=6427 errors=6426
+
+Full sync blocked: 6427 file(s) failed:
+  UNKNOWN: 6426
+  FILE_TOO_LARGE: 1
+
+Fix the YAML in those files and re-run, or use '--skip-failed'. A file that keeps failing auto-skips after 3 consecutive syncs.
++ codegraph init .
++ codegraphcontext index .
++ /usr/bin/python3 /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a090-gate/tools/sdd/gbrain_project.py init --pglite --no-embedding
+Setting up local brain with PGLite (no server needed)...
+  --no-embedding: deferred setup — configure with `gbrain config set embedding_model <id>` before import
+
+═══════════════════════════════════════════════════════════════
+[gbrain] search mode tentatively set to: conservative
+[gbrain] Reason: No OpenAI key configured — semantic cache still works, but no LLM expansion possible.
+═══════════════════════════════════════════════════════════════
+
+[AGENT] Before continuing, SHOW this matrix to your operator and
+[AGENT] ask which mode they want. The default above preserves the
+[AGENT] v0.31.x retrieval shape. Run `gbrain config set search.mode
+[AGENT] <conservative|balanced|tokenmax>` if the operator picks
+[AGENT] differently. See INSTALL_FOR_AGENTS.md Step 3.5 for the
+[AGENT] full protocol.
+
+Per-query cost @ 10K queries/mo (search payload only, no cache savings):
+
+                    Haiku 4.5     Sonnet 4.6    Opus 4.7
+                    ($1/M input)  ($3/M input)  ($5/M input)
+   conservative     $40/mo        $120/mo       $200/mo
+   balanced         $100/mo       $300/mo       $500/mo
+   tokenmax         $200/mo       $600/mo       $1,000/mo
+
+   (scales linearly: ×10 for 100K queries/mo, ÷10 for 1K)
+   25x corner-to-corner spread. Natural diagonal pairings span ~4x.
+
+To change later: gbrain config set search.mode <mode>
+To see what is running: gbrain search modes
+
+
+Brain ready at /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a090-gate/.sdd/gbrain-home/.gbrain/brain.pglite
+0 pages. Engine: PGLite (local Postgres).
+Next: gbrain import <dir>
+
+When you outgrow local: gbrain migrate --to supabase
+
+--- GBrain Mod Status ---
+Skills: 52 loaded
+GStack: found (claude)
+Resolver: skills/RESOLVER.md
+Soul audit: run `gbrain soul-audit` to customize agent identity
+Retrieval reflex: on by default (entity pointers injected per turn)
+  Install the policy skill into your agent repo:
+  gbrain integrations install retrieval-reflex --target <host-repo>
+
++ /usr/bin/python3 /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a090-gate/tools/sdd/gbrain_project.py sources add tossos-feat-p0-foundation --path /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a090-gate
+Created source "tossos-feat-p0-foundation" → /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a090-gate
+  federated: false — only searched when explicitly named via --source
++ /usr/bin/python3 /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a090-gate/tools/sdd/gbrain_project.py sync --source tossos-feat-p0-foundation --strategy code --no-embed --yes
+Running full import of /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a090-gate...
+Found 6514 code files
+
+Import complete (53.3s):
+  87 pages imported
+  6427 pages skipped (1 unchanged, 6426 errors)
+  1278 chunks created
+Sync BLOCKED at cc019374: 6427 file(s) failed to parse.
+  See ~/.gbrain/sync-failures.jsonl for details, or run 'gbrain doctor'.
+  Fix the files then re-run 'gbrain sync', or 'gbrain sync --skip-failed' to move on.
+[sdd-sync] all indexes current
+sync rc=0

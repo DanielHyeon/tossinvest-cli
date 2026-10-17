@@ -105,8 +105,12 @@ func TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest(t *testing.T) {
 	}{
 		{"lower case market", "us", "AAPL", 200, ""},
 		{"unknown market", "JP", "AAPL", 200, ""},
-		{"kr symbol with letters", "KR", "00593A", 200, ""},
+		{"kr symbol lowercase", "KR", "0101n0", 200, ""},
+		{"kr symbol punctuation", "KR", "0101-0", 200, ""},
+		{"kr symbol whitespace", "KR", " 0101N0", 200, ""},
+		{"kr symbol non-ascii", "KR", "가101N0", 200, ""},
 		{"kr symbol too short", "KR", "00593", 200, ""},
+		{"kr symbol too long", "KR", "0101N00", 200, ""},
 		{"us symbol lower case", "US", "aapl", 200, ""},
 		{"us symbol too long", "US", "ABCDEFGHIJK", 200, ""},
 		{"us symbol leading digit", "US", "1AAPL", 200, ""},
@@ -186,6 +190,19 @@ func TestStrictMinuteCandlesAcceptsTheKoreanMarket(t *testing.T) {
 	}
 	if harness.lastQuery() != "adjusted=false&count=200&interval=1m&symbol=005930" {
 		t.Fatalf("query = %q", harness.lastQuery())
+	}
+}
+
+func TestStrictMinuteCandlesAcceptsDomesticAlphanumericAndPreservesRequestSymbol(t *testing.T) {
+	t.Parallel()
+	harness := newStrictMinuteBodyHarness(t, strictMinuteBody(`null`,
+		strictMinuteCandleJSON("2026-08-14T09:31:00.000+09:00", "71000", "71100", "70900", "71050", "12", "KRW")))
+	page, err := harness.client.StrictMinuteCandles(context.Background(), "KR", "0101N0", 200, "")
+	if err != nil {
+		t.Fatalf("StrictMinuteCandles: %v", err)
+	}
+	if page.Symbol != "0101N0" || harness.lastQuery() != "adjusted=false&count=200&interval=1m&symbol=0101N0" {
+		t.Fatalf("page/query = %+v / %q", page, harness.lastQuery())
 	}
 }
 

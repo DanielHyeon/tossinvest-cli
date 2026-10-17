@@ -1,0 +1,12 @@
+# a138 RED — base 4a19f755 + a138 시험(production 무편집), 2026-10-14T20:51:47Z
+$ go test -count=1 ./internal/app/engine -run 'A138'
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a138_open_positions_wiring_internal_test.go:15:47: riskPolicyFromAutomationGate(gate).MaxOpenPositions undefined (type risk.Policy has no field or method MaxOpenPositions)
+internal/app/engine/a138_open_positions_wiring_internal_test.go:19:53: riskPolicyFromAutomationGate(gate).MaxOpenPositions undefined (type risk.Policy has no field or method MaxOpenPositions)
+internal/app/engine/a138_open_positions_wiring_internal_test.go:19:92: risk.DefaultPolicy().MaxOpenPositions undefined (type risk.Policy has no field or method MaxOpenPositions)
+internal/app/engine/a138_open_positions_wiring_internal_test.go:24:46: riskPolicyFromAutomationGate(usd).MaxOpenPositions undefined (type risk.Policy has no field or method MaxOpenPositions)
+internal/app/engine/a138_open_positions_wiring_internal_test.go:28:11: explicit.MaxOpenPositions undefined (type config.AutomationGate has no field or method MaxOpenPositions)
+internal/app/engine/a138_open_positions_wiring_internal_test.go:29:51: riskPolicyFromAutomationGate(explicit).MaxOpenPositions undefined (type risk.Policy has no field or method MaxOpenPositions)
+internal/app/engine/a138_open_positions_wiring_internal_test.go:34:11: invalid.MaxOpenPositions undefined (type config.AutomationGate has no field or method MaxOpenPositions)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [build failed]
+FAIL

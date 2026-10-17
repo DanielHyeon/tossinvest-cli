@@ -1,0 +1,6 @@
+# a139 RED — base 5bbbdc23 + a139 시험(production 무편집, freeze 반영 뒤), 2026-10-15T09:04:29Z
+$ go test -count=1 ./internal/app/engine -run A139
+internal/app/engine/a139_risk_budget_wiring_internal_test.go:57:12: undefined: perTradeRiskBudgetAudit
+internal/app/engine/a139_risk_budget_wiring_internal_test.go:60:12: undefined: perTradeRiskBudgetAudit
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [build failed]
+FAIL

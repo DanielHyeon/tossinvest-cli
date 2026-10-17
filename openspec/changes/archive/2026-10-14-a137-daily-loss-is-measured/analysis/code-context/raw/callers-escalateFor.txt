@@ -1,0 +1,6 @@
+
+Callers of "escalateFor" (1):
+
+method      IssueEntry
+  internal/execgw/riskguardian.go:408
+

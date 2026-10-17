@@ -1,0 +1,9 @@
+
+Callers of "IssueAndPlan" (2):
+
+function    dispatchValidated
+  internal/strategydispatch/dispatch.go:261
+
+method      IssueAndPlan
+  internal/strategydispatch/dispatch.go:225
+

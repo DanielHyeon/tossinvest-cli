@@ -1,0 +1,215 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "cac190d8a9f3c976a73478e172bd8cd27e1159d6",
+  "source_sha256": "09b460a13b4d36ff0c73fde00fc5203d3ecb6e5755e72ded7ac8d053a6eb5a55",
+  "function": "resolve_landing",
+  "signature": "resolve_landing(change_dir, root, base, analysis)",
+  "start": {
+    "line": 468,
+    "column": 1
+  },
+  "end": {
+    "line": 544,
+    "column": 21
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 487,
+      "inherited_line": false,
+      "source": "if candidate is None:"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 489,
+      "inherited_line": false,
+      "source": "if not FULL_SHA.fullmatch(candidate):"
+    },
+    {
+      "id": "B3",
+      "kind": "BoolOp",
+      "line": 500,
+      "inherited_line": false,
+      "source": "process.returncode or process.stdout.strip() != candidate"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 500,
+      "inherited_line": false,
+      "source": "if process.returncode or process.stdout.strip() != candidate:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 502,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, candidate, 'HEAD'):"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 507,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, base, candidate):"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 512,
+      "inherited_line": false,
+      "source": "if not pinning:"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 521,
+      "inherited_line": false,
+      "source": "if mismatched:"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 533,
+      "inherited_line": false,
+      "source": "if not floor:"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 538,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, floor, candidate):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 488,
+      "value": "''"
+    },
+    {
+      "line": 544,
+      "value": "candidate"
+    }
+  ],
+  "raises": [
+    {
+      "line": 493,
+      "source": "raise ValueError(f'landing point must be a full 40-hex commit id, not {candidate!r}')"
+    },
+    {
+      "line": 501,
+      "source": "raise ValueError(f'landing point is not a commit in this repository: {candidate}')"
+    },
+    {
+      "line": 503,
+      "source": "raise ValueError(f'landing point never landed on this history: {candidate}')"
+    },
+    {
+      "line": 508,
+      "source": "raise ValueError(f'landing point precedes the comparison base {base[:12]}: {candidate}')"
+    },
+    {
+      "line": 517,
+      "source": "raise ValueError(f'landing point {candidate[:12]} is pinned by no `revision: current` evidence: a declared landing must be the revision some bundle describes')"
+    },
+    {
+      "line": 522,
+      "source": "raise ValueError(f'landing point {candidate[:12]} is not the revision this evidence describes: ' + ', '.join(sorted(set(mismatched))))"
+    },
+    {
+      "line": 534,
+      "source": "raise ValueError(f'landing point {candidate[:12]} is pinned by evidence that never entered this history: commit the `revision: current` bundles that pin it')"
+    },
+    {
+      "line": 539,
+      "source": "raise ValueError(f\"landing point {candidate[:12]} precedes the evidence that pins it ({floor[:12]}): a declared landing cannot be older than the commit that put"
+    }
+  ],
+  "calls": [
+    {
+      "line": 486,
+      "callee": "_declared_landing"
+    },
+    {
+      "line": 489,
+      "callee": "FULL_SHA.fullmatch"
+    },
+    {
+      "line": 493,
+      "callee": "ValueError"
+    },
+    {
+      "line": 496,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 500,
+      "callee": "process.stdout.strip"
+    },
+    {
+      "line": 501,
+      "callee": "ValueError"
+    },
+    {
+      "line": 502,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 503,
+      "callee": "ValueError"
+    },
+    {
+      "line": 507,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 508,
+      "callee": "ValueError"
+    },
+    {
+      "line": 511,
+      "callee": "_pinning_at"
+    },
+    {
+      "line": 517,
+      "callee": "ValueError"
+    },
+    {
+      "line": 522,
+      "callee": "ValueError"
+    },
+    {
+      "line": 524,
+      "callee": "', '.join"
+    },
+    {
+      "line": 524,
+      "callee": "set"
+    },
+    {
+      "line": 524,
+      "callee": "sorted"
+    },
+    {
+      "line": 532,
+      "callee": "_evidence_floor"
+    },
+    {
+      "line": 534,
+      "callee": "ValueError"
+    },
+    {
+      "line": 538,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 539,
+      "callee": "ValueError"
+    }
+  ]
+}

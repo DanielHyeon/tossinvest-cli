@@ -1,0 +1,93 @@
+
+Callers of "LoadEntries" (30):
+
+function    supervisedProofs
+  cmd/tossctl/soak.go:405
+
+function    TestAnUnapprovedRunDoesNotBlockTheNextAttempt
+  cmd/tossctl/verify_test.go:417
+
+function    realStarter
+  internal/console/console_test.go:48
+
+function    loadRecord
+  internal/console/console_test.go:933
+
+method      readVerify
+  internal/console/data.go:363
+
+method      redoSet
+  internal/console/data.go:400
+
+method      report
+  internal/console/data.go:423
+
+function    TestTheRemeasureTableNamesExactlyTheStepsTheButtonWouldRun
+  internal/console/remeasure_test.go:428
+
+method      build
+  internal/verifylive/fake_broker_test.go:1207
+
+method      entries
+  internal/verifylive/fake_broker_test.go:1273
+
+function    TestAHeldArtifactSurvivesTheRecord
+  internal/verifylive/hold_test.go:242
+
+function    TestIdempotencyKeyIsSentOnTheWire
+  internal/verifylive/http_test.go:428
+
+function    runOverHTTP
+  internal/verifylive/http_test.go:456
+
+function    TestAFilledFieldSurvivesTheRecordRoundTrip
+  internal/verifylive/record_filled_test.go:146
+
+function    TestTheRealRecordsAreJudgedExactlyAsBefore
+  internal/verifylive/record_replay_test.go:73
+
+function    TestRecorderRoundTrips
+  internal/verifylive/record_test.go:22
+
+function    TestLoadEntriesToleratesATornFinalLine
+  internal/verifylive/record_test.go:63
+
+function    TestLoadEntriesRejectsANewerFormat
+  internal/verifylive/record_test.go:92
+
+function    TestLoadEntriesOnAMissingFile
+  internal/verifylive/record_test.go:102
+
+function    consoleVerifyStarter
+  cmd/tossctl/console.go:1188
+
+function    seamRecordHasReconcileLine
+  cmd/tossctl/verify_reconcile_seams_test.go:75
+
+function    rcEntriesWithReconcileLine
+  internal/verifylive/reconcile_fixture_test.go:134
+
+function    rcLoad
+  internal/verifylive/reconcile_fixture_test.go:150
+
+function    TestReconcileAppendsOneReconciledAbsentLineWhenEveryConditionHolds
+  internal/verifylive/reconcile_g1_test.go:22
+
+function    TestReconcileIsIdempotent
+  internal/verifylive/reconcile_g2_test.go:97
+
+function    TestReconcileRefusesATornFinalLineAtSelection
+  internal/verifylive/reconcile_g2_test.go:127
+
+function    TestReconcileLineNeverBecomesEndpointEvidence
+  internal/verifylive/reconcile_projection_test.go:116
+
+function    runVerifyRun
+  cmd/tossctl/verify.go:273
+
+function    loadVerifyRecord
+  cmd/tossctl/verify.go:738
+
+function    TestReconciledProjectionIsMonotoneLikeOutstanding
+  internal/verifylive/reconcile_green_test.go:29
+

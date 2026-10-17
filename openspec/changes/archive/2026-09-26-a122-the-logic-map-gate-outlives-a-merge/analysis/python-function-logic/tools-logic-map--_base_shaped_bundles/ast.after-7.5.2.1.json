@@ -1,0 +1,99 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "fc35eb2d013dccd0700836f857ad9d3e65bff0dc",
+  "source_sha256": "6acf286c58f08f4e5be3cb3f5cc54140373b0ec3013cb6d10862883314761903",
+  "function": "_base_shaped_bundles",
+  "signature": "_base_shaped_bundles(root, base, evidence)",
+  "start": {
+    "line": 699,
+    "column": 1
+  },
+  "end": {
+    "line": 727,
+    "column": 6
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "comprehension",
+      "line": 716,
+      "inherited_line": true,
+      "source": " for ast_path, source, digest in _select_pinning(root, evidence) if not ((root / source).is_file() and hashlib.sha256((r"
+    },
+    {
+      "id": "B2",
+      "kind": "BoolOp",
+      "line": 720,
+      "inherited_line": false,
+      "source": "(root / source).is_file() and hashlib.sha256((root / source).read_bytes()).hexdigest() == digest"
+    },
+    {
+      "id": "B3",
+      "kind": "comprehension",
+      "line": 723,
+      "inherited_line": true,
+      "source": " for _, source, _ in stale"
+    },
+    {
+      "id": "B4",
+      "kind": "comprehension",
+      "line": 724,
+      "inherited_line": true,
+      "source": " for ast_path, source, digest in stale if at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() =="
+    },
+    {
+      "id": "B5",
+      "kind": "BoolOp",
+      "line": 726,
+      "inherited_line": false,
+      "source": "at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() == digest"
+    }
+  ],
+  "returns": [
+    {
+      "line": 724,
+      "value": "sorted((ast_path.parent.name for ast_path, source, digest in stale if at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() == digest))"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 718,
+      "callee": "_select_pinning"
+    },
+    {
+      "line": 720,
+      "callee": "(root / source).is_file"
+    },
+    {
+      "line": 721,
+      "callee": "(root / source).read_bytes"
+    },
+    {
+      "line": 721,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 721,
+      "callee": "hashlib.sha256((root / source).read_bytes()).hexdigest"
+    },
+    {
+      "line": 723,
+      "callee": "_committed_many"
+    },
+    {
+      "line": 724,
+      "callee": "sorted"
+    },
+    {
+      "line": 726,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 726,
+      "callee": "hashlib.sha256(at_base[source]).hexdigest"
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "file": "cmd/tossctl/engine.go",
+  "source_sha256": "446e27a347768b0b2402ccff7fec368edb7f5d4b55913550619abafe91bce813",
+  "package": "main",
+  "function": "newEngineRunCmd",
+  "signature": "newEngineRunCmd(params=1, results=1)",
+  "start": {
+    "line": 134,
+    "column": 1
+  },
+  "end": {
+    "line": 176,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 172,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 175,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 9
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 4
+      },
+      "text": "cmd.SetOut"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 15
+      },
+      "text": "redact.Writer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 29
+      },
+      "text": "cmd.OutOrStdout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 4
+      },
+      "text": "cmd.SetErr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 15
+      },
+      "text": "redact.Writer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 29
+      },
+      "text": "cmd.ErrOrStderr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 11
+      },
+      "text": "runEngineRun"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,190 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "fb4e8f920d3464ae51df63929a14ac06f5fd23be",
+  "source_sha256": "f6ebcb5aa388f5203fbe474dafb81f0958841a1095517d49d33d8dd9c0eb3a0f",
+  "function": "resolve_base",
+  "signature": "resolve_base(change_dir, root, context)",
+  "start": {
+    "line": 282,
+    "column": 1
+  },
+  "end": {
+    "line": 330,
+    "column": 21
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 287,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 289,
+      "inherited_line": false,
+      "source": "except OSError as exc:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 305,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 307,
+      "inherited_line": false,
+      "source": "process.stderr.strip() or f'invalid Function Logic Map base: {value}'"
+    },
+    {
+      "id": "B5",
+      "kind": "Try",
+      "line": 312,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B6",
+      "kind": "ExceptHandler",
+      "line": 317,
+      "inherited_line": false,
+      "source": "except AdoptionError as exc:"
+    },
+    {
+      "id": "B7",
+      "kind": "IfExp",
+      "line": 319,
+      "inherited_line": false,
+      "source": "str(adoption['effective_base']) if adoption else persisted"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 320,
+      "inherited_line": false,
+      "source": "if context is not None:"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 323,
+      "inherited_line": false,
+      "source": "if adoption:"
+    },
+    {
+      "id": "B10",
+      "kind": "BoolOp",
+      "line": 328,
+      "inherited_line": false,
+      "source": "override and resolve(override) != effective"
+    },
+    {
+      "id": "B11",
+      "kind": "If",
+      "line": 328,
+      "inherited_line": false,
+      "source": "if override and resolve(override) != effective:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 309,
+      "value": "process.stdout.strip()"
+    },
+    {
+      "line": 330,
+      "value": "effective"
+    }
+  ],
+  "raises": [
+    {
+      "line": 290,
+      "source": "raise ValueError('missing base-commit.txt; run `python3 tools/sdd/capture_change_base.py --change <change-id>` at proposal freeze') from exc"
+    },
+    {
+      "line": 306,
+      "source": "raise ValueError(process.stderr.strip() or f'invalid Function Logic Map base: {value}')"
+    },
+    {
+      "line": 318,
+      "source": "raise ValueError(f'invalid execution-baseline adoption: {exc}') from exc"
+    },
+    {
+      "line": 329,
+      "source": "raise ValueError('SDD_BASE_REF must resolve to the selected effective comparison base')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 288,
+      "callee": "path.read_text(encoding='utf-8').strip"
+    },
+    {
+      "line": 288,
+      "callee": "path.read_text"
+    },
+    {
+      "line": 290,
+      "callee": "ValueError"
+    },
+    {
+      "line": 297,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 306,
+      "callee": "ValueError"
+    },
+    {
+      "line": 307,
+      "callee": "process.stderr.strip"
+    },
+    {
+      "line": 309,
+      "callee": "process.stdout.strip"
+    },
+    {
+      "line": 311,
+      "callee": "resolve"
+    },
+    {
+      "line": 316,
+      "callee": "validate_execution_baseline"
+    },
+    {
+      "line": 318,
+      "callee": "ValueError"
+    },
+    {
+      "line": 319,
+      "callee": "str"
+    },
+    {
+      "line": 326,
+      "callee": "str"
+    },
+    {
+      "line": 327,
+      "callee": "os.environ.get('SDD_BASE_REF', '').strip"
+    },
+    {
+      "line": 327,
+      "callee": "os.environ.get"
+    },
+    {
+      "line": 328,
+      "callee": "resolve"
+    },
+    {
+      "line": 329,
+      "callee": "ValueError"
+    }
+  ]
+}

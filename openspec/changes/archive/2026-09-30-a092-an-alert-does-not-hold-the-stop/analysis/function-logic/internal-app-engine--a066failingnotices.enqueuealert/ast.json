@@ -1,0 +1,40 @@
+{
+  "file": "internal/app/engine/a066_risk_relaxation_test.go",
+  "source_sha256": "78c53266581fb239fa0439c127aaf5c53e7139dcd3660177018c706936cac2b1",
+  "package": "engine",
+  "function": "EnqueueAlert",
+  "receiver": "a066FailingNotices",
+  "signature": "a066FailingNotices.EnqueueAlert(params=2, results=2)",
+  "start": {
+    "line": 214,
+    "column": 1
+  },
+  "end": {
+    "line": 216,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 215,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 12
+      },
+      "text": "errors.New"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

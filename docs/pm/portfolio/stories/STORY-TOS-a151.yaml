@@ -1,0 +1,20 @@
+{
+  "id": "STORY-TOS-a151",
+  "title": "손절 정책 오프라인 비교",
+  "feature": "FEAT-TOS-011",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a151-compare-stop-policies-offline",
+    "path": "openspec/changes/a151-compare-stop-policies-offline"
+  },
+  "found_by": {
+    "date": "2026-10-18",
+    "how": "User requested Astra-authored priority 1–9 OpenSpecs with Terra implementation and independent completion gates.",
+    "record": "openspec/changes/a151-compare-stop-policies-offline/proposal.md"
+  },
+  "acceptance": [
+    "Complete the scoped acceptance scenarios and dependency gates without changing operating settings.",
+    "Preserve frozen v1, r1 and existing a128/a147 evidence.",
+    "Require independent review, gstack review, Manager verification and scoped lifecycle actions."
+  ]
+}

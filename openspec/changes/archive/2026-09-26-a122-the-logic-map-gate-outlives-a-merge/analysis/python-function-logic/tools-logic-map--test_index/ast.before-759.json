@@ -1,0 +1,69 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "b28398e26f3dec1a404698b1995c0daae865653ac88ee6dab692eafa77cb881b",
+  "function": "test_index",
+  "signature": "test_index(root)",
+  "start": {
+    "line": 2146,
+    "column": 1
+  },
+  "end": {
+    "line": 2154,
+    "column": 17
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 2149,
+      "inherited_line": false,
+      "source": "for path in _globbed(root, '*_test.go'):"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 2150,
+      "inherited_line": false,
+      "source": "if '.git' in path.parts:"
+    },
+    {
+      "id": "B3",
+      "kind": "For",
+      "line": 2152,
+      "inherited_line": false,
+      "source": "for name, (start, end) in test_spans(path).items():"
+    }
+  ],
+  "returns": [
+    {
+      "line": 2154,
+      "value": "index"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 2149,
+      "callee": "_globbed"
+    },
+    {
+      "line": 2152,
+      "callee": "test_spans"
+    },
+    {
+      "line": 2152,
+      "callee": "test_spans(path).items"
+    },
+    {
+      "line": 2153,
+      "callee": "index.setdefault"
+    },
+    {
+      "line": 2153,
+      "callee": "index.setdefault(name, []).append"
+    }
+  ]
+}

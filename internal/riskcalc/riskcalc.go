@@ -224,9 +224,10 @@ type AccountSnapshot struct {
 
 // RealizedPnL is one realised result for a trading day, after costs.
 type RealizedPnL struct {
-	// TradingDay is market-local, YYYY-MM-DD. It must match the day being
-	// measured: a daily limit computed over the wrong day is not the limit
-	// anyone configured.
+	// TradingDay is the day label being measured, YYYY-MM-DD. It must match the
+	// day being measured: a daily limit computed over the wrong day is not the
+	// limit anyone configured. The production producer (a137, execgw) labels
+	// every entry with the account day (clock.AccountTradingDay).
 	TradingDay string
 	// Amount is signed: negative is a loss.
 	Amount   string
@@ -235,8 +236,11 @@ type RealizedPnL struct {
 	// false value is refused rather than used, because "실현 손익(비용 차감 후)"
 	// is the definition of the quantity, not a preference about it.
 	CostsDeducted bool
-	// AsOf carries the account snapshot's bound: this number comes from the
-	// broker, like the positions do.
+	// AsOf carries the account snapshot's bound. The production source is the
+	// engine journal's frozen trade outcomes (사용자 결정 a137 Q1, 2026-10-14 —
+	// the official API has no realised-P&L read), and AsOf is the instant the
+	// journal was read; how fresh the journal itself is belongs to the
+	// fill-detection loop's own escalation, not to this bound.
 	AsOf time.Time
 }
 

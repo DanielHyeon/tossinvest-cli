@@ -1,0 +1,442 @@
+{
+  "file": "tools/a112-family-shadow/main.go",
+  "source_sha256": "b205023b15dd8e0cdc5eb9263e3208adf68d14d6ceccf6f6d125f211f609b9f9",
+  "package": "main",
+  "function": "run",
+  "signature": "run(params=0, results=1)",
+  "start": {
+    "line": 60,
+    "column": 1
+  },
+  "end": {
+    "line": 109,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 98,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 80,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 84,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 87,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 92,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 96,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 99,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 102,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 108,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 2
+      },
+      "text": "flag.StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 2
+      },
+      "text": "flag.Uint64Var"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 2
+      },
+      "text": "flag.StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 2
+      },
+      "text": "flag.StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 2
+      },
+      "text": "flag.StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 2
+      },
+      "text": "flag.StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 2
+      },
+      "text": "flag.StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 2
+      },
+      "text": "flag.StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 2
+      },
+      "text": "flag.StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 2
+      },
+      "text": "flag.StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 2
+      },
+      "text": "flag.StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 2
+      },
+      "text": "flag.BoolVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 2
+      },
+      "text": "flag.StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 2
+      },
+      "text": "flag.StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 2
+      },
+      "text": "flag.Parse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 19
+      },
+      "text": "opts.document"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 15
+      },
+      "text": "strategyshadow.EncodeProductionFamilyShadow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 15
+      },
+      "text": "os.OpenFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 15
+      },
+      "text": "file.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 3
+      },
+      "text": "file.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 12
+      },
+      "text": "file.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 12
+      },
+      "text": "os.Chmod"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 12
+      },
+      "text": "sha256.Sum256"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 2
+      },
+      "text": "fmt.Printf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 48
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 2
+      },
+      "text": "fmt.Printf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 3
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 19
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 45
+      },
+      "text": "hex.EncodeToString"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 82,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 94,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 98,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 101,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 104,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

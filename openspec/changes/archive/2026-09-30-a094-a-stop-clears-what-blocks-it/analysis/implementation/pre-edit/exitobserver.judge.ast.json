@@ -1,0 +1,202 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "2d34b5c57f25a2c804f903c535c7fa88f4f677307d3c2af1033d4b7da0d1009b",
+  "package": "engine",
+  "function": "judge",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.judge(params=5, results=1)",
+  "start": {
+    "line": 862,
+    "column": 1
+  },
+  "end": {
+    "line": 898,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 864,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 867,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 871,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 881,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 887,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "switch",
+      "at": {
+        "line": 892,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "case",
+      "at": {
+        "line": 893,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "case",
+      "at": {
+        "line": 895,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 865,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 869,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 883,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 889,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 894,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 896,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 864,
+        "column": 6
+      },
+      "text": "o.quoteUsable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 868,
+        "column": 3
+      },
+      "text": "o.alertRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 881,
+        "column": 13
+      },
+      "text": "o.opts.Journal.StampExitSnapshotQuarantineSelector"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 886,
+        "column": 20
+      },
+      "text": "o.breakEven"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 888,
+        "column": 3
+      },
+      "text": "o.alertRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 894,
+        "column": 10
+      },
+      "text": "o.judgeLadder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 896,
+        "column": 10
+      },
+      "text": "o.judgeRatchet"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 881,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 886,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

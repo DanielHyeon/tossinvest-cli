@@ -1,0 +1,3 @@
+TREE	HEAD fd7853b26b40094e2483c6b68bd5a03d8b741ca9	uncommitted tracked: internal/execgw/replay.go,internal/obs/a096_one_send_per_condition_test.go,internal/obs/a099_round4_test.go,internal/obs/notifier.go	own untracked: internal/obs/a092_lock_scope_test.go,internal/obs/export_test.go
+CONTROL	GREEN	
+L18 claim moved outside the lock (pin)	CAUGHT	1 failing: TestAcknowledgeCannotClearTheGateMidSend

@@ -1,0 +1,51 @@
+
+Callers of "RouteSet" (16):
+
+method      collectMarket
+  internal/app/engine/strategy_route_authority.go:140
+
+function    Arbitrate
+  internal/strategyarbiter/arbiter.go:117
+
+function    TestAnUnusableRouteAuthorityIsAFault
+  internal/strategyproposal/lost_proposal_test.go:156
+
+function    LoadProductionAuthorityBatch
+  internal/strategyproposal/production.go:307
+
+function    TestPairedProductionRouteAuthorityLoadsExactFourLanesIndependently
+  internal/strategyrouter/production_test.go:22
+
+function    TestProductionRouteAuthorityFailureIsMarketLocal
+  internal/strategyrouter/production_test.go:45
+
+function    TestProductionRouteAuthoritySelectsEverySignedSymbolScope
+  internal/strategyrouter/production_test.go:69
+
+function    TestProductionRouteAuthorityBatchUsesEverySignedScopeInOneMarketSnapshot
+  internal/strategyrouter/production_test.go:101
+
+function    TestRouteSetEmitsEveryEligibleCandidateWithoutRawScorePreselection
+  internal/strategyrouter/routeset_test.go:10
+
+function    TestRouteSetDoesNotRefuseOnAScoreTie
+  internal/strategyrouter/routeset_test.go:52
+
+function    TestRouteSetPreservesTheActiveOwnerAloneBeforeAnyComparison
+  internal/strategyrouter/routeset_test.go:69
+
+function    TestRouteSetExcludesIneligibleAndDisabledCandidates
+  internal/strategyrouter/routeset_test.go:90
+
+function    TestRouteSetRefusesWhenNothingIsEligible
+  internal/strategyrouter/routeset_test.go:107
+
+function    TestRouteSetOrderIsDeterministicAndInputOrderIndependent
+  internal/strategyrouter/routeset_test.go:121
+
+function    TestRouteSetSealDetectsPostBuildMutation
+  internal/strategyrouter/routeset_test.go:152
+
+function    TestRouteSetFailsClosedExactlyLikeRouteOnPreludeFaults
+  internal/strategyrouter/routeset_test.go:178
+

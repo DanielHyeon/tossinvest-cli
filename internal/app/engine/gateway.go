@@ -184,7 +184,15 @@ func restoreAlertEntryLatch(ctx context.Context, j *journal.Journal, gate *execg
 // the completion of a state whose position has closed. It decides nothing about
 // protection — a fill is not an observation — and the handle it is given cannot
 // write a baseline, a watermark or a level at all.
-func bindApplyHooks(j *journal.Journal) error {
+//
+// a130: the optional refused argument is the trade-outcome refusal sink
+// (trade_outcome_refusal_log.go). NewContext passes the engine logger's sink;
+// the package tests bind with none, which is the binding before a130.
+func bindApplyHooks(j *journal.Journal, refused ...func(journal.TradeOutcomeRefusal)) error {
+	var outcomeRefused func(journal.TradeOutcomeRefusal)
+	if len(refused) > 0 {
+		outcomeRefused = refused[0]
+	}
 	if err := j.SetApplyHooks(journal.ApplyHooks{
 		Project:  journal.ProjectPosition,
 		Campaign: journal.ApplyPositionCampaignFill,
@@ -195,6 +203,9 @@ func bindApplyHooks(j *journal.Journal) error {
 		// conservative `[미검증]` placeholder task 1.1 shipped for exactly this —
 		// an unconfigured model would leave every close without an outcome row.
 		Costs: costs.DefaultModel(),
+		// a130: a close whose outcome cannot be frozen leaves one engine.log
+		// line after its fill commits. Nil (tests) reports nothing.
+		OutcomeRefused: outcomeRefused,
 	}); err != nil {
 		return fmt.Errorf("engine: binding the fill apply hooks: %w", err)
 	}
@@ -268,6 +279,10 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 	// without this the restart is the way around the block.
 	if err := restoreAlertEntryLatch(ctx, in.journal, entry); err != nil {
 		return engineWiring{}, fmt.Errorf("engine: restoring the alert entry latch: %w", err)
+	}
+	// 운영 모드도 원장이 산 게이트보다 오래 삶 — 투영기를 묶고 첫 진입 점검보다 먼저 복원함(a092 단위 ④).
+	if err := bindOperatingModeProjection(ctx, in.journal, entry, in.accountRef, in.logger); err != nil {
+		return engineWiring{}, fmt.Errorf("engine: binding the operating-mode projection: %w", err)
 	}
 	entry.SetAuthorityRefresh(func() error {
 		return tracker.Refresh(context.Background())

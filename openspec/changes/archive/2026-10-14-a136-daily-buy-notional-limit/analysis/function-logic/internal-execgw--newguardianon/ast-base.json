@@ -1,0 +1,87 @@
+{
+  "file": "internal/execgw/observation_test.go",
+  "source_sha256": "4be320aaeea6e6aaff5eebfd615762f7d41e2714968b5de40d8b9845b378c194",
+  "package": "execgw_test",
+  "function": "newGuardianOn",
+  "signature": "newGuardianOn(params=3, results=1)",
+  "start": {
+    "line": 550,
+    "column": 1
+  },
+  "end": {
+    "line": 565,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 561,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 564,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 551,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 552,
+        "column": 12
+      },
+      "text": "execgw.NewRiskGuardian"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 556,
+        "column": 18
+      },
+      "text": "guardianPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 557,
+        "column": 18
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 562,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 552,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

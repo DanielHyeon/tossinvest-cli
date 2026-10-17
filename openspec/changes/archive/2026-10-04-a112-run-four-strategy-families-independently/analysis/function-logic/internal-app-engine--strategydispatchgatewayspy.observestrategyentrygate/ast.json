@@ -1,0 +1,125 @@
+{
+  "file": "internal/app/engine/strategy_dispatch_cycle_test.go",
+  "source_sha256": "b0b9734d75c5e4fafa2b2033bd9c3d9660af813aa7d485b1840d2a1f8ebcd958",
+  "package": "engine",
+  "function": "ObserveStrategyEntryGate",
+  "receiver": "strategyDispatchGatewaySpy",
+  "signature": "strategyDispatchGatewaySpy.ObserveStrategyEntryGate(params=3, results=2)",
+  "start": {
+    "line": 46,
+    "column": 1
+  },
+  "end": {
+    "line": 57,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 53,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 51,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 54,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 2
+      },
+      "text": "spy.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 8
+      },
+      "text": "spy.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 9
+      },
+      "text": "execgw.StrategyEntryGateAuthorityForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 63
+      },
+      "text": "strings.Repeat"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "++",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 50,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 53,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 48,
+        "column": 2
+      },
+      "text": "spy.mu.Unlock"
+    }
+  ]
+}

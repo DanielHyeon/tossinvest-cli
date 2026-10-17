@@ -1,0 +1,11 @@
+# isolated worktree 402e1d34 = 951b3ec3 + 6.1 로트 (원 출력 — rtk proxy)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	2.158s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	1.272s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	259.072s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	0.109s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.321s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	0.397s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	1.516s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	312.026s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	0.111s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.304s

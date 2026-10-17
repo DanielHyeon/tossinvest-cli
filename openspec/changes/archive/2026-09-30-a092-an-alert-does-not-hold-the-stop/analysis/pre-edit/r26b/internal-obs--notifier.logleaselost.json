@@ -1,0 +1,168 @@
+{
+  "file": "internal/obs/notifier.go",
+  "source_sha256": "46c51c2e09e64ce400e0af84aec28ae6047f2573d3d0dd29cd4bc62489c26b4c",
+  "package": "obs",
+  "function": "logLeaseLost",
+  "receiver": "Notifier",
+  "signature": "Notifier.logLeaseLost(params=3, results=0)",
+  "start": {
+    "line": 676,
+    "column": 1
+  },
+  "end": {
+    "line": 710,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 677,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 680,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 681,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 690,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 695,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 703,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 678,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 686,
+        "column": 3
+      },
+      "text": "n.Log.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 687,
+        "column": 4
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 688,
+        "column": 23
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 691,
+        "column": 3
+      },
+      "text": "n.Log.Event"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 692,
+        "column": 23
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 699,
+        "column": 3
+      },
+      "text": "n.Log.Event"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 700,
+        "column": 23
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 704,
+        "column": 3
+      },
+      "text": "n.Log.Warn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 705,
+        "column": 23
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 708,
+        "column": 20
+      },
+      "text": "claimAgeMS"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 708,
+        "column": 46
+      },
+      "text": "n.now"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

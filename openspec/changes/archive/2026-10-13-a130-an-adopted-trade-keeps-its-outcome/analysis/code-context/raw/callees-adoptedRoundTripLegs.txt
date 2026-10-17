@@ -1,0 +1,21 @@
+
+Callees of "adoptedRoundTripLegs" (6):
+
+function    adoptedBasis
+  internal/journal/trade_outcomes.go:523
+
+function    engineSellOrders
+  internal/journal/trade_outcomes.go:551
+
+function    sumSellFills
+  internal/journal/trade_outcomes.go:619
+
+struct      tradeLeg
+  internal/journal/trade_outcomes.go:116
+
+struct      Context
+  internal/app/app.go:62
+
+interface   tradeOutcomeReader
+  internal/journal/trade_outcomes.go:150
+

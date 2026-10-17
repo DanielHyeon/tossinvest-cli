@@ -1,0 +1,24 @@
+{
+  "id": "STORY-TOS-a131",
+  "title": "No log or record file the system writes carries account information",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a131-no-account-in-any-log",
+    "path": "openspec/changes/archive/2026-10-13-a131-no-account-in-any-log"
+  },
+  "found_by": {
+    "date": "2026-10-12",
+    "how": "The a129 review found that engine.log already carried the account reference on every reconcile line (80,180 lines), that capability-soak.jsonl, capability-verify.jsonl and audit.log carried it too, and that position_id is an unsalted hash a short account number can be recovered from. The user decided on 2026-10-12 that account information is not kept in logs.",
+    "record": "openspec/changes/archive/2026-10-13-a131-no-account-in-any-log/proposal.md"
+  },
+  "acceptance": [
+    "Every structured engine-log line goes through one redaction rule that drops account fields and replaces account references, their masked forms and account-derived low-entropy identifiers in every string value, including wrapped error text",
+    "The engine process's direct stdout/stderr writes and the CLI's final error line pass through the same rule",
+    "Soak and verification records seal the account reference with a local key instead of writing it in the clear, and every reader opens it so the attestation binding is unchanged",
+    "audit.log keeps action, setting, old/new value, time and subject; only account text is replaced",
+    "A sentinel account planted in the account reference, error text and broker response appears in no sink output, and a structural test fails when a new append-only writer or logger construction bypasses the rule",
+    "A one-time cleanup command rewrites existing soak, verification and audit files with the same rule: preview writes nothing, apply replaces each file atomically without a backup",
+    "Order, exit, reconcile and stop-loss behaviour is unchanged"
+  ]
+}

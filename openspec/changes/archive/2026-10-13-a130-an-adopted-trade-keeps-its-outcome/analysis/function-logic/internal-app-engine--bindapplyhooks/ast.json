@@ -1,0 +1,101 @@
+{
+  "file": "internal/app/engine/gateway.go",
+  "source_sha256": "497ec967c114b5e7a9c1f9a80f129b381b160252dc0296ff71f95aca983d57e1",
+  "package": "engine",
+  "function": "bindApplyHooks",
+  "signature": "bindApplyHooks(params=2, results=1)",
+  "start": {
+    "line": 191,
+    "column": 1
+  },
+  "end": {
+    "line": 213,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 193,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 210,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 12
+      },
+      "text": "j.SetApplyHooks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 10
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 194,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 196,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

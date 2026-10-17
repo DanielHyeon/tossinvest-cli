@@ -1,0 +1,35 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d12520c97b800f234f5c25483068a2bd70bd19b",
+  "source_sha256": "487708dc51fe19f322275b49e31a7edc49025fd4fd28a04d4b728a41a4f7b70c",
+  "function": "_globbed",
+  "signature": "_globbed(root, pattern)",
+  "start": {
+    "line": 831,
+    "column": 1
+  },
+  "end": {
+    "line": 835,
+    "column": 19
+  },
+  "branches": [],
+  "returns": [
+    {
+      "line": 835,
+      "value": "matches"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 833,
+      "callee": "_pattern_outcome"
+    },
+    {
+      "line": 834,
+      "callee": "_remember"
+    }
+  ]
+}

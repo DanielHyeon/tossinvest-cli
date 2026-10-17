@@ -1,0 +1,113 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "source_sha256": "98845ce2dea180b8ab813180a51e9076ae1f787dea664362a61e8312675b135b",
+  "function": "_bundle_text",
+  "signature": "_bundle_text(map_path, known)",
+  "start": {
+    "line": 1312,
+    "column": 1
+  },
+  "end": {
+    "line": 1343,
+    "column": 28
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 1325,
+      "inherited_line": false,
+      "source": "for path in sorted(map_path.parent.glob('*')):"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 1326,
+      "inherited_line": false,
+      "source": "if not path.is_file():"
+    },
+    {
+      "id": "B3",
+      "kind": "Try",
+      "line": 1328,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 1329,
+      "inherited_line": false,
+      "source": "known is not None and path.name == 'ast.json'"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 1329,
+      "inherited_line": false,
+      "source": "if known is not None and path.name == 'ast.json':"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 1333,
+      "inherited_line": false,
+      "source": "if raw is None:"
+    },
+    {
+      "id": "B7",
+      "kind": "ExceptHandler",
+      "line": 1338,
+      "inherited_line": false,
+      "source": "except (OSError, UnicodeDecodeError):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1343,
+      "value": "'\\n'.join(texts)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1325,
+      "callee": "map_path.parent.glob"
+    },
+    {
+      "line": 1325,
+      "callee": "sorted"
+    },
+    {
+      "line": 1326,
+      "callee": "path.is_file"
+    },
+    {
+      "line": 1332,
+      "callee": "known.get"
+    },
+    {
+      "line": 1335,
+      "callee": "_decoded"
+    },
+    {
+      "line": 1335,
+      "callee": "texts.append"
+    },
+    {
+      "line": 1337,
+      "callee": "path.read_text"
+    },
+    {
+      "line": 1337,
+      "callee": "texts.append"
+    },
+    {
+      "line": 1343,
+      "callee": "'\\n'.join"
+    }
+  ]
+}

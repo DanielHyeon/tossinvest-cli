@@ -1,0 +1,12 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/execgw [github.com/JungHoonGhae/tossinvest-cli/internal/execgw.test]
+internal/execgw/a137_daily_loss_internal_test.go:90:4: g.dailyLossRows undefined (type *RiskGuardian has no field or method dailyLossRows)
+internal/execgw/a137_daily_loss_internal_test.go:104:4: g.dailyLossRows undefined (type *RiskGuardian has no field or method dailyLossRows)
+internal/execgw/a137_daily_loss_internal_test.go:109:4: g.dailyLossRows undefined (type *RiskGuardian has no field or method dailyLossRows)
+internal/execgw/a137_daily_loss_internal_test.go:119:4: g.dailyLossRows undefined (type *RiskGuardian has no field or method dailyLossRows)
+internal/execgw/a137_daily_loss_internal_test.go:139:4: g.dailyLossRows undefined (type *RiskGuardian has no field or method dailyLossRows)
+internal/execgw/a137_daily_loss_internal_test.go:150:4: g.dailyLossRows undefined (type *RiskGuardian has no field or method dailyLossRows)
+internal/execgw/a137_daily_loss_internal_test.go:159:4: g.dailyLossRows undefined (type *RiskGuardian has no field or method dailyLossRows)
+internal/execgw/a137_daily_loss_internal_test.go:171:4: g.dailyLossRows undefined (type *RiskGuardian has no field or method dailyLossRows)
+internal/execgw/a137_daily_loss_internal_test.go:186:4: g.dailyLossRows undefined (type *RiskGuardian has no field or method dailyLossRows)
+internal/execgw/a137_daily_loss_internal_test.go:187:13: g.MeasureDailyLoss undefined (type *RiskGuardian has no field or method MeasureDailyLoss)
+internal/execgw/a137_daily_loss_internal_test.go:187:13: too many errors

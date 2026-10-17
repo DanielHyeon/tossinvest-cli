@@ -1,0 +1,20 @@
+{
+  "id": "STORY-TOS-a152",
+  "title": "Volume Profile 데이터 적합성 평가",
+  "feature": "FEAT-TOS-006",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a152-qualify-volume-profile-evidence",
+    "path": "openspec/changes/a152-qualify-volume-profile-evidence"
+  },
+  "found_by": {
+    "date": "2026-10-18",
+    "how": "User requested Astra-authored priority 1–9 OpenSpecs with Terra implementation and independent completion gates.",
+    "record": "openspec/changes/a152-qualify-volume-profile-evidence/proposal.md"
+  },
+  "acceptance": [
+    "Complete the scoped acceptance scenarios and dependency gates without changing operating settings.",
+    "Preserve frozen v1, r1 and existing a128/a147 evidence.",
+    "Require independent review, gstack review, Manager verification and scoped lifecycle actions."
+  ]
+}

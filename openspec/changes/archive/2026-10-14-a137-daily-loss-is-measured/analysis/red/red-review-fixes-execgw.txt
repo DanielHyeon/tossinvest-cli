@@ -1,0 +1,1 @@
+  internal/execgw/a137_precheck_test.go:67:27: undefined: execgw.DailyLossUnmeasurable

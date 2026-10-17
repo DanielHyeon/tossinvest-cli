@@ -1,0 +1,21 @@
+{
+  "id": "STORY-TOS-a147",
+  "title": "Validate Jev MFI trend on separately registered shadow sessions",
+  "feature": "FEAT-TOS-006",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a147-validate-jev-mfi-trend",
+    "path": "openspec/changes/archive/2026-10-17-a147-validate-jev-mfi-trend"
+  },
+  "found_by": {
+    "date": "2026-10-18",
+    "how": "User requested separately registered additional-session verification of the observed MFI association with Jev candidates while preserving r1.",
+    "record": "openspec/changes/archive/2026-10-17-a147-validate-jev-mfi-trend/proposal.md"
+  },
+  "acceptance": [
+    "Pre-register independent KR and US shadow sessions with offset-bearing closed minute bar evidence and frozen analysis rules.",
+    "Compare MFI14 three-bar trend against subsequent 60-minute labels by market, session, and Jev selection without modifying r1.",
+    "Report missing and ambiguous evidence, dependence, and insufficient samples without claiming a strategy effect.",
+    "Keep future collection and model calls subject to separate authorization."
+  ]
+}

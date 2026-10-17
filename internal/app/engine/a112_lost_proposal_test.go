@@ -87,5 +87,5 @@ func collectWithLostProposal(t *testing.T, now time.Time,
 		return strategyproposal.ProductionBatchAuthorityWithFaultForTest(config.ManifestDigest,
 			map[string][]strategyflow.Result{"000660": {result}}, absence), nil
 	}
-	return loader.collect(context.Background(), routeReadySchedulePair(now), routes, proposalFXPair(now))
+	return a112PairOnly(loader.collect(context.Background(), routeReadySchedulePair(now), routes, proposalFXPair(now)))
 }

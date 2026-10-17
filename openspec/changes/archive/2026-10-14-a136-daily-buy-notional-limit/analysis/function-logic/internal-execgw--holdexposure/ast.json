@@ -1,0 +1,194 @@
+{
+  "file": "internal/execgw/gateway_test.go",
+  "source_sha256": "e7861a53bb5258f2b6703e7470b17375b281d032a66f3625f5e2582ba0a6bc8c",
+  "package": "execgw_test",
+  "function": "holdExposure",
+  "signature": "holdExposure(params=6, results=0)",
+  "start": {
+    "line": 207,
+    "column": 1
+  },
+  "end": {
+    "line": 250,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 216,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 220,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 18
+      },
+      "text": "j.ReservationVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 39
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 221,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 15
+      },
+      "text": "j.Reserve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 25
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 99
+      },
+      "text": "a136ZeroManualBuy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 117
+      },
+      "text": "clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 20
+      },
+      "text": "clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 15
+      },
+      "text": "strconv.FormatFloat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 15
+      },
+      "text": "strconv.FormatFloat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 211,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 213,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 215,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 217,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 219,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 223,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -251,6 +251,11 @@ type OperatingModeRecord struct {
 	Cause     string
 	Actor     string
 	CreatedAt time.Time
+	// Seq 는 이 전이 행의 커밋 순번(SQLite rowid)임(a092 단위 ④). 「현재 모드」 · 방향 판정 · 기동 복원 · 이력 순서는
+	// 벽시계가 아니라 이 순서 하나를 씀 — 시각은 트랜잭션 전에 얻으므로 늦게 커밋된 전이가 더 이른 시각을 가질 수 있음.
+	// 진입 게이트는 마지막으로 적용한 Seq 보다 큰 투영만 적용함(겹친 두 전이의 투영이 뒤바뀌어 도착해도 역행 없음).
+	// 0 은 「원장 행이 아님」(행 없는 기동 복원 · 원장을 거치지 않은 레코드).
+	Seq int64
 }
 
 // BlocksEntry reports whether this mode refuses EXPOSURE_RAISING.
@@ -276,6 +281,8 @@ type ModeSnapshot struct {
 	// Mode is then NORMAL: an account nobody has ever tightened is not blocked,
 	// and defaulting the other way would mean no engine could ever start.
 	Recorded bool
+	// Seq 는 현재 모드를 정한 행의 커밋 순번(rowid)임. 행이 없으면 0.
+	Seq int64
 }
 
 // BlocksEntry reports whether new exposure is refused.
@@ -441,16 +448,24 @@ func (j *Journal) TransitionOperatingMode(ctx context.Context, req TransitionMod
 	if id == "" {
 		id = operatingModeID(account, mode, cause, actor, nowText, seq)
 	}
-	if _, err := tx.ExecContext(ctx,
+	res, err := tx.ExecContext(ctx,
 		`INSERT INTO operating_modes (id, account_ref, mode, cause, actor, created_at)
 		 VALUES (?,?,?,?,?,?)`,
-		id, account, mode, cause, actor, nowText); err != nil {
+		id, account, mode, cause, actor, nowText)
+	if err != nil {
 		return OperatingModeRecord{}, false, fmt.Errorf(
 			"journal: recording the %s → %s transition for %s: %w", current.Mode, mode, account, err)
 	}
+	// 커밋 순번 = 방금 삽입한 행의 rowid. 전이는 BEGIN IMMEDIATE 로 직렬화되고 이 표는 지우거나 고치지 않으므로
+	// rowid 순서가 커밋 순서임(design D0.3g 5).
+	seqRow, err := res.LastInsertId()
+	if err != nil {
+		return OperatingModeRecord{}, false, fmt.Errorf(
+			"journal: reading the sequence of the %s → %s transition for %s: %w", current.Mode, mode, account, err)
+	}
 
 	record := OperatingModeRecord{
-		ID: id, AccountRef: account, Mode: mode, Cause: cause, Actor: actor, CreatedAt: now,
+		ID: id, AccountRef: account, Mode: mode, Cause: cause, Actor: actor, CreatedAt: now, Seq: seqRow,
 	}
 
 	// The audit line goes in before the commit, exactly as the operator
@@ -583,6 +598,7 @@ func (j *Journal) RestoreOperatingModeProjection(ctx context.Context, accountRef
 			Cause:      snapshot.Cause,
 			Actor:      snapshot.Actor,
 			CreatedAt:  snapshot.Since,
+			Seq:        snapshot.Seq,
 		})
 	}
 	return snapshot, nil
@@ -592,7 +608,7 @@ func (j *Journal) RestoreOperatingModeProjection(ctx context.Context, accountRef
 // first. Append-only: this is the whole record, and nothing rewrites it.
 func (j *Journal) OperatingModeHistory(ctx context.Context, accountRef string) ([]OperatingModeRecord, error) {
 	rows, err := j.db.QueryContext(ctx,
-		operatingModeSelect+" WHERE account_ref = ? ORDER BY created_at, rowid",
+		operatingModeSelect+" WHERE account_ref = ? ORDER BY rowid",
 		strings.TrimSpace(accountRef))
 	if err != nil {
 		return nil, fmt.Errorf("journal: listing operating-mode history: %w", err)
@@ -613,17 +629,20 @@ func (j *Journal) OperatingModeHistory(ctx context.Context, accountRef string) (
 	return out, nil
 }
 
-const operatingModeSelect = `SELECT id, account_ref, mode, cause, actor, created_at FROM operating_modes`
+const operatingModeSelect = `SELECT rowid, id, account_ref, mode, cause, actor, created_at FROM operating_modes`
 
-// modeLatestOrder is the "current mode" ordering, and it is (created_at, rowid)
-// rather than created_at alone.
+// modeLatestOrder is the "current mode" ordering: commit order (rowid) alone.
 //
-// Journal timestamps are second-resolution (decision.go formatJournalTime), so
-// two transitions inside one second are indistinguishable by time. Ordering by
-// time alone would let a relaxation that happened *before* a conservative
-// tightening read as the later one — the fail-open direction, in the one place
-// it must not be. (issues.md 2026-07-26, task 0.1 → 3.1.)
-const modeLatestOrder = " ORDER BY created_at DESC, rowid DESC LIMIT 1"
+// It used to be (created_at, rowid). Journal timestamps are second-resolution,
+// which the rowid tiebreak handled; but the time is also taken *before* the
+// transaction opens, so a transition that commits later can carry an earlier
+// time — and a wall clock that steps back does the same. Ordering by time then
+// reads a relaxation that committed *before* a tightening as the later one: the
+// fail-open direction, in the one place it must not be (a092 C4 · C5, codex r21).
+// operating_modes is a rowid table, nothing deletes or updates its rows, and
+// transitions are serialised by BEGIN IMMEDIATE, so rowid order is commit order.
+// Direction checks, start-up restore, gate projection and history all use it.
+const modeLatestOrder = " ORDER BY rowid DESC LIMIT 1"
 
 // modeDirection compares the target against the mode in force: +1 tightening,
 // 0 no change, −1 relaxation.
@@ -668,6 +687,7 @@ func currentModeFromRow(row rowScanner, account string) (ModeSnapshot, error) {
 		Actor:      record.Actor,
 		Since:      record.CreatedAt,
 		Recorded:   true,
+		Seq:        record.Seq,
 	}, nil
 }
 
@@ -695,7 +715,7 @@ func scanOperatingMode(row rowScanner) (OperatingModeRecord, error) {
 		record    OperatingModeRecord
 		createdAt string
 	)
-	if err := row.Scan(&record.ID, &record.AccountRef, &record.Mode,
+	if err := row.Scan(&record.Seq, &record.ID, &record.AccountRef, &record.Mode,
 		&record.Cause, &record.Actor, &createdAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return OperatingModeRecord{}, errNoOperatingMode

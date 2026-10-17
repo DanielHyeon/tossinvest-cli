@@ -1,0 +1,92 @@
+
+Impact of changing "admit" — 51 affected symbols:
+
+internal/strategyworker/bounded.go
+  method      admit:158
+  method      RunBounded:151
+
+internal/strategyworker/bounded_test.go
+  function    TestALaneWithNoTriggerDoesNotStartACycle:90
+  function    TestALaneAdmitsOnlyOneCycleAtATime:106
+  function    TestALaneRefusesASecondCycleBeforeItsCadenceElapsed:133
+  function    TestTheCadenceIsMeasuredFromTheCycleStartNotItsEnd:154
+  function    TestACycleThatCrossesTheDeadlineIsAbandonedAndCountedAsAFailure:178
+  function    TestALateResultFromAnAbandonedCycleChangesNothing:223
+  function    TestAPanickingStepIsAnAbnormalFailureRatherThanACrash:252
+  function    TestCancellationIsNotAFailure:273
+  function    TestALaneInBackoffWaitsItsRestartDeadline:295
+  function    TestASuccessfulBoundedCycleClearsTheFailureCounter:311
+  function    TestALatchedLaneDoesNotOpenACycleItAlreadyHeld:346
+  function    TestAnAdmittedCycleConsumesExactlyOneTrigger:361
+  function    TestTheWatchdogSleepsForTheDeadlineAndNotSomeOtherPolicyValue:382
+  function    TestAnOrdinaryStepErrorCountsAndDoesNotLatchBelowTheThreshold:426
+  function    admit:24
+  function    TestEveryProductionLaneKeepsItsOwnSlotAndFlight:327
+
+internal/strategyworker/policy_test.go
+  function    cadenceIsEnforced:18
+  function    theDeadlineIsEnforced:47
+
+internal/strategyworker/rehearsal_test.go
+  method      drive:108
+  function    TestAnAbandonedCycleKeepsItsOwnGoroutineUntilTheStepReturns:222
+  function    TestShutdownCancelsEveryLaneWithoutLatchingAny:515
+  function    runFaultCycle:646
+  function    TestTheLaneFollowsTheDesignFaultTableForEveryKindItCanExpress:591
+
+internal/strategyworker/a112_cross_lane_isolation_test.go
+  function    TestOneLaneInsideItsCadenceWindowDoesNotGateItsPeer:16
+  function    TestOneLaneInFlightDoesNotMakeItsPeerInFlight:34
+
+internal/app/engine/a112_lane_latch_durability_test.go
+  function    latchOneLane:62
+
+internal/app/engine/strategy_lane_runtime.go
+  method      runLane:305
+
+internal/app/engine/strategy_first_leg_admission.go
+  method      admit:83
+
+internal/app/engine/a137_daily_loss_cycle_test.go
+  function    TestA137ADailyLossRefusalEscalatesAndIsNotALaneFault:98
+  function    TestA137AFailedEscalationIsJoinedNotLost:119
+  function    TestA137APrecheckRefusalKeepsItsCause:133
+  function    TestA137ClassificationIsUnchangedForEveryPrecheckRefusal:145
+  function    TestA137AnUnmeasurableDayIsAPolicyOutcomeNotALaneFault:171
+  function    TestA137AdmissionCarriesTheMeasuredTokenIntoThePrecheck:200
+
+internal/app/engine/strategy_first_leg_admission_test.go
+  function    TestStrategyFirstLegAdmissionDormantPairedKRUS:19
+  function    TestStrategyFirstLegAdmissionUsesGuardianOnlyAllEightLanes:32
+  function    TestStrategyFirstLegAdmissionRejectsInvalidBeforeAuthority:60
+  function    TestStrategyFirstLegAdmissionRejectsAuthorityTamperPairedKRUS:73
+  function    TestStrategyFirstLegAdmissionClassifiesPairedFailures:99
+
+internal/app/engine/strategy_family_activation.go
+  method      admit:93
+
+internal/app/engine/strategy_market_coordinator.go
+  function    coordinateMarketProposals:57
+
+internal/app/engine/a112_shadow_carry_test.go
+  function    a112ShadowCoordinated:28
+
+internal/app/engine/strategy_proposal_authority.go
+  method      collectMarket:301
+
+openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently/analysis/review-8.5-2026-10/_codex-r2/B-post-B11.go
+  method      collectMarket:293
+
+openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently/analysis/review-8.5-2026-10/_codex-r2/B-post-B14.go
+  method      collectMarket:293
+
+openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently/analysis/review-8.5-2026-10/_codex-r2/B-pre-B11.go
+  method      collectMarket:293
+
+openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently/analysis/review-8.5-2026-10/_codex-r2/B-pre-B14.go
+  method      collectMarket:293
+
+internal/app/engine/a112_family_gate_test.go
+  function    TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope:302
+  function    TestAProposalNoLaneOwnsIsStoppedRatherThanPassedThrough:391
+

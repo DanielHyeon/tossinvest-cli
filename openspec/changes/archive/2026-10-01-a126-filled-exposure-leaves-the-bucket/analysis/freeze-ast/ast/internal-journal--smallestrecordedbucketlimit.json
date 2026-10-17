@@ -1,0 +1,242 @@
+{
+  "file": "internal/journal/risk_bucket_usage.go",
+  "source_sha256": "8eacbf2fea3f123439abe2d4d402193126661b505ac5e840b44e8869f4e6fcc0",
+  "package": "journal",
+  "function": "smallestRecordedBucketLimit",
+  "signature": "smallestRecordedBucketLimit(params=5, results=3)",
+  "start": {
+    "line": 88,
+    "column": 1
+  },
+  "end": {
+    "line": 114,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "for",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 99,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 103,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 106,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 93,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 100,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 104,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 111,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 15
+      },
+      "text": "tx.QueryContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 140
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 8
+      },
+      "text": "rows.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 6
+      },
+      "text": "rows.Next"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 13
+      },
+      "text": "rows.Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 16
+      },
+      "text": "SetString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 16
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 13
+      },
+      "text": "limit.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 23
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 25
+      },
+      "text": "limit.Cmp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 12
+      },
+      "text": "rows.Err"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 107,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 110,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 95,
+        "column": 2
+      },
+      "text": "rows.Close"
+    }
+  ],
+  "revision": "base",
+  "base_commit": "989ab031a9177041da1ebb79fd1ed1209347ed30"
+}

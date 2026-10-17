@@ -1,0 +1,12 @@
+
+Callers of "BackfillTradeOutcome" (3):
+
+function    TestAnAdoptedPositionWithNoEngineSellFreezesNothing
+  internal/journal/adoption_outcome_test.go:197
+
+function    TestAPartlyEngineSoldAdoptedPositionFreezesNothing
+  internal/journal/adoption_outcome_test.go:229
+
+function    TestABackfillRecoversTheGapAndRefusesToRewriteIt
+  internal/journal/trade_outcomes_test.go:326
+

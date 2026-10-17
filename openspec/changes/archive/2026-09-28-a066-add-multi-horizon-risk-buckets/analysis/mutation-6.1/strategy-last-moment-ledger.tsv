@@ -1,0 +1,3 @@
+TREE	HEAD bfaeb2bf	uncommitted: internal/execgw/a066_strategy_last_moment_barrier_test.go (new)
+CONTROL	GREEN	ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.566s
+B41 strategy last-moment barrier removed	CAUGHT	TestA066StrategyLastMomentQFinalBarrierRefusesALockTakenAfterTheInitialCheck/KR, TestA066StrategyLastMomentQFinalBarrierRefusesALockTakenAfterTheInitialCheck/US

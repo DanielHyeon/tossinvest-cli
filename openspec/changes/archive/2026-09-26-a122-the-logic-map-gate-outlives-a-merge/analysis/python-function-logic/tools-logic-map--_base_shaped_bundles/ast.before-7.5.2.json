@@ -1,0 +1,103 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "head_commit": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "source_sha256": "db2443db8fc2f047d3224d5b331bdafb15e17861dcfa8c5fdc8861adac62f0b2",
+  "function": "_base_shaped_bundles",
+  "signature": "_base_shaped_bundles(root, base, analysis)",
+  "start": {
+    "line": 597,
+    "column": 1
+  },
+  "end": {
+    "line": 619,
+    "column": 25
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 612,
+      "inherited_line": false,
+      "source": "for ast_path, source, digest in _pinning_bundles(root, analysis):"
+    },
+    {
+      "id": "B2",
+      "kind": "BoolOp",
+      "line": 614,
+      "inherited_line": false,
+      "source": "path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == digest"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 614,
+      "inherited_line": false,
+      "source": "if path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == digest:"
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 617,
+      "inherited_line": false,
+      "source": "at_base is not None and hashlib.sha256(at_base).hexdigest() == digest"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 617,
+      "inherited_line": false,
+      "source": "if at_base is not None and hashlib.sha256(at_base).hexdigest() == digest:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 619,
+      "value": "sorted(names)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 612,
+      "callee": "_pinning_bundles"
+    },
+    {
+      "line": 614,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 614,
+      "callee": "hashlib.sha256(path.read_bytes()).hexdigest"
+    },
+    {
+      "line": 614,
+      "callee": "path.is_file"
+    },
+    {
+      "line": 614,
+      "callee": "path.read_bytes"
+    },
+    {
+      "line": 616,
+      "callee": "_committed_bytes"
+    },
+    {
+      "line": 617,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 617,
+      "callee": "hashlib.sha256(at_base).hexdigest"
+    },
+    {
+      "line": 618,
+      "callee": "names.append"
+    },
+    {
+      "line": 619,
+      "callee": "sorted"
+    }
+  ]
+}

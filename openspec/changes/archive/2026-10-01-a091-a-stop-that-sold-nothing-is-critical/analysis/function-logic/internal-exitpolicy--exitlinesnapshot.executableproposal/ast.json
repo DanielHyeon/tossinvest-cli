@@ -1,0 +1,46 @@
+{
+  "file": "internal/exitpolicy/snapshot.go",
+  "source_sha256": "5aaed0f721c2931c0df07bdd58b626f785ec44fe30a63413c7f31a3b1d8d0ce0",
+  "package": "exitpolicy",
+  "function": "ExecutableProposal",
+  "receiver": "ExitLineSnapshot",
+  "signature": "ExitLineSnapshot.ExecutableProposal(params=0, results=1)",
+  "start": {
+    "line": 54,
+    "column": 1
+  },
+  "end": {
+    "line": 59,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 56,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,15 @@
+
+Callers of "Decide" (4):
+
+function    TestActivationIsOpaqueAndBoundToExactDesiredState
+  internal/scheduler/decision_test.go:23
+
+function    TestDecisionRejectsCalendarVersionChangedAfterActivation
+  internal/scheduler/decision_test.go:51
+
+function    TestDecisionStatesAreTypedAndOrderedFailClosed
+  internal/scheduler/decision_test.go:82
+
+function    TestHolidayWaitsWithNextSession
+  internal/scheduler/decision_test.go:114
+

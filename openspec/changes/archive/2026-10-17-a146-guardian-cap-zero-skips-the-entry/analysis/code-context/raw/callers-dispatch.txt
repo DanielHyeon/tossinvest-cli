@@ -1,0 +1,63 @@
+
+Callers of "dispatch" (20):
+
+method      dispatch
+  internal/app/engine/strategy_market_handoff_delivery.go:19
+
+function    TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral
+  internal/app/engine/a112_fault_classification_test.go:34
+
+function    TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall
+  internal/app/engine/strategy_dispatch_envelope_test.go:42
+
+function    TestTheSameEnvelopeCannotPlaceASecondOrder
+  internal/app/engine/strategy_dispatch_envelope_test.go:66
+
+function    a112TwoScopePin
+  internal/app/engine/a112_owner_scope_handoff_test.go:137
+
+function    TestALeaseNamesItsLaneAndTheLaneNamesExactlyOneFamily
+  internal/app/engine/a112_dispatch_lineage_test.go:89
+
+function    TestALineageDriftIsRefusedAtIssuanceBeforeAnyReservationLeaseOrBrokerCall
+  internal/app/engine/a112_dispatch_lineage_test.go:128
+
+function    TestTheFinalCheckRefusesWhenTheScheduleRevalidatorSeesDrift
+  internal/app/engine/a112_dispatch_lineage_test.go:182
+
+function    TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor
+  internal/app/engine/a112_family_gate_test.go:342
+
+function    TestTheOrderLeaseCannotOutliveTheFamilyActivation
+  internal/app/engine/a112_family_rollback_test.go:325
+
+function    TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires
+  internal/app/engine/a112_family_rollback_test.go:492
+
+function    TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission
+  internal/app/engine/a112_family_rollback_test.go:530
+
+function    TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder
+  internal/app/engine/a112_family_rollback_test.go:695
+
+function    TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway
+  internal/app/engine/strategy_dispatch_cycle_test.go:66
+
+function    TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner
+  internal/app/engine/strategy_dispatch_cycle_test.go:97
+
+function    TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS
+  internal/app/engine/strategy_dispatch_cycle_test.go:169
+
+function    main
+  tools/a140-breakout-signal-shadow/main.go:44
+
+function    dispatchStrategyMarketHandoffs
+  internal/app/engine/strategy_market_handoff_delivery.go:32
+
+function    TestRunRefusesToStartWithoutTheAPIKey
+  tools/a128-jev-shadow-probe/judge_test.go:16
+
+function    TestReportCommandReadsARealLedger
+  tools/a128-jev-shadow-probe/report_test.go:123
+

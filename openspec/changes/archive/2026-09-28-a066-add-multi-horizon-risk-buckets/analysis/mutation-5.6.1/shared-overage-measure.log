@@ -1,0 +1,14 @@
+copy HEAD cf381447 files 1881
+=== RUN   TestA066SharedBucketOverageFromOneOwnersActualFillIsLatched
+    a066_integration_5_7_shared_test.go:55: horizon/SHORT: shared usage 128 against limit 100, reservations with RISK_OVERAGE latch: 0
+    a066_integration_5_7_shared_test.go:57: shared horizon bucket is over its limit (128 > 100) but no reservation carries RISK_OVERAGE
+    a066_integration_5_7_shared_test.go:55: market/US: shared usage 128 against limit 100, reservations with RISK_OVERAGE latch: 0
+    a066_integration_5_7_shared_test.go:57: shared market bucket is over its limit (128 > 100) but no reservation carries RISK_OVERAGE
+    a066_integration_5_7_shared_test.go:55: strategy/strategy-alpha: shared usage 128 against limit 100, reservations with RISK_OVERAGE latch: 0
+    a066_integration_5_7_shared_test.go:57: shared strategy bucket is over its limit (128 > 100) but no reservation carries RISK_OVERAGE
+    a066_integration_5_7_shared_test.go:55: sector/sector-tech: shared usage 128 against limit 100, reservations with RISK_OVERAGE latch: 0
+    a066_integration_5_7_shared_test.go:57: shared sector bucket is over its limit (128 > 100) but no reservation carries RISK_OVERAGE
+--- FAIL: TestA066SharedBucketOverageFromOneOwnersActualFillIsLatched (0.64s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.643s
+FAIL

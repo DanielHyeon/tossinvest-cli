@@ -1,0 +1,93 @@
+{
+  "file": "internal/journal/operating_mode.go",
+  "source_sha256": "ed35ea67c26b9cc687280293d6aecce41d96bc49bcca911bec52ac9330ee0ddb",
+  "package": "journal",
+  "function": "currentModeFromRow",
+  "signature": "currentModeFromRow(params=2, results=2)",
+  "start": {
+    "line": 655,
+    "column": 1
+  },
+  "end": {
+    "line": 672,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 657,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 658,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 661,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 660,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 662,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 664,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 656,
+        "column": 17
+      },
+      "text": "scanOperatingMode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 658,
+        "column": 7
+      },
+      "text": "errors.Is"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 656,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

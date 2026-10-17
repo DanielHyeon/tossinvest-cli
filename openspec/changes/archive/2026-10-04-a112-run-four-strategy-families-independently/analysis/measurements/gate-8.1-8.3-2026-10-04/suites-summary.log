@@ -1,0 +1,19 @@
+== worktree fc0911f90f90cac3935f1d09c0a5fc2b9e683bc0 2026-10-04T16:57:22+09:00
+81-untagged exit=0 (185s): go test -count=1 -timeout 30m ./internal/breakoutlane/... ./internal/strategyflow/... ./internal/strategyrouter/... ./internal/strategyproposal/... ./internal/scheduler/... ./internal/strategyworker/... ./internal/strategycoordinator/... ./internal/strategyarbiter/... ./internal/strategyhandoff/... ./internal/continuationlane/... ./internal/reversallane/... ./internal/weeklyvaluelane/... ./internal/app/engine/...
+81-tagged exit=0 (249s): go test -count=1 -timeout 30m -tags tossos_testseams ./internal/breakoutlane/... ./internal/strategyflow/... ./internal/strategyrouter/... ./internal/strategyproposal/... ./internal/scheduler/... ./internal/strategyworker/... ./internal/strategycoordinator/... ./internal/strategyarbiter/... ./internal/strategyhandoff/... ./internal/continuationlane/... ./internal/reversallane/... ./internal/weeklyvaluelane/... ./internal/app/engine/...
+81-race-pkgs exit=0 (36s): go test -race -count=1 -timeout 30m -tags tossos_testseams ./internal/breakoutlane/... ./internal/strategyflow/... ./internal/strategyrouter/... ./internal/strategyproposal/... ./internal/scheduler/... ./internal/strategyworker/... ./internal/strategycoordinator/... ./internal/strategyarbiter/... ./internal/strategyhandoff/... ./internal/continuationlane/... ./internal/reversallane/... ./internal/weeklyvaluelane/...
+83-make-test-race exit=0 (117s): make test-race
+83-make-test exit=0 (766s): make test
+83-make-test-seams exit=0 (823s): make test-seams
+83-make-vet exit=0 (1s): make vet
+83-make-lint exit=0 (3s): make lint
+83-make-validate exit=0 (1s): make validate
+83-openspec-validate exit=0 (1s): openspec validate a112-run-four-strategy-families-independently --strict --no-interactive
+83-pm-check exit=0 (0s): python3 tools/pm/generate_master_tracker.py --check
+== done 2026-10-04T17:33:44+09:00
+83-make-test ok-packages=99
+83-make-test-seams ok-packages=100
+83-make-test-race ok-packages=8
+81-untagged ok-packages=13
+81-tagged ok-packages=13
+81-race-pkgs ok-packages=12

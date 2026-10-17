@@ -1,0 +1,54 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "head_commit": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "source_sha256": "db2443db8fc2f047d3224d5b331bdafb15e17861dcfa8c5fdc8861adac62f0b2",
+  "function": "_ast_value",
+  "signature": "_ast_value(path)",
+  "start": {
+    "line": 1243,
+    "column": 1
+  },
+  "end": {
+    "line": 1248,
+    "column": 18
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 1245,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 1247,
+      "inherited_line": false,
+      "source": "except (OSError, ValueError):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1246,
+      "value": "json.loads(path.read_text(encoding='utf-8'))"
+    },
+    {
+      "line": 1248,
+      "value": "{}"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1246,
+      "callee": "json.loads"
+    },
+    {
+      "line": 1246,
+      "callee": "path.read_text"
+    }
+  ]
+}

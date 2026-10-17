@@ -1,0 +1,5 @@
+=== RUN   TestReviewB2ClosedDownstream
+    review_downstream_test.go:19: DOWNSTREAM branch=B14 reason=INTERNAL_FAILURE detail=a selection has no lane to come back to verified=true entries=0 on=4 emitted=0 dispatch_callbacks=0
+--- PASS: TestReviewB2ClosedDownstream (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.005s

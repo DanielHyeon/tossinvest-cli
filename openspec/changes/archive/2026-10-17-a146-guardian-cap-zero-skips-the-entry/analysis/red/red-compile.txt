@@ -1,0 +1,23 @@
+# RED — 편집 전 production(HEAD 7264a920) + a146 RED 시험, 2026-10-17T22:29:38+09:00
+$ rtk proxy go vet -tags tossos_testseams ./internal/app/engine/
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a146_entry_skip_test.go:33:31: undefined: strategyEntrySkip
+internal/app/engine/a146_entry_skip_test.go:34:10: undefined: strategyEntrySkip
+internal/app/engine/a146_entry_skip_test.go:42:19: undefined: strategyEntrySkip
+internal/app/engine/a112_qfinal_family_test.go:250:15: undefined: strategyEntrySkip
+internal/app/engine/a112_qfinal_family_test.go:251:9: undefined: withStrategyEntrySkipRecorder
+internal/app/engine/a112_qfinal_family_test.go:251:72: undefined: strategyEntrySkip
+internal/app/engine/a146_cap_zero_characterization_test.go:131:65: snapshot.GuardianCapZeroSkips undefined (type StrategyWorkerSnapshot has no field or method GuardianCapZeroSkips)
+internal/app/engine/a146_cap_zero_characterization_test.go:132:116: snapshot.GuardianCapZeroSkips undefined (type StrategyWorkerSnapshot has no field or method GuardianCapZeroSkips)
+internal/app/engine/a146_cap_zero_characterization_test.go:147:65: snapshot.GuardianCapZeroSkips undefined (type StrategyWorkerSnapshot has no field or method GuardianCapZeroSkips)
+internal/app/engine/a146_cap_zero_characterization_test.go:148:109: snapshot.GuardianCapZeroSkips undefined (type StrategyWorkerSnapshot has no field or method GuardianCapZeroSkips)
+internal/app/engine/a146_entry_skip_test.go:42:19: too many errors
+
+$ rtk proxy go vet ./internal/app/engine/   (무태그 — census 시험 파일)
+
+$ rtk proxy go test -count=1 -run TestTheEntrySkipTypeIsMadeOnlyWhereTheCensusSaysItIs ./internal/app/engine/
+--- FAIL: TestTheEntrySkipTypeIsMadeOnlyWhereTheCensusSaysItIs (0.20s)
+    a146_entry_skip_census_test.go:67: entry-skip type mentions moved at a146_entry_skip.go:(decl), a146_entry_skip.go:Error, a146_entry_skip.go:Unwrap, a146_entry_skip.go:recordGuardianCapZeroSkip, a146_entry_skip.go:recordStrategyEntrySkip, a146_entry_skip.go:withStrategyEntrySkipRecorder, strategy_entry_supervisor.go:runMarket, strategy_first_leg_admission.go:admit, strategy_market_handoff_delivery.go:deliverEachStrategyHandoff: found map[], census map[a146_entry_skip.go:(decl):1 a146_entry_skip.go:Error:1 a146_entry_skip.go:Unwrap:1 a146_entry_skip.go:recordGuardianCapZeroSkip:1 a146_entry_skip.go:recordStrategyEntrySkip:2 a146_entry_skip.go:withStrategyEntrySkipRecorder:1 strategy_entry_supervisor.go:runMarket:1 strategy_first_leg_admission.go:admit:1 strategy_market_handoff_delivery.go:deliverEachStrategyHandoff:1] — a new maker silences what the order path skips
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.212s
+FAIL

@@ -1,0 +1,21 @@
+CONTROL (무변이) GREEN
+M1 ≥ → >: CAUGHT — ./internal/journal/: FAIL
+M2 released rows never counted: CAUGHT — ./internal/journal/: internal/journal/daily_buy.go:175:4: declared and not used: day
+M3 Z3 ignores release reason/attempt shape: SURVIVED
+M4 Z3 drops trading-day scope: SURVIVED
+M5 Z3 ignores lineage/events: CAUGHT — ./internal/journal/: FAIL
+M6 rollover offset 0: CAUGHT — ./internal/clock/: FAIL
+M7 issue-day check removed: CAUGHT — ./internal/journal/: FAIL
+M8 missing ceiling accepted: CAUGHT — ./internal/journal/: FAIL
+M9 hook removed from reserveRows: CAUGHT — ./internal/journal/: FAIL
+M10 unreadable amount read as zero: CAUGHT — ./internal/journal/: FAIL
+M11 doors carry a huge ceiling: CAUGHT — ./internal/execgw/: FAIL
+M12 interlock daily-buy check skipped: CAUGHT — ./internal/app/engine/: FAIL
+M13 default applied to every currency: CAUGHT — ./internal/config/: internal/config/daily_buy.go:3:8: "strings" imported and not used
+M14 currency change keeps the old figure: CAUGHT — ./internal/config/: internal/config/limits_io.go:148:5: declared and not used: prev
+M15 digest ignores the ceiling: CAUGHT — ./internal/execgw/: FAIL
+M16 policy validation skips the ceiling: CAUGHT — ./internal/risk/: FAIL
+M17 Z1 accepts any release: CAUGHT — ./internal/journal/: FAIL
+M18 Z2 includes CONFIRMED: CAUGHT — ./internal/journal/: FAIL
+
+[exited with code 0]

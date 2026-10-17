@@ -1,0 +1,123 @@
+{
+  "file": "internal/risk/chain.go",
+  "source_sha256": "43b2ef76b276cc56f96071de62bea02df21bc509ea0cfc08db82a3f3729216fc",
+  "package": "risk",
+  "function": "magnitudeIn",
+  "signature": "magnitudeIn(params=3, results=2)",
+  "start": {
+    "line": 677,
+    "column": 1
+  },
+  "end": {
+    "line": 693,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 679,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 683,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 686,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 680,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 684,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 687,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 692,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 678,
+        "column": 17
+      },
+      "text": "moneyIn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 682,
+        "column": 16
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 686,
+        "column": 5
+      },
+      "text": "value.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 687,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 678,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 682,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

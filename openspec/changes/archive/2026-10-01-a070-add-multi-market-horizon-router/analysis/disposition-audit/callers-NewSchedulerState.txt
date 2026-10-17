@@ -1,0 +1,33 @@
+
+Callers of "NewSchedulerState" (10):
+
+function    TestExternalCallersCannotForgeOwnerMarketOrQuotaAttestation
+  internal/strategyrouter/external_api_test.go:35
+
+function    MigrateLegacy
+  internal/strategyrouter/migration.go:18
+
+function    FuzzLegacyMigrationRetryConverges
+  internal/strategyrouter/property_fuzz_test.go:61
+
+function    NewMarketRecordStore
+  internal/strategyrouter/scheduler.go:191
+
+function    TestDefaultRecordsAreIndependentOFFAndUnobserved
+  internal/strategyrouter/scheduler_test.go:10
+
+function    TestPerMarketCASConflictAndRollbackPreservePeerRevision
+  internal/strategyrouter/scheduler_test.go:23
+
+function    TestConcurrentKRandUSCASCommitIndependently
+  internal/strategyrouter/scheduler_test.go:45
+
+function    TestLegacyMigrationMatrixAndIdempotentRetry
+  internal/strategyrouter/scheduler_test.go:72
+
+function    TestCrashBoundaryRestoresOldOrCompleteNewRecord
+  internal/strategyrouter/scheduler_test.go:100
+
+function    TestRollbackCannotReissueONAuthority
+  internal/strategyrouter/scheduler_test.go:129
+

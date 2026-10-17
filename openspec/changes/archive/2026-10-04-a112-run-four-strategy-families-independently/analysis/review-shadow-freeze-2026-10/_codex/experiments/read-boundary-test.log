@@ -1,0 +1,5 @@
+=== RUN   TestReviewReadValidationBoundary
+    review_shadow_sketch_test.go:21: Context.Read returned nil error after dynamic overlay; explicit Validate rejected: strategy projection: lane kr_short_flow_continuation_v1: invalid desired, effective or runtime
+--- PASS: TestReviewReadValidationBoundary (0.27s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.272s

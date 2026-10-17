@@ -234,7 +234,9 @@ func TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker(t *
 			LimitsJSON: limitsJSON, Nonce: "qfinal-gateway-nonce", IssuedAt: clk.Now(), ExpiresAt: clk.Now().Add(time.Minute),
 		},
 		Reserve: journal.ReserveRequest{
-			SnapshotAsOf: clk.Now(), ObservedVersion: version,
+			DailyBuyLimit:     &journal.DailyBuyLimit{Amount: "1000000000000", Currency: "KRW", ManualBuy: a136ZeroManualBuy(clk.Now())}, // a136: 이 시험이 재는 것과 무관한 넉넉한 상한
+			OpenPositionLimit: &journal.OpenPositionLimit{Max: 1000},                                                                     // a138: 이 시험이 재는 것과 무관한 넉넉한 상한
+			SnapshotAsOf:      clk.Now(), ObservedVersion: version,
 			SnapshotUsage: []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: "0", Currency: "KRW"}},
 			Limits:        []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: "5000000", Currency: "KRW"}},
 			Reservations:  []journal.ReservationRequest{{ID: "qfinal-gateway-hold", Kind: journal.ReservationKindOpenExposure, Amount: "140000", Currency: "KRW"}},
@@ -344,6 +346,8 @@ func qFinalKRRequest(t *testing.T, rig *guardianRig, suffix string, candidate ui
 		ExpectedPolicyVersion: rig.guardian.PolicyVersion(), ExpectedLimitsDigest: rig.guardian.LimitsDigest(),
 	}
 	request.SetFXAuthorityForTest(policy.FX)
+	// a137: precheck 는 이 Guardian 이 잰 일일 손실 토큰을 요구함(없으면 daily_loss 단 거절) — 생산의 첫 다리 승인과 같은 자리.
+	request.DailyLoss = rig.guardian.MeasureDailyLoss(context.Background())
 	return request
 }
 

@@ -1,0 +1,18 @@
+
+Callers of "newOwnerSnapshot" (5):
+
+function    OwnedRouteFixture
+  internal/strategyrouter/arbitration_testseam.go:69
+
+function    TwoActiveOwnersRouteFixture
+  internal/strategyrouter/arbitration_testseam.go:101
+
+function    LoadProductionRouteAuthorityBatch
+  internal/strategyrouter/production.go:318
+
+function    mustOwnerSnapshot
+  internal/strategyrouter/router_test.go:166
+
+function    StrategyflowRouteFixture
+  internal/strategyrouter/strategyflow_testseam.go:10
+

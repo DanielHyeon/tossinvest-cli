@@ -29,6 +29,8 @@ type strategyDispatchGatewaySpy struct {
 	observed       map[string]int
 	failProtection map[string]error
 	failEntryGate  map[string]error
+	// failEntryGateSymbol 은 종목 단위 진입 관문 거절(a112 5.2.2.2 — 한 범위의 관문 거절이 다른 범위의 worker 승격을 굶기지 않음).
+	failEntryGateSymbol map[string]error
 }
 
 func (spy *strategyDispatchGatewaySpy) ObserveStrategyProtection(_ context.Context, market string, _ uint64) (execgw.StrategyProtectionAuthority, error) {
@@ -41,11 +43,14 @@ func (spy *strategyDispatchGatewaySpy) ObserveStrategyProtection(_ context.Conte
 	return execgw.StrategyProtectionAuthorityForTest(strings.ToUpper(market), 9, strings.Repeat("a", 64)), nil
 }
 
-func (spy *strategyDispatchGatewaySpy) ObserveStrategyEntryGate(_ context.Context, market, _ string) (execgw.StrategyEntryGateAuthority, error) {
+func (spy *strategyDispatchGatewaySpy) ObserveStrategyEntryGate(_ context.Context, market, symbol string) (execgw.StrategyEntryGateAuthority, error) {
 	spy.mu.Lock()
 	defer spy.mu.Unlock()
 	spy.observed["gate-"+market]++
 	if err := spy.failEntryGate[market]; err != nil {
+		return execgw.StrategyEntryGateAuthority{}, err
+	}
+	if err := spy.failEntryGateSymbol[symbol]; err != nil {
 		return execgw.StrategyEntryGateAuthority{}, err
 	}
 	return execgw.StrategyEntryGateAuthorityForTest(3, "sha256:"+strings.Repeat("b", 64)), nil
@@ -90,6 +95,14 @@ func TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway(t *testing.
 }
 
 func TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner(t *testing.T) {
+	// a066 5.6.1 개정(2026-09-28, Manager 승인 교차 change 편집 — a112 파일):
+	// 이 fixture 의 KR·US continuation 레인은 한 계좌에서 horizon SHORT bucket 을 공유함(horizon 은 lineage 의 레인
+	// horizon 에서 오고 두 레인 다 SHORT 라 fixture 로 가를 수 없음). 5.6.1 부터 같은 snapshot wave 의 공유 bucket 두 번째
+	// 진입은 원장보다 적은 사용량을 주장하므로 BUCKET_USAGE_STALE 로 거절되고 다음 wave 에 성립함. 이 fixture 의 risk
+	// snapshot 원천은 고정 파일이라 "다음 wave" 를 만들 수 없음 — 다음 wave 성립은 journal 수준 시험
+	// (TestA066KRUSConcurrentContract, TestFirstLegAtomicAdmissionSameAccountKRUSRecollectsTheSerializedLoser)이 잼.
+	// 이 시험의 주제(두 dispatch 가 동시에 출발하고, 하나의 중앙 owner 아래에서 돌며, 번갈아 기다리지 않음)는 그대로 단언함:
+	// 동시 출발 · 결과 둘 다 도착 · 성립한 쪽의 lease 와 거절된 쪽이 같은 중앙 owner(첫 epoch) · 거절된 쪽은 Gateway 에 닿지 않음.
 	cycle, proposals, j, spy := pairedStrategyDispatchCycleFixture(t)
 	type result struct {
 		market StrategyMarket
@@ -116,35 +129,40 @@ func TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner(t *testin
 	close(start)
 	runners.Wait()
 	close(results)
-	seen := map[StrategyMarket]bool{}
+	var admitted, refused []result
 	for result := range results {
-		if result.err != nil || result.out.State != journal.StateConfirmed {
+		switch {
+		case result.err == nil && result.out.State == journal.StateConfirmed:
+			admitted = append(admitted, result)
+		case result.err != nil && strings.Contains(result.err.Error(), "engine: first-leg admission ATOMIC_ADMISSION_FAILED") &&
+			strings.Contains(result.err.Error(), "BUCKET_USAGE_STALE"):
+			// first-leg 다리가 오류를 ATOMIC_ADMISSION_FAILED 문자열로 눕히므로 타입이 아니라 거절 코드 문자열로 가름.
+			// "first-leg admission" 접두는 dispatch 가 admission 에 닿았다는 뜻 — admission 바로 앞에서 dispatchOwner 를
+			// 지나므로 거절된 쪽도 중앙 owner 를 얻은 뒤임.
+			refused = append(refused, result)
+		default:
 			t.Fatalf("%s outcome=%+v err=%v", result.market, result.out, result.err)
 		}
-		seen[result.market] = true
 	}
-	if !seen[StrategyMarketKR] || !seen[StrategyMarketUS] {
-		t.Fatalf("paired concurrent results=%v", seen)
+	if len(admitted) != 1 || len(refused) != 1 || admitted[0].market == refused[0].market {
+		t.Fatalf("one wave on shared buckets must admit exactly one market and refuse the other as stale: admitted=%+v refused=%+v", admitted, refused)
 	}
 	spy.mu.Lock()
 	calls := append([]execgw.StrategyPlaceRequest(nil), spy.calls...)
 	spy.mu.Unlock()
-	if len(calls) != 2 {
-		t.Fatalf("Gateway calls=%+v", calls)
+	if len(calls) != 1 || !strings.EqualFold(calls[0].Intent.Market, string(admitted[0].market)) {
+		t.Fatalf("Gateway calls=%+v, want exactly the admitted %s market", calls, admitted[0].market)
 	}
-	var ownerEpoch uint64
-	var fencingToken string
-	for _, call := range calls {
-		lease, err := j.LookupStrategyDispatchLease(context.Background(), call.Lease.LeaseID)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if ownerEpoch == 0 {
-			ownerEpoch, fencingToken = lease.OwnerEpoch, lease.FencingToken
-		}
-		if lease.OwnerEpoch != ownerEpoch || lease.FencingToken != fencingToken {
-			t.Fatalf("paired lease owners diverged first=%d/%s lease=%+v", ownerEpoch, fencingToken, lease)
-		}
+	lease, err := j.LookupStrategyDispatchLease(context.Background(), calls[0].Lease.LeaseID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// 하나의 중앙 owner: 두 dispatch 가 모두 dispatchOwner 를 거쳤고(거절된 쪽도 admission 전에 owner 를 얻음) owner 는
+	// 한 번만 획득됨 — 첫 epoch 이고, 성립한 lease 가 그 owner 의 epoch·fencing 을 담음.
+	central := cycle.owner.owner
+	if central.Epoch != 1 || lease.OwnerEpoch != central.Epoch || lease.FencingToken != central.FencingToken {
+		t.Fatalf("central owner epoch=%d/%s, admitted lease owner=%d/%s — the two dispatches did not share one owner",
+			central.Epoch, central.FencingToken, lease.OwnerEpoch, lease.FencingToken)
 	}
 }
 
@@ -249,6 +267,7 @@ func pairedStrategyDispatchCycleFixture(t *testing.T) (*strategyDispatchCycle, s
 		account := strategyAccountMarketAuthority{market: market,
 			authority: strategyaccount.AuthorityForTest(accountMarket, quote, state, now.Add(-time.Second), now.Add(time.Minute), 1,
 				"sha256:"+strings.Repeat("c", 64)), snapshot: StrategyAccountMarketSnapshot{Market: market, Ready: true, Reason: StrategyAccountReady}}
+		account = a112ScopedAccount(account, result, account.authority)
 		if market == StrategyMarketKR {
 			proposals.kr, accounts.kr = proposal, account
 		} else {
@@ -263,7 +282,7 @@ func pairedStrategyDispatchCycleFixture(t *testing.T) (*strategyDispatchCycle, s
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = j.Close() })
-	guardian, err := execgw.NewRiskGuardian(execgw.RiskGuardianOptions{Journal: j, Clock: fakeClock, AccountRef: "acct-risk-loader",
+	guardian, err := execgw.NewRiskGuardian(execgw.RiskGuardianOptions{ManualBuys: a136ZeroManualBuyBoardInternal(fakeClock), Journal: j, Clock: fakeClock, AccountRef: "acct-risk-loader",
 		Policy: risk.DefaultPolicy(), Costs: costs.DefaultModel(), PolicyVersion: "engine.automation_gate/risk-policy-v1"})
 	if err != nil {
 		t.Fatal(err)
@@ -273,6 +292,8 @@ func pairedStrategyDispatchCycleFixture(t *testing.T) (*strategyDispatchCycle, s
 	spy := &strategyDispatchGatewaySpy{observed: map[string]int{}}
 	cycle := newStrategyDispatchCycle(j, spy, firstLeg, schedule, riskFixture.fx, riskPair, proposals, &strategyDispatchOwnerCoordinator{})
 	cycle.revalidateSchedule = func(context.Context, StrategyMarket, strategyScheduleMarketAuthority) error { return nil }
+	// 생산 조립과 같은 모양으로 실시계를 넣는다 (태스크 8.7.2).
+	cycle.now = fakeClock.Now
 	return cycle, proposals, j, spy
 }
 

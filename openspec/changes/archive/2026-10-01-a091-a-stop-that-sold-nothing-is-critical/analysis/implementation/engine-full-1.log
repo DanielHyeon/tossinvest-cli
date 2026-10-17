@@ -1,0 +1,7 @@
+--- FAIL: TestA091TheReportFitsItsShare (16.35s)
+    --- FAIL: TestA091TheReportFitsItsShare/an_operator_acknowledging_a_100-row_backlog (7.29s)
+        a091_replay_test.go:268: cell "an operator acknowledging a 100-row backlog": 20 reports, observed worst 1.277836178s (share 750ms)
+        a091_replay_test.go:270: observed worst 1.277836178s exceeds the 750ms share — STOP and report (design D5 acceptance (i))
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	511.742s
+FAIL

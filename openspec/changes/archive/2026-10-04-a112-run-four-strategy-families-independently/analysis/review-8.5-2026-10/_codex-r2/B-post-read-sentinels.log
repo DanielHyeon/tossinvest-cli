@@ -1,0 +1,25 @@
+=== RUN   TestReviewB1ReadSentinels
+=== RUN   TestReviewB1ReadSentinels/missing
+    review_b1_io_test.go:17: mode=missing unavailable=true undeclared=false verified=false
+=== RUN   TestReviewB1ReadSentinels/directory
+    review_b1_io_test.go:17: mode=directory unavailable=true undeclared=false verified=false
+=== RUN   TestReviewB1ReadSentinels/symlink
+    review_b1_io_test.go:17: mode=symlink unavailable=true undeclared=false verified=false
+=== RUN   TestReviewB1ReadSentinels/wrong-mode
+    review_b1_io_test.go:17: mode=wrong-mode unavailable=true undeclared=false verified=false
+=== RUN   TestReviewB1ReadSentinels/empty
+    review_b1_io_test.go:17: mode=empty unavailable=true undeclared=false verified=false
+=== RUN   TestReviewB1ReadSentinels/unknown-json-field
+    review_b1_io_test.go:17: mode=unknown-json-field unavailable=true undeclared=false verified=false
+=== RUN   TestReviewB1ReadSentinels/bad-json
+    review_b1_io_test.go:17: mode=bad-json unavailable=true undeclared=false verified=false
+--- PASS: TestReviewB1ReadSentinels (0.00s)
+    --- PASS: TestReviewB1ReadSentinels/missing (0.00s)
+    --- PASS: TestReviewB1ReadSentinels/directory (0.00s)
+    --- PASS: TestReviewB1ReadSentinels/symlink (0.00s)
+    --- PASS: TestReviewB1ReadSentinels/wrong-mode (0.00s)
+    --- PASS: TestReviewB1ReadSentinels/empty (0.00s)
+    --- PASS: TestReviewB1ReadSentinels/unknown-json-field (0.00s)
+    --- PASS: TestReviewB1ReadSentinels/bad-json (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	0.006s

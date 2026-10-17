@@ -147,6 +147,13 @@ type Options struct {
 	AccountRef string
 	Comparer   Comparer
 	Stabilise  Stabilisation
+
+	// Alerts 는 기동이 확정하지 못한 ACKED attempt 의 명명 critical 을 창 0 으로 기록하는 알림기의 단일 입구임
+	// (a094 D−4.2 · D−6.1). 조립부가 *obs.Notifier 를 넣음.
+	Alerts CriticalRecorder
+	// CatchUp 은 Run 이 끝난 뒤 · 준비 신호 앞에 도는 exit 발의 따라잡기임(a094 D−2.5). 조립부가 넣음 — reconcile 은
+	// exit 상태를 모르므로 함수로 받는다. Run 본문은 부르지 않음(CatchUpExitProposals 가 부름).
+	CatchUp func(ctx context.Context)
 }
 
 // Recovery is the restart sequence.
@@ -197,6 +204,8 @@ type Report struct {
 	// Unresolved are attempts that could not be settled by observation. Their
 	// symbols stay blocked by the resolver's own latch until an operator acts.
 	Unresolved []string
+	// ConfirmedAcked 는 기동이 기록 번호의 바이트 일치로 CONFIRMED 로 종결한 ACKED 발주들임(a094 D−4.2).
+	ConfirmedAcked []string
 	// StillPending are attempts left in a state recovery does not settle —
 	// an ACK the previous process never confirmed. They block their symbol
 	// through the journal, not through this sequence.
@@ -264,6 +273,13 @@ func (r *Recovery) Run(ctx context.Context) (Report, error) {
 			// an order and the previous process died before confirming it. It is
 			// not ambiguous, it is unfinished, and the journal's own per-symbol
 			// check keeps it blocked.
+			//
+			// a094 D−4.2: 발주면 기록 번호로 한 번 읽어 바이트 일치일 때만 확정함. 그 밖은 상태를 바꾸지 않고 알림만 —
+			// 실패는 복구를 실패시키지 않음.
+			if rec.State == journal.StateAcked && r.confirmAcked(ctx, rec) {
+				report.ConfirmedAcked = append(report.ConfirmedAcked, rec.ID)
+				continue
+			}
 			blocked, berr := r.blockedSymbol(ctx, rec)
 			if berr != nil {
 				return report, fmt.Errorf("%w: %v", ErrRecoveryIncomplete, berr)

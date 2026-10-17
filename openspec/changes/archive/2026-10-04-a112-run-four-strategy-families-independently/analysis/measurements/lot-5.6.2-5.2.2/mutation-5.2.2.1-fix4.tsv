@@ -1,0 +1,7 @@
+TREE	HEAD 618b100273c65d8b543386425df1a9785fc05fd0 (git archive) + own: internal/strategyhandoff/source_freeze_test.go,internal/strategyhandoff/mint_census_test.go,internal/strategyhandoff/escape_test.go
+CONTROL	GREEN	
+H09 codex round-3 generic minter + any-returning method + pointer reassignment (digest not re-pinned)	CAUGHT	1 failing: TestTheSeamSourceIsFrozen
+H10 twin-struct conversion minter (digest not re-pinned)	CAUGHT	1 failing: TestTheSeamSourceIsFrozen
+H11 comment-only edit to the seam (digest not re-pinned — every edit is a re-pin)	CAUGHT	1 failing: TestTheSeamSourceIsFrozen
+H12 a new production file in the seam package (digest not re-pinned)	CAUGHT	1 failing: TestTheSeamSourceIsFrozen
+N03 gofmt-normalised whitespace only (digest must not move)	GREEN-AS-EXPECTED	

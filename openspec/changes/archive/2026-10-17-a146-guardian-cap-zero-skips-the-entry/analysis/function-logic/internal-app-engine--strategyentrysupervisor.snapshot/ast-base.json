@@ -1,0 +1,119 @@
+{
+  "file": "internal/app/engine/strategy_entry_supervisor.go",
+  "source_sha256": "6f7c999a13c4abdc6f575a76076c527b869611b9921004645dd45cb3b19a3a8e",
+  "package": "engine",
+  "function": "Snapshot",
+  "receiver": "StrategyEntrySupervisor",
+  "signature": "StrategyEntrySupervisor.Snapshot(params=1, results=2)",
+  "start": {
+    "line": 782,
+    "column": 1
+  },
+  "end": {
+    "line": 804,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 783,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 789,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 784,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 790,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 792,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 783,
+        "column": 18
+      },
+      "text": "validStrategyMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 786,
+        "column": 2
+      },
+      "text": "s.mu.RLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 787,
+        "column": 8
+      },
+      "text": "s.mu.RUnlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 800,
+        "column": 15
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 800,
+        "column": 49
+      },
+      "text": "cap"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 788,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 787,
+        "column": 2
+      },
+      "text": "s.mu.RUnlock"
+    }
+  ]
+}

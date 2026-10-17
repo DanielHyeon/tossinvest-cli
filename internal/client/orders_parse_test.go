@@ -64,3 +64,63 @@ func TestListPendingOrdersParsesStructuredFields(t *testing.T) {
 		t.Fatalf("expected parsed status, got %q", orders[0].Status)
 	}
 }
+
+func TestListPendingOrdersRejectsAbsentOrNullResult(t *testing.T) {
+	t.Parallel()
+	for name, body := range map[string]string{
+		"absent": `{}`,
+		"null":   `{"result":null}`,
+		"object": `{"result":{}}`,
+		"scalar": `{"result":1}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte(body)) }))
+			defer srv.Close()
+			c := New(Config{HTTPClient: srv.Client(), CertBaseURL: srv.URL, Session: &session.Session{Cookies: map[string]string{"SESSION": "x"}}})
+			if orders, err := c.ListPendingOrders(context.Background()); err == nil || orders != nil {
+				t.Fatalf("orders=%v err=%v, want schema error and nil orders", orders, err)
+			}
+		})
+	}
+}
+
+func TestListPendingOrdersAcceptsExplicitEmptyResult(t *testing.T) {
+	t.Parallel()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte(`{"result":[]}`)) }))
+	defer srv.Close()
+	c := New(Config{HTTPClient: srv.Client(), CertBaseURL: srv.URL, Session: &session.Session{Cookies: map[string]string{"SESSION": "x"}}})
+	orders, err := c.ListPendingOrders(context.Background())
+	if err != nil || orders == nil || len(orders) != 0 {
+		t.Fatalf("orders=%v err=%v, want non-nil empty", orders, err)
+	}
+}
+
+func TestHasPendingOrderRejectsUnknownPendingCollection(t *testing.T) {
+	t.Parallel()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte(`{}`)) }))
+	defer srv.Close()
+	c := New(Config{HTTPClient: srv.Client(), CertBaseURL: srv.URL, Session: &session.Session{Cookies: map[string]string{"SESSION": "x"}}})
+	found, err := c.HasPendingOrder(context.Background(), "1")
+	if err == nil || found {
+		t.Fatalf("found=%v err=%v, want error and no authoritative false", found, err)
+	}
+}
+
+func TestFindOrderRejectsUnknownPendingCollectionWithoutCompletedFallback(t *testing.T) {
+	t.Parallel()
+	var completedCalls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/trading/orders/histories/all/pending" {
+			completedCalls++
+		}
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	defer srv.Close()
+	c := New(Config{HTTPClient: srv.Client(), CertBaseURL: srv.URL, Session: &session.Session{Cookies: map[string]string{"SESSION": "x"}}})
+	if _, err := c.FindOrder(context.Background(), "1", "us"); err == nil {
+		t.Fatal("want pending collection error")
+	}
+	if completedCalls != 0 {
+		t.Fatalf("completed history calls=%d, want 0", completedCalls)
+	}
+}

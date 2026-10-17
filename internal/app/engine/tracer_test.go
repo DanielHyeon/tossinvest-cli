@@ -46,6 +46,7 @@ func newTracer(t *testing.T, s *e2eStack, params engine.TracerParams) *engine.Tr
 		Journal: s.engine.Journal, Clock: s.clk, AccountRef: s.engine.AccountRef,
 		Policy: risk.DefaultPolicy(), Costs: costs.DefaultModel(),
 		PolicyVersion: "add-core-domain/8.2",
+		ManualBuys:    a136ZeroManualBuyBoard(s.clk), // a136: 「수동 매수 0」 — 이 시험이 재는 것과 무관
 	})
 	if err != nil {
 		t.Fatalf("NewRiskGuardian: %v", err)

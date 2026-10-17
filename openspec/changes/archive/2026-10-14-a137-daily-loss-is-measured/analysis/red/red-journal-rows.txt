@@ -1,0 +1,9 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/journal [github.com/JungHoonGhae/tossinvest-cli/internal/journal.test]
+internal/journal/a137_daily_loss_rows_test.go:43:68: undefined: DailyLossRow
+internal/journal/a137_daily_loss_rows_test.go:46:17: j.DailyLossRows undefined (type *Journal has no field or method DailyLossRows)
+internal/journal/a137_daily_loss_rows_test.go:50:20: undefined: DailyLossRow
+internal/journal/a137_daily_loss_rows_test.go:175:19: j.DailyLossRows undefined (type *Journal has no field or method DailyLossRows)
+internal/journal/a137_daily_loss_rows_test.go:175:92: undefined: ErrDailyLossLedgerMalformed
+internal/journal/a137_daily_loss_rows_test.go:188:17: j.DailyLossRows undefined (type *Journal has no field or method DailyLossRows)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal [build failed]
+FAIL

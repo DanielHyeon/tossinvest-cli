@@ -1,0 +1,112 @@
+{
+  "file": "internal/obs/notifier.go",
+  "source_sha256": "0bc75668ff17c3d6dec1c8191e24f00b80a700c091ed33fe80c1acbd4b9a5bd8",
+  "package": "obs",
+  "function": "escalate",
+  "receiver": "Notifier",
+  "signature": "Notifier.escalate(params=2, results=0)",
+  "start": {
+    "line": 378,
+    "column": 1
+  },
+  "end": {
+    "line": 399,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 379,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 384,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 385,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 391,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 380,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 379,
+        "column": 25
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 382,
+        "column": 21
+      },
+      "text": "n.Journal.EscalateOperatingMode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 3
+      },
+      "text": "n.Log.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 388,
+        "column": 16
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 393,
+        "column": 3
+      },
+      "text": "n.Log.Warn"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 382,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

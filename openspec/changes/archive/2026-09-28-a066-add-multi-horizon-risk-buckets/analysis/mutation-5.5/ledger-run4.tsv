@@ -1,0 +1,6 @@
+CONTROL	GREEN	
+M37 scope accepts padded account	CAUGHT	1 failing: TestEntryLossLockActivationKeepsTheFirstCauseAndIsImmutable
+M38 gateway last-moment check removed	CAUGHT	1 failing: TestA066LockActivatedAfterInitialCheckIsRefusedAtTheLastMoment
+M39 returned ActivatedAt not truncated	CAUGHT	1 failing: TestEntryLossLockActivationKeepsTheFirstCauseAndIsImmutable
+M40 production method value of IssueEntry	CAUGHT	1 failing: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_IssueEntry
+M41 production new(GuardianAdapter)	CAUGHT	1 failing: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_GuardianAdapter

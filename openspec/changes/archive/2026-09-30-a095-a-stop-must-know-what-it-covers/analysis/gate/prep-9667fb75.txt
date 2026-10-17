@@ -1,0 +1,6 @@
+# 격리 워크트리 /tmp/claude-1000/a095-gate @ 9667fb75 — 게이트 전 준비
+make sdd-infra rc 0
+sdd_sync.py --no-gbrain rc 0 ([sdd-sync] all indexes current)
+✓ Index is up to date
+make sdd-check rc 0
+Totals: 48 passed, 0 failed (48 items)

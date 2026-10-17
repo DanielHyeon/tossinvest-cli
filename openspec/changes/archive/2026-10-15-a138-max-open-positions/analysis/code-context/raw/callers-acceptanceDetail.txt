@@ -1,0 +1,6 @@
+
+Callers of "acceptanceDetail" (1):
+
+function    runInterlock
+  internal/app/engine/interlock.go:381
+

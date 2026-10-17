@@ -1,0 +1,53 @@
+{
+  "file": "internal/execgw/failclosed.go",
+  "source_sha256": "fbe97b79db74c5e7801fd3e1c6301d13f261d0d6c5e880308b36323ca328ebd4",
+  "package": "execgw",
+  "function": "AllReasonCodes",
+  "signature": "AllReasonCodes(params=0, results=1)",
+  "start": {
+    "line": 254,
+    "column": 1
+  },
+  "end": {
+    "line": 311,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 309,
+        "column": 42
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 310,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 2
+      },
+      "text": "sort.Slice"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 255,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

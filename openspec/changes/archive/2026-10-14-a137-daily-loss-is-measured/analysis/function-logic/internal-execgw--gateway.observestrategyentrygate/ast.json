@@ -1,0 +1,172 @@
+{
+  "file": "internal/execgw/strategy_entry_gate_authority.go",
+  "source_sha256": "0d91fbdd3bcf5df543e802a8e970ccab1250cecdbe751a653ad2a442754d83bd",
+  "package": "execgw",
+  "function": "ObserveStrategyEntryGate",
+  "receiver": "Gateway",
+  "signature": "Gateway.ObserveStrategyEntryGate(params=3, results=2)",
+  "start": {
+    "line": 22,
+    "column": 1
+  },
+  "end": {
+    "line": 35,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 24,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 27,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 25,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 29,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 19
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 35
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 63
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 79
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 24,
+        "column": 49
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 40
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 16
+      },
+      "text": "g.entry.CheckEntryFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 40
+      },
+      "text": "g.entry.markStrategyRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 2
+      },
+      "text": "g.entry.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 2
+      },
+      "text": "g.entry.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 9
+      },
+      "text": "sealStrategyEntryGateAuthority"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 23,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 27,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 32,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

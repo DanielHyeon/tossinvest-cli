@@ -1,0 +1,45 @@
+.FF....F.F.F.
+======================================================================
+FAIL: test_a063_with_a_leftover_record_is_judged_from_its_base_commit (test_check_analysis.TheA063ExceptionIsRetired.test_a063_with_a_leftover_record_is_judged_from_its_base_commit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 256, in test_a063_with_a_leftover_record_is_judged_from_its_base_commit
+    self.assertNotIn(key, context)
+AssertionError: 'execution_baseline_adoption' unexpectedly found in {'execution_baseline_adoption': False, 'effective_base': 'b0389a2b75c260cb8ba6975da4268e81bf99e4cc', 'head': 'ed05c34f62efbf1f4e2588e6efa16cfd32f8e316', 'landing': '', 'required_count': 1, 'base_shaped_bundles': []}
+
+======================================================================
+FAIL: test_a063s_modified_function_is_still_required (test_check_analysis.TheA063ExceptionIsRetired.test_a063s_modified_function_is_still_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 268, in test_a063s_modified_function_is_still_required
+    self.assertTrue(any("Attest" in error and "missing" in error for error in errors), errors)
+AssertionError: False is not true : ['function-logic analysis directory has no targets']
+
+======================================================================
+FAIL: test_an_archived_a063_is_rechecked_by_its_id_on_the_general_path (test_check_analysis.TheA063ExceptionIsRetired.test_an_archived_a063_is_rechecked_by_its_id_on_the_general_path)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 349, in test_an_archived_a063_is_rechecked_by_its_id_on_the_general_path
+    self.assertNotIn("execution_baseline_adoption", context)
+AssertionError: 'execution_baseline_adoption' unexpectedly found in {'execution_baseline_adoption': False, 'effective_base': 'f45c6437f349bedc2bdfb9db9c2deb53126258f2', 'head': '9b63ea6289e8403d497abee0438b27944278c35d', 'landing': '', 'required_count': 1, 'base_shaped_bundles': []}
+
+======================================================================
+FAIL: test_main_prints_only_the_ordinary_success_line (test_check_analysis.TheA063ExceptionIsRetired.test_main_prints_only_the_ordinary_success_line)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 242, in test_main_prints_only_the_ordinary_success_line
+    self.assertIn("evidence complete or diff-proven exempt", output.getvalue())
+AssertionError: 'evidence complete or diff-proven exempt' not found in '[logic-map] fixture: execution-baseline adoption exception evidence complete\n'
+
+======================================================================
+FAIL: test_the_exception_module_and_its_suite_are_gone (test_check_analysis.TheA063ExceptionIsRetired.test_the_exception_module_and_its_suite_are_gone)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 365, in test_the_exception_module_and_its_suite_are_gone
+    self.assertFalse((here / "execution_baseline.py").exists())
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 13 tests in 79.113s
+
+FAILED (failures=5)

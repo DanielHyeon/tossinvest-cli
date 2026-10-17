@@ -1,0 +1,6 @@
+
+Callers of "checkDailyBuyNotional" (1):
+
+function    reserveRows
+  internal/journal/reservations.go:323
+

@@ -39,7 +39,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -84,43 +83,12 @@ func (g *Gateway) roundTripFor(plan mutationPlan) journal.ExistenceCheck {
 // journal turns into IN_DOUBT rather than CONFIRMED — including the case where
 // the record exists but belongs somewhere else.
 func (g *Gateway) confirmCreatedOrder(ctx context.Context, plan mutationPlan, brokerOrderID string) error {
-	if g.orders == nil {
-		return errNoOrderReader
-	}
-	rctx, cancel := context.WithTimeout(ctx, roundTripTimeout)
-	defer cancel()
-
-	raw, err := g.orders.OrderRaw(rctx, brokerOrderID)
-	if err != nil {
-		return fmt.Errorf("reading order %q back: %w", brokerOrderID, err)
-	}
-	facts, err := parseOrderFacts(unwrapOrderEnvelope(raw))
-	if err != nil {
-		return fmt.Errorf("the read-back of order %q could not be read: %w", brokerOrderID, err)
-	}
-
-	// Byte-exact. An id that differs only in whitespace or case is a different
-	// id: we have no rule from the broker that says otherwise, and the safe
-	// reading of "the record I got back is not the one I asked for" is doubt.
-	if facts.OrderID != brokerOrderID {
-		return fmt.Errorf("the broker acked order %q but the read-back names %q",
-			brokerOrderID, facts.OrderID)
-	}
-
-	// TODO(2a-4.1): RECONCILE 상태로 전이 — "같은 브로커 식별자가 상충하는
-	// 계좌·심볼 컨텍스트에 출현"은 RECONCILE 진입 조건이다. 상태 저장소가 생기기
-	// 전까지는 fail-closed 경로(IN_DOUBT + 심볼 차단)로 기록한다.
+	// 판정은 기동의 ACKED 확정과 같은 함수(ConfirmPlacedOrder)임(a094 D−4.2 · D−5.1). 응답 종목이 비면 이제 확인 실패다.
 	//
-	// Account scope is not compared here because the read is already
-	// account-scoped: OrderRawByID sends the X-Tossinvest-Account header, so a
-	// record belonging to another account cannot come back through it. The symbol
-	// is the conflicting-context dimension this read can actually see.
-	if facts.Symbol != "" && plan.symbol != "" && facts.Symbol != plan.symbol {
-		return fmt.Errorf(
-			"order %q was acked for %s but the broker reports it on %s — the same identifier appears in a conflicting context",
-			brokerOrderID, plan.symbol, facts.Symbol)
-	}
-	return nil
+	// TODO(2a-4.1): RECONCILE 상태로 전이 — "같은 브로커 식별자가 상충하는 계좌·심볼 컨텍스트에 출현"은 RECONCILE 진입
+	// 조건이다. 상태 저장소가 생기기 전까지는 fail-closed 경로(IN_DOUBT + 심볼 차단)로 기록한다. Account scope is not
+	// compared because the read is already account-scoped (OrderRawByID sends the account header).
+	return ConfirmPlacedOrder(ctx, g.orders, brokerOrderID, plan.symbol)
 }
 
 // unwrapOrderEnvelope returns the inner object of an official `{"result": …}`

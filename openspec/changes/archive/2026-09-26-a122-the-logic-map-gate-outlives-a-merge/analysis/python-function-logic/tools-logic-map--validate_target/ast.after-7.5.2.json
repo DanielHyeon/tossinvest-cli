@@ -1,0 +1,630 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "source_sha256": "98845ce2dea180b8ab813180a51e9076ae1f787dea664362a61e8312675b135b",
+  "function": "validate_target",
+  "signature": "validate_target(target, root, index, require_calls, revision_ref, prefetched, evidence)",
+  "start": {
+    "line": 1370,
+    "column": 1
+  },
+  "end": {
+    "line": 1496,
+    "column": 40
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 1385,
+      "inherited_line": false,
+      "source": "for name in REQUIRED:"
+    },
+    {
+      "id": "B2",
+      "kind": "BoolOp",
+      "line": 1387,
+      "inherited_line": false,
+      "source": "name == 'ast.json' and evidence is not None"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 1387,
+      "inherited_line": false,
+      "source": "if name == 'ast.json' and evidence is not None:"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 1388,
+      "inherited_line": false,
+      "source": "if path not in evidence:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 1392,
+      "inherited_line": false,
+      "source": "if raw is None:"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 1396,
+      "inherited_line": false,
+      "source": "if path.exists():"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 1401,
+      "inherited_line": false,
+      "source": "if 'TODO' in texts[name]:"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 1403,
+      "inherited_line": false,
+      "source": "if 'ast.json' not in texts:"
+    },
+    {
+      "id": "B9",
+      "kind": "Try",
+      "line": 1405,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B10",
+      "kind": "ExceptHandler",
+      "line": 1407,
+      "inherited_line": false,
+      "source": "except ValueError:"
+    },
+    {
+      "id": "B11",
+      "kind": "BoolOp",
+      "line": 1410,
+      "inherited_line": false,
+      "source": "not isinstance(value, dict) or any((not value.get(key) for key in keys))"
+    },
+    {
+      "id": "B12",
+      "kind": "If",
+      "line": 1410,
+      "inherited_line": false,
+      "source": "if not isinstance(value, dict) or any((not value.get(key) for key in keys)):"
+    },
+    {
+      "id": "B13",
+      "kind": "comprehension",
+      "line": 1410,
+      "inherited_line": true,
+      "source": " for key in keys"
+    },
+    {
+      "id": "B14",
+      "kind": "BoolOp",
+      "line": 1415,
+      "inherited_line": false,
+      "source": "not isinstance(value['start'], dict) or not isinstance(value['end'], dict) or (not isinstance(value.get('branches') or ["
+    },
+    {
+      "id": "B15",
+      "kind": "If",
+      "line": 1415,
+      "inherited_line": false,
+      "source": "if not isinstance(value['start'], dict) or not isinstance(value['end'], dict) or (not isinstance(value.get('branches') o"
+    },
+    {
+      "id": "B16",
+      "kind": "BoolOp",
+      "line": 1416,
+      "inherited_line": false,
+      "source": "value.get('branches') or []"
+    },
+    {
+      "id": "B17",
+      "kind": "Try",
+      "line": 1418,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B18",
+      "kind": "ExceptHandler",
+      "line": 1420,
+      "inherited_line": false,
+      "source": "except ValueError as exc:"
+    },
+    {
+      "id": "B19",
+      "kind": "If",
+      "line": 1423,
+      "inherited_line": false,
+      "source": "if revision == 'current':"
+    },
+    {
+      "id": "B20",
+      "kind": "If",
+      "line": 1424,
+      "inherited_line": false,
+      "source": "if revision_ref:"
+    },
+    {
+      "id": "B21",
+      "kind": "BoolOp",
+      "line": 1427,
+      "inherited_line": false,
+      "source": "prefetched is not None and relative in prefetched"
+    },
+    {
+      "id": "B22",
+      "kind": "IfExp",
+      "line": 1427,
+      "inherited_line": false,
+      "source": "prefetched[relative] if prefetched is not None and relative in prefetched else _committed_bytes(root, revision_ref, rela"
+    },
+    {
+      "id": "B23",
+      "kind": "If",
+      "line": 1429,
+      "inherited_line": false,
+      "source": "if blob is None:"
+    },
+    {
+      "id": "B24",
+      "kind": "If",
+      "line": 1431,
+      "inherited_line": false,
+      "source": "if hashlib.sha256(blob).hexdigest() != value['source_sha256']:"
+    },
+    {
+      "id": "B25",
+      "kind": "If",
+      "line": 1433,
+      "inherited_line": false,
+      "source": "if not source.is_file():"
+    },
+    {
+      "id": "B26",
+      "kind": "If",
+      "line": 1435,
+      "inherited_line": false,
+      "source": "if hashlib.sha256(source.read_bytes()).hexdigest() != value['source_sha256']:"
+    },
+    {
+      "id": "B27",
+      "kind": "If",
+      "line": 1437,
+      "inherited_line": false,
+      "source": "if revision != 'base':"
+    },
+    {
+      "id": "B28",
+      "kind": "For",
+      "line": 1441,
+      "inherited_line": false,
+      "source": "for section in MAP_SECTIONS:"
+    },
+    {
+      "id": "B29",
+      "kind": "If",
+      "line": 1442,
+      "inherited_line": false,
+      "source": "if section not in logic:"
+    },
+    {
+      "id": "B30",
+      "kind": "BoolOp",
+      "line": 1444,
+      "inherited_line": false,
+      "source": "relative not in logic or function not in logic"
+    },
+    {
+      "id": "B31",
+      "kind": "If",
+      "line": 1444,
+      "inherited_line": false,
+      "source": "if relative not in logic or function not in logic:"
+    },
+    {
+      "id": "B32",
+      "kind": "BoolOp",
+      "line": 1448,
+      "inherited_line": false,
+      "source": "value.get('branches') or []"
+    },
+    {
+      "id": "B33",
+      "kind": "If",
+      "line": 1450,
+      "inherited_line": false,
+      "source": "if '# Branch Test Map' not in branch_map:"
+    },
+    {
+      "id": "B34",
+      "kind": "If",
+      "line": 1453,
+      "inherited_line": false,
+      "source": "if len(mapped) != len(set(mapped)):"
+    },
+    {
+      "id": "B35",
+      "kind": "comprehension",
+      "line": 1455,
+      "inherited_line": true,
+      "source": " for branch in branches if isinstance(branch, dict) and branch.get('id')"
+    },
+    {
+      "id": "B36",
+      "kind": "BoolOp",
+      "line": 1458,
+      "inherited_line": false,
+      "source": "isinstance(branch, dict) and branch.get('id')"
+    },
+    {
+      "id": "B37",
+      "kind": "BoolOp",
+      "line": 1460,
+      "inherited_line": false,
+      "source": "branches and len(expected) != len(branches)"
+    },
+    {
+      "id": "B38",
+      "kind": "If",
+      "line": 1460,
+      "inherited_line": false,
+      "source": "if branches and len(expected) != len(branches):"
+    },
+    {
+      "id": "B39",
+      "kind": "If",
+      "line": 1463,
+      "inherited_line": false,
+      "source": "if missing:"
+    },
+    {
+      "id": "B40",
+      "kind": "IfExp",
+      "line": 1470,
+      "inherited_line": false,
+      "source": "expected if branches else {'B1'}"
+    },
+    {
+      "id": "B41",
+      "kind": "If",
+      "line": 1471,
+      "inherited_line": false,
+      "source": "if unexpected:"
+    },
+    {
+      "id": "B42",
+      "kind": "IfExp",
+      "line": 1488,
+      "inherited_line": false,
+      "source": "test_index(root) if index is None else index"
+    },
+    {
+      "id": "B43",
+      "kind": "BoolOp",
+      "line": 1491,
+      "inherited_line": false,
+      "source": "not branches and 'B1' not in mapped"
+    },
+    {
+      "id": "B44",
+      "kind": "If",
+      "line": 1491,
+      "inherited_line": false,
+      "source": "if not branches and 'B1' not in mapped:"
+    },
+    {
+      "id": "B45",
+      "kind": "BoolOp",
+      "line": 1494,
+      "inherited_line": false,
+      "source": "'# Risk Pattern Report' not in risk or relative not in risk"
+    },
+    {
+      "id": "B46",
+      "kind": "If",
+      "line": 1494,
+      "inherited_line": false,
+      "source": "if '# Risk Pattern Report' not in risk or relative not in risk:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1404,
+      "value": "(errors, None)"
+    },
+    {
+      "line": 1408,
+      "value": "(errors + [f'{target.name}: ast.json is invalid'], None)"
+    },
+    {
+      "line": 1411,
+      "value": "(errors + [f'{target.name}: ast.json is placeholder evidence'], None)"
+    },
+    {
+      "line": 1417,
+      "value": "(errors + [f'{target.name}: ast.json is invalid'], None)"
+    },
+    {
+      "line": 1421,
+      "value": "(errors + [f'{target.name}: {exc}'], None)"
+    },
+    {
+      "line": 1496,
+      "value": "(errors, (relative, function))"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1389,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1393,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1395,
+      "callee": "_decoded"
+    },
+    {
+      "line": 1396,
+      "callee": "path.exists"
+    },
+    {
+      "line": 1397,
+      "callee": "path.read_text"
+    },
+    {
+      "line": 1399,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1402,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1406,
+      "callee": "json.loads"
+    },
+    {
+      "line": 1410,
+      "callee": "any"
+    },
+    {
+      "line": 1410,
+      "callee": "isinstance"
+    },
+    {
+      "line": 1410,
+      "callee": "value.get"
+    },
+    {
+      "line": 1415,
+      "callee": "isinstance"
+    },
+    {
+      "line": 1415,
+      "callee": "isinstance"
+    },
+    {
+      "line": 1416,
+      "callee": "isinstance"
+    },
+    {
+      "line": 1416,
+      "callee": "value.get"
+    },
+    {
+      "line": 1419,
+      "callee": "normalized_source"
+    },
+    {
+      "line": 1419,
+      "callee": "str"
+    },
+    {
+      "line": 1422,
+      "callee": "value.get"
+    },
+    {
+      "line": 1428,
+      "callee": "_committed_bytes"
+    },
+    {
+      "line": 1430,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1431,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 1431,
+      "callee": "hashlib.sha256(blob).hexdigest"
+    },
+    {
+      "line": 1432,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1433,
+      "callee": "source.is_file"
+    },
+    {
+      "line": 1434,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1435,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 1435,
+      "callee": "hashlib.sha256(source.read_bytes()).hexdigest"
+    },
+    {
+      "line": 1435,
+      "callee": "source.read_bytes"
+    },
+    {
+      "line": 1436,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1438,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1439,
+      "callee": "qualified"
+    },
+    {
+      "line": 1440,
+      "callee": "texts.get"
+    },
+    {
+      "line": 1443,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1445,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1448,
+      "callee": "value.get"
+    },
+    {
+      "line": 1449,
+      "callee": "texts.get"
+    },
+    {
+      "line": 1451,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1452,
+      "callee": "branch_ids"
+    },
+    {
+      "line": 1453,
+      "callee": "len"
+    },
+    {
+      "line": 1453,
+      "callee": "len"
+    },
+    {
+      "line": 1453,
+      "callee": "set"
+    },
+    {
+      "line": 1454,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1456,
+      "callee": "branch.get"
+    },
+    {
+      "line": 1456,
+      "callee": "str"
+    },
+    {
+      "line": 1458,
+      "callee": "branch.get"
+    },
+    {
+      "line": 1458,
+      "callee": "isinstance"
+    },
+    {
+      "line": 1460,
+      "callee": "len"
+    },
+    {
+      "line": 1460,
+      "callee": "len"
+    },
+    {
+      "line": 1461,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1462,
+      "callee": "set"
+    },
+    {
+      "line": 1464,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1465,
+      "callee": "sorted"
+    },
+    {
+      "line": 1470,
+      "callee": "set"
+    },
+    {
+      "line": 1472,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1474,
+      "callee": "sorted"
+    },
+    {
+      "line": 1476,
+      "callee": "coordinate_errors"
+    },
+    {
+      "line": 1476,
+      "callee": "errors.extend"
+    },
+    {
+      "line": 1481,
+      "callee": "errors.extend"
+    },
+    {
+      "line": 1481,
+      "callee": "role_errors"
+    },
+    {
+      "line": 1482,
+      "callee": "errors.extend"
+    },
+    {
+      "line": 1483,
+      "callee": "test_citation_errors"
+    },
+    {
+      "line": 1488,
+      "callee": "test_index"
+    },
+    {
+      "line": 1492,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1493,
+      "callee": "texts.get"
+    },
+    {
+      "line": 1495,
+      "callee": "errors.append"
+    }
+  ]
+}

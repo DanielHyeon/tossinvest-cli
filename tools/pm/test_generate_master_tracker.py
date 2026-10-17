@@ -225,6 +225,46 @@ class TrackerTests(unittest.TestCase):
             errors = tracker.validate(root)
             self.assertTrue(any("expected one story" in error for error in errors))
 
+    def test_one_feature_carries_several_stories_and_changes(self):
+        """Feature 는 Story 여러 개를, 같은 기능은 change 여러 개를 가질 수 있다.
+
+        1:1 은 Story↔change **한 쌍에만** 있고 계층 위로 전파되지 않는다. 바로 위의
+        시험은 두 Story 가 **같은** change 를 가리키는 것을 거절한다. 이 시험은 그
+        거절이 Feature 까지 번지지 않는다는 것을 못 박는다 — 한 Feature 아래 두
+        Story 가 **각자의** change 를 가리키면 검증은 오류를 하나도 내지 않아야 한다.
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fixture(root)
+            self.replace_with_numbered_story(root)
+            portfolio = root / "docs" / "pm" / "portfolio"
+            second = root / "openspec" / "changes" / "a041-second-stage"
+            second.mkdir(parents=True)
+            (second / "proposal.md").write_text("# proposal\n", encoding="utf-8")
+            self.write_json(
+                portfolio / "stories" / "STORY-TOS-a041.yaml",
+                {
+                    "id": "STORY-TOS-a041",
+                    "feature": "FEAT-TOS-001",
+                    "title": "Second stage of the same capability",
+                    "intent": "active",
+                    "openspec": {
+                        "change_id": "a041-second-stage",
+                        "path": "openspec/changes/a041-second-stage",
+                    },
+                    "acceptance": ["Example acceptance"],
+                },
+            )
+            registry_path = portfolio / "_registry.yaml"
+            registry = json.loads(registry_path.read_text(encoding="utf-8"))
+            registry["stories"].append("STORY-TOS-a041")
+            self.write_json(registry_path, registry)
+            feature_path = portfolio / "features" / "FEAT-TOS-001.yaml"
+            feature = json.loads(feature_path.read_text(encoding="utf-8"))
+            feature["stories"].append("STORY-TOS-a041")
+            self.write_json(feature_path, feature)
+            self.assertEqual(tracker.validate(root), [])
+
     def test_invalid_openspec_path_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

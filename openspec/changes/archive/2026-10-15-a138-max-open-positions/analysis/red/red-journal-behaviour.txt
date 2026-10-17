@@ -1,0 +1,22 @@
+# a138 행동 RED — 요청 칸 · 훅 자리만 두고 판정 함수는 빈 몸(return nil), 2026-10-14T22:03:23Z, HEAD ab5edc48 + 워킹트리
+$ go test -count=1 ./internal/journal -run A138
+--- FAIL: TestA138TheSeventhSymbolIsRefused (0.26s)
+    a138_open_positions_test.go:142: Reserve(d-7 kr/000007) must be refused by the open position maximum, got <nil>
+--- FAIL: TestA138AnEntryOnAHeldSymbolIsAllowedAtTheMaximum (0.59s)
+    a138_open_positions_test.go:166: Reserve(d-new kr/000007) must be refused by the open position maximum, got <nil>
+--- FAIL: TestA138EveryKindOfLivePositionCounts (0.29s)
+    a138_open_positions_test.go:177: Reserve(d-new kr/000007) must be refused by the open position maximum, got <nil>
+--- FAIL: TestA138PositionsAndHoldsOfOneSymbolCountOnceAndClosedOnesNotAtAll (0.26s)
+    a138_open_positions_test.go:209: Reserve(d-fourth kr/000004) must be refused by the open position maximum, got <nil>
+--- FAIL: TestA138ConcurrentEntriesCannotBothTakeTheLastSlot (0.25s)
+    a138_open_positions_test.go:252: exactly one of two concurrent new symbols may take the sixth slot, ok=2 errs=[]
+--- FAIL: TestA138AnExposureRaisingReservationWithoutTheMaximumIsRefused (0.21s)
+    a138_open_positions_test.go:262: an exposure-raising reservation without the maximum must be refused, got <nil>
+--- FAIL: TestA138AnUncountableHoldFailsClosed (0.21s)
+    a138_open_positions_test.go:285: an uncountable hold must refuse the entry as a failed count, not pass or read as a limit, got <nil>
+--- FAIL: TestA138AReconciledSymbolWithoutAPositionRowCounts (0.68s)
+--- FAIL: TestA138EveryHeldReservationKindCountsAndReleasedOnesDoNot (0.23s)
+    a138_open_positions_test.go:346: Reserve(d-new kr/000006) must be refused by the open position maximum, got <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	2.988s
+FAIL

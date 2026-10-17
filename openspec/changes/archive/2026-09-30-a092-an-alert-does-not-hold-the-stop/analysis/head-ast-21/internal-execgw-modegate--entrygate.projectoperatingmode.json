@@ -1,0 +1,118 @@
+{
+  "file": "internal/execgw/modegate.go",
+  "source_sha256": "0299613895160de00f689e9fa3b8b913a84406665c7ca6494eba0e405f44201e",
+  "package": "execgw",
+  "function": "ProjectOperatingMode",
+  "receiver": "EntryGate",
+  "signature": "EntryGate.ProjectOperatingMode(params=1, results=0)",
+  "start": {
+    "line": 35,
+    "column": 1
+  },
+  "end": {
+    "line": 51,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 47,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 41,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 2
+      },
+      "text": "g.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 2
+      },
+      "text": "delete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 2
+      },
+      "text": "g.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 6
+      },
+      "text": "rec.BlocksEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 2
+      },
+      "text": "g.Block"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 43,
+        "column": 2
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 45,
+        "column": 3
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 48,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

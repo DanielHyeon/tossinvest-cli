@@ -1,0 +1,329 @@
+{
+  "file": "internal/client/completed_orders.go",
+  "source_sha256": "2c389d043a94552ec5dd4e0179f3f5c3cdbd1eb26eaefec8cbbfcae5959cc486",
+  "package": "client",
+  "function": "ListCompletedOrdersRange",
+  "receiver": "Client",
+  "signature": "Client.ListCompletedOrdersRange(params=6, results=2)",
+  "start": {
+    "line": 27,
+    "column": 1
+  },
+  "end": {
+    "line": 78,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 31,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 52,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 55,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "range",
+      "at": {
+        "line": 59,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 65,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 68,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 71,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 29,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 32,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 37,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 53,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 56,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 66,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 69,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 72,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 74,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 12
+      },
+      "text": "c.requireSession"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 12
+      },
+      "text": "c.ensureTradingMetadata"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 18
+      },
+      "text": "normalizeHistoryMarkets"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 12
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 15
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 4
+      },
+      "text": "from.Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 4
+      },
+      "text": "to.Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 13
+      },
+      "text": "c.getJSON"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 16
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 13
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 28
+      },
+      "text": "parseCompletedOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 2
+      },
+      "text": "sort.SliceStable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 10
+      },
+      "text": "orders.SubmittedAt.After"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 28,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 31,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 35,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 43,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 52,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 60,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

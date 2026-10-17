@@ -1,0 +1,9 @@
+Start status/HEAD transcribed from initial tool output; end captured directly.
+status comparison: cmp exit 0
+HEAD comparison: cmp exit 0
+HEAD: 4d22d72663dcf3a42be928b3ecf3db817ffc6ac5
+Real repository initially dirty; status unchanged. No clean-tree claim.
+Reviewed production source files and go.mod/go.sum byte-identical to 4d22d726; see source-comparison.txt.
+Writes confined to supplied copy: _codex/recheck4, .gocache, .gotmp, review output Markdown.
+No network, broker, LIVE, toggle, make, go list, go run, or runtime engine invocation.
+No access to ~/.codex.

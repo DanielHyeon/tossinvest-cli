@@ -1,0 +1,101 @@
+python3 tools/sdd/sdd_doctor.py
+[tools]
+  OK   rtk: rtk 0.42.0
+  OK   openspec: 1.4.1
+  OK   codegraph: 1.6.0
+  OK   codegraphcontext: Usage: codegraphcontext [OPTIONS] COMMAND [ARGS]...                            
+  OK   create-context-graph: create-context-graph, version 0.13.1
+  OK   ast-grep: ast-grep 0.45.0
+  OK   gbrain: gbrain 0.42.51.0
+  OK   docker: Docker version 29.8.2, build 7fc2dff
+[skills]
+  OK   gstack: /home/daniel/.agents/skills/gstack
+  OK   superpowers: /home/daniel/.codex/.tmp/plugins/plugins/superpowers
+[python_modules]
+  OK   typedb-driver: mode=local raw=/mnt/D/Axipient/workspace/TossOS/.sdd/.venv/bin/python resolved=/home/daniel/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/bin/python3.13; typedb-driver 3.11.5
+[files]
+  OK   .mcp.json: present
+  OK   .codex/config.toml: present
+  OK   .codex/hooks.json: present
+  OK   .claude/settings.json: present
+  OK   .githooks/pre-commit: present
+  OK   .githooks/post-commit: present
+  OK   .gbrain-source: present
+  OK   tools/sdd/gbrain_project.py: present
+  OK   tools/sdd-history/refresh_indexes.py: present
+[services]
+  OK   typedb(shared): running
+  OK   neo4j(shared): running
+python3 tools/sdd/check_index_freshness.py
+[index-freshness] WARN: gbrain advisory index is missing or stale
+[index-freshness] CodeGraph hard-evidence index matches the worktree
+/usr/bin/make sdd-check-ci
+make[1]: Entering directory '/mnt/D/Axipient/workspace/TossOS'
+python3 tools/sdd/check_agent_config_sync.py
+[agent-config] Claude/Codex safety bootstrap and workflow routing are synchronized
+python3 scripts/memory_index.py check
+valid
+python3 tools/pm/generate_master_tracker.py --check
+[pm] hierarchy and generated trackers are current
+python3 -m compileall -q scripts tools/logic-map tools/sdd tools/sdd-history tools/pm tools/deploy
+/usr/bin/make sdd-test
+make[2]: Entering directory '/mnt/D/Axipient/workspace/TossOS'
+python3 -m unittest discover -s scripts -p 'test_*.py'
+...............
+----------------------------------------------------------------------
+Ran 15 tests in 0.393s
+
+OK
+python3 -m unittest discover -s tools/logic-map -p 'test_*.py'
+.......................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 503 tests in 75.613s
+
+OK
+python3 -m unittest discover -s tools/sdd -p 'test_*.py'
+....................................................................source registration failed
+..[gbrain-project] busy: owner pid=456 command='gbrain serve'
+.schema read failed
+..F.....
+======================================================================
+FAIL: test_the_census_is_exactly_the_pinned_list (test_testseam_build_tags.TestseamBuildTagTests.test_the_census_is_exactly_the_pinned_list)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS/tools/sdd/test_testseam_build_tags.py", line 81, in test_the_census_is_exactly_the_pinned_list
+    self.assertEqual(
+AssertionError: Lists differ: ['int[27 chars]ane_shadow_load_testseam.go', 'internal/app/en[1226 chars].go'] != ['int[27 chars]ane_step_testseam.go', 'internal/continuationl[1165 chars].go']
+
+First differing element 0:
+'internal/app/engine/strategy_lane_shadow_load_testseam.go'
+'internal/app/engine/strategy_lane_step_testseam.go'
+
+First list contains 1 additional elements.
+First extra element 24:
+'internal/weeklyvaluelane/strategyflow_testseam.go'
+
+Diff is 1451 characters long. Set self.maxDiff to None to see it. : the *_testseam.go set changed — add or remove it in EXPECTED after checking its build line (new: ['internal/app/engine/strategy_lane_shadow_load_testseam.go'], gone: [])
+
+----------------------------------------------------------------------
+Ran 79 tests in 0.576s
+
+FAILED (failures=1)
+[sdd-sync] GBrain source 'tossos-x' is registered at /mnt/D/project/axipient/TossOS, not /mnt/D/Axipient/workspace/TossOS. Sync would read the old path. Repair is destructive (it deletes this source's pages, then re-indexes):
+  python3 /mnt/D/Axipient/workspace/TossOS/tools/sdd/gbrain_project.py sources remove tossos-x --confirm-destructive
+  python3 /mnt/D/Axipient/workspace/TossOS/tools/sdd/gbrain_project.py sources add tossos-x --path /mnt/D/Axipient/workspace/TossOS
++ /usr/bin/python3 /mnt/D/Axipient/workspace/TossOS/tools/sdd/gbrain_project.py sync --source tossos-x --strategy code --no-embed --yes
+SOURCES
+───────
+  default               federated          0 pages  never synced
+  tossos-x              isolated        4261 pages  never synced
+                        /mnt/D/Axipient/workspace/TossOS
+[sdd-sync] WARN: GBrain advisory busy; keeping its previous freshness ([gbrain-project] busy: owner pid=123 command='gbrain serve' home=/tmp/project/.sdd/gbrain-home)
++ /usr/bin/python3 /mnt/D/Axipient/workspace/TossOS/tools/sdd/gbrain_project.py sources add tossos-x --path /mnt/D/Axipient/workspace/TossOS
+[sdd-sync] GBrain source probe failed: schema read failed
++ /usr/bin/python3 /mnt/D/Axipient/workspace/TossOS/tools/sdd/gbrain_project.py sync --source tossos-x --strategy code --no-embed --yes
+[sdd-sync] WARN: GBrain advisory busy; keeping its previous freshness ([gbrain-project] busy: owner pid=456 command='gbrain serve')
++ /usr/bin/python3 /tmp/tmpipym249d/repo/tools/sdd/gbrain_project.py sources list
+make[2]: Leaving directory '/mnt/D/Axipient/workspace/TossOS'
+make[2]: *** [Makefile:141: sdd-test] Error 1
+make[1]: Leaving directory '/mnt/D/Axipient/workspace/TossOS'
+make[1]: *** [Makefile:159: sdd-check-ci] Error 2
+make: *** [Makefile:169: sdd-check] Error 2

@@ -1,0 +1,64 @@
+{
+  "file": "internal/obs/mode.go",
+  "source_sha256": "ff7224f12ed7c0898cd3cc14cfb64e1206580327ae7e980b64c66ea0a7e5497e",
+  "package": "obs",
+  "function": "AnnounceOperatingMode",
+  "receiver": "Notifier",
+  "signature": "Notifier.AnnounceOperatingMode(params=3, results=1)",
+  "start": {
+    "line": 48,
+    "column": 1
+  },
+  "end": {
+    "line": 54,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 50,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 53,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 9
+      },
+      "text": "n.Notify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 23
+      },
+      "text": "operatingModeEvent"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

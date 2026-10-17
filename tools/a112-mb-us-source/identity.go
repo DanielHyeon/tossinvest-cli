@@ -581,7 +581,7 @@ func (s systemIdentity) snapshotContext(ctx context.Context, cfg config) (identi
 	if err != nil || targetGOOS == "" {
 		return identitySnapshot{}, errors.New("selected Go binary did not provide GOOS")
 	}
-	base, err := readSourceSingleLine(root, "openspec/changes/a112-run-four-strategy-families-independently/base-commit.txt")
+	base, err := readSourceSingleLine(root, "openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently/base-commit.txt")
 	if err != nil || base == "" {
 		return identitySnapshot{}, errors.New("frozen A112 base commit is unavailable")
 	}
@@ -792,7 +792,7 @@ func splitNULPaths(data []byte) []string {
 }
 
 func measurementSourceDigests(root string) (map[string]string, error) {
-	paths := []string{"go.mod", "go.sum", "openspec/changes/a112-run-four-strategy-families-independently/base-commit.txt", "internal/official/a112_mbus_read.go", "internal/official/a112_mbus_read_test.go", "internal/official/a112_mbus_read_unix.go", "internal/official/a112_mbus_read_unsupported.go", "internal/official/a112_mbus_static_test.go"}
+	paths := []string{"go.mod", "go.sum", "openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently/base-commit.txt", "internal/official/a112_mbus_read.go", "internal/official/a112_mbus_read_test.go", "internal/official/a112_mbus_read_unix.go", "internal/official/a112_mbus_read_unsupported.go", "internal/official/a112_mbus_static_test.go"}
 	err := filepath.WalkDir(filepath.Join(root, "tools/a112-mb-us-source"), func(path string, entry os.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr

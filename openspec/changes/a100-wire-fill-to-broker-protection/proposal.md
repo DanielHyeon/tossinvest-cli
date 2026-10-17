@@ -91,8 +91,8 @@ func (g *Gateway) checkProtection(ctx context.Context, plan mutationPlan, previo
 4. 보유 수량이 바뀌면 더 안전한 방향으로만 교체한다.
 5. 수렴 실패는 typed reconcile reason과 관측 가능한 알림으로 끝난다 — 체결 감지·청산·대사를
    막지 않는다.
-6. 한 포지션에 브로커측 매도 청구권이 둘이 되지 않도록 인프로세스 보호 매도(a087)와의
-   권한 계약을 정한다.
+6. 한 포지션에 브로커측 매도 청구권이 둘이 되지 않도록 인프로세스 보호 매도(`ExitObserver` 청산 경로 —
+   현재 LIMIT; 시장가 전환은 a087 Phase 2 이며 §0.7 사람 실측 게이트 대기)와의 권한 계약을 정한다.
 7. raw conditional status와 triggered child id를 손실 없이 보존하고, child fill보다 먼저
    exact parent/client/scope/generation owner를 journal에 등록한다. 이미 관측된 child fill은 소급
    귀속하지 않고 `ATTRIBUTION_FAILED` reconcile/alert로 fail closed한다.
@@ -174,7 +174,7 @@ a071 tasks.md §6을 함께 고친다.
 
 **원래부터 범위 밖:**
 
-- 레인 활성화(a105), threshold 승인(a101), 라이브 평가(a103), 사이징 역산(a104).
+- 레인 활성화(a105 — 예약 번호·미등록), threshold 승인 · 라이브 평가(소유 change 없음 — 옛 판의 a101 · a103 표기는 그 번호가 각각 soak autostart · rollback pin 으로 land 되어 낡았다, R0 정정 2026-10-04), 사이징 역산(a104 — 예약 번호·미등록).
 - 실계좌 **주문 전략**. 이 change의 기능 검증은 httptest 계약 테스트로 하고, 전략적 실계좌
   1회는 a106이다. 선행 실측 M-A는 기능 검증이 아니라 **전제 확인**이며 별도 승인 대상이다.
 - `internal/protection.Controller`와 `Repository`의 부활(design D1).

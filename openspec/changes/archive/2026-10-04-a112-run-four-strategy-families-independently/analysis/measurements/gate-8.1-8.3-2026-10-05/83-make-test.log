@@ -1,0 +1,113 @@
+go test -timeout 30m ./...
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	55.747s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app	0.020s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	498.728s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/app/paths	[no test files]
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/attemptthaw	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/attest	0.095s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/audit	0.873s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/auth	0.025s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/binstamp	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.338s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/brokerstate	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/candidate	8.809s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/candidatesrc	0.009s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/client	0.060s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.072s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/config	0.040s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	112.354s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane	0.039s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/costs	0.435s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/deployguard	0.020s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/doctor	0.004s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/domain	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/enginelock	0.386s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	151.125s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy	0.387s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/exitquarantine	0.002s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/export	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/filldetect	4.901s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/flatten	12.697s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/handoff	0.181s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/httpapi	0.665s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/hybrid	0.006s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/i18n	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	774.120s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/localupdate	4.032s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/markout	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/mcp	0.069s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/measure	2.368s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/measure/degrade	1.602s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/monitor	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/networkboundary	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/obs	41.444s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	1.210s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialbars	4.339s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialfx	0.385s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/onboarding	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/operatorview	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/ops	0.209s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/optimization	6.474s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/optimizationevidence	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/orderintent	0.002s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/orderlineage	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/output	0.008s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/performance	24.013s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/performancejournal	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/position	0.047s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positioncampaign	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy	0.002s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc	0.010s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protection	7.446s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionlifecycle	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionofficial	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionreadiness	0.422s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/push	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/qr	0.166s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/ratebudget	0.022s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	61.124s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/releaseupdate	0.108s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/replay	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reversallane	0.057s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/risk	0.006s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	0.464s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc	0.003s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/riskrelaxation	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/runlock	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/scheduler	2.615s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/selfupdate	0.002s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/session	0.002s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/settingmeta	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/soak	0.213s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/strategy	[no test files]
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/strategyaccount	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycandidate	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycandle	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategydispatch	0.006s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyengine	0.905s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyevidence	4.477s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	0.180s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	11.094s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategymarket	0.594s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	0.587s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc	4.817s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal	5.153s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	3.014s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyruntime	0.010s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow	1.470s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	1.981s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/testenv	0.578s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/trading	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/tui	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/updatecheck	0.006s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/verifylive	14.349s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/version	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane	0.117s
+?   	github.com/JungHoonGhae/tossinvest-cli/tools/a112-family-activation	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-family-shadow	0.008s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-l1c-quote-probe	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-mb-us-source	308.192s
+?   	github.com/JungHoonGhae/tossinvest-cli/tools/boundarymap	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/logic-map	0.005s

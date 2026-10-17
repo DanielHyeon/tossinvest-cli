@@ -1,0 +1,102 @@
+{
+  "file": "internal/strategyprojection/model.go",
+  "source_sha256": "f192e4f2f934f8bb3e165a47f2ecb7dda91874826c299aff0aa073f8082cbd01",
+  "package": "strategyprojection",
+  "function": "Clone",
+  "signature": "Clone(params=1, results=1)",
+  "start": {
+    "line": 224,
+    "column": 1
+  },
+  "end": {
+    "line": 232,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 228,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 231,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 12
+      },
+      "text": "cloneRuntimeIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 61
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 95
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 10
+      },
+      "text": "cloneLanes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 52
+      },
+      "text": "cloneCoordinators"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 25
+      },
+      "text": "cloneMarket"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 225,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 229,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

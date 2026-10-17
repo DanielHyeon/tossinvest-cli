@@ -1,0 +1,10 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/strategy_first_leg_admission_test.go:176:72: undefined: execgw.DailyLossMeasurement
+internal/app/engine/strategy_first_leg_admission_test.go:178:16: undefined: execgw.DailyLossMeasurement
+internal/app/engine/strategy_first_leg_admission_test.go:186:17: undefined: execgw.DailyLossEntryBlock
+internal/app/engine/a137_daily_loss_cycle_test.go:42:17: undefined: execgw.DailyLossEntryBlock
+internal/app/engine/a137_daily_loss_cycle_test.go:69:21: undefined: execgw.DailyLossEntryBlock
+internal/app/engine/a137_daily_loss_cycle_test.go:97:22: undefined: StrategyFirstLegDailyLossLimit
+internal/app/engine/a137_daily_loss_cycle_test.go:100:21: undefined: execgw.DailyLossEntryBlock
+internal/app/engine/a137_daily_loss_cycle_test.go:119:20: undefined: execgw.DailyLossEntryBlock
+internal/app/engine/a137_daily_loss_cycle_test.go:145:139: undefined: StrategyFirstLegDailyLossLimit

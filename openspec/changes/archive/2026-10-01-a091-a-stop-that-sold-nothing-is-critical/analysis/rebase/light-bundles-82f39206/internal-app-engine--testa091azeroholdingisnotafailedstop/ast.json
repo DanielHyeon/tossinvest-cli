@@ -1,0 +1,188 @@
+{
+  "file": "internal/app/engine/a091_stop_sold_nothing_test.go",
+  "source_sha256": "9e8cdf8722000cda3ab20b64d2395e924d193b5047814547fe66dcfc1606aa7c",
+  "package": "engine_test",
+  "function": "TestA091AZeroHoldingIsNotAFailedStop",
+  "signature": "TestA091AZeroHoldingIsNotAFailedStop(params=1, results=0)",
+  "start": {
+    "line": 341,
+    "column": 1
+  },
+  "end": {
+    "line": 356,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 345,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 349,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 353,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 342,
+        "column": 7
+      },
+      "text": "a091Harness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 342,
+        "column": 28
+      },
+      "text": "a091Zero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 343,
+        "column": 2
+      },
+      "text": "r.breach"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 344,
+        "column": 2
+      },
+      "text": "r.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 345,
+        "column": 10
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 345,
+        "column": 14
+      },
+      "text": "r.rows"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 346,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 348,
+        "column": 11
+      },
+      "text": "r.log.ofEvent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 349,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 349,
+        "column": 25
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 349,
+        "column": 42
+      },
+      "text": "fmt.Sprint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 350,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 352,
+        "column": 7
+      },
+      "text": "r.alertsCause"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 354,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 342,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 345,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 348,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 352,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

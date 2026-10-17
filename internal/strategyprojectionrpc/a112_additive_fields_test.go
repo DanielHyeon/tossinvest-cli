@@ -28,23 +28,33 @@ func TestClientIgnoresAdditiveFieldsFromANewerEngine(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// 이 client 가 모르는 필드 두 개를 심는다: envelope 하나(미래의 `coordinators`)와
-	// 시장 레코드 안 하나(미래의 `lanes`). 둘 다 spec 이 예고한 additive 필드다.
+	// 이 client 가 모르는 필드 셋을 심는다: envelope 하나, 시장 레코드 안 하나, 레인 자식 안 하나.
+	// a112 7.3 전에는 `coordinators` · `lanes` 를 심었는데 7.3 이 그 둘을 **아는** 필드(계약 · 검증 대상)로
+	// 만들었다 — 그래서 아직 아무도 모르는 이름으로 바꿨다. 재는 것은 그대로다: 더 새 엔진이 더한 필드를
+	// 이 client 가 몰라도 read 가 실패하지 않는다.
 	var envelope map[string]json.RawMessage
 	if err := json.Unmarshal(raw, &envelope); err != nil {
 		t.Fatal(err)
 	}
-	envelope["coordinators"] = json.RawMessage(`[{"market":"KR"},{"market":"US"}]`)
+	envelope["futureChildren"] = json.RawMessage(`[{"market":"KR"},{"market":"US"}]`)
 	var markets map[string]map[string]json.RawMessage
 	if err := json.Unmarshal(envelope["markets"], &markets); err != nil {
 		t.Fatal(err)
 	}
-	markets["KR"]["lanes"] = json.RawMessage(`[{"family":"BREAKOUT_RETEST"}]`)
+	markets["KR"]["futureLanes"] = json.RawMessage(`[{"family":"BREAKOUT_RETEST"}]`)
 	remarshalled, err := json.Marshal(markets)
 	if err != nil {
 		t.Fatal(err)
 	}
 	envelope["markets"] = remarshalled
+	var lanes []map[string]json.RawMessage
+	if err := json.Unmarshal(envelope["lanes"], &lanes); err != nil || len(lanes) != 8 {
+		t.Fatalf("arrangement: lanes=%d err=%v", len(lanes), err)
+	}
+	lanes[0]["futureLaneField"] = json.RawMessage(`1`)
+	if envelope["lanes"], err = json.Marshal(lanes); err != nil {
+		t.Fatal(err)
+	}
 	body, err := json.Marshal(envelope)
 	if err != nil {
 		t.Fatal(err)

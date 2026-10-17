@@ -1,0 +1,403 @@
+{
+  "file": "internal/risk/chain.go",
+  "source_sha256": "43b2ef76b276cc56f96071de62bea02df21bc509ea0cfc08db82a3f3729216fc",
+  "package": "risk",
+  "function": "preflight",
+  "signature": "preflight(params=1, results=1)",
+  "start": {
+    "line": 162,
+    "column": 1
+  },
+  "end": {
+    "line": 205,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 163,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 170,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 173,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 186,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 189,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 193,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 164,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 168,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 171,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 174,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 178,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 181,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 187,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 190,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 194,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 201,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 204,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 5
+      },
+      "text": "in.Now.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 10
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 10
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 10
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 10
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 41
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 43
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 15
+      },
+      "text": "currencyOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 10
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 41
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 10
+      },
+      "text": "allow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 16
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 10
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 41
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 5
+      },
+      "text": "price.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 10
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 41
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 12
+      },
+      "text": "in.Policy.Validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 10
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 81
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 6
+      },
+      "text": "in.Costs.Configured"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 10
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 9
+      },
+      "text": "allow"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 177,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 185,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 193,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,208 @@
+{
+  "file": "internal/strategyprojectionrpc/transport_unix.go",
+  "source_sha256": "177e64f9b820e6f760f77363c172e04d2bb4afdcb44983f0ff6dbbbb0890c3e6",
+  "package": "strategyprojectionrpc",
+  "function": "Dial",
+  "signature": "Dial(params=2, results=2)",
+  "start": {
+    "line": 408,
+    "column": 1
+  },
+  "end": {
+    "line": 439,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 410,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 415,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 424,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 411,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 416,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 425,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 436,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 438,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 409,
+        "column": 21
+      },
+      "text": "readDescriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 409,
+        "column": 36
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 16
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 30
+      },
+      "text": "filepath.Dir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 414,
+        "column": 15
+      },
+      "text": "os.Lstat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 415,
+        "column": 19
+      },
+      "text": "info.Mode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 415,
+        "column": 53
+      },
+      "text": "Perm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 415,
+        "column": 53
+      },
+      "text": "info.Mode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 416,
+        "column": 15
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 424,
+        "column": 6
+      },
+      "text": "projectionSocketAccepts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 425,
+        "column": 15
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 11
+      },
+      "text": "DialContext"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 409,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 413,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 414,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 434,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

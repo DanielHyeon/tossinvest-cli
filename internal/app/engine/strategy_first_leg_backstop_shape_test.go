@@ -145,26 +145,41 @@ func requireGuardFollowsTheRederivation(t *testing.T, file *ast.File, guard *ast
 		t.Fatal("가드가 함수 최상위 문장이 아니다 — 다른 블록 안에 있으면 그 블록의" +
 			" 조건이 참일 때만 도는 가드가 된다")
 	}
-	chain := []string{"proposalAuthority := proposal.entries[0].authority", rederivation}
-	if position < len(chain) {
-		t.Fatalf("가드 앞에 문장이 %d 개뿐이다 — 재유도 사슬 %d 고리가 들어갈 자리가 없다",
-			position, len(chain))
+	// a112 6.2 봉인 로트(2026-10-01)의 **의도적 변경.** 앞 판본은 사슬을 `proposalAuthority := proposal.entries[0].authority` →
+	// `result := proposalAuthority.Proposal()` → 가드로 못 박았다. 6.2 가 그 첫 고리를 「소유자 범위로 고르기」로 바꿨다 — 아래 실패
+	// 메시지가 요구한 대로 **새 선택이 무엇에 기대는지를 먼저 정하고** 그 성질을 다시 못 박는다:
+	//   (1) 가드 바로 앞 문장은 여전히 `result := proposalAuthority.Proposal()` — 가드가 보는 값은 loader 자기 권한 쌍에서 나온다.
+	//   (2) proposalAuthority 는 `proposal.authorityForOwnerScope(accepted.result.Lineage)` 한 번으로만 정해지고, 바로 다음 문장이
+	//       선택 실패 거절이다(선택 실패를 무시하는 길이 없다).
+	//   (3) 그 선택 함수는 **identity 를 읽지 않는다**(범위로 고르고 identity 로 대조 — 자기 참조 함정 회피). 이것은 아래
+	//       requireScopeSelectionReadsNoIdentity 가 그 함수 본문에서 센다. 행동으로는 a112_first_leg_owner_scope_seal_test.go 가
+	//       거절 문구로 선택 기제를 가린다(identity 로 고르는 변이는 같은 범위 패자에서 선택 실패 문구를 낸다).
+	if position < 1 || statementText(body.List[position-1]) != rederivation {
+		t.Fatalf("가드 바로 앞 문장이 %q 가 아니다 — 가드가 보는 값이 loader 자기 권한 쌍에서 그대로 나왔다는 보장이 사라진다.\n\n"+
+			"L6 6.2 가 여러 항목 중 하나를 고르도록 바꾼다면, **그 선택이 accepted 의 identity 에 기대면 안 된다.** accepted 와 맞는"+
+			" 항목을 골라 놓고 그것을 accepted 와 비교하면 이 가드는 자기 참조가 된다. 기대 문자열만 고쳐서 통과시키는 것이 가장 쉬운"+
+			" 길이므로 여기 적어 둔다.", rederivation)
 	}
-	for offset, want := range chain {
-		got := statementText(body.List[position-len(chain)+offset])
-		if got != want {
-			t.Fatalf("재유도 사슬의 고리 %d 이 %q 가 아니라 %q 다 — 가드가 보는 값이"+
-				" loader 자기 권한 쌍에서 그대로 나왔다는 보장이 사라진다.\n\n"+
-				"L6 6.2 가 여러 항목 중 하나를 고르도록 바꾼다면, **그 선택이 accepted 에"+
-				" 기대면 안 된다.** accepted 와 맞는 항목을 골라 놓고 그것을 accepted 와"+
-				" 비교하면 이 가드는 자기 참조가 되고, 이 시험은 그대로 초록이다."+
-				" 기대 문자열만 고쳐서 통과시키는 것이 가장 쉬운 길이므로 여기 적어 둔다 —"+
-				" 고칠 때는 새 선택이 무엇에 기대는지를 먼저 정하고, 그 성질을 여기에"+
-				" 다시 못 박아야 한다.", offset+1, want, got)
+	const selection = "proposalAuthority, scoped := proposal.authorityForOwnerScope(accepted.result.Lineage)"
+	selectedAt := -1
+	for index := 0; index < position; index++ {
+		if multiAssignText(body.List[index]) == selection {
+			selectedAt = index
 		}
 	}
-	// 사슬의 세 이름이 각각 한 번만 대입돼야 한다. 하나라도 두 번 대입되면 가드가
-	// 비교하는 값이 재유도된 값이 아닐 수 있다.
+	if selectedAt < 0 {
+		t.Fatalf("가드 앞 최상위 문장에 %q 가 없다 — 권한 쌍에서 항목을 고르는 자리가 소유자 범위 선택이 아니다", selection)
+	}
+	next, ok := body.List[selectedAt+1].(*ast.IfStmt)
+	if !ok || types.ExprString(next.Cond) != "!scoped" || next.Else != nil || len(next.Body.List) != 1 {
+		t.Fatal("소유자 범위 선택 바로 다음 문장이 `if !scoped { 거절 }` 이 아니다 — 선택 실패를 무시하는 길이 생긴다")
+	}
+	if ret, ok := next.Body.List[0].(*ast.ReturnStmt); !ok || len(ret.Results) != 2 ||
+		types.ExprString(ret.Results[0]) != "execgw.QFinalCampaignFirstLegIssuance{}" ||
+		types.ExprString(ret.Results[1]) != "errors.New(strategyFirstLegOwnerScopeRefusal)" {
+		t.Fatal("선택 실패 갈래가 빈 발주와 선택 실패 거절을 돌려주지 않는다")
+	}
+	requireScopeSelectionReadsNoIdentity(t, file)
 	for _, name := range []string{"proposal", "proposalAuthority", "result"} {
 		if count := assignmentsTo(body, name); count != 1 {
 			t.Fatalf("%s 가 함수 안에서 %d 번 대입된다 — 한 번이어야 한다."+
@@ -180,6 +195,50 @@ func requireGuardFollowsTheRederivation(t *testing.T, file *ast.File, guard *ast
 // (12차 적대 리뷰). 오늘 그 구멍으로는 해를 못 만든다 — 가드가 뒤따르는 모든
 // 문장을 지배하므로 가드 뒤의 채택은 identity 가 이미 같을 때만 돌고, identity
 // 동일은 봉인된 값 전체의 동일이라 채택이 무의미하다. 그래도 세는 편이 싸다.
+// multiAssignText 는 `a, b := f(x)` 모양의 대입을 글자로 돌려준다(오른쪽 식 하나).
+func multiAssignText(statement ast.Stmt) string {
+	assign, ok := statement.(*ast.AssignStmt)
+	if !ok || len(assign.Rhs) != 1 {
+		return ""
+	}
+	names := make([]string, 0, len(assign.Lhs))
+	for _, left := range assign.Lhs {
+		names = append(names, types.ExprString(left))
+	}
+	return strings.Join(names, ", ") + " " + assign.Tok.String() + " " + types.ExprString(assign.Rhs[0])
+}
+
+// requireScopeSelectionReadsNoIdentity 는 선택 함수가 identity 를 읽지 않고 범위 정규화(`strategyrouter.NewOwnerKey`)로 고르는지
+// 본다. identity 로 고르면 대조가 자기 참조가 된다.
+func requireScopeSelectionReadsNoIdentity(t *testing.T, _ *ast.File) {
+	t.Helper()
+	file := parseEngineFile(t, "strategy_first_leg_owner_scope.go")
+	var selector *ast.FuncDecl
+	for _, decl := range file.Decls {
+		if function, ok := decl.(*ast.FuncDecl); ok && function.Name.Name == "authorityForOwnerScope" {
+			selector = function
+		}
+	}
+	if selector == nil {
+		t.Fatal("authorityForOwnerScope 를 못 찾았다")
+	}
+	ownerKeys := 0
+	ast.Inspect(selector.Body, func(node ast.Node) bool {
+		if value, ok := node.(*ast.SelectorExpr); ok {
+			switch value.Sel.Name {
+			case "Identity", "LineageIdentity", "CampaignID", "LaneID", "Horizon":
+				t.Errorf("선택 함수가 %s 를 읽는다 — 범위 밖의 값으로 고르면 대조가 공허해지거나 범위가 넓어진다", types.ExprString(value))
+			case "NewOwnerKey":
+				ownerKeys++
+			}
+		}
+		return true
+	})
+	if ownerKeys != 2 {
+		t.Errorf("선택 함수의 strategyrouter.NewOwnerKey 호출=%d, want 2(원하는 범위 · 쌍 항목의 범위를 같은 정규형으로)", ownerKeys)
+	}
+}
+
 func assignmentsTo(body *ast.BlockStmt, name string) int {
 	count := 0
 	ast.Inspect(body, func(node ast.Node) bool {

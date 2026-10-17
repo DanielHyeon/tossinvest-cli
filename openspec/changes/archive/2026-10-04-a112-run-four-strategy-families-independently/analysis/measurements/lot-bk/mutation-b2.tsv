@@ -1,0 +1,5 @@
+TREE	HEAD 538439ed0539f1161d61daec4afb4e6dc91f7ed5 (git archive) + own: internal/breakoutlane/types.go,internal/breakoutlane/a112_fx_seal_digest_test.go,internal/breakoutlane/evaluator_test.go
+CONTROL	GREEN	[./internal/breakoutlane pass events 24]
+B2-1 the overwrite is restored (the caller's inverse digest is not verified — Manager-required mutant)	CAUGHT	2 failing: TestAnInverseFXSealVerifiesTheCallersDigest, TestAdversarialInvalidUTF8ConfigAndFXDirectionScale
+B2-2 the inverse digest is checked against the normalized form instead of the given form	CAUGHT	3 failing: TestAnInverseFXSealVerifiesTheCallersDigest, TestAdversarialInvalidUTF8ConfigAndFXDirectionScale, TestGstackRepairQuoteAndFXExactBoundaries/inverse_scale_6
+B2-3 the normalized seal is not re-sealed (keeps the caller's inverse digest)	CAUGHT	3 failing: TestAnInverseFXSealVerifiesTheCallersDigest, TestAdversarialInvalidUTF8ConfigAndFXDirectionScale, TestGstackRepairQuoteAndFXExactBoundaries/inverse_scale_6

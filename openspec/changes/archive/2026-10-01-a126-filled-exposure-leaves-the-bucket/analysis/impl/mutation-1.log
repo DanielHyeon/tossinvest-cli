@@ -1,0 +1,22 @@
+start d154c6845d9f613b internal/journal/risk_bucket_fill.go
+start 6292cb576e64b9f9 internal/journal/risk_bucket_owner.go
+start 9ae65976e8c1502c internal/journal/risk_bucket_usage.go
+start c5e0c64b2de65248 internal/riskbucket/production_snapshot_authority.go
+control GREEN
+M1 CAUGHT — 떠남을 항상 참(활성 owner 도 빠짐)
+M1b CAUGHT — 떠남을 아예 적용하지 않음(수리 되돌림 — 양성 대조가 잡아야)
+M2 CAUGHT — 영수증 대신 owner released_at 만 봄
+M3 CAUGHT — scope latch 되돌림 제거(D4 fail-open)
+M4 CAUGHT — 떠난 행을 한도 모집단에서 뺌(D3 완화)
+M6 CAUGHT — 영수증 행의 HELD · held≠0 을 받음
+M6b-1 CAUGHT — released_at 불일치를 받음
+M6b-2 CAUGHT — owner 키 사본 불일치를 받음
+M6b-3 CAUGHT — 결정 사본 쪽 영수증을 보지 않음
+M6c CAUGHT — 손상 검사를 scope latch 판정 뒤로(되돌림이 손상 검사 우회 — codex #4)
+M7 CAUGHT — 떠난 행의 latch 플래그를 집계에서 뺌
+M9 CAUGHT — SQL 이 scope latch 를 싣지 않음(되돌림 입력 제거)
+M10 CAUGHT — SQL 의 영수증 존재를 owner released_at 으로 바꿔치기
+F1 CAUGHT — a066 결함 수리 되돌림(해제 검사의 옛 철자)
+F2 CAUGHT — 해제 검사가 미해소 체결을 보지 않음(fail-open)
+F3 CAUGHT — 해소 조각 OR→AND(두 자리 공통)
+caught 16 · survived 0

@@ -1,0 +1,31 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "8091e6c4d4b6c7685b2e02cdc14cab932d41874a",
+  "source_sha256": "461e02a35d028aced721858a48c85983564976d0bae40a3d68386d1f39a48e2c",
+  "function": "_committed_bytes",
+  "signature": "_committed_bytes(root, ref, relative)",
+  "start": {
+    "line": 425,
+    "column": 1
+  },
+  "end": {
+    "line": 432,
+    "column": 60
+  },
+  "branches": [],
+  "returns": [
+    {
+      "line": 432,
+      "value": "_committed_many(root, ref, [relative])[relative]"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 432,
+      "callee": "_committed_many"
+    }
+  ]
+}

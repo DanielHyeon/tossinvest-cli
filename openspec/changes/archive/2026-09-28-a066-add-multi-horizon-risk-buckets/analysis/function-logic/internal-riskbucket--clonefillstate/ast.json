@@ -1,0 +1,290 @@
+{
+  "file": "internal/riskbucket/fill.go",
+  "source_sha256": "845a67b3669ecda77230dc1cdb9256fffa6ae88edf54a50602231a2bdaef088a",
+  "package": "riskbucket",
+  "function": "cloneFillState",
+  "signature": "cloneFillState(params=1, results=1)",
+  "start": {
+    "line": 442,
+    "column": 1
+  },
+  "end": {
+    "line": 470,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 444,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 448,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 452,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 461,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 466,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 469,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 28
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 60
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 86
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 118
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 149
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 170
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 445,
+        "column": 19
+      },
+      "text": "cloneLatchMap"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 449,
+        "column": 25
+      },
+      "text": "cloneMinorMap"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 450,
+        "column": 28
+      },
+      "text": "cloneMinorMap"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 451,
+        "column": 12
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 451,
+        "column": 40
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 453,
+        "column": 27
+      },
+      "text": "cloneMinorMap"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 454,
+        "column": 25
+      },
+      "text": "cloneMinorMap"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 455,
+        "column": 28
+      },
+      "text": "cloneActualFillEvidence"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 467,
+        "column": 25
+      },
+      "text": "cloneMinorMap"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 443,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 445,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 446,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 449,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 450,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 451,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 453,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 454,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 455,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 456,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 458,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 459,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 462,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 467,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

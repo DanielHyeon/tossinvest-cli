@@ -1,0 +1,152 @@
+# Function Logic Map: `changed_existing_functions` (Python, a122 task 7.5.2.4)
+
+## task 7.5.2.4 — 통합 diff 의 본문 줄은 파일 헤더가 아니다 (7.5.2.3 재리뷰 2026-09-21, 보안)
+
+`tools/logic-map/check_analysis.py:124-235` (편집 전) · 분기 **34** · 반환 2 · raise 3 · 호출 47.
+`enumerate.py` 가 기계로 열거했다 — `ast.before-7.5.2.4.json` · `ast.after-7.5.2.4.json`.
+
+이 함수는 7.5.2.x 세 로트가 **한 번도 안 건드린 곳**이다. 재확인 원장(깔때기 넷)은 원리상 여기를 못 본다 —
+판정 입력을 자식 프로세스(`git diff` · `go run`)가 읽기 때문이다. 그래서 이 결함은 로트가 만든 것이 아니라
+로트가 **못 보던 것**이고, 경합이 아니라 **결정적**이다(같은 디스크에서 몇 번을 돌려도 같은 답).
+
+## Inputs and invariants
+
+`root` · `base` · `target`. 답하는 질문은 하나다 — **base 에 이미 있었고 논리가 바뀐 Go 함수가 무엇인가.**
+입력은 `git diff --no-ext-diff --find-renames --unified=0 <base> [<target>] -- '*.go'` 의 표준출력 한 덩이이고,
+출력은 `(파일, 함수) → {file, function, base_hash|current_hash}` 이다. 이 집합이 곧 게이트의 `required` 다.
+
+불변식: **본문 줄은 파일 이름을 정하지 못한다.** `--unified=0` 이면 문맥 줄이 없고 본문은 전부 `-`·`+`·`\`
+로 시작한다. 따라서 열 0 의 `diff --git ` 과 `@@` 는 모호하지 않지만, `--- `·`+++ ` 는 **모호하다** —
+지워진 소스 줄 `-- x` 는 `--- x` 로, 더한 소스 줄 `++ x` 는 `+++ x` 로 나온다(진짜 git 실측, `7524_diff.py`).
+
+## 편집 전의 논리와 그것이 틀린 자리
+
+파서는 상태가 없다. 한 줄을 볼 때마다 네 모양을 **평평한 `if/elif`** 로 물어본다(B27 · B28 · B30 · B32).
+
+| 갈래 | 줄(편집 전) | 하는 일 | 본문에서 일어나는 일 |
+|---|---|---|---|
+| B27 | 213 | `diff --git ` → `flush()` · 이름 둘 비움 | 본문 줄은 이 모양이 못 된다(접두사) — 안전 |
+| B28 | 217 | `--- ` → `old_source` 덮어쓰기 | **지워진 `-- …` 소스 줄이 덮는다** |
+| B30 | 220 | `+++ ` → `new_source` 덮어쓰기 | **더한 `++ …` 소스 줄이 덮는다** |
+| B32 | 225 | `@@` → `hunks.append` | 본문 줄은 이 모양이 못 된다 — 안전 |
+
+세 결과(전부 `7524_diff.py` 로 진짜 git · 진짜 파서에서 실측):
+
+1. `--- /dev/null` 이 지워지면 `old_source=""` → B5/B6 의 이른 반환이 그 파일의 훅을 **통째로 버린다** → 요구 **0 건**.
+2. `+++ /dev/null` 이 더해지면 `new_source=""` → B15~B19 의 현재 쪽이 안 돌고 키에 `base_hash` 만 남는다 →
+   `_verdict` 의 `base_hash` 갈래가 **`revision: base`** 를 요구한다. 요구되는 지도가 *편집 뒤* 논리가 아니라 *편집 전* 논리가 된다.
+3. 지워진 줄이 `-- name of the table` 같은 평범한 SQL 주석이면 `old_source` 가 헛경로가 되어
+   `RuntimeError: cannot load existing base file <주석 문장>` — 말이 안 되는 문장으로 **거짓 차단**.
+   추적 `*.go` 에 이 모양은 오늘 **111 줄 / 10 파일** 있다(`/dev/null` 정확형은 0).
+
+## 수리 (편집 후)
+
+문법대로 **상태 하나**(`in_body`)를 갖는다. `diff --git ` 이 파일을 열고, 첫 `@@` 가 본문을 열고,
+본문에서는 `@@` 만 읽는다 — `--- `·`+++ ` 는 그 안에서 다시 이름이 되지 못한다.
+훅 적재는 두 자리에서 같은 말을 하지 않도록 `hunk()` 한 곳으로 모았다.
+
+**새 거절은 0 개다 — 유도가 아니라 측정이다 (7.5.22 정정).** 앞 판본은 "본문에서 이름을 안 읽을 뿐이니
+아무것도 새로 거절하지 않는다" 고 **유도**했는데, 그것은 거짓이다: 위 1번(`deleted-dev-null`)은 편집 전에
+`required 0` 으로 **통과**했고 수리 뒤에는 요구가 생긴다. 0 이라고 말할 수 있는 근거는 전수 열거표
+(change 117 전부에서 본문의 헤더 모양 줄 **0**)이지 수리의 성질이 아니다.
+그래서 판정이 느슨해지는 방향은 없다 — 본문을 이름으로 읽어서 **사라지던** 요구가 돌아오고, 같은 실수로
+**엉뚱한 이름 아래 생기던** 요구는 제자리를 찾는다(그래서 개수는 늘 수도 줄 수도 있다; 사라지는 것은
+틀린 요구뿐이다). 위 3번의 거짓 차단도 사라진다.
+
+편집 후: `:128-257` · 분기 **36** · 반환 4 · raise 3 (`ast.after-7.5.2.4.json`). 파서는 `B26~B36` 이다.
+
+| id | 줄 | 종류 | 소스 | 무엇을 정하나 |
+|---|---|---|---|---|
+| B26 | 227 | If | `if match is None:` | `hunk()` — 훅이 아니면 아무것도 안 한다 |
+| B29 | 239 | For | `for line in process.stdout.splitlines():` | 줄 하나씩 |
+| B30 | 240 | If | `if line.startswith('diff --git '):` | 파일을 연다 · 이름 둘을 비우고 **본문을 닫는다** |
+| B31 | 245 | If | `if in_body:` | 본문이면 훅만 읽는다 — 이름은 **안** 읽는다 |
+| B32 | 248 | If | `if hunk(line):` | 첫 훅이 **본문을 연다** |
+| B33 | 250 | If | `if line.startswith('--- '):` | 본문 **밖**에서만 base 이름 |
+| B34 | 252 | IfExp | `'' if value == '/dev/null' else …` | 새 파일이면 base 논리가 없다 |
+| B35 | 253 | If | `if line.startswith('+++ '):` | 본문 **밖**에서만 현재 이름 |
+| B36 | 255 | IfExp | `'' if value == '/dev/null' else …` | 지워진 파일이면 현재 논리가 없다 |
+
+`B26` 은 옛 판본의 `if match:` 를 뒤집은 것이 아니라 **한 곳으로 모은** 것이다 — 훅을 적재하는 자리가 둘이면
+둘이 같은 말을 하는지 아무도 안 본다([[two-judgements-cover-for-each-other]]).
+
+## task 7.5.23 — 훅을 세는 것만으로는 부족하다 (2026-09-23)
+
+이 함수는 훅으로 `required` 를 정한다. 그래서 **git 이 본문을 안 내면 요구가 조용히 사라진다.**
+7.5.22 가 앞단 가드에 `--numstat` 의 `-`/`-` 검사를 넣어 이진 취급을 막았지만, `textconv` 는
+`--numstat` 에 `1`/`1` 을 내면서 이 함수가 읽는 diff 의 본문을 지운다 — 가드와 이 함수가
+**다른 투영**을 봤다.
+
+수리는 이 함수 안에 둘이다. 판정 `git diff` 가 **`--no-textconv`** 를 받고(`--no-ext-diff` 옆),
+파서가 훅을 낸 파일을 `bodied` 에 모아 **가드가 돌려준 `--numstat` 레코드와 대조**한다 —
+내용이 바뀌었다는데(`0`/`0` 도 `-`/`-` 도 아닌데) 훅이 하나도 없으면 거절한다.
+본문 표시는 파일의 **첫 훅 한 자리**에서만 한다(이름은 그 뒤 안 바뀌므로 뒤의 훅은 같은 것을
+다시 넣을 뿐이고, 두 자리에 두면 한쪽을 지우는 변이가 동등 변이가 된다).
+
+편집 후 `ast.after-7.5.23.json`: 분기 36 → **42** · raise 3 → **4**.
+
+## task 7.5.24 — 짝짓기를 순서로 (2026-09-23)
+
+7.5.23 이 `bodied` 를 **이름 집합**으로 둔 것이 회귀였다(위 가드 FLM 참조). 이 함수 안에서는
+`bodied` 가 **구역마다 한 칸인 목록**이 된다: `diff --git ` 마다 `False` 를 붙이고 그 구역의 첫 훅에서
+`bodied[-1] = True` 로 바꾼다. 끝에서 `zip(records, bodied)` 로 짝짓고, 크기가 다르면 따로 거절한다.
+이름을 안 비교하므로 git 의 인용과 `removeprefix` 의 유도가 판정에 안 섞인다.
+
+편집 후 `ast.after-7.5.24.json`: 분기 42 · raise 4 → **5**(크기 어긋남 거절이 하나 늘었다).
+
+## task 7.5.27 — 워킹트리를 다시 쓰는 알려진 문 (2026-09-23)
+
+두 git 호출 앞에서 `_git_view_pins(root)` 를 **한 번** 계산해 가드와 판정에 **같이** 준다
+(`core.fsmonitor=false` · 모든 필터 드라이버의 `clean=`·`process=`·`required=false`). 그리고 워킹트리
+대상이면 **가장 뒤에서** `_hidden_by_index_flags` 를 물어, `assume-unchanged`·`skip-worktree` 로 편집을
+감춘 `*.go` 를 이름 대고 거절한다. 이 둘은 교차 검사가 원리상 못 보는 모양 — 두 시야가 **함께** 거짓말하는
+모양 — 이다. class(판정 바이트를 git 의 투영 없이 대조)는 사람 결정 7.5.25 로 남는다.
+
+## task 7.5.28 — 줄 경계 · `ident` · 머리 줄의 탭 (2026-09-24)
+
+**판정 diff 를 바이트로 받아 `\n` 에서만 자른다.** `text=True` + `str.splitlines()` 는 U+2028 · U+2029 ·
+U+0085(와 `\r`)에서도 잘랐다. 그 글자가 경로에 있으면 `diff --git` 머리가 잘려 뒷조각이 훅으로 읽히고,
+본문이 이름보다 먼저 열려 그 파일의 요구가 통째로 사라졌다 — 7.5.24 의 순서 짝짓기가 낸 **회귀**다(이름
+짝짓기는 이 입력을 거절했다). 머리 줄의 이름은 `_header_name` 으로 읽는다: git 은 이름에 공백이 있으면 줄 끝에
+**탭**을 붙이는데 그것을 이름으로 읽어 거짓 차단했다(이 change 이전부터). 워킹트리 대상의 **가장 뒤**에서
+`_ident_go_paths` 를 먼저, 그다음 `_hidden_by_index_flags` 를 묻는다. `ast.after-7.5.28.json`.
+
+## task 7.5.25 — git 의 워킹트리 투영을 안 쓴다 (2026-09-24, 사람이 선택지 1 을 골랐다)
+
+`ast.before-7.5.25.json`(편집 전, `cfe8d08b` 의 `:323-517`, 분기 45 · raise 7) →
+`ast.after-7.5.25.json`(몸통을 떼어 낸 껍데기, 분기 2 · raise 1) + `../tools-logic-map--_changed_existing_functions/ast.after-7.5.25.json`
+(몸통, 분기 39 · raise 4). 옛/새 분기 열을 difflib 로 맞춘 결과(손으로 재번호하지 않았다):
+
+| 편집 전 | 편집 후 | 무엇이 바뀌었나 |
+|---|---|---|
+| B2 `IfExp [target] if target else []` | 껍데기 B2 `if target:` | 대상이 워킹트리면 **스냅숏을 연다**(`_worktree_snapshot`) — 두 diff 가 견주는 쌍은 `_compared` 하나가 준다 |
+| B15 `BoolOp target and new_source` · B16 · B17 (`root / new_source`) | 몸통 B13 `if target:` · B14 · B15 (`_temporary_go(contents[new_source])`) | 현재 쪽이 **디스크를 다시 읽지 않고** 스냅숏의 바이트를 읽는다 |
+| B24 `BoolOp` · B25 `if target and current is not None:` | 몸통 B22 `if current is not None:` | 현재 쪽이 이제 늘 임시 파일이므로 늘 지운다 |
+| B43 `if not target:` · B44 `if rewritten:` · B45 `if hidden:` | — | `ident` · 인덱스 플래그 거절을 **지웠다** — 스냅숏이 그 문들을 원리로 닫는다 |
+| raise 6 `the ident attribute rewrites …` · raise 7 `an index flag … hides …` | — | 같은 이유로 지웠다 |
+
+나머지 분기(편집 전 B1 · B3~B14 · B18~B23 · B26~B42)는 순서와 내용이 그대로 몸통 B1~B12 · B16~B21 · B23~B39 로
+옮겨졌다(첫 `if not base:` 는 껍데기 B1 에 남는다).
+
+**껍데기와 몸통으로 가른 까닭.** 스냅숏은 임시 디렉터리(임시 인덱스 · 임시 객체 저장소)를 두 diff 가 끝날 때까지
+살려 둬야 한다 — `with` 안에 몸통 180 줄을 들여 쓰는 대신 몸통을 떼어 `with` 안에서 부른다. 대상이 커밋이면
+스냅숏 없이 곧장 부른다.
+
+**불변식 (편집 후).** 워킹트리 대상에서 판정이 견주는 바이트 = 깔때기(`_read_regular`)가 읽은 바이트 = git 에 건넨
+blob = `go_functions` 가 지도를 뽑는 바이트. 셋이 한 번의 읽기에서 온다. 편집 전에는 git 이 **자기 시야**로 바이트를
+골랐고(필터 · `ident` · `working-tree-encoding` · stat 캐시 · fsmonitor · 인덱스 플래그) 현재 쪽은 디스크를 **다시**
+읽었다 — 둘이 다를 수 있었다.
+
+## task 7.5.31 — git 밖의 대조 (2026-09-24)
+
+껍데기(`changed_existing_functions`)는 분기 수가 같다(2) — 스냅숏의 셋째 값 `placed` 를 몸통에 건넬 뿐이다. 몸통
+(`_changed_existing_functions`, `../tools-logic-map--_changed_existing_functions/ast.after-7.5.31.json`)은 분기 39 → **40**:
+맨 뒤에 `if placed is not None:` 하나(B40)가 붙어 `_snapshot_disagreement` 를 부른다 — 가드가 읽은 **같은** 레코드로,
+앞의 모든 가드 **뒤에**. 커밋 대상은 `placed` 가 `None` 이다.
+
+## task 7.5.34 — 두 대상 모두 격리한 비교 (2026-09-24)
+
+`ast.before-7.5.34.json`(분기 2 · 반환 2) → `ast.after-7.5.34.json`(분기 **1** · 반환 **1**). 편집 전 B2(`if target:` —
+커밋 대상은 스냅숏 없이)가 빠졌다: 커밋 대상도 `_isolated_comparison` 이 검증한 두 트리를 세운다(7.5.31 까지는 git 이
+oid 로 찾아 주는 두 트리를 그대로 견줬다 — 한쪽 blob 을 위조하면 `[]`). 커밋 대상이 워킹트리를 안 읽는 것은
+`_isolated_comparison` 의 B11 이 지킨다.

@@ -1,0 +1,5 @@
+=== RUN   TestReviewAEquivalence
+    review_a_test.go:51: A 2400 random + 8 named snapshots x 4 = 9632 decisions
+--- PASS: TestReviewAEquivalence (0.76s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.758s

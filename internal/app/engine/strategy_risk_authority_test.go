@@ -11,12 +11,14 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/officialfx"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
@@ -127,6 +129,35 @@ type strategyRiskLoaderFixture struct {
 
 func newStrategyRiskLoaderFixture(t *testing.T) strategyRiskLoaderFixture {
 	t.Helper()
+	return newStrategyRiskLoaderFixtureWith(t, nil)
+}
+
+// newStrategyRiskLoaderFixtureWith 는 KR 서명 위험 정책의 종목 목록에 extraKR 을 더한다(a112 5.2.2.2 — 소유자 범위 둘인 KR 시장의
+// 범위별 위험 권한). 결과 권한 쌍은 원래 종목 하나 그대로다 — 범위별 결과는 시험이 제안 권한에서 다시 만든다.
+func newStrategyRiskLoaderFixtureWith(t *testing.T, extraKR []riskLoaderSymbol) strategyRiskLoaderFixture {
+	t.Helper()
+	return newStrategyRiskLoaderFixtureGeneration(t, extraKR, 1)
+}
+
+// newStrategyRiskLoaderFixtureGeneration 은 서명 위험 정책의 세대를 정한다(a112 5.2.2.2 리뷰 수리 — 시장 칸과 범위 번들의 세대가 갈리는
+// 배치를 만들어 dispatch 가 **범위 번들의** 세대를 읽는지 잼, 리뷰 B #1 · 변이 M20).
+func newStrategyRiskLoaderFixtureGeneration(t *testing.T, extraKR []riskLoaderSymbol, generation uint64) strategyRiskLoaderFixture {
+	t.Helper()
+	return newStrategyRiskLoaderFixtureFor(t, riskLoaderFixtureOptions{extraKR: extraKR, generation: generation})
+}
+
+// riskLoaderFixtureOptions 는 KR 서명 위험 정책의 변형이다(a112 6.2 — family 버킷 한도 · 둘째 family 레인 항목).
+type riskLoaderFixtureOptions struct {
+	extraKR           []riskLoaderSymbol
+	generation        uint64
+	krStrategyLimit   string               // 빈 값이면 기본 5000000
+	extraKRStrategies []riskLoaderStrategy // 다른 family 레인의 strategy 항목
+	krHorizonShort    string               // 빈 값이면 기본 10000000(공유 차원 고갈 시험)
+}
+
+func newStrategyRiskLoaderFixtureFor(t *testing.T, options riskLoaderFixtureOptions) strategyRiskLoaderFixture {
+	t.Helper()
+	extraKR, generation := options.extraKR, options.generation
 	now := time.Date(2026, 8, 4, 2, 0, 0, 0, time.UTC)
 	dir := t.TempDir()
 	journalPath := filepath.Join(dir, "journal.db")
@@ -156,7 +187,7 @@ func newStrategyRiskLoaderFixture(t *testing.T) strategyRiskLoaderFixture {
 			t.Fatal(err)
 		}
 		body := riskLoaderBody{SchemaVersion: "strategy-risk-bucket-policy:v1", Domain: "TossOS/strategy-risk-bucket-policy/ed25519/v1",
-			SignatureAlgorithm: "Ed25519", KeyID: env[strategyRiskKeyIDEnv], Generation: 1, Market: bucketMarket,
+			SignatureAlgorithm: "Ed25519", KeyID: env[strategyRiskKeyIDEnv], Generation: generation, Market: bucketMarket,
 			AccountID: "acct-risk-loader", AccountCurrency: "KRW", QuoteCurrency: quote, PolicyVersion: "risk-policy-v1", Approver: "risk-committee",
 			ObservedAt: now.Add(-time.Minute).Format(time.RFC3339Nano), FreshUntil: now.Add(time.Minute).Format(time.RFC3339Nano),
 			Fee:           riskLoaderFee{FixedBaseMinor: "0", PerUnitBaseMinor: "1", MinimumBaseMinor: "1", Version: "fee-v1", Digest: riskLoaderDigest("fee-" + string(market))},
@@ -164,6 +195,16 @@ func newStrategyRiskLoaderFixture(t *testing.T) strategyRiskLoaderFixture {
 			Strategies: []riskLoaderStrategy{{LaneID: descriptor.LaneID, LaneVersion: descriptor.LaneVersion, Horizon: riskbucket.HorizonShort,
 				RiskID: "continuation", RiskVersion: "continuation-risk-v1", LimitMinor: "5000000"}},
 			Symbols: []riskLoaderSymbol{{Symbol: symbol, Sector: "technology", SectorLimitMinor: "3000000", SymbolLimitMinor: "2000000"}}}
+		if market == StrategyMarketKR {
+			body.Symbols = append(body.Symbols, extraKR...)
+			if options.krStrategyLimit != "" {
+				body.Strategies[0].LimitMinor = options.krStrategyLimit
+			}
+			if options.krHorizonShort != "" {
+				body.HorizonLimits = map[riskbucket.Horizon]string{riskbucket.HorizonShort: options.krHorizonShort, riskbucket.HorizonMedium: "20000000"}
+			}
+			body.Strategies = append(body.Strategies, options.extraKRStrategies...)
+		}
 		bodyJSON, _ := json.Marshal(body)
 		manifest := riskLoaderManifest{riskLoaderBody: body, Signature: base64.StdEncoding.EncodeToString(ed25519.Sign(private, bodyJSON))}
 		data, _ := json.Marshal(manifest)
@@ -204,11 +245,16 @@ func createStrategyRiskLoaderJournal(t *testing.T, path string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, statement := range []string{`PRAGMA user_version=27`,
+	// a127: 축소 원장도 엔진이 주입하는 현재 스키마(journal.SchemaVersion)를 단다 — 엔진 호출 자리가 그 상수를 넣으므로(D2).
+	for _, statement := range []string{fmt.Sprintf(`PRAGMA user_version=%d`, journal.SchemaVersion),
 		`CREATE TABLE risk_bucket_policies(bucket_dimension TEXT,bucket_value TEXT,policy_version TEXT,record_digest TEXT,PRIMARY KEY(bucket_dimension,bucket_value,policy_version))`,
 		`CREATE TABLE risk_bucket_snapshots(snapshot_id TEXT PRIMARY KEY,bucket_dimension TEXT,bucket_value TEXT,policy_version TEXT)`,
-		`CREATE TABLE risk_bucket_reservations(reservation_id TEXT PRIMARY KEY,account_ref TEXT,bucket_dimension TEXT,bucket_value TEXT,policy_version TEXT,snapshot_id TEXT,held_minor TEXT,filled_minor TEXT,state TEXT,risk_overage_latched INTEGER,unknown_actual_latched INTEGER)`,
-		`CREATE TABLE risk_bucket_scope_latches(account_ref TEXT,market TEXT,symbol TEXT)`} {
+		`CREATE TABLE risk_bucket_reservations(reservation_id TEXT PRIMARY KEY,account_ref TEXT,bucket_dimension TEXT,bucket_value TEXT,policy_version TEXT,snapshot_id TEXT,held_minor TEXT,filled_minor TEXT,state TEXT,risk_overage_latched INTEGER,unknown_actual_latched INTEGER,decision_id TEXT,market TEXT,symbol TEXT,owner_prospective_generation TEXT)`,
+		`CREATE TABLE risk_bucket_scope_latches(account_ref TEXT,market TEXT,symbol TEXT,prospective_generation TEXT)`,
+		// a126: 사용량 reader 가 떠남 판정을 위해 읽는 표(생산 원장 v24+ 에 실재). 빈 표 — 이 시험의 단언은 바뀌지 않음.
+		`CREATE TABLE risk_bucket_owner_release_receipts(account_ref TEXT,market TEXT,symbol TEXT,prospective_generation TEXT,released_at TEXT)`,
+		`CREATE TABLE risk_bucket_owners(account_ref TEXT,market TEXT,symbol TEXT,prospective_generation TEXT,released_at TEXT)`,
+		`CREATE TABLE risk_bucket_final_decisions(decision_id TEXT PRIMARY KEY,account_ref TEXT,market TEXT,symbol TEXT,owner_prospective_generation TEXT)`} {
 		if _, err := db.Exec(statement); err != nil {
 			t.Fatal(err)
 		}

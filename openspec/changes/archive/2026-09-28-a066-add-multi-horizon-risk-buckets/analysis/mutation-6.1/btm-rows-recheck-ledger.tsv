@@ -1,0 +1,16 @@
+# recheck 1 (survivors at e5ad6f9b)
+TREE	HEAD e5ad6f9b45368128857fa4762426ab85837cce2d	uncommitted tracked: none
+CONTROL	GREEN	
+internal-journal--commitfreshriskbucketadmissiontx B15 if@442	CAUGHT	2 failing: TestA066FreshScaleInReusesTheOwnerOnlyAfterStateAndBucketIdentityMatch/bucket_identity_drift, TestA066FreshScaleInReusesTheOwnerOnlyAfterStateAndBucketIdentityMatch/state_digest_drift
+internal-journal--journal.revalidateqfinaladmission B15 range@616	SURVIVED	
+internal-journal--loadriskbucketfilltransition B10 else@800	CAUGHT	1 failing: TestA066FillTransitionUsesTheSmallestDecisionLimitPerBucket/later_decision_tighter
+internal-journal--loadriskbucketfilltransition B18 range@837	SURVIVED	
+internal-riskbucket--applyfill B2 if@108	CAUGHT	2 failing: TestA066ApplyFillValidatesBucketShapeBeforeAnyArithmetic, TestA066ApplyFillValidatesBucketShapeBeforeAnyArithmetic
+internal-riskbucket--applyfill B5 range@115	CAUGHT	2 failing: TestA066ApplyFillTargetHeldGuardsAreLayered, TestA066ApplyFillTargetHeldGuardsAreLayered
+internal-riskbucket--applyfill B25 if@210	CAUGHT	2 failing: TestA066ApplyFillRecordKeepsTheActualEvidenceItWasValuedWith, TestA066ApplyFillRecordKeepsTheActualEvidenceItWasValuedWith
+internal-riskbucket--applyfill B36 if@256	CAUGHT	2 failing: TestA066ApplyFillFirstApplyOverflowIsRefusedAtTheAddition, TestA066ApplyFillFirstApplyOverflowIsRefusedAtTheAddition
+# recheck 2 (after hardening the two layer pins against a head continue)
+TREE	HEAD e5ad6f9b45368128857fa4762426ab85837cce2d	uncommitted tracked: internal/journal/a066_fill_transition_layers_test.go,internal/journal/a066_fill_transition_limit_test.go
+CONTROL	GREEN	
+internal-journal--journal.revalidateqfinaladmission B15 range@616	CAUGHT	1 failing: TestA066RevalidateDimensionGuardsAreLayered
+internal-journal--loadriskbucketfilltransition B18 range@837	CAUGHT	1 failing: TestA066FillTransitionBucketCountGuardsAreLayered

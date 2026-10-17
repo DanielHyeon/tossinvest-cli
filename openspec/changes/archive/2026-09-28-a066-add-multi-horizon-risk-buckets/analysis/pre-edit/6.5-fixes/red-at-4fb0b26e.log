@@ -1,0 +1,14 @@
+    a066_review_fixes_test.go:68: submit after the latch: required=true err=<nil>, want entry blocked
+    a066_review_fixes_test.go:68: submit after the latch: required=true err=<nil>, want entry blocked
+    a066_review_fixes_test.go:68: submit after the latch: required=true err=<nil>, want entry blocked
+--- FAIL: TestA066SubmitRevalidationRefusesALatchTakenAfterIssuance (0.80s)
+    --- FAIL: TestA066SubmitRevalidationRefusesALatchTakenAfterIssuance/shared_bucket_overage_on_another_owner (0.21s)
+    --- FAIL: TestA066SubmitRevalidationRefusesALatchTakenAfterIssuance/shared_bucket_unknown_actual_on_another_owner (0.19s)
+    --- FAIL: TestA066SubmitRevalidationRefusesALatchTakenAfterIssuance/active_reconcile_on_the_entry_symbol (0.20s)
+    a066_review_fixes_test.go:97: a larger declared limit must be capped by the recorded 80: err=<nil>
+--- FAIL: TestA066SharedBucketAdmissionIsCappedByTheSmallestRecordedLimit (0.21s)
+    a066_review_fixes_test.go:133: the broker fill must be kept when the state seal is missing: result={OrderID:risk-missing-seal Delta:2 DeltaQuantity:2 Changed:false FailClosed:false Reason: Detail: Corrected:false CommittedAt:2026-03-30T00:30:01Z ReleasedReservations:[] ReservationAlerts:[]} err=journal: applying risk buckets for fill risk-missing-seal: sql: no rows in result set
+--- FAIL: TestA066FillWithAMissingStateSealLatchesAndKeepsTheFill (0.21s)
+--- FAIL: TestA066IssuedEntryIsRefusedAtSubmitWhenItsScopeLatchedAfterIssuance (0.45s)
+    --- FAIL: TestA066IssuedEntryIsRefusedAtSubmitWhenItsScopeLatchedAfterIssuance/active_reconcile_after_issuance_refuses_the_submit (0.21s)
+        a066_submit_latch_test.go:65: latched scope submitted or refusal unnamed: rejected=execgw: rejected state=CONFIRMED places=1 err=<nil>

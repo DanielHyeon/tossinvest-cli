@@ -492,12 +492,19 @@ func (j *Journal) applyRiskBucketOwnerBindingInTx(ctx context.Context, tx *sql.T
 	if strings.ToUpper(strings.TrimSpace(fill.Side)) != "BUY" {
 		return nil
 	}
+	// a066 6.x: 증분을 해석하지 못하는 BUY 체결은 의미 갭임 — 형제 갭(다중 활성 scope·결속 거절)과 같이 이 주문의 활성
+	// owner scope 를 REPLAY_MISMATCH 로 latch 하고 nil 을 돌려줌(진입만 막고 체결·exit 는 막지 않음). 등록된 위험 주문이
+	// 아니면 latch 할 owner 가 없으므로 예전과 같이 아무것도 안 함.
 	delta, err := campaignQuantity(fill.Delta)
 	if err != nil {
-		return nil
+		return latchRiskBucketFillFailureForScope(ctx, tx, fill, "owner bind: fill delta unreadable: "+err.Error())
 	}
 	positive, err := riskcalc.CompareDecimal(delta, "0")
-	if err != nil || positive <= 0 {
+	if err != nil {
+		return latchRiskBucketFillFailureForScope(ctx, tx, fill, "owner bind: fill delta unreadable: "+err.Error())
+	}
+	// 증분 0 은 같은 누적량의 재관측 — 결속할 새 수량이 없음.
+	if positive <= 0 {
 		return nil
 	}
 	rows, err := tx.QueryContext(ctx, `SELECT DISTINCT d.account_ref,d.market,d.symbol,d.owner_prospective_generation
@@ -922,7 +929,7 @@ func (j *Journal) releaseRiskBucketOwner(ctx context.Context, key riskbucket.Own
 		{"pending_entry", `SELECT count(*) FROM risk_bucket_orders o JOIN risk_bucket_final_decisions d ON d.decision_id=o.decision_id WHERE d.account_ref=? AND d.market=? AND d.symbol=? AND d.owner_prospective_generation=? AND o.state='ACTIVE'`, []any{key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration}},
 		{"owner_latch", `SELECT count(*) FROM risk_bucket_owners WHERE account_ref=? AND market=? AND symbol=? AND prospective_generation=? AND (risk_overage_latched=1 OR unknown_actual_latched=1)`, []any{key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration}},
 		{"scope_latch", `SELECT count(*) FROM risk_bucket_scope_latches WHERE account_ref=? AND market=? AND symbol=? AND prospective_generation=?`, []any{key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration}},
-		{"unresolved_fill", `SELECT count(*) FROM risk_bucket_fills f JOIN risk_bucket_orders o ON o.order_key=f.order_key JOIN risk_bucket_final_decisions d ON d.decision_id=o.decision_id WHERE d.account_ref=? AND d.market=? AND d.symbol=? AND d.owner_prospective_generation=? AND (f.actual_known=0 OR NOT EXISTS(SELECT 1 FROM risk_bucket_fill_actual_evidence a WHERE a.fill_id=f.fill_id))`, []any{key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration}},
+		{"unresolved_fill", `SELECT count(*) FROM risk_bucket_fills f JOIN risk_bucket_orders o ON o.order_key=f.order_key JOIN risk_bucket_final_decisions d ON d.decision_id=o.decision_id WHERE d.account_ref=? AND d.market=? AND d.symbol=? AND d.owner_prospective_generation=? AND NOT ` + riskBucketFillActualResolvedSQL, []any{key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration}},
 		{"unresolved_fill", `SELECT count(*) FROM risk_bucket_events WHERE account_ref=? AND market=? AND symbol=? AND prospective_generation=? AND event_type='FILL_UNACCOUNTED'`, []any{key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration}},
 		{"protection_saga", `SELECT count(*) FROM protection_sagas WHERE account_ref=? AND market=? AND symbol=? AND generation=? AND state NOT IN ('TRIGGERED','CLOSED')`, []any{key.AccountID, string(key.Market), key.Symbol, actualGeneration}},
 		{"protection_order", `SELECT count(*) FROM protection_mutation_attempts a JOIN protection_sagas s ON s.saga_id=a.saga_id WHERE s.account_ref=? AND s.market=? AND s.symbol=? AND a.generation=? AND a.state<>'CLOSED'`, []any{key.AccountID, string(key.Market), key.Symbol, actualGeneration}},

@@ -1,0 +1,137 @@
+{
+  "file": "internal/app/engine/strategy_entry_supervisor.go",
+  "source_sha256": "6f1f6804cfd437116c16a48d1526327c28360433f09e0ba3567eb3537442ee5b",
+  "package": "engine",
+  "function": "invokeStrategyCycle",
+  "signature": "invokeStrategyCycle(params=2, results=1)",
+  "start": {
+    "line": 1079,
+    "column": 1
+  },
+  "end": {
+    "line": 1091,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1081,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1084,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1090,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1080,
+        "column": 8
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1081,
+        "column": 19
+      },
+      "text": "recover"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1083,
+        "column": 18
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1084,
+        "column": 52
+      },
+      "text": "isCentralStrategyIntegrity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1089,
+        "column": 16
+      },
+      "text": "cycle"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1081,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1082,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1083,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1084,
+        "column": 7
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1085,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1089,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 1080,
+        "column": 2
+      }
+    }
+  ]
+}

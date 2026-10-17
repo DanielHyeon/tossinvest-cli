@@ -1,0 +1,79 @@
+
+Impact of changing "newEngineCmd" — 38 affected symbols:
+
+cmd/tossctl/engine.go
+  function    newEngineCmd:115
+
+cmd/tossctl/engine_reconcile_test.go
+  function    TestEngineReconcileResolveIsRegisteredAsOfficialReadOnly:75
+
+cmd/tossctl/a098_the_operator_command_names_a_person_test.go
+  function    a098RunAlerts:117
+  function    TestTheAcknowledgedNameIsTheOneTheOperatorTyped:177
+  function    TestAcknowledgingWithoutANameChangesNothing:210
+  function    TestAcknowledgingAsksForNothingElse:242
+  function    TestTheListingShowsTheLeaseAndLeaksNothing:265
+  function    TestAcknowledgingSaysEntryIsStillBlocked:304
+  function    TestTheCommandsRefuseWhenNoEngineIsRunning:339
+  function    TestTheAlertCommandsAreWiredUnderEngine:135
+
+cmd/tossctl/a094_attempt_resolve_test.go
+  function    TestA094TheAttemptResolveCommandIsAttachedToTheEngineTree:94
+
+cmd/tossctl/root.go
+  function    newRootCmd:52
+
+cmd/tossctl/a108_the_engine_outlives_its_read_endpoint_test.go
+  function    TestTheDegradedBootDoesNotWaitForTheNotifier:387
+
+cmd/tossctl/candidate_test.go
+  function    runCandidateStreams:106
+  function    TestTheDiscoveryCommandsDeclareThemselvesReadOnly:133
+
+cmd/tossctl/console_remote_test.go
+  function    TestConsoleOffersOnlyTheCompleteRemoteAccessFlagSet:12
+
+cmd/tossctl/flatten_test.go
+  function    TestFlattenOffersNoAutomationFlag:35
+  function    TestFlattenOffersDryRun:59
+  function    TestFlattenIsAnnotatedAsAnOfficialMutation:76
+  function    TestFlattenRefusesWithoutOfficialCredentials:94
+
+cmd/tossctl/httpapi_test.go
+  function    TestHTTPAPICommandIsRegisteredReadOnlyAndNonMutating:9
+
+cmd/tossctl/soak_test.go
+  function    runCLI:131
+  function    TestSoakCommandsAreRegisteredAndReadOnly:661
+  function    TestSoakRunFlags:689
+
+cmd/tossctl/verify_test.go
+  function    TestVerifyRunOffersNoAutomationFlag:180
+  function    TestVerifyRunOffersTheKnobsTheProcedureNeeds:206
+  function    TestVerifyCommandsAreRegisteredAndAnnotated:234
+
+cmd/tossctl/console_test.go
+  function    TestConsoleIsRegisteredAndAnnotated:44
+  function    TestConsoleOffersOnlyTheExplicitRemoteFlagSet:71
+  function    TestConsoleProbeSymbolMatchesVerifyRunsDefault:142
+
+cmd/tossctl/engine_risk_relaxation_test.go
+  function    TestEngineRiskRelaxationCommandsDeclareWhatTheyAre:91
+
+cmd/tossctl/a092_mode_release_cmd_test.go
+  function    TestA092ModeReleaseDeclaresWhatItIs:24
+
+cmd/tossctl/help_convention_test.go
+  function    TestShortDescriptionsAreEnglish:60
+  function    TestLeafCommandsHaveSourceAnnotation:80
+  function    TestMutatingAnnotationOnTradeCommands:96
+
+cmd/tossctl/verify_reconcile_test.go
+  function    TestVerifyReconcileIsRegisteredAsAMutatingOfficialCommand:342
+
+cmd/tossctl/main.go
+  function    main:11
+
+cmd/tossctl/a131_scrub_account_records_test.go
+  function    TestA131CobraErrorLineIsRedacted:243
+

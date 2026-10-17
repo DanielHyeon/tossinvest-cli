@@ -1,0 +1,132 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "3da639a9653f8e5b55da97243e4974ee74c105a0",
+  "source_sha256": "1dfa432b00817a8e18b8577e67024b675cb229e96d26c0c6c4db90b9c7618f6c",
+  "function": "record_landing",
+  "signature": "record_landing(change, root)",
+  "start": {
+    "line": 1276,
+    "column": 1
+  },
+  "end": {
+    "line": 1326,
+    "column": 6
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 1291,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 1294,
+      "inherited_line": false,
+      "source": "except ValueError as exc:"
+    },
+    {
+      "id": "B3",
+      "kind": "Try",
+      "line": 1297,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 1302,
+      "inherited_line": false,
+      "source": "if refusal:"
+    },
+    {
+      "id": "B5",
+      "kind": "ExceptHandler",
+      "line": 1305,
+      "inherited_line": false,
+      "source": "except GATE_FAULTS as exc:"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 1309,
+      "inherited_line": false,
+      "source": "if not landing:"
+    },
+    {
+      "id": "B7",
+      "kind": "Try",
+      "line": 1311,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B8",
+      "kind": "ExceptHandler",
+      "line": 1314,
+      "inherited_line": false,
+      "source": "except FileExistsError:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1295,
+      "value": "(1, [str(exc)])"
+    },
+    {
+      "line": 1303,
+      "value": "(1, [f'{change}: {refusal}'])"
+    },
+    {
+      "line": 1308,
+      "value": "(1, [f'{change}: no landing recorded — {exc}'])"
+    },
+    {
+      "line": 1310,
+      "value": "(1, [f'{change}: no landing recorded — {why}'])"
+    },
+    {
+      "line": 1319,
+      "value": "(1, [f'{change}: `{LANDING_FILE}` appeared while the landing was being computed — not overwritten'])"
+    },
+    {
+      "line": 1323,
+      "value": "(0, [f\"{change}: recorded `{LANDING_FILE}` = {landing} (base {base[:12]}) — computed from this change's own evidence, not chosen; commit it with the change\"])"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1293,
+      "callee": "resolve_referenced_change"
+    },
+    {
+      "line": 1295,
+      "callee": "str"
+    },
+    {
+      "line": 1301,
+      "callee": "_recording_refusal"
+    },
+    {
+      "line": 1304,
+      "callee": "compute_landing"
+    },
+    {
+      "line": 1312,
+      "callee": "landing_file.open"
+    },
+    {
+      "line": 1313,
+      "callee": "(landing + '\\n').encode"
+    },
+    {
+      "line": 1313,
+      "callee": "output.write"
+    }
+  ]
+}

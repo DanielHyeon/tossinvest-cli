@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/redact"
 )
 
 // Field names. Stable contract; append, never rename.
@@ -124,6 +125,9 @@ func NewLogger(opts LogOptions) *Logger {
 	} else {
 		handler = slog.NewTextHandler(w, handlerOpts)
 	}
+	// a131: 모든 줄이 계좌 규칙 하나를 지남 — 계좌 키는 버리고 문자열 값·오류 원문·메시지의 계좌를 치환(안전 불변식 8).
+	// 기본 속성도 이 감싼 핸들러에 붙여야 규칙을 지남(감싸기 전에 붙이면 우회).
+	handler = redact.Handler(handler)
 	if len(opts.Base) > 0 {
 		handler = handler.WithAttrs(opts.Base)
 	}

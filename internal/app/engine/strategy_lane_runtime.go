@@ -48,6 +48,12 @@ type strategyLaneObservation struct {
 	Abandoned bool
 	Latched   bool
 	Emitted   bool
+	// 아래는 a112 7.3 투영이 읽는 관측 시점 값이다. Wave 는 record 가 찍는 시장별 물결 번호(0 = 미관측), Desired · Effective 는 그 물결이
+	// 받은 활성화가 이 레인에 대해 말한 값, 두 digest 는 그 물결에 이 레인이 받은 입력(없으면 빈 값)이다.
+	Wave                           uint64
+	Refusal                        strategyarbiter.Refusal
+	Desired, Effective             strategyrouter.DesiredState
+	SnapshotDigest, EvidenceDigest string
 }
 
 // strategyLaneRuntime 은 프로세스가 사는 내내 **같은** 여덟 레인이다.
@@ -74,9 +80,21 @@ type strategyLaneRuntime struct {
 	// latches 는 지금 **열려 있는** 원장 기록이다. 원장의 순번을 들고 있어야
 	// 복구를 요청할 수 있다.
 	latches map[strategyworker.Key]journal.StrategyLaneLatch
+	// waves 는 시장별 evaluate 물결 번호다(a112 7.3, 판정 Q1=(B)). 프로세스 수명이고 record 가 mu 아래에서 올린다.
+	waves map[StrategyMarket]uint64
 	// unmatched 는 이 빌드에 없는 레인을 가리키는 기록이다. 버리지 않고 들고
 	// 있는 이유는 그것이 복구를 요청할 수 있는 유일한 손잡이이기 때문이다.
 	unmatched []journal.StrategyLaneLatch
+	// 아래는 a112 7.3.1 SHADOW 상태다(전부 mu 아래, 프로세스 수명 — 원장 · 파일에 쓰지 않으므로 재시작이 되살리지 않는다).
+	//   shadowCells: 시장별 칸 하나 {wave, batch, activation} — record 가 파도를 올리는 같은 임계 구역에서 덮어쓴다(누적 없음).
+	//   shadowEpochs: 실패한 주기마다 오르는 세대 — 게시는 시작 때 복사한 세대 · 파도와 같을 때만(CAS).
+	//   shadowObserved: 게시된 관측(시장 → 레인 열쇠). 투영은 shadowObservationUsable 하나로만 쓴다.
+	//   shadowInFlight · shadowSkipped: 시장당 단일 비행과 그때 건너뛴 물결 수(시험 관측 전용 — 생산 독자 · 투영 노출 없음).
+	shadowCells    map[StrategyMarket]strategyShadowCell
+	shadowEpochs   map[StrategyMarket]uint64
+	shadowObserved map[StrategyMarket]map[strategyworker.Key]strategyShadowObservation
+	shadowInFlight map[StrategyMarket]bool
+	shadowSkipped  map[StrategyMarket]uint64
 }
 
 // newStrategyLaneRuntime 은 생산 레인 여덟을 세운다.
@@ -89,9 +107,16 @@ func newStrategyLaneRuntime(clk clock.Clock, ledger strategyLaneLedger, accountR
 		return nil
 	}
 	lanes := strategyworker.ProductionLanes(clk)
+	// shadow 맵은 여기서 만든다 — nil 맵 대입은 panic 이고, 그 panic 이 주기 경로(record · 실패 폐기 defer)에서 나면 원래 오류를 덮는다
+	// (브리프 v3.3 N5).
 	return &strategyLaneRuntime{clk: clk, ledger: ledger, accountRef: accountRef, lanes: lanes,
-		observed: make(map[strategyworker.Key]strategyLaneObservation, len(lanes)),
-		latches:  map[strategyworker.Key]journal.StrategyLaneLatch{}}
+		observed:       make(map[strategyworker.Key]strategyLaneObservation, len(lanes)),
+		latches:        map[strategyworker.Key]journal.StrategyLaneLatch{},
+		shadowCells:    make(map[StrategyMarket]strategyShadowCell, 2),
+		shadowEpochs:   make(map[StrategyMarket]uint64, 2),
+		shadowObserved: make(map[StrategyMarket]map[strategyworker.Key]strategyShadowObservation, 2),
+		shadowInFlight: make(map[StrategyMarket]bool, 2),
+		shadowSkipped:  make(map[StrategyMarket]uint64, 2)}
 }
 
 // productionStrategyLanes 는 이 프로세스의 여덟 레인을 돌려준다. 없으면 만든다.
@@ -188,8 +213,10 @@ func strategyFamilyLaneStep(lane *strategyworker.Lane,
 //
 // 자기 제안이 없는 레인도 사이클을 돈다. "이번 물결에 낼 것이 없었다"와
 // "레인이 돌지 않았다"는 다른 뜻이고, 돌지 않은 레인은 관측에서 사라진다.
+//
+// shadow(a112 7.3.1)는 이 물결의 관문 앞 제안 묶음이다. 여기서는 record 로 넘기기만 한다 — 메서드 호출 · 순회 0(AST 핀 ④).
 func (runtime *strategyLaneRuntime) evaluate(ctx context.Context, market StrategyMarket,
-	activationGeneration uint64, promotion strategyrouter.FamilyActivation, inputs []strategyworker.Input,
+	activationGeneration uint64, promotion strategyrouter.FamilyActivation, inputs []strategyworker.Input, shadow strategyShadowBatch,
 ) error {
 	if runtime == nil {
 		return nil
@@ -201,8 +228,23 @@ func (runtime *strategyLaneRuntime) evaluate(ctx context.Context, market Strateg
 		return err
 	}
 	lanes := runtime.lanesFor(market)
-	observations := make([]strategyLaneObservation, 0, len(lanes))
-	for _, lane := range lanes {
+	// a112 7.5 D1: 레인 넷은 **동시에** 돌고 여기서 join 된다(시장 주기 안 — 분리된 레인 goroutine 금지, Manager 조건 ①).
+	//
+	// 왜: 순차로 돌면 앞 레인의 멈춤이 뒤 레인을 그 마감 시한만큼 세운다 — 설계 「느린 worker 때문에 다른 worker 가 기다리지 않게」와
+	// 스펙 「한 instance 의 wait · timeout 이 peer 의 evaluation cycle 을 바꾸지 않는다」를 어긴다. 동시에 돌면 이웃은 자기 지연으로
+	// 끝나고, 시장 주기의 지연은 합이 아니라 최댓값(각 레인이 RunBounded 마감 시한으로 끊기므로 ≤ 마감 시한 1 회)이다.
+	//
+	// 안전한 이유: 레인은 서로 상태를 공유하지 않고(Lane 주석 — 이웃 레인을 가리키는 필드 0), goroutine 하나가 레인 하나만 돌며, 관측은
+	// 자기 색인 칸에만 쓴다(레인 순서 그대로). 버려진 사이클의 step goroutine 수명은 strategyworker.invokeBounded 가 정한다 — step 이
+	// 돌아올 때까지 살고(순수 메모리 step 이라 곧 끝남), 비정상으로 레인이 즉시 잠기므로 레인당 최대 하나다(review 「7.5」 조건 ②).
+	//
+	// panic: 레인 goroutine 안의 panic(step 밖 — step 의 panic 은 invokeStep 이 이미 실패로 바꾼다)을 삼키지 않고 join 뒤 이 goroutine
+	// 에서 다시 던진다. 순차였을 때와 같이 시장 주기의 회복 경로(invokeStrategyCycle)가 받게 하려는 것이다 — 다른 goroutine 의 panic 은
+	// 그 경로가 잡을 수 없어 프로세스를 끝낸다.
+	observations := make([]strategyLaneObservation, len(lanes))
+	panics := make([]any, len(lanes))
+	var join sync.WaitGroup
+	for index, lane := range lanes {
 		input := strategyworker.Input{}
 		for _, candidate := range inputs {
 			if lane.Owns(candidate.Proposal) {
@@ -210,9 +252,20 @@ func (runtime *strategyLaneRuntime) evaluate(ctx context.Context, market Strateg
 				break
 			}
 		}
-		observations = append(observations, runtime.runLane(ctx, lane, promotion, input))
+		join.Add(1)
+		go func(index int, lane *strategyworker.Lane, input strategyworker.Input) {
+			defer join.Done()
+			defer func() { panics[index] = recover() }()
+			observations[index] = runtime.runLane(ctx, lane, promotion, input)
+		}(index, lane, input)
 	}
-	runtime.record(observations)
+	join.Wait()
+	for _, recovered := range panics {
+		if recovered != nil {
+			panic(recovered)
+		}
+	}
+	runtime.record(market, observations, shadow, promotion)
 	// 남기지 못한 잠금은 오류다. 조용히 넘기면 다음 재시작이 잠긴 레인을 열고,
 	// 그것이 이 태스크가 없애려는 바로 그 동작이다.
 	if err := runtime.persistMarketLatches(ctx, market, activationGeneration, runtime.clk.Now()); err != nil {
@@ -252,15 +305,23 @@ func strategyLaneInputs(accountRef string, authority strategyProposalMarketAutho
 func (runtime *strategyLaneRuntime) runLane(ctx context.Context, lane *strategyworker.Lane,
 	promotion strategyrouter.FamilyActivation, input strategyworker.Input,
 ) strategyLaneObservation {
-	observation := strategyLaneObservation{Key: lane.Key(), Trigger: lane.Offer()}
+	// a112 7.3: 투영이 읽을 관측 시점 값 — 활성화가 이 레인 자기 열쇠에 대해 말한 상태와 이번 입력의 digest. 레인 상태는 건드리지 않는다
+	// (Desired · Effective 는 worker 값 위임, 입력은 이미 받은 값).
+	observation := strategyLaneObservation{Key: lane.Key(), Desired: lane.Desired(promotion), Effective: lane.Effective(promotion),
+		SnapshotDigest: input.SnapshotDigest, EvidenceDigest: strategyLaneEvidenceDigest(input)}
+	observation.Trigger = lane.Offer()
 	if observation.Trigger != strategyworker.TriggerEnqueued {
 		observation.Health = lane.Health()
 		return observation
 	}
-	bounded, start := lane.RunBounded(ctx, input, strategyFamilyLaneStep(lane, promotion))
+	// 레인 안에서 도는 일은 laneStepFor 하나다(a112 7.5 D1). 생산 빌드(태그 없음)의 정의는 strategyFamilyLaneStep 그대로이고 seam 은
+	// tossos_testseams 빌드에만 있다 — 생산 바이너리에 함수 필드를 두면 `*Context` 클로저가 레인 안으로 들어올 길이 열린다
+	// (TestOnlyThePackageLevelStepEverRunsInsideALane 가 자리 · 본문 · 태그를 못 박음).
+	bounded, start := lane.RunBounded(ctx, input, runtime.laneStepFor(lane, promotion))
 	observation.Start = start
 	observation.Outcome = bounded.Cycle.Outcome
 	observation.Detail = bounded.Cycle.Detail
+	observation.Refusal = bounded.Cycle.Refusal
 	observation.Abnormal = bounded.Abnormal
 	observation.Cancelled = bounded.Cancelled
 	observation.Abandoned = bounded.Abandoned
@@ -274,13 +335,29 @@ func (runtime *strategyLaneRuntime) runLane(ctx context.Context, lane *strategyw
 }
 
 // record 는 이번 주기의 관측을 레인 열쇠별로 덮어쓴다.
-func (runtime *strategyLaneRuntime) record(observations []strategyLaneObservation) {
+//
+// a112 7.3(판정 Q1=(B)): 이 시장의 물결 번호를 하나 올려 이번 관측들에 찍는다. 같은 잠금 안에서 올리고 찍어야 두 물결이 한 번호를
+// 나눠 갖지 않는다. 관측이 없는 호출은 물결이 아니다(번호를 올리지 않음).
+//
+// a112 7.3.1(⑤): 같은 잠금 · 파도 증가 바로 뒤에 그 시장의 shadow 칸 {wave, batch, activation} 을 한 번에 덮어쓴다 — 그래서 「파도」 는
+// 묶음을 실어 온 evaluate 의 파도 번호이고 묶음 · 파도 · 활성화는 구성으로 짝이다. 관측이 없는 호출은 칸도 건드리지 않는다.
+func (runtime *strategyLaneRuntime) record(market StrategyMarket, observations []strategyLaneObservation, shadow strategyShadowBatch,
+	activation strategyrouter.FamilyActivation,
+) {
 	if runtime == nil || len(observations) == 0 {
 		return
 	}
 	runtime.mu.Lock()
 	defer runtime.mu.Unlock()
+	if runtime.waves == nil {
+		runtime.waves = make(map[StrategyMarket]uint64, 2)
+	}
+	if runtime.waves[market] < ^uint64(0) {
+		runtime.waves[market]++
+	}
+	runtime.shadowCells[market] = strategyShadowCell{wave: runtime.waves[market], batch: shadow, activation: activation}
 	for _, observation := range observations {
+		observation.Wave = runtime.waves[market]
 		runtime.observed[observation.Key] = observation
 	}
 }

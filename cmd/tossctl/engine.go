@@ -67,6 +67,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/redact"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/runlock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc"
 	"github.com/spf13/cobra"
@@ -121,6 +122,14 @@ func newEngineCmd(root *rootOptions) *cobra.Command {
 	// `engineJournalDir` 를 쓰므로, 격리 프로파일은 자기 엔진의 알림만 본다.
 	cmd.AddCommand(newEngineRunCmd(root), newEngineReconcileResolveCmd(root),
 		newEngineAlertsCmd(root))
+	// a066 5.5(D8): 진입 손실 잠금 · RISK_OVERAGE latch 의 운영자 해제(mutating) 와 읽기 전용 확인.
+	cmd.AddCommand(newEngineRiskRelaxationCmds(root)...)
+	// a092 단위 ④: 사람의 운영 모드 완화(mutating) — 모드 투영이 배선된 빌드의 유일한 완화 경로.
+	cmd.AddCommand(newEngineModeReleaseCmd(root))
+	// a094 D−4.5: park(UNRESOLVED_IN_DOUBT) 해동 — 운영자 해소(mutating, audit 먼저) 뒤 같은 명령 안에서 발의 해제.
+	cmd.AddCommand(newEngineAttemptResolveCmd(root))
+	// a134: 엔진 밖 감시 명령(호스트 타이머가 매 분 부름) — 마커 침묵을 판정해 한 번만 알림. 엔진 · 저널을 열지 않음.
+	cmd.AddCommand(newEngineHeartbeatCheckCmd(root))
 	return cmd
 }
 
@@ -159,6 +168,9 @@ raises exposure. Reduce-only exits remain available.`),
 		Annotations:  map[string]string{"source": "official", "mutating": "true"},
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			// a131: 이 프로세스의 stdout/stderr 가 engine.log 임 — 엔진 로거·직접 출력이 모두 계좌 규칙을 지남.
+			cmd.SetOut(redact.Writer(cmd.OutOrStdout()))
+			cmd.SetErr(redact.Writer(cmd.ErrOrStderr()))
 			return runEngineRun(cmd, root)
 		},
 	}
@@ -343,6 +355,21 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 	if alertControlErr != nil {
 		reportEngineEndpointDegraded(ctx, ectx, errOut, engineAlertControlEndpoint(dir),
 			alertControlErr)
+	}
+	// a092 단위 ④ — 사람의 운영 모드 완화 표면. 알림 제어와 같은 이유로 이 프로세스 안이어야 하고(산 게이트), 다른 힘이라
+	// 자기 소켓 · 토큰을 가짐. 기동 실패는 알림 제어와 같이 강등 보고 — 보호 루프는 그대로 돎.
+	// 표면을 못 만들면(핸들 부족) 기동을 멈추지 않고 강등으로 보고함 — 이 표면이 없어도 잃는 것은 사람의 완화뿐이고
+	// 모드 사유 차단은 유지되는 보수 방향임. 엔진을 멈추면 손절이 없어짐(안전 불변식 4).
+	modeOps, modeControlErr := ectx.ModeOperations()
+	if modeControlErr == nil {
+		var modeControl *engine.ModeControlServer
+		modeControl, modeControlErr = engineModeControlStart(dir, modeOps)
+		if modeControl != nil {
+			defer modeControl.Close()
+		}
+	}
+	if modeControlErr != nil {
+		reportEngineEndpointDegraded(ctx, ectx, errOut, engineModeControlEndpoint(dir), modeControlErr)
 	}
 	fmt.Fprintf(out, "account          %s\nloops            %s\n",
 		ectx.Automation.MaskedAccount(), strings.Join(rt.LoopNames(), ", "))
@@ -538,6 +565,7 @@ var (
 	}
 	enginePositionPolicyRuntimeStart = engine.StartPositionPolicyRuntimeServer
 	engineAlertControlStart          = engine.StartAlertControlServer
+	engineModeControlStart           = engine.StartModeControlServer
 )
 
 // engineAssemble builds the engine profile.
@@ -601,8 +629,19 @@ var engineRuntimeFactory = engineRuntime
 // Without it that step was guarded by a source string, and a102's A2 review
 // showed what that is worth: `ready = nil` inserted between the parameter and
 // its use left every test green (mutation N5).
+//
+// a094 D−2.5 · D−2.6-2: 재시작 복구가 **성공한 뒤** · 준비 신호 앞에 exit 발의 따라잡기를 한 번 돈다(종결됐는데 무장된 채
+// 남은 발의를 같은 해제 판정으로 푼다). 복구가 실패하면 루프가 하나도 뜨지 않으므로 따라잡기도 하지 않는다. 따라잡기는
+// 행 단위로 실패를 흡수하고 반환값을 바꾸지 않는다.
 var engineRecoverySequence = func(r *reconcile.Recovery) func(context.Context) (reconcile.Report, error) {
-	return r.Run
+	return func(ctx context.Context) (reconcile.Report, error) {
+		report, err := r.Run(ctx)
+		if err != nil {
+			return report, err
+		}
+		r.CatchUpExitProposals(ctx)
+		return report, nil
+	}
 }
 
 // engineRuntime assembles the loop set and hands it to the supervisor, refusing
@@ -630,11 +669,15 @@ func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, l
 	}
 
 	observer, err := ectx.ExitObserver(engine.ExitObserverOptions{
-		Clock:     clk,
-		Costs:     costs.DefaultModel(),
-		SLO:       detectorPressure{detector: detector},
-		Escalate:  ectx.Journal,
-		Announcer: ectx.Notifier,
+		Clock:    clk,
+		Costs:    costs.DefaultModel(),
+		SLO:      detectorPressure{detector: detector},
+		Escalate: ectx.Journal,
+		// Announcer · Alerts 는 넘기지 않음 — Context.ExitObserver 가 기록 전용으로 묶음(a092 C1).
+		// a090: 미관측 줄(exit.position_unobserved)만 받는 전용 로거. 관측자 전체 Log 는 넣지 않음 — 기존 줄이 계좌 원문을 실음.
+		UnobservedLog: logger,
+		// a129: 청산 주문 생애 줄(확정 · 거부 · 체결 …)만 받는 전용 로거 — 화이트리스트 필드만 씀. 2026-10-07 010170 손절이 이 로그에 0 줄이었음.
+		ExitOrderLog: logger,
 	})
 	if err != nil {
 		return nil, err
@@ -698,7 +741,11 @@ func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, l
 			},
 			strategyEntry.SupervisedLoop(),
 		},
-		Auxiliary: []engine.AuxiliaryExecutor{alertDelivery},
+		// a092 C8: exit 관측 goroutine 의 일반 등급 알림을 비우는 보조 실행자 — 배달 실행자와 따로(그 사이클에 얹지 않음).
+		// a135: attestation 만료 · 범위 상실 감시 — 감독 밖이라 그 결함이 손절 루프를 내리지 않음.
+		Auxiliary: []engine.AuxiliaryExecutor{alertDelivery, ectx.NormalAlertRelayExecutor(), ectx.AttestationWatch(clk),
+			ectx.ManualBuyRefresher(clk)}, // a136 D9=b: 엔진 밖 수동 매수 읽기
+
 	})
 }
 

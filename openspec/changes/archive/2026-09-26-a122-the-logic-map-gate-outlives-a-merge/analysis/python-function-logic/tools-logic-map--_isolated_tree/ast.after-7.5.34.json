@@ -1,0 +1,125 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "ff19be0162521627988dc8e09a06297b57e4d35d",
+  "source_sha256": "613a3174efe33c71a7c1f120fc9102d8cbd00e02756b3d2aa8e0eec80b86c359",
+  "function": "_isolated_tree",
+  "signature": "_isolated_tree(root, environment, index, entries)",
+  "start": {
+    "line": 313,
+    "column": 1
+  },
+  "end": {
+    "line": 338,
+    "column": 32
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "comprehension",
+      "line": 325,
+      "inherited_line": true,
+      "source": " for path, (mode, oid) in entries.items()"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 327,
+      "inherited_line": false,
+      "source": "if built.returncode:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 333,
+      "inherited_line": false,
+      "source": "if written.returncode:"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 336,
+      "inherited_line": false,
+      "source": "if not FULL_OID.fullmatch(tree):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 338,
+      "value": "tree.decode('ascii')"
+    }
+  ],
+  "raises": [
+    {
+      "line": 328,
+      "source": "raise RuntimeError(_first_line(built.stderr, 'git update-index failed'))"
+    },
+    {
+      "line": 334,
+      "source": "raise RuntimeError(_first_line(written.stderr, 'git write-tree failed'))"
+    },
+    {
+      "line": 337,
+      "source": "raise RuntimeError('cannot read git write-tree output')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 321,
+      "callee": "str"
+    },
+    {
+      "line": 322,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 325,
+      "callee": "b''.join"
+    },
+    {
+      "line": 325,
+      "callee": "entries.items"
+    },
+    {
+      "line": 325,
+      "callee": "oid.encode"
+    },
+    {
+      "line": 328,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 328,
+      "callee": "_first_line"
+    },
+    {
+      "line": 329,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 334,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 334,
+      "callee": "_first_line"
+    },
+    {
+      "line": 335,
+      "callee": "written.stdout.strip"
+    },
+    {
+      "line": 336,
+      "callee": "FULL_OID.fullmatch"
+    },
+    {
+      "line": 337,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 338,
+      "callee": "tree.decode"
+    }
+  ]
+}

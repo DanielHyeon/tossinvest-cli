@@ -1,0 +1,109 @@
+{
+  "file": "internal/manualbuy/summary_test.go",
+  "source_sha256": "a124c1cfba84e32d58d3dd3f15c79cd6d1b9c6e7b51dc84de794e046d1f5ecff",
+  "package": "manualbuy",
+  "function": "TestA136AnUnvaluableManualBuyFailsTheWholeSnapshot",
+  "signature": "TestA136AnUnvaluableManualBuyFailsTheWholeSnapshot(params=1, results=0)",
+  "start": {
+    "line": 45,
+    "column": 1
+  },
+  "end": {
+    "line": 63,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 46,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 56,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 59,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 28
+      },
+      "text": "json.RawMessage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 28
+      },
+      "text": "json.RawMessage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 16
+      },
+      "text": "Summarize"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 43
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 55,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 57,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 59,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

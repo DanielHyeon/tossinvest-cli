@@ -1,0 +1,6 @@
+
+Callers of "TradeOutcomes" (1):
+
+function    TestTradeOutcomesAreScopedToTheAccount
+  internal/journal/trade_outcomes_test.go:508
+

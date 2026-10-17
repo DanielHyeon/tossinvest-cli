@@ -1,0 +1,71 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "522d5d81c4992c5717b1d83c029abe0abdc2d257755cfff9cf2a26f2375c23ca",
+  "package": "engine",
+  "function": "alertProposalRefused",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.alertProposalRefused(params=4, results=0)",
+  "start": {
+    "line": 1654,
+    "column": 1
+  },
+  "end": {
+    "line": 1671,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1656,
+        "column": 2
+      },
+      "text": "o.alert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1658,
+        "column": 8
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1659,
+        "column": 4
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1660,
+        "column": 10
+      },
+      "text": "o.label"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1661,
+        "column": 9
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1666,
+        "column": 21
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

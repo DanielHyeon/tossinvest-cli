@@ -1,0 +1,23 @@
+# a140 GREEN — HEAD d7d8a021, 2026-10-15T07:37:11Z
+Go vet: No issues found
+vet rc=0
+gofmt-l done
+--- PASS: TestUpperWickRoundsUpAndIsZeroOnAFlatBar (0.00s)
+--- PASS: TestDeriveRefusesAGapAndASeriesThatDoesNotStartAtTheOpen (0.00s)
+--- PASS: TestOpeningRangeATRRefusesAnIncompleteRangeAndAZeroATR (0.00s)
+--- PASS: TestOpeningRangeATRKeepsTheRationalUntilTheEnd (0.00s)
+--- PASS: TestOpeningRangeATRIsWilderFourteenOverTheFifteenBars (0.00s)
+--- PASS: TestUpperWickRefusesAnImpossibleBar (0.00s)
+--- PASS: TestRVOLRefusesAZeroVolumeWindowAndSurvivesHugeVolumes (0.00s)
+--- PASS: TestVolumeExpandedIsRVOLAtLeastOne (0.00s)
+--- PASS: TestRVOLUsesTheFifteenBarsBeforeAndRoundsDown (0.00s)
+--- PASS: TestLaneBarsAreAcceptedByTheFrozenEvaluator (0.00s)
+--- PASS: TestRVOLIsUndefinedInsideTheOpeningRange (0.00s)
+--- PASS: TestDeriveCarriesNoRVOLForOpeningRangeBars (0.00s)
+--- PASS: TestDeriveIsDeterministicAndTheDigestFollowsTheInput (0.00s)
+--- PASS: TestACorrectedBarKeepsItsLaneIdentity (0.00s)
+--- PASS: TestDeriveRefusesAMixedOrUnclosedSeries (0.00s)
+--- PASS: TestOpeningRangeATRIsFixedOnceTheRangeIsLocked (0.00s)
+--- PASS: TestThePackageUsesNoFloatClockOrNetwork (0.01s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutsignal	0.021s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutsignal	1.035s

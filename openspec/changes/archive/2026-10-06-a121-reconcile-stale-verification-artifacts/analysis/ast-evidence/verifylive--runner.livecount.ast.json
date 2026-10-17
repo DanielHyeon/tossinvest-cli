@@ -1,0 +1,131 @@
+{
+  "file": "internal/verifylive/mutate.go",
+  "source_sha256": "e458ab76ccefd18ca4cd8cf4330fc6f12a9863d42618d10d99e276aa360b3a9a",
+  "package": "verifylive",
+  "function": "liveCount",
+  "receiver": "Runner",
+  "signature": "Runner.liveCount(params=2, results=1)",
+  "start": {
+    "line": 672,
+    "column": 1
+  },
+  "end": {
+    "line": 685,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 675,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 679,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 680,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 684,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 673,
+        "column": 13
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 673,
+        "column": 20
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 674,
+        "column": 12
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 676,
+        "column": 13
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 679,
+        "column": 20
+      },
+      "text": "Outstanding"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 673,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 674,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 676,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 678,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 681,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

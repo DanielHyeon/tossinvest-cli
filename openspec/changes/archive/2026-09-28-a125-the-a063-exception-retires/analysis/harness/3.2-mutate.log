@@ -1,0 +1,10 @@
+control GREEN
+M1 기록의 execution_base 를 base 로 읽기 CAUGHT
+M2 a063 착지 기록 거절 복원(판정 경로) CAUGHT
+M3 a063 기록 명령 거절 복원(_recording_refusal) CAUGHT
+M4 id 로 착지 우회(검증 없이 수락) CAUGHT
+M5 비정규 기록 거절 복원 CAUGHT
+M6 SDD_BASE_REF 대조 끔 CAUGHT
+M7 이관 라벨 복원(출력) CAUGHT
+M8 옛 문맥 키 되살림 CAUGHT
+done 8 / 8

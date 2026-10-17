@@ -1,0 +1,7 @@
+TREE	HEAD d736e0cb	uncommitted: internal/journal/risk_bucket_owner.go, internal/journal/a066_owner_bind_delta_gap_test.go (new)
+CONTROL	GREEN	
+O1 delta gap returns nil (the pre-edit behavior)	CAUGHT	TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill/not-a-quantity, TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill/-1
+O2 compare error returns nil	SURVIVED	
+O3 zero delta latches	CAUGHT	TestA066OwnerBindZeroDeltaIsANoOpNotAGap
+O4 delta gap latches only released owners	CAUGHT	TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill/not-a-quantity, TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill/-1
+O5 delta gap aborts the fill	CAUGHT	TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill/not-a-quantity, TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill/-1

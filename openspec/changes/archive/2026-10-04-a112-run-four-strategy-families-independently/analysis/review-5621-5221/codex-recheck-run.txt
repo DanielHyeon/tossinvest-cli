@@ -1,0 +1,12 @@
+start 2026-10-01 01:08:41 KST
+codex-cli 0.154.0, codex exec resume 01a0f288-9b3d-7261-a577-07e09660fcc5 (시도)
+tree = git archive 99ad897c (files 18355)
+prompt prompt-codex-recheck.md sha256 2c0598d7a8e66a9b
+rc=1
+resume 실패: "no rollout found for thread id 01a0f288-…" — 첫 판을 --ephemeral 로 돌려 세션 기록이 남지 않았다(a092 선례와 같은 원인).
+대체: 새 세션. 프롬프트가 앞 판정 원문(codex-output.md)을 읽게 하므로 맥락은 파일로 넘긴다.
+start2 2026-10-01 01:09:02 KST, codex exec -s read-only --skip-git-repo-check -C <tree> (ephemeral 없음 — 다음 재확인은 resume 가능)
+end 2026-10-01 01:13:42 KST
+rc=0
+session id: 01a0f313-9a12-7760-a555-c99b15f97107
+tokens used 123,195

@@ -15,6 +15,7 @@ package main
 import (
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
@@ -58,7 +59,43 @@ func (s consoleLimitSettings) Save(l config.GuardianLimits) error {
 	} else {
 		recordLimitSave(config.GuardianLimits{}, l)
 	}
+	// a136: 하루 매수 상한은 다섯 칸과 달리 프리셋이 쓰지 않고, 통화 전환 저장이 쓰기도 함(지움) — 그래서 저장 **뒤** 파일 값으로
+	// 실제 변화를 적음(폼 값이 아니라 파일 값이 audit 의 대상).
+	if after, err := s.svc.LoadRawEngineGate(); err == nil {
+		from, fromCurrency := 0.0, ""
+		if beforeErr == nil {
+			from, fromCurrency = before.MaxDailyBuyNotional, before.LimitCurrency
+		}
+		recordDailyBuySave(from, fromCurrency, after.MaxDailyBuyNotional, after.LimitCurrency)
+		// a138: 최대 보유 포지션 수도 저장 뒤 파일 값으로 적음(폼이 그 칸을 보내지 않았으면 값이 그대로라 RecordChange 가 남기지 않음).
+		openFrom := 0.0
+		if beforeErr == nil {
+			openFrom = before.MaxOpenPositions
+		}
+		recordOpenPositionsSave(openFrom, after.MaxOpenPositions)
+	}
 	return nil
+}
+
+// recordOpenPositionsSave 는 최대 보유 포지션 수의 콘솔 저장 audit 한 줄(a138, 값이 바뀐 때만 RecordChange 가 남김). best-effort —
+// 기동 audit(engine.automation_gate.max_open_positions, 해석 값)가 둘째 기록임. 0 은 「미설정 — 기본 6」으로 적어 의미가 드러나게 함.
+func recordOpenPositionsSave(before, after float64) {
+	dir, err := journal.DataDir()
+	if err != nil {
+		return
+	}
+	log, err := audit.Open(audit.Options{Path: filepath.Join(dir, audit.FileName)})
+	if err != nil {
+		return
+	}
+	number := func(v float64) string {
+		if v == 0 {
+			return "0 (미설정 — 기본 " + strconv.Itoa(config.DefaultMaxOpenPositions) + ")"
+		}
+		return strconv.FormatFloat(v, 'f', -1, 64)
+	}
+	_, _ = log.RecordChange(audit.ActionLimitChange, "console.automation_gate.max_open_positions", number(after),
+		"saved from the console settings screen; file value before this save was "+number(before))
 }
 
 // recordLimitSave appends one entry per field, with the value it moved from.
@@ -101,4 +138,26 @@ func quotedOrUnset(v string) string {
 		return "미설정"
 	}
 	return v
+}
+
+// recordDailyBuySave 는 하루 매수 상한의 콘솔 저장 audit 한 줄(값이 바뀐 때만 RecordChange 가 남김).
+func recordDailyBuySave(before float64, beforeCurrency string, after float64, afterCurrency string) {
+	dir, err := journal.DataDir()
+	if err != nil {
+		return
+	}
+	log, err := audit.Open(audit.Options{Path: filepath.Join(dir, audit.FileName)})
+	if err != nil {
+		return
+	}
+	// 값에 통화를 붙여 적음 — 숫자가 같아도 통화가 바뀌면 다른 상한이므로 RecordChange 가 변화로 남김(구현 리뷰 P1-1).
+	number := func(v float64, currency string) string {
+		if v == 0 {
+			return "0"
+		}
+		return strconv.FormatFloat(v, 'f', -1, 64) + " " + strings.ToUpper(strings.TrimSpace(currency))
+	}
+	_, _ = log.RecordChange(audit.ActionLimitChange, "console.automation_gate.max_daily_buy_notional", number(after, afterCurrency),
+		"saved from the console settings screen (0 = unset); file value before this save was "+
+			quotedOrUnset(number(before, beforeCurrency)))
 }

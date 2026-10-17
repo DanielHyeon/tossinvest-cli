@@ -1,0 +1,44 @@
+# 시작 트리: 7ab8cd12 + 1.5.2 시험 diff(미커밋 작업 트리, 시험 파일 sha 는 아래 test 줄)
+test d2df830b7ee0d70b internal/journal/a126_filled_exposure_leaves_the_bucket_test.go
+test 5dc1253874e74344 internal/journal/risk_bucket_fill_test.go
+test 40d2f896e7e09c8e internal/journal/risk_bucket_owner_test.go
+test 382cb136b66deb63 internal/riskbucket/a126_departed_rows_test.go
+test a820706763867c03 internal/riskbucket/a126_snapshot_digest_replay_test.go
+test 308092e288586bd0 internal/riskbucket/production_snapshot_authority_test.go
+start 8daed316f087979f internal/journal/apply_hook.go
+start 98512040e5733560 internal/journal/risk_bucket_fill.go
+start 8828a2a0d1dba358 internal/journal/risk_bucket_issuance.go
+start 6292cb576e64b9f9 internal/journal/risk_bucket_owner.go
+start 9ae65976e8c1502c internal/journal/risk_bucket_usage.go
+start 04b461130389895e internal/journal/strategy_dispatch_runtime.go
+start c5e0c64b2de65248 internal/riskbucket/production_snapshot_authority.go
+control GREEN
+M1 CAUGHT — 떠남을 항상 참(활성 owner 도 빠짐)
+M1b CAUGHT — 떠남을 아예 적용하지 않음(수리 되돌림 — 양성 대조가 잡아야)
+M2 CAUGHT — 영수증 대신 owner released_at 만 봄
+M3 CAUGHT — scope latch 되돌림 제거(D4 fail-open)
+M4 CAUGHT — 떠난 행을 한도 모집단에서 뺌(D3 완화)
+M6 CAUGHT — 영수증 행의 HELD · held≠0 을 받음
+M6b-1 CAUGHT — released_at 불일치를 받음
+M6b-2 CAUGHT — owner 키 사본 불일치를 받음
+M6b-3 CAUGHT — 결정 사본 쪽 영수증을 보지 않음
+M6c CAUGHT — 손상 검사를 scope latch 판정 뒤로(되돌림이 손상 검사 우회 — codex #4)
+M7 CAUGHT — 떠난 행의 latch 플래그를 집계에서 뺌
+M9 CAUGHT — SQL 이 scope latch 를 싣지 않음(되돌림 입력 제거)
+M10 CAUGHT — SQL 의 영수증 존재를 owner released_at 으로 바꿔치기
+F1 CAUGHT — a066 결함 수리 되돌림(해제 검사의 옛 철자)
+F2 CAUGHT — 해제 검사가 미해소 체결을 보지 않음(fail-open)
+F3 CAUGHT — 해소 조각 OR→AND(두 자리 공통)
+P1 CAUGHT — 전략 정산 경로(campaign 미결선)의 binding 제거 — 그 경로의 되돌림 시험이 잡아야
+P2 CAUGHT — RecordFill 경로(campaign 결선)의 binding 제거 — 그 경로의 되돌림 시험이 잡아야
+X1 CAUGHT — 영수증 조인이 generation 을 안 봄(R6)
+X2 CAUGHT — 영수증 조인이 symbol 을 안 봄(R6)
+X3 CAUGHT — HELD 상태 검사 제거, held≠0 은 남김(R4)
+X7 CAUGHT — 사본 일치가 symbol 을 안 봄(R5)
+X7m CAUGHT — 사본 일치가 market 을 안 봄(R5)
+X9 CAUGHT — 영수증 조인이 account 를 안 봄(R6)
+B3 CAUGHT — admission 이 판독 불가 사용량을 거절하지 않음(R8)
+C2close CAUGHT — 제출 재검증이 latch 아닌 재계산으로 C2 를 닫음 — 잔여 핀이 깨져야(R2)
+T1 CAUGHT — owner 해제 생산 호출 추가 — tasks 3.1 tripwire 가 잡아야(R7)
+caught 27 · survived 0
+rc=0

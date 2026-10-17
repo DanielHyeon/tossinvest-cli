@@ -1,0 +1,444 @@
+package main
+
+// helpers_test.go 는 mock 두 개(official·TypeSafe)와 시험용 probe 조립을 제공함.
+// 실 API 는 부르지 않음 — 모든 시험은 httptest 서버만 침.
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"path/filepath"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+)
+
+// 계좌·시크릿 모양의 표식 — mock official 응답에 섞어 넣고, 외부 전송·원장에 새지 않음을 확인함.
+// 실제 값이 아닌 시험용 문자열임.
+const (
+	sentinelAccount  = "ACCT-SENTINEL-9911"
+	sentinelHolding  = "HOLD-SENTINEL-4242"
+	sentinelBalance  = "BAL-SENTINEL-5150"
+	sentinelOfficial = "OFFICIAL-TOKEN-SENTINEL-7733"
+	testTypeSafeKey  = "test-typesafe-key-not-a-secret"
+)
+
+var sentinels = []string{sentinelAccount, sentinelHolding, sentinelBalance, sentinelOfficial, testTypeSafeKey}
+
+// kst 는 시험 시각의 기준 시간대.
+var kst = time.FixedZone("KST", 9*3600)
+
+func at(hour, minute int) time.Time { return time.Date(2026, 10, 7, hour, minute, 0, 0, kst) }
+
+// rankingRow 는 랭킹 응답 한 행을 시험이 지정할 때 씀(표본 선택 시험).
+type rankingRow struct {
+	symbol, price, currency string
+}
+
+// officialMock 은 official Open API 의 공개 읽기 여섯 경로(환율 포함) + 토큰 경로를 흉내냄.
+type officialMock struct {
+	t      *testing.T
+	server *httptest.Server
+
+	mu          sync.Mutex
+	prices      map[string]string // symbol → lastPrice
+	rateLimited map[string]int    // path → 앞으로 돌려줄 429 횟수
+	failStatus  map[string]int    // path → 고정 실패 상태
+	calls       map[string]int
+	methods     map[string]bool
+	queries     map[string]string // path → 마지막 요청의 query 원문
+	noRegular   bool
+	// rankingRows 가 nil 이 아니면 기본 두 행(계좌 표식 섞인 응답) 대신 이 행들로 랭킹을 답함.
+	rankingRows []rankingRow
+	// fx* 는 /api/v1/exchange-rate 응답의 짝과 매수 환율.
+	fxBase, fxQuote, fxRate string
+	// stockStatus 는 /stocks 의 상장 상태(기본 ACTIVE).
+	stockStatus map[string]string
+	// now 는 1분봉 mock 이 「아직 안 닫힌 봉」을 만들지 않게 before 가 없을 때 쓰는 기준 시각.
+	now time.Time
+}
+
+func newOfficialMock(t *testing.T) *officialMock {
+	m := &officialMock{
+		t:           t,
+		prices:      map[string]string{"005930": "70000", "000660": "120000"},
+		rateLimited: map[string]int{},
+		failStatus:  map[string]int{},
+		calls:       map[string]int{},
+		methods:     map[string]bool{},
+		queries:     map[string]string{},
+		fxBase:      "USD", fxQuote: "KRW", fxRate: "1250",
+		now: at(10, 0),
+	}
+	m.server = httptest.NewServer(http.HandlerFunc(m.serve))
+	t.Cleanup(m.server.Close)
+	return m
+}
+
+func (m *officialMock) serve(w http.ResponseWriter, r *http.Request) {
+	m.mu.Lock()
+	m.calls[r.URL.Path]++
+	m.methods[r.Method+" "+r.URL.Path] = true
+	m.queries[r.URL.Path] = r.URL.RawQuery
+	if n := m.rateLimited[r.URL.Path]; n > 0 {
+		m.rateLimited[r.URL.Path] = n - 1
+		m.mu.Unlock()
+		w.WriteHeader(http.StatusTooManyRequests)
+		return
+	}
+	if status := m.failStatus[r.URL.Path]; status != 0 {
+		m.mu.Unlock()
+		w.WriteHeader(status)
+		_, _ = io.WriteString(w, `{"error":"mock failure"}`)
+		return
+	}
+	prices := map[string]string{}
+	for symbol, price := range m.prices {
+		prices[symbol] = price
+	}
+	noRegular := m.noRegular
+	status := func(symbol string) string {
+		if value := m.stockStatus[symbol]; value != "" {
+			return value
+		}
+		return "ACTIVE"
+	}
+	statusSamsung, statusHynix := status("005930"), status("000660")
+	rankingRows := append([]rankingRow(nil), m.rankingRows...)
+	customRanking := m.rankingRows != nil
+	fxBody := `{"result":{"baseCurrency":"` + m.fxBase + `","quoteCurrency":"` + m.fxQuote + `","rate":"` + m.fxRate +
+		`","midRate":"` + m.fxRate + `","basisPoint":"0","rateChangeType":"EQUAL"}}`
+	m.mu.Unlock()
+
+	write := func(body string) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, body)
+	}
+	// 1.7 공개 읽기 — 계좌 모양 필드를 봉투에 섞어 넣음(어댑터·엄격 리더가 버려야 함).
+	if strings.HasPrefix(r.URL.Path, "/api/v1/stocks/") && strings.HasSuffix(r.URL.Path, "/warnings") {
+		write(`{"result":[{"warningType":"VI_STATIC","startDate":"2026-10-07","endDate":null,"exchange":"KRX","accountNo":"` +
+			sentinelAccount + `"}]}`)
+		return
+	}
+	if body, ok := mockIndicatorBody(r); ok {
+		write(body)
+		return
+	}
+	switch r.URL.Path {
+	case "/oauth2/token":
+		write(`{"access_token":"` + sentinelOfficial + `","expires_in":86400,"token_type":"Bearer"}`)
+	case "/api/v1/market-calendar/KR", "/api/v1/market-calendar/US":
+		regular := `"regularMarket":{"startTime":"2026-10-07T09:00:00+09:00","endTime":"2026-10-07T15:30:00+09:00"}`
+		if noRegular {
+			regular = `"regularMarket":null`
+		}
+		write(`{"result":{"previousBusinessDay":{"date":"2026-10-06"},"today":{"date":"2026-10-07",` + regular +
+			`},"nextBusinessDay":{"date":"2026-10-08"}}}`)
+	case "/api/v1/exchange-rate":
+		write(fxBody)
+	case "/api/v1/rankings":
+		if customRanking {
+			var rows []string
+			for index, row := range rankingRows {
+				rows = append(rows, fmt.Sprintf(`{"rank":%d,"symbol":"%s","currency":"%s","price":{"lastPrice":"%s","basePrice":"%s"},`+
+					`"tradingVolume":"10","tradingAmount":"1000"}`, index+1, row.symbol, row.currency, row.price, row.price))
+			}
+			write(`{"result":{"rankedAt":"2026-10-07T10:00:00+09:00","rankings":[` + strings.Join(rows, ",") + `]}}`)
+			return
+		}
+		// 계좌 모양 필드를 일부러 섞음 — 공개 어댑터가 버려야 함.
+		write(`{"result":{"rankedAt":"2026-10-07T10:00:00+09:00","accountNo":"` + sentinelAccount + `","rankings":[` +
+			`{"rank":1,"symbol":"005930","currency":"KRW","price":{"lastPrice":"70000","basePrice":"69000","changeRate":"1.45"},` +
+			`"tradingVolume":"1000","tradingAmount":"70000000","holdingQuantity":"` + sentinelHolding + `"},` +
+			`{"rank":2,"symbol":"000660","currency":"KRW","price":{"lastPrice":"120000","basePrice":"121000","changeRate":"-0.83"},` +
+			`"tradingVolume":"500","tradingAmount":"60000000","accountBalance":"` + sentinelBalance + `"}]}}`)
+	case "/api/v1/stocks":
+		write(`{"result":[` +
+			`{"symbol":"005930","name":"삼성전자","market":"KOSPI","currency":"KRW","status":"` + statusSamsung + `","accountNo":"` + sentinelAccount + `"},` +
+			`{"symbol":"000660","name":"SK하이닉스","market":"KOSPI","currency":"KRW","status":"` + statusHynix + `","holdingQuantity":"` + sentinelHolding + `"}]}`)
+	case "/api/v1/prices":
+		var rows []string
+		for _, symbol := range strings.Split(r.URL.Query().Get("symbols"), ",") {
+			if price, found := prices[symbol]; found {
+				rows = append(rows, `{"symbol":"`+symbol+`","lastPrice":"`+price+`","currency":"KRW","timestamp":"2026-10-07T10:00:00+09:00",`+
+					`"accountBalance":"`+sentinelBalance+`"}`)
+			}
+		}
+		write(`{"result":[` + strings.Join(rows, ",") + `]}`)
+	case "/api/v1/candles":
+		write(mockCandleBody(r, m.now))
+	case "/api/v1/price-limits":
+		write(`{"result":{"upperLimitPrice":"91000","lowerLimitPrice":"49000","currency":"KRW","timestamp":null,` +
+			`"accountBalance":"` + sentinelBalance + `"}}`)
+	case "/api/v1/orderbook":
+		write(`{"result":{"timestamp":"2026-10-07T09:59:58+09:00","currency":"KRW",` +
+			`"asks":[{"price":"70100","volume":"12"}],"bids":[{"price":"70000","volume":"30"}]}}`)
+	default:
+		m.t.Errorf("unexpected official call %s %s", r.Method, r.URL.Path)
+		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
+func (m *officialMock) client(t *testing.T) *official.Client {
+	return official.New(official.Credentials{APIKey: "mock-key", SecretKey: "mock-secret"},
+		filepath.Join(t.TempDir(), "openapi-token.json"), official.WithBaseURL(m.server.URL))
+}
+
+func (m *officialMock) query(path string) string {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.queries[path]
+}
+
+// setRanking 은 랭킹 행을 지정하고, 각 행의 가격을 /prices 에도 넣음(기준가가 있어야 판단까지 감).
+func (m *officialMock) setRanking(rows ...rankingRow) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.rankingRows = append([]rankingRow{}, rows...)
+	m.prices = map[string]string{}
+	for _, row := range rows {
+		m.prices[row.symbol] = row.price
+	}
+}
+
+func (m *officialMock) callCount(path string) int {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.calls[path]
+}
+
+// typeSafeMock 은 /v1/systemone 을 흉내내고 받은 본문·헤더를 모두 보관함.
+type typeSafeMock struct {
+	server *httptest.Server
+
+	mu       sync.Mutex
+	bodies   [][]byte
+	auth     []string
+	statuses []int // 앞에서부터 하나씩 소비, 비면 200
+	answer   func(questionID string) string
+	// answerFor 가 nil 이 아니면 answer 대신 종목별 답을 줌(1.6 선별 시험 — state.symbol 로 가름).
+	answerFor func(symbol, questionID string) string
+	// failSymbols 의 종목은 422(비재시도)로 거절함 — 판단 실패가 gap 행이 되고 선별 대상에서 빠짐을 봄.
+	failSymbols map[string]bool
+}
+
+func newTypeSafeMock(t *testing.T) *typeSafeMock {
+	m := &typeSafeMock{answer: func(id string) string {
+		return fmt.Sprintf(`{"type":"noul","noul":%s}`, map[string]string{
+			"j1_up_within_horizon": "0.93", "j2_hold_off_red_flag": "0.12",
+		}[id])
+	}}
+	m.server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		m.mu.Lock()
+		m.bodies = append(m.bodies, body)
+		m.auth = append(m.auth, r.Header.Get("Authorization"))
+		status := http.StatusOK
+		if len(m.statuses) > 0 {
+			status, m.statuses = m.statuses[0], m.statuses[1:]
+		}
+		answer, answerFor, failSymbols := m.answer, m.answerFor, m.failSymbols
+		m.mu.Unlock()
+		if r.Method != http.MethodPost || r.URL.Path != systemOnePath {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		if status != http.StatusOK {
+			w.WriteHeader(status)
+			_, _ = io.WriteString(w, `{"detail":"mock refusal"}`)
+			return
+		}
+		var request struct {
+			State struct {
+				Symbol string `json:"symbol"`
+			} `json:"state"`
+			Questions map[string]json.RawMessage `json:"questions"`
+		}
+		_ = json.Unmarshal(body, &request)
+		if failSymbols[request.State.Symbol] {
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			_, _ = io.WriteString(w, `{"detail":"mock refusal for the symbol"}`)
+			return
+		}
+		var answers []string
+		for id := range request.Questions {
+			if answerFor != nil {
+				answers = append(answers, `"`+id+`":`+answerFor(request.State.Symbol, id))
+				continue
+			}
+			answers = append(answers, `"`+id+`":`+answer(id))
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `{"model":"jev-1.13.0","answers":{`+strings.Join(answers, ",")+
+			`},"usage":{"input_tokens":321,"output_tokens":20}}`)
+	}))
+	t.Cleanup(m.server.Close)
+	return m
+}
+
+func (m *typeSafeMock) requests() [][]byte {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return append([][]byte(nil), m.bodies...)
+}
+
+func (m *typeSafeMock) judgeClient(t *testing.T) *judgeClient {
+	client, err := newJudgeClient(testTypeSafeKey, m.server.URL, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.sleep = func(context.Context, time.Duration) error { return nil }
+	return client
+}
+
+// fakeClock 은 sleep 이 시계를 앞으로 미는 결정적 시계.
+type fakeClock struct {
+	mu    sync.Mutex
+	now   time.Time
+	slept []time.Duration
+}
+
+func (c *fakeClock) Now() time.Time {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.now
+}
+
+func (c *fakeClock) Sleep(ctx context.Context, d time.Duration) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.slept = append(c.slept, d)
+	if d > 0 {
+		c.now = c.now.Add(d)
+	}
+	return ctx.Err()
+}
+
+func (c *fakeClock) Set(t time.Time) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.now = t
+}
+
+type testRig struct {
+	official *officialMock
+	typeSafe *typeSafeMock
+	clock    *fakeClock
+	probe    *probe
+	dir      string
+}
+
+func newTestRig(t *testing.T) *testRig {
+	t.Helper()
+	officialServer := newOfficialMock(t)
+	typeSafeServer := newTypeSafeMock(t)
+	dir := t.TempDir()
+	l, err := openLedger(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = l.Close() })
+	clock := &fakeClock{now: at(10, 0)}
+	p := newProbe(officialServer.client(t), typeSafeServer.judgeClient(t), l, config{
+		Interval: 10 * time.Minute, TopK: 10, Pool: 30, Horizon: 60 * time.Minute, LabelTick: 30 * time.Second,
+		RetryDelays: []time.Duration{time.Second, 2 * time.Second},
+		CapSource:   fixedCap(500000, "KRW"),
+	})
+	p.now, p.sleep = clock.Now, clock.Sleep
+	p.seed = func() uint64 { return testSeed }
+	p.logf = func(string, ...any) {}
+	return &testRig{official: officialServer, typeSafe: typeSafeServer, clock: clock, probe: p, dir: dir}
+}
+
+// testSeed 는 시험 rig 의 고정 표본 선택 시드.
+const testSeed uint64 = 42
+
+func fixedCap(value float64, currency string) func(context.Context) (orderCap, error) {
+	return func(context.Context) (orderCap, error) { return orderCap{Value: value, Currency: currency}, nil }
+}
+
+func (r *testRig) contents(t *testing.T) ledgerContents {
+	t.Helper()
+	contents, err := readLedger(filepath.Join(r.dir, ledgerFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return contents
+}
+
+func (r *testRig) session() session {
+	return session{Open: at(9, 0), Close: at(15, 30), Source: sessionSourceCalendar}
+}
+
+// mockCandleBody 는 /api/v1/candles 의 1m(엄격 리더 계약: 봉 일곱 열쇠·최신이 앞·분 경계·before 이하)과
+// 1d 응답을 만듦. 1분봉은 09:01 KST 부터 before(없으면 now) 까지 닫힌 봉, 종가 = 70000 + 분 × 10.
+func mockCandleBody(r *http.Request, now time.Time) string {
+	query := r.URL.Query()
+	symbol := query.Get("symbol")
+	currency := "USD"
+	if len(symbol) == 6 && strings.Trim(symbol, "0123456789") == "" {
+		currency = "KRW"
+	}
+	count := 100
+	if value := query.Get("count"); value != "" {
+		fmt.Sscanf(value, "%d", &count)
+	}
+	var rows []string
+	if query.Get("interval") == "1d" {
+		// 일봉: 앞 22 일(시각 09:00 KST — 문서 예시 모양) + 오늘 봉, 최신이 앞.
+		for day := 0; day <= 22 && len(rows) < count; day++ {
+			stamp := time.Date(2026, 10, 7-day, 9, 0, 0, 0, kst).Format(time.RFC3339)
+			close := 70000 - day*100
+			rows = append(rows, fmt.Sprintf(`{"timestamp":"%s","openPrice":"%d","highPrice":"%d","lowPrice":"%d","closePrice":"%d",`+
+				`"volume":"1000","currency":"%s"}`, stamp, close, close+200, close-200, close, currency))
+		}
+		return `{"result":{"candles":[` + strings.Join(rows, ",") + `],"nextBefore":null},"accountNo":"` + sentinelAccount + `"}`
+	}
+	before := now
+	if value := query.Get("before"); value != "" {
+		if parsed, err := time.Parse(time.RFC3339, value); err == nil {
+			before = parsed
+		}
+	}
+	open := time.Date(before.In(kst).Year(), before.In(kst).Month(), before.In(kst).Day(), 9, 0, 0, 0, kst)
+	for closeAt := before.Truncate(time.Minute); closeAt.After(open) && len(rows) < count; closeAt = closeAt.Add(-time.Minute) {
+		minute := int(closeAt.Sub(open) / time.Minute)
+		price := 70000 + minute*10
+		rows = append(rows, fmt.Sprintf(`{"timestamp":"%s","openPrice":"%d","highPrice":"%d","lowPrice":"%d","closePrice":"%d",`+
+			`"volume":"100","currency":"%s"}`, closeAt.In(kst).Format("2006-01-02T15:04:05-07:00"), price, price+10, price-10, price, currency))
+	}
+	return `{"result":{"candles":[` + strings.Join(rows, ",") + `],"nextBefore":null},"holdingQuantity":"` + sentinelHolding + `"}`
+}
+
+// mockIndicatorBody 는 market-indicators 경로(지수 시세·지수 봉·시장 투자자별 매매대금)를 답함.
+func mockIndicatorBody(r *http.Request) (string, bool) {
+	path := r.URL.Path
+	if !strings.HasPrefix(path, "/api/v1/market-indicators/") {
+		return "", false
+	}
+	switch {
+	case path == "/api/v1/market-indicators/prices":
+		return `{"result":[{"symbol":"KOSPI","timestamp":"2026-10-07T10:00:00+09:00","lastPrice":"2600"},` +
+			`{"symbol":"KOSDAQ","timestamp":"2026-10-07T10:00:00+09:00","lastPrice":"800"}],"accountNo":"` + sentinelAccount + `"}`, true
+	case strings.HasSuffix(path, "/candles") && r.URL.Query().Get("interval") == "1d":
+		return `{"result":{"candles":[{"timestamp":"2026-10-07T09:00:00+09:00","openPrice":"2550","highPrice":"2610","lowPrice":"2540",` +
+			`"closePrice":"2600","volume":"1"},{"timestamp":"2026-10-06T09:00:00+09:00","openPrice":"2490","highPrice":"2510",` +
+			`"lowPrice":"2480","closePrice":"2500","volume":"1"}],"nextBefore":null}}`, true
+	case strings.HasSuffix(path, "/candles"):
+		return `{"result":{"candles":[{"timestamp":"2026-10-07T09:31:00+09:00","openPrice":"2595","highPrice":"2596","lowPrice":"2594",` +
+			`"closePrice":"2595","volume":"1"},{"timestamp":"2026-10-07T09:30:00+09:00","openPrice":"2590","highPrice":"2591",` +
+			`"lowPrice":"2589","closePrice":"2590","volume":"1"}],"nextBefore":null}}`, true
+	case strings.HasSuffix(path, "/investor-trading"):
+		return `{"result":{"nextUntil":null,"records":[{"date":"2026-10-07","updatedAt":"2026-10-07T10:00:00+09:00",` +
+			`"individual":{"buyAmount":"300","sellAmount":"100"},"foreigner":{"buyAmount":"100","sellAmount":"250"},` +
+			`"institution":{"buyAmount":"80","sellAmount":"30"},"otherCorporation":{"buyAmount":"0","sellAmount":"0"},` +
+			`"accountBalance":"` + sentinelBalance + `"}]}}`, true
+	}
+	return "", false
+}

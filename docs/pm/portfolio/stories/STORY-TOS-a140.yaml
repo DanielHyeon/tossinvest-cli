@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a140",
+  "title": "Breakout signals are measured in shadow before any entry wiring",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a140-breakout-signals-are-measured-in-shadow",
+    "path": "openspec/changes/a140-breakout-signals-are-measured-in-shadow"
+  },
+  "found_by": {
+    "date": "2026-10-15",
+    "how": "The 2026-10-14 StockOS gap analysis ranked entry signal producers as P2. CodeGraph 1.6.0 and logic-map AST at HEAD 050d092f showed all eight lane instances run but none has a live producer: production proposals come only from a human-signed manifest pinned by digest in the process environment, nothing in production opens evidence.db for writing, the closed-bar and L1 quote producers have zero production callers, and buildLaneInput refuses every breakout scope because ATR, RVOL, upper-wick and volume-expanded are never computed. Breakout-retest is the only family whose evidence can be built from official data alone, so the first story measures whether it fires before any trust anchor, manifest or Jev seam is built on it.",
+    "record": "openspec/changes/a140-breakout-signals-are-measured-in-shadow/proposal.md"
+  },
+  "acceptance": [
+    "A new pure package internal/breakoutsignal derives the four breakout v1 metrics from a sealed series of stored official closed one-minute bars with integer arithmetic under a named version, refuses with a typed reason when a value cannot be made, and has no production caller",
+    "A standalone tool under tools/a140-breakout-signal-shadow/ polls closed bars into its own evidence store, evaluates breakoutlane v1 unchanged, reads quotes only at session start and when a setup reaches ARMED, and appends signal, label and gap rows to an append-only ledger",
+    "The tool refuses to start when its evidence store resolves to the engine's production evidence.db, and a static test forbids order, account, holding, buying-power, toggle and activation-write names in the tool",
+    "No signed manifest is read or written, no Jev or external judgment API is called, and no shadow proposal reaches the coordinator, Guardian, journal or broker",
+    "A report shows the per-session setup funnel, refusal distribution, RVOL counterfactuals, shadow proposal count and outcome distribution with verdicts withheld below 30 samples, and the decision to wire evidence production into the engine is made by a human on that receipt"
+  ]
+}

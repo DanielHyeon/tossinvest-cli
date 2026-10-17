@@ -1,0 +1,132 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "cac190d8a9f3c976a73478e172bd8cd27e1159d6",
+  "source_sha256": "09b460a13b4d36ff0c73fde00fc5203d3ecb6e5755e72ded7ac8d053a6eb5a55",
+  "function": "compute_landing",
+  "signature": "compute_landing(root, base, analysis)",
+  "start": {
+    "line": 972,
+    "column": 1
+  },
+  "end": {
+    "line": 1002,
+    "column": 6
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 982,
+      "inherited_line": false,
+      "source": "if not _pinning_bundles(root, analysis):"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 985,
+      "inherited_line": false,
+      "source": "if not floor:"
+    },
+    {
+      "id": "B3",
+      "kind": "IfExp",
+      "line": 987,
+      "inherited_line": false,
+      "source": "floor if _is_ancestor(root, base, floor) else base"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 992,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B5",
+      "kind": "For",
+      "line": 994,
+      "inherited_line": false,
+      "source": "for candidate in [start, *process.stdout.split()]:"
+    },
+    {
+      "id": "B6",
+      "kind": "BoolOp",
+      "line": 995,
+      "inherited_line": false,
+      "source": "not _is_ancestor(root, base, candidate) or not _is_ancestor(root, floor, candidate)"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 995,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, base, candidate) or not _is_ancestor(root, floor, candidate):"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 997,
+      "inherited_line": false,
+      "source": "if not _pinning_at(root, candidate, analysis)[1]:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 983,
+      "value": "('', 'no `revision: current` evidence pins a landing for this change')"
+    },
+    {
+      "line": 986,
+      "value": "('', 'the pinning evidence never entered this history (commit the bundles)')"
+    },
+    {
+      "line": 993,
+      "value": "('', f'cannot walk the history after {start[:12]}')"
+    },
+    {
+      "line": 998,
+      "value": "(candidate, '')"
+    },
+    {
+      "line": 999,
+      "value": "('', f'no commit at or after the evidence ({floor[:12]}) matches every pinning bundle — the evidence does not describe any revision on this history')"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 982,
+      "callee": "_pinning_bundles"
+    },
+    {
+      "line": 984,
+      "callee": "_evidence_floor"
+    },
+    {
+      "line": 987,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 988,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 994,
+      "callee": "process.stdout.split"
+    },
+    {
+      "line": 995,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 995,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 997,
+      "callee": "_pinning_at"
+    }
+  ]
+}

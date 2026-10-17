@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "method": "codex mcp list --json from the TossOS repository root",
+  "host_versions": ["0.154.0", "0.155.0-alpha.16.3"],
+  "source_layer": ".codex/config.toml",
+  "source_layer_basis": "inferred_by_elimination; CLI loader only, app-server capability discovery unverified",
+  "effective_wrapper_registrations": 1,
+  "outside_repository_wrapper_registrations": 0
+}

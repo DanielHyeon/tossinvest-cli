@@ -1,0 +1,15 @@
+--- FAIL: TestA091TheStopSoldNothingKindIsCritical (0.00s)
+    a091_stop_sold_nothing_test.go:17: SeverityOf(exit.stop_sold_nothing) = normal, want critical
+--- FAIL: TestA091NoOtherGradeMoved (0.00s)
+    a091_stop_sold_nothing_test.go:55: CriticalEvents() has 19 kinds, want 20 (19 + exit.stop_sold_nothing)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/obs	0.003s
+FAIL
+            {"time":"2026-09-30T00:00:00Z","level":"WARN","msg":"engine.operating_mode","event":"engine.operating_mode","subject":"engine","severity":"critical","account":"99887766554","to_state":"ENTRY_BLOCKED","reason":"CRITICAL_ALERT_UNDELIVERED","detail":"new entries are blocked until an operator acknowledges the alert backlog"}
+    --- FAIL: TestA091TheEscalationLinesCarryNoAccount/failed (0.20s)
+        a091_escalate_account_internal_test.go:45: the escalation line carries the account field "99887766554"
+        a091_escalate_account_internal_test.go:52: the account "99887766554" appears in the escalation log:
+            {"time":"2026-09-30T00:00:00Z","level":"ERROR","msg":"engine.operating_mode","event":"engine.operating_mode","subject":"engine","severity":"critical","account":"99887766554","trigger_event":"exit.stop_sold_nothing","detail":"the undelivered critical alert did not reach the operating mode, so a restart would lift the block","error":"journal: starting the operating-mode transition for [account]: sql: database is closed"}
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/obs	0.409s
+FAIL

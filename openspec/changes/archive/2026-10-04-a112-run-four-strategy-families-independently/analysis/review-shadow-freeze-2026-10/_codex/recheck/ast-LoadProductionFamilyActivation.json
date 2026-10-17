@@ -1,0 +1,507 @@
+{
+  "file": "../../internal/strategyrouter/production_family_activation.go",
+  "source_sha256": "57123f814187d9201ec6999d6375adc649b579c89beb6c4731f36cc51243b005",
+  "package": "strategyrouter",
+  "function": "LoadProductionFamilyActivation",
+  "signature": "LoadProductionFamilyActivation(params=2, results=2)",
+  "start": {
+    "line": 429,
+    "column": 1
+  },
+  "end": {
+    "line": 495,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 434,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 437,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 440,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 449,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 468,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 471,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 476,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 482,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 486,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 489,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 435,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 438,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 441,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 461,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 469,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 472,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 477,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 483,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 487,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 490,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 493,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 434,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 435,
+        "column": 30
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 438,
+        "column": 30
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 440,
+        "column": 12
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 21
+      },
+      "text": "filepath.Clean"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 36
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 26
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 445,
+        "column": 20
+      },
+      "text": "productionRouteOwnerUID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 446,
+        "column": 10
+      },
+      "text": "ProductionFamilyActivationFileName"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 449,
+        "column": 15
+      },
+      "text": "failedFields"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 452,
+        "column": 29
+      },
+      "text": "filepath.IsAbs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 453,
+        "column": 29
+      },
+      "text": "config.ObservedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 454,
+        "column": 34
+      },
+      "text": "productionRouteDigestValid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 455,
+        "column": 37
+      },
+      "text": "productionRouteIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 456,
+        "column": 40
+      },
+      "text": "productionRouteDigestValid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 457,
+        "column": 37
+      },
+      "text": "productionRouteDigestValid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 458,
+        "column": 35
+      },
+      "text": "productionRouteIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 459,
+        "column": 31
+      },
+      "text": "productionRouteIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 460,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 461,
+        "column": 30
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 461,
+        "column": 109
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 463,
+        "column": 15
+      },
+      "text": "readProductionRouteFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 463,
+        "column": 39
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 469,
+        "column": 30
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 471,
+        "column": 5
+      },
+      "text": "productionRouteDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 472,
+        "column": 30
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 475,
+        "column": 19
+      },
+      "text": "decodeProductionFamilyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 483,
+        "column": 30
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 485,
+        "column": 16
+      },
+      "text": "validateProductionFamilyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 489,
+        "column": 12
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 492,
+        "column": 16
+      },
+      "text": "productionRouteTime"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 440,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 443,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 444,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 445,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 446,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 449,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 463,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 475,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 485,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 489,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 492,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

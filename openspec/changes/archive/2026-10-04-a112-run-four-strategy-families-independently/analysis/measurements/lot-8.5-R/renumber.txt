@@ -1,0 +1,12 @@
+# a112 8.5 응답 로트 — branch renumbering by difflib alignment of pre-edit (HEAD 178cc196) vs post-edit ast.json; key = kind + condition text[:25]
+== strategyProposalAuthorityLoader.collectMarket pre 15 post 15
+  equal ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15'] -> ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15']
+== strategyProposalAuthorityLoader.loadFamilyActivation pre 2 post 3
+  insert [] -> ['B1']
+  equal ['B1', 'B2'] -> ['B2', 'B3']
+== LoadProductionFamilyActivation pre 10 post 10
+  equal ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10'] -> ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10']
+== validateProductionFamilyActivation pre 8 post 8
+  equal ['B1', 'B2', 'B3'] -> ['B1', 'B2', 'B3']
+  replace ['B4'] -> ['B4']
+  equal ['B5', 'B6', 'B7', 'B8'] -> ['B5', 'B6', 'B7', 'B8']

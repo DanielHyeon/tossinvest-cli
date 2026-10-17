@@ -1,0 +1,63 @@
+
+Callers of "PollClosedBars" (20):
+
+function    TestPollNeverAdmitsTheNewestObservedBar
+  internal/officialbars/producer_test.go:313
+
+function    TestPollAdmitsThePreviousNewestBarOnceASuccessorExists
+  internal/officialbars/producer_test.go:362
+
+function    TestPollStoresOnlyRegularSessionBarsButUsesTheOthersAsSuccessors
+  internal/officialbars/producer_test.go:405
+
+function    TestPollLabelsOvernightUSBarsWithTheirEasternDate
+  internal/officialbars/producer_test.go:448
+
+function    TestPollUsesTheKoreanCalendarAndSessionPrefix
+  internal/officialbars/producer_test.go:477
+
+function    TestPollRefusesInvalidInputBeforeAnyRequest
+  internal/officialbars/producer_test.go:504
+
+function    TestPollCrawlsPagesInTheMeasuredShape
+  internal/officialbars/producer_test.go:551
+
+function    TestPollInterfaceGuardRefusesAnOverlapThatIsNotByteIdentical
+  internal/officialbars/producer_test.go:589
+
+function    TestPollInterfaceGuardRefusesAPageThatStartsNewerThanThePreviousPageEnded
+  internal/officialbars/producer_test.go:621
+
+function    TestPollRefusesACursorThatDoesNotMoveBackwards
+  internal/officialbars/producer_test.go:647
+
+function    TestPollStopConditions
+  internal/officialbars/producer_test.go:673
+
+function    TestPollRepolledWithIdenticalContentAppendsNothing
+  internal/officialbars/producer_test.go:759
+
+function    TestPollWritesACorrectionAsARevisionAndLeavesTheEarlierReplayAlone
+  internal/officialbars/producer_test.go:795
+
+function    TestPollCountsAConflictWhenAForeignWriterHoldsTheSameRevision
+  internal/officialbars/producer_test.go:841
+
+function    TestPollRecordsAConstructorRefusalAndKeepsTheOtherBars
+  internal/officialbars/producer_test.go:883
+
+function    TestPollReturnsStoreErrorWithTheCountsSoFar
+  internal/officialbars/producer_test.go:910
+
+function    TestPollReturnsAReaderErrorWithoutAppending
+  internal/officialbars/producer_test.go:940
+
+function    TestPollIsDeterministic
+  internal/officialbars/producer_test.go:962
+
+function    TestPollAcceptsAStaleOrLateCalendarThroughTheWholeSession
+  internal/officialbars/producer_test.go:997
+
+function    TestPollDeduplicatesEveryStoredRowRegardlessOfIngestionInstant
+  internal/officialbars/producer_test.go:1027
+

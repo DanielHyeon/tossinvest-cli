@@ -1,0 +1,9 @@
+
+Callers of "encodeFields" (2):
+
+method      recordCritical
+  internal/obs/record_only.go:115
+
+method      notifyCritical
+  internal/obs/notifier.go:195
+

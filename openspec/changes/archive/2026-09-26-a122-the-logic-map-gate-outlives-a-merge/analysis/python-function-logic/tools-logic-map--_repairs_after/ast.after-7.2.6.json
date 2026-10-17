@@ -1,0 +1,74 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "e9f868200782e79e7c2e1124a27a06afd7e715be",
+  "source_sha256": "caa7294dd88dba4f7c60c86810ad5083b9071cd27f09080221c451ee1bf082e1",
+  "function": "_repairs_after",
+  "signature": "_repairs_after(root, candidate, repairs)",
+  "start": {
+    "line": 694,
+    "column": 1
+  },
+  "end": {
+    "line": 712,
+    "column": 61
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 702,
+      "inherited_line": false,
+      "source": "if not repairs:"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 708,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B3",
+      "kind": "comprehension",
+      "line": 712,
+      "inherited_line": true,
+      "source": " for commit in repairs if commit in after"
+    }
+  ],
+  "returns": [
+    {
+      "line": 703,
+      "value": "[]"
+    },
+    {
+      "line": 712,
+      "value": "[commit for commit in repairs if commit in after]"
+    }
+  ],
+  "raises": [
+    {
+      "line": 710,
+      "source": "raise RuntimeError(f'cannot walk the history after {candidate[:12]}')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 704,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 710,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 711,
+      "callee": "process.stdout.split"
+    },
+    {
+      "line": 711,
+      "callee": "set"
+    }
+  ]
+}

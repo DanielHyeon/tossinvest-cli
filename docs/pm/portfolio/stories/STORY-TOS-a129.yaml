@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a129",
+  "title": "An exit order the engine places leaves a line in the engine log",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a129-an-exit-order-leaves-a-line",
+    "path": "openspec/changes/archive/2026-10-12-a129-an-exit-order-leaves-a-line"
+  },
+  "found_by": {
+    "date": "2026-10-12",
+    "how": "On 2026-10-07 02:08:08Z the engine fired the 010170 stop correctly (SELL LIMIT 6 @18010, fully filled, position CLOSED), but engine.log held zero lines for the order or the fill, so the operator and the Manager both concluded the stop had not fired; the truth was only in the journal. Cause: ExitObserver.log returns at once when opts.Log is nil, and engineRuntime deliberately does not wire Log because the observer's other Log lines (logErr) carry the account in the clear; only the a090 UnobservedLog is wired.",
+    "record": "openspec/changes/archive/2026-10-12-a129-an-exit-order-leaves-a-line/proposal.md"
+  },
+  "acceptance": [
+    "An exit order's confirmation, its fills, and its refusal or failure each write one structured line to a dedicated exit-order logger that the production engine wires; the observer's whole Log stays unwired",
+    "Each line carries only a whitelist of fields (symbol, market, side, order type, quantity, limit price, exit action and level, observed price, baseline, intent/position/attempt/order ids, broker result state and reason code, cumulative fill quantity and average price); a test plants a sentinel in every account-shaped input and asserts it never reaches the output",
+    "With the dedicated logger nil the observer behaves and writes exactly as before, and adds no journal read",
+    "A logger that fails or panics does not stop or delay the exit submission, the release of a refused proposal, or the next position's judgement",
+    "No broker call, judgement, proposal, order or release behaviour changes"
+  ]
+}

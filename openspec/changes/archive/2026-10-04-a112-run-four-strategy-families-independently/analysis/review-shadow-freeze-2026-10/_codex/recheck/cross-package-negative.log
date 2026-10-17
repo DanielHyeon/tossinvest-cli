@@ -1,0 +1,5 @@
+# github.com/JungHoonGhae/tossinvest-cli/review-recheck/negative
+review-recheck/negative/attack.go:4:41: cannot refer to unexported field market in struct literal of type strategyrouter.FamilyActivation
+review-recheck/negative/attack.go:4:74: cannot refer to unexported field generation in struct literal of type strategyrouter.FamilyActivation
+FAIL	github.com/JungHoonGhae/tossinvest-cli/review-recheck/negative [build failed]
+FAIL

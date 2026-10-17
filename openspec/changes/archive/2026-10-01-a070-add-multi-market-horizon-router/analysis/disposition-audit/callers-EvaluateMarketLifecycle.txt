@@ -1,0 +1,15 @@
+
+Callers of "EvaluateMarketLifecycle" (4):
+
+function    LoadProductionRouteAuthorityBatch
+  internal/strategyrouter/production.go:318
+
+function    Route
+  internal/strategyrouter/router.go:195
+
+function    TestGenerationRolloverAndMarketFailureIsolation
+  internal/strategyrouter/router_test.go:59
+
+function    RouteSet
+  internal/strategyrouter/routeset.go:47
+

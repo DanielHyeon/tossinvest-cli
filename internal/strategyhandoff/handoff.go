@@ -11,6 +11,7 @@ package strategyhandoff
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
 )
@@ -31,8 +32,14 @@ import (
 // "selected_limit": "at most one selected proposal per owner scope" 다.
 // 즉 종목이 둘인 시장이 아무 말 없이 아무것도 안 하는 지금 동작은 없어져야
 // 한다. 그것을 실제로 없애는 것은 태스크 5.2(시장 단위 단일 제안 준비 상태를
-// 시장마다 네 개의 독립 레인 worker 로 교체)이며, 그 로트는 이 상수와 Single
-// 의 서명을 **함께** 바꿔야 한다.
+// 시장마다 네 개의 독립 레인 worker 로 교체)이다.
+//
+// **태스크 5.2.2.1 이후 이 값의 단위는 두 가지다.** Admit 을 직접 부르는 자리
+// (서명 활성화가 없는 시장 — 오늘 생산 전부)에서는 여전히 시장당 1 이다.
+// AdmitEachOwnerScope 를 거치는 자리(서명 활성화된 시장)에서는 Admit 이 소유자
+// 범위 하나씩만 받으므로 같은 1 이 **소유자 범위당** 1 이 된다. 상수도 Single 의
+// 서명도 바꾸지 않았다 — 앞 판본의 예고("상수와 서명을 함께 바꿔야 한다") 대신
+// handoff 의 **개수**를 늘렸고, 그래서 이 값과 deliverable 이 갈라지지 않는다.
 const Capacity = 1
 
 // deliverable 은 이 경계가 **실제로 건네주는** 선택의 수다. Single 과 Deliver 가
@@ -198,4 +205,64 @@ func (handoff Handoff) Deliver(to func(Delivered) error) error {
 		return nil
 	}
 	return to(Delivered{result: result})
+}
+
+// AdmitEachOwnerScope 는 한 시장의 조정 결과를 **소유자 범위마다** 경계 값 하나로 바꿈(태스크 5.2.2.1).
+//
+// 동결 골든의 queue 블록("selected_limit": "at most one selected proposal per owner scope")이 요구하는 상한 단위는
+// 시장이 아니라 소유자 범위임. 그래서 상한을 시장 단위에서 소유자 범위 단위로 옮기되, **값이 나가는 문은 그대로 둠** —
+// 돌려주는 각 handoff 는 Admit 이 만든 것이고 선택 하나만 싣으므로 Single · Deliver · Refusal 의 불변식(Single 이 값을
+// 내주는 것 ⇔ Refusal 이 Admitted)과 Capacity(=1, 이제 소유자 범위당)가 손대지 않은 채 성립함. Single 의 서명을 바꾸는
+// 대신 handoff 의 **개수**를 늘린 것이 이 함수의 선택임.
+//
+// 시장 단위 판정은 소유자 범위로 쪼개지 않음:
+//   - 닫힌 시장·선택 없음은 Admit 그대로 handoff 하나(닫힌 시장에서 항목이 새지 않게 준비 상태를 먼저 봄).
+//   - 같은 소유자 범위에 선택이 둘 이상이면(범위당 상한 초과) **시장 전체**를 OverCapacity 로 거절함. 하나를 골라 조용히
+//     버리지 않음 — 어느 쪽이 맞는지 이 경계는 모르고, 조정자는 범위당 하나만 고르도록 되어 있으므로 둘이 왔다는 것 자체가
+//     조정자 쪽 고장의 신호임.
+//
+// 순서는 여기서 정하지 않음(Admit 과 같음) — 조정자가 정한 소유자 범위 순서가 곧 handoff 순서임.
+func AdmitEachOwnerScope(ready bool, selected []strategyflow.Result) []Handoff {
+	// 시장 단위 거절(닫힘 · 선택 없음)은 기존 문이 그대로 판정함.
+	if !ready || len(selected) == 0 {
+		return []Handoff{Admit(ready, selected)}
+	}
+	// 범위당 상한 검사를 **먼저** 끝냄 — 일부 범위만 내보낸 뒤 중복을 발견하는 순서를 만들지 않음.
+	seen := make(map[ownerScope]struct{}, len(selected))
+	for _, result := range selected {
+		scope := ownerScopeOf(result)
+		if _, duplicate := seen[scope]; duplicate {
+			return []Handoff{{refusal: OverCapacity, pending: len(selected)}}
+		}
+		seen[scope] = struct{}{}
+	}
+	handoffs := make([]Handoff, 0, len(selected))
+	for _, result := range selected {
+		// 선택 하나짜리 새 배열을 Admit 에 넘김 — 부르는 쪽 배열을 들고 있지 않음(Admit 이 다시 복사함).
+		handoffs = append(handoffs, Admit(ready, []strategyflow.Result{result}))
+	}
+	return handoffs
+}
+
+// ownerScope 는 포지션 소유 범위의 비교용 표기(strategyrouter.OwnerKey 와 같은 네 축: 계좌 · 시장 · 종목 · 포지션 세대).
+//
+// strategyrouter 를 import 하지 않고 따로 두는 이유: 이 패키지의 import 는 허용 목록(dependency_closure_test.go)으로
+// 고정돼 있고 strategyflow 하나뿐임. 축은 strategyrouter.OwnerKey 의 필드와 같아야 하며 `Horizon` 은 절대 넣지 않음
+// (OwnerKey 머리말 — 범위에 horizon 을 넣으면 같은 종목의 두 전략군이 서로 다른 범위로 보여 둘 다 건너감).
+type ownerScope struct {
+	account    string
+	market     string
+	symbol     string
+	generation uint64
+}
+
+// ownerScopeOf 는 제안의 계보에서 소유자 범위를 읽음. strategyrouter.NewOwnerKey 와 같은 정규화(공백 제거 · 종목 대문자)를
+// 적용함 — 표기만 다른 같은 범위를 둘로 세면 범위당 상한이 뚫리기 때문(보수 방향: 정규화는 중복을 늘릴 뿐 줄이지 않음).
+func ownerScopeOf(result strategyflow.Result) ownerScope {
+	return ownerScope{
+		account:    strings.TrimSpace(result.Lineage.AccountRef),
+		market:     string(result.Lineage.Market),
+		symbol:     strings.ToUpper(strings.TrimSpace(result.Lineage.Symbol)),
+		generation: result.Lineage.PositionGeneration,
+	}
 }

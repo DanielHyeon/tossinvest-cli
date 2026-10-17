@@ -57,6 +57,13 @@ type GuardianLimits struct {
 	MaxDailyLossAmount float64
 	MaxDailyLossRatio  float64
 	Currency           string
+	// DailyBuy 는 하루 매수 총액 상한(a136, `max_daily_buy_notional`). nil 이면 이 저장은 그 키를 **건드리지 않음** — 티어 프리셋은
+	// 이 값을 갖지 않으므로(USD 프리셋 값을 만들지 않음 — 사용자 결정) 프리셋 적용이 운영자가 넣은 값을 지우지 않음.
+	// 0 은 미설정(KRW 면 기본 10,000,000, 다른 통화면 엔진 기동 거부). 다섯 한도의 티어 대조 · 상한 검사 대상이 아님.
+	DailyBuy *float64
+	// OpenPositions 는 최대 보유 포지션 수(a138, `max_open_positions`). nil 이면 이 저장은 그 키를 **건드리지 않음**(티어 프리셋은 갖지 않음).
+	// 0 은 미설정(모든 통화에서 기본 6). 통화를 바꾸는 저장도 이 값을 지우지 않음 — 개수는 통화로 재해석되지 않음.
+	OpenPositions *float64
 }
 
 // GuardianTier is one registered set of ceilings.
@@ -161,7 +168,7 @@ var guardianTiers = []GuardianTier{
 		//                    axis stays the stricter of the two. Below: the
 		//                    measured $300 share, with room for a market fill.
 		//                    Rounded, because a ceiling is a backstop and sizing
-		//                    is RiskBudget's job (risk/input.go:223).
+		//                    is RiskBudget's job (risk/input.go `Policy.RiskBudget`).
 		//   exposure $1,500 — 3x notional, the stricter of the two registered US
 		//                    shapes (us-smoke 3.00x, us-small-live 3.33x).
 		//   daily loss $50  — us-small-live's, deliberately NOT raised. $75 would
@@ -336,6 +343,17 @@ func (l GuardianLimits) Validate() error {
 	}
 	if strings.TrimSpace(l.Currency) == "" {
 		return errors.New("the limit block names no currency, so its money bounds mean nothing")
+	}
+	// a136: 하루 매수 상한은 0(미설정)까지 허용 — 0 의 의미는 통화가 정함(EffectiveMaxDailyBuyNotional).
+	if l.DailyBuy != nil && (math.IsNaN(*l.DailyBuy) || math.IsInf(*l.DailyBuy, 0) || *l.DailyBuy < 0) {
+		return fmt.Errorf("max_daily_buy_notional is %v; it must be a finite non-negative number (0 = unset)", *l.DailyBuy)
+	}
+	// a138: 최대 보유 포지션 수는 0(미설정 → 기본 6) 또는 1 이상의 정수 — 판정은 WholeOpenPositions 한 곳.
+	if l.OpenPositions != nil && *l.OpenPositions != 0 {
+		if _, ok := WholeOpenPositions(*l.OpenPositions); !ok {
+			return fmt.Errorf("max_open_positions is %v; it must be a whole number of at least 1 (0 = unset, default %d)",
+				*l.OpenPositions, DefaultMaxOpenPositions)
+		}
 	}
 	return nil
 }

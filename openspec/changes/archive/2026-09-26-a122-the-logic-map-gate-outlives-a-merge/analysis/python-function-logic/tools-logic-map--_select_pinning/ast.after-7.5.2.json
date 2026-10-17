@@ -1,0 +1,99 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "source_sha256": "98845ce2dea180b8ab813180a51e9076ae1f787dea664362a61e8312675b135b",
+  "function": "_select_pinning",
+  "signature": "_select_pinning(root, reads)",
+  "start": {
+    "line": 626,
+    "column": 1
+  },
+  "end": {
+    "line": 649,
+    "column": 17
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 635,
+      "inherited_line": false,
+      "source": "for ast_path, raw in reads:"
+    },
+    {
+      "id": "B2",
+      "kind": "BoolOp",
+      "line": 637,
+      "inherited_line": false,
+      "source": "not isinstance(value, dict) or value.get('revision', 'current') != 'current'"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 637,
+      "inherited_line": false,
+      "source": "if not isinstance(value, dict) or value.get('revision', 'current') != 'current':"
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 641,
+      "inherited_line": false,
+      "source": "not raw_source or not digest"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 641,
+      "inherited_line": false,
+      "source": "if not raw_source or not digest:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 649,
+      "value": "found"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 636,
+      "callee": "_parsed"
+    },
+    {
+      "line": 637,
+      "callee": "isinstance"
+    },
+    {
+      "line": 637,
+      "callee": "value.get"
+    },
+    {
+      "line": 639,
+      "callee": "str"
+    },
+    {
+      "line": 639,
+      "callee": "value.get"
+    },
+    {
+      "line": 640,
+      "callee": "str"
+    },
+    {
+      "line": 640,
+      "callee": "value.get"
+    },
+    {
+      "line": 647,
+      "callee": "normalized_source"
+    },
+    {
+      "line": 648,
+      "callee": "found.append"
+    }
+  ]
+}

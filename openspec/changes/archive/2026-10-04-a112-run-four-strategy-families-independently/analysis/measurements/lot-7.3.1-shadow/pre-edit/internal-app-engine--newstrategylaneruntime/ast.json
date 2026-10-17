@@ -1,0 +1,78 @@
+{
+  "file": "internal/app/engine/strategy_lane_runtime.go",
+  "source_sha256": "95611377145456c4906da5ebb95eca97dd025df0c1fb255ebc443c1ce12d5d36",
+  "package": "engine",
+  "function": "newStrategyLaneRuntime",
+  "signature": "newStrategyLaneRuntime(params=3, results=1)",
+  "start": {
+    "line": 95,
+    "column": 1
+  },
+  "end": {
+    "line": 103,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 97,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 11
+      },
+      "text": "strategyworker.ProductionLanes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 13
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 66
+      },
+      "text": "len"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

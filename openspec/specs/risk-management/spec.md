@@ -9,11 +9,11 @@ Guardian 판정 체인(고정 순서·reason-code)·위험 기반 수량·발급
 **순서의 권위는 이 표다**(SHALL — StockOS `evaluate_guardian`과의 대응은 `docs/guardian-chain.md` 참고 산출물로 남기되 순서 보존을 규범으로 주장하지 않는다: 원 체인에는 미이식 단계가 섞여 있고 최소 RR은 원 체인에 없는 신규 검사다). 이식 분류의 열거(SHALL):
 
 - **이식**: kill switch·모드, 진입 latch, 손절 계약(reason: STOP_MISSING·STOP_NOT_BELOW_ENTRY·TARGET_NOT_ABOVE_ENTRY·INVALID_TARGET_STOP·TARGET_BELOW_BREAK_EVEN), 주문 크기(INVALID_ORDER_SIZE·MAX_ORDER_EXCEEDED), 현금(INSUFFICIENT_CASH·비용 포함), 당일 재진입(쿨다운 기본 30분 `[미검증]`·당일 심볼당 최대 진입 수 기본 2회 `[미검증]`·**미체결 매수 존재 시 진입 차단 PENDING_BUY_ORDER_BLOCKED**), 총 노출, 일손실, 중복 주문
-- **신규**: 최소 RR, 심볼 allowlist, STOP_MISSING(원본은 생성자 강제라 카운터파트 없음)
-- **제외**: KIS 고유(CASH_ONLY 등), LLM 게이트, capital stage, ARM/DASHBOARD 확인(운영 UI 소관 — 게이트 flip 승인이 대체), LIVE_DISABLED(인터록이 대체), BUY_PAUSED/SELL_ONLY(운영 모드가 대체), 미국장 진입 시간창, DAILY_TURNOVER·MAX_POSITIONS·CANCEL_RATE(P3), SELL_COST_BUFFER(§0.3)
+- **신규**: 최소 RR, 심볼 allowlist, STOP_MISSING(원본은 생성자 강제라 카운터파트 없음), 하루 매수 총액(DAILY_TURNOVER 의 매수 측 — 체인 단계가 아니라 결정·예약 원자 트랜잭션에서 판정한다: 「하루 매수 총액 한도」 요구), 최대 보유 포지션 수(MAX_POSITIONS — 체인 단계가 아니라 결정·예약 원자 트랜잭션에서 판정한다: 「최대 보유 포지션 수 한도」 요구)
+- **제외**: KIS 고유(CASH_ONLY 등), LLM 게이트, capital stage, ARM/DASHBOARD 확인(운영 UI 소관 — 게이트 flip 승인이 대체), LIVE_DISABLED(인터록이 대체), BUY_PAUSED/SELL_ONLY(운영 모드가 대체), 미국장 진입 시간창, CANCEL_RATE(P3), SELL_COST_BUFFER(§0.3)
 - **구조 대체**: 레버리지/인버스·ETF/ETN 클래스 차단 → 심볼 allowlist(분류 소스 `[미측정]`, P3 재설계)
 
-체인의 모든 입력은 의도 필드·브로커 스냅샷·journal 상태에서 온다(SHALL — 신호 계층 산물 없음: 구조적 RR 계산·등급배수는 P3). 총계 한도의 경계값은 도달 시 차단(≥)이며(SHALL — 예약 트랜잭션의 실장과 일치), 주문 단위 한도는 포함 상한(초과 시 차단)을 유지한다.
+체인의 모든 입력은 의도 필드·브로커 스냅샷·journal 상태에서 온다(SHALL — 신호 계층 산물 없음: 구조적 RR 계산·등급배수는 P3). 총계 한도의 경계값은 도달 시 차단(≥)이며(SHALL — 예약 트랜잭션의 실장과 일치), 주문 단위 한도는 포함 상한(초과 시 차단)을 유지한다. 최대 보유 포지션 수는 허용되는 최대 개수이므로 그 개수를 넘게 될 때 차단한다(SHALL — 「최대 보유 포지션 수 한도」).
 
 #### Scenario: 체인 첫 실패 정지
 - **WHEN** kill switch가 활성인 상태에서 진입 의도가 평가되면
@@ -96,7 +96,7 @@ Guardian은 engine-safety 메인 스펙의 결정 계약을 구현하는 발급�
 
 ### Requirement: 정책 수치의 provenance
 
-모든 한도·정책 수치는 코드에 출처와 함께 기록되어야 하며(SHALL — 출처는 ① StockOS 파일·심볼과 그 검증 상태, 또는 ② TossOS 실측이다; ②는 `verify-*` change의 `measurements.md`에 남은 관측을 **식별자로 인용**해야 한다(SHALL — 관측 번호·날짜·시장; "관측했다"는 서술은 출처가 아니다)), 사용자 미확정 시 보수 기본값 전체 집합을 사용한다(SHALL — 인터록 5필드를 전부 충족): 주문당 notional 1,000,000 KRW·주문당 수량 100주·총 노출 10,000,000 KRW·일일 손실 100,000 KRW·일일 손실 자본비 1%·통화 KRW. USD 축의 승인 집합은 주문당 notional 500 USD·주문당 수량 100주·총 노출 1,500 USD·일일 손실 50 USD·일일 손실 자본비 1%이며, 이 집합은 기본값이 아니라 **운영자가 명시적으로 고를 때만** 적용된다(SHALL NOT — 통화가 하나인 게이트에서 USD를 기본값으로 두면 국내 자동 진입이 조용히 닫힌다). "Toss 검증됨" 표시는 실계좌 검증 결과에만 근거해 전환한다(SHALL NOT — 미검증 상태에서 검증됨 표기 금지). 수치 변경은 §0.9(보수 방향만) 검토와 audit 기록을 요구한다(SHALL). 완화 방향의 수치 등재는 **새 통화 축을 등재하는 경우에 한해**, 각 수치가 이미 승인된 다른 통화의 선호 안쪽에 있고(SHALL — 등가 논증과 **그 논증이 깨지는 환율**을 change 문서에 기록한다), 사람이 그 수치를 명시적으로 승인했으며, 근거를 실측 식별자로 인용할 때만 허용한다(SHALL — 셋 중 하나라도 없으면 등재하지 않는다). 환산 환율은 코드에 넣지 않는다(SHALL NOT — 등가는 등재 시점의 정책 논증이며 런타임이 계산할 값이 아니다; 통화 간 정규화는 FX staleness 경계를 가진 riskcalc의 자리다).
+모든 한도·정책 수치는 코드에 출처와 함께 기록되어야 하며(SHALL — 출처는 ① StockOS 파일·심볼과 그 검증 상태, 또는 ② TossOS 실측이다; ②는 `verify-*` change의 `measurements.md`에 남은 관측을 **식별자로 인용**해야 한다(SHALL — 관측 번호·날짜·시장; "관측했다"는 서술은 출처가 아니다)), 사용자 미확정 시 보수 기본값 전체 집합을 사용한다(SHALL — 인터록 5필드를 전부 충족): 주문당 notional 1,000,000 KRW·주문당 수량 100주·총 노출 10,000,000 KRW·일일 손실 100,000 KRW·일일 손실 자본비 1%·통화 KRW. 하루 매수 총액 한도의 기본값은 10,000,000 KRW이며(SHALL), 그 출처는 사용자 결정(2026-10-14, change a136)이다 — 이전에 상한이 없던 새 검사이므로 이 수치의 등재는 완화가 아니다. 이 기본값은 통화가 KRW인 게이트에만 적용되며 다른 통화로 환산해 적용해서는 안 된다(SHALL NOT). 최대 보유 포지션 수의 기본값은 6이며(SHALL), 그 출처는 사용자 결정(2026-10-15, change a138)이다 — 이전에 상한이 없던 새 검사이므로 이 수치의 등재는 완화가 아니다. 개수는 통화와 무관하므로 이 기본값은 모든 통화의 게이트에 적용된다(SHALL). 건당 위험 예산은 설정 수치가 아니라 일일 손실 한도의 1/3을 통화 최소 단위로 내린 유도값이며(SHALL — 기본 집합에서 33,333 KRW, USD 승인 집합에서 16.66 USD), 그 나눗수의 출처는 사용자 결정(2026-10-15, change a139)이다 — 이전 유도(일일 손실 전부)보다 작으므로 등재는 강화다. USD 축의 승인 집합은 주문당 notional 500 USD·주문당 수량 100주·총 노출 1,500 USD·일일 손실 50 USD·일일 손실 자본비 1%이며, 이 집합은 기본값이 아니라 **운영자가 명시적으로 고를 때만** 적용된다(SHALL NOT — 통화가 하나인 게이트에서 USD를 기본값으로 두면 국내 자동 진입이 조용히 닫힌다). "Toss 검증됨" 표시는 실계좌 검증 결과에만 근거해 전환한다(SHALL NOT — 미검증 상태에서 검증됨 표기 금지). 수치 변경은 §0.9(보수 방향만) 검토와 audit 기록을 요구한다(SHALL). 완화 방향의 수치 등재는 **새 통화 축을 등재하는 경우에 한해**, 각 수치가 이미 승인된 다른 통화의 선호 안쪽에 있고(SHALL — 등가 논증과 **그 논증이 깨지는 환율**을 change 문서에 기록한다), 사람이 그 수치를 명시적으로 승인했으며, 근거를 실측 식별자로 인용할 때만 허용한다(SHALL — 셋 중 하나라도 없으면 등재하지 않는다). 환산 환율은 코드에 넣지 않는다(SHALL NOT — 등가는 등재 시점의 정책 논증이며 런타임이 계산할 값이 아니다; 통화 간 정규화는 FX staleness 경계를 가진 riskcalc의 자리다).
 
 #### Scenario: 한도 완화 시도
 
@@ -162,20 +162,59 @@ five configured limits and one normalized currency. The Guardian's maximum
 quantity, maximum order notional, maximum open exposure, maximum daily loss, and
 maximum daily loss ratio SHALL produce a limit snapshot byte-for-byte equivalent
 to the interlock's audited snapshot, including configured/set bits and currency.
-The per-trade risk budget SHALL equal the configured maximum daily-loss amount in
-the same currency.
+The per-trade risk budget SHALL equal one third of the configured maximum daily-loss
+amount in the same currency, rounded down to the currency's minor unit (KRW 1, USD
+0.01); a currency with no known minor unit, or a third that rounds to zero, SHALL leave
+the policy invalid so the gate refuses to start. The divisor's source is the user's
+decision of 2026-10-15 (change a139); before it the budget equalled the whole daily-loss
+amount ceiling, so one stopped-out trade could spend the whole amount ceiling (the
+ratio-of-equity ceiling, which can be lower, is not considered by this rule). The change is in
+the conservative direction only (§0.9) and SHALL NOT be relaxed without a new decision.
+The production policy derives the budget in one function, the default policy carries the
+same rule's value pinned equal by a test, and the startup audit SHALL record the derived value with the rule in its detail;
+when the budget cannot be derived (for example a gate-off configuration with no daily-loss
+amount) the audit line SHALL record an empty value with the reason and SHALL NOT fail the
+start, so a gate-off start stays the upstream behaviour. The production Guardian's policy
+version SHALL change with this rule (`engine.automation_gate/risk-policy-v2`), so every
+decision preimage names the sizing rule it was issued under. The Guardian's daily buy notional ceiling SHALL equal the gate's
+resolved `max_daily_buy_notional` (absent or zero resolves to 10,000,000 only when the
+currency is KRW) in the same currency, and the startup interlock SHALL compare the
+Guardian's declared ceiling with that resolved value; a Guardian that does not declare
+one, or declares a different one, SHALL be refused. The ceiling is not part of the
+five-field limit snapshot a decision carries, because the reservation transaction —
+not the Gateway — is where it is measured. The Guardian's maximum open positions
+SHALL equal the gate's resolved `max_open_positions` (absent or zero resolves to 6 in
+every currency), and the startup interlock SHALL compare the Guardian's declared
+maximum with that resolved value; a Guardian that does not declare one, or declares a
+different one, SHALL be refused. The maximum is likewise outside the five-field limit
+snapshot and is measured in the reservation transaction.
 
 #### Scenario: USD policy construction
 - **WHEN** the gate contains valid USD limits
 - **THEN** every Guardian money field and its audited limit snapshot use USD and the configured values without falling back to KRW defaults
 
 #### Scenario: One configured value differs
-- **WHEN** any one of the five policy values or the currency differs from the gate
+- **WHEN** any one of the five policy values, the resolved daily buy notional ceiling, the resolved maximum open positions, or the currency differs from the gate
 - **THEN** the startup interlock refuses the Guardian as a single-source mismatch
 
 #### Scenario: Risk budget derivation
 - **WHEN** the Guardian policy is created from a valid gate
-- **THEN** its per-trade risk budget equals the configured daily-loss amount and grants no larger loss budget
+- **THEN** its per-trade risk budget equals one third of the configured daily-loss amount rounded down to the minor unit, and grants no larger loss budget
+
+#### Scenario: Risk budget rounding
+
+- **WHEN** the gate's daily-loss amount is 100000 KRW, 50 USD, or 50.75 USD
+- **THEN** the per-trade risk budget is 33333 KRW, 16.66 USD, or 16.91 USD respectively
+
+#### Scenario: Risk budget too small to size
+
+- **WHEN** the gate's daily-loss amount is 0.02 USD so that one third rounds down to zero
+- **THEN** the Guardian policy is invalid and the gate-on start is refused
+
+#### Scenario: Gate-off start without a daily loss
+
+- **WHEN** the automation gate is off and the configuration has no daily-loss amount
+- **THEN** the start succeeds as before and the startup audit records an empty per-trade risk budget with the reason
 
 ### Requirement: Production Guardian uses the engine journal
 All decisions and reservations issued by the production Guardian SHALL be
@@ -299,6 +338,12 @@ digest를 authority로 승격해서는 안 된다 (MUST NOT). KR same-currency p
 sizing, aggregate와 다섯 bucket reservation, decision limits envelope와 Gateway last-moment
 validation에 끝까지 사용되어야 하며 중간 재조회나 다른 환율 사용은 금지한다 (MUST NOT).
 
+일일 손실 측정(「일일 손실 한도의 입력은 원장에서 측정된다」)과 하루 매수 총액 한도의 금액 중 account base currency 로 이미 표시된 것은 환산하지 않으며 authority 도 요구하지 않는다 (SHALL).
+다른 시장의 손실 또는 매수 금액은 **그 요청과 같은 paired FX collection(같은 observedAt)에 실린 그 시장의 authority** 로만 환산해야 하며 (SHALL), Guardian 은 precheck 에서
+그 authority 의 official source · base/quote pair · 신선도를 검증해야 한다 (SHALL). 그 authority 가 없거나 검증에 실패하면 그 요청의 신규 exposure 를 fail-closed 로 거부해야 한다 (SHALL).
+이 환산을 위해 FX 를 재조회하거나, caller 가 제공한 환율 또는 다른 파도의 authority 를 써서는 안 된다 (MUST NOT). 이 조항은 요청의 sizing · aggregate exposure · bucket reservation ·
+decision limits envelope · Gateway last-moment validation 이 쓰는 FX 규칙을 바꾸지 않는다 (SHALL NOT).
+
 Base reservation은 exposure를 작게 계산하지 않도록 ceil하고 admissible quantity는 floor해야 한다
 (SHALL). FX 없음, stale, 역방향, market/quote/base/digest 불일치 또는 완화된 haircut은 해당
 시장의 신규 exposure만 거부하고 (SHALL), protection, fill, reconciliation과 reduce-only exit를
@@ -328,3 +373,385 @@ Base reservation은 exposure를 작게 계산하지 않도록 ceil하고 admissi
 
 - **WHEN** entry용 official FX authority를 만들 수 없지만 기존 US 포지션의 reduce-only exit가 필요하다
 - **THEN** 신규 US entry만 닫히고 exit, protection, reconciliation과 fill 처리는 계속된다
+
+#### Scenario: KR 진입의 일일 손실에 든 US 손실
+
+- **WHEN** KR 진입 precheck 의 일일 손실 측정에 같은 일 키의 US 손실(USD)이 있고 같은 paired FX collection 에 검증되는 US authority 가 있다
+- **THEN** 그 손실은 US authority 로 base 환산(올림)되어 측정에 들어가고 KR 요청의 sizing · exposure · reservation 은 KR identity authority 를 그대로 쓴다
+
+#### Scenario: 다른 시장 authority 부재
+
+- **WHEN** KR 진입의 일일 손실 측정에 US 손실이 있는데 같은 paired FX collection 에 US authority 가 없다
+- **THEN** 그 KR 진입은 일일 손실 단에서 입력 불가로 거부되고 FX 재조회는 일어나지 않으며 exit · protection · reconciliation 은 계속된다
+
+#### Scenario: base 통화 손실
+
+- **WHEN** account base 가 KRW 이고 측정할 손실이 모두 KR(KRW)이다
+- **THEN** 환산과 authority 없이 측정된다
+
+#### Scenario: KR 진입의 하루 매수 합계에 든 US 수동 매수
+
+- **WHEN** KR 진입의 하루 매수 합계에 오늘 US 수동 매수(USD)가 있고 같은 paired FX collection 에 검증되는 US authority 가 있다
+- **THEN** 그 금액은 US authority 로 base 환산(올림)되어 합계에 들어가고, authority 가 없으면 그 KR 진입은 거부되며 FX 재조회는 일어나지 않는다
+
+### Requirement: Guardian은 q_candidate를 보수적인 q_final로 제한한다
+
+기존 Guardian 판정 체인의 mutation-free precheck가 exposure-raising 의도를 허용한 뒤 multi-horizon calculator는 canonical `q_candidate`와 monetary bucket으로 `q_final`을 확정해야 한다(SHALL). GuardianDecision은 q_final 확정 뒤에만 발급되어야 하며(SHALL), decision과 intent quantity는 q_final과 정확히 같고 q_candidate 및 기존 Guardian 허용 수량을 초과해서는 안 된다(MUST NOT). q_candidate, q_final, worst executable price, fee/FX haircut digest, 각 monetary bucket snapshot/version, binding cap, owner와 refusal reason은 GuardianDecision provenance에 포함되어야 한다(SHALL).
+
+#### Scenario: Bucket이 strategy 수량을 축소
+- **WHEN** q_candidate가 10주이고 유효한 q_final이 4주다
+- **THEN** GuardianDecision과 intent quantity는 정확히 4주이며 q_candidate 10주와 binding monetary bucket provenance를 보존한다
+
+#### Scenario: Bucket 계산 실패
+- **WHEN** required bucket snapshot 또는 valuation을 fail-closed로 계산할 수 없다
+- **THEN** Guardian은 exposure-raising decision과 reservation을 발급하지 않고 안정 reason-code를 기록한다
+
+#### Scenario: q_final 전 decision 기록 시도
+- **WHEN** q_final과 monetary reservation preimage가 확정되기 전에 GuardianDecision을 기록하려 한다
+- **THEN** 발급은 거부되고 제출 가능한 decision과 reservation은 0건이다
+
+### Requirement: Guardian 원자 예약은 lane owner와 모든 bucket을 포함한다
+
+q_final 확정 뒤 결정 영속과 예약의 단일 journal transaction은 q_final GuardianDecision, lane owner 및 horizon, market, strategy, sector, symbol monetary bucket reservation을 함께 commit해야 한다(SHALL). 어느 owner 또는 bucket 검사라도 실패하면 GuardianDecision, 기존 exposure reservation, monetary bucket reservation과 campaign owner가 모두 rollback되어야 한다(SHALL). Gateway는 제출 전에 decision quantity가 q_final과 일치하고 모든 HELD monetary reservation 및 owner가 여전히 유효한지 journal에서 재검증해야 한다(SHALL).
+
+#### Scenario: Sector cap 경쟁
+- **WHEN** 동시에 허용된 두 decision 중 하나가 sector 잔여 한도를 먼저 예약한다
+- **THEN** 다른 transaction은 LIMIT_REACHED로 전체 rollback되고 제출 가능한 고아 decision이나 부분 reservation이 없다
+
+#### Scenario: 제출 전 owner 상실
+- **WHEN** decision 발급 뒤 Gateway 제출 전에 owner 또는 bucket reservation이 유효하지 않게 된다
+- **THEN** Gateway는 broker request 전에 제출을 거부한다
+
+### Requirement: 다중 horizon 손실 lock은 entry-only다
+
+short/medium horizon 및 market별 손실 lock은 해당 범위의 신규 EXPOSURE_RAISING decision과 추가 leg만 차단해야 한다(SHALL). lock은 RISK_REDUCING decision 발급, stop, emergency exit, reconciliation, fill detection 또는 기존 reservation 정리에 적용되어서는 안 된다(MUST NOT). 보수 방향 lock 활성화는 즉시 영속할 수 있지만 완화는 사람 승인과 audit를 요구해야 한다(SHALL).
+
+#### Scenario: Medium lock과 short entry
+- **WHEN** KR medium-horizon loss lock만 활성이고 독립 한도가 정상인 KR short-horizon 진입이 평가된다
+- **THEN** medium lock은 short 요청에 전파되지 않으며 short 요청은 나머지 Guardian 체인을 계속 평가한다
+
+#### Scenario: Market lock 중 emergency exit
+- **WHEN** US entry loss lock이 활성인 상태에서 US emergency exit가 발급된다
+- **THEN** RISK_REDUCING decision은 lock 평가 없이 진행되고 broker exit 경로가 지연되지 않는다
+
+#### Scenario: 잠금 해제는 운영자 승인과 audit 뒤에만
+- **WHEN** 운영자가 승인 참조와 함께 자신이 본 열린 잠금의 해제를 요청한다
+- **THEN** audit 줄이 commit 앞에 기록되고 해제는 append-only 기록으로 남으며 자동 경로는 해제를 요청할 수 없다
+
+#### Scenario: 해제는 도는 엔진이 기록한다
+- **WHEN** 운영자가 엔진이 돌지 않을 때 해제 명령을 실행한다
+- **THEN** 명령은 원장을 직접 열지 않고 거절하며 아무것도 해제되지 않는다. 엔진이 돌 때는 엔진이 자기 원장과 audit 로그로 해제하고, 커밋 뒤 통지 기록이 실패하면 해제는 유지된 채 「완화됨·통지 실패」로 보고된다
+
+#### Scenario: 해제 앞의 새 조이기가 이긴다
+- **WHEN** 운영자가 잠금을 본 뒤 같은 범위에 새 활성화(REAFFIRM)가 기록된다
+- **THEN** 운영자가 본 상태에 결속된 해제는 stale 로 거절되고 잠금은 유지된다
+
+### Requirement: fill 사실은 risk overage 또는 valuation unknown보다 우선 보존된다
+
+Guardian과 bucket projection은 이미 발생한 authoritative fill과 Position apply를 cap overage, missing actual price/fee/FX 또는 stale risk snapshot을 이유로 거부해서는 안 된다(MUST NOT). Fill transaction은 모든 적용 bucket의 proportional HELD transfer, actual monetary exposure 또는 explicit unknown, `max(transfer, actual)` filled amount 및 overage를 Position과 원자적으로 기록해야 한다(SHALL). `RISK_OVERAGE`와 `UNKNOWN_ACTUAL_RISK`는 신규 exposure만 차단하고 stop, emergency exit, reconciliation, fill detection과 Position apply를 차단해서는 안 된다(MUST NOT).
+
+#### Scenario: unknown actual risk인 authoritative fill
+- **WHEN** authoritative fill delta가 있지만 actual fee 또는 FX를 확정할 수 없다
+- **THEN** Guardian은 fill/Position을 적용하고 UNKNOWN_ACTUAL_RISK로 신규 exposure만 차단하며 missing 값을 0으로 대체하지 않는다
+
+#### Scenario: 모든 bucket의 overage 기록
+- **WHEN** 하나의 fill 뒤 여러 적용 bucket usage가 동시에 cap을 초과한다
+- **THEN** fill/Position은 한 번 보존되고 horizon, market, strategy, sector와 symbol 각각의 overage와 RISK_OVERAGE latch가 같은 transaction에 기록된다
+
+#### Scenario: RISK_OVERAGE latch 해제는 본 상태에 결속된다
+- **WHEN** 운영자가 읽은 owner 상태 digest 로 승인된 latch 해제를 요청하는데 그 사이 체결이나 latch 가 기록됐다
+- **THEN** 해제는 stale 로 거절되고, 결속이 맞으면 RISK_OVERAGE 만 해제되며 UNKNOWN_ACTUAL_RISK 와 overage 수치는 남고 다음 초과 체결은 다시 latch 한다
+
+### Requirement: 하루 매수 총액 한도
+
+Guardian은 계좌 하나의 하루 매수 총액에 상한을 두어야 한다(SHALL). 상한은 `engine.automation_gate.max_daily_buy_notional`(account base 통화 =
+`limit_currency`)이며, 키가 없거나 0이면 기본값 10,000,000 KRW를 적용한다(SHALL — 기존 관례: 0은 미설정). 음수·NaN·Inf는 기동 거부다(SHALL).
+`limit_currency`가 KRW가 아닌데 값이 없으면 게이트 ON 기동을 거부한다(SHALL — 승인된 다른 통화 기본값이 없고 코드 환율은 금지다).
+
+하루의 경계는 두 시장에 공통인 하나여야 하며(SHALL), **KST 08:00에 넘어간다**: 일 라벨은 `clock.AccountTradingDay(t)` =
+`clock.MarketKR.TradingDay(t − 8시간)` 한 곳에서만 계산한다(SHALL — 계좌 단위 일일 판정이 모두 이 함수를 쓴다). 라벨 D 의 하루에는 서울 날짜 D 의
+KR 정규장과 뉴욕 날짜 D 의 US 정규장이 함께 들어가며 어느 정규장도 둘로 나뉘지 않는다. 시장별 하루 또는 시장별 별도 한도를 두어서는 안 된다(SHALL NOT).
+
+판정은 체인 단계가 아니라 **결정 영속과 예약 삽입의 원자 journal 트랜잭션 안**에서 해야 한다(SHALL). 오늘의 합계는 같은 트랜잭션에서 읽은
+① 오늘(발급일 기준 — 체결일이 아님) 발급된 EXPOSURE_RAISING 결정의 OPEN_EXPOSURE 예약 중 **RELEASED** 이고 체결이 없었음이 증명되지 않은 것 — 제외는 셋뿐이다:
+attempt 없이 미소비 만료(EXPIRED_UNCONSUMED)로 해제됨, attempt 가 NOT_DISPATCHED 또는 FAILED_CONFIRMED, 또는 체결 경로 해제(BROKER_TERMINAL)이고 attempt 가 그 결정의
+CONFIRMED PLACE 이며 그 주문의 체결 스냅숏이 attempt 의 intent 범위(계좌·시장·거래일·종목·매수)와 attempt 확정 뒤 커밋으로 정확히 한 행 · 종결(fail-closed 아님) ·
+누적 체결 0 이고 소유 intent 가 하나이며 그 주문에 체결 이벤트·대체 계보·AMEND 시도가 없음, ② 발급일과 무관하게 아직 HELD인 OPEN_EXPOSURE 예약의 합이며, 새 진입의 예약 금액을 더한 값이 한도에 **도달하면** 발급을 거부하고
+LIMIT_REACHED로 기록한다(SHALL — 총계 경계 ≥와 같다). 결정의 발급일과 예약 커밋 순간의 하루가 다르면 그 예약은 거부된다(SHALL — 매수는 발급일에 귀속되므로). 금액은 예약 금액 그대로(`risk.EntryExposureValue` — 비용 포함, account base, US는 요청 단위
+frozen FX로 환산·ceil)를 쓰며 새 환율 경로를 만들어서는 안 된다(SHALL NOT). 합계를 계산할 수 없으면 그 매수의 결정과 예약은 함께 롤백된다(SHALL —
+fail-closed). EXPOSURE_RAISING 결정의 예약 트랜잭션이 이 한도를 함께 받지 않으면 그 요청은 거부된다(SHALL — 한도를 빠뜨린 발급 문이 조용히 통과하지 못한다).
+
+이 한도는 EXPOSURE_RAISING 진입 발급에만 적용된다(SHALL). RISK_REDUCING 발급, 손절, 익절, 비상 청산, flatten, 보호 주문, 대사, 체결 감지는 이 판정을
+지나서는 안 되며 지연되어서도 안 된다(SHALL NOT — §0.3). Guardian 밖의 수동 주문(토스 앱 등)은 이 한도로 막지 않는다(SHALL NOT — OFF = upstream). 그러나 수동 매수는 오늘 합계에 **들어간다**(SHALL —
+사용자 결정 2026-10-14 D9=b): 엔진 보조 실행자가 기존 공식 주문 조회(GET /api/v1/orders)로 라벨 D 의 매수 주문을 읽어 시각이 찍힌 스냅숏을 만들고,
+이 계좌 attempt 의 `broker_order_id` 와 같은 주문(엔진 자신의 주문 — 예약 원장이 이미 셈)은 뺀다(SHALL). 수동 매수 금액은 체결액과, 세부 상태(`orders[].status`)가 종결이
+아닌 주문의 미체결 잔량 × 지정가(금액 기반 시장가는 `orderAmount`)의 합이며, 지정가도 주문 금액도 없는 미체결 주문처럼 금액을 정할 수 없는 행이 있으면 그 스냅숏은 산정 불가다(SHALL). 브로커 조회는 precheck 밖에서만 하며(SHALL — 첫 다리
+precheck 의 「journal 변경·브로커 호출 없음」 계약), 스냅숏이 없거나 · 신선도 상한(2분)을 넘었거나 · 산정 불가이거나 · 다른 하루의 것이면 **매수만** 거부한다(SHALL). 실패한 읽기는 산정 불가 스냅숏으로 게시되어 이전 값이 계속 쓰이지 않는다(SHALL).
+US 수동 매수의 base 환산은 「KR과 US는 하나의 account-base Guardian 권위를 공유한다」의 paired FX 규칙을 따른다(SHALL).
+
+한도 변경은 기존 한도 설정 seam(콘솔 한도 편집기 → 키 단위 쓰기, `enabled` 비기록)으로 하며 필드별 이전·새 값이 audit 로그에 남아야 한다(SHALL).
+설정 파일 수동 편집은 기동 audit 가 해석 값의 변화를 남긴다(SHALL). 콘솔 칸은 현재 한도 통화의 자유 숫자 입력이고 USD 프리셋 값을 만들지 않으며(SHALL NOT),
+KRW 에서 미설정이면 적용될 기본값 10,000,000 을, USD 에서 미설정이면 「엔진이 기동을 거부함」을 평이하게 보여 준다(SHALL). 저장이 한도 통화를 바꾸면
+`max_daily_buy_notional` 은 0(미설정)으로 지워진다(SHALL — 옛 통화의 숫자가 새 통화로 재해석되지 않게; 미리 채워진 옛 숫자를 그대로 보낸 저장도 지움이며, 운영자가 새 통화로 다른 숫자를 넣은 저장만 그 값을 쓴다). 콘솔 편집에 타이핑 확인이나 추가 승인 단계를
+두지 않는다(SHALL NOT). 가동 중인 엔진은 기동 시점 값으로 동작하고 재시작 때 새 값을 쓴다.
+
+#### Scenario: 동시 매수가 함께 넘지 못한다
+
+- **WHEN** 오늘 합계가 9,500,000 KRW이고 각 400,000 KRW인 두 진입이 동시에 발급을 시도하면
+- **THEN** 먼저 커밋한 하나만 발급되고 다른 하나는 LIMIT_REACHED로 결정·예약이 함께 롤백된다
+
+#### Scenario: 체결된 매수도 하루가 끝날 때까지 센다
+
+- **WHEN** 오늘 발급된 진입이 체결되어 OPEN_EXPOSURE 보유가 해제된 뒤 새 진입이 평가되면
+- **THEN** 체결된 진입의 예약 금액이 오늘 합계에 그대로 남아 새 진입과 함께 한도에 대조된다
+
+#### Scenario: 체결 없음이 증명된 매수는 빠진다
+
+- **WHEN** 오늘 발급된 진입이 체결 수량 0으로 종결되었거나 미전송으로 끝났으면
+- **THEN** 그 예약 금액은 오늘 합계에서 빠진다
+
+#### Scenario: 하루 경계
+
+- **WHEN** KST 07:59에 합계가 한도에 도달해 매수가 거부되고 KST 08:00 이후 새 진입이 평가되면
+- **THEN** 전날 하루에 발급된 종결 진입은 합계에서 빠지고, 아직 HELD인 미체결 매수만 남아 대조된다
+
+#### Scenario: 합계를 계산할 수 없음
+
+- **WHEN** 오늘 합계에 들어갈 예약 행의 금액이나 통화를 해석할 수 없으면
+- **THEN** 그 매수는 결정과 예약 없이 거부되고, 같은 시각의 매도·청산 발급은 영향을 받지 않는다
+
+#### Scenario: 매도는 한도와 무관하다
+
+- **WHEN** 하루 매수 총액이 한도에 도달한 상태에서 손절 또는 reduce-only 매도가 발급되면
+- **THEN** 매도는 이 한도를 평가하지 않고 지연 없이 발급된다
+
+#### Scenario: US 매수의 환산
+
+- **WHEN** account base가 KRW인 계좌에 US 진입이 평가되면
+- **THEN** 그 진입이 OPEN_EXPOSURE로 예약하는 frozen FX 환산 금액이 하루 합계에 더해지고 다른 환율은 쓰이지 않는다
+
+#### Scenario: 기본값과 한도 변경 감사
+
+- **WHEN** 설정에 키가 없는 KRW 게이트로 기동했다가 운영자가 콘솔에서 한도를 5,000,000으로 바꾸면
+- **THEN** 기동 때는 10,000,000 KRW가 적용되고, 변경은 이전·새 값이 audit 로그에 남으며 재시작 뒤 5,000,000이 적용된다
+
+#### Scenario: 엔진 밖 수동 매수도 합계에 든다
+
+- **WHEN** 오늘 토스 앱으로 4,000,000 KRW 를 산 계좌에서 엔진 합계가 5,000,000 KRW 이고 상한이 10,000,000 KRW 일 때 1,500,000 KRW 진입이 평가되면
+- **THEN** 수동 매수는 막히지 않았고, 진입은 4,000,000 + 5,000,000 + 1,500,000 ≥ 10,000,000 으로 LIMIT_REACHED 거부된다
+
+#### Scenario: 수동 매수 스냅숏이 낡음
+
+- **WHEN** 수동 매수 스냅숏이 신선도 상한보다 오래되었거나 없으면
+- **THEN** 진입만 거부되고 매도·손절·청산은 영향을 받지 않는다
+
+#### Scenario: 콘솔 통화 전환
+
+- **WHEN** KRW 로 5,000,000 을 넣어 둔 계좌에서 운영자가 콘솔로 한도 통화를 USD 로 저장하면
+- **THEN** `max_daily_buy_notional` 은 0 으로 지워지고 콘솔은 USD 미설정이면 엔진이 기동을 거부한다고 보여 준다
+
+#### Scenario: 상한 없는 예약
+
+- **WHEN** EXPOSURE_RAISING 결정의 예약 요청에 하루 매수 상한이 없으면
+- **THEN** 그 예약과 결정은 거부되어 남지 않는다
+
+### Requirement: 일일 손실 한도의 입력은 원장에서 측정된다
+
+생산 Guardian 은 자동 진입 의도를 판정하기 전에 엔진 원장에서 그날의 실현 손실을 직접 측정해야 한다 (SHALL). 그날은 하루 매수 총액 한도와 같은 일 키 D 이고, 귀속은 `clock.AccountTradingDay(closed_at) == D`(KST 08:00 에 넘어가는 하루, `closed_at` 은 원장 커밋 시각)로 한다 (SHALL). 시장별 현지일로 귀속해서는 안 된다 (SHALL NOT — 늦게 기록된 손실이 끝난 날로 떨어져 세어지지 않는다). 일 키 함수는 하나여야 한다 (SHALL).
+측정 대상은 KR · US 의 관리 포지션(진입 결정 또는 편입이 있는 것)이며 그 밖의 시장은 측정 불가다 (SHALL). 각 포지션의 값은 동결된 비용 차감 후 실현 손익이고, 포지션 사이에서 이익이 손실을 상쇄해서는 안 된다 (SHALL NOT — 음수 행만 합산한다). 합산은 `riskcalc.DailyLoss` 의 계약으로 하며 새 공식을 만들어서는 안 된다 (SHALL NOT).
+관리 대상이 아닌 포지션, 아직 열린 포지션의 부분 청산, 미실현 손익은 측정에 들어가지 않는다 (SHALL — 명시 한계). 조정으로 수량 0 이 되어 닫힌 관리 포지션은 그 인스턴스 수명 안에 엔진 매도가 브로커에 나갔을 수 있는 기록 — 발송된 엔진 SELL 주문 attempt, 또는 브로커에 놓였을 수 있는 보호 주문(생성 · 교체) — 이 없을 때만 측정에서 빠지며 (SHALL — 사람의 앱 매도), 있으면 측정 불가다 (SHALL). `closed_at` 이 없거나 해석할 수 없는 CLOSED 관리 포지션이 하나라도 있으면 측정 불가다 (SHALL).
+체인이 비교하는 값은 호출자 값과 측정값이 **둘 다 유효할 때** 그 중 큰 쪽이어야 한다 (SHALL). 호출자 값이 무효(해석 불가 · 통화 불일치 · 음수)면 측정값으로 대체하지 않고 거절해야 하며 (SHALL), 측정이 실패하면 호출자 값으로 대체해서는 안 된다 (SHALL NOT).
+측정을 할 수 없으면 — 원장 읽기 실패, 그날 체결로 닫힌 관리 포지션의 성과 행 부재, 엔진 SELL 이 섞인 조정 종결, 다른 시장 손실의 환산 authority 부재(환산 규칙은 risk-management 「KR과 US는 하나의 account-base Guardian 권위를 공유한다」의 일일 손실 · 매수 금액 환산 조항 — a136 델타가 MODIFIED 로 둠), 원장 값 해석 불가, 측정 결과의 만료 · 일 키 불일치 — 그 진입은 일일 손실 단에서 입력 불가로 거절되어야 하며 (SHALL), 앞 단의 거절 사유를 가려서는 안 된다 (SHALL NOT).
+측정은 진입에만 적용된다: 위험 축소 결정 · 손절 · 비상 청산 · 대사 · 체결 감지는 측정을 호출하거나 기다려서는 안 된다 (MUST NOT). 측정은 원장 행을 연 채 네트워크를 타서는 안 되고 (MUST NOT), mutation-free precheck 의 브로커 호출 금지를 깨서는 안 된다 (MUST NOT).
+계좌 자본이 0 이하이면 체인이 일일 손실 한도 도달로 거절하며, 이 경로도 같은 강화를 받는다 (SHALL — 보수 방향).
+측정 불가로 일일 손실 단에서 거절된 전략 진입은 레인 결함이나 레인 잠금이 되어서는 안 되며 (SHALL NOT), 잴 수 있을 때까지 매 주기 거절되어야 한다 (SHALL). 측정과 무관한 입력 불가의 분류는 바뀌지 않는다 (SHALL NOT).
+측정이 한도 도달을 판정하면 생산 진입 경로는 운영 모드를 ENTRY_BLOCKED(trigger = 일일 손실 한도)로 강화 · 영속해야 한다 (SHALL). 전략 경로에서 ① 그 거절, ② trigger 가 일일 손실 한도인 운영 모드 행이 만든 모드 투영 거절, ③ 그 모드 변경이 원인인 제출 직전 펜스 거절은 주기 오류 · 레인 결함 · 레인 잠금이 되어서는 안 되며 (SHALL NOT), 계좌 단위 진입 차단 결과로 그 주기를 끝내야 하고 (SHALL), 거절 원인과 trigger 는 타입으로 보존되어야 한다 (SHALL). 다른 trigger 의 모드 차단 · 기동 복원 실패 차단 · 그 밖의 진입 관문과 펜스 거절의 동작은 바뀌어서는 안 된다 (SHALL NOT). 같은 주기에 앞서 건너뛴 범위 거절이 있으면 그 보고는 지금처럼 주기의 오류로 남는다 (SHALL — 조용한 건너뛰기 금지).
+
+#### Scenario: 서명 매니페스트가 0 을 적은 손실일
+- **WHEN** 계좌 매니페스트의 일일 손실이 0 이고 원장에 그날 닫힌 손실 합계가 한도 이상이다
+- **THEN** 진입은 `DAILY_LOSS_LIMIT_REACHED` 로 거절되고 운영 모드는 ENTRY_BLOCKED 로 강화된다
+
+#### Scenario: 포지션 사이의 이익은 상쇄하지 않는다
+- **WHEN** 그날 닫힌 두 포지션이 −60,000 과 +80,000 이고 한도가 50,000 이다
+- **THEN** 측정값은 60,000 이고 진입은 거절된다
+
+#### Scenario: 늦게 기록된 손실
+- **WHEN** 브로커에서 전날 체결된 손절이 KST 08:00 이후에야 원장에 반영되어 `closed_at` 이 오늘 일 키에 든다
+- **THEN** 그 손실은 오늘 측정에 들어간다
+
+#### Scenario: 호출자 값이 더 크다
+- **WHEN** 호출자 값과 측정값이 모두 유효하고 호출자 값이 더 크다
+- **THEN** 체인은 호출자 값으로 판정한다
+
+#### Scenario: 무효한 호출자 값
+- **WHEN** 호출자 값이 음수이고 측정은 성공했다
+- **THEN** 진입은 일일 손실 단에서 `INPUT_UNAVAILABLE` 로 거절되고 측정값으로 대체되지 않는다
+
+#### Scenario: 측정 실패는 호출자 값으로 떨어지지 않는다
+- **WHEN** 호출자 값은 0 으로 유효하고 측정이 실패한다
+- **THEN** 진입은 일일 손실 단에서 `INPUT_UNAVAILABLE` 로 거절된다
+
+#### Scenario: 성과 행이 없는 그날의 청산
+- **WHEN** 그날 체결로 닫힌 관리 포지션 하나의 성과 동결이 거절되어 성과 행이 없다
+- **THEN** 그 일 키의 진입은 일일 손실 단에서 `INPUT_UNAVAILABLE` 로 거절되고, 매도 · 손절 경로와 다른 포지션의 청산은 영향받지 않는다
+
+#### Scenario: 사람이 앱에서 판 관리 포지션
+- **WHEN** 관리 포지션이 조정으로 수량 0 이 되어 닫혔고 그 수명에 발송된 엔진 SELL attempt 가 없다
+- **THEN** 그 포지션은 측정에 들어가지 않고 진입을 막지도 않는다
+
+#### Scenario: 엔진 매도가 섞인 조정 종결
+- **WHEN** 관리 포지션이 조정으로 닫혔는데 그 수명에 발송된 엔진 SELL attempt 가 있다
+- **THEN** 측정 불가로 그 일 키의 진입이 거절된다
+
+#### Scenario: 측정 실패 중 손절
+- **WHEN** 원장 측정이 실패하는 상태에서 손절 · 비상 청산 위험 축소 결정이 요청된다
+- **THEN** 측정은 호출되지 않고 위험 축소 결정은 지연 없이 발급된다
+
+#### Scenario: kill switch 가 켜진 상태의 측정 실패
+- **WHEN** kill switch 가 켜져 있고 원장 측정도 실패한다
+- **THEN** 거절 사유는 kill switch 단의 것이다
+
+#### Scenario: 서명 활성화된 레인의 한도 도달
+- **WHEN** 같은 주기에 앞서 건너뛴 범위 거절이 없고, 서명 활성화된 전략 레인의 진입이 일일 손실 한도로 거절되고 이어 다른 레인의 진입이 그 ENTRY_BLOCKED 로 거절된다
+- **THEN** 두 레인 어느 것도 잠기지 않고 그 주기는 오류 없이 끝나며 운영 모드는 ENTRY_BLOCKED 다
+
+#### Scenario: 앞서 건너뛴 범위 거절과 섞인 한도 도달
+- **WHEN** 같은 주기에 한 범위가 버킷 고갈로 건너뛰어진 뒤 다른 범위가 일일 손실 한도로 거절된다
+- **THEN** 운영 모드는 ENTRY_BLOCKED 로 강화되고 그 주기의 남은 범위 전달은 멈추며, 건너뛴 범위 거절은 지금처럼 주기의 오류로 보고된다
+
+#### Scenario: 다른 원인의 모드 차단은 그대로
+- **WHEN** 운영 모드가 일일 손실이 아닌 trigger 로 ENTRY_BLOCKED 이거나 기동 복원 실패로 진입이 막혀 있다
+- **THEN** 전략 경로의 거절 동작(서명 활성화된 레인의 잠금 포함)은 이 change 이전과 같다
+
+#### Scenario: 강화와 경합한 제출 직전 펜스
+- **WHEN** 레인 B 의 진입이 강화 전에 승인되었고 제출 직전 재확인에서 일일 손실 한도 강화로 인한 모드 변경을 만나 펜스 거절된다
+- **THEN** 그 거절은 계좌 단위 진입 차단 결과이고 레인 B 는 잠기지 않으며 브로커 요청은 없다
+
+#### Scenario: 보호 주문이 있던 조정 종결
+- **WHEN** 관리 포지션이 조정으로 닫혔는데 그 수명에 브로커에 놓였을 수 있는 보호 주문(생성 · 교체)이 있었다
+- **THEN** 측정 불가로 그 일 키의 진입이 거절된다
+
+#### Scenario: 측정 불가인 날의 서명 활성화 레인
+- **WHEN** 그날 체결로 닫힌 관리 포지션의 성과 행이 없어 서명 활성화된 레인의 진입이 일일 손실 단에서 입력 불가로 거절된다
+- **THEN** 레인은 잠기지 않고 그 주기는 오류 없이 끝나며, 다음 주기의 진입도 성과 행이 채워지거나 일 키가 바뀔 때까지 다시 거절된다
+
+#### Scenario: 자본 0 인 계좌
+- **WHEN** 계좌 자본이 0 인 상태에서 전략 진입이 평가된다
+- **THEN** 진입은 일일 손실 한도 도달로 거절되고 운영 모드는 ENTRY_BLOCKED 로 강화된다
+
+#### Scenario: 일 경계
+- **WHEN** KST 08:00 을 지나 일 키가 바뀐다
+- **THEN** 이전 일 키의 손실과 성과 행 부재는 새 일 키의 측정에 들어가지 않는다. 이미 강화된 ENTRY_BLOCKED 는 사람이 풀 때까지 유지된다
+
+### Requirement: 최대 보유 포지션 수 한도
+
+Guardian은 계좌 하나가 동시에 드는 포지션의 수에 상한을 두어야 한다(SHALL). 상한은 `engine.automation_gate.max_open_positions`이며, 키가 없거나 0이면
+기본값 6을 적용한다(SHALL — 기존 관례: 0은 미설정, 개수는 통화와 무관). 음수·정수가 아님·NaN·Inf는 게이트 ON 기동 거부다(SHALL).
+
+세는 단위는 서로 다른 (시장, 종목) 하나다(SHALL — 같은 종목의 인스턴스·부분 체결 중인 진입과 그 포지션은 하나로 센다). 판정은 체인 단계가 아니라 **결정 영속과
+예약 삽입의 원자 journal 트랜잭션 안**에서 해야 하며(SHALL), 같은 트랜잭션에서 읽은 ① 계좌의 살아 있는 포지션(투영에서 CLOSED가 아닌 행 — 엔진 진입·편입·
+대사가 접어 넣은 외부 보유를 모두 포함), ② 발급일과 무관하게 아직 HELD인 예약(종류 무관 — Gateway가 제출을 인가하는 술어와 같다)을 가진 EXPOSURE_RAISING 결정의 종목,
+③ 이번 결정의 종목, ④ 종목 범위의 활성 RECONCILE 상태 중 ①~③에 없는 것(체결 투영이 거절되어 포지션 행 없이 보유가 남은 종목 — 범위 시장이 있으면 (시장, 종목)으로, 시장이 없는
+범위는 종목만으로 ①~③과 맞추고 맞는 것이 없으면 한 칸으로 센다)의
+합집합 크기가 상한을 **넘으면** 발급을 거부하고 LIMIT_REACHED로 기록한다(SHALL — 상한은 허용되는 최대 개수다: 상한 6이면 6개는 허용, 7번째 종목은 거부).
+이미 집합에 있는 종목에 더 사는 진입은 개수를 늘리지 않으므로 이 한도로 거부되지 않는다(SHALL). 종목은 트랜잭션 안에서 결정의 저장된 preimage에서 읽어야
+하며 호출자 값을 써서는 안 된다(SHALL NOT). 개수를 계산할 수 없으면(원장 읽기 실패, preimage 해석 불가) 그 진입의 결정과 예약은 함께 롤백된다(SHALL —
+fail-closed, 0으로 대체 금지). EXPOSURE_RAISING 결정의 예약 트랜잭션이 이 상한을 함께 받지 않으면 그 요청은 거부된다(SHALL — 한도를 빠뜨린 발급 문이
+조용히 통과하지 못한다).
+
+이 한도는 EXPOSURE_RAISING 진입 발급에만 적용된다(SHALL). RISK_REDUCING 발급, 손절, 익절, 비상 청산, flatten, 보호 주문, 대사, 체결 감지는 이 판정을
+지나서는 안 되며 지연되어서도 안 된다(SHALL NOT — §0.3). Guardian 밖의 수동 주문은 이 한도로 막지 않는다(SHALL NOT — OFF = upstream). 명시 한계: 대사가 접어 넣기 전의 외부 매수(대사 주기 60초 이상,
+안정 스냅숏이 잡힌 사이클까지), 미체결 수동 매수 주문, 운영자가 HELD 예약을 해제했지만 주문이 살아 있거나 체결된 경우(체결 감지 전), 엔진 진입 주문을 엔진 밖에서
+정정한 경우(대사 전)는 세지 않는다. 반대로 엔진 밖에서 판 포지션(대사 수렴 전), 운영자 해제를 기다리는 HELD 예약, 소수 잔량 포지션, RECONCILE 종목은 한 칸씩 센다.
+KR과 US는 한 계좌에서 합산된다.
+
+한도 변경은 기존 한도 설정 seam(콘솔 한도 편집기 → 키 단위 쓰기, `enabled` 비기록)으로 하며 이전·새 값이 audit 로그에 남아야 한다(SHALL — 콘솔 저장의 audit 줄은
+저장을 되돌리지 않는 best-effort 이고, 기동 audit 가 해석 값을 매 기동 다시 남기는 것이 둘째 기록이다; 0 은 「미설정 — 기본 6」으로 적는다). 설정 파일
+수동 편집은 기동 audit가 해석 값의 변화를 남긴다(SHALL). 콘솔 칸은 정수 입력이고, 미설정이면 적용될 기본값 6을 보여 준다(SHALL). 한도 통화를 바꾸는
+저장은 이 값을 지우지 않는다(SHALL — 개수는 통화로 재해석되지 않는다). 콘솔 편집에 타이핑 확인이나 추가 승인 단계를 두지 않는다(SHALL NOT). 가동 중인
+엔진은 기동 시점 값으로 동작하고 재시작 때 새 값을 쓴다.
+
+#### Scenario: 일곱 번째 종목은 거부된다
+
+- **WHEN** 계좌가 서로 다른 6 종목의 살아 있는 포지션을 들고 있고 상한이 6인 상태에서 새 종목 진입이 평가되면
+- **THEN** 진입은 LIMIT_REACHED로 결정·예약이 함께 롤백된다
+
+#### Scenario: 든 종목에 더 사는 진입
+
+- **WHEN** 계좌가 서로 다른 6 종목을 들고 있고 그중 한 종목에 더 사는 진입이 평가되면
+- **THEN** 개수가 늘지 않으므로 이 한도로 거부되지 않는다
+
+#### Scenario: 동시 진입이 함께 넘지 못한다
+
+- **WHEN** 5 종목을 든 계좌에서 서로 다른 새 종목 두 진입이 동시에 발급을 시도하면
+- **THEN** 먼저 커밋한 하나만 발급되고 다른 하나는 첫 진입의 HELD 예약을 보고 LIMIT_REACHED로 롤백된다
+
+#### Scenario: 편입·외부 보유도 센다
+
+- **WHEN** 계좌가 엔진 진입 4 종목, 편입 1 종목, 대사가 접어 넣은 외부 보유 1 종목을 들고 있고 새 종목 진입이 평가되면
+- **THEN** 개수는 6이므로 새 종목 진입은 거부된다
+
+#### Scenario: 투영이 거절된 체결의 종목도 센다
+
+- **WHEN** 진입 주문의 종결 체결이 예약을 해제했지만 포지션 투영이 거절되어 그 종목이 RECONCILE 상태이고 포지션 행이 없을 때, 계좌의 다른 5 종목과 함께 새 종목 진입이 평가되면
+- **THEN** RECONCILE 종목이 한 칸으로 세어져 개수는 6이고 새 종목 진입은 거부된다
+
+#### Scenario: 셀 수 없음
+
+- **WHEN** HELD 예약을 가진 결정의 preimage를 해석할 수 없으면
+- **THEN** 진입은 결정과 예약 없이 거부되고, 같은 시각의 매도·청산 발급은 영향을 받지 않는다
+
+#### Scenario: 매도는 한도와 무관하다
+
+- **WHEN** 개수가 상한을 넘은 상태(예: 외부 보유가 늘어남)에서 손절 또는 reduce-only 매도가 발급되면
+- **THEN** 매도는 이 한도를 평가하지 않고 지연 없이 발급된다
+
+#### Scenario: 기본값과 변경 감사
+
+- **WHEN** 설정에 키가 없는 게이트로 기동했다가 운영자가 콘솔에서 상한을 4로 바꾸면
+- **THEN** 기동 때는 6이 적용되고, 변경은 이전·새 값이 audit 로그에 남으며 재시작 뒤 4가 적용된다
+
+#### Scenario: 상한 없는 예약
+
+- **WHEN** EXPOSURE_RAISING 결정의 예약 요청에 최대 보유 포지션 수가 없으면
+- **THEN** 그 예약과 결정은 거부되어 남지 않는다
+
+### Requirement: Guardian 상한 0 인 전략 진입은 그 진입만 건너뛴다
+전략 첫 다리 진입의 Guardian 상한 0 (위험 예산 또는 주문 금액 상한으로 1주도 안 되는 진입 — `q_existing_guardian` 은 위험 예산 · 주문 수량 · 주문 금액 상한의 최소, 사람 결정 2026-10-18)이어서 q_final precheck 가 `EXISTING_GUARDIAN_CAP` 으로 거절하고 그 원인이 사이징의 「한 단위 미만」 판정일 때, 첫 다리 승인은 그 거절을 레인 결함이 아닌 **그 진입 하나의 건너뜀** 결과 `GUARDIAN_CAP_ZERO` 로 타입과 코드로 분류해야 한다 (SHALL). 이 결정의 출처는 사용자 결정(2026-10-15, change a146)이다. 분류는 거절 타입 · 코드가 맞고 그 sentinel 이 그 거절 자신의 원인 사슬에 있을 때만이며 (SHALL), 오류 문구로 가려서는 안 된다 (SHALL NOT). 같은 코드라도 원인이 다른 거절(상한 정수 해석 실패, 원인 없는 0 상한, FX · 정책 오류)은 오늘처럼 결함(`AUTHORITY_MISMATCH`)으로 남아야 한다 (SHALL). 전략 전달 루프는 건너뜀 결과를 만나면 그 범위만 건너뛰고 같은 주기의 다음 소유자 범위를 계속 평가해야 하며 (SHALL), 건너뜀을 주기 오류에 넣어서는 안 된다 (SHALL NOT). 건너뜀만 있었던 주기는 오류 없이 끝나야 하고, 그 주기는 감독자의 effective worker 를 잠그거나(latch) 권한 갱신 전용 worker 의 삼킨 오류 계수를 올려서는 안 된다 (SHALL NOT) — 생산 감독자는 서명 활성화된 시장도 권한 갱신 전용 worker 로 돌리므로 effective 쪽은 방어 불변식이다. 같은 주기의 범위 거절 보고, 멈추는 결함, 일일 손실 결과의 처리는 이 요구 이전과 같아야 한다 (SHALL). 건너뜀은 조용해서는 안 된다: 감독자는 시장별로 건너뜀 수와 첫 원인(계좌 값 · 금액 없음)을 진단용 스냅숏에 남겨야 하고 (SHALL), 운영 로그에 경고 줄 `engine.strategy_entry_skipped`(진입가 · 손절가 포함)를 한 프로세스 안에서 계좌 일 키 · 시장 · 종목마다 한 번 내야 하며 (SHALL), 일 키를 셀 수 없을 때도 그 줄을 생략해서는 안 된다 (SHALL NOT). 건너뜀은 원장 · 운영 모드 · 진입 게이트를 바꾸지 않으며 (SHALL NOT), 같은 후보는 다음 주기에 다시 판정된다 (SHALL). 건너뛴 진입은 발급 · dispatch lease · 브로커 요청을 만들지 않는다 (SHALL NOT). 이 분류는 첫 다리(매수) 진입에만 적용된다: 매도 · 손절 · 익절 · 비상 청산 · 대사 · 체결 감지 경로는 이 분류를 거치거나 기다려서는 안 된다 (MUST NOT). 사이징 규칙(위험 예산 1/3 · min 상한)은 이 요구가 바꾸지 않는다 (SHALL NOT). 명시 한계: 상한 0 거절은 그 뒤의 Guardian 판정(정책 버전 · 주간 예약 결속 · 계보 투영 · 버킷 · 체인 · 노출)보다 앞서므로, 그 판정이 잡을 결함이 상한 0 과 동시에 있으면 그 주기는 건너뜀으로 끝나고 결함은 상한이 한 단위 이상이 되는 주기에 드러난다 — 어느 경우에도 브로커 요청은 없다.
+
+#### Scenario: effective worker 의 상한 0 진입
+- **WHEN** 감독자의 effective worker 가 도는 시장의 주기에서 한 범위의 전략 첫 다리가 위험 예산으로 한 주의 위험도 못 덮어 Guardian 상한 0 으로 거절된다
+- **THEN** 그 범위는 건너뛰어지고 주기는 오류 없이 끝나며 시장은 잠기지 않고, 다음 주기에 다시 평가된다
+
+#### Scenario: 권한 갱신 전용 worker 에서 뒤 범위가 굶지 않는다
+- **WHEN** 권한 갱신 전용 worker(오늘 생산의 유일한 모양)가 도는 시장의 주기에서 앞 범위가 Guardian 상한 0 으로 건너뛰어진다
+- **THEN** 같은 주기의 뒤 범위가 Guardian precheck 까지 평가되고, 삼킨 오류 계수는 오르지 않으며 건너뜀 계수가 오른다
+
+#### Scenario: 같은 코드의 다른 원인은 결함이다
+- **WHEN** precheck 가 `EXISTING_GUARDIAN_CAP` 으로 거절했지만 원인이 「한 단위 미만」 판정이 아니다(상한 해석 실패 · 원인 없음 · FX 오류)
+- **THEN** 첫 다리 승인은 `AUTHORITY_MISMATCH` 로 남고 effective worker 는 오늘처럼 잠기며 권한 갱신 전용 worker 는 오늘처럼 삼켜 센다
+
+#### Scenario: 범위 거절과 섞인 건너뜀
+- **WHEN** 같은 주기에 한 범위가 버킷 고갈로 건너뛰어지고 다른 범위가 Guardian 상한 0 으로 건너뛰어진다
+- **THEN** 버킷 고갈 범위 거절은 지금처럼 주기의 오류로 보고되고, 건너뜀은 그 오류에 합쳐지지 않는다
+
+#### Scenario: 하루 한 줄
+- **WHEN** 같은 후보가 같은 계좌 일 키 안에서 주기마다 Guardian 상한 0 으로 건너뛰어진다
+- **THEN** 건너뜀 계수는 주기마다 오르고 경고 줄은 그 프로세스에서 그 일 키 · 종목에 한 번만 나오며, 다음 계좌 일 키에 다시 한 번 나온다
+
+#### Scenario: 매도 경로는 무관하다
+- **WHEN** 보유 포지션의 손절 · 비상 청산이 필요하다
+- **THEN** 그 결정은 이 분류를 거치지 않고 지연 없이 처리된다
+
+#### Scenario: 상한 0 뒤에 가려진 결함
+- **WHEN** 진입의 계좌 입력이 체인에서 입력 불가가 될 결함을 갖고 있고, 동시에 Guardian 상한이 0 이다
+- **THEN** 그 주기는 건너뜀으로 끝나고 브로커 요청은 없으며, 같은 결함은 상한이 한 단위 이상이 되는 주기에 결함(`AUTHORITY_MISMATCH`)으로 드러난다
+
+#### Scenario: 주문 금액 상한으로 1주도 안 되는 진입
+- **WHEN** 위험 예산은 넉넉하지만 한 주 가격(US 는 FX 환산 뒤)이 주문 금액 상한보다 커서 Guardian 상한이 0 이다
+- **THEN** 그 진입은 위험 예산 상한 0 과 같은 건너뜀으로 분류되고 주기는 오류 없이 끝나며 브로커 요청은 없다
+
+#### Scenario: 스킵은 결함을 가릴 수 없다
+- **WHEN** 전달 루프가 받은 오류가 건너뜀과 결함을 함께 품었거나(다중 오류 · 결함 문구가 건너뜀을 감쌈) 건너뜀의 문구만 흉내 낸다
+- **THEN** 그 오류는 건너뜀이 아니라 결함으로 다뤄져 주기가 오늘처럼 멈추고 그 오류가 그대로 보고된다
+

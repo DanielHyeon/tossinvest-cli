@@ -1,0 +1,46 @@
+{
+  "file": "internal/app/engine/guardian_wiring.go",
+  "source_sha256": "c21b52d0ebb66586fa24c7a31b31b975c6740d41ddce1b3a1bf0f3ec2b8deff8",
+  "package": "engine",
+  "function": "wholeOpenPositions",
+  "signature": "wholeOpenPositions(params=1, results=1)",
+  "start": {
+    "line": 116,
+    "column": 1
+  },
+  "end": {
+    "line": 119,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 11
+      },
+      "text": "config.WholeOpenPositions"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

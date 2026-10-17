@@ -1,0 +1,9 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a136_daily_buy_wiring_internal_test.go:15:46: riskPolicyFromAutomationGate(krw).MaxDailyBuyNotional undefined (type risk.Policy has no field or method MaxDailyBuyNotional)
+internal/app/engine/a136_daily_buy_wiring_internal_test.go:19:52: riskPolicyFromAutomationGate(krw).MaxDailyBuyNotional undefined (type risk.Policy has no field or method MaxDailyBuyNotional)
+internal/app/engine/a136_daily_buy_wiring_internal_test.go:19:94: risk.DefaultPolicy().MaxDailyBuyNotional undefined (type risk.Policy has no field or method MaxDailyBuyNotional)
+internal/app/engine/a136_daily_buy_wiring_internal_test.go:24:11: explicit.MaxDailyBuyNotional undefined (type config.AutomationGate has no field or method MaxDailyBuyNotional)
+internal/app/engine/a136_daily_buy_wiring_internal_test.go:25:51: riskPolicyFromAutomationGate(explicit).MaxDailyBuyNotional undefined (type risk.Policy has no field or method MaxDailyBuyNotional)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [build failed]
+FAIL
+rc=1 (base f504cc52 + a136 시험 파일, -tags tossos_testseams)

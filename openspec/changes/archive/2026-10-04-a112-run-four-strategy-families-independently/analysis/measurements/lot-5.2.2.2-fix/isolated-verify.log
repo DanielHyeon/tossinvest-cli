@@ -1,0 +1,9 @@
+# isolated worktree 8c5581e2 = 83234aff + 수리 로트 (원 출력 — rtk proxy)
+## go test -tags tossos_testseams ./internal/app/engine ./internal/riskbucket
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	232.859s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	2.051s
+## go test ./internal/app/engine ./internal/riskbucket ./internal/strategyhandoff ./internal/strategyflow
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	179.645s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	0.321s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	6.876s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	0.124s

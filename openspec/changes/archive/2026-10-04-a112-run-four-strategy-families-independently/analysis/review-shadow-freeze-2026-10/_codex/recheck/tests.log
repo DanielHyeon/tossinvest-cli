@@ -1,0 +1,43 @@
+=== RUN   TestRecheckV2CarrierReachesDispatchReceiver
+    census_test.go:45: dispatchHandoffs receiver carries strategyShadowInputs=true (entries-only body does not remove possession)
+    census_test.go:45: attack receiver carries strategyShadowInputs=true (entries-only body does not remove possession)
+--- PASS: TestRecheckV2CarrierReachesDispatchReceiver (0.00s)
+=== RUN   TestRecheckV2AliasesAndErasure
+    census_test.go:55: Nested detected
+    census_test.go:55: Inst detected
+    census_test.go:57: any remains erased; source freeze is necessary, go/types alone is not a dataflow proof
+--- PASS: TestRecheckV2AliasesAndErasure (0.00s)
+=== RUN   TestRecheckV2RebindingAndFreeze
+    census_test.go:76: q.Submit resolved as MethodVal; worker.owns resolved as function FieldVal; frozen source edit rejected
+--- PASS: TestRecheckV2RebindingAndFreeze (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/review-recheck	0.003s
+?   	github.com/JungHoonGhae/tossinvest-cli/review-recheck/strategyshadow	[no test files]
+=== RUN   TestRecheckV2EligibilityAndDifferential
+    recheck_v2_test.go:38: off eligible=true WOULD_EMIT=1 Submit-depth(pin absent/present)=[0 0]
+    recheck_v2_test.go:38: on eligible=false WOULD_EMIT=0 Submit-depth(pin absent/present)=[1 1]
+--- PASS: TestRecheckV2EligibilityAndDifferential (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.005s
+=== RUN   TestReviewShadowInputTap
+    recheck_v1_control_test.go:10: undeclared: reason=READY lane inputs=[000660:kr_short_flow_continuation_v1 005930:kr_short_absorption_reversal_v1]
+    recheck_v1_control_test.go:10: declared_closed: reason=FAMILY_GATE_CLOSED lane inputs=[]
+--- PASS: TestReviewShadowInputTap (0.00s)
+=== RUN   TestReviewReadValidationBoundary
+    recheck_v1_control_test.go:21: Context.Read returned nil error after dynamic overlay; explicit Validate rejected: strategy projection: lane kr_weekly_disclosure_value_v1: invalid desired, effective or runtime
+--- PASS: TestReviewReadValidationBoundary (0.29s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.309s
+=== RUN   TestRecheckV2Evidence
+    recheck_v2_evidence_test.go:12: FamilyWorker.Run
+    recheck_v2_evidence_test.go:12: FamilyWorker.owns
+    recheck_v2_evidence_test.go:12: strategyProposalAuthorityLoader.collectMarket
+    recheck_v2_evidence_test.go:12: strategyLaneRuntime.evaluate
+    recheck_v2_evidence_test.go:12: strategyLaneInputs
+    recheck_v2_evidence_test.go:12: strategyFamilyGate.admit
+    recheck_v2_evidence_test.go:12: strategyProposalAuthorityLoader.familyGateFor
+    recheck_v2_evidence_test.go:12: LoadProductionFamilyActivation
+    recheck_v2_evidence_test.go:12: validateLane
+--- PASS: TestRecheckV2Evidence (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/logic-map	0.005s

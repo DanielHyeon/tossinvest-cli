@@ -1,0 +1,83 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/app/engine",
+ "tests_run": 19,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-app-engine--alertdeliverer.release": {
+   "B1": {
+    "kind": "if",
+    "line": 605,
+    "column": 2,
+    "block": "605.72-607.3",
+    "entered_by": [],
+    "union": null
+   }
+  },
+  "internal-app-engine--alertdeliverer.recordfailedattempt": {
+   "B1": {
+    "kind": "if",
+    "line": 350,
+    "column": 2,
+    "block": "350.16-352.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 355,
+    "column": 2,
+    "block": "355.16-360.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B3": {
+    "kind": "switch",
+    "line": 361,
+    "column": 2,
+    "block": "361.2-361.21",
+    "entered_by": [
+     "TestADeliveryAndAnEmptyAcknowledgementAfterTheEvidenceDropOnlyTheBlock"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "case",
+    "line": 362,
+    "column": 2,
+    "block": "362.29-365.39",
+    "entered_by": [
+     "TestADeliveryAndAnEmptyAcknowledgementAfterTheEvidenceDropOnlyTheBlock"
+    ],
+    "union": null
+   },
+   "B5": {
+    "kind": "if",
+    "line": 365,
+    "column": 3,
+    "block": "365.39-367.4",
+    "entered_by": [
+     "TestADeliveryAndAnEmptyAcknowledgementAfterTheEvidenceDropOnlyTheBlock"
+    ],
+    "union": null
+   },
+   "B6": {
+    "kind": "case",
+    "line": 369,
+    "column": 2,
+    "block": "369.61-369.61",
+    "entered_by": [],
+    "union": null
+   },
+   "B7": {
+    "kind": "case",
+    "line": 371,
+    "column": 2,
+    "block": "371.10-374.66",
+    "entered_by": [],
+    "union": null
+   }
+  }
+ }
+}

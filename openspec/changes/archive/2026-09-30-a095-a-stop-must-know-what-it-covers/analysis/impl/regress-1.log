@@ -1,0 +1,5 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	405.732s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/obs	62.533s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy	0.398s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	75.763s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/config	0.058s

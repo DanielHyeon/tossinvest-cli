@@ -46,7 +46,14 @@ type QFinalEntryIssuance struct {
 	Admission                journal.RiskBucketAdmissionPlan
 	// FXAuthority is opaque and must remain attached through final issuance.
 	// Caller-created riskbucket.FXEvidence in Admission is always overwritten.
-	FXAuthority           officialfx.Evidence
+	FXAuthority officialfx.Evidence
+	// PairedFXAuthority 는 같은 파도의 짝 FX 수집(같은 observedAt)에서 꺼낸 **다른 시장**의 봉인 authority(a136 D9=b · a137).
+	// 하루 매수 합계에 든 다른 통화 수동 매수(또는 손실)를 환산하는 데만 쓰고, 요청의 sizing · exposure · reservation ·
+	// envelope FX 는 FXAuthority 그대로임. 비어 있으면 다른 통화 금액이 있는 날 이 진입은 거부됨.
+	PairedFXAuthority officialfx.Evidence
+	// DailyLoss 는 Guardian 이 precheck 직전에 잰 일일 손실 토큰(a137, MeasureDailyLoss). 영값 · 다른 Guardian · 만료 · 다른 일 키면
+	// 측정 실패로 그 진입은 일일 손실 단에서 거절됨.
+	DailyLoss             DailyLossMeasurement
 	ExpectedPolicyVersion string
 	ExpectedLimitsDigest  string
 	testFXAuthority       riskbucket.FXEvidence
@@ -154,9 +161,12 @@ func (g *RiskGuardian) PrecheckQFinalEntry(request QFinalEntryIssuance) (QFinalE
 		Quantity: strconv.FormatUint(decision.QFinal, 10), LimitPrice: request.EntryPrice,
 		StopPrice: request.StopPrice, TargetPrice: request.TargetPrice,
 	}
-	in := risk.Input{Now: g.clk.Now().UTC(), Intent: intent, Account: request.Account, Policy: g.policy, Costs: g.costs, AccountBaseFX: accountFX}
-	if verdict := evaluateChain(in); !verdict.Allowed {
-		return QFinalEntryPrecheck{}, chainRefusal(verdict)
+	// a137: precheck 직전에 잰 토큰(request.DailyLoss)을 바닥으로 씀 — 환산은 요청의 봉인 authority(자기 시장 + 같은 파도 짝 FX)뿐.
+	now := g.clk.Now().UTC()
+	account, measureErr := g.dailyLossFloor(request.Account, request.DailyLoss, now, qFinalManualBuyFX(request, market))
+	in := risk.Input{Now: now, Intent: intent, Account: account, Policy: g.policy, Costs: g.costs, AccountBaseFX: accountFX}
+	if verdict, unmeasured := evaluateChainWithDailyLoss(in, measureErr); !verdict.Allowed {
+		return QFinalEntryPrecheck{}, dailyLossChainRefusal(verdict, unmeasured)
 	}
 	if _, verdict := risk.EntryExposureValue(in); !verdict.Allowed {
 		return QFinalEntryPrecheck{}, chainRefusal(verdict)
@@ -238,12 +248,18 @@ func (g *RiskGuardian) IssuePrecheckedQFinalEntry(ctx context.Context, precheck 
 		if err != nil {
 			return journal.QFinalIssueRequest{}, err
 		}
+		daily, err := g.dailyBuyLimit(now, qFinalManualBuyFX(precheck.request, precheck.market))
+		if err != nil {
+			return journal.QFinalIssueRequest{}, err
+		}
 		return journal.QFinalIssueRequest{
 			Issue: journal.IssueRequest{Decision: decision, Reserve: journal.ReserveRequest{
 				SnapshotAsOf: snapshot.AsOf, ObservedVersion: snapshot.Version,
-				SnapshotUsage: []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: usage, Currency: exposure.Currency}},
-				Limits:        []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: g.policy.MaxOpenExposure.Amount, Currency: exposure.Currency}},
-				Reservations:  []journal.ReservationRequest{{ID: reservationID, Kind: journal.ReservationKindOpenExposure, Amount: exposure.Amount, Currency: exposure.Currency}},
+				SnapshotUsage:     []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: usage, Currency: exposure.Currency}},
+				Limits:            []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: g.policy.MaxOpenExposure.Amount, Currency: exposure.Currency}},
+				Reservations:      []journal.ReservationRequest{{ID: reservationID, Kind: journal.ReservationKindOpenExposure, Amount: exposure.Amount, Currency: exposure.Currency}},
+				DailyBuyLimit:     daily,
+				OpenPositionLimit: g.openPositionLimit(),
 			}}, Admission: admission,
 		}, nil
 	}

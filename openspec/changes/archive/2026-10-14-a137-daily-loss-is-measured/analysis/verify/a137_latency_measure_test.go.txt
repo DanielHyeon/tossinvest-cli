@@ -1,0 +1,101 @@
+//go:build tossos_testseams
+
+package journal
+
+// a137 task 2.4 — 일일 손실 원장 읽기 지연(측정용 사본에만 있고 커밋하지 않음).
+// A137_LATENCY_SIZES="1000,5000,20000" 처럼 CLOSED 관리 포지션 수를 받음. 그중 오늘 창에 든 것은 A137_LATENCY_TODAY(기본 20).
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
+)
+
+func TestA137LedgerReadLatency(t *testing.T) {
+	sizes := os.Getenv("A137_LATENCY_SIZES")
+	if sizes == "" {
+		t.Skip("A137_LATENCY_SIZES unset")
+	}
+	today := 20
+	if v := os.Getenv("A137_LATENCY_TODAY"); v != "" {
+		today, _ = strconv.Atoi(v)
+	}
+	now := time.Date(2026, 10, 14, 6, 0, 0, 0, time.UTC) // KST 15:00, 일 키 2026-10-14
+	from, to := time.Date(2026, 10, 13, 22, 0, 0, 0, time.UTC), time.Date(2026, 10, 15, 0, 0, 0, 0, time.UTC)
+	for _, field := range strings.Split(sizes, ",") {
+		n, _ := strconv.Atoi(strings.TrimSpace(field))
+		t.Run(field, func(t *testing.T) {
+			j, err := Open(context.Background(), Options{Path: filepath.Join(t.TempDir(), "journal.db"), Clock: clock.NewFake(now),
+				FSProber: FixedFSProber(FSInfo{Name: "ext4", Magic: MagicExt})})
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer j.Close()
+			ctx := context.Background()
+			start := time.Now()
+			tx, err := j.db.BeginTx(ctx, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for i := 0; i < n; i++ {
+				closed := now.Add(-time.Duration(n-i) * 90 * time.Minute) // 과거로 고르게(하루 16건 꼴)
+				if i >= n-today {
+					closed = now.Add(-time.Duration(n-i) * time.Minute) // 마지막 today 건은 오늘 창 안
+				}
+				id := fmt.Sprintf("p-%06d", i)
+				dec := "d-" + id
+				if _, err := tx.ExecContext(ctx, `INSERT INTO decisions (id, account_ref, generation, safety_class, preimage_kind, risk_preimage,
+					risk_hash, client_order_id, limits_json, nonce, issued_at, expires_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+					dec, "acct", 0, SafetyClassExposureRaising, PreimageKindRiskIntent, `{"symbol":"S"}`, "h-"+id, nil, `{}`, "n-"+id,
+					formatJournalTime(closed.Add(-time.Hour)), formatJournalTime(closed)); err != nil {
+					t.Fatal(err)
+				}
+				if _, err := tx.ExecContext(ctx, `INSERT INTO positions (id, account_ref, market, symbol, instance_seq, entry_decision_id, state,
+					quantity, avg_price, opened_at, closed_at) VALUES (?,?,?,?,?,?,'CLOSED','0','0',?,?)`,
+					id, "acct", []string{"kr", "us"}[i%2], fmt.Sprintf("S%03d", i%300), i/300+1, dec,
+					formatJournalTime(closed.Add(-time.Hour)), formatJournalTime(closed)); err != nil {
+					t.Fatal(err)
+				}
+				if _, err := tx.ExecContext(ctx, `INSERT INTO trade_outcomes (position_id, realized_pnl_after_costs, realized_r, initial_risk,
+					initial_quantity, held_seconds, exit_ratchet_level, exit_rung, closed_at) VALUES (?,?, '0','1','1',0,NULL,NULL,?)`,
+					id, "-1000", formatJournalTime(closed)); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := tx.Commit(); err != nil {
+				t.Fatal(err)
+			}
+			t.Logf("seeded %d closed managed positions (%d today) in %s", n, today, time.Since(start).Round(time.Millisecond))
+			measure := func(name string, fn func() error) {
+				var runs []time.Duration
+				for k := 0; k < 30; k++ {
+					s := time.Now()
+					if err := fn(); err != nil {
+						t.Fatal(err)
+					}
+					runs = append(runs, time.Since(s))
+				}
+				sort.Slice(runs, func(a, b int) bool { return runs[a] < runs[b] })
+				t.Logf("RESULT n=%d %-24s p50=%s p95=%s max=%s", n, name, runs[14].Round(time.Microsecond),
+					runs[28].Round(time.Microsecond), runs[29].Round(time.Microsecond))
+			}
+			measure("countMalformedClosedAt", func() error { _, err := j.countMalformedClosedAt(ctx, "acct"); return err })
+			measure("dailyLossCandidates", func() error {
+				rows, err := j.dailyLossCandidates(ctx, "acct", formatJournalTime(from), formatJournalTime(to))
+				if err == nil && len(rows) != today {
+					return fmt.Errorf("candidates=%d want %d", len(rows), today)
+				}
+				return err
+			})
+			measure("DailyLossRows(total)", func() error { _, err := j.DailyLossRows(ctx, "acct", from, to); return err })
+		})
+	}
+}

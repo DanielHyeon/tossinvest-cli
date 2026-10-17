@@ -1,0 +1,40 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/execgw",
+ "tests_run": 14,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-execgw--riskguardian.escalatefor": {
+   "B1": {
+    "kind": "if",
+    "line": 641,
+    "column": 2,
+    "block": "641.56-643.3",
+    "entered_by": [
+     "TestAChainRefusalIssuesNothing",
+     "TestOtherChainRefusalsAreNotTriggers"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 644,
+    "column": 2,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 646,
+    "column": 3,
+    "block": "646.56-651.4",
+    "entered_by": [
+     "TestA092AnUnannouncedDailyLossTighteningIsReportedAsTightened"
+    ],
+    "union": null
+   }
+  }
+ }
+}

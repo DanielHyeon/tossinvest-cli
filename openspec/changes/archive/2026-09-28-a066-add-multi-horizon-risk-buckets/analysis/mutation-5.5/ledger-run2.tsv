@@ -1,0 +1,37 @@
+CONTROL	GREEN	
+M01 CRA call removed	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.056s / FAIL
+M02 CRA account<-LaneID	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	19.209s / FAIL
+M03 CRA market<-KR	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.709s / FAIL
+M04 CRA horizon<-SHORT	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.893s / FAIL
+M05 fresh call removed	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.985s / FAIL
+M06 fresh account<-LaneID	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.881s / FAIL
+M07 fresh market<-KR	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.898s / FAIL
+M08 fresh horizon<-SHORT	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	17.455s / FAIL
+M09 reval call removed	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.319s / FAIL
+M10 reval account<-lane	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.520s / FAIL
+M11 reval market<-KR	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.876s / FAIL
+M12 reval horizon<-SHORT	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.768s / FAIL
+M13 decisionHorizon reads market dimension	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	20.936s / FAIL
+M14 admissionHorizon reads market cap	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	20.029s / FAIL
+M15 rule ignores found lock	NOT-APPLIED	old occurs 0 times
+M16 lock query ignores horizon	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.940s / FAIL
+M17 lock query ignores market	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	19.087s / FAIL
+M18 lock query ignores account	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	19.033s / FAIL
+M19 rule read error admits	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	17.509s / FAIL
+M20 rule unknown scope admits	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.759s / FAIL
+M21 locked error not wrapping blocked	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.095s / FAIL
+M22 API skips existing check	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	13.361s / FAIL
+M23 API accepts empty cause	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	9.453s / FAIL
+M24 API accepts zero time	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	9.481s / FAIL
+M25 no first-cause trigger	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	9.223s / FAIL
+M26 first-cause trigger ignores horizon	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	9.230s / FAIL
+M27 no update trigger	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	9.522s / FAIL
+M28 no delete trigger	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	9.278s / FAIL
+M29 schema version not bumped	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	14.202s / FAIL
+M30 gateway typed mapping removed	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	6.391s / FAIL
+M31 gateway maps lock to mismatch	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	6.494s / FAIL
+M32 refusal code wrong	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	19.415s / FAIL
+M33 reason code not registered	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	6.580s / FAIL
+M34 production NewTracer call	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	6.421s / FAIL
+M35 production GuardianAdapter	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	6.616s / FAIL
+M36 new exposure-raising producer	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	6.514s / FAIL

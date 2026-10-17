@@ -1,0 +1,22 @@
+    a092_lock_scope_test.go:67: the record-only entry did not return within 3s — it is waiting on the transport
+--- FAIL: TestA092ARecordDoesNotWaitForAnotherSendersTransport (3.21s)
+    a092_lock_scope_test.go:88: the record-only entry did not return within 3s — it is waiting on the transport
+--- FAIL: TestA092AnAcknowledgementPreemptsASendInFlight (3.22s)
+    a092_lock_scope_test.go:198: stages seen = [], want evidence and epoch at unrecorded
+    a092_lock_scope_test.go:198: stages seen = [], want evidence and epoch at vanished
+    a092_lock_scope_test.go:198: stages seen = [], want evidence and epoch at exhausted
+--- FAIL: TestA092EachLatchSiteLatchesWithoutARelease (0.61s)
+    a092_lock_scope_test.go:211: the latch was re-applied over an operator release that came after the evidence
+    a092_lock_scope_test.go:211: the latch was re-applied over an operator release that came after the evidence
+    a092_lock_scope_test.go:211: the latch was re-applied over an operator release that came after the evidence
+--- FAIL: TestA092AReleaseAfterTheEpochReadIsHonoured (0.60s)
+--- PASS: TestA092AReleaseBeforeTheEpochReadRelatches (0.60s)
+--- PASS: TestA092AReleaseBeforeTheEvidenceDoesNotChangeTheVerdict (0.22s)
+    a092_lock_scope_test.go:256: mode = ENTRY_BLOCKED — the escalation was supposed to fail
+    a092_lock_scope_test.go:269: a judgement without an escalation latched unconditionally
+    a092_lock_scope_test.go:256: mode = ENTRY_BLOCKED — the escalation was supposed to fail
+    a092_lock_scope_test.go:269: a judgement without an escalation latched unconditionally
+--- FAIL: TestA092AFailedEscalationLatchesUnconditionally (0.81s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/obs	9.280s
+FAIL

@@ -415,6 +415,10 @@ func commitFreshRiskBucketAdmissionTx(ctx context.Context, tx *sql.Tx, plan Risk
 	if err := ensureRiskBucketEntryScopeClean(ctx, tx, plan.Owner.Key); err != nil {
 		return RiskBucketAdmissionReceipt{}, err
 	}
+	// a066 5.5: 진입 손실 잠금 판정 — q_final 발급·전략 첫 leg 가 공유하는 트랜잭션 안에서 읽음.
+	if err := refuseEntryUnderLossLock(ctx, tx, plan.Owner.Key.AccountID, plan.Owner.Key.Market, admissionHorizon(decision)); err != nil {
+		return RiskBucketAdmissionReceipt{}, err
+	}
 
 	ownerReused := false
 	var prospective, lane, campaign string
@@ -442,6 +446,12 @@ func commitFreshRiskBucketAdmissionTx(ctx context.Context, tx *sql.Tx, plan Risk
 		if err := verifyRiskBucketScaleInIdentity(ctx, tx, plan.Owner.Key, decision.Caps); err != nil {
 			return RiskBucketAdmissionReceipt{}, err
 		}
+	}
+	// a066 5.6.1 F1: snapshot 이 원장보다 적은 사용량을 주장하면 stale — 같은 트랜잭션에서 생산 reader 와 같은 함수로 대조.
+	// owner·scale-in 판정 **뒤**, 이 진입의 예약을 쓰기 **앞**: 기존 가드(owner 충돌 등)가 이 가드에 가려지지 않고,
+	// 대조하는 원장 합에 이 진입 자신의 예약이 섞이지 않음.
+	if err := refuseStaleBucketUsage(ctx, tx, plan.Owner.Key.AccountID, plan.Admission.Buckets, decision.Caps); err != nil {
+		return RiskBucketAdmissionReceipt{}, err
 	}
 	storedPreimage, err := encodeQFinalStoredIssuance(preimage, ownerReused, reservationVersion)
 	if err != nil {
@@ -513,20 +523,9 @@ func insertFreshRiskBucketReservations(ctx context.Context, tx *sql.Tx, plan Ris
 	for i, cap := range decision.Caps {
 		bucket, ref := plan.Admission.Buckets[i], plan.Snapshots[i]
 		bound := bucket.BoundEvidence()
-		policyRecordDigest, err := riskBucketRecordDigest(struct {
-			Key      riskbucket.BucketKey
-			Evidence riskbucket.Evidence
-			Policy   riskbucket.ReservePolicy
-		}{bound.Key, bound.PolicyEvidence, p})
+		policyRecordDigest, err := storeRiskBucketPolicyRecord(ctx, tx, cap.Key, ref.PolicyDigest, bound, p, plan.CreatedAt)
 		if err != nil {
 			return err
-		}
-		if _, err = tx.ExecContext(ctx, `INSERT OR IGNORE INTO risk_bucket_policies(bucket_dimension,bucket_value,policy_version,policy_digest,policy_source,policy_observed_at,policy_fresh_until,record_digest,account_currency,quote_currency,evaluated_at,worst_price_quote,price_source,price_version,price_digest,price_observed_at,price_fresh_until,fee_fixed_base_minor,fee_per_unit_base_minor,fee_minimum_base_minor,fee_version,fee_digest,fx_rate_quote_to_base,fx_haircut,fx_source,fx_version,fx_digest,fx_observed_at,fx_fresh_until,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, string(cap.Key.Dimension), cap.Key.Value, cap.Key.PolicyVersion, ref.PolicyDigest, bound.PolicyEvidence.Source, canonicalRiskTime(bound.PolicyEvidence.ObservedAt), canonicalRiskTime(bound.PolicyEvidence.FreshUntil), policyRecordDigest, p.AccountCurrency, p.QuoteCurrency, canonicalRiskTime(p.EvaluatedAt), p.Price.WorstExecutableQuote, p.Price.Source, p.Price.Version, p.Price.Digest, canonicalRiskTime(p.Price.ObservedAt), canonicalRiskTime(p.Price.FreshUntil), p.Fee.FixedBaseMinor, p.Fee.PerUnitBaseMinor, p.Fee.MinimumBaseMinor, p.Fee.Version, p.Fee.Digest, p.FX.RateQuoteToBase, p.FX.Haircut, p.FX.Source, p.FX.Version, p.FX.Digest, canonicalRiskTime(p.FX.ObservedAt), canonicalRiskTime(p.FX.FreshUntil), canonicalRiskTime(plan.CreatedAt)); err != nil {
-			return err
-		}
-		var storedPolicyDigest string
-		if err := tx.QueryRowContext(ctx, `SELECT record_digest FROM risk_bucket_policies WHERE bucket_dimension=? AND bucket_value=? AND policy_version=?`, string(cap.Key.Dimension), cap.Key.Value, cap.Key.PolicyVersion).Scan(&storedPolicyDigest); err != nil || storedPolicyDigest != policyRecordDigest {
-			return fmt.Errorf("%w: immutable policy collision", ErrRiskBucketSnapshotMismatch)
 		}
 		snapshotRecordDigest, err := riskBucketRecordDigest(struct {
 			Reference           RiskBucketSnapshotReference
@@ -544,7 +543,7 @@ func insertFreshRiskBucketReservations(ctx context.Context, tx *sql.Tx, plan Ris
 			return fmt.Errorf("%w: immutable snapshot collision", ErrRiskBucketSnapshotMismatch)
 		}
 		reservationID := riskBucketReservationID(plan.TransactionID, cap.Key.Dimension)
-		if _, err = tx.ExecContext(ctx, `INSERT INTO risk_bucket_reservations(reservation_id,decision_id,existing_reservation_id,account_ref,market,symbol,owner_prospective_generation,bucket_dimension,bucket_value,policy_version,snapshot_id,reserved_minor,held_minor,filled_minor,overage_minor,state,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'0','0','HELD',?,?)`, reservationID, plan.DecisionID, plan.ExistingReservationID, plan.Owner.Key.AccountID, string(plan.Owner.Key.Market), plan.Owner.Key.Symbol, plan.Owner.Key.ProspectiveGeneration, string(cap.Key.Dimension), cap.Key.Value, cap.Key.PolicyVersion, ref.SnapshotID, cap.ReservationAtFinal, cap.ReservationAtFinal, canonicalRiskTime(plan.CreatedAt), canonicalRiskTime(plan.CreatedAt)); err != nil {
+		if _, err = tx.ExecContext(ctx, `INSERT INTO risk_bucket_reservations(reservation_id,decision_id,existing_reservation_id,account_ref,market,symbol,owner_prospective_generation,bucket_dimension,bucket_value,policy_version,snapshot_id,reserved_minor,held_minor,filled_minor,overage_minor,state,created_at,updated_at,policy_record_digest) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'0','0','HELD',?,?,?)`, reservationID, plan.DecisionID, plan.ExistingReservationID, plan.Owner.Key.AccountID, string(plan.Owner.Key.Market), plan.Owner.Key.Symbol, plan.Owner.Key.ProspectiveGeneration, string(cap.Key.Dimension), cap.Key.Value, cap.Key.PolicyVersion, ref.SnapshotID, cap.ReservationAtFinal, cap.ReservationAtFinal, canonicalRiskTime(plan.CreatedAt), canonicalRiskTime(plan.CreatedAt), policyRecordDigest); err != nil {
 			return fmt.Errorf("journal: insert %s q_final reservation: %w", cap.Key.Dimension, err)
 		}
 	}
@@ -621,6 +620,49 @@ func (j *Journal) RevalidateQFinalAdmission(ctx context.Context, decisionID stri
 	}
 	if len(seen) != len(riskbucket.RequiredDimensionOrder()) {
 		return true, fmt.Errorf("%w: q_final reservation dimension set", ErrRiskBucketReplayMismatch)
+	}
+	// a066 5.5 / 사용자 결정 ⑤: 잠금 전에 발급된 결정도 잠금 뒤 제출이면 거절함 — 노출은 제출 시점의
+	// 상태임. 모든 기존 검사 뒤에 둬서 기존 가드의 시험이 이 가드에 가려지지 않게 함.
+	horizon, err := decisionHorizon(ctx, j.db, decision.ID)
+	if err != nil {
+		return true, err
+	}
+	if err := refuseEntryUnderLossLock(ctx, j.db, account, riskbucket.Market(market), horizon); err != nil {
+		return true, err
+	}
+	// a066 6.5: latch 도 제출 시점의 상태로 봄 — admission 과 같은 규칙 함수 둘(owner 범위, bucket 원장 latch). 발급 뒤에
+	// owner·scope·공유 bucket 이 latch 되면 이미 발급된 결정도 여기서 거절됨(새 admission 과 같은 답).
+	if err := ensureRiskBucketEntryScopeClean(ctx, j.db, key); err != nil {
+		return true, err
+	}
+	bucketRows, err := j.db.QueryContext(ctx, `SELECT bucket_dimension,bucket_value FROM risk_bucket_reservations WHERE decision_id=? ORDER BY bucket_dimension`, decision.ID)
+	if err != nil {
+		return true, err
+	}
+	type bucketRef struct {
+		dimension riskbucket.Dimension
+		value     string
+	}
+	var refs []bucketRef
+	for bucketRows.Next() {
+		var ref bucketRef
+		if err := bucketRows.Scan(&ref.dimension, &ref.value); err != nil {
+			bucketRows.Close()
+			return true, err
+		}
+		refs = append(refs, ref)
+	}
+	if err := bucketRows.Close(); err != nil {
+		return true, err
+	}
+	for _, ref := range refs {
+		usage, err := riskbucket.ReadJournalBucketUsage(ctx, j.db, account, ref.dimension, ref.value)
+		if err != nil {
+			return true, fmt.Errorf("%w: %s bucket %q ledger usage unreadable at submit: %v", ErrRiskBucketSnapshotMismatch, ref.dimension, ref.value, err)
+		}
+		if err := latchedUsageRefusal(ref.dimension, ref.value, usage); err != nil {
+			return true, err
+		}
 	}
 	return true, nil
 }

@@ -312,6 +312,12 @@ func TestAdversarialInvalidUTF8ConfigAndFXDirectionScale(t *testing.T) {
 		t.Fatal(d.Refusal())
 	}
 	raw := FXSealInput{AccountCurrency: "KRW", InstrumentCurrency: "USD", Direction: FXInstrumentToAccount, RateNum: 2, RateDen: 1, Scale: 6, AsOfMS: 1, FreshUntilMS: 10}
+	// a112 B2(반전): 앞 판은 digest 없는 역방향 봉인의 **성공**을 박고 있었다 — 그 방향의 호출자 digest 를 검증하지 않던 결함을 핀한 것이다.
+	// 이제 digest 없이는 거절이고, 주어진 모양 그대로 봉인하면 정규화되어 통과한다.
+	if _, err := NewFXSeal(raw); err == nil {
+		t.Fatal("an inverse FX seal without a digest was accepted")
+	}
+	raw.Digest = FXSealDigest(raw)
 	f, err := NewFXSeal(raw)
 	if err != nil || f.value.Direction != FXAccountToInstrument || f.value.RateNum != 1 || f.value.RateDen != 2 || f.value.Scale != 6 {
 		t.Fatalf("fx=%+v err=%v", f, err)

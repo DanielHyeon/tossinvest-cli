@@ -1,0 +1,86 @@
+{
+  "file": "internal/execgw/a137_daily_loss.go",
+  "source_sha256": "5ebfb6c220c7568b8e53de3240f67fa480b9d39a72f550c495ba5a6173c03f2b",
+  "package": "execgw",
+  "function": "evaluateChainWithDailyLoss",
+  "signature": "evaluateChainWithDailyLoss(params=2, results=1)",
+  "start": {
+    "line": 177,
+    "column": 1
+  },
+  "end": {
+    "line": 183,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 182,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 13
+      },
+      "text": "evaluateChain"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 67
+      },
+      "text": "strings.TrimPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 86
+      },
+      "text": "measureErr.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 106
+      },
+      "text": "dailyloss.ErrUnmeasurable.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 178,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 180,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

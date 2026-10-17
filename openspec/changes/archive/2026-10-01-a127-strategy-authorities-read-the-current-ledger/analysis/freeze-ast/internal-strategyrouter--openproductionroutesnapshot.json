@@ -1,0 +1,207 @@
+{
+  "file": "internal/strategyrouter/production.go",
+  "source_sha256": "1175f67d72d78cc9f3ef65d505d97112382de26ea1eae89165314529dafb26d9",
+  "package": "strategyrouter",
+  "function": "openProductionRouteSnapshot",
+  "signature": "openProductionRouteSnapshot(params=3, results=3)",
+  "start": {
+    "line": 593,
+    "column": 1
+  },
+  "end": {
+    "line": 615,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 594,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 599,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 604,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 609,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 595,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 600,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 606,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 612,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 614,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 594,
+        "column": 12
+      },
+      "text": "validateProductionRouteJournalFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 598,
+        "column": 13
+      },
+      "text": "sql.Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 598,
+        "column": 32
+      },
+      "text": "dsn.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 602,
+        "column": 2
+      },
+      "text": "db.SetMaxOpenConns"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 603,
+        "column": 13
+      },
+      "text": "db.BeginTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 605,
+        "column": 3
+      },
+      "text": "db.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 609,
+        "column": 12
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 609,
+        "column": 12
+      },
+      "text": "tx.QueryRowContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 610,
+        "column": 3
+      },
+      "text": "tx.Rollback"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 611,
+        "column": 3
+      },
+      "text": "db.Close"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 594,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 597,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 598,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 603,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 609,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

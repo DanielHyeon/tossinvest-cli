@@ -1,0 +1,318 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "908a8a3621efa5c6fd891c3c73d27db6ac0e7e49",
+  "source_sha256": "b24e77d5e8f9de4208db0dbd4c85daae108896f1a3771ad6e155357c7a3f23fc",
+  "function": "_committed_many",
+  "signature": "_committed_many(root, ref, relatives)",
+  "start": {
+    "line": 418,
+    "column": 1
+  },
+  "end": {
+    "line": 529,
+    "column": 17
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "comprehension",
+      "line": 450,
+      "inherited_line": true,
+      "source": " for relative in wanted"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 451,
+      "inherited_line": false,
+      "source": "if not wanted:"
+    },
+    {
+      "id": "B3",
+      "kind": "comprehension",
+      "line": 453,
+      "inherited_line": true,
+      "source": " for relative in wanted"
+    },
+    {
+      "id": "B4",
+      "kind": "For",
+      "line": 454,
+      "inherited_line": false,
+      "source": "for spec in specs:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 455,
+      "inherited_line": false,
+      "source": "if '\\x00' in spec:"
+    },
+    {
+      "id": "B6",
+      "kind": "comprehension",
+      "line": 462,
+      "inherited_line": true,
+      "source": " for spec in specs"
+    },
+    {
+      "id": "B7",
+      "kind": "comprehension",
+      "line": 465,
+      "inherited_line": true,
+      "source": " for spec in asked"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 468,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B9",
+      "kind": "IfExp",
+      "line": 483,
+      "inherited_line": false,
+      "source": "f': {said}' if said else ''"
+    },
+    {
+      "id": "B10",
+      "kind": "IfExp",
+      "line": 484,
+      "inherited_line": false,
+      "source": "f' — `-Z` needs git {GIT_BATCH_MINIMUM} or newer' if process.returncode == 129 else ''"
+    },
+    {
+      "id": "B11",
+      "kind": "For",
+      "line": 488,
+      "inherited_line": false,
+      "source": "for index, (relative, request) in enumerate(zip(wanted, asked)):"
+    },
+    {
+      "id": "B12",
+      "kind": "If",
+      "line": 490,
+      "inherited_line": false,
+      "source": "if end < 0:"
+    },
+    {
+      "id": "B13",
+      "kind": "BoolOp",
+      "line": 495,
+      "inherited_line": false,
+      "source": "header == request + b' missing' or _SUBMODULE_HEADER.fullmatch(header)"
+    },
+    {
+      "id": "B14",
+      "kind": "If",
+      "line": 495,
+      "inherited_line": false,
+      "source": "if header == request + b' missing' or _SUBMODULE_HEADER.fullmatch(header):"
+    },
+    {
+      "id": "B15",
+      "kind": "If",
+      "line": 500,
+      "inherited_line": false,
+      "source": "if match is None:"
+    },
+    {
+      "id": "B16",
+      "kind": "If",
+      "line": 508,
+      "inherited_line": false,
+      "source": "if position + size >= len(data):"
+    },
+    {
+      "id": "B17",
+      "kind": "If",
+      "line": 513,
+      "inherited_line": false,
+      "source": "if data[position + size] != 0:"
+    },
+    {
+      "id": "B18",
+      "kind": "If",
+      "line": 519,
+      "inherited_line": false,
+      "source": "if match.group('type') == b'blob':"
+    },
+    {
+      "id": "B19",
+      "kind": "If",
+      "line": 522,
+      "inherited_line": false,
+      "source": "if position != len(data):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 452,
+      "value": "found"
+    },
+    {
+      "line": 529,
+      "value": "found"
+    }
+  ],
+  "raises": [
+    {
+      "line": 458,
+      "source": "raise RuntimeError(f'request contains a NUL byte, cannot be asked for: {spec!r}')"
+    },
+    {
+      "line": 481,
+      "source": "raise RuntimeError(f'cannot read blobs at {ref[:12]}: `git cat-file --batch -Z` failed (rc {process.returncode}' + (f': {said}' if said else '') + ')' + (f' — `"
+    },
+    {
+      "line": 492,
+      "source": "raise RuntimeError(_TRUNCATED.format(count=index, total=len(wanted), ref=ref[:12]))"
+    },
+    {
+      "line": 503,
+      "source": "raise RuntimeError(f'`git cat-file --batch -Z` gave an unrecognised answer to request {index + 1} of {len(wanted)} ({relative}) at {ref[:12]}: {header[:80]!r}')"
+    },
+    {
+      "line": 512,
+      "source": "raise RuntimeError(_TRUNCATED.format(count=index, total=len(wanted), ref=ref[:12]))"
+    },
+    {
+      "line": 515,
+      "source": "raise RuntimeError(f'`git cat-file --batch -Z` payload {index + 1} of {len(wanted)} ({relative}) at {ref[:12]} is not NUL-terminated: the response framing was n"
+    },
+    {
+      "line": 524,
+      "source": "raise RuntimeError(f'`git cat-file --batch -Z` left {len(data) - position} byte(s) unread at {ref[:12]}: the response framing was not understood')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 449,
+      "callee": "dict.fromkeys"
+    },
+    {
+      "line": 449,
+      "callee": "list"
+    },
+    {
+      "line": 458,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 462,
+      "callee": "spec.encode"
+    },
+    {
+      "line": 463,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 465,
+      "callee": "b''.join"
+    },
+    {
+      "line": 480,
+      "callee": "_first_line"
+    },
+    {
+      "line": 481,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 488,
+      "callee": "enumerate"
+    },
+    {
+      "line": 488,
+      "callee": "zip"
+    },
+    {
+      "line": 489,
+      "callee": "data.find"
+    },
+    {
+      "line": 492,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 492,
+      "callee": "_TRUNCATED.format"
+    },
+    {
+      "line": 492,
+      "callee": "len"
+    },
+    {
+      "line": 495,
+      "callee": "_SUBMODULE_HEADER.fullmatch"
+    },
+    {
+      "line": 499,
+      "callee": "_OBJECT_HEADER.fullmatch"
+    },
+    {
+      "line": 503,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 505,
+      "callee": "len"
+    },
+    {
+      "line": 507,
+      "callee": "int"
+    },
+    {
+      "line": 507,
+      "callee": "match.group"
+    },
+    {
+      "line": 508,
+      "callee": "len"
+    },
+    {
+      "line": 512,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 512,
+      "callee": "_TRUNCATED.format"
+    },
+    {
+      "line": 512,
+      "callee": "len"
+    },
+    {
+      "line": 515,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 516,
+      "callee": "len"
+    },
+    {
+      "line": 519,
+      "callee": "match.group"
+    },
+    {
+      "line": 522,
+      "callee": "len"
+    },
+    {
+      "line": 524,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 525,
+      "callee": "len"
+    },
+    {
+      "line": 528,
+      "callee": "found.update"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "file": "internal/execgw/retry.go",
+  "source_sha256": "a9612c2f35817471eee506ee2cfa3686fb297c3326bf1215eacbd162c2574f4c",
+  "package": "execgw",
+  "function": "ClearEpoch",
+  "receiver": "EntryGate",
+  "signature": "EntryGate.ClearEpoch(params=1, results=1)",
+  "start": {
+    "line": 559,
+    "column": 1
+  },
+  "end": {
+    "line": 563,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 562,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 560,
+        "column": 2
+      },
+      "text": "g.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 561,
+        "column": 8
+      },
+      "text": "g.mu.Unlock"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 561,
+        "column": 2
+      },
+      "text": "g.mu.Unlock"
+    }
+  ]
+}

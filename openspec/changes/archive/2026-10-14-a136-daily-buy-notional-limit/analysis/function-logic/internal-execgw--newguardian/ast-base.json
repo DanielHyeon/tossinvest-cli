@@ -1,0 +1,140 @@
+{
+  "file": "internal/execgw/riskguardian_test.go",
+  "source_sha256": "7fe23b60e8f77bb1d28c3a8e3c13fb3f96a956f6aaffbb3dfbde8593ac54dd83",
+  "package": "execgw_test",
+  "function": "newGuardian",
+  "signature": "newGuardian(params=2, results=1)",
+  "start": {
+    "line": 90,
+    "column": 1
+  },
+  "end": {
+    "line": 110,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 109,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 9
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 7
+      },
+      "text": "openJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 18
+      },
+      "text": "guardianPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 18
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 3
+      },
+      "text": "mutate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 12
+      },
+      "text": "execgw.NewRiskGuardian"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

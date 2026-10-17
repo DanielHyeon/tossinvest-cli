@@ -105,8 +105,10 @@ type BudgetGrant struct {
 }
 
 type budgetCommitment struct {
-	class              PollClass
-	generation         uint64
+	class      PollClass
+	generation uint64
+	// scope 는 전략 subscope 의 digest 다(a112 7.1). 범위 없는 발급은 0 값 — 완료는 발급 때와 같은 범위로만 된다(교차 replay 금지).
+	scope              [sha256.Size]byte
 	completed          bool
 	completedAt        time.Time
 	completionSequence uint64
@@ -308,6 +310,12 @@ func (c *BudgetCoordinator) observeLocked(observation official.RateBudget, cycle
 }
 
 func (c *BudgetCoordinator) TryAcquire(key string, class PollClass, now time.Time) BudgetGrant {
+	return c.tryAcquire(key, class, now, [sha256.Size]byte{})
+}
+
+// tryAcquire 는 TryAcquire 의 본문이다. scope 는 발급할 commitment 를 묶을 전략 subscope digest(범위 없으면 0) — 용량 판정은 범위와 무관하게
+// endpoint 하나의 commitment 집합에서 한다(a112 7.1: family 가 물리 용량을 복제하지 않음).
+func (c *BudgetCoordinator) tryAcquire(key string, class PollClass, now time.Time, scope [sha256.Size]byte) BudgetGrant {
 	if !isKnownPollClass(class) {
 		return BudgetGrant{Reason: BudgetUnknownClass}
 	}
@@ -380,7 +388,7 @@ func (c *BudgetCoordinator) TryAcquire(key string, class PollClass, now time.Tim
 		grant.Reason = BudgetTokenUnavailable
 		return grant
 	}
-	state.commitments[capability] = budgetCommitment{class: class, generation: state.generation}
+	state.commitments[capability] = budgetCommitment{class: class, generation: state.generation, scope: scope}
 	state.issued[capability] = struct{}{}
 	c.endpoints[key] = state
 	grant.Allowed = true
@@ -402,6 +410,12 @@ func (c *BudgetCoordinator) TryAcquire(key string, class PollClass, now time.Tim
 // Callers use this for success, error, and cancellation alike. False means the
 // token is forged, cross-scoped, already completed, or already reconciled.
 func (c *BudgetCoordinator) Complete(key string, token CommitmentToken) bool {
+	return c.complete(key, token, [sha256.Size]byte{})
+}
+
+// complete 는 Complete 의 본문이다. scope 는 완료를 요청하는 쪽의 전략 subscope digest(범위 없으면 0) — 발급 때의 범위와 다르면 거절하고
+// 상태를 바꾸지 않는다(a112 7.1 · 범위 있는 토큰과 범위 없는 토큰의 교차 replay 포함).
+func (c *BudgetCoordinator) complete(key string, token CommitmentToken, scope [sha256.Size]byte) bool {
 	if c == nil || token == (CommitmentToken{}) {
 		return false
 	}
@@ -416,7 +430,7 @@ func (c *BudgetCoordinator) Complete(key string, token CommitmentToken) bool {
 		return false
 	}
 	record, ok := state.commitments[token.capability]
-	if !ok || record.completed || record.class != token.class || record.generation != token.generation {
+	if !ok || record.completed || record.class != token.class || record.generation != token.generation || record.scope != scope {
 		return false
 	}
 	if c.now == nil {

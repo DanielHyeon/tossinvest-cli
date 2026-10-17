@@ -1,0 +1,249 @@
+{
+  "file": "internal/app/engine/a112_lane_latch_durability_test.go",
+  "source_sha256": "bf27865d0f81e8a13f1443fa18f697676ed951c8054bffb5f2355da7aa1295de",
+  "package": "engine",
+  "function": "TestTheProductionStepNeverLatchesSoTheLedgerStaysEmpty",
+  "signature": "TestTheProductionStepNeverLatchesSoTheLedgerStaysEmpty(params=1, results=0)",
+  "start": {
+    "line": 364,
+    "column": 1
+  },
+  "end": {
+    "line": 388,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "for",
+      "at": {
+        "line": 368,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 369,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 370,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 377,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 380,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 383,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 384,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 365,
+        "column": 13
+      },
+      "text": "laneLatchFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 366,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 367,
+        "column": 13
+      },
+      "text": "mustProductionStrategyLanes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 370,
+        "column": 14
+      },
+      "text": "runtime.evaluate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 371,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 3
+      },
+      "text": "fake.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 376,
+        "column": 15
+      },
+      "text": "c.Journal.OpenStrategyLaneLatches"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 378,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 380,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 381,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 381,
+        "column": 115
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 6
+      },
+      "text": "lane.Latched"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 385,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 385,
+        "column": 57
+      },
+      "text": "Parts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 385,
+        "column": 57
+      },
+      "text": "lane.Key"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 365,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 366,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 367,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 368,
+        "column": 6
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 368,
+        "column": 29
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 370,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 376,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

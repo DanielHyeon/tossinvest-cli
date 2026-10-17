@@ -1,0 +1,63 @@
+
+Callers of "Snapshot" (20):
+
+method      Snapshot
+  cmd/tossctl/httpapi_snapshot.go:10
+
+function    TestHTTPAPISnapshotCacheCoalescesThirtyTwoReconnects
+  cmd/tossctl/httpapi_snapshot_test.go:26
+
+function    TestHTTPAPISnapshotCacheRefreshesOnlyOnServerSchedule
+  cmd/tossctl/httpapi_snapshot_test.go:63
+
+function    cleanReconcileResolveRuntime
+  cmd/tossctl/engine_reconcile_test.go:36
+
+method      stabilise
+  internal/flatten/liquidate.go:577
+
+function    TestNamesDoNotAffectTheComparison
+  internal/reconcile/a085_display_name_test.go:15
+
+function    TestADisagreementIsUnchangedByTheName
+  internal/reconcile/a085_display_name_test.go:43
+
+function    snapshotWith
+  internal/reconcile/compare_test.go:18
+
+function    TestExternalOrderObservationCannotBecomeMissingLocalExposure
+  internal/reconcile/external_order_ownership_test.go:14
+
+function    TestPriorTradingDayLineageCannotMakeRecoveryComparisonFalseClean
+  internal/reconcile/external_order_ownership_test.go:105
+
+function    TestOrderedAtWithoutMarketUsesCandidateMarketTradingDay
+  internal/reconcile/scoped_order_identity_test.go:33
+
+function    TestBrokerOrderInAnotherScopeCannotHideMissingOwnedOrder
+  internal/reconcile/scoped_order_identity_test.go:89
+
+function    TestEveryCanonicalScopeDimensionRejectsAReusedID
+  internal/reconcile/scoped_order_identity_test.go:112
+
+function    TestPartialBrokerEvidenceCannotResolveTwoScopedOwners
+  internal/reconcile/scoped_order_identity_test.go:152
+
+function    TestCompleteBrokerScopeSelectsExactlyOneReusedIdentity
+  internal/reconcile/scoped_order_identity_test.go:176
+
+function    TestOlderNonterminalReusedTradingDayCannotDisappearFromLocalComparison
+  internal/reconcile/scoped_order_identity_test.go:201
+
+function    TestDigestIgnoresWhenWeLooked
+  internal/reconcile/snapshot_test.go:248
+
+function    TestDigestIsOrderIndependent
+  internal/reconcile/snapshot_test.go:265
+
+function    TestStabilisationNeedsTwoAgreeingSnapshotsSpacedApart
+  internal/reconcile/snapshot_test.go:279
+
+function    TestAChangedSnapshotResetsTheStreak
+  internal/reconcile/snapshot_test.go:314
+

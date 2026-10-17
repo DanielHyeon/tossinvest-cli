@@ -1,0 +1,140 @@
+# a112 8.1/8.4 BTM 재측정 — 생산 128 행(감사 census 의 prod·exists=yes GAP 행), 태그 union 커버리지(Manager 판정 결정 2 (i))
+# 측정 1: 패키지 자기 시험 태그 union(harness/branch_coverage.py --union --tags tossos_testseams, -coverpkg=자기 패키지) — 열 pkg_union
+# 측정 2: 모듈 전체 태그 시험 union(go test -tags tossos_testseams -covermode=set -coverpkg=engine,strategyproposal,strategyrouter,execgw,tools/a112-mb-us-source ./...) — 열 module_union
+# 워크트리 8f6f756b(생산 코드 = 현 HEAD 와 같음). 분기 → 블록 규칙은 branch_coverage.branch_block(분기 줄에서 시작하는 첫 블록; switch 는 포함 블록).
+# 판정: ENTERED-module = 자동 시험이 그 갈래 몸통을 실행(실측). NOT-ENTERED-module = 도달 안 됨 → 대조 처분 필요. NO-BLOCK = 몸통 블록 없음(빈 갈래 · 조건만) → 구조 대조. STALE-ROW = 번들 행이 현재 ast 에 없음.
+
+# 처분 열(class): ENTERED = 실측 진입(자동 시험) · R = 실패-닫힘 거절/건너뛰기 갈래(몸통이 오류/거절 코드 반환 · continue · 영값 반환뿐 — 노출을 늘릴 수 없음, 미시험) · L = 레인 생산 경로 미시험(buildLaneInput 의 reversal · weekly 갈래 — 이 둘의 생산 제안 적재를 지나는 시험 0) · D = 생산 호출자 0(ROADMAP a070 이월: strategyrouter Route · QuotaAuthority) · T = 도구(tools/a112-mb-us-source) 의 hold 갈래 · NB = 몸통 블록 없음(조건만 · 빈 몸통 — 커버리지가 잴 대상 없음, 구조 대조) · S = 번들 행이 현재 ast 에 없음(낡은 행 — 번들 재렌더 대상)
+bundle	branch	module_union	pkg_union	block	old_disposition	class
+internal-app-engine--buildproductionstrategymarketworker	B5	NOT-ENTERED-module	not-entered	462.13-463.12	진입 0	R
+internal-app-engine--context.newrefreshingpairedstrategyentrysupervisor	B1	NOT-ENTERED-module	not-entered	383.28-385.3	측정 표본의 시험 0개(블록 좌표 없거나 미실행)	R
+internal-app-engine--context.newrefreshingpairedstrategyentrysupervisor	B4	NOT-ENTERED-module	not-entered	403.16-405.3	측정 표본의 시험 0개(블록 좌표 없거나 미실행)	R
+internal-app-engine--context.runproductionstrategymarketcycle	B1	NOT-ENTERED-module	not-entered	516.16-518.3	아니오 — **진입 0**	R
+internal-app-engine--context.runproductionstrategymarketcycle	B2	NOT-ENTERED-module	not-entered	540.16-542.3	아니오 — **이 함수 진입 0**	R
+internal-app-engine--context.runproductionstrategymarketcycle	B3	NO-BLOCK	no-block	None	아니오 — **이 함수 진입 0**	NB
+internal-app-engine--context.runproductionstrategymarketcycle	B4	ENTERED-module	entered	549.27-551.3	아니오 — **진입 0**	ENTERED
+internal-app-engine--newstrategyentrysupervisor	B7	NOT-ENTERED-module	not-entered	649.18-651.3	측정 표본의 시험 0개(블록 좌표 없거나 미실행)	R
+internal-app-engine--newstrategyentrysupervisor	B12	NO-BLOCK	no-block	None	측정 표본의 시험 0개(블록 좌표 없거나 미실행)	NB
+internal-app-engine--newstrategyentrysupervisor	B13	NO-BLOCK	no-block	None	측정 표본의 시험 0개(블록 좌표 없거나 미실행)	NB
+internal-app-engine--newstrategyentrysupervisor	B14	NO-BLOCK	no-block	None	측정 표본의 시험 0개(블록 좌표 없거나 미실행)	NB
+internal-app-engine--newstrategyentrysupervisor	B18	NOT-ENTERED-module	not-entered	695.29-697.4	측정 표본의 시험 0개(블록 좌표 없거나 미실행)	R
+internal-app-engine--productionprotectionassemblies	B1	STALE-ROW(ast has no B1)	—	None	no	S
+internal-app-engine--productionstrategyfirstlegauthorityloader.collectstrategyfirstlegauthority	B6	NOT-ENTERED-module	not-entered	318.12-320.3	진입 0	R
+internal-app-engine--strategyaccountauthorityloader.collectmarket	B10	NOT-ENTERED-module	not-entered	192.12-193.109	진입 0	R
+internal-app-engine--strategyfirstlegadmissionbridge.admit	B7	ENTERED-module	entered	99.73-101.5	거짓 갈래 진입 0	ENTERED
+internal-app-engine--strategyproposalauthorityloader.familygatefor	B1	NOT-ENTERED-module	not-entered	118.19-120.3	arm not entered (engine tagged suite, post-edit); no per-test profile 	R
+internal-app-engine--strategyproposalauthoritypair.resultauthority	B3	NOT-ENTERED-module	not-entered	199.24-201.4	진입 0	R
+internal-app-engine--strategyriskauthorityloader.collectmarket	B9	NOT-ENTERED-module	not-entered	227.12-228.114	진입 0	R
+internal-app-engine--validatestrategyfirstlegauthority	B1	NO-BLOCK	no-block	None	no	NB
+internal-app-engine--validatestrategyfirstlegauthority	B2	NOT-ENTERED-module	not-entered	167.38-169.3	no	R
+internal-app-engine--validatestrategyfirstlegauthority	B3	NO-BLOCK	no-block	None	no	NB
+internal-app-engine--validatestrategyfirstlegauthority	B4	NO-BLOCK	no-block	None	no	NB
+internal-app-engine--validatestrategyfirstlegauthority	B5	NO-BLOCK	no-block	None	no	NB
+internal-app-engine--validatestrategyfirstlegresult	B1	ENTERED-module	entered	119.125-123.16	no	ENTERED
+internal-app-engine--validatestrategyfirstlegresult	B2	ENTERED-module	entered	124.31-125.47	no	ENTERED
+internal-app-engine--validatestrategyfirstlegresult	B3	ENTERED-module	entered	126.31-127.47	no	ENTERED
+internal-app-engine--validatestrategyfirstlegresult	B4	ENTERED-module	entered	128.10-129.146	no	ENTERED
+internal-app-engine--validatestrategyfirstlegresult	B5	ENTERED-module	entered	144.13-146.3	no	ENTERED
+internal-app-engine--validatestrategyfirstlegresult	B6	ENTERED-module	entered	147.109-148.121	no	ENTERED
+internal-app-engine--validatestrategyfirstlegresult	B7	NOT-ENTERED-module	not-entered	148.121-150.4	no	R
+internal-execgw--gateway.checkprotection	B1	ENTERED-module	entered	90.26-92.3	no	ENTERED
+internal-execgw--gateway.checkprotection	B2	ENTERED-module	entered	93.37-95.3	no	ENTERED
+internal-execgw--gateway.checkprotection	B3	ENTERED-module	entered	96.34-98.3	no	ENTERED
+internal-execgw--gateway.checkprotection	B4	ENTERED-module	entered	100.9-102.3	no	ENTERED
+internal-execgw--gateway.checkprotection	B5	ENTERED-module	entered	106.20-108.3	no	ENTERED
+internal-strategyproposal--buildlaneinput	B3	ENTERED-module	entered	448.116-449.11	arm not entered (untagged proposal suite); arm not entered (tagged pro	ENTERED
+internal-strategyproposal--buildlaneinput	B4	NOT-ENTERED-module	not-entered	449.11-451.4	arm not entered (untagged proposal suite); arm not entered (tagged pro	R
+internal-strategyproposal--buildlaneinput	B7	NOT-ENTERED-module	not-entered	471.17-473.4	arm not entered (untagged proposal suite); arm not entered (tagged pro	R
+internal-strategyproposal--buildlaneinput	B8	NOT-ENTERED-module	not-entered	476.100-477.11	arm not entered (untagged proposal suite); arm not entered (tagged pro	L→ENTERED
+internal-strategyproposal--buildlaneinput	B9	NOT-ENTERED-module	not-entered	477.11-479.4	arm not entered (untagged proposal suite); arm not entered (tagged pro	L→R
+internal-strategyproposal--buildlaneinput	B10	NOT-ENTERED-module	not-entered	481.47-483.4	arm not entered (untagged proposal suite); arm not entered (tagged pro	L→ENTERED
+internal-strategyproposal--buildlaneinput	B11	NOT-ENTERED-module	not-entered	485.38-487.4	arm not entered (untagged proposal suite); arm not entered (tagged pro	L→ENTERED
+internal-strategyproposal--buildlaneinput	B12	NOT-ENTERED-module	not-entered	489.17-491.4	arm not entered (untagged proposal suite); arm not entered (tagged pro	L→R
+internal-strategyproposal--buildlaneinput	B13	NOT-ENTERED-module	not-entered	501.38-503.18	arm not entered (untagged proposal suite); arm not entered (tagged pro	L→ENTERED
+internal-strategyproposal--buildlaneinput	B14	NOT-ENTERED-module	not-entered	503.18-505.5	arm not entered (untagged proposal suite); arm not entered (tagged pro	L→R
+internal-strategyproposal--buildlaneinput	B15	NOT-ENTERED-module	not-entered	509.17-511.4	arm not entered (untagged proposal suite); arm not entered (tagged pro	L→R
+internal-strategyproposal--buildlaneinput	B16	NOT-ENTERED-module	not-entered	514.53-516.3	arm not entered (untagged proposal suite); arm not entered (tagged pro	L→R
+internal-strategyproposal--buildlaneinput	B17	NOT-ENTERED-module	not-entered	518.74-520.3	arm not entered (untagged proposal suite); arm not entered (tagged pro	L→ENTERED
+internal-strategyproposal--buildlaneinput	B18	NOT-ENTERED-module	not-entered	522.46-524.3	arm not entered (untagged proposal suite); arm not entered (tagged pro	L→ENTERED
+internal-strategyproposal--buildlaneinput	B19	NOT-ENTERED-module	not-entered	542.40-544.17	arm not entered (untagged proposal suite); arm not entered (tagged pro	L→ENTERED
+internal-strategyproposal--buildlaneinput	B20	NOT-ENTERED-module	not-entered	544.17-546.4	arm not entered (untagged proposal suite); arm not entered (tagged pro	L→R
+internal-strategyproposal--buildlaneinput	B21	NOT-ENTERED-module	not-entered	550.16-552.3	arm not entered (untagged proposal suite); arm not entered (tagged pro	L→R
+internal-strategyproposal--loadproductionauthoritybatch	B1	NO-BLOCK	no-block	None	arm not entered (untagged proposal suite); arm not entered (tagged pro	NB
+internal-strategyproposal--loadproductionauthoritybatch	B2	NOT-ENTERED-module	not-entered	317.34-319.3	arm not entered (untagged proposal suite); arm not entered (tagged pro	R
+internal-strategyproposal--loadproductionauthoritybatch	B3	NOT-ENTERED-module	not-entered	321.57-323.3	arm not entered (untagged proposal suite); arm not entered (tagged pro	R
+internal-strategyproposal--loadproductionauthoritybatch	B4	NOT-ENTERED-module	not-entered	325.53-327.3	arm not entered (untagged proposal suite); arm not entered (tagged pro	R
+internal-strategyproposal--loadproductionauthoritybatch	B5	NOT-ENTERED-module	not-entered	329.16-331.3	arm not entered (untagged proposal suite); arm not entered (tagged pro	R
+internal-strategyproposal--loadproductionauthoritybatch	B7	NOT-ENTERED-module	not-entered	336.33-338.9	arm not entered (untagged proposal suite); arm not entered (tagged pro	L→ENTERED
+internal-strategyproposal--loadproductionauthoritybatch	B8	NOT-ENTERED-module	not-entered	341.16-343.3	arm not entered (untagged proposal suite); arm not entered (tagged pro	R
+internal-strategyproposal--loadproductionauthoritybatch	B9	NOT-ENTERED-module	not-entered	344.22-346.3	arm not entered (untagged proposal suite); arm not entered (tagged pro	R
+internal-strategyproposal--loadproductionauthoritybatch	B10	NOT-ENTERED-module	not-entered	348.9-350.3	arm not entered (untagged proposal suite); arm not entered (tagged pro	R
+internal-strategyproposal--loadproductionauthoritybatch	B11	NOT-ENTERED-module	not-entered	361.14-363.4	arm not entered (untagged proposal suite); arm not entered (tagged pro	R
+internal-strategyproposal--loadproductionauthoritybatch	B13	NOT-ENTERED-module	not-entered	368.14-370.12	arm not entered (untagged proposal suite); arm not entered (tagged pro	R
+internal-strategyproposal--loadproductionauthoritybatch	B16	NOT-ENTERED-module	not-entered	384.50-386.12	arm not entered (untagged proposal suite); arm not entered (tagged pro	R
+internal-strategyproposal--loadproductionauthoritybatch	B17	ENTERED-module	entered	389.47-391.4	arm not entered (untagged proposal suite); arm not entered (tagged pro	ENTERED
+internal-strategyproposal--loadproductionauthoritybatch	B20	NOT-ENTERED-module	not-entered	406.32-409.49	arm not entered (untagged proposal suite); arm not entered (tagged pro	R
+internal-strategyproposal--loadproductionauthoritybatch	B21	NOT-ENTERED-module	not-entered	409.49-411.5	arm not entered (untagged proposal suite); arm not entered (tagged pro	R
+internal-strategyproposal--productionbatchauthority.manifestdigest	B1	STALE-ROW(ast has no B1)	—	None	not entered by any measured profile	S
+internal-strategyproposal--validscopes	B1	NOT-ENTERED-module	not-entered	641.57-643.3	arm not entered (untagged proposal suite); arm not entered (tagged pro	R
+internal-strategyproposal--validscopes	B2	ENTERED-module	entered	645.31-649.410	arm not entered (untagged proposal suite); arm not entered (tagged pro	ENTERED
+internal-strategyproposal--validscopes	B3	ENTERED-module	entered	649.410-651.4	arm not entered (untagged proposal suite); arm not entered (tagged pro	ENTERED
+internal-strategyrouter--acquirefingerprint	B1	ENTERED-module	entered	192.253-194.3	no	ENTERED
+internal-strategyrouter--capabilityseal	B1	ENTERED-module	entered	98.233-100.3	no	ENTERED
+internal-strategyrouter--capabilitytoken	B1	ENTERED-module	entered	109.210-111.3	no	ENTERED
+internal-strategyrouter--productionroutefixture.write	B1	NO-BLOCK	no-block	None	passing run: not entered	NB
+internal-strategyrouter--productionroutefixture.write	B2	NO-BLOCK	no-block	None	passing run: not entered	NB
+internal-strategyrouter--productionroutefixture.write	B3	NO-BLOCK	no-block	None	passing run: not entered	NB
+internal-strategyrouter--productionroutefixture.write	B4	NO-BLOCK	no-block	None	passing run: not entered	NB
+internal-strategyrouter--productionroutefixture.write	B5	NO-BLOCK	no-block	None	passing run: not entered	NB
+internal-strategyrouter--productionroutefixture.write	B6	NO-BLOCK	no-block	None	passing run: not entered	NB
+internal-strategyrouter--quotaauthority.acquire	B1	NOT-ENTERED-module	not-entered	206.55-208.3	no	D
+internal-strategyrouter--quotaauthority.acquire	B2	NOT-ENTERED-module	not-entered	212.9-214.3	no	D
+internal-strategyrouter--quotaauthority.acquire	B3	ENTERED-module	entered	216.101-218.3	no	ENTERED
+internal-strategyrouter--quotaauthority.acquire	B4	ENTERED-module	entered	220.70-221.51	no	ENTERED
+internal-strategyrouter--quotaauthority.acquire	B5	ENTERED-module	entered	221.51-223.4	no	ENTERED
+internal-strategyrouter--quotaauthority.acquire	B6	ENTERED-module	entered	226.39-228.3	no	ENTERED
+internal-strategyrouter--quotaauthority.complete	B1	NOT-ENTERED-module	not-entered	245.72-247.3	no	D
+internal-strategyrouter--quotaauthority.complete	B2	ENTERED-module	entered	248.66-250.3	no	ENTERED
+internal-strategyrouter--quotaauthority.complete	B3	ENTERED-module	entered	251.77-253.3	no	ENTERED
+internal-strategyrouter--quotaauthority.complete	B4	NOT-ENTERED-module	not-entered	258.9-260.3	no	D
+internal-strategyrouter--quotaauthority.complete	B5	ENTERED-module	entered	262.72-264.3	no	ENTERED
+internal-strategyrouter--quotaauthority.complete	B6	ENTERED-module	entered	266.28-268.3	no	ENTERED
+internal-strategyrouter--quotasnapshotseal	B1	ENTERED-module	entered	58.207-60.3	no	ENTERED
+internal-strategyrouter--quotasnapshotseal	B2	ENTERED-module	entered	61.145-63.3	no	ENTERED
+internal-strategyrouter--route	B1	NOT-ENTERED-module	not-entered	197.103-200.3	no	D
+internal-strategyrouter--route	B2	ENTERED-module	entered	202.82-205.3	no	ENTERED
+internal-strategyrouter--route	B3	NOT-ENTERED-module	not-entered	206.33-209.3	no	D
+internal-strategyrouter--route	B4	NOT-ENTERED-module	not-entered	210.56-213.3	no	D
+internal-strategyrouter--route	B5	ENTERED-module	entered	214.105-217.3	no	ENTERED
+internal-strategyrouter--route	B6	ENTERED-module	entered	219.40-220.31	no	ENTERED
+internal-strategyrouter--route	B7	ENTERED-module	entered	220.31-223.4	no	ENTERED
+internal-strategyrouter--route	B8	NOT-ENTERED-module	not-entered	224.25-227.4	no	D
+internal-strategyrouter--route	B9	ENTERED-module	entered	228.19-230.4	no	ENTERED
+internal-strategyrouter--route	B10	ENTERED-module	entered	232.21-235.3	no	ENTERED
+internal-strategyrouter--route	B11	NOT-ENTERED-module	not-entered	236.46-239.3	no	D
+internal-strategyrouter--route	B12	ENTERED-module	entered	240.55-243.3	no	ENTERED
+internal-strategyrouter--route	B13	ENTERED-module	entered	244.108-247.3	no	ENTERED
+internal-strategyrouter--route	B14	ENTERED-module	entered	248.90-251.3	no	ENTERED
+internal-strategyrouter--route	B15	ENTERED-module	entered	252.22-254.61	no	ENTERED
+internal-strategyrouter--route	B16	NOT-ENTERED-module	not-entered	254.61-257.4	no	D
+internal-strategyrouter--route	B17	ENTERED-module	entered	264.47-265.35	no	ENTERED
+internal-strategyrouter--route	B18	NOT-ENTERED-module	not-entered	265.35-268.4	no	D
+internal-strategyrouter--route	B19	NOT-ENTERED-module	not-entered	269.38-272.4	no	D
+internal-strategyrouter--route	B20	NOT-ENTERED-module	not-entered	273.92-274.12	no	D
+internal-strategyrouter--route	B21	ENTERED-module	entered	276.49-278.4	no	ENTERED
+internal-strategyrouter--route	B22	ENTERED-module	entered	278.47-280.4	no	ENTERED
+internal-strategyrouter--route	B23	ENTERED-module	entered	278.47-280.4	no	ENTERED
+internal-strategyrouter--route	B24	ENTERED-module	entered	282.9-285.3	no	ENTERED
+internal-strategyrouter--route	B25	NOT-ENTERED-module	not-entered	286.12-289.3	no	D
+internal-strategyrouter--validacquirerequest	B1	STALE-ROW(ast has no B1)	—	None	no	S
+internal-strategyrouter--validproductionroutecandidates	B3	NO-BLOCK	no-block	None	arm not entered (untagged package suite); arm not entered (tagged pack	NB
+internal-strategyrouter--verifyproductionroutemanifest	B1	NO-BLOCK	no-block	None	arm not entered (untagged package suite); arm not entered (tagged pack	NB
+internal-strategyrouter--verifyproductionroutemanifest	B2	NOT-ENTERED-module	not-entered	511.14-513.3	arm not entered (untagged package suite); arm not entered (tagged pack	R
+internal-strategyrouter--verifyproductionroutemanifest	B3	NOT-ENTERED-module	not-entered	515.16-517.3	arm not entered (untagged package suite); arm not entered (tagged pack	R
+tools-a112-mb-us-source--run	B2	NOT-ENTERED-module	not-entered	75.104-77.3	no	T
+tools-a112-mb-us-source--run	B3	NOT-ENTERED-module	not-entered	79.22-81.3	no	T
+tools-a112-mb-us-source--run	B28	NOT-ENTERED-module	not-entered	182.31-184.3	no	T
+# B20 · B21(LoadProductionAuthorityBatch): 거절 이유를 든 평가는 정상 부재로 건너뛰고(continue), 이유 없는 미봉인은 고장 기록(시장 닫힘) — 둘 다 R. 코드 주석이 후자를 「지금 도달할 방법이 없는 방어적 검사」로 명기.
+# class 합계(3.8/4.5 로트 뒤): D=14, ENTERED=45, L→ENTERED=8, L→R=7, NB=17, R=31, S=3, T=3
+# L→ENTERED / L→R: 3.8/4.5 로트의 strategyproposal a112_paired_lane_batch_test.go(실 LoadProductionAuthorityBatch, KR·US reversal·weekly)를 넣고 태그 패키지 커버리지로 다시 잼 — reversal/weekly 생산 lane-input 경로 7 + weekly 원장 열기 1 이 진입, 남은 7(B9 · B12 · B14 · B15 · B16 · B20 · B21)은 실패-닫힘 오류 갈래(R 과 같은 모양).
+# 미계측 아티팩트: 시험 함수 번들의 95 행(btm-disposition-census.tsv kind=test) — Go 커버리지는 _test.go 파일을 계측하지 않는다. GONE: 삭제된 생산 함수의 2 행(kind=prod exists=NO).

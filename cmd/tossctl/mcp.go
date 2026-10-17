@@ -8,6 +8,7 @@ import (
 	"time"
 
 	tossclient "github.com/JungHoonGhae/tossinvest-cli/internal/client"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/hybrid"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/mcp"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
@@ -46,6 +47,10 @@ func newMCPCmd(opts *rootOptions) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			prefer, err := resolveBackend(cfg.OpenAPI, opts.backend)
+			if err != nil {
+				return err
+			}
 
 			// Official Open API client (optional): serves official reads + order
 			// writes when credentials are present.
@@ -59,7 +64,7 @@ func newMCPCmd(opts *rootOptions) *cobra.Command {
 			}
 			var officialClient *official.Client
 			var tradingSvc *trading.Service
-			if creds != nil {
+			if mcpOfficialEligible(creds, cfg.OpenAPI, prefer) {
 				officialClient = official.New(*creds, tokenFile)
 				// Order place/cancel/modify: gated by config exactly as the CLI's
 				// `tossctl order` is, routed through an official-only broker so
@@ -94,10 +99,6 @@ func newMCPCmd(opts *rootOptions) *cobra.Command {
 			if routedWTS == nil {
 				routedWTS = tossclient.New(tossclient.Config{TradingPolicy: cfg.Trading})
 			}
-			prefer, err := resolveBackend(cfg.OpenAPI, opts.backend)
-			if err != nil {
-				return err
-			}
 			routed := hybrid.New(routedWTS, officialClient,
 				hybrid.Policy{Prefer: prefer, Fallback: cfg.OpenAPI.Fallback}, os.Stderr)
 
@@ -126,4 +127,11 @@ func newMCPCmd(opts *rootOptions) *cobra.Command {
 			return server.Serve(cmd.Context(), cmd.InOrStdin(), cmd.OutOrStdout())
 		},
 	}
+}
+
+// mcpOfficialEligible mirrors the CLI's official-client eligibility rule. The
+// direct MCP dependencies must use this rule before construction because the
+// hybrid router cannot revoke an already-injected official client.
+func mcpOfficialEligible(creds *official.Credentials, openAPI config.OpenAPI, prefer string) bool {
+	return creds != nil && openAPI.Enabled && prefer != "wts"
 }

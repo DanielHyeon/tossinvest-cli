@@ -1,0 +1,86 @@
+{
+  "file": "internal/app/engine/position_policy_command.go",
+  "source_sha256": "9a6e666dc52e5e122a9c47dfd58110bc349fc5502c56c8607b8e3f00b63338fa",
+  "package": "engine",
+  "function": "NewPositionPolicyCommandService",
+  "signature": "NewPositionPolicyCommandService(params=2, results=2)",
+  "start": {
+    "line": 86,
+    "column": 1
+  },
+  "end": {
+    "line": 99,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 88,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 15
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 9
+      },
+      "text": "clock.System"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 17
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 91,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

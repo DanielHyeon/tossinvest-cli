@@ -151,8 +151,8 @@ func collectArbitrated(t *testing.T, now time.Time, scores []strategyrouter.Prod
 	loader.load = func(_ context.Context, config strategyproposal.ProductionConfig, targets []strategyproposal.ProductionTarget, _ interfaceOfficialFX) (strategyproposal.ProductionBatchAuthority, error) {
 		return arbitrationBatch(t, config, targets, now, multiSymbol, multiLanes), nil
 	}
-	return loader.collect(context.Background(), routeReadySchedulePair(now),
-		arbitrationRoutePair(t, now, scores, multiSymbol, multiLanes...), proposalFXPair(now))
+	return a112PairOnly(loader.collect(context.Background(), routeReadySchedulePair(now),
+		arbitrationRoutePair(t, now, scores, multiSymbol, multiLanes...), proposalFXPair(now)))
 }
 
 // 같은 종목에 세 가족이 제안하면 시장을 닫는 대신 점수가 높은 하나를 고른다.
@@ -269,7 +269,7 @@ func TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused(t *testin
 		return strategyproposal.ProductionBatchAuthorityMultiLaneForTest(config.ManifestDigest,
 			map[string][]strategyflow.Result{approvedSymbol: {result}}), nil
 	}
-	pair := loader.collect(context.Background(), routeReadySchedulePair(now), routes, proposalFXPair(now))
+	pair, _ := loader.collect(context.Background(), routeReadySchedulePair(now), routes, proposalFXPair(now))
 	if pair.kr.snapshot.Ready || pair.kr.snapshot.ArbitrationRefusal != string(strategyarbiter.RefusalSealMismatch) ||
 		pair.kr.snapshot.ArbitrationDetail != strategyarbiter.DetailScope {
 		t.Fatalf("KR=%+v, want %q / %q", pair.kr.snapshot, strategyarbiter.RefusalSealMismatch, strategyarbiter.DetailScope)
@@ -284,7 +284,7 @@ func TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated(t *test
 	loader.load = func(_ context.Context, config strategyproposal.ProductionConfig, _ []strategyproposal.ProductionTarget, _ interfaceOfficialFX) (strategyproposal.ProductionBatchAuthority, error) {
 		return strategyproposal.ProductionBatchAuthorityMultiLaneForTest(config.ManifestDigest, nil), nil
 	}
-	pair := loader.collect(context.Background(), routeReadySchedulePair(now),
+	pair, _ := loader.collect(context.Background(), routeReadySchedulePair(now),
 		arbitrationRoutePair(t, now, familyScoresForTest(strategyrouter.MarketKR), "005930", continuationlane.KRContinuationLaneID),
 		proposalFXPair(now))
 	if pair.kr.snapshot.Ready || pair.kr.snapshot.Reason != StrategyProposalNoAcceptedScope {

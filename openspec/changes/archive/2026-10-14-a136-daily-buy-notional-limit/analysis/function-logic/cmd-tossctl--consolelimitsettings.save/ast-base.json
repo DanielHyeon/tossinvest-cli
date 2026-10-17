@@ -1,0 +1,118 @@
+{
+  "file": "cmd/tossctl/limitsettings.go",
+  "source_sha256": "06572b0a355b9c26dd99d3b48008fb9edc390f50602c03100087de6ce3cb7407",
+  "package": "main",
+  "function": "Save",
+  "receiver": "consoleLimitSettings",
+  "signature": "consoleLimitSettings.Save(params=1, results=1)",
+  "start": {
+    "line": 48,
+    "column": 1
+  },
+  "end": {
+    "line": 62,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "else",
+      "at": {
+        "line": 58,
+        "column": 9
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 51,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 23
+      },
+      "text": "s.svc.LoadRawEngineGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 12
+      },
+      "text": "s.svc.SaveEngineGateLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 3
+      },
+      "text": "recordLimitSave"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 19
+      },
+      "text": "before.Limits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 3
+      },
+      "text": "recordLimitSave"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 50,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

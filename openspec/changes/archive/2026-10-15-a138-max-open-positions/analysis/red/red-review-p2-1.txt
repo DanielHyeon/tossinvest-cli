@@ -1,0 +1,6 @@
+# 구현 리뷰 P2-1 RED — limits_io.go 만 HEAD(86442ad7), 2026-10-15T00:31:17Z
+--- FAIL: TestA138TheLimitWriterTouchesTheOpenPositionKeyOnlyWhenAsked (0.00s)
+    a138_open_positions_test.go:114: a save that creates the file must keep the open position maximum, got 0 (<nil>)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/config	0.004s
+FAIL

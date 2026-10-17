@@ -56,11 +56,13 @@ type strategyMarketArbitration struct {
 // 언제나 참이 되어 아무것도 잡지 못한다.
 func coordinateMarketProposals(accountRef string, market StrategyMarket, routes []strategyRouteEntryAuthority,
 	batch strategyproposal.ProductionBatchAuthority, observedAt time.Time, gate strategyFamilyGate,
-) (strategyMarketArbitration, int) {
+) (strategyMarketArbitration, int, strategyShadowBatch) {
 	routerMarket := strategyRouterMarket(market)
 	coordinator := strategycoordinator.NewMarketCoordinator(routerMarket, observedAt)
 	arbitration := strategyMarketArbitration{byIdentity: make(map[string]strategyProposalEntryAuthority, batch.Len())}
 	refused := 0
+	// a112 7.3.1 SHADOW: 관문 앞 제안 전부를 별도 묶음으로 모은다(authority 밖 — 조정 · admit · Submit 은 이 값을 보지 않는다).
+	shadow := strategyShadowBatch{observed: true}
 	for _, route := range routes {
 		lanes := batch.LanesFor(route.approved.Symbol())
 		if len(lanes) == 0 {
@@ -88,6 +90,7 @@ func coordinateMarketProposals(accountRef string, market StrategyMarket, routes 
 			// `else if` 를 쓰지 않는다. Go AST 는 `} else if` 를 **같은 좌표의
 			// else 와 if 두 노드**로 내므로, 좌표로 분기를 세는 이 change 의
 			// 열거표에서 두 줄이 구별되지 않는다.
+			shadow.collect(envelope.Proposal)
 			admitted, outcome, ok := gate.admit(strategyworker.Input{Scope: scope,
 				SnapshotDigest: lane.SnapshotDigest(), Proposal: envelope.Proposal})
 			if !ok {
@@ -112,7 +115,9 @@ func coordinateMarketProposals(accountRef string, market StrategyMarket, routes 
 				// 안 옮기면 이 경로만 "유실 0" 이라고 거짓으로 보고한다.
 				arbitration.collision = true
 				arbitration.outcome.Drops = coordinator.Drops()
-				return arbitration, refused
+				// 루프 도중이라 모은 묶음은 뒤쪽 종목이 빠진 부분 묶음이다 — 싣지 않고 부재 값을 낸다(그 레인들을 NO_INPUT 으로 거짓
+				// 보고하지 않게, 브리프 §4 · Manager 판정 3). 조정 루프 순서는 그대로다.
+				return arbitration, refused, strategyShadowBatch{}
 			}
 			arbitration.byIdentity[result.Lineage.Identity] = strategyProposalEntryAuthority{route: route, authority: lane}
 		}
@@ -121,7 +126,7 @@ func coordinateMarketProposals(accountRef string, market StrategyMarket, routes 
 		}
 	}
 	arbitration.outcome = coordinator.Arbitrate()
-	return arbitration, refused
+	return arbitration, refused, shadow
 }
 
 // entries 는 조정자가 고른 순서 그대로 레인 권한 목록을 만든다.

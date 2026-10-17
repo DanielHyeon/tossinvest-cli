@@ -1,0 +1,19 @@
+# a133 mutation — HEAD 35936cc8 + 6 working-tree a133 files · copy /tmp/a133-mutate-376028-_1oks42d/repo
+CONTROL GREEN 
+CAUGHT M1 the boundary is bypassed (Publish does not redact) — --- FAIL: TestA133NtfyBoundaryScrubsEveryByte (0.00s); --- FAIL: TestA133CriticalFieldsLeaveNoAccount (0.28s); --- FAIL: TestA133BestEffortPathLeavesNoAccount (0.24s); --- FAIL: TestA133NormalRelayLeavesNoAccount (0.25s); --- FAIL: TestA133FlushRedeliveryLeavesNoAccount (0.34s); --- FAIL: TestA133DeliveryJudgementIsUnchanged (0.44s)
+CAUGHT M2 one send path is missed (redaction moved from the boundary into notificationFor) — --- FAIL: TestA133NtfyBoundaryScrubsEveryByte (0.00s); --- FAIL: TestA133FlushRedeliveryLeavesNoAccount (0.47s); --- FAIL: TestA133TheOnlyTransportPassesTheBoundary (0.19s); --- FAIL: TestA133TheDelivererRedeliversWithoutTheAccount (0.22s); --- FAIL: TestA133TheDelivererStillLatchesOnRefusal (0.25s)
+CAUGHT M3 account-key fields are rendered (field drop removed) — --- FAIL: TestA133CriticalFieldsLeaveNoAccount (0.27s); --- FAIL: TestA133BestEffortPathLeavesNoAccount (0.26s); --- FAIL: TestA133NormalRelayLeavesNoAccount (0.25s); --- FAIL: TestA133DeliveryJudgementIsUnchanged (0.40s)
+CAUGHT M4 the title is sent unredacted — --- FAIL: TestA133NtfyBoundaryScrubsEveryByte (0.00s); --- FAIL: TestA133CriticalFieldsLeaveNoAccount (0.27s); --- FAIL: TestA133BestEffortPathLeavesNoAccount (0.26s); --- FAIL: TestA133NormalRelayLeavesNoAccount (0.24s); --- FAIL: TestA133FlushRedeliveryLeavesNoAccount (0.42s); --- FAIL: TestA133DeliveryJudgementIsUnchanged (0.39s)
+CAUGHT M5 tags and the type tag are sent unredacted — --- FAIL: TestA133NtfyBoundaryScrubsEveryByte (0.00s); --- FAIL: TestA133TheBoundaryCoversEveryTextField (0.00s)
+CAUGHT M6 the tags list is sent unredacted — --- FAIL: TestA133NtfyBoundaryScrubsEveryByte (0.00s); --- FAIL: TestA133TheBoundaryCoversEveryTextField (0.00s)
+CAUGHT M7 the body is sent unredacted — --- FAIL: TestA133NtfyBoundaryScrubsEveryByte (0.00s); --- FAIL: TestA133CriticalFieldsLeaveNoAccount (0.25s); --- FAIL: TestA133BestEffortPathLeavesNoAccount (0.27s); --- FAIL: TestA133NormalRelayLeavesNoAccount (0.29s); --- FAIL: TestA133FlushRedeliveryLeavesNoAccount (0.33s); --- FAIL: TestA133DeliveryJudgementIsUnchanged (0.45s)
+CAUGHT M8 a second production transport without the boundary — --- FAIL: TestA133TheOnlyTransportPassesTheBoundary (0.19s)
+CAUGHT M9 the field drop is narrowed to the `account` key only — --- FAIL: TestA133CriticalFieldsLeaveNoAccount (0.28s); --- FAIL: TestA133BestEffortPathLeavesNoAccount (0.26s); --- FAIL: TestA133NormalRelayLeavesNoAccount (0.28s); --- FAIL: TestA133DeliveryJudgementIsUnchanged (0.51s)
+CAUGHT M10 a second obs file reaches the network — --- FAIL: TestA133TheOnlyTransportPassesTheBoundary (0.22s)
+CAUGHT M11 Notification gains a text field the boundary does not cover — --- FAIL: TestA133TheBoundaryCoversEveryTextField (0.00s)
+CAUGHT M12 derived ids are redacted in one pass (adjacent second id leaks) — --- FAIL: TestA133AdjacentDerivedIDsAreAllRedacted (0.00s)
+CAUGHT M13 a Publisher outside obs with an aliased context import — --- FAIL: TestA133TheOnlyTransportPassesTheBoundary (0.45s)
+CAUGHT M14 a second send method inside ntfy.go skips the boundary — --- FAIL: TestA133TheOnlyTransportPassesTheBoundary (0.19s)
+CAUGHT M15 the boundary is skipped for pinned-priority notifications — --- FAIL: TestA133NtfyBoundaryScrubsEveryByte (0.00s); --- FAIL: TestA133TheOnlyTransportPassesTheBoundary (0.21s)
+# 15/15 caught
+exit=0

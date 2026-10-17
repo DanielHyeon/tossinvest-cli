@@ -1,0 +1,2 @@
+CONTROL (무변이) GREEN
+M37 terminal statuses still count the remainder: CAUGHT — ./internal/manualbuy/: --- FAIL: TestA136ManualBuysAreSummedPerCurrency (0.00s), --- FAIL: TestA136TerminalStatusesCountOnlyWhatFilled (0.00s)

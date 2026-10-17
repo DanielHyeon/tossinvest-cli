@@ -1,0 +1,15 @@
+
+Callers of "riskPolicyFromAutomationGate" (4):
+
+function    TestAutomationGateRiskPolicyUsesEveryConfiguredUSDLimit
+  internal/app/engine/guardian_wiring_internal_test.go:15
+
+function    TestAutomationGateRiskPolicyPreservesInvalidNumbersForFailClosedValidation
+  internal/app/engine/guardian_wiring_internal_test.go:50
+
+function    TestA136ProductionPolicyResolvesTheDailyBuyCeiling
+  internal/app/engine/a136_daily_buy_wiring_internal_test.go:12
+
+function    newProductionRiskGuardian
+  internal/app/engine/guardian_wiring.go:69
+

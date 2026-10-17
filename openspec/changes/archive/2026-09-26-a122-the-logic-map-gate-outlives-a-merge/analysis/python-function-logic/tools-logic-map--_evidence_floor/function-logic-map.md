@@ -1,0 +1,90 @@
+# Function Logic Map: `_evidence_floor`
+
+`tools/logic-map/check_analysis.py:436-465`(worktree) · Python · **task 6.1.2**
+
+> **손으로 읽어서 만들지 않았다.** 같은 디렉터리의 `ast.worktree.json` 을
+> `enumerate.py` 가 기계로 열거했고 아래는 그 열거를 옮긴 것이다. 이 함수는 6.1.2 가
+> 새로 만든 것이라 편집 전 판본이 없다 — `ast.json`(HEAD) 이 없는 이유다.
+
+## Inputs and invariants
+
+고정 번들이 역사에 들어온 **마지막** 커밋. 저자가 고를 수 없는 유일한 하한이다
+— 오늘 만든 번들을 과거 커밋에 넣을 수 없기 때문이다. a122 6.1.1 이 활성 13건을
+전수로 재서 13건 **전부** 고정 번들이 자기 base 뒤에 커밋됐음을 확인했다.
+
+## Branches and early returns — 열거 그대로 (분기 6)
+
+| ID | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 450 | For | `for ast_path, _, _ in _pinning_bundles(root, analysis):` |
+| B2 | 451 | Try | `try:` |
+| B3 | 453 | ExceptHandler | `except ValueError:` |
+| B4 | 457 | If | `if before:` |
+| B5 | 459 | If | `if not paths:` |
+| B6 | 465 | IfExp | `'' if process.returncode else process.stdout.strip()` |
+
+반환 2개: `460` · `465`
+
+## Calls and live bindings
+
+`_pinning_bundles` · `git log -M --diff-filter=MA -1`.
+
+## State mutations and fallbacks
+
+없다.
+
+## Safety conclusion
+
+`-M --diff-filter=MA` 와 아카이브 전 경로를 같이 주는 것이 안전의 핵심이다.
+rename 을 세면 아카이브하는 순간 이미 유효했던 기록이 무효가 된다 — a099 의 바닥
+`21a315d1` 은 기록된 착지 `e6c4636a` 앞이고 rename 커밋은 뒤다. 못 찾으면 빈
+문자열이고, 호출자가 그것을 거절로 다룬다(빈 하한을 통과로 다루면 구멍이 남는다).
+
+---
+
+## 공백 기록 — 7.2.1 · 7.3.1 · 7.4 는 이 함수를 FLM 없이 바꿨다 (2026-09-13, 7.6 이 적음)
+
+이 세 task 는 내부를 바꾸면서 열거도 `not-applicable` 사유도 남기지 않았다. 7.6 이 7.2.1 직전
+(`eaf536d2`, 7.1 과 소스 동일)과 HEAD(`2b5b05c1`)를 같은 열거기로 뽑아 `ast.before-7.2.1.json` ·
+`ast.before-7.6.json` 으로 남긴다. 판정 근거(뮤테이션·A/B)는 각 task 의 VERIFY 절에 있다.
+
+| | 종류 | 소스 |
+|---|---|---|
+| — | — | (소스 한 줄 단위로 같다) |
+
+## task 7.5 — 번들 목록을 한 번 재서 넘긴다
+
+`ast.before-7.5.json`(= `8091e6c4` 의 소스)과 `ast.after-7.5.json` 을 같은 열거기로 뽑아
+**순서 있는 배열로** 대조했다: 분기 순서열 6개 중 **1개만 다르고** 그것은 번들 목록을 어디서 받는지다(`_pinning_bundles(root, analysis)` → `bundles`). **판정 조건과 그 순서는 바이트 동일** · 반환 **순서열 2개가 바이트 동일**.
+
+> **처음에는 개수로 적었다가 정정했다** (2026-09-18 독립 리뷰 P2). `분기 N · 반환 M` 은
+> multiset 크기라 **순열에 불변**이다 — 가드를 서로 바꿔도 같은 수가 나오므로 "순서가 안
+> 움직였다"를 못 받친다. 순서 있는 배열은 이미 같은 JSON 안에 있었고, 그것을 인용해야 한다
+> ([[a-new-guard-unpins-the-guards-behind-it]] 가 지키려는 것이 바로 순서다).
+
+바뀐 것은 고정 번들 목록이 **어디서 오는가** 하나다. 후보마다 디렉터리를 다시 순회하던
+것을 호출자가 한 번 재서 넘긴다 — `floor` 와 `repairs` 가 이미 그렇게 넘어오고 있었고
+(7.2.6 · 7.6), 7.5 는 셋째를 같은 방식으로 묶었다. 번들은 걷는 동안 안 변한다: 이 도구는
+번들을 **읽기만** 한다.
+
+값: 2026-09-18 프로파일에서 `_pinning_bundles` 가 a071 walk 하나에 341회 돌아
+13.07s 중 9.30s 였다. 묶은 뒤 a071 이 10.97s → **3.69s**.
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:762-813` · 분기 6 · 반환 2 · raise 1 (편집 전 L713-756 · 분기 6 · 반환 2 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+상징 `HEAD` 대신 명령이 **한 번** 푼 sha(`head`)를 받는다. 7.5.2 는 `HEAD` 를 열 자리에서 따로 읽고 지문에 표본 하나만 넣었다 — 기록은 표본 **전에** 읽혔고 뒤의 git 호출은 살아 있는 `HEAD` 를 다시 읽어서 가지 전환 한 번(레드팀 repro_b)도, 떠났다 돌아온 `HEAD`(이 세션이 재현)도 rc 0 이었다. 그리고 git 이 못 걸으면 **결함**이다 — 빈 문자열을 돌려주던 판본은 "평범한 커밋이 이 증거를 들인 적이 없다" 는 거절과 복구 조언(기록을 지워라)을 만들었다(레드팀 repro_a3). 이제 빈 문자열은 "걸었는데 없다" 하나다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 792 | For | `for ast_path, _, _ in bundles:` |
+| B2 | 793 | Try | `try:` |
+| B3 | 795 | ExceptHandler | `except ValueError:` |
+| B4 | 799 | If | `if before:` |
+| B5 | 801 | If | `if not paths:` |
+| B6 | 808 | If | `if process.returncode:` |
+
+| raise 줄 | 소스 |
+|---|---|
+| 809 | `raise RuntimeError("cannot find the commit that put this change's evidence into the histor` |

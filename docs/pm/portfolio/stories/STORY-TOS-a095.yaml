@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a095-a-stop-must-know-what-it-covers",
-    "path": "openspec/changes/a095-a-stop-must-know-what-it-covers"
+    "path": "openspec/changes/archive/2026-09-30-a095-a-stop-must-know-what-it-covers"
   },
   "acceptance": [
     "A held position the exit policy does not manage is graded critical rather than normal, overturning the recorded reason for the old grade with stated grounds",

@@ -1,0 +1,19 @@
+=== RUN   TestA137ADailyLossModeBlockEndsTheCycleQuietly
+    a137_daily_loss_cycle_test.go:53: bare: delivered=[a] err=execgw: new entries are blocked by the daily-loss limit: execgw: rejected (operating_mode_blocked): ENTRY_BLOCKED (AUTO): DAILY_LOSS_LIMIT_REACHED — want the cycle ended after a with no error
+    a137_daily_loss_cycle_test.go:53: wrapped like dispatch wraps: delivered=[a] err=engine: first-leg admission DAILY_LOSS_LIMIT: execgw: new entries are blocked by the daily-loss limit: execgw: rejected (operating_mode_blocked): ENTRY_BLOCKED (AUTO): DAILY_LOSS_LIMIT_REACHED — want the cycle ended after a with no error
+--- FAIL: TestA137ADailyLossModeBlockEndsTheCycleQuietly (0.00s)
+=== RUN   TestA137OtherModeBlocksBehaveAsBefore
+--- PASS: TestA137OtherModeBlocksBehaveAsBefore (0.00s)
+=== RUN   TestA137AMixedCycleStillReportsItsSkippedScopes
+--- PASS: TestA137AMixedCycleStillReportsItsSkippedScopes (0.00s)
+=== RUN   TestA137ADailyLossRefusalEscalatesAndIsNotALaneFault
+--- PASS: TestA137ADailyLossRefusalEscalatesAndIsNotALaneFault (0.00s)
+=== RUN   TestA137AFailedEscalationIsJoinedNotLost
+--- PASS: TestA137AFailedEscalationIsJoinedNotLost (0.00s)
+=== RUN   TestA137APrecheckRefusalKeepsItsCause
+--- PASS: TestA137APrecheckRefusalKeepsItsCause (0.00s)
+=== RUN   TestA137ClassificationIsUnchangedForEveryPrecheckRefusal
+--- PASS: TestA137ClassificationIsUnchangedForEveryPrecheckRefusal (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.009s
+FAIL

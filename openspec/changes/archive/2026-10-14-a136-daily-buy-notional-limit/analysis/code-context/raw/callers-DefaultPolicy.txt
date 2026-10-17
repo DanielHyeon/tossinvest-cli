@@ -1,0 +1,63 @@
+
+Callers of "DefaultPolicy" (20):
+
+function    buildE2EStack
+  internal/app/engine/exit_e2e_test.go:242
+
+function    TestTheRealGuardianClearsEveryClause
+  internal/app/engine/guardian_test.go:97
+
+function    TestTheRealGuardianIsPublishedWhenTheGateVerifies
+  internal/app/engine/guardian_test.go:143
+
+function    TestAGuardianSizedAgainstOtherNumbersIsRefused
+  internal/app/engine/guardian_test.go:188
+
+function    TestTheMoneyCeilingsAlsoHaveToAgree
+  internal/app/engine/guardian_test.go:213
+
+function    riskPolicyFromAutomationGate
+  internal/app/engine/guardian_wiring.go:34
+
+function    TestAutomationGateRiskPolicyUsesEveryConfiguredUSDLimit
+  internal/app/engine/guardian_wiring_internal_test.go:15
+
+function    newTracer
+  internal/app/engine/tracer_test.go:43
+
+function    TestALiveTracerRunIsBlockedByTheProtectionRefusal
+  internal/app/engine/tracer_test.go:312
+
+function    guardianPolicy
+  internal/execgw/riskguardian_test.go:34
+
+function    TestTheDefaultPolicyStatesTheSmallLiveSet
+  internal/execgw/riskguardian_test.go:252
+
+function    gridPolicy
+  internal/measure/counterfactual.go:353
+
+function    accountBaseTestPolicy
+  internal/risk/account_base_test.go:276
+
+function    usdPolicy
+  internal/risk/chain_test.go:61
+
+function    entryInput
+  internal/risk/chain_test.go:74
+
+function    TestStrategyEntryQuantityUsesExactMinimumOfGuardianCaps
+  internal/risk/contract_test.go:93
+
+function    TestStrategyEntryQuantityRefusesZeroCapacity
+  internal/risk/contract_test.go:131
+
+function    TestDefaultMinimumRewardRiskIsTwo
+  internal/risk/contract_test.go:401
+
+function    TestPolicyRejectsInvalidThresholds
+  internal/risk/contract_test.go:504
+
+function    TestDefaultPolicyIsTheConservativeDefaultSet
+  internal/risk/contract_test.go:537
+

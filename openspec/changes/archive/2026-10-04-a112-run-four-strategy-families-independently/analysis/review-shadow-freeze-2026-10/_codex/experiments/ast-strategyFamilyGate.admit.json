@@ -1,0 +1,102 @@
+{
+  "file": "../../internal/app/engine/strategy_family_activation.go",
+  "source_sha256": "50c775155bc8a12a5844ddbc30785f72e49b4fab7380146071e458f815d4c377",
+  "package": "engine",
+  "function": "admit",
+  "receiver": "strategyFamilyGate",
+  "signature": "strategyFamilyGate.admit(params=1, results=3)",
+  "start": {
+    "line": 93,
+    "column": 1
+  },
+  "end": {
+    "line": 109,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 98,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 95,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 102,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 108,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 6
+      },
+      "text": "gate.installed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 7
+      },
+      "text": "lane.Owns"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 12
+      },
+      "text": "lane.Run"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 101,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

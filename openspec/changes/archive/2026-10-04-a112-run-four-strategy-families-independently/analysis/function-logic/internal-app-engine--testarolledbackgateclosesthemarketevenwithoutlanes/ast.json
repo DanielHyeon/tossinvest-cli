@@ -1,0 +1,195 @@
+{
+  "file": "internal/app/engine/a112_family_rollback_test.go",
+  "source_sha256": "c1b6888e6bccd1b9ca9e54c43abbae8063f5e9cf12178e98b9170634d4c73979",
+  "package": "engine",
+  "function": "TestARolledBackGateClosesTheMarketEvenWithoutLanes",
+  "signature": "TestARolledBackGateClosesTheMarketEvenWithoutLanes(params=1, results=0)",
+  "start": {
+    "line": 401,
+    "column": 1
+  },
+  "end": {
+    "line": 416,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 410,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 413,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 402,
+        "column": 9
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 403,
+        "column": 11
+      },
+      "text": "testStrategyProposalLoader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 404,
+        "column": 12
+      },
+      "text": "rollbackLoader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 405,
+        "column": 60
+      },
+      "text": "strings.Repeat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 15
+      },
+      "text": "forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 15
+      },
+      "text": "a112PairOnly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 28
+      },
+      "text": "loader.collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 43
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 65
+      },
+      "text": "routeReadySchedulePair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 94
+      },
+      "text": "rollbackRoutes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 409,
+        "column": 3
+      },
+      "text": "proposalFXPair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 411,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 5
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 60
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 414,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 402,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 403,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 404,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 407,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 408,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

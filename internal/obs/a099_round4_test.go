@@ -148,10 +148,15 @@ func TestAHeldRowIsNotWhispered(t *testing.T) {
 	if line == nil {
 		t.Fatalf("no engine.alert_claim_held line at all. The log was:\n%s", buf.String())
 	}
-	if line["level"] != "WARN" {
-		t.Errorf("claim-held level = %v, want WARN — in this wiring the only way to reach "+
-			"this branch is a lease left by a sender that died, and an unsent critical "+
-			"alert is not an INFO", line["level"])
+	// a092 단위 ③(Manager 판정 (나)): 주제는 「held 행이 무음으로 넘어가지 않는다」 — 줄의 **실재**와 그 내용(보유자 · 만료)임.
+	// 등급은 INFO 로 바뀜: 잠금을 좁힌 뒤 이 갈래는 산 경합의 정상 경로이고, 죽은 발송자의 신호는 임차 만료 뒤
+	// logClaimStolen(WARN)이 진다. 로그 호출을 지우는 변이는 위 `line == nil` 단언이 잡음(review §24.7 반증).
+	if line["level"] != "INFO" {
+		t.Errorf("claim-held level = %v, want INFO — a live lease is the exclusion working; "+
+			"the dead-sender warning belongs to the takeover line (engine.alert_claim_stolen)", line["level"])
+	}
+	if line["claimed_by"] != "notifier:the-process-that-died" {
+		t.Errorf("claim-held line does not name the holder: %v", line["claimed_by"])
 	}
 	if _, ok := line["claim_expires_at"]; !ok {
 		t.Error("the claim-held line does not say when the lease frees. That timestamp is " +

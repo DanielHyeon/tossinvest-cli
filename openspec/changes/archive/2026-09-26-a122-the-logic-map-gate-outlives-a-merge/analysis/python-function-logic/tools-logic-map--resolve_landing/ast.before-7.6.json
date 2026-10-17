@@ -1,0 +1,264 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "2b5b05c1c69dd3fcf9c64a6df60c6b8cd3df871d",
+  "head_commit": "2b5b05c1c69dd3fcf9c64a6df60c6b8cd3df871d",
+  "source_sha256": "36f72fc173dab8baddd80d22f8f70af95d111a02e5095e63f22833865788008a",
+  "function": "resolve_landing",
+  "signature": "resolve_landing(change_dir, root, base, analysis)",
+  "start": {
+    "line": 570,
+    "column": 1
+  },
+  "end": {
+    "line": 679,
+    "column": 21
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 593,
+      "inherited_line": false,
+      "source": "if candidate is None:"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 595,
+      "inherited_line": false,
+      "source": "if not FULL_SHA.fullmatch(candidate):"
+    },
+    {
+      "id": "B3",
+      "kind": "BoolOp",
+      "line": 606,
+      "inherited_line": false,
+      "source": "process.returncode or process.stdout.strip() != candidate"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 606,
+      "inherited_line": false,
+      "source": "if process.returncode or process.stdout.strip() != candidate:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 608,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, candidate, 'HEAD'):"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 613,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, base, candidate):"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 618,
+      "inherited_line": false,
+      "source": "if not pinning:"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 627,
+      "inherited_line": false,
+      "source": "if mismatched:"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 639,
+      "inherited_line": false,
+      "source": "if not floor:"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 644,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, floor, candidate):"
+    },
+    {
+      "id": "B11",
+      "kind": "If",
+      "line": 654,
+      "inherited_line": false,
+      "source": "if unheld:"
+    },
+    {
+      "id": "B12",
+      "kind": "If",
+      "line": 672,
+      "inherited_line": false,
+      "source": "if candidate != computed:"
+    },
+    {
+      "id": "B13",
+      "kind": "IfExp",
+      "line": 673,
+      "inherited_line": false,
+      "source": "computed[:12] if computed else f'none — {why}'"
+    }
+  ],
+  "returns": [
+    {
+      "line": 594,
+      "value": "''"
+    },
+    {
+      "line": 679,
+      "value": "candidate"
+    }
+  ],
+  "raises": [
+    {
+      "line": 599,
+      "source": "raise ValueError(f'landing point must be a full 40-hex commit id, not {candidate!r}')"
+    },
+    {
+      "line": 607,
+      "source": "raise ValueError(f'landing point is not a commit in this repository: {candidate}')"
+    },
+    {
+      "line": 609,
+      "source": "raise ValueError(f'landing point never landed on this history: {candidate}')"
+    },
+    {
+      "line": 614,
+      "source": "raise ValueError(f'landing point precedes the comparison base {base[:12]}: {candidate}')"
+    },
+    {
+      "line": 623,
+      "source": "raise ValueError(f'landing point {candidate[:12]} is pinned by no `revision: current` evidence: a declared landing must be the revision some bundle describes')"
+    },
+    {
+      "line": 628,
+      "source": "raise ValueError(f'landing point {candidate[:12]} is not the revision this evidence describes: ' + ', '.join(sorted(set(mismatched))))"
+    },
+    {
+      "line": 640,
+      "source": "raise ValueError(f'landing point {candidate[:12]} is pinned by evidence that never entered this history: commit the `revision: current` bundles that pin it')"
+    },
+    {
+      "line": 645,
+      "source": "raise ValueError(f\"landing point {candidate[:12]} precedes the evidence that pins it ({floor[:12]}): a declared landing cannot be older than the commit that put"
+    },
+    {
+      "line": 655,
+      "source": "raise ValueError(f'landing point {candidate[:12]} does not hold the evidence this verdict read: ' + ', '.join(unheld) + ' — the bundle judged here is not the bu"
+    },
+    {
+      "line": 674,
+      "source": "raise ValueError(f\"landing point {candidate[:12]} is not the landing this change's evidence computes ({named}): the record must be the gate's own value — `--rec"
+    }
+  ],
+  "calls": [
+    {
+      "line": 592,
+      "callee": "_declared_landing"
+    },
+    {
+      "line": 595,
+      "callee": "FULL_SHA.fullmatch"
+    },
+    {
+      "line": 599,
+      "callee": "ValueError"
+    },
+    {
+      "line": 602,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 606,
+      "callee": "process.stdout.strip"
+    },
+    {
+      "line": 607,
+      "callee": "ValueError"
+    },
+    {
+      "line": 608,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 609,
+      "callee": "ValueError"
+    },
+    {
+      "line": 613,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 614,
+      "callee": "ValueError"
+    },
+    {
+      "line": 617,
+      "callee": "_pinning_at"
+    },
+    {
+      "line": 623,
+      "callee": "ValueError"
+    },
+    {
+      "line": 628,
+      "callee": "ValueError"
+    },
+    {
+      "line": 630,
+      "callee": "', '.join"
+    },
+    {
+      "line": 630,
+      "callee": "set"
+    },
+    {
+      "line": 630,
+      "callee": "sorted"
+    },
+    {
+      "line": 638,
+      "callee": "_evidence_floor"
+    },
+    {
+      "line": 640,
+      "callee": "ValueError"
+    },
+    {
+      "line": 644,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 645,
+      "callee": "ValueError"
+    },
+    {
+      "line": 653,
+      "callee": "_unheld_bundles"
+    },
+    {
+      "line": 655,
+      "callee": "ValueError"
+    },
+    {
+      "line": 657,
+      "callee": "', '.join"
+    },
+    {
+      "line": 671,
+      "callee": "compute_landing"
+    },
+    {
+      "line": 674,
+      "callee": "ValueError"
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "file": "internal/client/watchlist_manage.go",
+  "source_sha256": "de925d43fbf32a246efaf6c6df56fbf6a2f7158d00188818dcbc6dbb39dca4f1",
+  "package": "client",
+  "function": "ListWatchlistGroups",
+  "receiver": "Client",
+  "signature": "Client.ListWatchlistGroups(params=1, results=2)",
+  "start": {
+    "line": 49,
+    "column": 1
+  },
+  "end": {
+    "line": 59,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 51,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 56,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 12
+      },
+      "text": "c.requireSession"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 12
+      },
+      "text": "c.getJSON"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 9
+      },
+      "text": "mapBulkWatchlistGroups"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 50,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 55,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -95,6 +95,71 @@ fail() {
 	exit 1
 }
 
+# change id 로 디렉터리를 찾는다. 활성이면 `changes/<id>`, 끝났으면 `openspec archive`
+# 가 `changes/archive/<YYYY-MM-DD>-<id>` 로 옮겨 둔 자리다.
+#
+# 활성 경로만 보면 **짝이 먼저 아카이브된 순간 남은 쪽의 완료 게이트가 영구히 막힌다**
+# (2026-09-09 a099 가 실제로 그렇게 막혔다). 이 저장소가 같은 결함을 고친 것은
+# 이번이 세 번째다 — `f6965ebb` 와 `check_analysis.py` 의 `check` 가 앞의 둘이고,
+# 그 둘은 Python 이라 `resolve_referenced_change` 한 함수를 공유했다. 여기는 shell 이라
+# 부를 수 없어 규칙만 옮겨 적는다. 규칙은 그쪽과 같다:
+#
+#   - 날짜 접두사를 벗긴 나머지를 **전부** 맞춘다. 접미사로 고르면
+#     `2026-08-29-other-reference` 가 `reference` 로 통과한다. 날짜의 숫자는 ASCII
+#     `0123456789` 뿐이다 — Python 쪽도 `re.ASCII` 로 같은 뜻이다(a122 task 6.4(c)).
+#     범위 `[0-9]` 가 아니라 **나열** `[0123456789]` 인 이유(a122 task 6.4 보수): 범위는 로케일의
+#     콜레이션을 따른다. bash 5.2.21 · `en_US.UTF-8` 에서 `[0-9]` 는 전각 `０…８` · 아라비아-인도
+#     `٠…٨` · 수학 굵은 `𝟎…𝟖` 를 먹었다(`９` 만 제외, `C.UTF-8` 에서는 안 먹음). 이 스크립트도
+#     Makefile 도 로케일을 고정하지 않는다. 나열은 글자 하나씩 같은지만 보므로 로케일과 무관하다.
+#   - 사본이 둘 이상이면 **멈춘다**. 고르면 어느 것으로 통과했는지 기록에 안 남는다.
+#     활성과 아카이브에 같은 id 가 동시에 있는 것도 사본 둘이다 — 한때 여기만 멈추고
+#     Python 쪽은 활성을 조용히 골랐지만(a122 task 3.2.4 가 연 결함) 그쪽도 멈추게 고쳤다.
+#
+# 두 사본이 갈리지 않는 것은 문장이 아니라 시험이 지킨다: `tools/logic-map/test_check_analysis.py`
+# 의 `TheTwoChangeResolversAgree` 가 한 표를 이 스크립트와 Python 해소기에 **같이** 돌린다
+# (a122 task 6.4(f)). 여기를 고치면 그 표를 같이 고칠 것.
+#
+# 결과는 RESOLVED_CHANGE_DIR 에, 사유는 RESOLVE_ERROR 에 담고 0/1 을 돌려준다.
+# 값을 echo 로 돌려주면 command substitution 이 서브셸이라 fail() 이 부모를 못 멈춘다.
+RESOLVED_CHANGE_DIR=""
+RESOLVE_ERROR=""
+resolve_change_dir() {
+	resolve_id="$1"
+	RESOLVED_CHANGE_DIR=""
+	RESOLVE_ERROR=""
+
+	resolve_found=""
+	resolve_hits=0
+	if [ -d "openspec/changes/$resolve_id" ]; then
+		resolve_found="openspec/changes/$resolve_id"
+		resolve_hits=1
+	fi
+
+	for resolve_cand in openspec/changes/archive/*; do
+		[ -d "$resolve_cand" ] || continue
+		resolve_name=${resolve_cand##*/}
+		# YYYY-MM-DD- 로 시작하지 않으면 아카이브 이름이 아니다.
+		case "$resolve_name" in
+		[0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]-*) ;;
+		*) continue ;;
+		esac
+		[ "${resolve_name#????-??-??-}" = "$resolve_id" ] || continue
+		resolve_found="$resolve_cand"
+		resolve_hits=$((resolve_hits + 1))
+	done
+
+	if [ "$resolve_hits" -eq 0 ]; then
+		RESOLVE_ERROR="change 디렉터리가 없습니다 (활성·아카이브 어디에도 없음): $resolve_id"
+		return 1
+	fi
+	if [ "$resolve_hits" -gt 1 ]; then
+		RESOLVE_ERROR="같은 id 의 change 디렉터리가 $resolve_hits 개입니다: $resolve_id — 어느 것으로 통과했는지 남지 않으므로 멈춥니다"
+		return 1
+	fi
+	RESOLVED_CHANGE_DIR="$resolve_found"
+	return 0
+}
+
 # ---- 인자 검사 ------------------------------------------------------------
 
 if [ "$#" -ne 1 ] || [ -z "$1" ]; then
@@ -113,16 +178,26 @@ esac
 
 cd "$REPO_ROOT"
 
-CHANGE_DIR="openspec/changes/$CHANGE_ID"
-TASKS_FILE="$CHANGE_DIR/tasks.md"
-REVIEW_FILE="$CHANGE_DIR/review.md"
-
 echo "GATE: $CHANGE_ID"
 echo "repo: $REPO_ROOT"
+
+if resolve_change_dir "$CHANGE_ID"; then
+	CHANGE_DIR="$RESOLVED_CHANGE_DIR"
+else
+	# 1단계가 사유와 usage 를 함께 내도록 여기서는 자리만 잡아 둔다.
+	CHANGE_DIR="openspec/changes/$CHANGE_ID"
+fi
+TASKS_FILE="$CHANGE_DIR/tasks.md"
+REVIEW_FILE="$CHANGE_DIR/review.md"
 
 # ---- 1. tasks.md 존재 ------------------------------------------------------
 
 step "1/$TOTAL_STEPS tasks.md 확인"
+if [ -n "$RESOLVE_ERROR" ]; then
+	echo "$RESOLVE_ERROR" >&2
+	usage
+	fail "확정할 수 없는 change-id"
+fi
 if [ ! -d "$CHANGE_DIR" ]; then
 	echo "change 디렉터리가 없습니다: $CHANGE_DIR" >&2
 	usage
@@ -181,7 +256,11 @@ else
 		fi
 
 		echo "짝: $pair"
-		PAIR_DIR="openspec/changes/$pair"
+		# 짝은 먼저 아카이브될 수 있다. 활성 경로만 보면 그 순간 이쪽 게이트가 막힌다.
+		if ! resolve_change_dir "$pair"; then
+			fail "짝 change 를 찾을 수 없습니다 — $RESOLVE_ERROR"
+		fi
+		PAIR_DIR="$RESOLVED_CHANGE_DIR"
 		PAIR_TASKS="$PAIR_DIR/tasks.md"
 
 		# (a) 짝이 실재하는가

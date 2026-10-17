@@ -1,0 +1,65 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "fc35eb2d013dccd0700836f857ad9d3e65bff0dc",
+  "source_sha256": "6acf286c58f08f4e5be3cb3f5cc54140373b0ec3013cb6d10862883314761903",
+  "function": "_first_line",
+  "signature": "_first_line(said, fallback)",
+  "start": {
+    "line": 541,
+    "column": 1
+  },
+  "end": {
+    "line": 545,
+    "column": 49
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "BoolOp",
+      "line": 543,
+      "inherited_line": false,
+      "source": "said or ''"
+    },
+    {
+      "id": "B2",
+      "kind": "IfExp",
+      "line": 543,
+      "inherited_line": false,
+      "source": "said.decode('utf-8', 'replace') if isinstance(said, bytes) else said or ''"
+    },
+    {
+      "id": "B3",
+      "kind": "IfExp",
+      "line": 545,
+      "inherited_line": false,
+      "source": "lines[0][:160] if lines else fallback"
+    }
+  ],
+  "returns": [
+    {
+      "line": 545,
+      "value": "lines[0][:160] if lines else fallback"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 543,
+      "callee": "isinstance"
+    },
+    {
+      "line": 543,
+      "callee": "said.decode"
+    },
+    {
+      "line": 544,
+      "callee": "text.strip"
+    },
+    {
+      "line": 544,
+      "callee": "text.strip().splitlines"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "id": "STORY-TOS-a154",
+  "title": "검증된 손절 정책 사용자 선택",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a154-preview-validated-stop-policy-options",
+    "path": "openspec/changes/a154-preview-validated-stop-policy-options"
+  },
+  "found_by": {
+    "date": "2026-10-18",
+    "how": "User requested Astra-authored priority 1–9 OpenSpecs with Terra implementation and independent completion gates.",
+    "record": "openspec/changes/a154-preview-validated-stop-policy-options/proposal.md"
+  },
+  "acceptance": [
+    "Complete the scoped acceptance scenarios and dependency gates without changing operating settings.",
+    "Preserve frozen v1, r1 and existing a128/a147 evidence.",
+    "Require independent review, gstack review, Manager verification and scoped lifecycle actions."
+  ]
+}

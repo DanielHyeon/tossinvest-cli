@@ -711,8 +711,7 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 		if plan.strategy != nil && !g.skipStrategyEntryABAForTest {
 			if err := g.withStrategyEntryGateAuthority(dctx, plan.strategy.entryGateAuthority,
 				plan.market, plan.symbol, call); err != nil {
-				return notSent(reject(ReasonStrategyDispatchFenced,
-					"strategy final authority changed before transport: %v", err))
+				return notSent(strategyFenceRejection(err))
 			}
 		} else {
 			if err := call(); err != nil {
@@ -797,20 +796,16 @@ func (g *Gateway) releaseSymbol(key string) {
 //     of the question — but the operator must still be able to cancel and
 //     liquidate through the engine (§0.3).
 func (g *Gateway) checkSymbolFree(ctx context.Context, plan mutationPlan) (*RejectedError, error) {
-	pending, err := g.journal.PendingAttempts(ctx)
+	// 같은 종목의 미종결 판정은 exit 청소와 같은 함수(unsettledFor)로 함(a094 D−4.7).
+	unsettled, err := g.unsettledFor(ctx, plan)
 	if err != nil {
-		return nil, fmt.Errorf("execgw: checking for in-flight mutations on %s: %w", plan.symbol, err)
+		return nil, err
 	}
-	for _, rec := range pending {
-		same, err := g.attemptTargets(ctx, rec, plan)
-		if err != nil {
-			return nil, err
-		}
-		if same {
-			return reject(ReasonSymbolInFlight,
-				"attempt %s (%s, %s) on %s has not settled yet",
-				rec.ID, rec.Kind, rec.State, plan.symbol), nil
-		}
+	if len(unsettled) > 0 {
+		rec := unsettled[0]
+		return reject(ReasonSymbolInFlight,
+			"attempt %s (%s, %s) on %s has not settled yet",
+			rec.ID, rec.Kind, rec.State, plan.symbol), nil
 	}
 	if !plan.raisesExposure {
 		return nil, nil
@@ -856,7 +851,12 @@ func (g *Gateway) checkEntry(plan mutationPlan) *RejectedError {
 	if g.entry == nil || !plan.raisesExposure {
 		return nil
 	}
-	return g.entry.CheckEntryFor(plan.market, plan.symbol)
+	rejected := g.entry.CheckEntryFor(plan.market, plan.symbol)
+	if plan.strategy != nil {
+		// a137: 전략 진입만 — AUTO 일일 손실 모드만 남은 차단이면 계좌 진입 차단 표지를 닮(문구 · 사유는 그대로).
+		return g.entry.markStrategyRefusal(rejected, plan.market, plan.symbol)
+	}
+	return rejected
 }
 
 // checkReservation is the gateway's half of "예약이 총계 한도의 권위" (task 5.1,
@@ -903,6 +903,11 @@ func (g *Gateway) checkReservation(ctx context.Context, dec journal.Decision) *R
 				if errors.Is(err, journal.ErrDecisionNotFound) {
 					return reject(ReasonGuardianMissing,
 						"decision %s was revoked before its reservation authority could be revalidated", short(dec.ID))
+				}
+				// a066 5.5: 진입 손실 잠금 거절은 타입으로 가름 — mismatch 로 보고하면 운영자가 원인을 오독함.
+				if errors.Is(err, journal.ErrRiskBucketEntryLossLocked) {
+					return reject(ReasonEntryLossLockActive,
+						"decision %s enters a scope whose entry loss lock is active: %v", short(dec.ID), err)
 				}
 				return reject(ReasonGuardianRiskBucketMismatch,
 					"decision %s carries q_final authority that no longer has an exact active owner, aggregate hold and five monetary holds: %v",

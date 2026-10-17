@@ -1,0 +1,4 @@
+TREE	HEAD 4773eb56	uncommitted: internal/journal/a066_fill_transition_limit_test.go (new)
+CONTROL	GREEN	
+B12 smaller limit ignored	CAUGHT	TestA066FillTransitionUsesTheSmallestDecisionLimitPerBucket/later_decision_tighter
+B12 inverted to the larger limit	CAUGHT	TestA066FillTransitionUsesTheSmallestDecisionLimitPerBucket/later_decision_tighter, TestA066FillTransitionUsesTheSmallestDecisionLimitPerBucket/earlier_decision_tighter

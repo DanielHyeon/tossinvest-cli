@@ -1,0 +1,71 @@
+{
+  "file": "../../internal/strategyworker/worker.go",
+  "source_sha256": "588c56f0a3100d0f1fa93e8fed4cf303b506ad88823c53e8f8690ebe84504335",
+  "package": "strategyworker",
+  "function": "owns",
+  "receiver": "FamilyWorker",
+  "signature": "FamilyWorker.owns(params=1, results=1)",
+  "start": {
+    "line": 213,
+    "column": 1
+  },
+  "end": {
+    "line": 223,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 214,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 215,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 218,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 6
+      },
+      "text": "proposal.Result.ValidProposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 3
+      },
+      "text": "strategyarbiter.ProposalFamily"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 217,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

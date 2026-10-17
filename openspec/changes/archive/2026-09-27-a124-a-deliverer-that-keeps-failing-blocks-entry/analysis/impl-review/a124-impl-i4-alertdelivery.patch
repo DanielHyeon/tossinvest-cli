@@ -1,0 +1,162 @@
+--- /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a124-i3/tree/internal/app/engine/alertdelivery.go	2026-09-28 02:31:56.602974136 +0900
++++ internal/app/engine/alertdelivery.go	2026-09-28 02:54:00.831765900 +0900
+@@ -38,6 +38,18 @@
+ //	not published           record the attempt, then hand the lease back: this
+ //	                        row's turn is over and holding it until expiry keeps
+ //	                        it out of the next cycle for no reason.
++//
++// # 지속 실패의 주인 (a124)
++//
++// a092 가 동기 시도를 엔진 루프에서 빼면 「전달 실패 지속 → 신규 진입 차단 · 운영 모드 승격」을 할 주체가 이 실행자뿐임.
++// 판정은 세 가지이고 전부 judge 를 거침(design D1 · D7 · D8):
++//
++//	시도 한도      실패 기록이 커밋한 attempts ≥ alertAttemptLimit → 차단 + 승격 (반납 뒤 판정)
++//	전달 기록 실패  발행은 됐는데 정산이 안 됨 → 임차를 쥔 채 즉시 차단 + 승격
++//	기록 · 나열 실패 원장에 시도를 못 남긴 연속(행별 · 실행자 단위)이 한도 → 차단 + 승격
++//
++// 늦은 적용은 원칙 E(해제 세대)를 따르고, 실행자가 잡는 잠금은 진입 게이트 잠금뿐임. 진입을 실제로 막는 것은 게이트
++// 래치이고 모드 행은 원장 기록임(design D10 — 투영기 미배선).
+ 
+ import (
+ 	"context"
+@@ -128,6 +140,10 @@
+ 	alertStageLatched
+ )
+ 
++// alertNoRow 는 행이 없는 판정(미전달 나열 실패)의 alert id 자리임. 새 줄은 이 값이면 alert_id 칸을 쓰지 않음 —
++// 0 을 실제 행 id 로 읽지 않게.
++const alertNoRow int64 = 0
++
+ // alertFailureRun 은 원장에 쓰지 못한 **연속** 횟수와, 직전 증가 직후 읽은 해제 세대임 (D8, AA2).
+ type alertFailureRun struct {
+ 	count int
+@@ -171,7 +187,6 @@
+ 	// 에서만 쓰므로 잠금이 없음(heldReported 와 같은 이유). 재시작이 비우지만 기동 복원이 PENDING 으로 다시 잠금.
+ 	recordRuns map[int64]alertFailureRun
+ 	listRun    alertFailureRun
+-	listSeen   bool
+ }
+ 
+ // Run cycles until ctx ends.
+@@ -230,7 +245,7 @@
+ 		d.countListFailure(ctx)
+ 		return fmt.Errorf("listing the critical alert backlog: %w", err)
+ 	}
+-	d.listRun, d.listSeen = alertFailureRun{}, false
++	d.listRun = alertFailureRun{}
+ 	if len(pending) < d.batch() {
+ 		// 잘리지 않은(완전한) 나열에 없는 행은 PENDING 을 떠났음 — 그 행의 기록 실패 계수를 지움.
+ 		// 잘린 나열에 없다는 것은 그 증거가 아니므로 거르지 않음(Q5).
+@@ -377,15 +392,16 @@
+ 		d.forgetRecordRun(id)
+ 		return
+ 	}
+-	// Published, but somebody else's row to settle. It is out; the holder
+-	// records it. Still no release.
+-	d.logf(obs.EventAlertUndelivered, nil, "a delivered alert was settled by somebody else",
+-		"alert_id", id, "outcome", settled.Outcome.String())
+ 	switch settled.Outcome {
+ 	case journal.SettleAlreadySettled, journal.SettleLeaseLost:
+-		// 승인 · 남의 임차가 먼저 — 게이트 사건 아님(동기 경로 B8).
++		// Published, but somebody else's row to settle. It is out; the holder
++		// records it. Still no release. (승인 · 남의 임차가 먼저 — 게이트 사건 아님, 동기 경로 B8)
++		d.logf(obs.EventAlertUndelivered, nil, "a delivered alert was settled by somebody else",
++			"alert_id", id, "outcome", settled.Outcome.String())
+ 	default:
+ 		// 발행은 됐는데 행이 없거나 모르는 결과 — 정산되지 않은 것(동기 경로 B9·B10 → 즉시 잠금 + 승격).
++		d.logf(obs.EventAlertUndelivered, nil, "a delivered alert could not be matched to its row",
++			"alert_id", id, "outcome", settled.Outcome.String())
+ 		d.judge(ctx, id, d.readEpoch(id), true, alertLatchUnrecorded)
+ 	}
+ }
+@@ -440,21 +456,21 @@
+ 			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+ 				class = "context"
+ 			}
+-			d.Log.Error(obs.EventOperatingMode, nil,
++			d.Log.Error(obs.EventOperatingMode, nil, withAlertID([]any{
+ 				obs.FieldScope, alertJudgementLogMarker,
+-				obs.FieldReason, "escalation_failed:"+class,
++				obs.FieldReason, "escalation_failed:" + class,
+ 				obs.FieldDetail, "an undelivered critical alert could not tighten the operating mode; the entry latch stands instead",
+-				"alert_id", id)
++			}, id)...)
+ 		}
+ 		return err
+ 	}
+ 	if changed && d.Log != nil {
+-		d.Log.Warn(obs.EventOperatingMode,
++		d.Log.Warn(obs.EventOperatingMode, withAlertID([]any{
+ 			obs.FieldScope, alertJudgementLogMarker,
+ 			obs.FieldToState, journal.ModeEntryBlocked,
+ 			obs.FieldReason, journal.ModeTriggerCriticalAlertUndelivered,
+ 			obs.FieldDetail, "an undelivered critical alert tightened the operating mode",
+-			"alert_id", id)
++		}, id)...)
+ 	}
+ 	return nil
+ }
+@@ -465,11 +481,19 @@
+ 	if d.Log == nil {
+ 		return
+ 	}
+-	d.Log.Warn(obs.EventAlertUndelivered,
++	d.Log.Warn(obs.EventAlertUndelivered, withAlertID([]any{
+ 		obs.FieldScope, alertJudgementLogMarker,
+ 		obs.FieldReason, string(execgw.ReasonAlertUndelivered),
+ 		obs.FieldDetail, detail,
+-		"alert_id", id)
++	}, id)...)
++}
++
++// withAlertID 는 행이 있는 판정에만 alert_id 칸을 붙임.
++func withAlertID(fields []any, id int64) []any {
++	if id == alertNoRow {
++		return fields
++	}
++	return append(fields, "alert_id", id)
+ }
+ 
+ // countRecordFailure 는 한 행의 원장 쓰기 실패 하나를 셈(D8 「오류 하나의 전이」).
+@@ -484,8 +508,7 @@
+ 	if d.recordRuns == nil {
+ 		d.recordRuns = make(map[int64]alertFailureRun)
+ 	}
+-	run, seen := d.recordRuns[id]
+-	next, judged, blockEpoch := advanceFailureRun(run, seen, epoch)
++	next, judged, blockEpoch := advanceFailureRun(d.recordRuns[id], epoch)
+ 	if !judged {
+ 		d.recordRuns[id] = next
+ 		return
+@@ -499,14 +522,14 @@
+ 	if ctx.Err() != nil {
+ 		return
+ 	}
+-	epoch := d.readEpoch(0)
+-	next, judged, blockEpoch := advanceFailureRun(d.listRun, d.listSeen, epoch)
++	epoch := d.readEpoch(alertNoRow)
++	next, judged, blockEpoch := advanceFailureRun(d.listRun, epoch)
+ 	if !judged {
+-		d.listRun, d.listSeen = next, true
++		d.listRun = next
+ 		return
+ 	}
+-	d.listRun, d.listSeen = alertFailureRun{}, false
+-	d.judge(ctx, 0, blockEpoch, true, fmt.Sprintf(alertLatchListRun, alertAttemptLimit))
++	d.listRun = alertFailureRun{}
++	d.judge(ctx, alertNoRow, blockEpoch, true, fmt.Sprintf(alertLatchListRun, alertAttemptLimit))
+ }
+ 
+ // advanceFailureRun 은 오류 하나가 연속을 어떻게 바꾸는지 정함 (D8 AA2 — 위에서 아래 우선).
+@@ -516,8 +539,9 @@
+ //     「없음」으로 같음. 승격 쪽은 모호하므로 보수(승격)로 기움(Z1).
+ //  2. 아니고 직전 증가 뒤 해제가 있었음 → 연속이 끊김, 1 부터 다시.
+ //  3. 그 밖 → +1.
+-func advanceFailureRun(run alertFailureRun, seen bool, epoch uint64) (next alertFailureRun, judged bool, blockEpoch uint64) {
+-	if !seen {
++func advanceFailureRun(run alertFailureRun, epoch uint64) (next alertFailureRun, judged bool, blockEpoch uint64) {
++	// count 0 = 연속 없음(저장되는 연속은 늘 count ≥ 1 이고 판정 뒤에는 영값으로 돌아감).
++	if run.count == 0 {
+ 		if alertAttemptLimit <= 1 {
+ 			return alertFailureRun{}, true, epoch
+ 		}

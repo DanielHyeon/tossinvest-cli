@@ -1,0 +1,62 @@
+{
+  "file": "internal/journal/issuance_test.go",
+  "source_sha256": "007dba4fcfe480047497db2dce620fbebcc7b474456bd2024e459878e56ce2d0",
+  "package": "journal",
+  "function": "issueRequest",
+  "signature": "issueRequest(params=7, results=1)",
+  "start": {
+    "line": 20,
+    "column": 1
+  },
+  "end": {
+    "line": 54,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 22,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 12
+      },
+      "text": "j.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 16
+      },
+      "text": "issued.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 91
+      },
+      "text": "a136ZeroManualBuy"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 21,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

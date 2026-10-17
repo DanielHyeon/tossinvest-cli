@@ -1,0 +1,223 @@
+{
+  "file": "internal/journal/risk_bucket_fill.go",
+  "source_sha256": "d8d3cefcb0667911b992d36d7adafd360fbcf49d8c54afa7b5655234527ec309",
+  "package": "journal",
+  "function": "latchRiskBucketFillFailure",
+  "signature": "latchRiskBucketFillFailure(params=6, results=1)",
+  "start": {
+    "line": 1140,
+    "column": 1
+  },
+  "end": {
+    "line": 1156,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1141,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1144,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1147,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1142,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1145,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1148,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1155,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1141,
+        "column": 12
+      },
+      "text": "latchRiskBucketScope"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1144,
+        "column": 15
+      },
+      "text": "tx.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1144,
+        "column": 183
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1147,
+        "column": 15
+      },
+      "text": "tx.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1147,
+        "column": 226
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1150,
+        "column": 16
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1151,
+        "column": 12
+      },
+      "text": "sha256.Sum256"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1152,
+        "column": 16
+      },
+      "text": "hex.EncodeToString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1154,
+        "column": 12
+      },
+      "text": "tx.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1154,
+        "column": 240
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1154,
+        "column": 311
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1141,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1144,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1147,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1150,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1151,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1152,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1153,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1154,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base",
+  "base_commit": "989ab031a9177041da1ebb79fd1ed1209347ed30"
+}

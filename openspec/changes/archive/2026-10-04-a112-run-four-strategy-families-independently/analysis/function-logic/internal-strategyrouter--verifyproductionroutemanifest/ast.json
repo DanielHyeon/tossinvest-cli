@@ -1,0 +1,285 @@
+{
+  "file": "internal/strategyrouter/production.go",
+  "source_sha256": "617163a508030dea2768655db66006d52097f17be9c04bb7c9fc300d3adf8a21",
+  "package": "strategyrouter",
+  "function": "verifyProductionRouteManifest",
+  "signature": "verifyProductionRouteManifest(params=2, results=2)",
+  "start": {
+    "line": 491,
+    "column": 1
+  },
+  "end": {
+    "line": 522,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 496,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 511,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 515,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 508,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 512,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 516,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 521,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 493,
+        "column": 37
+      },
+      "text": "productionRouteTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 26
+      },
+      "text": "productionRouteTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 20
+      },
+      "text": "productionRouteTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 503,
+        "column": 4
+      },
+      "text": "productionRouteIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 503,
+        "column": 62
+      },
+      "text": "productionRouteIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 505,
+        "column": 4
+      },
+      "text": "productionRouteIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 506,
+        "column": 5
+      },
+      "text": "config.ActivationExpiresAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 506,
+        "column": 45
+      },
+      "text": "activationExpires.Equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 506,
+        "column": 101
+      },
+      "text": "observed.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 506,
+        "column": 139
+      },
+      "text": "config.ObservedAt.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 507,
+        "column": 4
+      },
+      "text": "config.ObservedAt.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 507,
+        "column": 51
+      },
+      "text": "observed.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 510,
+        "column": 20
+      },
+      "text": "validProductionRouteScopes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 514,
+        "column": 20
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 518,
+        "column": 20
+      },
+      "text": "DecodeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 518,
+        "column": 20
+      },
+      "text": "base64.StdEncoding.Strict"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 519,
+        "column": 28
+      },
+      "text": "base64.StdEncoding.EncodeToString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 519,
+        "column": 98
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 520,
+        "column": 3
+      },
+      "text": "ed25519.Verify"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 492,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 493,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 494,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 495,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 510,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 514,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 518,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 519,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,80 @@
+const AcceptedProjectionSchemaVersion
+const BreakoutRelease
+const RefusalExecutionTermsInvalid
+const RefusalInvalidCandidate
+const RefusalInvalidScope
+const RefusalLane
+const RefusalLineageIncomplete
+const RefusalLineageMismatch
+const RefusalNone
+const RefusalRouter
+const RefusalUnsupportedBinding
+const RuntimeUnobserved
+const StateOff
+func AcceptedProjection.ExecutionTerms func() ExecutionTerms
+func AcceptedProjection.Lineage func() Lineage
+func AcceptedProjection.Payload func() string
+func AcceptedProjection.PayloadDigest func() string
+func BreakoutKR func(request BreakoutRequest) LaneInput
+func BreakoutUS func(request BreakoutRequest) LaneInput
+func ContinuationKR func(request continuationlane.KREvaluationRequest) LaneInput
+func ContinuationUS func(request continuationlane.USEvaluationRequest) LaneInput
+func Descriptors func() []Descriptor
+func Evaluate func(request Request) Result
+func ExecutionPolicy.CalendarDigest func() string
+func ExecutionPolicy.CapSnapshotID func() string
+func ExecutionPolicy.DecisionDigest func() string
+func ExecutionPolicy.EntryCostsMinor func() string
+func ExecutionPolicy.ExitCostsMinor func() string
+func ExecutionPolicy.FairValueMinor func() string
+func ExecutionPolicy.Identity func() string
+func ExecutionPolicy.MinimumRRPPM func() uint64
+func ExecutionPolicy.StagedTargetMinor func() string
+func ExecutionTerms.AccountRef func() string
+func ExecutionTerms.CampaignID func() string
+func ExecutionTerms.EffectiveStop func() PriceProvenance
+func ExecutionTerms.Entry func() PriceProvenance
+func ExecutionTerms.Identity func() string
+func ExecutionTerms.LegOrdinal func() int
+func ExecutionTerms.LineageIdentity func() string
+func ExecutionTerms.Market func() strategyrouter.Market
+func ExecutionTerms.Policy func() ExecutionPolicy
+func ExecutionTerms.Quantity func() uint64
+func ExecutionTerms.Symbol func() string
+func ExecutionTerms.Target func() PriceProvenance
+func ExecutionTerms.Valid func() bool
+func FinalizeProposalQuantity func(proposal Result, qFinal uint64) (Result, bool)
+func Lineage.Valid func() bool
+func PriceProvenance.AsOf func() string
+func PriceProvenance.Currency func() string
+func PriceProvenance.Digest func() string
+func PriceProvenance.MajorDecimal func() (string, bool)
+func PriceProvenance.MinorScale func() int
+func PriceProvenance.PriceMinor func() string
+func PriceProvenance.Source func() string
+func PriceProvenance.UnitVersion func() string
+func PriceProvenance.Version func() string
+func ProjectAccepted func(result Result) (AcceptedProjection, error)
+func Propose func(request Request) Result
+func Result.ValidProposal func() bool
+func ReversalKR func(request reversallane.KREvaluationRequest) LaneInput
+func ReversalUS func(request reversallane.USEvaluationRequest) LaneInput
+func ValidateDescriptors func(descriptors []Descriptor) error
+func VerifyAcceptedProjection func(payload string) (AcceptedProjection, error)
+func WeeklyKR func(request weeklyvaluelane.EvaluationRequest) LaneInput
+func WeeklyUS func(request weeklyvaluelane.EvaluationRequest) LaneInput
+type AcceptedProjection struct{payload string; payloadDigest string; lineage Lineage; terms ExecutionTerms}
+type BreakoutPolicyInput struct{StagedTargetMinor string; FairValueMinor string; EntryCostsMinor string; ExitCostsMinor string; MinimumRRPPM uint64; DecisionDigest string; CalendarDigest string; CapSnapshotID string}
+type BreakoutPriceEnvelope struct{Source string; Version string; Digest string; AsOf string; Currency string; UnitVersion string; MinorScale int}
+type BreakoutRequest struct{Evidence breakoutlane.EvidenceInput; Prior *breakoutlane.Decision; AccountRef string; CandidateID string; CampaignID string; PositionGeneration uint64; LegOrdinal int; PlannedCeiling uint64; RiskBudgetDigest string; Price BreakoutPriceEnvelope; Policy BreakoutPolicyInput}
+type Descriptor struct{Market strategyrouter.Market; Horizon strategyrouter.Horizon; LaneID string; LaneVersion string; Release string; Desired State; Effective State; Runtime RuntimeState}
+type ExecutionPolicy struct{stagedTargetMinor, fairValueMinor, entryCostsMinor, exitCostsMinor string; minimumRRPPM uint64; decisionDigest, calendarDigest, capSnapshotID, identity string}
+type ExecutionTerms struct{accountRef, symbol, campaignID, lineageIdentity string; market strategyrouter.Market; legOrdinal int; quantity uint64; entry, stop, target PriceProvenance; policy ExecutionPolicy; identity string}
+type LaneInput struct{kind laneKind; continuationKR continuationlane.KREvaluationRequest; continuationUS continuationlane.USEvaluationRequest; reversalKR reversallane.KREvaluationRequest; reversalUS reversallane.USEvaluationRequest; weeklyKR weeklyvaluelane.EvaluationRequest; weeklyUS weeklyvaluelane.EvaluationRequest; breakoutKR BreakoutRequest; breakoutUS BreakoutRequest}
+type Lineage struct{AccountRef string; Market strategyrouter.Market; Symbol string; PositionGeneration uint64; CandidateState string; CandidateLifeID string; CandidateFirstSeenNS int64; CandidateLastSeenNS int64; CandidateValidUntilNS int64; CandidateApprovedAtNS int64; ThresholdVersion string; ThresholdSetDigest string; CandidateEvidenceDigest string; RouterEvidenceDigest string; LaneEvidenceDigest string; RouterID string; RouterRelease string; Horizon strategyrouter.Horizon; LaneID string; LaneVersion string; LaneRelease string; ConfigDigest string; CampaignID string; LegOrdinal int; PlannedCeiling uint64; RiskBudgetDigest string; ExecutionPolicyDigest string; Complete bool; Identity string}
+type PriceProvenance struct{priceMinor, source, version, digest, asOf, currency, unitVersion string; minorScale int}
+type RefusalCode string
+type Request struct{Approved strategy.ApprovedSnapshot; Router strategyrouter.RouteRequest; Lane LaneInput}
+type Result struct{Code RefusalCode; NativeCode string; Quantity uint64; ExecutionTerms ExecutionTerms; Lineage Lineage; CommonSafetyIndependent bool; GuardianCalls uint64; BrokerCalls uint64; Mutations uint64; proposalSeal [32]byte}
+type RuntimeState string
+type State string

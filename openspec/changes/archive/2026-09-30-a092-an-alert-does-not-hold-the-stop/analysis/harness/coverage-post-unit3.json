@@ -1,0 +1,807 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/obs",
+ "tests_run": 99,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-obs--notifier.deliver": {
+   "B1": {
+    "kind": "if",
+    "line": 473,
+    "column": 2,
+    "block": "473.19-475.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "for",
+    "line": 479,
+    "column": 2,
+    "block": "479.51-480.25",
+    "entered_by": [
+     "TestA092AFailedEscalationLatchesUnconditionally",
+     "TestA092ARecordDoesNotWaitForAnotherSendersTransport",
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092AReleaseBeforeTheEvidenceDoesNotChangeTheVerdict",
+     "TestA092AnAcknowledgementPreemptsASendInFlight",
+     "TestA092BothAnnouncersBuildTheSameEvent",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestA092EachTransitionIsItsOwnAnnouncement",
+     "TestA092RecordOnlyRearmsPastTheReminderWindow",
+     "TestACancelledSenderStillHandsTheLeaseBack",
+     "TestACriticalAlertStillEscalatesThroughTheSameNotifier",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestADeliveredAlertChangesNoMode",
+     "TestALaterOccurrenceOfTheSameKeyIsNotSwallowed",
+     "TestALeaseShorterThanTheBudgetIsReported",
+     "TestANoOpTransitionAnnouncesNothing",
+     "TestAPublishedButUnsettledRowKeepsItsLease",
+     "TestARelaxationIsAnnouncedAsARelaxation",
+     "TestARowThatVanishedIsNotReportedAsContention",
+     "TestASendThatCannotBeRecordedLatchesTheGate",
+     "TestASenderThatLosesTheLeaseStopsAtOnce",
+     "TestASenderThatSpendsItsBudgetReleasesTheRow",
+     "TestAcknowledgeCannotClearTheGateMidSend",
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+     "TestAnUndeliverableCriticalAlertTightensTheOperatingMode",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestConcurrentObservationsOfOneConditionSendOnce",
+     "TestContentionLossAndTakeoverAreThreeEvents",
+     "TestContentionNeitherLocksNorUnlocksTheEntryGate",
+     "TestCriticalAlertIsDurableBeforeItIsSent",
+     "TestCriticalAlertSurvivesAProcessRestart",
+     "TestExclusionHoldsBetweenSendersWithDifferentMutexes",
+     "TestFlushCannotPublishBesideASend",
+     "TestFlushDoesNotPublishARowAnotherSenderHolds",
+     "TestNotifierIsConcurrencySafe",
+     "TestOneConditionIsOneSend",
+     "TestPersistentDeliveryFailureBlocksEntries",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself",
+     "TestRepeatedFailuresAppendOneTransition",
+     "TestSuppressingTheSendKeepsTheRecord",
+     "TestTheAlertEscalationLoopTerminates",
+     "TestTheDefaultReminderWindowIsAnHour",
+     "TestTheEscalationDoesNotAnnounceThroughTheTransportThatJustFailed",
+     "TestTheSameConditionEnqueuesOnce",
+     "TestTheSameConditionIsRemindedOncePerWindow",
+     "TestTheSenderThatLosesTheClaimDoesNotPublish",
+     "TestTheTransitionAlertIsDurableAndNamesBothModes",
+     "TestWithoutAnAccountTheLatchIsStillTheConsequence"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 480,
+    "column": 3,
+    "block": "480.25-482.9",
+    "entered_by": [],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 485,
+    "column": 3,
+    "block": "485.17-487.22",
+    "entered_by": [
+     "TestA092AFailedEscalationLatchesUnconditionally",
+     "TestA092ARecordDoesNotWaitForAnotherSendersTransport",
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092AnAcknowledgementPreemptsASendInFlight",
+     "TestA092BothAnnouncersBuildTheSameEvent",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestA092EachTransitionIsItsOwnAnnouncement",
+     "TestA092RecordOnlyRearmsPastTheReminderWindow",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestADeliveredAlertChangesNoMode",
+     "TestALaterOccurrenceOfTheSameKeyIsNotSwallowed",
+     "TestALeaseShorterThanTheBudgetIsReported",
+     "TestANoOpTransitionAnnouncesNothing",
+     "TestAPublishedButUnsettledRowKeepsItsLease",
+     "TestARelaxationIsAnnouncedAsARelaxation",
+     "TestASendThatCannotBeRecordedLatchesTheGate",
+     "TestAcknowledgeCannotClearTheGateMidSend",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestConcurrentObservationsOfOneConditionSendOnce",
+     "TestContentionLossAndTakeoverAreThreeEvents",
+     "TestContentionNeitherLocksNorUnlocksTheEntryGate",
+     "TestCriticalAlertIsDurableBeforeItIsSent",
+     "TestExclusionHoldsBetweenSendersWithDifferentMutexes",
+     "TestFlushCannotPublishBesideASend",
+     "TestFlushDoesNotPublishARowAnotherSenderHolds",
+     "TestNotifierIsConcurrencySafe",
+     "TestOneConditionIsOneSend",
+     "TestSuppressingTheSendKeepsTheRecord",
+     "TestTheDefaultReminderWindowIsAnHour",
+     "TestTheSameConditionIsRemindedOncePerWindow",
+     "TestTheSenderThatLosesTheClaimDoesNotPublish",
+     "TestTheTransitionAlertIsDurableAndNamesBothModes"
+    ],
+    "union": null
+   },
+   "B5": {
+    "kind": "if",
+    "line": 487,
+    "column": 4,
+    "block": "487.22-488.28",
+    "entered_by": [
+     "TestA092AFailedEscalationLatchesUnconditionally",
+     "TestA092ARecordDoesNotWaitForAnotherSendersTransport",
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092AnAcknowledgementPreemptsASendInFlight",
+     "TestA092BothAnnouncersBuildTheSameEvent",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestA092EachTransitionIsItsOwnAnnouncement",
+     "TestA092RecordOnlyRearmsPastTheReminderWindow",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestADeliveredAlertChangesNoMode",
+     "TestALaterOccurrenceOfTheSameKeyIsNotSwallowed",
+     "TestALeaseShorterThanTheBudgetIsReported",
+     "TestANoOpTransitionAnnouncesNothing",
+     "TestARelaxationIsAnnouncedAsARelaxation",
+     "TestAcknowledgeCannotClearTheGateMidSend",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestConcurrentObservationsOfOneConditionSendOnce",
+     "TestContentionLossAndTakeoverAreThreeEvents",
+     "TestContentionNeitherLocksNorUnlocksTheEntryGate",
+     "TestCriticalAlertIsDurableBeforeItIsSent",
+     "TestExclusionHoldsBetweenSendersWithDifferentMutexes",
+     "TestFlushCannotPublishBesideASend",
+     "TestFlushDoesNotPublishARowAnotherSenderHolds",
+     "TestNotifierIsConcurrencySafe",
+     "TestOneConditionIsOneSend",
+     "TestSuppressingTheSendKeepsTheRecord",
+     "TestTheDefaultReminderWindowIsAnHour",
+     "TestTheSameConditionIsRemindedOncePerWindow",
+     "TestTheSenderThatLosesTheClaimDoesNotPublish",
+     "TestTheTransitionAlertIsDurableAndNamesBothModes"
+    ],
+    "union": null
+   },
+   "B6": {
+    "kind": "switch",
+    "line": 488,
+    "column": 5,
+    "block": "487.22-488.28",
+    "entered_by": [
+     "TestA092AFailedEscalationLatchesUnconditionally",
+     "TestA092ARecordDoesNotWaitForAnotherSendersTransport",
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092AnAcknowledgementPreemptsASendInFlight",
+     "TestA092BothAnnouncersBuildTheSameEvent",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestA092EachTransitionIsItsOwnAnnouncement",
+     "TestA092RecordOnlyRearmsPastTheReminderWindow",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestADeliveredAlertChangesNoMode",
+     "TestALaterOccurrenceOfTheSameKeyIsNotSwallowed",
+     "TestALeaseShorterThanTheBudgetIsReported",
+     "TestANoOpTransitionAnnouncesNothing",
+     "TestARelaxationIsAnnouncedAsARelaxation",
+     "TestAcknowledgeCannotClearTheGateMidSend",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestConcurrentObservationsOfOneConditionSendOnce",
+     "TestContentionLossAndTakeoverAreThreeEvents",
+     "TestContentionNeitherLocksNorUnlocksTheEntryGate",
+     "TestCriticalAlertIsDurableBeforeItIsSent",
+     "TestExclusionHoldsBetweenSendersWithDifferentMutexes",
+     "TestFlushCannotPublishBesideASend",
+     "TestFlushDoesNotPublishARowAnotherSenderHolds",
+     "TestNotifierIsConcurrencySafe",
+     "TestOneConditionIsOneSend",
+     "TestSuppressingTheSendKeepsTheRecord",
+     "TestTheDefaultReminderWindowIsAnHour",
+     "TestTheSameConditionIsRemindedOncePerWindow",
+     "TestTheSenderThatLosesTheClaimDoesNotPublish",
+     "TestTheTransitionAlertIsDurableAndNamesBothModes"
+    ],
+    "union": null
+   },
+   "B7": {
+    "kind": "case",
+    "line": 489,
+    "column": 5,
+    "block": "489.32-490.40",
+    "entered_by": [
+     "TestA092ARecordDoesNotWaitForAnotherSendersTransport",
+     "TestA092BothAnnouncersBuildTheSameEvent",
+     "TestA092EachTransitionIsItsOwnAnnouncement",
+     "TestA092RecordOnlyRearmsPastTheReminderWindow",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestADeliveredAlertChangesNoMode",
+     "TestALaterOccurrenceOfTheSameKeyIsNotSwallowed",
+     "TestALeaseShorterThanTheBudgetIsReported",
+     "TestANoOpTransitionAnnouncesNothing",
+     "TestARelaxationIsAnnouncedAsARelaxation",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestConcurrentObservationsOfOneConditionSendOnce",
+     "TestContentionLossAndTakeoverAreThreeEvents",
+     "TestContentionNeitherLocksNorUnlocksTheEntryGate",
+     "TestCriticalAlertIsDurableBeforeItIsSent",
+     "TestExclusionHoldsBetweenSendersWithDifferentMutexes",
+     "TestFlushCannotPublishBesideASend",
+     "TestFlushDoesNotPublishARowAnotherSenderHolds",
+     "TestNotifierIsConcurrencySafe",
+     "TestOneConditionIsOneSend",
+     "TestSuppressingTheSendKeepsTheRecord",
+     "TestTheDefaultReminderWindowIsAnHour",
+     "TestTheSameConditionIsRemindedOncePerWindow",
+     "TestTheSenderThatLosesTheClaimDoesNotPublish",
+     "TestTheTransitionAlertIsDurableAndNamesBothModes"
+    ],
+    "union": null
+   },
+   "B8": {
+    "kind": "case",
+    "line": 491,
+    "column": 5,
+    "block": "491.64-502.39",
+    "entered_by": [
+     "TestA092AnAcknowledgementPreemptsASendInFlight",
+     "TestAcknowledgeCannotClearTheGateMidSend"
+    ],
+    "union": null
+   },
+   "B9": {
+    "kind": "case",
+    "line": 503,
+    "column": 5,
+    "block": "503.33-504.85",
+    "entered_by": [
+     "TestA092AFailedEscalationLatchesUnconditionally",
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092EachLatchSiteLatchesWithoutARelease"
+    ],
+    "union": null
+   },
+   "B10": {
+    "kind": "case",
+    "line": 505,
+    "column": 5,
+    "block": "505.13-513.23",
+    "entered_by": [],
+    "union": null
+   },
+   "B11": {
+    "kind": "if",
+    "line": 531,
+    "column": 4,
+    "block": "531.20-535.5",
+    "entered_by": [
+     "TestA092AFailedEscalationLatchesUnconditionally",
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestAPublishedButUnsettledRowKeepsItsLease",
+     "TestASendThatCannotBeRecordedLatchesTheGate"
+    ],
+    "union": null
+   },
+   "B12": {
+    "kind": "if",
+    "line": 545,
+    "column": 3,
+    "block": "545.21-546.20",
+    "entered_by": [
+     "TestACancelledSenderStillHandsTheLeaseBack"
+    ],
+    "union": null
+   },
+   "B13": {
+    "kind": "else",
+    "line": 549,
+    "column": 10,
+    "block": "549.53-559.20",
+    "entered_by": [
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestARowThatVanishedIsNotReportedAsContention",
+     "TestASenderThatLosesTheLeaseStopsAtOnce"
+    ],
+    "union": null
+   },
+   "B14": {
+    "kind": "if",
+    "line": 546,
+    "column": 4,
+    "block": "546.20-548.5",
+    "entered_by": [
+     "TestACancelledSenderStillHandsTheLeaseBack"
+    ],
+    "union": null
+   },
+   "B15": {
+    "kind": "if",
+    "line": 549,
+    "column": 10,
+    "block": "549.53-559.20",
+    "entered_by": [
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestARowThatVanishedIsNotReportedAsContention",
+     "TestASenderThatLosesTheLeaseStopsAtOnce"
+    ],
+    "union": null
+   },
+   "B16": {
+    "kind": "if",
+    "line": 559,
+    "column": 4,
+    "block": "559.20-563.5",
+    "entered_by": [
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestARowThatVanishedIsNotReportedAsContention",
+     "TestASenderThatLosesTheLeaseStopsAtOnce"
+    ],
+    "union": null
+   },
+   "B17": {
+    "kind": "if",
+    "line": 569,
+    "column": 4,
+    "block": "569.65-575.5",
+    "entered_by": [
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestARowThatVanishedIsNotReportedAsContention"
+    ],
+    "union": null
+   },
+   "B18": {
+    "kind": "if",
+    "line": 578,
+    "column": 3,
+    "block": "578.25-579.20",
+    "entered_by": [
+     "TestACancelledSenderStillHandsTheLeaseBack",
+     "TestACriticalAlertStillEscalatesThroughTheSameNotifier",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestASenderThatSpendsItsBudgetReleasesTheRow",
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+     "TestAnUndeliverableCriticalAlertTightensTheOperatingMode",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestPersistentDeliveryFailureBlocksEntries",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself",
+     "TestRepeatedFailuresAppendOneTransition",
+     "TestTheAlertEscalationLoopTerminates",
+     "TestTheEscalationDoesNotAnnounceThroughTheTransportThatJustFailed",
+     "TestTheSameConditionEnqueuesOnce",
+     "TestWithoutAnAccountTheLatchIsStillTheConsequence"
+    ],
+    "union": null
+   },
+   "B19": {
+    "kind": "if",
+    "line": 579,
+    "column": 4,
+    "block": "579.20-580.10",
+    "entered_by": [
+     "TestACancelledSenderStillHandsTheLeaseBack"
+    ],
+    "union": null
+   },
+   "B20": {
+    "kind": "switch",
+    "line": 596,
+    "column": 2,
+    "block": "593.2-596.9",
+    "entered_by": [
+     "TestA092AFailedEscalationLatchesUnconditionally",
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092AReleaseBeforeTheEvidenceDoesNotChangeTheVerdict",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestACancelledSenderStillHandsTheLeaseBack",
+     "TestACriticalAlertStillEscalatesThroughTheSameNotifier",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestASenderThatSpendsItsBudgetReleasesTheRow",
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+     "TestAnUndeliverableCriticalAlertTightensTheOperatingMode",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestCriticalAlertSurvivesAProcessRestart",
+     "TestPersistentDeliveryFailureBlocksEntries",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself",
+     "TestRepeatedFailuresAppendOneTransition",
+     "TestTheAlertEscalationLoopTerminates",
+     "TestTheEscalationDoesNotAnnounceThroughTheTransportThatJustFailed",
+     "TestTheSameConditionEnqueuesOnce",
+     "TestWithoutAnAccountTheLatchIsStillTheConsequence"
+    ],
+    "union": null
+   },
+   "B21": {
+    "kind": "case",
+    "line": 597,
+    "column": 2,
+    "block": "597.21-598.19",
+    "entered_by": [],
+    "union": null
+   },
+   "B22": {
+    "kind": "if",
+    "line": 598,
+    "column": 3,
+    "block": "598.19-600.4",
+    "entered_by": [],
+    "union": null
+   },
+   "B23": {
+    "kind": "case",
+    "line": 601,
+    "column": 2,
+    "block": "601.49-601.49",
+    "entered_by": [
+     "TestA092AFailedEscalationLatchesUnconditionally",
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092AReleaseBeforeTheEvidenceDoesNotChangeTheVerdict",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestACancelledSenderStillHandsTheLeaseBack",
+     "TestACriticalAlertStillEscalatesThroughTheSameNotifier",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestASenderThatSpendsItsBudgetReleasesTheRow",
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+     "TestAnUndeliverableCriticalAlertTightensTheOperatingMode",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestCriticalAlertSurvivesAProcessRestart",
+     "TestPersistentDeliveryFailureBlocksEntries",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself",
+     "TestRepeatedFailuresAppendOneTransition",
+     "TestTheAlertEscalationLoopTerminates",
+     "TestTheEscalationDoesNotAnnounceThroughTheTransportThatJustFailed",
+     "TestTheSameConditionEnqueuesOnce",
+     "TestWithoutAnAccountTheLatchIsStillTheConsequence"
+    ],
+    "union": null
+   },
+   "B24": {
+    "kind": "case",
+    "line": 604,
+    "column": 2,
+    "block": "604.10-614.37",
+    "entered_by": [],
+    "union": null
+   },
+   "B25": {
+    "kind": "if",
+    "line": 620,
+    "column": 2,
+    "block": "620.18-624.3",
+    "entered_by": [
+     "TestA092AFailedEscalationLatchesUnconditionally",
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092AReleaseBeforeTheEvidenceDoesNotChangeTheVerdict",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestACancelledSenderStillHandsTheLeaseBack",
+     "TestACriticalAlertStillEscalatesThroughTheSameNotifier",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestASenderThatSpendsItsBudgetReleasesTheRow",
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+     "TestAnUndeliverableCriticalAlertTightensTheOperatingMode",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestPersistentDeliveryFailureBlocksEntries",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself",
+     "TestRepeatedFailuresAppendOneTransition",
+     "TestTheAlertEscalationLoopTerminates",
+     "TestTheEscalationDoesNotAnnounceThroughTheTransportThatJustFailed",
+     "TestTheSameConditionEnqueuesOnce",
+     "TestWithoutAnAccountTheLatchIsStillTheConsequence"
+    ],
+    "union": null
+   }
+  },
+  "internal-obs--notifier.claimanddeliver": {
+   "B1": {
+    "kind": "if",
+    "line": 295,
+    "column": 2,
+    "block": "295.16-308.19",
+    "entered_by": [
+     "TestAClaimThatFailsAttemptsTheDurableBlock",
+     "TestAClaimThatFailsBlocksNewEntries",
+     "TestAFailedClaimStillReturnsItsError",
+     "TestAFailedClaimWithNothingWiredStillReports"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 308,
+    "column": 3,
+    "block": "308.19-310.4",
+    "entered_by": [
+     "TestAClaimThatFailsAttemptsTheDurableBlock",
+     "TestAClaimThatFailsBlocksNewEntries",
+     "TestAFailedClaimStillReturnsItsError"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 311,
+    "column": 3,
+    "block": "311.20-314.4",
+    "entered_by": [
+     "TestAClaimThatFailsAttemptsTheDurableBlock",
+     "TestAClaimThatFailsBlocksNewEntries",
+     "TestAFailedClaimStillReturnsItsError"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "switch",
+    "line": 318,
+    "column": 2,
+    "block": "318.2-318.27",
+    "entered_by": [
+     "TestA092AFailedEscalationLatchesUnconditionally",
+     "TestA092ARecordDoesNotWaitForAnotherSendersTransport",
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092AReleaseBeforeTheEvidenceDoesNotChangeTheVerdict",
+     "TestA092AnAcknowledgementPreemptsASendInFlight",
+     "TestA092BothAnnouncersBuildTheSameEvent",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestA092EachTransitionIsItsOwnAnnouncement",
+     "TestA092RecordOnlyRearmsPastTheReminderWindow",
+     "TestACancelledSenderStillHandsTheLeaseBack",
+     "TestACriticalAlertStillEscalatesThroughTheSameNotifier",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestADeliveredAlertChangesNoMode",
+     "TestAHeldRowIsNotWhispered",
+     "TestALaterOccurrenceOfTheSameKeyIsNotSwallowed",
+     "TestALeaseLineCarriesItsOwnName",
+     "TestALeaseShorterThanTheBudgetIsReported",
+     "TestANoOpTransitionAnnouncesNothing",
+     "TestAPublishedButUnsettledRowKeepsItsLease",
+     "TestARelaxationIsAnnouncedAsARelaxation",
+     "TestARowThatVanishedIsNotReportedAsContention",
+     "TestASendThatCannotBeRecordedLatchesTheGate",
+     "TestASenderThatLosesTheLeaseStopsAtOnce",
+     "TestASenderThatSpendsItsBudgetReleasesTheRow",
+     "TestAcknowledgeCannotClearTheGateMidSend",
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+     "TestAnUndeliverableCriticalAlertTightensTheOperatingMode",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestConcurrentObservationsOfOneConditionSendOnce",
+     "TestContentionLossAndTakeoverAreThreeEvents",
+     "TestContentionNeitherLocksNorUnlocksTheEntryGate",
+     "TestCriticalAlertIsDurableBeforeItIsSent",
+     "TestCriticalAlertSurvivesAProcessRestart",
+     "TestExclusionHoldsBetweenSendersWithDifferentMutexes",
+     "TestFlushCannotPublishBesideASend",
+     "TestFlushDoesNotPublishARowAnotherSenderHolds",
+     "TestNotifierIsConcurrencySafe",
+     "TestOneConditionIsOneSend",
+     "TestPersistentDeliveryFailureBlocksEntries",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself",
+     "TestRepeatedFailuresAppendOneTransition",
+     "TestSuppressingTheSendKeepsTheRecord",
+     "TestTheAlertEscalationLoopTerminates",
+     "TestTheDefaultReminderWindowIsAnHour",
+     "TestTheEscalationDoesNotAnnounceThroughTheTransportThatJustFailed",
+     "TestTheSameConditionEnqueuesOnce",
+     "TestTheSameConditionIsRemindedOncePerWindow",
+     "TestTheSenderThatLosesTheClaimDoesNotPublish",
+     "TestTheTransitionAlertIsDurableAndNamesBothModes",
+     "TestWithoutAnAccountTheLatchIsStillTheConsequence"
+    ],
+    "union": null
+   },
+   "B5": {
+    "kind": "case",
+    "line": 319,
+    "column": 2,
+    "block": "319.28-328.43",
+    "entered_by": [
+     "TestNotifierIsConcurrencySafe",
+     "TestOneConditionIsOneSend",
+     "TestSuppressingTheSendKeepsTheRecord",
+     "TestTheDefaultReminderWindowIsAnHour",
+     "TestTheSameConditionIsRemindedOncePerWindow"
+    ],
+    "union": null
+   },
+   "B6": {
+    "kind": "case",
+    "line": 329,
+    "column": 2,
+    "block": "329.34-341.43",
+    "entered_by": [
+     "TestAHeldRowIsNotWhispered",
+     "TestALeaseLineCarriesItsOwnName",
+     "TestConcurrentObservationsOfOneConditionSendOnce",
+     "TestContentionLossAndTakeoverAreThreeEvents",
+     "TestContentionNeitherLocksNorUnlocksTheEntryGate",
+     "TestExclusionHoldsBetweenSendersWithDifferentMutexes",
+     "TestTheSenderThatLosesTheClaimDoesNotPublish"
+    ],
+    "union": null
+   },
+   "B7": {
+    "kind": "if",
+    "line": 348,
+    "column": 2,
+    "block": "348.10-353.3",
+    "entered_by": [
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092AnAcknowledgementPreemptsASendInFlight",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestARowThatVanishedIsNotReportedAsContention",
+     "TestASenderThatLosesTheLeaseStopsAtOnce",
+     "TestAcknowledgeCannotClearTheGateMidSend"
+    ],
+    "union": null
+   }
+  },
+  "internal-obs--notifier.notifycritical": {
+   "B1": {
+    "kind": "if",
+    "line": 192,
+    "column": 2,
+    "block": "192.22-196.19",
+    "entered_by": [
+     "TestCriticalWithoutAJournalIsLoudRatherThanSilent",
+     "TestTheTransitionLogLineIsCountable"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 196,
+    "column": 3,
+    "block": "196.19-200.4",
+    "entered_by": [
+     "TestCriticalWithoutAJournalIsLoudRatherThanSilent",
+     "TestTheTransitionLogLineIsCountable"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 216,
+    "column": 2,
+    "block": "216.16-236.3",
+    "entered_by": [
+     "TestAClaimThatFailsAttemptsTheDurableBlock",
+     "TestAClaimThatFailsBlocksNewEntries",
+     "TestAFailedClaimStillReturnsItsError",
+     "TestAFailedClaimWithNothingWiredStillReports"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 238,
+    "column": 2,
+    "block": "238.19-244.3",
+    "entered_by": [
+     "TestA092AFailedEscalationLatchesUnconditionally",
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092AReleaseBeforeTheEvidenceDoesNotChangeTheVerdict",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestACancelledSenderStillHandsTheLeaseBack",
+     "TestACriticalAlertStillEscalatesThroughTheSameNotifier",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestAPublishedButUnsettledRowKeepsItsLease",
+     "TestASendThatCannotBeRecordedLatchesTheGate",
+     "TestASenderThatSpendsItsBudgetReleasesTheRow",
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+     "TestAnUndeliverableCriticalAlertTightensTheOperatingMode",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestCriticalAlertSurvivesAProcessRestart",
+     "TestPersistentDeliveryFailureBlocksEntries",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself",
+     "TestRepeatedFailuresAppendOneTransition",
+     "TestTheAlertEscalationLoopTerminates",
+     "TestTheEscalationDoesNotAnnounceThroughTheTransportThatJustFailed",
+     "TestTheSameConditionEnqueuesOnce",
+     "TestWithoutAnAccountTheLatchIsStillTheConsequence"
+    ],
+    "union": null
+   }
+  },
+  "internal-obs--notifier.logclaimheld": {
+   "B1": {
+    "kind": "if",
+    "line": 717,
+    "column": 2,
+    "block": "717.18-719.3",
+    "entered_by": [],
+    "union": null
+   }
+  },
+  "internal-obs--notifier.escalate": {
+   "B1": {
+    "kind": "if",
+    "line": 420,
+    "column": 2,
+    "block": "420.63-422.3",
+    "entered_by": [
+     "TestA092AFailedEscalationLatchesUnconditionally",
+     "TestA092AReleaseBeforeTheEvidenceDoesNotChangeTheVerdict",
+     "TestACancelledSenderStillHandsTheLeaseBack",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestAFailedClaimWithNothingWiredStillReports",
+     "TestAPublishedButUnsettledRowKeepsItsLease",
+     "TestASendThatCannotBeRecordedLatchesTheGate",
+     "TestASenderThatSpendsItsBudgetReleasesTheRow",
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestCriticalAlertSurvivesAProcessRestart",
+     "TestPersistentDeliveryFailureBlocksEntries",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself",
+     "TestTheAlertEscalationLoopTerminates",
+     "TestTheSameConditionEnqueuesOnce",
+     "TestWithoutAnAccountTheLatchIsStillTheConsequence"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "switch",
+    "line": 425,
+    "column": 2,
+    "block": "423.2-425.9",
+    "entered_by": [
+     "TestA092AFailedEscalationLatchesUnconditionally",
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestA092RecordOnlyFailureLatchesAndEscalates",
+     "TestAClaimThatFailsAttemptsTheDurableBlock",
+     "TestAClaimThatFailsBlocksNewEntries",
+     "TestACriticalAlertStillEscalatesThroughTheSameNotifier",
+     "TestAFailedClaimStillReturnsItsError",
+     "TestAnUndeliverableCriticalAlertTightensTheOperatingMode",
+     "TestRepeatedFailuresAppendOneTransition",
+     "TestTheEscalationDoesNotAnnounceThroughTheTransportThatJustFailed"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "case",
+    "line": 426,
+    "column": 2,
+    "block": "426.34-431.41",
+    "entered_by": [
+     "TestA092AFailedEscalationLatchesUnconditionally",
+     "TestA092RecordOnlyFailureLatchesAndEscalates",
+     "TestAClaimThatFailsAttemptsTheDurableBlock",
+     "TestAClaimThatFailsBlocksNewEntries",
+     "TestAFailedClaimStillReturnsItsError"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "case",
+    "line": 432,
+    "column": 2,
+    "block": "432.31-438.92",
+    "entered_by": [
+     "TestA092AReleaseAfterTheEpochReadIsHonoured",
+     "TestA092AReleaseBeforeTheEpochReadRelatches",
+     "TestA092EachLatchSiteLatchesWithoutARelease",
+     "TestACriticalAlertStillEscalatesThroughTheSameNotifier",
+     "TestAnUndeliverableCriticalAlertTightensTheOperatingMode",
+     "TestRepeatedFailuresAppendOneTransition",
+     "TestTheEscalationDoesNotAnnounceThroughTheTransportThatJustFailed"
+    ],
+    "union": null
+   }
+  }
+ }
+}

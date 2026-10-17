@@ -1,0 +1,117 @@
+{
+  "file": "internal/execgw/riskguardian.go",
+  "source_sha256": "88cf7c183018aae8a7431d5d9d79974932ce8815de5ea47fb62c1133315379e0",
+  "package": "execgw",
+  "function": "escalateFor",
+  "receiver": "RiskGuardian",
+  "signature": "RiskGuardian.escalateFor(params=2, results=1)",
+  "start": {
+    "line": 640,
+    "column": 1
+  },
+  "end": {
+    "line": 656,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 641,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 644,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 646,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 642,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 649,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 652,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 655,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 644,
+        "column": 18
+      },
+      "text": "g.journal.EscalateOperatingMode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 646,
+        "column": 6
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 649,
+        "column": 11
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 652,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 644,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

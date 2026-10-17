@@ -1,0 +1,56 @@
+--- FAIL: TestA092TheDelivererRecordsAPreemptionSeenOnlyAtRelease (0.50s)
+    --- FAIL: TestA092TheDelivererRecordsAPreemptionSeenOnlyAtRelease/acknowledged (0.25s)
+        a092_deliverer_release_test.go:119: a preemption seen at release was not recorded:
+    --- FAIL: TestA092TheDelivererRecordsAPreemptionSeenOnlyAtRelease/lease-lost (0.24s)
+        a092_deliverer_release_test.go:119: a preemption seen at release was not recorded:
+--- FAIL: TestA092AnEngineFailureBodyCarriesNoLedgerText (0.26s)
+    a092_mode_endpoint_rejects_test.go:95: the 500 body carries raw ledger text: {"code":"internal","message":"journal: starting the operating-mode transition for 123-45: sql: database is closed"}
+--- FAIL: TestA092ACommittedReleaseIsNotHostageToTheRequestContext (0.26s)
+    a092_r26b_mode_release_test.go:42: result = {Changed:true TransitionID:mode-ea6ee4fc4c06fc691038e4c2 Mode: Seq:0 EntryBlocks:[] Notified:false NotifyError:journal: the operating-mode transition was recorded but not announced (ENTRY_BLOCKED → NORMAL): obs: recording a critical alert: journal: recording alert operating_mode:123-45:NORMAL:mode-ea6ee4fc4c06fc691038e4c2: context canceled NoticePending:false ReReadError:re-reading the operating mode after the release failed: journal: reading an operating-mode row: context canceled NoticeReadError:}, want the notice recorded and the state re-read despite the ended request
+--- FAIL: TestA092ANoticeListFailureKeepsTheModeThatWasRead (0.25s)
+    a092_r26b_mode_release_test.go:63: ReReadError = "re-reading the release notice failed: outbox read failed" — the mode was read; only the notice list failed
+    a092_r26b_mode_release_test.go:66: notice read error = "" pending = false, want the notice list failure named and no pending guess
+--- FAIL: TestA092ReleaseResultsCarryNoRawLedgerText (0.92s)
+    --- FAIL: TestA092ReleaseResultsCarryNoRawLedgerText/notify (0.42s)
+        a092_r26b_mode_release_test.go:95: NotifyError carries raw ledger text: "journal: the operating-mode transition was recorded but not announced (ENTRY_BLOCKED → NORMAL): obs: recording a critical alert: journal: recording alert operating_mode:123-45:NORMAL:mode-68fe71621fff76a740957e22: sql: database is closed"
+        a092_r26b_mode_release_test.go:98: gate description carries the account: "a critical engine.operating_mode alert could not be recorded in the outbox: journal: recording alert operating_mode:123-45:NORMAL:mode-68fe71621fff76a740957e22: sql: database is closed"
+    --- FAIL: TestA092ReleaseResultsCarryNoRawLedgerText/reread (0.25s)
+        a092_r26b_mode_release_test.go:111: ReReadError = "re-reading the operating mode after the release failed: reading the mode for 123-45 failed", want a fixed wording without the account
+    --- FAIL: TestA092ReleaseResultsCarryNoRawLedgerText/notice-list (0.25s)
+        a092_r26b_mode_release_test.go:124: NoticeReadError = "", want a fixed wording without the account
+--- FAIL: TestA092AnUnannouncedSustainedTighteningIsReportedAsTightened (0.00s)
+    a092_unannounced_sustained_tightening_test.go:44: a committed tightening whose notice failed was reported as not persisted:
+        {"time":"2026-09-30T05:11:02.824233124Z","level":"WARN","msg":"engine.operating_mode","event":"engine.operating_mode","subject":"engine","severity":"critical","account":"acct-runtime","loop":"reconcile","reason":"journal: journal: the operating-mode transition was recorded but not announced","detail":"the sustained-failure tightening did not reach the operating mode, so a restart would lift the block"}
+    a092_unannounced_sustained_tightening_test.go:47: the notice failure was not named:
+        {"time":"2026-09-30T05:11:02.824233124Z","level":"WARN","msg":"engine.operating_mode","event":"engine.operating_mode","subject":"engine","severity":"critical","account":"acct-runtime","loop":"reconcile","reason":"journal: journal: the operating-mode transition was recorded but not announced","detail":"the sustained-failure tightening did not reach the operating mode, so a restart would lift the block"}
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	3.435s
+FAIL
+--- FAIL: TestA092AnUnannouncedDailyLossTighteningIsReportedAsTightened (0.24s)
+    a092_announcement_failed_test.go:70: err = "execgw: the chain refused the issuance (DAILY_LOSS_LIMIT_REACHED): the day's realised loss is 100000 KRW against a ceiling of 100000 KRW; reaching the ceiling blocks\nexecgw: the daily-loss limit did not reach the operating mode, so a restart would lift the block: journal: the operating-mode transition was recorded but not announced (NORMAL → ENTRY_BLOCKED): outbox disk full" — the tightening did reach the operating mode; only its notice was not recorded
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.246s
+FAIL
+--- FAIL: TestA092ModeReleaseOutputDoesNotGuessWhatItCouldNotRead (0.00s)
+    --- FAIL: TestA092ModeReleaseOutputDoesNotGuessWhatItCouldNotRead/mode-reread-failed (0.00s)
+        a092_mode_release_output_test.go:25: the notice was described as delivered while nothing was re-read:
+            완화됨 — 전이 t1, 현재 모드 
+              통지: 기록됨(이미 전달 처리됨)
+            재조회 실패 — 현재 모드와 남은 사유를 읽지 못했다(추정하지 않음): re-reading the operating mode after the release failed
+        a092_mode_release_output_test.go:28: output does not say the state is unread:
+            완화됨 — 전이 t1, 현재 모드 
+              통지: 기록됨(이미 전달 처리됨)
+            재조회 실패 — 현재 모드와 남은 사유를 읽지 못했다(추정하지 않음): re-reading the operating mode after the release failed
+    --- FAIL: TestA092ModeReleaseOutputDoesNotGuessWhatItCouldNotRead/notice-list-failed (0.00s)
+        a092_mode_release_output_test.go:41: the notice state was not marked unconfirmed:
+            완화됨 — 전이 t1, 현재 모드 NORMAL
+              통지: 기록됨(이미 전달 처리됨)
+            남은 진입 차단 사유: ALERT_UNDELIVERED — 모드가 풀려도 거래가 재개된 것은 아니다
+    --- FAIL: TestA092ModeReleaseOutputDoesNotGuessWhatItCouldNotRead/not-pending (0.00s)
+        a092_mode_release_output_test.go:47: not pending was rendered as delivered — it may have been acknowledged:
+            완화됨 — 전이 t1, 현재 모드 NORMAL
+              통지: 기록됨(이미 전달 처리됨)
+            남은 진입 차단 사유: 없음
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.011s
+FAIL

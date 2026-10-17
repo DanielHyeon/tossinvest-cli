@@ -1,0 +1,155 @@
+{
+  "file": "internal/app/engine/strategy_entry_supervisor.go",
+  "source_sha256": "6f1f6804cfd437116c16a48d1526327c28360433f09e0ba3567eb3537442ee5b",
+  "package": "engine",
+  "function": "refreshPairedStrategyEntryProductionAssembly",
+  "receiver": "Context",
+  "signature": "Context.refreshPairedStrategyEntryProductionAssembly(params=2, results=2)",
+  "start": {
+    "line": 575,
+    "column": 1
+  },
+  "end": {
+    "line": 595,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 576,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 584,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 587,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 577,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 585,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 588,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 592,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 593,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 577,
+        "column": 45
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 579,
+        "column": 9
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 579,
+        "column": 9
+      },
+      "text": "clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 583,
+        "column": 26
+      },
+      "text": "c.joinStrategyRefreshWave"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 588,
+        "column": 10
+      },
+      "text": "awaitStrategyRefreshWave"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 592,
+        "column": 9
+      },
+      "text": "c.collectStrategyRefreshWave"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 593,
+        "column": 10
+      },
+      "text": "c.NewPairedStrategyEntryProductionAssembly"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 579,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 583,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

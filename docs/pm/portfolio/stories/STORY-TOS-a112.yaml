@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a112-run-four-strategy-families-independently",
-    "path": "openspec/changes/a112-run-four-strategy-families-independently"
+    "path": "openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently"
   },
   "acceptance": [
     "Continuation, reversal, weekly-value and breakout-retest expose exactly eight OFF-by-default KR/US lane descriptors",

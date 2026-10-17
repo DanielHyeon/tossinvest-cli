@@ -1,0 +1,28 @@
+package protectionlifecycle
+
+// a100 T1 RED 증인 — 저장소 기본 스위트에 넣지 않음(.go.txt). t1_mutation_harness.sh 가 overlay 로 주입함.
+// prepareRegister B3·B4 는 tasks 1.2.2·1.2.3 이 기대한 **자기 문구**로 거절해야 하지만,
+// 현 코드에서는 B2("entry is closed")가 먼저 막아 두 본문이 도달 불가임. 따라서 이 시험은 현 코드에서 RED.
+// core 수정(M-A 이후, Manager 결정)이 B3·B4 를 도달 가능하게 만들면 GREEN 이 되어야 함.
+
+import "testing"
+
+func TestA100T1REDPrepareRegisterB3OwnRefusal(t *testing.T) {
+	key := PositionKey{"acct", "kr-pos", MarketKR}
+	pending, _, err := prepareRegister(baseState(t), key, 8, 100, fullCapability())
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _, err = prepareRegister(pending, key, 8, 100, fullCapability())
+	if want := "operation_pending: operation already pending"; err == nil || err.Error() != want {
+		t.Fatalf("B3 본문 미도달 want=%q got=%v", want, err)
+	}
+}
+
+func TestA100T1REDPrepareRegisterB4OwnRefusal(t *testing.T) {
+	state, command, _ := registeredKR(t)
+	_, _, err := prepareRegister(state, command.Position, 8, 100, fullCapability())
+	if want := "operation_pending: protection already active"; err == nil || err.Error() != want {
+		t.Fatalf("B4 본문 미도달 want=%q got=%v", want, err)
+	}
+}

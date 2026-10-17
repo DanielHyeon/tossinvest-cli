@@ -1,0 +1,5 @@
+=== RUN   TestA133TheNotificationTestCarriesOnlyItsText
+--- PASS: TestA133TheNotificationTestCarriesOnlyItsText (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.012s
+rc=0

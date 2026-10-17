@@ -1,0 +1,11 @@
+# a112 6.2 봉인 리뷰 수리 RED — 격리 사본(git archive HEAD 16cb1a1a = 686b94e4 착지 코드 + 새 시험 파일), 2026-10-01T03:14:26+09:00
+# codex #1(P0, 정적 판정)을 실행으로 재현: 공유 배열의 제자리 원소 교체 → 1차 레그 발급(err=nil). 선택 함수 단위 시험(#3)은 편집 전에도 PASS(선택은 원래 옳았다 — 시험 주석이 거짓이었던 것).
+$ GOFLAGS=-trimpath go test -tags tossos_testseams -count=1 -v -run "TestTheScopeSelectorReturns|TestAnInPlaceSwap" ./internal/app/engine/
+=== RUN   TestTheScopeSelectorReturnsTheInScopeEntry
+--- PASS: TestTheScopeSelectorReturnsTheInScopeEntry (0.25s)
+=== RUN   TestAnInPlaceSwapInTheDispatchCopyDoesNotReachTheSeal
+    a112_first_leg_owner_scope_seal_test.go:258: in-place swap in the dispatch copy: issued a first leg, want refusal "production proposal identity changed"
+--- FAIL: TestAnInPlaceSwapInTheDispatchCopyDoesNotReachTheSeal (0.25s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.504s
+FAIL

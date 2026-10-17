@@ -1,0 +1,189 @@
+{
+  "file": "internal/app/engine/alertdelivery.go",
+  "source_sha256": "5791a31af9d2407935ea71edbdbf9a14cbd2025fce5da9866b1d586f8e8da0cf",
+  "package": "engine",
+  "function": "cycle",
+  "receiver": "alertDeliverer",
+  "signature": "alertDeliverer.cycle(params=1, results=1)",
+  "start": {
+    "line": 235,
+    "column": 1
+  },
+  "end": {
+    "line": 264,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 243,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 249,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 254,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 258,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 246,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 259,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 263,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 2
+      },
+      "text": "d.forgetLapsedHeld"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 21
+      },
+      "text": "d.Clock.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 18
+      },
+      "text": "PendingAlertsForDelivery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 18
+      },
+      "text": "d.led"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 56
+      },
+      "text": "d.batch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 3
+      },
+      "text": "d.countListFailure"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 20
+      },
+      "text": "d.batch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 3
+      },
+      "text": "d.pruneRecordRuns"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 258,
+        "column": 6
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 3
+      },
+      "text": "d.deliverOne"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 242,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 248,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

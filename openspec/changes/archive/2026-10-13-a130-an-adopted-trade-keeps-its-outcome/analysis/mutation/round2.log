@@ -1,0 +1,24 @@
+## --only M32 2026-10-13T08:17:08Z
+# a130 mutation — HEAD dbb0681c + working-tree a130 files · copy /tmp/a130-mutate-3643864-9yx3otmq/repo
+CONTROL GREEN 
+CAUGHT M32 a zero-close bar prices the lot :: --- FAIL: TestA130AZeroCloseBarIsRefused (0.23s)
+# 1/34 CAUGHT
+rc=0
+## --only M33 2026-10-13T08:18:32Z
+# a130 mutation — HEAD dbb0681c + working-tree a130 files · copy /tmp/a130-mutate-3664472-jgkiehqz/repo
+CONTROL GREEN 
+SURVIVED M33 an unconfirmed attempt dates a local sell :: 
+# 0/34 CAUGHT
+rc=0
+## --only M34 2026-10-13T08:19:30Z
+# a130 mutation — HEAD dbb0681c + working-tree a130 files · copy /tmp/a130-mutate-3669425-fhikhw53/repo
+CONTROL GREEN 
+CAUGHT M34 the nil-sink guard is gone :: --- FAIL: TestA130ANilSinkReadsNothingOnTheRefusalPath (0.00s)
+# 1/34 CAUGHT
+rc=0
+## --only M33 재측정(TestA130AFailedAmendDoesNotDateALocalSell 추가 뒤) 2026-10-13T08:30:26Z
+# a130 mutation — HEAD 02660f3d + working-tree a130 files · copy /tmp/a130-mutate-3715606-0apn0qv2/repo
+CONTROL GREEN 
+CAUGHT M33 an unconfirmed attempt dates a local sell :: --- FAIL: TestA130AFailedAmendDoesNotDateALocalSell (0.24s)
+# 1/34 CAUGHT
+rc=0

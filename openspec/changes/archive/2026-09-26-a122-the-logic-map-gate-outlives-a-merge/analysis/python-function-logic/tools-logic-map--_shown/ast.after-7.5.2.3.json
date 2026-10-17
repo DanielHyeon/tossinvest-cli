@@ -1,0 +1,58 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d12520c97b800f234f5c25483068a2bd70bd19b",
+  "source_sha256": "487708dc51fe19f322275b49e31a7edc49025fd4fd28a04d4b728a41a4f7b70c",
+  "function": "_shown",
+  "signature": "_shown(root, path)",
+  "start": {
+    "line": 863,
+    "column": 1
+  },
+  "end": {
+    "line": 868,
+    "column": 20
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 865,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 867,
+      "inherited_line": false,
+      "source": "except ValueError:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 866,
+      "value": "Path(path).relative_to(root).as_posix()"
+    },
+    {
+      "line": 868,
+      "value": "path"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 866,
+      "callee": "Path"
+    },
+    {
+      "line": 866,
+      "callee": "Path(path).relative_to"
+    },
+    {
+      "line": 866,
+      "callee": "Path(path).relative_to(root).as_posix"
+    }
+  ]
+}

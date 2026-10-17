@@ -1,0 +1,4 @@
+# 격리 워크트리 /tmp/claude-1000/a091-gate @ 3403be28 — 게이트 전 준비
+make sdd-infra rc 0
+sdd_sync.py --no-gbrain rc 0 ([sdd-sync] all indexes current)
+make sdd-check rc 0

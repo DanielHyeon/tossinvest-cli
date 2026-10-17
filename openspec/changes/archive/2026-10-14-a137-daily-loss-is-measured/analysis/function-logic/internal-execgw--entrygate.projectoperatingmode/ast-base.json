@@ -1,0 +1,185 @@
+{
+  "file": "internal/execgw/modegate.go",
+  "source_sha256": "8cb275362b7d5c258d0b893ea02cfd2daf4b09c4f07e6e932ef8b0798d029733",
+  "package": "execgw",
+  "function": "ProjectOperatingMode",
+  "receiver": "EntryGate",
+  "signature": "EntryGate.ProjectOperatingMode(params=1, results=0)",
+  "start": {
+    "line": 35,
+    "column": 1
+  },
+  "end": {
+    "line": 67,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 55,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 50,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 59,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 2
+      },
+      "text": "g.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 8
+      },
+      "text": "g.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 6
+      },
+      "text": "rec.BlocksEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 4
+      },
+      "text": "delete"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 38,
+        "column": 3
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 41,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 52,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 53,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 57,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 65,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 46,
+        "column": 2
+      },
+      "text": "g.mu.Unlock"
+    }
+  ]
+}

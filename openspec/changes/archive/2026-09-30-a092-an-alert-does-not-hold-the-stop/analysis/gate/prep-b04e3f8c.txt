@@ -1,0 +1,6 @@
+# 격리 워크트리 /tmp/claude-1000/a092-gate @ b04e3f8c — 게이트 전 준비
+make sdd-infra rc 0
+codegraphcontext stats (warm) rc 0; python3 tools/sdd/sdd_sync.py --no-gbrain → syncrc=0 ([sdd-sync] all indexes current)
+codegraph status: Index is up to date (rc 0)
+make sdd-check rc 0 (gbrain advisory WARN — --no-gbrain, 하드 증거 codegraph 일치)
+openspec validate --all: 49 passed, 0 failed

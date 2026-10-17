@@ -192,6 +192,10 @@ func newRootCmd() *cobra.Command {
 		// trading journal through journal.ReadOnly and writes only performance.db;
 		// console/httpapi retain their read-only capability boundary.
 		newPerformanceCmd(opts),
+		// scrub-account-records is a131's one-time cleanup: it rewrites existing
+		// soak, verification and audit records with the same redaction rule the
+		// writers now use. Preview by default; --apply is a human's call.
+		newScrubAccountRecordsCmd(opts),
 	)
 
 	return cmd

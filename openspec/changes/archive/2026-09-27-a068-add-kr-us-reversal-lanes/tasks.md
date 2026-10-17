@@ -1,0 +1,28 @@
+## 1. Logic Mapping and RED Contracts
+
+- [x] 1.1 Before editing existing registry/evaluator/dispatch-adjacent functions, record Function Logic Maps and Branch Test Maps for OFF, schema arithmetic, structural timing, allocation, invalidation and stop branches — N/A: implementation is isolated in the new `internal/reversallane` package and edits no existing function
+- [x] 1.2 Add concurrent peer RED schema tests for KR absorption and US dislocation fields, units, exact `effective_at<=observed_at<=ingested_at<=evaluated_at<=fresh_until`, inclusive equality and one-tick stale/reversed boundaries, threshold/config digest, overflow and exact ppm arithmetic; neither market test waits for the other
+- [x] 1.3 Add RED structural tests for exact `sweep_at <= break_at <= reclaim_at <= evaluated_at`, bounded window, stale/missing event, cross-market/generation scope and price-decline-only refusal
+- [x] 1.4 Add RED allocation/risk property tests for immutable budget/Q, 2:4:8 weights/14, floor+remainder, q_leg planned/a066 caps, exact account-valuation-minor `max(transferred reserve, ceil(qty*stop-distance + entry fees + estimated exit fees/levies))`, a066-frozen US FX quote/direction/haircut/ceil, filled floor plus held/proposed conservative reservations, checked overflow/refusal, actual overage or unknown-risk latch, partial fill/duplicate/cancel and no upward reallocation
+- [x] 1.5 Add RED authority tests proving typed invalidation/refusal suppresses add but lane exit decisions/orders remain zero while common exit engine proceeds independently
+- [x] 1.6 Add RED same-release and failure-isolation tests for both lane versions, OFF defaults and independent KR/US progression
+
+## 2. Concurrent KR and US Implementation
+
+- [x] 2.1 Implement strict KR absorption schema and pure `kr_short_absorption_reversal_v1` evaluator with checked integer arithmetic
+- [x] 2.2 Concurrently with 2.1, implement peer US dislocation schema and `us_short_dislocation_reversal_v1`; this task MUST NOT depend on KR stabilization or activation
+- [x] 2.3 Implement causal/bounded sweep-break-reclaim confirmation with stable event lineage and fail-closed scope validation
+- [x] 2.4 Implement immutable 2:4:8 ceilings, a066 cap, the frozen account-valuation-minor filled/held/proposed risk formula and same-snapshot US FX conversion, actual-fill overage latch, stop non-retreat and no reallocation
+- [x] 2.5 Register both lane ID/versions together as default OFF and return only entry/add decision or typed invalidation/refusal
+
+## 3. Integration and Safety
+
+- [x] 3.1 Integrate a064 structural evidence and a065/a066 campaign/risk contracts with schema/config, event, risk-budget and leg lineage through pure, sealed ports
+- [x] 3.2 Add crash/replay, partial-fill, duplicate-event, cross-market contamination and invalidation/common-exit fixtures
+- [x] 3.3 Prove dependency closure contains no broker, journal/owner writer, exit authority or operating-toggle writer and dormant registration creates no activation/LIVE change
+
+## 4. VERIFY
+
+- [x] 4.1 Run targeted KR/US reversal, structural-order/window, allocation property/fuzz and common-exit tests with race detection
+- [x] 4.2 Run broader evidence/campaign/risk/strategy/exit/scheduler regressions including adversarial price-decline-only and partial-fill cases — 2026-09-25 HEAD d72bc401 격리 워크트리: 30 패키지 test/seams·app/engine·race 12·vet·fuzz 4 전부 rc 0, 실패 0 + a068 가격 하락만·부분 체결 3개 PASS; 레인 diff 의 hostname/URL/approve 0·토글/승인 쓰기 0, dormant/OFF 가드 13 PASS (review.md `## 4.2 회귀 실측`)
+- [x] 4.3 Run `make sdd-sync`, `make sdd-check` and `make gate CHANGE=a068-add-kr-us-reversal-lanes`, recording both lanes remain OFF with zero live mutation — (2026-09-27) 정책 결정은 a122 에서 내려졌다: base 재고정 de8e45f4(자기 Go 의 기존 함수 수정 0), review.md 「종결 시퀀스」에 영수증·not-applicable 마커·두 레인 OFF 코드 인용. 돌리고 → 적고 → 체크. 1차 gate(격리 워크트리 TossOS-worktrees/a068-gate · b5589711)는 2/11 에서 이 줄 하나를 미완료로 세어 멈췄다. 2차가 실패하면 이 체크를 되돌린다. 아카이브는 Manager 검증 뒤.

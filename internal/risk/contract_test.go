@@ -345,20 +345,21 @@ func TestRiskBasedQuantityRefusesUnreadableInputs(t *testing.T) {
 
 func TestQuantityAboveTheRiskBudgetIsRefused(t *testing.T) {
 	// The chain does not trust the issuer's sizing: it recomputes the cap from
-	// the stop it just validated. Budget 100,000 over a 2,000-wide stop is 50
-	// shares; 51 is refused even though it is inside every configured per-order
-	// cap (51 ≤ 100 shares, 510,000 ≤ 1,000,000 KRW).
+	// the stop it just validated. Budget 33,333 (a139: a third of the 100,000
+	// default daily loss) over a 2,000-wide stop is 16 shares; 17 is refused
+	// even though it is inside every configured per-order cap (17 ≤ 100 shares,
+	// 170,000 ≤ 1,000,000 KRW).
 	in := entryInput()
 	in.Intent.StopPrice = "8000"
 	in.Intent.TargetPrice = "14000"
-	in.Intent.Quantity = "51"
+	in.Intent.Quantity = "17"
 	in.Account.CashAvailable = krw("2000000")
 	got := requireRefused(t, in, ReasonInvalidOrderSize)
-	if !strings.Contains(got.Detail, "50") {
+	if !strings.Contains(got.Detail, "16 units") {
 		t.Fatalf("detail %q does not show the cap the quantity exceeded", got.Detail)
 	}
 
-	in.Intent.Quantity = "50"
+	in.Intent.Quantity = "16"
 	requireAllowed(t, in)
 }
 

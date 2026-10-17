@@ -1,0 +1,54 @@
+{
+  "file": "internal/journal/issuance_test.go",
+  "source_sha256": "770e2a4d836c6b3c581b1d6883902f5369b18c8d394192735d4ae20ac1ab63b8",
+  "package": "journal",
+  "function": "issueRequest",
+  "signature": "issueRequest(params=7, results=1)",
+  "start": {
+    "line": 20,
+    "column": 1
+  },
+  "end": {
+    "line": 52,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 22,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 12
+      },
+      "text": "j.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 16
+      },
+      "text": "issued.Add"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 21,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

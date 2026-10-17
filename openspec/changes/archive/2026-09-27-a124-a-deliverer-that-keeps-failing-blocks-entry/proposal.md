@@ -1,0 +1,141 @@
+# a124 · 계속 실패하는 배달 실행자는 진입을 막는다
+
+- **Feature**: `FEAT-TOS-009` — Exit line truth and position policy lifecycle
+- **Story**: `STORY-TOS-a124`
+- **Spec**: `engine-safety` (ADDED 3)
+- **위험 등급**: **High-risk** — 진입 게이트·운영 모드(Guardian·kill switch·운영 모드 경로). 적대적 Eng 리뷰 + 교차 모델 + Pre-Edit 선언.
+- **출처**: a092 20라운드 사용자 결정 20-1 **ⓒ**(2026-09-25) — a098 설계 D8.4 가 「미배정 후속」으로 남긴 것을 별도 change 로 먼저 낸다.
+- 작성 2026-09-25, Manager(Fable, tossos-d6). HEAD `463cc895`.
+
+> **작성 순서**: 이 문서의 분기 주장은 전부 `analysis/function-logic/` 의 AST 산출물에서 나왔고, 산출물이
+> 문서보다 **먼저** 만들어졌다(`.claude/CLAUDE.md` 「단계 건너뛰기 금지」). 함수 5개 — `alertDeliverer.cycle` ·
+> `alertDeliverer.deliverOne` · `Notifier.deliver` · `Notifier.notifyCritical` · `restoreAlertEntryLatch`, 분기 48.
+> 편집 대상은 앞의 둘이고 뒤의 셋은 대조 근거다.
+
+## Why — 오늘 잰 것
+
+정본 「등급화된 알림」은 *"전달 실패가 지속되면 신규 진입을 차단한다(SHALL)"* 이고, 시나리오 「critical 알림 전달
+실패 지속」은 *"전송이 재시도 한도까지 실패하면 신규 진입이 차단되고 … 전달 복구 후 수동 확인으로 해제한다"* 다.
+운영 모드 트리거 `CRITICAL_ALERT_UNDELIVERED` 의 정의도 *"critical 알림 outbox 전달 실패 지속"*
+(`internal/journal/operating_mode.go:80-81`)이다.
+
+**HEAD 에서 그 SHALL 을 지키는 자리는 전부 동기 알림 경로에 있다.**
+
+| 자리 | 무엇 | 근거 |
+|---|---|---|
+| `Notifier.deliver` :484 · :520 · :571 | 전송 실패 3 종에서 `Gate.Block(ReasonAlertUndelivered)` | FLM `internal-obs--notifier.deliver` B12 · B18 · B27 |
+| `Notifier.claimAndDeliver` :280 | 기록 실패에서 같은 잠금 | grep — `notifier.go` 의 비테스트 `Gate.Block(ReasonAlertUndelivered)` 는 이 넷이 전부 |
+| `Notifier.notifyCritical` :219 · :228 | `escalate` → `EscalateOperatingMode(…, CRITICAL_ALERT_UNDELIVERED)` :383 | FLM `internal-obs--notifier.notifycritical` B3 · B4; `escalate` 의 호출자는 이 둘뿐 |
+| `restoreAlertEntryLatch` :164 | **기동 시 1회** 미전달 수로 잠금 복원 | FLM `internal-app-engine--restorealertentrylatch` 종단; 호출자 `gateway.go:269` 하나 |
+
+**a098 의 배달 실행자에는 하나도 없다.** `internal/app/engine/alertdelivery.go` 에 `Gate` · `Escalate` 는 0 회(grep).
+`deliverOne` 의 전송 실패(B9)는 `attempts+1`(`outbox.go:471`) · 임차 반납으로, publisher 부재(B8)는 로그 한 줄과 임차 반납으로만
+(attempts 불변) 끝나고(:221-226 · :205-212), `cycle` 은 `deliverOne` 의 결과를 받지 않아 배치 전부가 실패해도 `nil` 을 돌려준다
+(:163). `deliverOne` 은 행의 `attempts` 를 **읽지 않는다**(`Attempts` 0 회, grep). a098 설계 D8.4 는 이것을 스스로
+적었다 — *"배달 실행자가 매 주기 publish 에 실패하면서 계속 도는 상태는 a098 이 자동으로 안 잡는다 … 그때 진입을
+막는 것은 오늘의 다섯 자리 중 `deliver` 의 실패 경로이고, 그것은 동기 알림이 한 번이라도 시도될 때만 돈다.
+후속으로 남긴다"*, tasks 「안 하는 것」 :1802 *"미배정 후속"*.
+
+**a092 가 그 동기 시도를 뺀다.** a092 델타는 *"원격 전송·시도 간 대기·시도별 실패 기록·전달 실패에 따른 진입 게이트
+래치·운영 모드 승격은 루프 밖의 배달 경로가 수행해야 한다(SHALL)"* 고 적고, `claimAndDeliver` 에서 `deliver` 를
+뺀다. 그러면 위 표의 첫 세 줄은 엔진 루프 경로에서 **도달 불가**가 되고, 남는 것은 넷째 줄 — 재시작해야 성립하는
+차단 — 뿐이다. a092 20라운드 두 보이스가 독립으로 이것을 P0 로 냈다(A-1 = B-1): *"적힌 대로 GREEN 이면 전송이
+영구 실패해도 진입이 안 막힌다."* **옮기는 task 가 a092 에 없고, 그 주인은 a098 의 실행자다.**
+
+**같은 실행자가 새 행을 굶긴다.** `PendingAlerts` 는 `WHERE state = ? ORDER BY id` + `LIMIT ?`
+(`outbox.go:518-521`), 배치 상한 `alertDeliveryBatch = 10`(:74). 실패한 행은 `PENDING` 으로 남으므로 시도를 다 쓴
+오래된 행 10개가 매 사이클을 채우면 새 critical 행은 **첫 시도조차** 못 한다(a092 20라운드 B-2). 오늘은 동기 경로가
+이 막힘을 우회하고, a092 뒤에는 우회가 없다. a092 델타가 이미 「굶주림 금지」 문단을 적었는데 그 성질이 HEAD 실행자에
+없다 — 그 문단은 실행자의 성질이므로 이 change 로 옮긴다(사용자 결정 20-1).
+
+## What Changes
+
+**R1 — 배달 실행자가 지속 실패의 주인이다.** 어떤 행의 시도 수가 재시도 한도에 이르렀는데 전달되지 않았으면
+배달 실행자가 `Gate.Block(ReasonAlertUndelivered)` 와 `EscalateOperatingMode(…, CRITICAL_ALERT_UNDELIVERED)` 를
+부른다. 판정은 원장 행의 `attempts`(재시작을 넘긴다)에 선다 — 프로세스 메모리의 사이클 계수가 아니다.
+사유 코드도 트리거도 **정본의 것을 그대로** 쓴다: 그래서 해제는 정본 「운영자가 밀린 알림을 해제한다」의 두 조건
+(승인 + 미전달 0) 그대로이고, 모드 완화는 사람 승인 그대로이며, 재시작은 미전달이 남아 있으면 `restoreAlertEntryLatch` 가 오늘처럼
+다시 잠근다. **a124 가 생산에서 진입에 더하는 차단은 알림 사유 게이트 래치 하나다**(다른 진입 검사 — 미해결 · 발송자 정지 · 대사 · 신선도 — 는 그대로) — 모드 승격은 원장 기록이고, 그 모드의 진입 집행은 아래 「운영 효과 선행 조건」이
+착지해야 선다(design D10). 동기 경로가 한 번도 시도하지 않는 구성에서 이 성질이 성립해야 한다 — 그것이 a092 뒤의 세계다.
+
+**R2 — 행 선택은 굶주림을 만들지 않는다.** 한 사이클은 아직 한도에 이르지 않은 행을 **먼저** 고르고, 한도에 이른
+행은 잔여 자리에만 들어간다. 한도에 이른 행을 버리지 않는다 — 미전달로 남고 미전달 수에 세어진다. 빠지는 것은
+우선순위뿐이다(a092 델타 문단의 실체를 그대로 가져온다).
+
+**R3 — 최악 래치 시간을 적는다.** 첫 시도 전의 큐 대기(선행 배치의 서비스 시간)를 포함한 값을 실측으로 적는다
+(a092 델타 「최악 시간은 change 에 적혀야 한다」를 이 change 가 진다).
+
+**a092 와의 관계.** a092 21판은 「exit goroutine 에서 동기 deliver 제거」로 좁히고 이 change 를 착수 조건으로
+인용한다. 이 change 의 착지 전에 a092 가 `deliver` 를 빼면 정본 SHALL 이 빈다 — 순서는 a124 → a092 다.
+
+## Non-goals
+
+- `Notifier`(`claimAndDeliver` · `deliver` · `notifyCritical` · `Acknowledge`)를 편집하지 않는다 — a092 의 표면이다.
+- `EntryGate` 에는 해제 세대 필드 하나 · 메서드 둘 · `Clear` 한 줄만 더한다(design D7, M1 = B′). `revision`(전략 ABA 봉인)의 의미,
+  `Block` · `BlockSymbol` · 투영 · 점검 경로는 바꾸지 않는다.
+- 운영 모드 투영기 배선(`SetModeProjector`)과 모드 기동 복원(`RestoreOperatingModeProjection`)을 하지 않는다 — a092 축소판의 명명된 후속이고, a124 의
+  **운영 효과** 선행 조건이다(아래).
+- 새 사유 코드 · 새 트리거 · 새 토글 · 새 실행자를 만들지 않는다. `ReasonAlertSenderDown`(실행자 정지)의 의미도
+  그대로다 — 이것은 「시도가 실패했다」이고 그것은 「시도할 주체가 없다」다(정본 결정 8-1).
+- `Acknowledge` 의 해제 조건 · 운영 모드 완화 경로 · 기동 복원을 바꾸지 않는다.
+- 죽은 실행자를 되살리지 않는다(정본 결정 11-1). exit 관측 루프를 만지지 않는다.
+- 행을 버리는 어떤 형태의 "정리"도 하지 않는다.
+
+## 결정 (freeze 1판 리뷰 뒤 확정 — design 2판 D2·D3·D7·D8)
+
+- **한도 = 3** (`obs.DefaultCriticalAttempts` 인용, design D2). 1판의 *"같은 3 이면 약 6 s … 동기 경로는 약 34 s"* 는
+  서로 다른 실패 양상을 비교한 **잘못된 문장**이었다(review F11). 같은 양상에서 두 경로는 같은 시간이다 — 즉시 실패 4 s,
+  매번 10 s timeout 34 s.
+- **publisher 부재 = 실패 시도** (design D3). 결과는 동기 경로와 같고 지연만 ≈0 s 대 ≈4~6 s 로 다르다(F13).
+- **승인이 이긴다 → 원칙 E** (Manager 결정 M1 = **B′** · 원칙 E 채택, 2026-09-26 — C 는 freeze 3·4판에서 손절 경로 대기로 떨어졌다, design D7):
+  `EntryGate` 의 사유별 **해제 세대**. 「늦은 적용은 제때 적용과 같아야 한다」 — 실행자는 정산이 돌아온 직후 세대를 읽고, 세대가 그대로일 때만
+  잠근다. 바뀌었으면 해제가 판정 근거 **뒤**이므로 차단은 적용하지 않는다(제때 선 차단도 그 해제가 지웠다) — 승격은 적용한다(제때 된 승격은 해제로
+  풀리지 않는다 — **원장 행으로서**; 생산에서 그 행은 진입을 막지 않는다, design D10). 원장 상태로 판정을 버리지 않는다. 판정별 행동은 design D7 「판정 → 행동 표」. 원칙 E 는 사람 결정 「승인이 이긴다」(a092 델타 `spec.md:66-68`, 2026-08-10)를 실행자의 지연에 옮긴 것이다.
+  실행자는 `n.mu` 를 잡지 않는다. 해제 세대는 해제 **요청**마다 오른다(래치 유무 무관 — Manager 승인 2026-09-26, 반례 design D7 ㉣).
+- **기록 자체의 실패도 지속 실패다** (Manager 결정 M2 = (ii), design D8): 한 행에서 원장에 시도를 남기지 못한 연속 횟수가 같은 한도에
+  이르면 잠근다(해제 세대가 바뀌면 연속이 끊긴다 — 해제로 이어지지 않은 승인은 끊지 않는다). 발행 뒤 전달 기록 실패는 동기 경로처럼 즉시
+  잠근다(D1).
+
+## Impact
+
+- `internal/app/engine/alertdelivery.go` — `alertDeliverer` 에 게이트·계정 참조·배제 배선, `deliverOne` 한도 판정(D1)과
+  연속 기록 실패 계수(D8), `cycle`/`PendingAlerts` 선택 순서. FLM 은 편집 뒤 `revision: current` 재추출.
+- `internal/journal/outbox.go` — 새 메서드 `PendingAlertsForDelivery`(한도 인자). `PendingAlerts` 는 불변(obs 호출자 무편집).
+- `internal/journal/alert_claim.go` — `SettleResult.Attempts` (additive 필드), `settleUnderClaim` 적용 경로에서 같은 트랜잭션
+  읽기(D1). 스키마 무변경. FLM `internal-journal--journal.settleunderclaim`.
+- `internal/execgw/retry.go` — `EntryGate.clearEpochs`, `ClearEpoch` · `BlockUnlessClearedSince`(새 leaf), `Clear` 에 세대 증가 한 줄(D7).
+  **High-risk 표면** — Pre-Edit 대상(1.2). FLM `internal-execgw--entrygate.clear`(편집 대상) · `.block`(대조).
+- `internal/obs` — 편집 없음.
+- `internal/app/engine/auxiliary.go` — 실행자 생성 시 배선만.
+- 시험: `a098_*` 는 그대로 초록이어야 한다(특히 `a098_the_backlog_does_not_delay_protection_test.go`). 새 RED 는 tasks 2.x.
+- 스펙: `engine-safety` ADDED 3(해제 세대 계약 포함). a092 델타의 「굶주림」 문단은 a092 21판이 지운다.
+
+## 운영 효과 선행 조건 (코드 착지 조건이 아니다 — freeze 12회차 AC1, Manager 판정 2026-09-27)
+
+- **무엇**: `Journal.SetModeProjector` 의 생산 배선(엔진 게이트를 투영기로 묶음) + 기동 시 `Journal.RestoreOperatingModeProjection` 호출. 오늘 둘 다 비시험
+  호출자 0 이다(`journal/operating_mode.go:294` · `:574`; a092 proposal :499 · :582, 정본 `engine-safety/spec.md` base `4798d399` :995-1000 · HEAD :1030-1037 이
+  이미 적은 공백). 모드 행의 생산 판독은 전이 자신의 트랜잭션 안뿐이다 — 진입 허용 · 기동 소비자 0.
+- **왜 선행 조건인가**: a124 의 규칙은 전부 게이트 래치로 동작하므로 코드는 그것 없이 착지해도 된다(오늘보다 엄하다). 그러나 a124 가 말하는 효과 중
+  「운영 모드가 사람 완화 전까지 진입을 막는다」 — 승인 뒤 · 미전달 0 재시작 뒤 · design ㉩/㉪ 의 행 B — 는 이 배선이 있어야만 참이다. 배선만으로는 부족하고
+  AC2 수리와 **진입 허용 전 복원 순서**(기동에서 투영 복원이 첫 진입 점검보다 앞)가 함께여야 한다(design D10, AD3). 그 전까지 a124 의
+  모드 승격은 **원장 기록**이다(design D10 집행 표).
+- **소유**: **a092 축소판**(사용자 순서 a124 → a092 축소판). a124 는 이 영역을 편집하지 않는다. tasks 5.2 가 전달한다.
+- **함께 가져갈 기존 결함 (AC2)**: `EntryGate.ProjectOperatingMode`(`execgw/modegate.go:35-50`)의 지움→재삽입 창과 커밋 뒤 투영의 순서 — 투영기가 묶이는
+  순간 발현 가능해진다(design D10).
+
+## Follow-ups (이 change 범위 밖 — 사람에게 올라갈 항목)
+
+- **전략 진입 활성화 전 필수 선행 — 동기 알림 경로가 `n.mu` 를 쥔 채 진입 게이트를 잠근다.** `Notifier.claimAndDeliver` :280 과
+  `Notifier.deliver` :484 · :520 · :571 이 `n.mu` 아래에서 `Gate.Block` 을 부르고, 전략 진입 dispatch 는 게이트 잠금(`g.mu`)을 **브로커 전송
+  동안** 쥔다(`execgw/strategy_entry_gate_authority.go:60-72` → `gateway.go:692-708`). 둘이 겹치면 전달 실패를 겪은 동기 `Notify` 와 그 뒤의 모든
+  `n.mu` 대기자 — exit 관측 루프(`exitloop.go:1710`)와 비상 청산(`flatten.go:694`) 포함 — 가 브로커 전송을 기다린다(안전 불변식 4). 전략 진입이
+  이 빌드에서 휴면이라(`cmd/tossctl/engine_strategy_entry_dormant_test.go`) 오늘은 발현하지 않는다. a124 는 이 경로를 만지지 않는다(a092 표면 ·
+  a061 계열 봉인 설계). freeze 4판 §0.4 에서 발견, Manager 가 세 자리를 실측 재확인(2026-09-26).
+- **`Notifier.Acknowledge` 의 셈~해제 구간은 `n.mu` 를 거치지 않는 기록자를 막지 못한다** (a092 소유). 미전달 수를 센 뒤(:870) 해제하기 전(:875)에
+  `execgw/replay.go:551` 의 `EnqueueAlert` 가 새 critical 행을 넣으면, 그 행이 미전달인 채 알림 사유 래치가 풀린다(`parkAlert` 자신은 그 앞 :534-538 에서
+  `ReasonUnresolvedInDoubt` 를 잠근다 — 전체 진입이 열리는지는 그 사유에 달렸다). a092 델타가 「무엇이 그 구간을 지키는지
+  change 에 적혀야 한다」(`a092…/spec.md:72`)로 이미 요구한다. a124 의 원칙 E 는 이 경합을 **고치지도 넓히지도 않는다**: 그 행의 판정 근거가 확정된 **뒤에** 그 해제가 오면, 제때 적용했어도 그
+  해제가 차단을 지웠을 것이므로 차단은 적용하지 않고 승격만 적용한다(design D7 ㉩ · ㉪). 이 구간이 원자로 닫히면 **셈과 해제 사이 유입** 궤적의 판정은 선다 —
+  승인의 id 스냅숏 뒤 유입 → 실패 → 원자 셈~해제 전 전달 궤적은 그것으로 닫히지 않는다(design D10 (i), AD3). freeze 5회차 §0.5 V2 · 6회차 W1 에서 발견.
+  **(7판 · 8판) 그 승격은 생산에서 진입 차단을 더하지 않는다** — B 의 알림 사유 보호는 위 구간 수리나 위 「운영 효과 선행 조건」이 착지할 때, 각자 적힌 궤적
+  범위에서만 선다(design D10 「W1 재논증」).

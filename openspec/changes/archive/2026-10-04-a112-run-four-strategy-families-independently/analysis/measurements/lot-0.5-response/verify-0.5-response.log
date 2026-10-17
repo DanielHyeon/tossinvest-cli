@@ -1,0 +1,25 @@
+HEAD 4cbcfb36365c5910a681883841edb9e7fad9cc04 + working tree (response lot, uncommitted)
+== untagged
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	221.202s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	39.213s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow	47.894s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	57.225s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	50.143s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/httpapi	0.383s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/testenv	50.202s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialbars	53.407s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal	56.597s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-family-shadow	0.004s
+exit=0
+== tagged tossos_testseams
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	277.079s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	39.902s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow	50.230s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	58.253s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	52.529s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/httpapi	0.412s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/testenv	52.661s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialbars	55.314s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal	59.863s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-family-shadow	0.008s
+exit=0

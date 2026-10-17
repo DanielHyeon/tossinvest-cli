@@ -38,6 +38,26 @@ func classifyMutation(send journal.SendState, result domain.MutationResult, err 
 		}
 	}
 
+	// 브로커가 본문 code 로 이름을 준 거절은 status 보다 먼저 code 가 분류함(a094 R1, D−3.5). 확정 거절 목록의 code 면
+	// 종결, 두 자리 code 가 모순이면 뒤의 어떤 분류(문구 분류 · status 422 확정 거절)도 타지 않고 모호로 강제함.
+	// 판정 없음만 아래 종전 경로로 감.
+	switch reason, verdict := classifyRefusalCode(err); verdict {
+	case refusalCodeDefinitive:
+		return journal.DispatchOutcome{
+			Class:      journal.DispatchRejected,
+			ReasonCode: string(reason),
+			Detail:     err.Error(),
+			Err:        err,
+		}
+	case refusalCodeContradictory:
+		return journal.DispatchOutcome{
+			Class:      journal.DispatchAmbiguous,
+			ReasonCode: string(ReasonBrokerOutcomeUnknown),
+			Detail:     "the broker's top-level code and error.code disagree, so the refusal proves nothing: " + err.Error(),
+			Err:        err,
+		}
+	}
+
 	// A broker answer that asks for a human — an auth challenge, an FX consent, a
 	// deposit — is a well-formed refusal: the request was understood and declined,
 	// so it definitively did not execute. It is classified here, before the

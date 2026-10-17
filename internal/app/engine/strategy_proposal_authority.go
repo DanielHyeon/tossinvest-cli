@@ -3,9 +3,7 @@ package engine
 import (
 	"context"
 	"crypto/ed25519"
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
 	"os"
 	"path/filepath"
 	"sort"
@@ -14,6 +12,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/officialfx"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker"
@@ -102,20 +101,18 @@ type StrategyProposalMarketSnapshot struct {
 	// QueueDropCount 는 조정자 큐에서 접히거나 들어가지 못한 봉투의 수다.
 	// 유계 계수기다.
 	//
-	// **이 숫자는 지금 배선에서 언제나 0 이고, 아직 운영자에게 닿지도 않는다.**
-	// 두 가지가 다 사실이므로 둘 다 적는다.
+	// **이 숫자는 지금 배선에서 언제나 0 이다.** 계수기가 오르는 곳은 접힘과
+	// 넘침 둘뿐인데, 지금 배선은 둘 다 닿지 못한다. collectMarket 이 종목 중복을
+	// 먼저 거절하고 매니페스트가 (종목, 레인)마다 하나만 싣기 때문에 같은 레인
+	// 칸이 두 번 오지 않으며(접힘 없음), 큐 상한이 매니페스트 상한과 같아서 정상
+	// 매니페스트는 넘칠 수 없다(넘침 없음).
 	//
-	//  1. 언제나 0 인 이유: 계수기가 오르는 곳은 접힘과 넘침 둘뿐인데, 지금
-	//     배선은 둘 다 닿지 못한다. collectMarket 이 종목 중복을 먼저 거절하고
-	//     매니페스트가 (종목, 레인)마다 하나만 싣기 때문에 같은 레인 칸이 두 번
-	//     오지 않으며(접힘 없음), 큐 상한이 매니페스트 상한과 같아서 정상
-	//     매니페스트는 넘칠 수 없다(넘침 없음).
-	//  2. 닿지 않는 이유: 읽는 소비자가 없고, 지금의 유일한 운영자 표면은 이
-	//     시장의 닫힘을 EVIDENCE_STALE 하나로 뭉뚱그린다(strategy_runtime_projection.go).
+	// 운영자에게는 조정자 투영 자식(`coordinators[].queueDropCount`, a112 7.3)으로
+	// 닿는다. 시장 레코드는 여전히 이 시장의 닫힘을 EVIDENCE_STALE 하나로 뭉뚱그린다.
 	//
 	// 그러므로 이 수를 "조용한 유실이 없음의 증거"로 인용하면 안 된다. 언제나
-	// 0 인 계수기는 아무것도 증언하지 않는다. 투영까지 잇는 일은 태스크 7.3 이고,
-	// 여러 worker 가 같은 칸을 두고 다투게 만드는 일은 태스크 5.2·5.7 이다.
+	// 0 인 계수기는 아무것도 증언하지 않는다. 여러 worker 가 같은 칸을 두고
+	// 다투게 만드는 일은 태스크 5.2·5.7 이다.
 	QueueDropCount uint64
 	// ProductionFault 는 Reason 이 PROPOSAL_PRODUCTION_FAULT 일 때 어느 종목의
 	// 어느 레인이 무엇 때문에 사라졌는지다. 종목만으로는 부족하다 — 한 종목이
@@ -148,7 +145,8 @@ type strategyProposalMarketAuthority struct {
 	entries  []strategyProposalEntryAuthority
 	snapshot StrategyProposalMarketSnapshot
 	// activation 은 이 시장의 조정 앞에 선 4-가족 관문이 쓴 서명 활성화다
-	// (태스크 5.1.2.2). 영값이면 관문이 서지 않았다는 뜻이다.
+	// (태스크 5.1.2.2). 영값이면 관문이 서지 않았거나(미선언) 되돌린 채로 섰다
+	// (선언했는데 쓸 수 없음, 태스크 8.7.2) — 어느 쪽이든 승격은 없다.
 	//
 	// 권위와 함께 실어 보내는 이유: 새로 고침 뒤 도는 레인 관측 사이클이 관문과
 	// **같은** 승격을 봐야 한다. 두 자리에서 따로 읽으면 만료가 그 사이에
@@ -185,11 +183,27 @@ func (pair strategyProposalAuthorityPair) ResultAuthority() strategyResultAuthor
 		// 몇 개까지 넘길 수 있는지는 여기서 정하지 않는다. 경계 한 곳이 정한다.
 		// Single 은 값과 함께 "건너가도 되는가"를 돌려주므로, 거절을 안 보고
 		// 값을 읽는 판본은 아예 쓸 수 없다.
-		result, handedOff := value.dispatchHandoff().Single()
-		if !handedOff || !result.ValidProposal() {
+		//
+		// a112 5.2.2.2: 주문 경로와 같은 handoff 목록(dispatchHandoffs)에서 읽는다 — 활성화 없는 시장은 시장 단위 handoff 하나라 오늘과
+		// 같고(토글 OFF = upstream), 서명 활성화된 시장은 소유자 범위마다 하나다. 하나라도 유효하지 않으면 그 시장의 결과 권한은 준비 안 됨
+		// (경계가 승인한 목록의 일부만 넘기면 위험 · 계좌 권한이 주문 경로와 다른 범위 집합을 보게 된다).
+		handoffs := value.dispatchHandoffs()
+		results := make([]strategyflow.Result, 0, len(handoffs))
+		for _, handoff := range handoffs {
+			result, handedOff := handoff.Single()
+			if !handedOff || !result.ValidProposal() {
+				return strategyResultMarketAuthority{market: market}
+			}
+			results = append(results, result)
+		}
+		if len(results) == 0 {
 			return strategyResultMarketAuthority{market: market}
 		}
-		return strategyResultMarketAuthority{market: market, ready: true, result: result}
+		authority := strategyResultMarketAuthority{market: market, ready: true, result: results[0]}
+		if len(results) > 1 || value.familyActivation().Verified() {
+			authority.scoped = results
+		}
+		return authority
 	}
 	return strategyResultAuthorityPair{observedAt: pair.observedAt, kr: convert(StrategyMarketKR, pair.kr), us: convert(StrategyMarketUS, pair.us)}
 }
@@ -240,46 +254,59 @@ func newStrategyProposalAuthorityLoader(configDir, evidencePath, journalPath, ac
 		load: strategyproposal.LoadProductionAuthorityBatch}
 }
 
-func (loader *strategyProposalAuthorityLoader) collect(ctx context.Context, schedule strategyScheduleAuthorityPair, routes strategyRouteAuthorityPair, fx strategyFXAuthorityPair) strategyProposalAuthorityPair {
+// collect 는 두 시장의 제안 권한과, 그 옆의 shadow 묶음 짝(a112 7.3.1 — authority 밖 별도 값)을 돌려준다.
+func (loader *strategyProposalAuthorityLoader) collect(ctx context.Context, schedule strategyScheduleAuthorityPair, routes strategyRouteAuthorityPair, fx strategyFXAuthorityPair) (strategyProposalAuthorityPair, strategyShadowPair) {
 	if loader == nil || ctx == nil || schedule.observedAt.IsZero() || !schedule.observedAt.Equal(routes.observedAt) || !schedule.observedAt.Equal(fx.observedAt) {
-		return failedStrategyProposalPair(schedule.observedAt, StrategyProposalInternalFailure)
+		return failedStrategyProposalPair(schedule.observedAt, StrategyProposalInternalFailure), strategyShadowPair{}
 	}
 	type outcome struct {
 		market StrategyMarket
 		value  strategyProposalMarketAuthority
+		shadow strategyShadowBatch
 	}
 	outcomes := make(chan outcome, 2)
 	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
 		market := market
 		go func() {
 			value := strategyProposalMarketAuthority{market: market, snapshot: StrategyProposalMarketSnapshot{Market: market, Reason: StrategyProposalInternalFailure}}
+			var shadow strategyShadowBatch
 			func() {
 				defer func() {
 					if recover() != nil {
 						value = strategyProposalMarketAuthority{market: market, snapshot: StrategyProposalMarketSnapshot{Market: market, Reason: StrategyProposalInternalFailure}}
+						// 고장 갈래는 관측 없음(부재 값)이다 — 고장 전에 대입된 묶음을 남기지 않는다.
+						shadow = strategyShadowBatch{}
 					}
 				}()
-				value = loader.collectMarket(ctx, schedule.forMarket(market), routes.forMarket(market), fx.forMarket(market), schedule.observedAt)
+				value = loader.collectMarket(ctx, schedule.forMarket(market), routes.forMarket(market), fx.forMarket(market), schedule.observedAt, &shadow)
 			}()
-			outcomes <- outcome{market: market, value: value}
+			outcomes <- outcome{market: market, value: value, shadow: shadow}
 		}()
 	}
 	pair := strategyProposalAuthorityPair{observedAt: schedule.observedAt}
+	var shadow strategyShadowPair
 	for range 2 {
 		result := <-outcomes
 		if result.market == StrategyMarketKR {
-			pair.kr = result.value
+			pair.kr, shadow.kr = result.value, result.shadow
 		} else {
-			pair.us = result.value
+			pair.us, shadow.us = result.value, result.shadow
 		}
 	}
-	return pair
+	return pair, shadow
 }
 
-func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context, schedule strategyScheduleMarketAuthority, routes strategyRouteMarketAuthority, fx strategyFXMarketAuthority, observedAt time.Time) strategyProposalMarketAuthority {
+// collectMarket 의 shadow 는 a112 7.3.1 의 별도 운반 칸이다: 들어오자마자 부재 값으로 비우고(조정 앞 닫힘 일곱 = 「관측 없음」), 조정에
+// 닿은 주기만 조정자가 모은 관문 앞 묶음을 결속 설정과 함께 싣는다(조정 바로 뒤 대입 하나). 반환 갈래 열넷(닫힘 13 + 성공 1 — 함수 본문의 return 문, `fail` 클로저 안의 return 은 세지 않음)은 바뀌지 않는다.
+func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context, schedule strategyScheduleMarketAuthority, routes strategyRouteMarketAuthority, fx strategyFXMarketAuthority, observedAt time.Time, shadow *strategyShadowBatch) strategyProposalMarketAuthority {
+	*shadow = strategyShadowBatch{}
 	market := routes.market
 	// gate 를 fail 보다 **먼저** 선언한다. 클로저가 참조로 잡으므로, 아래에서
-	// 관문이 서는 순간 모든 닫힘 갈래가 그 활성화를 함께 싣게 된다.
+	// 관문이 계산된 **뒤의** 닫힘 갈래는 전부 그 시점의 활성화를 함께 싣는다. 정확히는 13 닫힘 중
+	// 첫째(ROUTE_NOT_READY — 관문 계산 전)만 영값을 싣고 나머지 열둘이 관문의 활성화를 싣는다
+	// (a112 8.8.4 항목 2). 관문은 두 번 계산된다(a112 8.5 응답 로트 ① — 아래 두 자리의 주석):
+	// 조정 앞 닫힘 여섯은 조기(진단) 값을, 조정 뒤 닫힘과 성공은 판정 값을 싣는다.
+	// 표는 TestTheThirteenProposalClosures… 가 못 박는다.
 	//
 	// 앞 판본은 반환값마다 `carry(...)` 를 부르게 했다. 그것은 이 change 가
 	// 반복해서 고쳐 온 **무시할 수 있는 답**이다 — 갈래 하나에서 빠뜨리면
@@ -296,8 +323,18 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 				GatedCount: gatedCount, GatedOutcomes: gatedOutcomes}}
 	}
 	if !routes.snapshot.Ready || len(routes.entries) == 0 || !schedule.snapshot.Ready || schedule.restore.Activation == nil {
+		// 영값을 싣는 유일한 닫힘이다(a112 8.8.4 항목 2): 경로 · 스케줄 권한이 준비되지 않은 주기에는 관문을 계산할 결속 값(경로 매니페스트
+		// digest · 보정 · 달력)이 없거나 믿을 수 없어, 관문 계산 **전**에 닫는다.
 		return fail(StrategyProposalRouteNotReady)
 	}
+	// 관문 **조기 계산**(진단 전용)은 결속 값이 서는 바로 이 자리다(a112 8.8.4 항목 2 — Manager 판정 Q-B2). 이 값은 아래 조정 **앞**
+	// 닫힘 여섯(FX · 설정 · 열쇠 · 중복 · 적재 · 고장)이 싣는 활성화로만 쓰인다 — 그 주기의 레인 관측이 관문과 같은 승격을 보게 하려는 것이다.
+	// 판정에는 쓰이지 않는다: 이 값은 제안 적재 시간만큼 낡으므로(적재 중 ctx 취소 · 매니페스트 철회가 안 보임 — 8.5 보이스 2 P1),
+	// 판정은 아래 조정 바로 앞에서 다시 계산한다. 잔여 비대칭(관측 전용): 적재 중 철회 경합에서 조정 앞 닫힘은 이 조기 값을 싣는다 —
+	// 그 갈래는 조정 · handoff 0 이라 주문 경로에 닿지 않는다. familyGateFor 는 읽기 전용이다(env · 매니페스트 파일 읽기와 검증, 레인
+	// 목록 조회 — 원장 · 브로커 · 토글 쓰기 0). 13 닫힘의 순서와 두 계산 자리는
+	// `TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness` 가 못 박는다.
+	gate = loader.familyGateFor(ctx, market, schedule, routes, observedAt)
 	if !fx.snapshot.Ready || !fx.read.valid {
 		return fail(StrategyProposalFXNotReady)
 	}
@@ -354,8 +391,14 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 	// 4-가족 관문은 **조정 앞**에 선다. 뒤에 세우면 중재가 이미 한 범위의
 	// 승자를 골라 버렸고, 그 승자의 레인이 잠겨 있으면 그 범위는 이웃 가족이
 	// 이길 수 있었는데도 통째로 닫힌다.
+	//
+	// 관문 **판정 계산**은 조정 바로 앞, 제안 적재 **뒤**다(a112 8.5 응답 로트 ① — Manager 판정 Y). 위 조기 값을 그대로 쓰면 적재 중
+	// 일어난 ctx 취소 · 매니페스트 철회가 이 주기 판정에 보이지 않아 닫혀야 할 시장이 열린다(허용 방향 — 보이스 2 실측). 이 자리는
+	// 8.8.4 이전의 판정 자리와 같다 — 같은 함수 · 같은 순간이라 판정이 구성상 편집 전과 같다. 조정 뒤 닫힘과 성공은 이 값을 싣는다.
+	// 대가는 조정에 닿는 주기의 활성화 읽기 한 번 더(소형 로컬 파일, 핀이 선언된 시장만).
 	gate = loader.familyGateFor(ctx, market, schedule, routes, observedAt)
-	arbitration, refused := coordinateMarketProposals(loader.accountRef, market, routes.entries, batch, observedAt, gate)
+	arbitration, refused, collected := coordinateMarketProposals(loader.accountRef, market, routes.entries, batch, observedAt, gate)
+	*shadow = collected.boundTo(loader.shadowConfig(market, schedule, routes))
 	gatedCount, gatedOutcomes = len(arbitration.gated), distinctGatedOutcomes(arbitration.gated)
 	// 관문이 한 소유자 범위를 통째로 지웠으면 시장을 닫는다 (태스크 8.8.1).
 	//
@@ -415,14 +458,12 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 		result.snapshot.QueueDropCount = outcome.Drops
 		return result
 	}
-	h := sha256.New()
-	for _, entry := range entries {
-		_, _ = h.Write([]byte(entry.route.approved.Symbol() + "\x00" + entry.authority.Proposal().Lineage.Identity + "\x00"))
-	}
+	// 제안 집합 digest 는 A-lite 계약(dispatchHandoffs)이 대조하는 식과 **한 함수**로 적는다(6.2 리뷰 보이스 A #6 — 두 사본이면 한쪽만
+	// 바뀌어 활성화 시장이 조용히 닫히거나, 대조가 공허해짐).
 	return strategyProposalMarketAuthority{market: market, entries: entries, activation: gate.activation,
 		snapshot: StrategyProposalMarketSnapshot{Market: market, Ready: true, Reason: StrategyProposalReady,
 			RoutedCount: len(routes.entries), ProposedCount: len(entries), RefusedCount: refused, ManifestDigest: digest,
-			ProposalSetDigest: "sha256:" + hex.EncodeToString(h.Sum(nil)), QueueDropCount: outcome.Drops,
+			ProposalSetDigest: strategyProposalSetDigest(entries), QueueDropCount: outcome.Drops,
 			GatedCount: gatedCount, GatedOutcomes: gatedOutcomes}}
 }
 

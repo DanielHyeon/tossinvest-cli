@@ -1,0 +1,52 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "fc35eb2d013dccd0700836f857ad9d3e65bff0dc",
+  "source_sha256": "6acf286c58f08f4e5be3cb3f5cc54140373b0ec3013cb6d10862883314761903",
+  "function": "_is_ancestor",
+  "signature": "_is_ancestor(root, older, newer)",
+  "start": {
+    "line": 548,
+    "column": 1
+  },
+  "end": {
+    "line": 564,
+    "column": 6
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 559,
+      "inherited_line": false,
+      "source": "if process.returncode in (0, 1):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 560,
+      "value": "process.returncode == 0"
+    }
+  ],
+  "raises": [
+    {
+      "line": 561,
+      "source": "raise RuntimeError(f'cannot tell whether {older[:12]} precedes {newer[:12]}: ' + _first_line(process.stderr, 'git merge-base failed'))"
+    }
+  ],
+  "calls": [
+    {
+      "line": 555,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 561,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 563,
+      "callee": "_first_line"
+    }
+  ]
+}

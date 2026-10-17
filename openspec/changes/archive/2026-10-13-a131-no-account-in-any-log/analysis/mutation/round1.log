@@ -1,0 +1,29 @@
+# a131 mutation — HEAD 6613e3ba + 32 working-tree a131 files · copy /tmp/a131-mutate-947333-cohu4pk3/repo
+CONTROL GREEN 
+BUILD-FAILED M1 NewLogger does not wrap the redacting handler —     a131_structure_test.go:261: internal/obs/log.go .NewLogger calls redact.Handler 0 time(s), want >= 1; internal/obs/log.go:26:2: "github.com/JungHoonGhae/tossinvest-cli/internal/redact" imported and not used
+CAUGHT M2 the handler keeps account keys — --- FAIL: TestA131HandlerDropsAccountKeysAndScrubsValues (0.00s); --- FAIL: TestA131EngineLoggerDropsAccountAndScrubsValues (0.00s); --- FAIL: TestA131BaseAttrsAreScrubbed (0.00s); --- FAIL: TestTheTransitionLogLineIsCountable (0.00s)
+CAUGHT M3 the mask rule is removed — --- FAIL: TestA131StringReplacesEveryAccountShape (0.00s); --- FAIL: TestA131StringCoversSeparatedMasksAndEveryDerivedID (0.00s); --- FAIL: TestA131HandlerDropsAccountKeysAndScrubsValues (0.00s); --- FAIL: TestA131WriterScrubsEveryWrite (0.00s); --- FAIL: TestA131EngineLoggerDropsAccountAndScrubsValues (0.00s); --- FAIL: TestA131AuditRecordReplacesOnlyAccountText (0.01s)
+CAUGHT M4 the official accounts read registers nothing — --- FAIL: TestA131TheSinksCallTheRule (0.22s); --- FAIL: TestA131AccountsRegistersEveryAccountNumber (0.00s)
+CAUGHT M5 engine run writes stdout unwrapped — --- FAIL: TestA131TheSinksCallTheRule (0.15s)
+CAUGHT M6 audit Record stores the entry unredacted — --- FAIL: TestA131TheSinksCallTheRule (0.22s); --- FAIL: TestA131AuditRecordReplacesOnlyAccountText (0.00s)
+CAUGHT M7 the soak record writes the account in the clear — --- FAIL: TestA131NoLoggerOrAppendWriterBypassesRedaction (0.24s); --- FAIL: TestA131TheSinksCallTheRule (0.18s); --- FAIL: TestA131SoakRecordSealsTheAccount (0.01s); --- FAIL: TestA131MissingSealKeyFailsClosed (0.03s); --- FAIL: TestA131UnopenableSealedLineIsAnError (0.06s)
+CAUGHT M8 the soak reader skips the seal on interior lines — --- FAIL: TestA131ReadersOpenTheSealOnEveryDecodedLine (0.16s); --- FAIL: TestA131SealedSoakRecordStillAttestsTheSameAccount (0.04s); --- FAIL: TestA131ScrubApplyReplacesAtomically (1.30s)
+CAUGHT M9 the position-id rule is removed — --- FAIL: TestA131StringReplacesEveryAccountShape (0.00s); --- FAIL: TestA131StringCoversSeparatedMasksAndEveryDerivedID (0.00s); --- FAIL: TestA131HandlerDropsAccountKeysAndScrubsValues (0.00s); --- FAIL: TestA131EngineLoggerDropsAccountAndScrubsValues (0.00s)
+CAUGHT M10 bound attributes are handed to the inner handler at bind time — --- FAIL: TestA131HandlerDropsAccountKeysAndScrubsValues (0.00s); --- FAIL: TestA131HandlerScrubsAttrsBoundBeforeRegistration (0.00s); --- FAIL: TestA131EngineLoggerDropsAccountAndScrubsValues (0.00s); --- FAIL: TestA131BaseAttrsAreScrubbed (0.00s)
+CAUGHT M11 the preview seals (writes the key) — --- FAIL: TestA131ScrubPreviewWritesNothing (0.01s)
+CAUGHT M12 the verify record writes the account in the clear — --- FAIL: TestA131TheSinksCallTheRule (0.14s); --- FAIL: TestA131VerifyRecordSealsTheAccount (0.01s); --- FAIL: TestA131ReconcileLineIsSealedAndStillBinds (0.01s); --- FAIL: TestA131UnopenableVerifyLineIsAnError (0.01s); --- FAIL: TestA131OpenRecorderRefusesAMissingKeyForASealedRecord (0.01s); --- FAIL: TestRecordCarriesNoUnmaskedAccountNumber (0.03s)
+BUILD-FAILED M13 the reconcile line is written unsealed —     a131_structure_test.go:261: internal/verifylive/record.go lockedRecord.appendLine calls redact.SealRecordLine 0 time(s), want >= 1; internal/verifylive/record.go:453:2: declared and not used: key
+CAUGHT M14 the strict reconcile reader does not open the seal — --- FAIL: TestA131ReadersOpenTheSealOnEveryDecodedLine (0.17s); --- FAIL: TestA131ReconcileLineIsSealedAndStillBinds (0.01s); --- FAIL: TestA131UnopenableVerifyLineIsAnError (0.01s); --- FAIL: TestReconcileLineMatchesTheDesignShape (0.02s)
+CAUGHT M15 the digit-run rule is removed — --- FAIL: TestA131StringReplacesEveryAccountShape (0.00s); --- FAIL: TestA131AccountsRegistersEveryAccountNumber (0.00s)
+CAUGHT M16 main leaves cobra's stderr unwrapped — --- FAIL: TestA131TheSinksCallTheRule (0.14s)
+CAUGHT M17 the scrub replaces a file that moved — --- FAIL: TestA131ScrubApplyAbortsWhenTheFileMoved (1.49s)
+CAUGHT M18 the attest output prints the masked account — --- FAIL: TestA131SoakAttestOutputCarriesNoAccount (0.02s)
+CAUGHT M19 an unopenable seal reads as an empty account — --- FAIL: TestA131MissingSealKeyFailsClosed (0.04s); --- FAIL: TestA131UnopenableSealedLineIsAnError (0.05s)
+CAUGHT M20 a missing key is recreated for a sealed record — --- FAIL: TestA131PrepareSealKeyRefusesANewKeyForASealedRecord (0.02s); --- FAIL: TestA131MissingSealKeyFailsClosed (0.02s); --- FAIL: TestA131UnopenableVerifyLineIsAnError (0.01s); --- FAIL: TestA131OpenRecorderRefusesAMissingKeyForASealedRecord (0.01s)
+CAUGHT M21 Append does not reopen a replaced record — --- FAIL: TestA131SoakAppendReopensAReplacedRecord (0.01s)
+CAUGHT M22 the scrub drops the replaced tail — --- FAIL: TestA131ScrubCarriesTheReplacedTail (0.08s)
+CAUGHT M23 the handler lets a panicking value kill the line — --- FAIL: TestA131HandlerSurvivesAPanickingValue (0.00s); panic: boom [recovered, repanicked]
+CAUGHT M24 identity keys are scrubbed — --- FAIL: TestA131SealRecordLineRoundTrips (0.00s)
+CAUGHT M25 the sealed line keeps format 1 — --- FAIL: TestA131SealRecordLineRoundTrips (0.00s)
+# 23/25 caught
+rc=1

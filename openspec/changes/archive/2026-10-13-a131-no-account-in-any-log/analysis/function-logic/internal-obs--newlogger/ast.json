@@ -1,0 +1,245 @@
+{
+  "file": "internal/obs/log.go",
+  "source_sha256": "8ca3cd8c3a8781173f06756b266bd05df9529822f7ee123fa66de2d3f5d14d04",
+  "package": "obs",
+  "function": "NewLogger",
+  "signature": "NewLogger(params=1, results=1)",
+  "start": {
+    "line": 99,
+    "column": 1
+  },
+  "end": {
+    "line": 135,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 115,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "else",
+      "at": {
+        "line": 125,
+        "column": 9
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 131,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 116,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 118,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 134,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 9
+      },
+      "text": "clock.System"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 7
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 12
+      },
+      "text": "slog.Time"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 36
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 36
+      },
+      "text": "clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 13
+      },
+      "text": "slog.NewJSONHandler"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 13
+      },
+      "text": "slog.NewTextHandler"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 12
+      },
+      "text": "redact.Handler"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 13
+      },
+      "text": "handler.WithAttrs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 22
+      },
+      "text": "slog.New"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 102,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 104,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 106,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 109,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 124,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 126,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 132,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

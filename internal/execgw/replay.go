@@ -104,9 +104,11 @@ const (
 // imported because internal/obs imports *this* package (its notifier latches the
 // entry gate), so the dependency can only run one way. The alert is written
 // straight into the journal's outbox, which is the durable half of obs's
-// critical path — the notifier's Flush picks the row up and delivers it — so an
+// critical path — the engine's delivery executor (a098 alertDeliverer) picks the
+// row up and delivers it; Notifier.Flush has no production caller — so an
 // engine whose notifier is not wired still records the alert rather than losing
-// it. TestReplayKeyConflictEnqueuesTheCriticalAlert pins the string against
+// it. It writes outside the notifier's exclusion lock, so parkAlert latches its
+// own reason first (a092 critical-record rule). TestReplayKeyConflictEnqueuesTheCriticalAlert pins the string against
 // obs's own constant.
 const (
 	eventOrderUnresolved  = "order.unresolved_in_doubt"

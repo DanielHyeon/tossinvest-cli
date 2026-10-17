@@ -1,0 +1,101 @@
+{
+  "file": "internal/journal/risk_bucket_admission_test.go",
+  "source_sha256": "67d1349d05075d7599e1d0df42befee14d5a3c59f948cc8531a22a09d66d9ad3",
+  "package": "journal",
+  "function": "seedExistingRiskReservation",
+  "signature": "seedExistingRiskReservation(params=4, results=0)",
+  "start": {
+    "line": 406,
+    "column": 1
+  },
+  "end": {
+    "line": 415,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 409,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 412,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 407,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 409,
+        "column": 15
+      },
+      "text": "j.db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 410,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 412,
+        "column": 15
+      },
+      "text": "j.db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 408,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 409,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 412,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

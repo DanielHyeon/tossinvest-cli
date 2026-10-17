@@ -1,0 +1,6 @@
+    a137_daily_loss_internal_test.go:375: refusal=execgw: the chain refused the issuance (INPUT_UNAVAILABLE): today's realised loss cannot be measured: the journal could not be read marked=true — want an unmarked equity INPUT_UNAVAILABLE
+--- FAIL: TestA137AnInvalidEquityWithAMeasurementFailureStaysUnmarked (0.21s)
+--- PASS: TestA137TheQuietMarkersAreMadeOnlyInTheirOwnFile (0.21s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.421s
+FAIL

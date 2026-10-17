@@ -1,0 +1,188 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "ff590b79db6ed6a8cd7101e47f8df6a9b4841310b5320a398730eadf6a8a02e5",
+  "function": "_safe_changed_go_paths",
+  "signature": "_safe_changed_go_paths(root, comparison)",
+  "start": {
+    "line": 495,
+    "column": 1
+  },
+  "end": {
+    "line": 552,
+    "column": 19
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 531,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B2",
+      "kind": "IfExp",
+      "line": 532,
+      "inherited_line": false,
+      "source": "process.stderr.decode('utf-8', 'replace') if isinstance(process.stderr, bytes) else process.stderr"
+    },
+    {
+      "id": "B3",
+      "kind": "BoolOp",
+      "line": 533,
+      "inherited_line": false,
+      "source": "stderr.strip() or 'git diff failed'"
+    },
+    {
+      "id": "B4",
+      "kind": "IfExp",
+      "line": 534,
+      "inherited_line": false,
+      "source": "process.stdout if isinstance(process.stdout, bytes) else process.stdout.encode('utf-8')"
+    },
+    {
+      "id": "B5",
+      "kind": "For",
+      "line": 536,
+      "inherited_line": false,
+      "source": "for _, _, paths in records:"
+    },
+    {
+      "id": "B6",
+      "kind": "For",
+      "line": 537,
+      "inherited_line": false,
+      "source": "for raw in paths:"
+    },
+    {
+      "id": "B7",
+      "kind": "Try",
+      "line": 538,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B8",
+      "kind": "ExceptHandler",
+      "line": 540,
+      "inherited_line": false,
+      "source": "except UnicodeDecodeError as error:"
+    },
+    {
+      "id": "B9",
+      "kind": "BoolOp",
+      "line": 544,
+      "inherited_line": false,
+      "source": "'\\n' in path or '\\r' in path or '\\t' in path"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 544,
+      "inherited_line": false,
+      "source": "if '\\n' in path or '\\r' in path or '\\t' in path:"
+    },
+    {
+      "id": "B11",
+      "kind": "For",
+      "line": 546,
+      "inherited_line": false,
+      "source": "for added, deleted, paths in records:"
+    },
+    {
+      "id": "B12",
+      "kind": "BoolOp",
+      "line": 547,
+      "inherited_line": false,
+      "source": "added == b'-' and deleted == b'-'"
+    },
+    {
+      "id": "B13",
+      "kind": "If",
+      "line": 547,
+      "inherited_line": false,
+      "source": "if added == b'-' and deleted == b'-':"
+    }
+  ],
+  "returns": [
+    {
+      "line": 552,
+      "value": "records"
+    }
+  ],
+  "raises": [
+    {
+      "line": 533,
+      "source": "raise RuntimeError(stderr.strip() or 'git diff failed')"
+    },
+    {
+      "line": 541,
+      "source": "raise RuntimeError('modified Go path is not UTF-8') from error"
+    },
+    {
+      "line": 545,
+      "source": "raise RuntimeError('modified Go path cannot be represented losslessly in unified diff')"
+    },
+    {
+      "line": 548,
+      "source": "raise RuntimeError('modified Go file has no textual diff (binary or -diff attribute): ' + paths[-1].decode('utf-8', 'strict'))"
+    }
+  ],
+  "calls": [
+    {
+      "line": 521,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 532,
+      "callee": "isinstance"
+    },
+    {
+      "line": 532,
+      "callee": "process.stderr.decode"
+    },
+    {
+      "line": 533,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 533,
+      "callee": "stderr.strip"
+    },
+    {
+      "line": 534,
+      "callee": "isinstance"
+    },
+    {
+      "line": 534,
+      "callee": "process.stdout.encode"
+    },
+    {
+      "line": 535,
+      "callee": "_numstat_records"
+    },
+    {
+      "line": 539,
+      "callee": "raw.decode"
+    },
+    {
+      "line": 541,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 545,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 548,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 550,
+      "callee": "paths[-1].decode"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "file": "/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/cfl-686.go",
+  "source_sha256": "26bca2d7d1c0ae0ff24a70ec64eb9a660ddf0ac27a60cd4947a40487cbe303be",
+  "package": "engine",
+  "function": "newProductionStrategyFirstLegAuthorityLoader",
+  "signature": "newProductionStrategyFirstLegAuthorityLoader(params=8, results=1)",
+  "start": {
+    "line": 202,
+    "column": 1
+  },
+  "end": {
+    "line": 208,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 206,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,179 @@
+{
+  "file": "internal/app/engine/strategy_proposal_authority_test.go",
+  "source_sha256": "d05d11be42f3538802baec08718c10782cea1007f608bac95ad206b16a9b57b0",
+  "package": "engine",
+  "function": "TestStrategyProposalAuthorityKeepsMarketFailureLocal",
+  "signature": "TestStrategyProposalAuthorityKeepsMarketFailureLocal(params=1, results=0)",
+  "start": {
+    "line": 49,
+    "column": 1
+  },
+  "end": {
+    "line": 65,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 53,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 59,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 62,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 54,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 56,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 9
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 12
+      },
+      "text": "testStrategyProposalLoader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 56
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 10
+      },
+      "text": "testProposalBatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 13
+      },
+      "text": "loader.collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 28
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 50
+      },
+      "text": "routeReadySchedulePair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 79
+      },
+      "text": "proposalRoutePair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 106
+      },
+      "text": "proposalFXPair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 52,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

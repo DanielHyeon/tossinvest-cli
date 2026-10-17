@@ -1,0 +1,18 @@
+
+Callers of "recordGateSettings" (5):
+
+function    TestNotificationSettingsAreAudited
+  internal/app/engine/a074_notification_audit_test.go:49
+
+function    TestTheAuditTrailCarriesNoNotificationSecret
+  internal/app/engine/a074_notification_audit_test.go:78
+
+function    TestARefusedNotificationBlockIsAudited
+  internal/app/engine/a074_notification_audit_test.go:101
+
+function    TestExistingAuditEntriesKeepTheirOrder
+  internal/app/engine/a074_notification_audit_test.go:119
+
+function    NewContext
+  internal/app/engine/engine.go:437
+

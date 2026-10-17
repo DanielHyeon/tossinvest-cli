@@ -1,0 +1,7 @@
+# a112 6.3 (c) 이동 영수증 — 조건식(go/types ExprString)
+## 이동 전 — HEAD 76dc35f7 strategy_entry_supervisor.go revalidateSchedule 클로저
+!fresh.snapshot.Ready || fresh.restore.Activation == nil || expected.restore.Activation == nil || fresh.desired.Revision != expected.desired.Revision || fresh.calendar.Version != expected.calendar.Version || fresh.snapshot.ActivationManifestDigest != expected.snapshot.ActivationManifestDigest || fresh.restore.Activation.Generation() != expected.restore.Activation.Generation() || !fresh.restore.Activation.ExpiresAt().Equal(expected.restore.Activation.ExpiresAt())
+## 이동 후 — strategy_schedule_revalidation.go strategyScheduleStillMatchesAdmission
+!fresh.snapshot.Ready || fresh.restore.Activation == nil || expected.restore.Activation == nil || fresh.desired.Revision != expected.desired.Revision || fresh.calendar.Version != expected.calendar.Version || fresh.snapshot.ActivationManifestDigest != expected.snapshot.ActivationManifestDigest || fresh.restore.Activation.Generation() != expected.restore.Activation.Generation() || !fresh.restore.Activation.ExpiresAt().Equal(expected.restore.Activation.ExpiresAt())
+## 이동 후 — 클로저 안 if(0 이어야 함)
+## 판정: 조건식 철자 동일

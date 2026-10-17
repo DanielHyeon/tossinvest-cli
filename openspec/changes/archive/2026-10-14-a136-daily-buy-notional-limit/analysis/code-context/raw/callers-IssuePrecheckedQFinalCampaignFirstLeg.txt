@@ -1,0 +1,6 @@
+
+Callers of "IssuePrecheckedQFinalCampaignFirstLeg" (1):
+
+method      IssuePrecheckedQFinalCampaignFirstLeg
+  internal/app/engine/strategy_first_leg_admission.go:57
+

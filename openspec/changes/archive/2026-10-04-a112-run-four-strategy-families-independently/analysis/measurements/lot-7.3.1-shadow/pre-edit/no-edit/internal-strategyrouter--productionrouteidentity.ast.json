@@ -1,0 +1,54 @@
+{
+  "file": "internal/strategyrouter/production.go",
+  "source_sha256": "617163a508030dea2768655db66006d52097f17be9c04bb7c9fc300d3adf8a21",
+  "package": "strategyrouter",
+  "function": "productionRouteIdentity",
+  "signature": "productionRouteIdentity(params=1, results=1)",
+  "start": {
+    "line": 756,
+    "column": 1
+  },
+  "end": {
+    "line": 758,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 757,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 757,
+        "column": 33
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 757,
+        "column": 61
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 757,
+        "column": 83
+      },
+      "text": "strings.ContainsAny"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

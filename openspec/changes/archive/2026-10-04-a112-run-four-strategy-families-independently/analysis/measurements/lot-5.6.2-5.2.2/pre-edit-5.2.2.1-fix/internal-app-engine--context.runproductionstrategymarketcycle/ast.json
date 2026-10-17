@@ -1,0 +1,323 @@
+{
+  "file": "internal/app/engine/strategy_entry_supervisor.go",
+  "source_sha256": "1f4f20967491555bb2dcfeeffc82962f3e778ec5efa3551540cd95aa536f0be7",
+  "package": "engine",
+  "function": "runProductionStrategyMarketCycle",
+  "receiver": "Context",
+  "signature": "Context.runProductionStrategyMarketCycle(params=3, results=1)",
+  "start": {
+    "line": 496,
+    "column": 1
+  },
+  "end": {
+    "line": 567,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 498,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 522,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 525,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 531,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 555,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 558,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 562,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 499,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 523,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 529,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 532,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 552,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 556,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 559,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 563,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 565,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 497,
+        "column": 16
+      },
+      "text": "c.refreshPairedStrategyEntryProductionAssembly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 521,
+        "column": 16
+      },
+      "text": "c.productionStrategyLanes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 525,
+        "column": 12
+      },
+      "text": "lanes.evaluate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 526,
+        "column": 3
+      },
+      "text": "restore.Activation.Generation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 526,
+        "column": 3
+      },
+      "text": "fresh.schedule.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 527,
+        "column": 3
+      },
+      "text": "familyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 527,
+        "column": 3
+      },
+      "text": "fresh.proposals.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 528,
+        "column": 3
+      },
+      "text": "strategyLaneInputs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 528,
+        "column": 36
+      },
+      "text": "fresh.proposals.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 552,
+        "column": 9
+      },
+      "text": "deliverEachStrategyHandoff"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 552,
+        "column": 36
+      },
+      "text": "dispatchHandoffs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 552,
+        "column": 36
+      },
+      "text": "fresh.proposals.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 553,
+        "column": 14
+      },
+      "text": "delivered.Result"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 554,
+        "column": 15
+      },
+      "text": "c.Journal.CurrentPositionCampaignCAS"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 554,
+        "column": 77
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 561,
+        "column": 12
+      },
+      "text": "fresh.dispatch.dispatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 562,
+        "column": 6
+      },
+      "text": "errors.Is"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 497,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 521,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 525,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 553,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 554,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 561,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

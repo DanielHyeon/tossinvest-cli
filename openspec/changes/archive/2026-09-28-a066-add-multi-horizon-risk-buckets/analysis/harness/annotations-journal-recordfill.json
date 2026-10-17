@@ -1,0 +1,14 @@
+{
+  "B30": {
+    "scenario": "a066 risk-bucket sidecar runs only for a locally owned fill, inside the same BEGIN IMMEDIATE fill transaction as the snapshot, Position and hooks (Wave 1C)"
+  },
+  "B31": {
+    "scenario": "ownership is ambiguous: every registered, unreleased risk owner in scope gets a REPLAY_MISMATCH scope latch, unknown-actual flags and a FILL_UNACCOUNTED event; the broker fill itself is kept (Wave 1C/1D)"
+  },
+  "B32": {
+    "scenario": "sidecar storage error aborts the whole fill transaction; semantic gaps latch entry inside the callee and return nil, so they never take this branch"
+  },
+  "B35": {
+    "scenario": "latch write error aborts the whole fill transaction"
+  }
+}

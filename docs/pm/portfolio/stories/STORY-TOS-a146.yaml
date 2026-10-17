@@ -1,0 +1,26 @@
+{
+  "id": "STORY-TOS-a146",
+  "title": "A strategy entry the Guardian cannot size even one unit for is skipped, not treated as a lane fault",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a146-guardian-cap-zero-skips-the-entry",
+    "path": "openspec/changes/archive/2026-10-17-a146-guardian-cap-zero-skips-the-entry"
+  },
+  "found_by": {
+    "date": "2026-10-15",
+    "how": "The a139 review found that when the per-trade risk budget cannot cover one unit the Guardian cap is zero and the first-leg admission reports it as an authority mismatch, which the strategy supervisor treats as a cycle fault. The user decided on 2026-10-15 that such an entry is skipped for this time only instead of latching the lane.",
+    "record": "openspec/changes/archive/2026-10-15-a139-per-trade-risk-budget/review.md"
+  },
+  "acceptance": [
+    "A first-leg entry whose Guardian cap is zero (one unit already exceeds a Guardian sizing cap) is a typed skip outcome, not an authority mismatch",
+    "A cycle whose only non-admission outcome is such a skip ends without error: a signed-activation market does not latch and a refresh-only market does not count a swallowed fault",
+    "The other owner scopes of the same cycle are still evaluated after a skip",
+    "Every skip is counted per market and announced once per account day and symbol",
+    "Every other precheck refusal, scope refusal reporting, daily-loss handling and every sell, stop-loss and emergency exit path behave exactly as before"
+  ],
+  "limits": [
+    "Scaling the quantity down to the remaining daily loss is out of scope (user decision 2026-10-15).",
+    "Whether a reported scope refusal should keep latching a signed-activation market is a separate finding left for a human decision."
+  ]
+}

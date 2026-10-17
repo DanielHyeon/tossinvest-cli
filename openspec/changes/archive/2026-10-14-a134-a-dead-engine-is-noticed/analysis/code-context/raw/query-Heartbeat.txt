@@ -1,0 +1,41 @@
+
+Search Results for "Heartbeat":
+
+struct      Heartbeat
+  internal/obs/heartbeat.go:41
+
+method      heartbeats
+  internal/httpapi/stream.go:332
+  (ctx context.Context) <-chan struct{}
+
+file        heartbeat.go
+  internal/obs/heartbeat.go:1
+
+function    heartbeat_fresh
+  tools/sdd/gbrain_project.py:72
+  (metadata: dict[str, object]) -> bool
+
+method      Beat
+  internal/obs/heartbeat.go:59
+  (ctx context.Context) error
+
+method      Run
+  internal/obs/heartbeat.go:91
+  (ctx context.Context) error
+
+constant    EventEngineHeartbeat
+  internal/obs/event.go:122
+  = "engine.heartbeat"
+
+method      test_stale_legacy_heartbeat_is_left_for_gbrain_recovery
+  tools/sdd/test_gbrain_project.py:154
+  (self) -> None
+
+method      requiresFullJudgement
+  internal/app/engine/exitloop.go:1109
+  (m managed, snapshot exitpolicy.ExitLineSnapshot) bool
+
+function    sameExitOperationalLine
+  internal/journal/exit_observation_refresh.go:160
+  (a, b exitpolicy.ExitLineSnapshot) bool
+

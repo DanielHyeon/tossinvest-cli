@@ -1,0 +1,163 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "HEAD",
+  "head_commit": "67d06bc914dba591752d1d759176e0910db22d4d",
+  "source_sha256": "57f486dffb57bfdc760e858005a72d92fedd91c1f1a5650935a6ad6fc2a5e4f3",
+  "function": "_recording_refusal",
+  "signature": "_recording_refusal(change, change_dir, root)",
+  "start": {
+    "line": 1237,
+    "column": 1
+  },
+  "end": {
+    "line": 1308,
+    "column": 20
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 1257,
+      "inherited_line": false,
+      "source": "if landing_file.is_symlink():"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 1267,
+      "inherited_line": false,
+      "source": "if _landing_record(change_dir, root) is not None:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 1269,
+      "inherited_line": false,
+      "source": "if landing_file.exists():"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 1279,
+      "inherited_line": false,
+      "source": "if (change_dir / 'analysis' / 'function-logic-reference.txt').exists():"
+    },
+    {
+      "id": "B5",
+      "kind": "Try",
+      "line": 1285,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B6",
+      "kind": "ExceptHandler",
+      "line": 1287,
+      "inherited_line": false,
+      "source": "except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 1289,
+      "inherited_line": false,
+      "source": "if facts.get('execution_baseline_adoption'):"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 1292,
+      "inherited_line": false,
+      "source": "if why:"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 1302,
+      "inherited_line": false,
+      "source": "if dirty.returncode:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1262,
+      "value": "(f'`{LANDING_FILE}` is a symlink — not followed: the record must be a regular file in the change directory, or the value the gate reads back is not the value it wrote', '')"
+    },
+    {
+      "line": 1268,
+      "value": "(f'`{LANDING_FILE}` already exists — not overwritten', '')"
+    },
+    {
+      "line": 1275,
+      "value": "(f'`{relative}` already exists on disk but not in HEAD — not overwritten: the gate reads the record from the commit, so commit it', '')"
+    },
+    {
+      "line": 1280,
+      "value": "('this change borrows its evidence — copy the landing recorded on the change that owns the bundles instead of computing a second one', '')"
+    },
+    {
+      "line": 1288,
+      "value": "(f'cannot resolve the comparison base: {exc}', '')"
+    },
+    {
+      "line": 1290,
+      "value": "(ADOPTION_REFUSES_A_LANDING, '')"
+    },
+    {
+      "line": 1293,
+      "value": "(f'no landing recorded — {why}', '')"
+    },
+    {
+      "line": 1303,
+      "value": "('the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits', '')"
+    },
+    {
+      "line": 1308,
+      "value": "('', base)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1257,
+      "callee": "landing_file.is_symlink"
+    },
+    {
+      "line": 1267,
+      "callee": "_landing_record"
+    },
+    {
+      "line": 1269,
+      "callee": "landing_file.exists"
+    },
+    {
+      "line": 1274,
+      "callee": "landing_file.relative_to"
+    },
+    {
+      "line": 1274,
+      "callee": "landing_file.relative_to(root).as_posix"
+    },
+    {
+      "line": 1279,
+      "callee": "(change_dir / 'analysis' / 'function-logic-reference.txt').exists"
+    },
+    {
+      "line": 1286,
+      "callee": "resolve_base"
+    },
+    {
+      "line": 1289,
+      "callee": "facts.get"
+    },
+    {
+      "line": 1291,
+      "callee": "_walk_floor"
+    },
+    {
+      "line": 1298,
+      "callee": "subprocess.run"
+    }
+  ]
+}

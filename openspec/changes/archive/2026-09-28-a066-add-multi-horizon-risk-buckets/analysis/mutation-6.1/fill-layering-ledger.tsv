@@ -1,0 +1,7 @@
+TREE	HEAD 9f9aa8e3	uncommitted: internal/riskbucket/a066_fill_target_held_layering_test.go (new)
+CONTROL	GREEN	
+L1 B6 loop removed	CAUGHT	--- FAIL: TestA066ApplyFillTargetHeldGuardsAreLayered (0.00s) | a066_fill_target_held_layering_test.go:53: B6: no top-level early loop over every event.ReservedMinor key that parses TargetHeldMinor and re
+L2 B6 walks only the first key	CAUGHT	--- FAIL: TestA066ApplyFillTargetHeldGuardsAreLayered (0.00s) | a066_fill_target_held_layering_test.go:53: B6: no top-level early loop over every event.ReservedMinor key that parses TargetHeldMinor and re
+L3 B32 backstop removed	CAUGHT	--- FAIL: TestA066ApplyFillTargetHeldGuardsAreLayered (0.00s) | a066_fill_target_held_layering_test.go:56: B32: the transfer loop no longer re-parses TargetHeldMinor as the declared backstop
+L4 B6 moved into a nested condition	CAUGHT	--- FAIL: TestA066ApplyFillTargetHeldShapeIsRefused (0.00s) | --- FAIL: TestA066ApplyFillTargetHeldGuardsAreLayered (0.00s) | a066_fill_target_held_layering_test.go:53: B6: no top-level early loop over every event.ReservedMinor key that parses TargetHeldMinor and re
+L5 B6 error check no longer returns	CAUGHT	--- FAIL: TestA066ApplyFillTargetHeldGuardsAreLayered (0.00s) | a066_fill_target_held_layering_test.go:53: B6: no top-level early loop over every event.ReservedMinor key that parses TargetHeldMinor and re

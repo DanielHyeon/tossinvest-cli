@@ -1,0 +1,30 @@
+CONTROL	GREEN	
+M01 CRA call removed	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	9.203s / FAIL
+M02 CRA account<-LaneID	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	8.571s / FAIL
+M03 CRA market<-KR	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	8.249s / FAIL
+M04 CRA horizon<-SHORT	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	20.231s / FAIL
+M05 fresh call removed	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	20.469s / FAIL
+M06 fresh account<-LaneID	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	20.180s / FAIL
+M07 fresh market<-KR	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	21.012s / FAIL
+M08 fresh horizon<-SHORT	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	21.341s / FAIL
+M09 reval call removed	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	19.792s / FAIL
+M10 reval account<-lane	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	19.461s / FAIL
+M11 reval market<-KR	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	19.479s / FAIL
+M12 reval horizon<-SHORT	CAUGHT	FAIL / # github.com/JungHoonGhae/tossinvest-cli/internal/journal [github.com/JungHoonGhae/tossinvest-cli/internal/journal.test] / internal/journal/risk_bucket_issuance.go:631:2: declared and not used: horizon
+M13 decisionHorizon reads market dimension	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	20.850s / FAIL
+M14 admissionHorizon reads market cap	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	19.479s / FAIL
+M15 rule ignores found lock	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	19.537s / FAIL
+M16 lock query ignores horizon	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.451s / FAIL
+M17 lock query ignores market	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.490s / FAIL
+M18 lock query ignores account	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.777s / FAIL
+M19 rule read error admits	SURVIVED	
+M20 rule unknown scope admits	SURVIVED	
+M21 locked error not wrapping blocked	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.266s / FAIL
+M22 API skips existing check	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.382s / FAIL
+M23 API accepts empty cause	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.530s / FAIL
+M24 API accepts zero time	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	19.117s / FAIL
+M25 no first-cause trigger	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.223s / FAIL
+M26 first-cause trigger ignores horizon	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.261s / FAIL
+M27 no update trigger	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.149s / FAIL
+M28 no delete trigger	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.279s / FAIL
+M29 schema version not bumped	CAUGHT	FAIL / FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	17.276s / FAIL

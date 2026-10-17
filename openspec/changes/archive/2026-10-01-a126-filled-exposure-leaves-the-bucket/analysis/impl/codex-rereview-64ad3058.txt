@@ -1,0 +1,20 @@
+DECLARATION: I did not read or write anything under ~/.codex and made no file changes.
+
+Previous three P2 findings are closed. No P0–P2 findings in this fix lot. Two non-blocking documentation corrections remain:
+
+- **P3 — Incorrect SQL equivalence statement.** `openspec/changes/a126-filled-exposure-leaves-the-bucket/review.md:278` says the shared fragment has the same semantics as the **old release predicate**. That predicate was defective and intentionally changed. Semantic equivalence applies to the old **transition reconstruction predicate**; extraction added outer parentheses. Replace “옛 해제 철자” accordingly.
+- **P3 — Mutation-count explanation is inconsistent.** `openspec/changes/a126-filled-exposure-leaves-the-bucket/review.md:286–287` says “기존 21 + 새” nine mutations equals 27. The current harness and committed log contain **18 existing + 9 new = 27 distinct mutations**. Correct the explanation; the log’s 27 count is consistent with the harness.
+
+Static verification:
+
+1. **Post-release overage:** `internal/journal/a126_filled_exposure_leaves_the_bucket_test.go:496–529` now creates B’s latch through production fill/actual completion: `50 + 24 + 30 = 104 > 100`. It preserves the latch across A’s release, checks admission blocking, calls `ReleaseRiskOverageLatch`, then completes B’s next actual fill. Assertions require zero latches and `30 filled + 25 held = 55`; including A would yield 105. The values distinguish the required behavior.
+
+2. **C2:** Same file, `:689–726`, calls `RecordQFinalDecisionAndReserve`, asserts `QFinal == 12`, and calls `RevalidateQFinalAdmission` before and after the revert, requiring `required == true` and no error. It also verifies A’s ORPHAN_FILL and shared usage `50 + 60`. A future revalidation rejection based on recomputed usage breaks this test.
+
+3. **Snapshot replay:** `internal/riskbucket/a126_snapshot_digest_replay_test.go:20–32,78–124` uses `LoadProductionRiskSnapshotAuthority`, compares bundle and per-dimension snapshot digests across fresh connections at each stage, verifies departure changes digests, and compares reverted versus never-departed state. The fixture separation is justified: the generator requires schema **27** (`production_snapshot_authority.go:33,367`), while the journal schema is **35** (`internal/journal/schema.go:6`). This proves generator reread determinism; the existing journal test separately exercises production lifecycle writes.
+
+Additional cases are non-vacuous: HELD/zero isolates the state guard; symbol/market divergence exercises decision-side receipt detection; receipt joins distinguish generation, symbol, and account; admission requires both the error type and `"ledger usage unreadable"`, avoiding an unrelated refusal passing the test. The census catches ordinary direct `.releaseRiskBucketOwner(` calls in non-test journal files. It is a literal-source tripwire, not exhaustive indirect-call analysis.
+
+Confirmed: **no non-test `.go` file changed** in `64ad3058`. Design errata align with the implemented scope. Tests and committed logs were inspected, not executed.
+
+VERDICT: PASS

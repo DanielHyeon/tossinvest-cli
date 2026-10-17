@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a133",
+  "title": "No alert that leaves the system carries account information",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a133-an-alert-carries-no-account",
+    "path": "openspec/changes/archive/2026-10-13-a133-an-alert-carries-no-account"
+  },
+  "found_by": {
+    "date": "2026-10-13",
+    "how": "a131 found, out of its scope, that the ntfy notification body spreads obs.Event.Fields and so sends the account reference and position_id to an external service; the Manager confirmed it. The user decided on 2026-10-13 that account information is not kept in logs and that this alert leak is fixed.",
+    "record": "openspec/changes/archive/2026-10-13-a133-an-alert-carries-no-account/proposal.md"
+  },
+  "acceptance": [
+    "Every notification the system publishes passes, at the one transport boundary, through a131's redaction rule (internal/redact) before any byte leaves the process: title, body and tags; the request URL carries only the configured server and topic",
+    "Context fields whose name is an account key are dropped when they are rendered into a notification body, and every remaining value is replaced by the same rule",
+    "A sentinel account and account-derived identifiers planted in Fields, Title and Body appear in none of the bytes an httptest ntfy server receives, on the live critical, best-effort, normal-relay, outbox redelivery and notification-test paths",
+    "Symbol, reason code and attempt id stay in the notification",
+    "Critical delivery, the delivery-failure judgement and the retry behaviour are unchanged, and no alert path delays an exit or a stop"
+  ]
+}

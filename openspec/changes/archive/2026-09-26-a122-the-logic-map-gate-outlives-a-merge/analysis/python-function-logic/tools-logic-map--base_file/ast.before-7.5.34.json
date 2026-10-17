@@ -1,0 +1,59 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "ff19be01",
+  "head_commit": "ff19be0162521627988dc8e09a06297b57e4d35d",
+  "source_sha256": "6ad654a895ea8f23b0234c7cbe44490ab7c72eb5bcca5f80f8de4430bec47138",
+  "function": "base_file",
+  "signature": "base_file(root, base, source)",
+  "start": {
+    "line": 97,
+    "column": 1
+  },
+  "end": {
+    "line": 110,
+    "column": 16
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 104,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 105,
+      "value": "None"
+    },
+    {
+      "line": 110,
+      "value": "path"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 98,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 106,
+      "callee": "tempfile.mkstemp"
+    },
+    {
+      "line": 107,
+      "callee": "os.close"
+    },
+    {
+      "line": 108,
+      "callee": "Path"
+    },
+    {
+      "line": 109,
+      "callee": "path.write_bytes"
+    }
+  ]
+}

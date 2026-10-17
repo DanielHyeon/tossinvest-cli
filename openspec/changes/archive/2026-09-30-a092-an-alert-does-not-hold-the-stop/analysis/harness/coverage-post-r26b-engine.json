@@ -1,0 +1,367 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/app/engine",
+ "tests_run": 37,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-app-engine--alertdeliverer.deliverone": {
+   "B1": {
+    "kind": "if",
+    "line": 272,
+    "column": 2,
+    "block": "272.16-277.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "switch",
+    "line": 278,
+    "column": 2,
+    "block": "278.2-278.27",
+    "entered_by": [
+     "TestA092AReleaseAfterTheEpochReadStandsForTheReleaseSite",
+     "TestA092TheAttemptLimitVerdictSurvivesAMissingRelease",
+     "TestA092TheDelivererLatchesWhenTheReleaseFindsNoRow",
+     "TestA092TheDelivererRecordsAPreemptedAttempt",
+     "TestA092TheDelivererRecordsAPreemptionSeenOnlyAtRelease",
+     "TestAClearAfterTheEvidenceLeavesWhatAnOnTimeLatchWouldHave",
+     "TestAClearAfterTheLimitthRecordFailureStillEscalates",
+     "TestAClearBeforeTheEvidenceDoesNotDropTheJudgement",
+     "TestAClearBetweenRecordFailuresRestartsTheCount",
+     "TestAClearBetweenTheEvidenceAndTheEpochReadRelatchesConservatively",
+     "TestAClearDuringThePublishIsBeforeTheEvidence",
+     "TestAClearJustBeforeTheRecordIsBeforeTheEvidence",
+     "TestAFailedEscalationLeavesTheLatch",
+     "TestALatchOnlyJudgementNeverEscalatesEvenAfterAClear",
+     "TestARearmWithoutAClearCarriesTheRecordFailureRun",
+     "TestARecordThatFindsNoRowLatchesButNeverEscalates",
+     "TestTheExecutorHoldsTheRowAndTheSynchronousSenderStandsDown",
+     "TestTheExecutorLatchesAndEscalatesAtTheAttemptLimit",
+     "TestTheLatchLineIsWrittenOnlyWhenThisExecutorLatches",
+     "TestTheProductionExecutorLatchesWithoutTheSynchronousPath",
+     "TestTheRuntimeWaitsForTheExecutorsLedgerWriteBeforeReturning",
+     "TestTheSynchronousSenderStandsDownWhileTheExecutorHoldsTheRow"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "case",
+    "line": 279,
+    "column": 2,
+    "block": "279.29-282.25",
+    "entered_by": [
+     "TestA092AReleaseAfterTheEpochReadStandsForTheReleaseSite",
+     "TestA092TheAttemptLimitVerdictSurvivesAMissingRelease",
+     "TestA092TheDelivererLatchesWhenTheReleaseFindsNoRow",
+     "TestA092TheDelivererRecordsAPreemptedAttempt",
+     "TestA092TheDelivererRecordsAPreemptionSeenOnlyAtRelease",
+     "TestAClearAfterTheEvidenceLeavesWhatAnOnTimeLatchWouldHave",
+     "TestAClearAfterTheLimitthRecordFailureStillEscalates",
+     "TestAClearBeforeTheEvidenceDoesNotDropTheJudgement",
+     "TestAClearBetweenRecordFailuresRestartsTheCount",
+     "TestAClearBetweenTheEvidenceAndTheEpochReadRelatchesConservatively",
+     "TestAClearDuringThePublishIsBeforeTheEvidence",
+     "TestAClearJustBeforeTheRecordIsBeforeTheEvidence",
+     "TestAFailedEscalationLeavesTheLatch",
+     "TestALatchOnlyJudgementNeverEscalatesEvenAfterAClear",
+     "TestARearmWithoutAClearCarriesTheRecordFailureRun",
+     "TestARecordThatFindsNoRowLatchesButNeverEscalates",
+     "TestTheExecutorHoldsTheRowAndTheSynchronousSenderStandsDown",
+     "TestTheExecutorLatchesAndEscalatesAtTheAttemptLimit",
+     "TestTheLatchLineIsWrittenOnlyWhenThisExecutorLatches",
+     "TestTheProductionExecutorLatchesWithoutTheSynchronousPath",
+     "TestTheRuntimeWaitsForTheExecutorsLedgerWriteBeforeReturning"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "case",
+    "line": 283,
+    "column": 2,
+    "block": "283.34-292.46",
+    "entered_by": [
+     "TestTheSynchronousSenderStandsDownWhileTheExecutorHoldsTheRow"
+    ],
+    "union": null
+   },
+   "B5": {
+    "kind": "if",
+    "line": 292,
+    "column": 3,
+    "block": "292.46-296.4",
+    "entered_by": [
+     "TestTheSynchronousSenderStandsDownWhileTheExecutorHoldsTheRow"
+    ],
+    "union": null
+   },
+   "B6": {
+    "kind": "case",
+    "line": 298,
+    "column": 2,
+    "block": "298.10-303.9",
+    "entered_by": [],
+    "union": null
+   },
+   "B7": {
+    "kind": "if",
+    "line": 305,
+    "column": 2,
+    "block": "305.17-312.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B8": {
+    "kind": "if",
+    "line": 316,
+    "column": 2,
+    "block": "316.24-326.3",
+    "entered_by": [
+     "TestTheExecutorLatchesAndEscalatesAtTheAttemptLimit",
+     "TestTheProductionExecutorLatchesWithoutTheSynchronousPath"
+    ],
+    "union": null
+   },
+   "B9": {
+    "kind": "else",
+    "line": 326,
+    "column": 9,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B10": {
+    "kind": "if",
+    "line": 333,
+    "column": 3,
+    "block": "333.18-335.4",
+    "entered_by": [
+     "TestA092AReleaseAfterTheEpochReadStandsForTheReleaseSite",
+     "TestA092TheAttemptLimitVerdictSurvivesAMissingRelease",
+     "TestA092TheDelivererLatchesWhenTheReleaseFindsNoRow",
+     "TestA092TheDelivererRecordsAPreemptedAttempt",
+     "TestA092TheDelivererRecordsAPreemptionSeenOnlyAtRelease",
+     "TestAClearAfterTheEvidenceLeavesWhatAnOnTimeLatchWouldHave",
+     "TestAClearAfterTheLimitthRecordFailureStillEscalates",
+     "TestAClearBeforeTheEvidenceDoesNotDropTheJudgement",
+     "TestAClearBetweenRecordFailuresRestartsTheCount",
+     "TestAClearBetweenTheEvidenceAndTheEpochReadRelatchesConservatively",
+     "TestAClearDuringThePublishIsBeforeTheEvidence",
+     "TestAClearJustBeforeTheRecordIsBeforeTheEvidence",
+     "TestAFailedEscalationLeavesTheLatch",
+     "TestALatchOnlyJudgementNeverEscalatesEvenAfterAClear",
+     "TestARearmWithoutAClearCarriesTheRecordFailureRun",
+     "TestARecordThatFindsNoRowLatchesButNeverEscalates",
+     "TestTheExecutorLatchesAndEscalatesAtTheAttemptLimit",
+     "TestTheLatchLineIsWrittenOnlyWhenThisExecutorLatches",
+     "TestTheProductionExecutorLatchesWithoutTheSynchronousPath",
+     "TestTheRuntimeWaitsForTheExecutorsLedgerWriteBeforeReturning"
+    ],
+    "union": null
+   },
+   "B11": {
+    "kind": "if",
+    "line": 337,
+    "column": 2,
+    "block": "337.17-340.3",
+    "entered_by": [
+     "TestA092AReleaseAfterTheEpochReadStandsForTheReleaseSite",
+     "TestA092TheAttemptLimitVerdictSurvivesAMissingRelease",
+     "TestA092TheDelivererLatchesWhenTheReleaseFindsNoRow",
+     "TestA092TheDelivererRecordsAPreemptedAttempt",
+     "TestA092TheDelivererRecordsAPreemptionSeenOnlyAtRelease",
+     "TestAClearAfterTheEvidenceLeavesWhatAnOnTimeLatchWouldHave",
+     "TestAClearAfterTheLimitthRecordFailureStillEscalates",
+     "TestAClearBeforeTheEvidenceDoesNotDropTheJudgement",
+     "TestAClearBetweenRecordFailuresRestartsTheCount",
+     "TestAClearBetweenTheEvidenceAndTheEpochReadRelatchesConservatively",
+     "TestAClearDuringThePublishIsBeforeTheEvidence",
+     "TestAClearJustBeforeTheRecordIsBeforeTheEvidence",
+     "TestAFailedEscalationLeavesTheLatch",
+     "TestALatchOnlyJudgementNeverEscalatesEvenAfterAClear",
+     "TestARearmWithoutAClearCarriesTheRecordFailureRun",
+     "TestARecordThatFindsNoRowLatchesButNeverEscalates",
+     "TestTheExecutorLatchesAndEscalatesAtTheAttemptLimit",
+     "TestTheLatchLineIsWrittenOnlyWhenThisExecutorLatches",
+     "TestTheProductionExecutorLatchesWithoutTheSynchronousPath",
+     "TestTheRuntimeWaitsForTheExecutorsLedgerWriteBeforeReturning"
+    ],
+    "union": null
+   }
+  },
+  "internal-app-engine--alertdeliverer.recordfailedattempt": {
+   "B1": {
+    "kind": "if",
+    "line": 350,
+    "column": 2,
+    "block": "350.16-352.3",
+    "entered_by": [
+     "TestAClearAfterTheLimitthRecordFailureStillEscalates",
+     "TestAClearBetweenRecordFailuresRestartsTheCount",
+     "TestARearmWithoutAClearCarriesTheRecordFailureRun",
+     "TestTheRuntimeWaitsForTheExecutorsLedgerWriteBeforeReturning"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 357,
+    "column": 2,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 365,
+    "column": 2,
+    "block": "365.116-368.3",
+    "entered_by": [
+     "TestA092TheDelivererRecordsAPreemptionSeenOnlyAtRelease"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 369,
+    "column": 2,
+    "block": "369.16-374.3",
+    "entered_by": [
+     "TestAClearAfterTheLimitthRecordFailureStillEscalates",
+     "TestAClearBetweenRecordFailuresRestartsTheCount",
+     "TestARearmWithoutAClearCarriesTheRecordFailureRun",
+     "TestTheRuntimeWaitsForTheExecutorsLedgerWriteBeforeReturning"
+    ],
+    "union": null
+   },
+   "B5": {
+    "kind": "switch",
+    "line": 375,
+    "column": 2,
+    "block": "375.2-375.21",
+    "entered_by": [
+     "TestA092AReleaseAfterTheEpochReadStandsForTheReleaseSite",
+     "TestA092TheAttemptLimitVerdictSurvivesAMissingRelease",
+     "TestA092TheDelivererLatchesWhenTheReleaseFindsNoRow",
+     "TestA092TheDelivererRecordsAPreemptedAttempt",
+     "TestA092TheDelivererRecordsAPreemptionSeenOnlyAtRelease",
+     "TestAClearAfterTheEvidenceLeavesWhatAnOnTimeLatchWouldHave",
+     "TestAClearBeforeTheEvidenceDoesNotDropTheJudgement",
+     "TestAClearBetweenTheEvidenceAndTheEpochReadRelatchesConservatively",
+     "TestAClearDuringThePublishIsBeforeTheEvidence",
+     "TestAClearJustBeforeTheRecordIsBeforeTheEvidence",
+     "TestAFailedEscalationLeavesTheLatch",
+     "TestALatchOnlyJudgementNeverEscalatesEvenAfterAClear",
+     "TestARecordThatFindsNoRowLatchesButNeverEscalates",
+     "TestTheExecutorLatchesAndEscalatesAtTheAttemptLimit",
+     "TestTheLatchLineIsWrittenOnlyWhenThisExecutorLatches",
+     "TestTheProductionExecutorLatchesWithoutTheSynchronousPath"
+    ],
+    "union": null
+   },
+   "B6": {
+    "kind": "case",
+    "line": 376,
+    "column": 2,
+    "block": "376.29-379.39",
+    "entered_by": [
+     "TestA092AReleaseAfterTheEpochReadStandsForTheReleaseSite",
+     "TestA092TheAttemptLimitVerdictSurvivesAMissingRelease",
+     "TestA092TheDelivererLatchesWhenTheReleaseFindsNoRow",
+     "TestA092TheDelivererRecordsAPreemptionSeenOnlyAtRelease",
+     "TestAClearAfterTheEvidenceLeavesWhatAnOnTimeLatchWouldHave",
+     "TestAClearBeforeTheEvidenceDoesNotDropTheJudgement",
+     "TestAClearBetweenTheEvidenceAndTheEpochReadRelatchesConservatively",
+     "TestAClearDuringThePublishIsBeforeTheEvidence",
+     "TestAClearJustBeforeTheRecordIsBeforeTheEvidence",
+     "TestAFailedEscalationLeavesTheLatch",
+     "TestTheExecutorLatchesAndEscalatesAtTheAttemptLimit",
+     "TestTheLatchLineIsWrittenOnlyWhenThisExecutorLatches",
+     "TestTheProductionExecutorLatchesWithoutTheSynchronousPath"
+    ],
+    "union": null
+   },
+   "B7": {
+    "kind": "if",
+    "line": 379,
+    "column": 3,
+    "block": "379.39-381.4",
+    "entered_by": [
+     "TestA092AReleaseAfterTheEpochReadStandsForTheReleaseSite",
+     "TestA092TheDelivererLatchesWhenTheReleaseFindsNoRow",
+     "TestA092TheDelivererRecordsAPreemptionSeenOnlyAtRelease",
+     "TestAClearAfterTheEvidenceLeavesWhatAnOnTimeLatchWouldHave",
+     "TestAClearBeforeTheEvidenceDoesNotDropTheJudgement",
+     "TestAClearBetweenTheEvidenceAndTheEpochReadRelatchesConservatively",
+     "TestAClearJustBeforeTheRecordIsBeforeTheEvidence",
+     "TestAFailedEscalationLeavesTheLatch",
+     "TestTheExecutorLatchesAndEscalatesAtTheAttemptLimit",
+     "TestTheLatchLineIsWrittenOnlyWhenThisExecutorLatches",
+     "TestTheProductionExecutorLatchesWithoutTheSynchronousPath"
+    ],
+    "union": null
+   },
+   "B8": {
+    "kind": "case",
+    "line": 383,
+    "column": 2,
+    "block": "383.61-387.52",
+    "entered_by": [
+     "TestA092TheDelivererRecordsAPreemptedAttempt"
+    ],
+    "union": null
+   },
+   "B9": {
+    "kind": "case",
+    "line": 388,
+    "column": 2,
+    "block": "388.10-391.66",
+    "entered_by": [
+     "TestALatchOnlyJudgementNeverEscalatesEvenAfterAClear",
+     "TestARecordThatFindsNoRowLatchesButNeverEscalates"
+    ],
+    "union": null
+   }
+  },
+  "internal-app-engine--alertdeliverer.release": {
+   "B1": {
+    "kind": "if",
+    "line": 626,
+    "column": 2,
+    "block": "626.16-629.3",
+    "entered_by": [],
+    "union": null
+   }
+  },
+  "internal-app-engine--runtime.escalate": {
+   "B1": {
+    "kind": "if",
+    "line": 459,
+    "column": 2,
+    "block": "459.74-461.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 463,
+    "column": 2,
+    "block": "463.69-471.3",
+    "entered_by": [
+     "TestA092AnUnannouncedSustainedTighteningIsReportedAsTightened"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 472,
+    "column": 2,
+    "block": "472.16-478.3",
+    "entered_by": [
+     "TestTheDegradationAlertGoesOutEvenWhenTheModeTransitionFails"
+    ],
+    "union": null
+   }
+  }
+ }
+}

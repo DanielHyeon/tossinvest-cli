@@ -1,0 +1,105 @@
+{
+  "revision": "base",
+  "file": "internal/obs/notifier.go",
+  "source_sha256": "d705f78d68c1eff38216e9dc9791cf737dc9d505bca77b8543aa7b7bc236bd83",
+  "package": "obs",
+  "function": "publishBestEffort",
+  "receiver": "Notifier",
+  "signature": "Notifier.publishBestEffort(params=3, results=0)",
+  "start": {
+    "line": 179,
+    "column": 1
+  },
+  "end": {
+    "line": 192,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 181,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 12
+      },
+      "text": "n.Publisher.Publish"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 37
+      },
+      "text": "notificationFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 3
+      },
+      "text": "n.Log.Warn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 23
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 24
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 16
+      },
+      "text": "err.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 183,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

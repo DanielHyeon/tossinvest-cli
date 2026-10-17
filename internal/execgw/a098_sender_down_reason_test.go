@@ -27,6 +27,17 @@ import (
 // base e6c4636a.
 const a098ReasonCodeCountBeforeSenderDown = 29
 
+// reasonCodesRegisteredAfterA098 는 a098 뒤에 **다른 change 가** 등록한 코드임. 길이 단언이 절대값이라
+// 새 코드 하나가 이 시험을 깨뜨렸음(a066 5.5, 2026-09-27) — 뒤에 온 코드를 이름으로 적고 각각의 소속도
+// 따로 단언해서, 길이 단언이 "a098 이 정확히 하나를 더했다"는 뜻을 그대로 유지함.
+var reasonCodesRegisteredAfterA098 = []execgw.ReasonCode{
+	execgw.ReasonEntryLossLockActive, // a066 5.5
+	// a112 5.6.2.1 — 전략 중앙 무결성의 진입 래치(사람 결정 (6)). 해제는 재시작뿐(원장 수리 뒤) — 완화 명령 가족 없음.
+	execgw.ReasonStrategyCentralIntegrity,
+	// a094 R1 — 브로커가 본문 code 로 이름 준 확정 거절(반대 방향 미체결 주문).
+	execgw.ReasonOppositePendingOrder,
+}
+
 // TestTheSenderDownReasonIsRegisteredInTheEnumeration is check ① and ②.
 //
 // Length and membership are separate assertions on purpose. Membership alone
@@ -35,8 +46,18 @@ const a098ReasonCodeCountBeforeSenderDown = 29
 func TestTheSenderDownReasonIsRegisteredInTheEnumeration(t *testing.T) {
 	codes := execgw.AllReasonCodes()
 
-	if got, want := len(codes), a098ReasonCodeCountBeforeSenderDown+1; got != want {
-		t.Errorf("AllReasonCodes() has %d codes, want %d — exactly one more than before a098", got, want)
+	if got, want := len(codes), a098ReasonCodeCountBeforeSenderDown+1+len(reasonCodesRegisteredAfterA098); got != want {
+		t.Errorf("AllReasonCodes() has %d codes, want %d — exactly one more than before a098, plus the %d registered after it",
+			got, want, len(reasonCodesRegisteredAfterA098))
+	}
+	for _, later := range reasonCodesRegisteredAfterA098 {
+		registered := false
+		for _, c := range codes {
+			registered = registered || c == later
+		}
+		if !registered {
+			t.Errorf("AllReasonCodes() does not contain %q, which the post-a098 count assumes", later)
+		}
 	}
 
 	found := false

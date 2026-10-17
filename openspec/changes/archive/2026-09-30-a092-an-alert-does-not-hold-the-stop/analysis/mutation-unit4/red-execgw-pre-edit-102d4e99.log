@@ -1,0 +1,6 @@
+# 편집 전(102d4e99 modegate.go) 에서 a092_mode_projection_internal_test.go (-race)
+--- FAIL: TestA092AStaleProjectionIsNotApplied — an older relaxation arriving late cleared a newer tightening
+--- FAIL: TestA092TheModeRevisionMovesOnlyWhenPresenceChanges — revision after a detail-only replacement = 3, want 2
+--- FAIL: TestA092NoCheckSeesAGapDuringReplacement — entry checks saw no latch 5632 times while one blocking mode replaced another
+--- FAIL: TestA092ProjectionTakesTheGateLockOnce — ProjectOperatingMode calls Block
+# PASS(회귀 가드): TestA092AProjectionReplacesTheModeLatch — 옛 판도 지운 뒤 넣으므로 설명은 교체됨(빈 창이 결함)

@@ -2,12 +2,15 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/risk"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 )
@@ -23,6 +26,14 @@ const (
 	StrategyFirstLegAuthorityCollectionFailed StrategyFirstLegAdmissionCode = "AUTHORITY_COLLECTION_FAILED"
 	StrategyFirstLegAuthorityMismatch         StrategyFirstLegAdmissionCode = "AUTHORITY_MISMATCH"
 	StrategyFirstLegAtomicAdmissionFailed     StrategyFirstLegAdmissionCode = "ATOMIC_ADMISSION_FAILED"
+	// StrategyFirstLegDailyLossLimit 은 일일 손실 한도로 계좌의 신규 진입이 막힌 것(a137) — 레인 결함이 아닌 정책 결과.
+	StrategyFirstLegDailyLossLimit StrategyFirstLegAdmissionCode = "DAILY_LOSS_LIMIT"
+	// StrategyFirstLegDailyLossUnmeasurable 은 그날의 손실을 잴 수 없어 신규 진입이 막힌 것(a137, Manager 결정 ①) — 매 주기 거절은
+	// 유지하되 레인 결함이 아님.
+	StrategyFirstLegDailyLossUnmeasurable StrategyFirstLegAdmissionCode = "DAILY_LOSS_UNMEASURABLE"
+	// StrategyFirstLegGuardianCapZero 는 Guardian 상한이 한 단위도 허용하지 않아 그 진입 하나를 건너뛴 것(a146, 사용자 결정 2026-10-15) —
+	// 레인 결함이 아닌 정책 결과이고 다음 주기에 다시 판정됨.
+	StrategyFirstLegGuardianCapZero StrategyFirstLegAdmissionCode = "GUARDIAN_CAP_ZERO"
 )
 
 // StrategyFirstLegAdmissionResult exposes no reusable authority. Receipt is
@@ -34,6 +45,9 @@ type StrategyFirstLegAdmissionResult struct {
 	Market  string
 	Receipt journal.QFinalCampaignFirstLegReceipt
 	Detail  string
+	// cause 는 권한 수집이 낸 오류 그대로다(a112 5.2.2.2 J4 · 리뷰 수리). 주문 경로는 이 사슬의 **타입**으로만 「다음 범위로 가도 되는가」를
+	// 가르고(범위 거절 타입), 결함이면 원인의 신원(원장 · ctx)을 잃지 않는다 — 문구로 가르지 않는다. Detail 은 같은 오류의 문구다.
+	cause error
 }
 
 // strategyFirstLegAuthorityLoader has an unexported method deliberately. A
@@ -50,6 +64,9 @@ type strategyFirstLegAuthorityLoader interface {
 type strategyFirstLegGuardian interface {
 	PrecheckQFinalCampaignFirstLeg(execgw.QFinalCampaignFirstLegIssuance) (execgw.QFinalCampaignFirstLegPrecheck, error)
 	IssuePrecheckedQFinalCampaignFirstLeg(context.Context, execgw.QFinalCampaignFirstLegPrecheck) (journal.QFinalCampaignFirstLegReceipt, error)
+	// a137: precheck 직전의 일일 손실 측정 토큰과, 한도 도달의 운영 모드 강화(원장 쓰기는 Guardian 안에서).
+	MeasureDailyLoss(context.Context) execgw.DailyLossMeasurement
+	EscalateDailyLossLimit(context.Context, error) error
 }
 
 var _ strategyFirstLegGuardian = (*execgw.RiskGuardian)(nil)
@@ -76,14 +93,65 @@ func (b *strategyFirstLegAdmissionBridge) admit(ctx context.Context, result stra
 	}
 	authority, err := b.loader.collectStrategyFirstLegAuthority(ctx, accepted)
 	if err != nil {
-		return strategyFirstLegRefusal(StrategyFirstLegAuthorityCollectionFailed, accepted.market, err.Error())
+		refusal := strategyFirstLegRefusal(StrategyFirstLegAuthorityCollectionFailed, accepted.market, err.Error())
+		refusal.cause = err
+		return refusal
 	}
 	if err := validateStrategyFirstLegAuthority(accepted, authority); err != nil {
 		return strategyFirstLegRefusal(StrategyFirstLegAuthorityMismatch, accepted.market, err.Error())
 	}
+	// a137: 일일 손실 측정은 precheck **바로 앞**(토큰의 측정 순간이 precheck 에 가장 가깝게). 실패도 토큰에 봉인되어 daily_loss 단까지 감.
+	authority.Entry.DailyLoss = b.guardian.MeasureDailyLoss(ctx)
 	precheck, err := b.guardian.PrecheckQFinalCampaignFirstLeg(authority)
 	if err != nil {
-		return strategyFirstLegRefusal(StrategyFirstLegAuthorityMismatch, accepted.market, err.Error())
+		// a137: 일일 손실 한도 체인 거절은 타입 · 단계로만 가름(문구 아님) — 강화에 성공하면 계좌 진입 차단(레인 결함 아님),
+		// 실패하면 거절과 강화 오류를 함께 든 결함으로 남음(조용히 삼켜지지 않게).
+		// 측정 불가(측정기 · 토큰에서만 생기는 타입 표지)는 강화 없이 계좌 단위 진입 차단 결과 — 그 밖의 입력 불가는 오늘처럼 결함.
+		if unmeasurable := (*execgw.DailyLossUnmeasurable)(nil); errors.As(err, &unmeasurable) {
+			if issue := (*execgw.IssueRefusal)(nil); errors.As(err, &issue) && issue.Stage == execgw.StageChain &&
+				issue.Reason == string(risk.ReasonInputUnavailable) {
+				refusal := strategyFirstLegRefusal(StrategyFirstLegDailyLossUnmeasurable, accepted.market, err.Error())
+				refusal.cause = err
+				return refusal
+			}
+		}
+		if issue := (*execgw.IssueRefusal)(nil); errors.As(err, &issue) && issue.Stage == execgw.StageChain &&
+			issue.Reason == string(risk.ReasonDailyLossLimitReached) {
+			refusal := strategyFirstLegRefusal(StrategyFirstLegDailyLossLimit, accepted.market, err.Error())
+			refusal.cause = b.guardian.EscalateDailyLossLimit(ctx, err)
+			return refusal
+		}
+		// a146(사용자 결정 2026-10-15): Guardian 상한 0 — 한 단위도 못 사는 진입은 레인 결함이 아니라 그 진입 하나의 건너뜀. 거절 타입 · 코드 ·
+		// 그 거절 **자신의** 원인 sentinel 셋이 모두 맞을 때만(문구 아님). 같은 코드의 해석 실패 · 원인 없는 0 · FX/정책 오류, 그리고 sentinel 이
+		// 거절 곁에만 있는 모양은 아래 AUTHORITY_MISMATCH 그대로(결함). 흔적은 주기 ctx 의 기록자가 남김(계수 · 하루 한 줄).
+		if qFinal := (*execgw.QFinalRefusal)(nil); errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalExistingGuardianCap &&
+			errors.Is(qFinal, risk.ErrStrategyQuantityZero) {
+			// 가격은 validateStrategyFirstLegAuthority 가 이미 해석해 결속한 봉인 조건의 값(여기서는 표시용).
+			entryMajor, _ := accepted.result.ExecutionTerms.Entry().MajorDecimal()
+			stopMajor, _ := accepted.result.ExecutionTerms.EffectiveStop().MajorDecimal()
+			fx := "unavailable"
+			if digest := authority.Entry.FXAuthority.Digest(); digest != "" {
+				fx = authority.Entry.FXAuthority.QuoteCurrency() + "->" + authority.Entry.FXAuthority.AccountCurrency() + " " + digest
+			}
+			skip := &strategyEntrySkip{market: accepted.market, symbol: accepted.result.Lineage.Symbol, entry: entryMajor, stop: stopMajor, fx: fx, cause: err}
+			refusal := strategyFirstLegRefusal(StrategyFirstLegGuardianCapZero, accepted.market, err.Error())
+			refusal.cause = skip
+			recordStrategyEntrySkip(ctx, skip)
+			return refusal
+		}
+		refusal := strategyFirstLegRefusal(StrategyFirstLegAuthorityMismatch, accepted.market, err.Error())
+		// a137 F8: 원인을 실음 — 하류가 errors.As 로 거절 타입을 볼 수 있게(문구 · 분류는 그대로).
+		refusal.cause = err
+		// a112 6.2(Manager 판정 (A)): 그 범위의 버킷 고갈(q_final 0)은 결함이 아니라 그 범위의 정책 결과다 — **타입 · 코드**로만 범위 거절로
+		// 싣는다(문구 아님). 그래야 한 family 버킷이 고갈돼도 같은 주기의 다른 범위가 계속 평가된다(스펙 「한 family risk bucket 고갈」).
+		// 그 밖의 precheck 거절과, 발급 단계(원장 트랜잭션)의 거절 — 같은 파도 둘째 범위의 BUCKET_USAGE_STALE 등 CAS — 은 결함으로 남는다
+		// (설계 ④ 보호). 진입 관문 관측 거절(R3)은 이 판정이 넓히지 않는다.
+		if qFinal := (*execgw.QFinalRefusal)(nil); errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalBucketCapExhausted {
+			if key, keyed := strategyOwnerKeyOf(authority.Result.Lineage); keyed {
+				refusal.cause = &strategyScopeRefusal{scope: key, detail: "this owner scope's risk bucket is exhausted", cause: err}
+			}
+		}
+		return refusal
 	}
 	receipt, err := b.guardian.IssuePrecheckedQFinalCampaignFirstLeg(ctx, precheck)
 	if err != nil {

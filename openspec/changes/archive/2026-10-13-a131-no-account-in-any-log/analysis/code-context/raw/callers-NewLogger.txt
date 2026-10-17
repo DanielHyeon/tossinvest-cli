@@ -1,0 +1,159 @@
+
+Callers of "NewLogger" (52):
+
+function    TestARateLimitedRecoveryLeavesOneCountableLine
+  cmd/tossctl/a102_engine_ready_test.go:230
+
+function    TestARecoveryThatWasNeverThrottledSaysNothing
+  cmd/tossctl/a102_engine_ready_test.go:259
+
+function    a108Engine
+  cmd/tossctl/a108_the_engine_outlives_its_read_endpoint_test.go:86
+
+function    assembleAccountSequenceTestEngine
+  cmd/tossctl/engine_account_seq_recovery_test.go:28
+
+function    TestAssembleEngineWiresOneProductionGuardianToTheEngineJournalAndExitObserver
+  cmd/tossctl/engine_assembly_test.go:28
+
+function    buildFlattenWiring
+  cmd/tossctl/flatten.go:199
+
+function    newCycleLog
+  internal/app/engine/a074_cycle_report_test.go:30
+
+function    TestAnExpiredLeaseIsTakenOverWithoutTheConditionHappeningAgain
+  internal/app/engine/a098_one_cycle_takes_a_batch_test.go:155
+
+function    a098SyncNotifier
+  internal/app/engine/a098_two_senders_one_row_test.go:94
+
+function    TestTheSynchronousSenderStandsDownWhileTheExecutorHoldsTheRow
+  internal/app/engine/a098_two_senders_one_row_test.go:111
+
+function    TestTheExecutorHoldsTheRowAndTheSynchronousSenderStandsDown
+  internal/app/engine/a098_two_senders_one_row_test.go:168
+
+function    TestAHeldRowIsReportedOncePerLeaseAndNotOncePerCycle
+  internal/app/engine/a098_two_senders_one_row_test.go:297
+
+function    openGateWithGuardianOptions
+  internal/app/engine/guardian_production_test.go:27
+
+function    openGate
+  internal/app/engine/interlock_test.go:198
+
+function    TestTheDefaultReminderWindowIsAnHour
+  internal/obs/a096b_round2_test.go:97
+
+function    a097BrokenClaim
+  internal/obs/a097_claim_failure_blocks_entry_test.go:33
+
+function    a099Pair
+  internal/obs/a099_claim_excludes_the_second_sender_test.go:53
+
+function    a099LoggedSender
+  internal/obs/a099_lease_events_test.go:28
+
+function    TestContentionLossAndTakeoverAreThreeEvents
+  internal/obs/a099_lease_events_test.go:162
+
+function    TestAPublishedButUnsettledRowKeepsItsLease
+  internal/obs/a099_regression_pins_test.go:48
+
+function    newEscalatingNotifier
+  internal/obs/escalation_test.go:27
+
+function    TestObservationFailureIsLoggedEvenWhenUndeliverable
+  internal/obs/measurement_test.go:166
+
+function    TestTheTransitionLogLineIsCountable
+  internal/obs/mode_test.go:89
+
+function    TestLogLinesAreCountable
+  internal/obs/obs_test.go:50
+
+function    TestErrorLinesCarryTheErrorAsAField
+  internal/obs/obs_test.go:86
+
+function    TestReconcileLineCounts
+  internal/obs/obs_test.go:103
+
+function    newNotifier
+  internal/obs/obs_test.go:332
+
+function    TestCriticalWithoutAJournalIsLoudRatherThanSilent
+  internal/obs/obs_test.go:600
+
+function    TestHeartbeatFailureIsNotAnIncident
+  internal/obs/obs_test.go:707
+
+function    a124Setup
+  internal/app/engine/a124_the_deliverer_judges_internal_test.go:151
+
+function    a096Notifier
+  internal/obs/a096_one_send_per_condition_test.go:50
+
+function    TestSuppressingTheSendKeepsTheRecord
+  internal/obs/a096_one_send_per_condition_test.go:304
+
+function    TestALeaseShorterThanTheBudgetIsReported
+  internal/obs/a099_round4_test.go:344
+
+function    TestA092RecordOnlyWithoutAJournalDoesNotPublish
+  internal/obs/a092_record_only_test.go:166
+
+function    TestA092RecordCriticalKeepsFieldsOutOfTheLog
+  internal/obs/a092_record_only_test.go:443
+
+function    a098AlertFixture
+  cmd/tossctl/a098_the_operator_command_names_a_person_test.go:47
+
+function    TestA092TheRelayStopIsNotAnUndeliveredCriticalAlert
+  internal/app/engine/a092_normal_relay_executor_test.go:19
+
+function    TestA092TheDelivererStopKeepsItsEvent
+  internal/app/engine/a092_normal_relay_executor_test.go:35
+
+function    a092RelayNotifier
+  internal/obs/a092_normal_relay_test.go:58
+
+function    TestA092ATakeoverIsAWarningThatNamesTheDeadSender
+  internal/obs/a092_claim_stolen_level_test.go:20
+
+function    TestA092AnUnannouncedSustainedTighteningIsReportedAsTightened
+  internal/app/engine/a092_unannounced_sustained_tightening_test.go:18
+
+function    TestA092TheReleaseFailureLogMasksTheAccount
+  internal/app/engine/a092_r26b_mode_release_test.go:131
+
+function    a092JSONLogger
+  internal/obs/a092_r26b_internal_test.go:42
+
+function    TestA092ARestoreFailureLatchIsReplacedByTheNextProjection
+  internal/app/engine/a092_m13_restore_latch_test.go:21
+
+function    TestA095OneCycleCanHoldAFailureAndADeferral
+  internal/app/engine/a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:750
+
+function    a090Setup
+  internal/app/engine/a090_unobserved_position_test.go:103
+
+function    TestA090R17TheEngineAssemblyPassesTheDedicatedLoggerThrough
+  internal/app/engine/a090_unobserved_position_test.go:1165
+
+function    a091Harness
+  internal/app/engine/a091_stop_sold_nothing_test.go:108
+
+function    runEngineRun
+  cmd/tossctl/engine.go:190
+
+function    a129Setup
+  internal/app/engine/a129_exit_order_log_test.go:127
+
+function    TestA129FWithoutTheDedicatedLoggerNothingChanges
+  internal/app/engine/a129_exit_order_log_test.go:528
+
+function    TestA129TheEngineAssemblyPassesTheExitOrderLoggerThrough
+  internal/app/engine/a129_exit_order_log_test.go:608
+

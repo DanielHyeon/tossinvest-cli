@@ -56,6 +56,9 @@ type Report struct {
 	Steps       []Outcome  `json:"steps"`
 	Groups      []Group    `json:"groups"`
 	Outstanding []Artifact `json:"outstanding,omitempty"`
+	// Reconciled are the artifacts a reconciliation line ended (a121) — reconciled
+	// absent, which is neither a cancellation nor a fill and proves no endpoint.
+	Reconciled []Artifact `json:"reconciled,omitempty"`
 	// M0Checkpoints are owner-record recovery facts. They are visible to status
 	// but intentionally never become cleanup/abort targets.
 	M0Checkpoints []M0Checkpoint `json:"m0_checkpoints,omitempty"`
@@ -210,6 +213,7 @@ func BuildReport(recordPath string, entries []Entry, now time.Time) Report {
 	}
 
 	rep.Outstanding = Outstanding(entries)
+	rep.Reconciled = ReconciledArtifacts(entries)
 	rep.ReplayEnabled = replayEnabled(latest["idempotency.replay_returns_same_order_id"].obs,
 		latest["idempotency.no_second_order_created"].obs)
 	return rep
@@ -288,6 +292,18 @@ func (rep Report) WriteText(w io.Writer) {
 			fmt.Fprintf(w, "  %s %s (%s) %s\n", a.Kind, a.ID, a.Symbol, truncate(note, 90))
 		}
 	}
+	writeReconciled(w, rep.Reconciled)
+}
+
+// writeReconciled 는 대사로 종결된 artifact 를 따로 보임(a121) — 살아 있다는 절에도, 취소·체결로도 쓰지 않음.
+func writeReconciled(w io.Writer, arts []Artifact) {
+	if len(arts) == 0 {
+		return
+	}
+	fmt.Fprintf(w, "\n대사로 종결된 객체 %d건 (공식 목록 두 번 읽기의 부재 근거 — 성공한 요청·증명이 아니다):\n", len(arts))
+	for _, a := range arts {
+		fmt.Fprintf(w, "  %s %s (%s) reconciled absent\n", a.Kind, a.ID, a.Symbol)
+	}
 }
 
 func replayVerdict(enabled bool) string {
@@ -304,6 +320,8 @@ type Progress struct {
 	Steps       []Outcome  `json:"steps"`
 	Pending     []StepID   `json:"pending"`
 	Outstanding []Artifact `json:"outstanding,omitempty"`
+	// Reconciled are the artifacts a reconciliation line ended (a121).
+	Reconciled []Artifact `json:"reconciled,omitempty"`
 	// M0Checkpoints are owner-record recovery facts. They are visible to status
 	// but intentionally never become cleanup/abort targets.
 	M0Checkpoints []M0Checkpoint `json:"m0_checkpoints,omitempty"`
@@ -339,6 +357,7 @@ func BuildProgress(recordPath string, entries []Entry) Progress {
 		}
 	}
 	p.Outstanding = Outstanding(entries)
+	p.Reconciled = ReconciledArtifacts(entries)
 	return p
 }
 
@@ -370,6 +389,7 @@ func (p Progress) WriteText(w io.Writer) {
 		}
 		fmt.Fprintln(w, "  `tossctl verify run --resume`가 절차를 마치고 이들을 취소한다.")
 	}
+	writeReconciled(w, p.Reconciled)
 	if len(p.M0Checkpoints) > 0 {
 		fmt.Fprintln(w, "\nM0 복구 체크포인트 (취소 대상 아님):")
 		for _, checkpoint := range p.M0Checkpoints {

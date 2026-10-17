@@ -1,0 +1,287 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/app/engine",
+ "tests_run": 72,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-app-engine--runtime.runauxiliary": {
+   "B1": {
+    "kind": "if",
+    "line": 92,
+    "column": 2,
+    "block": "92.30-101.3",
+    "entered_by": [
+     "TestEveryAuxiliaryExecutorIsStarted",
+     "TestTheEngineStopsPromptlyWithTheDelivererAttached"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 110,
+    "column": 2,
+    "block": "110.17-112.3",
+    "entered_by": [
+     "TestA092TheDelivererStopKeepsItsEvent",
+     "TestADeadAuxiliaryExecutorIsNotRestarted",
+     "TestAPanickingDelivererDoesNotKillTheEngine",
+     "TestAStoppedDelivererLocksTheEntryGate",
+     "TestAnAuxiliaryExecutorThatReturnsDoesNotStopTheEngine",
+     "TestTheRuntimeDrainsAnAuxiliaryExecutorBeforeItReturns"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 117,
+    "column": 2,
+    "block": "117.23-119.3",
+    "entered_by": [
+     "TestA092TheDelivererStopKeepsItsEvent",
+     "TestA092TheRelayStopIsNotAnUndeliveredCriticalAlert",
+     "TestAnAuxiliaryExecutorThatReturnsDoesNotStopTheEngine",
+     "TestTheRuntimeDrainsAnAuxiliaryExecutorBeforeItReturns"
+    ],
+    "union": null
+   }
+  },
+  "internal-app-engine--exitobserver.checkoutage": {
+   "B1": {
+    "kind": "if",
+    "line": 819,
+    "column": 2,
+    "block": "819.20-821.3",
+    "entered_by": [
+     "TestA092CredentialTighteningRecordsWithoutSending",
+     "TestA111MissingManagedSymbolIsInvalidEvidenceAndDoesNotResetTheOutage"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 822,
+    "column": 2,
+    "block": "822.46-824.3",
+    "entered_by": [
+     "TestA092CredentialTighteningRecordsWithoutSending",
+     "TestA111MissingManagedSymbolIsInvalidEvidenceAndDoesNotResetTheOutage",
+     "TestASustainedOutageBlocksEntriesAndAlertsOnce"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 825,
+    "column": 2,
+    "block": "825.20-827.3",
+    "entered_by": [
+     "TestASustainedOutageBlocksEntriesAndAlertsOnce"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 843,
+    "column": 2,
+    "block": "843.74-845.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B5": {
+    "kind": "if",
+    "line": 848,
+    "column": 2,
+    "block": "848.16-849.57",
+    "entered_by": [
+     "TestA092AnUnannouncedOutageTighteningStillCountsAsEscalated"
+    ],
+    "union": null
+   },
+   "B6": {
+    "kind": "if",
+    "line": 849,
+    "column": 3,
+    "block": "849.57-853.4",
+    "entered_by": [],
+    "union": null
+   }
+  },
+  "internal-app-engine--alertdeliverer.deliverone": {
+   "B1": {
+    "kind": "if",
+    "line": 272,
+    "column": 2,
+    "block": "272.16-277.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "switch",
+    "line": 278,
+    "column": 2,
+    "block": "278.2-278.27",
+    "entered_by": [
+     "TestACancelledDeliveryJudgementFallsBackToAnUnconditionalLatch",
+     "TestADeliveryAndAnEmptyAcknowledgementAfterTheEvidenceDropOnlyTheBlock",
+     "TestADeliveryRecordErrorFollowedByCancellationStillLatches",
+     "TestADeliveryRecordOutcomeDecidesTheJudgement",
+     "TestARecordedCriticalAlertIsDeliveredWithinTwoCycles",
+     "TestTheDeliveredNotificationCarriesTheRecordedAlert",
+     "TestTheDelivererHoldsNoLeaseAfterASuccessfulSend",
+     "TestTheDelivererNeverPublishesTheSameRowTwiceInACycle"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "case",
+    "line": 279,
+    "column": 2,
+    "block": "279.29-282.25",
+    "entered_by": [
+     "TestACancelledDeliveryJudgementFallsBackToAnUnconditionalLatch",
+     "TestADeliveryAndAnEmptyAcknowledgementAfterTheEvidenceDropOnlyTheBlock",
+     "TestADeliveryRecordErrorFollowedByCancellationStillLatches",
+     "TestADeliveryRecordOutcomeDecidesTheJudgement",
+     "TestARecordedCriticalAlertIsDeliveredWithinTwoCycles",
+     "TestTheDeliveredNotificationCarriesTheRecordedAlert",
+     "TestTheDelivererHoldsNoLeaseAfterASuccessfulSend",
+     "TestTheDelivererNeverPublishesTheSameRowTwiceInACycle"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "case",
+    "line": 283,
+    "column": 2,
+    "block": "283.34-292.46",
+    "entered_by": [],
+    "union": null
+   },
+   "B5": {
+    "kind": "if",
+    "line": 292,
+    "column": 3,
+    "block": "292.46-296.4",
+    "entered_by": [],
+    "union": null
+   },
+   "B6": {
+    "kind": "case",
+    "line": 298,
+    "column": 2,
+    "block": "298.10-303.9",
+    "entered_by": [],
+    "union": null
+   },
+   "B7": {
+    "kind": "if",
+    "line": 305,
+    "column": 2,
+    "block": "305.17-312.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B8": {
+    "kind": "if",
+    "line": 316,
+    "column": 2,
+    "block": "316.24-326.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B9": {
+    "kind": "else",
+    "line": 326,
+    "column": 9,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B10": {
+    "kind": "if",
+    "line": 333,
+    "column": 3,
+    "block": "333.18-335.4",
+    "entered_by": [
+     "TestADeliveryAndAnEmptyAcknowledgementAfterTheEvidenceDropOnlyTheBlock"
+    ],
+    "union": null
+   },
+   "B11": {
+    "kind": "if",
+    "line": 337,
+    "column": 2,
+    "block": "337.17-340.3",
+    "entered_by": [
+     "TestADeliveryAndAnEmptyAcknowledgementAfterTheEvidenceDropOnlyTheBlock"
+    ],
+    "union": null
+   }
+  },
+  "internal-app-engine--context.exitobserver": {
+   "B1": {
+    "kind": "if",
+    "line": 320,
+    "column": 2,
+    "block": "320.14-322.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 323,
+    "column": 2,
+    "block": "323.28-325.3",
+    "entered_by": [
+     "TestTheExitObserverIsUnavailableWithoutAVerifiedGate"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 327,
+    "column": 2,
+    "block": "327.9-330.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 343,
+    "column": 2,
+    "block": "343.23-345.3",
+    "entered_by": [
+     "TestA092ExitObserverGetsRecordOnlyAlertPaths",
+     "TestA092TheExitObserverOverridesACallersSyncAlertPath",
+     "TestProductionGuardianUsesConfiguredUSDLimitsAndReachesExitObserver"
+    ],
+    "union": null
+   },
+   "B5": {
+    "kind": "if",
+    "line": 348,
+    "column": 2,
+    "block": "348.23-351.3",
+    "entered_by": [
+     "TestA092ExitObserverGetsRecordOnlyAlertPaths",
+     "TestA092TheExitObserverOverridesACallersSyncAlertPath",
+     "TestProductionGuardianUsesConfiguredUSDLimitsAndReachesExitObserver"
+    ],
+    "union": null
+   },
+   "B6": {
+    "kind": "if",
+    "line": 352,
+    "column": 2,
+    "block": "352.23-354.3",
+    "entered_by": [
+     "TestA092ExitObserverGetsRecordOnlyAlertPaths",
+     "TestA092TheExitObserverOverridesACallersSyncAlertPath",
+     "TestProductionGuardianUsesConfiguredUSDLimitsAndReachesExitObserver"
+    ],
+    "union": null
+   }
+  }
+ }
+}

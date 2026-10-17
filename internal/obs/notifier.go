@@ -33,6 +33,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/redact"
 )
 
 // DefaultCriticalAttempts is how many times one critical alert is published
@@ -109,9 +110,12 @@ type Notifier struct {
 	// same condition earns another send. Zero uses DefaultRemindAfter.
 	RemindAfter time.Duration
 
-	// mu serialises the whole claim-and-send, not just the send. Claiming
-	// outside it would let two observations of one condition both read a row
-	// that has not been delivered yet and both publish (a096 round 1, blocker 1).
+	// mu serialises every path that records under the notifier (the claim, the
+	// record-only entry) against the operator's count-then-clear in Acknowledge.
+	// It does NOT cover the transport (a092 unit ③): a send in flight is
+	// excluded by the lease the claim took, so two observations of one condition
+	// still publish once (a096 round 1, blocker 1) — the lease, not this lock,
+	// is what now makes that true.
 	mu sync.Mutex
 
 	// leaseOnce keeps the lease-versus-budget complaint to one line per Notifier.
@@ -119,6 +123,21 @@ type Notifier struct {
 	// is the same every time; repeating it on every critical event would bury the
 	// alerts it sits next to.
 	leaseOnce sync.Once
+
+	// deliveryHook 는 시험 전용 단계 훅임(a092 단위 ③ — export_test.go 의 SetDeliveryHookForTest). 생산에서는 nil.
+	// 운영자 해제를 「근거 확정」과 「해제 세대 읽기」 사이, 또는 그 뒤에 결정적으로 끼워 넣어 원칙 E 를 재는 데 씀.
+	deliveryHook func(stage string)
+}
+
+// latchVerdict 는 승격을 포함하는 전달 실패 판정 하나임(a092 단위 ③ — 원칙 E).
+//
+// deliver 는 잠금 밖에서 돌므로 판정의 근거가 확정된 순간 전달 실패 사유의 해제 세대(epoch)를 읽어 여기 싣고, 차단 ·
+// 승격의 적용은 호출자(notifyCritical 의 judge)가 함. 차단보다 승격이 먼저 실패할 수 있어 둘을 한 자리에서 판정해야
+// 「승격 쓰기 실패면 무조건 차단」(K2)이 섬.
+type latchVerdict struct {
+	apply  bool   // 판정이 있음(false 면 적용할 것이 없음)
+	epoch  uint64 // 근거 확정 직후 읽은 해제 세대
+	detail string // 래치 사유 설명
 }
 
 // Notify grades an event and delivers it.
@@ -165,9 +184,10 @@ func (n *Notifier) publishBestEffort(ctx context.Context, e Event, severity Seve
 	if err := n.Publisher.Publish(ctx, notificationFor(e, severity)); err != nil && n.Log != nil {
 		// Logged, not escalated: this grade is best-effort by definition, and
 		// treating its failure as an incident would make the grading meaningless.
+		// 원래 사건의 유형 · 등급은 trigger_* 로 — emit 이 쓰는 줄 자신의 event · severity 를 가리지 않게(a092 26라운드 A#4 · B#4).
 		n.Log.Warn(EventAlertUndelivered,
-			FieldEvent, string(e.Type),
-			FieldSeverity, string(severity),
+			FieldTriggerEvent, string(e.Type),
+			"trigger_severity", string(severity),
 			FieldError, err.Error())
 	}
 }
@@ -180,7 +200,7 @@ func (n *Notifier) notifyCritical(ctx context.Context, e Event) error {
 		// their back.
 		if n.Log != nil {
 			n.Log.Warn(EventAlertUndelivered,
-				FieldEvent, string(e.Type),
+				FieldTriggerEvent, string(e.Type),
 				FieldDetail, "no journal is wired, so this critical alert is not durable")
 		}
 		n.publishBestEffort(ctx, e, SeverityCritical)
@@ -197,7 +217,7 @@ func (n *Notifier) notifyCritical(ctx context.Context, e Event) error {
 	}
 	// Durable first, exactly like an intent: a record that only exists in memory
 	// is a record that does not survive the crash it is warning about.
-	sent, owed, err := n.claimAndDeliver(ctx, record, e)
+	sent, owed, verdict, err := n.claimAndDeliver(ctx, record, e)
 	if err != nil {
 		// The entry gate is already latched — claimAndDeliver did that under the
 		// mutex. What is missing is the half that outlives this process.
@@ -221,38 +241,57 @@ func (n *Notifier) notifyCritical(ctx context.Context, e Event) error {
 	}
 
 	if owed && !sent {
-		// Outside claimAndDeliver, and that is not tidiness: it holds n.mu, the
+		// Outside claimAndDeliver's lock, and that is not tidiness: the
 		// escalation announces through a ModeAnnouncer, and an announcer wired to
 		// this Notifier would re-enter Notify and deadlock on a mutex Go does not
 		// make reentrant.
-		n.escalate(ctx, e)
+		n.judge(ctx, e, verdict)
 	}
 	return nil
 }
 
+// judge 는 승격을 포함하는 전달 실패 판정 하나를 원칙 E 로 적용함(a092 단위 ③ — 정본 델타 「모든 발송자」 문단, a124 judge 와 같은 규칙).
+//
+// 순서: 근거 확정 뒤 읽은 세대로 조건부 차단 → 승격 → 승격이 판정에 포함됐는데 쓰기가 실패하면 조건부 결과와 무관하게 무조건 차단.
+// 해제가 세대 읽기 뒤에 있었으면 차단은 버리고(제때 선 차단도 그 해제가 지웠을 것) 승격은 적용함 — 모드는 사람 완화로만 풀림.
+// 승격이 포함되지 않은 판정(계정 없음 · 원장 없음)은 무조건 차단을 만들지 않음(M5).
+func (n *Notifier) judge(ctx context.Context, e Event, v latchVerdict) {
+	if v.apply && n.Gate != nil {
+		n.Gate.BlockUnlessClearedSince(execgw.ReasonAlertUndelivered, v.epoch, v.detail)
+	}
+	included, err := n.escalate(ctx, e)
+	if included && err != nil && n.Gate != nil {
+		// 설명은 고정 문구 — 승격 실패 원문은 원장 문구(「… transition for <계좌>」)를 품고, 게이트 설명은 상태 출력이 어디서나
+		// 읽는 칸임(불변식 8 (a), 게이트 준비 gstack 리뷰). 원문은 escalate 의 로그 줄에 계좌를 가려 남음.
+		n.Gate.Block(execgw.ReasonAlertUndelivered, fmt.Sprintf(
+			"a critical %s alert could not be delivered and the operating mode could not be tightened (details are in the engine log)", e.Type))
+	}
+}
+
 // claimAndDeliver asks the outbox whether this send is owed and, if it is,
-// performs it — both under the delivery mutex.
+// performs it. The claim is taken under the notifier mutex; the send is not.
 //
-// Both under one lock because they are one decision. Claiming outside it lets
-// two observations of the same condition read the same not-yet-delivered row,
-// each conclude the send is owed, and each publish; the second then fails to
-// mark a row that is already DELIVERED, which is exactly the `no such alert`
-// line the 2026-08-08 storm left behind (a096 round 1, blocker 1).
-//
-// The mutex stays, and what it is for has changed. It excludes senders *inside
-// this Notifier* and never did anything else — a second Notifier, or a flush on
-// another one, walked straight past it. Exclusion between senders is now the
-// ledger's, held as a lease on the row itself (journal/alert_claim.go), and this
-// lock is the local half of it.
+// Deciding "is this send owed" is one decision with taking the lease, and the
+// ledger makes both in one transaction. Two observations of the same condition
+// therefore cannot both conclude the send is owed: the second finds the first
+// one's live lease and stays quiet, which is what ended the 2026-08-08 storm
+// (a096 round 1, blocker 1). a096 first did this with the mutex held across the
+// send; a099 moved exclusion into the ledger as a lease on the row
+// (journal/alert_claim.go); a092 unit ③ then released the mutex before the
+// transport, because the exit goroutine's record and the operator's
+// acknowledgement wait on this mutex and must not wait on a network round trip.
+// What the mutex still does is keep every recording path apart from the
+// operator's count-then-clear (Acknowledge).
 //
 // It reports whether the send happened and whether it was owed at all. A send
 // that was never owed is not a delivery failure and must not escalate — and
 // neither is a send another holder took over.
 func (n *Notifier) claimAndDeliver(
 	ctx context.Context, record journal.Alert, e Event,
-) (sent bool, owed bool, err error) {
+) (sent bool, owed bool, verdict latchVerdict, err error) {
+	// 잠금은 claim 과 그 판정까지만 덮음(a092 단위 ③ — 정본 「exit 관측 goroutine이 기다리는 잠금은 원격 전송을 덮어서는 안 된다」).
+	// 원격 전송 동안의 행 배제는 원장 임차가 짐. 잠금 안은 로컬 원장 작업뿐임.
 	n.mu.Lock()
-	defer n.mu.Unlock()
 
 	// Before the first claim, not after: if the lease this ledger issues cannot
 	// cover this sender's budget, every claim below is already unsound and the
@@ -277,9 +316,11 @@ func (n *Notifier) claimAndDeliver(
 			n.Log.Error(EventAlertUndelivered, err, FieldTriggerEvent, string(e.Type))
 		}
 		if n.Gate != nil {
+			// 잠금 안의 무조건 래치 — 기록 실패는 동기로 다룸. 운영자 승인의 셈~해제도 같은 잠금 아래라 겹치지 않음.
 			n.Gate.Block(execgw.ReasonAlertUndelivered, detail)
 		}
-		return false, false, err
+		n.mu.Unlock()
+		return false, false, latchVerdict{}, err
 	}
 	switch claim.Disposition {
 	case journal.ClaimSettled:
@@ -290,7 +331,8 @@ func (n *Notifier) claimAndDeliver(
 		// The line for this observation was still written: logEvent runs in
 		// Notify ahead of the grading branch, so the record of how long the
 		// condition persisted does not depend on whether it was sent.
-		return false, false, nil
+		n.mu.Unlock()
+		return false, false, latchVerdict{}, nil
 	case journal.ClaimHeldElsewhere:
 		// Another sender is publishing this row right now. Skipping is the
 		// exclusion doing its job, so this is not a failure and nothing is owed
@@ -301,19 +343,22 @@ func (n *Notifier) claimAndDeliver(
 		// entirely normal, leaving a successful delivery behind a lock nobody
 		// can open; clearing would let a routine race unlock a block a real
 		// failure put there. Contention is logged and nothing else.
+		n.mu.Unlock()
 		n.logClaimHeld(string(e.Type), claim)
-		return false, false, nil
+		return false, false, latchVerdict{}, nil
 	}
+	// 여기서 잠금을 놓음 — 이 행은 임차로 이 발송자의 것이고, 아래 전송 · 정산은 임차 토큰으로 배제됨.
+	n.mu.Unlock()
 
 	n.logClaimStolen(string(e.Type), claim)
-	sent, lost := n.deliver(ctx, claim.ID, claim.Token, e)
+	sent, lost, verdict := n.deliver(ctx, claim.ID, claim.Token, e)
 	if lost {
 		// The row moved on without us. Nothing is owed of this observation, so
 		// the caller does not escalate: the operating mode tightens on sustained
 		// *delivery* failure, and losing a race to another sender is not that.
-		return sent, false, nil
+		return sent, false, latchVerdict{}, nil
 	}
-	return sent, true, nil
+	return sent, true, verdict, nil
 }
 
 // claimant names this sender in the lease it takes. It is for the operator and
@@ -367,35 +412,38 @@ func (n *Notifier) remindAfter() time.Duration {
 // the transport to come back, and the account is blocked either way. It also
 // removes the only path by which this could re-enter deliver.
 //
-// # No error return
+// # What it returns
 //
 // Notify's contract is that a failed *send* is not the caller's problem — it has
 // already been handled, by latching the gate — and only a failed outbox *write*
-// is. A failed escalation is the same shape as a failed send: the in-process
-// block stands, and what was lost is the part that survives a restart. It is
-// logged at error level rather than bubbled, because every call site would
-// otherwise have to re-implement this same judgement.
-func (n *Notifier) escalate(ctx context.Context, e Event) {
+// is. A failed escalation is logged at error level here, and it is also
+// returned to the internal caller (a092 unit ③, K2): under principle E the
+// conditional latch can be skipped because an operator released it after the
+// evidence, and if the escalation then fails too, both halves are lost. So the
+// caller latches unconditionally when an escalation that was part of the
+// judgement fails. included is false when there is nothing to escalate (no
+// journal, no account) — that judgement never adds an unconditional latch.
+func (n *Notifier) escalate(ctx context.Context, e Event) (included bool, err error) {
 	if n.Journal == nil || strings.TrimSpace(n.AccountRef) == "" {
-		return
+		return false, nil
 	}
 	_, changed, err := n.Journal.EscalateOperatingMode(ctx, n.AccountRef,
 		journal.ModeTriggerCriticalAlertUndelivered, nil)
 	switch {
 	case err != nil && n.Log != nil:
-		n.Log.Error(EventOperatingMode, err,
-			FieldAccount, n.AccountRef,
-			FieldEvent, string(e.Type),
+		// 계좌 필드 없음(a091 — 새 critical 의 기록 실패가 이 줄에 닿는 표면이라 가림, 불변식 8(a)). 알림기는 계좌 하나에 묶임.
+		n.Log.Error(EventOperatingMode, MaskAccount(err, n.AccountRef),
+			FieldTriggerEvent, string(e.Type),
 			FieldDetail, "the undelivered critical alert did not reach the operating mode, "+
 				"so a restart would lift the block")
 	case changed && n.Log != nil:
 		// Not a Notify: see above. The line is the record.
 		n.Log.Warn(EventOperatingMode,
-			FieldAccount, n.AccountRef,
 			FieldToState, journal.ModeEntryBlocked,
 			FieldReason, journal.ModeTriggerCriticalAlertUndelivered,
 			FieldDetail, "new entries are blocked until an operator acknowledges the alert backlog")
 	}
+	return true, err
 }
 
 // deliver publishes one outbox row under the retry budget, latching the gate if
@@ -403,11 +451,20 @@ func (n *Notifier) escalate(ctx context.Context, e Event) {
 // recorded as published — which is not the same as whether it went out. A send
 // this system cannot account for counts as unsettled (a096 round 2).
 //
-// PRECONDITION: the caller holds n.mu, and holds it across the claim that
-// produced id as well as this send. One delivery loop at a time — two
-// goroutines publishing the same backlog would double-send and race on the
-// attempt counter — and one claim-and-send at a time, or two observations of
-// the same condition each conclude the send is owed and each publish.
+// The caller does NOT hold n.mu (a092 unit ③). The claim that produced id was
+// taken under n.mu, and from there the lease is the exclusion: a second
+// observation of the same condition finds the row held and does not publish,
+// and every settlement below presents this send's token. Holding the notifier
+// lock across the transport made the exit goroutine's record — and the
+// operator's acknowledgement — wait on somebody else's network round trip.
+//
+// Because an acknowledgement can now land while this runs, the three latch
+// sites follow principle E: the release epoch is read right after the evidence
+// is confirmed (the settlement, attempt record or release came back), and the
+// latch is applied only if no release happened since. The two sites whose
+// judgement includes an escalation (unrecorded, exhausted) hand the verdict to
+// the caller, which applies the latch and the escalation together (judge).
+//
 // The lease travels with id: every settlement below presents the token this
 // send was claimed under, and a settlement the ledger refuses because the token
 // no longer matches ends the send then and there. A sender that stalled past its
@@ -417,7 +474,7 @@ func (n *Notifier) escalate(ctx context.Context, e Event) {
 // The second return says the lease left this sender — through contention or an
 // operator's acknowledgement. The caller uses it to keep quiet: neither outcome
 // is this observation's delivery failure, so neither escalates.
-func (n *Notifier) deliver(ctx context.Context, id int64, token string, e Event) (sent bool, lost bool) {
+func (n *Notifier) deliver(ctx context.Context, id int64, token string, e Event) (sent bool, lost bool, verdict latchVerdict) {
 	attempts := n.Attempts
 	if attempts <= 0 {
 		attempts = DefaultCriticalAttempts
@@ -436,7 +493,7 @@ func (n *Notifier) deliver(ctx context.Context, id int64, token string, e Event)
 			if markErr == nil {
 				switch settled.Outcome {
 				case journal.SettleApplied:
-					return true, false
+					return true, false, latchVerdict{}
 				case journal.SettleLeaseLost, journal.SettleAlreadySettled:
 					// The push went out and the row was not ours to settle. It
 					// is out either way, so the send happened; what did not
@@ -448,7 +505,7 @@ func (n *Notifier) deliver(ctx context.Context, id int64, token string, e Event)
 					// their job; latching new entries on either would punish the
 					// normal case.
 					n.logLeaseLost(settled, id, e)
-					return true, true
+					return true, true, latchVerdict{}
 				case journal.SettleNotFound:
 					markErr = errors.New("the outbox row disappeared while it was being delivered")
 				default:
@@ -472,23 +529,22 @@ func (n *Notifier) deliver(ctx context.Context, id int64, token string, e Event)
 			// "The push went out" is not "the operator is covered" when this
 			// system's own record says it is not. So an unaccountable send is an
 			// unsettled one: stop new entries, let exits through.
-			detail := fmt.Sprintf(
+			// 근거 확정: 정산 결과가 돌아왔음 → 해제 세대를 지금 읽음(원칙 E). 적용은 승격과 함께 호출자가 함.
+			n.hook("evidence:unrecorded")
+			verdict := n.readVerdict("unrecorded", fmt.Sprintf(
 				"a critical %s alert was published but could not be recorded as delivered: %v",
-				e.Type, markErr)
+				e.Type, markErr))
 			if n.Log != nil {
 				n.Log.Error(EventAlertUndelivered, markErr,
 					FieldTriggerEvent, string(e.Type),
 					"alert_id", id)
-			}
-			if n.Gate != nil {
-				n.Gate.Block(execgw.ReasonAlertUndelivered, detail)
 			}
 			// The lease is deliberately kept. It is now the only thing
 			// suppressing a re-send of an alert the operator already has, and
 			// releasing it here would hand the row straight back to the next
 			// observation — the storm, through the success path. Expiry lets go
 			// eventually; nothing else does.
-			return false, false
+			return false, false, verdict
 		}
 		lastErr = err
 		failed, markErr := n.Journal.MarkAlertAttemptFailed(ctx, id, token, err.Error())
@@ -516,11 +572,14 @@ func (n *Notifier) deliver(ctx context.Context, id int64, token string, e Event)
 			// it documents as an error rather than contention. It latches, exactly
 			// as the same outcome does on the success path above; the two used to
 			// disagree about one fact.
-			if failed.Outcome == journal.SettleNotFound && n.Gate != nil {
-				n.Gate.Block(execgw.ReasonAlertUndelivered, fmt.Sprintf(
+			if !isPreemption(failed.Outcome) && n.Gate != nil {
+				// 근거 확정: 시도 기록이 행 없음으로 돌아왔음. 승격을 포함하지 않는 판정이라 여기서 조건부 차단만 함.
+				n.hook("evidence:vanished")
+				v := n.readVerdict("vanished", fmt.Sprintf(
 					"a critical %s alert vanished from the outbox while it was being delivered", e.Type))
+				n.Gate.BlockUnlessClearedSince(execgw.ReasonAlertUndelivered, v.epoch, v.detail)
 			}
-			return false, true
+			return false, true, latchVerdict{}
 		}
 		if attempt < attempts {
 			if !n.wait(ctx) {
@@ -537,6 +596,7 @@ func (n *Notifier) deliver(ctx context.Context, id int64, token string, e Event)
 	// the flush that is supposed to pick it up when the transport comes back.
 	// This is the one place a sender lets go without settling, which is why
 	// releasing is its own verb.
+	n.hook("release")
 	relCtx, relCancel := releaseCtx(ctx)
 	released, relErr := n.Journal.ReleaseAlertClaim(relCtx, id, token)
 	relCancel()
@@ -548,6 +608,18 @@ func (n *Notifier) deliver(ctx context.Context, id int64, token string, e Event)
 	case released.Outcome == journal.SettleApplied:
 		// The row is ours no longer and nobody else's yet. Fall through to the
 		// gate: this sender really did fail to deliver.
+	case !isPreemption(released.Outcome):
+		// 행 없음 · 모르는 결과는 선점이 아님(a092 25라운드 codex P0 — 델타 「행 없음·모르는 결과·원장 오류는 선점이 아니다」).
+		// 원장이 쥐고 있던 행을 잃은 것이므로 vanished 자리와 같이 잠금만 함(승격 없음 — a124 배달 실행자 N6 와 같은 규칙).
+		// 근거 확정: 반납 결과가 돌아왔음 → 해제 세대를 지금 읽고 조건부로 잠금.
+		n.logLeaseLost(released, id, e)
+		if n.Gate != nil {
+			n.hook("evidence:release-missing")
+			v := n.readVerdict("release-missing", fmt.Sprintf(
+				"a critical %s alert could not be handed back: the ledger answered %v", e.Type, released.Outcome))
+			n.Gate.BlockUnlessClearedSince(execgw.ReasonAlertUndelivered, v.epoch, v.detail)
+		}
+		return false, true, latchVerdict{}
 	default:
 		// The row moved on while this sender was spending the last of its budget —
 		// an operator acknowledged it, or another holder took it. Report it and
@@ -558,19 +630,36 @@ func (n *Notifier) deliver(ctx context.Context, id int64, token string, e Event)
 		// without escalating. The two used to disagree purely on *when* the same
 		// fact was noticed.
 		n.logLeaseLost(released, id, e)
-		return false, true
+		return false, true, latchVerdict{}
 	}
-	detail := fmt.Sprintf("a critical %s alert could not be delivered after %d attempts: %v",
-		e.Type, attempts, lastErr)
+	// 근거 확정: 반납 결과가 돌아왔음(또는 반납 오류) → 해제 세대를 지금 읽음. 적용은 승격과 함께 호출자가 함.
+	n.hook("evidence:exhausted")
+	verdict = n.readVerdict("exhausted", fmt.Sprintf("a critical %s alert could not be delivered after %d attempts: %v",
+		e.Type, attempts, lastErr))
 	if n.Log != nil {
 		n.Log.Error(EventAlertUndelivered, lastErr,
 			FieldTriggerEvent, string(e.Type),
 			"alert_id", id)
 	}
+	return false, false, verdict
+}
+
+// readVerdict 는 근거 확정 직후 전달 실패 사유의 해제 세대를 한 번 읽어 판정을 만듦(원칙 E). 그 뒤의 해제는 판정을 버리게 하고,
+// 근거와 이 읽기 사이의 해제는 「앞」으로 보여 다시 잠금 — 틀리는 방향은 잠그는 쪽뿐임.
+func (n *Notifier) readVerdict(site, detail string) latchVerdict {
+	var epoch uint64
 	if n.Gate != nil {
-		n.Gate.Block(execgw.ReasonAlertUndelivered, detail)
+		epoch = n.Gate.ClearEpoch(execgw.ReasonAlertUndelivered)
 	}
-	return false, false
+	n.hook("epoch:" + site)
+	return latchVerdict{apply: true, epoch: epoch, detail: detail}
+}
+
+// hook 은 시험 전용 단계 훅을 부름(생산에서는 nil — 아무것도 안 함).
+func (n *Notifier) hook(stage string) {
+	if n.deliveryHook != nil {
+		n.deliveryHook(stage)
+	}
 }
 
 // logLeaseLost records that a settlement was refused, and by whom it is held
@@ -606,6 +695,13 @@ func (n *Notifier) logLeaseLost(res journal.SettleResult, id int64, e Event) {
 			FieldTriggerEvent, string(e.Type),
 			"alert_id", id,
 			FieldDetail, "the row was settled by an operator or an earlier delivery")
+	case res.Outcome != journal.SettleLeaseLost:
+		// 결과 enum 이 분류함 — 이름 없는 결과를 ClaimedBy 로 갈라 선점이라 적으면 원장 이상이 두 발송자의 만남으로 묻힘
+		// (a092 26라운드 codex 재확인 R3). 차단은 호출자가 이미 판정함 — 이 함수는 기록만.
+		n.Log.Error(EventAlertUndelivered,
+			fmt.Errorf("the outbox returned an unknown settle outcome %s", res.Outcome),
+			FieldTriggerEvent, string(e.Type),
+			"alert_id", id)
 	case res.ClaimedBy == "":
 		// The row is still PENDING and carries no token. That is this sender's own
 		// release, seen a second time — not a loss. Warning "somebody took your
@@ -626,18 +722,28 @@ func (n *Notifier) logLeaseLost(res journal.SettleResult, id int64, e Event) {
 // logClaimHeld records a row this sender left alone because somebody else holds
 // a live lease on it.
 //
-// It is a warning, not an info line, and that is a a099 round-4 correction. The
-// branch was written as "the exclusion working", which is true only when a second
-// sender exists. In today's wiring there is exactly one Notifier and Flush has no
-// production caller, so the only way to arrive here is a lease left behind by a
-// sender that died — an unsent critical alert with nobody sending it. The expiry
-// goes on the line because it is the operator's only estimate of when the row can
-// move again; delivering it in the meantime is a098's loop, not this one's.
+// It is an info line (a092 unit ③, Manager ruling (나)). a099 round 4 made it a
+// warning on the premise that "the only way to arrive here is a lease left
+// behind by a sender that died" — one Notifier, Flush with no production caller.
+// That premise stopped holding twice over:
+//
+//   - a098's delivery executor holds live leases while it publishes, so a
+//     synchronous send that meets a row the executor is sending lands here;
+//   - a092 unit ③ narrowed the notifier lock to the claim, so two synchronous
+//     observations of one condition no longer queue on the lock — the second
+//     meets the first one's live lease here.
+//
+// Both are the lease doing its job. A warning on the normal path trains the
+// operator to ignore warnings. The dead-sender signal is owned elsewhere, by
+// structure rather than by guess: when the dead holder's lease expires, the next
+// sender takes the row over and logClaimStolen writes a warning naming the
+// holder it replaced. The line stays, with the holder, its age and the expiry,
+// so a held row is still never silent.
 func (n *Notifier) logClaimHeld(eventType string, claim journal.ClaimResult) {
 	if n.Log == nil {
 		return
 	}
-	n.Log.Warn(EventAlertClaimHeld,
+	n.Log.Event(EventAlertClaimHeld,
 		FieldTriggerEvent, eventType,
 		"alert_id", claim.ID,
 		"claimed_by", claim.ClaimedBy,
@@ -923,6 +1029,11 @@ func encodeFields(fields map[string]any) string {
 func renderFields(fields map[string]any) string {
 	keys := make([]string, 0, len(fields))
 	for k := range fields {
+		// 계좌 키 필드는 본문에 쓰지 않음(a133 D3) — 필드 이름은 문자열로 펼치기 전인 여기서만 알 수 있음.
+		// 나머지 값의 계좌 텍스트는 전송 경계(redactForTransport)가 치환함.
+		if redact.IsAccountKey(k) {
+			continue
+		}
 		keys = append(keys, k)
 	}
 	sortStrings(keys)

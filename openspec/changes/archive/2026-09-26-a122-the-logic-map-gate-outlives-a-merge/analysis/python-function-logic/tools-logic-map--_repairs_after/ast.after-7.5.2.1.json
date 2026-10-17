@@ -1,0 +1,93 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "fc35eb2d013dccd0700836f857ad9d3e65bff0dc",
+  "source_sha256": "6acf286c58f08f4e5be3cb3f5cc54140373b0ec3013cb6d10862883314761903",
+  "function": "_repairs_after",
+  "signature": "_repairs_after(root, candidate, repairs, head)",
+  "start": {
+    "line": 961,
+    "column": 1
+  },
+  "end": {
+    "line": 993,
+    "column": 61
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 976,
+      "inherited_line": false,
+      "source": "if repairs is None:"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 980,
+      "inherited_line": false,
+      "source": "if not repairs:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 986,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B4",
+      "kind": "comprehension",
+      "line": 993,
+      "inherited_line": true,
+      "source": " for commit in repairs if commit in after"
+    }
+  ],
+  "returns": [
+    {
+      "line": 981,
+      "value": "[]"
+    },
+    {
+      "line": 993,
+      "value": "[commit for commit in repairs if commit in after]"
+    }
+  ],
+  "raises": [
+    {
+      "line": 977,
+      "source": "raise RuntimeError(\"this change's own later Go work was never measured — a landing cannot be judged without it\")"
+    },
+    {
+      "line": 988,
+      "source": "raise RuntimeError(f'cannot walk the history after {candidate[:12]}: ' + _first_line(process.stderr, 'git rev-list failed'))"
+    }
+  ],
+  "calls": [
+    {
+      "line": 977,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 982,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 988,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 990,
+      "callee": "_first_line"
+    },
+    {
+      "line": 992,
+      "callee": "process.stdout.split"
+    },
+    {
+      "line": 992,
+      "callee": "set"
+    }
+  ]
+}

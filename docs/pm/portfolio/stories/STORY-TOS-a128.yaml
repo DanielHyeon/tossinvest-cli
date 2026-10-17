@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a128",
+  "title": "Jev semantic judgments earn a calibration receipt before any wiring",
+  "feature": "FEAT-TOS-006",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a128-jev-shadow-judgment-probe",
+    "path": "openspec/changes/a128-jev-shadow-judgment-probe"
+  },
+  "found_by": {
+    "date": "2026-10-07",
+    "how": "User decided to gate buy/sell on Jev probability >= 90% for both KR and US; TypeSafe's own docs state thresholds must be measured on domain data, and the probability is a judgment-on-state, not a market outcome probability — so a zero-wiring shadow probe with a 2-day (user-set) measurement window was commissioned before any manual-assist or engine veto wiring.",
+    "record": "openspec/changes/a128-jev-shadow-judgment-probe/proposal.md"
+  },
+  "acceptance": [
+    "A standalone tool under tools/a128-jev-shadow-probe/ samples both markets' sessions, asks J1 (direction hypothesis) and J2 (adverse-news veto) Noul judgments, and appends judgment+label rows to an append-only JSONL ledger; production packages are untouched",
+    "State sent to the external judgment API contains public market data only; a test pins that account identifiers, balances and tokens are blocked from the assembled state",
+    "Collection gaps (absent news, rate-limit give-ups) are named in the ledger rows, never silently omitted",
+    "A calibration report buckets p into 0.05-wide bins with per-bin sample counts, withholds verdicts on bins with n<30, and states the 2-day sample limitation; the 90% threshold adopt/reject/hold decision is made by a human on that receipt",
+    "No threshold is wired into any order path within this change; stop-loss paths are permanently out of scope for semantic judgments"
+  ]
+}

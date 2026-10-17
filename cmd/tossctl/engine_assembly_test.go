@@ -40,6 +40,8 @@ func TestAssembleEngineWiresOneProductionGuardianToTheEngineJournalAndExitObserv
 		MaxDailyLossAmount: 50,
 		MaxDailyLossRatio:  0.01,
 		LimitCurrency:      "USD",
+		// a136 D5: USD 게이트는 하루 매수 상한을 명시해야 기동함.
+		MaxDailyBuyNotional: 2000,
 	}
 	writeConfigFile(t, dir, cfg)
 	writeCredentials(t, dir)

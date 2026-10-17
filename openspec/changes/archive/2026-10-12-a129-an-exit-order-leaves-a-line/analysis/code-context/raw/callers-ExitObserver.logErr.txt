@@ -1,0 +1,12 @@
+
+Callers of "ExitObserver.logErr" (3):
+
+method      reportCycle
+  internal/app/engine/exitloop.go:410
+
+method      checkOutage
+  internal/app/engine/exitloop.go:860
+
+method      alert
+  internal/app/engine/exitloop.go:1832
+

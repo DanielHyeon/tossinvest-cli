@@ -44,9 +44,13 @@ type multiMarketStrategyRuntimeView struct {
 func (c *Console) buildMultiMarketStrategyRuntimePage(r *http.Request) multiMarketStrategyRuntimePage {
 	generatedAt := c.now().UTC()
 	snapshot := strategyprojection.DormantSnapshot(generatedAt)
+	// 부재는 nil 이 아니라 **부재 신호**로 묻는다(a115 design D2): 콘솔 부팅이 꽂는 재부착 wrapper 는
+	// 언제나 non-nil 이라 nil 검사로는 dormant 가 「읽지 못했다」로 회귀한다. 판정은 한 벌이고, 부작용
+	// (재부착 시도 깨우기)이 있으므로 한 번 물어 두 자리(Unwired·Read 여부)에 쓴다.
+	absent := strategyprojection.StrategyRuntimeAbsent(c.opts.StrategyRuntime)
 	page := multiMarketStrategyRuntimePage{chrome: c.chromeOnRequest("optimization-sub"),
-		Unwired: c.opts.StrategyRuntime == nil}
-	if c.opts.StrategyRuntime != nil {
+		Unwired: absent}
+	if !absent {
 		value, err := c.opts.StrategyRuntime.Read(r.Context())
 		if err != nil || strategyprojection.Validate(value) != nil {
 			page.LoadErr = true

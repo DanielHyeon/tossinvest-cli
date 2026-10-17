@@ -1,0 +1,43 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "9bc103fa196cd5fdba61bb4dadd79aa77eaa7a35",
+  "source_sha256": "6ad654a895ea8f23b0234c7cbe44490ab7c72eb5bcca5f80f8de4430bec47138",
+  "function": "_c_quoted",
+  "signature": "_c_quoted(text)",
+  "start": {
+    "line": 137,
+    "column": 1
+  },
+  "end": {
+    "line": 141,
+    "column": 26
+  },
+  "branches": [],
+  "returns": [
+    {
+      "line": 141,
+      "value": "f'\"{escaped}\"'"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 140,
+      "callee": "text.replace('\\\\', '\\\\\\\\').replace"
+    },
+    {
+      "line": 140,
+      "callee": "text.replace"
+    },
+    {
+      "line": 140,
+      "callee": "text.replace('\\\\', '\\\\\\\\').replace('\"', '\\\\\"').replace"
+    },
+    {
+      "line": 140,
+      "callee": "text.replace('\\\\', '\\\\\\\\').replace('\"', '\\\\\"').replace('\\n', '\\\\n').replace"
+    }
+  ]
+}

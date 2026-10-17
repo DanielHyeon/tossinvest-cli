@@ -1,0 +1,102 @@
+{
+  "file": "cmd/tossctl/engine.go",
+  "source_sha256": "aeefd5dcc3dd9cfb1f1b1435e816ff2f966c62c7ec9717f2308804ce062fdefd",
+  "package": "main",
+  "function": "newEngineCmd",
+  "signature": "newEngineCmd(params=1, results=1)",
+  "start": {
+    "line": 114,
+    "column": 1
+  },
+  "end": {
+    "line": 129,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 128,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 2
+      },
+      "text": "cmd.AddCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 17
+      },
+      "text": "newEngineRunCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 40
+      },
+      "text": "newEngineReconcileResolveCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 3
+      },
+      "text": "newEngineAlertsCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 2
+      },
+      "text": "cmd.AddCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 17
+      },
+      "text": "newEngineRiskRelaxationCmds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 2
+      },
+      "text": "cmd.AddCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 17
+      },
+      "text": "newEngineModeReleaseCmd"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 115,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

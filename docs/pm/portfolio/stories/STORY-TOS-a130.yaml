@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a130",
+  "title": "An adopted trade whose quantity grew after adoption still freezes its outcome",
+  "feature": "FEAT-TOS-005",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a130-an-adopted-trade-keeps-its-outcome",
+    "path": "openspec/changes/archive/2026-10-13-a130-an-adopted-trade-keeps-its-outcome"
+  },
+  "found_by": {
+    "date": "2026-10-12",
+    "how": "The 2026-10-07 010170 stop (adopted 3, reconciled to 6 sixty-three seconds later, sold 6) closed without a trade_outcomes row. adoptedRoundTripLegs compares the engine sell quantity with the adoption-time quantity, so a position whose quantity a reconciliation adjustment raised after adoption is refused; ApplyExitFill discards the refusal. 11 of 73 CLOSED positions in the production journal were lost this way since 2026-08-03.",
+    "record": "openspec/changes/archive/2026-10-13-a130-an-adopted-trade-keeps-its-outcome/proposal.md"
+  },
+  "acceptance": [
+    "An adopted position whose quantity reconciliation adjustments raised after adoption freezes an outcome when the engine sells the whole grown quantity; realised R uses the adoption-time per-share initial risk and the sold quantity in both numerator and denominator",
+    "A close whose outcome cannot be frozen writes one engine.log line naming the symbol, market, instance and a fixed reason code, with no account reference or position id; the fill transaction is never rolled back or held by it",
+    "A backfill tool previews every CLOSED position without an outcome (computed values or refusal reason) with zero writes, and writes only after a human passes the preview's confirmation token",
+    "The 31 already frozen rows recompute to the same values",
+    "The console note on the trade table names the real reasons a closed position has no row"
+  ]
+}

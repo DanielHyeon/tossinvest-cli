@@ -1,0 +1,177 @@
+{
+  "file": "internal/app/engine/risk_relaxation_command.go",
+  "source_sha256": "1c33bf8704cca65033ac4211cf53c14320467935412f97aea6c2aa2f95eb1148",
+  "package": "engine",
+  "function": "notifyRelaxation",
+  "signature": "notifyRelaxation(params=9, results=1)",
+  "start": {
+    "line": 170,
+    "column": 1
+  },
+  "end": {
+    "line": 196,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 173,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 190,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 176,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 192,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 195,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 79
+      },
+      "text": "journal.RFC3339"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 24
+      },
+      "text": "obs.ErrAlertNotDurable.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 9
+      },
+      "text": "notices.RecordCritical"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 32
+      },
+      "text": "context.WithoutCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 10
+      },
+      "text": "obs.EventType"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 51
+      },
+      "text": "strconv.FormatInt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 9
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 4
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 16
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 24
+      },
+      "text": "err.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 172,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 175,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 178,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 191,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

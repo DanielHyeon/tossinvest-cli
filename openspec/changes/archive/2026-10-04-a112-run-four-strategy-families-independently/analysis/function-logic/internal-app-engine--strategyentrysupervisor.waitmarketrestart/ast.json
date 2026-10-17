@@ -1,0 +1,171 @@
+{
+  "file": "internal/app/engine/strategy_entry_supervisor.go",
+  "source_sha256": "9cb510c1c9c7f44ac109de5fd8ddac8e6c559adb4d654b1acd65dce19cc9e577",
+  "package": "engine",
+  "function": "waitMarketRestart",
+  "receiver": "StrategyEntrySupervisor",
+  "signature": "StrategyEntrySupervisor.waitMarketRestart(params=2, results=1)",
+  "start": {
+    "line": 1020,
+    "column": 1
+  },
+  "end": {
+    "line": 1036,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1021,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1025,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1029,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 1032,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1022,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1026,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1030,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1033,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1035,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1021,
+        "column": 5
+      },
+      "text": "notBefore.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1022,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1024,
+        "column": 9
+      },
+      "text": "s.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1025,
+        "column": 5
+      },
+      "text": "now.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1026,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1028,
+        "column": 11
+      },
+      "text": "notBefore.Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1030,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1035,
+        "column": 9
+      },
+      "text": "s.clk.Sleep"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1024,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1028,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

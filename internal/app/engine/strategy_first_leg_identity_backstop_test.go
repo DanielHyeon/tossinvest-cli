@@ -82,6 +82,7 @@ func newFirstLegIdentityFixture(t *testing.T) firstLegIdentityFixture {
 			"sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
 		accountValue := strategyAccountMarketAuthority{market: market, authority: accountAuthority,
 			snapshot: StrategyAccountMarketSnapshot{Market: market, Ready: true, Reason: StrategyAccountReady}}
+		accountValue = a112ScopedAccount(accountValue, result, accountAuthority)
 		if market == StrategyMarketKR {
 			proposals.kr, accounts.kr = proposalMarket, accountValue
 		} else {
@@ -90,7 +91,7 @@ func newFirstLegIdentityFixture(t *testing.T) firstLegIdentityFixture {
 	}
 	handle := openTestJournal(t)
 	fakeClock := clock.NewFake(now)
-	guardian, err := execgw.NewRiskGuardian(execgw.RiskGuardianOptions{Journal: handle, Clock: fakeClock,
+	guardian, err := execgw.NewRiskGuardian(execgw.RiskGuardianOptions{ManualBuys: a136ZeroManualBuyBoardInternal(fakeClock), Journal: handle, Clock: fakeClock,
 		AccountRef: "acct-risk-loader", Policy: risk.DefaultPolicy(), Costs: costs.DefaultModel(),
 		PolicyVersion: "engine.automation_gate/risk-policy-v1"})
 	if err != nil {

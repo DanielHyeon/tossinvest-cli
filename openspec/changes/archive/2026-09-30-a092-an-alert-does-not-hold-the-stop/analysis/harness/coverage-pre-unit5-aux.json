@@ -1,0 +1,33 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/app/engine",
+ "tests_run": 19,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-app-engine--runtime.runauxiliary": {
+   "B1": {
+    "kind": "if",
+    "line": 89,
+    "column": 2,
+    "block": "89.30-98.3",
+    "entered_by": [
+     "TestEveryAuxiliaryExecutorIsStarted",
+     "TestTheEngineStopsPromptlyWithTheDelivererAttached"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 110,
+    "column": 2,
+    "block": "110.23-112.3",
+    "entered_by": [
+     "TestAnAuxiliaryExecutorThatReturnsDoesNotStopTheEngine",
+     "TestTheRuntimeDrainsAnAuxiliaryExecutorBeforeItReturns"
+    ],
+    "union": null
+   }
+  }
+ }
+}

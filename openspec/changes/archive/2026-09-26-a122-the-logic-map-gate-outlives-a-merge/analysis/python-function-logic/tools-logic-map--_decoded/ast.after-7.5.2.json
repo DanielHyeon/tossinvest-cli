@@ -1,0 +1,39 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "source_sha256": "98845ce2dea180b8ab813180a51e9076ae1f787dea664362a61e8312675b135b",
+  "function": "_decoded",
+  "signature": "_decoded(raw)",
+  "start": {
+    "line": 1346,
+    "column": 1
+  },
+  "end": {
+    "line": 1352,
+    "column": 70
+  },
+  "branches": [],
+  "returns": [
+    {
+      "line": 1352,
+      "value": "io.TextIOWrapper(io.BytesIO(raw), encoding='utf-8').read()"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1352,
+      "callee": "io.TextIOWrapper(io.BytesIO(raw), encoding='utf-8').read"
+    },
+    {
+      "line": 1352,
+      "callee": "io.BytesIO"
+    },
+    {
+      "line": 1352,
+      "callee": "io.TextIOWrapper"
+    }
+  ]
+}

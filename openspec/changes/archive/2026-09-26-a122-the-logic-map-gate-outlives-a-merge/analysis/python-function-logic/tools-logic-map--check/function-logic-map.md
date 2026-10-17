@@ -1,0 +1,398 @@
+# Function Logic Map: `check` — 해소 호출 두 자리만
+
+`tools/logic-map/check_analysis.py:684-765` · Python ·
+분기 34 · 반환 9 · 호출 45 (`ast.json` 기계 열거)
+
+이 change 는 `check` 의 판정 내용을 바꾸지 않는다. 바꾸는 것은 **해소 실패를
+어떻게 받느냐** 한 곳이다. 그래서 전체 34개 분기를 옮겨 적지 않고, 열거에서
+`resolve_referenced_change` 를 부르는 자리와 그것을 받는 handler 만 적는다.
+
+| 자리 | 호출 | 받는 분기 | 실패하면 |
+|---|---|---|---|
+| 게이트 대상 | `:690` | B1 `try:`(689) → **B2 `except ValueError:`**(691) | **삼키고** `openspec/changes/<id>` 로 되돌아간다 |
+| 빌린 증거 | `:715` | B14 `try:`(714) → B15 `except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc`(717) | `:718` `return ["function-logic reference base is invalid: …"]` |
+
+**두 자리가 같은 예외를 정반대로 다룬다.** 아래쪽은 오류로 돌려주고 위쪽은 삼킨다.
+그러므로 해소기를 fail-closed 로 만드는 것만으로는 게이트 대상 경로가 안 바뀐다 —
+B2 가 새 실패를 **기존 fallback 과 구분**해야 한다.
+
+구분의 근거는 문구가 아니라 **타입**으로 둔다. 문구로 가르면 메시지를 고치는 순간
+조용히 뚫린다 — [[existence-check-is-not-a-role-check]].
+
+## Safety conclusion
+
+`check` 의 나머지 32개 분기, 요구 함수 집합, base·landing 규칙, 번들 판정은
+한 줄도 바뀌지 않는다. Go 파일 변경 0.
+
+---
+
+## 두 번째 편집 — 해소 순서 (task 3.2.3.1, 2026-09-10)
+
+열거 파일이 셋이 됐다. **세 파일은 사슬이다** — 가운데 파일의 `source_sha256` 이
+`52c761de` 의 `check_analysis.py` 해시와 같다는 것을 대조해 확인했다(`b6ca421654cf`).
+
+| 파일 | 리비전 | 분기 | 반환 |
+|---|---|---|---|
+| `ast.json` | 3.2.4 편집 **전** HEAD | 34 | 9 |
+| `ast.worktree.json` | 3.2.4 편집 **후** = `52c761de` = 3.2.3.1 편집 **전** | 35 | 10 |
+| `ast.worktree-after-3.2.3.1.json` | 3.2.3.1 편집 **후** | 37 | 11 |
+
+이번 편집은 판정을 하나도 안 바꾸고 **호출 순서**만 바꾼다. 그것이 기계 열거로
+보이는 자리는 `calls` 의 줄 번호다.
+
+| | `resolve_landing` | 빌린 증거 해소(`resolve_referenced_change`+`resolve_base`) |
+|---|---|---|
+| 편집 전 | `L728` | `L742-743` — **뒤** |
+| 편집 후 | `L764` | `L754-755` — **앞** |
+
+**왜 순서가 판정이 되는가.** `resolve_landing` 은 넘겨받은 `analysis` 로 착지를
+고정한다. 빌린 증거를 쓰는 change 는 그 시점의 `analysis` 가 **지역** 디렉터리이고
+거기 번들이 0 이다(a073 이 a072 의 231개를 빌린다). 그래서 뒤에서 풀면 고정할 것이
+하나도 없는 채로 판정이 끝난다 — 3.2.3.1 의 새 거절이 그 change 를 통째로 죽인다.
+순서를 바꾸면 빌린 번들이 고정한다.
+
+분기 35→37, 반환 10→11 은 `try` 하나를 둘로 가른 결과다(`resolve_base` 의 실패와
+착지·diff 의 실패를 각자 받는다). 두 handler 의 문구는 **일부러 같게** 뒀다 —
+바깥에서 본 실패 종류가 갈리지 않아야 오늘의 판정이 그대로 남는다.
+
+---
+
+## 세 번째 편집 — 창의 끝 공유 (task 1.8, 2026-09-10)
+
+열거 파일이 다섯이 됐다. `ast.before-1.8.json` 은 3.3 커밋(`73cc6bdc`)에서 뽑았다.
+3.3 이 `check` 에서 바꾼 것은 반환 **값** 하나(실패 메시지)뿐이라 구조는 그대로다 —
+`ast.worktree-after-3.2.3.1.json` 과 분기 37 · 반환 11 이 같고 분기 **종류 열도
+글자 그대로 같다**. 값만 갈렸다는 것을 열거로 확인했다.
+
+| 파일 | 리비전 | 분기 | 반환 |
+|---|---|---|---|
+| `ast.worktree-after-3.2.3.1.json` | 3.2.3.1 편집 후 | 37 | 11 |
+| `ast.before-1.8.json` | `73cc6bdc` = 1.8 편집 **전** | 37 | 11 |
+| `ast.after-1.8.json` | 1.8 편집 **후** | **40** | **13** |
+
+새로 선 노드는 셋이고 전부 빌린 증거 블록 안이다:
+
+| 새 ID | 줄 | 소스 |
+|---|---|---|
+| B17 | 793 | `try:` (양쪽 선언을 같은 방법으로 읽는다) |
+| B18 | 795 | `except ValueError as exc:` → `cannot derive modified Go functions: …` |
+| B19 | 797 | `if not shared:` → `must share the exact landing point` |
+
+반환 둘이 늘었다(11 → 13): `L796` 은 기존 문구를 **그대로** 쓴다(빌리는 쪽의
+UTF-8 오류가 오늘과 같은 말을 하게), `L798` 이 새 사유다.
+
+**자리가 왜 여기인가.** 이 판정은 `L799` 의 `analysis = referenced_dir / …` **앞**,
+그리고 `L803` 의 `resolve_landing` **앞**에 선다. 뒤에 두면 저자가 고른 착지가 이미
+고정 판정을 통과한 뒤라 늦다. 3.2.3.1 이 해소 순서를 앞으로 당겨 둔 덕에 이 판정이
+설 자리가 이미 있었다.
+
+**대신 이 자리는 3.2.3.1 의 고정 판정을 가릴 수 있다.** 공유 규칙이 먼저 걸리면
+`resolve_landing` 이 아예 안 불린다. 그래서 3.2.3.1 회귀 시험의 픽스처를 "양쪽이
+같은 값을 선언"으로 고쳐 고정 판정이 홀로 판정하게 두었고, 변이 M4(해시 대조 삭제)가
+그 시험을 여전히 빨갛게 하는지 **재서** 확인했다 — 2건 FAIL.
+
+`resolve_referenced_change` 의 호출 자리는 여전히 **둘**(`L756` 게이트 대상 ·
+`L781` 빌린 쪽)이고 이 편집이 닿는 것은 뒤의 하나다. 앞의 자리는 `AmbiguousChange`
+와 `ValueError` 를 타입으로 갈라 받는 3.2.4 의 모양 그대로다.
+
+---
+
+## 네 번째 편집 — 이관 예외의 창 끝 (task 1.12, 2026-09-11)
+
+`ast.after-1.8.json`(= 커밋 `52d5cb2c` 의 상태, `source_sha256` 을 커밋된 파일 해시와
+대조해 확인) → `ast.after-1.12.json`. **분기 40 → 43, 반환 13 → 14.**
+
+| 새 ID | 줄 | 소스 | 무엇을 하나 |
+|---|---|---|---|
+| B5 | 785 | `{} if context is None else context` | 문맥을 **항상** 채운다 |
+| B21·B22 | 820 | `if adopted and _declared_landing(…) is not None:` | 이관의 두 번째 손잡이 거절 |
+| B24 | 836 | `str(facts.get('adoption_source','')) if adopted else resolve_landing(…)` | 이관이면 감사된 값, 아니면 해소 |
+
+사라진 것 하나: `if context is not None:`(옛 B22). 문맥 기록이 조건부가 아니게 됐다.
+그것이 **판정**이었다는 것이 이 편집의 발견이다 — 호출자가 문맥을 안 주면 `check` 가
+"이것이 이관인가"를 스스로 모르게 되고, 같은 입력에 다른 문장을 만든다. 변이 N5
+(`facts` 를 `context` 로 되돌림)가 시험 하나를 빨갛게 한다.
+
+반환 하나가 늘었다(13 → 14): `L825` 의 이관 거절. `L848` 은 새 반환이 아니라
+`missing Function Logic Map …` 의 **문자열이 바뀐** 것이다(`_target_text` 에 감사
+여부를 넘긴다).
+
+**`resolve_landing` 을 이관 경로에서 부르지 않는다.** 그 함수의 판정 전부는 **저자가
+고른 값**을 위한 것이고 감사된 source 는 고른 값이 아니다. `validate` 가
+`ancestry(P,E)` · `ancestry(E,source)` · `ancestry(source,head,strict=True)` ·
+`source^{tree}` 대조 · digest 셋으로 이미 묶는다 — 같은 판정을 두 번 하지 않는다
+([[two-judgements-cover-for-each-other]]).
+
+
+---
+
+## 편집 계획 — task 6.2 · 6.2.1 (코드보다 먼저, `ast.before-6.2.json` = HEAD `fb4e8f92`)
+
+분기 43 · 반환 14 는 **그대로** 여야 한다. 조건의 피연산자와 호출 인자만 바뀐다.
+
+| 자리 | 전 | 후 | task |
+|---|---|---|---|
+| L865 `resolve_base(change_dir, root, facts)` | 신원 = 디렉터리 이름 | `change_id=change` | 6.2 |
+| L879 `resolve_base(referenced_dir, root)` | 같음 | `change_id=referenced_change` | 6.2 |
+| B21·B22 L898 | `_declared_landing(...) is not None` — 해독, try 밖 | `_landing_record(...) is not None` — 해독 안 함 | 6.2.1 |
+
+B21·B22 가 기전이다: 이관 probe 는 "착지 기록이 **있는가**"를 묻는데 해독하는 함수를
+불렀고, 다섯 호출 자리 중 이것만 try 밖이었다. 비-UTF-8 기록이면 `ValueError` 가 `check()`
+를 뚫었다(4.4 Testing 전문가 실측).
+
+
+## 편집 결과 — task 6.2 · 6.2.1 (`ast.after-6.2.json`)
+
+분기 43 → 43 · 반환 14 → 14. 열거 diff 는 B21·B22 의 callee 하나(`_declared_landing` →
+`_landing_record`)뿐이다. `resolve_base` 두 호출은 인자만 늘었다. 변이 M7(probe 가 다시 해독)
+CAUGHT — `test_an_undecodable_landing_record_in_the_adoption_path_is_refused_not_raised` 가
+`ValueError` 로 **에러**가 된다(편집 전의 증상 그대로).
+
+## 편집 (task 7.1) — 분기 43 → 44, 반환 14 → 14
+
+`ast.before-7.1.json`(= 커밋 `60150803`) → `ast.after-7.1.json`.
+`check_analysis.py:885-1014` · Python
+
+| 방향 | 분기 |
+|---|---|
+| 추가 | `if not landing:` |
+| 삭제 | **없음** |
+
+**반환 14개가 하나도 안 바뀌었다.** 더한 것은 `facts` 에 사실 하나를
+채우는 `if not landing:` 뿐이고, 그 안에서 돌아가지 않는다. 즉 `check` 가 내는 오류
+목록은 이 편집 전후로 **동일**하다 — 7.1 이 "게이트 판정은 그대로"라고 적은 것의 구조적
+근거가 이 표다.
+
+**왜 `if not landing:` 으로 감쌌나.** 조언 줄은 대상이 워킹트리일 때만 나간다. 착지가
+있는 change 에서 번들 해시를 다시 세면 아무도 안 읽는 값에 `git show` 를 번들 수만큼
+쓴다. 실측(활성 24건, 2026-09-12): 이 편집 뒤에도 change 당 시간은 재기 전과 같은 대역
+(1.3s ~ 19.4s)이고, 가장 무거운 a071 이 19.4s 다.
+
+---
+
+## 편집 — task 7.6 (규칙 한 집) · 분기 44 → 43 · 반환 14 → 14 · raise 0 → 0
+
+편집 전 `ast.before-7.6.json`(HEAD `2b5b05c1`) · 편집 후 `ast.after-7.6.json`(워킹트리). 아래 표는 두 열거의
+`source` 를 스크립트가 줄 단위로 대조한 것이다.
+
+`record_landing` 과 같은 해소 수정(I4) · 이관 거절 문장 상수(I5). 나머지 분기 42개는 소스 한 줄 단위로 같다(스크립트 대조).
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | 분기 | `except AmbiguousChange as exc:` |
+| 사라짐 | 분기 | `except ValueError:` |
+| 생김 | 분기 | `except ValueError as exc:` |
+
+## 편집 — task 7.7 · 내부 논리 변경 없음 (분기 43 → 43 · 반환 14 → 14 · 호출 집합 동일)
+
+7.7 은 이 함수를 편집하지 않았다. 열거를 **먼저** 뽑은 이유는 조언 판정을 여기(`facts`)에 넣는 안을 검토했기
+때문이다 — 그 안은 버렸다: 조언 때문에 부른 git 이 멎으면 `check` 의 **판정**이 결함 한 줄로 바뀐다. 두 열거
+(`ast.before-7.7.json` · `ast.after-7.7.json`)의 분기·반환 `source` 와 호출 집합을 스크립트로 대조해 같음을
+확인했다(줄 번호만 위 함수들의 추가로 밀렸다). 이 함수가 부르는 `_target_text` 의 반환 문장이 바뀌었으므로
+`missing Function Logic Map … between base X and <대상>` 오류의 **문자열**은 달라진다 — 그쪽 절에 적었다.
+
+## 편집 — task 7.2.3 (빌리는 change 는 창을 좁히지 않는다) · 분기 43 → 41 · 반환 14 → 13 · raise 0 → 0
+
+편집 전 `ast.before-7.2.3.json`(HEAD `67d06bc9` blob, L1043-1169) · 편집 후 `ast.after-7.2.3.json`(워킹트리, L1050-1174). 표는 두 열거의 `source` 를 스크립트가 대조한 것이다.
+
+빌린 증거 갈래에서 1.8 의 공유 판정(`_declared_landing(빌리는 쪽) == _declared_landing(빌려주는 쪽)` → 다르면 `must share the exact landing point`, 해독 실패는 `cannot derive …`)을 걷고, **빌리는 쪽에 기록이 있는가**만 묻는다: `_landing_record(change_dir, root) is not None` 이면 `[BORROWED_REFUSES_A_LANDING]`. 사람이 2026-09-14 에 고른 규칙(리뷰 C4)이다 — 빌려주는 쪽의 착지는 빌려주는 쪽 증거의 가장 낮은 값이라 빌리는 쪽이 복사하면 그 뒤의 빌리는 쪽 작업이 창 밖이었다. 빌려주는 쪽의 기록은 이제 이 창에 안 쓰인다: 뒤의 `resolve_landing(change_dir, …)` 는 빌리는 쪽 디렉터리를 읽으므로 기록이 없으면 빈 값(워킹트리)이다 — 그 배관을 빌려주는 쪽으로 바꾸는 변이 C-E 를 `test_a_lender_record_does_not_narrow_the_borrower` 가 잡는다. 해독하지 않고 있는가만 묻는 이유는 6.2.1 과 같다(C-B 가 못 읽는 기록 앞에서 traceback 이 되는 것을 시험이 잡는다). base 공유 판정은 그대로다.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | 분기 | `try:` |
+| 사라짐 | 분기 | `except ValueError as exc:` |
+| 사라짐 | 분기 | `if not shared:` |
+| 생김 | 분기 | `if _landing_record(change_dir, root) is not None:` |
+| 사라짐 | 반환 | `[f'cannot derive modified Go functions: {exc}']` |
+| 사라짐 | 반환 | `['function-logic reference must share the exact landing point']` |
+| 생김 | 반환 | `[BORROWED_REFUSES_A_LANDING]` |
+
+호출 — 사라짐 ['_declared_landing'] · 생김 없음
+
+## task 7.5.1 — gstack 리뷰의 permissive 결함 수리
+
+`ast.before-7.5.1.json`(= git revision **`b29e1f4e`**, 소스 해시가 그 커밋과 일치)과
+`ast.after-7.5.1.json` 을 같은 열거기로 뽑아 **순서 있는 배열**을 difflib 으로 정렬했다
+(분기 41 · 반환 13 · raise 0 → 분기 43 · 반환 13 · raise 0).
+
+손 복사 예외 목록 셋을 `GATE_FAULTS` 로, 그리고 착지가 있으면 고정 소스를 **한 번** 미리 읽어 `validate_target` 에 넘긴다(F3 — 본 판정 경로가 번들마다 프로세스 하나였다).
+
+| | 종류 | 소스 |
+|---|---|---|
+| − | ExceptHandler | `except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:` |
+| + | ExceptHandler | `except GATE_FAULTS as exc:` |
+| − | ExceptHandler | `except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:` |
+| + | ExceptHandler | `except GATE_FAULTS as exc:` |
+| − | ExceptHandler | `except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:` |
+| + | ExceptHandler | `except GATE_FAULTS as exc:` |
+| + | IfExp | `_committed_many(root, landing, sorted({source for _, source, _ in _pinning_bundles(root, a` |
+| + | comprehension | ` for _, source, _ in _pinning_bundles(root, analysis)` |
+
+## task 7.5.2 — 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰, 2026-09-19)
+
+`tools/logic-map/check_analysis.py:1499-1670` · 분기 54 · 반환 14 · raise 0 (편집 전 L1359-1493 · 분기 43 · 반환 13 · raise 0, `ast.before-7.5.2.json` = revision `e9f905bd`).
+
+착지가 판정한 바이트에 묶는다: `ast.json` 을 **한 번** 읽어(`_read_evidence`) 착지의 지문과 대조하고, 다르면 번들 이름을 대고 멈춘다. 그 뒤의 모든 판정(대상 · 열거형 호출 · 번들 글자 · 요구 대조)이 그 바이트만 쓴다 — 7.5.1 이 "설계 변경" 이라며 남긴 수락 뒤의 창을 닫는다. 미리 읽기는 판정한 목록을 쓰고, 착지 해소가 없는 이관 change 에선 선별을 `ValueError` 안에서 해서 저장소 밖 소스가 대상 이름을 지우지 않게(Codex P2 · 적대 F3 — 이 로트 7.5.1 이 만든 회귀). 조언 계산(`_base_shaped_bundles`)의 결함은 판정이 아니라 조언 줄로. 앞선 실행이 같은 `facts` 에 남긴 판정 입력을 지운다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1508 | Try | `try:` |
+| B2 | 1510 | ExceptHandler | `except ValueError as exc:` |
+| B3 | 1515 | IfExp | `review.read_text(encoding='utf-8') if review.exists() else ''` |
+| B4 | 1519 | IfExp | `{} if context is None else context` |
+| B5 | 1521 | For | `for stale in ('landing_evidence', 'base_shaped_fault'):` |
+| B6 | 1523 | Try | `try:` |
+| B7 | 1525 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B8 | 1530 | If | `if reference_file.exists():` |
+| B9 | 1531 | BoolOp | `analysis.exists() and any((path.is_dir() and any(path.iterdir()) for path in analysis.iterdir()))` |
+| B10 | 1531 | BoolOp | `path.is_dir() and any(path.iterdir())` |
+| B11 | 1531 | If | `if analysis.exists() and any((path.is_dir() and any(path.iterdir()) for path in analysis.iterdir())):` |
+| B12 | 1531 | comprehension | ` for path in analysis.iterdir()` |
+| B13 | 1534 | BoolOp | `not re.fullmatch('[a-z0-9][a-z0-9-]*', referenced_change) or referenced_change == change` |
+| B14 | 1534 | If | `if not re.fullmatch('[a-z0-9][a-z0-9-]*', referenced_change) or referenced_change == change:` |
+| B15 | 1536 | Try | `try:` |
+| B16 | 1539 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B17 | 1541 | If | `if referenced_base != base:` |
+| B18 | 1551 | If | `if _landing_record(change_dir, root) is not None:` |
+| B19 | 1555 | BoolOp | `adopted and _landing_record(change_dir, root) is not None` |
+| B20 | 1555 | If | `if adopted and _landing_record(change_dir, root) is not None:` |
+| B21 | 1561 | Try | `try:` |
+| B22 | 1568 | IfExp | `str(facts.get('adoption_source', '')) if adopted else resolve_landing(change_dir, root, base, analysis, facts)` |
+| B23 | 1571 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B24 | 1575 | If | `if not landing:` |
+| B25 | 1580 | Try | `try:` |
+| B26 | 1582 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B27 | 1584 | If | `if not analysis.exists():` |
+| B28 | 1585 | If | `if required:` |
+| B29 | 1586 | comprehension | ` for source, function in required` |
+| B30 | 1593 | IfExp | `[] if EXEMPTION in review_text else [f'missing analysis or `{EXEMPTION}` review marker']` |
+| B31 | 1595 | comprehension | ` for path in analysis.iterdir() if path.is_dir()` |
+| B32 | 1596 | If | `if not targets:` |
+| B33 | 1604 | If | `if judged is not None:` |
+| B34 | 1606 | comprehension | ` for path in before.keys() \| now.keys() if before.get(path) != now.get(path)` |
+| B35 | 1610 | If | `if moved:` |
+| B36 | 1611 | comprehension | ` for name in moved` |
+| B37 | 1616 | comprehension | ` for ast_path, raw in reads` |
+| B38 | 1625 | comprehension | ` for path in sorted(analysis.glob('*/function-logic-map.md'))` |
+| B39 | 1638 | If | `if landing:` |
+| B40 | 1639 | If | `if judged is not None:` |
+| B41 | 1640 | comprehension | ` for _, source, _ in judged.pins` |
+| B42 | 1642 | Try | `try:` |
+| B43 | 1643 | comprehension | ` for _, source, _ in _select_pinning(root, reads)` |
+| B44 | 1644 | ExceptHandler | `except ValueError:` |
+| B45 | 1647 | For | `for target in targets:` |
+| B46 | 1652 | If | `if binding:` |
+| B47 | 1653 | If | `if binding in covered:` |
+| B48 | 1656 | For | `for binding, expected in required.items():` |
+| B49 | 1658 | If | `if target is None:` |
+| B50 | 1662 | If | `if not isinstance(ast_value, dict):` |
+| B51 | 1664 | BoolOp | `expected.get('current_hash') or expected.get('base_hash')` |
+| B52 | 1665 | If | `if ast_value.get('source_sha256') != expected_hash:` |
+| B53 | 1667 | IfExp | `'current' if expected.get('current_hash') else 'base'` |
+| B54 | 1668 | If | `if ast_value.get('revision', 'current') != expected_revision:` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1587-1759` · 분기 50 · 반환 13 · raise 0 (편집 전 L1499-1670 · 분기 54 · 반환 14 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+역사를 **여기서 한 번** 풀고(`_head_commit`, `facts["head"]`) 증거를 **한 번** 읽는다(`_read_evidence`). 착지 판정 · 조기 반환(`evidence.present`) · 번들 목록(`evidence.targets`) · 열거형 호출 · 대상 판정 · 조언이 전부 그 값을 쓴다 — 7.5.2 의 "착지 뒤 다시 읽어 대조" 블록과 `SWAPPED` 반환을 지웠다(반환 14 → 13). 번들 파일 목록을 못 열면 이름 댄 줄. 앞선 실행의 사실은 `RUN_FACTS` 전부를 지운다(7.5.2 는 둘만). 태어나지 않은 `HEAD` 는 결함 줄.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1596 | Try | `try:` |
+| B2 | 1598 | ExceptHandler | `except ValueError as exc:` |
+| B3 | 1603 | IfExp | `review.read_text(encoding='utf-8') if review.exists() else ''` |
+| B4 | 1607 | IfExp | `{} if context is None else context` |
+| B5 | 1610 | For | `for stale in RUN_FACTS:` |
+| B6 | 1612 | Try | `try:` |
+| B7 | 1620 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B8 | 1626 | If | `if reference_file.exists():` |
+| B9 | 1627 | BoolOp | `analysis.exists() and any((path.is_dir() and any(path.iterdir()) for path in analysis.iterdir()))` |
+| B10 | 1627 | BoolOp | `path.is_dir() and any(path.iterdir())` |
+| B11 | 1627 | If | `if analysis.exists() and any((path.is_dir() and any(path.iterdir()) for path in analysis.iterdir())):` |
+| B12 | 1627 | comprehension | ` for path in analysis.iterdir()` |
+| B13 | 1630 | BoolOp | `not re.fullmatch('[a-z0-9][a-z0-9-]*', referenced_change) or referenced_change == change` |
+| B14 | 1630 | If | `if not re.fullmatch('[a-z0-9][a-z0-9-]*', referenced_change) or referenced_change == change:` |
+| B15 | 1632 | Try | `try:` |
+| B16 | 1635 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B17 | 1637 | If | `if referenced_base != base:` |
+| B18 | 1647 | If | `if _landing_record(change_dir, root, head) is not None:` |
+| B19 | 1651 | BoolOp | `adopted and _landing_record(change_dir, root, head) is not None` |
+| B20 | 1651 | If | `if adopted and _landing_record(change_dir, root, head) is not None:` |
+| B21 | 1657 | Try | `try:` |
+| B22 | 1670 | IfExp | `str(facts.get('adoption_source', '')) if adopted else resolve_landing(change_dir, root, base, head, evidence)` |
+| B23 | 1673 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B24 | 1677 | If | `if not landing:` |
+| B25 | 1682 | Try | `try:` |
+| B26 | 1684 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B27 | 1686 | If | `if not evidence.present:` |
+| B28 | 1687 | If | `if required:` |
+| B29 | 1688 | comprehension | ` for source, function in required` |
+| B30 | 1695 | IfExp | `[] if EXEMPTION in review_text else [f'missing analysis or `{EXEMPTION}` review marker']` |
+| B31 | 1697 | If | `if not evidence.targets:` |
+| B32 | 1711 | For | `for target in evidence.targets:` |
+| B33 | 1712 | If | `if not os.path.lexists(target / 'function-logic-map.md'):` |
+| B34 | 1714 | Try | `try:` |
+| B35 | 1716 | ExceptHandler | `except OSError as exc:` |
+| B36 | 1717 | BoolOp | `exc.strerror or exc` |
+| B37 | 1718 | comprehension | ` for target, text in bundle_texts.items()` |
+| B38 | 1731 | If | `if landing:` |
+| B39 | 1732 | Try | `try:` |
+| B40 | 1733 | comprehension | ` for _, source, _ in _select_pinning(root, evidence)` |
+| B41 | 1734 | ExceptHandler | `except ValueError:` |
+| B42 | 1737 | For | `for target in evidence.targets:` |
+| B43 | 1742 | If | `if binding:` |
+| B44 | 1743 | If | `if binding in covered:` |
+| B45 | 1746 | For | `for binding, expected in required.items():` |
+| B46 | 1748 | If | `if target is None:` |
+| B47 | 1753 | BoolOp | `expected.get('current_hash') or expected.get('base_hash')` |
+| B48 | 1754 | If | `if ast_value.get('source_sha256') != expected_hash:` |
+| B49 | 1756 | IfExp | `'current' if expected.get('current_hash') else 'base'` |
+| B50 | 1757 | If | `if ast_value.get('revision', 'current') != expected_revision:` |
+
+## task 7.5.2.2 — 스냅숏은 끝에서 디스크와 다시 대조한다 (7.5.2.1 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1645-1753` · 분기 26 · 반환 10 · raise 0 (편집 전 L1587-1759 · 분기 50 · 반환 13 · raise 0, `ast.before-7.5.2.2.json` = revision `908a8a36`).
+
+사실을 **맨 앞**에서 `facts.clear()` — 7.5.2.1 은 손으로 적은 `RUN_FACTS` 를 id 해소 **뒤에서** 지워 오타 id 에 앞선 실행의 창이 남았다(레드팀 · Codex). 판정부(조기 반환 · 대상 판정)를 `_verdict` 로 떼고 **한 출구**에서 `_judged_state_moved` 를 묻는다 — 달라졌으면 판정 대신 "다시 돌려라"(Codex P1 · 적대: 스냅숏 판정이 디스크의 무효 증거 · 새 `HEAD` 위에서 PASS 로 나갔다). 판정 앞의 결함 · 거절은 대조하지 않는다(이미 빨갛다).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1657 | IfExp | `{} if context is None else context` |
+| B2 | 1663 | Try | `try:` |
+| B3 | 1665 | ExceptHandler | `except ValueError as exc:` |
+| B4 | 1670 | IfExp | `review.read_text(encoding='utf-8') if review.exists() else ''` |
+| B5 | 1671 | Try | `try:` |
+| B6 | 1679 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B7 | 1685 | If | `if reference_file.exists():` |
+| B8 | 1686 | BoolOp | `analysis.exists() and any((path.is_dir() and any(path.iterdir()) for path in analysis.iterdir()))` |
+| B9 | 1686 | BoolOp | `path.is_dir() and any(path.iterdir())` |
+| B10 | 1686 | If | `if analysis.exists() and any((path.is_dir() and any(path.iterdir()) for path in analysis.iterdir())):` |
+| B11 | 1686 | comprehension | ` for path in analysis.iterdir()` |
+| B12 | 1689 | BoolOp | `not re.fullmatch('[a-z0-9][a-z0-9-]*', referenced_change) or referenced_change == change` |
+| B13 | 1689 | If | `if not re.fullmatch('[a-z0-9][a-z0-9-]*', referenced_change) or referenced_change == change:` |
+| B14 | 1691 | Try | `try:` |
+| B15 | 1694 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B16 | 1696 | If | `if referenced_base != base:` |
+| B17 | 1706 | If | `if _landing_record(change_dir, root, head) is not None:` |
+| B18 | 1710 | BoolOp | `adopted and _landing_record(change_dir, root, head) is not None` |
+| B19 | 1710 | If | `if adopted and _landing_record(change_dir, root, head) is not None:` |
+| B20 | 1716 | Try | `try:` |
+| B21 | 1729 | IfExp | `str(facts.get('adoption_source', '')) if adopted else resolve_landing(change_dir, root, base, head, evidence)` |
+| B22 | 1732 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B23 | 1736 | If | `if not landing:` |
+| B24 | 1741 | Try | `try:` |
+| B25 | 1743 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B26 | 1753 | IfExp | `[moved] if moved else verdict` |
+
+## task 7.5.2.3 — 재확인의 입력 집합은 판정의 입력 집합이다 (7.5.2.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1913-1937` · 분기 3 · 반환 2 · raise 0 (편집 전 L1645-1753 · 분기 26 · 반환 10 · raise 0, `ast.before-7.5.2.3.json` = revision `1d12520c`).
+
+판정 본문이 `_judged` 로 가고 여기는 **원장을 열고 닫는 자리**가 됐다. 판정이 끝까지 갔을 때만 재확인한다 — 판정 앞에서 돌아간 결함 · 거절은 이미 빨갛다(7.5.2.2 와 같다).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1925 | IfExp | `{} if context is None else context` |
+| B2 | 1933 | If | `if not judged:` |
+| B3 | 1937 | IfExp | `[moved] if moved else verdict` |

@@ -1,0 +1,92 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "fc35eb2d013dccd0700836f857ad9d3e65bff0dc",
+  "source_sha256": "6acf286c58f08f4e5be3cb3f5cc54140373b0ec3013cb6d10862883314761903",
+  "function": "_select_pinning",
+  "signature": "_select_pinning(root, evidence)",
+  "start": {
+    "line": 673,
+    "column": 1
+  },
+  "end": {
+    "line": 696,
+    "column": 17
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 682,
+      "inherited_line": false,
+      "source": "for ast_path, raw in evidence.held.items():"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 684,
+      "inherited_line": false,
+      "source": "if value.get('revision', 'current') != 'current':"
+    },
+    {
+      "id": "B3",
+      "kind": "BoolOp",
+      "line": 688,
+      "inherited_line": false,
+      "source": "not raw_source or not digest"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 688,
+      "inherited_line": false,
+      "source": "if not raw_source or not digest:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 696,
+      "value": "found"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 682,
+      "callee": "evidence.held.items"
+    },
+    {
+      "line": 683,
+      "callee": "_parsed"
+    },
+    {
+      "line": 684,
+      "callee": "value.get"
+    },
+    {
+      "line": 686,
+      "callee": "str"
+    },
+    {
+      "line": 686,
+      "callee": "value.get"
+    },
+    {
+      "line": 687,
+      "callee": "str"
+    },
+    {
+      "line": 687,
+      "callee": "value.get"
+    },
+    {
+      "line": 694,
+      "callee": "normalized_source"
+    },
+    {
+      "line": 695,
+      "callee": "found.append"
+    }
+  ]
+}

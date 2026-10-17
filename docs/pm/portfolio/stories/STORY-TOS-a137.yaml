@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a137",
+  "title": "The daily-loss limit is measured from the journal",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a137-daily-loss-is-measured",
+    "path": "openspec/changes/archive/2026-10-14-a137-daily-loss-is-measured"
+  },
+  "found_by": {
+    "date": "2026-10-14",
+    "how": "The Manager's gap analysis found that riskcalc.DailyLoss has no production caller; the change's AST and CodeGraph evidence showed that the Guardian's daily_loss rung refuses a missing value but passes a zero, and that its only production inputs are a tracer literal zero and a signed account manifest field with no producer in the repository.",
+    "record": "openspec/changes/archive/2026-10-14-a137-daily-loss-is-measured/proposal.md"
+  },
+  "acceptance": [
+    "Before judging an automated entry the production Guardian measures today's realised loss after costs from the engine journal using the existing riskcalc.DailyLoss contract",
+    "The chain compares the larger of the caller-supplied value and the measured value; a caller value never lowers the measurement",
+    "A measurement that cannot be made refuses the entry at the daily_loss rung as input-unavailable without masking an earlier rung's reason",
+    "Risk-reducing decisions, stop-losses, emergency exits, reconciliation and fill detection never call or wait on the measurement",
+    "Reaching the limit escalates the operating mode to ENTRY_BLOCKED on every production entry path and is not classified as a strategy lane fault"
+  ]
+}

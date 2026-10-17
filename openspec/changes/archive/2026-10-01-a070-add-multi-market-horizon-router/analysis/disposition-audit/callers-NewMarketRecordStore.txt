@@ -1,0 +1,6 @@
+
+Callers of "NewMarketRecordStore" (1):
+
+function    TestConcurrentKRandUSCASCommitIndependently
+  internal/strategyrouter/scheduler_test.go:45
+

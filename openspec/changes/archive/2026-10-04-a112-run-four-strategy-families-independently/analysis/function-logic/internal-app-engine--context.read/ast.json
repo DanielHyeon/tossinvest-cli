@@ -1,0 +1,323 @@
+{
+  "file": "internal/app/engine/strategy_runtime_projection.go",
+  "source_sha256": "c9cdc65328bc621f04b109f103d4111d774a877c96565ec5d7cb1b3ee7cd60dc",
+  "package": "engine",
+  "function": "Read",
+  "receiver": "Context",
+  "signature": "Context.Read(params=1, results=2)",
+  "start": {
+    "line": 24,
+    "column": 1
+  },
+  "end": {
+    "line": 79,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 25,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 31,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 35,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 59,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 62,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 66,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 69,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 73,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 26,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 32,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 36,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 60,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 41
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 2
+      },
+      "text": "c.strategyProjectionMu.RLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 2
+      },
+      "text": "c.strategyProjectionMu.RUnlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 41
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 19
+      },
+      "text": "store.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 13
+      },
+      "text": "strategyprojection.WithRuntimeIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 3
+      },
+      "text": "strategyRuntimeConfigDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 34
+      },
+      "text": "strategyRuntimeBuildDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 2
+      },
+      "text": "c.strategyLanesMu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 2
+      },
+      "text": "c.strategyLanesMu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 20
+      },
+      "text": "lanes.projection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 17
+      },
+      "text": "supervisor.Snapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 21
+      },
+      "text": "strategyLanesWithoutShadow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 23
+      },
+      "text": "strategyprojection.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 15
+      },
+      "text": "strategyprojection.WithMarketFailure"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 29,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 57,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 63,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 67,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 72,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 73,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 74,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

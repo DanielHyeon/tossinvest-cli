@@ -1,0 +1,269 @@
+{
+  "file": "internal/journal/exit_state_test.go",
+  "source_sha256": "0bfab2fe1cdb4370cce3d820b4e1d15ce22ad51c67f3c7625833088369251a12",
+  "package": "journal",
+  "function": "TestARefusedProposalIsReArmedAfterARestart",
+  "signature": "TestARefusedProposalIsReArmedAfterARestart(params=1, results=0)",
+  "start": {
+    "line": 790,
+    "column": 1
+  },
+  "end": {
+    "line": 821,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 797,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 803,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 806,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 812,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 791,
+        "column": 10
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 791,
+        "column": 24
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 792,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 795,
+        "column": 2
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 796,
+        "column": 8
+      },
+      "text": "openTestJournalAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 797,
+        "column": 13
+      },
+      "text": "j.SetApplyHooks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 798,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 800,
+        "column": 11
+      },
+      "text": "openedPosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 801,
+        "column": 16
+      },
+      "text": "currentPosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 802,
+        "column": 3
+      },
+      "text": "armPartial"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 803,
+        "column": 13
+      },
+      "text": "j.AttachExitIntent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 804,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 806,
+        "column": 13
+      },
+      "text": "j.ResolveExitProposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 807,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 811,
+        "column": 15
+      },
+      "text": "openTestJournalAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 812,
+        "column": 12
+      },
+      "text": "restarted.RecordExitJudgement"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 816,
+        "column": 12
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 819,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 791,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 792,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 796,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 797,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 800,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 801,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 803,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 806,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 811,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 812,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

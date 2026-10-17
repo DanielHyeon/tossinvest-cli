@@ -1,0 +1,3 @@
+github.com/JungHoonGhae/tossinvest-cli/internal/enginewatch: no non-test Go files in /mnt/D/Axipient/workspace/TossOS/internal/enginewatch
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl [build failed]
+FAIL

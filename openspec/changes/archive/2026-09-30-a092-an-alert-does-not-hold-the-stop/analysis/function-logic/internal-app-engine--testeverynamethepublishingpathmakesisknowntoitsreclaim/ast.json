@@ -1,0 +1,282 @@
+{
+  "file": "internal/app/engine/a109_the_sibling_endpoints_recover_too_test.go",
+  "source_sha256": "4ed962de949a424d863a206ed4e688882d9bc7687c167aa25a71c5d98c82851b",
+  "package": "engine",
+  "function": "TestEveryNameThePublishingPathMakesIsKnownToItsReclaim",
+  "signature": "TestEveryNameThePublishingPathMakesIsKnownToItsReclaim(params=1, results=0)",
+  "start": {
+    "line": 379,
+    "column": 1
+  },
+  "end": {
+    "line": 436,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 380,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 410,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 416,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 419,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 424,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 425,
+        "column": 5
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 431,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 388,
+        "column": 22
+      },
+      "text": "positionPolicyRuntimeEndpointNames"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 395,
+        "column": 22
+      },
+      "text": "alertControlEndpointNames"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 401,
+        "column": 22
+      },
+      "text": "modeControlEndpointNames"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 406,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 407,
+        "column": 12
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 409,
+        "column": 19
+      },
+      "text": "positionpolicyrpc.StagedSocketName"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 411,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 11
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 415,
+        "column": 22
+      },
+      "text": "os.CreateTemp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 415,
+        "column": 36
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 417,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 419,
+        "column": 14
+      },
+      "text": "temporary.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 420,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 422,
+        "column": 11
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 422,
+        "column": 24
+      },
+      "text": "filepath.Base"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 422,
+        "column": 38
+      },
+      "text": "temporary.Name"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 425,
+        "column": 9
+      },
+      "text": "test.names.Knows"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 426,
+        "column": 6
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 431,
+        "column": 7
+      },
+      "text": "test.names.Knows"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 432,
+        "column": 5
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 407,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 409,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 413,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 415,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 419,
+        "column": 7
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 422,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

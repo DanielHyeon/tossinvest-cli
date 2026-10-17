@@ -1,0 +1,72 @@
+{
+  "file": "internal/obs/notifier.go",
+  "source_sha256": "d705f78d68c1eff38216e9dc9791cf737dc9d505bca77b8543aa7b7bc236bd83",
+  "package": "obs",
+  "function": "logClaimHeld",
+  "receiver": "Notifier",
+  "signature": "Notifier.logClaimHeld(params=2, results=0)",
+  "start": {
+    "line": 742,
+    "column": 1
+  },
+  "end": {
+    "line": 752,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 743,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 744,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 746,
+        "column": 2
+      },
+      "text": "n.Log.Event"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 750,
+        "column": 19
+      },
+      "text": "claimAgeMS"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 750,
+        "column": 47
+      },
+      "text": "n.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 751,
+        "column": 23
+      },
+      "text": "journal.RFC3339"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

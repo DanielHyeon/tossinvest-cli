@@ -1,0 +1,358 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "c2eec6279cb898f1dc9e34d89775cc1afd9b13b5",
+  "head_commit": "2b3b21150f4c741d8009f13411796f4efcde9463",
+  "source_sha256": "6aa2dfd3fa48662882fa81536a3583fa8a1bdf73a9ab14c3464ca7bd3652274d",
+  "function": "_verdict",
+  "signature": "_verdict(root, base, landing, adopted, required, evidence, review_text)",
+  "start": {
+    "line": 2903,
+    "column": 1
+  },
+  "end": {
+    "line": 3000,
+    "column": 18
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 2912,
+      "inherited_line": false,
+      "source": "if not evidence.present:"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 2913,
+      "inherited_line": false,
+      "source": "if required:"
+    },
+    {
+      "id": "B3",
+      "kind": "comprehension",
+      "line": 2914,
+      "inherited_line": true,
+      "source": " for source, function in required"
+    },
+    {
+      "id": "B4",
+      "kind": "IfExp",
+      "line": 2921,
+      "inherited_line": false,
+      "source": "[] if EXEMPTION in review_text else [f'missing analysis or `{EXEMPTION}` review marker']"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 2923,
+      "inherited_line": false,
+      "source": "if not evidence.targets:"
+    },
+    {
+      "id": "B6",
+      "kind": "For",
+      "line": 2938,
+      "inherited_line": false,
+      "source": "for target in evidence.targets:"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 2941,
+      "inherited_line": false,
+      "source": "if target in evidence.unlistable:"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 2946,
+      "inherited_line": false,
+      "source": "if 'function-logic-map.md' not in names:"
+    },
+    {
+      "id": "B9",
+      "kind": "Try",
+      "line": 2948,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B10",
+      "kind": "ExceptHandler",
+      "line": 2951,
+      "inherited_line": false,
+      "source": "except OSError as exc:"
+    },
+    {
+      "id": "B11",
+      "kind": "IfExp",
+      "line": 2956,
+      "inherited_line": false,
+      "source": "exc.filename if isinstance(exc.filename, str) else ''"
+    },
+    {
+      "id": "B12",
+      "kind": "IfExp",
+      "line": 2957,
+      "inherited_line": false,
+      "source": "Path(named).name if named else target.name"
+    },
+    {
+      "id": "B13",
+      "kind": "comprehension",
+      "line": 2959,
+      "inherited_line": true,
+      "source": " for target, text in bundle_texts.items()"
+    },
+    {
+      "id": "B14",
+      "kind": "If",
+      "line": 2972,
+      "inherited_line": false,
+      "source": "if landing:"
+    },
+    {
+      "id": "B15",
+      "kind": "Try",
+      "line": 2973,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B16",
+      "kind": "comprehension",
+      "line": 2974,
+      "inherited_line": true,
+      "source": " for _, source, _ in _select_pinning(root, evidence)"
+    },
+    {
+      "id": "B17",
+      "kind": "ExceptHandler",
+      "line": 2975,
+      "inherited_line": false,
+      "source": "except ValueError:"
+    },
+    {
+      "id": "B18",
+      "kind": "For",
+      "line": 2978,
+      "inherited_line": false,
+      "source": "for target in evidence.targets:"
+    },
+    {
+      "id": "B19",
+      "kind": "If",
+      "line": 2983,
+      "inherited_line": false,
+      "source": "if binding:"
+    },
+    {
+      "id": "B20",
+      "kind": "If",
+      "line": 2984,
+      "inherited_line": false,
+      "source": "if binding in covered:"
+    },
+    {
+      "id": "B21",
+      "kind": "For",
+      "line": 2987,
+      "inherited_line": false,
+      "source": "for binding, expected in required.items():"
+    },
+    {
+      "id": "B22",
+      "kind": "If",
+      "line": 2989,
+      "inherited_line": false,
+      "source": "if target is None:"
+    },
+    {
+      "id": "B23",
+      "kind": "BoolOp",
+      "line": 2994,
+      "inherited_line": false,
+      "source": "expected.get('current_hash') or expected.get('base_hash')"
+    },
+    {
+      "id": "B24",
+      "kind": "If",
+      "line": 2995,
+      "inherited_line": false,
+      "source": "if ast_value.get('source_sha256') != expected_hash:"
+    },
+    {
+      "id": "B25",
+      "kind": "IfExp",
+      "line": 2997,
+      "inherited_line": false,
+      "source": "'current' if expected.get('current_hash') else 'base'"
+    },
+    {
+      "id": "B26",
+      "kind": "If",
+      "line": 2998,
+      "inherited_line": false,
+      "source": "if ast_value.get('revision', 'current') != expected_revision:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 2917,
+      "value": "[f'missing Function Logic Map for {len(required)} function(s) modified between base {base[:12]} and {_target_text(landing, adopted)}: {names}']"
+    },
+    {
+      "line": 2921,
+      "value": "[] if EXEMPTION in review_text else [f'missing analysis or `{EXEMPTION}` review marker']"
+    },
+    {
+      "line": 2924,
+      "value": "['function-logic analysis directory has no targets']"
+    },
+    {
+      "line": 3000,
+      "value": "errors"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 2914,
+      "callee": "', '.join"
+    },
+    {
+      "line": 2918,
+      "callee": "len"
+    },
+    {
+      "line": 2919,
+      "callee": "_target_text"
+    },
+    {
+      "line": 2928,
+      "callee": "test_index"
+    },
+    {
+      "line": 2942,
+      "callee": "errors.append"
+    },
+    {
+      "line": 2945,
+      "callee": "evidence.listings.get"
+    },
+    {
+      "line": 2949,
+      "callee": "_bundle_text"
+    },
+    {
+      "line": 2950,
+      "callee": "evidence.held.get"
+    },
+    {
+      "line": 2956,
+      "callee": "isinstance"
+    },
+    {
+      "line": 2957,
+      "callee": "Path"
+    },
+    {
+      "line": 2958,
+      "callee": "_why"
+    },
+    {
+      "line": 2958,
+      "callee": "errors.append"
+    },
+    {
+      "line": 2959,
+      "callee": "call_enumeration_in_use"
+    },
+    {
+      "line": 2960,
+      "callee": "_parsed"
+    },
+    {
+      "line": 2960,
+      "callee": "bundle_texts.items"
+    },
+    {
+      "line": 2960,
+      "callee": "evidence.held.get"
+    },
+    {
+      "line": 2974,
+      "callee": "_select_pinning"
+    },
+    {
+      "line": 2974,
+      "callee": "sorted"
+    },
+    {
+      "line": 2977,
+      "callee": "_committed_many"
+    },
+    {
+      "line": 2979,
+      "callee": "validate_target"
+    },
+    {
+      "line": 2982,
+      "callee": "errors.extend"
+    },
+    {
+      "line": 2985,
+      "callee": "errors.append"
+    },
+    {
+      "line": 2987,
+      "callee": "required.items"
+    },
+    {
+      "line": 2988,
+      "callee": "covered.get"
+    },
+    {
+      "line": 2990,
+      "callee": "errors.append"
+    },
+    {
+      "line": 2993,
+      "callee": "_parsed"
+    },
+    {
+      "line": 2993,
+      "callee": "evidence.held.get"
+    },
+    {
+      "line": 2994,
+      "callee": "expected.get"
+    },
+    {
+      "line": 2994,
+      "callee": "expected.get"
+    },
+    {
+      "line": 2995,
+      "callee": "ast_value.get"
+    },
+    {
+      "line": 2996,
+      "callee": "errors.append"
+    },
+    {
+      "line": 2997,
+      "callee": "expected.get"
+    },
+    {
+      "line": 2998,
+      "callee": "ast_value.get"
+    },
+    {
+      "line": 2999,
+      "callee": "errors.append"
+    }
+  ]
+}

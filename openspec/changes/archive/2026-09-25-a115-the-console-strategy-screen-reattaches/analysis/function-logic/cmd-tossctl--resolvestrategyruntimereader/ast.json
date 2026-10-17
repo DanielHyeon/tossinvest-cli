@@ -1,0 +1,177 @@
+{
+  "file": "cmd/tossctl/httpapi.go",
+  "source_sha256": "0adcaf22e6e13a075f81f80917133ce8471a3c39a10753c99d83e37f536fa299",
+  "package": "main",
+  "function": "resolveStrategyRuntimeReader",
+  "signature": "resolveStrategyRuntimeReader(params=3, results=2)",
+  "start": {
+    "line": 278,
+    "column": 1
+  },
+  "end": {
+    "line": 310,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 281,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 289,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 290,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 300,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 286,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 297,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 307,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 309,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 17
+      },
+      "text": "engineJournalDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 16
+      },
+      "text": "strategyprojectionrpc.DescriptorPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 19
+      },
+      "text": "os.Stat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 7
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 4
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 21
+      },
+      "text": "strategyprojectionrpc.Dial"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 301,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 280,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 288,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 289,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 299,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

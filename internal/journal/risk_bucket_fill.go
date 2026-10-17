@@ -16,6 +16,12 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 )
 
+// riskBucketFillActualResolvedSQL 은 체결 한 건(별칭 f)의 actual 이 해소됐는가의 **유일한** 철자임 — fill 행의 actual_known 은 생산 INSERT
+// 가 늘 0 으로 쓰고(append-only) actual 보완은 evidence 행만 더하므로 둘 중 하나면 해소. 체결 재구성(loadRiskBucketFillTransition)과
+// owner 해제 검사(releaseRiskBucketOwner 의 unresolved_fill)가 함께 씀 — 두 자리가 갈라져 해제 검사만 OR 을 반대로 적었던 결함(a066,
+// a126 에서 발견 · 수리)이 다시 생기지 않게 함.
+const riskBucketFillActualResolvedSQL = `(f.actual_known=1 OR EXISTS(SELECT 1 FROM risk_bucket_fill_actual_evidence a WHERE a.fill_id=f.fill_id))`
+
 type RiskBucketOrderPlan struct {
 	OrderID, DecisionID, PredecessorOrderID              string
 	OrderQuantity                                        uint64
@@ -457,8 +463,13 @@ type riskBucketOrderAuthority struct {
 	bindings                            []riskBucketOrderAuthorityBinding
 }
 
+// loadRiskBucketOrderAuthority 는 결정의 다섯 예약이 **자기** 예약 가격 정책 record 와 함께 묶인 권위를 읽음.
+// v34 예약은 policy_record_digest 로 자기 record(risk_bucket_policy_records)를, v34 이전 예약(NULL)은 key 당 하나뿐이던
+// risk_bucket_policies 를 읽음(a066 5.6.1 F2). 공유 bucket 의 두 번째 진입이 첫 진입의 record 를 읽으면 통화·digest 가
+// 어긋나 주문 등록이 막히므로 key 로만 조인하면 안 됨.
 func loadRiskBucketOrderAuthority(ctx context.Context, tx *sql.Tx, decisionID string) (riskBucketOrderAuthority, error) {
-	rows, err := tx.QueryContext(ctx, `SELECT r.bucket_dimension,r.bucket_value,r.policy_version,r.reservation_id,r.reserved_minor,s.snapshot_id,s.snapshot_digest,s.policy_digest,p.policy_digest,p.record_digest,p.quote_currency,p.account_currency FROM risk_bucket_reservations r JOIN risk_bucket_snapshots s ON s.snapshot_id=r.snapshot_id AND s.bucket_dimension=r.bucket_dimension AND s.bucket_value=r.bucket_value AND s.policy_version=r.policy_version JOIN risk_bucket_policies p ON p.bucket_dimension=r.bucket_dimension AND p.bucket_value=r.bucket_value AND p.policy_version=r.policy_version WHERE r.decision_id=?`, decisionID)
+	rows, err := tx.QueryContext(ctx, `SELECT r.bucket_dimension,r.bucket_value,r.policy_version,r.reservation_id,r.reserved_minor,s.snapshot_id,s.snapshot_digest,s.policy_digest,p.policy_digest,p.record_digest,p.quote_currency,p.account_currency FROM risk_bucket_reservations r JOIN risk_bucket_snapshots s ON s.snapshot_id=r.snapshot_id AND s.bucket_dimension=r.bucket_dimension AND s.bucket_value=r.bucket_value AND s.policy_version=r.policy_version JOIN risk_bucket_policy_records p ON p.bucket_dimension=r.bucket_dimension AND p.bucket_value=r.bucket_value AND p.policy_version=r.policy_version AND p.record_digest=r.policy_record_digest WHERE r.decision_id=? AND r.policy_record_digest IS NOT NULL
+		UNION ALL SELECT r.bucket_dimension,r.bucket_value,r.policy_version,r.reservation_id,r.reserved_minor,s.snapshot_id,s.snapshot_digest,s.policy_digest,p.policy_digest,p.record_digest,p.quote_currency,p.account_currency FROM risk_bucket_reservations r JOIN risk_bucket_snapshots s ON s.snapshot_id=r.snapshot_id AND s.bucket_dimension=r.bucket_dimension AND s.bucket_value=r.bucket_value AND s.policy_version=r.policy_version JOIN risk_bucket_policies p ON p.bucket_dimension=r.bucket_dimension AND p.bucket_value=r.bucket_value AND p.policy_version=r.policy_version WHERE r.decision_id=? AND r.policy_record_digest IS NULL`, decisionID, decisionID)
 	if err != nil {
 		return riskBucketOrderAuthority{}, err
 	}
@@ -730,6 +741,28 @@ func riskBucketOrderRemaining(ctx context.Context, tx *sql.Tx, orderKey string) 
 	return out, rows.Err()
 }
 
+// riskBucketSharedUsage 는 owner 의 bucket 마다 **다른 진입**의 원장 사용량을 셈. 원장 행이 계약을 벗어나면 의미 오류
+// (ErrRiskBucketReplayMismatch — 체결은 보존하고 latch)로, 읽기 실패는 그대로(저장 오류) 돌려줌.
+func riskBucketSharedUsage(ctx context.Context, tx *sql.Tx, account string, owner map[riskbucket.BucketKey]riskbucket.BucketUsage) (map[riskbucket.BucketKey]string, error) {
+	shared := make(map[riskbucket.BucketKey]string, len(owner))
+	for key, usage := range owner {
+		ledger, err := riskbucket.ReadJournalBucketUsage(ctx, tx, account, key.Dimension, key.Value)
+		if err != nil {
+			if errors.Is(err, riskbucket.ErrJournalUsageInvalid) {
+				return nil, fmt.Errorf("%w: shared %s bucket usage: %v", ErrRiskBucketReplayMismatch, key.Dimension, err)
+			}
+			return nil, err
+		}
+		total, okTotal := sumMinor(ledger.FilledMinor, ledger.HeldMinor)
+		own, okOwn := sumMinor(usage.FilledMinor, usage.HeldMinor)
+		if !okTotal || !okOwn || total.Cmp(own) < 0 {
+			return nil, fmt.Errorf("%w: shared %s bucket usage %v is below this owner's %v", ErrRiskBucketReplayMismatch, key.Dimension, total, own)
+		}
+		shared[key] = new(big.Int).Sub(total, own).String()
+	}
+	return shared, nil
+}
+
 func loadRiskBucketFillTransition(ctx context.Context, tx *sql.Tx, target riskBucketOrderRecord, cumulativeRaw string, actual *riskbucket.ActualFillEvidence) (riskbucket.FillState, riskbucket.FillEvent, error) {
 	cumulative, err := strconv.ParseUint(strings.TrimSpace(cumulativeRaw), 10, 64)
 	if err != nil || cumulative == 0 {
@@ -815,6 +848,13 @@ func loadRiskBucketFillTransition(ctx context.Context, tx *sql.Tx, target riskBu
 	if len(decisionBuckets) == 0 || len(state.Buckets) != len(riskbucket.RequiredDimensionOrder()) {
 		return state, riskbucket.FillEvent{}, fmt.Errorf("%w: fill bucket count", ErrRiskBucketReplayMismatch)
 	}
+	// a066 5.7: 공유 bucket 의 overage 는 bucket 을 쓰는 모든 진입의 합으로 판정함. 이 owner 밖의 사용량 = 원장 합
+	// (riskbucket.ReadJournalBucketUsage — admission 대조·생산 snapshot reader 와 같은 함수) - 이 owner 의 합.
+	shared, err := riskBucketSharedUsage(ctx, tx, target.account, state.Buckets)
+	if err != nil {
+		return state, riskbucket.FillEvent{}, err
+	}
+	state.SharedUsedMinor = shared
 	orders, err := tx.QueryContext(ctx, `SELECT o.order_key,o.order_id,o.order_quantity,o.cumulative_fill,o.quote_currency,o.base_currency,o.reservation_policy_digest FROM risk_bucket_orders o JOIN risk_bucket_final_decisions d ON d.decision_id=o.decision_id WHERE d.account_ref=? AND d.market=? AND d.symbol=? AND d.owner_prospective_generation=? ORDER BY d.owner_sequence,o.order_key`, target.account, target.market, target.symbol, target.prospective)
 	if err != nil {
 		return state, riskbucket.FillEvent{}, err
@@ -848,7 +888,7 @@ func loadRiskBucketFillTransition(ctx context.Context, tx *sql.Tx, target riskBu
 	if err := orders.Close(); err != nil {
 		return state, riskbucket.FillEvent{}, err
 	}
-	fills, err := tx.QueryContext(ctx, `SELECT f.fill_id,f.order_key,f.cumulative_fill,f.delta_quantity,CASE WHEN f.actual_known=1 OR EXISTS(SELECT 1 FROM risk_bucket_fill_actual_evidence a WHERE a.fill_id=f.fill_id) THEN 1 ELSE 0 END FROM risk_bucket_fills f JOIN risk_bucket_orders o ON o.order_key=f.order_key JOIN risk_bucket_final_decisions d ON d.decision_id=o.decision_id WHERE d.account_ref=? AND d.market=? AND d.symbol=? AND d.owner_prospective_generation=? ORDER BY f.order_key,f.cumulative_fill,f.fill_id`, target.account, target.market, target.symbol, target.prospective)
+	fills, err := tx.QueryContext(ctx, `SELECT f.fill_id,f.order_key,f.cumulative_fill,f.delta_quantity,CASE WHEN `+riskBucketFillActualResolvedSQL+` THEN 1 ELSE 0 END FROM risk_bucket_fills f JOIN risk_bucket_orders o ON o.order_key=f.order_key JOIN risk_bucket_final_decisions d ON d.decision_id=o.decision_id WHERE d.account_ref=? AND d.market=? AND d.symbol=? AND d.owner_prospective_generation=? ORDER BY f.order_key,f.cumulative_fill,f.fill_id`, target.account, target.market, target.symbol, target.prospective)
 	if err != nil {
 		return state, riskbucket.FillEvent{}, err
 	}
@@ -1063,6 +1103,11 @@ func verifyRiskBucketStateDigest(ctx context.Context, q riskBucketQueryer, key r
 	}
 	var persisted string
 	if err := q.QueryRowContext(ctx, `SELECT state_digest FROM risk_bucket_state_snapshots WHERE account_ref=? AND market=? AND symbol=? AND prospective_generation=? ORDER BY event_sequence DESC LIMIT 1`, key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration).Scan(&persisted); err != nil {
+		// a066 6.5: 봉인 행이 없는 것은 저장 오류가 아니라 재구성 갭임 — 의미 오류로 돌려 체결 경로는 latch 하고 체결을
+		// 커밋함(2.7: 체결 감지는 막히지 않음). 다른 호출자는 어느 오류에서나 거절하므로 결과가 같음.
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("%w: state seal missing", ErrRiskBucketReplayMismatch)
+		}
 		return err
 	}
 	if persisted != digest {

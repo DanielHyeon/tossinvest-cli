@@ -1,0 +1,14 @@
+# a112 6.3 격리 — HEAD 76dc35f7 + 로트(잔여 (c) 포함)
+gate: head findings 173 lot findings 177 ONLY-HEAD 0 ONLY-LOT 4
+ + [logic-map] internal-app-engine--invokeboundedstrategycycle: AST source hash is stale: internal/app/engine/strategy_entry_supervisor.go
+ + [logic-map] internal-app-engine--strategyentrysupervisor.evaluationstate: AST source hash is stale: internal/app/engine/strategy_entry_supervisor.go
+ + [logic-map] internal-app-engine--strategyentrysupervisor.latchmarket: AST source hash is stale: internal/app/engine/strategy_entry_supervisor.go
+ + [logic-map] internal-app-engine--strategyentrysupervisor.waitmarketrestart: AST source hash is stale: internal/app/engine/strategy_entry_supervisor.go
+go vet -tags tossos_testseams ./...
+lint exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	218.500s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	47.683s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	216.704s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	48.430s
+END
+## 재실행(같은 파일 base 표기 번들 4 이동 뒤) — gate: head 173 lot 173 ONLY-HEAD 0 ONLY-LOT 0

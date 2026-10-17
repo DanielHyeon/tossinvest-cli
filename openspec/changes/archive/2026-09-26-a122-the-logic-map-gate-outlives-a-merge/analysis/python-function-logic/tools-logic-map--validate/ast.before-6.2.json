@@ -1,0 +1,795 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/execution_baseline.py",
+  "revision": "HEAD",
+  "head_commit": "fb4e8f920d3464ae51df63929a14ac06f5fd23be",
+  "source_sha256": "e9d8a55c718fe3568d09facb355e507c06c565f5bed915ef1b0f780d0104e1c3",
+  "function": "validate",
+  "signature": "validate(change_dir, root, persisted)",
+  "start": {
+    "line": 393,
+    "column": 1
+  },
+  "end": {
+    "line": 487,
+    "column": 69
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 395,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 397,
+      "inherited_line": false,
+      "source": "except FileNotFoundError:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 399,
+      "inherited_line": false,
+      "source": "if not stat.S_ISREG(record_mode):"
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 401,
+      "inherited_line": false,
+      "source": "change_dir.name != CHANGE or persisted != P"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 401,
+      "inherited_line": false,
+      "source": "if change_dir.name != CHANGE or persisted != P:"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 403,
+      "inherited_line": false,
+      "source": "if subprocess.run(['git', 'symbolic-ref', '-q', 'HEAD'], cwd=root, capture_output=True, check=False).returncode == 0:"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 407,
+      "inherited_line": false,
+      "source": "if _regular_committed(root, base_relative, head) != (P + '\\n').encode('ascii'):"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 411,
+      "inherited_line": false,
+      "source": "if set(record) != required:"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 415,
+      "inherited_line": false,
+      "source": "if not all((isinstance(record[key], str) for key in required - {'schema'})):"
+    },
+    {
+      "id": "B10",
+      "kind": "comprehension",
+      "line": 415,
+      "inherited_line": true,
+      "source": " for key in required - {'schema'}"
+    },
+    {
+      "id": "B11",
+      "kind": "BoolOp",
+      "line": 417,
+      "inherited_line": false,
+      "source": "record['change'] != CHANGE or record['planning_base'] != P or record['execution_base'] != E or (record['pre_edit_provena"
+    },
+    {
+      "id": "B12",
+      "kind": "If",
+      "line": 417,
+      "inherited_line": false,
+      "source": "if record['change'] != CHANGE or record['planning_base'] != P or record['execution_base'] != E or (record['pre_edit_prov"
+    },
+    {
+      "id": "B13",
+      "kind": "If",
+      "line": 419,
+      "inherited_line": false,
+      "source": "if record['inherited_history_disposition'] != 'committed historical work; missing original analysis remains debt':"
+    },
+    {
+      "id": "B14",
+      "kind": "For",
+      "line": 421,
+      "inherited_line": false,
+      "source": "for field in ('ledger_path', 'adversarial_review_path', 'gstack_review_path'):"
+    },
+    {
+      "id": "B15",
+      "kind": "For",
+      "line": 423,
+      "inherited_line": false,
+      "source": "for field in ('ledger_sha256', 'adversarial_review_sha256', 'gstack_review_sha256'):"
+    },
+    {
+      "id": "B16",
+      "kind": "If",
+      "line": 425,
+      "inherited_line": false,
+      "source": "if record['adversarial_review_path'] == record['gstack_review_path']:"
+    },
+    {
+      "id": "B17",
+      "kind": "BoolOp",
+      "line": 428,
+      "inherited_line": false,
+      "source": "not isinstance(record['source_tree'], str) or len(record['source_tree']) != 40 or any((char not in '0123456789abcdef' fo"
+    },
+    {
+      "id": "B18",
+      "kind": "If",
+      "line": 428,
+      "inherited_line": false,
+      "source": "if not isinstance(record['source_tree'], str) or len(record['source_tree']) != 40 or any((char not in '0123456789abcdef'"
+    },
+    {
+      "id": "B19",
+      "kind": "comprehension",
+      "line": 428,
+      "inherited_line": true,
+      "source": " for char in record['source_tree']"
+    },
+    {
+      "id": "B20",
+      "kind": "If",
+      "line": 433,
+      "inherited_line": false,
+      "source": "if _git(root, 'rev-parse', source + '^{tree}').stdout.strip() != record['source_tree']:"
+    },
+    {
+      "id": "B21",
+      "kind": "For",
+      "line": 436,
+      "inherited_line": false,
+      "source": "for args in (('diff', '--quiet'), ('diff', '--cached', '--quiet')):"
+    },
+    {
+      "id": "B22",
+      "kind": "If",
+      "line": 437,
+      "inherited_line": false,
+      "source": "if subprocess.run(['git', *args], cwd=root, capture_output=True, check=False).returncode:"
+    },
+    {
+      "id": "B23",
+      "kind": "For",
+      "line": 439,
+      "inherited_line": false,
+      "source": "for path in nul_paths(root, 'diff', '--name-only', source, head):"
+    },
+    {
+      "id": "B24",
+      "kind": "BoolOp",
+      "line": 440,
+      "inherited_line": false,
+      "source": "path.startswith('openspec/') or path.startswith('docs/pm/')"
+    },
+    {
+      "id": "B25",
+      "kind": "If",
+      "line": 440,
+      "inherited_line": false,
+      "source": "if not (path.startswith('openspec/') or path.startswith('docs/pm/')):"
+    },
+    {
+      "id": "B26",
+      "kind": "For",
+      "line": 443,
+      "inherited_line": false,
+      "source": "for path in sorted(candidates):"
+    },
+    {
+      "id": "B27",
+      "kind": "BoolOp",
+      "line": 445,
+      "inherited_line": false,
+      "source": "not _allowed_metadata(path) or not stat.S_ISREG(item.lstat().st_mode) or os.access(item, os.X_OK)"
+    },
+    {
+      "id": "B28",
+      "kind": "If",
+      "line": 445,
+      "inherited_line": false,
+      "source": "if not _allowed_metadata(path) or not stat.S_ISREG(item.lstat().st_mode) or os.access(item, os.X_OK):"
+    },
+    {
+      "id": "B29",
+      "kind": "If",
+      "line": 450,
+      "inherited_line": false,
+      "source": "if overlap:"
+    },
+    {
+      "id": "B30",
+      "kind": "If",
+      "line": 453,
+      "inherited_line": false,
+      "source": "if hashlib.sha256(ledger_raw).hexdigest() != record['ledger_sha256']:"
+    },
+    {
+      "id": "B31",
+      "kind": "For",
+      "line": 455,
+      "inherited_line": false,
+      "source": "for name in ('adversarial_review', 'gstack_review'):"
+    },
+    {
+      "id": "B32",
+      "kind": "If",
+      "line": 456,
+      "inherited_line": false,
+      "source": "if hashlib.sha256(_regular_committed(root, record[name + '_path'], head)).hexdigest() != record[name + '_sha256']:"
+    },
+    {
+      "id": "B33",
+      "kind": "If",
+      "line": 460,
+      "inherited_line": false,
+      "source": "if set(ledger) != ledger_required:"
+    },
+    {
+      "id": "B34",
+      "kind": "If",
+      "line": 463,
+      "inherited_line": false,
+      "source": "if ledger['inherited_history_disposition'] != 'committed historical work; missing original analysis remains debt':"
+    },
+    {
+      "id": "B35",
+      "kind": "BoolOp",
+      "line": 465,
+      "inherited_line": false,
+      "source": "not isinstance(ledger['planning_to_execution'], dict) or not isinstance(ledger['execution_to_source'], dict)"
+    },
+    {
+      "id": "B36",
+      "kind": "If",
+      "line": 465,
+      "inherited_line": false,
+      "source": "if not isinstance(ledger['planning_to_execution'], dict) or not isinstance(ledger['execution_to_source'], dict):"
+    },
+    {
+      "id": "B37",
+      "kind": "If",
+      "line": 468,
+      "inherited_line": false,
+      "source": "if ledger['planning_to_execution'] != expected_planning:"
+    },
+    {
+      "id": "B38",
+      "kind": "comprehension",
+      "line": 471,
+      "inherited_line": true,
+      "source": " for path in nul_paths(root, 'diff', '--name-only', E, source) if path.endswith('.go')"
+    },
+    {
+      "id": "B39",
+      "kind": "If",
+      "line": 472,
+      "inherited_line": false,
+      "source": "if recorded_paths != expected_paths:"
+    },
+    {
+      "id": "B40",
+      "kind": "If",
+      "line": 474,
+      "inherited_line": false,
+      "source": "if any((path not in {'cmd/tossctl/soak.go', 'cmd/tossctl/soak_test.go', 'internal/soak/attest.go', 'internal/soak/attest"
+    },
+    {
+      "id": "B41",
+      "kind": "comprehension",
+      "line": 474,
+      "inherited_line": true,
+      "source": " for path in expected_paths"
+    },
+    {
+      "id": "B42",
+      "kind": "If",
+      "line": 483,
+      "inherited_line": false,
+      "source": "if ledger.get('execution_to_source') != expected_execution:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 398,
+      "value": "None"
+    },
+    {
+      "line": 487,
+      "value": "{'effective_base': E, 'source': source, 'ledger': ledger}"
+    }
+  ],
+  "raises": [
+    {
+      "line": 400,
+      "source": "raise AdoptionError('execution-baseline record is not a regular file')"
+    },
+    {
+      "line": 402,
+      "source": "raise AdoptionError('execution-baseline adoption is not allowed for this change/base')"
+    },
+    {
+      "line": 404,
+      "source": "raise AdoptionError('adoption requires detached HEAD')"
+    },
+    {
+      "line": 408,
+      "source": "raise AdoptionError('planning base file is substituted')"
+    },
+    {
+      "line": 412,
+      "source": "raise AdoptionError('invalid execution-baseline record')"
+    },
+    {
+      "line": 416,
+      "source": "raise AdoptionError('execution-baseline record field types are invalid')"
+    },
+    {
+      "line": 418,
+      "source": "raise AdoptionError('invalid execution-baseline record')"
+    },
+    {
+      "line": 420,
+      "source": "raise AdoptionError('inherited history disposition is invalid')"
+    },
+    {
+      "line": 426,
+      "source": "raise AdoptionError('adoption review paths must be distinct')"
+    },
+    {
+      "line": 429,
+      "source": "raise AdoptionError('source tree must be a full lowercase SHA-1')"
+    },
+    {
+      "line": 434,
+      "source": "raise AdoptionError('source tree mismatch')"
+    },
+    {
+      "line": 438,
+      "source": "raise AdoptionError('adoption requires a clean worktree')"
+    },
+    {
+      "line": 441,
+      "source": "raise AdoptionError(f'source-to-evidence drift: {path}')"
+    },
+    {
+      "line": 446,
+      "source": "raise AdoptionError(f'untracked/ignored input is not allowed: {path}')"
+    },
+    {
+      "line": 451,
+      "source": "raise AdoptionError(f'untracked/ignored Go build input: {overlap[0]}')"
+    },
+    {
+      "line": 454,
+      "source": "raise AdoptionError('ledger digest mismatch')"
+    },
+    {
+      "line": 457,
+      "source": "raise AdoptionError(f'{name} digest mismatch')"
+    },
+    {
+      "line": 461,
+      "source": "raise AdoptionError('invalid execution-baseline ledger')"
+    },
+    {
+      "line": 464,
+      "source": "raise AdoptionError('ledger inherited history disposition is invalid')"
+    },
+    {
+      "line": 466,
+      "source": "raise AdoptionError('execution-baseline ledger range types are invalid')"
+    },
+    {
+      "line": 469,
+      "source": "raise AdoptionError('planning history mismatch')"
+    },
+    {
+      "line": 473,
+      "source": "raise AdoptionError('execution-to-source Go path inventory mismatch')"
+    },
+    {
+      "line": 481,
+      "source": "raise AdoptionError('execution-to-source Go path is outside the fixed allowlist')"
+    },
+    {
+      "line": 484,
+      "source": "raise AdoptionError('execution-to-source function inventory mismatch')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 396,
+      "callee": "record_path.lstat"
+    },
+    {
+      "line": 399,
+      "callee": "stat.S_ISREG"
+    },
+    {
+      "line": 400,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 402,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 403,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 404,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 405,
+      "callee": "_git(root, 'rev-parse', 'HEAD').stdout.strip"
+    },
+    {
+      "line": 405,
+      "callee": "_git"
+    },
+    {
+      "line": 405,
+      "callee": "full_commit"
+    },
+    {
+      "line": 406,
+      "callee": "(change_dir.relative_to(root) / 'base-commit.txt').as_posix"
+    },
+    {
+      "line": 406,
+      "callee": "change_dir.relative_to"
+    },
+    {
+      "line": 407,
+      "callee": "(P + '\\n').encode"
+    },
+    {
+      "line": 407,
+      "callee": "_regular_committed"
+    },
+    {
+      "line": 408,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 409,
+      "callee": "_regular_committed"
+    },
+    {
+      "line": 409,
+      "callee": "record_path.relative_to"
+    },
+    {
+      "line": 409,
+      "callee": "record_path.relative_to(root).as_posix"
+    },
+    {
+      "line": 409,
+      "callee": "strict_json"
+    },
+    {
+      "line": 411,
+      "callee": "set"
+    },
+    {
+      "line": 412,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 413,
+      "callee": "_schema_one"
+    },
+    {
+      "line": 414,
+      "callee": "(change_dir.relative_to(root) / 'analysis').as_posix"
+    },
+    {
+      "line": 414,
+      "callee": "change_dir.relative_to"
+    },
+    {
+      "line": 415,
+      "callee": "all"
+    },
+    {
+      "line": 415,
+      "callee": "isinstance"
+    },
+    {
+      "line": 416,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 418,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 420,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 422,
+      "callee": "_change_analysis_path"
+    },
+    {
+      "line": 424,
+      "callee": "_sha256"
+    },
+    {
+      "line": 426,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 427,
+      "callee": "full_commit"
+    },
+    {
+      "line": 428,
+      "callee": "any"
+    },
+    {
+      "line": 428,
+      "callee": "isinstance"
+    },
+    {
+      "line": 428,
+      "callee": "len"
+    },
+    {
+      "line": 429,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 430,
+      "callee": "ancestry"
+    },
+    {
+      "line": 431,
+      "callee": "ancestry"
+    },
+    {
+      "line": 432,
+      "callee": "ancestry"
+    },
+    {
+      "line": 433,
+      "callee": "_git(root, 'rev-parse', source + '^{tree}').stdout.strip"
+    },
+    {
+      "line": 433,
+      "callee": "_git"
+    },
+    {
+      "line": 434,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 435,
+      "callee": "verify_source_go_lock"
+    },
+    {
+      "line": 437,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 438,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 439,
+      "callee": "nul_paths"
+    },
+    {
+      "line": 440,
+      "callee": "path.startswith"
+    },
+    {
+      "line": 440,
+      "callee": "path.startswith"
+    },
+    {
+      "line": 441,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 442,
+      "callee": "set"
+    },
+    {
+      "line": 442,
+      "callee": "untracked_filesystem_entries"
+    },
+    {
+      "line": 443,
+      "callee": "sorted"
+    },
+    {
+      "line": 445,
+      "callee": "_allowed_metadata"
+    },
+    {
+      "line": 445,
+      "callee": "item.lstat"
+    },
+    {
+      "line": 445,
+      "callee": "os.access"
+    },
+    {
+      "line": 445,
+      "callee": "stat.S_ISREG"
+    },
+    {
+      "line": 446,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 447,
+      "callee": "candidates.add"
+    },
+    {
+      "line": 448,
+      "callee": "go_inputs"
+    },
+    {
+      "line": 448,
+      "callee": "go_inputs"
+    },
+    {
+      "line": 449,
+      "callee": "sorted"
+    },
+    {
+      "line": 451,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 452,
+      "callee": "_regular_committed"
+    },
+    {
+      "line": 453,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 453,
+      "callee": "hashlib.sha256(ledger_raw).hexdigest"
+    },
+    {
+      "line": 454,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 456,
+      "callee": "hashlib.sha256(_regular_committed(root, record[name + '_path'], head)).hexdigest"
+    },
+    {
+      "line": 456,
+      "callee": "_regular_committed"
+    },
+    {
+      "line": 456,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 457,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 458,
+      "callee": "strict_json"
+    },
+    {
+      "line": 460,
+      "callee": "set"
+    },
+    {
+      "line": 461,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 462,
+      "callee": "_schema_one"
+    },
+    {
+      "line": 464,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 465,
+      "callee": "isinstance"
+    },
+    {
+      "line": 465,
+      "callee": "isinstance"
+    },
+    {
+      "line": 466,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 467,
+      "callee": "range_payload"
+    },
+    {
+      "line": 469,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 470,
+      "callee": "ledger.get('execution_to_source', {}).get"
+    },
+    {
+      "line": 470,
+      "callee": "ledger.get"
+    },
+    {
+      "line": 471,
+      "callee": "nul_paths"
+    },
+    {
+      "line": 471,
+      "callee": "path.endswith"
+    },
+    {
+      "line": 471,
+      "callee": "sorted"
+    },
+    {
+      "line": 473,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 474,
+      "callee": "any"
+    },
+    {
+      "line": 481,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 482,
+      "callee": "range_payload"
+    },
+    {
+      "line": 483,
+      "callee": "ledger.get"
+    },
+    {
+      "line": 484,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 485,
+      "callee": "exact_inventory"
+    },
+    {
+      "line": 486,
+      "callee": "exact_inventory"
+    }
+  ]
+}

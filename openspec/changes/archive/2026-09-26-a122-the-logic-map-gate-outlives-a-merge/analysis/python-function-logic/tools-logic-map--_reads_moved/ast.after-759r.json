@@ -1,0 +1,91 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "ff590b79db6ed6a8cd7101e47f8df6a9b4841310b5320a398730eadf6a8a02e5",
+  "function": "_reads_moved",
+  "signature": "_reads_moved(root, book)",
+  "start": {
+    "line": 1567,
+    "column": 1
+  },
+  "end": {
+    "line": 1581,
+    "column": 14
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 1572,
+      "inherited_line": false,
+      "source": "if book.diverged:"
+    },
+    {
+      "id": "B2",
+      "kind": "Try",
+      "line": 1575,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B3",
+      "kind": "For",
+      "line": 1576,
+      "inherited_line": false,
+      "source": "for (kind, key), before in sorted(book.seen.items()):"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 1577,
+      "inherited_line": false,
+      "source": "if _PROBE_NOW[kind](key) != before:"
+    },
+    {
+      "id": "B5",
+      "kind": "IfExp",
+      "line": 1578,
+      "inherited_line": false,
+      "source": "'the tracked file list' if kind == 'tracked' else _shown(root, key)"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1573,
+      "value": "f'{_shown(root, book.diverged)} changed'"
+    },
+    {
+      "line": 1578,
+      "value": "f'{('the tracked file list' if kind == 'tracked' else _shown(root, key))} changed'"
+    },
+    {
+      "line": 1581,
+      "value": "''"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1573,
+      "callee": "_shown"
+    },
+    {
+      "line": 1576,
+      "callee": "book.seen.items"
+    },
+    {
+      "line": 1576,
+      "callee": "sorted"
+    },
+    {
+      "line": 1577,
+      "callee": "_PROBE_NOW[kind]"
+    },
+    {
+      "line": 1578,
+      "callee": "_shown"
+    }
+  ]
+}

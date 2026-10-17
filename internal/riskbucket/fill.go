@@ -45,6 +45,10 @@ type FillState struct {
 	Buckets      map[BucketKey]BucketUsage
 	Orders       map[string]OrderFillState
 	OwnerLatches map[Latch]bool
+	// SharedUsedMinor 는 bucket 마다 **이 owner 밖의** 원장 사용량(held+filled)임(a066 5.7). 공유 bucket 의 overage 는 bucket 을
+	// 쓰는 모든 진입의 합으로 판정해야 하므로(설계 D5) 이 값이 overage 계산에 더해짐. 이 owner 의 예약에는 쓰이지 않고
+	// 상태 digest 에도 들어가지 않음(체결 트랜잭션 동안의 읽기 값).
+	SharedUsedMinor map[BucketKey]string
 }
 
 func (s FillState) EntryBlocked() bool {
@@ -366,6 +370,17 @@ func recomputeOverageLatches(state *FillState) error {
 		if err != nil {
 			return refusal(RefusalFillEvidenceInconsistent, "overage_usage_overflow", err)
 		}
+		// a066 5.7: 공유 bucket 은 다른 진입의 사용량까지 더한 합으로 한도와 비교함(설계 D5 "filled + remaining HELD - limit").
+		// 이전에는 이 owner 의 합만 봐서, 두 owner 가 한도를 채운 뒤 한 owner 의 실제 체결가가 높아도 overage 가 서지 않았음.
+		if shared, ok := state.SharedUsedMinor[key]; ok {
+			others, err := parseMinor(shared, 0)
+			if err != nil {
+				return refusal(RefusalFillEvidenceInconsistent, "overage_shared_usage", err)
+			}
+			if used, err = addMinor(used, others, 0); err != nil {
+				return refusal(RefusalFillEvidenceInconsistent, "overage_shared_usage_overflow", err)
+			}
+		}
 		overage := new(big.Int).Sub(used, limit)
 		if overage.Sign() > 0 {
 			anyOverage = true
@@ -445,6 +460,11 @@ func cloneFillState(in FillState) FillState {
 	}
 	for latch, set := range in.OwnerLatches {
 		out.OwnerLatches[latch] = set
+	}
+	// nil 은 nil 로 둠 — 공유 사용량을 모르는 상태(순수 전이 시험·공유 bucket 없음)와 "빈 공유 사용량"을 같게 다루고, 실패한
+	// 전이가 입력과 DeepEqual 이어야 하는 crash-pure 계약(TestApplyFill*CrashPure)을 깨지 않게 함.
+	if in.SharedUsedMinor != nil {
+		out.SharedUsedMinor = cloneMinorMap(in.SharedUsedMinor)
 	}
 	return out
 }

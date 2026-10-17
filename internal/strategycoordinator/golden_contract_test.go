@@ -10,7 +10,7 @@ import (
 
 // goldenPath 는 a112 의 동결 골든이다. 이 파일은 "내용을 바꾸려면 Manager 가 쓴
 // OpenSpec amendment 와 새 manifest/receipt 가 필요하다"고 스스로 적고 있다.
-const goldenPath = "../../openspec/changes/a112-run-four-strategy-families-independently/analysis/goldens/four-family-runtime-v1.json"
+const goldenPath = "../../openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently/analysis/goldens/four-family-runtime-v1.json"
 
 type goldenFile struct {
 	Descriptors []struct {

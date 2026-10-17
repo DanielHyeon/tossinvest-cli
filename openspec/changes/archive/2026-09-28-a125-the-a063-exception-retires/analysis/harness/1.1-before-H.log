@@ -1,0 +1,6 @@
+a063-align-attestation-renewal-profile errors=1 required=None 1.4s
+a066-add-multi-horizon-risk-buckets errors=389 required=393 446.0s
+a070-add-multi-market-horizon-router errors=1 required=340 349.0s
+a074-critical-events-reach-the-operator errors=352 required=347 381.1s
+a087-a-protective-exit-is-a-market-order errors=1 required=283 517.2s
+a091-a-stop-that-sold-nothing-is-critical errors=285 required=283 547.5s

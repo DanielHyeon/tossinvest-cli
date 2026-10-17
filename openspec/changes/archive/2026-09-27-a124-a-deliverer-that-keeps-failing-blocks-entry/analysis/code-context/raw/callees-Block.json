@@ -1,0 +1,11 @@
+{
+  "symbol": "Block",
+  "callees": [
+    {
+      "name": "ReasonCode",
+      "kind": "type_alias",
+      "filePath": "internal/execgw/reason.go",
+      "startLine": 11
+    }
+  ]
+}

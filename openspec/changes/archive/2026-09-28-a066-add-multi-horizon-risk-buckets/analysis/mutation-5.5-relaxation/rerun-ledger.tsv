@@ -1,0 +1,8 @@
+TREE	HEAD ecd67a44 + working tree	copy /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a066-relax-mut-1996576-q_xrp1dv/tree
+CONTROL-C	GREEN	./cmd/tossctl/ ^(TestEngineRisk|TestEngineEntryLock|TestEngineRelaxation|TestMutatingAnnotationOnTradeCommands)
+CONTROL-E	GREEN	./internal/app/engine/ ^TestA066
+CONTROL-M	GREEN	./internal/journal/ ^(TestA066|TestEntryLossLock|TestMigrationV3[2-5]|TestJournalAuditActions|TestRefuseEntryUnderLossLock|TestSchemaTablesAndColumns|TestTheReadOnlyHandleHasNoWriteMethods)
+M08	CAUGHT	internal/journal/risk_bucket_relaxation.go	nil auditor accepted	rc=1
+M23	CAUGHT	internal/journal/risk_bucket_relaxation.go	a typed-nil audit log (*audit.Log)(nil) accepted (CX-1)	rc=1
+E10	CAUGHT	internal/app/engine/risk_relaxation_command.go	notice shares the request cancellation (client hang-up drops the notice)	rc=1
+C04	CAUGHT	cmd/tossctl/engine_risk_relaxation.go	CLI ignores a dial error	rc=1

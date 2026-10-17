@@ -1,0 +1,301 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "5a54f78de85c7ff90bde7fef221e1feed75bad23",
+  "source_sha256": "a88c966bbcf57e109278e7c29d8e051da0a2acc1652c6e3d83845308e2e59ede",
+  "function": "resolve_base",
+  "signature": "resolve_base(change_dir, root, context)",
+  "start": {
+    "line": 817,
+    "column": 1
+  },
+  "end": {
+    "line": 897,
+    "column": 21
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 833,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 837,
+      "inherited_line": false,
+      "source": "except FileNotFoundError as exc:"
+    },
+    {
+      "id": "B3",
+      "kind": "ExceptHandler",
+      "line": 843,
+      "inherited_line": false,
+      "source": "except (OSError, UnicodeDecodeError) as exc:"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 845,
+      "inherited_line": false,
+      "source": "if not FULL_SHA.fullmatch(candidate):"
+    },
+    {
+      "id": "B5",
+      "kind": "BoolOp",
+      "line": 851,
+      "inherited_line": false,
+      "source": "committed is not None and committed.decode('utf-8', 'replace').strip() != candidate"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 851,
+      "inherited_line": false,
+      "source": "if committed is not None and committed.decode('utf-8', 'replace').strip() != candidate:"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 869,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B8",
+      "kind": "BoolOp",
+      "line": 871,
+      "inherited_line": false,
+      "source": "process.stderr.strip() or f'invalid Function Logic Map base: {value}'"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 876,
+      "inherited_line": false,
+      "source": "if persisted != candidate:"
+    },
+    {
+      "id": "B10",
+      "kind": "Try",
+      "line": 879,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B11",
+      "kind": "ExceptHandler",
+      "line": 884,
+      "inherited_line": false,
+      "source": "except AdoptionError as exc:"
+    },
+    {
+      "id": "B12",
+      "kind": "IfExp",
+      "line": 886,
+      "inherited_line": false,
+      "source": "str(adoption['effective_base']) if adoption else persisted"
+    },
+    {
+      "id": "B13",
+      "kind": "If",
+      "line": 887,
+      "inherited_line": false,
+      "source": "if context is not None:"
+    },
+    {
+      "id": "B14",
+      "kind": "If",
+      "line": 890,
+      "inherited_line": false,
+      "source": "if adoption:"
+    },
+    {
+      "id": "B15",
+      "kind": "BoolOp",
+      "line": 895,
+      "inherited_line": false,
+      "source": "override and resolve(override) != effective"
+    },
+    {
+      "id": "B16",
+      "kind": "If",
+      "line": 895,
+      "inherited_line": false,
+      "source": "if override and resolve(override) != effective:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 873,
+      "value": "process.stdout.strip()"
+    },
+    {
+      "line": 897,
+      "value": "effective"
+    }
+  ],
+  "raises": [
+    {
+      "line": 838,
+      "source": "raise ValueError('missing base-commit.txt; run `python3 tools/sdd/capture_change_base.py --change <change-id>` at proposal freeze') from exc"
+    },
+    {
+      "line": 844,
+      "source": "raise ValueError(UNREADABLE.format(what='base-commit.txt', why=_why(exc))) from exc"
+    },
+    {
+      "line": 848,
+      "source": "raise ValueError(f'comparison base must be a full 40-hex commit id, not {candidate!r}')"
+    },
+    {
+      "line": 855,
+      "source": "raise ValueError(f'`{relative}` on disk ({candidate[:12]}) is not the one committed in HEAD ({shown[:12]}) — the comparison base is frozen at proposal freeze; r"
+    },
+    {
+      "line": 870,
+      "source": "raise ValueError(process.stderr.strip() or f'invalid Function Logic Map base: {value}')"
+    },
+    {
+      "line": 878,
+      "source": "raise ValueError(f'comparison base is not a commit in this repository: {candidate}')"
+    },
+    {
+      "line": 885,
+      "source": "raise ValueError(f'invalid execution-baseline adoption: {exc}') from exc"
+    },
+    {
+      "line": 896,
+      "source": "raise ValueError('SDD_BASE_REF must resolve to the selected effective comparison base')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 836,
+      "callee": "_decoded"
+    },
+    {
+      "line": 836,
+      "callee": "_decoded(_read_regular(path)).strip"
+    },
+    {
+      "line": 836,
+      "callee": "_read_regular"
+    },
+    {
+      "line": 838,
+      "callee": "ValueError"
+    },
+    {
+      "line": 844,
+      "callee": "UNREADABLE.format"
+    },
+    {
+      "line": 844,
+      "callee": "ValueError"
+    },
+    {
+      "line": 844,
+      "callee": "_why"
+    },
+    {
+      "line": 845,
+      "callee": "FULL_SHA.fullmatch"
+    },
+    {
+      "line": 848,
+      "callee": "ValueError"
+    },
+    {
+      "line": 849,
+      "callee": "path.relative_to"
+    },
+    {
+      "line": 849,
+      "callee": "path.relative_to(root).as_posix"
+    },
+    {
+      "line": 850,
+      "callee": "_committed_bytes"
+    },
+    {
+      "line": 851,
+      "callee": "committed.decode('utf-8', 'replace').strip"
+    },
+    {
+      "line": 851,
+      "callee": "committed.decode"
+    },
+    {
+      "line": 854,
+      "callee": "committed.decode('utf-8', 'replace').strip"
+    },
+    {
+      "line": 854,
+      "callee": "committed.decode"
+    },
+    {
+      "line": 855,
+      "callee": "ValueError"
+    },
+    {
+      "line": 861,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 870,
+      "callee": "ValueError"
+    },
+    {
+      "line": 871,
+      "callee": "process.stderr.strip"
+    },
+    {
+      "line": 873,
+      "callee": "process.stdout.strip"
+    },
+    {
+      "line": 875,
+      "callee": "resolve"
+    },
+    {
+      "line": 878,
+      "callee": "ValueError"
+    },
+    {
+      "line": 883,
+      "callee": "validate_execution_baseline"
+    },
+    {
+      "line": 885,
+      "callee": "ValueError"
+    },
+    {
+      "line": 886,
+      "callee": "str"
+    },
+    {
+      "line": 893,
+      "callee": "str"
+    },
+    {
+      "line": 894,
+      "callee": "os.environ.get('SDD_BASE_REF', '').strip"
+    },
+    {
+      "line": 894,
+      "callee": "os.environ.get"
+    },
+    {
+      "line": 895,
+      "callee": "resolve"
+    },
+    {
+      "line": 896,
+      "callee": "ValueError"
+    }
+  ]
+}

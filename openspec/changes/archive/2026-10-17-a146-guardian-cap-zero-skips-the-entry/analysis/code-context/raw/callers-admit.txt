@@ -1,0 +1,63 @@
+
+Callers of "admit" (20):
+
+method      RunBounded
+  internal/strategyworker/bounded.go:151
+
+function    cadenceIsEnforced
+  internal/strategyworker/policy_test.go:18
+
+function    theDeadlineIsEnforced
+  internal/strategyworker/policy_test.go:47
+
+function    TestAnAbandonedCycleKeepsItsOwnGoroutineUntilTheStepReturns
+  internal/strategyworker/rehearsal_test.go:222
+
+function    TestTheLaneFollowsTheDesignFaultTableForEveryKindItCanExpress
+  internal/strategyworker/rehearsal_test.go:591
+
+function    TestOneLaneInsideItsCadenceWindowDoesNotGateItsPeer
+  internal/strategyworker/a112_cross_lane_isolation_test.go:16
+
+function    TestOneLaneInFlightDoesNotMakeItsPeerInFlight
+  internal/strategyworker/a112_cross_lane_isolation_test.go:34
+
+function    TestA137ADailyLossRefusalEscalatesAndIsNotALaneFault
+  internal/app/engine/a137_daily_loss_cycle_test.go:98
+
+function    TestA137AFailedEscalationIsJoinedNotLost
+  internal/app/engine/a137_daily_loss_cycle_test.go:119
+
+function    TestA137APrecheckRefusalKeepsItsCause
+  internal/app/engine/a137_daily_loss_cycle_test.go:133
+
+function    TestA137ClassificationIsUnchangedForEveryPrecheckRefusal
+  internal/app/engine/a137_daily_loss_cycle_test.go:145
+
+function    TestA137AnUnmeasurableDayIsAPolicyOutcomeNotALaneFault
+  internal/app/engine/a137_daily_loss_cycle_test.go:171
+
+function    TestA137AdmissionCarriesTheMeasuredTokenIntoThePrecheck
+  internal/app/engine/a137_daily_loss_cycle_test.go:200
+
+function    TestStrategyFirstLegAdmissionDormantPairedKRUS
+  internal/app/engine/strategy_first_leg_admission_test.go:19
+
+function    TestStrategyFirstLegAdmissionUsesGuardianOnlyAllEightLanes
+  internal/app/engine/strategy_first_leg_admission_test.go:32
+
+function    TestStrategyFirstLegAdmissionRejectsInvalidBeforeAuthority
+  internal/app/engine/strategy_first_leg_admission_test.go:60
+
+function    TestStrategyFirstLegAdmissionRejectsAuthorityTamperPairedKRUS
+  internal/app/engine/strategy_first_leg_admission_test.go:73
+
+function    TestStrategyFirstLegAdmissionClassifiesPairedFailures
+  internal/app/engine/strategy_first_leg_admission_test.go:99
+
+function    coordinateMarketProposals
+  internal/app/engine/strategy_market_coordinator.go:57
+
+function    TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope
+  internal/app/engine/a112_family_gate_test.go:302
+

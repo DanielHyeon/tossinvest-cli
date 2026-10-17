@@ -1,0 +1,45 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "94702b5c068b1ed2634b3add29aed292fb941f4c",
+  "source_sha256": "f6ebcb5aa388f5203fbe474dafb81f0958841a1095517d49d33d8dd9c0eb3a0f",
+  "function": "_target_text",
+  "signature": "_target_text(landing, audited)",
+  "start": {
+    "line": 353,
+    "column": 1
+  },
+  "end": {
+    "line": 361,
+    "column": 89
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 359,
+      "inherited_line": false,
+      "source": "if not landing:"
+    },
+    {
+      "id": "B2",
+      "kind": "IfExp",
+      "line": 361,
+      "inherited_line": false,
+      "source": "f'audited source-commit {landing}' if audited else f'landed-commit {landing}'"
+    }
+  ],
+  "returns": [
+    {
+      "line": 360,
+      "value": "'working tree (no landed-commit.txt)'"
+    },
+    {
+      "line": 361,
+      "value": "f'audited source-commit {landing}' if audited else f'landed-commit {landing}'"
+    }
+  ],
+  "raises": [],
+  "calls": []
+}

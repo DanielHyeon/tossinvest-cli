@@ -1,0 +1,126 @@
+{
+  "file": "internal/app/engine/interlock.go",
+  "source_sha256": "775bcfb551f8198119ebeb92dafd1ec0bf8a7c7764daa6d5bee5e7e412fe298f",
+  "package": "engine",
+  "function": "acceptanceDetail",
+  "signature": "acceptanceDetail(params=1, results=1)",
+  "start": {
+    "line": 425,
+    "column": 1
+  },
+  "end": {
+    "line": 442,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 427,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 427,
+        "column": 9
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 431,
+        "column": 3
+      },
+      "text": "status.MaskedAccount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 432,
+        "column": 3
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 432,
+        "column": 3
+      },
+      "text": "status.AttestationExpiresAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 434,
+        "column": 3
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 435,
+        "column": 3
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 3
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 437,
+        "column": 3
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 438,
+        "column": 3
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 439,
+        "column": 3
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 440,
+        "column": 3
+      },
+      "text": "limitString"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 426,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

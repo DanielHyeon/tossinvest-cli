@@ -1,0 +1,347 @@
+{
+  "file": "internal/execgw/riskguardian_qfinal_test.go",
+  "source_sha256": "2f2a1e6036fcf9c60676f1e3d573e2274fce16a8ec3b844511acb488be6aaaff",
+  "package": "execgw_test",
+  "function": "qFinalKRRequest",
+  "signature": "qFinalKRRequest(params=4, results=1)",
+  "start": {
+    "line": 305,
+    "column": 1
+  },
+  "end": {
+    "line": 351,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 320,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 324,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 330,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 350,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 306,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 310,
+        "column": 221
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 310,
+        "column": 256
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 311,
+        "column": 207
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 311,
+        "column": 242
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 28
+      },
+      "text": "riskbucket.RequiredDimensionOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 150
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 211
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 246
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 323,
+        "column": 28
+      },
+      "text": "riskbucket.NewPolicyProvenance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 162
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 223
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 258
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 329,
+        "column": 30
+      },
+      "text": "riskbucket.NewSnapshotProvenance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 13
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 334,
+        "column": 16
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 334,
+        "column": 122
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 338,
+        "column": 75
+      },
+      "text": "guardianAccount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 345,
+        "column": 26
+      },
+      "text": "rig.guardian.PolicyVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 345,
+        "column": 78
+      },
+      "text": "rig.guardian.LimitsDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 347,
+        "column": 2
+      },
+      "text": "request.SetFXAuthorityForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 349,
+        "column": 22
+      },
+      "text": "rig.guardian.MeasureDailyLoss"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 349,
+        "column": 52
+      },
+      "text": "context.Background"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 307,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 308,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 314,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 321,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 322,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 323,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 327,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 328,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 329,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 333,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 334,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 336,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 349,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

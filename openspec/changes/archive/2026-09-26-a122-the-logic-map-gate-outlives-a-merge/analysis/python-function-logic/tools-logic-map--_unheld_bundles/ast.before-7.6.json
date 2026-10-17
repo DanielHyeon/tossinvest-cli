@@ -1,0 +1,135 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "2b5b05c1c69dd3fcf9c64a6df60c6b8cd3df871d",
+  "head_commit": "2b5b05c1c69dd3fcf9c64a6df60c6b8cd3df871d",
+  "source_sha256": "36f72fc173dab8baddd80d22f8f70af95d111a02e5095e63f22833865788008a",
+  "function": "_unheld_bundles",
+  "signature": "_unheld_bundles(root, candidate, analysis)",
+  "start": {
+    "line": 532,
+    "column": 1
+  },
+  "end": {
+    "line": 567,
+    "column": 31
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 550,
+      "inherited_line": false,
+      "source": "for ast_path, _, _ in _pinning_bundles(root, analysis):"
+    },
+    {
+      "id": "B2",
+      "kind": "Try",
+      "line": 551,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B3",
+      "kind": "ExceptHandler",
+      "line": 553,
+      "inherited_line": false,
+      "source": "except ValueError:"
+    },
+    {
+      "id": "B4",
+      "kind": "Try",
+      "line": 555,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B5",
+      "kind": "ExceptHandler",
+      "line": 557,
+      "inherited_line": false,
+      "source": "except OSError:"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 561,
+      "inherited_line": false,
+      "source": "if committed is None:"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 563,
+      "inherited_line": false,
+      "source": "if before:"
+    },
+    {
+      "id": "B8",
+      "kind": "BoolOp",
+      "line": 565,
+      "inherited_line": false,
+      "source": "committed is None or committed != judged"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 565,
+      "inherited_line": false,
+      "source": "if committed is None or committed != judged:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 567,
+      "value": "sorted(set(unheld))"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 550,
+      "callee": "_pinning_bundles"
+    },
+    {
+      "line": 552,
+      "callee": "ast_path.relative_to"
+    },
+    {
+      "line": 552,
+      "callee": "ast_path.relative_to(root).as_posix"
+    },
+    {
+      "line": 556,
+      "callee": "ast_path.read_bytes"
+    },
+    {
+      "line": 558,
+      "callee": "unheld.append"
+    },
+    {
+      "line": 560,
+      "callee": "_committed_bytes"
+    },
+    {
+      "line": 562,
+      "callee": "_pre_archive_path"
+    },
+    {
+      "line": 564,
+      "callee": "_committed_bytes"
+    },
+    {
+      "line": 566,
+      "callee": "unheld.append"
+    },
+    {
+      "line": 567,
+      "callee": "set"
+    },
+    {
+      "line": 567,
+      "callee": "sorted"
+    }
+  ]
+}

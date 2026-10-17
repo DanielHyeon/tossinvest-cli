@@ -1,0 +1,33 @@
+
+Callers of "PollQuoteL1" (10):
+
+function    TestPollQuoteL1SealsTwoReadsIntoOneRow
+  internal/officialbars/quote_test.go:143
+
+function    TestPollQuoteL1BindsTheHalvesConservatively
+  internal/officialbars/quote_test.go:191
+
+function    TestPollQuoteL1AppendsNothingWhenEitherHalfFails
+  internal/officialbars/quote_test.go:233
+
+function    TestPollQuoteL1RefusesQuotesTheContractCannotHold
+  internal/officialbars/quote_test.go:273
+
+function    TestPollQuoteL1RefusesFractionalKRW
+  internal/officialbars/quote_test.go:320
+
+function    TestPollQuoteL1IsIdempotentOnAnIdenticalReRead
+  internal/officialbars/quote_test.go:351
+
+function    TestPollQuoteL1QuarantinesADifferentBodyAtTheSameInstant
+  internal/officialbars/quote_test.go:376
+
+function    TestPollQuoteL1RefusesHalvesThatDisagree
+  internal/officialbars/quote_test.go:410
+
+function    TestPollQuoteL1RefusesBadArgumentsBeforeAnyRead
+  internal/officialbars/quote_test.go:447
+
+function    TestPollQuoteL1RefusesAQuoteReceivedBeforeItWasObserved
+  internal/officialbars/quote_test.go:513
+

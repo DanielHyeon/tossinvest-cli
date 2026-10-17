@@ -1,0 +1,12 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/journal [github.com/JungHoonGhae/tossinvest-cli/internal/journal.test]
+internal/journal/a136_daily_buy_test.go:22:39: undefined: ManualBuyTotal
+internal/journal/a136_daily_buy_test.go:27:10: undefined: ManualBuyTotal
+internal/journal/a136_daily_buy_test.go:35:75: unknown field ManualBuy in struct literal of type DailyBuyLimit
+internal/journal/a136_daily_buy_test.go:279:76: unknown field ManualBuy in struct literal of type DailyBuyLimit
+internal/journal/a136_daily_buy_test.go:352:78: unknown field ManualBuy in struct literal of type DailyBuyLimit
+internal/journal/a136_daily_buy_test.go:373:53: undefined: ManualBuyTotal
+internal/journal/a136_daily_buy_test.go:376:76: unknown field ManualBuy in struct literal of type DailyBuyLimit
+internal/journal/a136_daily_buy_test.go:386:42: undefined: ManualBuyStaleness
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal [build failed]
+FAIL
+rc=1 (core c8783ad9 + 1.5 시험 파일, -tags tossos_testseams)

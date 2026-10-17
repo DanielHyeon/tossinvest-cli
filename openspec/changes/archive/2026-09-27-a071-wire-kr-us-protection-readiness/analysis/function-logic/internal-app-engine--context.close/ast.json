@@ -1,0 +1,85 @@
+{
+  "file": "internal/app/engine/engine.go",
+  "source_sha256": "d0cb8011c0186beeedface3cb4ba47dc81b3a79202b9ab9650dda99a44a347d7",
+  "package": "engine",
+  "function": "Close",
+  "receiver": "Context",
+  "signature": "Context.Close(params=0, results=1)",
+  "start": {
+    "line": 606,
+    "column": 1
+  },
+  "end": {
+    "line": 616,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 607,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 612,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 608,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 613,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 615,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 613,
+        "column": 10
+      },
+      "text": "j.Close"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 610,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 611,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

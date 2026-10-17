@@ -1,0 +1,38 @@
+{
+  "file": "internal/httpapi/strategy_runtime.go",
+  "source_sha256": "694aa756765edad81d7846f76b5662b4829e14c81aa947f40ed82374d67886d0",
+  "package": "httpapi",
+  "function": "StrategyRuntimeAbsent",
+  "signature": "StrategyRuntimeAbsent(params=1, results=1)",
+  "start": {
+    "line": 27,
+    "column": 1
+  },
+  "end": {
+    "line": 29,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 9
+      },
+      "text": "strategyprojection.StrategyRuntimeAbsent"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

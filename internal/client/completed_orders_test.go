@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -79,6 +80,61 @@ func TestListCompletedOrdersParsesStructuredFields(t *testing.T) {
 	}
 	if orders[0].Status != "취소" {
 		t.Fatalf("expected status 취소, got %q", orders[0].Status)
+	}
+}
+
+func TestListCompletedOrdersRangeRejectsMissingCollections(t *testing.T) {
+	t.Parallel()
+	for name, body := range map[string]string{"result absent": `{}`, "result null": `{"result":null}`, "body missing": `{"result":{}}`, "body null": `{"result":{"body":null}}`, "body object": `{"result":{"body":{}}}`, "body scalar": `{"result":{"body":1}}`} {
+		t.Run(name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte(body)) }))
+			defer srv.Close()
+			c := New(Config{HTTPClient: srv.Client(), CertBaseURL: srv.URL, Session: &session.Session{Cookies: map[string]string{"SESSION": "x"}, Headers: map[string]string{"App-Version": "v"}}})
+			orders, err := c.ListCompletedOrdersRange(context.Background(), "us", time.Now(), time.Now(), 1, 1)
+			if err == nil || orders != nil {
+				t.Fatalf("orders=%v err=%v, want schema error and nil orders", orders, err)
+			}
+		})
+	}
+}
+
+func TestListCompletedOrdersRangeAcceptsExplicitEmptyBody(t *testing.T) {
+	t.Parallel()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte(`{"result":{"body":[]}}`)) }))
+	defer srv.Close()
+	c := New(Config{HTTPClient: srv.Client(), CertBaseURL: srv.URL, Session: &session.Session{Cookies: map[string]string{"SESSION": "x"}, Headers: map[string]string{"App-Version": "v"}}})
+	orders, err := c.ListCompletedOrdersRange(context.Background(), "us", time.Now(), time.Now(), 1, 1)
+	if err != nil || orders == nil || len(orders) != 0 {
+		t.Fatalf("orders=%v err=%v, want non-nil empty", orders, err)
+	}
+}
+
+func TestListCompletedOrdersRangeRejectsPartialMarketResult(t *testing.T) {
+	t.Parallel()
+	for name, second := range map[string]func(http.ResponseWriter){
+		"schema": func(w http.ResponseWriter) { _, _ = w.Write([]byte(`{"result":{"body":null}}`)) },
+		"http":   func(w http.ResponseWriter) { http.Error(w, "bad gateway", http.StatusBadGateway) },
+	} {
+		t.Run(name, func(t *testing.T) {
+			var paths []string
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				paths = append(paths, r.URL.Path)
+				if strings.Contains(r.URL.Path, "/us/") {
+					_, _ = w.Write([]byte(`{"result":{"body":[{"orderNo":1,"userOrderDate":"2026-03-11","symbol":"US","status":"done"}]}}`))
+					return
+				}
+				second(w)
+			}))
+			defer srv.Close()
+			c := New(Config{HTTPClient: srv.Client(), CertBaseURL: srv.URL, Session: &session.Session{Cookies: map[string]string{"SESSION": "x"}, Headers: map[string]string{"App-Version": "v"}}})
+			orders, err := c.ListCompletedOrdersRange(context.Background(), "all", time.Now(), time.Now(), 1, 1)
+			if err == nil || orders != nil {
+				t.Fatalf("orders=%v err=%v, want no partial aggregate", orders, err)
+			}
+			if got, want := strings.Join(paths, ","), "/api/v2/trading/my-orders/markets/us/by-date/completed,/api/v2/trading/my-orders/markets/kr/by-date/completed"; got != want {
+				t.Fatalf("paths=%s want=%s", got, want)
+			}
+		})
 	}
 }
 

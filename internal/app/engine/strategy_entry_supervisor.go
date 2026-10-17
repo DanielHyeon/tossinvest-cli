@@ -16,8 +16,6 @@ import (
 	candidatepkg "github.com/JungHoonGhae/tossinvest-cli/internal/candidate"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff"
 )
 
 // StrategyEntryLoopName is the single outer runtime loop which owns both market
@@ -122,6 +120,21 @@ type StrategyEntrySupervisorOptions struct {
 	QueueDepth int
 	CycleLimit time.Duration
 	Clock      clock.Clock
+	// EntryGate 는 권한 갱신 전용 worker 가 보고한 중앙 무결성 고장을 신규 진입 차단으로 잇는 자리다(a112 5.6.2.1, 사람
+	// 결정 (6)). 할 수 있는 일은 `Block` 하나뿐이다 — 감독자는 진입을 닫을 수만 있고 열 수 없다. nil 이면 그 고장은
+	// 기존의 프로세스 전체 fail-closed 로 올라간다(조용히 삼키지 않는다).
+	EntryGate StrategyEntryBlocker
+	// DailyLossNotice 는 측정 불가로 전략 진입이 막힌 것을 계좌 일 키마다 한 번 알리는 자리(a137 재리뷰 P1-N1). nil 이면 스냅숏 계수만.
+	// cause 는 계좌 값 · 원문 오류가 없는 측정 불가 문구(dailyloss 고정 문구 + 시장 · 심볼 · pos- 손잡이)다.
+	DailyLossNotice func(market StrategyMarket, day, cause string)
+	// EntrySkipNotice 는 Guardian 상한 0 으로 건너뛴 전략 진입을 (계좌 일 키, 종목)마다 한 번 알리는 자리(a146). nil 이면 스냅숏 계수만.
+	// cause 는 고정 문구 + 시장 · 종목 · 코드(계좌 값 · 금액 없음)다.
+	EntrySkipNotice func(market StrategyMarket, day, symbol, cause string)
+}
+
+// StrategyEntryBlocker 는 감독자가 진입 게이트에 쓸 수 있는 유일한 동작이다. `*execgw.EntryGate` 가 만족한다.
+type StrategyEntryBlocker interface {
+	Block(reason execgw.ReasonCode, detail string)
 }
 
 // ErrStrategyCentralIntegrity is the only non-cancellation failure the outer
@@ -183,6 +196,15 @@ type strategyMarketRuntime struct {
 	// 않고, 그 구별이야말로 운영자가 알아야 하는 것이다.
 	swallowedCount uint64
 	firstSwallowed string
+	// a137: 측정 불가 계수 · 첫 원인 · 마지막으로 알린 계좌 일 키(g.mu 아래).
+	dailyLossUnmeasurable uint64
+	firstDailyLossCause   string
+	dailyLossNoticeDay    string
+	// a146: Guardian 상한 0 스킵 계수 · 첫 원인 · 알림 기억(일 키 · 그날 알린 종목, g.mu 아래).
+	guardianCapZeroSkips     uint64
+	firstGuardianCapZeroSkip string
+	entrySkipNoticeDay       string
+	entrySkipNoticed         map[string]struct{}
 }
 
 // StrategyWorkerSnapshot is a read-only, market-keyed operational view. It
@@ -213,6 +235,16 @@ type StrategyWorkerSnapshot struct {
 	// 안 나가는데 아무도 그 이유를 모른다" 는 상태가 실제로 일어나고 있다는 뜻이다.
 	SwallowedCycleErrors  uint64
 	FirstSwallowedFailure string
+
+	// DailyLossUnmeasurableCycles 는 그날의 손실을 잴 수 없어 진입이 거절된 채 **조용히** 끝난 주기의 수(a137 재리뷰 P1-N1 — 잠금 ·
+	// 삼킴이 아닌 정책 결과라 다른 칸에는 남지 않으므로 여기 셈). FirstDailyLossUnmeasurable 은 그 첫 원인(계좌 값 · 원문 오류 없음).
+	DailyLossUnmeasurableCycles uint64
+	FirstDailyLossUnmeasurable  string
+
+	// GuardianCapZeroSkips 는 Guardian 상한 0 으로 건너뛴 전략 진입의 수(a146 — 결함이 아닌 정책 결과라 잠금 · 삼킴 칸에는 남지 않으므로
+	// 여기 셈, 포화). FirstGuardianCapZeroSkip 은 그 첫 원인(고정 문구 + 시장 · 종목 · 코드, 계좌 값 · 금액 없음).
+	GuardianCapZeroSkips     uint64
+	FirstGuardianCapZeroSkip string
 }
 
 type StrategyTriggerResult string
@@ -229,6 +261,13 @@ const (
 type StrategyEntrySupervisor struct {
 	clk        clock.Clock
 	cycleLimit time.Duration
+
+	// entry 는 중앙 무결성 고장의 진입 차단 자리(5.6.2.1). nil 이면 프로세스 전체 fail-closed 로 올린다.
+	entry StrategyEntryBlocker
+	// dailyLossNotice 는 측정 불가 알림 자리(a137, nil 허용).
+	dailyLossNotice func(market StrategyMarket, day, cause string)
+	// entrySkipNotice 는 Guardian 상한 0 스킵 알림 자리(a146, nil 허용).
+	entrySkipNotice func(market StrategyMarket, day, symbol, cause string)
 
 	mu        sync.RWMutex
 	workers   map[StrategyMarket]*strategyMarketRuntime
@@ -272,6 +311,9 @@ type StrategyEntryProductionAssembly struct {
 	// 스칼라 관측이라 활성화 세대를 담지 않는다. durable lane latch 의 복구
 	// 조건이 그 세대이므로(5.3.3), 권위를 그대로 들고 있어야 한다.
 	schedule strategyScheduleAuthorityPair
+	// shadow 는 a112 7.3.1 의 관문 앞 제안 묶음 짝이다 — proposals(주문 경로의 권한)와 **별개 필드**다. 시장 주기는 이 값을 evaluate 인자
+	// 한 자리로만 레인 런타임에 넘기고(값 보관), dispatch · worker · 결과 권한에는 닿지 않는다(census ②).
+	shadow strategyShadowPair
 }
 
 // NewPairedStrategyEntryProductionAssembly loads KR and US from one frozen
@@ -311,7 +353,7 @@ func (c *Context) NewPairedStrategyEntryProductionAssembly(ctx context.Context, 
 	if err != nil {
 		return StrategyEntryProductionAssembly{}, err
 	}
-	proposalAuthority := newStrategyProposalAuthorityLoader(c.Paths.ConfigDir, evidencePath, journalPath, c.AccountRef, os.Getenv).
+	proposalAuthority, shadowAuthority := newStrategyProposalAuthorityLoader(c.Paths.ConfigDir, evidencePath, journalPath, c.AccountRef, os.Getenv).
 		withStrategyLanes(lanes).
 		collect(ctx, scheduleAuthority, routeAuthority, fxAuthority)
 	resultAuthority := proposalAuthority.ResultAuthority()
@@ -325,16 +367,17 @@ func (c *Context) NewPairedStrategyEntryProductionAssembly(ctx context.Context, 
 	firstLegBridge := newStrategyFirstLegAdmissionBridge(guardian, firstLegLoader)
 	dispatchCycle := newStrategyDispatchCycle(c.Journal, c.Gateway, firstLegBridge, scheduleAuthority, fxAuthority, riskAuthority,
 		proposalAuthority, c.strategyDispatchOwner)
+	// 4-가족 활성화의 만료를 실시계로 재게 한다 (태스크 8.7.2). 이 대입이 빠지면 검증된 가족
+	// 활성화를 가진 시장의 주문이 전부 거절된다 — 넓힘이 아니라 fail-closed 다. 시계가 nil 이면
+	// 메서드 값을 만들지 않는다(nil 인터페이스의 `clk.Now` 는 그 자리에서 panic 이다); 그때
+	// now 는 nil 로 남고 dispatch 가 검증된 가족 활성화를 거절한다.
+	if clk != nil {
+		dispatchCycle.now = clk.Now
+	}
+	// 재검증 = 수집(I/O) + drift 판정. 판정은 축마다 시험할 수 있게 순수 함수로 옮겼다(a112 6.3 — 의미 무변경 이동).
 	dispatchCycle.revalidateSchedule = func(checkCtx context.Context, market StrategyMarket, expected strategyScheduleMarketAuthority) error {
 		fresh := newStrategyScheduleAuthorityLoader(c.Paths.ConfigDir, clk, c.official, os.Getenv).collectMarket(checkCtx, market)
-		if !fresh.snapshot.Ready || fresh.restore.Activation == nil || expected.restore.Activation == nil ||
-			fresh.desired.Revision != expected.desired.Revision || fresh.calendar.Version != expected.calendar.Version ||
-			fresh.snapshot.ActivationManifestDigest != expected.snapshot.ActivationManifestDigest ||
-			fresh.restore.Activation.Generation() != expected.restore.Activation.Generation() ||
-			!fresh.restore.Activation.ExpiresAt().Equal(expected.restore.Activation.ExpiresAt()) {
-			return errors.New("engine: signed scheduler activation no longer matches dispatch admission")
-		}
-		return nil
+		return strategyScheduleStillMatchesAdmission(fresh, expected)
 	}
 	snapshot := StrategyEntryProductionSnapshot{
 		Clock:              clk,
@@ -355,7 +398,7 @@ func (c *Context) NewPairedStrategyEntryProductionAssembly(ctx context.Context, 
 	assembly := StrategyEntryProductionAssembly{Supervisor: supervisor, Schedule: snapshot.Schedule,
 		Candidate: candidateAuthority.Snapshot(), Route: routeAuthority.Snapshot(), FX: fxAuthority.Snapshot(), Proposal: proposalAuthority.Snapshot(),
 		Risk: riskAuthority.Snapshot(), Account: accountAuthority.Snapshot(), firstLeg: firstLegBridge, dispatch: dispatchCycle,
-		proposals: proposalAuthority, schedule: scheduleAuthority}
+		proposals: proposalAuthority, schedule: scheduleAuthority, shadow: shadowAuthority}
 	if err := c.publishStrategyRuntime(assembly); err != nil {
 		return StrategyEntryProductionAssembly{}, err
 	}
@@ -372,18 +415,23 @@ func (c *Context) NewRefreshingPairedStrategyEntrySupervisor(clk clock.Clock) (*
 	if c == nil || clk == nil {
 		return nil, errors.New("engine: paired strategy refresh supervisor unavailable")
 	}
+	// 진입 게이트가 없으면 만들지 않는다(5.6.2.1): 그 조립에서는 중앙 무결성 고장이 진입이 아니라 프로세스를 닫는다.
+	if c.Entry == nil {
+		return nil, fmt.Errorf("%w: the strategy refresh supervisor needs the entry gate", ErrRuntimeUnavailable)
+	}
 	workers := make([]StrategyMarketWorker, 0, 2)
 	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
 		market := market
 		workers = append(workers, StrategyMarketWorker{
 			Market: market, PollInterval: DefaultStrategyCycleLimit, RefreshesAuthority: true,
-			Cycle: func(cycleCtx context.Context) error {
-				return c.runProductionStrategyMarketCycle(cycleCtx, clk, market)
-			},
+			// a112 7.3.1: 주기 함수를 부르고, nil 로 돌아온 **뒤**에만 shadow 단계를 비동기로 시작하는 클로저(productionStrategyCycle 하나 —
+			// 두 생산 자리가 같은 몸통을 쓴다). 반환값은 주기 함수의 오류 그대로다.
+			Cycle: c.productionStrategyCycle(clk, market),
 		})
 	}
 	supervisor, err := NewStrategyEntrySupervisor(StrategyEntrySupervisorOptions{
-		Clock: clk, CycleLimit: MaximumStrategyCycleLimit, Workers: workers,
+		Clock: clk, CycleLimit: MaximumStrategyCycleLimit, Workers: workers, EntryGate: c.Entry,
+		DailyLossNotice: c.strategyDailyLossNotice(), EntrySkipNotice: c.strategyEntrySkipNotice(),
 	})
 	if err != nil {
 		return nil, err
@@ -404,8 +452,7 @@ func (c *Context) productionStrategyWorker(ctx context.Context, clk clock.Clock,
 	}
 	return buildProductionStrategyMarketWorker(ctx, clk, market,
 		c.Journal != nil && c.Gateway != nil && c.Guardian != nil && c.Automation.Verified,
-		c.Gateway, schedule, candidate, route, fx, proposal, riskAuthority, account,
-		func(cycleCtx context.Context) error { return c.runProductionStrategyMarketCycle(cycleCtx, clk, market) })
+		c.Gateway, schedule, candidate, route, fx, proposal, riskAuthority, account, c.productionStrategyCycle(clk, market))
 }
 
 func buildProductionStrategyMarketWorker(ctx context.Context, clk clock.Clock, market StrategyMarket, wiringReady bool,
@@ -427,21 +474,45 @@ func buildProductionStrategyMarketWorker(ctx context.Context, clk clock.Clock, m
 		fx.forMarket(market), proposal.forMarket(market), riskAuthority.forMarket(market), account.forMarket(market)
 	// 제안 쪽 준비 상태와 개수는 경계가 혼자 판단한다. 여기서 다시 세면
 	// 승격 규칙과 dispatch 규칙이 따로 놀 수 있고, 그 차이는 아무도 보고하지 않는다.
-	result, handedOff := p.dispatchHandoff().Single()
 	if !s.snapshot.Ready || s.restore.Activation == nil || !ca.snapshot.Ready || !ro.snapshot.Ready || !f.snapshot.Ready ||
-		!handedOff || !r.snapshot.Ready || !a.snapshot.Ready {
+		!r.snapshot.Ready || !a.snapshot.Ready {
 		return dormant
 	}
-	if !result.ValidProposal() {
-		return dormant
+	// a112 5.2.2.2: 승격은 주문 경로와 **같은 handoff 목록**(dispatchHandoffs)을 본다. 활성화 없는 시장은 오늘처럼 시장 단위
+	// handoff 하나(상한 거절이면 dormant — 토글 OFF = upstream). 서명 활성화된 시장은 소유자 범위마다 handoff 하나이고, 승인된
+	// 범위 중 **하나라도** 보호 · 진입 관문 관측을 통과하면 승격함 — 한 범위의 거절이 다른 범위를 굶기지 않음(Manager 판정 J3).
+	// 관측은 준비 확인일 뿐이고 주문마다 제출 경로가 범위 단위로 다시 검사함(withStrategyEntryGateAuthority · 보호 재확인).
+	promoted := false
+	for _, handoff := range p.dispatchHandoffs() {
+		result, handedOff := handoff.Single()
+		if !handedOff || !result.ValidProposal() {
+			continue
+		}
+		// 승격 근거 범위는 자기 위험 · 계좌 권한이 준비돼 있어야 함(5.2.2.2 리뷰 A #3) — 시장 칸의 Ready 는 「어느 범위든」이라, 권한 있는
+		// 범위가 관문에 막히고 권한 없는 범위만 관문을 통과하면 거래할 범위 0 인 worker 가 승격됐다.
+		key, keyed := strategyOwnerKeyOf(result.Lineage)
+		if !keyed {
+			continue
+		}
+		if _, ready := r.forScope(key); !ready {
+			continue
+		}
+		if _, ready := a.forScope(key); !ready {
+			continue
+		}
+		// 보호 관측은 그대로 둔다. 관측 자체가 준비되지 않은 범위를 걸러 내는 일을
+		// 하고 있고(오류면 그 범위는 승격 근거가 못 됨), 반환값을 활성화와 대조하지
+		// **않는다**는 점은 이전 그대로다 — 아래 주석 참고.
+		if _, err := gateway.ObserveStrategyProtection(ctx, strings.ToLower(string(market)), result.Quantity); err != nil {
+			continue
+		}
+		if _, err := gateway.ObserveStrategyEntryGate(ctx, strings.ToLower(string(market)), result.Lineage.Symbol); err != nil {
+			continue
+		}
+		promoted = true
+		break
 	}
-	// 보호 관측은 그대로 둔다. 관측 자체가 준비되지 않은 시장을 걸러 내는 일을
-	// 하고 있고(오류면 dormant), 그것은 이 로트가 바꾸지 않는다. 바뀐 것은
-	// 반환값을 활성화와 대조하지 **않는다**는 점뿐이다 — 아래 주석 참고.
-	if _, err := gateway.ObserveStrategyProtection(ctx, strings.ToLower(string(market)), result.Quantity); err != nil {
-		return dormant
-	}
-	if _, err := gateway.ObserveStrategyEntryGate(ctx, strings.ToLower(string(market)), result.Lineage.Symbol); err != nil {
+	if !promoted {
 		return dormant
 	}
 	// **여기에는 활성화 결속이 없다 (태스크 8.8.2).**
@@ -453,8 +524,8 @@ func buildProductionStrategyMarketWorker(ctx context.Context, clk clock.Clock, m
 	//  1. 두 값이 **per-cycle** 스냅샷 봉인이라 사람이 서명한 상수가 같아질 수
 	//     없었다. 매니페스트를 배포하면 두 시장이 영원히 dormant 가 된다.
 	//  2. 이 함수가 만드는 `Effective` 는 **화면과 승격 판정**만 움직인다. 주문은
-	//     refresh worker 의 사이클이 `dispatchHandoff().Deliver` 로 내보내고,
-	//     그 경로는 이 서술자를 읽지 않는다. 즉 화면은 멈추고 주문은 나갔다.
+	//     refresh worker 의 사이클이 내보내고(당시 `dispatchHandoff().Deliver`, 5.2.2.1 이후
+	//     `dispatchStrategyMarketHandoffs`), 그 경로는 이 서술자를 읽지 않는다. 즉 화면은 멈추고 주문은 나갔다.
 	//
 	// 그래서 결속을 옮겼다: 넷은 제안 수집 단계(존재하고 변하지 않는 사실),
 	// ProtectionReady 하한은 `strategyDispatchCycle.dispatch`(보호 세대가
@@ -462,11 +533,13 @@ func buildProductionStrategyMarketWorker(ctx context.Context, clk clock.Clock, m
 	digest := strategyWorkerEvidenceDigest(s.snapshot.ActivationManifestDigest, s.calendar.Version,
 		ca.snapshot.ThresholdSetDigest, ca.snapshot.EvidenceDigest, ro.snapshot.OwnerSetDigest,
 		f.snapshot.Digest, p.snapshot.ProposalSetDigest, r.snapshot.BundleDigest, a.snapshot.Identity)
-	if !validStrategyDigest(digest) || s.desired.Revision == 0 || a.authority.FreshUntil().IsZero() {
+	// 권한 만료는 준비된 계좌 범위들 중 가장 이른 값(범위 하나면 오늘과 같은 값 — 5.2.2.2 리뷰 A #3).
+	expiresAt := a.earliestFreshUntil()
+	if !validStrategyDigest(digest) || s.desired.Revision == 0 || expiresAt.IsZero() {
 		return dormant
 	}
 	return StrategyMarketWorker{Market: market, Effective: true, AuthorityGeneration: s.desired.Revision,
-		AuthorityExpiresAt: a.authority.FreshUntil(), EvidenceDigest: digest, LatchRevision: 1,
+		AuthorityExpiresAt: expiresAt, EvidenceDigest: digest, LatchRevision: 1,
 		PollInterval: DefaultStrategyCycleLimit, RefreshesAuthority: true, Cycle: cycle}
 }
 
@@ -499,10 +572,14 @@ func (c *Context) runProductionStrategyMarketCycle(ctx context.Context, clk cloc
 	if err != nil {
 		return err
 	}
+	// a112 7.3.1(Manager 판정 (A)): 마지막 인자 하나가 이 물결의 shadow 묶음이다 — 레인 런타임이 파도 번호와 **같은 잠금**에서 값으로 보관할
+	// 뿐(dispatch 앞 shadow **일** 0: 적재 · 판정 · I/O 없음). shadow 단계는 이 함수가 돌아온 뒤 cycle 클로저가 시작한다. 이 함수 본문의
+	// shadow 타입 식은 이 인자 하나뿐이고 그 유일한 호출은 접근자 forMarket 이다(a112_shadow_structure_test.go 가 타입 규칙으로 못 박음).
 	if err := lanes.evaluate(ctx, market,
 		fresh.schedule.forMarket(market).restore.Activation.Generation(),
 		fresh.proposals.forMarket(market).familyActivation(),
-		strategyLaneInputs(c.AccountRef, fresh.proposals.forMarket(market))); err != nil {
+		strategyLaneInputs(c.AccountRef, fresh.proposals.forMarket(market)),
+		fresh.shadow.forMarket(market)); err != nil {
 		return err
 	}
 	if fresh.dispatch == nil {
@@ -522,21 +599,13 @@ func (c *Context) runProductionStrategyMarketCycle(ctx context.Context, clk cloc
 	// 봉투의 값 필드는 strategyhandoff 밖에서 채울 수 없다. 앞 판본은 이 자리를
 	// `entries` 라는 토큰을 세어 지켰고, 적대 리뷰가 헬퍼 함수 하나로 세 번
 	// 우회했다. 토큰 금지는 함수 본문 단위라서 한 다리만 건너면 사라진다.
-	return fresh.proposals.forMarket(market).dispatchHandoff().Deliver(func(delivered strategyhandoff.Delivered) error {
-		lineage := delivered.Result().Lineage
-		cas, err := c.Journal.CurrentPositionCampaignCAS(ctx, lineage.AccountRef, string(lineage.Market), lineage.Symbol)
-		if err != nil {
-			return err
-		}
-		if cas.Claimed || cas.State != "FLAT" && cas.State != "CLOSED" {
-			return nil
-		}
-		_, err = fresh.dispatch.dispatch(ctx, delivered)
-		if errors.Is(err, journal.ErrStrategyDispatchLeaseConsumed) {
-			return nil
-		}
-		return err
-	})
+	//
+	// 태스크 5.2.2.1: 받는 handoff 는 `dispatchHandoffs` 가 정함 — 활성화 없는 시장(오늘 생산 전부)은 지금까지와 같은
+	// 시장 단위 handoff 하나, 서명 활성화된 시장은 소유자 범위마다 하나. 바뀐 것은 몸통을 몇 번 부를 수 있는가뿐임.
+	// 2026-09-30 리뷰 수리: 몸통은 `dispatchStrategyMarketHandoffs`(strategy_market_handoff_delivery.go)로 의미 무변경
+	// 이동 — 시험이 생산 몸통 자체를 돌 수 있게. 이 문장이 이 함수의 **마지막 문장**이어야 하고 그 모양(부르는 함수 ·
+	// 넘기는 원장 · dispatch 주기 · handoff 원천)은 a112_market_delivery_structure_test.go 가 식별자 해소로 못 박음.
+	return dispatchStrategyMarketHandoffs(ctx, c.Journal, fresh.dispatch, fresh.proposals.forMarket(market).dispatchHandoffs())
 }
 
 func (c *Context) refreshPairedStrategyEntryProductionAssembly(ctx context.Context, clk clock.Clock) (StrategyEntryProductionAssembly, error) {
@@ -666,6 +735,7 @@ func NewStrategyEntrySupervisor(opts StrategyEntrySupervisorOptions) (*StrategyE
 
 	return &StrategyEntrySupervisor{
 		clk: clk, cycleLimit: cycleLimit, workers: workers, ready: make(chan struct{}), faults: make(chan StrategyWorkerFault, 2),
+		entry: opts.EntryGate, dailyLossNotice: opts.DailyLossNotice, entrySkipNotice: opts.EntrySkipNotice,
 	}, nil
 }
 
@@ -744,6 +814,8 @@ func (s *StrategyEntrySupervisor) Snapshot(market StrategyMarket) (StrategyWorke
 		RestartAttempt:      worker.restartAttempt, RestartNotBefore: worker.restartNotBefore,
 		QueueDepth: len(worker.queue), QueueCapacity: cap(worker.queue),
 		SwallowedCycleErrors: worker.swallowedCount, FirstSwallowedFailure: worker.firstSwallowed,
+		DailyLossUnmeasurableCycles: worker.dailyLossUnmeasurable, FirstDailyLossUnmeasurable: worker.firstDailyLossCause,
+		GuardianCapZeroSkips: worker.guardianCapZeroSkips, FirstGuardianCapZeroSkip: worker.firstGuardianCapZeroSkip,
 	}, true
 }
 
@@ -885,7 +957,11 @@ func (s *StrategyEntrySupervisor) runMarket(ctx context.Context, start <-chan st
 			if !allowed {
 				continue
 			}
-			err, abnormal, cancelled, abandoned := invokeBoundedStrategyCycle(ctx, s.clk, s.cycleLimit, worker.descriptor.Cycle)
+			// a137 재리뷰 P1-N1: 주기 ctx 에 이 시장의 측정 불가 기록자를 실음 — 전달 자리가 조용히 끝낸 주기도 흔적을 남기게.
+			cycleCtx := withStrategyDailyLossRecorder(ctx, func(cause error) { s.recordDailyLossUnmeasurable(worker, cause) })
+			// a146: 같은 주기 ctx 에 Guardian 상한 0 스킵 기록자 — 스킵은 주기 오류가 아니므로 흔적은 이 기록자로만 남음.
+			cycleCtx = withStrategyEntrySkipRecorder(cycleCtx, func(skip *strategyEntrySkip) { s.recordGuardianCapZeroSkip(worker, skip) })
+			err, abnormal, cancelled, abandoned := invokeBoundedStrategyCycle(cycleCtx, s.clk, s.cycleLimit, worker.descriptor.Cycle)
 			if abandoned {
 				s.markAbandoned(worker)
 			}
@@ -907,6 +983,16 @@ func (s *StrategyEntrySupervisor) runMarket(ctx context.Context, start <-chan st
 				// (5.2.1) KR·US 가 **함께** 여기 온다. 세지 않으면 두 시장의 진입이
 				// 조용히 멈춘 채 어느 화면에도 나타나지 않는다.
 				s.recordSwallowedCycleError(worker, err)
+				// **중앙 무결성 고장은 삼키지 않는다** (태스크 5.6.2.1, 사람 결정 (6)).
+				//
+				// 판정 순서(refreshOnly 가 중앙 판정보다 앞)는 그대로다 — 뒤집으면 전략 평가 하나가
+				// `Run` 을 반환시키고 Runtime 이 fill/exit/reconcile 까지 취소한다(엔진 정지 = 손절 없음).
+				// 대신 이 갈래 안에서 신규 진입만 닫는다(design.md:198 고장표 = 진입 게이트 의미론). 루프는
+				// 계속 돌고, 게이트가 없는 조립에서만 기존의 프로세스 전체 fail-closed 로 올린다.
+				if isCentralStrategyIntegrity(err) && !s.blockEntryOnCentralIntegrity(worker) {
+					s.signalCentral(central, err)
+					return
+				}
 				continue
 			}
 			if isCentralStrategyIntegrity(err) {
@@ -949,6 +1035,22 @@ func (s *StrategyEntrySupervisor) recordSwallowedCycleError(worker *strategyMark
 	if worker.firstSwallowed == "" {
 		worker.firstSwallowed = cause.Error()
 	}
+}
+
+// blockEntryOnCentralIntegrity 는 권한 갱신 전용 worker 가 보고한 중앙 무결성 고장으로 신규 진입을 닫는다(5.6.2.1).
+// 게이트가 없으면 false — 호출자가 프로세스 전체 fail-closed 로 올린다.
+//
+// 설명은 고정 문구다: 원인 원문은 그 시장의 스냅숏(`FirstSwallowedFailure`)에 남고, 게이트 설명은 상태 출력이
+// 어디서나 읽는 칸이라 원문(원장 · 계좌 문구를 품을 수 있음)을 싣지 않는다. 해제는 재시작뿐이다(원장 수리 뒤).
+func (s *StrategyEntrySupervisor) blockEntryOnCentralIntegrity(worker *strategyMarketRuntime) bool {
+	if s == nil || s.entry == nil || worker == nil {
+		return false
+	}
+	s.entry.Block(execgw.ReasonStrategyCentralIntegrity, fmt.Sprintf(
+		"the %s strategy refresh cycle reported a central integrity fault; new entries are closed until a restart "+
+			"after the ledger is repaired (first cause in the strategy runtime snapshot); exits are unaffected",
+		worker.descriptor.Market))
+	return true
 }
 
 func (s *StrategyEntrySupervisor) waitMarketRestart(ctx context.Context, notBefore time.Time) error {

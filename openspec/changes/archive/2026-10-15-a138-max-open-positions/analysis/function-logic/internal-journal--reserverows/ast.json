@@ -1,0 +1,327 @@
+{
+  "file": "internal/journal/reservations.go",
+  "source_sha256": "ec3fa6b414a2246a12891e7b23d169c9cbaf45d890c1283f3e19afed7861a542",
+  "package": "journal",
+  "function": "reserveRows",
+  "signature": "reserveRows(params=5, results=2)",
+  "start": {
+    "line": 328,
+    "column": 1
+  },
+  "end": {
+    "line": 384,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 331,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 337,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 340,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 344,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 348,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 354,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 355,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 379,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 332,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 338,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 341,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 345,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 349,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 363,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 380,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 383,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 12
+      },
+      "text": "checkDecisionReservable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 336,
+        "column": 15
+      },
+      "text": "heldTotals"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 340,
+        "column": 12
+      },
+      "text": "plan.checkLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 344,
+        "column": 12
+      },
+      "text": "checkDailyBuyNotional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 348,
+        "column": 12
+      },
+      "text": "checkOpenPositions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 353,
+        "column": 37
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 353,
+        "column": 60
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 16
+      },
+      "text": "tx.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 361,
+        "column": 4
+      },
+      "text": "nullableString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 361,
+        "column": 36
+      },
+      "text": "formatJournalTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 363,
+        "column": 28
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 365,
+        "column": 22
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 373,
+        "column": 18
+      },
+      "text": "req.SnapshotAsOf.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 378,
+        "column": 18
+      },
+      "text": "reservationVersion"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 331,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 336,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 340,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 344,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 348,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 353,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 355,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 365,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 378,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 382,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -187,6 +187,14 @@ type ApplyHooks struct {
 	// whereas pricing a round trip as free would report every trade as better
 	// than it was, permanently, in a row nothing rewrites.
 	Costs costs.Model
+	// OutcomeRefused receives each close whose outcome could not be frozen (a130,
+	// design D3) — symbol, market, instance and a fixed reason code, never the
+	// account or the position id. It is called only after the fill transaction
+	// has committed (RecordFill), never for a rolled-back one; it returns
+	// nothing and its panic is recovered, so it cannot fail a fill. A sink that
+	// does I/O should hand it off so a blocked writer does not hold the fill
+	// path. Nil, the shipped state, reads and calls nothing on the refusal path.
+	OutcomeRefused func(TradeOutcomeRefusal)
 }
 
 // SetApplyHooks binds the domain's apply functions. It is called once, at
@@ -269,7 +277,7 @@ func (j *Journal) runApplyHooks(ctx context.Context, tx *sql.Tx, fill AppliedFil
 		return nil
 	}
 
-	handle := &ApplyTx{tx: tx, now: fill.CommittedAt, costs: hooks.Costs}
+	handle := &ApplyTx{tx: tx, now: fill.CommittedAt, costs: hooks.Costs, outcomeRefused: hooks.OutcomeRefused}
 	defer handle.invalidate()
 
 	if hooks.Project != nil {
@@ -310,6 +318,8 @@ type ApplyTx struct {
 	now    string
 	costs  costs.Model
 	closed atomic.Bool
+	// outcomeRefused is ApplyHooks.OutcomeRefused (a130). Nil collects nothing.
+	outcomeRefused func(TradeOutcomeRefusal)
 }
 
 func (a *ApplyTx) invalidate() { a.closed.Store(true) }
@@ -822,65 +832,104 @@ const (
 // The reason for the refusal is not recorded here. `exit_events` has no free-text
 // column (D7), and the subsystem that refused has its own record; the join
 // between them is the intent id this event carries.
-func (j *Journal) ResolveExitProposal(ctx context.Context, positionID string,
+//
+// expectedIntentID 는 이 해제가 겨누는 발의의 intent 임(a094 D−2.5). 현재 무장된 발의의 intent 가 그것과 다르면 아무것도
+// 바꾸지 않음 — 늦게 도착한 해제가 그 사이 재무장된 다른 발의를 지우지 않게. attempt 상태를 보는 해제 판정은
+// ReleaseUnacceptedExitProposal 이 함; 이 함수는 판정 없이 비우는 쓰기이므로 호출자가 그 근거를 이미 가진 경우에만 씀.
+func (j *Journal) ResolveExitProposal(ctx context.Context, positionID, expectedIntentID string,
 	resolution ProposalResolution) error {
 	id := strings.TrimSpace(positionID)
-	action := ExitEventProposalRefused
-	switch resolution {
-	case ProposalRefused:
-	case ProposalCancelled:
-		action = ExitEventProposalCancelled
-	default:
-		return fmt.Errorf("%w: %q is neither %s nor %s", ErrInvalidRequest,
-			string(resolution), ProposalRefused, ProposalCancelled)
+	if strings.TrimSpace(expectedIntentID) == "" {
+		return fmt.Errorf("%w: resolving the proposal of %s needs the intent it armed", ErrInvalidRequest, id)
 	}
-	now := j.nowString()
-
+	action, err := proposalResolutionAction(resolution)
+	if err != nil {
+		return err
+	}
 	tx, err := j.db.BeginTx(ctx, nil) // BEGIN IMMEDIATE
 	if err != nil {
 		return fmt.Errorf("journal: resolving the proposal of %s: %w", id, err)
 	}
 	defer tx.Rollback()
-
-	var kind string
-	var pendingAction, pendingLevel, pendingIntent sql.NullString
-	err = tx.QueryRowContext(ctx, `
-		SELECT policy_kind, pending_action, pending_level, pending_intent_id
-		  FROM exit_states WHERE position_id = ?`, id).
-		Scan(&kind, &pendingAction, &pendingLevel, &pendingIntent)
-	if errors.Is(err, sql.ErrNoRows) {
-		return fmt.Errorf("%w: position %s", ErrExitStateNotFound, id)
-	}
-	if err != nil {
-		return fmt.Errorf("journal: reading the proposal of %s: %w", id, err)
-	}
-	if strings.TrimSpace(pendingAction.String) == "" {
-		return nil
-	}
-
-	if _, err := tx.ExecContext(ctx, `
-		UPDATE exit_states
-		   SET pending_action = NULL, pending_level = NULL, pending_intent_id = NULL, updated_at = ?
-		 WHERE position_id = ?`, now, id); err != nil {
-		return fmt.Errorf("journal: resolving the proposal of %s: %w", id, err)
-	}
-	if kind == ExitPolicyLadder {
-		if rung, err := exitpolicy.RungIndex(strings.TrimSpace(pendingLevel.String)); err == nil {
-			if err := rollBackRungTx(ctx, tx, id, rung-1, now); err != nil {
-				return err
-			}
-		}
-	}
-	if err := appendExitEventTx(ctx, tx, exitEventRow{
-		PositionID: id, LevelAfter: strings.TrimSpace(pendingLevel.String),
-		Action: action, ProposedIntentID: strings.TrimSpace(pendingIntent.String), CreatedAt: now,
-	}); err != nil {
+	released, err := clearExitProposalTx(ctx, tx, id, expectedIntentID, action, j.nowString())
+	if err != nil || !released {
 		return err
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("journal: resolving the proposal of %s: %w", id, err)
 	}
 	return nil
+}
+
+// clearExitProposalTx 는 무장된 발의를 비우는 쓰기 한 곳임 — 기대 intent 와 같을 때만.
+//
+// released=false 는 비울 발의가 없거나(멱등) 무장된 발의의 intent 가 다름(늦게 도착한 해제)임. 사다리면 발의가 올린 rung 을
+// 되돌리고(RungIndex 가 거부하는 음수 · 빈 레벨은 되돌림 없이), 손절 가격 컬럼(entry · initial stop · baseline)은 건드리지 않음.
+func clearExitProposalTx(ctx context.Context, tx *sql.Tx, positionID, expectedIntentID, action, now string) (bool, error) {
+	var kind string
+	var pendingAction, pendingLevel, pendingIntent sql.NullString
+	err := tx.QueryRowContext(ctx, `
+		SELECT policy_kind, pending_action, pending_level, pending_intent_id
+		  FROM exit_states WHERE position_id = ?`, positionID).
+		Scan(&kind, &pendingAction, &pendingLevel, &pendingIntent)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, fmt.Errorf("%w: position %s", ErrExitStateNotFound, positionID)
+	}
+	if err != nil {
+		return false, fmt.Errorf("journal: reading the proposal of %s: %w", positionID, err)
+	}
+	if strings.TrimSpace(pendingAction.String) == "" {
+		return false, nil
+	}
+	if strings.TrimSpace(pendingIntent.String) != strings.TrimSpace(expectedIntentID) {
+		// 다른 발의임 — 늦게 도착한 해제가 그 사이 무장된 발의를 지우면 그 발의의 주문이 살아 있을 수 있음.
+		return false, nil
+	}
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE exit_states
+		   SET pending_action = NULL, pending_level = NULL, pending_intent_id = NULL, updated_at = ?
+		 WHERE position_id = ?`, now, positionID); err != nil {
+		return false, fmt.Errorf("journal: resolving the proposal of %s: %w", positionID, err)
+	}
+	if kind == ExitPolicyLadder {
+		if rung, err := exitpolicy.RungIndex(strings.TrimSpace(pendingLevel.String)); err == nil {
+			if err := rollBackRungTx(ctx, tx, positionID, rung-1, now); err != nil {
+				return false, err
+			}
+		}
+	}
+	if err := appendExitEventTx(ctx, tx, exitEventRow{
+		PositionID: positionID, LevelAfter: strings.TrimSpace(pendingLevel.String),
+		Action: action, ProposedIntentID: strings.TrimSpace(pendingIntent.String), CreatedAt: now,
+	}); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// armedExitProposalsQ 는 pending_action 이 찬 exit 상태를 읽음(a094 기동 따라잡기의 순회 대상). 쓰지 않음.
+func armedExitProposalsQ(ctx context.Context, q queryer, accountRef string) ([]ArmedExitProposal, error) {
+	rows, err := q.QueryContext(ctx, `
+		SELECT s.position_id, coalesce(s.pending_intent_id,''), coalesce(s.pending_action,''), coalesce(s.pending_level,'')
+		  FROM exit_states s JOIN positions p ON p.id = s.position_id
+		 WHERE p.account_ref = ? AND TRIM(coalesce(s.pending_action,'')) <> ''
+		 ORDER BY s.position_id`, strings.TrimSpace(accountRef))
+	if err != nil {
+		return nil, fmt.Errorf("journal: listing the armed exit proposals: %w", err)
+	}
+	defer rows.Close()
+	var out []ArmedExitProposal
+	for rows.Next() {
+		var p ArmedExitProposal
+		if err := rows.Scan(&p.PositionID, &p.IntentID, &p.Action, &p.Level); err != nil {
+			return nil, fmt.Errorf("journal: listing the armed exit proposals: %w", err)
+		}
+		out = append(out, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("journal: listing the armed exit proposals: %w", err)
+	}
+	return out, nil
 }
 
 // ApplyExitFill is the Exit apply hook: it moves the exit state that a fill has
@@ -981,7 +1030,12 @@ func ApplyExitFill(ctx context.Context, tx *ApplyTx, fill AppliedFill) error {
 		//    trade this cannot price leaves no row rather than rolling back a fill
 		//    the broker has already reported. BackfillTradeOutcome recovers it from
 		//    data that, the position being CLOSED, cannot move any more.
-		freezeTradeOutcomeTx(ctx, tx, where.PositionID, tx.costs)
+		//    a130: the refusal is no longer dropped — its reason is noted on the
+		//    handle and reported after the transaction commits. Noting returns
+		//    nothing, so it is still unable to turn into a rollback.
+		if reason := freezeTradeOutcomeTx(ctx, tx, where.PositionID, tx.costs); reason != "" {
+			tx.noteOutcomeRefusal(ctx, where.PositionID, reason)
+		}
 	}
 	return nil
 }

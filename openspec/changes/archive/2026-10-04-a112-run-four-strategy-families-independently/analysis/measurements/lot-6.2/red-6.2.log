@@ -1,0 +1,36 @@
+# RED — HEAD 54ff5ee2 + 6.2 시험(생산 편집 전)
+=== RUN   TestQFinalIsBoundByTheFamilyBucketWhenItIsTheSmallestCap
+--- PASS: TestQFinalIsBoundByTheFamilyBucketWhenItIsTheSmallestCap (0.56s)
+=== RUN   TestAnExhaustedFamilyBucketRefusesOnlyThatFamily
+=== RUN   TestAnExhaustedFamilyBucketRefusesOnlyThatFamily/fixture_order_(continuation_first)
+    a112_qfinal_family_test.go:95: err=engine: first-leg admission AUTHORITY_MISMATCH: execgw: q_final refused: BUCKET_CAP_EXHAUSTED (monetary_bucket): BUCKET_CAP_EXHAUSTED (monetary_bucket), want the reversal scope's bucket-cap exhaustion recorded as that scope's typed refusal
+=== RUN   TestAnExhaustedFamilyBucketRefusesOnlyThatFamily/coordinator_order_(reversal_000660_first)
+    a112_qfinal_family_test.go:91: placed= err=engine: first-leg admission AUTHORITY_MISMATCH: execgw: q_final refused: BUCKET_CAP_EXHAUSTED (monetary_bucket): BUCKET_CAP_EXHAUSTED (monetary_bucket), want the continuation scope issued and the exhausted reversal family refused
+--- FAIL: TestAnExhaustedFamilyBucketRefusesOnlyThatFamily (0.55s)
+    --- FAIL: TestAnExhaustedFamilyBucketRefusesOnlyThatFamily/fixture_order_(continuation_first) (0.28s)
+    --- FAIL: TestAnExhaustedFamilyBucketRefusesOnlyThatFamily/coordinator_order_(reversal_000660_first) (0.27s)
+=== RUN   TestASharedDimensionExhaustionRefusesEveryScopeAndIssuesNothing
+    a112_qfinal_family_test.go:116: err=engine: first-leg admission AUTHORITY_MISMATCH: execgw: q_final refused: BUCKET_CAP_EXHAUSTED (monetary_bucket): BUCKET_CAP_EXHAUSTED (monetary_bucket) — want both scopes refused by the shared horizon exhaustion, each recorded as its own typed refusal
+--- FAIL: TestASharedDimensionExhaustionRefusesEveryScopeAndIssuesNothing (0.28s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	1.407s
+FAIL
+
+# GREEN — 같은 시험 + 경계 시험(편집 뒤)
+=== RUN   TestQFinalIsBoundByTheFamilyBucketWhenItIsTheSmallestCap
+--- PASS: TestQFinalIsBoundByTheFamilyBucketWhenItIsTheSmallestCap (0.67s)
+=== RUN   TestAnExhaustedFamilyBucketRefusesOnlyThatFamily
+=== RUN   TestAnExhaustedFamilyBucketRefusesOnlyThatFamily/fixture_order_(continuation_first)
+=== RUN   TestAnExhaustedFamilyBucketRefusesOnlyThatFamily/coordinator_order_(reversal_000660_first)
+--- PASS: TestAnExhaustedFamilyBucketRefusesOnlyThatFamily (0.63s)
+    --- PASS: TestAnExhaustedFamilyBucketRefusesOnlyThatFamily/fixture_order_(continuation_first) (0.32s)
+    --- PASS: TestAnExhaustedFamilyBucketRefusesOnlyThatFamily/coordinator_order_(reversal_000660_first) (0.31s)
+=== RUN   TestASharedDimensionExhaustionRefusesEveryScopeAndIssuesNothing
+--- PASS: TestASharedDimensionExhaustionRefusesEveryScopeAndIssuesNothing (0.27s)
+=== RUN   TestTwoFamiliesRacingForOneOwnerScopeLeaveOneTransaction
+--- PASS: TestTwoFamiliesRacingForOneOwnerScopeLeaveOneTransaction (0.33s)
+=== RUN   TestAPrecheckRefusalOtherThanBucketExhaustionStillStopsTheCycle
+--- PASS: TestAPrecheckRefusalOtherThanBucketExhaustionStillStopsTheCycle (0.27s)
+=== RUN   TestAnExistingGuardianCapRefusalIsNotAScopeRefusal
+--- PASS: TestAnExistingGuardianCapRefusalIsNotAScopeRefusal (0.31s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	2.492s

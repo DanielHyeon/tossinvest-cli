@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -403,5 +404,67 @@ func TestToolResultKeepsSmallPayload(t *testing.T) {
 	got := res.(map[string]any)["content"].([]map[string]any)[0]["text"].(string)
 	if got != string(want) {
 		t.Errorf("small payload was modified:\n got %s\nwant %s", got, want)
+	}
+}
+
+func TestToolResultKeepsExactNumbersAfterTrimming(t *testing.T) {
+	const integer = "9007199254740993"
+	const negative = "-9007199254740993"
+	const decimal = "0.1234567890123456789"
+	items := make([]json.RawMessage, 0, 800)
+	for i := 0; i < cap(items); i++ {
+		items = append(items, json.RawMessage(`{"id":`+integer+`,"negative":`+negative+`,"decimal":`+decimal+`,"padding":"`+strings.Repeat("x", 80)+`"}`))
+	}
+	res, rerr := toolResult(map[string]any{"items": items}, false)
+	if rerr != nil {
+		t.Fatal(rerr)
+	}
+	text := res.(map[string]any)["content"].([]map[string]any)[0]["text"].(string)
+	if len(text) > maxResultBytes {
+		t.Fatalf("result is %d bytes, want <= %d", len(text), maxResultBytes)
+	}
+	dec := json.NewDecoder(strings.NewReader(text))
+	dec.UseNumber()
+	var decoded map[string]any
+	if err := dec.Decode(&decoded); err != nil {
+		t.Fatalf("trimmed output is not JSON: %v", err)
+	}
+	item := decoded["items"].([]any)[0].(map[string]any)
+	for field, want := range map[string]string{"id": integer, "negative": negative, "decimal": decimal} {
+		got, ok := item[field].(json.Number)
+		if !ok || got.String() != want {
+			t.Errorf("%s = %#v, want json.Number(%q)", field, item[field], want)
+		}
+	}
+}
+
+func TestTrimAcceptsExactAndMalformedOmissionMarkers(t *testing.T) {
+	base := []any{"first", "second", map[string]any{omittedKey: json.Number("2")}}
+	got := trim(base, 100, 50)
+	marker := got[len(got)-1].(map[string]any)[omittedKey]
+	if marker != 3 {
+		t.Fatalf("cumulative marker = %v, want 3", marker)
+	}
+	twice := trim(trim([]any{"first", "second", "third", "fourth"}, 100, 50), 100, 50)
+	if marker := twice[len(twice)-1].(map[string]any)[omittedKey]; marker != 3 {
+		t.Fatalf("repeated trim marker = %v, want 3", marker)
+	}
+	for _, malformed := range []any{json.Number("1.5"), json.Number("-1"), json.Number("999999999999999999999999999999"), "bad"} {
+		t.Run("malformed", func(t *testing.T) {
+			defer func() {
+				if r := recover(); r != nil {
+					t.Fatalf("trim panicked: %v", r)
+				}
+			}()
+			got := trim([]any{"first", "second", map[string]any{omittedKey: malformed}}, 100, 50)
+			if marker := got[len(got)-1].(map[string]any)[omittedKey]; marker != 1 {
+				t.Fatalf("malformed marker result = %v, want 1", marker)
+			}
+		})
+	}
+	for _, n := range []float64{math.NaN(), math.Inf(1), float64(maxInt)} {
+		if _, ok := omittedCount(n); ok {
+			t.Errorf("omittedCount(%v) accepted invalid float", n)
+		}
 	}
 }

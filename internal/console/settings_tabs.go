@@ -288,7 +288,9 @@ func (c *Console) positionPolicySummary(r *http.Request) string {
 // strategyRuntimeSummary is the lane screen's own entry-capability projection,
 // desired and effective, produced by the same projection that screen renders.
 func (c *Console) strategyRuntimeSummary(r *http.Request) string {
-	if c.opts.StrategyRuntime == nil {
+	// 전략 화면과 같은 부재 판정 한 벌이다(a115 design D2) — nil 검사로 두면 재부착 wrapper 앞에서
+	// 요약만 「읽지 못함」으로 갈라진다.
+	if strategyprojection.StrategyRuntimeAbsent(c.opts.StrategyRuntime) {
 		return "KR OFF/UNKNOWN · US OFF/UNKNOWN — dormant 미배선"
 	}
 	snapshot, err := c.opts.StrategyRuntime.Read(r.Context())

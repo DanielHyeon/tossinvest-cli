@@ -1,0 +1,263 @@
+{
+  "file": "internal/app/engine/strategy_proposal_authority_test.go",
+  "source_sha256": "d05d11be42f3538802baec08718c10782cea1007f608bac95ad206b16a9b57b0",
+  "package": "engine",
+  "function": "TestStrategyProposalAuthorityLoadsKRUSConcurrently",
+  "signature": "TestStrategyProposalAuthorityLoadsKRUSConcurrently(params=1, results=0)",
+  "start": {
+    "line": 23,
+    "column": 1
+  },
+  "end": {
+    "line": 47,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 38,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 43,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 31,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 24,
+        "column": 9
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 12
+      },
+      "text": "testStrategyProposalLoader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 13
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 13
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 14
+      },
+      "text": "StrategyMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 10
+      },
+      "text": "testProposalBatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 10
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 5
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 11
+      },
+      "text": "a112PairOnly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 24
+      },
+      "text": "loader.collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 39
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 61
+      },
+      "text": "routeReadySchedulePair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 90
+      },
+      "text": "proposalRoutePair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 117
+      },
+      "text": "proposalFXPair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 2
+      },
+      "text": "close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 4
+      },
+      "text": "pair.ResultAuthority"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 40
+      },
+      "text": "pair.ResultAuthority"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 24,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 25,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 26,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 27,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    }
+  ],
+  "defers": null
+}

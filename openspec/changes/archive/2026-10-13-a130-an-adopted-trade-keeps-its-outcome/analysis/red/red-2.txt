@@ -1,0 +1,21 @@
+# a130 RED 2판 — base 233d5d9c 격리 worktree, production 무편집, 2026-10-13T00:42:36Z
+# 시험 = 2판 시험의 base-API 판(싱크 · 사유 단언을 뺀 「행 없음」 단언만). 사건 재현은 base 에서도 행 없음(PASS) — 그 RED 는 사유 기록 부재(컴파일 RED, red-1.txt).
+$ go test -count=1 -run TestA130 -v ./internal/journal/
+=== RUN   TestA130AQuantityRaisedAfterAdoptionIsRefusedWithItsReason
+--- PASS: TestA130AQuantityRaisedAfterAdoptionIsRefusedWithItsReason (0.24s)
+=== RUN   TestA130TheGrowThenShrinkRoundTripIsNowRefused
+    a130_red2_base_test.go:166: TradeOutcomeOf: <nil>, want no row
+--- FAIL: TestA130TheGrowThenShrinkRoundTripIsNowRefused (0.24s)
+=== RUN   TestA130APostAdoptionDisposalBlocksASweptFlatten
+    a130_red2_base_test.go:196: TradeOutcomeOf: <nil>, want no row
+--- FAIL: TestA130APostAdoptionDisposalBlocksASweptFlatten (0.26s)
+=== RUN   TestA130AReadoptedPositionIsRefused
+    a130_red2_base_test.go:232: TradeOutcomeOf: <nil>, want no row
+--- FAIL: TestA130AReadoptedPositionIsRefused (0.23s)
+=== RUN   TestA130APreAdoptionAdjustmentStillFreezes
+--- PASS: TestA130APreAdoptionAdjustmentStillFreezes (0.23s)
+=== RUN   TestA130AnEngineEnteredRoundTripIsUnchanged
+--- PASS: TestA130AnEngineEnteredRoundTripIsUnchanged (0.24s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	1.445s
+FAIL

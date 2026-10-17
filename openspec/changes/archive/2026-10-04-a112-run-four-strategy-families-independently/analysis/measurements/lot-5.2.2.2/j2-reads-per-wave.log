@@ -1,0 +1,5 @@
+=== RUN   TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope
+    a112_owner_scope_trading_test.go:304: J2 measured: one activated two-scope KR wave reads risk=2 + account=2 owner-scope authorities
+--- PASS: TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope (2.12s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	2.126s

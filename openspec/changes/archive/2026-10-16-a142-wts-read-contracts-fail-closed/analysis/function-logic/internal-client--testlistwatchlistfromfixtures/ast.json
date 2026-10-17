@@ -1,0 +1,218 @@
+{
+  "file": "internal/client/watchlist_test.go",
+  "source_sha256": "de3ec778a43b365513e8d9ae4070f3bd19a039c6ac5c5bf397d46af9288e7bf7",
+  "package": "client",
+  "function": "TestListWatchlistFromFixtures",
+  "signature": "TestListWatchlistFromFixtures(params=1, results=0)",
+  "start": {
+    "line": 16,
+    "column": 1
+  },
+  "end": {
+    "line": 46,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 30,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 43,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 17,
+        "column": 2
+      },
+      "text": "t.Parallel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 9
+      },
+      "text": "httptest.NewServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 28
+      },
+      "text": "http.HandlerFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 20,
+        "column": 28
+      },
+      "text": "r.URL.RequestURI"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 10
+      },
+      "text": "w.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 18
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 8
+      },
+      "text": "srv.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 7
+      },
+      "text": "New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 30
+      },
+      "text": "srv.Client"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 16
+      },
+      "text": "c.ListWatchlist"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 32
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 6
+      },
+      "text": "reflect.DeepEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 19,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 20,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 21,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 29,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 27,
+        "column": 2
+      },
+      "text": "srv.Close"
+    }
+  ]
+}

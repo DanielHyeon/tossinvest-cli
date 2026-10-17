@@ -512,6 +512,28 @@ const alertSelect = `SELECT id, event_key, event_type, severity, title, body, pa
        claimed_by, claimed_at, claim_expires_at
   FROM alert_outbox`
 
+// PendingAlertsForDelivery 는 배달 실행자의 선택임 — 재시도 한도 아래 행을 **먼저**, 그 안에서 오래된 것
+// 먼저 고름(a124 design D4, R2). 한도에 이른 행은 잔여 자리에만 들어가고 버려지지 않음(미전달로 남아 계속 셈).
+//
+// PendingAlerts 의 정렬을 바꾸지 않고 따로 둔 것은 그 호출자(Flush · Acknowledge · 운영자 목록)를 건드리지
+// 않기 위함(AA4). 식 정렬 `(attempts >= ?)` 는 idx_outbox_state(state, id) 로 풀리지 않아 PENDING 전부를
+// 정렬함 — 연결 점유가 backlog 크기에 비례(AB1). 그 비용은 tasks 2.6 (c) 가 잼.
+// limit 0 은 전부. attemptLimit 은 호출자가 가진 한도 상수를 그대로 받음 — SQL 에 값을 박지 않음.
+func (j *Journal) PendingAlertsForDelivery(ctx context.Context, limit, attemptLimit int) ([]Alert, error) {
+	query := alertSelect + ` WHERE state = ? ORDER BY (attempts >= ?), id`
+	args := []any{AlertPending, attemptLimit}
+	if limit > 0 {
+		query += ` LIMIT ?`
+		args = append(args, limit)
+	}
+	rows, err := j.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("journal: selecting pending alerts for delivery: %w", err)
+	}
+	defer rows.Close()
+	return scanAlerts(rows)
+}
+
 // PendingAlerts lists undelivered alerts, oldest first. A limit of zero means all
 // of them.
 func (j *Journal) PendingAlerts(ctx context.Context, limit int) ([]Alert, error) {

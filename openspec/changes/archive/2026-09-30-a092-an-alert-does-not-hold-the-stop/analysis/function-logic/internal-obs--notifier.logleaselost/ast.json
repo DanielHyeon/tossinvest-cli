@@ -1,0 +1,200 @@
+{
+  "file": "internal/obs/notifier.go",
+  "source_sha256": "d705f78d68c1eff38216e9dc9791cf737dc9d505bca77b8543aa7b7bc236bd83",
+  "package": "obs",
+  "function": "logLeaseLost",
+  "receiver": "Notifier",
+  "signature": "Notifier.logLeaseLost(params=3, results=0)",
+  "start": {
+    "line": 679,
+    "column": 1
+  },
+  "end": {
+    "line": 720,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 680,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 683,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 684,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 693,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 698,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 705,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "case",
+      "at": {
+        "line": 713,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 681,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 689,
+        "column": 3
+      },
+      "text": "n.Log.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 690,
+        "column": 4
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 691,
+        "column": 23
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 694,
+        "column": 3
+      },
+      "text": "n.Log.Event"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 695,
+        "column": 23
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 701,
+        "column": 3
+      },
+      "text": "n.Log.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 702,
+        "column": 4
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 703,
+        "column": 23
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 709,
+        "column": 3
+      },
+      "text": "n.Log.Event"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 710,
+        "column": 23
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 714,
+        "column": 3
+      },
+      "text": "n.Log.Warn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 715,
+        "column": 23
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 718,
+        "column": 20
+      },
+      "text": "claimAgeMS"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 718,
+        "column": 46
+      },
+      "text": "n.now"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

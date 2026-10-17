@@ -1,0 +1,20 @@
+== RED at HEAD d54f4dca, machine.go unedited (sha 3f2e013019481047)
+=== RUN   TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit
+=== RUN   TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/RVOL_exactly_1.2,_close_and_wick_qualify
+    a112_rvol_counterfactual_test.go:38: provenance={RVOLAdmission:false RVOLAt1200000:false RVOLAt2000000:false RVOLAt2500000:false ResistanceMinor:100 RangeLowMinor:90 Transitions:[DISCOVERED RANGE_LOCKED]}, want at1.2=true and no admission or higher counterfactual
+=== RUN   TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/RVOL_one_ppm_under_admission
+    a112_rvol_counterfactual_test.go:38: provenance={RVOLAdmission:false RVOLAt1200000:false RVOLAt2000000:false RVOLAt2500000:false ResistanceMinor:100 RangeLowMinor:90 Transitions:[DISCOVERED RANGE_LOCKED]}, want at1.2=true and no admission or higher counterfactual
+=== RUN   TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/RVOL_one_ppm_under_1.2
+=== RUN   TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/wick_one_ppm_over_the_veto
+=== RUN   TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/close_inside_the_buffer_(no_breakout_close)
+--- FAIL: TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit (0.00s)
+    --- FAIL: TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/RVOL_exactly_1.2,_close_and_wick_qualify (0.00s)
+    --- FAIL: TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/RVOL_one_ppm_under_admission (0.00s)
+    --- PASS: TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/RVOL_one_ppm_under_1.2 (0.00s)
+    --- PASS: TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/wick_one_ppm_over_the_veto (0.00s)
+    --- PASS: TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/close_inside_the_buffer_(no_breakout_close) (0.00s)
+=== RUN   TestTheAdmittedBreakoutPathIsUnchangedByTheCounterfactual
+--- PASS: TestTheAdmittedBreakoutPathIsUnchangedByTheCounterfactual (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.003s
+FAIL

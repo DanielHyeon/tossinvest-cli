@@ -1,0 +1,1 @@
+base journal: go test -count=1 -coverprofile ./internal/journal/ rc=0 (7m56s), 2026-10-13, base 233d5d9c

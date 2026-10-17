@@ -1,0 +1,273 @@
+{
+  "file": "internal/execgw/gateway.go",
+  "source_sha256": "6e587b7df573272dc3e54c8c17b29aa9b8b15613635f007a811ea0a8d06a5c38",
+  "package": "execgw",
+  "function": "checkReservation",
+  "receiver": "Gateway",
+  "signature": "Gateway.checkReservation(params=2, results=1)",
+  "start": {
+    "line": 889,
+    "column": 1
+  },
+  "end": {
+    "line": 923,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 890,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 894,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 899,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 900,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 902,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 903,
+        "column": 5
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 908,
+        "column": 5
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 891,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 895,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 904,
+        "column": 6
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 909,
+        "column": 6
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 912,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 916,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 919,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 893,
+        "column": 23
+      },
+      "text": "g.journal.ReservationsForDecision"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 895,
+        "column": 10
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 897,
+        "column": 47
+      },
+      "text": "short"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 900,
+        "column": 6
+      },
+      "text": "reservation.Held"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 901,
+        "column": 14
+      },
+      "text": "g.journal.RevalidateQFinalAdmission"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 903,
+        "column": 8
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 904,
+        "column": 13
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 905,
+        "column": 88
+      },
+      "text": "short"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 908,
+        "column": 8
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 909,
+        "column": 13
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 910,
+        "column": 73
+      },
+      "text": "short"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 912,
+        "column": 12
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 914,
+        "column": 6
+      },
+      "text": "short"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 919,
+        "column": 9
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 922,
+        "column": 32
+      },
+      "text": "short"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 922,
+        "column": 47
+      },
+      "text": "len"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 893,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 901,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

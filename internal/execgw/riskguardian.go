@@ -225,6 +225,9 @@ type RiskGuardianOptions struct {
 	// It is called after the ledger has answered and it must not block — see
 	// observation.go.
 	Observer EntryObserver
+	// ManualBuys 는 엔진 밖 수동 매수 스냅숏 보드(a136 D9=b). nil 이면 모든 진입이 거부됨 — 수동 매수를 셀 수 없는 하루
+	// 매수 총액은 모르는 값이므로(fail-closed). 생산 Guardian 은 newProductionRiskGuardian 이 보드를 만들어 넣음.
+	ManualBuys *ManualBuyBoard
 }
 
 // RiskGuardian is the risk authority. Its fields are unexported because two of
@@ -245,6 +248,9 @@ type RiskGuardian struct {
 	announcer     journal.ModeAnnouncer
 	newID         func() string
 	observer      EntryObserver
+	manualBuys    *ManualBuyBoard
+	// dailyLossRows 는 일일 손실 측정의 원장 읽기 자리(a137). nil 이면 journal.DailyLossRows — 시험만 바꿈.
+	dailyLossRows func(context.Context, string, time.Time, time.Time) ([]journal.DailyLossRow, error)
 }
 
 // NewRiskGuardian validates the configuration and derives the limit snapshot.
@@ -305,6 +311,7 @@ func NewRiskGuardian(opts RiskGuardianOptions) (*RiskGuardian, error) {
 		announcer:     opts.Announcer,
 		newID:         newID,
 		observer:      opts.Observer,
+		manualBuys:    opts.ManualBuys,
 	}, nil
 }
 
@@ -319,7 +326,12 @@ func (g *RiskGuardian) AccountRef() string { return g.accountRef }
 func (g *RiskGuardian) PolicyVersion() string { return g.policyVersion }
 
 func (g *RiskGuardian) LimitsDigest() string {
-	sum := sha256.Sum256([]byte(g.limitsJSON))
+	// 하루 매수 상한은 5필드 스냅샷(limitsJSON) 밖에 있으므로 digest 입력에 따로 더함 — 이 한도만 바꿔도 다른 한도처럼
+	// 전략 바인딩이 무효화됨(a136 freeze 리뷰 P2-4).
+	// 최대 보유 포지션 수(a138)도 같은 이유로 더함 — 개수 상한만 바꿔도 바인딩이 무효화됨.
+	sum := sha256.Sum256([]byte(g.limitsJSON + "\ndaily_buy_notional=" +
+		g.policy.MaxDailyBuyNotional.Amount + " " + g.policy.MaxDailyBuyNotional.Currency +
+		"\nmax_open_positions=" + strconv.Itoa(g.policy.MaxOpenPositions)))
 	return "sha256:" + hex.EncodeToString(sum[:])
 }
 
@@ -418,22 +430,26 @@ func (g *RiskGuardian) IssueEntry(ctx context.Context, req EntryIssuance) (Issue
 			string(intent.Side))
 	}
 
+	// a137: 원장에서 잰 그날의 손실을 바닥으로 씀 — 이 문은 FX 권한이 없어 다른 통화 손실이 있으면 측정 불가(진입 거절).
+	measurement := g.MeasureDailyLoss(ctx)
+	now := g.clk.Now().UTC()
+	account, measureErr := g.dailyLossFloor(req.Account, measurement, now, nil)
 	in := risk.Input{
-		Now:     g.clk.Now().UTC(),
+		Now:     now,
 		Intent:  intent,
-		Account: req.Account,
+		Account: account,
 		Policy:  g.policy,
 		Costs:   g.costs,
 	}
 	// The chain, once. Everything after this point is the ledger's answer, not a
 	// second judgement of the intent.
-	if verdict := evaluateChain(in); !verdict.Allowed {
+	if verdict, unmeasured := evaluateChainWithDailyLoss(in, measureErr); !verdict.Allowed {
 		// The refusal population's first persistence. It has no decision and no
 		// preimage, so this is the only record that will ever exist of it —
 		// design D6's asymmetry, and why a lost refusal is counted under its own
 		// kind.
 		g.observeEntry(g.entryObservation(in, journal.OutcomeRefusedChain, verdict))
-		return Issued{}, errors.Join(chainRefusal(verdict), g.escalateFor(ctx, verdict))
+		return Issued{}, errors.Join(dailyLossChainRefusal(verdict, unmeasured), g.escalateFor(ctx, verdict))
 	}
 	exposure, verdict := risk.EntryExposureValue(in)
 	if !verdict.Allowed {
@@ -478,6 +494,11 @@ func (g *RiskGuardian) IssueEntry(ctx context.Context, req EntryIssuance) (Issue
 		if err != nil {
 			return journal.IssueRequest{}, err
 		}
+		// a136: 이 문은 FX authority 를 갖지 않으므로 수동 매수는 base 통화 금액만 셀 수 있음(다른 통화가 있으면 거부).
+		daily, err := g.dailyBuyLimit(in.Now, nil)
+		if err != nil {
+			return journal.IssueRequest{}, err
+		}
 		return journal.IssueRequest{
 			Decision: decision,
 			Reserve: journal.ReserveRequest{
@@ -501,6 +522,8 @@ func (g *RiskGuardian) IssueEntry(ctx context.Context, req EntryIssuance) (Issue
 						Currency: currency,
 					},
 				},
+				DailyBuyLimit:     daily,
+				OpenPositionLimit: g.openPositionLimit(),
 			},
 		}, nil
 	}
@@ -643,6 +666,12 @@ func (g *RiskGuardian) escalateFor(ctx context.Context, verdict risk.Decision) e
 	}
 	if _, _, err := g.journal.EscalateOperatingMode(ctx, g.accountRef,
 		journal.ModeTriggerDailyLossLimit, g.announcer); err != nil {
+		if errors.Is(err, journal.ErrModeAnnouncementFailed) {
+			// 전이는 커밋됐고 통지 기록만 실패함 — 재시작이 푸는 차단이 아님(a092 26라운드 보이스 B #7 잔재). 진입 거절은
+			// 호출자가 이미 판정했고 이 오류는 그 거절에 덧붙는 기록일 뿐임.
+			return fmt.Errorf("execgw: the daily-loss limit tightened the operating mode, but its notice "+
+				"could not be recorded: %w", err)
+		}
 		return fmt.Errorf("execgw: the daily-loss limit did not reach the operating mode, "+
 			"so a restart would lift the block: %w", err)
 	}

@@ -1,0 +1,5 @@
+package strategyshadow
+import "github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
+func forge() strategyrouter.FamilyActivation {
+ return strategyrouter.FamilyActivation{market: strategyrouter.MarketKR, generation: 1}
+}

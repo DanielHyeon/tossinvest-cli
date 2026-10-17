@@ -1,0 +1,9 @@
+{"same": {"base": true, "base_context": true, "verdict": true, "facts": true, "rc": true, "output": true}, "stub_calls": 4, "adoption_key": false}
+{"reads": [[3273, "facts.get('execution_baseline_adoption')"], [3513, "context.get('execution_baseline_adoption')"], [2867, "facts.get('execution_baseline_adoption')"], [3443, "context.get('execution_baseline_adoption')"]]}
+resolve_base: guards=['adoption', 'adoption']
+_target_text: guards=['audited']
+_judged: guards=['adopted and _landing_record(change_dir, root, head) is not None', 'adopted']
+_verdict: guards=[]
+_recording_refusal: guards=["facts.get('execution_baseline_adoption')"]
+main: guards=["context.get('execution_baseline_adoption')"]
+OK

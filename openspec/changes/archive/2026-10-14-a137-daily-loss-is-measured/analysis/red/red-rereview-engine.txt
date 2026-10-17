@@ -1,0 +1,5 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a137_unmeasurable_notice_test.go:59:4: unknown field DailyLossNotice in struct literal of type StrategyEntrySupervisorOptions
+internal/app/engine/a137_unmeasurable_notice_test.go:86:73: snapshot.DailyLossUnmeasurableCycles undefined (type StrategyWorkerSnapshot has no field or method DailyLossUnmeasurableCycles)
+internal/app/engine/a137_unmeasurable_notice_test.go:87:31: snapshot.FirstDailyLossUnmeasurable undefined (type StrategyWorkerSnapshot has no field or method FirstDailyLossUnmeasurable)
+internal/app/engine/a137_unmeasurable_notice_test.go:88:30: snapshot.FirstDailyLossUnmeasurable undefined (type StrategyWorkerSnapshot has no field or method FirstDailyLossUnmeasurable)

@@ -44,7 +44,7 @@ func TestStrategyFirstLegAdmissionUsesGuardianOnlyAllEightLanes(t *testing.T) {
 			if outcome.Code != StrategyFirstLegAdmitted || loader.calls != 1 || issuer.precheckCalls != 1 || issuer.issueCalls != 1 {
 				t.Fatalf("outcome=%+v loader=%d precheck=%d issue=%d", outcome, loader.calls, issuer.precheckCalls, issuer.issueCalls)
 			}
-			if issuer.events != "precheck,issue" || issuer.requests[0].Result.Lineage.Identity != lane.result.Lineage.Identity ||
+			if issuer.events != "measure,precheck,issue" || issuer.requests[0].Result.Lineage.Identity != lane.result.Lineage.Identity ||
 				outcome.Receipt.QFinal != 10 || outcome.Receipt.CampaignID != lane.result.Lineage.CampaignID {
 				t.Fatalf("events=%q request=%+v receipt=%+v", issuer.events, issuer.requests, outcome.Receipt)
 			}
@@ -168,6 +168,23 @@ type firstLegGuardianSpy struct {
 	precheckErr   error
 	issueErr      error
 	receipt       journal.QFinalCampaignFirstLegReceipt
+	// a137: 측정 · 강화 호출 기록.
+	escalations int
+	escalateErr error
+	token       execgw.DailyLossMeasurement
+}
+
+func (s *firstLegGuardianSpy) MeasureDailyLoss(context.Context) execgw.DailyLossMeasurement {
+	s.events = strings.TrimPrefix(s.events+",measure", ",")
+	return s.token
+}
+
+func (s *firstLegGuardianSpy) EscalateDailyLossLimit(_ context.Context, refusal error) error {
+	s.escalations++
+	if s.escalateErr != nil {
+		return errors.Join(refusal, s.escalateErr)
+	}
+	return &execgw.DailyLossEntryBlock{Cause: refusal}
 }
 
 func (s *firstLegGuardianSpy) PrecheckQFinalCampaignFirstLeg(request execgw.QFinalCampaignFirstLegIssuance) (execgw.QFinalCampaignFirstLegPrecheck, error) {

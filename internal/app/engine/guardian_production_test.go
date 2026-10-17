@@ -66,6 +66,7 @@ func TestProductionGuardianUsesConfiguredUSDLimitsAndReachesExitObserver(t *test
 	gate.MaxTotalExposure = 1000
 	gate.MaxDailyLossAmount = 50
 	gate.LimitCurrency = "usd"
+	gate.MaxDailyBuyNotional = 2000 // a136 D5: USD 게이트는 명시 필수
 	writeGateConfig(t, dir, gate)
 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
 	writeAttestation(t, dir, nil)

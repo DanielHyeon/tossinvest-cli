@@ -79,6 +79,10 @@ const (
 	// lapse. CRITICAL, because the alternative is finding out at the next
 	// restart, which is too late.
 	EventCredentialExpiring EventType = "broker.credential_expiring"
+	// EventCredentialExpiryNotice 는 capability attestation 만료가 다가온다는 사전 통지임(a135, D-7~D-3). Normal —
+	// 등급표(criticalEvents)에 넣지 않음: 며칠 남은 만료는 아직 경보가 아니고, D-2 부터는 EventCredentialExpiring 이 알림.
+	// 알림이 꺼진 엔진은 critical 단계도 이 타입으로 기록만 함 — 보낼 수 없는 critical 행이 진입을 멈추지 않게(a091 · a095 규칙).
+	EventCredentialExpiryNotice EventType = "broker.credential_expiry_notice"
 
 	// --- reconciliation -----------------------------------------------------
 
@@ -153,6 +157,29 @@ const (
 	// independently settable knobs in two packages, so the invariant needs a voice
 	// at runtime as well as a pin at build time.
 	EventAlertLeaseTooShort EventType = "engine.alert_lease_too_short"
+	// EventNormalAlertDropped is a normal-grade alert the exit goroutine handed off
+	// and nobody sent: the relay buffer was full, the relay was not wired, or the
+	// engine stopped with it still queued (a092 C8 · K13). Normal-grade by
+	// definition — best effort — but a drop nobody records is indistinguishable
+	// from a send, so every drop is a line naming the alert's type and key.
+	EventNormalAlertDropped EventType = "engine.normal_alert_dropped"
+	// EventNormalAlertRelayStopped is the normal-grade relay executor stopping for
+	// a reason other than shutdown. Its own type, not EventAlertUndelivered: that
+	// one is the critical delivery executor's, and a filter on it must not pick up
+	// a best-effort relay (a092 K13). Log only — no latch.
+	EventNormalAlertRelayStopped EventType = "engine.normal_alert_relay_stopped"
+	// EventAttestationWatchFailed 는 a135 attestation 감시의 판정 한 번이 실패했거나(패닉 · 알림 기록 실패) 그 보조 실행자가
+	// 멈춘 줄임. Normal · 로그만 — 래치 없음. 감시의 결함이 진입 · 청산에 닿으면 안 됨(EventNormalAlertRelayStopped 와 같은 규칙).
+	EventAttestationWatchFailed EventType = "engine.attestation_watch_failed"
+	// EventManualBuyRefreshFailed 는 a136 수동 매수 refresher 의 읽기 한 번이 실패했거나(조회 실패 · 산정 불가) 그 보조 실행자가
+	// 멈춘 줄임. 로그만 — 래치 없음. 실패한 읽기는 보드에 산정 불가로 게시되어 **매수만** 거부되고 매도 · 청산에는 닿지 않음.
+	EventManualBuyRefreshFailed EventType = "engine.manual_buy_refresh_failed"
+	// EventDailyLossUnmeasurable 은 그날의 실현 손실을 잴 수 없어 전략 신규 진입이 매 주기 거절되는 중이라는 줄(a137). 로그만 —
+	// 래치 · 운영 모드 변화 없음, 계좌 일 키마다 한 번. 매도 · 손절 · 청산에는 닿지 않음.
+	EventDailyLossUnmeasurable EventType = "engine.daily_loss_unmeasurable"
+	// EventStrategyEntrySkipped 은 Guardian 상한이 한 단위도 허용하지 않아 전략 진입 하나를 건너뛰었다는 줄(a146). 로그만 — 래치 · 운영 모드
+	// 변화 없음, (계좌 일 키, 시장, 종목)마다 한 번. 매도 · 손절 · 청산에는 닿지 않음.
+	EventStrategyEntrySkipped EventType = "engine.strategy_entry_skipped"
 	// EventEngineLoopFailed is a supervised loop that returned for a reason other
 	// than the runtime being cancelled (add-engine-runtime: 방어적 종료 계약).
 	// CRITICAL: the landed loops do not return, so one that did has hit a state
@@ -177,6 +204,11 @@ const (
 	// CRITICAL: with no broker-resident stop, an unobserved position is an
 	// unprotected one.
 	EventExitObservationOutage EventType = "exit.observation_outage"
+	// EventExitPositionUnobserved 는 보유 포지션 하나가 판정에 닿지 못한 연속의 시작 · 해제 · 기록 실패 줄임(a090).
+	// Normal — 등급표(criticalEvents)에 넣지 않음: 임계 아래의 미관측은 경보가 아니고, 임계를 넘은 것은
+	// EventExitObservationOutage 가 critical 로 알림. 로그 줄은 SeverityOf 를 싣으므로 여기서 critical 타입을 쓰면
+	// 연속 시작 한 줄이 critical 표지를 닮.
+	EventExitPositionUnobserved EventType = "exit.position_unobserved"
 	// EventExitJudgementRefused is an evaluation that could not run at all — an
 	// invariant violation in the stored state, or a price the policy cannot use
 	// (exitpolicy.ErrRefused). CRITICAL, and distinct from "nothing to do": the
@@ -221,6 +253,10 @@ const (
 	// floor, with the remainder left pending (exit-policy: 캡 발생은 알림된다).
 	// Normal: part of the exit did go, and the remainder re-proposes itself.
 	EventExitProposalCapped EventType = "exit.proposal_capped"
+	// EventExitStopSoldNothing 는 엔진이 보호하기로 한 포지션의 보호 청산(손절)이 RECONCILE 확정 하한 때문에 한 주도 나가지 않은
+	// 사실임(a091 — engine-safety 「등급화된 알림」). 알림이 켜진 엔진의 exit 관측만 이 종류를 냄 — 알림 꺼짐 · 계좌 보유 0 ·
+	// 종료 취소 · 익절 · 부분 캡은 EventExitProposalCapped(normal)로 남음. CRITICAL.
+	EventExitStopSoldNothing EventType = "exit.stop_sold_nothing"
 	// EventExitLiquidationDelayed is a breach liquidation held back past the
 	// resolution bound by an unsettled attempt on the same symbol (exit-policy:
 	// 지연이 유계를 넘으면 critical 알림). CRITICAL.
@@ -236,6 +272,10 @@ const (
 	// position it will not protect, and a feature toggle must not silence it.
 	// What the toggle changes is how often it has anything to say.
 	EventExitPositionUnmanaged EventType = "exit.position_unmanaged"
+	// EventExitPositionAdoptionFailed 는 엔진이 보호하기로 한 보유(adoption.enabled 참)의 편입 시도가 실패한 사실임
+	// (a095 — engine-safety 「무관리 보유 보고의 등급은 사실이 정한다」). 알림이 켜진 엔진의 대사 루프만 이 종류를 냄 —
+	// 알림 꺼짐 · 운영자가 고른 상태 · 연기 · exit 관측 자리는 EventExitPositionUnmanaged(normal)로 남음. CRITICAL.
+	EventExitPositionAdoptionFailed EventType = "exit.position_adoption_failed"
 	// EventExitPositionAdopted is an externally acquired holding taken into exit
 	// management (change adopt-external-positions). It carries the observation the
 	// synthetic t0 was built from and the stop derived from it, because those two
@@ -334,6 +374,14 @@ var criticalEvents = map[EventType]bool{
 	EventExitSnapshotQuarantined: true,
 	EventExitProposalRefused:     true,
 	EventExitLiquidationDelayed:  true,
+
+	// a095 — 편입 시도 실패만. 같은 무관리 보고라도 exit 관측 자리 · 운영자가 고른 상태 · 연기는 EventExitPositionUnmanaged
+	// (normal)로 남음. 종류째 올리면 알림을 끈 기본 엔진이 손으로 산 보유 하나로 진입을 멈춤(결정 (1) · (2)).
+	EventExitPositionAdoptionFailed: true,
+
+	// a091 — 보호 청산 0주만. 부분 캡 · 익절 0주 · 알림 꺼짐 · 보유 0 · 종료 취소는 EventExitProposalCapped(normal)로 남음 — 종류째
+	// 올리면 알림을 끈 기본 엔진이 보낼 수 없는 행 때문에 진입을 멈춤(a095 와 같은 규칙).
+	EventExitStopSoldNothing: true,
 }
 
 // SeverityOf grades an event.

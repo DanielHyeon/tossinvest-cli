@@ -1,0 +1,10 @@
+$ go test -json -count=1 -tags tossos_testseams -run ^(TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten|TestTheRuntimeVocabularyIsExactlyUnobservedUntilAShadowLotExtendsIt)$ ./internal/app/engine
+exit=0 passed=2/2
+  PASS	TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten
+  PASS	TestTheRuntimeVocabularyIsExactlyUnobservedUntilAShadowLotExtendsIt
+$ go test -json -count=1 -run ^(TestDormantAndUnavailableSnapshotsCarryEightUnobservedLanesAndTwoCoordinators)$ ./internal/strategyprojection
+exit=0 passed=1/1
+  PASS	TestDormantAndUnavailableSnapshotsCarryEightUnobservedLanesAndTwoCoordinators
+$ go test -json -count=1 -run ^(TestOnlyTheAuthoringToolCanBuildActivationBytes)$ ./internal/strategyrouter
+exit=0 passed=1/1
+  PASS	TestOnlyTheAuthoringToolCanBuildActivationBytes

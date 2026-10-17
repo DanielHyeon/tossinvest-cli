@@ -1,0 +1,342 @@
+{
+  "file": "internal/riskbucket/production_snapshot_authority.go",
+  "source_sha256": "087f632570367fd5ba530aa6f83993dbf2cb8e522178421c38b82570b6e84677",
+  "package": "riskbucket",
+  "function": "aggregateProductionRiskUsage",
+  "signature": "aggregateProductionRiskUsage(params=1, results=2)",
+  "start": {
+    "line": 473,
+    "column": 1
+  },
+  "end": {
+    "line": 498,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 477,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 480,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 490,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 484,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 491,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 496,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 474,
+        "column": 18
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 474,
+        "column": 32
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 476,
+        "column": 11
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 476,
+        "column": 29
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 478,
+        "column": 26
+      },
+      "text": "SetString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 478,
+        "column": 26
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 479,
+        "column": 22
+      },
+      "text": "SetString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 479,
+        "column": 22
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 480,
+        "column": 30
+      },
+      "text": "rowFilled.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 480,
+        "column": 54
+      },
+      "text": "rowHeld.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 480,
+        "column": 76
+      },
+      "text": "rowFilled.BitLen"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 480,
+        "column": 104
+      },
+      "text": "rowHeld.BitLen"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 481,
+        "column": 109
+      },
+      "text": "rowHeld.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 483,
+        "column": 5
+      },
+      "text": "canonicalIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 483,
+        "column": 46
+      },
+      "text": "canonicalIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 488,
+        "column": 3
+      },
+      "text": "filled.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 489,
+        "column": 3
+      },
+      "text": "held.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 6
+      },
+      "text": "filled.BitLen"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 31
+      },
+      "text": "held.BitLen"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 491,
+        "column": 33
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 493,
+        "column": 11
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 4
+      },
+      "text": "fmt.Sprint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 36
+      },
+      "text": "fmt.Sprint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 496,
+        "column": 41
+      },
+      "text": "filled.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 496,
+        "column": 69
+      },
+      "text": "held.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 497,
+        "column": 14
+      },
+      "text": "productionRiskDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 497,
+        "column": 35
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 497,
+        "column": 42
+      },
+      "text": "strings.Join"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 474,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 475,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 476,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 478,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 479,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 487,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 493,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

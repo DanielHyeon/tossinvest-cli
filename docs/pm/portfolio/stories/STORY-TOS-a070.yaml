@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a070-add-multi-market-horizon-router",
-    "path": "openspec/changes/a070-add-multi-market-horizon-router"
+    "path": "openspec/changes/archive/2026-10-01-a070-add-multi-market-horizon-router"
   },
   "acceptance": [
     "KR and US calendars, IANA time zones, DST and regular-session scopes are evaluated independently without a combined activation manifest",

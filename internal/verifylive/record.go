@@ -22,6 +22,7 @@ package verifylive
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base32"
@@ -29,6 +30,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/redact"
+	"io"
 	"os"
 	"path/filepath"
 	"sync"
@@ -60,7 +63,9 @@ func RecordFileName(market string) string {
 }
 
 // RecordFormatVersion is the format this build writes and understands.
-const RecordFormatVersion = 1
+// a131: 2 = 계좌를 봉인해 쓰는 형식(redact.SealedFormatVersion 과 같아야 함 — 시험이 고정). 형식 1 까지만 아는 옛 읽기는
+// 새 줄을 「newer format」으로 거절함(평문 옛 줄 + 봉인 새 줄 기록으로 옛 판본이 판정하는 길을 닫음).
+const RecordFormatVersion = 2
 
 // KindStep marks a step record. The field exists so a later change can append a
 // different kind of line without every old reader mistaking it for a step.
@@ -241,6 +246,12 @@ type Artifact struct {
 	ChainID string `json:"chain_id,omitempty"`
 	// Note explains an artifact whose state needs one.
 	Note string `json:"note,omitempty"`
+	// ReconciledAbsent 는 셋째 종결이다(a121) — 공식 목록 두 번 읽기가 이 객체의 부재를 좁혀 확인했다는 대사 사건.
+	// 취소도 체결도 아니며 `tossctl verify reconcile` 만 쓴다. 이 필드를 모르는 구 바이너리는 그 줄을 비-종결로 읽어
+	// 객체를 다시 보유 상태로 보인다(안전 방향 — design G2 「구 바이너리」).
+	ReconciledAbsent bool `json:"reconciled_absent,omitempty"`
+	// ReconciledAt 은 대사 줄을 추가한 시각이다. 영이면 생략(omitzero)해 다른 줄의 바이트를 바꾸지 않는다.
+	ReconciledAt time.Time `json:"reconciled_at,omitzero"`
 }
 
 // Entry is one line of the record: one step, one verdict.
@@ -264,6 +275,9 @@ type Entry struct {
 
 	// AccountRef is masked. The unmasked number never enters this file.
 	AccountRef string `json:"account_ref"`
+	// AccountRefSealed 는 a131 부터 기록 줄에 실리는 봉인된 계좌(마스크)임(redact.SealRecordLine). 읽을 때 LoadEntries ·
+	// 대사 엄격 해독이 열어 AccountRef 를 채움.
+	AccountRefSealed string `json:"account_ref_sealed,omitempty"`
 
 	// Mutating repeats the catalogue's flag on the line itself, so a reader
 	// grepping the record for "what did this touch" does not need the catalogue.
@@ -305,6 +319,8 @@ type Recorder struct {
 	mu   sync.Mutex
 	path string
 	f    *os.File
+	// key 는 OpenRecorder 가 브로커 호출 전에 준비한 봉인 키임(a131) — Append 는 이 메모리 키만 씀.
+	key *redact.SealKey
 }
 
 // OpenRecorder opens (or creates) the record for appending, owner-only.
@@ -317,7 +333,13 @@ func OpenRecorder(path string) (*Recorder, error) {
 	if err != nil {
 		return nil, fmt.Errorf("verifylive: opening the record %s: %w", path, err)
 	}
-	return &Recorder{path: path, f: f}, nil
+	// a131: 봉인 키 준비는 여기서 — 측정·실주문보다 먼저 실패해야 함(Append 에서 나면 실주문 뒤의 기록 실패가 됨).
+	key, err := redact.PrepareSealKey(path)
+	if err != nil {
+		_ = f.Close()
+		return nil, fmt.Errorf("verifylive: preparing the record's seal key: %w", err)
+	}
+	return &Recorder{path: path, f: f, key: key}, nil
 }
 
 // Path returns the record's location.
@@ -335,6 +357,11 @@ func (r *Recorder) Append(e Entry) error {
 	if err != nil {
 		return fmt.Errorf("verifylive: encoding a step entry: %w", err)
 	}
+	// a131: 계좌는 봉인해 씀(같은 규칙 — redact.SealRecordLine, 키는 OpenRecorder 가 준비).
+	line, err = redact.SealRecordLine(line, r.key)
+	if err != nil {
+		return fmt.Errorf("verifylive: sealing the record line: %w", err)
+	}
 	line = append(line, '\n')
 
 	r.mu.Lock()
@@ -342,12 +369,35 @@ func (r *Recorder) Append(e Entry) error {
 	if r.f == nil {
 		return errors.New("verifylive: the record is closed")
 	}
+	// a131: 정리 명령이 경로를 원자 교체했으면 다시 엶 — 열린 fd 는 사라진 inode 를 가리켜 그 뒤 줄이 소리 없이 사라짐.
+	if err := reopenIfReplaced(r); err != nil {
+		return err
+	}
 	if _, err := r.f.Write(line); err != nil {
 		return fmt.Errorf("verifylive: appending to %s: %w", r.path, err)
 	}
 	if err := r.f.Sync(); err != nil {
 		return fmt.Errorf("verifylive: syncing %s: %w", r.path, err)
 	}
+	return nil
+}
+
+// reopenIfReplaced 는 기록 경로의 파일이 열린 fd 와 다른 inode 면(정리 명령의 원자 교체) 경로를 다시 엶. 호출자가 r.mu 를 쥠.
+func reopenIfReplaced(r *Recorder) error {
+	open, err := r.f.Stat()
+	if err != nil {
+		return fmt.Errorf("verifylive: stat the open record %s: %w", r.path, err)
+	}
+	now, err := os.Stat(r.path)
+	if err == nil && os.SameFile(open, now) {
+		return nil
+	}
+	f, oerr := os.OpenFile(r.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+	if oerr != nil {
+		return fmt.Errorf("verifylive: reopening the replaced record %s: %w", r.path, oerr)
+	}
+	_ = r.f.Close()
+	r.f = f
 	return nil
 }
 
@@ -364,6 +414,94 @@ func (r *Recorder) Close() error {
 }
 
 var errUnknownFormat = errors.New("the record was written by a newer TossOS")
+
+// readRecordRaw 는 기록 파일의 원문 바이트를 읽음(a121 대사의 엄격 해독·지문 입력). 기록 파일을 여는 일은
+// 이 파일(record.go)이 소유함 — TestNoAutomationBypassExists 의 경계.
+func readRecordRaw(path string) ([]byte, error) {
+	return os.ReadFile(path)
+}
+
+// --- a121 대사 추가의 기록 잠금(codex CG-2·CG-3) -----------------------------------
+
+// recordWrite·recordSync 는 대사 추가의 쓰기·동기화 자리임(시험이 부분 쓰기·교차 쓰기·동기화 실패를 주입).
+var (
+	recordWrite = func(f *os.File, b []byte) (int, error) { return f.Write(b) }
+	recordSync  = func(f *os.File) error { return f.Sync() }
+)
+
+// lockedRecord 는 대사 추가 한 번을 위해 **기록 파일 자체**에 쥔 배타 flock 과 그 fd 임. 판정할 바이트를 이 fd 로
+// 읽고 같은 fd 로 쓰므로, 판정한 바이트와 쓰는 파일이 같다(지문 = 판정한 바이트).
+type lockedRecord struct {
+	path string
+	f    *os.File
+}
+
+// lockRecordForAppend 는 기록 파일을 열고(만들지 않음) 비차단 배타 flock 을 쥠. 이미 잡혀 있으면 errRecordLocked.
+func lockRecordForAppend(path string) (*lockedRecord, error) {
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_APPEND, 0)
+	if err != nil {
+		return nil, fmt.Errorf("verifylive: opening the record %s: %w", path, err)
+	}
+	if err := flockExclusiveNB(f.Fd()); err != nil {
+		_ = f.Close()
+		return nil, err
+	}
+	return &lockedRecord{path: path, f: f}, nil
+}
+
+// contents 는 잠근 fd 로 파일 전체를 처음부터 읽음.
+func (l *lockedRecord) contents() ([]byte, error) {
+	st, err := l.f.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("verifylive: stat %s: %w", l.path, err)
+	}
+	buf := make([]byte, st.Size())
+	if _, err := l.f.ReadAt(buf, 0); err != nil && !errors.Is(err, io.EOF) {
+		return nil, fmt.Errorf("verifylive: reading %s: %w", l.path, err)
+	}
+	return buf, nil
+}
+
+// appendLine 은 개행으로 끝나는 줄을 **한 번의 Write** 로 쓰고 동기화한 뒤 다시 읽어 대조함. 쓰기 직전 파일 크기가
+// 판정한 바이트 길이(judged)와 다르면 쓰지 않음.
+func (l *lockedRecord) appendLine(line []byte, judged int64) error {
+	if len(line) == 0 || line[len(line)-1] != '\n' {
+		return errors.New("verifylive: a record line must end with a newline")
+	}
+	// a131: 대사 줄의 계좌(마스크)도 봉인해 씀 — 쓰기 전, 키 준비 실패면 아무것도 안 씀. 아래 대조는 봉인된 줄과 함.
+	key, err := redact.PrepareSealKey(l.path)
+	if err != nil {
+		return fmt.Errorf("verifylive: preparing the record's seal key: %w", err)
+	}
+	if line, err = redact.SealRecordLine(line, key); err != nil {
+		return fmt.Errorf("verifylive: sealing the reconcile line: %w", err)
+	}
+	st, err := l.f.Stat()
+	if err != nil {
+		return fmt.Errorf("verifylive: stat %s: %w", l.path, err)
+	}
+	if st.Size() != judged {
+		return errRecordSizeMoved
+	}
+	n, err := recordWrite(l.f, line)
+	if err != nil || n != len(line) {
+		return fmt.Errorf("%w (%d of %d bytes, %v)", errRecordAppendIncomplete, n, len(line), err)
+	}
+	if err := recordSync(l.f); err != nil {
+		return fmt.Errorf("%w (sync: %v)", errRecordAppendIncomplete, err)
+	}
+	back := make([]byte, len(line))
+	if _, err := l.f.ReadAt(back, judged); err != nil && !errors.Is(err, io.EOF) {
+		return fmt.Errorf("%w (read-back: %v)", errRecordAppendUnverified, err)
+	}
+	if !bytes.Equal(back, line) {
+		return errRecordAppendUnverified
+	}
+	return nil
+}
+
+// release 는 잠금과 fd 를 놓음.
+func (l *lockedRecord) release() { _ = l.f.Close() }
 
 // LoadEntries reads the record.
 //
@@ -384,6 +522,8 @@ func LoadEntries(path string) ([]Entry, error) {
 		entries []Entry
 		lineNo  int
 	)
+	// a131: 봉인된 계좌(마스크)는 이 기록 옆의 키로 엶(키는 한 번만 읽음, 만들지 않음).
+	opener := redact.NewOpener(filepath.Dir(path))
 	scanner := bufio.NewScanner(f)
 	scanner.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
 
@@ -398,6 +538,9 @@ func LoadEntries(path string) ([]Entry, error) {
 		}
 		e, err := decodeEntry(pending)
 		if err != nil {
+			return fmt.Errorf("verifylive: %s line %d: %w", path, pendingLine, err)
+		}
+		if e, err = openEntryAccount(e, opener); err != nil {
 			return fmt.Errorf("verifylive: %s line %d: %w", path, pendingLine, err)
 		}
 		entries = append(entries, e)
@@ -429,9 +572,26 @@ func LoadEntries(path string) ([]Entry, error) {
 			// A torn final line is what a crash during an append leaves behind.
 			return entries, nil
 		}
+		// a131: 열 수 없는 봉인은 찢긴 줄이 아님 — 관용 없이 오류.
+		if e, err = openEntryAccount(e, opener); err != nil {
+			return nil, fmt.Errorf("verifylive: %s line %d: %w", path, pendingLine, err)
+		}
 		entries = append(entries, e)
 	}
 	return entries, nil
+}
+
+// openRecordEntries 는 대사 엄격 해독이 읽은 항목들의 봉인 계좌를 엶(a131). 기록 파일을 다루는 일은 record.go 가 소유함 —
+// reconcile*.go 는 이 함수 하나로만 봉인 규칙에 닿음(TestReconcileVerifyliveFilesReachOnlyAllowlistedCode).
+func openRecordEntries(entries []Entry, path string) error {
+	opener := redact.NewOpener(filepath.Dir(path))
+	for i := range entries {
+		var err error
+		if entries[i], err = openEntryAccount(entries[i], opener); err != nil {
+			return fmt.Errorf("record entry %d: %w", i+1, err)
+		}
+	}
+	return nil
 }
 
 func decodeEntry(line []byte) (Entry, error) {
@@ -568,11 +728,12 @@ func outstandingLines(entries []Entry) []outstandingLine {
 
 // terminal reports that this line says the object has stopped existing.
 //
-// Two ways, and the difference between them is recorded rather than flattened:
-// this tool cancelled it, or it filled. Every consumer of Outstanding asks the
-// same question through this one predicate, so a third ending added later is
-// honoured by all of them at once.
-func (a Artifact) terminal() bool { return a.Cancelled || a.Filled }
+// Three ways, and the difference between them is recorded rather than flattened:
+// this tool cancelled it, it filled, or a reconciliation read established its
+// absence (a121 — reconciled absent, which is neither of the other two). Every
+// consumer of Outstanding asks the same question through this one predicate, so
+// the third ending is honoured by all of them at once.
+func (a Artifact) terminal() bool { return a.Cancelled || a.Filled || a.ReconciledAbsent }
 
 // --- digests ------------------------------------------------------------------
 

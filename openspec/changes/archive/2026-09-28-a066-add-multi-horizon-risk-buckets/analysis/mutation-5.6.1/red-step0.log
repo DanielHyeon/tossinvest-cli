@@ -1,0 +1,23 @@
+copy HEAD 47a61244 files 1874
+=== RUN   TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided
+=== RUN   TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided/KR
+    a066_integration_5_6_test.go:97: second admission at another price with a ledger-true snapshot: q_final=0 err=journal: risk bucket snapshot mismatch: immutable policy collision, want 5
+=== RUN   TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided/US
+    a066_integration_5_6_test.go:97: second admission at another price with a ledger-true snapshot: q_final=0 err=journal: risk bucket snapshot mismatch: immutable policy collision, want 5
+--- FAIL: TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided (1.19s)
+    --- FAIL: TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided/KR (0.60s)
+    --- FAIL: TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided/US (0.60s)
+=== RUN   TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice
+=== RUN   TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/KR_same_price
+    a066_integration_5_6_test.go:128: stale snapshot admitted: q_final=10, strategy usage 100 against limit 80
+=== RUN   TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/KR_other_price
+    a066_integration_5_6_test.go:131: stale snapshot refused for another reason: journal: risk bucket snapshot mismatch: immutable policy collision
+=== RUN   TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/US_other_price
+    a066_integration_5_6_test.go:131: stale snapshot refused for another reason: journal: risk bucket snapshot mismatch: immutable policy collision
+--- FAIL: TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice (1.85s)
+    --- FAIL: TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/KR_same_price (0.62s)
+    --- FAIL: TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/KR_other_price (0.62s)
+    --- FAIL: TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/US_other_price (0.61s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	3.047s
+FAIL

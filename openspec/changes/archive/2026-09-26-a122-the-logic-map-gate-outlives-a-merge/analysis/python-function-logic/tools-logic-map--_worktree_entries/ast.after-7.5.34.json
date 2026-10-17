@@ -1,0 +1,198 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "ff19be0162521627988dc8e09a06297b57e4d35d",
+  "source_sha256": "613a3174efe33c71a7c1f120fc9102d8cbd00e02756b3d2aa8e0eec80b86c359",
+  "function": "_worktree_entries",
+  "signature": "_worktree_entries(root, algorithm)",
+  "start": {
+    "line": 261,
+    "column": 1
+  },
+  "end": {
+    "line": 310,
+    "column": 25
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 280,
+      "inherited_line": false,
+      "source": "if listed.returncode:"
+    },
+    {
+      "id": "B2",
+      "kind": "For",
+      "line": 284,
+      "inherited_line": false,
+      "source": "for entry in listed.stdout.split(b'\\x00'):"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 285,
+      "inherited_line": false,
+      "source": "if not entry:"
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 289,
+      "inherited_line": false,
+      "source": "len(fields) != 4 or not raw_path"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 289,
+      "inherited_line": false,
+      "source": "if len(fields) != 4 or not raw_path:"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 291,
+      "inherited_line": false,
+      "source": "if not raw_path.endswith(b'.go'):"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 297,
+      "inherited_line": false,
+      "source": "if stage != b'0':"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 299,
+      "inherited_line": false,
+      "source": "if mode not in GO_FILE_MODES:"
+    },
+    {
+      "id": "B9",
+      "kind": "Try",
+      "line": 301,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B10",
+      "kind": "ExceptHandler",
+      "line": 303,
+      "inherited_line": false,
+      "source": "except (FileNotFoundError, NotADirectoryError):"
+    },
+    {
+      "id": "B11",
+      "kind": "If",
+      "line": 305,
+      "inherited_line": false,
+      "source": "if tag.upper() == b'S':"
+    }
+  ],
+  "returns": [
+    {
+      "line": 310,
+      "value": "(entries, disk)"
+    }
+  ],
+  "raises": [
+    {
+      "line": 281,
+      "source": "raise RuntimeError(_first_line(listed.stderr, 'git ls-files failed'))"
+    },
+    {
+      "line": 290,
+      "source": "raise RuntimeError('cannot read git ls-files -s -v record')"
+    },
+    {
+      "line": 298,
+      "source": "raise RuntimeError(f'Go file is unmerged: {path} — resolve the conflict before the gate')"
+    },
+    {
+      "line": 300,
+      "source": "raise RuntimeError(f'tracked Go path is not a regular file in the index (mode {mode.decode()}): {path}')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 276,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 281,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 281,
+      "callee": "_first_line"
+    },
+    {
+      "line": 284,
+      "callee": "listed.stdout.split"
+    },
+    {
+      "line": 287,
+      "callee": "entry.partition"
+    },
+    {
+      "line": 288,
+      "callee": "head.split"
+    },
+    {
+      "line": 289,
+      "callee": "len"
+    },
+    {
+      "line": 290,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 291,
+      "callee": "raw_path.endswith"
+    },
+    {
+      "line": 296,
+      "callee": "os.fsdecode"
+    },
+    {
+      "line": 298,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 300,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 300,
+      "callee": "mode.decode"
+    },
+    {
+      "line": 302,
+      "callee": "_read_regular"
+    },
+    {
+      "line": 305,
+      "callee": "tag.upper"
+    },
+    {
+      "line": 306,
+      "callee": "oid.decode"
+    },
+    {
+      "line": 309,
+      "callee": "hashlib.new(algorithm, b'blob %d\\x00' % len(data) + data).hexdigest"
+    },
+    {
+      "line": 309,
+      "callee": "hashlib.new"
+    },
+    {
+      "line": 309,
+      "callee": "len"
+    }
+  ]
+}

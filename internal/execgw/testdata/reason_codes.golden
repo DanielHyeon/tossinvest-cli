@@ -6,6 +6,7 @@ critical_alert_sender_down
 critical_alert_undelivered
 currency_balance_insufficient
 currency_balance_unavailable
+entry_loss_lock_active
 fill_detection_slo_violated
 flatten_in_progress
 funding_required
@@ -19,10 +20,12 @@ guardian_nonce_reused
 interactive_auth_required
 invalid_mutation_request
 operating_mode_blocked
+opposite_pending_order_exists
 reconciliation_mismatch
 reconciliation_mismatch_permanent
 recovery_incomplete
 required_query_stale
+strategy_central_integrity
 symbol_mutation_in_flight
 trading_policy_disabled
 unknown_broker_state

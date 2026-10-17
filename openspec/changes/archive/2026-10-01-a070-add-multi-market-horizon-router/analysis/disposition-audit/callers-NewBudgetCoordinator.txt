@@ -1,0 +1,51 @@
+
+Callers of "NewBudgetCoordinator" (16):
+
+function    TestCandidateEntryAndAnalyticsNeverSpendReservedBudget
+  internal/scheduler/budget_test.go:119
+
+function    TestMissingStaleAndClockSkewBudgetGrantNoAdditionalLowPriorityPoll
+  internal/scheduler/budget_test.go:137
+
+function    TestSafetyClassesContinueWithoutBudgetProvenance
+  internal/scheduler/budget_test.go:168
+
+function    TestCoordinatorIsEndpointKeyed
+  internal/scheduler/budget_test.go:178
+
+function    TestOlderBudgetObservationCannotReplaceNewerEvidence
+  internal/scheduler/budget_test.go:194
+
+function    TestEqualTimestampBudgetCorrectionOnlyMovesConservatively
+  internal/scheduler/budget_test.go:211
+
+function    TestEqualTimestampBudgetCorrectionWithConflictingProvenanceFailsClosed
+  internal/scheduler/budget_test.go:230
+
+function    TestNewResetWindowReconcilesOldCommitments
+  internal/scheduler/budget_test.go:303
+
+function    TestNewResetWindowReconcilesCommitmentsAfterInvalidInterimObservation
+  internal/scheduler/budget_test.go:330
+
+function    TestUnknownPollClassFailsClosed
+  internal/scheduler/budget_test.go:663
+
+function    TestUnknownResetKindFailsClosed
+  internal/scheduler/budget_test.go:672
+
+function    TestOldObservationIsStaleEvenWhenResetIsStillInFuture
+  internal/scheduler/budget_test.go:683
+
+function    TestAnalyticsCannotConsumeCandidateAndEntryShare
+  internal/scheduler/budget_test.go:695
+
+function    TestAnalyticsCommitmentsSurviveNewObservationInSameResetWindow
+  internal/scheduler/budget_test.go:715
+
+function    TestDecisionStatesAreTypedAndOrderedFailClosed
+  internal/scheduler/decision_test.go:82
+
+function    TestHolidayWaitsWithNextSession
+  internal/scheduler/decision_test.go:114
+

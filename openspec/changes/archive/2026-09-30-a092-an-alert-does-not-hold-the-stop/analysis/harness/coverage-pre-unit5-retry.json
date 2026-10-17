@@ -1,0 +1,32 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/execgw",
+ "tests_run": 15,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-execgw--retrier.escalatecredentialfailure": {
+   "B1": {
+    "kind": "if",
+    "line": 410,
+    "column": 2,
+    "block": "410.64-412.3",
+    "entered_by": [
+     "TestAuthClassificationStillLatchesThroughTheSentinel",
+     "TestAuthFailureLatchesEntryImmediately",
+     "TestQueryDoesNotRetryPermanentOrAuth",
+     "TestTheRetrierWithoutAnEscalatorStillLatches"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 413,
+    "column": 2,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   }
+  }
+ }
+}

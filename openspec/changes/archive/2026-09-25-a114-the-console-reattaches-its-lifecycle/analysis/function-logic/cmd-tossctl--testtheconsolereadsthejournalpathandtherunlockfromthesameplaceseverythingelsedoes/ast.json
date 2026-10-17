@@ -1,0 +1,103 @@
+{
+  "file": "cmd/tossctl/console_test.go",
+  "source_sha256": "c8beb71fd6ef61799e9076a598b6cec6f9bceb04fea27d46573e4096aa68b0f8",
+  "package": "main",
+  "function": "TestTheConsoleReadsTheJournalPathAndTheRunLockFromTheSamePlacesEverythingElseDoes",
+  "signature": "TestTheConsoleReadsTheJournalPathAndTheRunLockFromTheSamePlacesEverythingElseDoes(params=1, results=0)",
+  "start": {
+    "line": 369,
+    "column": 1
+  },
+  "end": {
+    "line": 388,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 373,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 380,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 384,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 372,
+        "column": 9
+      },
+      "text": "readSource"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 372,
+        "column": 39
+      },
+      "text": "readSource"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 380,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 381,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 5
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 385,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 372,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

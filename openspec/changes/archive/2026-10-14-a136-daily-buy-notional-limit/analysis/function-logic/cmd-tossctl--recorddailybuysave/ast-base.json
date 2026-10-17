@@ -1,0 +1,154 @@
+{
+  "file": "cmd/tossctl/limitsettings.go",
+  "source_sha256": "8e4690b6126a248bf6c0cfd43d0a28146ca5c08ecd2a59d98ead3501d1ebcf61",
+  "package": "main",
+  "function": "recordDailyBuySave",
+  "signature": "recordDailyBuySave(params=2, results=0)",
+  "start": {
+    "line": 116,
+    "column": 1
+  },
+  "end": {
+    "line": 128,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 122,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 119,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 123,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 125,
+        "column": 37
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 14
+      },
+      "text": "journal.DataDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 14
+      },
+      "text": "audit.Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 45
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 44
+      },
+      "text": "strconv.FormatFloat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 9
+      },
+      "text": "log.RecordChange"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 101
+      },
+      "text": "number"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 90
+      },
+      "text": "quotedOrUnset"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 104
+      },
+      "text": "number"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 125,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

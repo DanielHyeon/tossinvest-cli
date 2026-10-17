@@ -1,0 +1,389 @@
+{
+  "file": "internal/strategyprojectionrpc/a108_publication_is_total_test.go",
+  "source_sha256": "2b34fc7686ac24726348d9b766b0de320bea19a1f300c32b861511a222410b0f",
+  "package": "strategyprojectionrpc",
+  "function": "TestProjectionLivenessClausesEachDecideOnTheirOwn",
+  "signature": "TestProjectionLivenessClausesEachDecideOnTheirOwn(params=1, results=0)",
+  "start": {
+    "line": 460,
+    "column": 1
+  },
+  "end": {
+    "line": 519,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 461,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 482,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 487,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 495,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 506,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 514,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 467,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 472,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 477,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 490,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 500,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 509,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 467,
+        "column": 11
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 470,
+        "column": 4
+      },
+      "text": "a108MakeControlDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 471,
+        "column": 4
+      },
+      "text": "a108DeadSocketWithMode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 472,
+        "column": 11
+      },
+      "text": "SocketPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 475,
+        "column": 4
+      },
+      "text": "a108MakeControlDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 476,
+        "column": 4
+      },
+      "text": "a108LiveSocket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 477,
+        "column": 11
+      },
+      "text": "SocketPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 482,
+        "column": 7
+      },
+      "text": "os.Geteuid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 483,
+        "column": 5
+      },
+      "text": "t.Skip"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 485,
+        "column": 4
+      },
+      "text": "a108MakeControlDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 486,
+        "column": 4
+      },
+      "text": "a108LiveSocket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 487,
+        "column": 14
+      },
+      "text": "os.Chmod"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 487,
+        "column": 23
+      },
+      "text": "SocketPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 488,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 11
+      },
+      "text": "SocketPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 7
+      },
+      "text": "os.Geteuid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 496,
+        "column": 5
+      },
+      "text": "t.Skip"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 4
+      },
+      "text": "a108MakeControlDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 4
+      },
+      "text": "a108DeadSocketWithMode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 500,
+        "column": 11
+      },
+      "text": "SocketPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 505,
+        "column": 15
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 506,
+        "column": 14
+      },
+      "text": "os.WriteFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 506,
+        "column": 36
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 507,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 509,
+        "column": 11
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 512,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 513,
+        "column": 11
+      },
+      "text": "shortRuntimeDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 514,
+        "column": 14
+      },
+      "text": "projectionSocketAccepts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 514,
+        "column": 38
+      },
+      "text": "test.build"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 515,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 487,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 505,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 506,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 513,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 514,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,43 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "5a54f78de85c7ff90bde7fef221e1feed75bad23",
+  "source_sha256": "a88c966bbcf57e109278e7c29d8e051da0a2acc1652c6e3d83845308e2e59ede",
+  "function": "_archived_change_id",
+  "signature": "_archived_change_id(name)",
+  "start": {
+    "line": 757,
+    "column": 1
+  },
+  "end": {
+    "line": 767,
+    "column": 54
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "IfExp",
+      "line": 767,
+      "inherited_line": false,
+      "source": "matched.group('change') if matched else ''"
+    }
+  ],
+  "returns": [
+    {
+      "line": 767,
+      "value": "matched.group('change') if matched else ''"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 766,
+      "callee": "ARCHIVED_CHANGE.fullmatch"
+    },
+    {
+      "line": 767,
+      "callee": "matched.group"
+    }
+  ]
+}

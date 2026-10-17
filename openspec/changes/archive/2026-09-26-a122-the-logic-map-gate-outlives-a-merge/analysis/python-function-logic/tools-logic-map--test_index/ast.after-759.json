@@ -1,0 +1,85 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "194ec1a2994162a2cd035455d3532c4fe0cef9f1bad4a2e86a583d343947ecbb",
+  "function": "test_index",
+  "signature": "test_index(root)",
+  "start": {
+    "line": 2177,
+    "column": 1
+  },
+  "end": {
+    "line": 2188,
+    "column": 17
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "comprehension",
+      "line": 2184,
+      "inherited_line": true,
+      "source": " for path in _tracked(root) if path.name.endswith('_test.go')"
+    },
+    {
+      "id": "B2",
+      "kind": "For",
+      "line": 2185,
+      "inherited_line": false,
+      "source": "for path in sorted(index.files):"
+    },
+    {
+      "id": "B3",
+      "kind": "For",
+      "line": 2186,
+      "inherited_line": false,
+      "source": "for name, (start, end) in test_spans(path).items():"
+    }
+  ],
+  "returns": [
+    {
+      "line": 2188,
+      "value": "index"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 2184,
+      "callee": "TestIndex"
+    },
+    {
+      "line": 2184,
+      "callee": "_tracked"
+    },
+    {
+      "line": 2184,
+      "callee": "frozenset"
+    },
+    {
+      "line": 2184,
+      "callee": "path.name.endswith"
+    },
+    {
+      "line": 2185,
+      "callee": "sorted"
+    },
+    {
+      "line": 2186,
+      "callee": "test_spans"
+    },
+    {
+      "line": 2186,
+      "callee": "test_spans(path).items"
+    },
+    {
+      "line": 2187,
+      "callee": "index.setdefault"
+    },
+    {
+      "line": 2187,
+      "callee": "index.setdefault(name, []).append"
+    }
+  ]
+}

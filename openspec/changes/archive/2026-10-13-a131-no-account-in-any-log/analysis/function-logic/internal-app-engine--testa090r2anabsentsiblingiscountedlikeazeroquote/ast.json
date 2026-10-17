@@ -1,0 +1,195 @@
+{
+  "file": "internal/app/engine/a090_unobserved_position_test.go",
+  "source_sha256": "692d0efcd2399acf462b4323ed1dfa50c2e9d538411d323af600f4fed65c6375",
+  "package": "engine_test",
+  "function": "TestA090R2AnAbsentSiblingIsCountedLikeAZeroQuote",
+  "signature": "TestA090R2AnAbsentSiblingIsCountedLikeAZeroQuote(params=1, results=0)",
+  "start": {
+    "line": 271,
+    "column": 1
+  },
+  "end": {
+    "line": 289,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 277,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 281,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 286,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 7
+      },
+      "text": "a090Setup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 15
+      },
+      "text": "f.a090Pair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 274,
+        "column": 2
+      },
+      "text": "delete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 2
+      },
+      "text": "f.clk.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 11
+      },
+      "text": "f.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 11
+      },
+      "text": "f.lines"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 51
+      },
+      "text": "redact.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 285,
+        "column": 2
+      },
+      "text": "f.cycles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 12
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 16
+      },
+      "text": "f.lines"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 272,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 273,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 276,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 280,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 286,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

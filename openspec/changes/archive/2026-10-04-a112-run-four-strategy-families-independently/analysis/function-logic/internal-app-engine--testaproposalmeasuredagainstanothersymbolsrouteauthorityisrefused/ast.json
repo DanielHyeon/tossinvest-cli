@@ -1,0 +1,310 @@
+{
+  "file": "internal/app/engine/a112_arbitration_test.go",
+  "source_sha256": "44c3a7a4270c2c5b5e965da58dadff94b51df649d3aaf90d786141b1b189bb78",
+  "package": "engine",
+  "function": "TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused",
+  "signature": "TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused(params=1, results=0)",
+  "start": {
+    "line": 238,
+    "column": 1
+  },
+  "end": {
+    "line": 277,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 242,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 249,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 266,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 273,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 269,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 9
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 14
+      },
+      "text": "strategyrouter.NewOwnerKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 34
+      },
+      "text": "arbitrationLineageDigests"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 18
+      },
+      "text": "strategyrouter.MultiCandidateRouteFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 49
+      },
+      "text": "strategy.ApprovedSnapshotForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 10
+      },
+      "text": "strategyrouter.ProductionRouteAuthorityFromRequestForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 4
+      },
+      "text": "familyScoresForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 12
+      },
+      "text": "testStrategyProposalLoader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 264,
+        "column": 18
+      },
+      "text": "strategyflow.AcceptedResultForAuthorityTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 264,
+        "column": 62
+      },
+      "text": "riskLoaderDescriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 78
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 101
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 10
+      },
+      "text": "strategyproposal.ProductionBatchAuthorityMultiLaneForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 13
+      },
+      "text": "loader.collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 28
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 50
+      },
+      "text": "routeReadySchedulePair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 87
+      },
+      "text": "proposalFXPair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 70
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 241,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 245,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 252,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 255,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 260,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 261,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 264,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 272,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

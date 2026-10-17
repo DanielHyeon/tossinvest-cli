@@ -1,0 +1,108 @@
+{
+  "file": "internal/strategyprojectionrpc/transport_unix.go",
+  "source_sha256": "177e64f9b820e6f760f77363c172e04d2bb4afdcb44983f0ff6dbbbb0890c3e6",
+  "package": "strategyprojectionrpc",
+  "function": "projectionSocketAccepts",
+  "signature": "projectionSocketAccepts(params=1, results=1)",
+  "start": {
+    "line": 396,
+    "column": 1
+  },
+  "end": {
+    "line": 406,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 398,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 402,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 400,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 403,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 405,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 397,
+        "column": 15
+      },
+      "text": "net.DialTimeout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 7
+      },
+      "text": "conn.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 402,
+        "column": 5
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 402,
+        "column": 42
+      },
+      "text": "errors.Is"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 397,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 399,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

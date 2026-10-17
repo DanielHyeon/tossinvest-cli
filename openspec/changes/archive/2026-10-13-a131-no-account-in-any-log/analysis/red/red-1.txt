@@ -1,0 +1,10 @@
+233d5d9c10e36ddd416ba89d5c6b41237c3c1b9a
+github.com/JungHoonGhae/tossinvest-cli/internal/redact: no non-test Go files in /mnt/D/Axipient/workspace/TossOS/internal/redact
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/redact [build failed]
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/obs [build failed]
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official [build failed]
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/audit [build failed]
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/soak [build failed]
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/verifylive [build failed]
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl [build failed]
+FAIL

@@ -1,0 +1,22 @@
+# a130 RED 4판 — production 무편집 HEAD af0c0ce7 격리 worktree, 2026-10-13T06:18:22Z
+## 1) 4판 시험 그대로(컴파일 RED)
+internal/official/a130_intake_candle_test.go:38:25: client.MinuteCandleClosingAt undefined (type *Client has no field or method MinuteCandleClosingAt)
+internal/official/a130_intake_candle_test.go:48:29: earlier.MinuteCandleClosingAt undefined (type *Client has no field or method MinuteCandleClosingAt)
+internal/official/a130_intake_candle_test.go:52:25: empty.MinuteCandleClosingAt undefined (type *Client has no field or method MinuteCandleClosingAt)
+internal/journal/a130_adopted_outcome_test.go:34:9: undefined: TradeOutcomeRefusal
+internal/journal/a130_adopted_outcome_test.go:37:31: undefined: TradeOutcomeRefusal
+internal/journal/a130_adopted_outcome_test.go:43:32: undefined: TradeOutcomeRefusal
+internal/journal/a130_adopted_outcome_test.go:46:18: undefined: TradeOutcomeRefusal
+internal/journal/a130_adopted_outcome_test.go:152:58: undefined: TradeOutcomeRefusalReason
+internal/journal/a130_adopted_outcome_test.go:193:66: undefined: IntakePrices
+internal/journal/a130_journal_copy_census_test.go:121:26: undefined: TradeOutcomeRefusalReason
+internal/journal/a130_trade_outcome_backfill_test.go:89:48: undefined: IntakePrices
+internal/journal/a130_trade_outcome_backfill_test.go:106:67: undefined: IntakePrices
+
+## 2) base-API 행동 RED — 로컬 매도 + 이전 인스턴스 flatten 쓸어 담기(4판 R3-3)
+=== RUN   TestA130RED4LocalSellOffsetBySweptFlatten
+    a130_red4_base_test.go:54: TradeOutcomeOf: <nil> — base froze a row whose sell leg holds another instance's flatten proceeds
+--- FAIL: TestA130RED4LocalSellOffsetBySweptFlatten (0.35s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.351s
+FAIL

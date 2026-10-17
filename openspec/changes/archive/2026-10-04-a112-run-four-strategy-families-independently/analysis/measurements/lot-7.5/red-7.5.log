@@ -1,0 +1,10 @@
+# RED a112 7.5 — HEAD 69deeb48 + 시험만(생산 무편집)
+## engine (무태그)
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a112_lane_operability_test.go:47:11: runtime.laneStep undefined (type *strategyLaneRuntime has no field or method laneStep)
+internal/app/engine/a112_lane_operability_test.go:101:10: runtime.laneStep undefined (type *strategyLaneRuntime has no field or method laneStep)
+## strategyworker
+# github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker
+# [github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker]
+vet: internal/strategyworker/a112_lane_status_test.go:15:15: lane.Status undefined (type *Lane has no field or method Status)
+## 메모: C1~C3 는 지금 동작의 운용성 핀이라 HEAD 에서 통과가 정답 — 반증은 변이(lot-7.5/mutation-7.5.tsv)가 진다.

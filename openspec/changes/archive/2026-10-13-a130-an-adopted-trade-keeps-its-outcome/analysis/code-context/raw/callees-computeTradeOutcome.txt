@@ -1,0 +1,45 @@
+
+Callees of "computeTradeOutcome" (14):
+
+method      Configured
+  internal/costs/costs.go:327
+
+method      Next
+  internal/journal/readonly_schema_arms_test.go:86
+
+function    frozenExitFacts
+  internal/journal/trade_outcomes.go:257
+
+function    adoptedRoundTripLegs
+  internal/journal/trade_outcomes.go:488
+
+function    roundTripLegs
+  internal/journal/trade_outcomes.go:292
+
+method      EstimateTradeCost
+  internal/costs/costs.go:485
+
+function    ratText
+  internal/journal/trade_outcomes.go:755
+
+function    ratOf
+  internal/journal/trade_outcomes.go:741
+
+function    heldSeconds
+  internal/journal/trade_outcomes.go:726
+
+method      Close
+  internal/journal/readonly_schema_arms_test.go:84
+
+struct      TradeOutcome
+  internal/journal/trade_outcomes.go:91
+
+struct      Context
+  internal/app/app.go:62
+
+interface   tradeOutcomeReader
+  internal/journal/trade_outcomes.go:150
+
+struct      Model
+  internal/costs/costs.go:156
+

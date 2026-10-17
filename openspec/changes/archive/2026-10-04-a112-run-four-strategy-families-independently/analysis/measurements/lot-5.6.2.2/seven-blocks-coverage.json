@@ -1,0 +1,330 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/app/engine",
+ "tests_run": 9,
+ "failed_tests": [],
+ "union_passed": false,
+ "failures": {
+  "<union>": "--- FAIL: TestA111ObserverUsesClockLeaseHelpersForTheUseLease (0.00s)\n--- FAIL: TestA111FallbackSequenceRecoveryIsLazyAndPriceEvidenceUsesTheGateDuration (0.00s)\nFAIL"
+ },
+ "bundles": {
+  "internal-app-engine--strategyentrysupervisor.runmarket": {
+   "B1": {
+    "kind": "select",
+    "line": 895,
+    "column": 2,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "for",
+    "line": 900,
+    "column": 2,
+    "block": "900.6-901.10",
+    "entered_by": [
+     "TestALaneLatchThatCannotBeRecordedIsCountedNotEscalated",
+     "TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue",
+     "TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine",
+     "TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning",
+     "TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows",
+     "TestEightSimultaneousLaneFaultsLeaveTheSafetyLoopsRunning",
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping",
+     "TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError"
+    ],
+    "union": true
+   },
+   "B3": {
+    "kind": "select",
+    "line": 901,
+    "column": 3,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 910,
+    "column": 4,
+    "block": "910.15-912.19",
+    "entered_by": [
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": true
+   },
+   "B5": {
+    "kind": "if",
+    "line": 912,
+    "column": 5,
+    "block": "912.19-915.6",
+    "entered_by": [
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": true
+   },
+   "B6": {
+    "kind": "if",
+    "line": 916,
+    "column": 5,
+    "block": "916.70-917.26",
+    "entered_by": [
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": true
+   },
+   "B7": {
+    "kind": "if",
+    "line": 917,
+    "column": 6,
+    "block": "917.26-919.7",
+    "entered_by": [],
+    "union": true
+   },
+   "B8": {
+    "kind": "if",
+    "line": 925,
+    "column": 4,
+    "block": "925.16-926.13",
+    "entered_by": [
+     "TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue"
+    ],
+    "union": true
+   },
+   "B9": {
+    "kind": "if",
+    "line": 929,
+    "column": 4,
+    "block": "929.17-931.5",
+    "entered_by": [
+     "TestEightSimultaneousLaneFaultsLeaveTheSafetyLoopsRunning"
+    ],
+    "union": true
+   },
+   "B10": {
+    "kind": "if",
+    "line": 932,
+    "column": 4,
+    "block": "932.17-934.5",
+    "entered_by": [
+     "TestEightSimultaneousLaneFaultsLeaveTheSafetyLoopsRunning"
+    ],
+    "union": true
+   },
+   "B11": {
+    "kind": "if",
+    "line": 935,
+    "column": 4,
+    "block": "935.18-936.13",
+    "entered_by": [
+     "TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine",
+     "TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning",
+     "TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows",
+     "TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError"
+    ],
+    "union": true
+   },
+   "B12": {
+    "kind": "if",
+    "line": 938,
+    "column": 4,
+    "block": "938.19-956.83",
+    "entered_by": [
+     "TestALaneLatchThatCannotBeRecordedIsCountedNotEscalated",
+     "TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine",
+     "TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning",
+     "TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows",
+     "TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError"
+    ],
+    "union": true
+   },
+   "B13": {
+    "kind": "if",
+    "line": 956,
+    "column": 5,
+    "block": "956.83-959.6",
+    "entered_by": [],
+    "union": true
+   },
+   "B14": {
+    "kind": "if",
+    "line": 962,
+    "column": 4,
+    "block": "962.39-965.5",
+    "entered_by": [],
+    "union": true
+   },
+   "B15": {
+    "kind": "if",
+    "line": 967,
+    "column": 4,
+    "block": "967.18-970.5",
+    "entered_by": [
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": true
+   },
+   "B16": {
+    "kind": "if",
+    "line": 971,
+    "column": 4,
+    "block": "971.69-972.25",
+    "entered_by": [
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": true
+   },
+   "B17": {
+    "kind": "if",
+    "line": 972,
+    "column": 5,
+    "block": "972.25-974.6",
+    "entered_by": [],
+    "union": true
+   }
+  },
+  "internal-app-engine--strategyentrysupervisor.latchmarket": {
+   "B1": {
+    "kind": "if",
+    "line": 1101,
+    "column": 2,
+    "block": "1101.18-1103.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B2": {
+    "kind": "if",
+    "line": 1105,
+    "column": 2,
+    "block": "1105.14-1107.3",
+    "entered_by": [],
+    "union": true
+   },
+   "B3": {
+    "kind": "if",
+    "line": 1108,
+    "column": 2,
+    "block": "1108.53-1110.3",
+    "entered_by": [
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": true
+   },
+   "B4": {
+    "kind": "if",
+    "line": 1112,
+    "column": 2,
+    "block": "1112.25-1114.3",
+    "entered_by": [
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": true
+   },
+   "B5": {
+    "kind": "if",
+    "line": 1116,
+    "column": 2,
+    "block": "1116.44-1119.3",
+    "entered_by": [
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": true
+   },
+   "B6": {
+    "kind": "if",
+    "line": 1122,
+    "column": 2,
+    "block": "1122.54-1124.3",
+    "entered_by": [
+     "TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue",
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": true
+   },
+   "B7": {
+    "kind": "if",
+    "line": 1125,
+    "column": 2,
+    "block": "1125.31-1130.3",
+    "entered_by": [
+     "TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue",
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": true
+   },
+   "B8": {
+    "kind": "if",
+    "line": 1131,
+    "column": 2,
+    "block": "1131.44-1133.3",
+    "entered_by": [
+     "TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue",
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": true
+   },
+   "B9": {
+    "kind": "select",
+    "line": 1145,
+    "column": 2,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   }
+  },
+  "internal-app-engine--strategyentrysupervisor.waitmarketrestart": {
+   "B1": {
+    "kind": "if",
+    "line": 1021,
+    "column": 2,
+    "block": "1021.24-1023.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B2": {
+    "kind": "if",
+    "line": 1025,
+    "column": 2,
+    "block": "1025.18-1027.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B3": {
+    "kind": "if",
+    "line": 1029,
+    "column": 2,
+    "block": "1029.43-1031.3",
+    "entered_by": [
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": true
+   },
+   "B4": {
+    "kind": "if",
+    "line": 1032,
+    "column": 2,
+    "block": "1032.16-1034.3",
+    "entered_by": [],
+    "union": true
+   }
+  },
+  "internal-app-engine--invokeboundedstrategycycle": {
+   "B1": {
+    "kind": "select",
+    "line": 1072,
+    "column": 2,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 1078,
+    "column": 3,
+    "block": "1078.23-1080.4",
+    "entered_by": [
+     "TestTheWatchdogRechecksCancellationInsteadOfTrustingItsOwnTimer"
+    ],
+    "union": true
+   }
+  }
+ }
+}

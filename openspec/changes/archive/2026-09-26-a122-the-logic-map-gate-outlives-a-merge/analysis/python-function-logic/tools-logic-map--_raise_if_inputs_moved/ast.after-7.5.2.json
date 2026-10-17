@@ -1,0 +1,43 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "source_sha256": "98845ce2dea180b8ab813180a51e9076ae1f787dea664362a61e8312675b135b",
+  "function": "_raise_if_inputs_moved",
+  "signature": "_raise_if_inputs_moved(root, analysis, inputs)",
+  "start": {
+    "line": 1732,
+    "column": 1
+  },
+  "end": {
+    "line": 1738,
+    "column": 41
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 1737,
+      "inherited_line": false,
+      "source": "if _evidence_fingerprint(root, analysis)[0] != inputs.fingerprint:"
+    }
+  ],
+  "returns": [],
+  "raises": [
+    {
+      "line": 1738,
+      "source": "raise RuntimeError(INPUTS_MOVED)"
+    }
+  ],
+  "calls": [
+    {
+      "line": 1737,
+      "callee": "_evidence_fingerprint"
+    },
+    {
+      "line": 1738,
+      "callee": "RuntimeError"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+# 판 1 (전체 11) — 수리 커밋 d8769cfb 직전 트리
+TREE	HEAD 071e67c19cbfaafbe5de3eb98777e7a21411642d	uncommitted tracked: internal/app/engine/alertdelivery.go,internal/obs/notifier.go	own untracked: internal/obs/settle_outcome.go,internal/obs/a092_settle_outcome_internal_test.go,internal/app/engine/a092_deliverer_release_test.go
+CONTROL	GREEN	
+X01 release NotFound read as preemption again	CAUGHT	2 failing: TestA092TheDelivererLatchesWhenTheReleaseFindsNoRow/not-found, TestA092TheDelivererLatchesWhenTheReleaseFindsNoRow/unknown
+X02 release site latches unconditionally	CAUGHT	1 failing: TestA092AReleaseAfterTheEpochReadStandsForTheReleaseSite
+X03 release site escalates	CAUGHT	3 failing: TestA092TheDelivererLatchesWhenTheReleaseFindsNoRow/not-found, TestA092TheDelivererLatchesWhenTheReleaseFindsNoRow/unknown, TestA092TheAttemptLimitVerdictSurvivesAMissingRelease
+X04 preemption not recorded	CAUGHT	2 failing: TestA092TheDelivererRecordsAPreemptedAttempt/acknowledged, TestA092TheDelivererRecordsAPreemptedAttempt/lease-lost
+X05 release site returns before the limit verdict	CAUGHT	1 failing: TestA092TheAttemptLimitVerdictSurvivesAMissingRelease
+X06 preemption judgement widened to not-found	CAUGHT	5 failing: TestA092OnlyNamedOutcomesArePreemptions, TestA092EachLatchSiteLatchesWithoutARelease/vanished, TestA092EachLatchSiteLatchesWithoutARelease/release-missing, TestA092AReleaseBeforeTheEpochReadRelatches/vanished, TestA092AReleaseBeforeTheEpochReadRelatches/release-missing
+X07 hand-off after stop silently queued	CAUGHT	2 failing: TestA092AHandOffAfterTheRelayStoppedIsRecorded, TestA092APanicInTheRelayRecordsWhatItHeld
+X08 in-flight alert at panic not recorded	BUILD-FAIL	0 failing:  | internal/obs/normal_relay.go:64:6: declared and not used: inFlight | internal/obs/normal_relay.go:64:6: declared and not used: inFlight
+X09 publish failure not recorded	CAUGHT	1 failing: TestA092APublishFailureOrNoPublisherIsRecordedWithItsKey/publish_fails
+X10 no publisher silent	CAUGHT	1 failing: TestA092APublishFailureOrNoPublisherIsRecordedWithItsKey/no_publisher
+X11 re-read failure returns an error again	CAUGHT	1 failing: TestA092AReReadFailureKeepsTheCommittedRelease
+# 판 2 (X08 재정의: 빈 문자열 → '_ = inFlight' — 판 1 은 미사용 변수로 BUILD-FAIL)
+TREE	HEAD d8769cfbcc89b3f69c7f9ed45c640173c5054499	uncommitted tracked: none	own untracked: none
+CONTROL	GREEN	
+X08 in-flight alert at panic not recorded	CAUGHT	1 failing: TestA092APanicInTheRelayRecordsWhatItHeld

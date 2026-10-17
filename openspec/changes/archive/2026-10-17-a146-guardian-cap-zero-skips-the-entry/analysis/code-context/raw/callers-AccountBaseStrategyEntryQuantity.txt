@@ -1,0 +1,12 @@
+
+Callers of "AccountBaseStrategyEntryQuantity" (3):
+
+function    TestAccountBaseStrategyQuantityFloorsPaired
+  internal/risk/account_base_test.go:74
+
+function    TestAccountBaseStrategyQuantityRequiresExplicitFXPaired
+  internal/risk/account_base_test.go:102
+
+method      PrecheckQFinalEntry
+  internal/execgw/riskguardian_qfinal.go:89
+

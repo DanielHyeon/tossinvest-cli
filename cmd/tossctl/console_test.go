@@ -367,7 +367,9 @@ func consoleOptionFields(t *testing.T) map[string]bool {
 // engine's active profile, and the run marker is the one `verify run` and the
 // soak already agree on.
 func TestTheConsoleReadsTheJournalPathAndTheRunLockFromTheSamePlacesEverythingElseDoes(t *testing.T) {
-	src := readSource(t, "console.go")
+	// a114: lifecycle dial 은 부팅 1회에서 재부착 wrapper(console_lifecycle_attach.go)로 옮겨 갔다.
+	// 콘솔의 배선은 두 파일에 걸치므로 둘을 함께 읽는다.
+	src := readSource(t, "console.go") + readSource(t, "console_lifecycle_attach.go")
 	for _, want := range []string{
 		"consoleJournalPath(root)",
 		"positionpolicyrpc.Dial(ctx, descriptorPath)",
@@ -386,7 +388,8 @@ func TestTheConsoleReadsTheJournalPathAndTheRunLockFromTheSamePlacesEverythingEl
 }
 
 func TestConsolePolicyWiringCannotOpenOrMigrateTheTradingJournal(t *testing.T) {
-	src := readSource(t, "console.go")
+	// a114: 좁은 engine client 는 재부착 wrapper 파일에서 만들어진다 — 금지 문자열도 두 파일에 걸쳐 본다.
+	src := readSource(t, "console.go") + readSource(t, "console_lifecycle_attach.go")
 	for _, forbidden := range []string{
 		"NewPositionPolicyCommandService", "journal.Open(", "ApplyPositionPolicy(",
 	} {

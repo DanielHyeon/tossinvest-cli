@@ -1,0 +1,46 @@
+{
+  "file": "internal/journal/a126_filled_exposure_leaves_the_bucket_test.go",
+  "source_sha256": "d2df830b7ee0d70b4d33240cab20b63bd352ef7914a95837e6a7ade906844cd2",
+  "package": "journal",
+  "function": "a126AdmitSymbol",
+  "signature": "a126AdmitSymbol(params=7, results=1)",
+  "start": {
+    "line": 292,
+    "column": 1
+  },
+  "end": {
+    "line": 296,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 294,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 294,
+        "column": 9
+      },
+      "text": "a126AdmitOwner"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

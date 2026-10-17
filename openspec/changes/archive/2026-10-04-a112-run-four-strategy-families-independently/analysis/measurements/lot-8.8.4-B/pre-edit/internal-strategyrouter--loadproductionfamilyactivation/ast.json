@@ -1,0 +1,413 @@
+{
+  "file": "internal/strategyrouter/production_family_activation.go",
+  "source_sha256": "c8e2efb9b1a8243bcec000f0c2fa9e96bd8576c97aa35a694a1e6c053407288f",
+  "package": "strategyrouter",
+  "function": "LoadProductionFamilyActivation",
+  "signature": "LoadProductionFamilyActivation(params=2, results=2)",
+  "start": {
+    "line": 427,
+    "column": 1
+  },
+  "end": {
+    "line": 478,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 432,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 435,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 438,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 445,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 455,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 459,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 465,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 469,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 472,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 433,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 436,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 439,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 451,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 456,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 460,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 466,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 470,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 473,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 476,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 432,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 438,
+        "column": 12
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 21
+      },
+      "text": "filepath.Clean"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 36
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 442,
+        "column": 26
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 20
+      },
+      "text": "productionRouteOwnerUID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 10
+      },
+      "text": "ProductionFamilyActivationFileName"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 445,
+        "column": 32
+      },
+      "text": "filepath.IsAbs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 445,
+        "column": 68
+      },
+      "text": "config.ObservedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 446,
+        "column": 4
+      },
+      "text": "productionRouteDigestValid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 447,
+        "column": 4
+      },
+      "text": "productionRouteIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 448,
+        "column": 4
+      },
+      "text": "productionRouteDigestValid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 449,
+        "column": 4
+      },
+      "text": "productionRouteDigestValid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 450,
+        "column": 4
+      },
+      "text": "productionRouteIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 450,
+        "column": 56
+      },
+      "text": "productionRouteIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 453,
+        "column": 15
+      },
+      "text": "readProductionRouteFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 453,
+        "column": 39
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 455,
+        "column": 19
+      },
+      "text": "productionRouteDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 458,
+        "column": 19
+      },
+      "text": "decodeProductionFamilyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 468,
+        "column": 16
+      },
+      "text": "validateProductionFamilyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 472,
+        "column": 12
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 475,
+        "column": 16
+      },
+      "text": "productionRouteTime"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 438,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 441,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 442,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 443,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 444,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 453,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 458,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 468,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 472,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 475,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

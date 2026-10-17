@@ -1,0 +1,247 @@
+package main
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+// syntheticLedger 는 질문 하나·시장 하나에 p 와 수익률을 지정해 원장 내용을 만듦.
+func syntheticLedger(questionID string, rows []struct {
+	p   float64
+	ret *float64
+}) ledgerContents {
+	contents := ledgerContents{Labels: map[string]labelRow{}}
+	for index, row := range rows {
+		id := fmt.Sprintf("j-%d", index)
+		contents.Judgments = append(contents.Judgments, judgmentRow{
+			ID: id, Market: "KR", QuestionID: questionID, QuestionRev: questionRev, QuestionDigest: "sha256:q",
+			ModelAnswered: "jev-1.13.0", P: row.p,
+		})
+		label := labelRow{JudgmentID: id, RealizedReturn: row.ret}
+		if row.ret == nil {
+			label.LabelGap = "realized_price_missing"
+		}
+		contents.Labels[id] = label
+	}
+	return contents
+}
+
+func ret(v float64) *float64 { return &v }
+
+func rowsAt(p float64, hits, misses int) []struct {
+	p   float64
+	ret *float64
+} {
+	var rows []struct {
+		p   float64
+		ret *float64
+	}
+	for index := 0; index < hits; index++ {
+		rows = append(rows, struct {
+			p   float64
+			ret *float64
+		}{p, ret(0.01)})
+	}
+	for index := 0; index < misses; index++ {
+		rows = append(rows, struct {
+			p   float64
+			ret *float64
+		}{p, ret(-0.01)})
+	}
+	return rows
+}
+
+// TestReportHoldsBinsBelowThirtySamples 는 보류 규칙: 구간 n<30 이면 적중률을 싣지 않음.
+func TestReportHoldsBinsBelowThirtySamples(t *testing.T) {
+	t.Parallel()
+	contents := syntheticLedger("j1_up_within_horizon", rowsAt(0.92, 20, 9)) // 29건
+	report := renderCalibrationReport(contents, "ledger.jsonl")
+	if !strings.Contains(report, "| 0.90–0.95 | 29 | 29 | 20 | — | 보류(n<30) |") {
+		t.Fatalf("a 29-sample bin must be held without a rate:\n%s", report)
+	}
+	if !strings.Contains(report, "권고: **보류**") {
+		t.Fatalf("the p ≥ 0.90 verdict must be held below 30 labels:\n%s", report)
+	}
+	if strings.Contains(report, "0.690") {
+		t.Fatalf("a held bin leaked its hit rate:\n%s", report)
+	}
+}
+
+func TestReportJudgesBinsAtThirtySamples(t *testing.T) {
+	t.Parallel()
+	contents := syntheticLedger("j1_up_within_horizon", rowsAt(0.95, 27, 3)) // 30건, 0.900
+	report := renderCalibrationReport(contents, "ledger.jsonl")
+	if !strings.Contains(report, "| 0.95–1.00 | 30 | 30 | 27 | 0.900 | 판정 가능 |") {
+		t.Fatalf("a 30-sample bin must be judged:\n%s", report)
+	}
+	if !strings.Contains(report, "예비 채택 후보") {
+		t.Fatalf("0.900 at p ≥ 0.90 is a preliminary adopt candidate:\n%s", report)
+	}
+	low := renderCalibrationReport(syntheticLedger("j1_up_within_horizon", rowsAt(0.97, 20, 10)), "l")
+	if !strings.Contains(low, "예비 기각 후보") {
+		t.Fatalf("0.667 at p ≥ 0.90 is a preliminary reject candidate:\n%s", low)
+	}
+}
+
+func TestReportUsesTheQuestionsHitRuleAndExcludesGaps(t *testing.T) {
+	t.Parallel()
+	rows := rowsAt(0.91, 0, 30) // 수익률 전부 음수
+	rows = append(rows, struct {
+		p   float64
+		ret *float64
+	}{0.91, nil})
+	j2 := renderCalibrationReport(syntheticLedger("j2_hold_off_red_flag", rows), "l")
+	if !strings.Contains(j2, "| 0.90–0.95 | 31 | 30 | 30 | 1.000 | 판정 가능 |") {
+		t.Fatalf("J2 counts negative returns as hits and leaves the label gap out of the denominator:\n%s", j2)
+	}
+	if !strings.Contains(j2, "라벨 결손 1") {
+		t.Fatalf("the label gap must be counted in the header:\n%s", j2)
+	}
+}
+
+func TestReportStatesTheTwoDayLimitAndBinEdges(t *testing.T) {
+	t.Parallel()
+	report := renderCalibrationReport(syntheticLedger("j1_up_within_horizon", rowsAt(0.5, 1, 0)), "l")
+	for _, want := range []string{"2일 측정", "예비 판정", "| < 0.50 |", "| 0.50–0.55 | 1 |", "| 0.95–1.00 |"} {
+		if !strings.Contains(report, want) {
+			t.Fatalf("report lacks %q:\n%s", want, report)
+		}
+	}
+	for p, want := range map[float64]int{0.4999: -1, 0.5: 0, 0.55: 1, 0.8999: 7, 0.9: 8, 0.95: 9, 1.0: 9} {
+		if got := binIndex(p); got != want {
+			t.Errorf("binIndex(%v) = %d, want %d", p, got, want)
+		}
+	}
+}
+
+// TestReportCommandReadsARealLedger 는 수집 → 라벨 → report 하위 명령을 한 줄로 이어 봄.
+func TestReportCommandReadsARealLedger(t *testing.T) {
+	t.Parallel()
+	rig := newTestRig(t)
+	if err := rig.probe.cycle(context.Background(), "KR", rig.session(), at(10, 0)); err != nil {
+		t.Fatal(err)
+	}
+	rig.clock.Set(at(11, 0))
+	if err := rig.probe.labelTick(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	path := filepath.Join(rig.dir, ledgerFileName)
+	if err := dispatch(context.Background(), []string{"report", "--ledger", path}, os.Getenv, &out); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"judgment 행 4 · 실현 라벨 4", "## j1_up_within_horizon — KR", "## j2_hold_off_red_flag — KR"} {
+		if !strings.Contains(out.String(), want) {
+			t.Fatalf("report lacks %q:\n%s", want, out.String())
+		}
+	}
+}
+
+// TestReportSeparatesSelectionLots 는 selection 이 없는 옛 행(top10)과 1.5 이후 행을 다른 표로 나누고
+// 한 표에 섞지 않음을 봄. 두 로트를 섞으면 0.95 구간이 60건·적중 30 이 되어 드러남.
+func TestReportSeparatesSelectionLots(t *testing.T) {
+	t.Parallel()
+	old := syntheticLedger("j1_up_within_horizon", rowsAt(0.95, 30, 0)) // 옛 로트: 전부 적중
+	fresh := syntheticLedger("j1_up_within_horizon", rowsAt(0.95, 0, 30))
+	contents := ledgerContents{Labels: map[string]labelRow{}}
+	contents.Judgments = append(contents.Judgments, old.Judgments...)
+	for id, label := range old.Labels {
+		contents.Labels[id] = label
+	}
+	record := &selectionRecord{Rule: selectionRule, Seed: 1, CapValue: 500000, CapCurrency: "KRW"}
+	for _, row := range fresh.Judgments {
+		label := fresh.Labels[row.ID]
+		row.ID, label.JudgmentID = "new-"+row.ID, "new-"+row.ID
+		row.Selection = record
+		contents.Judgments = append(contents.Judgments, row)
+		contents.Labels[row.ID] = label
+	}
+	report := renderCalibrationReport(contents, "ledger.jsonl")
+	for _, want := range []string{
+		"표본 선택 로트: " + selectionRule + "=30, top10=30",
+		"## j1_up_within_horizon — KR · 로트 top10",
+		"## j1_up_within_horizon — KR · 로트 " + selectionRule,
+		"| 0.95–1.00 | 30 | 30 | 30 | 1.000 | 판정 가능 |",
+		"| 0.95–1.00 | 30 | 30 | 0 | 0.000 | 판정 가능 |",
+	} {
+		if !strings.Contains(report, want) {
+			t.Fatalf("report lacks %q:\n%s", want, report)
+		}
+	}
+	if strings.Contains(report, "| 0.95–1.00 | 60 |") {
+		t.Fatalf("the two selection lots were mixed in one table:\n%s", report)
+	}
+}
+
+// screenedLedger 는 선별 로트(1.6) 행: 결선 n 개는 전부 적중, 비결선(순위 밖) m 개·악재 제외 r 개는 전부 빗나감.
+func screenedLedger(finalists, outranked, redFlagged int) ledgerContents {
+	contents := ledgerContents{Labels: map[string]labelRow{}}
+	record := &selectionRecord{Rule: selectionRule, Seed: 1, CapValue: 500000, CapCurrency: "KRW"}
+	add := func(prefix string, count int, screen screenRecord, realized float64) {
+		for index := 0; index < count; index++ {
+			for _, questionID := range []string{screenUpQuestion, screenRedFlagQuestion} {
+				id := fmt.Sprintf("%s-%d-%s", prefix, index, questionID)
+				s := screen
+				contents.Judgments = append(contents.Judgments, judgmentRow{
+					ID: id, Market: "KR", QuestionID: questionID, QuestionRev: questionRev, QuestionDigest: "sha256:q",
+					ModelAnswered: "jev-1.13.0", P: 0.6, Selection: record, Screen: &s,
+				})
+				contents.Labels[id] = labelRow{JudgmentID: id, RealizedReturn: ret(realized)}
+			}
+		}
+	}
+	add("fin", finalists, screenRecord{Finalist: true, Rank: 1}, 0.01)
+	add("out", outranked, screenRecord{Rank: 11}, -0.01)
+	add("red", redFlagged, screenRecord{RedFlagExcluded: true}, -0.01)
+	return contents
+}
+
+// TestReportComparesFinalistsWithTheControlGroup 는 선별 로트에서 J1 의 결선 vs 비결선 비교 표를 냄:
+// 집단별 n·적중·적중률, 같은 n<30 보류 규칙. 비결선 = 순위 밖 + 악재 제외.
+func TestReportComparesFinalistsWithTheControlGroup(t *testing.T) {
+	t.Parallel()
+	report := renderCalibrationReport(screenedLedger(30, 20, 10), "ledger.jsonl")
+	for _, want := range []string{
+		"## 결선 vs 비결선 (" + screenUpQuestion + ") — KR · 로트 " + selectionRule,
+		"| 결선 | 30 | 30 | 30 | 1.000 | 판정 가능 |",
+		"| 비결선 전체 | 30 | 30 | 0 | 0.000 | 판정 가능 |",
+		"| └ J2 악재 제외 | 10 | 10 | 0 | — | 보류(n<30) |",
+		"| └ 생존·순위 밖 | 20 | 20 | 0 | — | 보류(n<30) |",
+	} {
+		if !strings.Contains(report, want) {
+			t.Fatalf("report lacks %q:\n%s", want, report)
+		}
+	}
+	// 비교는 J1 만 — J2 행은 결선 비교에 섞이지 않음(섞이면 n 이 60 이 됨).
+	if strings.Contains(report, "| 결선 | 60 |") || strings.Contains(report, "결선 vs 비결선 ("+screenRedFlagQuestion) {
+		t.Fatalf("the finalist comparison must count J1 rows only:\n%s", report)
+	}
+	held := renderCalibrationReport(screenedLedger(29, 1, 0), "l")
+	if !strings.Contains(held, "| 결선 | 29 | 29 | 29 | — | 보류(n<30) |") {
+		t.Fatalf("a finalist group below 30 labels must be held:\n%s", held)
+	}
+}
+
+// TestReportLegacyLotsHaveNoScreenComparison 는 선별 기록이 없는 옛 로트(top10·random10)는 비교 표 없이
+// 예전과 같은 구간표만 냄.
+func TestReportLegacyLotsHaveNoScreenComparison(t *testing.T) {
+	t.Parallel()
+	legacy := syntheticLedger(screenUpQuestion, rowsAt(0.95, 30, 0))
+	for index := range legacy.Judgments[:10] {
+		legacy.Judgments[index].Selection = &selectionRecord{Rule: legacyRandomRule}
+	}
+	report := renderCalibrationReport(legacy, "l")
+	if strings.Contains(report, "결선 vs 비결선") {
+		t.Fatalf("legacy lots have no screen record and must not get a comparison:\n%s", report)
+	}
+	for _, want := range []string{"표본 선택 로트: " + legacyRandomRule + "=10, top10=20", "· 로트 top10", "· 로트 " + legacyRandomRule} {
+		if !strings.Contains(report, want) {
+			t.Fatalf("report lacks %q:\n%s", want, report)
+		}
+	}
+}

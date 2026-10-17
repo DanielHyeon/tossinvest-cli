@@ -1,0 +1,29 @@
+copy HEAD f2decd0a files 1877
+=== RUN   TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided
+=== RUN   TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided/KR
+=== RUN   TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided/US
+--- PASS: TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided (1.20s)
+    --- PASS: TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided/KR (0.60s)
+    --- PASS: TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided/US (0.60s)
+=== RUN   TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice
+=== RUN   TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/KR_same_price
+    a066_integration_5_6_test.go:128: stale snapshot admitted: q_final=10, strategy usage 100 against limit 80
+=== RUN   TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/KR_other_price
+    a066_integration_5_6_test.go:128: stale snapshot admitted: q_final=10, strategy usage 110 against limit 80
+=== RUN   TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/US_other_price
+    a066_integration_5_6_test.go:128: stale snapshot admitted: q_final=10, strategy usage 110 against limit 80
+--- FAIL: TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice (1.70s)
+    --- FAIL: TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/KR_same_price (0.57s)
+    --- FAIL: TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/KR_other_price (0.57s)
+    --- FAIL: TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/US_other_price (0.56s)
+=== RUN   TestA066SharedBucketSecondEntryReadsItsOwnPolicyRecord
+--- PASS: TestA066SharedBucketSecondEntryReadsItsOwnPolicyRecord (0.57s)
+=== RUN   TestMigrationV33ToV34KeepsLegacyReservationsReadable
+--- PASS: TestMigrationV33ToV34KeepsLegacyReservationsReadable (0.92s)
+=== RUN   TestRiskBucketAmbiguousSidecarLatchesAllApplicableReservationsWithoutDroppingFill
+--- PASS: TestRiskBucketAmbiguousSidecarLatchesAllApplicableReservationsWithoutDroppingFill (0.74s)
+=== RUN   TestSchemaTablesAndColumns
+--- PASS: TestSchemaTablesAndColumns (0.58s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	5.719s
+FAIL

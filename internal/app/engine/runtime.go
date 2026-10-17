@@ -460,6 +460,15 @@ func (r *Runtime) escalate(ctx context.Context, loop SupervisedLoop, consecutive
 		return
 	}
 	_, changed, err := r.opts.Escalate.EscalateOperatingMode(ctx, r.opts.AccountRef, loop.Trigger, r.opts.Announcer)
+	if err != nil && errors.Is(err, journal.ErrModeAnnouncementFailed) {
+		// 전이는 커밋됐고 통지 기록만 실패함 — 「원장에 닿지 않았다」가 아님(a092 26라운드 보이스 B #7 잔재, 단위 ⑤ 의 exit ·
+		// 자격 증명 두 자리와 같은 규칙). 통지 기록 실패는 기록 입구가 이미 전달 실패 사유로 잠갔음.
+		r.log(obs.EventOperatingMode, true,
+			"loop", loop.Name, obs.FieldReason, err.Error(),
+			obs.FieldDetail, "sustained cycle failure tightened the operating mode to ENTRY_BLOCKED, but its "+
+				"notice could not be recorded")
+		return
+	}
 	if err != nil {
 		r.log(obs.EventOperatingMode, true,
 			"loop", loop.Name, obs.FieldReason, err.Error(),

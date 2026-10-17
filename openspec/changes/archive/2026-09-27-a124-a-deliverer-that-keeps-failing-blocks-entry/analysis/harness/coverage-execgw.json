@@ -1,0 +1,72 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/execgw",
+ "tests_run": 59,
+ "failed_tests": [],
+ "union_passed": true,
+ "failures": {},
+ "bundles": {
+  "internal-execgw--entrygate.block": {
+   "B1": {
+    "kind": "if",
+    "line": 535,
+    "column": 2,
+    "block": "535.45-538.3",
+    "entered_by": [
+     "TestARejectedCredentialTightensTheOperatingMode",
+     "TestARelaxationClearsTheLatch",
+     "TestATighteningBetweenIssuanceAndSubmissionIsRefusedAtTheGateway",
+     "TestAccountBlockCoversEveryTradableSymbol",
+     "TestAnAccountWideStateBlocksEverything",
+     "TestAuthClassificationStillLatchesThroughTheSentinel",
+     "TestAuthFailureLatchesEntryImmediately",
+     "TestBlockSymbolWithoutASymbolLatchesTheAccount",
+     "TestCheckEntryStaysAccountWide",
+     "TestEveryClearRequestAdvancesTheReasonsEpoch",
+     "TestEveryEntryBlockingConditionReachesTheChain",
+     "TestNothingButThatReasonsClearMovesItsEpoch",
+     "TestReplayKeyConflictEnqueuesTheCriticalAlert",
+     "TestTheLatchClearsThroughTheGatesOwnRules",
+     "TestTheLatchSurfaceNeverDisagreesWithTheGate",
+     "TestTheModeLatchIsReplacedRatherThanAccumulated",
+     "TestTheModeSnapshotIsTheSharedView",
+     "TestTheRestartRebuildsTheModeLatch",
+     "TestTheRetrierWithoutAnEscalatorStillLatches",
+     "TestTheSenderDownReasonHasADeterministicLatchPrecedence",
+     "TestUnresolvedBlocksTheSymbolUntilAnOperatorResolves"
+    ],
+    "union": true
+   }
+  },
+  "internal-execgw--entrygate.clear": {
+   "B1": {
+    "kind": "if",
+    "line": 547,
+    "column": 2,
+    "block": "547.26-549.3",
+    "entered_by": [
+     "TestAConditionalBlockAfterAClearChangesNothing",
+     "TestAuthFailureLatchesEntryImmediately",
+     "TestEveryClearRequestAdvancesTheReasonsEpoch",
+     "TestNothingButThatReasonsClearMovesItsEpoch",
+     "TestTheEpochComparisonAndTheLatchAreOneStep",
+     "TestTheLatchClearsThroughTheGatesOwnRules"
+    ],
+    "union": true
+   },
+   "B2": {
+    "kind": "if",
+    "line": 551,
+    "column": 2,
+    "block": "551.44-554.3",
+    "entered_by": [
+     "TestAuthFailureLatchesEntryImmediately",
+     "TestEveryClearRequestAdvancesTheReasonsEpoch",
+     "TestNothingButThatReasonsClearMovesItsEpoch",
+     "TestTheEpochComparisonAndTheLatchAreOneStep",
+     "TestTheLatchClearsThroughTheGatesOwnRules"
+    ],
+    "union": true
+   }
+  }
+ }
+}

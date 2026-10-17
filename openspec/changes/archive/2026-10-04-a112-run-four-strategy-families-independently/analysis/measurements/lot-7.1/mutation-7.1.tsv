@@ -1,0 +1,13 @@
+TREE	HEAD 3403be286f8880e799f8d53d5a97acfb8dbbf40f (git archive) + own: internal/scheduler/budget.go,internal/scheduler/a112_strategy_scope_test.go,internal/scheduler/strategy_scope.go
+CONTROL	GREEN	[./internal/scheduler pass events 146]
+T01 completion ignores the scope (cross-family replay accepted)	CAUGHT	1 failing: TestScopedAndUnscopedCapabilitiesCannotCompleteEachOther
+T02 scoped completion skips the token's own scope check	CAUGHT	1 failing: TestAContinuationCapabilityCannotCompleteABreakoutPoll
+T03 unscoped API completes scoped capabilities (scoped -> unscoped replay)	CAUGHT	2 failing: TestScopedAndUnscopedCapabilitiesCannotCompleteEachOther, TestCommitmentCapabilityIsOpaqueAndBoundToCoordinatorKeyClassAndGeneration
+T04 scoped API completes unscoped capabilities (unscoped -> scoped replay)	CAUGHT	1 failing: TestScopedAndUnscopedCapabilitiesCannotCompleteEachOther
+T05 issuance does not bind the scope	CAUGHT	2 failing: TestAContinuationCapabilityCannotCompleteABreakoutPoll, TestScopedAndUnscopedCapabilitiesCannotCompleteEachOther
+T06 each family gets its own capacity (capacity multiplied)	CAUGHT	19 failing: TestEveryScopeSharesOnePhysicalCommitmentSet, TestEightLanesRacingForTheLastSlotCommitOnce, TestBudgetArithmeticFailsClosedForInvalidBounds, TestCandidateEntryAndAnalyticsNeverSpendReservedBudget, TestOutstandingCommitmentsSurviveNewObservationInSameResetWindow, TestCompletionClockFailureLeavesCommitmentInFlight/nil, TestCompletionClockFailureLeavesCommitmentInFlight/zero, TestCompleteNeverReopensCapacityWithoutAuthoritativeObservation …
+T07 refusal name leaks the internal reason instead of BUDGET_DEFERRED	CAUGHT	2 failing: TestEveryScopeSharesOnePhysicalCommitmentSet, TestEightLanesRacingForTheLastSlotCommitOnce
+T08 safety classes accepted by the strategy API	CAUGHT	1 failing: TestAnInvalidStrategyScopeOrSafetyClassIsDeferred
+T09 scope validation removed	CAUGHT	1 failing: TestAnInvalidStrategyScopeOrSafetyClassIsDeferred
+# T10 추가 후 단독 실행(HEAD de3b4f65 + own):
+T10 a production caller of the strategy budget API appears (Q4 pin)	CAUGHT	1 failing: TestTheStrategyBudgetAPIHasNoProductionCallerYet

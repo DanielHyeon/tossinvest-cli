@@ -1,0 +1,149 @@
+{
+  "file": "../../internal/app/engine/strategy_dispatch_handoff.go",
+  "source_sha256": "e541876ee046c38c4f4c3636aeb78586967c099438bad58b1c1d6bcdfece270b",
+  "package": "engine",
+  "function": "dispatchHandoffs",
+  "receiver": "strategyProposalMarketAuthority",
+  "signature": "strategyProposalMarketAuthority.dispatchHandoffs(params=0, results=1)",
+  "start": {
+    "line": 37,
+    "column": 1
+  },
+  "end": {
+    "line": 55,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 38,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 43,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 39,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 6
+      },
+      "text": "Verified"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 6
+      },
+      "text": "authority.familyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 36
+      },
+      "text": "authority.dispatchHandoff"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 14
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 45
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 14
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 31
+      },
+      "text": "entry.authority.Proposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 39
+      },
+      "text": "strategyProposalSetDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 9
+      },
+      "text": "strategyhandoff.AdmitEachOwnerScope"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 44,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 53,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

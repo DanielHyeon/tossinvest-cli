@@ -1,0 +1,27 @@
+
+Callers of "deliverEachStrategyHandoff" (8):
+
+function    a112TwoScopePin
+  internal/app/engine/a112_owner_scope_handoff_test.go:137
+
+function    TestEveryAdmittedOwnerScopeReachesTheDeliveryBody
+  internal/app/engine/a112_owner_scope_handoff_test.go:174
+
+function    TestAScopeFaultStopsTheCycleBeforeTheNextScope
+  internal/app/engine/a112_owner_scope_handoff_test.go:191
+
+function    TestOnlyATypedScopeRefusalIsSkippedEveryOtherFaultStops
+  internal/app/engine/a112_scope_refusal_census_test.go:100
+
+function    TestTheFirstLegAuthorityRefusesASecondBreakoutLegEvenPastTheDeliverySkip
+  internal/app/engine/a112_breakout_first_leg_only_test.go:180
+
+function    a137Deliver
+  internal/app/engine/a137_daily_loss_cycle_test.go:37
+
+function    a137RunCycles
+  internal/app/engine/a137_lane_kinds_test.go:41
+
+function    dispatchStrategyMarketHandoffs
+  internal/app/engine/strategy_market_handoff_delivery.go:32
+

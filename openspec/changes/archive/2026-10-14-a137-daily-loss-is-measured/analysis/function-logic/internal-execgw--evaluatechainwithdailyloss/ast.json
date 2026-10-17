@@ -1,0 +1,145 @@
+{
+  "file": "internal/execgw/a137_daily_loss.go",
+  "source_sha256": "d49003643c5f13fba6211319eb64ba6712c75d22cdbc89cedf30ff5df08ef04c",
+  "package": "execgw",
+  "function": "evaluateChainWithDailyLoss",
+  "signature": "evaluateChainWithDailyLoss(params=2, results=2)",
+  "start": {
+    "line": 187,
+    "column": 1
+  },
+  "end": {
+    "line": 199,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 189,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 190,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 195,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 13
+      },
+      "text": "evaluateChain"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 74
+      },
+      "text": "in.Policy.LimitCurrency"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 14
+      },
+      "text": "evaluateChain"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 66
+      },
+      "text": "strings.TrimPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 85
+      },
+      "text": "measureErr.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 105
+      },
+      "text": "dailyloss.ErrUnmeasurable.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 188,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 193,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 194,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 197,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

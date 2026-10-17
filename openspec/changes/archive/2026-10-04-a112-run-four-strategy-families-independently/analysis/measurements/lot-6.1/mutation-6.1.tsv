@@ -1,0 +1,10 @@
+TREE	HEAD 951b3ec382cdb6e9fb14af9006bf2621bf9c488c (git archive) + own: internal/riskbucket/production_snapshot_authority.go,internal/strategyrouter/production.go,internal/riskbucket/a112_family_risk_binding_test.go,internal/strategyrouter/a112_lane_family_test.go
+CONTROL	GREEN	[./internal/riskbucket pass events 131] [./internal/strategyrouter pass events 14]
+V01 two families sharing a risk id accepted	CAUGHT	1 failing: TestARiskIDSharedByTwoFamiliesRefusesThePolicy
+V02 a lane without a family accepted	BUILD-FAIL	0 failing:  | internal/riskbucket/production_snapshot_authority.go:266:11: declared and not used: known
+V03 family lint removed	CAUGHT	1 failing: TestARiskIDSharedByTwoFamiliesRefusesThePolicy
+V04 family resolved from the wrong market	CAUGHT	4 failing: TestTheFamilyIsResolvedInThePolicysOwnMarket, TestA126SnapshotDigestIsReplayDeterministicAcrossReleaseSharedFillAndRevert, TestProductionRiskSnapshotAuthorityPairedKRUSSameWave, TestProductionRiskSnapshotAuthorityFailureIsMarketLocal
+V05 resolver ignores the market (any market's lane resolves)	CAUGHT	2 failing: TestTheFamilyIsResolvedInThePolicysOwnMarket, TestProductionLaneFamilyIsDerivedFromTheCompleteRouteTable
+V06 resolver invents a family for unknown lanes	CAUGHT	3 failing: TestAStrategyEntryWhoseLaneHasNoFamilyRefusesThePolicy, TestTheFamilyIsResolvedInThePolicysOwnMarket, TestProductionLaneFamilyIsDerivedFromTheCompleteRouteTable
+V07 weekly horizon squeezed into SHORT	CAUGHT	1 failing: TestAWeeklyLaneIsRefusedForItsHorizonUntilAMappingIsDecided
+# V02 재정의(첫 실행 BUILD-FAIL — 미사용 변수) 후 단독 재실행(같은 HEAD 951b3ec3 + own): V02 a lane without a family accepted	CAUGHT	2 failing: TestAStrategyEntryWhoseLaneHasNoFamilyRefusesThePolicy, TestTheFamilyIsResolvedInThePolicysOwnMarket

@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "host": {
+    "product": "Codex CLI exec and Codex Desktop bundled CLI",
+    "version": "0.154.0; 0.155.0-alpha.16.3"
+  },
+  "post_tool_use_names": [
+    {"name": "Bash", "evidence": ["delivery-inferred", "binary-constant"]},
+    {"name": "apply_patch", "evidence": ["binary-constant"]}
+  ]
+}

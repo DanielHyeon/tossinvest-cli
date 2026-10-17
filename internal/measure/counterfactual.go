@@ -365,6 +365,7 @@ func gridPolicy(market costs.Market) (risk.Policy, string, error) {
 	policy.MaxOpenExposure = money(headroom, currency)
 	policy.MaxDailyLoss = money(headroom, currency)
 	policy.RiskBudget = money(headroom, currency)
+	policy.MaxDailyBuyNotional = money(headroom, currency) // a136: 새 필수 칸 — 격자는 기하만 거부해야 함
 	if err := policy.Validate(); err != nil {
 		return risk.Policy{}, "", fmt.Errorf("measure: the grid policy is unusable: %w", err)
 	}

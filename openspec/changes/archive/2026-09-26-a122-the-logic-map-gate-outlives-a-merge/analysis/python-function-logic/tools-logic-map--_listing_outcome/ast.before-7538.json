@@ -1,0 +1,149 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "5406cac16a439266f3d3cdee90728df5b9d90a66",
+  "head_commit": "5406cac16a439266f3d3cdee90728df5b9d90a66",
+  "source_sha256": "8d2a3338fdab86d66367020e8dfca3c832027a304c1c489a2f7124c1f19a8f17",
+  "function": "_listing_outcome",
+  "signature": "_listing_outcome(path)",
+  "start": {
+    "line": 1465,
+    "column": 1
+  },
+  "end": {
+    "line": 1495,
+    "column": 66
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 1479,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "For",
+      "line": 1481,
+      "inherited_line": false,
+      "source": "for child in path.iterdir():"
+    },
+    {
+      "id": "B3",
+      "kind": "Try",
+      "line": 1482,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B4",
+      "kind": "ExceptHandler",
+      "line": 1484,
+      "inherited_line": false,
+      "source": "except OSError as exc:"
+    },
+    {
+      "id": "B5",
+      "kind": "ExceptHandler",
+      "line": 1489,
+      "inherited_line": false,
+      "source": "except OSError as exc:"
+    },
+    {
+      "id": "B6",
+      "kind": "comprehension",
+      "line": 1491,
+      "inherited_line": true,
+      "source": " for raw, is_dir in ((name.encode('utf-8'), is_dir) for name, is_dir in entries)"
+    },
+    {
+      "id": "B7",
+      "kind": "IfExp",
+      "line": 1492,
+      "inherited_line": false,
+      "source": "b'd' if is_dir else b'f'"
+    },
+    {
+      "id": "B8",
+      "kind": "comprehension",
+      "line": 1493,
+      "inherited_line": true,
+      "source": " for name, is_dir in entries"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1490,
+      "value": "(_failed(exc), exc)"
+    },
+    {
+      "line": 1495,
+      "value": "('list:' + hashlib.sha256(encoded).hexdigest(), entries)"
+    }
+  ],
+  "raises": [
+    {
+      "line": 1485,
+      "source": "raise UnstatableEntry(exc.errno, f'cannot tell what `{child.name}` is: {exc.strerror}', str(child)) from exc"
+    }
+  ],
+  "calls": [
+    {
+      "line": 1481,
+      "callee": "path.iterdir"
+    },
+    {
+      "line": 1483,
+      "callee": "os.stat"
+    },
+    {
+      "line": 1485,
+      "callee": "UnstatableEntry"
+    },
+    {
+      "line": 1486,
+      "callee": "str"
+    },
+    {
+      "line": 1487,
+      "callee": "entries.append"
+    },
+    {
+      "line": 1487,
+      "callee": "stat.S_ISDIR"
+    },
+    {
+      "line": 1488,
+      "callee": "entries.sort"
+    },
+    {
+      "line": 1490,
+      "callee": "_failed"
+    },
+    {
+      "line": 1491,
+      "callee": "b''.join"
+    },
+    {
+      "line": 1492,
+      "callee": "len"
+    },
+    {
+      "line": 1492,
+      "callee": "len(raw).to_bytes"
+    },
+    {
+      "line": 1493,
+      "callee": "name.encode"
+    },
+    {
+      "line": 1495,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 1495,
+      "callee": "hashlib.sha256(encoded).hexdigest"
+    }
+  ]
+}

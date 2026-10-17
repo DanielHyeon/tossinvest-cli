@@ -1,0 +1,14 @@
+== HEAD ac17ec7543fd44bc4cf1567dbc906a1d0c421331 (scratch on 3be54204e514624e7e9f97d8eea61108c8682520)
+== make lint
+go vet ./...
+go vet -tags tossos_testseams ./...
+make lint exit=0 (rerun with real status)
+== go test untagged breakoutlane
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.215s
+== go test tagged breakoutlane
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.203s
+== race breakoutlane
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	2.473s
+== openspec validate
+Change 'a112-run-four-strategy-families-independently' is valid
+== check_analysis --change a112: HEAD 173 findings, lot 173, normalized set delta 0/0

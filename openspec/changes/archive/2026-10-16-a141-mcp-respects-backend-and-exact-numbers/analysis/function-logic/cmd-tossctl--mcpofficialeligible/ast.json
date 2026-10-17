@@ -1,0 +1,29 @@
+{
+  "file": "cmd/tossctl/mcp.go",
+  "source_sha256": "5ce62e06dcc392d1701a197bca0ece3119a0cbf2da057f0d891753582beaf3d0",
+  "package": "main",
+  "function": "mcpOfficialEligible",
+  "signature": "mcpOfficialEligible(params=3, results=1)",
+  "start": {
+    "line": 135,
+    "column": 1
+  },
+  "end": {
+    "line": 137,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 136,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

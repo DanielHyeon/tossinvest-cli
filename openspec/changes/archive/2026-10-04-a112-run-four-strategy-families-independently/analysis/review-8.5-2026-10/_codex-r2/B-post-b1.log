@@ -1,0 +1,8 @@
+=== RUN   TestReviewB1Acceptance
+    review_b1_test.go:62: B1 combinations=2704 observations=16224 accepted=29
+--- PASS: TestReviewB1Acceptance (0.50s)
+=== RUN   TestReviewB1DiagnosticPayload
+    review_b1_test.go:68: lane_error="strategyrouter: four-family activation unavailable: descriptors[lane_id=synthetic-account-123\nFORGED_RECORD]: lane_id" undeclared=false
+--- PASS: TestReviewB1DiagnosticPayload (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	0.503s

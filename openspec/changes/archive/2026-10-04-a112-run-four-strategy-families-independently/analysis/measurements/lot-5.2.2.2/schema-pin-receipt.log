@@ -1,0 +1,8 @@
+# 결함 영수증: 생산 위험 적재기 스키마 핀 27 vs journal.SchemaVersion — 2026-10-01T04:40:13+09:00 HEAD 8870c6c9 (작업 트리 미커밋 5.2.2.2)
+# 재현: go test -tags tossos_testseams -run TestTheRiskStubBridge ./internal/app/engine/ (fixture 위험 적재기 journalPath → admission 원장)
+# 코드 좌표: internal/riskbucket/production_snapshot_authority.go:33 productionRiskJournalSchema=27, :361 user_version 비교; internal/journal/schema.go:6 SchemaVersion=35; 생산 호출 internal/app/engine/strategy_entry_supervisor.go:328
+=== RUN   TestTheRiskStubBridgeIsStillNeededBecauseTheLoaderRefusesTheRealJournal
+    a112_owner_scope_trading_test.go:376: receipt: journal.SchemaVersion=35, real-journal load refused: risk bucket: production snapshot authority unavailable: risk bucket: exact journal schema unavailable
+--- PASS: TestTheRiskStubBridgeIsStillNeededBecauseTheLoaderRefusesTheRealJournal (0.56s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.565s

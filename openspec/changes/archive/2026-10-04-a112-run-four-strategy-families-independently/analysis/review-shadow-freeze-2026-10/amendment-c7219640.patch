@@ -1,0 +1,33 @@
+diff --git a/openspec/changes/a112-run-four-strategy-families-independently/design.md b/openspec/changes/a112-run-four-strategy-families-independently/design.md
+index 8eb654dc..a9ffbb87 100644
+--- a/openspec/changes/a112-run-four-strategy-families-independently/design.md
++++ b/openspec/changes/a112-run-four-strategy-families-independently/design.md
+@@ -243,7 +243,9 @@ production manifest는 각 market의 exact four descriptors와 family identity,
+ 
+ **개정 2026-09-27 [a112 결정 62] — 활성화의 부재·만료·폐기는 "선언" 여부로 가른다 (태스크 8.7.2).** 배포가 이 시장에 활성화 핀(`TOSSOS_STRATEGY_FAMILY_ACTIVATION_<MARKET>_MANIFEST_SHA256`)을 두지 않았으면 4-가족 런타임이 **배포되지 않은** 것이고, 그 시장은 기존 시장 단위 경로를 그대로 쓴다(토글 OFF = upstream, 오늘 생산은 핀 0 건). 핀을 두었는데 활성화를 쓸 수 없으면 — 파일 없음·핀 불일치·만료·폐기·결속 불일치 — 그 시장의 네 가족은 전부 OFF 이고 신규 진입이 닫힌다(`FAMILY_GATE_CLOSED`). 기존 경로로 돌아가지 않는다: 돌아가면 사람이 매니페스트에서 끈 가족이 만료·폐기 순간 되살아난다. 공유 safety 루프·원장 계보·레인 잠금은 이 판정이 건드리지 않는다. spec 의 "required activation authority 가 missing 이면 exposure-raising request 0 (SHALL)" 은 **선언된** 4-가족 활성화에 대해 이 형태로 만족되고, 미선언 시장의 기존 경로는 5.1.2.1·8.7.1 이 이미 적은 대로 "토글 OFF = upstream" 쪽이 가진다. 주문 lease 는 가족 활성화의 남은 수명으로 깎이고(min 결합만), 게이트웨이가 브로커 바이트 전에 부르는 최종 검사가 실시계로 만료를 다시 본다 — lease 행의 명목 만료는 파도→발급 사이 δ 만큼 넘을 수 있으나 SUBMITTING 은 만료 뒤 최종 검사를 통과할 수 없다. 재시작을 넘는 세대 래칫은 없다(잔여, 원장 기록이 필요 — 선례 5.3.3).
+ 
+-`OFF/OFF/UNOBSERVED`와 `SHADOW`는 다른 상태다. 새 설치·migration·restart는 전자를 유지한다. SHADOW는 server-owned signed shadow manifest가 명시된 경우에만 read-only evaluation/counterfactual projection을 허용하며 desired/effective/activation을 ON으로 만들거나 dispatch capability를 가질 수 없다. Restart는 과거 process-local shadow 상태를 복원하지 않는다.
++**개정 2026-10-04 [a112 결정 63] — SHADOW manifest의 신뢰 앵커도 서명이 아니라 외부 digest 핀이다 (태스크 7.3.1, 사용자 결정: SHADOW를 a112 안에서 구축).** 결정 61이 "그대로 둔다"고 미뤄 둔 SHADOW의 `signed`를 이 개정이 닫는다. 앵커는 `TOSSOS_STRATEGY_FAMILY_SHADOW_<MARKET>_MANIFEST_SHA256` 핀 + 정규 바이트 등식이고, 근거는 결정 61의 셋이 그대로 적용된다 — 특히 (b): 서명이 더 사는 분리는 개인키가 배포 호스트 밖에 있을 때만 참인데 이 배포에서는 그렇지 않고, 읽기 전용·노출 0인 SHADOW가 노출을 여는 활성화보다 강한 앵커를 갖는 것은 거꾸로다. 이 개정이 바꾸지 않는 것: SHADOW의 두 MUST NOT(ON 승격 금지·dispatch capability 금지), restart 무복원, 24시간 수명·`0400`·소유자 검사·정규 바이트 등식, 그리고 manifest는 생성기(`tools/a112-family-shadow`)만 만든다는 것. spec 델타 :89·:91은 같은 날 같은 결정으로 핀 문구로 개정됐다.
++
++`OFF/OFF/UNOBSERVED`와 `SHADOW`는 다른 상태다. 새 설치·migration·restart는 전자를 유지한다. SHADOW는 digest 핀으로 결속된 server-owned shadow manifest가 명시된 경우에만 read-only evaluation/counterfactual projection을 허용하며 desired/effective/activation을 ON으로 만들거나 dispatch capability를 가질 수 없다. Restart는 과거 process-local shadow 상태를 복원하지 않는다.
+ 
+ ### 9. 구현은 다음 모듈 경계를 따른다
+ 
+diff --git a/openspec/changes/a112-run-four-strategy-families-independently/specs/four-family-strategy-runtime/spec.md b/openspec/changes/a112-run-four-strategy-families-independently/specs/four-family-strategy-runtime/spec.md
+index 0155f177..3d019c72 100644
+--- a/openspec/changes/a112-run-four-strategy-families-independently/specs/four-family-strategy-runtime/spec.md
++++ b/openspec/changes/a112-run-four-strategy-families-independently/specs/four-family-strategy-runtime/spec.md
+@@ -86,10 +86,10 @@ Lane OFF, market close, evidence failure, worker queue pressure와 low-priority
+ - **THEN** exposure-raising broker request는 0건이고 reduce-only safety lifecycle은 계속된다
+ 
+ ### Requirement: SHADOW는 OFF state를 승격하지 않는 read-only runtime이다
+-새 설치·migration·restart는 `desired=OFF`, `effective=OFF`, `runtime=UNOBSERVED`를 유지해야 한다 (SHALL). `SHADOW`는 server-owned signed shadow manifest가 있을 때만 pure evaluation과 counterfactual projection을 허용하며 (SHALL), desired/effective/activation을 ON으로 만들거나 dispatch capability를 소유해서는 안 된다 (MUST NOT). Process-local shadow 상태를 restart에서 자동 복구해서는 안 된다 (MUST NOT).
++새 설치·migration·restart는 `desired=OFF`, `effective=OFF`, `runtime=UNOBSERVED`를 유지해야 한다 (SHALL). `SHADOW`는 digest 핀(`TOSSOS_STRATEGY_FAMILY_SHADOW_<MARKET>_MANIFEST_SHA256`)으로 결속된 server-owned shadow manifest가 있을 때만 pure evaluation과 counterfactual projection을 허용하며 (SHALL), desired/effective/activation을 ON으로 만들거나 dispatch capability를 소유해서는 안 된다 (MUST NOT). Process-local shadow 상태를 restart에서 자동 복구해서는 안 된다 (MUST NOT). (개정 2026-10-04 [a112 결정 63] — 신뢰 앵커를 "signed"에서 digest 핀으로: 결정 61과 같은 모델, 근거는 design.md 결정 63 문단.)
+ 
+-#### Scenario: signed shadow manifest가 없는 restart
+-- **WHEN** 이전 process가 SHADOW를 관측한 뒤 signed shadow manifest 없이 restart한다
++#### Scenario: shadow manifest 핀이 없는 restart
++- **WHEN** 이전 process가 SHADOW를 관측한 뒤 shadow manifest 핀 없이 restart한다
+ - **THEN** 모든 lane는 OFF/OFF/UNOBSERVED이고 proposal dispatch 또는 activation write는 0건이다
+ 
+ ### Requirement: runtime lineage와 health는 lane 단위로 결정적으로 관측된다

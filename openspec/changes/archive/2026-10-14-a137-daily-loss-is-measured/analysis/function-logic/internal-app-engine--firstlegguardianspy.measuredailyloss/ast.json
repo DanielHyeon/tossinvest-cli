@@ -1,0 +1,47 @@
+{
+  "file": "internal/app/engine/strategy_first_leg_admission_test.go",
+  "source_sha256": "ae208ecf8187b894d61d6f43f60ca9972cbe08101dc8550267c1539592a967df",
+  "package": "engine",
+  "function": "MeasureDailyLoss",
+  "receiver": "firstLegGuardianSpy",
+  "signature": "firstLegGuardianSpy.MeasureDailyLoss(params=1, results=1)",
+  "start": {
+    "line": 177,
+    "column": 1
+  },
+  "end": {
+    "line": 180,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 13
+      },
+      "text": "strings.TrimPrefix"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 178,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

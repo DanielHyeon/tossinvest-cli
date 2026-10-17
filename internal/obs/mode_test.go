@@ -110,10 +110,13 @@ func TestTheTransitionLogLineIsCountable(t *testing.T) {
 	}
 	want := map[string]string{
 		obs.FieldEvent:     string(obs.EventOperatingMode),
-		obs.FieldAccount:   "acct-7",
 		obs.FieldFromState: journal.ModeEntryBlocked,
 		obs.FieldToState:   journal.ModeNormal,
 		obs.FieldActor:     journal.ModeActorOperator,
+	}
+	// a131(사용자 결정 2026-10-12): 계좌는 로그에 남지 않음 — 이 줄은 예전에 계좌 필드를 셌다.
+	if _, ok := line[obs.FieldAccount]; ok {
+		t.Fatalf("the line carries an account field: %v", line)
 	}
 	for field, value := range want {
 		got, ok := line[field]

@@ -113,6 +113,9 @@ func TestMutatingAnnotationOnTradeCommands(t *testing.T) {
 		// the whole reason this command exists is that the objects it reaches are
 		// ones no automatic path may touch (verify-observes-the-trigger).
 		"tossctl verify abort": true,
+		// a121: verify reconcile 은 주문을 내지 않지만(공식 GET 만) 기록에 영속 대사 사건을 쓰고 사람 승인(y/N)을
+		// 요구한다 — 같은 운영자 명령 가족이라 자동 실행 금지 표지를 단다(design 「로트 1 처분」 S2).
+		"tossctl verify reconcile": true,
 		// console drives the same verify runner from a loopback page
 		// (verify-execution-capability task 1.6). It places live orders only
 		// through that runner and only after the typed approval, but it *can*
@@ -124,7 +127,19 @@ func TestMutatingAnnotationOnTradeCommands(t *testing.T) {
 		// itself even though interlock clause 6 makes a verified gate unreachable
 		// in this build: the annotation describes what the command is, not what
 		// this build happens to permit.
-		"tossctl engine run":               true,
+		"tossctl engine run": true,
+		// a066 5.5(design D8): 진입 손실 잠금 · RISK_OVERAGE latch 의 운영자 해제. 주문은 내지 않지만
+		// 노출 증가를 다시 여는 완화이고, 사용자 결정(2026-09-28)이 "tossctl mutating 명령(자동 실행 불가)"을
+		// 진입점으로 정했다. 읽기 전용 `engine risk-latch-show` 는 여기 없다.
+		"tossctl engine entry-lock-release": true,
+		"tossctl engine risk-latch-release": true,
+		// a092 단위 ④: 사람의 운영 모드 완화(노출 증가를 다시 여는 완화 — 같은 사용자 결정 가족)와, 원장을 쓰고 진입
+		// 래치를 푸는 알림 승인(Manager 판정 4 · a092 C17). 둘 다 주문은 내지 않음 — 자동 실행 금지 표지.
+		"tossctl engine mode-release": true,
+		"tossctl engine alerts ack":   true,
+		// a094 D−4.5: park(UNRESOLVED_IN_DOUBT) 해동 — 원장 전이와 발의 해제를 하는 운영자 해소(주문은 내지 않음). 같은 완화
+		// 명령 가족 계약이라 자동 실행 금지 표지를 단다.
+		"tossctl engine attempt-resolve":   true,
 		"tossctl order place":              true,
 		"tossctl order cancel":             true,
 		"tossctl order amend":              true,

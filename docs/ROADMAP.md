@@ -160,3 +160,100 @@ typed-confirmation을 유지한다 — 이 결정은 UI 표면에만 적용한�
 - MIT LICENSE·원저작권 고지 유지, 시크릿·세션·DB(sidecar 포함) 커밋 금지
 - NTFS 마운트: `core.filemode=false` 필수. **영속 데이터(원장·journal)는 저장소 밖 ext4 경로에 둔다**
 - Go module 경로: 유지 (사용자 결정 대기 항목 — review.md의 미결정 사항 참조)
+
+## a092 이월 · 미배정 후속 (a092 archive 뒤에도 남는 의무 — 2026-09-30)
+
+`a092-an-alert-does-not-hold-the-stop` 이 넘긴 것. 소유 change 가 아직 없는 항목은 「미배정」이다. 각 항에 **그것에 기대는 a092 계약**과 행선을 적는다. 근거 정본은 a092 `review.md` §24.11 · §24.12 이월 표와 `tasks.md` 「미배정 후속으로 이관한 것」이다.
+
+| 항목 | 기대는 a092 계약 | 행선 |
+|---|---|---|
+| `runtime.go` `Runtime.escalate` → `EscalateOperatingMode` 무기한 대기(3라운드 H2(a)) | 감독자 승격은 동기 통지자 경로(21판 Q1 문자 해석으로 범위 밖) | 미배정 |
+| 엔진 종료 순서 · 종료 중 완화 통지(떨어진 ctx 에 기한 없음, 26라운드 보이스 A N1) | mode-release 는 커밋 뒤 통지 · 재읽기를 요청 ctx 에서 뗌 | 종료 순서 후속 로트 — 완화 처리기를 원장 close 앞에 기다리기 |
+| `operating_modes` 최신 행 읽기의 temp B-tree 정렬(`ORDER BY rowid`, 무한 성장 — EXPLAIN 영수증 `analysis/harness/explain-operating-modes-order.txt`) | 모드 커밋 순서 = rowid(C5 · K14) | v33 마이그레이션 후보 — 스키마 핀 27 · 레인 활성화 순서와 함께 |
+| mode-release 통지 확인이 PENDING 전체를 읽음 → `event_key` 점조회 | 완화 결과는 다시 읽은 값(K16 · M12) | 후속 로트(성능) |
+| `Acknowledge` 의 N 행 autocommit(`n.mu` 아래) | 기록과 승인 셈~해제가 같은 `n.mu`(원칙) | 후속 로트(성능) |
+| `Flush` 결과 분류 · 차단 · 전송 위 `n.mu`(생산 호출자 0, K19 핀) | 생산 배달은 a098/a124 실행자 | 생산 연결 전 수리 |
+| `ClaimDisposition` 미지 값 처리 | 원장이 세 값만 반환(잠재) | 후속 로트(결과 분류 명시화) |
+| exit 배선 Floor 존재 검사(`if opts.Floor == nil`) · k3 핀이 호출 모양만 셈 · 이름 기반 구조 핀이 메서드 값을 못 봄 | k3 합성(floor 조회 401 은 기록 전용) · 입구 도달 경로 핀 | 후속 로트(구조 핀 계측기 — `*types.Func` 참조 세기) |
+| 제어 서버 · 클라이언트 사본(알림 제어 복제) · 기록 실패 처리 두 사본 · 승격 문구 판정 네 자리 · `claimAndDeliver` 수동 Unlock | 동작 불변 리팩터 | 후속 로트(리팩터) |
+| `Notifier` 에 `Close`/`Stop` 없음 · `flatten.Saga.Notifier` nil 지뢰(M6 핀이 조립 사실만 고정) · `o.Interval()` drift | exit 기록 전용(21판) 은 이 셋에 기대지 않음 | 미배정 |
+| 계좌 원문 로그 base 관행(약 20곳) · 동기 `claimAndDeliver` 게이트 설명의 원문 오류 | 불변식 8 (a) 는 a092 새 표면만 닫음 | 사람 결정 큐 「계좌 가림 설계」 |
+| `check_values.py` · `coverage_gate.py` 개선(옛 a092 10.4.2~10.4.6) | 없음(문서 도구) | a092 문서 도구 후속 로트(미배정) |
+
+## a095 이월 · 미배정 후속 (a095 archive 뒤에도 남는 의무 — 2026-09-30)
+
+`a095-a-stop-must-know-what-it-covers` 가 넘긴 것. 근거는 a095 `review.md` §4.7 · §4.8 · §4.9 와 `design.md` D8 · `issues.md`.
+
+| 항목 | 기대는 a095 계약 | 행선 |
+|---|---|---|
+| 배포 전 `main` 과 SchemaVersion 대조 · 배포 직전 원장 읽기 전용 재측정 · 배포 후 `alert_outbox` 에 편입 실패 critical 행 확인(tasks 7.1 · 7.2 · 7.4) | 공시 문안 §4.9 | 사람 항목 — 배포 승인 때 |
+| 대사 goroutine 의 동기 배달 비용 — transport 사망 시 편입 실패 보유당 사이클마다 ≈34s(계산값, 상한 54s) × N(design D8, Q7 둘째 면) | critical 은 메모리 래치를 지남(6판 원칙) · 정본은 이 대기를 근거로 인용 금지(SHALL NOT) | 미배정 — 후보: PENDING 재배달을 배달 실행자에게만 |
+| 수량 증가 래치가 「보고한 최대 수량」이라 감소(부분 익절 · 부분 매도) 뒤의 새 증가를 그 최대를 넘기 전까지 놓침 | 델타 「새 최대 수량마다 보고」 | 미배정 — 체결로 설명되지 않는 순증 기준 래치(델타 문언 변경) |
+| 편입 커밋 뒤 보호 미개설 보유의 알림 · 오해 부르는 성공 문구(`issues.md` I7) | 범주 ③ 은 critical 요구 밖(이름 붙은 경계) | 미배정 |
+| 총위험 보고(R3, `issues.md` I2) · 불타기 래칫 선행 조건(Q6, `issues.md` I1) · 운영자 재편입 하향의 승인 · audit(`issues.md` I6) | 없음(보류 · 후속) | 미배정 |
+
+## a094 이월 · 미배정 후속 (a094 archive 뒤에도 남는 의무 — 2026-10-01)
+
+`a094-a-stop-clears-what-blocks-it` 가 넘긴 것. 근거는 a094 `review.md` 「구현 로트」 §7~§11 · `design.md` D−2.4 · D−3.4 · D−4.2 · D−9.3 · D−9.4 · `issues.md` I3 · I4 · I5.
+
+| 항목 | 사유 | 행선 |
+|---|---|---|
+| 배포 전 `main` 과 SchemaVersion 대조 · 엔진 재시작 승인(롤백 원칙 8.2) · 배포 전 운영 원장의 ACKED 행 · intent 없는 무장 발의 행을 읽기 전용으로 셈 · 배포 뒤 첫 409 사건 실물 확인 · 얼어붙은 세 포지션(475150 · 080220 · 272210) 처리(tasks 8.1~8.4) | 스키마 변경 0 · 엔진 정지 = 손절 없음 · 이 change 는 소급 보호하지 않음(I4) | 사람 항목 — 배포 승인 때 |
+| 엔진 밖 주문(사람이 낸 반대 주문)의 취소 확대(tasks 3.X1 · D−2.4 선행 조건 넷). 그 전에는 새 409 의 결말이 「사람이 반대 주문을 치울 때까지 손절 보류 · 매 주기 거절 보고」 (I3) | 사용자 결정 대기 | 사람 결정 큐 |
+| 판정 불가(시세 없음) 포지션의 종결 대기 알림을 a090 미관측 경보가 덮는지의 통합 시험(tasks 3.R9a, D−9.3) | a090 착지 뒤 교차 시험 | a090 착지 뒤 — a090 또는 후속 로트 |
+| R1 소급 재분류(park 된 옛 409 행, tasks 4bis) | 5판 D−3.4 이연(YAGNI — 사건 두 행은 이미 park, 해동 명령으로 일원화) | 미배정 — 선택 후속 |
+| 나머지 ACKED 정산 — 해소기 matcher 의 주문 번호 판별자 · 단일 일치 덮어쓰기 반례(4.N4x, D−4.2) | 기동은 기록 번호 바이트 일치만 확정 | 미배정 — 후속 change 후보 |
+| UNKNOWN_BROKER_STATE 손 해소 명령 부재(D−9.4) — 종결 증거 대기 알림 본문이 「손 해소 수단은 아직 없다」 고 말함 | 명령이 저장소에 없음 | 미배정 — 후속 change 후보 |
+| 거래일을 건너 살아 있는 주문을 다른 날 취소하면 그 취소가 종결 증거로 찾히지 않음(`ConfirmedCancelOf` 의 거래일 결속 — 엔진 주문 `TimeInForce DAY` 전제, review §9) | 수용된 잔여(이름 붙임) | 미배정 |
+| 브로커 거절 본문의 JSON 중복 키(뒤 값이 이김, review §7 A8) | 수용된 잔여 — 이론적(브로커 실측 0) | 미배정 |
+
+
+## a091 이월 · 미배정 후속 (a091 archive 뒤에도 남는 의무 — 2026-10-01)
+
+`a091-a-stop-that-sold-nothing-is-critical` 가 넘긴 것. 근거는 a091 `design.md` D1 · D3 「새는 칸의 처분」 · D5 「후속 후보」 · D7 「이름 붙인 잔여」 · D8 와 `issues.md` 「후속 후보 — `Notifier.Acknowledge` 의 잠금 범위」.
+
+| 항목 | 사유 | 행선 |
+|---|---|---|
+| 배포 전 `main` 과 SchemaVersion 대조 · 엔진 재시작(두 시장 닫힌 창) · 배포 뒤 첫 `exit.stop_sold_nothing` 실물 확인 · ntfy 구독 필터 갱신(`exit.proposal_capped` 로 거르던 필터는 보호 0주를 더 이상 못 본다 — `docs/operations.md`) | 스키마 변경 0 · 엔진 정지 = 손절 없음 | 사람 항목 — 배포 승인 때 |
+| 알림 켜짐 게이트(D1, Manager Q1 — a095 정본 문자 그대로): `notifications.enabled = false` 엔진에서는 보호 0주가 옛 종류 normal + 로그 줄로 남는다 | 사용자 거부권 항목 — Manager 가 보고 | 사람 결정 큐 |
+| `Notifier.Acknowledge` 의 행별 · 배치 잠금 해제(`internal/obs/notifier.go` 승인이 `n.mu` 를 쥔 채 행마다 fsync — 밀린 행 100 승인 중 exit critical 기록 대기 실측 0.30~0.49s, 앞선 조건 1.06~1.28s) | 셈-해제 배제 불변식(a092 · a124) 아래 설계 필요 — 기존 exit critical 전부가 같은 대기를 진다 | 미배정 — 후속 change 후보 |
+| 보유 0 을 읽었는데 ③(no_holding)로 안 떨어지는 칸 셋 — (a) 매도가능 조회 실패 · (b) 매도가능 조회 지연으로 보유 스냅숏 낡음(StaleSnapshot) · (c) 로컬 수량 오류. 셋 다 critical 로 남김(과보고 방향). 넓히려면 `reconcileFloor` 가 보유 0 을 입력으로 넘겨야 함(riskcalc · 하한 공급자 편집). 또 ③ 는 보유 조회 한 번의 0 을 믿는다(base 와 같은 성질) | 범위 밖 — 이름 붙인 잔여 | 미배정 — 후속 change 후보 |
+| 공식 클라이언트가 요청 · 본문 읽기 오류를 문자열로 감싸 취소 원인을 지움(`internal/official/client.go` `fmt.Errorf("%w: %s", ErrTransport, err)`) — HTTP 요청 중 종료 취소가 ①(floor_unknown) critical 로 기록됨(과보고, 가짜 래치는 `WithoutCancel` 로 없음) | 이름 붙인 잔여(5라운드 codex P2) | 미배정 |
+| 계좌 가림 — exit 루프의 다른 `logErr` 호출자 · base 의 나머지 계좌 필드 줄(a091 은 자기가 새로 닿게 한 줄과 `Notifier.escalate` 두 줄만 가렸다) | a090 D12 · D13 와 같은 큐 | 사람 결정 큐 「계좌 가림 설계」 |
+
+## a090 이월 · 미배정 후속 (a090 archive 뒤에도 남는 의무 — 2026-10-01)
+
+`a090-an-unobserved-position-is-counted` 가 넘긴 것. 근거는 a090 `design.md` D1 · D2 · D9 · D11 · D12 · D13 · Q2 · Q3 와 `review.md` 「리뷰 라운드 1」 · 「Manager 판정 (2026-09-30)」.
+
+| 항목 | 사유 | 행선 |
+|---|---|---|
+| Q2 실측 — 정지·0가격 종목 포함 `/prices` 읽기 전용 GET 1회(장중, 쓰기 0) → design D6 의 [미측정] 두 행 확정(tasks 0.8) | 라이브 실측 — 이 로트 실행 금지(Manager 2026-09-30). 규칙은 결과와 무관(빈도만 알려 줌) | 사람 항목 — 사전 승인 범위 안에서 사람이 장중 실행 |
+| 배포 전 `main` 과 SchemaVersion 대조 · 엔진 재시작(두 시장 닫힌 창) · 배포 뒤 첫 포지션 단위 경보의 실물 확인(tasks 5.1 · 5.2 · 5.3) | 스키마 변경 0 · 엔진 정지 = 손절 없음 | 사람 항목 — 배포 승인 때 |
+| settle 의 루프 체류 몫 실측(주기당 최악 2K+2P 로컬 트랜잭션 — review 「Manager 판정」 표) · 상한 캡 | 정본 「루프에 남는 몫은 이름을 갖고 편성」 — 이름·크기는 기록, 실측·캡은 frozen 범위 밖 | 미배정 — 후속 로트(측정 후 필요 시 캡) |
+| 하류 임대 재검사 5자리 무음(`judge` · `judgeRatchet` · `judgeLadder` · `refreshObservation` · `record` 의 `!o.quoteUsable(quote)` → `return nil`) | Q3 — 판정 진입을 「관측됨」 으로 봄 | 미배정 — 후속 change 후보 |
+| 지속 B2(작업 집합 오류)를 어느 사다리도 재지 않음 · 재시작 창(기점 소실) · workingSet B6(미관리 normal)·B10(완료 정책) | D11-2 · D2 · D1 명명 잔여 | 미배정 |
+| `position_id`(계좌번호 무염 해시) 알림 탑재 · 기록 실패 시 입구 `Notifier.escalate` 로그의 `FieldAccount` 원문(a090 이 호출 경로 하나 추가) | base 관행(원장 내부 키 · a092 이전 승격 로그) — a090 신설 표면은 계좌 0(R17) | 사람 결정 큐 「계좌 가림 설계」(D12 · D13) |
+| 착지 기록이 형제의 같은-파일 편집에 연쇄 거절됨 — 착지는 번들이 역사에 든 커밋(바닥) **이후**여야 하는데, 자기 Go 착지 뒤 형제가 같은 파일을 다시 고치면 그 뒤 어느 커밋도 번들 리비전과 맞지 않는다. 거절 원문(a090 2026-10-01, a094 `e5e7a67f` 가 사이에 exitloop.go 편집): "no commit at or after the evidence (6dd1e74ed666) is accepted as the landing — at the first commit walked, landing point 6dd1e74ed666 is not the revision this evidence describes: internal/app/engine/exitloop.go". a090 은 로컬 합성 커밋(A)으로 게이트를 돌렸다(review 「게이트」) | 조건 5 · 8 의 합성 효과 — 형제 로트가 같은 파일을 병행 편집하는 한 반복 | 미배정 — gate change 후보(Manager 2026-10-01: 같은-파일 로트 직렬화 또는 착지 기록 선행) |
+
+## a112 이월 · 미배정 후속 (a112 5.2.2.2 에서 발견 — 2026-10-01)
+
+`a112-run-four-strategy-families-independently` 태스크 5.2.2.2 가 실측으로 올린 것. 근거는 a112 `review.md` 「5.2.2.2 잔여」 절과 영수증 `openspec/changes/archive/2026-10-04-a112-run-four-strategy-families-independently/analysis/measurements/lot-5.2.2.2/schema-pin-receipt.log`.
+
+| 항목 | 사유 | 행선 |
+|---|---|---|
+| **스키마 핀 27 두 자리** → `journal.SchemaVersion` 결속(또는 읽는 표가 존재하는 최소 버전 이상). ① riskbucket — `internal/riskbucket/production_snapshot_authority.go` `productionRiskJournalSchema = 27` · `PRAGMA user_version` 정확 일치 비교(생산 호출 `internal/app/engine/strategy_entry_supervisor.go` 위험 적재기). ② **strategyrouter**(2026-10-01 a127 조사로 추가) — `internal/strategyrouter/production.go:38` `productionRouteJournalV = 27` · `:609` 정확 일치, supervisor 가 route 적재기에 같은 실원장 경로를 넘긴다. `internal/journal/schema.go:6` `SchemaVersion = 35`. **핀은 SchemaVersion 이 이미 29 이던 커밋 `8022f578`(2026-08-04)에서 태어나 출하된 어느 스키마와도 맞은 적이 없다**(a127 F10 실측 — 앞 판의 「a084 부터 28 이상」은 부정확). route 적재기는 위험보다 **앞**이므로 riskbucket 만 고쳐도 1차 레그는 0 그대로다 — **생산 route · 위험 권한은 어느 범위에서도 ready 가 될 수 없다**(a112 시험 fixture 의 v27 축소 원장이 두 자리 모두를 가렸다) | **레인 활성화의 경성 선행 — route · 위험 두 적재기 모두** — 수리 전에 서명 활성화하면 route 미준비 · 전 범위 `AuthorityUnavailable`(1차 레그 0). 오늘 생산 서명 활성화 0 이라 동작 변화 없음. 시험 stub(user_version 27)이 결함을 가렸다. 수리 착지 시 a112 시험 다리 `a112MirrorLedgerIntoRiskStub` 제거 · 적재기를 실제 원장으로 단일화(트립와이어 `TestTheRiskStubBridgeIsStillNeededBecauseTheLoaderRefusesTheRealJournal` 가 실패로 알림) | **a127** 이 두 적재기를 함께 수리(Manager 2026-10-01 승인) — riskbucket 은 High-risk · a066 영역(판정 B) |
+| **weekly family 활성화의 경성 선행: riskbucket horizon 매핑 결정.** weekly 레인의 horizon 은 `WEEKLY` 인데 위험 버킷 horizon 은 `SHORT`/`MEDIUM` 뿐이라 적재기(`bindProductionRiskInputs`)가 「unsupported horizon」 으로 거절한다 — weekly family 는 활성화돼도 1차 레그 0. 매핑(어느 수평선 용량을 쓰는가)은 위험 의미론 결정 | 스키마 핀과 같은 등급 — 현재 상태는 핀 시험 `TestAWeeklyLaneIsRefusedForItsHorizonUntilAMappingIsDecided`(a112 6.1, 2026-10-01 Manager 판정)가 고정 — 미래 편집이 무음으로 SHORT 에 넣는 것을 막음 | weekly 활성화 로트의 freeze 몫 — 서명 정책 형식 질문(매니페스트 v2)과 함께 |
+| **lease 행의 계보 열 — 활성화 로트의 선행(a112 6.3 판정 (A)+(C)).** lease 발급 후 ~ transport 전 조정 결과 변경은 lease 행에 계보가 없어 검출 불가 — `FinalAuthorityCheck` 는 스케줄 재검증 · 가족 만료만 본다. 오늘 닫힌 지점은 **발급 시점**(1차 레그 권한의 소유자 범위 선택 + 봉인 identity 대조, admission 커밋 전 — `a112_dispatch_lineage_test.go` `TestALineageDriftIsRefusedAtIssuanceBeforeAnyReservationLeaseOrBrokerCall`). family 는 lease 의 LaneID 가 정본 표로 함의한다. **(B)** lease 행에 `lineage_identity` · `score_version` · `calibration_digest`(+ family) 열(journal schema v33 · 트리거) 추가 + transport 직전 현재 조정 결과 재대조 | 4-가족 서명 활성화를 실제로 켜는 로트의 **선행**(활성화 0 인 지금은 YAGNI — Manager 판정 2026-10-01) |
+| **breakout 같은 setup 둘째 첫 레그 — 봉인 해제 로트의 면제 불가 선행(a112 6.4 판정 2026-10-01).** 손절-종결 → 재시작 → 새 매니페스트 CampaignID → 같은 setup 둘째 첫 레그: 첫 레그 캠페인이 손절로 CLOSED 되고 claim 이 풀린다 → 재시작으로 레인 prior 를 잃는다(생산에서 `BreakoutRequest.Prior` 를 채우는 곳 0) → 같은 setup 이 봉 하나만 더해져도 새 스냅숏 digest · 새 ProposalID 로 다시 PROPOSED → 서명 제안 입력 매니페스트가 새 CampaignID 를 실으면 journal 은 FLAT/CLOSED · claim 없음 · 새 캠페인 PK 로 받아들인다 → 같은 setup 의 둘째 첫 레그. 스펙(breakout-retest-strategy-lane 「breakout v1 production 권위는 first-leg 하나로 제한된다」): "Proposal replay, duplicate bar delivery, correction 또는 restart가 동일 setup/bar에서 두 번째 first-leg 권위를 만들면 안 되며 (MUST NOT)". 오늘은 벽 뒤(생산 breakout 입력 전부 거절 — 핀 `TestEveryProductionBreakoutLaneInputIsRefusedAtTheWall` · `TestNoNonTestCodeBuildsABreakoutLaneInputAroundTheWall`) | **면제 불가: 「ErrBreakoutEvidenceUnavailable 해제 로트는 B(SetupID 계보 결속) 또는 C(consumed-setup 원장 기록) 착지 전 해제 불가」.** B = breakout 계보에 SetupID 를 싣고 CampaignID 를 그것에서 유도(봉인 · 골든 — freeze 급), C = admission 과 같은 트랜잭션의 consumed-setup 원장 기록(스키마 범프) | breakout 증거 생산자(ATR · RVOL · 윗꼬리 · 거래량 확장)를 세워 벽을 여는 로트 — 그 로트 안에서 B 또는 C 를 먼저 착지 |
+| **전략 dispatch crash 뒤 결과 대사 · 복구 — 활성화 로트의 면제 불가 선행(a112 6.5 판정 2026-10-01).** 근거(④ 의 위험): SUBMITTING 중 crash 면 브로커에 실주문이 존재할 수 있는데 이 빌드에는 그 결과를 알아낼 경로가 0 이다 — `internal/journal/strategy_dispatch_runtime.go:178` 「No constructor for that authority exists in this build」(ATTESTED_OUTCOME_REQUIRED), `DiscoverStrategyDispatchRecovery` · `RecoverClaimedStrategyDispatchLease` 생산 호출 0 · `internal/strategyruntime`(모델 복구) 생산 import 0 (grep 영수증 `lot-6.5-6.6/recovery-callers-grep.log`). UNKNOWN_BROKER_STATE 가족의 실체이며 활성화 상태에서는 liveness 가 아니라 안전 문제다. 같은 경로 부재로 ② admission 커밋 뒤 · lease 앞, ③ claim 뒤 · SUBMITTING 앞 crash 도 재시작 뒤 이어지지 않는다(그 종목 claim · HELD 용량이 풀리지 않음 — ② 는 lease 가 없어 복구 열거에도 안 보인다). 측정: engine `TestADispatchCrashAtEveryStepNeitherDuplicatesTheOrderNorReleasesTheCapacity`(네 crash 지점 · 재시작) | **면제 불가: 「활성화 로트는 outcome reconciliation 착지 전 해제 불가」.** 대사 경로 = 공식 브로커 정확 결과 증명의 생성자 + 복구 호출자(ATTESTED_OUTCOME_REQUIRED · REFUSE_RELEASE_REQUIRED) + admission-without-lease 열거 | 4-가족 서명 활성화를 실제로 켜는 로트 — 그 로트 안에서 먼저 착지 |
+| **활성화 실패 사유 · 삼킨 사이클 오류의 운영자 표면 — 활성화 로트의 선행(a112 8.8.4 판정 2026-10-04).** 8.8.4 로트 B 로 4-가족 활성화 적재의 거절은 필드명을 오류 사슬에 싣지만(`strategyrouter/production_family_activation.go`), 엔진은 그 오류를 관문 판별(`errors.Is` 미선언 / 그 밖 되돌림)에만 쓰고 snapshot · projection 에 내지 않는다 — 운영자는 여전히 「배포 안 함」 과 「만료 · 폐기 · 결속 불일치」 를 화면에서 못 가른다(미선언과 넷 다 ON 이 둘 다 `GatedCount=0`). `refreshOnly` 갈래가 세는 `SwallowedCycleErrors` 도 같은 처지. 또 공유 읽기 함수 `readProductionRouteFile` 이 OS 원인(없음 · 심링크 · 권한 · 소유자 · 크기)을 자기 sentinel 하나로 접는다. **같은 표면(a112 8.5 보이스 1 P2-3, 2026-10-04 합류):** 활성화가 검증된 시장이 조정 앞에서 닫힌 주기(FX · 설정 · 열쇠 · 중복 · 적재 · 고장)에 ON 레인이 입력 없이 돌아 `REFUSED / ARBITRATION_SEAL_MISMATCH / "the sealed proposal does not establish this worker's lane"` 로 보고된다 — FX 장애가 봉인 경보처럼 읽힌다(latch · 원장 0, 진단 전용). 후보: 「no input this wave」 전용 detail | snapshot/projection 필드(활성화 실패 사유 · 삼킨 오류 계수/첫 원인) + 읽기 함수 원인 보존 — 화면 · OpenAPI 계약 변경이라 7.3 투영과 같은 규율 | 4-가족 서명 활성화를 실제로 켜는 로트 — 그 로트 안에서 먼저 착지 |
+| ~~**SHADOW 런타임(spec four-family-strategy-runtime :88-94) — shadow 매니페스트 선행**~~ **닫힘(2026-10-05 — a112 7.3.1 구현 로트 착지로 종결; 브리프 v3.3 · 결정 63 digest 핀 · `internal/strategyshadow` · 도구 `tools/a112-family-shadow` · docs/operations.md 「KR/US SHADOW 관측」 절). 후속 = 4-가족 활성화 로트의 shadow 수집 운영(design :295 — 배포 뒤 사람 · A100). 아래 본문은 역사 기록.** (a112 7.3.1 R4, 2026-10-04; 사용자 결정 2026-10-04: a112 안에서 구축.) 오늘 SHADOW 상태 0(runtime 어휘 = {UNOBSERVED}, 핀 `TestTheRuntimeVocabularyIsExactlyUnobservedUntilAShadowLotExtendsIt`), 재시작 OFF/OFF/UNOBSERVED 핀 `TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten`. a112 안에서 SHADOW 를 세울지 · 미룰지 · spec 델타를 정정할지는 사용자 결정(7.3.1 R3) | SHADOW 를 세우는 로트는 함께 결정 · 착지: ① 신뢰 앵커 — 서명(spec :89 「signed」) vs 외부 digest 핀(형제 4-가족 활성화 매니페스트가 결정 61 로 서명을 뺀 선례) ② 매니페스트 형식 · 생성기 · 골든 · docs/operations.md(8.5 가 「셋 없으면 배포 불가」 로 판정한 선례) ③ 골든 four-family-runtime-v1.json runtime 어휘 개정(SHADOW 추가 — Manager amendment) ④ 재시작 비복구(활성화 적재기 패턴 — 매 파도 재읽기) | 사용자 결정(7.3.1 R3) 뒤 배정 |
+| **권한 적재 파도의 취소 응답(4 적재기 join 의 ctx select) — 활성화 로트의 면제 불가 선행 「핀 선언 전 착지」(a112 8.5 판정 2026-10-04, codex r2 P1 → (d)).** route · proposal · risk · account 적재기가 시장별 goroutine 안에서 ctx 없는 파일 읽기를 하고 `<-outcomes` 로 기다린다(ctx select 없음 — `strategy_route_authority.go` · `strategy_proposal_authority.go` `collect` · `strategy_risk_authority.go` · 계좌 적재기). 읽기에 들어간 뒤의 취소에 응답하지 않는 것은 8.8.4 이동 전부터 넷 공통 결함이고, 8.8.4 · 8.5 의 관문 계산은 핀 선언 시장의 주기에 같은 모양의 소형 읽기를 더했다(오늘 생산 핀 0 → 노출 0). 근거 `analysis/review-8.5-2026-10/design-brief-B2-P1.md` §1 · §3 · §4 | 넷을 **동시에** 한 규칙으로: 읽기 앞 `ctx.Err()` + join 의 ctx select(취소면 즉시 반환 · 미완 시장은 취소 사유). 핀: 적재기마다 stalled-reader seam — 읽기 진입 뒤 취소 → 시한 안 반환 · 막힌 시장만 취소 사유 · 다른 시장 결과 무손상 · 읽기 해제 뒤 goroutine 0. **후보(보이스 1 P2-1 제안, a112 8.5 범위 밖):** `FinalAuthorityCheck`(strategy_dispatch_cycle.go)가 만료만 재확인한다 — 핀 · 철회를 dispatch 직전에 재확인하면 제안 적재 ~ dispatch 사이 철회 경합이 판본과 무관하게 닫힌다. (d) 는 a112 8.5 의 F1(관문 스냅숏 낡음 — 판정 재계산으로 닫음)을 대신하지 못한다(직교) | 4-가족 서명 활성화의 첫 핀을 선언하는 로트보다 **먼저** 착지 |
+
+## a070 이월 · 미배정 후속 (a070 `--skip-specs` archive 뒤 — 2026-10-01)
+
+`a070-add-multi-market-horizon-router` 처분 ②(부분 대체)가 넘긴 것. 근거는 아카이브의 `analysis/disposition-audit.md` §5 · §7.
+
+| 항목 | 사유 | 행선 |
+|---|---|---|
+| 생산 호출자 0 인 `strategyrouter` 섬 정리 — `Route()`(a112 `RouteSet` 이 대체) · durable `SchedulerState`/CAS/rollback/`MarketRecordStore` · `MigrateLegacy` · `QuotaAuthority` | a112 시험 다수가 `Route` 를 참조 대조로 부름 — quota 권한이 정해진 뒤 한 번에 | a112 7.1 뒤 정리 change 하나(미배정) |

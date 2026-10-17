@@ -1,0 +1,414 @@
+{
+  "file": "internal/riskbucket/production_snapshot_authority.go",
+  "source_sha256": "9a74db4abd523da823e02e716258d428d3f385647c3d18121e744f9fac45119e",
+  "package": "riskbucket",
+  "function": "LoadProductionRiskSnapshotAuthority",
+  "signature": "LoadProductionRiskSnapshotAuthority(params=3, results=2)",
+  "start": {
+    "line": 170,
+    "column": 1
+  },
+  "end": {
+    "line": 209,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 171,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 174,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 178,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 184,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 190,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 199,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 203,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 172,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 175,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 179,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 187,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 191,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 195,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 200,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 204,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 208,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 19
+      },
+      "text": "config.ObservedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 12
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 41
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 11
+      },
+      "text": "canonicalProductionRiskConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 20
+      },
+      "text": "productionRiskOwnerUID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 10
+      },
+      "text": "ProductionRiskPolicyFileName"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 32
+      },
+      "text": "filepath.IsAbs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 69
+      },
+      "text": "filepath.IsAbs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 4
+      },
+      "text": "canonicalRiskDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 51
+      },
+      "text": "canonicalIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 93
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 4
+      },
+      "text": "canonicalIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 44
+      },
+      "text": "canonicalCurrency"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 15
+      },
+      "text": "readProductionRiskFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 38
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 19
+      },
+      "text": "productionRiskDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 19
+      },
+      "text": "decodeProductionRiskPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 20
+      },
+      "text": "verifyProductionRiskPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 33
+      },
+      "text": "bindProductionRiskInputs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 41
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 18
+      },
+      "text": "loadProductionRiskEntries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 41
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 13
+      },
+      "text": "newRiskSnapshotAuthorityService"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 9
+      },
+      "text": "service.Load"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 174,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 181,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 182,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 189,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 193,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 202,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 206,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 207,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

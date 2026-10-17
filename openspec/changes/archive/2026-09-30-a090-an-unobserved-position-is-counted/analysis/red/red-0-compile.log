@@ -1,0 +1,4 @@
+# RED-0 (컴파일) — 2026-09-30T19:41:02+09:00 HEAD 8c3ada62 · go vet ./internal/app/engine/
+Go vet: 1 issues
+═══════════════════════════════════════
+1. vet: internal/app/engine/a090_unobserved_position_test.go:95:5: o.UnobservedLog undefined (type *engine.ExitObserverO...

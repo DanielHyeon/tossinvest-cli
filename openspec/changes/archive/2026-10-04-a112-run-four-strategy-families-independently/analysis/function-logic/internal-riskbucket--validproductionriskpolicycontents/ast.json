@@ -1,0 +1,479 @@
+{
+  "file": "internal/riskbucket/production_snapshot_authority.go",
+  "source_sha256": "9a74db4abd523da823e02e716258d428d3f385647c3d18121e744f9fac45119e",
+  "package": "riskbucket",
+  "function": "validProductionRiskPolicyContents",
+  "signature": "validProductionRiskPolicyContents(params=1, results=1)",
+  "start": {
+    "line": 266,
+    "column": 1
+  },
+  "end": {
+    "line": 319,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 268,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 271,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 272,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 276,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 277,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 281,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "range",
+      "at": {
+        "line": 288,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 290,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 296,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 300,
+        "column": 3
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "range",
+      "at": {
+        "line": 306,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 307,
+        "column": 3
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 310,
+        "column": 3
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 313,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 269,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 273,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 278,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 282,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 293,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 297,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 301,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 308,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 311,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 314,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 318,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 6
+      },
+      "text": "canonicalIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 41
+      },
+      "text": "canonicalRiskDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 16
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 277,
+        "column": 16
+      },
+      "text": "parseMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 37
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 66
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 63
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 28
+      },
+      "text": "canonicalIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 64
+      },
+      "text": "canonicalIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 74
+      },
+      "text": "canonicalIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 292,
+        "column": 5
+      },
+      "text": "canonicalIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 295,
+        "column": 20
+      },
+      "text": "strategyrouter.ProductionLaneFamily"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 295,
+        "column": 56
+      },
+      "text": "strategyrouter.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 300,
+        "column": 16
+      },
+      "text": "parseMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 307,
+        "column": 69
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 307,
+        "column": 85
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 307,
+        "column": 122
+      },
+      "text": "canonicalIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 310,
+        "column": 16
+      },
+      "text": "parseMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 313,
+        "column": 16
+      },
+      "text": "parseMinor"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 267,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 272,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 277,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 284,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 287,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 289,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 295,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 296,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 299,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 300,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 303,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 305,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 310,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 313,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 316,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

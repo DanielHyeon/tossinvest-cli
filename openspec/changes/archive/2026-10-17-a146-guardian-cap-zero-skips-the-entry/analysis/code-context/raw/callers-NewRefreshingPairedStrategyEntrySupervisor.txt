@@ -1,0 +1,18 @@
+
+Callers of "NewRefreshingPairedStrategyEntrySupervisor" (5):
+
+function    TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate
+  internal/app/engine/a112_central_integrity_entry_gate_internal_test.go:17
+
+function    TestTheProductionStrategySupervisorRefusesAContextWithoutAnEntryGate
+  internal/app/engine/a112_central_integrity_entry_gate_internal_test.go:30
+
+function    newA112EightLaneRun
+  internal/app/engine/a112_eight_lane_fault_test.go:46
+
+function    engineRuntime
+  cmd/tossctl/engine.go:655
+
+function    TestA137TheProductionSupervisorCarriesTheNotice
+  internal/app/engine/a137_unmeasurable_notice_test.go:129
+

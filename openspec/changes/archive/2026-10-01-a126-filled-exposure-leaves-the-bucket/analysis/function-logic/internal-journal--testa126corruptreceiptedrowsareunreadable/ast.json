@@ -1,0 +1,250 @@
+{
+  "file": "internal/journal/a126_filled_exposure_leaves_the_bucket_test.go",
+  "source_sha256": "d2df830b7ee0d70b4d33240cab20b63bd352ef7914a95837e6a7ade906844cd2",
+  "package": "journal",
+  "function": "TestA126CorruptReceiptedRowsAreUnreadable",
+  "signature": "TestA126CorruptReceiptedRowsAreUnreadable(params=1, results=0)",
+  "start": {
+    "line": 336,
+    "column": 1
+  },
+  "end": {
+    "line": 374,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 349,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 350,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 353,
+        "column": 5
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 354,
+        "column": 6
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 359,
+        "column": 5
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 362,
+        "column": 5
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 368,
+        "column": 5
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 4
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 352,
+        "column": 13
+      },
+      "text": "a126ReleasedOwner"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 354,
+        "column": 19
+      },
+      "text": "j.db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 24
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 356,
+        "column": 7
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 359,
+        "column": 18
+      },
+      "text": "j.db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 360,
+        "column": 6
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 362,
+        "column": 18
+      },
+      "text": "riskbucket.ReadJournalBucketUsage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 362,
+        "column": 52
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 362,
+        "column": 138
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 363,
+        "column": 6
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 15
+      },
+      "text": "a126AdmitSymbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 81
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 131
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 148
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 369,
+        "column": 6
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 337,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 352,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 354,
+        "column": 9
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 359,
+        "column": 8
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 362,
+        "column": 8
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 368,
+        "column": 8
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

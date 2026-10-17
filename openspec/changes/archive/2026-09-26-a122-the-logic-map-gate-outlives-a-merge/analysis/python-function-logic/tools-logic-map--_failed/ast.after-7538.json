@@ -1,0 +1,31 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "5406cac16a439266f3d3cdee90728df5b9d90a66",
+  "source_sha256": "463982f421512a1bced22420952a6a4521239b63274c9536e4488818e2236b25",
+  "function": "_failed",
+  "signature": "_failed(exc)",
+  "start": {
+    "line": 1410,
+    "column": 1
+  },
+  "end": {
+    "line": 1415,
+    "column": 64
+  },
+  "branches": [],
+  "returns": [
+    {
+      "line": 1415,
+      "value": "f'{type(exc).__name__}:{exc.errno}:{exc.filename!r}'"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1415,
+      "callee": "type"
+    }
+  ]
+}

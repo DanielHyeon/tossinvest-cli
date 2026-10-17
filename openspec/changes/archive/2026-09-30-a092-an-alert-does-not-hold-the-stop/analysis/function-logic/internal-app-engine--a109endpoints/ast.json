@@ -1,0 +1,75 @@
+{
+  "file": "internal/app/engine/a109_the_sibling_endpoints_recover_too_test.go",
+  "source_sha256": "4ed962de949a424d863a206ed4e688882d9bc7687c167aa25a71c5d98c82851b",
+  "package": "engine",
+  "function": "a109Endpoints",
+  "signature": "a109Endpoints(params=0, results=1)",
+  "start": {
+    "line": 55,
+    "column": 1
+  },
+  "end": {
+    "line": 91,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 64,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 76,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 87,
+        "column": 5
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 12
+      },
+      "text": "StartPositionPolicyRuntimeServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 12
+      },
+      "text": "StartAlertControlServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 12
+      },
+      "text": "StartModeControlServer"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,184 @@
+{
+  "file": "internal/journal/position_projection.go",
+  "source_sha256": "5b62d380b860e67884ceb5f5e217a12fa0d8a190c54190f370ae711133002748",
+  "package": "journal",
+  "function": "ProjectPosition",
+  "signature": "ProjectPosition(params=3, results=1)",
+  "start": {
+    "line": 65,
+    "column": 1
+  },
+  "end": {
+    "line": 105,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 68,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 75,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 80,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 98,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 102,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 104,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 24
+      },
+      "text": "resolveFillOrigin"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 19
+      },
+      "text": "currentInstance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 18
+      },
+      "text": "position.Apply"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 5
+      },
+      "text": "outcome.Reconcile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 10
+      },
+      "text": "enterReconcileInTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 9
+      },
+      "text": "writeProjection"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

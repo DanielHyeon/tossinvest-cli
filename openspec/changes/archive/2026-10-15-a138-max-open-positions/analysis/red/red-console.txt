@@ -1,0 +1,22 @@
+# a138 콘솔 RED — 콘솔 · tossctl production 세 파일만 HEAD(ab5edc48)로 되돌리고 a138 시험 실행(나머지 a138 편집은 워킹트리), 2026-10-14T22:28:37Z
+$ go test ./internal/console -run A138
+--- FAIL: TestA138TheAdvancedFormSavesTheOpenPositionMaximum (0.01s)
+    a138_open_positions_settings_test.go:34: writes = [{MaxOrderQuantity:5 MaxOrderNotional:200000 MaxTotalExposure:400000 MaxDailyLossAmount:20000 MaxDailyLossRatio:0.005 Currency:KRW DailyBuy:0x85b3dd820f8 OpenPositions:<nil>}], want one save carrying 4
+--- FAIL: TestA138TheScreenSaysWhatTheOpenPositionMaximumIs (0.01s)
+    a138_open_positions_settings_test.go:80: an unset maximum must say the default 6 applies, in every currency
+    a138_open_positions_settings_test.go:85: an unusable maximum must say the engine refuses to start
+    a138_open_positions_settings_test.go:92: the advanced form must carry the open position field, prefilled, with its help text linked
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.026s
+FAIL
+$ go test ./cmd/tossctl -run A138
+--- FAIL: TestA138TheOpenPositionMaximumSaveIsAuditedFromTheFile (0.10s)
+    a138_open_positions_limitsettings_test.go:39: the move 0 → 4 must be audited once, naming what 0 meant:
+        {"at":"2026-10-14T22:28:42.323635155Z","subject":"daniel","action":"automation_gate.limit","setting":"console.automation_gate.max_order_quantity","old":"","new":"100","detail":"saved from the console settings screen; file value before this save was 미설정"}
+        {"at":"2026-10-14T22:28:42.334289202Z","subject":"daniel","action":"automation_gate.limit","setting":"console.automation_gate.max_order_notional","old":"","new":"1000000","detail":"saved from the console settings screen; file value before this save was 미설정"}
+        {"at":"2026-10-14T22:28:42.345698902Z","subject":"daniel","action":"automation_gate.limit","setting":"console.automation_gate.max_total_exposure","old":"","new":"10000000","detail":"saved from the console settings screen; file value before this save was 미설정"}
+        {"at":"2026-10-14T22:28:42.357159709Z","subject":"daniel","action":"automation_gate.limit","setting":"console.automation_gate.max_daily_loss_amount","old":"","new":"100000","detail":"saved from the console settings screen; file value before this save was 미설정"}
+        {"at":"2026-10-14T22:28:42.368756561Z","subject":"daniel","action":"automation_gate.limit","setting":"console.automation_gate.max_daily_loss_ratio","old":"","new":"0.01","detail":"saved from the console settings screen; file value before this save was 미설정"}
+        {"at":"2026-10-14T22:28:42.374819757Z","subject":"daniel","action":"automation_gate.limit","setting":"console.automation_gate.limit_currency","old":"","new":"KRW","detail":"saved from the console settings screen; file value before this save was KRW"}
+        {"at":"2026-10-14T22:28:42.380569789Z","subject":"daniel","action":"automation_gate.limit","setting":"console.automation_gate.max_daily_buy_notional","old":"","new":"0","detail":"saved from the console settings screen (0 = unset); file value before this save was 미설정"}
+        {"at":"2026-10-14T22:28:42.386639451Z","subject":"daniel","action":"automation_gate.limit","setting":"console.automation_gate.max_order_notional","old":"1000000","new":"100","detail":"saved from the console settings screen; file value before this save was 1000000"}

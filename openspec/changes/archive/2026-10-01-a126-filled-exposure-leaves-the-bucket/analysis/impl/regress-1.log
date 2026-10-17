@@ -1,0 +1,6 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	0.484s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	673.951s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	386.988s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	104.215s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	50.838s
+rc=0

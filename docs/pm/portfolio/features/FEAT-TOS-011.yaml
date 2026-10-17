@@ -3,5 +3,10 @@
   "title": "Lane performance and strategy optimization",
   "epic": "EPIC-TOS-004",
   "intent": "active",
-  "stories": ["STORY-TOS-a049", "STORY-TOS-a050"]
+  "stories": [
+    "STORY-TOS-a049",
+    "STORY-TOS-a050",
+    "STORY-TOS-a151",
+    "STORY-TOS-a153"
+  ]
 }

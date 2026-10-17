@@ -1,0 +1,271 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "0733bd8641ed8c41fd92b41e6cf5d4d24ce3e7534ea1308435534e4c284d827e",
+  "package": "engine",
+  "function": "applyFloor",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.applyFloor(params=4, results=3)",
+  "start": {
+    "line": 1627,
+    "column": 1
+  },
+  "end": {
+    "line": 1679,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1628,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1632,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1641,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 1645,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1648,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 1652,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 1655,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1629,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1639,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1642,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1646,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1649,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1653,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1660,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1678,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1631,
+        "column": 25
+      },
+      "text": "o.opts.Floor.ConfirmedFloor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1636,
+        "column": 3
+      },
+      "text": "o.reportZeroFloor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1637,
+        "column": 11
+      },
+      "text": "classifyZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1644,
+        "column": 14
+      },
+      "text": "riskcalc.CompareDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1646,
+        "column": 21
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1651,
+        "column": 20
+      },
+      "text": "riskcalc.SubDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1653,
+        "column": 21
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1655,
+        "column": 5
+      },
+      "text": "isZeroQuantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1657,
+        "column": 3
+      },
+      "text": "o.reportZeroFloor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1658,
+        "column": 11
+      },
+      "text": "classifyZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1662,
+        "column": 2
+      },
+      "text": "o.alert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1664,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1665,
+        "column": 10
+      },
+      "text": "o.label"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1666,
+        "column": 9
+      },
+      "text": "fmt.Sprintf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1631,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1644,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1651,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

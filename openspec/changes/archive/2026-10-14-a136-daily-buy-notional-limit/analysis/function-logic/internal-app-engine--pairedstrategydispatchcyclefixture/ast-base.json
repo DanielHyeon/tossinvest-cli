@@ -1,0 +1,532 @@
+{
+  "file": "internal/app/engine/strategy_dispatch_cycle_test.go",
+  "source_sha256": "b0b9734d75c5e4fafa2b2033bd9c3d9660af813aa7d485b1840d2a1f8ebcd958",
+  "package": "engine",
+  "function": "pairedStrategyDispatchCycleFixture",
+  "signature": "pairedStrategyDispatchCycleFixture(params=1, results=4)",
+  "start": {
+    "line": 244,
+    "column": 1
+  },
+  "end": {
+    "line": 298,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 251,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 255,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 261,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 271,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "else",
+      "at": {
+        "line": 273,
+        "column": 10
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 281,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 287,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 294,
+        "column": 108
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 297,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 17
+      },
+      "text": "newStrategyRiskLoaderFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 14
+      },
+      "text": "riskFixture.loader.collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 41
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 13
+      },
+      "text": "riskFixture.results.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 12
+      },
+      "text": "strategyproposal.ProductionBatchAuthorityForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 80
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 20
+      },
+      "text": "batch.For"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 256,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 15
+      },
+      "text": "strategyaccount.AuthorityForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 77
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 100
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 15
+      },
+      "text": "strings.Repeat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 13
+      },
+      "text": "a112ScopedAccount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 277,
+        "column": 14
+      },
+      "text": "pairedDispatchSchedule"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
+        "column": 15
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 12
+      },
+      "text": "journal.Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 25
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 69
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 83
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 13
+      },
+      "text": "journal.FixedFSProber"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 284,
+        "column": 2
+      },
+      "text": "t.Cleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 284,
+        "column": 25
+      },
+      "text": "j.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 285,
+        "column": 19
+      },
+      "text": "execgw.NewRiskGuardian"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 11
+      },
+      "text": "risk.DefaultPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 40
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 12
+      },
+      "text": "newProductionStrategyFirstLegAuthorityLoader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 14
+      },
+      "text": "newStrategyFirstLegAdmissionBridge"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 11
+      },
+      "text": "newStrategyDispatchCycle"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 247,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 248,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 249,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 252,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 253,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 254,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 258,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 260,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 262,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 264,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 267,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 270,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 272,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 274,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 277,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 278,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 279,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 284,
+        "column": 21
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 285,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 290,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 291,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 292,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 293,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 294,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 296,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

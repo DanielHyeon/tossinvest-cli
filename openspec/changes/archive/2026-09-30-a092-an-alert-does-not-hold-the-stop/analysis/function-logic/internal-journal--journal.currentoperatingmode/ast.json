@@ -1,0 +1,87 @@
+{
+  "file": "internal/journal/operating_mode.go",
+  "source_sha256": "093341ae577341d137f31abade8713a71ade2dfb03161db0e04aafaf0f4ce7f9",
+  "package": "journal",
+  "function": "CurrentOperatingMode",
+  "receiver": "Journal",
+  "signature": "Journal.CurrentOperatingMode(params=2, results=2)",
+  "start": {
+    "line": 568,
+    "column": 1
+  },
+  "end": {
+    "line": 577,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 570,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 571,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 574,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 569,
+        "column": 13
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 571,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 574,
+        "column": 9
+      },
+      "text": "currentModeFromRow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 575,
+        "column": 3
+      },
+      "text": "j.db.QueryRowContext"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 569,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

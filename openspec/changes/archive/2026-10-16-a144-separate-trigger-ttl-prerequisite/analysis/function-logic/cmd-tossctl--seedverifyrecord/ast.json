@@ -1,0 +1,150 @@
+{
+  "file": "cmd/tossctl/verify_test.go",
+  "source_sha256": "c5a2dc6f08602a66292703d4a1cd030b75f6f1f9f2880c6c17ab582e5194d7ce",
+  "package": "main",
+  "function": "seedVerifyRecord",
+  "signature": "seedVerifyRecord(params=2, results=0)",
+  "start": {
+    "line": 568,
+    "column": 1
+  },
+  "end": {
+    "line": 602,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 571,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 597,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 598,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 569,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 570,
+        "column": 14
+      },
+      "text": "verifylive.OpenRecorder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 572,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 574,
+        "column": 8
+      },
+      "text": "rec.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 576,
+        "column": 9
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 576,
+        "column": 9
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 598,
+        "column": 13
+      },
+      "text": "rec.Append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 599,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 570,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 576,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 577,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 598,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 574,
+        "column": 2
+      },
+      "text": "rec.Close"
+    }
+  ],
+  "revision": "base"
+}

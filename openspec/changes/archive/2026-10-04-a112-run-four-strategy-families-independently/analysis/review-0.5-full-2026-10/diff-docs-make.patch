@@ -1,0 +1,235 @@
+diff --git a/Makefile b/Makefile
+index 22b56c06..d197405f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -87,15 +87,27 @@ RACE_PACKAGES = \
+ # 아래 RACE_ENGINE_FILES 가 가리키는 파일들의 Test 함수 전부와 이 목록을 대조한다.
+ # 파일 목록도 Makefile 에 두는 이유: 가드에 경로를 박아 두면 새 동시성 시험 파일이
+ # 생겼을 때 가드가 조용히 그것을 안 본다.
++# a112 8.8.4 항목 4: 4-가족 관문 시험 두 파일(a112_family_gate · a112_family_rollback)을 넣었다. 8.7.2 기록 「새 시험에 goroutine 0 — 대상 아님」은
++# 모집단 오류였다 — 시험 파일이 아니라 **코드-언더-테스트**가 동시성이다(`strategyProposalAuthorityLoader.collect` 가 시장마다 goroutine).
++# a112 7.5: 엔진 줄도 `-tags tossos_testseams` 로 돈다 — 레인 지연 독립 시험(D1)의 멈추는 레인은 시험 seam 으로만 만들 수 있고 그 seam 은
++# 생산 바이너리 밖(태그 빌드)에 있다. -run 목록이 거르므로 도는 시험 집합은 목록 그대로다.
+ RACE_ENGINE_PACKAGE = ./internal/app/engine
+ RACE_ENGINE_FILES = \
+ 	internal/app/engine/a112_refresh_singleflight_test.go \
+-	internal/app/engine/a112_lane_latch_durability_test.go
+-RACE_ENGINE_TESTS = TestTwoMarketsRideOneAuthorityWaveInsteadOfTakingTurns|TestOnlyOneMarketEverLeadsAWave|TestAFailedWaveReachesEveryMarketAndIsNeverCached|TestAMarketWaitingOnTheWaveLeavesWhenItsOwnCycleIsCancelled|TestTheCacheWindowStillMeasuresFromTheWaveStart|TestAPanickingWaveNeverStrandsTheMarketsWaitingOnIt|TestTheMarketThatLeadsAWaveAlwaysPublishesIt|TestARefreshWithoutAClockRefusesBeforeItCanMintAWave|TestAFailedWaveCarriesNoAssemblyForEitherMarket|TestALatchedLaneComesBackLatchedAfterTheProcessRestarts|TestALatchOnlyReopensForAStrictlyNewerVerifiedActivation|TestARestoredLatchKeepsTheFirstCauseAcrossTheRestart|TestOneLatchedLaneLeavesItsSevenPeersOpenAcrossARestart|TestADurableLatchThatNamesNoLaneInThisBuildStopsTheCycleLoudlyAndCanBeClosed|TestALedgerThatCannotTakeTheLatchStopsTheCycle|TestTheRecoveryGenerationComesFromTheVerifiedActivationAndNothingElse|TestTheProductionStepNeverLatchesSoTheLedgerStaysEmpty|TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther
++	internal/app/engine/a112_lane_latch_durability_test.go \
++	internal/app/engine/a112_lane_operability_test.go \
++	internal/app/engine/a112_lane_latency_testseam_test.go \
++	internal/app/engine/a112_safety_cadence_under_failure_testseam_test.go 	internal/app/engine/a112_family_gate_test.go 	internal/app/engine/a112_family_rollback_test.go \
++	internal/app/engine/a112_lane_promotion_test.go \
++	internal/app/engine/a112_shadow_absent_restart_test.go \
++	internal/app/engine/a112_gate_decision_recompute_test.go \
++	internal/app/engine/a112_shadow_cycle_test.go \
++	internal/app/engine/a112_shadow_projection_test.go
++RACE_ENGINE_TESTS = TestTwoMarketsRideOneAuthorityWaveInsteadOfTakingTurns|TestOnlyOneMarketEverLeadsAWave|TestAFailedWaveReachesEveryMarketAndIsNeverCached|TestAMarketWaitingOnTheWaveLeavesWhenItsOwnCycleIsCancelled|TestTheCacheWindowStillMeasuresFromTheWaveStart|TestAPanickingWaveNeverStrandsTheMarketsWaitingOnIt|TestTheMarketThatLeadsAWaveAlwaysPublishesIt|TestARefreshWithoutAClockRefusesBeforeItCanMintAWave|TestAFailedWaveCarriesNoAssemblyForEitherMarket|TestALatchedLaneComesBackLatchedAfterTheProcessRestarts|TestALatchOnlyReopensForAStrictlyNewerVerifiedActivation|TestARestoredLatchKeepsTheFirstCauseAcrossTheRestart|TestOneLatchedLaneLeavesItsSevenPeersOpenAcrossARestart|TestADurableLatchThatNamesNoLaneInThisBuildStopsTheCycleLoudlyAndCanBeClosed|TestALedgerThatCannotTakeTheLatchStopsTheCycle|TestTheRecoveryGenerationComesFromTheVerifiedActivationAndNothingElse|TestTheProductionStepNeverLatchesSoTheLedgerStaysEmpty|TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther|TestAHungLaneDoesNotDelayItsPeersInTheSameWave|TestAPanicOutsideALaneStepStillReachesTheMarketCycle|TestAProjectedLaneRowIsNeverTorn|TestTheLaneProjectionReadsALaneRowUnderOneLock|TestAStalledRemoteWaveNeverBlocksTheProjectionRead|TestSafetyLoopsKeepTheirCadenceWhileEveryEntryQueueIsSaturated|TestSafetyLoopsKeepTheirCadenceThroughEveryEntryFailureKind|TestTheProductionActivationLoaderRunsAndFindsNoManifest|TestWithoutAVerifiedActivationCoordinationIsUnchanged|TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt|TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading|TestAClosedMarketStillCarriesTheGatesActivation|TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope|TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor|TestAProposalNoLaneOwnsIsStoppedRatherThanPassedThrough|TestTheLanesAreBuiltBeforeTheProposalsAreCollected|TestAGatedFamilyMustNotShrinkTheMarketIntoTheExactlyOneValve|TestTheGateSaysWhichKindOfStopItMade|TestADeclaredActivationThatLapsesRollsItsMarketBackInsteadOfWidening|TestRollingBackLeavesALatchedLaneLatched|TestTheRollbackPathOnlyReads|TestTheOrderLeaseCannotOutliveTheFamilyActivation|TestARolledBackGateClosesTheMarketEvenWithoutLanes|TestAnUndeclaredMarketStaysUndeclaredWhateverItsCalibrationSays|TestAnUnverifiedActivationWithoutAnErrorStillRollsBack|TestADeclaredMarketWhoseCalibrationDoesNotAgreeIsRolledBack|TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires|TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission|TestTheDispatchJudgesFamilyExpiryBeforeAdmissionAndInsideTheFinalCheck|TestTheProductionAssemblyGivesTheDispatchCycleTheRealClock|TestAVerifiedGateWithoutLanesClosesInsteadOfFallingBackToTheLegacyPath|TestADeclaredMarketWhoseCycleIsCancelledRollsBack|TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder|TestAVerifiedPromotionLetsTheOwningLaneEmitThroughTheLaneRuntime|TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten|TestTheRouterRuntimeStaysUnobservedAndOnlyTheProjectionAddsShadow|TestACancelDuringTheProposalLoadClosesTheMarketAtTheDecision|TestARevocationDuringTheProposalLoadClosesTheMarketAtTheDecision|TestAnUndeclaredMarketCancelledDuringTheLoadKeepsTheLegacyPath|TestANilEnvironmentReaderRollsTheGateBackInsteadOfPanicking|TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle|TestTheShadowPinLeavesTheDispatchTraceUnchanged|TestAFailingShadowStepChangesNothingButItsOwnObservation|TestAStuckShadowStepNeitherLatchesNorRefreshesTheOtherMarket|TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive|TestALateNilCycleIsAFailureAtTheLimit|TestTheShadowDeferNeverRewritesAFirstCycleError|TestCentralIntegrityKeepsItsIdentityThroughTheShadowDefer|TestARestartNeverRestoresShadow|TestTheNextWaveClearsAnUnusableShadow|TestWithoutANewWaveExpiryAndAgeStillEndTheShadow|TestTheShadowAgeLimitIsDerivedAndRejectsNoHealthyGap|TestTheGapBetweenRecordAndPublishIsUnobservedByDesign|TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow|TestOnlyOneShadowStepRunsPerMarket|TestNeitherTheStepNorTheProjectionShadowsAnOnLane
+ 
+ test-race:
+ 	go test -race -timeout 15m -count=1 -tags tossos_testseams $(RACE_PACKAGES)
+-	go test -race -timeout 5m -count=1 -run '$(RACE_ENGINE_TESTS)' $(RACE_ENGINE_PACKAGE)
++	go test -race -timeout 5m -count=1 -tags tossos_testseams -run '$(RACE_ENGINE_TESTS)' $(RACE_ENGINE_PACKAGE)
+ 
+ # vet only — `make lint` 은 gofmt 검사까지 함께 돌린다. 포맷 검사 없이 정적 분석만
+ # 빠르게 돌리고 싶을 때 이 타겟을 쓴다.
+diff --git a/docs/ROADMAP.md b/docs/ROADMAP.md
+index baaa69ff..31db0f14 100644
+--- a/docs/ROADMAP.md
++++ b/docs/ROADMAP.md
+@@ -208,6 +208,19 @@ typed-confirmation을 유지한다 — 이 결정은 UI 표면에만 적용한
+ | 브로커 거절 본문의 JSON 중복 키(뒤 값이 이김, review §7 A8) | 수용된 잔여 — 이론적(브로커 실측 0) | 미배정 |
+ 
+ 
++## a091 이월 · 미배정 후속 (a091 archive 뒤에도 남는 의무 — 2026-10-01)
++
++`a091-a-stop-that-sold-nothing-is-critical` 가 넘긴 것. 근거는 a091 `design.md` D1 · D3 「새는 칸의 처분」 · D5 「후속 후보」 · D7 「이름 붙인 잔여」 · D8 와 `issues.md` 「후속 후보 — `Notifier.Acknowledge` 의 잠금 범위」.
++
++| 항목 | 사유 | 행선 |
++|---|---|---|
++| 배포 전 `main` 과 SchemaVersion 대조 · 엔진 재시작(두 시장 닫힌 창) · 배포 뒤 첫 `exit.stop_sold_nothing` 실물 확인 · ntfy 구독 필터 갱신(`exit.proposal_capped` 로 거르던 필터는 보호 0주를 더 이상 못 본다 — `docs/operations.md`) | 스키마 변경 0 · 엔진 정지 = 손절 없음 | 사람 항목 — 배포 승인 때 |
++| 알림 켜짐 게이트(D1, Manager Q1 — a095 정본 문자 그대로): `notifications.enabled = false` 엔진에서는 보호 0주가 옛 종류 normal + 로그 줄로 남는다 | 사용자 거부권 항목 — Manager 가 보고 | 사람 결정 큐 |
++| `Notifier.Acknowledge` 의 행별 · 배치 잠금 해제(`internal/obs/notifier.go` 승인이 `n.mu` 를 쥔 채 행마다 fsync — 밀린 행 100 승인 중 exit critical 기록 대기 실측 0.30~0.49s, 앞선 조건 1.06~1.28s) | 셈-해제 배제 불변식(a092 · a124) 아래 설계 필요 — 기존 exit critical 전부가 같은 대기를 진다 | 미배정 — 후속 change 후보 |
++| 보유 0 을 읽었는데 ③(no_holding)로 안 떨어지는 칸 셋 — (a) 매도가능 조회 실패 · (b) 매도가능 조회 지연으로 보유 스냅숏 낡음(StaleSnapshot) · (c) 로컬 수량 오류. 셋 다 critical 로 남김(과보고 방향). 넓히려면 `reconcileFloor` 가 보유 0 을 입력으로 넘겨야 함(riskcalc · 하한 공급자 편집). 또 ③ 는 보유 조회 한 번의 0 을 믿는다(base 와 같은 성질) | 범위 밖 — 이름 붙인 잔여 | 미배정 — 후속 change 후보 |
++| 공식 클라이언트가 요청 · 본문 읽기 오류를 문자열로 감싸 취소 원인을 지움(`internal/official/client.go` `fmt.Errorf("%w: %s", ErrTransport, err)`) — HTTP 요청 중 종료 취소가 ①(floor_unknown) critical 로 기록됨(과보고, 가짜 래치는 `WithoutCancel` 로 없음) | 이름 붙인 잔여(5라운드 codex P2) | 미배정 |
++| 계좌 가림 — exit 루프의 다른 `logErr` 호출자 · base 의 나머지 계좌 필드 줄(a091 은 자기가 새로 닿게 한 줄과 `Notifier.escalate` 두 줄만 가렸다) | a090 D12 · D13 와 같은 큐 | 사람 결정 큐 「계좌 가림 설계」 |
++
+ ## a090 이월 · 미배정 후속 (a090 archive 뒤에도 남는 의무 — 2026-10-01)
+ 
+ `a090-an-unobserved-position-is-counted` 가 넘긴 것. 근거는 a090 `design.md` D1 · D2 · D9 · D11 · D12 · D13 · Q2 · Q3 와 `review.md` 「리뷰 라운드 1」 · 「Manager 판정 (2026-09-30)」.
+@@ -230,6 +243,12 @@ typed-confirmation을 유지한다 — 이 결정은 UI 표면에만 적용한
+ |---|---|---|
+ | **스키마 핀 27 두 자리** → `journal.SchemaVersion` 결속(또는 읽는 표가 존재하는 최소 버전 이상). ① riskbucket — `internal/riskbucket/production_snapshot_authority.go` `productionRiskJournalSchema = 27` · `PRAGMA user_version` 정확 일치 비교(생산 호출 `internal/app/engine/strategy_entry_supervisor.go` 위험 적재기). ② **strategyrouter**(2026-10-01 a127 조사로 추가) — `internal/strategyrouter/production.go:38` `productionRouteJournalV = 27` · `:609` 정확 일치, supervisor 가 route 적재기에 같은 실원장 경로를 넘긴다. `internal/journal/schema.go:6` `SchemaVersion = 35`. **핀은 SchemaVersion 이 이미 29 이던 커밋 `8022f578`(2026-08-04)에서 태어나 출하된 어느 스키마와도 맞은 적이 없다**(a127 F10 실측 — 앞 판의 「a084 부터 28 이상」은 부정확). route 적재기는 위험보다 **앞**이므로 riskbucket 만 고쳐도 1차 레그는 0 그대로다 — **생산 route · 위험 권한은 어느 범위에서도 ready 가 될 수 없다**(a112 시험 fixture 의 v27 축소 원장이 두 자리 모두를 가렸다) | **레인 활성화의 경성 선행 — route · 위험 두 적재기 모두** — 수리 전에 서명 활성화하면 route 미준비 · 전 범위 `AuthorityUnavailable`(1차 레그 0). 오늘 생산 서명 활성화 0 이라 동작 변화 없음. 시험 stub(user_version 27)이 결함을 가렸다. 수리 착지 시 a112 시험 다리 `a112MirrorLedgerIntoRiskStub` 제거 · 적재기를 실제 원장으로 단일화(트립와이어 `TestTheRiskStubBridgeIsStillNeededBecauseTheLoaderRefusesTheRealJournal` 가 실패로 알림) | **a127** 이 두 적재기를 함께 수리(Manager 2026-10-01 승인) — riskbucket 은 High-risk · a066 영역(판정 B) |
+ | **weekly family 활성화의 경성 선행: riskbucket horizon 매핑 결정.** weekly 레인의 horizon 은 `WEEKLY` 인데 위험 버킷 horizon 은 `SHORT`/`MEDIUM` 뿐이라 적재기(`bindProductionRiskInputs`)가 「unsupported horizon」 으로 거절한다 — weekly family 는 활성화돼도 1차 레그 0. 매핑(어느 수평선 용량을 쓰는가)은 위험 의미론 결정 | 스키마 핀과 같은 등급 — 현재 상태는 핀 시험 `TestAWeeklyLaneIsRefusedForItsHorizonUntilAMappingIsDecided`(a112 6.1, 2026-10-01 Manager 판정)가 고정 — 미래 편집이 무음으로 SHORT 에 넣는 것을 막음 | weekly 활성화 로트의 freeze 몫 — 서명 정책 형식 질문(매니페스트 v2)과 함께 |
++| **lease 행의 계보 열 — 활성화 로트의 선행(a112 6.3 판정 (A)+(C)).** lease 발급 후 ~ transport 전 조정 결과 변경은 lease 행에 계보가 없어 검출 불가 — `FinalAuthorityCheck` 는 스케줄 재검증 · 가족 만료만 본다. 오늘 닫힌 지점은 **발급 시점**(1차 레그 권한의 소유자 범위 선택 + 봉인 identity 대조, admission 커밋 전 — `a112_dispatch_lineage_test.go` `TestALineageDriftIsRefusedAtIssuanceBeforeAnyReservationLeaseOrBrokerCall`). family 는 lease 의 LaneID 가 정본 표로 함의한다. **(B)** lease 행에 `lineage_identity` · `score_version` · `calibration_digest`(+ family) 열(journal schema v33 · 트리거) 추가 + transport 직전 현재 조정 결과 재대조 | 4-가족 서명 활성화를 실제로 켜는 로트의 **선행**(활성화 0 인 지금은 YAGNI — Manager 판정 2026-10-01) |
++| **breakout 같은 setup 둘째 첫 레그 — 봉인 해제 로트의 면제 불가 선행(a112 6.4 판정 2026-10-01).** 손절-종결 → 재시작 → 새 매니페스트 CampaignID → 같은 setup 둘째 첫 레그: 첫 레그 캠페인이 손절로 CLOSED 되고 claim 이 풀린다 → 재시작으로 레인 prior 를 잃는다(생산에서 `BreakoutRequest.Prior` 를 채우는 곳 0) → 같은 setup 이 봉 하나만 더해져도 새 스냅숏 digest · 새 ProposalID 로 다시 PROPOSED → 서명 제안 입력 매니페스트가 새 CampaignID 를 실으면 journal 은 FLAT/CLOSED · claim 없음 · 새 캠페인 PK 로 받아들인다 → 같은 setup 의 둘째 첫 레그. 스펙(breakout-retest-strategy-lane 「breakout v1 production 권위는 first-leg 하나로 제한된다」): "Proposal replay, duplicate bar delivery, correction 또는 restart가 동일 setup/bar에서 두 번째 first-leg 권위를 만들면 안 되며 (MUST NOT)". 오늘은 벽 뒤(생산 breakout 입력 전부 거절 — 핀 `TestEveryProductionBreakoutLaneInputIsRefusedAtTheWall` · `TestNoNonTestCodeBuildsABreakoutLaneInputAroundTheWall`) | **면제 불가: 「ErrBreakoutEvidenceUnavailable 해제 로트는 B(SetupID 계보 결속) 또는 C(consumed-setup 원장 기록) 착지 전 해제 불가」.** B = breakout 계보에 SetupID 를 싣고 CampaignID 를 그것에서 유도(봉인 · 골든 — freeze 급), C = admission 과 같은 트랜잭션의 consumed-setup 원장 기록(스키마 범프) | breakout 증거 생산자(ATR · RVOL · 윗꼬리 · 거래량 확장)를 세워 벽을 여는 로트 — 그 로트 안에서 B 또는 C 를 먼저 착지 |
++| **전략 dispatch crash 뒤 결과 대사 · 복구 — 활성화 로트의 면제 불가 선행(a112 6.5 판정 2026-10-01).** 근거(④ 의 위험): SUBMITTING 중 crash 면 브로커에 실주문이 존재할 수 있는데 이 빌드에는 그 결과를 알아낼 경로가 0 이다 — `internal/journal/strategy_dispatch_runtime.go:178` 「No constructor for that authority exists in this build」(ATTESTED_OUTCOME_REQUIRED), `DiscoverStrategyDispatchRecovery` · `RecoverClaimedStrategyDispatchLease` 생산 호출 0 · `internal/strategyruntime`(모델 복구) 생산 import 0 (grep 영수증 `lot-6.5-6.6/recovery-callers-grep.log`). UNKNOWN_BROKER_STATE 가족의 실체이며 활성화 상태에서는 liveness 가 아니라 안전 문제다. 같은 경로 부재로 ② admission 커밋 뒤 · lease 앞, ③ claim 뒤 · SUBMITTING 앞 crash 도 재시작 뒤 이어지지 않는다(그 종목 claim · HELD 용량이 풀리지 않음 — ② 는 lease 가 없어 복구 열거에도 안 보인다). 측정: engine `TestADispatchCrashAtEveryStepNeitherDuplicatesTheOrderNorReleasesTheCapacity`(네 crash 지점 · 재시작) | **면제 불가: 「활성화 로트는 outcome reconciliation 착지 전 해제 불가」.** 대사 경로 = 공식 브로커 정확 결과 증명의 생성자 + 복구 호출자(ATTESTED_OUTCOME_REQUIRED · REFUSE_RELEASE_REQUIRED) + admission-without-lease 열거 | 4-가족 서명 활성화를 실제로 켜는 로트 — 그 로트 안에서 먼저 착지 |
++| **활성화 실패 사유 · 삼킨 사이클 오류의 운영자 표면 — 활성화 로트의 선행(a112 8.8.4 판정 2026-10-04).** 8.8.4 로트 B 로 4-가족 활성화 적재의 거절은 필드명을 오류 사슬에 싣지만(`strategyrouter/production_family_activation.go`), 엔진은 그 오류를 관문 판별(`errors.Is` 미선언 / 그 밖 되돌림)에만 쓰고 snapshot · projection 에 내지 않는다 — 운영자는 여전히 「배포 안 함」 과 「만료 · 폐기 · 결속 불일치」 를 화면에서 못 가른다(미선언과 넷 다 ON 이 둘 다 `GatedCount=0`). `refreshOnly` 갈래가 세는 `SwallowedCycleErrors` 도 같은 처지. 또 공유 읽기 함수 `readProductionRouteFile` 이 OS 원인(없음 · 심링크 · 권한 · 소유자 · 크기)을 자기 sentinel 하나로 접는다. **같은 표면(a112 8.5 보이스 1 P2-3, 2026-10-04 합류):** 활성화가 검증된 시장이 조정 앞에서 닫힌 주기(FX · 설정 · 열쇠 · 중복 · 적재 · 고장)에 ON 레인이 입력 없이 돌아 `REFUSED / ARBITRATION_SEAL_MISMATCH / "the sealed proposal does not establish this worker's lane"` 로 보고된다 — FX 장애가 봉인 경보처럼 읽힌다(latch · 원장 0, 진단 전용). 후보: 「no input this wave」 전용 detail | snapshot/projection 필드(활성화 실패 사유 · 삼킨 오류 계수/첫 원인) + 읽기 함수 원인 보존 — 화면 · OpenAPI 계약 변경이라 7.3 투영과 같은 규율 | 4-가족 서명 활성화를 실제로 켜는 로트 — 그 로트 안에서 먼저 착지 |
++| ~~**SHADOW 런타임(spec four-family-strategy-runtime :88-94) — shadow 매니페스트 선행**~~ **닫힘(2026-10-05 — a112 7.3.1 구현 로트 착지로 종결; 브리프 v3.3 · 결정 63 digest 핀 · `internal/strategyshadow` · 도구 `tools/a112-family-shadow` · docs/operations.md 「KR/US SHADOW 관측」 절). 후속 = 4-가족 활성화 로트의 shadow 수집 운영(design :295 — 배포 뒤 사람 · A100). 아래 본문은 역사 기록.** (a112 7.3.1 R4, 2026-10-04; 사용자 결정 2026-10-04: a112 안에서 구축.) 오늘 SHADOW 상태 0(runtime 어휘 = {UNOBSERVED}, 핀 `TestTheRuntimeVocabularyIsExactlyUnobservedUntilAShadowLotExtendsIt`), 재시작 OFF/OFF/UNOBSERVED 핀 `TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten`. a112 안에서 SHADOW 를 세울지 · 미룰지 · spec 델타를 정정할지는 사용자 결정(7.3.1 R3) | SHADOW 를 세우는 로트는 함께 결정 · 착지: ① 신뢰 앵커 — 서명(spec :89 「signed」) vs 외부 digest 핀(형제 4-가족 활성화 매니페스트가 결정 61 로 서명을 뺀 선례) ② 매니페스트 형식 · 생성기 · 골든 · docs/operations.md(8.5 가 「셋 없으면 배포 불가」 로 판정한 선례) ③ 골든 four-family-runtime-v1.json runtime 어휘 개정(SHADOW 추가 — Manager amendment) ④ 재시작 비복구(활성화 적재기 패턴 — 매 파도 재읽기) | 사용자 결정(7.3.1 R3) 뒤 배정 |
++| **권한 적재 파도의 취소 응답(4 적재기 join 의 ctx select) — 활성화 로트의 면제 불가 선행 「핀 선언 전 착지」(a112 8.5 판정 2026-10-04, codex r2 P1 → (d)).** route · proposal · risk · account 적재기가 시장별 goroutine 안에서 ctx 없는 파일 읽기를 하고 `<-outcomes` 로 기다린다(ctx select 없음 — `strategy_route_authority.go` · `strategy_proposal_authority.go` `collect` · `strategy_risk_authority.go` · 계좌 적재기). 읽기에 들어간 뒤의 취소에 응답하지 않는 것은 8.8.4 이동 전부터 넷 공통 결함이고, 8.8.4 · 8.5 의 관문 계산은 핀 선언 시장의 주기에 같은 모양의 소형 읽기를 더했다(오늘 생산 핀 0 → 노출 0). 근거 `analysis/review-8.5-2026-10/design-brief-B2-P1.md` §1 · §3 · §4 | 넷을 **동시에** 한 규칙으로: 읽기 앞 `ctx.Err()` + join 의 ctx select(취소면 즉시 반환 · 미완 시장은 취소 사유). 핀: 적재기마다 stalled-reader seam — 읽기 진입 뒤 취소 → 시한 안 반환 · 막힌 시장만 취소 사유 · 다른 시장 결과 무손상 · 읽기 해제 뒤 goroutine 0. **후보(보이스 1 P2-1 제안, a112 8.5 범위 밖):** `FinalAuthorityCheck`(strategy_dispatch_cycle.go)가 만료만 재확인한다 — 핀 · 철회를 dispatch 직전에 재확인하면 제안 적재 ~ dispatch 사이 철회 경합이 판본과 무관하게 닫힌다. (d) 는 a112 8.5 의 F1(관문 스냅숏 낡음 — 판정 재계산으로 닫음)을 대신하지 못한다(직교) | 4-가족 서명 활성화의 첫 핀을 선언하는 로트보다 **먼저** 착지 |
+ 
+ ## a070 이월 · 미배정 후속 (a070 `--skip-specs` archive 뒤 — 2026-10-01)
+ 
+diff --git a/docs/api/openapi-v1.json b/docs/api/openapi-v1.json
+index fc3f259a..fe6740d7 100644
+--- a/docs/api/openapi-v1.json
++++ b/docs/api/openapi-v1.json
+@@ -2627,9 +2627,9 @@
+       },
+       "StrategyRuntimeLaneRuntime": {
+         "type": "object",
+-        "description": "Read-only state of one family lane. health null means the lane is unobserved (no lane runtime yet, or the engine was unreachable); then only the key and the frozen defaults OFF/OFF/UNOBSERVED are present. cycleGeneration is the per-market evaluate wave in which this lane was last observed (process lifetime, 0 = not yet observed in this process); a lane whose value is below its market peers is stale. desired/effective are what the signed activation of that wave said for this lane. start is present only when trigger is ENQUEUED; outcome and abnormal only when start is ADMITTED; refusal only when outcome is REFUSED.",
++        "description": "Read-only state of one family lane. health null means the lane is unobserved (no lane runtime yet, or the engine was unreachable); then only the key and the frozen defaults OFF/OFF/UNOBSERVED are present. cycleGeneration is the per-market evaluate wave in which this lane was last observed (process lifetime, 0 = not yet observed in this process); a lane whose value is below its market peers is stale. desired/effective are what the signed activation of that wave said for this lane. start is present only when trigger is ENQUEUED; outcome and abnormal only when start is ADMITTED; refusal only when outcome is REFUSED. runtime is SHADOW only for an observed OFF/OFF lane that a valid digest-pinned shadow manifest names (a112 7.3.1 — a read-only counterfactual that never promotes); shadowOutcome is present exactly then.",
+         "additionalProperties": false,
+-        "required": ["market", "family", "laneId", "laneVersion", "horizon", "desired", "effective", "runtime", "health", "consecutiveFailures", "latchRevision", "firstFailure", "cycleGeneration", "trigger", "start", "outcome", "refusal", "abnormal", "pending", "dropped", "abandoned", "policyVersion", "cycleDeadlineMs", "nextDueAt", "restartNotBefore", "snapshotDigest", "evidenceDigest"],
++        "required": ["market", "family", "laneId", "laneVersion", "horizon", "desired", "effective", "runtime", "health", "consecutiveFailures", "latchRevision", "firstFailure", "cycleGeneration", "trigger", "start", "outcome", "refusal", "abnormal", "pending", "dropped", "abandoned", "policyVersion", "cycleDeadlineMs", "nextDueAt", "restartNotBefore", "snapshotDigest", "evidenceDigest", "shadowOutcome"],
+         "properties": {
+           "market": {"type": "string", "enum": ["KR", "US"]},
+           "family": {"type": "string", "enum": ["CONTINUATION", "REVERSAL", "WEEKLY_VALUE", "BREAKOUT_RETEST"]},
+@@ -2638,7 +2638,7 @@
+           "horizon": {"type": "string", "enum": ["SHORT", "WEEKLY"]},
+           "desired": {"$ref": "#/components/schemas/StrategyRuntimeState"},
+           "effective": {"$ref": "#/components/schemas/StrategyRuntimeState"},
+-          "runtime": {"type": "string", "enum": ["UNOBSERVED"]},
++          "runtime": {"type": "string", "enum": ["UNOBSERVED", "SHADOW"]},
+           "health": {"type": ["string", "null"], "enum": ["HEALTHY", "DEGRADED", "LATCHED", null]},
+           "consecutiveFailures": {"type": "integer", "minimum": 0},
+           "latchRevision": {"type": "integer", "minimum": 0},
+@@ -2657,7 +2657,8 @@
+           "nextDueAt": {"type": ["string", "null"], "format": "date-time"},
+           "restartNotBefore": {"type": ["string", "null"], "format": "date-time"},
+           "snapshotDigest": {"type": ["string", "null"], "maxLength": 256},
+-          "evidenceDigest": {"type": ["string", "null"], "maxLength": 256}
++          "evidenceDigest": {"type": ["string", "null"], "maxLength": 256},
++          "shadowOutcome": {"type": ["string", "null"], "description": "Counterfactual of a SHADOW lane for its latest evaluate wave: WOULD_EMIT (an owned sealed proposal - the lane would have emitted had it been ON), NOT_THIS_LANE (a proposal claimed this lane but its seal or family does not hold), NO_INPUT (no proposal claimed this lane). null whenever runtime is not SHADOW, including whenever no shadow pin is deployed.", "enum": ["WOULD_EMIT", "NOT_THIS_LANE", "NO_INPUT", null]}
+         }
+       },
+       "StrategyRuntimeCoordinator": {
+diff --git a/docs/operations.md b/docs/operations.md
+index ebeb9a67..7e1b5310 100644
+--- a/docs/operations.md
++++ b/docs/operations.md
+@@ -380,6 +380,59 @@ automation을 쓴다.
+ 활성화를 승인했는가"는 이 필드가 아니라 **핀을 넣은 배포 이력**이 답한다 —
+ 매니페스트 바이트 자체는 승인자를 증명하지 않는다 [a112 결정 61].
+ 
++### KR/US SHADOW 관측 — 사람이 만들고 digest로 핀한다(노출을 열지 않는다)
++
++SHADOW는 **OFF 레인의 읽기 전용 반사실**이다: "이 레인이 켜져 있었다면 이번 물결에 봉투를
++냈을까"를 투영(`lanes[].runtime = SHADOW`, `lanes[].shadowOutcome`)에만 보인다
++[a112 7.3.1 · 결정 63 v3]. desired/effective·활성화·조정·dispatch·원장은 바꾸지 않는다 —
++**SHADOW 매니페스트로 주문이 나가는 길은 없다.** 핀이 없는 오늘은 여덟 레인 전부
++`runtime = UNOBSERVED`, `shadowOutcome = null`이다.
++
++각 시장은 config 디렉터리의 `strategy-family-shadow-KR.json`,
++`strategy-family-shadow-US.json`을 소비한다(service UID 소유 regular file, exact mode
++`0400`, non-symlink). 신뢰 핀은 시장마다 하나다.
++
++- `TOSSOS_STRATEGY_FAMILY_SHADOW_KR_MANIFEST_SHA256`
++- `TOSSOS_STRATEGY_FAMILY_SHADOW_US_MANIFEST_SHA256`
++
++바이트는 도구가 만든다(정규 직렬화 등식 — 손으로 쓴 JSON은 거절된다).
++
++```bash
++go run ./tools/a112-family-shadow \
++  -market KR -generation <이전보다 큰 수> \
++  -route-manifest-digest   "$TOSSOS_STRATEGY_LANE_KR_MANIFEST_SHA256" \
++  -calibration-digest      "<경로 권한 파일의 calibration_digest>" \
++  -calendar-version        "<공식 달력 버전>" \
++  -risk-policy-digest      "$TOSSOS_RISK_BUCKET_KR_MANIFEST_SHA256" \
++  -build-digest            "<엔진이 보고하는 BuildDigest>" \
++  -actor "<승인자>" \
++  -approved-at 2026-10-05T00:00:00Z \
++  -issued-at   2026-10-05T00:30:00Z \
++  -expires-at  2026-10-05T23:00:00Z \
++  -shadow CONTINUATION,REVERSAL \
++  -out ~/.config/tossctl/strategy-family-shadow-KR.json.new
++```
++
++결속 다섯(경로 매니페스트·보정·달력·위험 정책·빌드)의 출처는 위 활성화 절의 표와 같다.
++ProtectionReady 하한은 없다(노출이 없으므로). 수명 상한 24시간, 재발급은 위 활성화 절과 같은
++`.new` → 핀 교체 → 이름 바꾸기 → 재시작 순서다. `-shadow`를 비우면 넷 다 OFF다.
++
++언제 SHADOW로 보이나(엔진이 지키는 규칙):
++
++- 그 물결의 활성화가 그 레인을 **OFF/OFF**로 둘 때만이다. 활성화가 켠 레인은 SHADOW가 아니다.
++- 관측은 **그 물결의 것만** 쓴다. 다음 물결이 오면 새 shadow 결과가 게시되기 전까지 잠깐
++  `UNOBSERVED`로 보인다 — 의도된 간극이다(이전 물결을 보여 주면 철회가 늦게 반영된다).
++- 매니페스트 만료 시각이 지나거나, 관측 나이가 74초(=2×(폴 5초+주기 한도 30초+shadow 단계
++  마감 2초))를 넘으면 새 물결이 없어도 `UNOBSERVED`로 돌아간다.
++- 그 시장의 주기가 실패하면(오류·panic·주기 한도 경과) 그 시장의 SHADOW는 즉시 지워진다.
++  supervisor가 그 시장의 평가를 abandon으로 기록한 뒤에는 프로세스가 사는 동안 SHADOW를
++  보이지 않는다.
++- 재시작은 SHADOW를 되살리지 않는다 — 첫 물결 전에는 여덟 레인 전부 `UNOBSERVED`이고,
++  유효한 핀이 있으면 첫 물결에서 매니페스트를 다시 읽는다.
++
++**끄기:** 핀을 env에서 빼고 재시작하면 SHADOW가 사라진다. 이것은 진입·주문과 무관하다
++(SHADOW는 애초에 진입을 열지 않는다). 급히 끄려면 `-revoked` 매니페스트를 배포해도 된다.
++
+ ### 교체·회수·복구
+ 
+ - TLS 인증서는 같은 public host SAN을 유지해 교체하고 container를 재생성한다.
+diff --git a/docs/pm/generated/00-master-tracker.md b/docs/pm/generated/00-master-tracker.md
+index 578b02c5..703b5d97 100644
+--- a/docs/pm/generated/00-master-tracker.md
++++ b/docs/pm/generated/00-master-tracker.md
+@@ -100,7 +100,7 @@
+     - STORY-TOS-a084 — Re-judge a quarantine once when the recovery selector that made it has changed [archived] → `a084-a-quarantine-outlives-its-cause`
+     - STORY-TOS-a087 — A protective exit is a market order, not a limit order [in_progress] → `a087-a-protective-exit-is-a-market-order`
+     - STORY-TOS-a089 — An unserved stop is counted, recorded and visible [archived] → `a089-an-unserved-stop-is-counted`
+-    - STORY-TOS-a091 — A stop that sold nothing is critical [implemented] → `a091-a-stop-that-sold-nothing-is-critical`
++    - STORY-TOS-a091 — A stop that sold nothing is critical [archived] → `a091-a-stop-that-sold-nothing-is-critical`
+     - STORY-TOS-a092 — An alert does not hold the stop [archived] → `a092-an-alert-does-not-hold-the-stop`
+     - STORY-TOS-a094 — A stop clears what blocks it [archived] → `a094-a-stop-clears-what-blocks-it`
+     - STORY-TOS-a095 — A stop must know what it covers [archived] → `a095-a-stop-must-know-what-it-covers`
+@@ -142,4 +142,4 @@
+     - STORY-TOS-a073 — Operate and deploy the concurrent KR and US lanes [archived] → `a073-operate-multi-market-strategy-lanes`
+     - STORY-TOS-a112 — Run four strategy families as independent evaluators [in_progress] → `a112-run-four-strategy-families-independently`
+     - STORY-TOS-a126 — Filled exposure leaves the bucket when its position does [archived] → `a126-filled-exposure-leaves-the-bucket`
+-    - STORY-TOS-a127 — Strategy authorities read the ledger the engine opened [in_progress] → `a127-strategy-authorities-read-the-current-ledger`
++    - STORY-TOS-a127 — Strategy authorities read the ledger the engine opened [archived] → `a127-strategy-authorities-read-the-current-ledger`
+diff --git a/docs/pm/generated/01-active-change-map.md b/docs/pm/generated/01-active-change-map.md
+index 004b087f..a99f118a 100644
+--- a/docs/pm/generated/01-active-change-map.md
++++ b/docs/pm/generated/01-active-change-map.md
+@@ -92,7 +92,7 @@
+ | `a087-a-protective-exit-is-a-market-order` | STORY-TOS-a087 | in_progress |
+ | `a089-an-unserved-stop-is-counted` | STORY-TOS-a089 | archived |
+ | `a090-an-unobserved-position-is-counted` | STORY-TOS-a090 | archived |
+-| `a091-a-stop-that-sold-nothing-is-critical` | STORY-TOS-a091 | implemented |
++| `a091-a-stop-that-sold-nothing-is-critical` | STORY-TOS-a091 | archived |
+ | `a092-an-alert-does-not-hold-the-stop` | STORY-TOS-a092 | archived |
+ | `a094-a-stop-clears-what-blocks-it` | STORY-TOS-a094 | archived |
+ | `a095-a-stop-must-know-what-it-covers` | STORY-TOS-a095 | archived |
+@@ -124,4 +124,4 @@
+ | `a124-a-deliverer-that-keeps-failing-blocks-entry` | STORY-TOS-a124 | archived |
+ | `a125-the-a063-exception-retires` | STORY-TOS-a125 | archived |
+ | `a126-filled-exposure-leaves-the-bucket` | STORY-TOS-a126 | archived |
+-| `a127-strategy-authorities-read-the-current-ledger` | STORY-TOS-a127 | in_progress |
++| `a127-strategy-authorities-read-the-current-ledger` | STORY-TOS-a127 | archived |
+diff --git a/docs/pm/portfolio/stories/STORY-TOS-a091.yaml b/docs/pm/portfolio/stories/STORY-TOS-a091.yaml
+index a8aa5f15..c362a149 100644
+--- a/docs/pm/portfolio/stories/STORY-TOS-a091.yaml
++++ b/docs/pm/portfolio/stories/STORY-TOS-a091.yaml
+@@ -5,7 +5,7 @@
+   "intent": "active",
+   "openspec": {
+     "change_id": "a091-a-stop-that-sold-nothing-is-critical",
+-    "path": "openspec/changes/a091-a-stop-that-sold-nothing-is-critical"
++    "path": "openspec/changes/archive/2026-10-01-a091-a-stop-that-sold-nothing-is-critical"
+   },
+   "acceptance": [
+     "When the confirmed floor reduces a protective exit's submitted quantity to zero, the engine reports it at critical grade so the event is written to the durable outbox and a delivery failure reaches the entry gate",
+diff --git a/docs/pm/portfolio/stories/STORY-TOS-a127.yaml b/docs/pm/portfolio/stories/STORY-TOS-a127.yaml
+index 36b4bba0..73cab7e7 100644
+--- a/docs/pm/portfolio/stories/STORY-TOS-a127.yaml
++++ b/docs/pm/portfolio/stories/STORY-TOS-a127.yaml
+@@ -5,7 +5,7 @@
+   "intent": "active",
+   "openspec": {
+     "change_id": "a127-strategy-authorities-read-the-current-ledger",
+-    "path": "openspec/changes/a127-strategy-authorities-read-the-current-ledger"
++    "path": "openspec/changes/archive/2026-10-01-a127-strategy-authorities-read-the-current-ledger"
+   },
+   "found_by": {
+     "date": "2026-10-01",

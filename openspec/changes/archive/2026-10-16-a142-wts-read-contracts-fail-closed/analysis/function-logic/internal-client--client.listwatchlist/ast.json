@@ -1,0 +1,101 @@
+{
+  "file": "internal/client/watchlist.go",
+  "source_sha256": "fc5440b66ddc096a9daeb2a8a125cf132d69bb69b7c191aaab864a44eb74f33b",
+  "package": "client",
+  "function": "ListWatchlist",
+  "receiver": "Client",
+  "signature": "Client.ListWatchlist(params=1, results=2)",
+  "start": {
+    "line": 9,
+    "column": 1
+  },
+  "end": {
+    "line": 19,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 11,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 15,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 12,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 18,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 10,
+        "column": 17
+      },
+      "text": "c.ListWatchlistGroups"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 14,
+        "column": 11
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 16,
+        "column": 11
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 10,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 14,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 16,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

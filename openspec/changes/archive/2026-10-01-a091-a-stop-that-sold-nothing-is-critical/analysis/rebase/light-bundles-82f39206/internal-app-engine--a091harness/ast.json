@@ -1,0 +1,160 @@
+{
+  "file": "internal/app/engine/a091_stop_sold_nothing_test.go",
+  "source_sha256": "5640f6fdbf0ded2060a9cb860f94976fe74d9b0948d1959b91a8d6dd94174cad",
+  "package": "engine_test",
+  "function": "a091Harness",
+  "signature": "a091Harness(params=4, results=1)",
+  "start": {
+    "line": 108,
+    "column": 1
+  },
+  "end": {
+    "line": 127,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 119,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 122,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 12
+      },
+      "text": "obs.NewLogger"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 73
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 18
+      },
+      "text": "newExitHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 11
+      },
+      "text": "clock.System"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 4
+      },
+      "text": "mutate"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 112,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 114,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 116,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 117,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 118,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 120,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

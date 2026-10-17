@@ -1,0 +1,135 @@
+{
+  "file": "cmd/tossctl/httpapi_strategy_attach.go",
+  "source_sha256": "7a6962132af59674fe31123a8f51ea60aa2f02cdbd322460b809dc06b21f0e00",
+  "package": "main",
+  "function": "wake",
+  "receiver": "strategyRuntimeAttachment",
+  "signature": "strategyRuntimeAttachment.wake(params=0, results=0)",
+  "start": {
+    "line": 166,
+    "column": 1
+  },
+  "end": {
+    "line": 177,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 170,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 172,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 2
+      },
+      "text": "a.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 9
+      },
+      "text": "a.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 14
+      },
+      "text": "a.lastTry.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 36
+      },
+      "text": "now.Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 28
+      },
+      "text": "a.ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 3
+      },
+      "text": "a.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 2
+      },
+      "text": "a.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 176,
+        "column": 5
+      },
+      "text": "a.attempt"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 168,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 169,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 174,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 176,
+        "column": 2
+      },
+      "text": "a.attempt"
+    }
+  ],
+  "defers": null
+}

@@ -1,0 +1,29 @@
+{
+  "file": "internal/strategyprojection/lanes.go",
+  "source_sha256": "9b6b15b0ebe8e74fcd582a8a6d6abed626706542ba9706e5ba551a3c302315a4",
+  "package": "strategyprojection",
+  "function": "LaneJSONFields",
+  "signature": "LaneJSONFields(params=0, results=1)",
+  "start": {
+    "line": 197,
+    "column": 1
+  },
+  "end": {
+    "line": 201,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

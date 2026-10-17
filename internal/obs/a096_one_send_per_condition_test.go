@@ -16,9 +16,11 @@ package obs_test
 import (
 	"bytes"
 	"context"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -348,84 +350,160 @@ func (p *blockingPublisher) Publish(_ context.Context, _ obs.Notification) error
 
 // TestAcknowledgeCannotClearTheGateMidSend: the release is a read-then-decide —
 // count what is still pending, clear the gate only if the count is zero. A096
-// re-arms settled rows, so a send running alongside an acknowledgement can turn
-// a settled row back into a pending one. If that lands between the count and
-// the clear, the gate opens while an undelivered critical alert exists.
+// re-arms settled rows, so a recording path running alongside an acknowledgement
+// can turn a settled row back into a pending one. If that lands between the count
+// and the clear, the gate opens while an undelivered critical alert exists.
 //
-// The two must therefore exclude each other.
+// The count-to-clear and every path that records under the notifier lock must
+// therefore exclude each other — and that is what this test pins.
 //
-// # What this test measures, and what it still cannot (a097)
+// # What changed in a092 (unit ③), and why the subject survives
 //
-// It used to prove exclusion with a 50ms timer: if Acknowledge had not returned
-// within the window, the mutex was declared to be working. That reads a loaded
-// machine as a correct one, and it keeps reading it that way after the mutex is
-// gone.
+// This test used to assert that an acknowledgement cannot run while a send is
+// parked inside Publish, because the notifier lock covered the transport. a092's
+// frozen spec forbids exactly that: the lock the exit goroutine waits on must not
+// cover a remote send ("exit 관측 goroutine이 기다리는 잠금은 원격 전송을 덮어서는
+// 안 된다"), and settling a row mid-send is explicitly allowed and must be treated
+// as a named preemption ("전송하는 동안 잠금을 놓는다는 것은 … 허용되어야 한다").
 //
-// This version asserts on the ledger instead. While the send is parked inside
-// Publish its row is still PENDING, so an Acknowledge that got in would have
-// found that row and stamped it — AcknowledgeAlert matches on state = PENDING.
-// A row that is still pending and still unstamped is an effect, not a duration.
-//
-// It is an improvement and not a proof. Nothing here observes the acknowledging
-// goroutine *reaching* the contested lock, so a scheduler that never runs it
-// produces the same reading as exclusion. Making that observable needs a seam in
-// production code: Notifier.Journal is a concrete *journal.Journal, so its calls
-// cannot be intercepted, and this file is an external test package, so an
-// unexported hook would be out of reach.
-//
-// a097 therefore records this lock as still unverified (tasks §8) rather than
-// counting the improvement as closure. The lock that *is* verified by
-// measurement is the one Flush shares with the send path: removing it fails
-// TestFlushCannotPublishBesideASend 20 times out of 20.
+// The subject was never "the operator waits for the network". It was "nothing
+// that records under the lock can land between the count and the clear". Under
+// the new lock scope a send in flight holds a lease, not the lock, and it
+// records nothing new while it publishes — its settlement can only move the row
+// out of PENDING, never into it. So the recording paths are the claim (under the
+// lock) and the record-only entry (under the lock), and the count-to-clear still
+// holds that lock across both reads. The structural half below pins that shape;
+// the behavioural half pins that the acknowledgement no longer waits and that the
+// sender does not undo it.
 func TestAcknowledgeCannotClearTheGateMidSend(t *testing.T) {
 	pub := &blockingPublisher{entered: make(chan struct{}), release: make(chan struct{})}
-	n, j, _, _ := a096Notifier(t, pub)
+	n, j, gate, _ := a096Notifier(t, pub)
 	ctx := context.Background()
 
 	sendDone := make(chan error, 1)
 	go func() { sendDone <- n.Notify(ctx, a096Event()) }()
 	select {
-	case <-pub.entered: // a send is in flight and holds the delivery mutex
+	case <-pub.entered: // a send is in flight and holds the row's lease
 	case <-time.After(10 * time.Second):
-		t.Fatal("no publish began within 10s — there was no send to exclude")
+		t.Fatal("no publish began within 10s — there was no send in flight")
 	}
 
-	var released atomic.Bool
-	ackRaced := make(chan bool, 1)
+	// Behavioural half: the operator does not wait on the network round trip.
 	ackDone := make(chan error, 1)
-	go func() {
-		err := n.Acknowledge(ctx, "operator")
-		ackRaced <- !released.Load()
-		ackDone <- err
-	}()
-
-	// The opportunity for the interleave, not the assertion about it.
-	time.Sleep(50 * time.Millisecond)
-
-	pending, err := j.PendingAlerts(ctx, 0)
-	if err != nil {
-		t.Fatalf("PendingAlerts mid-send: %v", err)
+	go func() { ackDone <- n.Acknowledge(ctx, "operator") }()
+	select {
+	case err := <-ackDone:
+		if err != nil {
+			t.Fatalf("Acknowledge: %v", err)
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("Acknowledge waited on a send parked inside Publish — the notifier lock covers the transport")
 	}
-	if len(pending) != 1 {
-		t.Fatalf("pending rows mid-send = %d, want 1 — the acknowledgement settled a row "+
-			"while the send that owns it was still inside Publish", len(pending))
-	}
-	if got := pending[0].AcknowledgedBy; got != "" {
-		t.Errorf("acknowledged_by = %q on the row currently being sent — the release "+
-			"ran inside the send it must exclude", got)
+	if count, err := j.UndeliveredCount(ctx); err != nil || count != 0 {
+		t.Fatalf("undelivered after the acknowledgement = %d (%v), want 0", count, err)
 	}
 
-	released.Store(true)
 	close(pub.release)
-
 	if err := <-sendDone; err != nil {
 		t.Fatalf("Notify: %v", err)
 	}
-	if raced := <-ackRaced; raced {
-		t.Error("Acknowledge returned before the send was released — it counted what was " +
-			"pending before a concurrent re-arm could change the answer")
+	if count, _ := j.UndeliveredCount(ctx); count != 0 {
+		t.Errorf("undelivered = %d after the send finished — the sender undid the acknowledgement", count)
 	}
-	if err := <-ackDone; err != nil {
-		t.Fatalf("Acknowledge after the send completed: %v", err)
+	if rej := gate.CheckEntry(); rej != nil {
+		t.Errorf("entry blocked after an acknowledged send finished: %v — a preemption is not a failure", rej)
+	}
+
+	// Structural half: the count and the clear sit inside one n.mu critical
+	// section of Acknowledge, and the two recording paths record inside theirs.
+	a096PinLockedBetween(t, "Acknowledge", []string{"UndeliveredCount", "any:Clear"})
+	a096PinLockedBetween(t, "claimAndDeliver", []string{"ClaimAlertForDelivery"})
+	a096PinLockedBetween(t, "recordCritical", []string{"RecordAlert"})
+}
+
+// a096PinLockedBetween 는 fn 본문에서 호출 이름 want 가 모두 첫 n.mu.Lock 과 그 뒤 첫 n.mu.Unlock 사이(소스 순서)에 있음을 단언함.
+// defer n.mu.Unlock() 은 함수 끝까지로 셈.
+func a096PinLockedBetween(t *testing.T, fn string, want []string) {
+	t.Helper()
+	fset := token.NewFileSet()
+	var body *ast.BlockStmt
+	for _, file := range []string{"notifier.go", "record_only.go"} {
+		f, err := parser.ParseFile(fset, file, nil, 0)
+		if err != nil {
+			t.Fatalf("parse %s: %v", file, err)
+		}
+		for _, d := range f.Decls {
+			if fd, ok := d.(*ast.FuncDecl); ok && fd.Name.Name == fn && fd.Recv != nil {
+				body = fd.Body
+			}
+		}
+	}
+	if body == nil {
+		t.Fatalf("%s not found", fn)
+	}
+	// 임계 구역 = 첫 n.mu.Lock ~ 그 뒤 첫 명시적 n.mu.Unlock. 명시적 해제가 없고 defer 해제만 있으면 함수 끝까지.
+	lock, unlock := token.NoPos, token.NoPos
+	deferred := false
+	var unlocks []token.Pos
+	calls := map[string][]token.Pos{}
+	ast.Inspect(body, func(node ast.Node) bool {
+		if d, ok := node.(*ast.DeferStmt); ok {
+			if s, ok := d.Call.Fun.(*ast.SelectorExpr); ok && s.Sel.Name == "Unlock" {
+				deferred = true
+				return false
+			}
+		}
+		c, ok := node.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+		s, ok := c.Fun.(*ast.SelectorExpr)
+		if !ok {
+			return true
+		}
+		if x, ok := s.X.(*ast.SelectorExpr); ok && x.Sel.Name == "mu" {
+			switch s.Sel.Name {
+			case "Lock":
+				if lock == token.NoPos {
+					lock = c.Pos()
+				}
+			case "Unlock":
+				unlocks = append(unlocks, c.Pos())
+			}
+			return true
+		}
+		calls[s.Sel.Name] = append(calls[s.Sel.Name], c.Pos())
+		return true
+	})
+	for _, u := range unlocks {
+		if lock != token.NoPos && u > lock && (unlock == token.NoPos || u < unlock) {
+			unlock = u
+		}
+	}
+	if unlock == token.NoPos && deferred {
+		unlock = body.End()
+	}
+	if lock == token.NoPos || unlock == token.NoPos {
+		t.Fatalf("%s: no n.mu critical section", fn)
+	}
+	// "any:" 접두는 적어도 한 호출이 임계 구역 안이면 됨(Acknowledge 의 원장 없음 갈래의 Clear 는 기록 경로가 없어 밖에 있음).
+	for _, name := range want {
+		anyOf := strings.HasPrefix(name, "any:")
+		name = strings.TrimPrefix(name, "any:")
+		ps := calls[name]
+		if len(ps) == 0 {
+			t.Errorf("%s: no call to %s", fn, name)
+		}
+		inside := 0
+		for _, p := range ps {
+			if p >= lock && p <= unlock {
+				inside++
+			} else if !anyOf {
+				t.Errorf("%s: %s at %s is outside the n.mu critical section", fn, name, fset.Position(p))
+			}
+		}
+		if anyOf && inside == 0 {
+			t.Errorf("%s: no %s inside the n.mu critical section", fn, name)
+		}
 	}
 }

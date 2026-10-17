@@ -1,0 +1,13 @@
+CONTROL (무변이) GREEN
+M24 engine orders counted as manual: CAUGHT — ./internal/manualbuy/: --- FAIL: TestA136ManualBuysAreSummedPerCurrency (0.00s)
+M25 pending remainder dropped: CAUGHT — ./internal/manualbuy/: --- FAIL: TestA136ManualBuysAreSummedPerCurrency (0.00s), --- FAIL: TestA136AnUnvaluableManualBuyFailsTheWholeSnapshot (0.00s), --- FAIL: TestA136ADuplicatedOrderCountsOnceAtTheLargerAmount (0.00s)
+M28 every save writes the daily key: CAUGHT — ./internal/config/: --- FAIL: TestA136ACurrencyChangingSaveClearsTheDailyBuyCeiling (0.00s), --- FAIL: TestA136TheLimitWriterTouchesTheDailyBuyKeyOnlyWhenAsked (0.00s)
+M31 form drops the daily field: CAUGHT — ./internal/console/: --- FAIL: TestA136TheAdvancedFormSavesTheDailyBuyCeiling (0.01s), --- FAIL: TestA136ACurrencySwitchDoesNotCarryThePrefilledFigure (0.01s)
+M33 Z3 snapshot may predate the attempt: CAUGHT — ./internal/journal/: --- FAIL: TestA136Z3NeedsASnapshotAfterTheAttemptAndOneOwner (1.58s)
+M34 Z3 ignores a second owner: CAUGHT — ./internal/journal/: --- FAIL: TestA136Z3NeedsASnapshotAfterTheAttemptAndOneOwner (1.40s)
+M35 staleness bound 30m: CAUGHT — ./internal/journal/: --- FAIL: TestA136TheManualBuyFreshnessBoundIsTwoMinutes (1.20s)
+M36 future snapshot allowed: CAUGHT — ./internal/journal/: --- FAIL: TestA136TheManualBuyFreshnessBoundIsTwoMinutes (1.78s)
+M37 terminal statuses still count the remainder: NOT-COMPILED — ./internal/manualbuy/: BUILD-FAILED
+M38 orderAmount ignored: CAUGHT — ./internal/manualbuy/: --- FAIL: TestA136AnAmountBasedMarketBuyCountsItsOrderAmount (0.00s)
+M39 currency switch carries the prefilled figure: CAUGHT — ./internal/console/: --- FAIL: TestA136ACurrencySwitchDoesNotCarryThePrefilledFigure (0.00s)
+M40 cancel targets counted as engine orders: CAUGHT — ./internal/journal/: --- FAIL: TestA136EngineOrderIDsExcludeCancelTargets (0.64s)

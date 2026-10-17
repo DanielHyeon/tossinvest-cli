@@ -1,0 +1,9 @@
+# 5.6.1 의 일곱 블록 — 현재 좌표(HEAD + 5.6.2.2 시험), 엔진 태그 스위트 전체 count 커버(covermode=count)
+787-790 만료 잠금 실패 → 중앙 (runMarket B5 본문): lines 913-914 count=1
+795-796 만료 뒤 재시작 대기 실패 → 중앙 (B7 뒤): lines 920-921 count=1
+800-801 잠긴 시장이 큐 요청 버림 (B8): lines 926-926 count=1
+813-814 refresh-only 삼킴 (B12 · recordSwallowed): lines 949-949 count=14
+821-824 보통 오류의 잠금 실패 → 중앙 (B15): lines 968-969 count=3
+829-830 잠근 뒤 재시작 대기 실패 → 중앙 (B17 뒤): lines 975-976 count=1
+894-896 watchdog 취소 재확인 (invokeBoundedStrategyCycle B2 본문): lines 1078.23-1080.4 count=1
+# 측정: 격리 워크트리 65fe66e7 + a112_eight_lane_fault_test.go, go test -tags tossos_testseams -covermode=count -coverpkg=./internal/app/engine ./internal/app/engine → ok 195.9s, 82.9%

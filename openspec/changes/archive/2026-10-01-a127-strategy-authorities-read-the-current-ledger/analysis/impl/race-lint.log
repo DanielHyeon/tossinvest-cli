@@ -1,0 +1,6 @@
+# -race (a127 시험 · 관련 패키지)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	9.866s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	8.691s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	10.707s
+# make lint
+lint rc=0

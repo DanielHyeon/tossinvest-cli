@@ -1,0 +1,39 @@
+=== RUN   TestTheEncoderGuardCountsEveryWayToNameThePackage
+=== RUN   TestTheEncoderGuardCountsEveryWayToNameThePackage/평범한_import
+=== RUN   TestTheEncoderGuardCountsEveryWayToNameThePackage/별칭_import
+=== RUN   TestTheEncoderGuardCountsEveryWayToNameThePackage/점_import_—_맨_이름으로_부른다
+=== RUN   TestTheEncoderGuardCountsEveryWayToNameThePackage/빈_import_를_진짜_별칭보다_먼저_적는다
+--- PASS: TestTheEncoderGuardCountsEveryWayToNameThePackage (0.00s)
+    --- PASS: TestTheEncoderGuardCountsEveryWayToNameThePackage/평범한_import (0.00s)
+    --- PASS: TestTheEncoderGuardCountsEveryWayToNameThePackage/별칭_import (0.00s)
+    --- PASS: TestTheEncoderGuardCountsEveryWayToNameThePackage/점_import_—_맨_이름으로_부른다 (0.00s)
+    --- PASS: TestTheEncoderGuardCountsEveryWayToNameThePackage/빈_import_를_진짜_별칭보다_먼저_적는다 (0.00s)
+=== RUN   TestReviewShadowSamePackageMint
+    review_shadow_sketch_test.go:19: same-package twin conversion -> any -> FamilyActivation: Verified=true ON=4; encoder references=map[]; file writes=0
+--- PASS: TestReviewShadowSamePackageMint (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	0.004s
+=== RUN   TestReviewCensusAliasAndErasure
+    census_test.go:71: ShadowDirect carries=true
+    census_test.go:71: ShadowAlias carries=false
+    census_test.go:71: ShadowAny carries=false
+    census_test.go:71: ShadowInst carries=false
+--- PASS: TestReviewCensusAliasAndErasure (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/review-experiments	0.002s
+=== RUN   TestReviewShadowRPCWithoutNetwork
+    review_shadow_sketch_test.go:10: unknown shadowOutcome: accepted by actual Client.Read (in-memory transport)
+    review_shadow_sketch_test.go:12: SHADOW enum: rejected: strategy projection: lane kr_short_flow_continuation_v1: invalid desired, effective or runtime
+--- PASS: TestReviewShadowRPCWithoutNetwork (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc	0.004s
+=== RUN   TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten
+--- PASS: TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten (0.27s)
+=== RUN   TestTheRuntimeVocabularyIsExactlyUnobservedUntilAShadowLotExtendsIt
+--- PASS: TestTheRuntimeVocabularyIsExactlyUnobservedUntilAShadowLotExtendsIt (0.01s)
+=== RUN   TestReviewShadowInputTap
+    review_shadow_sketch_test.go:10: undeclared: reason=READY lane inputs=[000660:kr_short_flow_continuation_v1 005930:kr_short_absorption_reversal_v1]
+    review_shadow_sketch_test.go:10: declared_closed: reason=FAMILY_GATE_CLOSED lane inputs=[]
+--- PASS: TestReviewShadowInputTap (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.275s

@@ -1,0 +1,264 @@
+{
+  "file": "internal/app/engine/interlock.go",
+  "source_sha256": "a2277d4bd3a76152d91c9feb46309b7e07d74a1689d736b6a9020c55ecc20baf",
+  "package": "engine",
+  "function": "recordGateSettings",
+  "signature": "recordGateSettings(params=5, results=1)",
+  "start": {
+    "line": 713,
+    "column": 1
+  },
+  "end": {
+    "line": 776,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 716,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 726,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "else",
+      "at": {
+        "line": 729,
+        "column": 9
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 729,
+        "column": 9
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 770,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 771,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 772,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 775,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 739,
+        "column": 62
+      },
+      "text": "strconv.FormatBool"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 742,
+        "column": 4
+      },
+      "text": "strconv.FormatBool"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 744,
+        "column": 4
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 746,
+        "column": 4
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 751,
+        "column": 4
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 752,
+        "column": 74
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 753,
+        "column": 74
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 754,
+        "column": 74
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 755,
+        "column": 77
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 756,
+        "column": 76
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 758,
+        "column": 4
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 758,
+        "column": 20
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 762,
+        "column": 4
+      },
+      "text": "strconv.FormatBool"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 766,
+        "column": 4
+      },
+      "text": "strconv.FormatBool"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 768,
+        "column": 4
+      },
+      "text": "strconv.FormatBool"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 771,
+        "column": 16
+      },
+      "text": "log.RecordChange"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 715,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 717,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 725,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 727,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 730,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 733,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 771,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

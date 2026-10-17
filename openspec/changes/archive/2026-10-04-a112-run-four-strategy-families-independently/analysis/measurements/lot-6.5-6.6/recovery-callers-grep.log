@@ -1,0 +1,12 @@
+# grep 2026-10-01 HEAD a60f657b: non-test callers of the journal recovery API outside internal/journal, and production importers of internal/strategyruntime
+internal/journal/strategy_dispatch_runtime.go:1444:// RecoverClaimedStrategyDispatchLease is the no-send cold-restart terminalizer.
+internal/journal/strategy_dispatch_runtime.go:1448:func (j *Journal) RecoverClaimedStrategyDispatchLease(ctx context.Context, request StrategyDispatchLeaseCAS) (StrategyDispatchLease, error) {
+internal/journal/strategy_dispatch_runtime.go:1539:// DiscoverStrategyDispatchRecovery lets a newly fenced owner enumerate every
+internal/journal/strategy_dispatch_runtime.go:1543:func (j *Journal) DiscoverStrategyDispatchRecovery(ctx context.Context, owner StrategyDispatchOwner) ([]StrategyDispatchRecoveryItem, error) {
+--- importers of internal/strategyruntime (non-test):
+--- journal/strategy_dispatch_runtime.go:176-180
+	// NOT_DISPATCHED transaction to refuse the lease and release its real holds.
+	StrategyDispatchRecoveryRefuseRelease StrategyDispatchRecoveryAction = "REFUSE_RELEASE_REQUIRED"
+	// StrategyDispatchRecoveryAttestedOutcome requires an opaque official exact
+	// broker outcome. No constructor for that authority exists in this build.
+	StrategyDispatchRecoveryAttestedOutcome StrategyDispatchRecoveryAction = "ATTESTED_OUTCOME_REQUIRED"

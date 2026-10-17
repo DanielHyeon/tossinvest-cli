@@ -1,0 +1,134 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d12520c97b800f234f5c25483068a2bd70bd19b",
+  "source_sha256": "487708dc51fe19f322275b49e31a7edc49025fd4fd28a04d4b728a41a4f7b70c",
+  "function": "_read_evidence",
+  "signature": "_read_evidence(analysis)",
+  "start": {
+    "line": 904,
+    "column": 1
+  },
+  "end": {
+    "line": 942,
+    "column": 73
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 922,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 924,
+      "inherited_line": false,
+      "source": "except (FileNotFoundError, NotADirectoryError):"
+    },
+    {
+      "id": "B3",
+      "kind": "comprehension",
+      "line": 926,
+      "inherited_line": true,
+      "source": " for name, is_dir in entries if is_dir"
+    },
+    {
+      "id": "B4",
+      "kind": "For",
+      "line": 930,
+      "inherited_line": false,
+      "source": "for target in targets:"
+    },
+    {
+      "id": "B5",
+      "kind": "Try",
+      "line": 932,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B6",
+      "kind": "ExceptHandler",
+      "line": 934,
+      "inherited_line": false,
+      "source": "except FileNotFoundError:"
+    },
+    {
+      "id": "B7",
+      "kind": "ExceptHandler",
+      "line": 936,
+      "inherited_line": false,
+      "source": "except OSError:"
+    },
+    {
+      "id": "B8",
+      "kind": "Try",
+      "line": 938,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B9",
+      "kind": "comprehension",
+      "line": 939,
+      "inherited_line": true,
+      "source": " for name, _ in _listed(target)"
+    },
+    {
+      "id": "B10",
+      "kind": "ExceptHandler",
+      "line": 940,
+      "inherited_line": false,
+      "source": "except OSError as exc:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 925,
+      "value": "Evidence(analysis, False, (), {}, {}, {})"
+    },
+    {
+      "line": 942,
+      "value": "Evidence(analysis, True, targets, held, listings, unlistable)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 923,
+      "callee": "_listed"
+    },
+    {
+      "line": 925,
+      "callee": "Evidence"
+    },
+    {
+      "line": 926,
+      "callee": "tuple"
+    },
+    {
+      "line": 933,
+      "callee": "_read_regular"
+    },
+    {
+      "line": 939,
+      "callee": "_listed"
+    },
+    {
+      "line": 939,
+      "callee": "tuple"
+    },
+    {
+      "line": 941,
+      "callee": "_why"
+    },
+    {
+      "line": 942,
+      "callee": "Evidence"
+    }
+  ]
+}

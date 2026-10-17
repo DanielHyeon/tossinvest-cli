@@ -1,0 +1,30 @@
+{
+  "file": "internal/verifylive/record.go",
+  "source_sha256": "9b44a5d8afd7a4dc6d13650c01e65a136f6e855d6fd7d13c5af9bcd458f20514",
+  "package": "verifylive",
+  "function": "terminal",
+  "receiver": "Artifact",
+  "signature": "Artifact.terminal(params=0, results=1)",
+  "start": {
+    "line": 664,
+    "column": 1
+  },
+  "end": {
+    "line": 664,
+    "column": 91
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 664,
+        "column": 37
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

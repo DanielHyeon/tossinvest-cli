@@ -1,0 +1,11 @@
+== scratch a41861d1 on 0b441270
+make lint exit=0
+gofmt listed=0
+make sdd-test exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.289s
+make test-race engine line exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	70.322s
+untagged engine exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	180.331s
+Change 'a112-run-four-strategy-families-independently' is valid
+== check_analysis --change a112: HEAD 173, lot 173, normalized set delta 0/0

@@ -1,0 +1,25 @@
+GATE: a112-run-four-strategy-families-independently
+repo: /mnt/D/Axipient/workspace/TossOS
+
+==> 1/11 tasks.md 확인
+OK: openspec/changes/a112-run-four-strategy-families-independently/tasks.md
+
+==> 2/11 미완료 태스크 확인
+미완료 태스크 15 건:
+20:- [ ] 0.3 For each L1–L6 lot, record `Terra RED → Terra GREEN → separate Terra adversarial review → implementer fix → same reviewer recheck → Manager acceptance` in `review.md` with exact commands and file ownership.
+21:- [ ] 0.4 Forbid a reviewer from editing the lot under review; reviewers report P0/P1/P2 and only P0/P1=0 may advance the dependency chain.
+22:- [ ] 0.5 After L7, run one final gstack pre-landing review over the complete diff; fix and re-review every P0/P1 before Manager completion verification.
+23:- [ ] 0.6 Treat build, dormant deployment and operating activation as three distinct gates. Missing A100 ProtectionReady permits build/shadow tests only and blocks container replacement and every exposure-raising dispatch.
+154:- [ ] 3.6 Implement the read-only official KR/US bar/quote evidence producer outside strategy refresh critical sections, using the M-B-proven lossless source, shared snapshots and scheduler capabilities rather than per-lane duplicate polling; do not fallback to WTS, float-adapted domain candles or test fixtures as production authority.
+155:- [ ] 3.7 Turn all breakout RED tests GREEN and prove deterministic replay across timezone, restart, correction and cache-miss fixtures with broker mutation spies at zero.
+156:- [ ] 3.8 Add candidate-origin tests proving Toss rank/volume/flow is read-only discovery evidence, cannot substitute for official closed bars/session/tradability and exposes no Toss manual-condition-order mutation path.
+165:- [ ] 4.4 Extend production proposal scope validation and `buildLaneInput` with strict breakout snapshot/config construction while preserving continuation/reversal/weekly-value fixtures byte-for-byte where contracts are unchanged.
+166:- [ ] 4.5 Add paired KR/US production integration tests covering all 8 descriptors, exact route/proposal lineage, matrix migration refusal and no implicit desired/effective/LIVE activation.
+555:- [ ] 7.3.1 Distinguish `OFF/OFF/UNOBSERVED` from explicit read-only `SHADOW`: SHADOW may evaluate and project counterfactuals but cannot mint desired/effective/activation, own dispatch capability or survive restart without a server-owned signed shadow manifest.
+581:- [ ] 8.1 Run focused unit/property/integration tests and race tests for breakout evidence/core, strategyflow, strategyrouter, strategyproposal, scheduler and engine worker/coordinator packages; attach RED-to-GREEN evidence to every Branch Test Map row.
+582:- [ ] 8.2 Run dependency/static guards proving lane/evidence/worker packages contain no WTS or broker mutator, writable journal, Guardian issuer, activation/toggle writer and tests cannot POST to a live hostname.
+583:- [ ] 8.3 Run `openspec validate a112-run-four-strategy-families-independently --strict --no-interactive`, PM tracker generation/check, `make sdd-check`, `make test`, `make vet`, `make validate` and `make gate CHANGE=a112-run-four-strategy-families-independently`.
+584:- [ ] 8.4 Refresh all edited-function AST/FLM/BTM/risk reports after GREEN implementation and confirm every branch/risk row maps to an automated test or an explicit reviewed non-code control.
+604:- [ ] 8.6 If and only if current A100 ProtectionReady and all dependency gates are complete, build/deploy in dormant OFF/UNOBSERVED mode and verify lane/automation/autostart/LIVE approval remain unchanged. Otherwise perform build-only/shadow-fixture verification, record deployment as BLOCKED, and prove exposure-raising broker requests remain zero.
+
+GATE FAIL: a112-run-four-strategy-families-independently — 미완료 태스크 15 건이 남아 있습니다

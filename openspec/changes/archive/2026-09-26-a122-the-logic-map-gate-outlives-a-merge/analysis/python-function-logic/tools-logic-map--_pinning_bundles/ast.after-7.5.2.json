@@ -1,0 +1,35 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "source_sha256": "98845ce2dea180b8ab813180a51e9076ae1f787dea664362a61e8312675b135b",
+  "function": "_pinning_bundles",
+  "signature": "_pinning_bundles(root, analysis)",
+  "start": {
+    "line": 621,
+    "column": 1
+  },
+  "end": {
+    "line": 623,
+    "column": 59
+  },
+  "branches": [],
+  "returns": [
+    {
+      "line": 623,
+      "value": "_select_pinning(root, _read_evidence(analysis))"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 623,
+      "callee": "_read_evidence"
+    },
+    {
+      "line": 623,
+      "callee": "_select_pinning"
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+[logic-map] a112-run-four-strategy-families-independently: base aeeb209e21c8 → working tree (no landed-commit.txt in HEAD) required 143 function(s) — judged at HEAD 2f698db65b3e
+[logic-map] a112-run-four-strategy-families-independently: the target is the working tree, so this window also holds 436 commit(s) that landed after the base and every existing function they changed is required here too — run `python3 tools/logic-map/check_analysis.py --change a112-run-four-strategy-families-independently --record-landing` to let the gate compute `landed-commit.txt` from this change's evidence and record it, which narrows it to this change's own work; if no commit on this history is accepted as the landing, the command says so instead of recording
+[logic-map] internal-app-engine--pairedstrategydispatchcyclefixture: AST source hash is stale: internal/app/engine/strategy_dispatch_cycle_test.go
+[logic-map] internal-app-engine--teststrategydispatchcyclepairskrusthroughderivedleaseandgateway: AST source hash is stale: internal/app/engine/strategy_dispatch_cycle_test.go
+[logic-map] internal-app-engine--teststrategydispatchcyclereadonlyrefusalsprecedefirstlegadmissionpairedkrus: AST source hash is stale: internal/app/engine/strategy_dispatch_cycle_test.go
+[logic-map] internal-app-engine--teststrategydispatchcyclerunskrusconcurrentlyunderonecentralowner: AST source hash is stale: internal/app/engine/strategy_dispatch_cycle_test.go
+[logic-map] internal-console--multimarketstrategyruntimepage.project: AST source hash is stale: internal/console/strategy_runtime_multimarket.go
+[logic-map] internal-journal--testschematablesandcolumns: AST source hash is stale: internal/journal/schema_test.go
+[logic-map] missing evidence for modified function cmd/tossctl/a098_the_engine_registers_a_sender_test.go:TestProductionRuntimeStartsExactlyOneAlertDeliverer
+[logic-map] missing evidence for modified function cmd/tossctl/a098_the_operator_command_names_a_person_test.go:TestTheAlertCommandsAreWiredUnderEngine
+[logic-map] missing evidence for modified function cmd/tossctl/console.go:runConsole
+[logic-map] missing evidence for modified function cmd/tossctl/console_test.go:TestTheConsoleReadsTheJournalPathAndTheRunLockFromTheSamePlacesEverythingElseDoes
+[logic-map] missing evidence for modified function cmd/tossctl/console_test.go:TestConsolePolicyWiringCannotOpenOrMigrateTheTradingJournal
+[logic-map] missing evidence for modified function cmd/tossctl/engine.go:newEngineCmd
+[logic-map] missing evidence for modified function cmd/tossctl/engine.go:runEngineRun
+[logic-map] missing evidence for modified function cmd/tossctl/engine.go:engineRuntime
+[logic-map] missing evidence for modified function cmd/tossctl/engine_alerts.go:newEngineAlertsAckCmd
+[logic-map] missing evidence for modified function cmd/tossctl/engine_test.go:TestTheExitObserverDefersToFillDetection
+[logic-map] missing evidence for modified function cmd/tossctl/help_convention_test.go:TestMutatingAnnotationOnTradeCommands
+[logic-map] missing evidence for modified function cmd/tossctl/soak.go:newSoakAttestCmd
+[logic-map] missing evidence for modified function cmd/tossctl/soak.go:runSoakAttest
+[logic-map] missing evidence for modified function cmd/tossctl/soak_test.go:TestSoakAttestRefusesAnUnfinishedSoakAndWritesNothing
+[logic-map] missing evidence for modified function cmd/tossctl/soak_test.go:TestSoakAttestWritesAVerifiableAttestation
+[logic-map] missing evidence for modified function internal/app/engine/a109_the_sibling_endpoints_recover_too_test.go:a109Endpoints
+[logic-map] missing evidence for modified function internal/app/engine/a109_the_sibling_endpoints_recover_too_test.go:TestTheStagedSocketNameFitsInsideEverySiblingsFinalName
+[logic-map] missing evidence for modified function internal/app/engine/a109_the_sibling_endpoints_recover_too_test.go:TestEveryNameThePublishingPathMakesIsKnownToItsReclaim
+[logic-map] missing evidence for modified function internal/app/engine/alertdelivery.go:alertDeliverer.cycle
+[logic-map] missing evidence for modified function internal/app/engine/alertdelivery.go:alertDeliverer.deliverOne
+[logic-map] missing evidence for modified function internal/app/engine/alertdelivery.go:alertDeliverer.release
+[logic-map] missing evidence for modified function internal/app/engine/auxiliary.go:Runtime.runAuxiliary
+[logic-map] missing evidence for modified function internal/app/engine/auxiliary.go:Context.AlertDeliverer
+[logic-map] missing evidence for modified function internal/app/engine/exitloop.go:ExitObserver.checkOutage
+[logic-map] missing evidence for modified function internal/app/engine/exitwiring.go:Context.ExitObserver
+[logic-map] missing evidence for modified function internal/app/engine/gateway.go:buildGateway
+[logic-map] missing evidence for modified function internal/app/engine/position_policy_command.go:NewPositionPolicyCommandService
+[logic-map] missing evidence for modified function internal/app/engine/position_policy_transport.go:StartPositionPolicyCommandServer
+[logic-map] missing evidence for modified function internal/app/engine/runtime.go:Runtime.escalate
+[logic-map] internal-app-engine--teststrategydispatchcyclepairskrusthroughderivedleaseandgateway: AST hash does not match modified function revision
+[logic-map] internal-app-engine--teststrategydispatchcyclerunskrusconcurrentlyunderonecentralowner: AST hash does not match modified function revision
+[logic-map] internal-app-engine--teststrategydispatchcyclereadonlyrefusalsprecedefirstlegadmissionpairedkrus: AST hash does not match modified function revision
+[logic-map] internal-app-engine--pairedstrategydispatchcyclefixture: AST hash does not match modified function revision
+[logic-map] missing evidence for modified function internal/console/console_test.go:TestTheDashboardReportsAnUnstartedMachineWithoutFailing
+[logic-map] missing evidence for modified function internal/console/data.go:Console.readAttestation
+[logic-map] missing evidence for modified function internal/console/settings_tabs.go:Console.strategyRuntimeSummary
+[logic-map] missing evidence for modified function internal/console/strategy_runtime_multimarket.go:Console.buildMultiMarketStrategyRuntimePage
+[logic-map] internal-console--multimarketstrategyruntimepage.project: AST hash does not match modified function revision
+[logic-map] missing evidence for modified function internal/execgw/a098_sender_down_reason_test.go:TestTheSenderDownReasonIsRegisteredInTheEnumeration
+[logic-map] missing evidence for modified function internal/execgw/failclosed.go:AllReasonCodes
+[logic-map] missing evidence for modified function internal/execgw/gateway.go:Gateway.checkReservation
+[logic-map] missing evidence for modified function internal/execgw/modegate.go:EntryGate.ProjectOperatingMode
+[logic-map] missing evidence for modified function internal/execgw/retry.go:Retrier.escalateCredentialFailure
+[logic-map] missing evidence for modified function internal/execgw/retry.go:EntryGate.Clear
+[logic-map] missing evidence for modified function internal/execgw/riskguardian.go:RiskGuardian.escalateFor
+[logic-map] missing evidence for modified function internal/httpapi/strategy_runtime.go:StrategyRuntimeAbsent
+[logic-map] missing evidence for modified function internal/journal/alert_claim.go:Journal.settleUnderClaim
+[logic-map] missing evidence for modified function internal/journal/operating_mode.go:Journal.TransitionOperatingMode
+[logic-map] missing evidence for modified function internal/journal/operating_mode.go:Journal.RestoreOperatingModeProjection
+[logic-map] missing evidence for modified function internal/journal/operating_mode.go:Journal.OperatingModeHistory
+[logic-map] missing evidence for modified function internal/journal/operating_mode.go:currentModeFromRow
+[logic-map] missing evidence for modified function internal/journal/operating_mode.go:scanOperatingMode
+[logic-map] missing evidence for modified function internal/journal/position_campaign.go:Journal.LinkCampaignOrder
+[logic-map] missing evidence for modified function internal/journal/position_campaign.go:ApplyPositionCampaignFill
+[logic-map] missing evidence for modified function internal/journal/position_campaign.go:updateCampaignSuccessorRemaining
+[logic-map] missing evidence for modified function internal/journal/position_campaign.go:campaignExposureBlockedInTx
+[logic-map] missing evidence for modified function internal/journal/position_campaign.go:campaignQuantity
+[logic-map] missing evidence for modified function internal/journal/position_campaign.go:campaignRemaining
+[logic-map] missing evidence for modified function internal/journal/position_campaign_test.go:TestApplyPositionCampaignFillPreservesLatePredecessorExactlyOnce
+[logic-map] missing evidence for modified function internal/journal/readonly_test.go:TestTheReadOnlyHandleHasNoWriteMethods
+[logic-map] missing evidence for modified function internal/journal/risk_bucket.go:Journal.CommitRiskBucketAdmission
+[logic-map] missing evidence for modified function internal/journal/risk_bucket.go:ensureRiskBucketEntryScopeClean
+[logic-map] missing evidence for modified function internal/journal/risk_bucket_admission_test.go:TestRiskBucketAdmissionRejectsImmutablePolicyAndSnapshotCollision
+[logic-map] missing evidence for modified function internal/journal/risk_bucket_fill.go:loadRiskBucketOrderAuthority
+[logic-map] missing evidence for modified function internal/journal/risk_bucket_fill.go:riskBucketOrderRemaining
+[logic-map] missing evidence for modified function internal/journal/risk_bucket_fill.go:loadRiskBucketFillTransition
+[logic-map] missing evidence for modified function internal/journal/risk_bucket_fill.go:verifyRiskBucketStateDigest
+[logic-map] missing evidence for modified function internal/journal/risk_bucket_fill_test.go:TestRiskBucketAmbiguousSidecarLatchesAllApplicableReservationsWithoutDroppingFill
+[logic-map] missing evidence for modified function internal/journal/risk_bucket_fill_test.go:TestRiskBucketActualAndReleaseRequireExactOwnerDecisionScopeForCollidingOrderID
+[logic-map] missing evidence for modified function internal/journal/risk_bucket_issuance.go:commitFreshRiskBucketAdmissionTx
+[logic-map] missing evidence for modified function internal/journal/risk_bucket_issuance.go:insertFreshRiskBucketReservations
+[logic-map] missing evidence for modified function internal/journal/risk_bucket_issuance.go:Journal.RevalidateQFinalAdmission
+[logic-map] missing evidence for modified function internal/journal/risk_bucket_owner.go:Journal.applyRiskBucketOwnerBindingInTx
+[logic-map] missing evidence for modified function internal/journal/risk_bucket_owner_test.go:seedRiskBucketOwnerLifecycle
+[logic-map] internal-journal--testschematablesandcolumns: AST hash does not match modified function revision
+[logic-map] missing evidence for modified function internal/journal/strategy_dispatch_runtime.go:linkConfirmedStrategyCampaignTx
+[logic-map] missing evidence for modified function internal/journal/strategy_dispatch_runtime_test.go:prepareStrategyDispatchLease
+[logic-map] missing evidence for modified function internal/journal/strategy_dispatch_runtime_test.go:openStrategyDispatchV25Journal
+[logic-map] missing evidence for modified function internal/journal/strategy_first_leg_atomic_test.go:TestFirstLegAtomicAdmissionSameAccountKRUSRecollectsTheSerializedLoser
+[logic-map] missing evidence for modified function internal/journal/strategy_lineage.go:insertExactStrategyDecision
+[logic-map] missing evidence for modified function internal/obs/a096_one_send_per_condition_test.go:TestAcknowledgeCannotClearTheGateMidSend
+[logic-map] missing evidence for modified function internal/obs/a099_round4_test.go:TestAHeldRowIsNotWhispered
+[logic-map] missing evidence for modified function internal/obs/mode.go:Notifier.AnnounceOperatingMode
+[logic-map] missing evidence for modified function internal/obs/notifier.go:Notifier.publishBestEffort
+[logic-map] missing evidence for modified function internal/obs/notifier.go:Notifier.notifyCritical
+[logic-map] missing evidence for modified function internal/obs/notifier.go:Notifier.claimAndDeliver
+[logic-map] missing evidence for modified function internal/obs/notifier.go:Notifier.escalate
+[logic-map] missing evidence for modified function internal/obs/notifier.go:Notifier.deliver
+[logic-map] missing evidence for modified function internal/obs/notifier.go:Notifier.logLeaseLost
+[logic-map] missing evidence for modified function internal/obs/notifier.go:Notifier.logClaimHeld
+[logic-map] missing evidence for modified function internal/positioncampaign/campaign.go:TransitionLeg
+[logic-map] missing evidence for modified function internal/positioncampaign/replay.go:Replay
+[logic-map] missing evidence for modified function internal/positioncampaign/replay.go:replayCampaignTransition
+[logic-map] missing evidence for modified function internal/positioncampaign/replay.go:replayLegFillTransition
+[logic-map] missing evidence for modified function internal/positioncampaign/replay.go:remainingFromCap
+[logic-map] missing evidence for modified function internal/positioncampaign/review_regression_test.go:TestProductionCoreContainsNoLaneRatiosOrBrokerDependency
+[logic-map] missing evidence for modified function internal/positioncampaign/watermark.go:LegLedger.Observe
+[logic-map] missing evidence for modified function internal/riskbucket/fill.go:recomputeOverageLatches
+[logic-map] missing evidence for modified function internal/riskbucket/fill.go:cloneFillState
+[logic-map] missing evidence for modified function internal/riskbucket/production_snapshot_authority.go:loadProductionRiskEntries
+[logic-map] missing evidence for modified function internal/riskbucket/production_snapshot_authority.go:readProductionRiskUsage
+[logic-map] missing evidence for modified function internal/riskbucket/production_snapshot_authority.go:aggregateProductionRiskUsage
+[logic-map] missing evidence for modified function internal/soak/attest.go:Summary.Evaluate
+[logic-map] missing evidence for modified function internal/soak/attest.go:BuildAttestation
+[logic-map] missing evidence for modified function internal/soak/attest_test.go:TestBuildAttestationRefusesAnIncompleteSoak
+[logic-map] missing evidence for modified function internal/strategyevidence/official_source.go:NewOfficialAdapter
+[logic-map] missing evidence for modified function internal/strategyevidence/official_source.go:OfficialAdapter.collectSEC
+[logic-map] missing evidence for modified function internal/strategyevidence/projection.go:Project
+[logic-map] missing evidence for modified function internal/strategyevidence/source.go:SourcePolicy.validate
+[logic-map] missing evidence for modified function internal/strategyevidence/source.go:NewAdapter
+[logic-map] missing evidence for modified function internal/strategyevidence/source.go:Adapter.Fetch
+[logic-map] missing evidence for modified function internal/strategyevidence/source_test.go:TestIncompleteOrUnverifiedPolicyMakesZeroCalls
+[logic-map] missing evidence for modified function internal/strategyevidence/source_test.go:TestAdapterKeepsCredentialOutOfRequestMetadata
+[logic-map] missing evidence for modified function internal/strategyevidence/source_test.go:TestAdapterRejectsRuntimeBoundExpansionBeforeTransport
+[logic-map] missing evidence for modified function internal/strategyevidence/source_test.go:TestAdapterEnforcesResponseBytesWindowAndRetryAfter
+[logic-map] missing evidence for modified function internal/strategyevidence/source_test.go:TestAdapterRejectsConcurrentCallBeforeSecondTransportRequest
+[logic-map] missing evidence for modified function internal/strategyprojectionrpc/a108_publication_is_total_test.go:TestProjectionLivenessClausesEachDecideOnTheirOwn
+[logic-map] missing evidence for modified function internal/strategyprojectionrpc/transport_unix.go:reclaimStaleControlDirectory
+[logic-map] missing evidence for modified function internal/strategyprojectionrpc/transport_unix.go:verifyStaleSocketShape
+[logic-map] missing evidence for modified function internal/strategyprojectionrpc/transport_unix.go:projectionSocketAccepts
+[logic-map] missing evidence for modified function internal/strategyprojectionrpc/transport_unix.go:Dial

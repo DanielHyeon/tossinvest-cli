@@ -1,0 +1,7 @@
+# a138 RED — base 4a19f755 + a138 시험(production 무편집), 2026-10-14T20:51:46Z
+$ go test -count=1 ./internal/execgw -run 'A138'
+# github.com/JungHoonGhae/tossinvest-cli/internal/execgw_test [github.com/JungHoonGhae/tossinvest-cli/internal/execgw.test]
+internal/execgw/a138_open_positions_test.go:17:56: o.Policy.MaxOpenPositions undefined (type risk.Policy has no field or method MaxOpenPositions)
+internal/execgw/a138_open_positions_test.go:90:14: a.MaxOpenPositionsLimit undefined (type *execgw.RiskGuardian has no field or method MaxOpenPositionsLimit)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw [build failed]
+FAIL

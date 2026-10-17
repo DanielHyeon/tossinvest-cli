@@ -1,0 +1,9 @@
+
+Callers of "ExitObserver.submit" (2):
+
+function    TestPrepareFailureBlocksSubmission
+  internal/journal/durability_test.go:539
+
+method      record
+  internal/app/engine/exitloop.go:1232
+

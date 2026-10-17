@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/hybrid"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
@@ -254,7 +255,9 @@ func toolResult(payload any, isError bool) (any, *rpcError) {
 	}
 	if len(text) > maxResultBytes {
 		var v any
-		if json.Unmarshal(text, &v) == nil {
+		dec := json.NewDecoder(bytes.NewReader(text))
+		dec.UseNumber()
+		if dec.Decode(&v) == nil {
 			if trimmed, terr := json.MarshalIndent(shrinkToCap(v), "", "  "); terr == nil {
 				text = trimmed
 			}
@@ -323,17 +326,17 @@ func keepable(s []any) int {
 // shrinkToCap's loop terminates; overshooting the cap only costs another pass.
 func trim(s []any, size, excess int) []any {
 	n, dropped := keepable(s), 0
-	if n < len(s) {
-		if c, ok := s[len(s)-1].(map[string]any)[omittedKey].(float64); ok {
-			dropped = int(c)
-		}
-	}
 	keep := n * (size - excess) / size
 	if keep >= n {
 		keep = n - 1
 	}
 	if keep < 0 {
 		keep = 0
+	}
+	if n < len(s) {
+		if c, ok := omittedCount(s[len(s)-1].(map[string]any)[omittedKey]); ok && c <= maxInt-int64(n-keep) {
+			dropped = int(c)
+		}
 	}
 	dropped += n - keep
 	out := make([]any, 0, keep+1)
@@ -342,6 +345,24 @@ func trim(s []any, size, excess int) []any {
 		omittedKey: dropped,
 		"_note":    fmt.Sprintf("%d items omitted: result exceeded the %d-byte MCP limit. Narrow the request (see describe_operation params) or use the CLI for the full list.", dropped, maxResultBytes),
 	})
+}
+
+const maxInt = int64(^uint(0) >> 1)
+
+func omittedCount(v any) (int64, bool) {
+	switch n := v.(type) {
+	case json.Number:
+		c, err := n.Int64()
+		return c, err == nil && c >= 0 && c <= maxInt
+	case float64:
+		if n < 0 || n != math.Trunc(n) || n >= float64(maxInt) || math.IsNaN(n) || math.IsInf(n, 0) {
+			return 0, false
+		}
+		return int64(n), true
+	case int:
+		return int64(n), n >= 0
+	}
+	return 0, false
 }
 
 // walkSlices visits every array in a decoded JSON value, passing a setter that

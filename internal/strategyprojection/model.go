@@ -96,6 +96,9 @@ type Snapshot struct {
 	GeneratedAt   time.Time                   `json:"generatedAt"`
 	Runtime       RuntimeIdentityProjection   `json:"runtime"`
 	Markets       map[Market]MarketProjection `json:"markets"`
+	// Lanes · Coordinators 는 a112 7.3 의 additive 자식이다(lanes.go). 언제나 8 · 2 개, 고정 순서.
+	Lanes        []LaneRuntimeProjection `json:"lanes"`
+	Coordinators []CoordinatorProjection `json:"coordinators"`
 }
 
 type MarketProjection struct {
@@ -177,7 +180,7 @@ func DormantSnapshot(generatedAt time.Time) Snapshot {
 	return Snapshot{SchemaVersion: SchemaVersion, GeneratedAt: generatedAt, Markets: map[Market]MarketProjection{
 		MarketKR: unknownMarket(MarketKR, RefusalNotConfigured, generatedAt),
 		MarketUS: unknownMarket(MarketUS, RefusalNotConfigured, generatedAt),
-	}}
+	}, Lanes: defaultLanes(), Coordinators: defaultCoordinators()}
 }
 
 func UnavailableSnapshot(generatedAt time.Time) Snapshot {
@@ -185,7 +188,7 @@ func UnavailableSnapshot(generatedAt time.Time) Snapshot {
 	return Snapshot{SchemaVersion: SchemaVersion, GeneratedAt: generatedAt, Markets: map[Market]MarketProjection{
 		MarketKR: unknownMarket(MarketKR, RefusalRuntimeUnavailable, generatedAt),
 		MarketUS: unknownMarket(MarketUS, RefusalRuntimeUnavailable, generatedAt),
-	}}
+	}, Lanes: defaultLanes(), Coordinators: defaultCoordinators()}
 }
 
 func WithMarketFailure(snapshot Snapshot, market Market, code RefusalCode, observedAt time.Time) Snapshot {
@@ -220,7 +223,8 @@ func unknownMarket(market Market, code RefusalCode, observedAt time.Time) Market
 
 func Clone(snapshot Snapshot) Snapshot {
 	out := Snapshot{SchemaVersion: snapshot.SchemaVersion, GeneratedAt: snapshot.GeneratedAt,
-		Runtime: cloneRuntimeIdentity(snapshot.Runtime), Markets: make(map[Market]MarketProjection, len(snapshot.Markets))}
+		Runtime: cloneRuntimeIdentity(snapshot.Runtime), Markets: make(map[Market]MarketProjection, len(snapshot.Markets)),
+		Lanes: cloneLanes(snapshot.Lanes), Coordinators: cloneCoordinators(snapshot.Coordinators)}
 	for market, item := range snapshot.Markets {
 		out.Markets[market] = cloneMarket(item)
 	}
@@ -278,6 +282,13 @@ func Validate(snapshot Snapshot) error {
 		if err := validateMarketProjection(item, snapshot.GeneratedAt); err != nil {
 			return fmt.Errorf("strategy projection: market %s: %w", market, err)
 		}
+	}
+	// a112 7.3: additive 자식 — 개수 · 고정 순서 · 열쇠 · enum · null 짝(lanes.go).
+	if err := validateLanes(snapshot.Lanes); err != nil {
+		return fmt.Errorf("strategy projection: %w", err)
+	}
+	if err := validateCoordinators(snapshot.Coordinators); err != nil {
+		return fmt.Errorf("strategy projection: %w", err)
 	}
 	return nil
 }

@@ -1,0 +1,10 @@
+
+Impact of changing "checkDailyLoss" — 5 affected symbols:
+
+internal/risk/chain.go
+  function    checkDailyLoss:518
+  variable    entryChain:96
+  function    EntryChainSteps:112
+  function    Evaluate:131
+  file        chain.go:1
+

@@ -1,0 +1,17 @@
+# a112 5.2.2.2 RED — 격리 사본(git archive HEAD e8d56d49 + 새 시험 파일 + 위험 fixture 확장 + 범위별 권한 **선언만**(strategy_owner_scope_authority.go · 두 시장 권한의 scopes 칸 — 배선 없음)), 2026-10-01T04:10:44+09:00
+$ GOFLAGS=-trimpath go test -tags tossos_testseams -count=1 -v -run "TestAnActivatedTwoScopeMarket|TestTheSecondLegOfOneCycle|TestAScopeWithoutItsOwn|TestTheFirstLegCurrency" ./internal/app/engine/
+=== RUN   TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope
+    a112_owner_scope_trading_test.go:169: two-scope delivery err=engine: first-leg admission AUTHORITY_COLLECTION_FAILED: paired production authority is incomplete for market, want both scopes issued
+--- FAIL: TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope (0.69s)
+=== RUN   TestTheSecondLegOfOneCycleCountsTheFirstLegsHeldReservation
+    a112_owner_scope_trading_test.go:197: placed=[] err=engine: first-leg admission AUTHORITY_COLLECTION_FAILED: paired production authority is incomplete for market — want exactly one leg under a cap that fits one (the held reservation must count)
+--- FAIL: TestTheSecondLegOfOneCycleCountsTheFirstLegsHeldReservation (0.70s)
+=== RUN   TestAScopeWithoutItsOwnAccountAuthorityIsRefusedAloneAndRecorded
+    a112_owner_scope_trading_test.go:213: placed= err=engine: first-leg admission AUTHORITY_COLLECTION_FAILED: paired production authority is incomplete for market, want only the scope with its own account authority
+--- FAIL: TestAScopeWithoutItsOwnAccountAuthorityIsRefusedAloneAndRecorded (0.70s)
+=== RUN   TestTheFirstLegCurrencyComesFromTheLineageNotTheEnvelope
+    a112_owner_scope_trading_test.go:231: issued with envelope currency "USD", want KRW re-derived from the KR lineage
+--- FAIL: TestTheFirstLegCurrencyComesFromTheLineageNotTheEnvelope (0.67s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	2.776s
+FAIL

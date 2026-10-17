@@ -1,0 +1,11 @@
+[Unit]
+Description=TossOS engine liveness watch (alert once when the engine goes silent)
+
+[Service]
+Type=oneshot
+# 판정 입력: config.json 과 엔진 활성 마커만. 쓰는 것은 자기 상태 파일 하나. 엔진 · 저널 · 엔진 잠금을 열지 않음(a134).
+# 보호된 ntfy 토픽이면 drop-in 의 EnvironmentFile= 로 TOSSCTL_NTFY_TOKEN 을 넣음(저장소에 넣지 않음).
+# 설치 때 한 번: 같은 환경으로 `engine heartbeat-check --send-test` 를 돌려 전달을 실측(tasks 게이트 뒤 절차).
+ExecStart=%h/.local/bin/tossctl --config-dir %h/.config/tossctl engine heartbeat-check
+# 멈춘 실행이 다음 매 분 실행을 막지 않게 상한(ntfy 전송 상한 10초보다 넉넉히, 1분보다 짧게).
+TimeoutStartSec=50s

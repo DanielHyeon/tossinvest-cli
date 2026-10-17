@@ -1,0 +1,20 @@
+# verify a112 7.3.1 SHADOW — 2026-10-05 03:07:28 KST HEAD 9e5f3ccf + 작업 트리
+## 무태그
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow	47.008s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	48.957s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/httpapi	0.394s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	41.090s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	53.650s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/testenv	48.923s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	210.282s
+## 태그
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	36.013s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	44.493s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow	37.976s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	301.846s
+## lint
+go vet ./...
+go vet -tags tossos_testseams ./...
+## race guard
+
+OK

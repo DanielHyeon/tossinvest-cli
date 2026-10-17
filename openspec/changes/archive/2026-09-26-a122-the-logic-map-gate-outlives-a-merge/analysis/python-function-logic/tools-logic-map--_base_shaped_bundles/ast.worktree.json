@@ -1,0 +1,103 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "601508039d15c95e6b141054cc5a17c0e221de66",
+  "source_sha256": "f7ca5855c3e0bd73387177e9c933f940ca0829144cf1624b2789f2d384963117",
+  "function": "_base_shaped_bundles",
+  "signature": "_base_shaped_bundles(root, base, analysis)",
+  "start": {
+    "line": 432,
+    "column": 1
+  },
+  "end": {
+    "line": 454,
+    "column": 25
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 447,
+      "inherited_line": false,
+      "source": "for ast_path, source, digest in _pinning_bundles(root, analysis):"
+    },
+    {
+      "id": "B2",
+      "kind": "BoolOp",
+      "line": 449,
+      "inherited_line": false,
+      "source": "path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == digest"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 449,
+      "inherited_line": false,
+      "source": "if path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == digest:"
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 452,
+      "inherited_line": false,
+      "source": "at_base is not None and hashlib.sha256(at_base).hexdigest() == digest"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 452,
+      "inherited_line": false,
+      "source": "if at_base is not None and hashlib.sha256(at_base).hexdigest() == digest:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 454,
+      "value": "sorted(names)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 447,
+      "callee": "_pinning_bundles"
+    },
+    {
+      "line": 449,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 449,
+      "callee": "hashlib.sha256(path.read_bytes()).hexdigest"
+    },
+    {
+      "line": 449,
+      "callee": "path.is_file"
+    },
+    {
+      "line": 449,
+      "callee": "path.read_bytes"
+    },
+    {
+      "line": 451,
+      "callee": "_committed_bytes"
+    },
+    {
+      "line": 452,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 452,
+      "callee": "hashlib.sha256(at_base).hexdigest"
+    },
+    {
+      "line": 453,
+      "callee": "names.append"
+    },
+    {
+      "line": 454,
+      "callee": "sorted"
+    }
+  ]
+}

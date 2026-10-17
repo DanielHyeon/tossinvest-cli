@@ -1,0 +1,17 @@
+== scratch 86431d3c on d54f4dca
+make lint exit=0
+gofmt listed=0
+go test  breakoutlane+strategyflow+strategyproposal exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.231s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	0.086s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal	0.004s
+go test -tags tossos_testseams breakoutlane+strategyflow+strategyproposal exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.250s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	0.096s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal	0.247s
+go test -race breakoutlane+strategyflow+strategyproposal exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	2.700s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	1.226s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal	1.013s
+Change 'a112-run-four-strategy-families-independently' is valid
+== check_analysis --change a112: HEAD 173, lot 173, normalized set delta 0/0

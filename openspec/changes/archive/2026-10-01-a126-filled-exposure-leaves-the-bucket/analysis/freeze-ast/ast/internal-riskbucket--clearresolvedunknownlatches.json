@@ -1,0 +1,89 @@
+{
+  "file": "internal/riskbucket/fill.go",
+  "source_sha256": "845a67b3669ecda77230dc1cdb9256fffa6ae88edf54a50602231a2bdaef088a",
+  "package": "riskbucket",
+  "function": "clearResolvedUnknownLatches",
+  "signature": "clearResolvedUnknownLatches(params=1, results=0)",
+  "start": {
+    "line": 420,
+    "column": 1
+  },
+  "end": {
+    "line": 433,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 421,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 422,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 423,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 429,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 424,
+        "column": 5
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 428,
+        "column": 2
+      },
+      "text": "delete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 430,
+        "column": 3
+      },
+      "text": "delete"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 431,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base",
+  "base_commit": "989ab031a9177041da1ebb79fd1ed1209347ed30"
+}

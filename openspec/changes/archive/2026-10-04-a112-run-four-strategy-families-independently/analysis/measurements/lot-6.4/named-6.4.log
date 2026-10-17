@@ -1,0 +1,14 @@
+$ go test -json -count=1 -tags tossos_testseams -run ^(TestARedeliveredBreakoutFirstLegReachesTheBrokerOnce|TestASecondBreakoutFirstLegWhileTheClaimIsActiveNeverReachesTheBroker|TestNoScaleInOrExtraBreakoutLegWhileTheCampaignIsOpen|TestTheFirstLegAuthorityRefusesASecondBreakoutLegEvenPastTheDeliverySkip)$ ./internal/app/engine
+exit=0 passed=4/4
+  PASS	TestARedeliveredBreakoutFirstLegReachesTheBrokerOnce
+  PASS	TestASecondBreakoutFirstLegWhileTheClaimIsActiveNeverReachesTheBroker
+  PASS	TestTheFirstLegAuthorityRefusesASecondBreakoutLegEvenPastTheDeliverySkip
+  PASS	TestNoScaleInOrExtraBreakoutLegWhileTheCampaignIsOpen
+$ go test -json -count=1 -run ^(TestEveryProductionBreakoutLaneInputIsRefusedAtTheWall|TestNoNonTestCodeBuildsABreakoutLaneInputAroundTheWall)$ ./internal/strategyproposal
+exit=0 passed=2/2
+  PASS	TestEveryProductionBreakoutLaneInputIsRefusedAtTheWall
+  PASS	TestNoNonTestCodeBuildsABreakoutLaneInputAroundTheWall
+$ go test -json -count=1 -run ^(TestFirstLegAtomicAdmissionCompetingSameScopeHasOneWinner|TestFirstLegAtomicAdmissionExactReplayUsesOriginalJournalToken)$ ./internal/journal
+exit=0 passed=2/2
+  PASS	TestFirstLegAtomicAdmissionCompetingSameScopeHasOneWinner
+  PASS	TestFirstLegAtomicAdmissionExactReplayUsesOriginalJournalToken

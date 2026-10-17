@@ -124,12 +124,12 @@ type tradeLeg struct {
 // freezeTradeOutcomeTx writes the outcome of a position that has just closed.
 //
 // It returns no error by design — see the file header. A refusal to compute is
-// reported through the returned bool so the caller can say so in a log without
-// being able to turn it into a rollback.
-func freezeTradeOutcomeTx(ctx context.Context, tx *ApplyTx, positionID string, model costs.Model) bool {
-	outcome, ok := computeTradeOutcome(ctx, tx, positionID, model)
-	if !ok {
-		return false
+// reported through the returned reason code (a130: "" = frozen) so the caller can
+// say so in a log without being able to turn it into a rollback.
+func freezeTradeOutcomeTx(ctx context.Context, tx *ApplyTx, positionID string, model costs.Model) TradeOutcomeRefusalReason {
+	outcome, reason := computeTradeOutcome(ctx, tx, positionID, model, nil)
+	if reason != "" {
+		return reason
 	}
 	_, err := tx.Exec(ctx, `
 		INSERT INTO trade_outcomes
@@ -141,7 +141,10 @@ func freezeTradeOutcomeTx(ctx context.Context, tx *ApplyTx, positionID string, m
 		outcome.InitialRisk, outcome.InitialQuantity, outcome.HeldSeconds,
 		nullableString(outcome.ExitRatchetLevel), nullableRung(outcome.ExitRung),
 		outcome.ClosedAt, outcome.CostTotal)
-	return err == nil
+	if err != nil {
+		return OutcomeRefusalInsertFailed
+	}
+	return ""
 }
 
 // tradeOutcomeReader is the read surface the computation needs, satisfied both
@@ -158,15 +161,18 @@ func (r journalReader) Query(ctx context.Context, query string, args ...any) (*s
 	return r.j.db.QueryContext(ctx, query, args...)
 }
 
-// computeTradeOutcome derives the frozen row. The bool is false when the trade
-// cannot be priced honestly, which is never an error the caller may act on.
+// computeTradeOutcome derives the frozen row. The reason is non-empty (a130: one
+// of the OutcomeRefusal* codes) when the trade cannot be priced honestly, which is
+// never an error the caller may act on. prices carries the broker 1-minute bars
+// for an adopted position's post-adoption lots; nil (the fill transaction, and
+// BackfillTradeOutcome) leaves such a position refused needs_intake_price.
 func computeTradeOutcome(ctx context.Context, r tradeOutcomeReader, positionID string,
-	model costs.Model) (TradeOutcome, bool) {
+	model costs.Model, prices IntakePrices) (TradeOutcome, TradeOutcomeRefusalReason) {
 	if !model.Configured() {
 		// An unconfigured model prices the round trip as free, which would report
 		// every trade as more profitable than it was. Recording nothing is the
 		// honest outcome; the backfill can fill it in once a model exists.
-		return TradeOutcome{}, false
+		return TradeOutcome{}, OutcomeRefusalCostModelUnconfigured
 	}
 
 	var (
@@ -178,48 +184,54 @@ func computeTradeOutcome(ctx context.Context, r tradeOutcomeReader, positionID s
 		       coalesce(adoption_id,''), coalesce(opened_at,''), coalesce(closed_at,'')
 		  FROM positions WHERE id = ?`, positionID)
 	if err != nil {
-		return TradeOutcome{}, false
+		return TradeOutcome{}, OutcomeRefusalPositionUnreadable
 	}
 	if !rows.Next() {
 		_ = rows.Close()
-		return TradeOutcome{}, false
+		return TradeOutcome{}, OutcomeRefusalPositionUnreadable
 	}
 	if err := rows.Scan(&account, &market, &symbol, &decisionID, &adoptionID,
 		&openedAt, &closedAt); err != nil {
 		_ = rows.Close()
-		return TradeOutcome{}, false
+		return TradeOutcome{}, OutcomeRefusalPositionUnreadable
 	}
 	_ = rows.Close()
 	if decisionID == "" && adoptionID == "" {
 		// Neither record justifies the position: no stop, no initial risk, no R to
 		// express anything in. An unmanaged position's round trip is not this
 		// engine's trade.
-		return TradeOutcome{}, false
+		return TradeOutcome{}, OutcomeRefusalUnmanagedPosition
 	}
 
 	risk, level, rung, ok := frozenExitFacts(ctx, r, positionID)
 	if !ok {
-		return TradeOutcome{}, false
+		return TradeOutcome{}, OutcomeRefusalExitStateUnreadable
 	}
 
-	var buy, sell tradeLeg
+	var (
+		buy, sell tradeLeg
+		reason    TradeOutcomeRefusalReason
+	)
 	if adoptionID != "" {
-		buy, sell, ok = adoptedRoundTripLegs(ctx, r, positionID, account, market, symbol)
-	} else {
-		buy, sell, ok = roundTripLegs(ctx, r, account, market, symbol, decisionID)
+		buy, sell, reason = adoptedRoundTripLegs(ctx, r, positionID, account, market, symbol, prices)
+	} else if buy, sell, ok = roundTripLegs(ctx, r, account, market, symbol, decisionID); !ok {
+		reason = OutcomeRefusalRoundTripUnpriceable
 	}
-	if !ok || buy.quantity.Sign() <= 0 {
-		return TradeOutcome{}, false
+	if reason != "" {
+		return TradeOutcome{}, reason
+	}
+	if buy.quantity.Sign() <= 0 {
+		return TradeOutcome{}, OutcomeRefusalEmptyBuyLeg
 	}
 
 	venue := costs.Market(strings.ToLower(strings.TrimSpace(market)))
 	buyCost, err := model.EstimateTradeCost(ratText(buy.notional), costs.SideBuy, venue)
 	if err != nil {
-		return TradeOutcome{}, false
+		return TradeOutcome{}, OutcomeRefusalCostEstimateFailed
 	}
 	sellCost, err := model.EstimateTradeCost(ratText(sell.notional), costs.SideSell, venue)
 	if err != nil {
-		return TradeOutcome{}, false
+		return TradeOutcome{}, OutcomeRefusalCostEstimateFailed
 	}
 	pnl := new(big.Rat).Sub(sell.notional, buy.notional)
 	pnl.Sub(pnl, ratOf(buyCost.Total))
@@ -228,7 +240,11 @@ func computeTradeOutcome(ctx context.Context, r tradeOutcomeReader, positionID s
 
 	// 실현 R = pnl ÷ (초기 위험 × 초기 수량). Both factors are frozen: the risk at
 	// t0 and the quantity the position was opened with, neither of which a
-	// partial take-profit moves.
+	// partial take-profit moves. (a130: for an adopted position whose quantity
+	// reconciliation raised after the adoption, buy.quantity is the adopted
+	// quantity plus every priced lot — the initial quantity of this round trip,
+	// which the sell leg was required to equal — so numerator and denominator
+	// count the same shares; r stays the adoption-time per-share risk.)
 	denominator := new(big.Rat).Mul(ratOf(risk), buy.quantity)
 	realizedR := "0"
 	if denominator.Sign() != 0 {
@@ -246,7 +262,7 @@ func computeTradeOutcome(ctx context.Context, r tradeOutcomeReader, positionID s
 		ExitRatchetLevel:      level,
 		ExitRung:              rung,
 		ClosedAt:              closedAt,
-	}, true
+	}, ""
 }
 
 // frozenExitFacts reads the exit-state values the outcome copies at close.
@@ -485,37 +501,67 @@ func roundTripLegs(ctx context.Context, r tradeOutcomeReader,
 // ADJUSTMENT_CLOSED event is where that story is recorded instead.
 
 // adoptedRoundTripLegs builds the synthetic buy leg and the attributed sell leg.
+//
+// a130: the reason is a fixed code ("" = both legs stand). The buy leg applies
+// the adoption rule (A7: the basis is the observation, not the cost basis) to
+// every lot: the adopted quantity at the adoption observation, plus each
+// quantity reconciliation added after the adoption at the broker's own market
+// price for that moment — the close of the official 1-minute bar the
+// adjustment fell in (design D1; user decision 2026-10-13, third). That price is
+// a network read, so it is never fetched here: inside the fill transaction
+// prices is nil and a position with such a lot is refused needs_intake_price;
+// the human-run backfill (trade_outcome_backfill.go) fetches the bars outside
+// any transaction and passes them in. The sell leg must equal the whole bought
+// quantity, so realised R divides by the risk of the same shares the P&L
+// counts. A re-adoption (the exit state's risk was rewritten), a post-adoption
+// decrease (a person's disposal) and a sell outside this instance's attributed
+// orders (instanceSellIntegrity) are refused. With no post-adoption increase
+// the arithmetic is exactly the pre-a130 one.
 func adoptedRoundTripLegs(ctx context.Context, r tradeOutcomeReader,
-	positionID, account, market, symbol string) (tradeLeg, tradeLeg, bool) {
+	positionID, account, market, symbol string, prices IntakePrices) (tradeLeg, tradeLeg, TradeOutcomeRefusalReason) {
 	buy := tradeLeg{quantity: new(big.Rat), notional: new(big.Rat), priced: true}
 	sell := tradeLeg{quantity: new(big.Rat), notional: new(big.Rat), priced: true}
 
 	adopted, observed, ok := adoptedBasis(ctx, r, positionID)
 	if !ok {
-		return buy, sell, false
+		return buy, sell, OutcomeRefusalAdoptionUnreadable
 	}
-	buy.quantity = adopted
-	buy.notional = new(big.Rat).Mul(adopted, observed)
+	lots, reason := adoptionEpoch(ctx, r, positionID)
+	if reason != "" {
+		return buy, sell, reason
+	}
+	added, addedNotional, _, reason := priceLots(lots, prices)
+	if reason != "" {
+		return buy, sell, reason
+	}
+	buy.quantity = new(big.Rat).Add(adopted, added)
+	buy.notional = new(big.Rat).Add(new(big.Rat).Mul(adopted, observed), addedNotional)
 
 	orders, ok := engineSellOrders(ctx, r, positionID, account, market, symbol)
 	if !ok {
-		return buy, sell, false
+		return buy, sell, OutcomeRefusalEngineSellUnreadable
 	}
 	if len(orders) == 0 {
 		// No engine sell fill is attributable to this instance at all. Freezing
 		// here would price the whole position as sold for nothing.
-		return buy, sell, false
+		return buy, sell, OutcomeRefusalNoEngineSell
 	}
 	if !sumSellFills(ctx, r, orders, account, market, symbol, &sell) {
-		return buy, sell, false
+		return buy, sell, OutcomeRefusalEngineSellUnreadable
 	}
-	if !sell.priced || sell.quantity.Cmp(adopted) != 0 {
+	if !sell.priced {
+		return buy, sell, OutcomeRefusalSellUnpriced
+	}
+	if reason := instanceSellIntegrity(ctx, r, positionID, account, market, symbol, orders); reason != "" {
+		return buy, sell, reason
+	}
+	if sell.quantity.Cmp(buy.quantity) != 0 {
 		// Under-attributed (a person finished the disposal) or over-attributed (a
 		// previous instance's flatten swept in). Either way the round trip this
 		// row would describe is not the one that happened.
-		return buy, sell, false
+		return buy, sell, OutcomeRefusalSellQuantityMismatch
 	}
-	return buy, sell, true
+	return buy, sell, ""
 }
 
 // adoptedBasis reads the synthetic t0: the adopted quantity and the observation
@@ -849,10 +895,10 @@ func (j *Journal) BackfillTradeOutcome(ctx context.Context, positionID string,
 		return TradeOutcome{}, err
 	}
 
-	outcome, ok := computeTradeOutcome(ctx, journalReader{j: j}, id, model)
-	if !ok {
+	outcome, reason := computeTradeOutcome(ctx, journalReader{j: j}, id, model, nil)
+	if reason != "" {
 		return TradeOutcome{}, fmt.Errorf(
-			"%w: the round trip of %s cannot be priced from what the ledger holds", ErrInvalidRequest, id)
+			"%w: the round trip of %s cannot be priced from what the ledger holds (%s)", ErrInvalidRequest, id, reason)
 	}
 	if _, err := j.db.ExecContext(ctx, `
 		INSERT INTO trade_outcomes

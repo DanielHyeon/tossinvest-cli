@@ -1,0 +1,40 @@
+start 90192bbebb241d78 internal/app/engine/strategy_risk_authority.go
+start 85e97cf96bd416ee internal/app/engine/strategy_route_authority.go
+start 9a74db4abd523da8 internal/riskbucket/production_snapshot_authority.go
+start 617163a508030dea internal/strategyrouter/production.go
+test afa07f6f7233d437 internal/riskbucket/a127_schema_binding_test.go
+test c578d9fd751b2112 internal/riskbucket/production_snapshot_authority_test.go
+test bcc1e64d7b93f8e5 internal/strategyrouter/a127_schema_binding_test.go
+test 6e90d923980152d0 internal/strategyrouter/a127_real_journal_test.go
+test 1ade435a3eb675dc internal/strategyrouter/a127_manifest_seam_parity_test.go
+test f8948db2a0026cde internal/strategyrouter/production_route_manifest_testseam.go
+test 21d69cb2a4f5da5a internal/strategyrouter/production_test.go
+test 5242f5c12ea41327 internal/app/engine/a127_schema_injection_test.go
+test 9f190f0d32244592 internal/app/engine/a112_owner_scope_trading_test.go
+test 88a27a5175907ac6 internal/app/engine/strategy_risk_authority_test.go
+control GREEN
+S1 CAUGHT — risk 동결 리터럴 27 복귀
+S2 CAUGHT — route 동결 리터럴 27 복귀
+S3 CAUGHT — risk 더 새 원장 검사 생략(버전 확인 생략 축)
+S4 CAUGHT — route 더 새 원장 검사 생략(버전 확인 생략 축)
+S5a CAUGHT — risk 더 옛 원장 수락((a) 로의 후퇴)
+S5b CAUGHT — route 더 옛 원장 수락
+S6a CAUGHT — risk 주입 0 수락(가드 삭제 — 0 수락 축)
+S6b CAUGHT — risk 음수 주입 수락
+S6c CAUGHT — route 주입 0 수락
+S6d CAUGHT — route 음수 주입 수락
+S7 CAUGHT — engine risk 자리가 선택자가 아닌 식(런타임 값 대용)
+S8 CAUGHT — route 판독 전 prepare 생략(prepare 생략 축)
+S9a CAUGHT — risk 방향 문구 뒤바꿈
+S9b CAUGHT — route 방향 문구 뒤바꿈
+S10a CAUGHT — engine risk 자리 리터럴 35
+S10b CAUGHT — engine route 자리 리터럴 35
+S11 CAUGHT — 스키마 거절을 범위 국소 신원으로 재표식
+S12a CAUGHT — route Batch 감싸기가 원인을 다시 버림
+S12b CAUGHT — route opener 가 맨 sentinel 로 복귀
+S13a CAUGHT — risk 사용량 판독을 tx 밖으로(tx 분리 축)
+S13b CAUGHT — risk latch 판독을 tx 밖으로
+S13c CAUGHT — risk 버전 판독을 tx 밖으로
+S14 CAUGHT — risk 판독 전 prepare 생략(prepare 생략 축)
+caught 23 · survived 0
+rc=0

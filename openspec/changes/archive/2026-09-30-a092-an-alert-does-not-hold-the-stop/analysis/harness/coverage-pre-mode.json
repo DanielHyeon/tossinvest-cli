@@ -1,0 +1,32 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/obs",
+ "tests_run": 81,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-obs--notifier.announceoperatingmode": {
+   "B1": {
+    "kind": "if",
+    "line": 50,
+    "column": 2,
+    "block": "50.14-52.3",
+    "entered_by": [
+     "TestAnnouncingWithoutANotifierIsSafe"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 54,
+    "column": 2,
+    "block": "54.90-56.3",
+    "entered_by": [
+     "TestARelaxationIsAnnouncedAsARelaxation",
+     "TestTheTransitionLogLineIsCountable"
+    ],
+    "union": null
+   }
+  }
+ }
+}

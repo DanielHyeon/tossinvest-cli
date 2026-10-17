@@ -1,0 +1,158 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "4de485020dd0e128645b283a03d95c4b30378f96",
+  "source_sha256": "90b232ab9efd6f522ac52592c7232fe20ce8df0c72e94d07d5d4104d1b34d78d",
+  "function": "_ident_go_paths",
+  "signature": "_ident_go_paths(root)",
+  "start": {
+    "line": 159,
+    "column": 1
+  },
+  "end": {
+    "line": 188,
+    "column": 65
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 171,
+      "inherited_line": false,
+      "source": "if listed.returncode:"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 173,
+      "inherited_line": false,
+      "source": "if not listed.stdout.strip(b'\\x00'):"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 179,
+      "inherited_line": false,
+      "source": "if checked.returncode:"
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 183,
+      "inherited_line": false,
+      "source": "fields and fields[-1] == b''"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 183,
+      "inherited_line": false,
+      "source": "if fields and fields[-1] == b'':"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 185,
+      "inherited_line": false,
+      "source": "if len(fields) % 3:"
+    },
+    {
+      "id": "B7",
+      "kind": "comprehension",
+      "line": 187,
+      "inherited_line": true,
+      "source": " for at in range(0, len(fields), 3) if fields[at + 2] not in (b'unspecified', b'unset')"
+    }
+  ],
+  "returns": [
+    {
+      "line": 174,
+      "value": "[]"
+    },
+    {
+      "line": 187,
+      "value": "[fields[at].decode('utf-8', 'strict') for at in range(0, len(fields), 3) if fields[at + 2] not in (b'unspecified', b'unset')]"
+    }
+  ],
+  "raises": [
+    {
+      "line": 172,
+      "source": "raise RuntimeError(_first_line(listed.stderr.decode('utf-8', 'replace'), 'git ls-files failed'))"
+    },
+    {
+      "line": 180,
+      "source": "raise RuntimeError(_first_line(checked.stderr.decode('utf-8', 'replace'), 'git check-attr failed'))"
+    },
+    {
+      "line": 186,
+      "source": "raise RuntimeError('cannot read git check-attr output')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 167,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 172,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 172,
+      "callee": "_first_line"
+    },
+    {
+      "line": 172,
+      "callee": "listed.stderr.decode"
+    },
+    {
+      "line": 173,
+      "callee": "listed.stdout.strip"
+    },
+    {
+      "line": 175,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 180,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 180,
+      "callee": "_first_line"
+    },
+    {
+      "line": 180,
+      "callee": "checked.stderr.decode"
+    },
+    {
+      "line": 182,
+      "callee": "checked.stdout.split"
+    },
+    {
+      "line": 184,
+      "callee": "fields.pop"
+    },
+    {
+      "line": 185,
+      "callee": "len"
+    },
+    {
+      "line": 186,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 187,
+      "callee": "fields[at].decode"
+    },
+    {
+      "line": 187,
+      "callee": "len"
+    },
+    {
+      "line": 187,
+      "callee": "range"
+    }
+  ]
+}

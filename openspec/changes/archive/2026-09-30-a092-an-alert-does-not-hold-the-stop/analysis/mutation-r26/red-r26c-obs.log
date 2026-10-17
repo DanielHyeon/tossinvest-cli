@@ -1,0 +1,6 @@
+--- FAIL: TestA092AFailedRecordKeepsTheKeyOutOfTheGate (0.64s)
+    a092_r26b_internal_test.go:227: the record-failure line does not mask the account: {"time":"2026-09-30T00:00:00Z","level":"ERROR","msg":"engine.alert_undelivered","event":"engine.alert_undelivered","subject":"engine","severity":"critical","trigger_event":"engine.operating_mode","error":"journal: recording alert operating_mode:99887766554:NORMAL:t2: sql: database is closed"}
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/obs	0.644s
+FAIL
+rc=1

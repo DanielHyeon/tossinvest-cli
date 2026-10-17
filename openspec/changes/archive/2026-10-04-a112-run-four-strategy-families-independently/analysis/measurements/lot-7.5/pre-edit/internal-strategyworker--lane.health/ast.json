@@ -1,0 +1,87 @@
+{
+  "file": "internal/strategyworker/lane.go",
+  "source_sha256": "b6919f2ac3ce70c08631286b8c879bd3b3ab273228d21246b359fa5031e594c5",
+  "package": "strategyworker",
+  "function": "Health",
+  "receiver": "Lane",
+  "signature": "Lane.Health(params=0, results=1)",
+  "start": {
+    "line": 185,
+    "column": 1
+  },
+  "end": {
+    "line": 195,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 188,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 189,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 192,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 2
+      },
+      "text": "lane.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 8
+      },
+      "text": "lane.mu.Unlock"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 187,
+        "column": 2
+      },
+      "text": "lane.mu.Unlock"
+    }
+  ]
+}

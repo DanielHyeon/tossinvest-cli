@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a099-a-claim-excludes-the-second-sender",
-    "path": "openspec/changes/a099-a-claim-excludes-the-second-sender"
+    "path": "openspec/changes/archive/2026-09-09-a099-a-claim-excludes-the-second-sender"
   },
   "acceptance": [
     "The outbox marks a row when it hands delivery to a sender, so a second sender that arrives at the same instant is told the send is not owed to it",

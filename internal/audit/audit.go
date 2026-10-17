@@ -174,6 +174,8 @@ func (l *Log) Record(e Entry) error {
 	if l == nil {
 		return nil
 	}
+	// a131: 문자열 칸의 계좌 텍스트만 치환(행위·시각 그대로, 설정 이름·값·상세·주체는 계좌만 `[account]` — 정리 명령과 같은 함수).
+	e = RedactEntry(e)
 	if e.At.IsZero() {
 		e.At = l.clk.Now().UTC()
 	} else {

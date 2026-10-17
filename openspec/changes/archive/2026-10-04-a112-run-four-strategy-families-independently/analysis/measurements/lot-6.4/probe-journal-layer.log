@@ -1,0 +1,5 @@
+# probe: layers 1 (delivery skip) and 2 (loader CAS) both off via go test -overlay, HEAD 65444341; only the journal admission remains
+    zz_probe_l12_test.go:13: LAYERS-1+2-OFF second-first-leg: broker=1 campaigns=1 bindings=1 legs=1 err=engine: first-leg admission ATOMIC_ADMISSION_FAILED: execgw: issuing atomic q_final first leg: journal: risk bucket owner conflict
+    zz_probe_l12_test.go:16: LAYERS-1+2-OFF redelivery: broker=1 err=engine: first-leg admission ATOMIC_ADMISSION_FAILED: execgw: issuing atomic q_final first leg: journal: risk bucket owner conflict
+--- PASS: TestZZProbeJournalLayerAlone (0.36s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.371s

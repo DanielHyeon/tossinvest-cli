@@ -1,0 +1,617 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/obs",
+ "tests_run": 81,
+ "failed_tests": [],
+ "union_passed": true,
+ "failures": {},
+ "bundles": {
+  "internal-obs--notifier.deliver": {
+   "B1": {
+    "kind": "if",
+    "line": 422,
+    "column": 2,
+    "block": "422.19-424.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B2": {
+    "kind": "for",
+    "line": 428,
+    "column": 2,
+    "block": "428.51-429.25",
+    "entered_by": [
+     "TestACancelledSenderStillHandsTheLeaseBack",
+     "TestACriticalAlertStillEscalatesThroughTheSameNotifier",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestADeliveredAlertChangesNoMode",
+     "TestALaterOccurrenceOfTheSameKeyIsNotSwallowed",
+     "TestALeaseShorterThanTheBudgetIsReported",
+     "TestANoOpTransitionAnnouncesNothing",
+     "TestAPublishedButUnsettledRowKeepsItsLease",
+     "TestARelaxationIsAnnouncedAsARelaxation",
+     "TestARowThatVanishedIsNotReportedAsContention",
+     "TestASendThatCannotBeRecordedLatchesTheGate",
+     "TestASenderThatLosesTheLeaseStopsAtOnce",
+     "TestASenderThatSpendsItsBudgetReleasesTheRow",
+     "TestAcknowledgeCannotClearTheGateMidSend",
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+     "TestAnUndeliverableCriticalAlertTightensTheOperatingMode",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestConcurrentObservationsOfOneConditionSendOnce",
+     "TestContentionLossAndTakeoverAreThreeEvents",
+     "TestContentionNeitherLocksNorUnlocksTheEntryGate",
+     "TestCriticalAlertIsDurableBeforeItIsSent",
+     "TestCriticalAlertSurvivesAProcessRestart",
+     "TestExclusionHoldsBetweenSendersWithDifferentMutexes",
+     "TestFlushCannotPublishBesideASend",
+     "TestFlushDoesNotPublishARowAnotherSenderHolds",
+     "TestNotifierIsConcurrencySafe",
+     "TestOneConditionIsOneSend",
+     "TestPersistentDeliveryFailureBlocksEntries",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself",
+     "TestRepeatedFailuresAppendOneTransition",
+     "TestSuppressingTheSendKeepsTheRecord",
+     "TestTheAlertEscalationLoopTerminates",
+     "TestTheDefaultReminderWindowIsAnHour",
+     "TestTheEscalationDoesNotAnnounceThroughTheTransportThatJustFailed",
+     "TestTheSameConditionEnqueuesOnce",
+     "TestTheSameConditionIsRemindedOncePerWindow",
+     "TestTheSenderThatLosesTheClaimDoesNotPublish",
+     "TestTheTransitionAlertIsDurableAndNamesBothModes",
+     "TestWithoutAnAccountTheLatchIsStillTheConsequence"
+    ],
+    "union": true
+   },
+   "B3": {
+    "kind": "if",
+    "line": 429,
+    "column": 3,
+    "block": "429.25-431.9",
+    "entered_by": [],
+    "union": false
+   },
+   "B4": {
+    "kind": "if",
+    "line": 434,
+    "column": 3,
+    "block": "434.17-436.22",
+    "entered_by": [
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestADeliveredAlertChangesNoMode",
+     "TestALaterOccurrenceOfTheSameKeyIsNotSwallowed",
+     "TestALeaseShorterThanTheBudgetIsReported",
+     "TestANoOpTransitionAnnouncesNothing",
+     "TestAPublishedButUnsettledRowKeepsItsLease",
+     "TestARelaxationIsAnnouncedAsARelaxation",
+     "TestASendThatCannotBeRecordedLatchesTheGate",
+     "TestAcknowledgeCannotClearTheGateMidSend",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestConcurrentObservationsOfOneConditionSendOnce",
+     "TestContentionLossAndTakeoverAreThreeEvents",
+     "TestContentionNeitherLocksNorUnlocksTheEntryGate",
+     "TestCriticalAlertIsDurableBeforeItIsSent",
+     "TestExclusionHoldsBetweenSendersWithDifferentMutexes",
+     "TestFlushCannotPublishBesideASend",
+     "TestFlushDoesNotPublishARowAnotherSenderHolds",
+     "TestNotifierIsConcurrencySafe",
+     "TestOneConditionIsOneSend",
+     "TestSuppressingTheSendKeepsTheRecord",
+     "TestTheDefaultReminderWindowIsAnHour",
+     "TestTheSameConditionIsRemindedOncePerWindow",
+     "TestTheSenderThatLosesTheClaimDoesNotPublish",
+     "TestTheTransitionAlertIsDurableAndNamesBothModes"
+    ],
+    "union": true
+   },
+   "B5": {
+    "kind": "if",
+    "line": 436,
+    "column": 4,
+    "block": "436.22-437.28",
+    "entered_by": [
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestADeliveredAlertChangesNoMode",
+     "TestALaterOccurrenceOfTheSameKeyIsNotSwallowed",
+     "TestALeaseShorterThanTheBudgetIsReported",
+     "TestANoOpTransitionAnnouncesNothing",
+     "TestARelaxationIsAnnouncedAsARelaxation",
+     "TestAcknowledgeCannotClearTheGateMidSend",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestConcurrentObservationsOfOneConditionSendOnce",
+     "TestContentionLossAndTakeoverAreThreeEvents",
+     "TestContentionNeitherLocksNorUnlocksTheEntryGate",
+     "TestCriticalAlertIsDurableBeforeItIsSent",
+     "TestExclusionHoldsBetweenSendersWithDifferentMutexes",
+     "TestFlushCannotPublishBesideASend",
+     "TestFlushDoesNotPublishARowAnotherSenderHolds",
+     "TestNotifierIsConcurrencySafe",
+     "TestOneConditionIsOneSend",
+     "TestSuppressingTheSendKeepsTheRecord",
+     "TestTheDefaultReminderWindowIsAnHour",
+     "TestTheSameConditionIsRemindedOncePerWindow",
+     "TestTheSenderThatLosesTheClaimDoesNotPublish",
+     "TestTheTransitionAlertIsDurableAndNamesBothModes"
+    ],
+    "union": true
+   },
+   "B6": {
+    "kind": "switch",
+    "line": 437,
+    "column": 5,
+    "block": "436.22-437.28",
+    "entered_by": [
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestADeliveredAlertChangesNoMode",
+     "TestALaterOccurrenceOfTheSameKeyIsNotSwallowed",
+     "TestALeaseShorterThanTheBudgetIsReported",
+     "TestANoOpTransitionAnnouncesNothing",
+     "TestARelaxationIsAnnouncedAsARelaxation",
+     "TestAcknowledgeCannotClearTheGateMidSend",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestConcurrentObservationsOfOneConditionSendOnce",
+     "TestContentionLossAndTakeoverAreThreeEvents",
+     "TestContentionNeitherLocksNorUnlocksTheEntryGate",
+     "TestCriticalAlertIsDurableBeforeItIsSent",
+     "TestExclusionHoldsBetweenSendersWithDifferentMutexes",
+     "TestFlushCannotPublishBesideASend",
+     "TestFlushDoesNotPublishARowAnotherSenderHolds",
+     "TestNotifierIsConcurrencySafe",
+     "TestOneConditionIsOneSend",
+     "TestSuppressingTheSendKeepsTheRecord",
+     "TestTheDefaultReminderWindowIsAnHour",
+     "TestTheSameConditionIsRemindedOncePerWindow",
+     "TestTheSenderThatLosesTheClaimDoesNotPublish",
+     "TestTheTransitionAlertIsDurableAndNamesBothModes"
+    ],
+    "union": true
+   },
+   "B7": {
+    "kind": "case",
+    "line": 438,
+    "column": 5,
+    "block": "438.32-439.24",
+    "entered_by": [
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestADeliveredAlertChangesNoMode",
+     "TestALaterOccurrenceOfTheSameKeyIsNotSwallowed",
+     "TestALeaseShorterThanTheBudgetIsReported",
+     "TestANoOpTransitionAnnouncesNothing",
+     "TestARelaxationIsAnnouncedAsARelaxation",
+     "TestAcknowledgeCannotClearTheGateMidSend",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestConcurrentObservationsOfOneConditionSendOnce",
+     "TestContentionLossAndTakeoverAreThreeEvents",
+     "TestContentionNeitherLocksNorUnlocksTheEntryGate",
+     "TestCriticalAlertIsDurableBeforeItIsSent",
+     "TestExclusionHoldsBetweenSendersWithDifferentMutexes",
+     "TestFlushCannotPublishBesideASend",
+     "TestFlushDoesNotPublishARowAnotherSenderHolds",
+     "TestNotifierIsConcurrencySafe",
+     "TestOneConditionIsOneSend",
+     "TestSuppressingTheSendKeepsTheRecord",
+     "TestTheDefaultReminderWindowIsAnHour",
+     "TestTheSameConditionIsRemindedOncePerWindow",
+     "TestTheSenderThatLosesTheClaimDoesNotPublish",
+     "TestTheTransitionAlertIsDurableAndNamesBothModes"
+    ],
+    "union": true
+   },
+   "B8": {
+    "kind": "case",
+    "line": 440,
+    "column": 5,
+    "block": "440.64-451.23",
+    "entered_by": [],
+    "union": false
+   },
+   "B9": {
+    "kind": "case",
+    "line": 452,
+    "column": 5,
+    "block": "452.33-453.85",
+    "entered_by": [],
+    "union": false
+   },
+   "B10": {
+    "kind": "case",
+    "line": 454,
+    "column": 5,
+    "block": "454.13-462.23",
+    "entered_by": [],
+    "union": false
+   },
+   "B11": {
+    "kind": "if",
+    "line": 478,
+    "column": 4,
+    "block": "478.20-482.5",
+    "entered_by": [
+     "TestAPublishedButUnsettledRowKeepsItsLease",
+     "TestASendThatCannotBeRecordedLatchesTheGate"
+    ],
+    "union": true
+   },
+   "B12": {
+    "kind": "if",
+    "line": 483,
+    "column": 4,
+    "block": "483.21-485.5",
+    "entered_by": [
+     "TestAPublishedButUnsettledRowKeepsItsLease",
+     "TestASendThatCannotBeRecordedLatchesTheGate"
+    ],
+    "union": true
+   },
+   "B13": {
+    "kind": "if",
+    "line": 495,
+    "column": 3,
+    "block": "495.21-496.20",
+    "entered_by": [
+     "TestACancelledSenderStillHandsTheLeaseBack"
+    ],
+    "union": true
+   },
+   "B14": {
+    "kind": "else",
+    "line": 499,
+    "column": 10,
+    "block": "499.53-509.20",
+    "entered_by": [
+     "TestARowThatVanishedIsNotReportedAsContention",
+     "TestASenderThatLosesTheLeaseStopsAtOnce"
+    ],
+    "union": true
+   },
+   "B15": {
+    "kind": "if",
+    "line": 496,
+    "column": 4,
+    "block": "496.20-498.5",
+    "entered_by": [
+     "TestACancelledSenderStillHandsTheLeaseBack"
+    ],
+    "union": true
+   },
+   "B16": {
+    "kind": "if",
+    "line": 499,
+    "column": 10,
+    "block": "499.53-509.20",
+    "entered_by": [
+     "TestARowThatVanishedIsNotReportedAsContention",
+     "TestASenderThatLosesTheLeaseStopsAtOnce"
+    ],
+    "union": true
+   },
+   "B17": {
+    "kind": "if",
+    "line": 509,
+    "column": 4,
+    "block": "509.20-513.5",
+    "entered_by": [
+     "TestARowThatVanishedIsNotReportedAsContention",
+     "TestASenderThatLosesTheLeaseStopsAtOnce"
+    ],
+    "union": true
+   },
+   "B18": {
+    "kind": "if",
+    "line": 519,
+    "column": 4,
+    "block": "519.65-522.5",
+    "entered_by": [
+     "TestARowThatVanishedIsNotReportedAsContention"
+    ],
+    "union": true
+   },
+   "B19": {
+    "kind": "if",
+    "line": 525,
+    "column": 3,
+    "block": "525.25-526.20",
+    "entered_by": [
+     "TestACancelledSenderStillHandsTheLeaseBack",
+     "TestACriticalAlertStillEscalatesThroughTheSameNotifier",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestASenderThatSpendsItsBudgetReleasesTheRow",
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+     "TestAnUndeliverableCriticalAlertTightensTheOperatingMode",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestPersistentDeliveryFailureBlocksEntries",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself",
+     "TestRepeatedFailuresAppendOneTransition",
+     "TestTheAlertEscalationLoopTerminates",
+     "TestTheEscalationDoesNotAnnounceThroughTheTransportThatJustFailed",
+     "TestTheSameConditionEnqueuesOnce",
+     "TestWithoutAnAccountTheLatchIsStillTheConsequence"
+    ],
+    "union": true
+   },
+   "B20": {
+    "kind": "if",
+    "line": 526,
+    "column": 4,
+    "block": "526.20-527.10",
+    "entered_by": [
+     "TestACancelledSenderStillHandsTheLeaseBack"
+    ],
+    "union": true
+   },
+   "B21": {
+    "kind": "switch",
+    "line": 543,
+    "column": 2,
+    "block": "540.2-543.9",
+    "entered_by": [
+     "TestACancelledSenderStillHandsTheLeaseBack",
+     "TestACriticalAlertStillEscalatesThroughTheSameNotifier",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestASenderThatSpendsItsBudgetReleasesTheRow",
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+     "TestAnUndeliverableCriticalAlertTightensTheOperatingMode",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestCriticalAlertSurvivesAProcessRestart",
+     "TestPersistentDeliveryFailureBlocksEntries",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself",
+     "TestRepeatedFailuresAppendOneTransition",
+     "TestTheAlertEscalationLoopTerminates",
+     "TestTheEscalationDoesNotAnnounceThroughTheTransportThatJustFailed",
+     "TestTheSameConditionEnqueuesOnce",
+     "TestWithoutAnAccountTheLatchIsStillTheConsequence"
+    ],
+    "union": true
+   },
+   "B22": {
+    "kind": "case",
+    "line": 544,
+    "column": 2,
+    "block": "544.21-545.19",
+    "entered_by": [],
+    "union": false
+   },
+   "B23": {
+    "kind": "if",
+    "line": 545,
+    "column": 3,
+    "block": "545.19-547.4",
+    "entered_by": [],
+    "union": false
+   },
+   "B24": {
+    "kind": "case",
+    "line": 548,
+    "column": 2,
+    "block": "548.49-548.49",
+    "entered_by": [
+     "TestACancelledSenderStillHandsTheLeaseBack",
+     "TestACriticalAlertStillEscalatesThroughTheSameNotifier",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestASenderThatSpendsItsBudgetReleasesTheRow",
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+     "TestAnUndeliverableCriticalAlertTightensTheOperatingMode",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestCriticalAlertSurvivesAProcessRestart",
+     "TestPersistentDeliveryFailureBlocksEntries",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself",
+     "TestRepeatedFailuresAppendOneTransition",
+     "TestTheAlertEscalationLoopTerminates",
+     "TestTheEscalationDoesNotAnnounceThroughTheTransportThatJustFailed",
+     "TestTheSameConditionEnqueuesOnce",
+     "TestWithoutAnAccountTheLatchIsStillTheConsequence"
+    ],
+    "union": true
+   },
+   "B25": {
+    "kind": "case",
+    "line": 551,
+    "column": 2,
+    "block": "551.10-561.21",
+    "entered_by": [],
+    "union": false
+   },
+   "B26": {
+    "kind": "if",
+    "line": 565,
+    "column": 2,
+    "block": "565.18-569.3",
+    "entered_by": [
+     "TestACancelledSenderStillHandsTheLeaseBack",
+     "TestACriticalAlertStillEscalatesThroughTheSameNotifier",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestASenderThatSpendsItsBudgetReleasesTheRow",
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+     "TestAnUndeliverableCriticalAlertTightensTheOperatingMode",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestPersistentDeliveryFailureBlocksEntries",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself",
+     "TestRepeatedFailuresAppendOneTransition",
+     "TestTheAlertEscalationLoopTerminates",
+     "TestTheEscalationDoesNotAnnounceThroughTheTransportThatJustFailed",
+     "TestTheSameConditionEnqueuesOnce",
+     "TestWithoutAnAccountTheLatchIsStillTheConsequence"
+    ],
+    "union": true
+   },
+   "B27": {
+    "kind": "if",
+    "line": 570,
+    "column": 2,
+    "block": "570.19-572.3",
+    "entered_by": [
+     "TestACancelledSenderStillHandsTheLeaseBack",
+     "TestACriticalAlertStillEscalatesThroughTheSameNotifier",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestASenderThatSpendsItsBudgetReleasesTheRow",
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+     "TestAnUndeliverableCriticalAlertTightensTheOperatingMode",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestPersistentDeliveryFailureBlocksEntries",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself",
+     "TestRepeatedFailuresAppendOneTransition",
+     "TestTheAlertEscalationLoopTerminates",
+     "TestTheEscalationDoesNotAnnounceThroughTheTransportThatJustFailed",
+     "TestTheSameConditionEnqueuesOnce",
+     "TestWithoutAnAccountTheLatchIsStillTheConsequence"
+    ],
+    "union": true
+   }
+  },
+  "internal-obs--notifier.notifycritical": {
+   "B1": {
+    "kind": "if",
+    "line": 177,
+    "column": 2,
+    "block": "177.22-181.19",
+    "entered_by": [
+     "TestCriticalWithoutAJournalIsLoudRatherThanSilent",
+     "TestTheTransitionLogLineIsCountable"
+    ],
+    "union": true
+   },
+   "B2": {
+    "kind": "if",
+    "line": 181,
+    "column": 3,
+    "block": "181.19-185.4",
+    "entered_by": [
+     "TestCriticalWithoutAJournalIsLoudRatherThanSilent",
+     "TestTheTransitionLogLineIsCountable"
+    ],
+    "union": true
+   },
+   "B3": {
+    "kind": "if",
+    "line": 201,
+    "column": 2,
+    "block": "201.16-221.3",
+    "entered_by": [
+     "TestAClaimThatFailsAttemptsTheDurableBlock",
+     "TestAClaimThatFailsBlocksNewEntries",
+     "TestAFailedClaimStillReturnsItsError",
+     "TestAFailedClaimWithNothingWiredStillReports"
+    ],
+    "union": true
+   },
+   "B4": {
+    "kind": "if",
+    "line": 223,
+    "column": 2,
+    "block": "223.19-229.3",
+    "entered_by": [
+     "TestACancelledSenderStillHandsTheLeaseBack",
+     "TestACriticalAlertStillEscalatesThroughTheSameNotifier",
+     "TestADeadTransportIsStillFoundAfterASuccessfulDelivery",
+     "TestAPublishedButUnsettledRowKeepsItsLease",
+     "TestASendThatCannotBeRecordedLatchesTheGate",
+     "TestASenderThatSpendsItsBudgetReleasesTheRow",
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+     "TestAnUndeliverableCriticalAlertTightensTheOperatingMode",
+     "TestAnUndeliveredConditionIsStillRetried",
+     "TestCriticalAlertSurvivesAProcessRestart",
+     "TestPersistentDeliveryFailureBlocksEntries",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself",
+     "TestRepeatedFailuresAppendOneTransition",
+     "TestTheAlertEscalationLoopTerminates",
+     "TestTheEscalationDoesNotAnnounceThroughTheTransportThatJustFailed",
+     "TestTheSameConditionEnqueuesOnce",
+     "TestWithoutAnAccountTheLatchIsStillTheConsequence"
+    ],
+    "union": true
+   }
+  },
+  "internal-obs--notifier.acknowledge": {
+   "B1": {
+    "kind": "if",
+    "line": 841,
+    "column": 2,
+    "block": "841.39-843.3",
+    "entered_by": [
+     "TestAcknowledgeRequiresAnIdentity"
+    ],
+    "union": true
+   },
+   "B2": {
+    "kind": "if",
+    "line": 844,
+    "column": 2,
+    "block": "844.22-845.20",
+    "entered_by": [],
+    "union": false
+   },
+   "B3": {
+    "kind": "if",
+    "line": 845,
+    "column": 3,
+    "block": "845.20-847.4",
+    "entered_by": [],
+    "union": false
+   },
+   "B4": {
+    "kind": "if",
+    "line": 854,
+    "column": 2,
+    "block": "854.19-856.17",
+    "entered_by": [
+     "TestAcknowledgeCannotClearTheGateMidSend",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself"
+    ],
+    "union": true
+   },
+   "B5": {
+    "kind": "if",
+    "line": 856,
+    "column": 3,
+    "block": "856.17-858.4",
+    "entered_by": [],
+    "union": false
+   },
+   "B6": {
+    "kind": "range",
+    "line": 859,
+    "column": 3,
+    "block": "859.33-861.4",
+    "entered_by": [],
+    "union": false
+   },
+   "B7": {
+    "kind": "range",
+    "line": 863,
+    "column": 2,
+    "block": "863.25-865.46",
+    "entered_by": [
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock"
+    ],
+    "union": true
+   },
+   "B8": {
+    "kind": "if",
+    "line": 864,
+    "column": 3,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B9": {
+    "kind": "if",
+    "line": 871,
+    "column": 2,
+    "block": "871.16-873.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B10": {
+    "kind": "if",
+    "line": 874,
+    "column": 2,
+    "block": "874.37-876.3",
+    "entered_by": [
+     "TestAcknowledgeCannotClearTheGateMidSend",
+     "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+     "TestRecoveredDeliveryDoesNotReleaseTheGateByItself"
+    ],
+    "union": true
+   }
+  }
+ }
+}

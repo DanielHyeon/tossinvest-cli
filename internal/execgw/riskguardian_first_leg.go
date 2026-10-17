@@ -187,13 +187,19 @@ func (g *RiskGuardian) IssuePrecheckedQFinalCampaignFirstLeg(ctx context.Context
 		if err != nil {
 			return journal.QFinalCampaignFirstLegRequest{}, err
 		}
+		daily, err := g.dailyBuyLimit(now, qFinalManualBuyFX(precheck.entry.request, precheck.entry.market))
+		if err != nil {
+			return journal.QFinalCampaignFirstLegRequest{}, err
+		}
 		return journal.QFinalCampaignFirstLegRequest{
 			Issue: journal.QFinalIssueRequest{
 				Issue: journal.IssueRequest{Decision: decision, Reserve: journal.ReserveRequest{
 					SnapshotAsOf: snapshot.AsOf, ObservedVersion: snapshot.Version,
-					SnapshotUsage: []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: usage, Currency: exposure.Currency}},
-					Limits:        []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: g.policy.MaxOpenExposure.Amount, Currency: exposure.Currency}},
-					Reservations:  []journal.ReservationRequest{{ID: reservationID, Kind: journal.ReservationKindOpenExposure, Amount: exposure.Amount, Currency: exposure.Currency}},
+					SnapshotUsage:     []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: usage, Currency: exposure.Currency}},
+					Limits:            []journal.AggregateAmount{{Kind: journal.ReservationKindOpenExposure, Amount: g.policy.MaxOpenExposure.Amount, Currency: exposure.Currency}},
+					Reservations:      []journal.ReservationRequest{{ID: reservationID, Kind: journal.ReservationKindOpenExposure, Amount: exposure.Amount, Currency: exposure.Currency}},
+					DailyBuyLimit:     daily,
+					OpenPositionLimit: g.openPositionLimit(),
 				}}, Admission: admission,
 			},
 			Strategy: strategy, Campaign: precheck.campaign, Weekly: cloneGuardianWeeklyBinding(precheck.weekly),

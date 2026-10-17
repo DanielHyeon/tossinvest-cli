@@ -1,0 +1,287 @@
+{
+  "file": "internal/app/engine/risk_relaxation_command.go",
+  "source_sha256": "3f976552ce400d0ce1245e0c72bce0943f252e93335d236d881b76ac20ce47d3",
+  "package": "engine",
+  "function": "ReleaseRiskOverageLatch",
+  "receiver": "PositionPolicyCommandService",
+  "signature": "PositionPolicyCommandService.ReleaseRiskOverageLatch(params=2, results=2)",
+  "start": {
+    "line": 94,
+    "column": 1
+  },
+  "end": {
+    "line": 124,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 100,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 108,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 118,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 122,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 2
+      },
+      "text": "s.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 8
+      },
+      "text": "s.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 15
+      },
+      "text": "s.relaxationRepo"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 18
+      },
+      "text": "s.relaxationAuditor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 27
+      },
+      "text": "relaxationOperator"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 42
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 11
+      },
+      "text": "riskbucket.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 29
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 45
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 11
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 65
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 17
+      },
+      "text": "repo.ReleaseRiskOverageLatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 55
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 55
+      },
+      "text": "s.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 35
+      },
+      "text": "relaxationError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 11
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 9
+      },
+      "text": "notifyRelaxation"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 98,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 120,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 97,
+        "column": 2
+      },
+      "text": "s.mu.Unlock"
+    }
+  ]
+}

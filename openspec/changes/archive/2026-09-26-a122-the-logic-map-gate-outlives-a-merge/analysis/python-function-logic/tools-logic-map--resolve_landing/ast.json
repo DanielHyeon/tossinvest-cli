@@ -1,0 +1,326 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "HEAD",
+  "head_commit": "52c761defec307b4535aa0c5a72c910df3d7152f",
+  "source_sha256": "b6ca421654cf5cb7be5f4cae1c296fd7ac15ad084c4070cf9c7b8cf3f082b0d1",
+  "function": "resolve_landing",
+  "signature": "resolve_landing(change_dir, root, base, analysis)",
+  "start": {
+    "line": 345,
+    "column": 1
+  },
+  "end": {
+    "line": 408,
+    "column": 21
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 358,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 360,
+      "inherited_line": false,
+      "source": "except ValueError:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 363,
+      "inherited_line": false,
+      "source": "if raw is None:"
+    },
+    {
+      "id": "B4",
+      "kind": "Try",
+      "line": 365,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B5",
+      "kind": "ExceptHandler",
+      "line": 367,
+      "inherited_line": false,
+      "source": "except UnicodeDecodeError as exc:"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 369,
+      "inherited_line": false,
+      "source": "if not FULL_SHA.fullmatch(candidate):"
+    },
+    {
+      "id": "B7",
+      "kind": "BoolOp",
+      "line": 380,
+      "inherited_line": false,
+      "source": "process.returncode or process.stdout.strip() != candidate"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 380,
+      "inherited_line": false,
+      "source": "if process.returncode or process.stdout.strip() != candidate:"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 382,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, candidate, 'HEAD'):"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 387,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, base, candidate):"
+    },
+    {
+      "id": "B11",
+      "kind": "For",
+      "line": 392,
+      "inherited_line": false,
+      "source": "for ast_path in sorted(analysis.glob('*/ast.json')) if analysis.is_dir() else ():"
+    },
+    {
+      "id": "B12",
+      "kind": "IfExp",
+      "line": 392,
+      "inherited_line": false,
+      "source": "sorted(analysis.glob('*/ast.json')) if analysis.is_dir() else ()"
+    },
+    {
+      "id": "B13",
+      "kind": "BoolOp",
+      "line": 394,
+      "inherited_line": false,
+      "source": "not isinstance(value, dict) or value.get('revision', 'current') != 'current'"
+    },
+    {
+      "id": "B14",
+      "kind": "If",
+      "line": 394,
+      "inherited_line": false,
+      "source": "if not isinstance(value, dict) or value.get('revision', 'current') != 'current':"
+    },
+    {
+      "id": "B15",
+      "kind": "BoolOp",
+      "line": 398,
+      "inherited_line": false,
+      "source": "not source or not digest"
+    },
+    {
+      "id": "B16",
+      "kind": "If",
+      "line": 398,
+      "inherited_line": false,
+      "source": "if not source or not digest:"
+    },
+    {
+      "id": "B17",
+      "kind": "BoolOp",
+      "line": 401,
+      "inherited_line": false,
+      "source": "blob is None or hashlib.sha256(blob).hexdigest() != digest"
+    },
+    {
+      "id": "B18",
+      "kind": "If",
+      "line": 401,
+      "inherited_line": false,
+      "source": "if blob is None or hashlib.sha256(blob).hexdigest() != digest:"
+    },
+    {
+      "id": "B19",
+      "kind": "If",
+      "line": 403,
+      "inherited_line": false,
+      "source": "if mismatched:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 361,
+      "value": "''"
+    },
+    {
+      "line": 364,
+      "value": "''"
+    },
+    {
+      "line": 408,
+      "value": "candidate"
+    }
+  ],
+  "raises": [
+    {
+      "line": 368,
+      "source": "raise ValueError(f'landing point is not UTF-8: {relative}') from exc"
+    },
+    {
+      "line": 373,
+      "source": "raise ValueError(f'landing point must be a full 40-hex commit id, not {candidate!r}')"
+    },
+    {
+      "line": 381,
+      "source": "raise ValueError(f'landing point is not a commit in this repository: {candidate}')"
+    },
+    {
+      "line": 383,
+      "source": "raise ValueError(f'landing point never landed on this history: {candidate}')"
+    },
+    {
+      "line": 388,
+      "source": "raise ValueError(f'landing point precedes the comparison base {base[:12]}: {candidate}')"
+    },
+    {
+      "line": 404,
+      "source": "raise ValueError(f'landing point {candidate[:12]} is not the revision this evidence describes: ' + ', '.join(sorted(set(mismatched))))"
+    }
+  ],
+  "calls": [
+    {
+      "line": 359,
+      "callee": "(change_dir / LANDING_FILE).relative_to"
+    },
+    {
+      "line": 359,
+      "callee": "(change_dir / LANDING_FILE).relative_to(root).as_posix"
+    },
+    {
+      "line": 362,
+      "callee": "_committed_bytes"
+    },
+    {
+      "line": 366,
+      "callee": "raw.decode('utf-8').strip"
+    },
+    {
+      "line": 366,
+      "callee": "raw.decode"
+    },
+    {
+      "line": 368,
+      "callee": "ValueError"
+    },
+    {
+      "line": 369,
+      "callee": "FULL_SHA.fullmatch"
+    },
+    {
+      "line": 373,
+      "callee": "ValueError"
+    },
+    {
+      "line": 376,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 380,
+      "callee": "process.stdout.strip"
+    },
+    {
+      "line": 381,
+      "callee": "ValueError"
+    },
+    {
+      "line": 382,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 383,
+      "callee": "ValueError"
+    },
+    {
+      "line": 387,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 388,
+      "callee": "ValueError"
+    },
+    {
+      "line": 392,
+      "callee": "analysis.glob"
+    },
+    {
+      "line": 392,
+      "callee": "analysis.is_dir"
+    },
+    {
+      "line": 392,
+      "callee": "sorted"
+    },
+    {
+      "line": 393,
+      "callee": "_ast_value"
+    },
+    {
+      "line": 394,
+      "callee": "isinstance"
+    },
+    {
+      "line": 394,
+      "callee": "value.get"
+    },
+    {
+      "line": 396,
+      "callee": "str"
+    },
+    {
+      "line": 396,
+      "callee": "value.get"
+    },
+    {
+      "line": 397,
+      "callee": "str"
+    },
+    {
+      "line": 397,
+      "callee": "value.get"
+    },
+    {
+      "line": 400,
+      "callee": "_committed_bytes"
+    },
+    {
+      "line": 401,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 401,
+      "callee": "hashlib.sha256(blob).hexdigest"
+    },
+    {
+      "line": 402,
+      "callee": "mismatched.append"
+    },
+    {
+      "line": 404,
+      "callee": "ValueError"
+    },
+    {
+      "line": 406,
+      "callee": "', '.join"
+    },
+    {
+      "line": 406,
+      "callee": "set"
+    },
+    {
+      "line": 406,
+      "callee": "sorted"
+    }
+  ]
+}

@@ -1,0 +1,211 @@
+{
+  "file": "internal/app/engine/a112_lane_coordinator_projection_test.go",
+  "source_sha256": "a1f16eb741b42836ad3606bcb3fdf6d1725ae56579ef6bbb03b9b43dc6ef42ee",
+  "package": "engine",
+  "function": "TestTheLaneDesiredAndEffectiveAreTheActivationTheWaveRanWith",
+  "signature": "TestTheLaneDesiredAndEffectiveAreTheActivationTheWaveRanWith(params=1, results=0)",
+  "start": {
+    "line": 124,
+    "column": 1
+  },
+  "end": {
+    "line": 150,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 127,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 132,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 135,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 140,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "else",
+      "at": {
+        "line": 146,
+        "column": 10
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 141,
+        "column": 4
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 146,
+        "column": 10
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 17
+      },
+      "text": "a112LaneProjectionContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 16
+      },
+      "text": "strategyrouter.FamilyActivationForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 83
+      },
+      "text": "strategyrouter.AllFourFamiliesForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 12
+      },
+      "text": "lanes.evaluate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 27
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 23
+      },
+      "text": "a112Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 22
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 125,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 127,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 131,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 133,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

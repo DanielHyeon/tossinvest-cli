@@ -1,0 +1,76 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "fc35eb2d",
+  "head_commit": "fc35eb2d013dccd0700836f857ad9d3e65bff0dc",
+  "source_sha256": "98845ce2dea180b8ab813180a51e9076ae1f787dea664362a61e8312675b135b",
+  "function": "_read_evidence",
+  "signature": "_read_evidence(analysis)",
+  "start": {
+    "line": 594,
+    "column": 1
+  },
+  "end": {
+    "line": 610,
+    "column": 17
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 604,
+      "inherited_line": false,
+      "source": "for ast_path in sorted(analysis.glob('*/ast.json')) if analysis.is_dir() else ():"
+    },
+    {
+      "id": "B2",
+      "kind": "IfExp",
+      "line": 604,
+      "inherited_line": false,
+      "source": "sorted(analysis.glob('*/ast.json')) if analysis.is_dir() else ()"
+    },
+    {
+      "id": "B3",
+      "kind": "Try",
+      "line": 605,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B4",
+      "kind": "ExceptHandler",
+      "line": 607,
+      "inherited_line": false,
+      "source": "except OSError:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 610,
+      "value": "reads"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 604,
+      "callee": "analysis.glob"
+    },
+    {
+      "line": 604,
+      "callee": "analysis.is_dir"
+    },
+    {
+      "line": 604,
+      "callee": "sorted"
+    },
+    {
+      "line": 606,
+      "callee": "ast_path.read_bytes"
+    },
+    {
+      "line": 609,
+      "callee": "reads.append"
+    }
+  ]
+}

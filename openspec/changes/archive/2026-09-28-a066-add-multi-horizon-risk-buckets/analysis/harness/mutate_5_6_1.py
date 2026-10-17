@@ -1,0 +1,198 @@
+#!/usr/bin/env python3
+"""a066 5.6.1 변이 하네스 — 공유 bucket 정합(F2 policy record 결속, F1 원장 사용량 대조)을 사본에서 변이함.
+
+사용: python3 mutate_5_6_1.py <scratch-dir> <own-untracked-file>... [--only REGEX]
+
+- 사본: git 추적 파일(작업 트리 내용) + 이 로트의 미추적 파일만 복사함(남의 미추적 RED 파일이 사본에 들어오지 않게).
+- 원장 첫 줄: HEAD sha 와 사본에 딸려 간 미커밋 추적 파일 목록.
+- 무변이 대조군이 GREEN 이 아니면 멈춤. 변이마다 정확히 한 곳(count==1)을 바꾸고, 실패한 시험 이름을 적음.
+- 한 번에 한 판.
+"""
+import os
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True).stdout.strip())
+J = "internal/journal/"
+RB = "internal/riskbucket/production_snapshot_authority.go"
+USAGE = J + "risk_bucket_usage.go"
+REC = J + "risk_bucket_policy_records.go"
+SQL34 = J + "risk_bucket_policy_records_v34.sql"
+FILL = J + "risk_bucket_fill.go"
+CRA = J + "risk_bucket.go"
+ISS = J + "risk_bucket_issuance.go"
+F1_CALL = "if err := refuseStaleBucketUsage(ctx, tx, plan.Owner.Key.AccountID, plan.Admission.Buckets); err != nil {"
+
+MUTANTS = [
+    ("N01 CRA stale check removed", CRA, F1_CALL, "if err := func(...any) error { return nil }(ctx, tx, plan.Owner.Key.AccountID, plan.Admission.Buckets); err != nil {"),
+    ("N02 fresh stale check removed", ISS, F1_CALL, "if err := func(...any) error { return nil }(ctx, tx, plan.Owner.Key.AccountID, plan.Admission.Buckets); err != nil {"),
+    ("N03 CRA stale check account<-LaneID", CRA, F1_CALL, F1_CALL.replace("plan.Owner.Key.AccountID,", "plan.Owner.LaneID,")),
+    ("N04 fresh stale check account<-LaneID", ISS, F1_CALL, F1_CALL.replace("plan.Owner.Key.AccountID,", "plan.Owner.LaneID,")),
+    ("N05 comparison accepts understated usage", USAGE, "if claimed.Cmp(ledger) < 0 {", "if claimed.Cmp(ledger) < -1000000 {"),
+    ("N06 held claim inflated tenfold", USAGE, "claimed, ok := sumMinor(bucket.FilledMinor, bucket.HeldMinor)", "claimed, ok := sumMinor(bucket.FilledMinor, bucket.HeldMinor+\"0\")"),
+    ("N07 ledger read error admits", USAGE, "\t\tif err != nil {\n\t\t\treturn fmt.Errorf(\"%w: %s bucket %q ledger usage unreadable", "\t\tif err != nil {\n\t\t\treturn nil\n\t\t\treturn fmt.Errorf(\"%w: %s bucket %q ledger usage unreadable"),
+    # 2026-09-28 비재시도 판정 뒤: 센티널이 ErrSnapshotStale 을 감싸면(재시도 대상이 되면) 잡혀야 함.
+    ("N08 stale refusal becomes retryable", CRA, "ErrRiskBucketUsageStale = errors.New(\"journal: risk bucket usage snapshot is behind the ledger; refused for this cycle and re-evaluated on the next snapshot wave\")", "ErrRiskBucketUsageStale = fmt.Errorf(\"%w: risk bucket usage snapshot is behind the ledger\", ErrSnapshotStale)"),
+    ("N09 refusal code wrong", USAGE, "Code: riskbucket.RefusalBucketUsageStale,", "Code: riskbucket.RefusalStaleBucket,"),
+    ("N10 shared sum drops filled", RB, "\t\tfilled.Add(filled, rowFilled)\n", "\t\t_ = rowFilled\n"),
+    ("N11 shared sum drops held", RB, "\t\theld.Add(held, rowHeld)\n", "\t\t_ = rowHeld\n"),
+    ("N12 production reader ignores latch", RB, "\t\tif usage.Latched {", "\t\tif false && usage.Latched {"),
+    ("N13 aggregate forgets latched rows", RB, "latched = latched || row.OverageLatched != 0 || row.UnknownLatched != 0", "latched = false"),
+    # 1회차 N14 는 컴파일 오류로 "CAUGHT" 가 찍혔음(닿지 않음) — record 표 대신 부모 표에 다시 쓰는 컴파일되는 변이로 바꿈.
+    ("N14 policy record not stored", REC, "`INSERT OR IGNORE INTO risk_bucket_policy_records(`+columns", "`INSERT OR IGNORE INTO risk_bucket_policies(`+columns"),
+    ("N15 key-only collision reinstated", REC, "\treturn recordDigest, nil\n}", "\tvar parent string\n\tif err := tx.QueryRowContext(ctx, `SELECT record_digest FROM risk_bucket_policies WHERE bucket_dimension=? AND bucket_value=? AND policy_version=?`, string(key.Dimension), key.Value, key.PolicyVersion).Scan(&parent); err != nil || parent != recordDigest {\n\t\treturn \"\", fmt.Errorf(\"%w: immutable policy collision\", ErrRiskBucketSnapshotMismatch)\n\t}\n\treturn recordDigest, nil\n}"),
+    ("N16 fill loader joins by key only", FILL, "AND p.record_digest=r.policy_record_digest WHERE r.decision_id=? AND r.policy_record_digest IS NOT NULL", "WHERE r.decision_id=? AND r.policy_record_digest IS NOT NULL"),
+    # 1회차 N17 은 괄호가 안 맞아 migration 자체가 SQL 오류로 실패했음(닿지 않음 — 적대 리뷰 2026-09-28). 균형 맞춤.
+    ("N17 v34 required-record trigger disabled", SQL34, "WHEN NEW.policy_record_digest IS NULL OR NOT EXISTS (", "WHEN 0 AND NOT EXISTS ("),
+    ("N17b v34 trigger ignores bucket_value", SQL34, "WHERE r.bucket_dimension=NEW.bucket_dimension AND r.bucket_value=NEW.bucket_value\n", "WHERE r.bucket_dimension=NEW.bucket_dimension\n"),
+    ("N17c v34 trigger ignores policy_version", SQL34, "   AND r.policy_version=NEW.policy_version AND r.record_digest=NEW.policy_record_digest)", "   AND r.record_digest=NEW.policy_record_digest)"),
+    ("N17d v34 trigger ignores key", SQL34, "WHERE r.bucket_dimension=NEW.bucket_dimension AND r.bucket_value=NEW.bucket_value\n   AND r.policy_version=NEW.policy_version AND r.record_digest=NEW.policy_record_digest)", "WHERE r.record_digest=NEW.policy_record_digest)"),
+    ("N18b immutability guards only NULL to value", SQL34, "WHEN OLD.policy_record_digest IS NOT NEW.policy_record_digest", "WHEN OLD.policy_record_digest IS NULL AND NEW.policy_record_digest IS NOT NULL"),
+    ("N22 claim side ignores filled", USAGE, "claimed, ok := sumMinor(bucket.FilledMinor, bucket.HeldMinor)", "claimed, ok := sumMinor(\"0\", bucket.HeldMinor)"),
+    ("N23 only the first bucket is judged", USAGE, "\tfor _, bucket := range buckets {", "\tfor _, bucket := range buckets[:1] {"),
+    ("N24 sector bucket skipped", USAGE, "\tfor _, bucket := range buckets {", "\tfor _, bucket := range buckets {\n\t\tif bucket.Key.Dimension == riskbucket.DimensionSector {\n\t\t\tcontinue\n\t\t}"),
+    ("N25 market bucket skipped", USAGE, "\tfor _, bucket := range buckets {", "\tfor _, bucket := range buckets {\n\t\tif bucket.Key.Dimension == riskbucket.DimensionMarket {\n\t\t\tcontinue\n\t\t}"),
+    ("N18 v34 immutable binding trigger removed", SQL34, "WHEN OLD.policy_record_digest IS NOT NEW.policy_record_digest", "WHEN 0"),
+    ("N19 schema version not bumped", J + "schema.go", "const SchemaVersion = 34", "const SchemaVersion = 33"),
+    ("N21 admission ignores latched shared usage", USAGE, "\t\tif usage.Latched {\n\t\t\treturn fmt.Errorf(", "\t\tif false && usage.Latched {\n\t\t\treturn fmt.Errorf("),
+    ("N20 legacy branch of fill loader dropped", FILL, "WHERE r.decision_id=? AND r.policy_record_digest IS NULL`, decisionID, decisionID)", "WHERE r.decision_id=? AND 0`, decisionID, decisionID)"),
+]
+
+# 5.6 계약 문장("independent market buckets, shared strategy caps, one symbol/one owner, monetary scale-in aggregation,
+# failure isolation")을 거짓으로 만드는 변이 — `--set 5.6` 으로 고름.
+CONTRACT_MUTANTS = [
+    ("C01 usage sums every value of a dimension", RB, "WHERE r.account_ref=? AND r.bucket_dimension=? AND r.bucket_value=? ORDER BY", "WHERE r.account_ref=? AND r.bucket_dimension=? AND ?<>'' ORDER BY"),
+    ("C02 usage sums every account", RB, "WHERE r.account_ref=? AND r.bucket_dimension=? AND r.bucket_value=? ORDER BY", "WHERE ?<>'' AND r.bucket_dimension=? AND r.bucket_value=? ORDER BY"),
+    ("C03 owner conflict ignored", ISS, "if prospective != plan.Owner.Key.ProspectiveGeneration || lane != plan.Owner.LaneID || campaign != plan.Owner.CampaignID {", "if false && (prospective != plan.Owner.Key.ProspectiveGeneration || lane != plan.Owner.LaneID || campaign != plan.Owner.CampaignID) {"),
+    ("C04 reconcile scope ignores market", CRA, "AND (symbol IS NULL OR symbol=?) AND (scope_market IS NULL OR scope_market=?)`,", "AND (symbol IS NULL OR symbol=?) AND (scope_market IS NULL OR ?<>'')`,"),
+    ("C05 loss lock ignores market", J + "risk_bucket_entry_loss_lock.go", "FROM risk_bucket_entry_loss_locks WHERE account_ref=? AND market=? AND horizon=?", "FROM risk_bucket_entry_loss_locks WHERE account_ref=? AND ?<>'' AND horizon=?"),
+    ("C06 stale check skips strategy", USAGE, "\tfor _, bucket := range buckets {", "\tfor _, bucket := range buckets {\n\t\tif bucket.Key.Dimension == riskbucket.DimensionStrategy {\n\t\t\tcontinue\n\t\t}"),
+    ("C07 latched shared usage ignored", USAGE, "\t\tif usage.Latched {\n\t\t\treturn fmt.Errorf(", "\t\tif false && usage.Latched {\n\t\t\treturn fmt.Errorf("),
+]
+# 5.7 공유 bucket overage 전파 — `--set 5.7`.
+FILL_MUTANTS = [
+    ("S01 shared usage not added to overage", "internal/riskbucket/fill.go", "\t\tif shared, ok := state.SharedUsedMinor[key]; ok {", "\t\tif shared, ok := state.SharedUsedMinor[key]; ok && false {"),
+    ("S02 loader skips shared usage", FILL, "\tstate.SharedUsedMinor = shared\n", "\t_ = shared\n"),
+    ("S03 shared usage counts the owner twice", FILL, "\t\tshared[key] = new(big.Int).Sub(total, own).String()", "\t\tshared[key] = total.String()"),
+    ("S04 clone drops shared usage", "internal/riskbucket/fill.go", "\t\tout.SharedUsedMinor = cloneMinorMap(in.SharedUsedMinor)\n", ""),
+    ("S05 invalid shared usage counted as zero", FILL, "\t\t\t\treturn nil, fmt.Errorf(\"%w: shared %s bucket usage: %v\", ErrRiskBucketReplayMismatch, key.Dimension, err)", "\t\t\t\tcontinue"),
+    ("S06 invalid shared usage treated as a storage error", FILL, "\t\t\t\treturn nil, fmt.Errorf(\"%w: shared %s bucket usage: %v\", ErrRiskBucketReplayMismatch, key.Dimension, err)", "\t\t\t\treturn nil, err"),
+]
+FILL_TESTS = [
+    ["go", "test", "-count=1", "./internal/riskbucket"],
+    ["go", "test", "-count=1", "-run", "TestA066SharedBucketOverage|TestA066SharedUsageUnreadable|TestA066LateFillOverage|TestA066PartialFillCrash|TestRiskBucketFill|TestRiskBucketAuthoritativePartialFill|TestRiskBucketOwnerAggregate|TestRiskBucketLateFill", "./internal/journal"],
+    ["go", "test", "-count=1", "-run", "TestA066LedgerUsageHasOneComputation", "./internal/execgw"],
+]
+
+# 6.2 위험 감소 경로 개방 — `--set 6.2`. 잠금·bucket 실패가 손절·비상 청산·취소·대사·체결 감지를 막거나 늦추게
+# 만드는 변이. 잡혀야 6.2 의 "zero exposure-raising + 위험 감소는 대기 없이 호출 가능" 이 시험으로 서 있음.
+GW = "internal/execgw/gateway.go"
+LOCK_COUNT = ("var a066Locks int\n\tif err := tx.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_entry_loss_locks WHERE account_ref=?`, "
+              "%s).Scan(&a066Locks); err == nil && a066Locks > 0 {\n\t\treturn %s, fmt.Errorf(\"a066 mutant: blocked by entry loss lock\")\n\t}\n\t")
+EXIT_MUTANTS = [
+    ("X01 risk-reducing decisions consult bucket authority", GW,
+     "\tif dec.SafetyClass != journal.SafetyClassExposureRaising {\n\t\treturn nil\n\t}\n\treservations, err := g.journal.ReservationsForDecision(ctx, dec.ID)",
+     "\treservations, err := g.journal.ReservationsForDecision(ctx, dec.ID)"),
+    ("X02 risk-reducing path waits 6s (evidence/FX wait stand-in)", GW,
+     "\tif dec.SafetyClass != journal.SafetyClassExposureRaising {\n\t\treturn nil\n\t}\n\treservations, err := g.journal.ReservationsForDecision(ctx, dec.ID)",
+     "\tif dec.SafetyClass != journal.SafetyClassExposureRaising {\n\t\ttime.Sleep(6 * time.Second)\n\t\treturn nil\n\t}\n\treservations, err := g.journal.ReservationsForDecision(ctx, dec.ID)"),
+    ("X03 reconcile entry blocked by loss lock", J + "reconcile_states.go",
+     "\t\treturn ReconcileState{}, false, fmt.Errorf(\"journal: starting the RECONCILE transaction: %w\", err)\n\t}\n\tdefer tx.Rollback()\n\n\t",
+     "\t\treturn ReconcileState{}, false, fmt.Errorf(\"journal: starting the RECONCILE transaction: %w\", err)\n\t}\n\tdefer tx.Rollback()\n\n\t" + LOCK_COUNT % ("account", "ReconcileState{}, false")),
+    ("X04 fill detection blocked by loss lock", J + "fills.go",
+     "\t\treturn res, fmt.Errorf(\"journal: starting the fill transaction for %s: %w\", orderID, err)\n\t}\n\tdefer tx.Rollback()\n\n\t",
+     "\t\treturn res, fmt.Errorf(\"journal: starting the fill transaction for %s: %w\", orderID, err)\n\t}\n\tdefer tx.Rollback()\n\n\t" + LOCK_COUNT % ("obs.AccountRef", "res")),
+]
+EXIT_TESTS = [
+    ["go", "test", "-count=1", "-run", "TestA066", "./internal/execgw"],
+    ["go", "test", "-count=1", "-run", "TestA066", "./internal/journal"],
+]
+
+CONTRACT_TESTS = [
+    ["go", "test", "-count=1", "-run", "TestA066KRUSConcurrentContract|TestA066KRUSFailureIsolation", "./internal/journal"],
+]
+
+TESTS = [
+    ["go", "test", "-count=1", "-run", "SharedBucket|StaleUsage|LatchedUsage|SameAccountKRUS|PartialFillCrash|LateFillOverage|MigrationV33ToV34|TestSchemaTablesAndColumns|TestRiskBucketAdmission|TestFirstLegAtomic|TestRiskBucketActualAndRelease|TestStrategyDispatch|LossLock", "./internal/journal"],
+    ["go", "test", "-count=1", "-tags", "tossos_testseams", "./internal/riskbucket"],
+    ["go", "test", "-count=1", "-run", "TestA066LedgerUsageHasOneComputation", "./internal/execgw"],
+]
+
+
+def run_tests(copy: Path, env: dict) -> tuple[bool, str]:
+    failed, notes = [], []
+    for command in TESTS:
+        result = subprocess.run(command, cwd=copy, env=env, capture_output=True, text=True)
+        if result.returncode != 0:
+            out = result.stdout + result.stderr
+            names = [line.strip()[len("--- FAIL: "):].split(" ")[0] for line in out.splitlines() if line.strip().startswith("--- FAIL: ")]
+            leaves = [n for n in names if not any(o != n and o.startswith(n + "/") for o in names)]
+            failed.extend(leaves)
+            if not names:
+                notes.append(out.strip().splitlines()[-1][:160] if out.strip() else "no output")
+    if failed or notes:
+        return False, f"{len(failed)} failing: " + ", ".join(failed[:8]) + (" …" if len(failed) > 8 else "") + (" | " + " | ".join(notes) if notes else "")
+    return True, ""
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    only = None
+    if "--only" in args:
+        i = args.index("--only")
+        only = re.compile(args[i + 1])
+        args = args[:i] + args[i + 2:]
+    global MUTANTS, TESTS
+    if "--set" in args:
+        i = args.index("--set")
+        if args[i + 1] == "5.6":
+            MUTANTS, TESTS = CONTRACT_MUTANTS, CONTRACT_TESTS
+        elif args[i + 1] == "5.7":
+            MUTANTS, TESTS = FILL_MUTANTS, FILL_TESTS
+        elif args[i + 1] == "6.2":
+            MUTANTS, TESTS = EXIT_MUTANTS, EXIT_TESTS
+        args = args[:i] + args[i + 2:]
+    scratch, own = Path(args[0]), args[1:]
+    copy = scratch / f"mut561-{os.getpid()}"
+    copy.mkdir(parents=True)
+    tracked = subprocess.run(["git", "ls-files", "--", "go.mod", "go.sum", "internal", "cmd", "tools"], cwd=ROOT,
+                             capture_output=True, text=True, check=True).stdout.split()
+    for rel in tracked + own:
+        source = ROOT / rel
+        if source.exists():
+            (copy / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, copy / rel)
+    env = dict(os.environ, GOFLAGS="-trimpath")
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
+    dirty = subprocess.run(["git", "diff", "--name-only", "HEAD", "--", "go.mod", "go.sum", "internal", "cmd", "tools"],
+                           cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
+    ledger = open(copy / "ledger.tsv", "w", encoding="utf-8")
+    ledger.write(f"TREE\tHEAD {head}\tuncommitted tracked: {','.join(dirty) or 'none'}\town untracked: {','.join(own) or 'none'}\n")
+    ok, why = run_tests(copy, env)
+    ledger.write(f"CONTROL\t{'GREEN' if ok else 'RED'}\t{why}\n")
+    ledger.flush()
+    if not ok:
+        print("control RED — stop:", why)
+        sys.exit(2)
+    for ident, rel, old, new in MUTANTS:
+        if only and not only.search(ident):
+            continue
+        target = copy / rel
+        pristine = target.read_text(encoding="utf-8")
+        if pristine.count(old) != 1:
+            ledger.write(f"{ident}\tNOT-APPLIED\told occurs {pristine.count(old)} times\n")
+            continue
+        target.write_text(pristine.replace(old, new, 1), encoding="utf-8")
+        green, why = run_tests(copy, env)
+        ledger.write(f"{ident}\t{'SURVIVED' if green else 'CAUGHT'}\t{why}\n")
+        ledger.flush()
+        target.write_text(pristine, encoding="utf-8")
+    ledger.close()
+    print((copy / "ledger.tsv").read_text(encoding="utf-8"))
+
+
+if __name__ == "__main__":
+    main()

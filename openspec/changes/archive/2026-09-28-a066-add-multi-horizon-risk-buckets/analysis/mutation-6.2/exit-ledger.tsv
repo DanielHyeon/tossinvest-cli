@@ -1,0 +1,6 @@
+TREE	HEAD a22a2c05d05554ea1d01bf1e273c3492d21e9286	uncommitted tracked: none	own untracked: none
+CONTROL	GREEN	
+X01 risk-reducing decisions consult bucket authority	CAUGHT	1 failing: TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths
+X02 risk-reducing path waits 6s (evidence/FX wait stand-in)	CAUGHT	1 failing: TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths
+X03 reconcile entry blocked by loss lock	CAUGHT	1 failing: TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths
+X04 fill detection blocked by loss lock	CAUGHT	1 failing: TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths

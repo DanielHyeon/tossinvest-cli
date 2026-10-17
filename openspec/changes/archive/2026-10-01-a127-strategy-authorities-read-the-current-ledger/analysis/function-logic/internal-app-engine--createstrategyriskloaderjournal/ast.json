@@ -1,0 +1,149 @@
+{
+  "file": "internal/app/engine/strategy_risk_authority_test.go",
+  "source_sha256": "88a27a5175907ac6e3239a4d07a64096b28e72fb41822ddf37b55d6f23b28f23",
+  "package": "engine",
+  "function": "createStrategyRiskLoaderJournal",
+  "signature": "createStrategyRiskLoaderJournal(params=2, results=0)",
+  "start": {
+    "line": 242,
+    "column": 1
+  },
+  "end": {
+    "line": 266,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 245,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 249,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 258,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 263,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 13
+      },
+      "text": "sql.Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 37
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 258,
+        "column": 16
+      },
+      "text": "db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 2
+      },
+      "text": "db.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 263,
+        "column": 12
+      },
+      "text": "os.Chmod"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 264,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 258,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 263,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

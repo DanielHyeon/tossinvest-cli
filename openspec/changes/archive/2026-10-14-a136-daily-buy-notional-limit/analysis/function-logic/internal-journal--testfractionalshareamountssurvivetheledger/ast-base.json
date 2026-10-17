@@ -1,0 +1,215 @@
+{
+  "file": "internal/journal/reservations_test.go",
+  "source_sha256": "9352330413290570af00ea0aa68c3c0f837f8e0d5a10db98b480d142e389de9d",
+  "package": "journal",
+  "function": "TestFractionalShareAmountsSurviveTheLedger",
+  "signature": "TestFractionalShareAmountsSurviveTheLedger(params=1, results=0)",
+  "start": {
+    "line": 224,
+    "column": 1
+  },
+  "end": {
+    "line": 248,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 235,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 238,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 242,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 245,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 10
+      },
+      "text": "openReservationJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 2
+      },
+      "text": "recordEntryDecision"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 9
+      },
+      "text": "exposureReserve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 68
+      },
+      "text": "mustVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 14
+      },
+      "text": "j.Reserve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 17
+      },
+      "text": "j.LookupReservation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 63
+      },
+      "text": "stored.Held"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 225,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 229,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 230,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 231,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 232,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 234,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 238,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 241,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

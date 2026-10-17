@@ -1,0 +1,11 @@
+start 8daed316f087979f internal/journal/apply_hook.go
+start 98512040e5733560 internal/journal/risk_bucket_fill.go
+start 6292cb576e64b9f9 internal/journal/risk_bucket_owner.go
+start 9ae65976e8c1502c internal/journal/risk_bucket_usage.go
+start 04b461130389895e internal/journal/strategy_dispatch_runtime.go
+start c5e0c64b2de65248 internal/riskbucket/production_snapshot_authority.go
+control GREEN
+F1 CAUGHT — a066 결함 수리 되돌림(해제 검사의 옛 철자)
+F2 CAUGHT — 해제 검사가 미해소 체결을 보지 않음(fail-open)
+F3 CAUGHT — 해소 조각 OR→AND(두 자리 공통)
+caught 3 · survived 0

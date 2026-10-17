@@ -1,0 +1,9 @@
+
+Callers of "LoadProductionAuthority" (2):
+
+function    TestProductionAccountAuthorityPairedKRUSSameWave
+  internal/strategyaccount/production_test.go:19
+
+function    TestProductionAccountAuthorityRefusesMarketLocalTamper
+  internal/strategyaccount/production_test.go:55
+

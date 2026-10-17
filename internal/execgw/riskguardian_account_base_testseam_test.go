@@ -13,6 +13,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/risk"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane"
@@ -33,6 +34,9 @@ func TestQFinalAccountBaseGuardianPairedKRUS(t *testing.T) {
 			decisionID := "qfinal-account-base-" + strings.ToLower(test.market)
 			rig := newGuardian(t, func(options *execgw.RiskGuardianOptions) {
 				options.NewID = fixedIDs(decisionID, decisionID+"-nonce")
+				// a139: 이 시험이 재는 것은 KR · US 가 같은 권위 경로로 같은 q_final 을 내는지(짝 계약)이지 예산 값이 아님 — 1/3 예산은 US 쪽
+				// 위험 상한(예산 ÷ (손절 폭 × FX))만 묶어 짝을 깨므로 옛 예산을 명시해 다른 상한이 묶게 둠. 1/3 사이징은 a139 시험이 잼.
+				options.Policy.RiskBudget = riskcalc.Money{Amount: "100000", Currency: "KRW"}
 			})
 			request := qFinalAccountBaseRequest(t, rig, strings.ToLower(test.market), test.market)
 			fx, err := risk.TestOnlySealAccountBaseFX(fixedNow, test.costMarket, guardianPolicy(), test.rate, "1")
@@ -109,6 +113,9 @@ func TestQFinalCampaignFirstLegProjectsGuardianOwnedLineageAllEightLanes(t *test
 			decisionID := "qfinal-" + suffix
 			rig := newGuardian(t, func(options *execgw.RiskGuardianOptions) {
 				options.NewID = fixedIDs(decisionID, decisionID+"-nonce")
+				// a139: 이 시험이 재는 것은 KR · US 가 같은 권위 경로로 같은 q_final 을 내는지(짝 계약)이지 예산 값이 아님 — 1/3 예산은 US 쪽
+				// 위험 상한(예산 ÷ (손절 폭 × FX))만 묶어 짝을 깨므로 옛 예산을 명시해 다른 상한이 묶게 둠. 1/3 사이징은 a139 시험이 잼.
+				options.Policy.RiskBudget = riskcalc.Money{Amount: "100000", Currency: "KRW"}
 			})
 			entry := qFinalAccountBaseRequest(t, rig, suffix, market)
 			entry.Admission.Owner.Key.ProspectiveGeneration = ""

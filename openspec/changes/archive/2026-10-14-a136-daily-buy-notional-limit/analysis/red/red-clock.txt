@@ -1,0 +1,6 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/clock [github.com/JungHoonGhae/tossinvest-cli/internal/clock.test]
+internal/clock/account_day_test.go:22:15: undefined: AccountTradingDay
+internal/clock/account_day_test.go:45:17: undefined: AccountTradingDay
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/clock [build failed]
+FAIL
+rc=1

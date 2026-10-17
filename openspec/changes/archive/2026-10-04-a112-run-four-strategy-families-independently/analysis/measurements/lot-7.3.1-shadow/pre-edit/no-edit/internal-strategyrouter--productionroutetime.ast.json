@@ -1,0 +1,86 @@
+{
+  "file": "internal/strategyrouter/production.go",
+  "source_sha256": "617163a508030dea2768655db66006d52097f17be9c04bb7c9fc300d3adf8a21",
+  "package": "strategyrouter",
+  "function": "productionRouteTime",
+  "signature": "productionRouteTime(params=1, results=2)",
+  "start": {
+    "line": 751,
+    "column": 1
+  },
+  "end": {
+    "line": 754,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 753,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 752,
+        "column": 17
+      },
+      "text": "time.Parse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 753,
+        "column": 9
+      },
+      "text": "parsed.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 753,
+        "column": 38
+      },
+      "text": "parsed.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 753,
+        "column": 57
+      },
+      "text": "parsed.Location"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 753,
+        "column": 90
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 753,
+        "column": 90
+      },
+      "text": "parsed.UTC"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 752,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

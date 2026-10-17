@@ -1,0 +1,85 @@
+{
+  "file": "internal/protectionlifecycle/state.go",
+  "source_sha256": "df5c5459c6d2add80bcfdcadb03f4af1dbcb19cce1424687c2d855a40fd66cbe",
+  "package": "protectionlifecycle",
+  "function": "validPending",
+  "signature": "validPending(params=3, results=1)",
+  "start": {
+    "line": 212,
+    "column": 1
+  },
+  "end": {
+    "line": 221,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 214,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 217,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 215,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 218,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 220,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 200
+      },
+      "text": "operationIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 9
+      },
+      "text": "validIdentity"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 213,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

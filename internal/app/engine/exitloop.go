@@ -137,6 +137,9 @@ type ReductionIssuer interface {
 type ExitSubmitter interface {
 	Place(ctx context.Context, req execgw.PlaceRequest) (execgw.Outcome, error)
 	Cancel(ctx context.Context, req execgw.CancelRequest) (execgw.Outcome, error)
+	// UnsettledOnSymbol 은 같은 종목의 미종결 attempt 임 — 주문 경로의 checkSymbolFree 와 같은 판정 함수(a094 D−4.7).
+	// 청소가 이것을 보고 치움 미완료로 판정하므로, 게이트웨이가 어차피 거절할 제출을 무장 · 해제하지 않음.
+	UnsettledOnSymbol(ctx context.Context, market, symbol string) ([]journal.AttemptRecord, error)
 }
 
 // ExitAlerter receives the loop's operator alerts. *obs.Notifier satisfies it.
@@ -184,6 +187,9 @@ type ExitObserverOptions struct {
 	Names *InstrumentNames
 	// Log receives the structured lines. Optional.
 	Log *obs.Logger
+	// UnobservedLog 는 a090 의 미관측 줄(exit.position_unobserved, normal)만 받는 전용 로거임. 선택.
+	// Log 와 따로 둔 이유: Log 의 기존 줄은 계좌 원문을 싣고(logErr) 생산에서 nil 이라, 새 줄만 내보내려면 좁은 싱크가 필요함.
+	UnobservedLog *obs.Logger
 	// Costs is the shared cost model, for the real break-even the BREAKEVEN
 	// ratchet level is composed from. Required: an unconfigured model drops
 	// break-even onto the entry price, which would promote the baseline early.
@@ -198,6 +204,20 @@ type ExitObserverOptions struct {
 	Escalate execgw.ModeEscalation
 	// Announcer is told about a transition that changed something. Optional.
 	Announcer journal.ModeAnnouncer
+	// Critical 은 a094 의 새 critical(park 원인 · 연속 청소 실패 · 종결 증거 대기)을 창 0 으로 기록하는 알림기의
+	// 단일 입구임(a092 K6). 조립부가 *obs.Notifier 를 넣음. nil 이면 경고 로그만 남음(durable 아님).
+	Critical CriticalRecorder
+	// NotificationsEnabled 는 로드된 설정의 notifications.enabled 임(a091 — a095 와 같은 원천). 보호 청산 0주를 critical 로 매기는
+	// 전제 — 꺼진 엔진에서 critical 은 보낼 수 없는 행이 되어 진입을 멈추므로(정본 「무관리 보유 보고의 등급은 사실이 정한다」와
+	// 같은 규칙) 옛 캡 종류(normal)로 남음. 생산 배선이 호출자 값과 무관하게 덮음.
+	NotificationsEnabled bool
+	// ZeroFloorLog 는 a091 의 0주 보고 줄(B2 의 가린 오류 · 기록 실패)만 받는 전용 로거임 — 계좌 필드 없는 줄만 씀. Log 는 생산에서 nil 이라
+	// 따로 둠(UnobservedLog 와 같은 이유). 생산 배선이 엔진 로거로 덮음. nil 이면 그 줄은 버려짐.
+	ZeroFloorLog *obs.Logger
+	// ExitOrderLog 는 a129 의 청산 주문 생애 줄(확정 · 결과 미상 · 거부 · 브로커 전 거절 · 체결 · 무체결 종결)만 받는 전용 로거임. 선택.
+	// Log 와 따로 둔 이유는 UnobservedLog 와 같음 — 화이트리스트 필드만 씀(exit_order_log.go). nil 이면 줄도 체결 따라가기도 원장 읽기도 0.
+	// 생산 배선은 engineRuntime 이 엔진 로거를 넣음(2026-10-07 010170 손절이 engine.log 에 0 줄이던 원인).
+	ExitOrderLog *obs.Logger
 
 	// AccountRef scopes everything. Required.
 	AccountRef string
@@ -252,9 +272,29 @@ type ExitObserver struct {
 	delayedSince map[string]time.Time
 	// delayAlerted stops that alert repeating within one delay.
 	delayAlerted map[string]bool
+	// clearStreak 는 포지션별 청소 연속 실패임(a094 D−2.7 · D−7.1 — key 는 연속 id). 관측자 상태라 재시작하면 새 연속.
+	clearStreak map[string]*clearStreak
+	// episodeRecorded 는 a094 의 명명 critical 을 한 프로세스에서 다시 적재하지 않게 하는 래치임(적재 중복 최적화).
+	episodeRecorded map[string]bool
 	// observationSequence distinguishes fallback observations when the quote
 	// source supplies no FetchedAt and a test/frozen clock does not advance.
 	observationSequence atomic.Uint64
+	// unobserved 는 보유·대상 포지션별 미관측 기록임(a090, exit_unobserved.go). 지연 초기화 — nil 이 「기록 없음」.
+	// 재시작하면 잃음(파일 머리 계약: 잃으면 다시 세고 다시 알림).
+	unobserved map[string]*unobservedRecord
+	// pendingModeNotices 는 커밋된 강화의 적재 못 한 공지임 — 처리 주기마다 같은 key 로 재시도(a090 design D10).
+	pendingModeNotices []obs.Event
+	// cycleUnobserved 는 진행 중인 주기 하나의 표시 · 원인 · 판정 진입 집계임(a090). 주기 신원(owner)으로 묶어,
+	// settle 을 부르지 않은 주기(B4)의 집계가 다음 주기로 새지 않게 함.
+	cycleUnobserved *unobservedCycle
+	// exitOrderQueue 는 이 주기에 submit 이 넣은 a129 줄임 — 주기 끝(endExitOrderCycle)에 씀. ExitOrderLog nil 이면 늘 비어 있음.
+	exitOrderQueue []queuedExitOrderLine
+	// exitOrderRefused 는 포지션별 마지막 거절 줄의 서명임 — 같은 거절이 연속한 주기에 반복될 때 첫 줄만 쓰게 함(a129).
+	exitOrderRefused map[string]string
+	// exitOrderRefusedNow 는 이 주기에 거절 줄이 난 포지션임 — 주기 끝에 이 집합 밖의 래치를 풂(a129).
+	exitOrderRefusedNow map[string]bool
+	// exitFills 는 체결을 따라가는 청산 주문임(intent id → 항목, a129). 지연 초기화 — 재시작하면 잃음.
+	exitFills map[string]*exitFillWatch
 }
 
 // NewExitObserver validates the wiring and snapshots the common selection used
@@ -403,6 +443,9 @@ type ExitCycle struct {
 	Unmanaged int
 	// Escalated reports that this cycle tightened the operating mode.
 	Escalated bool
+	// Unobserved 는 보유·exit 대상인데 이 주기에 판정에 닿지 못한 포지션 수임(a090). 시험·tracer 표면 — 생산 증거는
+	// UnobservedLog 의 줄임(Run 은 성공 주기의 결과를 버림).
+	Unobserved int
 	// Err is the cycle's first failure, if any. It is reported and not returned
 	// by Run: the loop holds rather than stops.
 	Err error
@@ -411,6 +454,8 @@ type ExitCycle struct {
 // ObserveOnce runs one cycle. It is exported for the tests and for a tracer
 // run, which drives the loop by hand rather than by clock.
 func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
+	// a129: 이 주기의 청산 주문 줄 쓰기 · 체결 따라가기는 모든 return 경로에서 판정 · 제출 뒤에 돎(원장 읽기만, 브로커 호출 0).
+	defer o.endExitOrderCycle(ctx)
 	var cycle ExitCycle
 	observation := cycleObservation{at: o.clk.Now().UTC()}
 
@@ -429,6 +474,8 @@ func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
 		return cycle
 	}
 	if len(states) == 0 {
+		// a090: 보유·대상 표시가 있는데 전부 탈락했으면 그 주기도 미관측으로 셈 — 표시가 없으면 기록을 비움.
+		o.settleUnobserved(ctx, &cycle)
 		// Nothing is held, so there is nothing to observe and nothing to be
 		// unprotected. The outage clock is reset rather than left running: an
 		// account with no positions that has not read a price is not in an
@@ -454,18 +501,24 @@ func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
 			// A symbol the price read did not answer for is a symbol this cycle
 			// did not observe. Hold it; the outage clock is per account and the
 			// next cycle may answer.
+			// a090: 무음으로 넘기지 않음 — 원인만 적고 판정은 순회 뒤(settleUnobserved).
+			o.noteUnobservedCause(&cycle, state.position.ID, unobservedNoQuote)
 			continue
 		}
 		if !o.quoteUsable(quote) {
 			// A quote that expired while an earlier position was handled is not a
 			// judgement. Keep its state untouched until the next one-batch cycle.
+			o.noteUnobservedCause(&cycle, state.position.ID, unobservedQuoteExpired)
 			continue
 		}
 		cycle.Judged++
+		o.noteJudged(&cycle, state)
 		if err := o.judge(ctx, state, quote, observation, &cycle); err != nil && cycle.Err == nil {
 			cycle.Err = err
 		}
 	}
+	// a090: 임계 판정 · 알림 · 강화는 모든 포지션 판정이 끝난 뒤 한 번 — 뒤 포지션의 손절 판정 앞에 서지 않음.
+	o.settleUnobserved(ctx, &cycle)
 	return cycle
 }
 
@@ -518,6 +571,8 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 			o.alertUnmanaged(ctx, p)
 			continue
 		}
+		// a090: exit 대상이 확정된 첫 자리 — 여기서 표시해야 아래 탈락(B8 · B12 · B14 · B21)이 전부 미관측으로 세어짐.
+		o.markHeld(cycle, p)
 		result, ok := byPosition[p.ID]
 		state := result.State
 		reJudging := false
@@ -531,6 +586,8 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 				continue
 			}
 			if opened.PositionID == "" {
+				// a090: 완료된 정책은 미관측 계수 범위 밖 — 위 표시를 해제함(관측 실패가 아니라 정책 수명).
+				o.unmarkHeld(cycle, p.ID)
 				// The state exists and is completed: the position closed and
 				// reopened is a new instance, and a completed policy judges
 				// nothing further.
@@ -846,9 +903,14 @@ func (o *ExitObserver) checkOutage(ctx context.Context, cycle *ExitCycle) {
 	_, changed, err := o.opts.Escalate.EscalateOperatingMode(ctx, o.opts.AccountRef,
 		journal.ModeTriggerExitObservationOutage, o.opts.Announcer)
 	if err != nil {
+		if !errors.Is(err, journal.ErrModeAnnouncementFailed) {
+			o.logErr(obs.EventOperatingMode, err,
+				"the exit observation outage did not reach the operating mode, so a restart would lift the block")
+			return
+		}
+		// 전이는 커밋됐고 통지 기록만 실패함(a092 보이스 B #7) — 강화된 것으로 셈. 기록 입구가 이미 전달 실패 사유로 잠갔음.
 		o.logErr(obs.EventOperatingMode, err,
-			"the exit observation outage did not reach the operating mode, so a restart would lift the block")
-		return
+			"the exit observation outage tightened the operating mode, but its notice could not be recorded")
 	}
 	cycle.Escalated = changed
 }
@@ -857,6 +919,13 @@ func (o *ExitObserver) checkOutage(ctx context.Context, cycle *ExitCycle) {
 func (o *ExitObserver) judge(ctx context.Context, m managed, quote observedQuote,
 	observation cycleObservation, cycle *ExitCycle) error {
 	if !o.quoteUsable(quote) {
+		return nil
+	}
+	// 무장된 발의가 왜 풀리지 않는지(park · 종결 증거 대기)를 판정 진입에서 알림 — 원장 읽기와 기록만, 평가 · 억제 ·
+	// 청소의 순서와 결과는 바꾸지 않음(a094 D−4.4 · D−9.3). 억제 · 조기 반환보다 앞이어야 손절 자신의 발의에도 닿음.
+	// 입증된 비수용 발의를 여기서 풀었으면 이 주기의 판정은 건너뜀 — m.state 는 해제 전 사본이라 그대로 평가하면 되돌린
+	// rung 을 옛 값으로 다시 씀(다음 관측이 새 상태로 판정).
+	if o.noteHeldProposal(ctx, m) {
 		return nil
 	}
 	if m.identityErr != nil {
@@ -1248,12 +1317,16 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 			if err != nil {
 				return err
 			}
-			if !cleared {
-				o.noteDelay(ctx, m, "a working order on the symbol could not be taken off the book")
+			if !cleared.cleared {
+				// 지연 경보의 사유는 형태 B(매도 취소의 종결 증거 대기)면 복구 절차를 안내함(a094 D−8.3 — 등급 · key ·
+				// 빈도 무변화). 연속 실패 트리거는 기존 타이머와 별개의 이른 경보임(D−2.7).
+				o.noteDelay(ctx, m, cleared.why())
+				o.noteClearFailure(ctx, m, cleared)
 				orderable = false
 				judgement.ArmSuppressedReason = journal.ArmSuppressedWorkingOrder
 			} else {
 				o.clearDelay(m.position.ID)
+				o.endClearStreak(m.position.ID)
 			}
 		}
 	}
@@ -1342,16 +1415,23 @@ func reJudgingVersion(m managed) int64 {
 // submit takes an armed proposal to the broker.
 func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolicy.Proposal,
 	quantity, intentID, observed string, provenance journal.ExitDecisionProvenance) error {
-	submitQuantity, capped, err := o.applyFloor(ctx, m, quantity)
+	// 보호/익절 구분은 호출자가 넘김 — applyFloor 는 제안이 손절인지 모름(a091 D2). 반환값은 그 구분과 무관함.
+	submitQuantity, capped, err := o.applyFloor(ctx, m, quantity, isProtective(proposal))
 	if err != nil {
+		// a129: 하한 산술 실패 — 해제 없음, 줄은 주기 끝에 씀(이하 모든 갈래 같음: noteExitOrder 는 대기열에 넣기만 함).
+		o.noteExitOrder(obs.EventOrderNotDispatched, true, true, false,
+			exitOrderLineFor(m, proposal, quantity, intentID, observed, false).because(exitOrderFloorArithmeticFailed))
 		return err
 	}
+	line := exitOrderLineFor(m, proposal, submitQuantity, intentID, observed, capped)
 	if isZeroQuantity(submitQuantity) {
 		// The confirmed floor authorises nothing — an absent or stale snapshot
 		// while the account is in RECONCILE. Release the proposal so the same
 		// level identity is proposed again once the floor lifts; keeping it armed
 		// would suppress exactly the re-proposal exit-policy asks for.
-		return o.release(ctx, m, journal.ProposalRefused)
+		releaseErr := o.release(ctx, m, intentID, journal.ProposalRefused)
+		o.noteExitOrder(obs.EventOrderNotDispatched, true, true, false, line.because(exitOrderFloorZero))
+		return releaseErr
 	}
 
 	issued, err := o.opts.Issuer.IssueReduction(ctx, execgw.ReductionIssuance{
@@ -1368,7 +1448,9 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 	})
 	if err != nil {
 		o.alertProposalRefused(ctx, m, proposal, err.Error())
-		return o.release(ctx, m, journal.ProposalRefused)
+		releaseErr := o.release(ctx, m, intentID, journal.ProposalRefused)
+		o.noteExitOrder(obs.EventOrderNotDispatched, true, true, false, line.because(exitOrderGuardianRefused))
+		return releaseErr
 	}
 
 	// Attach before submitting. The id is already in the judgement transaction;
@@ -1376,13 +1458,16 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 	// exists, so an attach that fails stops the submission rather than leaving an
 	// order nothing can resolve.
 	if err := o.opts.Journal.AttachExitIntent(ctx, m.position.ID, intentID); err != nil {
+		o.noteExitOrder(obs.EventOrderNotDispatched, true, true, false, line.because(exitOrderAttachFailed))
 		return fmt.Errorf("engine: attaching the exit intent of %s: %w", m.position.ID, err)
 	}
 
 	intent, err := o.sellIntent(m, submitQuantity, observed)
 	if err != nil {
 		o.alertRefused(ctx, m, err)
-		return o.release(ctx, m, journal.ProposalRefused)
+		releaseErr := o.release(ctx, m, intentID, journal.ProposalRefused)
+		o.noteExitOrder(obs.EventOrderNotDispatched, true, true, false, line.because(exitOrderIntentInvalid))
+		return releaseErr
 	}
 	out, err := o.opts.Submit.Place(ctx, execgw.PlaceRequest{
 		Intent:         intent,
@@ -1390,6 +1475,8 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 		IntentID:       intentID,
 		ExitProvenance: &provenance,
 	})
+	// a129: 이 아래 줄은 전부 Place 가 돌아온 뒤임 — 키 · 상태 · 사유만 옮기고 Detail · Result 는 싣지 않음.
+	line = line.placed(out)
 	switch {
 	case out.State == journal.StateConfirmed:
 		o.log(obs.EventOrderConfirmed, false,
@@ -1398,29 +1485,56 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 			"action", string(proposal.Action),
 			"level", proposal.Level,
 			"capped", capped)
+		o.noteExitOrder(obs.EventOrderConfirmed, false, false, true, line)
 		return nil
 	case out.State == journal.StateInDoubt || out.State == journal.StateUnresolvedInDoubt:
 		// The order may exist. The proposal stays armed and the resolver settles
 		// it; releasing here would let the next observation submit a second sell
 		// on top of one that may already be live.
+		doubt := obs.EventOrderInDoubt
+		if out.State == journal.StateUnresolvedInDoubt {
+			doubt = obs.EventOrderUnresolved
+		}
+		o.noteExitOrder(doubt, true, false, true, line)
 		return nil
 	case out.Reason == execgw.ReasonSymbolInFlight:
 		o.noteDelay(ctx, m, "another mutation on the symbol is in flight")
-		return o.release(ctx, m, journal.ProposalCancelled)
+		releaseErr := o.release(ctx, m, intentID, journal.ProposalCancelled)
+		o.noteExitOrder(obs.EventOrderNotDispatched, true, true, false, line)
+		return releaseErr
+	case out.AttemptID != "" && out.State != journal.StateNotDispatched && out.State != journal.StateFailedConfirmed:
+		// attempt 는 기록됐는데 입증된 비수용이 아님 — 결과를 원장에 쓰지 못해 상태가 빈 경우 포함(gateway 의 결과 쓰기
+		// 실패 · 종료 중 취소). 주문은 나갔을 수 있으므로 발의는 무장된 채 남기고, 재시작 복구와 기동 따라잡기가
+		// 그 attempt 를 처리함(a094 D−2.5 · 4.3c).
+		if err == nil {
+			err = fmt.Errorf("attempt %s ended in state %q", out.AttemptID, out.State)
+		}
+		o.noteExitOrder(obs.EventOrderInDoubt, true, false, true, line)
+		return fmt.Errorf("engine: the exit order of %s did not settle as unaccepted; the proposal stays armed: %w",
+			m.position.ID, err)
 	default:
 		detail := out.Detail
 		if detail == "" && err != nil {
 			detail = err.Error()
 		}
 		o.alertProposalRefused(ctx, m, proposal, detail)
-		return o.release(ctx, m, journal.ProposalRefused)
+		refusal := obs.EventOrderNotDispatched
+		if out.State == journal.StateFailedConfirmed {
+			refusal = obs.EventOrderRejected
+		}
+		releaseErr := o.release(ctx, m, intentID, journal.ProposalRefused)
+		o.noteExitOrder(refusal, true, true, false, line)
+		return releaseErr
 	}
 }
 
 // release clears an armed proposal that produced no live order, which re-arms
 // its level (exit-policy: 거부·취소 시 해당 레벨은 재발의 가능해진다).
-func (o *ExitObserver) release(ctx context.Context, m managed, how journal.ProposalResolution) error {
-	if err := o.opts.Journal.ResolveExitProposal(ctx, m.position.ID, how); err != nil {
+//
+// 해제는 원장의 판정 하나(ReleaseUnacceptedExitProposal)가 함 — 그 intent 의 attempt 가 전부 입증된 비수용이거나 하나도
+// 없고, 무장된 발의가 그 intent 일 때만(a094 D−2.5). 판정이 해제를 허락하지 않으면 발의는 무장된 채 남음.
+func (o *ExitObserver) release(ctx context.Context, m managed, intentID string, how journal.ProposalResolution) error {
+	if _, _, err := o.opts.Journal.ReleaseUnacceptedExitProposal(ctx, m.position.ID, intentID, how); err != nil {
 		return fmt.Errorf("engine: releasing the exit proposal of %s: %w", m.position.ID, err)
 	}
 	return nil
@@ -1437,17 +1551,48 @@ func (o *ExitObserver) release(ctx context.Context, m managed, how journal.Propo
 // The release is last and only on success. Releasing a proposal whose order is
 // still live would re-arm its level over a working sell, which is the oversell
 // the whole sequence exists to prevent.
-func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPending bool) (bool, error) {
+//
+// a094 가 더한 규칙 셋(원장만 읽음 — 새 브로커 호출 0):
+//
+//   - 같은 종목에 미종결 attempt 가 있으면 치움 미완료(D−4.7). 판정은 주문 경로와 같은 함수(Submit.UnsettledOnSymbol).
+//   - 매도의 취소 접수는 치움이 아님(D−4.3). 그 매도가 종결 체결 기록으로 미체결 목록에서 빠질 때까지 미완료이고, 엔진
+//     취소가 이미 접수 확정된 매도는 다시 취소하지 않음. 매수 취소는 종전대로 접수로 치움.
+//   - 발의 해제는 원장 판정(ReleaseClearedExitProposal)이 함(D−3.2) — 그 intent 의 attempt 가 살아 있을 수 있거나 park
+//     이거나 종결 증거를 기다리면 해제하지 않고 치움 미완료임.
+func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPending bool) (clearResult, error) {
 	live, err := o.opts.Journal.LiveOrdersForSymbol(ctx,
 		o.opts.AccountRef, m.position.Market, m.position.Symbol)
 	if err != nil {
-		return false, fmt.Errorf("engine: reading the working orders of %s: %w", m.position.Symbol, err)
+		return clearResult{}, fmt.Errorf("engine: reading the working orders of %s: %w", m.position.Symbol, err)
 	}
-	clear := true
+	unsettled, err := o.opts.Submit.UnsettledOnSymbol(ctx, m.position.Market, m.position.Symbol)
+	if err != nil {
+		return clearResult{}, fmt.Errorf("engine: reading the unsettled mutations on %s: %w", m.position.Symbol, err)
+	}
+	if len(unsettled) > 0 {
+		// 게이트웨이가 어차피 SymbolInFlight 로 거절할 제출을 무장 · 해제하지 않음 — 그 반복이 지연 타이머를 매 주기
+		// 지워 30초 경보에 닿지 못하게 했음(272210 의 모양). 엔진 취소가 전송 · 인수 단계인 것뿐이면 계수에서 뺌.
+		return clearResult{countable: !onlyEngineCancelsInFlight(unsettled, clearTargets(live, withPending))}, nil
+	}
+	res := clearResult{cleared: true, countable: true}
 	for _, order := range live {
 		buy := strings.EqualFold(strings.TrimSpace(order.Side), "BUY")
-		if !buy && !withPending {
-			continue
+		if !buy {
+			// 엔진 취소가 이미 접수 확정된 매도 — 종결 증거를 기다리는 중이며 다시 취소하지 않음. 발의 유무와 무관함(D−4.3-1):
+			// 발의가 풀린 뒤의 주기(withPending=false)에도 그 매도가 취소 전에 얼마나 체결됐는지 모르는 채 손절을 낼 수 없음.
+			_, waiting, err := o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
+			if err != nil {
+				o.warnEpisode(obs.EventExitLiquidationDelayed, err, "reading the engine cancel of order "+order.OrderID)
+				res.cleared = false
+				continue
+			}
+			if waiting {
+				res.cleared, res.awaitingClose = false, true
+				continue
+			}
+			if !withPending {
+				continue
+			}
 		}
 		issued, err := o.opts.Issuer.IssueReduction(ctx, execgw.ReductionIssuance{
 			Intent: risk.Intent{
@@ -1462,13 +1607,13 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 				strings.ToUpper(strings.TrimSpace(order.Side)), order.OrderID, m.position.ID),
 		})
 		if err != nil {
-			clear = false
+			res.cleared = false
 			continue
 		}
 		quantity, qerr := floatOf("working order quantity", order.Quantity)
-		price, perr := floatOf("working order price", order.Price)
+		price, perr := workingOrderPrice(order.Price)
 		if qerr != nil || perr != nil {
-			clear = false
+			res.cleared = false
 			continue
 		}
 		out, err := o.opts.Submit.Cancel(ctx, execgw.CancelRequest{
@@ -1483,18 +1628,31 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 			Decision: issued.Decision,
 		})
 		if err != nil || out.State != journal.StateConfirmed {
-			clear = false
+			res.cleared = false
+			continue
+		}
+		if !buy {
+			// 매도의 취소 접수는 치움의 증거가 아님 — 취소 전에 얼마나 체결됐는지는 종결 체결 기록만 말함(D−4.3).
+			res.cleared, res.awaitingClose = false, true
 		}
 	}
-	if !clear {
-		return false, nil
+	if !res.cleared {
+		return res, nil
 	}
 	if withPending && m.state.Pending() {
-		if err := o.release(ctx, m, journal.ProposalCancelled); err != nil {
-			return false, err
+		if strings.TrimSpace(m.state.PendingIntentID) == "" {
+			// intent 없는 발의는 attempt 를 찾을 수 없음 — 살아 있을 수 있는 발의로 다룸.
+			return clearResult{countable: true}, nil
+		}
+		verdict, released, err := o.opts.Journal.ReleaseClearedExitProposal(ctx, m.position.ID, m.state.PendingIntentID)
+		if err != nil {
+			return clearResult{}, fmt.Errorf("engine: releasing the exit proposal of %s: %w", m.position.ID, err)
+		}
+		if !released {
+			return clearResult{countable: true, awaitingClose: verdict == journal.ExitIntentAwaitingClose}, nil
 		}
 	}
-	return true, nil
+	return res, nil
 }
 
 // applyFloor caps a liquidation at the RECONCILE confirmed floor (task 7.5).
@@ -1506,7 +1664,9 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 // reconciliation incident. What is durable is the *condition* — the baseline is
 // still breached, the rung is still unfilled — and the next observation
 // re-derives the same proposal from it, under the same level, from the ledger.
-func (o *ExitObserver) applyFloor(ctx context.Context, m managed, quantity string) (string, bool, error) {
+//
+// protective 는 보고의 등급만 가름(a091) — 보호 청산이 0주로 깎이면 알림 켜진 엔진에서 critical 로 보고함. 반환값은 protective 와 무관함.
+func (o *ExitObserver) applyFloor(ctx context.Context, m managed, quantity string, protective bool) (string, bool, error) {
 	if o.opts.Floor == nil {
 		return quantity, false, nil
 	}
@@ -1514,9 +1674,10 @@ func (o *ExitObserver) applyFloor(ctx context.Context, m managed, quantity strin
 	if err != nil {
 		// A floor that cannot be computed is a floor of zero, not an absent one:
 		// the account is in RECONCILE and the engine has just failed to establish
-		// what it may sell.
-		o.logErr(obs.EventExitProposalCapped, err,
-			"the confirmed floor of "+m.position.Symbol+" could not be computed; nothing is submitted")
+		// what it may sell. 보고는 원인 분류 · 등급 · 가린 로그까지 exit_stop_sold_nothing.go 가 맡음(a091) — 반환값은 그대로.
+		o.reportZeroFloor(ctx, m, zeroFloor{
+			cause: classifyZero(ctx, riskcalc.ConfirmedFloor{}, err), proposed: quantity, protective: protective, err: err,
+		})
 		return "0", true, nil
 	}
 	if !applies {
@@ -1532,6 +1693,13 @@ func (o *ExitObserver) applyFloor(ctx context.Context, m managed, quantity strin
 	remainder, err := riskcalc.SubDecimal(quantity, floor.Quantity)
 	if err != nil {
 		return "", false, fmt.Errorf("engine: sizing the capped remainder of %s: %w", m.position.Symbol, err)
+	}
+	if isZeroQuantity(floor.Quantity) {
+		// 한 주도 나가지 않는 캡 — 「일부만 나갔다」는 거짓이고, 보호 청산이면 실패로 보고함(a091). 반환값은 부분 캡과 같은 모양.
+		o.reportZeroFloor(ctx, m, zeroFloor{
+			cause: classifyZero(ctx, floor, nil), proposed: quantity, protective: protective, floor: floor,
+		})
+		return floor.Quantity, true, nil
 	}
 	o.alert(ctx, obs.Event{
 		Type:  obs.EventExitProposalCapped,

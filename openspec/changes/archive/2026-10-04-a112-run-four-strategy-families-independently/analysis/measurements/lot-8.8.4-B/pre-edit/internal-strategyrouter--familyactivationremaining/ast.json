@@ -1,0 +1,62 @@
+{
+  "file": "internal/strategyrouter/production_family_activation.go",
+  "source_sha256": "c8e2efb9b1a8243bcec000f0c2fa9e96bd8576c97aa35a694a1e6c053407288f",
+  "package": "strategyrouter",
+  "function": "familyActivationRemaining",
+  "signature": "familyActivationRemaining(params=2, results=2)",
+  "start": {
+    "line": 383,
+    "column": 1
+  },
+  "end": {
+    "line": 388,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 384,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 385,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 387,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 6
+      },
+      "text": "now.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 9
+      },
+      "text": "expires.Sub"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

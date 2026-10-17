@@ -1,0 +1,101 @@
+{
+  "file": "cmd/tossctl/verify.go",
+  "source_sha256": "d863c1de6b2af55c56a1da9bd0124dcd81a2e8348c7eec4a2a72b662c3ce8ef7",
+  "package": "main",
+  "function": "newVerifyCmd",
+  "signature": "newVerifyCmd(params=1, results=1)",
+  "start": {
+    "line": 96,
+    "column": 1
+  },
+  "end": {
+    "line": 130,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 129,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 9
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 2
+      },
+      "text": "cmd.AddCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 3
+      },
+      "text": "newVerifyRunCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 3
+      },
+      "text": "newVerifyStatusCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 3
+      },
+      "text": "newVerifyReportCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 3
+      },
+      "text": "newVerifyAbortCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 3
+      },
+      "text": "newVerifyReconcileCmd"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,212 @@
+{
+  "file": "internal/app/engine/adoption.go",
+  "source_sha256": "3d66976f07a50aa7e98447cc17c943d394c67694025ad665765d39562ec0bc9d",
+  "package": "engine",
+  "function": "adoptOne",
+  "receiver": "ReconcileDriver",
+  "signature": "ReconcileDriver.adoptOne(params=3, results=1)",
+  "start": {
+    "line": 368,
+    "column": 1
+  },
+  "end": {
+    "line": 430,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 370,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 389,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 394,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 372,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 391,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 429,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 369,
+        "column": 15
+      },
+      "text": "exitpolicy.SyntheticStop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 371,
+        "column": 3
+      },
+      "text": "d.logDeferred"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 371,
+        "column": 73
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 375,
+        "column": 19
+      },
+      "text": "d.opts.Journal.AdoptPosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 18
+      },
+      "text": "journal.RFC3339"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 34
+      },
+      "text": "d.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 390,
+        "column": 3
+      },
+      "text": "d.logDeferred"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 390,
+        "column": 58
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 394,
+        "column": 15
+      },
+      "text": "d.opts.Journal.OpenAdoptedExitState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 3
+      },
+      "text": "d.logDeferred"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 400,
+        "column": 4
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 403,
+        "column": 2
+      },
+      "text": "d.alert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 405,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 406,
+        "column": 10
+      },
+      "text": "d.label"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 428,
+        "column": 2
+      },
+      "text": "delete"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 369,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 375,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 394,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

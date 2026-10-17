@@ -1,0 +1,60 @@
+
+Callers of "Publish" (19):
+
+method      publishBestEffort
+  internal/obs/notifier.go:179
+
+method      deliver
+  internal/obs/notifier.go:476
+
+method      Flush
+  internal/obs/notifier.go:832
+
+method      Beat
+  internal/obs/heartbeat.go:59
+
+method      Publish
+  internal/obs/ntfy.go:46
+
+function    publishHTTPAPISnapshots
+  cmd/tossctl/httpapi.go:709
+
+function    TestQueueFullDisconnectsOnlySlowClientAndNeverBlocksProducer
+  internal/httpapi/load_test.go:30
+
+function    TestLastEventIDResumesOnlyContiguousSameEpochEvents
+  internal/httpapi/reconnect_test.go:8
+
+function    TestEpochMismatchUnknownAndGapConvergeWithFullSnapshot
+  internal/httpapi/reconnect_test.go:29
+
+function    TestStreamHandlerWritesSnapshotUpdatesAndHeartbeat
+  internal/httpapi/stream_http_test.go:81
+
+function    TestStreamHandlerHonorsLastEventIDOnTheWire
+  internal/httpapi/stream_http_test.go:243
+
+function    TestStreamEventIDsContainEpochAndMonotonicSequence
+  internal/httpapi/stream_test.go:35
+
+function    TestStreamSequenceNeverWrapsOrMutatesPublishedData
+  internal/httpapi/stream_test.go:55
+
+function    TestCloseDisconnectsClientsAndRejectsFurtherPublish
+  internal/httpapi/stream_test.go:147
+
+function    TestPublishRejectsUnsafeEventTypeWithoutAdvancingSequence
+  internal/httpapi/stream_test.go:169
+
+function    publishNotificationTest
+  cmd/tossctl/notificationsettings.go:146
+
+function    TestTheNotificationBodyCarriesNoToken
+  internal/app/engine/a074_notification_wiring_test.go:196
+
+function    TestNtfyWithoutATopicIsNotConfigured
+  internal/obs/obs_test.go:281
+
+method      publish
+  internal/obs/normal_relay.go:103
+

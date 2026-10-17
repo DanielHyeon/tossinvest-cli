@@ -1,0 +1,603 @@
+{
+  "file": "internal/journal/strategy_dispatch_runtime.go",
+  "source_sha256": "04b461130389895e9a2bf9086bbb610905d99822a14cb4a25cf14260d819a593",
+  "package": "journal",
+  "function": "backfillConfirmedStrategyFillTx",
+  "receiver": "Journal",
+  "signature": "Journal.backfillConfirmedStrategyFillTx(params=4, results=1)",
+  "start": {
+    "line": 1297,
+    "column": 1
+  },
+  "end": {
+    "line": 1385,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1307,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1310,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1313,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 1320,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1321,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 1327,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 1330,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 1338,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 1344,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 1348,
+        "column": 3
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 1358,
+        "column": 3
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 1361,
+        "column": 3
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 1364,
+        "column": 3
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 1374,
+        "column": 3
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 1379,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1308,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1311,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1314,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1324,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1328,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1331,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1345,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1349,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1359,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1362,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1369,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1375,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1381,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1384,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1302,
+        "column": 9
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1302,
+        "column": 9
+      },
+      "text": "tx.QueryRowContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1305,
+        "column": 38
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1305,
+        "column": 54
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1307,
+        "column": 5
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1314,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1317,
+        "column": 11
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1317,
+        "column": 27
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1321,
+        "column": 16
+      },
+      "text": "releaseReservationsForOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1323,
+        "column": 4
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1327,
+        "column": 12
+      },
+      "text": "j.applyRiskBucketFillInTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1330,
+        "column": 12
+      },
+      "text": "j.releaseTerminalRiskBucketOrderInTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1335,
+        "column": 31
+      },
+      "text": "parseJournalTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1336,
+        "column": 27
+      },
+      "text": "parseJournalTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1337,
+        "column": 88
+      },
+      "text": "committedAt.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1343,
+        "column": 24
+      },
+      "text": "journalTimeStrictlyAfter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1348,
+        "column": 13
+      },
+      "text": "j.runApplyHooks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1354,
+        "column": 19
+      },
+      "text": "tx.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1357,
+        "column": 4
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1357,
+        "column": 20
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1361,
+        "column": 13
+      },
+      "text": "requireStrategyDispatchExactRows"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1364,
+        "column": 16
+      },
+      "text": "tx.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1367,
+        "column": 39
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1367,
+        "column": 55
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1371,
+        "column": 3
+      },
+      "text": "j.applyMu.RLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1373,
+        "column": 3
+      },
+      "text": "j.applyMu.RUnlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1379,
+        "column": 12
+      },
+      "text": "ApplyPositionCampaignFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1380,
+        "column": 3
+      },
+      "text": "handle.invalidate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1383,
+        "column": 2
+      },
+      "text": "handle.invalidate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1384,
+        "column": 9
+      },
+      "text": "j.applyRiskBucketOwnerBindingInTx"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1302,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1316,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1321,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1327,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1330,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1335,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1336,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1337,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1343,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1347,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1348,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1354,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1361,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1364,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1372,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1378,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1379,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

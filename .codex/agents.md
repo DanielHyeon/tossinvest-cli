@@ -13,9 +13,44 @@
 5. 운영 반영 = 이미지 재빌드 + 컨테이너 재시작 (위 절차)
 6. DB 상태 확인은 Postgres 직접 쿼리
 7. 문서.코드.테스트 일치 → docs/WORKFLOW.md의 SDD 방법론을 반드시 따를것
-8. 초등학생도 이해할 수 있게 한글 주석
+8. 직관적이고 명확한 한글 주석을 쉽게 이해할 수 있게 작성
+   . **코드의 의도 설명:** 단순히 문법을 번역하는 것이 아니라, 해당 코드가 '왜' 작성되었는지 의도를 설명
+   . **핵심 로직 강조:** 복잡한 연산이나 조건문이 있는 부분에는 작동 원리를 상세히 적어주세요.
+   . **통일된 문체:** 주석은 '\~함', '\~음' 또는 명사형으로 종결하여 깔끔하게 작성해 주세요.
+   (예: "데이터 로드 및 전처리 수행", "유효성 검사 실패 시 에러 반환")
 9. 구현 후 반드시 gstack 리뷰 검증
 10. 코드 구현 시 다하지도 않고 다했다고 거짓말 하지 않음
+11. **요구가 모호하면 코드 전에 `interview`(Ouroboros)로 숨은 가정을 질문으로 드러낸다.**
+    범위·비목표·산출물·검증 방법이 구체 값으로 정해지기 전에는 설계·코드로 가지 않는다
+    (Ouroboros MCP 가 있으면 모호함 점수 0.20 이하가 기준). 결과는 OpenSpec
+    proposal·design 에 옮긴다 — Ouroboros seed 를 두 번째 정본으로 두지 않는다.
+    MCP 가 없으면 스킬의 Path B 로 진행하고 역할 파일은 스킬 폴더의 `socratic-interviewer.md`
+    를 읽는다. 질문 도구가 안 보이면 번호 매긴 목록으로 묻고, Step 0 의 버전 확인·플러그인
+    업데이트는 하지 않는다.
+12. **UI 를 만지면 `ui-skills-root` 로 디자인 규칙을 1~3 개만 고른다**
+    (`baseline-ui` · `fixing-accessibility` · `fixing-motion-performance` · `fixing-metadata` ·
+    `improve-ui` · `create-design-md`). 쓰는 범위는 아래 "UI 스킬 라우팅" 과 같다.
+13. **화면·CLI 결과는 "됐다"고 말하기 전에 실제로 돌려서 본다(Reticle).**
+    웹 화면은 브라우저로 띄워 데이터·콘솔 에러·실패한 요청을 확인하고, CLI 는
+    `verify-cli-run` 으로 종료 코드가 아니라 결과물을 잰다. TossOS 콘솔은 Go `html/template`
+    이라 Reticle SDK 를 심을 `package.json` 이 없다 — 그때는 `agent-browser` 나 브라우저 MCP 로
+    같은 판정을 낸다. 사람 승인 뒤에만: `reticle init`(빌드 설정·의존성·권한 규칙을 바꾼다),
+    `reticle feedback`(외부 전송), `verify-unattended`. 콘솔을 몰 때 주문·토글·승인 버튼은
+    누르지 않는다(안전 불변식 1·7). "통과할 때까지 스스로 고치는" 루프는 UI 코드에만 쓰고
+    High-risk 경로(안전 불변식 5)에는 쓰지 않는다.
+14. **보고는 `caveman` 으로 짧게 쓰되 증거는 줄이지 않는다.** 결론부터 쓰고 인사·반복 요약·장식만 뺀다.
+    판정·수치·실패 출력·`not-applicable` 사유·남은 위험·보안 경고·되돌릴 수 없는 작업 설명은 그대로
+    (문장으로) 남기고, 코드·명령·경로·오류 문구와 커밋·PR·OpenSpec 문서는 대상이 아니다. caveman
+    CLI/proxy 의 입력 압축(로그·도구 출력 축약)과 텔레메트리는 쓰지 않는다 — 측정은 잘리지 않은 출력으로 한다.
+15. **사람에게 묻거나 다음 할 일을 줄 때는 `i-have-adhd` 형식을 쓴다.** 다음 행동을 먼저, 여러 단계는
+    번호로, 끝은 구체적인 다음 한 걸음 하나. 목록 5개 상한·접기는 증거 목록(판정·실패·남은 위험·사람
+    결정)에는 적용하지 않는다 — 그런 목록은 다 적는다.
+16. **코드를 쓰기 전에 `ponytail` 사다리를 탄다** (필요한가 → 이미 있는가 → 표준 라이브러리·언어 기능 →
+    기존 의존성 → 한 줄 → 최소 구현). High-risk 경로(안전 불변식 5)에서 사다리는 FLM/BTM·RED/GREEN·변이·
+    적대 리뷰를 대체하지 않고, 검증·오류 처리·fail-closed 가드·시험은 「최소」를 이유로 빼지 않는다.
+    `shortcut:` 주석은 사람이 고른 지름길에만 단다.
+
+11~16 의 외부 스킬은 아래 안전 부트스트랩과 SDD 순서보다 아래다. 충돌하면 스킬을 멈춘다.
 
 ## 최소 안전 부트스트랩
 
@@ -39,15 +74,21 @@ TossOS는 실제 돈을 다루는 자동매매 제품이다. 아래 규칙은 �
 ## 필수 진입과 완료 조건
 
 1. `docs/WORKFLOW.md`, 관련 OpenSpec change/spec, 현재 코드·테스트를 읽는다.
-2. memory recall → OpenSpec → CodeGraph hard evidence → CodeGraphContext 보조 문맥 →
+2. 작업은 Feature 가 아니라 Story 단위로 쪼갠다. Feature 하나가 Story 여럿을 갖고,
+   capability 하나를 change 여럿이 단계적으로 구현하며, 1:1 은 Story↔change 에만 있다
+   (`docs/WORKFLOW.md` PM 계층).
+3. memory recall → OpenSpec → CodeGraph hard evidence → CodeGraphContext 보조 문맥 →
    Go AST/Function Logic Map → RED/GREEN/REFACTOR/VERIFY 순서를 따른다.
-3. 기존 함수 내부 로직을 바꾸면 Function Logic Map과 Branch Test Map을 먼저 만든다.
-   High-risk 기존 함수는 면제할 수 없다.
-4. 함수 내부의 분기·early return·side effect를 **근거로 삼는 문서**는 그 근거를 손으로
+4. 기존 함수 내부 로직을 바꾸면 Function Logic Map과 Branch Test Map을 먼저 만든다.
+   High-risk 기존 함수는 면제할 수 없다. **비례 원칙(2026-09-27 사용자 지시)**: 이 의무와
+   변이 원장·다중 적대 리뷰는 High-risk 경로·게이트 판정을 직접 바꾸는 변경에만이고,
+   그 외 도구·시험·문서는 `not-applicable` 사유 한 줄 + 시험·경량 리뷰가 기본이다
+   (docs/WORKFLOW.md 「비례 원칙」).
+5. 함수 내부의 분기·early return·side effect를 **근거로 삼는 문서**는 그 근거를 손으로
    읽어서 만들지 않는다. proposal·design·review가 그런 주장을 담으면 대상 함수의
    `tools/logic-map` AST 산출물을 **먼저** 만들고 그 열거를 근거로 쓴다.
    산출물 없이 쓴 분기 주장은 미검증이다.
-5. `make sdd-sync`, `make sdd-check`, `make gate CHANGE=<change-id>`와 독립 리뷰가
+6. `make sdd-sync`, `make sdd-check`, `make gate CHANGE=<change-id>`와 독립 리뷰가
    끝나기 전에는 완료라고 보고하지 않는다.
 
 ## 단계 건너뛰기 금지
@@ -85,6 +126,8 @@ TossOS는 실제 돈을 다루는 자동매매 제품이다. 아래 규칙은 �
 백엔드·전략·주문 경로 작업에는 쓰지 않는다.
 
 - 화면 구조·색·타이포·접근성·반응형 판단 → `ui-ux-pro-max`
+- 빠른 정리·접근성·모션·메타데이터 규칙을 1~3 개만 고르기 → `ui-skills-root`(규칙 12),
+  바뀐 화면을 실제로 띄워 확인 → 규칙 13
 - AG Grid/AG Charts 코드를 쓰거나 고치기 **전에** → `ag-dev`, 버전 올릴 때 → `ag-update`
 - TradingView lightweight-charts 작업 → `lightweight-charts`
 

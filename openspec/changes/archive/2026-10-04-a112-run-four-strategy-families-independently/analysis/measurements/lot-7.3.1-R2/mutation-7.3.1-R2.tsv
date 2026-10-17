@@ -1,0 +1,9 @@
+TREE	HEAD 0b441270e90ed2c034a288087e71a061b1b9bae6 (git archive) + own: internal/app/engine/a112_shadow_absent_restart_test.go
+CONTROL	GREEN	[./internal/app/engine pass events 2]
+S1 a SHADOW runtime state is added to the router vocabulary	CAUGHT	1 failing: TestTheRuntimeVocabularyIsExactlyUnobservedUntilAShadowLotExtendsIt
+S2 a SHADOW lane runtime is added to the projection vocabulary	CAUGHT	1 failing: TestTheRuntimeVocabularyIsExactlyUnobservedUntilAShadowLotExtendsIt
+S3 an unobserved lane (fresh process) projects desired ON	CAUGHT	1 failing: TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten
+S4 the projection reports a lane as observed before its first wave (a fresh process inherits nothing, but would show observation fields)	BUILD-FAIL	0 failing:  | internal/app/engine/strategy_lane_projection.go:39:16: declared and not used: seen
+RERUN	S4 redefined (first definition BUILD-FAIL: unused variable) — same HEAD, own control below
+CONTROL	GREEN	[./internal/app/engine pass events 2]
+S4 the projection reports a lane as observed before its first wave (a fresh process inherits nothing, but would show observation fields)	CAUGHT	1 failing: TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten

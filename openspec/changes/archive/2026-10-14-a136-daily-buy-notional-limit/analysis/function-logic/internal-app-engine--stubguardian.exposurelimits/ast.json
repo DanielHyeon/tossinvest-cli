@@ -1,0 +1,31 @@
+{
+  "file": "internal/app/engine/interlock_test.go",
+  "source_sha256": "2e2a9003a0f81835a71425f338b66caf923e6f3ebe6d365e5a331f4de3accf6f",
+  "package": "engine_test",
+  "function": "ExposureLimits",
+  "receiver": "stubGuardian",
+  "signature": "stubGuardian.ExposureLimits(params=0, results=1)",
+  "start": {
+    "line": 49,
+    "column": 1
+  },
+  "end": {
+    "line": 49,
+    "column": 73
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 49,
+        "column": 56
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

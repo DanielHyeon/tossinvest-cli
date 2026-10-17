@@ -1,0 +1,231 @@
+{
+  "file": "internal/app/engine/strategy_proposal_authority.go",
+  "source_sha256": "a349829128400c6ae6845aa49d271b318d582b0151532d2fcbd62515debfffbf",
+  "package": "engine",
+  "function": "ResultAuthority",
+  "receiver": "strategyProposalAuthorityPair",
+  "signature": "strategyProposalAuthorityPair.ResultAuthority(params=0, results=1)",
+  "start": {
+    "line": 181,
+    "column": 1
+  },
+  "end": {
+    "line": 209,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 192,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 194,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 199,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 203,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 195,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 200,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 206,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 208,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 15
+      },
+      "text": "value.dispatchHandoffs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 14
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 45
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 25
+      },
+      "text": "handoff.Single"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 22
+      },
+      "text": "result.ValidProposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 14
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 26
+      },
+      "text": "Verified"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 26
+      },
+      "text": "value.familyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 70
+      },
+      "text": "convert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 110
+      },
+      "text": "convert"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 182,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 190,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 191,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 193,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 197,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 202,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 204,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

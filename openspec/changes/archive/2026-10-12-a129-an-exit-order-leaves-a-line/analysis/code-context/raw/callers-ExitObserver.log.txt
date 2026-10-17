@@ -1,0 +1,9 @@
+
+Callers of "ExitObserver.log" (2):
+
+method      settleUnobserved
+  internal/app/engine/exit_unobserved.go:139
+
+method      logUnobservedFailure
+  internal/app/engine/exit_unobserved.go:322
+

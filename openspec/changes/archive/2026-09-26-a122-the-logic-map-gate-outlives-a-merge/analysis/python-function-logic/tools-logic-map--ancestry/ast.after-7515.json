@@ -1,0 +1,57 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/execution_baseline.py",
+  "revision": "worktree",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "22ea8c60964f35dc526e8b79a1cbcd125de8ff81d45d9f77c0ea198f27f81592",
+  "function": "ancestry",
+  "signature": "ancestry(root, older, newer)",
+  "start": {
+    "line": 93,
+    "column": 1
+  },
+  "end": {
+    "line": 98,
+    "column": 66
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "BoolOp",
+      "line": 97,
+      "inherited_line": false,
+      "source": "result.returncode or (strict and older == newer)"
+    },
+    {
+      "id": "B2",
+      "kind": "BoolOp",
+      "line": 97,
+      "inherited_line": false,
+      "source": "strict and older == newer"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 97,
+      "inherited_line": false,
+      "source": "if result.returncode or (strict and older == newer):"
+    }
+  ],
+  "returns": [],
+  "raises": [
+    {
+      "line": 98,
+      "source": "raise AdoptionError('required commit ancestry is absent')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 95,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 98,
+      "callee": "AdoptionError"
+    }
+  ]
+}

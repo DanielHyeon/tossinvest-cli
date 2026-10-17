@@ -1,0 +1,8 @@
+Go test: 0 passed, 1 failed in 1 packages
+═══════════════════════════════════════
+
+engine [build failed]
+  internal/app/engine/a137_daily_loss_cycle_test.go:174:41: undefined: execgw.DailyLossUnmeasurable
+  internal/app/engine/a137_daily_loss_cycle_test.go:178:27: undefined: execgw.DailyLossUnmeasurable
+  internal/app/engine/a137_daily_loss_cycle_test.go:179:21: undefined: StrategyFirstLegDailyLossUnmeasurable
+  internal/app/engine/a137_lane_kinds_test.go:80:28: undefined: execgw.DailyLossUnmeasurable

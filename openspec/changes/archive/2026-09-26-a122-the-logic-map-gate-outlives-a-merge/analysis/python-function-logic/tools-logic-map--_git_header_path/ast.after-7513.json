@@ -1,0 +1,101 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "26e5bb3f825e148516ca5c15b1e035f511044b9b",
+  "source_sha256": "c9a58a69af033eaae558b1b81b65299a08bbffe6aa67e90d9f1928d4452f10e9",
+  "function": "_git_header_path",
+  "signature": "_git_header_path(path)",
+  "start": {
+    "line": 468,
+    "column": 1
+  },
+  "end": {
+    "line": 487,
+    "column": 40
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "BoolOp",
+      "line": 477,
+      "inherited_line": false,
+      "source": "byte < 32 or byte in (34, 92, 127)"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 477,
+      "inherited_line": false,
+      "source": "if not any((byte < 32 or byte in (34, 92, 127) for byte in raw)):"
+    },
+    {
+      "id": "B3",
+      "kind": "comprehension",
+      "line": 477,
+      "inherited_line": true,
+      "source": " for byte in raw"
+    },
+    {
+      "id": "B4",
+      "kind": "For",
+      "line": 480,
+      "inherited_line": false,
+      "source": "for byte in raw:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 481,
+      "inherited_line": false,
+      "source": "if byte in _C_LETTER:"
+    },
+    {
+      "id": "B6",
+      "kind": "BoolOp",
+      "line": 483,
+      "inherited_line": false,
+      "source": "byte < 32 or byte == 127"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 483,
+      "inherited_line": false,
+      "source": "if byte < 32 or byte == 127:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 478,
+      "value": "path"
+    },
+    {
+      "line": 487,
+      "value": "(out + b'\"').decode('utf-8')"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 476,
+      "callee": "path.encode"
+    },
+    {
+      "line": 477,
+      "callee": "any"
+    },
+    {
+      "line": 479,
+      "callee": "bytearray"
+    },
+    {
+      "line": 486,
+      "callee": "out.append"
+    },
+    {
+      "line": 487,
+      "callee": "(out + b'\"').decode"
+    }
+  ]
+}

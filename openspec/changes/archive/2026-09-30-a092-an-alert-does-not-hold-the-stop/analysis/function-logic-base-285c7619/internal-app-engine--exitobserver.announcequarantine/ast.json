@@ -1,0 +1,102 @@
+{
+  "file": "internal/app/engine/exit_quarantine_announce.go",
+  "source_sha256": "69734107d4f6e87e0e5b9b722b6442315fde8f1fc20718c4d9f290c7b57b4c22",
+  "package": "engine",
+  "function": "announceQuarantine",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.announceQuarantine(params=3, results=0)",
+  "start": {
+    "line": 59,
+    "column": 1
+  },
+  "end": {
+    "line": 90,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 68,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 9
+      },
+      "text": "quarantineAnnouncementKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 2
+      },
+      "text": "o.alert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 10
+      },
+      "text": "o.label"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 64,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

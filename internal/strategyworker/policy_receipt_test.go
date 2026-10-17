@@ -394,15 +394,25 @@ func TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter(t *testi
 	// `latchMarket` 에 닿는다. 참인 것은 더 좁다: 삼킴 **갈래**(`runMarket` B12)가
 	// 사이클 오류의 잠금 호출 앞에서 `continue` 로 끊는다는 것, 그리고 그 계약을
 	// TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError 와
-	// TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo 가 못 박는다는 것.
+	// TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning 이 못 박는다는 것(5.6.2.1 부터 중앙 무결성 오류는 삼키지 않고 진입 게이트를 닫는다 — 잠금 판정은 여전히 안 함).
 	//
 	// 그래서 임계값 1 의 유도 — **잠금은 세지 않고 첫 실패에 일어난다** — 는
 	// 그대로다. 그것이 무너지는 날은 삼킨 수가 잠금 판정에 들어가는 날이고, 그때는
 	// 이 목록이 아니라 임계값을 다시 정해야 한다.
+	//
+	// `dailyLossUnmeasurable`·`firstDailyLossCause`·`dailyLossNoticeDay` 는 a137(재리뷰 P1-N1)이 더했고 역시 **임계값을 건드리지
+	// 않는다**: 쓰는 곳은 `recordDailyLossUnmeasurable` 하나(a137_daily_loss_notice.go), 읽는 곳은 `Snapshot` 하나와 같은 함수의
+	// 일 키 비교뿐이며 `latchMarket` 은 셋 중 어느 것도 보지 않는다. 세는 것은 실패가 아니라 측정 불가로 조용히 끝난 주기(정책 결과)다.
+	//
+	// `guardianCapZeroSkips`·`firstGuardianCapZeroSkip`·`entrySkipNoticeDay`·`entrySkipNoticed` 는 a146 이 더했고 역시 **임계값을 건드리지
+	// 않는다**: 쓰는 곳은 `recordGuardianCapZeroSkip` 하나(a146_entry_skip.go), 읽는 곳은 `Snapshot`(앞 둘)과 같은 함수의 일 키 · 종목
+	// 비교(뒤 둘)뿐이며 `latchMarket` 은 넷 중 어느 것도 보지 않는다. 세는 것은 실패가 아니라 Guardian 상한 0 으로 건너뛴 진입(정책 결과)이다.
 	want := []string{
 		"descriptor", "queue", "effective", "latched", "firstFailure", "firstRefusal",
 		"firstAbnormal", "latchID", "latchRevision", "abandoned", "restartAttempt", "restartNotBefore",
 		"swallowedCount", "firstSwallowed",
+		"dailyLossUnmeasurable", "firstDailyLossCause", "dailyLossNoticeDay",
+		"guardianCapZeroSkips", "firstGuardianCapZeroSkip", "entrySkipNoticeDay", "entrySkipNoticed",
 	}
 	if strings.Join(fields, ",") != strings.Join(want, ",") {
 		t.Fatalf("the engine's per-market runtime state changed.\n got: %v\nwant: %v\n\n"+

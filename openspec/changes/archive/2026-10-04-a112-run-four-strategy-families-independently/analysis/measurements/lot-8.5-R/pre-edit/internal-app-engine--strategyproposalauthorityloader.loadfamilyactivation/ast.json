@@ -1,0 +1,148 @@
+{
+  "file": "internal/app/engine/strategy_family_activation.go",
+  "source_sha256": "230cc4c84bc3ff2bec2b98caaed10cdec7fd18e46181e3ce995899bbb0ee3492",
+  "package": "engine",
+  "function": "loadFamilyActivation",
+  "receiver": "strategyProposalAuthorityLoader",
+  "signature": "strategyProposalAuthorityLoader.loadFamilyActivation(params=5, results=2)",
+  "start": {
+    "line": 154,
+    "column": 1
+  },
+  "end": {
+    "line": 190,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 158,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 20
+      },
+      "text": "strategyMarketCalibrationDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 9
+      },
+      "text": "strategyrouter.LoadProductionFamilyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 40
+      },
+      "text": "strategyRouterMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 19
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 37
+      },
+      "text": "loader.getenv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 60
+      },
+      "text": "strategyRuntimeBuildDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 21
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 39
+      },
+      "text": "loader.getenv"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 157,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 159,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 168,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 181,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

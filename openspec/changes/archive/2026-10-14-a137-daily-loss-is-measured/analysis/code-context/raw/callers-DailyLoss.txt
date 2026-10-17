@@ -1,0 +1,21 @@
+
+Callers of "DailyLoss" (6):
+
+function    TestDailyLossIsRealisedAfterCosts
+  internal/riskcalc/riskcalc_test.go:328
+
+function    TestProfitableDayHasNoLoss
+  internal/riskcalc/riskcalc_test.go:349
+
+function    TestGrossPnLWithoutCostsIsRefused
+  internal/riskcalc/riskcalc_test.go:366
+
+function    TestRealizedFromAnotherTradingDayIsRefused
+  internal/riskcalc/riskcalc_test.go:379
+
+function    TestStaleRealizedPnLIsRefused
+  internal/riskcalc/riskcalc_test.go:393
+
+function    TestDailyLossNormalisesCurrency
+  internal/riskcalc/riskcalc_test.go:407
+

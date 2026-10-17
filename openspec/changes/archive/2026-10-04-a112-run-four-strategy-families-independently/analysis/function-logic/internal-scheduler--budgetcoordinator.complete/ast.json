@@ -1,0 +1,39 @@
+{
+  "file": "internal/scheduler/budget.go",
+  "source_sha256": "36879e8856901f349ea2a75856ddc3124520f5bd67b674359dcf854e6e8b6bf8",
+  "package": "scheduler",
+  "function": "Complete",
+  "receiver": "BudgetCoordinator",
+  "signature": "BudgetCoordinator.Complete(params=2, results=1)",
+  "start": {
+    "line": 412,
+    "column": 1
+  },
+  "end": {
+    "line": 414,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 413,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 9
+      },
+      "text": "c.complete"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,200 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "ff590b79db6ed6a8cd7101e47f8df6a9b4841310b5320a398730eadf6a8a02e5",
+  "function": "resolve_referenced_change",
+  "signature": "resolve_referenced_change(root, change)",
+  "start": {
+    "line": 777,
+    "column": 1
+  },
+  "end": {
+    "line": 831,
+    "column": 20
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 798,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 800,
+      "inherited_line": false,
+      "source": "except (FileNotFoundError, NotADirectoryError):"
+    },
+    {
+      "id": "B3",
+      "kind": "For",
+      "line": 803,
+      "inherited_line": false,
+      "source": "for name in names:"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 804,
+      "inherited_line": false,
+      "source": "if _archived_change_id(name) != change:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 807,
+      "inherited_line": false,
+      "source": "if not kind:"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 810,
+      "inherited_line": false,
+      "source": "if kind == 'dir':"
+    },
+    {
+      "id": "B7",
+      "kind": "IfExp",
+      "line": 812,
+      "inherited_line": false,
+      "source": "[direct] if open_here else []"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 813,
+      "inherited_line": false,
+      "source": "if not found:"
+    },
+    {
+      "id": "B9",
+      "kind": "BoolOp",
+      "line": 817,
+      "inherited_line": false,
+      "source": "open_here and archived"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 817,
+      "inherited_line": false,
+      "source": "if open_here and archived:"
+    },
+    {
+      "id": "B11",
+      "kind": "comprehension",
+      "line": 823,
+      "inherited_line": true,
+      "source": " for path in found"
+    },
+    {
+      "id": "B12",
+      "kind": "If",
+      "line": 825,
+      "inherited_line": false,
+      "source": "if len(archived) > 1:"
+    },
+    {
+      "id": "B13",
+      "kind": "comprehension",
+      "line": 829,
+      "inherited_line": true,
+      "source": " for path in archived"
+    }
+  ],
+  "returns": [
+    {
+      "line": 831,
+      "value": "found[0]"
+    }
+  ],
+  "raises": [
+    {
+      "line": 809,
+      "source": "raise UnstatableEntry(errno.EIO, f'cannot tell what `{name}` is', str(archive / name))"
+    },
+    {
+      "line": 816,
+      "source": "raise ValueError(f'change is neither open nor archived: {change}')"
+    },
+    {
+      "line": 821,
+      "source": "raise ValueError(f'{change} is open and archived at once: ' + ', '.join((path.relative_to(root).as_posix() for path in found)))"
+    },
+    {
+      "line": 827,
+      "source": "raise ValueError(f'archive holds {len(archived)} copies of {change}: ' + ', '.join((path.name for path in archived)))"
+    }
+  ],
+  "calls": [
+    {
+      "line": 794,
+      "callee": "_kind"
+    },
+    {
+      "line": 799,
+      "callee": "_named"
+    },
+    {
+      "line": 804,
+      "callee": "_archived_change_id"
+    },
+    {
+      "line": 806,
+      "callee": "_kind"
+    },
+    {
+      "line": 809,
+      "callee": "UnstatableEntry"
+    },
+    {
+      "line": 809,
+      "callee": "str"
+    },
+    {
+      "line": 811,
+      "callee": "archived.append"
+    },
+    {
+      "line": 816,
+      "callee": "ValueError"
+    },
+    {
+      "line": 821,
+      "callee": "ValueError"
+    },
+    {
+      "line": 823,
+      "callee": "', '.join"
+    },
+    {
+      "line": 823,
+      "callee": "path.relative_to"
+    },
+    {
+      "line": 823,
+      "callee": "path.relative_to(root).as_posix"
+    },
+    {
+      "line": 825,
+      "callee": "len"
+    },
+    {
+      "line": 827,
+      "callee": "ValueError"
+    },
+    {
+      "line": 828,
+      "callee": "len"
+    },
+    {
+      "line": 829,
+      "callee": "', '.join"
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "file": "internal/app/engine/auxiliary.go",
+  "source_sha256": "10cfb2178fc639723929d2f233e2f812ea66cba8edc4380f20ffd3fa84c849d6",
+  "package": "engine",
+  "function": "runAuxiliary",
+  "receiver": "Runtime",
+  "signature": "Runtime.runAuxiliary(params=2, results=0)",
+  "start": {
+    "line": 87,
+    "column": 1
+  },
+  "end": {
+    "line": 114,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 97,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 111,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 9
+      },
+      "text": "runAuxiliaryBody"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 5
+      },
+      "text": "r.gracefulStop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 2
+      },
+      "text": "r.log"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 20
+      },
+      "text": "describe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 2
+      },
+      "text": "aux.OnStop"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

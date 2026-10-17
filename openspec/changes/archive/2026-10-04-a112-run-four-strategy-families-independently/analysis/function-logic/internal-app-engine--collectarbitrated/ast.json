@@ -1,0 +1,124 @@
+{
+  "file": "internal/app/engine/a112_arbitration_test.go",
+  "source_sha256": "44c3a7a4270c2c5b5e965da58dadff94b51df649d3aaf90d786141b1b189bb78",
+  "package": "engine",
+  "function": "collectArbitrated",
+  "signature": "collectArbitrated(params=5, results=1)",
+  "start": {
+    "line": 146,
+    "column": 1
+  },
+  "end": {
+    "line": 156,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 152,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 12
+      },
+      "text": "testStrategyProposalLoader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 10
+      },
+      "text": "arbitrationBatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 9
+      },
+      "text": "a112PairOnly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 22
+      },
+      "text": "loader.collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 37
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 59
+      },
+      "text": "routeReadySchedulePair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 3
+      },
+      "text": "arbitrationRoutePair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 69
+      },
+      "text": "proposalFXPair"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 151,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

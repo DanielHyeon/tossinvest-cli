@@ -1,0 +1,23 @@
+bash tools/gate.sh a125-the-a063-exception-retires
+GATE: a125-the-a063-exception-retires
+repo: /mnt/D/Axipient/workspace/TossOS-worktrees/a125-gate
+
+==> 1/11 tasks.md 확인
+OK: openspec/changes/a125-the-a063-exception-retires/tasks.md
+
+==> 2/11 미완료 태스크 확인
+OK: 미완료 태스크 0건
+
+==> 3/11 짝 change 확인 (deploy-pair.txt)
+OK: 짝 선언 없음 — 이 change 는 혼자 배포한다
+
+==> 4/11 gstack 리뷰 기록 확인
+OK: openspec/changes/a125-the-a063-exception-retires/review.md
+
+==> 5/11 Function Logic Map 증거 확인
+[logic-map] a125-the-a063-exception-retires: base c2eec6279cb8 → working tree (no landed-commit.txt in HEAD) required 9 function(s) — judged at HEAD 6baafd5cbdc7
+[logic-map] a125-the-a063-exception-retires: the target is the working tree, so this window also holds 56 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: no landing recorded — no `revision: current` evidence pins a landing for this change
+[logic-map] missing Function Logic Map for 9 function(s) modified between base c2eec6279cb8 and working tree (no landed-commit.txt in HEAD): cmd/tossctl/engine.go:newEngineCmd, cmd/tossctl/help_convention_test.go:TestMutatingAnnotationOnTradeCommands, internal/app/engine/position_policy_command.go:NewPositionPolicyCommandService, internal/app/engine/position_policy_transport.go:StartPositionPolicyCommandServer, internal/journal/readonly_test.go:TestTheReadOnlyHandleHasNoWriteMethods, internal/journal/risk_bucket_entry_loss_lock.go:Journal.ActivateEntryLossLock, internal/journal/risk_bucket_entry_loss_lock.go:activeEntryLossLock, internal/journal/risk_bucket_entry_loss_lock_test.go:TestMigrationV32ToV33StartsWithNoEntryLossLock, internal/journal/schema_test.go:TestSchemaTablesAndColumns
+
+GATE FAIL: a125-the-a063-exception-retires — Function Logic Map 산출물 미완료
+make: *** [Makefile:169: gate] Error 1

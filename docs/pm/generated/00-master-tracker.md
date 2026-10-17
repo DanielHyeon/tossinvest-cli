@@ -4,14 +4,16 @@
 - EPIC-TOS-001 — Full SDD adoption [active]
   - FEAT-TOS-001 — StockOS SDD toolchain adaptation [active]
     - STORY-TOS-001 — Adopt the full StockOS SDD workflow in TossOS [archived] → `adopt-stockos-full-sdd`
-    - STORY-TOS-002 — Align TossOS Full SDD and enforce Story-to-OpenSpec one-to-one [in_progress] → `align-full-sdd-pm-contract`
+    - STORY-TOS-002 — Align TossOS Full SDD and enforce Story-to-OpenSpec one-to-one [archived] → `align-full-sdd-pm-contract`
     - STORY-TOS-a040 — Adopt StockOS OpenSpec numbering and Story mapping [archived] → `a040-adopt-stockos-openspec-naming`
     - STORY-TOS-a116 — Codex saves its own session context [archived] → `a116-install-codex-session-save-hook`
     - STORY-TOS-a118 — A sealed test still runs [archived] → `a118-a-sealed-test-still-runs`
-    - STORY-TOS-a119 — Codex keeps its handoff fresh and starts GBrain once [in_progress] → `a119-codex-session-handoff-and-gbrain-startup`
+    - STORY-TOS-a119 — Codex keeps its handoff fresh and starts GBrain once [archived] → `a119-codex-session-handoff-and-gbrain-startup`
     - STORY-TOS-a120 — Audit legacy execution-baseline adoption [archived] → `a120-audit-legacy-execution-baseline`
-    - STORY-TOS-a121 — Reconcile stale verification artifacts from authoritative reads [in_progress] → `a121-reconcile-stale-verification-artifacts`
-    - STORY-TOS-a122 — Keep the Function Logic Map gate answerable after a merge [in_progress] → `a122-the-logic-map-gate-outlives-a-merge`
+    - STORY-TOS-a121 — Reconcile stale verification artifacts from authoritative reads [archived] → `a121-reconcile-stale-verification-artifacts`
+    - STORY-TOS-a122 — Keep the Function Logic Map gate answerable after a merge [archived] → `a122-the-logic-map-gate-outlives-a-merge`
+    - STORY-TOS-a123 — An empty window is derived, not declared [archived] → `a123-an-empty-window-is-derived-not-declared`
+    - STORY-TOS-a125 — a063 is judged against its own base like every change [archived] → `a125-the-a063-exception-retires`
 - EPIC-TOS-005 — Secure delivery and engineering operations [active]
   - FEAT-TOS-007 — Secure remote access and signed releases [active]
     - STORY-TOS-031 — Enable trusted-network VPN console access [archived] → `enable-vpn-console-access`
@@ -48,10 +50,17 @@
     - STORY-TOS-a059 — Let the console find exactly the engine it owns [archived] → `a059-console-finds-the-engine-it-owns`
     - STORY-TOS-a100 — Holdings leave a stop at the broker [in_progress] → `a100-wire-fill-to-broker-protection`
     - STORY-TOS-a102 — Boot does not starve the engine [archived] → `a102-boot-does-not-starve-the-engine`
+    - STORY-TOS-a105 — Protection supervision goes Wired [in_progress] → `a105-protection-supervision-goes-wired`
     - STORY-TOS-a107 — Retire the second protection core [in_progress] → `a107-retire-the-second-protection-core`
     - STORY-TOS-a108 — Boot recovers from any leftover [archived] → `a108-boot-recovers-from-any-leftover`
     - STORY-TOS-a109 — The sibling endpoints recover too [archived] → `a109-the-sibling-endpoints-recover-too`
-    - STORY-TOS-a113 — The projection probe proves death [in_progress] → `a113-the-projection-probe-proves-death`
+    - STORY-TOS-a113 — The projection probe proves death [archived] → `a113-the-projection-probe-proves-death`
+    - STORY-TOS-a136 — A day's buying has a ceiling [archived] → `a136-daily-buy-notional-limit`
+    - STORY-TOS-a137 — The daily-loss limit is measured from the journal [archived] → `a137-daily-loss-is-measured`
+    - STORY-TOS-a138 — The account holds at most a configured number of positions [archived] → `a138-max-open-positions`
+    - STORY-TOS-a139 — One trade risks a third of the day's loss allowance [archived] → `a139-per-trade-risk-budget`
+    - STORY-TOS-a144 — Trigger verification does not require a TTL-edge measurement [archived] → `a144-separate-trigger-ttl-prerequisite`
+    - STORY-TOS-a146 — A strategy entry the Guardian cannot size even one unit for is skipped, not treated as a lane fault [archived] → `a146-guardian-cap-zero-skips-the-entry`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [archived] → `console-click-approval`
@@ -69,15 +78,16 @@
     - STORY-TOS-a060 — Make the console's soak restart use the profile the console is on [archived] → `a060-soak-restart-uses-this-profile`
     - STORY-TOS-a061 — Show instrument codes and names together in trade history [archived] → `a061-show-history-instrument-names`
     - STORY-TOS-a063 — Renew capability attestation from the console profile [in_progress] → `a063-align-attestation-renewal-profile`
-    - STORY-TOS-a077 — Make the trading screens show the protection line and the stock name they already hold [in_progress] → `a077-screens-show-what-they-already-know`
+    - STORY-TOS-a077 — Make the trading screens show the protection line and the stock name they already hold [archived] → `a077-screens-show-what-they-already-know`
     - STORY-TOS-a075 — Turn critical alert delivery on with one button, with no hand-edited config and no token to paste [archived] → `a075-alerts-turn-on-with-one-button`
     - STORY-TOS-a076 — Move the subscribe address to a phone by scanning it instead of typing it [archived] → `a076-the-subscribe-address-is-scannable`
     - STORY-TOS-a080 — Refresh the protection line on the engine's cadence instead of the broker cache TTL [archived] → `a080-line-refreshes-on-engine-cadence`
     - STORY-TOS-a081 — Let the trading screens share one reading of the engine instead of asking it per render [archived] → `a081-screens-share-one-engine-reading`
     - STORY-TOS-a085 — Say which stock, in Korean, in the alert and on the position screen [archived] → `a085-an-alert-says-which-stock`
     - STORY-TOS-a101 — The capability survey outlives a deploy [archived] → `a101-the-soak-outlives-a-deploy`
-    - STORY-TOS-a114 — The console reattaches its lifecycle [in_progress] → `a114-the-console-reattaches-its-lifecycle`
-    - STORY-TOS-a115 — The console strategy screen reattaches [in_progress] → `a115-the-console-strategy-screen-reattaches`
+    - STORY-TOS-a114 — The console reattaches its lifecycle [archived] → `a114-the-console-reattaches-its-lifecycle`
+    - STORY-TOS-a115 — The console strategy screen reattaches [archived] → `a115-the-console-strategy-screen-reattaches`
+    - STORY-TOS-a154 — 검증된 손절 정책 사용자 선택 [in_progress] → `a154-preview-validated-stop-policy-options`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [archived] → `add-common-exit-optimization`
@@ -85,6 +95,7 @@
     - STORY-TOS-a062 — Keep external orders out of engine-owned reconciliation [archived] → `a062-reconcile-owned-orders`
     - STORY-TOS-a083 — Let a reconciliation quantity block release itself after the adjustment it earned [archived] → `a083-a-block-releases-itself`
     - STORY-TOS-a110 — Only the same unresolved reconciliation dispute becomes permanent [archived] → `a110-only-the-same-dispute-becomes-permanent`
+    - STORY-TOS-a130 — An adopted trade whose quantity grew after adoption still freezes its outcome [archived] → `a130-an-adopted-trade-keeps-its-outcome`
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
     - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [archived] → `a041-complete-exit-line-contract`
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [archived] → `a042-persist-exit-line-snapshots`
@@ -93,24 +104,35 @@
     - STORY-TOS-a052 — Explain reconcile-blocked position adoption [archived] → `a052-reconcile-aware-position-management`
     - STORY-TOS-a053 — Restore visible exit-line references across markets [archived] → `a053-restore-visible-exit-line-references`
     - STORY-TOS-a078 — Stop quarantining a ladder position for activating its first rung [archived] → `a078-first-rung-keeps-its-judgement`
-    - STORY-TOS-a079 — Let an operator lift an exit-snapshot quarantine without rebuilding the baseline [in_progress] → `a079-operator-can-lift-a-quarantine`
+    - STORY-TOS-a079 — Let an operator lift an exit-snapshot quarantine without rebuilding the baseline [archived] → `a079-operator-can-lift-a-quarantine`
     - STORY-TOS-a074 — Make the moment protection stops visible, and let critical alerts actually leave the machine [in_progress] → `a074-critical-events-reach-the-operator`
     - STORY-TOS-a084 — Re-judge a quarantine once when the recovery selector that made it has changed [archived] → `a084-a-quarantine-outlives-its-cause`
     - STORY-TOS-a087 — A protective exit is a market order, not a limit order [in_progress] → `a087-a-protective-exit-is-a-market-order`
-    - STORY-TOS-a089 — An unserved stop is counted, recorded and visible [in_progress] → `a089-an-unserved-stop-is-counted`
-    - STORY-TOS-a091 — A stop that sold nothing is critical [in_progress] → `a091-a-stop-that-sold-nothing-is-critical`
-    - STORY-TOS-a092 — An alert does not hold the stop [in_progress] → `a092-an-alert-does-not-hold-the-stop`
-    - STORY-TOS-a094 — A stop clears what blocks it [in_progress] → `a094-a-stop-clears-what-blocks-it`
-    - STORY-TOS-a095 — A stop must know what it covers [in_progress] → `a095-a-stop-must-know-what-it-covers`
+    - STORY-TOS-a089 — An unserved stop is counted, recorded and visible [archived] → `a089-an-unserved-stop-is-counted`
+    - STORY-TOS-a091 — A stop that sold nothing is critical [archived] → `a091-a-stop-that-sold-nothing-is-critical`
+    - STORY-TOS-a092 — An alert does not hold the stop [archived] → `a092-an-alert-does-not-hold-the-stop`
+    - STORY-TOS-a094 — A stop clears what blocks it [archived] → `a094-a-stop-clears-what-blocks-it`
+    - STORY-TOS-a095 — A stop must know what it covers [archived] → `a095-a-stop-must-know-what-it-covers`
     - STORY-TOS-a096 — One condition is one alert [archived] → `a096-one-condition-is-one-alert`
     - STORY-TOS-a097 — A re-armed alert is a new episode [archived] → `a097-a-re-armed-alert-is-a-new-episode`
     - STORY-TOS-a098 — Nobody sends what the outbox keeps [archived] → `a098-nobody-sends-what-the-outbox-keeps`
-    - STORY-TOS-a099 — A claim excludes the second sender [in_progress] → `a099-a-claim-excludes-the-second-sender`
+    - STORY-TOS-a099 — A claim excludes the second sender [archived] → `a099-a-claim-excludes-the-second-sender`
     - STORY-TOS-a111 — Exit lines stay actionable with flat quotes [archived] → `a111-exit-lines-stay-actionable-with-flat-quotes`
+    - STORY-TOS-a124 — A deliverer that keeps failing blocks entry [archived] → `a124-a-deliverer-that-keeps-failing-blocks-entry`
+    - STORY-TOS-a090 — An unobserved position is counted and made known [archived] → `a090-an-unobserved-position-is-counted`
+    - STORY-TOS-a129 — An exit order the engine places leaves a line in the engine log [archived] → `a129-an-exit-order-leaves-a-line`
+    - STORY-TOS-a131 — No log or record file the system writes carries account information [archived] → `a131-no-account-in-any-log`
+    - STORY-TOS-a133 — No alert that leaves the system carries account information [archived] → `a133-an-alert-carries-no-account`
+    - STORY-TOS-a134 — A dead engine is noticed from outside the engine [archived] → `a134-a-dead-engine-is-noticed`
+    - STORY-TOS-a135 — Capability attestation expiry and scope loss are announced before a restart [archived] → `a135-attestation-expiry-is-announced`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`
     - STORY-TOS-CONTAINER-MODE — Pin the container entrypoint executable mode [archived] → `fix-container-entrypoint-permission`
+  - FEAT-TOS-014 — Upstream correctness and API compatibility [active]
+    - STORY-TOS-a141 — MCP honors backend policy and preserves exact JSON numbers [archived] → `a141-mcp-respects-backend-and-exact-numbers`
+    - STORY-TOS-a142 — WTS order lists fail closed and watchlists use dedicated reads [archived] → `a142-wts-read-contracts-fail-closed`
+    - STORY-TOS-a143 — Official chart reads and public API snapshots remain compatible [archived] → `a143-official-read-compatibility`
 - EPIC-TOS-004 — Candidate discovery and entry quality [active]
   - FEAT-TOS-006 — Candidate discovery and signal refinement [active]
     - STORY-TOS-027 — Add candidate discovery [archived] → `add-candidate-discovery`
@@ -118,22 +140,36 @@
     - STORY-TOS-029 — Retire the gainers candidate source [archived] → `retire-gainers-source`
     - STORY-TOS-030 — Refine extended-shadow bands [archived] → `refine-extended-shadow-bands`
     - STORY-TOS-a046 — Approve evidence-backed candidate veto thresholds [archived] → `a046-approve-candidate-veto-thresholds`
+    - STORY-TOS-a128 — Jev semantic judgments earn a calibration receipt before any wiring [in_progress] → `a128-jev-shadow-judgment-probe`
+    - STORY-TOS-a145 — Evaluate Jev input quality and a separate J2 question revision offline [archived] → `a145-separate-jev-input-quality-and-j2-evaluation`
+    - STORY-TOS-a147 — Validate Jev MFI trend on separately registered shadow sessions [archived] → `a147-validate-jev-mfi-trend`
+    - STORY-TOS-a152 — Volume Profile 데이터 적합성 평가 [in_progress] → `a152-qualify-volume-profile-evidence`
   - FEAT-TOS-010 — Strategy entry and market-aware scheduling [active]
     - STORY-TOS-a047 — Add the strategy entry engine [archived] → `a047-add-strategy-engine`
     - STORY-TOS-a048 — Add market-aware strategy scheduling [archived] → `a048-add-market-aware-scheduler`
     - STORY-TOS-a117 — The minute timestamp is the bar's close [archived] → `a117-the-minute-timestamp-is-the-bars-close`
+    - STORY-TOS-a148 — Parker RR 계약 분리 [in_progress] → `a148-clarify-parker-risk-reward-contract`
+    - STORY-TOS-a149 — 세션 VWAP와 확정봉 EMA9 계산 [in_progress] → `a149-compute-session-vwap-and-ema9`
   - FEAT-TOS-011 — Lane performance and strategy optimization [active]
     - STORY-TOS-a049 — Add deterministic lane performance attribution [archived] → `a049-add-lane-performance`
     - STORY-TOS-a050 — Add versioned strategy optimization lifecycle [archived] → `a050-add-strategy-optimization`
+    - STORY-TOS-a151 — 손절 정책 오프라인 비교 [in_progress] → `a151-compare-stop-policies-offline`
+    - STORY-TOS-a153 — 비용 반영 통합 비교 실험 [in_progress] → `a153-evaluate-cost-aware-strategy-variants`
   - FEAT-TOS-013 — Concurrent KR and US multi-horizon strategy lanes [active]
     - STORY-TOS-a064 — Establish authoritative KR and US strategy evidence [archived] → `a064-add-multi-market-strategy-evidence`
     - STORY-TOS-a065 — Add the strategy-neutral position campaign and leg core [archived] → `a065-add-position-campaign-leg-core`
-    - STORY-TOS-a066 — Cap multi-horizon risk and enforce single-lane ownership [in_progress] → `a066-add-multi-horizon-risk-buckets`
-    - STORY-TOS-a067 — Add concurrent KR and US short continuation lanes [in_progress] → `a067-add-kr-us-continuation-lanes`
-    - STORY-TOS-a068 — Add concurrent KR and US short reversal lanes [in_progress] → `a068-add-kr-us-reversal-lanes`
+    - STORY-TOS-a066 — Cap multi-horizon risk and enforce single-lane ownership [archived] → `a066-add-multi-horizon-risk-buckets`
+    - STORY-TOS-a067 — Add concurrent KR and US short continuation lanes [archived] → `a067-add-kr-us-continuation-lanes`
+    - STORY-TOS-a068 — Add concurrent KR and US short reversal lanes [archived] → `a068-add-kr-us-reversal-lanes`
     - STORY-TOS-a069 — Add concurrent KR and US weekly value repricing lanes [archived] → `a069-add-kr-us-weekly-value-lanes`
-    - STORY-TOS-a070 — Route candidates across markets, horizons and owning lanes [in_progress] → `a070-add-multi-market-horizon-router`
-    - STORY-TOS-a071 — Wire attested broker protection for KR and US entry [in_progress] → `a071-wire-kr-us-protection-readiness`
+    - STORY-TOS-a070 — Route candidates across markets, horizons and owning lanes [archived] → `a070-add-multi-market-horizon-router`
+    - STORY-TOS-a071 — Wire attested broker protection for KR and US entry [archived] → `a071-wire-kr-us-protection-readiness`
     - STORY-TOS-a072 — Wire the supervised KR and US strategy entry runtime [archived] → `a072-wire-multi-market-strategy-runtime`
     - STORY-TOS-a073 — Operate and deploy the concurrent KR and US lanes [archived] → `a073-operate-multi-market-strategy-lanes`
-    - STORY-TOS-a112 — Run four strategy families as independent evaluators [in_progress] → `a112-run-four-strategy-families-independently`
+    - STORY-TOS-a112 — Run four strategy families as independent evaluators [archived] → `a112-run-four-strategy-families-independently`
+    - STORY-TOS-a126 — Filled exposure leaves the bucket when its position does [archived] → `a126-filled-exposure-leaves-the-bucket`
+    - STORY-TOS-a127 — Strategy authorities read the ledger the engine opened [archived] → `a127-strategy-authorities-read-the-current-ledger`
+    - STORY-TOS-a140 — Breakout signals are measured in shadow before any entry wiring [in_progress] → `a140-breakout-signals-are-measured-in-shadow`
+    - STORY-TOS-a150 — 전략별 초기 손절 수량 원장 청산 일관성 [in_progress] → `a150-bind-strategy-stop-sizing-and-exit`
+    - STORY-TOS-a155 — 버전 전략 관측 전용 연결 [in_progress] → `a155-observe-versioned-strategy-decisions`
+    - STORY-TOS-a156 — 실거래 연결과 후속 진입 마감 복구 승인 [in_progress] → `a156-gate-live-strategy-policy-rollout`

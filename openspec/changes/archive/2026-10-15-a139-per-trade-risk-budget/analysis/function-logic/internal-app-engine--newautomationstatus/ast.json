@@ -1,0 +1,78 @@
+{
+  "file": "internal/app/engine/interlock.go",
+  "source_sha256": "fc45d99bf61312e64a2dd31bdde9d255020119aef9bf4509bd4ab2ffef342eba",
+  "package": "engine",
+  "function": "newAutomationStatus",
+  "signature": "newAutomationStatus(params=3, results=1)",
+  "start": {
+    "line": 330,
+    "column": 1
+  },
+  "end": {
+    "line": 345,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 333,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
+        "column": 20
+      },
+      "text": "attestationPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 336,
+        "column": 20
+      },
+      "text": "gateLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 338,
+        "column": 21
+      },
+      "text": "boundIfPositive"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 338,
+        "column": 37
+      },
+      "text": "gate.EffectiveMaxDailyBuyNotional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 340,
+        "column": 21
+      },
+      "text": "gate.EffectiveMaxOpenPositions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 342,
+        "column": 23
+      },
+      "text": "perTradeRiskBudgetAudit"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

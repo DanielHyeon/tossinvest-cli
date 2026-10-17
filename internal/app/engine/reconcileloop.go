@@ -166,6 +166,10 @@ type ReconcileDriverOptions struct {
 	// complete configuration: the loop still reconciles and still alerts on
 	// unmanaged holdings.
 	Adoption config.Adoption
+	// NotificationsEnabled 는 로드된 설정의 notifications.enabled 임(a095). 편입 시도 실패를 critical 로 매기는 전제 —
+	// 꺼진 엔진에서는 어떤 무관리 보고도 critical 이 아님(결정 (2)). 전송기 유무로 대신하지 않음(켜짐 + topic 없음도 켜짐).
+	// 생산 조립(Context.ReconcileDriver)이 항상 설정 값으로 덮어씀. 영값은 꺼짐 — 안전 방향.
+	NotificationsEnabled bool
 	// CommonPolicy is snapshotted into each adoption record. Empty means legacy
 	// RATCHET.
 	CommonPolicy string
@@ -225,12 +229,13 @@ type ReconcileDriver struct {
 	// produces the adoption event and not both (design A4).
 	ingest reconcile.Ingestor
 
-	// unmanaged latches the "confirmed outside exit management" alert per
-	// position, so a holding nobody adopts is reported once rather than every
-	// minute for the rest of the day.
-	unmanaged map[string]bool
-	// grown latches the external-increase alert per position.
-	grown map[string]bool
+	// unmanaged latches the *normal* "confirmed outside exit management" alert
+	// per (position, fact), so a holding nobody adopts is reported once rather
+	// than every minute for the rest of the day. 사실(조건 칸)별이라 같은 종목의 다른 사실은 삼키지 않음, critical 은 이
+	// 래치를 거치지 않음(a095). 편입 성공(adoptOne)이 포지션의 모든 칸을 지움.
+	unmanaged map[string]map[string]bool
+	// grown 은 수량 증가 보고의 래치 — 포지션별로 보고한 최대 수량(a095 Q4).
+	grown map[string]string
 
 	// health is the consecutive-failure count the runtime's degradation
 	// supervisor reads (add-engine-runtime, engine-safety 지속 열화 임계).
@@ -323,8 +328,8 @@ func NewReconcileDriver(opts ReconcileDriverOptions) (*ReconcileDriver, error) {
 	d := &ReconcileDriver{
 		opts:      opts,
 		clk:       opts.Clock,
-		unmanaged: map[string]bool{},
-		grown:     map[string]bool{},
+		unmanaged: map[string]map[string]bool{},
+		grown:     map[string]string{},
 	}
 	if d.clk == nil {
 		d.clk = clock.System()
@@ -360,6 +365,8 @@ func (c *Context) ReconcileDriver(opts ReconcileDriverOptions) (*ReconcileDriver
 	opts.Retrier = c.Retrier
 	opts.AccountRef = c.AccountRef
 	opts.Adoption = c.Config.Engine.Adoption
+	// 알림 켜짐은 로드된 설정 값으로만 판정함 — 호출자 값이 아니라(a095). 거부된 알림 블록은 로더가 0 으로 만들어 거짓.
+	opts.NotificationsEnabled = c.Config.Engine.Notifications.Enabled
 	opts.CommonPolicy = c.Config.Engine.ExitPolicy.CommonPolicy
 	if opts.Prices == nil {
 		opts.Prices = c.Official

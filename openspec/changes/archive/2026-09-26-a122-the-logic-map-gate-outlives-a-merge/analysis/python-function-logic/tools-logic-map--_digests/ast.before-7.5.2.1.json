@@ -1,0 +1,58 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "fc35eb2d",
+  "head_commit": "fc35eb2d013dccd0700836f857ad9d3e65bff0dc",
+  "source_sha256": "98845ce2dea180b8ab813180a51e9076ae1f787dea664362a61e8312675b135b",
+  "function": "_digests",
+  "signature": "_digests(reads)",
+  "start": {
+    "line": 613,
+    "column": 1
+  },
+  "end": {
+    "line": 618,
+    "column": 6
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "comprehension",
+      "line": 615,
+      "inherited_line": true,
+      "source": " for path, raw in reads"
+    },
+    {
+      "id": "B2",
+      "kind": "IfExp",
+      "line": 616,
+      "inherited_line": false,
+      "source": "'' if raw is None else hashlib.sha256(raw).hexdigest()"
+    }
+  ],
+  "returns": [
+    {
+      "line": 615,
+      "value": "tuple(((path.as_posix(), '' if raw is None else hashlib.sha256(raw).hexdigest()) for path, raw in reads))"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 615,
+      "callee": "tuple"
+    },
+    {
+      "line": 616,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 616,
+      "callee": "hashlib.sha256(raw).hexdigest"
+    },
+    {
+      "line": 616,
+      "callee": "path.as_posix"
+    }
+  ]
+}

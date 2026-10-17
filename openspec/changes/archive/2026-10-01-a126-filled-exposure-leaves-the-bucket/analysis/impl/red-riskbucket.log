@@ -1,0 +1,14 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket [github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket.test]
+internal/riskbucket/a126_departed_rows_test.go:13:69: unknown field OwnerKeyMatches in struct literal of type productionRiskUsageRow
+internal/riskbucket/a126_departed_rows_test.go:18:6: row.Receipted undefined (type productionRiskUsageRow has no field or method Receipted)
+internal/riskbucket/a126_departed_rows_test.go:18:21: row.DecisionReceipted undefined (type productionRiskUsageRow has no field or method DecisionReceipted)
+internal/riskbucket/a126_departed_rows_test.go:19:6: row.ReceiptReleasedAt undefined (type productionRiskUsageRow has no field or method ReceiptReleasedAt)
+internal/riskbucket/a126_departed_rows_test.go:19:29: row.OwnerReleasedAt undefined (type productionRiskUsageRow has no field or method OwnerReleasedAt)
+internal/riskbucket/a126_departed_rows_test.go:44:6: row.OwnerReleasedAt undefined (type productionRiskUsageRow has no field or method OwnerReleasedAt)
+internal/riskbucket/a126_departed_rows_test.go:54:6: row.ScopeLatched undefined (type productionRiskUsageRow has no field or method ScopeLatched)
+internal/riskbucket/a126_departed_rows_test.go:66:90: r.OwnerReleasedAt undefined (type productionRiskUsageRow has no field or method OwnerReleasedAt)
+internal/riskbucket/a126_departed_rows_test.go:68:6: r.OwnerReleasedAt undefined (type productionRiskUsageRow has no field or method OwnerReleasedAt)
+internal/riskbucket/a126_departed_rows_test.go:71:91: r.OwnerKeyMatches undefined (type productionRiskUsageRow has no field or method OwnerKeyMatches)
+internal/riskbucket/a126_departed_rows_test.go:71:91: too many errors
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket [build failed]
+FAIL

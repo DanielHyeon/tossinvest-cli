@@ -1,0 +1,29 @@
+# HEAD 050d092f06e92102c3603372969b4ad5738c37bc — rtk proxy grep, non-test production references
+## PollClosedBars(
+internal/officialbars/producer.go:169:func PollClosedBars(ctx context.Context, reader CandleReader, store BarStore, in BarPollInput) (BarPollResult, error) {
+## PollQuoteL1(
+internal/officialbars/quote.go:98:func PollQuoteL1(ctx context.Context, reader QuoteReader, store QuoteStore, in QuotePollInput) (QuotePollResult, error) {
+## strategyevidence.Open(
+## strategyevidence.OpenReadOnly(
+internal/strategyproposal/production.go:328:	evidenceStore, err := strategyevidence.OpenReadOnly(ctx, strategyevidence.Options{Path: config.EvidencePath, Clock: marketclock.NewFake(config.ObservedAt)})
+## strategyproposal.LoadProductionAuthorityBatch
+internal/app/engine/strategy_proposal_authority.go:254:		load: strategyproposal.LoadProductionAuthorityBatch}
+## ParkerConservativeLane
+internal/strategyengine/decision.go:17:// grants no authority; only ParkerConservativeLane.Evaluate can mint Decision.
+internal/strategyengine/lane.go:13:type ParkerConservativeLane struct{}
+internal/strategyengine/lane.go:15:func (ParkerConservativeLane) Evaluate(in LaneInput) Evaluation {
+## KindKRNetFlow
+internal/continuationlane/production_proposal.go:85:	header, payload, err := productionEvidence(input, strategyevidence.KindKRNetFlow, KRFlowSchemaV1)
+internal/reversallane/production_proposal.go:87:	header, payload, err := productionEvidence(input, strategyevidence.KindKRNetFlow, "kr-absorption-v1")
+internal/strategyevidence/model.go:24:	KindKRNetFlow       EvidenceKind = "kr_net_flow"
+internal/strategyevidence/model.go:221:	case KindKRNetFlow:
+## KindUSParticipation
+internal/continuationlane/production_proposal.go:116:	header, payload, err := productionEvidence(input, strategyevidence.KindUSParticipation, USParticipationSchemaV1)
+internal/reversallane/production_proposal.go:117:	header, payload, err := productionEvidence(input, strategyevidence.KindUSParticipation, "us-dislocation-v1")
+internal/strategyevidence/model.go:25:	KindUSParticipation EvidenceKind = "us_participation"
+internal/strategyevidence/model.go:223:	case KindUSParticipation:
+## ErrBreakoutEvidenceUnavailable
+internal/strategyproposal/production.go:57:// ErrBreakoutEvidenceUnavailable 는 돌파-되돌림 레인이 아직 생산 입력을 만들 수 없다는 뜻이다.
+internal/strategyproposal/production.go:61:var ErrBreakoutEvidenceUnavailable = errors.New("strategyproposal: breakout derived-metric evidence (atr, rvol ppm, upper-wick ppm, volume-expanded) is neither stored nor produced, so no breakout lane input can be built")
+internal/strategyproposal/production.go:400:			// 돌파 증거 미구축(ErrBreakoutEvidenceUnavailable)부터 보호적이지 않은
+internal/strategyproposal/production.go:440:		return strategyflow.LaneInput{}, nil, ErrBreakoutEvidenceUnavailable

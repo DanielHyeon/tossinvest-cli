@@ -1,0 +1,94 @@
+{
+  "file": "internal/journal/operating_mode.go",
+  "source_sha256": "093341ae577341d137f31abade8713a71ade2dfb03161db0e04aafaf0f4ce7f9",
+  "package": "journal",
+  "function": "RestoreOperatingModeProjection",
+  "receiver": "Journal",
+  "signature": "Journal.RestoreOperatingModeProjection(params=2, results=2)",
+  "start": {
+    "line": 589,
+    "column": 1
+  },
+  "end": {
+    "line": 605,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 591,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 594,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 592,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 604,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 590,
+        "column": 19
+      },
+      "text": "j.CurrentOperatingMode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 594,
+        "column": 10
+      },
+      "text": "j.modeProjectorRef"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 595,
+        "column": 3
+      },
+      "text": "p.ProjectOperatingMode"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 590,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 594,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

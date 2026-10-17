@@ -1,0 +1,111 @@
+{
+  "file": "internal/app/engine/strategy_entry_supervisor.go",
+  "source_sha256": "9cb510c1c9c7f44ac109de5fd8ddac8e6c559adb4d654b1acd65dce19cc9e577",
+  "package": "engine",
+  "function": "evaluationState",
+  "receiver": "StrategyEntrySupervisor",
+  "signature": "StrategyEntrySupervisor.evaluationState(params=1, results=2)",
+  "start": {
+    "line": 1038,
+    "column": 1
+  },
+  "end": {
+    "line": 1050,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1041,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1045,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1043,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1046,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1049,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1039,
+        "column": 2
+      },
+      "text": "s.mu.RLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1040,
+        "column": 8
+      },
+      "text": "s.mu.RUnlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1048,
+        "column": 11
+      },
+      "text": "Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1048,
+        "column": 11
+      },
+      "text": "s.clk.Now"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1048,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 1040,
+        "column": 2
+      },
+      "text": "s.mu.RUnlock"
+    }
+  ]
+}

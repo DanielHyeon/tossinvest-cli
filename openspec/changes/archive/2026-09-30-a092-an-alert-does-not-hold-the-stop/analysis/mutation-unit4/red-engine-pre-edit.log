@@ -1,0 +1,4 @@
+# buildGateway 편집 전(작업 트리, gateway.go 무편집) 에서 a092_mode_projection_wiring_test.go
+--- FAIL: TestA092AssemblyRestoresTheOperatingModeBeforeAnyLoop — mode latch after assembly = "" (present=false), want ENTRY_BLOCKED restored
+--- FAIL: TestA092TransitionsAfterAssemblyReachTheLiveGate — an automatic tightening after assembly did not reach the live gate
+--- FAIL: TestA092AnUnreadableModeLatchesInsteadOfRefusingToStart — an unreadable operating mode left entries open

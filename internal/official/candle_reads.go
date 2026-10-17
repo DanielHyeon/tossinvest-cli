@@ -106,6 +106,9 @@ func adaptCandles(symbol, interval string, raw apiCandlePage) domain.Chart {
 			Volume: parseDecimal(c.Volume),
 		})
 	}
+	for left, right := 0, len(candles)-1; left < right; left, right = left+1, right-1 {
+		candles[left], candles[right] = candles[right], candles[left]
+	}
 	return domain.Chart{
 		Symbol:    symbol,
 		Interval:  interval,

@@ -1,0 +1,188 @@
+{
+  "file": "internal/config/limits.go",
+  "source_sha256": "6817ccd8ebcd4480228d8a3c83f56d9c70b2fa21819d138afa78470d36a45483",
+  "package": "config",
+  "function": "Validate",
+  "receiver": "GuardianLimits",
+  "signature": "GuardianLimits.Validate(params=0, results=1)",
+  "start": {
+    "line": 322,
+    "column": 1
+  },
+  "end": {
+    "line": 341,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 323,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 325,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 326,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 328,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 333,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 337,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 327,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 329,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 334,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 338,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 340,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 323,
+        "column": 20
+      },
+      "text": "guardianFields"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 8
+      },
+      "text": "f.Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 8
+      },
+      "text": "math.IsNaN"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 25
+      },
+      "text": "math.IsInf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 11
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 329,
+        "column": 11
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 334,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 337,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 338,
+        "column": 10
+      },
+      "text": "errors.New"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 324,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

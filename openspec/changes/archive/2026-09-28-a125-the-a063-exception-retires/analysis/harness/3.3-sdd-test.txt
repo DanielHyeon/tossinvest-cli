@@ -1,0 +1,63 @@
+python3 -m unittest discover -s scripts -p 'test_*.py'
+...............
+----------------------------------------------------------------------
+Ran 15 tests in 0.554s
+
+OK
+python3 -m unittest discover -s tools/logic-map -p 'test_*.py'
+.......................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 503 tests in 633.852s
+
+OK
+python3 -m unittest discover -s tools/sdd -p 'test_*.py'
+....................................................................source registration failed
+..[gbrain-project] busy: owner pid=456 command='gbrain serve'
+.schema read failed
+.....
+----------------------------------------------------------------------
+Ran 76 tests in 1.001s
+
+OK
+[sdd-sync] GBrain source 'tossos-x' is registered at /mnt/D/project/axipient/TossOS, not /mnt/D/Axipient/workspace/TossOS-worktrees/a125-probe. Sync would read the old path. Repair is destructive (it deletes this source's pages, then re-indexes):
+  python3 /mnt/D/Axipient/workspace/TossOS-worktrees/a125-probe/tools/sdd/gbrain_project.py sources remove tossos-x --confirm-destructive
+  python3 /mnt/D/Axipient/workspace/TossOS-worktrees/a125-probe/tools/sdd/gbrain_project.py sources add tossos-x --path /mnt/D/Axipient/workspace/TossOS-worktrees/a125-probe
++ /usr/bin/python3 /mnt/D/Axipient/workspace/TossOS-worktrees/a125-probe/tools/sdd/gbrain_project.py sync --source tossos-x --strategy code --no-embed --yes
+SOURCES
+───────
+  default               federated          0 pages  never synced
+  tossos-x              isolated        4261 pages  never synced
+                        /mnt/D/Axipient/workspace/TossOS-worktrees/a125-probe
+[sdd-sync] WARN: GBrain advisory busy; keeping its previous freshness ([gbrain-project] busy: owner pid=123 command='gbrain serve' home=/tmp/project/.sdd/gbrain-home)
++ /usr/bin/python3 /mnt/D/Axipient/workspace/TossOS-worktrees/a125-probe/tools/sdd/gbrain_project.py sources add tossos-x --path /mnt/D/Axipient/workspace/TossOS-worktrees/a125-probe
+[sdd-sync] GBrain source probe failed: schema read failed
++ /usr/bin/python3 /mnt/D/Axipient/workspace/TossOS-worktrees/a125-probe/tools/sdd/gbrain_project.py sync --source tossos-x --strategy code --no-embed --yes
+[sdd-sync] WARN: GBrain advisory busy; keeping its previous freshness ([gbrain-project] busy: owner pid=456 command='gbrain serve')
++ /usr/bin/python3 /tmp/tmpo5u4qyct/repo/tools/sdd/gbrain_project.py sources list
+python3 -m unittest discover -s tools/sdd-history -p 'test_*.py'
+..............[sdd-hook] warning: offline
+...[commit-event] warning: offline
+..[context-graph] CCG adapter failed; its checkpoint was not advanced
+..........
+----------------------------------------------------------------------
+Ran 29 tests in 4.136s
+
+OK
+python3 -m unittest discover -s tools/pm -p 'test_*.py'
+................
+----------------------------------------------------------------------
+Ran 16 tests in 3.285s
+
+OK
+python3 -m unittest discover -s tools/deploy -p 'test_*.py'
+..................
+----------------------------------------------------------------------
+Ran 18 tests in 0.023s
+
+OK
+go test ./tools/logic-map
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/logic-map	0.011s
+
+real	10m52.708s
+user	1m16.717s
+sys	1m4.682s

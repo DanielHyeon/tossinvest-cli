@@ -1,0 +1,134 @@
+{
+  "file": "internal/app/engine/alertdelivery.go",
+  "source_sha256": "89a491c9c259cfeec2afb5095cd1037db0ad97b58f4689d1aaeba9ff82dab5bf",
+  "package": "engine",
+  "function": "cycle",
+  "receiver": "alertDeliverer",
+  "signature": "alertDeliverer.cycle(params=1, results=1)",
+  "start": {
+    "line": 145,
+    "column": 1
+  },
+  "end": {
+    "line": 164,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 151,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 158,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 152,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 159,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 163,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 2
+      },
+      "text": "d.forgetLapsedHeld"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 21
+      },
+      "text": "d.Clock.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 18
+      },
+      "text": "d.Journal.PendingAlerts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 47
+      },
+      "text": "d.batch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 6
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 3
+      },
+      "text": "d.deliverOne"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

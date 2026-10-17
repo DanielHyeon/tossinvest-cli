@@ -1,0 +1,55 @@
+== scratch worktree 178cc196 + lot files (2026-10-04T15:53:20+09:00)
+make lint exit=0
+gofmt listed=0
+make sdd-test exit=0
+go test untagged strategyrouter+engine+strategyworker+breakoutlane exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	1.293s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	199.855s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.322s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.245s
+go test -tags tossos_testseams same exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	1.643s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	221.992s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.375s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.270s
+race strategyrouter+breakoutlane exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	6.146s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	2.814s
+make test-race exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	2.361s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	1.617s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	29.488s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	1.037s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	9.951s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	1.309s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	1.075s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	75.535s
+== done 2026-10-04T16:03:53+09:00
+
+
+--- lint tail ---
+go vet ./...
+go vet -tags tossos_testseams ./...
+
+--- sddtest tail ---
+----------------------------------------------------------------------
+Ran 18 tests in 0.000s
+
+OK
+go test ./tools/logic-map
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/logic-map	0.002s
+
+--- make test-race ---
+go test -race -timeout 15m -count=1 -tags tossos_testseams ./internal/strategyworker ./internal/strategycoordinator ./internal/strategyhandoff ./internal/strategyarbiter ./internal/strategyrouter ./internal/strategyflow ./internal/clock
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	2.361s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	1.617s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	29.488s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	1.037s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	9.951s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	1.309s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	1.075s
+go test -race -timeout 5m -count=1 -tags tossos_testseams -run 'TestTwoMarketsRideOneAuthorityWaveInsteadOfTakingTurns|TestOnlyOneMarketEverLeadsAWave|TestAFailedWaveReachesEveryMarketAndIsNeverCached|TestAMarketWaitingOnTheWaveLeavesWhenItsOwnCycleIsCancelled|TestTheCacheWindowStillMeasuresFromTheWaveStart|TestAPanickingWaveNeverStrandsTheMarketsWaitingOnIt|TestTheMarketThatLeadsAWaveAlwaysPublishesIt|TestARefreshWithoutAClockRefusesBeforeItCanMintAWave|TestAFailedWaveCarriesNoAssemblyForEitherMarket|TestALatchedLaneComesBackLatchedAfterTheProcessRestarts|TestALatchOnlyReopensForAStrictlyNewerVerifiedActivation|TestARestoredLatchKeepsTheFirstCauseAcrossTheRestart|TestOneLatchedLaneLeavesItsSevenPeersOpenAcrossARestart|TestADurableLatchThatNamesNoLaneInThisBuildStopsTheCycleLoudlyAndCanBeClosed|TestALedgerThatCannotTakeTheLatchStopsTheCycle|TestTheRecoveryGenerationComesFromTheVerifiedActivationAndNothingElse|TestTheProductionStepNeverLatchesSoTheLedgerStaysEmpty|TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther|TestAHungLaneDoesNotDelayItsPeersInTheSameWave|TestAPanicOutsideALaneStepStillReachesTheMarketCycle|TestAProjectedLaneRowIsNeverTorn|TestTheLaneProjectionReadsALaneRowUnderOneLock|TestAStalledRemoteWaveNeverBlocksTheProjectionRead|TestSafetyLoopsKeepTheirCadenceWhileEveryEntryQueueIsSaturated|TestSafetyLoopsKeepTheirCadenceThroughEveryEntryFailureKind|TestTheProductionActivationLoaderRunsAndFindsNoManifest|TestWithoutAVerifiedActivationCoordinationIsUnchanged|TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt|TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading|TestAClosedMarketStillCarriesTheGatesActivation|TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope|TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor|TestAProposalNoLaneOwnsIsStoppedRatherThanPassedThrough|TestTheLanesAreBuiltBeforeTheProposalsAreCollected|TestAGatedFamilyMustNotShrinkTheMarketIntoTheExactlyOneValve|TestTheGateSaysWhichKindOfStopItMade|TestADeclaredActivationThatLapsesRollsItsMarketBackInsteadOfWidening|TestRollingBackLeavesALatchedLaneLatched|TestTheRollbackPathOnlyReads|TestTheOrderLeaseCannotOutliveTheFamilyActivation|TestARolledBackGateClosesTheMarketEvenWithoutLanes|TestAnUndeclaredMarketStaysUndeclaredWhateverItsCalibrationSays|TestAnUnverifiedActivationWithoutAnErrorStillRollsBack|TestADeclaredMarketWhoseCalibrationDoesNotAgreeIsRolledBack|TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires|TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission|TestTheDispatchJudgesFamilyExpiryBeforeAdmissionAndInsideTheFinalCheck|TestTheProductionAssemblyGivesTheDispatchCycleTheRealClock|TestAVerifiedGateWithoutLanesClosesInsteadOfFallingBackToTheLegacyPath|TestADeclaredMarketWhoseCycleIsCancelledRollsBack|TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder|TestAVerifiedPromotionLetsTheOwningLaneEmitThroughTheLaneRuntime|TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten|TestTheRuntimeVocabularyIsExactlyUnobservedUntilAShadowLotExtendsIt|TestACancelDuringTheProposalLoadClosesTheMarketAtTheDecision|TestARevocationDuringTheProposalLoadClosesTheMarketAtTheDecision|TestAnUndeclaredMarketCancelledDuringTheLoadKeepsTheLegacyPath|TestANilEnvironmentReaderRollsTheGateBackInsteadOfPanicking' ./internal/app/engine
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	75.535s
+Change 'a112-run-four-strategy-families-independently' is valid (openspec validate --strict, 공유 트리)
+[pm] hierarchy and generated trackers are current
+check_analysis(공유 트리, 같은 파일 shift 뒤): HEAD 148 줄 · 로트 152 줄 — 로트만 4 = 새 시험 파일 미추적(「not a Go test function in any tracked file」), HEAD 만 0. 커밋 뒤 재측정은 review.md 에.

@@ -1,0 +1,55 @@
+{
+  "file": "internal/execgw/gateway.go",
+  "source_sha256": "96264a796aa63f4a0af59746b89b1ee2130add0a23f4bf7b67cf55fce07d2875",
+  "package": "execgw",
+  "function": "checkEntry",
+  "receiver": "Gateway",
+  "signature": "Gateway.checkEntry(params=1, results=1)",
+  "start": {
+    "line": 851,
+    "column": 1
+  },
+  "end": {
+    "line": 856,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 852,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 853,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 855,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 855,
+        "column": 9
+      },
+      "text": "g.entry.CheckEntryFor"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

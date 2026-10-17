@@ -1,0 +1,4 @@
+    a133_adjacent_ids_test.go:32: redact.String("pos-00112233445566778899aabb pos-ffeeddccbbaa998877665544") = "pos-[redacted] pos-ffeeddccbbaa998877665544" — pos-ffeeddccbbaa998877665544 survived
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/redact	0.003s
+FAIL

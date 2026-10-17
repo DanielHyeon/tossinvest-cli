@@ -557,6 +557,7 @@ func newGuardianOn(t *testing.T, rig *guardianRig, observer execgw.EntryObserver
 		Costs:         costs.DefaultModel(),
 		PolicyVersion: "add-core-domain/4.1",
 		Observer:      observer,
+		ManualBuys:    a136ZeroManualBuyBoard(rig.clock), // a136
 	})
 	if err != nil {
 		t.Fatalf("NewRiskGuardian: %v", err)

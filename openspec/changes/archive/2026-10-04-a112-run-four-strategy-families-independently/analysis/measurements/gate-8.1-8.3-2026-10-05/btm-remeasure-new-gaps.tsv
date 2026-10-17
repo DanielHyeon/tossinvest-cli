@@ -1,0 +1,40 @@
+# a112 8.4 BTM 재측정(2026-10-05) — 옛 재측정(gate-8.1-8.3-2026-10-04/btm-remeasure-prod.tsv, 128 행) 이후 생긴 생산 GAP 행 30(harness/btm_remeasure.py)
+# 측정: 워크트리 2497427e, go test -tags tossos_testseams -covermode=set -coverpkg=engine,strategyprojection,strategyproposal,strategyrouter,execgw ./... (exit 0, ok 102 패키지, 823s)
+# class(옛 표 범례 그대로 + W): ENTERED = 실측 진입 · R = 실패-닫힘(오류/거절/영값/nil-가드 반환 · latch 기본 이유 문장 — 노출을 늘릴 수 없음, 미시험) · NB = 몸통 블록 없음(여러 줄 조건 · select · else — 블록 규칙이 분기 줄에서 시작하는 블록만 봄, 구조 대조)
+#   · W = 생산 배선 경로(실 원장이 있을 때 후보 · 증거 저장소 경로를 원장 옆으로 유도 — 시험 조립은 원장 경로 없이 만듦). 경로 계산만이고, 잘못된 경로는 저장소 열기 오류(B4 · B7 = R)로 닫힘.
+# NB 메모: collect B6(US else 갈래)은 같은 시험이 두 시장을 다 모으므로 실행되지만 `} else {` 블록 좌표가 규칙에 안 맞음 · latchmarket B9 select 기본 갈래는 번들이 「구조적으로 도달 불가」 로 처분 · validatelane B6 · B9 · B12 는 여러 줄 조건(몸통은 오류 반환 = R 모양).
+# 옛 census 대비: 옛 btm-disposition-census.tsv 는 `**no — …**`(굵은 글씨) 행 4 를 GAP 으로 세지 못했다(latchmarket B1 · B9 · waitmarketrestart B1 · B2 — 전부 번들 안에 처분 노트). 이 표가 그 넷을 포함한다.
+bundle	branch	module_union	block	disposition_cell	class
+internal-app-engine--context.newpairedstrategyentryproductionassembly	B1	NOT-ENTERED-module	297.14-299.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-app-engine--context.newpairedstrategyentryproductionassembly	B2	NOT-ENTERED-module	303.67-306.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	W
+internal-app-engine--context.newpairedstrategyentryproductionassembly	B3	NOT-ENTERED-module	314.23-316.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	W
+internal-app-engine--context.newpairedstrategyentryproductionassembly	B4	NOT-ENTERED-module	324.16-326.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-app-engine--context.newpairedstrategyentryproductionassembly	B7	NOT-ENTERED-module	366.16-368.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-app-engine--context.newpairedstrategyentryproductionassembly	B8	NOT-ENTERED-module	373.59-375.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-app-engine--context.productionstrategyworker	B1	NOT-ENTERED-module	420.14-422.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-app-engine--coordinatemarketproposals	B7	NOT-ENTERED-module	109.76-121.5	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-app-engine--newstrategylaneruntime	B1	NOT-ENTERED-module	106.16-108.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-app-engine--strategyentrysupervisor.latchmarket	B1	NOT-ENTERED-module	1101.18-1103.3	**no — block 953-955 count=0**	R
+internal-app-engine--strategyentrysupervisor.latchmarket	B9	NO-BLOCK		**no — block 1000-1001 count=0, 구조적으로 도달 불가(아래)**	NB
+internal-app-engine--strategyentrysupervisor.waitmarketrestart	B1	NOT-ENTERED-module	1021.24-1023.3	**no — block 873-875 count=0, 도달 불가(아래)**	R
+internal-app-engine--strategyentrysupervisor.waitmarketrestart	B2	NOT-ENTERED-module	1025.18-1027.3	**no — block 877-879 count=0, 도달 불가(아래)**	R
+internal-app-engine--strategylaneruntime.evaluate	B1	NOT-ENTERED-module	221.20-223.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-app-engine--strategylaneruntime.evaluate	B2	NOT-ENTERED-module	227.86-229.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-app-engine--strategylaneruntime.projection	B1	NOT-ENTERED-module	33.20-35.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-app-engine--strategylaneruntime.record	B1	NOT-ENTERED-module	347.46-349.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-app-engine--strategyproposalauthorityloader.collect	B1	NOT-ENTERED-module	259.159-261.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-app-engine--strategyproposalauthorityloader.collect	B3	NOT-ENTERED-module	275.26-279.7	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-app-engine--strategyproposalauthorityloader.collect	B6	NO-BLOCK		no — 측정상 진입 0(커버리지 공백, 통과가 아님)	NB
+internal-app-engine--strategyproposalauthorityloader.collectmarket	B11	NOT-ENTERED-module	419.27-426.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-app-engine--strategyproposalauthorityloader.collectmarket	B14	NOT-ENTERED-module	446.15-453.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-strategyprojection--clonelanes	B1	NOT-ENTERED-module	435.18-437.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-strategyprojection--validatelane	B6	NO-BLOCK		no — 측정상 진입 0(커버리지 공백, 통과가 아님)	NB
+internal-strategyprojection--validatelane	B9	NO-BLOCK		no — 측정상 진입 0(커버리지 공백, 통과가 아님)	NB
+internal-strategyprojection--validatelane	B11	ENTERED-module	342.25-344.59	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	ENTERED
+internal-strategyprojection--validatelane	B12	NO-BLOCK		no — 측정상 진입 0(커버리지 공백, 통과가 아님)	NB
+internal-strategyprojection--validatelane	B13	NOT-ENTERED-module	349.52-351.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-strategyprojection--validatelane	B15	NOT-ENTERED-module	355.69-357.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+internal-strategyprojection--validatelane	B17	NOT-ENTERED-module	362.75-364.3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)	R
+
+# 합계: ENTERED-module=1, NO-BLOCK=5, NOT-ENTERED-module=24
+# class 합계: ENTERED=1, NB=5, R=22, W=2

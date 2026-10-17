@@ -1,0 +1,352 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "ff19be0162521627988dc8e09a06297b57e4d35d",
+  "source_sha256": "613a3174efe33c71a7c1f120fc9102d8cbd00e02756b3d2aa8e0eec80b86c359",
+  "function": "_isolated_comparison",
+  "signature": "_isolated_comparison(root, base, target)",
+  "start": {
+    "line": 342,
+    "column": 1
+  },
+  "end": {
+    "line": 408,
+    "column": 55
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "IfExp",
+      "line": 356,
+      "inherited_line": false,
+      "source": "[target] if target else []"
+    },
+    {
+      "id": "B2",
+      "kind": "For",
+      "line": 357,
+      "inherited_line": false,
+      "source": "for revision in revisions:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 358,
+      "inherited_line": false,
+      "source": "if revision.startswith('-'):"
+    },
+    {
+      "id": "B4",
+      "kind": "comprehension",
+      "line": 362,
+      "inherited_line": true,
+      "source": " for kind in ('commit', 'tree')"
+    },
+    {
+      "id": "B5",
+      "kind": "comprehension",
+      "line": 362,
+      "inherited_line": true,
+      "source": " for revision in revisions"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 365,
+      "inherited_line": false,
+      "source": "if described.returncode:"
+    },
+    {
+      "id": "B7",
+      "kind": "BoolOp",
+      "line": 368,
+      "inherited_line": false,
+      "source": "len(answer) != 1 + 2 * len(revisions) or not all((FULL_OID.fullmatch(item) for item in answer[1:]))"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 368,
+      "inherited_line": false,
+      "source": "if len(answer) != 1 + 2 * len(revisions) or not all((FULL_OID.fullmatch(item) for item in answer[1:])):"
+    },
+    {
+      "id": "B9",
+      "kind": "comprehension",
+      "line": 368,
+      "inherited_line": true,
+      "source": " for item in answer[1:]"
+    },
+    {
+      "id": "B10",
+      "kind": "comprehension",
+      "line": 371,
+      "inherited_line": true,
+      "source": " for item in answer[1:]"
+    },
+    {
+      "id": "B11",
+      "kind": "If",
+      "line": 374,
+      "inherited_line": false,
+      "source": "if target:"
+    },
+    {
+      "id": "B12",
+      "kind": "comprehension",
+      "line": 380,
+      "inherited_line": true,
+      "source": " for path in before.keys() | after.keys() if before.get(path) != after.get(path)"
+    },
+    {
+      "id": "B13",
+      "kind": "For",
+      "line": 382,
+      "inherited_line": false,
+      "source": "for path in changed:"
+    },
+    {
+      "id": "B14",
+      "kind": "For",
+      "line": 383,
+      "inherited_line": false,
+      "source": "for side, label in ((before, 'base'), (after, 'target' if target else 'the index')):"
+    },
+    {
+      "id": "B15",
+      "kind": "IfExp",
+      "line": 383,
+      "inherited_line": false,
+      "source": "'target' if target else 'the index'"
+    },
+    {
+      "id": "B16",
+      "kind": "BoolOp",
+      "line": 384,
+      "inherited_line": false,
+      "source": "path in side and side[path][0] != GITLINK_MODE and (not (side is after and path in disk))"
+    },
+    {
+      "id": "B17",
+      "kind": "BoolOp",
+      "line": 384,
+      "inherited_line": false,
+      "source": "side is after and path in disk"
+    },
+    {
+      "id": "B18",
+      "kind": "If",
+      "line": 384,
+      "inherited_line": false,
+      "source": "if path in side and side[path][0] != GITLINK_MODE and (not (side is after and path in disk)):"
+    },
+    {
+      "id": "B19",
+      "kind": "comprehension",
+      "line": 389,
+      "inherited_line": true,
+      "source": " for path, data in disk.items()"
+    },
+    {
+      "id": "B20",
+      "kind": "For",
+      "line": 395,
+      "inherited_line": false,
+      "source": "for path in changed:"
+    },
+    {
+      "id": "B21",
+      "kind": "For",
+      "line": 396,
+      "inherited_line": false,
+      "source": "for side, into in ((before, old), (after, new)):"
+    },
+    {
+      "id": "B22",
+      "kind": "BoolOp",
+      "line": 397,
+      "inherited_line": false,
+      "source": "path not in side or side[path][0] == GITLINK_MODE"
+    },
+    {
+      "id": "B23",
+      "kind": "If",
+      "line": 397,
+      "inherited_line": false,
+      "source": "if path not in side or side[path][0] == GITLINK_MODE:"
+    },
+    {
+      "id": "B24",
+      "kind": "comprehension",
+      "line": 402,
+      "inherited_line": true,
+      "source": " for key, value in os.environ.items() if key != 'GIT_ALTERNATE_OBJECT_DIRECTORIES'"
+    }
+  ],
+  "returns": [],
+  "raises": [
+    {
+      "line": 359,
+      "source": "raise ValueError(f'not a revision: {revision}')"
+    },
+    {
+      "line": 366,
+      "source": "raise RuntimeError(_first_line(described.stderr, 'git rev-parse failed'))"
+    },
+    {
+      "line": 369,
+      "source": "raise RuntimeError('cannot read git rev-parse output')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 358,
+      "callee": "revision.startswith"
+    },
+    {
+      "line": 359,
+      "callee": "ValueError"
+    },
+    {
+      "line": 360,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 366,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 366,
+      "callee": "_first_line"
+    },
+    {
+      "line": 367,
+      "callee": "described.stdout.split"
+    },
+    {
+      "line": 368,
+      "callee": "FULL_OID.fullmatch"
+    },
+    {
+      "line": 368,
+      "callee": "all"
+    },
+    {
+      "line": 368,
+      "callee": "len"
+    },
+    {
+      "line": 368,
+      "callee": "len"
+    },
+    {
+      "line": 369,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 370,
+      "callee": "answer[0].decode"
+    },
+    {
+      "line": 371,
+      "callee": "item.decode"
+    },
+    {
+      "line": 372,
+      "callee": "_verified_go_entries"
+    },
+    {
+      "line": 377,
+      "callee": "_worktree_entries"
+    },
+    {
+      "line": 380,
+      "callee": "after.get"
+    },
+    {
+      "line": 380,
+      "callee": "after.keys"
+    },
+    {
+      "line": 380,
+      "callee": "before.get"
+    },
+    {
+      "line": 380,
+      "callee": "before.keys"
+    },
+    {
+      "line": 380,
+      "callee": "sorted"
+    },
+    {
+      "line": 385,
+      "callee": "os.fsdecode"
+    },
+    {
+      "line": 385,
+      "callee": "wanted.setdefault"
+    },
+    {
+      "line": 388,
+      "callee": "_verified_objects"
+    },
+    {
+      "line": 389,
+      "callee": "blobs.update"
+    },
+    {
+      "line": 389,
+      "callee": "disk.items"
+    },
+    {
+      "line": 390,
+      "callee": "tempfile.TemporaryDirectory"
+    },
+    {
+      "line": 391,
+      "callee": "Path"
+    },
+    {
+      "line": 392,
+      "callee": "store.mkdir"
+    },
+    {
+      "line": 400,
+      "callee": "os.fsdecode"
+    },
+    {
+      "line": 401,
+      "callee": "_write_loose_blob"
+    },
+    {
+      "line": 402,
+      "callee": "os.environ.items"
+    },
+    {
+      "line": 403,
+      "callee": "str"
+    },
+    {
+      "line": 405,
+      "callee": "Path"
+    },
+    {
+      "line": 405,
+      "callee": "_isolated_tree"
+    },
+    {
+      "line": 406,
+      "callee": "Path"
+    },
+    {
+      "line": 406,
+      "callee": "_isolated_tree"
+    },
+    {
+      "line": 408,
+      "callee": "Comparison"
+    }
+  ]
+}

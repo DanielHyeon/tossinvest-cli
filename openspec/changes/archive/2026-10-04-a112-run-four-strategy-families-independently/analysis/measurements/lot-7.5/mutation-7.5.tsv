@@ -1,0 +1,15 @@
+TREE	HEAD 1edee667a1260b2a273faaeae3080a8703f19247 (git archive) + own: internal/strategyworker/lane.go,internal/strategyworker/lane_view.go,internal/strategyworker/a112_lane_status_test.go,internal/app/engine/strategy_lane_runtime.go,internal/app/engine/strategy_lane_projection.go,internal/app/engine/strategy_lane_step.go,internal/app/engine/strategy_lane_step_testseam.go,internal/app/engine/a112_lane_operability_test.go,internal/app/engine/a112_lane_latency_testseam_test.go,internal/app/engine/a112_lane_fanout_test.go,internal/app/engine/a112_lane_runtime_test.go
+CONTROL	GREEN	[./internal/app/engine pass events 8] [./internal/strategyworker pass events 1] [./internal/app/engine pass events 1]
+R01 lanes run sequentially again (Manager: revert-to-sequential mutant)	CAUGHT	1 failing: TestAHungLaneDoesNotDelayItsPeersInTheSameWave
+R02 a lane goroutine panic is swallowed instead of re-raised on the market cycle	CAUGHT	1 failing: TestAPanicOutsideALaneStepStillReachesTheMarketCycle
+R03 the lane goroutine does not recover (a panic would end the process)	CAUGHT	0 failing:  | FAIL
+R04 evaluate does not join its lanes	CAUGHT	3 failing: TestEightLanesShareOneAuthorityWaveAndEachProposalReachesOneLane, TestAHungLaneDoesNotDelayItsPeersInTheSameWave, TestAPanicOutsideALaneStepStillReachesTheMarketCycle
+R05 the projection reads a per-field state accessor again (torn row)	CAUGHT	1 failing: TestTheLaneProjectionReadsALaneRowUnderOneLock
+R06 Status judges health differently from Health	CAUGHT	2 failing: TestAProjectedLaneRowIsNeverTorn, TestTheLaneStatusIsTheRowItsAccessorsRead
+R07 the test-seam laneStepFor ignores its hook (the hang never reaches the lane — reach control; re-anchored after the seam moved behind the build tag)	CAUGHT	2 failing: TestAHungLaneDoesNotDelayItsPeersInTheSameWave, TestAPanicOutsideALaneStepStillReachesTheMarketCycle
+R08 every lane receives every sealed proposal (fan-out duplicated)	CAUGHT	1 failing: TestEightLanesShareOneAuthorityWaveAndEachProposalReachesOneLane
+R09 a market cycle bypasses the one-second wave cache (a wave per cycle)	CAUGHT	1 failing: TestEightLanesShareOneAuthorityWaveAndEachProposalReachesOneLane
+R10 the projection Read waits for an in-flight remote wave	CAUGHT	1 failing: TestAStalledRemoteWaveNeverBlocksTheProjectionRead
+R11 the runtime starts its loops one after another (safety loops wait behind the entry supervisor)	CAUGHT	1 failing: TestSafetyLoopsKeepTheirCadenceWhileEveryEntryQueueIsSaturated
+R12 the production laneStepFor consults a hook (a function field reaches the production binary)	CAUGHT	1 failing: TestOnlyThePackageLevelStepEverRunsInsideALane
+R13 the seam file's build constraint widens beyond the test-seam build (a debug build would ship the seam)	CAUGHT	1 failing: TestOnlyThePackageLevelStepEverRunsInsideALane

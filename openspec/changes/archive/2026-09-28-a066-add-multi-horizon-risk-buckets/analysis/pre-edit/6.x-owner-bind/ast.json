@@ -1,0 +1,568 @@
+{
+  "file": "internal/journal/risk_bucket_owner.go",
+  "source_sha256": "a84b2aaa8d9aaa8297193541c111bd4415e6a2a99123948edb1141dd2033b3a9",
+  "package": "journal",
+  "function": "applyRiskBucketOwnerBindingInTx",
+  "receiver": "Journal",
+  "signature": "Journal.applyRiskBucketOwnerBindingInTx(params=3, results=1)",
+  "start": {
+    "line": 491,
+    "column": 1
+  },
+  "end": {
+    "line": 556,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 492,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 496,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 500,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 509,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "for",
+      "at": {
+        "line": 513,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 515,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 521,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 524,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 527,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "range",
+      "at": {
+        "line": 528,
+        "column": 3
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 529,
+        "column": 4
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 532,
+        "column": 4
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 538,
+        "column": 2
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 540,
+        "column": 3
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 543,
+        "column": 3
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 550,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 493,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 497,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 501,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 510,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 517,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 522,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 525,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 530,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 533,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 536,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 541,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 547,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 551,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 553,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 555,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 492,
+        "column": 5
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 492,
+        "column": 21
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 16
+      },
+      "text": "campaignQuantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 19
+      },
+      "text": "riskcalc.CompareDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 503,
+        "column": 15
+      },
+      "text": "tx.QueryContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 508,
+        "column": 3
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 508,
+        "column": 39
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 508,
+        "column": 55
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 508,
+        "column": 88
+      },
+      "text": "normaliseSymbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 513,
+        "column": 6
+      },
+      "text": "rows.Next"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 515,
+        "column": 13
+      },
+      "text": "rows.Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 516,
+        "column": 4
+      },
+      "text": "rows.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 519,
+        "column": 10
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 521,
+        "column": 12
+      },
+      "text": "rows.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 524,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 525,
+        "column": 10
+      },
+      "text": "j.latchReleasedOwnerLateFillInTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 527,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 529,
+        "column": 14
+      },
+      "text": "latchRiskBucketFillFailure"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 532,
+        "column": 14
+      },
+      "text": "j.recordRiskBucketStateTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 532,
+        "column": 98
+      },
+      "text": "fillObservationID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 538,
+        "column": 15
+      },
+      "text": "j.bindRiskBucketOwnerActualInTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 540,
+        "column": 7
+      },
+      "text": "errors.As"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 540,
+        "column": 38
+      },
+      "text": "isRiskBucketSemanticError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 540,
+        "column": 73
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 547,
+        "column": 11
+      },
+      "text": "latchRiskBucketFillFailure"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 547,
+        "column": 81
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 550,
+        "column": 13
+      },
+      "text": "latchRiskBucketFillFailure"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 553,
+        "column": 10
+      },
+      "text": "j.recordRiskBucketStateTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 553,
+        "column": 98
+      },
+      "text": "fillObservationID"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 495,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 499,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 503,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 515,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 519,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 521,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 529,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 532,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 538,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 549,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 550,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

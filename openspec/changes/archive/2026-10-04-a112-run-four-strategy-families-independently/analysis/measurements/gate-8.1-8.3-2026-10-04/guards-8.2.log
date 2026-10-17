@@ -1,0 +1,99 @@
+$ go test -count=1 -v ./internal/breakoutlane -run '^(TestResolvedProductionClosureAllowlist|TestPublicSurfaceCannotAssertEventsOrForgeMachine)$'
+--- PASS: TestResolvedProductionClosureAllowlist (0.00s)
+--- PASS: TestPublicSurfaceCannotAssertEventsOrForgeMachine (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.004s
+exit=0
+$ go test -count=1 -v ./internal/continuationlane -run '^TestPurePackageHasNoBrokerJournalExitOrToggleAuthorityDependency$'
+--- PASS: TestPurePackageHasNoBrokerJournalExitOrToggleAuthorityDependency (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane	0.003s
+exit=0
+$ go test -count=1 -v ./internal/reversallane -run '^(TestPurePackageHasNoBrokerJournalExitRegistryOrToggleAuthority|TestProductionFilesContainNoMutationOrExitDecisionTypes)$'
+--- PASS: TestPurePackageHasNoBrokerJournalExitRegistryOrToggleAuthority (0.00s)
+--- PASS: TestProductionFilesContainNoMutationOrExitDecisionTypes (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reversallane	0.004s
+exit=0
+$ go test -count=1 -v ./internal/weeklyvaluelane -run '^TestPurePackageHasNoSourceAPIBrokerJournalExitOrToggleAuthority$'
+--- PASS: TestPurePackageHasNoSourceAPIBrokerJournalExitOrToggleAuthority (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane	0.003s
+exit=0
+$ go test -count=1 -v ./internal/strategyflow -run '^TestPureFlowAndLaneDependencyClosureHasNoMutationAuthority$'
+--- PASS: TestPureFlowAndLaneDependencyClosureHasNoMutationAuthority (0.07s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	0.069s
+exit=0
+$ go test -count=1 -v ./internal/strategyworker -run '^(TestTheWorkerImportsNothingOutsideItsAllowedClosure|TestTheWorkerTransitivelyReachesNoMutationCapability)$'
+--- PASS: TestTheWorkerImportsNothingOutsideItsAllowedClosure (0.00s)
+--- PASS: TestTheWorkerTransitivelyReachesNoMutationCapability (0.14s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.145s
+exit=0
+$ go test -count=1 -v ./internal/strategyevidence -run '^(TestStrategyEvidenceImportClosureReachesNoMutationPath|TestDormantSnapshotReadIsSelectOnlyAcrossTheWholeCallChain|TestDormantSnapshotReadPortIsStructurallySelectOnly|TestSealBarSeriesIsStructurallySelectOnly|TestOpenReadOnlyReplaysButCannotCreateSnapshotOrAppend|TestOpenReadOnlyRefusesWrongModeAndSymlink)$'
+--- PASS: TestSealBarSeriesIsStructurallySelectOnly (0.00s)
+--- PASS: TestDormantSnapshotReadPortIsStructurallySelectOnly (0.00s)
+--- PASS: TestOpenReadOnlyReplaysButCannotCreateSnapshotOrAppend (0.12s)
+--- PASS: TestOpenReadOnlyRefusesWrongModeAndSymlink (0.10s)
+--- PASS: TestDormantSnapshotReadIsSelectOnlyAcrossTheWholeCallChain (0.01s)
+--- PASS: TestStrategyEvidenceImportClosureReachesNoMutationPath (0.01s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyevidence	0.234s
+exit=0
+$ go test -count=1 -v ./internal/strategycoordinator -run '^TestTheCoordinatorCannotReachAnyMutationCapability$'
+--- PASS: TestTheCoordinatorCannotReachAnyMutationCapability (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	0.003s
+exit=0
+$ go test -count=1 -v ./internal/strategyarbiter -run '^TestTheArbiterCannotReachAnyMutationCapability$'
+--- PASS: TestTheArbiterCannotReachAnyMutationCapability (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	0.003s
+exit=0
+$ go test -count=1 -v ./internal/strategyhandoff -run '^(TestTheHandoffSeamImportsNothingOutsideItsAllowedClosure|TestTheHandoffSeamTransitivelyReachesNoMutationCapability|TestOnlyTheEngineImportsThisSeam)$'
+--- PASS: TestTheHandoffSeamImportsNothingOutsideItsAllowedClosure (0.00s)
+--- PASS: TestTheHandoffSeamTransitivelyReachesNoMutationCapability (0.13s)
+--- PASS: TestOnlyTheEngineImportsThisSeam (1.50s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	1.639s
+exit=0
+$ go test -count=1 -v ./internal/officialbars -run '^TestProductionImportsStayInsideTheAllowlist$'
+--- PASS: TestProductionImportsStayInsideTheAllowlist (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialbars	0.004s
+exit=0
+$ go test -count=1 -v ./internal/strategyrouter -run '^(TestPackageHasNoMutationAuthorityOrRuntimeDependency|TestOnlyTheAuthoringToolCanBuildActivationBytes|TestTheEncoderGuardCountsEveryWayToNameThePackage|TestTheEncoderGuardCountsNothingWhenThePackageIsNotCalled|TestExternalAPIExposesNoAuthorityMintingConstructor)$'
+--- PASS: TestPackageHasNoMutationAuthorityOrRuntimeDependency (0.00s)
+--- PASS: TestOnlyTheAuthoringToolCanBuildActivationBytes (0.26s)
+--- PASS: TestTheEncoderGuardCountsEveryWayToNameThePackage (0.00s)
+--- PASS: TestTheEncoderGuardCountsNothingWhenThePackageIsNotCalled (0.00s)
+--- PASS: TestExternalAPIExposesNoAuthorityMintingConstructor (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	0.269s
+exit=0
+$ go test -count=1 -v ./internal/app/engine -run '^(TestTheFamilyLaneStepCarriesNothingButItsLaneAndTheSignedPromotion|TestOnlyThePackageLevelStepEverRunsInsideALane|TestEngineDependencyGraphExcludesWTSMutators)$'
+--- PASS: TestOnlyThePackageLevelStepEverRunsInsideALane (0.04s)
+--- PASS: TestTheFamilyLaneStepCarriesNothingButItsLaneAndTheSignedPromotion (0.02s)
+--- PASS: TestEngineDependencyGraphExcludesWTSMutators (0.01s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.071s
+exit=0
+$ go test -count=1 -v ./internal/testenv -run '^(TestNoProductionCodeHardcodesATestTransport|TestTestenvItselfIsNotImportedByProductionCode|TestIsRealHost|TestGuard.*|TestInstallGuardCoversTheDefaultTransport)$'
+--- PASS: TestNoProductionCodeHardcodesATestTransport (0.02s)
+--- PASS: TestTestenvItselfIsNotImportedByProductionCode (0.01s)
+--- PASS: TestIsRealHost (0.00s)
+--- PASS: TestGuardHardFailsAMutationToARealHost (0.00s)
+--- PASS: TestGuardBlocksEveryMutatingMethod (0.00s)
+--- PASS: TestGuardBlocksReadsToo (0.00s)
+--- PASS: TestGuardLetsHttptestThrough (0.00s)
+--- PASS: TestGuardCatchesAnOfficialClientPointedAtProduction (0.00s)
+--- PASS: TestInstallGuardCoversTheDefaultTransport (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/testenv	0.040s
+exit=0
+$ go test -count=1 -v ./internal/strategyruntime -run '^TestPackageHasNoBrokerLiveTransportToggleOrRuntimeWriter$'
+--- PASS: TestPackageHasNoBrokerLiveTransportToggleOrRuntimeWriter (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyruntime	0.003s
+exit=0

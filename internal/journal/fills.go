@@ -544,8 +544,11 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 	//    A hook error aborts everything above: the deferred rollback leaves the
 	//    snapshot un-advanced, and the next observation measures its delta from
 	//    the last quantity the projection actually saw.
+	// a130: the closes this transaction cannot freeze are collected here and
+	// reported only after the commit below succeeds.
+	var refusals []TradeOutcomeRefusal
 	if locallyOwned {
-		if err := j.runApplyHooks(ctx, tx, applied); err != nil {
+		if err := j.runApplyHooks(withOutcomeRefusals(ctx, &refusals), tx, applied); err != nil {
 			return res, err
 		}
 	}
@@ -553,6 +556,8 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 	if err := tx.Commit(); err != nil {
 		return res, fmt.Errorf("journal: committing the fill snapshot of %s: %w", orderID, err)
 	}
+	// a130: an outcome refusal is reported only for a close that committed.
+	j.reportOutcomeRefusals(refusals)
 	res.Changed = true
 	return res, nil
 }
@@ -1874,20 +1879,7 @@ func (j *Journal) LiveOrdersForSymbol(ctx context.Context, accountRef, market, s
 		SELECT c.order_id, c.intent_id, c.account_ref, c.market, c.trading_day,
 		       c.symbol, c.side, c.quantity, c.price, c.currency
 		  FROM selected_orders c
-		 WHERE NOT EXISTS (
-		   SELECT 1 FROM all_fill_snapshots f
-		    WHERE f.order_id = c.order_id AND f.terminal = 1
-		      AND c.ownership_at < f.committed_at
-		      AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(c.symbol))
-		      AND UPPER(TRIM(f.market)) = UPPER(TRIM(c.market))
-		      AND (TRIM(f.side) = '' OR UPPER(TRIM(f.side)) = UPPER(TRIM(c.side)))
-		      AND ((TRIM(f.account_ref) = TRIM(c.account_ref)
-		            AND TRIM(f.trading_day) = TRIM(c.trading_day))
-		           OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = ''
-		               AND TRIM(f.side) = '' AND EXISTS (
-		                 SELECT 1 FROM legacy_snapshot_owner owner
-		                  WHERE owner.order_id = f.order_id AND owner.intent_id = c.intent_id)))
-		 )
+		 WHERE NOT `+confirmedOrderTerminalEvidence+`
 		 ORDER BY c.recorded_at, c.attempt_rowid`,
 		string(StateConfirmed), accountRef,
 		normaliseMarket(market), normaliseSymbol(symbol))

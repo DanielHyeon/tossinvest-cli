@@ -1,0 +1,269 @@
+{
+  "file": "internal/client/orders_parse_test.go",
+  "source_sha256": "84a0f5c3e3342b54907c3db6b66d2540acd451ecd909ec6c257429979c1f903d",
+  "package": "client",
+  "function": "TestListPendingOrdersParsesStructuredFields",
+  "signature": "TestListPendingOrdersParsesStructuredFields(params=1, results=0)",
+  "start": {
+    "line": 12,
+    "column": 1
+  },
+  "end": {
+    "line": 66,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 16,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 57,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 13,
+        "column": 2
+      },
+      "text": "t.Parallel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 15,
+        "column": 12
+      },
+      "text": "httptest.NewServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 15,
+        "column": 31
+      },
+      "text": "http.HandlerFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 17,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 10
+      },
+      "text": "w.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 18
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 8
+      },
+      "text": "server.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 12
+      },
+      "text": "New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 16
+      },
+      "text": "server.Client"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 17
+      },
+      "text": "client.ListPendingOrders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 42
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 48
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 15,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 19,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 47,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 35,
+        "column": 2
+      },
+      "text": "server.Close"
+    }
+  ],
+  "revision": "base"
+}

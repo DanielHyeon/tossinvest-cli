@@ -1,0 +1,9 @@
+start 2026-09-30 22:37:13 KST
+codex-cli 0.154.0, codex exec -s read-only --ephemeral --skip-git-repo-check -C <tree>
+tree = git archive 00e1b9bd (files 18239)
+prompt prompt-codex.md sha256 cc11313ef495bd62
+end 2026-09-30 22:40:33 KST
+rc=0
+session id: 01a0f288-9b3d-7261-a577-07e09660fcc5
+tokens used 128,370
+인증 오류 없음(stderr 의 "401" 두 줄은 소스 · 문서 인용 — 줄 번호 401 · 시각 05:10 문장)

@@ -1,0 +1,267 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "77e36cca22498ff5e022c0392f4166cec3260c7d",
+  "head_commit": "77e36cca22498ff5e022c0392f4166cec3260c7d",
+  "source_sha256": "6aa2dfd3fa48662882fa81536a3583fa8a1bdf73a9ab14c3464ca7bd3652274d",
+  "function": "_self_repair_commits",
+  "signature": "_self_repair_commits(root, analysis, head)",
+  "start": {
+    "line": 1909,
+    "column": 1
+  },
+  "end": {
+    "line": 2009,
+    "column": 72
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 1936,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 1938,
+      "inherited_line": false,
+      "source": "except ValueError as exc:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 1945,
+      "inherited_line": false,
+      "source": "if change_dir.startswith(ARCHIVE_PREFIX):"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 1949,
+      "inherited_line": false,
+      "source": "if before:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 1962,
+      "inherited_line": false,
+      "source": "if touching.returncode:"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 1971,
+      "inherited_line": false,
+      "source": "if not hashes:"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 1992,
+      "inherited_line": false,
+      "source": "if listing.returncode:"
+    },
+    {
+      "id": "B8",
+      "kind": "For",
+      "line": 2001,
+      "inherited_line": false,
+      "source": "for block in listing.stdout.strip(b'\\x00').split(b'\\x00\\x00'):"
+    },
+    {
+      "id": "B9",
+      "kind": "BoolOp",
+      "line": 2003,
+      "inherited_line": false,
+      "source": "names and (not names.startswith(b'\\n'))"
+    },
+    {
+      "id": "B10",
+      "kind": "BoolOp",
+      "line": 2003,
+      "inherited_line": false,
+      "source": "not re.fullmatch(b'[0-9a-f]{40}|[0-9a-f]{64}', commit) or (names and (not names.startswith(b'\\n')))"
+    },
+    {
+      "id": "B11",
+      "kind": "If",
+      "line": 2003,
+      "inherited_line": false,
+      "source": "if not re.fullmatch(b'[0-9a-f]{40}|[0-9a-f]{64}', commit) or (names and (not names.startswith(b'\\n'))):"
+    },
+    {
+      "id": "B12",
+      "kind": "If",
+      "line": 2005,
+      "inherited_line": false,
+      "source": "if any((name.endswith(b'.go') for name in names[1:].split(b'\\x00'))):"
+    },
+    {
+      "id": "B13",
+      "kind": "comprehension",
+      "line": 2005,
+      "inherited_line": true,
+      "source": " for name in names[1:].split(b'\\x00')"
+    },
+    {
+      "id": "B14",
+      "kind": "comprehension",
+      "line": 2009,
+      "inherited_line": true,
+      "source": " for commit in reversed(hashes) if commit in flagged"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1972,
+      "value": "[]"
+    },
+    {
+      "line": 2009,
+      "value": "[commit for commit in reversed(hashes) if commit in flagged]"
+    }
+  ],
+  "raises": [
+    {
+      "line": 1943,
+      "source": "raise RuntimeError(f\"cannot name this change's directory under the repository: {exc}\") from exc"
+    },
+    {
+      "line": 1967,
+      "source": "raise RuntimeError(f'cannot list the commits that touched {change_dir}: {_first_line(touching.stderr, 'git log failed')}')"
+    },
+    {
+      "line": 1993,
+      "source": "raise RuntimeError('cannot read the files those commits changed: ' + _first_line(listing.stderr, 'git log --no-walk failed'))"
+    },
+    {
+      "line": 2004,
+      "source": "raise RuntimeError('cannot read the files those commits changed: unexpected git log -z output')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 1937,
+      "callee": "analysis.parent.parent.relative_to"
+    },
+    {
+      "line": 1937,
+      "callee": "analysis.parent.parent.relative_to(root).as_posix"
+    },
+    {
+      "line": 1943,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 1945,
+      "callee": "change_dir.startswith"
+    },
+    {
+      "line": 1948,
+      "callee": "_archived_change_id"
+    },
+    {
+      "line": 1948,
+      "callee": "change_dir[len(ARCHIVE_PREFIX):].partition"
+    },
+    {
+      "line": 1948,
+      "callee": "len"
+    },
+    {
+      "line": 1950,
+      "callee": "paths.append"
+    },
+    {
+      "line": 1951,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 1967,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 1968,
+      "callee": "_first_line"
+    },
+    {
+      "line": 1970,
+      "callee": "touching.stdout.split"
+    },
+    {
+      "line": 1973,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 1990,
+      "callee": "'\\n'.join"
+    },
+    {
+      "line": 1990,
+      "callee": "('\\n'.join(hashes) + '\\n').encode"
+    },
+    {
+      "line": 1993,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 1995,
+      "callee": "_first_line"
+    },
+    {
+      "line": 2000,
+      "callee": "set"
+    },
+    {
+      "line": 2001,
+      "callee": "listing.stdout.strip(b'\\x00').split"
+    },
+    {
+      "line": 2001,
+      "callee": "listing.stdout.strip"
+    },
+    {
+      "line": 2002,
+      "callee": "block.partition"
+    },
+    {
+      "line": 2003,
+      "callee": "names.startswith"
+    },
+    {
+      "line": 2003,
+      "callee": "re.fullmatch"
+    },
+    {
+      "line": 2004,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 2005,
+      "callee": "any"
+    },
+    {
+      "line": 2005,
+      "callee": "name.endswith"
+    },
+    {
+      "line": 2005,
+      "callee": "names[1:].split"
+    },
+    {
+      "line": 2006,
+      "callee": "commit.decode"
+    },
+    {
+      "line": 2006,
+      "callee": "flagged.add"
+    },
+    {
+      "line": 2009,
+      "callee": "reversed"
+    }
+  ]
+}

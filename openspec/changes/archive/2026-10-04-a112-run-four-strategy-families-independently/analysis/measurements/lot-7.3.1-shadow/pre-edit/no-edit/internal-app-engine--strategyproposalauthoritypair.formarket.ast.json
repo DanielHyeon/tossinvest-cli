@@ -1,0 +1,61 @@
+{
+  "file": "internal/app/engine/strategy_proposal_authority.go",
+  "source_sha256": "2c546898bc4178d0ee44238d51fb8e05a4c908cee721041ee24713c4c98ac385",
+  "package": "engine",
+  "function": "forMarket",
+  "receiver": "strategyProposalAuthorityPair",
+  "signature": "strategyProposalAuthorityPair.forMarket(params=1, results=1)",
+  "start": {
+    "line": 167,
+    "column": 1
+  },
+  "end": {
+    "line": 175,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 168,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 171,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 169,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 172,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 174,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

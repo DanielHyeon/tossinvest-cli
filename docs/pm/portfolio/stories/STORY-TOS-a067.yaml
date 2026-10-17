@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a067-add-kr-us-continuation-lanes",
-    "path": "openspec/changes/a067-add-kr-us-continuation-lanes"
+    "path": "openspec/changes/archive/2026-09-27-a067-add-kr-us-continuation-lanes"
   },
   "acceptance": [
     "KR flow continuation and US participation continuation are separate versioned lanes implemented in the same delivery wave",

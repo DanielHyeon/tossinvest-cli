@@ -1,0 +1,169 @@
+FFFFFFFFFFFFFF..
+======================================================================
+FAIL: test_a063_records_and_is_judged_by_the_landing_rules (test_check_analysis.TheA063ExceptionIsRetired.test_a063_records_and_is_judged_by_the_landing_rules)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 316, in test_a063_records_and_is_judged_by_the_landing_rules
+    self.assertEqual(code, 0, lines)
+AssertionError: 1 != 0 : ['a063-align-attestation-renewal-profile: cannot resolve the comparison base: invalid execution-baseline adoption: execution-baseline adoption is not allowed for this change/base']
+
+======================================================================
+FAIL: test_a063_with_a_leftover_record_is_judged_from_its_base_commit (test_check_analysis.TheA063ExceptionIsRetired.test_a063_with_a_leftover_record_is_judged_from_its_base_commit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 251, in test_a063_with_a_leftover_record_is_judged_from_its_base_commit
+    self.assertEqual(check_analysis.check(A063, root, context), [])
+AssertionError: Lists differ: ['cannot derive modified Go functions: inv[94 chars]ase'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'cannot derive modified Go functions: invalid execution-baseline adoption: execution-baseline adoption is not allowed for this change/base'
+
++ []
+- ['cannot derive modified Go functions: invalid execution-baseline adoption: '
+-  'execution-baseline adoption is not allowed for this change/base']
+
+======================================================================
+FAIL: test_a063s_modified_function_is_still_required (test_check_analysis.TheA063ExceptionIsRetired.test_a063s_modified_function_is_still_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 268, in test_a063s_modified_function_is_still_required
+    self.assertTrue(any("Attest" in error and "missing" in error for error in errors), errors)
+AssertionError: False is not true : ['cannot derive modified Go functions: invalid execution-baseline adoption: execution-baseline adoption is not allowed for this change/base']
+
+======================================================================
+FAIL: test_a_copied_record_changes_nothing_for_another_id (test_check_analysis.TheA063ExceptionIsRetired.test_a_copied_record_changes_nothing_for_another_id)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 360, in test_a_copied_record_changes_nothing_for_another_id
+    self.assertEqual(check_analysis.check(change, root), [], change)
+AssertionError: Lists differ: ['cannot derive modified Go functions: inv[94 chars]ase'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'cannot derive modified Go functions: invalid execution-baseline adoption: execution-baseline adoption is not allowed for this change/base'
+
++ []
+- ['cannot derive modified Go functions: invalid execution-baseline adoption: '
+-  'execution-baseline adoption is not allowed for this change/base'] : a063-align-attestation-renewal-profile
+
+======================================================================
+FAIL: test_a_deleted_function_needs_a_base_revision_bundle_from_the_base_commit (test_check_analysis.TheA063ExceptionIsRetired.test_a_deleted_function_needs_a_base_revision_bundle_from_the_base_commit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 274, in test_a_deleted_function_needs_a_base_revision_bundle_from_the_base_commit
+    self.assertEqual(check_analysis.check(A063, root), [])
+AssertionError: Lists differ: ['cannot derive modified Go functions: inv[94 chars]ase'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'cannot derive modified Go functions: invalid execution-baseline adoption: execution-baseline adoption is not allowed for this change/base'
+
++ []
+- ['cannot derive modified Go functions: invalid execution-baseline adoption: '
+-  'execution-baseline adoption is not allowed for this change/base']
+
+======================================================================
+FAIL: test_a_reference_beside_local_maps_is_refused (test_check_analysis.TheA063ExceptionIsRetired.test_a_reference_beside_local_maps_is_refused)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 308, in test_a_reference_beside_local_maps_is_refused
+    self.assertIn("function-logic reference cannot coexist with local function-logic evidence",
+AssertionError: 'function-logic reference cannot coexist with local function-logic evidence' not found in ['cannot derive modified Go functions: invalid execution-baseline adoption: execution-baseline adoption is not allowed for this change/base']
+
+======================================================================
+FAIL: test_a_stale_current_hash_fails (test_check_analysis.TheA063ExceptionIsRetired.test_a_stale_current_hash_fails)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 301, in test_a_stale_current_hash_fails
+    self.assertTrue(any("AST source hash is stale" in e or "AST hash does not match" in e for e in errors), errors)
+AssertionError: False is not true : ['cannot derive modified Go functions: invalid execution-baseline adoption: execution-baseline adoption is not allowed for this change/base']
+
+======================================================================
+FAIL: test_an_archived_a063_is_rechecked_by_its_id_on_the_general_path (test_check_analysis.TheA063ExceptionIsRetired.test_an_archived_a063_is_rechecked_by_its_id_on_the_general_path)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 347, in test_an_archived_a063_is_rechecked_by_its_id_on_the_general_path
+    self.assertEqual(check_analysis.check(A063, root, context), [])
+AssertionError: Lists differ: ['cannot derive modified Go functions: inv[94 chars]ase'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'cannot derive modified Go functions: invalid execution-baseline adoption: execution-baseline adoption is not allowed for this change/base'
+
++ []
+- ['cannot derive modified Go functions: invalid execution-baseline adoption: '
+-  'execution-baseline adoption is not allowed for this change/base']
+
+======================================================================
+FAIL: test_an_undecodable_landing_record_is_named_by_the_landing_rules (test_check_analysis.TheA063ExceptionIsRetired.test_an_undecodable_landing_record_is_named_by_the_landing_rules)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 332, in test_an_undecodable_landing_record_is_named_by_the_landing_rules
+    self.assertTrue(any("landing point is not UTF-8" in error for error in errors), errors)
+AssertionError: False is not true : ['cannot derive modified Go functions: invalid execution-baseline adoption: execution-baseline adoption is not allowed for this change/base']
+
+======================================================================
+FAIL: test_main_prints_only_the_ordinary_success_line (test_check_analysis.TheA063ExceptionIsRetired.test_main_prints_only_the_ordinary_success_line)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 242, in test_main_prints_only_the_ordinary_success_line
+    self.assertIn("evidence complete or diff-proven exempt", output.getvalue())
+AssertionError: 'evidence complete or diff-proven exempt' not found in '[logic-map] fixture: execution-baseline adoption exception evidence complete\n'
+
+======================================================================
+FAIL: test_sdd_base_ref_accepts_only_the_base_commit (test_check_analysis.TheA063ExceptionIsRetired.test_sdd_base_ref_accepts_only_the_base_commit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 285, in test_sdd_base_ref_accepts_only_the_base_commit
+    self.assertEqual(check_analysis.check(A063, root), [])
+AssertionError: Lists differ: ['cannot derive modified Go functions: inv[94 chars]ase'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'cannot derive modified Go functions: invalid execution-baseline adoption: execution-baseline adoption is not allowed for this change/base'
+
++ []
+- ['cannot derive modified Go functions: invalid execution-baseline adoption: '
+-  'execution-baseline adoption is not allowed for this change/base']
+
+======================================================================
+FAIL: test_the_exception_module_and_its_suite_are_gone (test_check_analysis.TheA063ExceptionIsRetired.test_the_exception_module_and_its_suite_are_gone)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 365, in test_the_exception_module_and_its_suite_are_gone
+    self.assertFalse((here / "execution_baseline.py").exists())
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_an_adopted_changes_escaping_bundle_keeps_its_name (test_check_analysis.TheVerdictReadsWhatTheLandingJudged.test_an_adopted_changes_escaping_bundle_keeps_its_name)
+**이관 change 회귀** (Codex P2 · 적대 F3). 착지 해소를 안 거치는 이관 경로에서 미리 읽기가
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 5704, in test_an_adopted_changes_escaping_bundle_keeps_its_name
+    self.assertEqual(check_analysis.check(A063, root), [])     # 대조군
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['cannot derive modified Go functions: inv[94 chars]ase'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'cannot derive modified Go functions: invalid execution-baseline adoption: execution-baseline adoption is not allowed for this change/base'
+
++ []
+- ['cannot derive modified Go functions: invalid execution-baseline adoption: '
+-  'execution-baseline adoption is not allowed for this change/base']
+
+======================================================================
+FAIL: test_a_reused_context_carries_nothing_from_the_last_run (test_check_analysis.OneCommandJudgesOneHistoryAndOneRead.test_a_reused_context_carries_nothing_from_the_last_run)
+`check` 가 채우는 사실은 **전부** 이번 실행의 것이어야 한다. 7.5.2 는 둘만 지웠다 — 앞선 이관
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/D/Axipient/workspace/TossOS-worktrees/a125-work/dev/tools/logic-map/test_check_analysis.py", line 6492, in test_a_reused_context_carries_nothing_from_the_last_run
+    self.assertNotIn("execution_baseline_adoption", facts)      # a125: 옛 키는 채워지지도 남지도 않는다
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'execution_baseline_adoption' unexpectedly found in {'execution_baseline_adoption': False, 'effective_base': '71536618de2a8baccb49b15d0f98a676b7cc5c40', 'head': '2a8a7acf3c06821959414f27a175b6b09f028327', 'landing': '', 'required_count': 1, 'base_shaped_bundles': []}
+
+----------------------------------------------------------------------
+Ran 16 tests in 53.076s
+
+FAILED (failures=14)

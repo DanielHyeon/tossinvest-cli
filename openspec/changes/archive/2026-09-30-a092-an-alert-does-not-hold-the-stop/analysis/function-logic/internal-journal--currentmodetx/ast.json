@@ -1,0 +1,46 @@
+{
+  "file": "internal/journal/operating_mode.go",
+  "source_sha256": "093341ae577341d137f31abade8713a71ade2dfb03161db0e04aafaf0f4ce7f9",
+  "package": "journal",
+  "function": "currentModeTx",
+  "signature": "currentModeTx(params=3, results=2)",
+  "start": {
+    "line": 696,
+    "column": 1
+  },
+  "end": {
+    "line": 700,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 697,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 697,
+        "column": 9
+      },
+      "text": "currentModeFromRow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 698,
+        "column": 3
+      },
+      "text": "tx.QueryRowContext"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

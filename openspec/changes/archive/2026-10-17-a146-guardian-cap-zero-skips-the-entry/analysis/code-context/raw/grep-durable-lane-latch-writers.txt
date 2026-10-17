@@ -1,0 +1,4 @@
+$ rtk proxy grep -rn "RecordStrategyLaneLatch(" --include=*.go internal cmd | grep -v _test
+internal/app/engine/strategy_lane_latch.go:43:	RecordStrategyLaneLatch(ctx context.Context, latch journal.StrategyLaneLatch) (journal.StrategyLaneLatch, error)
+internal/app/engine/strategy_lane_latch.go:249:		stored, err := runtime.ledger.RecordStrategyLaneLatch(ctx, journal.StrategyLaneLatch{
+internal/journal/strategy_lane_latch.go:83:func (j *Journal) RecordStrategyLaneLatch(ctx context.Context, latch StrategyLaneLatch) (StrategyLaneLatch, error) {

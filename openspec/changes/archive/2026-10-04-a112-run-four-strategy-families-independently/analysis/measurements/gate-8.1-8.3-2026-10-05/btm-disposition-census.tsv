@@ -1,0 +1,223 @@
+# a112 8.4 — BTM 행 처분 census(harness/btm_census.py — 규칙은 그 파일 머리, 손 분류 없음)
+bundle	kind	exists	gap_rows	total_rows	sample_disposition
+internal-app-engine--allsixstrategyfirstlegresults	prod	NO	2	3	passing run: not entered
+internal-app-engine--buildproductionstrategymarketworker	prod	yes	1	11	진입 0
+internal-app-engine--collectarbitrated	prod	yes	0	1	
+internal-app-engine--collectoverflowing	prod	yes	0	6	
+internal-app-engine--collectunderload	prod	yes	0	1	
+internal-app-engine--collectwithlostproposal	prod	yes	0	4	
+internal-app-engine--context.newpairedstrategyentryproductionassembly	prod	yes	6	8	no — 측정상 진입 0(커버리지 공백, 통과가 아님)
+internal-app-engine--context.newrefreshingpairedstrategyentrysupervisor	prod	yes	2	4	no — 측정상 진입 0(커버리지 공백, 통과가 아님)
+internal-app-engine--context.productionstrategyworker	prod	yes	1	1	no — 측정상 진입 0(커버리지 공백, 통과가 아님)
+internal-app-engine--context.read	prod	yes	0	9	
+internal-app-engine--context.refreshpairedstrategyentryproductionassembly	prod	yes	0	3	
+internal-app-engine--context.runproductionstrategymarketcycle	prod	yes	2	4	no — 측정상 진입 0(커버리지 공백, 통과가 아님)
+internal-app-engine--coordinatemarketproposals	prod	yes	1	8	no — 측정상 진입 0(커버리지 공백, 통과가 아님)
+internal-app-engine--invokeboundedstrategycycle	prod	yes	0	2	
+internal-app-engine--newproductionstrategyfirstlegauthorityloader	prod	yes	0	1	
+internal-app-engine--newstrategydispatchcycle	prod	yes	0	1	
+internal-app-engine--newstrategyentrysupervisor	prod	yes	5	18	측정 표본의 시험 0개(블록 좌표 없거나 미실행)
+internal-app-engine--newstrategylaneruntime	prod	yes	1	1	no — 측정상 진입 0(커버리지 공백, 통과가 아님)
+internal-app-engine--newstrategyriskloaderfixture	test	yes	0	1	
+internal-app-engine--pairedstrategydispatchcyclefixture	test	yes	0	7	
+internal-app-engine--pairedstrategyfirstlegresults	prod	yes	0	1	
+internal-app-engine--productionprotectionassemblies	prod	yes	1	1	no
+internal-app-engine--productionstrategyfirstlegauthorityloader.collectstrategyfirstlegauthority	prod	yes	1	16	진입 0
+internal-app-engine--proposalroutepair	prod	yes	0	3	
+internal-app-engine--strategyaccountauthorityloader.collectmarket	prod	yes	1	10	진입 0
+internal-app-engine--strategydispatchcycle.dispatch	prod	yes	0	22	
+internal-app-engine--strategydispatchgatewayspy.observestrategyentrygate	prod	yes	0	2	
+internal-app-engine--strategyentrysupervisor.evaluationstate	prod	yes	0	2	
+internal-app-engine--strategyentrysupervisor.latchmarket	prod	yes	2	10	**no — block 953-955 count=0**
+internal-app-engine--strategyentrysupervisor.runmarket	prod	yes	0	17	
+internal-app-engine--strategyentrysupervisor.snapshot	prod	yes	0	2	
+internal-app-engine--strategyentrysupervisor.waitmarketrestart	prod	yes	2	4	**no — block 873-875 count=0, 도달 불가(아래)**
+internal-app-engine--strategyfamilygate.installed	prod	yes	0	1	
+internal-app-engine--strategyfamilylanestep	prod	yes	0	1	
+internal-app-engine--strategyfirstlegadmissionbridge.admit	prod	yes	1	8	거짓 갈래 진입 0
+internal-app-engine--strategylaneprojection	prod	yes	0	6	
+internal-app-engine--strategylaneruntime.evaluate	prod	yes	2	8	no — 측정상 진입 0(커버리지 공백, 통과가 아님)
+internal-app-engine--strategylaneruntime.projection	prod	yes	1	3	no — 측정상 진입 0(커버리지 공백, 통과가 아님)
+internal-app-engine--strategylaneruntime.record	prod	yes	1	4	no — 측정상 진입 0(커버리지 공백, 통과가 아님)
+internal-app-engine--strategylaneruntime.runlane	prod	yes	0	2	
+internal-app-engine--strategymarketarbitration.entries	prod	yes	0	2	
+internal-app-engine--strategyprojectionfromassembly	prod	yes	0	10	
+internal-app-engine--strategyproposalauthorityloader.collect	prod	yes	3	6	no — 측정상 진입 0(커버리지 공백, 통과가 아님)
+internal-app-engine--strategyproposalauthorityloader.collectmarket	prod	yes	2	15	no — 측정상 진입 0(커버리지 공백, 통과가 아님)
+internal-app-engine--strategyproposalauthorityloader.familygatefor	prod	yes	1	4	arm not entered (engine tagged suite, post-edit); no per-tes
+internal-app-engine--strategyproposalauthorityloader.loadfamilyactivation	prod	yes	0	3	
+internal-app-engine--strategyproposalauthoritypair.resultauthority	prod	yes	1	4	진입 0
+internal-app-engine--strategyriskauthorityloader.collectmarket	prod	yes	1	9	진입 0
+internal-app-engine--strategyrouteauthorityloader.collectmarket	prod	yes	0	13	
+internal-app-engine--testaclosedmarketstillcarriesthegatesactivation	test	yes	0	5	
+internal-app-engine--testadeclaredactivationthatlapsesrollsitsmarketbackinsteadofwidening	test	yes	0	16	
+internal-app-engine--testadroppedtriggerneverdrivesacycle	test	yes	0	7	
+internal-app-engine--testadurablelatchthatnamesnolaneinthisbuildstopsthecycleloudlyandcanbeclosed	test	yes	0	6	
+internal-app-engine--testagatedfamilymustnotshrinkthemarketintotheexactlyonevalve	test	yes	0	9	
+internal-app-engine--testalatchedlanecomesbacklatchedaftertheprocessrestarts	test	yes	0	3	
+internal-app-engine--testalatchonlyreopensforastrictlynewerverifiedactivation	test	yes	0	7	
+internal-app-engine--testaledgerthatcannottakethelatchstopsthecycle	test	yes	0	2	
+internal-app-engine--testamarketwithmorescopesthanthequeueholdsclosesinsteadofdroppingone	test	yes	0	7	
+internal-app-engine--testaproposalmeasuredagainstanothersymbolsrouteauthorityisrefused	test	yes	0	4	
+internal-app-engine--testarestoredlatchkeepsthefirstcauseacrosstherestart	test	yes	0	3	
+internal-app-engine--testarolledbackgateclosesthemarketevenwithoutlanes	test	yes	0	2	
+internal-app-engine--testeveryfamilylaneisdormantuntilasignedmanifestpromotesit	test	yes	0	8	
+internal-app-engine--testeverylanestaysdormantonaproposalitactuallyowns	test	yes	0	5	
+internal-app-engine--testnoproductionsitediscardstheseamsadmissionanswer	test	yes	0	17	
+internal-app-engine--testonelatchedlaneleavesitssevenpeersopenacrossarestart	test	yes	0	6	
+internal-app-engine--testonlythepackagelevelstepeverrunsinsidealane	test	yes	0	6	
+internal-app-engine--testproductionfirstlegauthorityloaderpairedkrus	test	yes	0	11	
+internal-app-engine--testproposalcollectmarketclosesthemarketbeforebuildingentries	test	NO	0	17	
+internal-app-engine--testreadingthelaneprojectionneverchangesalane	test	yes	0	7	
+internal-app-engine--testrollingbackleavesalatchedlanelatched	test	yes	0	8	
+internal-app-engine--teststrategydispatchcyclepairskrusthroughderivedleaseandgateway	test	yes	0	7	
+internal-app-engine--teststrategydispatchcyclereadonlyrefusalsprecedefirstlegadmissionpairedkrus	test	yes	0	7	
+internal-app-engine--teststrategydispatchcyclerunskrusconcurrentlyunderonecentralowner	test	yes	0	10	
+internal-app-engine--teststrategyfirstlegadmissionusesguardianonlyallsixlanes	test	NO	4	4	passing run: not entered
+internal-app-engine--teststrategyproposalauthoritykeepsmarketfailurelocal	test	yes	0	3	
+internal-app-engine--teststrategyproposalauthorityloadskrusconcurrently	test	yes	0	2	
+internal-app-engine--testsymbolswithnoproposalatallarecountedrefusedratherthanarbitrated	test	yes	0	2	
+internal-app-engine--testthecyclegenerationisthemarketwaveinwhichthelanewaslastobserved	test	yes	0	9	
+internal-app-engine--testthelanedesiredandeffectivearetheactivationthewaveranwith	test	yes	0	8	
+internal-app-engine--testthelanestageonitsowncallsthegatewayzerotimes	test	yes	0	2	
+internal-app-engine--testtheproductionstepneverlatchessotheledgerstaysempty	test	yes	0	7	
+internal-app-engine--testtwomarketsevaluatetheirownlanesconcurrentlywithouttreadingoneachother	test	yes	0	7	
+internal-app-engine--validatestrategyfirstlegauthority	prod	yes	5	5	no
+internal-app-engine--validatestrategyfirstlegresult	prod	yes	7	7	no
+internal-breakoutlane--evaluatefresh	prod	yes	0	20	
+internal-breakoutlane--newfxseal	prod	yes	0	3	
+internal-breakoutlane--testadversarialinvalidutf8configandfxdirectionscale	test	yes	0	3	
+internal-clock--market.tradingday	prod	yes	0	1	
+internal-console--multimarketstrategyruntimepage.project	prod	yes	0	2	
+internal-execgw--allreasoncodes	prod	yes	0	1	
+internal-execgw--gateway.checkprotection	prod	yes	5	5	no
+internal-execgw--testqfinalcampaignfirstlegprojectsguardianownedlineageallsixlanes	test	NO	14	14	passing run: not entered
+internal-journal--testprojectacceptedstrategyflowlineagepairsallsixkruslanes	test	NO	12	12	passing run: not entered
+internal-journal--testrecordqfinalcampaignfirstlegacceptsallstrategyflowlanespaired	test	yes	6	7	passing run: not entered
+internal-journal--testschematablesandcolumns	test	yes	4	7	아니오 — 진입하지 않는 arm
+internal-official--adaptorderbook	prod	yes	0	3	
+internal-official--adaptprices	prod	yes	0	2	
+internal-official--client.dorequest	prod	yes	0	2	
+internal-official--client.orderbook	prod	yes	0	1	
+internal-official--client.prices	prod	yes	0	1	
+internal-official--client.send	prod	yes	0	9	
+internal-official--client.strictminutecandles	prod	yes	0	11	
+internal-official--parsedecimal	prod	yes	0	2	
+internal-official--strictminutecandle	prod	yes	0	10	
+internal-official--strictminutecandles	prod	yes	0	7	
+internal-official--strictminutecursor	prod	yes	0	6	
+internal-official--strictminutedecode	prod	yes	0	10	
+internal-official--strictminutefinalattempt	prod	yes	0	2	
+internal-official--strictminuteobject	prod	yes	0	8	
+internal-official--strictminutewalk	prod	yes	0	15	
+internal-official--unwrapanddecode	prod	yes	0	4	
+internal-officialbars--adoptpage	prod	yes	0	3	
+internal-officialbars--brokertimestamp	prod	yes	0	1	
+internal-officialbars--checkoverlap	prod	yes	0	3	
+internal-officialbars--cursorbefore	prod	yes	0	1	
+internal-officialbars--krbar	prod	yes	0	1	
+internal-officialbars--minutegaps	prod	yes	0	5	
+internal-officialbars--pollclosedbars	prod	yes	0	42	
+internal-officialbars--testpollendtoendthroughtherealofficialclient	test	yes	0	13	
+internal-officialbars--testpollrefusesacalendarwindowthatisnotonitsownday	test	yes	0	3	
+internal-officialbars--testpollstoresonlyregularsessionbarsbutusestheothersassuccessors	test	yes	0	6	
+internal-officialbars--usbar	prod	yes	0	1	
+internal-riskbucket--bindproductionriskinputs	prod	yes	0	10	
+internal-riskbucket--loadproductionriskentries	prod	yes	0	19	
+internal-riskbucket--loadproductionrisksnapshotauthority	prod	yes	0	8	
+internal-riskbucket--validproductionriskpolicycontents	prod	yes	0	14	
+internal-scheduler--adaptcalendarday	prod	yes	0	10	
+internal-scheduler--budgetcoordinator.complete	prod	yes	0	1	
+internal-scheduler--budgetcoordinator.tryacquire	prod	yes	0	1	
+internal-strategyarbiter--arbitrate	prod	yes	0	15	
+internal-strategyarbiter--continueexistingowner	prod	yes	0	3	
+internal-strategyarbiter--familyscore	prod	yes	0	4	
+internal-strategyarbiter--ownersnapshotfault	prod	yes	0	5	
+internal-strategyarbiter--selecthighestscore	prod	yes	0	10	
+internal-strategyevidence--canonicalintegervalue	prod	yes	0	8	
+internal-strategyevidence--checkclosedbar1m	prod	yes	0	28	
+internal-strategyevidence--kindsupportsmarket	prod	yes	0	5	
+internal-strategyevidence--minorfromrawdecimal	prod	yes	0	10	
+internal-strategyevidence--newclosedbar1menvelope	prod	yes	0	6	
+internal-strategyevidence--newclosedbar1mheader	prod	yes	0	11	
+internal-strategyevidence--normalizebarseriesquery	prod	yes	0	7	
+internal-strategyevidence--scanclosedbarrecord	prod	yes	0	16	
+internal-strategyevidence--store.append	prod	yes	0	17	
+internal-strategyevidence--store.sealbarseries	prod	yes	0	11	
+internal-strategyevidence--validatetypedpayload	prod	yes	0	12	
+internal-strategyflow--acceptedprojectionfixture	test	yes	1	1	passing run: not entered
+internal-strategyflow--canonicaldescriptor	prod	yes	0	2	
+internal-strategyflow--defaultregistry	prod	yes	0	1	
+internal-strategyflow--evaluate	prod	yes	0	1	
+internal-strategyflow--evaluatewith	prod	yes	0	12	
+internal-strategyflow--inputfor	prod	yes	0	10	
+internal-strategyflow--laneinput.matches	prod	yes	0	1	
+internal-strategyflow--proposalregistry	prod	yes	0	1	
+internal-strategyflow--propose	prod	yes	0	1	
+internal-strategyflow--testacceptedprojectioncoverskruscontinuationreversalandweeklytogether	test	NO	6	7	passing run: not entered
+internal-strategyflow--testapprovedcandidatesrouteandevaluateallpairedbindingswithcompletelineage	test	yes	5	6	passing run: not entered
+internal-strategyflow--testcandidateandlaneevidencearedistinctandbothpreserved	test	yes	1	1	passing run: not entered
+internal-strategyflow--testcompletelineagesealdetectsmutation	test	yes	2	2	passing run: not entered
+internal-strategyflow--testevaluaterejectsacceptedlanewithoutexactexecutionterms	test	yes	2	2	passing run: not entered
+internal-strategyflow--testevaluatesealsexactexecutionterms	test	yes	2	3	passing run: not entered
+internal-strategyflow--testexistingownerroutepinscampaignandacceptslaneconfiglineage	test	yes	2	2	passing run: not entered
+internal-strategyflow--testlanerefusalpreservesfirsttypedcodeandrouterlaneevidence	test	yes	3	3	passing run: not entered
+internal-strategyflow--testpairedregistrycoverskruscontinuationreversalandweekly	test	NO	7	7	passing run: not entered
+internal-strategyflow--testproductionevaluateusesrealrouterandallsixconcreteevaluators	test	NO	15	19	passing run: not entered
+internal-strategyflow--testrouterrefusalskipslaneandunsupportedbindingistyped	test	yes	2	2	passing run: not entered
+internal-strategyflow--testwrongmarketlaneinputandforgedacceptedlineagefailclosed	test	yes	2	2	passing run: not entered
+internal-strategyflow--validatedescriptors	prod	yes	0	4	
+internal-strategyprojection--clone	prod	yes	0	1	
+internal-strategyprojection--clonelanes	prod	yes	1	2	no — 측정상 진입 0(커버리지 공백, 통과가 아님)
+internal-strategyprojection--currentpair	prod	yes	0	2	
+internal-strategyprojection--dormantsnapshot	prod	yes	0	1	
+internal-strategyprojection--lanejsonfields	prod	yes	0	1	
+internal-strategyprojection--selectedscopejsonfields	prod	yes	0	1	
+internal-strategyprojection--unavailablesnapshot	prod	yes	0	1	
+internal-strategyprojection--validate	prod	yes	0	7	
+internal-strategyprojection--validatelane	prod	yes	7	17	no — 측정상 진입 0(커버리지 공백, 통과가 아님)
+internal-strategyprojectionrpc--client.read	prod	yes	0	8	
+internal-strategyprojectionrpc--testclientignoresadditivefieldsfromanewerengine	test	yes	0	10	
+internal-strategyprojectionrpc--testunixclientrejectsunknownschemafieldsandoversizedresponse	test	NO	0	2	
+internal-strategyproposal--buildlaneinput	prod	yes	17	21	arm not entered (untagged proposal suite); arm not entered (
+internal-strategyproposal--lanematchesmarket	prod	yes	0	2	
+internal-strategyproposal--loadproductionauthoritybatch	prod	yes	15	21	arm not entered (untagged proposal suite); arm not entered (
+internal-strategyproposal--productionbatchauthority.for	prod	yes	0	1	
+internal-strategyproposal--productionbatchauthority.len	prod	yes	0	1	
+internal-strategyproposal--productionbatchauthority.manifestdigest	prod	yes	1	1	not entered by any measured profile
+internal-strategyproposal--productionbatchauthorityfortest	prod	yes	0	2	
+internal-strategyproposal--productionfixture	test	yes	0	1	
+internal-strategyproposal--validscopes	prod	yes	3	3	arm not entered (untagged proposal suite); arm not entered (
+internal-strategyrouter--acquirefingerprint	prod	yes	1	1	no
+internal-strategyrouter--allfourfamiliesfortest	prod	yes	0	1	
+internal-strategyrouter--capabilityseal	prod	yes	1	1	no
+internal-strategyrouter--capabilitytoken	prod	yes	1	1	no
+internal-strategyrouter--decodeproductionfamilyactivation	prod	yes	0	4	
+internal-strategyrouter--failedfields	prod	yes	0	2	
+internal-strategyrouter--familyactivationdocument.body	prod	yes	0	5	
+internal-strategyrouter--familyactivationremaining	prod	yes	0	1	
+internal-strategyrouter--loadproductionfamilyactivation	prod	yes	0	10	
+internal-strategyrouter--loadproductionrouteauthoritybatch	prod	yes	0	17	
+internal-strategyrouter--productionrouteauthority.ownerdigest	prod	yes	0	1	
+internal-strategyrouter--productionroutedescriptors	prod	yes	0	2	
+internal-strategyrouter--productionroutefixture.body	prod	yes	0	2	
+internal-strategyrouter--productionroutefixture.write	prod	yes	6	6	passing run: not entered
+internal-strategyrouter--quotaauthority.acquire	prod	yes	6	6	no
+internal-strategyrouter--quotaauthority.complete	prod	yes	6	6	no
+internal-strategyrouter--quotasnapshotseal	prod	yes	2	2	no
+internal-strategyrouter--route	prod	yes	25	25	no
+internal-strategyrouter--testpairedproductionrouteauthorityloadsexactthreelanesindependently	test	NO	5	5	passing run: not entered
+internal-strategyrouter--testproductionrouteauthoritybatchusesevery	test	yes	0	7	
+internal-strategyrouter--testproductionrouteauthorityfailureismarketlocal	test	yes	0	5	
+internal-strategyrouter--testproductionrouteauthorityselectseverysignedsymbolscope	test	yes	0	4	
+internal-strategyrouter--validacquirerequest	prod	yes	1	1	no
+internal-strategyrouter--validateproductionfamilyactivation	prod	yes	0	8	
+internal-strategyrouter--validproductionroutecandidates	prod	yes	1	3	arm not entered (untagged package suite); arm not entered (t
+internal-strategyrouter--verifyproductionroutemanifest	prod	yes	3	3	arm not entered (untagged package suite); arm not entered (t
+internal-strategyworker--familyworker.run	prod	yes	0	2	
+internal-strategyworker--lane.health	prod	yes	0	1	
+internal-strategyworker--lane.run	prod	yes	0	1	
+internal-strategyworker--testproductionworkersareexactlytheeightthegoldenfroze	test	yes	0	6	
+tools-a112-mb-us-source--run	prod	yes	3	38	no
+
+# 합계 (kind, exists, gap|rows): ('prod', 'NO', 'gap')=2, ('prod', 'NO', 'rows')=3, ('prod', 'yes', 'gap')=156, ('prod', 'yes', 'rows')=973, ('test', 'NO', 'gap')=63, ('test', 'NO', 'rows')=87, ('test', 'yes', 'gap')=32, ('test', 'yes', 'rows')=307

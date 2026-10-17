@@ -1,0 +1,101 @@
+{
+  "file": "internal/app/engine/gateway.go",
+  "source_sha256": "cf4833845140eba8f7ca16de823d821985c3826c04b2e4f74c8c068ca61ff29d",
+  "package": "engine",
+  "function": "restoreAlertEntryLatch",
+  "signature": "restoreAlertEntryLatch(params=3, results=1)",
+  "start": {
+    "line": 153,
+    "column": 1
+  },
+  "end": {
+    "line": 168,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 155,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 158,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 156,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 159,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 22
+      },
+      "text": "j.UndeliveredCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 2
+      },
+      "text": "gate.Block"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 44
+      },
+      "text": "fmt.Sprintf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

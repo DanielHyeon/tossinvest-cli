@@ -1,0 +1,47 @@
+{
+  "symbol": "ExitObserver.alert",
+  "callers": [
+    {
+      "name": "announceQuarantine",
+      "kind": "method",
+      "filePath": "internal/app/engine/exit_quarantine_announce.go",
+      "startLine": 59
+    },
+    {
+      "name": "checkOutage",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 817
+    },
+    {
+      "name": "applyFloor",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 1509
+    },
+    {
+      "name": "alertUnmanaged",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 1601
+    },
+    {
+      "name": "alertRefused",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 1622
+    },
+    {
+      "name": "alertProposalRefused",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 1654
+    },
+    {
+      "name": "noteDelay",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 1675
+    }
+  ]
+}

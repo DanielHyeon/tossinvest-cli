@@ -1,0 +1,76 @@
+# a127 RED — 시험만(설정 필드 추가 외 생산 판정 무변), base fef34f11 + 작업 트리
+## go test -tags tossos_testseams ./internal/riskbucket/ -run TestA127|TestProductionRisk
+--- FAIL: TestA127RiskLoaderReadsTheLedgerWhoseSchemaEqualsTheInjectedVersion (0.31s)
+    a127_schema_binding_test.go:41: matching ledger refused: risk bucket: production snapshot authority unavailable: risk bucket: exact journal schema unavailable
+--- FAIL: TestA127RiskLoaderRefusesANewerLedger (0.37s)
+    a127_schema_binding_test.go:51: err=risk bucket: production snapshot authority unavailable: risk bucket: exact journal schema unavailable, want an Unavailable (not scope-refused) refusal naming the newer ledger
+--- FAIL: TestA127RiskLoaderRefusesAnOlderLedger (0.36s)
+    a127_schema_binding_test.go:61: err=risk bucket: production snapshot authority unavailable: risk bucket: exact journal schema unavailable, want an Unavailable refusal naming the older ledger
+--- FAIL: TestA127RiskLoaderRefusesAMissingInjectionBeforeOpeningTheLedger (0.33s)
+    a127_schema_binding_test.go:73: injected=0 err=risk bucket: production snapshot authority unavailable: risk bucket: production snapshot authority unavailable, want the injection refusal before any ledger access
+--- FAIL: TestA127RiskLoaderReportsAMissingUsageColumnAsADefectEvenOnALatchedScope (0.37s)
+    a127_schema_binding_test.go:88: control: latched scope on an intact ledger err=risk bucket: production snapshot authority unavailable: risk bucket: exact journal schema unavailable, want the scope refusal
+--- FAIL: TestA127RiskLoaderReadsEverythingInOneReadOnlyTransaction (0.00s)
+    a127_schema_binding_test.go:131: no BeginTx in loadProductionRiskEntries — the reads are not in one transaction
+--- FAIL: TestProductionRiskSnapshotAuthorityPairedKRUSSameWave (0.64s)
+    production_snapshot_authority_test.go:45: KR load: risk bucket: production snapshot authority unavailable: risk bucket: exact journal schema unavailable
+--- FAIL: TestProductionRiskSnapshotAuthorityFailureIsMarketLocal (0.64s)
+    production_snapshot_authority_test.go:74: US peer authority was contaminated: risk bucket: production snapshot authority unavailable: risk bucket: exact journal schema unavailable
+--- FAIL: TestProductionRiskSnapshotAuthorityReadsExactUsageAndRefusesLatch (0.89s)
+    production_snapshot_authority_test.go:116: risk bucket: production snapshot authority unavailable: risk bucket: exact journal schema unavailable
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	4.529s
+FAIL
+## go test ./internal/strategyrouter/ -run TestA127|TestProductionRoute
+--- FAIL: TestA127RouteLoaderReadsTheLedgerWhoseSchemaEqualsTheInjectedVersion (0.08s)
+    a127_schema_binding_test.go:41: matching ledger refused: strategyrouter: production route authority unavailable: owner snapshot
+--- FAIL: TestA127RouteLoaderRefusesANewerLedgerAndSaysSoAtTheBatchBoundary (0.14s)
+    a127_schema_binding_test.go:51: err=strategyrouter: production route authority unavailable: owner snapshot, want an Unavailable refusal naming the newer ledger
+--- FAIL: TestA127RouteLoaderRefusesAnOlderLedgerAndSaysSoAtTheBatchBoundary (0.08s)
+    a127_schema_binding_test.go:62: err=strategyrouter: production route authority unavailable: owner snapshot, want an Unavailable refusal naming the older ledger
+--- FAIL: TestA127RouteLoaderRefusesAMissingInjectionBeforeOpeningTheLedger (0.10s)
+    a127_schema_binding_test.go:75: injected=0 err=strategyrouter: production route authority unavailable: owner snapshot, want the injection refusal before any ledger access
+--- FAIL: TestProductionRouteAuthorityFailureIsMarketLocal (0.11s)
+    production_test.go:55: US was gated by KR failure: authority={request:{Key:{AccountRef: Market: Symbol: PositionGeneration:0} ExpectedOwnerRevision:0 ExpectedMarketRevision:0 EvaluatedAt:{wall:0 ext:0 loc:<nil>} Snap
+--- FAIL: TestProductionRouteAuthoritySelectsEverySignedSymbolScope (0.08s)
+    production_test.go:93: KR 035420 load: strategyrouter: production route authority unavailable: owner snapshot
+--- FAIL: TestProductionRouteAuthorityBatchUsesEverySignedScopeInOneMarketSnapshot (0.07s)
+    production_test.go:126: KR batch load: strategyrouter: production route authority unavailable: owner snapshot
+--- FAIL: TestProductionRouteAuthorityRestoresExactActiveOwner (0.15s)
+    production_test.go:172: strategyrouter: production route authority unavailable: owner snapshot
+--- FAIL: TestProductionRouteCandidatesCarryNoRawArbitrationScore (0.07s)
+    production_test.go:415: KR load: strategyrouter: production route authority unavailable: owner snapshot
+--- FAIL: TestProductionRouteAuthorityCarriesThreeIndependentSeals (0.08s)
+    production_test.go:532: KR load: strategyrouter: production route authority unavailable: owner snapshot
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	1.785s
+FAIL
+## go test -tags tossos_testseams ./internal/strategyrouter/ -run TestA127
+--- FAIL: TestA127RouteLoaderReadsTheLedgerWhoseSchemaEqualsTheInjectedVersion (0.15s)
+    a127_schema_binding_test.go:41: matching ledger refused: strategyrouter: production route authority unavailable: owner snapshot
+--- FAIL: TestA127RouteLoaderRefusesANewerLedgerAndSaysSoAtTheBatchBoundary (0.16s)
+    a127_schema_binding_test.go:51: err=strategyrouter: production route authority unavailable: owner snapshot, want an Unavailable refusal naming the newer ledger
+--- FAIL: TestA127RouteLoaderRefusesAnOlderLedgerAndSaysSoAtTheBatchBoundary (0.10s)
+    a127_schema_binding_test.go:62: err=strategyrouter: production route authority unavailable: owner snapshot, want an Unavailable refusal naming the older ledger
+--- FAIL: TestA127RouteLoaderRefusesAMissingInjectionBeforeOpeningTheLedger (0.11s)
+    a127_schema_binding_test.go:75: injected=0 err=strategyrouter: production route authority unavailable: owner snapshot, want the injection refusal before any ledger access
+--- FAIL: TestA127RouteLoaderReadsARealJournalOpenedByJournalOpen (0.64s)
+    a127_real_journal_test.go:38: KR: real journal (schema 35) refused: strategyrouter: production route authority unavailable: owner snapshot
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	1.523s
+FAIL
+## go test ./internal/app/engine/ -run TestA127
+--- FAIL: TestA127EngineInjectsTheJournalSchemaVersionConstant (0.00s)
+    a127_schema_injection_test.go:37: strategy_risk_authority.go: imports journal="" ProductionRiskSnapshotConfig="riskbucket" — the site must import both
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.005s
+FAIL
+## go test -tags tossos_testseams ./internal/app/engine/ -run TestTheRiskLoaderReadsTheRealJournal|TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope
+--- FAIL: TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope (1.03s)
+    a112_owner_scope_trading_test.go:255: J2 measured: one activated two-scope KR wave holds risk=2 + account=2 owner-scope entries (one load attempt each)
+    a112_owner_scope_trading_test.go:259: first wave placed= err=engine: first-leg admission AUTHORITY_COLLECTION_FAILED: paired production authority is incomplete for market, want the first scope in coordinator order on
+--- FAIL: TestTheRiskLoaderReadsTheRealJournal (1.10s)
+    a112_owner_scope_trading_test.go:374: real-journal load (schema 35) err=risk bucket: production snapshot authority unavailable: risk bucket: exact journal schema unavailable entries=5, want the five-bucket bundle
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	2.143s
+FAIL

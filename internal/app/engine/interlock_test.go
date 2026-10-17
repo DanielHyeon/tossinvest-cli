@@ -30,6 +30,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
 
 var interlockNow = time.Date(2026, 7, 26, 12, 0, 0, 0, time.UTC)
@@ -40,13 +41,33 @@ var interlockNow = time.Date(2026, 7, 26, 12, 0, 0, 0, time.UTC)
 // since task 7.5 that is what the interlock's single-source clause asks of a
 // Guardian: a risk authority that cannot say what it authorises against cannot be
 // shown to be the same source the audit trail records.
-type stubGuardian struct{ limits execgw.Limits }
+type stubGuardian struct {
+	limits execgw.Limits
+	// dailyBuy 는 진술할 하루 매수 상한(a136). 비어 있으면 KRW 게이트의 해석 기본값(10,000,000 KRW).
+	dailyBuy riskcalc.Money
+	// maxOpenPositions 는 진술할 최대 보유 포지션 수(a138). 0 이면 해석 기본값 6.
+	maxOpenPositions int
+}
 
 func (stubGuardian) Authorize(context.Context, execgw.AuthorizationRequest) (execgw.GuardianDecision, error) {
 	return execgw.GuardianDecision{}, errors.New("stub guardian authorises nothing")
 }
 
 func (g stubGuardian) ExposureLimits() execgw.Limits { return g.limits }
+
+func (g stubGuardian) DailyBuyNotionalLimit() riskcalc.Money {
+	if g.dailyBuy == (riskcalc.Money{}) {
+		return riskcalc.Money{Amount: "10000000", Currency: "KRW"}
+	}
+	return g.dailyBuy
+}
+
+func (g stubGuardian) MaxOpenPositionsLimit() int {
+	if g.maxOpenPositions == 0 {
+		return 6
+	}
+	return g.maxOpenPositions
+}
 
 // silentGuardian authorises nothing and says nothing about its limits. It is the
 // shape of a Guardian written before the single-source clause existed.
