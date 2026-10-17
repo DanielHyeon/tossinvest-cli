@@ -1,0 +1,18 @@
+$ rtk proxy grep -rn "\.Supervisor\b\|SupervisedLoop()" --include=*.go internal cmd | grep -v _test
+internal/app/engine/strategy_entry_supervisor.go:736:func (s *StrategyEntrySupervisor) SupervisedLoop() SupervisedLoop {
+internal/app/engine/strategy_runtime_projection.go:82:	if c == nil || assembly.Supervisor == nil {
+internal/app/engine/strategy_runtime_projection.go:94:		c.strategySupervisor = assembly.Supervisor
+internal/app/engine/strategy_runtime_projection.go:105:		c.strategySupervisor = assembly.Supervisor
+internal/app/engine/strategy_runtime_projection.go:123:		worker, ok := assembly.Supervisor.Snapshot(market)
+internal/protectionreadiness/attestation.go:113:	if !validSupervisorBinding(input.Supervisor, input.Scope) {
+internal/protectionreadiness/readiness.go:144:					EvidenceDigest: verified.body.EvidenceDigest, SupervisorDigest: marketInput.Supervisor.ComponentDigest,
+cmd/tossctl/engine.go:742:			strategyEntry.SupervisedLoop(),
+
+$ rtk proxy grep -rn "NewRefreshingPairedStrategyEntrySupervisor\|Effective: true" --include=*.go internal cmd | grep -v _test
+internal/app/engine/strategy_entry_supervisor.go:393:// NewRefreshingPairedStrategyEntrySupervisor builds the production runtime's
+internal/app/engine/strategy_entry_supervisor.go:399:func (c *Context) NewRefreshingPairedStrategyEntrySupervisor(clk clock.Clock) (*StrategyEntrySupervisor, error) {
+internal/app/engine/strategy_entry_supervisor.go:526:	return StrategyMarketWorker{Market: market, Effective: true, AuthorityGeneration: s.desired.Revision,
+cmd/tossctl/engine.go:690:	strategyEntry, err := ectx.NewRefreshingPairedStrategyEntrySupervisor(clk)
+
+$ rtk proxy grep -rn "effective = " internal/app/engine/*.go | grep -v _test
+internal/app/engine/strategy_entry_supervisor.go:1138:	worker.effective = false

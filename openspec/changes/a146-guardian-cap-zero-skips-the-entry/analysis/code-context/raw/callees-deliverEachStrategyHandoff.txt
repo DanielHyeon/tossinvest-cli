@@ -1,0 +1,12 @@
+
+Callees of "deliverEachStrategyHandoff" (3):
+
+method      Deliver
+  internal/strategyhandoff/handoff.go:199
+
+struct      Handoff
+  internal/strategyhandoff/handoff.go:84
+
+struct      Delivered
+  internal/strategyhandoff/handoff.go:182
+

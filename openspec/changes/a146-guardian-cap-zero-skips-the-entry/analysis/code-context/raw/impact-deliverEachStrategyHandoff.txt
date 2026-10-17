@@ -1,0 +1,50 @@
+
+Impact of changing "deliverEachStrategyHandoff" — 25 affected symbols:
+
+internal/app/engine/strategy_market_handoff_delivery.go
+  function    deliverEachStrategyHandoff:66
+  function    dispatchStrategyMarketHandoffs:32
+
+internal/app/engine/a112_owner_scope_handoff_test.go
+  function    a112TwoScopePin:137
+  function    TestAScopeTheRiskAuthorityDoesNotHoldIsAFaultInEitherOrder:127
+  function    TestEveryAdmittedOwnerScopeReachesTheDeliveryBody:174
+  function    TestAScopeFaultStopsTheCycleBeforeTheNextScope:191
+
+internal/app/engine/a112_scope_refusal_census_test.go
+  function    TestOnlyATypedScopeRefusalIsSkippedEveryOtherFaultStops:100
+
+internal/app/engine/a112_breakout_first_leg_only_test.go
+  function    TestTheFirstLegAuthorityRefusesASecondBreakoutLegEvenPastTheDeliverySkip:180
+  function    TestASecondBreakoutFirstLegWhileTheClaimIsActiveNeverReachesTheBroker:156
+
+internal/app/engine/a137_daily_loss_cycle_test.go
+  function    a137Deliver:37
+  function    TestA137ADailyLossModeBlockEndsTheCycleQuietly:53
+  function    TestA137OtherModeBlocksBehaveAsBefore:66
+  function    TestA137AMixedCycleStillReportsItsSkippedScopes:84
+  function    TestA137AnUnmeasurableDayIsAPolicyOutcomeNotALaneFault:171
+
+internal/app/engine/a137_lane_kinds_test.go
+  function    a137RunCycles:41
+  function    TestA137TheDailyLossStopsNeverLatchOrSwallowOnEitherLaneKind:77
+  function    TestA137AnUnmarkedFaultStillLatchesOrIsSwallowedAsToday:92
+
+internal/app/engine/a112_owner_scope_delivery_test.go
+  function    TestTheMarketDeliveryDispatchesEveryAdmittedScopeInOrder:56
+  function    TestASkippedScopeDoesNotStopTheNextOne:67
+  function    TestAFaultInOneScopeStopsTheCycleBeforeTheNext:83
+
+internal/app/engine/a112_qfinal_family_test.go
+  function    TestTwoFamiliesRacingForOneOwnerScopeLeaveOneTransaction:144
+
+internal/app/engine/a112_owner_scope_trading_test.go
+  method      deliverKR:244
+  function    TestAForgedScopeStopsTheCycleBeforeTheNextValidScope:486
+
+internal/app/engine/a137_unmeasurable_notice_test.go
+  function    TestA137AnUnmeasurableDayIsCountedAndAnnouncedOncePerAccountDay:36
+
+internal/app/engine/strategy_entry_supervisor.go
+  method      runProductionStrategyMarketCycle:531
+

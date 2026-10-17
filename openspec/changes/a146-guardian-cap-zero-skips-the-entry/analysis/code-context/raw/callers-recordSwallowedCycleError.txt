@@ -1,0 +1,6 @@
+
+Callers of "recordSwallowedCycleError" (1):
+
+method      runMarket
+  internal/app/engine/strategy_entry_supervisor.go:910
+

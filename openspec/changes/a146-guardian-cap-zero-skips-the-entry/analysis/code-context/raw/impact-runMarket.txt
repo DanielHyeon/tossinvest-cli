@@ -1,0 +1,49 @@
+
+Impact of changing "runMarket" — 26 affected symbols:
+
+internal/app/engine/strategy_entry_supervisor.go
+  method      runMarket:910
+  method      Run:808
+
+cmd/tossctl/engine_strategy_entry_dormant_test.go
+  function    TestProductionStrategyEntryAssemblyIsPairedDormantAndInert:15
+
+internal/app/engine/a112_fault_stream_capacity_test.go
+  function    TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining:45
+
+internal/app/engine/strategy_entry_supervisor_polling_test.go
+  function    TestStrategyEntrySupervisorPollsKRAndUSImmediatelyInTheSameWave:13
+  function    TestStrategyEntrySupervisorZeroPollIntervalKeepsExplicitTriggerSemantics:54
+  function    TestStrategyEntrySupervisorPollerKeepsCompletePeerRunningWhenOtherMarketDormant:78
+  function    TestStrategyEntrySupervisorPollsDormantRefreshWorkerWithoutOpeningPublicTrigger:105
+
+internal/app/engine/strategy_entry_supervisor_test.go
+  function    TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently:37
+  function    TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority:138
+  function    TestPairedMarketRestartHonorsPublishedAbsoluteDeadlineAfterHandoffRace:286
+  function    TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal:341
+  function    TestMarketQueueSaturationDoesNotConsumePeerQueue:381
+  function    TestShutdownAndTriggerShareBarrierAndDrainBothQueues:412
+  function    TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction:474
+  function    TestExpiredAuthorityLatchesBeforeEvaluation:528
+
+internal/app/engine/a112_central_integrity_entry_gate_test.go
+  function    a112RunRefreshOnlyPair:37
+
+internal/app/engine/a112_fault_scope_test.go
+  function    TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping:93
+  function    TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue:253
+  function    TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError:320
+  function    TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning:383
+  function    TestAnEffectiveMarketFaultLeavesItsPeerAndTheSupervisorAlone:436
+  function    TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows:502
+
+internal/app/engine/a137_lane_kinds_test.go
+  function    a137RunCycles:41
+
+internal/app/engine/a137_unmeasurable_notice_test.go
+  function    TestA137AnUnmeasurableDayIsCountedAndAnnouncedOncePerAccountDay:36
+
+tools/a128-jev-shadow-probe/collect.go
+  method      runMarket:295
+

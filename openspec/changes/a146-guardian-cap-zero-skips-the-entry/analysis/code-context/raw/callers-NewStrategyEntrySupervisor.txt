@@ -1,0 +1,45 @@
+
+Callers of "NewStrategyEntrySupervisor" (14):
+
+function    newFaultStreamSupervisor
+  internal/app/engine/a112_fault_stream_capacity_test.go:81
+
+function    TestStrategyEntrySupervisorRejectsUnsafeProductionPollIntervals
+  internal/app/engine/strategy_entry_supervisor_polling_test.go:134
+
+function    TestStrategySupervisorRejectsInvalidAssemblies
+  internal/app/engine/strategy_entry_supervisor_test.go:582
+
+function    mustStrategySupervisor
+  internal/app/engine/strategy_entry_supervisor_test.go:661
+
+function    TestSafetyLoopsKeepTheirCadenceWhileEveryEntryQueueIsSaturated
+  internal/app/engine/a112_lane_operability_test.go:165
+
+function    TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow
+  internal/app/engine/a112_shadow_projection_test.go:178
+
+function    TestTheCoordinatorChildShowsEveryAdmittedOwnerScope
+  internal/app/engine/a112_lane_coordinator_projection_test.go:241
+
+function    TestSafetyLoopsKeepTheirCadenceThroughEveryEntryFailureKind
+  internal/app/engine/a112_safety_cadence_under_failure_testseam_test.go:27
+
+function    TestAnActivatedTwoScopeMarketPromotesItsWorkerPerScope
+  internal/app/engine/a112_owner_scope_trading_test.go:404
+
+function    a137Supervisor
+  internal/app/engine/a137_lane_kinds_test.go:20
+
+function    TestA137AnUnmeasurableDayIsCountedAndAnnouncedOncePerAccountDay
+  internal/app/engine/a137_unmeasurable_notice_test.go:36
+
+method      NewPairedStrategyEntryProductionAssembly
+  internal/app/engine/strategy_entry_supervisor.go:310
+
+method      NewRefreshingPairedStrategyEntrySupervisor
+  internal/app/engine/strategy_entry_supervisor.go:399
+
+function    NewPairedStrategyEntryProductionAssembly
+  internal/app/engine/strategy_entry_supervisor.go:633
+

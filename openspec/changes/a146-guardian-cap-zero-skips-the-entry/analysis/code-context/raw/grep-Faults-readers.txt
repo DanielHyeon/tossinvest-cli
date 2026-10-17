@@ -1,0 +1,15 @@
+$ rtk proxy grep -rn "Faults()" --include=*.go internal cmd  (HEAD befea6ee)
+internal/app/engine/strategy_entry_supervisor.go:745:func (s *StrategyEntrySupervisor) Faults() <-chan StrategyWorkerFault {
+internal/app/engine/strategy_entry_supervisor_test.go:509:	case extra := <-supervisor.Faults():
+internal/app/engine/strategy_entry_supervisor_test.go:673:	case fault := <-supervisor.Faults():
+internal/app/engine/a112_eight_lane_fault_test.go:146:	if got := len(run.supervisor.Faults()); got != 0 {
+internal/app/engine/a112_eight_lane_fault_test.go:221:	if blocks := run.gate.Blocks(); len(blocks) != 0 || len(run.supervisor.Faults()) != 0 {
+internal/app/engine/a112_eight_lane_fault_test.go:222:		t.Fatalf("an unrecorded lane latch escalated: gate=%v faults=%d", blocks, len(run.supervisor.Faults()))
+internal/app/engine/a112_eight_lane_fault_test.go:246:	if got, want := cap(run.supervisor.Faults()), len(run.supervisor.workers); got != want {
+internal/app/engine/a112_fault_scope_test.go:356:	case fault := <-supervisor.Faults():
+internal/app/engine/a112_fault_scope_test.go:571:	case fault := <-supervisor.Faults():
+internal/app/engine/a112_fault_stream_capacity_test.go:30:	if got, want := cap(supervisor.Faults()), len(supervisor.workers); got != want {
+internal/app/engine/a112_fault_stream_capacity_test.go:43:// 건넬 수 있다. 생산에는 `Faults()` 소비자가 없으므로(이 저장소 전체에서 읽는
+internal/app/engine/a112_fault_stream_capacity_test.go:64:	for len(supervisor.Faults()) < len(supervisor.workers) && time.Now().Before(deadline) {
+internal/app/engine/a112_fault_stream_capacity_test.go:67:	if got := len(supervisor.Faults()); got != len(supervisor.workers) {
+internal/app/engine/a146_cap_zero_characterization_test.go:119:	return snapshot, calls.Load(), len(supervisor.Faults())

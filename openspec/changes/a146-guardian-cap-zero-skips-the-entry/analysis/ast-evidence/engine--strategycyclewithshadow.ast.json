@@ -1,0 +1,192 @@
+{
+  "file": "internal/app/engine/strategy_lane_shadow.go",
+  "source_sha256": "0a2e05373b77ed51d56bc8c8695795d7e41a5a7d51dd81503045127764dc277a",
+  "package": "engine",
+  "function": "strategyCycleWithShadow",
+  "signature": "strategyCycleWithShadow(params=4, results=1)",
+  "start": {
+    "line": 67,
+    "column": 1
+  },
+  "end": {
+    "line": 89,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 70,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 75,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 79,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 82,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 68,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 80,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 83,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 87,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 14
+      },
+      "text": "clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 9
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 5
+      },
+      "text": "invalidateShadow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 5
+      },
+      "text": "c.strategyLaneRuntimeIfAny"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 13
+      },
+      "text": "run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 20
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 20
+      },
+      "text": "clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 3
+      },
+      "text": "startShadowStep"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 3
+      },
+      "text": "c.strategyLaneRuntimeIfAny"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 71,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 73,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 79,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 85,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 74,
+        "column": 3
+      }
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+
+Callees of "admit" (20):
+
+method      Now
+  internal/clock/clock.go:37
+
+constant    StartAdmitted
+  internal/strategyworker/bounded.go:42
+
+constant    StartNoTrigger
+  internal/strategyworker/bounded.go:52
+
+constant    StartTooSoon
+  internal/strategyworker/bounded.go:50
+
+constant    StartBackoff
+  internal/strategyworker/bounded.go:48
+
+constant    StartInFlight
+  internal/strategyworker/bounded.go:46
+
+constant    StartLatched
+  internal/strategyworker/bounded.go:44
+
+type_alias  Start
+  internal/strategyworker/bounded.go:38
+
+function    validateStrategyFirstLegResult
+  internal/app/engine/strategy_first_leg_admission.go:149
+
+function    strategyFirstLegRefusal
+  internal/app/engine/strategy_first_leg_admission.go:222
+
+method      Error
+  internal/exitpolicy/adoption.go:59
+
+function    validateStrategyFirstLegAuthority
+  internal/app/engine/strategy_first_leg_admission.go:185
+
+function    strategyOwnerKeyOf
+  internal/app/engine/strategy_owner_scope_authority.go:71
+
+struct      strategyScopeRefusal
+  internal/app/engine/strategy_owner_scope_authority.go:82
+
+struct      StrategyFirstLegAdmissionResult
+  internal/app/engine/strategy_first_leg_admission.go:40
+
+struct      DailyLossUnmeasurable
+  internal/execgw/a137_daily_loss.go:214
+
+struct      IssueRefusal
+  internal/execgw/riskguardian.go:97
+
+struct      QFinalRefusal
+  internal/execgw/riskguardian_qfinal.go:19
+
+constant    StrategyFirstLegAdmitted
+  internal/app/engine/strategy_first_leg_admission.go:23
+
+constant    StrategyFirstLegAtomicAdmissionFailed
+  internal/app/engine/strategy_first_leg_admission.go:28
+

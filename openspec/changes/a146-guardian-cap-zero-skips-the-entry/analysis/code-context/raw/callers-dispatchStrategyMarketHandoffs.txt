@@ -1,0 +1,30 @@
+
+Callers of "dispatchStrategyMarketHandoffs" (9):
+
+function    TestTheMarketDeliveryDispatchesEveryAdmittedScopeInOrder
+  internal/app/engine/a112_owner_scope_delivery_test.go:56
+
+function    TestASkippedScopeDoesNotStopTheNextOne
+  internal/app/engine/a112_owner_scope_delivery_test.go:67
+
+function    TestAFaultInOneScopeStopsTheCycleBeforeTheNext
+  internal/app/engine/a112_owner_scope_delivery_test.go:83
+
+function    TestTwoFamiliesRacingForOneOwnerScopeLeaveOneTransaction
+  internal/app/engine/a112_qfinal_family_test.go:144
+
+function    TestASecondBreakoutFirstLegWhileTheClaimIsActiveNeverReachesTheBroker
+  internal/app/engine/a112_breakout_first_leg_only_test.go:156
+
+method      deliverKR
+  internal/app/engine/a112_owner_scope_trading_test.go:244
+
+function    TestAForgedScopeStopsTheCycleBeforeTheNextValidScope
+  internal/app/engine/a112_owner_scope_trading_test.go:486
+
+function    TestA137AnUnmeasurableDayIsCountedAndAnnouncedOncePerAccountDay
+  internal/app/engine/a137_unmeasurable_notice_test.go:36
+
+method      runProductionStrategyMarketCycle
+  internal/app/engine/strategy_entry_supervisor.go:531
+

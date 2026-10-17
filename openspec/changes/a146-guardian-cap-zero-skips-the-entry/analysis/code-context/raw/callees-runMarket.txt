@@ -1,0 +1,60 @@
+
+Callees of "runMarket" (19):
+
+method      Done
+  internal/app/engine/a112_watchdog_cancellation_test.go:33
+
+method      evaluationState
+  internal/app/engine/strategy_entry_supervisor.go:1056
+
+method      latchMarket
+  internal/app/engine/strategy_entry_supervisor.go:1117
+
+method      signalCentral
+  internal/app/engine/strategy_entry_supervisor.go:1187
+
+method      waitMarketRestart
+  internal/app/engine/strategy_entry_supervisor.go:1038
+
+method      Err
+  internal/app/engine/a112_watchdog_cancellation_test.go:34
+
+function    withStrategyDailyLossRecorder
+  internal/app/engine/a137_daily_loss_notice.go:17
+
+method      recordDailyLossUnmeasurable
+  internal/app/engine/a137_daily_loss_notice.go:32
+
+function    invokeBoundedStrategyCycle
+  internal/app/engine/strategy_entry_supervisor.go:1081
+
+method      markAbandoned
+  internal/app/engine/strategy_entry_supervisor.go:1070
+
+method      recordSwallowedCycleError
+  internal/app/engine/strategy_entry_supervisor.go:1008
+
+function    isCentralStrategyIntegrity
+  internal/app/engine/strategy_entry_supervisor.go:170
+
+method      blockEntryOnCentralIntegrity
+  internal/app/engine/strategy_entry_supervisor.go:1027
+
+variable    ErrStrategyAuthorityExpired
+  internal/app/engine/strategy_entry_supervisor.go:148
+
+struct      Context
+  internal/app/app.go:62
+
+struct      strategyMarketRuntime
+  internal/app/engine/strategy_entry_supervisor.go:175
+
+method      resolveSession
+  tools/a128-jev-shadow-probe/collect.go:208
+
+method      now
+  internal/obs/notifier.go:374
+
+function    stamp
+  tools/a128-jev-shadow-probe/collect.go:203
+
