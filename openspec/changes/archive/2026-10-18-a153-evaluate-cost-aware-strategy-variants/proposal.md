@@ -1,10 +1,10 @@
 ## Why
 
-개별 계산 정확성이 수익성 증명은 아니다. 비용과 의존 표본을 반영한 비교로 채택·보류를 결정한다.
+개별 계산 정확성은 수익성 증명이 아니다. 사용자 승인 최소 범위에 따라 캔들·거래량·MFI를 각각 독립 비교하는 KR·US 오프라인 도구를 만들고, 실증 수익성과 정책 승급은 보류한다.
 
 ## What Changes
 
-- Strategy comparisons are preregistered and cost aware.
+- Fixed independent candle/volume/MFI hypotheses and cost-aware exploratory comparisons; no preregistration claim.
 - Insufficient evidence never produces a promoted policy.
 - Ablations preserve research boundaries.
 - 권장 순서 6/9; 선행 완료 조건: a151, a152.
@@ -25,3 +25,7 @@
 대상: Reuse offline evaluation artifacts from a151; immutable datasets and reports; no additional collection.
 위험도: Offline evaluation; empirical claims require independent holdout evidence.
 기존 운영 값·정책을 자동 이행하지 않는다. 라이브러리 추가는 기본적으로 없다.
+
+## Approved scope revision — 2026-10-18
+
+User accepted the recommended minimum. Synthetic correctness, per-market complete-session comparisons and doubled-slippage stress are in scope. Partial exits, portfolio MDD, EMA exits and authenticated holdout/promotion are deferred explicitly in design. Existing broad scope is not claimed implemented.

@@ -1,0 +1,842 @@
+[
+  {
+    "file": "tools/a151-compare-stop-policies-offline/analysis.py",
+    "sha256": "3d7849652be408103211883888b9b6ef7a5828693f9f51d51b4408c07bbecc54",
+    "function": "timestamp",
+    "start": 33,
+    "end": 37,
+    "branches_and_exits": [
+      {
+        "kind": "If",
+        "line": 34,
+        "source": "if not isinstance(s, str): raise ValueError('timestamp required')"
+      },
+      {
+        "kind": "Raise",
+        "line": 34,
+        "source": "if not isinstance(s, str): raise ValueError('timestamp required')"
+      },
+      {
+        "kind": "If",
+        "line": 36,
+        "source": "if t.tzinfo is None or t.utcoffset() is None: raise ValueError('timestamp offset required')"
+      },
+      {
+        "kind": "Raise",
+        "line": 36,
+        "source": "if t.tzinfo is None or t.utcoffset() is None: raise ValueError('timestamp offset required')"
+      },
+      {
+        "kind": "Return",
+        "line": 37,
+        "source": "return t"
+      }
+    ]
+  },
+  {
+    "file": "tools/a151-compare-stop-policies-offline/analysis.py",
+    "sha256": "3d7849652be408103211883888b9b6ef7a5828693f9f51d51b4408c07bbecc54",
+    "function": "geometry",
+    "start": 72,
+    "end": 82,
+    "branches_and_exits": [
+      {
+        "kind": "For",
+        "line": 76,
+        "source": "for name, stop in zip(ARMS, stops):"
+      },
+      {
+        "kind": "If",
+        "line": 77,
+        "source": "if not 0 < stop < entry < target: raise CandidateError('invalid_stop')"
+      },
+      {
+        "kind": "Raise",
+        "line": 77,
+        "source": "if not 0 < stop < entry < target: raise CandidateError('invalid_stop')"
+      },
+      {
+        "kind": "If",
+        "line": 80,
+        "source": "if quantity <= 0: raise CandidateError('zero_quantity')"
+      },
+      {
+        "kind": "Raise",
+        "line": 80,
+        "source": "if quantity <= 0: raise CandidateError('zero_quantity')"
+      },
+      {
+        "kind": "Return",
+        "line": 82,
+        "source": "return result"
+      }
+    ]
+  },
+  {
+    "file": "tools/a151-compare-stop-policies-offline/analysis.py",
+    "sha256": "3d7849652be408103211883888b9b6ef7a5828693f9f51d51b4408c07bbecc54",
+    "function": "costs",
+    "start": 84,
+    "end": 89,
+    "branches_and_exits": [
+      {
+        "kind": "Return",
+        "line": 87,
+        "source": "return (ceil_grid(buy*exact(cost['buy_rate'])+exact(cost['buy_fixed']),quantum),"
+      }
+    ]
+  },
+  {
+    "file": "tools/a151-compare-stop-policies-offline/analysis.py",
+    "sha256": "3d7849652be408103211883888b9b6ef7a5828693f9f51d51b4408c07bbecc54",
+    "function": "pnl",
+    "start": 91,
+    "end": 92,
+    "branches_and_exits": [
+      {
+        "kind": "Return",
+        "line": 92,
+        "source": "return (exit_price-entry)*quantity-sum(costs(entry,exit_price,quantity,cost),Fraction())"
+      }
+    ]
+  },
+  {
+    "file": "tools/a151-compare-stop-policies-offline/analysis.py",
+    "sha256": "3d7849652be408103211883888b9b6ef7a5828693f9f51d51b4408c07bbecc54",
+    "function": "parse_bars",
+    "start": 98,
+    "end": 113,
+    "branches_and_exits": [
+      {
+        "kind": "If",
+        "line": 99,
+        "source": "if not isinstance(items, list) or len(items) > (390 if interval == 1 else 78): raise ManifestError('bar count')"
+      },
+      {
+        "kind": "IfExp",
+        "line": 99,
+        "source": "if not isinstance(items, list) or len(items) > (390 if interval == 1 else 78): raise ManifestError('bar count')"
+      },
+      {
+        "kind": "Raise",
+        "line": 99,
+        "source": "if not isinstance(items, list) or len(items) > (390 if interval == 1 else 78): raise ManifestError('bar count')"
+      },
+      {
+        "kind": "For",
+        "line": 101,
+        "source": "for b in items:"
+      },
+      {
+        "kind": "If",
+        "line": 104,
+        "source": "if received < closed: raise CandidateError('received_before_close')"
+      },
+      {
+        "kind": "Raise",
+        "line": 104,
+        "source": "if received < closed: raise CandidateError('received_before_close')"
+      },
+      {
+        "kind": "If",
+        "line": 106,
+        "source": "if closed <= session_open or closed > session_close or seconds % (interval*60): raise CandidateError('bar_outside_session')"
+      },
+      {
+        "kind": "Raise",
+        "line": 106,
+        "source": "if closed <= session_open or closed > session_close or seconds % (interval*60): raise CandidateError('bar_outside_session')"
+      },
+      {
+        "kind": "If",
+        "line": 107,
+        "source": "if previous is not None and closed <= previous: raise CandidateError('duplicate_or_reversed_bars')"
+      },
+      {
+        "kind": "Raise",
+        "line": 107,
+        "source": "if previous is not None and closed <= previous: raise CandidateError('duplicate_or_reversed_bars')"
+      },
+      {
+        "kind": "If",
+        "line": 110,
+        "source": "if l <= 0 or h < l or not l <= o <= h or not l <= c <= h: raise CandidateError('invalid_ohlc')"
+      },
+      {
+        "kind": "Raise",
+        "line": 110,
+        "source": "if l <= 0 or h < l or not l <= o <= h or not l <= c <= h: raise CandidateError('invalid_ohlc')"
+      },
+      {
+        "kind": "If",
+        "line": 111,
+        "source": "if any(p < minimum or p > maximum or p % tick for p in (o,h,l,c)): raise CandidateError('tick_range_or_grid','unsupported')"
+      },
+      {
+        "kind": "Raise",
+        "line": 111,
+        "source": "if any(p < minimum or p > maximum or p % tick for p in (o,h,l,c)): raise CandidateError('tick_range_or_grid','unsupported')"
+      },
+      {
+        "kind": "Return",
+        "line": 113,
+        "source": "return result"
+      }
+    ]
+  },
+  {
+    "file": "tools/a151-compare-stop-policies-offline/analysis.py",
+    "sha256": "3d7849652be408103211883888b9b6ef7a5828693f9f51d51b4408c07bbecc54",
+    "function": "evaluate",
+    "start": 115,
+    "end": 202,
+    "branches_and_exits": [
+      {
+        "kind": "For",
+        "line": 117,
+        "source": "for k in ('id','symbol','data_source','data_version'): nonempty(candidate[k])"
+      },
+      {
+        "kind": "If",
+        "line": 119,
+        "source": "if curr is None or candidate['currency'] != curr or candidate['account_currency'] != curr or candidate['basis'] != 'unadjusted': raise CandidateError('market_currency_or_basis','unsupported')"
+      },
+      {
+        "kind": "Raise",
+        "line": 119,
+        "source": "if curr is None or candidate['currency'] != curr or candidate['account_currency'] != curr or candidate['basis'] != 'unadjusted': raise CandidateError('market_currency_or_basis','unsupported')"
+      },
+      {
+        "kind": "For",
+        "line": 126,
+        "source": "for x in (session,tick_data,cost,limits): provenance(x,signal)"
+      },
+      {
+        "kind": "If",
+        "line": 128,
+        "source": "if session['timezone'] != zone_name: raise CandidateError('timezone_mismatch')"
+      },
+      {
+        "kind": "Raise",
+        "line": 128,
+        "source": "if session['timezone'] != zone_name: raise CandidateError('timezone_mismatch')"
+      },
+      {
+        "kind": "For",
+        "line": 130,
+        "source": "for t in (op,cl):"
+      },
+      {
+        "kind": "If",
+        "line": 132,
+        "source": "if local.date().isoformat()!=candidate['date'] or t.utcoffset()!=local.utcoffset(): raise CandidateError('session_date_or_offset')"
+      },
+      {
+        "kind": "Raise",
+        "line": 132,
+        "source": "if local.date().isoformat()!=candidate['date'] or t.utcoffset()!=local.utcoffset(): raise CandidateError('session_date_or_offset')"
+      },
+      {
+        "kind": "If",
+        "line": 134,
+        "source": "if session['kind']=='holiday': raise CandidateError('holiday')"
+      },
+      {
+        "kind": "Raise",
+        "line": 134,
+        "source": "if session['kind']=='holiday': raise CandidateError('holiday')"
+      },
+      {
+        "kind": "IfExp",
+        "line": 135,
+        "source": "expected_open=dt.time(9,0) if market=='KR' else dt.time(9,30)"
+      },
+      {
+        "kind": "IfExp",
+        "line": 136,
+        "source": "expected_close=dt.time(15,30) if market=='KR' else dt.time(16,0)"
+      },
+      {
+        "kind": "If",
+        "line": 138,
+        "source": "if local_op.time()!=expected_open or length<=0 or length>23400 or length%300 or session['kind'] not in ('regular','early_close') or (session['kind']=='regular' and local_cl.time()!=expected_close) or (session['kind']=='early_close' and local_cl.time()>=expected_close): raise CandidateError('invalid_session')"
+      },
+      {
+        "kind": "Raise",
+        "line": 138,
+        "source": "if local_op.time()!=expected_open or length<=0 or length>23400 or length%300 or session['kind'] not in ('regular','early_close') or (session['kind']=='regular' and local_cl.time()!=expected_close) or (session['kind']=='early_close' and local_cl.time()>=expected_close): raise CandidateError('invalid_session')"
+      },
+      {
+        "kind": "If",
+        "line": 139,
+        "source": "if tick_data['market'] != market or tick_data['symbol'] != candidate['symbol'] or not timestamp(tick_data['valid_from']) <= op <= signal < timestamp(tick_data['valid_until']) or timestamp(tick_data['valid_until']) < cl: raise CandidateError('tick_scope_or_validity','unsupported')"
+      },
+      {
+        "kind": "Raise",
+        "line": 139,
+        "source": "if tick_data['market'] != market or tick_data['symbol'] != candidate['symbol'] or not timestamp(tick_data['valid_from']) <= op <= signal < timestamp(tick_data['valid_until']) or timestamp(tick_data['valid_until']) < cl: raise CandidateError('tick_scope_or_validity','unsupported')"
+      },
+      {
+        "kind": "If",
+        "line": 141,
+        "source": "if tick <= 0 or lo <= 0 or hi < lo: raise CandidateError('invalid_tick')"
+      },
+      {
+        "kind": "Raise",
+        "line": 141,
+        "source": "if tick <= 0 or lo <= 0 or hi < lo: raise CandidateError('invalid_tick')"
+      },
+      {
+        "kind": "If",
+        "line": 142,
+        "source": "if cost['currency']!=curr or limits['currency']!=curr: raise CandidateError('currency_mismatch','unsupported')"
+      },
+      {
+        "kind": "Raise",
+        "line": 142,
+        "source": "if cost['currency']!=curr or limits['currency']!=curr: raise CandidateError('currency_mismatch','unsupported')"
+      },
+      {
+        "kind": "If",
+        "line": 143,
+        "source": "if any(exact(cost[k])>1 for k in ('buy_rate','sell_rate','tax_rate')) or exact(cost['quantum'])<=0: raise CandidateError('invalid_cost')"
+      },
+      {
+        "kind": "Raise",
+        "line": 143,
+        "source": "if any(exact(cost[k])>1 for k in ('buy_rate','sell_rate','tax_rate')) or exact(cost['quantum'])<=0: raise CandidateError('invalid_cost')"
+      },
+      {
+        "kind": "For",
+        "line": 144,
+        "source": "for k in ('buy_fixed','sell_fixed'): exact(cost[k])"
+      },
+      {
+        "kind": "If",
+        "line": 146,
+        "source": "if max_qty.denominator != 1: raise CandidateError('fractional_quantity_cap')"
+      },
+      {
+        "kind": "Raise",
+        "line": 146,
+        "source": "if max_qty.denominator != 1: raise CandidateError('fractional_quantity_cap')"
+      },
+      {
+        "kind": "For",
+        "line": 152,
+        "source": "for b in five:"
+      },
+      {
+        "kind": "If",
+        "line": 154,
+        "source": "if any(x is None for x in group):"
+      },
+      {
+        "kind": "If",
+        "line": 155,
+        "source": "if b[0] <= signal: raise CandidateError('missing_1m_aggregate')"
+      },
+      {
+        "kind": "Raise",
+        "line": 155,
+        "source": "if b[0] <= signal: raise CandidateError('missing_1m_aggregate')"
+      },
+      {
+        "kind": "If",
+        "line": 158,
+        "source": "if (b[2],b[3],b[4],b[5],b[6]) != (group[0][2],max(x[3] for x in group),min(x[4] for x in group),group[-1][5],sum((x[6] for x in group),Fraction())): raise CandidateError('bar_aggregation_mismatch')"
+      },
+      {
+        "kind": "Raise",
+        "line": 158,
+        "source": "if (b[2],b[3],b[4],b[5],b[6]) != (group[0][2],max(x[3] for x in group),min(x[4] for x in group),group[-1][5],sum((x[6] for x in group),Fraction())): raise CandidateError('bar_aggregation_mismatch')"
+      },
+      {
+        "kind": "If",
+        "line": 159,
+        "source": "if signal_close > signal or signal_close not in by5: raise CandidateError('missing_signal_bar')"
+      },
+      {
+        "kind": "Raise",
+        "line": 159,
+        "source": "if signal_close > signal or signal_close not in by5: raise CandidateError('missing_signal_bar')"
+      },
+      {
+        "kind": "If",
+        "line": 160,
+        "source": "if signal < op or signal >= cl: raise CandidateError('signal_outside_session')"
+      },
+      {
+        "kind": "Raise",
+        "line": 160,
+        "source": "if signal < op or signal >= cl: raise CandidateError('signal_outside_session')"
+      },
+      {
+        "kind": "For",
+        "line": 163,
+        "source": "for i in range(1,n+1):"
+      },
+      {
+        "kind": "If",
+        "line": 165,
+        "source": "if not b or b[1] > signal: raise CandidateError('missing_or_late_warmup')"
+      },
+      {
+        "kind": "Raise",
+        "line": 165,
+        "source": "if not b or b[1] > signal: raise CandidateError('missing_or_late_warmup')"
+      },
+      {
+        "kind": "If",
+        "line": 167,
+        "source": "if any(x is None or x[1]>signal for x in group): raise CandidateError('missing_or_late_warmup')"
+      },
+      {
+        "kind": "Raise",
+        "line": 167,
+        "source": "if any(x is None or x[1]>signal for x in group): raise CandidateError('missing_or_late_warmup')"
+      },
+      {
+        "kind": "If",
+        "line": 168,
+        "source": "if (b[2],b[3],b[4],b[5],b[6]) != (group[0][2],max(x[3] for x in group),min(x[4] for x in group),group[-1][5],sum((x[6] for x in group),Fraction())): raise CandidateError('bar_aggregation_mismatch')"
+      },
+      {
+        "kind": "Raise",
+        "line": 168,
+        "source": "if (b[2],b[3],b[4],b[5],b[6]) != (group[0][2],max(x[3] for x in group),min(x[4] for x in group),group[-1][5],sum((x[6] for x in group),Fraction())): raise CandidateError('bar_aggregation_mismatch')"
+      },
+      {
+        "kind": "If",
+        "line": 174,
+        "source": "if entry_open >= cl or bar is None: raise CandidateError('missing_next_bar','unfilled')"
+      },
+      {
+        "kind": "Raise",
+        "line": 174,
+        "source": "if entry_open >= cl or bar is None: raise CandidateError('missing_next_bar','unfilled')"
+      },
+      {
+        "kind": "If",
+        "line": 178,
+        "source": "if not lo<=entry<=hi or not lo<=target<=hi or any(not lo<=exact(a['stop'])<=hi for a in arms.values()): raise CandidateError('computed_price_outside_tick_range','unsupported')"
+      },
+      {
+        "kind": "Raise",
+        "line": 178,
+        "source": "if not lo<=entry<=hi or not lo<=target<=hi or any(not lo<=exact(a['stop'])<=hi for a in arms.values()): raise CandidateError('computed_price_outside_tick_range','unsupported')"
+      },
+      {
+        "kind": "For",
+        "line": 179,
+        "source": "for name in ARMS:"
+      },
+      {
+        "kind": "For",
+        "line": 181,
+        "source": "for order in ('stop_first','target_first'):"
+      },
+      {
+        "kind": "For",
+        "line": 183,
+        "source": "for t in range(minute+1,int(length//60)+1):"
+      },
+      {
+        "kind": "If",
+        "line": 185,
+        "source": "if current is None: break"
+      },
+      {
+        "kind": "If",
+        "line": 187,
+        "source": "if o<=stop: fill=floor_grid(o-exit_slip*tick,tick); why='stop_gap'"
+      },
+      {
+        "kind": "If",
+        "line": 188,
+        "source": "elif o>=target: fill=target; why='target_gap'"
+      },
+      {
+        "kind": "If",
+        "line": 191,
+        "source": "if st and tg: ambiguous=True"
+      },
+      {
+        "kind": "If",
+        "line": 192,
+        "source": "if st and (not tg or order=='stop_first'): fill=floor_grid(stop-exit_slip*tick,tick); why='stop_touch'"
+      },
+      {
+        "kind": "If",
+        "line": 193,
+        "source": "elif tg: fill=target; why='target_touch'"
+      },
+      {
+        "kind": "If",
+        "line": 195,
+        "source": "if fill<=0 or not lo<=fill<=hi:"
+      },
+      {
+        "kind": "If",
+        "line": 198,
+        "source": "if chosen is None:"
+      },
+      {
+        "kind": "IfExp",
+        "line": 199,
+        "source": "chosen={'status':'censored','reason':'missing_path_or_session_end','mark_at':mark[0].isoformat() if mark else None,'mark_price':number(mark[1]) if mark else None,'gross_mark_pnl':number((mark[1]-entry)*qty) if mark else None}"
+      },
+      {
+        "kind": "IfExp",
+        "line": 199,
+        "source": "chosen={'status':'censored','reason':'missing_path_or_session_end','mark_at':mark[0].isoformat() if mark else None,'mark_price':number(mark[1]) if mark else None,'gross_mark_pnl':number((mark[1]-entry)*qty) if mark else None}"
+      },
+      {
+        "kind": "IfExp",
+        "line": 199,
+        "source": "chosen={'status':'censored','reason':'missing_path_or_session_end','mark_at':mark[0].isoformat() if mark else None,'mark_price':number(mark[1]) if mark else None,'gross_mark_pnl':number((mark[1]-entry)*qty) if mark else None}"
+      },
+      {
+        "kind": "Return",
+        "line": 202,
+        "source": "return {'id':candidate['id'],'market':market,'status':'eligible','symbol':candidate['symbol'],'date':candidate['date'],'currency':curr,'entry':number(entry),'observed_open':number(bar[2]),'entry_slippage':number(entry-bar[2]),'entry_open_at':entry_open.isoformat(),'atr':number(atr),'unverified_future_5m':len(unverified),'unverified_5m':unverified,'model':{'session':session,'tick':tick_data,'cost':cost,'limits':limits,'signal_confirmed_at':candidate['signal_confirmed_at'],'signal_close_at':candidate['signal_close_at'],'data_source':candidate['data_source'],'data_version':candidate['data_version'],'basis':candidate['basis'],'entry_slippage_ticks':entry_slip,'exit_slippage_ticks':exit_slip},'arms':arms}"
+      }
+    ]
+  },
+  {
+    "file": "tools/a151-compare-stop-policies-offline/analysis.py",
+    "sha256": "3d7849652be408103211883888b9b6ef7a5828693f9f51d51b4408c07bbecc54",
+    "function": "compare",
+    "start": 204,
+    "end": 228,
+    "branches_and_exits": [
+      {
+        "kind": "If",
+        "line": 206,
+        "source": "if manifest['version']!='a151-v1' or not isinstance(manifest['synthetic'],bool): raise ValueError('invalid manifest version/synthetic')"
+      },
+      {
+        "kind": "Raise",
+        "line": 206,
+        "source": "if manifest['version']!='a151-v1' or not isinstance(manifest['synthetic'],bool): raise ValueError('invalid manifest version/synthetic')"
+      },
+      {
+        "kind": "If",
+        "line": 207,
+        "source": "if manifest['mode']!='initial_stops': raise ValueError('unsupported mode')"
+      },
+      {
+        "kind": "Raise",
+        "line": 207,
+        "source": "if manifest['mode']!='initial_stops': raise ValueError('unsupported mode')"
+      },
+      {
+        "kind": "If",
+        "line": 209,
+        "source": "if not isinstance(candidates,list) or len(candidates)>1000: raise ValueError('candidate limit')"
+      },
+      {
+        "kind": "Raise",
+        "line": 209,
+        "source": "if not isinstance(candidates,list) or len(candidates)>1000: raise ValueError('candidate limit')"
+      },
+      {
+        "kind": "For",
+        "line": 211,
+        "source": "for c in candidates:"
+      },
+      {
+        "kind": "If",
+        "line": 212,
+        "source": "if not isinstance(c,dict): raise ValueError('candidate structure')"
+      },
+      {
+        "kind": "Raise",
+        "line": 212,
+        "source": "if not isinstance(c,dict): raise ValueError('candidate structure')"
+      },
+      {
+        "kind": "If",
+        "line": 214,
+        "source": "if ident in ids: raise ValueError('duplicate candidate id')"
+      },
+      {
+        "kind": "Raise",
+        "line": 214,
+        "source": "if ident in ids: raise ValueError('duplicate candidate id')"
+      },
+      {
+        "kind": "Try",
+        "line": 216,
+        "source": "try: results.append(evaluate(c))"
+      },
+      {
+        "kind": "ExceptHandler",
+        "line": 217,
+        "source": "except ManifestError: raise"
+      },
+      {
+        "kind": "Raise",
+        "line": 217,
+        "source": "except ManifestError: raise"
+      },
+      {
+        "kind": "ExceptHandler",
+        "line": 218,
+        "source": "except CandidateError as e: results.append({'id':ident,'market':c.get('market'), 'status':e.status,'reason':str(e)})"
+      },
+      {
+        "kind": "ExceptHandler",
+        "line": 219,
+        "source": "except (ValueError,KeyError,TypeError,OverflowError) as e: results.append({'id':ident,'market':c.get('market'),'status':'invalid','reason':str(e)})"
+      },
+      {
+        "kind": "For",
+        "line": 221,
+        "source": "for market in ('KR','US'):"
+      },
+      {
+        "kind": "For",
+        "line": 224,
+        "source": "for left,right in (('structural','fixed'),('atr','fixed')):"
+      },
+      {
+        "kind": "IfExp",
+        "line": 226,
+        "source": "pairs[left+'_minus_'+right]=number(sum(vals,Fraction())/len(vals)) if vals else None"
+      },
+      {
+        "kind": "Return",
+        "line": 228,
+        "source": "return {'version':'a151-v1','synthetic':manifest['synthetic'],'provenance':'caller-supplied, unverified','profitability':'inconclusive','candidates':results,'markets':stats}"
+      }
+    ]
+  },
+  {
+    "file": "tools/a147-jev-mfi-offline/analysis.py",
+    "sha256": "c8d802e3f6423e100353310412923c845e50464bb637e391c81c33eaeb395c75",
+    "function": "mfi",
+    "start": 17,
+    "end": 71,
+    "branches_and_exits": [
+      {
+        "kind": "Try",
+        "line": 18,
+        "source": "try:"
+      },
+      {
+        "kind": "If",
+        "line": 20,
+        "source": "if not isinstance(max_age, (int, float)) or isinstance(max_age, bool) or not math.isfinite(max_age) or max_age < 0:"
+      },
+      {
+        "kind": "Raise",
+        "line": 21,
+        "source": "raise ValueError('invalid age')"
+      },
+      {
+        "kind": "ExceptHandler",
+        "line": 22,
+        "source": "except (ValueError, TypeError, AttributeError):"
+      },
+      {
+        "kind": "Return",
+        "line": 23,
+        "source": "return {'reason': 'invalid_observation'}"
+      },
+      {
+        "kind": "If",
+        "line": 24,
+        "source": "if len(bars) < 18:"
+      },
+      {
+        "kind": "Return",
+        "line": 25,
+        "source": "return {'reason': 'insufficient'}"
+      },
+      {
+        "kind": "Try",
+        "line": 28,
+        "source": "try:"
+      },
+      {
+        "kind": "For",
+        "line": 29,
+        "source": "for bar in items:"
+      },
+      {
+        "kind": "If",
+        "line": 32,
+        "source": "if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) for v in values):"
+      },
+      {
+        "kind": "Raise",
+        "line": 33,
+        "source": "raise ValueError('invalid number')"
+      },
+      {
+        "kind": "If",
+        "line": 35,
+        "source": "if low <= 0 or high < low or not low <= opening <= high or not low <= close <= high or volume < 0:"
+      },
+      {
+        "kind": "Raise",
+        "line": 36,
+        "source": "raise ValueError('invalid OHLCV')"
+      },
+      {
+        "kind": "If",
+        "line": 38,
+        "source": "if not math.isfinite(typical) or not math.isfinite(typical * volume):"
+      },
+      {
+        "kind": "Raise",
+        "line": 39,
+        "source": "raise ValueError('overflow')"
+      },
+      {
+        "kind": "ExceptHandler",
+        "line": 42,
+        "source": "except (KeyError, ValueError, TypeError, AttributeError, OverflowError):"
+      },
+      {
+        "kind": "Return",
+        "line": 43,
+        "source": "return {'reason': 'invalid_bar'}"
+      },
+      {
+        "kind": "If",
+        "line": 44,
+        "source": "if any(t > observed for t in times):"
+      },
+      {
+        "kind": "Return",
+        "line": 45,
+        "source": "return {'reason': 'future'}"
+      },
+      {
+        "kind": "If",
+        "line": 46,
+        "source": "if any(b - a != dt.timedelta(minutes=1) for a, b in zip(times, times[1:])):"
+      },
+      {
+        "kind": "Return",
+        "line": 47,
+        "source": "return {'reason': 'nonconsecutive'}"
+      },
+      {
+        "kind": "If",
+        "line": 48,
+        "source": "if (observed - times[-1]).total_seconds() > max_age:"
+      },
+      {
+        "kind": "Return",
+        "line": 49,
+        "source": "return {'reason': 'stale'}"
+      },
+      {
+        "kind": "For",
+        "line": 53,
+        "source": "for i in range(end - 13, end + 1):"
+      },
+      {
+        "kind": "If",
+        "line": 56,
+        "source": "if price > flows[i-1][0]:"
+      },
+      {
+        "kind": "If",
+        "line": 58,
+        "source": "elif price < flows[i-1][0]:"
+      },
+      {
+        "kind": "If",
+        "line": 60,
+        "source": "if positive == negative == 0:"
+      },
+      {
+        "kind": "Return",
+        "line": 61,
+        "source": "return None"
+      },
+      {
+        "kind": "If",
+        "line": 63,
+        "source": "if not math.isfinite(total) or not math.isfinite(positive) or not math.isfinite(negative):"
+      },
+      {
+        "kind": "Return",
+        "line": 64,
+        "source": "return None"
+      },
+      {
+        "kind": "Return",
+        "line": 65,
+        "source": "return 100 * (positive / total)"
+      },
+      {
+        "kind": "If",
+        "line": 68,
+        "source": "if current is None or previous is None:"
+      },
+      {
+        "kind": "Return",
+        "line": 69,
+        "source": "return {'reason': 'undefined_flow'}"
+      },
+      {
+        "kind": "Return",
+        "line": 71,
+        "source": "return {'mfi': current, 'delta': delta, 'direction': delta_direction(delta)}"
+      }
+    ]
+  },
+  {
+    "file": "tools/a147-jev-mfi-offline/analysis.py",
+    "sha256": "c8d802e3f6423e100353310412923c845e50464bb637e391c81c33eaeb395c75",
+    "function": "delta_direction",
+    "start": 74,
+    "end": 75,
+    "branches_and_exits": [
+      {
+        "kind": "IfExp",
+        "line": 75,
+        "source": "return 'unchanged' if abs(delta) <= 1e-9 else 'rising' if delta > 0 else 'falling'"
+      },
+      {
+        "kind": "IfExp",
+        "line": 75,
+        "source": "return 'unchanged' if abs(delta) <= 1e-9 else 'rising' if delta > 0 else 'falling'"
+      },
+      {
+        "kind": "Return",
+        "line": 75,
+        "source": "return 'unchanged' if abs(delta) <= 1e-9 else 'rising' if delta > 0 else 'falling'"
+      }
+    ]
+  },
+  {
+    "file": "tools/a145-jev-offline-analysis/analysis.py",
+    "sha256": "fa28c8ee364ff534fdad0d3109cf5dc7252a6266942b414b5a74afc5a4b45368",
+    "function": "timestamp",
+    "start": 35,
+    "end": 38,
+    "branches_and_exits": [
+      {
+        "kind": "If",
+        "line": 37,
+        "source": "if t.tzinfo is None: raise ValueError('timestamp missing timezone')"
+      },
+      {
+        "kind": "Raise",
+        "line": 37,
+        "source": "if t.tzinfo is None: raise ValueError('timestamp missing timezone')"
+      },
+      {
+        "kind": "Return",
+        "line": 38,
+        "source": "return t"
+      }
+    ]
+  }
+]

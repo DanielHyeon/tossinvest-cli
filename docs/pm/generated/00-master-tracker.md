@@ -154,7 +154,7 @@
     - STORY-TOS-a049 — Add deterministic lane performance attribution [archived] → `a049-add-lane-performance`
     - STORY-TOS-a050 — Add versioned strategy optimization lifecycle [archived] → `a050-add-strategy-optimization`
     - STORY-TOS-a151 — 손절 정책 오프라인 비교 [archived] → `a151-compare-stop-policies-offline`
-    - STORY-TOS-a153 — 비용 반영 통합 비교 실험 [in_progress] → `a153-evaluate-cost-aware-strategy-variants`
+    - STORY-TOS-a153 — 비용 반영 통합 비교 실험 [archived] → `a153-evaluate-cost-aware-strategy-variants`
   - FEAT-TOS-013 — Concurrent KR and US multi-horizon strategy lanes [active]
     - STORY-TOS-a064 — Establish authoritative KR and US strategy evidence [archived] → `a064-add-multi-market-strategy-evidence`
     - STORY-TOS-a065 — Add the strategy-neutral position campaign and leg core [archived] → `a065-add-position-campaign-leg-core`

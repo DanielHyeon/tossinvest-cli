@@ -1,0 +1,85 @@
+## Code Context
+
+**Query:** evaluate
+
+### Entry Points
+
+- **evaluate** (function) - internal/weeklyvaluelane/evaluate.go:131
+  `(request EvaluationRequest, market Market, source DisclosureSource, evidenceEvaluator func(DisclosureEvidence, DisclosureConfig) EvidenceResult) Outcome`
+- **evaluate** (function) - internal/reversallane/evaluate.go:41
+  `(context EvaluationContext, envelope CommonEnvelope, window time.Duration, structure StructuralConfirmation, metric MetricResult, laneID string) EvaluationResult`
+- **evaluate** (function) - tools/a151-compare-stop-policies-offline/analysis.py:115
+  `(candidate)`
+
+### Related Symbols
+
+- internal/weeklyvaluelane/evaluate.go: evaluateStage:135, EvaluateKR:104, EvaluateUS:108, EvaluationRequest:41
+- internal/weeklyvaluelane/types.go: Market:8
+- internal/reversallane/evaluate.go: evaluateStage:45, EvaluateKR:11, EvaluateUS:16, evaluationAdmitted:37
+- internal/continuationlane/evaluator.go: EvaluationContext:127
+
+### Code
+
+#### evaluate (internal/weeklyvaluelane/evaluate.go:131)
+
+```go
+func evaluate(request EvaluationRequest, market Market, source DisclosureSource, evidenceEvaluator func(DisclosureEvidence, DisclosureConfig) EvidenceResult) Outcome {
+	return evaluateStage(request, market, source, evidenceEvaluator, evaluationAdmitted)
+}
+```
+
+#### evaluate (internal/reversallane/evaluate.go:41)
+
+```go
+func evaluate(context EvaluationContext, envelope CommonEnvelope, window time.Duration, structure StructuralConfirmation, metric MetricResult, laneID string) EvaluationResult {
+	return evaluateStage(context, envelope, window, structure, metric, laneID, evaluationAdmitted)
+}
+```
+
+#### evaluate (tools/a151-compare-stop-policies-offline/analysis.py:115)
+
+```python
+def evaluate(candidate):
+    fields(candidate, 'id market currency account_currency symbol date basis data_source data_version signal_confirmed_at signal_close_at session tick cost limits entry_slippage_ticks exit_slippage_ticks bars_1m bars_5m')
+    for k in ('id','symbol','data_source','data_version'): nonempty(candidate[k])
+    market=candidate['market']; curr={'KR':'KRW','US':'USD'}.get(market)
+    if curr is None or candidate['currency'] != curr or candidate['account_currency'] != curr or candidate['basis'] != 'unadjusted': raise CandidateError('market_currency_or_basis','unsupported')
+    signal=timestamp(candidate['signal_confirmed_at']); signal_close=timestamp(candidate['signal_close_at'])
+    session=candidate['session']; tick_data=candidate['tick']; cost=candidate['cost']; limits=candidate['limits']
+    fields(session,'source version digest as_of timezone kind open_at close_at')
+    fields(tick_data,'source version digest as_of market symbol valid_from valid_until value min_price max_price')
+    fields(cost,'source version digest as_of currency buy_rate sell_rate tax_rate buy_fixed sell_fixed quantum')
+    fields(limits,'source version digest as_of currency risk_budget max_quantity max_notional')
+    for x in (session,tick_data,cost,limits): provenance(x,signal)
+    zone_name={'KR':'Asia/Seoul','US':'America/New_York'}[market]
+    if session['timezone'] != zone_name: raise CandidateError('timezone_mismatch')
+    zone=ZoneInfo(zone_name); op=timestamp(session['open_a
+... (truncated) ...
+```
+
+#### evaluateStage (internal/weeklyvaluelane/evaluate.go:135)
+
+```go
+func evaluateStage(request EvaluationRequest, market Market, source DisclosureSource, evidenceEvaluator func(DisclosureEvidence, DisclosureConfig) EvidenceResult, stage evaluationStage) Outcome {
+	lineage := ResultLineage{Market: market, Source: source, LaneID: request.Plan.laneID, LaneVersion: request.Plan.laneVersion, CampaignID: request.Plan.campaignID,
+		CandidateID: request.CandidateID, Symbol: request.Plan.symbol, FilingID: request.Evidence.FilingID, RevisionID: request.Evidence.RevisionID,
+		SupersededRevisionID: request.Evidence.SupersededRevisionID, RevisionSequence: request.Evidence.RevisionSequence,
+		ModelID: request.Evidence.ModelID, ModelVersion: request.Evidence.ModelVersion, ConfigDigest: request.Evidence.ModelConfigDigest,
+		EvidenceDigest: request.Evidence.EvidenceDigest, CalendarGeneration: request.MarketWeek.CalendarGeneration, CalendarDigest: request.MarketWeek.CalendarDigest,
+		SessionDate: request.MarketWeek.SessionDate, StableWeek: request.MarketWeek.StableIdentity, ReservationID: request.ReservationID, PlanDigest: request.Plan.digest,
+		PositionGeneration: request.Plan.positionGeneration, RiskBudgetMinor: request.Plan.riskBudgetMinor, PlannedLegOrdinal: request.Leg.Ordinal}
+	if stage == evaluationAdmitted {
+		lineage.CapSnapshotID, lineage.CapReservationMinor, lineage.CapReservationQuantity = request.Cap.snapshotID, request.Cap.reservationMinor, request.Cap.reservationQuantity
+	}
+	if request.Leg.Ordinal >= 1 && request.Leg.Ordinal <= len(request.Plan.
+... (truncated) ...
+```
+
+#### EvaluateKR (internal/weeklyvaluelane/evaluate.go:104)
+
+```go
+func EvaluateKR(request EvaluationRequest) Outcome {
+	return evaluate(request, MarketKR, SourceOpenDART, EvaluateKREvidence)
+}
+```
+

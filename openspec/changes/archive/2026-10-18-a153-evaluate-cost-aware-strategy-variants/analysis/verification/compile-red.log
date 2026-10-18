@@ -1,0 +1,17 @@
+test_cli_market_and_inconclusive (test_analysis.Contract.test_cli_market_and_inconclusive) ... FAIL
+test_duplicate_opportunity (test_analysis.Contract.test_duplicate_opportunity) ... ok
+test_invalid_timestamp_precision (test_analysis.Contract.test_invalid_timestamp_precision) ... ok
+
+======================================================================
+FAIL: test_cli_market_and_inconclusive (test_analysis.Contract.test_cli_market_and_inconclusive)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/tossos-a148-impl-20261018/tools/a153-evaluate-cost-aware-strategy-variants/test_analysis.py", line 23, in test_cli_market_and_inconclusive
+    self.assertEqual(run.returncode, 0, run.stderr)
+AssertionError: 2 != 0 : /usr/bin/python3: can't open file '/tmp/tossos-a148-impl-20261018/tools/a153-evaluate-cost-aware-strategy-variants/analysis.py': [Errno 2] No such file or directory
+
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.051s
+
+FAILED (failures=1)
