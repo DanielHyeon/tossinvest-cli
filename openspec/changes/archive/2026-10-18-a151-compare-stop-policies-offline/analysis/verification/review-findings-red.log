@@ -1,0 +1,38 @@
+........F.........F.F.
+======================================================================
+FAIL: test_invalid_exit_and_missing_path (test_analysis.ContractTests.test_invalid_exit_and_missing_path)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/tossos-a148-impl-20261018/tools/a151-compare-stop-policies-offline/test_analysis.py", line 193, in test_invalid_exit_and_missing_path
+    self.assertEqual(row['status'],'eligible')
+AssertionError: 'invalid' != 'eligible'
+- invalid
++ eligible
+
+
+======================================================================
+FAIL: test_tick_validity_covers_warmup_and_full_session (test_analysis.ContractTests.test_tick_validity_covers_warmup_and_full_session)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/tossos-a148-impl-20261018/tools/a151-compare-stop-policies-offline/test_analysis.py", line 210, in test_tick_validity_covers_warmup_and_full_session
+    self.assertEqual(a.compare(x)['candidates'][0]['status'],'unsupported')
+AssertionError: 'eligible' != 'unsupported'
+- eligible
++ unsupported
+
+
+======================================================================
+FAIL: test_unverifiable_future_aggregate_does_not_erase_outcomes (test_analysis.ContractTests.test_unverifiable_future_aggregate_does_not_erase_outcomes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/tossos-a148-impl-20261018/tools/a151-compare-stop-policies-offline/test_analysis.py", line 216, in test_unverifiable_future_aggregate_does_not_erase_outcomes
+    self.assertEqual(result['status'],'eligible')
+AssertionError: 'excluded' != 'eligible'
+- excluded
++ eligible
+
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.241s
+
+FAILED (failures=3)

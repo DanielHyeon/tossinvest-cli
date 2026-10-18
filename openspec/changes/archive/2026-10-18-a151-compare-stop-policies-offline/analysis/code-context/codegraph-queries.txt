@@ -1,0 +1,511 @@
+
+### query RiskBasedQuantity
+
+Search Results for "RiskBasedQuantity":
+
+function    RiskBasedQuantity
+  internal/risk/contract.go:96
+  (riskBudget, entryPrice, stopPrice string) (string, error)
+
+
+### callers RiskBasedQuantity
+
+Callers of "RiskBasedQuantity" (4):
+
+function    StrategyEntryQuantity
+  internal/risk/contract.go:127
+
+function    TestRiskBasedQuantity
+  internal/risk/contract_test.go:271
+
+function    TestRiskBasedQuantityFloorsExactlyOnce
+  internal/risk/contract_test.go:306
+
+function    TestRiskBasedQuantityRefusesUnreadableInputs
+  internal/risk/contract_test.go:331
+
+
+### callees RiskBasedQuantity
+
+Callees of "RiskBasedQuantity" (1):
+
+function    parseDecimal
+  internal/risk/contract.go:287
+
+
+### impact RiskBasedQuantity
+
+Impact of changing "RiskBasedQuantity" — 11 affected symbols:
+
+internal/risk/contract.go
+  function    RiskBasedQuantity:96
+  function    StrategyEntryQuantity:127
+
+internal/app/engine/a139_risk_budget_wiring_internal_test.go
+  function    TestA139ProductionPolicyDerivesAThirdOfTheDailyLoss:14
+
+internal/execgw/riskguardian.go
+  method      IssueStrategyEntry:351
+
+internal/execgw/riskguardian_qfinal.go
+  method      PrecheckQFinalEntry:89
+
+internal/risk/a139_risk_budget_test.go
+  function    TestA139TheRiskCapIsAThirdOfTheDailyLoss:69
+
+internal/risk/contract_test.go
+  function    TestStrategyEntryQuantityUsesExactMinimumOfGuardianCaps:93
+  function    TestStrategyEntryQuantityRefusesZeroCapacity:131
+  function    TestRiskBasedQuantity:271
+  function    TestRiskBasedQuantityFloorsExactlyOnce:306
+  function    TestRiskBasedQuantityRefusesUnreadableInputs:331
+
+
+### query StrategyEntryQuantity
+
+Search Results for "StrategyEntryQuantity":
+
+function    StrategyEntryQuantity
+  internal/risk/contract.go:127
+  (policy Policy, entryPrice, stopPrice string) (string, error)
+
+
+### callers StrategyEntryQuantity
+
+Callers of "StrategyEntryQuantity" (6):
+
+function    TestA139ProductionPolicyDerivesAThirdOfTheDailyLoss
+  internal/app/engine/a139_risk_budget_wiring_internal_test.go:14
+
+method      IssueStrategyEntry
+  internal/execgw/riskguardian.go:351
+
+method      PrecheckQFinalEntry
+  internal/execgw/riskguardian_qfinal.go:89
+
+function    TestA139TheRiskCapIsAThirdOfTheDailyLoss
+  internal/risk/a139_risk_budget_test.go:69
+
+function    TestStrategyEntryQuantityUsesExactMinimumOfGuardianCaps
+  internal/risk/contract_test.go:93
+
+function    TestStrategyEntryQuantityRefusesZeroCapacity
+  internal/risk/contract_test.go:131
+
+
+### callees StrategyEntryQuantity
+
+Callees of "StrategyEntryQuantity" (7):
+
+method      Validate
+  internal/risk/input.go:260
+
+function    RiskBasedQuantity
+  internal/risk/contract.go:96
+
+function    parseWholeNumber
+  internal/risk/contract.go:335
+
+function    parseDecimal
+  internal/risk/contract.go:287
+
+method      Set
+  internal/clock/fake.go:75
+
+variable    ErrStrategyQuantityZero
+  internal/risk/contract.go:52
+
+struct      Policy
+  internal/hybrid/client.go:32
+
+
+### impact StrategyEntryQuantity
+
+Impact of changing "StrategyEntryQuantity" — 10 affected symbols:
+
+internal/risk/contract.go
+  function    StrategyEntryQuantity:127
+
+internal/app/engine/a139_risk_budget_wiring_internal_test.go
+  function    TestA139ProductionPolicyDerivesAThirdOfTheDailyLoss:14
+
+internal/execgw/riskguardian.go
+  method      IssueStrategyEntry:351
+
+internal/strategydispatch/adapters.go
+  method      IssueAndPlan:29
+
+internal/execgw/riskguardian_qfinal.go
+  method      PrecheckQFinalEntry:89
+  method      IssueQFinalEntry:322
+
+internal/execgw/riskguardian_first_leg.go
+  method      PrecheckQFinalCampaignFirstLeg:50
+
+internal/risk/a139_risk_budget_test.go
+  function    TestA139TheRiskCapIsAThirdOfTheDailyLoss:69
+
+internal/risk/contract_test.go
+  function    TestStrategyEntryQuantityUsesExactMinimumOfGuardianCaps:93
+  function    TestStrategyEntryQuantityRefusesZeroCapacity:131
+
+
+### query OpeningRangeATR
+
+Search Results for "OpeningRangeATR":
+
+function    OpeningRangeATR
+  internal/breakoutsignal/signal.go:120
+  (bars []Bar) (uint64, error)
+
+
+### callers OpeningRangeATR
+
+Callers of "OpeningRangeATR" (4):
+
+function    Derive
+  internal/breakoutsignal/signal.go:202
+
+function    TestOpeningRangeATRIsWilderFourteenOverTheFifteenBars
+  internal/breakoutsignal/signal_test.go:112
+
+function    TestOpeningRangeATRKeepsTheRationalUntilTheEnd
+  internal/breakoutsignal/signal_test.go:125
+
+function    TestOpeningRangeATRRefusesAnIncompleteRangeAndAZeroATR
+  internal/breakoutsignal/signal_test.go:157
+
+
+### callees OpeningRangeATR
+
+Callees of "OpeningRangeATR" (10):
+
+function    refuse
+  internal/breakoutsignal/signal.go:62
+
+function    validBar
+  internal/breakoutsignal/signal.go:76
+
+function    trueRange
+  internal/breakoutsignal/signal.go:98
+
+constant    RefusalATRZero
+  internal/breakoutsignal/signal.go:48
+
+constant    RefusalOverflow
+  internal/breakoutsignal/signal.go:51
+
+constant    atrPeriod
+  internal/breakoutsignal/signal.go:32
+
+constant    OpeningRangeBars
+  internal/breakoutsignal/signal.go:30
+
+constant    RefusalBarInvalid
+  internal/breakoutsignal/signal.go:44
+
+constant    RefusalOpeningRangeIncomplete
+  internal/breakoutsignal/signal.go:47
+
+struct      Bar
+  internal/breakoutsignal/signal.go:65
+
+
+### impact OpeningRangeATR
+
+Impact of changing "OpeningRangeATR" — 13 affected symbols:
+
+internal/breakoutsignal/signal.go
+  function    OpeningRangeATR:120
+  function    Derive:202
+
+internal/breakoutsignal/signal_test.go
+  function    TestOpeningRangeATRIsFixedOnceTheRangeIsLocked:145
+  function    TestDeriveRefusesAGapAndASeriesThatDoesNotStartAtTheOpen:221
+  function    TestDeriveRefusesAMixedOrUnclosedSeries:238
+  function    TestDeriveIsDeterministicAndTheDigestFollowsTheInput:259
+  function    TestDeriveCarriesNoRVOLForOpeningRangeBars:278
+  function    TestLaneBarsAreAcceptedByTheFrozenEvaluator:302
+  function    TestACorrectedBarKeepsItsLaneIdentity:355
+  function    TestOpeningRangeATRIsWilderFourteenOverTheFifteenBars:112
+  function    TestOpeningRangeATRKeepsTheRationalUntilTheEnd:125
+  function    TestOpeningRangeATRRefusesAnIncompleteRangeAndAZeroATR:157
+
+tools/a140-breakout-signal-shadow/evaluate.go
+  function    evaluateSetup:66
+
+
+### query CalculateSessionFeatures
+
+Search Results for "CalculateSessionFeatures":
+
+function    CalculateSessionFeatures
+  internal/strategymarket/session_features.go:45
+  (in SessionFeatureInput) SessionFeatures
+
+
+### callers CalculateSessionFeatures
+
+Callers of "CalculateSessionFeatures" (6):
+
+function    TestSessionFeaturesGoldenAndReplay
+  internal/strategymarket/session_features_test.go:24
+
+function    TestSessionFeaturesBoundariesAndReadiness
+  internal/strategymarket/session_features_test.go:53
+
+function    TestSessionFeaturesRefusesInvalidEvidence
+  internal/strategymarket/session_features_test.go:95
+
+function    TestSessionFeaturesWeightedTypicalPriceAndNewSession
+  internal/strategymarket/session_features_test.go:134
+
+function    TestSessionFeaturesPrefixAndBoundaries
+  internal/strategymarket/session_features_test.go:159
+
+function    TestSessionFeaturesCanonicalDigestAndZeroVolume
+  internal/strategymarket/session_features_test.go:193
+
+
+### callees CalculateSessionFeatures
+
+Callees of "CalculateSessionFeatures" (14):
+
+method      fail
+  internal/candidate/watch_test.go:49
+
+method      IsZero
+  internal/execgw/guardian.go:186
+
+function    boundedFeatureDecimal
+  internal/strategymarket/session_features.go:270
+
+function    exactDecimal
+  internal/strategymarket/bars.go:230
+
+method      parse
+  internal/attest/protection_signature.go:108
+
+method      Set
+  internal/clock/fake.go:75
+
+function    normalize
+  internal/i18n/i18n.go:66
+
+struct      SessionFeatures
+  internal/strategymarket/session_features.go:36
+
+struct      FeatureValue
+  internal/strategymarket/session_features.go:32
+
+constant    FeatureKnown
+  internal/strategymarket/session_features.go:15
+
+constant    FeatureInvalid
+  internal/strategymarket/session_features.go:17
+
+constant    FeatureNotReady
+  internal/strategymarket/session_features.go:16
+
+constant    FeatureUnsupported
+  internal/strategymarket/session_features.go:18
+
+struct      SessionFeatureInput
+  internal/strategymarket/session_features.go:26
+
+
+### impact CalculateSessionFeatures
+
+Impact of changing "CalculateSessionFeatures" — 7 affected symbols:
+
+internal/strategymarket/session_features.go
+  function    CalculateSessionFeatures:45
+
+internal/strategymarket/session_features_test.go
+  function    TestSessionFeaturesGoldenAndReplay:24
+  function    TestSessionFeaturesBoundariesAndReadiness:53
+  function    TestSessionFeaturesRefusesInvalidEvidence:95
+  function    TestSessionFeaturesWeightedTypicalPriceAndNewSession:134
+  function    TestSessionFeaturesPrefixAndBoundaries:159
+  function    TestSessionFeaturesCanonicalDigestAndZeroVolume:193
+
+
+### query RegularSession
+
+Search Results for "RegularSession":
+
+method      RegularSession
+  internal/clock/market.go:122
+  (t time.Time) (Session, error)
+
+constant    regularSessionDuration
+  internal/scheduler/calendar.go:21
+  = 6*time.Hour + 30*time.Minute
+
+
+### callers RegularSession
+
+Callers of "RegularSession" (3):
+
+function    TestA136BothRegularSessionsOfDateDShareLabelD
+  internal/clock/account_day_test.go:32
+
+method      InRegularSession
+  internal/clock/market.go:146
+
+function    TestUnknownMarketFailsClosed
+  internal/clock/market_test.go:284
+
+
+### callees RegularSession
+
+Callees of "RegularSession" (4):
+
+method      Location
+  internal/clock/market.go:79
+
+struct      Session
+  internal/clock/market.go:99
+
+variable    ErrUnknownMarket
+  internal/clock/market.go:15
+
+variable    regularHours
+  internal/clock/market.go:55
+
+
+### impact RegularSession
+
+Impact of changing "RegularSession" — 4 affected symbols:
+
+internal/clock/market.go
+  method      RegularSession:122
+  method      InRegularSession:146
+
+internal/clock/account_day_test.go
+  function    TestA136BothRegularSessionsOfDateDShareLabelD:32
+
+internal/clock/market_test.go
+  function    TestUnknownMarketFailsClosed:284
+
+
+### query safe_output
+
+Search Results for "safe_output":
+
+function    safe_output
+  tools/a147-jev-mfi-offline/analysis.py:78
+  (source, output)
+
+
+### callers safe_output
+
+Callers of "safe_output" (1):
+
+function    main
+  tools/a147-jev-mfi-offline/analysis.py:546
+
+
+### callees safe_output
+ℹ No callees found for "safe_output"
+
+### impact safe_output
+
+Impact of changing "safe_output" — 3 affected symbols:
+
+tools/a147-jev-mfi-offline/analysis.py
+  function    safe_output:78
+  function    main:546
+  file        analysis.py:1
+
+
+### query write_once
+
+Search Results for "write_once":
+
+function    write_once
+  tools/a147-jev-mfi-offline/analysis.py:90
+  (path, obj)
+
+method      test_capture_is_full_hash_and_write_once
+  tools/sdd/test_capture_change_base.py:13
+  (self) -> None
+
+method      rememberRead
+  internal/candidatesrc/candidatesrc.go:351
+  (market string, items []domain.RankingItem, requested int) (
+	map[string]bool, bool)
+
+
+### callers write_once
+
+Callers of "write_once" (1):
+
+function    main
+  tools/a147-jev-mfi-offline/analysis.py:546
+
+
+### callees write_once
+
+Callees of "write_once" (1):
+
+method      write
+  scripts/test_memory_index.py:242
+
+
+### impact write_once
+
+Impact of changing "write_once" — 3 affected symbols:
+
+tools/a147-jev-mfi-offline/analysis.py
+  function    write_once:90
+  function    main:546
+  file        analysis.py:1
+
+
+### query validate_plan
+
+Search Results for "validate_plan":
+
+function    validate_plan
+  tools/a147-jev-mfi-offline/analysis.py:108
+  (plan)
+
+
+### callers validate_plan
+
+Callers of "validate_plan" (2):
+
+function    evaluate
+  tools/a147-jev-mfi-offline/analysis.py:338
+
+function    main
+  tools/a147-jev-mfi-offline/analysis.py:546
+
+
+### callees validate_plan
+
+Callees of "validate_plan" (4):
+
+variable    timestamp
+  tools/a147-jev-mfi-offline/analysis.py:14
+
+function    strip
+  openspec/changes/archive/2026-09-30-a092-an-alert-does-not-hold-the-stop/analysis/head-ast-20/census.py:35
+
+method      any
+  internal/journal/exit_snapshot.go:376
+
+function    value
+  tools/a147-jev-mfi-offline/analysis.py:51
+
+
+### impact validate_plan
+
+Impact of changing "validate_plan" — 3 affected symbols:
+
+tools/a147-jev-mfi-offline/analysis.py
+  function    validate_plan:108
+  function    evaluate:338
+  function    main:546
+
