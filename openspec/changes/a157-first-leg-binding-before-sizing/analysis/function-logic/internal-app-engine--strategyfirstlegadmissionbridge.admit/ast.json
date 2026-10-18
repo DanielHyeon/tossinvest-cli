@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_first_leg_admission.go",
-  "source_sha256": "566cfe6f3d50e6ef04168083b6e5c93e2ecccb0d1c744799741b0924a43dbd4c",
+  "source_sha256": "2ef5d3da61a8a82b898d3ff67b3250a054b24ae8cb3bfc964d49bde51239b98c",
   "package": "engine",
   "function": "admit",
   "receiver": "strategyFirstLegAdmissionBridge",
@@ -278,7 +278,7 @@
         "line": 111,
         "column": 10
       },
-      "text": "execgw.DailyLossChainRefusalOf"
+      "text": "execgw.DailyLossRefusalKindOf"
     },
     {
       "kind": "call",

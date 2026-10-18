@@ -54,7 +54,7 @@
 | B5 q_candidate | `entry.decision.QCandidate` | `request.Entry.QCandidate` |
 | B4 · B6 · B7 · B8 | 요청 값 | 같음 |
 
-**「일일 손실 체인 거절」 판별은 한 자리에 둔다.** execgw 에 판별 함수 하나(예: `DailyLossChainRefusalKind(err) → none | unmeasurable | limitReached`)를 두고,
+**「일일 손실 체인 거절」 판별은 한 자리에 둔다.** execgw 에 판별 함수 하나(`execgw.DailyLossRefusalKindOf(err) → DailyLossRefusalKindNone | …Unmeasurable | …LimitReached` — 구현 리뷰 P3-2 로 이름 확정, a137 의 `dailyLossChainRefusal` 과 대소문자만 다른 충돌 회피)를 두고,
 조건은 오늘 `admit` 의 B6-B8 조건(F7)을 **글자 그대로 옮긴 것**이다. 순서도 측정 불가 먼저, 한도 다음이다. `admit` 도 이 함수로 가른다(조건을 옮길 뿐 분기 결과는 같다).
 같은 판별이 두 자리에 있으면, 변이가 한쪽을 지워도 다른 쪽이 시험을 통과시킨다(기억 「판정이 둘이면 반증이 죽는다」). 그래서 판별은 하나로 둔다.
 

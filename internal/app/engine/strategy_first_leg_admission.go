@@ -108,12 +108,12 @@ func (b *strategyFirstLegAdmissionBridge) admit(ctx context.Context, result stra
 		// 실패하면 거절과 강화 오류를 함께 든 결함으로 남음(조용히 삼켜지지 않게).
 		// 측정 불가(측정기 · 토큰에서만 생기는 타입 표지)는 강화 없이 계좌 단위 진입 차단 결과 — 그 밖의 입력 불가는 오늘처럼 결함.
 		// a157: 두 조건은 execgw 판별 함수 하나에 있음 — precheck 의 보고 우선순위(일일 손실 > 결속 결함)와 같은 판별을 씀(조건 · 순서 그대로).
-		switch execgw.DailyLossChainRefusalOf(err) {
-		case execgw.DailyLossChainRefusalUnmeasurable:
+		switch execgw.DailyLossRefusalKindOf(err) {
+		case execgw.DailyLossRefusalKindUnmeasurable:
 			refusal := strategyFirstLegRefusal(StrategyFirstLegDailyLossUnmeasurable, accepted.market, err.Error())
 			refusal.cause = err
 			return refusal
-		case execgw.DailyLossChainRefusalLimitReached:
+		case execgw.DailyLossRefusalKindLimitReached:
 			refusal := strategyFirstLegRefusal(StrategyFirstLegDailyLossLimit, accepted.market, err.Error())
 			refusal.cause = b.guardian.EscalateDailyLossLimit(ctx, err)
 			return refusal

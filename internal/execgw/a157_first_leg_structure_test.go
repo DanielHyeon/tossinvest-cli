@@ -4,6 +4,9 @@ package execgw_test
 // 가를 수 없음 — 둘 다 같은 거절을 냄. 그래서 PrecheckQFinalCampaignFirstLeg 의 AST 에서 직접 셈:
 //   - 진입 판정 `g.PrecheckQFinalEntry` 호출은 정확히 하나,
 //   - 결속 거절의 field 문자 여섯과 `journal.QFinalPolicyVersion` 호출은 각각 정확히 한 번이고, 모두 그 호출보다 앞.
+//   - 결속 판정을 담은 닫힌 함수(FuncLit)는 함수 본문에 정확히 하나이고, 정의하는 자리에서 **즉시 한 번** 호출되며(`CallExpr.Fun` 이 FuncLit),
+//     그 호출은 함수 본문 최상위 대입문의 오른쪽이고(반복 · defer · go · if 안이 아님) 그 대입문은 진입 판정 호출이 든 최상위 문장보다 앞.
+//     리터럴 개수만 세면 「이름 붙인 닫힌 함수를 앞뒤로 두 번 부르기」 · 「유일한 호출을 사이징 뒤로 미루기」가 뚫림(구현 리뷰 P2 — 둘 다 행동이 같음).
 
 import (
 	"go/ast"
@@ -75,6 +78,38 @@ func TestA157ThePrecheckJudgesTheBindingOnceAndBeforeSizing(t *testing.T) {
 		if len(at) != 1 || at[0] > call {
 			t.Errorf("binding field %q at %v — want exactly one, before PrecheckQFinalEntry at %v", field, positions(fset, at), fset.Position(call))
 		}
+	}
+
+	// 닫힌 함수는 하나뿐이고 즉시 호출됨 — 그 FuncLit 이 바로 즉시 호출의 Fun 이어야 함(다른 이름으로 다시 부를 길이 없음).
+	var literals []*ast.FuncLit
+	var invoked []*ast.CallExpr
+	ast.Inspect(target.Body, func(node ast.Node) bool {
+		switch value := node.(type) {
+		case *ast.FuncLit:
+			literals = append(literals, value)
+		case *ast.CallExpr:
+			if _, ok := value.Fun.(*ast.FuncLit); ok {
+				invoked = append(invoked, value)
+			}
+		}
+		return true
+	})
+	if len(literals) != 1 || len(invoked) != 1 || invoked[0].Fun != literals[0] {
+		t.Fatalf("func literals=%d immediately-invoked=%d — want exactly one binding closure, invoked once where it is defined", len(literals), len(invoked))
+	}
+	// 그 즉시 호출이 최상위 대입문의 오른쪽이고, 진입 판정이 든 최상위 문장보다 앞인지 — 최상위 문장의 순서가 곧 실행 순서임.
+	bindingAt, sizingAt := -1, -1
+	for index, statement := range target.Body.List {
+		if assign, ok := statement.(*ast.AssignStmt); ok && len(assign.Rhs) == 1 && assign.Rhs[0] == ast.Expr(invoked[0]) {
+			bindingAt = index
+		}
+		if statement.Pos() <= call && call < statement.End() {
+			sizingAt = index
+		}
+	}
+	if bindingAt < 0 || sizingAt < 0 || bindingAt >= sizingAt {
+		t.Errorf("binding closure statement #%d, PrecheckQFinalEntry statement #%d — want the immediately-invoked binding closure "+
+			"as a top-level assignment strictly before the sizing statement", bindingAt, sizingAt)
 	}
 }
 

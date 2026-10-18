@@ -12,6 +12,8 @@ package execgw_test
 import (
 	"context"
 	"errors"
+	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -316,19 +318,55 @@ func TestA157OneInputThatTripsBothJudgements(t *testing.T) {
 	a157Expect(t, "f-noncanonical-symbol", err, a157B5)
 }
 
-// 통과 봉인 값 — 결속 · 진입 판정을 모두 통과하는 요청의 q_candidate · q_final 과 그 뒤 원자 발급 결과는 편집 전과 같음.
+// 통과 봉인 값 — 결속 · 진입 판정을 모두 통과하는 요청은 고정 시계 아래 정확히 이 봉인을 냄: q_candidate · q_final, 전략 계획(계보 투영 ·
+// attempt · 활성화 digest · revision · CreatedAt), 캠페인 요청, 주간 결속(값은 같고 요청과 다른 사본), 발급 시각. 그 뒤 원자 발급이 그 결정을 영속함.
+// 계보 투영의 기대값은 명시한 RiskIntent(계좌 · 시장 · 종목 · 매수 · q_final · 가격 · 정책 버전 리터럴)로 따로 투영해 만듦 — 봉인이 쓰는 값을
+// precheck 에서 읽지 않음(구현 리뷰 codex P3-2 · Opus P3-4).
 func TestA157AnAcceptedFirstLegSealsTheSameValues(t *testing.T) {
 	for _, descriptor := range []strategyflow.Descriptor{a157KRWeekly(t), a157US(t)} {
-		suffix := "a157-accept-" + strings.ToLower(string(descriptor.Market))
+		market := string(descriptor.Market)
+		want := a157AcceptedSeal[market]
+		suffix := "a157-accept-" + strings.ToLower(market)
 		rig := newGuardian(t, func(o *execgw.RiskGuardianOptions) { o.NewID = fixedIDs("d-"+suffix, "n-"+suffix) })
 		request := qFinalCampaignFirstLegIssuanceFixture(t, rig, descriptor, suffix)
 		precheck, err := rig.guardian.PrecheckQFinalCampaignFirstLeg(request)
 		if err != nil {
 			t.Fatalf("%s: %v", descriptor.LaneID, err)
 		}
-		if precheck.QCandidate() != 20 || precheck.QFinal() != a157AcceptedQFinal[string(descriptor.Market)] {
-			t.Fatalf("%s: q_candidate=%d q_final=%d — want 20 / %d", descriptor.LaneID, precheck.QCandidate(), precheck.QFinal(),
-				a157AcceptedQFinal[string(descriptor.Market)])
+		if precheck.QCandidate() != 20 || precheck.QFinal() != want.qFinal {
+			t.Fatalf("%s: q_candidate=%d q_final=%d — want 20 / %d", descriptor.LaneID, precheck.QCandidate(), precheck.QFinal(), want.qFinal)
+		}
+		strategy, campaign, weekly, issuedAt := precheck.SealForTest()
+		if !issuedAt.Equal(fixedNow) || issuedAt.Location() != time.UTC {
+			t.Errorf("%s: issuedAt=%v — want the fixed clock %v in UTC", descriptor.LaneID, issuedAt, fixedNow)
+		}
+		lineage, err := journal.ProjectAcceptedStrategyflowLineage(journal.StrategyflowLineageProjectionRequest{
+			Result: request.Result, ActivationManifestDigest: "sha256:" + strings.Repeat("a", 64), CreatedAt: fixedNow,
+			RiskIntent: journal.RiskIntent{AccountRef: "acct-7", Market: market, Symbol: want.symbol, Side: "BUY",
+				Quantity: strconv.FormatUint(want.qFinal, 10), EntryPrice: want.entry, StopPrice: want.stop, TargetPrice: want.target,
+				PolicyVersion: want.policyVersion},
+		})
+		if err != nil {
+			t.Fatalf("%s: arrangement — the expected lineage does not project: %v", descriptor.LaneID, err)
+		}
+		wantStrategy := journal.StrategyPlanRequest{Lineage: lineage, AttemptID: "attempt-" + suffix,
+			ActivationManifestDigest: "sha256:" + strings.Repeat("a", 64), Revision: 1, CreatedAt: fixedNow}
+		if !reflect.DeepEqual(strategy, wantStrategy) {
+			t.Errorf("%s: strategy seal\n  got  %+v\n  want %+v", descriptor.LaneID, strategy, wantStrategy)
+		}
+		wantCampaign := journal.FirstLegCampaignRequest{CampaignID: "campaign-" + suffix, ExpectedPositionGeneration: 0, ExpectedPositionVersion: 0,
+			CreateCommandKey: "create-" + suffix, FirstLegCommandKey: "leg-" + suffix, FirstLegPlanID: "plan-" + suffix}
+		if campaign != wantCampaign {
+			t.Errorf("%s: campaign seal %+v — want %+v", descriptor.LaneID, campaign, wantCampaign)
+		}
+		switch {
+		case descriptor.LaneID == weeklyvaluelane.KRWeeklyLaneID:
+			if weekly == nil || request.Weekly == nil || weekly == request.Weekly || *weekly != *request.Weekly ||
+				weekly.ReservationID != "weekly-"+suffix || weekly.PlannedOrdinal != 1 || weekly.StableWeek != "KR-XKRX-2026-W14" {
+				t.Errorf("%s: weekly seal %+v — want a copy of the reserved binding %+v", descriptor.LaneID, weekly, request.Weekly)
+			}
+		case weekly != nil:
+			t.Errorf("%s: weekly seal %+v — want none on a non-weekly lane", descriptor.LaneID, weekly)
 		}
 		receipt, err := rig.guardian.IssuePrecheckedQFinalCampaignFirstLeg(context.Background(), precheck)
 		if err != nil {
@@ -340,8 +378,15 @@ func TestA157AnAcceptedFirstLegSealsTheSameValues(t *testing.T) {
 	}
 }
 
-// 편집 전 HEAD 에서 잰 봉인 q_final(KR 70000 · 손절 폭 1000 · 예산 기본 / US 50 USD · FX 1400).
-var a157AcceptedQFinal = map[string]uint64{"KR": 10, "US": 4}
+// 편집 전 HEAD 에서 잰 봉인 값(KR 70000 · 손절 폭 1000 · 예산 기본 → q_final 10 / US 50 USD · FX 1400 → q_final 4) — 정책 버전은
+// Guardian 정책 버전 + 거래 ID 결속(journal.QFinalPolicyVersion 의 결과를 리터럴로 고정).
+var a157AcceptedSeal = map[string]struct {
+	qFinal                                     uint64
+	symbol, entry, stop, target, policyVersion string
+}{
+	"KR": {10, "005930", "70000", "69000", "72000", "add-core-domain/4.1|a066-q-final:v1|qfinal-tx-a157-accept-kr"},
+	"US": {4, "AAPL", "50", "45", "60", "add-core-domain/4.1|a066-q-final:v1|qfinal-tx-a157-accept-us"},
+}
 
 // nil Guardian — 결속 판정 전에 PrecheckQFinalEntry 의 B1 과 같은 거절(panic 아님).
 func TestA157ANilGuardianRefusesBeforeAnyBindingJudgement(t *testing.T) {
@@ -352,27 +397,27 @@ func TestA157ANilGuardianRefusesBeforeAnyBindingJudgement(t *testing.T) {
 
 // 판별 함수가 실제 Guardian 의 precheck 거절을 어떻게 읽는지 — 일일 손실 한도 · 측정 불가만 일일 손실 체인 거절이고, 표지 없는 입력 불가 ·
 // 상한 0 · 버킷 고갈 · 결속 결함은 아님. 표 시험(a157_daily_loss_kind_test.go)이 합성 모양을, 이 시험이 생산 모양을 맡음.
-func TestA157DailyLossChainRefusalOfRealRefusals(t *testing.T) {
+func TestA157DailyLossRefusalKindOfRealRefusals(t *testing.T) {
 	krWeekly := a157KRWeekly(t)
 	b2 := a157Bindings()[0]
 	for _, row := range []struct {
 		setup   a157Setup
 		binding *a157Binding
-		want    execgw.DailyLossChainRefusal
+		want    execgw.DailyLossRefusalKind
 	}{
-		{a157Limit(), nil, execgw.DailyLossChainRefusalLimitReached},
-		{a157Unmeasurable(), nil, execgw.DailyLossChainRefusalUnmeasurable},
-		{a157UnmarkedInput(), nil, execgw.DailyLossChainRefusalNone},
-		{a157CapZero(), nil, execgw.DailyLossChainRefusalNone},
-		{a157BucketExhausted(), nil, execgw.DailyLossChainRefusalNone},
-		{a157Setup{name: "binding-only"}, &b2, execgw.DailyLossChainRefusalNone},
+		{a157Limit(), nil, execgw.DailyLossRefusalKindLimitReached},
+		{a157Unmeasurable(), nil, execgw.DailyLossRefusalKindUnmeasurable},
+		{a157UnmarkedInput(), nil, execgw.DailyLossRefusalKindNone},
+		{a157CapZero(), nil, execgw.DailyLossRefusalKindNone},
+		{a157BucketExhausted(), nil, execgw.DailyLossRefusalKindNone},
+		{a157Setup{name: "binding-only"}, &b2, execgw.DailyLossRefusalKindNone},
 	} {
 		_, _, err := a157Precheck(t, krWeekly, row.setup, row.binding)
 		if err == nil {
 			t.Fatalf("%s: arrangement — want a refusal", row.setup.name)
 		}
-		if got := execgw.DailyLossChainRefusalOf(err); got != row.want {
-			t.Errorf("%s: DailyLossChainRefusalOf = %v, want %v (err %v)", row.setup.name, got, row.want, err)
+		if got := execgw.DailyLossRefusalKindOf(err); got != row.want {
+			t.Errorf("%s: DailyLossRefusalKindOf = %v, want %v (err %v)", row.setup.name, got, row.want, err)
 		}
 	}
 }

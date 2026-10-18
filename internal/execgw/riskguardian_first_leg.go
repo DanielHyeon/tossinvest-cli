@@ -50,7 +50,8 @@ func (p QFinalCampaignFirstLegPrecheck) QFinal() uint64     { return p.entry.QFi
 // a157(사람 결정 2026-10-18 「1-1」): 첫 다리 고유의 결속 판정 일곱(B2~B8)은 q_final 을 쓰지 않으므로 진입 판정(사이징 · 버킷 · 체인 · 노출)
 // **앞**에서 요청 값으로 함. 그래야 Guardian 상한 0 · 버킷 고갈 같은 진입 거절이 결속 결함을 가리지 않음. 보고 우선순위는
 // 일일 손실 체인 거절 > 결속 결함 > 그 밖의 진입 거절 — 일일 손실이 이기는 것은 a137 강화(ENTRY_BLOCKED 영속)와 계좌 단위 진입 차단을
-// 겹친 요청에서도 지키기 위함. 판정식 · 코드 · field · 문구와 받아들이는 요청의 집합은 편집 전과 같음(design D2).
+// 겹친 요청에서도 지키기 위함. 결속 판정식 · 코드 · field · 문구는 진입 판정과 독립이고, 받아들이는 요청은 두 판정을 모두 통과한 것
+// (두 판정의 논리곱)이므로 판정 순서가 받아들이는 집합을 바꾸지 않음 — 순서는 둘 다 걸린 요청의 보고만 정함(design D2).
 func (g *RiskGuardian) PrecheckQFinalCampaignFirstLeg(request QFinalCampaignFirstLegIssuance) (QFinalCampaignFirstLegPrecheck, error) {
 	// 결속 판정이 g.policyVersion · g.accountRef 를 읽으므로 그 전에 막음 — PrecheckQFinalEntry 의 nil 거절과 같은 거절.
 	if g == nil {
@@ -58,9 +59,9 @@ func (g *RiskGuardian) PrecheckQFinalCampaignFirstLeg(request QFinalCampaignFirs
 	}
 	lineage := request.Result.Lineage
 	terms := request.Result.ExecutionTerms
-	// 결속 판정 B2~B8 — 편집 전 상대 순서 그대로, 첫 결함에서 멈춤(닫힌 함수의 return). 입력은 요청 값임: PrecheckQFinalEntry 는
-	// TransactionID · Owner(AccountID 공백 제거 밖)와 q_candidate 를 바꾸지 않고 통과시키므로 편집 전에 읽던 값과 같음(design F3 · F4).
-	// 이 판정은 시계 · 원장 · 브로커를 읽지 않음(F2) — 앞으로 옮겨도 받아들이는 집합이 같음.
+	// 결속 판정 B2~B8 — B2 → B8 순서로 보고 첫 결함에서 멈춤(닫힌 함수의 return). 이 닫힌 함수는 정의하는 자리에서 꼭 한 번 즉시
+	// 호출되고 진입 판정보다 앞임(구조 시험이 고정). 입력은 요청 값: PrecheckQFinalEntry 는 TransactionID · Owner(AccountID 공백 제거 밖)와
+	// q_candidate 를 바꾸지 않고 통과시키므로 진입 판정이 본 값과 같음(design F3 · F4). 시계 · 원장 · 브로커를 읽지 않는 순수 판정임(F2).
 	var policyVersion string
 	var weekly *journal.WeeklyFirstLegReservationBinding
 	bindErr := func() error {
@@ -110,7 +111,7 @@ func (g *RiskGuardian) PrecheckQFinalCampaignFirstLeg(request QFinalCampaignFirs
 	// 진입 판정은 결속 결과와 무관하게 정확히 한 번 — 일일 손실 측정 토큰 판정이 여기 있으므로 결속 결함이 있어도 돌려야 우선순위를 가를 수 있음.
 	entry, err := g.PrecheckQFinalEntry(request.Entry)
 	// 진입 거절을 보고하는 경우: 결속 결함이 없거나, 진입 거절이 일일 손실 체인 거절(한도 · 측정 불가)임(1-1 — 첫 다리 승인과 같은 판별).
-	if err != nil && (bindErr == nil || DailyLossChainRefusalOf(err) != DailyLossChainRefusalNone) {
+	if err != nil && (bindErr == nil || DailyLossRefusalKindOf(err) != DailyLossRefusalKindNone) {
 		return QFinalCampaignFirstLegPrecheck{}, err
 	}
 	// 그 밖의 진입 거절(상한 0 · 버킷 고갈 · 다른 체인 거절 …)과 겹치거나 진입 판정을 통과했으면 결속 결함을 보고함.

@@ -15,7 +15,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 )
 
-func TestA157DailyLossChainRefusalOfTable(t *testing.T) {
+func TestA157DailyLossRefusalKindOfTable(t *testing.T) {
 	chain := func(reason risk.ReasonCode) *execgw.IssueRefusal {
 		return &execgw.IssueRefusal{Stage: execgw.StageChain, Reason: string(reason), Detail: "detail"}
 	}
@@ -26,24 +26,24 @@ func TestA157DailyLossChainRefusalOfTable(t *testing.T) {
 	for _, row := range []struct {
 		name string
 		err  error
-		want execgw.DailyLossChainRefusal
+		want execgw.DailyLossRefusalKind
 	}{
-		{"nil", nil, execgw.DailyLossChainRefusalNone},
-		{"limit", chain(risk.ReasonDailyLossLimitReached), execgw.DailyLossChainRefusalLimitReached},
-		{"limit wrapped", fmt.Errorf("outer: %w", chain(risk.ReasonDailyLossLimitReached)), execgw.DailyLossChainRefusalLimitReached},
-		{"limit at another stage", issuance(risk.ReasonDailyLossLimitReached), execgw.DailyLossChainRefusalNone},
-		{"unmeasurable", errors.Join(chain(risk.ReasonInputUnavailable), marker), execgw.DailyLossChainRefusalUnmeasurable},
-		{"unmeasurable wrapped", fmt.Errorf("outer: %w", errors.Join(chain(risk.ReasonInputUnavailable), marker)), execgw.DailyLossChainRefusalUnmeasurable},
-		{"input unavailable without the marker", chain(risk.ReasonInputUnavailable), execgw.DailyLossChainRefusalNone},
-		{"marker without a chain refusal", marker, execgw.DailyLossChainRefusalNone},
-		{"marker with input unavailable at another stage", errors.Join(issuance(risk.ReasonInputUnavailable), marker), execgw.DailyLossChainRefusalNone},
-		{"marker with a limit refusal", errors.Join(chain(risk.ReasonDailyLossLimitReached), marker), execgw.DailyLossChainRefusalLimitReached},
-		{"another chain reason", chain(risk.ReasonOpenExposureExceeded), execgw.DailyLossChainRefusalNone},
-		{"q_final refusal", &execgw.QFinalRefusal{Code: riskbucket.RefusalExistingGuardianCap, Field: "q_existing_guardian"}, execgw.DailyLossChainRefusalNone},
-		{"plain error", errors.New("plain"), execgw.DailyLossChainRefusalNone},
+		{"nil", nil, execgw.DailyLossRefusalKindNone},
+		{"limit", chain(risk.ReasonDailyLossLimitReached), execgw.DailyLossRefusalKindLimitReached},
+		{"limit wrapped", fmt.Errorf("outer: %w", chain(risk.ReasonDailyLossLimitReached)), execgw.DailyLossRefusalKindLimitReached},
+		{"limit at another stage", issuance(risk.ReasonDailyLossLimitReached), execgw.DailyLossRefusalKindNone},
+		{"unmeasurable", errors.Join(chain(risk.ReasonInputUnavailable), marker), execgw.DailyLossRefusalKindUnmeasurable},
+		{"unmeasurable wrapped", fmt.Errorf("outer: %w", errors.Join(chain(risk.ReasonInputUnavailable), marker)), execgw.DailyLossRefusalKindUnmeasurable},
+		{"input unavailable without the marker", chain(risk.ReasonInputUnavailable), execgw.DailyLossRefusalKindNone},
+		{"marker without a chain refusal", marker, execgw.DailyLossRefusalKindNone},
+		{"marker with input unavailable at another stage", errors.Join(issuance(risk.ReasonInputUnavailable), marker), execgw.DailyLossRefusalKindNone},
+		{"marker with a limit refusal", errors.Join(chain(risk.ReasonDailyLossLimitReached), marker), execgw.DailyLossRefusalKindLimitReached},
+		{"another chain reason", chain(risk.ReasonOpenExposureExceeded), execgw.DailyLossRefusalKindNone},
+		{"q_final refusal", &execgw.QFinalRefusal{Code: riskbucket.RefusalExistingGuardianCap, Field: "q_existing_guardian"}, execgw.DailyLossRefusalKindNone},
+		{"plain error", errors.New("plain"), execgw.DailyLossRefusalKindNone},
 	} {
-		if got := execgw.DailyLossChainRefusalOf(row.err); got != row.want {
-			t.Errorf("%s: DailyLossChainRefusalOf = %v, want %v", row.name, got, row.want)
+		if got := execgw.DailyLossRefusalKindOf(row.err); got != row.want {
+			t.Errorf("%s: DailyLossRefusalKindOf = %v, want %v", row.name, got, row.want)
 		}
 	}
 }

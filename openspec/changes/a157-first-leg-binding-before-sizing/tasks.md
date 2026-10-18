@@ -61,3 +61,6 @@ Story: `STORY-TOS-a157` · **High-risk**(Guardian · execgw 첫 다리 판정 �
 
 - 조립 감독자를 **Run** 하게 되는 change 는 알림 dedup 상태(`dailyLossNoticeDay` · `entrySkipNoticeDay` · `entrySkipNoticed`)를 감독자에서 `Context` 로 올려야 한다.
   조립 감독자는 권한 갱신 파도마다 새로 만들어지고(design F9), 생산 감독자와 함께 돌면 같은 줄이 두 번 나온다.
+- 전달 루프의 측정 불가 기록(`strategy_market_handoff_delivery.go:46`, a137)은 `*DailyLossUnmeasurable` 표지만 보고 계수 · 알림을 남긴다.
+  첫 다리 승인 분류와 같은 판별(`execgw.DailyLossRefusalKindOf(err) == DailyLossRefusalKindUnmeasurable`)로 옮겨야 두 자리가 갈라지지 않는다
+  (a157 구현 리뷰 Opus P3-1 — 오늘은 표지 생성 자리가 체인 · 입력 불가 하나라 결과가 같음).

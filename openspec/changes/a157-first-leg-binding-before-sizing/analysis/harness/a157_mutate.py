@@ -20,7 +20,7 @@ KIND = "internal/execgw/a157_daily_loss_kind.go"
 ADMIT = "internal/app/engine/strategy_first_leg_admission.go"
 SUP = "internal/app/engine/strategy_entry_supervisor.go"
 TARGET_FILES = [FIRST, KIND, ADMIT, SUP]
-FUNC = {FIRST: "RiskGuardian.PrecheckQFinalCampaignFirstLeg", KIND: "DailyLossChainRefusalOf",
+FUNC = {FIRST: "RiskGuardian.PrecheckQFinalCampaignFirstLeg", KIND: "DailyLossRefusalKindOf",
         ADMIT: "strategyFirstLegAdmissionBridge.admit", SUP: "Context.NewPairedStrategyEntryProductionAssembly"}
 TESTS = [
     ["go", "test", "-count=1", "-tags", "tossos_testseams", "./internal/execgw/",
@@ -99,7 +99,7 @@ MUTANTS = {
         ("\tvar policyVersion string\n", "\tentry, err := g.PrecheckQFinalEntry(request.Entry)\n\tif err != nil {\n"
                                           "\t\treturn QFinalCampaignFirstLegPrecheck{}, err\n\t}\n\tvar policyVersion string\n"),
         ("\tentry, err := g.PrecheckQFinalEntry(request.Entry)\n\t// 진입 거절을", "\t// 진입 거절을"),
-        ("\tif err != nil && (bindErr == nil || DailyLossChainRefusalOf(err) != DailyLossChainRefusalNone) {\n"
+        ("\tif err != nil && (bindErr == nil || DailyLossRefusalKindOf(err) != DailyLossRefusalKindNone) {\n"
          "\t\treturn QFinalCampaignFirstLegPrecheck{}, err\n\t}\n", ""),
     ]),
     "M2-move-B2": (FIRST, move(B2_IN, B2_OUT)),
@@ -127,20 +127,38 @@ MUTANTS = {
     "M11-B5-qcandidate-self": (FIRST, [("request.Result.Quantity != request.Entry.QCandidate", "request.Result.Quantity != request.Result.Quantity")]),
     "M12a-B5-lane-self": (FIRST, [("lineage.LaneID != owner.LaneID", "lineage.LaneID != lineage.LaneID")]),
     "M12b-B5-campaign-self": (FIRST, [("lineage.CampaignID != owner.CampaignID ||", "lineage.CampaignID != lineage.CampaignID ||")]),
-    "M13-drop-daily-loss-precedence": (FIRST, [("(bindErr == nil || DailyLossChainRefusalOf(err) != DailyLossChainRefusalNone)", "bindErr == nil")]),
-    "M13b-invert-daily-loss-test": (FIRST, [("DailyLossChainRefusalOf(err) != DailyLossChainRefusalNone", "DailyLossChainRefusalOf(err) == DailyLossChainRefusalNone")]),
+    "M13-drop-daily-loss-precedence": (FIRST, [("(bindErr == nil || DailyLossRefusalKindOf(err) != DailyLossRefusalKindNone)", "bindErr == nil")]),
+    "M13b-invert-daily-loss-test": (FIRST, [("DailyLossRefusalKindOf(err) != DailyLossRefusalKindNone", "DailyLossRefusalKindOf(err) == DailyLossRefusalKindNone")]),
     "M14a-kind-drop-unmeasurable": (KIND, [("errors.As(err, &unmeasurable) {", "false && errors.As(err, &unmeasurable) {")]),
     "M14b-kind-drop-limit": (KIND, [("\t\tissue.Reason == string(risk.ReasonDailyLossLimitReached) {", "\t\tfalse && issue.Reason == string(risk.ReasonDailyLossLimitReached) {")]),
     "M14c-kind-unmeasurable-any-stage": (KIND, [("issue.Stage == StageChain &&\n\t\t\tissue.Reason == string(risk.ReasonInputUnavailable)", "issue.Reason == string(risk.ReasonInputUnavailable)")]),
     "M14d-kind-unmeasurable-without-marker": (KIND, [("errors.As(err, &unmeasurable) {", "true || errors.As(err, &unmeasurable) {")]),
     "M15-duplicate-B3-after-sizing": (FIRST, [(AFTER, AFTER + B3_OUT)]),
+    # round2(구현 리뷰 P2): 리터럴은 그대로 두고 결속 판정의 **실행** 횟수 · 시점만 바꾸는 변이 — 행동이 같아 구조 시험만 잡을 수 있음.
+    "M15b-named-closure-called-twice": (FIRST, [
+        ("\tbindErr := func() error {\n", "\tbind := func() error {\n"),
+        ("\t\tweekly = binding\n\t\treturn nil\n\t}()\n", "\t\tweekly = binding\n\t\treturn nil\n\t}\n\tbindErr := bind()\n"),
+        ("\tissuedAt := g.clk.Now().UTC()\n", "\tif again := bind(); again != nil {\n\t\treturn QFinalCampaignFirstLegPrecheck{}, again\n\t}\n\tissuedAt := g.clk.Now().UTC()\n"),
+    ]),
+    "M15c-sole-invocation-after-sizing": (FIRST, [
+        ("\tbindErr := func() error {\n", "\tbind := func() error {\n"),
+        ("\t\tweekly = binding\n\t\treturn nil\n\t}()\n", "\t\tweekly = binding\n\t\treturn nil\n\t}\n"),
+        ("\tentry, err := g.PrecheckQFinalEntry(request.Entry)\n", "\tentry, err := g.PrecheckQFinalEntry(request.Entry)\n\tbindErr := bind()\n"),
+    ]),
+    "M15d-invocation-inside-a-loop": (FIRST, [
+        ("\tbindErr := func() error {\n", "\tvar bindErr error\n\tfor range 1 {\n\tbindErr = func() error {\n"),
+        ("\t\tweekly = binding\n\t\treturn nil\n\t}()\n", "\t\tweekly = binding\n\t\treturn nil\n\t}()\n\t}\n"),
+    ]),
+    # round2(구현 리뷰 P3-4 · codex P3-2): 통과 봉인 값 — 결속 판정이 봉인에 넘기는 두 값의 대입 삭제.
+    "M18-drop-policy-version-assignment": (FIRST, [("\t\tpolicyVersion = version\n", "\t\t_ = version\n")]),
+    "M19-drop-weekly-assignment": (FIRST, [("\t\tweekly = binding\n", "\t\t_ = binding\n")]),
     "M16a-entrygate-no-nil-guard": (SUP, [("\tif c.Entry != nil { //", "\tif true { //")]),
     "M16b-drop-daily-loss-notice": (SUP, [("DailyLossNotice: c.strategyDailyLossNotice(), EntrySkipNotice: c.strategyEntrySkipNotice()}",
                                            "EntrySkipNotice: c.strategyEntrySkipNotice()}")]),
     "M16c-drop-entry-skip-notice": (SUP, [("DailyLossNotice: c.strategyDailyLossNotice(), EntrySkipNotice: c.strategyEntrySkipNotice()}",
                                            "DailyLossNotice: c.strategyDailyLossNotice()}")]),
     "M16d-drop-entrygate": (SUP, [("\t\topts.EntryGate = c.Entry\n", "\t\t_ = c.Entry\n")]),
-    "M17-admit-ignores-classifier": (ADMIT, [("switch execgw.DailyLossChainRefusalOf(err) {", "switch execgw.DailyLossChainRefusalNone {")]),
+    "M17-admit-ignores-classifier": (ADMIT, [("switch execgw.DailyLossRefusalKindOf(err) {", "switch execgw.DailyLossRefusalKindNone {")]),
 }
 
 

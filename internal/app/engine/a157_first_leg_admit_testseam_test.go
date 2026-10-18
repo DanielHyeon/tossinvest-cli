@@ -34,15 +34,20 @@ func (l a157MutatingLoader) collectStrategyFirstLegAuthority(ctx context.Context
 	return authority, err
 }
 
-// a157EscalationCounter 는 실제 Guardian 을 그대로 쓰되 일일 손실 강화 · 발급 호출을 셈.
+// a157EscalationCounter 는 실제 Guardian 을 그대로 쓰되 일일 손실 강화 · 발급 호출을 셈. escalationFailure 가 있으면 강화가 실패한 것처럼
+// 실제 Guardian 의 실패 갈래와 같은 모양(errors.Join(거절, 강화 오류) — a137_daily_loss.go EscalateDailyLossLimit)을 돌려줌(원장 쓰기 없음).
 type a157EscalationCounter struct {
 	*execgw.RiskGuardian
-	escalations atomic.Int32
-	issues      atomic.Int32
+	escalationFailure error
+	escalations       atomic.Int32
+	issues            atomic.Int32
 }
 
 func (g *a157EscalationCounter) EscalateDailyLossLimit(ctx context.Context, refusal error) error {
 	g.escalations.Add(1)
+	if g.escalationFailure != nil {
+		return errors.Join(refusal, g.escalationFailure)
+	}
 	return g.RiskGuardian.EscalateDailyLossLimit(ctx, refusal)
 }
 
@@ -79,6 +84,12 @@ const (
 // a157Admit 은 거래 fixture 를 세우고(예산 · 일일 손실 원장 행), 결속 결함(빈 이름이면 없음)을 심어 KR 첫 범위(005930)를 승인에 넘김.
 func a157Admit(t *testing.T, riskBudget string, loss a157DailyLoss, binding string) (StrategyFirstLegAdmissionResult, *a157EscalationCounter) {
 	t.Helper()
+	return a157AdmitWith(t, riskBudget, loss, binding, nil)
+}
+
+// a157AdmitWith 는 a157Admit 에 강화 실패(escalationFailure, nil 이면 실제 강화)를 더한 것.
+func a157AdmitWith(t *testing.T, riskBudget string, loss a157DailyLoss, binding string, escalationFailure error) (StrategyFirstLegAdmissionResult, *a157EscalationCounter) {
+	t.Helper()
 	fixture := newA112TradingFixture(t, a112TradingOptions{riskBudget: riskBudget})
 	if loss != a157NoLoss {
 		// 손실 행은 다른 종목(999999)에 둠 — 일일 손실은 계좌 단위이고, 같은 종목이면 캠페인 세대 판독이 달라져 승인 앞에서 다른 거절이 남.
@@ -97,7 +108,7 @@ func a157Admit(t *testing.T, riskBudget string, loss a157DailyLoss, binding stri
 			t.Fatal(err)
 		}
 	}
-	counter := &a157EscalationCounter{RiskGuardian: fixture.guardian}
+	counter := &a157EscalationCounter{RiskGuardian: fixture.guardian, escalationFailure: escalationFailure}
 	var loader strategyFirstLegAuthorityLoader = fixture.loader
 	if binding != "" {
 		mutate, ok := a157EngineBindings[binding]
@@ -133,6 +144,33 @@ func TestA157EngineADailyLossLimitStillEscalatesWithABindingDefect(t *testing.T)
 			!errors.As(outcome.cause, &block) {
 			t.Errorf("binding=%q: outcome=%+v cause=%v escalations=%d issues=%d — want DAILY_LOSS_LIMIT, one escalation, an account block",
 				binding, outcome, outcome.cause, counter.escalations.Load(), counter.issues.Load())
+		}
+	}
+}
+
+// 일일 손실 한도 + 결속 결함 + **강화 실패** — 계좌 차단이 아니라 거절과 강화 오류를 함께 든 결함이고, 그 모양 · 문구가 결속 결함이 없을 때와
+// 같음(design D2 (c) 「성공/실패 갈래 모두 같음」, 구현 리뷰 Opus P3-3). 발급 0.
+func TestA157EngineAFailedEscalationIsTheSameJoinedFaultWithABindingDefect(t *testing.T) {
+	failure := errors.New("operating mode did not persist")
+	var baseline StrategyFirstLegAdmissionResult
+	for _, binding := range []string{"", "B2-policy-version", "B8-weekly"} {
+		outcome, counter := a157AdmitWith(t, "", a157LossLimit, binding, failure)
+		var block *execgw.DailyLossEntryBlock
+		var issue *execgw.IssueRefusal
+		if outcome.Code != StrategyFirstLegDailyLossLimit || counter.escalations.Load() != 1 || counter.issues.Load() != 0 ||
+			errors.As(outcome.cause, &block) || !errors.Is(outcome.cause, failure) || !errors.As(outcome.cause, &issue) ||
+			issue.Stage != execgw.StageChain || issue.Reason != "DAILY_LOSS_LIMIT_REACHED" {
+			t.Errorf("binding=%q: outcome=%+v cause=%v — want DAILY_LOSS_LIMIT with the chain refusal and the escalation error joined, no account block",
+				binding, outcome, outcome.cause)
+			continue
+		}
+		if binding == "" {
+			baseline = outcome
+			continue
+		}
+		if outcome.Detail != baseline.Detail || outcome.cause.Error() != baseline.cause.Error() {
+			t.Errorf("binding=%q: detail=%q cause=%q — want exactly the no-defect fault detail=%q cause=%q",
+				binding, outcome.Detail, outcome.cause, baseline.Detail, baseline.cause)
 		}
 	}
 }

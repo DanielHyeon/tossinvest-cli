@@ -21,13 +21,13 @@ TARGETS = [
      "prospective 세대 · B4 가격 단위 · B5 계보 결속 · B6 포지션 세대 · B7 attempt/활성화 · B8 주간 예약)을 거쳐 계보 투영(B9) 뒤 봉인을 돌려줌. 원장 · 브로커 호출 없음.",
      "design D1 — ① nil 가드(`PrecheckQFinalEntry` B1 과 같은 거절) ② B2~B8 을 편집 전 상대 순서로 **요청 값**에 대해 판정하고 첫 결함을 `bindErr` 로 잡음"
      "(입력 출처: `request.Entry.Admission.TransactionID` · `.Owner` · `request.Entry.QCandidate` — F3 · F4 로 같은 값) ③ `PrecheckQFinalEntry` 호출 한 번 "
-     "④ 진입 거절이 있고 결속 결함이 없거나 진입 거절이 일일 손실 체인 거절(`execgw.DailyLossChainRefusalOf`)이면 진입 거절 ⑤ 결속 결함 ⑥ B9 투영(무편집). "
+     "④ 진입 거절이 있고 결속 결함이 없거나 진입 거절이 일일 손실 체인 거절(`execgw.DailyLossRefusalKindOf`)이면 진입 거절 ⑤ 결속 결함 ⑥ B9 투영(무편집). "
      "판정식 · 코드 · field · 문구 무변경.",
      f"{TAGS} ./internal/execgw -run 'A157|QFinalCampaignFirstLeg|A136QFinalCampaignFirstLeg|A138QFinalCampaignFirstLeg'"),
     ("internal/app/engine/strategy_first_leg_admission.go", "strategyFirstLegAdmissionBridge.admit",
      "전략 첫 다리 승인 — 결과 검증 → 권한 수집 → 결속 검증 → 일일 손실 측정 → q_final precheck(거절 분류) → 원자 발급.",
      "precheck 거절 갈래의 a137 두 조건(측정 불가: 표지 + 체인 · 입력 불가 / 한도: 체인 · 한도 도달)을 execgw 판별 함수 "
-     "`DailyLossChainRefusalOf` 의 결과로 가름 — 조건을 글자 그대로 옮겼으므로 분기 결과(코드 · 원인 · 강화 호출)는 같음(design D1 「판별은 한 자리」).",
+     "`DailyLossRefusalKindOf` 의 결과로 가름 — 조건을 글자 그대로 옮겼으므로 분기 결과(코드 · 원인 · 강화 호출)는 같음(design D1 「판별은 한 자리」).",
      f"{TAGS} ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'"),
     ("internal/app/engine/strategy_entry_supervisor.go", "Context.NewPairedStrategyEntryProductionAssembly",
      "조립 감독자 생성 — 권한 파도(일정 · 후보 · 경로 · FX · 레인 · 제안 · 위험 · 계좌)를 모아 첫 다리 승인 · dispatch 주기 · 두 시장 worker 를 세우고 "
@@ -49,7 +49,7 @@ FN_TESTS = {
 
 # 편집 뒤에만 있는 시험(1.1 에서 더함) — after 모드에서만 인용.
 AFTER_ONLY = {
-    "TestA157ThePrecheckJudgesTheBindingOnceAndBeforeSizing", "TestA157DailyLossChainRefusalOfTable",
+    "TestA157ThePrecheckJudgesTheBindingOnceAndBeforeSizing", "TestA157DailyLossRefusalKindOfTable",
     "TestA157TheAssemblySupervisorCarriesBothNotices", "TestA157TheAssemblyNoticesReachTheLog",
     "TestA157TheAssemblySupervisorEntryGate",
 }
@@ -60,12 +60,14 @@ CAPZ = "TestA157CapZeroAndABindingDefect"
 DAILY = "TestA157DailyLossIsReportedBeforeABindingDefect"
 NOTES = {
     "RiskGuardian.PrecheckQFinalCampaignFirstLeg": [
+        ("bindErr := func() error", "—", "결속 판정 닫힌 함수의 즉시 호출 한 번(최상위 대입 · 진입 판정 앞 — 구조 시험)",
+         ["TestA157ThePrecheckJudgesTheBindingOnceAndBeforeSizing"]),
         ("g == nil", "—", "RISK_CALCULATION_INVALID/guardian(**a157 nil 가드** — 결속 판정이 `g.policyVersion` · `g.accountRef` 를 읽기 전)",
          ["TestA157ANilGuardianRefusesBeforeAnyBindingJudgement"]),
-        ("bindErr == nil || DailyLossChainRefusalOf", "—",
+        ("bindErr == nil || DailyLossRefusalKindOf", "—",
          "**a157 ④** 진입 거절 반환 — 결속 결함이 없거나 진입 거절이 일일 손실 체인 거절(1-1)",
          [DAILY, "TestA157AnEntryRefusalAloneIsReportedAsItself", "TestA157EngineADailyLossLimitStillEscalatesWithABindingDefect",
-          "TestA157EngineAnUnmeasurableDayStillWinsOverABindingDefect"]),
+          "TestA157EngineAFailedEscalationIsTheSameJoinedFaultWithABindingDefect", "TestA157EngineAnUnmeasurableDayStillWinsOverABindingDefect"]),
         ("bindErr != nil", "—", "**a157 ⑤** 결속 결함 반환(상한 0 · 버킷 · 그 밖의 진입 거절보다 먼저)",
          [CAPZ, "TestA157OtherEntryRefusalsAndABindingDefect", "TestA157OneInputThatTripsBothJudgements", "TestA157EngineACapZeroNoLongerHidesABindingDefect"]),
         # 「prev:」 메모는 분기 줄 바로 앞 세 줄에서 찾음 — `if err != nil {` 이 여럿이라 그 오류를 만든 호출로 가름.
@@ -87,13 +89,13 @@ NOTES = {
         ("b == nil || b.loader == nil", "—", "AUTHORITY_UNAVAILABLE", ["TestStrategyFirstLegAdmissionDormantPairedKRUS"]),
         ("validateStrategyFirstLegAuthority", "—", "AUTHORITY_MISMATCH(결속 불일치 — B3~B7 꼴을 precheck 앞에서 막음, design F8)",
          ["TestStrategyFirstLegAdmissionRejectsAuthorityTamperPairedKRUS"]),
-        ("DailyLossChainRefusalUnmeasurable", "—", "**a157** 판별 결과 측정 불가 → DAILY_LOSS_UNMEASURABLE + 원인(편집 전 B6-B7 과 같음)",
+        ("DailyLossRefusalKindUnmeasurable", "—", "**a157** 판별 결과 측정 불가 → DAILY_LOSS_UNMEASURABLE + 원인(편집 전 B6-B7 과 같음)",
          ["TestA137AnUnmeasurableDayIsAPolicyOutcomeNotALaneFault", "TestA157EngineAnUnmeasurableDayStillWinsOverABindingDefect"]),
-        ("DailyLossChainRefusalLimitReached", "a137 강화(`EscalateDailyLossLimit`)",
+        ("DailyLossRefusalKindLimitReached", "a137 강화(`EscalateDailyLossLimit`)",
          "**a157** 판별 결과 한도 도달 → DAILY_LOSS_LIMIT + 강화 결과 원인(편집 전 B8 과 같음)",
          ["TestA137ADailyLossRefusalEscalatesAndIsNotALaneFault", "TestA137AFailedEscalationIsJoinedNotLost",
-          "TestA157EngineADailyLossLimitStillEscalatesWithABindingDefect"]),
-        ("switch execgw.DailyLossChainRefusalOf", "—", "**a157** 일일 손실 판별(한 자리) — 아니면 아래 갈래",
+          "TestA157EngineADailyLossLimitStillEscalatesWithABindingDefect", "TestA157EngineAFailedEscalationIsTheSameJoinedFaultWithABindingDefect"]),
+        ("switch execgw.DailyLossRefusalKindOf", "—", "**a157** 일일 손실 판별(한 자리) — 아니면 아래 갈래",
          ["TestA137ClassificationIsUnchangedForEveryPrecheckRefusal", "TestA157EngineAnUnmeasurableDayStillWinsOverABindingDefect"]),
         ("unmeasurable := (*execgw.DailyLossUnmeasurable)", "—", "편집 전 a137 측정 불가 갈래(표지) — a157 이 판별 함수로 옮김",
          ["TestA137AnUnmeasurableDayIsAPolicyOutcomeNotALaneFault", "TestA157EngineAnUnmeasurableDayStillWinsOverABindingDefect"]),
