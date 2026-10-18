@@ -1,0 +1,9 @@
+HEAD b8d6d4cee568b6c05133910810b3cfe9871860c8 2026-10-18T14:23:03Z
+$ make lint
+go vet ./...
+go vet -tags tossos_testseams ./...
+
+real	2m26.053s
+user	0m15.408s
+sys	0m6.295s
+rc=0

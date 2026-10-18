@@ -1,0 +1,1 @@
+Change 'a157-first-leg-binding-before-sizing' is valid

@@ -37,3 +37,22 @@ internal/execgw/a157_daily_loss_kind.go            |  62 +++++++++++++   (새 �
 internal/execgw/riskguardian_first_leg.go          | 103 +++++++++++++--------  (대부분 닫힌 함수 안으로 들여쓰기)
 4 files changed, 141 insertions(+), 50 deletions(-)
 ```
+
+## round 2 — 2.3 구현 리뷰 수리 뒤 (커밋 `b8d6d4cee`)
+
+수리 내용(Manager 전달 1~7): 구조 시험 실행 모양 고정 · 통과 봉인 정확 대조 · 판별 주석 범위 축소 + tasks 후속 · 판별 이름 `DailyLossRefusalKind*` ·
+엔진 강화 실패 행 · 원장 M14c 동등 표기 · 첫 다리 주석을 불변식으로. 원문: `tests-round2.txt` · `lint-round2.txt` · `validate-round2.txt` · `check-analysis-round2.txt`.
+
+| 명령 | 결과 |
+|---|---|
+| `make lint` | **rc 0** (gofmt 위반 0 · vet 무태그/태그 출력 0, 2m26s) |
+| `go test -count=1 -timeout 30m ./internal/execgw/ ./internal/app/engine/` | **ok ×2** (execgw 138s · engine 314s) |
+| 같은 패키지 `-tags tossos_testseams -timeout 45m` | **ok ×2** (execgw 201s · engine 389s) |
+| `-race` 대상 execgw(`TestA157\|TestQFinalCampaignFirstLeg\|TestA136…\|TestA138…\|TestA137`) | **ok** (385s) |
+| `-race` 대상 engine(`TestA157\|TestA137\|TestA146\|TestStrategyFirstLegAdmission\|두 파도 시험`) | **ok** (107s) |
+| `openspec validate --strict` | **valid** |
+| `check_analysis.py` (번들 셋 재추출 뒤) | **rc 0**, evidence complete |
+| 불변: `riskguardian_qfinal.go` 파일 sha · `IssuePrecheckedQFinalCampaignFirstLeg` 본문 sha | `6fcace26fd7b2ddc…` · `28c40c8ab49a1cb6…` — 편집 전과 같음 |
+| 변이 round2 (`analysis/mutation/round2.md`) | **36/36 CAUGHT**(M15b · M15c · M15d · M18 · M19 추가) |
+
+risk · riskbucket · journal · cmd/tossctl 은 round 2 에서 Go 편집이 없어(`git diff --stat 1e58d3b56 b8d6d4cee` 는 internal/execgw · internal/app/engine 안의 8 파일뿐, 그 밖 패키지의 컴파일은 `make lint` 의 vet ./... 가 확인) 시험을 다시 돌리지 않음 — round 1 결과를 그대로 씀.

@@ -50,10 +50,15 @@
 
 - **부분 이동(M2~M8)은 행동 시험만으로도 잡힘** — 각 변이에서 `TestA157CapZeroAndABindingDefect`(상한 0 + 그 Bn 행)가 실패함. 구조 시험
   `TestA157ThePrecheckJudgesTheBindingOnceAndBeforeSizing` 도 함께 실패하지만, 구조 시험 없이도 CAUGHT(freeze 리뷰 P1-3 의 「부분 이동」 구멍이 닫힘).
-- **M15(복제)는 구조 시험만 잡음** — 설계대로(D6): 앞뒤 두 자리의 같은 판정은 행동으로 구별되지 않으므로 AST 셈이 유일한 못.
+- **M15(복제)는 구조 시험만 잡음** — 설계대로(D6): 앞뒤 두 자리의 같은 판정은 행동으로 구별되지 않으므로 AST 셈이 못임.
+  **(round2 정정, 구현 리뷰 P2)** round1 의 구조 시험은 **리터럴을 옮겨 적는** 복제만 잡았음 — 이름 붙인 닫힌 함수를 앞뒤로 두 번 부르는 모양(M15b,
+  리뷰어 실측 SURVIVED)과 유일한 호출을 사이징 뒤로 미루는 모양(M15c)은 리터럴 개수 · 위치가 그대로라 통과했음. 구조 시험을 「FuncLit 하나 ·
+  즉시 호출 하나 · 최상위 대입 · 진입 판정 문장보다 앞」으로 강화한 뒤 `round2.md` 에서 둘 다(+M15d 반복문 안 호출) CAUGHT.
 - **M14c(측정 불가 갈래의 단계 조건 삭제)는 판별 표 시험만 잡음.** 생산의 측정 불가 표지는 `dailyLossChainRefusal` 이 체인 단계 거절에만 붙이므로
   (a137_daily_loss.go:203-209) 실제 Guardian 경로에서는 행동이 같음 — 표 시험의 합성 행(「다른 단계의 입력 불가 + 표지」)이 조건을 못 박음. 비동등으로 셈.
 - **M16a(타입 있는 nil)는 `TestA157TheAssemblySupervisorEntryGate` 의 「게이트 없는 엔진 → nil 인터페이스」 단언이 잡음**(Block 의 panic 까지 가지 않고 칸에서 멈춤).
 - **M10(nil 가드 삭제)은 panic 으로 잡힘** — 결속 판정이 `g.policyVersion` 을 읽는 자리에서 nil 역참조. 가드가 있으면 거절(`RISK_CALCULATION_INVALID/guardian`).
-- 동등 변이: 없음(셈한 31 개 전부 비동등).
+- 동등 변이: **M14c 는 생산 경로에서 동등 — 합성 표 행으로만 잡힘**(round2 정정, 구현 리뷰 Opus P3-5). 표지 생성 자리는
+  `dailyLossChainRefusal` 하나이고 그 거절은 늘 체인 단계라, 생산이 만들 수 있는 오류에서는 행동이 같음. 표 행은 조건을 못 박으려 유지함.
+  그 밖의 30 개는 비동등.
 - 빌드 메모(변이 아님, freeze 리뷰 P3-6): 「B9 계보 투영을 사이징 앞으로」는 `entry.decision.QFinal` · `entry.intent` 가 없어 컴파일되지 않음 — 시험의 증거가 아니라 구조의 증거.

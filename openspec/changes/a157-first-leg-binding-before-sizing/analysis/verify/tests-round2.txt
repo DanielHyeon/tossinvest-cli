@@ -1,0 +1,12 @@
+HEAD b8d6d4cee568b6c05133910810b3cfe9871860c8 start 2026-10-18T14:55:03Z go version go1.26.5 linux/amd64
+$ go test -count=1 -timeout 30m ./internal/execgw/ ./internal/app/engine/
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	137.586s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	314.254s
+$ go test -count=1 -timeout 45m -tags tossos_testseams ./internal/execgw/ ./internal/app/engine/
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	201.205s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	388.607s
+$ go test -race -count=1 -timeout 30m -tags tossos_testseams ./internal/execgw/ -run 'TestA157|TestQFinalCampaignFirstLeg|TestA136QFinalCampaignFirstLeg|TestA138QFinalCampaignFirstLeg|TestA137'
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	384.974s
+$ go test -race -count=1 -timeout 30m -tags tossos_testseams ./internal/app/engine/ -run 'TestA157|TestA137|TestA146|TestStrategyFirstLegAdmission|TestTheMarketThatLeadsAWaveAlwaysPublishesIt|TestAFailedWaveCarriesNoAssemblyForEitherMarket'
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	106.543s
+end 2026-10-18T15:15:31Z
