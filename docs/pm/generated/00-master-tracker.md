@@ -148,7 +148,7 @@
     - STORY-TOS-a047 — Add the strategy entry engine [archived] → `a047-add-strategy-engine`
     - STORY-TOS-a048 — Add market-aware strategy scheduling [archived] → `a048-add-market-aware-scheduler`
     - STORY-TOS-a117 — The minute timestamp is the bar's close [archived] → `a117-the-minute-timestamp-is-the-bars-close`
-    - STORY-TOS-a148 — Parker RR 계약 분리 [in_progress] → `a148-clarify-parker-risk-reward-contract`
+    - STORY-TOS-a148 — Parker RR 계약 분리 [archived] → `a148-clarify-parker-risk-reward-contract`
     - STORY-TOS-a149 — 세션 VWAP와 확정봉 EMA9 계산 [in_progress] → `a149-compute-session-vwap-and-ema9`
   - FEAT-TOS-011 — Lane performance and strategy optimization [active]
     - STORY-TOS-a049 — Add deterministic lane performance attribution [archived] → `a049-add-lane-performance`

@@ -2,7 +2,7 @@
 
 우선순위 8/9: 버전 전략 관측 전용 연결. 선행 change: a149, a150, a153, a154.
 이 문서는 목표 동작을 명세한다. 소스 구현·배포·실거래 검증 완료를 뜻하지 않는다.
-공통 기준 증거: `../a148-clarify-parker-risk-reward-contract/analysis/code-context/`; 구현 전에는 현 HEAD의 호출 사슬·설정 binding과 수정 함수 AST를 새로 확인한다.
+공통 기준 증거: `../archive/2026-10-18-a148-clarify-parker-risk-reward-contract/analysis/code-context/`; 구현 전에는 현 HEAD의 호출 사슬·설정 binding과 수정 함수 AST를 새로 확인한다.
 
 ## Goals / Non-Goals
 
