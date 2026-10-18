@@ -55,6 +55,7 @@ Story: `STORY-TOS-a157` · **High-risk**(Guardian · execgw 첫 다리 판정 �
 ## 3. 사람 · Manager
 
 - [x] 3.1 Manager `make sdd-sync` · `make sdd-check` · `make gate CHANGE=a157-first-leg-binding-before-sizing`(격리 워크트리) + 독립 검증 · PM tracker 재생성 · archive
+      — 2026-10-19 Manager: 착지 b8d6d4cee(격리 워크트리 계산 · 1eb8cd560 커밋) · 게이트 = `make gate` **PASS** 11/11(격리 워크트리, HEAD 1eb8cd560, 00:46→01:24 KST, 로그 `analysis/verify/gate-1eb8cd560.log`) · 독립 리뷰 2건(freeze · 구현) 처분 완료 · archive
 - 배포(체크박스 아님): 엔진 이미지 교체는 사람이 KST 05:00~09:00 창에서. 배포 시점은 사용자 지시 「P3 까지 끝나면 바로」를 따른다.
 
 ## 후속 (체크박스 아님)
