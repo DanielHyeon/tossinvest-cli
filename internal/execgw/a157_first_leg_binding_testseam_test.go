@@ -266,17 +266,18 @@ func TestA157AnEntryRefusalAloneIsReportedAsItself(t *testing.T) {
 	}
 }
 
-// 상한 0 + 결속 결함 — **뒤집을 행**(편집 전: 상한 0 이 결속 결함을 가림).
+// 상한 0 + 결속 결함 — a157 로 뒤집힌 행: 결속 결함이 상한 0 보다 먼저 보고됨(편집 전 HEAD 에서는 상한 0 이 결함을 가렸음 —
+// `analysis/red/characterization-head.txt`). 일곱 판정 각각(B5 는 셋)을 따로 둬서 일부만 앞으로 옮긴 구현도 잡음(design D6 M1~M8).
 func TestA157CapZeroAndABindingDefect(t *testing.T) {
 	krWeekly := a157KRWeekly(t)
 	for _, binding := range a157Bindings() {
 		_, _, err := a157Precheck(t, krWeekly, a157CapZero(), &binding)
-		// 편집 전 HEAD: 상한 0 이 먼저 보고됨.
-		a157Expect(t, "cap-zero+"+binding.name, err, a157CapZeroWant)
+		a157Expect(t, "cap-zero+"+binding.name, err, binding.want)
 	}
 }
 
-// 버킷 고갈 · 표지 없는 입력 불가 + 결속 결함 — **뒤집을 행**(design D2 (b) · (e)).
+// 버킷 고갈 · 표지 없는 입력 불가 + 결속 결함 — a157 로 뒤집힌 행(design D2 (b) · (e)). 표지 없는 입력 불가는 일일 손실 체인 거절이
+// 아니므로(판별 함수가 측정 불가로 보지 않음) 결속 결함이 이김 — 판별의 표지 · 단계 조건을 지운 변이를 이 행이 잡음.
 func TestA157OtherEntryRefusalsAndABindingDefect(t *testing.T) {
 	krWeekly := a157KRWeekly(t)
 	for _, binding := range a157Bindings() {
@@ -284,9 +285,9 @@ func TestA157OtherEntryRefusalsAndABindingDefect(t *testing.T) {
 			continue
 		}
 		_, _, err := a157Precheck(t, krWeekly, a157BucketExhausted(), &binding)
-		a157Expect(t, "bucket+"+binding.name, err, a157BucketWant)
+		a157Expect(t, "bucket+"+binding.name, err, binding.want)
 		_, _, err = a157Precheck(t, krWeekly, a157UnmarkedInput(), &binding)
-		a157Expect(t, "unmarked+"+binding.name, err, a157Unmarked)
+		a157Expect(t, "unmarked+"+binding.name, err, binding.want)
 	}
 }
 
@@ -301,17 +302,18 @@ func TestA157DailyLossIsReportedBeforeABindingDefect(t *testing.T) {
 	}
 }
 
-// (f) 입력 하나가 결속 판정과 진입 판정을 함께 거는 경우 — **뒤집을 행**(freeze 리뷰 Opus P1-1 실측).
+// (f) 입력 하나가 결속 판정과 진입 판정을 함께 거는 경우 — a157 로 뒤집힌 행(freeze 리뷰 Opus P1-1 실측, design D2 (f)): 편집 전에는 진입
+// 판정의 ZERO_QUANTITY · UNKNOWN_SYMBOL, 편집 뒤에는 결속 판정 B5 가 보고됨. 엔진 분류는 둘 다 AUTHORITY_MISMATCH 로 같음.
 func TestA157OneInputThatTripsBothJudgements(t *testing.T) {
 	us := a157US(t)
 	_, _, err := a157Precheck(t, us, a157Setup{name: "f-qcandidate-zero", entry: func(_ *testing.T, r *execgw.QFinalCampaignFirstLegIssuance, _ string) {
 		r.Entry.QCandidate = 0
 	}}, nil)
-	a157Expect(t, "f-qcandidate-zero", err, "q:ZERO_QUANTITY/q_candidate: lane proposed zero")
+	a157Expect(t, "f-qcandidate-zero", err, a157B5)
 	_, _, err = a157Precheck(t, us, a157Setup{name: "f-symbol", entry: func(_ *testing.T, r *execgw.QFinalCampaignFirstLegIssuance, _ string) {
 		r.Entry.Symbol = strings.ToLower(r.Entry.Symbol)
 	}}, nil)
-	a157Expect(t, "f-noncanonical-symbol", err, "q:UNKNOWN_SYMBOL/symbol: symbol is not canonical")
+	a157Expect(t, "f-noncanonical-symbol", err, a157B5)
 }
 
 // 통과 봉인 값 — 결속 · 진입 판정을 모두 통과하는 요청의 q_candidate · q_final 과 그 뒤 원자 발급 결과는 편집 전과 같음.
@@ -346,4 +348,31 @@ func TestA157ANilGuardianRefusesBeforeAnyBindingJudgement(t *testing.T) {
 	var guardian *execgw.RiskGuardian
 	_, err := guardian.PrecheckQFinalCampaignFirstLeg(execgw.QFinalCampaignFirstLegIssuance{})
 	a157Expect(t, "nil-guardian", err, "q:RISK_CALCULATION_INVALID/guardian: Guardian is nil")
+}
+
+// 판별 함수가 실제 Guardian 의 precheck 거절을 어떻게 읽는지 — 일일 손실 한도 · 측정 불가만 일일 손실 체인 거절이고, 표지 없는 입력 불가 ·
+// 상한 0 · 버킷 고갈 · 결속 결함은 아님. 표 시험(a157_daily_loss_kind_test.go)이 합성 모양을, 이 시험이 생산 모양을 맡음.
+func TestA157DailyLossChainRefusalOfRealRefusals(t *testing.T) {
+	krWeekly := a157KRWeekly(t)
+	b2 := a157Bindings()[0]
+	for _, row := range []struct {
+		setup   a157Setup
+		binding *a157Binding
+		want    execgw.DailyLossChainRefusal
+	}{
+		{a157Limit(), nil, execgw.DailyLossChainRefusalLimitReached},
+		{a157Unmeasurable(), nil, execgw.DailyLossChainRefusalUnmeasurable},
+		{a157UnmarkedInput(), nil, execgw.DailyLossChainRefusalNone},
+		{a157CapZero(), nil, execgw.DailyLossChainRefusalNone},
+		{a157BucketExhausted(), nil, execgw.DailyLossChainRefusalNone},
+		{a157Setup{name: "binding-only"}, &b2, execgw.DailyLossChainRefusalNone},
+	} {
+		_, _, err := a157Precheck(t, krWeekly, row.setup, row.binding)
+		if err == nil {
+			t.Fatalf("%s: arrangement — want a refusal", row.setup.name)
+		}
+		if got := execgw.DailyLossChainRefusalOf(err); got != row.want {
+			t.Errorf("%s: DailyLossChainRefusalOf = %v, want %v (err %v)", row.setup.name, got, row.want, err)
+		}
+	}
 }

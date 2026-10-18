@@ -18,7 +18,6 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 )
 
 // a157MutatingLoader 는 생산 적재기가 모은 권한에 결속 결함 하나를 심음(validateStrategyFirstLegAuthority 를 통과하는 꼴만).
@@ -160,14 +159,15 @@ func TestA157EngineACapZeroAloneIsStillASkip(t *testing.T) {
 	}
 }
 
-// Guardian 상한 0 + 결속 결함(B2 · B8) — **뒤집을 행**. 편집 전: 상한 0 이 결함을 가려 조용한 스킵.
-func TestA157EngineACapZeroHidesABindingDefect(t *testing.T) {
+// Guardian 상한 0(예산 1 KRW) + 결속 결함(B2 · B8) — a157 로 뒤집힌 행(이 change 의 목적, design D2 (a)). 편집 전에는 상한 0 이 결함을 가려
+// 조용한 스킵이었음(`analysis/red/characterization-head.txt`); 이제는 결속 결함의 AUTHORITY_MISMATCH 이고 스킵 기록 · 발급은 없음.
+func TestA157EngineACapZeroNoLongerHidesABindingDefect(t *testing.T) {
 	for binding := range a157EngineBindings {
 		outcome, counter := a157Admit(t, "1", a157NoLoss, binding)
-		var qFinal *execgw.QFinalRefusal
-		if outcome.Code != StrategyFirstLegGuardianCapZero || !errors.As(outcome.cause, &qFinal) ||
-			qFinal.Code != riskbucket.RefusalExistingGuardianCap || counter.issues.Load() != 0 {
-			t.Errorf("%s: outcome=%+v cause=%v — want (before a157) the cap-zero skip hiding the binding defect", binding, outcome, outcome.cause)
+		var skip *strategyEntrySkip
+		if outcome.Code != StrategyFirstLegAuthorityMismatch || !errors.Is(outcome.cause, a157EngineBindingCause[binding]) ||
+			errors.As(outcome.cause, &skip) || counter.escalations.Load() != 0 || counter.issues.Load() != 0 {
+			t.Errorf("%s: outcome=%+v cause=%v — want AUTHORITY_MISMATCH from the binding check, not the cap-zero skip", binding, outcome, outcome.cause)
 		}
 	}
 }

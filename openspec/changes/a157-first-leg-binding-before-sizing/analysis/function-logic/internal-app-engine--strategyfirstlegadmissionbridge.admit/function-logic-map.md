@@ -1,8 +1,8 @@
 # Function Logic Map: `admit`
 
-- Source: `internal/app/engine/strategy_first_leg_admission.go` (86-161)
+- Source: `internal/app/engine/strategy_first_leg_admission.go` (86-158)
 - Qualified: `strategyFirstLegAdmissionBridge.admit`
-- AST evidence: `ast.json`(편집 전(= base 소스)) — 현재 AST branches 13 · returns 10
+- AST evidence: `ast.json`(편집 뒤) — 현재 AST branches 13 · returns 10
 - 편집 전 기준: `ast-base.json`(base `7b1748481`, `source_sha256` ce30183e9d936008…) — 편집 전 갈래 수 13
 - Risk scan: `risk-pattern-report.md`
 
@@ -25,22 +25,22 @@
 | B3 | `if err != nil {` (if 95) | — | AUTHORITY_COLLECTION_FAILED + 원인(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestStrategyFirstLegAdmissionClassifiesPairedFailures` |
 | B4 | `if err := validateStrategyFirstLegAuthority(accepted, authority); err != nil {` (if 100) | — | AUTHORITY_MISMATCH(결속 불일치 — B3~B7 꼴을 precheck 앞에서 막음, design F8) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestStrategyFirstLegAdmissionRejectsAuthorityTamperPairedKRUS` |
 | B5 | `if err != nil {` (if 106) | — | precheck 거절 → 아래 분류(일일 손실 · 상한 0 · 버킷 · 그 밖 AUTHORITY_MISMATCH) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestA137ClassificationIsUnchangedForEveryPrecheckRefusal` · `TestA157EngineABindingDefectAloneIsAnAuthorityMismatch` |
-| B6 | `if unmeasurable := (*execgw.DailyLossUnmeasurable)(nil); errors.As(err, &unmeasurable) {` (if 110) | — | 편집 전 a137 측정 불가 갈래(표지) — a157 이 판별 함수로 옮김 | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestA137AnUnmeasurableDayIsAPolicyOutcomeNotALaneFault` · `TestA157EngineAnUnmeasurableDayStillWinsOverABindingDefect` |
-| B7 | `if issue := (*execgw.IssueRefusal)(nil); errors.As(err, &issue) && issue.Stage == execgw.StageChain &&` (if 111) | — | 편집 전 a137 측정 불가 갈래의 체인 · 입력 불가 조건 → DAILY_LOSS_UNMEASURABLE — a157 이 판별 함수로 옮김 | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestA137AnUnmeasurableDayIsAPolicyOutcomeNotALaneFault` · `TestA157EngineAnUnmeasurableDayStillWinsOverABindingDefect` |
-| B8 | `if issue := (*execgw.IssueRefusal)(nil); errors.As(err, &issue) && issue.Stage == execgw.StageChain &&` (if 118) | a137 강화(`EscalateDailyLossLimit`) | 편집 전 a137 한도 갈래(체인 · 한도 도달) → DAILY_LOSS_LIMIT — a157 이 판별 함수로 옮김 | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestA137ADailyLossRefusalEscalatesAndIsNotALaneFault` · `TestA157EngineADailyLossLimitStillEscalatesWithABindingDefect` |
-| B9 | `if qFinal := (*execgw.QFinalRefusal)(nil); errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalExistingGuardianCap &&` (if 127) | ctx 기록자 호출(`recordStrategyEntrySkip`) | a146 GUARDIAN_CAP_ZERO(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestA146ACapZeroPrecheckIsATypedSkip` · `TestA157EngineACapZeroAloneIsStillASkip` |
-| B10 | `if digest := authority.Entry.FXAuthority.Digest(); digest != "" {` (if 133) | — | 스킵 알림의 FX 표시(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestA146ACapZeroPrecheckIsATypedSkip` |
-| B11 | `if qFinal := (*execgw.QFinalRefusal)(nil); errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalBucketCapExhausted {` (if 149) | — | 버킷 고갈 → 원인을 범위 거절로(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestA146CharacterizationABucketExhaustedScopeStillLatchesAnEffectiveMarket` |
-| B12 | `if key, keyed := strategyOwnerKeyOf(authority.Result.Lineage); keyed {` (if 150) | — | 범위 키가 있을 때만 범위 거절(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestA146CharacterizationABucketExhaustedScopeStillLatchesAnEffectiveMarket` |
-| B13 | `if err != nil {` (if 157) | 원장 원자 발급 | ATOMIC_ADMISSION_FAILED(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestStrategyFirstLegAdmissionClassifiesPairedFailures` |
+| B6 | `switch execgw.DailyLossChainRefusalOf(err) {` (switch 111) | — | **a157** 일일 손실 판별(한 자리) — 아니면 아래 갈래 | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestA137ClassificationIsUnchangedForEveryPrecheckRefusal` · `TestA157EngineAnUnmeasurableDayStillWinsOverABindingDefect` |
+| B7 | `case execgw.DailyLossChainRefusalUnmeasurable:` (case 112) | — | **a157** 판별 결과 측정 불가 → DAILY_LOSS_UNMEASURABLE + 원인(편집 전 B6-B7 과 같음) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestA137AnUnmeasurableDayIsAPolicyOutcomeNotALaneFault` · `TestA157EngineAnUnmeasurableDayStillWinsOverABindingDefect` |
+| B8 | `case execgw.DailyLossChainRefusalLimitReached:` (case 116) | a137 강화(`EscalateDailyLossLimit`) | **a157** 판별 결과 한도 도달 → DAILY_LOSS_LIMIT + 강화 결과 원인(편집 전 B8 과 같음) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestA137ADailyLossRefusalEscalatesAndIsNotALaneFault` · `TestA137AFailedEscalationIsJoinedNotLost` · `TestA157EngineADailyLossLimitStillEscalatesWithABindingDefect` |
+| B9 | `if qFinal := (*execgw.QFinalRefusal)(nil); errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalExistingGuardianCap &&` (if 124) | ctx 기록자 호출(`recordStrategyEntrySkip`) | a146 GUARDIAN_CAP_ZERO(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestA146ACapZeroPrecheckIsATypedSkip` · `TestA157EngineACapZeroAloneIsStillASkip` |
+| B10 | `if digest := authority.Entry.FXAuthority.Digest(); digest != "" {` (if 130) | — | 스킵 알림의 FX 표시(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestA146ACapZeroPrecheckIsATypedSkip` |
+| B11 | `if qFinal := (*execgw.QFinalRefusal)(nil); errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalBucketCapExhausted {` (if 146) | — | 버킷 고갈 → 원인을 범위 거절로(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestA146CharacterizationABucketExhaustedScopeStillLatchesAnEffectiveMarket` |
+| B12 | `if key, keyed := strategyOwnerKeyOf(authority.Result.Lineage); keyed {` (if 147) | — | 범위 키가 있을 때만 범위 거절(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestA146CharacterizationABucketExhaustedScopeStillLatchesAnEffectiveMarket` |
+| B13 | `if err != nil {` (if 154) | 원장 원자 발급 | ATOMIC_ADMISSION_FAILED(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A137|A146|StrategyFirstLegAdmission'` · `TestStrategyFirstLegAdmissionClassifiesPairedFailures` |
 
-Exact AST return positions: 89 · 92 · 98 · 101 · 115 · 122 · 140 · 154 · 158 · 160
+Exact AST return positions: 89 · 92 · 98 · 101 · 115 · 119 · 137 · 151 · 155 · 157
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| (호출 20종 — 대표: `MajorDecimal`, `accepted.result.ExecutionTerms.EffectiveStop`, `accepted.result.ExecutionTerms.Entry`, `authority.Entry.FXAuthority.AccountCurrency`, `authority.Entry.FXAuthority.Digest`, `authority.Entry.FXAuthority.QuoteCurrency`, `b.guardian.EscalateDailyLossLimit`, `b.guardian.IssuePrecheckedQFinalCampaignFirstLeg`) | 본문 참조 | 소스 참조 — 원장 · 브로커 · 파일 호출은 design F2 · F9 | AST |
+| (호출 21종 — 대표: `MajorDecimal`, `accepted.result.ExecutionTerms.EffectiveStop`, `accepted.result.ExecutionTerms.Entry`, `authority.Entry.FXAuthority.AccountCurrency`, `authority.Entry.FXAuthority.Digest`, `authority.Entry.FXAuthority.QuoteCurrency`, `b.guardian.EscalateDailyLossLimit`, `b.guardian.IssuePrecheckedQFinalCampaignFirstLeg`) | 본문 참조 | 소스 참조 — 원장 · 브로커 · 파일 호출은 design F2 · F9 | AST |
 
 ## State mutations and fallbacks
 

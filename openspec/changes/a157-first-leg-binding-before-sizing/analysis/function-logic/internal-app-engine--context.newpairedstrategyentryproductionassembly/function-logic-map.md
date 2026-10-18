@@ -1,8 +1,8 @@
 # Function Logic Map: `NewPairedStrategyEntryProductionAssembly`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (325-406)
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (325-413)
 - Qualified: `Context.NewPairedStrategyEntryProductionAssembly`
-- AST evidence: `ast.json`(편집 전(= base 소스)) — 현재 AST branches 8 · returns 6
+- AST evidence: `ast.json`(편집 뒤) — 현재 AST branches 9 · returns 6
 - 편집 전 기준: `ast-base.json`(base `7b1748481`, `source_sha256` 714ca3ce3fed5bce…) — 편집 전 갈래 수 8
 - Risk scan: `risk-pattern-report.md`
 
@@ -26,16 +26,17 @@
 | B4 | `if err != nil {` (if 353) | — | 레인 · 감독자 · 발표 오류 그대로(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A112|Refresh|Wave|ProductionAssembly'` · `TestAFailedWaveCarriesNoAssemblyForEitherMarket` |
 | B5 | `if clk != nil {` (if 374) | dispatch 주기에 실시계 | 무편집 | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A112|Refresh|Wave|ProductionAssembly'` · `TestTheProductionAssemblyGivesTheDispatchCycleTheRealClock` |
 | B6 | `for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {` (range 390) | worker 둘 | 무편집 | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A112|Refresh|Wave|ProductionAssembly'` · `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
-| B7 | `if err != nil {` (if 395) | — | 레인 · 감독자 · 발표 오류 그대로(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A112|Refresh|Wave|ProductionAssembly'` · `TestAFailedWaveCarriesNoAssemblyForEitherMarket` |
-| B8 | `if err := c.publishStrategyRuntime(assembly); err != nil {` (if 402) | — | 레인 · 감독자 · 발표 오류 그대로(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A112|Refresh|Wave|ProductionAssembly'` · `TestAFailedWaveCarriesNoAssemblyForEitherMarket` |
+| B7 | `if c.Entry != nil { // 타입 있는 nil(*execgw.EntryGate)을 인터페이스 칸에 넣지 않음 — nil 아닌 인터페이스가 되어 Block 에서 panic(F10)` (if 398) | `opts.EntryGate = c.Entry` | **a157** 게이트가 있을 때만 배선 — 없으면 인터페이스 칸이 nil 로 남음(F10) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A112|Refresh|Wave|ProductionAssembly'` · `TestA157TheAssemblySupervisorEntryGate` |
+| B8 | `if err != nil {` (if 402) | — | 레인 · 감독자 · 발표 오류 그대로(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A112|Refresh|Wave|ProductionAssembly'` · `TestAFailedWaveCarriesNoAssemblyForEitherMarket` |
+| B9 | `if err := c.publishStrategyRuntime(assembly); err != nil {` (if 409) | — | 레인 · 감독자 · 발표 오류 그대로(무편집) | `go test -tags tossos_testseams ./internal/app/engine -run 'A157|A112|Refresh|Wave|ProductionAssembly'` · `TestAFailedWaveCarriesNoAssemblyForEitherMarket` |
 
-Exact AST return positions: 327 · 354 · 380 · 396 · 403 · 405
+Exact AST return positions: 327 · 354 · 380 · 403 · 410 · 412
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| (호출 34종 — 대표: `NewStrategyEntrySupervisor`, `accountAuthority.Snapshot`, `append`, `c.Journal.Path`, `c.productionStrategyLanes`, `c.productionStrategyWorker`, `c.publishStrategyRuntime`, `candidateAuthority.Snapshot`) | 본문 참조 | 소스 참조 — 원장 · 브로커 · 파일 호출은 design F2 · F9 | AST |
+| (호출 36종 — 대표: `NewStrategyEntrySupervisor`, `accountAuthority.Snapshot`, `append`, `c.Journal.Path`, `c.productionStrategyLanes`, `c.productionStrategyWorker`, `c.publishStrategyRuntime`, `c.strategyDailyLossNotice`) | 본문 참조 | 소스 참조 — 원장 · 브로커 · 파일 호출은 design F2 · F9 | AST |
 
 ## State mutations and fallbacks
 

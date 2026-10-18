@@ -32,17 +32,17 @@ Story: `STORY-TOS-a157` · **High-risk**(Guardian · execgw 첫 다리 판정 �
 
 ## 1. 구현 (RED → GREEN → REFACTOR)
 
-- [ ] 1.1 RED → 실패 확인. 영수증 `analysis/red/red.txt`.
+- [x] 1.1 RED → 실패 확인. 영수증 `analysis/red/red.txt`.
   - 특성 시험의 「뒤집을 행」을 새 기대로 고친다.
   - 구조 시험(AST — design D6: 호출 하나 · field 문자와 `QFinalPolicyVersion` 각 한 번 · 호출보다 앞)을 더한다.
   - 판별 함수 표 시험을 더한다.
   - 조립 감독자 시험 셋(design D4 — 알림 칸 · 기록자 → `c.Log` · `EntryGate` nil/실제, 생산 감독자 대조군)을 더한다.
-- [ ] 1.2 GREEN.
+- [x] 1.2 GREEN.
   - 판별 함수(새 파일).
   - `admit` 의 두 조건을 판별 함수로.
   - `PrecheckQFinalCampaignFirstLeg` 새 모양(design D1).
   - 조립 감독자 옵션(design D4).
-- [ ] 1.3 REFACTOR · 편집 뒤 AST 재추출 · `riskguardian_qfinal.go` 파일 sha 불변 · `IssuePrecheckedQFinalCampaignFirstLeg` 함수 본문 sha 불변(design D3) ·
+- [x] 1.3 REFACTOR · 편집 뒤 AST 재추출 · `riskguardian_qfinal.go` 파일 sha 불변 · `IssuePrecheckedQFinalCampaignFirstLeg` 함수 본문 sha 불변(design D3) ·
       `check_analysis.py --change a157-first-leg-binding-before-sizing`
 
 ## 2. 검증

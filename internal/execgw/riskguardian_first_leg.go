@@ -46,51 +46,76 @@ func (p QFinalCampaignFirstLegPrecheck) QFinal() uint64     { return p.entry.QFi
 // PrecheckQFinalCampaignFirstLeg performs no journal mutation and no broker
 // call. The journal remains the final exact lineage validator; these checks
 // reject obvious cross-family or caller-token substitutions before collection.
+//
+// a157(사람 결정 2026-10-18 「1-1」): 첫 다리 고유의 결속 판정 일곱(B2~B8)은 q_final 을 쓰지 않으므로 진입 판정(사이징 · 버킷 · 체인 · 노출)
+// **앞**에서 요청 값으로 함. 그래야 Guardian 상한 0 · 버킷 고갈 같은 진입 거절이 결속 결함을 가리지 않음. 보고 우선순위는
+// 일일 손실 체인 거절 > 결속 결함 > 그 밖의 진입 거절 — 일일 손실이 이기는 것은 a137 강화(ENTRY_BLOCKED 영속)와 계좌 단위 진입 차단을
+// 겹친 요청에서도 지키기 위함. 판정식 · 코드 · field · 문구와 받아들이는 요청의 집합은 편집 전과 같음(design D2).
 func (g *RiskGuardian) PrecheckQFinalCampaignFirstLeg(request QFinalCampaignFirstLegIssuance) (QFinalCampaignFirstLegPrecheck, error) {
-	entry, err := g.PrecheckQFinalEntry(request.Entry)
-	if err != nil {
-		return QFinalCampaignFirstLegPrecheck{}, err
+	// 결속 판정이 g.policyVersion · g.accountRef 를 읽으므로 그 전에 막음 — PrecheckQFinalEntry 의 nil 거절과 같은 거절.
+	if g == nil {
+		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid, "guardian", "Guardian is nil", nil)
 	}
 	lineage := request.Result.Lineage
 	terms := request.Result.ExecutionTerms
-	policyVersion, err := journal.QFinalPolicyVersion(g.policyVersion, entry.admission.TransactionID)
-	if err != nil {
+	// 결속 판정 B2~B8 — 편집 전 상대 순서 그대로, 첫 결함에서 멈춤(닫힌 함수의 return). 입력은 요청 값임: PrecheckQFinalEntry 는
+	// TransactionID · Owner(AccountID 공백 제거 밖)와 q_candidate 를 바꾸지 않고 통과시키므로 편집 전에 읽던 값과 같음(design F3 · F4).
+	// 이 판정은 시계 · 원장 · 브로커를 읽지 않음(F2) — 앞으로 옮겨도 받아들이는 집합이 같음.
+	var policyVersion string
+	var weekly *journal.WeeklyFirstLegReservationBinding
+	bindErr := func() error {
+		version, err := journal.QFinalPolicyVersion(g.policyVersion, request.Entry.Admission.TransactionID)
+		if err != nil {
+			return err
+		}
+		policyVersion = version
+		owner := request.Entry.Admission.Owner
+		if strings.TrimSpace(owner.Key.ProspectiveGeneration) != "" {
+			return qFinalRefusal(riskbucket.RefusalOwnerConflict, "prospective_generation", "first-leg token is journal-owned", nil)
+		}
+		entryMajor, entryOK := terms.Entry().MajorDecimal()
+		stopMajor, stopOK := terms.EffectiveStop().MajorDecimal()
+		targetMajor, targetOK := terms.Target().MajorDecimal()
+		if !entryOK || !stopOK || !targetOK {
+			return qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
+				"first_leg_price_unit", "sealed strategy execution price unit is invalid", nil)
+		}
+		if request.Result.Quantity != request.Entry.QCandidate || lineage.AccountRef != g.accountRef ||
+			!strings.EqualFold(string(lineage.Market), request.Entry.Market) || lineage.Symbol != request.Entry.Symbol ||
+			entryMajor != request.Entry.EntryPrice || stopMajor != request.Entry.StopPrice ||
+			targetMajor != request.Entry.TargetPrice || lineage.LaneID != owner.LaneID ||
+			lineage.CampaignID != owner.CampaignID || request.Campaign.CampaignID != owner.CampaignID {
+			return qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
+				"first_leg_lineage", "sealed strategy result, q_candidate, owner and campaign are not exactly bound", nil)
+		}
+		currentGeneration := request.Campaign.ExpectedPositionGeneration
+		if currentGeneration < 0 || currentGeneration >= math.MaxInt64 || request.Campaign.ExpectedPositionVersion < 0 ||
+			lineage.PositionGeneration != uint64(currentGeneration)+1 {
+			return qFinalRefusal(riskbucket.RefusalOwnerConflict,
+				"position_generation", "strategy prospective generation must be exactly campaign current generation plus one", nil)
+		}
+		if strings.TrimSpace(request.AttemptID) == "" || request.AttemptID != strings.TrimSpace(request.AttemptID) || request.Revision < 1 ||
+			strings.TrimSpace(request.ActivationManifestDigest) == "" || request.ActivationManifestDigest != strings.TrimSpace(request.ActivationManifestDigest) {
+			return qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
+				"first_leg_strategy", "complete strategy attempt and activation binding required", nil)
+		}
+		binding, err := guardianWeeklyFirstLegBinding(lineage.LaneID, string(lineage.Market), request.Weekly)
+		if err != nil {
+			return qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
+				"weekly_reservation", "weekly first-leg reservation authority is missing or does not match the sealed lane", err)
+		}
+		weekly = binding
+		return nil
+	}()
+	// 진입 판정은 결속 결과와 무관하게 정확히 한 번 — 일일 손실 측정 토큰 판정이 여기 있으므로 결속 결함이 있어도 돌려야 우선순위를 가를 수 있음.
+	entry, err := g.PrecheckQFinalEntry(request.Entry)
+	// 진입 거절을 보고하는 경우: 결속 결함이 없거나, 진입 거절이 일일 손실 체인 거절(한도 · 측정 불가)임(1-1 — 첫 다리 승인과 같은 판별).
+	if err != nil && (bindErr == nil || DailyLossChainRefusalOf(err) != DailyLossChainRefusalNone) {
 		return QFinalCampaignFirstLegPrecheck{}, err
 	}
-	owner := entry.admission.Owner
-	if strings.TrimSpace(owner.Key.ProspectiveGeneration) != "" {
-		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalOwnerConflict, "prospective_generation", "first-leg token is journal-owned", nil)
-	}
-	entryMajor, entryOK := terms.Entry().MajorDecimal()
-	stopMajor, stopOK := terms.EffectiveStop().MajorDecimal()
-	targetMajor, targetOK := terms.Target().MajorDecimal()
-	if !entryOK || !stopOK || !targetOK {
-		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
-			"first_leg_price_unit", "sealed strategy execution price unit is invalid", nil)
-	}
-	if request.Result.Quantity != entry.decision.QCandidate || lineage.AccountRef != g.accountRef ||
-		!strings.EqualFold(string(lineage.Market), request.Entry.Market) || lineage.Symbol != request.Entry.Symbol ||
-		entryMajor != request.Entry.EntryPrice || stopMajor != request.Entry.StopPrice ||
-		targetMajor != request.Entry.TargetPrice || lineage.LaneID != owner.LaneID ||
-		lineage.CampaignID != owner.CampaignID || request.Campaign.CampaignID != owner.CampaignID {
-		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
-			"first_leg_lineage", "sealed strategy result, q_candidate, owner and campaign are not exactly bound", nil)
-	}
-	currentGeneration := request.Campaign.ExpectedPositionGeneration
-	if currentGeneration < 0 || currentGeneration >= math.MaxInt64 || request.Campaign.ExpectedPositionVersion < 0 ||
-		lineage.PositionGeneration != uint64(currentGeneration)+1 {
-		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalOwnerConflict,
-			"position_generation", "strategy prospective generation must be exactly campaign current generation plus one", nil)
-	}
-	if strings.TrimSpace(request.AttemptID) == "" || request.AttemptID != strings.TrimSpace(request.AttemptID) || request.Revision < 1 ||
-		strings.TrimSpace(request.ActivationManifestDigest) == "" || request.ActivationManifestDigest != strings.TrimSpace(request.ActivationManifestDigest) {
-		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
-			"first_leg_strategy", "complete strategy attempt and activation binding required", nil)
-	}
-	weekly, err := guardianWeeklyFirstLegBinding(lineage.LaneID, string(lineage.Market), request.Weekly)
-	if err != nil {
-		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
-			"weekly_reservation", "weekly first-leg reservation authority is missing or does not match the sealed lane", err)
+	// 그 밖의 진입 거절(상한 0 · 버킷 고갈 · 다른 체인 거절 …)과 겹치거나 진입 판정을 통과했으면 결속 결함을 보고함.
+	if bindErr != nil {
+		return QFinalCampaignFirstLegPrecheck{}, bindErr
 	}
 	issuedAt := g.clk.Now().UTC()
 	riskIntent := journal.RiskIntent{

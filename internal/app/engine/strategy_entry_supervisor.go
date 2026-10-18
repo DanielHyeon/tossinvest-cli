@@ -391,7 +391,14 @@ func (c *Context) NewPairedStrategyEntryProductionAssembly(ctx context.Context, 
 		workers = append(workers, c.productionStrategyWorker(ctx, clk, market, scheduleAuthority, candidateAuthority,
 			routeAuthority, fxAuthority, proposalAuthority, riskAuthority, accountAuthority))
 	}
-	supervisor, err := NewStrategyEntrySupervisor(StrategyEntrySupervisorOptions{Clock: clk, CycleLimit: MaximumStrategyCycleLimit, Workers: workers})
+	// a157(design D4 · D5): 생산 감독자와 같은 알림 함수 둘과 같은 진입 게이트 — 오늘은 투영 전용(Run 안 함)이지만, Run 하게 되는 날
+	// 중앙 무결성 고장이 프로세스 전체 정지(→ protection UNWIRED 면 손절 없음)가 아니라 진입 차단으로 가게. 알림 함수는 로그가 없으면 nil.
+	opts := StrategyEntrySupervisorOptions{Clock: clk, CycleLimit: MaximumStrategyCycleLimit, Workers: workers,
+		DailyLossNotice: c.strategyDailyLossNotice(), EntrySkipNotice: c.strategyEntrySkipNotice()}
+	if c.Entry != nil { // 타입 있는 nil(*execgw.EntryGate)을 인터페이스 칸에 넣지 않음 — nil 아닌 인터페이스가 되어 Block 에서 panic(F10)
+		opts.EntryGate = c.Entry
+	}
+	supervisor, err := NewStrategyEntrySupervisor(opts)
 	if err != nil {
 		return StrategyEntryProductionAssembly{}, err
 	}

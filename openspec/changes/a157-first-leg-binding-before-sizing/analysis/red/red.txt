@@ -1,0 +1,206 @@
+# a157 1.1 RED — HEAD 96e09d2d0bbd1b0752530ac46922d18221bd227c · 2026-10-18T07:08:38Z · go version go1.26.5 linux/amd64
+# 생산 파일 무편집 확인: git diff --stat HEAD -- internal/ ':!*_test.go'
+
+# (빈 줄 = 생산 무편집)
+
+## A. 컴파일 RED — 판별 함수가 아직 없음
+$ go test -count=1 ./internal/execgw/ -run TestA157
+# github.com/JungHoonGhae/tossinvest-cli/internal/execgw_test [github.com/JungHoonGhae/tossinvest-cli/internal/execgw.test]
+internal/execgw/a157_daily_loss_kind_test.go:29:15: undefined: execgw.DailyLossChainRefusal
+internal/execgw/a157_daily_loss_kind_test.go:31:23: undefined: execgw.DailyLossChainRefusalNone
+internal/execgw/a157_daily_loss_kind_test.go:32:61: undefined: execgw.DailyLossChainRefusalLimitReached
+internal/execgw/a157_daily_loss_kind_test.go:33:94: undefined: execgw.DailyLossChainRefusalLimitReached
+internal/execgw/a157_daily_loss_kind_test.go:34:81: undefined: execgw.DailyLossChainRefusalNone
+internal/execgw/a157_daily_loss_kind_test.go:35:84: undefined: execgw.DailyLossChainRefusalUnmeasurable
+internal/execgw/a157_daily_loss_kind_test.go:36:117: undefined: execgw.DailyLossChainRefusalUnmeasurable
+internal/execgw/a157_daily_loss_kind_test.go:37:87: undefined: execgw.DailyLossChainRefusalNone
+internal/execgw/a157_daily_loss_kind_test.go:38:53: undefined: execgw.DailyLossChainRefusalNone
+internal/execgw/a157_daily_loss_kind_test.go:39:121: undefined: execgw.DailyLossChainRefusalNone
+internal/execgw/a157_daily_loss_kind_test.go:39:121: too many errors
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw [build failed]
+FAIL
+$ go test -count=1 -tags tossos_testseams ./internal/execgw/ -run TestA157
+# github.com/JungHoonGhae/tossinvest-cli/internal/execgw_test [github.com/JungHoonGhae/tossinvest-cli/internal/execgw.test]
+internal/execgw/a157_daily_loss_kind_test.go:29:15: undefined: execgw.DailyLossChainRefusal
+internal/execgw/a157_daily_loss_kind_test.go:31:23: undefined: execgw.DailyLossChainRefusalNone
+internal/execgw/a157_daily_loss_kind_test.go:32:61: undefined: execgw.DailyLossChainRefusalLimitReached
+internal/execgw/a157_daily_loss_kind_test.go:33:94: undefined: execgw.DailyLossChainRefusalLimitReached
+internal/execgw/a157_daily_loss_kind_test.go:34:81: undefined: execgw.DailyLossChainRefusalNone
+internal/execgw/a157_daily_loss_kind_test.go:35:84: undefined: execgw.DailyLossChainRefusalUnmeasurable
+internal/execgw/a157_daily_loss_kind_test.go:36:117: undefined: execgw.DailyLossChainRefusalUnmeasurable
+internal/execgw/a157_daily_loss_kind_test.go:37:87: undefined: execgw.DailyLossChainRefusalNone
+internal/execgw/a157_daily_loss_kind_test.go:38:53: undefined: execgw.DailyLossChainRefusalNone
+internal/execgw/a157_daily_loss_kind_test.go:39:121: undefined: execgw.DailyLossChainRefusalNone
+internal/execgw/a157_daily_loss_kind_test.go:39:121: too many errors
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw [build failed]
+FAIL
+
+## B. 엔진 행동 RED(생산 무편집)
+$ go test -count=1 ./internal/app/engine/ -run TestA157 -v
+    a157_assembly_supervisor_test.go:58: assembly: dailyLossNotice set=false entrySkipNotice set=false — want both
+--- FAIL: TestA157TheAssemblySupervisorCarriesBothNotices (0.00s)
+    a157_assembly_supervisor_test.go:87: assembly: log "" lacks "engine.daily_loss_unmeasurable"
+    a157_assembly_supervisor_test.go:87: assembly: log "" lacks "engine.strategy_entry_skipped"
+    a157_assembly_supervisor_test.go:87: assembly: log "" lacks "\"account_day\":\"2026-10-18\""
+--- FAIL: TestA157TheAssemblyNoticesReachTheLog (0.00s)
+    a157_assembly_supervisor_test.go:114: assembly: entry = <nil> — want the engine's own entry gate
+--- FAIL: TestA157TheAssemblySupervisorEntryGate (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.008s
+FAIL
+$ go test -count=1 -tags tossos_testseams ./internal/app/engine/ -run TestA157 -v
+    a157_assembly_supervisor_test.go:58: assembly: dailyLossNotice set=false entrySkipNotice set=false — want both
+--- FAIL: TestA157TheAssemblySupervisorCarriesBothNotices (0.00s)
+    a157_assembly_supervisor_test.go:87: assembly: log "" lacks "engine.daily_loss_unmeasurable"
+    a157_assembly_supervisor_test.go:87: assembly: log "" lacks "engine.strategy_entry_skipped"
+    a157_assembly_supervisor_test.go:87: assembly: log "" lacks "\"account_day\":\"2026-10-18\""
+--- FAIL: TestA157TheAssemblyNoticesReachTheLog (0.00s)
+    a157_assembly_supervisor_test.go:114: assembly: entry = <nil> — want the engine's own entry gate
+--- FAIL: TestA157TheAssemblySupervisorEntryGate (0.00s)
+--- PASS: TestA157EngineABindingDefectAloneIsAnAuthorityMismatch (0.63s)
+--- PASS: TestA157EngineADailyLossLimitStillEscalatesWithABindingDefect (0.97s)
+--- PASS: TestA157EngineAnUnmeasurableDayStillWinsOverABindingDefect (0.89s)
+--- PASS: TestA157EngineACapZeroAloneIsStillASkip (0.29s)
+    a157_first_leg_admit_testseam_test.go:170: B2-policy-version: outcome={Code:GUARDIAN_CAP_ZERO Market:KR Receipt:{DecisionID: AggregateReservationID: BucketReservationIDs:[] CampaignID: AttemptID: FirstLegPlanID: LegSequence:0 Market: Symbol: RouterID: RouterVersion: QFinal:0 Idempotent:false} Detail:execgw: q_final refused: EXISTING_GUARDIAN_CAP (q_existing_guardian): risk: strategy sizing permits fewer than one unit cause:0x3cd084df6360} cause=engine: KR 005930 strategy entry skipped (GUARDIAN_CAP_ZERO) at entry 100 stop 95 fx KRW->KRW sha256:10d540f3b423ca2811f0b344cf5f011a8209d0c46a55c6198d895bcbf33c79b6: the Guardian cap permits fewer than one unit; it is judged again next cycle — want AUTHORITY_MISMATCH from the binding check, not the cap-zero skip
+    a157_first_leg_admit_testseam_test.go:170: B8-weekly: outcome={Code:GUARDIAN_CAP_ZERO Market:KR Receipt:{DecisionID: AggregateReservationID: BucketReservationIDs:[] CampaignID: AttemptID: FirstLegPlanID: LegSequence:0 Market: Symbol: RouterID: RouterVersion: QFinal:0 Idempotent:false} Detail:execgw: q_final refused: EXISTING_GUARDIAN_CAP (q_existing_guardian): risk: strategy sizing permits fewer than one unit cause:0x3cd084b3e360} cause=engine: KR 005930 strategy entry skipped (GUARDIAN_CAP_ZERO) at entry 100 stop 95 fx KRW->KRW sha256:10d540f3b423ca2811f0b344cf5f011a8209d0c46a55c6198d895bcbf33c79b6: the Guardian cap permits fewer than one unit; it is judged again next cycle — want AUTHORITY_MISMATCH from the binding check, not the cap-zero skip
+--- FAIL: TestA157EngineACapZeroNoLongerHidesABindingDefect (0.56s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	3.354s
+FAIL
+
+## C. 판별 함수(새 leaf 파일 internal/execgw/a157_daily_loss_kind.go)만 더한 뒤 — 표 시험 GREEN, 첫 다리 순서 행동 RED
+# 기존 생산 파일 무편집: git diff --stat HEAD -- internal/ ':!*_test.go'
+
+$ go test -count=1 ./internal/execgw/ -run TestA157 -v
+--- PASS: TestA157DailyLossChainRefusalOfTable (0.00s)
+    a157_first_leg_structure_test.go:71: journal.QFinalPolicyVersion at [riskguardian_first_leg.go:56:24] — want exactly one, before PrecheckQFinalEntry at riskguardian_first_leg.go:50:16
+    a157_first_leg_structure_test.go:76: binding field "first_leg_price_unit" at [riskguardian_first_leg.go:69:4] — want exactly one, before PrecheckQFinalEntry at riskguardian_first_leg.go:50:16
+    a157_first_leg_structure_test.go:76: binding field "first_leg_lineage" at [riskguardian_first_leg.go:77:4] — want exactly one, before PrecheckQFinalEntry at riskguardian_first_leg.go:50:16
+    a157_first_leg_structure_test.go:76: binding field "position_generation" at [riskguardian_first_leg.go:83:4] — want exactly one, before PrecheckQFinalEntry at riskguardian_first_leg.go:50:16
+    a157_first_leg_structure_test.go:76: binding field "first_leg_strategy" at [riskguardian_first_leg.go:88:4] — want exactly one, before PrecheckQFinalEntry at riskguardian_first_leg.go:50:16
+    a157_first_leg_structure_test.go:76: binding field "weekly_reservation" at [riskguardian_first_leg.go:93:4] — want exactly one, before PrecheckQFinalEntry at riskguardian_first_leg.go:50:16
+    a157_first_leg_structure_test.go:76: binding field "prospective_generation" at [riskguardian_first_leg.go:62:91] — want exactly one, before PrecheckQFinalEntry at riskguardian_first_leg.go:50:16
+--- FAIL: TestA157ThePrecheckJudgesTheBindingOnceAndBeforeSizing (0.01s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.025s
+FAIL
+$ go test -count=1 -tags tossos_testseams ./internal/execgw/ -run TestA157 -v
+--- PASS: TestA157DailyLossChainRefusalOfTable (0.00s)
+--- PASS: TestA157ABindingDefectAloneIsReportedAsItself (2.08s)
+--- PASS: TestA157AnEntryRefusalAloneIsReportedAsItself (1.07s)
+    a157_first_leg_binding_testseam_test.go:275: cap-zero+B2-policy-version:
+          got  q:EXISTING_GUARDIAN_CAP/q_existing_guardian: risk: strategy sizing permits fewer than one unit
+          want journal:invalid-request
+    a157_first_leg_binding_testseam_test.go:275: cap-zero+B3-prospective:
+          got  q:EXISTING_GUARDIAN_CAP/q_existing_guardian: risk: strategy sizing permits fewer than one unit
+          want q:OWNER_CONFLICT/prospective_generation: first-leg token is journal-owned
+    a157_first_leg_binding_testseam_test.go:275: cap-zero+B4-price-unit:
+          got  q:EXISTING_GUARDIAN_CAP/q_existing_guardian: risk: strategy sizing permits fewer than one unit
+          want q:RISK_CALCULATION_INVALID/first_leg_price_unit: sealed strategy execution price unit is invalid
+    a157_first_leg_binding_testseam_test.go:275: cap-zero+B5-q-candidate:
+          got  q:EXISTING_GUARDIAN_CAP/q_existing_guardian: risk: strategy sizing permits fewer than one unit
+          want q:RISK_CALCULATION_INVALID/first_leg_lineage: sealed strategy result, q_candidate, owner and campaign are not exactly bound
+    a157_first_leg_binding_testseam_test.go:275: cap-zero+B5-owner-lane:
+          got  q:EXISTING_GUARDIAN_CAP/q_existing_guardian: risk: strategy sizing permits fewer than one unit
+          want q:RISK_CALCULATION_INVALID/first_leg_lineage: sealed strategy result, q_candidate, owner and campaign are not exactly bound
+    a157_first_leg_binding_testseam_test.go:275: cap-zero+B5-owner-campaign:
+          got  q:EXISTING_GUARDIAN_CAP/q_existing_guardian: risk: strategy sizing permits fewer than one unit
+          want q:RISK_CALCULATION_INVALID/first_leg_lineage: sealed strategy result, q_candidate, owner and campaign are not exactly bound
+    a157_first_leg_binding_testseam_test.go:275: cap-zero+B6-position-generation:
+          got  q:EXISTING_GUARDIAN_CAP/q_existing_guardian: risk: strategy sizing permits fewer than one unit
+          want q:OWNER_CONFLICT/position_generation: strategy prospective generation must be exactly campaign current generation plus one
+    a157_first_leg_binding_testseam_test.go:275: cap-zero+B7-attempt:
+          got  q:EXISTING_GUARDIAN_CAP/q_existing_guardian: risk: strategy sizing permits fewer than one unit
+          want q:RISK_CALCULATION_INVALID/first_leg_strategy: complete strategy attempt and activation binding required
+    a157_first_leg_binding_testseam_test.go:275: cap-zero+B8-weekly:
+          got  q:EXISTING_GUARDIAN_CAP/q_existing_guardian: risk: strategy sizing permits fewer than one unit
+          want q:RISK_CALCULATION_INVALID/weekly_reservation: weekly first-leg reservation authority is missing or does not match the sealed lane +weekly-conflict
+--- FAIL: TestA157CapZeroAndABindingDefect (1.95s)
+    a157_first_leg_binding_testseam_test.go:288: bucket+B2-policy-version:
+          got  q:BUCKET_CAP_EXHAUSTED/monetary_bucket: BUCKET_CAP_EXHAUSTED (monetary_bucket)
+          want journal:invalid-request
+    a157_first_leg_binding_testseam_test.go:290: unmarked+B2-policy-version:
+          got  chain:chain/INPUT_UNAVAILABLE
+          want journal:invalid-request
+    a157_first_leg_binding_testseam_test.go:288: bucket+B8-weekly:
+          got  q:BUCKET_CAP_EXHAUSTED/monetary_bucket: BUCKET_CAP_EXHAUSTED (monetary_bucket)
+          want q:RISK_CALCULATION_INVALID/weekly_reservation: weekly first-leg reservation authority is missing or does not match the sealed lane +weekly-conflict
+    a157_first_leg_binding_testseam_test.go:290: unmarked+B8-weekly:
+          got  chain:chain/INPUT_UNAVAILABLE
+          want q:RISK_CALCULATION_INVALID/weekly_reservation: weekly first-leg reservation authority is missing or does not match the sealed lane +weekly-conflict
+--- FAIL: TestA157OtherEntryRefusalsAndABindingDefect (0.85s)
+--- PASS: TestA157DailyLossIsReportedBeforeABindingDefect (3.74s)
+    a157_first_leg_binding_testseam_test.go:312: f-qcandidate-zero:
+          got  q:ZERO_QUANTITY/q_candidate: lane proposed zero
+          want q:RISK_CALCULATION_INVALID/first_leg_lineage: sealed strategy result, q_candidate, owner and campaign are not exactly bound
+    a157_first_leg_binding_testseam_test.go:316: f-noncanonical-symbol:
+          got  q:UNKNOWN_SYMBOL/symbol: symbol is not canonical
+          want q:RISK_CALCULATION_INVALID/first_leg_lineage: sealed strategy result, q_candidate, owner and campaign are not exactly bound
+--- FAIL: TestA157OneInputThatTripsBothJudgements (0.42s)
+--- PASS: TestA157AnAcceptedFirstLegSealsTheSameValues (0.41s)
+--- PASS: TestA157ANilGuardianRefusesBeforeAnyBindingJudgement (0.00s)
+--- PASS: TestA157DailyLossChainRefusalOfRealRefusals (1.35s)
+    a157_first_leg_structure_test.go:71: journal.QFinalPolicyVersion at [riskguardian_first_leg.go:56:24] — want exactly one, before PrecheckQFinalEntry at riskguardian_first_leg.go:50:16
+    a157_first_leg_structure_test.go:76: binding field "position_generation" at [riskguardian_first_leg.go:83:4] — want exactly one, before PrecheckQFinalEntry at riskguardian_first_leg.go:50:16
+    a157_first_leg_structure_test.go:76: binding field "first_leg_strategy" at [riskguardian_first_leg.go:88:4] — want exactly one, before PrecheckQFinalEntry at riskguardian_first_leg.go:50:16
+    a157_first_leg_structure_test.go:76: binding field "weekly_reservation" at [riskguardian_first_leg.go:93:4] — want exactly one, before PrecheckQFinalEntry at riskguardian_first_leg.go:50:16
+    a157_first_leg_structure_test.go:76: binding field "prospective_generation" at [riskguardian_first_leg.go:62:91] — want exactly one, before PrecheckQFinalEntry at riskguardian_first_leg.go:50:16
+    a157_first_leg_structure_test.go:76: binding field "first_leg_price_unit" at [riskguardian_first_leg.go:69:4] — want exactly one, before PrecheckQFinalEntry at riskguardian_first_leg.go:50:16
+    a157_first_leg_structure_test.go:76: binding field "first_leg_lineage" at [riskguardian_first_leg.go:77:4] — want exactly one, before PrecheckQFinalEntry at riskguardian_first_leg.go:50:16
+--- FAIL: TestA157ThePrecheckJudgesTheBindingOnceAndBeforeSizing (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	11.894s
+FAIL
+
+## D. GREEN — 생산 편집 뒤(PrecheckQFinalCampaignFirstLeg · admit · 조립 감독자 옵션 + 판별 함수 새 파일)
+# 2026-10-18T08:23:24Z
+internal/app/engine/strategy_entry_supervisor.go   |   9 +-
+ .../app/engine/strategy_first_leg_admission.go     |  17 ++--
+ internal/execgw/riskguardian_first_leg.go          | 103 +++++++++++++--------
+ 3 files changed, 79 insertions(+), 50 deletions(-)
+$ go test -count=1  ./internal/execgw/ ./internal/app/engine/ -run TestA157 -v
+--- PASS: TestA157DailyLossChainRefusalOfTable (0.00s)
+--- PASS: TestA157ThePrecheckJudgesTheBindingOnceAndBeforeSizing (0.00s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.007s
+--- PASS: TestA157TheAssemblySupervisorCarriesBothNotices (0.00s)
+--- PASS: TestA157TheAssemblyNoticesReachTheLog (0.00s)
+--- PASS: TestA157TheAssemblySupervisorEntryGate (0.00s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.010s
+$ go test -count=1 -tags tossos_testseams ./internal/execgw/ ./internal/app/engine/ -run TestA157 -v
+--- PASS: TestA157DailyLossChainRefusalOfTable (0.00s)
+--- PASS: TestA157ABindingDefectAloneIsReportedAsItself (2.47s)
+--- PASS: TestA157AnEntryRefusalAloneIsReportedAsItself (1.38s)
+--- PASS: TestA157CapZeroAndABindingDefect (2.33s)
+--- PASS: TestA157OtherEntryRefusalsAndABindingDefect (0.85s)
+--- PASS: TestA157DailyLossIsReportedBeforeABindingDefect (3.82s)
+--- PASS: TestA157OneInputThatTripsBothJudgements (0.43s)
+--- PASS: TestA157AnAcceptedFirstLegSealsTheSameValues (0.46s)
+--- PASS: TestA157ANilGuardianRefusesBeforeAnyBindingJudgement (0.00s)
+--- PASS: TestA157DailyLossChainRefusalOfRealRefusals (1.31s)
+--- PASS: TestA157ThePrecheckJudgesTheBindingOnceAndBeforeSizing (0.00s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	13.063s
+--- PASS: TestA157TheAssemblySupervisorCarriesBothNotices (0.00s)
+--- PASS: TestA157TheAssemblyNoticesReachTheLog (0.00s)
+--- PASS: TestA157TheAssemblySupervisorEntryGate (0.00s)
+--- PASS: TestA157EngineABindingDefectAloneIsAnAuthorityMismatch (0.75s)
+--- PASS: TestA157EngineADailyLossLimitStillEscalatesWithABindingDefect (1.17s)
+--- PASS: TestA157EngineAnUnmeasurableDayStillWinsOverABindingDefect (1.18s)
+--- PASS: TestA157EngineACapZeroAloneIsStillASkip (0.37s)
+--- PASS: TestA157EngineACapZeroNoLongerHidesABindingDefect (0.74s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	4.223s
+
+# 대상 패키지 전체(같은 워킹트리, -timeout 은 Makefile 값):
+$ go test -count=1 -timeout 30m ./internal/execgw/ ./internal/app/engine/ ./internal/risk/ ./internal/riskbucket/ ./internal/journal/ ./cmd/tossctl/
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	161.881s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	519.336s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/risk	0.010s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	0.343s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	761.492s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	70.717s
+$ go test -count=1 -timeout 45m -tags tossos_testseams (same packages)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	249.729s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	762.408s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/risk	0.010s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	7.851s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	837.129s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	91.630s

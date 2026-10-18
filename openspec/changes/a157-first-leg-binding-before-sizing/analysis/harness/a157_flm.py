@@ -67,7 +67,7 @@ NOTES = {
          [DAILY, "TestA157AnEntryRefusalAloneIsReportedAsItself", "TestA157EngineADailyLossLimitStillEscalatesWithABindingDefect",
           "TestA157EngineAnUnmeasurableDayStillWinsOverABindingDefect"]),
         ("bindErr != nil", "—", "**a157 ⑤** 결속 결함 반환(상한 0 · 버킷 · 그 밖의 진입 거절보다 먼저)",
-         [CAPZ, "TestA157OtherEntryRefusalsAndABindingDefect", "TestA157OneInputThatTripsBothJudgements", "TestA157EngineACapZeroHidesABindingDefect"]),
+         [CAPZ, "TestA157OtherEntryRefusalsAndABindingDefect", "TestA157OneInputThatTripsBothJudgements", "TestA157EngineACapZeroNoLongerHidesABindingDefect"]),
         # 「prev:」 메모는 분기 줄 바로 앞 세 줄에서 찾음 — `if err != nil {` 이 여럿이라 그 오류를 만든 호출로 가름.
         ("prev:g.PrecheckQFinalEntry", "—", "편집 전 B1: 진입 판정 거절 그대로(결속 판정은 돌지 않음 — a157 이 바꾸는 자리)",
          ["TestA157AnEntryRefusalAloneIsReportedAsItself", CAPZ]),
