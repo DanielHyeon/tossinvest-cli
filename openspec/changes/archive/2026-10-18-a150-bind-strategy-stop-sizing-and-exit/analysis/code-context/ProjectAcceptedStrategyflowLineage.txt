@@ -1,0 +1,129 @@
+# node
+**ProjectAcceptedStrategyflowLineage** (function)
+
+**Location:** internal/journal/strategyflow_projection.go:42
+**Signature:** `(request StrategyflowLineageProjectionRequest) (StrategyDecisionLineage, error)`
+
+ProjectAcceptedStrategyflowLineage converts sealed accepted strategyflow
+evidence into the durable journal shape. It performs no write and grants no
+lease, activation, Gateway or broker authority.
+
+```go
+42	func ProjectAcceptedStrategyflowLineage(request StrategyflowLineageProjectionRequest) (StrategyDecisionLineage, error) {
+43		projection, err := strategyflow.ProjectAccepted(request.Result)
+44		if err != nil {
+45			return StrategyDecisionLineage{}, fmt.Errorf("journal strategy issuance: strategyflow projection: %w", err)
+46		}
+47		risk, err := exactCanonicalRiskIntent(request.RiskIntent)
+48		if err != nil {
+49			return StrategyDecisionLineage{}, err
+50		}
+51		activation := request.ActivationManifestDigest
+52		if activation == "" || strings.TrimSpace(activation) != activation || request.CreatedAt.IsZero() {
+53			return StrategyDecisionLineage{}, errors.New("journal strategy issuance: strategyflow projection metadata invalid")
+54		}
+55		created := request.CreatedAt.UTC()
+56		if err := verifyProjectionRiskIntent(projection, risk, strategyflowRiskBindingSchemaVersion); err != nil {
+57			return StrategyDecisionLineage{}, err
+58		}
+59		record := strategyflowRiskBindingPayload{SchemaVersion: strategyflowRiskBindingSchemaVersion,
+60			Strategyflow: json.RawMessage(projection.Payload()), StrategyflowPayloadDigest: projection.PayloadDigest(), RiskIntent: risk,
+61			ActivationManifestDigest: activation, CreatedAt: created.Format(time.RFC3339Nano)}
+62		identity, err := strategyflowDecisionIdentity(record)
+63		if err != nil {
+64			return StrategyDecisionLineage{}, err
+65		}
+66		record.Identity = identity
+67		payload, err := json.Marshal(record)
+68		if err != nil {
+69			return StrategyDecisionLineage{}, fmt.Errorf("journal strategy issuance: strategyflow projection encoding: %w", err)
+70		}
+71		return strategyflowLineageFromProjection(projection, risk, activation, created, identity, string(payload), strategyflowRiskBindingSchemaVersion), nil
+72	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** ProjectAccepted (internal/strategyflow/canonical_projection.go:116), exactCanonicalRiskIntent (internal/journal/strategyflow_projection.go:74), verifyProjectionRiskIntent (internal/journal/strategyflow_projection.go:92), Payload (internal/strategyflow/canonical_projection.go:28), PayloadDigest (internal/strategyflow/canonical_projection.go:29), strategyflowDecisionIdentity (internal/journal/strategyflow_projection.go:120), strategyflowLineageFromProjection (internal/journal/strategyflow_projection.go:136), StrategyDecisionLineage (internal/journal/strategy_lineage.go:102), strategyflowRiskBindingPayload (internal/journal/strategyflow_projection.go:29), strategyflowRiskBindingSchemaVersion (internal/journal/strategyflow_projection.go:19), StrategyflowLineageProjectionRequest (internal/journal/strategyflow_projection.go:22)
+**Called by ←** PrecheckQFinalCampaignFirstLeg (internal/execgw/riskguardian_first_leg.go:49), TestProjectAcceptedStrategyflowLineagePairsAllEightKRUSLanes (internal/journal/strategyflow_projection_test.go:16), strategyflowFirstLegFixture (internal/journal/strategyflow_projection_test.go:131), strategyflowBindingFixture (internal/journal/strategyflow_projection_test.go:249), TestProjectAcceptedStrategyflowLineageRejectsExactRiskDrift (internal/journal/strategyflow_projection_test.go:367)
+
+# callers
+
+Callers of "ProjectAcceptedStrategyflowLineage" (5):
+
+method      PrecheckQFinalCampaignFirstLeg
+  internal/execgw/riskguardian_first_leg.go:49
+
+function    TestProjectAcceptedStrategyflowLineagePairsAllEightKRUSLanes
+  internal/journal/strategyflow_projection_test.go:16
+
+function    strategyflowFirstLegFixture
+  internal/journal/strategyflow_projection_test.go:131
+
+function    strategyflowBindingFixture
+  internal/journal/strategyflow_projection_test.go:249
+
+function    TestProjectAcceptedStrategyflowLineageRejectsExactRiskDrift
+  internal/journal/strategyflow_projection_test.go:367
+
+
+# callees
+
+Callees of "ProjectAcceptedStrategyflowLineage" (11):
+
+function    ProjectAccepted
+  internal/strategyflow/canonical_projection.go:116
+
+function    exactCanonicalRiskIntent
+  internal/journal/strategyflow_projection.go:74
+
+function    verifyProjectionRiskIntent
+  internal/journal/strategyflow_projection.go:92
+
+method      Payload
+  internal/strategyflow/canonical_projection.go:28
+
+method      PayloadDigest
+  internal/strategyflow/canonical_projection.go:29
+
+function    strategyflowDecisionIdentity
+  internal/journal/strategyflow_projection.go:120
+
+function    strategyflowLineageFromProjection
+  internal/journal/strategyflow_projection.go:136
+
+struct      StrategyDecisionLineage
+  internal/journal/strategy_lineage.go:102
+
+struct      strategyflowRiskBindingPayload
+  internal/journal/strategyflow_projection.go:29
+
+constant    strategyflowRiskBindingSchemaVersion
+  internal/journal/strategyflow_projection.go:19
+
+struct      StrategyflowLineageProjectionRequest
+  internal/journal/strategyflow_projection.go:22
+
+
+# impact
+
+Impact of changing "ProjectAcceptedStrategyflowLineage" — 11 affected symbols:
+
+internal/journal/strategyflow_projection.go
+  function    ProjectAcceptedStrategyflowLineage:42
+
+internal/execgw/riskguardian_first_leg.go
+  method      PrecheckQFinalCampaignFirstLeg:49
+
+internal/app/engine/strategy_first_leg_admission.go
+  method      PrecheckQFinalCampaignFirstLeg:65
+
+internal/journal/strategyflow_projection_test.go
+  function    TestProjectAcceptedStrategyflowLineagePairsAllEightKRUSLanes:16
+  function    strategyflowFirstLegFixture:131
+  function    TestRecordQFinalCampaignFirstLegAcceptsAllStrategyflowLanesPaired:176
+  function    TestRecordQFinalCampaignFirstLegRejectsStrategyflowTamperWithoutRows:212
+  function    strategyflowBindingFixture:249
+  function    TestVerifyAcceptedStrategyflowProjectionRejectsLineageColumnDrift:278
+  function    TestVerifyAcceptedStrategyflowProjectionRejectsOuterCanonicalTamper:321
+  function    TestProjectAcceptedStrategyflowLineageRejectsExactRiskDrift:367
+
+

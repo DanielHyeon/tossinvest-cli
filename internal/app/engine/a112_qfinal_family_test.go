@@ -166,7 +166,7 @@ func TestTwoFamiliesRacingForOneOwnerScopeLeaveOneTransaction(t *testing.T) {
 		t.Fatalf("arrangement: reversal scope has no risk bundle: %+v", riskB.kr.snapshot)
 	}
 	schedule := fixture.loader.schedule
-	loaderB := newProductionStrategyFirstLegAuthorityLoader(fixture.clk, fixture.journal, fixture.guardian, schedule, pairB, riskB, fixture.fx, fixture.accounts)
+	loaderB := newProductionStrategyFirstLegAuthorityLoader(fixture.clk, fixture.journal, fixture.guardian, schedule, pairB, riskB, fixture.fx, fixture.accounts, a150RatchetPolicyFixture())
 	cycleB := newStrategyDispatchCycle(fixture.journal, fixture.spy, newStrategyFirstLegAdmissionBridge(fixture.guardian, loaderB), schedule,
 		fixture.fx, riskB, pairB, fixture.cycle.owner)
 	cycleB.revalidateSchedule = fixture.cycle.revalidateSchedule

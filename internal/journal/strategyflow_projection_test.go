@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -106,6 +108,10 @@ func TestVerifyStrategyflowRiskBindingV2Compatibility(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	golden, err := os.ReadFile("testdata/a150-baseline-v2.json")
+	if err != nil || string(payload) != string(golden) {
+		t.Fatalf("pre-a150 v2 bytes changed: %v", err)
+	}
 	lineage := strategyflowLineageFromProjection(projection, risk, record.ActivationManifestDigest, created, identity, string(payload), record.SchemaVersion)
 	decision, err := (DecisionRequest{ID: "decision-v2-us", AccountRef: risk.AccountRef, SafetyClass: SafetyClassExposureRaising,
 		Kind: KindPlace, Preimage: risk, LimitsJSON: `{"max_quantity":"10"}`, Nonce: "nonce-v2-us",
@@ -146,8 +152,12 @@ func strategyflowFirstLegFixture(t *testing.T, j *Journal, descriptor strategyfl
 	risk := RiskIntent{AccountRef: account, Market: market, Symbol: symbol, Side: "BUY", Quantity: "10", EntryPrice: entryMajor, StopPrice: stopMajor, TargetPrice: targetMajor, PolicyVersion: policy}
 	request.Issue.Issue.Decision.Preimage = risk
 	request.Issue.Admission.Owner.LaneID = descriptor.LaneID
+	policySnapshot, err := NewStrategyExitPolicySnapshot("")
+	if err != nil {
+		t.Fatal(err)
+	}
 	lineage, err := ProjectAcceptedStrategyflowLineage(StrategyflowLineageProjectionRequest{Result: result, RiskIntent: risk,
-		ActivationManifestDigest: request.Strategy.ActivationManifestDigest, CreatedAt: request.Strategy.CreatedAt})
+		ActivationManifestDigest: request.Strategy.ActivationManifestDigest, CreatedAt: request.Strategy.CreatedAt, ExitPolicy: &policySnapshot})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -223,7 +233,7 @@ func TestRecordQFinalCampaignFirstLegRejectsStrategyflowTamperWithoutRows(t *tes
 			{"q-final-column", func(v *QFinalCampaignFirstLegRequest) { v.Strategy.Lineage.Quantity = "9" }},
 			{"policy-column", func(v *QFinalCampaignFirstLegRequest) { v.Strategy.Lineage.PolicyVersion = "forged" }},
 			{"outer-schema", func(v *QFinalCampaignFirstLegRequest) {
-				v.Strategy.Lineage.DecisionPayload = strings.Replace(v.Strategy.Lineage.DecisionPayload, strategyflowRiskBindingSchemaVersion, "journal-strategyflow-risk-binding:v9", 1)
+				v.Strategy.Lineage.DecisionPayload = strings.Replace(v.Strategy.Lineage.DecisionPayload, strategyflowRiskBindingSchemaVersionV4, "journal-strategyflow-risk-binding:v9", 1)
 			}},
 			{"inner-lineage-seal", func(v *QFinalCampaignFirstLegRequest) {
 				v.Strategy.Lineage.DecisionPayload = strings.Replace(v.Strategy.Lineage.DecisionPayload, `strategy-lineage:v1:sha256:`, `strategy-lineage:v1:sha256:0`, 1)
@@ -232,7 +242,11 @@ func TestRecordQFinalCampaignFirstLegRejectsStrategyflowTamperWithoutRows(t *tes
 			t.Run(market+"/"+test.name, func(t *testing.T) {
 				j := openTestJournal(t)
 				request := strategyflowFirstLegFixture(t, j, descriptor, "sf-tamper-"+strings.ToLower(market)+"-"+test.name)
+				before := request.Strategy.Lineage
 				test.mutate(&request)
+				if reflect.DeepEqual(before, request.Strategy.Lineage) {
+					t.Fatal("tamper did not change the lineage")
+				}
 				if _, err := j.RecordQFinalCampaignFirstLeg(context.Background(), request); err == nil {
 					t.Fatal("tampered strategyflow first-leg accepted")
 				}
@@ -355,6 +369,9 @@ func TestVerifyAcceptedStrategyflowProjectionRejectsOuterCanonicalTamper(t *test
 		"schema-type": strings.Replace(payload, `"schema_version":"`+strategyflowRiskBindingSchemaVersion+`"`, `"schema_version":123`, 1),
 	} {
 		t.Run(name, func(t *testing.T) {
+			if tampered == payload {
+				t.Fatal("tamper did not change the payload")
+			}
 			lineage := base
 			lineage.DecisionPayload = tampered
 			if err := verifyStrategyRiskBinding(decision, lineage); err == nil {

@@ -306,7 +306,7 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"decisions": {
 			"account_ref", "client_order_id", "expires_at", "generation", "id",
 			"issued_at", "limits_json", "nonce", "preimage_kind", "risk_hash",
-			"risk_preimage", "safety_class",
+			"risk_preimage", "safety_class", "strategy_binding_version",
 		},
 		"risk_reservations": {
 			"account_ref", "amount", "attempt_id", "currency", "decision_id", "id",

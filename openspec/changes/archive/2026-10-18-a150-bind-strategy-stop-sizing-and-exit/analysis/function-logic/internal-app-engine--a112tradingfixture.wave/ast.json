@@ -1,0 +1,146 @@
+{
+  "file": "internal/app/engine/a112_owner_scope_trading_test.go",
+  "source_sha256": "fabdc28424d658cc2f9e6292882ef8fdbb2d620cebed12cfbdc314c034aa5a33",
+  "package": "engine",
+  "function": "wave",
+  "receiver": "a112TradingFixture",
+  "signature": "a112TradingFixture.wave(params=1, results=0)",
+  "start": {
+    "line": 192,
+    "column": 1
+  },
+  "end": {
+    "line": 202,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 200,
+        "column": 116
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 17
+      },
+      "text": "fixture.riskLoader.collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 44
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 66
+      },
+      "text": "fixture.proposals.ResultAuthority"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 14
+      },
+      "text": "pairedDispatchSchedule"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 19
+      },
+      "text": "newProductionStrategyFirstLegAuthorityLoader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 47
+      },
+      "text": "a150RatchetPolicyFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 18
+      },
+      "text": "newStrategyDispatchCycle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 73
+      },
+      "text": "newStrategyFirstLegAdmissionBridge"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 195,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 201,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

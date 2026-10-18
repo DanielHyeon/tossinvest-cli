@@ -761,7 +761,7 @@ func verifyStrategyRiskBinding(decision Decision, lineage StrategyDecisionLineag
 		return err
 	}
 	if versioned {
-		if schema != strategyflowRiskBindingSchemaVersionV2 && schema != strategyflowRiskBindingSchemaVersion {
+		if schema != strategyflowRiskBindingSchemaVersionV2 && schema != strategyflowRiskBindingSchemaVersion && schema != strategyflowRiskBindingSchemaVersionV4 {
 			return errors.New("journal strategy issuance: decision payload schema unsupported")
 		}
 		if riskRecord.AccountRef != decision.AccountRef {

@@ -1,0 +1,253 @@
+{
+  "file": "internal/journal/strategyflow_projection_test.go",
+  "source_sha256": "4897ee72290331ac04e2257d255a1922214b9849ad48877fa0bf8b10d2649156",
+  "package": "journal",
+  "function": "TestRecordQFinalCampaignFirstLegRejectsStrategyflowTamperWithoutRows",
+  "signature": "TestRecordQFinalCampaignFirstLegRejectsStrategyflowTamperWithoutRows(params=1, results=0)",
+  "start": {
+    "line": 212,
+    "column": 1
+  },
+  "end": {
+    "line": 247,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 214,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 216,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 236,
+        "column": 5
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 239,
+        "column": 5
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 240,
+        "column": 6
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 17
+      },
+      "text": "strategyflow.Descriptors"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 13
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 42
+      },
+      "text": "strings.Replace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 42
+      },
+      "text": "strings.Replace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 4
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 10
+      },
+      "text": "openTestJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 16
+      },
+      "text": "strategyflowFirstLegFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 75
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 5
+      },
+      "text": "test.mutate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 18
+      },
+      "text": "j.RecordQFinalCampaignFirstLeg"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 49
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 6
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 16
+      },
+      "text": "countRiskBucketRows"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 7
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 213,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 215,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 221,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 223,
+        "column": 64
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 224,
+        "column": 63
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 226,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 229,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 233,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 234,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 236,
+        "column": 8
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 240,
+        "column": 9
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,26 @@
+internal/strategyengine/rr_diagnostic.go:97:func ParkerRealizedRR(f RRFill) RRMetric {
+internal/strategyengine/rr_diagnostic.go:98:	out := RRMetric{State: RRUnknown, Reason: "missing or unconfirmed realized evidence", Provenance: "caller-supplied, unverified", PriceBasis: f.PriceBasis, PolicyVersion: LaneVersion, NumeratorUnit: f.AccountCurrency, DenominatorUnit: f.AccountCurrency}
+internal/strategyengine/rr_diagnostic.go:99:	if !f.EntryFinal || !f.ExitFinal || !f.CostsFinal || f.AverageEntry == "" || f.InitialStop == "" || f.Quantity == "" || f.PriceCurrency == "" || f.PriceBasis == "" || f.StopCurrency == "" || f.StopBasis == "" || f.AccountCurrency == "" || f.FXRate == "" || f.FXFrom == "" || f.FXTo == "" || f.FXSource == "" || f.FXAt.IsZero() || f.EntryAt.IsZero() || f.GrossPnL == "" || f.Costs == "" || f.PnLCurrency == "" || f.CostsCurrency == "" || f.FillSource == "" || f.ExitSource == "" || f.CostSource == "" {
+internal/strategyengine/rr_diagnostic.go:100:		return out
+internal/strategyengine/rr_diagnostic.go:101:	}
+internal/strategyengine/rr_diagnostic.go:102:	entry, e := positive(f.AverageEntry)
+internal/strategyengine/rr_diagnostic.go:103:	stop, s := positive(f.InitialStop)
+internal/strategyengine/rr_diagnostic.go:104:	qty, q := positive(f.Quantity)
+internal/strategyengine/rr_diagnostic.go:105:	fx, x := positive(f.FXRate)
+internal/strategyengine/rr_diagnostic.go:106:	pnl, p := decimal(f.GrossPnL)
+internal/strategyengine/rr_diagnostic.go:107:	cost, c := nonnegative(f.Costs)
+internal/strategyengine/rr_diagnostic.go:108:	if !e || !s || !q || !x || !p || !c || entry.Cmp(stop) <= 0 || f.PriceBasis != "unadjusted" || f.StopBasis != f.PriceBasis || f.StopCurrency != f.PriceCurrency || f.FXFrom != f.PriceCurrency || f.FXTo != f.AccountCurrency || f.PnLCurrency != f.AccountCurrency || f.CostsCurrency != f.AccountCurrency || !f.FXAt.Equal(f.EntryAt) || (f.PriceCurrency == f.AccountCurrency && fx.Cmp(big.NewRat(1, 1)) != 0) {
+internal/strategyengine/rr_diagnostic.go:109:		out.State = RRInvalid
+internal/strategyengine/rr_diagnostic.go:110:		out.Reason = "invalid or incompatible realized evidence"
+internal/strategyengine/rr_diagnostic.go:111:		return out
+internal/strategyengine/rr_diagnostic.go:112:	}
+internal/strategyengine/rr_diagnostic.go:113:	risk := new(big.Rat).Mul(new(big.Rat).Mul(new(big.Rat).Sub(entry, stop), qty), fx)
+internal/strategyengine/rr_diagnostic.go:114:	net := new(big.Rat).Sub(pnl, cost)
+internal/strategyengine/rr_diagnostic.go:115:	out.State = RRKnown
+internal/strategyengine/rr_diagnostic.go:116:	out.Reason = ""
+internal/strategyengine/rr_diagnostic.go:117:	out.Numerator = net.RatString()
+internal/strategyengine/rr_diagnostic.go:118:	out.Denominator = risk.RatString()
+internal/strategyengine/rr_diagnostic.go:119:	out.Ratio = new(big.Rat).Quo(net, risk).RatString()
+internal/strategyengine/rr_diagnostic.go:120:	out.Provenance = "caller-supplied, unverified; fill=" + f.FillSource + "; exit=" + f.ExitSource + "; cost=" + f.CostSource + "; fx=" + f.FXSource + " at " + f.FXAt.UTC().Format(time.RFC3339Nano) + " (" + f.FXFrom + "/" + f.FXTo + ")"
+internal/strategyengine/rr_diagnostic.go:121:	return out
+internal/strategyengine/rr_diagnostic.go:122:}

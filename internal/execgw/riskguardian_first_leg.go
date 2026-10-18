@@ -28,6 +28,7 @@ type QFinalCampaignFirstLegIssuance struct {
 	Revision                 int
 	Campaign                 journal.FirstLegCampaignRequest
 	Weekly                   *journal.WeeklyFirstLegReservationBinding
+	ExitPolicy               *journal.StrategyExitPolicySnapshot
 }
 
 // QFinalCampaignFirstLegPrecheck is opaque. It seals the exact q_final result
@@ -47,6 +48,10 @@ func (p QFinalCampaignFirstLegPrecheck) QFinal() uint64     { return p.entry.QFi
 // call. The journal remains the final exact lineage validator; these checks
 // reject obvious cross-family or caller-token substitutions before collection.
 func (g *RiskGuardian) PrecheckQFinalCampaignFirstLeg(request QFinalCampaignFirstLegIssuance) (QFinalCampaignFirstLegPrecheck, error) {
+	if request.ExitPolicy == nil {
+		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
+			"first_leg_exit_policy", "admitted exit policy snapshot is required", nil)
+	}
 	entry, err := g.PrecheckQFinalEntry(request.Entry)
 	if err != nil {
 		return QFinalCampaignFirstLegPrecheck{}, err
@@ -100,7 +105,7 @@ func (g *RiskGuardian) PrecheckQFinalCampaignFirstLeg(request QFinalCampaignFirs
 		TargetPrice: entry.intent.TargetPrice, PolicyVersion: policyVersion,
 	}
 	projected, err := journal.ProjectAcceptedStrategyflowLineage(journal.StrategyflowLineageProjectionRequest{
-		Result: request.Result, RiskIntent: riskIntent, ActivationManifestDigest: request.ActivationManifestDigest, CreatedAt: issuedAt,
+		Result: request.Result, RiskIntent: riskIntent, ActivationManifestDigest: request.ActivationManifestDigest, CreatedAt: issuedAt, ExitPolicy: request.ExitPolicy,
 	})
 	if err != nil {
 		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,

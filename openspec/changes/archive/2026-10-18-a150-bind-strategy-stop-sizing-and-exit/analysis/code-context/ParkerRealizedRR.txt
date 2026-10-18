@@ -1,0 +1,99 @@
+# node
+**ParkerRealizedRR** (function)
+
+**Location:** internal/strategyengine/rr_diagnostic.go:97
+**Signature:** `(f RRFill) RRMetric`
+
+ParkerRealizedRR은 실제 최초 계좌 위험과 확정 순손익만 사용함.
+
+```go
+97	func ParkerRealizedRR(f RRFill) RRMetric {
+98		out := RRMetric{State: RRUnknown, Reason: "missing or unconfirmed realized evidence", Provenance: "caller-supplied, unverified", PriceBasis: f.PriceBasis, PolicyVersion: LaneVersion, NumeratorUnit: f.AccountCurrency, DenominatorUnit: f.AccountCurrency}
+99		if !f.EntryFinal || !f.ExitFinal || !f.CostsFinal || f.AverageEntry == "" || f.InitialStop == "" || f.Quantity == "" || f.PriceCurrency == "" || f.PriceBasis == "" || f.StopCurrency == "" || f.StopBasis == "" || f.AccountCurrency == "" || f.FXRate == "" || f.FXFrom == "" || f.FXTo == "" || f.FXSource == "" || f.FXAt.IsZero() || f.EntryAt.IsZero() || f.GrossPnL == "" || f.Costs == "" || f.PnLCurrency == "" || f.CostsCurrency == "" || f.FillSource == "" || f.ExitSource == "" || f.CostSource == "" {
+100			return out
+101		}
+102		entry, e := positive(f.AverageEntry)
+103		stop, s := positive(f.InitialStop)
+104		qty, q := positive(f.Quantity)
+105		fx, x := positive(f.FXRate)
+106		pnl, p := decimal(f.GrossPnL)
+107		cost, c := nonnegative(f.Costs)
+108		if !e || !s || !q || !x || !p || !c || entry.Cmp(stop) <= 0 || f.PriceBasis != "unadjusted" || f.StopBasis != f.PriceBasis || f.StopCurrency != f.PriceCurrency || f.FXFrom != f.PriceCurrency || f.FXTo != f.AccountCurrency || f.PnLCurrency != f.AccountCurrency || f.CostsCurrency != f.AccountCurrency || !f.FXAt.Equal(f.EntryAt) || (f.PriceCurrency == f.AccountCurrency && fx.Cmp(big.NewRat(1, 1)) != 0) {
+109			out.State = RRInvalid
+110			out.Reason = "invalid or incompatible realized evidence"
+111			return out
+112		}
+113		risk := new(big.Rat).Mul(new(big.Rat).Mul(new(big.Rat).Sub(entry, stop), qty), fx)
+114		net := new(big.Rat).Sub(pnl, cost)
+115		out.State = RRKnown
+116		out.Reason = ""
+117		out.Numerator = net.RatString()
+118		out.Denominator = risk.RatString()
+119		out.Ratio = new(big.Rat).Quo(net, risk).RatString()
+120		out.Provenance = "caller-supplied, unverified; fill=" + f.FillSource + "; exit=" + f.ExitSource + "; cost=" + f.CostSource + "; fx=" + f.FXSource + " at " + f.FXAt.UTC().Format(time.RFC3339Nano) + " (" + f.FXFrom + "/" + f.FXTo + ")"
+121		return out
+122	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** positive (internal/strategyengine/lane.go:313), decimal (internal/strategyengine/lane.go:305), nonnegative (internal/strategyengine/lane.go:318), Format (internal/output/format.go:10), RRMetric (internal/strategyengine/rr_diagnostic.go:17), RRKnown (internal/strategyengine/rr_diagnostic.go:11), RRInvalid (internal/strategyengine/rr_diagnostic.go:13), RRUnknown (internal/strategyengine/rr_diagnostic.go:12), RRFill (internal/strategyengine/rr_diagnostic.go:86)
+**Called by ←** TestParkerRRDiagnosticsRealized (internal/strategyengine/rr_diagnostic_test.go:26), TestParkerRealizedRRRejectsMixedUnitsAndUnavailableEvidence (internal/strategyengine/rr_diagnostic_test.go:110), TestParkerRRSeparatesPlannedRiskFromFilledRisk (internal/strategyengine/rr_diagnostic_test.go:144)
+
+# callers
+
+Callers of "ParkerRealizedRR" (3):
+
+function    TestParkerRRDiagnosticsRealized
+  internal/strategyengine/rr_diagnostic_test.go:26
+
+function    TestParkerRealizedRRRejectsMixedUnitsAndUnavailableEvidence
+  internal/strategyengine/rr_diagnostic_test.go:110
+
+function    TestParkerRRSeparatesPlannedRiskFromFilledRisk
+  internal/strategyengine/rr_diagnostic_test.go:144
+
+
+# callees
+
+Callees of "ParkerRealizedRR" (9):
+
+function    positive
+  internal/strategyengine/lane.go:313
+
+function    decimal
+  internal/strategyengine/lane.go:305
+
+function    nonnegative
+  internal/strategyengine/lane.go:318
+
+type_alias  Format
+  internal/output/format.go:10
+
+struct      RRMetric
+  internal/strategyengine/rr_diagnostic.go:17
+
+constant    RRKnown
+  internal/strategyengine/rr_diagnostic.go:11
+
+constant    RRInvalid
+  internal/strategyengine/rr_diagnostic.go:13
+
+constant    RRUnknown
+  internal/strategyengine/rr_diagnostic.go:12
+
+struct      RRFill
+  internal/strategyengine/rr_diagnostic.go:86
+
+
+# impact
+
+Impact of changing "ParkerRealizedRR" — 4 affected symbols:
+
+internal/strategyengine/rr_diagnostic.go
+  function    ParkerRealizedRR:97
+
+internal/strategyengine/rr_diagnostic_test.go
+  function    TestParkerRRDiagnosticsRealized:26
+  function    TestParkerRealizedRRRejectsMixedUnitsAndUnavailableEvidence:110
+  function    TestParkerRRSeparatesPlannedRiskFromFilledRisk:144
+
+

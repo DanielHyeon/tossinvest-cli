@@ -1,0 +1,14 @@
+internal/journal/decision.go:294:func insertDecisionRow(ctx context.Context, ex execer, dec Decision) error {
+internal/journal/decision.go:295:	if _, err := ex.ExecContext(ctx,
+internal/journal/decision.go:296:		`INSERT INTO decisions
+internal/journal/decision.go:297:		   (id, account_ref, generation, safety_class, preimage_kind, risk_preimage,
+internal/journal/decision.go:298:		    risk_hash, client_order_id, limits_json, nonce, issued_at, expires_at)
+internal/journal/decision.go:299:		 VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+internal/journal/decision.go:300:		dec.ID, dec.AccountRef, dec.Generation, dec.SafetyClass, dec.PreimageKind,
+internal/journal/decision.go:301:		dec.RiskPreimage, dec.RiskHash, nullableString(dec.ClientOrderID),
+internal/journal/decision.go:302:		nullableString(dec.LimitsJSON), dec.Nonce,
+internal/journal/decision.go:303:		formatJournalTime(dec.IssuedAt), formatJournalTime(dec.ExpiresAt)); err != nil {
+internal/journal/decision.go:304:		return fmt.Errorf("journal: recording decision %s: %w", dec.ID, err)
+internal/journal/decision.go:305:	}
+internal/journal/decision.go:306:	return nil
+internal/journal/decision.go:307:}

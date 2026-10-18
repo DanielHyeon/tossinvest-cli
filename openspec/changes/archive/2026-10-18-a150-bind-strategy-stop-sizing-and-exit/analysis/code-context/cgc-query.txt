@@ -1,0 +1,60 @@
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+[
+  {
+    "f.name": "ParkerRRFromDecision",
+    "f.path": 
+"/tmp/tossos-a148-impl-20261018/internal/strategyengine/rr_diagnostic.go",
+    "f.line_number": 26,
+    "f.receiver_type": null
+  },
+  {
+    "f.name": "ParkerRealizedRR",
+    "f.path": 
+"/tmp/tossos-a148-impl-20261018/internal/strategyengine/rr_diagnostic.go",
+    "f.line_number": 97,
+    "f.receiver_type": null
+  },
+  {
+    "f.name": "PrecheckQFinalCampaignFirstLeg",
+    "f.path": 
+"/tmp/tossos-a148-impl-20261018/internal/execgw/riskguardian_first_leg.go",
+    "f.line_number": 49,
+    "f.receiver_type": "RiskGuardian"
+  },
+  {
+    "f.name": "ProjectAcceptedStrategyflowLineage",
+    "f.path": 
+"/tmp/tossos-a148-impl-20261018/internal/journal/strategyflow_projection.go",
+    "f.line_number": 42,
+    "f.receiver_type": null
+  },
+  {
+    "f.name": "RecordQFinalCampaignFirstLeg",
+    "f.path": 
+"/tmp/tossos-a148-impl-20261018/internal/journal/strategy_first_leg_atomic.go",
+    "f.line_number": 101,
+    "f.receiver_type": "Journal"
+  },
+  {
+    "f.name": "RequireCurrentStrategyDispatchTransportAuthority",
+    "f.path": 
+"/tmp/tossos-a148-impl-20261018/internal/journal/strategy_dispatch_runtime.go",
+    "f.line_number": 1659,
+    "f.receiver_type": "Journal"
+  },
+  {
+    "f.name": "openState",
+    "f.path": "/tmp/tossos-a148-impl-20261018/internal/app/engine/exitloop.go",
+    "f.line_number": 710,
+    "f.receiver_type": "ExitObserver"
+  },
+  {
+    "f.name": "verifyStrategyRiskBinding",
+    "f.path": 
+"/tmp/tossos-a148-impl-20261018/internal/journal/strategy_lineage.go",
+    "f.line_number": 747,
+    "f.receiver_type": null
+  }
+]

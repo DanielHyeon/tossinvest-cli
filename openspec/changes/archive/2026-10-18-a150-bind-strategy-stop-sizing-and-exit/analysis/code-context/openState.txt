@@ -1,0 +1,112 @@
+# node
+**openState** (method)
+
+**Location:** internal/app/engine/exitloop.go:710
+**Signature:** `(ctx context.Context, p journal.Position) (journal.ExitState, error)`
+
+```go
+710	func (o *ExitObserver) openState(ctx context.Context, p journal.Position) (journal.ExitState, error) {
+711		if p.Adopted() {
+712			return o.openAdoptedState(ctx, p)
+713		}
+714		decision, err := o.opts.Journal.LookupDecision(ctx, p.EntryDecisionID)
+715		if err != nil {
+716			return journal.ExitState{}, fmt.Errorf(
+717				"engine: reading the entry decision of position %s: %w", p.ID, err)
+718		}
+719		preimage, err := journal.ParsePreimage(decision.PreimageKind, decision.RiskPreimage)
+720		if err != nil {
+721			return journal.ExitState{}, fmt.Errorf(
+722				"engine: reading the entry decision of position %s: %w", p.ID, err)
+723		}
+724		entry, ok := preimage.(journal.RiskIntent)
+725		if !ok {
+726			return journal.ExitState{}, fmt.Errorf(
+727				"engine: the entry decision of position %s is a %s and carries no stop price",
+728				p.ID, decision.PreimageKind)
+729		}
+730	
+731		kind, policyID := journal.ExitPolicyRatchet, ""
+732		if o.opts.CommonPolicy != "" {
+733			kind, policyID = journal.ExitPolicyLadder, o.opts.CommonPolicy
+734		}
+735		state, err := o.opts.Journal.OpenExitState(ctx, journal.ExitStateSeed{
+736			PositionID:  p.ID,
+737			PolicyKind:  kind,
+738			PolicyID:    policyID,
+739			EntryPrice:  entry.EntryPrice,
+740			InitialStop: entry.StopPrice,
+741		})
+742		switch {
+743		case errors.Is(err, journal.ErrExitStateExists):
+744			// It exists but was not in the open set, so it is completed.
+745			return journal.ExitState{}, nil
+746		case err != nil:
+747			return journal.ExitState{}, fmt.Errorf("engine: opening the exit state of %s: %w", p.ID, err)
+748		}
+749		o.log(obs.EventEngineStarted, false,
+750			obs.FieldSymbol, p.Symbol,
+751			"position_id", p.ID,
+752			"baseline", state.Baseline,
+753			"initial_risk", state.InitialRisk,
+754			obs.FieldDetail, "the exit policy is now managing this position")
+755		return state, nil
+756	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** Adopted (internal/journal/position_projection.go:524), openAdoptedState (internal/app/engine/exitloop.go:767), LookupDecision (internal/journal/decision.go:395), ParsePreimage (internal/journal/decision.go:173), OpenExitState (internal/journal/exit_state.go:117), log (internal/app/engine/exitloop.go:1883), ExitState (internal/journal/apply_hook.go:547), ExitStateSeed (internal/journal/exit_state.go:93), Context (internal/app/app.go:62), Position (internal/domain/models.go:41)
+**Called by ←** workingSet (internal/app/engine/exitloop.go:546)
+
+# callers
+
+Callers of "openState" (1):
+
+method      workingSet
+  internal/app/engine/exitloop.go:546
+
+
+# callees
+
+Callees of "openState" (10):
+
+method      Adopted
+  internal/journal/position_projection.go:524
+
+method      openAdoptedState
+  internal/app/engine/exitloop.go:767
+
+method      LookupDecision
+  internal/journal/decision.go:395
+
+function    ParsePreimage
+  internal/journal/decision.go:173
+
+method      OpenExitState
+  internal/journal/exit_state.go:117
+
+method      log
+  internal/app/engine/exitloop.go:1883
+
+struct      ExitState
+  internal/journal/apply_hook.go:547
+
+struct      ExitStateSeed
+  internal/journal/exit_state.go:93
+
+struct      Context
+  internal/app/app.go:62
+
+struct      Position
+  internal/domain/models.go:41
+
+
+# impact
+
+Impact of changing "openState" — 3 affected symbols:
+
+internal/app/engine/exitloop.go
+  method      openState:710
+  method      workingSet:546
+  method      ObserveOnce:456
+
+

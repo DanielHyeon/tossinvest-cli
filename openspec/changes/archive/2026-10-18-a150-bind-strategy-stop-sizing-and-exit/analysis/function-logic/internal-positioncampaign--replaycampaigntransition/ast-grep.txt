@@ -1,0 +1,56 @@
+internal/positioncampaign/replay.go:344:func replayCampaignTransition(state Snapshot, event Event) (CampaignTransition, bool) {
+internal/positioncampaign/replay.go:345:	if event.Sequence == 1 {
+internal/positioncampaign/replay.go:346:		if event.EventKind != "CREATED" || event.CampaignState != CampaignPlanned || event.EntryBlocked {
+internal/positioncampaign/replay.go:347:			return CampaignTransition{}, false
+internal/positioncampaign/replay.go:348:		}
+internal/positioncampaign/replay.go:349:		return CampaignTransition{State: CampaignPlanned}, true
+internal/positioncampaign/replay.go:350:	}
+internal/positioncampaign/replay.go:351:	var transition CampaignTransition
+internal/positioncampaign/replay.go:352:	var err error
+internal/positioncampaign/replay.go:353:	switch event.EventKind {
+internal/positioncampaign/replay.go:354:	case "LEG_PLANNED":
+internal/positioncampaign/replay.go:355:		transition, err = TransitionCampaign(state.CampaignState, CampaignLegPlanned)
+internal/positioncampaign/replay.go:356:	case "ORDER_LINKED":
+internal/positioncampaign/replay.go:357:		transition, err = TransitionCampaign(state.CampaignState, CampaignOrderLinked)
+internal/positioncampaign/replay.go:358:	case "ORDER_LINK_REFUSED":
+internal/positioncampaign/replay.go:359:		transition, err = TransitionCampaign(state.CampaignState, CampaignLineageMismatch)
+internal/positioncampaign/replay.go:360:	case "PROSPECTIVE_CANCELLED":
+internal/positioncampaign/replay.go:361:		transition, err = TransitionCampaign(state.CampaignState, CampaignCancelledBeforeFill)
+internal/positioncampaign/replay.go:362:	case "AMBIGUOUS_ORDER_FILL":
+internal/positioncampaign/replay.go:363:		if state.CampaignState == CampaignClosed {
+internal/positioncampaign/replay.go:364:			transition, err = TransitionCampaign(state.CampaignState, CampaignLateFact)
+internal/positioncampaign/replay.go:365:		} else if state.CampaignState == CampaignReconcile {
+internal/positioncampaign/replay.go:366:			transition, err = TransitionCampaign(state.CampaignState, CampaignEvidenceIncomplete)
+internal/positioncampaign/replay.go:367:		} else {
+internal/positioncampaign/replay.go:368:			transition, err = TransitionCampaign(state.CampaignState, CampaignLineageMismatch)
+internal/positioncampaign/replay.go:369:		}
+internal/positioncampaign/replay.go:370:	case "ORDER_WATERMARK_ADVANCED":
+internal/positioncampaign/replay.go:371:		switch {
+internal/positioncampaign/replay.go:372:		case state.CampaignState == CampaignClosed:
+internal/positioncampaign/replay.go:373:			transition, err = TransitionCampaign(state.CampaignState, CampaignLateFact)
+internal/positioncampaign/replay.go:374:		case event.CampaignState == CampaignClosed:
+internal/positioncampaign/replay.go:375:			transition, err = TransitionCampaign(state.CampaignState, CampaignPositionClosed)
+internal/positioncampaign/replay.go:376:		case event.CampaignState == CampaignReconcile:
+internal/positioncampaign/replay.go:377:			if state.CampaignState == CampaignReconcile {
+internal/positioncampaign/replay.go:378:				transition, err = TransitionCampaign(state.CampaignState, CampaignEvidenceIncomplete)
+internal/positioncampaign/replay.go:379:			} else {
+internal/positioncampaign/replay.go:380:				transition, err = TransitionCampaign(state.CampaignState, CampaignWatermarkMismatch)
+internal/positioncampaign/replay.go:381:			}
+internal/positioncampaign/replay.go:382:		case state.CampaignState == CampaignExiting:
+internal/positioncampaign/replay.go:383:			transition, err = TransitionCampaign(state.CampaignState, CampaignRiskReducingProgress)
+internal/positioncampaign/replay.go:384:		default:
+internal/positioncampaign/replay.go:385:			transition, err = TransitionCampaign(state.CampaignState, CampaignLegProgress)
+internal/positioncampaign/replay.go:386:		}
+internal/positioncampaign/replay.go:387:	case "STOP_COMPOSED":
+internal/positioncampaign/replay.go:388:		// 이 갈래만 event 의 값을 입력으로 받는다. stop 후보(가격·유효성)는 event 에
+internal/positioncampaign/replay.go:389:		// 실리지 않으므로 replay 가 ComposeLongStop 의 block 판정을 되계산할 방법이
+internal/positioncampaign/replay.go:390:		// 없다. 되계산할 수 없는 것을 지어내는 대신 event 를 믿고, **단조성**만
+internal/positioncampaign/replay.go:391:		// 아래 LatchEntryBlocked 로 강제한다.
+internal/positioncampaign/replay.go:392:		transition = CampaignTransition{State: state.CampaignState, EntryBlocked: event.EntryBlocked}
+internal/positioncampaign/replay.go:393:	default:
+internal/positioncampaign/replay.go:394:		return CampaignTransition{}, false
+internal/positioncampaign/replay.go:395:	}
+internal/positioncampaign/replay.go:396:	// 이미 걸린 진입 차단은 어떤 전이도 풀지 않는다. 원장에 쓰는 쪽과 같은 함수다.
+internal/positioncampaign/replay.go:397:	transition = LatchEntryBlocked(state.EntryBlocked, transition)
+internal/positioncampaign/replay.go:398:	return transition, err == nil && transition.State == event.CampaignState && transition.EntryBlocked == event.EntryBlocked
+internal/positioncampaign/replay.go:399:}

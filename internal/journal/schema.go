@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 35
+const SchemaVersion = 36
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -172,6 +172,7 @@ var migrations = []migration{
 	// release records for the entry loss lock, RISK_OVERAGE latch release records, and the v33 first-cause-wins trigger
 	// replaced by "at most one open lock per scope". Additive apart from that trigger swap; v33's file is unchanged.
 	{Version: 35, SQL: schemaV35},
+	{Version: 36, SQL: schemaV36},
 }
 
 // schemaV1 is the initial schema.

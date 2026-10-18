@@ -1,0 +1,82 @@
+internal/app/engine/strategy_entry_supervisor.go:325:func (c *Context) NewPairedStrategyEntryProductionAssembly(ctx context.Context, clk clock.Clock) (StrategyEntryProductionAssembly, error) {
+internal/app/engine/strategy_entry_supervisor.go:326:	if c == nil {
+internal/app/engine/strategy_entry_supervisor.go:327:		return StrategyEntryProductionAssembly{}, errors.New("engine: strategy production context is unavailable")
+internal/app/engine/strategy_entry_supervisor.go:328:	}
+internal/app/engine/strategy_entry_supervisor.go:329:	scheduleAuthority := newStrategyScheduleAuthorityLoader(c.Paths.ConfigDir, clk, c.official, os.Getenv).collect(ctx)
+internal/app/engine/strategy_entry_supervisor.go:330:	candidateStorePath := ""
+internal/app/engine/strategy_entry_supervisor.go:331:	journalPath := ""
+internal/app/engine/strategy_entry_supervisor.go:332:	if c.Journal != nil && strings.TrimSpace(c.Journal.Path()) != "" {
+internal/app/engine/strategy_entry_supervisor.go:333:		journalPath = c.Journal.Path()
+internal/app/engine/strategy_entry_supervisor.go:334:		candidateStorePath = filepath.Join(filepath.Dir(journalPath), candidatepkg.DBFileName)
+internal/app/engine/strategy_entry_supervisor.go:335:	}
+internal/app/engine/strategy_entry_supervisor.go:336:	candidateAuthority := newStrategyCandidateAuthorityLoader(c.Paths.ConfigDir, candidateStorePath, os.Getenv).collect(ctx, scheduleAuthority)
+internal/app/engine/strategy_entry_supervisor.go:337:	routeAuthority := newStrategyRouteAuthorityLoader(c.Paths.ConfigDir, journalPath, c.AccountRef, os.Getenv).
+internal/app/engine/strategy_entry_supervisor.go:338:		collect(ctx, scheduleAuthority, candidateAuthority)
+internal/app/engine/strategy_entry_supervisor.go:339:	accountCurrency := strings.ToUpper(strings.TrimSpace(c.Config.Engine.AutomationGate.LimitCurrency))
+internal/app/engine/strategy_entry_supervisor.go:340:	fxAuthority := newStrategyFXAuthorityLoader(c.Paths.ConfigDir, c.AccountRef, accountCurrency,
+internal/app/engine/strategy_entry_supervisor.go:341:		scheduleAuthority.observedAt, c.official, os.Getenv).collect(ctx, candidateAuthority)
+internal/app/engine/strategy_entry_supervisor.go:342:	evidencePath := ""
+internal/app/engine/strategy_entry_supervisor.go:343:	if journalPath != "" {
+internal/app/engine/strategy_entry_supervisor.go:344:		evidencePath = filepath.Join(filepath.Dir(journalPath), "evidence.db")
+internal/app/engine/strategy_entry_supervisor.go:345:	}
+internal/app/engine/strategy_entry_supervisor.go:346:	// 레인을 제안 수집 **앞**에 세운다 (태스크 5.1.2.2).
+internal/app/engine/strategy_entry_supervisor.go:347:	//
+internal/app/engine/strategy_entry_supervisor.go:348:	// 순서가 안전이다. 4-가족 관문은 레인의 잠금을 읽어 판정하고, 그 잠금은
+internal/app/engine/strategy_entry_supervisor.go:349:	// 원장에서 태어난다(5.3.3). 관문 뒤에 세우면 재시작 뒤 **첫 주기**에
+internal/app/engine/strategy_entry_supervisor.go:350:	// durably 잠긴 레인이 열린 것으로 읽히고, 그 가족의 제안이 조정자에 닿는다.
+internal/app/engine/strategy_entry_supervisor.go:351:	// 레인 세우기는 기억이 있어 두 번 불러도 한 번만 복원한다.
+internal/app/engine/strategy_entry_supervisor.go:352:	lanes, err := c.productionStrategyLanes(ctx, clk)
+internal/app/engine/strategy_entry_supervisor.go:353:	if err != nil {
+internal/app/engine/strategy_entry_supervisor.go:354:		return StrategyEntryProductionAssembly{}, err
+internal/app/engine/strategy_entry_supervisor.go:355:	}
+internal/app/engine/strategy_entry_supervisor.go:356:	proposalAuthority, shadowAuthority := newStrategyProposalAuthorityLoader(c.Paths.ConfigDir, evidencePath, journalPath, c.AccountRef, os.Getenv).
+internal/app/engine/strategy_entry_supervisor.go:357:		withStrategyLanes(lanes).
+internal/app/engine/strategy_entry_supervisor.go:358:		collect(ctx, scheduleAuthority, routeAuthority, fxAuthority)
+internal/app/engine/strategy_entry_supervisor.go:359:	resultAuthority := proposalAuthority.ResultAuthority()
+internal/app/engine/strategy_entry_supervisor.go:360:	riskAuthority := newStrategyRiskAuthorityLoader(c.Paths.ConfigDir, journalPath, c.AccountRef, accountCurrency,
+internal/app/engine/strategy_entry_supervisor.go:361:		scheduleAuthority.observedAt, os.Getenv).collect(ctx, resultAuthority, fxAuthority)
+internal/app/engine/strategy_entry_supervisor.go:362:	accountAuthority := newStrategyAccountAuthorityLoader(c.Paths.ConfigDir, c.AccountRef, accountCurrency,
+internal/app/engine/strategy_entry_supervisor.go:363:		scheduleAuthority.observedAt, os.Getenv).collect(ctx, proposalAuthority)
+internal/app/engine/strategy_entry_supervisor.go:364:	guardian, _ := c.Guardian.(*execgw.RiskGuardian)
+internal/app/engine/strategy_entry_supervisor.go:365:	firstLegLoader := newProductionStrategyFirstLegAuthorityLoader(clk, c.Journal, guardian, scheduleAuthority,
+internal/app/engine/strategy_entry_supervisor.go:366:		proposalAuthority, riskAuthority, fxAuthority, accountAuthority)
+internal/app/engine/strategy_entry_supervisor.go:367:	firstLegBridge := newStrategyFirstLegAdmissionBridge(guardian, firstLegLoader)
+internal/app/engine/strategy_entry_supervisor.go:368:	dispatchCycle := newStrategyDispatchCycle(c.Journal, c.Gateway, firstLegBridge, scheduleAuthority, fxAuthority, riskAuthority,
+internal/app/engine/strategy_entry_supervisor.go:369:		proposalAuthority, c.strategyDispatchOwner)
+internal/app/engine/strategy_entry_supervisor.go:370:	// 4-가족 활성화의 만료를 실시계로 재게 한다 (태스크 8.7.2). 이 대입이 빠지면 검증된 가족
+internal/app/engine/strategy_entry_supervisor.go:371:	// 활성화를 가진 시장의 주문이 전부 거절된다 — 넓힘이 아니라 fail-closed 다. 시계가 nil 이면
+internal/app/engine/strategy_entry_supervisor.go:372:	// 메서드 값을 만들지 않는다(nil 인터페이스의 `clk.Now` 는 그 자리에서 panic 이다); 그때
+internal/app/engine/strategy_entry_supervisor.go:373:	// now 는 nil 로 남고 dispatch 가 검증된 가족 활성화를 거절한다.
+internal/app/engine/strategy_entry_supervisor.go:374:	if clk != nil {
+internal/app/engine/strategy_entry_supervisor.go:375:		dispatchCycle.now = clk.Now
+internal/app/engine/strategy_entry_supervisor.go:376:	}
+internal/app/engine/strategy_entry_supervisor.go:377:	// 재검증 = 수집(I/O) + drift 판정. 판정은 축마다 시험할 수 있게 순수 함수로 옮겼다(a112 6.3 — 의미 무변경 이동).
+internal/app/engine/strategy_entry_supervisor.go:378:	dispatchCycle.revalidateSchedule = func(checkCtx context.Context, market StrategyMarket, expected strategyScheduleMarketAuthority) error {
+internal/app/engine/strategy_entry_supervisor.go:379:		fresh := newStrategyScheduleAuthorityLoader(c.Paths.ConfigDir, clk, c.official, os.Getenv).collectMarket(checkCtx, market)
+internal/app/engine/strategy_entry_supervisor.go:380:		return strategyScheduleStillMatchesAdmission(fresh, expected)
+internal/app/engine/strategy_entry_supervisor.go:381:	}
+internal/app/engine/strategy_entry_supervisor.go:382:	snapshot := StrategyEntryProductionSnapshot{
+internal/app/engine/strategy_entry_supervisor.go:383:		Clock:              clk,
+internal/app/engine/strategy_entry_supervisor.go:384:		AutomationVerified: c.Automation.Verified,
+internal/app/engine/strategy_entry_supervisor.go:385:		EntryPermitted:     c.Automation.EntryPermitted,
+internal/app/engine/strategy_entry_supervisor.go:386:		ProtectionWired:    c.Automation.Protection == ProtectionWired,
+internal/app/engine/strategy_entry_supervisor.go:387:		Schedule:           scheduleAuthority.Snapshot(),
+internal/app/engine/strategy_entry_supervisor.go:388:	}
+internal/app/engine/strategy_entry_supervisor.go:389:	workers := make([]StrategyMarketWorker, 0, 2)
+internal/app/engine/strategy_entry_supervisor.go:390:	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
+internal/app/engine/strategy_entry_supervisor.go:391:		workers = append(workers, c.productionStrategyWorker(ctx, clk, market, scheduleAuthority, candidateAuthority,
+internal/app/engine/strategy_entry_supervisor.go:392:			routeAuthority, fxAuthority, proposalAuthority, riskAuthority, accountAuthority))
+internal/app/engine/strategy_entry_supervisor.go:393:	}
+internal/app/engine/strategy_entry_supervisor.go:394:	supervisor, err := NewStrategyEntrySupervisor(StrategyEntrySupervisorOptions{Clock: clk, CycleLimit: MaximumStrategyCycleLimit, Workers: workers})
+internal/app/engine/strategy_entry_supervisor.go:395:	if err != nil {
+internal/app/engine/strategy_entry_supervisor.go:396:		return StrategyEntryProductionAssembly{}, err
+internal/app/engine/strategy_entry_supervisor.go:397:	}
+internal/app/engine/strategy_entry_supervisor.go:398:	assembly := StrategyEntryProductionAssembly{Supervisor: supervisor, Schedule: snapshot.Schedule,
+internal/app/engine/strategy_entry_supervisor.go:399:		Candidate: candidateAuthority.Snapshot(), Route: routeAuthority.Snapshot(), FX: fxAuthority.Snapshot(), Proposal: proposalAuthority.Snapshot(),
+internal/app/engine/strategy_entry_supervisor.go:400:		Risk: riskAuthority.Snapshot(), Account: accountAuthority.Snapshot(), firstLeg: firstLegBridge, dispatch: dispatchCycle,
+internal/app/engine/strategy_entry_supervisor.go:401:		proposals: proposalAuthority, schedule: scheduleAuthority, shadow: shadowAuthority}
+internal/app/engine/strategy_entry_supervisor.go:402:	if err := c.publishStrategyRuntime(assembly); err != nil {
+internal/app/engine/strategy_entry_supervisor.go:403:		return StrategyEntryProductionAssembly{}, err
+internal/app/engine/strategy_entry_supervisor.go:404:	}
+internal/app/engine/strategy_entry_supervisor.go:405:	return assembly, nil
+internal/app/engine/strategy_entry_supervisor.go:406:}

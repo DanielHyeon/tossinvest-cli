@@ -1,0 +1,68 @@
+internal/app/engine/exitloop.go:456:func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
+internal/app/engine/exitloop.go:457:	// a129: 이 주기의 청산 주문 줄 쓰기 · 체결 따라가기는 모든 return 경로에서 판정 · 제출 뒤에 돎(원장 읽기만, 브로커 호출 0).
+internal/app/engine/exitloop.go:458:	defer o.endExitOrderCycle(ctx)
+internal/app/engine/exitloop.go:459:	var cycle ExitCycle
+internal/app/engine/exitloop.go:460:	observation := cycleObservation{at: o.clk.Now().UTC()}
+internal/app/engine/exitloop.go:461:
+internal/app/engine/exitloop.go:462:	if o.opts.SLO != nil && o.opts.SLO.FillDetectionBehind() {
+internal/app/engine/exitloop.go:463:		// Yield the whole cycle, and let the outage clock keep running. See the
+internal/app/engine/exitloop.go:464:		// file header: an unobserved position is unprotected whether the reason
+internal/app/engine/exitloop.go:465:		// was a failure or a choice.
+internal/app/engine/exitloop.go:466:		cycle.Deferred = true
+internal/app/engine/exitloop.go:467:		o.checkOutage(ctx, &cycle)
+internal/app/engine/exitloop.go:468:		return cycle
+internal/app/engine/exitloop.go:469:	}
+internal/app/engine/exitloop.go:470:
+internal/app/engine/exitloop.go:471:	states, err := o.workingSet(ctx, &cycle)
+internal/app/engine/exitloop.go:472:	if err != nil {
+internal/app/engine/exitloop.go:473:		cycle.Err = err
+internal/app/engine/exitloop.go:474:		return cycle
+internal/app/engine/exitloop.go:475:	}
+internal/app/engine/exitloop.go:476:	if len(states) == 0 {
+internal/app/engine/exitloop.go:477:		// a090: 보유·대상 표시가 있는데 전부 탈락했으면 그 주기도 미관측으로 셈 — 표시가 없으면 기록을 비움.
+internal/app/engine/exitloop.go:478:		o.settleUnobserved(ctx, &cycle)
+internal/app/engine/exitloop.go:479:		// Nothing is held, so there is nothing to observe and nothing to be
+internal/app/engine/exitloop.go:480:		// unprotected. The outage clock is reset rather than left running: an
+internal/app/engine/exitloop.go:481:		// account with no positions that has not read a price is not in an
+internal/app/engine/exitloop.go:482:		// outage, and escalating it would block entries for a condition that
+internal/app/engine/exitloop.go:483:		// only entering could clear.
+internal/app/engine/exitloop.go:484:		o.lastObserved = o.clk.Now()
+internal/app/engine/exitloop.go:485:		o.outageRaised = false
+internal/app/engine/exitloop.go:486:		return cycle
+internal/app/engine/exitloop.go:487:	}
+internal/app/engine/exitloop.go:488:	quotes, err := o.observe(ctx, symbolsOf(states), observation)
+internal/app/engine/exitloop.go:489:	if err != nil {
+internal/app/engine/exitloop.go:490:		cycle.Err = err
+internal/app/engine/exitloop.go:491:		o.checkOutage(ctx, &cycle)
+internal/app/engine/exitloop.go:492:		return cycle
+internal/app/engine/exitloop.go:493:	}
+internal/app/engine/exitloop.go:494:	o.lastObserved = o.clk.Now()
+internal/app/engine/exitloop.go:495:	o.outageRaised = false
+internal/app/engine/exitloop.go:496:	cycle.Observed = len(quotes)
+internal/app/engine/exitloop.go:497:
+internal/app/engine/exitloop.go:498:	for _, state := range states {
+internal/app/engine/exitloop.go:499:		quote, ok := quotes[strings.ToUpper(strings.TrimSpace(state.position.Symbol))]
+internal/app/engine/exitloop.go:500:		if !ok {
+internal/app/engine/exitloop.go:501:			// A symbol the price read did not answer for is a symbol this cycle
+internal/app/engine/exitloop.go:502:			// did not observe. Hold it; the outage clock is per account and the
+internal/app/engine/exitloop.go:503:			// next cycle may answer.
+internal/app/engine/exitloop.go:504:			// a090: 무음으로 넘기지 않음 — 원인만 적고 판정은 순회 뒤(settleUnobserved).
+internal/app/engine/exitloop.go:505:			o.noteUnobservedCause(&cycle, state.position.ID, unobservedNoQuote)
+internal/app/engine/exitloop.go:506:			continue
+internal/app/engine/exitloop.go:507:		}
+internal/app/engine/exitloop.go:508:		if !o.quoteUsable(quote) {
+internal/app/engine/exitloop.go:509:			// A quote that expired while an earlier position was handled is not a
+internal/app/engine/exitloop.go:510:			// judgement. Keep its state untouched until the next one-batch cycle.
+internal/app/engine/exitloop.go:511:			o.noteUnobservedCause(&cycle, state.position.ID, unobservedQuoteExpired)
+internal/app/engine/exitloop.go:512:			continue
+internal/app/engine/exitloop.go:513:		}
+internal/app/engine/exitloop.go:514:		cycle.Judged++
+internal/app/engine/exitloop.go:515:		o.noteJudged(&cycle, state)
+internal/app/engine/exitloop.go:516:		if err := o.judge(ctx, state, quote, observation, &cycle); err != nil && cycle.Err == nil {
+internal/app/engine/exitloop.go:517:			cycle.Err = err
+internal/app/engine/exitloop.go:518:		}
+internal/app/engine/exitloop.go:519:	}
+internal/app/engine/exitloop.go:520:	// a090: 임계 판정 · 알림 · 강화는 모든 포지션 판정이 끝난 뒤 한 번 — 뒤 포지션의 손절 판정 앞에 서지 않음.
+internal/app/engine/exitloop.go:521:	o.settleUnobserved(ctx, &cycle)
+internal/app/engine/exitloop.go:522:	return cycle
+internal/app/engine/exitloop.go:523:}

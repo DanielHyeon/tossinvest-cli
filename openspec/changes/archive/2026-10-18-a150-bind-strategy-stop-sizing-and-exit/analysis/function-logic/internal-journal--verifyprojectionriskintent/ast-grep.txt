@@ -1,0 +1,27 @@
+internal/journal/strategyflow_projection.go:92:func verifyProjectionRiskIntent(projection strategyflow.AcceptedProjection, risk RiskIntent, schema string) error {
+internal/journal/strategyflow_projection.go:93:	lineage, terms := projection.Lineage(), projection.ExecutionTerms()
+internal/journal/strategyflow_projection.go:94:	quantity, canonical := NormalizeDecimal(risk.Quantity)
+internal/journal/strategyflow_projection.go:95:	qFinal, quantityErr := strconv.ParseUint(quantity, 10, 64)
+internal/journal/strategyflow_projection.go:96:	_, _, marked := splitQFinalPolicyVersion(risk.PolicyVersion)
+internal/journal/strategyflow_projection.go:97:	if !canonical || quantity != risk.Quantity || quantityErr != nil || qFinal == 0 || qFinal > terms.Quantity() || !marked ||
+internal/journal/strategyflow_projection.go:98:		risk.AccountRef != lineage.AccountRef || risk.AccountRef != terms.AccountRef() ||
+internal/journal/strategyflow_projection.go:99:		!strings.EqualFold(risk.Market, string(lineage.Market)) || !strings.EqualFold(risk.Market, string(terms.Market())) || risk.Symbol != lineage.Symbol || risk.Symbol != terms.Symbol() {
+internal/journal/strategyflow_projection.go:100:		return errors.New("journal strategy issuance: strategyflow RiskIntent/accepted-result exact binding mismatch")
+internal/journal/strategyflow_projection.go:101:	}
+internal/journal/strategyflow_projection.go:102:	entry, stop, target := terms.Entry().PriceMinor(), terms.EffectiveStop().PriceMinor(), terms.Target().PriceMinor()
+internal/journal/strategyflow_projection.go:103:	if schema == strategyflowRiskBindingSchemaVersion {
+internal/journal/strategyflow_projection.go:104:		var entryOK, stopOK, targetOK bool
+internal/journal/strategyflow_projection.go:105:		entry, entryOK = terms.Entry().MajorDecimal()
+internal/journal/strategyflow_projection.go:106:		stop, stopOK = terms.EffectiveStop().MajorDecimal()
+internal/journal/strategyflow_projection.go:107:		target, targetOK = terms.Target().MajorDecimal()
+internal/journal/strategyflow_projection.go:108:		if !entryOK || !stopOK || !targetOK {
+internal/journal/strategyflow_projection.go:109:			return errors.New("journal strategy issuance: strategyflow execution price unit invalid")
+internal/journal/strategyflow_projection.go:110:		}
+internal/journal/strategyflow_projection.go:111:	} else if schema != strategyflowRiskBindingSchemaVersionV2 {
+internal/journal/strategyflow_projection.go:112:		return errors.New("journal strategy issuance: strategyflow decision payload schema unsupported")
+internal/journal/strategyflow_projection.go:113:	}
+internal/journal/strategyflow_projection.go:114:	if risk.EntryPrice != entry || risk.StopPrice != stop || risk.TargetPrice != target {
+internal/journal/strategyflow_projection.go:115:		return errors.New("journal strategy issuance: strategyflow RiskIntent/accepted-result exact binding mismatch")
+internal/journal/strategyflow_projection.go:116:	}
+internal/journal/strategyflow_projection.go:117:	return nil
+internal/journal/strategyflow_projection.go:118:}

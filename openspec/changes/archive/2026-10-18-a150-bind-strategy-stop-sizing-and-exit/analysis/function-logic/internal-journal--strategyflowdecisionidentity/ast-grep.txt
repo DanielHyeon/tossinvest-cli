@@ -1,0 +1,15 @@
+internal/journal/strategyflow_projection.go:120:func strategyflowDecisionIdentity(record strategyflowRiskBindingPayload) (string, error) {
+internal/journal/strategyflow_projection.go:121:	record.Identity = ""
+internal/journal/strategyflow_projection.go:122:	payload, err := json.Marshal(record)
+internal/journal/strategyflow_projection.go:123:	if err != nil {
+internal/journal/strategyflow_projection.go:124:		return "", fmt.Errorf("journal strategy issuance: strategyflow decision identity encoding: %w", err)
+internal/journal/strategyflow_projection.go:125:	}
+internal/journal/strategyflow_projection.go:126:	sum := sha256.Sum256(payload)
+internal/journal/strategyflow_projection.go:127:	version := "v3"
+internal/journal/strategyflow_projection.go:128:	if record.SchemaVersion == strategyflowRiskBindingSchemaVersionV2 {
+internal/journal/strategyflow_projection.go:129:		version = "v2"
+internal/journal/strategyflow_projection.go:130:	} else if record.SchemaVersion != strategyflowRiskBindingSchemaVersion {
+internal/journal/strategyflow_projection.go:131:		return "", errors.New("journal strategy issuance: strategyflow decision identity schema unsupported")
+internal/journal/strategyflow_projection.go:132:	}
+internal/journal/strategyflow_projection.go:133:	return "strategy-decision:" + version + ":sha256:" + hex.EncodeToString(sum[:]), nil
+internal/journal/strategyflow_projection.go:134:}

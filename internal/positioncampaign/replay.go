@@ -357,6 +357,12 @@ func replayCampaignTransition(state Snapshot, event Event) (CampaignTransition, 
 		transition, err = TransitionCampaign(state.CampaignState, CampaignOrderLinked)
 	case "ORDER_LINK_REFUSED":
 		transition, err = TransitionCampaign(state.CampaignState, CampaignLineageMismatch)
+	case "PROTECTION_RECONCILE":
+		if state.CampaignState == CampaignReconcile {
+			transition, err = TransitionCampaign(state.CampaignState, CampaignEvidenceIncomplete)
+		} else {
+			transition, err = TransitionCampaign(state.CampaignState, CampaignLineageMismatch)
+		}
 	case "PROSPECTIVE_CANCELLED":
 		transition, err = TransitionCampaign(state.CampaignState, CampaignCancelledBeforeFill)
 	case "AMBIGUOUS_ORDER_FILL":

@@ -1,0 +1,102 @@
+{
+  "file": "internal/journal/decision.go",
+  "source_sha256": "9f46b4ed60fe74fb5cc69381e15d916a032bf05a9f7b6a27ec65262718667e6f",
+  "package": "journal",
+  "function": "insertDecisionRow",
+  "signature": "insertDecisionRow(params=3, results=1)",
+  "start": {
+    "line": 294,
+    "column": 1
+  },
+  "end": {
+    "line": 307,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 295,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 304,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 306,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 295,
+        "column": 15
+      },
+      "text": "ex.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 301,
+        "column": 35
+      },
+      "text": "nullableString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 3
+      },
+      "text": "nullableString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 303,
+        "column": 3
+      },
+      "text": "formatJournalTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 303,
+        "column": 36
+      },
+      "text": "formatJournalTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 304,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 295,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

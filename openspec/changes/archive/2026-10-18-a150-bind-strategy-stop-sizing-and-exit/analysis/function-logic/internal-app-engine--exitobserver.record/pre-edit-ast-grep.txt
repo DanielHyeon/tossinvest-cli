@@ -1,0 +1,131 @@
+internal/app/engine/exitloop.go:1283:func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolicy.ExitLineSnapshot,
+internal/app/engine/exitloop.go:1284:	recoveryPolicy exitpolicy.RecoveryPolicyDefinition, quote observedQuote,
+internal/app/engine/exitloop.go:1285:	observation cycleObservation, cycle *ExitCycle) error {
+internal/app/engine/exitloop.go:1286:	if !o.quoteUsable(quote) {
+internal/app/engine/exitloop.go:1287:		return nil
+internal/app/engine/exitloop.go:1288:	}
+internal/app/engine/exitloop.go:1289:	proposal := snapshot.ExecutableProposal()
+internal/app/engine/exitloop.go:1290:	quantity := snapshot.ProjectedQuantity
+internal/app/engine/exitloop.go:1291:	orderable := snapshot.Orderable && !proposal.Zero()
+internal/app/engine/exitloop.go:1292:	judgement := journal.ExitJudgement{
+internal/app/engine/exitloop.go:1293:		Snapshot: snapshot, RecoveryPolicy: recoveryPolicy,
+internal/app/engine/exitloop.go:1294:		ReJudgingVersion: reJudgingVersion(m),
+internal/app/engine/exitloop.go:1295:		PositionID:       m.position.ID, LifecycleGeneration: m.state.LifecycleGeneration,
+internal/app/engine/exitloop.go:1296:		ObservedPrice: snapshot.ObservedPrice,
+internal/app/engine/exitloop.go:1297:		HighWater:     snapshot.HighWater, Baseline: snapshot.CurrentProtection,
+internal/app/engine/exitloop.go:1298:		RatchetLevel: string(snapshot.RatchetLevel), ActiveRung: snapshot.ActiveRung,
+internal/app/engine/exitloop.go:1299:		Provenance: journal.ExitDecisionProvenance{
+internal/app/engine/exitloop.go:1300:			ObservationID: snapshot.ObservationID, SnapshotID: snapshot.SnapshotID,
+internal/app/engine/exitloop.go:1301:			DecisionID: snapshot.DecisionID, Policy: snapshot.Policy,
+internal/app/engine/exitloop.go:1302:		},
+internal/app/engine/exitloop.go:1303:	}
+internal/app/engine/exitloop.go:1304:	judgement.ObservationSource, judgement.ObservedAt = quote.Source, quote.FetchedAt
+internal/app/engine/exitloop.go:1305:	if judgement.ObservationSource == "" {
+internal/app/engine/exitloop.go:1306:		if quote.FetchedAt.IsZero() {
+internal/app/engine/exitloop.go:1307:			judgement.ObservationSource, judgement.ObservedAt = "cycle:"+strconv.FormatUint(observation.sequence, 10), observation.at
+internal/app/engine/exitloop.go:1308:		} else {
+internal/app/engine/exitloop.go:1309:			judgement.ObservationSource = "quote_fetched_at"
+internal/app/engine/exitloop.go:1310:		}
+internal/app/engine/exitloop.go:1311:	}
+internal/app/engine/exitloop.go:1312:
+internal/app/engine/exitloop.go:1313:	// Clearing the symbol comes *before* the arming, not after it, and the reason
+internal/app/engine/exitloop.go:1314:	// is that one of the two things it clears is an arming.
+internal/app/engine/exitloop.go:1315:	//
+internal/app/engine/exitloop.go:1316:	//   - The working entry buy is the E31 succession (issues.md, task 6.1): a
+internal/app/engine/exitloop.go:1317:	//     liquidation submitted while a buy is still working can be answered by
+internal/app/engine/exitloop.go:1318:	//     an entry fill during the close, which the projection refuses as a
+internal/app/engine/exitloop.go:1319:	//     forbidden transition and turns into a RECONCILE.
+internal/app/engine/exitloop.go:1320:	//   - The outstanding take-profit is what CancelPendingFirst names. Two
+internal/app/engine/exitloop.go:1321:	//     working sells on one position can oversell it, and the arming refuses
+internal/app/engine/exitloop.go:1322:	//     a second proposal while the first is outstanding — so the first has to
+internal/app/engine/exitloop.go:1323:	//     be resolved, and it can only be resolved once its order is off the book.
+internal/app/engine/exitloop.go:1324:	//
+internal/app/engine/exitloop.go:1325:	// A clear that does not complete does not stop the judgement: the watermark
+internal/app/engine/exitloop.go:1326:	// and the baseline still advance, and only the proposal is withheld. §0.3 is
+internal/app/engine/exitloop.go:1327:	// why the withholding is noticed rather than silent — noteDelay is what turns
+internal/app/engine/exitloop.go:1328:	// a delayed liquidation into an alert once it passes its bound.
+internal/app/engine/exitloop.go:1329:	if orderable && (snapshot.CancelPendingFirst || isFullExit(proposal)) {
+internal/app/engine/exitloop.go:1330:		if m.reJudge && !isProtective(proposal) {
+internal/app/engine/exitloop.go:1331:			// The one pass a superseded quarantine earns, and the only pass where the
+internal/app/engine/exitloop.go:1332:			// judgement below can still refuse. clearTheSymbol sends real cancels to
+internal/app/engine/exitloop.go:1333:			// the broker before RecordExitJudgementResult runs the recovery selection,
+internal/app/engine/exitloop.go:1334:			// so cancel-then-refuse would leave the position with no working order,
+internal/app/engine/exitloop.go:1335:			// still quarantined and still unjudged.
+internal/app/engine/exitloop.go:1336:			//
+internal/app/engine/exitloop.go:1337:			// The rule is asymmetric on purpose: a re-judgement withholds profit
+internal/app/engine/exitloop.go:1338:			// taking, never protection. Withholding is not free — the next cycle finds
+internal/app/engine/exitloop.go:1339:			// the line unchanged and returns before proposing anything, so a withheld
+internal/app/engine/exitloop.go:1340:			// rung waits for the next one — which is exactly why a stop is excluded
+internal/app/engine/exitloop.go:1341:			// below rather than delayed and alarmed. What is withheld here is an
+internal/app/engine/exitloop.go:1342:			// upside order whose loss costs nothing but upside.
+internal/app/engine/exitloop.go:1343:			//
+internal/app/engine/exitloop.go:1344:			// No noteDelay here, unlike the uncleared-working-order branch below.
+internal/app/engine/exitloop.go:1345:			// That clock measures a delayed *liquidation*, and by construction this
+internal/app/engine/exitloop.go:1346:			// branch never holds one: isProtective takes stops out of it. Starting
+internal/app/engine/exitloop.go:1347:			// that timer for a withheld take-profit would leave it running — this
+internal/app/engine/exitloop.go:1348:			// branch has no clearDelay — so a genuine clear failure days later would
+internal/app/engine/exitloop.go:1349:			// alarm immediately with an elapsed time of days.
+internal/app/engine/exitloop.go:1350:			orderable = false
+internal/app/engine/exitloop.go:1351:			judgement.ArmSuppressedReason = journal.ArmSuppressedReJudge
+internal/app/engine/exitloop.go:1352:		} else {
+internal/app/engine/exitloop.go:1353:			cleared, err := o.clearTheSymbol(ctx, m, snapshot.CancelPendingFirst)
+internal/app/engine/exitloop.go:1354:			if err != nil {
+internal/app/engine/exitloop.go:1355:				return err
+internal/app/engine/exitloop.go:1356:			}
+internal/app/engine/exitloop.go:1357:			if !cleared.cleared {
+internal/app/engine/exitloop.go:1358:				// 지연 경보의 사유는 형태 B(매도 취소의 종결 증거 대기)면 복구 절차를 안내함(a094 D−8.3 — 등급 · key ·
+internal/app/engine/exitloop.go:1359:				// 빈도 무변화). 연속 실패 트리거는 기존 타이머와 별개의 이른 경보임(D−2.7).
+internal/app/engine/exitloop.go:1360:				o.noteDelay(ctx, m, cleared.why())
+internal/app/engine/exitloop.go:1361:				o.noteClearFailure(ctx, m, cleared)
+internal/app/engine/exitloop.go:1362:				orderable = false
+internal/app/engine/exitloop.go:1363:				judgement.ArmSuppressedReason = journal.ArmSuppressedWorkingOrder
+internal/app/engine/exitloop.go:1364:			} else {
+internal/app/engine/exitloop.go:1365:				o.clearDelay(m.position.ID)
+internal/app/engine/exitloop.go:1366:				o.endClearStreak(m.position.ID)
+internal/app/engine/exitloop.go:1367:			}
+internal/app/engine/exitloop.go:1368:		}
+internal/app/engine/exitloop.go:1369:	}
+internal/app/engine/exitloop.go:1370:
+internal/app/engine/exitloop.go:1371:	intentID := ""
+internal/app/engine/exitloop.go:1372:	if orderable {
+internal/app/engine/exitloop.go:1373:		intentID = exitIntentID(snapshot.DecisionID)
+internal/app/engine/exitloop.go:1374:		if intentID == "" {
+internal/app/engine/exitloop.go:1375:			intentID = o.opts.NewID()
+internal/app/engine/exitloop.go:1376:		}
+internal/app/engine/exitloop.go:1377:		judgement.Proposal = &journal.ExitProposal{
+internal/app/engine/exitloop.go:1378:			Action:     string(proposal.Action),
+internal/app/engine/exitloop.go:1379:			Level:      proposal.Level,
+internal/app/engine/exitloop.go:1380:			IntentID:   intentID,
+internal/app/engine/exitloop.go:1381:			Provenance: judgement.Provenance,
+internal/app/engine/exitloop.go:1382:		}
+internal/app/engine/exitloop.go:1383:	}
+internal/app/engine/exitloop.go:1384:
+internal/app/engine/exitloop.go:1385:	recorded, err := o.opts.Journal.RecordExitJudgementResult(ctx, judgement)
+internal/app/engine/exitloop.go:1386:	if err != nil {
+internal/app/engine/exitloop.go:1387:		if errors.Is(err, journal.ErrProposalPending) {
+internal/app/engine/exitloop.go:1388:			// Another proposal is outstanding. The evaluator suppresses this in
+internal/app/engine/exitloop.go:1389:			// the normal path; reaching here means the row moved under the read,
+internal/app/engine/exitloop.go:1390:			// and holding is the conservative answer.
+internal/app/engine/exitloop.go:1391:			return nil
+internal/app/engine/exitloop.go:1392:		}
+internal/app/engine/exitloop.go:1393:		if errors.Is(err, journal.ErrExitSnapshotQuarantined) {
+internal/app/engine/exitloop.go:1394:			// The transaction quarantined this generation and committed before
+internal/app/engine/exitloop.go:1395:			// returning. Announcing here is what makes the creating cycle
+internal/app/engine/exitloop.go:1396:			// observable at all — the working set only sees the quarantine on the
+internal/app/engine/exitloop.go:1397:			// next cycle, and this is the path all three of the 2026-08-03
+internal/app/engine/exitloop.go:1398:			// quarantines came through (change a074).
+internal/app/engine/exitloop.go:1399:			//
+internal/app/engine/exitloop.go:1400:			// The error is still returned unchanged: the judgement was not
+internal/app/engine/exitloop.go:1401:			// recorded, and the announcement decides nothing about that.
+internal/app/engine/exitloop.go:1402:			o.announceQuarantineFromLedger(ctx, m.position)
+internal/app/engine/exitloop.go:1403:		}
+internal/app/engine/exitloop.go:1404:		return fmt.Errorf("engine: recording the exit judgement of %s: %w", m.position.ID, err)
+internal/app/engine/exitloop.go:1405:	}
+internal/app/engine/exitloop.go:1406:	if recorded.ArmedProposal == nil || recorded.ArmOutcome != journal.ExitArmArmed {
+internal/app/engine/exitloop.go:1407:		return nil
+internal/app/engine/exitloop.go:1408:	}
+internal/app/engine/exitloop.go:1409:	intentID = recorded.ArmedProposal.IntentID
+internal/app/engine/exitloop.go:1410:	cycle.Proposed++
+internal/app/engine/exitloop.go:1411:	return o.submit(ctx, m, proposal, quantity, intentID, judgement.ObservedPrice,
+internal/app/engine/exitloop.go:1412:		judgement.Provenance)
+internal/app/engine/exitloop.go:1413:}

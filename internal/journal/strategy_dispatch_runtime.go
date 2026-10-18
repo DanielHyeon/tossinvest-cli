@@ -1679,6 +1679,23 @@ func (j *Journal) RequireCurrentStrategyDispatchTransportAuthority(ctx context.C
 		lease.FencingToken != request.FencingToken || !j.clk.Now().UTC().Before(lease.ExpiresAt) {
 		return ErrStrategyDispatchFenced
 	}
+	state, _, blocked, err := campaignHeaderInTx(ctx, tx, lease.CampaignID)
+	if err != nil {
+		return err
+	}
+	if blocked || state == positioncampaign.CampaignReconcile || state == positioncampaign.CampaignClosed {
+		return ErrStrategyDispatchFenced
+	}
+	protection, err := strategyProtectionInTx(ctx, tx, lease.GuardianDecisionID, lease.CampaignID)
+	if err != nil {
+		return fmt.Errorf("%w: %v", ErrStrategyDispatchFenced, err)
+	}
+	if !protection.Legacy && (protection.Risk.AccountRef != lease.AccountRef || !strings.EqualFold(protection.Risk.Market, string(lease.Market)) || protection.Risk.Symbol != lease.Symbol) {
+		return ErrStrategyDispatchFenced
+	}
+	if err := requireStrategyProtectionPositionInTx(ctx, tx, lease.CampaignID, protection); err != nil {
+		return fmt.Errorf("%w: %v", ErrStrategyDispatchFenced, err)
+	}
 	return nil
 }
 

@@ -1,0 +1,454 @@
+{
+  "file": "internal/positioncampaign/replay.go",
+  "source_sha256": "d9c52e4fc51c40a8d5abc8225e34474d1b65b3a1658b4c50e4cded5c8c346a63",
+  "package": "positioncampaign",
+  "function": "replayCampaignTransition",
+  "signature": "replayCampaignTransition(params=2, results=2)",
+  "start": {
+    "line": 344,
+    "column": 1
+  },
+  "end": {
+    "line": 399,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 345,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 346,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "switch",
+      "at": {
+        "line": 353,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 354,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 356,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 358,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "case",
+      "at": {
+        "line": 360,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "case",
+      "at": {
+        "line": 362,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 363,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "else",
+      "at": {
+        "line": 365,
+        "column": 10
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 365,
+        "column": 10
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "else",
+      "at": {
+        "line": 367,
+        "column": 10
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "case",
+      "at": {
+        "line": 370,
+        "column": 2
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "switch",
+      "at": {
+        "line": 371,
+        "column": 3
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "case",
+      "at": {
+        "line": 372,
+        "column": 3
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "case",
+      "at": {
+        "line": 374,
+        "column": 3
+      }
+    },
+    {
+      "id": "B17",
+      "kind": "case",
+      "at": {
+        "line": 376,
+        "column": 3
+      }
+    },
+    {
+      "id": "B18",
+      "kind": "if",
+      "at": {
+        "line": 377,
+        "column": 4
+      }
+    },
+    {
+      "id": "B19",
+      "kind": "else",
+      "at": {
+        "line": 379,
+        "column": 11
+      }
+    },
+    {
+      "id": "B20",
+      "kind": "case",
+      "at": {
+        "line": 382,
+        "column": 3
+      }
+    },
+    {
+      "id": "B21",
+      "kind": "case",
+      "at": {
+        "line": 384,
+        "column": 3
+      }
+    },
+    {
+      "id": "B22",
+      "kind": "case",
+      "at": {
+        "line": 387,
+        "column": 2
+      }
+    },
+    {
+      "id": "B23",
+      "kind": "case",
+      "at": {
+        "line": 393,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 347,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 349,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 394,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 398,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 21
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 357,
+        "column": 21
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 359,
+        "column": 21
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 361,
+        "column": 21
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 364,
+        "column": 22
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 366,
+        "column": 22
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 22
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 373,
+        "column": 22
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 375,
+        "column": 22
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 378,
+        "column": 23
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 380,
+        "column": 23
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 383,
+        "column": 22
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 385,
+        "column": 22
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 397,
+        "column": 15
+      },
+      "text": "LatchEntryBlocked"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 355,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 357,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 359,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 361,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 364,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 366,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 368,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 373,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 375,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 378,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 380,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 383,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 385,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 392,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 397,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

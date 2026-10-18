@@ -58,7 +58,7 @@ func TestProductionFirstLegAuthorityLoaderPairedKRUS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	loader := newProductionStrategyFirstLegAuthorityLoader(fakeClock, j, guardian, routeReadySchedulePair(now), proposals, riskPair, riskFixture.fx, accounts)
+	loader := newProductionStrategyFirstLegAuthorityLoader(fakeClock, j, guardian, routeReadySchedulePair(now), proposals, riskPair, riskFixture.fx, accounts, a150RatchetPolicyFixture())
 	markets := map[StrategyMarket]bool{}
 	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
 		result := proposals.forMarket(market).entries[0].authority.Proposal()
@@ -69,6 +69,9 @@ func TestProductionFirstLegAuthorityLoaderPairedKRUS(t *testing.T) {
 		issuance, err := loader.collectStrategyFirstLegAuthority(context.Background(), accepted)
 		if err != nil {
 			t.Fatalf("%s collect: %v", market, err)
+		}
+		if issuance.ExitPolicy == nil {
+			t.Fatalf("%s first-leg exit policy snapshot missing", market)
 		}
 		wantPrice := "100"
 		if issuance.Entry.Market != string(market) || issuance.Entry.EntryPrice != wantPrice || issuance.Entry.QCandidate != result.Quantity ||

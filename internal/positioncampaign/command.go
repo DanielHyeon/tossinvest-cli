@@ -10,19 +10,20 @@ var ErrInvalidCommand = errors.New("position campaign: invalid command identity"
 type CommandKind string
 
 const (
-	CommandCreate            CommandKind = "CREATE"
-	CommandPlanLeg           CommandKind = "PLAN_LEG"
-	CommandLinkOrder         CommandKind = "LINK_ORDER"
-	CommandCancelProspective CommandKind = "CANCEL_PROSPECTIVE"
-	CommandApplyFill         CommandKind = "APPLY_FILL"
-	CommandUpdateStop        CommandKind = "UPDATE_STOP"
-	CommandRecordEvidence    CommandKind = "RECORD_EVIDENCE"
+	CommandCreate              CommandKind = "CREATE"
+	CommandPlanLeg             CommandKind = "PLAN_LEG"
+	CommandLinkOrder           CommandKind = "LINK_ORDER"
+	CommandCancelProspective   CommandKind = "CANCEL_PROSPECTIVE"
+	CommandApplyFill           CommandKind = "APPLY_FILL"
+	CommandUpdateStop          CommandKind = "UPDATE_STOP"
+	CommandRecordEvidence      CommandKind = "RECORD_EVIDENCE"
+	CommandProtectionReconcile CommandKind = "PROTECTION_RECONCILE"
 )
 
 func ValidateCommand(kind, key string) error {
 	switch CommandKind(kind) {
 	case CommandCreate, CommandPlanLeg, CommandLinkOrder, CommandCancelProspective,
-		CommandApplyFill, CommandUpdateStop, CommandRecordEvidence:
+		CommandApplyFill, CommandUpdateStop, CommandRecordEvidence, CommandProtectionReconcile:
 	default:
 		return fmt.Errorf("%w: unknown kind %q", ErrInvalidCommand, kind)
 	}

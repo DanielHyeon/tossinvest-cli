@@ -1,0 +1,91 @@
+# node
+**RequireCurrentStrategyDispatchTransportAuthority** (method)
+
+**Location:** internal/journal/strategy_dispatch_runtime.go:1659
+**Signature:** `(ctx context.Context, request StrategyDispatchLeaseCAS) error`
+
+```go
+1659	func (j *Journal) RequireCurrentStrategyDispatchTransportAuthority(ctx context.Context, request StrategyDispatchLeaseCAS) error {
+1660		if j == nil || j.db == nil || ctx == nil || !validStrategyDispatchIdentity(request.LeaseID) ||
+1661			request.ExpectedRevision == 0 || request.ExpectedRevision == ^uint64(0) || request.OwnerEpoch == 0 ||
+1662			!validStrategyDispatchIdentity(request.FencingToken) {
+1663			return fmt.Errorf("%w: invalid strategy transport authority", ErrInvalidRequest)
+1664		}
+1665		tx, err := j.db.BeginTx(ctx, nil)
+1666		if err != nil {
+1667			return err
+1668		}
+1669		defer tx.Rollback()
+1670		if err := requireCurrentStrategyDispatchOwner(ctx, tx, request.OwnerEpoch, request.FencingToken); err != nil {
+1671			return err
+1672		}
+1673		lease, err := loadStrategyDispatchLease(ctx, tx, request.LeaseID)
+1674		if err != nil {
+1675			return err
+1676		}
+1677		if lease.State != StrategyDispatchLeaseSubmitting || lease.Disposition != StrategyDispatchReservationReserved ||
+1678			lease.Revision != request.ExpectedRevision+1 || lease.OwnerEpoch != request.OwnerEpoch ||
+1679			lease.FencingToken != request.FencingToken || !j.clk.Now().UTC().Before(lease.ExpiresAt) {
+1680			return ErrStrategyDispatchFenced
+1681		}
+1682		return nil
+1683	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** validStrategyDispatchIdentity (internal/journal/strategy_dispatch_runtime.go:1685), requireCurrentStrategyDispatchOwner (internal/journal/strategy_dispatch_runtime.go:1643), loadStrategyDispatchLease (internal/journal/strategy_dispatch_runtime.go:1599), Now (internal/clock/clock.go:37), StrategyDispatchReservationReserved (internal/journal/strategy_dispatch_runtime.go:60), StrategyDispatchLeaseSubmitting (internal/journal/strategy_dispatch_runtime.go:51), Context (internal/app/app.go:62), StrategyDispatchLeaseCAS (internal/journal/strategy_dispatch_runtime.go:134)
+**Called by ←** TestDispatchStrategyVerifiedPreventsOwnerTakeoverBetweenSubmittingAndBrokerKRUS (internal/journal/strategy_dispatch_outcome_test.go:143), TestBeginStrategyDispatchSubmittingPairedKRUSCurrentAuthority (internal/journal/strategy_dispatch_submitting_test.go:14)
+
+# callers
+
+Callers of "RequireCurrentStrategyDispatchTransportAuthority" (2):
+
+function    TestDispatchStrategyVerifiedPreventsOwnerTakeoverBetweenSubmittingAndBrokerKRUS
+  internal/journal/strategy_dispatch_outcome_test.go:143
+
+function    TestBeginStrategyDispatchSubmittingPairedKRUSCurrentAuthority
+  internal/journal/strategy_dispatch_submitting_test.go:14
+
+
+# callees
+
+Callees of "RequireCurrentStrategyDispatchTransportAuthority" (8):
+
+function    validStrategyDispatchIdentity
+  internal/journal/strategy_dispatch_runtime.go:1685
+
+function    requireCurrentStrategyDispatchOwner
+  internal/journal/strategy_dispatch_runtime.go:1643
+
+function    loadStrategyDispatchLease
+  internal/journal/strategy_dispatch_runtime.go:1599
+
+method      Now
+  internal/clock/clock.go:37
+
+constant    StrategyDispatchReservationReserved
+  internal/journal/strategy_dispatch_runtime.go:60
+
+constant    StrategyDispatchLeaseSubmitting
+  internal/journal/strategy_dispatch_runtime.go:51
+
+struct      Context
+  internal/app/app.go:62
+
+struct      StrategyDispatchLeaseCAS
+  internal/journal/strategy_dispatch_runtime.go:134
+
+
+# impact
+
+Impact of changing "RequireCurrentStrategyDispatchTransportAuthority" — 3 affected symbols:
+
+internal/journal/strategy_dispatch_runtime.go
+  method      RequireCurrentStrategyDispatchTransportAuthority:1659
+
+internal/journal/strategy_dispatch_outcome_test.go
+  function    TestDispatchStrategyVerifiedPreventsOwnerTakeoverBetweenSubmittingAndBrokerKRUS:143
+
+internal/journal/strategy_dispatch_submitting_test.go
+  function    TestBeginStrategyDispatchSubmittingPairedKRUSCurrentAuthority:14
+
+

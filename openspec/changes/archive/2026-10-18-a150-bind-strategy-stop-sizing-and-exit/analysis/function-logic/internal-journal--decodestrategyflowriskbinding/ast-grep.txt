@@ -1,0 +1,22 @@
+internal/journal/strategyflow_projection.go:181:func decodeStrategyflowRiskBinding(payload string) (strategyflowRiskBindingPayload, error) {
+internal/journal/strategyflow_projection.go:182:	decoder := json.NewDecoder(strings.NewReader(payload))
+internal/journal/strategyflow_projection.go:183:	decoder.DisallowUnknownFields()
+internal/journal/strategyflow_projection.go:184:	var record strategyflowRiskBindingPayload
+internal/journal/strategyflow_projection.go:185:	if err := decoder.Decode(&record); err != nil {
+internal/journal/strategyflow_projection.go:186:		return strategyflowRiskBindingPayload{}, fmt.Errorf("journal strategy issuance: decoding strategyflow decision payload: %w", err)
+internal/journal/strategyflow_projection.go:187:	}
+internal/journal/strategyflow_projection.go:188:	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
+internal/journal/strategyflow_projection.go:189:		return strategyflowRiskBindingPayload{}, errors.New("journal strategy issuance: strategyflow decision payload has trailing data")
+internal/journal/strategyflow_projection.go:190:	}
+internal/journal/strategyflow_projection.go:191:	canonical, err := json.Marshal(record)
+internal/journal/strategyflow_projection.go:192:	if err != nil || string(canonical) != payload {
+internal/journal/strategyflow_projection.go:193:		return strategyflowRiskBindingPayload{}, errors.New("journal strategy issuance: strategyflow decision payload is not canonical")
+internal/journal/strategyflow_projection.go:194:	}
+internal/journal/strategyflow_projection.go:195:	if record.SchemaVersion != strategyflowRiskBindingSchemaVersionV2 && record.SchemaVersion != strategyflowRiskBindingSchemaVersion {
+internal/journal/strategyflow_projection.go:196:		return strategyflowRiskBindingPayload{}, errors.New("journal strategy issuance: strategyflow decision payload schema unsupported")
+internal/journal/strategyflow_projection.go:197:	}
+internal/journal/strategyflow_projection.go:198:	if record.ActivationManifestDigest == "" || strings.TrimSpace(record.ActivationManifestDigest) != record.ActivationManifestDigest {
+internal/journal/strategyflow_projection.go:199:		return strategyflowRiskBindingPayload{}, errors.New("journal strategy issuance: strategyflow activation manifest binding invalid")
+internal/journal/strategyflow_projection.go:200:	}
+internal/journal/strategyflow_projection.go:201:	return record, nil
+internal/journal/strategyflow_projection.go:202:}

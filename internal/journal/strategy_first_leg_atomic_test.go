@@ -739,6 +739,10 @@ type failingEntropy struct{}
 func (failingEntropy) Read([]byte) (int, error) { return 0, errors.New("synthetic entropy failure") }
 
 func firstLegAtomicFixture(t *testing.T, j *Journal, suffix, account, market, symbol string) QFinalCampaignFirstLegRequest {
+	return a150FirstLegAtomicFixture(t, j, suffix, account, market, symbol)
+}
+
+func legacyFirstLegAtomicFixture(t *testing.T, j *Journal, suffix, account, market, symbol string) QFinalCampaignFirstLegRequest {
 	t.Helper()
 	qFinal := qFinalIssueFixture(t, j, suffix)
 	qFinal.Issue.Decision.AccountRef = account

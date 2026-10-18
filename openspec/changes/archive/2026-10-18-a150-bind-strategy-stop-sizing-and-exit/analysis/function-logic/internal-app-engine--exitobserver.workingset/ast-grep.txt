@@ -1,0 +1,124 @@
+internal/app/engine/exitloop.go:546:func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]managed, error) {
+internal/app/engine/exitloop.go:547:	positions, err := o.opts.Journal.Positions(ctx, o.opts.AccountRef)
+internal/app/engine/exitloop.go:548:	if err != nil {
+internal/app/engine/exitloop.go:549:		return nil, err
+internal/app/engine/exitloop.go:550:	}
+internal/app/engine/exitloop.go:551:	stateResults, err := o.opts.Journal.OpenExitStateResults(ctx, o.opts.AccountRef)
+internal/app/engine/exitloop.go:552:	if err != nil {
+internal/app/engine/exitloop.go:553:		return nil, err
+internal/app/engine/exitloop.go:554:	}
+internal/app/engine/exitloop.go:555:	byPosition := make(map[string]journal.ExitStateResult, len(stateResults))
+internal/app/engine/exitloop.go:556:	for _, result := range stateResults {
+internal/app/engine/exitloop.go:557:		byPosition[result.State.PositionID] = result
+internal/app/engine/exitloop.go:558:	}
+internal/app/engine/exitloop.go:559:
+internal/app/engine/exitloop.go:560:	var out, refused []managed
+internal/app/engine/exitloop.go:561:	for _, p := range positions {
+internal/app/engine/exitloop.go:562:		if p.State == journal.PositionClosed || isZeroQuantity(p.Quantity) {
+internal/app/engine/exitloop.go:563:			continue
+internal/app/engine/exitloop.go:564:		}
+internal/app/engine/exitloop.go:565:		if !p.ExitEligible() {
+internal/app/engine/exitloop.go:566:			// exit-policy: entry 결정이 없는 포지션은 exit 정책의 대상이 아니며
+internal/app/engine/exitloop.go:567:			// 발견 시 알림을 발송한다. There is no stop to build a baseline out
+internal/app/engine/exitloop.go:568:			// of and no risk to measure R against, so the honest answer is to
+internal/app/engine/exitloop.go:569:			// name it rather than to invent one.
+internal/app/engine/exitloop.go:570:			cycle.Unmanaged++
+internal/app/engine/exitloop.go:571:			o.alertUnmanaged(ctx, p)
+internal/app/engine/exitloop.go:572:			continue
+internal/app/engine/exitloop.go:573:		}
+internal/app/engine/exitloop.go:574:		// a090: exit 대상이 확정된 첫 자리 — 여기서 표시해야 아래 탈락(B8 · B12 · B14 · B21)이 전부 미관측으로 세어짐.
+internal/app/engine/exitloop.go:575:		o.markHeld(cycle, p)
+internal/app/engine/exitloop.go:576:		result, ok := byPosition[p.ID]
+internal/app/engine/exitloop.go:577:		state := result.State
+internal/app/engine/exitloop.go:578:		reJudging := false
+internal/app/engine/exitloop.go:579:		reJudgeVersion := int64(0)
+internal/app/engine/exitloop.go:580:		if !ok {
+internal/app/engine/exitloop.go:581:			opened, err := o.openState(ctx, p)
+internal/app/engine/exitloop.go:582:			if err != nil {
+internal/app/engine/exitloop.go:583:				if cycle.Err == nil {
+internal/app/engine/exitloop.go:584:					cycle.Err = err
+internal/app/engine/exitloop.go:585:				}
+internal/app/engine/exitloop.go:586:				continue
+internal/app/engine/exitloop.go:587:			}
+internal/app/engine/exitloop.go:588:			if opened.PositionID == "" {
+internal/app/engine/exitloop.go:589:				// a090: 완료된 정책은 미관측 계수 범위 밖 — 위 표시를 해제함(관측 실패가 아니라 정책 수명).
+internal/app/engine/exitloop.go:590:				o.unmarkHeld(cycle, p.ID)
+internal/app/engine/exitloop.go:591:				// The state exists and is completed: the position closed and
+internal/app/engine/exitloop.go:592:				// reopened is a new instance, and a completed policy judges
+internal/app/engine/exitloop.go:593:				// nothing further.
+internal/app/engine/exitloop.go:594:				continue
+internal/app/engine/exitloop.go:595:			}
+internal/app/engine/exitloop.go:596:			cycle.Opened++
+internal/app/engine/exitloop.go:597:			state = opened
+internal/app/engine/exitloop.go:598:		}
+internal/app/engine/exitloop.go:599:		if result.Corruption != nil {
+internal/app/engine/exitloop.go:600:			q, qerr := o.opts.Journal.QuarantineExitSnapshot(ctx, p.ID, p.InstanceSeq,
+internal/app/engine/exitloop.go:601:				"stored_snapshot_corrupt", result.Corruption.Error())
+internal/app/engine/exitloop.go:602:			if qerr != nil {
+internal/app/engine/exitloop.go:603:				if cycle.Err == nil {
+internal/app/engine/exitloop.go:604:					cycle.Err = qerr
+internal/app/engine/exitloop.go:605:				}
+internal/app/engine/exitloop.go:606:				continue
+internal/app/engine/exitloop.go:607:			}
+internal/app/engine/exitloop.go:608:			refused = append(refused, managed{position: p, state: state,
+internal/app/engine/exitloop.go:609:				identityErr: fmt.Errorf("%w (quarantine version %d)", result.Corruption, q.Version)})
+internal/app/engine/exitloop.go:610:			o.announceQuarantine(ctx, p, q)
+internal/app/engine/exitloop.go:611:			continue
+internal/app/engine/exitloop.go:612:		}
+internal/app/engine/exitloop.go:613:		if q, active, qerr := o.opts.Journal.ActiveExitSnapshotQuarantine(ctx, p.ID, p.InstanceSeq); qerr != nil {
+internal/app/engine/exitloop.go:614:			if cycle.Err == nil {
+internal/app/engine/exitloop.go:615:				cycle.Err = qerr
+internal/app/engine/exitloop.go:616:			}
+internal/app/engine/exitloop.go:617:			continue
+internal/app/engine/exitloop.go:618:		} else if active && !q.NeedsReJudgement() {
+internal/app/engine/exitloop.go:619:			refused = append(refused, managed{position: p, state: state,
+internal/app/engine/exitloop.go:620:				identityErr: fmt.Errorf("%w (version %d): %s", journal.ErrExitSnapshotQuarantined, q.Version, q.Reason)})
+internal/app/engine/exitloop.go:621:			continue
+internal/app/engine/exitloop.go:622:		} else if active {
+internal/app/engine/exitloop.go:623:			// The selector that wrote this quarantine is older than the one running
+internal/app/engine/exitloop.go:624:			// now, so the comparison it refused may reach a different answer — and
+internal/app/engine/exitloop.go:625:			// until it is allowed to run, this position is not judged at all, its stop
+internal/app/engine/exitloop.go:626:			// included.
+internal/app/engine/exitloop.go:627:			//
+internal/app/engine/exitloop.go:628:			// Two things make letting it through safe, and both are code, not comment:
+internal/app/engine/exitloop.go:629:			// the retry is spent once a price is in hand rather than wherever the
+internal/app/engine/exitloop.go:630:			// judgement happens to land (D8), and the pass never cancels a working
+internal/app/engine/exitloop.go:631:			// order before the transaction that may still refuse it (D9). It does
+internal/app/engine/exitloop.go:632:			// still arm: a rung promotion is submitted only after the judgement
+internal/app/engine/exitloop.go:633:			// commits, so a refusal cannot have placed anything.
+internal/app/engine/exitloop.go:634:			reJudging = true
+internal/app/engine/exitloop.go:635:			reJudgeVersion = q.Version
+internal/app/engine/exitloop.go:636:			o.log(obs.EventExitSnapshotQuarantined, false,
+internal/app/engine/exitloop.go:637:				obs.FieldSymbol, p.Symbol,
+internal/app/engine/exitloop.go:638:				"position_id", p.ID,
+internal/app/engine/exitloop.go:639:				"quarantine_version", q.Version,
+internal/app/engine/exitloop.go:640:				"selector_revision", q.SelectorRevision,
+internal/app/engine/exitloop.go:641:				"current_selector_revision", exitpolicy.RecoverySelectorRevision,
+internal/app/engine/exitloop.go:642:				obs.FieldDetail, "the recovery selector has changed since this quarantine was written; "+
+internal/app/engine/exitloop.go:643:					"the generation is being re-judged once")
+internal/app/engine/exitloop.go:644:		}
+internal/app/engine/exitloop.go:645:		identity, identityErr := managedPolicyIdentity(state, p.Adopted())
+internal/app/engine/exitloop.go:646:		if identityErr != nil {
+internal/app/engine/exitloop.go:647:			q, qerr := o.opts.Journal.QuarantineExitSnapshot(ctx, p.ID, p.InstanceSeq,
+internal/app/engine/exitloop.go:648:				"legacy_policy_identity_unknown", identityErr.Error())
+internal/app/engine/exitloop.go:649:			if qerr != nil {
+internal/app/engine/exitloop.go:650:				if cycle.Err == nil {
+internal/app/engine/exitloop.go:651:					cycle.Err = qerr
+internal/app/engine/exitloop.go:652:				}
+internal/app/engine/exitloop.go:653:				continue
+internal/app/engine/exitloop.go:654:			}
+internal/app/engine/exitloop.go:655:			refused = append(refused, managed{position: p, state: state,
+internal/app/engine/exitloop.go:656:				identityErr: fmt.Errorf("%w (quarantine version %d)", identityErr, q.Version)})
+internal/app/engine/exitloop.go:657:			o.announceQuarantine(ctx, p, q)
+internal/app/engine/exitloop.go:658:			continue
+internal/app/engine/exitloop.go:659:		}
+internal/app/engine/exitloop.go:660:		out = append(out, managed{
+internal/app/engine/exitloop.go:661:			position: p, state: state, policyIdentity: identity, identityErr: identityErr,
+internal/app/engine/exitloop.go:662:			reJudge: reJudging, reJudgeVersion: reJudgeVersion,
+internal/app/engine/exitloop.go:663:		})
+internal/app/engine/exitloop.go:664:	}
+internal/app/engine/exitloop.go:665:	// Quarantined rows come last. alertRefused may synchronously retry a
+internal/app/engine/exitloop.go:666:	// publisher, so every valid position—including an emergency breach—is
+internal/app/engine/exitloop.go:667:	// recorded/armed/submitted before alert delivery can wait.
+internal/app/engine/exitloop.go:668:	return append(out, refused...), nil
+internal/app/engine/exitloop.go:669:}

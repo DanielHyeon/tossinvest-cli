@@ -22,6 +22,26 @@ type RRMetric struct {
 }
 type ParkerRRDiagnostics struct{ Space, Target, Realized RRMetric }
 
+// diagnosticDecimal bounds caller-supplied input before the shared parser.
+func diagnosticDecimal(value string) bool {
+	if len(value) == 0 || len(value) > 64 {
+		return false
+	}
+	digits, point := 0, false
+	for i, c := range value {
+		switch {
+		case c >= '0' && c <= '9':
+			digits++
+		case c == '.' && !point:
+			point = true
+		case (c == '+' || c == '-') && i == 0:
+		default:
+			return false
+		}
+	}
+	return digits > 0
+}
+
 // ParkerRRFromDecision은 호출자가 제공한 결정 기록을 변경하지 않고 계산함.
 func ParkerRRFromDecision(r DecisionRecord) ParkerRRDiagnostics {
 	unit := ""
@@ -35,6 +55,11 @@ func ParkerRRFromDecision(r DecisionRecord) ParkerRRDiagnostics {
 	planned := RRMetric{State: RRUnknown, Reason: "missing planned input", NumeratorUnit: unit, DenominatorUnit: unit, PriceBasis: basis, PolicyVersion: r.LaneVersion, Provenance: "caller-supplied decision record; unverified"}
 	result := ParkerRRDiagnostics{Space: planned, Target: planned, Realized: RRMetric{State: RRUnknown, Reason: "no realized evidence", PolicyVersion: r.LaneVersion}}
 	if r.EntryPrice == "" || r.StopPrice == "" || r.Currency == "" || r.LaneVersion == "" {
+		return result
+	}
+	if !diagnosticDecimal(r.EntryPrice) || !diagnosticDecimal(r.StopPrice) {
+		result.Space.State, result.Target.State = RRInvalid, RRInvalid
+		result.Space.Reason, result.Target.Reason = "invalid planned input", "invalid planned input"
 		return result
 	}
 	entry, e := positive(r.EntryPrice)
@@ -52,6 +77,10 @@ func ParkerRRFromDecision(r DecisionRecord) ParkerRRDiagnostics {
 		out.Denominator = risk.RatString()
 		out.Reason = "missing numerator"
 		if raw == "" {
+			return out
+		}
+		if !diagnosticDecimal(raw) {
+			out.State, out.Reason = RRInvalid, "invalid numerator"
 			return out
 		}
 		value, ok := positive(raw)
@@ -98,6 +127,12 @@ func ParkerRealizedRR(f RRFill) RRMetric {
 	out := RRMetric{State: RRUnknown, Reason: "missing or unconfirmed realized evidence", Provenance: "caller-supplied, unverified", PriceBasis: f.PriceBasis, PolicyVersion: LaneVersion, NumeratorUnit: f.AccountCurrency, DenominatorUnit: f.AccountCurrency}
 	if !f.EntryFinal || !f.ExitFinal || !f.CostsFinal || f.AverageEntry == "" || f.InitialStop == "" || f.Quantity == "" || f.PriceCurrency == "" || f.PriceBasis == "" || f.StopCurrency == "" || f.StopBasis == "" || f.AccountCurrency == "" || f.FXRate == "" || f.FXFrom == "" || f.FXTo == "" || f.FXSource == "" || f.FXAt.IsZero() || f.EntryAt.IsZero() || f.GrossPnL == "" || f.Costs == "" || f.PnLCurrency == "" || f.CostsCurrency == "" || f.FillSource == "" || f.ExitSource == "" || f.CostSource == "" {
 		return out
+	}
+	for _, value := range []string{f.AverageEntry, f.InitialStop, f.Quantity, f.FXRate, f.GrossPnL, f.Costs} {
+		if !diagnosticDecimal(value) {
+			out.State, out.Reason = RRInvalid, "invalid or incompatible realized evidence"
+			return out
+		}
 	}
 	entry, e := positive(f.AverageEntry)
 	stop, s := positive(f.InitialStop)

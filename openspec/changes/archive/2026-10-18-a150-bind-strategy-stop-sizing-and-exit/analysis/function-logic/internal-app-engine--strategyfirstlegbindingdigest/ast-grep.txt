@@ -1,0 +1,6 @@
+internal/app/engine/strategy_account_first_leg_authority.go:401:func strategyFirstLegBindingDigest(result strategyflow.Result, account strategyaccount.Authority, riskDigest, activationDigest string) string {
+internal/app/engine/strategy_account_first_leg_authority.go:402:	value := strings.Join([]string{"TossOS/production-first-leg/v1", result.Lineage.Identity, result.ExecutionTerms.Identity(),
+internal/app/engine/strategy_account_first_leg_authority.go:403:		account.Identity(), riskDigest, activationDigest}, "\x00")
+internal/app/engine/strategy_account_first_leg_authority.go:404:	sum := sha256.Sum256([]byte(value))
+internal/app/engine/strategy_account_first_leg_authority.go:405:	return "sha256:" + hex.EncodeToString(sum[:])
+internal/app/engine/strategy_account_first_leg_authority.go:406:}

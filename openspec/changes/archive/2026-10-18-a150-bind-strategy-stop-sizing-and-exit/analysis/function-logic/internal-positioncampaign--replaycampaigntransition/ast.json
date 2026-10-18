@@ -1,0 +1,508 @@
+{
+  "file": "internal/positioncampaign/replay.go",
+  "source_sha256": "7f71c0d45024aacff66358acd9ae389f32f4742466005e4b815ccaa3490381db",
+  "package": "positioncampaign",
+  "function": "replayCampaignTransition",
+  "signature": "replayCampaignTransition(params=2, results=2)",
+  "start": {
+    "line": 344,
+    "column": 1
+  },
+  "end": {
+    "line": 405,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 345,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 346,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "switch",
+      "at": {
+        "line": 353,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 354,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 356,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 358,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "case",
+      "at": {
+        "line": 360,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 361,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "else",
+      "at": {
+        "line": 363,
+        "column": 10
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "case",
+      "at": {
+        "line": 366,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "case",
+      "at": {
+        "line": 368,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 369,
+        "column": 3
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "else",
+      "at": {
+        "line": 371,
+        "column": 10
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 371,
+        "column": 10
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "else",
+      "at": {
+        "line": 373,
+        "column": 10
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "case",
+      "at": {
+        "line": 376,
+        "column": 2
+      }
+    },
+    {
+      "id": "B17",
+      "kind": "switch",
+      "at": {
+        "line": 377,
+        "column": 3
+      }
+    },
+    {
+      "id": "B18",
+      "kind": "case",
+      "at": {
+        "line": 378,
+        "column": 3
+      }
+    },
+    {
+      "id": "B19",
+      "kind": "case",
+      "at": {
+        "line": 380,
+        "column": 3
+      }
+    },
+    {
+      "id": "B20",
+      "kind": "case",
+      "at": {
+        "line": 382,
+        "column": 3
+      }
+    },
+    {
+      "id": "B21",
+      "kind": "if",
+      "at": {
+        "line": 383,
+        "column": 4
+      }
+    },
+    {
+      "id": "B22",
+      "kind": "else",
+      "at": {
+        "line": 385,
+        "column": 11
+      }
+    },
+    {
+      "id": "B23",
+      "kind": "case",
+      "at": {
+        "line": 388,
+        "column": 3
+      }
+    },
+    {
+      "id": "B24",
+      "kind": "case",
+      "at": {
+        "line": 390,
+        "column": 3
+      }
+    },
+    {
+      "id": "B25",
+      "kind": "case",
+      "at": {
+        "line": 393,
+        "column": 2
+      }
+    },
+    {
+      "id": "B26",
+      "kind": "case",
+      "at": {
+        "line": 399,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 347,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 349,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 400,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 404,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 21
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 357,
+        "column": 21
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 359,
+        "column": 21
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 362,
+        "column": 22
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 364,
+        "column": 22
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 367,
+        "column": 21
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 370,
+        "column": 22
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 372,
+        "column": 22
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 22
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 379,
+        "column": 22
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 381,
+        "column": 22
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 23
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 23
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 389,
+        "column": 22
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 391,
+        "column": 22
+      },
+      "text": "TransitionCampaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 403,
+        "column": 15
+      },
+      "text": "LatchEntryBlocked"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 355,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 357,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 359,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 362,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 364,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 367,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 370,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 372,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 374,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 379,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 381,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 384,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 386,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 389,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 391,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 398,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 403,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

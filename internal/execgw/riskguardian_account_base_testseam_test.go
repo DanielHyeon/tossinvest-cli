@@ -135,8 +135,12 @@ func TestQFinalCampaignFirstLegProjectsGuardianOwnedLineageAllEightLanes(t *test
 				t.Fatal(err)
 			}
 			manifest := "sha256:" + strings.Repeat("5", 64)
+			policy, err := journal.NewStrategyExitPolicySnapshot("")
+			if err != nil {
+				t.Fatal(err)
+			}
 			request := execgw.QFinalCampaignFirstLegIssuance{
-				Entry: entry, Result: result, ActivationManifestDigest: manifest,
+				Entry: entry, Result: result, ExitPolicy: &policy, ActivationManifestDigest: manifest,
 				AttemptID: "attempt-" + suffix, Revision: 1,
 				Campaign: journal.FirstLegCampaignRequest{CampaignID: entry.Admission.Owner.CampaignID,
 					ExpectedPositionGeneration: 0, ExpectedPositionVersion: 0,
@@ -273,7 +277,11 @@ func TestQFinalCampaignFirstLegRejectsTamperWithoutWritesPairedKRUS(t *testing.T
 				if err != nil {
 					t.Fatal(err)
 				}
-				request := execgw.QFinalCampaignFirstLegIssuance{Entry: entry, Result: result,
+				policy, err := journal.NewStrategyExitPolicySnapshot("")
+				if err != nil {
+					t.Fatal(err)
+				}
+				request := execgw.QFinalCampaignFirstLegIssuance{Entry: entry, Result: result, ExitPolicy: &policy,
 					ActivationManifestDigest: "sha256:" + strings.Repeat("a", 64), AttemptID: "attempt-" + decisionID, Revision: 1,
 					Campaign: journal.FirstLegCampaignRequest{CampaignID: entry.Admission.Owner.CampaignID,
 						ExpectedPositionGeneration: 0, ExpectedPositionVersion: 0, CreateCommandKey: "create-" + decisionID,
@@ -372,7 +380,11 @@ func qFinalCampaignFirstLegIssuanceFixture(t *testing.T, rig *guardianRig, descr
 	if err != nil {
 		t.Fatal(err)
 	}
-	request := execgw.QFinalCampaignFirstLegIssuance{Entry: entry, Result: result,
+	policy, err := journal.NewStrategyExitPolicySnapshot("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := execgw.QFinalCampaignFirstLegIssuance{Entry: entry, Result: result, ExitPolicy: &policy,
 		ActivationManifestDigest: "sha256:" + strings.Repeat("a", 64), AttemptID: "attempt-" + suffix, Revision: 1,
 		Campaign: journal.FirstLegCampaignRequest{CampaignID: entry.Admission.Owner.CampaignID,
 			ExpectedPositionGeneration: 0, ExpectedPositionVersion: 0, CreateCommandKey: "create-" + suffix,

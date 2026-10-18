@@ -1,0 +1,47 @@
+internal/app/engine/exitloop.go:710:func (o *ExitObserver) openState(ctx context.Context, p journal.Position) (journal.ExitState, error) {
+internal/app/engine/exitloop.go:711:	if p.Adopted() {
+internal/app/engine/exitloop.go:712:		return o.openAdoptedState(ctx, p)
+internal/app/engine/exitloop.go:713:	}
+internal/app/engine/exitloop.go:714:	decision, err := o.opts.Journal.LookupDecision(ctx, p.EntryDecisionID)
+internal/app/engine/exitloop.go:715:	if err != nil {
+internal/app/engine/exitloop.go:716:		return journal.ExitState{}, fmt.Errorf(
+internal/app/engine/exitloop.go:717:			"engine: reading the entry decision of position %s: %w", p.ID, err)
+internal/app/engine/exitloop.go:718:	}
+internal/app/engine/exitloop.go:719:	preimage, err := journal.ParsePreimage(decision.PreimageKind, decision.RiskPreimage)
+internal/app/engine/exitloop.go:720:	if err != nil {
+internal/app/engine/exitloop.go:721:		return journal.ExitState{}, fmt.Errorf(
+internal/app/engine/exitloop.go:722:			"engine: reading the entry decision of position %s: %w", p.ID, err)
+internal/app/engine/exitloop.go:723:	}
+internal/app/engine/exitloop.go:724:	entry, ok := preimage.(journal.RiskIntent)
+internal/app/engine/exitloop.go:725:	if !ok {
+internal/app/engine/exitloop.go:726:		return journal.ExitState{}, fmt.Errorf(
+internal/app/engine/exitloop.go:727:			"engine: the entry decision of position %s is a %s and carries no stop price",
+internal/app/engine/exitloop.go:728:			p.ID, decision.PreimageKind)
+internal/app/engine/exitloop.go:729:	}
+internal/app/engine/exitloop.go:730:
+internal/app/engine/exitloop.go:731:	kind, policyID := journal.ExitPolicyRatchet, ""
+internal/app/engine/exitloop.go:732:	if o.opts.CommonPolicy != "" {
+internal/app/engine/exitloop.go:733:		kind, policyID = journal.ExitPolicyLadder, o.opts.CommonPolicy
+internal/app/engine/exitloop.go:734:	}
+internal/app/engine/exitloop.go:735:	state, err := o.opts.Journal.OpenExitState(ctx, journal.ExitStateSeed{
+internal/app/engine/exitloop.go:736:		PositionID:  p.ID,
+internal/app/engine/exitloop.go:737:		PolicyKind:  kind,
+internal/app/engine/exitloop.go:738:		PolicyID:    policyID,
+internal/app/engine/exitloop.go:739:		EntryPrice:  entry.EntryPrice,
+internal/app/engine/exitloop.go:740:		InitialStop: entry.StopPrice,
+internal/app/engine/exitloop.go:741:	})
+internal/app/engine/exitloop.go:742:	switch {
+internal/app/engine/exitloop.go:743:	case errors.Is(err, journal.ErrExitStateExists):
+internal/app/engine/exitloop.go:744:		// It exists but was not in the open set, so it is completed.
+internal/app/engine/exitloop.go:745:		return journal.ExitState{}, nil
+internal/app/engine/exitloop.go:746:	case err != nil:
+internal/app/engine/exitloop.go:747:		return journal.ExitState{}, fmt.Errorf("engine: opening the exit state of %s: %w", p.ID, err)
+internal/app/engine/exitloop.go:748:	}
+internal/app/engine/exitloop.go:749:	o.log(obs.EventEngineStarted, false,
+internal/app/engine/exitloop.go:750:		obs.FieldSymbol, p.Symbol,
+internal/app/engine/exitloop.go:751:		"position_id", p.ID,
+internal/app/engine/exitloop.go:752:		"baseline", state.Baseline,
+internal/app/engine/exitloop.go:753:		"initial_risk", state.InitialRisk,
+internal/app/engine/exitloop.go:754:		obs.FieldDetail, "the exit policy is now managing this position")
+internal/app/engine/exitloop.go:755:	return state, nil
+internal/app/engine/exitloop.go:756:}

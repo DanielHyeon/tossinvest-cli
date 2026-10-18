@@ -111,6 +111,9 @@ const (
 	QuarantineReleaseSelectorRevised = "SELECTOR_REVISED"
 
 	ArmSuppressedWorkingOrder = "working_order_not_cleared"
+	// Floor reconciliation commits a tighter admitted baseline before any order
+	// clearing; the next actual observation can submit the protective proposal.
+	ArmSuppressedFloorReconciliation = "admitted_floor_reconciliation"
 	// ArmSuppressedReJudge — the judgement ran only because a quarantine written by
 	// an older recovery selector earned its one re-judgement, and that pass declined
 	// to take a proposal that would have required cancelling a working order first.
@@ -131,7 +134,7 @@ const (
 // corruption — losing the evidence D9 exists to record and firing a validator
 // whose job is to detect real corruption (a084 개정 2).
 func knownArmSuppression(reason string) bool {
-	return reason == ArmSuppressedWorkingOrder || reason == ArmSuppressedReJudge
+	return reason == ArmSuppressedWorkingOrder || reason == ArmSuppressedReJudge || reason == ArmSuppressedFloorReconciliation
 }
 
 var (

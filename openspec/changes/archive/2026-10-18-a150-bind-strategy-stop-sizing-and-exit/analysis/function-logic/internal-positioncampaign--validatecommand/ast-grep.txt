@@ -1,0 +1,20 @@
+internal/positioncampaign/command.go:22:func ValidateCommand(kind, key string) error {
+internal/positioncampaign/command.go:23:	switch CommandKind(kind) {
+internal/positioncampaign/command.go:24:	case CommandCreate, CommandPlanLeg, CommandLinkOrder, CommandCancelProspective,
+internal/positioncampaign/command.go:25:		CommandApplyFill, CommandUpdateStop, CommandRecordEvidence:
+internal/positioncampaign/command.go:26:	default:
+internal/positioncampaign/command.go:27:		return fmt.Errorf("%w: unknown kind %q", ErrInvalidCommand, kind)
+internal/positioncampaign/command.go:28:	}
+internal/positioncampaign/command.go:29:	if len(key) == 0 || len(key) > 128 {
+internal/positioncampaign/command.go:30:		return fmt.Errorf("%w: key length %d is outside 1..128", ErrInvalidCommand, len(key))
+internal/positioncampaign/command.go:31:	}
+internal/positioncampaign/command.go:32:	for i := 0; i < len(key); i++ {
+internal/positioncampaign/command.go:33:		c := key[i]
+internal/positioncampaign/command.go:34:		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+internal/positioncampaign/command.go:35:			(c >= '0' && c <= '9') || c == '.' || c == '_' || c == ':' || c == '-' {
+internal/positioncampaign/command.go:36:			continue
+internal/positioncampaign/command.go:37:		}
+internal/positioncampaign/command.go:38:		return fmt.Errorf("%w: key %q contains a non-canonical byte at %d", ErrInvalidCommand, key, i)
+internal/positioncampaign/command.go:39:	}
+internal/positioncampaign/command.go:40:	return nil
+internal/positioncampaign/command.go:41:}

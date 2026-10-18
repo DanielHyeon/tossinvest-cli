@@ -245,6 +245,9 @@ func seedPolicyIdentity(kind, policyID string, adopted bool,
 // write access to what has been sold.
 type ExitJudgement struct {
 	PositionID string
+	// ExpectedFloorState fences floor reconciliation to the evaluator input.
+	ExpectedFloorState    *ExitState
+	ExpectedFloorQuantity string
 	// LifecycleGeneration is copied from the exact ExitState observed by the
 	// engine. Zero is accepted only for legacy in-process callers and resolves to
 	// the current generation; production always supplies a positive value.
@@ -317,10 +320,11 @@ type ExitProposal struct {
 type ExitArmOutcome string
 
 const (
-	ExitArmNotRequested            ExitArmOutcome = "not_requested"
-	ExitArmArmed                   ExitArmOutcome = "armed"
-	ExitArmSuppressedSavedMonotone ExitArmOutcome = "suppressed_saved_monotone"
-	ExitArmSuppressedWorkingOrder  ExitArmOutcome = "suppressed_working_order"
+	ExitArmNotRequested                  ExitArmOutcome = "not_requested"
+	ExitArmArmed                         ExitArmOutcome = "armed"
+	ExitArmSuppressedSavedMonotone       ExitArmOutcome = "suppressed_saved_monotone"
+	ExitArmSuppressedWorkingOrder        ExitArmOutcome = "suppressed_working_order"
+	ExitArmSuppressedFloorReconciliation ExitArmOutcome = "suppressed_floor_reconciliation"
 )
 
 // ExitJudgementResult is the only execution authority returned after the
@@ -436,6 +440,26 @@ func (j *Journal) recordExitJudgementTx(ctx context.Context, judgement ExitJudge
 	if err != nil {
 		return err
 	}
+	if expected := judgement.ExpectedFloorState; expected != nil {
+		currentID, expectedID := "", ""
+		if current.Effective != nil {
+			currentID = current.Effective.Line.SnapshotID
+		}
+		if expected.Snapshot.Snapshot != nil {
+			expectedID = expected.Snapshot.Snapshot.Line.SnapshotID
+		}
+		floorState, err := scanExitState(tx.QueryRowContext(ctx, exitStateSelect+` WHERE position_id=?`, id))
+		if err != nil {
+			return fmt.Errorf("journal: reading floor state of %s: %w", id, err)
+		}
+		var quantity string
+		if err := tx.QueryRowContext(ctx, `SELECT quantity FROM positions WHERE id=?`, id).Scan(&quantity); err != nil {
+			return fmt.Errorf("journal: reading floor quantity of %s: %w", id, err)
+		}
+		if currentID != expectedID || current.Baseline != expected.Baseline || current.HighWater != expected.HighWater || current.RatchetLevel != expected.RatchetLevel || current.ActiveRung != expected.ActiveRung || quantity != judgement.ExpectedFloorQuantity || floorState.TakenRatioTotal != expected.TakenRatioTotal || floorState.PendingAction != expected.PendingAction || floorState.PendingLevel != expected.PendingLevel || floorState.PendingIntentID != expected.PendingIntentID {
+			return fmt.Errorf("%w: floor candidate observed different exit inputs", ErrExitObservationConflict)
+		}
+	}
 	if current.Completed {
 		return fmt.Errorf("%w: %s", ErrExitStateCompleted, id)
 	}
@@ -511,6 +535,9 @@ func (j *Journal) recordExitJudgementTx(ctx context.Context, judgement ExitJudge
 		}
 		selected, source, selectErr := exitpolicy.SelectRecoverySnapshot(savedLine, recomputed.Line)
 		if selectErr != nil {
+			if judgement.ExpectedFloorState != nil {
+				return fmt.Errorf("%w: admitted floor recovery: %v", ErrExitObservationConflict, selectErr)
+			}
 			if _, qerr := quarantineExitSnapshotTx(ctx, tx, id, recomputed.Line.PositionGeneration,
 				QuarantineReasonAmbiguousRecovery, selectErr.Error(), now); qerr != nil {
 				return qerr
@@ -617,6 +644,8 @@ func (j *Journal) recordExitJudgementTx(ctx context.Context, judgement ExitJudge
 		proposal := *judgement.Proposal
 		result.ArmOutcome = ExitArmArmed
 		result.ArmedProposal = &proposal
+	case judgement.ArmSuppressedReason == ArmSuppressedFloorReconciliation:
+		result.ArmOutcome = ExitArmSuppressedFloorReconciliation
 	case judgement.ArmSuppressedReason == ArmSuppressedWorkingOrder,
 		judgement.ArmSuppressedReason == ArmSuppressedReJudge:
 		result.ArmOutcome = ExitArmSuppressedWorkingOrder

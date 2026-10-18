@@ -1,0 +1,64 @@
+internal/execgw/riskguardian_first_leg.go:49:func (g *RiskGuardian) PrecheckQFinalCampaignFirstLeg(request QFinalCampaignFirstLegIssuance) (QFinalCampaignFirstLegPrecheck, error) {
+internal/execgw/riskguardian_first_leg.go:50:	entry, err := g.PrecheckQFinalEntry(request.Entry)
+internal/execgw/riskguardian_first_leg.go:51:	if err != nil {
+internal/execgw/riskguardian_first_leg.go:52:		return QFinalCampaignFirstLegPrecheck{}, err
+internal/execgw/riskguardian_first_leg.go:53:	}
+internal/execgw/riskguardian_first_leg.go:54:	lineage := request.Result.Lineage
+internal/execgw/riskguardian_first_leg.go:55:	terms := request.Result.ExecutionTerms
+internal/execgw/riskguardian_first_leg.go:56:	policyVersion, err := journal.QFinalPolicyVersion(g.policyVersion, entry.admission.TransactionID)
+internal/execgw/riskguardian_first_leg.go:57:	if err != nil {
+internal/execgw/riskguardian_first_leg.go:58:		return QFinalCampaignFirstLegPrecheck{}, err
+internal/execgw/riskguardian_first_leg.go:59:	}
+internal/execgw/riskguardian_first_leg.go:60:	owner := entry.admission.Owner
+internal/execgw/riskguardian_first_leg.go:61:	if strings.TrimSpace(owner.Key.ProspectiveGeneration) != "" {
+internal/execgw/riskguardian_first_leg.go:62:		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalOwnerConflict, "prospective_generation", "first-leg token is journal-owned", nil)
+internal/execgw/riskguardian_first_leg.go:63:	}
+internal/execgw/riskguardian_first_leg.go:64:	entryMajor, entryOK := terms.Entry().MajorDecimal()
+internal/execgw/riskguardian_first_leg.go:65:	stopMajor, stopOK := terms.EffectiveStop().MajorDecimal()
+internal/execgw/riskguardian_first_leg.go:66:	targetMajor, targetOK := terms.Target().MajorDecimal()
+internal/execgw/riskguardian_first_leg.go:67:	if !entryOK || !stopOK || !targetOK {
+internal/execgw/riskguardian_first_leg.go:68:		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
+internal/execgw/riskguardian_first_leg.go:69:			"first_leg_price_unit", "sealed strategy execution price unit is invalid", nil)
+internal/execgw/riskguardian_first_leg.go:70:	}
+internal/execgw/riskguardian_first_leg.go:71:	if request.Result.Quantity != entry.decision.QCandidate || lineage.AccountRef != g.accountRef ||
+internal/execgw/riskguardian_first_leg.go:72:		!strings.EqualFold(string(lineage.Market), request.Entry.Market) || lineage.Symbol != request.Entry.Symbol ||
+internal/execgw/riskguardian_first_leg.go:73:		entryMajor != request.Entry.EntryPrice || stopMajor != request.Entry.StopPrice ||
+internal/execgw/riskguardian_first_leg.go:74:		targetMajor != request.Entry.TargetPrice || lineage.LaneID != owner.LaneID ||
+internal/execgw/riskguardian_first_leg.go:75:		lineage.CampaignID != owner.CampaignID || request.Campaign.CampaignID != owner.CampaignID {
+internal/execgw/riskguardian_first_leg.go:76:		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
+internal/execgw/riskguardian_first_leg.go:77:			"first_leg_lineage", "sealed strategy result, q_candidate, owner and campaign are not exactly bound", nil)
+internal/execgw/riskguardian_first_leg.go:78:	}
+internal/execgw/riskguardian_first_leg.go:79:	currentGeneration := request.Campaign.ExpectedPositionGeneration
+internal/execgw/riskguardian_first_leg.go:80:	if currentGeneration < 0 || currentGeneration >= math.MaxInt64 || request.Campaign.ExpectedPositionVersion < 0 ||
+internal/execgw/riskguardian_first_leg.go:81:		lineage.PositionGeneration != uint64(currentGeneration)+1 {
+internal/execgw/riskguardian_first_leg.go:82:		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalOwnerConflict,
+internal/execgw/riskguardian_first_leg.go:83:			"position_generation", "strategy prospective generation must be exactly campaign current generation plus one", nil)
+internal/execgw/riskguardian_first_leg.go:84:	}
+internal/execgw/riskguardian_first_leg.go:85:	if strings.TrimSpace(request.AttemptID) == "" || request.AttemptID != strings.TrimSpace(request.AttemptID) || request.Revision < 1 ||
+internal/execgw/riskguardian_first_leg.go:86:		strings.TrimSpace(request.ActivationManifestDigest) == "" || request.ActivationManifestDigest != strings.TrimSpace(request.ActivationManifestDigest) {
+internal/execgw/riskguardian_first_leg.go:87:		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
+internal/execgw/riskguardian_first_leg.go:88:			"first_leg_strategy", "complete strategy attempt and activation binding required", nil)
+internal/execgw/riskguardian_first_leg.go:89:	}
+internal/execgw/riskguardian_first_leg.go:90:	weekly, err := guardianWeeklyFirstLegBinding(lineage.LaneID, string(lineage.Market), request.Weekly)
+internal/execgw/riskguardian_first_leg.go:91:	if err != nil {
+internal/execgw/riskguardian_first_leg.go:92:		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
+internal/execgw/riskguardian_first_leg.go:93:			"weekly_reservation", "weekly first-leg reservation authority is missing or does not match the sealed lane", err)
+internal/execgw/riskguardian_first_leg.go:94:	}
+internal/execgw/riskguardian_first_leg.go:95:	issuedAt := g.clk.Now().UTC()
+internal/execgw/riskguardian_first_leg.go:96:	riskIntent := journal.RiskIntent{
+internal/execgw/riskguardian_first_leg.go:97:		AccountRef: g.accountRef, Market: entry.request.Market, Symbol: entry.intent.Symbol,
+internal/execgw/riskguardian_first_leg.go:98:		Side: string(risk.SideBuy), Quantity: strconv.FormatUint(entry.decision.QFinal, 10),
+internal/execgw/riskguardian_first_leg.go:99:		EntryPrice: entry.intent.LimitPrice, StopPrice: entry.intent.StopPrice,
+internal/execgw/riskguardian_first_leg.go:100:		TargetPrice: entry.intent.TargetPrice, PolicyVersion: policyVersion,
+internal/execgw/riskguardian_first_leg.go:101:	}
+internal/execgw/riskguardian_first_leg.go:102:	projected, err := journal.ProjectAcceptedStrategyflowLineage(journal.StrategyflowLineageProjectionRequest{
+internal/execgw/riskguardian_first_leg.go:103:		Result: request.Result, RiskIntent: riskIntent, ActivationManifestDigest: request.ActivationManifestDigest, CreatedAt: issuedAt,
+internal/execgw/riskguardian_first_leg.go:104:	})
+internal/execgw/riskguardian_first_leg.go:105:	if err != nil {
+internal/execgw/riskguardian_first_leg.go:106:		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
+internal/execgw/riskguardian_first_leg.go:107:			"first_leg_projection", "sealed strategy result cannot be bound to Guardian q_final", err)
+internal/execgw/riskguardian_first_leg.go:108:	}
+internal/execgw/riskguardian_first_leg.go:109:	strategy := journal.StrategyPlanRequest{Lineage: projected, AttemptID: request.AttemptID,
+internal/execgw/riskguardian_first_leg.go:110:		ActivationManifestDigest: request.ActivationManifestDigest, Revision: request.Revision, CreatedAt: issuedAt}
+internal/execgw/riskguardian_first_leg.go:111:	return QFinalCampaignFirstLegPrecheck{entry: entry, strategy: strategy, campaign: request.Campaign, weekly: weekly, issuedAt: issuedAt}, nil
+internal/execgw/riskguardian_first_leg.go:112:}

@@ -1,0 +1,252 @@
+{
+  "file": "internal/journal/strategy_weekly_first_leg_test.go",
+  "source_sha256": "2fa64960bf80aae576e9b61162028cca8816edd90a30bc9ee970f2cd8399124c",
+  "package": "journal",
+  "function": "weeklyFirstLegFixture",
+  "signature": "weeklyFirstLegFixture(params=6, results=1)",
+  "start": {
+    "line": 59,
+    "column": 1
+  },
+  "end": {
+    "line": 88,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 72,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 13
+      },
+      "text": "firstLegAtomicFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 16
+      },
+      "text": "a150NamedTestProjection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 12
+      },
+      "text": "a150BindFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 15
+      },
+      "text": "request.Strategy.CreatedAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 18
+      },
+      "text": "time.Parse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 16
+      },
+      "text": "session.ISOWeek"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 12
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 22
+      },
+      "text": "j.ReserveWeeklyMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 44
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 34
+      },
+      "text": "evaluated.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 75
+      },
+      "text": "evaluated.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 62,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 65,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 68,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 84,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

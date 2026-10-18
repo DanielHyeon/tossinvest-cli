@@ -1,0 +1,214 @@
+# node
+**4 definitions named "PrecheckQFinalCampaignFirstLeg"**
+Returning 4 in full — pick the one you need (no Read required).
+
+**PrecheckQFinalCampaignFirstLeg** (method)
+
+**Location:** internal/app/engine/a146_cap_zero_characterization_test.go:42
+**Signature:** `(request execgw.QFinalCampaignFirstLegIssuance) (execgw.QFinalCampaignFirstLegPrecheck, error)`
+
+```go
+42	func (g *a146CountingGuardian) PrecheckQFinalCampaignFirstLeg(request execgw.QFinalCampaignFirstLegIssuance) (execgw.QFinalCampaignFirstLegPrecheck, error) {
+43		g.prechecks.Add(1)
+44		precheck, err := g.RiskGuardian.PrecheckQFinalCampaignFirstLeg(request)
+45		g.mu.Lock()
+46		if g.firstErr == nil {
+47			g.firstErr = err
+48		}
+49		g.mu.Unlock()
+50		return precheck, err
+51	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** QFinalCampaignFirstLegIssuance (internal/execgw/riskguardian_first_leg.go:23), QFinalCampaignFirstLegPrecheck (internal/execgw/riskguardian_first_leg.go:35)
+
+---
+
+**PrecheckQFinalCampaignFirstLeg** (method)
+
+**Location:** internal/app/engine/strategy_first_leg_admission.go:65
+**Signature:** `(execgw.QFinalCampaignFirstLegIssuance) (execgw.QFinalCampaignFirstLegPrecheck, error)`
+
+```go
+65		PrecheckQFinalCampaignFirstLeg(execgw.QFinalCampaignFirstLegIssuance) (execgw.QFinalCampaignFirstLegPrecheck, error)
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** PrecheckQFinalCampaignFirstLeg (internal/app/engine/strategy_first_leg_admission_test.go:190) [dynamic: interface → impl @internal/app/engine/strategy_first_leg_admission_test.go:190], PrecheckQFinalCampaignFirstLeg (internal/execgw/riskguardian_first_leg.go:49) [dynamic: interface → impl @internal/execgw/riskguardian_first_leg.go:49]
+
+---
+
+**PrecheckQFinalCampaignFirstLeg** (method)
+
+**Location:** internal/app/engine/strategy_first_leg_admission_test.go:190
+**Signature:** `(request execgw.QFinalCampaignFirstLegIssuance) (execgw.QFinalCampaignFirstLegPrecheck, error)`
+
+```go
+190	func (s *firstLegGuardianSpy) PrecheckQFinalCampaignFirstLeg(request execgw.QFinalCampaignFirstLegIssuance) (execgw.QFinalCampaignFirstLegPrecheck, error) {
+191		s.precheckCalls++
+192		s.requests = append(s.requests, request)
+193		s.events = strings.TrimPrefix(s.events+",precheck", ",")
+194		return execgw.QFinalCampaignFirstLegPrecheck{}, s.precheckErr
+195	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** QFinalCampaignFirstLegPrecheck (internal/execgw/riskguardian_first_leg.go:35), QFinalCampaignFirstLegIssuance (internal/execgw/riskguardian_first_leg.go:23)
+**Called by ←** PrecheckQFinalCampaignFirstLeg (internal/app/engine/strategy_first_leg_admission.go:65) [dynamic: interface → impl @internal/app/engine/strategy_first_leg_admission_test.go:190]
+
+---
+
+**PrecheckQFinalCampaignFirstLeg** (method)
+
+**Location:** internal/execgw/riskguardian_first_leg.go:49
+**Signature:** `(request QFinalCampaignFirstLegIssuance) (QFinalCampaignFirstLegPrecheck, error)`
+
+```go
+49	func (g *RiskGuardian) PrecheckQFinalCampaignFirstLeg(request QFinalCampaignFirstLegIssuance) (QFinalCampaignFirstLegPrecheck, error) {
+50		entry, err := g.PrecheckQFinalEntry(request.Entry)
+51		if err != nil {
+52			return QFinalCampaignFirstLegPrecheck{}, err
+53		}
+54		lineage := request.Result.Lineage
+55		terms := request.Result.ExecutionTerms
+56		policyVersion, err := journal.QFinalPolicyVersion(g.policyVersion, entry.admission.TransactionID)
+57		if err != nil {
+58			return QFinalCampaignFirstLegPrecheck{}, err
+59		}
+60		owner := entry.admission.Owner
+61		if strings.TrimSpace(owner.Key.ProspectiveGeneration) != "" {
+62			return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalOwnerConflict, "prospective_generation", "first-leg token is journal-owned", nil)
+63		}
+64		entryMajor, entryOK := terms.Entry().MajorDecimal()
+65		stopMajor, stopOK := terms.EffectiveStop().MajorDecimal()
+66		targetMajor, targetOK := terms.Target().MajorDecimal()
+67		if !entryOK || !stopOK || !targetOK {
+68			return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
+69				"first_leg_price_unit", "sealed strategy execution price unit is invalid", nil)
+70		}
+71		if request.Result.Quantity != entry.decision.QCandidate || lineage.AccountRef != g.accountRef ||
+72			!strings.EqualFold(string(lineage.Market), request.Entry.Market) || lineage.Symbol != request.Entry.Symbol ||
+73			entryMajor != request.Entry.EntryPrice || stopMajor != request.Entry.StopPrice ||
+74			targetMajor != request.Entry.TargetPrice || lineage.LaneID != owner.LaneID ||
+75			lineage.CampaignID != owner.CampaignID || request.Campaign.CampaignID != owner.CampaignID {
+76			return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
+77				"first_leg_lineage", "sealed strategy result, q_candidate, owner and campaign are not exactly bound", nil)
+78		}
+79		currentGeneration := request.Campaign.ExpectedPositionGeneration
+80		if currentGeneration < 0 || currentGeneration >= math.MaxInt64 || request.Campaign.ExpectedPositionVersion < 0 ||
+81			lineage.PositionGeneration != uint64(currentGeneration)+1 {
+82			return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalOwnerConflict,
+83				"position_generation", "strategy prospective generation must be exactly campaign current generation plus one", nil)
+84		}
+85		if strings.TrimSpace(request.AttemptID) == "" || request.AttemptID != strings.TrimSpace(request.AttemptID) || request.Revision < 1 ||
+86			strings.TrimSpace(request.ActivationManifestDigest) == "" || request.ActivationManifestDigest != strings.TrimSpace(request.ActivationManifestDigest) {
+87			return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
+88				"first_leg_strategy", "complete strategy attempt and activation binding required", nil)
+89		}
+90		weekly, err := guardianWeeklyFirstLegBinding(lineage.LaneID, string(lineage.Market), request.Weekly)
+91		if err != nil {
+92			return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
+93				"weekly_reservation", "weekly first-leg reservation authority is missing or does not match the sealed lane", err)
+94		}
+95		issuedAt := g.clk.Now().UTC()
+96		riskIntent := journal.RiskIntent{
+97			AccountRef: g.accountRef, Market: entry.request.Market, Symbol: entry.intent.Symbol,
+98			Side: string(risk.SideBuy), Quantity: strconv.FormatUint(entry.decision.QFinal, 10),
+99			EntryPrice: entry.intent.LimitPrice, StopPrice: entry.intent.StopPrice,
+100			TargetPrice: entry.intent.TargetPrice, PolicyVersion: policyVersion,
+101		}
+102		projected, err := journal.ProjectAcceptedStrategyflowLineage(journal.StrategyflowLineageProjectionRequest{
+103			Result: request.Result, RiskIntent: riskIntent, ActivationManifestDigest: request.ActivationManifestDigest, CreatedAt: issuedAt,
+104		})
+105		if err != nil {
+106			return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
+107				"first_leg_projection", "sealed strategy result cannot be bound to Guardian q_final", err)
+108		}
+109		strategy := journal.StrategyPlanRequest{Lineage: projected, AttemptID: request.AttemptID,
+110			ActivationManifestDigest: request.ActivationManifestDigest, Revision: request.Revision, CreatedAt: issuedAt}
+111		return QFinalCampaignFirstLegPrecheck{entry: entry, strategy: strategy, campaign: request.Campaign, weekly: weekly, issuedAt: issuedAt}, nil
+112	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** PrecheckQFinalEntry (internal/execgw/riskguardian_qfinal.go:89), QFinalPolicyVersion (internal/journal/risk_bucket_issuance.go:48), qFinalRefusal (internal/execgw/riskguardian_qfinal.go:347), MajorDecimal (internal/strategyflow/types.go:192), Entry (internal/strategyflow/types.go:246), EffectiveStop (internal/strategyflow/types.go:247), Target (internal/strategyflow/types.go:248), guardianWeeklyFirstLegBinding (internal/execgw/riskguardian_first_leg.go:216), Now (internal/clock/clock.go:37), ProjectAcceptedStrategyflowLineage (internal/journal/strategyflow_projection.go:42), QFinalCampaignFirstLegPrecheck (internal/execgw/riskguardian_first_leg.go:35), RiskIntent (internal/journal/decision.go:63), +3 more
+**Called by ←** PrecheckQFinalCampaignFirstLeg (internal/app/engine/strategy_first_leg_admission.go:65) [dynamic: interface → impl @internal/execgw/riskguardian_first_leg.go:49]
+
+# callers
+
+Callers of "PrecheckQFinalCampaignFirstLeg" (1):
+
+method      PrecheckQFinalCampaignFirstLeg
+  internal/app/engine/strategy_first_leg_admission.go:65
+
+
+# callees
+
+Callees of "PrecheckQFinalCampaignFirstLeg" (17):
+
+method      PrecheckQFinalCampaignFirstLeg
+  internal/app/engine/strategy_first_leg_admission_test.go:190
+
+method      PrecheckQFinalCampaignFirstLeg
+  internal/execgw/riskguardian_first_leg.go:49
+
+method      PrecheckQFinalEntry
+  internal/execgw/riskguardian_qfinal.go:89
+
+function    QFinalPolicyVersion
+  internal/journal/risk_bucket_issuance.go:48
+
+function    qFinalRefusal
+  internal/execgw/riskguardian_qfinal.go:347
+
+method      MajorDecimal
+  internal/strategyflow/types.go:192
+
+method      Entry
+  internal/strategyflow/types.go:246
+
+method      EffectiveStop
+  internal/strategyflow/types.go:247
+
+method      Target
+  internal/strategyflow/types.go:248
+
+function    guardianWeeklyFirstLegBinding
+  internal/execgw/riskguardian_first_leg.go:216
+
+method      Now
+  internal/clock/clock.go:37
+
+function    ProjectAcceptedStrategyflowLineage
+  internal/journal/strategyflow_projection.go:42
+
+struct      QFinalCampaignFirstLegPrecheck
+  internal/execgw/riskguardian_first_leg.go:35
+
+struct      RiskIntent
+  internal/journal/decision.go:63
+
+struct      StrategyflowLineageProjectionRequest
+  internal/journal/strategyflow_projection.go:22
+
+struct      StrategyPlanRequest
+  internal/journal/strategy_lineage.go:139
+
+struct      QFinalCampaignFirstLegIssuance
+  internal/execgw/riskguardian_first_leg.go:23
+
+
+# impact
+
+Impact of changing "PrecheckQFinalCampaignFirstLeg" — 4 affected symbols:
+
+internal/app/engine/strategy_first_leg_admission.go
+  method      PrecheckQFinalCampaignFirstLeg:65
+
+internal/execgw/riskguardian_first_leg.go
+  method      PrecheckQFinalCampaignFirstLeg:49
+
+internal/app/engine/strategy_first_leg_admission_test.go
+  method      PrecheckQFinalCampaignFirstLeg:190
+
+internal/app/engine/a146_cap_zero_characterization_test.go
+  method      PrecheckQFinalCampaignFirstLeg:42
+
+
