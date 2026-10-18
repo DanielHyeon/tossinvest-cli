@@ -14,7 +14,7 @@ Story: `STORY-TOS-a157` · **High-risk**(Guardian · execgw 첫 다리 판정 �
       `evidence-reconciliation.md`(인터페이스 선언 :65 대 실제 호출 :105 포함)
 - [x] 0.3 proposal-freeze 적대 리뷰(분리 컨텍스트 Opus + codex) → review.md → 수리 — Opus APPROVE-WITH-FIXES(P0 0 · P1 3), codex REJECT as written(P1 1).
       사람 결정 「1-1, 2-1」 반영, 지적 전부 문서에 반영(review.md 표)
-- [ ] 0.4 특성 시험 — 편집 전 HEAD 에서 통과해야 한다(현재 순서를 고정함). 영수증 `analysis/red/characterization-head.txt`.
+- [x] 0.4 특성 시험 — 편집 전 HEAD 에서 통과해야 한다(현재 순서를 고정함). 영수증 `analysis/red/characterization-head.txt`.
   - 뒤에 RED 로 뒤집을 행:
     - 상한 0 + Bn 일곱(B5 는 q_candidate 갈래와 소유자 LaneID/CampaignID 갈래 둘). 오늘은 `EXISTING_GUARDIAN_CAP`.
     - 입력 하나가 둘을 거는 (f) 실측 두 행(`QCandidate=0` · 비정규 Symbol).

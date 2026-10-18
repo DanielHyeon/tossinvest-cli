@@ -1,0 +1,39 @@
+# a157 0.4 특성 시험 — 편집 전 HEAD 에서 통과(현재 순서를 고정)
+# HEAD d6c26f09832c32ec5caccdad54b6d2e14cff0a6e · 2026-10-18T06:11:28Z · go version go1.26.5 linux/amd64
+# 생산 파일 무편집: git diff --stat HEAD -- internal/ 출력 ↓ (빈 줄 = 무편집; 새 시험 파일 2개는 untracked)
+
+?? internal/app/engine/a157_first_leg_admit_testseam_test.go
+?? internal/execgw/a157_first_leg_binding_testseam_test.go
+$ go test -count=1 -tags tossos_testseams ./internal/execgw/ -run TestA157 -v
+=== RUN   TestA157ABindingDefectAloneIsReportedAsItself
+--- PASS: TestA157ABindingDefectAloneIsReportedAsItself (2.24s)
+=== RUN   TestA157AnEntryRefusalAloneIsReportedAsItself
+--- PASS: TestA157AnEntryRefusalAloneIsReportedAsItself (1.13s)
+=== RUN   TestA157CapZeroAndABindingDefect
+--- PASS: TestA157CapZeroAndABindingDefect (1.88s)
+=== RUN   TestA157OtherEntryRefusalsAndABindingDefect
+--- PASS: TestA157OtherEntryRefusalsAndABindingDefect (0.85s)
+=== RUN   TestA157DailyLossIsReportedBeforeABindingDefect
+--- PASS: TestA157DailyLossIsReportedBeforeABindingDefect (3.80s)
+=== RUN   TestA157OneInputThatTripsBothJudgements
+--- PASS: TestA157OneInputThatTripsBothJudgements (0.41s)
+=== RUN   TestA157AnAcceptedFirstLegSealsTheSameValues
+--- PASS: TestA157AnAcceptedFirstLegSealsTheSameValues (0.45s)
+=== RUN   TestA157ANilGuardianRefusesBeforeAnyBindingJudgement
+--- PASS: TestA157ANilGuardianRefusesBeforeAnyBindingJudgement (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	10.768s
+
+$ go test -count=1 -tags tossos_testseams ./internal/app/engine/ -run TestA157 -v
+=== RUN   TestA157EngineABindingDefectAloneIsAnAuthorityMismatch
+--- PASS: TestA157EngineABindingDefectAloneIsAnAuthorityMismatch (0.63s)
+=== RUN   TestA157EngineADailyLossLimitStillEscalatesWithABindingDefect
+--- PASS: TestA157EngineADailyLossLimitStillEscalatesWithABindingDefect (0.92s)
+=== RUN   TestA157EngineAnUnmeasurableDayStillWinsOverABindingDefect
+--- PASS: TestA157EngineAnUnmeasurableDayStillWinsOverABindingDefect (0.99s)
+=== RUN   TestA157EngineACapZeroAloneIsStillASkip
+--- PASS: TestA157EngineACapZeroAloneIsStillASkip (0.29s)
+=== RUN   TestA157EngineACapZeroHidesABindingDefect
+--- PASS: TestA157EngineACapZeroHidesABindingDefect (0.61s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	3.442s
