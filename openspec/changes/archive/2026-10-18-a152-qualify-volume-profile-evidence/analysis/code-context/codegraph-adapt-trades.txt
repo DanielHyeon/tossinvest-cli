@@ -1,0 +1,157 @@
+## Code Context
+
+**Query:** adaptTrades
+
+### Entry Points
+
+- **adaptTrades** (function) - internal/official/market_reads.go:307
+  `(symbol string, raw []apiTrade) domain.TradeList`
+- **Trades** (method) - internal/official/market_reads.go:284
+  `(ctx context.Context, symbol string, count int) (domain.TradeList, error)`
+- **adapt** (method) - internal/protectionofficial/gateway.go:259
+  `(raw official.RawConditionalOrder) (protection.BrokerProtection, error)`
+
+### Related Symbols
+
+- internal/official/market_reads.go: parseDecimal:15
+- internal/official/market_reads_test.go: TestAdaptTradesUnit:240, TestAdaptTradesEmpty:268, TestTradesIntegration:279
+- internal/domain/models.go: Trade:92, TradeList:101
+- internal/official/client.go: Client:24, get:234
+- internal/hybrid/client.go: GetTrades:140
+- internal/protectionofficial/gateway.go: Gateway:31
+
+### Code
+
+#### adaptTrades (internal/official/market_reads.go:307)
+
+```go
+func adaptTrades(symbol string, raw []apiTrade) domain.TradeList {
+	trades := make([]domain.Trade, 0, len(raw))
+	for _, t := range raw {
+		trades = append(trades, domain.Trade{
+			Time:   t.Timestamp,
+			Price:  parseDecimal(t.Price),
+			Volume: parseDecimal(t.Volume),
+			// TradeType, Base, CumulativeVolume — not in official Trade schema
+		})
+	}
+	return domain.TradeList{
+		Symbol:    symbol,
+		Trades:    trades,
+		FetchedAt: time.Now().UTC(),
+		// ProductCode, Name — not in /trades response
+	}
+}
+```
+
+#### Trades (internal/official/market_reads.go:284)
+
+```go
+func (c *Client) Trades(ctx context.Context, symbol string, count int) (domain.TradeList, error) {
+	q := url.Values{}
+	q.Set("symbol", symbol)
+	if count > 0 {
+		q.Set("count", strconv.Itoa(count))
+	}
+	var raw []apiTrade
+	if err := c.get(ctx, "/api/v1/trades", q, &raw); err != nil {
+		return domain.TradeList{}, err
+	}
+	return adaptTrades(symbol, raw), nil
+}
+```
+
+#### adapt (internal/protectionofficial/gateway.go:259)
+
+```go
+func (g *Gateway) adapt(raw official.RawConditionalOrder) (protection.BrokerProtection, error) {
+	quantity, err := positiveInteger(raw.Quantity)
+	if err != nil {
+		return protection.BrokerProtection{}, err
+	}
+	trigger, err := positiveInteger(raw.TriggerPrice)
+	if err != nil {
+		return protection.BrokerProtection{}, err
+	}
+	if raw.ID == "" || raw.ClientOrderID == "" || raw.Symbol != g.scope.Symbol || raw.Market != string(g.scope.Market) || raw.Type != "SINGLE" || raw.OrderType != "MARKET" || raw.OrderSide != "SELL" || raw.ConditionType != "STOP" || !validExpireDate(raw.ExpireDate) {
+		return protection.BrokerProtection{}, ErrAmbiguousConditional
+	}
+	status := strings.ToUpper(strings.TrimSpace(raw.Status))
+	triggered := strings.TrimSpace(raw.TriggeredOrderID) != ""
+	terminal, err := lifecycle(status, triggered)
+	if err != nil {
+		return protection.BrokerProtection{}, err
+	}
+	return protection.BrokerProtection{Scope: g.scope, ID: raw.ID, ClientOrderID: raw.ClientOrderID,
+		Quantity: quantity, Trigger: trigger, Terminal: terminal, Triggered: triggered,
+		OrderSide: raw.OrderSide, OrderType: raw.OrderType, ConditionType: raw.ConditionType, ExpireDate: raw.ExpireDate}, nil
+}
+```
+
+#### parseDecimal (internal/official/market_reads.go:15)
+
+```go
+func parseDecimal(s string) float64 {
+	if s == "" {
+		return 0
+	}
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0
+	}
+	return f
+}
+```
+
+#### TestAdaptTradesUnit (internal/official/market_reads_test.go:240)
+
+```go
+func TestAdaptTradesUnit(t *testing.T) {
+	raw := []apiTrade{
+		{Price: "72000", Volume: "120", Timestamp: "2026-03-25T09:30:42.000+09:00", Currency: "KRW"},
+		{Price: "71900", Volume: "50", Timestamp: "2026-03-25T09:30:41.500+09:00", Currency: "KRW"},
+	}
+	got := adaptTrades("005930", raw)
+	if got.Symbol != "005930" {
+		t.Fatalf("Symbol: want 005930, got %q", got.Symbol)
+	}
+	if len(got.Trades) != 2 {
+		t.Fatalf("Trades: want 2, got %d", len(got.Trades))
+	}
+	if got.Trades[0].Price != 72000 || got.Trades[0].Volume != 120 {
+		t.Fatalf("Trades[0]: %+v", got.Trades[0])
+	}
+	if got.Trades[0].Time != "2026-03-25T09:30:42.000+09:00" {
+		t.Fatalf("Trades[0].Time: got %q", got.Trades[0].Time)
+	}
+	// Fields not in official Trade schema
+	if got.Trades[0].TradeType != "" {
+		t.Fatalf("TradeType: expected empty, got %q", got.Trades[0].TradeType)
+	}
+	if got.ProductCode != "" {
+		t.Fatalf("ProductCode: expected empty, got %q", got.ProductCode)
+	}
+}
+```
+
+
+## Call paths
+
+Execution flow among the key symbols (traced through the call graph):
+
+- Trades → adaptTrades → parseDecimal
+
+_codegraph_node any symbol above for its source + its own callers/callees._
+
+
+Callers of "adaptTrades" (3):
+
+method      Trades
+  internal/official/market_reads.go:284
+
+function    TestAdaptTradesUnit
+  internal/official/market_reads_test.go:240
+
+function    TestAdaptTradesEmpty
+  internal/official/market_reads_test.go:268
+

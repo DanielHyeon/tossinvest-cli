@@ -1,0 +1,17 @@
+...............F............
+======================================================================
+FAIL: test_offset_minutes_are_not_normalized (test_analysis.Qualification.test_offset_minutes_are_not_normalized)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/tossos-a148-impl-20261018/tools/a152-qualify-volume-profile-evidence/test_analysis.py", line 133, in test_offset_minutes_are_not_normalized
+    d=dataset(); d['session']['open_at']='2026-10-15T09:00:00+08:60'; self.assertEqual(result(d)['status'],'invalid')
+                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'eligible_unverified' != 'invalid'
+- eligible_unverified
++ invalid
+
+
+----------------------------------------------------------------------
+Ran 28 tests in 0.305s
+
+FAILED (failures=1)

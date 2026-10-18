@@ -1,0 +1,110 @@
+{
+  "file": "internal/official/market_reads.go",
+  "source_sha256": "b356524b48df5dc550c07d74c00f6f7c695e6364c78036e04df8df94ef2ce1ea",
+  "package": "official",
+  "function": "Trades",
+  "receiver": "Client",
+  "signature": "Client.Trades(params=3, results=2)",
+  "start": {
+    "line": 284,
+    "column": 1
+  },
+  "end": {
+    "line": 295,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 287,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 291,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 292,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 294,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 2
+      },
+      "text": "q.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 3
+      },
+      "text": "q.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 18
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 12
+      },
+      "text": "c.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 294,
+        "column": 9
+      },
+      "text": "adaptTrades"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 285,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 291,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

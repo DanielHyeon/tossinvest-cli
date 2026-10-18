@@ -1,0 +1,29 @@
+.......F..............F....
+======================================================================
+FAIL: test_future_submicrosecond_and_fractional_offset_rejected (test_analysis.Qualification.test_future_submicrosecond_and_fractional_offset_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/tossos-a148-impl-20261018/tools/a152-qualify-volume-profile-evidence/test_analysis.py", line 125, in test_future_submicrosecond_and_fractional_offset_rejected
+    d=dataset(); d['records'][1]['received_at']='2026-10-15T10:05:00.000000001+09:00'; self.assertEqual(result(d)['status'],'invalid')
+                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'eligible_unverified' != 'invalid'
+- eligible_unverified
++ invalid
+
+
+======================================================================
+FAIL: test_timestamp_strict_subset (test_analysis.Qualification.test_timestamp_strict_subset)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/tossos-a148-impl-20261018/tools/a152-qualify-volume-profile-evidence/test_analysis.py", line 130, in test_timestamp_strict_subset
+    d=dataset(); d['records'][1]['received_at']=value; self.assertEqual(result(d)['status'],'invalid',value)
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'eligible_unverified' != 'invalid'
+- eligible_unverified
++ invalid
+ : 2026-10-15 09:20:01+09:00
+
+----------------------------------------------------------------------
+Ran 27 tests in 0.314s
+
+FAILED (failures=2)

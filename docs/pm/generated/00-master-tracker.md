@@ -143,7 +143,7 @@
     - STORY-TOS-a128 — Jev semantic judgments earn a calibration receipt before any wiring [in_progress] → `a128-jev-shadow-judgment-probe`
     - STORY-TOS-a145 — Evaluate Jev input quality and a separate J2 question revision offline [archived] → `a145-separate-jev-input-quality-and-j2-evaluation`
     - STORY-TOS-a147 — Validate Jev MFI trend on separately registered shadow sessions [archived] → `a147-validate-jev-mfi-trend`
-    - STORY-TOS-a152 — Volume Profile 데이터 적합성 평가 [in_progress] → `a152-qualify-volume-profile-evidence`
+    - STORY-TOS-a152 — Volume Profile 데이터 적합성 평가 [archived] → `a152-qualify-volume-profile-evidence`
   - FEAT-TOS-010 — Strategy entry and market-aware scheduling [active]
     - STORY-TOS-a047 — Add the strategy entry engine [archived] → `a047-add-strategy-engine`
     - STORY-TOS-a048 — Add market-aware strategy scheduling [archived] → `a048-add-market-aware-scheduler`
