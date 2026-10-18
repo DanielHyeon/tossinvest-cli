@@ -37,4 +37,33 @@
 
 ## Pre-Edit Gate
 
-(구현 Teammate 가 FLM/BTM 뒤에 기록)
+```text
+Pre-Edit Gate:
+- change id / task id: a157-first-leg-binding-before-sizing / 1.1~1.3
+- 대상 심볼(편집하는 기존 함수 — 번들 analysis/function-logic/, ast-base.json = base 7b1748481 소스):
+    internal/execgw/riskguardian_first_leg.go           RiskGuardian.PrecheckQFinalCampaignFirstLeg (본문 순서 재배치 — design D1)
+    internal/app/engine/strategy_first_leg_admission.go strategyFirstLegAdmissionBridge.admit (일일 손실 두 조건 → 판별 함수 호출, 분기 결과 동일)
+    internal/app/engine/strategy_entry_supervisor.go    Context.NewPairedStrategyEntryProductionAssembly (394 행 옵션 — 알림 둘 + nil 가드 게이트)
+  새 파일(새 leaf): internal/execgw/a157_daily_loss_kind.go — 판별 함수 `DailyLossChainRefusalOf` 와 결과 타입(기존 파일 무편집 — Logic Map 범위 고정)
+  무편집(확인 방법):
+    internal/execgw/riskguardian_qfinal.go — 파일 sha 6fcace26fd7b2ddc…(편집 전) 그대로여야 함(PrecheckQFinalEntry · IssueQFinalEntry)
+    RiskGuardian.IssuePrecheckedQFinalCampaignFirstLeg — 함수 본문 sha 28c40c8ab49a1cb6…(편집 전, analysis/harness/_funcsha gofmt 정규화 FuncDecl 구간)
+    사이징(internal/risk) · 체인 · 버킷(internal/riskbucket) · 원장(internal/journal) · Gateway · 매도/손절/청산/대사 경로 전부
+- CodeGraph: analysis/code-context/ — codegraph 1.6.0 callers/impact, affected --filter '*_test.go' 1,153(기본 판별식 1).
+  불일치 둘(인터페이스 선언 :65 대 실제 호출 :105, admit 필드 경유 호출 누락)은 HEAD grep 으로 해소. CGC 는 색인 범위가 옛 사본이라 advisory.
+- 기존 동작 근거: HEAD 읽기 + analysis/ast-evidence/ 8 + FLM 번들 3 + 특성 시험 13 함수(편집 전 HEAD 통과 — analysis/red/characterization-head.txt)
+  + freeze 리뷰 실측(analysis/review/freeze-opus.md)
+- Function Logic Map / Branch Test Map: analysis/function-logic/{internal-execgw--riskguardian.precheckqfinalcampaignfirstleg,
+  internal-app-engine--strategyfirstlegadmissionbridge.admit, internal-app-engine--context.newpairedstrategyentryproductionassembly}
+  (생성: analysis/harness/a157_flm.py base · check_analysis.py 통과)
+- upstream 상속 시험 영향: no — 게이트 OFF 는 Guardian · 전략 감독자 경로를 만들지 않음. 편집 함수는 첫 다리(매수) 진입 판정 · 그 분류 · 감독자 조립뿐
+- 실패 시험 선행: yes — 1.1 에서 특성 시험의 뒤집을 행(상한 0 + Bn 9 · 버킷/표지 없는 입력 불가 + B2/B8 · (f) 2 · 엔진 상한 0 + B2/B8)을
+  새 기대로 바꾸고, 구조 AST 시험 · 판별 표 시험 · 조립 감독자 시험 셋을 더해 RED 를 확인한 뒤(analysis/red/red.txt) 편집
+- 설정 · DB · journal 변경: 없음(새 키 0 · 스키마 0 · 원장 쓰기 0 · 서명 매니페스트 0). rollback = 이전 이미지
+- 안전 불변식 §0 검토: 통과 —
+    받아들이는 요청 집합 불변(design D2: B1~B8 은 부작용 없는 판정의 논리곱, B2~B8 은 시계 · 원장을 읽지 않음, PrecheckQFinalEntry 한 번),
+    바뀌는 것은 둘 이상 걸린 요청의 보고뿐이고 어느 갈래도 발급 · 주문을 늘리지 않음,
+    일일 손실 강화 · 계좌 단위 진입 차단 보존(사람 결정 1-1 — 판별 함수 하나를 precheck 와 admit 이 공유),
+    조립 감독자 EntryGate 는 nil 가드(F10 — 타입 있는 nil panic 방지, 오늘은 Run 안 함),
+    사이징 무편집(§0.9), 매도 · 손절 · 비상 청산 경로 무관(§0.3), 토글 OFF 무관
+```

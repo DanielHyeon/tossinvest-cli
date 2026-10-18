@@ -24,7 +24,7 @@ Story: `STORY-TOS-a157` · **High-risk**(Guardian · execgw 첫 다리 판정 �
     - **일일 손실 한도 + B2 · B8, 측정 불가 + B2 · B8**(execgw 거절 + 엔진 `admit` 분류 · 강화 호출. 엔진 행은 B2 · B8 만 — design D3).
     - 통과 봉인 값.
     - nil Guardian.
-- [ ] 0.5 편집할 기존 함수의 FLM/BTM 번들(`analysis/function-logic/`) + Pre-Edit 선언(review.md). 번들 대상:
+- [x] 0.5 편집할 기존 함수의 FLM/BTM 번들(`analysis/function-logic/`) + Pre-Edit 선언(review.md). 번들 대상:
   - `RiskGuardian.PrecheckQFinalCampaignFirstLeg`
   - `strategyFirstLegAdmissionBridge.admit`
   - `Context.NewPairedStrategyEntryProductionAssembly`
