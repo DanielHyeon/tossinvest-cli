@@ -1,0 +1,12 @@
+
+2 files scanned with regex matching only (.go).
+Rules that need a parsed page (tiny-text, low-contrast and other element rules) did not run on them; findings are an undercount, not a clean bill of health.
+For the full check, scan the running dev server (npx impeccable detect http://localhost:PORT) or a static site's built .html.
+
+/tmp/tossos-a148-impl-20261018/internal/console/templates.go
+  line 54: [side-tab] border-left: 3px solid #b07000
+    → Thick colored border on one side of a card — the most recognizable tell of AI-generated UIs. Use a subtler accent or remove it entirely.
+  line 55: [side-tab] border-left: 3px solid #a01818
+    → Thick colored border on one side of a card — the most recognizable tell of AI-generated UIs. Use a subtler accent or remove it entirely.
+
+2 anti-patterns found.

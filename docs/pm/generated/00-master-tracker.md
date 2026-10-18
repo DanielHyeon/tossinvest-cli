@@ -87,7 +87,7 @@
     - STORY-TOS-a101 — The capability survey outlives a deploy [archived] → `a101-the-soak-outlives-a-deploy`
     - STORY-TOS-a114 — The console reattaches its lifecycle [archived] → `a114-the-console-reattaches-its-lifecycle`
     - STORY-TOS-a115 — The console strategy screen reattaches [archived] → `a115-the-console-strategy-screen-reattaches`
-    - STORY-TOS-a154 — 검증된 손절 정책 사용자 선택 [in_progress] → `a154-preview-validated-stop-policy-options`
+    - STORY-TOS-a154 — 가정값 손절 정책 수치 비교 [archived] → `a154-preview-validated-stop-policy-options`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [archived] → `add-common-exit-optimization`

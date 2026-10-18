@@ -803,6 +803,7 @@ func (c *Console) routes() http.Handler {
 	mux.HandleFunc("/settings/system-update/download",
 		c.session0(c.mutating(c.handleSystemUpdateDownload)))
 	mux.HandleFunc("/optimization", c.session0(c.handleOptimization))
+	mux.HandleFunc("/optimization/hypothetical", c.hypotheticalNoStore(c.session0(c.mutating(c.handleHypothetical, 8192))))
 	mux.HandleFunc("/performance-history", c.session0(c.handlePerformanceHistory))
 	mux.HandleFunc("/strategy-runtime/market-schedule", c.session0(c.handleMarketSchedule))
 	mux.HandleFunc("/strategy-runtime", c.session0(c.handleStrategyRuntime))

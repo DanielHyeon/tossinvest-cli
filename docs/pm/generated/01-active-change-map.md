@@ -151,6 +151,6 @@
 | `a151-compare-stop-policies-offline` | STORY-TOS-a151 | archived |
 | `a152-qualify-volume-profile-evidence` | STORY-TOS-a152 | archived |
 | `a153-evaluate-cost-aware-strategy-variants` | STORY-TOS-a153 | archived |
-| `a154-preview-validated-stop-policy-options` | STORY-TOS-a154 | in_progress |
+| `a154-preview-validated-stop-policy-options` | STORY-TOS-a154 | archived |
 | `a155-observe-versioned-strategy-decisions` | STORY-TOS-a155 | in_progress |
 | `a156-gate-live-strategy-policy-rollout` | STORY-TOS-a156 | in_progress |

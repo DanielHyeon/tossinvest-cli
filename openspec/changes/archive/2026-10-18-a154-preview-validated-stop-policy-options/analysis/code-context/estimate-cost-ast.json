@@ -1,0 +1,221 @@
+{
+  "file": "internal/costs/costs.go",
+  "source_sha256": "73239c460436dc0cf5d18457cb528f65e7ee794e467c67ace3637884b2213959",
+  "package": "costs",
+  "function": "EstimateTradeCost",
+  "receiver": "Model",
+  "signature": "Model.EstimateTradeCost(params=3, results=2)",
+  "start": {
+    "line": 485,
+    "column": 1
+  },
+  "end": {
+    "line": 514,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 487,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 491,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 495,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 499,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 501,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 488,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 492,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 496,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 502,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 508,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 486,
+        "column": 16
+      },
+      "text": "parseNonNegative"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 25
+      },
+      "text": "m.commissionRateFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 17
+      },
+      "text": "m.FXConversionFeeRate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 500,
+        "column": 19
+      },
+      "text": "m.SellTaxRate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 509,
+        "column": 15
+      },
+      "text": "formatAmount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 510,
+        "column": 15
+      },
+      "text": "formatAmount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 511,
+        "column": 15
+      },
+      "text": "formatAmount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 512,
+        "column": 15
+      },
+      "text": "formatAmount"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 486,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 490,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 494,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 498,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 500,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 504,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 506,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 507,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

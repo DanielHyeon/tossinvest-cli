@@ -1,0 +1,13 @@
+# Pre-Edit Gate
+
+- Change/task: a154 / 1.2–2.4. Base: c14642e979e07d16c19501fa93dd448da52ecff7.
+- Existing production symbol: console.Console.routes; existing static route test inspector and template constants. New calculation and handler are new leaf functions. Existing risk.RiskBasedQuantity is reused unchanged.
+- CodeGraph/CGC: `analysis/code-context` records existing optimization handler and store context; CGC cross-worktree candidates are advisory only. Fresh AST for routes and exact risk helper fixes current-worktree binding.
+- Existing routes: AST B1 conditional remote login/logout; B2 remote security wrapper versus mux return. Existing session0/mutating tests and static route guard remain applicable. Only one route registration is added; both branches are unchanged.
+- FLM/BTM: `analysis/function-logic/internal-console--console.routes/`. New leaf functions: Function Logic Map: not-applicable (no existing function). The gate-affecting existing registeredRoutes and TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate inspectors have their own fresh AST, FLM, risk report and BTM under analysis/function-logic/. The explicit wrapper test checks transparent handling of only hypotheticalNoStore and rejects opaque or unguarded cases; session and CSRF requirements remain in force. New helper functions have no pre-edit function to map.
+- Upstream inherited tests: yes, existing route and optimization suites retained. RED calculator and HTTP expectations precede implementation.
+- No configuration, journal, candidate, or database writes; rollback removes new leaf and route/UI additions. No live calls. Guard POST, CSRF, remote origin, bounded body and no-store before security refusals; exact bounded inputs; no operational authority.
+
+## Gate attempt 1 repair
+
+The first aggregate gate failed at make test: four existing UI tests treated every form and input as a policy control; a fifth template check expected the exact existing scroll-wrapper class. Four existing test functions were captured before editing and have fresh post-edit AST/FLM/BTM under `analysis/function-logic/internal-console--testoptimization*`. Their original policy assertions remain. A new test helper first verifies the hypothetical section's sole compute-only form and exact inputs, then removes it only for those assertions; negative mutations reject forged settings, apply buttons and extra forms. The wrapper uses the existing exact `table-scroll` class while its descendant table retains the presentation class. The original gate failure and focused repair output are retained under `analysis/verification`. The aggregate gate must be rerun; the first attempt is not a pass.
