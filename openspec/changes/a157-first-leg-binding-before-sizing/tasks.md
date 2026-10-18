@@ -10,7 +10,7 @@ Story: `STORY-TOS-a157` · **High-risk**(Guardian · execgw 첫 다리 판정 �
 
 - [x] 0.1 Story 등록(`STORY-TOS-a157.yaml` · `_registry.yaml` · `FEAT-TOS-003` 역링크) + proposal · design · spec 델타 · tasks —
       AST 근거 8건(`analysis/ast-evidence/`, 편집 전 HEAD `7b1748481`)
-- [ ] 0.2 CodeGraph hard evidence(`analysis/code-context/codegraph-baseline.md`, raw 는 이미 있음) · CodeGraphContext(또는 `not-applicable` 사유) ·
+- [x] 0.2 CodeGraph hard evidence(`analysis/code-context/codegraph-baseline.md`, raw 는 이미 있음) · CodeGraphContext(또는 `not-applicable` 사유) ·
       `evidence-reconciliation.md`(인터페이스 선언 :65 대 실제 호출 :105 포함)
 - [x] 0.3 proposal-freeze 적대 리뷰(분리 컨텍스트 Opus + codex) → review.md → 수리 — Opus APPROVE-WITH-FIXES(P0 0 · P1 3), codex REJECT as written(P1 1).
       사람 결정 「1-1, 2-1」 반영, 지적 전부 문서에 반영(review.md 표)

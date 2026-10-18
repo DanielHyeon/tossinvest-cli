@@ -1,0 +1,33 @@
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+
+Functions that call 'NewStrategyEntrySupervisor':
+╭────────────────────────────────────────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬────────────╮
+│ Caller Function                            │ Location                                                                                                                                                         │ Call Type  │
+├────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────┤
+│ NewPairedStrategyEntryProductionAssembly   │ /mnt/D/Axipient/workspace/TossOS-worktrees/archive-batch1/internal/app/engine/strategy_entry_supervisor.go:283                                                   │ 📝 Project │
+│ NewRefreshingPairedStrategyEntrySupervisor │ /mnt/D/Axipient/workspace/TossOS-worktrees/archive-batch1/internal/app/engine/strategy_entry_supervisor.go:371                                                   │ 📝 Project │
+│ NewPairedStrategyEntryProductionAssembly   │ /mnt/D/Axipient/workspace/TossOS-worktrees/archive-batch1/internal/app/engine/strategy_entry_supervisor.go:579                                                   │ 📝 Project │
+│ NewPairedStrategyEntryProductionAssembly   │ /mnt/D/project/axipient/TossOS-worktrees/a109-t2/internal/app/engine/strategy_entry_supervisor.go:261                                                            │ 📝 Project │
+│ NewRefreshingPairedStrategyEntrySupervisor │ /mnt/D/project/axipient/TossOS-worktrees/a109-t2/internal/app/engine/strategy_entry_supervisor.go:337                                                            │ 📝 Project │
+│ NewPairedStrategyEntryProductionAssembly   │ /mnt/D/project/axipient/TossOS-worktrees/a109-t2/internal/app/engine/strategy_entry_supervisor.go:477                                                            │ 📝 Project │
+│ NewPairedStrategyEntryProductionAssembly   │ /mnt/D/project/axipient/TossOS-worktrees/a109/internal/app/engine/strategy_entry_supervisor.go:261                                                               │ 📝 Project │
+│ NewRefreshingPairedStrategyEntrySupervisor │ /mnt/D/project/axipient/TossOS-worktrees/a109/internal/app/engine/strategy_entry_supervisor.go:337                                                               │ 📝 Project │
+│ NewPairedStrategyEntryProductionAssembly   │ /mnt/D/project/axipient/TossOS-worktrees/a109/internal/app/engine/strategy_entry_supervisor.go:477                                                               │ 📝 Project │
+│ NewPairedStrategyEntryProductionAssembly   │ /mnt/D/project/axipient/TossOS/internal/app/engine/strategy_entry_supervisor.go:283                                                                              │ 📝 Project │
+│ NewRefreshingPairedStrategyEntrySupervisor │ /mnt/D/project/axipient/TossOS/internal/app/engine/strategy_entry_supervisor.go:371                                                                              │ 📝 Project │
+│ NewPairedStrategyEntryProductionAssembly   │ /mnt/D/project/axipient/TossOS/internal/app/engine/strategy_entry_supervisor.go:579                                                                              │ 📝 Project │
+│ NewPairedStrategyEntryProductionAssembly   │ /mnt/D/tmp-review-7534-adv/wt/internal/app/engine/strategy_entry_supervisor.go:283                                                                               │ 📝 Project │
+│ NewRefreshingPairedStrategyEntrySupervisor │ /mnt/D/tmp-review-7534-adv/wt/internal/app/engine/strategy_entry_supervisor.go:371                                                                               │ 📝 Project │
+│ NewPairedStrategyEntryProductionAssembly   │ /mnt/D/tmp-review-7534-adv/wt/internal/app/engine/strategy_entry_supervisor.go:579                                                                               │ 📝 Project │
+│ NewPairedStrategyEntryProductionAssembly   │ /tmp/a121-red/internal/app/engine/strategy_entry_supervisor.go:296                                                                                               │ 📝 Project │
+│ NewRefreshingPairedStrategyEntrySupervisor │ /tmp/a121-red/internal/app/engine/strategy_entry_supervisor.go:385                                                                                               │ 📝 Project │
+│ NewPairedStrategyEntryProductionAssembly   │ /tmp/a121-red/internal/app/engine/strategy_entry_supervisor.go:618                                                                                               │ 📝 Project │
+│ NewPairedStrategyEntryProductionAssembly   │ /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a090-gate/internal/app/engine/strategy_entry_supervisor.go:295 │ 📝 Project │
+│ NewRefreshingPairedStrategyEntrySupervisor │ /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a090-gate/internal/app/engine/strategy_entry_supervisor.go:390 │ 📝 Project │
+╰────────────────────────────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴────────────╯
+
+Total: 20 caller(s)

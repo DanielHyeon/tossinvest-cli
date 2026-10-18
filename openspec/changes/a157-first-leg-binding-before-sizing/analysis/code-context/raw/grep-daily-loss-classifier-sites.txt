@@ -1,0 +1,33 @@
+internal/obs/event.go:177:	// EventDailyLossUnmeasurable 은 그날의 실현 손실을 잴 수 없어 전략 신규 진입이 매 주기 거절되는 중이라는 줄(a137). 로그만 —
+internal/obs/event.go:179:	EventDailyLossUnmeasurable EventType = "engine.daily_loss_unmeasurable"
+internal/risk/chain.go:529:		return refuse(ReasonDailyLossLimitReached, fmt.Sprintf(
+internal/risk/chain.go:544:		return refuse(ReasonDailyLossLimitReached, fmt.Sprintf(
+internal/risk/chain.go:560:		return refuse(ReasonDailyLossLimitReached, fmt.Sprintf(
+internal/risk/reason.go:146:	// ReasonDailyLossLimitReached: the day's realised loss reached the absolute
+internal/risk/reason.go:149:	ReasonDailyLossLimitReached ReasonCode = "DAILY_LOSS_LIMIT_REACHED"
+internal/risk/reason.go:180:	ReasonDailyLossLimitReached,
+internal/app/engine/strategy_entry_supervisor.go:240:	// 삼킴이 아닌 정책 결과라 다른 칸에는 남지 않으므로 여기 셈). FirstDailyLossUnmeasurable 은 그 첫 원인(계좌 값 · 원문 오류 없음).
+internal/app/engine/strategy_entry_supervisor.go:242:	FirstDailyLossUnmeasurable  string
+internal/app/engine/strategy_entry_supervisor.go:817:		DailyLossUnmeasurableCycles: worker.dailyLossUnmeasurable, FirstDailyLossUnmeasurable: worker.firstDailyLossCause,
+internal/app/engine/strategy_entry_supervisor.go:961:			cycleCtx := withStrategyDailyLossRecorder(ctx, func(cause error) { s.recordDailyLossUnmeasurable(worker, cause) })
+internal/app/engine/strategy_first_leg_admission.go:31:	// StrategyFirstLegDailyLossUnmeasurable 은 그날의 손실을 잴 수 없어 신규 진입이 막힌 것(a137, Manager 결정 ①) — 매 주기 거절은
+internal/app/engine/strategy_first_leg_admission.go:33:	StrategyFirstLegDailyLossUnmeasurable StrategyFirstLegAdmissionCode = "DAILY_LOSS_UNMEASURABLE"
+internal/app/engine/strategy_first_leg_admission.go:110:		if unmeasurable := (*execgw.DailyLossUnmeasurable)(nil); errors.As(err, &unmeasurable) {
+internal/app/engine/strategy_first_leg_admission.go:113:				refusal := strategyFirstLegRefusal(StrategyFirstLegDailyLossUnmeasurable, accepted.market, err.Error())
+internal/app/engine/strategy_first_leg_admission.go:119:			issue.Reason == string(risk.ReasonDailyLossLimitReached) {
+internal/app/engine/strategy_market_handoff_delivery.go:46:		if unmeasurable := (*execgw.DailyLossUnmeasurable)(nil); errors.As(err, &unmeasurable) {
+internal/app/engine/strategy_market_handoff_delivery.go:47:			recordStrategyDailyLossUnmeasurable(ctx, unmeasurable)
+internal/app/engine/strategy_market_handoff_delivery.go:86:		var unmeasurable *execgw.DailyLossUnmeasurable
+internal/app/engine/a137_daily_loss_notice.go:21:// recordStrategyDailyLossUnmeasurable 은 ctx 의 기록자에 측정 불가를 넘김. 기록자가 없으면(시험 · 감독자 밖) 아무것도 안 함.
+internal/app/engine/a137_daily_loss_notice.go:22:func recordStrategyDailyLossUnmeasurable(ctx context.Context, cause error) {
+internal/app/engine/a137_daily_loss_notice.go:31:// recordDailyLossUnmeasurable 은 계수를 올리고 첫 원인을 남기며, 계좌 일 키가 바뀐 첫 번째에만 알림을 냄.
+internal/app/engine/a137_daily_loss_notice.go:32:func (s *StrategyEntrySupervisor) recordDailyLossUnmeasurable(worker *strategyMarketRuntime, cause error) {
+internal/app/engine/a137_daily_loss_notice.go:65:		log.Warn(obs.EventDailyLossUnmeasurable, obs.FieldMarket, string(market), "account_day", day, obs.FieldDetail,
+internal/execgw/riskguardian.go:664:	if verdict.Reason != risk.ReasonDailyLossLimitReached {
+internal/execgw/a137_daily_loss.go:202:// 「측정 불가」 표지(*DailyLossUnmeasurable)를 원인으로 이어 붙임 — 전략 경로가 그것을 레인 결함이 아닌 정책 결과로 읽게(Manager 결정 ①).
+internal/execgw/a137_daily_loss.go:207:		refusal.cause = &DailyLossUnmeasurable{Cause: measureErr}
+internal/execgw/a137_daily_loss.go:212:// DailyLossUnmeasurable 은 「그날의 손실을 잴 수 없어 신규 진입이 막혔다」는 표지임(측정기 · 토큰에서만 생김). 진입은 잴 수 있을 때까지
+internal/execgw/a137_daily_loss.go:214:type DailyLossUnmeasurable struct {
+internal/execgw/a137_daily_loss.go:218:func (e *DailyLossUnmeasurable) Error() string {
+internal/execgw/a137_daily_loss.go:225:func (e *DailyLossUnmeasurable) Unwrap() error {
+internal/execgw/a137_daily_loss.go:236:	if err := g.escalateFor(ctx, risk.Decision{Reason: risk.ReasonDailyLossLimitReached}); err != nil {

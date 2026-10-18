@@ -1,0 +1,3 @@
+internal/app/engine/strategy_first_leg_admission.go:65:	PrecheckQFinalCampaignFirstLeg(execgw.QFinalCampaignFirstLegIssuance) (execgw.QFinalCampaignFirstLegPrecheck, error)
+internal/app/engine/strategy_first_leg_admission.go:105:	precheck, err := b.guardian.PrecheckQFinalCampaignFirstLeg(authority)
+internal/execgw/riskguardian_first_leg.go:49:func (g *RiskGuardian) PrecheckQFinalCampaignFirstLeg(request QFinalCampaignFirstLegIssuance) (QFinalCampaignFirstLegPrecheck, error) {

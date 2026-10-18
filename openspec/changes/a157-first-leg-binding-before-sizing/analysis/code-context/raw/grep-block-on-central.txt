@@ -1,0 +1,13 @@
+1045:func (s *StrategyEntrySupervisor) blockEntryOnCentralIntegrity(worker *strategyMarketRuntime) bool {
+1046-	if s == nil || s.entry == nil || worker == nil {
+1047-		return false
+1048-	}
+1049-	s.entry.Block(execgw.ReasonStrategyCentralIntegrity, fmt.Sprintf(
+1050-		"the %s strategy refresh cycle reported a central integrity fault; new entries are closed until a restart "+
+1051-			"after the ledger is repaired (first cause in the strategy runtime snapshot); exits are unaffected",
+1052-		worker.descriptor.Market))
+1053-	return true
+1054-}
+1055-
+1056-func (s *StrategyEntrySupervisor) waitMarketRestart(ctx context.Context, notBefore time.Time) error {
+1057-	if notBefore.IsZero() {

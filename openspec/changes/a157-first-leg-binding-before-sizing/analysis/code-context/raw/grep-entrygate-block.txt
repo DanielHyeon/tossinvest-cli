@@ -1,0 +1,17 @@
+543:func (g *EntryGate) Block(reason ReasonCode, detail string) {
+544-	g.mu.Lock()
+545-	defer g.mu.Unlock()
+546-	if _, exists := g.latches[reason]; !exists {
+547-		g.latches[reason] = detail
+--
+582:func (g *EntryGate) BlockUnlessClearedSince(reason ReasonCode, epoch uint64, detail string) (applied, inserted bool) {
+583-	g.mu.Lock()
+584-	defer g.mu.Unlock()
+585-	if g.clearEpochs[reason] != epoch {
+586-		return false, false
+--
+647:func (g *EntryGate) Blocks() map[ReasonCode]string {
+648-	g.mu.Lock()
+649-	defer g.mu.Unlock()
+650-	out := make(map[ReasonCode]string, len(g.latches))
+651-	for k, v := range g.latches {

@@ -1,0 +1,33 @@
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+
+Functions that call 'PrecheckQFinalCampaignFirstLeg':
+╭───────────────────────────────────────────────────────────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬────────────╮
+│ Caller Function                                                   │ Location                                                                                                                                                           │ Call Type  │
+├───────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────┤
+│ admit                                                             │ /mnt/D/Axipient/workspace/TossOS-worktrees/archive-batch1/internal/app/engine/strategy_first_leg_admission.go:69                                                   │ 📝 Project │
+│ admit                                                             │ /mnt/D/project/axipient/TossOS-worktrees/a109-t2/internal/app/engine/strategy_first_leg_admission.go:69                                                            │ 📝 Project │
+│ admit                                                             │ /mnt/D/project/axipient/TossOS-worktrees/a109/internal/app/engine/strategy_first_leg_admission.go:69                                                               │ 📝 Project │
+│ admit                                                             │ /mnt/D/project/axipient/TossOS/internal/app/engine/strategy_first_leg_admission.go:69                                                                              │ 📝 Project │
+│ admit                                                             │ /mnt/D/tmp-review-7534-adv/wt/internal/app/engine/strategy_first_leg_admission.go:69                                                                               │ 📝 Project │
+│ admit                                                             │ /tmp/a121-red/internal/app/engine/strategy_first_leg_admission.go:74                                                                                               │ 📝 Project │
+│ admit                                                             │ /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a090-gate/internal/app/engine/strategy_first_leg_admission.go:69 │ 📝 Project │
+│ admit                                                             │ /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/wt-a146/internal/app/engine/strategy_first_leg_admission.go:86   │ 📝 Project │
+│ admit                                                             │ /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/wt-gate/internal/app/engine/strategy_first_leg_admission.go:73   │ 📝 Project │
+│ admit                                                             │ /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/wt127mut/internal/app/engine/strategy_first_leg_admission.go:74  │ 📝 Project │
+│ admit                                                             │ /tmp/claude-1000/a091-gate/internal/app/engine/strategy_first_leg_admission.go:74                                                                                  │ 📝 Project │
+│ admit                                                             │ /tmp/claude-1000/a092-gate/internal/app/engine/strategy_first_leg_admission.go:69                                                                                  │ 📝 Project │
+│ admit                                                             │ /tmp/claude-1000/a094-gate/internal/app/engine/strategy_first_leg_admission.go:69                                                                                  │ 📝 Project │
+│ admit                                                             │ /tmp/claude-1000/a095-gate/internal/app/engine/strategy_first_leg_admission.go:69                                                                                  │ 📝 Project │
+│ admit                                                             │ /tmp/tossos-a063-execution-adoption/internal/app/engine/strategy_first_leg_admission.go:69                                                                         │ 📝 Project │
+│ admit                                                             │ /tmp/tossos-a074-a079-integration/internal/app/engine/strategy_first_leg_admission.go:69                                                                           │ 📝 Project │
+│ TestQFinalCampaignFirstLegProjectsGuardianOwnedLineageAllSixLanes │ /tmp/tossos-a074-a079-integration/internal/execgw/riskguardian_account_base_testseam_test.go:98                                                                    │ 📝 Project │
+│ TestQFinalCampaignFirstLegWeeklyBindingPairedKRUS                 │ /tmp/tossos-a074-a079-integration/internal/execgw/riskguardian_account_base_testseam_test.go:182                                                                   │ 📝 Project │
+│ TestQFinalCampaignFirstLegWeeklyBindingPairedKRUS                 │ /tmp/tossos-a074-a079-integration/internal/execgw/riskguardian_account_base_testseam_test.go:182                                                                   │ 📝 Project │
+│ TestQFinalCampaignFirstLegWeeklyBindingPairedKRUS                 │ /tmp/tossos-a074-a079-integration/internal/execgw/riskguardian_account_base_testseam_test.go:182                                                                   │ 📝 Project │
+╰───────────────────────────────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴────────────╯
+
+Total: 20 caller(s)

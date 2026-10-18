@@ -1,0 +1,9 @@
+
+Callers of "strategyDailyLossNotice" (2):
+
+function    TestA137TheProductionNoticeIsOneWarningLine
+  internal/app/engine/a137_unmeasurable_notice_test.go:110
+
+method      NewRefreshingPairedStrategyEntrySupervisor
+  internal/app/engine/strategy_entry_supervisor.go:414
+

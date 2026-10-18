@@ -1,0 +1,3 @@
+internal/execgw/riskguardian_first_leg.go:50:	entry, err := g.PrecheckQFinalEntry(request.Entry)
+internal/execgw/riskguardian_qfinal.go:89:func (g *RiskGuardian) PrecheckQFinalEntry(request QFinalEntryIssuance) (QFinalEntryPrecheck, error) {
+internal/execgw/riskguardian_qfinal.go:323:	precheck, err := g.PrecheckQFinalEntry(request)
