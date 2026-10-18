@@ -1,0 +1,4 @@
+[logic-map] a157-first-leg-binding-before-sizing: base 7b1748481889 → working tree (no landed-commit.txt in HEAD) required 3 function(s) — judged at HEAD 6daacdbf84e9
+[logic-map] a157-first-leg-binding-before-sizing: the target is the working tree, so this window also holds 8 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits
+[logic-map] a157-first-leg-binding-before-sizing: evidence complete or diff-proven exempt
+rc=0

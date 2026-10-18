@@ -1,0 +1,20 @@
+HEAD 170ce91442ad4ec6233c5bf0934f2c85857ecee6 start 2026-10-18T09:26:00Z go version go1.26.5 linux/amd64
+$ go test -count=1 -timeout 30m ./internal/execgw/ ./internal/app/engine/ ./internal/risk/ ./internal/riskbucket/ ./internal/journal/
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	270.263s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	551.238s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/risk	0.010s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	0.365s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	741.189s
+$ go test -count=1 -timeout 45m -tags tossos_testseams ./internal/execgw/ ./internal/app/engine/ ./internal/risk/ ./internal/riskbucket/ ./internal/journal/
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	332.199s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	805.898s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/risk	0.013s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	7.226s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	823.959s
+$ go test -race -count=1 -timeout 30m -tags tossos_testseams ./internal/execgw/ -run 'TestA157|TestQFinalCampaignFirstLeg|TestA136QFinalCampaignFirstLeg|TestA138QFinalCampaignFirstLeg|TestA137'
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	408.749s
+$ go test -race -count=1 -timeout 30m -tags tossos_testseams ./internal/app/engine/ -run 'TestA157|TestA137|TestA146|TestStrategyFirstLegAdmission|TestTheMarketThatLeadsAWaveAlwaysPublishesIt|TestAFailedWaveCarriesNoAssemblyForEitherMarket'
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	99.682s
+$ go test -count=1 -timeout 30m ./cmd/tossctl/ (조립 감독자 dormant 시험 포함)
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	75.616s
+end 2026-10-18T10:02:58Z
