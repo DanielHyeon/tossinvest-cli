@@ -1,0 +1,15 @@
+
+Callers of "ApplyPositionCampaignFill" (4):
+
+function    TestAmbiguousCampaignFillPreservesAuthoritativeFillTransaction
+  internal/journal/position_campaign_hardening_test.go:182
+
+function    TestCampaignFillRollbackAndRestartAreDeterministic
+  internal/journal/position_campaign_test.go:290
+
+function    applyCampaignFillForTest
+  internal/journal/position_campaign_test.go:554
+
+method      backfillConfirmedStrategyFillTx
+  internal/journal/strategy_dispatch_runtime.go:1297
+

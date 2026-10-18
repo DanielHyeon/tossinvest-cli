@@ -1,0 +1,8 @@
+--- FAIL: TestA159PartialFillLatchRestartAndNextLeg (0.75s)
+    --- FAIL: TestA159PartialFillLatchRestartAndNextLeg/blocked-true (0.36s)
+        a159_protection_restart_test.go:168: expected exposure block: leg={CampaignID: Sequence:0 PlanID: IntentID: RequestedQuantity: FilledQuantity: ResidualQuantity: State: Version:0 CampaignVersion:0 CreatedAt: UpdatedAt:} err=position campaign: invalid transition: campaign RECONCILE cannot accept LEG_PLANNED
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.753s
+FAIL
+
+EXIT_CODE=1

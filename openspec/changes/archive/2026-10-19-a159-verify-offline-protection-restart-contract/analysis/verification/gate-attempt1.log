@@ -1,0 +1,25 @@
+bash tools/gate.sh a159-verify-offline-protection-restart-contract
+GATE: a159-verify-offline-protection-restart-contract
+repo: /tmp/tossos-a148-impl-20261018
+
+==> 1/11 tasks.md 확인
+OK: openspec/changes/a159-verify-offline-protection-restart-contract/tasks.md
+
+==> 2/11 미완료 태스크 확인
+OK: 미완료 태스크 0건
+
+==> 3/11 짝 change 확인 (deploy-pair.txt)
+OK: 짝 선언 없음 — 이 change 는 혼자 배포한다
+
+==> 4/11 gstack 리뷰 기록 확인
+OK: openspec/changes/a159-verify-offline-protection-restart-contract/review.md
+
+==> 5/11 Function Logic Map 증거 확인
+[logic-map] a159-verify-offline-protection-restart-contract: base 1dbff7ced365 → working tree (no landed-commit.txt in HEAD) required 0 function(s) — judged at HEAD 1dbff7ced365
+[logic-map] a159-verify-offline-protection-restart-contract: the target is the working tree, so this window also holds 0 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: no landing recorded — no `revision: current` evidence pins a landing for this change
+[logic-map] missing analysis or `Function Logic Map: not-applicable` review marker
+
+GATE FAIL: a159-verify-offline-protection-restart-contract — Function Logic Map 산출물 미완료
+make: *** [Makefile:184: gate] Error 1
+
+EXIT_CODE=2

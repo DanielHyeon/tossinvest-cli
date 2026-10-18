@@ -1,0 +1,20 @@
+{
+  "id": "STORY-TOS-a159",
+  "title": "오프라인 부분 체결·보호 복구 회귀 검증",
+  "feature": "FEAT-TOS-013",
+  "intent": "archived",
+  "openspec": {
+    "change_id": "a159-verify-offline-protection-restart-contract",
+    "path": "openspec/changes/archive/2026-10-19-a159-verify-offline-protection-restart-contract"
+  },
+  "found_by": {
+    "date": "2026-10-19",
+    "how": "User approved a separate offline regression change; implementation scope and acceptance remain subject to design review.",
+    "record": "openspec/changes/archive/2026-10-19-a159-verify-offline-protection-restart-contract/proposal.md"
+  },
+  "acceptance": [
+    "Verify scoped synthetic partial-fill, durable entry block, restart and duplicate handling through existing journal and protection paths.",
+    "Verify protective evaluation and submission behavior for unsettled and terminal entry states with test doubles; do not infer real broker outcomes.",
+    "Preserve existing policy, operating settings, live data and existing evidence; complete independent review and required lifecycle checks."
+  ]
+}

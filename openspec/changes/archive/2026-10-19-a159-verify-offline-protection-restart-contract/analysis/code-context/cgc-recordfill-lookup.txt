@@ -1,0 +1,50 @@
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+Found 20 matches for 'RecordFill':
+╭────────────┬──────────┬──────────────────────────────────────────────────────╮
+│ Name       │ Type     │ Location                                             │
+├────────────┼──────────┼──────────────────────────────────────────────────────┤
+│ RecordFill │ Function │ /tmp/claude-1000/-mnt-D-project-axipient-TossOS/4ae1 │
+│            │          │ be25-8c79-4117-9da1-fbea023b699d/scratchpad/gate-lab │
+│            │          │ el/internal/journal/fills.go:242                     │
+│ RecordFill │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a041/intern │
+│            │          │ al/journal/fills.go:242                              │
+│ RecordFill │ Function │ /tmp/claude-1000/-mnt-D-project-axipient-TossOS/81c6 │
+│            │          │ 1aa2-383f-4024-9f8a-7b691a61be10/scratchpad/gatewt/i │
+│            │          │ nternal/journal/fills.go:242                         │
+│ RecordFill │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a042/intern │
+│            │          │ al/journal/fills.go:242                              │
+│ RecordFill │ Function │ /mnt/D/project/axipient/TossOS-rps-gate/internal/jou │
+│            │          │ rnal/fills.go:242                                    │
+│ RecordFill │ Function │ /tmp/tossos-a052/internal/journal/fills.go:242       │
+│ RecordFill │ Function │ /tmp/tossos-gate-wt/internal/journal/fills.go:242    │
+│ RecordFill │ Function │ /mnt/D/project/axipient/TossOS-cac-gate/internal/jou │
+│            │          │ rnal/fills.go:242                                    │
+│ RecordFill │ Function │ /mnt/D/project/axipient/TossOS-cac2/internal/journal │
+│            │          │ /fills.go:242                                        │
+│ RecordFill │ Function │ /mnt/D/project/axipient/TossOS-ux-gate/internal/jour │
+│            │          │ nal/fills.go:242                                     │
+│ RecordFill │ Function │ /mnt/D/project/axipient/TossOS-cb-gate/internal/jour │
+│            │          │ nal/fills.go:242                                     │
+│ RecordFill │ Function │ /tmp/tossos-workflow-gate-No1rAbrq/internal/journal/ │
+│            │          │ fills.go:242                                         │
+│ RecordFill │ Function │ /tmp/tossos-workflow-gate-8n1aWD4n/internal/journal/ │
+│            │          │ fills.go:242                                         │
+│ RecordFill │ Function │ /tmp/tossos-workflow-gate-PKj4j4d2/internal/journal/ │
+│            │          │ fills.go:242                                         │
+│ RecordFill │ Function │ /tmp/tossos-gbrain-gate.MX45VC/repo/internal/journal │
+│            │          │ /fills.go:242                                        │
+│ RecordFill │ Function │ /tmp/tossos-gbrain-gate.4nl0Kz/repo/internal/journal │
+│            │          │ /fills.go:242                                        │
+│ RecordFill │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a048/intern │
+│            │          │ al/journal/fills.go:242                              │
+│ RecordFill │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a045/intern │
+│            │          │ al/journal/fills.go:242                              │
+│ RecordFill │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a046/intern │
+│            │          │ al/journal/fills.go:242                              │
+│ RecordFill │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a043/intern │
+│            │          │ al/journal/fills.go:242                              │
+╰────────────┴──────────┴──────────────────────────────────────────────────────╯

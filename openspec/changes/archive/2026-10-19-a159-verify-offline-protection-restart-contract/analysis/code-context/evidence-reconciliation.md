@@ -1,0 +1,5 @@
+# Evidence reconciliation
+
+CodeGraph status and callers captured from this worktree; source reads and AST files confirm exact targets and source hashes. The pre-edit lookup found `ApplyPositionCampaignFill` caller `backfillConfirmedStrategyFillTx` and ReconcileStrategyProtection caller `workingSet`; source inspection supplies transactional details, since callers alone do not establish branch semantics. The recorded CodeGraph index is a pre-test snapshot; final fingerprint refresh remains required after all changes.
+
+CGC `find name RecordFill --no-fuzzy` returned 20 matches across multiple unrelated indexed worktrees. Its broad result is supporting discovery only and does not establish target-worktree freshness or exact caller completeness. Read target source and AST instead; run the supported scoped synchronization before tests and reconcile its result without treating CGC as hard authority. The archived component tests are not a single connected workflow. No test or runtime action is asserted by this analysis.

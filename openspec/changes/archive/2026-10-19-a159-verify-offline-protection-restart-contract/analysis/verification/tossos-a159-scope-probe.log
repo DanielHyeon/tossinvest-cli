@@ -1,0 +1,7 @@
+--- FAIL: TestA159ProbeSecondScope (0.35s)
+    a159_protection_restart_test.go:383: US dispatch={IntentID: AttemptID: State: Class: BrokerOrderID: Reason: Detail: Result:{Kind: Status: OrderID: OriginalOrderID: CurrentOrderID: Symbol: Market: Quantity:0 FilledQuantity:0 Price:0 AverageExecutionPrice:0 OrderDate: Warnings:[]}} err=engine: first-leg admission ATOMIC_ADMISSION_FAILED: execgw: issuing atomic q_final first leg: journal: risk bucket entry blocked: horizon bucket "SHORT" carries latched usage (UNKNOWN_ACTUAL_RISK)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.355s
+FAIL
+
+EXIT_CODE=1

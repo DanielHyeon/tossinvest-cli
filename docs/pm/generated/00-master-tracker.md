@@ -173,3 +173,4 @@
     - STORY-TOS-a150 — 전략별 초기 손절 수량 원장 청산 일관성 [archived] → `a150-bind-strategy-stop-sizing-and-exit`
     - STORY-TOS-a155 — 버전 전략 관측 전용 연결 [archived] → `a155-observe-versioned-strategy-decisions`
     - STORY-TOS-a156 — 실거래 연결과 후속 진입 마감 복구 승인 [in_progress] → `a156-gate-live-strategy-policy-rollout`
+    - STORY-TOS-a159 — 오프라인 부분 체결·보호 복구 회귀 검증 [archived] → `a159-verify-offline-protection-restart-contract`
