@@ -154,3 +154,4 @@
 | `a154-preview-validated-stop-policy-options` | STORY-TOS-a154 | in_progress |
 | `a155-observe-versioned-strategy-decisions` | STORY-TOS-a155 | in_progress |
 | `a156-gate-live-strategy-policy-rollout` | STORY-TOS-a156 | in_progress |
+| `a157-first-leg-binding-before-sizing` | STORY-TOS-a157 | in_progress |

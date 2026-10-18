@@ -1,0 +1,15 @@
+
+Callers of "NewPairedStrategyEntryProductionAssembly" (4):
+
+method      refreshPairedStrategyEntryProductionAssembly
+  internal/app/engine/strategy_entry_supervisor.go:611
+
+function    TestProductionStrategyEntryAssemblyIsPairedDormantAndInert
+  cmd/tossctl/engine_strategy_entry_dormant_test.go:15
+
+function    TestProductionStrategyEntryAssemblyCannotPromoteFromAutomationFacts
+  cmd/tossctl/engine_strategy_entry_dormant_test.go:104
+
+function    NewDormantStrategyEntrySupervisor
+  internal/app/engine/strategy_entry_supervisor.go:657
+

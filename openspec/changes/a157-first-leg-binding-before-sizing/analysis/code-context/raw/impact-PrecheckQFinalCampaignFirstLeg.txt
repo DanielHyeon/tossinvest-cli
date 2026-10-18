@@ -1,0 +1,15 @@
+
+Impact of changing "PrecheckQFinalCampaignFirstLeg" — 4 affected symbols:
+
+internal/app/engine/strategy_first_leg_admission.go
+  method      PrecheckQFinalCampaignFirstLeg:65
+
+internal/execgw/riskguardian_first_leg.go
+  method      PrecheckQFinalCampaignFirstLeg:49
+
+internal/app/engine/strategy_first_leg_admission_test.go
+  method      PrecheckQFinalCampaignFirstLeg:190
+
+internal/app/engine/a146_cap_zero_characterization_test.go
+  method      PrecheckQFinalCampaignFirstLeg:42
+

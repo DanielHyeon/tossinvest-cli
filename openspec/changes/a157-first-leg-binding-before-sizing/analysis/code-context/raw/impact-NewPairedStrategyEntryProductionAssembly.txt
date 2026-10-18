@@ -1,0 +1,26 @@
+
+Impact of changing "NewPairedStrategyEntryProductionAssembly" — 15 affected symbols:
+
+internal/app/engine/strategy_entry_supervisor.go
+  method      NewPairedStrategyEntryProductionAssembly:325
+  method      refreshPairedStrategyEntryProductionAssembly:611
+  method      runProductionStrategyMarketCycle:546
+  function    NewPairedStrategyEntryProductionAssembly:648
+  function    NewDormantStrategyEntrySupervisor:657
+
+internal/app/engine/a112_refresh_singleflight_test.go
+  function    TestTwoMarketsRideOneAuthorityWaveInsteadOfTakingTurns:52
+  function    TestAFailedWaveReachesEveryMarketAndIsNeverCached:120
+  function    TestAMarketWaitingOnTheWaveLeavesWhenItsOwnCycleIsCancelled:151
+  function    TestAPanickingWaveNeverStrandsTheMarketsWaitingOnIt:210
+  function    TestTheMarketThatLeadsAWaveAlwaysPublishesIt:258
+  function    TestARefreshWithoutAClockRefusesBeforeItCanMintAWave:293
+  function    TestAFailedWaveCarriesNoAssemblyForEitherMarket:313
+
+cmd/tossctl/engine_strategy_entry_dormant_test.go
+  function    TestProductionStrategyEntryAssemblyIsPairedDormantAndInert:15
+  function    TestProductionStrategyEntryAssemblyCannotPromoteFromAutomationFacts:104
+
+internal/app/engine/strategy_entry_supervisor_test.go
+  function    TestStrategyEntrySupervisorDefaultsPairedMarketsDormant:18
+

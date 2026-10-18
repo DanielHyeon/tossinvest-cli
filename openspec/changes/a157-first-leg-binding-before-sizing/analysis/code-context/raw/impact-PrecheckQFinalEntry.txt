@@ -1,0 +1,13 @@
+
+Impact of changing "PrecheckQFinalEntry" — 4 affected symbols:
+
+internal/execgw/riskguardian_qfinal.go
+  method      PrecheckQFinalEntry:89
+  method      IssueQFinalEntry:322
+
+internal/execgw/riskguardian_first_leg.go
+  method      PrecheckQFinalCampaignFirstLeg:49
+
+internal/app/engine/strategy_first_leg_admission.go
+  method      PrecheckQFinalCampaignFirstLeg:65
+

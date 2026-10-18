@@ -61,6 +61,7 @@
     - STORY-TOS-a139 — One trade risks a third of the day's loss allowance [archived] → `a139-per-trade-risk-budget`
     - STORY-TOS-a144 — Trigger verification does not require a TTL-edge measurement [archived] → `a144-separate-trigger-ttl-prerequisite`
     - STORY-TOS-a146 — A strategy entry the Guardian cannot size even one unit for is skipped, not treated as a lane fault [archived] → `a146-guardian-cap-zero-skips-the-entry`
+    - STORY-TOS-a157 — A strategy first-leg binding defect is refused before Guardian sizing, so a zero cap cannot hide it [in_progress] → `a157-first-leg-binding-before-sizing`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [archived] → `console-click-approval`

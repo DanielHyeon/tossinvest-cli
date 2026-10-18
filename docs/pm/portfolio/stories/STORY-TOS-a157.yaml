@@ -1,0 +1,25 @@
+{
+  "id": "STORY-TOS-a157",
+  "title": "A strategy first-leg binding defect is refused before Guardian sizing, so a zero cap cannot hide it",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a157-first-leg-binding-before-sizing",
+    "path": "openspec/changes/a157-first-leg-binding-before-sizing"
+  },
+  "found_by": {
+    "date": "2026-10-18",
+    "how": "The a146 freeze review (P1-1, design F10) found that a zero Guardian cap returns before the first-leg policy-version, lineage and weekly-reservation binding checks, so after a146 a co-occurring binding defect becomes a silent skip. The human decided on 2026-10-18 that the binding checks must move ahead of sizing before any strategy lane is activated (P2 S5/S6). The a146 implementation review (P3-5) also found that the assembly supervisor lacks the daily-loss and entry-skip notices.",
+    "record": "openspec/changes/archive/2026-10-17-a146-guardian-cap-zero-skips-the-entry/tasks.md"
+  },
+  "acceptance": [
+    "Every first-leg binding check that does not need q_final runs before Guardian sizing, so a binding defect is refused as a binding defect even when the cap is zero",
+    "The set of first-leg requests the Guardian accepts is unchanged; only the refusal reported for a request with more than one defect changes",
+    "The assembly supervisor carries the same daily-loss and entry-skip notices as the production refresh supervisor",
+    "Every sell, stop-loss and emergency exit path behaves exactly as before"
+  ],
+  "limits": [
+    "The lineage projection needs q_final and stays after sizing.",
+    "The bucket, chain and exposure judgements inside the entry precheck need q_final and stay after the cap."
+  ]
+}
