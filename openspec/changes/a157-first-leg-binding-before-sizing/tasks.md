@@ -49,7 +49,7 @@ Story: `STORY-TOS-a157` · **High-risk**(Guardian · execgw 첫 다리 판정 �
 
 - [ ] 2.1 `make lint` · `go vet ./...` · `rtk proxy go test -count=1`(execgw · app/engine · risk · riskbucket · journal) · `-tags tossos_testseams` · `-race` 대상 ·
       `openspec validate --strict` → `analysis/verify/receipts.md`
-- [ ] 2.2 변이 원장(`analysis/mutation/`, design D6 — 저장소 밖 사본 · pid 접미 · 무변이 대조군 GREEN · 시작 sha 단언). 비동등 전부 CAUGHT
+- [x] 2.2 변이 원장(`analysis/mutation/`, design D6 — 저장소 밖 사본 · pid 접미 · 무변이 대조군 GREEN · 시작 sha 단언). 비동등 전부 CAUGHT
 - [ ] 2.3 독립 적대 리뷰(분리 컨텍스트 — Manager) → review.md → 수리
 
 ## 3. 사람 · Manager
