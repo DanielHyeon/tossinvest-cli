@@ -2,7 +2,7 @@
 
 우선순위 2/9: 세션 VWAP와 확정봉 EMA9 계산. 선행 change: a148.
 이 문서는 목표 동작을 명세한다. 소스 구현·배포·실거래 검증 완료를 뜻하지 않는다.
-공통 기준 증거: `../archive/2026-10-18-a148-clarify-parker-risk-reward-contract/analysis/code-context/`; 구현 전에는 현 HEAD의 호출 사슬·설정 binding과 수정 함수 AST를 새로 확인한다.
+공통 기준 증거: `../2026-10-18-a148-clarify-parker-risk-reward-contract/analysis/code-context/`; 구현 전에는 현 HEAD의 호출 사슬·설정 binding과 수정 함수 AST를 새로 확인한다.
 
 ## Goals / Non-Goals
 
@@ -18,6 +18,12 @@ EMA9는 정규장 확정 5분봉 종가 9개 SMA를 seed로, alpha=2/(9+1)=0.2�
 VWAP slope는 인접한 두 확정 5분 close 시점 VWAP의 (current/previous-1)*100으로 고정한다. as_of, received_at, source, calendar/method version, bar range/count, input digest와 readiness 이유를 반환한다. 내부 계산은 checked rational/decimal, 표시만 반올림한다.
 
 ## Risks / Trade-offs
+
+### 구현 경계 확인 (2026-10-18, Manager)
+
+이번 계산기는 출처·수신 시각·세션 캘린더를 명시한 호출자 제공 입력을 사용한다. 출처 문자열이나 KR 장시간만으로 공식 데이터·거래일을 인증하지 않으며, 기존 official page/VerifiedBar 봉인을 생성하지 않는다. 결과의 provenance는 호출자 제공·미검증임을 표시한다. 5분봉 OHLCV는 같은 prefix의 구성 1분봉과 대조한다. 09:46의 slope는 09:45와 09:40 경계값으로 계산하며, 1분 prefix가 불완전하면 별도 5분봉이 충분해도 ready EMA를 만들지 않는다. 실제 데이터 수집·검증 adapter 연결은 이번 범위가 아니다.
+
+부분 결과는 지표별 상태로 보존하되, 전체 상태 `known`은 VWAP·EMA9·slope가 모두 준비됐을 때만 사용한다. 그 전에는 전체 `not_ready`로 표시한다. 숫자는 길이가 제한된 십진 표기만 허용하며 지수·분수·진법 표기로 입력 크기 제한을 우회하지 못하게 한다.
 
 - 과적합·표본 부족 → 수익성 주장과 기능 정확성 판정을 분리하고 unknown/inconclusive를 보존한다.
 - 기존 계약 회귀 → frozen fixtures, OFF 동작, 기존 포지션 snapshot을 보존한다.
