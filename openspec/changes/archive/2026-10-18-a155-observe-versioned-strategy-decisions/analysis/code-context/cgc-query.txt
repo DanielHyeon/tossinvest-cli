@@ -1,0 +1,15 @@
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+[
+  {
+    "f.name": "ParkerRRFromDecision",
+    "f.file_path": null
+  },
+  {
+    "f.name": "CalculateSessionFeatures",
+    "f.file_path": null
+  }
+]

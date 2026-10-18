@@ -20,3 +20,11 @@ Replay validation SHALL NOT authorize actual capture; actual sessions SHALL requ
 #### Scenario: No session approval
 - **WHEN** offline replay and code review pass
 - **THEN** no collector, schedule, restart or API measurement is started
+
+#### Scenario: Corrupt or ambiguous recovery
+- **WHEN** a record payload digest, checkpoint prefix, file ownership or final newline is invalid
+- **THEN** recovery refuses without truncating or appending to existing evidence
+
+#### Scenario: Unsupported runtime scope
+- **WHEN** US data reaches the existing KR-only session-feature or Parker RR adapter
+- **THEN** those diagnostics remain explicitly unsupported and no runtime strategy or order eligibility is inferred

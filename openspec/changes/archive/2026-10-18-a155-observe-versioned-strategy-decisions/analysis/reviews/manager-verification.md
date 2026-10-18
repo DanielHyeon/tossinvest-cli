@@ -1,0 +1,11 @@
+# Manager implementation verification
+
+2026-10-18. Scope: a155 offline implementation, excluding a157 and all live/operational changes.
+
+Direct source inspection covered diagnostic input/currency/basis validation, optional quantity and exact risk calculation, queue admission/closure and counters, CLI validation and failure reporting, and ledger/checkpoint recovery. The reviewed implementation preserves computable diagnostics when quantity is absent, distinguishes unsupported US feature/RR calculation from hypothetical USD risk, rejects conflicting identities and malformed records, and re-establishes recovery durability before accepting duplicate success. Existing runtime source files remain unmodified; new code is isolated in `internal/strategyobserve` and its offline replay tool.
+
+Independent implementation review passed after correcting currency, optional quantity and recovery barriers. The gstack reviewer has confirmed resolution of physical-line, FIFO and durability findings; its final written receipt must be present before gate freeze. Synthetic CLI receipts and focused race evidence were inspected, not represented as live observations or independently rerun Manager tests. Tests are delegated to Terra/reviewers.
+
+Implementation scope accepted for the aggregate gate. This document does not establish aggregate gate success, archive, commit, push, actual observation, profitability or live readiness. Those require separate actual receipts. Existing r1/a128/a147 evidence and the original checkout remain outside this change.
+
+Gate attempt 1 failed at the repository-wide a047 architecture guard because the new offline leaf imports the pure RR helper. Manager directly inspected the existing guard and approved only the exact offline leaf's helper/type/constants, together with an inverse runtime-import prohibition. Direct inspection of the revised guard confirms import paths now use `strconv.Unquote` and both directions are checked; raw/escaped literal bypasses found by reviewers are covered by negative fixtures. This changes architecture tests, not engine implementation or operational wiring. The original failure remains evidence. A new reviewed aggregate-gate attempt is required before lifecycle approval.

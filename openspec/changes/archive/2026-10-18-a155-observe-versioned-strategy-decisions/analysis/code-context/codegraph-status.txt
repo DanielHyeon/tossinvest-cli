@@ -1,0 +1,37 @@
+
+CodeGraph Status
+
+Project: /tmp/tossos-a148-impl-20261018
+
+Index Statistics:
+  Files:     2,872
+  Nodes:     50,360
+  Edges:     186,550
+  DB Size:   190.79 MB
+  Backend:   node:sqlite — built-in (full WAL)
+  Journal:   wal
+
+Nodes by Kind:
+  import          16,303
+  function        16,178
+  method          5,799
+  constant        3,532
+  struct          2,910
+  file            2,578
+  variable        2,286
+  type_alias      355
+  interface       215
+  class           132
+  route           69
+  property        3
+
+Files by Language:
+  go              2,275
+  yaml            294
+  python          272
+  typescript      14
+  tsx             13
+  javascript      4
+
+✓ Index is up to date
+

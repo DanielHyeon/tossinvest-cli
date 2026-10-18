@@ -1,0 +1,57 @@
+**TestA047ShipsNoRuntimeOrderOrExitWiring** (function)
+
+**Location:** internal/strategyengine/wiring_test.go:13
+**Signature:** `(t *testing.T)`
+
+```go
+13	func TestA047ShipsNoRuntimeOrderOrExitWiring(t *testing.T) {
+14		root := filepath.Clean(filepath.Join("..", ".."))
+15		modulePath := "github.com/JungHoonGhae/tossinvest-cli/internal/strategyengine"
+16		allowedDormantContracts := map[string]bool{
+17			"internal/execgw/riskguardian.go":       true,
+18			"internal/strategydispatch/adapters.go": true,
+19			"internal/strategydispatch/dispatch.go": true,
+20			"internal/console/strategy_runtime.go":  true,
+21			"internal/httpapi/read.go":              true,
+22		}
+23		err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
+24			if err != nil {
+25				return err
+26			}
+27			if entry.IsDir() {
+28				if entry.Name() == ".git" || entry.Name() == "vendor" {
+29					return filepath.SkipDir
+30				}
+31				return nil
+32			}
+33			if !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+34				return nil
+35			}
+36			relative, _ := filepath.Rel(root, path)
+37			if strings.HasPrefix(filepath.ToSlash(relative), "internal/strategyengine/") {
+38				return nil
+39			}
+40			file, parseErr := parser.ParseFile(token.NewFileSet(), path, nil, 0)
+41			if parseErr != nil {
+42				return parseErr
+43			}
+44			for _, spec := range file.Imports {
+45				if strings.Trim(spec.Path.Value, "\"") == modulePath {
+46					rel := filepath.ToSlash(relative)
+47					if !allowedDormantContracts[rel] {
+48						t.Errorf("a047 dormant engine is runtime-wired by %s", rel)
+49					}
+50					if rel == "internal/console/strategy_runtime.go" || rel == "internal/httpapi/read.go" {
+51						assertConsoleOnlyCallsDormantDescriptor(t, file)
+52					}
+53				}
+54			}
+55			return nil
+56		})
+57		if err != nil {
+58			t.Fatal(err)
+59		}
+60	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** Name (internal/app/engine/instrumentnames.go:66), assertConsoleOnlyCallsDormantDescriptor (internal/strategyengine/wiring_test.go:62), T (internal/i18n/i18n.go:104)

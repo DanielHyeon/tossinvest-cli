@@ -1,0 +1,13 @@
+panic: close of closed channel
+
+goroutine 35 [running]:
+github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve.TestQueueBlockedWriterDoesNotBlockProducerOrExit.func1.1({0x0?, 0x0?, 0x0?})
+	/tmp/tossos-a148-impl-20261018/internal/strategyobserve/observe_test.go:76 +0x34
+github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve.(*Queue).Run(0xc0000c8180, 0xc000185fb8)
+	/tmp/tossos-a148-impl-20261018/internal/strategyobserve/queue.go:66 +0x99
+github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve.TestQueueBlockedWriterDoesNotBlockProducerOrExit.func1()
+	/tmp/tossos-a148-impl-20261018/internal/strategyobserve/observe_test.go:76 +0xa5
+created by github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve.TestQueueBlockedWriterDoesNotBlockProducerOrExit in goroutine 34
+	/tmp/tossos-a148-impl-20261018/internal/strategyobserve/observe_test.go:76 +0x271
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve	0.127s
+FAIL

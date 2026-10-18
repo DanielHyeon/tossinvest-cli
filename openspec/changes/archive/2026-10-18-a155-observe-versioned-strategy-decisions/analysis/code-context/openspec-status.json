@@ -1,0 +1,88 @@
+{
+  "changeName": "a155-observe-versioned-strategy-decisions",
+  "schemaName": "spec-driven",
+  "planningHome": {
+    "kind": "repo",
+    "root": "/tmp/tossos-a148-impl-20261018",
+    "changesDir": "/tmp/tossos-a148-impl-20261018/openspec/changes",
+    "defaultSchema": "spec-driven"
+  },
+  "changeRoot": "/tmp/tossos-a148-impl-20261018/openspec/changes/a155-observe-versioned-strategy-decisions",
+  "artifactPaths": {
+    "proposal": {
+      "outputPath": "proposal.md",
+      "resolvedOutputPath": "/tmp/tossos-a148-impl-20261018/openspec/changes/a155-observe-versioned-strategy-decisions/proposal.md",
+      "existingOutputPaths": [
+        "/tmp/tossos-a148-impl-20261018/openspec/changes/a155-observe-versioned-strategy-decisions/proposal.md"
+      ]
+    },
+    "specs": {
+      "outputPath": "specs/**/*.md",
+      "resolvedOutputPath": "/tmp/tossos-a148-impl-20261018/openspec/changes/a155-observe-versioned-strategy-decisions/specs/**/*.md",
+      "existingOutputPaths": [
+        "/tmp/tossos-a148-impl-20261018/openspec/changes/a155-observe-versioned-strategy-decisions/specs/strategy-runtime/spec.md"
+      ]
+    },
+    "design": {
+      "outputPath": "design.md",
+      "resolvedOutputPath": "/tmp/tossos-a148-impl-20261018/openspec/changes/a155-observe-versioned-strategy-decisions/design.md",
+      "existingOutputPaths": [
+        "/tmp/tossos-a148-impl-20261018/openspec/changes/a155-observe-versioned-strategy-decisions/design.md"
+      ]
+    },
+    "tasks": {
+      "outputPath": "tasks.md",
+      "resolvedOutputPath": "/tmp/tossos-a148-impl-20261018/openspec/changes/a155-observe-versioned-strategy-decisions/tasks.md",
+      "existingOutputPaths": [
+        "/tmp/tossos-a148-impl-20261018/openspec/changes/a155-observe-versioned-strategy-decisions/tasks.md"
+      ]
+    }
+  },
+  "isComplete": true,
+  "applyRequires": [
+    "tasks"
+  ],
+  "nextSteps": [
+    "All planning artifacts are complete; review tasks before implementation."
+  ],
+  "actionContext": {
+    "mode": "repo-local",
+    "sourceOfTruth": "repo",
+    "planningArtifacts": [
+      "proposal",
+      "design",
+      "specs",
+      "tasks"
+    ],
+    "linkedContext": [],
+    "allowedEditRoots": [
+      "/tmp/tossos-a148-impl-20261018"
+    ],
+    "requiresAffectedAreaSelection": false,
+    "constraints": [
+      "Repo-local change artifacts and implementation edits are scoped to this project."
+    ]
+  },
+  "artifacts": [
+    {
+      "id": "proposal",
+      "outputPath": "proposal.md",
+      "status": "done"
+    },
+    {
+      "id": "design",
+      "outputPath": "design.md",
+      "status": "done"
+    },
+    {
+      "id": "specs",
+      "outputPath": "specs/**/*.md",
+      "status": "done"
+    },
+    {
+      "id": "tasks",
+      "outputPath": "tasks.md",
+      "status": "done"
+    }
+  ]
+}

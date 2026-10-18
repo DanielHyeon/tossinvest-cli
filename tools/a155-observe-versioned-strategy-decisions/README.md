@@ -1,0 +1,13 @@
+# Offline strategy diagnostics
+
+This local fixture replay records caller-supplied, unverified diagnostics. It has no collector, order, reservation, account, coordinator, or runtime integration. It does not establish profitability, trading eligibility, authenticated provenance, or actual filled risk. US session features and Parker RR are unsupported; independently supplied USD planned price risk remains hypothetical. KR features require the supplied calendar and bar provenance required by `strategymarket`.
+
+From the repository root, run with an existing parent and an explicitly chosen new output directory:
+
+```sh
+go run ./tools/a155-observe-versioned-strategy-decisions -input tools/a155-observe-versioned-strategy-decisions/testdata/synthetic.jsonl -out /tmp/example-parent/diagnostics
+```
+
+The input is JSONL: one typed object per line, with `parent`, `policy_version`, `features` (the exported `SessionFeatureInput` JSON fields, such as `Market`, `Symbol`, `Currency`, `AsOf`, `Minutes`, and `Fives`) and optional `geometry`. See the synthetic fixture and `internal/strategymarket/session_features.go` for the complete typed fields. Geometry uses `currency`, `basis` (`unadjusted`), `entry`, `stop`, optional `target` and `lvn_space_pct`, `quantity`, and optional `lane_id`/`lane_version`. Quote currency must match market. Quantity may be omitted, leaving risk unknown while other diagnostics remain available; when supplied it is a whole share count of 1–1,000,000 (null and zero are rejected). price numbers have at most 32 characters and eight fractional digits. Risk is exact `(entry-stop)*quantity`, excluding fees and fill uncertainty. Parker RR is computed only for the existing KR lane/version; actual realized RR is unknown.
+
+Input lines are at most 1 MiB, total input at most 64 MiB, and at most 65,536 records. Input is validated before output is opened. Output has an owned marker, append-only `ledger.jsonl` and atomic `checkpoint.json`; ledger is limited to 64 MiB and 65,536 records, each line at most 65,536 bytes including newline. Queue capacity is 256; a full queue drops new records and yields a nonzero exit. Counters distinguish accepted, durable, duplicate, full, invalid, oversize, failed and pending. No queue operation performs filesystem I/O. Linux local filesystem semantics are required. Output paths under `openspec`, `r1`, or components containing `a128`/`a147`, symbolic-link traversal, foreign directories, and linked files are refused. Malformed or torn evidence is never truncated. Locking and checksums do not authenticate evidence against a filesystem owner.

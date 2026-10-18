@@ -1,0 +1,1 @@
+{"parent":"fixture-us","policy_version":"research-v1","features":{"Market":"US","Symbol":"XYZ","Currency":"USD","AsOf":"2026-01-02T15:00:00Z"},"geometry":{"currency":"USD","basis":"unadjusted","entry":"100","stop":"99.3","target":"102.1","lvn_space_pct":"","quantity":100,"lane_id":"","lane_version":""}}

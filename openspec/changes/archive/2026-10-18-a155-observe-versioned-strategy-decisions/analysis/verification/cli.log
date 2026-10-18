@@ -1,0 +1,5 @@
+765886e02d0d6afb864e18859465fa59c35e1eab262e10604dbbbd803ceb9c2b  tools/a155-observe-versioned-strategy-decisions/testdata/synthetic.jsonl
+offline=unverified output=/tmp/tossos-a155-final-cli-3bV2xd/out accepted=1 durable=1 duplicate=0 full=0 invalid=0 oversize=0 failed=0 pending=0
+offline=unverified output=/tmp/tossos-a155-final-cli-3bV2xd/out accepted=1 durable=0 duplicate=1 full=0 invalid=0 oversize=0 failed=0 pending=0
+765886e02d0d6afb864e18859465fa59c35e1eab262e10604dbbbd803ceb9c2b  tools/a155-observe-versioned-strategy-decisions/testdata/synthetic.jsonl
+verified: one ledger line; USD risk=70; features and RR unsupported; owned files ['checkpoint.json', 'ledger.jsonl', 'marker']

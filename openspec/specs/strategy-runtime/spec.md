@@ -307,3 +307,32 @@ OFF 전환은 운영자 LIVE approval을 만들거나 삭제해서는 안 된다
 - **WHEN** 버전은 같지만 적재기가 읽는 열 하나가 원장에 없다(그 열을 읽는 질의가 해당 범위에서 조건부로만 실행되는 경우 포함)
 - **THEN** 적재기는 원장 데이터 판독 전에 실패를 드러내 fail-closed 로 거절하고 권한을 만들지 않으며, 그 거절은 원장에서 유도되는 범위 국소 거절(예: scope latch) 신원을 갖지 않는다
 
+### Requirement: Observation has no execution authority
+The observation component SHALL emit append-only diagnostic records using versioned evidence without access to broker mutations, reservation writes, position changes or order-capable coordinator submission.
+
+#### Scenario: All candidate conditions pass
+- **WHEN** an observation fixture meets every proposed entry condition
+- **THEN** a diagnostic record is produced and orders, reservations and trading state mutations remain zero
+
+### Requirement: Observation failure cannot delay protection
+Observation SHALL use nonblocking producer enqueue, a maximum 256-record queue, maximum 64KiB encoded records and drop-newest counters, with no observation disk I/O or retry on trading/exit threads. Append durability SHALL precede checkpoint advancement and replay SHALL deduplicate stable record IDs without truncating evidence. It SHALL report failed records while preserving independent protective exits.
+
+#### Scenario: Storage failure
+- **WHEN** the observation destination is full or unavailable
+- **THEN** failure is visible and existing exit handling continues without waiting for observation recovery
+
+### Requirement: Actual observation requires a separate registered session approval
+Replay validation SHALL NOT authorize actual capture; actual sessions SHALL require an explicitly approved bounded manifest and SHALL preserve existing evidence paths and schedules.
+
+#### Scenario: No session approval
+- **WHEN** offline replay and code review pass
+- **THEN** no collector, schedule, restart or API measurement is started
+
+#### Scenario: Corrupt or ambiguous recovery
+- **WHEN** a record payload digest, checkpoint prefix, file ownership or final newline is invalid
+- **THEN** recovery refuses without truncating or appending to existing evidence
+
+#### Scenario: Unsupported runtime scope
+- **WHEN** US data reaches the existing KR-only session-feature or Parker RR adapter
+- **THEN** those diagnostics remain explicitly unsupported and no runtime strategy or order eligibility is inferred
+
