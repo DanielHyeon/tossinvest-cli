@@ -44,7 +44,7 @@ Pre-Edit Gate:
     internal/execgw/riskguardian_first_leg.go           RiskGuardian.PrecheckQFinalCampaignFirstLeg (본문 순서 재배치 — design D1)
     internal/app/engine/strategy_first_leg_admission.go strategyFirstLegAdmissionBridge.admit (일일 손실 두 조건 → 판별 함수 호출, 분기 결과 동일)
     internal/app/engine/strategy_entry_supervisor.go    Context.NewPairedStrategyEntryProductionAssembly (394 행 옵션 — 알림 둘 + nil 가드 게이트)
-  새 파일(새 leaf): internal/execgw/a157_daily_loss_kind.go — 판별 함수 `DailyLossChainRefusalOf` 와 결과 타입(기존 파일 무편집 — Logic Map 범위 고정)
+  새 파일(새 leaf): internal/execgw/a157_daily_loss_kind.go — 판별 함수 `DailyLossChainRefusalOf`(2.3 수리 b8d6d4cee 에서 `DailyLossRefusalKindOf` 로 개명) 와 결과 타입(기존 파일 무편집 — Logic Map 범위 고정)
   무편집(확인 방법):
     internal/execgw/riskguardian_qfinal.go — 파일 sha 6fcace26fd7b2ddc…(편집 전) 그대로여야 함(PrecheckQFinalEntry · IssueQFinalEntry)
     RiskGuardian.IssuePrecheckedQFinalCampaignFirstLeg — 함수 본문 sha 28c40c8ab49a1cb6…(편집 전, analysis/harness/_funcsha gofmt 정규화 FuncDecl 구간)
@@ -67,3 +67,32 @@ Pre-Edit Gate:
     조립 감독자 EntryGate 는 nil 가드(F10 — 타입 있는 nil panic 방지, 오늘은 Run 안 함),
     사이징 무편집(§0.9), 매도 · 손절 · 비상 청산 경로 무관(§0.3), 토글 OFF 무관
 ```
+
+## 구현 독립 적대 리뷰 (task 2.3, 2026-10-18~19)
+
+- 보이스: 분리 컨텍스트 둘.
+  - Opus 서브에이전트: 저장소 밖 사본에서 편집 전 생산 코드에 새 시험을 돌려 특성 행이 정직한지 대조했고, 직접 변이를 넣었다.
+  - codex `exec -s read-only`.
+- 대상: `7b1748481..10ab9f87a`.
+- 원문: `analysis/review/impl-opus.md` · `analysis/review/impl-codex.md`.
+- 판정: 둘 다 **APPROVE-WITH-FIXES**(P0 0 · P1 0). 생산 동작 결함은 없다.
+
+| 지적 | 처분 | 반영 |
+|---|---|---|
+| Opus P2-1 · codex P2 구조 시험이 글자 위치만 봄 — 이름 붙인 closure 두 번 호출이 SURVIVED(실측), 사이징 뒤 호출도 통과 | 수용 — FuncLit 하나 · 즉시 호출 · 최상위 대입 · 사이징 문장보다 앞을 단언, M15b/c/d 추가 | b8d6d4cee · round2 |
+| codex P3 · Opus P3-4 통과 봉인 값 시험이 머리말만큼 단언하지 않음 | 수용 — strategy · campaign · weekly · issuedAt 를 고정 시계 기대값과 정확 대조 | b8d6d4cee |
+| Opus P3-1 「판별은 여기 하나뿐」이 저장소 전체로는 거짓(delivery:46 표지만 봄) | 수용 — 주석 범위를 좁히고 tasks 「후속」에 이전 메모 | b8d6d4cee |
+| Opus P3-2 `DailyLossChainRefusal` 과 `dailyLossChainRefusal` 대소문자만 다름 | 수용 — `DailyLossRefusalKind(Of)` 로 개명 | b8d6d4cee |
+| Opus P3-3 강화 실패 + 결속 결함 엔진 행 없음 | 수용 — 엔진 시험 추가(무결함 · B2 · B8, 같은 joined 결함) | b8d6d4cee |
+| Opus P3-5 「동등 변이 없음」과 M14c 긴장 | 수용 — M14c 는 생산 경로에서 동등, 합성 표 행으로만 잡힘으로 표기 | 98d6bd526 |
+| Opus P3-6 주석이 편집 시점을 가리킴 | 수용 — 불변식 서술로 | b8d6d4cee |
+
+- 거절: 없음.
+- 수리 뒤 검증(Teammate, HEAD b8d6d4cee — `analysis/verify/receipts.md`):
+  - 변이 round2 **36/36 CAUGHT**(무변이 대조군 GREEN · 시작/복원 sha 단언 · 전부 대상 도달). M14c 는 생산 경로 동등.
+  - `make lint` rc 0.
+  - execgw · app/engine 무태그 · `-tags tossos_testseams` 전체 ok, `-race` 대상 ok.
+  - `openspec validate --strict` valid, `check_analysis` evidence complete.
+  - `riskguardian_qfinal.go` 파일 sha · `IssuePrecheckedQFinalCampaignFirstLeg` 본문 sha 불변.
+- Manager 판정: 수리 diff 확인 뒤 2.3 닫음. 남은 것은 3.1(격리 워크트리 게이트 · 착지 기록 · archive)이다.
+
