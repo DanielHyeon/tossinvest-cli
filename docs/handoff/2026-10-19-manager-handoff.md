@@ -93,6 +93,14 @@
 
 ---
 
+> **진행(2026-10-19 14:21 KST, 실측):** 2 · 3 · 4 완료.
+> - 3 soak 은 스스로 회복(soak days 3)했다. 그 결과 갱신 타이머가 00:21 · 06:21 에 attestation 을 **GET 전용으로 덮어썼다**(a135 예고대로).
+> - 사람이 KR 장중에 엔진을 정지했다. 그 뒤 `verify run --redo order-cancel`(`--config-dir ~/.config/tossctl`)을 돌려 POST orders 05:15:53Z · POST cancel 05:16:29Z 를 감독 증거로 남겼다.
+> - 이어 `tossos-attest.service` 갱신 → **POST 포함 11 endpoint · 감독 증거 2 · 만료 2026-11-18T05:16:59Z**.
+> - `docker start tossos-tossos-1` 기동 상태는 10-15 와 같다: gate_enabled · gate_verified True, protection UNWIRED, entry_permitted False.
+> - 정지 중 살아 있는 포지션은 US 1 · KR 0 이었다. US 손절 판단은 정규장만이라 공백이 없었다.
+> - 남은 사람 작업: 1(a087 매도 — `--config-dir` 필수) · 6 · 7.
+
 ## 3. 사용자 결정 대기 — 동시 진행 change 수
 
 - 규칙: 동시 change 최대 4개(2026-09-26 사용자 지시, 기억 「SDD 작업 방식」).
