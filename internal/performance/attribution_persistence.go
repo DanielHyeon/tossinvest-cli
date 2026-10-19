@@ -516,12 +516,15 @@ func validateAttributionGeneration(ctx context.Context, db attributionQueryer, a
 		return attributionHead{}, fmt.Errorf("performance: reading attribution rebuild head: %w", err)
 	}
 	if head.AccountRef != accountRef || head.SemanticsVersion != AttributionSemantics ||
-		head.RowCount < 0 || head.RowCount > MaxAttributionGenerationRows ||
-		digestBytes([]byte(head.SourceJSON)) != head.SourceDigest {
+		head.RowCount < 0 || head.RowCount > MaxAttributionGenerationRows {
+		return attributionHead{}, fmt.Errorf("%w: attribution head envelope", ErrImmutableConflict)
+	}
+	sourceBytes := []byte(head.SourceJSON)
+	if digestBytes(sourceBytes) != head.SourceDigest {
 		return attributionHead{}, fmt.Errorf("%w: attribution head envelope", ErrImmutableConflict)
 	}
 	var rebuild AttributionRebuild
-	if err := json.Unmarshal([]byte(head.SourceJSON), &rebuild); err != nil {
+	if err := json.Unmarshal(sourceBytes, &rebuild); err != nil {
 		return attributionHead{}, fmt.Errorf("performance: decoding attribution evidence: %w", err)
 	}
 	if rebuild.AccountRef != head.AccountRef || rebuild.ID != head.RebuildID ||

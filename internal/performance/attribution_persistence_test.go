@@ -3,12 +3,14 @@ package performance
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
 	"reflect"
 	"slices"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 )
@@ -224,6 +226,54 @@ func TestAttributionEvidenceRejectsHeadEnvelopeMismatch(t *testing.T) {
 	}
 	if _, err := store.AttributionEvidence(context.Background(), "acct-1"); !errors.Is(err, ErrImmutableConflict) {
 		t.Fatalf("head envelope err=%v", err)
+	}
+}
+
+func TestAttributionGenerationTypedSourceAndEmptyUnavailable(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		unavailable any
+		invalid     bool
+	}{
+		{"null", nil, false},
+		{"empty", []any{}, false},
+		{"wrong element type", []any{42}, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			store := openTestStore(t)
+			position, fills := stagedFixture()
+			rebuild := AttributionRebuild{ID: "typed-source", AccountRef: "acct-1", CalculatedAt: attributionAt,
+				Positions: []PositionEvidence{position}, FillDeltas: fills}
+			if err := store.PersistAttributionRebuild(context.Background(), rebuild); err != nil {
+				t.Fatal(err)
+			}
+			var source string
+			if err := store.db.QueryRow(`SELECT source_json FROM attribution_rebuilds WHERE account_ref='acct-1'`).Scan(&source); err != nil {
+				t.Fatal(err)
+			}
+			var decoded map[string]any
+			if err := json.Unmarshal([]byte(source), &decoded); err != nil {
+				t.Fatal(err)
+			}
+			decoded["Unavailable"] = tc.unavailable
+			raw, err := json.Marshal(decoded)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := store.db.Exec(`UPDATE attribution_rebuilds SET source_json=?,source_digest=? WHERE account_ref='acct-1'`, string(raw), digestBytes(raw)); err != nil {
+				t.Fatal(err)
+			}
+			rows, err := store.AttributionRows(context.Background(), "acct-1", AttributionQuery{Market: position.Market, IncludeLinkMissing: true}, 10)
+			if tc.invalid {
+				if err == nil || !strings.Contains(err.Error(), "decoding attribution evidence") {
+					t.Fatalf("typed source accepted: rows=%v err=%v", rows, err)
+				}
+				return
+			}
+			if err != nil || len(rows) != 1 {
+				t.Fatalf("complete-only source rows=%v err=%v", rows, err)
+			}
+		})
 	}
 }
 
