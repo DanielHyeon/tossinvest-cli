@@ -101,6 +101,10 @@
 > - 정지 중 살아 있는 포지션은 US 1 · KR 0 이었다. US 손절 판단은 정규장만이라 공백이 없었다.
 > - 남은 사람 작업: 1(a087 매도 — `--config-dir` 필수) · 6 · 7.
 
+> **배포(2026-10-19 20:26 KST, 사용자 결정 「P3 전 지금 배포 · 15:35~21:00 창」):** 488b370f → e537ab23c(이미지 788dd6995faa).
+> 직후 gate verified · protection UNWIRED · entry_permitted false(전과 같음) · mutation delta 0 · reconcile clean. 롤백 핀 1825e2bc(schema 35).
+> 기록: `~/.local/share/tossos-deploy/release-20261019-{runbook,review}.md` · `preflight-20261019T091821Z/post-replace.txt`. a087 5.1 = accepted(FILLED).
+
 ## 3. 사용자 결정 대기 — 동시 진행 change 수
 
 - 규칙: 동시 change 최대 4개(2026-09-26 사용자 지시, 기억 「SDD 작업 방식」).
