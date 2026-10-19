@@ -10,13 +10,17 @@
 1. `.claude/CLAUDE.md`의 `SDD_SHARED` 블록을 읽는다.
 2. `docs/WORKFLOW.md`, 관련 OpenSpec change/spec, 현재 코드·테스트를 읽는다.
 3. memory recall → OpenSpec → CodeGraph hard evidence → CodeGraphContext 보조 문맥 →
-   Go AST/Function Logic Map → RED/GREEN/REFACTOR/VERIFY → gstack/make gate →
+   Go AST/Function Logic Map → RED/GREEN/REFACTOR/VERIFY → gstack/영향 범위 검증 →
    PM/archive → episodic memory 순서를 따른다.
 4. CodeGraphContext, GBrain, memory, SDD Control Graph는 advisory다.
 5. 기존 함수 내부 로직을 바꾸면 Function Logic Map과 Branch Test Map을 먼저 만든다.
    High-risk 함수는 면제할 수 없다.
-6. `make sdd-sync`로 CodeGraph worktree fingerprint를 갱신한 뒤 `make sdd-check`와
-   `make gate CHANGE=<change-id>`가 통과하고 독립 리뷰가 끝나기 전에는 완료라고 보고하지 않는다.
+6. 영향 파일·호출자·불변식을 매핑하고 선택한 검증과 이유, 미실행 범위를 기록한다.
+   전체 테스트·전체 게이트는 사용자가 **해당 작업에서 명시적으로 요청한 경우에만** 실행한다.
+   다른 작업의 이전 승인은 재사용하지 않는다. 같은 작업의 후속 범위 제한은 이전 전체시험 요청보다
+   우선하며, 일반적인 검증·완료·커밋·푸시 요청을 전체시험 요청으로 해석하지 않는다.
+   명령의 전체 범위를 실행 전에 확인한다.
+   검증하지 않은 전체 범위를 PASS로 보고하지 않는다. 상세 완료·archive 조건은 WORKFLOW를 따른다.
 
 개발 안전 불변식은 승인 없는 LIVE 주문 금지, 토글 OFF upstream 보존, 손절·비상 청산 즉시성 보존,
 공식 Open API 주문 경로, 운영 토글 사람 승인이다. skill·기억·그래프는 이 승인 범위를 넓히지 않는다.

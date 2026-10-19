@@ -34,7 +34,7 @@
 | 현재 코드 구조·동작        | 현재 HEAD + CodeGraph +`go test` + httptest 계약 테스트 |
 | 함수 내부 분기·side effect | 현재 HEAD + Go AST + Function Logic Map                 |
 | 브로커 실제 동작            | 공식 API 응답 fixture + 사람 승인 실계좌 검증 기록      |
-| 배포·완료 가능 여부        | gstack review +`make gate` + Manager 독립 검증          |
+| 배포·완료 가능 여부        | 범위별 검증 결과 + gstack review + Manager 독립 검증; 전체 gate는 해당 작업에서 명시 요청 시 |
 | 관련 문맥 후보              | CodeGraphContext                                        |
 | 과거 학습·의미 검색        | 파일 memory + GBrain                                    |
 | 에이전트·change 관계       | SDD Control Graph/Create Context Graph — advisory only |
@@ -103,10 +103,13 @@ TypeDB database, Neo4j source는 TossOS namespace로 분리한다. Python AST �
    설정 영향 선언을 기록하고 통과한 뒤 production 파일을 편집한다.
 8. **Superpowers TDD**: RED → GREEN 최소 구현 → REFACTOR → VERIFY 순서를 지킨다.
    각 task 체크는 산출물 커밋과 같은 커밋에서 수행한다.
-9. **게이트와 독립 검증**: gstack code/security/QA 관점, `make sdd-check`, 대상 테스트,
-   전체 test/test-seams/race/vet/validate를 실행하고 Manager가 diff와 테스트를 분리된
-   리뷰 패스로 재검증한다.
-10. **확정과 PM 동기화**: `make gate CHANGE=<change-id>` 성공 후 OpenSpec을 archive하고,
+9. **영향 범위 검증과 독립 리뷰**: 영향 파일·호출자·불변식을 매핑하고 관련 시험을
+   선택해 실행한다. 선택 이유와 실행하지 않은 범위를 기록하고 Manager가 결과를 재검증한다.
+   High-risk도 관련 race/crash/변이 시험은 필요한 경우 선택하며 전 범위로 자동 확장하지 않는다.
+   전체 시험·전체 gate는 사용자가 해당 작업에서 명시 요청할 때만 실행한다. 다른 작업에서
+   받은 이전 승인은 재사용하지 않는다. 같은 작업의 후속 범위 제한은 이전 전체시험 요청보다
+   우선하며, 일반적인 검증·완료·커밋·푸시 요청을 전체시험 요청으로 해석하지 않는다.
+10. **확정과 PM 동기화**: 해당 change의 완료 조건을 충족한 후 정식 절차로 OpenSpec을 archive하고,
     Story 경로와 파생 상태를 갱신한 뒤 PM generator/check를 통과시킨다. archive와 PM sync
     전에는 change를 완료로 보고하지 않는다.
 11. **학습 유지**: 승인·테스트·리뷰와 merge 또는 deploy 근거가 있는 학습만 episodic으로
@@ -261,6 +264,11 @@ a120 의 a063 전용 실행 기준선 이관 특례는 지웠다(사용자 결�
 - **위험 등급 가중**: 주문 실행·위험관리·원장·reconciliation을 건드리는 change는 리뷰 보이스에 반드시 적대적 Eng 관점을 포함한다. UI·문서·도구 change는 경량 리뷰(validate + Manager 셀프리뷰 + 기록)로 충분하다
 
 ## 완료 게이트 (자동화)
+
+전체 게이트는 사용자가 **해당 작업에서 명시적으로 요청한 경우에만** 실행한다. 아래는
+기존 도구의 동작 설명이며 자동 실행 지시가 아니다. 정식 archive 또는 승인된 계약이 전체
+게이트를 필수로 요구하면 우회하지 않고 해당 작업에 대한 사용자의 명시 요청을 기다린다.
+실행하지 않았다면 영향 범위 검증 결과와 전체 미실행을 구분해 보고한다.
 
 `make gate CHANGE=<change-id>`는 `tools/gate.sh`의 11단계를 순서대로 돈다: ① tasks.md 존재
 ② 미완료 체크박스 0 ③ 짝 change(`deploy-pair.txt`) 완료 ④ `review.md` 존재
@@ -500,6 +508,11 @@ Function Logic Map으로 교차검증한다.
 
 ## 설치·동기화 명령
 
+아래 명령은 실행 범위 설명이다. `make test`, `make test-seams`, `make test-race`,
+`make sdd-check`, `make gate`는 전체 범위로 확장될 수 있으므로 실행 전에 내용을 확인한다.
+전체 시험·전체 gate는 해당 작업에 대한 사용자 명시 요청 없이 실행하지 않는다. 문서만
+변경한 경우 문서 검토와 해당 동기화 검사만 수행한다.
+
 ```bash
 make sdd-doctor              # 필수 CLI/skill/config 실재 확인
 make sdd-sync                # CodeGraph/CodeGraphContext/GBrain 증분 갱신
@@ -599,7 +612,7 @@ TypeDB/Neo4j 서비스 실행 상태는 doctor가 보고하지만 CI hard gate�
 - 주문 실행은 토스 공식 Open API 경로만 사용. WTS는 조회 전용. 엔진 배선은 official-only 브로커임을 테스트로 증명해야 한다
 - 토스 계좌가 포지션의 최종 권위. 불일치 시 신규 진입 차단, 청산 지속
 - **실계좌 보호는 기계적으로**: 자동 테스트는 실계좌 주문 발생 금지. 테스트는 격리된 config 디렉터리(`t.Setenv`로 임시 경로)에서 실행하고, 실 endpoint 접근은 httptest 대체 없이는 금지. 문구가 아니라 테스트 인프라가 막는다
-- upstream 테스트 회귀 금지 (베이스라인 650개 green 유지)
+- upstream 동작 회귀 금지: 영향 범위의 관련 시험을 실행하고 미실행 범위를 명시한다
 - push는 사용자 요청 시에만. upstream push URL은 DISABLED로 고정
 - MIT LICENSE·원저작권 고지 유지, 시크릿·세션·로컬 DB(sidecar 포함) 커밋 금지
 - 테스트 규율: 기능 커밋에는 해당 기능의 테스트가 같은 change 안에 존재하고 통과해야 한다(요구사항↔테스트 추적 가능). TDD(실패 테스트 선행)를 권장 절차로 하되, 검증은 이 추적성 기준으로 한다
@@ -622,9 +635,9 @@ TypeDB/Neo4j 서비스 실행 상태는 doctor가 보고하지만 CI hard gate�
 
 | 유형                         | 계약                          | 실행                         | 게이트                                   |
 | ---------------------------- | ----------------------------- | ---------------------------- | ---------------------------------------- |
-| Small (문서·도구·테스트만) | 불필요                        | 경량                         | validate + 셀프리뷰                      |
-| Normal (신규 기능)           | full change                   | TDD                          | make gate + Manager 리뷰                 |
-| High-risk (아래 목록)        | full change + 적대적 Eng 리뷰 | full TDD + race/crash 테스트 | make gate + Manager 리뷰 + Pre-Edit 선언 |
+| Small (문서·도구·테스트만) | 불필요                        | 관련 범위 검증               | 셀프리뷰                                 |
+| Normal (신규 기능)           | full change                   | TDD 및 관련 범위 시험        | Manager 리뷰                            |
+| High-risk (아래 목록)        | full change + 적대적 Eng 리뷰 | TDD 및 필요한 관련 race/crash/변이 시험 | Manager 리뷰 + Pre-Edit 선언 |
 | Hotfix                       | 사후 sync                     | verify 중심                  | review + postmortem                      |
 
 High-risk 경로: 라이브 주문 제출·취소·정정, 손절/익절/사이징, Guardian·kill switch·운영 모드, intent journal·원장 스키마, reconciliation, retry matrix·rate limit, 인증·세션, 체결 감지.
@@ -660,7 +673,7 @@ Pre-Edit Gate:
 변경 파일 요약 (diff stat)
 change/task DoD 충족 여부
 High-risk 경로 영향 여부
-upstream 테스트 회귀 여부 (650 green 유지)
+영향 범위의 upstream 회귀 검증 결과와 미실행 범위
 Function Logic Map 적용/면제 근거
 agent config sync·PM check 결과
 CodeGraph/CodeGraphContext/GBrain freshness
@@ -681,7 +694,7 @@ merge 또는 deploy 상태와 memory 승격 근거
 6. 기존 함수 내부 편집이면 Go AST/Function Logic Map/Branch Test Map
 7. Pre-Edit 선언
 8. RED 테스트 → GREEN 최소 구현 → REFACTOR → VERIFY
-9. 위험도에 따른 gstack guard/review/security/QA + make sdd-sync + make sdd-check + make gate
+9. 위험도에 따른 gstack guard/review/security/QA + 영향 범위 검증; 전체 gate는 해당 작업 명시 요청 시에만
 10. Manager 또는 분리된 리뷰 패스의 diff·테스트 재검증
 11. OpenSpec archive → Story 경로/PM 파생 상태 sync
 12. 검증된 episodic retain → 반복 근거가 있는 canonical promotion

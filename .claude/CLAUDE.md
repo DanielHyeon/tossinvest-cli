@@ -101,8 +101,13 @@ TossOS는 실제 돈을 다루는 자동매매 제품이다. 아래 규칙은 �
    읽어서 만들지 않는다. proposal·design·review가 그런 주장을 담으면 대상 함수의
    `tools/logic-map` AST 산출물을 **먼저** 만들고 그 열거를 근거로 쓴다.
    산출물 없이 쓴 분기 주장은 미검증이다.
-6. `make sdd-sync`, `make sdd-check`, `make gate CHANGE=<change-id>`와 독립 리뷰가
-   끝나기 전에는 완료라고 보고하지 않는다.
+6. 영향 파일·호출자·불변식을 매핑하고 선택한 시험·이유·미실행 범위를 기록한다.
+   전체 테스트·전체 게이트는 사용자가 해당 작업에서 명시적으로 요청한 경우에만 실행하며,
+   다른 작업의 이전 승인은 재사용하지 않는다. 같은 작업의 후속 범위 제한은 이전 전체시험 요청보다
+   우선하며, 일반적인 검증·완료·커밋·푸시 요청을 전체시험 요청으로 해석하지 않는다.
+   `make sdd-sync` 뒤에도 `make sdd-check`,
+   `make gate CHANGE=<change-id>` 등 명령의 전체 실행 범위를 먼저 확인한다.
+   실행하지 않은 전체 검증을 PASS로 보고하지 않는다. archive의 필수 조건은 우회하지 않는다.
 
 ## 단계 건너뛰기 금지
 
@@ -128,7 +133,7 @@ TossOS는 실제 돈을 다루는 자동매매 제품이다. 아래 규칙은 �
    (문서가 분기를 주장하는 시점이 이미 작성 시점이다 — 구현 task로 미루지 않는다)
 6. High-risk면 Pre-Edit 선언
 7. RED 테스트 → GREEN 최소 구현 → Refactor → Verify
-8. gstack review + make sdd-check + make gate
+8. gstack review + 영향 범위 검증 (전체 gate는 해당 작업에 대한 명시 요청 시에만)
 9. PM/archive 동기화 + 검증된 memory retain
 10. 완료 보고 (금지 조건 확인 후)
 ```
