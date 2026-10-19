@@ -156,3 +156,4 @@
 | `a156-gate-live-strategy-policy-rollout` | STORY-TOS-a156 | in_progress |
 | `a159-verify-offline-protection-restart-contract` | STORY-TOS-a159 | archived |
 | `a160-read-consistent-campaign-continuation-state` | STORY-TOS-a160 | archived |
+| `a161-preserve-offline-campaign-plan-risk-state` | STORY-TOS-a161 | archived |

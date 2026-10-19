@@ -1,0 +1,5 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	3.141s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane	1.143s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reversallane	1.393s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane	1.518s
+EXIT_CODE=0

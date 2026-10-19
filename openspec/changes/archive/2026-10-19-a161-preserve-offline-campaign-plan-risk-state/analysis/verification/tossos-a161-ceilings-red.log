@@ -1,0 +1,6 @@
+--- FAIL: TestRejectsRedistributedCeilings (0.00s)
+    codec_test.go:165: sum-preserving redistribution accepted
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.002s
+FAIL
+EXIT_CODE=1

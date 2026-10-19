@@ -1,0 +1,208 @@
+{
+  "file": "internal/weeklyvaluelane/plan.go",
+  "source_sha256": "d0efe681ac0b13afa75ea398f5bda7ddaa91da75e427c9ebd45fcacca2e192ac",
+  "package": "weeklyvaluelane",
+  "function": "mintFrozenFX",
+  "signature": "mintFrozenFX(params=1, results=2)",
+  "start": {
+    "line": 145,
+    "column": 1
+  },
+  "end": {
+    "line": 163,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 155,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 152,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 156,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 162,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 20
+      },
+      "text": "time.Parse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 27
+      },
+      "text": "time.Parse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 15
+      },
+      "text": "parsePositiveDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 24
+      },
+      "text": "parsePositiveDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 50
+      },
+      "text": "haircut.Cmp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 62
+      },
+      "text": "SetInt64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 62
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 95
+      },
+      "text": "asOf.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 22
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 7
+      },
+      "text": "validBoundedIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 23
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 12
+      },
+      "text": "fxSeal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 147,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 148,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 149,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 159,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 161,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

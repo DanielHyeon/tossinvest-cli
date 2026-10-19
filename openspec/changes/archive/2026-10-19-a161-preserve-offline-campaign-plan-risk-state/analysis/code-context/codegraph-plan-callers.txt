@@ -1,0 +1,63 @@
+
+Callers of "BuildCampaignPlan" (20):
+
+function    mustPlan
+  internal/reversallane/allocation_risk_test.go:159
+
+function    productionContext
+  internal/reversallane/production_proposal.go:192
+
+function    TestCallerDeclaredRiskCapAndFXCannotAuthorizeDecision
+  internal/reversallane/review_regression_test.go:9
+
+function    TestRiskCapCannotReplayAcrossPlansWithSameMarketAndPolicy
+  internal/reversallane/review_regression_test.go:51
+
+function    TestRiskCapCannotReplayAcrossPlansAndRejectsZeroBasis
+  internal/reversallane/review_regression_test.go:186
+
+function    TestZeroPlanAndOutOfRangeConfigFailClosed
+  internal/reversallane/review_regression_test.go:263
+
+function    strategyflowContext
+  internal/reversallane/strategyflow_testseam.go:72
+
+function    TestPositiveFillsRequireDistinctSequentialOrdinals
+  internal/weeklyvaluelane/hardening_test.go:102
+
+function    TestPlanBoundPrivateCapFrozenFXAndCheckedRisk
+  internal/weeklyvaluelane/plan_risk_rr_test.go:28
+
+function    mustPlan
+  internal/weeklyvaluelane/plan_risk_rr_test.go:122
+
+function    productionPlan
+  internal/weeklyvaluelane/production_proposal.go:217
+
+function    TestReservationCASUniquenessCorrectionReplayConsumeAndZeroRelease
+  internal/weeklyvaluelane/reservation_test.go:30
+
+function    strategyflowEvaluation
+  internal/weeklyvaluelane/strategyflow_testseam.go:49
+
+function    TestImmutableEightFourTwoAllocationUsesFloorAndFinalRemainder
+  internal/continuationlane/allocation_risk_test.go:9
+
+function    TestFrozenFXAndRiskCapRequireSealedConstructors
+  internal/continuationlane/allocation_risk_test.go:118
+
+function    TestRiskCapCannotReplayAcrossExactPlanIdentity
+  internal/continuationlane/allocation_risk_test.go:325
+
+function    TestForeignOrIncompleteRiskEventsPreserveAccountingAndLatch
+  internal/continuationlane/allocation_risk_test.go:342
+
+function    TestZeroQuantityPlanAndUnboundedRiskInputFailClosed
+  internal/continuationlane/allocation_risk_test.go:416
+
+function    mustPlan
+  internal/continuationlane/allocation_risk_test.go:477
+
+function    productionContext
+  internal/continuationlane/production_proposal.go:190
+

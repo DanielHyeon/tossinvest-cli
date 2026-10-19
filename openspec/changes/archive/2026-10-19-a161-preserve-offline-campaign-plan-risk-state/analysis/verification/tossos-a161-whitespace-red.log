@@ -1,0 +1,9 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane	0.004s
+--- FAIL: TestOfflineEvidencePreservesNativeWhitespaceAmounts (0.00s)
+    offline_evidence_test.go:83: invalid inspection evidence
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reversallane	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane	0.003s
+FAIL
+
+EXIT_CODE=1

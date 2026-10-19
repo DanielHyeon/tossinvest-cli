@@ -1,0 +1,3 @@
+# a161 code context reconciliation
+
+Base `67810038f21dffd519a3d44edb9e255238b5b74a`; source-pinned Go AST files copied verbatim from the research capture. Each AST embeds the source SHA-256 and function. CodeGraph status/callers/context and CGC stats are read-only research; caller name collisions require lane-specific source verification. CGC is supporting evidence and its shared index is not proof of exclusive worktree indexing. See `../research-first.md` and `../native-risk-codec-research.md` for scoped findings and limits. No production source changed, no tests or full gate executed as part of this evidence preparation. Full current-index synchronization is separately recorded by the repository workflow.

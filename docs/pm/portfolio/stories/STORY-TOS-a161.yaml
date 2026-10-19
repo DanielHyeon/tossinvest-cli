@@ -1,0 +1,20 @@
+{
+  "id": "STORY-TOS-a161",
+  "title": "오프라인 캠페인 계획 및 위험 상태 보존",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a161-preserve-offline-campaign-plan-risk-state",
+    "path": "openspec/changes/archive/2026-10-19-a161-preserve-offline-campaign-plan-risk-state"
+  },
+  "found_by": {
+    "date": "2026-10-19",
+    "how": "User approved offline preservation of captured immutable plans and native risk snapshots.",
+    "record": "openspec/changes/archive/2026-10-19-a161-preserve-offline-campaign-plan-risk-state/proposal.md"
+  },
+  "acceptance": [
+    "Preserve initial immutable plan and captured native risk state as detached, versioned inspection data for all three lanes.",
+    "Keep unknowns and lane-specific semantics explicit; captured values do not establish current live ledger authority or order eligibility.",
+    "Preserve existing runtime, journal schema and operations; complete independent review and required lifecycle checks."
+  ]
+}

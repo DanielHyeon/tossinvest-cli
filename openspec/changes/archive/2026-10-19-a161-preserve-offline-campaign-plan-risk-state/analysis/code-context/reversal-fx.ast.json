@@ -1,0 +1,208 @@
+{
+  "file": "internal/reversallane/risk.go",
+  "source_sha256": "21fe24431b3eb9586dbb758feac0e94261a47eda696455868a53d352a3d2814c",
+  "package": "reversallane",
+  "function": "mintFrozenFX",
+  "signature": "mintFrozenFX(params=1, results=2)",
+  "start": {
+    "line": 50,
+    "column": 1
+  },
+  "end": {
+    "line": 66,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 52,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 57,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 62,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 65,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 22
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 19
+      },
+      "text": "time.Parse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 26
+      },
+      "text": "time.Parse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 42
+      },
+      "text": "asOf.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 22
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 18
+      },
+      "text": "parsePositiveRat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 24
+      },
+      "text": "parsePositiveRat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 16
+      },
+      "text": "rate.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 50
+      },
+      "text": "haircut.Cmp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 62
+      },
+      "text": "big.NewRat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 22
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 19
+      },
+      "text": "frozenFXSeal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 59,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

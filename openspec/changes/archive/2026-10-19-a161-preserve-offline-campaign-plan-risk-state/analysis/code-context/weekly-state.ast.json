@@ -1,0 +1,161 @@
+{
+  "file": "internal/weeklyvaluelane/risk.go",
+  "source_sha256": "58d95da5249f6ab8f9301bafaef5c89260eebe2ef8ba941e4aa51aaf3835d28c",
+  "package": "weeklyvaluelane",
+  "function": "mintRiskState",
+  "signature": "mintRiskState(params=3, results=2)",
+  "start": {
+    "line": 32,
+    "column": 1
+  },
+  "end": {
+    "line": 45,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 39,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 34,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 37,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 40,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 6
+      },
+      "text": "plan.valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 23
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 14
+      },
+      "text": "parseUnsigned"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 23
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 14
+      },
+      "text": "parseUnsigned"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 23
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 15
+      },
+      "text": "riskStateSeal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 39,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 43,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

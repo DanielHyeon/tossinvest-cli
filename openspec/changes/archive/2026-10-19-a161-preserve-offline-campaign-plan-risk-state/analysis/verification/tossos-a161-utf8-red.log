@@ -1,0 +1,6 @@
+--- FAIL: TestOfflineEvidenceRejectsUnencodableNativeText (0.00s)
+    offline_evidence_test.go:106: invalid UTF-8 native map key accepted
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane	0.004s
+FAIL
+EXIT_CODE=1

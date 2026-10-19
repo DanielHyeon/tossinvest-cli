@@ -1,0 +1,6 @@
+--- FAIL: TestMalformedFXValuesRejected (0.00s)
+    codec_test.go:124: accepted FX rate "invalid" haircut "1"
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.002s
+FAIL
+EXIT_CODE=1

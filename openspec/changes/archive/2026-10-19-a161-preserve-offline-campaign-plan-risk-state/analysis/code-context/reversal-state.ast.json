@@ -1,0 +1,62 @@
+{
+  "file": "internal/reversallane/risk.go",
+  "source_sha256": "21fe24431b3eb9586dbb758feac0e94261a47eda696455868a53d352a3d2814c",
+  "package": "reversallane",
+  "function": "NewRiskState",
+  "signature": "NewRiskState(params=1, results=1)",
+  "start": {
+    "line": 82,
+    "column": 1
+  },
+  "end": {
+    "line": 84,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 31
+      },
+      "text": "plan.Digest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 87
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 126
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 160
+      },
+      "text": "make"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,3 @@
+# Pre-edit preparation
+
+Base: `67810038f21dffd519a3d44edb9e255238b5b74a`. Intended implementation is new one-way lane-owned export files, a new standalone stdlib-only codec leaf, and focused tests. No existing production function edits, runtime wiring, journal schema, live calls, configuration, earlier evidence or a157 edits are authorized. Source-pinned AST and graph context are in `code-context/`; select exact functions and capture fresh AST/FLM/BTM before any necessary existing function or guard change. Native plans and FX must never be reconstructed or sealed on decode. Design reviews and pre-edit sync are pending; this file does not claim their completion.
