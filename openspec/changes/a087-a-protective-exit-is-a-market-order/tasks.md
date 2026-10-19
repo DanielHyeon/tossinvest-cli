@@ -219,9 +219,15 @@
 > 보낸 헤더 **이름** — 중 orderId 는 계좌 개인정보가 아니다(허용). 토큰·계좌 번호·API 키는 도구가 쓰지 않는다(헤더 값 미기록,
 > sentinel 5종 시험). 원 응답 본문의 `error.data` 에 수량 값이 실릴 수 있으나 계좌 식별 정보가 아니다.
 
-- [ ] 5.1 **KR MARKET 매도 1회.** 최소 수량(1주)·장중. 스키마는 지원하나 실접수 미측정.
+- [x] 5.1 **KR MARKET 매도 1회.** 최소 수량(1주)·장중. 스키마는 지원하나 실접수 미측정.
       수단 `tools/a087-market-sell-probe/`. 성공·실패 모두 응답 코드·본문 code·주문 상태를 기록. 처분은 아래 표
       — 2026-10-15 시도 2회(15:13 · 15:16 KST, 010170 1주, 사람 터미널): 둘 다 **HTTP 401 `invalid-token`** → 처분 「판정 불가(인증)」, MARKET 반증 아님. 주문 미접수 예상(401). 영수증 `analysis/market-sell-receipts/a087ms-20261015T151103-0a2582f5.json` · `…T151445-9157ce87.json`. 토큰 캐시 mtime 15:26:58 — 같은 OpenAPI 키 공유 이웃 제품의 토큰 재발급 정황(기억 「공유 credential 토큰 전쟁」), 미검증. 재시도는 다음 장중
+      — **2026-10-19 재시도 = 처분 「accepted」(FILLED).** 사람 터미널, 010170 1주, `--config-dir ~/.config/tossctl`(엔진과 같은 토큰 캐시).
+      영수증 `analysis/market-sell-receipts/a087ms-20261019T145815-8bdcb862.json`: 보냄 14:59:19.102 KST → HTTP 200 · orderId 수신 · clientOrderId 메아리 일치(14:59:19.251).
+      주문 상태(👁 read-only `tossctl --config-dir ~/.config/tossctl orders completed`): 010170 SELL 1주 **체결완료**, 브로커 접수 14:59:19.277 KST —
+      그 화면은 OpenAPI orderId 를 싣지 않아 시각(+0.2s) · 종목 · 방향 · 수량으로 대조했고 같은 시각의 다른 010170 매도 1주는 없음. 체결 품질은 재지 않음(도구 범위 밖).
+      10-15 의 401 원인 정정: 그날 명령에는 `--config-dir` 가 없어 도구가 기본 토큰 캐시(`~/.cache/tossctl`)로 새 토큰을 받는 구조였다 — 2026-10-19 같은 구조의 도구가
+      엔진 토큰과 번갈아 무효화하는 것을 실측(인수인계 §4 정정). 이웃 제품 가설보다 이쪽이 유력(10-15 당시 재현은 안 함)
 - [ ] 5.2 **세션 경계.** 정규장 밖 KR MARKET 매도(1주)의 응답 코드 관측. **예상 응답 집합**(재리뷰 P1-4):
       `422 order-hours-closed` · **`422 order-type-not-allowed`**(openapi `POST /api/v1/orders` 422 예시 「현재 사용할 수 없는
       호가 유형」 — 저장소 Go 코드 참조 0, `refusal_code.go` 목록에도 없음) · 그 밖의 코드(있는 그대로 기록).

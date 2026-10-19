@@ -1,0 +1,42 @@
+{
+  "schema": "a087-market-sell-receipt/v1",
+  "tool": "a087-market-sell-probe",
+  "state": "answered",
+  "outcome": "accepted",
+  "client_order_id": "a087ms-20261019T145815-8bdcb862",
+  "confirm_token": "a087ms-20261019T145815-8bdcb862.77b3878e4123a6cb",
+  "issued_at_kst": "2026-10-19T14:58:15+09:00",
+  "sent_at_kst": "2026-10-19T14:59:19.102465464+09:00",
+  "answered_at_kst": "2026-10-19T14:59:19.251546226+09:00",
+  "session_context": {
+    "kst_weekday": "Monday",
+    "clock_phase": "krx-regular-by-clock",
+    "basis": "KST wall clock against KRX regular 09:00-15:30 only; no market calendar was read, so holidays are not detected"
+  },
+  "request": {
+    "method": "POST",
+    "path": "/api/v1/orders",
+    "wire_body": "{\"symbol\":\"010170\",\"side\":\"SELL\",\"orderType\":\"MARKET\",\"quantity\":\"1\",\"clientOrderId\":\"a087ms-20261019T145815-8bdcb862\",\"confirmHighValueOrder\":false}",
+    "wire_body_sha256": "9cf7050f721f3465efa857a8bf74e901107014c7ce41144a1ebe6e34a15ba9e6",
+    "header_names": [
+      "Authorization",
+      "Content-Type",
+      "X-Tossinvest-Account"
+    ]
+  },
+  "response": {
+    "http_status": 200,
+    "body": "{\"result\":{\"orderId\":\"GMdMqymK8bqlgrKYeAAwcuwP_FMdygF4C6gRMqx2MWAPE4k2c2DFxquAeXRBupsbfRXrrhxeC9R1PG-KnMWB4A\",\"clientOrderId\":\"a087ms-20261019T145815-8bdcb862\"}}",
+    "body_sha256": "393370927c6f30e0460c549dbefa5bc1b87c9924bffc6414c92e3ed42b9d7940",
+    "body_json": {
+      "result": {
+        "orderId": "GMdMqymK8bqlgrKYeAAwcuwP_FMdygF4C6gRMqx2MWAPE4k2c2DFxquAeXRBupsbfRXrrhxeC9R1PG-KnMWB4A",
+        "clientOrderId": "a087ms-20261019T145815-8bdcb862"
+      }
+    },
+    "order_id": "GMdMqymK8bqlgrKYeAAwcuwP_FMdygF4C6gRMqx2MWAPE4k2c2DFxquAeXRBupsbfRXrrhxeC9R1PG-KnMWB4A",
+    "client_order_id_echo": "a087ms-20261019T145815-8bdcb862",
+    "echo_matches_sent": true
+  },
+  "guidance": "the broker took the request (HTTP 200, orderId recorded) — this is NOT yet the a087 §5 'accepted' row; read this orderId's status with `tossctl orders list` / `tossctl orders completed`: PENDING / PARTIAL_FILLED / FILLED = accepted, REJECTED = refused (fill quality is NOT measured here)"
+}
