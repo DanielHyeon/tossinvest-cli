@@ -127,6 +127,12 @@
 > `--config-dir ~/.config/tossctl` 로 다시 띄운 뒤 9 분간 재발 0. **운영 계정에 닿는 모든 도구 · tossctl 명령에 `--config-dir ~/.config/tossctl` 을 붙인다.**
  (읽기 전용 GET — 에이전트 실행 가능)
 
+> **자동 기동(2026-10-19 21:1x, 사용자 지시):** 아래 명령을 이제 systemd 사용자 타이머가 평일마다 띄운다 —
+> `tossos-a140-kr.timer` 08:45 · `tossos-a128-kr.timer` 08:50 · `tossos-a128-us.timer` 22:00 KST(유닛은 `~/.config/systemd/user/`,
+> 로그는 `/tmp/a1{28,40}-<kr|us>-<MMDD>.log`). 손으로 같은 측정을 또 띄우지 말 것(같은 원장 중복 쓰기). 확인은
+> `systemctl --user list-timers | grep -E 'a128|a140'`, 시장별 5 세션을 채우면 `systemctl --user disable --now <timer>`.
+> a128 KR 은 `--session "09:00-15:30"` 로 달력을 우회하므로 **평일 KR 휴장일에는 타이머를 미리 꺼야** 한다(다음 휴장 12-25).
+
 | 측정 | 남은 것 | 실행 |
 |---|---|---|
 | a128 Jev s3 | 시장별 ≥5 세션(Jev 거부 임계는 그 뒤 사람이 시장별로 — a140 D16). 지금 s3: KR 10-16 1세션, US 10-15 · 10-16(일부) | `setsid nohup openspec/changes/a128-jev-shadow-judgment-probe/run-probe.sh KR /tmp/a128-kr-<MMDD>.log --session "09:00-15:30" --wait-open --config-dir ~/.config/tossctl` · US 는 `run-probe.sh US /tmp/a128-us-<MMDD>.log --wait-open --config-dir ~/.config/tossctl` |
