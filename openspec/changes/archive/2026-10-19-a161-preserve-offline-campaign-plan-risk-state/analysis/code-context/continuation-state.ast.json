@@ -1,0 +1,54 @@
+{
+  "file": "internal/continuationlane/risk.go",
+  "source_sha256": "997653e38a0fb0166c8fe086221248f3110ce34a43b328b45a7f08de0d835bb1",
+  "package": "continuationlane",
+  "function": "NewRiskState",
+  "signature": "NewRiskState(params=1, results=1)",
+  "start": {
+    "line": 68,
+    "column": 1
+  },
+  "end": {
+    "line": 70,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 69,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 138
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 167
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 209
+      },
+      "text": "make"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,63 @@
+
+Callers of "PlanCampaignLeg" (20):
+
+function    TestCampaignWithReplacementReconstructsFromEvidence
+  internal/journal/campaign_a065_review_test.go:45
+
+function    TestResidualCancelInOneObservationAgreesWithReconstruction
+  internal/journal/campaign_a065_review_test.go:94
+
+function    TestCampaignFillDoesNotClearTheStopEntryLatch
+  internal/journal/campaign_a065_review_test.go:146
+
+function    TestClosedBoundGenerationBlocksTheNextEntryLeg
+  internal/journal/campaign_a065_review_test.go:216
+
+function    TestReEntryAfterCloseIsAdmittedOnANewCampaign
+  internal/journal/campaign_a065_review_test.go:264
+
+function    TestStaleRiskReducingIntentFromAClosedGenerationDoesNotBlockForever
+  internal/journal/campaign_a065_review_test.go:288
+
+function    TestUnresolvedRiskReducingIntentInTheLiveGenerationStillBlocks
+  internal/journal/campaign_a065_review_test.go:315
+
+function    TestLinkCampaignOrderUsesAuthoritativeAttemptAndUniqueOrderScope
+  internal/journal/position_campaign_hardening_test.go:70
+
+function    TestReplacementPredecessorHasOneAuthoritativeSuccessor
+  internal/journal/position_campaign_hardening_test.go:143
+
+function    TestAmbiguousCampaignFillPreservesAuthoritativeFillTransaction
+  internal/journal/position_campaign_hardening_test.go:182
+
+function    TestClosedCampaignLateFillStaysClosedAndLatchesReconcile
+  internal/journal/position_campaign_hardening_test.go:269
+
+function    TestExposureAdmissionReadsPositionAndPendingRiskReduction
+  internal/journal/position_campaign_hardening_test.go:304
+
+function    TestZeroFillTerminalClosesCampaignAndReleasesClaim
+  internal/journal/position_campaign_hardening_test.go:341
+
+function    TestCampaignReplayDetectsCompleteProjectionDrift
+  internal/journal/position_campaign_hardening_test.go:365
+
+function    TestCampaignCommandsAndEventsAreAppendOnly
+  internal/journal/position_campaign_hardening_test.go:399
+
+function    TestLinkCampaignOrderAmbiguityAndQuantityAuthorityLatch
+  internal/journal/position_campaign_independent_review_test.go:61
+
+function    TestCampaignCommandsExpectedVersionAndDeterministicRetry
+  internal/journal/position_campaign_test.go:131
+
+function    TestApplyPositionCampaignFillPreservesLatePredecessorExactlyOnce
+  internal/journal/position_campaign_test.go:217
+
+function    TestCampaignFillRollbackAndRestartAreDeterministic
+  internal/journal/position_campaign_test.go:290
+
+function    TestLinkCampaignOrderRequiresImmutableIntentAttemptLineage
+  internal/journal/position_campaign_test.go:356
+

@@ -1,0 +1,10 @@
+--- FAIL: TestA159PartialFillLatchRestartAndNextLeg (1.01s)
+    --- FAIL: TestA159PartialFillLatchRestartAndNextLeg/blocked-false (0.49s)
+        a159_protection_restart_test.go:132: fill replay={OrderID:a159-buy Delta:0 DeltaQuantity:0 Changed:true FailClosed:false Reason: Detail: Corrected:false CommittedAt:2026-08-04T02:00:03Z ReleasedReservations:[] ReservationAlerts:[]} err=<nil>
+    --- FAIL: TestA159PartialFillLatchRestartAndNextLeg/blocked-true (0.52s)
+        a159_protection_restart_test.go:132: fill replay={OrderID:a159-buy Delta:0 DeltaQuantity:0 Changed:true FailClosed:false Reason: Detail: Corrected:false CommittedAt:2026-08-04T02:00:03Z ReleasedReservations:[] ReservationAlerts:[]} err=<nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	1.014s
+FAIL
+
+EXIT_CODE=1

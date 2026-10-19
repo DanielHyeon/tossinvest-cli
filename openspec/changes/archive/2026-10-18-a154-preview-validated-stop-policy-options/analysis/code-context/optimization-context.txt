@@ -1,0 +1,92 @@
+## Code Context
+
+**Query:** handleOptimization optimization registry Preview Apply
+
+### Entry Points
+
+- **Registry** (struct) - internal/optimization/registry.go:18
+- **renderOptimizationPreview** (method) - internal/console/optimization_view.go:156
+  `(w http.ResponseWriter, preview strategyopt.Preview)`
+- **writeOptimizationApplyError** (method) - internal/console/optimization_view.go:299
+  `(w http.ResponseWriter, r *http.Request, capability string, err error)`
+
+### Related Symbols
+
+- internal/optimization/registry.go: Field:119, Fields:128, All:145, BuildRegistry:31
+- internal/strategyprojection/projection_test.go: TestGoldenRegistryIsStableAndReturnedAsCopy:97
+- internal/console/console.go: Console:354
+- internal/console/pages.go: renderHTML:388
+- internal/console/optimization_view.go: previewPage:145
+- internal/console/optimization.go: handleOptimizationSave:185
+- internal/exitquarantine/model.go: Preview:107
+
+### Code
+
+#### Registry (internal/optimization/registry.go:18)
+
+```go
+type Registry struct {
+	fields map[string]RegisteredField
+}
+```
+
+#### renderOptimizationPreview (internal/console/optimization_view.go:156)
+
+```go
+func (c *Console) renderOptimizationPreview(w http.ResponseWriter, preview strategyopt.Preview) {
+	c.renderHTML(w, http.StatusOK, "optimization-preview", c.previewPage(preview), optimizationPreviewCSP)
+}
+```
+
+#### writeOptimizationApplyError (internal/console/optimization_view.go:299)
+
+```go
+func (c *Console) writeOptimizationApplyError(w http.ResponseWriter, r *http.Request, capability string, err error) {
+	if !errors.Is(err, strategyopt.ErrVersionConflict) {
+		c.writeOptimizationError(w, err)
+		return
+	}
+	conflict, recoveryErr := c.opts.Optimization.RecoverConflict(r.Context(), capability)
+	if recoveryErr != nil {
+		c.writeOptimizationError(w, err)
+		return
+	}
+	c.renderHTML(w, http.StatusPreconditionFailed, "optimization-conflict",
+		c.newOptimizationConflictPage(c.csrf, conflict), consoleHTMLCSP)
+}
+```
+
+#### Field (internal/optimization/registry.go:119)
+
+```go
+func (r Registry) Field(key string) (RegisteredField, bool) {
+	field, ok := r.fields[strings.TrimSpace(key)]
+	if !ok {
+		return RegisteredField{}, false
+	}
+	field.Descriptor = cloneDescriptor(field.Descriptor)
+	return field, true
+}
+```
+
+#### Fields (internal/optimization/registry.go:128)
+
+```go
+func (r Registry) Fields(category Category) []RegisteredField {
+	keys := make([]string, 0, len(r.fields))
+	for key, field := range r.fields {
+		if field.Category == category {
+			keys = append(keys, key)
+		}
+	}
+	sort.Strings(keys)
+	out := make([]RegisteredField, 0, len(keys))
+	for _, key := range keys {
+		field := r.fields[key]
+		field.Descriptor = cloneDescriptor(field.Descriptor)
+		out = append(out, field)
+	}
+	return out
+}
+```
+

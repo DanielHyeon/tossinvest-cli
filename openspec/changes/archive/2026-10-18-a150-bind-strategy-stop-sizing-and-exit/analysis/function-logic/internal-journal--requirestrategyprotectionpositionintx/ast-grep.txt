@@ -1,0 +1,35 @@
+internal/journal/strategy_protection_read.go:127:func requireStrategyProtectionPositionInTx(ctx context.Context, tx *sql.Tx, campaignID string, protection StrategyProtection) error {
+internal/journal/strategy_protection_read.go:128:	if protection.Legacy {
+internal/journal/strategy_protection_read.go:129:		return nil
+internal/journal/strategy_protection_read.go:130:	}
+internal/journal/strategy_protection_read.go:131:	var account, market, symbol, decision string
+internal/journal/strategy_protection_read.go:132:	var generation sql.NullInt64
+internal/journal/strategy_protection_read.go:133:	if err := tx.QueryRowContext(ctx, `SELECT account_ref,market,symbol,decision_id,actual_position_generation FROM position_campaigns WHERE id=?`, campaignID).Scan(&account, &market, &symbol, &decision, &generation); err != nil {
+internal/journal/strategy_protection_read.go:134:		return err
+internal/journal/strategy_protection_read.go:135:	}
+internal/journal/strategy_protection_read.go:136:	p, err := scanPosition(tx.QueryRowContext(ctx, positionSelect+` WHERE account_ref=? AND lower(market)=lower(?) AND symbol=? ORDER BY instance_seq DESC LIMIT 1`, account, market, symbol))
+internal/journal/strategy_protection_read.go:137:	if errors.Is(err, ErrPositionNotFound) {
+internal/journal/strategy_protection_read.go:138:		if generation.Valid {
+internal/journal/strategy_protection_read.go:139:			return errors.New("strategy protection: missing bound position")
+internal/journal/strategy_protection_read.go:140:		}
+internal/journal/strategy_protection_read.go:141:		return nil
+internal/journal/strategy_protection_read.go:142:	}
+internal/journal/strategy_protection_read.go:143:	if err != nil {
+internal/journal/strategy_protection_read.go:144:		return err
+internal/journal/strategy_protection_read.go:145:	}
+internal/journal/strategy_protection_read.go:146:	if p.State == PositionClosed && !generation.Valid {
+internal/journal/strategy_protection_read.go:147:		return nil
+internal/journal/strategy_protection_read.go:148:	}
+internal/journal/strategy_protection_read.go:149:	if p.State == PositionClosed || !generation.Valid || generation.Int64 != p.InstanceSeq || p.EntryDecisionID != decision {
+internal/journal/strategy_protection_read.go:150:		return errors.New("strategy protection: current position mismatch")
+internal/journal/strategy_protection_read.go:151:	}
+internal/journal/strategy_protection_read.go:152:	result, err := scanExitStateResult(tx.QueryRowContext(ctx, exitStateSelect+` WHERE position_id=?`, p.ID))
+internal/journal/strategy_protection_read.go:153:	if err != nil {
+internal/journal/strategy_protection_read.go:154:		return err
+internal/journal/strategy_protection_read.go:155:	}
+internal/journal/strategy_protection_read.go:156:	s := result.State
+internal/journal/strategy_protection_read.go:157:	if result.Corruption != nil || s.Completed || protection.Policy == nil || s.PositionGeneration != p.InstanceSeq || s.PolicyKind != protection.Policy.Kind || s.PolicyIdentity != protection.Policy.Identity || s.EntryPrice != protection.Risk.EntryPrice || s.InitialStop != protection.Risk.StopPrice {
+internal/journal/strategy_protection_read.go:158:		return errors.New("strategy protection: exit snapshot mismatch")
+internal/journal/strategy_protection_read.go:159:	}
+internal/journal/strategy_protection_read.go:160:	return nil
+internal/journal/strategy_protection_read.go:161:}

@@ -1,0 +1,355 @@
+{
+  "file": "internal/strategyengine/wiring_test.go",
+  "source_sha256": "6298b6ee03571ea1a53a062dc5ff37d7ea6bff076f606eb6daba4a4ffa8f26d2",
+  "package": "strategyengine",
+  "function": "TestA047ShipsNoRuntimeOrderOrExitWiring",
+  "signature": "TestA047ShipsNoRuntimeOrderOrExitWiring(params=1, results=0)",
+  "start": {
+    "line": 13,
+    "column": 1
+  },
+  "end": {
+    "line": 60,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 24,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 27,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 28,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 33,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 37,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 41,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "range",
+      "at": {
+        "line": 44,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 45,
+        "column": 4
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 47,
+        "column": 5
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 50,
+        "column": 5
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 57,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 25,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 29,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 31,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 34,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 38,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 42,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 55,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 14,
+        "column": 10
+      },
+      "text": "filepath.Clean"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 14,
+        "column": 25
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 9
+      },
+      "text": "filepath.WalkDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 6
+      },
+      "text": "entry.IsDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 7
+      },
+      "text": "entry.Name"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 33
+      },
+      "text": "entry.Name"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 7
+      },
+      "text": "strings.HasSuffix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 41
+      },
+      "text": "strings.HasSuffix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 18
+      },
+      "text": "filepath.Rel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 6
+      },
+      "text": "strings.HasPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 24
+      },
+      "text": "filepath.ToSlash"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 21
+      },
+      "text": "parser.ParseFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 38
+      },
+      "text": "token.NewFileSet"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 7
+      },
+      "text": "strings.Trim"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 12
+      },
+      "text": "filepath.ToSlash"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 6
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 6
+      },
+      "text": "assertConsoleOnlyCallsDormantDescriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 14,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 15,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 16,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 23,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 40,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 46,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

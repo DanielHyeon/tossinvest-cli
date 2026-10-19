@@ -1,0 +1,277 @@
+{
+  "version": "a152-v1",
+  "synthetic": true,
+  "datasets": [
+    {
+      "id": "KRtrades",
+      "kind": "trades",
+      "market": "KR",
+      "symbol": "X",
+      "currency": "KRW",
+      "basis": "unadjusted",
+      "profile_mode": "current_prefix",
+      "session": {
+        "date": "2026-10-15",
+        "timezone": "Asia/Seoul",
+        "open_at": "2026-10-15T09:00:00+09:00",
+        "close_at": "2026-10-15T15:00:00+09:00"
+      },
+      "cutoff_at": "2026-10-15T10:00:00+09:00",
+      "as_of": "2026-10-15T10:05:00+09:00",
+      "source": {
+        "name": "supplied",
+        "version": "1",
+        "reference": "local",
+        "declared_kind": "executions"
+      },
+      "coverage": {
+        "start_at": "2026-10-15T09:00:00+09:00",
+        "end_at": "2026-10-15T10:00:00+09:00",
+        "status": "complete",
+        "gaps": [],
+        "sequence_status": "complete",
+        "venues": [
+          "X"
+        ],
+        "trade_types": [
+          "regular"
+        ]
+      },
+      "correction_policy": "none_declared",
+      "price_increment": "1",
+      "records": [
+        {
+          "event_id": "1",
+          "action": "trade",
+          "reference_id": null,
+          "executed_at": "2026-10-15T09:15:00+09:00",
+          "received_at": "2026-10-15T09:15:01+09:00",
+          "price": "100",
+          "volume": "2"
+        },
+        {
+          "event_id": "2",
+          "action": "trade",
+          "reference_id": null,
+          "executed_at": "2026-10-15T09:20:00+09:00",
+          "received_at": "2026-10-15T09:20:01+09:00",
+          "price": "101",
+          "volume": "3"
+        }
+      ],
+      "bin_method": null,
+      "access": {
+        "license": "provided claim",
+        "availability": "provided",
+        "cost_note": "unknown"
+      }
+    },
+    {
+      "id": "USbins",
+      "kind": "bins",
+      "market": "US",
+      "symbol": "X",
+      "currency": "USD",
+      "basis": "unadjusted",
+      "profile_mode": "current_prefix",
+      "session": {
+        "date": "2026-10-15",
+        "timezone": "America/New_York",
+        "open_at": "2026-10-15T09:00:00-04:00",
+        "close_at": "2026-10-15T15:00:00-04:00"
+      },
+      "cutoff_at": "2026-10-15T10:00:00-04:00",
+      "as_of": "2026-10-15T10:05:00-04:00",
+      "source": {
+        "name": "supplied",
+        "version": "1",
+        "reference": "local",
+        "declared_kind": "executed_price_bins"
+      },
+      "coverage": {
+        "start_at": "2026-10-15T09:00:00-04:00",
+        "end_at": "2026-10-15T10:00:00-04:00",
+        "status": "complete",
+        "gaps": [],
+        "sequence_status": "complete",
+        "venues": [
+          "X"
+        ],
+        "trade_types": [
+          "regular"
+        ]
+      },
+      "correction_policy": "none_declared",
+      "price_increment": "1",
+      "records": [
+        {
+          "lower": "100",
+          "upper": "101",
+          "volume": "2"
+        },
+        {
+          "lower": "101",
+          "upper": "102",
+          "volume": "0"
+        },
+        {
+          "lower": "102",
+          "upper": "103",
+          "volume": "3"
+        }
+      ],
+      "bin_method": {
+        "name": "supplied",
+        "volume_basis": "executed",
+        "unit": "shares",
+        "boundary": "[lower,upper)",
+        "width": "1",
+        "price_min": "100",
+        "price_max": "103",
+        "zero_bins_explicit": true,
+        "built_at": "2026-10-15T10:01:00-04:00",
+        "received_at": "2026-10-15T10:02:00-04:00"
+      },
+      "access": {
+        "license": "provided claim",
+        "availability": "provided",
+        "cost_note": "unknown"
+      }
+    },
+    {
+      "id": "KRohlcv",
+      "kind": "ohlcv",
+      "market": "KR",
+      "symbol": "X",
+      "currency": "KRW",
+      "basis": "unadjusted",
+      "profile_mode": "current_prefix",
+      "session": {
+        "date": "2026-10-15",
+        "timezone": "Asia/Seoul",
+        "open_at": "2026-10-15T09:00:00+09:00",
+        "close_at": "2026-10-15T15:00:00+09:00"
+      },
+      "cutoff_at": "2026-10-15T10:00:00+09:00",
+      "as_of": "2026-10-15T10:05:00+09:00",
+      "source": {
+        "name": "supplied",
+        "version": "1",
+        "reference": "local",
+        "declared_kind": "ohlcv"
+      },
+      "coverage": {
+        "start_at": "2026-10-15T09:00:00+09:00",
+        "end_at": "2026-10-15T10:00:00+09:00",
+        "status": "complete",
+        "gaps": [],
+        "sequence_status": "complete",
+        "venues": [
+          "X"
+        ],
+        "trade_types": [
+          "regular"
+        ]
+      },
+      "correction_policy": "none_declared",
+      "price_increment": "1",
+      "records": [],
+      "bin_method": null,
+      "access": {
+        "license": "provided claim",
+        "availability": "provided",
+        "cost_note": "unknown"
+      }
+    },
+    {
+      "id": "KRorderbook",
+      "kind": "orderbook",
+      "market": "KR",
+      "symbol": "X",
+      "currency": "KRW",
+      "basis": "unadjusted",
+      "profile_mode": "current_prefix",
+      "session": {
+        "date": "2026-10-15",
+        "timezone": "Asia/Seoul",
+        "open_at": "2026-10-15T09:00:00+09:00",
+        "close_at": "2026-10-15T15:00:00+09:00"
+      },
+      "cutoff_at": "2026-10-15T10:00:00+09:00",
+      "as_of": "2026-10-15T10:05:00+09:00",
+      "source": {
+        "name": "supplied",
+        "version": "1",
+        "reference": "local",
+        "declared_kind": "orderbook"
+      },
+      "coverage": {
+        "start_at": "2026-10-15T09:00:00+09:00",
+        "end_at": "2026-10-15T10:00:00+09:00",
+        "status": "complete",
+        "gaps": [],
+        "sequence_status": "complete",
+        "venues": [
+          "X"
+        ],
+        "trade_types": [
+          "regular"
+        ]
+      },
+      "correction_policy": "none_declared",
+      "price_increment": "1",
+      "records": [],
+      "bin_method": null,
+      "access": {
+        "license": "provided claim",
+        "availability": "provided",
+        "cost_note": "unknown"
+      }
+    },
+    {
+      "id": "KRunavailable",
+      "kind": "unavailable",
+      "market": "KR",
+      "symbol": "X",
+      "currency": "KRW",
+      "basis": "unadjusted",
+      "profile_mode": "current_prefix",
+      "session": {
+        "date": "2026-10-15",
+        "timezone": "Asia/Seoul",
+        "open_at": "2026-10-15T09:00:00+09:00",
+        "close_at": "2026-10-15T15:00:00+09:00"
+      },
+      "cutoff_at": "2026-10-15T10:00:00+09:00",
+      "as_of": "2026-10-15T10:05:00+09:00",
+      "source": {
+        "name": "supplied",
+        "version": "1",
+        "reference": "local",
+        "declared_kind": "unknown"
+      },
+      "coverage": {
+        "start_at": "2026-10-15T09:00:00+09:00",
+        "end_at": "2026-10-15T10:00:00+09:00",
+        "status": "complete",
+        "gaps": [],
+        "sequence_status": "complete",
+        "venues": [
+          "X"
+        ],
+        "trade_types": [
+          "regular"
+        ]
+      },
+      "correction_policy": "none_declared",
+      "price_increment": "1",
+      "records": [],
+      "bin_method": null,
+      "access": {
+        "license": "provided claim",
+        "availability": "provided",
+        "cost_note": "unknown"
+      }
+    }
+  ]
+}

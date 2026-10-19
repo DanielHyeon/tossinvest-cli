@@ -1,0 +1,15 @@
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+📊 Statistics for: /tmp/tossos-a148-impl-20261018
+
+┏━━━━━━━━━━━━━━━━━━┳━━━━━━━┓
+┃ Metric           ┃ Count ┃
+┡━━━━━━━━━━━━━━━━━━╇━━━━━━━┩
+│ Files            │ 10404 │
+│ Functions        │ 13818 │
+│ Classes          │   132 │
+│ Imported Modules │   185 │
+└──────────────────┴───────┘

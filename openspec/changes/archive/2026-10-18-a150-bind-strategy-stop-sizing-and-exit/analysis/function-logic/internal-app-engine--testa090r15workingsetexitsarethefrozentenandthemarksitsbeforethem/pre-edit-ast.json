@@ -1,0 +1,79 @@
+{
+  "file": "internal/app/engine/a090_workingset_exits_test.go",
+  "source_sha256": "d15b7431e5ab359468fa4d95a42cb870aac9278725ca5729e72785bc4c0d9200",
+  "package": "engine_test",
+  "function": "TestA090R15WorkingSetExitsAreTheFrozenTenAndTheMarkSitsBeforeThem",
+  "signature": "TestA090R15WorkingSetExitsAreTheFrozenTenAndTheMarkSitsBeforeThem(params=1, results=0)",
+  "start": {
+    "line": 216,
+    "column": 1
+  },
+  "end": {
+    "line": 220,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 217,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 17
+      },
+      "text": "a090CheckWorkingSet"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 40
+      },
+      "text": "a090ReadExitloop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 62
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 45
+      },
+      "text": "strings.Join"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 217,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

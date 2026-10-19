@@ -1,0 +1,8 @@
+--- FAIL: TestA160StoredScopeAndFailures (0.38s)
+    --- FAIL: TestA160StoredScopeAndFailures/different_decision (0.38s)
+        campaign_continuation_snapshot_test.go:200: got={Campaign:{ID:campaign AccountRef:acct Market:kr Symbol:005930 LaneID:kr LaneVersion:v1 DecisionID:decision EvidenceDigest:digest ExpectedPositionGeneration:0 ExpectedPositionVersion:0 ProspectiveToken:token ActualPositionGeneration:1 State:ACTIVE Version:4 EntryBlocked:false EffectiveStop: StopSource: StopPolicy: StopObservedAt: StopCandidate: StopCandidateValid:false StopCandidateSource: StopCandidatePolicy: StopCandidateObservedAt: StopSelectedFrom: CreatedAt:2026-03-30T00:30:00Z UpdatedAt:2026-03-30T00:31:00Z} Position:{ID:a160-pos AccountRef:acct Market:kr Symbol:005930 InstanceSeq:1 EntryDecisionID:other AdoptionID: State:OPEN Quantity:3 AvgPrice:70000 OpenedAt: ClosedAt:} ProjectionVersion:2 Legs:[{CampaignID:campaign Sequence:1 PlanID:leg-a160 IntentID:a160-intent RequestedQuantity:10 FilledQuantity:3 ResidualQuantity:7 State:PARTIAL Version:3 CampaignVersion:4 CreatedAt:2026-03-30T00:30:00Z UpdatedAt:2026-03-30T00:31:00Z}] Watermarks:[{CampaignID:campaign LegSequence:1 OrderID:a160-order IntentID:a160-intent AttemptID:a160-attempt PredecessorOrderID: CarryBaseline:0 RequestedCap:10 CumulativeFilled:3 RemainingQuantity:7 Terminal:false LineageAmbiguous:false LastObservationID:60c5d8b19c1e0a2fd53acbaf766de3edea2f955738fd7dbeedd7aa5e8cef9f14 CampaignVersion:4 CreatedAt:2026-03-30T00:30:00Z UpdatedAt:2026-03-30T00:31:00Z}] PlanAvailability:FULL_PLAN_PREIMAGE_UNAVAILABLE} err=<nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.387s
+FAIL
+
+EXIT_CODE=1

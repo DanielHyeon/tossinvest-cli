@@ -1,0 +1,5 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane [github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane.test]
+../a161-latch-mutant.go:26:10: declared and not used: v
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane [build failed]
+FAIL
+EXIT_CODE=1

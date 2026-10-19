@@ -1,0 +1,55 @@
+{
+  "file": "internal/app/engine/strategy_first_leg_identity_backstop_test.go",
+  "source_sha256": "0eb6a371653573f8112661d705c920569f88fbdaf127b297fe15a246698d7e47",
+  "package": "engine",
+  "function": "loaderWith",
+  "receiver": "firstLegIdentityFixture",
+  "signature": "firstLegIdentityFixture.loaderWith(params=1, results=1)",
+  "start": {
+    "line": 104,
+    "column": 1
+  },
+  "end": {
+    "line": 107,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 9
+      },
+      "text": "newProductionStrategyFirstLegAuthorityLoader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 3
+      },
+      "text": "routeReadySchedulePair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 95
+      },
+      "text": "a150RatchetPolicyFixture"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

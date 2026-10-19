@@ -19,10 +19,11 @@ import (
 	"testing"
 )
 
-// a090FrozenWorkingSetExits 는 설계 단계 FLM(workingSet 분기 22)의 이탈 열 개임.
+// a090FrozenWorkingSetExits 는 설계 단계 FLM(workingSet 분기 22)의 이탈 열한 개임 (a150 보호 입력 불일치 포함).
 var a090FrozenWorkingSetExits = []string{
 	"continue @ p.State == journal.PositionClosed || isZeroQuantity(p.Quantity) #0", // B5 보유 아님
 	"continue @ !p.ExitEligible() #0",                                               // B6 미관리(표시 앞)
+	"continue @ !p.Adopted() > err != nil > !ok && protection.Policy == nil #0",     // a150 미복구 보호: 표시 뒤 거절
 	"continue @ !ok > err != nil #0",                                                // B8 열기 실패
 	`continue @ !ok > opened.PositionID == "" #0`,                                   // B10 완료(해제 뒤)
 	"continue @ result.Corruption != nil > qerr != nil #0",                          // B12 격리 쓰기 실패
@@ -213,6 +214,7 @@ func a090CheckWorkingSet(t *testing.T, src []byte) []string {
 	return problems
 }
 
+// Ten in this historical test name identifies the original census; a150 pins an eleventh exit.
 func TestA090R15WorkingSetExitsAreTheFrozenTenAndTheMarkSitsBeforeThem(t *testing.T) {
 	if problems := a090CheckWorkingSet(t, a090ReadExitloop(t)); len(problems) > 0 {
 		t.Fatalf("workingSet exit census:\n  %s", strings.Join(problems, "\n  "))

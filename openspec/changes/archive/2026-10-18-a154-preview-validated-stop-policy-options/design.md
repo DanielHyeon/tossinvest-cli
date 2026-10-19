@@ -1,0 +1,41 @@
+# Numeric preview design — approved scope, 2026-10-18
+
+Status: user approved the hypothetical numeric comparison scope, including deferred cost/target/FX/apply. Independent and gstack draft reviews resolved all technical blockers. Canonical implementation contract; no implementation completion claim.
+
+## Purpose and authority
+
+Add a hypothetical calculator to the existing optimization exit-protection view. Compare initial protection, sizing basis, strategic exit and common profit protection separately. This is not a quote, broker order preview, actual holding calculation, approved policy or runtime recommendation. Existing legacy defaults and common exit picker remain unchanged. Parker remains KR-only; KR/US below means research arithmetic in quote currency, not US Parker support.
+
+## Approved input contract
+
+Use manual hypothetical inputs only; do not fetch account, market, holding or evidence files automatically. Fixed choice of market KR/KRW or US/USD; long-only integer-share examples. Fields: planned entry, signal-bar low, ATR14 value, uniform tick size and its lower/upper valid price bounds, per-trade price-risk budget, maximum shares and maximum notional. These are scenario parameters, not settings. Policy IDs are finite (fixed_007, signal_low_tick, atr14_15); no arbitrary stop coefficient or policy ID. Low and ATR may be missing independently. Entry/grid are needed for stop computation; all budget/caps are needed for quantity computation. Missing input is unknown; present invalid input is an error, never zero. Positive values must be bounded unsigned decimal strings, maximum 32 characters and 8 decimal places; quantity cap integer <=1,000,000. Currency is derived from market, no free-text FX/account currency.
+
+Tick/grid is a user-declared bounded, zero-origin, uniform grid for this scenario, not an inferred exchange schedule. Entry must already be a valid positive grid price. Stops must remain within supplied bounds; interval-crossing/tiered grids are unsupported. Do not silently round an entered entry price or infer a KR/US tick default. Label signal low and ATR as manually supplied, not validated candles or computed ATR. Optional source label and observation timestamp are descriptive only; provenance is always user-supplied/unverified. No stale-input claim is possible without trusted data: prominently say not live and no execution eligibility.
+
+## Exact numerical contract
+
+Use Go math/big.Rat and existing exact quantity helper if behavior matches; no Python subprocess or float64 trading model reuse. The three stops, independently, are floor_grid(entry*0.993), floor_grid(signal_low)-tick, and floor_grid(entry-1.5*ATR14). Validate 0<stop<entry, grid/bounds. Signal low must be positive and not exceed entry; ATR positive. Compute per-share distance=entry-stop and distance percent=100*distance/entry. For each valid stop with complete sizing inputs, quantity=min(floor(budget/distance), max_shares, floor(max_notional/entry)). Zero quantity is a valid no-position result, not permission to trade. Planned gross price risk=quantity*distance and notional=quantity*entry; cap logic is identical across policies. Never size from formatted/rounded display values.
+
+Render prices, distances, currency amounts and notionals as exact terminating decimals, trimming trailing fractional zeros. Distance percent alone uses six decimal places, half-up rounding, visibly labelled rounded; a positive percentage below 0.000001% displays `<0.000001%`, never zero. Display values never feed calculation. Supplied risk budget, maximum shares and maximum notional must be positive; input zero is an error, while a computed quantity of zero is a valid no-position result. Use RiskBasedQuantity only after explicit geometry validation, followed by the exact caps; do not construct a production Policy to call StrategyEntryQuantity, whose validation and zero-result semantics differ.
+
+Common entry/grid errors prevent all numerical results. Missing or invalid low affects only the signal-low arm; missing or invalid ATR affects only the ATR arm. Missing sizing inputs leave quantity/risk/notional unknown while retaining valid stops and distances; invalid sizing inputs similarly block sizing with field errors. Shared sizing failure must not hide valid stop results. Signal-low means the supplied signal-bar low, not a confirmed structural swing low.
+
+No target or RR is computed in this minimum numerical design. Costs, taxes, spread, gap/slippage, FX and actual filled risk remain unknown/not-included; this displayed price-risk budget does not cap total loss. Show that limitation adjacent to numerical results, not only in a footer. Do not imply EMA exit or intrabar stop execution matches these initial levels.
+
+## Request and state boundary
+
+Separate pure calculation endpoint and template result; do not call optimization.Store.Preview, Apply, rollback, preset registration or capability generation. No new writable registry field. Reuse console session authentication, origin/CSRF and bounded-request middleware for a compute-only POST; do not call a mutating service simply because that middleware is reused. Reject unknown/duplicate form fields, invalid method, invalid policy/market, oversized body and unsafe numeric input. All server output must be escaped. Do not put sensitive scenario values in URLs or logs; response no-store, no persistence/localStorage. Existing page GET does not perform calculations or create candidates.
+
+Reject all query parameters on the calculation endpoint, validate PostForm rather than merged Form, and reject duplicate csrf as well as other duplicate fields. Bound the body to 8 KiB before parsing. Apply no-store before session/POST guards so refusals also carry it. Reuse the existing session0 security contract including its configured trusted-network exception; do not claim every configuration uses session authentication or modify that operating choice. Extend the static route test with an explicit compute-only CSRF-protected set without weakening state-changing route assertions.
+
+Database snapshots, candidate rows, audit rows, position protection, operational toggles and scheduler remain unchanged. A forged existing optimization preview/apply request for any new research-only key must fail without writes. Existing stale-CAS tests continue to cover the original lifecycle; they do not prove a new approved stop-selection integration. No new approved apply is implemented.
+
+## UX
+
+Mode Operate, preserve existing console styles. Explicit title '가정값 손절 비교'; manually entered hypothetical badge. Native labelled inputs, visible keyboard focus, field-linked errors, retain valid user input after validation errors, responsive result rows/cards and readable units. Compare three policies together; unsupported/missing fields remain visibly unknown by policy. No apply button/token. Calculation action must say '계산' rather than '적용' or broker preview. Initial state explains required inputs, no misleading prefilled price/budget. Server-rendered request/response means no separate asynchronous loading state is required unless added. Test mobile/desktop and keyboard in an isolated synthetic harness, no operating service restart.
+
+## Verification and deferred work
+
+Independent hand-calculated KR/US oracles, exact decimal/floor boundaries, tick-range and invalid geometry, missing low/ATR, missing caps, zero quantity, notional/risk limits, malformed inputs, request authorization, no-write assertions and forged key rejection. Fresh AST/FLM and branch tests before editing existing high-risk code; prefer pure new leaf and minimal console wiring. Impeccable and accessibility review plus actual isolated rendered evidence required. Independent and gstack reviews, Manager checks and full gate remain required before lifecycle.
+
+Deferred explicitly: authenticated feed-driven preview, fee-inclusive sizing, slippage/gap simulation, RR/target comparison, FX/account-risk comparison, accepted holdout/operator approval registry, new-policy CAS apply/rollback/runtime integration. Existing a150 and all prior evidence stay unchanged. Archive may only represent the approved reduced numerical-preview scope, not the original applied-policy capability.

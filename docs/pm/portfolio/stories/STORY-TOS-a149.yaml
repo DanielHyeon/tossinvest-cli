@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a149-compute-session-vwap-and-ema9",
-    "path": "openspec/changes/a149-compute-session-vwap-and-ema9"
+    "path": "openspec/changes/archive/2026-10-18-a149-compute-session-vwap-and-ema9"
   },
   "found_by": {
     "date": "2026-10-18",
     "how": "User requested Astra-authored priority 1–9 OpenSpecs with Terra implementation and independent completion gates.",
-    "record": "openspec/changes/a149-compute-session-vwap-and-ema9/proposal.md"
+    "record": "openspec/changes/archive/2026-10-18-a149-compute-session-vwap-and-ema9/proposal.md"
   },
   "acceptance": [
     "Complete the scoped acceptance scenarios and dependency gates without changing operating settings.",

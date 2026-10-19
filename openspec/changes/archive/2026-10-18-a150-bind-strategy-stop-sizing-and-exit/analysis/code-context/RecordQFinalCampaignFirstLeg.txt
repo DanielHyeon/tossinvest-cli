@@ -1,0 +1,305 @@
+# node
+**RecordQFinalCampaignFirstLeg** (method)
+
+**Location:** internal/journal/strategy_first_leg_atomic.go:101
+**Signature:** `(ctx context.Context, request QFinalCampaignFirstLegRequest) (QFinalCampaignFirstLegReceipt, error)`
+
+```go
+101	func (j *Journal) RecordQFinalCampaignFirstLeg(ctx context.Context, request QFinalCampaignFirstLegRequest) (QFinalCampaignFirstLegReceipt, error) {
+102		if j == nil || j.db == nil {
+103			return QFinalCampaignFirstLegReceipt{}, errors.New("journal first-leg admission: journal required")
+104		}
+105		if strings.TrimSpace(request.Issue.Admission.Owner.Key.ProspectiveGeneration) != "" {
+106			return QFinalCampaignFirstLegReceipt{}, fmt.Errorf("%w: first-leg prospective token is journal-owned", ErrInvalidRequest)
+107		}
+108		if err := validateFirstLegCampaignRequest(request.Campaign); err != nil {
+109			return QFinalCampaignFirstLegReceipt{}, err
+110		}
+111		if request.RouterID != strategyrouter.RouterID || request.RouterVersion != strategyrouter.RouterRelease {
+112			return QFinalCampaignFirstLegReceipt{}, fmt.Errorf("%w: first-leg router identity is not the sealed production router", ErrInvalidRequest)
+113		}
+114	
+115		tx, err := j.db.BeginTx(ctx, nil)
+116		if err != nil {
+117			return QFinalCampaignFirstLegReceipt{}, fmt.Errorf("journal: begin first-leg admission: %w", err)
+118		}
+119		defer tx.Rollback()
+120	
+121		token, replayCandidate, err := firstLegReplayTokenTx(ctx, tx, request)
+122		if err != nil {
+123			return QFinalCampaignFirstLegReceipt{}, err
+124		}
+125		if !replayCandidate {
+126			token, err = j.mintFirstLegToken()
+127			if err != nil {
+128				return QFinalCampaignFirstLegReceipt{}, err
+129			}
+130		}
+131		request.Issue.Admission.Owner.Key.ProspectiveGeneration = token
+132		prepared, err := j.prepareQFinalCampaignFirstLeg(request)
+133		if err != nil {
+134			return QFinalCampaignFirstLegReceipt{}, err
+135		}
+136		if err := validateWeeklyFirstLegBindingTx(ctx, tx, prepared); err != nil {
+137			return QFinalCampaignFirstLegReceipt{}, err
+138		}
+139	
+140		if replayCandidate {
+141			replayed, qFinal, err := recoverQFinalIssueReplayTx(ctx, tx, request.Issue.Admission, prepared.decision,
+142				prepared.reserve, prepared.reservePlan, prepared.riskDecision, prepared.issueDigest)
+143			if err != nil {
+144				return QFinalCampaignFirstLegReceipt{}, err
+145			}
+146			if !replayed {
+147				return QFinalCampaignFirstLegReceipt{}, fmt.Errorf("%w: first-leg binding without q_final authority", ErrRiskBucketReplayMismatch)
+148			}
+149			if err := verifyFirstLegReplayTx(ctx, tx, prepared, token); err != nil {
+150				return QFinalCampaignFirstLegReceipt{}, err
+151			}
+152			if err := tx.Commit(); err != nil {
+153				return QFinalCampaignFirstLegReceipt{}, fmt.Errorf("journal: commit first-leg replay: %w", err)
+154			}
+155			return firstLegReceipt(prepared, qFinal.Admission, true), nil
+156		}
+157	
+158		if replayed, _, err := recoverQFinalIssueReplayTx(ctx, tx, request.Issue.Admission, prepared.decision,
+159			prepared.reserve, prepared.reservePlan, prepared.riskDecision, prepared.issueDigest); err != nil {
+160			return QFinalCampaignFirstLegReceipt{}, err
+161		} else if replayed {
+162			return QFinalCampaignFirstLegReceipt{}, fmt.Errorf("%w: q_final authority exists without first-leg binding", ErrRiskBucketReplayMismatch)
+163		}
+164		if err := reservePrecheck(ctx, tx, prepared.reserve, prepared.reservePlan, j.clk.Now().UTC()); err != nil {
+165			return QFinalCampaignFirstLegReceipt{}, err
+166		}
+167		if err := insertDecisionRow(ctx, tx, prepared.decision); err != nil {
+168			return QFinalCampaignFirstLegReceipt{}, err
+169		}
+170		reserved, err := reserveRows(ctx, tx, prepared.reserve, prepared.reservePlan, j.clk.Now().UTC())
+171		if err != nil {
+172			return QFinalCampaignFirstLegReceipt{}, err
+173		}
+174		qFinalReceipt, err := commitFreshRiskBucketAdmissionTx(ctx, tx, request.Issue.Admission, prepared.riskDecision,
+175			prepared.issuePreimage, prepared.issueDigest, reserved.Version)
+176		if err != nil {
+177			return QFinalCampaignFirstLegReceipt{}, err
+178		}
+179		if _, err := insertExactStrategyDecision(ctx, tx, prepared.strategyPlan.Lineage); err != nil {
+180			return QFinalCampaignFirstLegReceipt{}, err
+181		}
+182		if _, err := insertExactStrategyAttempt(ctx, tx, prepared.strategyPlan, prepared.decision.ID, prepared.decision.AccountRef); err != nil {
+183			return QFinalCampaignFirstLegReceipt{}, err
+184		}
+185		if err := insertFirstLegCampaignTx(ctx, tx, prepared, token, j.nowString()); err != nil {
+186			return QFinalCampaignFirstLegReceipt{}, err
+187		}
+188		if err := insertFirstLegBindingTx(ctx, tx, prepared, token, j.nowString()); err != nil {
+189			return QFinalCampaignFirstLegReceipt{}, err
+190		}
+191		if err := tx.Commit(); err != nil {
+192			return QFinalCampaignFirstLegReceipt{}, fmt.Errorf("journal: commit first-leg admission: %w", err)
+193		}
+194		return firstLegReceipt(prepared, qFinalReceipt, false), nil
+195	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** validateFirstLegCampaignRequest (internal/journal/strategy_first_leg_atomic.go:197), firstLegReplayTokenTx (internal/journal/strategy_first_leg_atomic.go:224), mintFirstLegToken (internal/journal/strategy_first_leg_atomic.go:212), prepareQFinalCampaignFirstLeg (internal/journal/strategy_first_leg_atomic.go:255), validateWeeklyFirstLegBindingTx (internal/journal/strategy_weekly_first_leg.go:43), recoverQFinalIssueReplayTx (internal/journal/risk_bucket_issuance.go:234), verifyFirstLegReplayTx (internal/journal/strategy_first_leg_atomic.go:474), firstLegReceipt (internal/journal/strategy_first_leg_atomic.go:506), reservePrecheck (internal/journal/reservations.go:293), Now (internal/clock/clock.go:37), insertDecisionRow (internal/journal/decision.go:294), reserveRows (internal/journal/reservations.go:328), +9 more
+**Called by ←** TestEntryLossLockRefusesTheStrategyFirstLegAdmission (internal/journal/risk_bucket_entry_loss_lock_test.go:329), seedBoundStrategyDispatchClaimLease (internal/journal/strategy_dispatch_claim_test.go:351), TestIssueVerifiedFirstLegStrategyDispatchLeasePairsKRUS (internal/journal/strategy_dispatch_issuance_test.go:10), TestIssueVerifiedFirstLegStrategyDispatchLeaseRefusesCrossMarketAndStaleOwner (internal/journal/strategy_dispatch_issuance_test.go:52), TestIssueVerifiedFirstLegStrategyDispatchLeaseRollsBackDerivedAuthorityWithLeaseInsert (internal/journal/strategy_dispatch_issuance_test.go:83), RecordQFinalCampaignFirstLegWithRecollection (internal/journal/strategy_first_leg_atomic.go:88), TestFirstLegAtomicAdmissionDeliversKRAndUSTogether (internal/journal/strategy_first_leg_atomic_test.go:21), TestFirstLegAtomicAdmissionSameAccountKRUSRecollectsTheSerializedLoser (internal/journal/strategy_first_leg_atomic_test.go:74), TestFirstLegAtomicAdmissionExactReplayUsesOriginalJournalToken (internal/journal/strategy_first_leg_atomic_test.go:183), TestFirstLegAtomicAdmissionSurvivesReopenWithoutLegacyRecovery (internal/journal/strategy_first_leg_atomic_test.go:211), TestFirstLegAtomicAdmissionDoesNotRepairPartialQFinalAuthority (internal/journal/strategy_first_leg_atomic_test.go:249), TestFirstLegAtomicAdmissionEntropyFailureWritesNothing (internal/journal/strategy_first_leg_atomic_test.go:271), +11 more
+
+# callers
+
+Callers of "RecordQFinalCampaignFirstLeg" (20):
+
+function    TestEntryLossLockRefusesTheStrategyFirstLegAdmission
+  internal/journal/risk_bucket_entry_loss_lock_test.go:329
+
+function    seedBoundStrategyDispatchClaimLease
+  internal/journal/strategy_dispatch_claim_test.go:351
+
+function    TestIssueVerifiedFirstLegStrategyDispatchLeasePairsKRUS
+  internal/journal/strategy_dispatch_issuance_test.go:10
+
+function    TestIssueVerifiedFirstLegStrategyDispatchLeaseRefusesCrossMarketAndStaleOwner
+  internal/journal/strategy_dispatch_issuance_test.go:52
+
+function    TestIssueVerifiedFirstLegStrategyDispatchLeaseRollsBackDerivedAuthorityWithLeaseInsert
+  internal/journal/strategy_dispatch_issuance_test.go:83
+
+method      RecordQFinalCampaignFirstLegWithRecollection
+  internal/journal/strategy_first_leg_atomic.go:88
+
+function    TestFirstLegAtomicAdmissionDeliversKRAndUSTogether
+  internal/journal/strategy_first_leg_atomic_test.go:21
+
+function    TestFirstLegAtomicAdmissionSameAccountKRUSRecollectsTheSerializedLoser
+  internal/journal/strategy_first_leg_atomic_test.go:74
+
+function    TestFirstLegAtomicAdmissionExactReplayUsesOriginalJournalToken
+  internal/journal/strategy_first_leg_atomic_test.go:183
+
+function    TestFirstLegAtomicAdmissionSurvivesReopenWithoutLegacyRecovery
+  internal/journal/strategy_first_leg_atomic_test.go:211
+
+function    TestFirstLegAtomicAdmissionDoesNotRepairPartialQFinalAuthority
+  internal/journal/strategy_first_leg_atomic_test.go:249
+
+function    TestFirstLegAtomicAdmissionEntropyFailureWritesNothing
+  internal/journal/strategy_first_leg_atomic_test.go:271
+
+function    TestFirstLegAtomicAdmissionTokenCollisionRollsBackSecondMarket
+  internal/journal/strategy_first_leg_atomic_test.go:285
+
+function    TestFirstLegAtomicAdmissionLateStatementFailuresRollbackEveryFamily
+  internal/journal/strategy_first_leg_atomic_test.go:302
+
+function    TestFirstLegAtomicAdmissionRejectsCallerTokenAndCrossMarketSubstitution
+  internal/journal/strategy_first_leg_atomic_test.go:338
+
+function    TestFirstLegBindingIsImmutableAndRequiredByFutureLease
+  internal/journal/strategy_first_leg_atomic_test.go:370
+
+function    TestFirstLegRouterIdentityIsRequiredAndReplayBoundKRUS
+  internal/journal/strategy_first_leg_atomic_test.go:449
+
+function    TestFutureLeaseRejectsCancelledOrBlockedKRAndUSFirstLeg
+  internal/journal/strategy_first_leg_atomic_test.go:502
+
+function    TestFutureLeaseAcceptsExactKRAndUSFirstLegBinding
+  internal/journal/strategy_first_leg_atomic_test.go:553
+
+function    TestWeeklyFirstLegBindsPairedKRUSReservationsAtomically
+  internal/journal/strategy_weekly_first_leg_test.go:17
+
+
+# callees
+
+Callees of "RecordQFinalCampaignFirstLeg" (20):
+
+function    validateFirstLegCampaignRequest
+  internal/journal/strategy_first_leg_atomic.go:197
+
+function    firstLegReplayTokenTx
+  internal/journal/strategy_first_leg_atomic.go:224
+
+method      mintFirstLegToken
+  internal/journal/strategy_first_leg_atomic.go:212
+
+method      prepareQFinalCampaignFirstLeg
+  internal/journal/strategy_first_leg_atomic.go:255
+
+function    validateWeeklyFirstLegBindingTx
+  internal/journal/strategy_weekly_first_leg.go:43
+
+function    recoverQFinalIssueReplayTx
+  internal/journal/risk_bucket_issuance.go:234
+
+function    verifyFirstLegReplayTx
+  internal/journal/strategy_first_leg_atomic.go:474
+
+function    firstLegReceipt
+  internal/journal/strategy_first_leg_atomic.go:506
+
+function    reservePrecheck
+  internal/journal/reservations.go:293
+
+method      Now
+  internal/clock/clock.go:37
+
+function    insertDecisionRow
+  internal/journal/decision.go:294
+
+function    reserveRows
+  internal/journal/reservations.go:328
+
+function    commitFreshRiskBucketAdmissionTx
+  internal/journal/risk_bucket_issuance.go:397
+
+function    insertExactStrategyDecision
+  internal/journal/strategy_lineage.go:421
+
+function    insertExactStrategyAttempt
+  internal/journal/strategy_lineage.go:456
+
+function    insertFirstLegCampaignTx
+  internal/journal/strategy_first_leg_atomic.go:374
+
+method      nowString
+  internal/journal/durability.go:798
+
+function    insertFirstLegBindingTx
+  internal/journal/strategy_first_leg_atomic.go:455
+
+struct      QFinalCampaignFirstLegReceipt
+  internal/journal/strategy_first_leg_atomic.go:54
+
+struct      Context
+  internal/app/app.go:62
+
+
+# impact
+
+Impact of changing "RecordQFinalCampaignFirstLeg" — 39 affected symbols:
+
+internal/journal/strategy_first_leg_atomic.go
+  method      RecordQFinalCampaignFirstLeg:101
+  method      RecordQFinalCampaignFirstLegWithRecollection:88
+
+internal/journal/risk_bucket_entry_loss_lock_test.go
+  function    TestEntryLossLockRefusesTheStrategyFirstLegAdmission:329
+
+internal/journal/strategy_dispatch_claim_test.go
+  function    seedBoundStrategyDispatchClaimLease:351
+  function    TestClaimStrategyDispatchLeasePairedKRUSCurrentAuthority:15
+  function    TestClaimStrategyDispatchLeasePairedKRUSRefusesExpiredChangedCrossMarketAndStaleOwner:66
+  function    TestClaimStrategyDispatchLeaseReleaseCardinalityMismatchRollsBackKRUS:151
+  function    TestClaimStrategyDispatchLeaseRepeatsLiveAttemptStrategyAndClientJoinsKRUS:220
+  function    TestClaimStrategyDispatchLeaseRejectsInvalidMissingAndReplayWithoutRevival:283
+  function    TestClaimStrategyDispatchLeaseRollbackIsAtomic:323
+
+internal/journal/strategy_dispatch_outcome_test.go
+  function    TestLoadStrategyDispatchLeasePreservesEqualTimestampsPairedKRUS:269
+  function    TestDispatchStrategyVerifiedRejectsCrossAttemptBeforeBrokerPairedKRUS:373
+
+internal/journal/strategy_dispatch_recovery_test.go
+  function    TestRecoverClaimedStrategyDispatchLeasePairedKRUSRefusesAndReleases:12
+  function    TestRecoverClaimedStrategyDispatchLeaseRejectsSubmittingWithoutReleaseKRUS:99
+
+internal/journal/strategy_dispatch_refusal_test.go
+  function    claimedPreTransportRefusalFixture:359
+
+internal/journal/strategy_dispatch_submitting_test.go
+  function    TestBeginStrategyDispatchSubmittingRejectsInvalidMissingAndNonClaimedWithoutRevival:238
+  function    seedClaimedStrategyDispatchLease:343
+
+internal/journal/strategy_dispatch_issuance_test.go
+  function    TestIssueVerifiedFirstLegStrategyDispatchLeasePairsKRUS:10
+  function    TestIssueVerifiedFirstLegStrategyDispatchLeaseRefusesCrossMarketAndStaleOwner:52
+  function    TestIssueVerifiedFirstLegStrategyDispatchLeaseRollsBackDerivedAuthorityWithLeaseInsert:83
+
+internal/execgw/riskguardian_first_leg.go
+  method      IssuePrecheckedQFinalCampaignFirstLeg:117
+
+internal/journal/strategy_first_leg_atomic_test.go
+  function    TestFirstLegAtomicAdmissionSameAccountKRUSRecollectsTheSerializedLoser:74
+  function    TestFirstLegAtomicAdmissionCompetingSameScopeHasOneWinner:143
+  function    TestFirstLegAtomicAdmissionDeliversKRAndUSTogether:21
+  function    TestFirstLegAtomicAdmissionExactReplayUsesOriginalJournalToken:183
+  function    TestFirstLegAtomicAdmissionSurvivesReopenWithoutLegacyRecovery:211
+  function    TestFirstLegAtomicAdmissionDoesNotRepairPartialQFinalAuthority:249
+  function    TestFirstLegAtomicAdmissionEntropyFailureWritesNothing:271
+  function    TestFirstLegAtomicAdmissionTokenCollisionRollsBackSecondMarket:285
+  function    TestFirstLegAtomicAdmissionLateStatementFailuresRollbackEveryFamily:302
+  function    TestFirstLegAtomicAdmissionRejectsCallerTokenAndCrossMarketSubstitution:338
+  function    TestFirstLegBindingIsImmutableAndRequiredByFutureLease:370
+  function    TestFirstLegRouterIdentityIsRequiredAndReplayBoundKRUS:449
+  function    TestFutureLeaseRejectsCancelledOrBlockedKRAndUSFirstLeg:502
+  function    TestFutureLeaseAcceptsExactKRAndUSFirstLegBinding:553
+
+internal/journal/strategy_weekly_first_leg_test.go
+  function    TestWeeklyFirstLegBindsPairedKRUSReservationsAtomically:17
+  function    TestWeeklyFirstLegRequiresExactReservationAndNonWeeklyCannotSmuggleOne:39
+
+internal/journal/strategyflow_projection_test.go
+  function    TestRecordQFinalCampaignFirstLegAcceptsAllStrategyflowLanesPaired:176
+  function    TestRecordQFinalCampaignFirstLegRejectsStrategyflowTamperWithoutRows:212
+
+

@@ -1,0 +1,5 @@
+--- FAIL: TestA154UnknownInvalidAndZeroQuantity (0.00s)
+    a154_hypothetical_test.go:49: decimal shares accepted {Input:{Market:US Entry:100 Low:101 ATR: Tick:0.01 Min:1 Max:200 Budget: MaxShares:1.0 MaxNotional:1000} Currency:USD Errors:map[low:신호봉 저가는 진입가 이하이어야 합니다.] Arms:[{Name:고정 0.7% Stop:99.3 Distance:0.7 Percent:0.700000% Quantity: Risk: Notional: State:계산됨} {Name:신호봉 저가 아래 1틱 Stop: Distance: Percent: Quantity: Risk: Notional: State:입력 오류} {Name:ATR14 × 1.5 Stop: Distance: Percent: Quantity: Risk: Notional: State:입력 부족}]}
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.015s
+FAIL

@@ -1,0 +1,4 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve [github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve.test]
+internal/strategyobserve/observe_test.go:77:6: declared and not used: once
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve [build failed]
+FAIL

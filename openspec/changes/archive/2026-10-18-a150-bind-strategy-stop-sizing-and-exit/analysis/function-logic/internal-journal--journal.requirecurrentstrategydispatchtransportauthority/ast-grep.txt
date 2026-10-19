@@ -1,0 +1,25 @@
+internal/journal/strategy_dispatch_runtime.go:1659:func (j *Journal) RequireCurrentStrategyDispatchTransportAuthority(ctx context.Context, request StrategyDispatchLeaseCAS) error {
+internal/journal/strategy_dispatch_runtime.go:1660:	if j == nil || j.db == nil || ctx == nil || !validStrategyDispatchIdentity(request.LeaseID) ||
+internal/journal/strategy_dispatch_runtime.go:1661:		request.ExpectedRevision == 0 || request.ExpectedRevision == ^uint64(0) || request.OwnerEpoch == 0 ||
+internal/journal/strategy_dispatch_runtime.go:1662:		!validStrategyDispatchIdentity(request.FencingToken) {
+internal/journal/strategy_dispatch_runtime.go:1663:		return fmt.Errorf("%w: invalid strategy transport authority", ErrInvalidRequest)
+internal/journal/strategy_dispatch_runtime.go:1664:	}
+internal/journal/strategy_dispatch_runtime.go:1665:	tx, err := j.db.BeginTx(ctx, nil)
+internal/journal/strategy_dispatch_runtime.go:1666:	if err != nil {
+internal/journal/strategy_dispatch_runtime.go:1667:		return err
+internal/journal/strategy_dispatch_runtime.go:1668:	}
+internal/journal/strategy_dispatch_runtime.go:1669:	defer tx.Rollback()
+internal/journal/strategy_dispatch_runtime.go:1670:	if err := requireCurrentStrategyDispatchOwner(ctx, tx, request.OwnerEpoch, request.FencingToken); err != nil {
+internal/journal/strategy_dispatch_runtime.go:1671:		return err
+internal/journal/strategy_dispatch_runtime.go:1672:	}
+internal/journal/strategy_dispatch_runtime.go:1673:	lease, err := loadStrategyDispatchLease(ctx, tx, request.LeaseID)
+internal/journal/strategy_dispatch_runtime.go:1674:	if err != nil {
+internal/journal/strategy_dispatch_runtime.go:1675:		return err
+internal/journal/strategy_dispatch_runtime.go:1676:	}
+internal/journal/strategy_dispatch_runtime.go:1677:	if lease.State != StrategyDispatchLeaseSubmitting || lease.Disposition != StrategyDispatchReservationReserved ||
+internal/journal/strategy_dispatch_runtime.go:1678:		lease.Revision != request.ExpectedRevision+1 || lease.OwnerEpoch != request.OwnerEpoch ||
+internal/journal/strategy_dispatch_runtime.go:1679:		lease.FencingToken != request.FencingToken || !j.clk.Now().UTC().Before(lease.ExpiresAt) {
+internal/journal/strategy_dispatch_runtime.go:1680:		return ErrStrategyDispatchFenced
+internal/journal/strategy_dispatch_runtime.go:1681:	}
+internal/journal/strategy_dispatch_runtime.go:1682:	return nil
+internal/journal/strategy_dispatch_runtime.go:1683:}

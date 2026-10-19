@@ -1,0 +1,92 @@
+{
+  "file": "internal/app/engine/strategy_account_first_leg_authority.go",
+  "source_sha256": "02dde3d465ea908113fe64068c4c8ebbc214137b055ea3b3876fa6a41218af35",
+  "package": "engine",
+  "function": "strategyFirstLegBindingDigest",
+  "signature": "strategyFirstLegBindingDigest(params=4, results=1)",
+  "start": {
+    "line": 401,
+    "column": 1
+  },
+  "end": {
+    "line": 406,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 405,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 402,
+        "column": 11
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 402,
+        "column": 92
+      },
+      "text": "result.ExecutionTerms.Identity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 403,
+        "column": 3
+      },
+      "text": "account.Identity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 404,
+        "column": 9
+      },
+      "text": "sha256.Sum256"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 404,
+        "column": 23
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 405,
+        "column": 21
+      },
+      "text": "hex.EncodeToString"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 402,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 404,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

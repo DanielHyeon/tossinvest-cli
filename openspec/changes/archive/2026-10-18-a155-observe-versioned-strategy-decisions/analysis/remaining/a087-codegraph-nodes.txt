@@ -1,0 +1,420 @@
+**ExitObserver** (method)
+
+**Location:** internal/app/engine/exitwiring.go:319
+**Signature:** `(opts ExitObserverOptions) (*ExitObserver, error)`
+
+```go
+319	func (c *Context) ExitObserver(opts ExitObserverOptions) (*ExitObserver, error) {
+320		if c == nil {
+321			return nil, ErrExitObserverUnavailable
+322		}
+323		if !c.Automation.Verified {
+324			return nil, fmt.Errorf("%w: the automation gate is not verified", ErrExitObserverUnavailable)
+325		}
+326		issuer, ok := c.Guardian.(ReductionIssuer)
+327		if !ok {
+328			return nil, fmt.Errorf("%w: the injected Guardian does not issue reductions",
+329				ErrExitObserverUnavailable)
+330		}
+331		// exit goroutine 의 알림 경로는 주입 지점별로 기록 전용임(a092 C1): 알림 · 관측 두절 강화 통지 · 가격 조회와
+332		// 청산 상한 조회의 401 강화 통지. 동기 통지는 원격 전송을 기다리게 하므로 손절 판정 루프에 둘 수 없음.
+333		recordOnly := obs.RecordOnly{N: c.Notifier, Relay: c.NormalAlertRelay()}
+334		exitRetrier := exitSideRetrier(c.Retrier, recordOnly)
+335	
+336		opts.Journal = c.Journal
+337		opts.Prices = c.Official
+338		opts.Retrier = exitRetrier
+339		opts.Issuer = issuer
+340		opts.Submit = c.Gateway
+341		opts.AccountRef = c.AccountRef
+342		opts.CommonPolicy = c.Config.Engine.ExitPolicy.CommonPolicy
+343		if opts.Names == nil {
+344			opts.Names = c.Names
+345		}
+346		// 호출자가 넘긴 값과 무관하게 덮음(25라운드 보이스 B #4) — 기본값만 두면 「생산 호출자가 동기 알림기를 넘기지 않는다」에
+347		// 기대게 되고, 그것은 존재 검사이지 역할 검사가 아님. Retrier 가 이미 무조건 덮이는 것과 같은 규칙.
+348		if c.Notifier != nil {
+349			opts.Alerts = recordOnly
+350			opts.Announcer = recordOnly
+351			// a094 의 새 critical 은 같은 알림기의 단일 입구로 창 0 기록함(D−6.1) — 호출자 값과 무관하게 덮음(같은 규칙).
+352			opts.Critical = c.Notifier
+353		}
+354		// 보호 청산 0주의 등급 전제(a091) — 로드된 설정에서 덮음. 호출자 값과 무관(위 Alerts 와 같은 규칙, a095 reconcileloop.go 와 같은 원천).
+355		opts.NotificationsEnabled = c.Config.Engine.Notifications.Enabled
+356		// a091 0주 보고 줄의 싱크 — 엔진 로거(계좌 필드 없는 줄만 씀). 호출자 값과 무관하게 덮음.
+357		opts.ZeroFloorLog = c.Log
+358		if opts.Floor == nil {
+359			opts.Floor = exitSideFloor(c.exitFloor, exitRetrier)
+360		}
+361		return NewExitObserver(opts)
+362	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** NormalAlertRelay (internal/app/engine/normal_relay_wiring.go:13), exitSideRetrier (internal/app/engine/exit_record_only.go:15), exitSideFloor (internal/app/engine/exit_record_only.go:26), NewExitObserver (internal/app/engine/exitloop.go:304), RecordOnly (internal/obs/record_only.go:35), ErrExitObserverUnavailable (internal/app/engine/exitwiring.go:297), ExitObserverOptions (internal/app/engine/exitloop.go:170), ExitObserver (internal/app/engine/exitloop.go:247)
+**Called by ←** engineRuntime (cmd/tossctl/engine.go:655), TestAssembleEngineWiresOneProductionGuardianToTheEngineJournalAndExitObserver (cmd/tossctl/engine_assembly_test.go:28), TestA090R17TheEngineAssemblyPassesTheDedicatedLoggerThrough (internal/app/engine/a090_unobserved_position_test.go:1166), TestA091TheProductionAssemblyReadsTheLoadedSwitch (internal/app/engine/a091_stop_sold_nothing_test.go:873), TestA092ExitObserverGetsRecordOnlyAlertPaths (internal/app/engine/a092_exit_record_only_wiring_test.go:17), TestA092TheExitObserverOverridesACallersSyncAlertPath (internal/app/engine/a092_exit_record_only_wiring_test.go:110), TestA094TheExitObserverRecordsCriticalsThroughTheNotifier (internal/app/engine/a094_wiring_test.go:20), TestA129TheEngineAssemblyPassesTheExitOrderLoggerThrough (internal/app/engine/a129_exit_order_log_test.go:609), TestProductionGuardianUsesConfiguredUSDLimitsAndReachesExitObserver (internal/app/engine/guardian_production_test.go:62)
+**Run** (method)
+
+**Location:** internal/app/engine/exitloop.go:395
+**Signature:** `(ctx context.Context) error`
+
+```go
+395	func (o *ExitObserver) Run(ctx context.Context) error {
+396		for {
+397			if err := ctx.Err(); err != nil {
+398				return err
+399			}
+400			o.reportCycle(o.ObserveOnce(ctx))
+401			if err := o.clk.Sleep(ctx, o.Interval()); err != nil {
+402				return err
+403			}
+404		}
+405	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** Err (internal/app/engine/a112_watchdog_cancellation_test.go:34), reportCycle (internal/app/engine/exitloop.go:423), ObserveOnce (internal/app/engine/exitloop.go:457), Sleep (internal/clock/clock.go:42), Interval (internal/app/engine/exitloop.go:368), Context (internal/app/app.go:62)
+**ObserveOnce** (method)
+
+**Location:** internal/app/engine/exitloop.go:457
+**Signature:** `(ctx context.Context) ExitCycle`
+
+ObserveOnce runs one cycle. It is exported for the tests and for a tracer
+run, which drives the loop by hand rather than by clock.
+
+```go
+457	func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
+458		// a129: 이 주기의 청산 주문 줄 쓰기 · 체결 따라가기는 모든 return 경로에서 판정 · 제출 뒤에 돎(원장 읽기만, 브로커 호출 0).
+459		defer o.endExitOrderCycle(ctx)
+460		var cycle ExitCycle
+461		o.protectionAlerts = nil
+462		defer o.flushStrategyProtectionAlerts(ctx)
+463		observation := cycleObservation{at: o.clk.Now().UTC()}
+464	
+465		if o.opts.SLO != nil && o.opts.SLO.FillDetectionBehind() {
+466			// Yield the whole cycle, and let the outage clock keep running. See the
+467			// file header: an unobserved position is unprotected whether the reason
+468			// was a failure or a choice.
+469			cycle.Deferred = true
+470			o.checkOutage(ctx, &cycle)
+471			return cycle
+472		}
+473	
+474		states, err := o.workingSet(ctx, &cycle)
+475		if err != nil {
+476			cycle.Err = err
+477			return cycle
+478		}
+479		if len(states) == 0 {
+480			// a090: 보유·대상 표시가 있는데 전부 탈락했으면 그 주기도 미관측으로 셈 — 표시가 없으면 기록을 비움.
+481			o.settleUnobserved(ctx, &cycle)
+482			// Nothing is held, so there is nothing to observe and nothing to be
+483			// unprotected. The outage clock is reset rather than left running: an
+484			// account with no positions that has not read a price is not in an
+485			// outage, and escalating it would block entries for a condition that
+486			// only entering could clear.
+487			o.lastObserved = o.clk.Now()
+488			o.outageRaised = false
+489			return cycle
+490		}
+491		quotes, err := o.observe(ctx, symbolsOf(states), observation)
+492		if err != nil {
+493			cycle.Err = err
+494			o.checkOutage(ctx, &cycle)
+495			return cycle
+496		}
+497		o.lastObserved = o.clk.Now()
+498		o.outageRaised = false
+499		cycle.Observed = len(quotes)
+500	
+501		for _, state := range states {
+502			quote, ok := quotes[strings.ToUpper(strings.TrimSpace(state.position.Symbol))]
+503			if !ok {
+504				// A symbol the price read did not answer for is a symbol this cycle
+505				// did not observe. Hold it; the outage clock is per account and the
+506				// next cycle may answer.
+507				// a090: 무음으로 넘기지 않음 — 원인만 적고 판정은 순회 뒤(settleUnobserved).
+508				o.noteUnobservedCause(&cycle, state.position.ID, unobservedNoQuote)
+509				continue
+510			}
+511			if !o.quoteUsable(quote) {
+512				// A quote that expired while an earlier position was handled is not a
+513				// judgement. Keep its state untouched until the next one-batch cycle.
+514				o.noteUnobservedCause(&cycle, state.position.ID, unobservedQuoteExpired)
+515				continue
+516			}
+517			cycle.Judged++
+518			o.noteJudged(&cycle, state)
+519			if err := o.judge(ctx, state, quote, observation, &cycle); err != nil && cycle.Err == nil {
+520				cycle.Err = err
+521			}
+522		}
+523		// a090: 임계 판정 · 알림 · 강화는 모든 포지션 판정이 끝난 뒤 한 번 — 뒤 포지션의 손절 판정 앞에 서지 않음.
+524		o.settleUnobserved(ctx, &cycle)
+525		return cycle
+526	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** endExitOrderCycle (internal/app/engine/exit_order_log.go:236), flushStrategyProtectionAlerts (internal/app/engine/strategy_protection.go:29), Now (internal/clock/clock.go:37), FillDetectionBehind (internal/app/engine/exitloop.go:155), checkOutage (internal/app/engine/exitloop.go:916), workingSet (internal/app/engine/exitloop.go:550), settleUnobserved (internal/app/engine/exit_unobserved.go:139), observe (internal/app/engine/exitloop.go:842), symbolsOf (internal/app/engine/exitloop.go:1952), noteUnobservedCause (internal/app/engine/exit_unobserved.go:128), quoteUsable (internal/app/engine/exitloop.go:1179), noteJudged (internal/app/engine/exit_unobserved.go:134), +4 more
+**Called by ←** TestA094AnEpisodeIsOneRowAcrossRestarts (internal/app/engine/a094_exit_clear_more_test.go:78), TestA094TwoStreaksAtTheSameInstantAreTwoEpisodes (internal/app/engine/a094_exit_clear_test.go:646), TestA094TheCloseWaitEpisodeIsOneRowAcrossRestarts (internal/app/engine/a094_review_fixes_test.go:38), TestA110ChangingReconcileDisputesDoNotSuppressAnUncoveredAdoption (internal/app/engine/a110_adoption_recovery_test.go:26), TestA111AutomaticallyAdoptedCommonLadderEvaluatesItsUnchangedFirstQuote (internal/app/engine/a111_flat_exit_observation_test.go:286), TestA111FallbackObservationSourceIsDurableAndRestartMonotone (internal/app/engine/a111_flat_exit_observation_test.go:784), TestA111LeaseIsRecheckedAtTheRecordOrRefreshBoundary (internal/app/engine/a111_flat_exit_observation_test.go:1077), TestExitObserverConcurrentSameQuoteArmsAndMutatesOnce (internal/app/engine/exit_identity_concurrency_test.go:88), TestAnArmedProposalIsNotProposedTwiceAfterARestart (internal/app/engine/exitloop_test.go:1151), Run (internal/app/engine/tracer.go:273), Run (internal/app/engine/exitloop.go:395), TestA150UnrecoverablePositionIsCountedAndWarned (internal/app/engine/a150_exit_protection_test.go:536)
+**observe** (method)
+
+**Location:** internal/app/engine/exitloop.go:842
+**Signature:** `(ctx context.Context, symbols []string, observation cycleObservation) (map[string]observedQuote, error)`
+
+observe performs the one price read of the cycle.
+
+```go
+842	func (o *ExitObserver) observe(ctx context.Context, symbols []string, observation cycleObservation) (map[string]observedQuote, error) {
+843		var quotes []domain.Quote
+844		var out map[string]observedQuote
+845		needsFallback := false
+846		err := o.opts.Retrier.Query(ctx, execgw.QueryPrice, func(ctx context.Context) error {
+847			var qerr error
+848			quotes, qerr = o.opts.Prices.Prices(ctx, symbols)
+849			if qerr != nil {
+850				return qerr
+851			}
+852			// Keep this process-local anchor separate from the persisted UTC evidence
+853			// time. clock.LeaseAnchor preserves the system clock's monotonic reading,
+854			// while injected clocks deterministically use their Now/Since pair.
+855			leaseAnchor := clock.LeaseAnchor(o.clk)
+856			validatedAt := leaseAnchor.UTC()
+857			wanted := make(map[string]struct{}, len(symbols))
+858			for _, symbol := range symbols {
+859				wanted[strings.ToUpper(strings.TrimSpace(symbol))] = struct{}{}
+860			}
+861			next := make(map[string]observedQuote, len(quotes))
+862			for _, q := range quotes {
+863				symbol := strings.ToUpper(strings.TrimSpace(q.Symbol))
+864				if _, needed := wanted[symbol]; !needed || q.Last <= 0 || math.IsNaN(q.Last) || math.IsInf(q.Last, 0) {
+865					continue
+866				}
+867				effectiveAt, source := q.FetchedAt.UTC(), "quote_fetched_at"
+868				if q.FetchedAt.IsZero() {
+869					effectiveAt, source = validatedAt, ""
+870					needsFallback = true
+871				} else if effectiveAt.After(validatedAt) ||
+872					validatedAt.Sub(effectiveAt) > execgw.QueryPriceEvidenceDuration {
+873					continue
+874				}
+875				next[symbol] = observedQuote{Price: decimalOf(q.Last), FetchedAt: effectiveAt,
+876					Source: source, leaseAnchor: leaseAnchor}
+877			}
+878			if len(next) == 0 {
+879				return execgw.NewEvidenceInvalidError(fmt.Sprintf("no valid quote evidence for %d managed symbol(s)", len(symbols)))
+880			}
+881			out = next
+882			return nil
+883		})
+884		if err != nil {
+885			return nil, err
+886		}
+887		if needsFallback {
+888			// Official fetched-at evidence never pays for this scan. Only a successful
+889			// managed quote that actually needs the cycle fallback recovers the durable
+890			// maximum, and it does so after the one broker read so a local journal error
+891			// cannot make Retrier repeat that read.
+892			maximum, err := o.opts.Journal.MaxExitObservationCycle(ctx, o.opts.AccountRef)
+893			if err != nil {
+894				return nil, err
+895			}
+896			for {
+897				current := o.observationSequence.Load()
+898				if current >= maximum || o.observationSequence.CompareAndSwap(current, maximum) {
+899					break
+900				}
+901			}
+902			sequence := o.observationSequence.Add(1)
+903			source := "cycle:" + strconv.FormatUint(sequence, 10)
+904			for symbol, quote := range out {
+905				if quote.Source != "" {
+906					continue
+907				}
+908				quote.Source = source
+909				out[symbol] = quote
+910			}
+911		}
+912		return out, nil
+913	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** Prices (internal/app/engine/exitloop.go:120), LeaseAnchor (internal/clock/clock.go:57), decimalOf (internal/app/engine/exitloop.go:1990), NewEvidenceInvalidError (internal/execgw/retry.go:66), MaxExitObservationCycle (internal/journal/exit_observation_refresh.go:238), Query (internal/performance/query.go:26), observedQuote (internal/app/engine/exitloop.go:829), Context (internal/app/app.go:62), cycleObservation (internal/app/engine/exitloop.go:836)
+**Called by ←** ObserveOnce (internal/app/engine/exitloop.go:457)
+**IssueReduction** (method)
+
+**Location:** internal/app/engine/exitloop.go:131
+**Signature:** `(ctx context.Context, req execgw.ReductionIssuance) (execgw.Issued, error)`
+
+```go
+131		IssueReduction(ctx context.Context, req execgw.ReductionIssuance) (execgw.Issued, error)
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** IssueReduction (internal/app/engine/a111_flat_exit_observation_test.go:71) [dynamic: interface → impl @internal/app/engine/a111_flat_exit_observation_test.go:71], IssueReduction (internal/app/engine/a129_exit_order_log_test.go:69) [dynamic: interface → impl @internal/app/engine/a129_exit_order_log_test.go:69], IssueReduction (internal/app/engine/exitloop_test.go:1195) [dynamic: interface → impl @internal/app/engine/exitloop_test.go:1195], IssueReduction (internal/execgw/issue.go:86) [dynamic: interface → impl @internal/execgw/issue.go:86], IssueReduction (internal/execgw/riskguardian.go:587) [dynamic: interface → impl @internal/execgw/riskguardian.go:587]
+**Called by ←** submit (internal/app/engine/exitloop.go:1465), clearTheSymbol (internal/app/engine/exitloop.go:1611)
+**IssueReduction** (method)
+
+**Location:** internal/execgw/riskguardian.go:587
+**Signature:** `(ctx context.Context, req ReductionIssuance) (Issued, error)`
+
+```go
+587	func (g *RiskGuardian) IssueReduction(ctx context.Context, req ReductionIssuance) (Issued, error) {
+588		intent, err := g.scopedIntent(req.Intent)
+589		if err != nil {
+590			return Issued{}, err
+591		}
+592		if intent.Side != risk.SideSell {
+593			return Issued{}, fmt.Errorf("execgw: IssueReduction authorises reduce-only exits, which are sells; "+
+594				"the intent is a %s", string(intent.Side))
+595		}
+596	
+597		in := risk.Input{
+598			Now:     g.clk.Now().UTC(),
+599			Intent:  intent,
+600			Account: req.Account,
+601			Policy:  g.policy,
+602			Costs:   g.costs,
+603		}
+604		if verdict := evaluateChain(in); !verdict.Allowed {
+605			return Issued{}, chainRefusal(verdict)
+606		}
+607	
+608		now := in.Now
+609		dec, err := g.journal.RecordDecision(ctx, journal.DecisionRequest{
+610			ID:          g.newID(),
+611			AccountRef:  g.accountRef,
+612			Generation:  0,
+613			SafetyClass: journal.SafetyClassRiskReducing,
+614			Kind:        journal.KindPlace,
+615			Preimage: journal.ReductionIntent{
+616				AccountRef:  g.accountRef,
+617				Market:      string(intent.Market),
+618				Symbol:      intent.Symbol,
+619				Side:        string(intent.Side),
+620				MaxQuantity: intent.Quantity,
+621				Reason:      req.Reason,
+622			},
+623			Nonce:     g.newID(),
+624			IssuedAt:  now,
+625			ExpiresAt: now.Add(g.ttl),
+626		})
+627		if err != nil {
+628			return Issued{}, err
+629		}
+630		return Issued{
+631			Decision:  GuardianDecision{ID: dec.ID, Generation: dec.Generation},
+632			ExpiresAt: dec.ExpiresAt,
+633		}, nil
+634	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** scopedIntent (internal/execgw/riskguardian.go:687), Now (internal/clock/clock.go:37), evaluateChain (internal/execgw/riskguardian.go:70), chainRefusal (internal/execgw/riskguardian.go:702), RecordDecision (internal/journal/decision.go:275), newID (internal/execgw/issue.go:176), Issued (internal/execgw/riskguardian.go:114), DecisionRequest (internal/journal/decision.go:239), ReductionIntent (internal/journal/decision.go:126), GuardianDecision (internal/execgw/guardian.go:176), Input (internal/risk/chain.go:65), Context (internal/app/app.go:62), +1 more
+**Called by ←** TestAssembleEngineWiresOneProductionGuardianToTheEngineJournalAndExitObserver (cmd/tossctl/engine_assembly_test.go:28), TestOnlyEntriesReachTheObservationTable (internal/execgw/observation_scope_test.go:78), IssueReduction (internal/app/engine/exitloop.go:131) [dynamic: interface → impl @internal/execgw/riskguardian.go:587]
+**Place** (method)
+
+**Location:** internal/execgw/gateway.go:358
+**Signature:** `(ctx context.Context, req PlaceRequest) (Outcome, error)`
+
+Place submits a new order through the full gateway sequence.
+
+```go
+358	func (g *Gateway) Place(ctx context.Context, req PlaceRequest) (Outcome, error) {
+359		return g.place(ctx, req, nil)
+360	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** place (internal/execgw/gateway.go:362), Context (internal/app/app.go:62), PlaceRequest (internal/execgw/gateway.go:250), Outcome (internal/continuationlane/evaluator.go:170)
+**Called by ←** TestStrategyGatewayRejectsMissingOrFencedAuthorityPairedKRUS (internal/execgw/strategy_gateway_account_base_test.go:255), sell (internal/flatten/liquidate.go:444), PlaceStrategyEntry (internal/strategydispatch/adapters.go:92), Place (internal/app/engine/exitloop.go:138) [dynamic: interface → impl @internal/execgw/gateway.go:358]
+**Place** (method)
+
+**Location:** internal/trading/service.go:186
+**Signature:** `(ctx context.Context, intent orderintent.PlaceIntent, opts ExecuteOptions) (MutationResult, error)`
+
+```go
+186	func (s *Service) Place(ctx context.Context, intent orderintent.PlaceIntent, opts ExecuteOptions) (MutationResult, error) {
+187		// 1. capability check
+188		if !placeIntentSupported(intent) {
+189			return MutationResult{}, ErrPlaceUnsupported
+190		}
+191		// 2. side policy
+192		if intent.Side == "sell" && !s.policy.Sell {
+193			return MutationResult{}, &DisabledActionError{Action: "sell"}
+194		}
+195		// 3. fractional policy
+196		if intent.Fractional && !s.policy.Fractional {
+197			return MutationResult{}, &DisabledActionError{Action: "fractional"}
+198		}
+199		// 4. execution guard (--execute, confirm token, allow_live)
+200		if err := s.guard(ctx, ActionPlace, s.PreviewPlace(intent), opts); err != nil {
+201			return MutationResult{}, err
+202		}
+203		// 5. broker call
+204		if s.broker == nil {
+205			return MutationResult{}, ErrLiveMutationPending
+206		}
+207		return s.withLineage(s.broker.PlacePendingOrder(ctx, intent))
+208	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** placeIntentSupported (internal/trading/service.go:269), guard (internal/trading/service.go:237), PreviewPlace (internal/trading/service.go:109), withLineage (internal/trading/service.go:102), PlacePendingOrder (internal/trading/service.go:15), MutationResult (internal/domain/mutation.go:18), DisabledActionError (internal/trading/errors.go:89), Context (internal/app/app.go:62), PlaceIntent (internal/orderintent/intent.go:13), ExecuteOptions (internal/trading/service.go:30)
+**Called by ←** place (internal/execgw/gateway.go:362), placeHandler (internal/ops/write_operations.go:133), TestPlaceRequiresExecutionFlags (internal/trading/service_test.go:54), TestPlaceCallsBrokerForSupportedIntent (internal/trading/service_test.go:96), TestPlaceFailsWhenActionDisabledInConfig (internal/trading/service_test.go:187), TestSellPlaceFailsWhenSellDisabledInConfig (internal/trading/service_test.go:232), TestSellPlaceCallsBrokerWhenSellEnabled (internal/trading/service_test.go:265), TestKRPlaceCallsBrokerWithoutMarketGate (internal/trading/service_test.go:453), TestPlacePolicyChecksBeforeGuard (internal/trading/service_test.go:490), TestPlaceFailsWhenLiveActionsDisabledInConfig (internal/trading/service_test.go:546)
+**PlaceOrder** (method)
+
+**Location:** internal/official/orders_write.go:182
+**Signature:** `(ctx context.Context, intent orderintent.PlaceIntent) (trading.MutationResult, error)`
+
+```go
+182	func (c *Client) PlaceOrder(ctx context.Context, intent orderintent.PlaceIntent) (trading.MutationResult, error) {
+183		body, err := buildOrderCreate(intent)
+184		if err != nil {
+185			return trading.MutationResult{}, fmt.Errorf("building order body: %w", err)
+186		}
+187		hdrs, err := c.acctHeaders(ctx)
+188		if err != nil {
+189			return trading.MutationResult{}, err
+190		}
+191		var resp apiOrderCreateResponse
+192		if err := c.postWithHeaders(ctx, "/api/v1/orders", body, hdrs, &resp); err != nil {
+193			return trading.MutationResult{}, err
+194		}
+195		// The echo is read back rather than ignored: the response is documented to
+196		// return the key "요청 시 전달한 값 그대로" (OrderResponse.clientOrderId), so a
+197		// different non-null key describes a different order. Accepting it as an ack
+198		// would attach somebody else's order id to this attempt. A null/absent echo is
+199		// the documented shape for an unkeyed request and is left alone.
+200		if intent.ClientOrderID != "" && resp.ClientOrderID != nil && *resp.ClientOrderID != intent.ClientOrderID {
+201			return trading.MutationResult{}, fmt.Errorf(
+202				"order response echoed clientOrderId %q but the request sent %q",
+203				*resp.ClientOrderID, intent.ClientOrderID)
+204		}
+205		return trading.MutationResult{
+206			Kind:     "place",
+207			Status:   "accepted",
+208			OrderID:  resp.OrderID,
+209			Symbol:   intent.Symbol,
+210			Market:   intent.Market,
+211			Quantity: intent.Quantity,
+212			Price:    intent.Price,
+213		}, nil
+214	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** buildOrderCreate (internal/official/orders_write.go:100), acctHeaders (internal/official/orders_write.go:165), postWithHeaders (internal/official/client.go:427), Context (internal/app/app.go:62), PlaceIntent (internal/orderintent/intent.go:13), MutationResult (internal/domain/mutation.go:18)
+**Called by ←** PlacePendingOrder (internal/ops/write_operations.go:24), TestGuardCatchesAnOfficialClientPointedAtProduction (internal/testenv/testenv_test.go:161), TestWireBodyIsByteIdenticalToTheOfficialSerializer (tools/a087-market-sell-probe/contract_test.go:22), PlaceOrder (internal/hybrid/broker.go:32) [dynamic: interface → impl @internal/official/orders_write.go:182], PlaceOrder (internal/verifylive/verifylive.go:598) [dynamic: interface → impl @internal/official/orders_write.go:182]
+**InRegularSession** (method)
+
+**Location:** internal/clock/market.go:146
+**Signature:** `(t time.Time) (bool, error)`
+
+InRegularSession reports whether t is inside the market's regular session.
+
+```go
+146	func (m Market) InRegularSession(t time.Time) (bool, error) {
+147		s, err := m.RegularSession(t)
+148		if err != nil {
+149			return false, err
+150		}
+151		return s.Contains(t), nil
+152	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** RegularSession (internal/clock/market.go:122)
+**Called by ←** TestUnknownMarketFailsClosed (internal/clock/market_test.go:284)

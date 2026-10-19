@@ -1,0 +1,27 @@
+internal/journal/strategy_lineage.go:747:func verifyStrategyRiskBinding(decision Decision, lineage StrategyDecisionLineage) error {
+internal/journal/strategy_lineage.go:748:	if journalHash := HashPreimage(decision.RiskPreimage); journalHash != decision.RiskHash {
+internal/journal/strategy_lineage.go:749:		return errors.New("journal strategy issuance: RiskIntent hash mismatch")
+internal/journal/strategy_lineage.go:750:	}
+internal/journal/strategy_lineage.go:751:	parsed, err := ParsePreimage(decision.PreimageKind, decision.RiskPreimage)
+internal/journal/strategy_lineage.go:752:	if err != nil {
+internal/journal/strategy_lineage.go:753:		return fmt.Errorf("journal strategy issuance: parsing canonical RiskIntent: %w", err)
+internal/journal/strategy_lineage.go:754:	}
+internal/journal/strategy_lineage.go:755:	riskRecord, ok := parsed.(RiskIntent)
+internal/journal/strategy_lineage.go:756:	if !ok {
+internal/journal/strategy_lineage.go:757:		return errors.New("journal strategy issuance: preimage is not RiskIntent")
+internal/journal/strategy_lineage.go:758:	}
+internal/journal/strategy_lineage.go:759:	schema, versioned, err := strategyDecisionPayloadSchema(lineage.DecisionPayload)
+internal/journal/strategy_lineage.go:760:	if err != nil {
+internal/journal/strategy_lineage.go:761:		return err
+internal/journal/strategy_lineage.go:762:	}
+internal/journal/strategy_lineage.go:763:	if versioned {
+internal/journal/strategy_lineage.go:764:		if schema != strategyflowRiskBindingSchemaVersionV2 && schema != strategyflowRiskBindingSchemaVersion {
+internal/journal/strategy_lineage.go:765:			return errors.New("journal strategy issuance: decision payload schema unsupported")
+internal/journal/strategy_lineage.go:766:		}
+internal/journal/strategy_lineage.go:767:		if riskRecord.AccountRef != decision.AccountRef {
+internal/journal/strategy_lineage.go:768:			return errors.New("journal strategy issuance: strategyflow decision account mismatch")
+internal/journal/strategy_lineage.go:769:		}
+internal/journal/strategy_lineage.go:770:		return verifyStrategyflowRiskBinding(riskRecord, lineage)
+internal/journal/strategy_lineage.go:771:	}
+internal/journal/strategy_lineage.go:772:	return verifyLegacyStrategyRiskBinding(riskRecord, lineage)
+internal/journal/strategy_lineage.go:773:}

@@ -16,6 +16,7 @@ import (
 	candidatepkg "github.com/JungHoonGhae/tossinvest-cli/internal/candidate"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 )
 
 // StrategyEntryLoopName is the single outer runtime loop which owns both market
@@ -362,8 +363,15 @@ func (c *Context) NewPairedStrategyEntryProductionAssembly(ctx context.Context, 
 	accountAuthority := newStrategyAccountAuthorityLoader(c.Paths.ConfigDir, c.AccountRef, accountCurrency,
 		scheduleAuthority.observedAt, os.Getenv).collect(ctx, proposalAuthority)
 	guardian, _ := c.Guardian.(*execgw.RiskGuardian)
+	exitPolicy, err := journal.NewStrategyExitPolicySnapshot(c.Config.Engine.ExitPolicy.CommonPolicy)
+	if c.Config.Engine.ExitPolicy.Rejected != "" {
+		return StrategyEntryProductionAssembly{}, fmt.Errorf("production first-leg exit policy is invalid: %s", c.Config.Engine.ExitPolicy.Rejected)
+	}
+	if err != nil {
+		return StrategyEntryProductionAssembly{}, fmt.Errorf("production first-leg exit policy is invalid: %w", err)
+	}
 	firstLegLoader := newProductionStrategyFirstLegAuthorityLoader(clk, c.Journal, guardian, scheduleAuthority,
-		proposalAuthority, riskAuthority, fxAuthority, accountAuthority)
+		proposalAuthority, riskAuthority, fxAuthority, accountAuthority, &exitPolicy)
 	firstLegBridge := newStrategyFirstLegAdmissionBridge(guardian, firstLegLoader)
 	dispatchCycle := newStrategyDispatchCycle(c.Journal, c.Gateway, firstLegBridge, scheduleAuthority, fxAuthority, riskAuthority,
 		proposalAuthority, c.strategyDispatchOwner)

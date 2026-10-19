@@ -17,6 +17,7 @@ import (
 const (
 	strategyflowRiskBindingSchemaVersionV2 = "journal-strategyflow-risk-binding:v2"
 	strategyflowRiskBindingSchemaVersion   = "journal-strategyflow-risk-binding:v3"
+	strategyflowRiskBindingSchemaVersionV4 = "journal-strategyflow-risk-binding:v4"
 )
 
 type StrategyflowLineageProjectionRequest struct {
@@ -24,16 +25,18 @@ type StrategyflowLineageProjectionRequest struct {
 	RiskIntent               RiskIntent
 	ActivationManifestDigest string
 	CreatedAt                time.Time
+	ExitPolicy               *StrategyExitPolicySnapshot
 }
 
 type strategyflowRiskBindingPayload struct {
-	SchemaVersion             string          `json:"schema_version"`
-	Strategyflow              json.RawMessage `json:"strategyflow"`
-	StrategyflowPayloadDigest string          `json:"strategyflow_payload_digest"`
-	RiskIntent                RiskIntent      `json:"risk_intent"`
-	ActivationManifestDigest  string          `json:"activation_manifest_digest"`
-	CreatedAt                 string          `json:"created_at"`
-	Identity                  string          `json:"identity"`
+	SchemaVersion             string                      `json:"schema_version"`
+	Strategyflow              json.RawMessage             `json:"strategyflow"`
+	StrategyflowPayloadDigest string                      `json:"strategyflow_payload_digest"`
+	RiskIntent                RiskIntent                  `json:"risk_intent"`
+	ActivationManifestDigest  string                      `json:"activation_manifest_digest"`
+	CreatedAt                 string                      `json:"created_at"`
+	Identity                  string                      `json:"identity"`
+	ExitPolicy                *StrategyExitPolicySnapshot `json:"exit_policy,omitempty"`
 }
 
 // ProjectAcceptedStrategyflowLineage converts sealed accepted strategyflow
@@ -53,12 +56,19 @@ func ProjectAcceptedStrategyflowLineage(request StrategyflowLineageProjectionReq
 		return StrategyDecisionLineage{}, errors.New("journal strategy issuance: strategyflow projection metadata invalid")
 	}
 	created := request.CreatedAt.UTC()
-	if err := verifyProjectionRiskIntent(projection, risk, strategyflowRiskBindingSchemaVersion); err != nil {
+	schema := strategyflowRiskBindingSchemaVersion
+	if request.ExitPolicy != nil {
+		if err := validateStrategyExitPolicySnapshot(*request.ExitPolicy); err != nil {
+			return StrategyDecisionLineage{}, err
+		}
+		schema = strategyflowRiskBindingSchemaVersionV4
+	}
+	if err := verifyProjectionRiskIntent(projection, risk, schema); err != nil {
 		return StrategyDecisionLineage{}, err
 	}
-	record := strategyflowRiskBindingPayload{SchemaVersion: strategyflowRiskBindingSchemaVersion,
+	record := strategyflowRiskBindingPayload{SchemaVersion: schema,
 		Strategyflow: json.RawMessage(projection.Payload()), StrategyflowPayloadDigest: projection.PayloadDigest(), RiskIntent: risk,
-		ActivationManifestDigest: activation, CreatedAt: created.Format(time.RFC3339Nano)}
+		ActivationManifestDigest: activation, CreatedAt: created.Format(time.RFC3339Nano), ExitPolicy: request.ExitPolicy}
 	identity, err := strategyflowDecisionIdentity(record)
 	if err != nil {
 		return StrategyDecisionLineage{}, err
@@ -68,7 +78,7 @@ func ProjectAcceptedStrategyflowLineage(request StrategyflowLineageProjectionReq
 	if err != nil {
 		return StrategyDecisionLineage{}, fmt.Errorf("journal strategy issuance: strategyflow projection encoding: %w", err)
 	}
-	return strategyflowLineageFromProjection(projection, risk, activation, created, identity, string(payload), strategyflowRiskBindingSchemaVersion), nil
+	return strategyflowLineageFromProjection(projection, risk, activation, created, identity, string(payload), schema), nil
 }
 
 func exactCanonicalRiskIntent(value RiskIntent) (RiskIntent, error) {
@@ -100,7 +110,7 @@ func verifyProjectionRiskIntent(projection strategyflow.AcceptedProjection, risk
 		return errors.New("journal strategy issuance: strategyflow RiskIntent/accepted-result exact binding mismatch")
 	}
 	entry, stop, target := terms.Entry().PriceMinor(), terms.EffectiveStop().PriceMinor(), terms.Target().PriceMinor()
-	if schema == strategyflowRiskBindingSchemaVersion {
+	if schema == strategyflowRiskBindingSchemaVersion || schema == strategyflowRiskBindingSchemaVersionV4 {
 		var entryOK, stopOK, targetOK bool
 		entry, entryOK = terms.Entry().MajorDecimal()
 		stop, stopOK = terms.EffectiveStop().MajorDecimal()
@@ -127,6 +137,8 @@ func strategyflowDecisionIdentity(record strategyflowRiskBindingPayload) (string
 	version := "v3"
 	if record.SchemaVersion == strategyflowRiskBindingSchemaVersionV2 {
 		version = "v2"
+	} else if record.SchemaVersion == strategyflowRiskBindingSchemaVersionV4 {
+		version = "v4"
 	} else if record.SchemaVersion != strategyflowRiskBindingSchemaVersion {
 		return "", errors.New("journal strategy issuance: strategyflow decision identity schema unsupported")
 	}
@@ -137,7 +149,7 @@ func strategyflowLineageFromProjection(projection strategyflow.AcceptedProjectio
 	lineage, terms := projection.Lineage(), projection.ExecutionTerms()
 	payloadHash := sha256.Sum256([]byte(payload))
 	entry, stop, target := terms.Entry().PriceMinor(), terms.EffectiveStop().PriceMinor(), terms.Target().PriceMinor()
-	if schema == strategyflowRiskBindingSchemaVersion {
+	if schema == strategyflowRiskBindingSchemaVersion || schema == strategyflowRiskBindingSchemaVersionV4 {
 		entry, stop, target = risk.EntryPrice, risk.StopPrice, risk.TargetPrice
 	}
 	return StrategyDecisionLineage{DecisionIdentity: identity, CandidateLifeID: lineage.CandidateLifeID, Market: string(lineage.Market), Symbol: lineage.Symbol,
@@ -192,8 +204,18 @@ func decodeStrategyflowRiskBinding(payload string) (strategyflowRiskBindingPaylo
 	if err != nil || string(canonical) != payload {
 		return strategyflowRiskBindingPayload{}, errors.New("journal strategy issuance: strategyflow decision payload is not canonical")
 	}
-	if record.SchemaVersion != strategyflowRiskBindingSchemaVersionV2 && record.SchemaVersion != strategyflowRiskBindingSchemaVersion {
+	if record.SchemaVersion != strategyflowRiskBindingSchemaVersionV2 && record.SchemaVersion != strategyflowRiskBindingSchemaVersion && record.SchemaVersion != strategyflowRiskBindingSchemaVersionV4 {
 		return strategyflowRiskBindingPayload{}, errors.New("journal strategy issuance: strategyflow decision payload schema unsupported")
+	}
+	if record.SchemaVersion == strategyflowRiskBindingSchemaVersionV4 {
+		if record.ExitPolicy == nil {
+			return strategyflowRiskBindingPayload{}, errors.New("journal strategy issuance: v4 exit policy is missing")
+		}
+		if err := validateStrategyExitPolicySnapshot(*record.ExitPolicy); err != nil {
+			return strategyflowRiskBindingPayload{}, err
+		}
+	} else if record.ExitPolicy != nil {
+		return strategyflowRiskBindingPayload{}, errors.New("journal strategy issuance: legacy payload carries v4 policy")
 	}
 	if record.ActivationManifestDigest == "" || strings.TrimSpace(record.ActivationManifestDigest) != record.ActivationManifestDigest {
 		return strategyflowRiskBindingPayload{}, errors.New("journal strategy issuance: strategyflow activation manifest binding invalid")

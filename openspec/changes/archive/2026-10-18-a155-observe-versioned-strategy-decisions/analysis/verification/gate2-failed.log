@@ -1,0 +1,25 @@
+bash tools/gate.sh a155-observe-versioned-strategy-decisions
+GATE: a155-observe-versioned-strategy-decisions
+repo: /tmp/tossos-a148-impl-20261018
+
+==> 1/11 tasks.md 확인
+OK: openspec/changes/a155-observe-versioned-strategy-decisions/tasks.md
+
+==> 2/11 미완료 태스크 확인
+OK: 미완료 태스크 0건
+
+==> 3/11 짝 change 확인 (deploy-pair.txt)
+OK: 짝 선언 없음 — 이 change 는 혼자 배포한다
+
+==> 4/11 gstack 리뷰 기록 확인
+OK: openspec/changes/a155-observe-versioned-strategy-decisions/review.md
+
+==> 5/11 Function Logic Map 증거 확인
+[logic-map] a155-observe-versioned-strategy-decisions: base f156b66eaef9 → working tree (no landed-commit.txt in HEAD) required 2 function(s) — judged at HEAD f156b66eaef9
+[logic-map] a155-observe-versioned-strategy-decisions: the target is the working tree, so this window also holds 0 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: no landing recorded — no `revision: current` evidence pins a landing for this change
+[logic-map] missing Function Logic Map for 2 function(s) modified between base f156b66eaef9 and working tree (no landed-commit.txt in HEAD): internal/strategyengine/wiring_test.go:TestA047ShipsNoRuntimeOrderOrExitWiring, internal/strategyengine/wiring_test.go:assertConsoleOnlyCallsDormantDescriptor
+
+GATE FAIL: a155-observe-versioned-strategy-decisions — Function Logic Map 산출물 미완료
+make: *** [Makefile:184: gate] Error 1
+
+EXIT_CODE=2

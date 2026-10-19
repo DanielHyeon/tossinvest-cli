@@ -1,0 +1,11 @@
+--- original/internal/journal/position_campaign.go
++++ overlay/internal/journal/position_campaign.go
+@@ -559,7 +559,7 @@
+ 	} else if exposureBlocked {
+ 		return CampaignLegRecord{}, positioncampaign.ErrExposureBlocked
+ 	}
+-	if blocked {
++	if false && blocked {
+ 		return CampaignLegRecord{}, positioncampaign.ErrExposureBlocked
+ 	}
+ 	if _, err := positioncampaign.TransitionCampaign(state, positioncampaign.CampaignLegPlanned); err != nil {

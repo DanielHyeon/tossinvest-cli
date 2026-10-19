@@ -1,0 +1,16 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence [github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence.test]
+internal/campaignstateevidence/codec_test.go:13:16: undefined: Evidence
+internal/campaignstateevidence/codec_test.go:14:9: undefined: Evidence
+internal/campaignstateevidence/codec_test.go:14:232: undefined: Plan
+internal/campaignstateevidence/codec_test.go:14:244: undefined: Scope
+internal/campaignstateevidence/codec_test.go:14: undefined: Risk
+internal/campaignstateevidence/codec_test.go:14: undefined: ContinuationFill
+internal/campaignstateevidence/codec_test.go:14: undefined: ContinuationCancel
+internal/campaignstateevidence/codec_test.go:19:12: undefined: Encode
+internal/campaignstateevidence/codec_test.go:31:14: undefined: Decode
+internal/campaignstateevidence/codec_test.go:40:20: undefined: Decode
+internal/campaignstateevidence/codec_test.go:40:20: too many errors
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence [build failed]
+FAIL
+
+EXIT_CODE=1

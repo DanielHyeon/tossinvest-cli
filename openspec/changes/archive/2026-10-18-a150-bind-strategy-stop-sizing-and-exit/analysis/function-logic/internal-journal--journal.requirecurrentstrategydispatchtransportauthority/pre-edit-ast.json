@@ -1,0 +1,226 @@
+{
+  "file": "internal/journal/strategy_dispatch_runtime.go",
+  "source_sha256": "04b461130389895e9a2bf9086bbb610905d99822a14cb4a25cf14260d819a593",
+  "package": "journal",
+  "function": "RequireCurrentStrategyDispatchTransportAuthority",
+  "receiver": "Journal",
+  "signature": "Journal.RequireCurrentStrategyDispatchTransportAuthority(params=2, results=1)",
+  "start": {
+    "line": 1659,
+    "column": 1
+  },
+  "end": {
+    "line": 1683,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1660,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1666,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1670,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 1674,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1677,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1663,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1667,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1671,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1675,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1680,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1682,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1660,
+        "column": 47
+      },
+      "text": "validStrategyDispatchIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1661,
+        "column": 65
+      },
+      "text": "uint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1662,
+        "column": 4
+      },
+      "text": "validStrategyDispatchIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1663,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1665,
+        "column": 13
+      },
+      "text": "j.db.BeginTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1669,
+        "column": 8
+      },
+      "text": "tx.Rollback"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1670,
+        "column": 12
+      },
+      "text": "requireCurrentStrategyDispatchOwner"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1673,
+        "column": 16
+      },
+      "text": "loadStrategyDispatchLease"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1679,
+        "column": 50
+      },
+      "text": "Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1679,
+        "column": 50
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1679,
+        "column": 50
+      },
+      "text": "j.clk.Now"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1665,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1670,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1673,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 1669,
+        "column": 2
+      },
+      "text": "tx.Rollback"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+
+Search Results for "ParkerRRFromDecision":
+
+function    ParkerRRFromDecision
+  internal/strategyengine/rr_diagnostic.go:46
+  (r DecisionRecord) ParkerRRDiagnostics
+
+
+Callers of "ParkerRRFromDecision" (5):
+
+function    TestParkerRRDiagnosticsFrozenFixture
+  internal/strategyengine/rr_diagnostic_test.go:9
+
+function    TestParkerRRDiagnosticsInvalidOrMissingPlan
+  internal/strategyengine/rr_diagnostic_test.go:80
+
+function    TestParkerRRSeparatesPlannedRiskFromFilledRisk
+  internal/strategyengine/rr_diagnostic_test.go:144
+
+function    TestParkerRRExactExampleAndUnknownMetadata
+  internal/strategyengine/rr_diagnostic_test.go:154
+
+function    TestRRDiagnosticDecimalBoundary
+  internal/strategyengine/rr_diagnostic_bounds_test.go:9
+

@@ -341,7 +341,7 @@ func TestA157AnAcceptedFirstLegSealsTheSameValues(t *testing.T) {
 			t.Errorf("%s: issuedAt=%v — want the fixed clock %v in UTC", descriptor.LaneID, issuedAt, fixedNow)
 		}
 		lineage, err := journal.ProjectAcceptedStrategyflowLineage(journal.StrategyflowLineageProjectionRequest{
-			Result: request.Result, ActivationManifestDigest: "sha256:" + strings.Repeat("a", 64), CreatedAt: fixedNow,
+			Result: request.Result, ExitPolicy: request.ExitPolicy, ActivationManifestDigest: "sha256:" + strings.Repeat("a", 64), CreatedAt: fixedNow,
 			RiskIntent: journal.RiskIntent{AccountRef: "acct-7", Market: market, Symbol: want.symbol, Side: "BUY",
 				Quantity: strconv.FormatUint(want.qFinal, 10), EntryPrice: want.entry, StopPrice: want.stop, TargetPrice: want.target,
 				PolicyVersion: want.policyVersion},

@@ -1,0 +1,132 @@
+## Code Context
+
+**Query:** riskBucketAdmissionDigest
+
+### Entry Points
+
+- **riskBucketAdmissionDigest** (function) - internal/journal/risk_bucket.go:350
+  `(plan RiskBucketAdmissionPlan, decision riskbucket.AdmissionDecision) (string, string, error)`
+- **Admission** (struct) - internal/positioncampaign/campaign.go:212
+- **Admission** (struct) - internal/strategycoordinator/coordinator.go:122
+
+### Related Symbols
+
+- internal/riskbucket/evidence_access.go: BoundEvidence:17
+- internal/journal/risk_bucket.go: CommitRiskBucketAdmission:93, RiskBucketAdmissionPlan:64
+- internal/journal/risk_bucket_issuance.go: RecordQFinalDecisionAndReserve:70
+- internal/journal/strategy_first_leg_atomic.go: prepareQFinalCampaignFirstLeg:273
+- internal/riskbucket/admission.go: AdmissionDecision:55
+- internal/positioncampaign/campaign_test.go: TestExitFirstAdmission:97
+- internal/strategycoordinator/coordinator.go: Submit:203, faultLocked:342
+- internal/positioncampaign/campaign.go: AdmitExposure:220
+
+### Code
+
+#### riskBucketAdmissionDigest (internal/journal/risk_bucket.go:350)
+
+```go
+func riskBucketAdmissionDigest(plan RiskBucketAdmissionPlan, decision riskbucket.AdmissionDecision) (string, string, error) {
+	type admissionPreimage struct {
+		TransactionID, DecisionID, ExistingReservationID string
+		QCandidate, QExistingGuardian, QFinal            uint64
+		Owner                                            riskbucket.OwnerClaim
+		Snapshots                                        []RiskBucketSnapshotReference
+		ConsumedBuckets                                  []riskbucket.BucketEvidenceBinding
+		Policy                                           riskbucket.ReservePolicy
+		Caps                                             []riskbucket.BucketCap
+	}
+	consumed := make([]riskbucket.BucketEvidenceBinding, 0, len(plan.Admission.Buckets))
+	for _, bucket := range plan.Admission.Buckets {
+		consumed = append(consumed, bucket.BoundEvidence())
+	}
+	raw, err := json.Marshal(admissionPreimage{
+		TransactionID: plan.TransactionID, DecisionID: plan.DecisionID, ExistingReservationID: plan.ExistingReservationID,
+		QCandidate: decision.QCandidate, QExistingGuardian: decision.QExistingGuardian, QFinal: decision.QFinal,
+		Owner: plan.Owner, Snapshots: plan.Snapshots, ConsumedBuckets: consumed, Policy: plan.Admission.Policy, Caps: decision.Caps,
+	})
+	if err != nil {
+		return "", "", fmt.Errorf("journal: encode risk bucket admission: %w", err)
+	}
+	sum := sha256.Sum256(raw)
+	return string(raw), hex.EncodeToString(sum[:]), nil
+}
+```
+
+#### Admission (internal/positioncampaign/campaign.go:212)
+
+```go
+type Admission struct {
+	CampaignState       CampaignState
+	PositionClosing     bool
+	RiskReducingPending bool
+}
+```
+
+#### Admission (internal/strategycoordinator/coordinator.go:122)
+
+```go
+type Admission struct {
+	Key      Key
+	Admitted bool
+	Overflow bool
+	Refusal  strategyarbiter.Refusal
+	Detail   string
+}
+```
+
+#### BoundEvidence (internal/riskbucket/evidence_access.go:17)
+
+```go
+func (b BucketSnapshot) BoundEvidence() BucketEvidenceBinding {
+	return BucketEvidenceBinding{
+		Key:              b.PolicyProvenance.key,
+		Snapshot:         b.SnapshotProvenance.binding,
+		PolicyEvidence:   b.PolicyProvenance.evidence,
+		SnapshotEvidence: b.SnapshotProvenance.evidence,
+	}
+}
+```
+
+#### CommitRiskBucketAdmission (internal/journal/risk_bucket.go:93)
+
+```go
+func (j *Journal) CommitRiskBucketAdmission(ctx context.Context, plan RiskBucketAdmissionPlan) (RiskBucketAdmissionReceipt, error) {
+	decision := riskbucket.CalculateAdmission(plan.Admission)
+	if decision.Refusal != nil {
+		return RiskBucketAdmissionReceipt{}, decision.Refusal
+	}
+	if err := validateRiskBucketAdmission(plan, decision); err != nil {
+		return RiskBucketAdmissionReceipt{}, err
+	}
+	preimage, digest, err := riskBucketAdmissionDigest(plan, decision)
+	if err != nil {
+		return RiskBucketAdmissionReceipt{}, err
+	}
+	tx, err := j.db.BeginTx(ctx, nil)
+	if err != nil {
+		return RiskBucketAdmissionReceipt{}, fmt.Errorf("journal: begin risk bucket admission: %w", err)
+	}
+	defer tx.Rollback()
+
+	var priorDigest string
+	var priorQ uint64
+	err = tx.QueryRowContext(ctx, `SELECT request_digest,q_final FROM risk_bucket_final_decisions WHERE transaction_id=?`, plan.TransactionID).Scan(&priorDigest, &priorQ)
+	if err == nil {
+		if priorDigest != digest || priorQ != decision.QFinal {
+			return RiskBucketAdmissionReceipt{}, fmt.Errorf("%w: transaction %s", ErrRiskBucketReplayMismatch, plan.TransactionID)
+		}
+		receipt := riskBucketReceipt(plan, decision, true, true)
+		if err := tx.Commit(); err != nil {
+			return RiskBucketAdmissionReceipt{}, err
+		}
+		return receipt, nil
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		return RiskBucketAdmissionReceipt{}, fmt.Errorf("journal: read risk bucket admission: %w", err)
+	}
+
+	var reservationAccount, reservationState string
+	if err := tx.QueryRowConte
+... (truncated) ...
+```
+

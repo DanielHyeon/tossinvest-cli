@@ -1,0 +1,186 @@
+
+CodeGraph Status
+
+Project: /tmp/tossos-a148-impl-20261018
+
+Index Statistics:
+  Files:     2,880
+  Nodes:     50,505
+  Edges:     186,986
+  DB Size:   192.39 MB
+  Backend:   node:sqlite — built-in (full WAL)
+  Journal:   wal
+
+Nodes by Kind:
+  import          16,363
+  function        16,219
+  method          5,811
+  constant        3,545
+  struct          2,919
+  file            2,586
+  variable        2,287
+  type_alias      356
+  interface       215
+  class           132
+  route           69
+  property        3
+
+Files by Language:
+  go              2,283
+  yaml            294
+  python          272
+  typescript      14
+  tsx             13
+  javascript      4
+
+✓ Index is up to date
+
+
+Search Results for "ExitObserver":
+
+method      ExitObserver
+  internal/app/engine/exitwiring.go:319
+  (opts ExitObserverOptions) (*ExitObserver, error)
+
+struct      ExitObserver
+  internal/app/engine/exitloop.go:247
+
+struct      ExitObserverOptions
+  internal/app/engine/exitloop.go:170
+
+function    NewExitObserver
+  internal/app/engine/exitloop.go:304
+  (opts ExitObserverOptions) (*ExitObserver, error)
+
+method      outageAfter
+  internal/app/engine/exitloop.go:375
+  () time.Duration
+
+method      delayBound
+  internal/app/engine/exitloop.go:382
+  () time.Duration
+
+method      clearRefused
+  internal/app/engine/exitloop.go:1863
+  (positionID string)
+
+method      clearDelay
+  internal/app/engine/exitloop.go:1918
+  (positionID string)
+
+method      unobservedMoment
+  internal/app/engine/exit_unobserved.go:105
+  (symbol string) unobservedMark
+
+method      quoteUsable
+  internal/app/engine/exitloop.go:1179
+  (quote observedQuote) bool
+
+
+Callers of "ObserveOnce" (12):
+
+function    TestA094AnEpisodeIsOneRowAcrossRestarts
+  internal/app/engine/a094_exit_clear_more_test.go:78
+
+function    TestA094TwoStreaksAtTheSameInstantAreTwoEpisodes
+  internal/app/engine/a094_exit_clear_test.go:646
+
+function    TestA094TheCloseWaitEpisodeIsOneRowAcrossRestarts
+  internal/app/engine/a094_review_fixes_test.go:38
+
+function    TestA110ChangingReconcileDisputesDoNotSuppressAnUncoveredAdoption
+  internal/app/engine/a110_adoption_recovery_test.go:26
+
+function    TestA111AutomaticallyAdoptedCommonLadderEvaluatesItsUnchangedFirstQuote
+  internal/app/engine/a111_flat_exit_observation_test.go:286
+
+function    TestA111FallbackObservationSourceIsDurableAndRestartMonotone
+  internal/app/engine/a111_flat_exit_observation_test.go:784
+
+function    TestA111LeaseIsRecheckedAtTheRecordOrRefreshBoundary
+  internal/app/engine/a111_flat_exit_observation_test.go:1077
+
+function    TestExitObserverConcurrentSameQuoteArmsAndMutatesOnce
+  internal/app/engine/exit_identity_concurrency_test.go:88
+
+function    TestAnArmedProposalIsNotProposedTwiceAfterARestart
+  internal/app/engine/exitloop_test.go:1151
+
+method      Run
+  internal/app/engine/tracer.go:273
+
+method      Run
+  internal/app/engine/exitloop.go:395
+
+function    TestA150UnrecoverablePositionIsCountedAndWarned
+  internal/app/engine/a150_exit_protection_test.go:536
+
+
+Callees of "IssueReduction" (20):
+
+method      validate
+  internal/execgw/issue.go:159
+
+method      record
+  internal/execgw/issue.go:137
+
+function    decimalString
+  internal/execgw/gateway.go:1095
+
+struct      GuardianDecision
+  internal/execgw/guardian.go:176
+
+struct      DecisionRequest
+  internal/journal/decision.go:239
+
+struct      ReductionIntent
+  internal/journal/decision.go:126
+
+struct      Context
+  internal/app/app.go:62
+
+struct      ReductionRequest
+  internal/execgw/issue.go:48
+
+method      IssueReduction
+  internal/app/engine/a111_flat_exit_observation_test.go:71
+
+method      IssueReduction
+  internal/app/engine/a129_exit_order_log_test.go:69
+
+method      IssueReduction
+  internal/app/engine/exitloop_test.go:1195
+
+method      IssueReduction
+  internal/execgw/issue.go:86
+
+method      IssueReduction
+  internal/execgw/riskguardian.go:587
+
+method      scopedIntent
+  internal/execgw/riskguardian.go:687
+
+method      Now
+  internal/clock/clock.go:37
+
+variable    evaluateChain
+  internal/execgw/riskguardian.go:70
+
+function    chainRefusal
+  internal/execgw/riskguardian.go:702
+
+method      RecordDecision
+  internal/journal/decision.go:275
+
+method      newID
+  internal/execgw/issue.go:176
+
+struct      Issued
+  internal/execgw/riskguardian.go:114
+
+
+Callers of "InRegularSession" (1):
+
+function    TestUnknownMarketFailsClosed
+  internal/clock/market_test.go:284
+

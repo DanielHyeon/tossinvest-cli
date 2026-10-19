@@ -1,0 +1,118 @@
+# node
+**verifyStrategyRiskBinding** (function)
+
+**Location:** internal/journal/strategy_lineage.go:747
+**Signature:** `(decision Decision, lineage StrategyDecisionLineage) error`
+
+```go
+747	func verifyStrategyRiskBinding(decision Decision, lineage StrategyDecisionLineage) error {
+748		if journalHash := HashPreimage(decision.RiskPreimage); journalHash != decision.RiskHash {
+749			return errors.New("journal strategy issuance: RiskIntent hash mismatch")
+750		}
+751		parsed, err := ParsePreimage(decision.PreimageKind, decision.RiskPreimage)
+752		if err != nil {
+753			return fmt.Errorf("journal strategy issuance: parsing canonical RiskIntent: %w", err)
+754		}
+755		riskRecord, ok := parsed.(RiskIntent)
+756		if !ok {
+757			return errors.New("journal strategy issuance: preimage is not RiskIntent")
+758		}
+759		schema, versioned, err := strategyDecisionPayloadSchema(lineage.DecisionPayload)
+760		if err != nil {
+761			return err
+762		}
+763		if versioned {
+764			if schema != strategyflowRiskBindingSchemaVersionV2 && schema != strategyflowRiskBindingSchemaVersion {
+765				return errors.New("journal strategy issuance: decision payload schema unsupported")
+766			}
+767			if riskRecord.AccountRef != decision.AccountRef {
+768				return errors.New("journal strategy issuance: strategyflow decision account mismatch")
+769			}
+770			return verifyStrategyflowRiskBinding(riskRecord, lineage)
+771		}
+772		return verifyLegacyStrategyRiskBinding(riskRecord, lineage)
+773	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** HashPreimage (internal/journal/decision.go:213), ParsePreimage (internal/journal/decision.go:173), strategyDecisionPayloadSchema (internal/journal/strategy_lineage.go:775), verifyStrategyflowRiskBinding (internal/journal/strategyflow_projection.go:151), verifyLegacyStrategyRiskBinding (internal/journal/strategy_lineage.go:795), Decision (internal/breakoutlane/types.go:202), StrategyDecisionLineage (internal/journal/strategy_lineage.go:102)
+**Called by ←** prepareQFinalCampaignFirstLeg (internal/journal/strategy_first_leg_atomic.go:255), RecordStrategyDecisionAndReserve (internal/journal/strategy_lineage.go:315), TestProjectAcceptedStrategyflowLineagePairsAllEightKRUSLanes (internal/journal/strategyflow_projection_test.go:16), TestVerifyStrategyflowRiskBindingV2Compatibility (internal/journal/strategyflow_projection_test.go:76), TestVerifyAcceptedStrategyflowProjectionRejectsLineageColumnDrift (internal/journal/strategyflow_projection_test.go:278), TestVerifyAcceptedStrategyflowProjectionRejectsOuterCanonicalTamper (internal/journal/strategyflow_projection_test.go:321)
+
+# callers
+
+Callers of "verifyStrategyRiskBinding" (6):
+
+method      prepareQFinalCampaignFirstLeg
+  internal/journal/strategy_first_leg_atomic.go:255
+
+method      RecordStrategyDecisionAndReserve
+  internal/journal/strategy_lineage.go:315
+
+function    TestProjectAcceptedStrategyflowLineagePairsAllEightKRUSLanes
+  internal/journal/strategyflow_projection_test.go:16
+
+function    TestVerifyStrategyflowRiskBindingV2Compatibility
+  internal/journal/strategyflow_projection_test.go:76
+
+function    TestVerifyAcceptedStrategyflowProjectionRejectsLineageColumnDrift
+  internal/journal/strategyflow_projection_test.go:278
+
+function    TestVerifyAcceptedStrategyflowProjectionRejectsOuterCanonicalTamper
+  internal/journal/strategyflow_projection_test.go:321
+
+
+# callees
+
+Callees of "verifyStrategyRiskBinding" (7):
+
+function    HashPreimage
+  internal/journal/decision.go:213
+
+function    ParsePreimage
+  internal/journal/decision.go:173
+
+function    strategyDecisionPayloadSchema
+  internal/journal/strategy_lineage.go:775
+
+function    verifyStrategyflowRiskBinding
+  internal/journal/strategyflow_projection.go:151
+
+function    verifyLegacyStrategyRiskBinding
+  internal/journal/strategy_lineage.go:795
+
+struct      Decision
+  internal/breakoutlane/types.go:202
+
+struct      StrategyDecisionLineage
+  internal/journal/strategy_lineage.go:102
+
+
+# impact
+
+Impact of changing "verifyStrategyRiskBinding" — 15 affected symbols:
+
+internal/journal/strategy_lineage.go
+  function    verifyStrategyRiskBinding:747
+  method      RecordStrategyDecisionAndReserve:315
+  method      RecordStrategyDecisionAndReserveWithRecollection:386
+
+internal/journal/strategy_first_leg_atomic.go
+  method      prepareQFinalCampaignFirstLeg:255
+  method      RecordQFinalCampaignFirstLeg:101
+
+internal/journal/strategy_first_leg_atomic_test.go
+  function    seedFirstLegUpstreamWithoutBinding:657
+
+internal/journal/strategy_lineage_test.go
+  function    TestStrategyProductionIssuanceCommitsAuthorityReservationAndLineageTogether:189
+  function    TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection:217
+  function    TestStrategyProductionIssuanceBindsFullDecisionRecordIdentity:253
+  function    TestStrategyProductionIssuanceRejectsNonCanonicalDecisionPayload:272
+  function    TestStrategyProductionIssuanceFailureRollsBackReservationAndAllAuthority:357
+
+internal/journal/strategyflow_projection_test.go
+  function    TestProjectAcceptedStrategyflowLineagePairsAllEightKRUSLanes:16
+  function    TestVerifyStrategyflowRiskBindingV2Compatibility:76
+  function    TestVerifyAcceptedStrategyflowProjectionRejectsLineageColumnDrift:278
+  function    TestVerifyAcceptedStrategyflowProjectionRejectsOuterCanonicalTamper:321
+
+

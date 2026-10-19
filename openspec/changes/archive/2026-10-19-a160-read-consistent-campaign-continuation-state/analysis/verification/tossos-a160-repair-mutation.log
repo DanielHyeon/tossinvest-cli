@@ -1,0 +1,7 @@
+--- FAIL: TestExitEligibilityHasOneSpelling (0.05s)
+    eligibility_drift_test.go:135: internal/position/provenance.go names "entry_decision_id". Exit eligibility is position.ExitEligible and nothing else — a second copy of "which columns count" is how an adopted position comes to be reported as unmanaged. If this file genuinely has to name the column, add it to eligibilitySpellers with the reason.
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/position	0.058s
+FAIL
+
+EXIT_CODE=1

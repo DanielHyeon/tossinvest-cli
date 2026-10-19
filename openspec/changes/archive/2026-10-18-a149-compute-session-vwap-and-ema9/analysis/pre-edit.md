@@ -1,0 +1,7 @@
+# Pre-Edit Gate — 2026-10-18
+
+- Change a149 tasks 1.1–2.4, Terra sole writer. Base `0551b8781d7141417b3c35db9c3eb345689c32cd`; predecessor a148 formally archived and pushed. STORY-TOS-a149 and design review are present; scope confirmed by Manager.
+- Surface: new pure calculation leaf and tests in `internal/strategymarket`. No existing functions, records, decision predicates, source seals or operating paths change. Inputs and provenance are caller-supplied; no network or live authority is claimed.
+- CodeGraph 1.6.0, current worktree: `SealOfficialClosedKRXFiveMinuteFor` definition in bars.go:115, callers include adapter and existing wrapper/tests, 10 callee candidates and 10 impacted symbols; actual source and tests inspected. Existing OfficialMinutePage is opaque; five-minute VerifiedBar alone does not expose a session prefix or per-bar received timestamps. Existing exactDecimal helper supplies exact rational parsing. CodeGraphContext earlier report is generic advisory only; fresh synchronization is running.
+- Function Logic Map: not-applicable — only new pure functions; no existing functions or entry/gate behavior edited. Branch tests required for session boundaries, data integrity, missing and unsupported evidence.
+- RED tests precede implementation; frozen tests retained unchanged. Inputs are copied/read-only; no network, order, configuration, database, journal, restart or data collection. Rollback removes new leaf/test/docs. Safety invariants preserved.

@@ -1,0 +1,31 @@
+internal/journal/strategyflow_projection.go:42:func ProjectAcceptedStrategyflowLineage(request StrategyflowLineageProjectionRequest) (StrategyDecisionLineage, error) {
+internal/journal/strategyflow_projection.go:43:	projection, err := strategyflow.ProjectAccepted(request.Result)
+internal/journal/strategyflow_projection.go:44:	if err != nil {
+internal/journal/strategyflow_projection.go:45:		return StrategyDecisionLineage{}, fmt.Errorf("journal strategy issuance: strategyflow projection: %w", err)
+internal/journal/strategyflow_projection.go:46:	}
+internal/journal/strategyflow_projection.go:47:	risk, err := exactCanonicalRiskIntent(request.RiskIntent)
+internal/journal/strategyflow_projection.go:48:	if err != nil {
+internal/journal/strategyflow_projection.go:49:		return StrategyDecisionLineage{}, err
+internal/journal/strategyflow_projection.go:50:	}
+internal/journal/strategyflow_projection.go:51:	activation := request.ActivationManifestDigest
+internal/journal/strategyflow_projection.go:52:	if activation == "" || strings.TrimSpace(activation) != activation || request.CreatedAt.IsZero() {
+internal/journal/strategyflow_projection.go:53:		return StrategyDecisionLineage{}, errors.New("journal strategy issuance: strategyflow projection metadata invalid")
+internal/journal/strategyflow_projection.go:54:	}
+internal/journal/strategyflow_projection.go:55:	created := request.CreatedAt.UTC()
+internal/journal/strategyflow_projection.go:56:	if err := verifyProjectionRiskIntent(projection, risk, strategyflowRiskBindingSchemaVersion); err != nil {
+internal/journal/strategyflow_projection.go:57:		return StrategyDecisionLineage{}, err
+internal/journal/strategyflow_projection.go:58:	}
+internal/journal/strategyflow_projection.go:59:	record := strategyflowRiskBindingPayload{SchemaVersion: strategyflowRiskBindingSchemaVersion,
+internal/journal/strategyflow_projection.go:60:		Strategyflow: json.RawMessage(projection.Payload()), StrategyflowPayloadDigest: projection.PayloadDigest(), RiskIntent: risk,
+internal/journal/strategyflow_projection.go:61:		ActivationManifestDigest: activation, CreatedAt: created.Format(time.RFC3339Nano)}
+internal/journal/strategyflow_projection.go:62:	identity, err := strategyflowDecisionIdentity(record)
+internal/journal/strategyflow_projection.go:63:	if err != nil {
+internal/journal/strategyflow_projection.go:64:		return StrategyDecisionLineage{}, err
+internal/journal/strategyflow_projection.go:65:	}
+internal/journal/strategyflow_projection.go:66:	record.Identity = identity
+internal/journal/strategyflow_projection.go:67:	payload, err := json.Marshal(record)
+internal/journal/strategyflow_projection.go:68:	if err != nil {
+internal/journal/strategyflow_projection.go:69:		return StrategyDecisionLineage{}, fmt.Errorf("journal strategy issuance: strategyflow projection encoding: %w", err)
+internal/journal/strategyflow_projection.go:70:	}
+internal/journal/strategyflow_projection.go:71:	return strategyflowLineageFromProjection(projection, risk, activation, created, identity, string(payload), strategyflowRiskBindingSchemaVersion), nil
+internal/journal/strategyflow_projection.go:72:}

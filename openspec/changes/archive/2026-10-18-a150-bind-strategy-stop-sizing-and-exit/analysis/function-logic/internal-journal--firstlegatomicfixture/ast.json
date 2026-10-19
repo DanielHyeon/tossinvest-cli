@@ -1,0 +1,38 @@
+{
+  "file": "internal/journal/strategy_first_leg_atomic_test.go",
+  "source_sha256": "604dd43d6685ab68db5a88a4db777893a63482471591019ea61d841536ca59b0",
+  "package": "journal",
+  "function": "firstLegAtomicFixture",
+  "signature": "firstLegAtomicFixture(params=6, results=1)",
+  "start": {
+    "line": 741,
+    "column": 1
+  },
+  "end": {
+    "line": 743,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 742,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 742,
+        "column": 9
+      },
+      "text": "a150FirstLegAtomicFixture"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

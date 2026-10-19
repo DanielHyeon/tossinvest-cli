@@ -1,0 +1,293 @@
+{
+  "file": "internal/weeklyvaluelane/plan.go",
+  "source_sha256": "d0efe681ac0b13afa75ea398f5bda7ddaa91da75e427c9ebd45fcacca2e192ac",
+  "package": "weeklyvaluelane",
+  "function": "BuildCampaignPlan",
+  "signature": "BuildCampaignPlan(params=1, results=2)",
+  "start": {
+    "line": 44,
+    "column": 1
+  },
+  "end": {
+    "line": 72,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 52,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 53,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 57,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "else",
+      "at": {
+        "line": 61,
+        "column": 9
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 58,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 61,
+        "column": 9
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 50,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 54,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 59,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 62,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 22
+      },
+      "text": "parseUnsigned"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 26
+      },
+      "text": "parseUnsigned"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 47
+      },
+      "text": "budget.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 69
+      },
+      "text": "perShare.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 26
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 7
+      },
+      "text": "validBoundedIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 27
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 27
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 34
+      },
+      "text": "request.FX.valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 26
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 124
+      },
+      "text": "budget.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 22
+      },
+      "text": "perShare.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 96
+      },
+      "text": "AllocateSeven"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 7
+      },
+      "text": "cloneFX"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 16
+      },
+      "text": "planDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 14
+      },
+      "text": "sha256.Sum256"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 28
+      }
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 46,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 47,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 69,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

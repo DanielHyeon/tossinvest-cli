@@ -1,0 +1,18 @@
+┌  Syncing CodeGraph
+│
+Scanning files...
+Parsing code...
+Resolving refs...
+Linking dynamic dispatch...
+│
+◆  Synced 5 changed files
+│
+●  Added: 3, Modified: 1, Removed: 1 — 74 nodes in 3.6s
+│
+└  Done
+
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
++ codegraph sync .
++ codegraphcontext update . --quiet
+[sdd-sync] all indexes current

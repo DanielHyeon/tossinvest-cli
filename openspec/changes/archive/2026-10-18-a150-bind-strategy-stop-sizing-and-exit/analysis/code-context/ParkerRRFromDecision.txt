@@ -1,0 +1,129 @@
+# node
+**ParkerRRFromDecision** (function)
+
+**Location:** internal/strategyengine/rr_diagnostic.go:26
+**Signature:** `(r DecisionRecord) ParkerRRDiagnostics`
+
+ParkerRRFromDecision은 호출자가 제공한 결정 기록을 변경하지 않고 계산함.
+
+```go
+26	func ParkerRRFromDecision(r DecisionRecord) ParkerRRDiagnostics {
+27		unit := ""
+28		if r.Currency != "" {
+29			unit = r.Currency + "/share"
+30		}
+31		basis := "unadjusted"
+32		if r.BarAdjusted {
+33			basis = "adjusted"
+34		}
+35		planned := RRMetric{State: RRUnknown, Reason: "missing planned input", NumeratorUnit: unit, DenominatorUnit: unit, PriceBasis: basis, PolicyVersion: r.LaneVersion, Provenance: "caller-supplied decision record; unverified"}
+36		result := ParkerRRDiagnostics{Space: planned, Target: planned, Realized: RRMetric{State: RRUnknown, Reason: "no realized evidence", PolicyVersion: r.LaneVersion}}
+37		if r.EntryPrice == "" || r.StopPrice == "" || r.Currency == "" || r.LaneVersion == "" {
+38			return result
+39		}
+40		entry, e := positive(r.EntryPrice)
+41		stop, s := positive(r.StopPrice)
+42		if !e || !s || entry.Cmp(stop) <= 0 || r.BarAdjusted || r.LaneID != LaneID || r.LaneVersion != LaneVersion {
+43			result.Space.State = RRInvalid
+44			result.Target.State = RRInvalid
+45			result.Space.Reason = "invalid planned input"
+46			result.Target.Reason = result.Space.Reason
+47			return result
+48		}
+49		risk := new(big.Rat).Sub(entry, stop)
+50		metric := func(raw string, space bool) RRMetric {
+51			out := planned
+52			out.Denominator = risk.RatString()
+53			out.Reason = "missing numerator"
+54			if raw == "" {
+55				return out
+56			}
+57			value, ok := positive(raw)
+58			if !ok {
+59				out.State = RRInvalid
+60				out.Reason = "invalid numerator"
+61				return out
+62			}
+63			numerator := new(big.Rat)
+64			if space {
+65				numerator.Quo(new(big.Rat).Mul(entry, value), big.NewRat(100, 1))
+66			} else {
+67				numerator.Sub(value, entry)
+68			}
+69			if numerator.Sign() <= 0 {
+70				out.State = RRInvalid
+71				out.Reason = "invalid numerator"
+72				return out
+73			}
+74			out.State = RRKnown
+75			out.Reason = ""
+76			out.Numerator = numerator.RatString()
+77			out.Ratio = new(big.Rat).Quo(numerator, risk).RatString()
+78			return out
+79		}
+80		result.Space = metric(r.LVNSpacePct, true)
+81		result.Target = metric(r.TargetPrice, false)
+82		return result
+83	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** positive (internal/strategyengine/lane.go:313), RRMetric (internal/strategyengine/rr_diagnostic.go:17), ParkerRRDiagnostics (internal/strategyengine/rr_diagnostic.go:23), RRKnown (internal/strategyengine/rr_diagnostic.go:11), RRInvalid (internal/strategyengine/rr_diagnostic.go:13), RRUnknown (internal/strategyengine/rr_diagnostic.go:12), DecisionRecord (internal/strategyengine/decision.go:18)
+**Called by ←** TestParkerRRDiagnosticsFrozenFixture (internal/strategyengine/rr_diagnostic_test.go:9), TestParkerRRDiagnosticsInvalidOrMissingPlan (internal/strategyengine/rr_diagnostic_test.go:80), TestParkerRRSeparatesPlannedRiskFromFilledRisk (internal/strategyengine/rr_diagnostic_test.go:144), TestParkerRRExactExampleAndUnknownMetadata (internal/strategyengine/rr_diagnostic_test.go:154)
+
+# callers
+
+Callers of "ParkerRRFromDecision" (4):
+
+function    TestParkerRRDiagnosticsFrozenFixture
+  internal/strategyengine/rr_diagnostic_test.go:9
+
+function    TestParkerRRDiagnosticsInvalidOrMissingPlan
+  internal/strategyengine/rr_diagnostic_test.go:80
+
+function    TestParkerRRSeparatesPlannedRiskFromFilledRisk
+  internal/strategyengine/rr_diagnostic_test.go:144
+
+function    TestParkerRRExactExampleAndUnknownMetadata
+  internal/strategyengine/rr_diagnostic_test.go:154
+
+
+# callees
+
+Callees of "ParkerRRFromDecision" (7):
+
+function    positive
+  internal/strategyengine/lane.go:313
+
+struct      RRMetric
+  internal/strategyengine/rr_diagnostic.go:17
+
+struct      ParkerRRDiagnostics
+  internal/strategyengine/rr_diagnostic.go:23
+
+constant    RRKnown
+  internal/strategyengine/rr_diagnostic.go:11
+
+constant    RRInvalid
+  internal/strategyengine/rr_diagnostic.go:13
+
+constant    RRUnknown
+  internal/strategyengine/rr_diagnostic.go:12
+
+struct      DecisionRecord
+  internal/strategyengine/decision.go:18
+
+
+# impact
+
+Impact of changing "ParkerRRFromDecision" — 5 affected symbols:
+
+internal/strategyengine/rr_diagnostic.go
+  function    ParkerRRFromDecision:26
+
+internal/strategyengine/rr_diagnostic_test.go
+  function    TestParkerRRDiagnosticsFrozenFixture:9
+  function    TestParkerRRDiagnosticsInvalidOrMissingPlan:80
+  function    TestParkerRRSeparatesPlannedRiskFromFilledRisk:144
+  function    TestParkerRRExactExampleAndUnknownMetadata:154
+
+

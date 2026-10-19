@@ -1,0 +1,28 @@
+
+Search Results for "CalculateSessionFeatures":
+
+function    CalculateSessionFeatures
+  internal/strategymarket/session_features.go:45
+  (in SessionFeatureInput) SessionFeatures
+
+
+Callers of "CalculateSessionFeatures" (6):
+
+function    TestSessionFeaturesGoldenAndReplay
+  internal/strategymarket/session_features_test.go:24
+
+function    TestSessionFeaturesBoundariesAndReadiness
+  internal/strategymarket/session_features_test.go:53
+
+function    TestSessionFeaturesRefusesInvalidEvidence
+  internal/strategymarket/session_features_test.go:95
+
+function    TestSessionFeaturesWeightedTypicalPriceAndNewSession
+  internal/strategymarket/session_features_test.go:134
+
+function    TestSessionFeaturesPrefixAndBoundaries
+  internal/strategymarket/session_features_test.go:159
+
+function    TestSessionFeaturesCanonicalDigestAndZeroVolume
+  internal/strategymarket/session_features_test.go:193
+

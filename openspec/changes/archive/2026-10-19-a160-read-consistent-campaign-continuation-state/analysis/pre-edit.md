@@ -1,0 +1,9 @@
+# Pre-edit preparation
+
+Base `5f3506599fd9cbd40b888aa954ae880244bedf9b`; implementation not started. Current scope: new ReadOnly reader and test files only, existing scanners reused without modifying them. Existing-function FLM/BTM: not applicable to the intended new files; if an existing function must change, stop and refresh AST/FLM/BTM before editing. The `research-first.md` is a retained earlier a156 investigation; its future admission proposal is outside a160's approved read-only scope.
+
+ReadOnly uses one read transaction with strict scoped generation and authoritative projection identity, ordered legs and watermarks, error without partial results, orphan detection, and typed full-plan unavailable. No risk values, new decisions/reservations/leases, schema changes or runtime integration. Exact test and implementation paths remain to be chosen after design review.
+
+Source-bound current AST and CodeGraph status/callers are in `code-context/`. CodeGraph status came from the pre-Story clean base and is discovery evidence, not final SDD freshness; CGC results may include unrelated worktrees and are advisory. Final hard sync/check is pending. Search-first used existing journal/scanners; no dependency or external package search applies. ai-memory CLI explicit project returned project-not-found and global lookup empty; no memory writes. Design reviews, Manager implementation authorization, and pre-edit sync are pending. No tests or gate claimed.
+
+Manager approved one existing test-function edit: exact name registration in `TestTheReadOnlyHandleHasNoWriteMethods`. Baseline AST/FLM/BTM under `function-logic/`; retain all existing reflection checks. Update AST to final source after edit and account for any detector-reported adjacent line drift. No existing production function edit is authorized.

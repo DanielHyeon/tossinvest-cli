@@ -1,0 +1,325 @@
+// Package campaignstateevidence는 권한 없는 독립 조회 데이터를 보관한다.
+package campaignstateevidence
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"math/big"
+	"reflect"
+	"strconv"
+	"strings"
+	"time"
+)
+
+// fxNumber는 원문을 유지하며 숫자 형식과 할당 크기를 검사한다.
+func fxNumber(raw, family string) (*big.Rat, bool) {
+	if family == "reversal" {
+		raw = strings.TrimSpace(raw)
+	} else {
+		for _, part := range strings.Split(raw, ".") {
+			if part == "" {
+				return nil, false
+			}
+			for _, c := range part {
+				if c < '0' || c > '9' {
+					return nil, false
+				}
+			}
+		}
+	}
+	if raw == "" || len(raw) > 128 || strings.ContainsAny(raw, "/eE+-") || strings.Count(raw, ".") > 1 {
+		return nil, false
+	}
+	if i := strings.IndexAny(raw, "pP"); i >= 0 {
+		exponent, err := strconv.Atoi(raw[i+1:])
+		if err != nil || exponent > 1000 {
+			return nil, false
+		}
+	}
+	r, ok := new(big.Rat).SetString(raw)
+	return r, ok && r.Sign() > 0 && r.Num().BitLen() <= 256 && r.Denom().BitLen() <= 256
+}
+
+type Scope struct {
+	Account    string `json:"account"`
+	Market     string `json:"market"`
+	Symbol     string `json:"symbol"`
+	Campaign   string `json:"campaign"`
+	Lane       string `json:"lane"`
+	Version    string `json:"version"`
+	Generation uint64 `json:"generation"`
+}
+type FX struct {
+	Authority  string `json:"authority"`
+	Version    string `json:"version"`
+	QuoteID    string `json:"quote_id"`
+	AsOf       string `json:"as_of"`
+	FreshUntil string `json:"fresh_until"`
+	Direction  string `json:"direction"`
+	Rate       string `json:"rate"`
+	Haircut    string `json:"haircut"`
+	Digest     string `json:"digest"`
+	Official   *bool  `json:"official"`
+	Frozen     *bool  `json:"frozen"`
+	Seal       string `json:"seal"`
+}
+type Plan struct {
+	Scope           Scope    `json:"scope"`
+	Budget          string   `json:"budget"`
+	PerShareRisk    string   `json:"per_share_risk"`
+	Quantity        uint64   `json:"quantity"`
+	Ceilings        []uint64 `json:"ceilings"`
+	Weights         []uint64 `json:"weights"`
+	PolicyDigest    string   `json:"policy_digest"`
+	ConfigDigest    string   `json:"config_digest"`
+	AccountCurrency string   `json:"account_currency"`
+	QuoteCurrency   string   `json:"quote_currency"`
+	FX              *FX      `json:"fx"`
+	Digest          string   `json:"digest"`
+	Seal            string   `json:"seal"`
+}
+type ContinuationFill struct {
+	Applied     bool   `json:"applied"`
+	Risk        string `json:"risk"`
+	Known       bool   `json:"known"`
+	Fingerprint string `json:"fingerprint"`
+}
+type ContinuationCancel struct {
+	Applied     bool   `json:"applied"`
+	Fingerprint string `json:"fingerprint"`
+}
+type ReversalFill struct {
+	Applied     bool   `json:"applied"`
+	Risk        string `json:"risk"`
+	Fingerprint string `json:"fingerprint"`
+}
+type WeeklyFill struct {
+	Fingerprint   string `json:"fingerprint"`
+	KnownIdentity bool   `json:"known_identity"`
+}
+type Risk struct {
+	PlanDigest          string                        `json:"plan_digest"`
+	Budget              string                        `json:"budget"`
+	Filled              string                        `json:"filled"`
+	Held                string                        `json:"held"`
+	Latches             map[string]bool               `json:"latches"`
+	ContinuationFills   map[string]ContinuationFill   `json:"continuation_fills"`
+	ContinuationCancels map[string]ContinuationCancel `json:"continuation_cancels"`
+	ReversalFills       map[string]ReversalFill       `json:"reversal_fills"`
+	ReversalCancels     map[string]string             `json:"reversal_cancels"`
+	WeeklyFills         map[string]WeeklyFill         `json:"weekly_fills"`
+	Seal                string                        `json:"seal"`
+	CancelStatus        string                        `json:"cancel_status"`
+	ReservationStatus   string                        `json:"reservation_status"`
+}
+type Evidence struct {
+	Schema      string `json:"schema"`
+	Family      string `json:"family"`
+	CapturedAt  string `json:"captured_at"`
+	Purpose     string `json:"purpose"`
+	Origin      string `json:"origin"`
+	Currentness string `json:"currentness"`
+	Plan        Plan   `json:"plan"`
+	Risk        Risk   `json:"risk"`
+}
+
+const MaxSize = 4 << 20
+
+func amount(v string, positive bool) bool {
+	if len(v) == 0 || len(v) > 78 || (len(v) > 1 && v[0] == '0') {
+		return false
+	}
+	for _, c := range v {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	n, ok := new(big.Int).SetString(v, 10)
+	return ok && n.BitLen() <= 256 && (!positive || n.Sign() > 0)
+}
+func equalWeights(a, b []uint64) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+func validate(e Evidence) error {
+	bad := errors.New("invalid inspection evidence")
+	if e.Schema != "campaign-state-evidence:v1" || e.Purpose != "inspection-only" || e.Origin != "caller-provided-snapshot" || e.Currentness != "ledger-currentness-unverified" {
+		return bad
+	}
+	if _, err := time.Parse(time.RFC3339Nano, e.CapturedAt); err != nil {
+		return bad
+	}
+	p, r := e.Plan, e.Risk
+	checkAmount := func(value string, positive bool) bool {
+		if e.Family == "reversal" {
+			value = strings.TrimSpace(value)
+		}
+		return amount(value, positive)
+	}
+	s := p.Scope
+	for _, v := range []string{s.Account, s.Symbol, s.Campaign, s.Lane, s.Version, p.PolicyDigest, p.ConfigDigest, p.AccountCurrency, p.QuoteCurrency, p.Digest, r.PlanDigest} {
+		if strings.TrimSpace(v) == "" || len(v) > 256 {
+			return bad
+		}
+	}
+	if (s.Market != "KR" && s.Market != "US") || s.Generation == 0 || p.Quantity == 0 || !checkAmount(p.Budget, true) || !checkAmount(p.PerShareRisk, true) || !checkAmount(r.Filled, false) || !checkAmount(r.Held, false) || r.PlanDigest != p.Digest {
+		return bad
+	}
+	lanes := map[string]map[string]string{
+		"continuation": {"KR": "kr_short_flow_continuation_v1", "US": "us_short_participation_continuation_v1"},
+		"reversal":     {"KR": "kr_short_absorption_reversal_v1", "US": "us_short_dislocation_reversal_v1"},
+		"weekly":       {"KR": "kr_weekly_disclosure_value_v1", "US": "us_weekly_disclosure_value_v1"},
+	}
+	if s.Version != "v1" || lanes[e.Family][s.Market] != s.Lane {
+		return bad
+	}
+	var total uint64
+	for _, ceiling := range p.Ceilings {
+		if ceiling > p.Quantity-total {
+			return bad
+		}
+		total += ceiling
+	}
+	if total != p.Quantity {
+		return bad
+	}
+	if e.Family == "weekly" {
+		if len(p.Ceilings) != 7 {
+			return bad
+		}
+		base := p.Quantity / 7
+		for i := 0; i < 6; i++ {
+			if p.Ceilings[i] != base {
+				return bad
+			}
+		}
+		if p.Ceilings[6] != p.Quantity-base*6 {
+			return bad
+		}
+	} else {
+		if len(p.Ceilings) != 3 {
+			return bad
+		}
+		firstWeight := uint64(8)
+		if e.Family == "reversal" {
+			firstWeight = 2
+		}
+		q, rem := p.Quantity/14, p.Quantity%14
+		first := q*firstWeight + rem*firstWeight/14
+		second := q*4 + rem*4/14
+		if p.Ceilings[0] != first || p.Ceilings[1] != second || p.Ceilings[2] != p.Quantity-first-second {
+			return bad
+		}
+	}
+	if (p.AccountCurrency == p.QuoteCurrency) != (p.FX == nil) {
+		return bad
+	}
+	if p.FX != nil {
+		f := p.FX
+		if f.QuoteID == "" || f.Digest == "" || f.Direction != "QUOTE_TO_ACCOUNT" || f.Rate == "" || f.Haircut == "" || len(f.Seal) != 64 {
+			return bad
+		}
+		if _, err := hex.DecodeString(f.Seal); err != nil {
+			return bad
+		}
+		_, rateOK := fxNumber(f.Rate, e.Family)
+		haircut, haircutOK := fxNumber(f.Haircut, e.Family)
+		if !rateOK || !haircutOK || haircut.Cmp(big.NewRat(1, 1)) < 0 {
+			return bad
+		}
+		if _, err := time.Parse(time.RFC3339Nano, f.AsOf); err != nil {
+			return bad
+		}
+		if e.Family != "continuation" {
+			if f.Authority == "" || f.Version == "" {
+				return bad
+			}
+			fresh, err := time.Parse(time.RFC3339Nano, f.FreshUntil)
+			asOf, _ := time.Parse(time.RFC3339Nano, f.AsOf)
+			if err != nil || asOf.After(fresh) {
+				return bad
+			}
+		}
+		if e.Family != "weekly" && (f.Official == nil || !*f.Official || f.Frozen == nil || !*f.Frozen) {
+			return bad
+		}
+	}
+	switch e.Family {
+	case "continuation":
+		if len(p.Ceilings) != 3 || !equalWeights(p.Weights, []uint64{8, 4, 2}) || r.Budget != p.Budget || r.CancelStatus != "captured" || r.ReservationStatus != "not_applicable" || r.ReversalFills != nil || r.ReversalCancels != nil || r.WeeklyFills != nil {
+			return bad
+		}
+		for _, v := range r.ContinuationFills {
+			if v.Risk != "" && !checkAmount(v.Risk, false) {
+				return bad
+			}
+		}
+	case "reversal":
+		if len(p.Ceilings) != 3 || !equalWeights(p.Weights, []uint64{2, 4, 8}) || r.Budget != "" || r.CancelStatus != "captured" || r.ReservationStatus != "not_applicable" || r.ContinuationFills != nil || r.ContinuationCancels != nil || r.WeeklyFills != nil {
+			return bad
+		}
+		for _, v := range r.ReversalFills {
+			if v.Risk != "" && !checkAmount(v.Risk, false) {
+				return bad
+			}
+		}
+	case "weekly":
+		if len(p.Ceilings) != 7 || p.Weights != nil || r.Budget != "" || r.CancelStatus != "not_applicable" || r.ReservationStatus != "not_captured" || r.ContinuationFills != nil || r.ContinuationCancels != nil || r.ReversalFills != nil || r.ReversalCancels != nil || r.Seal == "" || p.Seal == "" {
+			return bad
+		}
+	default:
+		return bad
+	}
+	return nil
+}
+func Encode(e Evidence) ([]byte, error) {
+	if err := validate(e); err != nil {
+		return nil, err
+	}
+	b, err := json.Marshal(e)
+	if err != nil {
+		return nil, err
+	}
+	if len(b) > MaxSize {
+		return nil, errors.New("evidence exceeds limit")
+	}
+	var copied Evidence
+	if err := json.Unmarshal(b, &copied); err != nil || !reflect.DeepEqual(e, copied) {
+		return nil, errors.New("evidence cannot be preserved losslessly")
+	}
+	return b, nil
+}
+func Decode(b []byte, expected string, scope Scope) (Evidence, error) {
+	var zero Evidence
+	if len(b) == 0 || len(b) > MaxSize || len(expected) != 64 {
+		return zero, errors.New("invalid evidence size or digest")
+	}
+	sum := sha256.Sum256(b)
+	if hex.EncodeToString(sum[:]) != expected {
+		return zero, errors.New("content digest mismatch")
+	}
+	var e Evidence
+	d := json.NewDecoder(bytes.NewReader(b))
+	d.DisallowUnknownFields()
+	if err := d.Decode(&e); err != nil {
+		return zero, err
+	}
+	canonical, err := Encode(e)
+	if err != nil {
+		return zero, err
+	}
+	if !bytes.Equal(canonical, b) {
+		return zero, errors.New("noncanonical or foreign evidence")
+	}
+	return e, nil
+}

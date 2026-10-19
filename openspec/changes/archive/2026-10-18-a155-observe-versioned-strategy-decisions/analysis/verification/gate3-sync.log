@@ -1,0 +1,15 @@
+┌  Syncing CodeGraph
+│
+Scanning files...
+│
+●  Already up to date
+│
+└  Done
+
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
++ codegraph sync .
++ codegraphcontext update . --quiet
+[sdd-sync] all indexes current
+
+EXIT_CODE=0

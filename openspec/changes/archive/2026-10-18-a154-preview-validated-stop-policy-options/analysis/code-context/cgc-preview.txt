@@ -1,0 +1,124 @@
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+Found 41 matches for 'preview':
+╭────────────────────────────┬──────────┬──────────────────────────────────────╮
+│ Name                       │ Type     │ Location                             │
+├────────────────────────────┼──────────┼──────────────────────────────────────┤
+│ preview                    │ Function │ /tmp/tossos-a052/internal/optimizati │
+│                            │          │ on/store.go:566                      │
+│ preview                    │ Function │ /mnt/D/project/axipient/TossOS-workt │
+│                            │          │ rees/a050/internal/optimization/stor │
+│                            │          │ e.go:438                             │
+│ preview                    │ Function │ /mnt/D/project/axipient/TossOS-relea │
+│                            │          │ se-verify-20260803/internal/optimiza │
+│                            │          │ tion/store.go:566                    │
+│ preview                    │ Function │ /tmp/tossos-a053-exit-lines/internal │
+│                            │          │ /optimization/store.go:566           │
+│ preview                    │ Function │ /tmp/tossos-a054-simple-positions/in │
+│                            │          │ ternal/optimization/store.go:566     │
+│ preview                    │ Function │ /tmp/tossos-a061-reconcile-owned-ord │
+│                            │          │ ers/internal/optimization/store.go:5 │
+│                            │          │ 66                                   │
+│ preview                    │ Function │ /tmp/tossos-a058-stockos-density/int │
+│                            │          │ ernal/optimization/store.go:566      │
+│ preview                    │ Function │ /tmp/tossos-a058-detail-dialog/inter │
+│                            │          │ nal/optimization/store.go:566        │
+│ preview                    │ Function │ /tmp/tossos-a061-scoped-snapshots/in │
+│                            │          │ ternal/optimization/store.go:566     │
+│ preview                    │ Function │ /tmp/tossos-a060-history-names/inter │
+│                            │          │ nal/optimization/store.go:566        │
+│ preview                    │ Function │ /tmp/tossos-a061-scoped-reconcile/in │
+│                            │          │ ternal/optimization/store.go:566     │
+│ preview                    │ Function │ /tmp/tossos-a053-main/internal/optim │
+│                            │          │ ization/store.go:566                 │
+│ preview                    │ Function │ /tmp/tossos-a061-scoped-detector/int │
+│                            │          │ ernal/optimization/store.go:566      │
+│ preview                    │ Function │ /tmp/tossos-a061-scoped-fill-events/ │
+│                            │          │ internal/optimization/store.go:566   │
+│ preview                    │ Function │ /tmp/tossos-release-a060/internal/op │
+│                            │          │ timization/store.go:566              │
+│ preview                    │ Function │ /mnt/D/project/axipient/TossOS-workt │
+│                            │          │ rees/a064-multi-market-strategy-lane │
+│                            │          │ s/internal/optimization/store.go:566 │
+│ preview                    │ Function │ /tmp/tossos-a081-work-status/interna │
+│                            │          │ l/optimization/store.go:566          │
+│ preview                    │ Function │ /tmp/tossos-release-a066/internal/op │
+│                            │          │ timization/store.go:566              │
+│ preview                    │ Function │ /tmp/tossos-a074-a079-integration/in │
+│                            │          │ ternal/optimization/store.go:566     │
+│ preview                    │ Function │ /mnt/D/project/axipient/TossOS-workt │
+│                            │          │ rees/a109-t2/internal/optimization/s │
+│                            │          │ tore.go:566                          │
+│ after_preview              │ Variable │ /mnt/D/project/axipient/stockos/.cla │
+│                            │          │ ude/worktrees/a207-impl/apps/api/sto │
+│                            │          │ ckos_api/routes/llm_settings.py:207  │
+│ after_preview              │ Variable │ /tmp/stockos-wt-a205p5/apps/api/stoc │
+│                            │          │ kos_api/routes/llm_settings.py:207   │
+│ after_preview              │ Variable │ /mnt/D/project/axipient/stockos/.cla │
+│                            │          │ ude/worktrees/agent-a3c431800307295a │
+│                            │          │ 3/apps/api/stockos_api/routes/llm_se │
+│                            │          │ ttings.py:207                        │
+│ after_preview              │ Variable │ /mnt/D/project/axipient/stockos/.cla │
+│                            │          │ ude/worktrees/a228-krx-rebreakout-di │
+│                            │          │ rect-live/apps/api/stockos_api/route │
+│                            │          │ s/llm_settings.py:207                │
+│ after_preview              │ Variable │ /tmp/stockos-wt-a208/apps/api/stocko │
+│                            │          │ s_api/routes/llm_settings.py:207     │
+│ after_preview              │ Variable │ /tmp/stockos-wt-a214/apps/api/stocko │
+│                            │          │ s_api/routes/llm_settings.py:207     │
+│ after_preview              │ Variable │ /mnt/D/project/axipient/stockos/.cla │
+│                            │          │ ude/worktrees/agent-ad1f68d1c1e02950 │
+│                            │          │ c/apps/api/stockos_api/routes/llm_se │
+│                            │          │ ttings.py:207                        │
+│ after_preview              │ Variable │ /tmp/stockos-wt-a216/apps/api/stocko │
+│                            │          │ s_api/routes/llm_settings.py:207     │
+│ after_preview              │ Variable │ /mnt/D/project/axipient/stockos/apps │
+│                            │          │ /api/stockos_api/routes/llm_settings │
+│                            │          │ .py:207                              │
+│ after_preview              │ Variable │ /mnt/D/project/axipient/stockos/.cla │
+│                            │          │ ude/worktrees/agent-a0d0e5b0342e6ad3 │
+│                            │          │ 6/apps/api/stockos_api/routes/llm_se │
+│                            │          │ ttings.py:207                        │
+│ after_preview              │ Variable │ /mnt/D/project/axipient/stockos/.cla │
+│                            │          │ ude/worktrees/agent-a35a4d6eed38eff7 │
+│                            │          │ b/apps/api/stockos_api/routes/llm_se │
+│                            │          │ ttings.py:207                        │
+│ after_preview              │ Variable │ /mnt/D/project/axipient/stockos/.cla │
+│                            │          │ ude/worktrees/agent-a301dc3324661121 │
+│                            │          │ d/apps/api/stockos_api/routes/llm_se │
+│                            │          │ ttings.py:207                        │
+│ after_preview              │ Variable │ /mnt/D/project/axipient/stockos/.cla │
+│                            │          │ ude/worktrees/agent-a0da7562446fe8af │
+│                            │          │ 2/apps/api/stockos_api/routes/llm_se │
+│                            │          │ ttings.py:207                        │
+│ after_preview              │ Variable │ /mnt/D/project/axipient/stockos/.cla │
+│                            │          │ ude/worktrees/agent-a809ba1c1b7df020 │
+│                            │          │ 7/apps/api/stockos_api/routes/llm_se │
+│                            │          │ ttings.py:207                        │
+│ auto_market_switch_preview │ Variable │ /mnt/D/project/axipient/stockos/.cla │
+│                            │          │ ude/worktrees/agent-ad1f68d1c1e02950 │
+│                            │          │ c/apps/api/stockos_api/routes/auto_o │
+│                            │          │ rder_execution.py:591                │
+│ auto_market_switch_preview │ Variable │ /mnt/D/project/axipient/stockos/.cla │
+│                            │          │ ude/worktrees/agent-a0d0e5b0342e6ad3 │
+│                            │          │ 6/apps/api/stockos_api/routes/auto_o │
+│                            │          │ rder_execution.py:351                │
+│ auto_market_switch_preview │ Variable │ /mnt/D/project/axipient/stockos/.cla │
+│                            │          │ ude/worktrees/a207-impl/apps/api/sto │
+│                            │          │ ckos_api/routes/auto_order_execution │
+│                            │          │ .py:591                              │
+│ auto_market_switch_preview │ Variable │ /tmp/stockos-wt-a216/apps/api/stocko │
+│                            │          │ s_api/routes/auto_order_execution.py │
+│                            │          │ :591                                 │
+│ auto_market_switch_preview │ Variable │ /mnt/D/project/axipient/stockos/.cla │
+│                            │          │ ude/worktrees/agent-a3c431800307295a │
+│                            │          │ 3/apps/api/stockos_api/routes/auto_o │
+│                            │          │ rder_execution.py:591                │
+│ auto_market_switch_preview │ Variable │ /tmp/stockos-wt-a214/apps/api/stocko │
+│                            │          │ s_api/routes/auto_order_execution.py │
+│                            │          │ :591                                 │
+│ preview_trade              │ Module   │ preview_trade                        │
+╰────────────────────────────┴──────────┴──────────────────────────────────────╯

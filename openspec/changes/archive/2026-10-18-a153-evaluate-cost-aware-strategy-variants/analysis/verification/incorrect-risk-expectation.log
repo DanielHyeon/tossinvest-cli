@@ -1,0 +1,26 @@
+test_cli_market_and_inconclusive (test_analysis.Contract.test_cli_market_and_inconclusive) ... ok
+test_duplicate_opportunity (test_analysis.Contract.test_duplicate_opportunity) ... ok
+test_invalid_timestamp_precision (test_analysis.Contract.test_invalid_timestamp_precision) ... ok
+test_duplicate_normalized_instant_with_different_confirmation (test_analysis.Detail.test_duplicate_normalized_instant_with_different_confirmation) ... ok
+test_feature_truth_unknown_and_future_independence (test_analysis.Detail.test_feature_truth_unknown_and_future_independence) ... ok
+test_fee_monotonicity (test_analysis.Detail.test_fee_monotonicity) ... ok
+test_fixed_sensitivity_does_not_change_base_score (test_analysis.Detail.test_fixed_sensitivity_does_not_change_base_score) ... ok
+test_full_session_unknown_and_inherited_exclusion (test_analysis.Detail.test_full_session_unknown_and_inherited_exclusion) ... ok
+test_mfi_direction_and_late_or_stale (test_analysis.Detail.test_mfi_direction_and_late_or_stale) ... ok
+test_missing_and_zero_risk_are_not_zero_return (test_analysis.Detail.test_missing_and_zero_risk_are_not_zero_return) ... ok
+test_session_weighting_and_unknown_exclusion (test_analysis.Detail.test_session_weighting_and_unknown_exclusion) ... ok
+test_slippage_reexecutes_with_new_entry (test_analysis.Detail.test_slippage_reexecutes_with_new_entry) ... FAIL
+test_timestamp_offset_bounds (test_analysis.Detail.test_timestamp_offset_bounds) ... ok
+
+======================================================================
+FAIL: test_slippage_reexecutes_with_new_entry (test_analysis.Detail.test_slippage_reexecutes_with_new_entry)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/tossos-a148-impl-20261018/tools/a153-evaluate-cost-aware-strategy-variants/test_analysis.py", line 115, in test_slippage_reexecutes_with_new_entry
+    self.assertNotEqual(row['base']['arms']['fixed']['risk'],row['stress']['arms']['fixed']['risk'])
+AssertionError: '6960' == '6960'
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.321s
+
+FAILED (failures=1)

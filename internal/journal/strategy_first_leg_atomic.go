@@ -10,11 +10,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"strconv"
 	"strings"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positioncampaign"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 )
 
@@ -138,6 +140,14 @@ func (j *Journal) RecordQFinalCampaignFirstLeg(ctx context.Context, request QFin
 	}
 
 	if replayCandidate {
+		var marker int
+		if err := tx.QueryRowContext(ctx, `SELECT strategy_binding_version FROM decisions WHERE id=?`, prepared.decision.ID).Scan(&marker); err != nil {
+			return QFinalCampaignFirstLegReceipt{}, fmt.Errorf("journal: reading strategy protection marker: %w", err)
+		}
+		schema, _, err := strategyDecisionPayloadSchema(prepared.strategyPlan.Lineage.DecisionPayload)
+		if err != nil || (marker == 4) != (schema == strategyflowRiskBindingSchemaVersionV4) || (marker != 0 && marker != 4) {
+			return QFinalCampaignFirstLegReceipt{}, fmt.Errorf("%w: strategy protection marker mismatch", ErrRiskBucketReplayMismatch)
+		}
 		replayed, qFinal, err := recoverQFinalIssueReplayTx(ctx, tx, request.Issue.Admission, prepared.decision,
 			prepared.reserve, prepared.reservePlan, prepared.riskDecision, prepared.issueDigest)
 		if err != nil {
@@ -154,6 +164,14 @@ func (j *Journal) RecordQFinalCampaignFirstLeg(ctx context.Context, request QFin
 		}
 		return firstLegReceipt(prepared, qFinal.Admission, true), nil
 	}
+	binding, err := decodeStrategyflowRiskBinding(prepared.strategyPlan.Lineage.DecisionPayload)
+	if err != nil || binding.SchemaVersion != strategyflowRiskBindingSchemaVersionV4 {
+		return QFinalCampaignFirstLegReceipt{}, fmt.Errorf("%w: new first-leg admission requires v4 protection binding", ErrInvalidRequest)
+	}
+	projection, err := strategyflow.VerifyAcceptedProjection(string(binding.Strategyflow))
+	if err != nil || request.Campaign.ExpectedPositionGeneration < 0 || request.Campaign.ExpectedPositionGeneration == math.MaxInt64 || projection.Lineage().PositionGeneration != uint64(request.Campaign.ExpectedPositionGeneration)+1 {
+		return QFinalCampaignFirstLegReceipt{}, fmt.Errorf("%w: first-leg admitted generation mismatch", ErrInvalidRequest)
+	}
 
 	if replayed, _, err := recoverQFinalIssueReplayTx(ctx, tx, request.Issue.Admission, prepared.decision,
 		prepared.reserve, prepared.reservePlan, prepared.riskDecision, prepared.issueDigest); err != nil {
@@ -164,7 +182,7 @@ func (j *Journal) RecordQFinalCampaignFirstLeg(ctx context.Context, request QFin
 	if err := reservePrecheck(ctx, tx, prepared.reserve, prepared.reservePlan, j.clk.Now().UTC()); err != nil {
 		return QFinalCampaignFirstLegReceipt{}, err
 	}
-	if err := insertDecisionRow(ctx, tx, prepared.decision); err != nil {
+	if err := insertV4StrategyDecision(ctx, tx, prepared.decision); err != nil {
 		return QFinalCampaignFirstLegReceipt{}, err
 	}
 	reserved, err := reserveRows(ctx, tx, prepared.reserve, prepared.reservePlan, j.clk.Now().UTC())

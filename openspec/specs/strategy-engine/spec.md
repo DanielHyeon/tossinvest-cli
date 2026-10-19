@@ -624,3 +624,45 @@ Production route authority는 시장의 eligible continuation, reversal, weekly-
 - **WHEN** KR에 서로 다른 owner scope의 두 symbol candidate set이 동시에 존재한다
 - **THEN** market-wide 하나를 사전 선택하지 않고 두 owner scope가 독립적으로 coordinator intake에 도달한다
 
+### Requirement: Parker RR diagnostics distinguish space target and realized results
+Diagnostics SHALL identify each RR numerator, denominator, units, price basis and policy version without altering frozen v1 decisions or interpreting legacy RR labels as a stronger predicate.
+
+#### Scenario: Legacy floor fixture
+- **WHEN** entry=100, stop=99.3, forward space=1.2 and target=102.1 are supplied
+- **THEN** space RR is 12/7, target RR is 3, realized RR is unknown without fills/costs, and the frozen v1 decision remains identical
+
+### Requirement: Parker RR diagnostics reject undefined risk
+RR diagnostics SHALL return a typed invalid or unknown state for nonpositive risk or unavailable realized evidence.
+
+#### Scenario: Invalid denominator
+- **WHEN** entry equals stop
+- **THEN** no finite RR or approved risk decision is fabricated
+
+### Requirement: Session features have explicit reset seed and time semantics
+Feature calculation SHALL use session-prefix unadjusted closed one-minute bars for typical-price VWAP and session-reset closed five-minute EMA9 seeded by the first nine closes. It SHALL return method and timing provenance and SHALL NOT replace frozen v1 runtime inputs.
+
+#### Scenario: Session boundary
+- **WHEN** the first bar of a new supported session arrives
+- **THEN** VWAP accumulators and EMA seed reset and EMA remains not_ready until nine complete five-minute bars exist
+
+### Requirement: Incomplete session inputs cannot become ready indicators
+The calculator SHALL reject future, duplicate, malformed or mixed-session bars and SHALL mark incomplete prefixes, zero total volume and insufficient warm-up not_ready. Unsupported calendars SHALL NOT be inferred.
+
+#### Scenario: Mid-session start
+- **WHEN** only the last twenty minutes of a session are available
+- **THEN** no session VWAP or ready EMA is fabricated
+
+### Requirement: VWAP slope and EMA period are reproducible
+The calculator SHALL identify EMA periods as five-minute closed bars and compute VWAP percent slope between consecutive five-minute boundaries using an explicit version.
+
+#### Scenario: Equivalent replay
+- **WHEN** the same canonical prefix is replayed
+- **THEN** values, readiness and input digest are identical with no network or broker calls
+
+### Requirement: Diagnostic risk inputs have bounded decimal syntax
+Parker RR diagnostics SHALL validate caller-supplied numeric strings as bounded decimal literals before numeric parsing. They SHALL reject exponent, fraction, radix and oversized representations without changing the frozen runtime parser or existing valid diagnostic results.
+
+#### Scenario: Unsupported numeric representation
+- **WHEN** a supplied planned or realized RR numeric input contains a binary exponent, fraction, nondecimal radix or exceeds the documented length bound
+- **THEN** the diagnostic returns invalid without parsing that representation or granting trading authority
+

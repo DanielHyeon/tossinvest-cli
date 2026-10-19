@@ -287,7 +287,7 @@ func pairedStrategyDispatchCycleFixture(t *testing.T) (*strategyDispatchCycle, s
 	if err != nil {
 		t.Fatal(err)
 	}
-	loader := newProductionStrategyFirstLegAuthorityLoader(fakeClock, j, guardian, schedule, proposals, riskPair, riskFixture.fx, accounts)
+	loader := newProductionStrategyFirstLegAuthorityLoader(fakeClock, j, guardian, schedule, proposals, riskPair, riskFixture.fx, accounts, a150RatchetPolicyFixture())
 	firstLeg := newStrategyFirstLegAdmissionBridge(guardian, loader)
 	spy := &strategyDispatchGatewaySpy{observed: map[string]int{}}
 	cycle := newStrategyDispatchCycle(j, spy, firstLeg, schedule, riskFixture.fx, riskPair, proposals, &strategyDispatchOwnerCoordinator{})

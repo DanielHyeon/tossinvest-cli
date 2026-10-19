@@ -178,11 +178,7 @@ func registeredRoutes(t *testing.T) []route {
 						"whose handler is a value is a route whose gates cannot be read off the "+
 						"registration", name, r.Path, arg)
 				}
-				if outer, ok := arg.(*ast.CallExpr); ok {
-					if fn, ok := outer.Fun.(*ast.SelectorExpr); ok && fn.Sel.Name == "session0" {
-						r.Session = true
-					}
-				}
+				r.Session = sessionGuarded(arg)
 				ast.Inspect(arg, func(inner ast.Node) bool {
 					if c, ok := inner.(*ast.CallExpr); ok {
 						if fn, ok := c.Fun.(*ast.SelectorExpr); ok {
@@ -415,13 +411,16 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		"/openapi/login/save":                     true,
 		"/logout":                                 true,
 	}
+	computeOnly := map[string]bool{"/optimization/hypothetical": true}
 	seen := map[string]bool{}
 	for _, r := range registeredRoutes(t) {
 		seen[r.Path] = true
 		switch {
+		case computeOnly[r.Path] && !r.CSRFGated:
+			t.Errorf("%s compute-only route is not behind the CSRF gate", r.Path)
 		case stateChanging[r.Path] && !r.CSRFGated:
 			t.Errorf("%s changes state but is not behind the CSRF gate", r.Path)
-		case !stateChanging[r.Path] && r.CSRFGated:
+		case !stateChanging[r.Path] && !computeOnly[r.Path] && r.CSRFGated:
 			t.Errorf("%s is a read route behind the CSRF gate; it would be unopenable", r.Path)
 		}
 	}

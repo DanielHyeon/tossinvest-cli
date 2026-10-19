@@ -1,0 +1,58 @@
+internal/strategyengine/rr_diagnostic.go:26:func ParkerRRFromDecision(r DecisionRecord) ParkerRRDiagnostics {
+internal/strategyengine/rr_diagnostic.go:27:	unit := ""
+internal/strategyengine/rr_diagnostic.go:28:	if r.Currency != "" {
+internal/strategyengine/rr_diagnostic.go:29:		unit = r.Currency + "/share"
+internal/strategyengine/rr_diagnostic.go:30:	}
+internal/strategyengine/rr_diagnostic.go:31:	basis := "unadjusted"
+internal/strategyengine/rr_diagnostic.go:32:	if r.BarAdjusted {
+internal/strategyengine/rr_diagnostic.go:33:		basis = "adjusted"
+internal/strategyengine/rr_diagnostic.go:34:	}
+internal/strategyengine/rr_diagnostic.go:35:	planned := RRMetric{State: RRUnknown, Reason: "missing planned input", NumeratorUnit: unit, DenominatorUnit: unit, PriceBasis: basis, PolicyVersion: r.LaneVersion, Provenance: "caller-supplied decision record; unverified"}
+internal/strategyengine/rr_diagnostic.go:36:	result := ParkerRRDiagnostics{Space: planned, Target: planned, Realized: RRMetric{State: RRUnknown, Reason: "no realized evidence", PolicyVersion: r.LaneVersion}}
+internal/strategyengine/rr_diagnostic.go:37:	if r.EntryPrice == "" || r.StopPrice == "" || r.Currency == "" || r.LaneVersion == "" {
+internal/strategyengine/rr_diagnostic.go:38:		return result
+internal/strategyengine/rr_diagnostic.go:39:	}
+internal/strategyengine/rr_diagnostic.go:40:	entry, e := positive(r.EntryPrice)
+internal/strategyengine/rr_diagnostic.go:41:	stop, s := positive(r.StopPrice)
+internal/strategyengine/rr_diagnostic.go:42:	if !e || !s || entry.Cmp(stop) <= 0 || r.BarAdjusted || r.LaneID != LaneID || r.LaneVersion != LaneVersion {
+internal/strategyengine/rr_diagnostic.go:43:		result.Space.State = RRInvalid
+internal/strategyengine/rr_diagnostic.go:44:		result.Target.State = RRInvalid
+internal/strategyengine/rr_diagnostic.go:45:		result.Space.Reason = "invalid planned input"
+internal/strategyengine/rr_diagnostic.go:46:		result.Target.Reason = result.Space.Reason
+internal/strategyengine/rr_diagnostic.go:47:		return result
+internal/strategyengine/rr_diagnostic.go:48:	}
+internal/strategyengine/rr_diagnostic.go:49:	risk := new(big.Rat).Sub(entry, stop)
+internal/strategyengine/rr_diagnostic.go:50:	metric := func(raw string, space bool) RRMetric {
+internal/strategyengine/rr_diagnostic.go:51:		out := planned
+internal/strategyengine/rr_diagnostic.go:52:		out.Denominator = risk.RatString()
+internal/strategyengine/rr_diagnostic.go:53:		out.Reason = "missing numerator"
+internal/strategyengine/rr_diagnostic.go:54:		if raw == "" {
+internal/strategyengine/rr_diagnostic.go:55:			return out
+internal/strategyengine/rr_diagnostic.go:56:		}
+internal/strategyengine/rr_diagnostic.go:57:		value, ok := positive(raw)
+internal/strategyengine/rr_diagnostic.go:58:		if !ok {
+internal/strategyengine/rr_diagnostic.go:59:			out.State = RRInvalid
+internal/strategyengine/rr_diagnostic.go:60:			out.Reason = "invalid numerator"
+internal/strategyengine/rr_diagnostic.go:61:			return out
+internal/strategyengine/rr_diagnostic.go:62:		}
+internal/strategyengine/rr_diagnostic.go:63:		numerator := new(big.Rat)
+internal/strategyengine/rr_diagnostic.go:64:		if space {
+internal/strategyengine/rr_diagnostic.go:65:			numerator.Quo(new(big.Rat).Mul(entry, value), big.NewRat(100, 1))
+internal/strategyengine/rr_diagnostic.go:66:		} else {
+internal/strategyengine/rr_diagnostic.go:67:			numerator.Sub(value, entry)
+internal/strategyengine/rr_diagnostic.go:68:		}
+internal/strategyengine/rr_diagnostic.go:69:		if numerator.Sign() <= 0 {
+internal/strategyengine/rr_diagnostic.go:70:			out.State = RRInvalid
+internal/strategyengine/rr_diagnostic.go:71:			out.Reason = "invalid numerator"
+internal/strategyengine/rr_diagnostic.go:72:			return out
+internal/strategyengine/rr_diagnostic.go:73:		}
+internal/strategyengine/rr_diagnostic.go:74:		out.State = RRKnown
+internal/strategyengine/rr_diagnostic.go:75:		out.Reason = ""
+internal/strategyengine/rr_diagnostic.go:76:		out.Numerator = numerator.RatString()
+internal/strategyengine/rr_diagnostic.go:77:		out.Ratio = new(big.Rat).Quo(numerator, risk).RatString()
+internal/strategyengine/rr_diagnostic.go:78:		return out
+internal/strategyengine/rr_diagnostic.go:79:	}
+internal/strategyengine/rr_diagnostic.go:80:	result.Space = metric(r.LVNSpacePct, true)
+internal/strategyengine/rr_diagnostic.go:81:	result.Target = metric(r.TargetPrice, false)
+internal/strategyengine/rr_diagnostic.go:82:	return result
+internal/strategyengine/rr_diagnostic.go:83:}

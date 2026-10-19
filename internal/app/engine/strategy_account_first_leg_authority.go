@@ -264,30 +264,44 @@ func accountLoaderTime(loader *strategyAccountAuthorityLoader) time.Time {
 }
 
 type productionStrategyFirstLegAuthorityLoader struct {
-	clk       clock.Clock
-	journal   *journal.Journal
-	guardian  *execgw.RiskGuardian
-	schedule  strategyScheduleAuthorityPair
-	proposals strategyProposalAuthorityPair
-	risk      strategyRiskAuthorityPair
-	fx        strategyFXAuthorityPair
-	accounts  strategyAccountAuthorityPair
+	clk        clock.Clock
+	journal    *journal.Journal
+	guardian   *execgw.RiskGuardian
+	schedule   strategyScheduleAuthorityPair
+	proposals  strategyProposalAuthorityPair
+	risk       strategyRiskAuthorityPair
+	fx         strategyFXAuthorityPair
+	accounts   strategyAccountAuthorityPair
+	exitPolicy *journal.StrategyExitPolicySnapshot
 }
 
 func newProductionStrategyFirstLegAuthorityLoader(clk clock.Clock, jrn *journal.Journal, guardian *execgw.RiskGuardian,
 	schedule strategyScheduleAuthorityPair, proposals strategyProposalAuthorityPair, riskAuthority strategyRiskAuthorityPair,
-	fx strategyFXAuthorityPair, accounts strategyAccountAuthorityPair,
+	fx strategyFXAuthorityPair, accounts strategyAccountAuthorityPair, exitPolicy *journal.StrategyExitPolicySnapshot,
 ) *productionStrategyFirstLegAuthorityLoader {
+	var policy *journal.StrategyExitPolicySnapshot
+	if exitPolicy != nil {
+		copy := *exitPolicy
+		policy = &copy
+	}
 	// 제안 쌍을 **떼어 내어** 든다(a112 6.2 봉인 리뷰 codex #1): entries 는 slice 라 그대로 들면 dispatch · 조립이 쥔 같은 배열의
 	// 원소 교체가 이 권한의 대조 원본까지 바꾼다 — 그러면 봉인의 재유도가 교체된 값을 교체된 값과 비교한다. 여기서 복사해
 	// 공유 자체를 끊는다(detachedStrategyProposalPair 머리말).
 	return &productionStrategyFirstLegAuthorityLoader{clk: clk, journal: jrn, guardian: guardian, schedule: schedule,
-		proposals: detachedStrategyProposalPair(proposals), risk: riskAuthority, fx: fx, accounts: accounts}
+		proposals: detachedStrategyProposalPair(proposals), risk: riskAuthority, fx: fx, accounts: accounts, exitPolicy: policy}
 }
 
 func (loader *productionStrategyFirstLegAuthorityLoader) collectStrategyFirstLegAuthority(ctx context.Context, accepted strategyFirstLegAccepted) (execgw.QFinalCampaignFirstLegIssuance, error) {
 	if loader == nil || ctx == nil || loader.clk == nil || loader.journal == nil || loader.guardian == nil {
 		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production first-leg authority is unavailable")
+	}
+	if loader.exitPolicy == nil {
+		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production first-leg exit policy unavailable")
+	}
+	exitPolicy := *loader.exitPolicy
+	expected, err := journal.NewStrategyExitPolicySnapshot(exitPolicy.PolicyID)
+	if err != nil || exitPolicy != expected {
+		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production first-leg exit policy invalid")
 	}
 	market := StrategyMarket(accepted.market)
 	proposal, riskAuthority, fx, account, schedule := loader.proposals.forMarket(market), loader.risk.forMarket(market),
@@ -366,7 +380,7 @@ func (loader *productionStrategyFirstLegAuthorityLoader) collectStrategyFirstLeg
 	if !entryOK || !stopOK || !targetOK {
 		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production strategy price unit invalid")
 	}
-	bindingDigest := strategyFirstLegBindingDigest(result, accountAuthority, riskBundle.Digest(), schedule.snapshot.ActivationManifestDigest)
+	bindingDigest := strategyFirstLegBindingDigest(result, accountAuthority, riskBundle.Digest(), schedule.snapshot.ActivationManifestDigest, exitPolicy)
 	transactionID := "strategy-risk:" + strings.TrimPrefix(bindingDigest, "sha256:")[:32]
 	attemptID := "strategy-attempt:" + strings.TrimPrefix(bindingDigest, "sha256:")[:32]
 	observedAt := loader.accounts.observedAt
@@ -391,16 +405,16 @@ func (loader *productionStrategyFirstLegAuthorityLoader) collectStrategyFirstLeg
 		// a136 D9=b · FX 조항: 같은 파도의 짝 FX 에서 다른 시장 authority — 하루 매수 합계의 다른 통화 수동 매수 환산용.
 		PairedFXAuthority:     loader.fx.forMarket(otherStrategyMarket(market)).read.evidence,
 		ExpectedPolicyVersion: loader.guardian.PolicyVersion(), ExpectedLimitsDigest: loader.guardian.LimitsDigest()},
-		Result: result, ActivationManifestDigest: schedule.snapshot.ActivationManifestDigest, AttemptID: attemptID, Revision: 1,
+		Result: result, ActivationManifestDigest: schedule.snapshot.ActivationManifestDigest, AttemptID: attemptID, Revision: 1, ExitPolicy: &exitPolicy,
 		Campaign: journal.FirstLegCampaignRequest{CampaignID: result.Lineage.CampaignID, ExpectedPositionGeneration: cas.Generation,
 			ExpectedPositionVersion: cas.Version, CreateCommandKey: "campaign-create:" + strings.TrimPrefix(bindingDigest, "sha256:")[:32],
 			FirstLegCommandKey: "campaign-leg:" + strings.TrimPrefix(bindingDigest, "sha256:")[:32],
 			FirstLegPlanID:     "first-leg:" + strings.TrimPrefix(bindingDigest, "sha256:")[:32]}, Weekly: proposalAuthority.WeeklyBinding()}, nil
 }
 
-func strategyFirstLegBindingDigest(result strategyflow.Result, account strategyaccount.Authority, riskDigest, activationDigest string) string {
+func strategyFirstLegBindingDigest(result strategyflow.Result, account strategyaccount.Authority, riskDigest, activationDigest string, policy journal.StrategyExitPolicySnapshot) string {
 	value := strings.Join([]string{"TossOS/production-first-leg/v1", result.Lineage.Identity, result.ExecutionTerms.Identity(),
-		account.Identity(), riskDigest, activationDigest}, "\x00")
+		account.Identity(), riskDigest, activationDigest, policy.Kind, policy.PolicyID, policy.Identity.ID, policy.Identity.Version, policy.Identity.Digest}, "\x00")
 	sum := sha256.Sum256([]byte(value))
 	return "sha256:" + hex.EncodeToString(sum[:])
 }

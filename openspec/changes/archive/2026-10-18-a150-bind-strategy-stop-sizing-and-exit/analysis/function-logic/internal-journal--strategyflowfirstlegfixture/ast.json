@@ -1,0 +1,351 @@
+{
+  "file": "internal/journal/strategyflow_projection_test.go",
+  "source_sha256": "85127245be19a62ddd1a5f85358b22e9af0214b840ba93c5064c62a35169d78e",
+  "package": "journal",
+  "function": "strategyflowFirstLegFixture",
+  "signature": "strategyflowFirstLegFixture(params=4, results=1)",
+  "start": {
+    "line": 137,
+    "column": 1
+  },
+  "end": {
+    "line": 184,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 145,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 149,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 156,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 161,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 165,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 167,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 176,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 12
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 23
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 13
+      },
+      "text": "firstLegAtomicFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 76
+      },
+      "text": "pairedProjectionPrices"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 17
+      },
+      "text": "strategyflow.AcceptedResultForJournalTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 17
+      },
+      "text": "QFinalPolicyVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 25
+      },
+      "text": "NewStrategyExitPolicySnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 18
+      },
+      "text": "ProjectAcceptedStrategyflowLineage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 162,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 30
+      },
+      "text": "j.ReserveWeeklyMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 52
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 75
+      },
+      "text": "request.Strategy.CreatedAt.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 16
+      },
+      "text": "request.Strategy.CreatedAt.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 139,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 140,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 141,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 142,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 143,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 144,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 148,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 152,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 153,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 155,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 159,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 164,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 166,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 168,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 170,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 179,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

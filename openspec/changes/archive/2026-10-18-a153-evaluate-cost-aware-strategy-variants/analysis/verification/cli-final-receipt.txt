@@ -1,0 +1,4 @@
+exit=0; previously absent output created; input unchanged SHA256 479bc39aa7798ea111361920c47f534d2753253e2fd2202ec067f6cbbece64c4
+KR/US each total=1, complete_sessions=1; profitability=inconclusive; production_authorized=false
+output SHA256 dd6a2759cfb2ed30796b13126682953765939d06140d13930183585c3aae5628
+Watched input and output only; network, other paths, transient files and child processes not independently observed.

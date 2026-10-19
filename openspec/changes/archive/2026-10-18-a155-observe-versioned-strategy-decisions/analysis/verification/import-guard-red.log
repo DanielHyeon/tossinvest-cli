@@ -1,0 +1,5 @@
+--- FAIL: TestA155ImportGuardUnquotesGoLiterals (0.00s)
+    a155_wiring_guard_test.go:55: bypassed: package p; import `github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve`
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/strategyengine	0.003s
+FAIL

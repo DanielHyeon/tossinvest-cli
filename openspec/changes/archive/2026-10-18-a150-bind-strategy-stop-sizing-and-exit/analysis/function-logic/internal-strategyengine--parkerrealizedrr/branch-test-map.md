@@ -1,0 +1,10 @@
+# Branch Test Map: `ParkerRealizedRR`
+
+Current AST branch inventory. Scenario rows name conditions; they do not claim isolated branch coverage. Focused receipts are in the implementation evidence; full regression remains pending.
+
+| Branch | Source line and condition | Verification status |
+|---|---|---|
+| B1 | 128: `if !f.EntryFinal \|\| !f.ExitFinal \|\| !f.CostsFinal \|\| f.AverageEntry == "" \|\| f.InitialStop == "" \|\| f.Quantity == "" \|\| f.PriceCurrency == "" \|\| f.PriceBasis == "" \|\| f.StopCurrency == "" \|\| f.StopBasis == "" \|\| f.AccountCurrency == "" \|\| f.FXRate == "" \|\| f.FXFrom == "" \|\| f.FXTo == "" \|\| f.FXSource == "" \|\| f.FXAt.IsZero() \|\| f.EntryAt.IsZero() \|\| f.GrossPnL == "" \|\| f.Costs == "" \|\| f.PnLCurrency == "" \|\| f.CostsCurrency == "" \|\| f.FillSource == "" \|\| f.ExitSource == "" \|\| f.CostSource == "" {` | Inspect branch behavior in source; focused tests exercise relevant admission, recovery and refusal paths. Individual branch coverage is not asserted here. |
+| B2 | 131: `for _, value := range []string{f.AverageEntry, f.InitialStop, f.Quantity, f.FXRate, f.GrossPnL, f.Costs} {` | Inspect branch behavior in source; focused tests exercise relevant admission, recovery and refusal paths. Individual branch coverage is not asserted here. |
+| B3 | 132: `if !diagnosticDecimal(value) {` | Inspect branch behavior in source; focused tests exercise relevant admission, recovery and refusal paths. Individual branch coverage is not asserted here. |
+| B4 | 143: `if !e \|\| !s \|\| !q \|\| !x \|\| !p \|\| !c \|\| entry.Cmp(stop) <= 0 \|\| f.PriceBasis != "unadjusted" \|\| f.StopBasis != f.PriceBasis \|\| f.StopCurrency != f.PriceCurrency \|\| f.FXFrom != f.PriceCurrency \|\| f.FXTo != f.AccountCurrency \|\| f.PnLCurrency != f.AccountCurrency \|\| f.CostsCurrency != f.AccountCurrency \|\| !f.FXAt.Equal(f.EntryAt) \|\| (f.PriceCurrency == f.AccountCurrency && fx.Cmp(big.NewRat(1, 1)) != 0) {` | Inspect branch behavior in source; focused tests exercise relevant admission, recovery and refusal paths. Individual branch coverage is not asserted here. |

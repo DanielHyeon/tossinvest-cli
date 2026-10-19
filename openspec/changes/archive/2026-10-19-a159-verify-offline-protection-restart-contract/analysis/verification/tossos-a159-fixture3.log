@@ -1,0 +1,7 @@
+--- FAIL: TestA159ProtectionExitAfterRestart (0.53s)
+    a159_protection_restart_test.go:293: expected capped sell=2: []
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	1.996s
+FAIL
+
+EXIT_CODE=1

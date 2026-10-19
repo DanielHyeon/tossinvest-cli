@@ -1,0 +1,43 @@
+internal/journal/strategy_protection_read.go:127:func requireStrategyProtectionPositionInTx(ctx context.Context, tx *sql.Tx, campaignID string, protection StrategyProtection) error {
+internal/journal/strategy_protection_read.go:128:	if protection.Legacy {
+internal/journal/strategy_protection_read.go:129:		return nil
+internal/journal/strategy_protection_read.go:130:	}
+internal/journal/strategy_protection_read.go:131:	var account, market, symbol, decision string
+internal/journal/strategy_protection_read.go:132:	var generation sql.NullInt64
+internal/journal/strategy_protection_read.go:133:	var expectedGeneration, expectedVersion int64
+internal/journal/strategy_protection_read.go:134:	if err := tx.QueryRowContext(ctx, `SELECT account_ref,market,symbol,decision_id,actual_position_generation,expected_position_generation,expected_position_version FROM position_campaigns WHERE id=?`, campaignID).Scan(&account, &market, &symbol, &decision, &generation, &expectedGeneration, &expectedVersion); err != nil {
+internal/journal/strategy_protection_read.go:135:		return err
+internal/journal/strategy_protection_read.go:136:	}
+internal/journal/strategy_protection_read.go:137:	p, err := scanPosition(tx.QueryRowContext(ctx, positionSelect+` WHERE account_ref=? AND lower(market)=lower(?) AND symbol=? ORDER BY instance_seq DESC LIMIT 1`, account, market, symbol))
+internal/journal/strategy_protection_read.go:138:	if errors.Is(err, ErrPositionNotFound) {
+internal/journal/strategy_protection_read.go:139:		if generation.Valid || expectedGeneration != 0 || expectedVersion != 0 {
+internal/journal/strategy_protection_read.go:140:			return errors.New("strategy protection: missing expected position")
+internal/journal/strategy_protection_read.go:141:		}
+internal/journal/strategy_protection_read.go:142:		return nil
+internal/journal/strategy_protection_read.go:143:	}
+internal/journal/strategy_protection_read.go:144:	if err != nil {
+internal/journal/strategy_protection_read.go:145:		return err
+internal/journal/strategy_protection_read.go:146:	}
+internal/journal/strategy_protection_read.go:147:	if p.State == PositionClosed && !generation.Valid {
+internal/journal/strategy_protection_read.go:148:		var currentVersion int64
+internal/journal/strategy_protection_read.go:149:		if err := tx.QueryRowContext(ctx, `SELECT version FROM position_projection_versions WHERE position_id=?`, p.ID).Scan(&currentVersion); err != nil {
+internal/journal/strategy_protection_read.go:150:			return fmt.Errorf("strategy protection: missing position version: %w", err)
+internal/journal/strategy_protection_read.go:151:		}
+internal/journal/strategy_protection_read.go:152:		if p.InstanceSeq != expectedGeneration || currentVersion != expectedVersion {
+internal/journal/strategy_protection_read.go:153:			return errors.New("strategy protection: prefill position generation changed")
+internal/journal/strategy_protection_read.go:154:		}
+internal/journal/strategy_protection_read.go:155:		return nil
+internal/journal/strategy_protection_read.go:156:	}
+internal/journal/strategy_protection_read.go:157:	if p.State == PositionClosed || !generation.Valid || generation.Int64 != p.InstanceSeq || p.EntryDecisionID != decision {
+internal/journal/strategy_protection_read.go:158:		return errors.New("strategy protection: current position mismatch")
+internal/journal/strategy_protection_read.go:159:	}
+internal/journal/strategy_protection_read.go:160:	result, err := scanExitStateResult(tx.QueryRowContext(ctx, exitStateSelect+` WHERE position_id=?`, p.ID))
+internal/journal/strategy_protection_read.go:161:	if err != nil {
+internal/journal/strategy_protection_read.go:162:		return err
+internal/journal/strategy_protection_read.go:163:	}
+internal/journal/strategy_protection_read.go:164:	s := result.State
+internal/journal/strategy_protection_read.go:165:	if result.Corruption != nil || s.Completed || protection.Policy == nil || s.PositionGeneration != p.InstanceSeq || s.PolicyKind != protection.Policy.Kind || s.PolicyIdentity != protection.Policy.Identity || s.EntryPrice != protection.Risk.EntryPrice || s.InitialStop != protection.Risk.StopPrice {
+internal/journal/strategy_protection_read.go:166:		return errors.New("strategy protection: exit snapshot mismatch")
+internal/journal/strategy_protection_read.go:167:	}
+internal/journal/strategy_protection_read.go:168:	return nil
+internal/journal/strategy_protection_read.go:169:}

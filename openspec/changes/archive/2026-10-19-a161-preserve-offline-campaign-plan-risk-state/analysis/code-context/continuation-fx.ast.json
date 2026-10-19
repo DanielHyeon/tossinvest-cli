@@ -1,0 +1,101 @@
+{
+  "file": "internal/continuationlane/allocation.go",
+  "source_sha256": "c6a578a68994331cbb5e8c304f190eab1cc38864b1481a86b86903da67f85a33",
+  "package": "continuationlane",
+  "function": "newFrozenFX",
+  "signature": "newFrozenFX(params=1, results=2)",
+  "start": {
+    "line": 36,
+    "column": 1
+  },
+  "end": {
+    "line": 44,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 39,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 40,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 43,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 26
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 81
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 6
+      },
+      "text": "validFXFields"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 22
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 12
+      },
+      "text": "frozenFXSeal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

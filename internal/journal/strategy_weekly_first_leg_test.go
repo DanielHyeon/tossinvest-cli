@@ -2,16 +2,11 @@ package journal
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyengine"
 )
 
 func TestWeeklyFirstLegBindsPairedKRUSReservationsAtomically(t *testing.T) {
@@ -64,28 +59,8 @@ func TestWeeklyFirstLegRequiresExactReservationAndNonWeeklyCannotSmuggleOne(t *t
 func weeklyFirstLegFixture(t *testing.T, j *Journal, suffix, account, market, symbol string) QFinalCampaignFirstLegRequest {
 	t.Helper()
 	request := firstLegAtomicFixture(t, j, suffix, account, market, symbol)
-	laneID := map[string]string{"KR": "kr_weekly_disclosure_value_v1", "US": "us_weekly_disclosure_value_v1"}[market]
-	request.Issue.Admission.Owner.LaneID = laneID
-	request.Strategy.Lineage.LaneID = laneID
-	var record strategyengine.DecisionRecord
-	if err := json.Unmarshal([]byte(request.Strategy.Lineage.DecisionPayload), &record); err != nil {
-		t.Fatal(err)
-	}
-	record.LaneID, record.Identity = laneID, ""
-	identityPayload, err := json.Marshal(record)
-	if err != nil {
-		t.Fatal(err)
-	}
-	identityHash := sha256.Sum256(identityPayload)
-	record.Identity = "strategy-decision:v1:sha256:" + hex.EncodeToString(identityHash[:])
-	payload, err := json.Marshal(record)
-	if err != nil {
-		t.Fatal(err)
-	}
-	payloadHash := sha256.Sum256(payload)
-	request.Strategy.Lineage.DecisionIdentity = record.Identity
-	request.Strategy.Lineage.DecisionPayload = string(payload)
-	request.Strategy.Lineage.DecisionPayloadDigest = "sha256:" + hex.EncodeToString(payloadHash[:])
+	projection := a150NamedTestProjection(t, "a150-weekly-projection-"+market, account, symbol, request.Campaign.CampaignID)
+	request = a150BindFixture(t, request, projection)
 
 	evaluated := request.Strategy.CreatedAt.UTC()
 	provider, zone, prefix := "XKRX_OFFICIAL", "Asia/Seoul", "KR-XKRX"

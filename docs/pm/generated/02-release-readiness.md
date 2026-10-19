@@ -155,3 +155,6 @@
 | STORY-TOS-a155 | 3 |
 | STORY-TOS-a156 | 3 |
 | STORY-TOS-a157 | 4 |
+| STORY-TOS-a159 | 3 |
+| STORY-TOS-a160 | 3 |
+| STORY-TOS-a161 | 3 |

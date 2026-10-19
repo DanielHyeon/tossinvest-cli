@@ -1,0 +1,29 @@
+{
+  "file": "internal/journal/exit_snapshot.go",
+  "source_sha256": "19ebe0eeb9879bcbe16664a39d2ed1785c8cadb55dc97bc3b3eb1455980ff5ce",
+  "package": "journal",
+  "function": "knownArmSuppression",
+  "signature": "knownArmSuppression(params=1, results=1)",
+  "start": {
+    "line": 136,
+    "column": 1
+  },
+  "end": {
+    "line": 138,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

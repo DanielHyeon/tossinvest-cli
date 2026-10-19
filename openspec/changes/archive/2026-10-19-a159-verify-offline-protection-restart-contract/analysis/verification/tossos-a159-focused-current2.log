@@ -1,0 +1,7 @@
+--- FAIL: TestA159ProtectionExitAfterRestart (0.44s)
+    a159_protection_restart_test.go:344: sell authority={ID:a159-sell-attempt IntentID:exit_b678f19422ccc79f55ba713040be46619cc15c3ac3a4ba34188bf49771c536a8 Kind:PLACE State:CONFIRMED AttemptNo:1 TargetOrderID: BrokerOrderID:a159-sell Fingerprint:a159-sell RecordedAt:2026-08-04T02:00:32Z DispatchStartedAt:2026-08-04T02:00:32Z SettledAt:2026-08-04T02:00:32Z ReasonCode:broker_accepted Detail: AccountRef:acct-risk-loader DecisionID:04139fad0c5736959985ed161adb907d SafetyClass:RISK_REDUCING Generation:0 ClientOrderID:tos-H9Xt36rxNVas600JL6ptdjzPgxnrwtwf WireBody: SerializerVersion: ReplayCount:0 LastReplayAt:} err=<nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	2.113s
+FAIL
+
+EXIT_CODE=1

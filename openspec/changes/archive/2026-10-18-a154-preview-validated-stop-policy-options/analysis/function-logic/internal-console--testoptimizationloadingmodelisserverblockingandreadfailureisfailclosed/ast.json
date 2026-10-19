@@ -1,0 +1,148 @@
+{
+  "file": "internal/console/optimization_ui_contract_test.go",
+  "source_sha256": "e806f159ccd115d62e550d42f321aa422057389bbf60eaab531524d996264b8f",
+  "package": "console",
+  "function": "TestOptimizationLoadingModelIsServerBlockingAndReadFailureIsFailClosed",
+  "signature": "TestOptimizationLoadingModelIsServerBlockingAndReadFailureIsFailClosed(params=1, results=0)",
+  "start": {
+    "line": 221,
+    "column": 1
+  },
+  "end": {
+    "line": 237,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 229,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 230,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 234,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 7
+      },
+      "text": "newDashboardHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 10
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 9
+      },
+      "text": "optimizationPolicyOnly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 5
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 40
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 225,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 225,
+        "column": 55
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 228,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

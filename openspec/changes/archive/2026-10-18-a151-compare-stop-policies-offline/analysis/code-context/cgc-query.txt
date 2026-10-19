@@ -1,0 +1,44 @@
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+[
+  {
+    "f.name": "CalculateSessionFeatures",
+    "f.path": 
+"/tmp/tossos-a148-impl-20261018/internal/strategymarket/session_features.go",
+    "f.line_number": 45
+  },
+  {
+    "f.name": "OpeningRangeATR",
+    "f.path": 
+"/tmp/tossos-a148-impl-20261018/internal/breakoutsignal/signal.go",
+    "f.line_number": 120
+  },
+  {
+    "f.name": "RegularSession",
+    "f.path": "/tmp/tossos-a148-impl-20261018/internal/clock/market.go",
+    "f.line_number": 122
+  },
+  {
+    "f.name": "RiskBasedQuantity",
+    "f.path": "/tmp/tossos-a148-impl-20261018/internal/risk/contract.go",
+    "f.line_number": 96
+  },
+  {
+    "f.name": "StrategyEntryQuantity",
+    "f.path": "/tmp/tossos-a148-impl-20261018/internal/risk/contract.go",
+    "f.line_number": 127
+  },
+  {
+    "f.name": "safe_output",
+    "f.path": 
+"/tmp/tossos-a148-impl-20261018/tools/a147-jev-mfi-offline/analysis.py",
+    "f.line_number": 78
+  },
+  {
+    "f.name": "write_once",
+    "f.path": 
+"/tmp/tossos-a148-impl-20261018/tools/a147-jev-mfi-offline/analysis.py",
+    "f.line_number": 90
+  }
+]

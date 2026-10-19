@@ -1,0 +1,11 @@
+--- original/internal/journal/fills.go
++++ overlay/internal/journal/fills.go
+@@ -417,7 +417,7 @@
+ 	// 2. A byte-identical re-observation touches nothing at all. That is what
+ 	//    makes "the same snapshot arrived from the poller and from an SSE
+ 	//    re-fetch" provably a no-op rather than merely harmless.
+-	if hadPrev && delta == 0 && sameSnapshot(obs, prev) {
++	if false && hadPrev && delta == 0 && sameSnapshot(obs, prev) {
+ 		if err := tx.Commit(); err != nil {
+ 			return res, fmt.Errorf("journal: closing the no-op snapshot of %s: %w", orderID, err)
+ 		}

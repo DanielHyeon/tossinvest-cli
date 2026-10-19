@@ -103,7 +103,7 @@ func newFirstLegIdentityFixture(t *testing.T) firstLegIdentityFixture {
 
 func (fixture firstLegIdentityFixture) loaderWith(proposals strategyProposalAuthorityPair) *productionStrategyFirstLegAuthorityLoader {
 	return newProductionStrategyFirstLegAuthorityLoader(fixture.clk, fixture.journal, fixture.guardian,
-		routeReadySchedulePair(fixture.now), proposals, fixture.risk, fixture.fx, fixture.accounts)
+		routeReadySchedulePair(fixture.now), proposals, fixture.risk, fixture.fx, fixture.accounts, a150RatchetPolicyFixture())
 }
 
 // TestFirstLegAuthorityRefusesAProposalItDidNotAuthorize 는 주조된 봉투가 나르는

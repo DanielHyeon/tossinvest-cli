@@ -1,0 +1,11 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve [github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve.test]
+internal/strategyobserve/observe_test.go:10:6: undefined: Input
+internal/strategyobserve/observe_test.go:10:195: undefined: Geometry
+internal/strategyobserve/observe_test.go:11:9: undefined: Calculate
+internal/strategyobserve/observe_test.go:15:5: undefined: NewQueue
+internal/strategyobserve/observe_test.go:15:60: undefined: Oversize
+internal/strategyobserve/observe_test.go:15:153: undefined: Closed
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve [build failed]
+FAIL
+
+EXIT_CODE=1

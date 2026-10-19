@@ -1,0 +1,163 @@
+{
+  "file": "internal/journal/strategyflow_projection.go",
+  "source_sha256": "8748f7be2b9f6f260f382b27b5e567d269e42395d1491cb919a5205fc3ca03e3",
+  "package": "journal",
+  "function": "strategyflowLineageFromProjection",
+  "signature": "strategyflowLineageFromProjection(params=7, results=1)",
+  "start": {
+    "line": 148,
+    "column": 1
+  },
+  "end": {
+    "line": 161,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 152,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 155,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 20
+      },
+      "text": "projection.Lineage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 42
+      },
+      "text": "projection.ExecutionTerms"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 17
+      },
+      "text": "sha256.Sum256"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 31
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 25
+      },
+      "text": "PriceMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 25
+      },
+      "text": "terms.Entry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 53
+      },
+      "text": "PriceMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 53
+      },
+      "text": "terms.EffectiveStop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 89
+      },
+      "text": "PriceMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 89
+      },
+      "text": "terms.Target"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 111
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 64
+      },
+      "text": "hex.EncodeToString"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 149,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 151,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 153,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

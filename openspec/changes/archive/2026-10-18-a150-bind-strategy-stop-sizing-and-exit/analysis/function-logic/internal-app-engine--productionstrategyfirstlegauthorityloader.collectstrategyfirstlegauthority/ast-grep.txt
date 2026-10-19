@@ -1,0 +1,112 @@
+internal/app/engine/strategy_account_first_leg_authority.go:288:func (loader *productionStrategyFirstLegAuthorityLoader) collectStrategyFirstLegAuthority(ctx context.Context, accepted strategyFirstLegAccepted) (execgw.QFinalCampaignFirstLegIssuance, error) {
+internal/app/engine/strategy_account_first_leg_authority.go:289:	if loader == nil || ctx == nil || loader.clk == nil || loader.journal == nil || loader.guardian == nil {
+internal/app/engine/strategy_account_first_leg_authority.go:290:		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production first-leg authority is unavailable")
+internal/app/engine/strategy_account_first_leg_authority.go:291:	}
+internal/app/engine/strategy_account_first_leg_authority.go:292:	market := StrategyMarket(accepted.market)
+internal/app/engine/strategy_account_first_leg_authority.go:293:	proposal, riskAuthority, fx, account, schedule := loader.proposals.forMarket(market), loader.risk.forMarket(market),
+internal/app/engine/strategy_account_first_leg_authority.go:294:		loader.fx.forMarket(market), loader.accounts.forMarket(market), loader.schedule.forMarket(market)
+internal/app/engine/strategy_account_first_leg_authority.go:295:	if !riskAuthority.snapshot.Ready || !fx.snapshot.Ready || !account.snapshot.Ready ||
+internal/app/engine/strategy_account_first_leg_authority.go:296:		!schedule.snapshot.Ready || schedule.restore.Activation == nil {
+internal/app/engine/strategy_account_first_leg_authority.go:297:		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("paired production authority is incomplete for market")
+internal/app/engine/strategy_account_first_leg_authority.go:298:	}
+internal/app/engine/strategy_account_first_leg_authority.go:299:	// a112 6.2 봉인(의미 봉인): 조립이 중재해 둔 권한 쌍에서 **소유자 범위로** 항목 하나를 다시 꺼냄 — 0 또는 복수면 거절.
+internal/app/engine/strategy_account_first_leg_authority.go:300:	// 범위는 선택 기준이고 대조는 아래 identity 가드가 함(자기 참조 함정 회피 — authorityForOwnerScope 머리말).
+internal/app/engine/strategy_account_first_leg_authority.go:301:	proposalAuthority, scoped := proposal.authorityForOwnerScope(accepted.result.Lineage)
+internal/app/engine/strategy_account_first_leg_authority.go:302:	if !scoped {
+internal/app/engine/strategy_account_first_leg_authority.go:303:		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New(strategyFirstLegOwnerScopeRefusal)
+internal/app/engine/strategy_account_first_leg_authority.go:304:	}
+internal/app/engine/strategy_account_first_leg_authority.go:305:	result := proposalAuthority.Proposal()
+internal/app/engine/strategy_account_first_leg_authority.go:306:	if result.Lineage.Identity != accepted.result.Lineage.Identity || result.ExecutionTerms.Identity() != accepted.result.ExecutionTerms.Identity() {
+internal/app/engine/strategy_account_first_leg_authority.go:307:		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production proposal identity changed")
+internal/app/engine/strategy_account_first_leg_authority.go:308:	}
+internal/app/engine/strategy_account_first_leg_authority.go:309:	// 5.2.2.2 리뷰 codex #1: 마지막 권한 경계의 수용 집합은 서명 활성화 밖에서 넓어지지 않는다 — 활성화 없는 시장은 6.2 위치에서 편집 전과
+internal/app/engine/strategy_account_first_leg_authority.go:310:	// 같은 시장 단위 개수 관문으로 거절한다(상류 handoff · 계좌 적재기도 막지만 마지막 권한이 스스로 막는다).
+internal/app/engine/strategy_account_first_leg_authority.go:311:	if !proposal.familyActivation().Verified() && len(proposal.entries) != 1 {
+internal/app/engine/strategy_account_first_leg_authority.go:312:		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("paired production authority is incomplete for market")
+internal/app/engine/strategy_account_first_leg_authority.go:313:	}
+internal/app/engine/strategy_account_first_leg_authority.go:314:	// a112 5.2.2.2 — 시장 단위 개수 관문을 걷었다. 그 관문이 지키던 「하류 권한이 시장당 하나」를 이제 **범위별 재유도**가 진다: 위험 ·
+internal/app/engine/strategy_account_first_leg_authority.go:315:	// 계좌 권한도 봉인과 같은 소유자 범위 키로 조립 권한에서 다시 고른다. 그 범위의 권한이 없으면 **그 범위만** 거절한다(Manager 판정 J3 —
+internal/app/engine/strategy_account_first_leg_authority.go:316:	// 범위 거절 타입 · 봉투 값 폴백 없음). 원장 · Gateway · 중앙 오류와 identity 불일치(위조 의심)는 범위 거절이 아니다.
+internal/app/engine/strategy_account_first_leg_authority.go:317:	key, keyed := strategyOwnerKeyOf(result.Lineage)
+internal/app/engine/strategy_account_first_leg_authority.go:318:	if !keyed { // 봉인이 정규화를 보장하므로 도달 불가 — 바뀌면 범위 거절이 아니라 결함(리뷰 A #4)
+internal/app/engine/strategy_account_first_leg_authority.go:319:		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production first-leg owner scope key invalid")
+internal/app/engine/strategy_account_first_leg_authority.go:320:	}
+internal/app/engine/strategy_account_first_leg_authority.go:321:	// 범위 권한이 없을 때 그것이 **범위 국소 원인**이면 그 범위만 타입 거절(J3), 원장 결함 · ctx · 항목 부재면 타입 없는 오류로 주기를 멈춤
+internal/app/engine/strategy_account_first_leg_authority.go:322:	// (J4 — 5.2.2.2 리뷰 A #1 · codex #2: 편집 전에는 원장 결함도 범위 거절로 접혀 같은 주기의 다음 범위가 발급됐다).
+internal/app/engine/strategy_account_first_leg_authority.go:323:	riskBundle, riskScoped := riskAuthority.forScope(key)
+internal/app/engine/strategy_account_first_leg_authority.go:324:	if !riskScoped {
+internal/app/engine/strategy_account_first_leg_authority.go:325:		scopeLocal, cause := riskAuthority.riskScopeCause(key)
+internal/app/engine/strategy_account_first_leg_authority.go:326:		if !scopeLocal {
+internal/app/engine/strategy_account_first_leg_authority.go:327:			return execgw.QFinalCampaignFirstLegIssuance{}, fmt.Errorf("production risk authority fault for owner scope %s: %w", key.Symbol, cause)
+internal/app/engine/strategy_account_first_leg_authority.go:328:		}
+internal/app/engine/strategy_account_first_leg_authority.go:329:		return execgw.QFinalCampaignFirstLegIssuance{}, &strategyScopeRefusal{scope: key, detail: "no ready risk authority for this owner scope", cause: cause}
+internal/app/engine/strategy_account_first_leg_authority.go:330:	}
+internal/app/engine/strategy_account_first_leg_authority.go:331:	accountAuthority, accountScoped := account.forScope(key)
+internal/app/engine/strategy_account_first_leg_authority.go:332:	if !accountScoped {
+internal/app/engine/strategy_account_first_leg_authority.go:333:		// 계좌 매니페스트는 시장 단위 파일 — 범위 국소 원인이 없으므로 계좌 실패는 언제나 결함(codex 재확인 P1 → Manager 판정 (A)).
+internal/app/engine/strategy_account_first_leg_authority.go:334:		return execgw.QFinalCampaignFirstLegIssuance{}, fmt.Errorf("production account authority fault for owner scope %s: %w", key.Symbol,
+internal/app/engine/strategy_account_first_leg_authority.go:335:			account.accountScopeCause(key))
+internal/app/engine/strategy_account_first_leg_authority.go:336:	}
+internal/app/engine/strategy_account_first_leg_authority.go:337:	// 발급 통화는 봉투(accepted.currency)가 아니라 조립 권한의 계보 시장에서 다시 유도한다(6.2 리뷰 보이스 A #3).
+internal/app/engine/strategy_account_first_leg_authority.go:338:	currency, currencyKnown := map[strategyrouter.Market]string{strategyrouter.MarketKR: "KRW", strategyrouter.MarketUS: "USD"}[result.Lineage.Market]
+internal/app/engine/strategy_account_first_leg_authority.go:339:	if !currencyKnown {
+internal/app/engine/strategy_account_first_leg_authority.go:340:		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production first-leg market currency unknown")
+internal/app/engine/strategy_account_first_leg_authority.go:341:	}
+internal/app/engine/strategy_account_first_leg_authority.go:342:	scope := riskBundle.Scope()
+internal/app/engine/strategy_account_first_leg_authority.go:343:	if err := riskBundle.Validate(scope); err != nil || scope.AccountID != result.Lineage.AccountRef ||
+internal/app/engine/strategy_account_first_leg_authority.go:344:		string(scope.Market) != string(result.Lineage.Market) || scope.Symbol != result.Lineage.Symbol || !scope.AsOf.Equal(loader.accounts.observedAt) {
+internal/app/engine/strategy_account_first_leg_authority.go:345:		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production risk authority scope changed")
+internal/app/engine/strategy_account_first_leg_authority.go:346:	}
+internal/app/engine/strategy_account_first_leg_authority.go:347:	cas, err := loader.journal.CurrentPositionCampaignCAS(ctx, result.Lineage.AccountRef, string(result.Lineage.Market), result.Lineage.Symbol)
+internal/app/engine/strategy_account_first_leg_authority.go:348:	if err != nil || cas.Claimed || cas.State != "FLAT" && cas.State != "CLOSED" || cas.Generation < 0 ||
+internal/app/engine/strategy_account_first_leg_authority.go:349:		result.Lineage.PositionGeneration != uint64(cas.Generation)+1 {
+internal/app/engine/strategy_account_first_leg_authority.go:350:		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production position campaign CAS changed")
+internal/app/engine/strategy_account_first_leg_authority.go:351:	}
+internal/app/engine/strategy_account_first_leg_authority.go:352:	entries := riskBundle.Entries()
+internal/app/engine/strategy_account_first_leg_authority.go:353:	buckets := make([]riskbucket.BucketSnapshot, 0, len(entries))
+internal/app/engine/strategy_account_first_leg_authority.go:354:	references := make([]journal.RiskBucketSnapshotReference, 0, len(entries))
+internal/app/engine/strategy_account_first_leg_authority.go:355:	for _, entry := range entries {
+internal/app/engine/strategy_account_first_leg_authority.go:356:		buckets = append(buckets, entry.Bucket)
+internal/app/engine/strategy_account_first_leg_authority.go:357:		reference := entry.Reference
+internal/app/engine/strategy_account_first_leg_authority.go:358:		references = append(references, journal.RiskBucketSnapshotReference{Key: reference.Key, SnapshotID: reference.SnapshotID,
+internal/app/engine/strategy_account_first_leg_authority.go:359:			SnapshotDigest: reference.SnapshotDigest, SnapshotVersion: reference.SnapshotVersion, PolicyDigest: reference.PolicyDigest,
+internal/app/engine/strategy_account_first_leg_authority.go:360:			PolicyObservedAt: reference.PolicyObservedAt, PolicyFreshUntil: reference.PolicyFreshUntil,
+internal/app/engine/strategy_account_first_leg_authority.go:361:			SnapshotObservedAt: reference.SnapshotObservedAt, SnapshotFreshUntil: reference.SnapshotFreshUntil})
+internal/app/engine/strategy_account_first_leg_authority.go:362:	}
+internal/app/engine/strategy_account_first_leg_authority.go:363:	entryPrice, entryOK := result.ExecutionTerms.Entry().MajorDecimal()
+internal/app/engine/strategy_account_first_leg_authority.go:364:	stopPrice, stopOK := result.ExecutionTerms.EffectiveStop().MajorDecimal()
+internal/app/engine/strategy_account_first_leg_authority.go:365:	targetPrice, targetOK := result.ExecutionTerms.Target().MajorDecimal()
+internal/app/engine/strategy_account_first_leg_authority.go:366:	if !entryOK || !stopOK || !targetOK {
+internal/app/engine/strategy_account_first_leg_authority.go:367:		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production strategy price unit invalid")
+internal/app/engine/strategy_account_first_leg_authority.go:368:	}
+internal/app/engine/strategy_account_first_leg_authority.go:369:	bindingDigest := strategyFirstLegBindingDigest(result, accountAuthority, riskBundle.Digest(), schedule.snapshot.ActivationManifestDigest)
+internal/app/engine/strategy_account_first_leg_authority.go:370:	transactionID := "strategy-risk:" + strings.TrimPrefix(bindingDigest, "sha256:")[:32]
+internal/app/engine/strategy_account_first_leg_authority.go:371:	attemptID := "strategy-attempt:" + strings.TrimPrefix(bindingDigest, "sha256:")[:32]
+internal/app/engine/strategy_account_first_leg_authority.go:372:	observedAt := loader.accounts.observedAt
+internal/app/engine/strategy_account_first_leg_authority.go:373:	collect := func(readCtx context.Context, _ int) (execgw.ExposureSnapshot, error) {
+internal/app/engine/strategy_account_first_leg_authority.go:374:		now := loader.clk.Now().UTC()
+internal/app/engine/strategy_account_first_leg_authority.go:375:		if readCtx == nil || readCtx.Err() != nil || now.IsZero() || now.After(accountAuthority.FreshUntil()) {
+internal/app/engine/strategy_account_first_leg_authority.go:376:			return execgw.ExposureSnapshot{}, errors.New("production account exposure snapshot expired")
+internal/app/engine/strategy_account_first_leg_authority.go:377:		}
+internal/app/engine/strategy_account_first_leg_authority.go:378:		version, versionErr := loader.journal.ReservationVersion(readCtx, result.Lineage.AccountRef)
+internal/app/engine/strategy_account_first_leg_authority.go:379:		if versionErr != nil {
+internal/app/engine/strategy_account_first_leg_authority.go:380:			return execgw.ExposureSnapshot{}, versionErr
+internal/app/engine/strategy_account_first_leg_authority.go:381:		}
+internal/app/engine/strategy_account_first_leg_authority.go:382:		return execgw.ExposureSnapshot{AsOf: accountAuthority.ObservedAt(), Version: version, OpenExposure: accountAuthority.OpenExposure()}, nil
+internal/app/engine/strategy_account_first_leg_authority.go:383:	}
+internal/app/engine/strategy_account_first_leg_authority.go:384:	owner := riskbucket.OwnerClaim{Key: riskbucket.OwnerKey{AccountID: result.Lineage.AccountRef, Market: scope.Market, Symbol: result.Lineage.Symbol},
+internal/app/engine/strategy_account_first_leg_authority.go:385:		LaneID: result.Lineage.LaneID, CampaignID: result.Lineage.CampaignID}
+internal/app/engine/strategy_account_first_leg_authority.go:386:	return execgw.QFinalCampaignFirstLegIssuance{Entry: execgw.QFinalEntryIssuance{Market: string(result.Lineage.Market), Currency: currency,
+internal/app/engine/strategy_account_first_leg_authority.go:387:		Symbol: result.Lineage.Symbol, QCandidate: result.Quantity, EntryPrice: entryPrice, StopPrice: stopPrice, TargetPrice: targetPrice,
+internal/app/engine/strategy_account_first_leg_authority.go:388:		Account: accountAuthority.AccountState(), Collect: collect, Admission: journal.RiskBucketAdmissionPlan{TransactionID: transactionID,
+internal/app/engine/strategy_account_first_leg_authority.go:389:			Admission: riskbucket.AdmissionRequest{QCandidate: result.Quantity, Policy: riskBundle.Policy(), Buckets: buckets},
+internal/app/engine/strategy_account_first_leg_authority.go:390:			Owner:     owner, Snapshots: references, CreatedAt: observedAt}, FXAuthority: fx.read.evidence,
+internal/app/engine/strategy_account_first_leg_authority.go:391:		// a136 D9=b · FX 조항: 같은 파도의 짝 FX 에서 다른 시장 authority — 하루 매수 합계의 다른 통화 수동 매수 환산용.
+internal/app/engine/strategy_account_first_leg_authority.go:392:		PairedFXAuthority:     loader.fx.forMarket(otherStrategyMarket(market)).read.evidence,
+internal/app/engine/strategy_account_first_leg_authority.go:393:		ExpectedPolicyVersion: loader.guardian.PolicyVersion(), ExpectedLimitsDigest: loader.guardian.LimitsDigest()},
+internal/app/engine/strategy_account_first_leg_authority.go:394:		Result: result, ActivationManifestDigest: schedule.snapshot.ActivationManifestDigest, AttemptID: attemptID, Revision: 1,
+internal/app/engine/strategy_account_first_leg_authority.go:395:		Campaign: journal.FirstLegCampaignRequest{CampaignID: result.Lineage.CampaignID, ExpectedPositionGeneration: cas.Generation,
+internal/app/engine/strategy_account_first_leg_authority.go:396:			ExpectedPositionVersion: cas.Version, CreateCommandKey: "campaign-create:" + strings.TrimPrefix(bindingDigest, "sha256:")[:32],
+internal/app/engine/strategy_account_first_leg_authority.go:397:			FirstLegCommandKey: "campaign-leg:" + strings.TrimPrefix(bindingDigest, "sha256:")[:32],
+internal/app/engine/strategy_account_first_leg_authority.go:398:			FirstLegPlanID:     "first-leg:" + strings.TrimPrefix(bindingDigest, "sha256:")[:32]}, Weekly: proposalAuthority.WeeklyBinding()}, nil
+internal/app/engine/strategy_account_first_leg_authority.go:399:}

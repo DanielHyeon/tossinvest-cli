@@ -28,6 +28,7 @@ type QFinalCampaignFirstLegIssuance struct {
 	Revision                 int
 	Campaign                 journal.FirstLegCampaignRequest
 	Weekly                   *journal.WeeklyFirstLegReservationBinding
+	ExitPolicy               *journal.StrategyExitPolicySnapshot
 }
 
 // QFinalCampaignFirstLegPrecheck is opaque. It seals the exact q_final result
@@ -53,9 +54,13 @@ func (p QFinalCampaignFirstLegPrecheck) QFinal() uint64     { return p.entry.QFi
 // 겹친 요청에서도 지키기 위함. 결속 판정식 · 코드 · field · 문구는 진입 판정과 독립이고, 받아들이는 요청은 두 판정을 모두 통과한 것
 // (두 판정의 논리곱)이므로 판정 순서가 받아들이는 집합을 바꾸지 않음 — 순서는 둘 다 걸린 요청의 보고만 정함(design D2).
 func (g *RiskGuardian) PrecheckQFinalCampaignFirstLeg(request QFinalCampaignFirstLegIssuance) (QFinalCampaignFirstLegPrecheck, error) {
-	// 결속 판정이 g.policyVersion · g.accountRef 를 읽으므로 그 전에 막음 — PrecheckQFinalEntry 의 nil 거절과 같은 거절.
+	// 결속 판정 전에 nil Guardian을 거절한다.
 	if g == nil {
 		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid, "guardian", "Guardian is nil", nil)
+	}
+	if request.ExitPolicy == nil {
+		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,
+			"first_leg_exit_policy", "admitted exit policy snapshot is required", nil)
 	}
 	lineage := request.Result.Lineage
 	terms := request.Result.ExecutionTerms
@@ -126,7 +131,7 @@ func (g *RiskGuardian) PrecheckQFinalCampaignFirstLeg(request QFinalCampaignFirs
 		TargetPrice: entry.intent.TargetPrice, PolicyVersion: policyVersion,
 	}
 	projected, err := journal.ProjectAcceptedStrategyflowLineage(journal.StrategyflowLineageProjectionRequest{
-		Result: request.Result, RiskIntent: riskIntent, ActivationManifestDigest: request.ActivationManifestDigest, CreatedAt: issuedAt,
+		Result: request.Result, RiskIntent: riskIntent, ActivationManifestDigest: request.ActivationManifestDigest, CreatedAt: issuedAt, ExitPolicy: request.ExitPolicy,
 	})
 	if err != nil {
 		return QFinalCampaignFirstLegPrecheck{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid,

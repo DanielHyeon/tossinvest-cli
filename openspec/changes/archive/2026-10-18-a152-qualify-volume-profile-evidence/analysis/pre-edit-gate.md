@@ -1,0 +1,5 @@
+# Implementation boundary
+
+Base `0f95adce191ca4c82a4abd2f29aa1da02a5c2c42`; sole writer owns the independent a152 offline tool and tests. No runtime, order, risk, credential, database, API collection, operations, existing r1/a128/a147 evidence or UI changes are included. Existing Go function FLM/BTM is not applicable: no existing function is modified. The saved Go AST and CodeGraph context support the narrow trade-adapter research only. Existing CodeGraph status reported up to date before implementation; final frozen hard sync and check remain required and are not claimed here.
+
+Search-first found no suitable profile qualifier in the inspected repository, and selected stdlib-based independent leaf over coupling to the a147/a151 tools. Design and spec were independently reviewed before implementation. Input provenance, coverage, calendar and licensing remain caller assertions; there is no runtime integration or production authority. DB migration and `impeccable` are not applicable: this is an offline CLI with no UI or database change.

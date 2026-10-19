@@ -1,0 +1,3 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyengine	5.151s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve	1.349s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a155-observe-versioned-strategy-decisions	1.042s

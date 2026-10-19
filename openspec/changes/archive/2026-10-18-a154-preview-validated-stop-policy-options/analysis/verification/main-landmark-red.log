@@ -1,0 +1,5 @@
+--- FAIL: TestA154ComputeOnlyHTTP (0.00s)
+    a154_hypothetical_http_test.go:33: result must have one main landmark
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.016s
+FAIL

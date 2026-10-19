@@ -299,13 +299,13 @@ var qFinalIssuanceTables = []string{
 
 // schemaAdditionsAfterV25 는 v25 이후 migration 이 q_final writer 표에 **더한** 것임(각 migration 정의에서 읽음):
 // v34(risk_bucket_policy_records_v34.sql)가 표 risk_bucket_policy_records 와 열 risk_bucket_reservations.policy_record_digest
-// 를 더함. 옛 저널로 옮길 때 이 목록만 빠질 수 있음 — 목록 밖의 차이는 fixture 결함이므로 멈춤.
+// 를 더함; v36 adds decisions.strategy_binding_version. 옛 저널로 옮길 때 이 목록만 빠질 수 있음 — 목록 밖의 차이는 fixture 결함이므로 멈춤.
 var schemaAdditionsAfterV25 = struct {
 	tables  map[string]bool
 	columns map[string]map[string]bool
 }{
 	tables:  map[string]bool{"risk_bucket_policy_records": true},
-	columns: map[string]map[string]bool{"risk_bucket_reservations": {"policy_record_digest": true}},
+	columns: map[string]map[string]bool{"risk_bucket_reservations": {"policy_record_digest": true}, "decisions": {"strategy_binding_version": true}},
 }
 
 var qFinalScratchJournals sync.Map // *Journal(대상) → *Journal(현재 스키마 scratch)

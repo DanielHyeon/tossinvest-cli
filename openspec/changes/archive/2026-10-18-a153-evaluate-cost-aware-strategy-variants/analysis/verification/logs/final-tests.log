@@ -1,0 +1,33 @@
+test_cli_market_and_inconclusive (test_analysis.Contract.test_cli_market_and_inconclusive) ... ok
+test_duplicate_opportunity (test_analysis.Contract.test_duplicate_opportunity) ... ok
+test_invalid_timestamp_precision (test_analysis.Contract.test_invalid_timestamp_precision) ... ok
+test_bootstrap_percentile_and_reproducibility (test_analysis.Detail.test_bootstrap_percentile_and_reproducibility) ... ok
+test_cli_duplicate_keys_and_nonfinite (test_analysis.Detail.test_cli_duplicate_keys_and_nonfinite) ... ok
+test_cli_files_immutable_exclusive_and_symlink (test_analysis.Detail.test_cli_files_immutable_exclusive_and_symlink) ... ok
+test_complete_synthetic_has_known_signal_features (test_analysis.Detail.test_complete_synthetic_has_known_signal_features) ... ok
+test_contradictory_signal_aggregate_is_unknown (test_analysis.Detail.test_contradictory_signal_aggregate_is_unknown) ... ok
+test_duplicate_normalized_instant_with_different_confirmation (test_analysis.Detail.test_duplicate_normalized_instant_with_different_confirmation) ... ok
+test_feature_truth_unknown_and_future_independence (test_analysis.Detail.test_feature_truth_unknown_and_future_independence) ... ok
+test_fee_monotonicity (test_analysis.Detail.test_fee_monotonicity) ... ok
+test_fixed_sensitivity_does_not_change_base_score (test_analysis.Detail.test_fixed_sensitivity_does_not_change_base_score) ... ok
+test_full_session_unknown_and_inherited_exclusion (test_analysis.Detail.test_full_session_unknown_and_inherited_exclusion) ... ok
+test_future_unused_bad_timestamp_is_input_error (test_analysis.Detail.test_future_unused_bad_timestamp_is_input_error) ... ok
+test_independent_fee_oracle (test_analysis.Detail.test_independent_fee_oracle) ... ok
+test_independent_stress_execution_oracle (test_analysis.Detail.test_independent_stress_execution_oracle) ... ok
+test_independent_unequal_session_and_bootstrap_oracle (test_analysis.Detail.test_independent_unequal_session_and_bootstrap_oracle) ... ok
+test_late_or_missing_signal_constituents_unknown (test_analysis.Detail.test_late_or_missing_signal_constituents_unknown) ... ok
+test_mfi_direction_and_late_or_stale (test_analysis.Detail.test_mfi_direction_and_late_or_stale) ... ok
+test_mfi_positive_direction_with_independent_flow_oracle (test_analysis.Detail.test_mfi_positive_direction_with_independent_flow_oracle) ... ok
+test_missing_and_zero_risk_are_not_zero_return (test_analysis.Detail.test_missing_and_zero_risk_are_not_zero_return) ... ok
+test_missing_previous_constituent_only_volume_unknown (test_analysis.Detail.test_missing_previous_constituent_only_volume_unknown) ... ok
+test_session_exclusion_preserves_specific_outcome_reason (test_analysis.Detail.test_session_exclusion_preserves_specific_outcome_reason) ... ok
+test_session_weighting_and_unknown_exclusion (test_analysis.Detail.test_session_weighting_and_unknown_exclusion) ... ok
+test_slippage_reexecutes_with_new_entry (test_analysis.Detail.test_slippage_reexecutes_with_new_entry) ... ok
+test_timestamp_offset_bounds (test_analysis.Detail.test_timestamp_offset_bounds) ... ok
+
+----------------------------------------------------------------------
+Ran 26 tests in 0.590s
+
+OK
+
+EXIT_CODE=0

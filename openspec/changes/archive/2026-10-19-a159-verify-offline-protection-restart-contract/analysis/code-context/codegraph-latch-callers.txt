@@ -1,0 +1,15 @@
+
+Callers of "ReconcileStrategyProtection" (4):
+
+method      workingSet
+  internal/app/engine/exitloop.go:550
+
+function    TestA150ProtectionLatchIsScopedIdempotentAndBlocksEntry
+  internal/journal/a150_protection_read_test.go:68
+
+function    TestA150FinalTransportRefusesCommittedProtectionLatch
+  internal/journal/a150_protection_read_test.go:226
+
+function    TestA150RestartAfterLatchSeedsAdmittedExit
+  internal/app/engine/a150_exit_protection_test.go:85
+

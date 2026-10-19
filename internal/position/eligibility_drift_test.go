@@ -35,6 +35,9 @@ import (
 // reason each one is not a drifted copy of the predicate.
 var eligibilitySpellers = map[string]string{
 	"internal/position/provenance.go": "the predicate itself",
+
+	"internal/journal/campaign_continuation_snapshot.go": "reads entry decision identity only to bind a campaign to its current position, not exit eligibility",
+
 	"internal/journal/adoption.go": "the adoption writer: it reads both columns inside its own " +
 		"transaction to refuse an engine-entered position and to enforce set-once",
 	"internal/journal/position_projection.go": "the projection: the select list and Adopted(), " +
@@ -56,7 +59,9 @@ var eligibilitySpellers = map[string]string{
 		"(observed_at) for an already-adopted position; it does not decide exit eligibility",
 	"internal/journal/trade_outcome_backfill.go": "a130: the human-run backfill selects its population (adopted positions " +
 		"closed by a fill) — a read of which record justified a closed position, not an exit-eligibility test",
-	"internal/journal/trade_analytics.go": "the analytics join that splits measured R from synthetic R",
+	"internal/journal/trade_analytics.go":               "the analytics join that splits measured R from synthetic R",
+	"internal/journal/strategy_protection_read.go":      "reads the exact entry decision to verify admitted strategy lineage and generation, not exit eligibility",
+	"internal/journal/strategy_protection_reconcile.go": "scopes a reconciliation latch to the stored entry decision, not exit eligibility",
 	"internal/journal/strategy_lineage.go": "the strategy-only entry_decision_identity primary key; it stores " +
 		"canonical strategy provenance and does not read or decide position exit eligibility",
 	"internal/journal/lane_performance.go": "the read-only performance lineage query joins the persisted " +

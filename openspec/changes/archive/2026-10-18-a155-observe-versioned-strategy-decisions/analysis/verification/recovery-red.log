@@ -1,0 +1,5 @@
+--- FAIL: TestReviewRecoveryEstablishesDurabilityBeforeDuplicate (0.01s)
+    store_linux_test.go:285: recovery did not establish checkpoint: stat /tmp/TestReviewRecoveryEstablishesDurabilityBeforeDuplicate357562592/001/out/checkpoint.json: no such file or directory
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve	0.012s
+FAIL

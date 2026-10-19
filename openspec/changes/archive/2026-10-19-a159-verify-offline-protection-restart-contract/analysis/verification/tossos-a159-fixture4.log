@@ -1,0 +1,7 @@
+--- FAIL: TestA159ProtectionExitAfterRestart (0.42s)
+    a159_protection_restart_test.go:295: expected capped sell=2: requests=[] state={PositionID:pos-6cb9342961856ef06e015d55 PolicyKind:RATCHET PolicyID:RATCHET LifecycleGeneration:1 PolicyIdentity:{ID:RATCHET Version:1.0.0 Digest:sha256:e466b80c94435f8b737eeaf8458d2ffb70ec82d6407f0e6ed93c8dafa2a3f032} PositionGeneration:1 SnapshotStatus:EVALUATED Snapshot:{Snapshot:0x38165292f500 UnknownReason: Stale:false StaleReason:} EntryPrice:100 InitialStop:95 InitialRisk:5 Baseline:95 HighWater:100 RatchetLevel:NONE ActiveRung:-1 TakenRatioTotal:0 PendingAction: PendingLevel: PendingIntentID: Completed:false UpdatedAt:2026-08-04T02:00:31Z} live=[] alerts=[{Type:exit.liquidation_delayed Key:exit.liquidation_delayed|pos-6cb9342961856ef06e015d55 Title:005930 청산이 허용 지연을 넘겼다 Body:a working order on the symbol could not be taken off the book · 경과 31s. 브로커에 상주하는 손절이 생기기 전까지 이 지연은 보호되지 않는 노출이다. Fields:map[delay_seconds:31 detail:a working order on the symbol could not be taken off the book position_id:pos-6cb9342961856ef06e015d55 symbol:005930]}]
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.422s
+FAIL
+
+EXIT_CODE=1

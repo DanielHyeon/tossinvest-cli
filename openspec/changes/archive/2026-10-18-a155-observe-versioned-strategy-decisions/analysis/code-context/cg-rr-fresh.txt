@@ -1,0 +1,7 @@
+
+Search Results for "ParkerRRFromDecision":
+
+function    ParkerRRFromDecision
+  internal/strategyengine/rr_diagnostic.go:46
+  (r DecisionRecord) ParkerRRDiagnostics
+

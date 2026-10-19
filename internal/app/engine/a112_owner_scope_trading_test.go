@@ -194,7 +194,7 @@ func (fixture *a112TradingFixture) wave(t *testing.T) {
 	fixture.risk = fixture.riskLoader.collect(context.Background(), fixture.proposals.ResultAuthority(), fixture.fx)
 	schedule := pairedDispatchSchedule(fixture.now)
 	fixture.loader = newProductionStrategyFirstLegAuthorityLoader(fixture.clk, fixture.journal, fixture.guardian, schedule, fixture.proposals,
-		fixture.risk, fixture.fx, fixture.accounts)
+		fixture.risk, fixture.fx, fixture.accounts, a150RatchetPolicyFixture())
 	fixture.cycle = newStrategyDispatchCycle(fixture.journal, fixture.spy, newStrategyFirstLegAdmissionBridge(fixture.guardian, fixture.loader),
 		schedule, fixture.fx, fixture.risk, fixture.proposals, &strategyDispatchOwnerCoordinator{})
 	fixture.cycle.revalidateSchedule = func(context.Context, StrategyMarket, strategyScheduleMarketAuthority) error { return nil }

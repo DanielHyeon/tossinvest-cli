@@ -1,0 +1,33 @@
+
+Callers of "ReadCampaignContinuationSnapshot" (10):
+
+function    TestA160SnapshotAndReadOnlyPersistence
+  internal/journal/campaign_continuation_snapshot_test.go:79
+
+function    TestA160UnavailableNeverReturnsPartial
+  internal/journal/campaign_continuation_snapshot_test.go:106
+
+function    TestA160ReadTransactionDoesNotMixConcurrentWrite
+  internal/journal/campaign_continuation_snapshot_test.go:125
+
+function    TestA160StoredScopeAndFailures
+  internal/journal/campaign_continuation_snapshot_test.go:169
+
+function    TestA160InvalidAndCancelledContext
+  internal/journal/campaign_continuation_snapshot_test.go:206
+
+function    TestA160USAndPlannedLegWithoutWatermark
+  internal/journal/campaign_continuation_snapshot_test.go:221
+
+function    TestA160OrphanWatermarkFailsClosed
+  internal/journal/campaign_continuation_snapshot_test.go:250
+
+function    TestA160ForeignWatermarkScopeFailsClosed
+  internal/journal/campaign_continuation_snapshot_test.go:272
+
+function    TestA160ClosedAndNilHandleFails
+  internal/journal/campaign_continuation_snapshot_test.go:286
+
+function    TestA160PeerScopeAndMissingTable
+  internal/journal/campaign_continuation_snapshot_test.go:300
+

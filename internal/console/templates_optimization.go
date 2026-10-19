@@ -62,6 +62,7 @@ const optimizationTemplates = `
   {{end}}
 
   {{if .ExitProtection}}
+    {{template "hypothetical-form" .}}
     <section id="exit-protection" aria-labelledby="exit-protection-title">
       <p class="section-kicker">현재 변경 가능 항목 1개 · <code>exit.common-policy</code></p>
       <h2 id="exit-protection-title">청산/보호 · 익절 정책</h2>
@@ -464,4 +465,30 @@ const optimizationTemplates = `
 <p><strong>신규 entry가 OFF이거나 runtime이 unavailable이어도 exit·reconcile·보호 감독은 계속된다.</strong></p>
 {{template "foot" .}}
 {{end}}
+{{define "hypothetical-form"}}
+<section aria-labelledby="hypothetical-title">
+<h2 id="hypothetical-title">가정값 손절 비교</h2>
+<p>직접 입력한 연구용 가정입니다. 실시간 시세, 검증된 정책, 보유 종목 또는 주문 가능 여부가 아닙니다. KR/US는 연구 계산 범위이며 Parker 전략은 KR 전용입니다.</p>
+<p>손절가 계산에는 시장, 진입가, 가정 호가와 가격 범위가 필요합니다. 수량 계산에는 위험 예산과 두 상한이 추가로 필요합니다. ATR과 신호봉 저가는 직접 입력하며 봉 또는 ATR을 검증하지 않습니다. 목표가와 손익비는 계산하지 않습니다.</p>
+<p>초기 손절은 전략 청산 및 공통 익절 보호와 별개입니다. 비용·세금·스프레드·갭·슬리피지·환율과 실제 체결 위험은 포함되지 않아 가격 위험 예산이 총손실을 제한하지 않습니다.</p>
+<form method="post" action="/optimization/hypothetical">
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<div class="hypothetical-fields"><div><label for="hyp-market">시장 및 통화</label>
+<select id="hyp-market" name="market" {{if .HypotheticalMarketError}}aria-invalid="true" aria-describedby="hyp-error-market"{{end}}><option value="">선택</option><option value="KR" {{if eq .HypotheticalMarket "KR"}}selected{{end}}>KR / KRW</option><option value="US" {{if eq .HypotheticalMarket "US"}}selected{{end}}>US / USD</option></select>{{if .HypotheticalMarketError}}<span id="hyp-error-market" class="danger" role="alert">{{.HypotheticalMarketError}}</span>{{end}}</div>
+{{range .HypotheticalFields}}
+<div><label for="hyp-{{.Key}}">{{.Label}}</label><input id="hyp-{{.Key}}" name="{{.Key}}" value="{{.Value}}" inputmode="decimal" maxlength="32" {{if .Error}}aria-invalid="true" aria-describedby="hyp-error-{{.Key}}"{{end}}>{{if .Error}}<span id="hyp-error-{{.Key}}" class="danger">{{.Error}}</span>{{end}}</div>
+{{end}}
+</div>
+<p>가격 범위 안에서 한 가지 호가 간격을 가정합니다. 실제 거래소 호가표를 검증하지 않습니다.</p>
+<button type="submit">계산</button>
+</form>
+{{with .HypotheticalResult}}
+<p>수량과 금액은 계획값이며 체결 결과가 아닙니다. 비용과 갭 등은 포함되지 않습니다.</p>
+<div class="table-scroll" role="region" aria-label="연구 후보별 계산 결과" tabindex="0"><table class="hypothetical-results"><tr><th>연구 후보</th><th>상태</th><th>손절가</th><th>주당 거리</th><th>거리 비율 (반올림)</th><th>수량</th><th>가격 위험</th><th>매수금액</th></tr>
+{{range .Arms}}<tr><th scope="row">{{.Name}}</th><td>{{.State}}</td><td>{{if .Stop}}{{.Stop}}{{else}}알 수 없음{{end}}</td><td>{{if .Distance}}{{.Distance}}{{else}}알 수 없음{{end}}</td><td>{{if .Percent}}{{.Percent}}{{else}}알 수 없음{{end}}</td><td>{{if .Quantity}}{{.Quantity}}{{else}}알 수 없음{{end}}</td><td>{{if .Risk}}{{.Risk}}{{else}}알 수 없음{{end}}</td><td>{{if .Notional}}{{.Notional}}{{else}}알 수 없음{{end}}</td></tr>{{end}}
+</table></div><p>통화: {{if .Currency}}{{.Currency}}{{else}}알 수 없음{{end}} · 정책 적용 불가 · 승인된 성과 근거 없음</p>
+{{end}}
+</section>
+{{end}}
+{{define "hypothetical-result"}}{{template "head" .}}<p><a href="/optimization?category=exit-protection">최적화로 돌아가기</a></p><h1>가정값 계산 결과</h1>{{template "hypothetical-form" .}}{{template "foot" .}}{{end}}
 `

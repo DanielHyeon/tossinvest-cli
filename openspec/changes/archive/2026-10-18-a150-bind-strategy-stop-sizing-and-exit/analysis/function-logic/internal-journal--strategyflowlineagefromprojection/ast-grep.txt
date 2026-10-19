@@ -1,0 +1,14 @@
+internal/journal/strategyflow_projection.go:136:func strategyflowLineageFromProjection(projection strategyflow.AcceptedProjection, risk RiskIntent, activation string, created time.Time, identity, payload, schema string) StrategyDecisionLineage {
+internal/journal/strategyflow_projection.go:137:	lineage, terms := projection.Lineage(), projection.ExecutionTerms()
+internal/journal/strategyflow_projection.go:138:	payloadHash := sha256.Sum256([]byte(payload))
+internal/journal/strategyflow_projection.go:139:	entry, stop, target := terms.Entry().PriceMinor(), terms.EffectiveStop().PriceMinor(), terms.Target().PriceMinor()
+internal/journal/strategyflow_projection.go:140:	if schema == strategyflowRiskBindingSchemaVersion {
+internal/journal/strategyflow_projection.go:141:		entry, stop, target = risk.EntryPrice, risk.StopPrice, risk.TargetPrice
+internal/journal/strategyflow_projection.go:142:	}
+internal/journal/strategyflow_projection.go:143:	return StrategyDecisionLineage{DecisionIdentity: identity, CandidateLifeID: lineage.CandidateLifeID, Market: string(lineage.Market), Symbol: lineage.Symbol,
+internal/journal/strategyflow_projection.go:144:		ThresholdVersion: lineage.ThresholdVersion, ThresholdSetDigest: lineage.ThresholdSetDigest, EvidenceDigest: lineage.CandidateEvidenceDigest,
+internal/journal/strategyflow_projection.go:145:		LaneID: lineage.LaneID, LaneVersion: lineage.LaneVersion, LaneSourceDigest: lineage.LaneEvidenceDigest, LaneConstantsDigest: lineage.ConfigDigest,
+internal/journal/strategyflow_projection.go:146:		EntryPrice: entry, StopPrice: stop, TargetPrice: target,
+internal/journal/strategyflow_projection.go:147:		Quantity: risk.Quantity, PolicyVersion: risk.PolicyVersion, SettingsDigest: lineage.RiskBudgetDigest,
+internal/journal/strategyflow_projection.go:148:		DecisionPayload: payload, DecisionPayloadDigest: "sha256:" + hex.EncodeToString(payloadHash[:]), ActivationManifestDigest: activation, CreatedAt: created}
+internal/journal/strategyflow_projection.go:149:}

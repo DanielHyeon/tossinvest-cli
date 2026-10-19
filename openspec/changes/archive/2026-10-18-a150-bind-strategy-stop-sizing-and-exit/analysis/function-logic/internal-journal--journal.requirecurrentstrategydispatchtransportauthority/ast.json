@@ -1,0 +1,378 @@
+{
+  "file": "internal/journal/strategy_dispatch_runtime.go",
+  "source_sha256": "2b82ef970b73ae626bc54a1da851280cbb0a23a809e729efc47ae0cc0d4bfe52",
+  "package": "journal",
+  "function": "RequireCurrentStrategyDispatchTransportAuthority",
+  "receiver": "Journal",
+  "signature": "Journal.RequireCurrentStrategyDispatchTransportAuthority(params=2, results=1)",
+  "start": {
+    "line": 1659,
+    "column": 1
+  },
+  "end": {
+    "line": 1700,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1660,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1666,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1670,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 1674,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1677,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 1683,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 1686,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 1690,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 1693,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 1696,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1663,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1667,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1671,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1675,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1680,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1684,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1687,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1691,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1694,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1697,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1699,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1660,
+        "column": 47
+      },
+      "text": "validStrategyDispatchIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1661,
+        "column": 65
+      },
+      "text": "uint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1662,
+        "column": 4
+      },
+      "text": "validStrategyDispatchIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1663,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1665,
+        "column": 13
+      },
+      "text": "j.db.BeginTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1669,
+        "column": 8
+      },
+      "text": "tx.Rollback"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1670,
+        "column": 12
+      },
+      "text": "requireCurrentStrategyDispatchOwner"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1673,
+        "column": 16
+      },
+      "text": "loadStrategyDispatchLease"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1679,
+        "column": 50
+      },
+      "text": "Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1679,
+        "column": 50
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1679,
+        "column": 50
+      },
+      "text": "j.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1682,
+        "column": 28
+      },
+      "text": "campaignHeaderInTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1689,
+        "column": 21
+      },
+      "text": "strategyProtectionInTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1691,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1693,
+        "column": 79
+      },
+      "text": "strings.EqualFold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1693,
+        "column": 121
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1696,
+        "column": 12
+      },
+      "text": "requireStrategyProtectionPositionInTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1697,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1665,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1670,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1673,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1682,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1689,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1696,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 1669,
+        "column": 2
+      },
+      "text": "tx.Rollback"
+    }
+  ]
+}

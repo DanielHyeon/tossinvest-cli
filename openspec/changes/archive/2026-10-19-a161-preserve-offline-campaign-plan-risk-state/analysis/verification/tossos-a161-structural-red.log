@@ -1,0 +1,7 @@
+--- FAIL: TestRejectsMismatchedLaneWeightsAndFX (0.00s)
+    codec_test.go:87: accepted "weights":[8,2,4]
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.003s
+FAIL
+
+EXIT_CODE=1

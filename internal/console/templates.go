@@ -189,6 +189,12 @@ form { display: inline; }
 .explain-link { margin: 0.5rem 0; }
 .explain-link > a { font-weight: 600; color: #4e4e48; }
 .explain-link > div { margin-top: 0.4rem; }
+.hypothetical-results th, .hypothetical-results td { white-space: nowrap; }
+.hypothetical-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: 0.8rem; }
+.hypothetical-fields label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+.hypothetical-fields input, .hypothetical-fields select { box-sizing: border-box; width: 100%; min-height: 2.5rem; padding: 0.4rem; }
+.hypothetical-fields .danger { display: block; margin-top: 0.25rem; }
+.hypothetical-fields :focus-visible { outline: 3px solid #2878d0; outline-offset: 2px; }
 .optimization-shell { display: grid; grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr); gap: 1rem; align-items: start; }
 .optimization-nav { position: sticky; top: 0.75rem; display: grid; gap: 0.35rem; }
 .optimization-nav a { min-height: 56px; display: flex; flex-direction: column; justify-content: center; padding: 0.55rem 0.75rem;

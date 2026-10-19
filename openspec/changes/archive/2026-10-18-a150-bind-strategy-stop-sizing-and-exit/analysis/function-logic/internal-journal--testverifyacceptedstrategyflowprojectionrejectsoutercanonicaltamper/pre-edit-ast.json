@@ -1,0 +1,380 @@
+{
+  "file": "internal/journal/strategyflow_projection_test.go",
+  "source_sha256": "4897ee72290331ac04e2257d255a1922214b9849ad48877fa0bf8b10d2649156",
+  "package": "journal",
+  "function": "TestVerifyAcceptedStrategyflowProjectionRejectsOuterCanonicalTamper",
+  "signature": "TestVerifyAcceptedStrategyflowProjectionRejectsOuterCanonicalTamper(params=1, results=0)",
+  "start": {
+    "line": 321,
+    "column": 1
+  },
+  "end": {
+    "line": 365,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 325,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 331,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 336,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 341,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 346,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 350,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 360,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 20
+      },
+      "text": "strategyflowBindingFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 50
+      },
+      "text": "strategyflow.Descriptors"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 12
+      },
+      "text": "verifyStrategyRiskBinding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 330,
+        "column": 25
+      },
+      "text": "HashPreimage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 12
+      },
+      "text": "verifyStrategyRiskBinding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 332,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
+        "column": 27
+      },
+      "text": "reduction.Canonical"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 337,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 340,
+        "column": 118
+      },
+      "text": "HashPreimage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 341,
+        "column": 12
+      },
+      "text": "verifyStrategyRiskBinding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 342,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 346,
+        "column": 12
+      },
+      "text": "verifyStrategyRiskBinding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 347,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 18
+      },
+      "text": "strings.TrimSuffix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 354,
+        "column": 18
+      },
+      "text": "strings.Replace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 18
+      },
+      "text": "strings.Replace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 357,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 360,
+        "column": 14
+      },
+      "text": "verifyStrategyRiskBinding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 361,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 322,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 323,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 324,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 325,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 328,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 329,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 330,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 331,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 334,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 335,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 339,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 340,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 341,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 344,
+        "column": 2
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 345,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 346,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 349,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 358,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 359,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 360,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

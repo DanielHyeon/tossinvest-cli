@@ -1,0 +1,12 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/reversallane [github.com/JungHoonGhae/tossinvest-cli/internal/reversallane.test]
+internal/reversallane/offline_evidence_test.go:22:13: undefined: CaptureOfflineEvidence
+# github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane [github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane.test]
+internal/continuationlane/offline_evidence_test.go:22:13: undefined: CaptureOfflineEvidence
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane [build failed]
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reversallane [build failed]
+# github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane [github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane.test]
+internal/weeklyvaluelane/offline_evidence_test.go:22:13: undefined: CaptureOfflineEvidence
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane [build failed]
+FAIL
+
+EXIT_CODE=1

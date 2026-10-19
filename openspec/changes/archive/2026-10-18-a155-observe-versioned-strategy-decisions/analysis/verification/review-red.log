@@ -1,0 +1,11 @@
+--- FAIL: TestReviewGeometryMissingQuantityAndCurrency (0.00s)
+    observe_test.go:211: optional quantity: {Schema: Calculation: ID: InputDigest: Parent: PolicyVersion: Provenance: Features:{Status: Reason: Method: EMAMethod: SlopeMethod: Market: Symbol: Currency: TradingDate: CalendarSource: CalendarVersion: Source: Provenance: Digest: AsOf:0001-01-01 00:00:00 +0000 UTC OpenAt:0001-01-01 00:00:00 +0000 UTC CloseAt:0001-01-01 00:00:00 +0000 UTC FirstMinuteAt:0001-01-01 00:00:00 +0000 UTC LastMinuteAt:0001-01-01 00:00:00 +0000 UTC FirstFiveAt:0001-01-01 00:00:00 +0000 UTC LastFiveAt:0001-01-01 00:00:00 +0000 UTC LastReceivedAt:0001-01-01 00:00:00 +0000 UTC SlopePreviousAt:0001-01-01 00:00:00 +0000 UTC SlopeCurrentAt:0001-01-01 00:00:00 +0000 UTC MinuteCount:0 FiveCount:0 VWAP:{State: Value: Reason:} EMA9:{State: Value: Reason:} Slope:{State: Value: Reason:}} Geometry:<nil> Risk: RiskCurrency: RiskState: RRStatus: RR:{Space:{State: Ratio: Numerator: Denominator: NumeratorUnit: DenominatorUnit: PriceBasis: PolicyVersion: Provenance: Reason:} Target:{State: Ratio: Numerator: Denominator: NumeratorUnit: DenominatorUnit: PriceBasis: PolicyVersion: Provenance: Reason:} Realized:{State: Ratio: Numerator: Denominator: NumeratorUnit: DenominatorUnit: PriceBasis: PolicyVersion: Provenance: Reason:}}} invalid quantity
+--- FAIL: TestReviewPhysicalLineBoundary (0.00s)
+    observe_test.go:221: second physical newline accepted
+--- FAIL: TestReviewMissingBarBasisRejected (0.00s)
+    observe_test.go:227: missing bar basis accepted
+--- FAIL: TestReviewFIFORefusedWithoutBlocking (0.31s)
+    store_linux_test.go:258: fifo open blocked
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve	0.316s
+FAIL

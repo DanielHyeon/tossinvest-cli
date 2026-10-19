@@ -1,0 +1,63 @@
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+Found 20 matches for 'positionCampaignQuery':
+╭───────────────────────┬──────────┬───────────────────────────────────────────╮
+│ Name                  │ Type     │ Location                                  │
+├───────────────────────┼──────────┼───────────────────────────────────────────┤
+│ positionCampaignQuery │ Function │ /tmp/tossos-a081-work-status/internal/jou │
+│                       │          │ rnal/position_campaign.go:1431            │
+│ positionCampaignQuery │ Function │ /mnt/D/project/axipient/TossOS-worktrees/ │
+│                       │          │ a064-multi-market-strategy-lanes/internal │
+│                       │          │ /journal/position_campaign.go:1431        │
+│ positionCampaignQuery │ Function │ /tmp/tossos-a074-a079-integration/interna │
+│                       │          │ l/journal/position_campaign.go:1431       │
+│ positionCampaignQuery │ Function │ /tmp/tossos-archive-clXp3V/internal/journ │
+│                       │          │ al/position_campaign.go:1431              │
+│ positionCampaignQuery │ Function │ /mnt/D/project/axipient/TossOS-worktrees/ │
+│                       │          │ a109-t2/internal/journal/position_campaig │
+│                       │          │ n.go:1431                                 │
+│ positionCampaignQuery │ Function │ /mnt/D/project/axipient/TossOS-worktrees/ │
+│                       │          │ a109/internal/journal/position_campaign.g │
+│                       │          │ o:1431                                    │
+│ positionCampaignQuery │ Function │ /mnt/D/project/axipient/TossOS/internal/j │
+│                       │          │ ournal/position_campaign.go:1431          │
+│ positionCampaignQuery │ Function │ /mnt/D/Axipient/workspace/TossOS-worktree │
+│                       │          │ s/a125-gate/internal/journal/position_cam │
+│                       │          │ paign.go:1477                             │
+│ positionCampaignQuery │ Function │ /mnt/D/tmp-review-7534-adv/wt/internal/jo │
+│                       │          │ urnal/position_campaign.go:1477           │
+│ positionCampaignQuery │ Function │ /mnt/D/Axipient/workspace/TossOS-worktree │
+│                       │          │ s/archive-batch1/internal/journal/positio │
+│                       │          │ n_campaign.go:1477                        │
+│ positionCampaignQuery │ Function │ /tmp/tossos-a063-execution-adoption/inter │
+│                       │          │ nal/journal/position_campaign.go:1431     │
+│ positionCampaignQuery │ Function │ /tmp/tossos-a120-audit-legacy-execution-b │
+│                       │          │ aseline/internal/journal/position_campaig │
+│                       │          │ n.go:1431                                 │
+│ positionCampaignQuery │ Function │ /mnt/D/Axipient/workspace/TossOS-worktree │
+│                       │          │ s/a066-gate/internal/journal/position_cam │
+│                       │          │ paign.go:1477                             │
+│ positionCampaignQuery │ Function │ /tmp/claude-1000/a092-gate/internal/journ │
+│                       │          │ al/position_campaign.go:1477              │
+│ positionCampaignQuery │ Function │ /tmp/claude-1000/a095-gate/internal/journ │
+│                       │          │ al/position_campaign.go:1477              │
+│ positionCampaignQuery │ Function │ /tmp/claude-1000/-mnt-D-Axipient-workspac │
+│                       │          │ e-TossOS/4b178b0a-b918-4419-8142-f266a03d │
+│                       │          │ 8e82/scratchpad/wt-gate/internal/journal/ │
+│                       │          │ position_campaign.go:1477                 │
+│ positionCampaignQuery │ Function │ /tmp/claude-1000/-mnt-D-Axipient-workspac │
+│                       │          │ e-TossOS/4b178b0a-b918-4419-8142-f266a03d │
+│                       │          │ 8e82/scratchpad/a090-gate/internal/journa │
+│                       │          │ l/position_campaign.go:1477               │
+│ positionCampaignQuery │ Function │ /tmp/claude-1000/a094-gate/internal/journ │
+│                       │          │ al/position_campaign.go:1477              │
+│ positionCampaignQuery │ Function │ /tmp/claude-1000/-mnt-D-Axipient-workspac │
+│                       │          │ e-TossOS/4b178b0a-b918-4419-8142-f266a03d │
+│                       │          │ 8e82/scratchpad/wt127mut/internal/journal │
+│                       │          │ /position_campaign.go:1477                │
+│ positionCampaignQuery │ Function │ /tmp/claude-1000/a091-gate/internal/journ │
+│                       │          │ al/position_campaign.go:1477              │
+╰───────────────────────┴──────────┴───────────────────────────────────────────╯

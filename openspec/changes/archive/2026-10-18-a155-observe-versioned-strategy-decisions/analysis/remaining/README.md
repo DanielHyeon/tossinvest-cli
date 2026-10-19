@@ -1,0 +1,3 @@
+# Remaining-work research (not completion)
+
+These read-only follow-up notes concern active a087 and a156, outside a155 implementation. Source census and CodeGraph query are supporting evidence only: the graph caller query missed a known direct use, so it is not a complete call graph. Actual a087 exchange-session/broker evidence and D7 disposition remain outstanding; no a087 task checkbox was completed by this research. a156 remains active: policy/version promotion, qFinal/pending accounting, monotonic stop, closing deadline and its live evidence contracts are unresolved. Existing component tests do not prove the whole composed change. No live call, collection, new a156 implementation or scope reduction is represented here. a157 remains separately owned and excluded.

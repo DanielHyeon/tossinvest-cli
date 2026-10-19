@@ -16,6 +16,7 @@ func TestOptimizationDOMHasNoArbitraryInputAndSubmitsOnlyOwnerOptions(t *testing
 	h := newDashboardHarness(t, func(options *Options) { options.Optimization = commander })
 	h.authenticate(t)
 	page := h.page(t, "/optimization?category=exit-protection")
+	page = optimizationPolicyOnly(t, page)
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
 		t.Fatal(err)
@@ -114,6 +115,7 @@ func TestOptimizationUsesOnePresetPreviewFlowWithoutClientDraft(t *testing.T) {
 	h := newDashboardHarness(t, func(options *Options) { options.Optimization = commander })
 	h.authenticate(t)
 	page := h.page(t, "/optimization?category=exit-protection")
+	page = optimizationPolicyOnly(t, page)
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
 		t.Fatal(err)
@@ -165,6 +167,7 @@ func TestOptimizationConfigurationErrorIsReadOnlyAndSuppressesPresetControls(t *
 	h := newDashboardHarness(t, func(options *Options) { options.Optimization = commander })
 	h.authenticate(t)
 	page := h.page(t, "/optimization?category=exit-protection")
+	page = optimizationPolicyOnly(t, page)
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
 		t.Fatal(err)
@@ -222,6 +225,7 @@ func TestOptimizationLoadingModelIsServerBlockingAndReadFailureIsFailClosed(t *t
 	h := newDashboardHarness(t, func(options *Options) { options.Optimization = failedOptimizationCommander{} })
 	h.authenticate(t)
 	page := h.page(t, "/optimization?category=exit-protection")
+	page = optimizationPolicyOnly(t, page)
 	for _, want := range []string{"lifecycle을 읽지 못했다", "모든 변경을 닫았다", "미검증/사용 불가"} {
 		if !strings.Contains(page, want) {
 			t.Errorf("fail-closed page lacks %q", want)

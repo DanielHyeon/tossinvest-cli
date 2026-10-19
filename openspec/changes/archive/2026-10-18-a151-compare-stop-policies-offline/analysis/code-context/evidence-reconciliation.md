@@ -1,0 +1,3 @@
+# Evidence reconciliation
+
+At base `cf9260f3f5e89a1d8382f2d0437a70a088d36704`, CodeGraph and exact-path CGC agree on all queried definition locations. Direct source confirms native-currency sizing, float64 cost model, ordinary-hours clock without holiday authority, and ATR/a149 limitations recorded in `codegraph-baseline.md`. No unresolved graph/source discrepancy for the proposed new offline tool. The graph does not validate caller-provided calendar, tick, cost or research data. No existing-function logic edit is in scope; AST/FLM/BTM for existing functions is not applicable unless the scope changes.

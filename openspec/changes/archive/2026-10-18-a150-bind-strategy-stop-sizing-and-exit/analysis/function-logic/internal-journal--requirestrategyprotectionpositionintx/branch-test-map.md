@@ -1,0 +1,17 @@
+# Branch Test Map: `requireStrategyProtectionPositionInTx`
+
+Current AST branch inventory. Scenario rows name conditions; they do not claim isolated branch coverage. Focused receipts are in the implementation evidence; full regression remains pending.
+
+| Branch | Source line and condition | Verification status |
+|---|---|---|
+| B1 | 141: `if protection.Legacy {` | Inspect branch behavior in source; focused tests exercise relevant admission, recovery and refusal paths. Individual branch coverage is not asserted here. |
+| B2 | 147: `if err := tx.QueryRowContext(ctx, 'SELECT account_ref,market,symbol,decision_id,actual_position_generation,expected_position_generation,expected_position_version FROM position_campaigns WHERE id=?', campaignID).Scan(&account, &market, &symbol, &decision, &generation, &expectedGeneration, &expectedVersion); err != nil {` | Inspect branch behavior in source; focused tests exercise relevant admission, recovery and refusal paths. Individual branch coverage is not asserted here. |
+| B3 | 151: `if errors.Is(err, ErrPositionNotFound) {` | Inspect branch behavior in source; focused tests exercise relevant admission, recovery and refusal paths. Individual branch coverage is not asserted here. |
+| B4 | 152: `if generation.Valid \|\| expectedGeneration != 0 \|\| expectedVersion != 0 {` | Inspect branch behavior in source; focused tests exercise relevant admission, recovery and refusal paths. Individual branch coverage is not asserted here. |
+| B5 | 157: `if err != nil {` | Inspect branch behavior in source; focused tests exercise relevant admission, recovery and refusal paths. Individual branch coverage is not asserted here. |
+| B6 | 160: `if p.State == PositionClosed && !generation.Valid {` | Inspect branch behavior in source; focused tests exercise relevant admission, recovery and refusal paths. Individual branch coverage is not asserted here. |
+| B7 | 162: `if err := tx.QueryRowContext(ctx, 'SELECT version FROM position_projection_versions WHERE position_id=?', p.ID).Scan(&currentVersion); err != nil {` | Inspect branch behavior in source; focused tests exercise relevant admission, recovery and refusal paths. Individual branch coverage is not asserted here. |
+| B8 | 165: `if p.InstanceSeq != expectedGeneration \|\| currentVersion != expectedVersion {` | Inspect branch behavior in source; focused tests exercise relevant admission, recovery and refusal paths. Individual branch coverage is not asserted here. |
+| B9 | 170: `if p.State == PositionClosed \|\| !generation.Valid \|\| generation.Int64 != p.InstanceSeq \|\| p.EntryDecisionID != decision \|\| p.InstanceSeq != protection.PositionGeneration {` | Inspect branch behavior in source; focused tests exercise relevant admission, recovery and refusal paths. Individual branch coverage is not asserted here. |
+| B10 | 174: `if err != nil {` | Inspect branch behavior in source; focused tests exercise relevant admission, recovery and refusal paths. Individual branch coverage is not asserted here. |
+| B11 | 178: `if result.Corruption != nil \|\| s.Completed \|\| protection.Policy == nil \|\| s.PositionGeneration != p.InstanceSeq \|\| s.PolicyKind != protection.Policy.Kind \|\| s.PolicyIdentity != protection.Policy.Identity \|\| s.EntryPrice != protection.Risk.EntryPrice \|\| s.InitialStop != protection.Risk.StopPrice {` | Inspect branch behavior in source; focused tests exercise relevant admission, recovery and refusal paths. Individual branch coverage is not asserted here. |

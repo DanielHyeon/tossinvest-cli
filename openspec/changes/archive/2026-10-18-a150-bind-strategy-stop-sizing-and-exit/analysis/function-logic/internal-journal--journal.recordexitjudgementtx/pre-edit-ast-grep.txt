@@ -1,0 +1,234 @@
+internal/journal/exit_state.go:392:func (j *Journal) recordExitJudgementTx(ctx context.Context, judgement ExitJudgement,
+internal/journal/exit_state.go:393:	result *ExitJudgementResult) error {
+internal/journal/exit_state.go:394:	id := strings.TrimSpace(judgement.PositionID)
+internal/journal/exit_state.go:395:	if id == "" {
+internal/journal/exit_state.go:396:		return fmt.Errorf("%w: a judgement needs a position", ErrInvalidRequest)
+internal/journal/exit_state.go:397:	}
+internal/journal/exit_state.go:398:	if err := judgement.Provenance.validate(); err != nil {
+internal/journal/exit_state.go:399:		return err
+internal/journal/exit_state.go:400:	}
+internal/journal/exit_state.go:401:	if judgement.Provenance.zero() && strings.TrimSpace(judgement.ArmSuppressedReason) != "" {
+internal/journal/exit_state.go:402:		return fmt.Errorf("%w: legacy judgement cannot assert an arm-suppression reason", ErrInvalidRequest)
+internal/journal/exit_state.go:403:	}
+internal/journal/exit_state.go:404:	if judgement.Proposal != nil {
+internal/journal/exit_state.go:405:		if err := validateProposal(*judgement.Proposal); err != nil {
+internal/journal/exit_state.go:406:			return err
+internal/journal/exit_state.go:407:		}
+internal/journal/exit_state.go:408:		if err := judgement.Proposal.Provenance.validate(); err != nil {
+internal/journal/exit_state.go:409:			return err
+internal/journal/exit_state.go:410:		}
+internal/journal/exit_state.go:411:		if judgement.Provenance.zero() != judgement.Proposal.Provenance.zero() ||
+internal/journal/exit_state.go:412:			(!judgement.Provenance.zero() &&
+internal/journal/exit_state.go:413:				!sameExitDecisionProvenance(judgement.Provenance, judgement.Proposal.Provenance)) {
+internal/journal/exit_state.go:414:			return fmt.Errorf("%w: proposal provenance must match its exit judgement", ErrInvalidRequest)
+internal/journal/exit_state.go:415:		}
+internal/journal/exit_state.go:416:	}
+internal/journal/exit_state.go:417:	var recomputed *StoredExitSnapshot
+internal/journal/exit_state.go:418:	if !judgement.Provenance.zero() {
+internal/journal/exit_state.go:419:		candidate := StoredExitSnapshot{Line: judgement.Snapshot, RecoveryPolicy: judgement.RecoveryPolicy,
+internal/journal/exit_state.go:420:			ObservationSource: strings.TrimSpace(judgement.ObservationSource),
+internal/journal/exit_state.go:421:			ObservedAt:        judgement.ObservedAt.UTC().Format(time.RFC3339Nano)}
+internal/journal/exit_state.go:422:		if err := validateJudgementSnapshot(id, judgement, candidate); err != nil {
+internal/journal/exit_state.go:423:			return fmt.Errorf("%w: %v", ErrInvalidRequest, err)
+internal/journal/exit_state.go:424:		}
+internal/journal/exit_state.go:425:		recomputed = &candidate
+internal/journal/exit_state.go:426:	}
+internal/journal/exit_state.go:427:
+internal/journal/exit_state.go:428:	now := j.nowString()
+internal/journal/exit_state.go:429:	tx, err := j.db.BeginTx(ctx, nil) // BEGIN IMMEDIATE
+internal/journal/exit_state.go:430:	if err != nil {
+internal/journal/exit_state.go:431:		return fmt.Errorf("journal: recording the exit judgement of %s: %w", id, err)
+internal/journal/exit_state.go:432:	}
+internal/journal/exit_state.go:433:	defer tx.Rollback()
+internal/journal/exit_state.go:434:
+internal/journal/exit_state.go:435:	current, err := scanExitProgress(ctx, tx, id)
+internal/journal/exit_state.go:436:	if err != nil {
+internal/journal/exit_state.go:437:		return err
+internal/journal/exit_state.go:438:	}
+internal/journal/exit_state.go:439:	if current.Completed {
+internal/journal/exit_state.go:440:		return fmt.Errorf("%w: %s", ErrExitStateCompleted, id)
+internal/journal/exit_state.go:441:	}
+internal/journal/exit_state.go:442:	expectedLifecycle := judgement.LifecycleGeneration
+internal/journal/exit_state.go:443:	if expectedLifecycle == 0 {
+internal/journal/exit_state.go:444:		expectedLifecycle = current.LifecycleGeneration
+internal/journal/exit_state.go:445:	}
+internal/journal/exit_state.go:446:	if expectedLifecycle != current.LifecycleGeneration {
+internal/journal/exit_state.go:447:		return fmt.Errorf("%w: judgement generation %d, current exit generation %d",
+internal/journal/exit_state.go:448:			ErrExitLifecycleStale, expectedLifecycle, current.LifecycleGeneration)
+internal/journal/exit_state.go:449:	}
+internal/journal/exit_state.go:450:	var lifecycleGeneration int64
+internal/journal/exit_state.go:451:	var lifecycleStatus positionpolicy.Status
+internal/journal/exit_state.go:452:	err = tx.QueryRowContext(ctx, `SELECT adoption_generation,status
+internal/journal/exit_state.go:453:		FROM position_policy_lifecycles WHERE position_id=?
+internal/journal/exit_state.go:454:		ORDER BY adoption_generation DESC LIMIT 1`, id).Scan(&lifecycleGeneration, &lifecycleStatus)
+internal/journal/exit_state.go:455:	if errors.Is(err, sql.ErrNoRows) {
+internal/journal/exit_state.go:456:		lifecycleGeneration, lifecycleStatus = 1, positionpolicy.StatusManaged
+internal/journal/exit_state.go:457:	} else if err != nil {
+internal/journal/exit_state.go:458:		return fmt.Errorf("journal: reading exit lifecycle of %s: %w", id, err)
+internal/journal/exit_state.go:459:	}
+internal/journal/exit_state.go:460:	if lifecycleStatus != positionpolicy.StatusManaged || lifecycleGeneration != expectedLifecycle {
+internal/journal/exit_state.go:461:		return fmt.Errorf("%w: lifecycle generation %d is %s; judgement holds generation %d",
+internal/journal/exit_state.go:462:			ErrExitLifecycleStale, lifecycleGeneration, lifecycleStatus, expectedLifecycle)
+internal/journal/exit_state.go:463:	}
+internal/journal/exit_state.go:464:	if recomputed != nil && recomputed.Line.PositionGeneration != current.PositionGeneration {
+internal/journal/exit_state.go:465:		return fmt.Errorf("%w: snapshot generation %d does not match position generation %d",
+internal/journal/exit_state.go:466:			ErrInvalidRequest, recomputed.Line.PositionGeneration, current.PositionGeneration)
+internal/journal/exit_state.go:467:	}
+internal/journal/exit_state.go:468:	if recomputed != nil {
+internal/journal/exit_state.go:469:		var duplicate int
+internal/journal/exit_state.go:470:		err := tx.QueryRowContext(ctx, `SELECT 1 FROM exit_events WHERE decision_id=?`,
+internal/journal/exit_state.go:471:			recomputed.Line.DecisionID).Scan(&duplicate)
+internal/journal/exit_state.go:472:		if err == nil {
+internal/journal/exit_state.go:473:			// The deterministic decision was already committed by another
+internal/journal/exit_state.go:474:			// observer. Returning ErrProposalPending is intentional: the engine
+internal/journal/exit_state.go:475:			// treats it as a conservative no-submit outcome, whereas nil would
+internal/journal/exit_state.go:476:			// make both observers submit the same already-armed proposal.
+internal/journal/exit_state.go:477:			return ErrProposalPending
+internal/journal/exit_state.go:478:		}
+internal/journal/exit_state.go:479:		if !errors.Is(err, sql.ErrNoRows) {
+internal/journal/exit_state.go:480:			return fmt.Errorf("journal: checking duplicate exit decision: %w", err)
+internal/journal/exit_state.go:481:		}
+internal/journal/exit_state.go:482:	}
+internal/journal/exit_state.go:483:	// Legacy callers have no complete candidates to compare, so retain the old
+internal/journal/exit_state.go:484:	// scalar monotonicity guards. Snapshot callers are decided below as one
+internal/journal/exit_state.go:485:	// coherent tuple; checking their individual scalars first would reject the
+internal/journal/exit_state.go:486:	// very stale-but-valid saved-snapshot recovery a042 requires.
+internal/journal/exit_state.go:487:	if recomputed == nil {
+internal/journal/exit_state.go:488:		if err := notBelow("high water", id, judgement.HighWater, current.HighWater); err != nil {
+internal/journal/exit_state.go:489:			return err
+internal/journal/exit_state.go:490:		}
+internal/journal/exit_state.go:491:		if err := notBelow("baseline", id, judgement.Baseline, current.Baseline); err != nil {
+internal/journal/exit_state.go:492:			return err
+internal/journal/exit_state.go:493:		}
+internal/journal/exit_state.go:494:	}
+internal/journal/exit_state.go:495:	level := strings.TrimSpace(judgement.RatchetLevel)
+internal/journal/exit_state.go:496:	if level == "" {
+internal/journal/exit_state.go:497:		level = current.RatchetLevel
+internal/journal/exit_state.go:498:	}
+internal/journal/exit_state.go:499:
+internal/journal/exit_state.go:500:	effectiveSource := ""
+internal/journal/exit_state.go:501:	var saved, effective *StoredExitSnapshot
+internal/journal/exit_state.go:502:	if current.Effective != nil {
+internal/journal/exit_state.go:503:		copy := *current.Effective
+internal/journal/exit_state.go:504:		saved = &copy
+internal/journal/exit_state.go:505:	}
+internal/journal/exit_state.go:506:	if recomputed != nil {
+internal/journal/exit_state.go:507:		var savedLine *exitpolicy.ExitLineSnapshot
+internal/journal/exit_state.go:508:		if saved != nil {
+internal/journal/exit_state.go:509:			line := saved.Line
+internal/journal/exit_state.go:510:			savedLine = &line
+internal/journal/exit_state.go:511:		}
+internal/journal/exit_state.go:512:		selected, source, selectErr := exitpolicy.SelectRecoverySnapshot(savedLine, recomputed.Line)
+internal/journal/exit_state.go:513:		if selectErr != nil {
+internal/journal/exit_state.go:514:			if _, qerr := quarantineExitSnapshotTx(ctx, tx, id, recomputed.Line.PositionGeneration,
+internal/journal/exit_state.go:515:				QuarantineReasonAmbiguousRecovery, selectErr.Error(), now); qerr != nil {
+internal/journal/exit_state.go:516:				return qerr
+internal/journal/exit_state.go:517:			}
+internal/journal/exit_state.go:518:			if err := tx.Commit(); err != nil {
+internal/journal/exit_state.go:519:				return err
+internal/journal/exit_state.go:520:			}
+internal/journal/exit_state.go:521:			return fmt.Errorf("%w: %v", ErrExitSnapshotQuarantined, selectErr)
+internal/journal/exit_state.go:522:		}
+internal/journal/exit_state.go:523:		// The selection succeeded. If a superseded selector had this generation
+internal/journal/exit_state.go:524:		// quarantined, that row is what stopped it being judged at all, and it is
+internal/journal/exit_state.go:525:		// closed here — in the same transaction as the judgement it earned, so the
+internal/journal/exit_state.go:526:		// two cannot come apart (a084).
+internal/journal/exit_state.go:527:		if err := releaseReJudgedQuarantineTx(ctx, tx, judgement.ReJudgingVersion, id,
+internal/journal/exit_state.go:528:			recomputed.Line.PositionGeneration, now); err != nil {
+internal/journal/exit_state.go:529:			return err
+internal/journal/exit_state.go:530:		}
+internal/journal/exit_state.go:531:		if source == exitpolicy.RecoverySavedMonotone {
+internal/journal/exit_state.go:532:			effective = saved
+internal/journal/exit_state.go:533:			effectiveSource = EffectiveSourceSaved
+internal/journal/exit_state.go:534:		} else {
+internal/journal/exit_state.go:535:			copy := *recomputed
+internal/journal/exit_state.go:536:			copy.Line = selected
+internal/journal/exit_state.go:537:			effective = &copy
+internal/journal/exit_state.go:538:			effectiveSource = EffectiveSourceRecomputed
+internal/journal/exit_state.go:539:		}
+internal/journal/exit_state.go:540:		judgement.HighWater = effective.Line.HighWater
+internal/journal/exit_state.go:541:		judgement.Baseline = effective.Line.CurrentProtection
+internal/journal/exit_state.go:542:		judgement.RatchetLevel = string(effective.Line.RatchetLevel)
+internal/journal/exit_state.go:543:		judgement.ActiveRung = effective.Line.ActiveRung
+internal/journal/exit_state.go:544:		if effectiveSource == EffectiveSourceSaved {
+internal/journal/exit_state.go:545:			judgement.Proposal = nil
+internal/journal/exit_state.go:546:			judgement.ArmSuppressedReason = ""
+internal/journal/exit_state.go:547:		}
+internal/journal/exit_state.go:548:		level = strings.TrimSpace(judgement.RatchetLevel)
+internal/journal/exit_state.go:549:	}
+internal/journal/exit_state.go:550:
+internal/journal/exit_state.go:551:	updateSQL := `
+internal/journal/exit_state.go:552:		UPDATE exit_states
+internal/journal/exit_state.go:553:		   SET baseline_price = ?, high_water = ?, ratchet_level = ?, active_rung = ?, updated_at = ?
+internal/journal/exit_state.go:554:		 WHERE position_id = ?`
+internal/journal/exit_state.go:555:	args := []any{judgement.Baseline, judgement.HighWater, level,
+internal/journal/exit_state.go:556:		nullableRung(judgement.ActiveRung), now, id}
+internal/journal/exit_state.go:557:	if effective != nil {
+internal/journal/exit_state.go:558:		raw, err := encodeStoredSnapshot(*effective)
+internal/journal/exit_state.go:559:		if err != nil {
+internal/journal/exit_state.go:560:			return err
+internal/journal/exit_state.go:561:		}
+internal/journal/exit_state.go:562:		line := effective.Line
+internal/journal/exit_state.go:563:		updateSQL = `UPDATE exit_states SET baseline_price=?,high_water=?,ratchet_level=?,active_rung=?,updated_at=?,
+internal/journal/exit_state.go:564:			snapshot_status=?,policy_id=?,policy_version=?,policy_digest=?,snapshot_id=?,decision_id=?,observation_id=?,
+internal/journal/exit_state.go:565:			position_generation=?,next_target=?,next_protection=?,last_observation_source=?,last_observed_at=?,
+internal/journal/exit_state.go:566:			snapshot_action=?,snapshot_ratio=?,projected_quantity=?,state_only=?,suppressed_reason=?,effective_snapshot_json=?
+internal/journal/exit_state.go:567:			WHERE position_id=?`
+internal/journal/exit_state.go:568:		args = []any{line.CurrentProtection, line.HighWater, string(line.RatchetLevel), nullableRung(line.ActiveRung), now,
+internal/journal/exit_state.go:569:			SnapshotStatusEvaluated, line.Policy.ID, line.Policy.Version, line.Policy.Digest, line.SnapshotID,
+internal/journal/exit_state.go:570:			line.DecisionID, line.ObservationID, line.PositionGeneration, nullableString(line.NextTarget),
+internal/journal/exit_state.go:571:			nullableString(line.NextProtection), effective.ObservationSource, effective.ObservedAt,
+internal/journal/exit_state.go:572:			nullableString(string(line.Action)), nullableString(line.Ratio), line.ProjectedQuantity,
+internal/journal/exit_state.go:573:			boolInt(line.StateOnly), nullableString(line.Suppressed), raw, id}
+internal/journal/exit_state.go:574:	}
+internal/journal/exit_state.go:575:	if _, err := tx.ExecContext(ctx, updateSQL, args...); err != nil {
+internal/journal/exit_state.go:576:		return fmt.Errorf("journal: recording the exit judgement of %s: %w", id, err)
+internal/journal/exit_state.go:577:	}
+internal/journal/exit_state.go:578:	if err := j.runExitWriteHook("after_state"); err != nil {
+internal/journal/exit_state.go:579:		return err
+internal/journal/exit_state.go:580:	}
+internal/journal/exit_state.go:581:
+internal/journal/exit_state.go:582:	action := ""
+internal/journal/exit_state.go:583:	intentID := ""
+internal/journal/exit_state.go:584:	if judgement.Proposal != nil {
+internal/journal/exit_state.go:585:		action, intentID = judgement.Proposal.Action, judgement.Proposal.IntentID
+internal/journal/exit_state.go:586:		if err := armExitProposalTx(ctx, tx, id, *judgement.Proposal, now); err != nil {
+internal/journal/exit_state.go:587:			return err
+internal/journal/exit_state.go:588:		}
+internal/journal/exit_state.go:589:		if err := j.runExitWriteHook("after_arm"); err != nil {
+internal/journal/exit_state.go:590:			return err
+internal/journal/exit_state.go:591:		}
+internal/journal/exit_state.go:592:	}
+internal/journal/exit_state.go:593:	event := exitEventRow{
+internal/journal/exit_state.go:594:		PositionID: id, ObservedPrice: judgement.ObservedPrice,
+internal/journal/exit_state.go:595:		HighWater: judgement.HighWater, BaselineAfter: judgement.Baseline,
+internal/journal/exit_state.go:596:		LevelAfter: levelAfter(level, judgement.ActiveRung), Action: action,
+internal/journal/exit_state.go:597:		ProposedIntentID: intentID, CreatedAt: now,
+internal/journal/exit_state.go:598:		ArmSuppressedReason: judgement.ArmSuppressedReason,
+internal/journal/exit_state.go:599:	}
+internal/journal/exit_state.go:600:	if recomputed != nil && effective != nil {
+internal/journal/exit_state.go:601:		event.Evaluation = evaluationForEvent(saved, recomputed, effective, effectiveSource)
+internal/journal/exit_state.go:602:	}
+internal/journal/exit_state.go:603:	if err := appendExitEventTx(ctx, tx, event); err != nil {
+internal/journal/exit_state.go:604:		return err
+internal/journal/exit_state.go:605:	}
+internal/journal/exit_state.go:606:	if err := j.runExitWriteHook("after_event"); err != nil {
+internal/journal/exit_state.go:607:		return err
+internal/journal/exit_state.go:608:	}
+internal/journal/exit_state.go:609:	if err := tx.Commit(); err != nil {
+internal/journal/exit_state.go:610:		return fmt.Errorf("journal: recording the exit judgement of %s: %w", id, err)
+internal/journal/exit_state.go:611:	}
+internal/journal/exit_state.go:612:	result.EffectiveSource = effectiveSource
+internal/journal/exit_state.go:613:	switch {
+internal/journal/exit_state.go:614:	case effectiveSource == EffectiveSourceSaved:
+internal/journal/exit_state.go:615:		result.ArmOutcome = ExitArmSuppressedSavedMonotone
+internal/journal/exit_state.go:616:	case judgement.Proposal != nil:
+internal/journal/exit_state.go:617:		proposal := *judgement.Proposal
+internal/journal/exit_state.go:618:		result.ArmOutcome = ExitArmArmed
+internal/journal/exit_state.go:619:		result.ArmedProposal = &proposal
+internal/journal/exit_state.go:620:	case judgement.ArmSuppressedReason == ArmSuppressedWorkingOrder,
+internal/journal/exit_state.go:621:		judgement.ArmSuppressedReason == ArmSuppressedReJudge:
+internal/journal/exit_state.go:622:		result.ArmOutcome = ExitArmSuppressedWorkingOrder
+internal/journal/exit_state.go:623:	}
+internal/journal/exit_state.go:624:	return nil
+internal/journal/exit_state.go:625:}

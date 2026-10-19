@@ -1,0 +1,51 @@
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+Found 20 matches for 'handleOptimization':
+╭────────────────────┬──────────┬──────────────────────────────────────────────╮
+│ Name               │ Type     │ Location                                     │
+├────────────────────┼──────────┼──────────────────────────────────────────────┤
+│ handleOptimization │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a04 │
+│                    │          │ 1/internal/console/optimization.go:36        │
+│ handleOptimization │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a04 │
+│                    │          │ 2/internal/console/optimization.go:36        │
+│ handleOptimization │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a04 │
+│                    │          │ 5/internal/console/optimization.go:36        │
+│ handleOptimization │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a04 │
+│                    │          │ 6/internal/console/optimization.go:36        │
+│ handleOptimization │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a04 │
+│                    │          │ 8/internal/console/optimization.go:36        │
+│ handleOptimization │ Function │ /tmp/tossos-a052/internal/console/optimizati │
+│                    │          │ on.go:65                                     │
+│ handleOptimization │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a04 │
+│                    │          │ 3/internal/console/optimization.go:36        │
+│ handleOptimization │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a04 │
+│                    │          │ 5-full/internal/console/optimization.go:88   │
+│ handleOptimization │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a04 │
+│                    │          │ 4/internal/console/optimization.go:36        │
+│ handleOptimization │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a04 │
+│                    │          │ 6-full/internal/console/optimization.go:36   │
+│ handleOptimization │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a04 │
+│                    │          │ 7/internal/console/optimization.go:88        │
+│ handleOptimization │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a04 │
+│                    │          │ 5-security/internal/console/optimization.go: │
+│                    │          │ 36                                           │
+│ handleOptimization │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a05 │
+│                    │          │ 0/internal/console/optimization.go:65        │
+│ handleOptimization │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a04 │
+│                    │          │ 9/internal/console/optimization.go:88        │
+│ handleOptimization │ Function │ /tmp/tossos-a053-exit-lines/internal/console │
+│                    │          │ /optimization.go:65                          │
+│ handleOptimization │ Function │ /tmp/tossos-a061-reconcile-owned-orders/inte │
+│                    │          │ rnal/console/optimization.go:65              │
+│ handleOptimization │ Function │ /tmp/tossos-a058-stockos-density/internal/co │
+│                    │          │ nsole/optimization.go:65                     │
+│ handleOptimization │ Function │ /tmp/tossos-a054-simple-positions/internal/c │
+│                    │          │ onsole/optimization.go:65                    │
+│ handleOptimization │ Function │ /tmp/tossos-a060-history-names/internal/cons │
+│                    │          │ ole/optimization.go:65                       │
+│ handleOptimization │ Function │ /tmp/tossos-a058-detail-dialog/internal/cons │
+│                    │          │ ole/optimization.go:65                       │
+╰────────────────────┴──────────┴──────────────────────────────────────────────╯

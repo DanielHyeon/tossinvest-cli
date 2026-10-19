@@ -245,10 +245,11 @@ type ExitObserverOptions struct {
 
 // ExitObserver is the loop.
 type ExitObserver struct {
-	opts    ExitObserverOptions
-	clk     clock.Clock
-	ratchet exitpolicy.RatchetConfig
-	ladder  exitpolicy.LadderPolicy
+	protectionAlerts []obs.Event
+	opts             ExitObserverOptions
+	clk              clock.Clock
+	ratchet          exitpolicy.RatchetConfig
+	ladder           exitpolicy.LadderPolicy
 
 	// lastObserved is when a price read last succeeded. Zero means "not yet",
 	// which is measured from start so a loop that never reads escalates.
@@ -457,6 +458,8 @@ func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
 	// a129: 이 주기의 청산 주문 줄 쓰기 · 체결 따라가기는 모든 return 경로에서 판정 · 제출 뒤에 돎(원장 읽기만, 브로커 호출 0).
 	defer o.endExitOrderCycle(ctx)
 	var cycle ExitCycle
+	o.protectionAlerts = nil
+	defer o.flushStrategyProtectionAlerts(ctx)
 	observation := cycleObservation{at: o.clk.Now().UTC()}
 
 	if o.opts.SLO != nil && o.opts.SLO.FillDetectionBehind() {
@@ -524,10 +527,11 @@ func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
 
 // managed is one position and the exit state that governs it.
 type managed struct {
-	position       journal.Position
-	state          journal.ExitState
-	policyIdentity exitpolicy.PolicyIdentity
-	identityErr    error
+	position           journal.Position
+	state              journal.ExitState
+	policyIdentity     exitpolicy.PolicyIdentity
+	identityErr        error
+	floorExpectedState *journal.ExitState
 	// reJudge marks the one pass a superseded quarantine earns. The judgement
 	// runs; the order side of it does not. See the suppression in record and
 	// a084 개정 2 D9 for why a cancel that precedes a refusal is a protection loss.
@@ -575,10 +579,35 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 		o.markHeld(cycle, p)
 		result, ok := byPosition[p.ID]
 		state := result.State
+		var protection journal.StrategyProtection
+		if !p.Adopted() {
+			var campaign string
+			protection, campaign, err = o.opts.Journal.StrategyProtectionForPosition(ctx, p)
+			if err == nil && !protection.Legacy && ok && result.Corruption == nil && !strategyProtectionMatchesExit(protection, p, state) {
+				err = errors.New("strategy protection: existing exit differs from admitted snapshot")
+			}
+			if err != nil {
+				cause := err
+				blockFailed := campaign == ""
+				if campaign != "" {
+					if latchErr := o.opts.Journal.ReconcileStrategyProtection(ctx, campaign, p); latchErr != nil {
+						blockFailed = true
+						cause = fmt.Errorf("%v; entry block failed: %w", cause, latchErr)
+					}
+				}
+				if cycle.Err == nil {
+					cycle.Err = cause
+				}
+				o.queueStrategyProtectionAlert(p, cause, ok, blockFailed)
+				if !ok && protection.Policy == nil {
+					continue
+				}
+			}
+		}
 		reJudging := false
 		reJudgeVersion := int64(0)
 		if !ok {
-			opened, err := o.openState(ctx, p)
+			opened, err := o.openState(ctx, p, protection)
 			if err != nil {
 				if cycle.Err == nil {
 					cycle.Err = err
@@ -657,9 +686,21 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 			o.announceQuarantine(ctx, p, q)
 			continue
 		}
+		// Evaluate the admitted stop as a floor without changing the historical
+		// entry, initial R, policy, or pending order. The normal snapshot and
+		// recovery transaction remains responsible for any durable transition.
+		var floorExpectedState *journal.ExitState
+		if protection.Policy != nil && protection.PositionGeneration == p.InstanceSeq {
+			if cmp, compareErr := riskcalc.CompareDecimal(protection.Risk.StopPrice, state.Baseline); compareErr == nil && cmp > 0 {
+				previous := state
+				floorExpectedState = &previous
+				state.Baseline = protection.Risk.StopPrice
+			}
+		}
 		out = append(out, managed{
 			position: p, state: state, policyIdentity: identity, identityErr: identityErr,
-			reJudge: reJudging, reJudgeVersion: reJudgeVersion,
+			floorExpectedState: floorExpectedState,
+			reJudge:            reJudging, reJudgeVersion: reJudgeVersion,
 		})
 	}
 	// Quarantined rows come last. alertRefused may synchronously retry a
@@ -707,7 +748,7 @@ func managedPolicyIdentity(state journal.ExitState, adopted bool) (exitpolicy.Po
 // the synthetic stop derived from it (design A2's manage-forward t0). The cost
 // basis is in neither: anchoring on it would put every long-held winner outside
 // its own band on the first observation.
-func (o *ExitObserver) openState(ctx context.Context, p journal.Position) (journal.ExitState, error) {
+func (o *ExitObserver) openState(ctx context.Context, p journal.Position, protection journal.StrategyProtection) (journal.ExitState, error) {
 	if p.Adopted() {
 		return o.openAdoptedState(ctx, p)
 	}
@@ -729,15 +770,16 @@ func (o *ExitObserver) openState(ctx context.Context, p journal.Position) (journ
 	}
 
 	kind, policyID := journal.ExitPolicyRatchet, ""
-	if o.opts.CommonPolicy != "" {
+	identity := exitpolicy.PolicyIdentity{}
+	if protection.Policy != nil {
+		kind, policyID, identity = protection.Policy.Kind, protection.Policy.PolicyID, protection.Policy.Identity
+		entry = protection.Risk
+	} else if o.opts.CommonPolicy != "" {
 		kind, policyID = journal.ExitPolicyLadder, o.opts.CommonPolicy
 	}
 	state, err := o.opts.Journal.OpenExitState(ctx, journal.ExitStateSeed{
-		PositionID:  p.ID,
-		PolicyKind:  kind,
-		PolicyID:    policyID,
-		EntryPrice:  entry.EntryPrice,
-		InitialStop: entry.StopPrice,
+		PositionID: p.ID, PolicyKind: kind, PolicyID: policyID, PolicyIdentity: identity,
+		EntryPrice: entry.EntryPrice, InitialStop: entry.StopPrice,
 	})
 	switch {
 	case errors.Is(err, journal.ErrExitStateExists):
@@ -1253,7 +1295,9 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 	quantity := snapshot.ProjectedQuantity
 	orderable := snapshot.Orderable && !proposal.Zero()
 	judgement := journal.ExitJudgement{
-		Snapshot: snapshot, RecoveryPolicy: recoveryPolicy,
+		ExpectedFloorState:    m.floorExpectedState,
+		ExpectedFloorQuantity: m.position.Quantity,
+		Snapshot:              snapshot, RecoveryPolicy: recoveryPolicy,
 		ReJudgingVersion: reJudgingVersion(m),
 		PositionID:       m.position.ID, LifecycleGeneration: m.state.LifecycleGeneration,
 		ObservedPrice: snapshot.ObservedPrice,
@@ -1289,7 +1333,12 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 	// and the baseline still advance, and only the proposal is withheld. §0.3 is
 	// why the withholding is noticed rather than silent — noteDelay is what turns
 	// a delayed liquidation into an alert once it passes its bound.
-	if orderable && (snapshot.CancelPendingFirst || isFullExit(proposal)) {
+	if orderable && m.floorExpectedState != nil {
+		// Commit the admitted floor before touching any outstanding order. A fresh
+		// observation retries the protective proposal after this transaction.
+		orderable = false
+		judgement.ArmSuppressedReason = journal.ArmSuppressedFloorReconciliation
+	} else if orderable && (snapshot.CancelPendingFirst || isFullExit(proposal)) {
 		if m.reJudge && !isProtective(proposal) {
 			// The one pass a superseded quarantine earns, and the only pass where the
 			// judgement below can still refuse. clearTheSymbol sends real cancels to
