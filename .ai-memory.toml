@@ -1,0 +1,29 @@
+# ai-memory 저장소 표식 — 이 저장소의 lifecycle 자동 기록을 켬(사용자 지시 2026-10-19, 필수 개발 규칙 18).
+# capture-mode 는 allowlist: 이 표식이 있는 저장소만 기록되고 그 밖은 아무것도 내보내지 않음.
+#
+# ignore_paths 는 파일 도구의 경로 칸과 셸 명령에 글자로 적힌 경로만 거름(best-effort, docs/marker-file.md).
+# 셸 명령의 **출력**(tossctl 조회 · 원장 질의 결과 등)은 경로가 아니라 거르지 못함 — 규칙 18 의 남은 위험.
+workspace = "default"
+project = "junghoonghae-tossinvest-cli"
+
+[capture]
+ignore_paths = [
+  # 운영 원장 · 토큰 · 계좌 봉인 키 · capability 증명 · 엔진 로그
+  "~/.config/tossctl/**",
+  "~/.cache/tossctl/**",
+  "~/.local/share/tossctl/**",
+  # 운영 배포 override · 제품 데이터 · 그림자 측정 증거
+  "~/.local/share/tossos/**",
+  "~/.local/share/tossos-deploy/**",
+  "~/.local/state/tossos-a140/**",
+  # 저장소 안의 원장 · 비밀 파일 모양
+  "**/*.db",
+  "**/*.db-wal",
+  "**/*.sqlite",
+  ".env",
+  "**/.env",
+  "**/*.key",
+  # 그림자 측정 원장(시장 데이터 · 판정 상태)
+  "openspec/changes/a128-jev-shadow-judgment-probe/analysis/shadow-ledger/**",
+  "openspec/changes/a140-breakout-signals-are-measured-in-shadow/analysis/shadow-ledger/**",
+]
