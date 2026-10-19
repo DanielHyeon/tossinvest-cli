@@ -63,8 +63,8 @@
    - 도구 소스가 착지 커밋 그대로인지: `git status --porcelain -- tools/a087-market-sell-probe` 빈 출력.
    - 두 명령을 **5분 안에** 이어서(미리보기는 전송 없음, 토큰 5분):
      ```
-     go run ./tools/a087-market-sell-probe --symbol 010170 --qty 1
-     go run ./tools/a087-market-sell-probe --symbol 010170 --qty 1 --execute --confirm <토큰>
+     go run ./tools/a087-market-sell-probe --config-dir ~/.config/tossctl --symbol 010170 --qty 1
+     go run ./tools/a087-market-sell-probe --config-dir ~/.config/tossctl --symbol 010170 --qty 1 --execute --confirm <토큰>
      ```
    - 종료 코드: 0 접수 · 2 브로커 거절 · 3 불명(→ 미리보기 재실행 금지, 먼저 `tossctl orders list`).
    - 이전 시도: 2026-10-15 15:13 · 15:16 둘 다 `401 invalid-token` → 「판정 불가(인증)」(`f6bcc95a`).
@@ -107,12 +107,18 @@
 
 ---
 
-## 4. 계속 돌려야 하는 측정 (읽기 전용 GET — 에이전트 실행 가능)
+## 4. 계속 돌려야 하는 측정
+
+> **정정(2026-10-19 09:5x, 실측):** 이 문서의 명령에는 원래 `--config-dir` 가 없었다. 빼면 도구가 기본 토큰 캐시(`~/.cache/tossctl`)로
+> 새 토큰을 받아 같은 앱 키를 쓰는 엔진 토큰(`~/.config/tossctl`)을 무효화한다(a082 토큰 전쟁). 10-19 오전 a128 · a140 측정과
+> `tossctl verify run` 이 그렇게 돌아 두 토큰 파일이 3~4 분마다 번갈아 다시 쓰였고 엔진 대사가 401 을 한 번 맞았다(09:40:40).
+> `--config-dir ~/.config/tossctl` 로 다시 띄운 뒤 9 분간 재발 0. **운영 계정에 닿는 모든 도구 · tossctl 명령에 `--config-dir ~/.config/tossctl` 을 붙인다.**
+ (읽기 전용 GET — 에이전트 실행 가능)
 
 | 측정 | 남은 것 | 실행 |
 |---|---|---|
-| a128 Jev s3 | 시장별 ≥5 세션(Jev 거부 임계는 그 뒤 사람이 시장별로 — a140 D16). 지금 s3: KR 10-16 1세션, US 10-15 · 10-16(일부) | `setsid nohup openspec/changes/a128-jev-shadow-judgment-probe/run-probe.sh KR /tmp/a128-kr-<MMDD>.log --session "09:00-15:30" --wait-open` · US 는 `run-probe.sh US /tmp/a128-us-<MMDD>.log --wait-open` |
-| a140 KR 돌파 | 4 세션 더(10-16 1/5 완료) | `go run ./tools/a140-breakout-signal-shadow run --evidence-db ~/.local/state/tossos-a140/shadow-evidence.sqlite` (그날 08:40 이후 기동 — 달력의 오늘 세션을 읽으므로 전날 밤에 띄우면 「session over」로 끝남) |
+| a128 Jev s3 | 시장별 ≥5 세션(Jev 거부 임계는 그 뒤 사람이 시장별로 — a140 D16). 지금 s3: KR 10-16 1세션, US 10-15 · 10-16(일부) | `setsid nohup openspec/changes/a128-jev-shadow-judgment-probe/run-probe.sh KR /tmp/a128-kr-<MMDD>.log --session "09:00-15:30" --wait-open --config-dir ~/.config/tossctl` · US 는 `run-probe.sh US /tmp/a128-us-<MMDD>.log --wait-open --config-dir ~/.config/tossctl` |
+| a140 KR 돌파 | 4 세션 더(10-16 1/5 완료) | `go run ./tools/a140-breakout-signal-shadow run --evidence-db ~/.local/state/tossos-a140/shadow-evidence.sqlite --config-dir ~/.config/tossctl` (그날 08:40 이후 기동 — 달력의 오늘 세션을 읽으므로 전날 밤에 띄우면 「session over」로 끝남) |
 
 - 둘을 같은 날 돌려도 MARKET_DATA 그룹 한도 안(a140 D11).
 - 프로브는 시작할 때 키 · WTS 세션을 한 번 읽는다 — 키나 세션을 바꾸면 다시 띄운다.
