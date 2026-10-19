@@ -150,6 +150,8 @@ func TestTheReadOnlyHandleHasNoWriteMethods(t *testing.T) {
 		// releases themselves exist only on the engine-owned Journal writer.
 		"ReadEntryLossLocks":   true,
 		"ReadRiskOwnerLatches": true,
+		// a160 reads a scoped snapshot through the query-only connection.
+		"ReadCampaignContinuationSnapshot": true,
 	}
 	typ := reflect.TypeOf(&ReadOnly{})
 	for i := 0; i < typ.NumMethod(); i++ {

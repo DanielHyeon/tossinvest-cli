@@ -174,3 +174,4 @@
     - STORY-TOS-a155 — 버전 전략 관측 전용 연결 [archived] → `a155-observe-versioned-strategy-decisions`
     - STORY-TOS-a156 — 실거래 연결과 후속 진입 마감 복구 승인 [in_progress] → `a156-gate-live-strategy-policy-rollout`
     - STORY-TOS-a159 — 오프라인 부분 체결·보호 복구 회귀 검증 [archived] → `a159-verify-offline-protection-restart-contract`
+    - STORY-TOS-a160 — 후속 진입용 캠페인 일관 읽기 스냅샷 [archived] → `a160-read-consistent-campaign-continuation-state`

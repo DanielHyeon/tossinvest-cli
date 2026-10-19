@@ -35,6 +35,9 @@ import (
 // reason each one is not a drifted copy of the predicate.
 var eligibilitySpellers = map[string]string{
 	"internal/position/provenance.go": "the predicate itself",
+
+	"internal/journal/campaign_continuation_snapshot.go": "reads entry decision identity only to bind a campaign to its current position, not exit eligibility",
+
 	"internal/journal/adoption.go": "the adoption writer: it reads both columns inside its own " +
 		"transaction to refuse an engine-entered position and to enforce set-once",
 	"internal/journal/position_projection.go": "the projection: the select list and Adopted(), " +

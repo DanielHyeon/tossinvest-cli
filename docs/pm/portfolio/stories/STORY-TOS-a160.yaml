@@ -1,0 +1,20 @@
+{
+  "id": "STORY-TOS-a160",
+  "title": "후속 진입용 캠페인 일관 읽기 스냅샷",
+  "feature": "FEAT-TOS-013",
+  "intent": "archived",
+  "openspec": {
+    "change_id": "a160-read-consistent-campaign-continuation-state",
+    "path": "openspec/changes/archive/2026-10-19-a160-read-consistent-campaign-continuation-state"
+  },
+  "found_by": {
+    "date": "2026-10-19",
+    "how": "Manager scoped a read-only offline campaign snapshot following a156 source investigation.",
+    "record": "openspec/changes/archive/2026-10-19-a160-read-consistent-campaign-continuation-state/proposal.md"
+  },
+  "acceptance": [
+    "Read current campaign, position, protection and ordered leg/order watermarks from one scoped read transaction.",
+    "Report unavailable immutable plan preimage without manufacturing risk, quantity or admission authority.",
+    "Preserve existing schema, production execution and operating settings; complete independent review and required lifecycle checks."
+  ]
+}

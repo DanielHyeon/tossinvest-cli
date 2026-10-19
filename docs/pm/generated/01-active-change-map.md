@@ -155,3 +155,4 @@
 | `a155-observe-versioned-strategy-decisions` | STORY-TOS-a155 | archived |
 | `a156-gate-live-strategy-policy-rollout` | STORY-TOS-a156 | in_progress |
 | `a159-verify-offline-protection-restart-contract` | STORY-TOS-a159 | archived |
+| `a160-read-consistent-campaign-continuation-state` | STORY-TOS-a160 | archived |
