@@ -29,3 +29,4 @@
 - 전문: `analysis/gstack/terra-s4-review-2026-10-20.md`(gstack `/review` preamble 이 격리 worktree 가드에 막혀 checklist 범주로 자기 리뷰).
 - 판정: 이 change 범위 blocker 0, 고친 것 1(InputTokens 주석). **착지 선행 조건 1**: a145·a147 오프라인 분석기가 「한 state = J1·J2 두 행」을
   가정 — s4 행이 원장에 들어가면 a145 는 `ValueError('unpaired questions')` 로 멈추고 a147 은 전부 `invalid_pair` 로 셈(tasks 5.5).
+  같은 날 이 로트에서 수리(J3·J4 행을 짝 판정 전에 빼고 수를 남김 — s4 이전 출력 불변, 변이 5/5, tasks 5.5 영수증).

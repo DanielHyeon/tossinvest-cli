@@ -127,7 +127,8 @@
 
 - 사용자 결정(2026-10-20): 4.2 를 「측정 계속」(선택지 2)으로 정하고, 같은 요청에 질문 둘(J3·J4)을 **더한다**. J1·J2 는
   원문·id·rev 그대로 계속 묻는다(옛 행과 새 행의 J1·J2 가 같은 모집단으로 비교되도록).
-- 이유(calibration-report-2026-10-20 의 관측에서):
+- 이유(`analysis/calibration-report-2026-10-20.md` 의 관측에서 — J1 구간 적중 0.581·0.547·0.549 로 평평, 사이클 안 ρ −0.000;
+  J2 낮은 구간은 60분 하락 라벨에 대해 역방향):
   1. J1 의 「> 0」 은 그날 시장 흐름에 묻힌다 — 적중률이 0.5 를 넘은 것은 상승일 탓이고 구간 사이 차이가 없었다. 0 근처의
      작은 움직임이 적중을 좌우하므로 방향 질문이 국면 질문이 된다.
   2. +1% 는 「비용(수수료·세금·스프레드)을 넘는 움직임」의 근사다. 이 근사는 비용 모형이 아니고, 비용 차감 결론을 내지 않는다.
@@ -160,6 +161,10 @@
   J3·J4 를 더해 J1·J2 의 답이 달라지지 않는다는 근거는 계약 문서 인용뿐이다(concepts/state.md 「All questions see the same state
   and are evaluated independently」, api.md 「The key is not sent to the underlying model」) — 실측 아님. s4 측정 뒤 J1·J2 의 p 분포를
   s4 전후로 대조해 적을 것(tasks 5.7).
+- 원장을 읽는 다른 도구(호환, tasks 5.5): `tools/a145-jev-offline-analysis`·`tools/a147-jev-mfi-offline` 은 한 state 의 행을
+  J1·J2 두 개로 가정했음(a145 는 모르는 질문 id 를 `invalid judgment` 로 거부, a147 은 행 수 2 가 아니면 `invalid_pair`). 두 도구가
+  `S4_QUESTIONS`(J3·J4 두 id — a145 에 한 번 정의, a147 은 그것을 읽음) 행과 그 라벨을 짝 판정 **전에** 빼고, 뺀 수를 출력에
+  `ignored_s4_question_rows` 로 남기게 함(s4 이전 원장에서는 이 열쇠가 없어 출력 불변). 목록 밖 질문 id 는 예전처럼 거부·`invalid_pair`.
 - 보고서 추가: (1) J3·J4 의 p 구간표·p ≥ 0.90 예비 판정(기존 양식 그대로). (2) **개장 후 경과 시간대별 표** — 질문 × 로트 × 시장마다
   `minutes_since_open` 구간 0–29 · 30–60 · 61–120 · 121+ 의 판단 n · 실현 라벨 n · 적중 · 적중률 · 평균 p(실현 라벨 행) · 판정(같은
   n<30 보류). 개장 30분(가장 변동이 큰 구간)을 따로 보이기 위함. `minutes_since_open` 은 원장 행에 없고 state 파일에 있으므로

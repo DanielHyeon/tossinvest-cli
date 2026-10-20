@@ -224,4 +224,43 @@ class SourceTest(unittest.TestCase):
    with self.subTest(change=change):self.assertEqual(analysis.source_bars(state,dict(evidence,**change),evidence['observed_at'],'digest',source,window)[1],reason)
   prior=[dict(b,close_at=b['close_at'].replace('2026-10-20','2026-10-19')) for b in bars]
   self.assertEqual(analysis.source_bars(state,dict(evidence,bars=prior),evidence['observed_at'],'digest',source,window)[1],'outside_session')
+GOLDEN=Path(__file__).with_name('testdata')/'pre-s4-golden.json'
+S4_IDS=('j3_up_1pct_within_horizon','j4_down_1pct_within_horizon')
+def evaluate_fixture(root,with_s4=False):
+ """a128 s4 이전 모양 스냅숏(KR 후보 2: A 결선·캡처 있음, B 비결선·캡처 없음)을 evaluate 함. with_s4 면 J3·J4 행·라벨을 섞음."""
+ source=root/'snapshot';source.mkdir();(source/'states').mkdir();(source/'captures').mkdir()
+ bars=MfiTest().bars()
+ for bar in bars:bar['open']=bar['close']
+ rows,labels,captures=[],[],{}
+ for symbol,finalist,realized in (('A',True,.01),('B',False,-.02)):
+  state={'market':'KR','symbol':symbol,'observed_at':'2026-10-20T09:18:00+09:00','base_price':100,'intraday':{'bars_1m':[{'t':b['close_at'][11:16],'o':b['open'],'h':b['high'],'l':b['low'],'c':b['close'],'v':b['volume']} for b in bars]}}
+  state_bytes=json.dumps(state).encode();digest=hashlib.sha256(state_bytes).hexdigest();(source/'states'/f'{digest}.json').write_bytes(state_bytes+b'\n')
+  if finalist:
+   evidence={'state_digest':digest,'market':'KR','symbol':symbol,'observed_at':state['observed_at'],'source_timezone':'Asia/Seoul','source':'fixture','received_at':state['observed_at'],'bars':bars}
+   capture=json.dumps(evidence).encode();captures[digest]=hashlib.sha256(capture).hexdigest();(source/'captures'/f'{captures[digest]}.json').write_bytes(capture)
+  common={'kind':'judgment','state_rev':'a128-s3','market':'KR','at':state['observed_at'],'symbol':symbol,'state_digest':digest,'screen':{'finalist':finalist},'horizon_minutes':60,'label_due_at':'2026-10-20T10:18:00+09:00','base_price':100,'question_rev':'a128-r1'}
+  questions=[('j1_up_within_horizon','a128-r1'),('j2_hold_off_red_flag','a128-r1')]+([(q,'a128-r2') for q in S4_IDS] if with_s4 else [])
+  for question,rev in questions:
+   ident=f'{symbol}-{question}';rows.append(dict(common,id=ident,question_id=question,question_rev=rev))
+   labels.append({'kind':'label','judgment_id':ident,'due_at':common['label_due_at'],'at':'2026-10-20T10:18:01+09:00','realized_price':round(100*(1+realized),6),'realized_return':realized})
+ (source/'ledger.jsonl').write_text(''.join(json.dumps(x)+'\n' for x in rows+labels))
+ fields=('completeness_rules','candidate_rule','cycle_schedule','interruption_rules','replacement_rules','interim_reporting_rules','stop_rules','analysis_version')
+ plan={key:'fixed' for key in fields};plan['session_plan']={'KR':[{'date':'2026-10-20','open_at':'2026-10-20T09:00:00+09:00','close_at':'2026-10-20T15:30:00+09:00','cadence_seconds':60,'max_cycle_skew_seconds':2}], 'US':[{'date':'2026-10-20','open_at':'2026-10-20T09:30:00-04:00','close_at':'2026-10-20T16:00:00-04:00','cadence_seconds':60,'max_cycle_skew_seconds':2}]}
+ plan.update(coverage_thresholds={'min_cycle_fraction':1,'min_mfi_fraction':1,'min_label_fraction':1},sources={'KR':{'name':'fixture','timezone':'Asia/Seoul'},'US':{'name':'fixture','timezone':'America/New_York'}},registered_at='2026-10-19T00:00:00+09:00',first_observation_not_before='2026-10-20T00:00:00+09:00',max_bar_age_seconds=60,max_label_delay_seconds=90,horizon_minutes=60)
+ return analysis.evaluate(source,plan,{'captures':captures,'sessions':{'KR:2026-10-20':{'status':'partial','reason':'fixture'}}})
+class S4CompatibilityTest(unittest.TestCase):
+ """a128 s4(J3·J4 질문 추가) 호환: J3·J4 행은 invalid_pair 가 아니라 무시되고, s4 이전 출력은 그대로임."""
+ def test_pre_s4_output_matches_the_golden(self):
+  with tempfile.TemporaryDirectory() as d:result=evaluate_fixture(Path(d))
+  self.assertEqual(json.loads(json.dumps(result)),json.loads(GOLDEN.read_text()))  # 골든은 s4 수리 전 코드(3415cf89f)의 출력
+ def test_s4_rows_are_ignored_and_counted(self):
+  with tempfile.TemporaryDirectory() as d:before=evaluate_fixture(Path(d))
+  with tempfile.TemporaryDirectory() as d:after=evaluate_fixture(Path(d),with_s4=True)
+  self.assertEqual(after.pop('ignored_s4_question_rows'),{'judgments':4,'labels':4})
+  self.assertEqual(after,before)
+  self.assertNotIn('ignored_s4_question_rows',before)
+  self.assertNotIn('invalid_pair',json.dumps(after))
+ def test_unknown_question_ids_still_make_an_invalid_pair(self):
+  rows=[{'state_rev':'s','market':'KR','at':'t','symbol':'A','state_digest':'d','question_id':q} for q in ('j1_up_within_horizon','j2_hold_off_red_flag','j9_unknown')]
+  self.assertFalse(analysis.pair_candidates(rows)[0]['pair_valid'])
 if __name__=='__main__':unittest.main()

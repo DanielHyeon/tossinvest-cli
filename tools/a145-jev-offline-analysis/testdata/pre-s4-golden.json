@@ -1,0 +1,357 @@
+{
+  "manifest": {
+    "judgments": 8,
+    "labels": 8,
+    "ledger_sha256": "cd17988d113c9b6e1fa722d0a457e265fd89a864794a19677e7d600753a52fbb",
+    "observation_max_utc": "2026-10-16T01:00:00+00:00",
+    "observation_min_utc": "2026-10-16T01:00:00+00:00",
+    "state_count": 4,
+    "state_manifest_sha256": "23b5ae00a15163d7e0e9e05012295365ae57ec721bdbd0f8444c4043ad6dd362"
+  },
+  "quality": [
+    {
+      "class": "unknown",
+      "exclusion_rate": 0.3333333333333333,
+      "field": "daily",
+      "local_session": "2026-10-16",
+      "lot": "a128-s3",
+      "market": "KR",
+      "missing_labels": 0,
+      "provenance": [
+        "jev_screen1_of_random3_of_top100_le_order_cap",
+        "calendar",
+        "jev-1.13.0",
+        "jev-1.13.0",
+        "a128-r1",
+        "sha256:j1_up_within_horizon",
+        "sha256:j2_hold_off_red_flag",
+        "unknown"
+      ],
+      "row_weighted_mean_pct": 0.9666666666666667,
+      "selection_rate": 0.3333333333333333,
+      "states": 3
+    },
+    {
+      "class": "unknown",
+      "exclusion_rate": 0.3333333333333333,
+      "field": "intraday",
+      "local_session": "2026-10-16",
+      "lot": "a128-s3",
+      "market": "KR",
+      "missing_labels": 0,
+      "provenance": [
+        "jev_screen1_of_random3_of_top100_le_order_cap",
+        "calendar",
+        "jev-1.13.0",
+        "jev-1.13.0",
+        "a128-r1",
+        "sha256:j1_up_within_horizon",
+        "sha256:j2_hold_off_red_flag",
+        "unknown"
+      ],
+      "row_weighted_mean_pct": 0.9666666666666667,
+      "selection_rate": 0.3333333333333333,
+      "states": 3
+    },
+    {
+      "class": "unknown",
+      "exclusion_rate": 0.3333333333333333,
+      "field": "market_context",
+      "local_session": "2026-10-16",
+      "lot": "a128-s3",
+      "market": "KR",
+      "missing_labels": 0,
+      "provenance": [
+        "jev_screen1_of_random3_of_top100_le_order_cap",
+        "calendar",
+        "jev-1.13.0",
+        "jev-1.13.0",
+        "a128-r1",
+        "sha256:j1_up_within_horizon",
+        "sha256:j2_hold_off_red_flag",
+        "unknown"
+      ],
+      "row_weighted_mean_pct": 0.9666666666666667,
+      "selection_rate": 0.3333333333333333,
+      "states": 3
+    },
+    {
+      "class": "False",
+      "exclusion_rate": 0.3333333333333333,
+      "field": "market_future_news",
+      "local_session": "2026-10-16",
+      "lot": "a128-s3",
+      "market": "KR",
+      "missing_labels": 0,
+      "provenance": [
+        "jev_screen1_of_random3_of_top100_le_order_cap",
+        "calendar",
+        "jev-1.13.0",
+        "jev-1.13.0",
+        "a128-r1",
+        "sha256:j1_up_within_horizon",
+        "sha256:j2_hold_off_red_flag",
+        "unknown"
+      ],
+      "row_weighted_mean_pct": 0.9666666666666667,
+      "selection_rate": 0.3333333333333333,
+      "states": 3
+    },
+    {
+      "class": "unavailable",
+      "exclusion_rate": 0.3333333333333333,
+      "field": "market_news",
+      "local_session": "2026-10-16",
+      "lot": "a128-s3",
+      "market": "KR",
+      "missing_labels": 0,
+      "provenance": [
+        "jev_screen1_of_random3_of_top100_le_order_cap",
+        "calendar",
+        "jev-1.13.0",
+        "jev-1.13.0",
+        "a128-r1",
+        "sha256:j1_up_within_horizon",
+        "sha256:j2_hold_off_red_flag",
+        "unknown"
+      ],
+      "row_weighted_mean_pct": 0.9666666666666667,
+      "selection_rate": 0.3333333333333333,
+      "states": 3
+    },
+    {
+      "class": "unknown",
+      "exclusion_rate": 0.3333333333333333,
+      "field": "market_news_freshness",
+      "local_session": "2026-10-16",
+      "lot": "a128-s3",
+      "market": "KR",
+      "missing_labels": 0,
+      "provenance": [
+        "jev_screen1_of_random3_of_top100_le_order_cap",
+        "calendar",
+        "jev-1.13.0",
+        "jev-1.13.0",
+        "a128-r1",
+        "sha256:j1_up_within_horizon",
+        "sha256:j2_hold_off_red_flag",
+        "unknown"
+      ],
+      "row_weighted_mean_pct": 0.9666666666666667,
+      "selection_rate": 0.3333333333333333,
+      "states": 3
+    },
+    {
+      "class": "unknown",
+      "exclusion_rate": 0.3333333333333333,
+      "field": "quote",
+      "local_session": "2026-10-16",
+      "lot": "a128-s3",
+      "market": "KR",
+      "missing_labels": 0,
+      "provenance": [
+        "jev_screen1_of_random3_of_top100_le_order_cap",
+        "calendar",
+        "jev-1.13.0",
+        "jev-1.13.0",
+        "a128-r1",
+        "sha256:j1_up_within_horizon",
+        "sha256:j2_hold_off_red_flag",
+        "unknown"
+      ],
+      "row_weighted_mean_pct": 0.9666666666666667,
+      "selection_rate": 0.3333333333333333,
+      "states": 3
+    },
+    {
+      "class": "unknown",
+      "exclusion_rate": 0.3333333333333333,
+      "field": "stock_flows",
+      "local_session": "2026-10-16",
+      "lot": "a128-s3",
+      "market": "KR",
+      "missing_labels": 0,
+      "provenance": [
+        "jev_screen1_of_random3_of_top100_le_order_cap",
+        "calendar",
+        "jev-1.13.0",
+        "jev-1.13.0",
+        "a128-r1",
+        "sha256:j1_up_within_horizon",
+        "sha256:j2_hold_off_red_flag",
+        "unknown"
+      ],
+      "row_weighted_mean_pct": 0.9666666666666667,
+      "selection_rate": 0.3333333333333333,
+      "states": 3
+    },
+    {
+      "class": "False",
+      "exclusion_rate": 0.3333333333333333,
+      "field": "symbol_future_news",
+      "local_session": "2026-10-16",
+      "lot": "a128-s3",
+      "market": "KR",
+      "missing_labels": 0,
+      "provenance": [
+        "jev_screen1_of_random3_of_top100_le_order_cap",
+        "calendar",
+        "jev-1.13.0",
+        "jev-1.13.0",
+        "a128-r1",
+        "sha256:j1_up_within_horizon",
+        "sha256:j2_hold_off_red_flag",
+        "unknown"
+      ],
+      "row_weighted_mean_pct": 0.9666666666666667,
+      "selection_rate": 0.3333333333333333,
+      "states": 3
+    },
+    {
+      "class": "unavailable",
+      "exclusion_rate": 0.3333333333333333,
+      "field": "symbol_news",
+      "local_session": "2026-10-16",
+      "lot": "a128-s3",
+      "market": "KR",
+      "missing_labels": 0,
+      "provenance": [
+        "jev_screen1_of_random3_of_top100_le_order_cap",
+        "calendar",
+        "jev-1.13.0",
+        "jev-1.13.0",
+        "a128-r1",
+        "sha256:j1_up_within_horizon",
+        "sha256:j2_hold_off_red_flag",
+        "unknown"
+      ],
+      "row_weighted_mean_pct": 0.9666666666666667,
+      "selection_rate": 0.3333333333333333,
+      "states": 3
+    },
+    {
+      "class": "unknown",
+      "exclusion_rate": 0.3333333333333333,
+      "field": "symbol_news_freshness",
+      "local_session": "2026-10-16",
+      "lot": "a128-s3",
+      "market": "KR",
+      "missing_labels": 0,
+      "provenance": [
+        "jev_screen1_of_random3_of_top100_le_order_cap",
+        "calendar",
+        "jev-1.13.0",
+        "jev-1.13.0",
+        "a128-r1",
+        "sha256:j1_up_within_horizon",
+        "sha256:j2_hold_off_red_flag",
+        "unknown"
+      ],
+      "row_weighted_mean_pct": 0.9666666666666667,
+      "selection_rate": 0.3333333333333333,
+      "states": 3
+    }
+  ],
+  "r2": {
+    "question": {
+      "criteria": {
+        "false": "No such explicit adverse signal is visible in the supplied state.",
+        "true": "An explicit adverse signal relevant to buying now is visible in the supplied state."
+      },
+      "instructions": "Does this state show a clear, explicit adverse signal relevant to buying this stock now? Distinguish an unavailable news feed from a successfully read feed with no matching symbol headlines. Do not treat missing information by itself as an adverse signal, and do not infer safety or sufficient information from missing data.",
+      "type": "noul"
+    },
+    "reason": "No compatible saved r2 responses supplied.",
+    "status": "BLOCKED"
+  },
+  "sessions": [
+    {
+      "complete_cycles": 1,
+      "current_mean_pct": 1.2,
+      "cycles": 1,
+      "incomplete_cycles": 0,
+      "j1_only_mean_pct": 1.2,
+      "local_session": "2026-10-16",
+      "lot": "a128-s3",
+      "market": "KR",
+      "pool_uniform_mean_pct": 0.9666666666666667,
+      "provenance": [
+        "jev_screen1_of_random3_of_top100_le_order_cap",
+        "calendar",
+        "jev-1.13.0",
+        "jev-1.13.0",
+        "a128-r1",
+        "sha256:j1_up_within_horizon",
+        "sha256:j2_hold_off_red_flag",
+        "unknown"
+      ],
+      "survivor_uniform_mean_pct": 1.65,
+      "zero_k_cycles": 0
+    }
+  ],
+  "sidecar": [
+    {
+      "local_session": "2026-10-16",
+      "lot": "a128-s3",
+      "market": "KR",
+      "quality": {
+        "daily": "unknown",
+        "intraday": "unknown",
+        "market_context": "unknown",
+        "market_future_news": false,
+        "market_news": "unavailable",
+        "market_news_age_seconds": null,
+        "market_news_freshness": "unknown",
+        "quote": "unknown",
+        "stock_flows": "unknown",
+        "symbol_future_news": false,
+        "symbol_news": "unavailable",
+        "symbol_news_age_seconds": null,
+        "symbol_news_freshness": "unknown"
+      },
+      "state_digest": "2148b68638e676622dae065f6900a95f7c776c3c342c40ee291d32c25c07fea3"
+    },
+    {
+      "local_session": "2026-10-16",
+      "lot": "a128-s3",
+      "market": "KR",
+      "quality": {
+        "daily": "unknown",
+        "intraday": "unknown",
+        "market_context": "unknown",
+        "market_future_news": false,
+        "market_news": "unavailable",
+        "market_news_age_seconds": null,
+        "market_news_freshness": "unknown",
+        "quote": "unknown",
+        "stock_flows": "unknown",
+        "symbol_future_news": false,
+        "symbol_news": "unavailable",
+        "symbol_news_age_seconds": null,
+        "symbol_news_freshness": "unknown"
+      },
+      "state_digest": "6c90133edcb17f8396a94a5d2d1477636f39f16dee3bb6609ad291aeabe68801"
+    },
+    {
+      "local_session": "2026-10-16",
+      "lot": "a128-s3",
+      "market": "KR",
+      "quality": {
+        "daily": "unknown",
+        "intraday": "unknown",
+        "market_context": "unknown",
+        "market_future_news": false,
+        "market_news": "unavailable",
+        "market_news_age_seconds": null,
+        "market_news_freshness": "unknown",
+        "quote": "unknown",
+        "stock_flows": "unknown",
+        "symbol_future_news": false,
+        "symbol_news": "unavailable",
+        "symbol_news_age_seconds": null,
+        "symbol_news_freshness": "unknown"
+      },
+      "state_digest": "4e37b26d20b5db0c87ba47a9a59c7fccfacb4edbb62e2bfc7b5d3cc099ac053a"
+    }
+  ]
+}

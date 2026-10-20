@@ -13,6 +13,9 @@ from zoneinfo import ZoneInfo
 
 J1 = 'j1_up_within_horizon'
 J2 = 'j2_hold_off_red_flag'
+# a128 s4(2026-10-20)가 같은 요청에 더한 질문 — 이 분석은 J1·J2 만 쓰므로 이 행·라벨은 오류가 아니라 무시하고 수만 셈.
+# 목록 밖의 질문 id 는 그대로 'invalid judgment' 로 거부함(모르는 행을 조용히 버리지 않게).
+S4_QUESTIONS = ('j3_up_1pct_within_horizon', 'j4_down_1pct_within_horizon')
 R2 = {'type': 'noul', 'instructions': 'Does this state show a clear, explicit adverse signal relevant to buying this stock now? Distinguish an unavailable news feed from a successfully read feed with no matching symbol headlines. Do not treat missing information by itself as an adverse signal, and do not infer safety or sufficient information from missing data.', 'criteria': {'true': 'An explicit adverse signal relevant to buying now is visible in the supplied state.', 'false': 'No such explicit adverse signal is visible in the supplied state.'}}
 REPO = pathlib.Path(__file__).resolve().parents[2]
 
@@ -76,11 +79,13 @@ def read_snapshot(source):
     ledger_path = source/'ledger.jsonl'
     if ledger_path.is_symlink(): raise ValueError('ledger symlink rejected')
     raw = ledger_path.read_bytes()
-    judgments, labels = {}, {}
+    judgments, labels, ignored = {}, {}, set()
     for line in raw.splitlines():
         x = json.loads(line)
         if x.get('kind') == 'judgment':
-            if x['id'] in judgments: raise ValueError('duplicate judgment id')
+            if x['id'] in judgments or x['id'] in ignored: raise ValueError('duplicate judgment id')
+            if x.get('question_id') in S4_QUESTIONS:
+                ignored.add(x['id']); continue
             if x.get('question_id') not in (J1,J2) or not number(x.get('p')) or not 0 <= x['p'] <= 1 or not number(x.get('base_price')) or x['base_price'] <= 0: raise ValueError('invalid judgment')
             if x.get('horizon_minutes') != 60:
                 raise ValueError('only 60-minute horizons are supported')
@@ -88,6 +93,9 @@ def read_snapshot(source):
         elif x.get('kind') == 'label':
             if x['judgment_id'] in labels: raise ValueError('duplicate label')
             labels[x['judgment_id']] = x
+    # 무시한 s4 판단의 라벨은 줄 순서와 무관하게 다 읽은 뒤에 뺌.
+    ignored_labels = len(labels.keys() & ignored)
+    labels = {k: v for k, v in labels.items() if k not in ignored}
     if labels.keys() - judgments.keys(): raise ValueError('orphan label')
     for ident, label in labels.items():
         j = judgments[ident]
@@ -140,6 +148,8 @@ def read_snapshot(source):
         cycles[cycle].append({'key':key[-1], 'j1':one['p'], 'j2':two['p'], 'rank':rank, 'return':value, 'screen':screen, 'quality':quality(state), 'state':state, 'model':one.get('model_answered'), 'model_version':one.get('model_version'), 'request_controls_sha256':one.get('request_controls_sha256'), 'model_requested':one.get('model_requested'), 'j1_digest':one.get('question_digest'), 'j2_digest':two.get('question_digest'), 'baseline_request_sha256':one.get('request_sha256'), 'question_rev':one.get('question_rev'), 'observed_at':one['at']})
     observation_times=sorted(timestamp(x['at']) for x in judgments.values())
     manifest = {'analysis_at_utc':dt.datetime.now(dt.timezone.utc).isoformat(), 'snapshot_path':str(source), 'observation_min_utc':observation_times[0].isoformat() if observation_times else None, 'observation_max_utc':observation_times[-1].isoformat() if observation_times else None, 'ledger_sha256': hashlib.sha256(raw).hexdigest(), 'state_count':len(states), 'judgments':len(judgments), 'labels':len(labels), 'state_manifest_sha256':hashlib.sha256(''.join(d+'\n' for d in sorted(states)).encode()).hexdigest()}
+    if ignored:  # s4 이전 원장에서는 열쇠 자체가 없음 — 옛 출력 바이트 불변
+        manifest['ignored_s4_question_rows'] = {'judgments':len(ignored), 'labels':ignored_labels}
     return cycles, manifest
 
 

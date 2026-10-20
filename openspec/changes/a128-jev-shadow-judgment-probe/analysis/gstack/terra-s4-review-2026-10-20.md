@@ -19,7 +19,7 @@ Delivered: `state.go` 질문 2 개(rev a128-r2), `report.go` 적중 규칙 2 개
 
 | # | 등급 | 확신 | 위치 | 내용 | 처리 |
 |---|---|---|---|---|---|
-| 1 | P1(착지 선행 조건) | 9/10 | `tools/a145-jev-offline-analysis/analysis.py:123` · `tools/a147-jev-mfi-offline/analysis.py:175` | 원장을 읽는 다른 도구 둘이 한 state 의 행이 J1·J2 두 개뿐이라고 가정. a145: `if set(pair) != {J1,J2}: raise ValueError('unpaired questions')` → s4 행이 하나라도 있으면 **분석 전체가 멈춤**. a147: `valid_pair = … and len(rows) == 2 and …` → s4 의 모든 후보가 `invalid_pair` 로 **조용히 강등**. | 미수리 — a145·a147 change 범위. tasks 5.5 에 착지 선행 조건으로 적음(두 도구가 question_id 를 J1·J2 로 거르거나 s4 이전 스냅숏 전용임을 명시) |
+| 1 | P1(착지 선행 조건) | 9/10 | `tools/a145-jev-offline-analysis/analysis.py:123` · `tools/a147-jev-mfi-offline/analysis.py:175` | 원장을 읽는 다른 도구 둘이 한 state 의 행이 J1·J2 두 개뿐이라고 가정. a145: `if set(pair) != {J1,J2}: raise ValueError('unpaired questions')` → s4 행이 하나라도 있으면 **분석 전체가 멈춤**. a147: `valid_pair = … and len(rows) == 2 and …` → s4 의 모든 후보가 `invalid_pair` 로 **조용히 강등**. | **수리(같은 날, Manager 지시)** — 두 도구가 J3·J4 행·라벨을 짝 판정 전에 빼고 수를 `ignored_s4_question_rows` 로 남김. 실측으로 a145 는 84 행 `invalid judgment` 에서 먼저 멈췄음. 영수증·변이 5/5 는 tasks 5.5 |
 | 2 | P3 | 9/10 | `ledger.go` `InputTokens` 주석 | 「한 요청이 J1·J2 두 행을 만들므로 2배」 — s4 부터 4 행이라 낡음 | 수리(AUTO-FIX) — 질문 수 배수와 요청 단위로 묶는 방법을 적음 |
 | 3 | 정보 | — | design.md 「질문 추가 (s4)」 | J3·J4 를 같은 요청에 더해도 J1·J2 답이 그대로라는 근거는 계약 문서 인용뿐(독립 평가·key 미전송). 실측 아님 | tasks 5.7 에 s4 전후 J1·J2 p 분포 대조를 넣음 |
 | 4 | 정보 | — | 비용 | 질문 원문만큼 입력 토큰이 늘고, state 가 질문마다 다시 세어지는지는 계약 범위에서 미기재 | tasks 5.6 에 첫 사이클 `input_tokens` 중앙값 대조를 넣음 |
@@ -51,6 +51,6 @@ Delivered: `state.go` 질문 2 개(rev a128-r2), `report.go` 적중 규칙 2 개
 
 ## 남은 위험
 
-- 1번(a145·a147) 처리 전에 s4 를 공유 트리에 반영하면 a145 분석이 멈춤.
+- 1번(a145·a147)은 수리됨. 아카이브된 a145·a147·a153 기록 속 소스 sha256 은 수리 전 값으로 남음(시점 영수증 — 고치지 않음).
 - J3·J4 의 기저율이 낮으면 구간 n≥30 이 늦게 참(5.6 은 시장당 ≥5 세션).
 - J1·J2 독립성은 미실측(3번).

@@ -343,13 +343,17 @@ def evaluate(snapshot, plan, sidecar):
     registered = timestamp(plan['registered_at'])
     snapshot = Path(snapshot)
     raw = read_evidence(snapshot / 'ledger.jsonl')
-    judgments, labels, identifiers = [], {}, set()
+    judgments, labels, identifiers, ignored = [], {}, set(), set()
     for line in raw.splitlines():
         row = json.loads(line)
         if row.get('kind') == 'judgment':
             if row['id'] in identifiers:
                 raise ValueError('duplicate judgment ID')
             identifiers.add(row['id'])
+            # a128 s4 의 J3·J4 행은 짝 판정(J1·J2 두 행) 전에 뺌 — 안 빼면 모든 후보가 invalid_pair 가 됨. 수는 출력에 남김.
+            if row.get('question_id') in _reader.S4_QUESTIONS:
+                ignored.add(row['id'])
+                continue
             if timestamp(row['at']) <= registered or timestamp(row['at']) < timestamp(plan['first_observation_not_before']):
                 raise ValueError('observation predates registration')
             judgments.append(row)
@@ -359,6 +363,8 @@ def evaluate(snapshot, plan, sidecar):
             labels[row['judgment_id']] = row
     if set(labels) - identifiers:
         raise ValueError('orphan label')
+    ignored_labels = len(set(labels) & ignored)
+    labels = {k: v for k, v in labels.items() if k not in ignored}
     if not isinstance(sidecar, dict) or not isinstance(sidecar.get('captures'), dict) or not isinstance(sidecar.get('sessions'), dict):
         raise ValueError('sidecar captures and sessions maps required')
     records = []
@@ -462,12 +468,15 @@ def evaluate(snapshot, plan, sidecar):
                 'mfi_fraction':mfi_fraction, 'label_fraction':label_fraction,
                 'supplied_status':item['status'], 'status':status, 'reason':item.get('reason'),
                 'status_source':'supplied status plus calculated coverage; not proof of complete capture'})
-    return {'status':'inconclusive', 'sessions':session_status, 'groups':summarize(records),
+    result = {'status':'inconclusive', 'sessions':session_status, 'groups':summarize(records),
             'warnings':['Observational only; repeated symbols and overlapping horizons are not independent.',
                         'Capture source and receipt time are supplied provenance, not proof of their authenticity.',
                         'Manifest registration time is supplied evidence, not independent proof that the file was fixed before observation.',
                         'No account return, causality or same-K strategy effect is established.'],
             'raw_judgment_rows':len(judgments), 'candidate_records':len(records), 'duplicate_cycle_identities':conflicts}
+    if ignored:  # s4 이전 원장에서는 열쇠 자체가 없음 — 옛 출력 불변
+        result['ignored_s4_question_rows'] = {'judgments':len(ignored), 'labels':ignored_labels}
+    return result
 
 
 def read_sidecar(path, manifest_digest):

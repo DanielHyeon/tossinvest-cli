@@ -330,6 +330,23 @@
       `tools/a145-jev-offline-analysis/analysis.py` 는 `set(pair) != {J1,J2}` 면 `ValueError('unpaired questions')` 로 **전체가 멈추고**,
       `tools/a147-jev-mfi-offline/analysis.py` 는 `len(rows) == 2` 가 거짓이라 s4 행을 전부 `invalid_pair` 로 셈(조용한 강등). s4 행이
       원장에 들어가기 전에 두 도구가 question_id 를 J1·J2 로 거르게 하거나, s4 이전 스냅숏에만 돌린다는 제한을 적을 것(a145·a147 change 범위).
+      — **선행 조건 해소(2026-10-20, Manager 지시로 이 로트에서 수리 — a145·a147 은 아카이브됨, a128 s4 호환 후속)**: 실측으로 a145 는
+      위 123 행보다 앞인 84 행 `x.get('question_id') not in (J1,J2)` → `ValueError('invalid judgment')` 에서 먼저 멈춤(RED 확인).
+      수리: a145 `S4_QUESTIONS = (J3, J4)` 한 곳 정의 → `read_snapshot` 이 그 행을 짝 판정 전에 빼고(중복 id 검사는 유지), 그 라벨은 줄
+      순서와 무관하게 다 읽은 뒤 뺌, manifest 에 `ignored_s4_question_rows{judgments, labels}`(뺀 것이 있을 때만). a147 `evaluate` 는
+      `_reader.S4_QUESTIONS` 로 같은 거름(등록 시각 검사 전) + 출력에 같은 열쇠(있을 때만). 목록 밖 질문 id 는 예전처럼 a145 거부·a147
+      `invalid_pair`(조용히 버리지 않음 — 시험 고정).
+      영수증(python 3.12.3, `python3 -m unittest discover -s <도구> -p 'test_*.py'`): a145 `Ran 16 tests … OK`(새 3: base 코드 골든 일치 ·
+      J3·J4 섞은 원장 = 없는 원장 출력과 같음(원장 해시·무시 수 열쇠만 다름) · 모르는 id 거부) · a147 `Ran 22 tests … OK`(새 3: 같은
+      구성, 무시 수 `{judgments 4, labels 4}`, 출력에 `invalid_pair` 없음). 골든 `tools/a145-jev-offline-analysis/testdata/pre-s4-golden.json`·
+      `tools/a147-jev-mfi-offline/testdata/pre-s4-golden.json` 은 수리 전 코드(3415cf89f)로 생성. RED: 수리 전 새 시험 2 건 ERROR(a145
+      `ValueError: invalid judgment`, a147 `KeyError: 'ignored_s4_question_rows'`). 변이(제자리 → 복원 cmp 동일): a145 거름 제거 · a145
+      라벨 거름 제거 · a145 「J1·J2 밖 전부 무시」 · a147 거름 제거 · a147 무시 수 누락 = 5/5 CAUGHT(`python3 -B` — 첫 판에서 같은 크기
+      변이를 같은 초에 복원하자 `__pycache__` 의 변이체 바이트코드가 유효로 남아 복원 뒤 스위트가 변이체를 돌았음; 캐시 삭제 후 `-B` 로
+      재실행해 무변이 GREEN·5/5 를 다시 얻음). 공유 원장(sha256 접두 a4b1b99acef0e505,
+      s4 이전)을 읽기 전용으로 base·new a145 에 돌림 → sessions·quality·sidecar·r2.json 바이트 동일, manifest 는 실행 시각 외 같고 열쇠 순서
+      동일. a147 은 등록 전 관측을 거부하는 도구라 라이브 원장 대조 불가(픽스처 골든으로 대신). a153 시험(이 두 파일을 import) `Ran 26 tests … OK`.
+      남는 것: 아카이브된 a145·a147·a153 기록의 소스 sha256(예 a145 `fa28c8ee…`)은 그 시점 영수증이라 이제 현재 소스와 다름 — 고치지 않음.
 - [ ] 5.6 측정 — 시장당 s4 세션 5 회 이상(KR ≥5 · US ≥5). 첫 사이클의 `input_tokens` 중앙값을 s3 와 대조해 기록.
 - [ ] 5.7 보고 — J3·J4 구간표·시간대 표, J1·J2 의 p 분포 s4 전후 대조(질문 추가가 J1·J2 를 바꾸지 않았는지), 수익성 결론 없음.
 - [ ] 5.8 사람 결정 — J3·J4 결과로 후속(수동 보조·엔진 veto) 착수 여부와 임계. 후속 change 범위 초안을 review.md 에.

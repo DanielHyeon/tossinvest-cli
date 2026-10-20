@@ -1,0 +1,108 @@
+{
+  "candidate_records": 2,
+  "duplicate_cycle_identities": 0,
+  "groups": [
+    {
+      "candidates": 1,
+      "directions": {
+        "falling": {
+          "candidates": 0,
+          "mean_return_pct": null,
+          "positive_fraction": null,
+          "valid_labels": 0
+        },
+        "rising": {
+          "candidates": 0,
+          "mean_return_pct": null,
+          "positive_fraction": null,
+          "valid_labels": 0
+        },
+        "unchanged": {
+          "candidates": 0,
+          "mean_return_pct": null,
+          "positive_fraction": null,
+          "valid_labels": 0
+        }
+      },
+      "equal_cycle_rising_minus_falling_pp": null,
+      "label_excluded": {},
+      "label_valid": 1,
+      "market": "KR",
+      "matched_cycles": 0,
+      "mfi_excluded": {
+        "unproven_asof": 1
+      },
+      "mfi_valid": 0,
+      "selection": "nonselected",
+      "session": "2026-10-20"
+    },
+    {
+      "candidates": 1,
+      "directions": {
+        "falling": {
+          "candidates": 0,
+          "mean_return_pct": null,
+          "positive_fraction": null,
+          "valid_labels": 0
+        },
+        "rising": {
+          "candidates": 0,
+          "mean_return_pct": null,
+          "positive_fraction": null,
+          "valid_labels": 0
+        },
+        "unchanged": {
+          "candidates": 1,
+          "mean_return_pct": 1.0,
+          "positive_fraction": 1.0,
+          "valid_labels": 1
+        }
+      },
+      "equal_cycle_rising_minus_falling_pp": null,
+      "label_excluded": {},
+      "label_valid": 1,
+      "market": "KR",
+      "matched_cycles": 0,
+      "mfi_excluded": {},
+      "mfi_valid": 1,
+      "selection": "selected",
+      "session": "2026-10-20"
+    }
+  ],
+  "raw_judgment_rows": 4,
+  "sessions": [
+    {
+      "cycle_fraction": 0.002564102564102564,
+      "label_fraction": 1.0,
+      "market": "KR",
+      "mfi_fraction": 0.5,
+      "observed_cycles": 1,
+      "planned_cycles": 390,
+      "reason": "fixture",
+      "session": "2026-10-20",
+      "status": "incomplete",
+      "status_source": "supplied status plus calculated coverage; not proof of complete capture",
+      "supplied_status": "partial"
+    },
+    {
+      "cycle_fraction": 0.0,
+      "label_fraction": 0,
+      "market": "US",
+      "mfi_fraction": 0,
+      "observed_cycles": 0,
+      "planned_cycles": 390,
+      "reason": null,
+      "session": "2026-10-20",
+      "status": "incomplete",
+      "status_source": "supplied status plus calculated coverage; not proof of complete capture",
+      "supplied_status": "unknown"
+    }
+  ],
+  "status": "inconclusive",
+  "warnings": [
+    "Observational only; repeated symbols and overlapping horizons are not independent.",
+    "Capture source and receipt time are supplied provenance, not proof of their authenticity.",
+    "Manifest registration time is supplied evidence, not independent proof that the file was fixed before observation.",
+    "No account return, causality or same-K strategy effect is established."
+  ]
+}

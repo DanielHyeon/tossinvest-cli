@@ -176,4 +176,76 @@ class AnalysisTests(unittest.TestCase):
             self.assertEqual(json.loads((output/'r2.json').read_text())['status'],'BLOCKED')
             self.assertEqual(json.loads((output/'sessions.json').read_text())[0]['complete_cycles'],1)
 
+GOLDEN = pathlib.Path(__file__).with_name('testdata') / 'pre-s4-golden.json'
+S4_IDS = ('j3_up_1pct_within_horizon', 'j4_down_1pct_within_horizon')
+
+
+def pre_s4_snapshot(source, with_s4=False):
+    """a128 s4 이전 모양 스냅숏(선별 사이클 1 + 옛 로트 1 행). with_s4 면 같은 state 에 J3·J4 행·라벨을 섞어 넣음."""
+    (source/'states').mkdir(parents=True)
+    rows, labels = [], []
+    selection = {'rule':'jev_screen1_of_random3_of_top100_le_order_cap','seed':7}
+    cases = [('A', 1, .6, .2, {'finalist':True,'red_flag_excluded':False,'screen_rank':1}, .012),
+             ('B', 2, .5, .7, {'finalist':False,'red_flag_excluded':True,'screen_rank':0}, -.004),
+             ('C', 3, .4, .1, {'finalist':False,'red_flag_excluded':False,'screen_rank':2}, .021),
+             ('D', 4, .55, .3, None, None)]
+    for symbol, rank, j1, j2, screen, realized in cases:
+        state = {'market':'KR','symbol':symbol,'observed_at':'2026-10-16T01:00:00Z','base_price':100,'ranking_rank':rank,'news':'absent','session_source':'calendar'}
+        raw = json.dumps(state, separators=(',',':')).encode(); digest = hashlib.sha256(raw).hexdigest()
+        (source/'states'/f'{digest}.json').write_bytes(raw+b'\n')
+        common = {'kind':'judgment','at':state['observed_at'],'market':'KR','symbol':symbol,'state_digest':'sha256:'+digest,'base_price':100,
+                  'horizon_minutes':60,'label_due_at':'2026-10-16T02:00:00Z','model_answered':'jev-1.13.0','model_requested':'jev-1.13.0','question_rev':'a128-r1'}
+        if screen is not None:
+            common.update(screen=screen, selection=selection, state_rev='a128-s3')
+        questions = [(a.J1, j1, 'a128-r1'), (a.J2, j2, 'a128-r1')]
+        if with_s4:
+            questions += [(S4_IDS[0], .3, 'a128-r2'), (S4_IDS[1], .2, 'a128-r2')]
+        for question, p, rev in questions:
+            ident = f'{symbol}-{question}'
+            rows.append(dict(common, id=ident, question_id=question, question_rev=rev, question_digest='sha256:'+question, p=p))
+            label = {'kind':'label','judgment_id':ident,'due_at':'2026-10-16T02:00:00Z','at':'2026-10-16T02:00:01Z'}
+            if realized is None:
+                label.update(realized_price=None, realized_return=None, label_gap='realized_price_missing: fixture')
+            else:
+                label.update(realized_price=round(100*(1+realized), 6), realized_return=realized)
+            labels.append(label)
+    (source/'ledger.jsonl').write_text(''.join(json.dumps(x)+'\n' for x in rows+labels))
+
+
+def run_cli(source, output):
+    with patch('sys.argv', ['analysis', str(source), str(output)]): a.main()
+    result = {name: json.loads((output/f'{name}.json').read_text()) for name in ('manifest','sessions','quality','sidecar','r2')}
+    for volatile in ('analysis_at_utc', 'snapshot_path'):  # 실행 시각·임시 경로 — 비교에서 뺌
+        result['manifest'].pop(volatile)
+    return result
+
+
+class S4CompatibilityTests(unittest.TestCase):
+    """a128 s4(J3·J4 질문 추가) 호환: J3·J4 행은 오류가 아니라 무시되고, s4 이전 출력은 그대로임."""
+
+    def test_pre_s4_output_matches_the_golden(self):
+        with tempfile.TemporaryDirectory() as root:
+            root = pathlib.Path(root); pre_s4_snapshot(root/'snapshot')
+            result = run_cli(root/'snapshot', root/'out')
+        self.assertEqual(result, json.loads(GOLDEN.read_text()))  # 골든은 s4 수리 전 코드(3415cf89f)의 출력
+
+    def test_s4_rows_are_ignored_and_counted(self):
+        with tempfile.TemporaryDirectory() as root:
+            root = pathlib.Path(root)
+            pre_s4_snapshot(root/'pre'); pre_s4_snapshot(root/'s4', with_s4=True)
+            before, after = run_cli(root/'pre', root/'out-pre'), run_cli(root/'s4', root/'out-s4')
+            raw = (root/'s4'/'ledger.jsonl').read_bytes()
+        self.assertEqual(after['manifest'].pop('ignored_s4_question_rows'), {'judgments':8, 'labels':8})
+        self.assertEqual(after['manifest'].pop('ledger_sha256'), hashlib.sha256(raw).hexdigest())  # 원장 해시는 원문 그대로
+        before['manifest'].pop('ledger_sha256')
+        self.assertEqual(after, before)
+        self.assertNotIn('ignored_s4_question_rows', before['manifest'])
+
+    def test_unknown_question_ids_are_still_rejected(self):
+        with tempfile.TemporaryDirectory() as root:
+            source = pathlib.Path(root)/'snapshot'; pre_s4_snapshot(source)
+            row = json.loads((source/'ledger.jsonl').read_text().splitlines()[0]); row.update(id='x', question_id='j9_unknown')
+            with (source/'ledger.jsonl').open('a') as stream: stream.write(json.dumps(row)+'\n')
+            with self.assertRaisesRegex(ValueError, 'invalid judgment'): a.read_snapshot(source)
+
 if __name__ == '__main__': unittest.main()
