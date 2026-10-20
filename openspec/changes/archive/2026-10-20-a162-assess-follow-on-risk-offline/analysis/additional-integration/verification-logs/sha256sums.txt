@@ -1,0 +1,14 @@
+6380ff0634cd898ba0a2c7943a0b01f4263282dc50ccd3efe27e77f9eecc5b81  openspec/changes/a162-assess-follow-on-risk-offline/analysis/additional-integration/verification-logs/adapter-negative-final.log
+132a5d9b24ef6924ebc627014750fe7e38463d9d730c69e9549623e39c346c69  openspec/changes/a162-assess-follow-on-risk-offline/analysis/additional-integration/verification-logs/adapter-oracle-final-exit.txt
+4aacb89dd1b5727ad7d8f0a04cc7e75f4205399878fb938ff47a3240afe84338  openspec/changes/a162-assess-follow-on-risk-offline/analysis/additional-integration/verification-logs/adapter-oracle-final.log
+bc211cbef64cd6569525dd717cfc2a21a11f264dc8c8f0e02f163f061e88e4c8  openspec/changes/a162-assess-follow-on-risk-offline/analysis/additional-integration/verification-logs/final-document-check-exit.txt
+ba9f7c43761104726a1a9a87738a5298f091df32a5a219bc01ca1935774b6dc9  openspec/changes/a162-assess-follow-on-risk-offline/analysis/additional-integration/verification-logs/final-exit-summary.txt
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  openspec/changes/a162-assess-follow-on-risk-offline/analysis/additional-integration/verification-logs/final-format-check.log
+9b7fd16d7030725e4c52481b2c589de6d44883b0d3d07192723922af3de4f880  openspec/changes/a162-assess-follow-on-risk-offline/analysis/additional-integration/verification-logs/final-pm-check.log
+0521f5250ce80bf5dfb471152996c755eb55ba8e45f7d727169e3983617303e5  openspec/changes/a162-assess-follow-on-risk-offline/analysis/additional-integration/verification-logs/final-strict.log
+96d5ed8d409616fd12ad7277b8cb3456845ecc5da97baed781926bef50bf49e6  openspec/changes/a162-assess-follow-on-risk-offline/analysis/additional-integration/verification-logs/offline-default-final.log
+8d1988c2646570fe7a4c2dca08888fcb58325b48647dfeedf115442eb0dfad09  openspec/changes/a162-assess-follow-on-risk-offline/analysis/additional-integration/verification-logs/offline-tagged-final.log
+bc1d9e4e996fe96e3985e9e3eafbbed78959f0368658a55c1a5e2560005fa8c3  openspec/changes/a162-assess-follow-on-risk-offline/analysis/additional-integration/verification-logs/strategyflow-consumer-final.log
+dc80070d8957e44f1a369d5a75ad998b1616d1ff75eac9a435442d0fb1357804  openspec/changes/a162-assess-follow-on-risk-offline/analysis/additional-integration/verification-logs/weekly-default-build-gofiles.txt
+35ec9ca6c72b889d468d2d5a42aa34669b65fc370bc08c08b20a3d9c5f415a24  openspec/changes/a162-assess-follow-on-risk-offline/analysis/additional-integration/verification-logs/weekly-prefix-red.log
+c7833653ae9d3c41937f26a9558f64a0061278039cb474bfe7e71ead37387a2e  openspec/changes/a162-assess-follow-on-risk-offline/analysis/additional-integration/verification-logs/weekly-targeted-final.log

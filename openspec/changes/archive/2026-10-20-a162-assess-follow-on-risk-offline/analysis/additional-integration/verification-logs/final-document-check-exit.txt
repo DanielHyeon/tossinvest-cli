@@ -1,0 +1,3 @@
+strict=0
+pm-check=0
+format=0

@@ -1,0 +1,20 @@
+{
+  "id": "STORY-TOS-a162",
+  "title": "기존 전략 평가기를 재사용하는 오프라인 후속 진입 위험 판정",
+  "feature": "FEAT-TOS-013",
+  "intent": "archived",
+  "openspec": {
+    "change_id": "a162-assess-follow-on-risk-offline",
+    "path": "openspec/changes/archive/2026-10-20-a162-assess-follow-on-risk-offline"
+  },
+  "found_by": {
+    "date": "2026-10-20",
+    "how": "User approved designing offline follow-on assessment before runtime persistence, dispatch and closeout.",
+    "record": "openspec/changes/archive/2026-10-20-a162-assess-follow-on-risk-offline/proposal.md"
+  },
+  "acceptance": [
+    "Reuse native KR/US proposal APIs for continuation, reversal and weekly without restoring detached evidence into execution authority.",
+    "Calculate a hypothetical budget-limited quantity using explicit account-currency per-share risk assumptions; reject missing or mismatched inputs.",
+    "Expose no qFinal, risk reservation, lease, journal mutation, runtime connection or live trading permission."
+  ]
+}

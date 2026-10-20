@@ -1,0 +1,17 @@
+**ProposeKR** (function)
+
+**Location:** internal/continuationlane/evaluator.go:198
+**Signature:** `(request KREvaluationRequest) Outcome`
+
+ProposeKR evaluates the KR lane without consuming or fabricating a066
+authority. A successful quantity is q_candidate: exact current-leg planned
+remaining, not an admitted or executable quantity.
+
+```go
+198	func ProposeKR(request KREvaluationRequest) Outcome {
+199		return evaluateStage(request.Context, request.Evidence.Envelope, EvaluateKRFlow(request.Evidence, request.Config), evaluationProposal)
+200	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** evaluateStage (internal/continuationlane/evaluator.go:219), EvaluateKRFlow (internal/continuationlane/evidence.go:176), evaluationProposal (internal/continuationlane/evaluator.go:212), KREvaluationRequest (internal/continuationlane/evaluator.go:141), Outcome (internal/continuationlane/evaluator.go:170)
+**Called by ←** TestProductionProposalAuthoritiesDeliverKRUSFromImmutableSnapshots (internal/continuationlane/production_proposal_test.go:16), TestPairedContinuationProposalIsCapFreePlannedRemaining (internal/continuationlane/proposal_test.go:5), TestPairedContinuationAdmissionReducesProposalWithoutChangingIt (internal/continuationlane/proposal_test.go:24), proposeContinuationKR (internal/strategyflow/adapters.go:47)

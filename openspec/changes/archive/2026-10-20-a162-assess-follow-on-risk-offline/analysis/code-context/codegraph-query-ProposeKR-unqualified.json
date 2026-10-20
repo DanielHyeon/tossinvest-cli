@@ -1,0 +1,98 @@
+[
+  {
+    "node": {
+      "id": "function:30fc8ab94d03efec5518161fe939c69c",
+      "kind": "function",
+      "name": "ProposeKR",
+      "qualifiedName": "ProposeKR",
+      "filePath": "internal/reversallane/evaluate.go",
+      "language": "go",
+      "startLine": 23,
+      "endLine": 26,
+      "startColumn": 0,
+      "endColumn": 1,
+      "docstring": "ProposeKR returns the cap-free q_candidate for the KR lane. It cannot issue\nrisk, journal, dispatch, or broker authority.",
+      "signature": "(request KREvaluationRequest) EvaluationResult",
+      "visibility": null,
+      "isExported": true,
+      "isAsync": false,
+      "isStatic": false,
+      "isAbstract": false,
+      "returnType": "EvaluationResult",
+      "updatedAt": 1789666922270
+    },
+    "score": 109.30365282664447
+  },
+  {
+    "node": {
+      "id": "function:a29ce04a3002f478ff90624b4d1a99bc",
+      "kind": "function",
+      "name": "ProposeKR",
+      "qualifiedName": "ProposeKR",
+      "filePath": "internal/weeklyvaluelane/evaluate.go",
+      "language": "go",
+      "startLine": 115,
+      "endLine": 117,
+      "startColumn": 0,
+      "endColumn": 1,
+      "docstring": "ProposeKR evaluates the KR weekly lane without a066 cap authority. A\nsuccessful Quantity is q_candidate only and the durable weekly reservation\nis still mandatory.",
+      "signature": "(request EvaluationRequest) Outcome",
+      "visibility": null,
+      "isExported": true,
+      "isAsync": false,
+      "isStatic": false,
+      "isAbstract": false,
+      "returnType": "Outcome",
+      "updatedAt": 1789666923527
+    },
+    "score": 109.12896447816904
+  },
+  {
+    "node": {
+      "id": "function:a4ba3842ce23e9d1eac431f2358466c2",
+      "kind": "function",
+      "name": "ProposeKR",
+      "qualifiedName": "ProposeKR",
+      "filePath": "internal/continuationlane/evaluator.go",
+      "language": "go",
+      "startLine": 198,
+      "endLine": 200,
+      "startColumn": 0,
+      "endColumn": 1,
+      "docstring": "ProposeKR evaluates the KR lane without consuming or fabricating a066\nauthority. A successful quantity is q_candidate: exact current-leg planned\nremaining, not an admitted or executable quantity.",
+      "signature": "(request KREvaluationRequest) Outcome",
+      "visibility": null,
+      "isExported": true,
+      "isAsync": false,
+      "isStatic": false,
+      "isAbstract": false,
+      "returnType": "Outcome",
+      "updatedAt": 1789666918616
+    },
+    "score": 109.02566088144935
+  },
+  {
+    "node": {
+      "id": "function:bb6070d6e31e3b4d691e45846a607b8e",
+      "kind": "function",
+      "name": "ProposeUS",
+      "qualifiedName": "ProposeUS",
+      "filePath": "internal/continuationlane/evaluator.go",
+      "language": "go",
+      "startLine": 204,
+      "endLine": 206,
+      "startColumn": 0,
+      "endColumn": 1,
+      "docstring": "ProposeUS is the paired US proposal path. It has the same fail-closed\nbranches as ProposeKR and deliberately ignores any caller cap value.",
+      "signature": "(request USEvaluationRequest) Outcome",
+      "visibility": null,
+      "isExported": true,
+      "isAsync": false,
+      "isStatic": false,
+      "isAbstract": false,
+      "returnType": "Outcome",
+      "updatedAt": 1789666918616
+    },
+    "score": 17.294283588336626
+  }
+]

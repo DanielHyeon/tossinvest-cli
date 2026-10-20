@@ -1,0 +1,26 @@
+--- FAIL: TestStrategyflowFollowOnFixtureBuildsNativePrefixThroughOrdinalSeven (0.00s)
+    --- FAIL: TestStrategyflowFollowOnFixtureBuildsNativePrefixThroughOrdinalSeven/KR-ordinal-3 (0.00s)
+        strategyflow_followon_test.go:21: fixture ordinal=3: weekly strategyflow fixture: WEEK_RESERVATION_CONFLICT
+    --- FAIL: TestStrategyflowFollowOnFixtureBuildsNativePrefixThroughOrdinalSeven/KR-ordinal-4 (0.00s)
+        strategyflow_followon_test.go:21: fixture ordinal=4: weekly strategyflow fixture: WEEK_RESERVATION_CONFLICT
+    --- FAIL: TestStrategyflowFollowOnFixtureBuildsNativePrefixThroughOrdinalSeven/KR-ordinal-5 (0.00s)
+        strategyflow_followon_test.go:21: fixture ordinal=5: weekly strategyflow fixture: WEEK_RESERVATION_CONFLICT
+    --- FAIL: TestStrategyflowFollowOnFixtureBuildsNativePrefixThroughOrdinalSeven/KR-ordinal-6 (0.00s)
+        strategyflow_followon_test.go:21: fixture ordinal=6: weekly strategyflow fixture: WEEK_RESERVATION_CONFLICT
+    --- FAIL: TestStrategyflowFollowOnFixtureBuildsNativePrefixThroughOrdinalSeven/KR-ordinal-7 (0.00s)
+        strategyflow_followon_test.go:21: fixture ordinal=7: weekly strategyflow fixture: WEEK_RESERVATION_CONFLICT
+    --- FAIL: TestStrategyflowFollowOnFixtureBuildsNativePrefixThroughOrdinalSeven/US-ordinal-3 (0.00s)
+        strategyflow_followon_test.go:21: fixture ordinal=3: weekly strategyflow fixture: WEEK_RESERVATION_CONFLICT
+    --- FAIL: TestStrategyflowFollowOnFixtureBuildsNativePrefixThroughOrdinalSeven/US-ordinal-4 (0.00s)
+        strategyflow_followon_test.go:21: fixture ordinal=4: weekly strategyflow fixture: WEEK_RESERVATION_CONFLICT
+    --- FAIL: TestStrategyflowFollowOnFixtureBuildsNativePrefixThroughOrdinalSeven/US-ordinal-5 (0.00s)
+        strategyflow_followon_test.go:21: fixture ordinal=5: weekly strategyflow fixture: WEEK_RESERVATION_CONFLICT
+    --- FAIL: TestStrategyflowFollowOnFixtureBuildsNativePrefixThroughOrdinalSeven/US-ordinal-6 (0.00s)
+        strategyflow_followon_test.go:21: fixture ordinal=6: weekly strategyflow fixture: WEEK_RESERVATION_CONFLICT
+    --- FAIL: TestStrategyflowFollowOnFixtureBuildsNativePrefixThroughOrdinalSeven/US-ordinal-7 (0.00s)
+        strategyflow_followon_test.go:21: fixture ordinal=7: weekly strategyflow fixture: WEEK_RESERVATION_CONFLICT
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane	0.012s
+FAIL
+
+EXIT_CODE=1

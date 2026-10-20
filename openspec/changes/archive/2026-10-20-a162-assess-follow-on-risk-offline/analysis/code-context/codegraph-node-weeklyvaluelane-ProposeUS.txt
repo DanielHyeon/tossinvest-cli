@@ -1,0 +1,15 @@
+**ProposeUS** (function)
+
+**Location:** internal/weeklyvaluelane/evaluate.go:120
+**Signature:** `(request EvaluationRequest) Outcome`
+
+ProposeUS is the paired US weekly q_candidate proposal path.
+
+```go
+120	func ProposeUS(request EvaluationRequest) Outcome {
+121		return evaluateStage(request, MarketUS, SourceEDGAR, EvaluateUSEvidence, evaluationProposal)
+122	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** evaluateStage (internal/weeklyvaluelane/evaluate.go:135), evaluationProposal (internal/weeklyvaluelane/evaluate.go:128), EvaluationRequest (internal/weeklyvaluelane/evaluate.go:41), Outcome (internal/continuationlane/evaluator.go:170)
+**Called by ←** proposeWeeklyUS (internal/strategyflow/adapters.go:113), TestProductionProposalAuthoritiesDeliverPairedKRUSFromDurableWeeks (internal/weeklyvaluelane/production_proposal_test.go:17), TestPairedWeeklyProposalIsCapFreeButKeepsDurableReservation (internal/weeklyvaluelane/proposal_test.go:8), TestPairedWeeklyAdmissionReducesProposalWithoutChangingPrices (internal/weeklyvaluelane/proposal_test.go:31)
