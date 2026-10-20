@@ -257,3 +257,11 @@ typed-confirmation을 유지한다 — 이 결정은 UI 표면에만 적용한�
 | 항목 | 사유 | 행선 |
 |---|---|---|
 | 생산 호출자 0 인 `strategyrouter` 섬 정리 — `Route()`(a112 `RouteSet` 이 대체) · durable `SchedulerState`/CAS/rollback/`MarketRecordStore` · `MigrateLegacy` · `QuotaAuthority` | a112 시험 다수가 `Route` 를 참조 대조로 부름 — quota 권한이 정해진 뒤 한 번에 | a112 7.1 뒤 정리 change 하나(미배정) |
+
+## a074 이월 · 미배정 후속 (a074 archive 뒤에도 남는 의무 — 2026-10-20)
+
+`a074-critical-events-reach-the-operator` 가 넘긴 것. 근거는 a074 `issues.md` 「I7 정정」 끝 문단과 `tasks.md` 11.1 처분(사용자 결정 2026-10-20).
+
+| 항목 | 사유 | 행선 |
+|---|---|---|
+| 배포 후 격리 생성 이벤트가 실제 사이클에서 발행되는지 실측(tasks 11.1) — 열린 포지션에 새 격리가 생긴 사이클의 critical 이벤트 · 구조 로그를 원장의 격리 행과 대조 | 새 격리가 열린 포지션에 자연히 생기기 전에는 측정 불가. 만들어 내려면 원장 대사를 어긋나게 해야 하므로 하지 않는다 | 사람 항목 — 다음 자연 격리 발생 때 읽기 전용 확인 |

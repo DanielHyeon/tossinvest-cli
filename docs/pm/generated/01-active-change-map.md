@@ -77,7 +77,7 @@
 | `a071-wire-kr-us-protection-readiness` | STORY-TOS-a071 | archived |
 | `a072-wire-multi-market-strategy-runtime` | STORY-TOS-a072 | archived |
 | `a073-operate-multi-market-strategy-lanes` | STORY-TOS-a073 | archived |
-| `a074-critical-events-reach-the-operator` | STORY-TOS-a074 | in_progress |
+| `a074-critical-events-reach-the-operator` | STORY-TOS-a074 | implemented |
 | `a075-alerts-turn-on-with-one-button` | STORY-TOS-a075 | archived |
 | `a076-the-subscribe-address-is-scannable` | STORY-TOS-a076 | archived |
 | `a077-screens-show-what-they-already-know` | STORY-TOS-a077 | archived |
