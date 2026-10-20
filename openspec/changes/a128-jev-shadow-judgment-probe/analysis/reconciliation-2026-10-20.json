@@ -1,0 +1,221 @@
+{
+  "captured_at_utc": "2026-10-20T00:56:27.598137+00:00",
+  "scope": "read-only aggregate reconciliation; raw ledger rows and identifiers withheld",
+  "snapshot": {
+    "path": "openspec/changes/a128-jev-shadow-judgment-probe/analysis/shadow-ledger/ledger.jsonl",
+    "sha256_before": "35014b3bf9a3a72e0ec91a580f9d8fd3d8e9b7b02d31b845af50ab0c2f764742",
+    "sha256_after": "35014b3bf9a3a72e0ec91a580f9d8fd3d8e9b7b02d31b845af50ab0c2f764742",
+    "bytes_before": 23527966,
+    "bytes_after": 23527966,
+    "stable_during_read": true
+  },
+  "rows_by_kind": {
+    "gap": 10,
+    "judgment": 13800,
+    "label": 13440
+  },
+  "judgment_label_linkage": {
+    "judgments": 13800,
+    "labels": 13440,
+    "realized_labels": 13380,
+    "label_gap_labels": 60,
+    "invalid_label_shape": 0,
+    "unlabeled_judgments": 360,
+    "orphan_labels": 0,
+    "duplicate_judgment_ids": 0,
+    "duplicate_label_judgment_ids": 0,
+    "unlabeled_due_by_capture": 0,
+    "unlabeled_not_due_by_capture": 360,
+    "unlabeled_missing_or_invalid_due": 0
+  },
+  "task_3_candidate_core": {
+    "KR|2026-10-16|a128-s3": {
+      "judgments": 1980,
+      "first_judgment_at_utc": "2026-10-16T00:00:00Z",
+      "last_judgment_at_utc": "2026-10-16T05:20:00Z",
+      "final_due_at_utc": "2026-10-16T06:20:00Z",
+      "labels": 1980,
+      "first_label_at_utc": "2026-10-16T01:00:04Z",
+      "last_label_at_utc": "2026-10-16T06:20:03Z",
+      "label_before_due": 0,
+      "realized_labels": 1920,
+      "explicit_label_gaps": 60,
+      "unlabeled": 0,
+      "state_session_source_rows": {
+        "manual-override": 1980
+      },
+      "gap_rows_by_stage": {},
+      "selection_lot_count": 1
+    },
+    "KR|2026-10-19|a128-s3": {
+      "judgments": 2040,
+      "first_judgment_at_utc": "2026-10-19T00:00:00Z",
+      "last_judgment_at_utc": "2026-10-19T05:27:50Z",
+      "final_due_at_utc": "2026-10-19T06:27:50Z",
+      "labels": 2040,
+      "first_label_at_utc": "2026-10-19T01:00:20Z",
+      "last_label_at_utc": "2026-10-19T06:28:16Z",
+      "label_before_due": 0,
+      "realized_labels": 2040,
+      "explicit_label_gaps": 0,
+      "unlabeled": 0,
+      "state_session_source_rows": {
+        "manual-override": 2040
+      },
+      "gap_rows_by_stage": {
+        "session": 2
+      },
+      "selection_lot_count": 1
+    },
+    "US|2026-10-15|a128-s3": {
+      "judgments": 1980,
+      "first_judgment_at_utc": "2026-10-15T13:30:00Z",
+      "last_judgment_at_utc": "2026-10-15T18:50:00Z",
+      "final_due_at_utc": "2026-10-15T19:50:00Z",
+      "labels": 1980,
+      "first_label_at_utc": "2026-10-15T14:30:21Z",
+      "last_label_at_utc": "2026-10-15T19:50:16Z",
+      "label_before_due": 0,
+      "realized_labels": 1980,
+      "explicit_label_gaps": 0,
+      "unlabeled": 0,
+      "state_session_source_rows": {
+        "calendar": 1980
+      },
+      "gap_rows_by_stage": {},
+      "selection_lot_count": 1
+    },
+    "US|2026-10-19|a128-s3": {
+      "judgments": 1980,
+      "first_judgment_at_utc": "2026-10-19T13:30:00Z",
+      "last_judgment_at_utc": "2026-10-19T18:50:00Z",
+      "final_due_at_utc": "2026-10-19T19:50:00Z",
+      "labels": 1980,
+      "first_label_at_utc": "2026-10-19T14:30:06Z",
+      "last_label_at_utc": "2026-10-19T19:50:02Z",
+      "label_before_due": 0,
+      "realized_labels": 1980,
+      "explicit_label_gaps": 0,
+      "unlabeled": 0,
+      "state_session_source_rows": {
+        "calendar": 1980
+      },
+      "gap_rows_by_stage": {},
+      "selection_lot_count": 1
+    }
+  },
+  "task_3_candidate_core_selection_lot_count": 1,
+  "task_3_candidate_core_note": "Four selected a128-s3 current-lot sessions only; manual-override provenance is preserved for both KR keys, while both US keys are calendar-sourced. Structural evidence, not a task promotion.",
+  "task_3_candidate_core_limitations": [
+    "State provenance is linked by referenced state_digest. Candidate log files are correlated by filename/content predicates only; the ledger schema has no log-path field.",
+    "For KR 2026-10-16, no same-UTC-date stage=session gap was found. This is not treated as a defect because the manual window may have a different start-date convention; neither normal exit nor a complete session window is inferred from that absence.",
+    "The current ledger proves structural linkage and label timing, not prediction quality, profitability, a threshold decision, or authority to promote policy."
+  ],
+  "candidate_execution_log_inventory": [
+    {
+      "path": "/tmp/a128-kr-1016.log",
+      "sha256": "88f11a89247ee67c906ed5d071d2a25f8e67891bf40f8d6f80ed040c8a2f605d",
+      "filename_market": "KR",
+      "filename_date_hint": "2026-10-16",
+      "contains_manual_override_marker": true,
+      "contains_calendar_marker": true,
+      "contains_matching_market_token": true,
+      "contains_error_marker": false
+    },
+    {
+      "path": "/tmp/a128-kr-1019.log",
+      "sha256": "248c4016f18a2fd2cede3b540796bb59d83a44390f9b169b9b728be0cf702e2f",
+      "filename_market": "KR",
+      "filename_date_hint": "2026-10-19",
+      "contains_manual_override_marker": true,
+      "contains_calendar_marker": true,
+      "contains_matching_market_token": true,
+      "contains_error_marker": true
+    },
+    {
+      "path": "/tmp/a128-kr-1019b.log",
+      "sha256": "9ca06c02de377eda55ea580dd48096c54672679ac62d47a50afaa7662d2e8b86",
+      "filename_market": "KR",
+      "filename_date_hint": "2026-10-19",
+      "contains_manual_override_marker": true,
+      "contains_calendar_marker": true,
+      "contains_matching_market_token": true,
+      "contains_error_marker": false
+    },
+    {
+      "path": "/tmp/a128-us-1015.log",
+      "sha256": "b83643a6ac60d0715706457d1c1331adb37cb15f959b9eadc08014cfff49212a",
+      "filename_market": "US",
+      "filename_date_hint": "2026-10-15",
+      "contains_manual_override_marker": false,
+      "contains_calendar_marker": false,
+      "contains_matching_market_token": true,
+      "contains_error_marker": false
+    },
+    {
+      "path": "/tmp/a128-us-1019.log",
+      "sha256": "f172732af8f0da549fff0d2c7527562852b09bd18d13073191578e9fa2fbc357",
+      "filename_market": "US",
+      "filename_date_hint": "2026-10-19",
+      "contains_manual_override_marker": false,
+      "contains_calendar_marker": false,
+      "contains_matching_market_token": true,
+      "contains_error_marker": false
+    },
+    {
+      "path": "/tmp/a128-us-1019-manual.log",
+      "sha256": "1350c8da59efc17bb42588ac49b21278023bca43c9b6961654eb17c7d9ec7e87",
+      "filename_market": "US",
+      "filename_date_hint": "2026-10-19",
+      "contains_manual_override_marker": false,
+      "contains_calendar_marker": false,
+      "contains_matching_market_token": true,
+      "contains_error_marker": true
+    }
+  ],
+  "source_contracts": [
+    {
+      "path": "openspec/changes/a128-jev-shadow-judgment-probe/tasks.md",
+      "sha256": "ebb241c0fa542b00717d44ecdac62153672fe6ed1b42c2873843852b79a37ef6"
+    },
+    {
+      "path": "openspec/changes/a128-jev-shadow-judgment-probe/design.md",
+      "sha256": "dab15b5e37de13183cbdfc5990a6b7c4b71c8fa581fbab8409eea1afd4686bb3"
+    },
+    {
+      "path": "openspec/changes/a128-jev-shadow-judgment-probe/review.md",
+      "sha256": "b8fdc92666eb61ae4946b87182fe5367eff575a4734288690817743d53943c99"
+    },
+    {
+      "path": "openspec/changes/a128-jev-shadow-judgment-probe/analysis/audit-2026-10-17.md",
+      "sha256": "b8c1dffe257a9ac36195aab22dfbe7b9e69d6e6979c561bda3f258c1a618fef3"
+    },
+    {
+      "path": "tools/a128-jev-shadow-probe/ledger.go",
+      "sha256": "0a504f9644faaa0234cafe3be414baf38a0fc9356302ff25f14a4979f65434b5"
+    },
+    {
+      "path": "tools/a128-jev-shadow-probe/report.go",
+      "sha256": "17662da0e9427ce18fc1f47cd58ceda5c585b51b02cbc4844e2e066e7168d167"
+    }
+  ],
+  "source_contracts_capture_note": "Source-contract hashes were captured before this reconciliation updated tasks.md; they identify the source semantics reviewed, not the final task-document hash.",
+  "manager_reconciliation": {
+    "approved_task_checks": [
+      "3.1",
+      "3.2"
+    ],
+    "approved_scope": "Current a128-s3 two-day, two-market collection and final-label completion only; 4.x remains open.",
+    "execution_log_resolution": "Root directly reviewed core logs: KR 2026-10-16 and US 2026-10-15/19 closed 33 cycles; KR 2026-10-19 had six context-canceled cycles then 28 closed cycles, totaling 34.",
+    "manual_override_gap_attribution": {
+      "KR_2026-10-16": [
+        "2026-10-15T23:40:01Z"
+      ],
+      "KR_2026-10-19": [
+        "2026-10-18T23:13:53Z",
+        "2026-10-19T00:57:50Z"
+      ]
+    },
+    "gap_attribution_note": "UTC dates do not alone identify the local session; the listed manual-window gap times are retained with local-session attribution."
+  }
+}

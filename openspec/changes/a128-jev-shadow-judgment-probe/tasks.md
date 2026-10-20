@@ -266,14 +266,16 @@
 > US 1일차 10-12·2일차 10-13. (프로브는 세션 종료와 함께 죽으므로 US 밤 세션은 사람이
 > `setsid nohup ./run-probe.sh US <log> --wait-open &` 로 띄워 장 마감+horizon 까지 유지.)
 
-- [ ] 3.1 1일차: KR 세션 + US 세션 각 1회 프로브 실행(에이전트 가능 — read-only).
+- [x] 3.1 1일차: KR 세션 + US 세션 각 1회 프로브 실행(에이전트 가능 — read-only).
       실행 로그·원장 보존.
       — 달력 오판 대응 수단: official market-calendar 가 개장일을 휴장으로 오응답하면(2026-10-12 KR 실측)
       `--session "HH:MM-HH:MM"`(시장 현지 시각, KR=Asia/Seoul·US=America/New_York)로 달력을 우회해 측정을 돌린다 —
       달력 호출 0, 우회는 state `session_source=manual-override` + gap 행(stage=session, "calendar bypassed by
       --session, …, reason=operator")에 남아 보고서가 혼입을 가려낸다. 파싱 실패·역전창(start≥end)은 시작 전 거부.
       (run-probe.sh 가 그대로 전달: `./run-probe.sh KR <log> --session "09:00-15:30"`.)
-- [ ] 3.2 2일차: 동일. 라벨러 완주 확인(마지막 판단 + h분까지).
+      — 2026-10-20 read-only reconciliation: current `a128-s3` core KR 10-16·10-19와 US 10-15·10-19의 실행 기록·원장·state·라벨 시각을 대조했다. KR 두 세션은 기록형 `manual-override`, US 두 세션은 calendar provenance다. 자세한 집계·제한은 `analysis/reconciliation-2026-10-20.md`와 동명 JSON에 보관한다.
+- [x] 3.2 2일차: 동일. 라벨러 완주 확인(마지막 판단 + h분까지).
+      — KR 10-19는 첫 6 cycles가 context canceled 된 뒤 28 closed cycles를 재개해 합계 34 cycles가 됐다. 이를 uninterrupted run으로 표현하지 않는다. 네 core 세션의 미라벨은 0이고 label_at<due_at는 0이다. KR 10-16의 명시 라벨 결손 60건은 실현으로 바꾸지 않는다.
 - [x] 3.3 원장·state 파일 커밋(계좌 데이터 0 확인 후).
       — 2026-10-17 offline audit: 9,000 judgment·9,000 label·6 explicit gap,
       4,500 referenced state files with link/hash/JSON errors 0 and no

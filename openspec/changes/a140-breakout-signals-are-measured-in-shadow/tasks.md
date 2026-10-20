@@ -41,6 +41,8 @@ Story: `STORY-TOS-a140` · **Low**(새 파일만 · High-risk 경로 무접촉 �
 - [ ] 3.2 라벨러 완주 확인(마지막 PROPOSED 의 마감까지)
 - [ ] 3.3 원장 커밋(계좌 데이터 0 확인 후, evidence DB 는 커밋하지 않고 digest 만)
 
+> **2026-10-20 read-only reconciliation.** Current canonical ledger has closed KR sessions 2/5 plus one ongoing key, 14 completed labels total, and no preserved D11 approval receipt. Tasks 3.1–3.3 remain open. Details: `analysis/reconciliation-2026-10-20.md` and the paired JSON. This does not substitute for a128 market-by-market measurement or a human D16 decision.
+
 ## 4. 판정 · 종결
 
 - [ ] 4.1 보고서 — 세션별 퍼널 · 거절 분포 · RVOL 반사실 · 제안 수 · 결과 분포(n<30 보류) · 호출 예산 실측
