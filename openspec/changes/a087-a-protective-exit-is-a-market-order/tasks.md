@@ -25,10 +25,13 @@
       definition/callers/impact 확인 — 2026-10-10 HEAD `6e844e11`, codegraph 1.6.0. `make sdd-sync` rc=2(2회):
       CodeGraph sync 성공·fingerprint 기록, CodeGraphContext `update` 300초 타임아웃(advisory 미갱신).
       산출물 `analysis/gate-0.4-codegraph.md`
-- [ ] 0.5 **엔진 세션 게이트 유무 확인 (design D7 — 재리뷰 P1-4)** — 청산 판정 상류(`ObserveOnce`·`judge`·`record`)를
+- [x] 0.5 **엔진 세션 게이트 유무 확인 (design D7 — 재리뷰 P1-4)** — 청산 판정 상류(`ObserveOnce`·`judge`·`record`)를
       CodeGraph 로 따라가 세션·시각 입력이 있는지 열거하고 `analysis/` 에 남긴다. 결과와 §5.2 를 입력으로 D7 교집합의
       처분을 사람이 정한다. **§1~§3 착수 조건**. read-only 작업이고 그 답이 spec Requirement 1 의 SHALL NOT 을 무효화할 수
       있으므로 **0.9 freeze 판정 전에 수행하는 것을 권장**한다(3차 재리뷰 A-P3-4 — 차단 아님, Manager 판단)
+      — 2026-10-20 HEAD `00fed684`, logic-map AST 12개 + codegraph 1.6.0: **세션 입력 0 · 시각 입력 40(전부 경과 시간)** →
+      엔진에 세션 게이트 없음(D7 「교집합 공집합」 분기 불성립). `analysis/gate-0.5-session-inputs.md` · `analysis/session-gate-0.5/`.
+      **D7 처분은 미정 — §5.2 결과와 함께 사람 결정 대기**
 - [x] 0.6 **2차 재리뷰 문서 수리** — P0-1·P1-1~4·P2-1~5·P3-1~3 처분(2026-10-10, 처분 대조표 `review.md` 끝).
       사용자 결정 2건(2026-10-10) 반영. production 편집 0
 - [x] 0.7 **Eng 재리뷰 1회** (재리뷰 「freeze 재개 조건」) — 0.6 개정본 대상. 2026-10-10 실행(3차, `e93cd6a4`):
@@ -170,13 +173,21 @@
 
 ## 4. 회귀 방지
 
-- [ ] 4.1 `flatten` 무변화 — 이미 거래소 하한가 1순위이고 이 change의 범위 밖임을 테스트로 고정.
+- [x] 4.1 `flatten` 무변화 — 이미 거래소 하한가 1순위이고 이 change의 범위 밖임을 테스트로 고정.
       `flatten.sell`/`Liquidate` 는 `checkOrderShape` 상류다(`analysis/gate-0.4-codegraph.md`) — ② 변경이 flatten 의 LIMIT 을 바꾸지 않음
-- [ ] 4.2 `verifylive` 무변화 — 검증 도구의 "체결되면 안 되는 지정가" 성질 유지
-- [ ] 4.3 조건주문 경로 무변화 (2c 범위)
+      — `internal/flatten/a087_flatten_limit_pin_test.go` `TestA087FlattenStillSellsAtAnAggressiveLimit`(하한가·체결가 할인 두 행, 실제 Gateway 경유).
+      변이 2/2 CAUGHT(`analysis/pin-mutations/`)
+- [x] 4.2 `verifylive` 무변화 — 검증 도구의 "체결되면 안 되는 지정가" 성질 유지
+      — `internal/verifylive/a087_far_limit_only_pin_test.go` `TestA087VerifyPlacesOnlyFarLimitOrders`(전체 2회 실행의 생성 7·정정 1 전수:
+      LIMIT·시장성 없는 가격). 변이 2/2 CAUGHT(`analysis/pin-mutations/`)
+- [x] 4.3 조건주문 경로 무변화 (2c 범위)
+      — `internal/trading/a087_conditional_path_unchanged_pin_test.go` `TestA087ConditionalMarketStopBypassesThePlacePredicateUnchanged`
+      (기본 Service 에서 ③ 이 KR 시장가 매도 비지원인 채로 SINGLE+MARKET 매도 조건주문이 의도 그대로 브로커에 닿음). 변이 2/2 CAUGHT(`analysis/pin-mutations/`)
 - [ ] 4.4 upstream 상속 테스트 650 green 유지
-- [ ] 4.5 **전송 표류 가드 KR market sell 골든 행** (재리뷰 P3-3) — `decision_test.go` 표류 가드 골든은 US market sell 만 있다.
+- [x] 4.5 **전송 표류 가드 KR market sell 골든 행** (재리뷰 P3-3) — `decision_test.go` 표류 가드 골든은 US market sell 만 있다.
       KR market sell 행을 더해 `buildOrderCreate` 와 사본 `PlaceWireBody`(`execgw/wirebody.go`)가 둘 다 가격·TIF 를 싣지 않음을 고정
+      — 기존 파일 대신 새 파일 `internal/execgw/a087_kr_market_sell_wire_pin_test.go` `TestA087KRMarketSellWireBodyCarriesNoPriceOrTIF`
+      (같은 골든을 `PlaceWireBody` 와 httptest 로 잡은 `official.PlaceOrder` 전송 바이트 양쪽에 대조, 가격이 남은 intent 행 포함). 변이 3/3 CAUGHT
 - [ ] 4.6 **재생 경로** (재리뷰 P3-3) — `PlaceWireBody` 를 쓰는 재생 경로가 MARKET 보호 청산 intent 를 가격 없이 재구성하는지 시험
 
 ## 5. 실측 (사용자 승인 항목 — §0.7, 자동 실행 금지)
@@ -234,6 +245,8 @@
       시간외단일가에는 시장가가 없다
 - [ ] 5.3 `openspec/changes/verify-execution-capability/measurements.md`에 M계열로 기록
       (`docs/trading/measurements.md`는 **존재하지 않는다** — 초안 리뷰 M7)
+      — 5.1 분만 기록(2026-10-20): 「9차」 절 **M50**(KR 정규장 MARKET 매도 1주 접수·`체결완료`) + 10-15 401 두 시도 처분.
+      **5.2 미측정이라 미체크** — 5.2 측정 뒤 같은 절에 M 행을 더하고 체크한다
 
 ### 실측 결과 → 처분 (재리뷰 P1-1·P1-4, 사용자 결정 2026-10-10)
 

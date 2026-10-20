@@ -239,3 +239,18 @@ runs: `run-B3L57BY47BFBVGZS`(21:43, 등록) → `run-OJRFYBGI4UOBM4MD`(22:23, �
 **선택: TSLA.** 임계 통과가 초 단위로 일어나고, 스프레드가 좁아 임계를 최근 체결가와 최우선
 매수호가 사이에 놓아 두 기준을 가를 수 있다. 대가는 $300 노출과 후보 유니버스 관측 995회
 겹침이다(엔진 미가동이지만 측정 전 `exclude_symbols` 고정이 필요하다).
+
+## 9차 — KR 일반 주문 MARKET 매도 (2026-10-19 14:59 KST, 사람 터미널 · a087 실측 도구)
+
+change `a087-a-protective-exit-is-a-market-order` tasks 5.1 의 측정이다. 수단은 출하 CLI 가 아니라 별도 실측 도구
+`tools/a087-market-sell-probe/`(출하 `tossctl order place` 는 비분수 MARKET 을 브로커에 닿기 전 로컬 거부하므로 그 결과는
+브로커 응답이 아니다 — a087 tasks §5 머리말). 주문 생성은 사람이 자기 터미널에서 주문별로 승인해 실행했다. 처분 기준은
+a087 tasks §5 「실측 결과 → 처분」 표다. 같은 change 의 5.2(정규장 밖 KR MARKET 매도)는 **미측정**이라 이 절에 없다.
+
+| # | 사실 | 근거 |
+|---|---|---|
+| M50 | **KR 정규장에서 일반 주문 MARKET 매도가 접수·체결된다** — `POST /api/v1/orders` 본문 `orderType:"MARKET"`·`side:"SELL"`·`quantity:"1"`(010170), **가격·`timeInForce` 없음**, `confirmHighValueOrder:false`. 보냄 14:59:19.102 KST → **HTTP 200**·`orderId` 수신·`clientOrderId` 메아리 일치(14:59:19.251, 왕복 약 149ms). 상태는 사람이 읽기 전용 `tossctl orders completed` 로 확인: 010170 매도 1주 **`체결완료`**, 브로커 접수 14:59:19.277 KST. 그 화면은 OpenAPI `orderId` 를 싣지 않아 시각(+0.2s)·종목·방향·수량으로 대조했고 같은 시각의 다른 010170 매도 1주는 없었다. `체결완료` 는 완료 이력의 한글 표시값이며 라이브 status enum(`FILLED`)을 직접 읽은 것은 아니다(M46). a087 처분 표의 「수용」 행(200 + 체결 상태) — **KR 정규장 한정**으로 Phase 2 의 브로커 전제가 성립했다 | a087 `analysis/market-sell-receipts/a087ms-20261019T145815-8bdcb862.json`(`outcome=accepted`, `http_status=200`, `echo_matches_sent=true`, `session_context.clock_phase=krx-regular-by-clock`), 커밋 `e537ab23c`, a087 tasks 5.1 |
+| — | 같은 측정의 **선행 시도 2회(2026-10-15 15:13·15:16 KST)는 HTTP 401 `invalid-token`** 으로 판정 불가(인증)였다 — MARKET 반증이 아니다. 그날 명령에 `--config-dir` 가 없어 도구가 엔진과 다른 기본 토큰 캐시(`~/.cache/tossctl`)로 새 토큰을 받았고, 2026-10-19 같은 구조의 도구가 엔진 토큰과 번갈아 무효화하는 것이 실측됐다(10-15 당시 재현은 안 함). 10-19 성공 실행은 `--config-dir ~/.config/tossctl`(엔진과 같은 캐시)이었다 | a087 `analysis/market-sell-receipts/a087ms-20261015T151103-0a2582f5.json`·`…T151445-9157ce87.json`, a087 tasks 5.1 |
+
+이 측정이 **재지 않은 것**: 체결 품질(체결가 대 결정 시 관측가 — n=1, 도구 범위 밖, a087 design D6), 부분체결 잔량,
+정규장 밖 응답(a087 5.2), US MARKET 매도(a087 proposal 「US 한계」), VI·단일가·거래정지 종목에서의 거동.

@@ -1,0 +1,36 @@
+[control] TestA087FlattenStillSellsAtAnAggressiveLimit (internal/flatten/liquidate.go 원본 overlay)
+      ok  	github.com/JungHoonGhae/tossinvest-cli/internal/flatten	0.536s
+[M1] 4.1 M1 flatten 청산 매도를 MARKET 으로
+      a087_flatten_limit_pin_test.go:63: orders that reached the broker = [], want exactly one
+      → CAUGHT
+[M2] 4.1 M2 거래소 하한가 1순위를 건너뜀
+      a087_flatten_limit_pin_test.go:73: price = 67600, want 63000
+      → CAUGHT
+[control] TestA087VerifyPlacesOnlyFarLimitOrders (internal/verifylive/mutate.go 원본 overlay)
+      ok  	github.com/JungHoonGhae/tossinvest-cli/internal/verifylive	0.074s
+[M3] 4.2 M3 검증 주문을 MARKET 으로
+      a087_far_limit_only_pin_test.go:107: placement 6 {Symbol:005930 Market:KR Side:sell OrderType:market Quantity:4 Price:84000 Amount:0 CurrencyMode: Fractional:false ClientOrderID:}: order type "market", want limit — a verify order must not be able to fill
+      → CAUGHT
+[M4] 4.2 M4 가격을 시장 쪽으로 넘김(매수가 최근가 위)
+      a087_far_limit_only_pin_test.go:115: placement 4: buy at 112000 is not below the last trade 70000
+      → CAUGHT
+[control] TestA087ConditionalMarketStopBypassesThePlacePredicateUnchanged (internal/trading/conditional.go 원본 overlay)
+      ok  	github.com/JungHoonGhae/tossinvest-cli/internal/trading	0.009s
+[M5] 4.3 M5 조건주문 의도를 변형(MARKET→LIMIT)
+      a087_conditional_path_unchanged_pin_test.go:56: the conditional path altered the intent:
+      → CAUGHT
+[M6] 4.3 M6 조건주문이 일반 주문 관문 ③ 을 거치게 함
+      a087_conditional_path_unchanged_pin_test.go:50: ConditionalPlace(SINGLE+MARKET SELL): live place supports only a narrow subset of orders
+      → CAUGHT
+[control] TestA087KRMarketSellWireBodyCarriesNoPriceOrTIF (internal/execgw/wirebody.go 원본 overlay)
+      ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.015s
+[M7] 4.5 M7 사본 렌더러가 시장가에 남은 가격을 실음
+      a087_kr_market_sell_wire_pin_test.go:86: stored copy (PlaceWireBody):
+      → CAUGHT
+[M8] 4.5 M8 실제 빌더가 시장가에 남은 가격을 실음
+      a087_kr_market_sell_wire_pin_test.go:89: sent bytes (official buildOrderCreate):
+      → CAUGHT
+[M9] 4.5 M9 사본 렌더러가 시장가에 TIF 를 실음
+      a087_kr_market_sell_wire_pin_test.go:86: stored copy (PlaceWireBody):
+      → CAUGHT
+합계: CAUGHT 9/9 · 대조군 PASS 4/4
