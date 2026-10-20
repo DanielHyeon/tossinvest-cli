@@ -110,3 +110,16 @@ change of its own." 그 결과 운영 원장의 critical 알림 6건이 `attempt
 - §0.7: 이 함수는 알림을 켜지 않는다. 설정 파일이 켠다.
 - §0.8: 토큰은 이 함수에 값으로 들어오지 않는다 — `resolveNotificationPublisher`가
   환경에서 읽어 `obs.Ntfy`에 직접 넣고, 이 함수는 존재 여부(bool)만 audit로 넘긴다.
+
+## Refresh (2026-10-20)
+
+a074 종결(base 재고정) 전에 이 번들의 `ast.json` 을 HEAD `3415cf89` 의 소스로 다시 추출했다
+(`go run ./tools/logic-map --file internal/app/engine/engine.go --func NewContext`, `revision: current` 유지). 옛 `ast.json` 은
+840b3377 재기준화가 base `448dfeb1` 의 소스로 만든 것이라 소스 해시가 낡아 있었다.
+`risk-pattern-report.md` 도 같은 소스로 재생성했다 — 결과는 바이트 동일.
+
+- 이 함수를 바꾼 이웃 커밋(`git log -L`, base..HEAD): a085 `cd1a9087` · a130 `dbb0681c`. a074 커밋은 없다.
+- 분기 15 → 15. 옛/새 분기를 `(kind, column, 소스 줄 글자)` 로 difflib 정렬한 결과 Bn → Bn 항등이다 — Branch Test Map 재번호 없음. B8 은 같은 자리·같은 kind 에서 조건 글자만 바뀌었다(`bindApplyHooks(jrn)` → `bindApplyHooks(jrn, tradeOutcomeRefusalSink(opts.Logger))`, a130).
+
+위 문단은 **이웃 change 의 편집을 기록할 뿐** a074 의 관측을 새로 주장하지 않는다. 위의 Inputs·Branches 절은
+a074 편집 당시(base 기준)의 서술이며 그대로 둔다.

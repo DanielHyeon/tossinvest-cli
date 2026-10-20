@@ -86,3 +86,16 @@ we cannot record is a settings change nobody can audit."
 - §0.5: 알림 설정이 처음으로 audit 대상이 된다. `engine.go`의 `Publisher` 주석이
   요구한 조건이 이것으로 충족된다.
 - §0.8: topic·token 값이 audit에 나타나지 않음을 6.2가 테스트로 고정한다.
+
+## Refresh (2026-10-20)
+
+a074 종결(base 재고정) 전에 이 번들의 `ast.json` 을 HEAD `3415cf89` 의 소스로 다시 추출했다
+(`go run ./tools/logic-map --file internal/app/engine/interlock.go --func recordGateSettings`, `revision: current` 유지). 옛 `ast.json` 은
+840b3377 재기준화가 base `448dfeb1` 의 소스로 만든 것이라 소스 해시가 낡아 있었다.
+`risk-pattern-report.md` 도 같은 소스로 재생성했다 — 결과는 바이트 동일.
+
+- 이 함수를 바꾼 이웃 커밋(`git log -L`, base..HEAD): a136 `c8783ad9` · a138 `86442ad7` · a139 `6f4f7cd3` (audit 항목 추가). a074 커밋은 없다.
+- 분기 6 → 6. 옛/새 분기를 `(kind, column, 소스 줄 글자)` 로 difflib 정렬한 결과 Bn → Bn 항등이다 — Branch Test Map 재번호 없음. a074 의 알림 audit 4항목 순서·이름 계약(6.4)은 이웃 항목이 뒤에 붙는 것으로 바뀌지 않는다 — `a074_notification_audit_test.go` 가 계속 통과한다.
+
+위 문단은 **이웃 change 의 편집을 기록할 뿐** a074 의 관측을 새로 주장하지 않는다. 위의 Inputs·Branches 절은
+a074 편집 당시(base 기준)의 서술이며 그대로 둔다.

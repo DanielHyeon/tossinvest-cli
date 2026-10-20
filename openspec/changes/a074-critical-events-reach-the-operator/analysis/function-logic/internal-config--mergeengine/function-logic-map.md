@@ -76,3 +76,16 @@ topic 오버라이드의 해석은 조립 지점의 일이다 — 그래야 이 
   분기는 편집하지 않는다.
 - §0.2: `notifications` 키가 없는 모든 기존 설정이 편집 전과 동일하게 로드된다.
 - §0.8: 토큰 필드가 **없다.** 파일에 토큰을 담을 자리를 만들지 않는 것이 이 설계의 일부다.
+
+## Refresh (2026-10-20)
+
+a074 종결(base 재고정) 전에 이 번들의 `ast.json` 을 HEAD `3415cf89` 의 소스로 다시 추출했다
+(`go run ./tools/logic-map --file internal/config/engine.go --func mergeEngine`, `revision: current` 유지). 옛 `ast.json` 은
+840b3377 재기준화가 base `448dfeb1` 의 소스로 만든 것이라 소스 해시가 낡아 있었다.
+`risk-pattern-report.md` 도 같은 소스로 재생성했다 — 결과는 바이트 동일.
+
+- 이 함수를 바꾼 이웃 커밋(`git log -L`, base..HEAD): a136 `c8783ad9` · a138 `86442ad7` (설정 필드 병합 추가). a074 커밋은 없다.
+- 분기 5 → 5. 옛/새 분기를 `(kind, column, 소스 줄 글자)` 로 difflib 정렬한 결과 Bn → Bn 항등이다 — Branch Test Map 재번호 없음.
+
+위 문단은 **이웃 change 의 편집을 기록할 뿐** a074 의 관측을 새로 주장하지 않는다. 위의 Inputs·Branches 절은
+a074 편집 당시(base 기준)의 서술이며 그대로 둔다.

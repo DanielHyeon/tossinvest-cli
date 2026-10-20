@@ -69,3 +69,16 @@ error 등급으로 남긴다. 분기 구조·반환 조건·주기는 바뀌지 
 - §0.3: 청산 발의는 `ObserveOnce` 안에서 이미 끝난 뒤이므로 새 로그가 손절의 즉시성에
   앞서지 않는다.
 - §0.2: 토글이 없다. 알림 설정과 무관하게 동작한다.
+
+## Refresh (2026-10-20)
+
+a074 종결(base 재고정) 전에 이 번들의 `ast.json` 을 HEAD `3415cf89` 의 소스로 다시 추출했다
+(`go run ./tools/logic-map --file internal/app/engine/exitloop.go --func ExitObserver.Run`, `revision: current` 유지). 옛 `ast.json` 은
+840b3377 재기준화가 base `448dfeb1` 의 소스로 만든 것이라 소스 해시가 낡아 있었다.
+`risk-pattern-report.md` 도 같은 소스로 재생성했다 — 바뀐 것은 파일 안 `panic` 위치 줄 번호뿐.
+
+- 함수 본문 바이트는 base 와 같다(`git log -L` 로 base..HEAD 에 이 함수를 바꾼 커밋 0). 위치만 350-360 → 395-405 로 옮겼다 — 같은 파일의 다른 함수 편집 때문에 파일 해시만 낡았다.
+- 분기 3 → 3. 옛/새 분기를 `(kind, column, 소스 줄 글자)` 로 difflib 정렬한 결과 Bn → Bn 항등이다 — Branch Test Map 재번호 없음.
+
+위 문단은 **이웃 change 의 편집을 기록할 뿐** a074 의 관측을 새로 주장하지 않는다. 위의 Inputs·Branches 절은
+a074 편집 당시(base 기준)의 서술이며 그대로 둔다.

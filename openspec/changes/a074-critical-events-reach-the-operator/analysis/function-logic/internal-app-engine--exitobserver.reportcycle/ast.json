@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "736a583f6476c7fdf28e3a787bf89cc8df46aad888e559a1067921eeae6242c2",
+  "source_sha256": "ba30515476584fead62907157bb5ba985271057b2da882c6fda79e2b29951598",
   "package": "engine",
   "function": "reportCycle",
   "receiver": "ExitObserver",
   "signature": "ExitObserver.reportCycle(params=1, results=0)",
   "start": {
-    "line": 378,
+    "line": 423,
     "column": 1
   },
   "end": {
-    "line": 384,
+    "line": 429,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 379,
+        "line": 424,
         "column": 2
       }
     }
@@ -27,7 +27,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 380,
+        "line": 425,
         "column": 3
       }
     }
@@ -36,7 +36,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 382,
+        "line": 427,
         "column": 2
       },
       "text": "o.logErr"

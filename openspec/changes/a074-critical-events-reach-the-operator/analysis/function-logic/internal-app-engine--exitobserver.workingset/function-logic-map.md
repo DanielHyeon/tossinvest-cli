@@ -98,3 +98,18 @@ B11은 활성 격리 확인(B14) **앞**에 있으므로, 이미 격리된 corru
   판정 이전 단계이므로, 유효 포지션의 발의는 아직 시작도 하지 않았다 — 함수 주석의
   append 순서 결정이 지키려는 것이 정확히 이것이고 a074는 그 순서를 유지한다.
 - §0.7: 격리를 자동 해제하지 않는다. 알림만 한다.
+
+## Refresh (2026-10-20)
+
+a074 종결(base 재고정) 전에 이 번들의 `ast.json` 을 HEAD `3415cf89` 의 소스로 다시 추출했다
+(`go run ./tools/logic-map --file internal/app/engine/exitloop.go --func ExitObserver.workingSet`, `revision: current` 유지). 옛 `ast.json` 은
+840b3377 재기준화가 base `448dfeb1` 의 소스로 만든 것이라 소스 해시가 낡아 있었다.
+`risk-pattern-report.md` 도 같은 소스로 재생성했다 — 바뀐 것은 파일 안 `panic` 위치 줄 번호뿐.
+
+- 이 함수를 바꾼 이웃 커밋(`git log -L`, base..HEAD): a084 `3d4bdfd4` · a083/a084 `a9f24b0d` · `52b5cb6d`, a090 `8d2f1e12`, a150 `cf9260f3`. a074 커밋은 없다.
+- 분기 20 → 31. 옛/새 분기를 `(kind, column)` 키로 difflib 정렬했다. 대응: B1~B6 항등 · B7~B17 → B14~B24 · B18~B20 → B27~B29.
+  - `(kind, column, 소스 줄 글자)` 키로도 정렬했다. 두 키는 격리 사슬 하나에서만 갈린다. 옛 B15(`else`)·B17(`if`)은 둘 다 `} else if active {` 줄에 있고, a084 가 그 앞에 `} else if active && !q.NeedsReJudgement() {` 갈래를 넣었다. 글자 키는 옛 B15 를 새 B25(`else if active` 의 else) 에 붙이고 옛 B16 을 지운다. 구조 키는 옛 B14/B15/B16/B17 을 새 B21/B22/B23/B24 에 붙인다. 소스(647-650 줄)에서 `refused` 에 넣는 본문은 새 B24 갈래 아래에 있다. 그래서 구조 키를 쓴다.
+- 새 분기 11(B7~B13 · B25 · B26 · B30 · B31)은 전부 이웃의 것이다. Branch Test Map 은 그 행에 그 분기를 만든 change 의 현존 시험을 적고 RED `n/a` 로 둔다.
+
+위 문단은 **이웃 change 의 편집을 기록할 뿐** a074 의 관측을 새로 주장하지 않는다. 위의 Inputs·Branches 절은
+a074 편집 당시(base 기준)의 서술이며 그대로 둔다.

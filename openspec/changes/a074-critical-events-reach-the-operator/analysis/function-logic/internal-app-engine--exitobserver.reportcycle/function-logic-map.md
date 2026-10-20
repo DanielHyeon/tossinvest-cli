@@ -51,3 +51,16 @@ B1의 else 경로(= 실패한 사이클)가 유일한 side effect다: `o.logErr`
 - Safe edit boundary: 함수 전체가 a074의 것이다.
 - High-risk impact: **no** — 판정·주문·손절 경로에 값을 공급하지 않고 반환값도 없다.
 - §0.3: 호출 시점은 사이클이 끝난 뒤이므로 어떤 청산도 지연시키지 않는다.
+
+## Refresh (2026-10-20)
+
+a074 종결(base 재고정) 전에 이 번들의 `ast.json` 을 HEAD `3415cf89` 의 소스로 다시 추출했다
+(`go run ./tools/logic-map --file internal/app/engine/exitloop.go --func ExitObserver.reportCycle`, `revision: current` 유지). 옛 `ast.json` 은
+840b3377 재기준화가 base `448dfeb1` 의 소스로 만든 것이라 소스 해시가 낡아 있었다.
+`risk-pattern-report.md` 도 같은 소스로 재생성했다 — 바뀐 것은 파일 안 `panic` 위치 줄 번호뿐.
+
+- 함수 본문 바이트는 base 와 같다(`git log -L` 로 base..HEAD 에 이 함수를 바꾼 커밋 0). 위치만 378-384 → 423-429 로 옮겼다.
+- 분기 1 → 1. 옛/새 분기를 `(kind, column, 소스 줄 글자)` 로 difflib 정렬한 결과 Bn → Bn 항등이다 — Branch Test Map 재번호 없음.
+
+위 문단은 **이웃 change 의 편집을 기록할 뿐** a074 의 관측을 새로 주장하지 않는다. 위의 Inputs·Branches 절은
+a074 편집 당시(base 기준)의 서술이며 그대로 둔다.

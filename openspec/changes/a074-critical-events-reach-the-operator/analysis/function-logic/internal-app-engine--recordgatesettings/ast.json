@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/interlock.go",
-  "source_sha256": "a2277d4bd3a76152d91c9feb46309b7e07d74a1689d736b6a9020c55ecc20baf",
+  "source_sha256": "fc45d99bf61312e64a2dd31bdde9d255020119aef9bf4509bd4ab2ffef342eba",
   "package": "engine",
   "function": "recordGateSettings",
   "signature": "recordGateSettings(params=5, results=1)",
   "start": {
-    "line": 713,
+    "line": 739,
     "column": 1
   },
   "end": {
-    "line": 776,
+    "line": 811,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 716,
+        "line": 742,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 726,
+        "line": 752,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "else",
       "at": {
-        "line": 729,
+        "line": 755,
         "column": 9
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 729,
+        "line": 755,
         "column": 9
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "range",
       "at": {
-        "line": 770,
+        "line": 805,
         "column": 2
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 771,
+        "line": 806,
         "column": 3
       }
     }
@@ -66,14 +66,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 772,
+        "line": 807,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 775,
+        "line": 810,
         "column": 2
       }
     }
@@ -82,112 +82,8 @@
     {
       "kind": "call",
       "at": {
-        "line": 739,
+        "line": 765,
         "column": 62
-      },
-      "text": "strconv.FormatBool"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 742,
-        "column": 4
-      },
-      "text": "strconv.FormatBool"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 744,
-        "column": 4
-      },
-      "text": "limitString"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 746,
-        "column": 4
-      },
-      "text": "strings.Join"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 751,
-        "column": 4
-      },
-      "text": "strings.Join"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 752,
-        "column": 74
-      },
-      "text": "limitString"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 753,
-        "column": 74
-      },
-      "text": "limitString"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 754,
-        "column": 74
-      },
-      "text": "limitString"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 755,
-        "column": 77
-      },
-      "text": "limitString"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 756,
-        "column": 76
-      },
-      "text": "limitString"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 758,
-        "column": 4
-      },
-      "text": "strings.ToUpper"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 758,
-        "column": 20
-      },
-      "text": "strings.TrimSpace"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 762,
-        "column": 4
-      },
-      "text": "strconv.FormatBool"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 766,
-        "column": 4
       },
       "text": "strconv.FormatBool"
     },
@@ -202,7 +98,159 @@
     {
       "kind": "call",
       "at": {
-        "line": 771,
+        "line": 770,
+        "column": 4
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 772,
+        "column": 4
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 777,
+        "column": 4
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 778,
+        "column": 74
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 779,
+        "column": 74
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 780,
+        "column": 74
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 781,
+        "column": 77
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 782,
+        "column": 76
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 784,
+        "column": 4
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 784,
+        "column": 20
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 788,
+        "column": 4
+      },
+      "text": "strconv.FormatBool"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 792,
+        "column": 4
+      },
+      "text": "strconv.FormatBool"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 794,
+        "column": 4
+      },
+      "text": "strconv.FormatBool"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 797,
+        "column": 4
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 797,
+        "column": 16
+      },
+      "text": "gate.EffectiveMaxDailyBuyNotional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 800,
+        "column": 4
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 800,
+        "column": 16
+      },
+      "text": "gate.EffectiveMaxOpenPositions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 803,
+        "column": 4
+      },
+      "text": "perTradeRiskBudgetAudit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 803,
+        "column": 41
+      },
+      "text": "perTradeRiskBudgetAudit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 806,
         "column": 16
       },
       "text": "log.RecordChange"
@@ -212,49 +260,49 @@
     {
       "kind": ":=",
       "at": {
-        "line": 715,
+        "line": 741,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 717,
+        "line": 743,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 725,
+        "line": 751,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 727,
+        "line": 753,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 730,
+        "line": 756,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 733,
+        "line": 759,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 771,
+        "line": 806,
         "column": 6
       }
     }
