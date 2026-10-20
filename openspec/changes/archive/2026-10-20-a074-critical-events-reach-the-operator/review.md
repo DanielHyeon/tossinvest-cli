@@ -199,3 +199,10 @@ GATE PASS 11/11 을 본 뒤 「1」). `docs/WORKFLOW.md` 「사람 승인 base �
    전부 다른 change 의 기존 함수다.
 3. **재고정** 448dfeb1 → b9289fe4, `base-commit.txt` 한 파일만 커밋. 시운전(격리 worktree, base = refresh 커밋)에서
    5단계 `required 0 function(s)` · `evidence complete or diff-proven exempt`, 완료 게이트 11/11 PASS.
+
+### 완료 게이트
+
+- gate PASS 05e23b5b, 11/11 (격리 worktree `/tmp/tossos-a074-gate2-20261021`, 로그 gate6.log). 첫 실행(gate5.log)은 7단계에서
+  무관한 벽시계 성능 시험 `TestMaximumAttributionGenerationIntegrityScanMeetsP95Target` 이 p95=2.207s(목표 ≤2s, 7회 중 1회만 초과)로
+  실패했다(부하 평균 7.7/9.5/10.7). Manager 결정으로 한 번만 재실행했고 통과했다(시작 시 부하 6.21/6.51/7.60). 그 시험은 손대지 않았다.
+- 시운전 PASS(gate3.log, base = 격리 refresh 커밋)와 같은 결과다. `make sdd-sync` 의 gbrain project sync 미완료(advisory)는 6단계 통과에 영향 없음.
