@@ -14,8 +14,14 @@ package main
 //   - 결정은 사람이 함. 보고서는 예비 권고만 냄.
 
 import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 )
@@ -34,6 +40,31 @@ var hitRules = map[string]struct {
 }{
 	"j1_up_within_horizon": {"realized return > 0", func(r float64) bool { return r > 0 }},
 	"j2_hold_off_red_flag": {"realized return < 0", func(r float64) bool { return r < 0 }},
+	// s4: 경계 ±0.01 은 참에 포함 — 라벨러가 수익률을 소수 8 자리로 반올림해 적으므로 정확히 1% 는 0.01 로 저장됨.
+	"j3_up_1pct_within_horizon":   {"realized return ≥ +0.01", func(r float64) bool { return r >= 0.01 }},
+	"j4_down_1pct_within_horizon": {"realized return ≤ -0.01", func(r float64) bool { return r <= -0.01 }},
+}
+
+// sessionBuckets 는 개장 후 경과 분(state 의 minutes_since_open) 구간 — 개장 30분(0–29)을 따로 보이기 위함(s4).
+// 각 구간은 upTo 이하를 담음. 마지막 줄 「알 수 없음」 = state 파일 없음·해시 불일치·값 없음·음수.
+var sessionBuckets = []struct {
+	label string
+	upTo  int
+}{{"0–29", 29}, {"30–60", 60}, {"61–120", 120}, {"121+", math.MaxInt}}
+
+const unknownSessionBucket = "알 수 없음"
+
+// sessionBucket 은 구간 번호를 돌려줌. 알 수 없으면 len(sessionBuckets).
+func sessionBucket(minutes int, known bool) int {
+	if !known || minutes < 0 {
+		return len(sessionBuckets)
+	}
+	for index, bucket := range sessionBuckets {
+		if minutes <= bucket.upTo {
+			return index
+		}
+	}
+	return len(sessionBuckets)
 }
 
 const twoDayLimit = "이 보고서는 사용자 지시(2026-10-07)에 따른 **2일 측정**(KR 2세션 + US 2세션)의 산출물이다. " +
@@ -151,7 +182,104 @@ func renderCalibrationReport(contents ledgerContents, ledgerPath string) string 
 			}
 		}
 	}
+	// s4 시간대 표는 맨 뒤에 덧붙임 — 그 앞의 기존 출력은 바이트 그대로 남음(골든 접두 시험).
+	for _, questionID := range sortedKeys(questionIDs) {
+		rule, known := hitRules[questionID]
+		if !known {
+			continue
+		}
+		for _, lot := range sortedKeys(keysOf(lots)) {
+			for _, market := range marketList {
+				renderSessionTimeSection(&out, contents, lot, questionID, market, rule.rule, rule.hit)
+			}
+		}
+	}
 	return out.String()
+}
+
+// renderSessionTimeSection 은 한 질문·한 로트·한 시장의 행을 개장 후 경과 시간대로 나눠 셈.
+// 평균 p 는 실현 라벨 행만으로 냄 — 같은 행의 적중률과 나란히 읽게(보정 대조).
+func renderSessionTimeSection(out *strings.Builder, contents ledgerContents, lot, questionID, market, rule string, hit func(float64) bool) {
+	line := func(format string, args ...any) { fmt.Fprintf(out, format+"\n", args...) }
+	stats := make([]binStats, len(sessionBuckets)+1)
+	sumP := make([]float64, len(sessionBuckets)+1)
+	for _, row := range contents.Judgments {
+		if selectionLot(row) != lot || row.QuestionID != questionID || (market != allMarketsLabel && row.Market != market) {
+			continue
+		}
+		minutes, known := contents.StateMinutes[row.StateDigest]
+		index := sessionBucket(minutes, known)
+		stats[index].judgments++
+		label, found := contents.Labels[row.ID]
+		if !found || label.RealizedReturn == nil {
+			continue
+		}
+		stats[index].labeled++
+		sumP[index] += row.P
+		if hit(*label.RealizedReturn) {
+			stats[index].hits++
+		}
+	}
+
+	line("")
+	line("## 개장 후 경과 시간대 — %s · %s · 로트 %s", questionID, market, lot)
+	line("")
+	line("적중 규칙: %s. 구간 = state 파일의 minutes_since_open(개장 30분 = 0–29). 「%s」 = state 파일 없음·해시 불일치·값 없음.",
+		rule, unknownSessionBucket)
+	line("")
+	line("| 개장 후 분 | 판단 n | 실현 라벨 n | 적중 | 적중률 | 평균 p | 판정 |")
+	line("|---|---:|---:|---:|---:|---:|---|")
+	for index, s := range stats {
+		name := unknownSessionBucket
+		if index < len(sessionBuckets) {
+			name = sessionBuckets[index].label
+		}
+		rate, meanP, verdict := "—", "—", fmt.Sprintf("보류(n<%d)", minBinSamples)
+		if s.labeled > 0 {
+			meanP = fmt.Sprintf("%.3f", sumP[index]/float64(s.labeled))
+		}
+		if s.labeled >= minBinSamples {
+			rate = fmt.Sprintf("%.3f", float64(s.hits)/float64(s.labeled))
+			verdict = "판정 가능"
+		}
+		line("| %s | %d | %d | %d | %s | %s | %s |", name, s.judgments, s.labeled, s.hits, rate, meanP, verdict)
+	}
+}
+
+// readStateMinutes 는 원장이 참조하는 state 파일에서 minutes_since_open 만 읽음(읽기 전용 — 쓰기·이동 없음).
+// 파일 내용(끝 줄바꿈 제외)의 sha256 이 행의 state_digest 와 같을 때만 씀 — 판단한 그 state 의 값만 구간에 들어가게.
+// 파일 없음·읽기 실패·해시 불일치·값 없음은 맵에 넣지 않음 → 보고서의 「알 수 없음」 줄로 셈(조용히 빼지 않음).
+func readStateMinutes(statesDir string, judgments []judgmentRow) map[string]int {
+	minutes := map[string]int{}
+	seen := map[string]bool{}
+	for _, row := range judgments {
+		digest := row.StateDigest
+		if seen[digest] {
+			continue
+		}
+		seen[digest] = true
+		// 순수 16진 64 자만 파일 이름으로 씀 — 원장 값이 states/ 밖 경로를 가리킬 수 없게.
+		hexDigest, ok := strings.CutPrefix(digest, "sha256:")
+		if decoded, err := hex.DecodeString(hexDigest); !ok || err != nil || len(decoded) != sha256.Size {
+			continue
+		}
+		raw, err := os.ReadFile(filepath.Join(statesDir, hexDigest+".json"))
+		if err != nil {
+			continue
+		}
+		raw = bytes.TrimSuffix(raw, []byte("\n"))
+		if sum := sha256.Sum256(raw); hex.EncodeToString(sum[:]) != hexDigest {
+			continue
+		}
+		var state struct {
+			MinutesSinceOpen *int `json:"minutes_since_open"`
+		}
+		if json.Unmarshal(raw, &state) != nil || state.MinutesSinceOpen == nil {
+			continue
+		}
+		minutes[digest] = *state.MinutesSinceOpen
+	}
+	return minutes
 }
 
 // cycleBudgets 는 예산 관측 필드(1.7)가 있는 로트마다 사이클(시장·시각) 단위의 GET 수·수집 시간 요약 한 줄.

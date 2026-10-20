@@ -310,7 +310,7 @@ func TestWTSFailuresBecomeNamedGapsNotFabrications(t *testing.T) {
 		t.Fatal(err)
 	}
 	contents := rig.contents(t)
-	if len(contents.Judgments) != 4 || len(contents.Gaps) != 0 {
+	if len(contents.Judgments) != 8 || len(contents.Gaps) != 0 { // 2 종목 × 질문 4(s4)
 		t.Fatalf("WTS failures must not stop the judgment: %d judgments, gaps %+v", len(contents.Judgments), contents.Gaps)
 	}
 	for _, state := range outboundStates(t, rig) {

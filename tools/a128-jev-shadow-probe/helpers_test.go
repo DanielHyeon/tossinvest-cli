@@ -232,6 +232,7 @@ func newTypeSafeMock(t *testing.T) *typeSafeMock {
 	m := &typeSafeMock{answer: func(id string) string {
 		return fmt.Sprintf(`{"type":"noul","noul":%s}`, map[string]string{
 			"j1_up_within_horizon": "0.93", "j2_hold_off_red_flag": "0.12",
+			"j3_up_1pct_within_horizon": "0.31", "j4_down_1pct_within_horizon": "0.22",
 		}[id])
 	}}
 	m.server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

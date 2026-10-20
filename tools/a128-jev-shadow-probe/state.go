@@ -243,9 +243,14 @@ func assertPublicJSON(raw []byte) error {
 	return walk("$", decoded)
 }
 
-// probeQuestions 는 J1·J2 원문임(design.md 「판단 설계」). 영어인 이유: models.md 「English is the
-// primary training language」. 원문을 바꾸면 questionRev 를 올릴 것 — digest 는 자동으로 바뀜.
-const questionRev = "a128-r1"
+// probeQuestions 는 J1~J4 원문임(design.md 「판단 설계」·「질문 추가 (s4)」). 영어인 이유: models.md 「English is the
+// primary training language」. 원문을 바꾸면 그 질문의 rev 를 올릴 것 — digest 는 자동으로 바뀜.
+// rev 는 질문마다 붙음(원장 행 하나 = 질문 하나): J1·J2 는 a128-r1 그대로(옛 행과 비교 가능하게 — 시험이 digest 를 고정),
+// s4 에서 더한 J3·J4 는 a128-r2.
+const (
+	questionRev   = "a128-r1"
+	questionRevS4 = "a128-r2"
+)
 
 func probeQuestions() []question {
 	return []question{
@@ -272,6 +277,34 @@ func probeQuestions() []question {
 				Criteria: &noulCriteria{
 					True:  "The state contains an explicit adverse signal for buying now.",
 					False: "No adverse signal for buying now is visible in the state.",
+				},
+			},
+		},
+		// J3·J4(s4): J1 의 「> 0」 이 그날 시장 흐름에 묻혀 ±1%(비용 근사) 움직임을 직접 물음. 라벨러는 그대로 —
+		// 같은 endpoint realized_return 으로 J3 ⇔ ≥ +0.01, J4 ⇔ ≤ −0.01(report.go hitRules).
+		{
+			ID:  "j3_up_1pct_within_horizon",
+			Rev: questionRevS4,
+			Body: noulQuestion{
+				Type: "noul",
+				Instructions: "Will this stock's last traded price, exactly `horizon_minutes` minutes after " +
+					"`observed_at`, be at least 1% above `base_price`?",
+				Criteria: &noulCriteria{
+					True:  "The last traded price at `observed_at` plus `horizon_minutes` is at least 1.01 times `base_price`.",
+					False: "That price is below 1.01 times `base_price`.",
+				},
+			},
+		},
+		{
+			ID:  "j4_down_1pct_within_horizon",
+			Rev: questionRevS4,
+			Body: noulQuestion{
+				Type: "noul",
+				Instructions: "Will this stock's last traded price, exactly `horizon_minutes` minutes after " +
+					"`observed_at`, be at least 1% below `base_price`?",
+				Criteria: &noulCriteria{
+					True:  "The last traded price at `observed_at` plus `horizon_minutes` is at most 0.99 times `base_price`.",
+					False: "That price is above 0.99 times `base_price`.",
 				},
 			},
 		},

@@ -218,6 +218,8 @@ func reportCommand(args []string, stdout io.Writer) error {
 	if err != nil {
 		return err
 	}
+	// 시간대 표(s4)의 minutes_since_open 은 원장 옆 states/ 의 state 파일에만 있음 — 읽기만 함.
+	contents.StateMinutes = readStateMinutes(filepath.Join(filepath.Dir(*ledgerPath), statesDirName), contents.Judgments)
 	_, err = io.WriteString(stdout, renderCalibrationReport(contents, *ledgerPath))
 	return err
 }

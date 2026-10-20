@@ -290,6 +290,46 @@
       — 2026-10-20 `analysis/calibration-report-2026-10-20.md`(동결 사본 sha256 `a4b1b99a…`, s3 core 4 세션 3,990 판단 쌍):
       J1 예측력 없음(구간 적중 0.581·0.547·0.549, 사이클 안 ρ −0.000) → 배선 후보 제외 기록; J2 p≥0.9 판단 0(최대 0.85) →
       보류, 낮은 구간은 역방향. 비용 미반영 적중 빈도 관측 — 수익성 결론 아님. 결정은 4.2(사람).
-- [ ] 4.2 사람 결정 기록 — 90% 임계 채택/기각/보류, 후속 change(수동 보조·엔진 veto
+- [x] 4.2 사람 결정 기록 — 90% 임계 채택/기각/보류, 후속 change(수동 보조·엔진 veto
       gate) 착수 여부. 후속 change 범위 초안을 review.md 에 남긴다.
+      — 2026-10-20 사용자 결정: **측정 계속 + 질문 추가(s4)** (4.2 선택지 2, Manager 전달). 같은 요청에 J3·J4 를 더하고
+      J1·J2 는 그대로 묻는다(design.md 「질문 추가 (s4)」). 측정을 이어 가므로 후속 change(수동 보조·엔진 veto) 범위 초안은
+      이번에 쓰지 않음 — s4 측정 뒤 사람 결정(5.8)으로 넘김. 선택지 목록 원문은 이 기록에 없음(Manager 전달 요지만).
 - [ ] 4.3 gate → archive(Opus) → Story 경로 갱신.
+
+## 5. 질문 추가 s4 (사용자 결정 2026-10-20)
+
+- [x] 5.1 설계 — design.md 「질문 추가 (s4)」: J3 `j3_up_1pct_within_horizon`(60분 뒤 +1% 이상)·J4 `j4_down_1pct_within_horizon`
+      (60분 뒤 −1% 이하) 원문, 참/거짓 기준(J3 ⇔ `realized_return ≥ +0.01`, J4 ⇔ `≤ −0.01`), 질문별 rev(J3·J4 = `a128-r2`,
+      J1·J2 = `a128-r1` 유지), 그대로인 것, 로트 분리, 시간대 표, 비용·한계. spec 델타 변경 없음(질문 일반 요구).
+- [x] 5.2 코드 — `state.go` `probeQuestions` 에 J3·J4 추가(J1·J2 바이트 불변), `report.go` 적중 규칙 둘 + 개장 후 경과 시간대
+      표(state 파일 읽기 전용), `main.go` report 가 states 를 읽음. 선별·라벨러·원장 스키마·state_rev 무변경. `internal/` 무접촉.
+- [x] 5.3 시험 — J3·J4 가 요청에 원문대로 실림 · J1·J2 digest 고정(원장 실측 값) · 적중 경계(+0.01 참·+0.0099 거짓·−0.01 참) ·
+      선별이 J3·J4 를 무시 · 옛 원장 픽스처가 base 코드 골든을 접두로 그대로 보고 · 시간대 구간 경계 · J3·J4 행이 question_id 로
+      가려짐. 변이 1 건 이상 확인.
+      — 영수증(2026-10-20, go1.26.5, 실 API·브로커 호출 0 — httptest 만, `run` 미실행, 공유 트리 무편집):
+      `gofmt -l tools/a128-jev-shadow-probe/` 빈 출력 · `go vet ./tools/a128-jev-shadow-probe/...` rc=0 ·
+      `go vet -tags tossos_testseams …` rc=0 · `rtk proxy go test -count=1 -v ./tools/a128-jev-shadow-probe/...` rc=0(최상위 84 PASS +
+      하위 23 PASS, FAIL 0) · 같은 명령 `-race` rc=0. 새 시험 `s4_test.go` 9 개 + 픽스처 `testdata/pre-s4/`(옛 모양 원장 23 줄 · state 5 —
+      파일 없음 1 · 해시 불일치 1 포함 · base 코드 bbe4ceaa6 로 만든 `report-base.golden.md`). 기존 시험은 행 수만 갱신(2 → 4 질문).
+      변이(`-overlay`, 무변이 대조군 GREEN, 전후 소스 sha256 동일): J3 `>=`→`>` · J4 `<=`→`<` · 구간 경계 29→30 · state 해시 검사 삭제 ·
+      선별이 J1 대신 J3 를 읽음 · 선별이 J2 대신 J4 를 읽음 · J1 원문 한 글자 · J3 rev r1 = 8/8 CAUGHT(처음 「선별이 J3 를 읽음」이
+      살아남음 — 두 사이클의 J3 순서가 우연히 같은 결선을 내서; J3 순서를 반대로 두고 결선을 손계산으로 고정해 CAUGHT). 제자리 변이 1 건
+      (J3 `>=`→`>` → `TestS4HitRuleBoundaries` FAIL → 복원, `diff` 빈 출력). 라이브 원장(sha256 접두 a4b1b99acef0e505)을 읽기 전용으로
+      base 코드(overlay)·새 코드 둘로 report → 새 출력이 base 출력 23,235 바이트를 접두로 바이트 그대로 포함, 뒤는 시간대 표 18 개뿐,
+      「알 수 없음」 0(참조 state 전부 해시 일치).
+      Function Logic Map: 기존 함수 내부 분기 변경이 `renderCalibrationReport` 끝의 덧붙임 루프 1 개(AST B19~B22)라 AST 산출물을 만듦 —
+      `analysis/function-logic/tools-a128-jev-shadow-probe--rendercalibrationreport/`(ast.json 분기 22 · FLM · BTM · risk). B1~B18 은 base 와
+      같고 골든 접두 시험이 고정. `check_analysis.py --change a128-…` 는 「missing base-commit.txt」로 판정 불가(이 change 에 base 가 동결된
+      적 없음 — 동결은 Manager 결정). 그 밖의 편집(`probeQuestions` 데이터·`reportCommand` 한 줄·새 함수 `renderSessionTimeSection`·
+      `readStateMinutes`·`sessionBucket`): not-applicable(분기 변경 없음 / 새 함수). 변이 원장·다중 적대 리뷰: not-applicable(비례 원칙 —
+      측정 도구 경로만, High-risk 무접촉·게이트 판정 변경 0).
+- [x] 5.4 리뷰 — 경량(비례 원칙): `analysis/gstack/terra-s4-review-2026-10-20.md`.
+- [ ] 5.5 착지 — 공유 트리 반영(systemd 타이머가 공유 트리에서 `go run` 하므로 **반영 순간부터 s4 가 측정됨**). 반영 시각을 여기
+      적어 s4 경계로 씀. Manager. **선행 조건(리뷰 발견)**: 원장을 읽는 다른 도구 둘이 「한 state = J1·J2 두 행」을 가정함 —
+      `tools/a145-jev-offline-analysis/analysis.py` 는 `set(pair) != {J1,J2}` 면 `ValueError('unpaired questions')` 로 **전체가 멈추고**,
+      `tools/a147-jev-mfi-offline/analysis.py` 는 `len(rows) == 2` 가 거짓이라 s4 행을 전부 `invalid_pair` 로 셈(조용한 강등). s4 행이
+      원장에 들어가기 전에 두 도구가 question_id 를 J1·J2 로 거르게 하거나, s4 이전 스냅숏에만 돌린다는 제한을 적을 것(a145·a147 change 범위).
+- [ ] 5.6 측정 — 시장당 s4 세션 5 회 이상(KR ≥5 · US ≥5). 첫 사이클의 `input_tokens` 중앙값을 s3 와 대조해 기록.
+- [ ] 5.7 보고 — J3·J4 구간표·시간대 표, J1·J2 의 p 분포 s4 전후 대조(질문 추가가 J1·J2 를 바꾸지 않았는지), 수익성 결론 없음.
+- [ ] 5.8 사람 결정 — J3·J4 결과로 후속(수동 보조·엔진 veto) 착수 여부와 임계. 후속 change 범위 초안을 review.md 에.

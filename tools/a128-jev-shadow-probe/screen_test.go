@@ -124,9 +124,9 @@ func TestCycleJudgesTheWholePoolAndFlagsOnlyTheFinalists(t *testing.T) {
 	}
 	contents := rig.contents(t)
 
-	// 풀 30 중 판단 성공 29 종목 × 질문 2 = 58 행, 실패 1 종목은 gap(judgment).
-	if len(contents.Judgments) != 58 {
-		t.Fatalf("judgment rows = %d, want 58 (29 judged pool symbols × 2 questions)", len(contents.Judgments))
+	// 풀 30 중 판단 성공 29 종목 × 질문 4(s4) = 116 행, 실패 1 종목은 gap(judgment).
+	if len(contents.Judgments) != 116 {
+		t.Fatalf("judgment rows = %d, want 116 (29 judged pool symbols × 4 questions)", len(contents.Judgments))
 	}
 	if len(contents.Gaps) != 1 || contents.Gaps[0].Stage != "judgment" || contents.Gaps[0].Symbol != "S28" {
 		t.Fatalf("gaps = %+v, want one judgment gap for S28", contents.Gaps)
@@ -178,8 +178,8 @@ func TestCycleJudgesTheWholePoolAndFlagsOnlyTheFinalists(t *testing.T) {
 	if err := rig.probe.labelTick(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(rig.contents(t).Labels); got != 58 {
-		t.Fatalf("labels = %d, want 58 (finalists and non-finalists alike)", got)
+	if got := len(rig.contents(t).Labels); got != 116 {
+		t.Fatalf("labels = %d, want 116 (finalists and non-finalists alike)", got)
 	}
 }
 
@@ -202,8 +202,8 @@ func TestCycleRecordsFewerFinalistsWhenFewSurvive(t *testing.T) {
 		t.Fatal(err)
 	}
 	contents := rig.contents(t)
-	if len(contents.Judgments) != 24 {
-		t.Fatalf("judgment rows = %d, want 24 — red-flagged pool symbols stay in the ledger", len(contents.Judgments))
+	if len(contents.Judgments) != 48 {
+		t.Fatalf("judgment rows = %d, want 48 (12 × 4 questions) — red-flagged pool symbols stay in the ledger", len(contents.Judgments))
 	}
 	finalists := map[string]int{}
 	for _, row := range contents.Judgments {

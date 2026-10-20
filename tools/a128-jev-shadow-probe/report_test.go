@@ -135,7 +135,7 @@ func TestReportCommandReadsARealLedger(t *testing.T) {
 	if err := dispatch(context.Background(), []string{"report", "--ledger", path}, os.Getenv, &out); err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"judgment 행 4 · 실현 라벨 4", "## j1_up_within_horizon — KR", "## j2_hold_off_red_flag — KR"} {
+	for _, want := range []string{"judgment 행 8 · 실현 라벨 8", "## j1_up_within_horizon — KR", "## j2_hold_off_red_flag — KR"} {
 		if !strings.Contains(out.String(), want) {
 			t.Fatalf("report lacks %q:\n%s", want, out.String())
 		}

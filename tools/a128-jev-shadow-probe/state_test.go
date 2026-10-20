@@ -172,8 +172,8 @@ func TestNewsAbsenceIsExplicitInStateAndRow(t *testing.T) {
 		}
 	}
 	contents := rig.contents(t)
-	if len(contents.Judgments) != 4 {
-		t.Fatalf("expected 4 judgment rows (2 symbols × 2 questions), got %d", len(contents.Judgments))
+	if len(contents.Judgments) != 8 {
+		t.Fatalf("expected 8 judgment rows (2 symbols × 4 questions), got %d", len(contents.Judgments))
 	}
 	for _, row := range contents.Judgments {
 		if !hasPrefix(row.CollectionGaps, "news:") {

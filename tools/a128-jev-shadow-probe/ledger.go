@@ -54,7 +54,8 @@ type judgmentRow struct {
 	Currency       string  `json:"currency"`
 	HorizonMinutes int     `json:"horizon_minutes"`
 	LabelDueAt     string  `json:"label_due_at"`
-	// InputTokens 는 요청 단위 값임 — 한 요청이 J1·J2 두 행을 만들므로 행 합산은 비용을 2배로 셈.
+	// InputTokens 는 요청 단위 값임 — 한 요청이 질문 수만큼 행을 만들므로(s3 까지 J1·J2 = 2, s4 부터 J1~J4 = 4)
+	// 행 합산은 비용을 그 배수로 셈. 요청 단위 비용은 (at, symbol, state_digest) 로 묶어 한 번만 셀 것.
 	InputTokens    int      `json:"input_tokens"`
 	CollectionGaps []string `json:"collection_gaps"`
 	// Selection 은 이 판단의 종목이 어떤 표본 선택 규칙으로 뽑혔는지(1.5 이후). 없는 옛 행 = top10 로트.
@@ -182,6 +183,9 @@ type ledgerContents struct {
 	Judgments []judgmentRow
 	Labels    map[string]labelRow
 	Gaps      []gapRow
+	// StateMinutes 는 state digest → minutes_since_open(s4 보고서의 개장 후 경과 시간대 표). 원장 행에 없는 값이라
+	// report 하위 명령만 state 파일에서 읽어 채움(readStateMinutes). 없는 digest = 「알 수 없음」 구간.
+	StateMinutes map[string]int
 }
 
 // readLedger 는 줄마다 kind 를 보고 나눔. 해석 못 하는 줄은 건너뛰지 않고 오류로 멈춤.

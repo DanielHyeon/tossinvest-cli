@@ -56,7 +56,12 @@ func TestLedgerRowSchema(t *testing.T) {
 			if !strings.HasPrefix(row["state_digest"].(string), "sha256:") || !strings.HasPrefix(row["question_digest"].(string), "sha256:") {
 				t.Fatalf("digests missing: %s", line)
 			}
-			if row["question_rev"] != questionRev || row["model_answered"] != "jev-1.13.0" {
+			// rev 는 질문마다(s4): J1·J2 = a128-r1 그대로, J3·J4 = a128-r2. 행은 question_id 로 가려짐.
+			wantRev := map[string]string{
+				"j1_up_within_horizon": "a128-r1", "j2_hold_off_red_flag": "a128-r1",
+				"j3_up_1pct_within_horizon": "a128-r2", "j4_down_1pct_within_horizon": "a128-r2",
+			}[row["question_id"].(string)]
+			if wantRev == "" || row["question_rev"] != wantRev || row["model_answered"] != "jev-1.13.0" {
 				t.Fatalf("population fields: %s", line)
 			}
 			if _, err := time.Parse(time.RFC3339, row["at"].(string)); err != nil {
@@ -95,8 +100,8 @@ func TestLedgerRowSchema(t *testing.T) {
 			t.Fatalf("unexpected row kind %q", kind)
 		}
 	}
-	if kinds[kindJudgment] != 4 || kinds[kindLabel] != 4 {
-		t.Fatalf("rows = %v, want 4 judgments + 4 labels", kinds)
+	if kinds[kindJudgment] != 8 || kinds[kindLabel] != 8 {
+		t.Fatalf("rows = %v, want 8 judgments + 8 labels (2 symbols × 4 questions)", kinds)
 	}
 	// state 원문은 digest 이름으로 보관돼 재검증 가능해야 함.
 	contents := rig.contents(t)
@@ -223,8 +228,8 @@ func TestRateLimitBackoffThenGapRow(t *testing.T) {
 	if err := rig.probe.cycle(context.Background(), "KR", rig.session(), at(10, 0)); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(rig.contents(t).Judgments); got != 4 {
-		t.Fatalf("recovered cycle wrote %d judgments, want 4", got)
+	if got := len(rig.contents(t).Judgments); got != 8 {
+		t.Fatalf("recovered cycle wrote %d judgments, want 8", got)
 	}
 	if !reflect.DeepEqual(rig.clock.slept[:2], []time.Duration{time.Second, 2 * time.Second}) {
 		t.Fatalf("backoff = %v, want the configured exponential delays", rig.clock.slept)
@@ -370,8 +375,8 @@ func TestRestorePendingAfterRestart(t *testing.T) {
 	if err := restarted.labelTick(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(rig.contents(t).Labels); got != 4 {
-		t.Fatalf("labels after restart = %d, want 4", got)
+	if got := len(rig.contents(t).Labels); got != 8 {
+		t.Fatalf("labels after restart = %d, want 8", got)
 	}
 }
 

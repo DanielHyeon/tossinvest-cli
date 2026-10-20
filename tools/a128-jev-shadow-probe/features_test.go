@@ -344,7 +344,7 @@ func TestReadFailuresBecomeMissingInputsNotGaps(t *testing.T) {
 		t.Fatal(err)
 	}
 	contents := rig.contents(t)
-	if len(contents.Judgments) != 4 || len(contents.Gaps) != 0 {
+	if len(contents.Judgments) != 8 || len(contents.Gaps) != 0 { // 2 종목 × 질문 4(s4)
 		t.Fatalf("read failures must not stop the judgment: %d judgments, gaps %+v", len(contents.Judgments), contents.Gaps)
 	}
 	for _, name := range []string{"minute_bars:", "daily_bars:", "warnings:", "price_limits:", "market_context:"} {

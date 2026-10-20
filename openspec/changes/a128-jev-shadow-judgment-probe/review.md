@@ -23,3 +23,9 @@
 - 자기 리뷰에서 찾은 것(리뷰 전): dry run 에서 피드 53/53 이 RFC3339 해석 실패 → news=present·빈 목록 → 시간대 없는 모양 해석 +
   결손 처리로 수리(`TestFeedWithNoParseableTimeIsAGapNotEmptyNews`).
 - 남은 위험: 뉴스 시간대 가정(1번) · 뉴스 포함 입력 토큰 미실측 · US 기사 일치율 미실측 · 영숫자 KR 코드는 수급·공식 읽기 모두 결손(후속 change).
+
+## 5.x (s4 — J3·J4 질문 추가) — 경량 리뷰, 2026-10-20
+
+- 전문: `analysis/gstack/terra-s4-review-2026-10-20.md`(gstack `/review` preamble 이 격리 worktree 가드에 막혀 checklist 범주로 자기 리뷰).
+- 판정: 이 change 범위 blocker 0, 고친 것 1(InputTokens 주석). **착지 선행 조건 1**: a145·a147 오프라인 분석기가 「한 state = J1·J2 두 행」을
+  가정 — s4 행이 원장에 들어가면 a145 는 `ValueError('unpaired questions')` 로 멈추고 a147 은 전부 `invalid_pair` 로 셈(tasks 5.5).

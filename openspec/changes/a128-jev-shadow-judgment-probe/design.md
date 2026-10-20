@@ -123,6 +123,55 @@
   `WTS 요청 중앙·최대` 가 붙음. WTS 는 엔진과 공유하는 Open API 키가 아님(다른 서버).
 - state_rev = `a128-s3`; 질문 원문 불변(`questionRev` a128-r1). 원장은 s1(빈 값)·s2·s3 로트로 갈라짐.
 
+## 질문 추가 (s4, tasks 5.x, 2026-10-20)
+
+- 사용자 결정(2026-10-20): 4.2 를 「측정 계속」(선택지 2)으로 정하고, 같은 요청에 질문 둘(J3·J4)을 **더한다**. J1·J2 는
+  원문·id·rev 그대로 계속 묻는다(옛 행과 새 행의 J1·J2 가 같은 모집단으로 비교되도록).
+- 이유(calibration-report-2026-10-20 의 관측에서):
+  1. J1 의 「> 0」 은 그날 시장 흐름에 묻힌다 — 적중률이 0.5 를 넘은 것은 상승일 탓이고 구간 사이 차이가 없었다. 0 근처의
+     작은 움직임이 적중을 좌우하므로 방향 질문이 국면 질문이 된다.
+  2. +1% 는 「비용(수수료·세금·스프레드)을 넘는 움직임」의 근사다. 이 근사는 비용 모형이 아니고, 비용 차감 결론을 내지 않는다.
+  3. J2 는 「명백한 악재 신호」를 물었는데 라벨은 60분 하락이었다 — 질문과 라벨이 다른 것을 쟀다. J4 는 하방 위험을 라벨과
+     같은 말로 직접 묻는다.
+  4. J4 가 J3 의 거울이라 두 질문의 p 를 같은 state 에서 대조할 수 있다(둘 다 높으면 「변동성이 크다」로 읽힘 — 관측 항목).
+- 질문 원문(영어 — models.md 「English is the primary training language」, `state.go` `probeQuestions` 와 바이트 단위로 같음):
+  - J3 `j3_up_1pct_within_horizon`
+    - instructions: "Will this stock's last traded price, exactly `horizon_minutes` minutes after `observed_at`, be at least
+      1% above `base_price`?"
+    - criteria.true: "The last traded price at `observed_at` plus `horizon_minutes` is at least 1.01 times `base_price`."
+    - criteria.false: "That price is below 1.01 times `base_price`."
+  - J4 `j4_down_1pct_within_horizon`
+    - instructions: "Will this stock's last traded price, exactly `horizon_minutes` minutes after `observed_at`, be at least
+      1% below `base_price`?"
+    - criteria.true: "The last traded price at `observed_at` plus `horizon_minutes` is at most 0.99 times `base_price`."
+    - criteria.false: "That price is above 0.99 times `base_price`."
+- 참/거짓 판정(라벨러 불변 — 기존 endpoint `realized_return` 하나로 셈): J3 참 ⇔ `realized_return ≥ +0.01`,
+  J4 참 ⇔ `realized_return ≤ −0.01`. 보고서 적중 규칙 = 이 참 조건(`report.go` `hitRules`). 경계 ±0.01 은 참에 포함.
+  `realized_return` 은 라벨러가 소수 8 자리로 반올림해 적으므로(`writeLabels`) 정확히 1% 움직임은 0.01 로 저장되어 부동소수
+  오차로 경계가 뒤집히지 않는다. 라벨 결손·미라벨은 기존과 같이 분모에서 빠진다.
+- rev 는 **질문마다** 붙는다(`question.Rev` 필드 → 원장 `question_rev` 열, 행 하나 = 질문 하나). J1·J2 = `a128-r1` 유지,
+  J3·J4 = `a128-r2`. 원문이 바뀌면 `question_digest`(전송 본문 sha256)가 자동으로 바뀌므로, 시험이 J1·J2 의 digest 를 현재 값
+  (원장 7,710 행씩과 같은 값, 2026-10-20 실측)으로 못 박는다.
+- 그대로인 것: J1·J2 원문·id·rev·digest, 선별(`screen.go` — J2 p ≥ 0.5 제외, J1 내림차순 상위 K; J3·J4 는 읽지 않음), 결선 비교
+  표(J1 만), state 모양(`state_rev` a128-s3 — state 를 바꾸지 않으므로 올리지 않음), 표본 선택 규칙 id, 라벨러, 원장 스키마
+  (`a128-shadow-ledger/v1` — 새 열 없음, 새 행은 `question_id` 로 가려짐), spec 델타(질문 일반 요구라 바뀔 문장 없음).
+- 로트 분리: J3·J4 는 자기 `question_id` 로 따로 표가 됨(보고서는 질문 id × 로트 × 시장마다 표를 만듦 — 섞일 자리가 없음).
+  J1·J2 는 s4 전후 행이 **의도적으로 한 로트**다(원문·digest·state_rev 가 같으므로). s4 이후만 보려면 첫 J3 행의 `at` 이 경계다.
+  J3·J4 를 더해 J1·J2 의 답이 달라지지 않는다는 근거는 계약 문서 인용뿐이다(concepts/state.md 「All questions see the same state
+  and are evaluated independently」, api.md 「The key is not sent to the underlying model」) — 실측 아님. s4 측정 뒤 J1·J2 의 p 분포를
+  s4 전후로 대조해 적을 것(tasks 5.7).
+- 보고서 추가: (1) J3·J4 의 p 구간표·p ≥ 0.90 예비 판정(기존 양식 그대로). (2) **개장 후 경과 시간대별 표** — 질문 × 로트 × 시장마다
+  `minutes_since_open` 구간 0–29 · 30–60 · 61–120 · 121+ 의 판단 n · 실현 라벨 n · 적중 · 적중률 · 평균 p(실현 라벨 행) · 판정(같은
+  n<30 보류). 개장 30분(가장 변동이 큰 구간)을 따로 보이기 위함. `minutes_since_open` 은 원장 행에 없고 state 파일에 있으므로
+  보고서가 `<원장 디렉터리>/states/<digest>.json` 을 **읽기만** 한다 — 파일 내용 sha256 이 행의 `state_digest` 와 같을 때만 쓰고,
+  파일 없음·해시 불일치·값 없음·음수는 「알 수 없음」 줄로 센다(조용히 빼지 않음). 기존 J1·J2 출력은 바뀌지 않고 뒤에 덧붙기만 한다
+  (base 코드로 만든 골든을 접두로 고정하는 시험).
+- 비용: 질문이 요청당 2 → 4. 요청 수·GET 수는 같다. 과금은 입력 토큰 단위이고(models.md) 질문 원문만큼 입력이 늘지만, state 가
+  질문마다 다시 세어지는지는 계약 문서 범위에서 미기재 — 첫 s4 사이클 원장 `input_tokens` 중앙값을 s3 중앙값과 대조해 적을 것.
+- 한계: +1% 는 비용 근사일 뿐이며 이 측정은 여전히 수익성 결론을 내지 않는다. 60분 창 겹침·같은 종목 반복으로 표본이 독립이
+  아님(calibration-report 「한계」)은 J3·J4 에도 그대로다. J3·J4 의 기저율(±1% 를 넘는 60분 움직임 비율)은 종목·국면에 따라 작을 수
+  있어 구간 n≥30 이 늦게 찰 수 있다. 측정 창은 시장당 5 세션 이상(5.6)이며 그 뒤에도 판정은 예비다.
+
 ## 임계 판정 보고서
 
 - p 구간(0.50~1.00, 0.05 폭)별: 표본 수, J1 실현 적중률, J2 는 라벨 정의(악재 판단 뒤
