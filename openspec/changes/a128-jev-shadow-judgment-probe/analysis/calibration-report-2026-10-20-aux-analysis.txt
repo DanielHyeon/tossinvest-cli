@@ -1,0 +1,150 @@
+# a128 4.1 — 보조 분석 원문 출력(저장소 밖 일회성 스크립트, 집계만 — 종목 미출력)
+# 수익률 단위: bp = realized_return × 1e4. 비용(수수료·세금·스프레드·슬리피지) 미반영.
+
+# [1] 주 표본 core4
+pairs 3990 labeled 3960
+
+## (a) p 분포
+KR 2026-10-16 n 990 J1 min 0.350 p5 0.470 med 0.540 p95 0.570 max 0.610 | J1>=0.9 0 | J2 min 0.140 med 0.320 p95 0.560 max 0.780 J2>=0.9 0 J2>=0.5 105
+KR 2026-10-19 n 1020 J1 min 0.270 p5 0.450 med 0.520 p95 0.560 max 0.590 | J1>=0.9 0 | J2 min 0.170 med 0.375 p95 0.690 max 0.850 J2>=0.9 0 J2>=0.5 277
+US 2026-10-15 n 990 J1 min 0.400 p5 0.450 med 0.510 p95 0.550 max 0.590 | J1>=0.9 0 | J2 min 0.130 med 0.360 p95 0.650 max 0.740 J2>=0.9 0 J2>=0.5 244
+US 2026-10-19 n 990 J1 min 0.350 p5 0.460 med 0.510 p95 0.560 max 0.590 | J1>=0.9 0 | J2 min 0.110 med 0.300 p95 0.520 max 0.690 J2>=0.9 0 J2>=0.5 74
+ALL n 3990 J1 min 0.270 p5 0.450 med 0.520 p95 0.560 max 0.610 | J1>=0.9 0 | J2 min 0.110 med 0.330 p95 0.630 max 0.850 J2>=0.9 0 J2>=0.5 700
+
+## (b) J1 Spearman (pooled ρ, n | within-cycle mean ρ, cycles, share>0)
+KR 2026-10-16 chg ρ=+0.361 n=990 | wc=+0.343 c=33 pos=0.94 ; vwap ρ=+0.650 n=951 | wc=+0.589 c=32 pos=1.00 ; r ρ=-0.031 n=960 | wc=+0.011 c=32 pos=0.53
+KR 2026-10-19 chg ρ=+0.521 n=1020 | wc=+0.486 c=34 pos=1.00 ; vwap ρ=+0.693 n=990 | wc=+0.637 c=33 pos=1.00 ; r ρ=-0.122 n=1020 | wc=-0.002 c=34 pos=0.44
+US 2026-10-15 chg ρ=+0.490 n=990 | wc=+0.502 c=33 pos=1.00 ; vwap ρ=+0.562 n=960 | wc=+0.532 c=32 pos=1.00 ; r ρ=-0.121 n=990 | wc=-0.097 c=33 pos=0.33
+US 2026-10-19 chg ρ=+0.372 n=990 | wc=+0.324 c=33 pos=0.85 ; vwap ρ=+0.738 n=960 | wc=+0.695 c=32 pos=1.00 ; r ρ=+0.008 n=990 | wc=+0.087 c=33 pos=0.64
+ALL chg ρ=+0.503 n=3990 | wc=+0.414 c=133 pos=0.95 ; vwap ρ=+0.665 n=3861 | wc=+0.614 c=129 pos=1.00 ; r ρ=-0.056 n=3960 | wc=-0.000 c=132 pos=0.48
+
+## J1 hit/mean by within-session p tercile? -> J1 top vs bottom third per session
+KR 2026-10-16 bottom3rd hit 0.553 mean 31.9bp med 24.2bp | top3rd hit 0.528 mean 12.8bp med 14.4bp | zero-return share 0.041
+KR 2026-10-19 bottom3rd hit 0.635 mean 72.1bp med 58.4bp | top3rd hit 0.535 mean 23.3bp med 11.1bp | zero-return share 0.032
+US 2026-10-15 bottom3rd hit 0.667 mean 52.4bp med 20.9bp | top3rd hit 0.548 mean 24.6bp med 3.7bp | zero-return share 0.014
+US 2026-10-19 bottom3rd hit 0.473 mean 3.9bp med 0.0bp | top3rd hit 0.497 mean -13.4bp med 0.0bp | zero-return share 0.014
+ALL bottom3rd hit 0.570 mean 39.6bp med 11.5bp | top3rd hit 0.545 mean 15.7bp med 8.7bp | zero-return share 0.025
+
+## (c) J2 Spearman with features & r
+KR 2026-10-16 chg ρ=-0.239 n=990 wc=-0.182 pos=0.18 ; r1d ρ=-0.344 n=987 wc=-0.282 pos=0.03 ; r5d ρ=-0.237 n=971 wc=-0.261 pos=0.06 ; r20d ρ=-0.086 n=965 wc=-0.098 pos=0.24 ; vwap ρ=-0.307 n=951 wc=-0.265 pos=0.09 ; r ρ=+0.169 n=960 wc=+0.140 pos=0.75
+KR 2026-10-19 chg ρ=-0.625 n=1020 wc=-0.631 pos=0.00 ; r1d ρ=-0.459 n=1019 wc=-0.294 pos=0.12 ; r5d ρ=-0.533 n=1013 wc=-0.614 pos=0.00 ; r20d ρ=-0.316 n=1007 wc=-0.414 pos=0.00 ; vwap ρ=-0.342 n=990 wc=-0.403 pos=0.15 ; r ρ=+0.177 n=1020 wc=+0.020 pos=0.44
+US 2026-10-15 chg ρ=-0.782 n=990 wc=-0.773 pos=0.00 ; r1d ρ=+0.081 n=990 wc=+0.099 pos=0.61 ; r5d ρ=-0.789 n=990 wc=-0.793 pos=0.00 ; r20d ρ=-0.620 n=990 wc=-0.621 pos=0.00 ; vwap ρ=+0.011 n=960 wc=-0.027 pos=0.50 ; r ρ=+0.233 n=990 wc=+0.250 pos=0.64
+US 2026-10-19 chg ρ=+0.055 n=990 wc=+0.056 pos=0.67 ; r1d ρ=-0.440 n=990 wc=-0.440 pos=0.00 ; r5d ρ=-0.466 n=990 wc=-0.446 pos=0.12 ; r20d ρ=-0.480 n=990 wc=-0.456 pos=0.03 ; vwap ρ=-0.611 n=960 wc=-0.596 pos=0.00 ; r ρ=+0.045 n=990 wc=-0.037 pos=0.48
+ALL chg ρ=-0.426 n=3990 wc=-0.384 pos=0.21 ; r1d ρ=-0.223 n=3986 wc=-0.230 pos=0.19 ; r5d ρ=-0.502 n=3964 wc=-0.529 pos=0.05 ; r20d ρ=-0.357 n=3952 wc=-0.397 pos=0.07 ; vwap ρ=-0.241 n=3861 wc=-0.323 pos=0.19 ; r ρ=+0.178 n=3960 wc=+0.092 pos=0.58
+
+## (c2) J2 flagged (p2>=0.5) vs not: 60m return
+KR 2026-10-16 FLAG n=105 lab=103 up=0.650 down=0.311 mean=+104.0bp med=+71.3bp | NOT n=885 lab=857 up=0.537 down=0.422 mean=+14.5bp med=+13.6bp | chg 1.70 vs 3.49 r5d -9.62 vs -3.98 r20d -5.31 vs -0.10
+KR 2026-10-19 FLAG n=277 lab=277 up=0.679 down=0.303 mean=+94.8bp med=+111.8bp | NOT n=743 lab=743 up=0.576 down=0.386 mean=+32.5bp med=+22.1bp | chg -2.18 vs 2.12 r5d -9.88 vs -0.08 r20d -8.41 vs 1.04
+US 2026-10-15 FLAG n=244 lab=244 up=0.717 down=0.275 mean=+86.5bp med=+58.7bp | NOT n=746 lab=746 up=0.527 down=0.457 mean=+16.4bp med=+1.7bp | chg -5.25 vs 0.42 r5d -15.90 vs -1.51 r20d -14.82 vs 0.15
+US 2026-10-19 FLAG n=74 lab=74 up=0.500 down=0.459 mean=-5.8bp med=+2.1bp | NOT n=916 lab=916 up=0.500 down=0.488 mean=-2.5bp med=+0.2bp | chg 2.59 vs 1.41 r5d -10.68 vs -1.46 r20d -19.87 vs -2.05
+ALL FLAG n=700 lab=698 up=0.669 down=0.311 mean=+82.6bp med=+64.2bp | NOT n=3290 lab=3262 up=0.533 down=0.441 mean=+14.3bp med=+4.5bp | chg -2.17 vs 1.90 r5d -12.06 vs -1.83 r20d -11.47 vs -0.33
+
+## (d) finalist vs non-finalist (all non-finalists)
+KR 2026-10-16 FIN n=330 lab=320 up=0.553 mean=+10.4bp med=+15.3bp | NONFIN n=660 lab=640 up=0.547 mean=+30.9bp med=+16.7bp | SURV-OUTRANKED n=555 lab=537 up=0.527 mean=+16.9bp med=+11.0bp
+KR 2026-10-19 FIN n=320 lab=320 up=0.616 mean=+38.9bp med=+32.0bp | NONFIN n=700 lab=700 up=0.599 mean=+54.3bp med=+32.8bp | SURV-OUTRANKED n=423 lab=423 up=0.546 mean=+27.7bp med=+15.3bp
+US 2026-10-15 FIN n=330 lab=330 up=0.545 mean=+20.9bp med=+4.1bp | NONFIN n=660 lab=660 up=0.588 mean=+40.1bp med=+11.3bp | SURV-OUTRANKED n=416 lab=416 up=0.512 mean=+12.9bp med=+0.5bp
+US 2026-10-19 FIN n=330 lab=330 up=0.552 mean=+2.5bp med=+5.2bp | NONFIN n=660 lab=660 up=0.474 mean=-5.3bp med=-0.9bp | SURV-OUTRANKED n=586 lab=586 up=0.471 mean=-5.2bp med=-1.1bp
+ALL FIN n=1310 lab=1300 up=0.566 mean=+18.1bp med=+10.2bp | NONFIN n=2680 lab=2660 up=0.553 mean=+30.3bp med=+8.3bp | SURV-OUTRANKED n=1980 lab=1962 up=0.511 mean=+11.8bp med=+1.3bp
+
+## cycle-clustered bootstrap 95% CI (2000 draws, resample cycles within ALL)
+J2flag-minus-not mean bp point +68.305 CI [+39.118, +94.982]
+J2flag-minus-not up-rate point +0.136 CI [+0.076, +0.191]
+fin-minus-nonfin up-rate point +0.014 CI [-0.023, +0.050]
+fin-minus-nonfin mean bp point -12.257 CI [-26.263, +0.650]
+
+## independence
+KR 2026-10-16 pairs 990 cycles 33 distinct symbols 165 pairs/symbol mean 6.0 max 17
+KR 2026-10-19 pairs 1020 cycles 34 distinct symbols 169 pairs/symbol mean 6.0 max 18
+US 2026-10-15 pairs 990 cycles 33 distinct symbols 222 pairs/symbol mean 4.5 max 19
+US 2026-10-19 pairs 990 cycles 33 distinct symbols 199 pairs/symbol mean 5.0 max 20
+ALL pairs 3990 cycles 133 distinct symbols 513 pairs/symbol mean 7.8 max 33
+
+## news present share 1.0 symbol-headline>0 share 0.019799498746867168
+
+## extra
+KR 2026-10-16 ρ(J1,J2)=-0.448 | survivors wc ρ(J1,r)=+0.021 pos=0.53 | fin-surv_out up +0.026 mean -6.4bp
+KR 2026-10-19 ρ(J1,J2)=-0.621 | survivors wc ρ(J1,r)=+0.071 pos=0.53 | fin-surv_out up +0.070 mean +11.2bp
+US 2026-10-15 ρ(J1,J2)=-0.505 | survivors wc ρ(J1,r)=+0.039 pos=0.48 | fin-surv_out up +0.033 mean +8.0bp
+US 2026-10-19 ρ(J1,J2)=-0.445 | survivors wc ρ(J1,r)=+0.104 pos=0.64 | fin-surv_out up +0.081 mean +7.8bp
+ALL ρ(J1,J2)=-0.493 | survivors wc ρ(J1,r)=+0.059 pos=0.55 | fin-surv_out up +0.055 mean +6.3bp
+fin-minus-survivor_outranked up-rate point +0.055 CI [+0.023, +0.087]
+fin-minus-survivor_outranked mean bp point +6.329 CI [-3.607, +16.211]
+J1top3rd: see above; J1 p<0.5 vs >=0.5 up-rate point -0.034 CI [-0.090, +0.025]
+
+# [2] 민감도 core4+KR 2026-10-20
+pairs 4980 labeled 4950
+
+## (a) p 분포
+KR 2026-10-16 n 990 J1 min 0.350 p5 0.470 med 0.540 p95 0.570 max 0.610 | J1>=0.9 0 | J2 min 0.140 med 0.320 p95 0.560 max 0.780 J2>=0.9 0 J2>=0.5 105
+KR 2026-10-19 n 1020 J1 min 0.270 p5 0.450 med 0.520 p95 0.560 max 0.590 | J1>=0.9 0 | J2 min 0.170 med 0.375 p95 0.690 max 0.850 J2>=0.9 0 J2>=0.5 277
+KR 2026-10-20 n 990 J1 min 0.360 p5 0.430 med 0.480 p95 0.540 max 0.590 | J1>=0.9 0 | J2 min 0.250 med 0.510 p95 0.700 max 0.850 J2>=0.9 0 J2>=0.5 564
+US 2026-10-15 n 990 J1 min 0.400 p5 0.450 med 0.510 p95 0.550 max 0.590 | J1>=0.9 0 | J2 min 0.130 med 0.360 p95 0.650 max 0.740 J2>=0.9 0 J2>=0.5 244
+US 2026-10-19 n 990 J1 min 0.350 p5 0.460 med 0.510 p95 0.560 max 0.590 | J1>=0.9 0 | J2 min 0.110 med 0.300 p95 0.520 max 0.690 J2>=0.9 0 J2>=0.5 74
+ALL n 4980 J1 min 0.270 p5 0.450 med 0.510 p95 0.560 max 0.610 | J1>=0.9 0 | J2 min 0.110 med 0.360 p95 0.650 max 0.850 J2>=0.9 0 J2>=0.5 1264
+
+## (b) J1 Spearman (pooled ρ, n | within-cycle mean ρ, cycles, share>0)
+KR 2026-10-16 chg ρ=+0.361 n=990 | wc=+0.343 c=33 pos=0.94 ; vwap ρ=+0.650 n=951 | wc=+0.589 c=32 pos=1.00 ; r ρ=-0.031 n=960 | wc=+0.011 c=32 pos=0.53
+KR 2026-10-19 chg ρ=+0.521 n=1020 | wc=+0.486 c=34 pos=1.00 ; vwap ρ=+0.693 n=990 | wc=+0.637 c=33 pos=1.00 ; r ρ=-0.122 n=1020 | wc=-0.002 c=34 pos=0.44
+KR 2026-10-20 chg ρ=+0.433 n=990 | wc=+0.360 c=33 pos=0.97 ; vwap ρ=+0.688 n=960 | wc=+0.507 c=32 pos=0.97 ; r ρ=-0.156 n=990 | wc=-0.018 c=33 pos=0.52
+US 2026-10-15 chg ρ=+0.490 n=990 | wc=+0.502 c=33 pos=1.00 ; vwap ρ=+0.562 n=960 | wc=+0.532 c=32 pos=1.00 ; r ρ=-0.121 n=990 | wc=-0.097 c=33 pos=0.33
+US 2026-10-19 chg ρ=+0.372 n=990 | wc=+0.324 c=33 pos=0.85 ; vwap ρ=+0.738 n=960 | wc=+0.695 c=32 pos=1.00 ; r ρ=+0.008 n=990 | wc=+0.087 c=33 pos=0.64
+ALL chg ρ=+0.557 n=4980 | wc=+0.403 c=166 pos=0.95 ; vwap ρ=+0.704 n=4821 | wc=+0.592 c=161 pos=0.99 ; r ρ=+0.008 n=4950 | wc=-0.004 c=165 pos=0.49
+
+## J1 hit/mean by within-session p tercile? -> J1 top vs bottom third per session
+KR 2026-10-16 bottom3rd hit 0.553 mean 31.9bp med 24.2bp | top3rd hit 0.528 mean 12.8bp med 14.4bp | zero-return share 0.041
+KR 2026-10-19 bottom3rd hit 0.635 mean 72.1bp med 58.4bp | top3rd hit 0.535 mean 23.3bp med 11.1bp | zero-return share 0.032
+KR 2026-10-20 bottom3rd hit 0.400 mean -17.1bp med -15.9bp | top3rd hit 0.345 mean -78.9bp med -42.8bp | zero-return share 0.027
+US 2026-10-15 bottom3rd hit 0.667 mean 52.4bp med 20.9bp | top3rd hit 0.548 mean 24.6bp med 3.7bp | zero-return share 0.014
+US 2026-10-19 bottom3rd hit 0.473 mean 3.9bp med 0.0bp | top3rd hit 0.497 mean -13.4bp med 0.0bp | zero-return share 0.014
+ALL bottom3rd hit 0.512 mean 18.6bp med 1.9bp | top3rd hit 0.541 mean 10.1bp med 8.4bp | zero-return share 0.026
+
+## (c) J2 Spearman with features & r
+KR 2026-10-16 chg ρ=-0.239 n=990 wc=-0.182 pos=0.18 ; r1d ρ=-0.344 n=987 wc=-0.282 pos=0.03 ; r5d ρ=-0.237 n=971 wc=-0.261 pos=0.06 ; r20d ρ=-0.086 n=965 wc=-0.098 pos=0.24 ; vwap ρ=-0.307 n=951 wc=-0.265 pos=0.09 ; r ρ=+0.169 n=960 wc=+0.140 pos=0.75
+KR 2026-10-19 chg ρ=-0.625 n=1020 wc=-0.631 pos=0.00 ; r1d ρ=-0.459 n=1019 wc=-0.294 pos=0.12 ; r5d ρ=-0.533 n=1013 wc=-0.614 pos=0.00 ; r20d ρ=-0.316 n=1007 wc=-0.414 pos=0.00 ; vwap ρ=-0.342 n=990 wc=-0.403 pos=0.15 ; r ρ=+0.177 n=1020 wc=+0.020 pos=0.44
+KR 2026-10-20 chg ρ=-0.648 n=990 wc=-0.598 pos=0.00 ; r1d ρ=-0.398 n=990 wc=-0.291 pos=0.06 ; r5d ρ=-0.496 n=975 wc=-0.504 pos=0.00 ; r20d ρ=-0.489 n=967 wc=-0.513 pos=0.03 ; vwap ρ=-0.618 n=960 wc=-0.450 pos=0.09 ; r ρ=+0.157 n=990 wc=-0.003 pos=0.48
+US 2026-10-15 chg ρ=-0.782 n=990 wc=-0.773 pos=0.00 ; r1d ρ=+0.081 n=990 wc=+0.099 pos=0.61 ; r5d ρ=-0.789 n=990 wc=-0.793 pos=0.00 ; r20d ρ=-0.620 n=990 wc=-0.621 pos=0.00 ; vwap ρ=+0.011 n=960 wc=-0.027 pos=0.50 ; r ρ=+0.233 n=990 wc=+0.250 pos=0.64
+US 2026-10-19 chg ρ=+0.055 n=990 wc=+0.056 pos=0.67 ; r1d ρ=-0.440 n=990 wc=-0.440 pos=0.00 ; r5d ρ=-0.466 n=990 wc=-0.446 pos=0.12 ; r20d ρ=-0.480 n=990 wc=-0.456 pos=0.03 ; vwap ρ=-0.611 n=960 wc=-0.596 pos=0.00 ; r ρ=+0.045 n=990 wc=-0.037 pos=0.48
+ALL chg ρ=-0.562 n=4980 wc=-0.427 pos=0.17 ; r1d ρ=-0.330 n=4976 wc=-0.242 pos=0.16 ; r5d ρ=-0.492 n=4939 wc=-0.524 pos=0.04 ; r20d ρ=-0.386 n=4919 wc=-0.420 pos=0.06 ; vwap ρ=-0.381 n=4821 wc=-0.348 pos=0.17 ; r ρ=+0.064 n=4950 wc=+0.073 pos=0.56
+
+## (c2) J2 flagged (p2>=0.5) vs not: 60m return
+KR 2026-10-16 FLAG n=105 lab=103 up=0.650 down=0.311 mean=+104.0bp med=+71.3bp | NOT n=885 lab=857 up=0.537 down=0.422 mean=+14.5bp med=+13.6bp | chg 1.70 vs 3.49 r5d -9.62 vs -3.98 r20d -5.31 vs -0.10
+KR 2026-10-19 FLAG n=277 lab=277 up=0.679 down=0.303 mean=+94.8bp med=+111.8bp | NOT n=743 lab=743 up=0.576 down=0.386 mean=+32.5bp med=+22.1bp | chg -2.18 vs 2.12 r5d -9.88 vs -0.08 r20d -8.41 vs 1.04
+KR 2026-10-20 FLAG n=564 lab=564 up=0.395 down=0.574 mean=-24.8bp med=-24.9bp | NOT n=426 lab=426 up=0.296 down=0.681 mean=-83.6bp med=-41.9bp | chg -5.05 vs 0.56 r5d -7.99 vs -0.24 r20d -10.67 vs 4.60
+US 2026-10-15 FLAG n=244 lab=244 up=0.717 down=0.275 mean=+86.5bp med=+58.7bp | NOT n=746 lab=746 up=0.527 down=0.457 mean=+16.4bp med=+1.7bp | chg -5.25 vs 0.42 r5d -15.90 vs -1.51 r20d -14.82 vs 0.15
+US 2026-10-19 FLAG n=74 lab=74 up=0.500 down=0.459 mean=-5.8bp med=+2.1bp | NOT n=916 lab=916 up=0.500 down=0.488 mean=-2.5bp med=+0.2bp | chg 2.59 vs 1.41 r5d -10.68 vs -1.46 r20d -19.87 vs -2.05
+ALL FLAG n=1264 lab=1262 up=0.547 down=0.429 mean=+34.6bp med=+18.6bp | NOT n=3716 lab=3688 up=0.506 down=0.468 mean=+3.0bp med=+0.9bp | chg -3.46 vs 1.75 r5d -10.25 vs -1.65 r20d -11.11 vs 0.23
+
+## (d) finalist vs non-finalist (all non-finalists)
+KR 2026-10-16 FIN n=330 lab=320 up=0.553 mean=+10.4bp med=+15.3bp | NONFIN n=660 lab=640 up=0.547 mean=+30.9bp med=+16.7bp | SURV-OUTRANKED n=555 lab=537 up=0.527 mean=+16.9bp med=+11.0bp
+KR 2026-10-19 FIN n=320 lab=320 up=0.616 mean=+38.9bp med=+32.0bp | NONFIN n=700 lab=700 up=0.599 mean=+54.3bp med=+32.8bp | SURV-OUTRANKED n=423 lab=423 up=0.546 mean=+27.7bp med=+15.3bp
+KR 2026-10-20 FIN n=281 lab=281 up=0.356 mean=-70.1bp med=-22.8bp | NONFIN n=709 lab=709 up=0.351 mean=-42.1bp med=-35.7bp | SURV-OUTRANKED n=145 lab=145 up=0.179 mean=-109.7bp med=-84.8bp
+US 2026-10-15 FIN n=330 lab=330 up=0.545 mean=+20.9bp med=+4.1bp | NONFIN n=660 lab=660 up=0.588 mean=+40.1bp med=+11.3bp | SURV-OUTRANKED n=416 lab=416 up=0.512 mean=+12.9bp med=+0.5bp
+US 2026-10-19 FIN n=330 lab=330 up=0.552 mean=+2.5bp med=+5.2bp | NONFIN n=660 lab=660 up=0.474 mean=-5.3bp med=-0.9bp | SURV-OUTRANKED n=586 lab=586 up=0.471 mean=-5.2bp med=-1.1bp
+ALL FIN n=1591 lab=1581 up=0.529 mean=+2.4bp med=+5.0bp | NONFIN n=3389 lab=3369 up=0.510 mean=+15.1bp med=+1.9bp | SURV-OUTRANKED n=2125 lab=2107 up=0.488 mean=+3.4bp med=+0.0bp
+
+## cycle-clustered bootstrap 95% CI (2000 draws, resample cycles within ALL)
+J2flag-minus-not mean bp point +31.642 CI [+8.684, +54.983]
+J2flag-minus-not up-rate point +0.041 CI [-0.027, +0.105]
+fin-minus-nonfin up-rate point +0.019 CI [-0.017, +0.053]
+fin-minus-nonfin mean bp point -12.684 CI [-26.271, -0.104]
+
+## independence
+KR 2026-10-16 pairs 990 cycles 33 distinct symbols 165 pairs/symbol mean 6.0 max 17
+KR 2026-10-19 pairs 1020 cycles 34 distinct symbols 169 pairs/symbol mean 6.0 max 18
+KR 2026-10-20 pairs 990 cycles 33 distinct symbols 164 pairs/symbol mean 6.0 max 20
+US 2026-10-15 pairs 990 cycles 33 distinct symbols 222 pairs/symbol mean 4.5 max 19
+US 2026-10-19 pairs 990 cycles 33 distinct symbols 199 pairs/symbol mean 5.0 max 20
+ALL pairs 4980 cycles 166 distinct symbols 547 pairs/symbol mean 9.1 max 42
+
+## news present share 1.0 symbol-headline>0 share 0.021887550200803213
+
+## extra
+KR 2026-10-16 ρ(J1,J2)=-0.448 | survivors wc ρ(J1,r)=+0.021 pos=0.53 | fin-surv_out up +0.026 mean -6.4bp
+KR 2026-10-19 ρ(J1,J2)=-0.621 | survivors wc ρ(J1,r)=+0.071 pos=0.53 | fin-surv_out up +0.070 mean +11.2bp
+KR 2026-10-20 ρ(J1,J2)=-0.662 | survivors wc ρ(J1,r)=-0.076 pos=0.42 | fin-surv_out up +0.177 mean +39.6bp
+US 2026-10-15 ρ(J1,J2)=-0.505 | survivors wc ρ(J1,r)=+0.039 pos=0.48 | fin-surv_out up +0.033 mean +8.0bp
+US 2026-10-19 ρ(J1,J2)=-0.445 | survivors wc ρ(J1,r)=+0.104 pos=0.64 | fin-surv_out up +0.081 mean +7.8bp
+ALL ρ(J1,J2)=-0.590 | survivors wc ρ(J1,r)=+0.033 pos=0.52 | fin-surv_out up +0.040 mean -1.0bp
+fin-minus-survivor_outranked up-rate point +0.040 CI [+0.009, +0.072]
+fin-minus-survivor_outranked mean bp point -0.990 CI [-10.627, +9.128]
+J1top3rd: see above; J1 p<0.5 vs >=0.5 up-rate point +0.026 CI [-0.034, +0.087]
