@@ -165,3 +165,37 @@ worktree에 체크아웃하고 `check_analysis.py --change`를 실행해
 "병합 시점 이후로 이 change가 더 고친 함수가 없다"를 확인하는 것이고, "이 change가
 고친 함수에 증거가 있다"는 위의 원래 base 재검사가 확인한다. 한 명령으로 둘 다
 재도출되지는 않는다.
+
+## 종결 시퀀스 (2026-10-21, a077 3aae0a79 선례 · 사용자 승인 「사람 승인 base 재고정」)
+
+**승인 기록.** 사용자 결정(2026-10-21, Manager 경유 — Teammate 보고와 격리 worktree 시운전
+GATE PASS 11/11 을 본 뒤 「1」). `docs/WORKFLOW.md` 「사람 승인 base 재고정」 1·2·3 을 아래로 갖춘다.
+
+### 왜 `--record-landing` 이 아닌가
+
+- a074 의 Go 작업은 `e540668fe`(2026-08-04, 구현) 와 이름 바꾸기 `b8f31f276` · `d42e42e91` 이고,
+  셋 다 옛 base `448dfeb1`(통합 병합)의 조상이다. 840b3377 재기준화가 base 를 작업 **뒤로** 옮겼다.
+- refresh 전 `--record-landing` 거절: `no commit at or after the evidence (840b337725fa) is accepted as the landing —
+  … changes none of the sources its evidence pins since the comparison base 448dfeb1263d`.
+- refresh 뒤 격리 worktree 시운전에서 기록되는 착지는 refresh 커밋 자신(2026-10-20)이고, 그 착지로도
+  `required 543`(missing 538) 이 그대로였다 — 착지가 작업 뒤라 창이 좁혀지지 않는다. 그 시운전 기록은 버렸다.
+
+### stale 번들 refresh 영수증 (b9289fe4)
+
+- 일곱 번들의 `ast.json` 을 HEAD 3415cf89 소스로 재추출(`revision: current` 유지). 분기 대응은 difflib 정렬:
+  run 3→3 · reportCycle 1→1 · NewContext 15→15 · recordGateSettings 6→6 · mergeEngine 5→5 는 항등,
+  record 12→18 · workingSet 20→31 은 재번호(각 FLM 「Refresh (2026-10-20)」 절에 대응표와 키 선택 근거).
+- 늘어난 분기 17 은 전부 이웃(a083/a084 · a090 · a094 · a111 · a150)의 것이다(`git log -L`, a074 커밋 0).
+  BTM 의 그 행은 그 분기를 만든 change 의 현존 시험을 인용하고 RED `n/a` — a074 관측을 주장하지 않는다.
+- refresh 뒤 check_analysis 에서 stale · 인용 오류 0(남은 것은 옛 base 의 형제 required 뿐).
+
+### base 재고정 영수증
+
+1. **귀속 실측** — 모집단 = `git log --all --no-merges -- openspec/changes/a064-critical-events-reach-the-operator
+   openspec/changes/a074-critical-events-reach-the-operator`(옛 디렉터리명 포함, 잰 순간 HEAD b9289fe4) 9 커밋. 옛 base 의 조상:
+   e540668f(go 16) · b8f31f27(go 28, 이름 바꾸기) · 875f8be4 · ca64000e · d42e42e9(go 57, 이름 바꾸기).
+   옛 base 뒤: 840b3377 · 421c1927 · 3415cf89 · b9289fe4 — 전부 go 0. **옛 base 이후 자기 Go 커밋 0.**
+2. **옛 base 의 required** — `448dfeb1263d → working tree` required 543 · missing 538, 창에 착지 커밋 1106 —
+   전부 다른 change 의 기존 함수다.
+3. **재고정** 448dfeb1 → b9289fe4, `base-commit.txt` 한 파일만 커밋. 시운전(격리 worktree, base = refresh 커밋)에서
+   5단계 `required 0 function(s)` · `evidence complete or diff-proven exempt`, 완료 게이트 11/11 PASS.
