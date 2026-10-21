@@ -1,0 +1,313 @@
+### callers adaptPrices
+
+Callers of "adaptPrices" (3):
+
+method      Prices
+  internal/official/market_reads.go:142
+
+function    TestAdaptPricesUnit
+  internal/official/market_reads_test.go:85
+
+function    TestAdaptPricesEmpty
+  internal/official/market_reads_test.go:107
+
+### callees adaptPrices
+
+Callees of "adaptPrices" (3):
+
+function    parseDecimal
+  internal/official/market_reads.go:15
+
+struct      Quote
+  internal/domain/models.go:395
+
+struct      apiPrice
+  internal/official/market_reads.go:133
+
+### callers observe
+
+Callers of "observe" (20):
+
+method      ObserveOnce
+  internal/app/engine/exitloop.go:457
+
+method      pollLocked
+  internal/filldetect/detect.go:283
+
+function    TestALateLifecycleFailureDoesNotUnseatTheNewAttachment
+  cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go:456
+
+function    TestTheConsoleReadinessSeamCombinesTheMarkerAndTheProcessList
+  cmd/tossctl/a102_engine_ready_test.go:847
+
+function    recoverThenReady
+  cmd/tossctl/engineready.go:58
+
+function    awaitEngineReady
+  cmd/tossctl/engineready.go:339
+
+function    TestA110ChangingReconcileDisputesDoNotSuppressAnUncoveredAdoption
+  internal/app/engine/a110_adoption_recovery_test.go:26
+
+function    TestA159ProtectionExitAfterRestart
+  internal/app/engine/a159_protection_restart_test.go:223
+
+function    TestA111BreachStillRecordsBeforeSubmitAndPendingStillDeduplicates
+  internal/app/engine/a111_flat_exit_observation_test.go:500
+
+function    TestTheSameComparisonNeitherSpendsNorDiscardsACredit
+  internal/reconcile/a083_credit_lifetime_test.go:28
+
+function    TestAnUndatedComparisonCannotSpendACredit
+  internal/reconcile/a083_credit_lifetime_test.go:62
+
+function    TestACreditFromALaterComparisonIsNotSpent
+  internal/reconcile/a083_credit_lifetime_test.go:84
+
+function    TestAnUnrelatedMismatchDoesNotDiscardAnAnsweredCredit
+  internal/reconcile/a083_credit_lifetime_test.go:111
+
+function    TestARefutedCreditIsDiscardedPerSymbol
+  internal/reconcile/a083_credit_lifetime_test.go:161
+
+function    TestAReclassifiedDisagreementDoesNotReleaseTheBlock
+  internal/reconcile/a083b_credit_scope_test.go:65
+
+function    TestAReclassifiedDisagreementRefutesTheCredit
+  internal/reconcile/a083b_credit_scope_test.go:91
+
+function    TestACreditIsSpentByTheFirstComparisonThatCouldUseIt
+  internal/reconcile/a083b_credit_scope_test.go:123
+
+function    TestACreditWithNothingLeftToAnswerIsDiscarded
+  internal/reconcile/a083b_credit_scope_test.go:174
+
+function    TestAnUnrelatedMismatchStillDoesNotDiscardAnAnsweredCredit
+  internal/reconcile/a083b_credit_scope_test.go:204
+
+function    TestQuantityMismatchBlocksEntries
+  internal/reconcile/mismatch_test.go:60
+
+### callees observe
+
+Callees of "observe" (20):
+
+struct      Observation
+  internal/candidate/candidate.go:162
+
+method      Prices
+  internal/app/engine/exitloop.go:120
+
+function    LeaseAnchor
+  internal/clock/clock.go:57
+
+function    decimalOf
+  internal/app/engine/exitloop.go:1990
+
+function    NewEvidenceInvalidError
+  internal/execgw/retry.go:66
+
+method      MaxExitObservationCycle
+  internal/journal/exit_observation_refresh.go:238
+
+struct      Query
+  internal/performance/query.go:26
+
+struct      observedQuote
+  internal/app/engine/exitloop.go:829
+
+struct      Context
+  internal/app/app.go:62
+
+struct      cycleObservation
+  internal/app/engine/exitloop.go:836
+
+struct      sloSample
+  internal/filldetect/slo.go:107
+
+function    requestCancelled
+  cmd/tossctl/httpapi_strategy_attach.go:260
+
+function    endpointAnswered
+  cmd/tossctl/console_lifecycle_attach.go:255
+
+type_alias  engineLook
+  cmd/tossctl/engineready.go:126
+
+struct      ExitCycle
+  internal/app/engine/exitloop.go:432
+
+method      Observe
+  internal/reconcile/mismatch.go:618
+
+function    T
+  internal/i18n/i18n.go:104
+
+struct      Tracker
+  internal/reconcile/mismatch.go:300
+
+struct      Diff
+  internal/reconcile/compare.go:292
+
+struct      Outcome
+  internal/continuationlane/evaluator.go:170
+
+### callers ObserveOnce
+
+Callers of "ObserveOnce" (12):
+
+function    TestA110ChangingReconcileDisputesDoNotSuppressAnUncoveredAdoption
+  internal/app/engine/a110_adoption_recovery_test.go:26
+
+method      Run
+  internal/app/engine/tracer.go:273
+
+function    TestAnArmedProposalIsNotProposedTwiceAfterARestart
+  internal/app/engine/exitloop_test.go:1151
+
+function    TestA111AutomaticallyAdoptedCommonLadderEvaluatesItsUnchangedFirstQuote
+  internal/app/engine/a111_flat_exit_observation_test.go:286
+
+function    TestA111FallbackObservationSourceIsDurableAndRestartMonotone
+  internal/app/engine/a111_flat_exit_observation_test.go:784
+
+function    TestA111LeaseIsRecheckedAtTheRecordOrRefreshBoundary
+  internal/app/engine/a111_flat_exit_observation_test.go:1077
+
+function    TestExitObserverConcurrentSameQuoteArmsAndMutatesOnce
+  internal/app/engine/exit_identity_concurrency_test.go:88
+
+function    TestA094AnEpisodeIsOneRowAcrossRestarts
+  internal/app/engine/a094_exit_clear_more_test.go:78
+
+function    TestA094TheCloseWaitEpisodeIsOneRowAcrossRestarts
+  internal/app/engine/a094_review_fixes_test.go:38
+
+function    TestA094TwoStreaksAtTheSameInstantAreTwoEpisodes
+  internal/app/engine/a094_exit_clear_test.go:646
+
+function    TestA150UnrecoverablePositionIsCountedAndWarned
+  internal/app/engine/a150_exit_protection_test.go:536
+
+method      Run
+  internal/app/engine/exitloop.go:395
+
+### callees ObserveOnce
+
+Callees of "ObserveOnce" (16):
+
+method      endExitOrderCycle
+  internal/app/engine/exit_order_log.go:236
+
+method      flushStrategyProtectionAlerts
+  internal/app/engine/strategy_protection.go:29
+
+method      Now
+  internal/clock/clock.go:37
+
+method      FillDetectionBehind
+  internal/app/engine/exitloop.go:155
+
+method      checkOutage
+  internal/app/engine/exitloop.go:916
+
+method      workingSet
+  internal/app/engine/exitloop.go:550
+
+method      settleUnobserved
+  internal/app/engine/exit_unobserved.go:139
+
+method      observe
+  internal/app/engine/exitloop.go:842
+
+function    symbolsOf
+  internal/app/engine/exitloop.go:1952
+
+method      noteUnobservedCause
+  internal/app/engine/exit_unobserved.go:128
+
+method      quoteUsable
+  internal/app/engine/exitloop.go:1179
+
+method      noteJudged
+  internal/app/engine/exit_unobserved.go:134
+
+method      judge
+  internal/app/engine/exitloop.go:961
+
+struct      cycleObservation
+  internal/app/engine/exitloop.go:836
+
+struct      Context
+  internal/app/app.go:62
+
+struct      ExitCycle
+  internal/app/engine/exitloop.go:432
+
+### callers quoteUsable
+
+Callers of "quoteUsable" (6):
+
+method      ObserveOnce
+  internal/app/engine/exitloop.go:457
+
+method      judge
+  internal/app/engine/exitloop.go:961
+
+method      judgeRatchet
+  internal/app/engine/exitloop.go:1025
+
+method      judgeLadder
+  internal/app/engine/exitloop.go:1079
+
+method      refreshObservation
+  internal/app/engine/exitloop.go:1158
+
+method      record
+  internal/app/engine/exitloop.go:1288
+
+### callees quoteUsable
+
+Callees of "quoteUsable" (3):
+
+method      Now
+  internal/clock/clock.go:37
+
+function    LeaseElapsed
+  internal/clock/clock.go:65
+
+struct      observedQuote
+  internal/app/engine/exitloop.go:829
+
+### callers stableObservationID
+
+Callers of "stableObservationID" (3):
+
+function    TestStableObservationIDUsesFetchedAtAndIgnoresCycleFallback
+  internal/app/engine/exit_observation_identity_test.go:11
+
+function    TestStableObservationIDReusesOneFallbackWithinCycle
+  internal/app/engine/exit_observation_identity_test.go:34
+
+method      snapshotContext
+  internal/app/engine/exitloop.go:1190
+
+### callees stableObservationID
+
+Callees of "stableObservationID" (5):
+
+function    CanonicalDecimal
+  internal/riskcalc/decimal.go:109
+
+type_alias  Format
+  internal/output/format.go:10
+
+struct      managed
+  internal/app/engine/exitloop.go:529
+
+struct      observedQuote
+  internal/app/engine/exitloop.go:829
+
+struct      cycleObservation
+  internal/app/engine/exitloop.go:836
+

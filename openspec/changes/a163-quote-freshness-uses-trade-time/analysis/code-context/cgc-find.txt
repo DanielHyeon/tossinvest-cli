@@ -1,0 +1,106 @@
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+Found 20 matches for 'adaptPrices':
+╭─────────────┬──────────┬─────────────────────────────────────────────────────╮
+│ Name        │ Type     │ Location                                            │
+├─────────────┼──────────┼─────────────────────────────────────────────────────┤
+│ adaptPrices │ Function │ /tmp/claude-1000/-mnt-D-project-axipient-TossOS/81c │
+│             │          │ 61aa2-383f-4024-9f8a-7b691a61be10/scratchpad/gatewt │
+│             │          │ /internal/official/market_reads.go:142              │
+│ adaptPrices │ Function │ /mnt/D/project/axipient/TossOS-rps-gate/internal/of │
+│             │          │ ficial/market_reads.go:142                          │
+│ adaptPrices │ Function │ /tmp/claude-1000/-mnt-D-project-axipient-TossOS/4ae │
+│             │          │ 1be25-8c79-4117-9da1-fbea023b699d/scratchpad/gate-l │
+│             │          │ abel/internal/official/market_reads.go:142          │
+│ adaptPrices │ Function │ /mnt/D/project/axipient/TossOS-cac-gate/internal/of │
+│             │          │ ficial/market_reads.go:142                          │
+│ adaptPrices │ Function │ /mnt/D/project/axipient/TossOS-cac2/internal/offici │
+│             │          │ al/market_reads.go:142                              │
+│ adaptPrices │ Function │ /mnt/D/project/axipient/TossOS-ux-gate/internal/off │
+│             │          │ icial/market_reads.go:142                           │
+│ adaptPrices │ Function │ /mnt/D/project/axipient/TossOS-cb-gate/internal/off │
+│             │          │ icial/market_reads.go:142                           │
+│ adaptPrices │ Function │ /tmp/tossos-workflow-gate-8n1aWD4n/internal/officia │
+│             │          │ l/market_reads.go:142                               │
+│ adaptPrices │ Function │ /tmp/tossos-workflow-gate-No1rAbrq/internal/officia │
+│             │          │ l/market_reads.go:142                               │
+│ adaptPrices │ Function │ /tmp/tossos-gate-wt/internal/official/market_reads. │
+│             │          │ go:142                                              │
+│ adaptPrices │ Function │ /tmp/tossos-workflow-gate-PKj4j4d2/internal/officia │
+│             │          │ l/market_reads.go:142                               │
+│ adaptPrices │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a041/inter │
+│             │          │ nal/official/market_reads.go:142                    │
+│ adaptPrices │ Function │ /tmp/tossos-gbrain-gate.MX45VC/repo/internal/offici │
+│             │          │ al/market_reads.go:142                              │
+│ adaptPrices │ Function │ /tmp/tossos-gbrain-gate.4nl0Kz/repo/internal/offici │
+│             │          │ al/market_reads.go:142                              │
+│ adaptPrices │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a042/inter │
+│             │          │ nal/official/market_reads.go:142                    │
+│ adaptPrices │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a045/inter │
+│             │          │ nal/official/market_reads.go:142                    │
+│ adaptPrices │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a048/inter │
+│             │          │ nal/official/market_reads.go:142                    │
+│ adaptPrices │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a046/inter │
+│             │          │ nal/official/market_reads.go:142                    │
+│ adaptPrices │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a043/inter │
+│             │          │ nal/official/market_reads.go:142                    │
+│ adaptPrices │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a044/inter │
+│             │          │ nal/official/market_reads.go:142                    │
+╰─────────────┴──────────┴─────────────────────────────────────────────────────╯
+rc=0
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+Found 20 matches for 'quoteUsable':
+╭─────────────┬──────────┬─────────────────────────────────────────────────────╮
+│ Name        │ Type     │ Location                                            │
+├─────────────┼──────────┼─────────────────────────────────────────────────────┤
+│ quoteUsable │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a109/inter │
+│             │          │ nal/app/engine/exitloop.go:1068                     │
+│ quoteUsable │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a109-t2/in │
+│             │          │ ternal/app/engine/exitloop.go:1068                  │
+│ quoteUsable │ Function │ /mnt/D/Axipient/workspace/TossOS-worktrees/a125-gat │
+│             │          │ e/internal/app/engine/exitloop.go:1068              │
+│ quoteUsable │ Function │ /mnt/D/tmp-review-7534-adv/wt/internal/app/engine/e │
+│             │          │ xitloop.go:1068                                     │
+│ quoteUsable │ Function │ /mnt/D/project/axipient/TossOS/internal/app/engine/ │
+│             │          │ exitloop.go:1068                                    │
+│ quoteUsable │ Function │ /tmp/tossos-a063-execution-adoption/internal/app/en │
+│             │          │ gine/exitloop.go:1068                               │
+│ quoteUsable │ Function │ /tmp/tossos-a120-audit-legacy-execution-baseline/in │
+│             │          │ ternal/app/engine/exitloop.go:1068                  │
+│ quoteUsable │ Function │ /mnt/D/Axipient/workspace/TossOS-worktrees/archive- │
+│             │          │ batch1/internal/app/engine/exitloop.go:1068         │
+│ quoteUsable │ Function │ /tmp/claude-1000/a091-gate/internal/app/engine/exit │
+│             │          │ loop.go:1123                                        │
+│ quoteUsable │ Function │ /mnt/D/Axipient/workspace/TossOS-worktrees/a066-gat │
+│             │          │ e/internal/app/engine/exitloop.go:1068              │
+│ quoteUsable │ Function │ /tmp/claude-1000/a092-gate/internal/app/engine/exit │
+│             │          │ loop.go:1073                                        │
+│ quoteUsable │ Function │ /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4 │
+│             │          │ b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a090 │
+│             │          │ -gate/internal/app/engine/exitloop.go:1112          │
+│ quoteUsable │ Function │ /tmp/claude-1000/a095-gate/internal/app/engine/exit │
+│             │          │ loop.go:1112                                        │
+│ quoteUsable │ Function │ /tmp/claude-1000/a094-gate/internal/app/engine/exit │
+│             │          │ loop.go:1116                                        │
+│ quoteUsable │ Function │ /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4 │
+│             │          │ b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/wt-g │
+│             │          │ ate/internal/app/engine/exitloop.go:1120            │
+│ quoteUsable │ Function │ /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4 │
+│             │          │ b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/wt12 │
+│             │          │ 7mut/internal/app/engine/exitloop.go:1123           │
+│ quoteUsable │ Function │ /tmp/a121-red/internal/app/engine/exitloop.go:1123  │
+│ quoteUsable │ Function │ /tmp/tossos-compat-20261015/internal/app/engine/exi │
+│             │          │ tloop.go:1137                                       │
+│ quoteUsable │ Function │ /tmp/tossos-a144-gate-20261017/internal/app/engine/ │
+│             │          │ exitloop.go:1137                                    │
+│ quoteUsable │ Function │ /tmp/tossos-a145-gate-20261017/internal/app/engine/ │
+│             │          │ exitloop.go:1137                                    │
+╰─────────────┴──────────┴─────────────────────────────────────────────────────╯
+rc=0

@@ -1,0 +1,305 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "ba30515476584fead62907157bb5ba985271057b2da882c6fda79e2b29951598",
+  "package": "engine",
+  "function": "checkOutage",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.checkOutage(params=2, results=0)",
+  "start": {
+    "line": 916,
+    "column": 1
+  },
+  "end": {
+    "line": 958,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 918,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 921,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 924,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 942,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 947,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 948,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 922,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 925,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 943,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 951,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 918,
+        "column": 5
+      },
+      "text": "since.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 921,
+        "column": 5
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 921,
+        "column": 5
+      },
+      "text": "o.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 921,
+        "column": 30
+      },
+      "text": "o.outageAfter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 929,
+        "column": 2
+      },
+      "text": "o.alert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 931,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 932,
+        "column": 32
+      },
+      "text": "String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 932,
+        "column": 32
+      },
+      "text": "Round"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 932,
+        "column": 32
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 932,
+        "column": 32
+      },
+      "text": "o.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 933,
+        "column": 9
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 933,
+        "column": 9
+      },
+      "text": "since.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 938,
+        "column": 22
+      },
+      "text": "int"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 938,
+        "column": 26
+      },
+      "text": "Seconds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 938,
+        "column": 26
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 938,
+        "column": 26
+      },
+      "text": "o.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 942,
+        "column": 31
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 945,
+        "column": 21
+      },
+      "text": "o.opts.Escalate.EscalateOperatingMode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 948,
+        "column": 7
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 949,
+        "column": 4
+      },
+      "text": "o.logErr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 954,
+        "column": 3
+      },
+      "text": "o.logErr"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 917,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 919,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 927,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 945,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 957,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

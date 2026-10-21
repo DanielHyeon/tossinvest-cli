@@ -1,0 +1,23 @@
+{
+  "id": "STORY-TOS-a163",
+  "title": "시세의 브로커 데이터 시각을 보존하고 보고하되 손절 판정 자격은 바꾸지 않는다",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a163-quote-freshness-uses-trade-time",
+    "path": "openspec/changes/a163-quote-freshness-uses-trade-time"
+  },
+  "found_by": {
+    "date": "2026-10-21",
+    "how": "a087 tasks 0.5 의 AST 열거가 공식 adaptPrices 가 /prices 의 timestamp 를 버리고 FetchedAt 에 수신 시각(time.Now)을 넣는다는 것을 보였다. 청산 루프의 15초 신선도 검사는 체결 나이가 아니라 응답 수신 나이를 잰다. 사용자는 2026-10-21 방향 A(기록·보고만, 손절 판정 불변)와 H1~H7 권장안을 승인했다.",
+    "record": "openspec/changes/a163-quote-freshness-uses-trade-time/proposal.md"
+  },
+  "acceptance": [
+    "공식 가격 어댑터가 /prices 행의 timestamp 를 받은 시각과 별도인 브로커 데이터 시각으로 보존하고, null·누락·해독 불가는 오류 없이 0 값으로 두며 로컬 시계로 메우지 않는다",
+    "FetchedAt·관측 identity·원장 observed-at 은 받은 시각 그대로이고 청산 판정·발의·제출 자격은 체결 나이와 브로커 시각 유무에 따라 바뀌지 않는다",
+    "브로커 시각이 9시간 30분 묵었거나 없거나 미래인 관측도 보호선 아래이면 같은 주기에 보호 청산이 제출된다",
+    "체결 나이는 그 주기의 모든 포지션 판정 뒤 로그 필드로 남고, 브로커 시각 부재는 판정 뒤 일반 등급 알림으로 포지션·사유당 한 번 보고되며 진입 래치·모드 강화를 일으키지 않는다",
+    "로그·알림에 계좌 식별 정보가 없고 추가 브로커 호출이 없다",
+    "진입 게이트·편입 t0·비상 청산 지정가·a112 잔여 (k) 는 동작 변화 없이 잔여로 기록된다"
+  ]
+}

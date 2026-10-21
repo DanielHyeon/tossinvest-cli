@@ -1,0 +1,87 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "ba30515476584fead62907157bb5ba985271057b2da882c6fda79e2b29951598",
+  "package": "engine",
+  "function": "quoteUsable",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.quoteUsable(params=1, results=1)",
+  "start": {
+    "line": 1179,
+    "column": 1
+  },
+  "end": {
+    "line": 1188,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1184,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1185,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1187,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1183,
+        "column": 9
+      },
+      "text": "o.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1184,
+        "column": 5
+      },
+      "text": "Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1184,
+        "column": 5
+      },
+      "text": "now.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1187,
+        "column": 9
+      },
+      "text": "clock.LeaseElapsed"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1183,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

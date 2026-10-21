@@ -1,0 +1,121 @@
+### impact adaptPrices
+
+Impact of changing "adaptPrices" — 13 affected symbols:
+
+internal/official/market_reads.go
+  function    adaptPrices:168
+  method      Prices:142
+
+internal/app/engine/reads.go
+  method      Prices:71
+
+internal/flatten/liquidate.go
+  method      Prices:85
+
+internal/verifylive/verifylive.go
+  method      Prices:583
+
+internal/app/engine/position_policy_command.go
+  method      Prices:39
+
+internal/hybrid/client.go
+  method      GetQuote:117
+
+internal/ops/read_operations.go
+  function    readOperations:78
+
+cmd/tossctl/soak.go
+  method      Prices:694
+
+tools/a128-jev-shadow-probe/collect.go
+  method      Prices:30
+
+internal/app/engine/exitloop.go
+  method      Prices:120
+
+internal/official/market_reads_test.go
+  function    TestAdaptPricesUnit:85
+  function    TestAdaptPricesEmpty:107
+
+### impact quoteUsable
+
+Impact of changing "quoteUsable" — 31 affected symbols:
+
+internal/app/engine/exitloop.go
+  method      quoteUsable:1179
+  method      ObserveOnce:457
+  method      Run:395
+  method      judge:961
+  method      judgeRatchet:1025
+  method      judgeLadder:1079
+  method      refreshObservation:1158
+  method      record:1288
+
+internal/app/engine/a110_adoption_recovery_test.go
+  function    TestA110ChangingReconcileDisputesDoNotSuppressAnUncoveredAdoption:26
+
+internal/app/engine/tracer.go
+  method      Run:273
+
+internal/app/engine/exitloop_test.go
+  function    TestAnArmedProposalIsNotProposedTwiceAfterARestart:1151
+
+internal/app/engine/a111_flat_exit_observation_test.go
+  function    TestA111AutomaticallyAdoptedCommonLadderEvaluatesItsUnchangedFirstQuote:286
+  function    TestA111FallbackObservationSourceIsDurableAndRestartMonotone:784
+  function    TestA111LeaseIsRecheckedAtTheRecordOrRefreshBoundary:1077
+
+internal/app/engine/exit_identity_concurrency_test.go
+  function    TestExitObserverConcurrentSameQuoteArmsAndMutatesOnce:88
+
+internal/app/engine/a094_exit_clear_more_test.go
+  function    TestA094AnEpisodeIsOneRowAcrossRestarts:78
+
+internal/app/engine/a094_review_fixes_test.go
+  function    TestA094TheCloseWaitEpisodeIsOneRowAcrossRestarts:38
+
+internal/app/engine/a094_exit_clear_test.go
+  function    TestA094TwoStreaksAtTheSameInstantAreTwoEpisodes:646
+
+internal/app/engine/a150_exit_protection_test.go
+  function    TestA150UnrecoverablePositionIsCountedAndWarned:536
+  function    TestA150ExistingExitRemainsManagedWhenLatchFails:142
+  function    TestA150StopBreachUsesSellableFloorWhenLatchFails:209
+  function    TestA150MismatchedStopCannotWeakenAdmittedProtection:252
+  function    testA150FloorRestart:332
+  function    TestA150StaleFloorCandidateDoesNotQuarantineExistingExit:397
+  function    TestA150FloorReconciliationPreservesExistingPendingSell:460
+  function    testA150FloorSeedConflict:493
+
+internal/app/engine/a159_protection_restart_test.go
+  function    TestA159ProtectionExitAfterRestart:223
+
+internal/candidate/metrics_test.go
+  function    TestAOneMinuteGapAndATenMinuteGapAreNotTheSameRate:175
+
+internal/app/engine/a091_replay_test.go
+  function    a091LaterStopUnder:398
+
+internal/app/engine/a137_daily_loss_notice.go
+  function    recordStrategyDailyLossUnmeasurable:22
+### impact stableObservationID
+
+Impact of changing "stableObservationID" — 9 affected symbols:
+
+internal/app/engine/exitloop.go
+  function    stableObservationID:1202
+  method      snapshotContext:1190
+  method      judgeRatchet:1025
+  method      judgeLadder:1079
+
+internal/app/engine/exit_observation_identity_test.go
+  function    TestStableObservationIDUsesFetchedAtAndIgnoresCycleFallback:11
+  function    TestStableObservationIDReusesOneFallbackWithinCycle:34
+
+internal/exitpolicy/snapshot_test.go
+  function    ladderSnapshotInput:20
+  function    TestRatchetOneSharePartialIsStateOnlyButBreachIsFull:194
+
+tools/a112-mb-us-source/identity.go
+  method      snapshotContext:88
+

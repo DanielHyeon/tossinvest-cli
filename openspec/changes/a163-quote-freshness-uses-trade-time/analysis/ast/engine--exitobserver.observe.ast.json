@@ -1,0 +1,559 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "ba30515476584fead62907157bb5ba985271057b2da882c6fda79e2b29951598",
+  "package": "engine",
+  "function": "observe",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.observe(params=3, results=2)",
+  "start": {
+    "line": 842,
+    "column": 1
+  },
+  "end": {
+    "line": 913,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 849,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 858,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 862,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 864,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 868,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "else",
+      "at": {
+        "line": 871,
+        "column": 11
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 871,
+        "column": 11
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 878,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 884,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 887,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 893,
+        "column": 3
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "for",
+      "at": {
+        "line": 896,
+        "column": 3
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 898,
+        "column": 4
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "range",
+      "at": {
+        "line": 904,
+        "column": 3
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 905,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 850,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 879,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 882,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 885,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 894,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 912,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 846,
+        "column": 9
+      },
+      "text": "o.opts.Retrier.Query"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 848,
+        "column": 18
+      },
+      "text": "o.opts.Prices.Prices"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 855,
+        "column": 18
+      },
+      "text": "clock.LeaseAnchor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 856,
+        "column": 18
+      },
+      "text": "leaseAnchor.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 857,
+        "column": 13
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 857,
+        "column": 39
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 859,
+        "column": 11
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 859,
+        "column": 27
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 861,
+        "column": 11
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 861,
+        "column": 42
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 863,
+        "column": 14
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 863,
+        "column": 30
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 864,
+        "column": 62
+      },
+      "text": "math.IsNaN"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 864,
+        "column": 84
+      },
+      "text": "math.IsInf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 867,
+        "column": 27
+      },
+      "text": "q.FetchedAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 868,
+        "column": 7
+      },
+      "text": "q.FetchedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 871,
+        "column": 14
+      },
+      "text": "effectiveAt.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 872,
+        "column": 5
+      },
+      "text": "validatedAt.Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 875,
+        "column": 40
+      },
+      "text": "decimalOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 878,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 879,
+        "column": 11
+      },
+      "text": "execgw.NewEvidenceInvalidError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 879,
+        "column": 42
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 879,
+        "column": 106
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 892,
+        "column": 19
+      },
+      "text": "o.opts.Journal.MaxExitObservationCycle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 897,
+        "column": 15
+      },
+      "text": "o.observationSequence.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 898,
+        "column": 29
+      },
+      "text": "o.observationSequence.CompareAndSwap"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 902,
+        "column": 15
+      },
+      "text": "o.observationSequence.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 903,
+        "column": 24
+      },
+      "text": "strconv.FormatUint"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 845,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 846,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 848,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 855,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 856,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 857,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 859,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 861,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 863,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 864,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 867,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 869,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 870,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 875,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 881,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 892,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 897,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 902,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 903,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 908,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 909,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
