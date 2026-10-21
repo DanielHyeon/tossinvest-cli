@@ -36,12 +36,18 @@ This is a read-only survey of official account endpoints; it does not authorize 
 
 ## Task 4.2 completion record
 
-- Approval details and survey window: **pending**
-- Preflight result: **pending**
-- Backup directory and validation: **pending**
-- Template/binary re-verification immediately before install: **pending**
-- `systemd-analyze --user verify` and `systemctl --user daemon-reload`: **pending**
-- Timer enabled/active result: **pending**
+Filled 2026-10-22 — detail in [`task-4.2-4.4-operation-2026-10-22.md`](task-4.2-4.4-operation-2026-10-22.md).
+
+- Approval details and survey window: user "승인" 2026-10-22 via Manager; survey window from install
+  (2026-10-22 06:18 KST) counting UTC days from 2026-10-22, max 7 days (to 2026-10-29 UTC). Binary
+  replacement was outside the approval and was not performed.
+- Preflight result: pass; engine profile proved equal to console target (container bind
+  `$HOME/.config/tossctl -> /var/lib/tossos/config`, same attestation inode).
+- Backup directory and validation: `$HOME/.config/systemd/user/a063-backup-20261021T211830Z`, `cmp` equal for all three.
+- Template/binary re-verification immediately before install: both template digests OK; installed binary
+  (`5287fe3c…3807`) supports `--record-renewal-status`.
+- `systemd-analyze --user verify` and `systemctl --user daemon-reload`: exit 0 / exit 0.
+- Timer enabled/active result: enabled, active; next 2026-10-22 12:00 KST.
 
 ## Task 4.3 completion record
 

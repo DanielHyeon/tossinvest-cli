@@ -31,14 +31,21 @@
       reviews to complete immutable inventories, and verify all E-based maps at clean detached H.
 - [x] 4.1 Run focused tests, `make test`, `make vet`, `make validate`, `make sdd-sync`,
       and `make sdd-check`; retain actual results. The final change gate follows operational proof.
-- [ ] 4.2 With explicit human approval, back up and install the service definition and reload user
+- [x] 4.2 With explicit human approval, back up and install the service definition and reload user
       systemd without enabling or changing any trading control. Record approval scope, target profile,
       reviewed template digest and approved survey window before the corresponding operations.
+      *(2026-10-22 사용자 "승인". 조작 전 기록 커밋 `ae7000458`, 06:18 KST 설치 — 백업
+      `~/.config/systemd/user/a063-backup-20261021T211830Z`, 설치본 digest = 검토 digest, 바이너리는 승인 범위 밖이라
+      교체하지 않음. `analysis/adoption/task-4.2-4.4-operation-2026-10-22.md`.)*
 - [ ] 4.3 Start the console-profile survey in the approved window and retain at least three consecutive
       qualifying days, recording actual dates. The original 2026-08-29 deadline was not verified and
       has passed; current evidence must not be backdated or replaced by synthetic test records.
+      *(진행 중: 같은 프로필 survey 가 이미 실행 중이라 중단·중복하지 않음. 셀 일자 2026-10-22(UTC)~, 가장 이른 판정
+      2026-10-25 09:00 KST 이후, 상한 2026-10-29(UTC). 기록 파일 §6.)*
 - [ ] 4.4 Verify a fresh attestation is written to the engine profile, renewal failures are visible, and
       no live engine restart or order mutation is used for verification.
+      *(부분: 2026-10-22 06:18 KST 새 attestation(만료 2026-11-20T21:18:31Z)·renewal-status `issued`·console 표시 확인,
+      재시작·주문 0. 운영 중 실패 가시성 관측은 아직 없음 — 3일 창 뒤 재판정. 기록 파일 §5~§6.)*
 - [ ] 4.4.1 Immediately before the final gate (after 4.2~4.4), re-pin the comparison base by the `docs/WORKFLOW.md`
       「사람 승인 base 재고정」 procedure: re-measure attribution from P (`da80ce31`) to the then-HEAD (own non-merge Go
       commits touching this directory, plus a human check for Go commits split from their document commit), re-verify every

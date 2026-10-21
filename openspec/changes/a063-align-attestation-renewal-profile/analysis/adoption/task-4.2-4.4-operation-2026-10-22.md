@@ -102,3 +102,56 @@ timer 는 `OnCalendar=*-*-* 00/6:00:00`, `Persistent=true` — 로컬 시각 00�
   2026-10-25 09:00 KST 이후 판정 가능.
 - 상한: 7일 — 2026-10-29(UTC) 일자까지. 그 안에 연속 3일을 못 채우면 4.3 은 미완으로 보고한다. 일자 하나라도
   FAIL 이면 연속 계수를 다시 시작한다.
+
+## 4. 조작 (task 4.2) — 2026-10-22 06:18 KST
+
+§1~§3 은 커밋 `ae7000458` 로 조작 전에 고정했다. 실행은 deployment-plan 활성화 블록에서 바이너리 설치 줄만 뺀
+스크립트 한 번(exit 0)이다. 순서와 결과:
+
+| 단계 | 결과 |
+| --- | --- |
+| 검토 digest 재확인(`sha256sum -c`) | service OK · timer OK |
+| 설치된 바이너리 `--record-renewal-status` 지원 | 있음 |
+| 전제 재검증(정규 파일·비심링크·FragmentPath 정확·drop-in 없음·timer enabled+active·service inactive) | 모두 통과 |
+| 백업 디렉터리 | `/home/daniel/.config/systemd/user/a063-backup-20261021T211830Z` |
+| 백업 검증(`cmp -s` 원본=사본) | 셋 다 일치 — `tossctl` `5287fe3c…3807`, service `1524b07a…055b`, timer `983cac7d…cc8d23` |
+| `systemctl --user disable --now tossos-attest.timer` | 06:18:30 KST, 이후 service inactive 확인 |
+| `install -m 0644` service·timer | 설치본 digest `0bf50972…de96` · `0db4e0cb…1edde` = 검토 digest, mode 644 |
+| `systemd-analyze --user verify` (설치본 둘) | exit 0, 경고 없음 |
+| `systemctl --user daemon-reload` | exit 0 |
+| `systemctl --user enable --now tossos-attest.timer` | 06:18:31 KST, enabled · active |
+
+하지 않은 것: 바이너리 교체, 다른 단위(`tossos-a128-*`·`tossos-a140-kr`) 변경, `systemctl start tossos-attest.service`
+수동 실행, 엔진·console·survey 재시작/정지, 토글·설정 변경, 주문 명령, `make` 명령.
+
+롤백: deployment-plan 「Proposed rollback」 블록의 `backup=` 에 위 디렉터리를 넣어 실행한다.
+
+## 5. 첫 renewal 주기 관측 (read-only)
+
+`enable --now` 직후 `Persistent=true` 가 놓친 06:00 KST 슬롯을 즉시 실행했다(기존 stamp 02:34 < 06:00).
+수동 트리거는 쓰지 않았다.
+
+| 관측 | 값 |
+| --- | --- |
+| `tossos-attest.service` | 시작·종료 2026-10-22 06:18:31 KST, `Result=success`, `ExecMainStatus=0` |
+| `tossos-attest.timer` | LAST 06:18:31 KST, NEXT **2026-10-22 12:00:00 KST** (이후 18·00·06 시) |
+| attestation (engine profile) | mtime 2026-10-22 06:18:31 KST, `issued_at` 2026-10-21T21:18:31Z, `expires_at` **2026-11-20T21:18:31Z**, `soak_days` 6, `verified_by` `tossos-attest.timer` — 설치 시각 이후 새로 쓰임 |
+| renewal-status | `~/.config/tossctl/capability-attestation.json.renewal-status.json`, mode 0600, 154 B: `format_version` 1, `attempted_at` 2026-10-21T21:18:31Z, `outcome` `issued`, `reason_codes` 없음, `expires_at` 2026-11-20T21:18:31Z |
+| 엔진 컨테이너에서 보임 | `/var/lib/tossos/config/` 아래 두 파일 모두 같은 크기·시각으로 보임(bind mount) |
+| 운영 console 표면 | `GET https://127.0.0.1:37085/verify-console` 200 — `renewal 진단: issued · 마지막 시도 2026-10-21 21:18Z (1시간 미만 전)`, `attestation 만료까지 약 720시간 남았다.`, 상태 `유효`, 발급/만료 2026-10-21 → 2026-11-20 |
+| 엔진·survey·console 프로세스 | 조작 전과 같은 PID·기동 시각(engine 2026-10-19 20:26:12, soak run 20:26:19) — 재시작 없음 |
+
+journal 출력에는 엔드포인트 목록·만료·"gate will still refuse (clause 9)" 안내만 있고 이 기록에는 위 메타데이터만 옮겼다.
+
+## 6. 남은 것
+
+- **4.2: 완료.**
+- **4.3: 진행 중.** survey 는 같은 프로필에서 이미 돌고 있어 중단·중복하지 않았다. 셀 일자는 2026-10-22(UTC) 부터,
+  가장 이른 판정은 2026-10-25 09:00 KST 이후, 상한 2026-10-29(UTC). 각 일자는 `tossctl --config-dir ~/.config/tossctl
+  soak status`(로컬 읽기) 의 일자 행으로 기록한다.
+- **4.4: 부분.** (1) 프로필 일치 ✔ (2) 설치 이후 새 attestation ✔ (3) renewal-status 가 같은 프로필 sibling 경로에 있고
+  마지막 renewal 과 일치 ✔ (5) 엔진 재시작·주문 변경 0 ✔. 남은 것은 (4) **실패 가시성의 운영 관측** — 새 단위는
+  셸 `||` 가림이 없어 거절 시 systemd `Result=exit-code` 로 남고 renewal-status 가 `refused`/`failed` 가 되지만,
+  이번 주기는 `issued` 라 실제 실패는 관측되지 않았다. 실패를 일부러 만들려면 승인 범위 밖 조작(record·프로필 변경)이
+  필요하므로 하지 않았다. 템플릿 4.4 는 3일 창 뒤에 확인하도록 되어 있으므로 창이 끝날 때 다시 판정한다.
+- 4.4.1 base 재고정, 4.5 독립 리뷰·PM 동기화·`make gate`·archive 는 그 뒤.
