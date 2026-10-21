@@ -95,3 +95,31 @@
 - 토글 시험·census 확장·audit 행 시험 자체 — 문서 로트라 아직 없음(tasks 2.13~2.16 이 만든다).
 - 공식 갈래 `tossctl quote --json` 의 `source_timestamp` 키는 토글과 무관하게 생긴다 — H7(a) 사용자 승인과 Manager 범위(어댑터 보존은 토글 밖)에 따른
   것이고, 이 키가 upstream 공식 갈래 출력 계약에 주는 영향은 이 로트에서 다시 재지 않았다(2026-10-21 D2 판단 그대로).
+
+## 1.3 Pre-Edit 선언 — 2026-10-22 구현 로트(격리 worktree `/tmp/tossos-a163-impl-20261022`, 브랜치 `a163-impl`, HEAD `1eab9b931`)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a163-quote-freshness-uses-trade-time / 3.1~3.6 (RED 2.0~2.16 선행)
+- 대상 심볼(패키지.함수):
+  · official.adaptPrices (리터럴 대입 한 줄)
+  · engine.ExitObserver.observe (observedQuote 리터럴 필드 하나) · engine.ExitObserver.ObserveOnce (순회 뒤 호출 한 줄)
+  · cmd/tossctl.engineRuntime (SourceAgeLog 옵션 키 하나)
+  · config.mergeEngine (B4 앞 if 하나) · engine.recordGateSettings (끝 인자 + 끝 행) · engine.Context.ExitObserver (덮어쓰기 한 줄)
+  · engine.NewContext (recordGateSettings 호출 인자 하나) · a074 시험 함수 넷(호출 인자 false) — issues.md I3
+  · 새 코드(새 파일): internal/app/engine/exit_source_age.go · 새 타입 필드(domain.Quote.SourceTimestamp · observedQuote.SourceTimestamp ·
+    ExitObserverOptions.SourceAgeLog/SourceAgeReport · config.Engine.ExitSourceAgeReport · rawEngine) · 새 상수(audit.ActionExitSourceAgeReport ·
+    obs 이벤트 둘) · schemas/config.schema.json 속성 · Makefile RACE 목록
+- CodeGraph definition/callers/callees/impact: analysis/code-context/codegraph-callers-0.7-20261022.txt (codegraph 1.6.0, make sdd-sync 직후)
+- CodeGraphContext 후보와 evidence reconciliation: evidence-reconciliation.md 「tasks 0.7 재질의」 — 불일치 2(issues.md I1·I2, 시험 범위만)
+- 기존 동작 파악 근거: HEAD 원문 + AST 32(analysis/ast) + FLM 번들 12(analysis/function-logic) + 기존 시험(exitloop_test · exit_e2e_test ·
+  a090 · a111 · a129 · a074 · config engine_test · official market_reads_test)
+- Function Logic Map / Branch Test Map: analysis/function-logic/ 12 번들(편집 전 revision current = base 소스) — 편집 뒤 최신화(tasks 3.5)
+- upstream 상속 테스트 영향: yes — domain.Quote JSON(tossctl quote --json). 회귀 방지: 2.0 골든 둘(WTS · adaptStocks, 편집 전 GREEN)
+- 실패 테스트 선행 작성: yes — 고정 시험(1.2 · 2.0~2.4)은 편집 전 GREEN 실측, RED(2.5~2.16)는 GREEN 전 실패 실측을 analysis/red-green/ 에 기록
+- 설정·DB·journal 변경과 rollback: 설정 키 하나 추가(engine.exit_source_age_report, 기본 false, omitempty). journal schema 변경 0.
+  rollback = 이 브랜치 커밋 되돌림. 키가 남은 config 파일도 옛 바이너리가 읽음 — internal/config 의 로더는 encoding/json 기본 디코드이고
+  DisallowUnknownFields 사용 0(grep 2026-10-22), 그래서 모르는 키는 버려짐(= 꺼짐과 같음)
+- 안전 불변식 §0 위반 여부 검토: 통과 — 판정 경로 새 분기 0(렌더 해시 · census · ObserveOnce 분기 수), 손절 즉시성 불변(e2e 2.1~2.3),
+  OFF = 오늘 동작(2.13 · 2.14), 공식 API 호출 0 추가, 토글 쓰기 코드 0(사람 flip), 계좌 ref 미기재(2.8)
+```

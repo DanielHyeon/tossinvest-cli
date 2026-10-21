@@ -26,8 +26,10 @@
       callers/callees/impact 를 HEAD 와 대조 → `analysis/code-context/{codegraph-baseline,codegraphcontext-context,evidence-reconciliation}.md`
       — 2026-10-21 codegraph 1.6.0 기존 색인(2,929 files), 불일치 0(이름 충돌 거짓 엣지만), CGC 는 이 체크아웃을 못 봄(advisory 미반영).
       `make sdd-sync` 는 이 문서 단계에서 돌리지 않았다 → 0.7
-- [ ] 0.7 편집 착수 직전 `make sdd-sync` 후 0.6 질의 재실행·`evidence-reconciliation.md` 갱신(fingerprint 신선) — D8 로 편집 대상이 된
+- [x] 0.7 편집 착수 직전 `make sdd-sync` 후 0.6 질의 재실행·`evidence-reconciliation.md` 갱신(fingerprint 신선) — D8 로 편집 대상이 된
       `config.mergeEngine` · `engine.recordGateSettings` · `engine.Context.ExitObserver` 의 callers 도 함께
+      — 2026-10-22 격리 worktree(HEAD `1eab9b931`): `make sdd-sync` rc=0(CodeGraph 1.6.0 init · GBrain advisory `Sync BLOCKED`), 재질의 원문
+      `analysis/code-context/codegraph-callers-0.7-20261022.txt`, `evidence-reconciliation.md` 「tasks 0.7 재질의」(불일치 2 → issues.md I1·I2)
 - [x] 0.8 설계 동결 — 사용자 결정 2026-10-22 반영: H2 보충 「토글 필요」(Manager 범위 결정 — a163 안, 기본 OFF, 보고·로그·알림 경로만 막음,
       어댑터 `SourceTimestamp` 보존은 토글 밖) · H7 형태 변경 승인 · 구간 경계 5분/1시간 · 주기당 알림 8건 승인. design D8 · 결정표 ·
       spec exit-policy 「체결 나이 보고는 기본 꺼진 운영 토글 뒤에 있다」 · proposal · review 처분 반영. D8 의 함수 내부 주장은 이 로트의 AST 셋
@@ -35,34 +37,44 @@
 
 ## 1. 함수 내부 증거 (편집 전, High-risk 면제 없음)
 
-- [ ] 1.1 FLM/BTM 번들 — 편집 대상 기존 함수: `official.adaptPrices` · `engine.ExitObserver.observe` · `engine.ExitObserver.ObserveOnce` ·
+- [x] 1.1 FLM/BTM 번들 — 편집 대상 기존 함수: `official.adaptPrices` · `engine.ExitObserver.observe` · `engine.ExitObserver.ObserveOnce` ·
       `cmd/tossctl.engineRuntime`(`SourceAgeLog` 배선 — freeze 리뷰 P1-3) · D8 토글: `config.mergeEngine` · `engine.recordGateSettings` ·
       `engine.Context.ExitObserver`
       (`scaffold_analysis.py` → `ast.json` · `function-logic-map.md` · `branch-test-map.md` · `risk-pattern-report.md`).
       편집 뒤 분기·반환 수 불변 단언: `observe` 15·6 · `ObserveOnce` 8·5(defer 2) · `adaptPrices` 1·1 (design D7) ·
       `recordGateSettings` 6·2 · `Context.ExitObserver` 6·4. 바뀌는 것은 `mergeEngine` 5→6 · 반환 2 (B4 조기 반환 **앞**에 `if raw.X != nil` 하나, design D8)
-- [ ] 1.2 **바뀌면 안 되는** 판정 함수 열 개의 고정 — `source_sha256` 은 파일 해시라 쓰지 않음(freeze 리뷰 P1-2, design D7):
+      — 2026-10-22: 번들 12(목록 7 + `engine.NewContext` · a074 시험 함수 넷 — issues.md I3), `check_analysis.py` 「evidence complete」.
+      편집 뒤 분기·반환 수 단언과 revision 최신화는 3.5
+- [x] 1.2 **바뀌면 안 되는** 판정 함수 열 개의 고정 — `source_sha256` 은 파일 해시라 쓰지 않음(freeze 리뷰 P1-2, design D7):
       (a) 커밋된 Go 시험이 수신자 `ExitObserver` 의 `quoteUsable` · `judge` · `judgeRatchet` · `judgeLadder` · `record` · `refreshObservation` ·
       `stableObservationID` · `snapshotContext` · `requiresFullJudgement` · `noteHeldProposal` 을 `go/parser`(주석 미적재)+`go/printer` 로
       렌더한 sha256 을 시험 안 상수와 비교 — 기대값 `analysis/render-hash/render-hash-base.txt`(동명 `judge`·`record` 는 다른 수신자이므로
       수신자로 고를 것). (b) `SourceTimestamp` 금지 census 시험(`internal/app/engine`·`internal/official` 비시험 파일, 허용 자리·자리별 수는
       design D7 2). census 는 보고 토글 식별자 `SourceAgeReport` 도 센다(`internal/app/engine` 비시험 파일 — 허용 = `ExitObserverOptions` 필드
       선언 1 · `exitwiring.go` 덮어쓰기 1 · `exit_source_age.go` 임의 수, design D8). 두 시험 모두 **편집 전 GREEN**(census 는 편집 전 출현 0 = 허용 밖 0)
-- [ ] 1.3 Pre-Edit 선언(대상 심볼 · 호출부 · 기존 시험 · 불변식 · 실패 시험 · rollback)을 `review.md` 에 기록
+      — 2026-10-22: `internal/app/engine/a163_judgement_pin_test.go` 편집 전 GREEN(렌더 해시 열 개 = `render-hash-base.txt` · census 허용 밖 0).
+      편집 전 판은 허용 자리 0 도 받고 GREEN 로트에서 정확한 수로 조임. 설계와 다른 사실 둘은 issues.md I1(자유 함수)·I2(엄격 리더 넷)
+- [x] 1.3 Pre-Edit 선언(대상 심볼 · 호출부 · 기존 시험 · 불변식 · 실패 시험 · rollback)을 `review.md` 에 기록
+      — 2026-10-22 `review.md` 「1.3 Pre-Edit 선언」
 
 ## 2. RED — 현재 동작을 먼저 고정 (편집 전 GREEN 이어야 하는 고정 시험)
 
-- [ ] 2.0 고정(freeze 리뷰 P1-1, 안전 3): `tossctl quote --json` 경로의 JSON 바이트 불변 — `output.WriteQuote(FormatJSON, …)` 에
+- [x] 2.0 고정(freeze 리뷰 P1-1, 안전 3): `tossctl quote --json` 경로의 JSON 바이트 불변 — `output.WriteQuote(FormatJSON, …)` 에
       (a) WTS 갈래 생산자 `internal/client/quote.go:115` 의 Quote(httptest WTS 응답 또는 그 생산 함수 경유) · (b) `adaptStocks` 의 Quote 를 넣어
       편집 전에 굳힌 골든 바이트와 같다(`FetchedAt` 은 고정 시각으로 덮어 비교), `source_timestamp` 키가 **없다**. 편집 전 GREEN
-- [ ] 2.1 고정(e2e — freeze 리뷰 P2-1): `exit_e2e_test.go` 의 httptest 브로커(`newE2EBroker`·`servePrices`)로 **공식 어댑터를 거쳐**
+      — `internal/output/a163_quote_json_golden_test.go`(WTS) · `internal/official/a163_stocks_quote_json_golden_test.go`(adaptStocks), 편집 전 GREEN
+- [x] 2.1 고정(e2e — freeze 리뷰 P2-1): `exit_e2e_test.go` 의 httptest 브로커(`newE2EBroker`·`servePrices`)로 **공식 어댑터를 거쳐**
       `ExitObserver.opts.Prices` 를 구동. `/api/v1/prices` 본문 `"timestamp":"2026-08-27T19:59:59.000+09:00"`(9h30m 묵음) + 받은 시각
       15 s 안 + 손절선 아래 → **같은 주기에** 보호 청산이 제출된다(`cycle.Judged`·제출 수). 편집 전에는 필드가 무시되므로 GREEN.
       `servePrices` 가 `map[string]string` 이라 `null`·키 없음은 원문 본문 변형이 필요함. `e2eClockDomainPrices` 는 `FetchedAt` 만 덮으므로
       편집 뒤 `SourceTimestamp` 는 보존됨(확인할 것)
-- [ ] 2.2 고정(같은 e2e): 브로커 시각 `null` · 키 없음 · `""` · `"garbage"` · `+0900` 형식 → 판정·제출이 2.1 과 같다(행 탈락 없음 · 오류 없음)
-- [ ] 2.3 고정(같은 e2e): 브로커 시각이 미래(시계 차) → 판정·제출이 2.1 과 같다
-- [ ] 2.4 고정: 관측 identity(`stableObservationID`)와 원장 `ObservedAt` 이 브로커 시각과 무관하게 `FetchedAt` 으로 만들어진다
+      — `internal/app/engine/a163_source_time_e2e_test.go` `TestA163AStaleBrokerTimeStillLiquidatesInTheSameCycle` 편집 전 GREEN(원문 본문 브로커 `newA163Broker`)
+- [x] 2.2 고정(같은 e2e): 브로커 시각 `null` · 키 없음 · `""` · `"garbage"` · `+0900` 형식 → 판정·제출이 2.1 과 같다(행 탈락 없음 · 오류 없음)
+      — `TestA163AMissingOrMalformedBrokerTimeJudgesTheSame`(하위 5) 편집 전 GREEN
+- [x] 2.3 고정(같은 e2e): 브로커 시각이 미래(시계 차) → 판정·제출이 2.1 과 같다
+      — `TestA163AFutureBrokerTimeJudgesTheSame` 편집 전 GREEN
+- [x] 2.4 고정: 관측 identity(`stableObservationID`)와 원장 `ObservedAt` 이 브로커 시각과 무관하게 `FetchedAt` 으로 만들어진다
+      — `TestA163IdentityAndObservedAtComeFromTheReceiptNotTheBrokerTime` 편집 전 GREEN(e2e, 같은 브로커 시각 두 주기)
 - [ ] 2.5 RED: `adaptPrices` 가 `timestamp` 원문을 `SourceTimestamp` 에 **그대로** 보존한다(실측 형식 `+09:00` 두 시장 · 밀리초 · null → `""` ·
       키 없음 → `""` · 깨진 문자열 → 원문 그대로). 해독하지 않음, 오류·행 탈락 0
 - [ ] 2.6 RED: 판정 순회 뒤 보고 — 구간 `missing`·`unparseable` 포지션 1건당 `source_missing` 일반 등급 알림 1건, 래치로 다음 주기 0건,

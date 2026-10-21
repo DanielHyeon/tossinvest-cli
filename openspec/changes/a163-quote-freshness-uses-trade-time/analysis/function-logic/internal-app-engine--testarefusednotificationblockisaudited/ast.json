@@ -1,0 +1,148 @@
+{
+  "file": "internal/app/engine/a074_notification_audit_test.go",
+  "source_sha256": "cb7ce786caf9519a6803a04e75da09949c30a950853bfd1f8e2d9327f16dac7e",
+  "package": "engine",
+  "function": "TestARefusedNotificationBlockIsAudited",
+  "signature": "TestARefusedNotificationBlockIsAudited(params=1, results=0)",
+  "start": {
+    "line": 101,
+    "column": 1
+  },
+  "end": {
+    "line": 117,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 114,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 9
+      },
+      "text": "auditFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 19
+      },
+      "text": "resolveNotificationPublisher"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 85
+      },
+      "text": "fixedEnv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 12
+      },
+      "text": "recordGateSettings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 15
+      },
+      "text": "settingsFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 105,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,102 @@
+{
+  "file": "internal/official/market_reads.go",
+  "source_sha256": "b356524b48df5dc550c07d74c00f6f7c695e6364c78036e04df8df94ef2ce1ea",
+  "package": "official",
+  "function": "adaptPrices",
+  "signature": "adaptPrices(params=1, results=1)",
+  "start": {
+    "line": 168,
+    "column": 1
+  },
+  "end": {
+    "line": 180,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 170,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 9
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 33
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 9
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 15
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 15
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 15
+      },
+      "text": "time.Now"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 169,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 171,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

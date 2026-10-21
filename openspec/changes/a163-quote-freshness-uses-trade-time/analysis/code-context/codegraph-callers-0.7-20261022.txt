@@ -1,0 +1,210 @@
+# tasks 0.7 재질의 — worktree /tmp/tossos-a163-impl-20261022 HEAD 1eab9b931, codegraph 1.6.0, make sdd-sync 직후
+
+CodeGraph Status
+
+Project: /tmp/tossos-a163-impl-20261022
+
+Index Statistics:
+  Files:     2,923
+  Nodes:     51,090
+### callers adaptPrices
+
+Callers of "adaptPrices" (3):
+
+method      Prices
+  internal/official/market_reads.go:142
+
+  internal/official/market_reads_test.go:85
+
+  internal/official/market_reads_test.go:107
+
+### callers observe
+
+Callers of "observe" (20):
+
+method      ObserveOnce
+  internal/app/engine/exitloop.go:457
+
+method      pollLocked
+  internal/filldetect/detect.go:283
+
+  cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go:456
+
+  cmd/tossctl/a102_engine_ready_test.go:847
+
+function    recoverThenReady
+  cmd/tossctl/engineready.go:58
+
+function    awaitEngineReady
+  cmd/tossctl/engineready.go:339
+
+  internal/app/engine/a110_adoption_recovery_test.go:26
+
+  internal/app/engine/a159_protection_restart_test.go:223
+
+  internal/app/engine/a111_flat_exit_observation_test.go:500
+
+  internal/reconcile/a083_credit_lifetime_test.go:28
+
+  internal/reconcile/a083_credit_lifetime_test.go:62
+
+  internal/reconcile/a083_credit_lifetime_test.go:84
+
+  internal/reconcile/a083_credit_lifetime_test.go:111
+
+  internal/reconcile/a083_credit_lifetime_test.go:161
+
+  internal/reconcile/a083b_credit_scope_test.go:65
+
+  internal/reconcile/a083b_credit_scope_test.go:91
+
+  internal/reconcile/a083b_credit_scope_test.go:123
+### callers ObserveOnce
+
+Callers of "ObserveOnce" (12):
+
+  internal/app/engine/a094_exit_clear_more_test.go:78
+
+  internal/app/engine/a094_exit_clear_test.go:646
+
+  internal/app/engine/a094_review_fixes_test.go:38
+
+  internal/app/engine/a110_adoption_recovery_test.go:26
+
+  internal/app/engine/a111_flat_exit_observation_test.go:286
+
+  internal/app/engine/a111_flat_exit_observation_test.go:784
+
+  internal/app/engine/a111_flat_exit_observation_test.go:1077
+
+  internal/app/engine/a150_exit_protection_test.go:536
+
+  internal/app/engine/exit_identity_concurrency_test.go:88
+
+method      Run
+  internal/app/engine/exitloop.go:395
+
+  internal/app/engine/exitloop_test.go:1151
+
+method      Run
+  internal/app/engine/tracer.go:273
+
+### callers quoteUsable
+
+Callers of "quoteUsable" (6):
+
+method      ObserveOnce
+  internal/app/engine/exitloop.go:457
+
+method      judge
+  internal/app/engine/exitloop.go:961
+
+method      judgeRatchet
+  internal/app/engine/exitloop.go:1025
+
+method      judgeLadder
+  internal/app/engine/exitloop.go:1079
+
+method      refreshObservation
+  internal/app/engine/exitloop.go:1158
+
+method      record
+  internal/app/engine/exitloop.go:1288
+
+### callers stableObservationID
+
+Callers of "stableObservationID" (3):
+
+  internal/app/engine/exit_observation_identity_test.go:11
+
+  internal/app/engine/exit_observation_identity_test.go:34
+
+method      snapshotContext
+  internal/app/engine/exitloop.go:1190
+
+### callers mergeEngine
+
+Callers of "mergeEngine" (1):
+
+method      load
+  internal/config/service.go:240
+
+### callers recordGateSettings
+
+Callers of "recordGateSettings" (5):
+
+  internal/app/engine/a074_notification_audit_test.go:49
+
+  internal/app/engine/a074_notification_audit_test.go:78
+
+  internal/app/engine/a074_notification_audit_test.go:101
+
+  internal/app/engine/a074_notification_audit_test.go:119
+
+function    NewContext
+  internal/app/engine/engine.go:437
+
+### callers engineRuntime
+
+Callers of "engineRuntime" (5):
+
+  cmd/tossctl/a098_the_engine_registers_a_sender_test.go:20
+
+  cmd/tossctl/a098_the_engine_registers_a_sender_test.go:37
+
+  cmd/tossctl/engine_runtime_branch_test.go:49
+
+  cmd/tossctl/engine_strategy_entry_dormant_test.go:50
+
+file        engine.go
+  cmd/tossctl/engine.go:1
+
+### callers ExitObserver (Context.ExitObserver 포함, 이름 충돌 다수)
+
+Callers of "ExitObserver" (20):
+
+function    engineRuntime
+  cmd/tossctl/engine.go:655
+
+  cmd/tossctl/engine_assembly_test.go:28
+
+  internal/app/engine/a090_unobserved_position_test.go:1166
+
+  internal/app/engine/a091_stop_sold_nothing_test.go:873
+
+  internal/app/engine/a092_exit_record_only_wiring_test.go:17
+
+  internal/app/engine/a092_exit_record_only_wiring_test.go:110
+
+  internal/app/engine/a094_wiring_test.go:20
+
+  internal/app/engine/a129_exit_order_log_test.go:609
+
+  internal/app/engine/guardian_production_test.go:62
+
+  internal/app/engine/a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:409
+
+  internal/app/engine/a150_exit_protection_test.go:72
+
+  internal/app/engine/a150_exit_protection_test.go:85
+
+  internal/app/engine/a150_exit_protection_test.go:113
+
+  internal/app/engine/a150_exit_protection_test.go:142
+
+  internal/app/engine/a150_exit_protection_test.go:180
+
+  internal/app/engine/a150_exit_protection_test.go:209
+
+  internal/app/engine/a150_exit_protection_test.go:252
+
+function    testA150FloorRestart
+  internal/app/engine/a150_exit_protection_test.go:332
+### affected --filter '*_test.go' (건수)
+internal/app/engine/exitloop.go 1198
+internal/official/market_reads.go 1192
+internal/config/engine.go 1198
+internal/app/engine/interlock.go 1173
+internal/app/engine/exitwiring.go 1137
+cmd/tossctl/engine.go 1143
+internal/domain/models.go 1197
