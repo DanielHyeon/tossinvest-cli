@@ -55,13 +55,22 @@
     「이미 있는가」 칸을 채우는 방법이다. 찾은 외부 패키지·MCP·스킬을 **들이는 것**(설치·`go.mod`·설정 추가)은
     사람 승인 뒤에만 하고, 들일 때는 `dependency-auditor` 로 라이선스·CVE·전이 의존성을 본다. 검색 채널이
     없었으면 「없음」이 아니라 「그 채널은 안 봤음」으로 보고한다.
-18. **기억은 로컬 `Hindsight` 를 쓰고 이 저장소의 bank 는 `tossos-dev-episodes` 다**(사용자 지시 2026-10-20 — `ai-memory` 는 제거됨).
-    Hindsight 는 로컬 MCP(`http://127.0.0.1:8888/mcp/`, LLM · 임베딩 모두 로컬 — 외부 전송 0)이고 자동 기록 훅이 없다.
-    비자명한 설계 · 디버깅 · 리뷰 전에 `recall` 로 이전 시행착오를 찾고, 기록(`retain`)은 사용자가 요청했거나 change 를 닫을 때
-    검증된 교훈 후보만 남긴다. 시크릿 · 세션 · 계좌 · 포지션 · 금액 · 검증 안 된 수익 결론은 넣지 않는다(안전 부트스트랩 8).
-    Hindsight 는 검증 전 episodic 기억이고 advisory 다 — 현재 HEAD · OpenSpec · 시험 · 파일 기억을 대체하지 않는다.
+18. **기억은 로컬 `ai-memory` 와 `Hindsight` 둘 다 쓴다**(사용자 지시 2026-10-22 — ai-memory 재설치, 2026-10-20 의 제거 지시를 대체).
+    `ai-memory`(3.1.x, 서버 `http://127.0.0.1:49374` — 로컬)는 Claude·Codex 훅이 세션을 **자동 기록**하는 프로젝트 기억이다.
+    이전 결정 · 시행착오 · 최근 작업을 찾을 때 먼저 `ai-memory-retrieval`(또는 memory 검색 도구)로 recall 하고,
+    세션 이어받기는 `ai-memory-handoff`, wiki 페이지 쓰기(`ai-memory-durable-pages`)는 사용자가 요청했거나 change 를 닫을 때
+    검증된 교훈만 남긴다. `Hindsight`(로컬 MCP `http://127.0.0.1:8888/mcp/`, bank `tossos-dev-episodes`, 자동 훅 없음)는
+    비자명한 설계 · 디버깅 · 리뷰 전 `recall` 과 change 종결 시 `retain` 에 계속 쓴다. 두 저장소 모두 외부 전송 0 이어야 한다.
+    시크릿 · 세션 · 계좌 · 포지션 · 금액 · 검증 안 된 수익 결론은 wiki 페이지 · retain 에 넣지 않는다(안전 부트스트랩 8).
+    둘 다 검증 전 advisory 기억이다 — 현재 HEAD · OpenSpec · 시험 · 파일 기억을 대체하지 않는다.
+19. **큰 비증거 문맥은 `headroom` MCP 로 압축해 읽을 수 있다**(사용자 지시 2026-10-22, headroom-ai 0.41, Apache-2.0).
+    쓰는 범위는 MCP 도구(`headroom_compress` · `headroom_retrieve` · `headroom_stats`)뿐이고, 압축은 로컬에서 하며 원문은
+    `retrieve` 로 되찾는다. **증거는 압축하지 않는다** — 시험 · 게이트 · logic-map · 측정 · 실패 출력은 규칙 14 대로
+    잘리지 않은 원문으로 읽는다. 모든 요청을 경유시키는 `headroom proxy` · `headroom wrap` · `ANTHROPIC_BASE_URL` 변경과
+    규칙 파일을 고쳐 쓰는 `headroom learn` 은 사람 승인 뒤에만 쓴다. 익명 업로드 비콘은 기본 ON 이므로
+    `HEADROOM_BEACON=off` · `DO_NOT_TRACK=1` · `HEADROOM_UPDATE_CHECK=off` 를 유지한다(MCP 등록 env · `~/.profile`).
 
-11~18 의 외부 스킬·도구는 아래 안전 부트스트랩과 SDD 순서보다 아래다. 충돌하면 스킬을 멈춘다.
+11~19 의 외부 스킬·도구는 아래 안전 부트스트랩과 SDD 순서보다 아래다. 충돌하면 스킬을 멈춘다.
 
 ## 최소 안전 부트스트랩
 
