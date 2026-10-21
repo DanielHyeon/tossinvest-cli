@@ -22,6 +22,37 @@
 | return | | 56 | `return RefusalEntryDriftExceeded` |  |
 | return | | 58 | `return RefusalNone` |  |
 
+## `internal/config/engine.go` `mergeEngine` (324–358)
+
+- 분기 5 · 반환 2 · go 0 · defer 0
+
+| 종류 | id | 줄 | 원문 | 표시 |
+| --- | --- | --- | --- | --- |
+| branch:if | B1 | 325 | `if raw == nil {` |  |
+| branch:if | B2 | 328 | `if raw.Autostart != nil {` |  |
+| branch:if | B3 | 332 | `if raw.ExitPolicy != nil {` |  |
+| branch:if | B4 | 342 | `if raw.AutomationGate == nil {` |  |
+| branch:if | B5 | 346 | `if gate.Enabled != nil {` |  |
+| return | | 326 | `return` |  |
+| return | | 343 | `return` |  |
+
+## `internal/app/engine/exitwiring.go` `Context.ExitObserver` (319–362)
+
+- 분기 6 · 반환 4 · go 0 · defer 0
+
+| 종류 | id | 줄 | 원문 | 표시 |
+| --- | --- | --- | --- | --- |
+| branch:if | B1 | 320 | `if c == nil {` |  |
+| branch:if | B2 | 323 | `if !c.Automation.Verified {` |  |
+| branch:if | B3 | 327 | `if !ok {` |  |
+| branch:if | B4 | 343 | `if opts.Names == nil {` |  |
+| branch:if | B5 | 348 | `if c.Notifier != nil {` |  |
+| branch:if | B6 | 358 | `if opts.Floor == nil {` |  |
+| return | | 321 | `return nil, ErrExitObserverUnavailable` |  |
+| return | | 324 | `return nil, fmt.Errorf("%w: the automation gate is not verified", ErrExitObserverUnavailable)` |  |
+| return | | 328 | `return nil, fmt.Errorf("%w: the injected Guardian does not issue reductions",` |  |
+| return | | 361 | `return NewExitObserver(opts)` |  |
+
 ## `internal/app/engine/exitloop.go` `ExitObserver.checkOutage` (916–958)
 
 - 분기 6 · 반환 4 · go 0 · defer 0
@@ -399,6 +430,21 @@
 | return | | 341 | `return out, readAt, nil` |  |
 | call | | 298 | `d.clk.Now` | CLOCK |
 
+## `internal/app/engine/interlock.go` `recordGateSettings` (739–811)
+
+- 분기 6 · 반환 2 · go 0 · defer 0
+
+| 종류 | id | 줄 | 원문 | 표시 |
+| --- | --- | --- | --- | --- |
+| branch:if | B1 | 742 | `if adoption.Rejected != "" {` |  |
+| branch:if | B2 | 752 | `if notifications.Refused != "" {` |  |
+| branch:else | B3 | 755 | `} else if notifications.PublicService && notifications.TopicConfigured {` |  |
+| branch:if | B4 | 755 | `} else if notifications.PublicService && notifications.TopicConfigured {` |  |
+| branch:range | B5 | 805 | `for _, c := range changes {` |  |
+| branch:if | B6 | 806 | `if _, err := log.RecordChange(c.action, c.setting, c.value, c.detail); err != nil {` |  |
+| return | | 807 | `return err` |  |
+| return | | 810 | `return nil` |  |
+
 ## `internal/app/engine/runtime.go` `Runtime.Run` (288–379)
 
 - 분기 5 · 반환 3 · go 3 · defer 4
@@ -578,4 +624,4 @@
 | return | | 187 | `return result, nil` |  |
 | call | | 142 | `instant.value.IsZero` | CLOCK |
 
-합계: AST 29 · 분기 193 · 반환 130
+합계: AST 32 · 분기 210 · 반환 138

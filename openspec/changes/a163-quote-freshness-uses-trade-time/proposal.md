@@ -36,6 +36,9 @@ VI·거래정지 — 체결이 멈추는 구간마다 손절 판정이 사라지
 4. 보고 코드는 recover 경계 안에서만 돈다 — 보고의 패닉이 청산 goroutine 을 끝내지 않는다(감독자에 recover 없음 — design D4).
 5. 「체결이 오래됨」 알림은 **이 change 에서 내지 않는다**(H1). 나이는 로그 필드로만 남고, 배포 뒤 그 분포(H6)를 보고 임계·정규장 한정을
    별도 Story 에서 정한다.
+6. **보고는 기본 OFF 인 운영 토글 뒤에 있다**(사용자 결정 2026-10-22 「토글 필요」, Manager 범위 결정 — a163 안). 엔진 설정 bool 키
+   `engine.exit_source_age_report`(기본 `false`)가 2·3 의 로그·알림만 켠다. OFF = 오늘 동작(새 줄 0 · `source_missing` 알림 0). 1 의 어댑터
+   보존은 토글 밖이다. 엔진 기동 때 한 번 읽고, 값이 바뀐 기동은 audit 행을 남긴다. 켜는 것은 사람이다(design D8).
 
 ## 영향
 
@@ -43,6 +46,10 @@ VI·거래정지 — 체결이 멈추는 구간마다 손절 판정이 사라지
   `internal/app/engine/exitloop.go`(`observedQuote` 필드 · `observe` 가 값을 실어 나름 · `ObserveOnce` 의 순회 뒤 호출 한 줄 ·
   `ExitObserverOptions.SourceAgeLog` 필드) · `cmd/tossctl/engine.go`(`engineRuntime` 의 `SourceAgeLog: logger` 배선 — freeze 리뷰 P1-3).
   새 보고 코드는 새 파일(`internal/app/engine/exit_source_age.go` 가안)에 둔다.
+  보고 토글(design D8): `internal/config/engine.go`(`Engine` bool 필드 · raw · `mergeEngine` 한 묶음) · `schemas/config.schema.json`(속성 하나) ·
+  `internal/audit/audit.go`(action 상수 하나) · `internal/app/engine/interlock.go`(`recordGateSettings` 끝 인자·끝 행) ·
+  `internal/app/engine/engine.go`(그 호출부) · `internal/app/engine/exitwiring.go`(`Context.ExitObserver` 덮어쓰기 한 줄) ·
+  `ExitObserverOptions.SourceAgeReport` 필드.
 - 판정·주문·원장: **변화 0** — `observe` 의 후보 제외 규칙, `quoteUsable`, `judge*`, `record`, `stableObservationID`(관측 identity),
   원장 `ObservedAt`, journal schema 전부 그대로(사람 결정 H5 가 로그 전용을 고르는 경우).
 - 공식 API 호출 수: 변화 0(같은 응답의 버려지던 필드를 읽을 뿐). rate budget 재계상 불요.
@@ -67,7 +74,8 @@ VI·거래정지 — 체결이 멈추는 구간마다 손절 판정이 사라지
 | 안전 4 · §0.3 손절 즉시성 | 체결 나이는 어떤 판정도 건너뛰게 하지 않는다. 오래된 체결가·「모름」 시각의 관측도 지금과 똑같이 판정·발의·제출된다 | 어댑터를 거친 e2e 고정 시험(체결 9h30m 묵음 + 손절선 아래 → 같은 주기에 제출) · 판정 함수 열 개 렌더 해시 시험 · `SourceTimestamp` 금지 census · 변이 원장(design D7) |
 | 안전 4 | 보고는 그 주기의 모든 판정 **뒤**에 한 번 — 뒤 포지션의 손절 판정 앞에 서지 않는다. 보고의 패닉은 청산 goroutine 을 끝내지 않는다 | 순서 시험(`settleUnobserved` 바로 앞) · recover 경계 + 패닉 주입 시험 · 래치 맵 단일 goroutine 소유(`-race` 목록) |
 | exit-policy 「관측 사이클은 알림의 원격 전송을 기다려서는 안 된다」 | 일반 등급 = 구조화 로그 한 줄 + 사이클 밖 유실 허용 전송 | 기존 알림 경로 재사용, 새 전송기 없음 |
-| 안전 3 · §0.2 OFF = 기존 동작 | 판정 경로의 동작은 켬/끔과 무관하게 기존과 동일. 보고 끄기 토글은 두지 않는다(design 「H2 보충」 — 사용자 확인 대기 잔여). upstream 표면 `tossctl quote --json`(WTS 갈래) 바이트 불변 | 기존 exit 시험 전부 무수정 통과 · tasks 2.0 JSON 골든 |
+| 안전 3 · §0.2 OFF = 기존 동작 | 보고 토글 기본 OFF(사용자 결정 2026-10-22) — OFF 면 새 로그 줄·알림 0, `tossctl config show` 바이트 불변(omitempty). 판정 경로의 동작은 켬/끔과 무관하게 기존과 동일. upstream 표면 `tossctl quote --json`(WTS 갈래) 바이트 불변 | 기존 exit 시험 전부 무수정 통과 · tasks 2.0 JSON 골든 · 2.13 기본값 · 2.14 OFF/ON 대조 · 변이 ⑰⑱㉒ |
+| §0.5 · §0.7 운영 설정 audit · 사람 flip | 토글 값이 바뀐 기동은 old→new audit 행 한 건. 이 change 는 토글을 쓰는(켜는) 코드 경로를 더하지 않는다 | tasks 2.15 배선 · 2.16 audit · 변이 ⑳㉑ |
 | §0.4 rate budget | 호출 0 추가 | diff 에 새 `c.get` 0 |
 | 안전 8 | 알림·로그에 계좌 ref 를 싣지 않는다(a090 머리 규칙과 같음) | 필드 목록 시험 |
 | 안전 6 · §0.9 손절 단방향 | 손절 로직 변경 0 | `judgeRatchet`·`judgeLadder` 포함 열 개의 렌더 해시 시험(design D7) |
@@ -76,7 +84,8 @@ VI·거래정지 — 체결이 멈추는 구간마다 손절 판정이 사라지
 
 H1 임계(시장·세션별) · H2 알림 등급·경로 · H3 진입·전략·flatten 경로도 보고만 할지 · H4 브로커 시각이 없거나 해독 불가일 때 ·
 H5 원장 보존 여부 · H6 장중 실측 선행 여부 · H7 JSON 노출·호가 어댑터 포함 여부 — **사용자 결정 2026-10-21 「권장대로 착수 승인」**:
-일곱 모두 design 권고안으로 확정.
+일곱 모두 design 권고안으로 확정. **사용자 결정 2026-10-22**: H2 보충 「토글 필요」(a163 안 · 기본 OFF) · H7 형태(`source_timestamp` 문자열) 승인 ·
+구간 경계 5분/1시간 · 주기당 알림 8건 승인 — 설계 동결(tasks 0.8).
 
 ## 착수 승인과 동시 change 상한 예외
 

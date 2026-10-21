@@ -4,6 +4,8 @@
 > 나서 편집한다. 사용자 방향 결정 A(2026-10-21, design D0). 사람 결정 H1~H7 은 2026-10-21 「권장대로 착수 승인」으로 확정됐고
 > (design 「사람 결정 기록」), 같은 결정이 동시 change 상한 예외를 승인했다(proposal 「착수 승인과 동시 change 상한 예외」).
 > production 편집은 0.5 freeze 리뷰 · 0.7 · §1 · §2 뒤에만 한다.
+> 사용자 결정 2026-10-22(design 「사람 결정 기록 — 사용자 결정 2026-10-22」): 보고 토글 필요(a163 안 · 기본 OFF, design D8) ·
+> H7 형태 `source_timestamp` 승인 · 구간 경계 5분/1시간 · 주기당 알림 8건 승인 → 설계 동결(0.8).
 
 ## 0. 게이트 선행
 
@@ -24,20 +26,28 @@
       callers/callees/impact 를 HEAD 와 대조 → `analysis/code-context/{codegraph-baseline,codegraphcontext-context,evidence-reconciliation}.md`
       — 2026-10-21 codegraph 1.6.0 기존 색인(2,929 files), 불일치 0(이름 충돌 거짓 엣지만), CGC 는 이 체크아웃을 못 봄(advisory 미반영).
       `make sdd-sync` 는 이 문서 단계에서 돌리지 않았다 → 0.7
-- [ ] 0.7 편집 착수 직전 `make sdd-sync` 후 0.6 질의 재실행·`evidence-reconciliation.md` 갱신(fingerprint 신선)
+- [ ] 0.7 편집 착수 직전 `make sdd-sync` 후 0.6 질의 재실행·`evidence-reconciliation.md` 갱신(fingerprint 신선) — D8 로 편집 대상이 된
+      `config.mergeEngine` · `engine.recordGateSettings` · `engine.Context.ExitObserver` 의 callers 도 함께
+- [x] 0.8 설계 동결 — 사용자 결정 2026-10-22 반영: H2 보충 「토글 필요」(Manager 범위 결정 — a163 안, 기본 OFF, 보고·로그·알림 경로만 막음,
+      어댑터 `SourceTimestamp` 보존은 토글 밖) · H7 형태 변경 승인 · 구간 경계 5분/1시간 · 주기당 알림 8건 승인. design D8 · 결정표 ·
+      spec exit-policy 「체결 나이 보고는 기본 꺼진 운영 토글 뒤에 있다」 · proposal · review 처분 반영. D8 의 함수 내부 주장은 이 로트의 AST 셋
+      (`analysis/ast/config--mergeengine` · `engine--recordgatesettings` · `engine--context.exitobserver`, `enumerate-output.md` AST 32 · STALE 0)
 
 ## 1. 함수 내부 증거 (편집 전, High-risk 면제 없음)
 
 - [ ] 1.1 FLM/BTM 번들 — 편집 대상 기존 함수: `official.adaptPrices` · `engine.ExitObserver.observe` · `engine.ExitObserver.ObserveOnce` ·
-      `cmd/tossctl.engineRuntime`(`SourceAgeLog` 배선 — freeze 리뷰 P1-3)
+      `cmd/tossctl.engineRuntime`(`SourceAgeLog` 배선 — freeze 리뷰 P1-3) · D8 토글: `config.mergeEngine` · `engine.recordGateSettings` ·
+      `engine.Context.ExitObserver`
       (`scaffold_analysis.py` → `ast.json` · `function-logic-map.md` · `branch-test-map.md` · `risk-pattern-report.md`).
-      편집 뒤 분기·반환 수 불변 단언: `observe` 15·6 · `ObserveOnce` 8·5(defer 2) · `adaptPrices` 1·1 (design D7)
+      편집 뒤 분기·반환 수 불변 단언: `observe` 15·6 · `ObserveOnce` 8·5(defer 2) · `adaptPrices` 1·1 (design D7) ·
+      `recordGateSettings` 6·2 · `Context.ExitObserver` 6·4. 바뀌는 것은 `mergeEngine` 5→6 · 반환 2 (B4 조기 반환 **앞**에 `if raw.X != nil` 하나, design D8)
 - [ ] 1.2 **바뀌면 안 되는** 판정 함수 열 개의 고정 — `source_sha256` 은 파일 해시라 쓰지 않음(freeze 리뷰 P1-2, design D7):
       (a) 커밋된 Go 시험이 수신자 `ExitObserver` 의 `quoteUsable` · `judge` · `judgeRatchet` · `judgeLadder` · `record` · `refreshObservation` ·
       `stableObservationID` · `snapshotContext` · `requiresFullJudgement` · `noteHeldProposal` 을 `go/parser`(주석 미적재)+`go/printer` 로
       렌더한 sha256 을 시험 안 상수와 비교 — 기대값 `analysis/render-hash/render-hash-base.txt`(동명 `judge`·`record` 는 다른 수신자이므로
       수신자로 고를 것). (b) `SourceTimestamp` 금지 census 시험(`internal/app/engine`·`internal/official` 비시험 파일, 허용 자리·자리별 수는
-      design D7 2). 두 시험 모두 **편집 전 GREEN**(census 는 편집 전 출현 0 = 허용 밖 0)
+      design D7 2). census 는 보고 토글 식별자 `SourceAgeReport` 도 센다(`internal/app/engine` 비시험 파일 — 허용 = `ExitObserverOptions` 필드
+      선언 1 · `exitwiring.go` 덮어쓰기 1 · `exit_source_age.go` 임의 수, design D8). 두 시험 모두 **편집 전 GREEN**(census 는 편집 전 출현 0 = 허용 밖 0)
 - [ ] 1.3 Pre-Edit 선언(대상 심볼 · 호출부 · 기존 시험 · 불변식 · 실패 시험 · rollback)을 `review.md` 에 기록
 
 ## 2. RED — 현재 동작을 먼저 고정 (편집 전 GREEN 이어야 하는 고정 시험)
@@ -72,6 +82,22 @@
 - [ ] 2.12 RED(freeze 리뷰 P2-3·P3-3·P3-4): 로그 빈도와 분류 — 같은 구간이 연속 3 주기 → 줄 1(첫 주기만), 구간 변화 → 줄 1 더.
       `missing` 과 `unparseable` 이 다른 `bucket` 값으로 남음. 나이는 `observedQuote.FetchedAt` 기준 — `domain.Quote.FetchedAt` 이 0 인
       대체 경로(`exitloop.go:867-870`)에서 `ahead` 로 잘못 분류되지 않음
+> 2.6 · 2.7 · 2.8 · 2.9 · 2.10 · 2.11(b) · 2.12 는 보고 토글 **ON**(`ExitObserverOptions.SourceAgeReport = true`)으로 돈다(design D8 — 보고는 ON 에서만).
+- [ ] 2.13 RED(사용자 결정 2026-10-22, design D8 — 기본 OFF): `internal/config` — engine 블록 없음 · 키 없음 · 명시 `false` → `ExitSourceAgeReport == false`,
+      `true` → `true`. `automation_gate` 키 **없는** 파일의 `true` 도 `true`(merge 가 `mergeEngine` B4 조기 반환 앞). 꺼짐이면 `config.Status` JSON
+      (`tossctl config show`)에 `exit_source_age_report` 키가 **없다**(omitempty — 편집 전 바이트와 같음). `schemas/config.schema.json` engine 블록에
+      boolean · `default: false` 속성이 있고 `TestPublishedSchemaMatchesSchemaVersion` 통과
+- [ ] 2.14 RED(OFF = 오늘 동작): 같은 주기 입력(`missing` · `unparseable` · 9h30m 묵음 · 손절선 아래 하나)을 토글 OFF 와 ON 관측자에 각각 돌려
+      — OFF: `SourceAgeLog` 줄 0 · `source_missing` 알림 0 · 래치 맵 크기 0 · a090 집계·`settleUnobserved` 결과 ON 과 같음. 두 관측자의
+      `cycle.Judged` · 제출 수 · 제출 순서 · 원장 행이 같다(토글은 판정과 제출 사이에 서지 않음). ON: 2.6 · 2.12 의 줄·알림이 남음.
+      `ExitObserverOptions` 0 값 = OFF 단언
+- [ ] 2.15 RED(배선 — design D8 「읽는 시점」): `Context.ExitObserver` 가 호출자 값과 무관하게 `opts.SourceAgeReport` 를
+      `c.Config.Engine.ExitSourceAgeReport` 로 덮는다 — 설정 `true` · 호출자 `false` → 관측자 ON, 설정 `false` · 호출자 `true` → OFF
+      (선례 `NotificationsEnabled` `exitwiring.go:355` 의 시험 모양). 설정은 기동 때 한 번만 읽힘(주기 중 설정 파일 변경이 관측자에 닿지 않음)
+- [ ] 2.16 RED(audit — §0.5): `recordGateSettings` 가 `changes` 목록 **끝**(`per_trade_risk_budget` 뒤)에 action `audit.ActionExitSourceAgeReport`
+      (`"exit.source_age_report"`) · setting `engine.exit_source_age_report` · 값 `"false"`/`"true"` 행을 쓴다. 꺼짐→켜짐 재기동은 old `false` · new
+      `true` 한 행, 같은 값 재기동은 0 행(`RecordChange`). 기존 행 순서 불변(`a074_notification_audit_test.go` 의 앞부분 단언 무수정 통과 — 호출부 4곳은
+      끝 인자 `false` 만 기계적으로 추가). 이 행의 기록 실패는 기존 행과 같은 기동 거부
 
 ## 3. GREEN — 최소 구현
 
@@ -82,6 +108,10 @@
       `settleUnobserved` 앞 호출 한 줄만(design D4)
 - [ ] 3.4 `ExitObserverOptions.SourceAgeLog *obs.Logger` 필드 + `cmd/tossctl/engine.go` `engineRuntime` 배선 `SourceAgeLog: logger`
 - [ ] 3.5 1.1 번들 최신화(revision 대조) · 1.2 의 렌더 해시·census 시험 GREEN 확인
+- [ ] 3.6 보고 토글(design D8): `config.Engine.ExitSourceAgeReport bool` · json `exit_source_age_report,omitempty` + `rawEngine` `*bool` +
+      `mergeEngine` B4 앞 merge 한 줄 묶음 · `schemas/config.schema.json` 속성 · `audit.ActionExitSourceAgeReport` 상수 · `recordGateSettings` 끝 인자 +
+      끝 행 · `engine.go:472` 호출부 · `ExitObserverOptions.SourceAgeReport bool` · `Context.ExitObserver` 덮어쓰기 한 줄 · `exit_source_age.go` 진입 함수의
+      recover 경계 바로 뒤 「꺼짐이면 반환」. `ObserveOnce` 와 판정 함수에는 토글 코드 0. config 를 **쓰는** 함수(콘솔 스위치·저장)는 더하지 않음
 
 ## 4. VERIFY
 
@@ -93,7 +123,11 @@
       ⑨ `observe` B7 필터의 `effectiveAt` 을 브로커 시각 기준으로 ⑩ `snapshotContext` 가 `stableObservationID` 에 브로커 시각을 넘김
       (1.2 렌더 해시·census) ⑪ 보고기 recover 경계 제거(2.10) ⑫ `engine.go` 의 `SourceAgeLog` 배선 삭제(2.11) ⑬ JSON 태그에서
       `omitempty` 삭제(2.0) ⑭ 전이 대신 매 주기 줄(2.12) ⑮ `held` 기준 정리 삭제(2.6 맵 크기) ⑯ 주기 상한 삭제(2.6)
-- [ ] 4.2 관련 시험: `go test ./internal/official/ ./internal/app/engine/ ./internal/domain/ ./internal/output/ ./cmd/tossctl/` +
+      — 보고 토글(사용자 결정 2026-10-22, design D8): ⑰ 토글 무시(진입 함수의 「꺼짐이면 반환」 삭제 → 2.14 OFF 줄·알림 0 이 잡음)
+      ⑱ 기본값 ON 으로 뒤집기(`mergeEngine` 이 키 없음을 `true` 로 / 진입 함수 판단을 `!SourceAgeReport` 로 → 2.13·2.14)
+      ⑲ merge 를 B4 조기 반환 뒤로 이동(2.13 `automation_gate` 없는 파일) ⑳ `exitwiring.go` 덮어쓰기 삭제(2.15)
+      ㉑ audit 행 삭제 · 값 고정(2.16) ㉒ 토글 판단을 `ObserveOnce` 판정 순회 앞으로 옮겨 꺼짐이면 판정 건너뜀(2.14 판정·제출 동일 · census · `ObserveOnce` 분기 수)
+- [ ] 4.2 관련 시험: `go test ./internal/official/ ./internal/app/engine/ ./internal/domain/ ./internal/output/ ./internal/config/ ./internal/audit/ ./cmd/tossctl/` +
       `make test-race`(2.10 을 `RACE_ENGINE_TESTS` 에 넣은 뒤) + `make test-seams` (선택 이유·미실행 범위 기록; `codegraph affected` 는
       1,197/1,216 건이라 선택 근거로 쓰지 않음 — 쓸 때는 `--filter '*_test.go'`)
 - [ ] 4.3 기존 exit 시험 무수정 통과(`exitloop_test.go` · `exit_e2e_test.go` · `exit_observation_identity_test.go` 등)
@@ -105,7 +139,8 @@
 - [ ] 5.1 C7(진입 게이트 수신 시각) · C8·C9(편입 t0 나이 검사 0) · C10(비상 청산 지정가 나이 검사 0) · C12(CLI 바닥글 시각) ·
       a112 (k) 를 후속 Story 후보로 `issues.md` 에 기록(H3 = 잔여 기록) + H1 후속(`source_old` 임계·정규장 한정, H6 분포 뒤 — 전이 줄로는
       구간 내부 분포를 얻지 못하는 한계 포함) + freeze 리뷰 P3-7(기존 위험: `apiPrice.Timestamp` 디코드 타입이 바뀌면 `Prices` 전체 오류 →
-      판정 0, a163 이 넓히지 않음) + H2 보충(보고 끄기 토글 없음 — 사용자 확인 대기)
+      판정 0, a163 이 넓히지 않음) + 보고 토글의 콘솔 스위치 부재(사람 flip 은 config 편집 + 엔진 재기동, 콘솔 스위치가 필요하면 별도 Story —
+      design D8 「표시」). H2 보충은 사용자 결정 2026-10-22 로 닫힘(잔여 아님)
 
 ## 6. 확정
 

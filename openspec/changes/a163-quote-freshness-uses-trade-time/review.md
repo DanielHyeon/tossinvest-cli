@@ -28,7 +28,7 @@
 | P2-4 | 래치 수명·정리 기준 없음 | **반영** — a090 `held` 기준 정리, 판정 안 된 포지션은 래치 불변, 맵 크기 0 단언 | design D4 「래치와 정리」 · tasks 2.6 · 변이 ⑮ |
 | P2-5 | 일반 등급 버퍼(64) 공유, 재시작 직후 몰림 | **반영** — 주기당 8건 상한(넘는 것은 다음 주기), 버퍼 가득 참 시 버림·로그 줄은 남음을 명시 | design D4 「주기 상한」 · spec exit-policy · tasks 2.6 · 변이 ⑯ |
 | P3-1 | proposal:23 「오래된 관측을 기록·알린다」 ↔ H1 | **반영** — 「나이를 기록, 시각 부재만 알림」 | proposal 「왜」 끝 |
-| P3-2 | H2 의 보고 끄기 여부 미결 | **잔여(사용자 확인 대기)** — 설계 판단 「토글 없음」과 근거를 기록. 사용자가 끄기를 원하면 별도 Story | design 「freeze 리뷰 반영 주석」 H2 보충 · proposal 안전 3 행 · tasks 5.1 |
+| P3-2 | H2 의 보고 끄기 여부 미결 | ~~잔여(사용자 확인 대기) — 「토글 없음」~~ → **닫힘 2026-10-22**: 사용자 결정 「토글 필요」, a163 안 · 기본 OFF(아래 「0.8 설계 동결」) | design D8 · 「사람 결정 기록 — 사용자 결정 2026-10-22」 · spec exit-policy 토글 요구사항 · proposal 「무엇을」6·안전 3·§0.5 행 · tasks 0.8·2.13~2.16·3.6·변이 ⑰~㉒ |
 | P3-3 | null 과 해독 실패를 한 사유로 합침 | **반영** — 로그 구간 `missing`/`unparseable` 분리(알림 사유는 H4 대로 하나) | design D4 「분류」 · spec 시나리오 · tasks 2.12 |
 | P3-4 | 나이의 `FetchedAt` 이 어느 값인지 | **반영** — `observedQuote.FetchedAt`(대체 경로 `exitloop.go:867-870` 포함) | design D4 「나이」 · tasks 2.12 |
 | P3-5 | 결과를 `review.md` 에 | **반영** — 이 파일 | `review.md` · tasks 0.5 |
@@ -64,7 +64,34 @@
 - 렌더 해시 시험·census 시험·배선 시험 자체 — 문서 로트라 아직 없음(tasks 1.2·2.11 이 만든다). `analysis/render-hash/render-hash-base.txt` 는
   기대값의 원천일 뿐 시험이 아니다.
 
-### 사용자 확인 대기 잔여
+### 사용자 확인 대기 잔여 — 2026-10-22 둘 다 닫힘
 
-1. H2 보충 — 보고 끄기 토글을 두지 않는다는 설계 판단(design 「freeze 리뷰 반영 주석」). 「토글이 필요하다」면 별도 Story.
-2. design D2 의 필드 형태 변경(`source_at` time → `source_timestamp` string) — H7 의 실질은 그대로이나 사용자 표의 문자열과 다르므로 보고함.
+1. ~~H2 보충 — 보고 끄기 토글을 두지 않는다는 설계 판단~~ → 사용자 결정 2026-10-22 「토글 필요」로 뒤집힘(아래 처분 1).
+2. ~~design D2 의 필드 형태 변경(`source_at` time → `source_timestamp` string)~~ → 사용자 결정 2026-10-22 승인(아래 처분 2).
+
+## 0.8 설계 동결 — 사용자 결정 2026-10-22
+
+- 경로: Manager 경유 사용자 회신(2026-10-22). 범위 판단(토글을 a163 안에 둘지)은 Manager 결정.
+- 성격: 사람 결정 기록 + 문서 로트(production Go 편집 0). freeze 리뷰 재론 아님 — 리뷰가 남긴 사용자 확인 대기 둘을 닫고 수치를 승인받음.
+
+| # | 사용자 결정 | 처분 | 반영 위치 |
+| --- | --- | --- | --- |
+| 1 | H2 보충: exit-loop 체결 시각 보고 토글 **필요**(「토글 필요」). Manager 범위: a163 안(별도 Story 아님), **기본 OFF** — OFF = 오늘 동작(새 로그 줄 0 · `source_missing` 알림 0). 토글은 보고·로그·알림 경로만 막고 어댑터의 `source_timestamp` 원문 보존은 막지 않음. 생산 ON flip 은 사람의 행동 | **반영** — 기존 세 패턴 재사용(새 설정 메커니즘 0): ① 저장 = engine 블록 bool 키 `engine.exit_source_age_report`(선례 `Engine.Autostart` `internal/config/engine.go:48·265·328-330`, raw `*bool`, omitempty) ② 읽기 = 기동 1회, `Context.ExitObserver` 가 옵션을 덮어씀(선례 `exitwiring.go:355` `NotificationsEnabled`) ③ audit = `recordGateSettings` 끝 행 + 새 action `exit.source_age_report`(선례 a136·a138·a139 끝 행 `interlock.go:795-803`). 판단 자리 = 보고 진입 함수의 recover 경계 바로 뒤 — `ObserveOnce` 분기 수·판정 함수 렌더 해시 불변, census 가 `SourceAgeReport` 출현을 셈. 콘솔 스위치·config 쓰기 코드 0 | design D8 · D4 머리 주석 · D7 2 · 위험 · spec exit-policy 「체결 나이 보고는 기본 꺼진 운영 토글 뒤에 있다」 · proposal 「무엇을」6·「영향」·안전 표 · tasks 0.8·1.1·1.2·2.13~2.16·3.6·4.1 ⑰~㉒·4.2·5.1 |
+| 2 | H7 형태 변경 승인: `SourceTimestamp string` · json `source_timestamp,omitempty` 가 `source_at` time 을 대체 | **반영** — D2 형태가 정본, 2026-10-21 H7 행 문자열은 대체됨으로 표시 | design 「사람 결정 기록 — 사용자 결정 2026-10-22」 |
+| 3 | 수치 승인: 로그 구간 경계 5분 · 1시간, 한 주기 알림 최대 8건 | **반영** — 사람 승인 값으로 표시(바꾸려면 새 사람 결정) | design 결정표 · D4 「분류」·「주기 상한」(값 불변) |
+
+### D8 근거 (AST · grep, 2026-10-22, HEAD `c8d5db19b`)
+
+- AST 셋 추가: `analysis/ast/config--mergeengine.ast.json`(분기 5 · 반환 2 — B4 `:342` `raw.AutomationGate == nil` 조기 반환) ·
+  `engine--recordgatesettings.ast.json`(분기 6 · 반환 2 — B5 range · B6 `RecordChange` 오류 → `return err`) ·
+  `engine--context.exitobserver.ast.json`(분기 6 · 반환 4 — `:342`·`:355` 덮어쓰기는 어느 분기 안에도 없음). `enumerate-output.md` 재생성: AST 32 · STALE 0.
+- 주기 재읽기 선례 없음: `internal/app/engine` 비시험 파일의 설정 로드는 `engine.go:370` 한 줄(grep `config.NewService`·`.Load(`·`LoadRaw`).
+  `LoadRaw*` 호출자는 전부 콘솔 저장 어댑터(`cmd/tossctl/*settings.go`·`engineautostart.go`·`soakautostart.go`).
+- 공개 스키마 engine 블록 `additionalProperties: false`(`schemas/config.schema.json:95-98`) → 속성 추가 필요. a136 이 키 추가에 `schema_version` 5 를 유지한 선례.
+- `recordGateSettings` 호출자: 생산 1(`engine.go:472`) · 시험 4(`a074_notification_audit_test.go:55·84·105·124`). a074 시험은 앞부분 행만 단언(`:146` `len(entries) < len(want)`) — 끝 덧붙임과 양립.
+
+### 검증하지 못한 것 (0.8 로트)
+
+- 토글 시험·census 확장·audit 행 시험 자체 — 문서 로트라 아직 없음(tasks 2.13~2.16 이 만든다).
+- 공식 갈래 `tossctl quote --json` 의 `source_timestamp` 키는 토글과 무관하게 생긴다 — H7(a) 사용자 승인과 Manager 범위(어댑터 보존은 토글 밖)에 따른
+  것이고, 이 키가 upstream 공식 갈래 출력 계약에 주는 영향은 이 로트에서 다시 재지 않았다(2026-10-21 D2 판단 그대로).

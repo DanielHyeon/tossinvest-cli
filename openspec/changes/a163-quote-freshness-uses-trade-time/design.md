@@ -68,6 +68,9 @@ Manager 경유 사용자 회신 「A」(2026-10-21): **브로커 체결·시세 
 
 ## D4. 청산 루프 규칙 — 판정 경로에 새 분기 0, 판정 순회 안 새 코드 0
 
+> 사용자 결정 2026-10-22: 이 절의 보고(구간 분류 · 래치 · `SourceAgeLog` 줄 · `source_missing` 알림)는 **기본 OFF 인 보고 토글이 켜졌을 때만**
+> 돈다(D8). 「운반」과 「생산 싱크」는 토글 밖이다.
+
 freeze 리뷰(2026-10-21) P1-3·P1-4·P2-3·P2-4·P2-5·P3-3·P3-4 반영판. 분기·defer·recover 주장은 전부 `analysis/ast/enumerate-output.md`
 (이 로트에서 `Runtime.Run` · `ExitObserver.Run` · `writeExitOrder` · `snapshotContext` · `requiresFullJudgement` · `noteHeldProposal` ·
 `raiseUnobserved` AST 일곱을 더해 재생성, AST 29 · STALE 0)에서 온다.
@@ -156,6 +159,8 @@ freeze 리뷰(2026-10-21) P1-3·P1-4·P2-3·P2-4·P2-5·P3-3·P3-4 반영판. �
    복합 리터럴 키 · 필드 선언 · method value)을 세어, 허용 자리와 자리별 정확한 수 = {`observedQuote` 필드 선언 1 · `observe` 의
    `observedQuote{…}` 리터럴 2(키 + `q.SourceTimestamp`) · `adaptPrices` 리터럴 키 1 · `exit_source_age.go` 의 임의 수} 밖에서 0 임을
    단언한다. 존재 검사가 아니라 금지 census 다 — 헬퍼가 판정에 브로커 시각을 흘리는 경로 전부를 이 범위가 닫는다.
+   같은 시험이 보고 토글 식별자 `SourceAgeReport` 도 센다(허용 자리는 D8 「census 확장」) — 사용자 결정 2026-10-22 로 더한 토글이 판정 함수·
+   `ObserveOnce` 에 분기로 들어오는 경로를 닫는다.
 3. **어댑터~판정 e2e**(tasks 2.1~2.3): 공식 어댑터를 httptest 로 물려 어댑터 행 탈락·오류 반환 변이를 잡는다.
 
 `observe`·`ObserveOnce`·`adaptPrices`·`engineRuntime` 은 편집 대상이므로 1 의 대상이 아니라 FLM/BTM `revision: base` 대조 대상이다
@@ -196,10 +201,70 @@ H1 과 H4 의 결합: 이 change 에서 알림을 내는 사유는 `source_missi
 - H7: 위 표의 `source_at,omitempty` 는 D2 의 첫 가안 이름·타입을 옮겨 적은 것이다. freeze 리뷰 P1-1 로 그 형태가 0 값을
   `0001-01-01T00:00:00Z` 로 내보내는 결함임이 실측돼 구현 형태를 `SourceTimestamp string` · `source_timestamp,omitempty` 로 바꿨다(D2).
   H7 의 실질 — JSON 에 노출 · 값이 없으면 생략 · `adaptOrderbook` 제외 — 은 그대로다. 사람 결정의 범위를 넓히거나 좁히지 않는다.
-- H2 보충 — 보고 끄기 토글(proposal 안전 불변식 표의 「보고 자체도 끌 수 있게 할지는 H2」): **두지 않는다**(설계 판단). 근거: ① 보고는
-  청산 루프 안에서만 돌고 청산 루프는 TossOS 엔진 전용이라 엔진이 꺼진 상태 = upstream 이다, ② 판정 경로는 켬/끔과 무관하게 불변이다(D7),
-  ③ 엔진 밖 표면인 `tossctl quote --json` 은 tasks 2.0 이 바이트 불변으로 고정한다. 사용자가 이 판단을 확인하지 않았으므로 `review.md`
-  처분표에 **사용자 확인 대기 잔여**로 남긴다 — 끄기가 필요하다고 하면 별도 Story.
+- H2 보충 — 보고 끄기 토글: 2026-10-21 판에는 「두지 않는다」(설계 판단, 사용자 확인 대기)였다. **사용자 결정 2026-10-22 「토글 필요」로
+  대체됨** — 아래 「사람 결정 기록 — 사용자 결정 2026-10-22」와 D8 이 정본이다.
+
+### 사람 결정 기록 — 사용자 결정 2026-10-22 (설계 동결)
+
+Manager 경유 사용자 회신(2026-10-22). 2026-10-21 처분 로트가 남긴 「사용자 확인 대기 잔여」 둘(`review.md`)과 수치 셋을 닫는다.
+이 기록으로 설계를 동결한다(tasks 0.8).
+
+| # | 결정 | 구현에 주는 뜻 |
+| --- | --- | --- |
+| H2 보충 | **토글 필요** — 사용자 결정 2026-10-22. 범위(Manager 결정): **a163 안에 둔다**(별도 Story 아님), **기본 OFF** | D8. OFF = 오늘 동작(새 로그 줄 0 · `source_missing` 알림 0). 토글은 보고·로그·알림 경로만 막고, 어댑터가 `timestamp` 원문을 `SourceTimestamp` 에 보존하는 것(D3)과 `observedQuote` 운반(D4)은 토글 밖이다. 생산에서 ON 으로 flip 하는 것은 사람의 행동이다(§0.7) |
+| H7 형태 | **승인** — 사용자 결정 2026-10-22: `SourceTimestamp string` · json `source_timestamp,omitempty` 가 `source_at` time 을 대체 | D2 의 형태가 정본. 2026-10-21 표 H7 행의 `source_at,omitempty` 문자열은 이 결정으로 대체됨 |
+| 수치 | **승인** — 사용자 결정 2026-10-22: 로그 구간 경계 **5분 · 1시간**, 한 주기 알림 **최대 8건** | D4 「분류」의 `le_5m`·`le_1h`·`gt_1h` 경계와 D4 「주기 상한」 8 이 정본(사람 승인 값). 바꾸려면 새 사람 결정 |
+
+## D8. 보고 토글 — 사용자 결정 2026-10-22 「토글 필요」
+
+search-first 결과: 새 설정 메커니즘을 만들지 않는다. 엔진 설정 블록의 bool 키 · 기동 1회 읽기 · 기동 audit 행이라는 **기존 세 패턴**을
+그대로 쓴다. 함수 내부 주장은 이 로트에서 만든 AST 셋(`analysis/ast/config--mergeengine.ast.json` ·
+`engine--recordgatesettings.ast.json` · `engine--context.exitobserver.ast.json`, `enumerate-output.md` 재생성 — AST 32 · STALE 0)에서 온다.
+
+- **무엇을 막나**: 보고 진입 함수(`exit_source_age.go`)의 전부 — 구간 분류 · 래치 맵 갱신 · `SourceAgeLog` 전이 줄 · `source_missing` 알림.
+  **막지 않는 것**: `adaptPrices` 의 `SourceTimestamp` 보존(D3), `observedQuote` 운반(D4 「운반」), `SourceAgeLog` 생산 배선(D4 「생산 싱크」 —
+  싱크는 늘 꽂혀 있고 쓰기 여부만 토글이 정함). 그래서 공식 `/prices` 갈래의 `tossctl quote --json` 에 생기는 `source_timestamp` 키는
+  토글과 무관하다(H7 사용자 승인 — WTS 갈래·`adaptStocks` 바이트 불변은 tasks 2.0 이 고정).
+- **OFF 의 정의**: 새 로그 줄 0 · `source_missing` 알림 0 · 래치 맵 항목 0. 판정·발의·제출·원장·a090 집계·`settleUnobserved` 는 ON 과
+  같다(D6·D7 — 토글은 판정 입력이 아니다). 엔진 로그·알림 표면은 a163 이전과 같다.
+- **저장 — 기존 패턴**: `config.File` engine 블록의 bool 키 `engine.exit_source_age_report`. 선례 `Engine.Autostart`
+  (`internal/config/engine.go:48` 필드 · `:265` raw `*bool` · `:328-330` merge). raw 는 `*bool` 이고 키 없음·명시 `false` 모두 `false`
+  (선례 주석 `engine.go:246-248` · `notifications.go:76-79`). 「unset means on」 금지(`engine.go:17-21` 파일 머리 규칙). 태그는
+  `json:"exit_source_age_report,omitempty"` — 꺼져 있으면 `tossctl config show`(`config.Status.Engine`, `internal/config/service.go:124·214`)
+  출력 바이트가 편집 전과 같다(Autostart 는 omitempty 가 없어 늘 보이지만, 선례 `ExitPolicy` 필드들의 omitempty `engine.go:64-65` 를 따른다).
+  bool 하나라 거부할 값이 없으므로 `Rejected` 필드를 두지 않는다.
+- **merge 자리**: `mergeEngine`(`engine.go:324-358`) B4 조기 반환(`if raw.AutomationGate == nil { return }` `:342-343`, AST) **앞**.
+  뒤에 두면 `automation_gate` 키가 없는 파일에서 토글이 조용히 무시된다 — `mergeNotifications` 를 같은 이유로 앞에 둔 주석 `:337-341` 과 같은
+  규칙. 편집 뒤 `mergeEngine` 분기 5→6(B2 와 같은 모양 `if raw.X != nil` 하나), 반환 2 불변.
+- **공개 스키마**: `schemas/config.schema.json` 의 engine 블록이 `additionalProperties: false`(`:95-98`)이므로 boolean · `default: false`
+  속성을 더한다. `schema_version` 은 5 그대로 — 선례 a136(`c8783ad90`, 키 추가에 버전 유지). `TestPublishedSchemaMatchesSchemaVersion`
+  (`internal/config/engine_test.go:186-206`)이 그대로 통과해야 한다.
+- **읽는 시점 — 기동 1회(기존 패턴, 주기 재읽기 아님)**: 엔진은 설정을 `engine.go:370`(`config.NewService(paths.ConfigFile).Load`)에서 한 번
+  읽고, `internal/app/engine` 비시험 파일에서 주기마다 설정을 다시 읽는 곳은 0 이다(2026-10-22 grep 전수 — `config.NewService`·`.Load(`·`LoadRaw`
+  출현은 그 한 줄). 청산 관측자에는 `Context.ExitObserver`(`exitwiring.go:319-362`)가 로드된 설정을 옵션에 **덮어써서** 넘긴다 — 선례
+  `opts.NotificationsEnabled = c.Config.Engine.Notifications.Enabled`(`:355`)와 `opts.CommonPolicy = …`(`:342`), AST 상 둘 다 어느 분기 안에도
+  없는 무조건 대입. 새 옵션 `ExitObserverOptions.SourceAgeReport bool`(선례 필드 `NotificationsEnabled` `exitloop.go:210-213`)을 같은 자리에서
+  `opts.SourceAgeReport = c.Config.Engine.ExitSourceAgeReport` 로 덮는다(호출자 값과 무관 · 분기 0 추가 — `Context.ExitObserver` 분기 6·반환 4
+  불변). 주기 재읽기를 고르지 않은 이유: 엔진 선례 0 이고, 설정 파일 I/O 와 그 실패 분기가 청산 goroutine 에 들어온다.
+  결과: flip 은 **다음 엔진 기동부터** 효력이다. 엔진 재기동은 그동안 손절 판정이 없으므로 두 시장이 닫힌 창(KST 05:00~09:00)에서만 한다
+  (기존 운영 규칙).
+- **판단 자리**: 보고 진입 함수 안, recover 경계(D4 「패닉 격리」)를 세운 **바로 뒤 첫 판단** — 꺼져 있으면 즉시 반환한다. `ObserveOnce` 의 보고
+  호출 한 줄(D4 「자리」 — 판정 순회 뒤 · `settleUnobserved` 앞)은 토글과 무관하게 무조건이다. 그래서 ① `ObserveOnce` 분기·반환 8·5 불변(D7),
+  ② 판정 함수 열 개 렌더 해시 불변(D7 1), ③ 토글은 판정과 주문 제출 **사이에 서지 않는다**(호출 자리가 이미 그 주기의 판정·제출 뒤).
+- **census 확장(D7 2)**: `SourceAgeReport` 식별자도 `internal/app/engine` 비시험 파일의 모든 출현을 센다. 허용 = `ExitObserverOptions` 필드 선언 1 ·
+  `exitwiring.go` 덮어쓰기 1 · `exit_source_age.go` 임의 수, 그 밖 0 — 토글이 판정 함수·`ObserveOnce` 에 분기로 들어오는 경로를 닫는다.
+- **audit — 기존 기동 audit 행**: `recordGateSettings`(`internal/app/engine/interlock.go:739-811`)의 `changes` 목록 **끝**에 한 행
+  (선례 a136·a138·a139 행 `:795-803` 「끝에 덧붙임(위 순서 무변경)」). setting `engine.exit_source_age_report` · 값 `strconv.FormatBool` ·
+  action 새 상수 `audit.ActionExitSourceAgeReport = "exit.source_age_report"` — 다른 것을 허가하는 설정은 자기 action 을 갖는다는 선례
+  (`internal/audit/audit.go:64-101` 주석: adoption·trading·notifications). 이 스위치는 주문을 허가하지 않는 보고 스위치라 gate·notification
+  action 에 섞지 않는다. 기록은 `RecordChange`(`audit.go:217-239`)라 값이 바뀐 기동에만 행이 생기고(old→new), 같은 값이면 0 행이다.
+  함수 시그니처에 끝 인자 `sourceAgeReport bool` 을 더한다 — 호출자는 생산 1(`engine.go:472`, `cfg.Engine.ExitSourceAgeReport`) · 시험 4
+  (`a074_notification_audit_test.go:55·84·105·124`, 기계적 `false`). 실패 모양은 불변: 이 행의 기록 실패도 기존 행과 같은 `B6 → return err`
+  (AST `engine--recordgatesettings`) → 기동 거부(`engine.go:472-479`)다 — 같은 파일·같은 쓰기라 새 실패 종류가 아니다.
+- **표시**: `tossctl config show` 가 켜졌을 때만 키를 보인다(omitempty). **콘솔 스위치는 두지 않는다**(비목표) — 사람의 flip 은 config 파일
+  편집 + 엔진 재기동이고 기동 audit 행이 그 변경을 남긴다(§0.5). 콘솔 토글이 필요하면 별도 Story(콘솔 저장 경로는 자기 audit 행을 쓴다 —
+  선례 `cmd/tossctl/engineautostart.go:28-45`). 이 change 는 이 값을 **쓰는** 코드(config 저장 함수)를 더하지 않는다 — 에이전트·코드 flip 경로 0.
+- **H6 과의 결합**: 기본 OFF 이므로 H6 (b) 「배포 뒤 로그로 분포 수집」은 사람이 켠 기동부터 시작된다. 켜기 전 기간의 표본은 없다.
 
 ## 위험
 
@@ -213,3 +278,6 @@ H1 과 H4 의 결합: 이 change 에서 알림을 내는 사유는 `source_missi
 - **보고 시간이 손절 앞에 서는 편집**: 보고를 순회 안에서 보내면 뒤 포지션의 판정이 늦어진다. 막는 법 — 순서 시험(가짜 알림기가 첫 포지션
   보고 시점에 뒤 포지션 제출 수를 단언).
 - **스팸**: 장외 모든 보유 종목이 매 주기 줄·알림을 내는 것 — 로그는 구간 전이 때만, 알림은 `source_missing` 하나에 래치 + 주기당 8건 상한(D4).
+- **토글이 판정 앞에 서거나 무시되는 편집**(D8): 토글 판단을 `ObserveOnce` 나 판정 함수에 분기로 넣으면 판정 경로에 새 분기가 생기고, 토글을
+  무시하거나 기본값을 ON 으로 뒤집으면 OFF = 오늘 동작이 깨진다. 막는 법 — 판단은 보고 진입 함수 안에만(`SourceAgeReport` census), OFF 시험
+  (줄 0 · 알림 0 · 판정·제출이 ON 과 같음), 기본값·merge 자리 시험, 배선 덮어쓰기 시험, audit 행 시험, 그리고 변이 ⑰~㉒(tasks 4.1).
