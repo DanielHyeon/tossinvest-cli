@@ -1,0 +1,16 @@
+**ProposeUS** (function)
+
+**Location:** internal/reversallane/evaluate.go:29
+**Signature:** `(request USEvaluationRequest) EvaluationResult`
+
+ProposeUS is the paired US q_candidate proposal path.
+
+```go
+29	func ProposeUS(request USEvaluationRequest) EvaluationResult {
+30		metric := EvaluateUSMetric(request.Evidence, request.Config)
+31		return evaluateStage(request.Context, request.Evidence.CommonEnvelope, request.Config.StructuralWindow, request.Structure, metric, USReversalLaneID, evaluationProposal)
+32	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** EvaluateUSMetric (internal/reversallane/schema.go:135), evaluateStage (internal/reversallane/evaluate.go:45), evaluationProposal (internal/reversallane/evaluate.go:38), USEvaluationRequest (internal/continuationlane/evaluator.go:147), EvaluationResult (internal/reversallane/types.go:255)
+**Called by ←** TestProductionProposalAuthoritiesDeliverPairedKRUSFirstLeg (internal/reversallane/production_proposal_test.go:16), TestProductionProposalAuthoritiesRequireFinalLegStructureForKRUS (internal/reversallane/production_proposal_test.go:38), TestPairedReversalProposalIsCapFreePlannedRemaining (internal/reversallane/proposal_test.go:5), TestPairedReversalAdmissionReducesProposalWithoutChangingTerms (internal/reversallane/proposal_test.go:24), proposeReversalUS (internal/strategyflow/adapters.go:83)

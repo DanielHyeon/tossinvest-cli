@@ -1,0 +1,16 @@
+**ProposeUS** (function)
+
+**Location:** internal/continuationlane/evaluator.go:204
+**Signature:** `(request USEvaluationRequest) Outcome`
+
+ProposeUS is the paired US proposal path. It has the same fail-closed
+branches as ProposeKR and deliberately ignores any caller cap value.
+
+```go
+204	func ProposeUS(request USEvaluationRequest) Outcome {
+205		return evaluateStage(request.Context, request.Evidence.Envelope, EvaluateUSParticipation(request.Evidence, request.Config), evaluationProposal)
+206	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** evaluateStage (internal/continuationlane/evaluator.go:219), EvaluateUSParticipation (internal/continuationlane/evidence.go:199), evaluationProposal (internal/continuationlane/evaluator.go:212), USEvaluationRequest (internal/continuationlane/evaluator.go:147), Outcome (internal/continuationlane/evaluator.go:170)
+**Called by ←** TestProductionProposalAuthoritiesDeliverKRUSFromImmutableSnapshots (internal/continuationlane/production_proposal_test.go:16), TestPairedContinuationProposalIsCapFreePlannedRemaining (internal/continuationlane/proposal_test.go:5), TestPairedContinuationAdmissionReducesProposalWithoutChangingIt (internal/continuationlane/proposal_test.go:24), proposeContinuationUS (internal/strategyflow/adapters.go:51)

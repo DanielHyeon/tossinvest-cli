@@ -1,0 +1,17 @@
+817ab205e9ca634aed7b561c9027118d5664611ec19799b30ac1f7a753fa250f  openspec/changes/a162-assess-follow-on-risk-offline/analysis/code-context/codegraph-node-continuationlane-ProposeKR.txt
+7d7be631e8e756dab86a2d2170d3f928f81a602e7c643f7f8f3b0e0f00e9ef7a  openspec/changes/a162-assess-follow-on-risk-offline/analysis/code-context/codegraph-node-continuationlane-ProposeUS.txt
+04850dbc21e988afac2581c44e8fe9b0026fc2e66bb790a5b9d06f155f688748  openspec/changes/a162-assess-follow-on-risk-offline/analysis/code-context/codegraph-node-reversallane-ProposeKR.txt
+68dfc23153924bad893d467494968e41250cd5931799af36b2ae4b64f8caf43b  openspec/changes/a162-assess-follow-on-risk-offline/analysis/code-context/codegraph-node-reversallane-ProposeUS.txt
+9ba9e9d3ee45b07f9dd6642927a46a4ac4ea3b09c8e09535dbc832d215f714a1  openspec/changes/a162-assess-follow-on-risk-offline/analysis/code-context/codegraph-node-weeklyvaluelane-ProposeKR.txt
+d85c730ecd976b71b752f54f0c8286910102140daf426950a1dd74dc86633a15  openspec/changes/a162-assess-follow-on-risk-offline/analysis/code-context/codegraph-node-weeklyvaluelane-ProposeUS.txt
+5b94af6776668b2ac74d63304eb5868e009d92c9527b8c114cf5db0d6e5f7f85  openspec/changes/a162-assess-follow-on-risk-offline/analysis/code-context/codegraph-query-ProposeKR-unqualified.json
+cbae9e97d35451903d13c1db5e9357c1ff8026bf09e7cd5be80f9465c7296fde  openspec/changes/a162-assess-follow-on-risk-offline/analysis/code-context/codegraph-query-ProposeUS-unqualified.json
+812373bed4f41bbdf401077e9516635740a44d821a888d55804d7be281180e75  openspec/changes/a162-assess-follow-on-risk-offline/analysis/code-context/codegraph-query-continuationlane-ProposeKR.txt
+65e7fa706b86163fee33893e0d5ebaf6ebeb97a78cfc900e3092613f524c3c20  openspec/changes/a162-assess-follow-on-risk-offline/analysis/code-context/codegraph-query-reversallane-ProposeKR.txt
+9c914f964ebbfb2bb1f85d3f4eaa9bda63292b5a01f3eafd8703a68a3b0df765  openspec/changes/a162-assess-follow-on-risk-offline/analysis/code-context/codegraph-query-weeklyvaluelane-ProposeKR.txt
+c8eda3c86753669aad37711ebf859fd9deb357c2ffcbea75efbe02303410edd0  openspec/changes/a162-assess-follow-on-risk-offline/analysis/code-context/codegraph-status.txt
+8756a924abf2cd07481897ce4a9a15629f9efed778a956667c9d53f08a90dbfc  openspec/changes/a162-assess-follow-on-risk-offline/analysis/code-context/continuationlane--evaluateStage.ast.json
+f6199f4a3796bbbc52875580b552385718c74378e7bb9c24dfc8b5c86400fc92  openspec/changes/a162-assess-follow-on-risk-offline/analysis/code-context/reversallane--admitExistingRisk.ast.json
+27314c296d51114a852a93e896f05264d36895d3378ed47c91b325bc9eeded0e  openspec/changes/a162-assess-follow-on-risk-offline/analysis/code-context/sha256sums.txt
+738a9f6682fcb03d62722ec14d819979dc00273f8af1a73661b20dd8796d523b  openspec/changes/a162-assess-follow-on-risk-offline/analysis/code-context/weeklyvaluelane--admitExistingRisk.ast.json
+48a59661572930e829c3c4a67d67b8204082f9af83029947d5dc8779a89a435f  openspec/changes/a162-assess-follow-on-risk-offline/analysis/evidence-reconciliation.md

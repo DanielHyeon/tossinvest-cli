@@ -1,0 +1,25 @@
+[
+  {
+    "node": {
+      "id": "function:ecf765cbfe815337af0cd732d2fcf113",
+      "kind": "function",
+      "name": "strategyflowEvaluation",
+      "qualifiedName": "strategyflowEvaluation",
+      "filePath": "internal/weeklyvaluelane/strategyflow_testseam.go",
+      "language": "go",
+      "startLine": 69,
+      "endLine": 119,
+      "startColumn": 0,
+      "endColumn": 1,
+      "signature": "(candidateID string, evidence DisclosureEvidence, config DisclosureConfig, ordinal int) (EvaluationRequest, error)",
+      "visibility": null,
+      "isExported": false,
+      "isAsync": false,
+      "isStatic": false,
+      "isAbstract": false,
+      "returnType": "EvaluationRequest",
+      "updatedAt": 1792494650640
+    },
+    "score": 125.07087974970052
+  }
+]

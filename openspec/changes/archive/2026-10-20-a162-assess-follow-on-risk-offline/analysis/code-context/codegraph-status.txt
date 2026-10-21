@@ -1,0 +1,37 @@
+
+CodeGraph Status
+
+Project: /mnt/D/Axipient/workspace/TossOS
+
+Index Statistics:
+  Files:     2,920
+  Nodes:     51,030
+  Edges:     188,763
+  DB Size:   211.75 MB
+  Backend:   node:sqlite — built-in (full WAL)
+  Journal:   wal
+
+Nodes by Kind:
+  import          16,587
+  function        16,372
+  method          5,824
+  constant        3,574
+  struct          2,939
+  file            2,618
+  variable        2,338
+  type_alias      359
+  interface       215
+  class           132
+  route           69
+  property        3
+
+Files by Language:
+  go              2,311
+  yaml            302
+  python          276
+  typescript      14
+  tsx             13
+  javascript      4
+
+✓ Index is up to date
+

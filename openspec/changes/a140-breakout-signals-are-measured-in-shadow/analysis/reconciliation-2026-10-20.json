@@ -1,0 +1,97 @@
+{
+  "captured_at_utc": "2026-10-20T00:56:27.598137+00:00",
+  "scope": "read-only aggregate reconciliation; raw ledger rows and identifiers withheld",
+  "snapshot": {
+    "path": "openspec/changes/a140-breakout-signals-are-measured-in-shadow/analysis/shadow-ledger/ledger.jsonl",
+    "sha256_before": "ce4c672551237a1c5f112ff69b330edcffc61a43084616df894a9fbcbea897a2",
+    "sha256_after": "ce4c672551237a1c5f112ff69b330edcffc61a43084616df894a9fbcbea897a2",
+    "bytes_before": 250721,
+    "bytes_after": 250721,
+    "stable_during_read": true
+  },
+  "rows_by_kind": {
+    "universe": 3,
+    "gap": 52,
+    "budget": 84,
+    "signal": 228,
+    "label": 14,
+    "session": 2
+  },
+  "sessions": {
+    "distinct": 3,
+    "by_prefix": {
+      "KRX": 3
+    },
+    "session_summary_rows": 2,
+    "universe_rows": 3,
+    "per_session": {
+      "KRX:2026-10-16": {
+        "universe_rows": 1,
+        "session_summary_rows": 1,
+        "proposals": 7,
+        "labels": 7,
+        "unlabeled_proposals": 0,
+        "gaps": 37,
+        "budgets": 40
+      },
+      "KRX:2026-10-19": {
+        "universe_rows": 1,
+        "session_summary_rows": 1,
+        "proposals": 7,
+        "labels": 7,
+        "unlabeled_proposals": 0,
+        "gaps": 12,
+        "budgets": 39
+      },
+      "KRX:2026-10-20": {
+        "universe_rows": 1,
+        "session_summary_rows": 0,
+        "proposals": 2,
+        "labels": 0,
+        "unlabeled_proposals": 2,
+        "gaps": 3,
+        "budgets": 5
+      }
+    }
+  },
+  "proposal_label_linkage": {
+    "proposed_signal_setup_ids": 16,
+    "labels": 14,
+    "labeled_proposals": 14,
+    "unlabeled_proposals": 2,
+    "orphan_label_setup_ids": 0,
+    "duplicate_labels_per_setup": 0,
+    "outcomes": {
+      "close": 13,
+      "target": 1
+    }
+  },
+  "operational_rows": {
+    "signals": 228,
+    "gaps": 52,
+    "budgets": 84
+  },
+  "source_contracts": [
+    {
+      "path": "openspec/changes/a140-breakout-signals-are-measured-in-shadow/tasks.md",
+      "sha256": "91d00cb1b312d153fbe95bf35e531f899141851abe28f184c6b8c11145a4b716"
+    },
+    {
+      "path": "openspec/changes/a140-breakout-signals-are-measured-in-shadow/design.md",
+      "sha256": "a637f1782e6afe5cc10a8c1b11789da9b7ade4ecb961bfb41d65127ea71ebecf"
+    },
+    {
+      "path": "openspec/changes/a140-breakout-signals-are-measured-in-shadow/review.md",
+      "sha256": "15090e01da2bf55dd357193a5f5be60cff9276448a3516d5508649cb926c5e1f"
+    },
+    {
+      "path": "tools/a140-breakout-signal-shadow/ledger.go",
+      "sha256": "44523e91f5508b762d79b8fe3ad171d0436d746109856ffa0523fb16f3736626"
+    },
+    {
+      "path": "tools/a140-breakout-signal-shadow/report.go",
+      "sha256": "bf1ef0c509b7bd634b8647284bc6538971e7c6c6190cc932826e732a0c347099"
+    }
+  ],
+  "source_contracts_capture_note": "Source-contract hashes were captured before this reconciliation updated tasks.md; they identify the source semantics reviewed, not the final task-document hash."
+}
