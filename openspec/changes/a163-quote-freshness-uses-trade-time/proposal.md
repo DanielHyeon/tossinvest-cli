@@ -20,30 +20,34 @@
 VI·거래정지 — 체결이 멈추는 구간마다 손절 판정이 사라지고, 그 구간이 바로 가격이 가장 크게 움직일 수 있는 구간이다
 (`analysis/quote-time-evidence.md` §4). 이것은 안전 불변식 「손절·비상 청산의 즉시성을 약화·지연하지 않는다」 위반이다.
 
-그래서 이 change 는 **보이게 만드는 것**까지만 한다: 체결 시각을 받은 시각 **옆에** 보존하고, 체결이 오래된 관측을 기록·알린다.
+그래서 이 change 는 **보이게 만드는 것**까지만 한다: 체결 시각을 받은 시각 **옆에** 보존하고, 체결 나이를 기록하며, 시각 **부재**만
+알린다(「오래됨」 알림은 내지 않는다 — H1).
 판정은 지금과 같은 받은 시각 기준으로 계속 돈다.
 
 ## 무엇을
 
-1. **공식 시세 어댑터가 브로커 시각을 보존한다.** `domain.Quote` 에 브로커 데이터 시각 필드를 더하고 `adaptPrices` 가
-   `timestamp` 를 해독해 채운다. null·키 없음·해독 실패는 **0 값(「모름」)** 으로 둔다 — 우리 시계로 메우지 않는다(a112 결정 35 와
-   같은 이유). `FetchedAt` 은 **의미·값 모두 그대로**(받은 시각)다.
-2. **청산 루프가 체결 나이를 기록한다.** 판정에 들어간 관측마다 체결 나이(`FetchedAt − 브로커 시각`, 브로커 시각이 0 이면 「모름」)를
-   구조화 로그 필드로 남긴다.
-3. **브로커 시각이 없는 관측을 알린다.** 한 주기의 **모든 포지션 판정이 끝난 뒤** 한 번, 브로커 시각이 「모름」인 포지션을
-   `source_missing` 일반 등급 알림으로 올린다(H2·H4). 같은 포지션의 같은 사유는 래치로 한 번만 올린다.
-4. 「체결이 오래됨」 알림은 **이 change 에서 내지 않는다**(H1). 나이는 로그 필드로만 남고, 배포 뒤 그 분포(H6)를 보고 임계·정규장 한정을
+1. **공식 시세 어댑터가 브로커 시각을 보존한다.** `domain.Quote` 에 브로커 데이터 시각 **원문 문자열** 필드(`SourceTimestamp`)를 더하고
+   `adaptPrices` 가 `timestamp` 를 그대로 담는다(대입 한 줄, 해독 없음 — design D2·D3). null·키 없음은 빈 문자열(「모름」)이다 — 우리
+   시계로 메우지 않는다(a112 결정 35 와 같은 이유). `FetchedAt` 은 **의미·값 모두 그대로**(받은 시각)다.
+2. **청산 루프가 체결 나이를 기록한다.** 판정된 포지션마다 체결 나이(`observedQuote.FetchedAt − 해독한 브로커 시각`)를 구간으로 나눠
+   **구간이 바뀔 때만** 전용 로거 `SourceAgeLog`(생산 배선 `cmd/tossctl/engine.go`)에 한 줄 남긴다. 시각 없음·해독 불가·미래는 각자의 구간이다.
+3. **브로커 시각이 없거나 해독할 수 없는 관측을 알린다.** 한 주기의 **모든 포지션 판정이 끝난 뒤** 한 번, 그런 포지션을 `source_missing`
+   일반 등급 알림으로 올린다(H2·H4). 같은 포지션은 래치로 한 번만, 한 주기 최대 8건.
+4. 보고 코드는 recover 경계 안에서만 돈다 — 보고의 패닉이 청산 goroutine 을 끝내지 않는다(감독자에 recover 없음 — design D4).
+5. 「체결이 오래됨」 알림은 **이 change 에서 내지 않는다**(H1). 나이는 로그 필드로만 남고, 배포 뒤 그 분포(H6)를 보고 임계·정규장 한정을
    별도 Story 에서 정한다.
 
 ## 영향
 
-- 생산 코드: `internal/domain/models.go`(필드 하나 추가) · `internal/official/market_reads.go`(`adaptPrices`) ·
-  `internal/app/engine/exitloop.go`(`observe` 가 값을 실어 나름, 주기 끝 보고 하나). 새 보고 코드는 새 파일
-  (`internal/app/engine/exit_source_age.go` 가안)에 둔다.
+- 생산 코드: `internal/domain/models.go`(필드 하나 추가) · `internal/official/market_reads.go`(`adaptPrices` 대입 한 줄) ·
+  `internal/app/engine/exitloop.go`(`observedQuote` 필드 · `observe` 가 값을 실어 나름 · `ObserveOnce` 의 순회 뒤 호출 한 줄 ·
+  `ExitObserverOptions.SourceAgeLog` 필드) · `cmd/tossctl/engine.go`(`engineRuntime` 의 `SourceAgeLog: logger` 배선 — freeze 리뷰 P1-3).
+  새 보고 코드는 새 파일(`internal/app/engine/exit_source_age.go` 가안)에 둔다.
 - 판정·주문·원장: **변화 0** — `observe` 의 후보 제외 규칙, `quoteUsable`, `judge*`, `record`, `stableObservationID`(관측 identity),
   원장 `ObservedAt`, journal schema 전부 그대로(사람 결정 H5 가 로그 전용을 고르는 경우).
 - 공식 API 호출 수: 변화 0(같은 응답의 버려지던 필드를 읽을 뿐). rate budget 재계상 불요.
-- `domain.Quote` 의 JSON 출력(`tossctl quote --json` 등)에 필드 하나가 늘어난다(`omitempty` 가안 — 사람 결정 H7).
+- `domain.Quote` 의 JSON 출력: 공식 `/prices` 갈래에만 `source_timestamp` 키가 생긴다(`string`+`omitempty` — H7 의 실질, design D2).
+  필드를 채우지 않는 WTS 갈래·`adaptStocks` 의 `tossctl quote --json` 바이트는 편집 전과 같다(tasks 2.0 고정 — 안전 3).
 
 ## 비목표
 
@@ -60,13 +64,13 @@ VI·거래정지 — 체결이 멈추는 구간마다 손절 판정이 사라지
 
 | 불변식 | 이 change 의 약속 | 강제 방법 |
 | --- | --- | --- |
-| 안전 4 · §0.3 손절 즉시성 | 체결 나이는 어떤 판정도 건너뛰게 하지 않는다. 오래된 체결가·「모름」 시각의 관측도 지금과 똑같이 판정·발의·제출된다 | 고정 시험(체결 9h30m 묵음 + 손절선 아래 → 같은 주기에 제출) · 변이 원장 |
-| 안전 4 | 보고는 그 주기의 모든 판정 **뒤**에 한 번 — 뒤 포지션의 손절 판정 앞에 서지 않는다 | 순서 시험(a090 `settleUnobserved` 와 같은 자리) |
+| 안전 4 · §0.3 손절 즉시성 | 체결 나이는 어떤 판정도 건너뛰게 하지 않는다. 오래된 체결가·「모름」 시각의 관측도 지금과 똑같이 판정·발의·제출된다 | 어댑터를 거친 e2e 고정 시험(체결 9h30m 묵음 + 손절선 아래 → 같은 주기에 제출) · 판정 함수 열 개 렌더 해시 시험 · `SourceTimestamp` 금지 census · 변이 원장(design D7) |
+| 안전 4 | 보고는 그 주기의 모든 판정 **뒤**에 한 번 — 뒤 포지션의 손절 판정 앞에 서지 않는다. 보고의 패닉은 청산 goroutine 을 끝내지 않는다 | 순서 시험(`settleUnobserved` 바로 앞) · recover 경계 + 패닉 주입 시험 · 래치 맵 단일 goroutine 소유(`-race` 목록) |
 | exit-policy 「관측 사이클은 알림의 원격 전송을 기다려서는 안 된다」 | 일반 등급 = 구조화 로그 한 줄 + 사이클 밖 유실 허용 전송 | 기존 알림 경로 재사용, 새 전송기 없음 |
-| 안전 3 · §0.2 OFF = 기존 동작 | 판정 경로의 동작은 켬/끔과 무관하게 기존과 동일. 보고 자체도 끌 수 있게 할지는 H2 | 기존 exit 시험 전부 무수정 통과 |
+| 안전 3 · §0.2 OFF = 기존 동작 | 판정 경로의 동작은 켬/끔과 무관하게 기존과 동일. 보고 끄기 토글은 두지 않는다(design 「H2 보충」 — 사용자 확인 대기 잔여). upstream 표면 `tossctl quote --json`(WTS 갈래) 바이트 불변 | 기존 exit 시험 전부 무수정 통과 · tasks 2.0 JSON 골든 |
 | §0.4 rate budget | 호출 0 추가 | diff 에 새 `c.get` 0 |
 | 안전 8 | 알림·로그에 계좌 ref 를 싣지 않는다(a090 머리 규칙과 같음) | 필드 목록 시험 |
-| 안전 6 · §0.9 손절 단방향 | 손절 로직 변경 0 | `judgeRatchet`·`judgeLadder` diff 0 |
+| 안전 6 · §0.9 손절 단방향 | 손절 로직 변경 0 | `judgeRatchet`·`judgeLadder` 포함 열 개의 렌더 해시 시험(design D7) |
 
 ## 사람 결정 (design 「사람 결정 기록」이 정본)
 

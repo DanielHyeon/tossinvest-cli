@@ -1,0 +1,49 @@
+// a163 P1-2: 함수별 렌더 해시(주석 제외 go/printer 렌더 → sha256) 산출 — 시험이 굳힐 기대값의 원천.
+package main
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/printer"
+	"go/token"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+)
+
+func main() {
+	dir := os.Args[1]
+	want := map[string]bool{}
+	for _, n := range os.Args[2:] {
+		want[n] = true
+	}
+	fset := token.NewFileSet()
+	files, _ := filepath.Glob(filepath.Join(dir, "*.go"))
+	var out []string
+	for _, f := range files {
+		if strings.HasSuffix(f, "_test.go") {
+			continue
+		}
+		file, err := parser.ParseFile(fset, f, nil, 0) // 주석 미적재 = 주석 편집에 둔감
+		if err != nil {
+			panic(err)
+		}
+		for _, d := range file.Decls {
+			fd, ok := d.(*ast.FuncDecl)
+			if !ok || !want[fd.Name.Name] {
+				continue
+			}
+			var b bytes.Buffer
+			if err := printer.Fprint(&b, token.NewFileSet(), fd); err != nil {
+				panic(err)
+			}
+			out = append(out, fmt.Sprintf("%s\t%s\t%x", fd.Name.Name, filepath.Base(f), sha256.Sum256(b.Bytes())))
+		}
+	}
+	sort.Strings(out)
+	fmt.Println(strings.Join(out, "\n"))
+}

@@ -60,6 +60,15 @@ def main() -> int:
         clock_calls = [c for c in (ast["calls"] or []) if CLOCK.search(c.get("text", ""))]
         for c in clock_calls:
             print(f"| call | | {c['at']['line']} | `{c['text']}` | CLOCK |")
+        # freeze 리뷰 P1-4: 패닉 격리 주장의 근거 — go 문·defer 전수와 recover 호출 전수(없으면 줄 없음).
+        for kind in ("go_statements", "defers"):
+            for s in (ast.get(kind) or []):
+                ln = s["at"]["line"]
+                text = lines[ln - 1].strip().replace("|", "\\|")
+                print(f"| {s['kind']} | | {ln} | `{text}` | |")
+        for c in (ast["calls"] or []):
+            if c.get("text") == "recover":
+                print(f"| call | | {c['at']['line']} | `recover` | RECOVER |")
         print()
         total_b += len((ast["branches"] or []))
         total_r += len((ast["returns"] or []))

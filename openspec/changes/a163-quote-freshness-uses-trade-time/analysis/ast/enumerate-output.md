@@ -111,6 +111,30 @@
 | return | | 1074 | `return o.record(ctx, m, snapshot,` |  |
 | call | | 1067 | `o.quoteUsable` | CLOCK |
 
+## `internal/app/engine/exit_held_proposal.go` `ExitObserver.noteHeldProposal` (126–173)
+
+- 분기 11 · 반환 6 · go 0 · defer 0
+
+| 종류 | id | 줄 | 원문 | 표시 |
+| --- | --- | --- | --- | --- |
+| branch:if | B1 | 127 | `if !m.state.Pending() {` |  |
+| branch:if | B2 | 130 | `if strings.TrimSpace(m.state.PendingIntentID) == "" {` |  |
+| branch:if | B3 | 136 | `if err != nil {` |  |
+| branch:if | B4 | 140 | `if facts.Verdict == journal.ExitIntentUnaccepted {` |  |
+| branch:if | B5 | 142 | `if err != nil {` |  |
+| branch:range | B6 | 148 | `for _, rec := range facts.Parked {` |  |
+| branch:range | B7 | 154 | `for _, order := range facts.Awaiting {` |  |
+| branch:if | B8 | 155 | `if !strings.EqualFold(strings.TrimSpace(order.Side), "SELL") \|\| strings.TrimSpace(order.OrderID) == "" {` |  |
+| branch:if | B9 | 162 | `if err != nil {` |  |
+| branch:range | B10 | 166 | `for _, order := range live {` |  |
+| branch:if | B11 | 167 | `if !strings.EqualFold(strings.TrimSpace(order.Side), "SELL") \|\| seen[order.OrderID] {` |  |
+| return | | 128 | `return false` |  |
+| return | | 133 | `return false` |  |
+| return | | 138 | `return false` |  |
+| return | | 145 | `return released` |  |
+| return | | 164 | `return false` |  |
+| return | | 172 | `return false` |  |
+
 ## `internal/app/engine/exitloop.go` `ExitObserver.observe` (842–913)
 
 - 분기 15 · 반환 6 · go 0 · defer 0
@@ -167,6 +191,8 @@
 | call | | 487 | `o.clk.Now` | CLOCK |
 | call | | 497 | `o.clk.Now` | CLOCK |
 | call | | 511 | `o.quoteUsable` | CLOCK |
+| defer | | 459 | `defer o.endExitOrderCycle(ctx)` | |
+| defer | | 462 | `defer o.flushStrategyProtectionAlerts(ctx)` | |
 
 ## `internal/app/engine/exitloop.go` `ExitObserver.quoteUsable` (1179–1188)
 
@@ -180,6 +206,25 @@
 | call | | 1183 | `o.clk.Now` | CLOCK |
 | call | | 1184 | `Before` | CLOCK |
 | call | | 1187 | `clock.LeaseElapsed` | CLOCK |
+
+## `internal/app/engine/exit_unobserved.go` `ExitObserver.raiseUnobserved` (207–243)
+
+- 분기 8 · 반환 4 · go 0 · defer 0
+
+| 종류 | id | 줄 | 원문 | 표시 |
+| --- | --- | --- | --- | --- |
+| branch:if | B1 | 210 | `if !s.recorded {` |  |
+| branch:if | B2 | 212 | `if recorder == nil {` |  |
+| branch:if | B3 | 215 | `if err := recorder.RecordCritical(ctx, o.unobservedEvent(id, rec, elapsed), 0); err != nil {` |  |
+| branch:if | B4 | 217 | `if !s.alertFail {` |  |
+| branch:if | B5 | 226 | `if s.tightened \|\| o.opts.Escalate == nil {` |  |
+| branch:if | B6 | 231 | `if err != nil && !errors.Is(err, journal.ErrModeAnnouncementFailed) {` |  |
+| branch:if | B7 | 232 | `if !s.modeFail {` |  |
+| branch:if | B8 | 240 | `if changed {` |  |
+| return | | 213 | `return` |  |
+| return | | 221 | `return` |  |
+| return | | 227 | `return` |  |
+| return | | 236 | `return` |  |
 
 ## `internal/app/engine/exitloop.go` `ExitObserver.record` (1288–1425)
 
@@ -229,6 +274,29 @@
 | return | | 1176 | `return nil` |  |
 | call | | 1161 | `o.quoteUsable` | CLOCK |
 
+## `internal/app/engine/exitloop.go` `ExitObserver.requiresFullJudgement` (1151–1156)
+
+- 분기 1 · 반환 2 · go 0 · defer 0
+
+| 종류 | id | 줄 | 원문 | 표시 |
+| --- | --- | --- | --- | --- |
+| branch:if | B1 | 1152 | `if m.reJudge \|\| m.state.SnapshotStatus != journal.SnapshotStatusEvaluated \|\| m.state.Snapshot.Snapshot == nil {` |  |
+| return | | 1153 | `return true` |  |
+| return | | 1155 | `return snapshot.Changed \|\| !journal.SameExitOperationalLine(m.state.Snapshot.Snapshot.Line, snapshot)` |  |
+
+## `internal/app/engine/exitloop.go` `ExitObserver.Run` (395–405)
+
+- 분기 3 · 반환 2 · go 0 · defer 0
+
+| 종류 | id | 줄 | 원문 | 표시 |
+| --- | --- | --- | --- | --- |
+| branch:for | B1 | 396 | `for {` |  |
+| branch:if | B2 | 397 | `if err := ctx.Err(); err != nil {` |  |
+| branch:if | B3 | 401 | `if err := o.clk.Sleep(ctx, o.Interval()); err != nil {` | CLOCK |
+| return | | 398 | `return err` |  |
+| return | | 402 | `return err` |  |
+| call | | 401 | `o.clk.Sleep` | CLOCK |
+
 ## `internal/app/engine/exit_unobserved.go` `ExitObserver.settleUnobserved` (139–204)
 
 - 분기 12 · 반환 1 · go 0 · defer 0
@@ -252,6 +320,29 @@
 | call | | 176 | `clock.LeaseElapsed` | CLOCK |
 | call | | 198 | `clock.LeaseElapsed` | CLOCK |
 | call | | 199 | `o.outageAfter` | CLOCK |
+
+## `internal/app/engine/exitloop.go` `ExitObserver.snapshotContext` (1190–1200)
+
+- 분기 1 · 반환 2 · go 0 · defer 0
+
+| 종류 | id | 줄 | 원문 | 표시 |
+| --- | --- | --- | --- | --- |
+| branch:if | B1 | 1193 | `if err != nil {` |  |
+| return | | 1194 | `return exitpolicy.SnapshotContext{}, err` |  |
+| return | | 1196 | `return exitpolicy.SnapshotContext{` |  |
+
+## `internal/app/engine/exit_order_log.go` `ExitObserver.writeExitOrder` (259–270)
+
+- 분기 2 · 반환 2 · go 0 · defer 1
+
+| 종류 | id | 줄 | 원문 | 표시 |
+| --- | --- | --- | --- | --- |
+| branch:if | B1 | 261 | `if logger == nil {` |  |
+| branch:if | B2 | 265 | `if warn {` |  |
+| return | | 262 | `return` |  |
+| return | | 267 | `return` |  |
+| defer | | 264 | `defer func() { _ = recover() }()` | |
+| call | | 264 | `recover` | RECOVER |
 
 ## `internal/app/engine/position_policy_command.go` `PositionPolicyCommandService.prepare` (303–365)
 
@@ -308,6 +399,28 @@
 | return | | 341 | `return out, readAt, nil` |  |
 | call | | 298 | `d.clk.Now` | CLOCK |
 
+## `internal/app/engine/runtime.go` `Runtime.Run` (288–379)
+
+- 분기 5 · 반환 3 · go 3 · defer 4
+
+| 종류 | id | 줄 | 원문 | 표시 |
+| --- | --- | --- | --- | --- |
+| branch:if | B1 | 289 | `if r.opts.Recover != nil {` |  |
+| branch:if | B2 | 294 | `if err := r.opts.Recover(ctx); err != nil {` |  |
+| branch:range | B3 | 304 | `for _, loop := range r.opts.Loops {` |  |
+| branch:range | B4 | 322 | `for _, aux := range r.opts.Auxiliary {` |  |
+| branch:if | B5 | 351 | `if r.gracefulStop(ctx, first.err) {` |  |
+| return | | 295 | `return err` |  |
+| return | | 355 | `return nil` |  |
+| return | | 378 | `return failure` |  |
+| go | | 306 | `go func(loop SupervisedLoop) {` | |
+| go | | 324 | `go func(aux AuxiliaryExecutor) {` | |
+| go | | 335 | `go func() {` | |
+| defer | | 300 | `defer cancel()` | |
+| defer | | 307 | `defer wg.Done()` | |
+| defer | | 325 | `defer wg.Done()` | |
+| defer | | 336 | `defer supervisorWG.Done()` | |
+
 ## `internal/app/engine/exitloop.go` `stableObservationID` (1202–1226)
 
 - 분기 4 · 반환 2 · go 0 · defer 0
@@ -363,6 +476,7 @@
 | branch:if | B1 | 536 | `if required && (!exists \|\| now.Sub(prior) > threshold) {` | CLOCK |
 | call | | 533 | `g.clk.Now` | CLOCK |
 | call | | 536 | `now.Sub` | CLOCK |
+| defer | | 532 | `defer g.mu.Unlock()` | |
 
 ## `internal/flatten/liquidate.go` `Saga.aggressivePrice` (372–398)
 
@@ -464,4 +578,4 @@
 | return | | 187 | `return result, nil` |  |
 | call | | 142 | `instant.value.IsZero` | CLOCK |
 
-합계: AST 22 · 분기 162 · 반환 109
+합계: AST 29 · 분기 193 · 반환 130

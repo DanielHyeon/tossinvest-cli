@@ -1,0 +1,15 @@
+# a163 판정 함수 렌더 해시 — HEAD 60033240a (internal 은 base f7d80c348 과 diff 0), go1.26.5, 2026-10-21
+# 재생성: 사본 디렉터리에 render_hash.go.txt 를 main.go 로 복사 → GOFLAGS=-trimpath go run main.go <repo>/internal/app/engine quoteUsable judge judgeRatchet judgeLadder record refreshObservation stableObservationID snapshotContext requiresFullJudgement noteHeldProposal
+# 이름 충돌 주의: judge(alertdelivery.go) · record(strategy_lane_runtime.go) 는 다른 수신자 — 시험은 ExitObserver 수신자로 고를 것
+judge	alertdelivery.go	7a380e2ea962a505dcd92c61cad829607b1b6e7862fb9406e75e4e7653047c40
+judge	exitloop.go	a3d5c5625182180a44789e394b3c9a93f0af05e70f37a8f41b004bd1052ab570
+judgeLadder	exitloop.go	12a3a2b27be71f00697bfc0ea2474419e083dbabbe7dcf8fa58e8ccb884360b2
+judgeRatchet	exitloop.go	de9209b6f33481e5634bf612b0224dcda3d4e629680d9b35b161b21b7bd37c47
+noteHeldProposal	exit_held_proposal.go	2232f89dc1f62d1e63b83eacae0c9c65d44ecdd626a18d57cdd3f9aca38de015
+quoteUsable	exitloop.go	54da8fc5f48d567d5f0dba98b99b4e87ed0318d13340c5f0d172f72b846ff49b
+record	exitloop.go	f3458b84adf93b386bf17d6ae42e49d3a7d49e407829a7c7c10ea789efb499ea
+record	strategy_lane_runtime.go	53b09b938f7d53e0d3baa7edd4c11eee0cd0dbe3c5a87e2d1d777ba9c0cc40c4
+refreshObservation	exitloop.go	9cf96697467eb3c3d1b15bb6bc496a0bf5d9276b19583884dc2168beeeb2eeaa
+requiresFullJudgement	exitloop.go	a0778e2b9397c7b93ba37dca99ff0ee11a8f92ff1ddca54781e6303f16ff49c6
+snapshotContext	exitloop.go	72e0ece21373fb4556fff202e5bea7e12e73a720440545f90780901c466aab86
+stableObservationID	exitloop.go	25fcfa904e0fcc99fd3b2e35e79707ca238338d6157e80dcf071d417665a1480
