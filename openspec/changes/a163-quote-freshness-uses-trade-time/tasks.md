@@ -159,16 +159,22 @@
       ㉑ audit 행 삭제 · 값 고정(2.16) ㉒ 토글 판단을 `ObserveOnce` 판정 순회 앞으로 옮겨 꺼짐이면 판정 건너뜀(2.14 판정·제출 동일 · census · `ObserveOnce` 분기 수)
       — `analysis/mutation/`(하네스 `harness.py` · `ledger.md` · `ledger.json`): HEAD `ff232b3cf` 사본, 무변이 대조군 26 묶음 rc=0, **32 CAUGHT / 32**
       (목록 ①~㉒ 에 ④a/④b · ⑱a/⑱b · ㉑a~c 분할 + 리뷰 처분 ㉓~㉘). 첫 판에서 ② 생존 → 순서 시험 수리(`aeeea2c02`). ⑧ 은 시한 초과로 잡힘(issues I9)
-- [ ] 4.2 관련 시험: `go test ./internal/official/ ./internal/app/engine/ ./internal/domain/ ./internal/output/ ./internal/config/ ./internal/audit/ ./cmd/tossctl/` +
+- [x] 4.2 관련 시험: `go test ./internal/official/ ./internal/app/engine/ ./internal/domain/ ./internal/output/ ./internal/config/ ./internal/audit/ ./cmd/tossctl/` +
       `make test-race`(2.10 을 `RACE_ENGINE_TESTS` 에 넣은 뒤) + `make test-seams` (선택 이유·미실행 범위 기록; `codegraph affected` 는
       1,197/1,216 건이라 선택 근거로 쓰지 않음 — 쓸 때는 `--filter '*_test.go'`)
+      — 2026-10-22 HEAD `ff232b3cf`(Go 최종) 기준: 위 7 패키지 + `internal/obs` · `client` · `hybrid` · `flatten` 무태그 전부 ok(engine 296 s). `make test-race` rc=0
+      (7 패키지 + 엔진 목록, `TestA163APanicking…` 포함). `make lint` rc=0. `make test-seams`(`-tags tossos_testseams ./...`) rc=2 — 114 ok · 실패 1:
+      `internal/performance` `TestMaximumAttributionGenerationIntegrityScanMeetsP95Target` p95 2.019 s > 2 s(병행 부하 중 시간 상한 시험, 단독 재실행 ok,
+      이 패키지는 a163 이 고친 패키지에 의존하지 않음 — `go list -deps`). 선택 이유: 편집 패키지 + 그 소비자(flatten · hybrid · client · obs). 미실행: `make test`(전체)
 - [x] 4.3 기존 exit 시험 무수정 통과(`exitloop_test.go` · `exit_e2e_test.go` · `exit_observation_identity_test.go` 등)
       — 4.2 의 패키지 실행에서 `exitloop_test.go` · `exit_e2e_test.go` · `exit_observation_identity_test.go` 등 기존 시험 무수정 PASS(무편집 — 편집한 시험은
       `a074_notification_audit_test.go` 의 호출 인자 넷뿐, design D8)
 - [x] 4.4 독립 적대 리뷰(High-risk) → `review.md`
       — `review.md` 「4.4 구현 리뷰」: 전문 · 적대(Claude) · Codex 적대 · 저자 critical pass. 수리 10(R1~R10) · 잔여 4(I5~I7) · 수용 3. 손절 경로 결함 0
-- [ ] 4.5 `make sdd-sync` · `make sdd-check` · (사용자 명시 요청 시) `make gate CHANGE=a163-quote-freshness-uses-trade-time`
+- [x] 4.5 `make sdd-sync` · `make sdd-check` · (사용자 명시 요청 시) `make gate CHANGE=a163-quote-freshness-uses-trade-time`
 
+      — `make sdd-sync` rc=2: CodeGraph · CGC 갱신 OK, GBrain advisory sync 가 1800 s 시한 초과(incomplete) — `check_index_freshness.py` 「CodeGraph hard-evidence
+      index matches the worktree」. `make sdd-infra` 로 worktree-local `.sdd/.venv` 생성 뒤 `make sdd-check` rc=0(gbrain advisory WARN). `make gate` 는 사용자 요청 없음 — 미실행
 ## 5. 잔여 기록 (이 change 에서 고치지 않음)
 
 - [x] 5.1 C7(진입 게이트 수신 시각) · C8·C9(편입 t0 나이 검사 0) · C10(비상 청산 지정가 나이 검사 0) · C12(CLI 바닥글 시각) ·
