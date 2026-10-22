@@ -77,8 +77,11 @@
 ### by-id 응답 분류(A2)
 
 - `statement`: HTTP 200, result 가 객체, `conditionalOrderId`·`status`·`symbol`·`market` 이 non-null 문자열, `first` 가 객체이고
-  `first.status` 문자열·`first.triggeredOrderId` 키 존재(null 또는 문자열), `second` 키 존재(null 또는 객체). 결측·null·형 불일치는
-  a121 목록 해독과 같은 이유(F2 — null 이 제로값으로 접힘)로 거절.
+  `first.status` 가 non-null 문자열. 이 다섯은 계약의 required 다(`ConditionalOrderDetailResponse.required` ·
+  `ConditionalOrderCondition.required`) — 결측·null·형 불일치는 a121 목록 해독과 같은 이유(F2 — null 이 제로값으로 접힘)로 거절.
+  `first.triggeredOrderId` 와 `second` 는 계약상 required 가 **아니다**(nullable) — 키 없음과 null 은 둘 다 「없음」이고, 있으면
+  형만 검사한다(`triggeredOrderId` 는 문자열, `second` 는 객체 — 다른 형은 거절). **정정 2026-10-22**: 첫 판은 두 키의 존재를 요구했는데,
+  그것은 계약에 맞는 응답을 거절하는 가드였다(아래 「0.6 영수증 대조」 C2).
 - `silent`: `*official.APIError` 의 `Code == 404` 이고 본문 error.code 가 `conditional-order-not-found`(M40 실측 문자열). 본문 해독 불능 404 는
   거절(silent 아님).
 - 그 밖: 400·401/403(`ErrAuth`/`ErrIPNotAllowed`)·429(`ErrRateLimited`)·5xx(`ErrServer`)·전송·스키마 오류 → `expiry-read-error`
@@ -144,11 +147,41 @@ cmd `validateM0TriggerMode`: B3 `M0Unsettled` → B7(`!ok`) 안에서 B8 `M0Exac
 
 | id | 질문 | 기본(권장) | 상태 |
 | --- | --- | --- | --- |
-| H1 | 모드: 명시 `--expired` vs 읽은 결과로 자동 판별 | 명시 플래그(D1) | 대기 |
-| H2 | 범위: 미결 HOLD 만 vs `M0ExactPrerequisites` 전제 fail 셋까지 | 미결 HOLD 만(D9) — 전제는 별도 실측 계획 | 대기 |
-| H3 | 브로커가 더는 이름하지 않을 때(0.6 결과가 404+부재) 과거 관측(08-13)을 근거로 받을지 | 받지 않음 — 그 경우 a164 는 0.6 에서 멈추고 재결정 | 대기 |
-| H4 | 같은 심볼의 다른 OPEN 조건주문·OPEN 일반 주문을 만료 모드에서도 거절할지 | 거절 유지(Q4 와 같은 비용, D2 거부 2·3) | 대기 |
-| H5 | 만료 어휘(`EXPIRED`, leg status) 출처 | OpenAPI enum + 0.6 사람 실측 영수증 골든, 둘 다 있어야 허용 목록에 넣음 | 대기 |
+| H1 | 모드: 명시 `--expired` vs 읽은 결과로 자동 판별 | 명시 플래그(D1) | **확정 2026-10-22(사용자 「둘 다 예」) — 명시 `--expired` 만** |
+| H2 | 범위: 미결 HOLD 만 vs `M0ExactPrerequisites` 전제 fail 셋까지 | 미결 HOLD 만(D9) — 전제는 별도 실측 계획 | **확정 2026-10-22 — 미결 artifact HOLD 만. 마지막 판정 fail 전제 셋은 실주문 재측정으로 남김** |
+| H3 | 브로커가 더는 이름하지 않을 때(0.6 결과가 404+부재) 과거 관측(08-13)을 근거로 받을지 | 받지 않음 — 그 경우 a164 는 0.6 에서 멈추고 재결정 | **확정 2026-10-22 — 받지 않음**(0.6 에서 브로커가 현재 이름하므로 이번에는 쓰일 일 없음) |
+| H4 | 같은 심볼의 다른 OPEN 조건주문·OPEN 일반 주문을 만료 모드에서도 거절할지 | 거절 유지(Q4 와 같은 비용, D2 거부 2·3) | **확정 2026-10-22 — 거절** |
+| H5 | 만료 어휘(`EXPIRED`, leg status) 출처 | OpenAPI enum + 0.6 사람 실측 영수증 골든, 둘 다 있어야 허용 목록에 넣음 | **확정 2026-10-22 — 둘 다 요구.** 영수증: top-level `EXPIRED` · `first.status` `EXPIRED`(`analysis/receipts/expiry-probe-2026-10-22.json`) |
+
+## 0.6 영수증 대조 (2026-10-22)
+
+영수증: `analysis/receipts/expiry-probe-2026-10-22.json` — Manager 가 사용자 승인(2026-10-22 「둘 다 예」) 뒤 엔진 프로필 자격으로 돌린
+읽기 전용 GET 셋, 수량 필드 제거. 반입 때 키 전수를 세어 계좌·수량 키가 없음을 확인했다.
+
+- ① by-id: rc 0 · top-level `EXPIRED` · `SINGLE` · 333430 · KR · `first` {STOP, `EXPIRED`} · `second`·발동 id 키 없음 · `expire_date` 2026-08-07.
+- ② CLOSED·333430: 행 1 = 그 id, `EXPIRED`, `has_next` false. ③ OPEN 조건·333430: 0 행.
+- 판정(tasks 0.6): **계속** — 증거 규칙 A3 의 두 출처가 모두 현재 대상을 `EXPIRED` 로 이름한다.
+
+설계 가정과 어긋난 점:
+
+- **C1. 영수증은 원 응답 바이트가 아니다.** `order conditional get/list` 는 도메인 어댑터(`official.Client.ConditionalOrder` →
+  `adaptConditionalOrder`)를 거친 CLI 출력이다 — 키가 snake_case(`triggered_order_id`, `has_next`)이고 원 API 는 camelCase
+  (`conditionalOrderId`, `triggeredOrderId`, `hasNext` — OpenAPI). status 문자열은 어댑터가 그대로 옮기므로(`conditional_reads.go:240` 최상위 · `:226` leg — `adaptConditionalOrder`·`adaptCondition`)
+  **어휘 값의 영수증으로는 유효**하다(H5). 그러나 tasks 2.1 의 원 바이트 골든으로는 쓸 수 없다 — 원 형태 골든은 OpenAPI 스키마 +
+  이 영수증의 값으로 만들고, 원 응답의 키 존재 여부는 미측정으로 둔다.
+- **C2. 키 부재를 구별하지 못한다.** 도메인 `TriggeredOrderID` 는 `omitempty`, `Second` 는 포인터 `omitempty`(`internal/domain/models.go:784` · `:798`)라
+  CLI 출력에서 null·키 없음·빈 문자열이 같아진다. 동시에 OpenAPI 는 두 키를 required 로 두지 않는다 → 첫 판 D3 의 「키 존재 요구」는
+  계약 위반이 아닌 응답을 거절했을 것이다. D3 를 정정했다(키 없음 = null = 없음).
+- **C3. 영수증의 `target_profit_rate: 0`·`order_price: 0` 은 브로커 값이 아니다** — 도메인 `parseDecimal` 이 null 을 0 으로 접은 값이다. 판정 입력으로 쓰지 않는다.
+- **C4. 「OPEN 일반 주문 0」은 이번 영수증으로 증명되지 않았다.** `tossctl orders list` 는 hybrid 가 WTS 에 맡긴 세션 읽기
+  `ListPendingOrders` = `/api/v1/trading/orders/histories/all/pending`(`internal/client/account.go:155-174`, `internal/hybrid/client.go:298-300`)이다 —
+  미체결 목록이긴 하나 **비공식 WTS** 출처다. 대사가 실제로 부르는 것은 공식 `GET /api/v1/orders?status=OPEN&symbol=…`
+  (`official.Client.ReconcileOpenOrdersPage`)이고 이 GET 을 내는 CLI 하위 명령은 없다(`order list --status` 는 없는 플래그). 그래서 H4 의
+  일반 주문 쪽은 실기록 대사 실행(tasks 6.2) 안의 공식 읽기가 처음으로 판정한다 — 비어 있지 않으면 그 실행이 `open-plain-order` 로 거절한다.
+- **C5. 첫 목록 시도가 429**(「lazy account-seq resolution: official: rate limited」)였고 5초 뒤 재시도로 통과했다. 대사 명령은 자동 재시도가 없으므로
+  (D6) 같은 일이 생기면 `accounts-read`/`read-error` 로 거절되고 사람이 다시 돌린다 — 설계와 맞음, 운영 메모.
+- 맞은 가정: by-id 가 종료 주문을 돌려준다(OpenAPI 서술과 일치) · 정리 DELETE 404 와 by-id 200 `EXPIRED` 가 공존한다 — 「404 는 종결 근거가 아니며
+  만료 대상은 by-id 로 아직 읽힌다」는 D3 의 전제가 실측으로 섰다. `expire_date` 2026-08-07 은 감사의 08-13 `EXPIRED` 와 맞다(H3 — 근거로는 안 씀).
 
 ## 잔여 위험
 

@@ -1,0 +1,55 @@
+{
+  "probed_at_kst": "2026-10-22",
+  "by_config_dir": "engine profile (~/.config/tossctl)",
+  "note": "read-only GETs run by Manager with user approval 2026-10-22 (\"둘 다 예\"); quantity fields removed",
+  "get_by_id": {
+    "id": "DJwYn8P_dD9lQMEeYc-5l5_yDTzu2fo55FEJkhU8WVg",
+    "type": "SINGLE",
+    "status": "EXPIRED",
+    "symbol": "333430",
+    "market": "KR",
+    "order_type": "MARKET",
+    "expire_date": "2026-08-07",
+    "first": {
+      "type": "STOP",
+      "status": "EXPIRED",
+      "trigger_price": 3200,
+      "target_profit_rate": 0,
+      "order_price": 0
+    },
+    "created_at": "2026-07-31T18:49:05.000+09:00"
+  },
+  "list_closed_symbol_333430": {
+    "orders": [
+      {
+        "id": "DJwYn8P_dD9lQMEeYc-5l5_yDTzu2fo55FEJkhU8WVg",
+        "type": "SINGLE",
+        "status": "EXPIRED",
+        "symbol": "333430",
+        "market": "KR",
+        "order_type": "MARKET",
+        "expire_date": "2026-08-07",
+        "first": {
+          "type": "STOP",
+          "status": "EXPIRED",
+          "trigger_price": 3200,
+          "target_profit_rate": 0,
+          "order_price": 0
+        },
+        "created_at": "2026-07-31T18:49:05.000+09:00"
+      }
+    ],
+    "has_next": false,
+    "fetched_at": "2026-10-22T03:15:45.689700859Z"
+  },
+  "list_open_symbol_333430": {
+    "orders": [],
+    "has_next": false,
+    "fetched_at": "2026-10-22T03:15:50.886340196Z"
+  },
+  "orders_list_all_symbols": {
+    "rows": 0,
+    "note": "No pending orders (read-only order history); 333430 rows 0"
+  },
+  "first_list_attempts": "CLOSED/OPEN list first attempt failed \"lazy account-seq resolution: official: rate limited\"; succeeded on retry after 5s"
+}

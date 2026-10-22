@@ -15,7 +15,7 @@
 - [x] 0.4 함수 내부 주장의 AST 선행 — `analysis/ast/` 29개 + `enumerate-output.md`(분기 169 · 반환 138 · STALE 0)
 - [x] 0.5 CodeGraph hard evidence — `analysis/codegraph-affected*.txt`(`--filter '*_test.go'`, codegraph 1.6.0) ·
       `analysis/code-context/{codegraph-baseline,codegraphcontext-context,evidence-reconciliation}.md`
-- [ ] 0.6 **사람 읽기 전용 확인 — 이 change 의 진행 여부를 정함.** 엔진 프로필 자격으로, 장 시간 무관:
+- [x] 0.6 **사람 읽기 전용 확인 — 이 change 의 진행 여부를 정함.** 엔진 프로필 자격으로, 장 시간 무관:
       ① `tossctl --config-dir <엔진 프로필> order conditional get DJwYn8P_dD9lQMEeYc-5l5_yDTzu2fo55FEJkhU8WVg --output json`
       ② `tossctl --config-dir <엔진 프로필> order conditional list --status CLOSED --symbol 333430 --limit 100 --output json`(hasNext 면 커서로 끝까지)
       ③ 같은 명령 `--status OPEN` · `tossctl … order list --status OPEN --symbol 333430`(있으면).
@@ -23,7 +23,11 @@
       `analysis/receipts/expiry-probe-<date>.json` 에 남긴다(top-level status · first.status · triggeredOrderId · second 유무 · 404 본문 code·requestId).
       판정: ①이 200 `EXPIRED` 이거나 ②에 그 id 가 `EXPIRED` 로 있으면 계속. 둘 다 아니면(404 + 부재) **여기서 멈추고 사용자 재결정**(H3).
       ③에 행이 있으면 H4 가 막는다 — 사용자에게 보고
-- [ ] 0.7 사람 결정 H1~H5 기록(design 「사람 결정」 표에 날짜·선택)
+      — **2026-10-22 Manager 실행(사용자 승인 「둘 다 예」), 판정: 계속.** ① 200 `EXPIRED`(SINGLE · first `EXPIRED` · second·발동 id 없음) ·
+      ② CLOSED 1 행 = 그 id `EXPIRED` · ③ OPEN 조건 0. 영수증 `analysis/receipts/expiry-probe-2026-10-22.json`(수량 제거, 계좌 키 0 확인).
+      ③의 일반 주문 쪽은 공식 읽기로 재지 못함(`orders list` 는 WTS pending — design 「0.6 영수증 대조」 C4) → 6.2 실행이 판정.
+      영수증은 CLI 도메인 출력이라 원 바이트 골든이 아님(C1) · D3 키 존재 요구 정정(C2)
+- [x] 0.7 사람 결정 H1~H5 기록(design 「사람 결정」 표에 날짜·선택) — 2026-10-22 사용자 「둘 다 예」: 다섯 다 기본안으로 확정
 - [ ] 0.8 **proposal-freeze 리뷰** — 적대적 Eng 보이스 포함(High-risk 인접), 결과 `review.md`.
       필수 질문: 「이 diff 의 어느 줄이 살아 있는 조건주문을 닫힘으로 적을 수 있나」
 - [ ] 0.9 편집 착수 직전 `make sdd-sync` → 0.5 질의 재실행 · `evidence-reconciliation.md` 갱신(fingerprint 신선)
@@ -41,7 +45,8 @@
 ## 2. RED
 
 - [ ] 2.1 by-id 대사 읽기 해독: statement · silent(404 `conditional-order-not-found`) · 거절(404 다른 code·해독 불능 본문 · 400 · 401/403 · 429 · 5xx ·
-      전송 · null result · 필드 결측/null/형 불일치 · `first` 결측 · `second` 키 결측) — httptest, 0.6 영수증을 골든으로
+      전송 · null result · required 필드 결측/null/형 불일치 · `first` 결측 · `triggeredOrderId`/`second` 형 불일치) + 수락: `triggeredOrderId`·`second`
+      키 없음과 null 이 같게 「없음」(design D3 정정) — httptest. 원 바이트 골든은 OpenAPI 스키마 + 0.6 영수증 값으로 만든다(영수증은 CLI 출력, C1)
 - [ ] 2.2 증거 규칙 수락 두 갈래: by-id 만 · CLOSED 만(by-id silent) · 둘 다
 - [ ] 2.3 증거 규칙 거절 — design D2 거부 1~5 와 D3 표의 행마다 하나, **가드별 거절 코드 단언**(공유 문구 아님):
       `expiry-evidence-absent` · `expiry-target-live` · `expiry-target-fired` · `expiry-target-status` · `expiry-read-error` · `expiry-reads-differ` ·
