@@ -165,3 +165,12 @@ Function Logic Map: not-applicable — a140 은 옛 base 에 없던 새 파일�
 - 귀속 실측(`651de4394..64463c579`, 14 커밋): a140 디렉터리를 만진 비병합 커밋 5 개의 `.go` 편집 0, `internal/breakoutsignal` · `tools/a140-breakout-signal-shadow`
   를 만진 커밋 0. 창 안 `.go` 커밋은 `6d12ca6bb`(a170) · `f0733d7b0`(a128) 둘 — 형제 착지 몫.
 - 처분: 같은 승인으로 base 를 이 기록 커밋으로 다시 고정한다(다음 단독 커밋이 영수증).
+
+### 6.4 완료 gate 4 차 — 2026-10-23 (**PASS 11/11**)
+
+- worktree `/tmp/tossos-a140-close-20261022` @`1b636e76f`(2 차 재고정). `python3 tools/sdd/sdd_sync.py --no-gbrain` → rc=1(CodeGraphContext `stats timed out`,
+  advisory) · CodeGraph fingerprint head `1b636e76f` 기록 · sync 앞뒤 HEAD 동일. `ls -d /tmp/.git` → 없음.
+- `SDD_PYTHON=/tmp/tossos-a148-sdd-venv/bin/python make gate CHANGE=a140-breakout-signals-are-measured-in-shadow` → **rc=0, `GATE PASS`**:
+  1~4 OK · 5 `base 5fae512d137b → working tree … required 0 function(s) — judged at HEAD 1b636e76f116` → `OK: Function Logic Map` · 6 `OK: make sdd-check` ·
+  7 `OK: make test` · 8 `OK: make test-seams` · 9 `OK: make test-race` · 10 `OK: make vet` · 11 `OK: make validate`.
+- 원문 로그: `analysis/gate-2026-10-23-pass.log`(sha256 `9b11e3aa…adeb4`).
