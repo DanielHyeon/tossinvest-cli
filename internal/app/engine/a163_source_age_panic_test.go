@@ -9,6 +9,7 @@ package engine_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -30,7 +31,7 @@ func (p a163PanickingAlerts) Notify(ctx context.Context, e obs.Event) error {
 }
 
 // a163PanicRun 은 같은 입력의 두 주기(첫 주기는 판정만, 둘째 주기에 손절선 아래)를 Run goroutine 으로 돌리고 제출 수와 a090 줄 수를 돌려줌.
-func a163PanicRun(t *testing.T, inject func(*engine.ExitObserverOptions)) (places int, unobservedLines int) {
+func a163PanicRun(t *testing.T, inject func(*engine.ExitObserverOptions)) (places int, unobservedLines int, recoveredLines int) {
 	t.Helper()
 	unobserved := &a090Buffer{}
 	f := a163Setup(t, true, func(o *engine.ExitObserverOptions) {
@@ -71,22 +72,35 @@ func a163PanicRun(t *testing.T, inject func(*engine.ExitObserverOptions)) (place
 	case <-time.After(5 * time.Second):
 		t.Fatal("Run did not return after cancel")
 	}
-	return len(f.submit.places), len(a163Lines(t, unobserved.String(), obs.EventExitPositionUnobserved))
+	recovered := 0
+	for _, l := range a163Lines(t, f.logs.String(), obs.EventExitSourceAge) {
+		if detail, _ := l[obs.FieldDetail].(string); strings.Contains(detail, "panicked and was recovered") {
+			recovered++
+		}
+	}
+	return len(f.submit.places), len(a163Lines(t, unobserved.String(), obs.EventExitPositionUnobserved)), recovered
 }
 
 func TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops(t *testing.T) {
-	wantPlaces, wantUnobserved := a163PanicRun(t, nil)
-	if wantPlaces != 1 || wantUnobserved == 0 {
-		t.Fatalf("control: places=%d a090 lines=%d, want the liquidation and the settlement's line", wantPlaces, wantUnobserved)
+	wantPlaces, wantUnobserved, controlRecovered := a163PanicRun(t, nil)
+	if wantPlaces != 1 || wantUnobserved == 0 || controlRecovered != 0 {
+		t.Fatalf("control: places=%d a090 lines=%d recovered=%d, want the liquidation, the settlement's line and no recovery line",
+			wantPlaces, wantUnobserved, controlRecovered)
 	}
-	for name, inject := range map[string]func(*engine.ExitObserverOptions){
-		"log sink panics": func(o *engine.ExitObserverOptions) {
+	for name, c := range map[string]struct {
+		inject        func(*engine.ExitObserverOptions)
+		wantRecovered int // 쓰기 대상이 패닉하면 고정 문구 줄도 못 씀(0), 알림기가 패닉하면 두 주기 연속 패닉에 줄 하나(래치)
+	}{
+		"log sink panics": {func(o *engine.ExitObserverOptions) {
 			o.SourceAgeLog = obs.NewLogger(obs.LogOptions{Writer: a163PanickingWriter{}, JSON: true, Clock: o.Clock})
-		},
-		"alerter panics": func(o *engine.ExitObserverOptions) { o.Alerts = a163PanickingAlerts{inner: o.Alerts} },
+		}, 0},
+		"alerter panics": {func(o *engine.ExitObserverOptions) { o.Alerts = a163PanickingAlerts{inner: o.Alerts} }, 1},
 	} {
 		t.Run(name, func(t *testing.T) {
-			places, unobserved := a163PanicRun(t, inject)
+			places, unobserved, recovered := a163PanicRun(t, c.inject)
+			if recovered != c.wantRecovered {
+				t.Fatalf("recovered-panic lines = %d, want %d — a recovered panic leaves one fixed line per streak", recovered, c.wantRecovered)
+			}
 			if places != wantPlaces {
 				t.Fatalf("places = %d with a panicking report, want %d — the next cycle's stop must still go out (safety 4)", places, wantPlaces)
 			}

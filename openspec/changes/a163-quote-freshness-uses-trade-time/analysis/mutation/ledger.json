@@ -1,0 +1,542 @@
+{
+ "head": "aeeea2c02cc013332b175b116eed24c73164ea8b",
+ "copy": "/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/1711ae2d-4cc3-48b0-97b1-c0fa1bb7c4da/scratchpad/a163-mutation-331771",
+ "control": [
+  {
+   "pkg": "./cmd/tossctl/",
+   "run": "TestA163EngineRuntimeWiresTheSourceAgeLogger",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163AClosedPositionLeavesTheLatch",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163AMissingOrMalformedBrokerTimeJudgesTheSame",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163AMissingOrMalformedBrokerTimeJudgesTheSame|TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163AMissingOrUnparseableTimeIsAlertedOnceAndRearmsWhenATimeArrives",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163AStaleBrokerTimeStillLiquidatesInTheSameCycle|TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163AStartupAuditsTheLoadedReportToggle",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163AnAgeLineIsWrittenOnlyWhenTheBucketChanges",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163AtMostEightSourceAlertsLeaveInOneCycle",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163IdentityAndObservedAtComeFromTheReceiptNotTheBrokerTime|TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange|TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163TheProductionAssemblyReadsTheLoadedToggle",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163TheReportComesAfterEveryJudgementAndBeforeTheUnobservedSettlement",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163TheReportNeverBlocksEntryOrEscalates|TestA163AMissingOrUnparseableTimeIsAlertedOnceAndRearmsWhenATimeArrives",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163TheReportToggleIsTheLastAuditedSettingAndOnlyItsChangeIsWritten|TestA163AStartupAuditsTheLoadedReportToggle",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn|TestA163TheReportToggleIsReadOnlyWhereTheDesignAllows|TestA163AStaleBrokerTimeStillLiquidatesInTheSameCycle",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/config/",
+   "run": "TestA163TheSourceAgeReportToggleDefaultsOff",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/official/",
+   "run": "TestA163AdaptPricesKeepsTheBrokerTimeVerbatim",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/official/",
+   "run": "TestA163AdaptPricesKeepsTheBrokerTimeVerbatim|TestA163PricesCarriesTheBrokerTimeInOneRequest",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/official/",
+   "run": "TestA163TheOfficialStocksQuoteJSONIsByteIdenticalAndCarriesNoBrokerTime",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/output/",
+   "run": "TestA163TheWTSQuoteJSONIsByteIdenticalAndCarriesNoBrokerTime",
+   "rc": 0,
+   "failed": ""
+  }
+ ],
+ "mutations": [
+  {
+   "id": "①",
+   "why": "보고 사유(시각 없음)가 있으면 판정을 건너뜀",
+   "file": "internal/app/engine/exitloop.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163AMissingOrMalformedBrokerTimeJudgesTheSame|TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows",
+     "rc": 1,
+     "failed": "TestA163AMissingOrMalformedBrokerTimeJudgesTheSame,TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/absent,TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/empty,TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/null,TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "②",
+   "why": "보고를 판정 순회 안(판정 직후)으로 이동",
+   "file": "internal/app/engine/exitloop.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163TheReportComesAfterEveryJudgementAndBeforeTheUnobservedSettlement",
+     "rc": 1,
+     "failed": "TestA163TheReportComesAfterEveryJudgementAndBeforeTheUnobservedSettlement"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "③",
+   "why": "어댑터가 빈 시각을 받은 시각 문자열로 메움",
+   "file": "internal/official/market_reads.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/official/",
+     "run": "TestA163AdaptPricesKeepsTheBrokerTimeVerbatim|TestA163PricesCarriesTheBrokerTimeInOneRequest",
+     "rc": 1,
+     "failed": "TestA163AdaptPricesKeepsTheBrokerTimeVerbatim,TestA163PricesCarriesTheBrokerTimeInOneRequest"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "④a",
+   "why": "어댑터가 FetchedAt 을 브로커 시각으로",
+   "file": "internal/official/market_reads.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/official/",
+     "run": "TestA163AdaptPricesKeepsTheBrokerTimeVerbatim",
+     "rc": 1,
+     "failed": "TestA163AdaptPricesKeepsTheBrokerTimeVerbatim"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "④b",
+   "why": "observe 리터럴의 FetchedAt 에 브로커 시각 대입",
+   "file": "internal/app/engine/exitloop.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163IdentityAndObservedAtComeFromTheReceiptNotTheBrokerTime|TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows",
+     "rc": 1,
+     "failed": "TestA163IdentityAndObservedAtComeFromTheReceiptNotTheBrokerTime,TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑤",
+   "why": "래치 제거(이미 알린 포지션도 매 주기 알림)",
+   "file": "internal/app/engine/exit_source_age.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163AMissingOrUnparseableTimeIsAlertedOnceAndRearmsWhenATimeArrives",
+     "rc": 1,
+     "failed": "TestA163AMissingOrUnparseableTimeIsAlertedOnceAndRearmsWhenATimeArrives"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑥",
+   "why": "보고 등급을 critical 로(등급표 등재)",
+   "file": "internal/obs/event.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163TheReportNeverBlocksEntryOrEscalates|TestA163AMissingOrUnparseableTimeIsAlertedOnceAndRearmsWhenATimeArrives",
+     "rc": 1,
+     "failed": "TestA163AMissingOrUnparseableTimeIsAlertedOnceAndRearmsWhenATimeArrives,TestA163TheReportNeverBlocksEntryOrEscalates"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑦",
+   "why": "어댑터가 빈 · 깨진 timestamp 행을 버림",
+   "file": "internal/official/market_reads.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163AMissingOrMalformedBrokerTimeJudgesTheSame",
+     "rc": 1,
+     "failed": "TestA163AMissingOrMalformedBrokerTimeJudgesTheSame,TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/+0900,TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/absent,TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/empty,TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/garbage,TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/null"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑧",
+   "why": "어댑터가 빈 · 깨진 timestamp 에 오류 반환(Prices)",
+   "file": "internal/official/market_reads.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163AMissingOrMalformedBrokerTimeJudgesTheSame",
+     "rc": 1,
+     "failed": "PANIC in -run TestA163AMissingOrMalformedBrokerTimeJudgesTheSame: panic: test timed out after 15m0s"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑨",
+   "why": "observe B7 필터의 effectiveAt 을 브로커 시각 기준으로",
+   "file": "internal/app/engine/exitloop.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163AStaleBrokerTimeStillLiquidatesInTheSameCycle|TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows",
+     "rc": 1,
+     "failed": "TestA163AStaleBrokerTimeStillLiquidatesInTheSameCycle,TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑩",
+   "why": "snapshotContext 가 stableObservationID 에 브로커 시각을 넘김",
+   "file": "internal/app/engine/exitloop.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange|TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows",
+     "rc": 1,
+     "failed": "TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows,TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑪",
+   "why": "보고기 recover 경계 제거",
+   "file": "internal/app/engine/exit_source_age.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops",
+     "rc": 1,
+     "failed": "PANIC in -run TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops: panic: a163: injected log sink panic"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑫",
+   "why": "engineRuntime 의 SourceAgeLog 배선 삭제",
+   "file": "cmd/tossctl/engine.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./cmd/tossctl/",
+     "run": "TestA163EngineRuntimeWiresTheSourceAgeLogger",
+     "rc": 1,
+     "failed": "TestA163EngineRuntimeWiresTheSourceAgeLogger"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑬",
+   "why": "JSON 태그에서 omitempty 삭제",
+   "file": "internal/domain/models.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/output/",
+     "run": "TestA163TheWTSQuoteJSONIsByteIdenticalAndCarriesNoBrokerTime",
+     "rc": 1,
+     "failed": "TestA163TheWTSQuoteJSONIsByteIdenticalAndCarriesNoBrokerTime"
+    },
+    {
+     "pkg": "./internal/official/",
+     "run": "TestA163TheOfficialStocksQuoteJSONIsByteIdenticalAndCarriesNoBrokerTime",
+     "rc": 1,
+     "failed": "TestA163TheOfficialStocksQuoteJSONIsByteIdenticalAndCarriesNoBrokerTime"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑭",
+   "why": "전이 대신 매 주기 줄",
+   "file": "internal/app/engine/exit_source_age.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163AnAgeLineIsWrittenOnlyWhenTheBucketChanges",
+     "rc": 1,
+     "failed": "TestA163AnAgeLineIsWrittenOnlyWhenTheBucketChanges"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑮",
+   "why": "held 기준 정리 삭제",
+   "file": "internal/app/engine/exit_source_age.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163AClosedPositionLeavesTheLatch",
+     "rc": 1,
+     "failed": "TestA163AClosedPositionLeavesTheLatch"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑯",
+   "why": "주기 상한 삭제",
+   "file": "internal/app/engine/exit_source_age.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163AtMostEightSourceAlertsLeaveInOneCycle",
+     "rc": 1,
+     "failed": "TestA163AtMostEightSourceAlertsLeaveInOneCycle"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑰",
+   "why": "토글 무시(꺼짐이면 반환 삭제)",
+   "file": "internal/app/engine/exit_source_age.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn",
+     "rc": 1,
+     "failed": "TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑱a",
+   "why": "기본값 ON — mergeEngine 이 키 없음을 true 로",
+   "file": "internal/config/engine.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/config/",
+     "run": "TestA163TheSourceAgeReportToggleDefaultsOff",
+     "rc": 1,
+     "failed": "TestA163TheSourceAgeReportToggleDefaultsOff,TestA163TheSourceAgeReportToggleDefaultsOff/no_key"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑱b",
+   "why": "기본값 ON — 진입 함수 판단을 뒤집음",
+   "file": "internal/app/engine/exit_source_age.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn",
+     "rc": 1,
+     "failed": "TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑲",
+   "why": "merge 를 automation_gate 조기 반환 뒤로 이동",
+   "file": "internal/config/engine.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/config/",
+     "run": "TestA163TheSourceAgeReportToggleDefaultsOff",
+     "rc": 1,
+     "failed": "TestA163TheSourceAgeReportToggleDefaultsOff,TestA163TheSourceAgeReportToggleDefaultsOff/true_without_automation_gate"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "⑳",
+   "why": "exitwiring 덮어쓰기 삭제",
+   "file": "internal/app/engine/exitwiring.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163TheProductionAssemblyReadsTheLoadedToggle",
+     "rc": 1,
+     "failed": "TestA163TheProductionAssemblyReadsTheLoadedToggle,TestA163TheProductionAssemblyReadsTheLoadedToggle/loaded=false,TestA163TheProductionAssemblyReadsTheLoadedToggle/loaded=true"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "㉑a",
+   "why": "audit 행 삭제",
+   "file": "internal/app/engine/interlock.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163TheReportToggleIsTheLastAuditedSettingAndOnlyItsChangeIsWritten|TestA163AStartupAuditsTheLoadedReportToggle",
+     "rc": 1,
+     "failed": "TestA163AStartupAuditsTheLoadedReportToggle,TestA163TheReportToggleIsTheLastAuditedSettingAndOnlyItsChangeIsWritten"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "㉑b",
+   "why": "audit 행 값 고정(false)",
+   "file": "internal/app/engine/interlock.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163TheReportToggleIsTheLastAuditedSettingAndOnlyItsChangeIsWritten|TestA163AStartupAuditsTheLoadedReportToggle",
+     "rc": 1,
+     "failed": "TestA163AStartupAuditsTheLoadedReportToggle,TestA163TheReportToggleIsTheLastAuditedSettingAndOnlyItsChangeIsWritten"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "㉑c",
+   "why": "NewContext 가 로드된 값 대신 false 를 넘김",
+   "file": "internal/app/engine/engine.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163AStartupAuditsTheLoadedReportToggle",
+     "rc": 1,
+     "failed": "TestA163AStartupAuditsTheLoadedReportToggle"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "㉒",
+   "why": "토글 판단을 ObserveOnce 판정 순회 앞으로 — 꺼짐이면 판정 건너뜀",
+   "file": "internal/app/engine/exitloop.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn|TestA163TheReportToggleIsReadOnlyWhereTheDesignAllows|TestA163AStaleBrokerTimeStillLiquidatesInTheSameCycle",
+     "rc": 1,
+     "failed": "TestA163AStaleBrokerTimeStillLiquidatesInTheSameCycle,TestA163TheReportToggleIsReadOnlyWhereTheDesignAllows,TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn"
+    }
+   ],
+   "verdict": "CAUGHT"
+  }
+ ]
+}

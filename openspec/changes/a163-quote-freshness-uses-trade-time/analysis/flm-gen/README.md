@@ -16,8 +16,8 @@ python3 -I openspec/changes/a163-quote-freshness-uses-trade-time/analysis/flm-ge
 | 함수 | 분기 | 반환 | defer | 범위(줄) |
 | --- | --- | --- | --- | --- |
 | `official.adaptPrices` | 1 → 1 | 1 → 1 | 0 → 0 | 168–180 → 168–183 |
-| `ExitObserver.observe` | 15 → 15 | 6 → 6 | 0 → 0 | 842–913 → 858–929 |
-| `ExitObserver.ObserveOnce` | 8 → 8 | 5 → 5 | 2 → 2 | 457–526 → 467–539 |
+| `ExitObserver.observe` | 15 → 15 | 6 → 6 | 0 → 0 | 842–913 → 860–931 |
+| `ExitObserver.ObserveOnce` | 8 → 8 | 5 → 5 | 2 → 2 | 457–526 → 469–541 |
 | `cmd/tossctl.engineRuntime` | 6 → 6 | 7 → 7 | 0 → 0 | 655–750 → 655–752 |
 | `config.mergeEngine` | **5 → 6** | 2 → 2 | 0 → 0 | 324–358 → 330–368 |
 | `engine.recordGateSettings` | 6 → 6 | 2 → 2 | 0 → 0 | 739–811 → 739–813 |

@@ -33,6 +33,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
@@ -49,7 +51,8 @@ const (
 	sourceAgeGT1h        = "gt_1h"
 
 	// sourceAgeAlertsPerCycle 은 한 주기의 source_missing 알림 상한임(= obs.DefaultNormalRelayCapacity 64 의 1/8, 사람 승인 값).
-	// 넘는 포지션은 알림함을 세우지 않으므로 다음 주기로 넘어감 — 재시작 직후 몰려도 일반 등급 버퍼의 7/8 은 다른 exit 알림 몫.
+	// 넘는 포지션은 알림함을 세우지 않으므로 다음 주기로 넘어감 — 재시작 직후 몰려도 **한 주기 안에서는** 일반 등급 버퍼의 7/8 이
+	// 다른 exit 알림 몫으로 남음. 여러 주기에 걸친 누적(시각 부재 ↔ 복귀가 번갈아 재무장되는 진동)은 이 상한이 막지 않음 — issues.md I5.
 	sourceAgeAlertsPerCycle = 8
 	// sourceAgeRawLimit 은 해독 불가 원문을 줄 · 알림에 싣는 최대 바이트임(브로커가 보낸 긴 글자를 그대로 퍼뜨리지 않음).
 	sourceAgeRawLimit = 64
@@ -69,7 +72,9 @@ func (o *ExitObserver) reportSourceAge(ctx context.Context, cycle *ExitCycle, st
 	defer func() {
 		if recover() != nil {
 			o.sourceAgeRecovered()
+			return
 		}
+		o.sourceAgePanicLogged = false // 패닉 없이 끝난 보고 — 다음 패닉 연속의 첫 줄을 다시 쓰게 함
 	}()
 	if !o.opts.SourceAgeReport {
 		return // 꺼짐 = a163 이전 동작(줄 · 알림 · 래치 0)
@@ -159,12 +164,22 @@ func sourceAgeAlertable(bucket string) bool {
 	return bucket == sourceAgeMissing || bucket == sourceAgeUnparseable
 }
 
-// sourceAgeRaw 는 해독 불가 원문의 앞 64 바이트임(그 밖의 구간에는 싣지 않음).
+// sourceAgeRaw 는 해독 불가 원문의 앞 64 바이트임(그 밖의 구간에는 싣지 않음). 글자 경계에서 자르고 인쇄 불가 글자(개행 · 제어문자)는
+// '?' 로 바꿈 — 브로커가 보낸 글자가 알림 본문(renderFields → ntfy)에 줄을 끼워 넣거나 깨진 UTF-8 로 전송을 망치지 않게(리뷰 2026-10-22).
 func sourceAgeRaw(raw string) string {
 	if len(raw) > sourceAgeRawLimit {
-		return raw[:sourceAgeRawLimit]
+		cut := sourceAgeRawLimit
+		for cut > 0 && !utf8.RuneStart(raw[cut]) {
+			cut--
+		}
+		raw = raw[:cut]
 	}
-	return raw
+	return strings.Map(func(r rune) rune {
+		if r == utf8.RuneError || !unicode.IsPrint(r) {
+			return '?'
+		}
+		return r
+	}, raw)
 }
 
 // logSourceAge 는 구간 전이 한 줄을 씀. 필드는 design D4 목록뿐 — 계좌 ref 없음(안전 8).
@@ -209,8 +224,13 @@ func (o *ExitObserver) sourceMissingEvent(m managed, bucket, raw string) obs.Eve
 }
 
 // sourceAgeRecovered 는 거둔 패닉의 고정 문구 한 줄임(계좌 · 원문 없음). 이 쓰기 자체의 패닉도 거둠 — 쓰기 대상이 패닉의 원인일 수 있음.
+// 같은 패닉이 매 주기 되풀이되면 연속의 첫 주기에만 씀(전이 줄 정책과 같음 — 5초마다 같은 줄은 관측이 아님). 패닉 없이 끝난 보고가 풂.
 func (o *ExitObserver) sourceAgeRecovered() {
 	defer func() { _ = recover() }()
+	if o.sourceAgePanicLogged {
+		return
+	}
+	o.sourceAgePanicLogged = true
 	if logger := o.opts.SourceAgeLog; logger != nil {
 		logger.Warn(obs.EventExitSourceAge, obs.FieldDetail, sourceAgePanicDetail)
 	}

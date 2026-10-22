@@ -306,6 +306,8 @@ type ExitObserver struct {
 	// sourceAge 는 a163 체결 나이 보고의 포지션별 래치임(position id → 마지막 구간 · 알림함). 지연 초기화 — 재시작하면 잃음.
 	// ObserveOnce 의 goroutine 만 읽고 씀(unobserved 와 같은 소유) — 잠금 없음, concurrent map write 는 recover 로 못 거둠.
 	sourceAge map[string]*sourceAgeRecord
+	// sourceAgePanicLogged 는 거둔 보고 패닉의 고정 문구 줄을 연속의 첫 주기에만 쓰게 하는 래치임(a163, 같은 goroutine 소유).
+	sourceAgePanicLogged bool
 }
 
 // NewExitObserver validates the wiring and snapshots the common selection used

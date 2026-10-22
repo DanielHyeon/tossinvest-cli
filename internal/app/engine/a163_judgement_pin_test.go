@@ -140,13 +140,51 @@ func a163Census(t *testing.T, files []string, name string) map[a163Site]int {
 			}
 			ast.Inspect(decl, func(n ast.Node) bool {
 				if id, ok := n.(*ast.Ident); ok && id.Name == name {
-					counts[a163Site{file: filepath.Base(path), owner: owner}]++
+					counts[a163Site{file: a163RelPath(path), owner: owner}]++
 				}
 				return true
 			})
 		}
 	}
 	return counts
+}
+
+// a163RelPath 는 모듈 루트 기준 경로임(이 시험의 작업 디렉터리는 internal/app/engine). 루트 밖(임시 파일)은 파일 이름만.
+func a163RelPath(path string) string {
+	root, _ := filepath.Abs(filepath.Join("..", "..", ".."))
+	abs, _ := filepath.Abs(path)
+	if rel, err := filepath.Rel(root, abs); err == nil && !strings.HasPrefix(rel, "..") {
+		return filepath.ToSlash(rel)
+	}
+	return filepath.Base(path)
+}
+
+// a163ModuleProductionGoFiles 는 cmd · internal 아래 모든 비시험 Go 파일임(리뷰 2026-10-22: census 를 엔진 · 공식 어댑터에서 모듈 전체로 —
+// domain.Quote.SourceTimestamp 는 진입 · 전략 · flatten 경로의 /prices 소비자에게도 채워지므로 그 읽기도 금지 census 가 셈, design D5).
+func a163ModuleProductionGoFiles(t *testing.T) []string {
+	t.Helper()
+	var out []string
+	for _, top := range []string{"cmd", "internal"} {
+		err := filepath.WalkDir(filepath.Join("..", "..", "..", top), func(path string, d os.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if d.IsDir() && d.Name() == "testdata" {
+				return filepath.SkipDir
+			}
+			if !d.IsDir() && strings.HasSuffix(path, ".go") && !strings.HasSuffix(path, "_test.go") {
+				out = append(out, path)
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("walk %s: %v", top, err)
+		}
+	}
+	if len(out) < 500 {
+		t.Fatalf("only %d production Go files under cmd · internal — the census would be partial", len(out))
+	}
+	return out
 }
 
 func a163ProductionGoFiles(t *testing.T, dir string) []string {
@@ -191,27 +229,27 @@ func a163CheckCensus(t *testing.T, name string, counts map[a163Site]int, allowed
 }
 
 func TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows(t *testing.T) {
-	files := append(a163ProductionGoFiles(t, "."), a163ProductionGoFiles(t, filepath.Join("..", "..", "official"))...)
-	counts := a163Census(t, files, "SourceTimestamp")
+	counts := a163Census(t, a163ModuleProductionGoFiles(t), "SourceTimestamp")
 	a163CheckCensus(t, "SourceTimestamp", counts, map[a163Site]int{
-		{file: "exitloop.go", owner: "type observedQuote"}:   1, // 필드 선언
-		{file: "exitloop.go", owner: "ExitObserver.observe"}: 2, // observedQuote{…} 리터럴의 키 + q.SourceTimestamp
-		{file: "market_reads.go", owner: "adaptPrices"}:      1, // 리터럴 키
-		// 편집 전부터 있던 다른 타입의 같은 이름 필드(a112 L1c 엄격 리더 — 생산 판정 소비자 0, officialbars 만 읽음).
-		// design D7 2 는 「편집 전 출현 0」 이라 적었으나 HEAD 에 넷이 있음(issues.md). 정확한 수로 굳혀 새 출현은 여전히 잡힘.
-		{file: "strict_quote_reads.go", owner: "type StrictLastPrice"}:      1,
-		{file: "strict_quote_reads.go", owner: "type StrictTopOfBook"}:      1,
-		{file: "strict_quote_reads.go", owner: "Client.StrictLastPrice"}:    1,
-		{file: "strict_quote_reads.go", owner: "Client.StrictOrderbookTop"}: 1,
-	}, "exit_source_age.go")
+		{file: "internal/domain/models.go", owner: "type Quote"}:                 1, // 필드 선언
+		{file: "internal/app/engine/exitloop.go", owner: "type observedQuote"}:   1, // 필드 선언
+		{file: "internal/app/engine/exitloop.go", owner: "ExitObserver.observe"}: 2, // observedQuote{…} 리터럴의 키 + q.SourceTimestamp
+		{file: "internal/official/market_reads.go", owner: "adaptPrices"}:        1, // 리터럴 키
+		// 편집 전부터 있던 다른 타입의 같은 이름 필드(a112 L1c 엄격 리더 — 생산 판정 소비자 0).
+		// design D7 2 는 「편집 전 출현 0」 이라 적었으나 HEAD 에 넷이 있음(issues.md I2). 정확한 수로 굳혀 새 출현은 여전히 잡힘.
+		{file: "internal/official/strict_quote_reads.go", owner: "type StrictLastPrice"}:      1,
+		{file: "internal/official/strict_quote_reads.go", owner: "type StrictTopOfBook"}:      1,
+		{file: "internal/official/strict_quote_reads.go", owner: "Client.StrictLastPrice"}:    1,
+		{file: "internal/official/strict_quote_reads.go", owner: "Client.StrictOrderbookTop"}: 1,
+	}, "internal/app/engine/exit_source_age.go")
 }
 
 func TestA163TheReportToggleIsReadOnlyWhereTheDesignAllows(t *testing.T) {
 	counts := a163Census(t, a163ProductionGoFiles(t, "."), "SourceAgeReport")
 	a163CheckCensus(t, "SourceAgeReport", counts, map[a163Site]int{
-		{file: "exitloop.go", owner: "type ExitObserverOptions"}: 1, // 필드 선언
-		{file: "exitwiring.go", owner: "Context.ExitObserver"}:   1, // 생산 배선의 무조건 덮어쓰기
-	}, "exit_source_age.go")
+		{file: "internal/app/engine/exitloop.go", owner: "type ExitObserverOptions"}: 1, // 필드 선언
+		{file: "internal/app/engine/exitwiring.go", owner: "Context.ExitObserver"}:   1, // 생산 배선의 무조건 덮어쓰기
+	}, "internal/app/engine/exit_source_age.go")
 }
 
 // 금지 census 가 실제로 세는지 — 이 시험 파일 자신의 바이트에서 알려진 출현을 찾게 함(무변이 대조군: 계측기가 눈멀면 위 두 시험이

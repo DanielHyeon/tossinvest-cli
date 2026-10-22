@@ -79,7 +79,7 @@ MUTATIONS = [
      "\tif t, perr := time.Parse(time.RFC3339Nano, quote.SourceTimestamp); perr == nil {\n\t\tquote.FetchedAt = t\n\t}\n\tobservationID, err := stableObservationID(o.opts.AccountRef, m, quote, fallback)\n",
      [(ENGINE, "TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange|TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows")]),
     ("⑪", "보고기 recover 경계 제거", AGE,
-     "\tdefer func() {\n\t\tif recover() != nil {\n\t\t\to.sourceAgeRecovered()\n\t\t}\n\t}()\n\tif !o.opts.SourceAgeReport {",
+     "\tdefer func() {\n\t\tif recover() != nil {\n\t\t\to.sourceAgeRecovered()\n\t\t\treturn\n\t\t}\n\t\to.sourceAgePanicLogged = false // 패닉 없이 끝난 보고 — 다음 패닉 연속의 첫 줄을 다시 쓰게 함\n\t}()\n\tif !o.opts.SourceAgeReport {",
      "\tif !o.opts.SourceAgeReport {",
      [(ENGINE, "TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops")]),
     ("⑫", "engineRuntime 의 SourceAgeLog 배선 삭제", "cmd/tossctl/engine.go",
@@ -139,6 +139,27 @@ MUTATIONS = [
      "\tfor _, state := range states {\n\t\tquote, ok := quotes[",
      "\tif !o.opts.SourceAgeReport {\n\t\to.settleUnobserved(ctx, &cycle)\n\t\treturn cycle\n\t}\n\tfor _, state := range states {\n\t\tquote, ok := quotes[",
      [(ENGINE, "TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn|TestA163TheReportToggleIsReadOnlyWhereTheDesignAllows|TestA163AStaleBrokerTimeStillLiquidatesInTheSameCycle")]),
+    # --- gstack 리뷰(2026-10-22) 처분으로 더한 변이 ---
+    ("㉓", "거둔 패닉의 고정 문구 줄 삭제(흔적 없는 패닉)", AGE,
+     "\t\t\to.sourceAgeRecovered()\n",
+     "",
+     [(ENGINE, "TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops")]),
+    ("㉔", "고정 문구 줄 래치 삭제(매 주기 같은 줄)", AGE,
+     "\tif o.sourceAgePanicLogged {\n\t\treturn\n\t}\n",
+     "",
+     [(ENGINE, "TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops")]),
+    ("㉕", "미래(ahead) 구간도 알림 사유로", AGE,
+     "\treturn bucket == sourceAgeMissing || bucket == sourceAgeUnparseable\n",
+     "\treturn bucket == sourceAgeMissing || bucket == sourceAgeUnparseable || bucket == sourceAgeAhead\n",
+     [(ENGINE, "TestA163EveryBucketIsClassifiedFromTheReceiptTime")]),
+    ("㉖", "원문 정화 삭제(바이트 자르기 · 제어문자 통과)", AGE,
+     "\treturn strings.Map(func(r rune) rune {",
+     "\tif len(raw) >= 0 {\n\t\treturn raw\n\t}\n\treturn strings.Map(func(r rune) rune {",
+     [(ENGINE, "TestA163TheRawBrokerTimeIsBoundedPrintableAndValidUTF8")]),
+    ("㉗", "비상 청산(flatten) 경로가 브로커 시각을 읽음", "internal/flatten/liquidate.go",
+     "\t\t\tif !strings.EqualFold(strings.TrimSpace(q.Symbol), symbol) || q.Last <= 0 {\n",
+     "\t\t\tif !strings.EqualFold(strings.TrimSpace(q.Symbol), symbol) || q.Last <= 0 || q.SourceTimestamp == \"\" {\n",
+     [(ENGINE, "TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows")]),
 ]
 
 
@@ -148,7 +169,7 @@ def sha(path: Path) -> str:
 
 def run_tests(copy: Path, pkg: str, pattern: str) -> tuple[int, str]:
     env = dict(os.environ, GOFLAGS="-trimpath")
-    proc = subprocess.run(["go", "test", "-count=1", "-timeout", "15m", "-run", pattern, pkg],
+    proc = subprocess.run(["go", "test", "-count=1", "-timeout", "4m", "-run", pattern, pkg],
                           cwd=copy, env=env, capture_output=True, text=True)
     out = proc.stdout + proc.stderr
     failed = sorted({line.split()[2] for line in out.splitlines() if line.lstrip().startswith("--- FAIL:")})

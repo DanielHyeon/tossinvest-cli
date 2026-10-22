@@ -1,6 +1,6 @@
 # Function Logic Map: `ExitObserver.ObserveOnce`
 
-- Source: `internal/app/engine/exitloop.go` (467-539)
+- Source: `internal/app/engine/exitloop.go` (469-541)
 - AST evidence: `ast.json`
 - Risk scan: `risk-pattern-report.md`
 - 기준: 편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`
@@ -19,16 +19,16 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | if 475 `if o.opts.SLO != nil && o.opts.SLO.FillDetectionBehind() {` | `cycle.Deferred`, `checkOutage` | `return cycle` | 기존 시험 |
-| B2 | if 485 `if err != nil {` | `cycle.Err` | `return cycle` | 기존 시험 |
-| B3 | if 489 `if len(states) == 0 {` | `settleUnobserved`, 두절 시계 리셋 | `return cycle` | 기존 시험 |
-| B4 | if 502 `if err != nil {` | `cycle.Err`, `checkOutage` | `return cycle` | `TestAFailedObservationHoldsTheJudgement` |
-| B5 | range 511 `for _, state := range states {` | 판정 순회 | — | 기존 시험 |
-| B6 | if 513 `if !ok {` | `noteUnobservedCause(no_quote)` | `continue` | `TestA090R2AnAbsentSiblingIsCountedLikeAZeroQuote` |
-| B7 | if 521 `if !o.quoteUsable(quote) {` | `noteUnobservedCause(quote_expired)` | `continue` | `TestA090R7AQuoteThatExpiredMidCycleIsCountedAsExpired` |
-| B8 | if 529 `if err := o.judge(ctx, state, quote, observation, &cycle); err != nil && cycle.Err == nil {` | `cycle.Err` 첫 오류만 | — | 기존 시험 |
+| B1 | if 477 `if o.opts.SLO != nil && o.opts.SLO.FillDetectionBehind() {` | `cycle.Deferred`, `checkOutage` | `return cycle` | 기존 시험 |
+| B2 | if 487 `if err != nil {` | `cycle.Err` | `return cycle` | 기존 시험 |
+| B3 | if 491 `if len(states) == 0 {` | `settleUnobserved`, 두절 시계 리셋 | `return cycle` | 기존 시험 |
+| B4 | if 504 `if err != nil {` | `cycle.Err`, `checkOutage` | `return cycle` | `TestAFailedObservationHoldsTheJudgement` |
+| B5 | range 513 `for _, state := range states {` | 판정 순회 | — | 기존 시험 |
+| B6 | if 515 `if !ok {` | `noteUnobservedCause(no_quote)` | `continue` | `TestA090R2AnAbsentSiblingIsCountedLikeAZeroQuote` |
+| B7 | if 523 `if !o.quoteUsable(quote) {` | `noteUnobservedCause(quote_expired)` | `continue` | `TestA090R7AQuoteThatExpiredMidCycleIsCountedAsExpired` |
+| B8 | if 531 `if err := o.judge(ctx, state, quote, observation, &cycle); err != nil && cycle.Err == nil {` | `cycle.Err` 첫 오류만 | — | 기존 시험 |
 
-반환 좌표(AST): 481 · 487 · 499 · 505 · 538
+반환 좌표(AST): 483 · 489 · 501 · 507 · 540
 
 ## Calls and live bindings
 

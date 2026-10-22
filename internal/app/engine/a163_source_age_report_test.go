@@ -259,6 +259,33 @@ func TestA163AtMostEightSourceAlertsLeaveInOneCycle(t *testing.T) {
 	}
 }
 
+// 부재 → 해독 불가는 같은 사유(source_missing)라 다시 알리지 않음(spec 「같은 사유는 한 번만」) — 구간 줄은 남음.
+func TestA163MissingThenUnparseableIsOneReason(t *testing.T) {
+	f := a163Setup(t, true, nil)
+	f.entry("005930", "10", "70000", "68000", "70000")
+	f.quote("005930", 70100)
+	f.stamps["005930"] = ""
+	f.cycle()
+	f.stamps["005930"] = "garbage"
+	f.cycle()
+	if got := len(f.missingAlerts()); got != 1 {
+		t.Fatalf("alerts across missing → unparseable = %d, want 1 — one reason, one alert until a time arrives", got)
+	}
+	if got := f.bucketsOf("005930"); fmt.Sprint(got) != "[missing unparseable]" {
+		t.Fatalf("buckets = %v, want the change logged", got)
+	}
+}
+
+// 구간 이름 le_15s 와 주기 상한 8(= 64 의 1/8)은 다른 패키지의 상수에서 왔음 — 그 상수가 움직이면 이름 · 주석이 거짓이 되므로 못 박음.
+func TestA163TheBucketNamesStillMatchTheirSourceConstants(t *testing.T) {
+	if execgw.QueryPriceEvidenceDuration != 15*time.Second {
+		t.Fatalf("QueryPriceEvidenceDuration = %s — the le_15s bucket name no longer says what it measures", execgw.QueryPriceEvidenceDuration)
+	}
+	if obs.DefaultNormalRelayCapacity != 64 {
+		t.Fatalf("DefaultNormalRelayCapacity = %d — the 8-per-cycle cap was approved as 1/8 of 64", obs.DefaultNormalRelayCapacity)
+	}
+}
+
 // --- 2.7 순서 -------------------------------------------------------------------
 
 // a163OrderProbe 는 첫 source_missing 알림 순간의 제출 수를 적음.
@@ -493,6 +520,22 @@ func TestA163EveryBucketIsClassifiedFromTheReceiptTime(t *testing.T) {
 	for _, c := range cases {
 		if got := f.bucketsOf(c.symbol); fmt.Sprint(got) != "["+c.want+"]" {
 			t.Errorf("%s (%q) buckets = %v, want [%s]", c.symbol, f.stamps[c.symbol], got, c.want)
+		}
+	}
+	// 알림은 부재 · 해독 불가 둘뿐 — 묵음 · 미래(ahead) · 신선 구간은 로그만(H1 · H4).
+	for _, c := range cases {
+		want := 0
+		if c.want == "missing" || c.want == "unparseable" {
+			want = 1
+		}
+		got := 0
+		for _, e := range f.missingAlerts() {
+			if e.Fields[obs.FieldSymbol] == c.symbol {
+				got++
+			}
+		}
+		if got != want {
+			t.Errorf("%s (%s) alerts = %d, want %d", c.symbol, c.want, got, want)
 		}
 	}
 	// 받은 시각이 비어 사이클 대체로 잰 나이 — 0 시각으로 재면 거대 음수가 되어 ahead 로 떨어짐(P3-4).
