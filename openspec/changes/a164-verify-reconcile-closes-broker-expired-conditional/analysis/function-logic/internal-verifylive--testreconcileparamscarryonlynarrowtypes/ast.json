@@ -1,0 +1,325 @@
+{
+  "file": "internal/verifylive/reconcile_seal_test.go",
+  "source_sha256": "425387b8af8ff54abfa983d70097efe98bc5a63c78f70dbe95405437c2b489d5",
+  "package": "verifylive",
+  "function": "TestReconcileParamsCarryOnlyNarrowTypes",
+  "signature": "TestReconcileParamsCarryOnlyNarrowTypes(params=1, results=0)",
+  "start": {
+    "line": 108,
+    "column": 1
+  },
+  "end": {
+    "line": 133,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "for",
+      "at": {
+        "line": 119,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 121,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 124,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 114,
+        "column": 67
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 115,
+        "column": 37
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 129,
+        "column": 72
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 130,
+        "column": 41
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 3
+      },
+      "text": "reflect.TypeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 3
+      },
+      "text": "Elem"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 3
+      },
+      "text": "reflect.TypeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 18
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 3
+      },
+      "text": "reflect.TypeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 3
+      },
+      "text": "Elem"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 3
+      },
+      "text": "reflect.TypeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 18
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 3
+      },
+      "text": "reflect.TypeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 3
+      },
+      "text": "reflect.TypeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 3
+      },
+      "text": "reflect.TypeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 19
+      },
+      "text": "typ.NumField"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 9
+      },
+      "text": "typ.Field"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 77
+      },
+      "text": "typ.Name"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 8
+      },
+      "text": "ok"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 59
+      },
+      "text": "typ.Name"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 2
+      },
+      "text": "check"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 8
+      },
+      "text": "reflect.TypeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 48
+      },
+      "text": "ft.Kind"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 79
+      },
+      "text": "ft.Kind"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 2
+      },
+      "text": "check"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 8
+      },
+      "text": "reflect.TypeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 2
+      },
+      "text": "check"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 8
+      },
+      "text": "reflect.TypeOf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 109,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 119,
+        "column": 7
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 119,
+        "column": 35
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 120,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

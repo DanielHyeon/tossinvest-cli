@@ -1,0 +1,103 @@
+{
+  "file": "internal/verifylive/reconcile_check.go",
+  "source_sha256": "2546999c3f878b39be8f34b6eb5f5d8483e0c3d496e323630245d99750c179cf",
+  "package": "verifylive",
+  "function": "WriteText",
+  "receiver": "ReconcileApproval",
+  "signature": "ReconcileApproval.WriteText(params=1, results=1)",
+  "start": {
+    "line": 413,
+    "column": 1
+  },
+  "end": {
+    "line": 423,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 422,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 415,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 416,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 417,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 418,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 419,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 420,
+        "column": 2
+      },
+      "text": "fmt.Fprintln"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 421,
+        "column": 12
+      },
+      "text": "io.WriteString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 421,
+        "column": 30
+      },
+      "text": "b.String"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 421,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

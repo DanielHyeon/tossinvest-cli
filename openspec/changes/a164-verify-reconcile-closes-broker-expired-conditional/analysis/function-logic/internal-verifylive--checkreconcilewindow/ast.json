@@ -1,15 +1,15 @@
 {
   "file": "internal/verifylive/reconcile_check.go",
-  "source_sha256": "2546999c3f878b39be8f34b6eb5f5d8483e0c3d496e323630245d99750c179cf",
+  "source_sha256": "4211d94e33e07b9fb4e4d2f5b5da665611a9cda8ab07bc7ddb6ac0be29a85188",
   "package": "verifylive",
   "function": "checkReconcileWindow",
-  "signature": "checkReconcileWindow(params=3, results=1)",
+  "signature": "checkReconcileWindow(params=4, results=1)",
   "start": {
-    "line": 136,
+    "line": 139,
     "column": 1
   },
   "end": {
-    "line": 143,
+    "line": 149,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,15 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 138,
+        "line": 141,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 145,
         "column": 2
       }
     }
@@ -26,14 +34,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 139,
+        "line": 142,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 142,
+        "line": 146,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 148,
         "column": 2
       }
     }
@@ -42,7 +57,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 137,
+        "line": 140,
         "column": 13
       },
       "text": "now.Sub"
@@ -50,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 139,
+        "line": 142,
         "column": 10
       },
       "text": "refuse"
@@ -58,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 140,
+        "line": 143,
         "column": 4
       },
       "text": "fmt.Sprintf"
@@ -66,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 142,
+        "line": 148,
         "column": 9
       },
       "text": "checkReconcileRetention"
@@ -76,7 +91,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 137,
+        "line": 140,
         "column": 2
       }
     }

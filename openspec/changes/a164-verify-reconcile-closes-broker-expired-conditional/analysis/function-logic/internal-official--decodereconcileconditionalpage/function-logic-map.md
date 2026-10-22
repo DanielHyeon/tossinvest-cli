@@ -1,9 +1,9 @@
 # Function Logic Map: `DecodeReconcileConditionalPage`
 
-- Source: `internal/official/reconcile_reads.go` (134-151)
+- Source: `internal/official/reconcile_reads.go` (136-153)
 - Qualified function: `DecodeReconcileConditionalPage`
-- Revision: `current` (구현 base `aec9bde67`, `source_sha256` 3fca84976dedd94e…)
-- AST evidence: `ast.json` — AST branches 3, 반환 3(줄 137, 143, 150), 호출 이름 6
+- Revision: `current` (구현 base `aec9bde67`, `source_sha256` bebc899ee1c6b99e…)
+- AST evidence: `ast.json` — AST branches 3, 반환 3(줄 139, 145, 152), 호출 이름 6
 - Risk scan: `risk-pattern-report.md`
 - 이 change 에서의 역할: 목록 행 엄격 해독. a164 는 행에 `FirstStatus` 한 필드 대입을 더함(P2-3) — 부재 모드는 그 필드를 읽지 않음.
 
@@ -20,9 +20,9 @@ AST 열거 순서 그대로다. 「Required test」 칸은 손으로 고르지 �
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | if 줄 136: `if err != nil {` | 없음 | `return ReconcileConditionalPage{}, err` | `TestDecodeReconcileConditionalPageRefusesSchemaHoles` · `TestDecodeReconcilePageNamesTheGuardThatRefused` · `TestReconcileClientReadsRefuseANullResult` |
-| B2 | range 줄 140: `for i, raw := range env.rows {` | 없음 | `var o apiConditionalOrder` | `TestDecodeReconcileConditionalPageKeepsTheSecondLegAndTheTrigger` |
-| B3 | if 줄 142: `if err := json.Unmarshal(raw, &o); err != nil {` | 없음 | `return ReconcileConditionalPage{}, reconcileSchema("conditionalOrders[%d] does not decode: %v", i, err)` | 미덮임(시험별 coverage 측정 0) — 행 객체가 `apiConditionalOrder` 로 안 풀리는 경우(예: 필드 형 불일치) — 기존 공백 |
+| B1 | if 줄 138: `if err != nil {` | 없음 | `return ReconcileConditionalPage{}, err` | `TestDecodeReconcileConditionalPageRefusesSchemaHoles` · `TestDecodeReconcilePageNamesTheGuardThatRefused` · `TestReconcileClientReadsRefuseANullResult` |
+| B2 | range 줄 142: `for i, raw := range env.rows {` | 없음 | `var o apiConditionalOrder` | `TestDecodeReconcileConditionalPageKeepsTheSecondLegAndTheTrigger` |
+| B3 | if 줄 144: `if err := json.Unmarshal(raw, &o); err != nil {` | 없음 | `return ReconcileConditionalPage{}, reconcileSchema("conditionalOrders[%d] does not decode: %v", i, err)` | 미덮임(시험별 coverage 측정 0) — 행 객체가 `apiConditionalOrder` 로 안 풀리는 경우(예: 필드 형 불일치) — 기존 공백 |
 
 ## Calls and live bindings
 
@@ -41,3 +41,9 @@ AST 호출 이름 전체: `append`, `decodeReconcileEnvelope`, `json.Unmarshal`,
 
 - Safe edit boundary: 대입 한 줄에 `FirstStatus: o.First.Status` 만.
 - High-risk impact: 인접 — 만료 모드 A4 의 CLOSED 행 leg 검사 입력.
+
+## a164 GREEN 재추출
+
+- 편집 전(구현 base `aec9bde67`) 분기 열 길이 3 에서 편집 뒤 3 로. `source_sha256` 3fca84976ded… → bebc899ee1c6….
+- 옛/새 분기 열(kind + 원문 줄)을 difflib 으로 정렬한 결과: equal 옛 B1..B3 = 새 B1..B3.
+- 위 표의 B 번호는 **새** AST 기준이고, 시험 칸은 GREEN 코드에서 시험별 프로필을 다시 떠 측정한 값이다(손 재번호 없음).

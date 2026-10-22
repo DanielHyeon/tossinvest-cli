@@ -23,7 +23,7 @@ def taken(f, line, col):
         text = src[ln - 1].rstrip()
         if text.endswith("{"):
             brace = len(text)  # 1 기반 열의 `{`
-            return sorted({t for c, t in hits.get((f, ln), []) if c >= brace})
+            return sorted({t for c, t in hits.get((f, ln), []) if c >= brace - 1})  # else 블록은 `{` 앞 칸에서 시작함(실측)
     return []
 out = {}
 for d in sorted(os.listdir(fl)):

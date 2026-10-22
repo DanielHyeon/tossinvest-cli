@@ -1,15 +1,15 @@
 {
   "file": "cmd/tossctl/verify_reconcile.go",
-  "source_sha256": "82787649cc4147d15b9abf3e44457d6c7c0afe9c7cd0866c63da6db87f73277b",
+  "source_sha256": "4008a00b6a32f2da1a15092a10f14280d3de718537b5b652401e2bdbf032535a",
   "package": "main",
   "function": "newVerifyReconcileCmd",
   "signature": "newVerifyReconcileCmd(params=1, results=1)",
   "start": {
-    "line": 42,
+    "line": 44,
     "column": 1
   },
   "end": {
-    "line": 70,
+    "line": 79,
     "column": 2
   },
   "branches": null,
@@ -17,14 +17,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 63,
+        "line": 70,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 69,
+        "line": 78,
         "column": 2
       }
     }
@@ -33,7 +33,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 47,
+        "line": 49,
         "column": 9
       },
       "text": "strings.TrimSpace"
@@ -41,7 +41,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 63,
+        "line": 70,
         "column": 11
       },
       "text": "runVerifyReconcile"
@@ -49,7 +49,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 66,
+        "line": 73,
         "column": 2
       },
       "text": "StringVar"
@@ -57,7 +57,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 66,
+        "line": 73,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -65,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 67,
+        "line": 74,
         "column": 2
       },
       "text": "StringVar"
@@ -73,7 +73,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 67,
+        "line": 74,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 2
+      },
+      "text": "BoolVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -83,14 +99,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 43,
+        "line": 45,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 44,
+        "line": 46,
         "column": 2
       }
     }

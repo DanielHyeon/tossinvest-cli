@@ -1,17 +1,14 @@
 # Branch Test Map: `checkReconcileAbsence`
 
-- Source: `internal/verifylive/reconcile_check.go` (371-396)
-- AST branches 7 — 시험 칸은 시험별 coverage 측정(본문 블록 실행)으로 채움
+- Source: `internal/verifylive/reconcile_check.go` (379-394)
+- AST branches 4 — 시험 칸은 시험별 coverage 측정(본문 블록 실행)으로 채움
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if 줄 372: `if len(r.condOpen) > 0 {` | `TestReconcileRefusesALiveSuccessorInTheOpenConditionalGroup` | 해당 없음 — 편집 전 기준선 | 기준선 통과(측정, 아래 「측정」) |
-| B2 | if 줄 376: `if len(r.plainOpen) > 0 {` | `TestReconcileRefusesAnyOpenPlainOrderOnTheSymbol` | 해당 없음 — 편집 전 기준선 | 기준선 통과(측정, 아래 「측정」) |
-| B3 | range 줄 380: `for _, row := range r.closed {` | `TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt` · `TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt` · `TestReconcileRefusesAnotherIdentifierThatFiredInClosed` · `TestReconcileRefusesClosedStatusOutsideTheAllowlist` 외 2 | 해당 없음 — 편집 전 기준선 | 기준선 통과(측정, 아래 「측정」) |
-| B4 | if 줄 381: `if row.ID != target.ID {` | `TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt` · `TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt` · `TestReconcileRefusesAnotherIdentifierThatFiredInClosed` · `TestReconcileRefusesClosedStatusOutsideTheAllowlist` | 해당 없음 — 편집 전 기준선 | 기준선 통과(측정, 아래 「측정」) |
-| B5 | if 줄 384: `if row.Status == "EXPIRED" {` | `TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage` | 해당 없음 — 편집 전 기준선 | 기준선 통과(측정, 아래 「측정」) |
-| B6 | range 줄 390: `for _, row := range r.closed {` | `TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt` · `TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt` · `TestReconcileRefusesAnotherIdentifierThatFiredInClosed` · `TestReconcileRefusesClosedStatusOutsideTheAllowlist` | 해당 없음 — 편집 전 기준선 | 기준선 통과(측정, 아래 「측정」) |
-| B7 | if 줄 391: `if row.TriggeredOrderID != "" \|\| row.Status == "COMPLETED" {` | `TestReconcileRefusesAnotherIdentifierThatFiredInClosed` | 해당 없음 — 편집 전 기준선 | 기준선 통과(측정, 아래 「측정」) |
+| B1 | if 줄 380: `if err := checkReconcileNoLiveOrder(r); err != nil {` | `TestReconcileAbsenceGuardsRefuseInTheirContractOrder` · `TestReconcileRefusesALiveSuccessorInTheOpenConditionalGroup` · `TestReconcileRefusesAnyOpenPlainOrderOnTheSymbol` | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B2 | range 줄 383: `for _, row := range r.closed {` | `TestReconcileAbsenceGuardsRefuseInTheirContractOrder` · `TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt` · `TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt` · `TestReconcileRefusesAnotherIdentifierThatFiredInClosed` 외 3 | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B3 | if 줄 384: `if row.ID != target.ID {` | `TestReconcileAbsenceGuardsRefuseInTheirContractOrder` · `TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt` · `TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt` · `TestReconcileRefusesAnotherIdentifierThatFiredInClosed` 외 1 | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B4 | if 줄 387: `if row.Status == "EXPIRED" {` | `TestReconcileAbsenceGuardsRefuseInTheirContractOrder` · `TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage` | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
 
 ## 측정
 
@@ -19,3 +16,9 @@
   `reconcile_*_test.go`·`record_filled_test.go`·`record_replay_test.go`·`report_test.go`, official 의 `reconcile_reads*_test.go`,
   cmd 의 `verify_reconcile*_test.go` 를 `-tags tossos_testseams` 로) 돌려 279 시험 프로필을 얻고, 분기 줄의 본문 `{` 블록 실행 수가
   0 보다 큰 시험만 적었다. 기준선 스위트는 verifylive 634 · official 455 · cmd(Reconcile 계열) 62 전부 통과.
+
+## a164 GREEN 재추출
+
+- 편집 전(구현 base `aec9bde67`) 분기 열 길이 7 에서 편집 뒤 4 로. `source_sha256` 2546999c3f87… → 4211d94e33e0….
+- 옛/새 분기 열(kind + 원문 줄)을 difflib 으로 정렬한 결과: replace 옛 B1..B2(2) → 새 B1..B1(1) · equal 옛 B3..B5 = 새 B2..B4 · delete 옛 B6..B7(2) → 새 B5..B4(0).
+- 위 표의 B 번호는 **새** AST 기준이고, 시험 칸은 GREEN 코드에서 시험별 프로필을 다시 떠 측정한 값이다(손 재번호 없음).

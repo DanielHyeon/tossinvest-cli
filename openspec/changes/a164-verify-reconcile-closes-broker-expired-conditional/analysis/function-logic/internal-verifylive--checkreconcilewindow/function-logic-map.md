@@ -1,11 +1,11 @@
 # Function Logic Map: `checkReconcileWindow`
 
-- Source: `internal/verifylive/reconcile_check.go` (136-143)
+- Source: `internal/verifylive/reconcile_check.go` (139-149)
 - Qualified function: `checkReconcileWindow`
-- Revision: `current` (구현 base `aec9bde67`, `source_sha256` 2546999c3f878b39…)
-- AST evidence: `ast.json` — AST branches 1, 반환 2(줄 139, 142), 호출 이름 4
+- Revision: `current` (구현 base `aec9bde67`, `source_sha256` 4211d94e33e07b9f…)
+- AST evidence: `ast.json` — AST branches 2, 반환 3(줄 142, 146, 148), 호출 이름 4
 - Risk scan: `risk-pattern-report.md`
-- 이 change 에서의 역할: Q3 창 + Q1 나이 재검. a164 는 만료 모드에서 Q1 재검을 건너뛰는 모드 인자를 더함(design D7 — 만료 모드는 Q1 을 부르지 않음).
+- 이 change 에서의 역할: Q3 창 + Q1 나이 재검. a164 편집: 모드 인자 `expired` — 참이면 Q1 재검을 건너뜀(B2, design D7).
 
 ## Inputs and invariants
 
@@ -21,7 +21,8 @@ AST 열거 순서 그대로다. 「Required test」 칸은 손으로 고르지 �
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | if 줄 138: `if elapsed < 0 \|\| elapsed > reconcileFreshnessBound {` | 없음 | `return refuse(RefuseFreshnessExceeded,` | `TestReconcileFreshnessWindowCoversAppendAdmission` · `TestReconcileRefusesWhenThePairExceedsTheFreshnessBound` |
+| B1 | if 줄 141: `if elapsed < 0 \|\| elapsed > reconcileFreshnessBound {` | 없음 | `return refuse(RefuseFreshnessExceeded,` | `TestExpiryReconcileWindowStartsBeforeTheFirstByIDRead` · `TestReconcileFreshnessWindowCoversAppendAdmission` · `TestReconcileRefusesAtTheWriteBoundaryGateItself` · `TestReconcileRefusesWhenThePairExceedsTheFreshnessBound` |
+| B2 | if 줄 145: `if expired {` | 없음 | `return nil` | `TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding` · `TestExpiryReconcileAcceptsATerminalChainSibling` · `TestExpiryReconcileAcceptsAnotherIdentifiersExpiredClosedRow` · `TestExpiryReconcileAcceptsTwoStatementsAndAnExpiredClosedRow` 외 11 |
 
 ## Calls and live bindings
 
@@ -39,3 +40,9 @@ AST 호출 이름 전체: `checkReconcileRetention`, `fmt.Sprintf`, `now.Sub`, `
 
 - Safe edit boundary: 부재 모드(인자 거짓)는 지금과 같은 두 판정을 같은 순서로.
 - High-risk impact: 인접 — Q1 을 만료 모드에서 다시 부르면 수락 경로가 죽음(변이 4.7), 부재 모드에서 건너뛰면 부재 대사가 열림(변이 4.7 둘째).
+
+## a164 GREEN 재추출
+
+- 편집 전(구현 base `aec9bde67`) 분기 열 길이 1 에서 편집 뒤 2 로. `source_sha256` 2546999c3f87… → 4211d94e33e0….
+- 옛/새 분기 열(kind + 원문 줄)을 difflib 으로 정렬한 결과: equal 옛 B1..B1 = 새 B1..B1 · insert 옛 B2..B1(0) → 새 B2..B2(1).
+- 위 표의 B 번호는 **새** AST 기준이고, 시험 칸은 GREEN 코드에서 시험별 프로필을 다시 떠 측정한 값이다(손 재번호 없음).

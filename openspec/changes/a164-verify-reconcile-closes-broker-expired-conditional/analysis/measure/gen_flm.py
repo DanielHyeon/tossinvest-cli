@@ -24,7 +24,13 @@ for d in sorted(os.listdir(FL)):
     items = [(f"B{i}", b) for i, b in enumerate(br, 1)] or [("B1", None)]
     for bid, b in items:
         tests = cov[d].get(bid, [])
+        selfrun = False
+        if not tests and n.get("cover", {}).get(bid):
+            # 시험 파일의 함수는 coverprofile 이 계측하지 않음 — 그 함수를 실행하는 시험(자기 자신 포함)의 PASS 가 증거.
+            tests, selfrun = n["cover"][bid], True
         cited = " · ".join(f"`{t}`" for t in tests[:4]) + (f" 외 {len(tests)-4}" if len(tests) > 4 else "")
+        if selfrun:
+            cited += " (시험 파일 함수 — coverprofile 계측 밖, 실행 PASS 가 증거)"
         if not tests:
             cited = "미덮임(시험별 coverage 측정 0) — " + n.get("uncovered", {}).get(bid, "기존 공백")
         if b is None:

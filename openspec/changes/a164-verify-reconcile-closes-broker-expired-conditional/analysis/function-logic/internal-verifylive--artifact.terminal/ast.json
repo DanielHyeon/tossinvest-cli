@@ -1,25 +1,25 @@
 {
   "file": "internal/verifylive/record.go",
-  "source_sha256": "9a289d21048578d838450ed55f418e1c7b57ad0890b5ca1effc958b0b21f8ad6",
+  "source_sha256": "3382ef456fedbef82e0c7f56f98e6b75c59e679ad1847d01c258db61da987414",
   "package": "verifylive",
   "function": "terminal",
   "receiver": "Artifact",
   "signature": "Artifact.terminal(params=0, results=1)",
   "start": {
-    "line": 736,
+    "line": 742,
     "column": 1
   },
   "end": {
-    "line": 736,
-    "column": 91
+    "line": 744,
+    "column": 2
   },
   "branches": null,
   "returns": [
     {
       "kind": "return",
       "at": {
-        "line": 736,
-        "column": 37
+        "line": 743,
+        "column": 2
       }
     }
   ],

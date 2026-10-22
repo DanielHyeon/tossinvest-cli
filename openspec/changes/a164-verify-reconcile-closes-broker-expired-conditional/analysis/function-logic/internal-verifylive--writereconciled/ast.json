@@ -1,6 +1,6 @@
 {
   "file": "internal/verifylive/report.go",
-  "source_sha256": "e96b2103cb0c4d3992027945fe644677dc39e5cf90c5ee784edb91ff6dd9518b",
+  "source_sha256": "f851d8119375e13ac5a3b4c890050b9b263431f19e7a97e439505361bd6f3182",
   "package": "verifylive",
   "function": "writeReconciled",
   "signature": "writeReconciled(params=2, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 307,
+    "line": 312,
     "column": 2
   },
   "branches": [
@@ -27,6 +27,14 @@
       "at": {
         "line": 304,
         "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 307,
+        "column": 3
       }
     }
   ],
@@ -60,20 +68,35 @@
       "kind": "call",
       "at": {
         "line": 303,
-        "column": 148
+        "column": 123
       },
       "text": "len"
     },
     {
       "kind": "call",
       "at": {
-        "line": 305,
+        "line": 310,
         "column": 3
       },
       "text": "fmt.Fprintf"
     }
   ],
-  "assignments": null,
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 306,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 308,
+        "column": 4
+      }
+    }
+  ],
   "go_statements": null,
   "defers": null
 }

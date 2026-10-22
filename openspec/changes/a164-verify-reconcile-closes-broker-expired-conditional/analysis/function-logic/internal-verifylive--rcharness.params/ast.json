@@ -1,0 +1,109 @@
+{
+  "file": "internal/verifylive/reconcile_fixture_test.go",
+  "source_sha256": "bb3af371cc0bf0cd0e770d32b7b536c32adbd35ec09ad0a54c7ffbeb410b0fdd",
+  "package": "verifylive",
+  "function": "params",
+  "receiver": "rcHarness",
+  "signature": "rcHarness.params(params=0, results=1)",
+  "start": {
+    "line": 370,
+    "column": 1
+  },
+  "end": {
+    "line": 389,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 383,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 371,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 386,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 380,
+        "column": 18
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 381,
+        "column": 22
+      },
+      "text": "h.out.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 382,
+        "column": 28
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 382,
+        "column": 32
+      },
+      "text": "h.reader.listCalls"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 5
+      },
+      "text": "h.onApprove"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 380,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 381,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 382,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

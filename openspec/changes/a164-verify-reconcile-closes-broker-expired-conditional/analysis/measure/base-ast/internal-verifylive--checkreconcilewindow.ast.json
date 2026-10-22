@@ -1,0 +1,86 @@
+{
+  "file": "internal/verifylive/reconcile_check.go",
+  "source_sha256": "2546999c3f878b39be8f34b6eb5f5d8483e0c3d496e323630245d99750c179cf",
+  "package": "verifylive",
+  "function": "checkReconcileWindow",
+  "signature": "checkReconcileWindow(params=3, results=1)",
+  "start": {
+    "line": 136,
+    "column": 1
+  },
+  "end": {
+    "line": 143,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 139,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 142,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 13
+      },
+      "text": "now.Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 10
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 4
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 9
+      },
+      "text": "checkReconcileRetention"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

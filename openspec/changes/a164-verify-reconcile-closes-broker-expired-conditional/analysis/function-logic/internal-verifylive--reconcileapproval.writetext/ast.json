@@ -1,24 +1,41 @@
 {
   "file": "internal/verifylive/reconcile_check.go",
-  "source_sha256": "2546999c3f878b39be8f34b6eb5f5d8483e0c3d496e323630245d99750c179cf",
+  "source_sha256": "4211d94e33e07b9fb4e4d2f5b5da665611a9cda8ab07bc7ddb6ac0be29a85188",
   "package": "verifylive",
   "function": "WriteText",
   "receiver": "ReconcileApproval",
   "signature": "ReconcileApproval.WriteText(params=1, results=1)",
   "start": {
-    "line": 413,
+    "line": 436,
     "column": 1
   },
   "end": {
-    "line": 423,
+    "line": 452,
     "column": 2
   },
-  "branches": null,
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 438,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "else",
+      "at": {
+        "line": 442,
+        "column": 9
+      }
+    }
+  ],
   "returns": [
     {
       "kind": "return",
       "at": {
-        "line": 422,
+        "line": 451,
         "column": 2
       }
     }
@@ -27,7 +44,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 415,
+        "line": 440,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 3
+      },
+      "text": "fmt.Fprintln"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 445,
         "column": 2
       },
       "text": "fmt.Fprintf"
@@ -35,7 +76,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 416,
+        "line": 446,
         "column": 2
       },
       "text": "fmt.Fprintf"
@@ -43,7 +84,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 417,
+        "line": 447,
         "column": 2
       },
       "text": "fmt.Fprintf"
@@ -51,7 +92,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 418,
+        "line": 448,
         "column": 2
       },
       "text": "fmt.Fprintf"
@@ -59,15 +100,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 419,
-        "column": 2
-      },
-      "text": "fmt.Fprintf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 420,
+        "line": 449,
         "column": 2
       },
       "text": "fmt.Fprintln"
@@ -75,7 +108,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 421,
+        "line": 450,
         "column": 12
       },
       "text": "io.WriteString"
@@ -83,7 +116,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 421,
+        "line": 450,
         "column": 30
       },
       "text": "b.String"
@@ -93,7 +126,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 421,
+        "line": 450,
         "column": 2
       }
     }

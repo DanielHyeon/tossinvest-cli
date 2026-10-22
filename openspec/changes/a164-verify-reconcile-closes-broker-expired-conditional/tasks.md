@@ -99,7 +99,8 @@
       — GREEN — `checkReconcileExpiry`(A5 → A3 → A4 → A7 → A6) · `checkReconcileByIDPair`(A2) · 어휘 H5 · 보조 함수 `checkReconcileNoLiveOrder`·`checkReconcileNoFiredTrace` 추출(부재 순서 불변, 1.2 시험 GREEN)
 - [x] 3.3 `record.go`·`reconcile_record.go`·`projection_reconciled.go`·`report.go`·`reconcile.go`·`reconcile_check.go`·`cmd/tossctl/verify_reconcile.go` 최소 편집
       — GREEN — `Reconcile` 의 `p.Expired` 분기 다섯 · `checkReconcileWindow` 모드 인자 · terminal/MarshalJSON/투영/report/cmd 문구 · Q6 문구(D8). 검증: verifylive·official·cmd 무태그 통과, 같은 셋 `-tags tossos_testseams` 2075 통과, `make lint` rc=0, `openspec validate --strict` rc=0
-- [ ] 3.4 FLM/BTM 재추출 · 분기 수 대조 · `check_analysis.py --change …`
+- [x] 3.4 FLM/BTM 재추출 · 분기 수 대조 · `check_analysis.py --change …`
+      — 2026-10-22 — 번들 16(편집 11 · 근거 2 · 게이트가 수정으로 센 시험 함수 3), 시험별 프로필을 GREEN 코드에서 다시 떠 BTM 재생성, 옛/새 분기 열 difflib 정렬 절 첨부(손 재번호 없음). 인접 삽입 3 자리는 새 파일로 옮김(f59a313ce). `check_analysis.py --change …` → "evidence complete or diff-proven exempt" rc=0
 
 ## 4. 변이 목록(각각 시험이 잡아야 함 — 실행 기록은 `analysis/mutation/`)
 

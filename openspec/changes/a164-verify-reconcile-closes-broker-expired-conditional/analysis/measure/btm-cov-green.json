@@ -1,0 +1,791 @@
+{
+ "cmd-tossctl--newverifyreconcilecmd": {
+  "B1": [
+   "TestVerifyReconcileExpiredIsAFlagOfTheSameMutatingCommand",
+   "TestVerifyReconcileIsRegisteredAsAMutatingOfficialCommand",
+   "TestVerifyReconcileOffersNoIdentifierSymbolOrBypassFlag"
+  ]
+ },
+ "cmd-tossctl--reconcilereads.ensureidentity": {
+  "B1": [
+   "TestExpiryReconcileCommandAppendsWithOnlyGetReadsAndLeavesProofsUnchanged",
+   "TestReconcileNarrowReaderBindsTheValidatedSequence",
+   "TestReconcileSucceedsWithOnlyGetRequestsAndTheTokenPost"
+  ],
+  "B2": [],
+  "B3": [
+   "TestReconcileByIDReadRechecksIdentityBeforeItIsSent",
+   "TestReconcileReaderRechecksIdentityBeforeItsFirstScopedRead"
+  ]
+ },
+ "cmd-tossctl--runverifyreconcile": {
+  "B1": [],
+  "B2": [
+   "TestReconcileRefusesPreflightBeforeAnyLockOrRead"
+  ],
+  "B3": [
+   "TestReconcileRefusesWhenTheExecutionLockIsHeld"
+  ],
+  "B4": [
+   "TestReconcileRefusesWhenTheRateBudgetLeaseIsHeld"
+  ],
+  "B5": [],
+  "B6": [
+   "TestReconcileDefaultApprovalStopsTheCommandBeforeAnyListRead"
+  ],
+  "B7": [
+   "TestExpiryReconcileCommandAppendsWithOnlyGetReadsAndLeavesProofsUnchanged"
+  ]
+ },
+ "internal-official--decodereconcileconditionalpage": {
+  "B1": [
+   "TestDecodeReconcileConditionalPageRefusesSchemaHoles",
+   "TestDecodeReconcilePageNamesTheGuardThatRefused",
+   "TestReconcileClientReadsRefuseANullResult"
+  ],
+  "B2": [
+   "TestDecodeReconcileConditionalPageKeepsTheSecondLegAndTheTrigger"
+  ],
+  "B3": []
+ },
+ "internal-verifylive--artifact.marshaljson": {
+  "B1": [
+   "TestADeleteNotFoundFromEveryListReadDoesNotReconcile",
+   "TestAFilledFieldSurvivesTheRecordRoundTrip",
+   "TestAFullRunProducesAReportWithNoIdempotencyGaps",
+   "TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding",
+   "TestAnOlderBinaryStillSeesTheReconciledArtifactAsOutstandingAndHeld",
+   "TestExpiryReconcileAcceptsATerminalChainSibling",
+   "TestExpiryReconcileAcceptsAnotherIdentifiersExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsAndAnExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsWhenTheClosedListEvictedTheTarget",
+   "TestExpiryReconcileApprovalNamesTheModeAndTheByIDReads",
+   "TestExpiryReconcileDeclinedApprovalReadsNothing",
+   "TestExpiryReconcileDoesNotNeedTheQ1Measurement",
+   "TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader",
+   "TestExpiryReconcileIsIdempotent",
+   "TestExpiryReconcileLiftsTheOutstandingHoldOfVerifyNew",
+   "TestExpiryReconcileLineNeverBecomesEndpointEvidence",
+   "TestExpiryReconcileReadsInTheContractOrder",
+   "TestExpiryReconcileRefusesAnOpenChainSibling",
+   "TestExpiryReconcileRefusesEachGuardWithItsOwnCode",
+   "TestExpiryReconcileRefusesWithoutAReceiptBackedVocabulary",
+   "TestExpiryReconcileStaticRefusalsComeBeforeApproval",
+   "TestExpiryReconcileTextLabelsReconciledExpired",
+   "TestExpiryReconcileWindowStartsBeforeTheFirstByIDRead",
+   "TestLockedAppendRefusesWhenTheRecordGrewAfterTheLockedRead",
+   "TestProgressPointsAtTheRestartWhenOneIsPending",
+   "TestReconcileAbsenceGuardsRefuseInTheirContractOrder",
+   "TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt",
+   "TestReconcileAcceptsExactlyThePageCap",
+   "TestReconcileAcceptsWellFormedEmptyListsOverHTTP",
+   "TestReconcileAppendsInOneWriteEndingWithANewline",
+   "TestReconcileAppendsOneReconciledAbsentLineWhenEveryConditionHolds",
+   "TestReconcileApprovalShowsBothMasksAndTheAccountCountBeforeAnyListRead",
+   "TestReconcileApprovalWaitDoesNotConsumeTheFreshnessWindow",
+   "TestReconcileDetectsAWriterInterleavingAtTheAppend",
+   "TestReconcileFingerprintIsTheFileBytes",
+   "TestReconcileFreshnessWindowCoversAppendAdmission",
+   "TestReconcileIsIdempotent",
+   "TestReconcileLeavesTheReportAttributesAndVerdictsUnchanged",
+   "TestReconcileLineAddsNoAccountIdentityBeyondTheMask",
+   "TestReconcileLineCarriesNoHoldEvenWhenTheOutstandingLineHadOne",
+   "TestReconcileLineMatchesTheDesignShape",
+   "TestReconcileLineNeverBecomesEndpointEvidence",
+   "TestReconcileOnlyRemovesItsExactArtifactFromCleanupPlanning",
+   "TestReconcilePinsRedoSetBeforeAndAfter",
+   "TestReconcileQueriesTheRecordLineSymbolBytes",
+   "TestReconcileReadsTheGroupsInTheFixedOrder",
+   "TestReconcileRechecksTheRetentionAgeImmediatelyBeforeAppend",
+   "TestReconcileRefusesABrokenInnerLine",
+   "TestReconcileRefusesACompleteFinalLineWithoutNewline",
+   "TestReconcileRefusesACurrentAccountWhoseMaskDiffers",
+   "TestReconcileRefusesADuplicateRowWithinOneRead",
+   "TestReconcileRefusesALiveSuccessorInTheOpenConditionalGroup",
+   "TestReconcileRefusesANewerRecordFormat",
+   "TestReconcileRefusesARecordThatChangedBeforeAppend",
+   "TestReconcileRefusesARowAppearingInOnlyOneRead",
+   "TestReconcileRefusesARowForAnotherMarket",
+   "TestReconcileRefusesARowForAnotherSymbol",
+   "TestReconcileRefusesARowMissingRequiredFields",
+   "TestReconcileRefusesAStatusTransitionBetweenTheTwoReads",
+   "TestReconcileRefusesATornFinalLineAtSelection",
+   "TestReconcileRefusesATornFinalLineBeforeAppend",
+   "TestReconcileRefusesAZeroCreatedAtOnTheOutstandingLine",
+   "TestReconcileRefusesAnArtifactOlderThanTheRetentionBound",
+   "TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt",
+   "TestReconcileRefusesAnUnresolvedM0Owner",
+   "TestReconcileRefusesAnotherIdentifierThatFiredInClosed",
+   "TestReconcileRefusesAnyEvictionModelButDuration",
+   "TestReconcileRefusesAnyOpenPlainOrderOnTheSymbol",
+   "TestReconcileRefusesAtTheWriteBoundaryGateItself",
+   "TestReconcileRefusesClosedStatusOutsideTheAllowlist",
+   "TestReconcileRefusesMalformedListResponsesEvenWhenBothReadsAgree",
+   "TestReconcileRefusesMixedAccountReferences",
+   "TestReconcileRefusesOCORowsInEitherGroup",
+   "TestReconcileRefusesPaginationFaultsInEitherRead",
+   "TestReconcileRefusesSeveralCandidates",
+   "TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage",
+   "TestReconcileRefusesTheTargetFoundInClosed",
+   "TestReconcileRefusesUnusableAccountReferences",
+   "TestReconcileRefusesWhenTheApprovalCannotBeShown",
+   "TestReconcileRefusesWhenTheInstrumentControlFails",
+   "TestReconcileRefusesWhenThePairExceedsTheFreshnessBound",
+   "TestReconcileRefusesWhileAnotherReconciliationHoldsTheRecordFile",
+   "TestReconcileRefusesWhileTheFreshnessBoundIsUnfixed",
+   "TestReconcileRefusesWhileTheRetentionMeasurementIsAbsent",
+   "TestReconcileRefusesWithoutApproval",
+   "TestReconcileRefusesZeroCandidates",
+   "TestReconcileReportsAFailedSyncLoudly",
+   "TestReconcileReportsAPartialAppendLoudly",
+   "TestReconcileSelectsTheA063ShapedArtifactAsTheOneCandidate",
+   "TestReconcileStaticRefusalsComeBeforeTheHumanApproval",
+   "TestReconcileTextLabelsReconciledAbsentInReportAndStatus",
+   "TestReconcileValidatesTheSecondSnapshotToo",
+   "TestReconcileVerifiesTheAppendByReadingItBack",
+   "TestReconciledProjectionIsMonotoneLikeOutstanding",
+   "TestReportTextNamesTheUnverifiedProperties",
+   "TestUnreconciledArtifactsSerialiseExactlyAsTheBase"
+  ]
+ },
+ "internal-verifylive--artifact.terminal": {
+  "B1": [
+   "TestADeleteNotFoundFromEveryListReadDoesNotReconcile",
+   "TestADeleteNotFoundLeavesTheArtifactOutstanding",
+   "TestAFilledObjectIsNotOutstanding",
+   "TestAFullRunProducesAReportWithNoIdempotencyGaps",
+   "TestAGenericOperatorObservationDoesNotReconcile",
+   "TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding",
+   "TestExpiryReconcileAcceptsATerminalChainSibling",
+   "TestExpiryReconcileAcceptsAnotherIdentifiersExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsAndAnExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsWhenTheClosedListEvictedTheTarget",
+   "TestExpiryReconcileApprovalNamesTheModeAndTheByIDReads",
+   "TestExpiryReconcileDeclinedApprovalReadsNothing",
+   "TestExpiryReconcileDoesNotNeedTheQ1Measurement",
+   "TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader",
+   "TestExpiryReconcileIsIdempotent",
+   "TestExpiryReconcileLiftsTheOutstandingHoldOfVerifyNew",
+   "TestExpiryReconcileLineNeverBecomesEndpointEvidence",
+   "TestExpiryReconcileReadsInTheContractOrder",
+   "TestExpiryReconcileRefusesAnOpenChainSibling",
+   "TestExpiryReconcileRefusesEachGuardWithItsOwnCode",
+   "TestExpiryReconcileRefusesWithoutAReceiptBackedVocabulary",
+   "TestExpiryReconcileStaticRefusalsComeBeforeApproval",
+   "TestExpiryReconcileTextLabelsReconciledExpired",
+   "TestExpiryReconcileWindowStartsBeforeTheFirstByIDRead",
+   "TestFillIsMonotone",
+   "TestProgressPointsAtTheRestartWhenOneIsPending",
+   "TestReconcileAbsenceGuardsRefuseInTheirContractOrder",
+   "TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt",
+   "TestReconcileAcceptsExactlyThePageCap",
+   "TestReconcileAcceptsWellFormedEmptyListsOverHTTP",
+   "TestReconcileAppendsInOneWriteEndingWithANewline",
+   "TestReconcileAppendsOneReconciledAbsentLineWhenEveryConditionHolds",
+   "TestReconcileApprovalShowsBothMasksAndTheAccountCountBeforeAnyListRead",
+   "TestReconcileApprovalWaitDoesNotConsumeTheFreshnessWindow",
+   "TestReconcileDetectsAWriterInterleavingAtTheAppend",
+   "TestReconcileFingerprintIsTheFileBytes",
+   "TestReconcileFreshnessWindowCoversAppendAdmission",
+   "TestReconcileIsIdempotent",
+   "TestReconcileLeavesTheReportAttributesAndVerdictsUnchanged",
+   "TestReconcileLineAddsNoAccountIdentityBeyondTheMask",
+   "TestReconcileLineCarriesNoHoldEvenWhenTheOutstandingLineHadOne",
+   "TestReconcileLineMatchesTheDesignShape",
+   "TestReconcileLineNeverBecomesEndpointEvidence",
+   "TestReconcileOnlyRemovesItsExactArtifactFromCleanupPlanning",
+   "TestReconcilePinsRedoSetBeforeAndAfter",
+   "TestReconcileQueriesTheRecordLineSymbolBytes",
+   "TestReconcileReadsTheGroupsInTheFixedOrder",
+   "TestReconcileRechecksTheRetentionAgeImmediatelyBeforeAppend",
+   "TestReconcileRefusesACurrentAccountWhoseMaskDiffers",
+   "TestReconcileRefusesADuplicateRowWithinOneRead",
+   "TestReconcileRefusesALiveSuccessorInTheOpenConditionalGroup",
+   "TestReconcileRefusesARecordThatChangedBeforeAppend",
+   "TestReconcileRefusesARowAppearingInOnlyOneRead",
+   "TestReconcileRefusesARowForAnotherMarket",
+   "TestReconcileRefusesARowForAnotherSymbol",
+   "TestReconcileRefusesARowMissingRequiredFields",
+   "TestReconcileRefusesAStatusTransitionBetweenTheTwoReads",
+   "TestReconcileRefusesATornFinalLineBeforeAppend",
+   "TestReconcileRefusesAZeroCreatedAtOnTheOutstandingLine",
+   "TestReconcileRefusesAnArtifactOlderThanTheRetentionBound",
+   "TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt",
+   "TestReconcileRefusesAnUnresolvedM0Owner",
+   "TestReconcileRefusesAnotherIdentifierThatFiredInClosed",
+   "TestReconcileRefusesAnyEvictionModelButDuration",
+   "TestReconcileRefusesAnyOpenPlainOrderOnTheSymbol",
+   "TestReconcileRefusesAtTheWriteBoundaryGateItself",
+   "TestReconcileRefusesClosedStatusOutsideTheAllowlist",
+   "TestReconcileRefusesMalformedListResponsesEvenWhenBothReadsAgree",
+   "TestReconcileRefusesMixedAccountReferences",
+   "TestReconcileRefusesOCORowsInEitherGroup",
+   "TestReconcileRefusesPaginationFaultsInEitherRead",
+   "TestReconcileRefusesSeveralCandidates",
+   "TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage",
+   "TestReconcileRefusesTheTargetFoundInClosed",
+   "TestReconcileRefusesUnusableAccountReferences",
+   "TestReconcileRefusesWhenTheApprovalCannotBeShown",
+   "TestReconcileRefusesWhenTheInstrumentControlFails",
+   "TestReconcileRefusesWhenThePairExceedsTheFreshnessBound",
+   "TestReconcileRefusesWhileAnotherReconciliationHoldsTheRecordFile",
+   "TestReconcileRefusesWhileTheFreshnessBoundIsUnfixed",
+   "TestReconcileRefusesWhileTheRetentionMeasurementIsAbsent",
+   "TestReconcileRefusesWithoutApproval",
+   "TestReconcileRefusesZeroCandidates",
+   "TestReconcileReportsAFailedSyncLoudly",
+   "TestReconcileReportsAPartialAppendLoudly",
+   "TestReconcileSelectsTheA063ShapedArtifactAsTheOneCandidate",
+   "TestReconcileStaticRefusalsComeBeforeTheHumanApproval",
+   "TestReconcileTextLabelsReconciledAbsentInReportAndStatus",
+   "TestReconcileValidatesTheSecondSnapshotToo",
+   "TestReconcileVerifiesTheAppendByReadingItBack",
+   "TestReconciledProjectionIsMonotoneLikeOutstanding",
+   "TestRecordsWrittenBeforeFillsExistedKeepTheirJudgement",
+   "TestReportTextNamesTheUnverifiedProperties",
+   "TestTheRealRecordsAreJudgedExactlyAsBefore"
+  ]
+ },
+ "internal-verifylive--checkreconcileabsence": {
+  "B1": [
+   "TestReconcileAbsenceGuardsRefuseInTheirContractOrder",
+   "TestReconcileRefusesALiveSuccessorInTheOpenConditionalGroup",
+   "TestReconcileRefusesAnyOpenPlainOrderOnTheSymbol"
+  ],
+  "B2": [
+   "TestReconcileAbsenceGuardsRefuseInTheirContractOrder",
+   "TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt",
+   "TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt",
+   "TestReconcileRefusesAnotherIdentifierThatFiredInClosed",
+   "TestReconcileRefusesClosedStatusOutsideTheAllowlist",
+   "TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage",
+   "TestReconcileRefusesTheTargetFoundInClosed"
+  ],
+  "B3": [
+   "TestReconcileAbsenceGuardsRefuseInTheirContractOrder",
+   "TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt",
+   "TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt",
+   "TestReconcileRefusesAnotherIdentifierThatFiredInClosed",
+   "TestReconcileRefusesClosedStatusOutsideTheAllowlist"
+  ],
+  "B4": [
+   "TestReconcileAbsenceGuardsRefuseInTheirContractOrder",
+   "TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage"
+  ]
+ },
+ "internal-verifylive--checkreconcilewindow": {
+  "B1": [
+   "TestExpiryReconcileWindowStartsBeforeTheFirstByIDRead",
+   "TestReconcileFreshnessWindowCoversAppendAdmission",
+   "TestReconcileRefusesAtTheWriteBoundaryGateItself",
+   "TestReconcileRefusesWhenThePairExceedsTheFreshnessBound"
+  ],
+  "B2": [
+   "TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding",
+   "TestExpiryReconcileAcceptsATerminalChainSibling",
+   "TestExpiryReconcileAcceptsAnotherIdentifiersExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsAndAnExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsWhenTheClosedListEvictedTheTarget",
+   "TestExpiryReconcileApprovalNamesTheModeAndTheByIDReads",
+   "TestExpiryReconcileDoesNotNeedTheQ1Measurement",
+   "TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader",
+   "TestExpiryReconcileIsIdempotent",
+   "TestExpiryReconcileLiftsTheOutstandingHoldOfVerifyNew",
+   "TestExpiryReconcileLineNeverBecomesEndpointEvidence",
+   "TestExpiryReconcileReadsInTheContractOrder",
+   "TestExpiryReconcileRefusesAnOpenChainSibling",
+   "TestExpiryReconcileRefusesEachGuardWithItsOwnCode",
+   "TestExpiryReconcileTextLabelsReconciledExpired"
+  ]
+ },
+ "internal-verifylive--rcharness.params": {
+  "B1": []
+ },
+ "internal-verifylive--readreconcileset": {
+  "B1": [
+   "TestADeleteNotFoundFromEveryListReadDoesNotReconcile",
+   "TestReconcileRefusesMalformedListResponsesEvenWhenBothReadsAgree",
+   "TestReconcileRefusesPaginationFaultsInEitherRead"
+  ],
+  "B2": [
+   "TestReconcileRefusesMalformedListResponsesEvenWhenBothReadsAgree",
+   "TestReconcileRefusesPaginationFaultsInEitherRead"
+  ],
+  "B3": [
+   "TestReconcileRefusesADuplicateRowWithinOneRead",
+   "TestReconcileRefusesPaginationFaultsInEitherRead"
+  ]
+ },
+ "internal-verifylive--reconcile": {
+  "B1": [],
+  "B2": [],
+  "B3": [],
+  "B4": [],
+  "B5": [
+   "TestReconcileRefusesABrokenInnerLine",
+   "TestReconcileRefusesACompleteFinalLineWithoutNewline",
+   "TestReconcileRefusesANewerRecordFormat",
+   "TestReconcileRefusesATornFinalLineAtSelection",
+   "TestReconcileRefusesAnUnreadableRecord"
+  ],
+  "B6": [
+   "TestExpiryReconcileIsIdempotent",
+   "TestReconcileIsIdempotent",
+   "TestReconcileRefusesAnUnresolvedM0Owner",
+   "TestReconcileRefusesSeveralCandidates",
+   "TestReconcileRefusesZeroCandidates"
+  ],
+  "B7": [
+   "TestExpiryReconcileStaticRefusalsComeBeforeApproval",
+   "TestReconcileRefusesACurrentAccountWhoseMaskDiffers",
+   "TestReconcileRefusesMixedAccountReferences",
+   "TestReconcileRefusesUnusableAccountReferences"
+  ],
+  "B8": [
+   "TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding",
+   "TestExpiryReconcileAcceptsATerminalChainSibling",
+   "TestExpiryReconcileAcceptsAnotherIdentifiersExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsAndAnExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsWhenTheClosedListEvictedTheTarget",
+   "TestExpiryReconcileApprovalNamesTheModeAndTheByIDReads",
+   "TestExpiryReconcileDeclinedApprovalReadsNothing",
+   "TestExpiryReconcileDoesNotNeedTheQ1Measurement",
+   "TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader",
+   "TestExpiryReconcileIsIdempotent",
+   "TestExpiryReconcileLiftsTheOutstandingHoldOfVerifyNew",
+   "TestExpiryReconcileLineNeverBecomesEndpointEvidence",
+   "TestExpiryReconcileReadsInTheContractOrder",
+   "TestExpiryReconcileRefusesAnOpenChainSibling",
+   "TestExpiryReconcileRefusesEachGuardWithItsOwnCode",
+   "TestExpiryReconcileRefusesWithoutAReceiptBackedVocabulary",
+   "TestExpiryReconcileStaticRefusalsComeBeforeApproval",
+   "TestExpiryReconcileTextLabelsReconciledExpired",
+   "TestExpiryReconcileWindowStartsBeforeTheFirstByIDRead"
+  ],
+  "B9": [
+   "TestExpiryReconcileDoesNotNeedTheQ1Measurement",
+   "TestReconcileRefusesAZeroCreatedAtOnTheOutstandingLine",
+   "TestReconcileRefusesAnArtifactOlderThanTheRetentionBound",
+   "TestReconcileRefusesAnyEvictionModelButDuration",
+   "TestReconcileRefusesWhileTheRetentionMeasurementIsAbsent",
+   "TestReconcileStaticRefusalsComeBeforeTheHumanApproval"
+  ],
+  "B10": [
+   "TestExpiryReconcileRefusesWithoutAReceiptBackedVocabulary"
+  ],
+  "B11": [
+   "TestExpiryReconcileDoesNotNeedTheQ1Measurement",
+   "TestReconcileRefusesAZeroCreatedAtOnTheOutstandingLine",
+   "TestReconcileRefusesAnArtifactOlderThanTheRetentionBound",
+   "TestReconcileRefusesAnyEvictionModelButDuration",
+   "TestReconcileRefusesWhileTheRetentionMeasurementIsAbsent",
+   "TestReconcileStaticRefusalsComeBeforeTheHumanApproval"
+  ],
+  "B12": [
+   "TestExpiryReconcileStaticRefusalsComeBeforeApproval",
+   "TestReconcileRefusesWhileTheFreshnessBoundIsUnfixed",
+   "TestReconcileStaticRefusalsComeBeforeTheHumanApproval"
+  ],
+  "B13": [
+   "TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding",
+   "TestExpiryReconcileAcceptsATerminalChainSibling",
+   "TestExpiryReconcileAcceptsAnotherIdentifiersExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsAndAnExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsWhenTheClosedListEvictedTheTarget",
+   "TestExpiryReconcileApprovalNamesTheModeAndTheByIDReads",
+   "TestExpiryReconcileDeclinedApprovalReadsNothing",
+   "TestExpiryReconcileDoesNotNeedTheQ1Measurement",
+   "TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader",
+   "TestExpiryReconcileIsIdempotent",
+   "TestExpiryReconcileLiftsTheOutstandingHoldOfVerifyNew",
+   "TestExpiryReconcileLineNeverBecomesEndpointEvidence",
+   "TestExpiryReconcileReadsInTheContractOrder",
+   "TestExpiryReconcileRefusesAnOpenChainSibling",
+   "TestExpiryReconcileRefusesEachGuardWithItsOwnCode",
+   "TestExpiryReconcileTextLabelsReconciledExpired",
+   "TestExpiryReconcileWindowStartsBeforeTheFirstByIDRead"
+  ],
+  "B14": [
+   "TestReconcileRefusesWhenTheApprovalCannotBeShown"
+  ],
+  "B15": [
+   "TestExpiryReconcileDeclinedApprovalReadsNothing",
+   "TestReconcileRefusesWithoutApproval"
+  ],
+  "B16": [
+   "TestReconcileRefusesWhenTheInstrumentControlFails"
+  ],
+  "B17": [
+   "TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding",
+   "TestExpiryReconcileAcceptsATerminalChainSibling",
+   "TestExpiryReconcileAcceptsAnotherIdentifiersExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsAndAnExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsWhenTheClosedListEvictedTheTarget",
+   "TestExpiryReconcileApprovalNamesTheModeAndTheByIDReads",
+   "TestExpiryReconcileDoesNotNeedTheQ1Measurement",
+   "TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader",
+   "TestExpiryReconcileIsIdempotent",
+   "TestExpiryReconcileLiftsTheOutstandingHoldOfVerifyNew",
+   "TestExpiryReconcileLineNeverBecomesEndpointEvidence",
+   "TestExpiryReconcileReadsInTheContractOrder",
+   "TestExpiryReconcileRefusesAnOpenChainSibling",
+   "TestExpiryReconcileRefusesEachGuardWithItsOwnCode",
+   "TestExpiryReconcileTextLabelsReconciledExpired",
+   "TestExpiryReconcileWindowStartsBeforeTheFirstByIDRead"
+  ],
+  "B18": [
+   "TestExpiryReconcileRefusesEachGuardWithItsOwnCode"
+  ],
+  "B19": [
+   "TestADeleteNotFoundFromEveryListReadDoesNotReconcile",
+   "TestReconcileRefusesADuplicateRowWithinOneRead",
+   "TestReconcileRefusesMalformedListResponsesEvenWhenBothReadsAgree",
+   "TestReconcileRefusesPaginationFaultsInEitherRead"
+  ],
+  "B20": [
+   "TestReconcileRefusesADuplicateRowWithinOneRead",
+   "TestReconcileRefusesPaginationFaultsInEitherRead"
+  ],
+  "B21": [
+   "TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding",
+   "TestExpiryReconcileAcceptsATerminalChainSibling",
+   "TestExpiryReconcileAcceptsAnotherIdentifiersExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsAndAnExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsWhenTheClosedListEvictedTheTarget",
+   "TestExpiryReconcileApprovalNamesTheModeAndTheByIDReads",
+   "TestExpiryReconcileDoesNotNeedTheQ1Measurement",
+   "TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader",
+   "TestExpiryReconcileIsIdempotent",
+   "TestExpiryReconcileLiftsTheOutstandingHoldOfVerifyNew",
+   "TestExpiryReconcileLineNeverBecomesEndpointEvidence",
+   "TestExpiryReconcileReadsInTheContractOrder",
+   "TestExpiryReconcileRefusesAnOpenChainSibling",
+   "TestExpiryReconcileRefusesEachGuardWithItsOwnCode",
+   "TestExpiryReconcileTextLabelsReconciledExpired",
+   "TestExpiryReconcileWindowStartsBeforeTheFirstByIDRead"
+  ],
+  "B22": [
+   "TestExpiryReconcileRefusesEachGuardWithItsOwnCode"
+  ],
+  "B23": [
+   "TestReconcileRefusesWhenTheInstrumentControlFails"
+  ],
+  "B24": [
+   "TestExpiryReconcileWindowStartsBeforeTheFirstByIDRead",
+   "TestReconcileFreshnessWindowCoversAppendAdmission",
+   "TestReconcileRechecksTheRetentionAgeImmediatelyBeforeAppend",
+   "TestReconcileRefusesWhenThePairExceedsTheFreshnessBound"
+  ],
+  "B25": [
+   "TestReconcileRefusesARowAppearingInOnlyOneRead",
+   "TestReconcileRefusesAStatusTransitionBetweenTheTwoReads"
+  ],
+  "B26": [
+   "TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding",
+   "TestExpiryReconcileAcceptsATerminalChainSibling",
+   "TestExpiryReconcileAcceptsAnotherIdentifiersExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsAndAnExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsWhenTheClosedListEvictedTheTarget",
+   "TestExpiryReconcileApprovalNamesTheModeAndTheByIDReads",
+   "TestExpiryReconcileDoesNotNeedTheQ1Measurement",
+   "TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader",
+   "TestExpiryReconcileIsIdempotent",
+   "TestExpiryReconcileLiftsTheOutstandingHoldOfVerifyNew",
+   "TestExpiryReconcileLineNeverBecomesEndpointEvidence",
+   "TestExpiryReconcileReadsInTheContractOrder",
+   "TestExpiryReconcileRefusesAnOpenChainSibling",
+   "TestExpiryReconcileRefusesEachGuardWithItsOwnCode",
+   "TestExpiryReconcileTextLabelsReconciledExpired"
+  ],
+  "B27": [
+   "TestExpiryReconcileRefusesEachGuardWithItsOwnCode"
+  ],
+  "B28": [
+   "TestReconcileRefusesARowForAnotherMarket",
+   "TestReconcileRefusesARowForAnotherSymbol",
+   "TestReconcileRefusesARowMissingRequiredFields",
+   "TestReconcileRefusesOCORowsInEitherGroup"
+  ],
+  "B29": [
+   "TestReconcileValidatesTheSecondSnapshotToo"
+  ],
+  "B30": [
+   "TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding",
+   "TestExpiryReconcileAcceptsATerminalChainSibling",
+   "TestExpiryReconcileAcceptsAnotherIdentifiersExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsAndAnExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsWhenTheClosedListEvictedTheTarget",
+   "TestExpiryReconcileApprovalNamesTheModeAndTheByIDReads",
+   "TestExpiryReconcileDoesNotNeedTheQ1Measurement",
+   "TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader",
+   "TestExpiryReconcileIsIdempotent",
+   "TestExpiryReconcileLiftsTheOutstandingHoldOfVerifyNew",
+   "TestExpiryReconcileLineNeverBecomesEndpointEvidence",
+   "TestExpiryReconcileReadsInTheContractOrder",
+   "TestExpiryReconcileRefusesAnOpenChainSibling",
+   "TestExpiryReconcileRefusesEachGuardWithItsOwnCode",
+   "TestExpiryReconcileTextLabelsReconciledExpired"
+  ],
+  "B31": [
+   "TestReconcileAbsenceGuardsRefuseInTheirContractOrder",
+   "TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt",
+   "TestReconcileAcceptsExactlyThePageCap",
+   "TestReconcileAcceptsWellFormedEmptyListsOverHTTP",
+   "TestReconcileAppendsInOneWriteEndingWithANewline",
+   "TestReconcileAppendsOneReconciledAbsentLineWhenEveryConditionHolds",
+   "TestReconcileApprovalShowsBothMasksAndTheAccountCountBeforeAnyListRead",
+   "TestReconcileApprovalWaitDoesNotConsumeTheFreshnessWindow",
+   "TestReconcileDetectsAWriterInterleavingAtTheAppend",
+   "TestReconcileFingerprintIsTheFileBytes",
+   "TestReconcileIsIdempotent",
+   "TestReconcileLineAddsNoAccountIdentityBeyondTheMask",
+   "TestReconcileLineCarriesNoHoldEvenWhenTheOutstandingLineHadOne",
+   "TestReconcileLineMatchesTheDesignShape",
+   "TestReconcileLineNeverBecomesEndpointEvidence",
+   "TestReconcileQueriesTheRecordLineSymbolBytes",
+   "TestReconcileReadsTheGroupsInTheFixedOrder",
+   "TestReconcileRefusesALiveSuccessorInTheOpenConditionalGroup",
+   "TestReconcileRefusesARecordThatChangedBeforeAppend",
+   "TestReconcileRefusesATornFinalLineBeforeAppend",
+   "TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt",
+   "TestReconcileRefusesAnotherIdentifierThatFiredInClosed",
+   "TestReconcileRefusesAnyOpenPlainOrderOnTheSymbol",
+   "TestReconcileRefusesAtTheWriteBoundaryGateItself",
+   "TestReconcileRefusesClosedStatusOutsideTheAllowlist",
+   "TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage",
+   "TestReconcileRefusesTheTargetFoundInClosed",
+   "TestReconcileRefusesWhileAnotherReconciliationHoldsTheRecordFile",
+   "TestReconcileReportsAFailedSyncLoudly",
+   "TestReconcileReportsAPartialAppendLoudly",
+   "TestReconcileSelectsTheA063ShapedArtifactAsTheOneCandidate",
+   "TestReconcileVerifiesTheAppendByReadingItBack"
+  ],
+  "B32": [
+   "TestExpiryReconcileRefusesAnOpenChainSibling",
+   "TestExpiryReconcileRefusesEachGuardWithItsOwnCode"
+  ],
+  "B33": [
+   "TestReconcileAbsenceGuardsRefuseInTheirContractOrder",
+   "TestReconcileRefusesALiveSuccessorInTheOpenConditionalGroup",
+   "TestReconcileRefusesAnotherIdentifierThatFiredInClosed",
+   "TestReconcileRefusesAnyOpenPlainOrderOnTheSymbol",
+   "TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage",
+   "TestReconcileRefusesTheTargetFoundInClosed"
+  ],
+  "B34": [
+   "TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt",
+   "TestReconcileRefusesClosedStatusOutsideTheAllowlist"
+  ],
+  "B35": [
+   "TestReconcileRefusesWhileAnotherReconciliationHoldsTheRecordFile"
+  ],
+  "B36": [
+   "TestReconcileRefusesWhileAnotherReconciliationHoldsTheRecordFile"
+  ],
+  "B37": [],
+  "B38": [
+   "TestReconcileRefusesATornFinalLineBeforeAppend"
+  ],
+  "B39": [
+   "TestReconcileFingerprintIsTheFileBytes",
+   "TestReconcileRefusesARecordThatChangedBeforeAppend"
+  ],
+  "B40": [],
+  "B41": [
+   "TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding",
+   "TestExpiryReconcileAcceptsATerminalChainSibling",
+   "TestExpiryReconcileAcceptsAnotherIdentifiersExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsAndAnExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsWhenTheClosedListEvictedTheTarget",
+   "TestExpiryReconcileApprovalNamesTheModeAndTheByIDReads",
+   "TestExpiryReconcileDoesNotNeedTheQ1Measurement",
+   "TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader",
+   "TestExpiryReconcileIsIdempotent",
+   "TestExpiryReconcileLiftsTheOutstandingHoldOfVerifyNew",
+   "TestExpiryReconcileLineNeverBecomesEndpointEvidence",
+   "TestExpiryReconcileReadsInTheContractOrder",
+   "TestExpiryReconcileTextLabelsReconciledExpired"
+  ],
+  "B42": [
+   "TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt",
+   "TestReconcileAcceptsExactlyThePageCap",
+   "TestReconcileAcceptsWellFormedEmptyListsOverHTTP",
+   "TestReconcileAppendsInOneWriteEndingWithANewline",
+   "TestReconcileAppendsOneReconciledAbsentLineWhenEveryConditionHolds",
+   "TestReconcileApprovalShowsBothMasksAndTheAccountCountBeforeAnyListRead",
+   "TestReconcileApprovalWaitDoesNotConsumeTheFreshnessWindow",
+   "TestReconcileDetectsAWriterInterleavingAtTheAppend",
+   "TestReconcileIsIdempotent",
+   "TestReconcileLineAddsNoAccountIdentityBeyondTheMask",
+   "TestReconcileLineCarriesNoHoldEvenWhenTheOutstandingLineHadOne",
+   "TestReconcileLineMatchesTheDesignShape",
+   "TestReconcileLineNeverBecomesEndpointEvidence",
+   "TestReconcileQueriesTheRecordLineSymbolBytes",
+   "TestReconcileReadsTheGroupsInTheFixedOrder",
+   "TestReconcileRefusesAtTheWriteBoundaryGateItself",
+   "TestReconcileReportsAFailedSyncLoudly",
+   "TestReconcileReportsAPartialAppendLoudly",
+   "TestReconcileSelectsTheA063ShapedArtifactAsTheOneCandidate",
+   "TestReconcileVerifiesTheAppendByReadingItBack"
+  ],
+  "B43": [],
+  "B44": [
+   "TestReconcileRefusesAtTheWriteBoundaryGateItself"
+  ],
+  "B45": [
+   "TestReconcileDetectsAWriterInterleavingAtTheAppend",
+   "TestReconcileReportsAFailedSyncLoudly",
+   "TestReconcileReportsAPartialAppendLoudly",
+   "TestReconcileVerifiesTheAppendByReadingItBack"
+  ],
+  "B46": []
+ },
+ "internal-verifylive--reconcileapproval.writetext": {
+  "B1": [
+   "TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding",
+   "TestExpiryReconcileAcceptsATerminalChainSibling",
+   "TestExpiryReconcileAcceptsAnotherIdentifiersExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsAndAnExpiredClosedRow",
+   "TestExpiryReconcileAcceptsTwoStatementsWhenTheClosedListEvictedTheTarget",
+   "TestExpiryReconcileApprovalNamesTheModeAndTheByIDReads",
+   "TestExpiryReconcileDeclinedApprovalReadsNothing",
+   "TestExpiryReconcileDoesNotNeedTheQ1Measurement",
+   "TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader",
+   "TestExpiryReconcileIsIdempotent",
+   "TestExpiryReconcileLiftsTheOutstandingHoldOfVerifyNew",
+   "TestExpiryReconcileLineNeverBecomesEndpointEvidence",
+   "TestExpiryReconcileReadsInTheContractOrder",
+   "TestExpiryReconcileRefusesAnOpenChainSibling",
+   "TestExpiryReconcileRefusesEachGuardWithItsOwnCode",
+   "TestExpiryReconcileTextLabelsReconciledExpired",
+   "TestExpiryReconcileWindowStartsBeforeTheFirstByIDRead"
+  ],
+  "B2": [
+   "TestADeleteNotFoundFromEveryListReadDoesNotReconcile",
+   "TestExpiryReconcileApprovalNamesTheModeAndTheByIDReads",
+   "TestReconcileAbsenceGuardsRefuseInTheirContractOrder",
+   "TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt",
+   "TestReconcileAcceptsExactlyThePageCap",
+   "TestReconcileAcceptsWellFormedEmptyListsOverHTTP",
+   "TestReconcileAppendsInOneWriteEndingWithANewline",
+   "TestReconcileAppendsOneReconciledAbsentLineWhenEveryConditionHolds",
+   "TestReconcileApprovalShowsBothMasksAndTheAccountCountBeforeAnyListRead",
+   "TestReconcileApprovalWaitDoesNotConsumeTheFreshnessWindow",
+   "TestReconcileDetectsAWriterInterleavingAtTheAppend",
+   "TestReconcileFingerprintIsTheFileBytes",
+   "TestReconcileFreshnessWindowCoversAppendAdmission",
+   "TestReconcileIsIdempotent",
+   "TestReconcileLineAddsNoAccountIdentityBeyondTheMask",
+   "TestReconcileLineCarriesNoHoldEvenWhenTheOutstandingLineHadOne",
+   "TestReconcileLineMatchesTheDesignShape",
+   "TestReconcileLineNeverBecomesEndpointEvidence",
+   "TestReconcileQueriesTheRecordLineSymbolBytes",
+   "TestReconcileReadsTheGroupsInTheFixedOrder",
+   "TestReconcileRechecksTheRetentionAgeImmediatelyBeforeAppend",
+   "TestReconcileRefusesADuplicateRowWithinOneRead",
+   "TestReconcileRefusesALiveSuccessorInTheOpenConditionalGroup",
+   "TestReconcileRefusesARecordThatChangedBeforeAppend",
+   "TestReconcileRefusesARowAppearingInOnlyOneRead",
+   "TestReconcileRefusesARowForAnotherMarket",
+   "TestReconcileRefusesARowForAnotherSymbol",
+   "TestReconcileRefusesARowMissingRequiredFields",
+   "TestReconcileRefusesAStatusTransitionBetweenTheTwoReads",
+   "TestReconcileRefusesATornFinalLineBeforeAppend",
+   "TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt",
+   "TestReconcileRefusesAnotherIdentifierThatFiredInClosed",
+   "TestReconcileRefusesAnyOpenPlainOrderOnTheSymbol",
+   "TestReconcileRefusesAtTheWriteBoundaryGateItself",
+   "TestReconcileRefusesClosedStatusOutsideTheAllowlist",
+   "TestReconcileRefusesMalformedListResponsesEvenWhenBothReadsAgree",
+   "TestReconcileRefusesOCORowsInEitherGroup",
+   "TestReconcileRefusesPaginationFaultsInEitherRead",
+   "TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage",
+   "TestReconcileRefusesTheTargetFoundInClosed",
+   "TestReconcileRefusesWhenTheApprovalCannotBeShown",
+   "TestReconcileRefusesWhenTheInstrumentControlFails",
+   "TestReconcileRefusesWhenThePairExceedsTheFreshnessBound",
+   "TestReconcileRefusesWhileAnotherReconciliationHoldsTheRecordFile",
+   "TestReconcileRefusesWithoutApproval",
+   "TestReconcileReportsAFailedSyncLoudly",
+   "TestReconcileReportsAPartialAppendLoudly",
+   "TestReconcileSelectsTheA063ShapedArtifactAsTheOneCandidate",
+   "TestReconcileValidatesTheSecondSnapshotToo",
+   "TestReconcileVerifiesTheAppendByReadingItBack"
+  ]
+ },
+ "internal-verifylive--reconciledartifacts": {
+  "B1": [
+   "TestAFullRunProducesAReportWithNoIdempotencyGaps",
+   "TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader",
+   "TestExpiryReconcileTextLabelsReconciledExpired",
+   "TestProgressPointsAtTheRestartWhenOneIsPending",
+   "TestReconcileLeavesTheReportAttributesAndVerdictsUnchanged",
+   "TestReconcileTextLabelsReconciledAbsentInReportAndStatus",
+   "TestReconciledProjectionIsMonotoneLikeOutstanding",
+   "TestReplayStaysDisabledUnlessBothHalvesArePositive",
+   "TestReportTextNamesTheUnverifiedProperties",
+   "TestUnverifiedValuesAreNotCountedAsAnswers"
+  ],
+  "B2": [
+   "TestAFullRunProducesAReportWithNoIdempotencyGaps",
+   "TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader",
+   "TestExpiryReconcileTextLabelsReconciledExpired",
+   "TestProgressPointsAtTheRestartWhenOneIsPending",
+   "TestReconcileLeavesTheReportAttributesAndVerdictsUnchanged",
+   "TestReconcileTextLabelsReconciledAbsentInReportAndStatus",
+   "TestReconciledProjectionIsMonotoneLikeOutstanding",
+   "TestReportTextNamesTheUnverifiedProperties"
+  ],
+  "B3": [
+   "TestAFullRunProducesAReportWithNoIdempotencyGaps",
+   "TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader",
+   "TestExpiryReconcileTextLabelsReconciledExpired",
+   "TestProgressPointsAtTheRestartWhenOneIsPending",
+   "TestReconcileLeavesTheReportAttributesAndVerdictsUnchanged",
+   "TestReconcileTextLabelsReconciledAbsentInReportAndStatus",
+   "TestReconciledProjectionIsMonotoneLikeOutstanding",
+   "TestReportTextNamesTheUnverifiedProperties"
+  ],
+  "B4": [
+   "TestReconciledProjectionIsMonotoneLikeOutstanding"
+  ],
+  "B5": [
+   "TestAFullRunProducesAReportWithNoIdempotencyGaps",
+   "TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader",
+   "TestExpiryReconcileTextLabelsReconciledExpired",
+   "TestProgressPointsAtTheRestartWhenOneIsPending",
+   "TestReconcileLeavesTheReportAttributesAndVerdictsUnchanged",
+   "TestReconcileTextLabelsReconciledAbsentInReportAndStatus",
+   "TestReconciledProjectionIsMonotoneLikeOutstanding",
+   "TestReportTextNamesTheUnverifiedProperties"
+  ],
+  "B6": [
+   "TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader",
+   "TestExpiryReconcileTextLabelsReconciledExpired",
+   "TestReconcileLeavesTheReportAttributesAndVerdictsUnchanged",
+   "TestReconcileTextLabelsReconciledAbsentInReportAndStatus",
+   "TestReconciledProjectionIsMonotoneLikeOutstanding"
+  ]
+ },
+ "internal-verifylive--testreconcileparamscarryonlynarrowtypes": {
+  "B1": [],
+  "B2": [],
+  "B3": []
+ },
+ "internal-verifylive--testreconcilerefusesthetargetexpiredinclosedwiththepermanentmessage": {
+  "B1": []
+ },
+ "internal-verifylive--writereconciled": {
+  "B1": [
+   "TestProgressPointsAtTheRestartWhenOneIsPending",
+   "TestReportTextNamesTheUnverifiedProperties"
+  ],
+  "B2": [
+   "TestExpiryReconcileTextLabelsReconciledExpired",
+   "TestReconcileTextLabelsReconciledAbsentInReportAndStatus"
+  ],
+  "B3": [
+   "TestExpiryReconcileTextLabelsReconciledExpired"
+  ]
+ }
+}

@@ -1,0 +1,122 @@
+{
+  "file": "internal/verifylive/reconcile_check.go",
+  "source_sha256": "2546999c3f878b39be8f34b6eb5f5d8483e0c3d496e323630245d99750c179cf",
+  "package": "verifylive",
+  "function": "readReconcileSet",
+  "signature": "readReconcileSet(params=3, results=2)",
+  "start": {
+    "line": 184,
+    "column": 1
+  },
+  "end": {
+    "line": 197,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 187,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 190,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 193,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 188,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 191,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 194,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 25
+      },
+      "text": "readReconcileConditionalGroup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 26
+      },
+      "text": "readReconcilePlainGroup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 23
+      },
+      "text": "readReconcileConditionalGroup"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 187,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 190,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 193,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

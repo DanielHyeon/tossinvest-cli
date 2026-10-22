@@ -1,126 +1,354 @@
 {
-"internal-verifylive--reconcile": {
- "role": "판정 파이프라인 본체. a164 는 `p.Expired` 일 때만 갈리는 자리 다섯을 더한다(정적 거절의 Q1↔만료 어휘, 승인 모드, 창 시작 직후·둘째 목록 읽기 직후의 by-id 두 번, 판정 보조 선택, 줄 직렬화). 플래그 없음 경로의 호출 순서·거절 코드는 불변이어야 함(design D1).",
- "inputs": [
-  "| `p.RecordPath` | cmd 가 `--config-dir` 에서 유도한 경로 | `reconcilePreflight` | 읽기 실패 `record-unreadable`(B5) |",
-  "| `p.Reader` | 공식 GET 셋(→ a164 넷)만 노출하는 인터페이스 | `ReconcileReader` 봉인(`reconcile_seal_test.go`) | nil 이면 `read-error`(B2) |",
-  "| `p.Approve` | 사람 y/N seam | cmd `verifyReconcileApprove` | nil 이면 `not-approved`(B3) |",
-  "| `p.Now` | 시계 | 생산 `time.Now` | nil 이면 `time.Now`(B1) |",
-  "| 패키지 상태 `reconcileRetention`·`reconcileFreshnessBound` | 생산 nil · 15 s | `reconcile.go:346`·`:356` | Q1 없음 → `retention-unmeasured`(B8), Q3 ≤0 → `freshness-unfixed`(B9) |"
- ],
- "effects": {"B1":"`now = time.Now`","B4":"`out = io.Discard`","B10":"승인 화면 쓰기 실패","B22":"잠금 실패","B30":"한 번의 쓰기 실패 — 찢긴 줄 가능(오류 문구가 알림)"},
- "uncovered": {"B1":"생산 호출자(cmd)는 항상 `time.Now` 를 줌","B2":"생산 호출자는 항상 리더를 줌","B3":"생산 호출자는 항상 승인 seam 을 줌","B4":"생산 호출자는 단말 출력을 줌","B24":"잠근 fd 읽기 오류 — 주입 seam 없음","B27":"선택 때 개행 꼬리(B5)와 지문 일치(B26)가 이미 막아 사실상 도달 불가(방어)","B28":"`crypto/rand` 실패만","B29":"쓰기 직전 재검 거절 — 행동 시험은 B16 에서 먼저 거절됨. 위치는 구조 핀 `TestReconcileFinalGateSitsAtTheWriteBoundary`·`TestReconcileRechecksTheWindowAtBothContractPoints` 가 고정","B31":"잠그지 않는 작성자 끼어들기 — 층을 내린 `TestLockedAppendRefusesWhenTheRecordGrewAfterTheLockedRead` 가 잠금 층에서 잼"},
- "calls": [
-  "| `readRecordStrict`·`decodeRecordStrict` | 엄격 해독·지문 | 실패 = 거절, 재시도 없음 | AST |",
-  "| `selectReconcileCandidate` | 후보 정확히 하나 | 0·복수·M0 = 거절 | AST |",
-  "| `bindReconcileAccount` | 계좌 결속 | mixed → mismatch 순 | AST |",
-  "| `checkReconcileRetention` | Q1 정적 거절(승인 앞) | 생산 nil = 거절 | AST — a164: 만료 모드는 부르지 않음(D7) |",
-  "| `checkReconcileInstrument` | 양성 대조 두 번 | 오류·다른 심볼 = 거절 | AST |",
-  "| `readReconcileSet` | 세 그룹 두 번 읽기 | 오류 = `read-error` 등, 자동 재시도 없음 | AST — a164 는 그대로 부름(P2-5 ⑤) |",
-  "| `checkReconcileWindow` | Q3 창 + Q1 나이 재검(두 번) | 초과 = 거절 | AST — a164: 모드 인자로 Q1 재검 생략 |",
-  "| `checkReconcileAbsence`·`checkReconcileClosedStatus` | 부재 판정 | 거절 | AST — a164: 만료 모드는 `checkReconcileExpiry` |",
-  "| `lockRecordForAppend`·`contents`·`appendLine` | 잠금·재읽기·한 번의 쓰기 | 잠김·크기 이동 = 거절, 그 밖 오류 = 큰 소리 | AST |"
- ],
- "state": ["기록 파일 끝에 한 줄 추가가 유일한 부작용(B30 이후). 거절은 기록을 바꾸지 않음(`rcRefuse` 가 바이트 비교).", "a164 편집 뒤에도 쓰기 자리는 `appendLine` 하나 — 만료 모드도 같은 잠금·쓰기 경로를 탐(복사 금지)."],
- "safety": ["Safe edit boundary: `p.Expired` 가 거짓이면 호출 순서·인자·거절 코드가 base 와 같아야 함 — 구조 핀(`TestReconcileRechecksTheWindowAtBothContractPoints`·`TestReconcileFinalGateSitsAtTheWriteBoundary`·`TestReconcileStaticRefusalsComeBeforeTheHumanApproval`)과 a121 행동 시험 전부가 그대로 통과해야 함.", "High-risk impact: yes — 잘못 닫으면 살아 있는 조건주문이 정리·HOLD·노출 상한에서 빠짐. 만료 모드의 생존 판정(A5)은 부재 모드와 같은 보조 함수로만 판정."]
-},
-"internal-verifylive--checkreconcileabsence": {
- "role": "부재 판정. a164 는 A5 세 판정(OPEN 조건 · OPEN 일반 · 발동 흔적)을 보조 함수 둘로 뽑아 두 모드가 같이 부르게 한다(design D4). 부재 모드 거절 순서(OPEN 조건 → 일반 OPEN → CLOSED target → 발동 흔적)는 불변. Q6 문구만 D8 로 바꿈.",
- "inputs": ["| `r reconcileRead` | 첫 읽기 스냅숏(둘째와 multiset 동일 확인 뒤) | `readReconcileSet` | — |", "| `target Artifact` | 기록이 고른 후보 | `selectReconcileCandidate` | — |"],
- "effects": {},
- "calls": ["| `refuse` | 거절 코드 생성 | 순수 | AST |", "| `fmt.Sprintf` | 문구 | 순수 | AST |"],
- "state": ["상태 변경 없음. 대상 행 루프(B3~B5)는 첫 일치에서 반환 — EXPIRED 면 `closed-target-expired`(Q6), 그 밖 `closed-target-present`.", "발동 흔적 루프(B6·B7)는 대상 행을 빼지 않음 — a164 만료 모드에서 대상 CLOSED 행이 `COMPLETED` 면 `closed-fired-trace`(P3-5)."],
- "safety": ["Safe edit boundary: B1·B2 를 `checkReconcileNoLiveOrder`, B6·B7 을 `checkReconcileNoFiredTrace` 로 옮기되 이 함수는 그 둘을 같은 순서로 부름. 문구 상수만 D8 로 교체.", "High-risk impact: yes — A5 는 생존 판정의 유일한 자리(design D2 위계). 보조 함수에 대상 제외 인자를 넣지 않음."]
-},
-"internal-verifylive--checkreconcilewindow": {
- "role": "Q3 창 + Q1 나이 재검. a164 는 만료 모드에서 Q1 재검을 건너뛰는 모드 인자를 더함(design D7 — 만료 모드는 Q1 을 부르지 않음).",
- "inputs": ["| `start`·`now` | 창 시작(a164 만료 모드는 by-id ① 직전)과 지금 | `Reconcile` | 음수·초과 = `freshness-exceeded` |", "| `target.CreatedAt` | Q1 나이 | 기록 줄 | `checkReconcileRetention` 이 판정 |"],
- "effects": {},
- "calls": ["| `checkReconcileRetention` | Q1 나이 재검 | 거절 | AST — a164: 만료 모드는 부르지 않음 |"],
- "state": ["상태 변경 없음."],
- "safety": ["Safe edit boundary: 부재 모드(인자 거짓)는 지금과 같은 두 판정을 같은 순서로.", "High-risk impact: 인접 — Q1 을 만료 모드에서 다시 부르면 수락 경로가 죽음(변이 4.7), 부재 모드에서 건너뛰면 부재 대사가 열림(변이 4.7 둘째)."]
-},
-"internal-verifylive--readreconcileset": {
- "role": "근거 함수(편집 없음) — 만료 모드도 이 함수를 그대로 두 번 부른다는 설계 주장(A1 · P2-5 ⑤)의 근거.",
- "inputs": ["| `r ReconcileReader`·`symbol` | 봉인된 리더 · artifact 줄 심볼 | `Reconcile` | — |"],
- "effects": {},
- "calls": ["| `readReconcileConditionalGroup` | OPEN · CLOSED 그룹 | 페이지 오류 = 거절 | AST |", "| `readReconcilePlainGroup` | 일반 OPEN | 같음 | AST |"],
- "state": ["상태 변경 없음. 고정 순서: 조건 OPEN → 일반 OPEN → CLOSED."],
- "safety": ["편집하지 않음. a164 만료 모드가 다른 읽기 집합을 만들면 변이 4.17 과 시험 2.4 의 호출 수 단언이 잡음."]
-},
-"internal-verifylive--reconcileapproval.writetext": {
- "role": "승인 화면. a164 는 만료 모드에서 머리 문구와 「상세 조회 2회」 를 보이는 갈래를 더함(P3-6). 부재 모드 출력은 바이트 단위로 불변.",
- "inputs": ["| 수신자 `a ReconcileApproval` | 스칼라 필드만(봉인 2층) | `Reconcile` | — |", "| `w io.Writer` | 단말 | cmd | 쓰기 오류를 돌려줌 → `approval-display` |"],
- "effects": {"B1": "운영자 화면에 승인 내용 씀"},
- "calls": ["| `fmt.Fprintf`·`io.WriteString` | 화면 문구 | 쓰기 오류 반환 | AST |"],
- "state": ["쓰기 하나가 부작용. 원문 계좌 없음(마스크만)."],
- "safety": ["Safe edit boundary: 모드 필드가 비면(부재) 지금 문구 그대로.", "High-risk impact: 낮음 — 표시만, 판정 없음."]
-},
-"internal-verifylive--artifact.terminal": {
- "role": "종결 술어 한 곳. a164 는 넷째 종결 `ReconciledExpired` 를 더함 — `Outstanding`·`PendingCleanup`·HOLD·노출 상한이 한 번에 따름(design D5).",
- "inputs": ["| 수신자 `a Artifact` | 기록 한 줄의 artifact | `record.go` `Artifact` | 순수 술어 |"],
- "effects": {},
- "calls": ["| (없음) | 호출 0 | 해당 없음 | AST |"],
- "state": ["상태 변경 없음. 생산 호출 자리(HEAD grep): `record.go` `outstandingLines` 두 곳 · `projection_reconciled.go` · `runner.go` `joinChain`."],
- "safety": ["Safe edit boundary: `|| a.ReconciledExpired` 한 항만. 새 필드를 세우는 경로는 만료 대사 하나뿐이어야 함.", "High-risk impact: yes — 이 술어가 정리 대상·노출 상한·HOLD 를 정함."]
-},
-"internal-verifylive--artifact.marshaljson": {
- "role": "대사된 artifact 의 확정형 직렬화. a164 는 넷째 종결도 확정형으로(보유·취소 필드 없이) 씀.",
- "inputs": ["| 수신자 `a Artifact` | — | `record.go` | json 오류만 |"],
- "effects": {},
- "calls": ["| `json.Marshal` | 직렬화 | 오류 반환 | AST |"],
- "state": ["상태 변경 없음. 대사되지 않은 artifact 는 별칭 타입으로 base 와 바이트 동일(`TestUnreconciledArtifactsSerialiseExactlyAsTheBase`)."],
- "safety": ["Safe edit boundary: 조건을 `ReconciledAbsent || ReconciledExpired` 로 넓히고 `reconciled_absent` 를 omitempty 로, `reconciled_expired` 를 omitempty 로 더함 — 부재 줄 바이트 불변.", "High-risk impact: 인접 — 확정형이 HeldUntil 을 실으면 구 바이너리 재보유 모양이 바뀜."]
-},
-"internal-verifylive--reconciledartifacts": {
- "role": "status·report 투영 필터(`projection_reconciled.go:26`). a164 는 넷째 종결도 「대사로 종결」 로 보임(P2-5 ⑦).",
- "inputs": ["| `entries []Entry` | 기록 전체 | `LoadEntries` | — |"],
- "effects": {},
- "calls": ["| `Artifact.terminal` | 단조성 | 순수 | AST |"],
- "state": ["상태 변경 없음. 종결 뒤 비-종결 줄은 되살리지 않음(B4)."],
- "safety": ["Safe edit boundary: B6 조건에 `|| a.ReconciledExpired` 만.", "High-risk impact: 낮음 — 표시 투영."]
-},
-"internal-verifylive--writereconciled": {
- "role": "report·status 텍스트. a164 는 artifact 마다 「reconciled absent」/「reconciled expired」 를 갈라 씀(task 2.8).",
- "inputs": ["| `arts []Artifact` | `ReconciledArtifacts` 결과 | report.go | — |"],
- "effects": {"B2": "텍스트 한 줄씩 씀"},
- "calls": ["| `fmt.Fprintf` | 텍스트 | 오류 무시(기존 관례) | AST |"],
- "state": ["쓰기만."],
- "safety": ["Safe edit boundary: 부재 artifact 의 줄 문구는 그대로.", "High-risk impact: 낮음."]
-},
-"internal-official--decodereconcileconditionalpage": {
- "role": "목록 행 엄격 해독. a164 는 행에 `FirstStatus` 한 필드 대입을 더함(P2-3) — 부재 모드는 그 필드를 읽지 않음.",
- "inputs": ["| `result []byte` | `result` 원문 | `getAcct` | 스키마 위반 = `ErrReconcileSchema` |"],
- "effects": {},
- "uncovered": {"B3": "행 객체가 `apiConditionalOrder` 로 안 풀리는 경우(예: 필드 형 불일치) — 기존 공백"},
- "calls": ["| `decodeReconcileEnvelope` | 봉투 검증 | 오류 반환 | AST |", "| `json.Unmarshal` | 행 해독 | 오류 = 스키마 거절 | AST |"],
- "state": ["상태 변경 없음."],
- "safety": ["Safe edit boundary: 대입 한 줄에 `FirstStatus: o.First.Status` 만.", "High-risk impact: 인접 — 만료 모드 A4 의 CLOSED 행 leg 검사 입력."]
-},
-"cmd-tossctl--newverifyreconcilecmd": {
- "role": "명령 표면. a164 는 같은 명령에 `--expired` 플래그 하나를 더함(별도 하위 명령 금지, `mutating: \"true\"` 상속).",
- "inputs": ["| `root *rootOptions` | 전역 플래그 | cobra | — |"],
- "effects": {},
- "calls": ["| `cmd.Flags().StringVar` | 플래그 | — | AST |", "| `runVerifyReconcile` | RunE | 오류 반환 | AST |"],
- "state": ["상태 없음."],
- "safety": ["Safe edit boundary: Annotations 불변, 플래그 하나 추가.", "High-risk impact: 낮음 — 표면."]
-},
-"cmd-tossctl--runverifyreconcile": {
- "role": "명령 흐름. a164 는 `Expired` 를 Params 에 넘기고 결과 문구를 모드별로 고름.",
- "inputs": ["| `opts *verifyReconcileOptions` | market · record · (a164) expired | cobra | — |"],
- "effects": {"B6": "결과 문구 출력 없음(거절)"},
- "uncovered": {"B1": "cobra 가 늘 ctx 를 줌", "B5": "리더 생성 거절 — 생성자 시험(`TestReconcileNarrowReaderRefusesAccountShapes`)이 함수 층에서 잼"},
- "calls": ["| `reconcilePreflight`·`acquireVerifyExecutionLock`·`acquireVerifyRateBudget` | 사전 검사·배제·lease | 거절 | AST |", "| `verifyReconcileReaderFactory` | 좁은 리더 | 거절 | AST |", "| `verifylive.Reconcile` | 판정 | 거절 | AST |"],
- "state": ["잠금·lease 를 defer 로 해제."],
- "safety": ["Safe edit boundary: 순서 불변, Params 필드 하나 추가.", "High-risk impact: 인접."]
-},
-"cmd-tossctl--reconcilereads.ensureidentity": {
- "role": "근거 함수(편집 없음) — 새 by-id 메서드가 기존 두 계좌 범위 메서드처럼 이 함수 뒤에만 위임한다는 설계 주장(P2-4)의 근거.",
- "inputs": ["| `r.verified` | 첫 계좌 범위 읽기 전 거짓 | 생성자 | 한 번 확인 뒤 참 |"],
- "effects": {"B3": "신원 불일치 → 읽지 않음"},
- "uncovered": {"B2": "재조회 자체 실패 — 기존 공백"},
- "calls": ["| `r.client.Accounts` | 신원 재확인 | 오류 반환 | AST |"],
- "state": ["`r.verified = true` 한 번."],
- "safety": ["편집하지 않음. 새 메서드가 이 호출을 빼면 변이 4.20 둘째가 잡아야 함."]
-}
+ "internal-verifylive--reconcile": {
+  "role": "판정 파이프라인 본체. a164 편집(acb6a6b36): `p.Expired` 분기 — 정적 거절 Q1↔만료 어휘(B8~B11), 승인 모드(B13), 창 시작 직후 by-id ①(B17·B18), 둘째 목록 뒤 by-id ②(B21·B22), A2 쌍 비교(B26·B27), 판정 선택(B30~B34), 만료 줄 직렬화(B41·B42). 플래그 없음 경로의 호출 순서·거절 코드 불변(1.2 시험 + a121 시험 전부 통과).",
+  "inputs": [
+   "| `p.RecordPath` | cmd 가 `--config-dir` 에서 유도한 경로 | `reconcilePreflight` | 읽기 실패 `record-unreadable`(B5) |",
+   "| `p.Reader` | 공식 GET 셋(→ a164 넷)만 노출하는 인터페이스 | `ReconcileReader` 봉인(`reconcile_seal_test.go`) | nil 이면 `read-error`(B2) |",
+   "| `p.Approve` | 사람 y/N seam | cmd `verifyReconcileApprove` | nil 이면 `not-approved`(B3) |",
+   "| `p.Now` | 시계 | 생산 `time.Now` | nil 이면 `time.Now`(B1) |",
+   "| 패키지 상태 `reconcileRetention`·`reconcileFreshnessBound` | 생산 nil · 15 s | `reconcile.go:346`·`:356` | Q1 없음 → `retention-unmeasured`(B8), Q3 ≤0 → `freshness-unfixed`(B9) |"
+  ],
+  "effects": {
+   "B1": "`now = time.Now`",
+   "B4": "`out = io.Discard`",
+   "B14": "승인 화면 쓰기 실패",
+   "B18": "by-id ① 계좌 범위 GET(a164)",
+   "B22": "by-id ② 계좌 범위 GET(a164)",
+   "B35": "잠금 실패",
+   "B41": "만료 줄 직렬화(넷째 종결 표지)",
+   "B45": "한 번의 쓰기 실패 — 찢긴 줄 가능(오류 문구가 알림)"
+  },
+  "uncovered": {
+   "B1": "생산 호출자(cmd)는 항상 `time.Now` 를 줌",
+   "B2": "생산 호출자는 항상 리더를 줌",
+   "B3": "생산 호출자는 항상 승인 seam 을 줌",
+   "B4": "생산 호출자는 단말 출력을 줌",
+   "B37": "잠근 fd 읽기 오류 — 주입 seam 없음",
+   "B40": "선택 때 개행 꼬리와 지문 일치가 이미 막아 사실상 도달 불가(방어)",
+   "B43": "`crypto/rand` 실패만(두 직렬화 공통)",
+   "B46": "잠그지 않는 작성자 끼어들기 — 층을 내린 `TestLockedAppendRefusesWhenTheRecordGrewAfterTheLockedRead` 가 잠금 층에서 잼"
+  },
+  "calls": [
+   "| `readRecordStrict`·`decodeRecordStrict` | 엄격 해독·지문 | 실패 = 거절, 재시도 없음 | AST |",
+   "| `selectReconcileCandidate` | 후보 정확히 하나 | 0·복수·M0 = 거절 | AST |",
+   "| `bindReconcileAccount` | 계좌 결속 | mixed → mismatch 순 | AST |",
+   "| `checkReconcileRetention` | Q1 정적 거절(승인 앞) | 생산 nil = 거절 | AST — a164: 만료 모드는 부르지 않음(D7) |",
+   "| `checkReconcileInstrument` | 양성 대조 두 번 | 오류·다른 심볼 = 거절 | AST |",
+   "| `readReconcileSet` | 세 그룹 두 번 읽기 | 오류 = `read-error` 등, 자동 재시도 없음 | AST — a164 는 그대로 부름(P2-5 ⑤) |",
+   "| `checkReconcileWindow` | Q3 창 + Q1 나이 재검(두 번) | 초과 = 거절 | AST — a164: 모드 인자로 Q1 재검 생략 |",
+   "| `checkReconcileAbsence`·`checkReconcileClosedStatus` | 부재 판정 | 거절 | AST — a164: 만료 모드는 `checkReconcileExpiry` |",
+   "| `lockRecordForAppend`·`contents`·`appendLine` | 잠금·재읽기·한 번의 쓰기 | 잠김·크기 이동 = 거절, 그 밖 오류 = 큰 소리 | AST |"
+  ],
+  "state": [
+   "기록 파일 끝에 한 줄 추가가 유일한 부작용(B30 이후). 거절은 기록을 바꾸지 않음(`rcRefuse` 가 바이트 비교).",
+   "a164 편집 뒤에도 쓰기 자리는 `appendLine` 하나 — 만료 모드도 같은 잠금·쓰기 경로를 탐(복사 금지)."
+  ],
+  "safety": [
+   "Safe edit boundary: `p.Expired` 가 거짓이면 호출 순서·인자·거절 코드가 base 와 같아야 함 — 구조 핀(`TestReconcileRechecksTheWindowAtBothContractPoints`·`TestReconcileFinalGateSitsAtTheWriteBoundary`·`TestReconcileStaticRefusalsComeBeforeTheHumanApproval`)과 a121 행동 시험 전부가 그대로 통과해야 함.",
+   "High-risk impact: yes — 잘못 닫으면 살아 있는 조건주문이 정리·HOLD·노출 상한에서 빠짐. 만료 모드의 생존 판정(A5)은 부재 모드와 같은 보조 함수로만 판정."
+  ]
+ },
+ "internal-verifylive--checkreconcileabsence": {
+  "role": "부재 판정. a164 편집: OPEN 조건·일반 OPEN(옛 B1·B2)과 발동 흔적(옛 B6·B7)을 `checkReconcileNoLiveOrder`·`checkReconcileNoFiredTrace` 로 옮김(분기 7 → 4) — 두 모드가 같은 보조 함수를 부름. 부재 모드 거절 순서는 `TestReconcileAbsenceGuardsRefuseInTheirContractOrder` 가 편집 전후 같은 결과로 고정. Q6 문구 D8.",
+  "inputs": [
+   "| `r reconcileRead` | 첫 읽기 스냅숏(둘째와 multiset 동일 확인 뒤) | `readReconcileSet` | — |",
+   "| `target Artifact` | 기록이 고른 후보 | `selectReconcileCandidate` | — |"
+  ],
+  "effects": {},
+  "calls": [
+   "| `refuse` | 거절 코드 생성 | 순수 | AST |",
+   "| `fmt.Sprintf` | 문구 | 순수 | AST |"
+  ],
+  "state": [
+   "상태 변경 없음. 대상 행 루프(B3~B5)는 첫 일치에서 반환 — EXPIRED 면 `closed-target-expired`(Q6), 그 밖 `closed-target-present`.",
+   "발동 흔적 루프(B6·B7)는 대상 행을 빼지 않음 — a164 만료 모드에서 대상 CLOSED 행이 `COMPLETED` 면 `closed-fired-trace`(P3-5)."
+  ],
+  "safety": [
+   "Safe edit boundary: B1·B2 를 `checkReconcileNoLiveOrder`, B6·B7 을 `checkReconcileNoFiredTrace` 로 옮기되 이 함수는 그 둘을 같은 순서로 부름. 문구 상수만 D8 로 교체.",
+   "High-risk impact: yes — A5 는 생존 판정의 유일한 자리(design D2 위계). 보조 함수에 대상 제외 인자를 넣지 않음."
+  ]
+ },
+ "internal-verifylive--checkreconcilewindow": {
+  "role": "Q3 창 + Q1 나이 재검. a164 편집: 모드 인자 `expired` — 참이면 Q1 재검을 건너뜀(B2, design D7).",
+  "inputs": [
+   "| `start`·`now` | 창 시작(a164 만료 모드는 by-id ① 직전)과 지금 | `Reconcile` | 음수·초과 = `freshness-exceeded` |",
+   "| `target.CreatedAt` | Q1 나이 | 기록 줄 | `checkReconcileRetention` 이 판정 |"
+  ],
+  "effects": {},
+  "calls": [
+   "| `checkReconcileRetention` | Q1 나이 재검 | 거절 | AST — a164: 만료 모드는 부르지 않음 |"
+  ],
+  "state": [
+   "상태 변경 없음."
+  ],
+  "safety": [
+   "Safe edit boundary: 부재 모드(인자 거짓)는 지금과 같은 두 판정을 같은 순서로.",
+   "High-risk impact: 인접 — Q1 을 만료 모드에서 다시 부르면 수락 경로가 죽음(변이 4.7), 부재 모드에서 건너뛰면 부재 대사가 열림(변이 4.7 둘째)."
+  ]
+ },
+ "internal-verifylive--readreconcileset": {
+  "role": "근거 함수(편집 없음) — 만료 모드도 이 함수를 그대로 두 번 부른다는 설계 주장(A1 · P2-5 ⑤)의 근거.",
+  "inputs": [
+   "| `r ReconcileReader`·`symbol` | 봉인된 리더 · artifact 줄 심볼 | `Reconcile` | — |"
+  ],
+  "effects": {},
+  "calls": [
+   "| `readReconcileConditionalGroup` | OPEN · CLOSED 그룹 | 페이지 오류 = 거절 | AST |",
+   "| `readReconcilePlainGroup` | 일반 OPEN | 같음 | AST |"
+  ],
+  "state": [
+   "상태 변경 없음. 고정 순서: 조건 OPEN → 일반 OPEN → CLOSED."
+  ],
+  "safety": [
+   "편집하지 않음. a164 만료 모드가 다른 읽기 집합을 만들면 변이 4.17 과 시험 2.4 의 호출 수 단언이 잡음."
+  ]
+ },
+ "internal-verifylive--reconcileapproval.writetext": {
+  "role": "승인 화면. a164 편집: 만료 모드 갈래(B1 — 모드·상세 조회 2회·근거 규칙), 부재 모드(B2 else)는 a121 문구 그대로.",
+  "inputs": [
+   "| 수신자 `a ReconcileApproval` | 스칼라 필드만(봉인 2층) | `Reconcile` | — |",
+   "| `w io.Writer` | 단말 | cmd | 쓰기 오류를 돌려줌 → `approval-display` |"
+  ],
+  "effects": {
+   "B1": "만료 모드 머리 두 줄",
+   "B2": "a121 머리 한 줄"
+  },
+  "calls": [
+   "| `fmt.Fprintf`·`io.WriteString` | 화면 문구 | 쓰기 오류 반환 | AST |"
+  ],
+  "state": [
+   "쓰기 하나가 부작용. 원문 계좌 없음(마스크만)."
+  ],
+  "safety": [
+   "Safe edit boundary: 모드 필드가 비면(부재) 지금 문구 그대로.",
+   "High-risk impact: 낮음 — 표시만, 판정 없음."
+  ]
+ },
+ "internal-verifylive--artifact.terminal": {
+  "role": "종결 술어 한 곳. a164 는 넷째 종결 `ReconciledExpired` 를 더함 — `Outstanding`·`PendingCleanup`·HOLD·노출 상한이 한 번에 따름(design D5).",
+  "inputs": [
+   "| 수신자 `a Artifact` | 기록 한 줄의 artifact | `record.go` `Artifact` | 순수 술어 |"
+  ],
+  "effects": {},
+  "calls": [
+   "| (없음) | 호출 0 | 해당 없음 | AST |"
+  ],
+  "state": [
+   "상태 변경 없음. 생산 호출 자리(HEAD grep): `record.go` `outstandingLines` 두 곳 · `projection_reconciled.go` · `runner.go` `joinChain`."
+  ],
+  "safety": [
+   "Safe edit boundary: `|| a.ReconciledExpired` 한 항만. 새 필드를 세우는 경로는 만료 대사 하나뿐이어야 함.",
+   "High-risk impact: yes — 이 술어가 정리 대상·노출 상한·HOLD 를 정함."
+  ]
+ },
+ "internal-verifylive--artifact.marshaljson": {
+  "role": "대사된 artifact 의 확정형 직렬화. a164 는 넷째 종결도 확정형으로(보유·취소 필드 없이) 씀.",
+  "inputs": [
+   "| 수신자 `a Artifact` | — | `record.go` | json 오류만 |"
+  ],
+  "effects": {},
+  "calls": [
+   "| `json.Marshal` | 직렬화 | 오류 반환 | AST |"
+  ],
+  "state": [
+   "상태 변경 없음. 대사되지 않은 artifact 는 별칭 타입으로 base 와 바이트 동일(`TestUnreconciledArtifactsSerialiseExactlyAsTheBase`)."
+  ],
+  "safety": [
+   "Safe edit boundary: 조건을 `ReconciledAbsent || ReconciledExpired` 로 넓히고 `reconciled_absent` 를 omitempty 로, `reconciled_expired` 를 omitempty 로 더함 — 부재 줄 바이트 불변.",
+   "High-risk impact: 인접 — 확정형이 HeldUntil 을 실으면 구 바이너리 재보유 모양이 바뀜."
+  ]
+ },
+ "internal-verifylive--reconciledartifacts": {
+  "role": "status·report 투영 필터(`projection_reconciled.go:26`). a164 는 넷째 종결도 「대사로 종결」 로 보임(P2-5 ⑦).",
+  "inputs": [
+   "| `entries []Entry` | 기록 전체 | `LoadEntries` | — |"
+  ],
+  "effects": {},
+  "calls": [
+   "| `Artifact.terminal` | 단조성 | 순수 | AST |"
+  ],
+  "state": [
+   "상태 변경 없음. 종결 뒤 비-종결 줄은 되살리지 않음(B4)."
+  ],
+  "safety": [
+   "Safe edit boundary: B6 조건에 `|| a.ReconciledExpired` 만.",
+   "High-risk impact: 낮음 — 표시 투영."
+  ]
+ },
+ "internal-verifylive--writereconciled": {
+  "role": "report·status 텍스트. a164 편집: artifact 마다 「reconciled absent」/「reconciled expired」 를 가름(B3).",
+  "inputs": [
+   "| `arts []Artifact` | `ReconciledArtifacts` 결과 | report.go | — |"
+  ],
+  "effects": {
+   "B2": "텍스트 한 줄씩 씀",
+   "B3": "만료 라벨"
+  },
+  "calls": [
+   "| `fmt.Fprintf` | 텍스트 | 오류 무시(기존 관례) | AST |"
+  ],
+  "state": [
+   "쓰기만."
+  ],
+  "safety": [
+   "Safe edit boundary: 부재 artifact 의 줄 문구는 그대로.",
+   "High-risk impact: 낮음."
+  ]
+ },
+ "internal-official--decodereconcileconditionalpage": {
+  "role": "목록 행 엄격 해독. a164 는 행에 `FirstStatus` 한 필드 대입을 더함(P2-3) — 부재 모드는 그 필드를 읽지 않음.",
+  "inputs": [
+   "| `result []byte` | `result` 원문 | `getAcct` | 스키마 위반 = `ErrReconcileSchema` |"
+  ],
+  "effects": {},
+  "uncovered": {
+   "B3": "행 객체가 `apiConditionalOrder` 로 안 풀리는 경우(예: 필드 형 불일치) — 기존 공백"
+  },
+  "calls": [
+   "| `decodeReconcileEnvelope` | 봉투 검증 | 오류 반환 | AST |",
+   "| `json.Unmarshal` | 행 해독 | 오류 = 스키마 거절 | AST |"
+  ],
+  "state": [
+   "상태 변경 없음."
+  ],
+  "safety": [
+   "Safe edit boundary: 대입 한 줄에 `FirstStatus: o.First.Status` 만.",
+   "High-risk impact: 인접 — 만료 모드 A4 의 CLOSED 행 leg 검사 입력."
+  ]
+ },
+ "cmd-tossctl--newverifyreconcilecmd": {
+  "role": "명령 표면. a164 는 같은 명령에 `--expired` 플래그 하나를 더함(별도 하위 명령 금지, `mutating: \"true\"` 상속).",
+  "inputs": [
+   "| `root *rootOptions` | 전역 플래그 | cobra | — |"
+  ],
+  "effects": {},
+  "calls": [
+   "| `cmd.Flags().StringVar` | 플래그 | — | AST |",
+   "| `runVerifyReconcile` | RunE | 오류 반환 | AST |"
+  ],
+  "state": [
+   "상태 없음."
+  ],
+  "safety": [
+   "Safe edit boundary: Annotations 불변, 플래그 하나 추가.",
+   "High-risk impact: 낮음 — 표면."
+  ]
+ },
+ "cmd-tossctl--runverifyreconcile": {
+  "role": "명령 흐름. a164 편집: `Expired: opts.expired` 전달, 결과 문구 라벨(B7).",
+  "inputs": [
+   "| `opts *verifyReconcileOptions` | market · record · (a164) expired | cobra | — |"
+  ],
+  "effects": {
+   "B6": "결과 문구 출력 없음(거절)",
+   "B7": "만료 라벨"
+  },
+  "uncovered": {
+   "B1": "cobra 가 늘 ctx 를 줌",
+   "B5": "리더 생성 거절 — 생성자 시험(`TestReconcileNarrowReaderRefusesAccountShapes`)이 함수 층에서 잼"
+  },
+  "calls": [
+   "| `reconcilePreflight`·`acquireVerifyExecutionLock`·`acquireVerifyRateBudget` | 사전 검사·배제·lease | 거절 | AST |",
+   "| `verifyReconcileReaderFactory` | 좁은 리더 | 거절 | AST |",
+   "| `verifylive.Reconcile` | 판정 | 거절 | AST |"
+  ],
+  "state": [
+   "잠금·lease 를 defer 로 해제."
+  ],
+  "safety": [
+   "Safe edit boundary: 순서 불변, Params 필드 하나 추가.",
+   "High-risk impact: 인접."
+  ]
+ },
+ "cmd-tossctl--reconcilereads.ensureidentity": {
+  "role": "근거 함수(편집 없음) — 새 by-id 메서드가 기존 두 계좌 범위 메서드처럼 이 함수 뒤에만 위임한다는 설계 주장(P2-4)의 근거.",
+  "inputs": [
+   "| `r.verified` | 첫 계좌 범위 읽기 전 거짓 | 생성자 | 한 번 확인 뒤 참 |"
+  ],
+  "effects": {
+   "B3": "신원 불일치 → 읽지 않음"
+  },
+  "uncovered": {
+   "B2": "재조회 자체 실패 — 기존 공백"
+  },
+  "calls": [
+   "| `r.client.Accounts` | 신원 재확인 | 오류 반환 | AST |"
+  ],
+  "state": [
+   "`r.verified = true` 한 번."
+  ],
+  "safety": [
+   "편집하지 않음. 새 메서드가 이 호출을 빼면 변이 4.20 둘째가 잡아야 함."
+  ]
+ },
+ "internal-verifylive--rcharness.params": {
+  "role": "시험 하네스(시험 전용). a164 편집: `Expired: h.expired` 한 줄 — 만료 모드 시험이 같은 하네스로 Reconcile 을 몰게 함. 비례 원칙상 무거운 규율 대상 아님 — 번들은 게이트가 요구해서 둠.",
+  "inputs": [
+   "| 수신자 `h *rcHarness` | 시험 하네스 | `reconcile_fixture_test.go` | — |"
+  ],
+  "effects": {},
+  "calls": [
+   "| (함수 리터럴 Approve) | 승인 기록 | 시험 seam | AST |"
+  ],
+  "state": [
+   "`Approve` 리터럴이 하네스의 승인·화면·목록 호출 수를 기록함(기존)."
+  ],
+  "safety": [
+   "생산 동작 무관(시험 파일). `expired` 거짓이면 a121 하네스와 같은 Params."
+  ],
+  "cover": {
+   "B1": [
+    "TestExpiryReconcileAcceptsTwoStatementsAndAnExpiredClosedRow",
+    "TestReconcileAppendsOneReconciledAbsentLineWhenEveryConditionHolds"
+   ]
+  }
+ },
+ "internal-verifylive--testreconcilerefusesthetargetexpiredinclosedwiththepermanentmessage": {
+  "role": "Q6 시험(시험 전용). a164 편집: 기대 문구를 D8 로 바꾸고 「영구히」 부재를 단언 — 이름은 FLM 연속성을 위해 a121 그대로.",
+  "inputs": [
+   "| `t *testing.T` | — | go test | — |"
+  ],
+  "effects": {},
+  "calls": [
+   "| `rcRefuse` | 거절·기록 불변 단언 | 시험 | AST |"
+  ],
+  "state": [
+   "없음."
+  ],
+  "safety": [
+   "생산 동작 무관. 부재 모드의 Q6 거절 코드·위치는 그대로임을 이 시험이 계속 잼."
+  ],
+  "cover": {
+   "B1": [
+    "TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage"
+   ]
+  }
+ },
+ "internal-verifylive--testreconcileparamscarryonlynarrowtypes": {
+  "role": "봉인 2층 시험(시험 전용). a164 편집: 허용 타입에 `bool` 하나(ReconcileParams.Expired — 값 타입, 메서드 없음).",
+  "inputs": [
+   "| `t *testing.T` | — | go test | — |"
+  ],
+  "effects": {},
+  "calls": [
+   "| `reflect.TypeOf` | 필드 타입 대조 | 순수 | AST |"
+  ],
+  "state": [
+   "없음."
+  ],
+  "safety": [
+   "bool 은 메서드가 없어 쓰기 경로를 열 수 없음. Approval·Account 는 여전히 스칼라만."
+  ],
+  "cover": {
+   "B1": [
+    "TestReconcileParamsCarryOnlyNarrowTypes"
+   ],
+   "B2": [
+    "TestReconcileParamsCarryOnlyNarrowTypes"
+   ],
+   "B3": [
+    "TestReconcileParamsCarryOnlyNarrowTypes"
+   ]
+  }
+ }
 }

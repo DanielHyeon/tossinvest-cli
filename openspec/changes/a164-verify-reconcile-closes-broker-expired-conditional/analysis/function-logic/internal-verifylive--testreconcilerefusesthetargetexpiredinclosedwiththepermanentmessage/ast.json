@@ -1,0 +1,142 @@
+{
+  "file": "internal/verifylive/reconcile_g1_test.go",
+  "source_sha256": "9bee0396eed204f1c965cd010ecb360db87e98dbe26d3f4d2346985ffc5b8df2",
+  "package": "verifylive",
+  "function": "TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage",
+  "signature": "TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage(params=1, results=0)",
+  "start": {
+    "line": 141,
+    "column": 1
+  },
+  "end": {
+    "line": 149,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 7
+      },
+      "text": "newRCHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 23
+      },
+      "text": "rcA063Entries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 2
+      },
+      "text": "h.reader.set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 52
+      },
+      "text": "rcCondPage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 74
+      },
+      "text": "rcCondRow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 7
+      },
+      "text": "rcRefuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 23
+      },
+      "text": "r.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 43
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 60
+      },
+      "text": "r.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 80
+      },
+      "text": "r.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 142,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 144,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

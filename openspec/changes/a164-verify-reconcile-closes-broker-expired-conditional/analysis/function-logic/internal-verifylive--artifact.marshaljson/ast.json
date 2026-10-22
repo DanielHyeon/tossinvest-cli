@@ -1,16 +1,16 @@
 {
   "file": "internal/verifylive/reconcile_record.go",
-  "source_sha256": "84baeb1173ccb0d7bf193383d79815823102d52d377d2988a411957962350987",
+  "source_sha256": "01f19dd45c00351b9e845a5d2963fbf65811a53c4e48d631c476b9c61adae0cf",
   "package": "verifylive",
   "function": "MarshalJSON",
   "receiver": "Artifact",
   "signature": "Artifact.MarshalJSON(params=0, results=2)",
   "start": {
-    "line": 109,
+    "line": 110,
     "column": 1
   },
   "end": {
-    "line": 126,
+    "line": 128,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 111,
+        "line": 112,
         "column": 2
       }
     }
@@ -27,14 +27,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 112,
+        "line": 113,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 114,
+        "line": 115,
         "column": 2
       }
     }
@@ -43,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 112,
+        "line": 113,
         "column": 10
       },
       "text": "json.Marshal"
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 112,
+        "line": 113,
         "column": 23
       },
       "text": "plainArtifact"
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 114,
+        "line": 115,
         "column": 9
       },
       "text": "json.Marshal"
