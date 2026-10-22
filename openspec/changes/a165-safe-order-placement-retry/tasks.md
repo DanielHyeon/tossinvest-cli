@@ -1,4 +1,4 @@
-> 착수 2026-10-23(Terra). 1.3 FAIL → §2 미착수, D7 사람 결정 대기(`review.md`).
+> 착수 2026-10-23(Terra). 1.3 1차·2차 FAIL → §2 미착수, F3 사람 결정 대기(`review.md`).
 
 ## 0. 착수 준비
 
@@ -14,7 +14,7 @@
 - [ ] 1.1 design.md — 갈래표(미접수 확정 / 결과 불명 / 확정 거절)를 FLM 반환 지점에 매핑, 같은 키 강제, 8s·최대 2회 시간 상한,
   재시도 중 재시작·ctx 취소·조회-재전송 경합, 손절·flatten 즉시성 영향, 401 기존 재전송(`client.go:344`)을 「확실히 미접수」로 넣고 근거를 시험으로 고정(사람 결정 3). — 첫 판(1.3 FAIL) → 2판 [design.md](design.md)(사용자 2차 결정 반영, 2026-10-23).
 - [ ] 1.2 spec delta — order-execution 「Retry Matrix 산출물」·「취소의 일시적 거절 처리」 MODIFIED. — 2판: 「Retry Matrix 산출물」·「취소의 일시적 거절 처리」·「IN_DOUBT 해소」 MODIFIED(strict validate 통과).
-- [ ] 1.3 proposal-freeze 리뷰(적대적 Eng 보이스 포함) → `review.md`. — 1차 2026-10-23 **FAIL(blocker 3: A1·S1·S2)**. D7 사람 결정(review.md 질문 1~7) 뒤 1.1·1.2 재작성 → 재리뷰.
+- [ ] 1.3 proposal-freeze 리뷰(적대적 Eng 보이스 포함) → `review.md`. — 1차 2026-10-23 **FAIL(blocker 3: A1·S1·S2)**. D7 사람 결정(review.md 질문 1~7) 뒤 1.1·1.2 재작성 → 재리뷰. — 2차(2판) 2026-10-23 **FAIL(blocker F1·F2·F3)**. F3(R1·R2 생산 도달 0) 사람 결정 대기(review.md 「1.3 재리뷰(2판)」).
 
 ## 2. 구현 (RED → GREEN → REFACTOR → VERIFY)
 

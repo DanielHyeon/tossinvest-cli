@@ -67,3 +67,31 @@
 | S10 | 수리 — 「한다(SHALL)」 형, 시나리오 추가 |
 | A11·S12 | 기록 — 잔여 R-a165-4, D11 |
 | 신규 | strategy first-leg 는 재전송 범위 밖(D9, 보수 — 오늘 동작) |
+
+## 1.3 재리뷰(2판) — 2026-10-23 — **FAIL (blocker 3, 고유 3) → §2 미착수**
+
+- 대상: design 2판 · delta 2판 · 23 번들. HEAD `6baa60a78`. 보이스 둘(새 컨텍스트, 읽기 전용): **A2 — 적대 Eng 레드팀**(FAIL, blocker 2), **S2 — 안전·범위**(FAIL, blocker 2). 파일 편집·`make`·`tossctl` 0.
+  A2 가 실행한 기존 시험 `go test ./internal/flatten -run 'TestARefusedCancelIsNotAFailure|TestUnresolvedCancelHoldsItsSymbol'` PASS.
+
+| id | 보이스 | 심각도 | 요약 | 처분(3판 계획) |
+|---|---|---|---|---|
+| F1 | A2·S2 | **BLOCKER** | flatten 취소 409 소진 → FAILED_CONFIRMED → `classifyCancel` B3(flatten.go:458) `FlattenStepFailed` → `UnsettledCancelSymbols`(journal/flatten.go:326–328)가 안 셈 → `planLiquidation`(liquidate.go:281–319)이 **살아 있는 주문 옆에서 전량 매도** — oversell 가드(`TestUnresolvedCancelHoldsItsSymbol`) 우회. 기존 시험 flatten_test.go:487–489 가 「FAILED_CONFIRMED = 주문이 살아 있지 않음」을 고정한다. already-processing 의 실측 의미는 「주문이 아직 처리 중 = 살아 있음」(M16) | 수용 — flatten 정책은 소진 시 **오늘 경로(AMBIGUOUS → `resolveStep`)** 로 둔다. 확정 미수락 분류(R3)는 엔진 정책에만. 시험 「소진 → 그 종목 Held」 추가. 엔진 쪽은 두 보이스 모두 안전 확인(`clearTheSymbol` B11 1697, `LiveOrdersForSymbol` 은 취소 FAILED_CONFIRMED 로 주문을 지우지 않음 — fills.go:1859–1882) |
+| F2 | A2 | **BLOCKER** | (b) 조회·R2 를 1페이지로 판정하는데 1페이지 완전성 근거 없음 — openapi 는 CLOSED 정렬 방향을 정하지 않고, `From` 미지정이면 전 기간. 첫 주문이 즉시 체결돼 CLOSED 깊이에 묻히면 사전 부재 → 재전송 → R2 「1건 = ACK id」 → CONFIRMED, 첫 주문 추적 밖 | 수용 — `OrderQuery.From` 에 첫 전송 KST 거래일(−1일 여유), 페이지가 `HasNext=true` 이고 일치가 없으면 「모름」(재전송 없음·R2 실패). CLOSED 정렬은 [미측정] — 사람 측정 1회 권고 |
+| F3 | S2 | **BLOCKER(사람 결정)** | **R1·R2 는 생산 도달 0** — 생산 `Place` 호출자 4곳 중 매수는 `tracer.go:442`(non-test 생성자 0)와 `strategydispatch/adapters.go:112`(`GatewayAdapter` 생산 배선 0)뿐이고, 생산 전략 진입은 `PlaceClaimedStrategy`(strategy_dispatch_cycle.go:206)인데 D9 가 뺐다 | **사람 결정 필요** — 아래 |
+| F4 | A2·S2 | MAJOR | `err == official.ErrServer` 는 「주문 POST 가 5xx」가 아니다 — 토큰 교환 non-200 이 bare `ErrServer`(token.go:152–156), SendTracker·`GotFirstResponseByte` 는 ctx 전체라 토큰 교환·accounts GET 의 끊김도 (b) 로 셈 → 주문 바이트 0 인 실패가 「재전송」(결정 4 위반, 중복 위험은 0) | 수용 — 판정을 주문 POST 자체에 귀속(official 에 요청별 신호), 토큰 5xx·account-seq 끊김 시험 |
+| F5 | A2·S2 | MAJOR(사실) | 엔진에는 세션 중 IN_DOUBT 해소기가 없다 — `Resolver.Resolve` 는 부팅 복구(runtime.go:289–296 → recovery.go:300)와 flatten 뿐. design 의 「해소 최소 45s」 거짓 — 오늘 엔진 409 취소는 **재시작·운영자 해소까지** 그 종목 손절을 막는다(R3 의 이득은 더 큼). R2 실패(목록 지연)도 올바른 ACK 뒤 재시작까지 차단 | 수용 — D6·D7 문장 정정 |
+| F6 | S2 | MAJOR | R2 강도 과장(지연 사례에서 첫 주문을 못 봄 — R-a165-3 아래 잔여) | 수용 — 한계를 잔여·delta 에 명시, R2 조회를 창 끝 쪽으로 늦추는 완화 검토 |
+| F7 | S2 | MAJOR(절차) | FLM 누락: `tokenManager.token/exchange`, `Resolver.Resolve`/`resolveStep`, `Saga.planLiquidation`, `journal.UnsettledCancelSymbols`, `Client.PlaceOrder`, `classifyRefusalCode`. 생성기 머리말의 coverprofile 범위 표기가 flatten·engine 번들과 안 맞음 | 수용 |
+| F8 | S2·A2 | MINOR | D9 경계 `plan.strategy == nil` 이 `GatewayAdapter.PlaceStrategyEntry`(strategy nil 인 Gateway.Place)를 못 막음 — 배선되면 리스 안에서 8s 늘어남 | 수용 — 명시적 opt-in 으로 |
+| F9 | A2·S2 | MINOR | POST 회계(401 루프 포함 최악 주문 POST 9), D10 산식 불일치, R3 재취소 N 종목 상한(≈0.4 req/s/종목, 경보 `noteDelay` 유지), delta 시나리오 공백(flatten 재시도 성공·소진, R2 통과, place·amend 409 불변, MARKET·분할·strategy 제외, 주문 전 5xx), 「비분할」 spec 누락, 401 재전송의 기록 면제 명시, proposal What Changes·tasks 2.2 의 1판 잔재, R2 의 읽을 수 없는 행, `roundTripFor` 가 바깥 ctx(상한 정정), D1 인용 645→646 | 수용 |
+| F10 | S2 | NOTE | 재전송이 자기 claim·예약에 막히지 않는지 RED 양성 대조군 필요 | 수용 |
+
+깨지지 않은 반례(A2): 키·본문 결정성, 응답 받은 뒤 실패 3종((b) 아님), 재전송 확정 거절 강등, 재시작, PARTIAL_FILLED dedup, HTTP/1.1 비재전송·HTTP/2 안전 재전송, `dctx.Err()`, 엔진 R3, flatten R4 무강등, 감소 place 제외, claim 유지, 예약 재검사, 오류 감싸기 없음.
+
+### 사람 결정 요청 (F3 — 이것 하나)
+
+R1·R2(진입 결과 불명 재전송 + 정착 전 목록 대조)는 지금 설계대로면 **생산에서 한 번도 돌지 않는다**. 생산 매수 진입은 전략 claimed 경로(`PlaceClaimedStrategy`)뿐인데 D9 가 리스·EntryGate 잠금 문제로 그 경로를 뺐다.
+
+1. **R1·R2 를 a165 에서 뺀다(권고).** a165 = 엔진 취소 409 확정 미수락(R3) + flatten 취소 409 재시도(R4, 소진 시 오늘 경로) + 401 근거 시험(R5). 진입 재전송은 전략 claimed 경로와 함께 후속 change 로 설계한다(F2·F4·F6 도 그쪽으로).
+2. **꺼진 채로 만든다** — 생산 도달 0 을 문서에 밝히고 배선은 후속. High-risk 검증 비용(변이·적대 리뷰)은 그대로 든다.
+3. **D9 를 철회** — `PlaceClaimedStrategy`(EntryGate 잠금·SUBMITTING 리스 안)까지 재전송을 넓혀 새로 설계한다.
