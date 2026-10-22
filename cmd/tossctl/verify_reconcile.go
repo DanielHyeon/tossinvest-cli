@@ -32,6 +32,8 @@ type verifyReconcileOptions struct {
 	market string
 	// record 는 --record override 가 들어오면 채워짐 — 대사는 이것을 거절함(G3-3).
 	record string
+	// expired 는 만료 대사 모드임(a164 D1) — 승인 전에 운영자가 고름. 같은 명령의 플래그(별도 하위 명령 없음).
+	expired bool
 }
 
 func reconcileRefusal(code verifylive.ReconcileRefusalCode, detail string) error {
@@ -66,6 +68,8 @@ approval after it shows the record's and the credentials' masked accounts.`),
 	cmd.Flags().StringVar(&opts.market, "market", "", "Market whose record to reconcile: KR or US (required)")
 	cmd.Flags().StringVar(&opts.record, "record", "",
 		"Refused: the record is always derived from --config-dir so it matches the credentials' profile")
+	cmd.Flags().BoolVar(&opts.expired, "expired", false,
+		"Reconcile a broker-confirmed expiry instead of an absence: closes only when two by-id reads in this run name the artifact EXPIRED and untriggered")
 	return cmd
 }
 
@@ -107,6 +111,7 @@ func runVerifyReconcile(cmd *cobra.Command, root *rootOptions, opts *verifyRecon
 		Out:        terminalOut,
 		Approve:    verifyReconcileApprove,
 		Now:        time.Now,
+		Expired:    opts.expired,
 	})
 	if err != nil {
 		return err
@@ -241,6 +246,15 @@ func (r *reconcileReads) ReconcileOpenOrdersPage(ctx context.Context, symbol, cu
 
 func (r *reconcileReads) ReconcileInstrument(ctx context.Context, symbol string) (string, error) {
 	return r.client.ReconcileInstrument(ctx, symbol)
+}
+
+// ReconcileConditionalOrder 는 by-id 상세 GET 임(a164). 계좌 범위 읽기라 다른 두 메서드처럼 신원 재확인 뒤에만 위임함(P2-4) —
+// 만료 모드에서는 이것이 첫 계좌 범위 호출이므로 Accounts 재조회가 그보다 먼저 옴.
+func (r *reconcileReads) ReconcileConditionalOrder(ctx context.Context, id string) (official.ReconcileConditionalDetail, error) {
+	if err := r.ensureIdentity(ctx); err != nil {
+		return official.ReconcileConditionalDetail{}, err
+	}
+	return r.client.ReconcileConditionalOrder(ctx, id)
 }
 
 // verifyReconcileTerminal 은 기본 승인이 읽고 쓰는 단말임 — 시험이 바꿔 끼움. 대화형 판정은 실제 tty 여부

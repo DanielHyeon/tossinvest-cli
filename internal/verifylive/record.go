@@ -250,6 +250,10 @@ type Artifact struct {
 	// 취소도 체결도 아니며 `tossctl verify reconcile` 만 쓴다. 이 필드를 모르는 구 바이너리는 그 줄을 비-종결로 읽어
 	// 객체를 다시 보유 상태로 보인다(안전 방향 — design G2 「구 바이너리」).
 	ReconciledAbsent bool `json:"reconciled_absent,omitempty"`
+	// ReconciledExpired 는 넷째 종결이다(a164) — 이번 실행의 by-id 상세 GET 두 번이 이 조건주문을 EXPIRED·미발동으로
+	// 이름했다는 대사 사건. 취소·체결·부재가 아니며 `tossctl verify reconcile --expired` 만 쓴다. 이 필드를 모르는 구
+	// 바이너리는 그 줄을 비-종결로 읽는다(안전 방향 — design D10).
+	ReconciledExpired bool `json:"reconciled_expired,omitempty"`
 	// ReconciledAt 은 대사 줄을 추가한 시각이다. 영이면 생략(omitzero)해 다른 줄의 바이트를 바꾸지 않는다.
 	ReconciledAt time.Time `json:"reconciled_at,omitzero"`
 }

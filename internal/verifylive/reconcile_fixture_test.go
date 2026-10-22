@@ -186,6 +186,9 @@ type rcFakeReader struct {
 	instrumentN int
 	// hook 은 응답 직전에 불린다 — 시계를 움직이거나 기록 파일을 바꾸는 데 쓴다.
 	hook func(c rcCall)
+	// byID 는 n 번째(0 부터) by-id 상세 읽기의 응답을 정한다(a164).
+	byID  func(n int, id string) (official.ReconcileConditionalDetail, error)
+	byIDN int
 }
 
 func newRCFakeReader() *rcFakeReader {
@@ -271,6 +274,21 @@ func (r *rcFakeReader) ReconcileInstrument(ctx context.Context, symbol string) (
 		return fn(n, symbol)
 	}
 	return symbol, nil
+}
+
+// ReconcileConditionalOrder 는 a164 by-id 상세 읽기다 — byID 가 n 번째(0 부터) 응답을 정한다. nil 이면 오류(부재 모드 시험은
+// 이 메서드를 부르지 않아야 한다).
+func (r *rcFakeReader) ReconcileConditionalOrder(ctx context.Context, id string) (official.ReconcileConditionalDetail, error) {
+	r.record(rcCall{Kind: "by-id", Symbol: id})
+	r.mu.Lock()
+	n := r.byIDN
+	r.byIDN++
+	fn := r.byID
+	r.mu.Unlock()
+	if fn == nil {
+		return official.ReconcileConditionalDetail{}, fmt.Errorf("fake: unscripted by-id read %d", n)
+	}
+	return fn(n, id)
 }
 
 func (r *rcFakeReader) listCalls() []rcCall {

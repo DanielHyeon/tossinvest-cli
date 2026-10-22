@@ -110,6 +110,7 @@ func TestReconcileParamsCarryOnlyNarrowTypes(t *testing.T) {
 		reflect.TypeOf((*io.Writer)(nil)).Elem():                                      true,
 		reflect.TypeOf(func(context.Context, ReconcileApproval) error { return nil }): true,
 		reflect.TypeOf(func() time.Time { return time.Time{} }):                       true,
+		reflect.TypeOf(false):                                                         true, // a164 Expired — 모드 선택 하나(값 타입, 메서드 없음)
 	}
 	check := func(typ reflect.Type, ok func(reflect.Type) bool) {
 		for i := 0; i < typ.NumField(); i++ {

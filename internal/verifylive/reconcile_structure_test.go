@@ -32,6 +32,7 @@ var reconcileReadMethods = map[string]bool{
 	"ReconcileConditionalOrdersPage": true,
 	"ReconcileOpenOrdersPage":        true,
 	"ReconcileInstrument":            true,
+	"ReconcileConditionalOrder":      true, // a164 by-id 상세 GET(design D2 A2)
 }
 
 // reconcileSourceFiles 는 census 대상 — 대사 경로의 비시험 소스 전부(cmd·verifylive·official).

@@ -44,6 +44,8 @@ type ReconcileReader interface {
 	ReconcileConditionalOrdersPage(ctx context.Context, status, symbol, cursor string, limit int) (official.ReconcileConditionalPage, error)
 	ReconcileOpenOrdersPage(ctx context.Context, symbol, cursor string, limit int) (official.ReconcileOrderPage, error)
 	ReconcileInstrument(ctx context.Context, symbol string) (string, error)
+	// ReconcileConditionalOrder 는 by-id 상세 GET 임(a164 만료 모드 전용 — 부재 모드는 부르지 않음).
+	ReconcileConditionalOrder(ctx context.Context, id string) (official.ReconcileConditionalDetail, error)
 }
 
 // ReconcileAccount 는 좁은 생성자가 자체 Accounts() 읽기로 확정한 계좌 사실임(design G3-2 P1-2·R2-2).
@@ -63,6 +65,8 @@ type ReconcileApproval struct {
 	ID                 string
 	Symbol             string
 	Market             string
+	// Mode 는 대사 모드임 — 비면 부재, ReconcileModeExpired 면 만료(a164 D1). 화면·질문이 모드를 이름함.
+	Mode string
 }
 
 // ReconcileParams 는 대사 한 번의 입력임. 기록 경로는 cmd 가 --config-dir 에서 유도한 값이어야 함(G3-3).
@@ -75,6 +79,8 @@ type ReconcileParams struct {
 	// Approve 는 승인 내용이 출력된 뒤, 주문·조건주문 목록 읽기 전에 불림. 오류면 거절.
 	Approve func(context.Context, ReconcileApproval) error
 	Now     func() time.Time
+	// Expired 는 운영자가 승인 전에 고른 만료 대사 모드임(a164 D1 — `--expired`). 거짓이면 a121 부재 대사 그대로.
+	Expired bool
 }
 
 // ReconcileResult 는 추가된 대사 줄의 요약임.
@@ -134,6 +140,16 @@ const (
 	RefuseClosedTargetPresent ReconcileRefusalCode = "closed-target-present"
 	RefuseClosedFiredTrace    ReconcileRefusalCode = "closed-fired-trace"
 	RefuseClosedStatus        ReconcileRefusalCode = "closed-status"
+	// 만료 판정(a164 D2·D3·D4)
+	RefuseExpiryVocabularyUnfixed ReconcileRefusalCode = "expiry-vocabulary-unfixed"
+	RefuseExpiryEvidenceAbsent    ReconcileRefusalCode = "expiry-evidence-absent"
+	RefuseExpirySourcesDisagree   ReconcileRefusalCode = "expiry-sources-disagree"
+	RefuseExpiryTargetLive        ReconcileRefusalCode = "expiry-target-live"
+	RefuseExpiryTargetFired       ReconcileRefusalCode = "expiry-target-fired"
+	RefuseExpiryTargetStatus      ReconcileRefusalCode = "expiry-target-status"
+	RefuseExpiryReadError         ReconcileRefusalCode = "expiry-read-error"
+	RefuseExpiryReadsDiffer       ReconcileRefusalCode = "expiry-reads-differ"
+	RefuseExpiryChainOpen         ReconcileRefusalCode = "expiry-chain-open"
 	// cmd 사전 검사(G3-2·G3-3·G3-4·동시성)
 	RefuseNoConfigDir         ReconcileRefusalCode = "no-config-dir"
 	RefuseEnvCredentials      ReconcileRefusalCode = "env-credentials"
@@ -198,6 +214,10 @@ func Reconcile(ctx context.Context, p ReconcileParams) (ReconcileResult, error) 
 	recordMask, currentMask, err := bindReconcileAccount(entries, target, p.Account.Ref)
 	if err != nil {
 		return ReconcileResult{}, err
+	}
+	// a164 골격: 만료 모드는 아직 판정 없이 늘 거절함(tasks 2 머리 — 플래그 없는 경로 불변).
+	if p.Expired {
+		return ReconcileResult{}, refuse(RefuseExpiryEvidenceAbsent, "the expiry mode has no evidence rule yet")
 	}
 
 	// 4. 정적 거절 — Q1·Q3 는 로컬 판정이라 사람 승인 **앞**에서 거절함(A-GREEN P2-a: y 를 누른 뒤에 측정 부재로

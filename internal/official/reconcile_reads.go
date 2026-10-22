@@ -36,6 +36,8 @@ type ReconcileConditionalRow struct {
 	Status           string
 	TriggeredOrderID string
 	HasSecond        bool
+	// FirstStatus 는 first leg 의 status 원문임(a164 P2-3 — 만료 모드 A4 의 CLOSED 행 leg 검사 입력, 부재 모드는 읽지 않음).
+	FirstStatus string
 }
 
 // ReconcileConditionalPage 는 조건주문 목록 한 페이지임.
