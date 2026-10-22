@@ -140,3 +140,16 @@ FREEZE: 위 P1 셋을 문서로 닫은 뒤 착수(같은 커밋). 남은 사람 
 
 Function Logic Map: not-applicable — a140 은 옛 base 에 없던 새 파일만 만들었다(`internal/breakoutsignal/` · `tools/a140-breakout-signal-shadow/`, 17 개 전부 `A`,
 §6 귀속 실측). 기존 함수 편집 0 · 게이트 판정 변경 0(docs/WORKFLOW.md 「비례 원칙」). 재고정 뒤 5 단계 required 0.
+
+### 6.2 완료 gate 2 차 — 2026-10-23 (FAIL, 7 단계 `make test` — a140 무관, 멈춤)
+
+- worktree 를 `bb2f286b1`(6.1 기록)로 옮김. `python3 tools/sdd/sdd_sync.py --no-gbrain` → rc=0, `[sdd-sync] all indexes current`.
+- `SDD_PYTHON=/tmp/tossos-a148-sdd-venv/bin/python make gate CHANGE=a140-breakout-signals-are-measured-in-shadow` → **rc=2**:
+  1~4 OK · 5 `required 0 function(s) — judged at HEAD bb2f286b1fc8` · `evidence complete or diff-proven exempt` → `OK: Function Logic Map` ·
+  6 `OK: make sdd-check`(CodeGraph 신선, GBrain advisory WARN) · 7 `go test -timeout 30m ./...` →
+  `--- FAIL: TestInspectionPackageHasNoRuntimeConsumers` · `authority_guard_test.go:80: unexpected inspection import: internal/offlinecontinuation/assessment.go`
+  · `FAIL github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence` → `GATE FAIL: … make test 실패`. 8~11 단계는 돌지 않았다.
+- 단독 재현: `go test -count=1 -run TestInspectionPackageHasNoRuntimeConsumers ./internal/campaignstateevidence/` → FAIL(같은 문구).
+  `internal/offlinecontinuation/assessment.go:10` 이 `campaignstateevidence` 를 import — 그 파일의 최근 커밋은 `3f8e34632`(2026-10-20 「feat(offline): assess follow-on risk
+  without authority」, a162 계열). a140 의 파일(`internal/breakoutsignal` · `tools/a140-breakout-signal-shadow`)과 무관하다.
+- 처분: base 재고정 외 사유의 FAIL 이므로 우회하지 않고 멈췄다(Manager 지시). 4.3 은 다시 열고 archive 하지 않는다. 그 시험을 고치는 것은 a140 범위 밖이다.
