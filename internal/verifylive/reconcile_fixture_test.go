@@ -355,6 +355,8 @@ type rcHarness struct {
 	listCallsAtApproval int
 	approveErr          error
 	onApprove           func()
+	// expired 는 a164 만료 모드로 돌린다(ReconcileParams.Expired).
+	expired bool
 }
 
 // rcSetPolicies 는 Q1·Q3 seam 을 시험 동안만 바꾼다.
@@ -388,6 +390,7 @@ func (h *rcHarness) params() ReconcileParams {
 		Reader:     h.reader,
 		Out:        &h.out,
 		Now:        h.clock.Now,
+		Expired:    h.expired,
 		Approve: func(ctx context.Context, a ReconcileApproval) error {
 			h.approvals = append(h.approvals, a)
 			h.outAtApproval = h.out.String()

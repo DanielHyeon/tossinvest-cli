@@ -23,6 +23,15 @@ func RCA063RecordForTest(t *testing.T) []byte {
 	return b
 }
 
+// RCExpiredRecordAndLineForTest 는 a063 형 기록 원문과, 그 위에서 만료 대사(a164)가 실제로 쓴 줄(개행 포함)이다.
+func RCExpiredRecordAndLineForTest(t *testing.T) ([]byte, string) {
+	t.Helper()
+	h := newRCExpiredHarness(t, true)
+	before := h.bytes()
+	_, _, raw := rcAccept(t, h)
+	return before, raw + "\n"
+}
+
 // RCReconcileLineForTest 는 설계 모양 대사 줄(개행 포함)이다.
 func RCReconcileLineForTest() string {
 	return rcReconcileLineJSON(rcTarget(), rcNow, ReconcileBasisDomain+":sha256:00")

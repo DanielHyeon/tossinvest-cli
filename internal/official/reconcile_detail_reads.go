@@ -34,6 +34,11 @@ type ReconcileConditionalDetail struct {
 // errReconcileDetailUnimplemented 는 골격 단계 표지임 — by-id 읽기가 아직 판정 없이 서 있음.
 var errReconcileDetailUnimplemented = errors.New("official: the reconcile by-id read is not implemented yet")
 
+// DecodeReconcileConditionalDetail 은 by-id 상세의 result 원문을 statement 로 엄격 해독함(골격 — 아직 거절만).
+func DecodeReconcileConditionalDetail(result []byte) (ReconcileConditionalDetail, error) {
+	return ReconcileConditionalDetail{}, errReconcileDetailUnimplemented
+}
+
 // ReconcileConditionalOrder 는 GET /api/v1/conditional-orders/{id} 를 대사용으로 읽음(계좌 헤더 포함).
 func (c *Client) ReconcileConditionalOrder(ctx context.Context, id string) (ReconcileConditionalDetail, error) {
 	if strings.TrimSpace(id) == "" {

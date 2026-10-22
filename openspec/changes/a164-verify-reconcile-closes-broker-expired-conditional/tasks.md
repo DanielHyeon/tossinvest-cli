@@ -56,31 +56,39 @@
 > `--expired` 플래그를 **판정 없이**(만료 모드 진입 = 항상 `expiry-evidence-absent` 거절, by-id 메서드 = 미구현 오류) 세운다. 골격은 생산 동작을
 > 바꾸지 않는다(플래그 없는 경로 불변, 플래그 있는 경로는 늘 거절). 그 위에서 RED 시험이 **컴파일되고 단언에서 실패**해야 RED 로 친다.
 
-- [ ] 2.1 by-id 대사 읽기 해독: statement · silent(404 `conditional-order-not-found`) · 거절(404 다른 code·해독 불능 본문 · 400 · 401/403 · 429 · 5xx ·
+- [x] 2.1 by-id 대사 읽기 해독: statement · silent(404 `conditional-order-not-found`) · 거절(404 다른 code·해독 불능 본문 · 400 · 401/403 · 429 · 5xx ·
       전송 · null result · required 필드 결측/null/형 불일치 · `first` 결측 · `triggeredOrderId`/`second` 형 불일치) + 수락: `triggeredOrderId`·`second`
       키 없음과 null 이 같게 「없음」(design D3 정정) — httptest. 원 바이트 골든은 OpenAPI 스키마 + 0.6 영수증 값으로 만든다(영수증은 CLI 출력, C1)
-- [ ] 2.2 증거 규칙 수락 두 갈래: by-id statement ×2 + CLOSED 대상 행 없음(축출) · by-id statement ×2 + CLOSED 대상 행 `EXPIRED`.
+      — RED 2026-10-22: `internal/official/reconcile_detail_reads_test.go` 5 시험(골든 = OpenAPI 모양 + 0.6 값) — 단언에서 실패 확인(`analysis/red-green/red-2026-10-22.md`)
+- [x] 2.2 증거 규칙 수락 두 갈래: by-id statement ×2 + CLOSED 대상 행 없음(축출) · by-id statement ×2 + CLOSED 대상 행 `EXPIRED`.
       (첫 판의 「CLOSED 만(by-id silent)」 수락 갈래는 freeze 리뷰 P1-1 로 2.3 거절 갈래로 옮김)
-- [ ] 2.3 증거 규칙 거절 — design D2 거부 1~5 와 D3 표의 행마다 하나, **가드별 거절 코드 단언**(공유 문구 아님):
+      — RED 2026-10-22: `TestExpiryReconcileAcceptsTwoStatementsWhenTheClosedListEvictedTheTarget` · `…AndAnExpiredClosedRow` (+ A6·A7 양성 대조 둘) — 단언에서 실패 확인(`analysis/red-green/red-2026-10-22.md`)
+- [x] 2.3 증거 규칙 거절 — design D2 거부 1~5 와 D3 표의 행마다 하나, **가드별 거절 코드 단언**(공유 문구 아님):
       `expiry-evidence-absent` · `expiry-target-live` · `expiry-target-fired` · `expiry-target-status` · `expiry-read-error` · `expiry-reads-differ` ·
       `expiry-chain-open` · `expiry-sources-disagree`(by-id silent ×2 + CLOSED 대상 행 — P1-1) · `open-conditional` · `open-plain-order` ·
       `closed-fired-trace` · `closed-status`(어휘 밖) · by-id id/심볼/시장/type≠`SINGLE`(P3-3) 불일치 · by-id/CLOSED 행 `first.status` 어휘 밖(P2-3).
       명시 사례: (a) by-id 200 `EXPIRED` ×2 + CLOSED `EXPIRED` 인데 OPEN 조건 1건 → `open-conditional`(P2-6, A5 는 증거로 완화 불가) ·
       (b) 만료 모드에서 대상 CLOSED 행이 `COMPLETED` → `closed-fired-trace`(공유 발동 흔적 루프가 먼저 — P3-5) ·
       (c) by-id `COMPLETED` + 목록 발동 흔적 없음 → `expiry-target-fired` · (d) by-id 한 번 statement·한 번 silent → `expiry-reads-differ`
-- [ ] 2.4 순서: 승인 전 거절(후보·계좌·Q3·어휘) · 승인 뒤 읽기 · **승인 거절이면 by-id 호출 0**(P2-1) · `--expired` 에서 Q1 미호출 ·
+      — RED 2026-10-22: `TestExpiryReconcileRefusesEachGuardWithItsOwnCode` 하위 38 + `TestExpiryReconcileRefusesAnOpenChainSibling` · 어휘 둘 — 단언에서 실패 확인(`analysis/red-green/red-2026-10-22.md`)
+- [x] 2.4 순서: 승인 전 거절(후보·계좌·Q3·어휘) · 승인 뒤 읽기 · **승인 거절이면 by-id 호출 0**(P2-1) · `--expired` 에서 Q1 미호출 ·
       플래그 없음에서 Q1 호출(기존) · 창 시작이 by-id ① 직전(P3-1 — by-id ① 뒤 지연을 주입해 15 s 초과 거절) ·
       리더가 받은 `ReconcileOpenOrdersPage` 호출이 두 읽기 만큼(P2-5 ⑤ — 만료 모드가 `readReconcileSet` 을 그대로 씀)
-- [ ] 2.5 기록: 줄 하나 추가 · 기존 바이트 불변 · `terminal()` 넷째 종결 · `Outstanding`/`PendingCleanup`/HOLD 두 곳(cmd·`New`)이 따름 ·
+      — RED 2026-10-22: `TestExpiryReconcileStaticRefusalsComeBeforeApproval` · `…DeclinedApprovalReadsNothing` · `…DoesNotNeedTheQ1Measurement` · `…ReadsInTheContractOrder` · `…WindowStartsBeforeTheFirstByIDRead` · 구조 핀 — 단언에서 실패 확인(`analysis/red-green/red-2026-10-22.md`)
+- [x] 2.5 기록: 줄 하나 추가 · 기존 바이트 불변 · `terminal()` 넷째 종결 · `Outstanding`/`PendingCleanup`/HOLD 두 곳(cmd·`New`)이 따름 ·
       구 바이너리 시뮬레이션(필드 버린 해독)에서 다시 outstanding · 계좌 원문·응답 원문 없음 · 줄의 `calls` 비어 있음 ·
       `SucceededEndpoints` 결과 불변 · 같은 artifact 재실행 = `no-candidate` · 관측에 대상 외 브로커 id 없음(Q2) — P2-2 ·
       `ReconciledArtifacts`·status 출력에 「reconciled expired」로 보임(P2-5 ⑦ — `projection_reconciled.go:26` 필터)
-- [ ] 2.6 봉인: 대사 리더 메서드 집합이 GET 넷(목록 2 · 종목 · by-id)뿐 — `reconcile_seal_test.go` 세 층 갱신 ·
+      — RED 2026-10-22: verifylive 6 + cmd `TestM0TriggerHoldFollowsAReconciledExpiredArtifact` · 구 바이너리 `TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding` — 단언에서 실패 확인(`analysis/red-green/red-2026-10-22.md`)
+- [x] 2.6 봉인: 대사 리더 메서드 집합이 GET 넷(목록 2 · 종목 · by-id)뿐 — `reconcile_seal_test.go` 세 층 갱신 ·
       cmd `reconcileReads` 의 by-id 가 첫 계좌 범위 호출일 때 Accounts 재조회가 먼저(P2-4, `ensureIdentity`)
-- [ ] 2.7 cmd: `--expired` 는 같은 명령의 플래그(별도 하위 명령 금지) · 승인 화면/질문의 모드 표시 + 만료 모드에서 「상세 조회 2회」 명시
+      — RED 2026-10-22: 봉인 2층 bool · 읽기 메서드 목록(골격 커밋) · `TestReconcileByIDReadRechecksIdentityBeforeItIsSent` — 단언에서 실패 확인(`analysis/red-green/red-2026-10-22.md`)
+- [x] 2.7 cmd: `--expired` 는 같은 명령의 플래그(별도 하위 명령 금지) · 승인 화면/질문의 모드 표시 + 만료 모드에서 「상세 조회 2회」 명시
       (P3-6 — 지금 머리 「공식 목록 조회 전용」 `reconcile_check.go:415`, 질문 「reconciled absent 로 기록할까?」 `verify_reconcile.go:260`) ·
       `mutating: "true"` 유지 · 부재 모드 Q6 문구(D8)
-- [ ] 2.8 report/status 의 「reconciled expired」 구별 표시
+      — RED 2026-10-22: `TestVerifyReconcileExpiredIsAFlagOfTheSameMutatingCommand` · `TestReconcileApprovalQuestionNamesTheMode` · 승인 화면 · Q6 문구 시험 갱신 · 전 경로 seams 시험 — 단언에서 실패 확인(`analysis/red-green/red-2026-10-22.md`)
+- [x] 2.8 report/status 의 「reconciled expired」 구별 표시
+      — RED 2026-10-22: `TestExpiryReconcileTextLabelsReconciledExpired` — 단언에서 실패 확인(`analysis/red-green/red-2026-10-22.md`)
 
 ## 3. GREEN · REFACTOR
 

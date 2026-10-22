@@ -11,3 +11,21 @@ const ReconcileModeExpired = "expired"
 
 // StepReconcileExpired 는 만료 대사 줄의 StepID 임 — Steps() 카탈로그 ∪ {cleanup, abort, reconcile-absent} 밖(design D5).
 const StepReconcileExpired StepID = "reconcile-expired"
+
+// ReconcileExpiredBasisDomain 은 만료 대사 근거 지문의 버전·도메인 태그임(design D5).
+const ReconcileExpiredBasisDomain = "a164/reconcile-expired-basis/v1"
+
+// 만료 대사 줄의 관측 키(design D5) — 근거 지문은 부재 대사와 같은 키 ObservationReconcileBasis 에 실음.
+const (
+	ObservationReconcileExpiredByID       = "reconcile.expired.by_id"
+	ObservationReconcileExpiredClosedRows = "reconcile.expired.closed_rows"
+)
+
+// ReconcileGroupConditionalByID 는 근거 multiset 에서 by-id statement 행의 그룹 이름임(design D5).
+const ReconcileGroupConditionalByID = "conditional-by-id"
+
+// reconcileExpiryLegVocabulary 는 만료 leg(first.status) 어휘임 — 골격: 비어 있음(모든 진술 거절).
+var reconcileExpiryLegVocabulary = map[string]bool{}
+
+// reconcileExpiryClosedVocabulary 는 만료 모드 CLOSED 행 status 허용 목록임(A6) — 골격: 비어 있음.
+var reconcileExpiryClosedVocabulary = map[string]bool{}

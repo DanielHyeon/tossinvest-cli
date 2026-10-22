@@ -135,14 +135,15 @@ func TestReconcileRefusesTheTargetFoundInClosed(t *testing.T) {
 	rcRefuse(t, h, RefuseClosedTargetPresent)
 }
 
-// TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage 는 Q6 이다 — 거절 메시지가 영구 거절을 적는다.
-func TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage(t *testing.T) {
+// TestReconcileRefusesTheTargetExpiredInClosedAndNamesTheExpiryMode 는 Q6 이다 — 부재 대사는 만료 대상을 여전히 거절하고,
+// 그 문구는 a164 D8 대로 「부재가 아니라 종결」 과 `--expired` 를 말한다(사용자 결정 2026-10-22 (a) 가 「영구히」 를 대체).
+func TestReconcileRefusesTheTargetExpiredInClosedAndNamesTheExpiryMode(t *testing.T) {
 	h := newRCHarness(t, rcA063Entries())
 	h.reader.set(-1, ReconcileGroupConditionalClosed, rcCondPage("", false, rcCondRow(rcTargetID, "EXPIRED")))
 	r := rcRefuse(t, h, RefuseClosedTargetExpired)
-	const want = "만료된 artifact 는 이 경로로 영구히 대사되지 않는다"
-	if !strings.Contains(r.Error(), want) {
-		t.Fatalf("Q6 refusal must say %q; got %q", want, r.Error())
+	const want = "만료된 artifact 는 부재 대사로 받지 않는다 — 브로커가 확인한 만료는 `--expired` 로 대사한다"
+	if !strings.Contains(r.Error(), want) || strings.Contains(r.Error(), "영구히") {
+		t.Fatalf("Q6 refusal must say %q and no longer \"영구히\"; got %q", want, r.Error())
 	}
 }
 
