@@ -145,3 +145,11 @@ Pre-Edit Gate:
   원인 미확인(편집 직후 컴파일 캐시 경합으로 추정 — 미검증). 재현 안 됨.
 - 운영 메모: 리뷰 시점(18:20 KST)에 이 worktree 의 git admin 디렉터리에 0바이트 `index.lock` 이 남아 커밋이 막힘 — 잡은 프로세스 없음,
   `git fsck --connectivity-only` 정상 확인 뒤 제거(이 worktree 전용, 30분 넘은 빈 파일만).
+
+## 5.3 sdd-sync (2026-10-22, HEAD `8246ad1e2`) — 미완(체크 안 함)
+
+- `make sdd-sync` rc=2: CodeGraph fingerprint 는 `8246ad1e2` 로 기록됨(`.sdd/index-state.json`), CodeGraphContext `incomplete`(R5 그대로).
+- `python3 tools/sdd/check_index_freshness.py` rc=1 두 판 연속: `CodeGraph status probe failed: … timed out after 15 seconds`.
+  같은 명령을 직접 재면 `codegraph status .` → "✓ Index is up to date" 인데 **real 27 s**(user 1.3 s — 디스크 대기, `/mnt/D` NTFS 위 195 MB db).
+  판정: 색인은 신선하나 게이트 프로브가 시간 초과로 실패 — 환경 사안. gate 전에 부하 낮은 때 `make sdd-sync` → `check_index_freshness.py` 재실행 필요.
+  이 절을 쓰는 커밋 자체가 fingerprint 를 다시 낡게 하므로, 어차피 gate 직전 재동기화가 필요함.
