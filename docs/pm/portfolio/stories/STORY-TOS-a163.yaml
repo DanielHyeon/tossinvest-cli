@@ -19,5 +19,9 @@
     "체결 나이는 그 주기의 모든 포지션 판정 뒤 로그 필드로 남고, 브로커 시각 부재는 판정 뒤 일반 등급 알림으로 포지션·사유당 한 번 보고되며 진입 래치·모드 강화를 일으키지 않는다",
     "로그·알림에 계좌 식별 정보가 없고 추가 브로커 호출이 없다",
     "진입 게이트·편입 t0·비상 청산 지정가·a112 잔여 (k) 는 동작 변화 없이 잔여로 기록된다"
+  ],
+  "limits": [
+    "engine.exit_source_age_report defaults to OFF; flipping it ON is a human action and requires a prior human decision on three pre-flip residuals (Manager disposition 2026-10-22, issues.md I5-I7): I5 source_missing re-arm flapping and 15 s bucket-boundary flapping can amplify alerts and transition lines; I6 the report line is written synchronously on the exit goroutine; I7 the bucket latch advances even when the log write fails.",
+    "Entry gate, admission t0, emergency-flatten limit price, CLI footer time and a112 residual (k) keep received-time freshness; they are follow-up Story candidates (issues.md I11)."
   ]
 }

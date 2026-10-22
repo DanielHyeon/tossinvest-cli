@@ -157,3 +157,25 @@ Pre-Edit Gate:
   생산 `ObserveOnce` 호출자 `Run` 하나 · 보고는 판정 순회 뒤 · `stableObservationID` 는 필드를 명시 나열해 새 필드가 identity 를 안 바꿈 ·
   Key 충돌 없음 · 계좌 ref 없음(position_id 는 sha256 접두이고 로거가 가림) · `Time.Sub` 포화로 age_seconds 넘침 없음 · 윤초는 unparseable.
 - 리뷰 원문: 하위 에이전트 보고는 이 세션의 메시지(파일 아님), Codex 출력은 세션 스크래치. 결정만 이 표로 옮김.
+
+## Manager 검증 · 처분 — 2026-10-22 (구현 `78efe1951..fbb2d856c`, base `1eab9b931`)
+
+- 경로: Manager 가 구현 브랜치 `a163-impl` 을 직접 검증하고 처분을 정함. 사용자 상시 지시(Manager 검증 뒤 Terra 가 커밋 · 푸시 · archive)에 따라 기록.
+- Manager 실측:
+  - `exitloop.go` diff = `ExitObserverOptions` 필드 + `settleUnobserved` 앞 호출 한 줄뿐(판정 함수 본문 불변).
+  - `reportSourceAge` 는 토글 OFF 면 즉시 반환(OFF = 오늘 동작).
+  - `go test ./internal/app/engine/ ./cmd/tossctl/` 패키지 전체 PASS. `internal/official` · `internal/config` · `internal/audit` · `internal/output` PASS.
+  - `internal/performance` `TestMaximumAttributionGenerationIntegrityScanMeetsP95Target` p95 실패(tasks 4.2)는 병행 부하 중 시간 상한 시험 — a163 편집
+    패키지에 의존하지 않음(`go list -deps`), 단독 재실행 1회 PASS. **무관(unrelated)** 으로 처분.
+
+| issue | 처분 |
+| --- | --- |
+| I1 `stableObservationID` 는 수신자 없는 함수 | **수용 — 사실 정정**(설계 의도 불변, 문구만) |
+| I2 `SourceTimestamp` 이름이 편집 전 `strict_quote_reads.go` 에 넷 | **수용 — 사실 정정**. census 가 기존 넷을 정확한 수로 고정하고 새 출현은 실패 |
+| I3 편집 대상 기존 함수가 계획보다 다섯 많음(FLM 번들 5 추가) | **수용 — 사실 정정**. 게이트 ⑤ 가 직접 계산하므로 번들 다섯 유지 |
+| I5 재무장 진동 · 15 s 경계 진동(알림 · 전이 줄 증폭) | **토글 ON 전 사람 결정(pre-flip)** — 기본 OFF 에서는 존재하지 않음 |
+| I6 보고 줄 쓰기가 청산 goroutine 안에서 동기 | **토글 ON 전 사람 결정(pre-flip)** — 기본 OFF 에서는 쓰기 0 |
+| I7 쓰기 실패여도 래치 전진 | **토글 ON 전 사람 결정(pre-flip)** — 기본 OFF 에서는 래치 0 |
+
+- I5 · I6 · I7 은 `engine.exit_source_age_report` 를 켤 때만 생긴다. 토글 flip 은 사람의 행동이고(안전 7), 이 셋에 대한 사람 결정 없이 켜지
+  않도록 `issues.md` 잔여와 `STORY-TOS-a163` 의 `limits` 에 적었다.

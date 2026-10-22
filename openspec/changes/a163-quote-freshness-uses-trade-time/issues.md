@@ -32,7 +32,7 @@ design D4 「필드」 는 `source_timestamp` 를 「원문 앞 64 바이트」 
 제어문자 · 깨진 UTF-8)를 `?` 로 바꾼다 — 그 값이 알림 본문(`renderFields` → ntfy)에 그대로 들어가 줄을 끼워 넣거나 전송을 망치지 않게. 인쇄
 가능한 원문은 그대로다. 해독도 64 바이트 초과면 하지 않고 unparseable(R10).
 
-## I5 — 토글 ON 전 사람 결정: 재무장 진동 · 15 s 경계 진동 (잔여, gstack 리뷰 R12 · R13)
+## I5 — 토글 ON 전 사람 결정: 재무장 진동 · 15 s 경계 진동 (잔여 · pre-flip 사람 결정, gstack 리뷰 R12 · R13)
 
 - 시각 부재 ↔ 복귀가 번갈아 오면 design D4 의 재무장 규칙대로 그때마다 `source_missing` 이 다시 나간다. `NormalRelay` 는 Key 중복 제거가 없어
   여러 주기에 걸쳐 일반 등급 버퍼(64)를 채울 수 있고, 차면 capped · unmanaged 같은 다른 exit 일반 알림이 버려진다(주기당 8 상한은 한 주기 안만).
@@ -40,14 +40,14 @@ design D4 「필드」 는 `source_timestamp` 를 「원문 앞 64 바이트」 
 - 둘 다 토글 ON 일 때만이고 판정 · 제출과 무관. 실제 브로커가 시각을 간헐적으로 비우는지는 실측 0(H6). 사람이 토글을 켜기 전에 쿨다운 ·
   히스테리시스 여부를 정할 것 — 설계 변경이라 이 change 에서 하지 않음.
 
-## I6 — 보고 줄 쓰기는 동기 (잔여 · Manager 판단 요청, Codex 리뷰 R11 P1)
+## I6 — 보고 줄 쓰기는 동기 (잔여 · pre-flip 사람 결정 — Manager 처분 2026-10-22, Codex 리뷰 R11 P1)
 
 `SourceAgeLog` 쓰기는 청산 goroutine 안에서 동기다. 로그 싱크(stderr 파이프 · 파일)가 멈추면 그 goroutine 이 멈춰 **다음 주기의 손절 판정이 없다.**
 이 위험 종류는 이미 있다 — 같은 goroutine 의 a090 `UnobservedLog`(`settleUnobserved`) · a129 `ExitOrderLog`(`endExitOrderCycle`) · a091 `ZeroFloorLog`
 가 같은 엔진 로거에 같은 방식으로 쓴다. a163 은 토글 ON 일 때 그 쓰기 지점을 하나 늘린다(그 주기의 판정 · 제출 뒤). 비동기 · 유계 싱크로 바꾸는
 것은 design D4 「생산 싱크」 의 변경이라 하지 않았다. 엔진 로거 전반의 비차단화는 별도 Story 후보.
 
-## I7 — 쓰기 실패여도 래치가 전진 (잔여, Codex 리뷰 R14)
+## I7 — 쓰기 실패여도 래치가 전진 (잔여 · pre-flip 사람 결정 — Manager 처분 2026-10-22, Codex 리뷰 R14)
 
 `obs.Logger` 는 쓰기 결과를 돌려주지 않으므로 ENOSPC 같은 실패에도 구간 래치가 전진해 그 전이 줄이 사라진다. 기존 a090 · a129 줄과 같은 성질.
 
@@ -81,4 +81,4 @@ design D4 「필드」 는 `source_timestamp` 를 「원문 앞 64 바이트」 
 - **freeze 리뷰 P3-7(기존 위험)** `apiPrice.Timestamp` 디코드 타입(string)이 바뀌면 `Prices` 전체가 디코드 오류 → 그 주기 판정 0. a163 은 이 표면을
   넓히지 않음(디코드 타입 불변).
 - **보고 토글의 콘솔 스위치 부재** 사람 flip 은 config 편집 + 엔진 재기동(KST 05:00~09:00 창), 기동 audit 행이 남음. 콘솔 스위치가 필요하면 별도 Story.
-- **I5 · I6** (위) 토글 ON 전 사람 결정 · 엔진 로거 비차단화.
+- **I5 · I6 · I7** (위) 토글 ON 전 사람 결정(Manager 처분 2026-10-22 — 기본 OFF 에서는 셋 다 없음, flip 전 결정 필수) · 엔진 로거 비차단화.
