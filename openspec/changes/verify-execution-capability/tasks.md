@@ -6,7 +6,7 @@
 
 - [x] 1.1 조회 전용 soak 도구 작성 (mutation transport 컴파일 제외, 실 hostname POST 불가 가드 상속)
 - [ ] 1.2 자격증명 무인 갱신 soak 연속 3일+ 실행·기록 (사용자 환경)
-- [ ] 1.3 rate limit 실측 → retry matrix·폴링 SLO 수치 확정 반영 — **초안 — 사용자 승인 대기**: [retry matrix·폴링 SLO 수치 제안](analysis/retry-matrix-slo-draft-2026-10-22.md)(기존 측정 M4·M8·M10·attestation·soak 기록만 사용). 승인 전에는 코드 기본값·정본 표를 바꾸지 않는다(사용자 결정 2026-10-22, issues.md).
+- [x] 1.3 rate limit 실측 → retry matrix·폴링 SLO 수치 확정 반영 — **확정(사용자 결정 2026-10-22)**: [retry matrix·폴링 SLO 확정 수치](analysis/retry-matrix-slo-2026-10-22.md)(기존 측정 M4·M8·M10·attestation·soak 기록만 사용). 수정 승인 셋: 주문 접수 재시도 안전 방식 최대 2회 · 취소/정정 409 재시도(5s·2회) · 3 req/s 계좌 공유. 코드 기본값·정본 표 반영은 이 change 가 아니라 a165(접수·409 재시도)·a166(계좌 공유 속도 상한·엔진 GET 429)에서 같은 커밋으로 한다(issues.md 「1.3 확정」).
 - [ ] 1.4 attestation 파일 생성 (만료·계좌 식별·성공 endpoint 집합·속성 결과) + 엔진 기동 인터록 연동 확인 — endpoint 집합은 `engine.RequiredEndpoints()`와 drift 가드 테스트로 동기화한다(2a가 목록을 확장하면 자동 강제; 조건주문 endpoint는 2c가 추가) — 엔진 기동 인터록 증거는 a163 배포 재시작 창(KST 05:00–09:00, 한 번의 재시작으로 둘 다)에서 수집한다(사용자 결정 2026-10-22, issues.md).
 
 - [x] 1.5 [T] **안내형 실계좌 검증 도구** `tossctl verify run`: 2.1·2.2·2.5·2.7·2.8의 측정을 단계 목록으로 구동 — 승인은 **run당 1회 배치 typed-confirmation**(시작 시 계획된 전 mutation의 전체 요약 목록 + 만료 nonce — 사용자 결정 2026-07-26; 1회성 측정이므로 §0.1 취지 내 완화)이 기본이고 `--confirm-each`로 단계별 확인 옵트인, 자동화 플래그 금지·TTY 전용은 유지, 최소 수량·즉시 취소, 단계별 증거 JSONL 기록(→ attestation 속성 입력), 중단·재개 가능(조건주문 존속 확인은 재실행 2회 구조), 비용은 검증 주문 자체의 execution.commission에서 수집. 자동 테스트가 아니라 운영자 도구다(테스트는 httptest 전용, testenv 가드 상속). 유효 창 경계(2.7)는 의도적 이중 주문 절차임을 단계 안내문에 명시하고 기본 생략(--include-ttl-edge 옵트인)
