@@ -153,3 +153,15 @@ Function Logic Map: not-applicable — a140 은 옛 base 에 없던 새 파일�
   `internal/offlinecontinuation/assessment.go:10` 이 `campaignstateevidence` 를 import — 그 파일의 최근 커밋은 `3f8e34632`(2026-10-20 「feat(offline): assess follow-on risk
   without authority」, a162 계열). a140 의 파일(`internal/breakoutsignal` · `tools/a140-breakout-signal-shadow`)과 무관하다.
 - 처분: base 재고정 외 사유의 FAIL 이므로 우회하지 않고 멈췄다(Manager 지시). 4.3 은 다시 열고 archive 하지 않는다. 그 시험을 고치는 것은 a140 범위 밖이다.
+
+### 6.3 완료 gate 3 차 — 2026-10-23 (FAIL, 5 단계 — base 뒤 형제 착지) · 2 차 재고정
+
+- a170(`6d12ca6bb`)이 7 단계 실패 시험을 고침(사용자 결정, Manager 전달). 4.3 재체크 · tracker 재생성 `64463c579`. `python3 tools/sdd/sdd_sync.py --no-gbrain`
+  → rc=1(CodeGraphContext `stats timed out`, advisory) · CodeGraph fingerprint head `64463c579` 기록. sync 앞뒤 `git rev-parse HEAD` 모두 `64463c579`.
+- `SDD_PYTHON=/tmp/tossos-a148-sdd-venv/bin/python make gate CHANGE=a140-breakout-signals-are-measured-in-shadow` → **rc=2**: 1~4 OK, 5
+  `required 2 function(s) — judged at HEAD 64463c579601` · `missing Function Logic Map for 2 function(s) modified between base 651de4394ef7 and working tree …:
+  internal/campaignstateevidence/authority_guard_test.go:allowedImport, internal/campaignstateevidence/authority_guard_test.go:TestGuardRejectsRuntimeCaptureUse`.
+- 원인: 재고정한 base `651de4394` 뒤에 착지한 a170 의 시험 파일 편집 — base 창 사유, 2026-10-23 사용자 「base 재고정 승인」과 같은 종류다.
+- 귀속 실측(`651de4394..64463c579`, 14 커밋): a140 디렉터리를 만진 비병합 커밋 5 개의 `.go` 편집 0, `internal/breakoutsignal` · `tools/a140-breakout-signal-shadow`
+  를 만진 커밋 0. 창 안 `.go` 커밋은 `6d12ca6bb`(a170) · `f0733d7b0`(a128) 둘 — 형제 착지 몫.
+- 처분: 같은 승인으로 base 를 이 기록 커밋으로 다시 고정한다(다음 단독 커밋이 영수증).

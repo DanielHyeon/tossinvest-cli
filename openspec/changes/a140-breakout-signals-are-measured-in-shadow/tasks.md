@@ -72,4 +72,4 @@ Story: `STORY-TOS-a140` · **Low**(새 파일만 · High-risk 경로 무접촉 �
       — 2026-10-23 사용자 승인(Manager 전달): base 재고정 · 완료 gate 실행. 귀속 실측 a140 자기 기존 함수 편집 0(review §6).
       — 2026-10-23 gate 2 차: 5 단계 OK(required 0) · 6 OK · **7 `make test` FAIL** — `internal/campaignstateevidence`
         `TestInspectionPackageHasNoRuntimeConsumers`(a162 계열 `internal/offlinecontinuation/assessment.go` import, a140 무관). 멈춤, archive 안 함(review §6.2).
-      — 2026-10-23 a170(`6d12ca6bb`)이 그 시험을 고침(Manager 전달 사용자 결정) → gate 3 차(review §6.3).
+      — 2026-10-23 a170(`6d12ca6bb`)이 그 시험을 고침(Manager 전달 사용자 결정) → gate 3 차 5 단계 FAIL(a170 착지가 base 창에, required 2) → 같은 승인으로 2 차 재고정(review §6.3).
