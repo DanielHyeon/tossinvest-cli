@@ -40,6 +40,8 @@
     - STORY-TOS-011 — Verify conditional orders await the object they hold [archived] → `verify-holds-what-it-awaits`
     - STORY-TOS-012 — Verify conditional trigger observation [in_progress] → `verify-observes-the-trigger`
     - STORY-TOS-a164 — 브로커가 만료로 확인한 검증 조건주문을 검증 기록에서 양성 증거로만 닫는다 [in_progress] → `a164-verify-reconcile-closes-broker-expired-conditional`
+    - STORY-TOS-a165 — 주문 접수는 브로커가 확실히 받지 않았을 때만 같은 키로 재시도하고, 취소·정정은 409 already-processing 에만 재시도한다 [in_progress] → `a165-safe-order-placement-retry`
+    - STORY-TOS-a166 — 같은 계좌를 치는 모든 TossOS 프로세스가 하나의 3 req/s 예산을 나눠 쓰고, 엔진 폴링 GET 은 429 에 같은 주기 안 재시도하지 않는다 [in_progress] → `a166-account-shared-rate-limit`
   - FEAT-TOS-003 — Engine interlocks and Guardian controls [active]
     - STORY-TOS-013 — Attest supervised mutation coverage [archived] → `attest-covers-supervised-mutations`
     - STORY-TOS-014 — Size the US Guardian risk tier [archived] → `size-us-guardian-tier`

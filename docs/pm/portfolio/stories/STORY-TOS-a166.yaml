@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a166",
+  "title": "같은 계좌를 치는 모든 TossOS 프로세스가 하나의 3 req/s 예산을 나눠 쓰고, 엔진 폴링 GET 은 429 에 같은 주기 안 재시도하지 않는다",
+  "feature": "FEAT-TOS-002",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a166-account-shared-rate-limit",
+    "path": "openspec/changes/a166-account-shared-rate-limit"
+  },
+  "found_by": {
+    "date": "2026-10-22",
+    "how": "verify-execution-capability task 1.3 확정에서 사용자가 요청 속도 상한 3 req/s 를 계좌 전체 공유(엔진·soak·verify·프로브·CLI)로 정하고 구현이 필요하다고 했다(2026-10-22). 근거는 M4·M8·M10 429 측정과 2026-10-22 엔진·수동 조회 동시 429 관측(Manager 전달, 저장소 영수증 없음). 현행 코드에는 클라이언트 속도 상한이 없다.",
+    "record": "openspec/changes/verify-execution-capability/issues.md"
+  },
+  "acceptance": [
+    "같은 계좌로 공식 API 를 치는 모든 TossOS 프로세스의 요청 합이 초당 3건을 넘지 않고, 예산 키는 config 디렉터리가 아니라 계좌 식별이다",
+    "상한이 손절·비상 청산 요청을 지연시키지 않는다는 것이 시험으로 증명된다",
+    "엔진 폴링 GET 은 429 에 같은 주기 안 즉시 재시도하지 않고, Retry-After ≤30s 일 때만 존중하며 그 밖에는 포기해 staleness 에 맡긴다",
+    "공식 API 를 치는 모든 전송 자리가 상한 안에 있거나 처분 사유가 기록된다",
+    "정본 retry matrix 와 코드 기본값이 같은 커밋에서 바뀌고, High-risk 의무(FLM/BTM·Pre-Edit·다중 적대 리뷰·변이 원장)를 거친다"
+  ]
+}

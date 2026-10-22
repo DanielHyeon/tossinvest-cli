@@ -161,3 +161,5 @@
 | `a162-assess-follow-on-risk-offline` | STORY-TOS-a162 | archived |
 | `a163-quote-freshness-uses-trade-time` | STORY-TOS-a163 | archived |
 | `a164-verify-reconcile-closes-broker-expired-conditional` | STORY-TOS-a164 | in_progress |
+| `a165-safe-order-placement-retry` | STORY-TOS-a165 | in_progress |
+| `a166-account-shared-rate-limit` | STORY-TOS-a166 | in_progress |

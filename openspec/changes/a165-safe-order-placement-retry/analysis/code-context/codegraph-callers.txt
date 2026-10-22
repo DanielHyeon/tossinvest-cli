@@ -1,0 +1,88 @@
+1.6.0
+$ codegraph callers "Place"
+
+Callers of "Place" (17):
+
+method      submit
+  internal/app/engine/exitloop.go:1483
+
+function    placeHandler
+  internal/ops/write_operations.go:133
+
+function    TestPlaceRequiresExecutionFlags
+  internal/trading/service_test.go:54
+
+function    TestPlaceCallsBrokerForSupportedIntent
+  internal/trading/service_test.go:96
+
+function    TestPlaceFailsWhenActionDisabledInConfig
+  internal/trading/service_test.go:187
+
+function    TestSellPlaceFailsWhenSellDisabledInConfig
+  internal/trading/service_test.go:232
+
+function    TestSellPlaceCallsBrokerWhenSellEnabled
+  internal/trading/service_test.go:265
+
+function    TestKRPlaceCallsBrokerWithoutMarketGate
+  internal/trading/service_test.go:453
+
+function    TestPlacePolicyChecksBeforeGuard
+  internal/trading/service_test.go:490
+
+function    TestPlaceFailsWhenLiveActionsDisabledInConfig
+  internal/trading/service_test.go:546
+
+method      place
+  internal/execgw/gateway.go:362
+
+method      Place
+  internal/app/engine/exitloop.go:138
+
+function    TestStrategyGatewayRejectsMissingOrFencedAuthorityPairedKRUS
+  internal/execgw/strategy_gateway_account_base_test.go:255
+
+method      sell
+  internal/flatten/liquidate.go:444
+
+method      PlaceStrategyEntry
+  internal/strategydispatch/adapters.go:92
+
+method      Place
+  internal/app/engine/exitloop_test.go:95
+
+method      submitEntry
+  internal/app/engine/tracer.go:406
+
+
+$ codegraph callers "PlaceOrder"
+
+Callers of "PlaceOrder" (9):
+
+method      PlaceOrder
+  internal/hybrid/broker.go:32
+
+method      PlaceOrder
+  internal/verifylive/verifylive.go:598
+
+method      PlacePendingOrder
+  internal/ops/write_operations.go:24
+
+function    TestGuardCatchesAnOfficialClientPointedAtProduction
+  internal/testenv/testenv_test.go:161
+
+function    TestWireBodyIsByteIdenticalToTheOfficialSerializer
+  tools/a087-market-sell-probe/contract_test.go:22
+
+method      placeOrder
+  internal/verifylive/mutate.go:215
+
+method      replayPlaceOrder
+  internal/verifylive/mutate.go:261
+
+method      conflictProbe
+  internal/verifylive/mutate.go:283
+
+method      PlaceOrder
+  internal/verifylive/fake_broker_test.go:798
+
