@@ -9,6 +9,7 @@
 - 실행: python3 -I prereg_eval.py --window in-sample | out-of-sample
         python3 -I prereg_eval.py --self-test
         python3 -I prereg_eval.py --calibrate-x   (F 임계값 X 도출 과정 재현 — 감사용)
+        python3 -I prereg_eval.py --d2            (D2 — prereg-2026-10-23-d2-twice-daily-index-correlation.md)
 """
 from __future__ import annotations
 
@@ -18,6 +19,7 @@ import json
 import os
 import statistics
 import sys
+from zoneinfo import ZoneInfo
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 LEDGER = os.path.join(HERE, "shadow-ledger", "ledger.jsonl")
@@ -101,8 +103,23 @@ def load_states(dirpath: str):
             "minutes_since_open": d.get("minutes_since_open"),
             "change_pct": d.get("change_pct_vs_reference"),
             "bars": intraday.get("bars_1m") or [],
+            "index_pct": index_pct(d),  # D2 전용 — 기존 네 팔은 읽지 않음
         }
     return states, unreadable
+
+
+def index_pct(d):
+    """D2 지수 등락(%) — KR: indices[symbol=KOSPI].change_today_pct, US: major_indices[code=SPX.CBI].change_pct_vs_base.
+    값이 없으면 None(사전등록 D2 4절)."""
+    mc = d.get("market_context") or {}
+    if d.get("market") == "KR":
+        rows, key, field, want = mc.get("indices") or [], "symbol", "change_today_pct", "KOSPI"
+    else:
+        rows, key, field, want = mc.get("major_indices") or [], "code", "change_pct_vs_base", "SPX.CBI"
+    for r in rows:
+        if isinstance(r, dict) and r.get(key) == want and r.get(field) is not None:
+            return float(r[field])
+    return None
 
 
 # ---------------------------------------------------------------- 규칙
@@ -328,6 +345,225 @@ def fmt(x):
     return "-" if x is None else f"{x*100:+.2f}"
 
 
+# ---------------------------------------------------------------- D2(사전등록 2026-10-23)
+# 정본: prereg-2026-10-23-d2-twice-daily-index-correlation.md. 기존 네 팔과 독립 — 위 함수들의 동작을 바꾸지 않음.
+
+NY = ZoneInfo("America/New_York")
+D2_TZ = {"KR": KST, "US": NY}
+D2_START, D2_END = "2026-10-23", "2026-12-24"
+# 창 끝 = US 12-24 세션 13:00 ET 진입의 +60분 청산 시각(14:00 EST = 19:00Z). 이 시각 전 실행은 중간 집계(판정 아님).
+D2_FINAL_AFTER = dt.datetime(2026, 12, 24, 19, 0, tzinfo=dt.timezone.utc)
+D2_ENTRIES = ("10:00", "13:00")
+D2_LAG_MAX = dt.timedelta(minutes=10)   # 지수 관측 차이 상한(프로브 회차 간격 600초)
+D2_BAR_WINDOW = dt.timedelta(minutes=5)  # [T-5분, T] 안 가장 가까운 이전 봉
+D2_DATES_MIN = 5                        # B1·B3 각 날짜 수 하한
+D2_BINS = ("B1 <=-3", "B2 (-3,-1]", "B3 (-1,0)", "B4 >=0")
+D2_TYPE_GROUP = {"STOCK": "STOCK", "FOREIGN_STOCK": "STOCK", "ETF": "ETF", "FOREIGN_ETF": "ETF", "ETN": "ETN",
+                 "DEPOSITARY_RECEIPT": "기타", "INFRASTRUCTURE_FUND": "기타", "REIT": "기타", "STOCK_WARRANTS": "기타"}
+D2_RECEIPTS = os.path.join(HERE, "d2-receipts")
+
+
+def d2_bin(v):
+    """지수 등락 v(%) 의 구간. B1: v<=-3, B2: -3<v<=-1, B3: -1<v<0, B4: v>=0."""
+    return D2_BINS[0] if v <= -3 else D2_BINS[1] if v <= -1 else D2_BINS[2] if v < 0 else D2_BINS[3]
+
+
+def d2_type(sym, types):
+    """securityType → 갈래. enum 밖·조회 실패·영수증 없음 = 미분류(사전등록 D2 7절)."""
+    return D2_TYPE_GROUP.get(types.get(sym), "미분류")
+
+
+def d2_label_time(market, date, label):
+    """state 봉 라벨(KST "HH:MM") → aware 시각. KR 은 세션 날짜 그대로.
+    US 세션(UTC 13:30~21:00)은 KST 22:30~06:00 이라 자정을 넘음 — 12시 이후 라벨은 세션 날짜, 그 전은 다음 날."""
+    h, m = map(int, label.split(":"))
+    day = dt.date.fromisoformat(date)
+    if market == "US" and h < 12:
+        day += dt.timedelta(days=1)
+    return dt.datetime(day.year, day.month, day.day, h, m, tzinfo=KST)
+
+
+def d2_books(states, receipts):
+    """주식-일별 1분봉 책 두 개(state 합집합, 영수증). 키 = 시각, 값 = 종가. state 는 build_bars 관례(늦은 관측 우선)."""
+    sbook = {sd: {d2_label_time(sd[0], sd[1], t): c for t, (_, c) in b.items()}
+             for sd, b in build_bars(states).items()}
+    rbook = {}
+    for (market, date), rows in receipts.items():
+        for sym, bars in rows.items():
+            rbook[(market, date, sym)] = {parse_at(b["time"]): float(b["close"]) for b in bars}
+    return sbook, rbook
+
+
+def d2_pick(sbook, rbook, sd, t):
+    """시각 t 의 [t-5분, t] 안 가장 가까운 이전 봉 종가와 출처. state 를 먼저, 없을 때만 영수증. 둘 다 없으면 (None, None)."""
+    for src, book in (("state", sbook), ("receipt", rbook)):
+        b = book.get(sd) or {}
+        cands = [x for x in b if t - D2_BAR_WINDOW <= x <= t]
+        if cands:
+            return b[max(cands)], src
+    return None, None
+
+
+def d2_index(states):
+    """(market, 세션 날짜) → [(관측 시각, 지수 등락)] 시각순. 값 없는 state 는 뺌."""
+    out = {}
+    for st in states.values():
+        if st["observed_at"] is None or st.get("index_pct") is None:
+            continue
+        out.setdefault((st["market"], st["observed_at"].date().isoformat()), []).append(
+            (st["observed_at"], st["index_pct"]))
+    for v in out.values():
+        v.sort()
+    return out
+
+
+def spearman(xs, ys):
+    """스피어만 ρ(동순위 평균 순위). 표본 3 미만·분산 0 이면 None."""
+    if len(xs) < 3:
+        return None
+
+    def ranks(v):
+        order = sorted(range(len(v)), key=lambda i: v[i])
+        r = [0.0] * len(v)
+        i = 0
+        while i < len(order):
+            k = i
+            while k + 1 < len(order) and v[order[k + 1]] == v[order[i]]:
+                k += 1
+            for x in order[i:k + 1]:
+                r[x] = (i + k) / 2 + 1
+            i = k + 1
+        return r
+    rx, ry = ranks(xs), ranks(ys)
+    mx, my = statistics.fmean(rx), statistics.fmean(ry)
+    sxy = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
+    sxx, syy = sum((a - mx) ** 2 for a in rx), sum((b - my) ** 2 for b in ry)
+    return None if sxx == 0 or syy == 0 else sxy / (sxx * syy) ** 0.5
+
+
+def d2_verdict(day_means_by_bin):
+    """가설: B1 날짜 평균 순수익의 평균 > B3 의 것. B1·B3 날짜 수 각 5 이상일 때만."""
+    b1, b3 = day_means_by_bin.get(D2_BINS[0], []), day_means_by_bin.get(D2_BINS[2], [])
+    if len(b1) < D2_DATES_MIN or len(b3) < D2_DATES_MIN:
+        return "INSUFFICIENT"
+    return "SUPPORTED" if mean(b1) > mean(b3) else "NOT_SUPPORTED"
+
+
+def d2_trades(j2, states, receipts, types):
+    """D2 가상 거래 목록과 결측 집계. 반환: (trades, missing). trade = dict(market, entry, date, symbol,
+    signal, type, net, idx, lag_min, src)."""
+    sbook, rbook = d2_books(states, receipts)
+    idx = d2_index(states)
+    lists = {}  # (market, date) → {symbol: 목록 회차 J2 p}
+    for j in j2:
+        d = session_date(j)
+        if not (D2_START <= d <= D2_END):
+            continue
+        loc = j["at"].astimezone(D2_TZ[j["market"]])
+        if loc.hour == 10 and loc.minute < 10:
+            row = lists.setdefault((j["market"], d), {})
+            row.setdefault(j["symbol"], j["p"])  # 한 회차에 같은 종목 판단이 둘이면 첫 행
+    trades, missing = [], {}
+
+    def miss(key):
+        missing[key] = missing.get(key, 0) + 1
+
+    for (market, d), syms in sorted(lists.items()):
+        tz = D2_TZ[market]
+        day = dt.date.fromisoformat(d)
+        for entry in D2_ENTRIES:
+            h, m = map(int, entry.split(":"))
+            t_in = dt.datetime(day.year, day.month, day.day, h, m, tzinfo=tz)
+            t_out = (dt.datetime(day.year, day.month, day.day, 14, 10, tzinfo=tz) if market == "KR"
+                     else t_in + dt.timedelta(minutes=60))
+            obs = [(o, v) for o, v in idx.get((market, d), []) if o <= t_in]
+            if not obs or t_in - obs[-1][0] > D2_LAG_MAX:
+                miss(f"{market}-{entry}:index_missing_dates")
+                continue
+            o, v = obs[-1]
+            for sym, p in sorted(syms.items()):
+                sd = (market, d, sym)
+                pin, sin = d2_pick(sbook, rbook, sd, t_in)
+                if pin is None:
+                    miss(f"{market}-{entry}:entry_missing")
+                    continue
+                pout, sout = d2_pick(sbook, rbook, sd, t_out)
+                if pout is None:
+                    miss(f"{market}-{entry}:exit_missing")
+                    continue
+                trades.append({"market": market, "entry": entry, "date": d, "symbol": sym,
+                               "signal": p >= P_STRONG, "type": d2_type(sym, types),
+                               "net": pout / pin - 1.0 - COST_RT[market], "idx": v,
+                               "lag_min": (t_in - o).total_seconds() / 60, "src": (sin, sout)})
+    return trades, missing
+
+
+def d2_load_receipts(root=D2_RECEIPTS):
+    """영수증(읽기 전용). minute-bars/<MARKET>-<YYYY-MM-DD>.json = {"bars": {sym: [{"time": ISO, "close": n}]}, ...},
+    security-types.json = {"types": {sym: securityType}, ...}. 없으면 빈 값 — 유형은 전부 미분류, 보충 없음."""
+    receipts, types = {}, {}
+    mdir = os.path.join(root, "minute-bars")
+    if os.path.isdir(mdir):
+        for name in sorted(os.listdir(mdir)):
+            if name.endswith(".json"):
+                market, date = name[:-5].split("-", 1)
+                with open(os.path.join(mdir, name), "rb") as fh:
+                    receipts[(market, date)] = json.loads(fh.read().decode("utf-8")).get("bars") or {}
+    tpath = os.path.join(root, "security-types.json")
+    if os.path.isfile(tpath):
+        with open(tpath, "rb") as fh:
+            types = json.loads(fh.read().decode("utf-8")).get("types") or {}
+    return receipts, types
+
+
+def evaluate_d2(j2, states, receipts, types, now, out=print):
+    """D2 평가. 칸(시장×진입 시각)마다 날짜 단위 주 분석 + 종목 단위 보조. 반환: {칸: {verdict, rho, bins, dates}}."""
+    trades, missing = d2_trades(j2, states, receipts, types)
+    final = now >= D2_FINAL_AFTER
+    out(f"\n=== D2 — 창 {D2_START}~{D2_END}; "
+        f"{'최종 판정' if final else '중간 집계(서술용, 판정 아님)'}; 거래 {len(trades)}건; 유형 영수증 "
+        f"{'있음' if types else '없음(전부 미분류)'} ===")
+    srcs = {}
+    for t in trades:
+        for s in t["src"]:
+            srcs[s] = srcs.get(s, 0) + 1
+    out(f"봉 출처(진입+청산) {srcs or '없음'}; 결측 {missing or '없음'}")
+    res = {}
+    for market in ("KR", "US"):
+        for entry in D2_ENTRIES:
+            cell = [t for t in trades if t["market"] == market and t["entry"] == entry]
+            by_day = {}
+            for t in cell:
+                by_day.setdefault(t["date"], []).append(t)
+            days = sorted(by_day)
+            dv = [by_day[d][0]["idx"] for d in days]
+            dm = [mean([t["net"] for t in by_day[d]]) for d in days]
+            bins = {}
+            for v, m in zip(dv, dm):
+                bins.setdefault(d2_bin(v), []).append(m)
+            rho = spearman(dv, dm)
+            v = d2_verdict(bins)
+            key = f"{market}-{entry}"
+            res[key] = {"verdict": v, "rho": rho, "dates": len(days), "bins": {b: len(x) for b, x in bins.items()}}
+            out(f"\n-- {key} ({'KST' if market == 'KR' else 'ET'}; 비용 {COST_RT[market]*100:.2f}%) — 날짜 {len(days)}개, "
+                f"스피어만 ρ(날짜) {'-' if rho is None else f'{rho:+.3f}'}")
+            for b in D2_BINS:
+                xs = bins.get(b, [])
+                out(f"   {b:<11} 날짜 {len(xs):>3}  날짜 평균 순수익의 평균 {fmt(mean(xs)):>7}%")
+            out(f"   가설(B1 > B3, 각 날짜 >= {D2_DATES_MIN}): "
+                f"{v if final else v + ' — 중간 집계(판정 아님)'}")
+            # 보조(서술용): 종목 단위 ρ 와 갈래별 평균
+            srho = spearman([t["idx"] for t in cell], [t["net"] for t in cell])
+            out(f"   보조 종목 단위: n={len(cell)} ρ {'-' if srho is None else f'{srho:+.3f}'}")
+            groups = {}
+            for t in cell:
+                groups.setdefault((("신호" if t["signal"] else "비신호"), t["type"]), []).append(t["net"])
+            for g in sorted(groups):
+                out(f"     {g[0]}/{g[1]}: n={len(groups[g])} 평균 순수익 {fmt(mean(groups[g]))}%")
+    out("\n주의: D2 는 가상 매수 집계임. 실주문 0. SUPPORTED 도 수익성 결론이 아님.")
+    return res
+
+
 # ---------------------------------------------------------------- X 도출(감사용 재현)
 
 def calibrate_x(j2, states, out=print):
@@ -454,7 +690,110 @@ def self_test():
     by["2026-10-14"] = [1]
     assert "2026-10-14" not in select_sessions("out-of-sample", "KR", by)[0]
     assert select_sessions("in-sample", "KR", by)[0] == ["2026-10-14"]
+    d2_self_test()
     print("self-test OK")
+
+
+def d2_self_test():
+    """D2 합성 픽스처: 하락일/상승일/지수 결측·차이 초과/ETF·ETN·미분류/영수증 보충/US 자정 넘는 창/서머타임."""
+    utc = dt.timezone.utc
+
+    def z(s):
+        return dt.datetime.fromisoformat(s).replace(tzinfo=utc)
+
+    def st(mkt, sym, obs, bars=(), idx=None):
+        return {"market": mkt, "symbol": sym, "observed_at": z(obs), "minutes_since_open": 0, "change_pct": 0.0,
+                "bars": [{"t": t, "o": c, "h": c, "l": c, "c": c, "v": 1} for t, c in bars], "index_pct": idx}
+
+    states = {
+        # KR 10-23: 10:00 KOSPI -3.5(B1, 차이 0분), 13:00 -0.5(B3, 차이 5분)
+        "k1": st("KR", "IDX", "2026-10-23T01:00:00", idx=-3.5),
+        "k2": st("KR", "IDX", "2026-10-23T03:55:00", idx=-0.5),
+        "x1": st("KR", "X", "2026-10-23T01:00:00", [("10:00", 100)]),
+        "x2": st("KR", "X", "2026-10-23T05:10:00", [("13:00", 110), ("14:10", 121)]),
+        "y1": st("KR", "Y", "2026-10-23T01:00:00", [("09:57", 50)]),   # 10:00 없음 → 09:57 대체, 청산은 영수증
+        "z1": st("KR", "Z", "2026-10-23T01:00:00", [("10:00", 10)]),   # 청산 결측
+        "w1": st("KR", "W", "2026-10-23T00:50:00", [("10:00", 5), ("14:10", 6)]),  # 09:50 회차만 → 목록 밖
+        "w2": st("KR", "W2", "2026-10-23T05:10:00", [("10:00", 5), ("13:00", 5), ("14:10", 6)]),  # 10:10 회차만 → 목록 밖
+        # KR 10-26: 지수 관측이 09:40 뿐 → 10:00 차이 20분 > 10 → 결측
+        "k3": st("KR", "IDX", "2026-10-26T00:40:00", idx=-5.0),
+        "x3": st("KR", "X", "2026-10-26T05:10:00", [("10:00", 1), ("13:00", 1), ("14:10", 2)]),
+        # KR 10-22: 창 밖
+        "k0": st("KR", "IDX", "2026-10-22T01:00:00", idx=-9.0),
+        "x0": st("KR", "X", "2026-10-22T05:10:00", [("10:00", 1), ("14:10", 2)]),
+        # US 10-23(EDT): 10:00 ET = 14:00Z = 23:00 KST, 11:00 ET = 00:00 KST(다음 날), 13:00 ET = 02:00 KST, 14:00 ET = 03:00 KST
+        "s1": st("US", "IDX", "2026-10-23T14:00:00", idx=-1.5),
+        "s2": st("US", "IDX", "2026-10-23T16:55:00", idx=0.2),
+        "u1": st("US", "U", "2026-10-23T14:00:00", [("23:00", 20)]),
+        "u2": st("US", "U", "2026-10-23T15:10:00", [("23:57", 22)]),   # [23:55, 00:00] 창 — 자정 앞 봉
+        "u3": st("US", "U", "2026-10-23T18:00:00", [("02:00", 30), ("03:00", 27)]),
+        # US 11-02(EST): 10:00 ET = 15:00Z. 14:00Z 판단(09:00 ET)은 목록 밖
+        "s3": st("US", "IDX", "2026-11-02T15:00:00", idx=-4.0),
+        "v1": st("US", "V", "2026-11-02T16:00:00", [("00:00", 40), ("01:00", 44)]),
+        "v2": st("US", "V2", "2026-11-02T16:00:00", [("00:00", 40), ("01:00", 44)]),
+    }
+
+    def jd(sym, mkt, at, p):
+        return {"id": sym + at, "at": z(at), "market": mkt, "symbol": sym, "p": p, "base_price": 1.0, "digest": "-"}
+
+    j2 = [jd("X", "KR", "2026-10-23T01:00:00", 0.7), jd("Y", "KR", "2026-10-23T01:00:00", 0.2),
+          jd("Z", "KR", "2026-10-23T01:00:00", 0.3), jd("W", "KR", "2026-10-23T00:50:00", 0.9),
+          jd("W2", "KR", "2026-10-23T01:10:00", 0.9),
+          jd("X", "KR", "2026-10-26T01:00:00", 0.1), jd("X", "KR", "2026-10-22T01:00:00", 0.1),
+          jd("U", "US", "2026-10-23T14:00:00", 0.65), jd("V", "US", "2026-11-02T15:00:00", 0.1),
+          jd("V2", "US", "2026-11-02T14:00:00", 0.1)]
+    receipts = {("KR", "2026-10-23"): {"Y": [{"time": "2026-10-23T14:08:00+09:00", "close": 55}]}}
+    types = {"X": "ETF", "Y": "ETN", "U": "FOREIGN_STOCK", "Q": "WEIRD"}
+    trades, missing = d2_trades(j2, states, receipts, types)
+    got = {(t["market"], t["entry"], t["date"], t["symbol"]): t for t in trades}
+    c_kr, c_us = COST_RT["KR"], COST_RT["US"]
+    # KR X: 10:00 진입 100 → 14:10 121, 13:00 진입 110 → 121. ETF, 신호(p 0.7). 지수 10:00=-3.5(B1), 13:00=-0.5(차이 5분)
+    x10, x13 = got[("KR", "10:00", "2026-10-23", "X")], got[("KR", "13:00", "2026-10-23", "X")]
+    assert abs(x10["net"] - (0.21 - c_kr)) < 1e-12 and x10["idx"] == -3.5 and x10["lag_min"] == 0
+    assert abs(x13["net"] - (0.10 - c_kr)) < 1e-12 and x13["idx"] == -0.5 and x13["lag_min"] == 5
+    assert x10["type"] == "ETF" and x10["signal"] and x13["signal"]  # 13:00 도 목록 회차 분류
+    # KR Y: 09:57 대체 진입(state) + 영수증 14:08 청산, ETN, 비신호. 13:00 진입은 봉 없음 → 결측
+    y10 = got[("KR", "10:00", "2026-10-23", "Y")]
+    assert abs(y10["net"] - (0.10 - c_kr)) < 1e-12 and y10["src"] == ("state", "receipt") and y10["type"] == "ETN"
+    assert not y10["signal"]
+    # Z 는 청산 결측(미분류), W 는 09:50 회차라 목록 밖, 10-22 는 창 밖, 10-26 은 지수 차이 초과
+    assert ("KR", "10:00", "2026-10-23", "Z") not in got and ("KR", "10:00", "2026-10-23", "W") not in got
+    assert not any(k[3] == "W2" for k in got)  # 10:10 회차는 목록 회차가 아님
+    assert not any(k[2] in ("2026-10-22", "2026-10-26") for k in got)
+    assert missing == {"KR-10:00:exit_missing": 1, "KR-13:00:entry_missing": 2,
+                       "KR-10:00:index_missing_dates": 1, "KR-13:00:index_missing_dates": 1,
+                       "US-13:00:index_missing_dates": 1}, missing
+    assert d2_type("Z", types) == "미분류" and d2_type("Q", types) == "미분류" and d2_type("U", types) == "STOCK"
+    # US U(EDT): 10:00 ET 23:00 KST 진입 20 → 11:00 ET 창의 23:57 봉 22(자정 앞), 13:00 ET 30 → 14:00 ET 27
+    u10, u13 = got[("US", "10:00", "2026-10-23", "U")], got[("US", "13:00", "2026-10-23", "U")]
+    assert abs(u10["net"] - (0.10 - c_us)) < 1e-12 and u10["idx"] == -1.5 and u10["signal"]
+    assert abs(u13["net"] - (-0.10 - c_us)) < 1e-12 and u13["idx"] == 0.2 and u13["lag_min"] == 5
+    # US V(EST): 10:00 ET = 15:00Z 회차만 목록. V2(14:00Z = 09:00 EST)는 목록 밖
+    assert abs(got[("US", "10:00", "2026-11-02", "V")]["net"] - (0.10 - c_us)) < 1e-12
+    assert not any(k[3] == "V2" for k in got)
+    # 구간 경계와 판정·상관
+    assert [d2_bin(v) for v in (-3.0, -2.9999, -1.0, -0.0001, 0.0, 1.0)] == [
+        D2_BINS[0], D2_BINS[1], D2_BINS[1], D2_BINS[2], D2_BINS[3], D2_BINS[3]]
+    assert d2_verdict({D2_BINS[0]: [0.02] * 5, D2_BINS[2]: [0.01] * 5}) == "SUPPORTED"
+    assert d2_verdict({D2_BINS[0]: [0.01] * 5, D2_BINS[2]: [0.01] * 5}) == "NOT_SUPPORTED"
+    assert d2_verdict({D2_BINS[0]: [0.02] * 4, D2_BINS[2]: [0.01] * 9}) == "INSUFFICIENT"
+    assert d2_verdict({D2_BINS[0]: [0.02] * 9}) == "INSUFFICIENT"
+    assert spearman([1, 2, 3], [3, 2, 1]) == -1.0 and spearman([1, 2], [1, 2]) is None
+    assert abs(spearman([1, 1, 2], [1, 2, 3]) - 0.8660254037844387) < 1e-12
+    assert spearman([1, 1, 1], [1, 2, 3]) is None
+    # 창 끝 전 = 중간 집계 표시, 뒤 = 최종
+    lines = []
+    r = evaluate_d2(j2, states, receipts, types, z("2026-12-24T18:59:00"), out=lines.append)
+    assert "중간 집계(서술용, 판정 아님)" in lines[0] and r["KR-10:00"]["verdict"] == "INSUFFICIENT"
+    assert any("— 중간 집계(판정 아님)" in s for s in lines)
+    lines = []
+    evaluate_d2(j2, states, receipts, types, D2_FINAL_AFTER, out=lines.append)
+    assert "최종 판정" in lines[0] and not any("— 중간 집계(판정 아님)" in s for s in lines)
+    assert index_pct({"market": "KR", "market_context": {"indices": [{"symbol": "KOSDAQ", "change_today_pct": 1},
+                                                                     {"symbol": "KOSPI", "change_today_pct": -2}]}}) == -2.0
+    assert index_pct({"market": "US", "market_context": {"major_indices": [{"code": "SPX.CBI",
+                                                                            "change_pct_vs_base": 0.5}]}}) == 0.5
+    assert index_pct({"market": "US", "market_context": {}}) is None
 
 
 def main(argv=None):
@@ -463,6 +802,7 @@ def main(argv=None):
     g.add_argument("--window", choices=["in-sample", "out-of-sample"])
     g.add_argument("--self-test", action="store_true")
     g.add_argument("--calibrate-x", action="store_true")
+    g.add_argument("--d2", action="store_true")
     a = ap.parse_args(argv)
     if a.self_test:
         self_test()
@@ -473,6 +813,10 @@ def main(argv=None):
           f"state {len(states)}개(읽기 실패 {unreadable})")
     if a.calibrate_x:
         calibrate_x(j2, states)
+        return 0
+    if a.d2:
+        receipts, types = d2_load_receipts()
+        evaluate_d2(j2, states, receipts, types, dt.datetime.now(dt.timezone.utc))
         return 0
     evaluate(j2, labels, states, a.window)
     return 0

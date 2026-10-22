@@ -357,7 +357,14 @@
       진입 시각 KOSPI/S&P 500 등락(차이 상한 10분) · 구간 B1~B4 · 날짜 단위 판정(B1·B3 각 날짜 ≥5, 창 끝 한 번) · 유형 STOCK/ETF/ETN/기타/미분류 ·
       창 10-23~12-24). 10-23 KR 10:00 진입 전에 커밋. 기존 10-22 사전등록 문서 무변경. 취소된 하락장 X% 팔(R0·R1·R2)은 등록하지 않음.
       FLM: not-applicable(오프라인 평가 문서·도구 — High-risk 경로·게이트 판정 무접촉, 비례 원칙).
-- [ ] 6.2 평가기 — `prereg_eval.py --d2` 구현 + 자가 시험(하락일/상승일/지수 결측·차이 초과/ETF/ETN/미분류/봉 영수증 보충/US 자정 넘는 창).
-- [ ] 6.3 기존 출력 대조 — 같은 원장 스냅숏에서 `--window in-sample|out-of-sample`·`--calibrate-x` 출력이 편집 전후 바이트 동일(영수증).
+- [x] 6.2 평가기 — `prereg_eval.py --d2` 구현 + 자가 시험(하락일/상승일/지수 결측·차이 초과/ETF/ETN/미분류/봉 영수증 보충/US 자정 넘는 창).
+      기존 함수 편집은 `load_states` 에 `index_pct` 칸 추가 한 곳(기존 네 팔은 읽지 않음). 영수증(python 3.12.3): `python3 -I prereg_eval.py
+      --self-test` → `self-test OK` rc=0. 변이(스크래치 사본, 무변이 대조군 rc=0): 지수 차이 상한 10→30 · US 자정 넘김 제거 · 영수증 보충 제거 ·
+      목록 회차 10:00~10:09 → 10시 전체 · B1 경계 `<=`→`<` · US 청산 +60→+50분 · 진입 뒤 지수 허용 · 창 시작 제거 · 항상 최종 · enum 밖 값을 ETF 로
+      = 10/10 CAUGHT(rc=1; 목록 회차 변이는 첫 판에 살아남아 10:10 회차 픽스처를 더한 뒤 CAUGHT).
+- [x] 6.3 기존 출력 대조 — 한 프로세스에서 HEAD 판(`git hash-object` 787bd472…)과 편집 판(185713d6…, 커밋 판)을 같은 원장·state
+      입력(J2 12540 · 라벨 34020 · state 12540, 두 로더의 state 키 집합 동일 단언)에 돌림: in-sample `84698390a0f6ac7f`(2858B) · out-of-sample
+      `d4bb2e48262c1a40`(2419B) · calibrate-x `399e4fb3ee1f5e9e`(270B) 전부 IDENTICAL. 음성 대조: KR 비용 0.0050→0.0051 사본은 in/out-of-sample
+      DIFFERENT(calibrate-x 는 비용 무관이라 IDENTICAL — 예상대로). 하네스 `analysis/prereg_eval_compare.py`(같은 출력으로 재실행 확인).
 - [ ] 6.4 영수증 도구 — 유형(`securityType`, a169 뒤)·지난 시각 1분봉(`before` 지원 읽기 전용 조회) 수집 방법과 호출 수(D11 예산) 기록.
 - [ ] 6.5 리뷰 — 경량 gstack review(비례 원칙).
