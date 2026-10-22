@@ -130,6 +130,7 @@
     - STORY-TOS-a134 — A dead engine is noticed from outside the engine [archived] → `a134-a-dead-engine-is-noticed`
     - STORY-TOS-a135 — Capability attestation expiry and scope loss are announced before a restart [archived] → `a135-attestation-expiry-is-announced`
     - STORY-TOS-a163 — 시세의 브로커 데이터 시각을 보존하고 보고하되 손절 판정 자격은 바꾸지 않는다 [archived] → `a163-quote-freshness-uses-trade-time`
+    - STORY-TOS-a167 — A protective-exit remainder that stays live is re-priced and re-ordered [in_progress] → `a167-a-protective-remainder-is-re-priced`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`

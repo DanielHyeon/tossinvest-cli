@@ -1,0 +1,30 @@
+{
+  "id": "STORY-TOS-a167",
+  "title": "A protective-exit remainder that stays live is re-priced and re-ordered",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a167-a-protective-remainder-is-re-priced",
+    "path": "openspec/changes/a167-a-protective-remainder-is-re-priced"
+  },
+  "found_by": {
+    "date": "2026-10-22",
+    "how": "a087 task 3.6 read-only AST analysis found that a partially filled protective exit whose remainder stays non-terminal at the broker binds the position's protection to that order with no time bound and no alert (a087 issues.md I-R9). Asked 'remainder alert, recommended: automatically re-price and re-order', the user chose the recommendation on 2026-10-22. That is new High-risk exit-path behaviour outside a087's scope, so it was deferred to this change (a087 design D10).",
+    "record": "openspec/changes/a087-a-protective-exit-is-a-market-order/issues.md (I-R9, 사용자 결정 2026-10-22)"
+  },
+  "acceptance": [
+    "A protective-exit sell order whose remainder stays non-terminal for N seconds (N set by a human) is re-priced and re-ordered; a take-profit remainder is never touched",
+    "The engine holds at most one broker sell claim per symbol: a replacement is sent only after the old order is confirmed terminal by an order read, never from the status value alone (M32)",
+    "The replacement quantity is the remaining quantity reported by that terminal read",
+    "The replacement order type follows a087's session rule (limit where the broker does not accept market orders or the session cannot be judged) and a limit re-price never raises the price",
+    "An in-doubt cancel or a refused replacement raises a critical alert and is not retried blindly",
+    "FLM/BTM, a multi-voice adversarial review, a mutation ledger and a supervised live measurement are completed before landing"
+  ],
+  "measured": null,
+  "deviations": [],
+  "limits": [
+    "Registration only as of 2026-10-22: proposal, task skeleton and a draft spec delta; no design, base commit or code.",
+    "Implementation starts only after a087 Phase 2 lands, including its session input (a087 task 2.6).",
+    "N, amend versus cancel-then-replace, the limit price rule, the market-remainder disposition and the toggle default are open human decisions."
+  ]
+}

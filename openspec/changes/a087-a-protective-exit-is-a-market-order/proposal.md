@@ -34,6 +34,11 @@
 > 만드는 `trading.Service` 인스턴스에만 생성자 옵션으로 서고, CLI·ops·MCP 가 쓰는 기본 생성 경로는 upstream 과
 > 바이트 동일하다. 4판까지의 「사람 CLI 도 시장가 매도가 가능해진다」는 **철회된 1차 결정**이며 본문 전부 정정했다.
 > 처분 대조표(3차분)는 `review.md` 끝.
+>
+> **6판 (2026-10-22, 사용자 결정 — `issues.md` 「사용자 결정 (2026-10-22)」)**: ① **D7 처분** — 브로커가 시장가를 받지 않는 구간
+> (KRX 시간외단일가, 그리고 접수가 실측되지 않았거나 거부가 실측된 정규장 밖 구간)과 구간 판정 불가에서는 보호 청산을 **오늘처럼 지정가**로
+> 낸다. spec Requirement 1 에 그 예외를 넣었고, 엔진에 세션 게이트가 없으므로(tasks 0.5) 구간 입력 배선이 구현 task 2.6 이 됐다
+> (design D7 「처분」). ② **I-R9** — 비종결 잔량의 자동 재가격·재주문은 새 change **a167** 로 이연(design D10). ③ **I-R10** — 필요 없음으로 종결.
 
 ## Why
 
@@ -195,7 +200,7 @@ reader 인터페이스에 선언된 `PriceLimits`(reads.go:72, 비시험 호출�
 
 | 제안 | KR | US |
 | --- | --- | --- |
-| 보호 (`isProtective` — `BASELINE_BREACH`·`STOP_LOSS_LADDER`) | **MARKET** | **MARKET** |
+| 보호 (`isProtective` — `BASELINE_BREACH`·`STOP_LOSS_LADDER`) | **MARKET** — 단 시장가를 받지 않는 구간·구간 판정 불가는 오늘과 같은 LIMIT(6판, design D7) | **MARKET** — 같은 예외 |
 | 익절 (`LADDER_TAKE_PROFIT`) | LIMIT (현행 유지) | LIMIT (현행 유지) |
 
 익절을 그대로 두는 것이 §0.9다. 익절은 즉시성이 목적이 아니고, 시장가로 바꾸면 체결가
@@ -245,7 +250,8 @@ side == "buy"  && orderType == "market"                → 거부 (현행 유지
 - **Code**: `internal/app/engine/exitloop.go`(`sellIntent`·`submit` 호출부), `internal/execgw/failclosed.go`
   (`checkOrderShape` + 「internal/trading is not ours to change」 주석), **`internal/trading/service.go`
   (`placeIntentSupported` + 엔진 전용 생성자 옵션 — 기본값은 upstream 동일, 2026-10-10 사용자 결정 2차)**,
-  **`internal/app/engine/engine.go`(엔진 `trading.Service` 생성에서만 옵션을 켠다)**, 관측·원장 표시부.
+  **`internal/app/engine/engine.go`(엔진 `trading.Service` 생성에서만 옵션을 켠다)**, 관측·원장 표시부,
+  **구간·접수 입력 배선(6판 — 출처 함수는 tasks 2.6.1 의 AST 열거 뒤 정한다)**.
   ~~Phase 1 은 `PriceLimits` 배선 추가~~
   (불구현 — Phase 1 의 코드 산출물은 `internal/exitpolicy/a087_observed_price_pin_test.go` 시험 1개)
 - **영향받는 표면 (무변경이어도 시험 대상)**: 전송 `official.buildOrderCreate` 와 그 사본 `execgw.PlaceWireBody`
@@ -291,4 +297,6 @@ side == "buy"  && orderType == "market"                → 거부 (현행 유지
    ~~엔진 청산 루프는 정규장 기준이라 차단 요소는 아니지만~~ — **정정(재리뷰 P1-2 · 2차 리뷰 H1)**: 엔진에
    `InRegularSession` 호출자가 없다(비시험 호출자는 `verifylive` 하나). 엔진이 정규장 밖에서 보호 청산을 제출하는지와
    그때의 처분은 design D7 — **미해결, §1~§3 착수 전 확인**
+   → 0.5(2026-10-20)가 엔진에 세션 게이트가 없음을 AST 로 확인했고, D7 처분은 사용자 결정 2026-10-22 로 정해졌다(6판). §5.2 는 여전히
+   측정 대상이다 — 그 결과는 구간 표의 칸을 확정하는 입력이다
 3. **US** — 실측 없음. 한계는 위 What Changes §1 「US 한계」

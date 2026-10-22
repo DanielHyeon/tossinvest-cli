@@ -163,3 +163,4 @@
 | `a164-verify-reconcile-closes-broker-expired-conditional` | STORY-TOS-a164 | in_progress |
 | `a165-safe-order-placement-retry` | STORY-TOS-a165 | in_progress |
 | `a166-account-shared-rate-limit` | STORY-TOS-a166 | in_progress |
+| `a167-a-protective-remainder-is-re-priced` | STORY-TOS-a167 | in_progress |

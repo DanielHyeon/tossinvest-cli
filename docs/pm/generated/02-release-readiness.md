@@ -89,7 +89,7 @@
 | STORY-TOS-a083 | 5 |
 | STORY-TOS-a084 | 5 |
 | STORY-TOS-a085 | 6 |
-| STORY-TOS-a087 | 8 |
+| STORY-TOS-a087 | 9 |
 | STORY-TOS-a089 | 8 |
 | STORY-TOS-a090 | 5 |
 | STORY-TOS-a091 | 6 |
@@ -163,3 +163,4 @@
 | STORY-TOS-a164 | 6 |
 | STORY-TOS-a165 | 6 |
 | STORY-TOS-a166 | 5 |
+| STORY-TOS-a167 | 6 |
