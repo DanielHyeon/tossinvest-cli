@@ -1,0 +1,45 @@
+## cgc find name checkReconcileAbsence
+No code elements found with name 'checkReconcileAbsence'
+## cgc find name ReconciledAbsent
+No code elements found with name 'ReconciledAbsent'
+## cgc find name terminal
+Found 33 matches for 'terminal':
+╭─────────────────────────────────┬──────────┬─────────────────────────────────╮
+│ Name                            │ Type     │ Location                        │
+├─────────────────────────────────┼──────────┼─────────────────────────────────┤
+│ Terminal                        │ Function │ /tmp/claude-1000/-mnt-D-project │
+│                                 │          │ -axipient-TossOS/81c61aa2-383f- │
+│                                 │          │ 4024-9f8a-7b691a61be10/scratchp │
+│                                 │          │ ad/gatewt/internal/verifylive/r │
+│                                 │          │ ecord.go:105                    │
+│ Terminal                        │ Function │ /tmp/claude-1000/-mnt-D-project │
+│                                 │          │ -axipient-TossOS/4ae1be25-8c79- │
+│                                 │          │ 4117-9da1-fbea023b699d/scratchp │
+│                                 │          │ ad/gate-label/internal/verifyli │
+│                                 │          │ ve/record.go:86                 │
+│ Terminal                        │ Function │ /tmp/tossos-workflow-gate-8n1aW │
+│                                 │          │ D4n/internal/verifylive/record. │
+│                                 │          │ go:105                          │
+│ Terminal                        │ Function │ /mnt/D/project/axipient/TossOS- │
+│                                 │          │ rps-gate/internal/verifylive/re │
+│                                 │          │ cord.go:86                      │
+│ IsTerminal                      │ Function │ /tmp/claude-1000/-mnt-D-project │
+│                                 │          │ -axipient-TossOS/4ae1be25-8c79- │
+│                                 │          │ 4117-9da1-fbea023b699d/scratchp │
+│                                 │          │ ad/gate-label/internal/journal/ │
+│                                 │          │ durability.go:49                │
+│ IsTerminal                      │ Function │ /mnt/D/project/axipient/TossOS- │
+│                                 │          │ worktrees/a041/internal/journal │
+│                                 │          │ /durability.go:49               │
+│ IsTerminal                      │ Function │ /tmp/claude-1000/-mnt-D-project │
+│                                 │          │ -axipient-TossOS/81c61aa2-383f- │
+│                                 │          │ 4024-9f8a-7b691a61be10/scratchp │
+│                                 │          │ ad/gatewt/internal/brokerstate/ │
+│                                 │          │ derive.go:94                    │
+│ IsTerminal                      │ Function │ /tmp/claude-1000/-mnt-D-project │
+│                                 │          │ -axipient-TossOS/81c61aa2-383f- │
+│                                 │          │ 4024-9f8a-7b691a61be10/scratchp │
+│                                 │          │ ad/gatewt/internal/journal/dura │
+│                                 │          │ bility.go:49                    │
+│ IsTerminal                      │ Function │ /tmp/tossos-gbrain-gate.MX45VC/ │
+│                                 │          │ repo/internal/brokerstate/deriv │

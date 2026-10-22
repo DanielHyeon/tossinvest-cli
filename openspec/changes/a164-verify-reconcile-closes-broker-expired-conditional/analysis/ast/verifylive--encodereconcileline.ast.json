@@ -1,0 +1,124 @@
+{
+  "file": "internal/verifylive/reconcile_record.go",
+  "source_sha256": "84baeb1173ccb0d7bf193383d79815823102d52d377d2988a411957962350987",
+  "package": "verifylive",
+  "function": "encodeReconcileLine",
+  "signature": "encodeReconcileLine(params=5, results=2)",
+  "start": {
+    "line": 67,
+    "column": 1
+  },
+  "end": {
+    "line": 89,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 69,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 70,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 86,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 16
+      },
+      "text": "reconcileToken"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 12
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 18
+      },
+      "text": "start.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 18
+      },
+      "text": "at.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 9
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 68,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 72,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

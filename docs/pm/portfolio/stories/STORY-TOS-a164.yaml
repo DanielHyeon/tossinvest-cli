@@ -1,0 +1,23 @@
+{
+  "id": "STORY-TOS-a164",
+  "title": "브로커가 만료로 확인한 검증 조건주문을 검증 기록에서 양성 증거로만 닫는다",
+  "feature": "FEAT-TOS-002",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a164-verify-reconcile-closes-broker-expired-conditional",
+    "path": "openspec/changes/a164-verify-reconcile-closes-broker-expired-conditional"
+  },
+  "found_by": {
+    "date": "2026-10-22",
+    "how": "읽기 전용 감사가 엔진 프로필 KR 검증 기록에 2026-07-31 의 333430 조건주문이 outstanding 으로 남아 --include-trigger 를 HOLD 시키고, 정리 DELETE 가 404 로만 실패하며, verify reconcile 은 생산 Q1 nil(retention-unmeasured)과 Q6(만료 영구 거절)로 받을 수 없음을 보였다. 사용자는 2026-10-22 (a) 리뷰된 코드 변경으로 만료 artifact 정리 경로를 여는 것을 결정했다.",
+    "record": "openspec/changes/a164-verify-reconcile-closes-broker-expired-conditional/proposal.md"
+  },
+  "acceptance": [
+    "verify reconcile 은 명시 --expired 모드에서만 만료 대사를 하고, 플래그가 없으면 a121 부재 대사와 동작이 같다",
+    "만료 대사는 이번 실행의 공식 GET(by-id 상세 또는 CLOSED 목록) 하나 이상이 대상 id 를 EXPIRED·미발동·second 없음으로 이름할 때만 닫고, 404·목록 부재·과거 관측은 근거로 세지 않는다",
+    "같은 심볼의 OPEN 조건주문·OPEN 일반 주문·다른 id 의 발동 흔적·열린 체인 동료·판정 불능 응답이 하나라도 있으면 아무것도 쓰지 않는다",
+    "닫힘은 근거(원 status·응답 분류·시각·지문)를 실은 추가 한 줄이고 기존 줄을 다시 쓰지 않으며, 구 바이너리는 그 artifact 를 계속 outstanding 으로 본다",
+    "대사 리더는 GET 만 노출하고 명령은 mutating:true 로 남아 실기록 대사는 사람이 실행한다",
+    "M0 전제 단계 PASS 요구는 바뀌지 않으며 그 사실이 잔여로 기록된다"
+  ]
+}

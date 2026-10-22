@@ -1,0 +1,331 @@
+{
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "source_sha256": "82787649cc4147d15b9abf3e44457d6c7c0afe9c7cd0866c63da6db87f73277b",
+  "package": "main",
+  "function": "runVerifyReconcile",
+  "signature": "runVerifyReconcile(params=3, results=1)",
+  "start": {
+    "line": 73,
+    "column": 1
+  },
+  "end": {
+    "line": 117,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 82,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 86,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 91,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 97,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 112,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 9
+      },
+      "text": "cmd.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 9
+      },
+      "text": "cmd.OutOrStdout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 21
+      },
+      "text": "reconcilePreflight"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 15
+      },
+      "text": "acquireVerifyExecutionLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 10
+      },
+      "text": "reconcileRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 59
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 8
+      },
+      "text": "lock.Release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 16
+      },
+      "text": "acquireVerifyRateBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 10
+      },
+      "text": "reconcileRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 56
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 8
+      },
+      "text": "lease.Release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 26
+      },
+      "text": "verifyReconcileReaderFactory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 23
+      },
+      "text": "verifyReconcileTerminal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 14
+      },
+      "text": "verifylive.Reconcile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 15
+      },
+      "text": "verifylive.NormalizeMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 76,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 80,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 84,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 88,
+        "column": 2
+      },
+      "text": "lock.Release"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 93,
+        "column": 2
+      },
+      "text": "lease.Release"
+    }
+  ]
+}

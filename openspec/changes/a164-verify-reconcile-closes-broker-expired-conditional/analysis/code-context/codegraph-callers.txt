@@ -1,0 +1,240 @@
+# codegraph 1.6.0 · HEAD 4cd7af19db013435576e44302c964ebc5c2f0557
+
+## codegraph callers terminal
+
+Callers of "terminal" (1):
+
+method      joinChain
+  internal/verifylive/runner.go:1050
+
+
+## codegraph callers Outstanding
+
+Callers of "Outstanding" (20):
+
+function    TestReconcileAppendsOneReconciledAbsentLineWhenEveryConditionHolds
+  internal/verifylive/reconcile_g1_test.go:22
+
+function    TestADeleteNotFoundLeavesTheArtifactOutstanding
+  internal/verifylive/reconcile_projection_test.go:19
+
+function    TestAGenericOperatorObservationDoesNotReconcile
+  internal/verifylive/reconcile_projection_test.go:31
+
+function    TestReconcileOnlyRemovesItsExactArtifactFromCleanupPlanning
+  internal/verifylive/reconcile_projection_test.go:59
+
+function    TestAnOlderBinaryStillSeesTheReconciledArtifactAsOutstandingAndHeld
+  internal/verifylive/reconcile_rollback_test.go:333
+
+function    AbortTargets
+  internal/verifylive/abort.go:65
+
+method      Abort
+  internal/verifylive/abort.go:89
+
+function    TestAbortEndsAHeldChain
+  internal/verifylive/abort_test.go:60
+
+method      sweepStep
+  internal/verifylive/cleanup.go:277
+
+function    leftover
+  internal/verifylive/cleanup_test.go:20
+
+function    TestALeftoverOrderIsCancelledOnTheNextRun
+  internal/verifylive/cleanup_test.go:41
+
+function    TestTheRedoThatWasBlockedByTheLeftoverCanRun
+  internal/verifylive/cleanup_test.go:101
+
+function    TestTheConditionalLeftForPersistenceIsNotCleanedUp
+
+## codegraph callers PendingCleanup
+
+Callers of "PendingCleanup" (20):
+
+function    TestReconcileAppendsOneReconciledAbsentLineWhenEveryConditionHolds
+  internal/verifylive/reconcile_g1_test.go:22
+
+function    TestADeleteNotFoundLeavesTheArtifactOutstanding
+  internal/verifylive/reconcile_projection_test.go:19
+
+function    TestReconcileOnlyRemovesItsExactArtifactFromCleanupPlanning
+  internal/verifylive/reconcile_projection_test.go:59
+
+method      readVerify
+  internal/console/data.go:363
+
+function    TestAbortReachesWhatTheCleanupPrologueMayNot
+  internal/verifylive/abort_test.go:112
+
+function    TestAVerdictOlderThanTheConditionalDoesNotCleanItUp
+  internal/verifylive/cleanup_test.go:291
+
+function    TestAVerdictNewerThanTheConditionalOpensCleanup
+  internal/verifylive/cleanup_test.go:307
+
+function    TestAConditionalWithNoCancelVerdictIsNotCleanedUp
+  internal/verifylive/cleanup_test.go:321
+
+function    TestALeftoverOrderIsNotSubjectToTheOrderingRule
+  internal/verifylive/cleanup_test.go:329
+
+function    TestAHeldOrderIsNotACleanupTarget
+  internal/verifylive/hold_test.go:46
+
+function    TestAHeldConditionalIsNotACleanupTarget
+  internal/verifylive/hold_test.go:61
+
+function    TestAHoldEndsWhenItsGateDecides
+  internal/verifylive/hold_test.go:77
+
+function    TestAGateVerdictOlderThanTheHoldDoesNotRelease
+
+## codegraph callers ReconciledArtifacts
+
+Callers of "ReconciledArtifacts" (3):
+
+function    BuildReport
+  internal/verifylive/report.go:169
+
+function    BuildProgress
+  internal/verifylive/report.go:333
+
+function    TestReconciledProjectionIsMonotoneLikeOutstanding
+  internal/verifylive/reconcile_green_test.go:29
+
+
+## codegraph callers Reconcile
+
+Callers of "Reconcile" (8):
+
+method      run
+  internal/verifylive/reconcile_fixture_test.go:385
+
+function    TestReconcileAcceptsWellFormedEmptyListsOverHTTP
+  internal/verifylive/reconcile_http_test.go:62
+
+function    TestReconcileRefusesMalformedListResponsesEvenWhenBothReadsAgree
+  internal/verifylive/reconcile_http_test.go:73
+
+function    runVerifyReconcile
+  cmd/tossctl/verify_reconcile.go:73
+
+function    TestReconcileRefusesWhenTheApprovalCannotBeShown
+  internal/verifylive/reconcile_codex_test.go:166
+
+function    ProjectPosition
+  internal/journal/position_projection.go:65
+
+method      Closed
+  internal/position/position.go:189
+
+function    TestExpiryIsExactAcrossCreateRecoverAndReconcile
+  internal/protection/controller_test.go:521
+
+
+## codegraph callers checkReconcileAbsence
+
+Callers of "checkReconcileAbsence" (1):
+
+function    Reconcile
+  internal/verifylive/reconcile.go:168
+
+
+## codegraph callers checkReconcileClosedStatus
+
+Callers of "checkReconcileClosedStatus" (1):
+
+function    Reconcile
+  internal/verifylive/reconcile.go:168
+
+
+## codegraph callers checkReconcileRetention
+
+Callers of "checkReconcileRetention" (2):
+
+function    Reconcile
+  internal/verifylive/reconcile.go:168
+
+function    checkReconcileWindow
+  internal/verifylive/reconcile_check.go:136
+
+
+## codegraph callers ReconcileReader
+
+Callers of "ReconcileReader" (9):
+
+function    TestReconcileReaderExposesOnlyOfficialGetReads
+  internal/verifylive/reconcile_structure_test.go:134
+
+function    TestReconcileParamsCarryOnlyNarrowTypes
+  internal/verifylive/reconcile_seal_test.go:105
+
+function    buildVerifyReconcileReader
+  cmd/tossctl/verify_reconcile.go:146
+
+function    newVerifyReconcileReader
+  cmd/tossctl/verify_reconcile.go:167
+
+method      newReader
+  cmd/tossctl/verify_reconcile_test.go:154
+
+function    checkReconcileInstrument
+  internal/verifylive/reconcile_check.go:147
+
+function    readReconcileSet
+  internal/verifylive/reconcile_check.go:184
+
+function    readReconcileConditionalGroup
+  internal/verifylive/reconcile_check.go:244
+
+function    readReconcilePlainGroup
+  internal/verifylive/reconcile_check.go:272
+
+
+## codegraph callers newVerifyReconcileReader
+
+Callers of "newVerifyReconcileReader" (5):
+
+function    TestReconcileSucceedsWithOnlyGetRequestsAndTheTokenPost
+  cmd/tossctl/verify_reconcile_seams_test.go:161
+
+function    buildVerifyReconcileReader
+  cmd/tossctl/verify_reconcile.go:146
+
+function    TestReconcileReaderRechecksIdentityBeforeItsFirstScopedRead
+  cmd/tossctl/verify_reconcile_codex_test.go:91
+
+method      newReader
+  cmd/tossctl/verify_reconcile_test.go:154
+
+function    TestReconcileNarrowReaderRefusesAnAccountsReadFailure
+  cmd/tossctl/verify_reconcile_test.go:429
+
+
+## codegraph callers validateM0TriggerMode
+
+Callers of "validateM0TriggerMode" (2):
+
+function    runVerifyRun
+  cmd/tossctl/verify.go:273
+
+function    TestM0CLIValidationTreatsOnlyTTLAsNonPrerequisite
+  cmd/tossctl/verify_test.go:604
+
+
+## codegraph callers M0ExactPrerequisites
+
+Callers of "M0ExactPrerequisites" (3):
+
+function    New
+  internal/verifylive/runner.go:320
+
+function    validateM0TriggerMode
+  cmd/tossctl/verify.go:406
+
+function    TestM0ExactPrerequisitesStillRejectsEveryNonTTLNonPass
+  internal/verifylive/m0_recovery_test.go:246
+

@@ -1,0 +1,79 @@
+{
+  "file": "internal/official/conditional_reads.go",
+  "source_sha256": "fc60fb17db95dcfdb146d9eec0c41a1ad81a72aeb60c595ad8122a8178f4c75f",
+  "package": "official",
+  "function": "ConditionalOrder",
+  "receiver": "Client",
+  "signature": "Client.ConditionalOrder(params=2, results=2)",
+  "start": {
+    "line": 214,
+    "column": 1
+  },
+  "end": {
+    "line": 220,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 216,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 217,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 219,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 12
+      },
+      "text": "c.getAcct"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 57
+      },
+      "text": "url.PathEscape"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 9
+      },
+      "text": "adaptConditionalOrder"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 216,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

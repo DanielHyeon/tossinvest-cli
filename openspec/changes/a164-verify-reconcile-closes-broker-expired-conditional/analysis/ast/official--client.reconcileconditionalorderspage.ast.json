@@ -1,0 +1,110 @@
+{
+  "file": "internal/official/reconcile_reads.go",
+  "source_sha256": "3fca84976dedd94e7199f7801ae568ec55b361235d6fc3e0a7d4dc7c4b6ca881",
+  "package": "official",
+  "function": "ReconcileConditionalOrdersPage",
+  "receiver": "Client",
+  "signature": "Client.ReconcileConditionalOrdersPage(params=5, results=2)",
+  "start": {
+    "line": 192,
+    "column": 1
+  },
+  "end": {
+    "line": 201,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 193,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 197,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 194,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 198,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 38
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 12
+      },
+      "text": "c.getAcct"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 57
+      },
+      "text": "reconcileListQuery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 9
+      },
+      "text": "DecodeReconcileConditionalPage"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 197,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

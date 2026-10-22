@@ -1,0 +1,69 @@
+{
+  "file": "internal/verifylive/record.go",
+  "source_sha256": "9a289d21048578d838450ed55f418e1c7b57ad0890b5ca1effc958b0b21f8ad6",
+  "package": "verifylive",
+  "function": "ChainOf",
+  "signature": "ChainOf(params=3, results=1)",
+  "start": {
+    "line": 679,
+    "column": 1
+  },
+  "end": {
+    "line": 689,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 681,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 682,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 683,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 688,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 680,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 684,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

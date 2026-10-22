@@ -1,0 +1,287 @@
+{
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "source_sha256": "82787649cc4147d15b9abf3e44457d6c7c0afe9c7cd0866c63da6db87f73277b",
+  "package": "main",
+  "function": "newVerifyReconcileReader",
+  "signature": "newVerifyReconcileReader(params=4, results=3)",
+  "start": {
+    "line": 167,
+    "column": 1
+  },
+  "end": {
+    "line": 194,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 170,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 175,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 176,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 181,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 186,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 171,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 177,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 182,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 187,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 19
+      },
+      "text": "Accounts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 19
+      },
+      "text": "official.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 46
+      },
+      "text": "reconcileRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 43
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 176,
+        "column": 6
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 47
+      },
+      "text": "reconcileRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 46
+      },
+      "text": "reconcileRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 4
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 94
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 14
+      },
+      "text": "strconv.Atoi"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 27
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 46
+      },
+      "text": "reconcileRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 11
+      },
+      "text": "official.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 42
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 49
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 56
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 90
+      },
+      "text": "official.WithAccountSeq"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 9
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 58
+      },
+      "text": "len"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 169,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 185,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 190,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
