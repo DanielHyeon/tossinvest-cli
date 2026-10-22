@@ -140,6 +140,11 @@ func classifySourceAge(raw string, receivedAt time.Time) (bucket string, age tim
 	if raw == "" {
 		return sourceAgeMissing, 0, false
 	}
+	// RFC3339Nano 의 가장 긴 모양은 35 바이트 — 64 바이트를 넘는 글자는 해독하지 않고 해독 불가로 둠. 브로커가 보낸 거대 문자열을
+	// 청산 goroutine 에서 매 주기 끝까지 훑지 않게(Go 의 파서는 소수부 자릿수를 제한하지 않음, Codex 리뷰 2026-10-22).
+	if len(raw) > sourceAgeRawLimit {
+		return sourceAgeUnparseable, 0, false
+	}
 	at, err := time.Parse(time.RFC3339Nano, raw)
 	if err != nil {
 		return sourceAgeUnparseable, 0, false

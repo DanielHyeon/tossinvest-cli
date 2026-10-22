@@ -160,6 +160,10 @@ MUTATIONS = [
      "\t\t\tif !strings.EqualFold(strings.TrimSpace(q.Symbol), symbol) || q.Last <= 0 {\n",
      "\t\t\tif !strings.EqualFold(strings.TrimSpace(q.Symbol), symbol) || q.Last <= 0 || q.SourceTimestamp == \"\" {\n",
      [(ENGINE, "TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows")]),
+    ("㉘", "거대 원문 해독 상한 삭제(매 주기 끝까지 훑음)", AGE,
+     "\tif len(raw) > sourceAgeRawLimit {\n\t\treturn sourceAgeUnparseable, 0, false\n\t}\n",
+     "",
+     [(ENGINE, "TestA163TheRawBrokerTimeIsBoundedPrintableAndValidUTF8")]),
 ]
 
 
