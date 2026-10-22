@@ -300,7 +300,14 @@ func writeReconciled(w io.Writer, arts []Artifact) {
 	if len(arts) == 0 {
 		return
 	}
-	fmt.Fprintf(w, "\n대사로 종결된 객체 %d건 (공식 읽기 근거 — 성공한 요청·증명이 아니다):\n", len(arts))
+	// 부재만 있으면 a121 머리 바이트 그대로(design D1), 만료가 섞이면 근거를 공식 읽기 전체로 말함.
+	basis := "공식 목록 두 번 읽기의 부재 근거"
+	for _, a := range arts {
+		if a.ReconciledExpired {
+			basis = "공식 목록·상세 읽기 근거"
+		}
+	}
+	fmt.Fprintf(w, "\n대사로 종결된 객체 %d건 (%s — 성공한 요청·증명이 아니다):\n", len(arts), basis)
 	for _, a := range arts {
 		// a164: 부재(목록 두 번 읽기)와 만료(by-id 상세 두 번이 EXPIRED 로 이름)를 갈라 보임.
 		ending := "reconciled absent"

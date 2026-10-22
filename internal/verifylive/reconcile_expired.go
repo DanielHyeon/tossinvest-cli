@@ -175,8 +175,14 @@ func encodeReconcileExpiredLine(accountMask string, art Artifact, basis string, 
 	if err != nil {
 		return nil, err
 	}
-	var reads []string
+	var reads, classes []string
 	for i, d := range byID {
+		// 분류는 응답에서 유도함(gstack 리뷰 F4) — 상수로 박으면 A3 가 바뀔 때 기록이 조용히 거짓이 됨.
+		class := "statement"
+		if d.Silent {
+			class = "silent"
+		}
+		classes = append(classes, class)
 		reads = append(reads, fmt.Sprintf("%d: status=%s first=%s triggered=%q second=%v result=%s", i+1, d.Status, d.FirstStatus,
 			d.TriggeredOrderID, d.HasSecond, d.ResultDigest))
 	}
@@ -201,7 +207,7 @@ func encodeReconcileExpiredLine(accountMask string, art Artifact, basis string, 
 		Observations: []Observation{
 			{Key: ObservationReconcileBasis, Value: basis,
 				Detail: "two by-id reads named the artifact EXPIRED and untriggered and two complete list reads found no live or fired order on the symbol; not a cancel, fill or endpoint proof"},
-			{Key: ObservationReconcileExpiredByID, Value: "statement,statement", Detail: strings.Join(reads, "; ")},
+			{Key: ObservationReconcileExpiredByID, Value: strings.Join(classes, ","), Detail: strings.Join(reads, "; ")},
 			{Key: ObservationReconcileExpiredClosedRows, Value: closedValue, Detail: "first-leg " + strings.Join(closedLegs, ",")},
 		},
 		Artifacts: []Artifact{art},

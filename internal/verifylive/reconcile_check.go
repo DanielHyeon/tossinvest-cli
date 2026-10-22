@@ -139,8 +139,13 @@ func checkReconcileRetention(target Artifact, now time.Time) error {
 func checkReconcileWindow(target Artifact, start, now time.Time, expired bool) error {
 	elapsed := now.Sub(start)
 	if elapsed < 0 || elapsed > reconcileFreshnessBound {
+		// 부재 모드 문구는 a121 바이트 그대로(design D1 — D8 예외만), 만료 모드는 창 시작이 by-id ① 직전임을 말함.
+		since := "the first list read"
+		if expired {
+			since = "the first by-id read"
+		}
 		return refuse(RefuseFreshnessExceeded,
-			fmt.Sprintf("%s elapsed since the window started (first read) — the freshness bound is %s", elapsed, reconcileFreshnessBound))
+			fmt.Sprintf("%s elapsed since %s — the freshness bound is %s", elapsed, since, reconcileFreshnessBound))
 	}
 	if expired {
 		return nil

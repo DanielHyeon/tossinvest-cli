@@ -13,6 +13,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -90,14 +91,37 @@ func DecodeReconcileConditionalDetail(result []byte) (ReconcileConditionalDetail
 	return d, nil
 }
 
-// reconcileObject 는 원문이 JSON 객체인지 보고 필드 원문을 돌려줌.
+// reconcileObject 는 원문이 JSON 객체인지 보고 필드 원문을 돌려줌. 같은 키가 두 번 나오면 거절함 — map 으로 접으면
+// 마지막 값이 앞 값을 덮어(예: triggeredOrderId "ORD" 뒤의 null) 반대 증거가 조용히 사라지기 때문(gstack 리뷰 Codex P1).
 func reconcileObject(raw []byte, name string) (map[string]json.RawMessage, error) {
 	if len(raw) == 0 || raw[0] != '{' {
 		return nil, reconcileSchema("%s is not an object (%.20s)", name, raw)
 	}
-	var fields map[string]json.RawMessage
-	if err := json.Unmarshal(raw, &fields); err != nil {
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	if _, err := dec.Token(); err != nil { // 여는 '{'
 		return nil, reconcileSchema("%s does not decode: %v", name, err)
+	}
+	fields := map[string]json.RawMessage{}
+	for dec.More() {
+		tok, err := dec.Token()
+		if err != nil {
+			return nil, reconcileSchema("%s does not decode: %v", name, err)
+		}
+		key := fmt.Sprint(tok) // 객체 키 자리의 토큰은 문자열 — 봉인 census 가 type assertion 을 금하므로 fmt 로 꺼냄
+		var value json.RawMessage
+		if err := dec.Decode(&value); err != nil {
+			return nil, reconcileSchema("%s.%s does not decode: %v", name, key, err)
+		}
+		if _, dup := fields[key]; dup {
+			return nil, reconcileSchema("%s repeats the key %q — a later value would hide an earlier one", name, key)
+		}
+		fields[key] = value
+	}
+	if _, err := dec.Token(); err != nil { // 닫는 '}'
+		return nil, reconcileSchema("%s does not decode: %v", name, err)
+	}
+	if dec.More() {
+		return nil, reconcileSchema("%s has trailing data", name)
 	}
 	return fields, nil
 }

@@ -218,6 +218,11 @@ func TestReconcileByIDRefusesSchemaHoles(t *testing.T) {
 		"second-string":             set(`"orderPrice":null}`, `"orderPrice":null},"second":"none"`),
 		"second-array":              set(`"orderPrice":null}`, `"orderPrice":null},"second":[]`),
 		"type-number":               set(`"type":"SINGLE"`, `"type":1`),
+		// 중복 키는 마지막 값이 앞 값을 덮어 반대 증거를 지움(gstack 리뷰 Codex P1) — 엄격 해독이 거절해야 함.
+		"dup-status":    set(`"status":"EXPIRED","symbol"`, `"status":"COMPLETED","status":"EXPIRED","symbol"`),
+		"dup-first":     set(`"first":{`, `"first":{"type":"STOP","status":"COMPLETED","orderSide":"SELL","triggeredOrderId":"ORD-1"},"first":{`),
+		"dup-triggered": set(`"orderPrice":null}`, `"orderPrice":null,"triggeredOrderId":"ORD-1","triggeredOrderId":null}`),
+		"dup-second":    set(`"orderPrice":null}`, `"orderPrice":null},"second":{"type":"STOP","status":"CANCELED","orderSide":"SELL"},"second":null`),
 	}
 	for name, result := range cases {
 		t.Run(name, func(t *testing.T) {

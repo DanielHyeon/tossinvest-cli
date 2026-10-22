@@ -8,6 +8,7 @@ package verifylive
 // 부재 모드 동작을 바꾸지 않음을 이 두 시험이 편집 전후 같은 결과로 보임.
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -76,5 +77,26 @@ func TestReconcileRefusesAtTheWriteBoundaryGateItself(t *testing.T) {
 	rcRequireUnchanged(t, h, before)
 	if calls != 4 {
 		t.Fatalf("absence mode read the clock %d time(s); the contract points are four (static Q1, window start, two rechecks)", calls)
+	}
+}
+
+// TestReconcileAbsenceKeepsItsA121Wording 은 design D1 「플래그 없음 = 문구 불변(D8 예외만)」 이다(gstack 리뷰 F1 · Codex P3) —
+// 부재 모드의 신선도 거절 문구와 report 의 대사 절 머리는 a121 바이트 그대로다.
+func TestReconcileAbsenceKeepsItsA121Wording(t *testing.T) {
+	h := newRCHarness(t, rcA063Entries())
+	h.reader.hook = func(c rcCall) {
+		if c.Kind == "list" && c.Pass == 1 && c.Group == ReconcileGroupConditionalClosed {
+			h.clock.advance(rcFreshness + time.Second)
+		}
+	}
+	r := rcRefuse(t, h, RefuseFreshnessExceeded)
+	if !strings.Contains(r.Detail, "elapsed since the first list read — the freshness bound is") {
+		t.Fatalf("absence freshness wording changed: %q", r.Detail)
+	}
+	var report strings.Builder
+	writeReconciled(&report, ReconciledArtifacts(rcEntriesWithReconcileLine(t, rcA063Entries())))
+	if want := "\n대사로 종결된 객체 1건 (공식 목록 두 번 읽기의 부재 근거 — 성공한 요청·증명이 아니다):\n  conditional-order " +
+		rcTargetID + " (" + rcSymbol + ") reconciled absent\n"; report.String() != want {
+		t.Fatalf("absence report section changed\n got %q\nwant %q", report.String(), want)
 	}
 }
