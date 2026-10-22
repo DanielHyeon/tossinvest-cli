@@ -1,0 +1,217 @@
+{
+  "file": "internal/weeklyvaluelane/strategyflow_testseam.go",
+  "source_sha256": "1cfd09f4625e5b3d0623ba02defb85ff50d935b7961780acff18846f1c5befa8",
+  "package": "weeklyvaluelane",
+  "function": "strategyflowAdvanceFirstLeg",
+  "signature": "strategyflowAdvanceFirstLeg(params=5, results=3)",
+  "start": {
+    "line": 121,
+    "column": 1
+  },
+  "end": {
+    "line": 137,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 125,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 133,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 126,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 134,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 136,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 13
+      },
+      "text": "authorizeReservationCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 105
+      },
+      "text": "state.ScopeVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 124
+      },
+      "text": "plan.CampaignID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 143
+      },
+      "text": "plan.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 171
+      },
+      "text": "plan.CampaignID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 21
+      },
+      "text": "ApplyReservation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 10
+      },
+      "text": "authorizeReservationCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 107
+      },
+      "text": "state.ScopeVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 126
+      },
+      "text": "plan.CampaignID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 145
+      },
+      "text": "plan.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 173
+      },
+      "text": "plan.CampaignID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 55
+      },
+      "text": "plan.CampaignID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 121
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 121
+      },
+      "text": "evaluatedAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 22
+      },
+      "text": "ApplyPositiveFillAtomic"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 122,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 124,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 128,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 132,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

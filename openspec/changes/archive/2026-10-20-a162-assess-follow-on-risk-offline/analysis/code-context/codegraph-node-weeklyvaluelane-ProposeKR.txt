@@ -1,0 +1,17 @@
+**ProposeKR** (function)
+
+**Location:** internal/weeklyvaluelane/evaluate.go:115
+**Signature:** `(request EvaluationRequest) Outcome`
+
+ProposeKR evaluates the KR weekly lane without a066 cap authority. A
+successful Quantity is q_candidate only and the durable weekly reservation
+is still mandatory.
+
+```go
+115	func ProposeKR(request EvaluationRequest) Outcome {
+116		return evaluateStage(request, MarketKR, SourceOpenDART, EvaluateKREvidence, evaluationProposal)
+117	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** evaluateStage (internal/weeklyvaluelane/evaluate.go:135), evaluationProposal (internal/weeklyvaluelane/evaluate.go:128), EvaluationRequest (internal/weeklyvaluelane/evaluate.go:41), Outcome (internal/continuationlane/evaluator.go:170)
+**Called by ←** proposeWeeklyKR (internal/strategyflow/adapters.go:109), TestProductionProposalAuthoritiesDeliverPairedKRUSFromDurableWeeks (internal/weeklyvaluelane/production_proposal_test.go:17), TestPairedWeeklyProposalIsCapFreeButKeepsDurableReservation (internal/weeklyvaluelane/proposal_test.go:8), TestPairedWeeklyAdmissionReducesProposalWithoutChangingPrices (internal/weeklyvaluelane/proposal_test.go:31)

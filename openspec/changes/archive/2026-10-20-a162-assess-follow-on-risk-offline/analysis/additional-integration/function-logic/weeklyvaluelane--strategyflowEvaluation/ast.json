@@ -1,0 +1,489 @@
+{
+  "file": "internal/weeklyvaluelane/strategyflow_testseam.go",
+  "source_sha256": "1cfd09f4625e5b3d0623ba02defb85ff50d935b7961780acff18846f1c5befa8",
+  "package": "weeklyvaluelane",
+  "function": "strategyflowEvaluation",
+  "signature": "strategyflowEvaluation(params=4, results=2)",
+  "start": {
+    "line": 69,
+    "column": 1
+  },
+  "end": {
+    "line": 119,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 86,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 91,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 95,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 108,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 71,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 79,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 87,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 92,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 96,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 102,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 109,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 15
+      },
+      "text": "BuildCampaignPlan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 29
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 10
+      },
+      "text": "strategyflowWeek"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 17
+      },
+      "text": "NewReservationState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 40
+      },
+      "text": "NewRiskState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 19
+      },
+      "text": "mintRiskState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 29
+      },
+      "text": "strategyflowAdvanceFirstLeg"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 10
+      },
+      "text": "strategyflowNextWeek"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 14
+      },
+      "text": "admitExistingRisk"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 24
+      },
+      "text": "ApplyReservation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 48
+      },
+      "text": "authorizeReservationCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 140
+      },
+      "text": "state.ScopeVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 159
+      },
+      "text": "plan.CampaignID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 15
+      },
+      "text": "plan.CampaignID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 84
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 91
+      },
+      "text": "rune"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 140
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 147
+      },
+      "text": "rune"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 14
+      },
+      "text": "PlannedLegQuantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 14
+      },
+      "text": "mintRiskCap"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 15
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 15
+      },
+      "text": "evidence.EvaluatedAt.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 92
+      },
+      "text": "evidence.FreshUntil.Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 10
+      },
+      "text": "mintStopCandidate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 49
+      },
+      "text": "evidence.EvaluatedAt.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 35
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 42
+      },
+      "text": "rune"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 26
+      },
+      "text": "mintDormantEvaluationAuthorization"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 27
+      },
+      "text": "mintExecutionTermsPreimage"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 82,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 85,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 90,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 94,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 95,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 104,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,74 @@
+[
+  {
+    "node": {
+      "id": "function:e0c78a23513248e01f216e832589b848",
+      "kind": "function",
+      "name": "ProposeUS",
+      "qualifiedName": "ProposeUS",
+      "filePath": "internal/reversallane/evaluate.go",
+      "language": "go",
+      "startLine": 29,
+      "endLine": 32,
+      "startColumn": 0,
+      "endColumn": 1,
+      "docstring": "ProposeUS is the paired US q_candidate proposal path.",
+      "signature": "(request USEvaluationRequest) EvaluationResult",
+      "visibility": null,
+      "isExported": true,
+      "isAsync": false,
+      "isStatic": false,
+      "isAbstract": false,
+      "returnType": "EvaluationResult",
+      "updatedAt": 1789666922270
+    },
+    "score": 110.22975430461923
+  },
+  {
+    "node": {
+      "id": "function:34b164fc99633ff00f69ec3dbb53b4ca",
+      "kind": "function",
+      "name": "ProposeUS",
+      "qualifiedName": "ProposeUS",
+      "filePath": "internal/weeklyvaluelane/evaluate.go",
+      "language": "go",
+      "startLine": 120,
+      "endLine": 122,
+      "startColumn": 0,
+      "endColumn": 1,
+      "docstring": "ProposeUS is the paired US weekly q_candidate proposal path.",
+      "signature": "(request EvaluationRequest) Outcome",
+      "visibility": null,
+      "isExported": true,
+      "isAsync": false,
+      "isStatic": false,
+      "isAbstract": false,
+      "returnType": "Outcome",
+      "updatedAt": 1789666923527
+    },
+    "score": 110.19211873550337
+  },
+  {
+    "node": {
+      "id": "function:bb6070d6e31e3b4d691e45846a607b8e",
+      "kind": "function",
+      "name": "ProposeUS",
+      "qualifiedName": "ProposeUS",
+      "filePath": "internal/continuationlane/evaluator.go",
+      "language": "go",
+      "startLine": 204,
+      "endLine": 206,
+      "startColumn": 0,
+      "endColumn": 1,
+      "docstring": "ProposeUS is the paired US proposal path. It has the same fail-closed\nbranches as ProposeKR and deliberately ignores any caller cap value.",
+      "signature": "(request USEvaluationRequest) Outcome",
+      "visibility": null,
+      "isExported": true,
+      "isAsync": false,
+      "isStatic": false,
+      "isAbstract": false,
+      "returnType": "Outcome",
+      "updatedAt": 1789666918616
+    },
+    "score": 109.71529859558017
+  }
+]

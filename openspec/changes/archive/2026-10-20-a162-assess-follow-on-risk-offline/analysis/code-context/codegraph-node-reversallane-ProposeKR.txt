@@ -1,0 +1,17 @@
+**ProposeKR** (function)
+
+**Location:** internal/reversallane/evaluate.go:23
+**Signature:** `(request KREvaluationRequest) EvaluationResult`
+
+ProposeKR returns the cap-free q_candidate for the KR lane. It cannot issue
+risk, journal, dispatch, or broker authority.
+
+```go
+23	func ProposeKR(request KREvaluationRequest) EvaluationResult {
+24		metric := EvaluateKRMetric(request.Evidence, request.Config)
+25		return evaluateStage(request.Context, request.Evidence.CommonEnvelope, request.Config.StructuralWindow, request.Structure, metric, KRReversalLaneID, evaluationProposal)
+26	}
+```
+**Trail — codegraph_node any of these to follow it (no Read needed)**
+**Calls →** EvaluateKRMetric (internal/reversallane/schema.go:115), evaluateStage (internal/reversallane/evaluate.go:45), evaluationProposal (internal/reversallane/evaluate.go:38), KREvaluationRequest (internal/continuationlane/evaluator.go:141), EvaluationResult (internal/reversallane/types.go:255)
+**Called by ←** TestProductionProposalAuthoritiesDeliverPairedKRUSFirstLeg (internal/reversallane/production_proposal_test.go:16), TestProductionProposalAuthoritiesRequireFinalLegStructureForKRUS (internal/reversallane/production_proposal_test.go:38), TestPairedReversalProposalIsCapFreePlannedRemaining (internal/reversallane/proposal_test.go:5), TestPairedReversalAdmissionReducesProposalWithoutChangingTerms (internal/reversallane/proposal_test.go:24), proposeReversalKR (internal/strategyflow/adapters.go:78)

@@ -179,3 +179,4 @@
     - STORY-TOS-a159 — 오프라인 부분 체결·보호 복구 회귀 검증 [archived] → `a159-verify-offline-protection-restart-contract`
     - STORY-TOS-a160 — 후속 진입용 캠페인 일관 읽기 스냅샷 [archived] → `a160-read-consistent-campaign-continuation-state`
     - STORY-TOS-a161 — 오프라인 캠페인 계획 및 위험 상태 보존 [archived] → `a161-preserve-offline-campaign-plan-risk-state`
+    - STORY-TOS-a162 — 기존 전략 평가기를 재사용하는 오프라인 후속 진입 위험 판정 [archived] → `a162-assess-follow-on-risk-offline`

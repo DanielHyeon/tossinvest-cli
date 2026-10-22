@@ -1,0 +1,25 @@
+[
+  {
+    "node": {
+      "id": "function:2ac686837953e82546ca5cff9d68c9ed",
+      "kind": "function",
+      "name": "strategyflowAdvanceLeg",
+      "qualifiedName": "strategyflowAdvanceLeg",
+      "filePath": "internal/weeklyvaluelane/strategyflow_testseam.go",
+      "language": "go",
+      "startLine": 192,
+      "endLine": 207,
+      "startColumn": 0,
+      "endColumn": 1,
+      "signature": "(plan CampaignPlan, state ReservationState, risk RiskState, week MarketWeekEvidence, evaluatedAt time.Time, ordinal int, transfer string) (ReservationState, RiskState, error)",
+      "visibility": null,
+      "isExported": false,
+      "isAsync": false,
+      "isStatic": false,
+      "isAbstract": false,
+      "returnType": "ReservationState",
+      "updatedAt": 1792495723189
+    },
+    "score": 124.73367623950129
+  }
+]

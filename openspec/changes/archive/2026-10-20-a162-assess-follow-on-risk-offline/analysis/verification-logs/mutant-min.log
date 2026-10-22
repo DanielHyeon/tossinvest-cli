@@ -1,0 +1,6 @@
+--- FAIL: TestCalculateBoundsAndNoBudget (0.00s)
+    assessment_test.go:17: got {Status:ASSESSED Code: NativeKind: NativeCode: InvalidationCode: QCandidate:0x31b8c71d8920 QOffline:0x31b8c71d8928 Budget:0x31b8c71f2380 Filled:0x31b8c71f23a0 Held:0x31b8c71f23b0 Remaining:0x31b8c71f23c0 PerUnit:0x31b8c71f23d0 PlannedRisk:0x31b8c71f23e0 InspectionOnly:true LedgerCurrentness:unverified RiskBoundSource:caller_assumption ExecutionAuthority:false}
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/offlinecontinuation	0.005s
+FAIL
+EXIT_CODE=1
