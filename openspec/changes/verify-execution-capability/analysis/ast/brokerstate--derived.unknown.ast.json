@@ -1,0 +1,66 @@
+{
+  "file": "internal/brokerstate/derive.go",
+  "source_sha256": "43911775579ff59c5d4ed68a754126a5a57cde94ad2fe6a690902078cd311284",
+  "package": "brokerstate",
+  "function": "unknown",
+  "receiver": "Derived",
+  "signature": "Derived.unknown(params=2, results=1)",
+  "start": {
+    "line": 588,
+    "column": 1
+  },
+  "end": {
+    "line": 595,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 594,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 589,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 590,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 591,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 592,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 593,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

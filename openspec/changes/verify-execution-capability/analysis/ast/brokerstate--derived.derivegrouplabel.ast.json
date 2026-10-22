@@ -1,0 +1,333 @@
+{
+  "file": "internal/brokerstate/derive.go",
+  "source_sha256": "43911775579ff59c5d4ed68a754126a5a57cde94ad2fe6a690902078cd311284",
+  "package": "brokerstate",
+  "function": "deriveGroupLabel",
+  "receiver": "Derived",
+  "signature": "Derived.deriveGroupLabel(params=2, results=1)",
+  "start": {
+    "line": 537,
+    "column": 1
+  },
+  "end": {
+    "line": 575,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 538,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 539,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 540,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 543,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 546,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 548,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "switch",
+      "at": {
+        "line": 552,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "case",
+      "at": {
+        "line": 553,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "case",
+      "at": {
+        "line": 556,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "case",
+      "at": {
+        "line": 558,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "case",
+      "at": {
+        "line": 561,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "case",
+      "at": {
+        "line": 563,
+        "column": 2
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "case",
+      "at": {
+        "line": 565,
+        "column": 2
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "case",
+      "at": {
+        "line": 567,
+        "column": 2
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "case",
+      "at": {
+        "line": 570,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 541,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 544,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 547,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 549,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 554,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 557,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 559,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 562,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 564,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 566,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 568,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 571,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 541,
+        "column": 11
+      },
+      "text": "d.unknown"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 544,
+        "column": 11
+      },
+      "text": "d.unknown"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 547,
+        "column": 11
+      },
+      "text": "d.settle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 549,
+        "column": 11
+      },
+      "text": "d.settle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 554,
+        "column": 10
+      },
+      "text": "d.unknown"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 557,
+        "column": 10
+      },
+      "text": "d.settle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 559,
+        "column": 10
+      },
+      "text": "d.unknown"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 562,
+        "column": 10
+      },
+      "text": "d.settle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 564,
+        "column": 10
+      },
+      "text": "d.settle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 566,
+        "column": 10
+      },
+      "text": "d.settle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 568,
+        "column": 10
+      },
+      "text": "d.unknown"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 571,
+        "column": 10
+      },
+      "text": "d.unknown"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 572,
+        "column": 4
+      },
+      "text": "fmt.Sprintf"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

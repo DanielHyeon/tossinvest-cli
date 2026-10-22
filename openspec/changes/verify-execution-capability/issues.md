@@ -491,3 +491,73 @@ digest가 움직이므로 테스트가 필요하다). 번역이 빠진 줄은 `o
 수용 잔여 위험: ① 재시도로 회복한 사이클이 observed-rate 통계에 ok로 집계되나 백오프 벽시계가 elapsed에 포함돼 낮은 값으로만 기여(max 통계라 부풀림 불가 — 보수 방향). ② `LatencyMS`에 백오프 대기 포함 — task 1.3 retry matrix는 latency가 아니라 `requests`·class를 읽어야 한다. ③ throttled 사이클 최대 ~90s 연장(15분 간격에서 무해). ④ `limit=100`의 실브로커 효과는 httptest 쿼리스트링 검증까지 — 실측은 설치 후 첫 self re-exec 사이클에서 관측(M8 후속, 아래 기록 예정).
 
 Function Logic Map: not-applicable — 조회 전용 soak 패키지, High-risk 함수 무접촉(1.9 판정과 동일 근거). `probe`는 결과 조립을 `result`로 추출한 리팩터만으로 1호출/`Requests:1` 동작 불변(테스트 유지).
+
+## 사용자 결정 (2026-10-22, 「권장대로」) — 1.3 · 1.4 · 2.1 · 2.5 · 2.7 · 2.8
+
+Manager 가 아래 여섯 권고를 제시했고 사용자가 「권장대로」로 승인했다. 이 절은 그 승인 내용과, 승인 뒤 Teammate(Terra)가
+코드·기록으로 확인한 결과를 함께 적는다. 실계좌 주문·계좌 API 조회·엔진 재시작·`mutating: true` 명령은 하지 않았다.
+
+### 결정 원문(권고 그대로)
+
+1. **2.7 멱등키**: TTL/유효 창 경계 측정은 거부한다. 재생(같은 키 재전송)은 비활성으로 유지한다 — task 문언의
+   「사용자가 거부하면 … 비활성 유지」 갈래. 잔여: `DefaultReplayMargin=60s` 는 TTL/2 가 아니므로, 재생을 켜는 날 다시 본다.
+2. **2.1 status enum fixture**: `CANCEL_REJECTED`·`REPLACE_REJECTED` 는 「실제 관측 없음」으로 수용한다(M31: 197건,
+   관측값 `CANCELED`/`FILLED`/`REJECTED` 뿐). 닫는 조건: 모르는·미관측 status 가 코드에서 fail-closed 임을 증명하고
+   상태 파생 표 문서를 만든다.
+3. **2.5 범위 축소**: OCO sibling 동작·부분체결 잔량·일반 매도 동시 제출은 이 change 범위에서 빼고 a100 뒤 후속 Story 로
+   넘긴다. 발동(trigger) 측정은 범위에 남긴다.
+4. **2.8 매도가능수량**: 담보/신용 = N/A(이 계좌는 신용을 쓰지 않음 — 사용자). KR 미결제는 남는다 — 기존 M29/M33/M43 이
+   덮는지 확인하고, 아니면 그 부분은 열어 둔다.
+5. **1.3**: 기존 측정(M4·M8·M10, attestation `rate_limit_per_second=3.56`, 「0 throttled」)으로 retry matrix·폴링 SLO
+   수치 초안을 사람 승인용으로 만든다. 1.3 은 체크하지 않는다.
+6. **1.4**: 엔진 기동 인터록 증거는 a163 배포 재시작(KST 05:00–09:00, 두 일을 한 번의 재시작으로)에서 수집한다. 체크하지 않는다.
+
+### 확인 결과
+
+근거 AST: `analysis/ast/*.ast.json`(11개, `tools/logic-map` 산출), 열거 `analysis/ast/enumerate-output.md`
+(`python3 -I enumerate.py`, 합계 분기 130 · 반환 95 · STALE 0). 아래 분기 id·줄은 그 열거에서 옮겼다.
+
+- **결정 1 → 2.7 체크.** 재생 전송은 `execgw.Gateway.ReplayInDoubt` 안의 `internal/execgw/replay.go:323`
+  `g.replay.ReplayPlace(...)` 한 자리뿐이고, 그 앞 B5(`replay.go:259` `if g.attested == nil || !g.attested(ctx)`)가
+  `replay.go:260` `declineReplay(out, ReasonReplayNotAttested, …)` 로 먼저 반환한다. 생산 배선은 둘 다 nil:
+  엔진 `internal/app/engine/gateway.go:330` `Attested: nil`(`buildGateway`), flatten `cmd/tossctl/flatten.go:233`
+  `execgw.Options{…}` 에 `Attested` 필드 없음(영값 nil). 시험: `internal/app/engine/engine_test.go:637`
+  `TestStartupConstructsTheGateway`(`wiring.Attested` 가 참이면 실패), `internal/execgw/replay_test.go:260`
+  `TestReplayIsOffWithoutAttestation`·`:281` `TestReplayIsRefusedWithoutAnAttestationHook` — 2026-10-22 실행 PASS.
+  잔여(재생을 켜는 날의 선행 조건): ① `DefaultReplayMargin=60s`(`replay.go:78`)는 `ReplayKeyTTL/2`(5분)가 아니다 —
+  창 경계가 미검증이므로 task 문언상 켤 때는 TTL/2 이상으로 다시 정한다. ② 키의 계좌 스코프는 단일 계좌라 원리적으로
+  미검증(M14·M35)이며 재생이 꺼져 있는 동안만 무관하다.
+- **결정 2 → 2.1 체크.** 상태 매핑은 `brokerstate.Derive` 하나이고, 모르는 값은 B50(`derive.go:506` `default`) →
+  `derive.go:507` `unknown_status`, `CANCEL_REJECTED` → `:493`, `REPLACE_REJECTED` → `:499`, 셋 다 `unknown` 이
+  `derive.go:591` `FailClosed = true` 를 세운다. 체결 감지 경로는 `filldetect` `Detector.pollLocked` B7
+  (`detect.go:324` `if applied.FailClosed`) → `blockSymbol` → `Gate.Block`, 생산 배선 `cmd/tossctl/engine.go:780`
+  `Gate: ectx.Entry`. 기존 시험은 `Derive` 단위까지만 고정했으므로 끝단 시험을 하나 추가했다:
+  `internal/filldetect/unknown_status_test.go` `TestUnobservedStatusFailsClosedAtTheEntryGate`
+  (`EXPIRED`·`CANCEL_REJECTED`·`REPLACE_REJECTED` → 진입 게이트 `ReasonBrokerStateUnknown`, 체결 이벤트 0) — PASS,
+  변이 2종(`:507` 을 settle 로, `:493` 앞에 settle 삽입)에서 각각 FAIL 확인 후 원복. 표: [status-derivation-table-2026-10-22.md](analysis/status-derivation-table-2026-10-22.md).
+  2.1 이 처음 요구한 두 값의 「별도 레코드 실제 형태」는 **측정되지 않은 채** 닫는다 — 수용의 대가는 관측 전까지의 막힘이다.
+- **결정 3 → 2.5 문언 축소, 미체크.** 발동 계열(발동 관측·`triggeredOrderId` 노출 지연)·만료·ProtectiveCapability 속성
+  기록이 남아 2.5 는 열려 있다.
+- **결정 4 → 2.8 미체크.** M29·M33 은 「미체결 일반 매도가 예약한다」, M13·M34 는 「조건주문은 예약하지 않는다」를 덮는다.
+  M43 은 **US** 당일 매수분 당일 매도(결제 미도래로 거절 없음)이고 `sellableQuantity` 값을 읽은 관측이 아니다.
+  **KR 미결제는 어느 측정도 덮지 않는다.** 빠진 것: KR 당일(결제 전, T+2 미도래) 매수 수량이 `GET /api/v1/sellable-quantity`
+  값에 포함되는지, 그리고 그 수량의 매도 주문이 수락되는지. (M9 의 KR 매수 1주와 6차 실행 sellable 6 의 시점 관계는
+  기록만으로 가릴 수 없고, 가리려면 체결 이력 조회 — 사람 승인 필요 — 가 든다.)
+- **결정 5 → 1.3 초안, 미체크.** [retry-matrix-slo-draft-2026-10-22.md](analysis/retry-matrix-slo-draft-2026-10-22.md) —
+  초안, 사용자 승인 대기. 「0 throttled」는 최근 3일 soak 272 사이클의 **최종 class** 기준이며, 같은 기간 orders walk 는
+  272 중 267 사이클이 ≥15s(백오프 흡수)였다 — 요청 단위 429 는 계속 난다.
+- **결정 6 → 1.4 미체크.** 엔진 기동 인터록 증거는 a163 배포 재시작 창(KST 05:00–09:00, 한 번의 재시작)에서 수집한다.
+
+### 후속 Story 로 넘긴 항목 (2.5 에서 제외 — a100 뒤)
+
+Story 파일은 대응 change id 와 한 쌍이어야 하므로(docs/WORKFLOW.md PM 계약) 지금 만들지 않고 여기에 적는다.
+후속 Story 를 만들 때 이 목록을 그대로 옮긴다.
+
+| 항목 | 원래 위치 | 현재 근거 |
+|---|---|---|
+| OCO sibling 취소 시점 | 2.5 | 단계 없음. OCO/OTO 는 LIMIT 전용이라 기본 보호 가설(SINGLE+MARKET) 밖(M12) |
+| 조건주문 부분체결 잔량 | 2.5 | 단계 없음(measurements.md 「2.5에 남은 미측정」) |
+| 조건주문과 일반 매도 동시 제출의 거부 의미 | 2.5 | 단계 없음. 조건주문은 매도가능수량을 예약하지 않음(M13·M34) |
+
+Function Logic Map: not-applicable(편집 대상 기존 함수 없음 — 생산 코드 무변경, 추가는 시험 파일 1개와 문서). 분기 주장은
+위 AST 산출물로만 했다. 다중 적대 리뷰·변이 원장: not-applicable(High-risk 경로·게이트 판정 변경 없음 — 비례 원칙).

@@ -1,0 +1,92 @@
+{
+  "file": "internal/execgw/replay.go",
+  "source_sha256": "4a855eedf2195c3d9cb954f701477d34d0186d25252b92636d85eeac3dd370ae",
+  "package": "execgw",
+  "function": "withDefaults",
+  "receiver": "ReplayConfig",
+  "signature": "ReplayConfig.withDefaults(params=0, results=1)",
+  "start": {
+    "line": 130,
+    "column": 1
+  },
+  "end": {
+    "line": 144,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 131,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 134,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 140,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 143,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 132,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 135,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 138,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 141,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
