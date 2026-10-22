@@ -1,0 +1,60 @@
+# codegraph 1.6.0 HEAD 5975af2b955070a3754a0988565e3be079ae7d72
+$ codegraph callers classifyMutation
+
+Callers of "classifyMutation" (1):
+
+method      submit
+  internal/execgw/gateway.go:466
+
+
+$ codegraph callees classifyMutation
+
+Callees of "classifyMutation" (11):
+
+function    brokerOrderID
+  internal/execgw/classify.go:174
+
+function    policyRefusal
+  internal/execgw/classify.go:148
+
+method      Error
+  internal/exitpolicy/adoption.go:59
+
+function    classifyRefusalCode
+  internal/execgw/refusal_code.go:53
+
+function    ClassifyBrokerRefusal
+  internal/execgw/failclosed.go:157
+
+function    statusOf
+  internal/execgw/classify.go:125
+
+function    ClassifyHTTPMutation
+  internal/journal/dispatch.go:301
+
+function    reasonForClass
+  internal/execgw/classify.go:103
+
+struct      DispatchOutcome
+  internal/journal/dispatch.go:35
+
+type_alias  SendState
+  internal/journal/dispatch.go:226
+
+struct      MutationResult
+  internal/domain/mutation.go:18
+
+
+$ codegraph impact classifyMutation
+
+Impact of changing "classifyMutation" — 5 affected symbols:
+
+internal/execgw/classify.go
+  function    classifyMutation:21
+
+internal/execgw/gateway.go
+  method      submit:466
+  method      place:362
+  method      Cancel:403
+  method      Amend:425
+

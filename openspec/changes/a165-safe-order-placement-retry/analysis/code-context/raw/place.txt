@@ -1,0 +1,212 @@
+# codegraph 1.6.0 HEAD 5975af2b955070a3754a0988565e3be079ae7d72
+$ codegraph callers place
+
+Callers of "place" (20):
+
+method      Place
+  internal/execgw/gateway.go:358
+
+method      PlaceClaimedStrategy
+  internal/execgw/strategy_gateway.go:57
+
+function    Encode
+  internal/qr/qr.go:124
+
+function    TestTheChosenMaskIsTheLowestScoring
+  internal/qr/qr_test.go:402
+
+function    TestThePlacementStartsWhereTheStandardSaysItDoes
+  internal/qr/qr_test.go:465
+
+function    TestA094ANegativeLadderLevelReleasesWithoutARungRollback
+  internal/journal/a094_exit_proposal_release_test.go:175
+
+function    a130Sell
+  internal/journal/a130_adopted_outcome_test.go:111
+
+function    TestA130APostAdoptionDisposalBlocksASweptFlatten
+  internal/journal/a130_adopted_outcome_test.go:306
+
+function    TestA130ARolledBackCloseReportsNothing
+  internal/journal/a130_adopted_outcome_test.go:429
+
+function    TestA130AnOverAttributedSellWithoutAnyAdjustmentIsAForeignSell
+  internal/journal/a130_adopted_outcome_test.go:627
+
+function    TestA130EachReachableRefusalSiteNamesItsOwnReason
+  internal/journal/a130_adopted_outcome_test.go:657
+
+function    a130LocalSell
+  internal/journal/a130_adopted_outcome_test.go:771
+
+function    TestA130ALocalSellOffsetBySweptFlattenIsNoLongerFrozen
+  internal/journal/a130_adopted_outcome_test.go:797
+
+function    TestA130ALaterInstanceFlattenIsNotThisTripsSell
+  internal/journal/a130_adopted_outcome_test.go:827
+
+function    a138EnginePosition
+  internal/journal/a138_open_positions_test.go:90
+
+function    exitLoopSell
+  internal/journal/adoption_outcome_test.go:62
+
+function    TestAdoptedOutcomeIncludesFlattenSells
+  internal/journal/adoption_outcome_test.go:171
+
+function    TestOpenExitStatePreservesPinnedRuntimePolicyIdentity
+  internal/journal/exit_identity_contract_test.go:11
+
+function    TestOpenExitStateRejectsASeedWhosePolicyMeaningDoesNotMatchItsID
+  internal/journal/exit_identity_contract_test.go:35
+
+function    TestRecordExitJudgementRejectsProposalFromAnotherSnapshot
+  internal/journal/exit_identity_contract_test.go:57
+
+
+$ codegraph callees place
+
+Callees of "place" (20):
+
+method      CheckPlace
+  internal/execgw/failclosed.go:40
+
+method      Place
+  internal/trading/service.go:186
+
+method      executeOpts
+  internal/execgw/gateway.go:461
+
+method      PreviewPlace
+  internal/trading/service.go:109
+
+function    PlaceWireBody
+  internal/execgw/wirebody.go:63
+
+method      submit
+  internal/execgw/gateway.go:466
+
+struct      mutationPlan
+  internal/execgw/gateway.go:317
+
+struct      Context
+  internal/app/app.go:62
+
+struct      PlaceRequest
+  internal/execgw/gateway.go:250
+
+struct      strategyDispatchCapability
+  internal/execgw/strategy_gateway.go:39
+
+struct      Outcome
+  internal/continuationlane/evaluator.go:170
+
+function    newBuilder
+  internal/qr/qr.go:359
+
+method      finders
+  internal/qr/qr.go:395
+
+method      timing
+  internal/qr/qr.go:420
+
+method      alignment
+  internal/qr/qr.go:438
+
+method      reserveFormat
+  internal/qr/qr.go:465
+
+method      versionBlocks
+  internal/qr/qr.go:485
+
+method      data
+  internal/qr/qr.go:524
+
+method      format
+  internal/qr/qr.go:496
+
+type_alias  Matrix
+  internal/qr/qr.go:53
+
+
+$ codegraph impact place
+
+Impact of changing "place" — 184 affected symbols:
+
+internal/execgw/gateway.go
+  method      place:362
+  method      Place:358
+
+internal/execgw/strategy_gateway_account_base_test.go
+  function    TestStrategyGatewayRejectsMissingOrFencedAuthorityPairedKRUS:255
+
+internal/flatten/liquidate.go
+  method      sell:444
+
+internal/strategydispatch/adapters.go
+  method      PlaceStrategyEntry:92
+
+internal/app/engine/exitloop.go
+  method      Place:138
+
+internal/execgw/strategy_gateway.go
+  method      PlaceClaimedStrategy:57
+
+internal/app/engine/strategy_dispatch_cycle.go
+  method      PlaceClaimedStrategy:21
+
+internal/qr/qr.go
+  function    place:376
+  function    Encode:124
+
+internal/console/a076_notification_qr_test.go
+  function    TestTheDrawnSymbolIsTheAddress:44
+
+internal/console/settings_notification_qr.go
+  method      NotificationQR:51
+
+internal/qr/qr_test.go
+  function    TestTheSymbolHasTheStructureTheStandardRequires:105
+  function    TestAlignmentPatternsSitOnTheirCentres:167
+  function    TestThePayloadComesBackOutOfTheSymbol:338
+  function    TestTheSubscribeAddressFitsWithRoomToSpare:362
+  function    TestAPayloadTooLongIsRefusedRatherThanTruncated:375
+  function    TestEveryVersionThisEncoderClaimsIsReachable:385
+  function    TestTheChosenMaskIsTheLowestScoring:402
+  function    TestThePlacementStartsWhereTheStandardSaysItDoes:465
+
+internal/app/engine/exitloop_test.go
+  method      place:362
+
+internal/journal/position_projection_test.go
+  function    place:59
+  function    TestTheFirstFillOpensTheInstance:135
+  function    TestCollidingConfirmedOrderIdentityBlocksWithoutProjectingAPosition:175
+  function    TestReusedOrderIDIsOwnedByTheObservedTradingDay:203
+  function    TestTheProjectionRunsTheWholeRoundTrip:236
+  function    TestReEntryOpensTheNextInstanceAndKeepsTheOld:285
+  function    TestAnAmendmentKeepsOneInstance:329
+  function    TestACorrectionMovesTheBasisAndNotTheQuantity:406
+  function    TestARefusedSnapshotLeavesTheProjectionAlone:436
+  function    TestAnOversellFreezesTheProjectionAndBlocksTheSymbol:459
+  function    TestASellWithNothingHeldIsAttributionFailure:514
+  function    TestTheProjectionAndTheFillAreOneCommit:564
+  function    TestTheProjectionCarriesThePreviousSnapshotForItsCostBasis:595
+  function    TestAnUnpricedFillLeavesTheBasisUnknown:642
+
+internal/journal/a094_exit_proposal_release_test.go
+  function    TestA094ANegativeLadderLevelReleasesWithoutARungRollback:175
+  function    a094ArmedPosition:16
+  function    TestA094TheClearReleasesAProposalWhoseOrdersClosedFirst:242
+
+internal/journal/a130_adopted_outcome_test.go
+  function    a130Sell:111
+  function    a130GrownTagged:183
+  function    TestA130TheGrowThenShrinkRoundTripIsRefusedAsADisposal:287
+  function    TestA130APostAdoptionDisposalBlocksASweptFlatten:306
+  function    TestA130AReadoptedPositionIsRefused:338
+  function    TestA130APreAdoptionAdjustmentStillFreezes:374
+  function    TestA130TheSameSecondBoundaryFailsClosed:402
+  function    TestA130APanickingRefusalSinkDoesNotRollBackTheClose:488
+  function    TestA130AnUnpricedEngineSellIsReportedAsSuch:592
+  function    TestA130AFoldInBeforeOrAtTheAdoptionIsNotALot:605

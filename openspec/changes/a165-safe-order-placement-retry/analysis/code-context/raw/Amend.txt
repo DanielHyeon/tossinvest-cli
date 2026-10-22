@@ -1,0 +1,85 @@
+# codegraph 1.6.0 HEAD 5975af2b955070a3754a0988565e3be079ae7d72
+$ codegraph callers Amend
+
+Callers of "Amend" (3):
+
+method      Amend
+  internal/execgw/gateway.go:425
+
+function    modifyHandler
+  internal/ops/write_operations.go:217
+
+function    TestAmendCallsBrokerAfterGate
+  internal/trading/service_test.go:160
+
+
+$ codegraph callees Amend
+
+Callees of "Amend" (16):
+
+method      guard
+  internal/trading/service.go:237
+
+method      PreviewAmend
+  internal/trading/service.go:164
+
+method      GetOrderAvailableActions
+  internal/trading/service.go:16
+
+method      withLineage
+  internal/trading/service.go:102
+
+method      AmendPendingOrder
+  internal/trading/service.go:18
+
+struct      MutationResult
+  internal/domain/mutation.go:18
+
+struct      Context
+  internal/app/app.go:62
+
+struct      AmendIntent
+  internal/orderintent/intent.go:44
+
+struct      ExecuteOptions
+  internal/trading/service.go:30
+
+function    orderTypeFor
+  internal/execgw/gateway.go:1088
+
+method      Amend
+  internal/trading/service.go:224
+
+method      executeOpts
+  internal/execgw/gateway.go:461
+
+method      submit
+  internal/execgw/gateway.go:466
+
+struct      mutationPlan
+  internal/execgw/gateway.go:317
+
+struct      AmendRequest
+  internal/execgw/gateway.go:288
+
+struct      Outcome
+  internal/continuationlane/evaluator.go:170
+
+
+$ codegraph impact Amend
+
+Impact of changing "Amend" — 5 affected symbols:
+
+internal/trading/service.go
+  method      Amend:224
+
+internal/execgw/gateway.go
+  method      Amend:425
+
+internal/ops/write_operations.go
+  function    modifyHandler:217
+  function    writeOperations:90
+
+internal/trading/service_test.go
+  function    TestAmendCallsBrokerAfterGate:160
+

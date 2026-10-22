@@ -1,0 +1,55 @@
+$ cgc find name classifyMutation
+Services initialized.
+Found 4 matches for 'classifyMutation':
+╭──────────────────┬──────────┬────────────────────────────────────────────────╮
+│ Name             │ Type     │ Location                                       │
+├──────────────────┼──────────┼────────────────────────────────────────────────┤
+│ classifyMutation │ Function │ /tmp/tossos-gbrain-gate.MX45VC/repo/internal/e │
+│                  │          │ xecgw/classify.go:21                           │
+│ classifyMutation │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a041/ │
+│                  │          │ internal/execgw/classify.go:21                 │
+│ classifyMutation │ Function │ /tmp/claude-1000/-mnt-D-project-axipient-TossO │
+│                  │          │ S/4ae1be25-8c79-4117-9da1-fbea023b699d/scratch │
+│                  │          │ pad/gate-label/internal/execgw/classify.go:21  │
+│ classifyMutation │ Function │ /mnt/D/project/axipient/TossOS-rps-gate/intern │
+│                  │          │ al/execgw/classify.go:21                       │
+╰──────────────────┴──────────┴────────────────────────────────────────────────╯
+$ cgc find name transientRefusal
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+No code elements found with name 'transientRefusal'
+$ cgc find name ClassifyHTTPMutation
+│ ClassifyHTTPMutation │ Function │ /tmp/claude-1000/-mnt-D-project-axipient-T │
+│                      │          │ ossOS/4ae1be25-8c79-4117-9da1-fbea023b699d │
+│                      │          │ /scratchpad/gate-label/internal/journal/di │
+│                      │          │ spatch.go:301                              │
+│ ClassifyHTTPMutation │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a │
+│                      │          │ 041/internal/journal/dispatch.go:301       │
+│ ClassifyHTTPMutation │ Function │ /tmp/claude-1000/-mnt-D-project-axipient-T │
+│                      │          │ ossOS/81c61aa2-383f-4024-9f8a-7b691a61be10 │
+│                      │          │ /scratchpad/gatewt/internal/journal/dispat │
+│                      │          │ ch.go:301                                  │
+│ ClassifyHTTPMutation │ Function │ /tmp/tossos-a052/internal/journal/dispatch │
+│                      │          │ .go:301                                    │
+│ ClassifyHTTPMutation │ Function │ /mnt/D/project/axipient/TossOS-rps-gate/in │
+│                      │          │ ternal/journal/dispatch.go:301             │
+╰──────────────────────┴──────────┴────────────────────────────────────────────╯
+$ cgc find name WithSendTracker
+│ Name            │ Type     │ Location                                        │
+├─────────────────┼──────────┼─────────────────────────────────────────────────┤
+│ WithSendTracker │ Function │ /tmp/claude-1000/-mnt-D-project-axipient-TossOS │
+│                 │          │ /4ae1be25-8c79-4117-9da1-fbea023b699d/scratchpa │
+│                 │          │ d/gate-label/internal/journal/dispatch.go:278   │
+│ WithSendTracker │ Function │ /mnt/D/project/axipient/TossOS-worktrees/a041/i │
+│                 │          │ nternal/journal/dispatch.go:278                 │
+│ WithSendTracker │ Function │ /tmp/claude-1000/-mnt-D-project-axipient-TossOS │
+│                 │          │ /81c61aa2-383f-4024-9f8a-7b691a61be10/scratchpa │
+│                 │          │ d/gatewt/internal/journal/dispatch.go:278       │
+│ WithSendTracker │ Function │ /tmp/tossos-a052/internal/journal/dispatch.go:2 │
+│                 │          │ 78                                              │
+│ WithSendTracker │ Function │ /mnt/D/project/axipient/TossOS-rps-gate/interna │
+│                 │          │ l/journal/dispatch.go:278                       │
+╰─────────────────┴──────────┴─────────────────────────────────────────────────╯

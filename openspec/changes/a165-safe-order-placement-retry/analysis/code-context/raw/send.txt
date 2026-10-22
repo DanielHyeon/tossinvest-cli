@@ -1,0 +1,73 @@
+# codegraph 1.6.0 HEAD 5975af2b955070a3754a0988565e3be079ae7d72
+$ codegraph callers send
+
+Callers of "send" (4):
+
+file        capture_post_bodies.mjs
+  tools/capture_post_bodies.mjs:1
+
+method      deleteAcct
+  internal/official/client.go:369
+
+method      getWithHeaders
+  internal/official/client.go:392
+
+method      postWithHeaders
+  internal/official/client.go:427
+
+
+$ codegraph callees send
+
+Callees of "send" (7):
+
+method      token
+  internal/official/token.go:60
+
+method      doRequest
+  internal/official/client.go:191
+
+method      refresh
+  internal/official/token.go:108
+
+function    classifyStatus
+  internal/official/errors.go:39
+
+function    unwrapAndDecode
+  internal/official/client.go:213
+
+struct      Context
+  internal/app/app.go:62
+
+struct      Request
+  internal/attemptthaw/attemptthaw.go:31
+
+
+$ codegraph impact send
+
+Impact of changing "send" — 15 affected symbols:
+
+tools/capture_post_bodies.mjs
+  function    send:154
+  file        capture_post_bodies.mjs:1
+
+internal/official/client.go
+  method      send:320
+  method      deleteAcct:369
+  method      getWithHeaders:392
+  method      get:234
+  method      getAcct:289
+  method      postWithHeaders:427
+  method      postAcct:299
+  method      post:418
+
+internal/official/client_test.go
+  function    TestDeleteAcctRetriesOn401:241
+
+internal/official/conditional_writes.go
+  method      CancelConditionalOrder:11
+
+internal/official/orders_write.go
+  method      PlaceOrder:182
+  method      CancelOrder:222
+  method      ModifyOrder:250
+

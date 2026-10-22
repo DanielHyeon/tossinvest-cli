@@ -1,0 +1,150 @@
+# codegraph 1.6.0 HEAD 5975af2b955070a3754a0988565e3be079ae7d72
+$ codegraph callers PlaceOrder
+
+Callers of "PlaceOrder" (9):
+
+method      PlacePendingOrder
+  internal/ops/write_operations.go:24
+
+function    TestGuardCatchesAnOfficialClientPointedAtProduction
+  internal/testenv/testenv_test.go:161
+
+function    TestWireBodyIsByteIdenticalToTheOfficialSerializer
+  tools/a087-market-sell-probe/contract_test.go:22
+
+method      PlaceOrder
+  internal/hybrid/broker.go:32
+
+method      PlaceOrder
+  internal/verifylive/verifylive.go:598
+
+method      placeOrder
+  internal/verifylive/mutate.go:215
+
+method      replayPlaceOrder
+  internal/verifylive/mutate.go:261
+
+method      conflictProbe
+  internal/verifylive/mutate.go:283
+
+method      PlaceOrder
+  internal/verifylive/fake_broker_test.go:798
+
+
+$ codegraph callees PlaceOrder
+
+Callees of "PlaceOrder" (19):
+
+function    buildOrderCreate
+  internal/official/orders_write.go:100
+
+method      acctHeaders
+  internal/official/orders_write.go:165
+
+method      postWithHeaders
+  internal/official/client.go:427
+
+struct      Context
+  internal/app/app.go:62
+
+struct      PlaceIntent
+  internal/orderintent/intent.go:13
+
+struct      MutationResult
+  internal/domain/mutation.go:18
+
+method      PlaceOrder
+  internal/console/fake_broker_test.go:158
+
+method      PlaceOrder
+  internal/hybrid/broker_test.go:66
+
+method      PlaceOrder
+  internal/official/orders_write.go:182
+
+method      PlaceOrder
+  internal/verifylive/fake_broker_test.go:798
+
+function    errAlreadyProcessing
+  internal/verifylive/fake_broker_test.go:848
+
+method      throttled
+  internal/verifylive/fake_broker_test.go:221
+
+method      nextID
+  internal/verifylive/fake_broker_test.go:262
+
+function    mustOrderJSON
+  internal/verifylive/fake_broker_test.go:1014
+
+method      PlaceOrder
+  internal/verifylive/a087_far_limit_only_pin_test.go:35
+
+struct      APIError
+  internal/official/errors.go:22
+
+struct      keyedOrder
+  internal/verifylive/fake_broker_test.go:179
+
+function    orderIDFor
+  internal/console/fake_broker_test.go:204
+
+struct      placedOrder
+  internal/console/fake_broker_test.go:60
+
+
+$ codegraph impact PlaceOrder
+
+Impact of changing "PlaceOrder" — 21 affected symbols:
+
+internal/official/orders_write.go
+  method      PlaceOrder:182
+
+internal/ops/write_operations.go
+  method      PlacePendingOrder:24
+
+internal/trading/service.go
+  method      PlacePendingOrder:15
+
+internal/testenv/testenv_test.go
+  function    TestGuardCatchesAnOfficialClientPointedAtProduction:161
+
+tools/a087-market-sell-probe/contract_test.go
+  function    TestWireBodyIsByteIdenticalToTheOfficialSerializer:22
+
+internal/hybrid/broker.go
+  method      PlaceOrder:32
+
+internal/verifylive/verifylive.go
+  method      PlaceOrder:598
+
+internal/verifylive/mutate.go
+  method      placeOrder:215
+  method      replayPlaceOrder:261
+  method      conflictProbe:283
+
+internal/verifylive/plan_test.go
+  function    TestAMutationOutsideTheApprovedListSendsNothing:373
+
+internal/verifylive/runner_test.go
+  function    TestExposureCapRefusesASecondPlacement:344
+
+internal/verifylive/steps.go
+  method      stepIdempotency:249
+  method      stepIdempotencyTTLEdge:350
+  method      stepOrderCancel:393
+  method      stepOrderAmend:424
+  method      stepSellBoundary:467
+
+internal/hybrid/broker_test.go
+  method      PlaceOrder:66
+
+internal/verifylive/a087_far_limit_only_pin_test.go
+  method      PlaceOrder:35
+
+internal/verifylive/fake_broker_test.go
+  method      PlaceOrder:798
+
+internal/console/fake_broker_test.go
+  method      PlaceOrder:158
+

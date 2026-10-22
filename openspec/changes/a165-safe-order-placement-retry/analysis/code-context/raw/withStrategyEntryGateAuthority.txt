@@ -1,0 +1,66 @@
+# codegraph 1.6.0 HEAD 5975af2b955070a3754a0988565e3be079ae7d72
+$ codegraph callers withStrategyEntryGateAuthority
+
+Callers of "withStrategyEntryGateAuthority" (3):
+
+function    TestA137TheFinalGateFenceMarksOnlyTheDailyLossChange
+  internal/execgw/a137_daily_loss_internal_test.go:287
+
+method      submit
+  internal/execgw/gateway.go:466
+
+function    TestStrategyEntryGateAuthorityRejectsAllowedBlockedAllowedABAKRUS
+  internal/execgw/strategy_entry_gate_authority_internal_test.go:11
+
+
+$ codegraph callees withStrategyEntryGateAuthority
+
+Callees of "withStrategyEntryGateAuthority" (9):
+
+method      refresh
+  internal/enginelock/enginelock.go:342
+
+function    sealStrategyEntryGateAuthority
+  internal/execgw/strategy_entry_gate_authority.go:37
+
+method      dailyLossOnlyRejectionLocked
+  internal/execgw/a137_daily_loss.go:304
+
+method      checkAccountEntryLocked
+  internal/execgw/retry.go:615
+
+method      checkSymbolEntryLocked
+  internal/execgw/symbolgate.go:253
+
+method      fn
+  internal/console/restart_test.go:37
+
+struct      Lock
+  internal/enginelock/enginelock.go:120
+
+struct      Context
+  internal/app/app.go:62
+
+struct      StrategyEntryGateAuthority
+  internal/execgw/strategy_entry_gate_authority.go:14
+
+
+$ codegraph impact withStrategyEntryGateAuthority
+
+Impact of changing "withStrategyEntryGateAuthority" — 7 affected symbols:
+
+internal/execgw/strategy_entry_gate_authority.go
+  method      withStrategyEntryGateAuthority:46
+
+internal/execgw/a137_daily_loss_internal_test.go
+  function    TestA137TheFinalGateFenceMarksOnlyTheDailyLossChange:287
+
+internal/execgw/gateway.go
+  method      submit:466
+  method      place:362
+  method      Cancel:403
+  method      Amend:425
+
+internal/execgw/strategy_entry_gate_authority_internal_test.go
+  function    TestStrategyEntryGateAuthorityRejectsAllowedBlockedAllowedABAKRUS:11
+

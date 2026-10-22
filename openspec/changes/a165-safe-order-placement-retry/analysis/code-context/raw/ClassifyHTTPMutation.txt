@@ -1,0 +1,75 @@
+# codegraph 1.6.0 HEAD 5975af2b955070a3754a0988565e3be079ae7d72
+$ codegraph callers ClassifyHTTPMutation
+
+Callers of "ClassifyHTTPMutation" (4):
+
+function    TestA094TheStatusTableIsUnchanged
+  internal/execgw/a094_refusal_code_test.go:123
+
+function    classifyMutation
+  internal/execgw/classify.go:21
+
+function    TestClassifyHTTPMutation
+  internal/journal/dispatch_test.go:22
+
+function    httpDispatch
+  internal/journal/dispatch_test.go:151
+
+
+$ codegraph callees ClassifyHTTPMutation
+
+Callees of "ClassifyHTTPMutation" (10):
+
+method      Error
+  internal/exitpolicy/adoption.go:59
+
+method      String
+  internal/journal/dispatch.go:237
+
+function    isDefinitiveRejection
+  internal/journal/dispatch.go:349
+
+struct      DispatchOutcome
+  internal/journal/dispatch.go:35
+
+constant    DispatchAmbiguous
+  internal/journal/dispatch.go:31
+
+constant    DispatchRejected
+  internal/journal/dispatch.go:28
+
+constant    DispatchAcked
+  internal/journal/dispatch.go:25
+
+constant    DispatchNotSent
+  internal/journal/dispatch.go:23
+
+constant    SendNotStarted
+  internal/journal/dispatch.go:230
+
+type_alias  SendState
+  internal/journal/dispatch.go:226
+
+
+$ codegraph impact ClassifyHTTPMutation
+
+Impact of changing "ClassifyHTTPMutation" — 8 affected symbols:
+
+internal/journal/dispatch.go
+  function    ClassifyHTTPMutation:301
+
+internal/execgw/a094_refusal_code_test.go
+  function    TestA094TheStatusTableIsUnchanged:123
+
+internal/execgw/classify.go
+  function    classifyMutation:21
+
+internal/execgw/gateway.go
+  method      submit:466
+
+internal/journal/dispatch_test.go
+  function    TestClassifyHTTPMutation:22
+  function    httpDispatch:151
+  function    TestRunTransportFaults:190
+  function    TestConcurrentRunsAreSerialised:377
+

@@ -1,0 +1,176 @@
+# codegraph 1.6.0 HEAD 5975af2b955070a3754a0988565e3be079ae7d72
+$ codegraph callers submit
+
+Callers of "submit" (8):
+
+method      place
+  internal/execgw/gateway.go:362
+
+method      Cancel
+  internal/execgw/gateway.go:403
+
+method      Amend
+  internal/execgw/gateway.go:425
+
+method      record
+  internal/app/engine/exitloop.go:1306
+
+function    TestPrepareFailureBlocksSubmission
+  internal/journal/durability_test.go:539
+
+method      acceptWithoutResponse
+  internal/protectionlifecycle/fake_official_broker_test.go:23
+
+function    TestUnknownSubmitWithAttestedIdempotencyReusesSameOperationKey
+  internal/protectionlifecycle/lifecycle_test.go:101
+
+function    registeredKR
+  internal/protectionlifecycle/lifecycle_test.go:354
+
+
+$ codegraph callees submit
+
+Callees of "submit" (20):
+
+method      loadClaimedStrategyLeaseBinding
+  internal/execgw/strategy_gateway.go:91
+
+function    reject
+  internal/execgw/reason.go:295
+
+function    joinStrategyPreTransportRefusal
+  internal/execgw/strategy_gateway.go:198
+
+method      refuseClaimedStrategyPreTransport
+  internal/execgw/strategy_gateway.go:115
+
+method      loadDecision
+  internal/execgw/guardian.go:204
+
+method      prepareRequest
+  internal/execgw/gateway.go:1002
+
+method      Error
+  internal/exitpolicy/adoption.go:59
+
+method      claimSymbol
+  internal/execgw/gateway.go:766
+
+method      releaseSymbol
+  internal/execgw/gateway.go:779
+
+method      checkSymbolFree
+  internal/execgw/gateway.go:798
+
+method      checkDecisionUnspent
+  internal/execgw/gateway.go:969
+
+method      Prepare
+  internal/journal/durability.go:373
+
+method      ID
+  internal/journal/durability.go:348
+
+method      refuseWithStrategySettlement
+  internal/execgw/gateway.go:937
+
+method      refusePreparedClaimedStrategyPreTransport
+  internal/execgw/strategy_gateway.go:157
+
+method      checkProtection
+  internal/execgw/protection.go:89
+
+method      checkEntry
+  internal/execgw/gateway.go:850
+
+method      preflight
+  internal/verifylive/runner.go:752
+
+method      checkDecision
+  internal/execgw/guardian.go:235
+
+method      Now
+  internal/clock/clock.go:37
+
+
+$ codegraph impact submit
+
+Impact of changing "submit" — 44 affected symbols:
+
+internal/execgw/gateway.go
+  method      submit:466
+  method      place:362
+  method      Place:358
+  method      Cancel:403
+  method      Amend:425
+
+internal/execgw/strategy_gateway.go
+  method      PlaceClaimedStrategy:57
+
+internal/execgw/decision_test.go
+  function    TestSpentDecisionIsRefusedAfterAJournalRestart:564
+
+internal/flatten/flatten.go
+  method      settleStep:301
+
+internal/protectionofficial/gateway_test.go
+  function    TestGatewayCancelPreflightFailureNeverDispatchesDelete:155
+  function    TestGatewayCancelPostDeleteDisappearanceRemainsInDoubt:187
+  function    TestGatewayCancelNeedsTerminalNonTriggeredObservationAndExactSellable:200
+  function    TestGatewayCancelRejectsWrongOrDuplicateTerminalIdentity:221
+  function    TestGatewayTargetRequiresExactCurrentExpiry:246
+  function    TestGatewayCancelFallbackIgnoresOnlyAttestedRetiredReplaceRows:266
+  function    TestGatewayCancelFallbackRequiresCompleteOpenAndClosedScans:299
+
+internal/app/engine/exitloop.go
+  method      Cancel:139
+  method      submit:1483
+  method      record:1306
+  method      judgeRatchet:1043
+  method      judgeLadder:1097
+
+internal/app/engine/a091_replay_test.go
+  function    a091LaterStopUnder:398
+
+internal/app/engine/a137_daily_loss_notice.go
+  function    recordStrategyDailyLossUnmeasurable:22
+
+internal/app/engine/a146_entry_skip.go
+  function    recordStrategyEntrySkip:72
+
+internal/app/engine/a163_source_age_audit_test.go
+  function    TestA163TheReportToggleIsTheLastAuditedSettingAndOnlyItsChangeIsWritten:16
+
+internal/app/engine/a163_source_age_report_test.go
+  function    a163Setup:55
+
+internal/candidate/metrics_test.go
+  function    TestAOneMinuteGapAndATenMinuteGapAreNotTheSameRate:175
+
+internal/journal/durability_test.go
+  function    TestPrepareFailureBlocksSubmission:539
+
+internal/protectionlifecycle/fake_official_broker_test.go
+  method      submit:15
+  method      acceptWithoutResponse:23
+
+internal/protectionlifecycle/lifecycle_test.go
+  function    TestRegisterResponseCrashRecoversExactlyOnce:21
+  function    TestUnknownSubmitWithAttestedIdempotencyReusesSameOperationKey:101
+  function    registeredKR:354
+  function    TestSaferReplaceIsAtomicNonRetreatingAndClaimBounded:126
+  function    TestCancelUnknownRequiresExactBrokerIDAndKeepsCoverage:167
+  function    TestExactCancelResultConvergesTerminalAndKeepsEntryClosed:193
+  function    TestDuplicateAndPartialFillConvergeOnce:223
+  function    TestKRFailureDoesNotMutateUSProtection:274
+  function    TestExactBrokerIDRecoveryRejectsMismatchAndPreservesActive:305
+
+internal/protectionlifecycle/a100_t1_refusal_branches_test.go
+  function    registeredKRKey:68
+  function    registeredKRAndUS:75
+  function    TestA100T1PrepareRegisterB2ClosedEntryOrWrongPhaseRefused:272
+  function    TestA100T1PrepareRegisterB3PendingOperationNeverSubmitsTwice:333
+  function    TestA100T1PrepareRegisterB4ActiveProtectionNeverSubmitsSecond:373
+
+internal/strategycoordinator/fixture_test.go
+  method      submit:126

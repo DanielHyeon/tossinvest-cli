@@ -1,0 +1,164 @@
+{
+  "file": "internal/execgw/gateway.go",
+  "source_sha256": "b4b020607839345a70e7658ff488aef4282de4335eedd83b90a93520d80e53df",
+  "package": "execgw",
+  "function": "Cancel",
+  "receiver": "Gateway",
+  "signature": "Gateway.Cancel(params=2, results=2)",
+  "start": {
+    "line": 403,
+    "column": 1
+  },
+  "end": {
+    "line": 422,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 419,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 421,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 407,
+        "column": 18
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 407,
+        "column": 34
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 18
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 34
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 409,
+        "column": 18
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 409,
+        "column": 34
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 410,
+        "column": 18
+      },
+      "text": "orderTypeFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 18
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 34
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 419,
+        "column": 10
+      },
+      "text": "g.trading.Cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 419,
+        "column": 40
+      },
+      "text": "g.executeOpts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 419,
+        "column": 54
+      },
+      "text": "g.trading.PreviewCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 421,
+        "column": 9
+      },
+      "text": "g.submit"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 404,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 405,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 418,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

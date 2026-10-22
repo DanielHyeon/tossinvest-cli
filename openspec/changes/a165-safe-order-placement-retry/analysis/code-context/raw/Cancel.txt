@@ -1,0 +1,193 @@
+# codegraph 1.6.0 HEAD 5975af2b955070a3754a0988565e3be079ae7d72
+$ codegraph callers Cancel
+
+Callers of "Cancel" (16):
+
+method      clearTheSymbol
+  internal/app/engine/exitloop.go:1629
+
+method      Cancel
+  internal/protection/domain.go:409
+
+method      Cancel
+  internal/execgw/gateway.go:403
+
+function    cancelHandler
+  internal/ops/write_operations.go:194
+
+function    TestCancelExecutesBrokerAndReconciles
+  internal/trading/service_test.go:130
+
+function    TestSpentDecisionIsRefusedAfterAJournalRestart
+  internal/execgw/decision_test.go:564
+
+method      settleStep
+  internal/flatten/flatten.go:301
+
+function    TestGatewayCancelPreflightFailureNeverDispatchesDelete
+  internal/protectionofficial/gateway_test.go:155
+
+function    TestGatewayCancelPostDeleteDisappearanceRemainsInDoubt
+  internal/protectionofficial/gateway_test.go:187
+
+function    TestGatewayCancelNeedsTerminalNonTriggeredObservationAndExactSellable
+  internal/protectionofficial/gateway_test.go:200
+
+function    TestGatewayCancelRejectsWrongOrDuplicateTerminalIdentity
+  internal/protectionofficial/gateway_test.go:221
+
+function    TestGatewayTargetRequiresExactCurrentExpiry
+  internal/protectionofficial/gateway_test.go:246
+
+function    TestGatewayCancelFallbackIgnoresOnlyAttestedRetiredReplaceRows
+  internal/protectionofficial/gateway_test.go:266
+
+function    TestGatewayCancelFallbackRequiresCompleteOpenAndClosedScans
+  internal/protectionofficial/gateway_test.go:299
+
+method      Cancel
+  internal/app/engine/exitloop.go:139
+
+method      Cancel
+  internal/app/engine/exitloop_test.go:110
+
+
+$ codegraph callees Cancel
+
+Callees of "Cancel" (20):
+
+method      Cancel
+  internal/protection/controller_test.go:71
+
+method      Cancel
+  internal/protection/domain_test.go:647
+
+method      Cancel
+  internal/protectionofficial/gateway.go:83
+
+method      Cancel
+  internal/app/engine/a111_flat_exit_observation_test.go:173
+
+method      Cancel
+  internal/app/engine/a129_exit_order_log_test.go:98
+
+method      Cancel
+  internal/app/engine/a150_exit_protection_test.go:37
+
+method      Cancel
+  internal/app/engine/a159_protection_restart_test.go:194
+
+method      Cancel
+  internal/app/engine/exit_identity_concurrency_test.go:78
+
+method      Cancel
+  internal/app/engine/exit_snapshot_isolation_test.go:47
+
+method      Cancel
+  internal/app/engine/exitloop_test.go:110
+
+method      Cancel
+  internal/execgw/gateway.go:403
+
+method      Validate
+  internal/protection/domain.go:438
+
+method      ConditionalOrderRaw
+  internal/protectionofficial/gateway.go:26
+
+method      adapt
+  internal/protectionofficial/gateway.go:259
+
+function    matchesTarget
+  internal/protectionofficial/gateway.go:291
+
+method      CancelConditionalOrder
+  internal/protectionofficial/gateway.go:25
+
+method      cancelObservation
+  internal/protectionofficial/gateway.go:282
+
+method      ProtectionConditionalOrdersRaw
+  internal/protectionofficial/gateway.go:27
+
+function    matchesRetired
+  internal/protectionofficial/gateway.go:297
+
+struct      CancelObservation
+  internal/protection/domain.go:466
+
+
+$ codegraph impact Cancel
+
+Impact of changing "Cancel" — 30 affected symbols:
+
+internal/protection/domain.go
+  method      Cancel:409
+
+internal/app/engine/exitloop.go
+  method      Cancel:139
+  method      clearTheSymbol:1629
+  method      record:1306
+
+internal/protectionofficial/gateway.go
+  method      Cancel:83
+
+internal/trading/service.go
+  method      Cancel:210
+
+internal/execgw/gateway.go
+  method      Cancel:403
+
+internal/execgw/decision_test.go
+  function    TestSpentDecisionIsRefusedAfterAJournalRestart:564
+
+internal/flatten/flatten.go
+  method      settleStep:301
+  method      CancelAll:170
+
+internal/protectionofficial/gateway_test.go
+  function    TestGatewayCancelPreflightFailureNeverDispatchesDelete:155
+  function    TestGatewayCancelPostDeleteDisappearanceRemainsInDoubt:187
+  function    TestGatewayCancelNeedsTerminalNonTriggeredObservationAndExactSellable:200
+  function    TestGatewayCancelRejectsWrongOrDuplicateTerminalIdentity:221
+  function    TestGatewayTargetRequiresExactCurrentExpiry:246
+  function    TestGatewayCancelFallbackIgnoresOnlyAttestedRetiredReplaceRows:266
+  function    TestGatewayCancelFallbackRequiresCompleteOpenAndClosedScans:299
+
+internal/ops/write_operations.go
+  function    cancelHandler:194
+  function    writeOperations:90
+
+internal/trading/service_test.go
+  function    TestCancelExecutesBrokerAndReconciles:130
+
+internal/protection/domain_test.go
+  method      Cancel:647
+
+internal/app/engine/a150_exit_protection_test.go
+  method      Cancel:37
+
+internal/app/engine/a159_protection_restart_test.go
+  method      Cancel:194
+
+internal/app/engine/exit_identity_concurrency_test.go
+  method      Cancel:78
+
+internal/protection/controller_test.go
+  method      Cancel:71
+
+internal/app/engine/exitloop_test.go
+  method      Cancel:110
+
+internal/app/engine/a094_exit_clear_test.go
+  method      Cancel:100
+
+internal/app/engine/a111_flat_exit_observation_test.go
+  method      Cancel:173
+
+internal/app/engine/a129_exit_order_log_test.go
+  method      Cancel:98
+
+internal/app/engine/exit_snapshot_isolation_test.go
+  method      Cancel:47
+
