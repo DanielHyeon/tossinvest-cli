@@ -1,0 +1,41 @@
+# receipt: GREEN (2026-10-23, 형제 파일 캡처 시험 추가 뒤) — rtk proxy go test -count=1 -v ./internal/campaignstateevidence/ ./internal/offlinecontinuation/
+--- PASS: TestInspectionPackageHasNoRuntimeConsumers (0.28s)
+--- PASS: TestGuardRejectsRuntimeCaptureUse (0.00s)
+--- PASS: TestOfflineAssessmentIsTheOnlyNamedConsumer (0.00s)
+--- PASS: TestOfflineRoundTripAndScope (0.00s)
+--- PASS: TestStrictCanonicalBoundaries (0.00s)
+--- PASS: TestRejectsMismatchedLaneWeightsAndFX (0.00s)
+--- PASS: TestMutableEvidenceMustRevalidate (0.00s)
+--- PASS: TestMalformedFXValuesRejected (0.00s)
+--- PASS: TestNilAndEmptyMapsRemainDistinct (0.00s)
+--- PASS: TestRejectsRedistributedCeilings (0.00s)
+--- PASS: TestRejectsMissingZeroFieldsAndNestedDuplicate (0.00s)
+--- PASS: TestTextValidationCoversEveryStringField (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.288s
+--- PASS: TestCalculateBoundsAndNoBudget (0.00s)
+--- PASS: TestCalculateRejectsOverdrawnAndSumOverflow (0.00s)
+--- PASS: TestCalculateLimitsBeforeUint64Conversion (0.00s)
+--- PASS: TestBoundedDecimalLimits (0.00s)
+--- PASS: TestAssessmentHasNoOperationalDependencies (0.00s)
+--- PASS: TestResultExportsNoNativeAuthorityTypes (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/offlinecontinuation	0.003s
+rc=0
+# 태그 빌드: -tags tossos_testseams 같은 두 패키지
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.300s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/offlinecontinuation	0.027s
+rc=0
+# gofmt -l internal/campaignstateevidence/ (빈 출력 = 위반 0)
+rc=0
+
+# receipt 3: P3-1 단언 추가 뒤 (2026-10-23) — 같은 두 패키지 · 태그 빌드 · gofmt
+=== RUN   TestOfflineAssessmentIsTheOnlyNamedConsumer
+--- PASS: TestOfflineAssessmentIsTheOnlyNamedConsumer (0.00s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.260s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/offlinecontinuation	0.003s
+rc=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.262s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/offlinecontinuation	0.018s
+rc=0
+gofmt rc=0

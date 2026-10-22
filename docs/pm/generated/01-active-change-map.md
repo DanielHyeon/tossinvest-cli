@@ -166,3 +166,4 @@
 | `a167-a-protective-remainder-is-re-priced` | STORY-TOS-a167 | in_progress |
 | `a168-verify-read-decode-hardening` | STORY-TOS-a168 | in_progress |
 | `a169-breakout-universes-are-compared-in-shadow` | STORY-TOS-a169 | in_progress |
+| `a170-inspection-guard-reconciles-offline-assessment` | STORY-TOS-a170 | in_progress |

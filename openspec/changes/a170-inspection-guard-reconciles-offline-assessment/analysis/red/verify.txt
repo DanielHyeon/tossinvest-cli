@@ -1,0 +1,12 @@
+# receipt: make test · make lint (2026-10-23, worktree /tmp/tossos-a140-close-20261022, base 2bbee345f + a170 미커밋 diff — P3-1 단언 추가 **전** 판)
+## make test (go test -timeout 30m ./...)
+(FAIL 줄 0)
+ok 패키지 115
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.721s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/offlinecontinuation	(cached)
+make_test_rc=0
+## make lint
+go vet ./...
+go vet -tags tossos_testseams ./...
+make_lint_rc=0
+## P3-1 단언 추가 뒤 영향 패키지 재실행은 green.txt receipt 3(rc=0) — 그 뒤 make test 전체는 다시 돌리지 않았다(바뀐 것은 campaignstateevidence 시험 파일 한 함수의 단언 하나).

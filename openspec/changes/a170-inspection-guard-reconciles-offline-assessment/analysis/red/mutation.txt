@@ -1,0 +1,51 @@
+# receipt: 변이 4 판 (2026-10-23) — 각 판은 원본 복사본에서 한 줄만 바꾸고 rtk proxy go test -count=1 ./internal/campaignstateevidence/ 실행 뒤 원본 복원(sha256 대조)
+
+## M1 offlinecontinuation import 거절 삭제: rc=1 → CAUGHT
+--- FAIL: TestOfflineAssessmentIsTheOnlyNamedConsumer (0.00s)
+    authority_guard_test.go:136: guard missed runtime import of the offline assessment: <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.235s
+FAIL
+
+## M2 이름 허용을 패키지 접두로 넓힘: rc=0 → SURVIVED
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.216s
+
+## M3 evidence import 허용 목록에서 평가 파일 제외: rc=1 → CAUGHT
+--- FAIL: TestInspectionPackageHasNoRuntimeConsumers (0.22s)
+    authority_guard_test.go:94: unexpected inspection import: internal/offlinecontinuation/assessment.go
+--- FAIL: TestOfflineAssessmentIsTheOnlyNamedConsumer (0.00s)
+    authority_guard_test.go:131: named offline assessment refused: <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.228s
+
+## M4 CaptureOfflineEvidence 허용 조기 반환 삭제: rc=1 → CAUGHT
+--- FAIL: TestInspectionPackageHasNoRuntimeConsumers (0.27s)
+    authority_guard_test.go:91: unexpected inspection import: internal/offlinecontinuation/assessment.go
+--- FAIL: TestOfflineAssessmentIsTheOnlyNamedConsumer (0.00s)
+    authority_guard_test.go:128: named offline assessment refused: <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.276s
+
+# 2 판 (M2 생존 뒤 형제 파일 캡처 시험 추가) — 같은 방식
+
+## M2 재실행: rc=1 → CAUGHT
+--- FAIL: TestOfflineAssessmentIsTheOnlyNamedConsumer (0.00s)
+    authority_guard_test.go:139: capture use accepted in a sibling file: <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.259s
+FAIL
+
+## 무변이 대조군: rc=0 → GREEN
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.249s
+
+# 3 판 (리뷰 P3-1 뒤 점 import 캡처 단언 추가) — 같은 방식
+
+## M5 이름 허용 조기 반환을 import 루프 앞으로: rc=1 → CAUGHT
+--- FAIL: TestOfflineAssessmentIsTheOnlyNamedConsumer (0.00s)
+    authority_guard_test.go:144: dot-import capture accepted in the named assessment: <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.240s
+FAIL
+
+## 무변이 대조군: rc=0 → GREEN
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.251s

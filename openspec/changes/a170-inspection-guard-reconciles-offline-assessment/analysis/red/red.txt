@@ -1,0 +1,17 @@
+# receipt: rtk proxy go test -count=1 ./internal/campaignstateevidence/ (2026-10-23, 시험만 추가 · 가드 미수정, HEAD 2bbee345f)
+# github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence [github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence.test]
+internal/campaignstateevidence/authority_guard_test.go:116:30: undefined: offlineAssessment
+internal/campaignstateevidence/authority_guard_test.go:122:37: undefined: offlineAssessmentImport
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence [build failed]
+FAIL
+rc=1
+
+# receipt 2: 상수만 더한 뒤(가드 로직 미수정) — 행동 RED
+--- FAIL: TestInspectionPackageHasNoRuntimeConsumers (0.27s)
+    authority_guard_test.go:86: unexpected inspection import: internal/offlinecontinuation/assessment.go
+--- FAIL: TestOfflineAssessmentIsTheOnlyNamedConsumer (0.00s)
+    authority_guard_test.go:123: named offline assessment refused: <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.274s
+FAIL
+rc=1
