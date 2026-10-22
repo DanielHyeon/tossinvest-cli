@@ -127,3 +127,16 @@ FREEZE: 위 P1 셋을 문서로 닫은 뒤 착수(같은 커밋). 남은 사람 
     따라서 a140 이 고친 **기존** 함수는 0 이고, fresh 번들로 덮어야 할 대상도 0 이다.
 - 옛 base 에서의 required 129(창 안 형제 커밋 159)는 전부 형제 착지 몫이다(§5).
 - 새 base = 이 기록 커밋. `base-commit.txt` 만 담은 다음 단독 커밋의 메시지가 옛→새 sha 영수증이다(3 항).
+
+### 6.1 완료 gate 1 차 — 2026-10-23 (FAIL, 5 단계 — 면제 표식 부재)
+
+- 격리 worktree `/tmp/tossos-a140-close-20261022` 를 `5975af2b9`(4.3 체크 · tracker 재생성)로 옮김. `ls -d /tmp/.git` → 없음.
+- `make sdd-sync` → rc=2: CodeGraph 동기화 · fingerprint 기록(head `5975af2b9`)은 됐고, GBrain project sync 가 1800 초 시간 초과(advisory).
+- `SDD_PYTHON=/tmp/tossos-a148-sdd-venv/bin/python make gate CHANGE=a140-breakout-signals-are-measured-in-shadow` → **rc=2**: 1~4 OK,
+  5 `[logic-map] … base 651de4394ef7 → working tree (no landed-commit.txt in HEAD) required 0 function(s) — judged at HEAD 5975af2b9550`
+  · `[logic-map] missing analysis or \`Function Logic Map: not-applicable\` review marker` → `GATE FAIL`.
+- 재고정으로 required 는 129 → 0 이 됐다. 남은 실패는 review.md 에 정본 면제 문구(`check_analysis.EXEMPTION`)가 없다는 것뿐이다 — tasks.md 머리에는
+  있었지만 게이트는 review.md 를 읽는다(`tools/logic-map/check_analysis.py:2886`). 아래 줄이 그 기록이다.
+
+Function Logic Map: not-applicable — a140 은 옛 base 에 없던 새 파일만 만들었다(`internal/breakoutsignal/` · `tools/a140-breakout-signal-shadow/`, 17 개 전부 `A`,
+§6 귀속 실측). 기존 함수 편집 0 · 게이트 판정 변경 0(docs/WORKFLOW.md 「비례 원칙」). 재고정 뒤 5 단계 required 0.
