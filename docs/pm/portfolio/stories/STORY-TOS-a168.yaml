@@ -1,0 +1,21 @@
+{
+  "id": "STORY-TOS-a168",
+  "title": "검증 대사 읽기가 중복 키·모호한 성공 상태의 브로커 응답을 거절한다",
+  "feature": "FEAT-TOS-002",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a168-verify-read-decode-hardening",
+    "path": "openspec/changes/a168-verify-read-decode-hardening"
+  },
+  "found_by": {
+    "date": "2026-10-22",
+    "how": "a164 구현 리뷰(5.1, Codex 적대 패스)가 a121 공용 목록 행 해독의 중복 키 접기와 공용 전송의 2xx 수락을 찾았고, Manager 가 공용·High-risk 경로라 a164 범위 밖 후속 change 로 미뤘다.",
+    "record": "openspec/changes/a164-verify-reconcile-closes-broker-expired-conditional/review.md"
+  },
+  "acceptance": [
+    "검증 대사 목록 행·봉투 해독이 중복 키와 뒤따르는 데이터를 거절하고 기록에 아무것도 쓰지 않는다(부재·만료 두 모드)",
+    "대사 읽기의 성공 상태 계약이 하나이고 design 문장과 코드가 같다",
+    "a121 부재 모드의 거절 순서와 주문 경로 동작은 사람이 다르게 고르지 않는 한 바뀌지 않는다",
+    "물려받은 잔여(401 재시도 신원 재확인 · 직렬화 전 시각 신선도)는 범위 결정과 함께 기록된다"
+  ]
+}

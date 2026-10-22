@@ -131,7 +131,7 @@ A3·A4 진술 판정 → A7 체인 → A6 CLOSED 허용 목록(마지막) → �
   `Cancelled || Filled || ReconciledAbsent || ReconciledExpired`. 대사 artifact 확정형 직렬화(`Artifact.MarshalJSON`)를 넷째 종결로 넓힌다.
 - 관측(Observations): `reconcile.basis`(목록 multiset + by-id 진술 행을 그룹 `conditional-by-id` 로 포함한 지문 — 도메인 태그
   `a164/reconcile-expired-basis/v1`) · `reconcile.expired.by_id`(두 응답의 분류와 status·first.status·triggeredOrderId 원문) ·
-  `reconcile.expired.closed_rows`(CLOSED 에서 대상을 이름한 행의 status 원문) · 시각은 줄의 `started_at`(첫 목록 읽기)·`finished_at`(추가 시각).
+  `reconcile.expired.closed_rows`(CLOSED 에서 대상을 이름한 행의 status 원문) · 시각은 줄의 `started_at`(Q3 창 시작 — 만료 모드는 by-id ① 직전, `internal/verifylive/reconcile.go` 「7. 두 번 읽기」 의 `start := now()`; 부재 모드는 첫 목록 읽기)·`finished_at`(추가 시각). *정정 2026-10-22(Manager, 5.1 F2): 첫 판은 「첫 목록 읽기」 라고 적었으나 코드는 A1·P3-1 대로 창 시작을 by-id ① 직전에 둔다 — 코드가 맞고 문장이 낡았음.*
 - 요청 id: 실패 응답 본문의 `requestId` 는 silent 분류 때 함께 적는다(M40 처럼 본문에 있음, 계좌 정보 없음). **성공 응답의 requestId 를
   클라이언트가 노출하는지는 미확인** — 구현 로트 1.3 에서 `getAcct` 를 읽어 확정하고, 없으면 응답 바이트 `Digest`(16바이트 절단)를 대신
   적는다. 원문 응답·계좌 원문은 쓰지 않는다.
@@ -172,7 +172,7 @@ cmd `validateM0TriggerMode`: B3 `M0Unsettled` → B7(`!ok`) 안에서 B8 `M0Exac
 ## D10. 호환·되돌리기
 
 - 구 바이너리: `decodeEntry`·`decodeRecordStrict` 는 `json.Unmarshal`(unknown field 허용, `record.go:597-612` · `reconcile_record.go:47-64`)이라
-  새 필드를 버리고 그 줄을 비-종결로 읽는다 → artifact 가 다시 outstanding·정리 대상(오늘과 같은 상태, DELETE 404 반복) — 안전 방향.
+  새 필드를 버리고 그 줄을 비-종결로 읽는다 → artifact 가 다시 outstanding 이 되고 **보유(HOLD)** 된다 — 확정형 줄이 `HeldUntil` 을 싣지 않으므로 구 바이너리의 `PendingCleanup` 은 이 artifact 를 정리(DELETE) 대상으로 내지 않는다. 안전 방향(outstanding·HOLD 에 남음, a121 과 같은 성질). 시험 `TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding` 이 「outstanding 이고 정리 대상 아님」 을 단언한다. *정정 2026-10-22(Manager, 5.1 F3): 첫 판의 「정리 대상(DELETE 404 반복)」 은 부정확했음.*
 - 되돌리기: 이전 이미지/바이너리로 교체하면 위 상태로 돌아간다. 추가된 줄은 지우지 않으며 새 바이너리가 다시 존중한다. 스키마·설정·토글 변경 0.
 
 ## 사람 결정

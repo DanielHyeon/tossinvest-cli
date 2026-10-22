@@ -153,3 +153,20 @@ Pre-Edit Gate:
   같은 명령을 직접 재면 `codegraph status .` → "✓ Index is up to date" 인데 **real 27 s**(user 1.3 s — 디스크 대기, `/mnt/D` NTFS 위 195 MB db).
   판정: 색인은 신선하나 게이트 프로브가 시간 초과로 실패 — 환경 사안. gate 전에 부하 낮은 때 `make sdd-sync` → `check_index_freshness.py` 재실행 필요.
   이 절을 쓰는 커밋 자체가 fingerprint 를 다시 낡게 하므로, 어차피 gate 직전 재동기화가 필요함.
+
+## Manager 처분 — 5.1 미결 항목 (2026-10-22)
+
+Manager 가 `a164-impl` 구현을 검증한 뒤(생산 diff 범위 `cmd/tossctl` verify_reconcile* · `internal/official` 대사 읽기 ·
+`internal/verifylive` reconcile/record/projection/report, `terminal()` 에 `ReconciledExpired`, 명령은 `mutating: "true"` 유지,
+verifylive·official·cmd/tossctl `go test` Manager 재실행 PASS) 5.1 의 미결 항목을 다음과 같이 처분했다.
+
+| # | 항목 | 처분 |
+| --- | --- | --- |
+| 1 | C-P1 잔여 — a121 CLOSED/OPEN 목록 행 해독의 중복 키 접기(`internal/official/reconcile_reads.go:136`·`:144`, 다른 id 의 발동 흔적을 숨길 수 있음, 부재 모드도 영향) | **후속 change `a168-verify-read-decode-hardening` 으로 이관**(proposal 수준만 정의, STORY-TOS-a168, FEAT-TOS-002). a164 에서는 고치지 않음 |
+| 2 | C-P2a — 공용 `Client.send` 가 모든 2xx 수락(`internal/official/client.go:362`), design D3 는 「HTTP 200」 | **a168 로 이관**(공용 전송은 High-risk — 성공 상태 계약 선택은 a168 열린 질문 Q1). a164 design D3 문장은 a168 결정 때 함께 맞춘다 |
+| 3 | C-P2b — 401 토큰 갱신 재시도가 `ensureIdentity` 를 다시 하지 않음(`client.go:344` · `cmd/tossctl/verify_reconcile.go:226`) | **a121 상속 잔여로 기록 — 지금 변경 없음.** a168 proposal 「관련 잔여」 R-a 에 추가 |
+| 4 | C-P2c — 마지막 신선도 재검이 직렬화 전 `at` 을 씀(`internal/verifylive/reconcile.go:343`·`:359`) | **a121 상속 잔여로 기록 — 지금 변경 없음.** a168 proposal 「관련 잔여」 R-b 에 추가 |
+| 5 | F2 — design D5 의 `started_at` 「첫 목록 읽기」 문장이 낡음 | **design 문장 정정**(D5 — 만료 모드 창 시작 = by-id ① 직전, 정정 표기 포함). 위 5.1 표의 「frozen design 이라 고치지 않고」 는 이 처분으로 대체 |
+| 6 | F3 — design D10 「구 바이너리 = 정리 대상」 부정확(실제로는 다시 보유 — 안전 방향) | **design 문장 정정**(D10 — outstanding·HOLD, 정리 대상 아님, `TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding` 인용) |
+
+코드 변경 0(문서만). 남은 순서: 5.3 신선도 재확인 → 6.x 사람 실기록 대사 → 7.x 게이트·archive(gate·archive 는 6.x 뒤).

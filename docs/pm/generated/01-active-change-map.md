@@ -164,3 +164,4 @@
 | `a165-safe-order-placement-retry` | STORY-TOS-a165 | in_progress |
 | `a166-account-shared-rate-limit` | STORY-TOS-a166 | in_progress |
 | `a167-a-protective-remainder-is-re-priced` | STORY-TOS-a167 | in_progress |
+| `a168-verify-read-decode-hardening` | STORY-TOS-a168 | in_progress |
