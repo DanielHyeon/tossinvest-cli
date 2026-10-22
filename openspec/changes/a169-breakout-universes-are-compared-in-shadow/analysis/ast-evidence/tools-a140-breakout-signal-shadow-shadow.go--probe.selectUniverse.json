@@ -1,0 +1,180 @@
+{
+  "file": "tools/a140-breakout-signal-shadow/shadow.go",
+  "source_sha256": "62c2fe84d04026f1f398a01cb97b270880c82f1f355ad0a6b2841ccb59e62de1",
+  "package": "main",
+  "function": "selectUniverse",
+  "receiver": "probe",
+  "signature": "probe.selectUniverse(params=1, results=2)",
+  "start": {
+    "line": 264,
+    "column": 1
+  },
+  "end": {
+    "line": 285,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 266,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 270,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 271,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 275,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 281,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 267,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 282,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 284,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 18
+      },
+      "text": "p.paced.Rankings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 7
+      },
+      "text": "krSymbol.MatchString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 70
+      },
+      "text": "math.IsNaN"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 12
+      },
+      "text": "float64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 9
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 15
+      },
+      "text": "errors.New"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 265,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 274,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 279,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -184,3 +184,4 @@
     - STORY-TOS-a160 — 후속 진입용 캠페인 일관 읽기 스냅샷 [archived] → `a160-read-consistent-campaign-continuation-state`
     - STORY-TOS-a161 — 오프라인 캠페인 계획 및 위험 상태 보존 [archived] → `a161-preserve-offline-campaign-plan-risk-state`
     - STORY-TOS-a162 — 기존 전략 평가기를 재사용하는 오프라인 후속 진입 위험 판정 [archived] → `a162-assess-follow-on-risk-offline`
+    - STORY-TOS-a169 — breakout 그림자 신호를 같은 정의로 종목군 셋(거래대금 · 거래량 · 거래량 증가율)에서 다시 잰다 [in_progress] → `a169-breakout-universes-are-compared-in-shadow`
