@@ -1,6 +1,6 @@
 # a165 — 주문 접수 안전 재시도와 취소·정정 409 재시도
 
-> **정의만 — 착수 전.** 이 문서는 proposal 수준이다. design freeze·base commit·FLM/BTM·코드는 아직 없다.
+> **착수 2026-10-23 — design 1차 FAIL, 사람 결정 대기.** base·증거·FLM·design 첫 판·MODIFIED delta 첫 판·review.md 가 있다. 코드는 아직 없다.
 > 실계좌 주문·운영 토글 flip 은 이 change 의 어떤 단계도 자동으로 하지 않는다.
 
 ## Why
@@ -119,7 +119,7 @@ proposal 정의 때 남긴 질문에 사용자가 권장안대로 답했다. 기
 ### Modified Capabilities
 
 - `order-execution`: 「Retry Matrix 산출물」(주문 mutation 재시도 금지의 예외 두 개)과 「취소의 일시적 거절 처리」(엔진 경로 적용,
-  접수 재시도 시나리오 개정). spec delta 는 proposal 단계 초안(ADDED)만 있다 — design 단계에서 기존 요구의 MODIFIED 로 다시 쓴다.
+  접수 재시도 시나리오 개정). spec delta 는 MODIFIED 첫 판(1.3 FAIL — 재작성 예정, 「IN_DOUBT 해소」 추가 필요).
 
 ## Impact
 
