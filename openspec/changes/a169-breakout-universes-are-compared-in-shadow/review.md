@@ -24,3 +24,25 @@
 | 12 | P3 | U2 후보 제한(상위 100 합집합) 한계 미기재 | **수용** — 표에 한계 한 줄 |
 | 13 | P3 | a169 가 만드는 것(출력 칸)과 a128 영수증 파일의 경계 · securityType 선행 여부 | **수용** — 경계 명시, Q11 추가 |
 | 14 | P3 | ETN 심볼이 `^[0-9]{6}$` 밖이면 ETN 갈래가 조용히 빔 | **수용** — Q12 추가 |
+
+## 2. 2.1 `securityType` 노출 — 구현 경량 리뷰 (2026-10-23)
+
+- 범위: `internal/domain/models.go`(`Quote.SecurityType`) · `internal/official/stock_reads.go`(`adaptStocks` 대입 한 줄) ·
+  새 시험 `internal/official/a169_stocks_security_type_test.go`.
+- Function Logic Map: `analysis/function-logic/internal-official--adaptstocks/`(편집 뒤 AST, 분기 1 · 반환 1 불변). `check_analysis.py` rc=0.
+- 증거 조정: `analysis/code-context/`.
+- RED(HEAD `566e1cf7c`, 편집 전): TestA169 넷 중 셋 FAIL(`security_type` 키 없음), `TestA169ThePricesQuoteJSONCarriesNoSecurityType` 은 가드라 PASS.
+- GREEN · 영향 범위: `go test ./internal/official/ ./internal/domain/ ./cmd/tossctl/ ./internal/output/ ./internal/ops/ ./tools/a128-jev-shadow-probe/ -count=1`
+  무태그 rc=0(PASS 1,628 · FAIL 0 · SKIP 1), `-tags tossos_testseams` rc=0(PASS 1,646 · FAIL 0 · SKIP 1). `go build ./...` · `go vet`(두 구성) rc=0.
+- 바이트 동일: `TestA163TheWTSQuoteJSONIsByteIdenticalAndCarriesNoBrokerTime`(WTS) · `TestA163TheOfficialStocksQuoteJSONIsByteIdenticalAndCarriesNoBrokerTime`
+  (값 없는 /stocks 행 — 편집 전 골든) · `TestA169ThePricesQuoteJSONCarriesNoSecurityType`(/prices) PASS.
+- 보이스: 독립 리뷰어 1(별도 컨텍스트 · read-only). 비례 원칙상 경량(High-risk 밖 — 변이 원장 · 다중 적대 리뷰 not-applicable).
+
+| # | 등급 | 발견 | 처리 |
+|---|---|---|---|
+| 1 | P3 | 주석이 「소비자는 Go 필드가 아니라 출력 JSON 을 읽음」이라 했으나 읽는 코드는 아직 0 이고 a128 도구는 Go 필드를 인프로세스로 읽는 구조 | **수용** — 「예정 소비자 · 출력 JSON 또는 Go 필드」로 정정(models.go · 시험 머리) |
+
+- 실측(읽기 전용, 새로 빌드한 `./bin/tossctl`, 2026-10-23 06:19 KST): `ops call stocks` `{"symbols":["005930","069500"]}` → rc=0,
+  `005930` `security_type: "STOCK"` · `069500`(KODEX 200) `security_type: "ETF"`. ETN 은 후보 심볼 28 개(6 자리 · `Q` 접두 각 14)를
+  `/stocks` 2 GET 으로 찔렀으나 0 행, WTS 인기 랭킹 100 에도 ETN 없음 → **ETN 값 실측 못 함**. ETN 심볼 형식은 Q12 대로 첫 세션(또는 리허설)
+  영수증에서 확인한다.

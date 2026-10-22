@@ -19,7 +19,9 @@
 
 ## 2. 구현 (RED → GREEN → REFACTOR → VERIFY)
 
-- [ ] 2.1 `securityType` 노출(Q11 답이 「먼저」면 0.1 · 1.1 을 기다리지 않음) — `adaptStocks` FLM/BTM 또는 `Function Logic Map: not-applicable` 사유, RED(유형 칸 · 다른 생산자 바이트 불변) → GREEN.
+- [x] 2.1 `securityType` 노출(Q11 답이 「먼저」면 0.1 · 1.1 을 기다리지 않음) — `adaptStocks` FLM/BTM 또는 `Function Logic Map: not-applicable` 사유, RED(유형 칸 · 다른 생산자 바이트 불변) → GREEN.
+  — 2026-10-23: FLM/BTM `analysis/function-logic/internal-official--adaptstocks/` · RED 3 FAIL → GREEN · 영향 범위 시험 두 구성 rc=0 ·
+  경량 리뷰 P3 1 수용(review §2) · 실측 STOCK/ETF 확인, ETN 미실측(Q12 로 이월).
 - [ ] 2.2 종목군 선정(U0 · U1 · U2) · 공통 필터 · 유형 영수증 · 원장 행 — RED → GREEN.
 - [ ] 2.3 Q6 이 (a) 면 a140 판(lot) digest 불변 시험.
 - [ ] 2.4 VERIFY — 관련 패키지 시험 · vet · `make lint`.

@@ -423,6 +423,10 @@ type Quote struct {
 	// (null · 키 없음 · 채우지 않는 생산자). FetchedAt(받은 시각)을 대신하지 않으며 판정 입력이 아님 — 청산 루프의 보고 경로만 읽음.
 	// string+omitempty 인 이유: 채우지 않는 WTS · /stocks 갈래의 JSON 바이트가 편집 전과 같아야 함(time.Time 은 omitempty 로 0 값이 안 빠짐).
 	SourceTimestamp string `json:"source_timestamp,omitempty"`
+	// SecurityType 은 공식 /stocks 의 `securityType` 원문임(a169 — STOCK · ETF · ETN 등, 해석 · 거름 없음). 빈 값 = 「모름」.
+	// 예정 소비자: a169 종목군 유형 갈래 · a128 D2 유형 영수증(출력 JSON 또는 이 필드). 판정 입력이 아님.
+	// string+omitempty 인 이유: 채우지 않는 WTS · /prices 갈래의 JSON 바이트가 편집 전과 같아야 함(SourceTimestamp 와 같은 선례).
+	SecurityType string `json:"security_type,omitempty"`
 }
 
 // OrderBookLevel is a single price level (호가) with its resting volume.

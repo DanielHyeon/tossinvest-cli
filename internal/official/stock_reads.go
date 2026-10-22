@@ -72,6 +72,10 @@ func (c *Client) Stocks(ctx context.Context, symbols []string) ([]domain.Quote, 
 //   - status → Status:
 //     WTS stockInfoResult.Status → domain.Quote.Status.
 //
+//   - securityType → SecurityType (a169):
+//     verbatim broker enum (STOCK, ETF, ETN, ...). WTS and /prices never fill it,
+//     so their JSON omits the key.
+//
 //   - Last, Change, Volume, Open/High/Low etc.: not available from /stocks.
 //     Call /prices or /prices+/stocks in combination for full quote.
 //
@@ -88,6 +92,8 @@ func adaptStocks(raw []apiStockInfo) []domain.Quote {
 			Currency:   s.Currency,
 			Status:     s.Status,
 			FetchedAt:  time.Now().UTC(),
+			// a169: 브로커 유형 원문 그대로 — 분류 · 미분류 처리는 소비자 몫
+			SecurityType: s.SecurityType,
 			// Last, Change, Volume, Open/High/Low — not in /stocks
 			// Market (display name) — not in /stocks
 			// ProductCode — not in official stocks endpoint
