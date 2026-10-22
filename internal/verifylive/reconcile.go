@@ -215,14 +215,14 @@ func Reconcile(ctx context.Context, p ReconcileParams) (ReconcileResult, error) 
 	if err != nil {
 		return ReconcileResult{}, err
 	}
-	// a164 골격: 만료 모드는 아직 판정 없이 늘 거절함(tasks 2 머리 — 플래그 없는 경로 불변).
-	if p.Expired {
-		return ReconcileResult{}, refuse(RefuseExpiryEvidenceAbsent, "the expiry mode has no evidence rule yet")
-	}
 
 	// 4. 정적 거절 — Q1·Q3 는 로컬 판정이라 사람 승인 **앞**에서 거절함(A-GREEN P2-a: y 를 누른 뒤에 측정 부재로
-	// 거절당하는 모양 제거). 읽기 뒤의 재검(F7)은 그대로임.
-	if err := checkReconcileRetention(target, now()); err != nil {
+	// 거절당하는 모양 제거). 읽기 뒤의 재검(F7)은 그대로임. 만료 모드(a164 D4·D7)는 Q1 대신 만료 어휘 확정을 봄.
+	if p.Expired {
+		if err := checkReconcileExpiryVocabulary(); err != nil {
+			return ReconcileResult{}, err
+		}
+	} else if err := checkReconcileRetention(target, now()); err != nil {
 		return ReconcileResult{}, err
 	}
 	if reconcileFreshnessBound <= 0 {
@@ -233,6 +233,9 @@ func Reconcile(ctx context.Context, p ReconcileParams) (ReconcileResult, error) 
 	approval := ReconcileApproval{
 		RecordAccountMask: recordMask, CurrentAccountMask: currentMask, AccountCount: p.Account.Count,
 		Kind: target.Kind, ID: target.ID, Symbol: target.Symbol, Market: p.Market,
+	}
+	if p.Expired {
+		approval.Mode = ReconcileModeExpired
 	}
 	if err := approval.WriteText(out); err != nil {
 		return ReconcileResult{}, refuse(RefuseApprovalDisplay, "the approval could not be shown to the operator: "+err.Error())
@@ -247,8 +250,15 @@ func Reconcile(ctx context.Context, p ReconcileParams) (ReconcileResult, error) 
 		return ReconcileResult{}, err
 	}
 
-	// 7. 두 번 읽기 — 창의 시작은 첫 목록 읽기(승인 대기는 창 밖).
+	// 7. 두 번 읽기 — 창의 시작은 첫 목록 읽기(승인 대기는 창 밖). 만료 모드는 창 시작 직후 by-id ① 을, 둘째 목록 읽기
+	// 직후 by-id ② 를 읽음(a164 D4·P3-1 — by-id ① 뒤의 지연도 창 안에서 셈). 대상 id 는 기록이 고른 후보의 바이트.
 	start := now()
+	var byID [2]official.ReconcileConditionalDetail
+	if p.Expired {
+		if byID[0], err = readReconcileByID(ctx, p.Reader, target.ID); err != nil {
+			return ReconcileResult{}, err
+		}
+	}
 	first, err := readReconcileSet(ctx, p.Reader, symbol)
 	if err != nil {
 		return ReconcileResult{}, err
@@ -257,19 +267,29 @@ func Reconcile(ctx context.Context, p ReconcileParams) (ReconcileResult, error) 
 	if err != nil {
 		return ReconcileResult{}, err
 	}
+	if p.Expired {
+		if byID[1], err = readReconcileByID(ctx, p.Reader, target.ID); err != nil {
+			return ReconcileResult{}, err
+		}
+	}
 
-	// 8. 양성 대조 ② · 신선도·Q1 재검(F7).
+	// 8. 양성 대조 ② · 신선도·Q1 재검(F7, 만료 모드는 Q1 없음).
 	if err := checkReconcileInstrument(ctx, p.Reader, symbol); err != nil {
 		return ReconcileResult{}, err
 	}
-	if err := checkReconcileWindow(target, start, now()); err != nil {
+	if err := checkReconcileWindow(target, start, now(), p.Expired); err != nil {
 		return ReconcileResult{}, err
 	}
 
-	// 9. multiset 비교(P1-4).
+	// 9. multiset 비교(P1-4) · 만료 모드는 by-id 두 응답의 분류·필드 일치(A2).
 	basisRows := first.basis()
 	if !sameReconcileMultiset(basisRows, second.basis()) {
 		return ReconcileResult{}, refuse(RefuseReadsDiffer, "the two reads disagree as a multiset of (group, id, status, triggeredOrderId)")
+	}
+	if p.Expired {
+		if err := checkReconcileByIDPair(byID); err != nil {
+			return ReconcileResult{}, err
+		}
 	}
 
 	// 10. 행 검사 — 두 스냅숏 **각각**(codex CG-1: 비교 tuple 에 없는 second·심볼·시장이 둘째 읽기에서만 나타나도
@@ -280,11 +300,18 @@ func Reconcile(ctx context.Context, p ReconcileParams) (ReconcileResult, error) 
 	if err := checkReconcileRows(second, symbol, p.Market); err != nil {
 		return ReconcileResult{}, err
 	}
-	if err := checkReconcileAbsence(first, target); err != nil {
-		return ReconcileResult{}, err
-	}
-	if err := checkReconcileClosedStatus(first); err != nil {
-		return ReconcileResult{}, err
+	if p.Expired {
+		// a164: 생존 판정(A5) → 진술(A3·A4) → 체인(A7) → CLOSED 어휘(A6).
+		if err := checkReconcileExpiry(first, second, byID, target, entries, p.Market); err != nil {
+			return ReconcileResult{}, err
+		}
+	} else {
+		if err := checkReconcileAbsence(first, target); err != nil {
+			return ReconcileResult{}, err
+		}
+		if err := checkReconcileClosedStatus(first); err != nil {
+			return ReconcileResult{}, err
+		}
 	}
 
 	// 11. 추가 준비 — 기록 파일 자체를 잠그고(codex CG-2: 같은 inode 의 다른 대사와 직렬화) 그 fd 로 다시 읽어
@@ -315,13 +342,21 @@ func Reconcile(ctx context.Context, p ReconcileParams) (ReconcileResult, error) 
 	basis := ReconcileBasisDigest(basisRows)
 	at := now()
 	reconciled := target
-	reconciled.ReconciledAbsent = true
 	reconciled.ReconciledAt = at.UTC()
-	line, err := encodeReconcileLine(recordMask, reconciled, basis, start, at)
+	var line []byte
+	if p.Expired {
+		// a164 D5 — 넷째 종결과 만료 근거(목록 multiset + by-id statement 행, 도메인 태그 지문)·출처별 원 status 관측.
+		basis = ReconcileExpiredBasisDigest(basisRows, byID)
+		reconciled.ReconciledExpired = true
+		line, err = encodeReconcileExpiredLine(recordMask, reconciled, basis, first, second, byID, start, at)
+	} else {
+		reconciled.ReconciledAbsent = true
+		line, err = encodeReconcileLine(recordMask, reconciled, basis, start, at)
+	}
 	if err != nil {
 		return ReconcileResult{}, err
 	}
-	if err := checkReconcileWindow(target, start, at); err != nil {
+	if err := checkReconcileWindow(target, start, at, p.Expired); err != nil {
 		return ReconcileResult{}, err
 	}
 

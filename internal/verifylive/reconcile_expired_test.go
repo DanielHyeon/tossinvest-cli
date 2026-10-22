@@ -102,8 +102,24 @@ func rcRequireExpiredLine(t *testing.T, line map[string]any, raw string) {
 	if !reflect.DeepEqual(keys, want) {
 		t.Fatalf("observation keys %v, want %v", keys, want)
 	}
-	if strings.Contains(raw, rcAccount) || line["account_ref"] != rcMask() {
-		t.Fatalf("the line must carry only the record's mask: %s", raw)
+	// 줄은 a131 봉인(account_ref_sealed)으로 쓰인다 — 원문에는 계좌 숫자가 없어야 하고, 연 뒤의 값은 기록의 마스크다.
+	digits := strings.NewReplacer("-", "").Replace(rcAccount)
+	for _, leak := range []string{rcAccount, digits, digits[:len(digits)-4]} {
+		if strings.Contains(raw, leak) {
+			t.Fatalf("the expiry line carries account identity %q beyond the mask: %s", leak, raw)
+		}
+	}
+}
+
+// rcRequireLastLineMask 는 연(봉인 해제) 마지막 줄의 계좌가 기록의 마스크임을 단언한다.
+func rcRequireLastLineMask(t *testing.T, h *rcHarness) {
+	t.Helper()
+	all, err := LoadEntries(h.path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := all[len(all)-1].AccountRef; got != rcMask() {
+		t.Fatalf("the expiry line's account is %q, want the record's mask %q", got, rcMask())
 	}
 }
 
@@ -116,12 +132,14 @@ func TestExpiryReconcileAcceptsTwoStatementsWhenTheClosedListEvictedTheTarget(t 
 		t.Fatalf("result %+v basis %s", res.Artifact, res.Basis)
 	}
 	rcRequireExpiredLine(t, line, raw)
+	rcRequireLastLineMask(t, h)
 }
 
 func TestExpiryReconcileAcceptsTwoStatementsAndAnExpiredClosedRow(t *testing.T) {
 	h := newRCExpiredHarness(t, true)
 	_, line, raw := rcAccept(t, h)
 	rcRequireExpiredLine(t, line, raw)
+	rcRequireLastLineMask(t, h)
 }
 
 // TestExpiryReconcileAcceptsAnotherIdentifiersExpiredClosedRow 는 A6 의 양성 대조다 — 같은 심볼의 다른 EXPIRED 행은 어휘 안.

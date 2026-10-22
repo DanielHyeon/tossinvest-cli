@@ -92,10 +92,13 @@
 
 ## 3. GREEN · REFACTOR
 
-- [ ] 3.1 새 파일 `internal/official/reconcile_detail_reads.go`(by-id 대사 읽기, 엄격 해독) · `ReconcileConditionalRow` 에 `FirstStatus` 한 필드와
+- [x] 3.1 새 파일 `internal/official/reconcile_detail_reads.go`(by-id 대사 읽기, 엄격 해독) · `ReconcileConditionalRow` 에 `FirstStatus` 한 필드와
       `DecodeReconcileConditionalPage` 대입 한 줄(P2-3 — 부재 모드는 읽지 않음) · cmd `reconcileReads` 의 by-id 메서드는 `ensureIdentity` 뒤에만 위임(P2-4)
-- [ ] 3.2 새 파일 `internal/verifylive/reconcile_expired.go`(모드 판정·진술 수집·A3~A7) + 공통 보조 함수 추출(D4 — 부재 모드 순서 불변)
-- [ ] 3.3 `record.go`·`reconcile_record.go`·`projection_reconciled.go`·`report.go`·`reconcile.go`·`reconcile_check.go`·`cmd/tossctl/verify_reconcile.go` 최소 편집
+      — GREEN 2026-10-22 — `ReconcileConditionalDetail` 엄격 해독(required 다섯·nullable 둘·type 형) · silent = 404 + code 정확 일치 · 행 `FirstStatus` 대입 한 줄 · cmd by-id 는 `ensureIdentity` 뒤
+- [x] 3.2 새 파일 `internal/verifylive/reconcile_expired.go`(모드 판정·진술 수집·A3~A7) + 공통 보조 함수 추출(D4 — 부재 모드 순서 불변)
+      — GREEN — `checkReconcileExpiry`(A5 → A3 → A4 → A7 → A6) · `checkReconcileByIDPair`(A2) · 어휘 H5 · 보조 함수 `checkReconcileNoLiveOrder`·`checkReconcileNoFiredTrace` 추출(부재 순서 불변, 1.2 시험 GREEN)
+- [x] 3.3 `record.go`·`reconcile_record.go`·`projection_reconciled.go`·`report.go`·`reconcile.go`·`reconcile_check.go`·`cmd/tossctl/verify_reconcile.go` 최소 편집
+      — GREEN — `Reconcile` 의 `p.Expired` 분기 다섯 · `checkReconcileWindow` 모드 인자 · terminal/MarshalJSON/투영/report/cmd 문구 · Q6 문구(D8). 검증: verifylive·official·cmd 무태그 통과, 같은 셋 `-tags tossos_testseams` 2075 통과, `make lint` rc=0, `openspec validate --strict` rc=0
 - [ ] 3.4 FLM/BTM 재추출 · 분기 수 대조 · `check_analysis.py --change …`
 
 ## 4. 변이 목록(각각 시험이 잡아야 함 — 실행 기록은 `analysis/mutation/`)

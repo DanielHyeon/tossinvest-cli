@@ -57,6 +57,9 @@ var reconcileAllowedOutside = map[string]bool{
 	"(*" + verifylivePath + ".lockedRecord).release":              true,
 	// a131: 엄격 해독 뒤 봉인 계좌 열기 — record.go 소유, 순수(파일은 키 읽기만), 브로커 무관.
 	verifylivePath + ".openRecordEntries": true,
+	// a164 A7: 체인 판정의 기록 투영 둘 — record.go 소유, 순수(entries 만 읽음), 브로커 무관.
+	verifylivePath + ".ChainOf":     true,
+	verifylivePath + ".Outstanding": true,
 }
 
 // reconcileBannedImports 는 표준 라이브러리여도 reconcile*.go 가 import 하면 안 되는 패키지다(A-RED 재검 P2-a) — 직접

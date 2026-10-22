@@ -146,7 +146,7 @@ func DecodeReconcileConditionalPage(result []byte) (ReconcileConditionalPage, er
 		}
 		page.Rows = append(page.Rows, ReconcileConditionalRow{
 			ID: o.ConditionalOrderID, Symbol: o.Symbol, Market: o.Market, Status: o.Status,
-			TriggeredOrderID: o.First.TriggeredOrderID, HasSecond: o.Second != nil,
+			TriggeredOrderID: o.First.TriggeredOrderID, HasSecond: o.Second != nil, FirstStatus: o.First.Status,
 		})
 	}
 	return page, nil

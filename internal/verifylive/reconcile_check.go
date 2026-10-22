@@ -17,8 +17,9 @@ import (
 // reconcileListLimit 는 페이지당 행 수임(design G1 「치르는 값」 — 10 페이지 × 100).
 const reconcileListLimit = 100
 
-// reconcileQ6Message 는 Q6 거절 문구임(design G1-2 · Q6 — 거절 메시지와 문서 양쪽에 적음).
-const reconcileQ6Message = "만료된 artifact 는 이 경로로 영구히 대사되지 않는다"
+// reconcileQ6Message 는 Q6 거절 문구임(design G1-2 · Q6). a164 D8 — 사용자 결정 2026-10-22 (a) 가 「영구히」 를 대체:
+// 부재 대사는 만료 대상을 여전히 거절하고(만료는 부재가 아니라 종결), 브로커가 확인한 만료는 만료 모드로 안내함.
+const reconcileQ6Message = "만료된 artifact 는 부재 대사로 받지 않는다 — 브로커가 확인한 만료는 `--expired` 로 대사한다"
 
 // reconcileOpenFamily 는 OPEN 그룹의 조건주문 status 어휘임 — CLOSED 행에 나오면 그룹과 모순(codex F4).
 var reconcileOpenFamily = map[string]bool{"WATCHING": true, "PAUSED": true, "ORDERING": true, "ORDERED": true}
@@ -132,12 +133,17 @@ func checkReconcileRetention(target Artifact, now time.Time) error {
 	return nil
 }
 
-// checkReconcileWindow 는 Q3 창(첫 목록 읽기 시작부터 지금까지)과 Q1 나이를 다시 잼(codex F7).
-func checkReconcileWindow(target Artifact, start, now time.Time) error {
+// checkReconcileWindow 는 Q3 창(창 시작부터 지금까지)과 Q1 나이를 다시 잼(codex F7).
+// expired 면 Q1 재검을 건너뜀 — 만료 모드는 부재에서 추론하지 않으므로 Q1 을 부르지 않음(a164 D7). 창 시작은 부재 모드는
+// 첫 목록 읽기, 만료 모드는 첫 by-id 읽기 직전(P3-1).
+func checkReconcileWindow(target Artifact, start, now time.Time, expired bool) error {
 	elapsed := now.Sub(start)
 	if elapsed < 0 || elapsed > reconcileFreshnessBound {
 		return refuse(RefuseFreshnessExceeded,
-			fmt.Sprintf("%s elapsed since the first list read — the freshness bound is %s", elapsed, reconcileFreshnessBound))
+			fmt.Sprintf("%s elapsed since the window started (first read) — the freshness bound is %s", elapsed, reconcileFreshnessBound))
+	}
+	if expired {
+		return nil
 	}
 	return checkReconcileRetention(target, now)
 }
@@ -368,14 +374,11 @@ func checkReconcileRows(r reconcileRead, symbol, market string) error {
 
 // --- 부재 검사(OPEN 조건 → 일반 OPEN → CLOSED target → 발동 흔적) --------------------
 
+// checkReconcileAbsence 는 부재 판정임. 생존 판정(OPEN 조건 · 일반 OPEN · 발동 흔적)은 만료 모드와 같은 보조 함수를 부르고
+// (a164 D4 — 한 규칙은 한 자리), 가드 순서(OPEN 조건 → 일반 OPEN → CLOSED target → 발동 흔적)는 a121 그대로임.
 func checkReconcileAbsence(r reconcileRead, target Artifact) error {
-	if len(r.condOpen) > 0 {
-		return refuse(RefuseOpenConditional,
-			fmt.Sprintf("%d open conditional order(s) on the symbol — a live successor may exist under a new identifier", len(r.condOpen)))
-	}
-	if len(r.plainOpen) > 0 {
-		return refuse(RefuseOpenPlainOrder,
-			fmt.Sprintf("%d open plain order(s) on the symbol — a fired child may be resting", len(r.plainOpen)))
+	if err := checkReconcileNoLiveOrder(r); err != nil {
+		return err
 	}
 	for _, row := range r.closed {
 		if row.ID != target.ID {
@@ -387,6 +390,26 @@ func checkReconcileAbsence(r reconcileRead, target Artifact) error {
 		}
 		return refuse(RefuseClosedTargetPresent, "the artifact's identifier is listed in the CLOSED group — it is not absent")
 	}
+	return checkReconcileNoFiredTrace(r)
+}
+
+// checkReconcileNoLiveOrder 는 생존 판정 앞 둘이다 — 같은 심볼의 OPEN 조건주문 0건(정정 후속은 새 id 로 여기 있음)·OPEN 일반
+// 주문 0건(발동한 child 가 호가에 걸려 있음). 두 모드가 같이 부름(a164 D2 위계 — 어떤 증거로도 생략·완화하지 않음).
+func checkReconcileNoLiveOrder(r reconcileRead) error {
+	if len(r.condOpen) > 0 {
+		return refuse(RefuseOpenConditional,
+			fmt.Sprintf("%d open conditional order(s) on the symbol — a live successor may exist under a new identifier", len(r.condOpen)))
+	}
+	if len(r.plainOpen) > 0 {
+		return refuse(RefuseOpenPlainOrder,
+			fmt.Sprintf("%d open plain order(s) on the symbol — a fired child may be resting", len(r.plainOpen)))
+	}
+	return nil
+}
+
+// checkReconcileNoFiredTrace 는 생존 판정 셋째다 — CLOSED 의 **모든** 행(대상 포함)에 발동 흔적(triggeredOrderId · COMPLETED)이
+// 없어야 함. 대상 행을 빼지 않으므로 만료 모드에서 대상이 COMPLETED 면 여기서 closed-fired-trace(a164 P3-5).
+func checkReconcileNoFiredTrace(r reconcileRead) error {
 	for _, row := range r.closed {
 		if row.TriggeredOrderID != "" || row.Status == "COMPLETED" {
 			return refuse(RefuseClosedFiredTrace, "the symbol's CLOSED group holds a fired conditional — a successor may have fired")
@@ -412,7 +435,13 @@ func checkReconcileClosedStatus(r reconcileRead) error {
 // 쓰기 오류를 돌려줌(codex CG-4 — 보이지 않은 승인 내용으로 진행하지 않음).
 func (a ReconcileApproval) WriteText(w io.Writer) error {
 	var b strings.Builder
-	fmt.Fprintf(&b, "대사 대상 (공식 목록 조회 전용 · 기록에 사건 한 줄 추가 · 주문 변경 없음)\n")
+	if a.Mode == ReconcileModeExpired {
+		// a164 P3-6 — 만료 모드는 by-id 상세 조회(계좌 범위 GET) 두 번을 더 하므로 화면이 그것과 모드를 말함.
+		fmt.Fprintf(&b, "만료 대사 대상 (공식 목록 조회 · 조건주문 상세 조회 2회 · 기록에 reconciled expired 사건 한 줄 추가 · 주문 변경 없음)\n")
+		fmt.Fprintln(&b, "  닫는 근거는 이번 실행의 상세 조회 두 번이 이 조건주문을 EXPIRED·미발동으로 이름하는 것뿐이다 — 404·목록 부재는 근거가 아니다.")
+	} else {
+		fmt.Fprintf(&b, "대사 대상 (공식 목록 조회 전용 · 기록에 사건 한 줄 추가 · 주문 변경 없음)\n")
+	}
 	fmt.Fprintf(&b, "  artifact         %s %s (%s, %s)\n", a.Kind, a.ID, a.Symbol, a.Market)
 	fmt.Fprintf(&b, "  기록의 계좌       %s\n", a.RecordAccountMask)
 	fmt.Fprintf(&b, "  현재 자격의 계좌  %s\n", a.CurrentAccountMask)

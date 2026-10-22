@@ -3,7 +3,8 @@ package verifylive
 // projection_reconciled.go — a121 보고 투영: 대사 줄로 종결된 artifact 를 status·report 가 따로 보이게 함.
 // 대사 경로(reconcile*.go)가 아니라 투영 쪽이므로 종결 술어 terminal() 을 그대로 씀(술어는 한 곳).
 
-// ReconciledArtifacts 는 기록이 대사 줄로 종결한 artifact 들임 — status·report 가 "reconciled absent" 로 보임.
+// ReconciledArtifacts 는 기록이 대사 줄로 종결한 artifact 들임 — status·report 가 "reconciled absent" 또는(a164)
+// "reconciled expired" 로 보임.
 // 종결은 단조라 outstandingLines 와 같은 규칙(종결 뒤의 비-종결 줄은 되살리지 않음)으로 마지막 상태를 정함.
 func ReconciledArtifacts(entries []Entry) []Artifact {
 	order := []string{}
@@ -23,7 +24,7 @@ func ReconciledArtifacts(entries []Entry) []Artifact {
 	}
 	var out []Artifact
 	for _, key := range order {
-		if a := latest[key]; a.ReconciledAbsent {
+		if a := latest[key]; a.ReconciledAbsent || a.ReconciledExpired {
 			out = append(out, a)
 		}
 	}

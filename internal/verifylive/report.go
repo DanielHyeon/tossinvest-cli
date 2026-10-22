@@ -300,9 +300,14 @@ func writeReconciled(w io.Writer, arts []Artifact) {
 	if len(arts) == 0 {
 		return
 	}
-	fmt.Fprintf(w, "\n대사로 종결된 객체 %d건 (공식 목록 두 번 읽기의 부재 근거 — 성공한 요청·증명이 아니다):\n", len(arts))
+	fmt.Fprintf(w, "\n대사로 종결된 객체 %d건 (공식 읽기 근거 — 성공한 요청·증명이 아니다):\n", len(arts))
 	for _, a := range arts {
-		fmt.Fprintf(w, "  %s %s (%s) reconciled absent\n", a.Kind, a.ID, a.Symbol)
+		// a164: 부재(목록 두 번 읽기)와 만료(by-id 상세 두 번이 EXPIRED 로 이름)를 갈라 보임.
+		ending := "reconciled absent"
+		if a.ReconciledExpired {
+			ending = "reconciled expired"
+		}
+		fmt.Fprintf(w, "  %s %s (%s) %s\n", a.Kind, a.ID, a.Symbol, ending)
 	}
 }
 

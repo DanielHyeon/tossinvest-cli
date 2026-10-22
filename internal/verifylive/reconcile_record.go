@@ -106,23 +106,25 @@ func ReconcileBasisDigest(rows []ReconcileBasisRow) string {
 
 // MarshalJSON 은 대사된 artifact 만 design 확정형(P2-6)으로 씀 — 취소·체결·보유 필드(영 시각 포함)를 싣지 않음.
 // 대사되지 않은 artifact 는 별칭 타입으로 기존과 바이트 단위로 같게 씀(reconcile_marshal_test.go 가 핀).
+// a164: 넷째 종결(reconciled expired)도 같은 확정형 — 종결 표지 두 필드는 omitempty 라 부재 대사 줄의 바이트는 그대로임.
 func (a Artifact) MarshalJSON() ([]byte, error) {
 	type plainArtifact Artifact
-	if !a.ReconciledAbsent {
+	if !a.ReconciledAbsent && !a.ReconciledExpired {
 		return json.Marshal(plainArtifact(a))
 	}
 	return json.Marshal(struct {
-		Kind             string    `json:"kind"`
-		ID               string    `json:"id"`
-		Symbol           string    `json:"symbol"`
-		CreatedAt        time.Time `json:"created_at"`
-		Cancelled        bool      `json:"cancelled"`
-		Deliberate       bool      `json:"deliberate,omitempty"`
-		ChainID          string    `json:"chain_id,omitempty"`
-		Note             string    `json:"note,omitempty"`
-		ReconciledAbsent bool      `json:"reconciled_absent"`
-		ReconciledAt     time.Time `json:"reconciled_at,omitzero"`
-	}{a.Kind, a.ID, a.Symbol, a.CreatedAt, false, a.Deliberate, a.ChainID, a.Note, true, a.ReconciledAt})
+		Kind              string    `json:"kind"`
+		ID                string    `json:"id"`
+		Symbol            string    `json:"symbol"`
+		CreatedAt         time.Time `json:"created_at"`
+		Cancelled         bool      `json:"cancelled"`
+		Deliberate        bool      `json:"deliberate,omitempty"`
+		ChainID           string    `json:"chain_id,omitempty"`
+		Note              string    `json:"note,omitempty"`
+		ReconciledAbsent  bool      `json:"reconciled_absent,omitempty"`
+		ReconciledExpired bool      `json:"reconciled_expired,omitempty"`
+		ReconciledAt      time.Time `json:"reconciled_at,omitzero"`
+	}{a.Kind, a.ID, a.Symbol, a.CreatedAt, false, a.Deliberate, a.ChainID, a.Note, a.ReconciledAbsent, a.ReconciledExpired, a.ReconciledAt})
 }
 
 // --- 기록 잠금·추가의 오류 표지(record.go 의 lockedRecord 가 돌려주고 대사가 가름) ----------------

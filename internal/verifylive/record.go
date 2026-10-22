@@ -732,12 +732,16 @@ func outstandingLines(entries []Entry) []outstandingLine {
 
 // terminal reports that this line says the object has stopped existing.
 //
-// Three ways, and the difference between them is recorded rather than flattened:
-// this tool cancelled it, it filled, or a reconciliation read established its
-// absence (a121 — reconciled absent, which is neither of the other two). Every
+// Four ways, and the difference between them is recorded rather than flattened:
+// this tool cancelled it, it filled, a reconciliation read established its
+// absence (a121 — reconciled absent, which is neither of the other two), or two
+// by-id reads in one reconciliation named it EXPIRED and untriggered (a164 —
+// reconciled expired). Every
 // consumer of Outstanding asks the same question through this one predicate, so
 // the third ending is honoured by all of them at once.
-func (a Artifact) terminal() bool { return a.Cancelled || a.Filled || a.ReconciledAbsent }
+func (a Artifact) terminal() bool {
+	return a.Cancelled || a.Filled || a.ReconciledAbsent || a.ReconciledExpired
+}
 
 // --- digests ------------------------------------------------------------------
 

@@ -56,6 +56,11 @@ live successor, a fired child, an incomplete or malformed read, and appends one
 'reconciled absent' line to the record only when every condition holds. A DELETE
 404 by itself is never treated as an ending.
 
+With --expired it instead records a broker-confirmed expiry ('reconciled
+expired'): it also reads the artifact by identifier twice and closes it only
+when both reads name it EXPIRED and untriggered, the symbol has no live
+conditional or plain order and no fired trace. A 404 or an absence never closes.
+
 It requires an explicit --config-dir profile (credentials from that profile's
 file, never the environment), an explicit --market, and an interactive y/N
 approval after it shows the record's and the credentials' masked accounts.`),
@@ -116,8 +121,12 @@ func runVerifyReconcile(cmd *cobra.Command, root *rootOptions, opts *verifyRecon
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(out, "\nreconciled absent: %s %s (%s) — 기록 %s\n  근거 %s\n  취소·체결·성공한 요청이 아니다. 실패한 정리 줄은 기록에 그대로 남는다.\n",
-		res.Artifact.Kind, res.Artifact.ID, res.Artifact.Symbol, recordPath, res.Basis)
+	ending := "reconciled absent"
+	if res.Artifact.ReconciledExpired {
+		ending = "reconciled expired"
+	}
+	fmt.Fprintf(out, "\n%s: %s %s (%s) — 기록 %s\n  근거 %s\n  취소·체결·성공한 요청이 아니다. 실패한 정리 줄은 기록에 그대로 남는다.\n",
+		ending, res.Artifact.Kind, res.Artifact.ID, res.Artifact.Symbol, recordPath, res.Basis)
 	return nil
 }
 
@@ -271,7 +280,11 @@ var verifyReconcileApprove = func(ctx context.Context, approval verifylive.Recon
 	if !interactive {
 		return errors.New("stdin is not an interactive terminal — reconciliation is approved by a person at a terminal, never by a pipe")
 	}
-	if _, err := fmt.Fprintf(out, "%s %s 를 reconciled absent 로 기록할까? [y/N] ", approval.Kind, approval.ID); err != nil {
+	ending := "reconciled absent"
+	if approval.Mode == verifylive.ReconcileModeExpired {
+		ending = "reconciled expired" // a164 D1 — 질문이 모드를 이름함
+	}
+	if _, err := fmt.Fprintf(out, "%s %s 를 %s 로 기록할까? [y/N] ", approval.Kind, approval.ID, ending); err != nil {
 		return fmt.Errorf("the approval question could not be shown: %w", err)
 	}
 	type answer struct {
