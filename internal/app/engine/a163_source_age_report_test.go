@@ -286,12 +286,14 @@ func TestA163TheReportComesAfterEveryJudgementAndBeforeTheUnobservedSettlement(t
 	first := f.entry("005930", "10", "70000", "68000", "70000")
 	second := f.entry("000660", "4", "120000", "118000", "120000")
 	_ = f.entry("035420", "5", "200000", "190000", "200000") // 시세 없음 — a090 미관측 줄을 냄
-	f.quote("005930", 70100)
-	f.quote("000660", 117000) // 둘째가 손절선 아래
+	// 둘 다 손절선 아래 — 판정 순서(포지션 id 순)와 무관하게, 첫 보고 순간에 두 청산이 모두 나가 있어야 함.
+	// (한쪽만 손절이면 손절 포지션이 먼저 판정될 때 「순회 안 보고」 변이 ② 가 살아남음 — 변이 원장 첫 판에서 실측.)
+	f.quote("005930", 67000)
+	f.quote("000660", 117000)
 	f.stamps["005930"], f.stamps["000660"] = "", ""
 	f.cycle()
-	if probe.at != 1 {
-		t.Fatalf("submissions at the first report = %d, want 1 — the second position's stop must already be out (safety 4)", probe.at)
+	if probe.at != 2 {
+		t.Fatalf("submissions at the first report = %d, want 2 — every position's stop must already be out (safety 4)", probe.at)
 	}
 	if f.missingAlertsFor(first.ID) != 1 || f.missingAlertsFor(second.ID) != 1 {
 		t.Fatalf("alerts first=%d second=%d, want 1 · 1", f.missingAlertsFor(first.ID), f.missingAlertsFor(second.ID))
