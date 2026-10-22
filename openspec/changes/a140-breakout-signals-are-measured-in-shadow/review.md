@@ -110,3 +110,20 @@ FREEZE: 위 P1 셋을 문서로 닫은 뒤 착수(같은 커밋). 남은 사람 
   → `GATE FAIL: a140-breakout-signals-are-measured-in-shadow — Function Logic Map 산출물 미완료`. 6~11 단계는 돌지 않았다.
 - 원인: a140 은 새 파일만 바꿨지만(FLM not-applicable) base `526637460` 뒤 다른 change 의 커밋 159 개가 창에 들어와 그들이 바꾼 기존 함수 129 개를
   요구한다. 닫으려면 base 재고정(docs/WORKFLOW.md 「사람 승인 base 재고정」)이 필요하고 그것은 사람 승인 사항이다. 4.3 은 열어 둔다.
+
+## 6. base 재고정 — 사람 승인 (2026-10-23)
+
+- **승인**: 사용자 결정(Manager 전달, 2026-10-23) — 「base 재고정 승인」, 그리고 이 change 의 완료 gate
+  (`make gate CHANGE=a140-breakout-signals-are-measured-in-shadow`) 실행 승인. docs/WORKFLOW.md 「사람 승인 base 재고정」 2 항의 기록이 이 절이다.
+- **귀속 실측**(1 항, 범위 `526637460..34e12967e` = 173 커밋, 2026-10-23):
+  - a140 디렉터리를 만진 비병합 커밋 9 중 `.go` 를 고친 것 4 — `e076649d1` · `ac32dc9dc` · `c17d48167`(a140 자신) 과
+    `6f06eee8e`(`fix(verify): exempt TTL edge…` — a144 의 Go 커밋이 a140 tasks.md 2.1 체크를 함께 실었다. 그 Go(`internal/verifylive/m0_recovery.go` ·
+    `cmd/tossctl/verify_test.go`)는 a144 아카이브 번들 `cmd-tossctl--seedverifyrecord` · `internal-verifylive--m0exactprerequisites` ·
+    `internal-verifylive--officialrawforpending` 이 덮는다 — a140 의 작업이 아니다).
+  - a140 디렉터리를 만지지 않은 a140 Go 커밋 1 — `c564a89bf`(`policy.go` 신설 등). 경로 필터(`internal/breakoutsignal` ·
+    `tools/a140-breakout-signal-shadow`)로 찾았다.
+  - a140 Go 커밋 넷(`e076649d1` · `ac32dc9dc` · `c17d48167` · `c564a89bf`)이 만진 파일은 전부 옛 base 에 없던 파일이다
+    (`git ls-tree -r 526637460 -- internal/breakoutsignal tools/a140-breakout-signal-shadow` → 0 줄, `git diff --name-status` 17 줄 전부 `A`).
+    따라서 a140 이 고친 **기존** 함수는 0 이고, fresh 번들로 덮어야 할 대상도 0 이다.
+- 옛 base 에서의 required 129(창 안 형제 커밋 159)는 전부 형제 착지 몫이다(§5).
+- 새 base = 이 기록 커밋. `base-commit.txt` 만 담은 다음 단독 커밋의 메시지가 옛→새 sha 영수증이다(3 항).
