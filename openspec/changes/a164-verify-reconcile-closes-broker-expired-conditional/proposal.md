@@ -45,8 +45,9 @@ artifact 에 한해** 대체한다: 부재(absence) 대사는 여전히 만료 �
 1. `tossctl verify reconcile` 에 **명시 모드 플래그 `--expired`** 를 더한다. 플래그가 없으면 동작은 지금과 바이트 단위로 같다
    (a121 경로 불변 — 끄면 기존 동작, 안전 불변식 3 과 같은 모양).
 2. `--expired` 모드는 같은 사전 검사·계좌 결속·승인·두 번 읽기·행 검사·신선도·잠금·추가 경로를 그대로 쓰고, 판정 하나만 바꾼다:
-   **대상 id 의 종결이 이 실행 안의 공식 GET 으로 `EXPIRED` 라고 양성 확인될 때만** 닫는다. 근거는 by-id 상세 GET 과 CLOSED 목록 행이며
-   404 는 어느 경우에도 근거가 아니다(design D2·D3).
+   **대상 id 의 종결이 이 실행 안의 by-id 상세 GET 두 번으로 `EXPIRED` 라고 양성 확인될 때만** 닫는다. CLOSED 목록 행은 있으면 같은 말을
+   해야 하고 필수는 아니다. 404 는 어느 경우에도 근거가 아니다(design D2·D3, freeze 리뷰 P1-1). 같은 심볼의 생존 판정(A5)은 a121 그대로 —
+   어떤 증거로도 완화하지 않는다.
 3. 닫힘은 기록 끝에 **추가 한 줄**로만 남는다 — 새 종결 필드 `reconciled_expired`(Artifact 의 넷째 종결) · 판정한 원 status · 출처별
    응답 구분 · 시각 · 근거 지문. 기존 줄은 고치지 않는다.
 4. `terminal()` 이 넷째 종결을 존중해 `Outstanding`·`PendingCleanup`·HOLD·노출 상한이 한 번에 따른다. status·report 는
@@ -56,9 +57,10 @@ artifact 에 한해** 대체한다: 부재(absence) 대사는 여전히 만료 �
 ## 비목표
 
 - `M0ExactPrerequisites`(`m0_recovery.go:98`)가 요구하는 이전 단계 PASS(감사상 sell-boundary · conditional-modify · conditional-cancel 의
-  마지막 판정이 fail)를 다루지 않는다. 그것은 실주문 재측정(`verify run --redo …`, 사람 승인)이지 코드가 아니다 — 사람 결정 H2.
-  **그래서 a164 만으로는 `--include-trigger` 가 풀리지 않는다**: cmd `validateM0TriggerMode` 는 B8 `M0ExactPrerequisites`(`verify.go:424`)를
-  B9 미결 검사(`:428`)보다 **먼저** 본다.
+  마지막 판정이 fail)를 다루지 않는다. 그것은 실주문 재측정(`verify run --redo …`, 사람 승인)이지 코드가 아니다 — 사람 결정 H2(확정 2026-10-22).
+  **그래서 a164 만으로는 `--include-trigger` 가 풀리지 않는다**: 기록에 pending-create M0 체크포인트가 **없을 때**(`M0Unsettled` 의 `!ok`, AST
+  `validateM0TriggerMode` B7 `:419`) cmd 는 B8 `M0ExactPrerequisites`(`verify.go:424`)를 B9 미결 검사(`:428`)보다 **먼저** 본다. pending-create
+  체크포인트가 있으면 B8 을 건너뛰고 B9 가 관문이다(freeze 리뷰 P3-2). 결론은 감사가 보고한 전제 fail 셋이 사실일 때 성립한다 — 기록 미열람, 미검증.
 - 부재(absence) 경로의 Q1 보존 측정 — 그대로 미측정·거절.
 - 브로커 변이(취소·정정·등록) 경로 — 0. 대사 리더는 GET 만 노출한다(봉인 시험 갱신).
 - 콘솔 UI 편집 — 닫힌 artifact 는 outstanding 투영에서 빠지는 것으로 충분(a121 S1 과 같은 처분).
