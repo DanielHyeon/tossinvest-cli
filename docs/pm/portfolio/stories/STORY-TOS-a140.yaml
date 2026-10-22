@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a140-breakout-signals-are-measured-in-shadow",
-    "path": "openspec/changes/a140-breakout-signals-are-measured-in-shadow"
+    "path": "openspec/changes/archive/2026-10-22-a140-breakout-signals-are-measured-in-shadow"
   },
   "found_by": {
     "date": "2026-10-15",
     "how": "The 2026-10-14 StockOS gap analysis ranked entry signal producers as P2. CodeGraph 1.6.0 and logic-map AST at HEAD 050d092f showed all eight lane instances run but none has a live producer: production proposals come only from a human-signed manifest pinned by digest in the process environment, nothing in production opens evidence.db for writing, the closed-bar and L1 quote producers have zero production callers, and buildLaneInput refuses every breakout scope because ATR, RVOL, upper-wick and volume-expanded are never computed. Breakout-retest is the only family whose evidence can be built from official data alone, so the first story measures whether it fires before any trust anchor, manifest or Jev seam is built on it.",
-    "record": "openspec/changes/a140-breakout-signals-are-measured-in-shadow/proposal.md"
+    "record": "openspec/changes/archive/2026-10-22-a140-breakout-signals-are-measured-in-shadow/proposal.md"
   },
   "acceptance": [
     "A new pure package internal/breakoutsignal derives the four breakout v1 metrics from a sealed series of stored official closed one-minute bars with integer arithmetic under a named version, refuses with a typed reason when a value cannot be made, and has no production caller",
