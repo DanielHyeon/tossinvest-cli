@@ -170,3 +170,13 @@ verifylive·official·cmd/tossctl `go test` Manager 재실행 PASS) 5.1 의 미�
 | 6 | F3 — design D10 「구 바이너리 = 정리 대상」 부정확(실제로는 다시 보유 — 안전 방향) | **design 문장 정정**(D10 — outstanding·HOLD, 정리 대상 아님, `TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding` 인용) |
 
 코드 변경 0(문서만). 남은 순서: 5.3 신선도 재확인 → 6.x 사람 실기록 대사 → 7.x 게이트·archive(gate·archive 는 6.x 뒤).
+
+## 5.3 sdd-sync 재실행 (2026-10-23, HEAD `34e12967e` = 착지 커밋)
+
+- `make sdd-sync` rc=2(real 6 m 48 s): CodeGraph 「Already up to date」·fingerprint 기록, CodeGraphContext `update` 300 s 시간 초과
+  (`incomplete`, R5 그대로), gbrain 「engine locked during source probe」(advisory).
+- `python3 tools/sdd/check_index_freshness.py` 세 판: ① 출력 「CodeGraph hard-evidence index matches the worktree」(rc 미포착, real 84 s) ·
+  ② rc=1(출력 미포착 — 앞 절의 15 s status 프로브 시간 초과와 같은 환경 사안으로 추정, 미검증) · ③ rc=0, 같은 「matches」 + CGC·gbrain
+  advisory WARN(real 119 s). 재시도 루프는 돌리지 않음.
+- 판정: 착지 커밋 `34e12967e` 에서 CodeGraph fingerprint 신선 확인(③). 프로브는 `/mnt/D` 지연으로 간헐 실패. 이 절을 쓰는 커밋이
+  fingerprint 를 다시 낡게 하므로 gate(7.1) 직전 재동기화가 필요함.

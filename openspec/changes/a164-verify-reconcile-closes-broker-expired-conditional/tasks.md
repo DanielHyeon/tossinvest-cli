@@ -154,7 +154,8 @@
 - [x] 5.2 관련 시험: `go test ./internal/verifylive/ ./internal/official/ ./cmd/tossctl/ -run 'Reconcile|Outstanding|Cleanup|Hold|Report|M0'`
       + `make test-seams` 중 대사 seam · `go vet` · `make lint`. 선택 이유·미실행 범위를 `review.md` 에(전체 시험은 사용자 명시 요청 때만)
       — 무태그 verifylive·official·cmd/tossctl 패키지 전체 통과 · 같은 셋 `-tags tossos_testseams` 2080 통과 · `make lint` rc=0 · `openspec validate --strict` rc=0. 미실행: `make test-seams` 전체(`./...`)·`make test`·`make test-race`·gate — 전체 시험은 사용자 명시 요청 때만(`review.md` 「5.2」)
-- [ ] 5.3 `make sdd-sync` → fingerprint 신선 확인
+- [x] 5.3 `make sdd-sync` → fingerprint 신선 확인
+      — 2026-10-23 착지 커밋 `34e12967e` 에서 `check_index_freshness.py` rc=0(세 판 중 한 판 rc=1, 프로브 지연). CGC incomplete · gbrain advisory. gate 직전 재동기화 필요(`review.md` 「5.3 재실행」)
 
 ## 6. 사람 실행 — 실기록 대사
 
