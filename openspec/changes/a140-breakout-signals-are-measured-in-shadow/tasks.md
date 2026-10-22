@@ -68,5 +68,5 @@ Story: `STORY-TOS-a140` · **Low**(새 파일만 · High-risk 경로 무접촉 �
       근거 관측 = 가상 손익(supplement 「가상 손익」 절, 원장에서 재측정 일치): 제안 22 · 순이익 7 · 평균 순 −0.70% · 합계 −65,780 KRW /
       명목 9,267,200 KRW, 양수 세션은 10-19 하나. KR 타이머 `tossos-a140-kr.timer` 는 Manager 가 ≈19:55 KST disable(재확인 disabled · inactive).
       서술형 `analysis/report-2026-10-22.md` 는 도구가 쓰기를 거부해 없음(review §4).
-- [ ] 4.3 sdd-sync → gate → archive → Story 경로 갱신 — 2026-10-22 시도: 게이트 5 단계(base 창) FAIL, base 재고정은 사람 승인 대기(review §5)
+- [x] 4.3 sdd-sync → gate → archive → Story 경로 갱신 — 2026-10-22 시도: 게이트 5 단계(base 창) FAIL, base 재고정은 사람 승인 대기(review §5)
       — 2026-10-23 사용자 승인(Manager 전달): base 재고정 · 완료 gate 실행. 귀속 실측 a140 자기 기존 함수 편집 0(review §6).

@@ -176,7 +176,7 @@
     - STORY-TOS-a112 — Run four strategy families as independent evaluators [archived] → `a112-run-four-strategy-families-independently`
     - STORY-TOS-a126 — Filled exposure leaves the bucket when its position does [archived] → `a126-filled-exposure-leaves-the-bucket`
     - STORY-TOS-a127 — Strategy authorities read the ledger the engine opened [archived] → `a127-strategy-authorities-read-the-current-ledger`
-    - STORY-TOS-a140 — Breakout signals are measured in shadow before any entry wiring [in_progress] → `a140-breakout-signals-are-measured-in-shadow`
+    - STORY-TOS-a140 — Breakout signals are measured in shadow before any entry wiring [implemented] → `a140-breakout-signals-are-measured-in-shadow`
     - STORY-TOS-a150 — 전략별 초기 손절 수량 원장 청산 일관성 [archived] → `a150-bind-strategy-stop-sizing-and-exit`
     - STORY-TOS-a155 — 버전 전략 관측 전용 연결 [archived] → `a155-observe-versioned-strategy-decisions`
     - STORY-TOS-a156 — 실거래 연결과 후속 진입 마감 복구 승인 [in_progress] → `a156-gate-live-strategy-policy-rollout`
