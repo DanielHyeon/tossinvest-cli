@@ -135,9 +135,10 @@ func TestReconcileRefusesTheTargetFoundInClosed(t *testing.T) {
 	rcRefuse(t, h, RefuseClosedTargetPresent)
 }
 
-// TestReconcileRefusesTheTargetExpiredInClosedAndNamesTheExpiryMode 는 Q6 이다 — 부재 대사는 만료 대상을 여전히 거절하고,
-// 그 문구는 a164 D8 대로 「부재가 아니라 종결」 과 `--expired` 를 말한다(사용자 결정 2026-10-22 (a) 가 「영구히」 를 대체).
-func TestReconcileRefusesTheTargetExpiredInClosedAndNamesTheExpiryMode(t *testing.T) {
+// TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage 는 Q6 이다 — 부재 대사는 만료 대상을 여전히 거절한다.
+// a164 D8: 문구는 이제 「영구히」 가 아니라 「부재가 아니라 종결」 과 `--expired` 를 말한다(사용자 결정 2026-10-22 (a)).
+// 이름은 FLM 증거 연속성 때문에 a121 그대로 둔다 — 옛 이름의 「Permanent」 는 a121 당시 문구를 가리킨다.
+func TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage(t *testing.T) {
 	h := newRCHarness(t, rcA063Entries())
 	h.reader.set(-1, ReconcileGroupConditionalClosed, rcCondPage("", false, rcCondRow(rcTargetID, "EXPIRED")))
 	r := rcRefuse(t, h, RefuseClosedTargetExpired)

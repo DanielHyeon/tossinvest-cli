@@ -127,11 +127,6 @@ func (p *seamLockProbe) ReconcileInstrument(ctx context.Context, symbol string) 
 	return symbol, nil
 }
 
-func (p *seamLockProbe) ReconcileConditionalOrder(ctx context.Context, id string) (official.ReconcileConditionalDetail, error) {
-	p.probe()
-	return official.ReconcileConditionalDetail{}, fmt.Errorf("seam probe: no by-id read in absence mode")
-}
-
 // TestReconcileHoldsTheExecutionLockAndRateBudgetThroughTheReads 는 tasks 2.4.1 셋째 요구다 — 명령은 `verify run` 과
 // 같은 배제(실행 flock + rate-budget lease)를 쥔 채 읽고 추가한다.
 func TestReconcileHoldsTheExecutionLockAndRateBudgetThroughTheReads(t *testing.T) {

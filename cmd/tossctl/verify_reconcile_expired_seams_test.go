@@ -122,3 +122,9 @@ func TestExpiryReconcileCommandAppendsWithOnlyGetReadsAndLeavesProofsUnchanged(t
 		t.Fatalf("expiry reconciliation changed the supervised proofs\nbefore %+v\nafter  %+v", proofsBefore, proofsAfter)
 	}
 }
+
+// ReconcileConditionalOrder 는 a164 넷째 리더 메서드다 — 부재 모드 seam 시험은 부르지 않아야 하므로 오류로 답한다.
+func (p *seamLockProbe) ReconcileConditionalOrder(ctx context.Context, id string) (official.ReconcileConditionalDetail, error) {
+	p.probe()
+	return official.ReconcileConditionalDetail{}, fmt.Errorf("seam probe: no by-id read in absence mode")
+}

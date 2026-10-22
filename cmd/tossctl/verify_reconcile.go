@@ -257,15 +257,6 @@ func (r *reconcileReads) ReconcileInstrument(ctx context.Context, symbol string)
 	return r.client.ReconcileInstrument(ctx, symbol)
 }
 
-// ReconcileConditionalOrder 는 by-id 상세 GET 임(a164). 계좌 범위 읽기라 다른 두 메서드처럼 신원 재확인 뒤에만 위임함(P2-4) —
-// 만료 모드에서는 이것이 첫 계좌 범위 호출이므로 Accounts 재조회가 그보다 먼저 옴.
-func (r *reconcileReads) ReconcileConditionalOrder(ctx context.Context, id string) (official.ReconcileConditionalDetail, error) {
-	if err := r.ensureIdentity(ctx); err != nil {
-		return official.ReconcileConditionalDetail{}, err
-	}
-	return r.client.ReconcileConditionalOrder(ctx, id)
-}
-
 // verifyReconcileTerminal 은 기본 승인이 읽고 쓰는 단말임 — 시험이 바꿔 끼움. 대화형 판정은 실제 tty 여부
 // (term.IsTerminal)임: 파이프·리다이렉트·/dev/null(문자 장치지만 tty 아님)은 비대화형.
 var verifyReconcileTerminal = func() (in io.Reader, out io.Writer, interactive bool) {

@@ -276,21 +276,6 @@ func (r *rcFakeReader) ReconcileInstrument(ctx context.Context, symbol string) (
 	return symbol, nil
 }
 
-// ReconcileConditionalOrder 는 a164 by-id 상세 읽기다 — byID 가 n 번째(0 부터) 응답을 정한다. nil 이면 오류(부재 모드 시험은
-// 이 메서드를 부르지 않아야 한다).
-func (r *rcFakeReader) ReconcileConditionalOrder(ctx context.Context, id string) (official.ReconcileConditionalDetail, error) {
-	r.record(rcCall{Kind: "by-id", Symbol: id})
-	r.mu.Lock()
-	n := r.byIDN
-	r.byIDN++
-	fn := r.byID
-	r.mu.Unlock()
-	if fn == nil {
-		return official.ReconcileConditionalDetail{}, fmt.Errorf("fake: unscripted by-id read %d", n)
-	}
-	return fn(n, id)
-}
-
 func (r *rcFakeReader) listCalls() []rcCall {
 	r.mu.Lock()
 	defer r.mu.Unlock()
