@@ -167,3 +167,4 @@
 | `a168-verify-read-decode-hardening` | STORY-TOS-a168 | in_progress |
 | `a169-breakout-universes-are-compared-in-shadow` | STORY-TOS-a169 | in_progress |
 | `a170-inspection-guard-reconciles-offline-assessment` | STORY-TOS-a170 | in_progress |
+| `a171-entry-place-ambiguous-resend` | STORY-TOS-a171 | in_progress |
