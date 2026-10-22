@@ -158,5 +158,5 @@
 | `a159-verify-offline-protection-restart-contract` | STORY-TOS-a159 | archived |
 | `a160-read-consistent-campaign-continuation-state` | STORY-TOS-a160 | archived |
 | `a161-preserve-offline-campaign-plan-risk-state` | STORY-TOS-a161 | archived |
-| `a163-quote-freshness-uses-trade-time` | STORY-TOS-a163 | in_progress |
+| `a163-quote-freshness-uses-trade-time` | STORY-TOS-a163 | archived |
 | `a164-verify-reconcile-closes-broker-expired-conditional` | STORY-TOS-a164 | in_progress |

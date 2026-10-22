@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a163-quote-freshness-uses-trade-time",
-    "path": "openspec/changes/a163-quote-freshness-uses-trade-time"
+    "path": "openspec/changes/archive/2026-10-22-a163-quote-freshness-uses-trade-time"
   },
   "found_by": {
     "date": "2026-10-21",
     "how": "a087 tasks 0.5 의 AST 열거가 공식 adaptPrices 가 /prices 의 timestamp 를 버리고 FetchedAt 에 수신 시각(time.Now)을 넣는다는 것을 보였다. 청산 루프의 15초 신선도 검사는 체결 나이가 아니라 응답 수신 나이를 잰다. 사용자는 2026-10-21 방향 A(기록·보고만, 손절 판정 불변)와 H1~H7 권장안을 승인했다.",
-    "record": "openspec/changes/a163-quote-freshness-uses-trade-time/proposal.md"
+    "record": "openspec/changes/archive/2026-10-22-a163-quote-freshness-uses-trade-time/proposal.md"
   },
   "acceptance": [
     "공식 가격 어댑터가 /prices 행의 timestamp 를 받은 시각과 별도인 브로커 데이터 시각으로 보존하고, null·누락·해독 불가는 오류 없이 0 값으로 두며 로컬 시계로 메우지 않는다",

@@ -179,3 +179,13 @@ Pre-Edit Gate:
 
 - I5 · I6 · I7 은 `engine.exit_source_age_report` 를 켤 때만 생긴다. 토글 flip 은 사람의 행동이고(안전 7), 이 셋에 대한 사람 결정 없이 켜지
   않도록 `issues.md` 잔여와 `STORY-TOS-a163` 의 `limits` 에 적었다.
+
+### 완료 게이트 — 2026-10-22
+
+- `make sdd-sync`(격리 worktree `/tmp/tossos-a163-impl-20261022`, HEAD `0f72ee61b`): 첫 실행은 CodeGraphContext advisory 가 300 s 시한 초과(incomplete) →
+  관례대로 1회 재실행 rc=0. `check_index_freshness.py` 「CodeGraph hard-evidence index matches the worktree」(CGC WARN 없음).
+- `make gate CHANGE=a163-quote-freshness-uses-trade-time` → **GATE PASS, 11/11, rc=0** (HEAD `0f72ee61b`, 재실행 없음).
+  - 1 `OK: openspec/changes/a163-quote-freshness-uses-trade-time/tasks.md` · 2 `OK: 미완료 태스크 0건` · 3 `OK: 짝 선언 없음 — 이 change 는 혼자 배포한다` ·
+    4 `OK: …/review.md` · 5 `required 12 function(s)` · 창의 다른 change 커밋 20 · `evidence complete or diff-proven exempt` → `OK: Function Logic Map` ·
+    6 `OK: make sdd-check` · 7 `OK: make test` · 8 `OK: make test-seams` · 9 `OK: make test-race` · 10 `OK: make vet` · 11 `OK: make validate`.
+  - 7 · 8 단계에서 `internal/performance` p95 시험도 이번엔 통과(시작 부하 9.25/10.83/10.63).

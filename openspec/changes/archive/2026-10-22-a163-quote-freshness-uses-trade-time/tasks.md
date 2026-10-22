@@ -186,5 +186,7 @@
       — `issues.md` I11(+ I5~I10)
 ## 6. 확정
 
-- [ ] 6.1 archive · Story 경로 갱신 · PM `--check`
-- [ ] 6.2 검증된 학습만 memory retain(시세 값·계좌 정보 금지)
+- [x] 6.1 archive · Story 경로 갱신 · PM `--check`
+      — 완료 게이트 PASS 뒤 같은 닫는 로트에서 archive · Story `openspec.path` 갱신 · tracker 재생성 · PM `--check`(관례: 체크 → tracker → sdd-sync → gate → archive; 결과는 `review.md` 「완료 게이트」)
+- [x] 6.2 검증된 학습만 memory retain(시세 값·계좌 정보 금지)
+      — Hindsight bank `tossos-dev-episodes` 에 교훈 넷(pre-flip 결정은 Story limits 에 · 순서 시험의 판정 순서 의존 · 원문 길이 상한 · gate 2단계와 6.x 체크 순서). 시세 값 · 계좌 정보 0
