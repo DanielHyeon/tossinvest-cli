@@ -1,0 +1,62 @@
+{
+  "file": "internal/execgw/roundtrip.go",
+  "source_sha256": "face1097e68e93a098a6e8b0e9dd7961f559ad59a526ec140f2835222f90e255",
+  "package": "execgw",
+  "function": "roundTripFor",
+  "receiver": "Gateway",
+  "signature": "Gateway.roundTripFor(params=1, results=1)",
+  "start": {
+    "line": 71,
+    "column": 1
+  },
+  "end": {
+    "line": 78,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 72,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 73,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 76,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 10
+      },
+      "text": "g.confirmCreatedOrder"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,147 @@
+{
+  "file": "internal/official/errors.go",
+  "source_sha256": "5f9cc4baf967a604a7382e6904679caf8f42ea51438854b9efe1261872ab7627",
+  "package": "official",
+  "function": "classifyStatus",
+  "signature": "classifyStatus(params=2, results=1)",
+  "start": {
+    "line": 39,
+    "column": 1
+  },
+  "end": {
+    "line": 61,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 50,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 51,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 53,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 55,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 57,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 59,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 6
+      },
+      "text": "reIPWord.Match"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 21
+      },
+      "text": "bytes.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 11
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 38
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

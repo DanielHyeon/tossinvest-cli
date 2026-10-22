@@ -7,7 +7,7 @@
 - [x] 0.3 `make sdd-sync` 후 CodeGraph hard evidence(`Gateway.Place`·`Cancel`·`Amend`·`submit`·`classifyMutation`·`Client.send` 의
   callers/callees/impact)와 `analysis/code-context/` 증거 조정 3파일. — codegraph 1.6.0, `raw/` 원문, CGC 는 다른 체크아웃(advisory 불가).
 - [x] 0.4 FLM/BTM: 위 함수와 design 이 고르는 접수 조회 함수, 그리고 `withStrategyEntryGateAuthority`(클로저 호출 횟수) — High-risk, 면제 없음. — 9 번들(`analysis/function-logic/`, 생성기 `analysis/measure/gen_flm.py`), `check_analysis.py --change` rc=0.
-- [ ] 0.4.1 (1.3 S8/A10) 추가 번들: 조회 경로(`Resolver.scanBoth`·`ScanOrders`·`newMatcher`·`parseOrderFacts`), `unwrapAndDecode`, `tokenManager.refresh`, `refusalCodes`, `trading.Service.Cancel`, D7 의 `ExitObserver.ObserveOnce`·`clearTheSymbol`·`Saga` 루프·`resolveStep`·`Resolver.resolveCancel`.
+- [x] 0.4.1 (1.3 S8/A10) 추가 번들: 조회 경로(`Resolver.scanBoth`·`ScanOrders`·`newMatcher`·`parseOrderFacts`), `unwrapAndDecode`, `tokenManager.refresh`, `refusalCodes`, `trading.Service.Cancel`, D7 의 `ExitObserver.ObserveOnce`·`clearTheSymbol`·`Saga` 루프·`resolveStep`·`Resolver.resolveCancel`. — 2차 결정으로 범위가 줄어 남는 범위가 기대는 14 번들을 만들었다(classifyStatus·doRequest·unwrapAndDecode·tokenManager.refresh·refusalCodes·parseOrderFacts·newMatcher·matcher.matches·roundTripFor·DispatchVerified·Service.Cancel·Saga.settleStep·classifyCancel·clearTheSymbol). ObserveOnce·Saga sell 루프·resolveCancel 은 청산 place·엔진 같은 주기 재시도가 범위 밖이 되어 not-applicable. 합계 23 번들, `check_analysis.py --change` rc=0.
 
 ## 1. 계약 (design freeze)
 
