@@ -220,14 +220,14 @@ func TestRunRequiresConfigDirBeforeNetwork(t *testing.T) {
 	if err := os.WriteFile(ledger, []byte(j2Line("KR", "000001", "2026-10-23T01:00:00Z", j2Question)+"\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	err := run("KR", "2026-10-23", "", ledger, dir, 0, 0, false)
+	err := run("KR", "2026-10-23", "", ledger, dir, 0, 0, false, false)
 	if err == nil || !strings.Contains(err.Error(), "--config-dir is required") {
 		t.Fatalf("got %v", err)
 	}
 	if _, statErr := os.Stat(filepath.Join(dir, "minute-bars")); !os.IsNotExist(statErr) {
 		t.Fatal("no receipt directory may be created")
 	}
-	if err := run("KR", "2026-10-24", "", ledger, dir, 0, 0, true); err == nil {
+	if err := run("KR", "2026-10-24", "", ledger, dir, 0, 0, true, false); err == nil {
 		t.Fatal("an empty list must be an error, not an empty receipt")
 	}
 }

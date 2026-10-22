@@ -385,7 +385,21 @@
       추가(`TestRunRequiresConfigDirBeforeNetwork`, 6/6 PASS — 가드 제거 변이는 실제 자격증명·네트워크에 닿을 수 있어 돌리지 않음) ·
       토큰 캐시 공유가 의도임을 주석에 명시(엔진·a128 타이머와 같은 `~/.config/tossctl`; 만료 시 POST /token 이 유일한 비-GET, 주문 아님) ·
       count 상한 주석 · 거절 요청은 `fetches` 에만 남고 평가기는 `bars` 만 읽어 「봉 없음 → 결측」으로 셈 — 사전등록 3절 규칙과 같아 그대로 둠.
-- [ ] 6.6 유형 영수증 — `analysis/d2-receipts/security-types.json`. a169(tossctl `securityType` 노출) 뒤에 붙임. 그 전에는 전부 「미분류」.
+- [x] 6.6 유형 영수증 도구 — `tools/a128-d2-receipts --types`(a169 `064f67297` 의 `domain.Quote.SecurityType` 위). `official.Client.Stocks`
+      로 D2 목록 중 **아직 적히지 않은 종목만** 200 개씩 GET(날짜당 보통 1 호출), 원문 enum 그대로 `analysis/d2-receipts/security-types.json`
+      의 `types` 에 덧붙임(앞 값 불변·재질의 없음). securityType 빈 값·응답에서 빠진 종목 = null(평가기 「미분류」)이고 `runs` 에
+      `empty_type`/`not_in_response` 로 갈라 기록. 429 = 재시도 없이 멈추고 파일 무변경(rc 2). 쓰기는 임시 파일 + fsync + rename.
+      파일 형식은 `{"prereg","source","types":{sym: enum|null},"runs":[…]}` 래퍼 — 사전등록 7절 문구(`{"<symbol>": "<securityType>"}` 와
+      조회 시각·호출 수)의 구조화 표기이며 평가기 `d2_load_receipts` 는 평면·래퍼 둘 다 읽음(6.5).
+      시험(httptest): STOCK·ETF·ETN·REIT 원문 · 키 누락(빈 값) · 응답 누락 · 재실행 시 새 종목만 · 전부 아는 종목이면 호출 0 · 429 무재시도·
+      파일 무변경 · 201 종목 = 2 묶음 · 깨진 기존 파일 = 묻기 전 오류·무변경 → 패키지 10/10 PASS, vet·gofmt 깨끗. 변이(-overlay, 대조군 ok):
+      재질의 거름 제거 · 429 분기 제거 · 묶음 201 · 빈 값 저장 · runs 덮어쓰기 = 5/5 CAUGHT; 「nil 일 때만 대입」은 새 종목만 오므로 동등 변이.
+      실측(06:25 KST, 읽기 전용, 스크래치 출력, 10-22 목록 KR 30·US 30, 각 1 호출): STOCK 35 · ETF 23 · DEPOSITARY_RECEIPT 2, 미분류 0,
+      **ETN 0 건**(미실측 그대로). US ETF 도 `FOREIGN_ETF` 가 아니라 `ETF` 로 옴(GDX·IWM·LQD·SOXL·TLT·TQQQ·TSLL·XLI·XLK·XOP).
+      평가기 대조: 같은 파일을 `d2_load_receipts` 로 읽어 60 종목 전부 `D2_TYPE_GROUP` 대응과 일치(STOCK 35 · ETF 23 · 기타 2).
+      경량 리뷰(리뷰어 1): 0🔴 3🟡 1❓ 1🔵 → fsync 추가 · 빈 값/응답 누락 구분 기록 · 깨진 파일 시험 추가(수리); 파일 잠금 없음·묶음 사이 쉼
+      없음은 `shortcut:` 주석(실행은 Manager 지시로 한 번에 하나, 목록 30 종목 = 묶음 1); 래퍼 형식(❓)은 위처럼 유지.
+      실행: 분봉과 같은 시각에 `go run ./tools/a128-d2-receipts --market <KR|US> --date <날짜> --types --config-dir ~/.config/tossctl`.
 - [ ] 6.7 일별 영수증 실행·커밋 — 2026-10-23 KR(15:30 KST 뒤)부터 창 끝까지. 사람 또는 Manager 가 위 명령으로.
 - [x] 6.5 리뷰 — 경량(비례 원칙, 리뷰어 1 — 정적 대조 + `--self-test`): 0🔴 5🟡 1❓, 전부 수리(`fix(a128)` 커밋):
       (1) `index_pct` 가 이상한 `market_context` 에서 예외 → 기존 네 팔 적재까지 죽을 수 있음 → 타입 검사·숫자 아님 = None;

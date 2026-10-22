@@ -2,8 +2,10 @@
 //
 //	go run ./tools/a128-d2-receipts --market KR --date 2026-10-23 --config-dir ~/.config/tossctl
 //	go run ./tools/a128-d2-receipts --market KR --date 2026-10-23 --dry-run   # 목록·요청 계획만, 네트워크 없음
+//	go run ./tools/a128-d2-receipts --market KR --date 2026-10-23 --types --config-dir ~/.config/tossctl  # 유형 영수증
 //
-// 출력: <out>/minute-bars/<MARKET>-<YYYY-MM-DD>.json (기본 out = a128 change 의 analysis/d2-receipts).
+// 출력: <out>/minute-bars/<MARKET>-<YYYY-MM-DD>.json, --types 면 <out>/security-types.json 에 덧붙임
+// (기본 out = a128 change 의 analysis/d2-receipts).
 // --config-dir 는 필수이고 엔진·a128 타이머와 **같은** ~/.config/tossctl 을 줌 — 같은 토큰 캐시를 함께 써야 함.
 // 빠지면 기본 캐시(~/.cache/tossctl)로 새 토큰을 따로 받아 엔진 토큰을 무효화함(a082 토큰 전쟁, 2026-10-19 실측).
 // 토큰이 만료돼 있으면 공식 클라이언트가 POST /token 으로 새로 받음 — 이 도구의 유일한 비-GET 요청(주문 아님).
@@ -16,6 +18,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
@@ -37,8 +40,9 @@ func main() {
 	gap := flag.Duration("gap", 300*time.Millisecond, "pause between calls")
 	maxSymbols := flag.Int("max-symbols", 0, "only the first N listed symbols (0 = all; for retention checks)")
 	dryRun := flag.Bool("dry-run", false, "print the list and the call plan, no network")
+	types := flag.Bool("types", false, "collect securityType for the list into <out>/security-types.json instead of minute bars")
 	flag.Parse()
-	if err := run(*market, *date, *configDir, *ledger, *out, *gap, *maxSymbols, *dryRun); err != nil {
+	if err := run(*market, *date, *configDir, *ledger, *out, *gap, *maxSymbols, *dryRun, *types); err != nil {
 		fmt.Fprintln(os.Stderr, "a128-d2-receipts:", err)
 		if errors.Is(err, errRateLimited) {
 			os.Exit(2)
@@ -47,7 +51,7 @@ func main() {
 	}
 }
 
-func run(market, date, configDir, ledgerPath, out string, gap time.Duration, maxSymbols int, dryRun bool) error {
+func run(market, date, configDir, ledgerPath, out string, gap time.Duration, maxSymbols int, dryRun, types bool) error {
 	day, err := time.Parse("2006-01-02", date)
 	if err != nil {
 		return fmt.Errorf("--date: %w", err)
@@ -72,7 +76,8 @@ func run(market, date, configDir, ledgerPath, out string, gap time.Duration, max
 		return fmt.Errorf("no %s 10:00-round J2 judgments on %s in the ledger; nothing to fetch", market, date)
 	}
 	if dryRun {
-		view := map[string]any{"market": market, "date": date, "symbols": symbols, "calls": len(symbols) * len(plans), "plans": plans}
+		view := map[string]any{"market": market, "date": date, "symbols": symbols, "calls": len(symbols) * len(plans), "plans": plans,
+			"types_calls": (len(symbols) + stocksBatchMax - 1) / stocksBatchMax}
 		body, _ := json.MarshalIndent(view, "", "  ")
 		fmt.Println(string(body))
 		return nil
@@ -94,6 +99,16 @@ func run(market, date, configDir, ledgerPath, out string, gap time.Duration, max
 	client := official.New(*credentials, tokenFile)
 	ctx, cancel := context.WithTimeout(context.Background(), runBudget)
 	defer cancel()
+	if types {
+		path := filepath.Join(out, "security-types.json")
+		tr, err := updateTypes(ctx, client, path, market, date, symbols, time.Now)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("updated %s: listed %d, queried %d, calls %d, unclassified %d %v\n",
+			path, len(symbols), len(tr.Queried), tr.Calls, len(tr.Unclassified), tr.Unclassified)
+		return nil
+	}
 	rc, err := collect(ctx, client, market, date, symbols, plans, gap, sleepCtx, time.Now)
 	if err != nil {
 		return err
