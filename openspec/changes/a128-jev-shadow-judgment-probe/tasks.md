@@ -366,7 +366,27 @@
       입력(J2 12540 · 라벨 34020 · state 12540, 두 로더의 state 키 집합 동일 단언)에 돌림: in-sample `84698390a0f6ac7f`(2858B) · out-of-sample
       `d4bb2e48262c1a40`(2419B) · calibrate-x `399e4fb3ee1f5e9e`(270B) 전부 IDENTICAL. 음성 대조: KR 비용 0.0050→0.0051 사본은 in/out-of-sample
       DIFFERENT(calibrate-x 는 비용 무관이라 IDENTICAL — 예상대로). 하네스 `analysis/prereg_eval_compare.py`(같은 출력으로 재실행 확인).
-- [ ] 6.4 영수증 도구 — 유형(`securityType`, a169 뒤)·지난 시각 1분봉(`before` 지원 읽기 전용 조회) 수집 방법과 호출 수(D11 예산) 기록.
+- [x] 6.4 분봉 영수증 도구 — `tools/a128-d2-receipts/`(사용자 2026-10-23 권장안 채택). 위치 이유: 선례 `tools/a112-l1c-quote-probe`,
+      `go vet/test ./...` 가 tools/ 를 덮고, change 디렉터리는 아카이브 때 경로가 옮겨짐. 생산 코드 변경 0 — `internal/official`
+      `StrictMinuteCandles`(엄격 리더, 봉 시각 = **닫는** 시각, `before` 포함 상한) 재사용. 원장에서 D2 목록(현지 10:00:00≤at<10:10:00 J2)을
+      읽고 종목당 2 호출(KR: before 10:00 count 6 / before 14:10 count 76; US: before 11:00 ET count 66 / before 14:00 ET count 66)로
+      [T−5분, T] 봉만 남겨 `analysis/d2-receipts/minute-bars/<MARKET>-<date>.json` 에 씀(덮어쓰기 거절, 호출 수·소요 시간·본문 지문 기록).
+      429 = 재시도 없이 멈추고 파일 없음(rc 2), 엄격 계약 거절 = 그 요청만 기록하고 계속, 전송·인증 오류 = 멈춤. `--config-dir` 필수.
+      시험(fake 소스): `go test -count=1 ./tools/a128-d2-receipts/` 5/5 PASS, `go vet` 깨끗, gofmt 깨끗. 변이(-overlay, 무변이 대조군 ok):
+      창 −5→−6분 · 429 계속 · 거절 시 멈춤 · O_EXCL→O_TRUNC · count +6→+5 · 잘린 마지막 줄 무조건 건너뜀 = 6/6 CAUGHT; UTC 날짜→현지 날짜
+      변이는 살아남음 — 현지 10:00 은 두 시장 모두 UTC 날짜와 같아 동등 변이.
+      실측(2026-10-23 06시대 KST, 읽기 전용, `--max-symbols 1`, 스크래치 출력): KR 10-22·10-16·10-14, US 10-22·10-15 모두 rc 0, 요청마다
+      `ok`, 봉 18(KR)·24(US) 남김, 실행당 0.5~0.8초 → **공식 API 는 최소 9일 전(KR 10-14) 1분봉을 줌**(상한은 미측정). 같은 봉의 영수증
+      종가와 state 봉 종가 대조: 10-16 공통 12 · 10-22 공통 6, 불일치 0(시각 의미 일치). 측정 호출 10 회.
+      실행 명령(공유 트리 루트에서, 읽기 전용): KR 은 15:30 KST 뒤 `go run ./tools/a128-d2-receipts --market KR --date <KST 날짜>
+      --config-dir ~/.config/tossctl`, US 는 다음 날 05:00 KST(서머타임 해제 뒤 06:00) 뒤 `--market US --date <개장일>`. 시장·날짜당
+      약 60 호출(목록 30 × 2). 매일 수집 타이머는 운영 변경이라 만들지 않음 — 제안만(KR 15:40 · US 06:10 KST 평일, `Persistent=false`).
+      경량 리뷰(리뷰어 1, 읽기 전용 + go test/vet): 0🔴 4🟡 1❓ 1🔵 → 처분: 쓰기 실패 시 부분 파일 삭제(수리) · `--config-dir` 가드 시험
+      추가(`TestRunRequiresConfigDirBeforeNetwork`, 6/6 PASS — 가드 제거 변이는 실제 자격증명·네트워크에 닿을 수 있어 돌리지 않음) ·
+      토큰 캐시 공유가 의도임을 주석에 명시(엔진·a128 타이머와 같은 `~/.config/tossctl`; 만료 시 POST /token 이 유일한 비-GET, 주문 아님) ·
+      count 상한 주석 · 거절 요청은 `fetches` 에만 남고 평가기는 `bars` 만 읽어 「봉 없음 → 결측」으로 셈 — 사전등록 3절 규칙과 같아 그대로 둠.
+- [ ] 6.6 유형 영수증 — `analysis/d2-receipts/security-types.json`. a169(tossctl `securityType` 노출) 뒤에 붙임. 그 전에는 전부 「미분류」.
+- [ ] 6.7 일별 영수증 실행·커밋 — 2026-10-23 KR(15:30 KST 뒤)부터 창 끝까지. 사람 또는 Manager 가 위 명령으로.
 - [x] 6.5 리뷰 — 경량(비례 원칙, 리뷰어 1 — 정적 대조 + `--self-test`): 0🔴 5🟡 1❓, 전부 수리(`fix(a128)` 커밋):
       (1) `index_pct` 가 이상한 `market_context` 에서 예외 → 기존 네 팔 적재까지 죽을 수 있음 → 타입 검사·숫자 아님 = None;
       (2) 모듈 최상단 `ZoneInfo` → tzdata 없는 환경에서 기존 팔도 import 실패 → `d2_tz()` 지연 생성;
