@@ -37,14 +37,30 @@ Story: `STORY-TOS-a140` · **Low**(새 파일만 · High-risk 경로 무접촉 �
 
 ## 3. 측정 (D9 — 기본 KR 5 세션)
 
-- [ ] 3.1 KR 세션 실행(에이전트 가능 — read-only GET). 실행 전 호출 예산 기본값 사람 승인(D11)
-- [ ] 3.2 라벨러 완주 확인(마지막 PROPOSED 의 마감까지)
-- [ ] 3.3 원장 커밋(계좌 데이터 0 확인 후, evidence DB 는 커밋하지 않고 digest 만)
+- [x] 3.1 KR 세션 실행(에이전트 가능 — read-only GET). 실행 전 호출 예산 기본값 사람 승인(D11)
+      — 유효 KR 세션 **5/5**(10-16 · 19 · 20 · 21 · 22): 5 세션 모두 공식 달력 출처 · 판(lot) 하나(`…3ff46b8b`) · 종목 30 ·
+      세션 끝 요약 행 · 제안 전부 라벨 · MINUTE_GAP 0(`analysis/report-2026-10-22-supplement.txt` 「세션 유효성」). 10-19 의 두 프로세스
+      (`/tmp/a140-kr-1019.log` 09:55:33 KST `context canceled` → `1019b` 09:57:50 재시작)는 design §2.1-6 재시작 경로로 세션 키 · universe 행 ·
+      요약 행이 각 하나인 **한 세션**(정지 ≈2.5 분은 폴 하한 5 분이 소급 적재, 정지 자체의 결손 행은 없음). D11 승인 = review §1 일괄 승인
+      「권장대로」 D1~D15(커밋 `526637460`, 2026-10-15 16:26 KST — 첫 실행 10-16 08:40 KST 전). D11 단독 영수증은 없다(10-20 reconciliation 의
+      「receipt 없음」은 그것). 실측 봉 GET 평균 0.27~0.45/s — D11(0.5/s) 안.
+- [x] 3.2 라벨러 완주 확인(마지막 PROPOSED 의 마감까지) — PROPOSED 22 · 라벨 22 · 미라벨 0 · 고아 0. 5 세션 모두 요약 행이 마감 + 라벨 유예
+      30 분(06:59Z ≈ 15:59 KST)에 있고 10-22 프로세스는 종료(pgrep 0).
+- [x] 3.3 원장 커밋(계좌 데이터 0 확인 후, evidence DB 는 커밋하지 않고 digest 만) — 원장 sha256 `0b802a92…40c`(654 행). 계좌 · 잔고 · 보유 ·
+      주문 ID · 토큰 · 키 패턴 0 건(행 종류는 universe · signal · label · gap · budget · session 뿐, 종목 · 시장 가격 · 가상 수량 · 설정 한도 출처 경로만).
+      evidence DB sha256 `772e4ff8…6765`(72,622,080 B) — `analysis/report-2026-10-22-tool.txt` 머리에 기록, 커밋 안 함.
+
+> **2026-10-22 measurement close.** 위 3.1~3.3. 2026-10-20 note 는 그 시점(2/5 세션) 기록으로 남긴다.
 
 > **2026-10-20 read-only reconciliation.** Current canonical ledger has closed KR sessions 2/5 plus one ongoing key, 14 completed labels total, and no preserved D11 approval receipt. Tasks 3.1–3.3 remain open. Details: `analysis/reconciliation-2026-10-20.md` and the paired JSON. This does not substitute for a128 market-by-market measurement or a human D16 decision.
 
 ## 4. 판정 · 종결
 
-- [ ] 4.1 보고서 — 세션별 퍼널 · 거절 분포 · RVOL 반사실 · 제안 수 · 결과 분포(n<30 보류) · 호출 예산 실측
+- [x] 4.1 보고서 — 세션별 퍼널 · 거절 분포 · RVOL 반사실 · 제안 수 · 결과 분포(n<30 보류) · 호출 예산 실측
+      — 도구 보고서 원문 `analysis/report-2026-10-22-tool.txt`(`go run ./tools/a140-breakout-signal-shadow report`) + 보조 집계
+      `analysis/report-2026-10-22-supplement.txt`(`analysis/report_supplement.py` — 세션 유효성 · 예산 · R 구간 · RVOL 종목-세션 기준).
+      요지: 종목-세션 150 → 돌파 74 → PROPOSED 22(세션당 2~7) · 종결 timed_out 44 · invalidated 6 · armed_expired 2. 결과 close 17 · stop 3 ·
+      target 2 — n=22<30 판 합계 판정 보류. RVOL 1.2× 근접 0(낮춰도 표본 불변) · 2.0× 이면 제안 13 · 2.5× 이면 7. 결손 55 행(봉 401 41 ·
+      호가 401 4 · 교차 호가 bid>ask 거절 10). design §6 의 「수집 시간 > 간격 절반 WARNING」은 도구에 구현 없음(10 분 창 199 중 4 초과) — 기록만.
 - [ ] 4.2 사람 결정 기록 — S4(엔진 증거 생산) 착수 여부 · breakout 지표 판본 유지/수정 · 다른 가족 검토 여부
 - [ ] 4.3 sdd-sync → gate → archive → Story 경로 갱신

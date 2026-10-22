@@ -1,0 +1,65 @@
+# receipt: go run ./tools/a140-breakout-signal-shadow report (HEAD 2592ba059, go1.26.5, 2026-10-22 KST) — ledger sha256 0b802a928ee956dcfd229a5089e642785c6d9bf99b874b5e4f6a3ae805ee740c
+# evidence DB (not committed): ~/.local/state/tossos-a140/shadow-evidence.sqlite sha256 772e4ff8506dfa6e12d56851c6325f1793cec71e663e43fd2a08bee138fd6765 bytes 72622080 mtime 2026-10-22 15:59:06 KST (no -wal/-shm)
+# a140 breakout 그림자 신호 보고서
+
+한계: 가상 사이징(손절 = opening range 저점 · 목표 = 순 RR 1.5)이라 평가기의 RR 거절은 **구성상 공허**하다. 체결 가능성(호가 잔량)은
+재지 않았다. 결과 판정(승률 · 평균 R)은 표본 n<30 이면 **보류**한다. 판정은 사람이 한다.
+
+## KRX:2026-10-16
+
+- 종목 30 · 퍼널(가장 멀리 간 단계): RANGE_LOCKED 8 · RETEST_WAIT 15 · ARMED 0 · PROPOSED 7
+- 종결: invalidated 1 · proposed 7 · timed_out 14
+- 거절 코드(행 기준): FIRST_TOUCH_FORBIDDEN 15
+- RVOL 반사실(돌파 이상 종목): 1.2× 22 · 2.0× 14 · 2.5× 9
+- 제안 7(ARMED 시도 7) · 라벨 7: close 7
+- 결과 판정: 보류(n<30 — n=7)
+- 결손: bars official bars poll: 33 · quote official bars poll: 4
+- 호출 예산(그룹별 GET 합): MARKET_DATA 81 · MARKET_DATA_CHART 8049 · MARKET_INFO 1 · RANKING 1 · 10 분 창 수집 시간 최대 324.7 초
+
+## KRX:2026-10-19
+
+- 종목 30 · 퍼널(가장 멀리 간 단계): RANGE_LOCKED 4 · RETEST_WAIT 18 · ARMED 1 · PROPOSED 7
+- 종결: armed_expired 1 · invalidated 1 · proposed 7 · timed_out 17
+- 거절 코드(행 기준): ENTRY_DRIFT_EXCEEDED 5 · FIRST_TOUCH_FORBIDDEN 15 · QUOTE_STALE 1 · SPREAD_TOO_WIDE 1
+- RVOL 반사실(돌파 이상 종목): 1.2× 26 · 2.0× 12 · 2.5× 7
+- 제안 7(ARMED 시도 14) · 라벨 7: close 6 · target 1
+- 결과 판정: 보류(n<30 — n=7)
+- 결손: bars official bars poll: 8 · quote official bars poll: 4
+- 호출 예산(그룹별 GET 합): MARKET_DATA 135 · MARKET_DATA_CHART 6818 · MARKET_INFO 2 · RANKING 1 · 10 분 창 수집 시간 최대 254.5 초
+
+## KRX:2026-10-20
+
+- 종목 30 · 퍼널(가장 멀리 간 단계): RANGE_LOCKED 26 · RETEST_WAIT 1 · ARMED 0 · PROPOSED 3
+- 종결: proposed 3 · timed_out 1
+- 거절 코드(행 기준): ENTRY_DRIFT_EXCEEDED 1 · FIRST_TOUCH_FORBIDDEN 5 · SPREAD_TOO_WIDE 1
+- RVOL 반사실(돌파 이상 종목): 1.2× 4 · 2.0× 1 · 2.5× 0
+- 제안 3(ARMED 시도 5) · 라벨 3: close 1 · stop 1 · target 1
+- 결과 판정: 보류(n<30 — n=3)
+- 결손: quote official bars poll: 3
+- 호출 예산(그룹별 GET 합): MARKET_DATA 76 · MARKET_DATA_CHART 11392 · MARKET_INFO 1 · RANKING 1 · 10 분 창 수집 시간 최대 327.8 초
+
+## KRX:2026-10-21
+
+- 종목 30 · 퍼널(가장 멀리 간 단계): RANGE_LOCKED 17 · RETEST_WAIT 9 · ARMED 1 · PROPOSED 3
+- 종결: armed_expired 1 · invalidated 2 · proposed 3 · timed_out 7
+- 거절 코드(행 기준): ENTRY_DRIFT_EXCEEDED 4 · FIRST_TOUCH_FORBIDDEN 14 · SPREAD_TOO_WIDE 1
+- RVOL 반사실(돌파 이상 종목): 1.2× 13 · 2.0× 8 · 2.5× 5
+- 제안 3(ARMED 시도 8) · 라벨 3: close 3
+- 결과 판정: 보류(n<30 — n=3)
+- 결손: 없음
+- 호출 예산(그룹별 GET 합): MARKET_DATA 76 · MARKET_DATA_CHART 8937 · MARKET_INFO 1 · RANKING 1 · 10 분 창 수집 시간 최대 359.0 초
+
+## KRX:2026-10-22
+
+- 종목 30 · 퍼널(가장 멀리 간 단계): RANGE_LOCKED 21 · RETEST_WAIT 7 · ARMED 0 · PROPOSED 2
+- 종결: invalidated 2 · proposed 2 · timed_out 5
+- 거절 코드(행 기준): FIRST_TOUCH_FORBIDDEN 9
+- RVOL 반사실(돌파 이상 종목): 1.2× 9 · 2.0× 8 · 2.5× 4
+- 제안 2(ARMED 시도 2) · 라벨 2: stop 2
+- 결과 판정: 보류(n<30 — n=2)
+- 결손: quote official bars poll: 3
+- 호출 예산(그룹별 GET 합): MARKET_DATA 70 · MARKET_DATA_CHART 9514 · MARKET_INFO 1 · RANKING 1 · 10 분 창 수집 시간 최대 295.8 초
+
+## 판(lot) 합계
+
+- a140-effective-policy/v1@sha256:3ff46b8b0f7648c6008ed7a3ae463a9262af26fe1c1cc74267d97b26417101ff: 라벨 22 — 결과 판정 보류(n<30)

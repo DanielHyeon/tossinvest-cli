@@ -1,0 +1,35 @@
+# receipt: python3 -I openspec/changes/a140-breakout-signals-are-measured-in-shadow/analysis/report_supplement.py (2026-10-22 KST)
+ledger sha256 0b802a928ee956dcfd229a5089e642785c6d9bf99b874b5e4f6a3ae805ee740c · rows 654 · bytes 410670
+sessions 5 · lots 1
+
+## 세션 유효성
+- KRX:2026-10-16: VALID · calendar=True · one_lot=True · universe30=True · session_summary=True · all_proposals_labeled=True · no_minute_gap=True · first 2026-10-16T00:00:30Z · last 2026-10-16T06:59:10Z · proposed 7 · labeled 7
+- KRX:2026-10-19: VALID · calendar=True · one_lot=True · universe30=True · session_summary=True · all_proposals_labeled=True · no_minute_gap=True · first 2026-10-19T00:00:30Z · last 2026-10-19T06:59:09Z · proposed 7 · labeled 7
+- KRX:2026-10-20: VALID · calendar=True · one_lot=True · universe30=True · session_summary=True · all_proposals_labeled=True · no_minute_gap=True · first 2026-10-20T00:00:30Z · last 2026-10-20T06:59:07Z · proposed 3 · labeled 3
+- KRX:2026-10-21: VALID · calendar=True · one_lot=True · universe30=True · session_summary=True · all_proposals_labeled=True · no_minute_gap=True · first 2026-10-21T00:00:30Z · last 2026-10-21T06:59:07Z · proposed 3 · labeled 3
+- KRX:2026-10-22: VALID · calendar=True · one_lot=True · universe30=True · session_summary=True · all_proposals_labeled=True · no_minute_gap=True · first 2026-10-22T00:00:30Z · last 2026-10-22T06:59:06Z · proposed 2 · labeled 2
+
+## 호출 예산 실측
+- KRX:2026-10-16: 10분 창 40 · CHART GET 8049 · MARKET_DATA GET 81 · 수집 시간 중앙 144.2s · 최대 324.7s · 300s(창의 절반) 초과 창 1
+- KRX:2026-10-19: 10분 창 39 · CHART GET 6818 · MARKET_DATA GET 135 · 수집 시간 중앙 95.3s · 최대 254.5s · 300s(창의 절반) 초과 창 0
+- KRX:2026-10-20: 10분 창 40 · CHART GET 11392 · MARKET_DATA GET 76 · 수집 시간 중앙 196.0s · 최대 327.8s · 300s(창의 절반) 초과 창 1
+- KRX:2026-10-21: 10분 창 40 · CHART GET 8937 · MARKET_DATA GET 76 · 수집 시간 중앙 148.9s · 최대 359.0s · 300s(창의 절반) 초과 창 2
+- KRX:2026-10-22: 10분 창 40 · CHART GET 9514 · MARKET_DATA GET 70 · 수집 시간 중앙 129.8s · 최대 295.8s · 300s(창의 절반) 초과 창 0
+
+## 결과 분포 (판정 아님)
+- 라벨 n=22 · close 17 · stop 3 · target 2
+- R 구간: R<=-0.5 9 · -0.5<R<0 6 · 0<=R<0.5 2 · R>=0.5 5
+
+## RVOL 반사실(종목-세션, 어느 행에서든)
+- 종목-세션 150 · 돌파 74 · 돌파 못 한 것 중 1.2× 근접 0
+- 1.2x: 돌파 74 · 그 중 PROPOSED 22
+- 2.0x: 돌파 44 · 그 중 PROPOSED 13
+- 2.5x: 돌파 26 · 그 중 PROPOSED 7
+
+## ARMED 시도 결과(시도 행 기준)
+- ENTRY_DRIFT_EXCEEDED 10 · PROPOSED 22 · QUOTE_STALE 1 · SPREAD_TOO_WIDE 3
+
+## 결손 행(단계 · 코드)
+- bars READER_ERROR 41
+- quote QUOTE_ENVELOPE_REFUSED 10
+- quote QUOTE_READER_ERROR 4
