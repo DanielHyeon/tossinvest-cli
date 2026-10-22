@@ -46,3 +46,61 @@
 - production 편집 0. FLM/BTM 번들은 구현 로트 1.1(면제 아님). Function Logic Map: not-applicable — 이 로트는 문서뿐이고 분기 주장은
   `analysis/ast/enumerate-output.md` 의 B 번호로만 함.
 - 미검증 잔여: 원 응답 키 존재(C1) · 공식 OPEN 일반 주문 목록(C4 — 6.2 실행이 처음 판정) · 기록의 ChainID·M0 체크포인트·전제 fail 셋.
+
+## 구현 로트 1 — 함수 내부 증거 · Pre-Edit (2026-10-22, worktree `a164-impl` @ `aec9bde67`)
+
+### 1.1 FLM/BTM 번들
+
+`analysis/function-logic/` 13 번들 — 편집 대상 11(`Reconcile` · `checkReconcileAbsence` · `checkReconcileWindow` · `ReconcileApproval.WriteText` ·
+`Artifact.terminal` · `Artifact.MarshalJSON` · `ReconciledArtifacts` · `writeReconciled` · `DecodeReconcileConditionalPage` · `newVerifyReconcileCmd` ·
+`runVerifyReconcile`) + 근거 대상 2(`readReconcileSet` · `reconcileReads.ensureIdentity` — 편집 없음, 설계 주장 A1·P2-4 의 근거).
+BTM 의 시험 칸은 손으로 고르지 않았다: 시험 함수 279 개를 하나씩 `-coverprofile` 로 돌려 분기 본문 블록이 실행된 시험만 적었다
+(`analysis/measure/` — `pertest.sh` · `btm_cov.py` · `gen_flm.py` · `notes.json` · `btm-cov-base.json`). `check_analysis.py --change …` rc=0.
+
+- `encodeReconcileLine`: design FLM 대상 목록에 있었으나 **편집하지 않음** — 만료 줄은 새 함수 `encodeReconcileExpiredLine`(새 파일)이 씀.
+  Function Logic Map: not-applicable — 기존 함수 무편집.
+- `verifyReconcileApprove`: Function Logic Map: not-applicable — 패키지 변수에 담긴 함수 리터럴이라 `tools/logic-map` 이 찾지 못함
+  (`function "verifyReconcileApprove" not found`). 편집은 질문 문구의 모드 라벨 하나. 행동 시험: 기존 `TestReconcileDefaultApproval*` 셋 +
+  새 만료 모드 질문 시험(2.7).
+- 측정이 드러낸 기존 공백(행동 시험 0): `Reconcile` B1~B4(생산 호출자가 늘 채우는 nil 기본값) · B24 · B27(사실상 도달 불가) · B28 · B29 · B31,
+  `ensureIdentity` B2, `runVerifyReconcile` B1·B5, `DecodeReconcileConditionalPage` B3. 각 번들의 「Required test」 칸에 사유.
+
+### 1.2 부재 모드 불변 고정
+
+편집 전 새 시험 둘(`internal/verifylive/reconcile_a164_absent_test.go`) — 기준선에서 GREEN:
+`TestReconcileAbsenceGuardsRefuseInTheirContractOrder`(네 가드가 겹친 입력에서 하나씩 벗김 → open-conditional → open-plain-order →
+closed-target-expired → closed-fired-trace) · `TestReconcileRefusesAtTheWriteBoundaryGateItself`(B29 행동 — 넷째 `now()` 에서만 창 초과).
+기존 a121 시험(`reconcile_g1/g2/g3/codex/structure/green/rollback/projection/seal_test.go`)은 기준선 634 전부 통과.
+
+### 1.3
+
+design R3 에 기록 — 성공 응답 requestId 는 클라이언트가 노출하지 않음(`client.go:213-227` `unwrapAndDecode`), statement 는 `result` 바이트 지문.
+
+### 1.4 Pre-Edit Gate
+
+```text
+Pre-Edit Gate:
+- change id / task id: a164-verify-reconcile-closes-broker-expired-conditional / 2.x·3.x
+- 대상 심볼: verifylive.Reconcile · checkReconcileAbsence(A5 보조 함수 추출) · checkReconcileWindow(모드 인자) ·
+  ReconcileApproval.WriteText · Artifact.terminal · Artifact.MarshalJSON · ReconciledArtifacts · writeReconciled ·
+  official.DecodeReconcileConditionalPage · cmd newVerifyReconcileCmd · runVerifyReconcile · verifyReconcileApprove(문구) ·
+  타입 Artifact(필드 ReconciledExpired) · ReconcileConditionalRow(FirstStatus) · ReconcileReader(메서드 하나) · ReconcileParams(Expired) ·
+  ReconcileApproval(Mode). 새 파일: internal/verifylive/reconcile_expired.go · internal/official/reconcile_detail_reads.go
+- CodeGraph definition/callers/callees/impact: analysis/code-context/evidence-reconciliation.md 「0.9 재확인」 · codegraph-affected-0.9.txt(1,208)
+- CodeGraphContext 후보와 evidence reconciliation: CGC incomplete·옛 체크아웃(R5) — advisory 미반영, HEAD grep 으로 대조
+- 기존 동작 파악 근거: HEAD aec9bde67 · FLM 13 번들 · 시험별 coverage 279 · 기준선 스위트 verifylive 634 / official 455 / cmd Reconcile 62 통과
+- Function Logic Map / Branch Test Map: analysis/function-logic/ (위 1.1), not-applicable 둘은 사유 위
+- upstream 상속 테스트 영향: no — verify reconcile 은 TossOS 고유(a121). 부재 모드 시험 전부 무수정 통과가 회귀 기준(Q6 문구 시험 하나는 D8 로 문구만 갱신)
+- 실패 테스트 선행 작성: yes — 골격 커밋(만료 모드 = 늘 expiry-evidence-absent) 뒤 RED, 단언에서 실패 확인
+- 설정·DB·journal 변경과 rollback: 없음 — 검증 기록(jsonl)에 additive omitempty 필드 하나·새 StepID. 구 바이너리는 그 줄을 비-종결로 읽음(D10)
+- 안전 불변식 §0 위반 여부 검토: 통과 — 주문·취소·정정 경로 편집 0, 리더는 GET 만(봉인 시험 갱신), 새 공식 GET 2회는 기존 lease 안(D6),
+  토글·운영 설정 변경 0, 실기록 대사 실행은 사람(6.2)
+```
+
+구현 결정(설계 안의 선택, safe local — design 의도 명백):
+
+- 만료 모드는 `Reconcile` 안의 `p.Expired` 분기로 넣는다. 잠금·재해독·한 번의 쓰기는 한 벌만(복사 금지 — 구조 핀 셋이 그 한 벌을 고정).
+- D4 의 「만료 어휘 확정」 정적 거절 코드가 design 에 이름이 없어 `expiry-vocabulary-unfixed` 로 둠(Q3 의 `freshness-unfixed` 와 같은 모양).
+- 어휘 값: top-level 은 `EXPIRED` 단일 비교(A4), leg 어휘 `reconcileExpiryLegVocabulary = {EXPIRED}`, A6 CLOSED 어휘
+  `reconcileExpiryClosedVocabulary = {EXPIRED}` — H5(OpenAPI enum ∩ 0.6 영수증). 영수증 사본은 `internal/verifylive/testdata/` 에 두고 골든 시험이 대조
+  (change 디렉터리는 archive 때 옮겨지므로 시험이 그 경로를 읽지 않게).

@@ -33,17 +33,22 @@
       — 2026-10-22 독립 적대 리뷰 APPROVE-WITH-CHANGES(P0 0 · P1 1 · P2 6 · P3 6, 원문 `analysis/freeze-review-2026-10-22.md`).
       같은 날 문서 로트로 13건 전부 반영(처분표 `review.md`). 답: 생존 판정은 A5 하나가 짊어진다 — A5 가 서 있는 한 살아 있는 조건주문을
       닫는 입력 순서는 리뷰가 찾지 못함. P1-1 로 by-id silent + CLOSED 수락 갈래를 거절로 바꿈
-- [ ] 0.9 편집 착수 직전 `make sdd-sync` → 0.5 질의 재실행 · `evidence-reconciliation.md` 갱신(fingerprint 신선)
+- [x] 0.9 편집 착수 직전 `make sdd-sync` → 0.5 질의 재실행 · `evidence-reconciliation.md` 갱신(fingerprint 신선)
+      — 2026-10-22 worktree `a164-impl`: CodeGraph fingerprint 기록, affected 1,208(`analysis/codegraph-affected-0.9.txt`), CGC incomplete(R5)
 
 ## 1. 함수 내부 증거 (편집 전, 면제 없음)
 
-- [ ] 1.1 FLM/BTM 번들 — design 「FLM/BTM 대상」의 기존 함수 전부(`scaffold_analysis.py` → `ast.json` · `function-logic-map.md` ·
+- [x] 1.1 FLM/BTM 번들 — design 「FLM/BTM 대상」의 기존 함수 전부(`scaffold_analysis.py` → `ast.json` · `function-logic-map.md` ·
       `branch-test-map.md` · `risk-pattern-report.md`). `verifyReconcileApprove` 가 logic-map 에 안 잡히면 `Function Logic Map: not-applicable`
       사유 + 행동 시험
-- [ ] 1.2 부재 모드 불변 고정 — 플래그 없는 실행의 거절 코드·순서를 기존 시험(`reconcile_g1/g2/g3/codex/structure_test.go`)으로 확인하고,
+      — 13 번들, BTM 은 시험별 coverage 측정(review.md 「구현 로트 1」), `check_analysis.py` rc=0
+- [x] 1.2 부재 모드 불변 고정 — 플래그 없는 실행의 거절 코드·순서를 기존 시험(`reconcile_g1/g2/g3/codex/structure_test.go`)으로 확인하고,
       빠진 갈래가 있으면 편집 **전에** 시험을 더해 GREEN 으로 둔다
-- [ ] 1.3 `official` 클라이언트가 성공 응답 requestId 를 노출하는지 코드로 확정(design D5 R3) — 없으면 응답 `Digest` 로 대신함을 design 에 적음
-- [ ] 1.4 Pre-Edit 선언(`review.md`)
+      — 새 시험 둘 기준선 GREEN(review.md 1.2)
+- [x] 1.3 `official` 클라이언트가 성공 응답 requestId 를 노출하는지 코드로 확정(design D5 R3) — 없으면 응답 `Digest` 로 대신함을 design 에 적음
+      — 노출 안 함, design R3
+- [x] 1.4 Pre-Edit 선언(`review.md`)
+      — review.md 「1.4 Pre-Edit Gate」
 
 ## 2. RED
 

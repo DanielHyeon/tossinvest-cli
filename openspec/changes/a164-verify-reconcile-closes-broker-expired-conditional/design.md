@@ -222,7 +222,9 @@ cmd `validateM0TriggerMode`: B3 `M0Unsettled` → B7(`!ok`) 안에서 B8 `M0Exac
   freeze 리뷰 P2-3 수리로 by-id 와 CLOSED 행 **둘 다** `first.status` 를 만료 leg 어휘로 검사하므로, leg 가 `ORDERED`/`COMPLETED` 인 경우는 거절된다 —
   남는 것은 top-level·leg 가 모두 `EXPIRED` 인데 child 가 체결된 계약 밖 응답뿐.
 - R2. 정정된 옛 id 가 장기적으로 `EXPIRED` 로 다시 보일 가능성 — M19·M40 은 「즉시 404」만 쟀다. A5·A7 이 부분적으로 덮는다.
-- R3. 성공 응답 requestId 노출 여부 미확인(D5).
+- R3. 성공 응답 requestId — **1.3 확정(2026-10-22, 구현 로트)**: 노출하지 않는다. `Client.send` → `unwrapAndDecode`(`internal/official/client.go:213-227`)가
+  봉투에서 `result` 만 풀고 나머지(요청 id 포함)를 버린다. 그래서 by-id statement 는 `result` 원문 바이트의 지문(`sha256:` + 16바이트 절단, `DigestBytes` 와
+  같은 규칙)을 관측에 적는다. silent(404) 는 이 change 의 증거 규칙(A3)상 줄을 쓰지 않으므로 본문 requestId 는 거절 문구에만 남긴다.
 - R4. a164 는 `--include-trigger` 를 풀지 않는다(D9).
 - R5. CodeGraphContext 색인이 이 체크아웃을 못 본다(`analysis/code-context/cgc-find.txt` — a121 심볼 0건, 옛 경로) — advisory 미반영.
 - R6. 감사 사실(08-13 EXPIRED, 404 네 번)은 이 로트에서 재현하지 않았다(proposal 「미검증」).
