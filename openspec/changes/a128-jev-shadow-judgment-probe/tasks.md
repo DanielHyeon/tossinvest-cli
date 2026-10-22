@@ -367,4 +367,12 @@
       `d4bb2e48262c1a40`(2419B) · calibrate-x `399e4fb3ee1f5e9e`(270B) 전부 IDENTICAL. 음성 대조: KR 비용 0.0050→0.0051 사본은 in/out-of-sample
       DIFFERENT(calibrate-x 는 비용 무관이라 IDENTICAL — 예상대로). 하네스 `analysis/prereg_eval_compare.py`(같은 출력으로 재실행 확인).
 - [ ] 6.4 영수증 도구 — 유형(`securityType`, a169 뒤)·지난 시각 1분봉(`before` 지원 읽기 전용 조회) 수집 방법과 호출 수(D11 예산) 기록.
-- [ ] 6.5 리뷰 — 경량 gstack review(비례 원칙).
+- [x] 6.5 리뷰 — 경량(비례 원칙, 리뷰어 1 — 정적 대조 + `--self-test`): 0🔴 5🟡 1❓, 전부 수리(`fix(a128)` 커밋):
+      (1) `index_pct` 가 이상한 `market_context` 에서 예외 → 기존 네 팔 적재까지 죽을 수 있음 → 타입 검사·숫자 아님 = None;
+      (2) 모듈 최상단 `ZoneInfo` → tzdata 없는 환경에서 기존 팔도 import 실패 → `d2_tz()` 지연 생성;
+      (3) 유형 영수증이 `{"types": …}` 래퍼만 읽어 문서 7절의 평면 맵이면 조용히 전부 미분류 → 둘 다 받음;
+      (4) 중간 집계 반환값에 판정이 실림 → `verdict=None`, `interim` 칸으로 분리;
+      (5) 지수 값·관측 차이(분)를 계산만 하고 보고 안 함(4절·9.4) → 날짜별 줄(지수·차이·n·날짜 평균) 출력;
+      (❓) 같은 회차 중복 판단 → 시각 첫 행(원장 순서 무관), 목록 없는 날 → `<시장>:no_list_dates` 로 셈.
+      수리 뒤 `--self-test` rc=0, 새 변이 7/7 CAUGHT(시각 정렬 제거 · 목록 없는 날 집계 제거 · 평면 맵 거부 · 중간 판정 노출 · 숫자 아님→0.0 ·
+      차이 상한 30분 · US 자정 넘김 제거). 6.3 대조 재실행(편집 판 f9bf92e5…, 입력 J2 12570): 세 출력 sha256 동일 IDENTICAL.
