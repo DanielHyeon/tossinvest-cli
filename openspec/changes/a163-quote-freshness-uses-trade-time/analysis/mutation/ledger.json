@@ -1,6 +1,6 @@
 {
- "head": "aeeea2c02cc013332b175b116eed24c73164ea8b",
- "copy": "/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/1711ae2d-4cc3-48b0-97b1-c0fa1bb7c4da/scratchpad/a163-mutation-331771",
+ "head": "ff232b3cf29530a59567ae917d2c27392ada547a",
+ "copy": "/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/1711ae2d-4cc3-48b0-97b1-c0fa1bb7c4da/scratchpad/a163-mutation-1199441",
  "control": [
   {
    "pkg": "./cmd/tossctl/",
@@ -64,7 +64,19 @@
   },
   {
    "pkg": "./internal/app/engine/",
+   "run": "TestA163EveryBucketIsClassifiedFromTheReceiptTime",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
    "run": "TestA163IdentityAndObservedAtComeFromTheReceiptNotTheBrokerTime|TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows",
    "rc": 0,
    "failed": ""
   },
@@ -77,6 +89,12 @@
   {
    "pkg": "./internal/app/engine/",
    "run": "TestA163TheProductionAssemblyReadsTheLoadedToggle",
+   "rc": 0,
+   "failed": ""
+  },
+  {
+   "pkg": "./internal/app/engine/",
+   "run": "TestA163TheRawBrokerTimeIsBoundedPrintableAndValidUTF8",
    "rc": 0,
    "failed": ""
   },
@@ -272,7 +290,7 @@
      "pkg": "./internal/app/engine/",
      "run": "TestA163AMissingOrMalformedBrokerTimeJudgesTheSame",
      "rc": 1,
-     "failed": "PANIC in -run TestA163AMissingOrMalformedBrokerTimeJudgesTheSame: panic: test timed out after 15m0s"
+     "failed": "PANIC in -run TestA163AMissingOrMalformedBrokerTimeJudgesTheSame: panic: test timed out after 4m0s"
     }
    ],
    "verdict": "CAUGHT"
@@ -534,6 +552,96 @@
      "run": "TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn|TestA163TheReportToggleIsReadOnlyWhereTheDesignAllows|TestA163AStaleBrokerTimeStillLiquidatesInTheSameCycle",
      "rc": 1,
      "failed": "TestA163AStaleBrokerTimeStillLiquidatesInTheSameCycle,TestA163TheReportToggleIsReadOnlyWhereTheDesignAllows,TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "㉓",
+   "why": "거둔 패닉의 고정 문구 줄 삭제(흔적 없는 패닉)",
+   "file": "internal/app/engine/exit_source_age.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops",
+     "rc": 1,
+     "failed": "TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops,TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops/alerter_panics"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "㉔",
+   "why": "고정 문구 줄 래치 삭제(매 주기 같은 줄)",
+   "file": "internal/app/engine/exit_source_age.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops",
+     "rc": 1,
+     "failed": "TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops,TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops/alerter_panics"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "㉕",
+   "why": "미래(ahead) 구간도 알림 사유로",
+   "file": "internal/app/engine/exit_source_age.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163EveryBucketIsClassifiedFromTheReceiptTime",
+     "rc": 1,
+     "failed": "TestA163EveryBucketIsClassifiedFromTheReceiptTime"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "㉖",
+   "why": "원문 정화 삭제(바이트 자르기 · 제어문자 통과)",
+   "file": "internal/app/engine/exit_source_age.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163TheRawBrokerTimeIsBoundedPrintableAndValidUTF8",
+     "rc": 1,
+     "failed": "TestA163TheRawBrokerTimeIsBoundedPrintableAndValidUTF8"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "㉗",
+   "why": "비상 청산(flatten) 경로가 브로커 시각을 읽음",
+   "file": "internal/flatten/liquidate.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows",
+     "rc": 1,
+     "failed": "TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows"
+    }
+   ],
+   "verdict": "CAUGHT"
+  },
+  {
+   "id": "㉘",
+   "why": "거대 원문 해독 상한 삭제(매 주기 끝까지 훑음)",
+   "file": "internal/app/engine/exit_source_age.go",
+   "reached": true,
+   "runs": [
+    {
+     "pkg": "./internal/app/engine/",
+     "run": "TestA163TheRawBrokerTimeIsBoundedPrintableAndValidUTF8",
+     "rc": 1,
+     "failed": "TestA163TheRawBrokerTimeIsBoundedPrintableAndValidUTF8"
     }
    ],
    "verdict": "CAUGHT"

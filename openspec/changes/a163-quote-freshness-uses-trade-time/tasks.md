@@ -145,7 +145,7 @@
       — config · schema · audit 상수 · `recordGateSettings` 끝 인자/끝 행 · `NewContext` 호출부 · `Context.ExitObserver` 덮어쓰기 · 진입 함수 토글 판단. config 쓰기 코드 0
 ## 4. VERIFY
 
-- [ ] 4.1 변이 원장(`analysis/mutation/`): 무변이 대조군 GREEN 먼저, 그다음 전부 CAUGHT —
+- [x] 4.1 변이 원장(`analysis/mutation/`): 무변이 대조군 GREEN 먼저, 그다음 전부 CAUGHT —
       ① 보고 사유가 있으면 `continue`(판정 건너뜀) ② 보고를 순회 안으로 이동
       ③ 빈 `SourceTimestamp` 를 받은 시각 문자열로 메움(어댑터) ④a 어댑터에서 `FetchedAt` 을 브로커 시각으로 ④b `observe` 리터럴의
       `FetchedAt` 에 브로커 시각 대입 ⑤ 래치 제거 ⑥ 보고 등급을 critical 로(`criticalEvents` 등재) ⑦ 어댑터가 빈·깨진 `timestamp` 행을
@@ -157,21 +157,27 @@
       ⑱ 기본값 ON 으로 뒤집기(`mergeEngine` 이 키 없음을 `true` 로 / 진입 함수 판단을 `!SourceAgeReport` 로 → 2.13·2.14)
       ⑲ merge 를 B4 조기 반환 뒤로 이동(2.13 `automation_gate` 없는 파일) ⑳ `exitwiring.go` 덮어쓰기 삭제(2.15)
       ㉑ audit 행 삭제 · 값 고정(2.16) ㉒ 토글 판단을 `ObserveOnce` 판정 순회 앞으로 옮겨 꺼짐이면 판정 건너뜀(2.14 판정·제출 동일 · census · `ObserveOnce` 분기 수)
+      — `analysis/mutation/`(하네스 `harness.py` · `ledger.md` · `ledger.json`): HEAD `ff232b3cf` 사본, 무변이 대조군 26 묶음 rc=0, **32 CAUGHT / 32**
+      (목록 ①~㉒ 에 ④a/④b · ⑱a/⑱b · ㉑a~c 분할 + 리뷰 처분 ㉓~㉘). 첫 판에서 ② 생존 → 순서 시험 수리(`aeeea2c02`). ⑧ 은 시한 초과로 잡힘(issues I9)
 - [ ] 4.2 관련 시험: `go test ./internal/official/ ./internal/app/engine/ ./internal/domain/ ./internal/output/ ./internal/config/ ./internal/audit/ ./cmd/tossctl/` +
       `make test-race`(2.10 을 `RACE_ENGINE_TESTS` 에 넣은 뒤) + `make test-seams` (선택 이유·미실행 범위 기록; `codegraph affected` 는
       1,197/1,216 건이라 선택 근거로 쓰지 않음 — 쓸 때는 `--filter '*_test.go'`)
-- [ ] 4.3 기존 exit 시험 무수정 통과(`exitloop_test.go` · `exit_e2e_test.go` · `exit_observation_identity_test.go` 등)
-- [ ] 4.4 독립 적대 리뷰(High-risk) → `review.md`
+- [x] 4.3 기존 exit 시험 무수정 통과(`exitloop_test.go` · `exit_e2e_test.go` · `exit_observation_identity_test.go` 등)
+      — 4.2 의 패키지 실행에서 `exitloop_test.go` · `exit_e2e_test.go` · `exit_observation_identity_test.go` 등 기존 시험 무수정 PASS(무편집 — 편집한 시험은
+      `a074_notification_audit_test.go` 의 호출 인자 넷뿐, design D8)
+- [x] 4.4 독립 적대 리뷰(High-risk) → `review.md`
+      — `review.md` 「4.4 구현 리뷰」: 전문 · 적대(Claude) · Codex 적대 · 저자 critical pass. 수리 10(R1~R10) · 잔여 4(I5~I7) · 수용 3. 손절 경로 결함 0
 - [ ] 4.5 `make sdd-sync` · `make sdd-check` · (사용자 명시 요청 시) `make gate CHANGE=a163-quote-freshness-uses-trade-time`
 
 ## 5. 잔여 기록 (이 change 에서 고치지 않음)
 
-- [ ] 5.1 C7(진입 게이트 수신 시각) · C8·C9(편입 t0 나이 검사 0) · C10(비상 청산 지정가 나이 검사 0) · C12(CLI 바닥글 시각) ·
+- [x] 5.1 C7(진입 게이트 수신 시각) · C8·C9(편입 t0 나이 검사 0) · C10(비상 청산 지정가 나이 검사 0) · C12(CLI 바닥글 시각) ·
       a112 (k) 를 후속 Story 후보로 `issues.md` 에 기록(H3 = 잔여 기록) + H1 후속(`source_old` 임계·정규장 한정, H6 분포 뒤 — 전이 줄로는
       구간 내부 분포를 얻지 못하는 한계 포함) + freeze 리뷰 P3-7(기존 위험: `apiPrice.Timestamp` 디코드 타입이 바뀌면 `Prices` 전체 오류 →
       판정 0, a163 이 넓히지 않음) + 보고 토글의 콘솔 스위치 부재(사람 flip 은 config 편집 + 엔진 재기동, 콘솔 스위치가 필요하면 별도 Story —
       design D8 「표시」). H2 보충은 사용자 결정 2026-10-22 로 닫힘(잔여 아님)
 
+      — `issues.md` I11(+ I5~I10)
 ## 6. 확정
 
 - [ ] 6.1 archive · Story 경로 갱신 · PM `--check`

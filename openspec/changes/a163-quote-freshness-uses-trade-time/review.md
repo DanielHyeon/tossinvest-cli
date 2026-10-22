@@ -123,3 +123,37 @@ Pre-Edit Gate:
 - 안전 불변식 §0 위반 여부 검토: 통과 — 판정 경로 새 분기 0(렌더 해시 · census · ObserveOnce 분기 수), 손절 즉시성 불변(e2e 2.1~2.3),
   OFF = 오늘 동작(2.13 · 2.14), 공식 API 호출 0 추가, 토글 쓰기 코드 0(사람 flip), 계좌 ref 미기재(2.8)
 ```
+
+## 4.4 구현 리뷰 — gstack `/review` · 2026-10-22 (구현 저자와 다른 컨텍스트 셋 + Codex)
+
+- 대상: `1eab9b931..01d1fc34d`(편집 커밋 셋), 뒤이은 처분 커밋 `01d1fc34d` · `ff232b3cf`.
+- 보이스: ① 전문 리뷰(시험 · 유지보수 · 보안 렌즈, Claude 하위 에이전트, 읽기 전용) ② 적대 리뷰(Claude 하위 에이전트, 시험은 요약 모드) ③ Codex 적대
+  리뷰(`codex exec -s read-only`, 정적 — 시험 미실행) ④ 저자 critical pass(SQL · 동시성 · LLM · 셸 · enum 범주 — 해당 0: SQL · LLM · 셸 없음,
+  새 상수 셋(`obs.EventExitSourceAge` · `obs.EventExitSourceMissing` · `audit.ActionExitSourceAgeReport`)의 소비자는 `criticalEvents` 표 ·
+  이벤트 유일성 시험 · audit action 소비자 0(grep) — 빠진 갈래 없음).
+- **판정: P0 0 · P1 1(Codex) · P2 3 · P3 다수. 손절 판정 · 제출을 바꾸는 결함은 셋 모두 못 찾음.** 아래 처분 뒤 남은 차단 사유 없음(Manager 확인 요청 I5~I8).
+
+| # | 출처 | 요지 | 처분 |
+| --- | --- | --- | --- |
+| R1 | 전문(시험) | 거둔 패닉의 고정 문구 줄을 아무 시험도 안 셈 — 호출 삭제가 살아남음 | **수리** — 패닉 시험이 줄 수를 셈(로거 패닉 0 · 알림기 패닉 1), 변이 ㉓ CAUGHT |
+| R2 | 전문(유지) · 적대 P3-3 | 결정적 패닉이면 매 주기 Warn 한 줄 영구 | **수리** — 패닉 연속의 첫 주기에만(`sourceAgePanicLogged`, 패닉 없는 보고가 풂), 변이 ㉔ CAUGHT |
+| R3 | 전문(보안) · 적대 P3-2 | 원문 64 바이트 바이트 자르기가 글자 중간을 자르고 개행 · 제어문자를 알림 본문(renderFields → ntfy)에 통과 | **수리** — 글자 경계 자르기 + 인쇄 불가 글자 `?`(issues I4), `TestA163TheRawBrokerTimeIsBoundedPrintableAndValidUTF8`, 변이 ㉖ CAUGHT |
+| R4 | 전문(시험) | ahead 구간 무알림을 아무 시험도 안 셈 | **수리** — 분류 시험이 구간마다 알림 수 단언, 변이 ㉕ CAUGHT |
+| R5 | 전문(시험) | missing → unparseable 래치 동작 미고정 | **수리** — `TestA163MissingThenUnparseableIsOneReason`(spec 「같은 사유는 한 번만」 — 한 알림, 구간 줄은 남음) |
+| R6 | 전문(유지) | `le_15s` 이름 · 상한 8(= 64 의 1/8)이 다른 패키지 상수에 묶임 | **수리** — `TestA163TheBucketNamesStillMatchTheirSourceConstants` |
+| R7 | 전문(시험) · 적대 P3-7 | 공식 /prices 갈래 JSON 에 새 키 — 고정 시험 없음 | **수리** — `TestA163TheOfficialPricesQuoteJSONCarriesTheBrokerTime`. 키 생김 자체는 H7 사용자 승인 범위(토글 무관) |
+| R8 | 전문(시험) · 적대 P3-6 | 금지 census 가 엔진 · 공식 어댑터만 — flatten · 진입 · 전략의 미래 읽기 못 막음 | **수리** — census 를 `cmd` · `internal` 모듈 전체 비시험 파일로(정확한 자리 9), 변이 ㉗(flatten 이 브로커 시각을 읽음) CAUGHT |
+| R9 | 전문(시험) · 적대 P3-5 | Makefile 주석이 `-race` 가 단일 소유를 증명한다고 과장 | **수리** — 주석 정정(근거는 호출 구조) |
+| R10 | Codex P2 | 거대 원문을 매 주기 끝까지 해독(파서가 소수부 자릿수 무제한) | **수리** — 64 바이트 초과는 해독 없이 unparseable(RFC3339Nano 최장 35 — 정상 입력 거부 0), 변이 ㉘ |
+| R11 | Codex **P1** | 보고 줄 쓰기는 동기 — 로그 싱크가 멈추면 청산 goroutine 이 멈춰 다음 주기 손절 판정이 없음 | **잔여(issues I6, Manager 판단 요청)** — 같은 goroutine 의 a090 `UnobservedLog` · a129 `ExitOrderLog` · a091 `ZeroFloorLog` 가 이미 같은 엔진 로거에 같은 방식으로 씀(새 위험 종류 아님). 그 주기의 판정 · 제출은 끝난 뒤이고 토글 OFF(기본)면 줄 0. design D4 「생산 싱크」 가 엔진 로거를 정했으므로 비동기 싱크는 설계 변경 — 이 change 에서 하지 않음 |
+| R12 | 적대 **P2-1** | 시각 부재 ↔ 복귀 진동마다 재무장 → 무한정 알림(Relay 는 Key 중복 제거 없음), 주기당 8 상한은 주기 간 누적을 못 막음 | **잔여(issues I5)** — 재무장 규칙은 design D4 「래치와 정리」(사람 승인 설계). 토글 ON 전 사람 결정 필요(쿨다운 · 히스테리시스). 상수 주석을 「한 주기 안에서」로 정정 |
+| R13 | 적대 P3-1 | 15 s 경계 히스테리시스 없음 — 중간 유동 종목이 le_15s ↔ le_5m 를 오가며 줄 다수 | **잔여(issues I5)** — 구간 경계는 사람 승인 값(2026-10-22). H6 분포 수집 목적상 전이 줄이 곧 표본 |
+| R14 | Codex P2 | 쓰기 실패(ENOSPC 등)여도 래치가 전진해 그 구간 줄이 사라짐 | **잔여(issues I7)** — `obs.Logger` 는 쓰기 결과를 돌려주지 않음(기존 a090 · a129 줄 동일). 판정 무관 |
+| R15 | Codex P3 | 마지막 포지션이 닫히면(무보유 경로) 래치 맵이 다음 보고까지 남음 | **수용(설계대로)** — design D4 「무보유 경로에서는 보고를 부르지 않는다」. 크기는 직전 보유 포지션 수로 유계, 다음 보유 주기 또는 재시작에 정리 |
+| R16 | 적대 P3-4 | OFF 여도 업그레이드 뒤 첫 기동에 audit 행 `"" → "false"` 하나 | **수용** — design D8 「audit」 의 `RecordChange` 선례(a136 · a138 · a139 와 같음). OFF 의 정의(줄 · 알림 · 래치 0)는 audit 파일을 포함하지 않음(issues I8) |
+| R17 | 적대 · Codex | 출력 `source_timestamp` 키는 토글과 무관 | **수용** — H7 · D8 사용자 승인 |
+
+- 적대 리뷰가 확인한 비결함(요약): recover 경계가 해독 · 래치 · 로그 · 알림 전부를 감쌈 · 뮤텍스는 defer Unlock 이라 거둔 패닉이 잠금을 남기지 않음 ·
+  생산 `ObserveOnce` 호출자 `Run` 하나 · 보고는 판정 순회 뒤 · `stableObservationID` 는 필드를 명시 나열해 새 필드가 identity 를 안 바꿈 ·
+  Key 충돌 없음 · 계좌 ref 없음(position_id 는 sha256 접두이고 로거가 가림) · `Time.Sub` 포화로 age_seconds 넘침 없음 · 윤초는 unparseable.
+- 리뷰 원문: 하위 에이전트 보고는 이 세션의 메시지(파일 아님), Codex 출력은 세션 스크래치. 결정만 이 표로 옮김.

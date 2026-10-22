@@ -1,8 +1,8 @@
 # a163 변이 원장 (tasks 4.1)
 
-- HEAD `aeeea2c02` 의 추적 파일 사본(`a163-mutation-331771`)에서 실행. 원본 worktree 무편집. 생성: `harness.py` (손편집 금지 — 다시 돌릴 것)
-- 무변이 대조군: 시험 묶음 23 개 전부 rc=0
-- 결과: **26 CAUGHT / 26**
+- HEAD `ff232b3cf` 의 추적 파일 사본(`a163-mutation-1199441`)에서 실행. 원본 worktree 무편집. 생성: `harness.py` (손편집 금지 — 다시 돌릴 것)
+- 무변이 대조군: 시험 묶음 26 개 전부 rc=0
+- 결과: **32 CAUGHT / 32**
 
 | # | 변이 | 파일 | 판정 | 실패한 시험 |
 | --- | --- | --- | --- | --- |
@@ -14,7 +14,7 @@
 | ⑤ | 래치 제거(이미 알린 포지션도 매 주기 알림) | `internal/app/engine/exit_source_age.go` | CAUGHT | TestA163AMissingOrUnparseableTimeIsAlertedOnceAndRearmsWhenATimeArrives |
 | ⑥ | 보고 등급을 critical 로(등급표 등재) | `internal/obs/event.go` | CAUGHT | TestA163AMissingOrUnparseableTimeIsAlertedOnceAndRearmsWhenATimeArrives,TestA163TheReportNeverBlocksEntryOrEscalates |
 | ⑦ | 어댑터가 빈 · 깨진 timestamp 행을 버림 | `internal/official/market_reads.go` | CAUGHT | TestA163AMissingOrMalformedBrokerTimeJudgesTheSame,TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/+0900,TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/absent,TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/empty,TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/garbage,TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/null |
-| ⑧ | 어댑터가 빈 · 깨진 timestamp 에 오류 반환(Prices) | `internal/official/market_reads.go` | CAUGHT | PANIC in -run TestA163AMissingOrMalformedBrokerTimeJudgesTheSame: panic: test timed out after 15m0s |
+| ⑧ | 어댑터가 빈 · 깨진 timestamp 에 오류 반환(Prices) | `internal/official/market_reads.go` | CAUGHT | PANIC in -run TestA163AMissingOrMalformedBrokerTimeJudgesTheSame: panic: test timed out after 4m0s |
 | ⑨ | observe B7 필터의 effectiveAt 을 브로커 시각 기준으로 | `internal/app/engine/exitloop.go` | CAUGHT | TestA163AStaleBrokerTimeStillLiquidatesInTheSameCycle,TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows |
 | ⑩ | snapshotContext 가 stableObservationID 에 브로커 시각을 넘김 | `internal/app/engine/exitloop.go` | CAUGHT | TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows,TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange |
 | ⑪ | 보고기 recover 경계 제거 | `internal/app/engine/exit_source_age.go` | CAUGHT | PANIC in -run TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops: panic: a163: injected log sink panic |
@@ -32,3 +32,9 @@
 | ㉑b | audit 행 값 고정(false) | `internal/app/engine/interlock.go` | CAUGHT | TestA163AStartupAuditsTheLoadedReportToggle,TestA163TheReportToggleIsTheLastAuditedSettingAndOnlyItsChangeIsWritten |
 | ㉑c | NewContext 가 로드된 값 대신 false 를 넘김 | `internal/app/engine/engine.go` | CAUGHT | TestA163AStartupAuditsTheLoadedReportToggle |
 | ㉒ | 토글 판단을 ObserveOnce 판정 순회 앞으로 — 꺼짐이면 판정 건너뜀 | `internal/app/engine/exitloop.go` | CAUGHT | TestA163AStaleBrokerTimeStillLiquidatesInTheSameCycle,TestA163TheReportToggleIsReadOnlyWhereTheDesignAllows,TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn |
+| ㉓ | 거둔 패닉의 고정 문구 줄 삭제(흔적 없는 패닉) | `internal/app/engine/exit_source_age.go` | CAUGHT | TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops,TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops/alerter_panics |
+| ㉔ | 고정 문구 줄 래치 삭제(매 주기 같은 줄) | `internal/app/engine/exit_source_age.go` | CAUGHT | TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops,TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops/alerter_panics |
+| ㉕ | 미래(ahead) 구간도 알림 사유로 | `internal/app/engine/exit_source_age.go` | CAUGHT | TestA163EveryBucketIsClassifiedFromTheReceiptTime |
+| ㉖ | 원문 정화 삭제(바이트 자르기 · 제어문자 통과) | `internal/app/engine/exit_source_age.go` | CAUGHT | TestA163TheRawBrokerTimeIsBoundedPrintableAndValidUTF8 |
+| ㉗ | 비상 청산(flatten) 경로가 브로커 시각을 읽음 | `internal/flatten/liquidate.go` | CAUGHT | TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows |
+| ㉘ | 거대 원문 해독 상한 삭제(매 주기 끝까지 훑음) | `internal/app/engine/exit_source_age.go` | CAUGHT | TestA163TheRawBrokerTimeIsBoundedPrintableAndValidUTF8 |
