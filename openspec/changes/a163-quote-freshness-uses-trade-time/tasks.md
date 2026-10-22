@@ -75,56 +75,74 @@
       — `TestA163AFutureBrokerTimeJudgesTheSame` 편집 전 GREEN
 - [x] 2.4 고정: 관측 identity(`stableObservationID`)와 원장 `ObservedAt` 이 브로커 시각과 무관하게 `FetchedAt` 으로 만들어진다
       — `TestA163IdentityAndObservedAtComeFromTheReceiptNotTheBrokerTime` 편집 전 GREEN(e2e, 같은 브로커 시각 두 주기)
-- [ ] 2.5 RED: `adaptPrices` 가 `timestamp` 원문을 `SourceTimestamp` 에 **그대로** 보존한다(실측 형식 `+09:00` 두 시장 · 밀리초 · null → `""` ·
+- [x] 2.5 RED: `adaptPrices` 가 `timestamp` 원문을 `SourceTimestamp` 에 **그대로** 보존한다(실측 형식 `+09:00` 두 시장 · 밀리초 · null → `""` ·
       키 없음 → `""` · 깨진 문자열 → 원문 그대로). 해독하지 않음, 오류·행 탈락 0
-- [ ] 2.6 RED: 판정 순회 뒤 보고 — 구간 `missing`·`unparseable` 포지션 1건당 `source_missing` 일반 등급 알림 1건, 래치로 다음 주기 0건,
+      — `internal/official/a163_adapt_prices_source_time_test.go`(받은 시각 창 단언 포함 — 변이 ④a), RED→GREEN `analysis/red-green/`
+- [x] 2.6 RED: 판정 순회 뒤 보고 — 구간 `missing`·`unparseable` 포지션 1건당 `source_missing` 일반 등급 알림 1건, 래치로 다음 주기 0건,
       시각이 생긴 뒤 재무장. 나머지 구간은 로그만이고 알림 0건(H1). 정리(freeze 리뷰 P2-4): 이번 주기 `held` 에 있으나 판정 안 된 포지션은
       래치 불변, `held` 밖 id 는 지워짐 — 「포지션 청산 뒤 같은 id 재등장 없음 → 맵 크기 0」 단언. 상한(P2-5): 한 주기 `missing` 12건 →
       알림 8건, 다음 주기 4건
-- [ ] 2.7 RED: 순서 — 보고·나이 로그는 그 주기의 마지막 포지션 판정·제출 **뒤**에, `settleUnobserved` 앞에 일어난다(가짜 알림기가 보고
+      — `a163_source_age_report_test.go` 넷. 「맵 크기 0」 은 D4 호출 자리상 도달 불가(보고는 판정이 있는 주기에만 돌고 판정된 포지션은 맵에 남음) → 닫힌 포지션 id 가 빠지고 남은 하나만 있음으로 단언(변이 ⑮ 가 잡음). RED→GREEN `analysis/red-green/`
+- [x] 2.7 RED: 순서 — 보고·나이 로그는 그 주기의 마지막 포지션 판정·제출 **뒤**에, `settleUnobserved` 앞에 일어난다(가짜 알림기가 보고
       시점의 제출 수를 단언)
-- [ ] 2.8 RED: 알림·로그 필드에 계좌 ref 가 없다(필드 목록 = design D4 「필드」)
-- [ ] 2.9 RED: 진입 래치·운영 모드 강화·outbox 행이 보고로 생기지 않는다(H2)
-- [ ] 2.10 RED(freeze 리뷰 P1-4): 보고기 내부 패닉 주입(시험 seam 또는 nil 맵 강제) → 같은 `ObserveOnce` 가 정상 반환, `settleUnobserved` 가
+      — `TestA163TheReportComesAfterEveryJudgementAndBeforeTheUnobservedSettlement`(제출 수 + a090 줄과 한 버퍼 순서)
+- [x] 2.8 RED: 알림·로그 필드에 계좌 ref 가 없다(필드 목록 = design D4 「필드」)
+      — `TestA163NoReportLineOrAlertCarriesTheAccount`(줄 · 알림 키 ⊆ D4 목록 + 로거 자기 열, 계좌 ref 없음, 원문 ≤64 바이트 · unparseable 만)
+- [x] 2.9 RED: 진입 래치·운영 모드 강화·outbox 행이 보고로 생기지 않는다(H2)
+      — `TestA163TheReportNeverBlocksEntryOrEscalates`(실제 Notifier RecordOnly · 원장 outbox 행 0 · 모드 NORMAL · 진입 래치 없음). 골격에서도 통과 — 이빨은 변이 ⑥
+- [x] 2.10 RED(freeze 리뷰 P1-4): 보고기 내부 패닉 주입(시험 seam 또는 nil 맵 강제) → 같은 `ObserveOnce` 가 정상 반환, `settleUnobserved` 가
       돌고, 다음 주기의 제출 수가 패닉 없을 때와 같다. 이 시험 이름을 `Makefile` `RACE_ENGINE_TESTS`, 파일을 `RACE_ENGINE_FILES` 에 넣음
       (`tools/sdd/test_race_detector_actually_runs.py` 완전성 가드 통과)
-- [ ] 2.11 RED(freeze 리뷰 P1-3): 생산 배선 — (a) `cmd/tossctl` 구조 시험: `engineRuntime` 의 `engine.ExitObserverOptions` 리터럴에
+      — `a163_source_age_panic_test.go`(로거 패닉 · 알림기 패닉, Run goroutine), `RACE_ENGINE_FILES`·`RACE_ENGINE_TESTS` 등재, 가드 `tools/sdd/test_race_detector_actually_runs.py` OK, `-race` PASS. 골격에서도 통과 — 이빨은 변이 ⑪
+- [x] 2.11 RED(freeze 리뷰 P1-3): 생산 배선 — (a) `cmd/tossctl` 구조 시험: `engineRuntime` 의 `engine.ExitObserverOptions` 리터럴에
       `SourceAgeLog` 키가 있고 값이 엔진 로거(선례 `cmd/tossctl/a129_engine_runtime_exit_order_log_test.go`) · (b) 행동: `Context.ExitObserver`
       조립을 거친 관측자가 그 로거에 구간 전이 줄을 쓴다(시험 로거를 `opts.Log` 가 아니라 `SourceAgeLog` 로만 주입)
-- [ ] 2.12 RED(freeze 리뷰 P2-3·P3-3·P3-4): 로그 빈도와 분류 — 같은 구간이 연속 3 주기 → 줄 1(첫 주기만), 구간 변화 → 줄 1 더.
+      — (a) `cmd/tossctl/a163_engine_runtime_source_age_log_test.go` · (b) `TestA163TheAssembledObserverWritesItsLinesToTheDedicatedLogger`(검증 게이트 조립 + 원문 브로커, 묵은 시각이 gt_1h 로 도착)
+- [x] 2.12 RED(freeze 리뷰 P2-3·P3-3·P3-4): 로그 빈도와 분류 — 같은 구간이 연속 3 주기 → 줄 1(첫 주기만), 구간 변화 → 줄 1 더.
       `missing` 과 `unparseable` 이 다른 `bucket` 값으로 남음. 나이는 `observedQuote.FetchedAt` 기준 — `domain.Quote.FetchedAt` 이 0 인
       대체 경로(`exitloop.go:867-870`)에서 `ahead` 로 잘못 분류되지 않음
+      — `TestA163AnAgeLineIsWrittenOnlyWhenTheBucketChanges` · `TestA163EveryBucketIsClassifiedFromTheReceiptTime`(일곱 구간 + 경계 15 s · 5 분 · 1 시간 포함, 사이클 대체 받은 시각)
 > 2.6 · 2.7 · 2.8 · 2.9 · 2.10 · 2.11(b) · 2.12 는 보고 토글 **ON**(`ExitObserverOptions.SourceAgeReport = true`)으로 돈다(design D8 — 보고는 ON 에서만).
-- [ ] 2.13 RED(사용자 결정 2026-10-22, design D8 — 기본 OFF): `internal/config` — engine 블록 없음 · 키 없음 · 명시 `false` → `ExitSourceAgeReport == false`,
+- [x] 2.13 RED(사용자 결정 2026-10-22, design D8 — 기본 OFF): `internal/config` — engine 블록 없음 · 키 없음 · 명시 `false` → `ExitSourceAgeReport == false`,
       `true` → `true`. `automation_gate` 키 **없는** 파일의 `true` 도 `true`(merge 가 `mergeEngine` B4 조기 반환 앞). 꺼짐이면 `config.Status` JSON
       (`tossctl config show`)에 `exit_source_age_report` 키가 **없다**(omitempty — 편집 전 바이트와 같음). `schemas/config.schema.json` engine 블록에
       boolean · `default: false` 속성이 있고 `TestPublishedSchemaMatchesSchemaVersion` 통과
-- [ ] 2.14 RED(OFF = 오늘 동작): 같은 주기 입력(`missing` · `unparseable` · 9h30m 묵음 · 손절선 아래 하나)을 토글 OFF 와 ON 관측자에 각각 돌려
+      — `internal/config/a163_exit_source_age_report_test.go` 셋(Status.Engine 골든 = 편집 전 바이트)
+- [x] 2.14 RED(OFF = 오늘 동작): 같은 주기 입력(`missing` · `unparseable` · 9h30m 묵음 · 손절선 아래 하나)을 토글 OFF 와 ON 관측자에 각각 돌려
       — OFF: `SourceAgeLog` 줄 0 · `source_missing` 알림 0 · 래치 맵 크기 0 · a090 집계·`settleUnobserved` 결과 ON 과 같음. 두 관측자의
       `cycle.Judged` · 제출 수 · 제출 순서 · 원장 행이 같다(토글은 판정과 제출 사이에 서지 않음). ON: 2.6 · 2.12 의 줄·알림이 남음.
       `ExitObserverOptions` 0 값 = OFF 단언
-- [ ] 2.15 RED(배선 — design D8 「읽는 시점」): `Context.ExitObserver` 가 호출자 값과 무관하게 `opts.SourceAgeReport` 를
+      — `TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn`(주기 결과 · 제출 · 원장 행 문자열 대조, 0 값 옵션 = OFF)
+- [x] 2.15 RED(배선 — design D8 「읽는 시점」): `Context.ExitObserver` 가 호출자 값과 무관하게 `opts.SourceAgeReport` 를
       `c.Config.Engine.ExitSourceAgeReport` 로 덮는다 — 설정 `true` · 호출자 `false` → 관측자 ON, 설정 `false` · 호출자 `true` → OFF
       (선례 `NotificationsEnabled` `exitwiring.go:355` 의 시험 모양). 설정은 기동 때 한 번만 읽힘(주기 중 설정 파일 변경이 관측자에 닿지 않음)
-- [ ] 2.16 RED(audit — §0.5): `recordGateSettings` 가 `changes` 목록 **끝**(`per_trade_risk_budget` 뒤)에 action `audit.ActionExitSourceAgeReport`
+      — `TestA163TheProductionAssemblyReadsTheLoadedToggle`(설정 · 메모리 변경이 만들어진 관측자에 안 닿음)
+- [x] 2.16 RED(audit — §0.5): `recordGateSettings` 가 `changes` 목록 **끝**(`per_trade_risk_budget` 뒤)에 action `audit.ActionExitSourceAgeReport`
       (`"exit.source_age_report"`) · setting `engine.exit_source_age_report` · 값 `"false"`/`"true"` 행을 쓴다. 꺼짐→켜짐 재기동은 old `false` · new
       `true` 한 행, 같은 값 재기동은 0 행(`RecordChange`). 기존 행 순서 불변(`a074_notification_audit_test.go` 의 앞부분 단언 무수정 통과 — 호출부 4곳은
       끝 인자 `false` 만 기계적으로 추가). 이 행의 기록 실패는 기존 행과 같은 기동 거부
 
+      — `a163_source_age_audit_test.go`(끝 행 · 바뀐 기동만 · 같은 값 0 행) + `a163_source_age_startup_test.go`(NewContext 생산 경로, 세 번 기동 → 행 둘). 이 행만의 기록 실패 주입 시험은 없음 — 같은 루프 B6(FLM)이라 기존 실패 모양 그대로
 ## 3. GREEN — 최소 구현
 
-- [ ] 3.1 `domain.Quote.SourceTimestamp string` · json `source_timestamp,omitempty`(design D2) + `adaptPrices` 대입 한 줄(해독 없음, 분기 0 추가)
-- [ ] 3.2 `observedQuote` 에 `SourceTimestamp` 운반(`observe` 리터럴 한 자리, 분기 수 불변)
-- [ ] 3.3 새 파일 `internal/app/engine/exit_source_age.go`: recover 경계 진입 함수 + a090 집계 읽기(지우지 않음) + 해독·구간 분류 +
+- [x] 3.1 `domain.Quote.SourceTimestamp string` · json `source_timestamp,omitempty`(design D2) + `adaptPrices` 대입 한 줄(해독 없음, 분기 0 추가)
+      — `internal/domain/models.go` · `internal/official/market_reads.go`
+- [x] 3.2 `observedQuote` 에 `SourceTimestamp` 운반(`observe` 리터럴 한 자리, 분기 수 불변)
+      — `exitloop.go` `observedQuote` 필드 + `observe` 리터럴(분기 15 · 반환 6 불변)
+- [x] 3.3 새 파일 `internal/app/engine/exit_source_age.go`: recover 경계 진입 함수 + a090 집계 읽기(지우지 않음) + 해독·구간 분류 +
       전이 줄(`SourceAgeLog`) + `source_missing` 일반 등급 알림(주기당 8건 상한) + 래치(`held` 기준 정리). `ObserveOnce` 에는
       `settleUnobserved` 앞 호출 한 줄만(design D4)
-- [ ] 3.4 `ExitObserverOptions.SourceAgeLog *obs.Logger` 필드 + `cmd/tossctl/engine.go` `engineRuntime` 배선 `SourceAgeLog: logger`
-- [ ] 3.5 1.1 번들 최신화(revision 대조) · 1.2 의 렌더 해시·census 시험 GREEN 확인
-- [ ] 3.6 보고 토글(design D8): `config.Engine.ExitSourceAgeReport bool` · json `exit_source_age_report,omitempty` + `rawEngine` `*bool` +
+      — `internal/app/engine/exit_source_age.go`(새 파일) + `ObserveOnce` 호출 한 줄(분기 8 · 반환 5 · defer 2 불변). 이벤트 상수 둘(`obs.EventExitSourceAge` · `obs.EventExitSourceMissing`, 등급표 밖)은 `internal/obs/event.go`
+- [x] 3.4 `ExitObserverOptions.SourceAgeLog *obs.Logger` 필드 + `cmd/tossctl/engine.go` `engineRuntime` 배선 `SourceAgeLog: logger`
+      — `ExitObserverOptions.SourceAgeLog` + `cmd/tossctl/engine.go` 배선
+- [x] 3.5 1.1 번들 최신화(revision 대조) · 1.2 의 렌더 해시·census 시험 GREEN 확인
+      — 번들 12 `revision: current` 로 재생성(`analysis/flm-gen/README.md` 편집 전·뒤 대조), `check_analysis.py` required 12 · evidence complete. census 를 정확한 수로 조임(I2 의 기존 넷 포함)
+- [x] 3.6 보고 토글(design D8): `config.Engine.ExitSourceAgeReport bool` · json `exit_source_age_report,omitempty` + `rawEngine` `*bool` +
       `mergeEngine` B4 앞 merge 한 줄 묶음 · `schemas/config.schema.json` 속성 · `audit.ActionExitSourceAgeReport` 상수 · `recordGateSettings` 끝 인자 +
       끝 행 · `engine.go:472` 호출부 · `ExitObserverOptions.SourceAgeReport bool` · `Context.ExitObserver` 덮어쓰기 한 줄 · `exit_source_age.go` 진입 함수의
       recover 경계 바로 뒤 「꺼짐이면 반환」. `ObserveOnce` 와 판정 함수에는 토글 코드 0. config 를 **쓰는** 함수(콘솔 스위치·저장)는 더하지 않음
 
+      — config · schema · audit 상수 · `recordGateSettings` 끝 인자/끝 행 · `NewContext` 호출부 · `Context.ExitObserver` 덮어쓰기 · 진입 함수 토글 판단. config 쓰기 코드 0
 ## 4. VERIFY
 
 - [ ] 4.1 변이 원장(`analysis/mutation/`): 무변이 대조군 GREEN 먼저, 그다음 전부 CAUGHT —

@@ -173,6 +173,9 @@ func adaptPrices(raw []apiPrice) []domain.Quote {
 			Last:      parseDecimal(p.LastPrice),
 			Currency:  p.Currency,
 			FetchedAt: time.Now().UTC(),
+			// a163: 브로커 데이터 시각 원문을 그대로 보존함 — 해독 · 거름 · 오류 없음(행을 버리면 그 종목의 손절 관측이 사라짐).
+			// null · 키 없음은 디코드 규칙상 "" (「모름」)이고 우리 시계로 메우지 않음. 판정은 이 값을 읽지 않음(FetchedAt 기준).
+			SourceTimestamp: p.Timestamp,
 			// Name, MarketCode, Market, Change, Volume etc. — not in /prices
 		})
 	}

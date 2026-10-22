@@ -1,0 +1,1052 @@
+{
+ "internal-official--adaptprices": {
+  "revision_note": "편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`",
+  "risk": "High-risk(청산 관측의 유일한 생산 시세 어댑터 — `Client.Prices` 경유 `ExitObserver.observe` B1)",
+  "inputs": [
+   [
+    "`raw []apiPrice`",
+    "브로커 `/api/v1/prices` 행 0..n",
+    "공식 OpenAPI `PriceResponse`",
+    "디코드 실패는 호출자 `Client.Prices` 가 이미 오류로 반환 — 이 함수는 실패 경로 없음"
+   ],
+   [
+    "`p.Timestamp`",
+    "임의 문자열(`\"\"` = null·키 없음)",
+    "브로커 데이터 시각",
+    "편집 전: 읽지 않음(AST 호출에 없음)"
+   ]
+  ],
+  "branches": {
+   "B1": [
+    "행마다 `domain.Quote` 하나 추가(행 탈락 0)",
+    "끝에서 `out` 반환",
+    "`TestAdaptPricesUnit` · `TestAdaptPricesEmpty`"
+   ]
+  },
+  "calls": [
+   [
+    "`parseDecimal`",
+    "`lastPrice` 해독",
+    "실패 시 0 — 하류 `observe` B4 가 `Last <= 0` 을 거름",
+    "AST"
+   ],
+   [
+    "`time.Now().UTC()`",
+    "받은 시각 `FetchedAt`",
+    "실패 없음",
+    "AST"
+   ]
+  ],
+  "mutations": [
+   "`out` 슬라이스만 만든다. 상태 없음. 폴백 없음."
+  ],
+  "edit": [
+   "a163 3.1: 리터럴에 `SourceTimestamp: p.Timestamp` 대입 한 줄. 분기 1 · 반환 1 불변(design D3). 해독·거름·오류 0. — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`"
+  ],
+  "safety": [
+   "Safe edit boundary: 리터럴 필드 대입만. `FetchedAt` 줄 불변.",
+   "High-risk impact: yes — 행 탈락·오류 반환 변이(⑦⑧)는 e2e 2.1~2.3 이 잡는다."
+  ],
+  "tests": {
+   "*": [
+    "행마다 Quote 하나, 브로커 원문 보존 · 받은 시각 채움",
+    "`TestA163AdaptPricesKeepsTheBrokerTimeVerbatim` · `TestA163AMissingOrMalformedBrokerTimeJudgesTheSame` · `TestAdaptPricesUnit`",
+    "yes(2.5 — 골격에서 SourceTimestamp 빈 값으로 실패)",
+    "pass"
+   ]
+  }
+ },
+ "internal-app-engine--exitobserver.observe": {
+  "revision_note": "편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`",
+  "risk": "High-risk(손절 판정의 유일한 시세 입력)",
+  "inputs": [
+   [
+    "`symbols`",
+    "보유·대상 종목",
+    "`workingSet`",
+    "—"
+   ],
+   [
+    "`q.FetchedAt`",
+    "0 또는 받은 시각",
+    "어댑터",
+    "0 이면 사이클 대체(`validatedAt`), 미래·15 s 초과면 후보 제외(B7)"
+   ],
+   [
+    "`q.Last`",
+    "> 0 유한",
+    "어댑터",
+    "아니면 후보 제외(B4)"
+   ]
+  ],
+  "branches": {
+   "B1": [
+    "—",
+    "`return qerr` → Retrier 재시도/실패",
+    "`TestAFailedObservationHoldsTheJudgement`"
+   ],
+   "B2": [
+    "`wanted` 집합 구성",
+    "—",
+    "기존 시험"
+   ],
+   "B3": [
+    "후보 순회",
+    "—",
+    "기존 시험"
+   ],
+   "B4": [
+    "후보 제외",
+    "`continue`",
+    "`TestAQuoteWithNoLastTradeIsNotAnObservation`"
+   ],
+   "B5": [
+    "`FetchedAt` 0 → 사이클 대체, `needsFallback`",
+    "—",
+    "`TestA111FallbackObservationSourceIsDurableAndRestartMonotone`"
+   ],
+   "B6": [
+    "else-if 사슬",
+    "—",
+    "`TestA111QuoteEvidenceUsesOnePostBatchClockAndNeverFallsBackFromBadOfficialTime`"
+   ],
+   "B7": [
+    "미래·15 s 초과 후보 제외",
+    "`continue`",
+    "`TestA111QuoteEvidenceUsesOnePostBatchClockAndNeverFallsBackFromBadOfficialTime`"
+   ],
+   "B8": [
+    "—",
+    "후보 0 → `EvidenceInvalid`",
+    "기존 시험"
+   ],
+   "B9": [
+    "—",
+    "`return nil, err`",
+    "`TestAFailedObservationHoldsTheJudgement`"
+   ],
+   "B10": [
+    "대체 시퀀스 회복",
+    "—",
+    "`TestA111FallbackSequenceRecoveryIsLazyAndPriceEvidenceUsesTheGateDuration`"
+   ],
+   "B11": [
+    "—",
+    "원장 오류 반환",
+    "기존 시험"
+   ],
+   "B12": [
+    "CAS 루프",
+    "—",
+    "기존 시험"
+   ],
+   "B13": [
+    "루프 탈출",
+    "—",
+    "기존 시험"
+   ],
+   "B14": [
+    "대체 출처 기입",
+    "—",
+    "기존 시험"
+   ],
+   "B15": [
+    "공식 출처는 건너뜀",
+    "`continue`",
+    "기존 시험"
+   ]
+  },
+  "calls": [
+   [
+    "`o.opts.Retrier.Query`",
+    "단일 브로커 읽기 + 신선도 도장",
+    "재시도 매트릭스(QueryPrice)",
+    "AST"
+   ],
+   [
+    "`o.opts.Prices.Prices`",
+    "공식 `/prices`",
+    "오류는 B1",
+    "AST"
+   ],
+   [
+    "`clock.LeaseAnchor`",
+    "사용 임대 앵커",
+    "—",
+    "AST"
+   ],
+   [
+    "`o.opts.Journal.MaxExitObservationCycle`",
+    "대체 시퀀스 회복",
+    "오류는 B11",
+    "AST"
+   ]
+  ],
+  "mutations": [
+   "`out` 맵 · `needsFallback` · `o.observationSequence`(원자)."
+  ],
+  "edit": [
+   "a163 3.2: `next[symbol] = observedQuote{…}` 리터럴에 `SourceTimestamp: q.SourceTimestamp` 하나. 분기 15 · 반환 6 불변(design D7). B4·B7 의 거름은 여전히 `FetchedAt`·`Last` 만 읽음. — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`"
+  ],
+  "safety": [
+   "Safe edit boundary: 리터럴 필드 대입 하나. 조건식 무편집.",
+   "High-risk impact: yes — 변이 ④b·⑨ 는 렌더 해시가 아니라 e2e·census·identity 시험이 잡는다."
+  ],
+  "tests": {
+   "*": [
+    "후보 제외 규칙은 FetchedAt·Last 만 — 브로커 시각 운반은 리터럴 필드 하나",
+    "`TestA163AStaleBrokerTimeStillLiquidatesInTheSameCycle` · `TestA163TheAssembledObserverWritesItsLinesToTheDedicatedLogger` · `TestA111QuoteEvidenceUsesOnePostBatchClockAndNeverFallsBackFromBadOfficialTime`",
+    "n/a(분기 무편집 — 운반은 2.11(b) 가 골격에서 실패)",
+    "pass"
+   ]
+  }
+ },
+ "internal-app-engine--exitobserver.observeonce": {
+  "revision_note": "편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`",
+  "risk": "High-risk(청산 관측 주기 — 손절 판정 순회)",
+  "inputs": [
+   [
+    "`o.opts.SLO`",
+    "nil 또는 압력 원천",
+    "배선",
+    "뒤처지면 주기 양보(B1)"
+   ],
+   [
+    "`states`",
+    "작업 집합",
+    "`workingSet`",
+    "오류면 B2"
+   ],
+   [
+    "`quotes`",
+    "관측 맵",
+    "`observe`",
+    "오류면 B4"
+   ]
+  ],
+  "branches": {
+   "B1": [
+    "`cycle.Deferred`, `checkOutage`",
+    "`return cycle`",
+    "기존 시험"
+   ],
+   "B2": [
+    "`cycle.Err`",
+    "`return cycle`",
+    "기존 시험"
+   ],
+   "B3": [
+    "`settleUnobserved`, 두절 시계 리셋",
+    "`return cycle`",
+    "기존 시험"
+   ],
+   "B4": [
+    "`cycle.Err`, `checkOutage`",
+    "`return cycle`",
+    "`TestAFailedObservationHoldsTheJudgement`"
+   ],
+   "B5": [
+    "판정 순회",
+    "—",
+    "기존 시험"
+   ],
+   "B6": [
+    "`noteUnobservedCause(no_quote)`",
+    "`continue`",
+    "`TestA090R2AnAbsentSiblingIsCountedLikeAZeroQuote`"
+   ],
+   "B7": [
+    "`noteUnobservedCause(quote_expired)`",
+    "`continue`",
+    "`TestA090R7AQuoteThatExpiredMidCycleIsCountedAsExpired`"
+   ],
+   "B8": [
+    "`cycle.Err` 첫 오류만",
+    "—",
+    "기존 시험"
+   ]
+  },
+  "calls": [
+   [
+    "`o.workingSet`",
+    "보유·대상 포지션",
+    "오류는 B2",
+    "AST"
+   ],
+   [
+    "`o.observe`",
+    "주기의 단일 시세 읽기",
+    "오류는 B4",
+    "AST"
+   ],
+   [
+    "`o.quoteUsable` / `o.judge`",
+    "판정",
+    "판정 오류는 `cycle.Err`",
+    "AST"
+   ],
+   [
+    "`o.settleUnobserved`",
+    "a090 순회 뒤 집계 정리",
+    "실패는 로그",
+    "AST"
+   ],
+   [
+    "defer `o.endExitOrderCycle` · `o.flushStrategyProtectionAlerts`",
+    "a129 · 전략 보호 알림",
+    "—",
+    "AST(defer 2)"
+   ]
+  ],
+  "mutations": [
+   "`o.lastObserved` · `o.outageRaised` · `o.protectionAlerts` · a090 주기 집계."
+  ],
+  "edit": [
+   "a163 3.3: B5 판정 순회 **뒤**, `o.settleUnobserved(ctx, &cycle)` 바로 앞에 보고 호출 한 줄(`o.reportSourceAge(ctx, &cycle)` — 토글 판단은 그 함수 안, design D4·D8). 분기 8 · 반환 5 · defer 2 불변. 순회 안 새 코드 0. — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`"
+  ],
+  "safety": [
+   "Safe edit boundary: 순회 밖 호출 한 줄. B3(무보유)·조기 반환 경로에는 보고 없음.",
+   "High-risk impact: yes — 순서(2.7)·패닉(2.10)·토글 위치(㉒) 시험."
+  ],
+  "tests": {
+   "*": [
+    "판정 순회 뒤 · settleUnobserved 앞 보고 호출 한 줄(분기 밖)",
+    "`TestA163TheReportComesAfterEveryJudgementAndBeforeTheUnobservedSettlement` · `TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops` · `TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn` · `TestA090R16AJudgementThatEndsAtOnceStillCountsAsObserved`",
+    "yes(2.7 — 골격에서 알림 0 으로 실패)",
+    "pass"
+   ]
+  }
+ },
+ "cmd-tossctl--engineruntime": {
+  "revision_note": "편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`",
+  "risk": "High-risk(생산 엔진 런타임 조립 — 청산 관측자 배선)",
+  "inputs": [
+   [
+    "`ectx`",
+    "검증된 엔진 컨텍스트",
+    "`engine.NewContext`",
+    "—"
+   ],
+   [
+    "`logger`",
+    "엔진 로거",
+    "호출자",
+    "nil 이면 전용 줄 0"
+   ]
+  ],
+  "branches": {
+   "B1": [
+    "—",
+    "탐지기 조립 실패 반환",
+    "`TestProductionRuntimeStartsExactlyOneAlertDeliverer`"
+   ],
+   "B2": [
+    "—",
+    "대사 드라이버 실패 반환",
+    "`TestProductionRuntimeStartsExactlyOneAlertDeliverer`"
+   ],
+   "B3": [
+    "—",
+    "`ectx.ExitObserver` 실패 반환",
+    "`TestProductionRuntimeStartsExactlyOneAlertDeliverer`"
+   ],
+   "B4": [
+    "—",
+    "복구 조립 실패 반환",
+    "`TestProductionRuntimeStartsExactlyOneAlertDeliverer`"
+   ],
+   "B5": [
+    "—",
+    "전략 진입 감독 실패 반환",
+    "`TestProductionRuntimeStartsExactlyOneAlertDeliverer`"
+   ],
+   "B6": [
+    "—",
+    "다음 조립 실패 반환",
+    "`TestProductionRuntimeStartsExactlyOneAlertDeliverer`"
+   ]
+  },
+  "calls": [
+   [
+    "`ectx.ExitObserver`",
+    "청산 관측자 조립(옵션 리터럴 하나)",
+    "오류는 B3",
+    "AST"
+   ],
+   [
+    "`engine.NewRuntime`",
+    "감독자",
+    "—",
+    "AST"
+   ]
+  ],
+  "mutations": [
+   "없음(조립만)."
+  ],
+  "edit": [
+   "a163 3.4: `engine.ExitObserverOptions` 리터럴에 `SourceAgeLog: logger` 한 키. 분기 6 · 반환 7 불변. — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`"
+  ],
+  "safety": [
+   "Safe edit boundary: 옵션 리터럴 키 하나.",
+   "High-risk impact: yes(배선) — 구조 시험 2.11(a) · 변이 ⑫."
+  ],
+  "tests": {
+   "*": [
+    "기존 조립 + SourceAgeLog 배선 키",
+    "`TestA163EngineRuntimeWiresTheSourceAgeLogger` · `TestProductionRuntimeStartsExactlyOneAlertDeliverer`",
+    "yes(2.11(a) — 편집 전 실패)",
+    "pass"
+   ]
+  }
+ },
+ "internal-config--mergeengine": {
+  "revision_note": "편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`",
+  "risk": "Normal(설정 파싱) — 단 「키 없음 = 꺼짐」 불변식이 OFF=오늘 동작(§0.2)을 지킴",
+  "inputs": [
+   [
+    "`raw *rawEngine`",
+    "nil 또는 파싱된 engine 블록",
+    "config 파일",
+    "nil 이면 기본값(전부 off)"
+   ],
+   [
+    "`raw.AutomationGate`",
+    "nil 이면 B4 조기 반환",
+    "config 파일",
+    "그 뒤 필드는 병합 안 됨"
+   ]
+  ],
+  "branches": {
+   "B1": [
+    "—",
+    "`return`",
+    "`TestAConfigWithNoNotificationsBlockIsUnchanged`"
+   ],
+   "B2": [
+    "`cfg.Autostart`",
+    "—",
+    "`TestAutostartDefaultsOffAndLoadsExplicitValues`"
+   ],
+   "B3": [
+    "`cfg.ExitPolicy`",
+    "—",
+    "`TestUnknownCommonExitPolicyIsRetainedAsRejected`"
+   ],
+   "B4": [
+    "**(a163 새 분기)** `cfg.ExitSourceAgeReport`",
+    "—",
+    "`TestA163TheSourceAgeReportToggleDefaultsOff`"
+   ],
+   "B5": [
+    "—",
+    "`return`(조기, 옛 B4)",
+    "`TestNotificationsMergeWithoutAnAutomationGate`"
+   ],
+   "B6": [
+    "`cfg.AutomationGate.Enabled`(옛 B5)",
+    "—",
+    "`TestAutomationGateParsed`"
+   ]
+  },
+  "calls": [
+   [
+    "`mergeAdoption`",
+    "편입 블록",
+    "거부 시 0 블록",
+    "AST"
+   ],
+   [
+    "`mergeNotifications`",
+    "알림 블록(B4 앞)",
+    "—",
+    "AST"
+   ]
+  ],
+  "mutations": [
+   "`cfg` 의 engine 필드들."
+  ],
+  "edit": [
+   "a163 3.6: B4 조기 반환 **앞**에 `if raw.ExitSourceAgeReport != nil { cfg.ExitSourceAgeReport = *raw.ExitSourceAgeReport }` — 분기 5→6, 반환 2 불변(design D8). 새 분기는 B2 와 같은 모양. — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`"
+  ],
+  "safety": [
+   "Safe edit boundary: 새 `if` 하나, 기존 분기 무편집.",
+   "High-risk impact: no(설정 파싱) — 변이 ⑱⑲ 는 2.13 이 잡는다."
+  ],
+  "tests": {
+   "B1": [
+    "engine 블록 없음 → 기본값",
+    "`TestAConfigWithNoNotificationsBlockIsUnchanged`",
+    "n/a",
+    "pass"
+   ],
+   "B2": [
+    "autostart 병합",
+    "`TestAutostartDefaultsOffAndLoadsExplicitValues`",
+    "n/a",
+    "pass"
+   ],
+   "B3": [
+    "exit_policy 병합·거부",
+    "`TestUnknownCommonExitPolicyIsRetainedAsRejected`",
+    "n/a",
+    "pass"
+   ],
+   "B4": [
+    "(a163) 보고 토글 병합 — automation_gate 없는 파일 포함",
+    "`TestA163TheSourceAgeReportToggleDefaultsOff`",
+    "yes(골격: explicit true · true without automation_gate 실패)",
+    "pass"
+   ],
+   "B5": [
+    "automation_gate 없음 → 조기 반환(옛 B4)",
+    "`TestNotificationsMergeWithoutAnAutomationGate`",
+    "n/a",
+    "pass"
+   ],
+   "B6": [
+    "gate.enabled 병합(옛 B5)",
+    "`TestAutomationGateParsed`",
+    "n/a",
+    "pass"
+   ],
+   "*": [
+    "—",
+    "`TestAutomationGateParsed`",
+    "n/a",
+    "pass"
+   ]
+  },
+  "btm_note": "편집 전 분기 5 → 편집 뒤 6. 새 B4 가 들어와 옛 B4·B5 는 B5·B6 으로 밀렸다(분기 번호는 위치 — 편집 전·뒤 AST 를 줄 원문으로 대조해 재번호, `../../flm-gen/README.md`)."
+ },
+ "internal-app-engine--recordgatesettings": {
+  "revision_note": "편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`",
+  "risk": "High-risk(기동 인터록의 §0.5 audit — 실패하면 기동 거부)",
+  "inputs": [
+   [
+    "`log *audit.Log`",
+    "열린 audit 로그",
+    "`openAuditLog`",
+    "nil 이면 `RecordChange` 무동작"
+   ],
+   [
+    "`gate` · `adoption` · `notifications` · `attestationFile`",
+    "로드된 설정",
+    "config",
+    "—"
+   ]
+  ],
+  "branches": {
+   "B1": [
+    "`adoptionDetail` 채움",
+    "—",
+    "기존 시험"
+   ],
+   "B2": [
+    "알림 거부 사유",
+    "—",
+    "`TestARefusedNotificationBlockIsAudited`"
+   ],
+   "B3": [
+    "else-if 사슬",
+    "—",
+    "`TestNotificationSettingsAreAudited`"
+   ],
+   "B4": [
+    "공개 ntfy 경고",
+    "—",
+    "`TestNotificationSettingsAreAudited`"
+   ],
+   "B5": [
+    "행 순회",
+    "—",
+    "`TestExistingAuditEntriesKeepTheirOrder`"
+   ],
+   "B6": [
+    "—",
+    "`return err` → 기동 거부",
+    "기존 시험"
+   ]
+  },
+  "calls": [
+   [
+    "`log.RecordChange`",
+    "값이 바뀐 설정만 행",
+    "오류는 B6 반환",
+    "AST"
+   ],
+   [
+    "`perTradeRiskBudgetAudit`",
+    "a139 유도 값",
+    "—",
+    "AST"
+   ]
+  ],
+  "mutations": [
+   "audit 파일 append(값이 바뀐 설정만)."
+  ],
+  "edit": [
+   "a163 3.6: 끝 인자 `sourceAgeReport bool` + `changes` 목록 **끝**에 `{audit.ActionExitSourceAgeReport, \"engine.exit_source_age_report\", strconv.FormatBool(sourceAgeReport), \"\"}` 한 행. 분기 6 · 반환 2 불변(design D8). — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`"
+  ],
+  "safety": [
+   "Safe edit boundary: 목록 끝 행 하나, 앞 순서 무변경.",
+   "High-risk impact: yes(audit) — 2.16 · 변이 ㉑."
+  ],
+  "tests": {
+   "*": [
+    "기존 audit 행 + 끝 행(engine.exit_source_age_report)",
+    "`TestA163TheReportToggleIsTheLastAuditedSettingAndOnlyItsChangeIsWritten` · `TestExistingAuditEntriesKeepTheirOrder`",
+    "yes(2.16 — 골격에서 끝 행 없음으로 실패)",
+    "pass"
+   ]
+  }
+ },
+ "internal-app-engine--context.exitobserver": {
+  "revision_note": "편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`",
+  "risk": "High-risk(생산 청산 관측자 조립 — 호출자 값을 덮어쓰는 자리)",
+  "inputs": [
+   [
+    "`c`",
+    "엔진 컨텍스트",
+    "`NewContext`",
+    "nil · 미검증 · 비발행 Guardian 이면 거부"
+   ],
+   [
+    "`opts`",
+    "호출자 옵션",
+    "`engineRuntime`",
+    "일부 필드는 무조건 덮음"
+   ]
+  ],
+  "branches": {
+   "B1": [
+    "—",
+    "`ErrExitObserverUnavailable`",
+    "`TestA091TheProductionAssemblyReadsTheLoadedSwitch`"
+   ],
+   "B2": [
+    "—",
+    "게이트 미검증 거부",
+    "`TestA091TheProductionAssemblyReadsTheLoadedSwitch`"
+   ],
+   "B3": [
+    "—",
+    "Guardian 비발행 거부",
+    "`TestA091TheProductionAssemblyReadsTheLoadedSwitch`"
+   ],
+   "B4": [
+    "`opts.Names` 기본",
+    "—",
+    "`TestA091TheProductionAssemblyReadsTheLoadedSwitch`"
+   ],
+   "B5": [
+    "Alerts·Announcer·Critical 덮음",
+    "—",
+    "`TestA091TheProductionAssemblyReadsTheLoadedSwitch`"
+   ],
+   "B6": [
+    "`opts.Floor` 기본",
+    "—",
+    "`TestA091TheProductionAssemblyReadsTheLoadedSwitch`"
+   ]
+  },
+  "calls": [
+   [
+    "`NewExitObserver`",
+    "검증·구성",
+    "오류 반환",
+    "AST"
+   ],
+   [
+    "`exitSideRetrier` · `exitSideFloor`",
+    "기록 전용 재시도기·상한",
+    "—",
+    "AST"
+   ]
+  ],
+  "mutations": [
+   "`opts` 사본 필드 덮어쓰기(무조건: Journal·Prices·Retrier·Issuer·Submit·AccountRef·CommonPolicy·NotificationsEnabled·ZeroFloorLog)."
+  ],
+  "edit": [
+   "a163 3.6: 무조건 덮어쓰기 줄 `opts.SourceAgeReport = c.Config.Engine.ExitSourceAgeReport` 하나(선례 `NotificationsEnabled`). 분기 6 · 반환 4 불변(design D8). — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`"
+  ],
+  "safety": [
+   "Safe edit boundary: 어느 분기 안도 아닌 대입 한 줄.",
+   "High-risk impact: yes(배선) — 2.15 · 변이 ⑳."
+  ],
+  "tests": {
+   "*": [
+    "기존 조립 + SourceAgeReport 무조건 덮어쓰기",
+    "`TestA163TheProductionAssemblyReadsTheLoadedToggle` · `TestA091TheProductionAssemblyReadsTheLoadedSwitch`",
+    "yes(2.15 — 골격에서 호출자 값이 이김으로 실패)",
+    "pass"
+   ]
+  }
+ },
+ "internal-app-engine--newcontext": {
+  "revision_note": "편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`",
+  "risk": "High-risk(기동 인터록) — a163 은 호출 인자 하나만 바꿈",
+  "inputs": [
+   [
+    "`opts`",
+    "엔진 옵션",
+    "호출자",
+    "—"
+   ],
+   [
+    "`cfg`",
+    "로드된 설정(기동 1회)",
+    "`config.NewService(...).Load`",
+    "오류 B1"
+   ]
+  ],
+  "branches": {
+   "B1": [
+    "—",
+    "설정 실패 반환",
+    "기존 시험"
+   ],
+   "B2": [
+    "—",
+    "audit 열기 실패 반환",
+    "기존 시험"
+   ],
+   "B3": [
+    "시스템 시계",
+    "—",
+    "기존 시험"
+   ],
+   "B4": [
+    "주입 publisher 우선",
+    "—",
+    "`TestAnInjectedPublisherWins`"
+   ],
+   "B5": [
+    "—",
+    "audit 기록 실패 → 기동 거부",
+    "기존 시험"
+   ],
+   "B6": [
+    "—",
+    "계좌 미해석 거부",
+    "기존 시험"
+   ],
+   "B7": [
+    "—",
+    "원장 열기 실패 거부",
+    "기존 시험"
+   ],
+   "B8": [
+    "—",
+    "apply hook 실패 거부",
+    "기존 시험"
+   ],
+   "B9": [
+    "—",
+    "gateway 실패 거부",
+    "기존 시험"
+   ],
+   "B10": [
+    "Guardian 생성",
+    "—",
+    "기존 시험"
+   ],
+   "B11": [
+    "기본 factory",
+    "—",
+    "기존 시험"
+   ],
+   "B12": [
+    "—",
+    "Guardian 실패 거부",
+    "기존 시험"
+   ],
+   "B13": [
+    "—",
+    "인터록 실패 반환",
+    "기존 시험"
+   ],
+   "B14": [
+    "미검증이면 Guardian 버림",
+    "—",
+    "기존 시험"
+   ],
+   "B15": [
+    "—",
+    "전략 투영 실패 반환",
+    "`TestDormantSnapshotContainsExactPairedHonestMarkets`"
+   ]
+  },
+  "calls": [
+   [
+    "`recordGateSettings`",
+    "기동 audit(B5)",
+    "오류 → 기동 거부",
+    "AST"
+   ],
+   [
+    "`runInterlock`",
+    "자동화 게이트",
+    "—",
+    "AST"
+   ]
+  ],
+  "mutations": [
+   "Context 조립."
+  ],
+  "edit": [
+   "a163 3.6: B5 의 `recordGateSettings(...)` 호출에 끝 인자 `cfg.Engine.ExitSourceAgeReport` 하나. 분기 15 · 반환 11 불변. 실패 모양(B5 → 기동 거부) 불변. — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`"
+  ],
+  "safety": [
+   "Safe edit boundary: 호출 인자 하나.",
+   "High-risk impact: no 새 분기 — 2.16 · 변이 ㉑ 가 값 전달을 잰다."
+  ],
+  "tests": {
+   "*": [
+    "기존 기동 + 로드된 토글을 audit 에 전달",
+    "`TestA163AStartupAuditsTheLoadedReportToggle` · `TestAnInjectedPublisherWins`",
+    "yes(2.16 생산 절반 — 골격에서 토글이 false 로 로드됨으로 실패)",
+    "pass"
+   ]
+  }
+ },
+ "internal-app-engine--testnotificationsettingsareaudited": {
+  "revision_note": "편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`",
+  "risk": "시험 전용",
+  "inputs": [
+   [
+    "audit 고정물",
+    "임시 경로",
+    "`auditFixture`",
+    "—"
+   ]
+  ],
+  "branches": {
+   "B1": [
+    "—",
+    "`t.Fatalf`",
+    "자기 자신"
+   ],
+   "B2": [
+    "설정 순회",
+    "—",
+    "자기 자신"
+   ],
+   "B3": [
+    "—",
+    "`t.Errorf`",
+    "자기 자신"
+   ],
+   "B4": [
+    "—",
+    "`t.Errorf`",
+    "자기 자신"
+   ]
+  },
+  "calls": [
+   [
+    "`recordGateSettings`",
+    "대상 호출",
+    "오류는 Fatalf",
+    "AST"
+   ]
+  ],
+  "mutations": [
+   "없음."
+  ],
+  "edit": [
+   "a163 3.6: `recordGateSettings` 호출에 끝 인자 `false` 하나(design D8 — 기계적). 단언 무편집. — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`"
+  ],
+  "safety": [
+   "Safe edit boundary: 호출 인자 하나.",
+   "High-risk impact: no."
+  ],
+  "tests": {
+   "*": [
+    "자기 자신",
+    "`TestNotificationSettingsAreAudited`",
+    "n/a",
+    "pass"
+   ]
+  }
+ },
+ "internal-app-engine--testtheaudittrailcarriesnonotificationsecret": {
+  "revision_note": "편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`",
+  "risk": "시험 전용",
+  "inputs": [
+   [
+    "audit 고정물",
+    "임시 경로",
+    "`auditFixture`",
+    "—"
+   ]
+  ],
+  "branches": {
+   "B1": [
+    "—",
+    "`t.Fatalf`",
+    "자기 자신"
+   ],
+   "B2": [
+    "—",
+    "`t.Fatalf`",
+    "자기 자신"
+   ],
+   "B3": [
+    "행 순회",
+    "—",
+    "자기 자신"
+   ],
+   "B4": [
+    "—",
+    "`t.Fatalf`",
+    "자기 자신"
+   ]
+  },
+  "calls": [
+   [
+    "`recordGateSettings`",
+    "대상 호출",
+    "오류는 Fatalf",
+    "AST"
+   ]
+  ],
+  "mutations": [
+   "없음."
+  ],
+  "edit": [
+   "a163 3.6: `recordGateSettings` 호출에 끝 인자 `false` 하나. 단언 무편집. — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`"
+  ],
+  "safety": [
+   "Safe edit boundary: 호출 인자 하나.",
+   "High-risk impact: no."
+  ],
+  "tests": {
+   "*": [
+    "자기 자신",
+    "`TestTheAuditTrailCarriesNoNotificationSecret`",
+    "n/a",
+    "pass"
+   ]
+  }
+ },
+ "internal-app-engine--testarefusednotificationblockisaudited": {
+  "revision_note": "편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`",
+  "risk": "시험 전용",
+  "inputs": [
+   [
+    "audit 고정물",
+    "임시 경로",
+    "`auditFixture`",
+    "—"
+   ]
+  ],
+  "branches": {
+   "B1": [
+    "—",
+    "`t.Fatalf`",
+    "자기 자신"
+   ],
+   "B2": [
+    "—",
+    "`t.Fatal`",
+    "자기 자신"
+   ],
+   "B3": [
+    "—",
+    "`t.Fatalf`",
+    "자기 자신"
+   ]
+  },
+  "calls": [
+   [
+    "`recordGateSettings`",
+    "대상 호출",
+    "오류는 Fatalf",
+    "AST"
+   ]
+  ],
+  "mutations": [
+   "없음."
+  ],
+  "edit": [
+   "a163 3.6: `recordGateSettings` 호출에 끝 인자 `false` 하나. 단언 무편집. — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`"
+  ],
+  "safety": [
+   "Safe edit boundary: 호출 인자 하나.",
+   "High-risk impact: no."
+  ],
+  "tests": {
+   "*": [
+    "자기 자신",
+    "`TestARefusedNotificationBlockIsAudited`",
+    "n/a",
+    "pass"
+   ]
+  }
+ },
+ "internal-app-engine--testexistingauditentrieskeeptheirorder": {
+  "revision_note": "편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`",
+  "risk": "시험 전용",
+  "inputs": [
+   [
+    "audit 고정물",
+    "임시 경로",
+    "`auditFixture`",
+    "—"
+   ]
+  ],
+  "branches": {
+   "B1": [
+    "—",
+    "`t.Fatalf`",
+    "자기 자신"
+   ],
+   "B2": [
+    "—",
+    "`t.Fatalf`",
+    "자기 자신"
+   ],
+   "B3": [
+    "—",
+    "`t.Fatalf`(앞부분 행 수)",
+    "자기 자신"
+   ],
+   "B4": [
+    "순서 순회",
+    "—",
+    "자기 자신"
+   ],
+   "B5": [
+    "—",
+    "`t.Fatalf`",
+    "자기 자신"
+   ]
+  },
+  "calls": [
+   [
+    "`recordGateSettings`",
+    "대상 호출",
+    "오류는 Fatalf",
+    "AST"
+   ]
+  ],
+  "mutations": [
+   "없음."
+  ],
+  "edit": [
+   "a163 3.6: `recordGateSettings` 호출에 끝 인자 `false` 하나. 앞부분 순서 단언 무편집 — 새 행은 끝에 붙어 양립. — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`"
+  ],
+  "safety": [
+   "Safe edit boundary: 호출 인자 하나.",
+   "High-risk impact: no."
+  ],
+  "tests": {
+   "*": [
+    "자기 자신",
+    "`TestExistingAuditEntriesKeepTheirOrder`",
+    "n/a",
+    "pass"
+   ]
+  }
+ }
+}

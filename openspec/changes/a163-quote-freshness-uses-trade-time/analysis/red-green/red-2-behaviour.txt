@@ -1,0 +1,71 @@
+# RED 2단계 — 타입 표면만 더한 골격(필드 · 상수 · 끝 인자 · 빈 reportSourceAge), 동작 0. go1.26.5, 2026-10-22
+--- FAIL: TestA163AdaptPricesKeepsTheBrokerTimeVerbatim (0.00s)
+    a163_adapt_prices_source_time_test.go:38: 005930 SourceTimestamp = "", want "2026-08-27T19:59:59.000+09:00" verbatim
+    a163_adapt_prices_source_time_test.go:38: AAPL SourceTimestamp = "", want "2026-08-28T05:28:30.000+09:00" verbatim
+    a163_adapt_prices_source_time_test.go:38: 051910 SourceTimestamp = "", want "not-a-time" verbatim
+    a163_adapt_prices_source_time_test.go:38: 068270 SourceTimestamp = "", want "2026-08-27T19:59:59.123+0900" verbatim
+--- FAIL: TestA163PricesCarriesTheBrokerTimeInOneRequest (0.00s)
+    a163_adapt_prices_source_time_test.go:68: calls=1 quotes=[{ProductCode: Symbol:005930 Name: MarketCode: Market: Currency:KRW ReferencePrice:0 Last:72000 Change:0 ChangeRate:0 Volume:0 Open:0 High:0 Low:0 High52w:0 Low52w:0 MarketCap:0 TradingValue:0 TradingStrength:0 PrevVolume:0 UpperLimit:0 LowerLimit:0 Status: BadgeCount:0 NoticeCount:0 FetchedAt:2026-10-21 23:33:25.626999888 +0000 UTC SourceTimestamp:} {ProductCode: Symbol:000660 Name: MarketCode: Market: Currency:KRW ReferencePrice:0 Last:1 Change:0 ChangeRate:0 Volume:0 Open:0 High:0 Low:0 High52w:0 Low52w:0 MarketCap:0 TradingValue:0 TradingStrength:0 PrevVolume:0 UpperLimit:0 LowerLimit:0 Status: BadgeCount:0 NoticeCount:0 FetchedAt:2026-10-21 23:33:25.62700016 +0000 UTC SourceTimestamp:}], want one request and the broker time verbatim (null → empty)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.007s
+--- FAIL: TestA163TheSourceAgeReportToggleDefaultsOff (0.00s)
+--- FAIL: TestA163AnOffToggleLeavesConfigShowByteIdentical (0.00s)
+    a163_exit_source_age_report_test.go:61: an on toggle is not shown: {"autostart":false,"automation_gate":{"enabled":false},"adoption":{"enabled":false},"exit_policy":{},"notifications":{"enabled":false}}
+--- FAIL: TestA163ThePublishedSchemaDeclaresTheToggleOffByDefault (0.00s)
+    a163_exit_source_age_report_test.go:89: parsing the published schema: json: cannot unmarshal string into Go struct field .properties.properties.default of type bool
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/config	0.004s
+--- FAIL: TestA163TheReportToggleIsTheLastAuditedSettingAndOnlyItsChangeIsWritten (0.05s)
+    a163_source_age_audit_test.go:34: last entry = {At:2026-08-04 12:00:00 +0000 UTC Subject:test-operator Action:automation_gate.limit Setting:engine.automation_gate.per_trade_risk_budget Old: New: Detail:cannot be derived: risk: per-trade risk budget: maximum daily loss "0" is not positive (rule floor(max_daily_loss_amount / 3, minor unit) — a139)}, want the report toggle recorded off with its own action
+--- FAIL: TestA163AMissingOrUnparseableTimeIsAlertedOnceAndRearmsWhenATimeArrives (0.35s)
+    a163_source_age_report_test.go:171: alerts a=0 b=0 c=0, want 1 · 1 · 0 (a stale time is logged, never alerted — H1)
+--- FAIL: TestA163AHeldPositionThatWasNotJudgedKeepsItsLatch (0.30s)
+    a163_source_age_report_test.go:205: d alerts = 0, want 1
+--- FAIL: TestA163AClosedPositionLeavesTheLatch (0.31s)
+    a163_source_age_report_test.go:231: latch = map[], want both judged positions
+--- FAIL: TestA163AtMostEightSourceAlertsLeaveInOneCycle (0.65s)
+    a163_source_age_report_test.go:258: alerts per cycle = [0 0 0], want [8 4 0] — the cap carries the rest to the next cycle
+--- FAIL: TestA163TheReportComesAfterEveryJudgementAndBeforeTheUnobservedSettlement (0.33s)
+    a163_source_age_report_test.go:294: submissions at the first report = -1, want 1 — the second position's stop must already be out (safety 4)
+--- FAIL: TestA163NoReportLineOrAlertCarriesTheAccount (0.35s)
+    a163_source_age_report_test.go:347: lines = 0, want 3
+--- FAIL: TestA163TheAssembledObserverWritesItsLinesToTheDedicatedLogger (0.32s)
+    a163_source_age_report_test.go:431: dedicated logger lines = [], want one missing-bucket line
+--- FAIL: TestA163AnAgeLineIsWrittenOnlyWhenTheBucketChanges (0.29s)
+    a163_source_age_report_test.go:446: lines over three le_15s cycles = [], want one
+--- FAIL: TestA163EveryBucketIsClassifiedFromTheReceiptTime (0.49s)
+    a163_source_age_report_test.go:493: 100001 ("") buckets = [], want [missing]
+    a163_source_age_report_test.go:493: 100002 ("2026-03-30T09:59:58.000+0900") buckets = [], want [unparseable]
+    a163_source_age_report_test.go:493: 100003 ("2026-03-30T10:05:05.000+09:00") buckets = [], want [ahead]
+    a163_source_age_report_test.go:493: 100004 ("2026-03-30T10:00:02.000+09:00") buckets = [], want [le_15s]
+    a163_source_age_report_test.go:493: 100005 ("2026-03-30T09:58:05.000+09:00") buckets = [], want [le_5m]
+    a163_source_age_report_test.go:493: 100006 ("2026-03-30T09:30:05.000+09:00") buckets = [], want [le_1h]
+    a163_source_age_report_test.go:493: 100007 ("2026-03-30T00:30:05.000+09:00") buckets = [], want [gt_1h]
+    a163_source_age_report_test.go:493: 100008 ("2026-03-30T09:59:50.000+09:00") buckets = [], want [le_15s]
+    a163_source_age_report_test.go:493: 100009 ("2026-03-30T09:55:05.000+09:00") buckets = [], want [le_5m]
+    a163_source_age_report_test.go:493: 100010 ("2026-03-30T09:00:05.000+09:00") buckets = [], want [le_1h]
+--- FAIL: TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn (0.83s)
+    a163_source_age_report_test.go:574: toggle on: lines=0 alerts=0, want lines and the two source_missing alerts
+--- FAIL: TestA163TheProductionAssemblyReadsTheLoadedToggle (0.61s)
+--- FAIL: TestA163AStartupAuditsTheLoadedReportToggle (0.32s)
+    a163_source_age_startup_test.go:42: start 1 loaded the toggle as false, want true
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	10.345s
+--- FAIL: TestA163EngineRuntimeWiresTheSourceAgeLogger (0.00s)
+    a163_engine_runtime_source_age_log_test.go:47: engineRuntime does not wire SourceAgeLog — the source-age lines would reach no sink in production
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.013s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/output	0.007s
+FAIL
+    a163_exit_source_age_report_test.go:35: ExitSourceAgeReport = false, want true
+    a163_exit_source_age_report_test.go:35: ExitSourceAgeReport = false, want true
+--- FAIL: TestA163TheSourceAgeReportToggleDefaultsOff (0.00s)
+    --- PASS: TestA163TheSourceAgeReportToggleDefaultsOff/no_engine_block (0.00s)
+    --- PASS: TestA163TheSourceAgeReportToggleDefaultsOff/no_key (0.00s)
+    --- PASS: TestA163TheSourceAgeReportToggleDefaultsOff/explicit_false (0.00s)
+    --- FAIL: TestA163TheSourceAgeReportToggleDefaultsOff/explicit_true (0.00s)
+    --- FAIL: TestA163TheSourceAgeReportToggleDefaultsOff/true_without_automation_gate (0.00s)
+    a163_exit_source_age_report_test.go:61: an on toggle is not shown: {"autostart":false,"automation_gate":{"enabled":false},"adoption":{"enabled":false},"exit_policy":{},"notifications":{"enabled":false}}
+--- FAIL: TestA163AnOffToggleLeavesConfigShowByteIdentical (0.00s)
+    a163_exit_source_age_report_test.go:93: schema engine.exit_source_age_report = type "" default  (declared false), want a boolean defaulting to false — the engine block is additionalProperties:false
+--- FAIL: TestA163ThePublishedSchemaDeclaresTheToggleOffByDefault (0.00s)

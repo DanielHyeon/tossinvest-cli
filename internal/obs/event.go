@@ -209,6 +209,12 @@ const (
 	// EventExitObservationOutage 가 critical 로 알림. 로그 줄은 SeverityOf 를 싣으므로 여기서 critical 타입을 쓰면
 	// 연속 시작 한 줄이 critical 표지를 닮.
 	EventExitPositionUnobserved EventType = "exit.position_unobserved"
+	// EventExitSourceAge 는 판정된 포지션의 체결 나이 구간이 바뀐 순간의 줄임(a163 — 받은 시각 − 브로커 데이터 시각).
+	// Normal — 등급표에 넣지 않음: 보고이지 경보가 아니고, 판정은 이 값과 무관하게 받은 시각 기준으로 돎. 보고 토글이 켜졌을 때만 남.
+	EventExitSourceAge EventType = "exit.source_age"
+	// EventExitSourceMissing 은 브로커 데이터 시각이 없거나 해독할 수 없는 관측의 일반 등급 알림임(a163 H4).
+	// Normal — critical 로 올리면 outbox 기록 실패가 진입 래치 · 모드 강화를 부름(보고 전용 신호가 진입을 막는 길, H2).
+	EventExitSourceMissing EventType = "exit.source_missing"
 	// EventExitJudgementRefused is an evaluation that could not run at all — an
 	// invariant violation in the stored state, or a price the policy cannot use
 	// (exitpolicy.ErrRefused). CRITICAL, and distinct from "nothing to do": the

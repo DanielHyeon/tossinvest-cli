@@ -3,7 +3,7 @@
 - Source: `internal/app/engine/engine.go` (437-607)
 - AST evidence: `ast.json`
 - Risk scan: `risk-pattern-report.md`
-- 기준: 편집 전(base `f7d80c348`)
+- 기준: 편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`
 - AST 분기 15 · 반환 11 · defer 0 · go 0
 - 위험 등급: High-risk(기동 인터록) — a163 은 호출 인자 하나만 바꿈
 
@@ -49,7 +49,7 @@
 
 ## a163 편집
 
-- a163 3.6: B5 의 `recordGateSettings(...)` 호출에 끝 인자 `cfg.Engine.ExitSourceAgeReport` 하나. 분기 15 · 반환 11 불변. 실패 모양(B5 → 기동 거부) 불변.
+- a163 3.6: B5 의 `recordGateSettings(...)` 호출에 끝 인자 `cfg.Engine.ExitSourceAgeReport` 하나. 분기 15 · 반환 11 불변. 실패 모양(B5 → 기동 거부) 불변. — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`
 
 ## Safety conclusion
 

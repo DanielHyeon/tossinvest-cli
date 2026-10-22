@@ -470,7 +470,7 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 	// start on it, and the refusal record that may follow is what ties the two
 	// together (§0.5).
 	if err := recordGateSettings(auditLog, gate, cfg.Engine.Adoption, notifications,
-		status.AttestationFile); err != nil {
+		status.AttestationFile, cfg.Engine.ExitSourceAgeReport); err != nil {
 		// A settings change we cannot record is a settings change nobody can
 		// audit. Refusing here is the conservative direction: the engine does not
 		// start, and no order is placed off the record.

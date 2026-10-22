@@ -1,9 +1,9 @@
 # Function Logic Map: `adaptPrices`
 
-- Source: `internal/official/market_reads.go` (168-180)
+- Source: `internal/official/market_reads.go` (168-183)
 - AST evidence: `ast.json`
 - Risk scan: `risk-pattern-report.md`
-- 기준: 편집 전(base `f7d80c348` = HEAD `1eab9b931` 의 `internal` diff 0)
+- 기준: 편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`
 - AST 분기 1 · 반환 1 · defer 0 · go 0
 - 위험 등급: High-risk(청산 관측의 유일한 생산 시세 어댑터 — `Client.Prices` 경유 `ExitObserver.observe` B1)
 
@@ -20,7 +20,7 @@
 |---|---|---|---|---|
 | B1 | range 170 `for _, p := range raw {` | 행마다 `domain.Quote` 하나 추가(행 탈락 0) | 끝에서 `out` 반환 | `TestAdaptPricesUnit` · `TestAdaptPricesEmpty` |
 
-반환 좌표(AST): 179
+반환 좌표(AST): 182
 
 ## Calls and live bindings
 
@@ -35,7 +35,7 @@
 
 ## a163 편집
 
-- a163 3.1: 리터럴에 `SourceTimestamp: p.Timestamp` 대입 한 줄. 분기 1 · 반환 1 불변(design D3). 해독·거름·오류 0.
+- a163 3.1: 리터럴에 `SourceTimestamp: p.Timestamp` 대입 한 줄. 분기 1 · 반환 1 불변(design D3). 해독·거름·오류 0. — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`
 
 ## Safety conclusion
 

@@ -3,7 +3,7 @@
 - Source: `internal/app/engine/a074_notification_audit_test.go` (49-76)
 - AST evidence: `ast.json`
 - Risk scan: `risk-pattern-report.md`
-- 기준: 편집 전(base `f7d80c348`) — 시험 함수(비례 원칙: 기계적 호출 인자 편집)
+- 기준: 편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`
 - AST 분기 4 · 반환 0 · defer 0 · go 0
 - 위험 등급: 시험 전용
 
@@ -36,7 +36,7 @@
 
 ## a163 편집
 
-- a163 3.6: `recordGateSettings` 호출에 끝 인자 `false` 하나(design D8 — 기계적). 단언 무편집.
+- a163 3.6: `recordGateSettings` 호출에 끝 인자 `false` 하나(design D8 — 기계적). 단언 무편집. — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`
 
 ## Safety conclusion
 

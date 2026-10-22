@@ -678,6 +678,8 @@ func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, l
 		UnobservedLog: logger,
 		// a129: 청산 주문 생애 줄(확정 · 거부 · 체결 …)만 받는 전용 로거 — 화이트리스트 필드만 씀. 2026-10-07 010170 손절이 이 로그에 0 줄이었음.
 		ExitOrderLog: logger,
+		// a163: 체결 나이 보고 줄(exit.source_age)만 받는 전용 로거 — 계좌 없는 필드만 씀. 쓰기 여부는 로드된 설정의 토글이 정함.
+		SourceAgeLog: logger,
 	})
 	if err != nil {
 		return nil, err

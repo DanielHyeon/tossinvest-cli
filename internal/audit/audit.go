@@ -99,6 +99,11 @@ const (
 	// The values it records are deliberately not the channel: see
 	// engine.recordGateSettings and §0.8.
 	ActionNotificationSetting = "notifications.setting"
+	// ActionExitSourceAgeReport 는 청산 루프 체결 나이 보고 토글(engine.exit_source_age_report)의 변경임(a163 design D8).
+	//
+	// 자기 action 인 이유는 위 셋과 같음 — 허가하는 것이 다름. 이 스위치는 주문을 허가하지 않는 보고 스위치라 gate · notification
+	// action 에 섞지 않음. 운영자가 「언제 체결 나이 보고를 켰나」 를 다른 줄에서 읽어 내지 않게 함.
+	ActionExitSourceAgeReport = "exit.source_age_report"
 	// Remote console authentication events are separate from setting changes.
 	ActionRemoteLogin       = "console.remote.login"
 	ActionRemoteLoginFailed = "console.remote.login_failed"

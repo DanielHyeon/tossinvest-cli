@@ -1,9 +1,9 @@
 # Function Logic Map: `ExitObserver.observe`
 
-- Source: `internal/app/engine/exitloop.go` (842-913)
+- Source: `internal/app/engine/exitloop.go` (858-929)
 - AST evidence: `ast.json`
 - Risk scan: `risk-pattern-report.md`
-- 기준: 편집 전(base `f7d80c348`)
+- 기준: 편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`
 - AST 분기 15 · 반환 6 · defer 0 · go 0
 - 위험 등급: High-risk(손절 판정의 유일한 시세 입력)
 
@@ -19,23 +19,23 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | if 849 `if qerr != nil {` | — | `return qerr` → Retrier 재시도/실패 | `TestAFailedObservationHoldsTheJudgement` |
-| B2 | range 858 `for _, symbol := range symbols {` | `wanted` 집합 구성 | — | 기존 시험 |
-| B3 | range 862 `for _, q := range quotes {` | 후보 순회 | — | 기존 시험 |
-| B4 | if 864 `if _, needed := wanted[symbol]; !needed \|\| q.Last <= 0 \|\| math.IsNaN(q.Last) \|\| math.IsInf(q.Last, 0) {` | 후보 제외 | `continue` | `TestAQuoteWithNoLastTradeIsNotAnObservation` |
-| B5 | if 868 `if q.FetchedAt.IsZero() {` | `FetchedAt` 0 → 사이클 대체, `needsFallback` | — | `TestA111FallbackObservationSourceIsDurableAndRestartMonotone` |
-| B6 | else 871 `} else if effectiveAt.After(validatedAt) \|\|` | else-if 사슬 | — | `TestA111QuoteEvidenceUsesOnePostBatchClockAndNeverFallsBackFromBadOfficialTime` |
-| B7 | if 871 `} else if effectiveAt.After(validatedAt) \|\|` | 미래·15 s 초과 후보 제외 | `continue` | `TestA111QuoteEvidenceUsesOnePostBatchClockAndNeverFallsBackFromBadOfficialTime` |
-| B8 | if 878 `if len(next) == 0 {` | — | 후보 0 → `EvidenceInvalid` | 기존 시험 |
-| B9 | if 884 `if err != nil {` | — | `return nil, err` | `TestAFailedObservationHoldsTheJudgement` |
-| B10 | if 887 `if needsFallback {` | 대체 시퀀스 회복 | — | `TestA111FallbackSequenceRecoveryIsLazyAndPriceEvidenceUsesTheGateDuration` |
-| B11 | if 893 `if err != nil {` | — | 원장 오류 반환 | 기존 시험 |
-| B12 | for 896 `for {` | CAS 루프 | — | 기존 시험 |
-| B13 | if 898 `if current >= maximum \|\| o.observationSequence.CompareAndSwap(current, maximum) {` | 루프 탈출 | — | 기존 시험 |
-| B14 | range 904 `for symbol, quote := range out {` | 대체 출처 기입 | — | 기존 시험 |
-| B15 | if 905 `if quote.Source != "" {` | 공식 출처는 건너뜀 | `continue` | 기존 시험 |
+| B1 | if 865 `if qerr != nil {` | — | `return qerr` → Retrier 재시도/실패 | `TestAFailedObservationHoldsTheJudgement` |
+| B2 | range 874 `for _, symbol := range symbols {` | `wanted` 집합 구성 | — | 기존 시험 |
+| B3 | range 878 `for _, q := range quotes {` | 후보 순회 | — | 기존 시험 |
+| B4 | if 880 `if _, needed := wanted[symbol]; !needed \|\| q.Last <= 0 \|\| math.IsNaN(q.Last) \|\| math.IsInf(q.Last, 0) {` | 후보 제외 | `continue` | `TestAQuoteWithNoLastTradeIsNotAnObservation` |
+| B5 | if 884 `if q.FetchedAt.IsZero() {` | `FetchedAt` 0 → 사이클 대체, `needsFallback` | — | `TestA111FallbackObservationSourceIsDurableAndRestartMonotone` |
+| B6 | else 887 `} else if effectiveAt.After(validatedAt) \|\|` | else-if 사슬 | — | `TestA111QuoteEvidenceUsesOnePostBatchClockAndNeverFallsBackFromBadOfficialTime` |
+| B7 | if 887 `} else if effectiveAt.After(validatedAt) \|\|` | 미래·15 s 초과 후보 제외 | `continue` | `TestA111QuoteEvidenceUsesOnePostBatchClockAndNeverFallsBackFromBadOfficialTime` |
+| B8 | if 894 `if len(next) == 0 {` | — | 후보 0 → `EvidenceInvalid` | 기존 시험 |
+| B9 | if 900 `if err != nil {` | — | `return nil, err` | `TestAFailedObservationHoldsTheJudgement` |
+| B10 | if 903 `if needsFallback {` | 대체 시퀀스 회복 | — | `TestA111FallbackSequenceRecoveryIsLazyAndPriceEvidenceUsesTheGateDuration` |
+| B11 | if 909 `if err != nil {` | — | 원장 오류 반환 | 기존 시험 |
+| B12 | for 912 `for {` | CAS 루프 | — | 기존 시험 |
+| B13 | if 914 `if current >= maximum \|\| o.observationSequence.CompareAndSwap(current, maximum) {` | 루프 탈출 | — | 기존 시험 |
+| B14 | range 920 `for symbol, quote := range out {` | 대체 출처 기입 | — | 기존 시험 |
+| B15 | if 921 `if quote.Source != "" {` | 공식 출처는 건너뜀 | `continue` | 기존 시험 |
 
-반환 좌표(AST): 850 · 879 · 882 · 885 · 894 · 912
+반환 좌표(AST): 866 · 895 · 898 · 901 · 910 · 928
 
 ## Calls and live bindings
 
@@ -52,7 +52,7 @@
 
 ## a163 편집
 
-- a163 3.2: `next[symbol] = observedQuote{…}` 리터럴에 `SourceTimestamp: q.SourceTimestamp` 하나. 분기 15 · 반환 6 불변(design D7). B4·B7 의 거름은 여전히 `FetchedAt`·`Last` 만 읽음.
+- a163 3.2: `next[symbol] = observedQuote{…}` 리터럴에 `SourceTimestamp: q.SourceTimestamp` 하나. 분기 15 · 반환 6 불변(design D7). B4·B7 의 거름은 여전히 `FetchedAt`·`Last` 만 읽음. — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`
 
 ## Safety conclusion
 

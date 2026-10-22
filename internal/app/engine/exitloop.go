@@ -218,6 +218,13 @@ type ExitObserverOptions struct {
 	// Log 와 따로 둔 이유는 UnobservedLog 와 같음 — 화이트리스트 필드만 씀(exit_order_log.go). nil 이면 줄도 체결 따라가기도 원장 읽기도 0.
 	// 생산 배선은 engineRuntime 이 엔진 로거를 넣음(2026-10-07 010170 손절이 engine.log 에 0 줄이던 원인).
 	ExitOrderLog *obs.Logger
+	// SourceAgeLog 는 a163 의 체결 나이 보고 줄(exit.source_age — 구간 전이 · 거둔 패닉)만 받는 전용 로거임. 선택.
+	// Log 와 따로 둔 이유는 UnobservedLog 와 같음(Log 는 생산에서 nil · 계좌 원문). 생산 배선은 engineRuntime 이 엔진 로거를 넣음.
+	// nil 이면 줄 0 — 그래서 생산 배선 시험이 따로 있음(a129 선례).
+	SourceAgeLog *obs.Logger
+	// SourceAgeReport 는 체결 나이 보고 토글임(a163 design D8, 기본 false = 보고 없음 = a163 이전 동작). 판정 입력이 아님 —
+	// 보고 진입 함수(exit_source_age.go)만 읽음. 생산 배선(Context.ExitObserver)이 로드된 설정으로 호출자 값과 무관하게 덮음.
+	SourceAgeReport bool
 
 	// AccountRef scopes everything. Required.
 	AccountRef string
@@ -296,6 +303,9 @@ type ExitObserver struct {
 	exitOrderRefusedNow map[string]bool
 	// exitFills 는 체결을 따라가는 청산 주문임(intent id → 항목, a129). 지연 초기화 — 재시작하면 잃음.
 	exitFills map[string]*exitFillWatch
+	// sourceAge 는 a163 체결 나이 보고의 포지션별 래치임(position id → 마지막 구간 · 알림함). 지연 초기화 — 재시작하면 잃음.
+	// ObserveOnce 의 goroutine 만 읽고 씀(unobserved 와 같은 소유) — 잠금 없음, concurrent map write 는 recover 로 못 거둠.
+	sourceAge map[string]*sourceAgeRecord
 }
 
 // NewExitObserver validates the wiring and snapshots the common selection used
@@ -520,6 +530,9 @@ func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
 			cycle.Err = err
 		}
 	}
+	// a163: 체결 나이 보고도 모든 판정 · 제출 뒤 한 번 — a090 집계를 비우는 settleUnobserved 앞이어야 판정된 포지션을 읽음.
+	// 토글 판단 · 패닉 격리는 그 함수 안(exit_source_age.go) — 이 줄은 토글과 무관하게 무조건임.
+	o.reportSourceAge(ctx, &cycle, states, quotes)
 	// a090: 임계 판정 · 알림 · 강화는 모든 포지션 판정이 끝난 뒤 한 번 — 뒤 포지션의 손절 판정 앞에 서지 않음.
 	o.settleUnobserved(ctx, &cycle)
 	return cycle
@@ -831,6 +844,9 @@ type observedQuote struct {
 	FetchedAt   time.Time
 	Source      string
 	leaseAnchor time.Time
+	// SourceTimestamp 는 브로커 데이터 시각 원문을 보고 경로까지 실어 나름(a163). 판정 · identity · 원장 시각은 읽지 않음 —
+	// 그 셋은 FetchedAt 임(design D2). 금지 census(a163_judgement_pin_test.go)가 읽는 자리를 셈.
+	SourceTimestamp string
 }
 
 type cycleObservation struct {
@@ -873,7 +889,7 @@ func (o *ExitObserver) observe(ctx context.Context, symbols []string, observatio
 				continue
 			}
 			next[symbol] = observedQuote{Price: decimalOf(q.Last), FetchedAt: effectiveAt,
-				Source: source, leaseAnchor: leaseAnchor}
+				Source: source, leaseAnchor: leaseAnchor, SourceTimestamp: q.SourceTimestamp}
 		}
 		if len(next) == 0 {
 			return execgw.NewEvidenceInvalidError(fmt.Sprintf("no valid quote evidence for %d managed symbol(s)", len(symbols)))

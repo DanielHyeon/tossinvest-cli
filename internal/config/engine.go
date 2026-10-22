@@ -58,6 +58,10 @@ type Engine struct {
 	// which wires no transport and is exactly what every pre-a074 config
 	// produces. See notifications.go.
 	Notifications Notifications `json:"notifications"`
+	// ExitSourceAgeReport 는 청산 루프의 체결 나이 보고(구간 전이 로그 줄 · source_missing 알림)를 켬(a163 design D8).
+	// 기본 꺼짐 — 키 없음 · 명시 false 는 꺼짐이고 꺼짐 = a163 이전 동작. 판정 입력이 아니며, 켜는 것은 사람(설정 편집 + 엔진 재기동).
+	// omitempty: 꺼져 있으면 `tossctl config show` 출력 바이트가 편집 전과 같음.
+	ExitSourceAgeReport bool `json:"exit_source_age_report,omitempty"`
 }
 
 type ExitPolicy struct {
@@ -267,6 +271,8 @@ type rawEngine struct {
 	Adoption       *rawAdoption       `json:"adoption"`
 	ExitPolicy     *rawExitPolicy     `json:"exit_policy"`
 	Notifications  *rawNotifications  `json:"notifications"`
+	// a163: 선택 키 — 포인터인 이유는 Autostart 와 같음(키 없음과 명시 false 를 시험에서 가름, 둘 다 false).
+	ExitSourceAgeReport *bool `json:"exit_source_age_report"`
 }
 
 type rawExitPolicy struct {
@@ -339,6 +345,10 @@ func mergeEngine(cfg *Engine, raw *rawEngine) {
 	// a notification block silently ignored because the file has no
 	// `automation_gate` key would be the worst kind of quiet.
 	mergeNotifications(cfg, raw.Notifications)
+	// a163: 같은 이유로 조기 반환 앞 — automation_gate 키가 없는 파일에서 보고 토글이 조용히 무시되면 안 됨(design D8).
+	if raw.ExitSourceAgeReport != nil {
+		cfg.ExitSourceAgeReport = *raw.ExitSourceAgeReport
+	}
 	if raw.AutomationGate == nil {
 		return
 	}

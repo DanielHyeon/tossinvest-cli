@@ -184,8 +184,7 @@ func a163CheckCensus(t *testing.T, name string, counts map[a163Site]int, allowed
 		t.Errorf("%s appears outside its allowed sites: %v — a judgement path may now read it (design D7·D8)", name, outside)
 	}
 	for site, want := range allowed {
-		// 편집 전(GREEN 전) 판: 허용 자리는 0 도 받음 — GREEN 로트에서 정확한 수만 받게 조임(tasks 1.2 「편집 전 GREEN」).
-		if got := counts[site]; got != want && got != 0 {
+		if got := counts[site]; got != want {
 			t.Errorf("%s at %s = %d, want exactly %d", name, site, got, want)
 		}
 	}

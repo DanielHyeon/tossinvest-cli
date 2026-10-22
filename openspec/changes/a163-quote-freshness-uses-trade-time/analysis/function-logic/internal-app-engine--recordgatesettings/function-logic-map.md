@@ -1,9 +1,9 @@
 # Function Logic Map: `recordGateSettings`
 
-- Source: `internal/app/engine/interlock.go` (739-811)
+- Source: `internal/app/engine/interlock.go` (739-813)
 - AST evidence: `ast.json`
 - Risk scan: `risk-pattern-report.md`
-- 기준: 편집 전(base `f7d80c348`)
+- 기준: 편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`
 - AST 분기 6 · 반환 2 · defer 0 · go 0
 - 위험 등급: High-risk(기동 인터록의 §0.5 audit — 실패하면 기동 거부)
 
@@ -22,10 +22,10 @@
 | B2 | if 752 `if notifications.Refused != "" {` | 알림 거부 사유 | — | `TestARefusedNotificationBlockIsAudited` |
 | B3 | else 755 `} else if notifications.PublicService && notifications.TopicConfigured {` | else-if 사슬 | — | `TestNotificationSettingsAreAudited` |
 | B4 | if 755 `} else if notifications.PublicService && notifications.TopicConfigured {` | 공개 ntfy 경고 | — | `TestNotificationSettingsAreAudited` |
-| B5 | range 805 `for _, c := range changes {` | 행 순회 | — | `TestExistingAuditEntriesKeepTheirOrder` |
-| B6 | if 806 `if _, err := log.RecordChange(c.action, c.setting, c.value, c.detail); err != nil {` | — | `return err` → 기동 거부 | 기존 시험 |
+| B5 | range 807 `for _, c := range changes {` | 행 순회 | — | `TestExistingAuditEntriesKeepTheirOrder` |
+| B6 | if 808 `if _, err := log.RecordChange(c.action, c.setting, c.value, c.detail); err != nil {` | — | `return err` → 기동 거부 | 기존 시험 |
 
-반환 좌표(AST): 807 · 810
+반환 좌표(AST): 809 · 812
 
 ## Calls and live bindings
 
@@ -40,7 +40,7 @@
 
 ## a163 편집
 
-- a163 3.6: 끝 인자 `sourceAgeReport bool` + `changes` 목록 **끝**에 `{audit.ActionExitSourceAgeReport, "engine.exit_source_age_report", strconv.FormatBool(sourceAgeReport), ""}` 한 행. 분기 6 · 반환 2 불변(design D8).
+- a163 3.6: 끝 인자 `sourceAgeReport bool` + `changes` 목록 **끝**에 `{audit.ActionExitSourceAgeReport, "engine.exit_source_age_report", strconv.FormatBool(sourceAgeReport), ""}` 한 행. 분기 6 · 반환 2 불변(design D8). — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`
 
 ## Safety conclusion
 

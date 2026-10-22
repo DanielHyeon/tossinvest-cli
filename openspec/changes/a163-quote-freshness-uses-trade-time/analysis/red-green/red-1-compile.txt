@@ -1,0 +1,28 @@
+# RED 1단계 — GREEN 전, 새 시험만 더한 트리(HEAD 78efe1951 + 시험 파일), go1.26.5, 2026-10-22
+## go vet ./internal/official/
+# github.com/JungHoonGhae/tossinvest-cli/internal/official [github.com/JungHoonGhae/tossinvest-cli/internal/official.test]
+internal/official/a163_adapt_prices_source_time_test.go:37:8: q.SourceTimestamp undefined (type domain.Quote has no field or method SourceTimestamp)
+internal/official/a163_adapt_prices_source_time_test.go:38:70: q.SourceTimestamp undefined (type domain.Quote has no field or method SourceTimestamp)
+internal/official/a163_adapt_prices_source_time_test.go:67:49: quotes[0].SourceTimestamp undefined (type domain.Quote has no field or method SourceTimestamp)
+internal/official/a163_adapt_prices_source_time_test.go:67:113: quotes[1].SourceTimestamp undefined (type domain.Quote has no field or method SourceTimestamp)
+## go vet ./internal/config/
+# github.com/JungHoonGhae/tossinvest-cli/internal/config [github.com/JungHoonGhae/tossinvest-cli/internal/config.test]
+internal/config/a163_exit_source_age_report_test.go:34:18: cfg.Engine.ExitSourceAgeReport undefined (type Engine has no field or method ExitSourceAgeReport)
+internal/config/a163_exit_source_age_report_test.go:35:62: cfg.Engine.ExitSourceAgeReport undefined (type Engine has no field or method ExitSourceAgeReport)
+internal/config/a163_exit_source_age_report_test.go:39:26: DefaultFile().Engine.ExitSourceAgeReport undefined (type Engine has no field or method ExitSourceAgeReport)
+## go vet ./internal/app/engine/
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a163_export_test.go:5:39: o.sourceAge undefined (type *ExitObserver has no field or method sourceAge)
+internal/app/engine/a163_export_test.go:6:25: o.sourceAge undefined (type *ExitObserver has no field or method sourceAge)
+internal/app/engine/a163_source_age_audit_test.go:21:117: too many arguments in call to recordGateSettings
+	have (*audit.Log, config.AutomationGate, config.Adoption, notificationResolution, string, bool)
+	want (*audit.Log, config.AutomationGate, config.Adoption, notificationResolution, string)
+internal/app/engine/a163_source_age_audit_test.go:33:77: undefined: audit.ActionExitSourceAgeReport
+internal/app/engine/a163_source_age_audit_test.go:39:11: undefined: audit.ActionExitSourceAgeReport
+internal/app/engine/a163_source_age_audit_test.go:40:62: undefined: audit.ActionExitSourceAgeReport
+## go test ./cmd/tossctl/ -run TestA163
+--- FAIL: TestA163EngineRuntimeWiresTheSourceAgeLogger (0.00s)
+    a163_engine_runtime_source_age_log_test.go:47: engineRuntime does not wire SourceAgeLog — the source-age lines would reach no sink in production
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.011s
+FAIL

@@ -53,7 +53,7 @@ func TestNotificationSettingsAreAudited(t *testing.T) {
 	}, fixedEnv(map[string]string{envNtfyToken: "s3cret"}))
 
 	if err := recordGateSettings(log, config.AutomationGate{}, config.Adoption{},
-		resolution, "/tmp/attestation.json"); err != nil {
+		resolution, "/tmp/attestation.json", false); err != nil {
 		t.Fatalf("recordGateSettings: %v", err)
 	}
 
@@ -82,7 +82,7 @@ func TestTheAuditTrailCarriesNoNotificationSecret(t *testing.T) {
 	}, fixedEnv(map[string]string{envNtfyToken: "top-secret-token"}))
 
 	if err := recordGateSettings(log, config.AutomationGate{}, config.Adoption{},
-		resolution, ""); err != nil {
+		resolution, "", false); err != nil {
 		t.Fatalf("recordGateSettings: %v", err)
 	}
 
@@ -103,7 +103,7 @@ func TestARefusedNotificationBlockIsAudited(t *testing.T) {
 	_, resolution := resolveNotificationPublisher(config.Notifications{Enabled: true}, fixedEnv(nil))
 
 	if err := recordGateSettings(log, config.AutomationGate{}, config.Adoption{},
-		resolution, ""); err != nil {
+		resolution, "", false); err != nil {
 		t.Fatalf("recordGateSettings: %v", err)
 	}
 
@@ -122,7 +122,7 @@ func TestExistingAuditEntriesKeepTheirOrder(t *testing.T) {
 	log := auditFixture(t)
 	_, resolution := resolveNotificationPublisher(config.Notifications{}, fixedEnv(nil))
 	if err := recordGateSettings(log, config.AutomationGate{LimitCurrency: "KRW"},
-		config.Adoption{}, resolution, "/tmp/attestation.json"); err != nil {
+		config.Adoption{}, resolution, "/tmp/attestation.json", false); err != nil {
 		t.Fatalf("recordGateSettings: %v", err)
 	}
 

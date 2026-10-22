@@ -419,6 +419,10 @@ type Quote struct {
 	BadgeCount      int       `json:"badge_count,omitempty"`
 	NoticeCount     int       `json:"notice_count,omitempty"`
 	FetchedAt       time.Time `json:"fetched_at"`
+	// SourceTimestamp 는 브로커가 보낸 데이터 시각 원문임(a163 — 공식 /prices 의 `timestamp`, 해독하지 않음). 빈 값 = 「모름」
+	// (null · 키 없음 · 채우지 않는 생산자). FetchedAt(받은 시각)을 대신하지 않으며 판정 입력이 아님 — 청산 루프의 보고 경로만 읽음.
+	// string+omitempty 인 이유: 채우지 않는 WTS · /stocks 갈래의 JSON 바이트가 편집 전과 같아야 함(time.Time 은 omitempty 로 0 값이 안 빠짐).
+	SourceTimestamp string `json:"source_timestamp,omitempty"`
 }
 
 // OrderBookLevel is a single price level (호가) with its resting volume.

@@ -737,7 +737,7 @@ func resolveAccountRef(ctx context.Context, reads *official.Client) (string, err
 // wrote a 0.5 % stop and found adoption off has to be able to find out from the
 // audit trail that the number was refused rather than ignored.
 func recordGateSettings(log *audit.Log, gate config.AutomationGate,
-	adoption config.Adoption, notifications notificationResolution, attestationFile string) error {
+	adoption config.Adoption, notifications notificationResolution, attestationFile string, sourceAgeReport bool) error {
 	adoptionDetail := ""
 	if adoption.Rejected != "" {
 		adoptionDetail = "the configured block was refused and adoption stays off: " + adoption.Rejected
@@ -801,6 +801,8 @@ func recordGateSettings(log *audit.Log, gate config.AutomationGate,
 		// a139 — 끝에 덧붙임(위 순서 무변경). 유도 값(생산 정책과 같은 함수), detail 에 규칙. 유도 불가면 빈 값 + 사유 — 기동을 막지 않음.
 		{audit.ActionLimitChange, "engine.automation_gate.per_trade_risk_budget",
 			perTradeRiskBudgetAudit(gate).value, perTradeRiskBudgetAudit(gate).detail},
+		// a163 — 끝에 덧붙임(위 순서 무변경). 체결 나이 보고 토글은 주문을 허가하지 않는 보고 스위치라 자기 action 을 씀(design D8).
+		{audit.ActionExitSourceAgeReport, "engine.exit_source_age_report", strconv.FormatBool(sourceAgeReport), ""},
 	}
 	for _, c := range changes {
 		if _, err := log.RecordChange(c.action, c.setting, c.value, c.detail); err != nil {

@@ -102,6 +102,11 @@
           "type": "boolean",
           "default": false
         },
+        "exit_source_age_report": {
+          "description": "Report the broker data-time age of exit observations (bucket-change log lines and a normal-grade alert when the broker time is missing or unparseable). Defaults off; read once at engine start. Never changes an exit judgement.",
+          "type": "boolean",
+          "default": false
+        },
         "automation_gate": {
           "description": "Master switch for unattended order placement. Turning it on is a human decision and is recorded in the audit log; the engine still refuses to start without a valid capability attestation and non-zero limits.",
           "type": "object",

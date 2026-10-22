@@ -1,9 +1,9 @@
 # Function Logic Map: `Context.ExitObserver`
 
-- Source: `internal/app/engine/exitwiring.go` (319-362)
+- Source: `internal/app/engine/exitwiring.go` (319-364)
 - AST evidence: `ast.json`
 - Risk scan: `risk-pattern-report.md`
-- 기준: 편집 전(base `f7d80c348`)
+- 기준: 편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`
 - AST 분기 6 · 반환 4 · defer 0 · go 0
 - 위험 등급: High-risk(생산 청산 관측자 조립 — 호출자 값을 덮어쓰는 자리)
 
@@ -23,9 +23,9 @@
 | B3 | if 327 `if !ok {` | — | Guardian 비발행 거부 | `TestA091TheProductionAssemblyReadsTheLoadedSwitch` |
 | B4 | if 343 `if opts.Names == nil {` | `opts.Names` 기본 | — | `TestA091TheProductionAssemblyReadsTheLoadedSwitch` |
 | B5 | if 348 `if c.Notifier != nil {` | Alerts·Announcer·Critical 덮음 | — | `TestA091TheProductionAssemblyReadsTheLoadedSwitch` |
-| B6 | if 358 `if opts.Floor == nil {` | `opts.Floor` 기본 | — | `TestA091TheProductionAssemblyReadsTheLoadedSwitch` |
+| B6 | if 360 `if opts.Floor == nil {` | `opts.Floor` 기본 | — | `TestA091TheProductionAssemblyReadsTheLoadedSwitch` |
 
-반환 좌표(AST): 321 · 324 · 328 · 361
+반환 좌표(AST): 321 · 324 · 328 · 363
 
 ## Calls and live bindings
 
@@ -40,7 +40,7 @@
 
 ## a163 편집
 
-- a163 3.6: 무조건 덮어쓰기 줄 `opts.SourceAgeReport = c.Config.Engine.ExitSourceAgeReport` 하나(선례 `NotificationsEnabled`). 분기 6 · 반환 4 불변(design D8).
+- a163 3.6: 무조건 덮어쓰기 줄 `opts.SourceAgeReport = c.Config.Engine.ExitSourceAgeReport` 하나(선례 `NotificationsEnabled`). 분기 6 · 반환 4 불변(design D8). — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`
 
 ## Safety conclusion
 

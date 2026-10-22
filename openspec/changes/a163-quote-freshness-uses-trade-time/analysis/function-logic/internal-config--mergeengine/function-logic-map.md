@@ -1,10 +1,10 @@
 # Function Logic Map: `mergeEngine`
 
-- Source: `internal/config/engine.go` (324-358)
+- Source: `internal/config/engine.go` (330-368)
 - AST evidence: `ast.json`
 - Risk scan: `risk-pattern-report.md`
-- 기준: 편집 전(base `f7d80c348`)
-- AST 분기 5 · 반환 2 · defer 0 · go 0
+- 기준: 편집 뒤(브랜치 `a163-impl` GREEN 로트, 2026-10-22). 편집 전 번들 문서는 커밋 `78efe1951` · 생성 입력 `../../flm-gen/spec-base.json`
+- AST 분기 6 · 반환 2 · defer 0 · go 0
 - 위험 등급: Normal(설정 파싱) — 단 「키 없음 = 꺼짐」 불변식이 OFF=오늘 동작(§0.2)을 지킴
 
 ## Inputs and invariants
@@ -18,13 +18,14 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | if 325 `if raw == nil {` | — | `return` | `TestAConfigWithNoNotificationsBlockIsUnchanged` |
-| B2 | if 328 `if raw.Autostart != nil {` | `cfg.Autostart` | — | `TestAutostartDefaultsOffAndLoadsExplicitValues` |
-| B3 | if 332 `if raw.ExitPolicy != nil {` | `cfg.ExitPolicy` | — | `TestUnknownCommonExitPolicyIsRetainedAsRejected` |
-| B4 | if 342 `if raw.AutomationGate == nil {` | — | `return`(조기) | `TestNotificationsMergeWithoutAnAutomationGate` |
-| B5 | if 346 `if gate.Enabled != nil {` | `cfg.AutomationGate.Enabled` | — | `TestAutomationGateParsed` |
+| B1 | if 331 `if raw == nil {` | — | `return` | `TestAConfigWithNoNotificationsBlockIsUnchanged` |
+| B2 | if 334 `if raw.Autostart != nil {` | `cfg.Autostart` | — | `TestAutostartDefaultsOffAndLoadsExplicitValues` |
+| B3 | if 338 `if raw.ExitPolicy != nil {` | `cfg.ExitPolicy` | — | `TestUnknownCommonExitPolicyIsRetainedAsRejected` |
+| B4 | if 349 `if raw.ExitSourceAgeReport != nil {` | **(a163 새 분기)** `cfg.ExitSourceAgeReport` | — | `TestA163TheSourceAgeReportToggleDefaultsOff` |
+| B5 | if 352 `if raw.AutomationGate == nil {` | — | `return`(조기, 옛 B4) | `TestNotificationsMergeWithoutAnAutomationGate` |
+| B6 | if 356 `if gate.Enabled != nil {` | `cfg.AutomationGate.Enabled`(옛 B5) | — | `TestAutomationGateParsed` |
 
-반환 좌표(AST): 326 · 343
+반환 좌표(AST): 332 · 353
 
 ## Calls and live bindings
 
@@ -39,7 +40,7 @@
 
 ## a163 편집
 
-- a163 3.6: B4 조기 반환 **앞**에 `if raw.ExitSourceAgeReport != nil { cfg.ExitSourceAgeReport = *raw.ExitSourceAgeReport }` — 분기 5→6, 반환 2 불변(design D8). 새 분기는 B2 와 같은 모양.
+- a163 3.6: B4 조기 반환 **앞**에 `if raw.ExitSourceAgeReport != nil { cfg.ExitSourceAgeReport = *raw.ExitSourceAgeReport }` — 분기 5→6, 반환 2 불변(design D8). 새 분기는 B2 와 같은 모양. — **적용됨**, 편집 전·뒤 AST 분기·반환·defer 수 대조는 `../../flm-gen/README.md`
 
 ## Safety conclusion
 

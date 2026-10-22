@@ -1,6 +1,6 @@
 {
   "file": "internal/official/market_reads.go",
-  "source_sha256": "b356524b48df5dc550c07d74c00f6f7c695e6364c78036e04df8df94ef2ce1ea",
+  "source_sha256": "a2c2f01619e0b2a14fda7f9906d2b85c9480c05bda6aa5c7eb9b9420c8bf5b81",
   "package": "official",
   "function": "adaptPrices",
   "signature": "adaptPrices(params=1, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 180,
+    "line": 183,
     "column": 2
   },
   "branches": [
@@ -26,7 +26,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 179,
+        "line": 182,
         "column": 2
       }
     }
