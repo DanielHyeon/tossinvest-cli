@@ -1,0 +1,123 @@
+{
+  "file": "internal/campaignstateevidence/authority_guard_test.go",
+  "source_sha256": "79f219f533050f6c1c16727e6563f42b6a8d92a80831b5c8b8bced07d8a4f714",
+  "package": "campaignstateevidence",
+  "function": "TestGuardRejectsRuntimeCaptureUse",
+  "signature": "TestGuardRejectsRuntimeCaptureUse(params=1, results=0)",
+  "start": {
+    "line": 96,
+    "column": 1
+  },
+  "end": {
+    "line": 107,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 99,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 104,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 17
+      },
+      "text": "allowedImport"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 64
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 16
+      },
+      "text": "allowedImport"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 63
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 98,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 104,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}
