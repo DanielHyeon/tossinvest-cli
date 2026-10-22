@@ -22,7 +22,7 @@ NOTES = {
               "attempt 당 브로커 호출이 정확히 1회다. 결과는 725 의 `classifyMutation(tracker.State(), result, callErr)` 한 자리에서 분류된다.",
         mutations="journal Prepare(RECORDED) · DispatchVerified/DispatchStrategyVerified(DISPATCH_STARTED → 정착) · 심볼 claim/release. "
                   "재시도가 생기면 같은 attempt·같은 nonce·같은 clientOrderId 로 브로커 호출이 늘 뿐 journal 행은 늘지 않는다(design D1).",
-        safety="편집 경계는 dispatch 클로저(636–726) 안. 클로저 밖 거절 순서(B6–B28)와 정착(B49–B57)은 바꾸지 않는다. High-risk: yes."),
+        safety="a165 3판 편집 경계: dispatch 클로저(636–726)의 첫 전송 본문을 `sendOnce` 로 묶고, 취소일 때만 409 already-processing 처리(R3·R4)를 그 뒤에 둔다. 클로저 밖 거절 순서(B6–B28)와 정착(B49–B57)은 바꾸지 않는다. High-risk: yes."),
     "Gateway.place": dict(
         role="place 계획을 만들고 `plan.call` 클로저(394–397)를 정의한다. 클로저는 호출마다 같은 `keyed(key)` 로 PlaceIntent 를 만들므로 "
              "같은 key 면 같은 본문이다.",
@@ -163,6 +163,67 @@ NOTES = {
         calls="`LiveOrdersForSymbol`, `UnsettledOnSymbol`, `ConfirmedCancelOf`, `IssueReduction`, `Submit.Cancel`.",
         mutations="발의 해제(release).",
         safety="편집 계획 없음."),
+
+    "New": dict(
+        role="게이트웨이 생성자. a165 는 `Options.CancelRefusal` 을 `g.cancelRefusal` 로 옮기는 대입 한 줄만 더한다(분기 추가 없음).",
+        inputs=[("opts", "Options", "배선", "B2–B4 필수 필드 없으면 오류")],
+        calls="`strings.TrimSpace`, `clock.System`.",
+        mutations="Gateway 구성.",
+        safety="High-risk 경로의 구성만 — 대입 1줄."),
+    "buildGateway": dict(
+        role="엔진 게이트웨이 배선(execgw.New 호출 311). a165 는 `CancelRefusal: execgw.EngineCancelRefusal()` 한 필드를 더한다 — 취소 409 확정 미수락, 같은 주기 재시도 0.",
+        inputs=[("in", "gatewayInputs", "엔진 기동", "B1–B6 오류 반환")],
+        calls="`execgw.New` 등.",
+        mutations="엔진 배선.",
+        safety="필드 1개 추가. 되돌리기 = 그 줄 삭제."),
+    "buildFlattenWiring": dict(
+        role="CLI `tossctl flatten` 배선(execgw.New 233, `flatten.Saga` 247 — 생산 유일한 Saga 생성 자리). a165 는 `CancelRefusal: execgw.FlattenCancelRefusal()` 를 더한다 — 취소 409 재시도(누적 5s·2회), 소진 시 오늘 경로.",
+        inputs=[("root, opts", "CLI 옵션", "cobra", "B1·B2·B5·B7·B8 오류 반환")],
+        calls="`execgw.New`, `journal.Open` 등.",
+        mutations="CLI 배선.",
+        safety="필드 1개 추가."),
+    "Saga.resolveStep": dict(
+        role="flatten 의 IN_DOUBT 취소를 **동기로** 해소. B3 switch: CONFIRMED(434) / FAILED_CONFIRMED(437) / 그 밖(443). a165 R4 가 소진되면 결과가 오늘처럼 IN_DOUBT 여서 이 함수로 온다(1.3 재리뷰 F1 수리).",
+        inputs=[("step", "FlattenStep", "settleStep", "B1 Resolver 없음")],
+        calls="`s.Resolver.Resolve`.",
+        mutations="없음(값 반환).",
+        safety="편집 계획 없음."),
+    "Saga.planLiquidation": dict(
+        role="청산 매도 계획. B5(307) `UnsettledCancelSymbols` 가 준 held 종목은 계획에서 뺀다 — 취소가 정착 안 된 종목의 oversell 방지 가드. FlattenStepFailed 는 held 가 아니라서 매도가 계획된다(1.3 재리뷰 F1 의 사슬).",
+        inputs=[("snapshot", "reconcile.Snapshot", "Saga.Run", "B1 오류")],
+        calls="`UnsettledCancelSymbols`, `priceAndSize`.",
+        mutations="없음.",
+        safety="편집 계획 없음."),
+    "Journal.UnsettledCancelSymbols": dict(
+        role="flatten 취소 step 중 Pending·InDoubt·Held 인 종목만 센다(쿼리 조건). Failed·Done 은 정착으로 본다.",
+        inputs=[("sagaID", "string", "planLiquidation", "B1 오류")],
+        calls="`db.QueryContext`, `rows.Scan`.",
+        mutations="없음.",
+        safety="편집 계획 없음."),
+    "classifyRefusalCode": dict(
+        role="확정 거절 code 목록(`opposite-pending-order-exists`)만 확정으로. `already-processing` 은 목록에 없어 B6(74) 판정 없음 → 종전 경로(409 AMBIGUOUS). B3(63) 두 자리 모순이면 모호 강제. 주문 종류를 가리지 않으므로 a165 는 409 AP 를 이 목록에 **넣지 않고** 취소에만 별도 판정을 둔다.",
+        inputs=[("err", "official 오류", "classifyMutation", "APIError 아니면 B1")],
+        calls="`refusalCodes`.",
+        mutations="없음.",
+        safety="편집 계획 없음."),
+    "Client.PlaceOrder": dict(
+        role="POST /api/v1/orders. `buildOrderCreate`(B1) → `acctHeaders`(B2) → `postWithHeaders`(B3, 401 재전송은 그 안의 send) → echo 검사(B4). R5 시험의 대상.",
+        inputs=[("intent", "PlaceIntent", "officialBroker", "B1·B2 오류")],
+        calls="`buildOrderCreate`, `c.acctHeaders`, `c.postWithHeaders`.",
+        mutations="없음.",
+        safety="편집 계획 없음."),
+    "Client.CancelOrder": dict(
+        role="POST /api/v1/orders/{id}/cancel. 409 는 `postWithHeaders`→`send`→`classifyStatus` default 의 `*APIError{409, Body}` 로 올라온다(B2).",
+        inputs=[("orderID", "string", "officialBroker", "B1 계좌 헤더 오류")],
+        calls="`c.acctHeaders`, `c.postWithHeaders`.",
+        mutations="없음.",
+        safety="편집 계획 없음."),
+    "Client.postWithHeaders": dict(
+        role="본문을 `json.Marshal` 로 **한 번**(B1, 431) 인코딩하고 makeReq 가 그 바이트로 reader 를 만든다 — `send` 의 401 재전송 본문이 바이트 동일한 근거(R5).",
+        inputs=[("body", "any", "PlaceOrder 등", "B1 마샬 오류")],
+        calls="`json.Marshal`, `http.NewRequestWithContext`, `c.send`.",
+        mutations="없음.",
+        safety="편집 계획 없음."),
 }
 
 
@@ -180,6 +241,8 @@ def load_cov(paths):
 
 
 def body_count(blocks, relfile, line, col):
+    if not any(f.endswith("/" + relfile) for (f, _sl, _sc, _c) in blocks):
+        return "nofile"
     hits = [c for (f, sl, sc, c) in blocks if f.endswith("/" + relfile) and sl == line and sc > col]
     if not hits:
         return None
@@ -208,7 +271,8 @@ def main():
             ln, col = b["at"]["line"], b["at"]["column"]
             cond = esc(src[ln - 1].strip())
             cnt = body_count(blocks, rel, ln, col)
-            ran = ("측정 불가(본문 블록 없음)" if cnt is None else
+            ran = ("미측정 — 이 패키지 coverprofile 없음" if cnt == "nofile" else
+                   "측정 불가(본문 블록 없음)" if cnt is None else
                    (f"실행됨 — 패키지 스위트 count={cnt}" if cnt > 0 else "미실행 — 패키지 스위트 count=0"))
             rows.append(f"| {b['id']} | `{b['kind']} at {ln}:{col}` | {cond} | 아래 「State mutations」 | 소스 줄 {ln} 이하 | {ran} |")
             trows.append(f"| {b['id']} | `{b['kind']} at {ln}:{col}` | {cond} | {ran} | 해당 없음 — 편집 전 기준선(0.4) | 해당 없음 — 편집 전 기준선(0.4) |")
@@ -222,7 +286,7 @@ def main():
                 f"- Revision: `current` (a165 base `34e12967e`, `source_sha256` {a['source_sha256'][:16]}…)\n"
                 f"- AST evidence: `ast.json` — AST branches {len(branches)}, 반환 {len(returns)}, 호출 {len(calls)}\n"
                 f"- Risk scan: `risk-pattern-report.md`\n"
-                f"- 실행 칸 측정: 편집 전 기준선 `go test -count=1 -coverprofile` (execgw·official 패키지 전체, journal 은 `-run 'Classify|SendTracker|Dispatch'`) — "
+                f"- 실행 칸 측정: 편집 전 기준선 `go test -count=1 -coverprofile` (execgw·official·trading·flatten 패키지 전체, journal `-run 'Classify|SendTracker|Dispatch'`, app/engine `-run 'Clear|Cancel'` — journal·engine 은 부분 실행이라 count=0 이 「미실행」을 뜻하지 않을 수 있음, cmd/tossctl 은 미측정) — "
                 f"분기 줄에서 시작하는 본문 블록의 실행 수. 시험 이름별 귀속은 GREEN 재추출에서 함.\n")
         flm = f"""# Function Logic Map: `{q}`
 

@@ -1,0 +1,154 @@
+{
+  "file": "internal/official/orders_write.go",
+  "source_sha256": "d89e0bdbffdc2a41343dc195185286e258a1abda007d20d425d550439871bd71",
+  "package": "official",
+  "function": "PlaceOrder",
+  "receiver": "Client",
+  "signature": "Client.PlaceOrder(params=2, results=2)",
+  "start": {
+    "line": 182,
+    "column": 1
+  },
+  "end": {
+    "line": 214,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 184,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 188,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 185,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 189,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 193,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 201,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 205,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 15
+      },
+      "text": "buildOrderCreate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 36
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 15
+      },
+      "text": "c.acctHeaders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 12
+      },
+      "text": "c.postWithHeaders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 36
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 187,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 192,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

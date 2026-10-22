@@ -1,6 +1,6 @@
 {
   "id": "STORY-TOS-a165",
-  "title": "주문 접수는 브로커가 확실히 받지 않았을 때만 같은 키로 재시도하고, 취소·정정은 409 already-processing 에만 재시도한다",
+  "title": "엔진 취소의 409 already-processing 은 같은 주기 지연 없이 확정 미수락으로 기록하고, CLI flatten 취소는 그것에 한해 유한 재시도한다(주문 접수 재전송은 a171)",
   "feature": "FEAT-TOS-002",
   "intent": "active",
   "openspec": {
@@ -13,11 +13,11 @@
     "record": "openspec/changes/verify-execution-capability/issues.md"
   },
   "acceptance": [
-    "주문 접수는 HTTP 429 와 전송 전 연결 실패에만 즉시 재시도하고, 같은 clientOrderId·같은 본문·최초 전송부터 8s 안·최대 2회를 넘지 않는다",
-    "결과 불명(타임아웃·5xx·전송 후 끊김)은 접수 조회로 부재를 확인한 뒤에만 같은 키로 재전송하고, 맹목 재전송은 없다",
-    "4xx 확정 거절과 조건주문 생성은 재시도하지 않고, IN_DOUBT 재생은 task 2.7 결정대로 꺼진 채다",
-    "엔진 경로 취소·정정은 HTTP 409 와 본문 code already-processing 이 모두 맞을 때만 retryAfterSeconds 를 따라 총 5s·최대 2회 재시도한다",
-    "재시도 사실·횟수·갈래가 attempt 기록에 남고, 정본 retry matrix 와 execgw 기본값이 같은 커밋에서 바뀐다",
+    "엔진 게이트웨이의 취소가 HTTP 409 + 본문 code already-processing(두 code 자리 모순 없음)이면 브로커 호출 1회·대기 0으로 FAILED_CONFIRMED 가 되고, 청산 루프는 다음 주기에 다시 취소한다",
+    "CLI flatten 의 같은 취소는 retryAfterSeconds 를 따라 누적 5s·8s 창·최대 2회 재시도하고, 소진하면 IN_DOUBT 로 남아 그 종목 매도가 보류된다",
+    "주문 접수·정정·조건주문의 재시도와 분류는 바뀌지 않고, 설정이 없으면 기록이 이전과 바이트 동일하다",
+    "공식 클라이언트의 401 재전송이 같은 본문 바이트이고 401 에만 일어남을 시험이 고정한다",
+    "재시도 사실·횟수·분류가 attempt 기록에 남고, 정본 retry matrix 와 execgw 기본값이 같은 커밋에서 바뀐다",
     "High-risk 의무(FLM/BTM·Pre-Edit·다중 적대 리뷰·변이 원장)를 거치고 실계좌 주문을 내는 자동 시험이 없다"
   ]
 }

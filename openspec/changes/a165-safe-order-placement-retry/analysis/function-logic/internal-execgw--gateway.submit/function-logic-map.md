@@ -5,7 +5,7 @@
 - Revision: `current` (a165 base `34e12967e`, `source_sha256` b4b020607839345a…)
 - AST evidence: `ast.json` — AST branches 57, 반환 44, 호출 89
 - Risk scan: `risk-pattern-report.md`
-- 실행 칸 측정: 편집 전 기준선 `go test -count=1 -coverprofile` (execgw·official 패키지 전체, journal 은 `-run 'Classify|SendTracker|Dispatch'`) — 분기 줄에서 시작하는 본문 블록의 실행 수. 시험 이름별 귀속은 GREEN 재추출에서 함.
+- 실행 칸 측정: 편집 전 기준선 `go test -count=1 -coverprofile` (execgw·official·trading·flatten 패키지 전체, journal `-run 'Classify|SendTracker|Dispatch'`, app/engine `-run 'Clear|Cancel'` — journal·engine 은 부분 실행이라 count=0 이 「미실행」을 뜻하지 않을 수 있음, cmd/tossctl 은 미측정) — 분기 줄에서 시작하는 본문 블록의 실행 수. 시험 이름별 귀속은 GREEN 재추출에서 함.
 
 ## 역할 (a165)
 
@@ -97,4 +97,4 @@ AST 호출 이름 전체: `ReasonCode`, `attempt.DispatchStrategyVerified`, `att
 
 ## Safety conclusion
 
-- 편집 경계는 dispatch 클로저(636–726) 안. 클로저 밖 거절 순서(B6–B28)와 정착(B49–B57)은 바꾸지 않는다. High-risk: yes.
+- a165 3판 편집 경계: dispatch 클로저(636–726)의 첫 전송 본문을 `sendOnce` 로 묶고, 취소일 때만 409 already-processing 처리(R3·R4)를 그 뒤에 둔다. 클로저 밖 거절 순서(B6–B28)와 정착(B49–B57)은 바꾸지 않는다. High-risk: yes.
