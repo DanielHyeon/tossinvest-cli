@@ -1,12 +1,13 @@
 # a169 tasks
 
-> 정의만 — 착수 전(2026-10-23). 아래 task 는 골격이며 아무것도 시작하지 않았다. 출처: 사용자 결정 2026-10-23(종목군 셋 · ETF 별도 ·
-> `securityType` 노출) 과 a140 review §4.
+> 2026-10-23: 열린 질문 Q1~Q12 답 받음 — 전부 권장 채택(proposal 「사람 결정」 표 · `issues.md` §1). 지금 착수 = 2.1(Q11) 뿐.
+> 2.2 이후는 Q6 에 따라 a140 archive 뒤. 출처: 사용자 결정 2026-10-23(종목군 셋 · ETF 별도 · `securityType` 노출 · Q1~Q12) 과 a140 review §4.
 
 ## 0. 착수 준비
 
-- [ ] 0.1 proposal 열린 질문 Q1~Q12 에 사람 답을 받고 proposal 에 기록한다.
-- [ ] 0.2 단일 writer 배정, `python3 tools/sdd/capture_change_base.py --change a169-breakout-universes-are-compared-in-shadow` 로 base 고정.
+- [x] 0.1 proposal 열린 질문 Q1~Q12 에 사람 답을 받고 proposal 에 기록한다. — 2026-10-23 전부 권장 채택, proposal 「사람 결정」 표 · `issues.md` §1.
+- [x] 0.2 단일 writer 배정, `python3 tools/sdd/capture_change_base.py --change a169-breakout-universes-are-compared-in-shadow` 로 base 고정.
+  — writer Terra(2026-10-23), base `2bbee345f`.
 - [ ] 0.3 `make sdd-sync` 후 CodeGraph hard evidence(`adaptStocks` · `domain.Quote` 소비자 · Q6 에 따른 a140 도구 심볼)와 증거 조정.
   proposal 의 줄 번호를 AST 로 재확인.
 
