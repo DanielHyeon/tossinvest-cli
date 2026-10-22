@@ -65,6 +65,25 @@ def main() -> int:
         buckets["R<=-0.5" if x <= -0.5 else "-0.5<R<0" if x < 0 else "0<=R<0.5" if x < 0.5 else "R>=0.5"] += 1
     print("- R 구간: " + " · ".join(f"{k} {buckets[k]}" for k in ("R<=-0.5", "-0.5<R<0", "0<=R<0.5", "R>=0.5")))
 
+    # 가상 손익 — 판정 아님(n<30). 체결가 = PROPOSED 행 `worst`(최악 체결 가정), 비용 = 같은 행 `round_trip`(주당 왕복 ≈0.5%) × 수량.
+    # 사람이 본 요약(2026-10-22 Manager 집계)을 원장에서 다시 재서 영수증으로 남김 — 금액은 가상 수량 기준이며 계좌와 무관함.
+    print("\n## 가상 손익 (판정 아님 · 가상 체결 worst · 왕복 비용 round_trip)")
+    proposals = {r["setup_id"]: r for r in rows if r["kind"] == "signal" and r.get("phase") == "PROPOSED"}
+    per_session = collections.Counter()
+    nets, pcts, notional = [], [], 0
+    for r in labels:
+        p = proposals[r["setup_id"]]
+        cost_basis = p["worst"] * p["quantity"]
+        net = (r["exit"] - p["worst"] - p["round_trip"]) * p["quantity"]
+        nets.append(net)
+        pcts.append(net / cost_basis)
+        notional += cost_basis
+        per_session[r["session"]] += net
+    print(f"- 제안 {len(nets)} · 순이익 거래 {sum(1 for n in nets if n > 0)} · 거래당 평균 순 {100 * statistics.mean(pcts):.2f}%"
+          f" · 순 합계 {sum(nets):+,} KRW · 가상 명목 {notional:,} KRW")
+    for s in sessions:
+        print(f"- {s}: 순 {per_session[s]:+,} KRW")
+
     # RVOL 반사실 — 종목-세션마다 「어느 행에서든」 깃발이 선 적 있음(도구 보고서는 처음 깃발이 선 행 기준이라 1 씩 다를 수 있음)
     rank = {"RANGE_LOCKED": 1, "BREAKOUT_CLOSED": 2, "RETEST_WAIT": 3, "ARMED": 4, "PROPOSED": 5}
     furthest, flags = {}, collections.defaultdict(lambda: [False, False, False])

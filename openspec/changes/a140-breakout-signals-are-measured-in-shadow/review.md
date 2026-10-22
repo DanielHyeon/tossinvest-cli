@@ -73,3 +73,40 @@ FREEZE: 위 P1 셋을 문서로 닫은 뒤 착수(같은 커밋). 남은 사람 
 | 13 | P3 | 가짜 리더 주석이 「자라는 봉을 내줌」 | **수리** — 주석을 엄격 리더 계약대로, 실측 대조는 첫 장중 실행 |
 
 변이 원장: `analysis/red/mutation-tool.txt`(1 판 14 · 2 판 14, 생존 0 — 생존은 시험 추가 뒤 재실행으로 CAUGHT).
+
+## 4. 사람 결정 — 측정 뒤 (2026-10-22)
+
+사용자 원문(Manager 전달, 2026-10-22):
+
+- 「a140: 중단」
+- 「a140 승인 확인: 조회 예산(D11)과 호가 한도 기본값(D21)을 지금대로 둬」
+
+사용자가 본 근거(Manager 가 원장에서 집계, 가상 체결 `worst` · 주당 왕복 비용 `round_trip` ≈0.5%) — `analysis/report-2026-10-22-supplement.txt`
+「가상 손익」 절에서 같은 원장(sha256 `0b802a92…740c`)으로 다시 재서 일치 확인: 제안 22 · 순이익 거래 7 · 거래당 평균 순 −0.70% ·
+순 합계 −65,780 KRW · 가상 명목 9,267,200 KRW. 세션별 순: 10-16 −55,095 · 10-19 +61,177(상승일) · 10-20 −11,526 · 10-21 −21,338 ·
+10-22 −38,998 — 양수 세션은 10-19 하나. n=22<30 이고 세션끼리 상관이라 통계 판정이 아니라 사람 판단의 관측 근거다.
+
+반영:
+
+- **S4(엔진 증거 생산) 착수 안 함.** breakout 가족 측정은 여기서 멈춘다. 지표 판본 `breakoutsignal-v1` 은 고치지 않는다(수정 change 없음).
+  `internal/breakoutsignal` · `tools/a140-breakout-signal-shadow` 는 생산 import 0 인 채로 남는다(삭제는 이번 결정 범위 밖).
+- **D11 · D21 사람 확인 닫힘.** §1 「남은 사람 확인」 중 D21 기본값, 그리고 3.1 이 적은 「D11 단독 영수증 없음」이 이 원문으로 닫힌다.
+  D3 정밀화(ATR 창 고정)는 이번 원문에 없다 — 2.2 Manager 수용 그대로이고, 가족이 멈춰 후속 영향이 없다.
+- **다른 가족 검토 여부**는 이번 결정에 없다. 이 change 는 정하지 않는다.
+- KR 측정 타이머 `tossos-a140-kr.timer` 는 Manager 가 2026-10-22 ≈19:55 KST 에 껐다(disable). 재확인(팀메이트, 같은 날):
+  `systemctl --user is-enabled` = `disabled` · `is-active` = `inactive`.
+- 서술형 보고서 `analysis/report-2026-10-22.md` 는 작성 도구가 하위 에이전트의 보고서 파일 쓰기를 막아 만들지 못했다(두 번째 시도도 거부).
+  수치 영수증은 위 두 txt 가 정본이고, 결정 기록은 이 절이다.
+
+## 5. 완료 게이트 시도 — 2026-10-22 (FAIL, 5 단계)
+
+- 격리 worktree `/tmp/tossos-a140-close-20261022`, HEAD `697002d7d`(4.2 기록 + 4.3 을 게이트 2 단계 전 체크한 시험 커밋 — 공유 브랜치에는 올리지 않음).
+  `ls -d /tmp/.git` → 없음(No such file or directory).
+- `make sdd-sync` → rc=0, `[sdd-sync] all indexes current`. GBrain 코드 import 는 `Sync BLOCKED … 12641 file(s) failed to parse`(advisory, worktree-로컬 홈).
+- `make gate CHANGE=a140-breakout-signals-are-measured-in-shadow` → **GATE FAIL, rc=2**:
+  1 `OK: …/tasks.md` · 2 `OK: 미완료 태스크 0건` · 3 `OK: 짝 선언 없음 — 이 change 는 혼자 배포한다` · 4 `OK: …/review.md` ·
+  5 `[logic-map] a140-breakout-signals-are-measured-in-shadow: base 526637460edc → working tree (no landed-commit.txt in HEAD) required 129 function(s) — judged at HEAD 697002d7d31a`
+  · `this window also holds 159 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: no landing recorded — no `revision: current` evidence pins a landing for this change`
+  → `GATE FAIL: a140-breakout-signals-are-measured-in-shadow — Function Logic Map 산출물 미완료`. 6~11 단계는 돌지 않았다.
+- 원인: a140 은 새 파일만 바꿨지만(FLM not-applicable) base `526637460` 뒤 다른 change 의 커밋 159 개가 창에 들어와 그들이 바꾼 기존 함수 129 개를
+  요구한다. 닫으려면 base 재고정(docs/WORKFLOW.md 「사람 승인 base 재고정」)이 필요하고 그것은 사람 승인 사항이다. 4.3 은 열어 둔다.

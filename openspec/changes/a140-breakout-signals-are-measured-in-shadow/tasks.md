@@ -62,5 +62,10 @@ Story: `STORY-TOS-a140` · **Low**(새 파일만 · High-risk 경로 무접촉 �
       요지: 종목-세션 150 → 돌파 74 → PROPOSED 22(세션당 2~7) · 종결 timed_out 44 · invalidated 6 · armed_expired 2. 결과 close 17 · stop 3 ·
       target 2 — n=22<30 판 합계 판정 보류. RVOL 1.2× 근접 0(낮춰도 표본 불변) · 2.0× 이면 제안 13 · 2.5× 이면 7. 결손 55 행(봉 401 41 ·
       호가 401 4 · 교차 호가 bid>ask 거절 10). design §6 의 「수집 시간 > 간격 절반 WARNING」은 도구에 구현 없음(10 분 창 199 중 4 초과) — 기록만.
-- [ ] 4.2 사람 결정 기록 — S4(엔진 증거 생산) 착수 여부 · breakout 지표 판본 유지/수정 · 다른 가족 검토 여부
-- [ ] 4.3 sdd-sync → gate → archive → Story 경로 갱신
+- [x] 4.2 사람 결정 기록 — S4(엔진 증거 생산) 착수 여부 · breakout 지표 판본 유지/수정 · 다른 가족 검토 여부
+      — review §4(2026-10-22 사용자 원문 「a140: 중단」 · 「a140 승인 확인: 조회 예산(D11)과 호가 한도 기본값(D21)을 지금대로 둬」):
+      **S4 착수 안 함 · breakout 가족 측정 중단 · 지표 판본 수정 없음**. D11 · D21 사람 확인 빈칸 닫힘. 다른 가족 검토는 이번 결정에 없음.
+      근거 관측 = 가상 손익(supplement 「가상 손익」 절, 원장에서 재측정 일치): 제안 22 · 순이익 7 · 평균 순 −0.70% · 합계 −65,780 KRW /
+      명목 9,267,200 KRW, 양수 세션은 10-19 하나. KR 타이머 `tossos-a140-kr.timer` 는 Manager 가 ≈19:55 KST disable(재확인 disabled · inactive).
+      서술형 `analysis/report-2026-10-22.md` 는 도구가 쓰기를 거부해 없음(review §4).
+- [ ] 4.3 sdd-sync → gate → archive → Story 경로 갱신 — 2026-10-22 시도: 게이트 5 단계(base 창) FAIL, base 재고정은 사람 승인 대기(review §5)
