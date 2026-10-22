@@ -104,33 +104,56 @@
 
 ## 4. 변이 목록(각각 시험이 잡아야 함 — 실행 기록은 `analysis/mutation/`)
 
-- [ ] 4.1 by-id 404 를 statement 로 취급 → 2.3 `expiry-evidence-absent` 가 잡음
-- [ ] 4.2 A3 「by-id 두 응답 모두 statement」 요구 삭제(silent ×2 + 빈 진술 집합 통과)
-- [ ] 4.3 A4 `EXPIRED` 비교를 `COMPLETED` 허용으로 넓힘 / triggeredOrderId 검사 삭제 / second 검사 삭제
-- [ ] 4.4 by-id 둘째 읽기 삭제 또는 두 응답 비교 삭제
-- [ ] 4.5 A5 세 판정 각각 삭제(만료 모드에서만)
-- [ ] 4.6 A7 체인 검사 삭제
-- [ ] 4.7 `--expired` 에서 Q1 을 다시 부름(통과 경로가 죽어야 함) / 플래그 없음에서 Q1 을 건너뜀(부재 모드가 열려야 함 — 기존 시험이 잡음)
-- [ ] 4.8 `terminal()` 에서 `ReconciledExpired` 삭제 → 2.5 HOLD·정리 시험이 잡음
-- [ ] 4.9 by-id 의 id·심볼·시장 일치 검사 각각 삭제
-- [ ] 4.10 만료 어휘를 비어 있지 않은 기본값으로 바꿈(영수증 없이 통과)
-- [ ] 4.12 silent+CLOSED 를 수락으로 되돌림(P1-1) → 2.3 `expiry-sources-disagree`
-- [ ] 4.13 by-id·CLOSED 행 `first.status` 어휘 검사 각각 삭제(P2-3·P2-5 ①) / `type == SINGLE` 검사 삭제(P3-3)
-- [ ] 4.14 silent 분류를 「404 면 전부」로 넓힘(본문 code 비교 삭제) · 본문 해독 불능 404 를 silent 로(P2-5 ②)
-- [ ] 4.15 429·5xx·`ErrAuth`·`ErrIPNotAllowed` 를 silent 로 접음(P2-5 ③)
-- [ ] 4.16 두 by-id statement 비교의 필드별 삭제 — status · first.status · triggeredOrderId · second 각각(P2-5 ④)
-- [ ] 4.17 만료 모드 읽기 집합에서 일반 OPEN 읽기 생략(판정이 아니라 읽기 — P2-5 ⑤)
-- [ ] 4.18 만료 모드에서 A6 CLOSED 어휘 검사 자체 삭제(P2-5 ⑥)
-- [ ] 4.19 `ReconciledArtifacts` 필터(`projection_reconciled.go:26`)에 넷째 종결 미반영(P2-5 ⑦)
-- [ ] 4.20 by-id ① 을 승인 앞으로(P2-1) · by-id 메서드의 `ensureIdentity` 생략(P2-4) · 창 시작을 첫 목록 읽기 직전으로 되돌림(P3-1)
-- [ ] 4.21 줄에 by-id Call 을 실음(P2-2 — `SucceededEndpoints` 불변 시험이 잡아야 함)
-- [ ] 4.11 무변이 대조군 GREEN · 양성 대조군(변이 켜면 RED) 확인
+- [x] 4.1 by-id 404 를 statement 로 취급 → 2.3 `expiry-evidence-absent` 가 잡음
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.2 A3 「by-id 두 응답 모두 statement」 요구 삭제(silent ×2 + 빈 진술 집합 통과)
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.3 A4 `EXPIRED` 비교를 `COMPLETED` 허용으로 넓힘 / triggeredOrderId 검사 삭제 / second 검사 삭제
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.4 by-id 둘째 읽기 삭제 또는 두 응답 비교 삭제
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.5 A5 세 판정 각각 삭제(만료 모드에서만)
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.6 A7 체인 검사 삭제
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.7 `--expired` 에서 Q1 을 다시 부름(통과 경로가 죽어야 함) / 플래그 없음에서 Q1 을 건너뜀(부재 모드가 열려야 함 — 기존 시험이 잡음)
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.8 `terminal()` 에서 `ReconciledExpired` 삭제 → 2.5 HOLD·정리 시험이 잡음
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.9 by-id 의 id·심볼·시장 일치 검사 각각 삭제
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.10 만료 어휘를 비어 있지 않은 기본값으로 바꿈(영수증 없이 통과)
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.12 silent+CLOSED 를 수락으로 되돌림(P1-1) → 2.3 `expiry-sources-disagree`
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.13 by-id·CLOSED 행 `first.status` 어휘 검사 각각 삭제(P2-3·P2-5 ①) / `type == SINGLE` 검사 삭제(P3-3)
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.14 silent 분류를 「404 면 전부」로 넓힘(본문 code 비교 삭제) · 본문 해독 불능 404 를 silent 로(P2-5 ②)
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.15 429·5xx·`ErrAuth`·`ErrIPNotAllowed` 를 silent 로 접음(P2-5 ③)
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.16 두 by-id statement 비교의 필드별 삭제 — status · first.status · triggeredOrderId · second 각각(P2-5 ④)
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.17 만료 모드 읽기 집합에서 일반 OPEN 읽기 생략(판정이 아니라 읽기 — P2-5 ⑤)
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.18 만료 모드에서 A6 CLOSED 어휘 검사 자체 삭제(P2-5 ⑥)
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.19 `ReconciledArtifacts` 필터(`projection_reconciled.go:26`)에 넷째 종결 미반영(P2-5 ⑦)
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.20 by-id ① 을 승인 앞으로(P2-1) · by-id 메서드의 `ensureIdentity` 생략(P2-4) · 창 시작을 첫 목록 읽기 직전으로 되돌림(P3-1)
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.21 줄에 by-id Call 을 실음(P2-2 — `SucceededEndpoints` 불변 시험이 잡아야 함)
+      — CAUGHT(`analysis/mutation/ledger-2026-10-22.md`)
+- [x] 4.11 무변이 대조군 GREEN · 양성 대조군(변이 켜면 RED) 확인
+      — 대조군 GREEN, 변이 41 전부 RED(CAUGHT 41/41, 리뷰 수리분 4.22·4.23 포함) — `analysis/mutation/ledger-2026-10-22.md`
 
 ## 5. 리뷰 · 영향 범위 검증
 
-- [ ] 5.1 gstack review + 적대적 Eng(codex 포함) — 필수 질문 0.8 과 같음. 처분을 `review.md` 에
-- [ ] 5.2 관련 시험: `go test ./internal/verifylive/ ./internal/official/ ./cmd/tossctl/ -run 'Reconcile|Outstanding|Cleanup|Hold|Report|M0'`
+- [x] 5.1 gstack review + 적대적 Eng(codex 포함) — 필수 질문 0.8 과 같음. 처분을 `review.md` 에
+      — 2026-10-22 Claude 독립 적대 + Codex 적대(read-only) + 셀프. P1 1(중복 키) 수리 · P3 둘 수리 · 상속 P2 셋과 문서 둘은 Manager 결정 항목 — `review.md` 「5.1」
+- [x] 5.2 관련 시험: `go test ./internal/verifylive/ ./internal/official/ ./cmd/tossctl/ -run 'Reconcile|Outstanding|Cleanup|Hold|Report|M0'`
       + `make test-seams` 중 대사 seam · `go vet` · `make lint`. 선택 이유·미실행 범위를 `review.md` 에(전체 시험은 사용자 명시 요청 때만)
+      — 무태그 verifylive·official·cmd/tossctl 패키지 전체 통과 · 같은 셋 `-tags tossos_testseams` 2080 통과 · `make lint` rc=0 · `openspec validate --strict` rc=0. 미실행: `make test-seams` 전체(`./...`)·`make test`·`make test-race`·gate — 전체 시험은 사용자 명시 요청 때만(`review.md` 「5.2」)
 - [ ] 5.3 `make sdd-sync` → fingerprint 신선 확인
 
 ## 6. 사람 실행 — 실기록 대사

@@ -5,9 +5,9 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if 줄 227: `if r.verified {` | `TestExpiryReconcileCommandAppendsWithOnlyGetReadsAndLeavesProofsUnchanged` · `TestReconcileNarrowReaderBindsTheValidatedSequence` · `TestReconcileSucceedsWithOnlyGetRequestsAndTheTokenPost` | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
-| B2 | if 줄 231: `if err != nil {` | 미덮임(시험별 coverage 측정 0) — 재조회 자체 실패 — 기존 공백 | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
-| B3 | if 줄 234: `if len(accounts) != 1 \|\| strings.TrimSpace(accounts[0].DisplayName) != r.ref \|\|` | `TestReconcileByIDReadRechecksIdentityBeforeItIsSent` · `TestReconcileReaderRechecksIdentityBeforeItsFirstScopedRead` | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B1 | if 줄 227: `if r.verified {` | `TestExpiryReconcileCommandAppendsWithOnlyGetReadsAndLeavesProofsUnchanged` · `TestReconcileNarrowReaderBindsTheValidatedSequence` · `TestReconcileSucceedsWithOnlyGetRequestsAndTheTokenPost` | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B2 | if 줄 231: `if err != nil {` | 미덮임(시험별 coverage 측정 0) — 재조회 자체 실패 — 기존 공백 | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B3 | if 줄 234: `if len(accounts) != 1 \|\| strings.TrimSpace(accounts[0].DisplayName) != r.ref \|\|` | `TestReconcileByIDReadRechecksIdentityBeforeItIsSent` · `TestReconcileReaderRechecksIdentityBeforeItsFirstScopedRead` | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
 
 ## 측정
 

@@ -1,6 +1,6 @@
 {
   "file": "internal/verifylive/report.go",
-  "source_sha256": "f851d8119375e13ac5a3b4c890050b9b263431f19e7a97e439505361bd6f3182",
+  "source_sha256": "57cd90ed8528a35e9899f9082a19856ed6ceece5e3ab4080f9e04f26017f8efe",
   "package": "verifylive",
   "function": "writeReconciled",
   "signature": "writeReconciled(params=2, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 312,
+    "line": 319,
     "column": 2
   },
   "branches": [
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "range",
       "at": {
-        "line": 304,
+        "line": 305,
         "column": 2
       }
     },
@@ -33,7 +33,23 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 307,
+        "line": 306,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 311,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 314,
         "column": 3
       }
     }
@@ -59,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 303,
+        "line": 310,
         "column": 2
       },
       "text": "fmt.Fprintf"
@@ -67,15 +83,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 303,
-        "column": 123
+        "line": 310,
+        "column": 105
       },
       "text": "len"
     },
     {
       "kind": "call",
       "at": {
-        "line": 310,
+        "line": 317,
         "column": 3
       },
       "text": "fmt.Fprintf"
@@ -85,14 +101,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 306,
+        "line": 304,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 307,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 313,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 308,
+        "line": 315,
         "column": 4
       }
     }

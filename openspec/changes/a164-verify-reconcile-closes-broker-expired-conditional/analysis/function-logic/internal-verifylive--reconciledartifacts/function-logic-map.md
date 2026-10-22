@@ -20,12 +20,12 @@ AST 열거 순서 그대로다. 「Required test」 칸은 손으로 고르지 �
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | range 줄 12: `for _, e := range entries {` | 없음 | `for _, a := range e.Artifacts {` | `TestAFullRunProducesAReportWithNoIdempotencyGaps` · `TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader` · `TestExpiryReconcileTextLabelsReconciledExpired` · `TestProgressPointsAtTheRestartWhenOneIsPending` 외 6 |
-| B2 | range 줄 13: `for _, a := range e.Artifacts {` | 없음 | `key := a.Kind + "\x00" + a.ID` | `TestAFullRunProducesAReportWithNoIdempotencyGaps` · `TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader` · `TestExpiryReconcileTextLabelsReconciledExpired` · `TestProgressPointsAtTheRestartWhenOneIsPending` 외 4 |
-| B3 | if 줄 16: `if !seen {` | 없음 | `order = append(order, key)` | `TestAFullRunProducesAReportWithNoIdempotencyGaps` · `TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader` · `TestExpiryReconcileTextLabelsReconciledExpired` · `TestProgressPointsAtTheRestartWhenOneIsPending` 외 4 |
+| B1 | range 줄 12: `for _, e := range entries {` | 없음 | `for _, a := range e.Artifacts {` | `TestAFullRunProducesAReportWithNoIdempotencyGaps` · `TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader` · `TestExpiryReconcileTextLabelsReconciledExpired` · `TestProgressPointsAtTheRestartWhenOneIsPending` 외 7 |
+| B2 | range 줄 13: `for _, a := range e.Artifacts {` | 없음 | `key := a.Kind + "\x00" + a.ID` | `TestAFullRunProducesAReportWithNoIdempotencyGaps` · `TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader` · `TestExpiryReconcileTextLabelsReconciledExpired` · `TestProgressPointsAtTheRestartWhenOneIsPending` 외 5 |
+| B3 | if 줄 16: `if !seen {` | 없음 | `order = append(order, key)` | `TestAFullRunProducesAReportWithNoIdempotencyGaps` · `TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader` · `TestExpiryReconcileTextLabelsReconciledExpired` · `TestProgressPointsAtTheRestartWhenOneIsPending` 외 5 |
 | B4 | if 줄 19: `if seen && prev.terminal() && !a.terminal() {` | 없음 | `continue` | `TestReconciledProjectionIsMonotoneLikeOutstanding` |
-| B5 | range 줄 26: `for _, key := range order {` | 없음 | `if a := latest[key]; a.ReconciledAbsent \|\| a.ReconciledExpired {` | `TestAFullRunProducesAReportWithNoIdempotencyGaps` · `TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader` · `TestExpiryReconcileTextLabelsReconciledExpired` · `TestProgressPointsAtTheRestartWhenOneIsPending` 외 4 |
-| B6 | if 줄 27: `if a := latest[key]; a.ReconciledAbsent \|\| a.ReconciledExpired {` | 없음 | `out = append(out, a)` | `TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader` · `TestExpiryReconcileTextLabelsReconciledExpired` · `TestReconcileLeavesTheReportAttributesAndVerdictsUnchanged` · `TestReconcileTextLabelsReconciledAbsentInReportAndStatus` 외 1 |
+| B5 | range 줄 26: `for _, key := range order {` | 없음 | `if a := latest[key]; a.ReconciledAbsent \|\| a.ReconciledExpired {` | `TestAFullRunProducesAReportWithNoIdempotencyGaps` · `TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader` · `TestExpiryReconcileTextLabelsReconciledExpired` · `TestProgressPointsAtTheRestartWhenOneIsPending` 외 5 |
+| B6 | if 줄 27: `if a := latest[key]; a.ReconciledAbsent \|\| a.ReconciledExpired {` | 없음 | `out = append(out, a)` | `TestExpiryReconcileEndsTheArtifactForEveryOutstandingReader` · `TestExpiryReconcileTextLabelsReconciledExpired` · `TestReconcileAbsenceKeepsItsA121Wording` · `TestReconcileLeavesTheReportAttributesAndVerdictsUnchanged` 외 2 |
 
 ## Calls and live bindings
 

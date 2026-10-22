@@ -1,13 +1,15 @@
 # Branch Test Map: `writeReconciled`
 
-- Source: `internal/verifylive/report.go` (299-312)
-- AST branches 3 — 시험 칸은 시험별 coverage 측정(본문 블록 실행)으로 채움
+- Source: `internal/verifylive/report.go` (299-319)
+- AST branches 5 — 시험 칸은 시험별 coverage 측정(본문 블록 실행)으로 채움
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if 줄 300: `if len(arts) == 0 {` | `TestProgressPointsAtTheRestartWhenOneIsPending` · `TestReportTextNamesTheUnverifiedProperties` | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
-| B2 | range 줄 304: `for _, a := range arts {` | `TestExpiryReconcileTextLabelsReconciledExpired` · `TestReconcileTextLabelsReconciledAbsentInReportAndStatus` | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
-| B3 | if 줄 307: `if a.ReconciledExpired {` | `TestExpiryReconcileTextLabelsReconciledExpired` | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B1 | if 줄 300: `if len(arts) == 0 {` | `TestProgressPointsAtTheRestartWhenOneIsPending` · `TestReportTextNamesTheUnverifiedProperties` | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B2 | range 줄 305: `for _, a := range arts {` | `TestExpiryReconcileTextLabelsReconciledExpired` · `TestReconcileAbsenceKeepsItsA121Wording` · `TestReconcileTextLabelsReconciledAbsentInReportAndStatus` | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B3 | if 줄 306: `if a.ReconciledExpired {` | `TestExpiryReconcileTextLabelsReconciledExpired` | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B4 | range 줄 311: `for _, a := range arts {` | `TestExpiryReconcileTextLabelsReconciledExpired` · `TestReconcileAbsenceKeepsItsA121Wording` · `TestReconcileTextLabelsReconciledAbsentInReportAndStatus` | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B5 | if 줄 314: `if a.ReconciledExpired {` | `TestExpiryReconcileTextLabelsReconciledExpired` | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
 
 ## 측정
 
@@ -18,6 +20,6 @@
 
 ## a164 GREEN 재추출
 
-- 편집 전(구현 base `aec9bde67`) 분기 열 길이 2 에서 편집 뒤 3 로. `source_sha256` e96b2103cb0c… → f851d8119375….
-- 옛/새 분기 열(kind + 원문 줄)을 difflib 으로 정렬한 결과: equal 옛 B1..B2 = 새 B1..B2 · insert 옛 B3..B2(0) → 새 B3..B3(1).
+- 편집 전(구현 base `aec9bde67`) 분기 열 길이 2 에서 편집 뒤 5 로. `source_sha256` e96b2103cb0c… → 57cd90ed8528….
+- 옛/새 분기 열(kind + 원문 줄)을 difflib 으로 정렬한 결과: equal 옛 B1..B2 = 새 B1..B2 · insert 옛 B3..B2(0) → 새 B3..B5(3).
 - 위 표의 B 번호는 **새** AST 기준이고, 시험 칸은 GREEN 코드에서 시험별 프로필을 다시 떠 측정한 값이다(손 재번호 없음).

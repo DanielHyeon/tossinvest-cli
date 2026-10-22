@@ -20,7 +20,7 @@ AST 열거 순서 그대로다. 「Required test」 칸은 손으로 고르지 �
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | 분기 없음 — 단일 경로 | 없음 | func (a Artifact) terminal() bool { | `TestADeleteNotFoundFromEveryListReadDoesNotReconcile` · `TestADeleteNotFoundLeavesTheArtifactOutstanding` · `TestAFilledObjectIsNotOutstanding` · `TestAFullRunProducesAReportWithNoIdempotencyGaps` 외 90 |
+| B1 | 분기 없음 — 단일 경로 | 없음 | func (a Artifact) terminal() bool { | `TestADeleteNotFoundFromEveryListReadDoesNotReconcile` · `TestADeleteNotFoundLeavesTheArtifactOutstanding` · `TestAFilledObjectIsNotOutstanding` · `TestAFullRunProducesAReportWithNoIdempotencyGaps` 외 91 |
 
 ## Calls and live bindings
 

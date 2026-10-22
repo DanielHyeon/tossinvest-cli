@@ -5,13 +5,13 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if 줄 84: `if ctx == nil {` | 미덮임(시험별 coverage 측정 0) — cobra 가 늘 ctx 를 줌 | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
-| B2 | if 줄 90: `if err != nil {` | `TestReconcileRefusesPreflightBeforeAnyLockOrRead` | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
-| B3 | if 줄 94: `if err != nil {` | `TestReconcileRefusesWhenTheExecutionLockIsHeld` | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
-| B4 | if 줄 99: `if err != nil {` | `TestReconcileRefusesWhenTheRateBudgetLeaseIsHeld` | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
-| B5 | if 줄 105: `if err != nil {` | 미덮임(시험별 coverage 측정 0) — 리더 생성 거절 — 생성자 시험(`TestReconcileNarrowReaderRefusesAccountShapes`)이 함수 층에서 잼 | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
-| B6 | if 줄 121: `if err != nil {` | `TestReconcileDefaultApprovalStopsTheCommandBeforeAnyListRead` | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
-| B7 | if 줄 125: `if res.Artifact.ReconciledExpired {` | `TestExpiryReconcileCommandAppendsWithOnlyGetReadsAndLeavesProofsUnchanged` | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B1 | if 줄 84: `if ctx == nil {` | 미덮임(시험별 coverage 측정 0) — cobra 가 늘 ctx 를 줌 | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B2 | if 줄 90: `if err != nil {` | `TestReconcileRefusesPreflightBeforeAnyLockOrRead` | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B3 | if 줄 94: `if err != nil {` | `TestReconcileRefusesWhenTheExecutionLockIsHeld` | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B4 | if 줄 99: `if err != nil {` | `TestReconcileRefusesWhenTheRateBudgetLeaseIsHeld` | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B5 | if 줄 105: `if err != nil {` | 미덮임(시험별 coverage 측정 0) — 리더 생성 거절 — 생성자 시험(`TestReconcileNarrowReaderRefusesAccountShapes`)이 함수 층에서 잼 | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B6 | if 줄 121: `if err != nil {` | `TestReconcileDefaultApprovalStopsTheCommandBeforeAnyListRead` | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B7 | if 줄 125: `if res.Artifact.ReconciledExpired {` | `TestExpiryReconcileCommandAppendsWithOnlyGetReadsAndLeavesProofsUnchanged` | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
 
 ## 측정
 

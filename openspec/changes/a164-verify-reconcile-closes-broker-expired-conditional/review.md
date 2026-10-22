@@ -104,3 +104,44 @@ Pre-Edit Gate:
 - 어휘 값: top-level 은 `EXPIRED` 단일 비교(A4), leg 어휘 `reconcileExpiryLegVocabulary = {EXPIRED}`, A6 CLOSED 어휘
   `reconcileExpiryClosedVocabulary = {EXPIRED}` — H5(OpenAPI enum ∩ 0.6 영수증). 영수증 사본은 `internal/verifylive/testdata/` 에 두고 골든 시험이 대조
   (change 디렉터리는 archive 때 옮겨지므로 시험이 그 경로를 읽지 않게).
+
+## 5.1 구현 리뷰 — gstack `review` (2026-10-22, 대상 `aec9bde67..b7193f036`, 수리 뒤 `f4e71ad1d`)
+
+- 보이스: (1) Claude 독립 적대 서브에이전트(code-reviewer, 신선한 문맥, 읽기 전용 — 생산 diff 896줄 전독, 시험은 요약),
+  (2) Codex 적대 패스(`codex exec -s read-only`, 같은 diff), (3) 구현자 셀프 critical pass(체크리스트 Pass 1·2 — SQL·LLM·셸 해당 없음).
+- 필수 질문 「이 diff 의 어느 줄이 살아 있는 조건주문을 닫힘으로 적을 수 있나」:
+  - Claude: 없음 — 닫는 자리는 `reconcile.go` 의 `reconciled.ReconciledExpired = true` 하나이고 A5(`checkReconcileNoLiveOrder` ·
+    `checkReconcileNoFiredTrace`, 부재 모드와 같은 함수)·A3(silent 면 무조건 거절)·A4·A7 를 모두 통과해야 닿음. 남는 길은 design R1·R2(명칭 오류, 생존 은폐 아님).
+  - Codex: 정확히 해독된 LIVE 응답·보이는 OPEN 후속·보이는 발동 흔적으로는 우회 없음. 단 **해독이 부정확해지는 길 하나**(아래 C-P1).
+- 판정: 수리 뒤 P0·P1 잔여 0. 잔여 P2 셋은 전부 a121 공용 경로(전송·쓰기 경계)에서 물려받은 것이라 이 change 범위 밖 — Manager 결정 항목.
+
+| # | 보이스 | 요지 | 처분 |
+| --- | --- | --- | --- |
+| C-P1 | Codex | by-id 해독이 `map[string]json.RawMessage` 로 접어 **중복 키의 마지막 값**만 남김 — `"triggeredOrderId":"CHILD","triggeredOrderId":null` 이 미발동이 되어, 목록이 비고 CLOSED 가 축출된 경우 발동한 주문을 만료로 닫을 수 있음 | **수리 `f4e71ad1d`** — `reconcileObject` 가 토큰 단위로 읽어 중복 키·뒤따르는 데이터를 거절(result · first 두 층). 시험 `TestReconcileByIDRefusesSchemaHoles` 의 `dup-status`·`dup-first`·`dup-triggered`·`dup-second`(RED 확인 뒤 GREEN), 변이 4.22 |
+| C-P1 잔여 | Codex(파생) | 같은 성질이 a121 목록 행 해독(`DecodeReconcileConditionalPage` → `apiConditionalOrder` 구조체)에도 있음 — CLOSED 의 **다른 id** 행 발동 흔적을 중복 키로 숨기면 A5 셋째가 못 봄(두 모드 공통) | **미수리 · Manager 결정** — a121 공용 해독 경로이고 부재 모드 동작을 바꾸므로 a164 범위 밖. 대상 자신의 발동은 by-id(중복 거절)가 막음. 후속 change 권고 |
+| C-P2a | Codex | 공용 `Client.send` 가 모든 2xx 를 받음 — design D3 의 「HTTP 200」 과 다름 | **미수리 · Manager 결정** — 공용 전송(High-risk) 편집이 필요. 본문은 여전히 엄격 스키마·A4 를 통과해야 함. design D3 와 코드의 차이로 기록 |
+| C-P2b | Codex | 401 이면 토큰 갱신 뒤 한 번 재시도 — 재시도는 `ensureIdentity` 를 다시 하지 않고, 갱신이 디스크의 다른 자격 토큰을 쓸 수 있음(`token.go`) | **미수리 · 상속** — a121 목록 읽기와 같은 전송(CG-6 은 첫 범위 읽기 전 한 번만 확인). 계좌 헤더 seq 는 고정. 후속 change 권고(기억 「공유 credential 토큰 전쟁」 과 같은 계열) |
+| C-P2c | Codex | 마지막 신선도 재검이 직렬화 **전**에 잡은 `at` 을 씀 — 직렬화·봉인·fsync 지연은 15 s 창 밖 | **미수리 · 상속** — a121 쓰기 경계 구조 그대로이고 구조 핀(`TestReconcileFinalGateSitsAtTheWriteBoundary`)이 고정. 만료 모드가 더한 직렬화(지문·관측)는 마이크로초 단위 |
+| C-P3 = F1 | 둘 다 | 부재 모드 신선도 거절 문구와 report 대사 절 머리 바이트가 바뀜(D1 「D8 예외만」 위반) | **수리 `f4e71ad1d`** — 부재 모드 a121 바이트 복원, 만료 모드만 새 문구. 시험 `TestReconcileAbsenceKeepsItsA121Wording`, 변이 4.23 |
+| F2 | Claude | 줄의 `started_at` 은 창 시작(by-id ① 직전)인데 D5 는 「첫 목록 읽기」 라고 적음 | **문서 사안 · Manager** — 코드는 A1·P3-1(창 시작 = by-id ① 직전)과 맞음. D5 문장이 낡음 — frozen design 이라 고치지 않고 여기 기록 |
+| F3 | Claude | D10 의 「구 바이너리는 다시 outstanding·정리 대상(DELETE 404 반복)」 은 부정확 — 확정형이 HeldUntil 을 싣지 않아 구 바이너리는 **다시 보유**(정리 대상 아님) | **문서 사안 · Manager** — 안전 방향(Outstanding·HOLD 에 남음). 시험 `TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding` 이 「보유」 를 단언. a121 과 같은 성질 |
+| F4 | Claude | `reconcile.expired.by_id` 값 `"statement,statement"` 상수 | **수리 `f4e71ad1d`** — 응답 분류에서 유도 |
+
+셀프 critical pass(체크리스트): 새 상태 값 `reconciled_expired`·`reconcile-expired` 의 소비자를 HEAD grep 으로 전수 — 종결은 `terminal()` 한 곳
+(`outstandingLines` 두 자리 · `ReconciledArtifacts` · `joinChain`), `reconciled_absent` 를 직접 읽는 생산 코드 0, StepID 비교 소비자 넷은 카탈로그 밖 값이라 영향 없음
+(`TestReconcileExpiredStepIDIsOutsideTheCatalogueAndTheAbsenceStep`). 추가 발견 없음.
+
+## 5.2 영향 범위 검증 (2026-10-22, `f4e71ad1d`)
+
+- 실행: `go test -count=1 ./internal/verifylive/ ./internal/official/ ./cmd/tossctl/`(무태그, 패키지 전체) 통과 ·
+  `go test -count=1 -tags tossos_testseams` 같은 세 패키지 2080 통과 · `make lint`(gofmt + `go vet ./...` + 태그 vet) rc=0 ·
+  `openspec validate a164-… --strict --no-interactive` rc=0 · `check_analysis.py --change a164-…` rc=0.
+- 선택 이유: 편집 파일은 이 세 패키지에만 있음. CodeGraph affected 1,208 은 cmd/tossctl 전이 의존 때문이고, 그 밖 패키지는 바뀐 심볼
+  (`Artifact.terminal`·`ReconcileReader` 등)을 `go build ./...`·`go vet ./...` 로만 확인(컴파일 통과).
+- **미실행**: `make test-seams`(= `go test -tags tossos_testseams ./...`, 45분) 전체 · `make test` · `make test-race` · `make gate`.
+  정본 규칙(전체 시험·게이트는 사용자 명시 요청 때만)과 tasks 5.2(「`make test-seams` 중 대사 seam」)에 따라 영향 세 패키지로 한정.
+  콘솔(`internal/console` 의 `PendingCleanup` 소비)은 시험을 돌리지 않음 — 종결 술어 한 곳 편집이라 같은 판정을 받음(코드 근거만).
+- 관측: 리뷰 수리 직후 verifylive 한 판이 어느 시험인지 남기지 못한 채 1 회 실패 → 곧바로 세 판(단독 ×1, official 과 함께 ×2) 연속 통과.
+  원인 미확인(편집 직후 컴파일 캐시 경합으로 추정 — 미검증). 재현 안 됨.
+- 운영 메모: 리뷰 시점(18:20 KST)에 이 worktree 의 git admin 디렉터리에 0바이트 `index.lock` 이 남아 커밋이 막힘 — 잡은 프로세스 없음,
+  `git fsck --connectivity-only` 정상 확인 뒤 제거(이 worktree 전용, 30분 넘은 빈 파일만).

@@ -5,7 +5,7 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | 분기 없음 — 단일 경로 | `TestADeleteNotFoundFromEveryListReadDoesNotReconcile` · `TestADeleteNotFoundLeavesTheArtifactOutstanding` · `TestAFilledObjectIsNotOutstanding` · `TestAFullRunProducesAReportWithNoIdempotencyGaps` 외 90 | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B1 | 분기 없음 — 단일 경로 | `TestADeleteNotFoundFromEveryListReadDoesNotReconcile` · `TestADeleteNotFoundLeavesTheArtifactOutstanding` · `TestAFilledObjectIsNotOutstanding` · `TestAFullRunProducesAReportWithNoIdempotencyGaps` 외 91 | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
 
 ## 측정
 

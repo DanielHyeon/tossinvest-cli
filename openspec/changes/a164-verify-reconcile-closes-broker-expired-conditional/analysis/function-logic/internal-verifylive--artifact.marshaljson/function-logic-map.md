@@ -20,7 +20,7 @@ AST 열거 순서 그대로다. 「Required test」 칸은 손으로 고르지 �
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | if 줄 112: `if !a.ReconciledAbsent && !a.ReconciledExpired {` | 없음 | `return json.Marshal(plainArtifact(a))` | `TestADeleteNotFoundFromEveryListReadDoesNotReconcile` · `TestAFilledFieldSurvivesTheRecordRoundTrip` · `TestAFullRunProducesAReportWithNoIdempotencyGaps` · `TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding` 외 92 |
+| B1 | if 줄 112: `if !a.ReconciledAbsent && !a.ReconciledExpired {` | 없음 | `return json.Marshal(plainArtifact(a))` | `TestADeleteNotFoundFromEveryListReadDoesNotReconcile` · `TestAFilledFieldSurvivesTheRecordRoundTrip` · `TestAFullRunProducesAReportWithNoIdempotencyGaps` · `TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding` 외 93 |
 
 ## Calls and live bindings
 

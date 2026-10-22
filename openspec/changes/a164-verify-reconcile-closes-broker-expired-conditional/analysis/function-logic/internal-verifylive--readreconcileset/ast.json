@@ -1,15 +1,15 @@
 {
   "file": "internal/verifylive/reconcile_check.go",
-  "source_sha256": "4211d94e33e07b9fb4e4d2f5b5da665611a9cda8ab07bc7ddb6ac0be29a85188",
+  "source_sha256": "4bf4a9feb234771e7a93ad6356b07129f5799a780974f74a43be37be9a15a9d6",
   "package": "verifylive",
   "function": "readReconcileSet",
   "signature": "readReconcileSet(params=3, results=2)",
   "start": {
-    "line": 190,
+    "line": 195,
     "column": 1
   },
   "end": {
-    "line": 203,
+    "line": 208,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 193,
+        "line": 198,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 196,
+        "line": 201,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 199,
+        "line": 204,
         "column": 2
       }
     }
@@ -42,21 +42,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 194,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 197,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 200,
+        "line": 199,
         "column": 3
       }
     },
@@ -64,6 +50,20 @@
       "kind": "return",
       "at": {
         "line": 202,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 205,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 207,
         "column": 2
       }
     }
@@ -72,7 +72,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 193,
+        "line": 198,
         "column": 25
       },
       "text": "readReconcileConditionalGroup"
@@ -80,7 +80,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 196,
+        "line": 201,
         "column": 26
       },
       "text": "readReconcilePlainGroup"
@@ -88,7 +88,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 199,
+        "line": 204,
         "column": 23
       },
       "text": "readReconcileConditionalGroup"
@@ -98,21 +98,21 @@
     {
       "kind": "=",
       "at": {
-        "line": 193,
+        "line": 198,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 196,
+        "line": 201,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 199,
+        "line": 204,
         "column": 5
       }
     }

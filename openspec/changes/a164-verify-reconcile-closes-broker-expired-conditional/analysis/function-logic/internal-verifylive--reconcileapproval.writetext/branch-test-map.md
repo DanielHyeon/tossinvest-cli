@@ -1,12 +1,12 @@
 # Branch Test Map: `ReconcileApproval.WriteText`
 
-- Source: `internal/verifylive/reconcile_check.go` (436-452)
+- Source: `internal/verifylive/reconcile_check.go` (441-457)
 - AST branches 2 — 시험 칸은 시험별 coverage 측정(본문 블록 실행)으로 채움
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if 줄 438: `if a.Mode == ReconcileModeExpired {` | `TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding` · `TestExpiryReconcileAcceptsATerminalChainSibling` · `TestExpiryReconcileAcceptsAnotherIdentifiersExpiredClosedRow` · `TestExpiryReconcileAcceptsTwoStatementsAndAnExpiredClosedRow` 외 13 | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
-| B2 | else 줄 442: `} else {` | `TestADeleteNotFoundFromEveryListReadDoesNotReconcile` · `TestExpiryReconcileApprovalNamesTheModeAndTheByIDReads` · `TestReconcileAbsenceGuardsRefuseInTheirContractOrder` · `TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt` 외 46 | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B1 | if 줄 443: `if a.Mode == ReconcileModeExpired {` | `TestAnOlderBinaryStillSeesTheExpiredArtifactAsOutstanding` · `TestExpiryReconcileAcceptsATerminalChainSibling` · `TestExpiryReconcileAcceptsAnotherIdentifiersExpiredClosedRow` · `TestExpiryReconcileAcceptsTwoStatementsAndAnExpiredClosedRow` 외 13 | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B2 | else 줄 447: `} else {` | `TestADeleteNotFoundFromEveryListReadDoesNotReconcile` · `TestExpiryReconcileApprovalNamesTheModeAndTheByIDReads` · `TestReconcileAbsenceGuardsRefuseInTheirContractOrder` · `TestReconcileAbsenceKeepsItsA121Wording` 외 47 | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
 
 ## 측정
 
@@ -17,6 +17,6 @@
 
 ## a164 GREEN 재추출
 
-- 편집 전(구현 base `aec9bde67`) 분기 열 길이 0 에서 편집 뒤 2 로. `source_sha256` 2546999c3f87… → 4211d94e33e0….
+- 편집 전(구현 base `aec9bde67`) 분기 열 길이 0 에서 편집 뒤 2 로. `source_sha256` 2546999c3f87… → 4bf4a9feb234….
 - 옛/새 분기 열(kind + 원문 줄)을 difflib 으로 정렬한 결과: insert 옛 B1..B0(0) → 새 B1..B2(2).
 - 위 표의 B 번호는 **새** AST 기준이고, 시험 칸은 GREEN 코드에서 시험별 프로필을 다시 떠 측정한 값이다(손 재번호 없음).

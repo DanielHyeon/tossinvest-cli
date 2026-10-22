@@ -1,14 +1,14 @@
 # Branch Test Map: `checkReconcileAbsence`
 
-- Source: `internal/verifylive/reconcile_check.go` (379-394)
+- Source: `internal/verifylive/reconcile_check.go` (384-399)
 - AST branches 4 — 시험 칸은 시험별 coverage 측정(본문 블록 실행)으로 채움
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if 줄 380: `if err := checkReconcileNoLiveOrder(r); err != nil {` | `TestReconcileAbsenceGuardsRefuseInTheirContractOrder` · `TestReconcileRefusesALiveSuccessorInTheOpenConditionalGroup` · `TestReconcileRefusesAnyOpenPlainOrderOnTheSymbol` | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
-| B2 | range 줄 383: `for _, row := range r.closed {` | `TestReconcileAbsenceGuardsRefuseInTheirContractOrder` · `TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt` · `TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt` · `TestReconcileRefusesAnotherIdentifierThatFiredInClosed` 외 3 | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
-| B3 | if 줄 384: `if row.ID != target.ID {` | `TestReconcileAbsenceGuardsRefuseInTheirContractOrder` · `TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt` · `TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt` · `TestReconcileRefusesAnotherIdentifierThatFiredInClosed` 외 1 | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
-| B4 | if 줄 387: `if row.Status == "EXPIRED" {` | `TestReconcileAbsenceGuardsRefuseInTheirContractOrder` · `TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage` | 해당 없음 — a164 GREEN 재추출 — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B1 | if 줄 385: `if err := checkReconcileNoLiveOrder(r); err != nil {` | `TestReconcileAbsenceGuardsRefuseInTheirContractOrder` · `TestReconcileRefusesALiveSuccessorInTheOpenConditionalGroup` · `TestReconcileRefusesAnyOpenPlainOrderOnTheSymbol` | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B2 | range 줄 388: `for _, row := range r.closed {` | `TestReconcileAbsenceGuardsRefuseInTheirContractOrder` · `TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt` · `TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt` · `TestReconcileRefusesAnotherIdentifierThatFiredInClosed` 외 3 | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B3 | if 줄 389: `if row.ID != target.ID {` | `TestReconcileAbsenceGuardsRefuseInTheirContractOrder` · `TestReconcileAcceptsAnExpiredRowOfAnotherIdentifierOnceTheAllowlistHasIt` · `TestReconcileRefusesAnOpenFamilyClosedStatusEvenIfTheAllowlistListsIt` · `TestReconcileRefusesAnotherIdentifierThatFiredInClosed` 외 1 | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
+| B4 | if 줄 392: `if row.Status == "EXPIRED" {` | `TestReconcileAbsenceGuardsRefuseInTheirContractOrder` · `TestReconcileRefusesTheTargetExpiredInClosedWithThePermanentMessage` | 해당 없음 — a164 GREEN 재추출(리뷰 수리 f4e71ad1d 포함) — 새 갈래 RED 는 analysis/red-green/red-2026-10-22.md | 기준선 통과(측정, 아래 「측정」) |
 
 ## 측정
 
@@ -19,6 +19,6 @@
 
 ## a164 GREEN 재추출
 
-- 편집 전(구현 base `aec9bde67`) 분기 열 길이 7 에서 편집 뒤 4 로. `source_sha256` 2546999c3f87… → 4211d94e33e0….
+- 편집 전(구현 base `aec9bde67`) 분기 열 길이 7 에서 편집 뒤 4 로. `source_sha256` 2546999c3f87… → 4bf4a9feb234….
 - 옛/새 분기 열(kind + 원문 줄)을 difflib 으로 정렬한 결과: replace 옛 B1..B2(2) → 새 B1..B1(1) · equal 옛 B3..B5 = 새 B2..B4 · delete 옛 B6..B7(2) → 새 B5..B4(0).
 - 위 표의 B 번호는 **새** AST 기준이고, 시험 칸은 GREEN 코드에서 시험별 프로필을 다시 떠 측정한 값이다(손 재번호 없음).
