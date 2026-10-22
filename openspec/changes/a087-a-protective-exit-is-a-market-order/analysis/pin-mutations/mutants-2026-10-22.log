@@ -1,0 +1,36 @@
+[control] TestA087MarketSellFillPriceIsTheBrokersAverage (internal/filldetect/payload.go 원본 overlay)
+      ok  	github.com/JungHoonGhae/tossinvest-cli/internal/filldetect	0.275s
+[M10] 3.5 M10 브로커 평균 체결가를 버림
+      a087_market_exit_fill_pin_test.go:92: snapshot = {OrderID:o-mkt AccountRef:acct-1 Symbol:005930 Market:kr TradingDay:2026-03-30 Side:SELL State:FILLED Terminal:true FailClosed:false Quantity:10 FilledQuantity:10 AveragePrice: FilledAmount: BrokerVisibleAt:2026-03-30T01:29:59Z ObservedAt:2026-03-30T01:30:03Z CommittedAt:2026-03-30T01:30:03Z ReasonCode: Detail:}, want terminal 10 @ the broker's 70050
+      → CAUGHT
+[control] TestA087MarketSellRemainderIsTrackedUntilTheBrokerEndsIt (internal/journal/fills.go 원본 overlay)
+      ok  	github.com/JungHoonGhae/tossinvest-cli/internal/filldetect	0.343s
+[M11] 3.6 M11 비종결 주문을 추적 집합에서 뺌
+      a087_market_exit_fill_pin_test.go:125: tracked while the remainder is working = [], want o-mkt
+      → CAUGHT
+[control] TestA087LiveOrdersForSymbolReadsANullPriceAsEmpty (internal/journal/fills.go 원본 overlay)
+      ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.262s
+[M12] 3.7 M12 미체결 목록의 coalesce 제거
+      a087_intents_price_null_pin_test.go:74: LiveOrdersForSymbol over a NULL-priced intent: journal: listing the working orders of 005930: sql: Scan error on column index 8, name "price": converting NULL to string is unsupported
+      → CAUGHT
+[control] TestA087ReprepareOfAMarketIntentIsNotAMutation (internal/journal/durability.go 원본 overlay)
+      ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.293s
+[M13] 3.7 M13 scanIntent 가 NULL 을 빈 값이 아닌 것으로 읽음
+      a087_intents_price_null_pin_test.go:42: second Prepare of the same market intent = journal: intent fields differ from the recorded intent: intent intent-mkt — NULL price did not round-trip to ""
+      → CAUGHT
+[control] TestA087AnEmptyWorkingOrderPriceIsZeroNotAFailure (internal/app/engine/exit_held_proposal.go 원본 overlay)
+      ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.006s
+[M14] 3.7 M14 청소가 빈 가격을 실패로 읽음
+      a087_working_order_price_pin_test.go:14: workingOrderPrice("") = (0, engine: working order price "" is not a number: strconv.ParseFloat: parsing "": invalid syntax), want (0, nil)
+      → CAUGHT
+[control] TestA087AnEmptyIntentPriceMatchesAnyBrokerPrice (internal/execgw/indoubt.go 원본 overlay)
+      ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.005s
+[M15] 3.7 M15 빈 가격이 와일드카드가 아님
+      a087_null_price_pin_test.go:32: matcher price = 1, want 0 (no price to compare)
+      → CAUGHT
+[control] TestA087AnEmptyIntentPriceHasNoNotional (internal/execgw/indoubt.go 원본 overlay)
+      ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.005s
+[M16] 3.7 M16 빈 가격의 명목가가 0 이 아님
+      a087_null_price_pin_test.go:59: notional of a market intent = 10, want 0
+      → CAUGHT
+합계: CAUGHT 7/7 · 대조군 PASS 7/7

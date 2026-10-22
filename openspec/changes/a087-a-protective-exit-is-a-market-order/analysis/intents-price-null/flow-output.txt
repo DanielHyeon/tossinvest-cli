@@ -1,0 +1,110 @@
+accessor call sites + followed params (non-test): 20
+
+internal/app/engine/attempt_thaw_command.go:106 PositionPolicyCommandService.releaseThawedProposal ← LookupIntent
+    111 field AccountRef :: repo.ArmedExitProposals(ctx, intent.AccountRef)
+internal/app/engine/exit_held_proposal.go:90 clearTargets ← param live
+    92 pass  for _, order := range live { if strings.EqualFold(strings.TrimSpace(order.Side), "BUY") || withPending { out = append(out, strings.TrimSpace(order.OrderID)) } }
+    93 field Side :: strings.TrimSpace(order.Side)
+    94 field OrderID :: strings.TrimSpace(order.OrderID)
+internal/app/engine/exit_held_proposal.go:161 ExitObserver.noteHeldProposal ← LiveOrdersForSymbol
+    166 pass  for _, order := range live { if !strings.EqualFold(strings.TrimSpace(order.Side), "SELL") || seen[order.OrderID] { continue } o.noteAwaitingClose(ctx, m, order.…
+    167 field Side :: strings.TrimSpace(order.Side)
+    167 field OrderID :: seen[order.OrderID]
+    170 field AccountRef :: o.noteAwaitingClose(ctx, m, order.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
+    170 field Market :: o.noteAwaitingClose(ctx, m, order.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
+    170 field TradingDay :: o.noteAwaitingClose(ctx, m, order.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
+    170 field Symbol :: o.noteAwaitingClose(ctx, m, order.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
+    170 field OrderID :: o.noteAwaitingClose(ctx, m, order.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
+internal/app/engine/exit_order_log.go:295 ExitObserver.followExitFills ← LookupIntent
+    305 field AccountRef :: AccountRef: intent.AccountRef
+    305 field Market :: Market: intent.Market
+    306 field TradingDay :: TradingDay: intent.TradingDay
+    306 field Symbol :: Symbol: intent.Symbol
+    306 field Side :: Side: intent.Side
+internal/app/engine/exitloop.go:1630 ExitObserver.clearTheSymbol ← LiveOrdersForSymbol
+    1642 pass  clearTargets(live, withPending)
+    1645 pass  for _, order := range live { buy := strings.EqualFold(strings.TrimSpace(order.Side), "BUY") if !buy { _, waiting, err := o.opts.Journal.ConfirmedCancelOf(ctx, o…
+    1646 field Side :: strings.TrimSpace(order.Side)
+    1650 field Market :: o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
+    1650 field TradingDay :: o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
+    1650 field Symbol :: o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
+    1650 field OrderID :: o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
+    1652 field OrderID :: "reading the engine cancel of order " + order.OrderID
+    1667 field Market :: strings.TrimSpace(order.Market)
+    1668 field Symbol :: Symbol: order.Symbol
+    1670 field Quantity :: Quantity: order.Quantity
+    1672 field Quantity :: HeldQuantity: order.Quantity
+    1674 field Side :: strings.TrimSpace(order.Side)
+    1674 field OrderID :: fmt.Sprintf("cancelling the working %s order %s before liquidating position %s", strings.ToUpper(strings.TrimSpace(order.Side)), order.OrderID, m.position.ID)
+    1680 field Quantity :: floatOf("working order quantity", order.Quantity)
+    1681 field Price :: workingOrderPrice(order.Price)
+    1687 field OrderID :: OrderID: order.OrderID
+    1687 field Symbol :: Symbol: order.Symbol
+    1689 field Market :: Market: order.Market
+    1690 field Side :: Side: order.Side
+    1693 field Currency :: Currency: order.Currency
+internal/app/engine/exitwiring.go:266 reconcileFloor.localOpenSells ← LiveOrdersForSymbol
+    271 pass  for _, order := range live { if !strings.EqualFold(strings.TrimSpace(order.Side), "SELL") { continue } total, err = riskcalc.AddDecimal(total, orZeroQuantity(or…
+    272 field Side :: strings.TrimSpace(order.Side)
+    275 field Quantity :: orZeroQuantity(order.Quantity)
+internal/execgw/amend_indoubt.go:44 Resolver.resolveCancel ← param intent
+internal/execgw/amend_indoubt.go:161 Resolver.resolveAmend ← param intent
+    177 pass  newMatcher(intent, rec, cfg)
+internal/execgw/gateway.go:834 Gateway.attemptTargets ← LookupIntent
+    838 field Symbol :: strings.EqualFold(intent.Symbol, plan.symbol)
+    839 field Market :: strings.EqualFold(intent.Market, plan.market)
+internal/execgw/indoubt.go:243 Resolver.Resolve ← LookupIntent
+    250 field Symbol :: Symbol: intent.Symbol
+    276 pass  r.resolveCancel(ctx, attempt, rec, intent, res, cfg, clk)
+    278 pass  r.resolveAmend(ctx, attempt, rec, intent, res, cfg, clk)
+    281 pass  newMatcher(intent, rec, cfg)
+    337 pass  r.absenceCorroborated(ctx, rec, intent)
+internal/execgw/indoubt.go:445 Resolver.absenceCorroborated ← param intent
+    459 pass  r.windowContaminated(ctx, rec, intent)
+    462 field Notes :: DecodeBaseline(intent.Notes)
+    467 field Symbol :: r.Account.HoldingQuantity(ctx, intent.Symbol)
+    473 field Currency :: currency = intent.Currency
+    484 field Symbol :: fmt.Sprintf( "the %s holding moved by %s while the order lists showed nothing — the account and the lists disagree", intent.Symbol, decimalString(holdingDelta…
+    490 pass  intentNotional(intent)
+    499 field Symbol :: fmt.Sprintf("the %s holding and the buying power are unchanged from the pre-dispatch baseline", intent.Symbol)
+internal/execgw/indoubt.go:512 Resolver.windowContaminated ← param intent
+    519 field Market :: r.Journal.MutationsDispatchedSince(ctx, intent.Market, intent.Symbol, since, rec.ID)
+    519 field Symbol :: r.Journal.MutationsDispatchedSince(ctx, intent.Market, intent.Symbol, since, rec.ID)
+    523 field Symbol :: fmt.Sprintf( "absence cannot be corroborated: the journal could not be checked for other %s mutations: %v", intent.Symbol, err)
+    535 field Symbol :: fmt.Sprintf( "absence cannot be corroborated: %s was also touched by %s while this attempt was being observed, "+ "so the buying power and holding deltas no lon…
+internal/execgw/indoubt.go:545 intentNotional ← param intent
+    546 field Quantity :: strings.TrimSpace(intent.Quantity)
+    550 field Price :: strings.TrimSpace(intent.Price)
+internal/execgw/indoubt.go:652 newMatcher ← param intent
+    653 field Quantity :: strings.TrimSpace(intent.Quantity)
+    655 field ID :: fmt.Errorf("execgw: intent %s has an unreadable quantity %q", intent.ID, intent.Quantity)
+    655 field Quantity :: fmt.Errorf("execgw: intent %s has an unreadable quantity %q", intent.ID, intent.Quantity)
+    657 field Price :: parseOptionalDecimal(intent.Price)
+    660 field Symbol :: strings.TrimSpace(intent.Symbol)
+    661 field Side :: strings.TrimSpace(intent.Side)
+internal/execgw/replay.go:237 Gateway.ReplayInDoubt ← LookupIntent
+    241 field Symbol :: out.Symbol = intent.Symbol
+    267 field Market :: strings.ToLower(intent.Market)
+    267 field Symbol :: strings.ToUpper(intent.Symbol)
+    270 field Symbol :: "another mutation on " + intent.Symbol
+    360 pass  g.parkAlert(ctx, rec, intent, verdict.detail)
+internal/execgw/replay.go:536 Gateway.parkAlert ← param intent
+    539 field Symbol :: fmt.Sprintf( "attempt %s on %s is unresolved: %s", rec.ID, intent.Symbol, detail)
+    544 field Symbol :: "symbol": intent.Symbol
+    545 field Market :: "market": intent.Market
+    546 field AccountRef :: "account": intent.AccountRef
+    557 field Symbol :: "UNRESOLVED_IN_DOUBT: " + intent.Symbol
+internal/journal/durability.go:389 Journal.Prepare ← scanIntent
+    392 pass  existing != req.Intent
+internal/journal/recovery.go:130 Journal.blockedFor ← LookupIntent
+    135 field Market :: Market: intent.Market
+    136 field Symbol :: Symbol: intent.Symbol
+internal/reconcile/acked_boot.go:46 Recovery.confirmAcked ← LookupIntent
+    52 field Symbol :: r.alertAcked(ctx, rec, intent.Symbol, "a CANCEL/AMEND acknowledgement has no read-back rule; it stays ACKED")
+    56 field Symbol :: r.alertAcked(ctx, rec, intent.Symbol, "the acknowledgement recorded no broker order number to read back")
+    59 field Symbol :: execgw.ConfirmPlacedOrder(ctx, r.opts.Resolver.Order, rec.BrokerOrderID, intent.Symbol)
+    60 field Symbol :: r.alertAcked(ctx, rec, intent.Symbol, "the read-back did not confirm it: "+withoutBrokerBody(err))
+    69 field Symbol :: r.alertAcked(ctx, rec, intent.Symbol, fmt.Sprintf("the read-back matched but the ledger write failed: %v", err))
+internal/reconcile/recovery.go:424 Recovery.blockedSymbol ← LookupIntent
+    429 field Market :: Market: intent.Market
+    430 field Symbol :: Symbol: intent.Symbol

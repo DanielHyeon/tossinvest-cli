@@ -1,0 +1,337 @@
+{
+  "file": "internal/execgw/indoubt.go",
+  "source_sha256": "d220e7df90d725bf116227c892a8f1b6e2a1c7df2f157f5a1eadb0e3217bdbc0",
+  "package": "execgw",
+  "function": "absenceCorroborated",
+  "receiver": "Resolver",
+  "signature": "Resolver.absenceCorroborated(params=3, results=2)",
+  "start": {
+    "line": 445,
+    "column": 1
+  },
+  "end": {
+    "line": 500,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 448,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 459,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 463,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 468,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 472,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 476,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 481,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 492,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 449,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 460,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 464,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 469,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 477,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 482,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 493,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 498,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 459,
+        "column": 26
+      },
+      "text": "r.windowContaminated"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 462,
+        "column": 18
+      },
+      "text": "DecodeBaseline"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 467,
+        "column": 21
+      },
+      "text": "r.Account.HoldingQuantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 469,
+        "column": 17
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 475,
+        "column": 25
+      },
+      "text": "r.Account.BuyingPower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 477,
+        "column": 17
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 481,
+        "column": 6
+      },
+      "text": "nearZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 482,
+        "column": 17
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 484,
+        "column": 19
+      },
+      "text": "decimalString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 14
+      },
+      "text": "intentNotional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 492,
+        "column": 36
+      },
+      "text": "math.Abs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 493,
+        "column": 17
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 4
+      },
+      "text": "decimalString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 18
+      },
+      "text": "math.Abs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 38
+      },
+      "text": "decimalString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 15
+      },
+      "text": "fmt.Sprintf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 459,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 462,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 467,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 471,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 473,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 475,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 480,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 490,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 491,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

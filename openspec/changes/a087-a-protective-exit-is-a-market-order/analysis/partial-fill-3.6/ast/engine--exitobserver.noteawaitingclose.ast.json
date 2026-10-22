@@ -1,0 +1,179 @@
+{
+  "file": "internal/app/engine/exit_held_proposal.go",
+  "source_sha256": "bc7a564eb8b1e5eaa30c720230243f1aab411c3b895fdaf57c67e87f4bd7a564",
+  "package": "engine",
+  "function": "noteAwaitingClose",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.noteAwaitingClose(params=7, results=0)",
+  "start": {
+    "line": 177,
+    "column": 1
+  },
+  "end": {
+    "line": 196,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 187,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 181,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 184,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 189,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 193,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 24
+      },
+      "text": "o.opts.Journal.ConfirmedCancelOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 3
+      },
+      "text": "o.warnEpisode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 18
+      },
+      "text": "time.Parse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 47
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 3
+      },
+      "text": "o.warnEpisode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 12
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 12
+      },
+      "text": "o.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 14
+      },
+      "text": "o.delayBound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 2
+      },
+      "text": "o.recordAwaitingClose"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 178,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 186,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

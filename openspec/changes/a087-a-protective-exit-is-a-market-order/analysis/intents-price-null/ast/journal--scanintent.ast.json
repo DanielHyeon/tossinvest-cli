@@ -1,0 +1,100 @@
+{
+  "file": "internal/journal/durability.go",
+  "source_sha256": "29ec7a1849fade446c9125a5f604ab37ea23080b240472390cf4f5b3c534b1e9",
+  "package": "journal",
+  "function": "scanIntent",
+  "signature": "scanIntent(params=1, results=2)",
+  "start": {
+    "line": 701,
+    "column": 1
+  },
+  "end": {
+    "line": 717,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 709,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 712,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 710,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 713,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 716,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 706,
+        "column": 9
+      },
+      "text": "row.Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 709,
+        "column": 5
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 713,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 706,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 715,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -154,22 +154,41 @@
 - [ ] 3.3 **GREEN** — 원장 기록 경로
 - [ ] 3.4 **RED/GREEN** — 운영자 화면·알림이 가격 없는 청산을 "시장가"로 표시(결측 아님).
       `operatorview`·콘솔 템플릿·`obs` 필드
-- [ ] 3.5 체결가 확정이 체결 조회 경로로 이뤄지는지 확인 — 이미 `filldetect`가 하는 일이면
+- [x] 3.5 체결가 확정이 체결 조회 경로로 이뤄지는지 확인 — 이미 `filldetect`가 하는 일이면
       변경 없음을 테스트로 고정, 아니면 갭을 `issues.md`에 기록
-- [ ] 3.6 **부분체결 잔량** (재리뷰 P2-3 · 1차 리뷰 A14 의 행방, design D8) — MARKET 보호 청산의 잔량이 남는지·`filldetect`
+      — 2026-10-22 HEAD `0686c0f0a`: **이미 하는 일, 갭 없음.** 체결가는 브로커 `execution.averageFilledPrice` 에서만 옴
+      (`parseSnapshot` payload.go:91, 유형·intent 가격을 읽는 분기 0 — AST). 고정 `internal/filldetect/a087_market_exit_fill_pin_test.go`
+      `TestA087MarketSellFillPriceIsTheBrokersAverage`(가격 NULL KR 시장가 매도의 스냅숏 평균 = 브로커 값, intent 무변경). 변이 M10 CAUGHT.
+      `analysis/fill-price-3.5/`. production 편집 0
+- [x] 3.6 **부분체결 잔량** (재리뷰 P2-3 · 1차 리뷰 A14 의 행방, design D8) — MARKET 보호 청산의 잔량이 남는지·`filldetect`
       가 그 잔량을 어떻게 닫는지 확인. 갭이면 `issues.md` 에 기록
-- [ ] 3.7 **`intents.price` NULL 소비부 전수 열거** (재리뷰 P3-3 — 표본 셋 `fills.go` coalesce·`exit_held_proposal.go`
+      — 2026-10-22: 잔량이 남는지는 브로커 `[미측정]`. 체결 감지는 비종결 주문을 추적 집합(`terminal = 0`)에 두고 매 주기 읽다가 종결
+      (`CANCELLED_PARTIALLY_FILLED` 등) 관측으로 닫음 → `ApplyExitFill` 이 발의를 풀고 다음 관측이 남은 포지션을 재판정. 고정
+      `TestA087MarketSellRemainderIsTrackedUntilTheBrokerEndsIt`(변이 M11 CAUGHT). **갭**: 잔량이 비종결로 남는 동안 재발의 억제 ·
+      지연 경보 없음 → `issues.md` I-R9. 「종결 → 재발의 수량 = 잔량」 엔진 종단 시험은 없음(미검증). `analysis/partial-fill-3.6/`
+- [x] 3.7 **`intents.price` NULL 소비부 전수 열거** (재리뷰 P3-3 — 표본 셋 `fills.go` coalesce·`exit_held_proposal.go`
       `workingOrderPrice`·`indoubt.go` 가격 와일드카드/notional 0 은 통과, 전수 아님). **방법 (3차 재리뷰 A-P3-3)**: CodeGraph 는
       심볼 단위라 SQL 열의 읽기 자리를 열거하지 못한다 — ① 비시험 Go 소스의 SQL 문자열에서 `intents` 와 `price` 를 함께 읽는 자리를
       `rg` 로 모으고, ② 그 질의를 감싼 저널 접근자 함수의 호출자를 CodeGraph 로 따라가 ①∪② 를 `analysis/` 에 남긴다. 각 자리의 NULL
       처분을 시험 또는 not-applicable 사유로 적는다
-- [ ] 3.8 **청산 슬리피지 산출** (재리뷰 P1-3, design D6 · 3차 재리뷰 A-P2-4 정정) — **기존 칸 유도, schema·production 코드 추가
+      — 2026-10-22 HEAD `0686c0f0a`, codegraph 1.6.0: ① `census.go`(비시험 Go 969 파일) → SQL 3 자리 중 price 를 읽는 것 2(`intentSelect`
+      → `scanIntent` NullString · `LiveOrdersForSymbol` coalesce; `confirmedFillOwners` 의 `*` 는 price 없는 CTE). ② CodeGraph ∪ `flow.go`
+      → 접근자 호출 자리 12(CodeGraph 가 `exitwiring.go:266` `localOpenSells` 를 놓침 — 합집합에 넣음). NULL 이 닿는 Go 소비 4
+      (`Prepare` 비교 · `workingOrderPrice` · `parseOptionalDecimal`→matcher 와일드카드 · `intentNotional`) 전부 시험, 나머지 not-applicable
+      (price 미사용). 신규 시험 5(journal 2 · execgw 2 · engine 1) + 기존 1, 변이 M12~M16 CAUGHT. 표·AST: `analysis/intents-price-null/`.
+      부수 기록 `issues.md` I-R10. production 편집 0
+- [x] 3.8 **청산 슬리피지 산출** (재리뷰 P1-3, design D6 · 3차 재리뷰 A-P2-4 정정) — **기존 칸 유도, schema·production 코드 추가
       없음**(proposal Impact 「Schema: 없음」과 일치). 결정 시 관측가 `exit_events.observed_price`(같은 행 `proposed_intent_id`) 와 그
       intent 의 브로커 `order_id` 로 찾은 체결 평균가 `fill_snapshots.average_price` 로 bps 를 계산하는 **읽기 전용 저널 질의**를
       `analysis/` 에 둔다(착지 뒤 보호 청산마다 사람이 돌림). 「원장에 남긴다」는 철회 — 새 열을 쓰지 않는다. 착수 시 intent → `order_id`
       결속이 기존 칸으로 성립하는지 먼저 확인하고, 성립하지 않으면 **멈추고** proposal Impact 를 schema 변경으로 고쳐 재리뷰를 받는다.
       비례 원칙: 보호 청산 판정을 바꾸지 않는 관측 산출이라 High-risk 무거운 규율(FLM·변이 원장) 대상 아님(`slippagePct` 는 진입 전용 —
       무변경)
+      — 2026-10-22: **결속 성립 — schema 변경 불요**(proposal Impact 유지). 발의 행이 `observed_price`·`action`·`proposed_intent_id` 를 한
+      행에 씀(`exit_state.go` INSERT INTO exit_events) → `mutation_attempts`(PLACE·CONFIRMED·`broker_order_id`) → `scoped_fill_snapshots`
+      (order_id + intent 전체 범위 — 재사용 번호 차단; 범위 같은 행이 scoped 에 없을 때만 `fill_snapshots`). 질의
+      `analysis/exit-slippage-3.8/exit_slippage.sql`(adverse_bps, 스냅숏 없으면 NULL). 시험 `internal/journal/a087_exit_slippage_query_test.go`
+      (마이그레이션이 만든 임시 저널, 실제 저널 미접촉) — 질의 변이 Q1~Q3 CAUGHT(`query-mutants-2026-10-22.log`). 한계: AMEND 후속 주문 미추적
 
 ## 4. 회귀 방지
 

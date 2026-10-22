@@ -1,0 +1,87 @@
+
+Callers of "scanIntent" (2):
+
+method      Prepare
+  internal/journal/durability.go:373
+
+method      LookupIntent
+  internal/journal/durability.go:694
+
+
+Callers of "LookupIntent" (8):
+
+method      blockedSymbol
+  internal/reconcile/recovery.go:423
+
+method      confirmAcked
+  internal/reconcile/acked_boot.go:45
+
+method      followExitFills
+  internal/app/engine/exit_order_log.go:274
+
+method      Resolve
+  internal/execgw/indoubt.go:229
+
+method      blockedFor
+  internal/journal/recovery.go:129
+
+method      ReplayInDoubt
+  internal/execgw/replay.go:228
+
+method      LookupIntent
+  internal/app/engine/attempt_thaw_command.go:39
+
+method      attemptTargets
+  internal/execgw/gateway.go:833
+
+
+Callers of "LiveOrdersForSymbol" (16):
+
+function    TestTrackedAndLiveOrdersKeepTwoNonterminalReusedTradingDays
+  internal/journal/fills_test.go:635
+
+function    TestScopedTerminalStateDoesNotHideAnotherAccountsLiveReusedOrder
+  internal/journal/fills_test.go:774
+
+function    TestTrackedAndLiveOrdersAllowReusedIDInDifferentSymbolAndSideScopes
+  internal/journal/fills_test.go:930
+
+function    TestLiveOrdersForSymbolKeepsAReusedCurrentDayOrderAfterThePriorDayTerminal
+  internal/journal/fills_test.go:985
+
+function    TestLiveOrdersForSymbolUsesLegacyTerminalOnlyWithinItsMarket
+  internal/journal/fills_test.go:1029
+
+function    TestLegacySnapshotCannotTerminateOrOwnAFutureReusedOrder
+  internal/journal/fills_test.go:1073
+
+function    TestScopedExternalSnapshotCannotTerminateOrOwnAFutureOrder
+  internal/journal/fills_test.go:1108
+
+function    TestOrderIDLatestDayPartitionKeepsBothMarketsInTheSameAccount
+  internal/journal/fills_test.go:1143
+
+function    TestLiveOrdersForSymbolRejectsDuplicateCanonicalOwner
+  internal/journal/fills_test.go:1482
+
+function    TestConfirmedCancelDoesNotBecomeASecondOrderOwner
+  internal/journal/fills_test.go:1496
+
+method      noteHeldProposal
+  internal/app/engine/exit_held_proposal.go:126
+
+function    TestA094AnAmbiguouslyOwnedOrderIsStillAwaitingClose
+  internal/journal/a094_exit_proposal_release_test.go:336
+
+function    waitForJournaledOrder
+  internal/app/engine/tracer_test.go:205
+
+function    TestA159ProtectionExitAfterRestart
+  internal/app/engine/a159_protection_restart_test.go:223
+
+method      clearTheSymbol
+  internal/app/engine/exitloop.go:1629
+
+function    TestA087LiveOrdersForSymbolReadsANullPriceAsEmpty
+  internal/journal/a087_intents_price_null_pin_test.go:52
+

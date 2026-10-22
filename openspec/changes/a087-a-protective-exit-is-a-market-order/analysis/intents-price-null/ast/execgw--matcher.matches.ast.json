@@ -1,0 +1,147 @@
+{
+  "file": "internal/execgw/indoubt.go",
+  "source_sha256": "d220e7df90d725bf116227c892a8f1b6e2a1c7df2f157f5a1eadb0e3217bdbc0",
+  "package": "execgw",
+  "function": "matches",
+  "receiver": "matcher",
+  "signature": "matcher.matches(params=1, results=1)",
+  "start": {
+    "line": 687,
+    "column": 1
+  },
+  "end": {
+    "line": 706,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 688,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 691,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 694,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 697,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 700,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 701,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 689,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 692,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 695,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 698,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 702,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 705,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 694,
+        "column": 6
+      },
+      "text": "qtyClose"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 697,
+        "column": 36
+      },
+      "text": "qtyClose"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 701,
+        "column": 6
+      },
+      "text": "o.OrderedAt.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 701,
+        "column": 43
+      },
+      "text": "o.OrderedAt.After"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

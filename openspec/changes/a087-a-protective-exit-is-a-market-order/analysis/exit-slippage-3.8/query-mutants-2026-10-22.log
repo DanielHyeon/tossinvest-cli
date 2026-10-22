@@ -1,0 +1,5 @@
+control PASS
+Q1 day-scope join removed CAUGHT — a087_exit_slippage_query_test.go:137: rows = [{intent:intent-stop avg:50000 bps:{Float64:2857.14 Valid:true}} {intent:intent-stop avg:69930 bps:{Float64:10 Valid:true}} {intent:intent-unfilled avg: bps:{Float64:0 Valid:false}}], want the two protective decisions only
+Q2 NULLIF guard removed CAUGHT — a087_exit_slippage_query_test.go:143: unfilled stop = {intent:intent-unfilled avg: bps:{Float64:10000 Valid:true}}, want NULL bps
+Q3 priceless protective rows kept CAUGHT — a087_exit_slippage_query_test.go:137: rows = [{intent:intent-stop avg:69930 bps:{Float64:10 Valid:true}} {intent:intent-stop avg:69930 bps:{Float64:0 Valid:false}} {intent:intent-unfilled avg: bps:{Float64:0 Valid:false}}], want the two protective decisions only
+restored (sha256 equal)

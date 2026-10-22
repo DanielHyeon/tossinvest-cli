@@ -117,3 +117,25 @@ mock 에서만 잰다. `contract_test.go` 는 **요청**만 openapi 원문·생�
 0.5(엔진 세션 게이트 유무)는 지금 할 수 있는 read-only 작업이고, 그 답이 spec Requirement 1 의 SHALL NOT 을 무효화할 수 있다.
 재리뷰는 freeze 를 0.5 뒤로 두는 편이 재개정 비용이 작다고 적었다(차단 아님 — 이미 §1~§3 착수 조건). tasks 0.5 에 권장으로 적었고
 순서 결정은 0.9 Manager 대조에서 한다.
+
+## tasks 3.5~3.8 read-only 분석에서 남긴 미해결 (2026-10-22)
+
+### I-R9 — 부분체결 잔량이 비종결로 남으면 보호가 그 주문에 묶인다 (미해결 · 갭 · tasks 3.6)
+
+MARKET 보호 청산이 부분체결된 뒤 잔량이 브로커에 비종결(PARTIAL_FILLED)로 남는 동안: 발의는 무장 유지(`ApplyExitFill` 은 종결에서만
+`ResolvePending`), 같은 보호 행동의 재발의는 `SuppressedPending`(ratchet.go:423 · ladder.go:441)으로 억제, 억제된 판정은 발의가 비어
+청소·제출·`noteDelay` 지연 경보 어디에도 닿지 않고(exitloop.go:1314), 무장 발의 알림(`noteAwaitingClose`)은 엔진 취소가 확정된
+매도만 본다. 즉 **시간 상한도 경보도 없다.** 잔량이 브로커에서 종결(취소·체결)되면 체결 감지가 그것을 관측해 발의를 풀고 다음
+관측이 남은 포지션을 다시 판정한다(근거·시험: `analysis/partial-fill-3.6/README.md`).
+
+- 브로커 거동 `[미측정]`: KR 시장가 매도의 잔량이 즉시 취소되는지 잔존하는지. §5.1 은 1주 전량 체결 한 건뿐이다.
+- 재가격·에스컬레이션은 무소유 장부(tasks 「후속 change」 2행). 지연 경보를 이 경로에 더할지는 사람 결정 — 이 change 는 production
+  편집 0 으로 기록만 한다. LIMIT 보호 청산(오늘)도 같은 구조라 a087 이 만든 갭은 아니고, MARKET 이 「잔량이 남지 않는다」를 보장하지
+  않는다는 것(design D8 1행)이 이 기록의 요지다.
+
+### I-R10 — 부재 확증의 매수가능금액 갈래가 매도에서 무엇을 거르는지 미검증 (미해결 · 한계 기록 · tasks 3.7)
+
+`execgw.Resolver.absenceCorroborated` B8(`indoubt.go:492` `notional > 0 && bpDelta < 0 && …`)은 시장가 intent(가격 NULL → `intentNotional`
+0)에서 꺼진다(시험 `TestA087AnEmptyIntentPriceHasNoNotional`). 부재 확증은 그 앞 B7(보유수량 불변)에 기댄다. 지정가 **매도**에서 B8 이
+실제로 무엇을 거르는지는 매도 접수가 매수가능금액을 어떻게 움직이는지가 `[미측정]` 이라 판정할 수 없다 — 유형 무관 기존 동작이며 a087
+의 처분 대상 아님. 기록만.

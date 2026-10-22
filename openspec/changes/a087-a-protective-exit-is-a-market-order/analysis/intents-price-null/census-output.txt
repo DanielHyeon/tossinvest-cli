@@ -1,0 +1,9 @@
+scanned non-test Go files: 969
+hits (decl reads intents AND (mentions price OR selects *)): 3
+
+internal/journal/durability.go:698 const intentSelect
+    699: time_in_force, quantity, price, currency, source, fingerprint, notes FROM intents
+internal/journal/fills.go:565 confirmedFillOwners  [select-star]
+internal/journal/fills.go:1854 Journal.LiveOrdersForSymbol  [select-star]
+    1864: i.symbol, i.side, i.quantity, coalesce(i.price, '') AS price, i.currency
+    1880: c.symbol, c.side, c.quantity, c.price, c.currency

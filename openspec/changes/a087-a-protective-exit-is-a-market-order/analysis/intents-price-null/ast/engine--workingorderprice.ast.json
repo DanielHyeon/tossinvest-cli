@@ -1,0 +1,62 @@
+{
+  "file": "internal/app/engine/exit_held_proposal.go",
+  "source_sha256": "bc7a564eb8b1e5eaa30c720230243f1aab411c3b895fdaf57c67e87f4bd7a564",
+  "package": "engine",
+  "function": "workingOrderPrice",
+  "signature": "workingOrderPrice(params=1, results=2)",
+  "start": {
+    "line": 111,
+    "column": 1
+  },
+  "end": {
+    "line": 116,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 112,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 113,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 115,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 9
+      },
+      "text": "floatOf"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}
