@@ -14,3 +14,9 @@
 
 ## 검증 계획
 `gofmt -l`, `go vet`, `go test ./internal/console/ ./cmd/tossctl/`, 로컬 콘솔 렌더(1280/375px, 라이트/다크) 스크린샷·콘솔 에러 확인. 주문·토글·승인 버튼은 누르지 않는다.
+
+## 모션 주의 (Impeccable 3단계 리뷰, 4단계 입력)
+- 전환 0 유지 대상: 주문·승인·청산·토글 `button`/`.button-link`/`form`, `.sticky-save`(승인 바), `.console-approval`. 상태 규칙(`:hover`/`:active`/`:disabled`)은 즉시 반영이고 `transition` 을 걸지 않는다(안전 불변식 4).
+- `.detail-cell .row-details[open]` 는 위치 지정에 `transform: translate(-50%, -50%)` 를 이미 쓴다. 열림 애니메이션은 `opacity` 또는 개별 `translate`/`scale` 속성으로만 하고 `transform` 을 애니메이션하지 않는다.
+- 데이터 갱신(`meta refresh` 5초)으로 바뀌는 상태 변화에는 애니메이션을 걸지 않는다. 모션 후보는 탭·내비 `a.on` 전환과 `details` 열림뿐이다.
+- `prefers-reduced-motion: reduce` 에서 모든 모션을 끈다. 컴포지터 속성(`transform`/`opacity`)만 쓰고 `will-change` 는 활성 애니메이션 중에만 둔다.

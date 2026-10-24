@@ -387,3 +387,21 @@ func TestTheSummaryCostsNoBrokerCall(t *testing.T) {
 			"must not be the one that spends the budget", got-before)
 	}
 }
+
+// TestNoSideTabAccentBorders (change a172, Impeccable 리뷰 1~3).
+//
+// 알림·카드·내비 한쪽에 3px 색 띠를 두는 "side-tab" 은 AI 티의 대표 징후이고 규칙 20 이
+// 금지한다. 띠는 border-left 로도, inset box-shadow 로도 만들 수 있어 둘 다 막는다.
+// 1px 구분선(border-left: 1px / 0)은 정상이므로 3px 이상만 센다.
+func TestNoSideTabAccentBorders(t *testing.T) {
+	start := strings.Index(pageTemplates, `{{define "style"}}`)
+	end := strings.Index(pageTemplates[start:], "{{end}}")
+	if start < 0 || end < 0 {
+		t.Fatal("stylesheet block not found")
+	}
+	css := pageTemplates[start : start+end]
+	sideTab := regexp.MustCompile(`border-(?:left|right)\s*:\s*[2-9]px|inset\s+-?[2-9]px\s+0\s`)
+	if m := sideTab.FindAllString(css, -1); len(m) != 0 {
+		t.Errorf("stylesheet carries side-tab accent borders: %q", m)
+	}
+}
