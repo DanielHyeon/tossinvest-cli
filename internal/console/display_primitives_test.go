@@ -207,15 +207,25 @@ func TestTheHeadingStepsAreDistinguishable(t *testing.T) {
 
 var (
 	retiredStatusRule = regexp.MustCompile(`\.state-badge\s*[{,]`)
-	// A size is either a plain rem value or clamp(min, preferred, max) in rem.
+	// 크기는 `font-size: var(--text-N)` 로 모듈러 스케일 토큰을 읽고, 토큰은 rem clamp(min, 선호, max) 이다.
+	// 평범한 rem 값도 그대로 읽는다.
+	varSizePattern   = regexp.MustCompile(`font(?:-size)?:\s*var\((--text-[a-z0-9-]+)\)`)
 	remSizePattern   = regexp.MustCompile(`font-size:\s*([0-9.]+)rem`)
-	clampSizePattern = regexp.MustCompile(`font-size:\s*clamp\(\s*([0-9.]+)rem\s*,[^;]*,\s*([0-9.]+)rem\s*\)`)
-	bodyFontPattern  = regexp.MustCompile(`font:\s*clamp\(\s*([0-9.]+)rem\s*,[^;]*?,\s*([0-9.]+)rem\s*\)\s*/`)
+	clampSizePattern = regexp.MustCompile(`clamp\(\s*([0-9.]+)rem\s*,[^;]*?,\s*([0-9.]+)rem\s*\)`)
 )
+
+// tokenSize reads `--name: clamp(min, preferred, max)` from the stylesheet, in px.
+func tokenSize(sheet, name string) (lo, hi float64, ok bool) {
+	m := regexp.MustCompile(regexp.QuoteMeta(name) + `:\s*` + clampSizePattern.String()).FindStringSubmatch(sheet)
+	if m == nil {
+		return 0, 0, false
+	}
+	return remRange(m[1], m[2])
+}
 
 // declaredFontSize reads a bare element rule's font-size range, in px.
 func declaredFontSize(sheet, element string) (lo, hi float64, ok bool) {
-	i := strings.Index(sheet, "\n"+element+" { ")
+	i := strings.Index(sheet, "\n"+element+" {")
 	if i < 0 {
 		return 0, 0, false
 	}
@@ -225,8 +235,8 @@ func declaredFontSize(sheet, element string) (lo, hi float64, ok bool) {
 		return 0, 0, false
 	}
 	rule := rest[:j]
-	if m := clampSizePattern.FindStringSubmatch(rule); m != nil {
-		return remRange(m[1], m[2])
+	if m := varSizePattern.FindStringSubmatch(rule); m != nil {
+		return tokenSize(sheet, m[1])
 	}
 	if m := remSizePattern.FindStringSubmatch(rule); m != nil {
 		return remRange(m[1], m[1])
@@ -235,11 +245,7 @@ func declaredFontSize(sheet, element string) (lo, hi float64, ok bool) {
 }
 
 func declaredBodyFontSize(sheet string) (lo, hi float64, ok bool) {
-	m := bodyFontPattern.FindStringSubmatch(sheet)
-	if m == nil {
-		return 0, 0, false
-	}
-	return remRange(m[1], m[2])
+	return declaredFontSize(sheet, "body")
 }
 
 func remRange(a, b string) (lo, hi float64, ok bool) {

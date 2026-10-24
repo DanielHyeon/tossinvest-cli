@@ -167,33 +167,60 @@ func TestTradingViewsCarryWholePageResponsiveAndFocusContracts(t *testing.T) {
 	}
 }
 
-// 다크 테마는 :root 변수만 재정의한다(change a172). 의미 색 변수가 어느 면 위에서도
-// WCAG AA 4.5:1 이상인지 변수 값을 읽어 직접 잰다.
-func TestTradingViewsDarkSemanticStatusColorsMeetWCAGAA(t *testing.T) {
+// 두 테마는 `:root` 변수로만 색을 정한다(change a172). 한 함수가 라이트·다크를 모두 돌며
+// 변수 값을 읽어 직접 대비를 잰다.
+//   - 텍스트 토큰(잉크 1~3, 액센트, 의미색 fg) : 세 면(surface-0/1/2) 위에서 4.5:1 이상
+//   - 잉크는 의미색 바탕(ok/warn/bad-bg) 위에서도 4.5:1, 의미색 fg 는 자기 bg 위에서 4.5:1
+//   - UI 경계(line-strong, 포커스 링 accent, 의미색 line) : 세 면 위에서 3:1 이상
+//
+// line / line-soft 는 장식 구분선이라 대상이 아니다.
+func TestTradingViewsThemeColorsMeetWCAGInBothThemes(t *testing.T) {
+	rootBlock := regexp.MustCompile(`:root \{[^}]*\}`)
 	darkStart := strings.Index(pageTemplates, "@media (prefers-color-scheme: dark) {")
 	if darkStart < 0 {
-		t.Fatal("dark semantic media block is missing")
+		t.Fatal("dark theme media block is missing")
 	}
-	darkCSS := pageTemplates[darkStart:]
-	vars := map[string]string{}
-	for _, m := range regexp.MustCompile(`(--[a-z0-9-]+):\s*(#[0-9a-fA-F]{6})`).FindAllStringSubmatch(darkCSS, -1) {
-		vars[m[1]] = m[2]
+	blocks := map[string]string{
+		"light": rootBlock.FindString(pageTemplates[:darkStart]),
+		"dark":  rootBlock.FindString(pageTemplates[darkStart:]),
 	}
-	for _, surface := range []string{"--surface-0", "--surface-1", "--surface-2"} {
-		if vars[surface] == "" {
-			t.Fatalf("dark theme does not define %s", surface)
+	hexVar := regexp.MustCompile(`(--[a-z0-9-]+):\s*(#[0-9a-fA-F]{6})`)
+	for theme, block := range blocks {
+		vars := map[string]string{}
+		for _, m := range hexVar.FindAllStringSubmatch(block, -1) {
+			vars[m[1]] = m[2]
 		}
-	}
-	for _, token := range []string{"--ok", "--warn", "--bad", "--bad-soft", "--accent", "--ink-1", "--ink-2", "--ink-3"} {
-		color := vars[token]
-		if color == "" {
-			t.Errorf("dark theme does not define %s", token)
-			continue
-		}
-		for _, surface := range []string{"--surface-0", "--surface-1", "--surface-2"} {
-			if ratio := wcagContrastRatio(t, color, vars[surface]); ratio < 4.5 {
-				t.Errorf("%s %s contrast on %s %s = %.2f:1, want at least 4.5:1", token, color, surface, vars[surface], ratio)
+		get := func(name string) string {
+			if vars[name] == "" {
+				t.Fatalf("%s theme does not define %s", theme, name)
 			}
+			return vars[name]
+		}
+		surfaces := []string{"--surface-0", "--surface-1", "--surface-2"}
+		check := func(token string, against []string, floor float64) {
+			for _, bg := range against {
+				if ratio := wcagContrastRatio(t, get(token), get(bg)); ratio < floor {
+					t.Errorf("%s: %s %s on %s %s = %.2f:1, want at least %.1f:1", theme, token, get(token), bg, get(bg), ratio, floor)
+				}
+			}
+		}
+		for _, token := range []string{"--ink-1", "--ink-2", "--ink-3", "--accent", "--ok", "--warn", "--bad"} {
+			check(token, surfaces, 4.5)
+		}
+		for _, token := range []string{"--ink-1", "--ink-2", "--ink-3"} {
+			check(token, []string{"--ok-bg", "--warn-bg", "--bad-bg"}, 4.5)
+		}
+		for _, semantic := range []string{"ok", "warn", "bad"} {
+			check("--"+semantic, []string{"--" + semantic + "-bg"}, 4.5)
+			check("--"+semantic+"-line", surfaces, 3)
+		}
+		check("--line-strong", surfaces, 3)
+		check("--accent", surfaces, 3)
+		// 잉크는 1 → 3 으로 갈수록 옅어져야 한다(단조 스케일).
+		first, second, third := wcagContrastRatio(t, get("--ink-1"), get("--surface-1")),
+			wcagContrastRatio(t, get("--ink-2"), get("--surface-1")), wcagContrastRatio(t, get("--ink-3"), get("--surface-1"))
+		if !(first > second && second > third) {
+			t.Errorf("%s: ink steps are not monotonic against surface-1: %.2f %.2f %.2f", theme, first, second, third)
 		}
 	}
 }
