@@ -1,0 +1,21 @@
+{
+  "id": "STORY-TOS-a172",
+  "title": "콘솔 UI 의 AI 티 제거와 프리미엄 미니멀 테마(규칙 20) — 4단계",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a172-console-anti-ai-redesign",
+    "path": "openspec/changes/a172-console-anti-ai-redesign"
+  },
+  "found_by": {
+    "date": "2026-10-25",
+    "how": "사용자가 필수 개발 규칙 20(콘솔 UI 의 AI 티 금지 네 원칙)을 추가하고 기존 콘솔 CSS 를 그 규칙으로 재설계하라고 지시했다(2026-10-25).",
+    "record": ".claude/CLAUDE.md 규칙 20"
+  },
+  "acceptance": [
+    "규칙 20 의 네 원칙(기계적 대칭 깨기·유동 스케일 clamp()·스프링 모션·저밀도 프리미엄 질감)을 4단계로 나눠 콘솔 CSS 에 반영한다",
+    "기존 class 이름·operator-console spec 계약·기존 시험을 유지한다(고정 리터럴을 바꿔야 하면 tasks.md 에 사유와 함께 전수 기록)",
+    "주문·토글·승인·청산 경로의 즉시성은 장식 때문에 지연되거나 약해지지 않는다(안전 불변식 4)",
+    "Go 로직·핸들러·라우트·템플릿 데이터는 바꾸지 않는다(CSS 와 장식 마크업만)"
+  ]
+}
