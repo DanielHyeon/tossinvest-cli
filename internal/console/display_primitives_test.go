@@ -483,7 +483,7 @@ func TestMotionContract(t *testing.T) {
 		t.Error("button transitions do not exclude mutating forms by selector")
 	}
 	// (f) 스프링 이징은 linear() 이고, 단일 cubic-bezier 곡선은 쓰지 않음
-	if !strings.Contains(css, "--ease-spring: linear(") || !strings.Contains(css, "--ease-settle: linear(") {
+	if !strings.Contains(css, "--ease-spring: linear(") || !strings.Contains(css, "--ease-settle: linear(") || !strings.Contains(css, "--ease-pop: linear(") {
 		t.Error("spring easing tokens are not linear() curves")
 	}
 	if !strings.Contains(css, "@supports (animation-timing-function: linear(0, 1))") {
@@ -504,5 +504,17 @@ func TestMotionContract(t *testing.T) {
 func TestEveryPostFormButtonIsExcludedFromMotion(t *testing.T) {
 	if !strings.Contains(pageTemplates+optimizationTemplates, `<form method="post"`) {
 		t.Fatal("templates no longer emit <form method=\"post\">; update the motion exclusion selector")
+	}
+	// 경로 의존 방어(R4): 폼 안 버튼, 제출 입력, formmethod/formaction 이 붙은 어떤 요소든
+	// 전환 규칙의 :not() 목록과 transition: none 규칙에 모두 들어 있어야 한다.
+	css := styleBlock(t)
+	for _, selector := range []string{"[formmethod]", "[formaction]", "form button", "form input[type=submit]"} {
+		if got := strings.Count(css, selector); got < 3 {
+			t.Errorf("exclusion selector %q appears %d times, want it in all three :not() lists and the transition: none rule", selector, got)
+		}
+		exclusion := regexp.MustCompile(`(?s)form:not\(\[method=get\]\) button[^{]*\{[^}]*\}`).FindString(css)
+		if !strings.Contains(exclusion, selector) {
+			t.Errorf("transition: none rule does not list %q", selector)
+		}
 	}
 }

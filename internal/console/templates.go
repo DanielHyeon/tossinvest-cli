@@ -48,11 +48,12 @@ const pageTemplates = `
   --lift: 0 1px 2px rgba(32, 30, 26, 0.07);
   /* 모션: 시간 토큰 3단과 스프링 이징 2종. 기본값은 linear() 미지원 브라우저용 짧은 ease-out 이고
      지원하면 아래 @supports 블록이 감쇠 스프링 근사로 덮음. 움직임 크기도 토큰이라 reduced-motion 에서 0 으로 리셋됨 */
-  --dur-1: 120ms; --dur-2: 220ms; --dur-3: 360ms;
-  --ease-spring: ease-out; --ease-settle: ease-out;
-  --nudge: -2px; --press: 0.97; --pop-from: 0.96; --tile-on: 1.012;
+  --dur-1: 120ms; --dur-2: 220ms; --dur-3: 300ms;
+  --ease-spring: ease-out; --ease-settle: ease-out; --ease-pop: ease-out;
+  --nudge: -2px; --press: 0.97; --pop-from: 0.96;
   /* 떠 있는 층: 상세 모달(pop) · 하단 승인 바(bar) */
   --shadow-pop: 0 18px 54px rgba(20, 18, 14, 0.3), 0 0 0 1px var(--line);
+  --scrim: rgba(20, 18, 14, 0.32);
   --shadow-bar: 0 -5px 20px rgba(20, 18, 14, 0.14);
 }
 * { box-sizing: border-box; }
@@ -85,7 +86,7 @@ h1 { font-size: var(--text-3); font-weight: 700; line-height: 1.2; letter-spacin
 h2 { font-size: var(--text-2); font-weight: 650; line-height: 1.28; letter-spacing: -0.012em; margin: var(--space-4) 0 var(--space-1); text-wrap: balance; }
 h3 { font-size: var(--text-1); line-height: 1.35; letter-spacing: -0.004em; margin: var(--space-3) 0 var(--space-1); }
 /* 묶음은 테두리 대신 면(surface-1)과 아주 약한 그림자로 구분함 */
-section { padding: var(--space-3) 0; margin: var(--space-3) 0; border-top: 1px solid var(--line); }
+section { padding: var(--space-3) 0; margin: var(--space-5) 0; border-top: 1px solid var(--line); }
 /* 떠 있는 면은 먼저 읽어야 하는 것(상태 스트립·경고·승인)에만 줌 */
 .sticky-save, .order-summary { padding: var(--space-3) var(--space-4); border-top: 0; background: var(--surface-1);
   border-radius: var(--radius-card); box-shadow: var(--lift); }
@@ -94,8 +95,6 @@ pre { overflow-x: auto; padding: var(--space-2) var(--space-3); background: var(
 table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
 th, td { text-align: left; padding: 0.3rem 0.6rem 0.3rem 0; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
 code { overflow-wrap: anywhere; }
-.status-strip dt, .console-status dt, .console-summary dt, nav a small, .optimization-nav small,
-.status-strip dd small, .console-status dd small, .submetric, .optimization-steps span { letter-spacing: 0.02em; }
 dl { display: grid; grid-template-columns: 8rem 1fr; gap: 0.25rem var(--space-3); margin: var(--space-2) 0; }
 dt { color: var(--ink-3); } dd { margin: 0; }
 .notice { border: 1px solid var(--warn-line); background: var(--warn-bg); box-shadow: var(--lift); padding: var(--space-2) var(--space-3); border-radius: var(--radius-soft); }
@@ -170,14 +169,14 @@ summary { min-height: 44px; align-content: center; }
 .detail-cell .row-details { min-height: 44px; margin: 0; }
 .detail-cell .row-details summary { justify-content: flex-end; }
 .detail-cell .row-details[open] { position: fixed; left: 50%; top: 50%;
-  z-index: 21; width: min(42rem, calc(100vw - 2rem)); max-height: min(70vh, 42rem);
+  z-index: 21; width: min(42rem, calc(100% - 2rem)); max-height: min(70vh, 42rem);
   margin: 0; padding: 0.65rem 1.25rem 1.25rem; overflow: auto; transform: translate(-50%, -50%);
   box-sizing: border-box; border-radius: var(--radius-card);
   background: var(--surface-1); color: var(--ink-1); box-shadow: var(--shadow-pop);
   text-align: left; white-space: normal; }
 .detail-cell .row-details[open] summary { position: sticky; z-index: 22; top: 0; min-height: 44px;
   justify-content: flex-end; padding: 0 0.4rem; border-radius: var(--radius-soft); background: var(--surface-1); }
-.detail-cell .row-details[open] summary::after { content: " · 닫기"; }
+.detail-cell .row-details[open] summary::after { content: "닫기"; margin-inline-start: 0.5em; }
 .detail-cell .row-details[open] .detail-grid { align-content: start; margin-top: 0.25rem; }
 .filter-bar { display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem; align-items: center; }
 .filter-group { display: flex; flex-wrap: wrap; gap: 0.35rem 0.7rem; align-items: center; }
@@ -291,6 +290,9 @@ fieldset.setting-error { border: 1px solid var(--bad-line); }
   box-shadow: var(--shadow-bar), inset 0 2px var(--warn-line); }
 .confirm-check { display: flex; gap: 0.55rem; align-items: center; margin: 0.7rem 0; }
 .confirm-check input { width: 1.25rem; height: 1.25rem; }
+/* 설정 토글 체크박스: 라벨 전체가 44px 터치 목표(마크업·문구·제출 동작은 그대로) */
+label:not(.confirm-check):has(> input[type=checkbox]) { display: block; min-height: 44px; padding-block: 0.55rem; }
+label:not(.confirm-check) > input[type=checkbox] { width: 1.25rem; height: 1.25rem; vertical-align: middle; margin-inline-end: var(--space-2); }
 .approval-actions { align-items: stretch; }
 .approval-actions > * { flex: 1 1 12rem; }
 a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible {
@@ -323,7 +325,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
   .line-item > strong { text-align: left; }
   .detail-cell { text-align: left; white-space: normal; }
   .detail-cell .row-details summary { justify-content: flex-start; }
-  .detail-cell .row-details[open] { width: calc(100vw - 1.5rem); max-height: calc(100vh - 3rem); }
+  .detail-cell .row-details[open] { width: calc(100% - 1.5rem); max-height: calc(100% - 3rem); }
   .actions { min-width: 0; }
   .optimization-title { display: block; }
   .status-strip { width: 100%; }
@@ -346,6 +348,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
 @supports (animation-timing-function: linear(0, 1)) {
   :root {
     --ease-spring: linear(0, 0.5 7%, 1.143 14%, 1.287 21%, 1.097 29%, 0.934 36%, 0.923 43%, 0.986 50%, 1.024 57%, 1.019 64%, 1 71%, 0.992 79%, 0.996 86%, 1.001 93%, 1);
+    --ease-pop: linear(0, 0.547 8%, 1.053 17%, 1.114 25%, 1.028 33%, 0.986 42%, 0.989 50%, 0.999 58%, 1.002 67%, 1.001 75%, 1 83%, 1 92%, 1);
     --ease-settle: linear(0, 0.488 10%, 0.933 20%, 1.045 30%, 1.028 40%, 1.005 50%, 0.998 60%, 0.999 70%, 1 80%, 1 90%, 1);
   }
 }
@@ -357,25 +360,28 @@ nav a:hover { color: var(--ink-1); }
 .settings-tabs a:hover { background-color: var(--line-soft); }
 .optimization-nav a:hover { background-color: var(--surface-2); }
 /* 일반 버튼·링크 버튼: 누르면 작아졌다가 스프링으로 복귀. POST 폼·승인 영역 안의 버튼은 제외 */
-button:not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)),
-.button-link:not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)) {
+button:not(:where(form:not([method=get]) *, form button, form input[type=submit], [formmethod], [formaction], .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)),
+.button-link:not(:where(form:not([method=get]) *, form button, form input[type=submit], [formmethod], [formaction], .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)) {
   transition: scale var(--dur-2) var(--ease-spring), background-color var(--dur-1) var(--ease-settle), color var(--dur-1) var(--ease-settle); }
-button:active:not(:disabled):not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)),
-.button-link:active:not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)) {
+button:active:not(:disabled):not(:where(form:not([method=get]) *, form button, form input[type=submit], [formmethod], [formaction], .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)),
+.button-link:active:not(:where(form:not([method=get]) *, form button, form input[type=submit], [formmethod], [formaction], .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)) {
   scale: var(--press); transition-duration: var(--dur-1); }
 /* 제외 영역은 어떤 규칙이 나중에 들어와도 전환 0 으로 못 박음 */
-form:not([method=get]) button, form:not([method=get]) .button-link, .sticky-save, .sticky-save *, .approval-actions *,
+form:not([method=get]) button, form:not([method=get]) .button-link, form button, form input[type=submit],
+[formmethod], [formaction], .sticky-save, .sticky-save *, .approval-actions *,
 .confirm-check, .confirm-check *, .console-approval * { transition: none; }
-/* 선택된 선택지는 살짝 커진 채로 놓임(서버가 그린 정적 상태라 값이 바뀌는 순간의 애니메이션은 없음) */
-.choice-tile { transition: scale var(--dur-2) var(--ease-settle); }
-.choice-tile[data-selected=true] { scale: var(--tile-on); }
 /* 상세 모달 열림: opacity + 개별 scale 속성. 위치용 transform 은 건드리지 않고(transform 전환 없음),
    transform-origin 을 레이아웃 박스 좌상단(= 화면 중앙)에 두어 중앙 기준으로 커짐. will-change 는 열린 동안 이 한 곳만 */
 @keyframes pop-in { from { opacity: 0; scale: var(--pop-from); } }
-.detail-cell .row-details[open] { transform-origin: 0 0; animation: pop-in var(--dur-3) var(--ease-spring) both;
+/* 스크림: 열린 모달이 있는 셀의 ::before 가 화면 전체를 어둡게 덮음. pointer-events 를 꺼서 뒤의 어떤 버튼도 막지 않고,
+   opacity 만 애니메이션함(흐림 효과는 쓰지 않음). 모달 박스 안쪽은 overflow 에 잘려서 셀 쪽에 둠 */
+@keyframes scrim-in { from { opacity: 0; } }
+.detail-cell:has(.row-details[open])::before { content: ""; position: fixed; inset: 0; z-index: 20; background: var(--scrim);
+  pointer-events: none; animation: scrim-in var(--dur-3) var(--ease-settle) both; }
+.detail-cell .row-details[open] { transform-origin: 0 0; animation: pop-in var(--dur-3) var(--ease-pop) both;
   will-change: opacity, scale; }
 @media (prefers-reduced-motion: reduce) {
-  :root { --dur-1: 0.01ms; --dur-2: 0.01ms; --dur-3: 0.01ms; --nudge: 0px; --press: 1; --pop-from: 1; --tile-on: 1; }
+  :root { --dur-1: 0.01ms; --dur-2: 0.01ms; --dur-3: 0.01ms; --nudge: 0px; --press: 1; --pop-from: 1; }
 }
 /* 다크: 변수만 재정의함. 개별 규칙의 색 덮어쓰기는 두지 않음 */
 @media (prefers-color-scheme: dark) {
@@ -389,6 +395,7 @@ form:not([method=get]) button, form:not([method=get]) .button-link, .sticky-save
     --bad: #ea9a90; --bad-line: #c25f52; --bad-bg: #2d1a17;
     --lift: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--line-soft);
     --shadow-pop: 0 18px 54px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--line);
+    --scrim: rgba(0, 0, 0, 0.55);
     --shadow-bar: 0 -5px 20px rgba(0, 0, 0, 0.5);
   }
 }

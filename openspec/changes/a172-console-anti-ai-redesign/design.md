@@ -24,3 +24,8 @@
 ## 4단계 구현 결과 (위 「모션 주의」를 따름)
 - 토큰 `--dur-1/2/3`(120/220/360ms), `--ease-spring`·`--ease-settle`(`linear()`, `@supports` 바깥 기본 `ease-out`), 움직임 토큰 `--nudge/--press/--pop-from/--tile-on`. reduced-motion 은 토큰만 리셋(`!important` 없음).
 - 제외는 선택자로 지정: 일반 버튼 전환 규칙이 `:not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *))` 로 뺀 뒤, 같은 컨테이너에 `transition: none` 을 한 번 더 박음. POST 폼 선택자를 `form:not([method=get])` 로 쓴 이유: 읽기 전용 화면 시험이 페이지 어디에도 `method="post"`/`method=post` 문자열이 없을 것을 고정하기 때문(CSS 포함). 모든 `<form>` 이 POST 이므로 폼 안 버튼은 전부 제외되고, 전환이 걸리는 것은 폼 밖 `.button-link` 링크 버튼뿐이다.
+
+## 4단계 리뷰 반영으로 바뀐 수치
+- `--dur-3` 360 → 300ms. 모달 열림은 전용 `--ease-pop`(12점, 정점 약 1.11~1.13, 오버슈트 약 12%), nav·눌림은 `--ease-spring`(정점 1.287) 그대로. `.choice-tile` scale 은 정적 상태에 전환이 일어날 수 없어 삭제(`--tile-on` 토큰 삭제).
+- 제외 선택자에 `[formmethod]`, `[formaction]`, `form button`, `form input[type=submit]` 추가. 서버가 `data-mutating` 표식을 붙이는 방식은 Go 변경이라 이번 change 범위 밖(후속 후보).
+- 모달 스크림: 열린 모달이 있는 `.detail-cell::before`(`position: fixed; inset: 0; z-index: 20`), `opacity` 만 애니메이션, `pointer-events: none` 이라 뒤의 어떤 버튼도 막지 않음. 모달 너비는 `100vw` 대신 `100%`(스크롤바 폭 어긋남 제거).

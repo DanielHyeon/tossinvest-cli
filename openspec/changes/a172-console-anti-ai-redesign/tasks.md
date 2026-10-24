@@ -52,3 +52,20 @@ Story: `STORY-TOS-a172` · Low risk(CSS·장식 마크업만). FLM/BTM·변이·
 10. 다크 그림자 덮어쓰기 · 반영: `--shadow-pop`·`--shadow-bar` 토큰, 다크 `:root` 에서 값만 재정의, 개별 규칙 덮어쓰기 삭제
 11. 다크 카드 경계 1.1:1 · 반영: 다크 `--surface-1` `#1d1c19` → `#201f1b` + 다크 `--lift` 에 `--line-soft` 1px 윤곽. 대비 시험 재실행 통과
 12. 위계 · 부분: 정보 섹션은 상단 구분선만(면·그림자 제거), 떠 있는 면은 상태 스트립·`.notice`/`.danger`·`.sticky-save`·`.order-summary` 에만. 「첫 섹션 h2 한 단계 키움」은 h2 가 이미 `--text-2` 이고 텍스트·순서 변경 없이 키울 근거 측정이 없어 미반영(사유: 효과 미측정)
+
+## Impeccable 4단계 리뷰 반영 (review-stage4.md)
+번호 · 처리 · 사유
+- R1 · 반영 · 설정 토글 라벨 17~19px → 1280 46px·375 44px(실측 8개, 체크박스 20px). `label:not(.confirm-check):has(> input[type=checkbox]) { display: block; min-height: 44px }` — flex 가 아니라 block 이라 라벨 안 `<strong>`+문장 인라인 흐름이 그대로. 마크업·문구·제출 동작 불변
+- R2 · 반영 · 모달 전용 `--ease-pop`(정점 약 1.11~1.13)·`--dur-3` 300ms. nav·눌림은 `--ease-spring` 유지. 시험은 `--ease-pop: linear(` 단언 추가
+- R3 · 거절(리뷰어 do-not-fix) · 규칙 20 의 스프링 지시가 탐지기 취향보다 우선. 검출기 advisory 1건 그대로 보고
+- R4 · 반영(부분) · 제외 목록에 `[formmethod]`, `[formaction]`, `form button`, `form input[type=submit]` 추가(세 :not 목록 + transition: none 규칙), `TestEveryPostFormButtonIsExcludedFromMotion` 이 네 선택자의 존재를 단언. 서버 `data-mutating` 표식은 Go 변경이라 이번 범위 밖 — 후속 후보
+- R5 · 해당 없음 · 변경 불필요(리뷰어도 통과)
+- R6 · 반영 · `.detail-cell:has(.row-details[open])::before` 고정 스크림(`--scrim`, opacity 애니메이션, `pointer-events: none`). 모달 박스 안 `::before` 는 `overflow: auto` 에 잘려 셀 쪽에 둠. `backdrop-filter` 0. 주입 DOM 스크린샷 1장
+- R7 · 반영 · `width: min(42rem, calc(100% - 2rem))`, 모바일 `calc(100% - 1.5rem)`·`max-height: calc(100% - 3rem)`(두 곳)
+- R8 · 반영 · 한글 레이블 `letter-spacing: 0.02em` 그룹 규칙 삭제. 라틴 전용 `header strong`(tossctl console) 만 유지
+- R9 · 반영 · `section { margin: var(--space-5) 0 }`. 면 층(상태 스트립·경고·승인만 떠 있음)은 3단계에서 이미 적용, 텍스트 불변
+- R10 · 반영 · `.choice-tile` 전환·`scale` 상시 확대·`--tile-on` 삭제
+- R11 · 반영 · `content: "닫기"` + `margin-inline-start: 0.5em`
+- R12 · 보류 · 오탐 성격(제목 뒤 muted 부제). 기록만
+- R13 · 보류 · `overflow-x: clip` 은 측정 hscroll 0 이라 YAGNI. 기록만
+- R14~R17 · 유지 · do not fix(a058·스펙 리터럴, 시험 고정 폰트 크기, 카피·백엔드, meta refresh)
