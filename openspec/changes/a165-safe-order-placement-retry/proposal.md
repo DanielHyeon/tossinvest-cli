@@ -1,6 +1,6 @@
 # a165 — 주문 접수 안전 재시도와 취소·정정 409 재시도
 
-> **착수 2026-10-23 — design 1차 FAIL → 사용자 2차 결정(issues.md 「2차」)으로 범위 축소, design 재작성.** base·증거·FLM·design 첫 판·MODIFIED delta 첫 판·review.md 가 있다. 코드는 아직 없다.
+> **착수 2026-10-23 — 사용자 3차 결정으로 범위 = 취소 409 처리(R3·R4) + 401 근거 시험(R5). 주문 접수 재전송은 a171 로 이관. 아래 「Why」·「What Changes」 1판 문단은 역사 기록이다 — 현재 범위는 「사람 결정 3차」와 design 3판.** base·증거·FLM·design 첫 판·MODIFIED delta 첫 판·review.md 가 있다. 코드는 아직 없다.
 > 실계좌 주문·운영 토글 flip 은 이 change 의 어떤 단계도 자동으로 하지 않는다.
 
 ## Why
@@ -118,12 +118,16 @@ proposal 정의 때 남긴 질문에 사용자가 권장안대로 답했다. 기
 
 `review.md` 「사람 결정 요청」 1~7 을 권장안대로(기록 `issues.md` 「사용자 결정 (2026-10-23 2차)」). 남는 범위: **진입 접수의 (b) 결과 불명 → 8s 창 안 조회 후 재전송**(+ 재전송 ACK 의 정착 전 목록 대조), **CLI flatten 취소의 409 재시도**, **엔진 취소 409 `already-processing` 의 확정 미수락 분류**, **401 재전송 근거 시험 고정**. 429 갈래(a166 뒤로)·전송 전 실패 갈래·청산 place 재시도·Amend 는 범위 밖.
 
+## 사람 결정 3차 (2026-10-23) — 1.3 재리뷰 F3
+
+R1·R2(진입 재전송)를 a165 에서 빼고 a171 로 옮긴다. a165 = 엔진 취소 409 확정 미수락(R3) + CLI flatten 취소 409 재시도(R4, 소진 시 오늘 경로) + 401 재전송 근거 시험(R5). 기록 `issues.md` 「사용자 결정 (2026-10-23 3차)」.
+
 ## Capabilities
 
 ### Modified Capabilities
 
 - `order-execution`: 「Retry Matrix 산출물」(주문 mutation 재시도 금지의 예외 두 개)과 「취소의 일시적 거절 처리」(엔진 경로 적용,
-  접수 재시도 시나리오 개정). spec delta 는 MODIFIED 첫 판(1.3 FAIL — 재작성 예정, 「IN_DOUBT 해소」 추가 필요).
+  접수 재시도 시나리오 개정). spec delta 는 3판 — 「Retry Matrix 산출물」·「취소의 일시적 거절 처리」 MODIFIED.
 
 ## Impact
 

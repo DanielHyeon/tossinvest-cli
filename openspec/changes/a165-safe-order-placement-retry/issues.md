@@ -48,3 +48,15 @@
 
 남는 범위: 진입 (b) 8s 창 조회-후-재전송(+A1), CLI flatten 409 취소 재시도, 엔진 취소 409 「확정 미수락」 분류, 401 재전송 「확실히 미접수」 시험 고정.
 범위 밖이 된 1.3 발견: A3(429 패널티 — 429 갈래 보류로 소멸), A5(Amend 제외), S3 의 전송 전 실패 비관 전이(갈래 제외로 소멸), D7 ②③ 청산 place(0회 유지로 소멸).
+
+## 사용자 결정 (2026-10-23 3차, Manager 전달) — 1.3 재리뷰 F3
+
+- **F3 = 1(권고안)**: R1·R2(진입 결과 불명 재전송·정착 전 목록 대조)를 a165 에서 뺀다. a165 = **R3**(엔진 청산 루프 취소 409 → 같은 주기 재시도 없이 확정 미수락, 다음 주기 재취소) +
+  **R4**(CLI flatten 취소 409 재시도, 소진 시 오늘 경로 IN_DOUBT → `resolveStep` — F1 수리) + **R5**(401 재전송 근거 시험).
+- 진입 재전송은 전략 claimed 경로와 함께 **a171-entry-place-ambiguous-resend**(정의만, 커밋 `566860cfe` — Story STORY-TOS-a171)로. 미해소 F2·F4·F6·A2·F8 과 잔여
+  R-a165-1~4 를 a171 proposal 에 이관 기록했다. a165 에 남는 잔여는 R-a165-1(401 POST 미접수 실측 없음 — R5 가 시험으로만 고정)뿐이다.
+- 범위 축소에 따라 a165 의 FLM 번들 10개(조회 경로·place·Amend·strategy 게이트 등)를 지우고, 남는 범위가 기대는 10개(New·buildGateway·buildFlattenWiring·
+  resolveStep·planLiquidation·UnsettledCancelSymbols·classifyRefusalCode·PlaceOrder·CancelOrder·postWithHeaders)를 더했다(합계 23).
+- `check_analysis.py --change a165` 가 2026-10-23 오후부터 `missing evidence for modified function internal/official/stock_reads.go:adaptStocks` 를 낸다 — a165 base 뒤 착지한
+  형제 커밋(a169 `064f67297`, `security_type` 노출)이 고친 함수가 워킹트리 창에 들어온 것이다(a165 자기 편집 아님). GREEN 뒤 `--record-landing` 으로 창을 좁히거나,
+  안 되면 WORKFLOW 「사람 승인 base 재고정」 절차가 필요하다.

@@ -1,0 +1,108 @@
+{
+  "file": "internal/official/orders_write.go",
+  "source_sha256": "d89e0bdbffdc2a41343dc195185286e258a1abda007d20d425d550439871bd71",
+  "package": "official",
+  "function": "CancelOrder",
+  "receiver": "Client",
+  "signature": "Client.CancelOrder(params=2, results=2)",
+  "start": {
+    "line": 222,
+    "column": 1
+  },
+  "end": {
+    "line": 237,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 225,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 229,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 226,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 230,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 232,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 30
+      },
+      "text": "url.PathEscape"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 15
+      },
+      "text": "c.acctHeaders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 12
+      },
+      "text": "c.postWithHeaders"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 224,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 229,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
