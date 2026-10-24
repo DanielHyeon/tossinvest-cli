@@ -1,0 +1,2276 @@
+[
+  {
+    "package": "cmd/tossctl",
+    "imports": [
+      "internal/app",
+      "internal/app/engine",
+      "internal/attemptthaw",
+      "internal/attest",
+      "internal/audit",
+      "internal/auth",
+      "internal/binstamp",
+      "internal/candidate",
+      "internal/candidatesrc",
+      "internal/client",
+      "internal/clock",
+      "internal/config",
+      "internal/console",
+      "internal/costs",
+      "internal/doctor",
+      "internal/domain",
+      "internal/enginelock",
+      "internal/enginewatch",
+      "internal/execgw",
+      "internal/exitquarantine",
+      "internal/filldetect",
+      "internal/flatten",
+      "internal/handoff",
+      "internal/httpapi",
+      "internal/hybrid",
+      "internal/i18n",
+      "internal/journal",
+      "internal/localupdate",
+      "internal/mcp",
+      "internal/monitor",
+      "internal/networkboundary",
+      "internal/obs",
+      "internal/official",
+      "internal/onboarding",
+      "internal/operatorview",
+      "internal/ops",
+      "internal/optimization",
+      "internal/optimizationevidence",
+      "internal/orderintent",
+      "internal/orderlineage",
+      "internal/output",
+      "internal/performance",
+      "internal/performancejournal",
+      "internal/positionpolicy",
+      "internal/positionpolicyrpc",
+      "internal/push",
+      "internal/ratebudget",
+      "internal/reconcile",
+      "internal/redact",
+      "internal/releaseupdate",
+      "internal/riskbucket",
+      "internal/riskrelaxation",
+      "internal/runlock",
+      "internal/scheduler",
+      "internal/selfupdate",
+      "internal/session",
+      "internal/settingmeta",
+      "internal/soak",
+      "internal/strategyprojection",
+      "internal/strategyprojectionrpc",
+      "internal/trading",
+      "internal/tui",
+      "internal/updatecheck",
+      "internal/verifylive",
+      "internal/version"
+    ],
+    "files": [
+      "account.go",
+      "accumulate.go",
+      "adoptionsettings.go",
+      "auth.go",
+      "candidate.go",
+      "candidatebands.go",
+      "candidatepanel.go",
+      "community.go",
+      "conditional_gate.go",
+      "config.go",
+      "console.go",
+      "console_journal.go",
+      "console_lifecycle_attach.go",
+      "console_openapi.go",
+      "console_strategy_attach.go",
+      "doctor.go",
+      "doctor_openapi.go",
+      "engine.go",
+      "engine_alerts.go",
+      "engine_alerts_client.go",
+      "engine_alerts_client_unix.go",
+      "engine_assembly.go",
+      "engine_attempt_resolve.go",
+      "engine_heartbeat_check.go",
+      "engine_mode_release.go",
+      "engine_mode_release_client_unix.go",
+      "engine_reconcile.go",
+      "engine_risk_relaxation.go",
+      "engineautostart.go",
+      "engineproc.go",
+      "engineready.go",
+      "errors.go",
+      "exit_quarantine_commander.go",
+      "exitpolicysettings.go",
+      "export.go",
+      "flatten.go",
+      "httpapi.go",
+      "httpapi_exit_line_reference.go",
+      "httpapi_read_cache.go",
+      "httpapi_reader.go",
+      "httpapi_securefile_unix.go",
+      "httpapi_snapshot.go",
+      "httpapi_strategy_attach.go",
+      "init.go",
+      "instrument_names.go",
+      "lending.go",
+      "limitsettings.go",
+      "main.go",
+      "market.go",
+      "marketschedule.go",
+      "mcp.go",
+      "monitor.go",
+      "notificationsettings.go",
+      "openapi.go",
+      "operatingsettings.go",
+      "ops.go",
+      "optimization.go",
+      "order.go",
+      "orders.go",
+      "performance_project.go",
+      "portfolio.go",
+      "position_policy_commander.go",
+      "profit.go",
+      "push.go",
+      "quote.go",
+      "relaunch_unix.go",
+      "root.go",
+      "scrub_account_records.go",
+      "scrub_account_records_unix.go",
+      "signals_unix.go",
+      "soak.go",
+      "soakautostart.go",
+      "soakproc.go",
+      "soakproc_unix.go",
+      "system_update.go",
+      "tax.go",
+      "transactions.go",
+      "update.go",
+      "verify.go",
+      "verify_reconcile.go",
+      "version.go",
+      "vetothresholds.go",
+      "watchlist.go"
+    ],
+    "ignored_files": [
+      "engine_account_seq_recovery_test.go",
+      "engine_alerts_client_other.go",
+      "engine_assembly_test.go",
+      "engine_mode_release_client_other.go",
+      "httpapi_securefile_windows.go",
+      "relaunch_other.go",
+      "scrub_account_records_other.go",
+      "signals_windows.go",
+      "soakproc_other.go",
+      "verify_reconcile_codex_seams_test.go",
+      "verify_reconcile_seams_test.go"
+    ]
+  },
+  {
+    "package": "internal/app",
+    "imports": [
+      "internal/app/paths",
+      "internal/auth",
+      "internal/client",
+      "internal/config",
+      "internal/hybrid",
+      "internal/official",
+      "internal/orderlineage",
+      "internal/output",
+      "internal/session",
+      "internal/trading"
+    ],
+    "files": [
+      "app.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/app/engine",
+    "imports": [
+      "internal/app/paths",
+      "internal/attemptthaw",
+      "internal/attest",
+      "internal/audit",
+      "internal/brokerstate",
+      "internal/candidate",
+      "internal/clock",
+      "internal/config",
+      "internal/costs",
+      "internal/domain",
+      "internal/execgw",
+      "internal/exitpolicy",
+      "internal/exitquarantine",
+      "internal/journal",
+      "internal/manualbuy",
+      "internal/obs",
+      "internal/official",
+      "internal/officialfx",
+      "internal/orderintent",
+      "internal/positionpolicy",
+      "internal/positionpolicyrpc",
+      "internal/protection",
+      "internal/protectionreadiness",
+      "internal/reconcile",
+      "internal/risk",
+      "internal/riskbucket",
+      "internal/riskcalc",
+      "internal/riskrelaxation",
+      "internal/scheduler",
+      "internal/strategy",
+      "internal/strategyaccount",
+      "internal/strategyarbiter",
+      "internal/strategycandidate",
+      "internal/strategycoordinator",
+      "internal/strategyflow",
+      "internal/strategyhandoff",
+      "internal/strategyprojection",
+      "internal/strategyproposal",
+      "internal/strategyrouter",
+      "internal/strategyshadow",
+      "internal/strategyworker",
+      "internal/trading",
+      "internal/version"
+    ],
+    "files": [
+      "a134_notification_publisher.go",
+      "a137_daily_loss_notice.go",
+      "adoption.go",
+      "alert_control.go",
+      "alert_control_transport_unix.go",
+      "alertdelivery.go",
+      "alertops.go",
+      "attempt_thaw_command.go",
+      "attempt_thaw_transport.go",
+      "attestation_watch.go",
+      "auxiliary.go",
+      "boot_catchup.go",
+      "broker.go",
+      "daily_buy_interlock.go",
+      "engine.go",
+      "exit_held_proposal.go",
+      "exit_order_log.go",
+      "exit_quarantine_announce.go",
+      "exit_quarantine_command.go",
+      "exit_quarantine_transport.go",
+      "exit_record_only.go",
+      "exit_stop_sold_nothing.go",
+      "exit_unobserved.go",
+      "exitloop.go",
+      "exitwiring.go",
+      "gateway.go",
+      "guardian_wiring.go",
+      "instrumentnames.go",
+      "interlock.go",
+      "manual_buy_refresh.go",
+      "mode_control.go",
+      "mode_control_transport_unix.go",
+      "mode_projection_wiring.go",
+      "modeops.go",
+      "normal_relay_wiring.go",
+      "notifications.go",
+      "open_positions_interlock.go",
+      "position_policy_command.go",
+      "position_policy_runtime_transport_unix.go",
+      "position_policy_transport.go",
+      "precheck.go",
+      "private_endpoint_lifecycle_unix.go",
+      "protection_wiring.go",
+      "reads.go",
+      "reconcileloop.go",
+      "risk_relaxation_command.go",
+      "risk_relaxation_transport.go",
+      "runtime.go",
+      "runtime_wiring.go",
+      "strategy_account_first_leg_authority.go",
+      "strategy_candidate_authority.go",
+      "strategy_dispatch_cycle.go",
+      "strategy_dispatch_handoff.go",
+      "strategy_entry_supervisor.go",
+      "strategy_family_activation.go",
+      "strategy_first_leg_admission.go",
+      "strategy_first_leg_owner_scope.go",
+      "strategy_fx_authority.go",
+      "strategy_lane_latch.go",
+      "strategy_lane_projection.go",
+      "strategy_lane_runtime.go",
+      "strategy_lane_shadow.go",
+      "strategy_lane_shadow_load.go",
+      "strategy_lane_step.go",
+      "strategy_market_coordinator.go",
+      "strategy_market_handoff_delivery.go",
+      "strategy_owner_scope_authority.go",
+      "strategy_proposal_authority.go",
+      "strategy_proposal_set_digest.go",
+      "strategy_refresh_wave.go",
+      "strategy_risk_authority.go",
+      "strategy_route_authority.go",
+      "strategy_runtime_projection.go",
+      "strategy_schedule_authority.go",
+      "strategy_schedule_revalidation.go",
+      "strategy_shadow_batch.go",
+      "tracer.go",
+      "trade_outcome_refusal_log.go"
+    ],
+    "ignored_files": [
+      "a112_arbitration_test.go",
+      "a112_breakout_first_leg_only_test.go",
+      "a112_coordinator_test.go",
+      "a112_dispatch_crash_restart_test.go",
+      "a112_dispatch_handoff_test.go",
+      "a112_dispatch_lineage_test.go",
+      "a112_eight_lane_fault_test.go",
+      "a112_family_gate_test.go",
+      "a112_family_rollback_test.go",
+      "a112_fault_classification_test.go",
+      "a112_first_leg_owner_scope_seal_test.go",
+      "a112_gate_decision_recompute_test.go",
+      "a112_lane_coordinator_projection_test.go",
+      "a112_lane_dependency_test.go",
+      "a112_lane_fanout_test.go",
+      "a112_lane_latency_testseam_test.go",
+      "a112_lane_promotion_test.go",
+      "a112_lost_proposal_test.go",
+      "a112_market_cycle_delivery_test.go",
+      "a112_no_implicit_activation_test.go",
+      "a112_owner_scope_handoff_test.go",
+      "a112_owner_scope_trading_test.go",
+      "a112_proposal_closure_carriage_test.go",
+      "a112_protection_expired_strategy_test.go",
+      "a112_qfinal_family_test.go",
+      "a112_safety_cadence_under_failure_testseam_test.go",
+      "a112_shadow_absent_restart_test.go",
+      "a112_shadow_binding_test.go",
+      "a112_shadow_carry_test.go",
+      "a112_shadow_cycle_test.go",
+      "a112_shadow_projection_test.go",
+      "a112_shadow_structure_test.go",
+      "a124_the_executor_holds_no_stop_lock_testseams_test.go",
+      "a137_daily_loss_cycle_test.go",
+      "a137_lane_kinds_test.go",
+      "a137_unmeasurable_notice_test.go",
+      "alert_control_transport_other.go",
+      "cli_testseams.go",
+      "mode_control_transport_other.go",
+      "position_policy_runtime_transport_other.go",
+      "strategy_account_first_leg_authority_test.go",
+      "strategy_dispatch_cycle_test.go",
+      "strategy_dispatch_envelope_test.go",
+      "strategy_first_leg_admission_test.go",
+      "strategy_first_leg_identity_backstop_test.go",
+      "strategy_lane_shadow_load_testseam.go",
+      "strategy_lane_step_testseam.go",
+      "strategy_proposal_authority_test.go",
+      "strategy_risk_authority_test.go",
+      "strategy_route_authority_test.go"
+    ]
+  },
+  {
+    "package": "internal/app/paths",
+    "imports": [
+      "internal/config"
+    ],
+    "files": [
+      "paths.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/attemptthaw",
+    "imports": [],
+    "files": [
+      "attemptthaw.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/attest",
+    "imports": [],
+    "files": [
+      "attest.go",
+      "protection_matrix.go",
+      "protection_owner_unix.go",
+      "protection_signature.go"
+    ],
+    "ignored_files": [
+      "protection_owner_other.go"
+    ]
+  },
+  {
+    "package": "internal/audit",
+    "imports": [
+      "internal/clock",
+      "internal/redact"
+    ],
+    "files": [
+      "audit.go",
+      "redact.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/auth",
+    "imports": [
+      "internal/client",
+      "internal/session"
+    ],
+    "files": [
+      "extend.go",
+      "helper.go",
+      "playwright.go",
+      "service.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/binstamp",
+    "imports": [],
+    "files": [
+      "binstamp.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/breakoutlane",
+    "imports": [],
+    "files": [
+      "arithmetic.go",
+      "machine.go",
+      "rules.go",
+      "sizing.go",
+      "types.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/breakoutsignal",
+    "imports": [
+      "internal/breakoutlane",
+      "internal/strategyevidence"
+    ],
+    "files": [
+      "signal.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/brokerstate",
+    "imports": [
+      "internal/domain"
+    ],
+    "files": [
+      "derive.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/candidate",
+    "imports": [
+      "internal/clock"
+    ],
+    "files": [
+      "band.go",
+      "candidate.go",
+      "fsguard.go",
+      "fsprobe_linux.go",
+      "level.go",
+      "metrics.go",
+      "newlylisted.go",
+      "production_threshold_authority.go",
+      "production_threshold_authority_owner_unix.go",
+      "readonly.go",
+      "scan.go",
+      "sightingsource.go",
+      "source.go",
+      "store.go",
+      "tallycheck.go",
+      "threshold_descriptors.go",
+      "thresholdset.go",
+      "veto.go",
+      "watch.go"
+    ],
+    "ignored_files": [
+      "fsprobe_other.go",
+      "production_threshold_authority_owner_other.go"
+    ]
+  },
+  {
+    "package": "internal/candidatesrc",
+    "imports": [
+      "internal/candidate",
+      "internal/clock",
+      "internal/domain",
+      "internal/official"
+    ],
+    "files": [
+      "candidatesrc.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/client",
+    "imports": [
+      "internal/config",
+      "internal/domain",
+      "internal/orderintent",
+      "internal/orderlineage",
+      "internal/session",
+      "internal/trading"
+    ],
+    "files": [
+      "account.go",
+      "account_detail.go",
+      "accumulation.go",
+      "auth_extend.go",
+      "chart.go",
+      "client.go",
+      "community.go",
+      "completed_orders.go",
+      "dividends.go",
+      "errors.go",
+      "lending.go",
+      "marketdata.go",
+      "news.go",
+      "openapi_meta.go",
+      "policy.go",
+      "portfolio.go",
+      "prime.go",
+      "probe.go",
+      "profit.go",
+      "profit_period.go",
+      "quote.go",
+      "trading.go",
+      "transactions.go",
+      "transfer_income.go",
+      "watchlist.go",
+      "watchlist_manage.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/clock",
+    "imports": [],
+    "files": [
+      "account_day.go",
+      "clock.go",
+      "fake.go",
+      "market.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/config",
+    "imports": [
+      "internal/exitpolicy",
+      "internal/version"
+    ],
+    "files": [
+      "adoption_flock_unix.go",
+      "adoption_io.go",
+      "daily_buy.go",
+      "engine.go",
+      "exit_policy_io.go",
+      "limits.go",
+      "limits_io.go",
+      "notifications.go",
+      "notifications_io.go",
+      "open_positions.go",
+      "operating_io.go",
+      "paths.go",
+      "service.go",
+      "soak_io.go"
+    ],
+    "ignored_files": [
+      "adoption_flock_other.go"
+    ]
+  },
+  {
+    "package": "internal/console",
+    "imports": [
+      "internal/attest",
+      "internal/binstamp",
+      "internal/brokerstate",
+      "internal/candidate",
+      "internal/clock",
+      "internal/config",
+      "internal/domain",
+      "internal/enginelock",
+      "internal/exitpolicy",
+      "internal/exitquarantine",
+      "internal/journal",
+      "internal/localupdate",
+      "internal/networkboundary",
+      "internal/operatorview",
+      "internal/optimization",
+      "internal/performance",
+      "internal/positionpolicy",
+      "internal/qr",
+      "internal/releaseupdate",
+      "internal/runlock",
+      "internal/settingmeta",
+      "internal/soak",
+      "internal/strategyprojection",
+      "internal/verifylive"
+    ],
+    "files": [
+      "chrome.go",
+      "console.go",
+      "data.go",
+      "engineproc.go",
+      "exit_line_reference_helpers.go",
+      "exit_line_reference_row.go",
+      "exit_quarantine.go",
+      "explain.go",
+      "holdings.go",
+      "instrument_names.go",
+      "line_cadence.go",
+      "market_schedule.go",
+      "openapi_onboarding.go",
+      "optimization.go",
+      "optimization_candidate_filters.go",
+      "optimization_view.go",
+      "orders.go",
+      "orders_filter.go",
+      "orders_page.go",
+      "overview.go",
+      "pages.go",
+      "performance_history.go",
+      "portfolio.go",
+      "portfolio_pages.go",
+      "position_policy.go",
+      "position_policy_cache.go",
+      "protection_liveness.go",
+      "remote.go",
+      "restart.go",
+      "run.go",
+      "settings.go",
+      "settings_autostart.go",
+      "settings_card.go",
+      "settings_limits.go",
+      "settings_notification_qr.go",
+      "settings_notifications.go",
+      "settings_operating.go",
+      "settings_stop_percent.go",
+      "settings_tabs.go",
+      "settings_update.go",
+      "signals.go",
+      "strategy_runtime.go",
+      "strategy_runtime_multimarket.go",
+      "system_update.go",
+      "templates.go",
+      "templates_exit_quarantine.go",
+      "templates_optimization.go",
+      "templates_orders.go",
+      "templates_overview.go",
+      "templates_portfolio.go",
+      "templates_position_policy.go",
+      "templates_settings.go",
+      "templates_signals.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/continuationlane",
+    "imports": [
+      "internal/clock",
+      "internal/officialfx",
+      "internal/strategyevidence"
+    ],
+    "files": [
+      "allocation.go",
+      "arithmetic.go",
+      "evaluator.go",
+      "evidence.go",
+      "execution_terms.go",
+      "production_proposal.go",
+      "registry.go",
+      "risk.go",
+      "types.go"
+    ],
+    "ignored_files": [
+      "production_proposal_test.go",
+      "strategyflow_testseam.go"
+    ]
+  },
+  {
+    "package": "internal/costs",
+    "imports": [
+      "internal/clock"
+    ],
+    "files": [
+      "costs.go",
+      "fingerprint.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/dailyloss",
+    "imports": [
+      "internal/clock",
+      "internal/riskcalc"
+    ],
+    "files": [
+      "measure.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/deployguard",
+    "imports": [],
+    "files": [
+      "model.go",
+      "plan.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/doctor",
+    "imports": [
+      "internal/auth",
+      "internal/client",
+      "internal/config",
+      "internal/i18n",
+      "internal/version"
+    ],
+    "files": [
+      "service.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/domain",
+    "imports": [],
+    "files": [
+      "models.go",
+      "mutation.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/enginelock",
+    "imports": [
+      "internal/binstamp",
+      "internal/runlock"
+    ],
+    "files": [
+      "enginelock.go",
+      "flock_unix.go"
+    ],
+    "ignored_files": [
+      "flock_other.go"
+    ]
+  },
+  {
+    "package": "internal/enginewatch",
+    "imports": [
+      "internal/clock",
+      "internal/enginelock",
+      "internal/obs"
+    ],
+    "files": [
+      "watch.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/execgw",
+    "imports": [
+      "internal/brokerstate",
+      "internal/clock",
+      "internal/costs",
+      "internal/dailyloss",
+      "internal/domain",
+      "internal/journal",
+      "internal/official",
+      "internal/officialfx",
+      "internal/orderintent",
+      "internal/protection",
+      "internal/risk",
+      "internal/riskbucket",
+      "internal/riskcalc",
+      "internal/strategyengine",
+      "internal/strategyflow",
+      "internal/strategyrouter",
+      "internal/trading",
+      "internal/weeklyvaluelane"
+    ],
+    "files": [
+      "a094_shared_judgements.go",
+      "a137_daily_loss.go",
+      "amend_indoubt.go",
+      "classify.go",
+      "daily_buy.go",
+      "entrylatch.go",
+      "failclosed.go",
+      "fingerprint.go",
+      "gateway.go",
+      "guardian.go",
+      "indoubt.go",
+      "issue.go",
+      "manual_buy.go",
+      "modegate.go",
+      "observation.go",
+      "open_positions.go",
+      "orders_source.go",
+      "protection.go",
+      "protection_refusal.go",
+      "readiness_wiring.go",
+      "reason.go",
+      "refusal_code.go",
+      "replay.go",
+      "replay_transport.go",
+      "retry.go",
+      "riskguardian.go",
+      "riskguardian_first_leg.go",
+      "riskguardian_qfinal.go",
+      "roundtrip.go",
+      "strategy_entry_gate_authority.go",
+      "strategy_gateway.go",
+      "strategy_protection_authority.go",
+      "strategy_read_budget.go",
+      "symbolgate.go",
+      "wirebody.go"
+    ],
+    "ignored_files": [
+      "a066_strategy_last_moment_barrier_test.go",
+      "a112_protection_prerequisite_test.go",
+      "a124_entry_gate_testseam.go",
+      "a136_daily_buy_first_leg_testseam_test.go",
+      "a136_manual_buy_internal_testseam_test.go",
+      "a137_daily_loss_fx_internal_testseam_test.go",
+      "a137_fence_test.go",
+      "a137_precheck_test.go",
+      "a138_open_positions_first_leg_testseam_test.go",
+      "a139_account_base_sizing_testseam_test.go",
+      "riskguardian_account_base_testseam_test.go",
+      "strategy_authority_testseam.go",
+      "strategy_gateway_account_base_test.go",
+      "strategy_protection_authority_test.go"
+    ]
+  },
+  {
+    "package": "internal/exitpolicy",
+    "imports": [
+      "internal/settingmeta"
+    ],
+    "files": [
+      "adoption.go",
+      "candidate.go",
+      "common_policy.go",
+      "decimal.go",
+      "doc.go",
+      "identity.go",
+      "ladder.go",
+      "ratchet.go",
+      "recovery.go",
+      "snapshot.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/exitquarantine",
+    "imports": [],
+    "files": [
+      "model.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/export",
+    "imports": [],
+    "files": [
+      "doc.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/filldetect",
+    "imports": [
+      "internal/brokerstate",
+      "internal/clock",
+      "internal/domain",
+      "internal/execgw",
+      "internal/journal",
+      "internal/push"
+    ],
+    "files": [
+      "detect.go",
+      "hints.go",
+      "ledger.go",
+      "payload.go",
+      "slo.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/flatten",
+    "imports": [
+      "internal/attest",
+      "internal/clock",
+      "internal/domain",
+      "internal/execgw",
+      "internal/journal",
+      "internal/obs",
+      "internal/orderintent",
+      "internal/reconcile"
+    ],
+    "files": [
+      "confirm.go",
+      "flatten.go",
+      "liquidate.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/handoff",
+    "imports": [],
+    "files": [
+      "handoff.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/httpapi",
+    "imports": [
+      "internal/candidate",
+      "internal/clock",
+      "internal/networkboundary",
+      "internal/operatorview",
+      "internal/optimization",
+      "internal/performance",
+      "internal/positionpolicy",
+      "internal/settingmeta",
+      "internal/strategyengine",
+      "internal/strategyprojection"
+    ],
+    "files": [
+      "auth.go",
+      "boundary_error.go",
+      "capability.go",
+      "exit_line_reference.go",
+      "idempotency.go",
+      "model.go",
+      "read.go",
+      "router.go",
+      "security.go",
+      "security_path_unix.go",
+      "server.go",
+      "strategy_runtime.go",
+      "stream.go"
+    ],
+    "ignored_files": [
+      "security_path_windows.go"
+    ]
+  },
+  {
+    "package": "internal/hybrid",
+    "imports": [
+      "internal/client",
+      "internal/domain",
+      "internal/official",
+      "internal/orderintent",
+      "internal/trading"
+    ],
+    "files": [
+      "broker.go",
+      "client.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/i18n",
+    "imports": [],
+    "files": [
+      "i18n.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/journal",
+    "imports": [
+      "internal/clock",
+      "internal/costs",
+      "internal/exitpolicy",
+      "internal/exitquarantine",
+      "internal/position",
+      "internal/positioncampaign",
+      "internal/positionpolicy",
+      "internal/riskbucket",
+      "internal/riskcalc",
+      "internal/strategyflow",
+      "internal/strategyrouter"
+    ],
+    "files": [
+      "a137_daily_loss_rows.go",
+      "account_views.go",
+      "adoption.go",
+      "alert_claim.go",
+      "alert_claim_v31.go",
+      "apply_hook.go",
+      "backup.go",
+      "core_domain.go",
+      "daily_buy.go",
+      "decision.go",
+      "dispatch.go",
+      "durability.go",
+      "entryobservation.go",
+      "execution_contract.go",
+      "exit_observation_refresh.go",
+      "exit_proposal_release.go",
+      "exit_quarantine_list.go",
+      "exit_quarantine_selector_v30.go",
+      "exit_snapshot.go",
+      "exit_snapshot_integrity.go",
+      "exit_state.go",
+      "fills.go",
+      "flatten.go",
+      "fsguard.go",
+      "fsprobe_linux.go",
+      "idempotency.go",
+      "integrity.go",
+      "issuance.go",
+      "journal.go",
+      "lane_performance.go",
+      "lifecycle.go",
+      "lineage.go",
+      "nonce.go",
+      "open_positions.go",
+      "operating_mode.go",
+      "outbox.go",
+      "paths.go",
+      "policy_snapshot.go",
+      "position_adjustments.go",
+      "position_campaign.go",
+      "position_campaign_cas_read.go",
+      "position_policy.go",
+      "position_projection.go",
+      "protection_orders.go",
+      "provenance.go",
+      "readonly.go",
+      "reconcile_states.go",
+      "record_alert.go",
+      "recovery.go",
+      "replay.go",
+      "reservation_release.go",
+      "reservations.go",
+      "resolution.go",
+      "risk_bucket.go",
+      "risk_bucket_entry_loss_lock.go",
+      "risk_bucket_fill.go",
+      "risk_bucket_issuance.go",
+      "risk_bucket_owner.go",
+      "risk_bucket_policy_records.go",
+      "risk_bucket_relaxation.go",
+      "risk_bucket_usage.go",
+      "schema.go",
+      "strategy_dispatch_immutable_v28.go",
+      "strategy_dispatch_issuance.go",
+      "strategy_dispatch_refusal.go",
+      "strategy_dispatch_runtime.go",
+      "strategy_dispatch_runtime_schema.go",
+      "strategy_evidence.go",
+      "strategy_first_leg_atomic.go",
+      "strategy_first_leg_v26.go",
+      "strategy_lane_latch.go",
+      "strategy_lane_latch_v32.go",
+      "strategy_lineage.go",
+      "strategy_weekly_first_leg.go",
+      "strategy_weekly_lifecycle.go",
+      "strategy_weekly_lifecycle_v29.go",
+      "strategy_weekly_reservation.go",
+      "strategy_weekly_reservation_v27.go",
+      "strategyflow_projection.go",
+      "trade_analytics.go",
+      "trade_outcome_backfill.go",
+      "trade_outcome_refusal.go",
+      "trade_outcomes.go"
+    ],
+    "ignored_files": [
+      "a137_testseam.go",
+      "fsprobe_other.go",
+      "strategyflow_projection_test.go"
+    ]
+  },
+  {
+    "package": "internal/localupdate",
+    "imports": [],
+    "files": [
+      "open_unix.go",
+      "updater.go"
+    ],
+    "ignored_files": [
+      "open_other.go"
+    ]
+  },
+  {
+    "package": "internal/manualbuy",
+    "imports": [
+      "internal/clock"
+    ],
+    "files": [
+      "summary.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/markout",
+    "imports": [],
+    "files": [
+      "markout.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/mcp",
+    "imports": [
+      "internal/hybrid",
+      "internal/official",
+      "internal/ops",
+      "internal/trading"
+    ],
+    "files": [
+      "catalog.go",
+      "server.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/measure",
+    "imports": [
+      "internal/costs",
+      "internal/journal",
+      "internal/measure/degrade",
+      "internal/risk",
+      "internal/riskcalc"
+    ],
+    "files": [
+      "counterfactual.go",
+      "population.go",
+      "reconstruct.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/measure/degrade",
+    "imports": [],
+    "files": [
+      "degrade.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/monitor",
+    "imports": [
+      "internal/client",
+      "internal/ops",
+      "internal/session"
+    ],
+    "files": [
+      "official_read_contract.go",
+      "probes.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/networkboundary",
+    "imports": [],
+    "files": [
+      "boundary.go",
+      "certificate.go",
+      "origin.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/obs",
+    "imports": [
+      "internal/clock",
+      "internal/execgw",
+      "internal/journal",
+      "internal/redact"
+    ],
+    "files": [
+      "a133_transport_redact.go",
+      "alert_lease.go",
+      "event.go",
+      "heartbeat.go",
+      "log.go",
+      "mode.go",
+      "normal_relay.go",
+      "notifier.go",
+      "ntfy.go",
+      "record_only.go",
+      "settle_outcome.go",
+      "topic.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/official",
+    "imports": [
+      "internal/domain",
+      "internal/orderintent",
+      "internal/redact",
+      "internal/trading"
+    ],
+    "files": [
+      "a112_mbus_read.go",
+      "a112_mbus_read_unix.go",
+      "a130_intake_candle.go",
+      "account_identity_authority.go",
+      "account_reads.go",
+      "account_redact.go",
+      "asset_reads.go",
+      "auth_headers.go",
+      "calendar_reads.go",
+      "candle_raw.go",
+      "candle_reads.go",
+      "client.go",
+      "commissions_reads.go",
+      "conditional_reads.go",
+      "conditional_writes.go",
+      "credentials.go",
+      "errors.go",
+      "m0_reads.go",
+      "market_reads.go",
+      "orders_raw.go",
+      "orders_reads.go",
+      "orders_write.go",
+      "price_limits_reads.go",
+      "protection_reads.go",
+      "ratebudget.go",
+      "reads.go",
+      "reconcile_reads.go",
+      "sellable_qty_reads.go",
+      "stock_reads.go",
+      "strict_minute_candles.go",
+      "strict_quote_reads.go",
+      "token.go",
+      "trace.go",
+      "typed_calendar_reads.go",
+      "warnings_reads.go"
+    ],
+    "ignored_files": [
+      "a112_mbus_read_unsupported.go"
+    ]
+  },
+  {
+    "package": "internal/officialbars",
+    "imports": [
+      "internal/clock",
+      "internal/official",
+      "internal/scheduler",
+      "internal/strategyevidence"
+    ],
+    "files": [
+      "producer.go",
+      "quote.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/officialfx",
+    "imports": [
+      "internal/domain"
+    ],
+    "files": [
+      "evidence.go",
+      "production.go",
+      "production_owner_unix.go"
+    ],
+    "ignored_files": [
+      "authority_testseam.go",
+      "production_owner_other.go"
+    ]
+  },
+  {
+    "package": "internal/onboarding",
+    "imports": [
+      "internal/i18n"
+    ],
+    "files": [
+      "onboarding.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/operatorview",
+    "imports": [
+      "internal/exitpolicy",
+      "internal/journal"
+    ],
+    "files": [
+      "exit_freshness.go",
+      "exit_line.go",
+      "exit_line_reference.go",
+      "exit_line_status.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/ops",
+    "imports": [
+      "internal/client",
+      "internal/hybrid",
+      "internal/official",
+      "internal/orderintent",
+      "internal/trading"
+    ],
+    "files": [
+      "ops.go",
+      "read_operations.go",
+      "write_operations.go",
+      "wts_operations.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/optimization",
+    "imports": [
+      "internal/clock",
+      "internal/exitpolicy",
+      "internal/settingmeta"
+    ],
+    "files": [
+      "model.go",
+      "providers.go",
+      "registry.go",
+      "store.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/optimizationevidence",
+    "imports": [
+      "internal/optimization",
+      "internal/performance"
+    ],
+    "files": [
+      "provider.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/orderintent",
+    "imports": [],
+    "files": [
+      "conditional.go",
+      "intent.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/orderlineage",
+    "imports": [],
+    "files": [
+      "service.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/output",
+    "imports": [
+      "internal/client",
+      "internal/config",
+      "internal/doctor",
+      "internal/domain",
+      "internal/i18n",
+      "internal/orderintent",
+      "internal/trading"
+    ],
+    "files": [
+      "account.go",
+      "account_detail.go",
+      "accumulation.go",
+      "chart.go",
+      "conditional.go",
+      "config.go",
+      "doctor.go",
+      "format.go",
+      "lending.go",
+      "marketdata.go",
+      "news.go",
+      "orders.go",
+      "portfolio.go",
+      "profit.go",
+      "profit_period.go",
+      "quote.go",
+      "style.go",
+      "table.go",
+      "trading.go",
+      "transactions.go",
+      "transfer_income.go",
+      "watchlist.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/performance",
+    "imports": [
+      "internal/markout"
+    ],
+    "files": [
+      "attribution.go",
+      "attribution_persistence.go",
+      "lineage_reader.go",
+      "model.go",
+      "query.go",
+      "readonly.go",
+      "store.go"
+    ],
+    "ignored_files": [
+      "race_enabled_test.go"
+    ]
+  },
+  {
+    "package": "internal/performancejournal",
+    "imports": [
+      "internal/journal",
+      "internal/performance"
+    ],
+    "files": [
+      "adapter.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/position",
+    "imports": [
+      "internal/riskcalc"
+    ],
+    "files": [
+      "decimal.go",
+      "doc.go",
+      "position.go",
+      "provenance.go",
+      "table.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/positioncampaign",
+    "imports": [
+      "internal/riskcalc"
+    ],
+    "files": [
+      "campaign.go",
+      "command.go",
+      "fill.go",
+      "identity.go",
+      "replay.go",
+      "stop.go",
+      "watermark.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/positionpolicy",
+    "imports": [
+      "internal/exitpolicy"
+    ],
+    "files": [
+      "management.go",
+      "model.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/positionpolicyrpc",
+    "imports": [
+      "internal/attemptthaw",
+      "internal/exitquarantine",
+      "internal/positionpolicy",
+      "internal/riskrelaxation"
+    ],
+    "files": [
+      "attempt_thaw_client.go",
+      "client.go",
+      "exit_quarantine_client.go",
+      "private_endpoint.go",
+      "private_fs_unix.go",
+      "private_staging.go",
+      "private_staging_unix.go",
+      "risk_relaxation_client.go",
+      "runtime.go",
+      "runtime_unix.go"
+    ],
+    "ignored_files": [
+      "private_fs_other.go",
+      "private_fs_other_test.go",
+      "runtime_other.go"
+    ]
+  },
+  {
+    "package": "internal/protection",
+    "imports": [
+      "internal/attest",
+      "internal/exitpolicy",
+      "internal/protectionreadiness"
+    ],
+    "files": [
+      "checkpoint_identity.go",
+      "controller.go",
+      "domain.go",
+      "readiness_adapter.go",
+      "reconcile.go",
+      "repository.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/protectionlifecycle",
+    "imports": [],
+    "files": [
+      "lifecycle.go",
+      "state.go",
+      "types.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/protectionofficial",
+    "imports": [
+      "internal/domain",
+      "internal/official",
+      "internal/protection"
+    ],
+    "files": [
+      "gateway.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/protectionreadiness",
+    "imports": [],
+    "files": [
+      "attestation.go",
+      "dispatch.go",
+      "evidence.go",
+      "policy.go",
+      "production.go",
+      "production_owner_unix.go",
+      "readiness.go",
+      "registry.go",
+      "seal.go",
+      "state.go",
+      "types.go"
+    ],
+    "ignored_files": [
+      "authority_testseam.go",
+      "production_owner_other.go"
+    ]
+  },
+  {
+    "package": "internal/push",
+    "imports": [
+      "internal/client",
+      "internal/session"
+    ],
+    "files": [
+      "listen.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/qr",
+    "imports": [],
+    "files": [
+      "qr.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/ratebudget",
+    "imports": [],
+    "files": [
+      "flock_unix.go",
+      "lease.go"
+    ],
+    "ignored_files": [
+      "flock_other.go"
+    ]
+  },
+  {
+    "package": "internal/reconcile",
+    "imports": [
+      "internal/clock",
+      "internal/domain",
+      "internal/execgw",
+      "internal/journal",
+      "internal/obs",
+      "internal/official",
+      "internal/position",
+      "internal/riskcalc"
+    ],
+    "files": [
+      "acked_boot.go",
+      "compare.go",
+      "converge.go",
+      "external.go",
+      "mismatch.go",
+      "ratelimit.go",
+      "recovery.go",
+      "snapshot.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/redact",
+    "imports": [],
+    "files": [
+      "record.go",
+      "redact.go",
+      "sinks.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/releaseupdate",
+    "imports": [
+      "internal/updatecheck",
+      "internal/version"
+    ],
+    "files": [
+      "client.go",
+      "extract.go",
+      "sigstore.go",
+      "tuf.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/replay",
+    "imports": [],
+    "files": [
+      "doc.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/reversallane",
+    "imports": [
+      "internal/clock",
+      "internal/officialfx",
+      "internal/strategyevidence"
+    ],
+    "files": [
+      "evaluate.go",
+      "execution_terms.go",
+      "plan.go",
+      "production_proposal.go",
+      "registry.go",
+      "risk.go",
+      "schema.go",
+      "structural.go",
+      "types.go"
+    ],
+    "ignored_files": [
+      "production_proposal_test.go",
+      "strategyflow_testseam.go"
+    ]
+  },
+  {
+    "package": "internal/risk",
+    "imports": [
+      "internal/costs",
+      "internal/officialfx",
+      "internal/riskcalc"
+    ],
+    "files": [
+      "account_base.go",
+      "chain.go",
+      "contract.go",
+      "input.go",
+      "netrr.go",
+      "reason.go",
+      "risk_budget.go"
+    ],
+    "ignored_files": [
+      "account_base_testseam.go",
+      "account_base_testseam_test.go"
+    ]
+  },
+  {
+    "package": "internal/riskbucket",
+    "imports": [
+      "internal/officialfx",
+      "internal/strategyflow",
+      "internal/strategyrouter"
+    ],
+    "files": [
+      "admission.go",
+      "decimal.go",
+      "evidence_access.go",
+      "fill.go",
+      "fx_authority.go",
+      "owner.go",
+      "production_snapshot_authority.go",
+      "production_snapshot_owner_linux.go",
+      "production_snapshot_owner_unix.go",
+      "reserve.go",
+      "snapshot_authority_bundle.go",
+      "types.go"
+    ],
+    "ignored_files": [
+      "a112_family_risk_binding_test.go",
+      "a126_snapshot_digest_replay_test.go",
+      "a127_schema_binding_test.go",
+      "production_snapshot_authority_test.go",
+      "production_snapshot_owner_other.go",
+      "production_snapshot_owner_unix_other.go"
+    ]
+  },
+  {
+    "package": "internal/riskcalc",
+    "imports": [],
+    "files": [
+      "aggregate.go",
+      "confirmed_floor.go",
+      "decimal.go",
+      "riskcalc.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/riskrelaxation",
+    "imports": [],
+    "files": [
+      "riskrelaxation.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/runlock",
+    "imports": [],
+    "files": [
+      "runlock.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/scheduler",
+    "imports": [
+      "internal/clock",
+      "internal/official",
+      "internal/strategyrouter"
+    ],
+    "files": [
+      "budget.go",
+      "calendar.go",
+      "decision.go",
+      "desired.go",
+      "desired_flock_unix.go",
+      "production_activation.go",
+      "production_activation_owner_unix.go",
+      "strategy_scope.go"
+    ],
+    "ignored_files": [
+      "activation_testseam.go",
+      "desired_flock_other.go",
+      "production_activation_owner_other.go"
+    ]
+  },
+  {
+    "package": "internal/selfupdate",
+    "imports": [
+      "internal/version"
+    ],
+    "files": [
+      "method.go",
+      "run.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/session",
+    "imports": [],
+    "files": [
+      "store.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/settingmeta",
+    "imports": [],
+    "files": [
+      "descriptor.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/soak",
+    "imports": [
+      "internal/attest",
+      "internal/binstamp",
+      "internal/clock",
+      "internal/redact"
+    ],
+    "files": [
+      "account_seal.go",
+      "attest.go",
+      "protection_probe.go",
+      "record.go",
+      "renewal_status.go",
+      "renewal_status_unix.go",
+      "soak.go",
+      "summary.go"
+    ],
+    "ignored_files": [
+      "renewal_status_other.go"
+    ]
+  },
+  {
+    "package": "internal/strategy",
+    "imports": [
+      "internal/candidate"
+    ],
+    "files": [
+      "approved.go"
+    ],
+    "ignored_files": [
+      "approved_testseam.go"
+    ]
+  },
+  {
+    "package": "internal/strategyaccount",
+    "imports": [
+      "internal/risk",
+      "internal/riskcalc"
+    ],
+    "files": [
+      "production.go",
+      "production_owner_linux.go",
+      "production_owner_unix.go"
+    ],
+    "ignored_files": [
+      "authority_testseam.go",
+      "production_owner_other.go",
+      "production_test.go"
+    ]
+  },
+  {
+    "package": "internal/strategyarbiter",
+    "imports": [
+      "internal/strategyflow",
+      "internal/strategyrouter"
+    ],
+    "files": [
+      "arbiter.go"
+    ],
+    "ignored_files": [
+      "arbiter_selection_test.go",
+      "fixture_test.go"
+    ]
+  },
+  {
+    "package": "internal/strategycandidate",
+    "imports": [
+      "internal/candidate",
+      "internal/strategy"
+    ],
+    "files": [
+      "sanitize.go"
+    ],
+    "ignored_files": [
+      "approved_batch_testseam.go"
+    ]
+  },
+  {
+    "package": "internal/strategycandle",
+    "imports": [
+      "internal/official",
+      "internal/strategymarket"
+    ],
+    "files": [
+      "adapter.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/strategycoordinator",
+    "imports": [
+      "internal/strategyarbiter",
+      "internal/strategyrouter"
+    ],
+    "files": [
+      "coordinator.go"
+    ],
+    "ignored_files": [
+      "a112_overflow_active_owner_test.go",
+      "coordinator_test.go",
+      "dedup_axis_test.go",
+      "fixture_test.go",
+      "receipt_contract_test.go"
+    ]
+  },
+  {
+    "package": "internal/strategydispatch",
+    "imports": [
+      "internal/execgw",
+      "internal/journal",
+      "internal/orderintent",
+      "internal/risk",
+      "internal/strategyengine"
+    ],
+    "files": [
+      "adapters.go",
+      "dispatch.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/strategyengine",
+    "imports": [
+      "internal/strategy",
+      "internal/strategymarket"
+    ],
+    "files": [
+      "contracts.go",
+      "decision.go",
+      "lane.go",
+      "runtime_descriptor.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/strategyevidence",
+    "imports": [
+      "internal/clock"
+    ],
+    "files": [
+      "breakout_bar.go",
+      "breakout_series.go",
+      "consumer.go",
+      "model.go",
+      "official_source.go",
+      "projection.go",
+      "readonly.go",
+      "readonly_owner_linux.go",
+      "readonly_owner_unix.go",
+      "source.go",
+      "store.go"
+    ],
+    "ignored_files": [
+      "readonly_owner_other.go",
+      "readonly_owner_unix_other.go"
+    ]
+  },
+  {
+    "package": "internal/strategyflow",
+    "imports": [
+      "internal/breakoutlane",
+      "internal/continuationlane",
+      "internal/reversallane",
+      "internal/strategy",
+      "internal/strategyrouter",
+      "internal/weeklyvaluelane"
+    ],
+    "files": [
+      "adapters.go",
+      "breakout.go",
+      "canonical_projection.go",
+      "flow.go",
+      "registry.go",
+      "types.go"
+    ],
+    "ignored_files": [
+      "a112_production_breakout_integration_test.go",
+      "authority_stop_provenance_testseam.go",
+      "authority_testseam.go",
+      "canonical_projection_testseam.go",
+      "lane_input_testseam.go",
+      "production_integration_test.go"
+    ]
+  },
+  {
+    "package": "internal/strategyhandoff",
+    "imports": [
+      "internal/strategyflow"
+    ],
+    "files": [
+      "handoff.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/strategymarket",
+    "imports": [],
+    "files": [
+      "bars.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/strategyprojection",
+    "imports": [],
+    "files": [
+      "lanes.go",
+      "model.go",
+      "presence.go",
+      "registry.go",
+      "runtime_identity.go",
+      "store.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/strategyprojectionrpc",
+    "imports": [
+      "internal/strategyprojection"
+    ],
+    "files": [
+      "transport.go",
+      "transport_probe_unix.go",
+      "transport_unix.go"
+    ],
+    "ignored_files": [
+      "transport_other.go"
+    ]
+  },
+  {
+    "package": "internal/strategyproposal",
+    "imports": [
+      "internal/breakoutlane",
+      "internal/clock",
+      "internal/continuationlane",
+      "internal/journal",
+      "internal/officialfx",
+      "internal/reversallane",
+      "internal/strategy",
+      "internal/strategyevidence",
+      "internal/strategyflow",
+      "internal/strategyrouter",
+      "internal/weeklyvaluelane"
+    ],
+    "files": [
+      "production.go",
+      "production_owner_linux.go",
+      "production_owner_unix.go"
+    ],
+    "ignored_files": [
+      "a112_paired_lane_batch_test.go",
+      "lost_proposal_test.go",
+      "multilane_testseam.go",
+      "production_owner_other.go",
+      "production_owner_unix_other.go",
+      "production_test.go",
+      "production_testseam.go"
+    ]
+  },
+  {
+    "package": "internal/strategyrouter",
+    "imports": [
+      "internal/breakoutlane",
+      "internal/continuationlane",
+      "internal/reversallane",
+      "internal/weeklyvaluelane"
+    ],
+    "files": [
+      "family.go",
+      "migration.go",
+      "production.go",
+      "production_family_activation.go",
+      "production_owner_linux.go",
+      "production_owner_unix.go",
+      "production_shared_export.go",
+      "quota.go",
+      "registry.go",
+      "router.go",
+      "routeset.go",
+      "scheduler.go",
+      "types.go"
+    ],
+    "ignored_files": [
+      "a127_manifest_seam_parity_test.go",
+      "a127_real_journal_test.go",
+      "arbitration_testseam.go",
+      "production_family_activation_testseam.go",
+      "production_owner_other.go",
+      "production_owner_unix_other.go",
+      "production_route_manifest_testseam.go",
+      "production_testseam.go",
+      "strategyflow_testseam.go"
+    ]
+  },
+  {
+    "package": "internal/strategyruntime",
+    "imports": [],
+    "files": [
+      "coordinator.go",
+      "fallback.go",
+      "lease.go",
+      "lineage.go",
+      "recovery.go",
+      "registry.go",
+      "seal.go",
+      "types.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/strategyshadow",
+    "imports": [
+      "internal/strategyrouter"
+    ],
+    "files": [
+      "shadow.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/strategyworker",
+    "imports": [
+      "internal/breakoutlane",
+      "internal/clock",
+      "internal/continuationlane",
+      "internal/reversallane",
+      "internal/strategyarbiter",
+      "internal/strategycoordinator",
+      "internal/strategyrouter",
+      "internal/weeklyvaluelane"
+    ],
+    "files": [
+      "bounded.go",
+      "lane.go",
+      "lane_view.go",
+      "policy.go",
+      "restore.go",
+      "shadow.go",
+      "worker.go"
+    ],
+    "ignored_files": [
+      "a112_golden_desired_effective_test.go",
+      "a112_projection_accessor_testseam_test.go",
+      "a112_shadow_verdict_test.go",
+      "cycle_test.go",
+      "fixture_test.go",
+      "rehearsal_test.go"
+    ]
+  },
+  {
+    "package": "internal/testenv",
+    "imports": [],
+    "files": [
+      "closure.go",
+      "testenv.go",
+      "typecheck.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/trading",
+    "imports": [
+      "internal/config",
+      "internal/domain",
+      "internal/orderintent",
+      "internal/orderlineage"
+    ],
+    "files": [
+      "conditional.go",
+      "errors.go",
+      "result.go",
+      "service.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/tui",
+    "imports": [],
+    "files": [
+      "pick.go",
+      "spinner.go",
+      "tui.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/updatecheck",
+    "imports": [
+      "internal/version"
+    ],
+    "files": [
+      "checker.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/verifylive",
+    "imports": [
+      "internal/attest",
+      "internal/clock",
+      "internal/domain",
+      "internal/official",
+      "internal/orderintent",
+      "internal/redact",
+      "internal/trading"
+    ],
+    "files": [
+      "abort.go",
+      "account_seal.go",
+      "cleanup.go",
+      "confirm.go",
+      "endpoints.go",
+      "hours.go",
+      "korean.go",
+      "m0_manual.go",
+      "m0_recovery.go",
+      "mutate.go",
+      "plan.go",
+      "pricing.go",
+      "projection_reconciled.go",
+      "receipt.go",
+      "receipt_linux.go",
+      "reconcile.go",
+      "reconcile_check.go",
+      "reconcile_record.go",
+      "record.go",
+      "record_lock_unix.go",
+      "redo.go",
+      "report.go",
+      "retry.go",
+      "runner.go",
+      "steps.go",
+      "steps_trigger.go",
+      "verifylive.go"
+    ],
+    "ignored_files": [
+      "receipt_other.go",
+      "reconcile_testseam.go",
+      "record_lock_other.go"
+    ]
+  },
+  {
+    "package": "internal/version",
+    "imports": [],
+    "files": [
+      "version.go"
+    ],
+    "ignored_files": []
+  },
+  {
+    "package": "internal/weeklyvaluelane",
+    "imports": [
+      "internal/clock",
+      "internal/officialfx",
+      "internal/strategyevidence"
+    ],
+    "files": [
+      "arithmetic.go",
+      "evaluate.go",
+      "execution_authority.go",
+      "plan.go",
+      "production_proposal.go",
+      "registry.go",
+      "reservation.go",
+      "risk.go",
+      "rr.go",
+      "schema.go",
+      "types.go"
+    ],
+    "ignored_files": [
+      "production_proposal_test.go",
+      "strategyflow_testseam.go"
+    ]
+  }
+]

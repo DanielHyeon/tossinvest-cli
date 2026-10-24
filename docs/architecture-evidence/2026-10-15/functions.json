@@ -1,0 +1,74 @@
+[
+  {
+    "source": "internal/app/engine/interlock.go",
+    "symbol": "verifyGate",
+    "sha256": "fc45d99bf61312e64a2dd31bdde9d255020119aef9bf4509bd4ab2ffef342eba",
+    "ast": "verifyGate.json"
+  },
+  {
+    "source": "internal/app/engine/interlock.go",
+    "symbol": "checkTradingPolicy",
+    "sha256": "fc45d99bf61312e64a2dd31bdde9d255020119aef9bf4509bd4ab2ffef342eba",
+    "ast": "checkTradingPolicy.json"
+  },
+  {
+    "source": "internal/app/engine/strategy_entry_supervisor.go",
+    "symbol": "Context.productionStrategyWorker",
+    "sha256": "6f7c999a13c4abdc6f575a76076c527b869611b9921004645dd45cb3b19a3a8e",
+    "ast": "Context-productionStrategyWorker.json"
+  },
+  {
+    "source": "internal/app/engine/strategy_dispatch_cycle.go",
+    "symbol": "strategyDispatchCycle.dispatch",
+    "sha256": "72021ef372fe658540d68292cf0556181ad8a981ce81d807eb0903e3b55c67a7",
+    "ast": "strategyDispatchCycle-dispatch.json"
+  },
+  {
+    "source": "internal/app/engine/strategy_first_leg_admission.go",
+    "symbol": "strategyFirstLegAdmissionBridge.admit",
+    "sha256": "70815fb4533715ddba2e1560fe8316efe89c85a2a23a0bfbcfc04933ae7abc61",
+    "ast": "strategyFirstLegAdmissionBridge-admit.json"
+  },
+  {
+    "source": "internal/strategyrouter/production_family_activation.go",
+    "symbol": "LoadProductionFamilyActivation",
+    "sha256": "bac16c04b38d49c479a381fb326d7dd066e5525997322619d8ceb496e3ddb0d8",
+    "ast": "LoadProductionFamilyActivation.json"
+  },
+  {
+    "source": "internal/strategyrouter/production_family_activation.go",
+    "symbol": "validateProductionFamilyActivation",
+    "sha256": "bac16c04b38d49c479a381fb326d7dd066e5525997322619d8ceb496e3ddb0d8",
+    "ast": "validateProductionFamilyActivation.json"
+  },
+  {
+    "source": "internal/execgw/protection.go",
+    "symbol": "Gateway.checkProtection",
+    "sha256": "71e4923e1301555808b3c65b437d1d20906f9d633d8eef52ac676a1433cd8267",
+    "ast": "Gateway-checkProtection.json"
+  },
+  {
+    "source": "internal/execgw/gateway.go",
+    "symbol": "Gateway.submit",
+    "sha256": "b4b020607839345a70e7658ff488aef4282de4335eedd83b90a93520d80e53df",
+    "ast": "Gateway-submit.json"
+  },
+  {
+    "source": "internal/execgw/gateway.go",
+    "symbol": "Gateway.checkEntry",
+    "sha256": "b4b020607839345a70e7658ff488aef4282de4335eedd83b90a93520d80e53df",
+    "ast": "Gateway-checkEntry.json"
+  },
+  {
+    "source": "internal/risk/chain.go",
+    "symbol": "Evaluate",
+    "sha256": "43b2ef76b276cc56f96071de62bea02df21bc509ea0cfc08db82a3f3729216fc",
+    "ast": "Evaluate.json"
+  },
+  {
+    "source": "internal/app/engine/strategy_entry_supervisor.go",
+    "symbol": "buildProductionStrategyMarketWorker",
+    "sha256": "6f7c999a13c4abdc6f575a76076c527b869611b9921004645dd45cb3b19a3a8e",
+    "ast": "buildProductionStrategyMarketWorker.json"
+  }
+]

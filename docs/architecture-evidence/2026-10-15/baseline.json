@@ -1,0 +1,8 @@
+{
+  "date": "2026-10-15",
+  "head": "dd6d9ec09e1a0d30d8dd23d1062c45f6f610ddc2",
+  "go_version": "go version go1.26.5 linux/amd64",
+  "package_count": 111,
+  "scope": "Linux default build; test files and special build tags excluded; working tree source",
+  "git_status_before_document": " M internal/app/engine/a139_risk_budget_interlock_test.go\n M internal/app/engine/guardian_wiring.go\n M internal/risk/a139_risk_budget_test.go\n M openspec/changes/a128-jev-shadow-judgment-probe/analysis/shadow-ledger/ledger.jsonl\n M openspec/changes/a139-per-trade-risk-budget/analysis/function-logic/internal-app-engine--newproductionriskguardian/ast.json\n M openspec/changes/a139-per-trade-risk-budget/analysis/function-logic/internal-app-engine--riskpolicyfromautomationgate/ast.json\n M openspec/changes/a139-per-trade-risk-budget/analysis/mutation/a139_mutate.py\n M openspec/changes/a139-per-trade-risk-budget/design.md\n M openspec/changes/a139-per-trade-risk-budget/review.md\n M openspec/changes/a139-per-trade-risk-budget/specs/risk-management/spec.md\n M openspec/changes/a139-per-trade-risk-budget/tasks.md\n"
+}

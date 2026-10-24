@@ -20,7 +20,7 @@ P0/P1을 구현자가 고친 뒤 같은 리뷰어가 재검토해 `P0=0, P1=0`�
 | M0 | 0.2a | Terra-M0: `verify run --include-trigger` causal receipt 도구 | A-M0 Terra | lossless parent/child receipt·fsync barrier·INCONCLUSIVE gate GREEN |
 | M-A | 0.2, 0.11 | **사람이 실행·승인하는 실계좌 측정** | A-M Terra read-only | 발동·child 체결·조회 귀속·raw status 표가 모두 PASS |
 | T1 | 1.1~1.3 | Terra-1: `internal/protectionlifecycle` RED와 필요한 최소 core 수정 | A1 Terra | 9개 거부 분기 본문 실행 + 회귀 GREEN |
-| T2-A | 2.1~2.6, 3.10 | Terra-2A: 도메인 매핑·journal schema·child ownership/apply | A2-A Terra | durable pending/causal child 귀속/선행-fill 거부 원자성 |
+| T2-A | 2.1~2.7, 3.10 | Terra-2A: 도메인 매핑·journal schema·child ownership/apply | A2-A Terra | durable pending/causal child 귀속/선행-fill 거부 원자성 |
 | T2-B | 4.0 | Terra-2B: `protectionlifecycle` pure API seal/allowlist | A2-B Terra | exact public surface + authority-minting 0; T3 compile seam 준비 |
 | T3 | 3.1~3.8 | Terra-3: 독립 수렴 워커 core | A3 Terra | worker-only 실패 격리·수량/generation 재확인 |
 | T4-A | 4.5~4.6 | Terra-4A: exit 상주주문 취소·flat/child 권위 경계 | A4-A Terra | 기존 손절 즉시성·child 귀속 보존 + double-sell 창 최소화 |

@@ -1,0 +1,42 @@
+
+Callers of "PlaceClaimedStrategy" (13):
+
+method      PlaceClaimedStrategy
+  internal/app/engine/strategy_dispatch_cycle.go:21
+
+function    TestStrategyGatewayBeginsSubmittingImmediatelyBeforeBrokerPairedKRUS
+  internal/execgw/strategy_gateway_account_base_test.go:24
+
+function    TestStrategyGatewayRechecksEntryGateAfterSubmittingFencePairedKRUS
+  internal/execgw/strategy_gateway_account_base_test.go:99
+
+function    TestStrategyGatewayFinalGateWaitCannotUseExpiredReplacedOwnerKRUS
+  internal/execgw/strategy_gateway_account_base_test.go:139
+
+function    TestStrategyGatewayRechecksSourceBackedActivationAfterSubmittingFencePairedKRUS
+  internal/execgw/strategy_gateway_account_base_test.go:216
+
+function    TestStrategyGatewayRejectsMissingOrFencedAuthorityPairedKRUS
+  internal/execgw/strategy_gateway_account_base_test.go:255
+
+function    TestStrategyGatewaySettlesDefinitiveRefusalAndAmbiguityPairedKRUS
+  internal/execgw/strategy_gateway_account_base_test.go:309
+
+function    TestStrategyGatewayRejectsStaleAndCrossMarketFXBeforeSubmittingPairedKRUS
+  internal/execgw/strategy_gateway_account_base_test.go:356
+
+function    TestStrategyGatewayRejectsValidLeaseFromDifferentDecisionPairedKRUS
+  internal/execgw/strategy_gateway_account_base_test.go:421
+
+function    TestStrategyLeaseCannotBeConsumedByReductionPairedKRUS
+  internal/execgw/strategy_gateway_account_base_test.go:458
+
+function    TestA066StrategyLastMomentQFinalBarrierRefusesALockTakenAfterTheInitialCheck
+  internal/execgw/a066_strategy_last_moment_barrier_test.go:24
+
+method      PlaceClaimedStrategy
+  internal/app/engine/strategy_dispatch_cycle_test.go:59
+
+function    a137FenceRun
+  internal/execgw/a137_fence_test.go:20
+

@@ -1,0 +1,73 @@
+{
+  "observed_at": "2026-10-20T18:58:06.784604+00:00",
+  "binding": {
+    "attestation_account_normalized_match": true,
+    "engine_startup_or_token_provenance_verified": false,
+    "first_account_row_valid": true
+  },
+  "limits": [
+    "sample_bps_are_not_policy_rates_or_global_cost_estimates",
+    "no_pre_order_sellable_or_reserved_snapshot",
+    "no_post_fill_holding_or_residual_snapshot",
+    "no_cancel_or_replace_rejection_detail",
+    "closed_history_not_exhausted"
+  ],
+  "request_history": {
+    "cache_write": false,
+    "initial_v2_gets": 8,
+    "redirect": false,
+    "refresh": false,
+    "retry": false,
+    "total_gets": 11,
+    "v2_numeric_aggregate": "retired_due_to_local_numeric_classifier_defect",
+    "v3_gets": 3
+  },
+  "samples": {
+    "m50_exact": {
+      "commission": "2",
+      "commission_bps": "1.532567049808429118773946360",
+      "detail_identity_exact": true,
+      "currency_exact": true,
+      "expected_currency": "KRW",
+      "filled_amount": "13050",
+      "filled_at_present": true,
+      "filled_quantity": "1",
+      "quantity": "1",
+      "request_quantity_check": true,
+      "settlement_date_present": true,
+      "side_sell": true,
+      "status_filled": true,
+      "symbol_exact": true,
+      "tax": "26",
+      "tax_bps": "19.92337164750957854406130268"
+    },
+    "representative_us_journal_bound": {
+      "commission": "0.03",
+      "commission_bps": "9.066183136899365367180417044",
+      "detail_identity_exact": true,
+      "currency_exact": true,
+      "expected_currency": "USD",
+      "filled_amount": "33.09",
+      "filled_at_present": true,
+      "filled_quantity": "1",
+      "quantity": "1",
+      "request_quantity_check": "not_checked",
+      "settlement_date_present": true,
+      "side_sell": true,
+      "status_filled": true,
+      "symbol_exact": true,
+      "tax": "0.01",
+      "tax_bps": "3.022061045633121789060139015"
+    }
+  },
+  "schema": "tossos.broker-receipt-samples.v1",
+  "script": {
+    "path": "/tmp/tossos-verify-broker-orders-readonly-20261021-v3.py",
+    "sha256": "6587d8c8a7b78c88e604227010f3f14a103dc0377f68cc0095857d0dc46b8215"
+  },
+  "source_original_v3_summary": {
+    "path": "/tmp/tossos-verify-trade-evidence-20261021/broker-orders-readonly-v3-summary.json",
+    "raw_body_persisted": false,
+    "sha256": "27f2771e2bc4711e73655b410aec7fa39c3def882ba9b628b656263aa1899902"
+  }
+}
