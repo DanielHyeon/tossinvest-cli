@@ -405,3 +405,104 @@ func TestNoSideTabAccentBorders(t *testing.T) {
 		t.Errorf("stylesheet carries side-tab accent borders: %q", m)
 	}
 }
+
+// styleBlock returns the console stylesheet (the "style" template body).
+func styleBlock(t *testing.T) string {
+	t.Helper()
+	start := strings.Index(pageTemplates, `{{define "style"}}`)
+	if start < 0 {
+		t.Fatal("stylesheet block not found")
+	}
+	end := strings.Index(pageTemplates[start:], "{{end}}")
+	return pageTemplates[start : start+end]
+}
+
+// TestMotionContract (change a172 4단계, 안전 불변식 4).
+//
+// 모션은 compositor 속성만 쓰고, 상태를 바꾸는 POST 폼·승인 영역의 버튼은 전환이 0 이어야
+// 한다. 꾸밈이 주문·승인·청산·토글 버튼의 즉시성을 늦추지 못하게 이 시험이 막는다.
+func TestMotionContract(t *testing.T) {
+	css := styleBlock(t)
+
+	// (a) transition: all 금지
+	if regexp.MustCompile(`transition(?:-property)?\s*:\s*[^;{}]*\ball\b`).MatchString(css) {
+		t.Error("stylesheet transitions `all`")
+	}
+	// (b) 전환·키프레임 속성 목록에 레이아웃·paint-heavy 속성 0건. 허용: translate scale opacity
+	// transform background-color color. 이 밖의 이름이 하나라도 있으면 실패.
+	allowed := map[string]bool{"translate": true, "scale": true, "opacity": true, "transform": true,
+		"background-color": true, "color": true, "none": true}
+	for _, m := range regexp.MustCompile(`(?m)transition\s*:\s*([^;}]*)`).FindAllStringSubmatch(css, -1) {
+		for _, part := range strings.Split(m[1], ",") {
+			fields := strings.Fields(part)
+			if len(fields) == 0 {
+				continue
+			}
+			if !allowed[fields[0]] {
+				t.Errorf("transition animates %q, which is not a compositor/hover-colour property", fields[0])
+			}
+		}
+	}
+	for _, m := range regexp.MustCompile(`@keyframes\s+[a-z-]+\s*\{([^@]*?)\}\s*\n`).FindAllStringSubmatch(css, -1) {
+		for _, prop := range regexp.MustCompile(`([a-z-]+)\s*:`).FindAllStringSubmatch(m[1], -1) {
+			if !allowed[prop[1]] {
+				t.Errorf("@keyframes animates %q", prop[1])
+			}
+		}
+	}
+	// blur·backdrop-filter 금지
+	if regexp.MustCompile(`backdrop-filter|filter\s*:\s*blur|\bblur\(`).MatchString(css) {
+		t.Error("stylesheet uses blur or backdrop-filter")
+	}
+	// (c) will-change 는 전체 2곳 이하
+	if n := strings.Count(css, "will-change"); n > 2 {
+		t.Errorf("will-change appears %d times, want at most 2", n)
+	}
+	// (d) reduced-motion 블록이 시간 토큰을 0 으로 만들고 움직임 크기를 리셋
+	rm := regexp.MustCompile(`@media \(prefers-reduced-motion: reduce\) \{[^@]*?\n\}`).FindString(css)
+	if rm == "" {
+		t.Fatal("prefers-reduced-motion block is missing")
+	}
+	for _, want := range []string{"--dur-1: 0.01ms", "--dur-2: 0.01ms", "--dur-3: 0.01ms", "--nudge: 0px", "--press: 1", "--pop-from: 1"} {
+		if !strings.Contains(rm, want) {
+			t.Errorf("reduced-motion block does not reset %s", want)
+		}
+	}
+	// (e) 제외 컨테이너: POST 폼 버튼·승인 바·승인 버튼 묶음·확인 체크·승인 안내는 transition: none
+	exclusion := regexp.MustCompile(`(?s)form:not\(\[method=get\]\) button[^{]*\{[^}]*\}`).FindString(css)
+	if !strings.Contains(exclusion, "transition: none") {
+		t.Fatalf("mutating-form buttons are not pinned to transition: none: %q", exclusion)
+	}
+	for _, container := range []string{".sticky-save", ".approval-actions", ".confirm-check", ".console-approval"} {
+		if !strings.Contains(exclusion, container) {
+			t.Errorf("exclusion rule does not cover %s", container)
+		}
+	}
+	// 일반 버튼 전환 규칙은 같은 컨테이너를 :not() 으로도 뺀다(규칙 순서가 바뀌어도 전환이 새지 않게).
+	if !strings.Contains(css, `button:not(:where(form:not([method=get]) *`) {
+		t.Error("button transitions do not exclude mutating forms by selector")
+	}
+	// (f) 스프링 이징은 linear() 이고, 단일 cubic-bezier 곡선은 쓰지 않음
+	if !strings.Contains(css, "--ease-spring: linear(") || !strings.Contains(css, "--ease-settle: linear(") {
+		t.Error("spring easing tokens are not linear() curves")
+	}
+	if !strings.Contains(css, "@supports (animation-timing-function: linear(0, 1))") {
+		t.Error("linear() easings have no @supports guard with a fallback")
+	}
+	if strings.Contains(css, "cubic-bezier") || strings.Contains(css, "ease-in-out") {
+		t.Error("stylesheet uses a single-curve easing")
+	}
+}
+
+// TestEveryPostFormButtonIsExcludedFromMotion walks the real templates: every
+// <form method="post"> button sits inside a form[method="post"], so the exclusion
+// selector covers it by construction. This pins that the selector's attribute form
+// matches the markup the templates emit. The stylesheet selects mutating forms as
+// `form:not([method=get])` on purpose, never by spelling the POST attribute: read-only screens
+// are pinned to contain no `method="post"`/`method=post` string anywhere in the page, CSS
+// included. Fail-safe direction: a form that does not say GET is treated as mutating.
+func TestEveryPostFormButtonIsExcludedFromMotion(t *testing.T) {
+	if !strings.Contains(pageTemplates+optimizationTemplates, `<form method="post"`) {
+		t.Fatal("templates no longer emit <form method=\"post\">; update the motion exclusion selector")
+	}
+}

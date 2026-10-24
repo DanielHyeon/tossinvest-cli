@@ -23,7 +23,10 @@ Story: `STORY-TOS-a172` · Low risk(CSS·장식 마크업만). FLM/BTM·변이·
 - [x] 3.4 라이트·다크 양 테마 대비 시험(텍스트 4.5:1, UI 경계 3:1), `docs/console-design.md`
 
 ## 4. 4단계 — 스프링 물리 인터랙션 + GPU 가속 최적화(`ui-ux-pro-max` + `fixing-motion-performance`)
-- [ ] 4.1 스프링 느낌 모션(`transform`/`opacity` 만, `prefers-reduced-motion` 존중) · 4.2 컴포지터 속성만·`will-change` 최소 · 4.3 주문·토글·승인·청산 버튼에는 지연 전환 금지(안전 불변식 4)
+- [x] 4.1 `linear()` 스프링 이징·시간 토큰, nav·탭·링크 버튼 `:active`·선택 타일·상세 모달 열림(`opacity`+`scale`)
+- [x] 4.2 전환 속성 compositor 전용(hover 색 ≤ `--dur-1`), `will-change` 1곳, blur 0
+- [x] 4.3 POST 폼·`.sticky-save`·`.approval-actions`·`.confirm-check`·`.console-approval` 전환 0(안전 불변식 4), 시험 `TestMotionContract`(변이로 FAIL 확인)
+- [x] 4.4 reduced-motion(토큰 리셋), 프레임 측정(`scratchpad/a172/frames.cjs`: 모달 10회·nav hover 20회, p95 16.8ms, 32ms 초과 0)
 
 ## 5. 검증·포트
 - [ ] 5.1 전체 콘솔 시험 · 렌더 · 경량 리뷰 · 포트

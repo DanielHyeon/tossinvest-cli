@@ -46,6 +46,11 @@ const pageTemplates = `
   --warn: #7f540f; --warn-line: #a9761e; --warn-bg: #f8eed9;
   --bad: #9a3228; --bad-line: #b4503f; --bad-bg: #f6e6e1;
   --lift: 0 1px 2px rgba(32, 30, 26, 0.07);
+  /* 모션: 시간 토큰 3단과 스프링 이징 2종. 기본값은 linear() 미지원 브라우저용 짧은 ease-out 이고
+     지원하면 아래 @supports 블록이 감쇠 스프링 근사로 덮음. 움직임 크기도 토큰이라 reduced-motion 에서 0 으로 리셋됨 */
+  --dur-1: 120ms; --dur-2: 220ms; --dur-3: 360ms;
+  --ease-spring: ease-out; --ease-settle: ease-out;
+  --nudge: -2px; --press: 0.97; --pop-from: 0.96; --tile-on: 1.012;
   /* 떠 있는 층: 상세 모달(pop) · 하단 승인 바(bar) */
   --shadow-pop: 0 18px 54px rgba(20, 18, 14, 0.3), 0 0 0 1px var(--line);
   --shadow-bar: 0 -5px 20px rgba(20, 18, 14, 0.14);
@@ -333,6 +338,44 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
   .optimization-nav a { flex-basis: 100%; }
   .optimization-content section { padding-inline: 0.75rem; }
   .approval-actions > * { flex-basis: 100%; width: 100%; }
+}
+/* --- 모션(change a172 4단계) ------------------------------------------------
+   원칙: 전환 대상은 transform 계열(translate·scale)·opacity 와 hover 색(background-color·color)뿐이고,
+   hover 색은 --dur-1 이하. 레이아웃 속성·box-shadow·all·blur 는 쓰지 않음.
+   주문·승인·청산·토글 등 상태를 바꾸는 POST 폼의 버튼과 승인 바는 전환 0(안전 불변식 4). */
+@supports (animation-timing-function: linear(0, 1)) {
+  :root {
+    --ease-spring: linear(0, 0.5 7%, 1.143 14%, 1.287 21%, 1.097 29%, 0.934 36%, 0.923 43%, 0.986 50%, 1.024 57%, 1.019 64%, 1 71%, 0.992 79%, 0.996 86%, 1.001 93%, 1);
+    --ease-settle: linear(0, 0.488 10%, 0.933 20%, 1.045 30%, 1.028 40%, 1.005 50%, 0.998 60%, 0.999 70%, 1 80%, 1 90%, 1);
+  }
+}
+nav a, .settings-tabs a, .optimization-nav a { transition: translate var(--dur-2) var(--ease-spring),
+  background-color var(--dur-1) var(--ease-settle), color var(--dur-1) var(--ease-settle); }
+nav a:hover, nav a:focus-visible, .settings-tabs a:hover, .settings-tabs a:focus-visible,
+.optimization-nav a:hover, .optimization-nav a:focus-visible { translate: 0 var(--nudge); }
+nav a:hover { color: var(--ink-1); }
+.settings-tabs a:hover { background-color: var(--line-soft); }
+.optimization-nav a:hover { background-color: var(--surface-2); }
+/* 일반 버튼·링크 버튼: 누르면 작아졌다가 스프링으로 복귀. POST 폼·승인 영역 안의 버튼은 제외 */
+button:not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)),
+.button-link:not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)) {
+  transition: scale var(--dur-2) var(--ease-spring), background-color var(--dur-1) var(--ease-settle), color var(--dur-1) var(--ease-settle); }
+button:active:not(:disabled):not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)),
+.button-link:active:not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)) {
+  scale: var(--press); transition-duration: var(--dur-1); }
+/* 제외 영역은 어떤 규칙이 나중에 들어와도 전환 0 으로 못 박음 */
+form:not([method=get]) button, form:not([method=get]) .button-link, .sticky-save, .sticky-save *, .approval-actions *,
+.confirm-check, .confirm-check *, .console-approval * { transition: none; }
+/* 선택된 선택지는 살짝 커진 채로 놓임(서버가 그린 정적 상태라 값이 바뀌는 순간의 애니메이션은 없음) */
+.choice-tile { transition: scale var(--dur-2) var(--ease-settle); }
+.choice-tile[data-selected=true] { scale: var(--tile-on); }
+/* 상세 모달 열림: opacity + 개별 scale 속성. 위치용 transform 은 건드리지 않고(transform 전환 없음),
+   transform-origin 을 레이아웃 박스 좌상단(= 화면 중앙)에 두어 중앙 기준으로 커짐. will-change 는 열린 동안 이 한 곳만 */
+@keyframes pop-in { from { opacity: 0; scale: var(--pop-from); } }
+.detail-cell .row-details[open] { transform-origin: 0 0; animation: pop-in var(--dur-3) var(--ease-spring) both;
+  will-change: opacity, scale; }
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-1: 0.01ms; --dur-2: 0.01ms; --dur-3: 0.01ms; --nudge: 0px; --press: 1; --pop-from: 1; --tile-on: 1; }
 }
 /* 다크: 변수만 재정의함. 개별 규칙의 색 덮어쓰기는 두지 않음 */
 @media (prefers-color-scheme: dark) {

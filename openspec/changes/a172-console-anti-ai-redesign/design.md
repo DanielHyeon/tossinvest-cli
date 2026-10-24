@@ -20,3 +20,7 @@
 - `.detail-cell .row-details[open]` 는 위치 지정에 `transform: translate(-50%, -50%)` 를 이미 쓴다. 열림 애니메이션은 `opacity` 또는 개별 `translate`/`scale` 속성으로만 하고 `transform` 을 애니메이션하지 않는다.
 - 데이터 갱신(`meta refresh` 5초)으로 바뀌는 상태 변화에는 애니메이션을 걸지 않는다. 모션 후보는 탭·내비 `a.on` 전환과 `details` 열림뿐이다.
 - `prefers-reduced-motion: reduce` 에서 모든 모션을 끈다. 컴포지터 속성(`transform`/`opacity`)만 쓰고 `will-change` 는 활성 애니메이션 중에만 둔다.
+
+## 4단계 구현 결과 (위 「모션 주의」를 따름)
+- 토큰 `--dur-1/2/3`(120/220/360ms), `--ease-spring`·`--ease-settle`(`linear()`, `@supports` 바깥 기본 `ease-out`), 움직임 토큰 `--nudge/--press/--pop-from/--tile-on`. reduced-motion 은 토큰만 리셋(`!important` 없음).
+- 제외는 선택자로 지정: 일반 버튼 전환 규칙이 `:not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *))` 로 뺀 뒤, 같은 컨테이너에 `transition: none` 을 한 번 더 박음. POST 폼 선택자를 `form:not([method=get])` 로 쓴 이유: 읽기 전용 화면 시험이 페이지 어디에도 `method="post"`/`method=post` 문자열이 없을 것을 고정하기 때문(CSS 포함). 모든 `<form>` 이 POST 이므로 폼 안 버튼은 전부 제외되고, 전환이 걸리는 것은 폼 밖 `.button-link` 링크 버튼뿐이다.

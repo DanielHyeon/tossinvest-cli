@@ -46,5 +46,9 @@
 - 주문·토글·승인·청산 버튼을 장식으로 흐리거나 전환으로 늦추는 것(안전 불변식 4). 버튼은 항상 채워진 「누르는 것」으로 보인다.
 - 접근성(포커스 링 `--accent` 3px·offset 2px, 44px 타깃)과 모션 성능 규칙이 미학보다 앞선다.
 
-## 모션
-4단계에서 추가 예정(스프링 느낌, `transform`/`opacity` 만, `prefers-reduced-motion` 존중). 현재 전환·애니메이션은 0개다.
+## 모션 (4단계, 순수 CSS)
+- 토큰: `--dur-1/2/3` = 120/220/360ms, `--ease-spring`(14점 `linear()` 감쇠 스프링, 약 29% overshoot), `--ease-settle`(10점, 약 5%). `linear()` 미지원이면 `@supports` 바깥 기본값 `ease-out`. 움직임 크기(`--nudge --press --pop-from --tile-on`)도 토큰.
+- 대상: 상단 nav·설정 탭·최적화 nav(hover/focus 시 `translate`), POST 폼 밖의 일반 `button`/`.button-link`(`:active` 에서 `scale`), `.choice-tile` 선택(정적 `scale`), 상세 모달 열림(`opacity` + 개별 `scale`, 위치용 `transform` 은 그대로).
+- 제외(전환 0, 안전 불변식 4): `form:not([method=get])` 안의 모든 버튼(주문·승인·청산·토글·엔진 시작/정지·재시작 등 모든 POST 폼), `.sticky-save`, `.approval-actions`, `.confirm-check`, `.console-approval`. 데이터 값이 바뀌는 자리에는 애니메이션 없음.
+- 성능: 전환 속성은 `translate/scale/opacity` 와 hover 색(`background-color/color`, ≤ `--dur-1`)뿐. `all`·레이아웃 속성·`box-shadow`·blur 금지, `will-change` 는 열린 모달 1곳. 시험 `TestMotionContract`.
+- `prefers-reduced-motion: reduce`: 시간 토큰을 0.01ms, 움직임 토큰을 0/1 로 리셋.
