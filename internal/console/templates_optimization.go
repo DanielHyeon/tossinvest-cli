@@ -5,7 +5,6 @@ const optimizationTemplates = `
 {{template "head" .}}
 <div class="optimization-title">
   <div>
-    <p class="eyebrow">Optimization lifecycle</p>
     <h1>최적화 <span class="muted">전략 파라미터</span></h1>
     <p class="muted">서버가 정한 preset 하나를 골라 before/after를 검토한 뒤 적용한다. 설정과 LIVE 권한은 항상 분리된다.</p>
   </div>
@@ -64,7 +63,7 @@ const optimizationTemplates = `
   {{if .ExitProtection}}
     {{template "hypothetical-form" .}}
     <section id="exit-protection" aria-labelledby="exit-protection-title">
-      <p class="section-kicker">현재 변경 가능 항목 1개 · <code>exit.common-policy</code></p>
+      <p class="muted">현재 변경 가능 항목 1개 · <code>exit.common-policy</code></p>
       <h2 id="exit-protection-title">청산/보호 · 익절 정책</h2>
       <p>신규 관리 포지션에만 적용할 공통 정책이다. 기존 포지션 snapshot과 LIVE/lane 상태는 자동으로 재결합하지 않는다.</p>
       <ol class="optimization-steps" aria-label="익절 보호 설정 적용 순서">
@@ -233,7 +232,7 @@ const optimizationTemplates = `
 {{define "optimization-preview"}}
 {{template "head" .}}
 <p><a href="/optimization?category={{.Preview.Category}}">최적화 / {{.Preview.Category}}</a></p>
-<p class="eyebrow">2단계 · 읽기 전용 검토</p>
+<p class="muted">2단계 · 읽기 전용 검토</p>
 <h1>설정 변경 미리보기</h1>
 <p class="notice"><strong>아직 적용되지 않았다.</strong> before/after, 적용 시점과 권한 불변을 확인한다.</p>
 <section class="preview-review" aria-labelledby="preview-diff-title" aria-readonly="true">
@@ -252,7 +251,7 @@ const optimizationTemplates = `
   </dl>
 </section>
 <section class="sticky-save" aria-labelledby="preview-approval-title" {{if .Preview.RiskConfirmationRequired}}data-risk-preview data-not-before-ms="{{.NotBeforeUnixMilli}}"{{end}}>
-  <p class="section-kicker">3단계 · 최종 확인</p>
+  <p class="muted">3단계 · 최종 확인</p>
   <h2 id="preview-approval-title">이 변경만 승인·적용</h2>
   {{if .Preview.RiskConfirmationRequired}}
   <p class="danger">보호 또는 위험 계약에 영향을 줄 수 있어 3초 확인 대기가 적용된다. 문구나 사유를 직접 입력하지 않는다.</p>

@@ -6,9 +6,9 @@ Story: `STORY-TOS-a172` · Low risk(CSS·장식 마크업만). FLM/BTM·변이·
 - [x] 0.1 Story 등록(FEAT-TOS-004) · change 정의 · base `fd6afe23b`
 
 ## 1. 1단계 — 날것의 담백한 구조
-- [ ] 1.1 징후 측정 → `scratchpad/a172/stage1-scan.md`
-- [ ] 1.2 제거(eyebrow·균일 반경 중립화·평면 카드 배경)
-- [ ] 1.3 gofmt·vet·console/cmd 시험, 렌더 확인
+- [x] 1.1 징후 측정 → scratchpad a172/stage1-scan.md
+- [x] 1.2 제거(eyebrow·균일 반경 중립화·평면 카드 배경)
+- [x] 1.3 gofmt·vet·console/cmd 시험, 렌더 확인
 
 ## 2. 2단계 — 토큰·반경·간격·유동 타입
 - [ ] 2.1 토큰 도입 · 2.2 clamp() 스케일
