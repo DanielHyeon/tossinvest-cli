@@ -176,64 +176,76 @@ func TestOneNameForOneStatusDisplay(t *testing.T) {
 // TestTheHeadingStepsAreDistinguishable (task 4.4).
 //
 // Body text and a section heading at the same size is a screen that does not say
-// what is important on it.
+// what is important on it. Sizes are fluid (clamp, change a172), so the order is
+// checked at both ends of the range: the narrowest and the widest viewport.
 func TestTheHeadingStepsAreDistinguishable(t *testing.T) {
-	sizes := map[string]float64{}
+	lo, hi := map[string]float64{}, map[string]float64{}
 	for _, level := range []string{"h1", "h2", "h3"} {
-		size, ok := declaredFontSize(pageTemplates, level)
+		min, max, ok := declaredFontSize(pageTemplates, level)
 		if !ok {
 			t.Errorf("%s declares no font size, so its step is whatever the browser picks", level)
 			continue
 		}
-		sizes[level] = size
+		lo[level], hi[level] = min, max
 	}
-	body, ok := declaredBodyFontSize(pageTemplates)
+	bodyLo, bodyHi, ok := declaredBodyFontSize(pageTemplates)
 	if !ok {
 		t.Fatal("the stylesheet declares no body font size")
 	}
-	sizes["body"] = body
+	lo["body"], hi["body"] = bodyLo, bodyHi
 
-	if !(sizes["h1"] > sizes["h2"] && sizes["h2"] > sizes["h3"] && sizes["h3"] > sizes["body"]) {
-		t.Errorf("the heading steps are not distinguishable: %v", sizes)
+	for name, sizes := range map[string]map[string]float64{"narrowest": lo, "widest": hi} {
+		if !(sizes["h1"] > sizes["h2"] && sizes["h2"] > sizes["h3"] && sizes["h3"] > sizes["body"]) {
+			t.Errorf("the heading steps are not distinguishable at the %s viewport: %v", name, sizes)
+		}
 	}
-	if sizes["body"] < 15 {
-		t.Errorf("body text is %vpx; below 15 the console stops being readable at arm's length",
-			sizes["body"])
+	if lo["body"] < 15 {
+		t.Errorf("body text is %vpx at its smallest; below 15 the console stops being readable at arm's length",
+			lo["body"])
 	}
 }
 
 var (
 	retiredStatusRule = regexp.MustCompile(`\.state-badge\s*[{,]`)
-	remSizePattern    = regexp.MustCompile(`font-size:\s*([0-9.]+)rem`)
-	bodyFontPattern   = regexp.MustCompile(`font:\s*([0-9.]+)px/`)
+	// A size is either a plain rem value or clamp(min, preferred, max) in rem.
+	remSizePattern   = regexp.MustCompile(`font-size:\s*([0-9.]+)rem`)
+	clampSizePattern = regexp.MustCompile(`font-size:\s*clamp\(\s*([0-9.]+)rem\s*,[^;]*,\s*([0-9.]+)rem\s*\)`)
+	bodyFontPattern  = regexp.MustCompile(`font:\s*clamp\(\s*([0-9.]+)rem\s*,[^;]*?,\s*([0-9.]+)rem\s*\)\s*/`)
 )
 
-// declaredFontSize reads a bare element rule's font-size, in px.
-func declaredFontSize(sheet, element string) (float64, bool) {
+// declaredFontSize reads a bare element rule's font-size range, in px.
+func declaredFontSize(sheet, element string) (lo, hi float64, ok bool) {
 	i := strings.Index(sheet, "\n"+element+" { ")
 	if i < 0 {
-		return 0, false
+		return 0, 0, false
 	}
 	rest := sheet[i:]
 	j := strings.Index(rest, "}")
 	if j < 0 {
-		return 0, false
+		return 0, 0, false
 	}
-	m := remSizePattern.FindStringSubmatch(rest[:j])
-	if m == nil {
-		return 0, false
+	rule := rest[:j]
+	if m := clampSizePattern.FindStringSubmatch(rule); m != nil {
+		return remRange(m[1], m[2])
 	}
-	v, err := strconv.ParseFloat(m[1], 64)
-	return v * 16, err == nil
+	if m := remSizePattern.FindStringSubmatch(rule); m != nil {
+		return remRange(m[1], m[1])
+	}
+	return 0, 0, false
 }
 
-func declaredBodyFontSize(sheet string) (float64, bool) {
+func declaredBodyFontSize(sheet string) (lo, hi float64, ok bool) {
 	m := bodyFontPattern.FindStringSubmatch(sheet)
 	if m == nil {
-		return 0, false
+		return 0, 0, false
 	}
-	v, err := strconv.ParseFloat(m[1], 64)
-	return v, err == nil
+	return remRange(m[1], m[2])
+}
+
+func remRange(a, b string) (lo, hi float64, ok bool) {
+	x, errA := strconv.ParseFloat(a, 64)
+	y, errB := strconv.ParseFloat(b, 64)
+	return x * 16, y * 16, errA == nil && errB == nil
 }
 
 // The console renders no inline event handler on any screen, and this is what

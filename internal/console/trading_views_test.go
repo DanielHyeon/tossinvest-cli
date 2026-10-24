@@ -167,29 +167,33 @@ func TestTradingViewsCarryWholePageResponsiveAndFocusContracts(t *testing.T) {
 	}
 }
 
+// 다크 테마는 :root 변수만 재정의한다(change a172). 의미 색 변수가 어느 면 위에서도
+// WCAG AA 4.5:1 이상인지 변수 값을 읽어 직접 잰다.
 func TestTradingViewsDarkSemanticStatusColorsMeetWCAGAA(t *testing.T) {
-	const darkSection = "#1d1d22"
 	darkStart := strings.Index(pageTemplates, "@media (prefers-color-scheme: dark) {")
 	if darkStart < 0 {
 		t.Fatal("dark semantic media block is missing")
 	}
-	darkEnd := strings.Index(pageTemplates[darkStart+1:], "@media (prefers-color-scheme: dark)")
-	if darkEnd < 0 {
-		t.Fatal("dark responsive media block is missing")
+	darkCSS := pageTemplates[darkStart:]
+	vars := map[string]string{}
+	for _, m := range regexp.MustCompile(`(--[a-z0-9-]+):\s*(#[0-9a-fA-F]{6})`).FindAllStringSubmatch(darkCSS, -1) {
+		vars[m[1]] = m[2]
 	}
-	darkCSS := pageTemplates[darkStart : darkStart+1+darkEnd]
-	for name, contract := range map[string]struct {
-		selector string
-		token    string
-	}{
-		"fresh status":          {selector: ".ok { color: #22c55e; }", token: "#22c55e"},
-		"stale or error status": {selector: ".bad { color: #f43f5e; }", token: "#f43f5e"},
-	} {
-		if !strings.Contains(darkCSS, contract.selector) {
-			t.Errorf("dark semantic CSS is missing %s contract %q", name, contract.selector)
+	for _, surface := range []string{"--surface-0", "--surface-1", "--surface-2"} {
+		if vars[surface] == "" {
+			t.Fatalf("dark theme does not define %s", surface)
 		}
-		if ratio := wcagContrastRatio(t, contract.token, darkSection); ratio < 4.5 {
-			t.Errorf("%s token %s contrast on %s = %.2f:1, want at least 4.5:1", name, contract.token, darkSection, ratio)
+	}
+	for _, token := range []string{"--ok", "--warn", "--bad", "--bad-soft", "--accent", "--ink-1", "--ink-2", "--ink-3"} {
+		color := vars[token]
+		if color == "" {
+			t.Errorf("dark theme does not define %s", token)
+			continue
+		}
+		for _, surface := range []string{"--surface-0", "--surface-1", "--surface-2"} {
+			if ratio := wcagContrastRatio(t, color, vars[surface]); ratio < 4.5 {
+				t.Errorf("%s %s contrast on %s %s = %.2f:1, want at least 4.5:1", token, color, surface, vars[surface], ratio)
+			}
 		}
 	}
 }

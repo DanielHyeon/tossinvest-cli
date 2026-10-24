@@ -10,7 +10,7 @@
 균일 4/6px 를 버리고 요소 역할별로 다른(비대칭 포함) 반경 토큰을 둔다. 1단계에서는 최소로 중립화만 한다.
 
 ## 모션 계획
-3단계. 스프링 느낌 `cubic-bezier` 오버슈트는 `transform`/`opacity` 만, `prefers-reduced-motion: reduce` 에서 제거. 주문·토글·승인·청산 버튼에는 지연 전환을 걸지 않는다(안전 불변식 4).
+4단계. 스프링 느낌 `cubic-bezier` 오버슈트는 `transform`/`opacity` 만, `prefers-reduced-motion: reduce` 에서 제거. 주문·토글·승인·청산 버튼에는 지연 전환을 걸지 않는다(안전 불변식 4).
 
 ## 검증 계획
 `gofmt -l`, `go vet`, `go test ./internal/console/ ./cmd/tossctl/`, 로컬 콘솔 렌더(1280/375px, 라이트/다크) 스크린샷·콘솔 에러 확인. 주문·토글·승인 버튼은 누르지 않는다.
