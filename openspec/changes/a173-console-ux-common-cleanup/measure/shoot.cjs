@@ -25,7 +25,8 @@ for(const [tag,vp] of [['d',{width:1280,height:900}],['m',{width:390,height:844}
   await p.goto(base+'/?session='+tok);
   for(const n of pages){const f=n.replace(/[\/?=&]/g,'_');const r=await p.goto(base+'/'+n);
     if(tag==='d'&&scheme==='light') fs.writeFileSync(`${out}/${f}.html`,await r.text());
-    await p.screenshot({path:`${out}/${scheme}-${tag}-${f}.png`,fullPage:true});
+    try{await p.screenshot({path:`${out}/${scheme}-${tag}-${f}.png`,fullPage:true});}
+    catch(e){console.error('스크린샷 실패',scheme,tag,n,e.message.split('\n')[0]);}
     const m=await p.evaluate(sample);m.status=r.status();
     all[`${scheme}/${tag}/${n}`]=m;}
   await ctx.close();}

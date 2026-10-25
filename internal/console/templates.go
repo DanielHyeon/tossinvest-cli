@@ -225,7 +225,8 @@ summary { min-height: 44px; align-content: center; }
 .console-status > div, .console-summary > div { min-width: 0; padding: 0.5rem 0.75rem;
   border-left: 1px solid var(--line-soft); }
 /* 상태 표시줄은 칸당 한 줄(change a173): 칸 설명은 small 한 줄, 긴 사유는 title */
-.console-status > div { padding-block: 0.35rem; }
+.console-status { line-height: 1.35; }
+.console-status > div { padding-block: 0.2rem; }
 .console-status dd small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .console-status > div:first-child, .console-summary > div:first-child { border-left: 0; }
 .console-status dt, .console-summary dt { color: var(--ink-3); font-size: var(--text--1); }

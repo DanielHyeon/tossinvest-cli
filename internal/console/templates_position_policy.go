@@ -30,9 +30,9 @@ desired와 effective가 달라도 어느 한쪽으로 덮어쓰지 않는다.</p
 <tr><th scope="row" data-label="구분">실행값 · effective</th><td data-label="enabled"><strong>{{.Effective.EnabledText}}</strong></td><td data-label="합성 손절"><strong>{{.Effective.StopText}}</strong></td>
 <td data-label="include"><code>{{.Effective.IncludesText}}</code></td><td data-label="exclude"><code>{{.Effective.ExcludesText}}</code></td></tr>
 </tbody></table>
-{{if .DesiredErr}}<p class="aside" role="status">desired 알 수 없음 · <code>{{.DesiredErr}}</code></p>{{end}}
+{{if .DesiredErr}}<p class="aside" role="status">desired 알 수 없음</p>{{template "tech" .DesiredErr}}{{end}}
 {{if .DesiredVerdict}}<p class="danger" role="alert">desired validation 거부 · <code>{{.DesiredVerdict}}</code></p>{{end}}
-{{if .RuntimeErr}}<p class="aside" role="status">effective 알 수 없음 · <code>{{.RuntimeErr}}</code></p>{{end}}
+{{if .RuntimeErr}}<p class="aside" role="status">effective 알 수 없음</p>{{template "tech" .RuntimeErr}}{{end}}
 <p class="muted">손절 option 2~20%, 0.5% step · {{.Descriptor.ExcludePrecedence}} · 1주: {{.Descriptor.OneShareBehavior}} · 적용 시점: {{.Descriptor.ApplyTiming}}</p>
 
 <h3>실행 중 편입 대사 차단</h3>
