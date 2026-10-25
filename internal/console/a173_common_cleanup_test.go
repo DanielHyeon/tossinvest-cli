@@ -323,3 +323,22 @@ func TestStructuralUnmeasuredSentenceIsSaidOnce(t *testing.T) {
 		t.Errorf("구조적 미측정 사유 문장이 %d회 — 1회여야 한다", n)
 	}
 }
+
+// TestDisclosureMarkerSurvivesTheMobileBlock — 모바일 규칙(summary 를 inline-flex 로 바꿈)이 펼침 표식을 지우던 결함(a173 4.6).
+func TestDisclosureMarkerSurvivesTheMobileBlock(t *testing.T) {
+	page := a173Fixtures(t)[0].get("/dashboard")
+	css := page[strings.Index(page, "<style>"):strings.Index(page, "</style>")]
+	base := "details.scope summary, details.tech summary { color"
+	if i := strings.Index(css, base); i < 0 || !strings.Contains(css[i:i+400], "display: list-item; list-style: disclosure-closed inside;") {
+		t.Fatal("scope/tech summary 는 모든 폭에서 list-item + disclosure 표식이어야 한다")
+	}
+	media := css[strings.Index(css, "@media (max-width: 720px)"):]
+	flex := strings.Index(media, "button, summary, nav a, .filter-group a")
+	restore := strings.Index(media, "details.scope summary, details.tech summary { display: list-item; }")
+	if flex < 0 || restore < flex {
+		t.Error("모바일 블록이 summary 를 flex 로 만든 뒤, 같은 블록 안에서 scope/tech summary 를 list-item 으로 되돌려야 한다")
+	}
+	if !strings.Contains(css, "details.tech[open] > summary") {
+		t.Error("열린 상태 표식(disclosure-open) 규칙이 없다")
+	}
+}

@@ -135,7 +135,9 @@ td p, th p, .console-status p { max-inline-size: none; }
 h1:has(+ .scope) { display: inline-block; margin-inline-end: var(--space-2); }
 .status-pill.scope { color: var(--ink-3); vertical-align: 0.5em; }
 details.scope, details.tech { margin: var(--space-1) 0 var(--space-2); }
-details.scope summary, details.tech summary { color: var(--ink-3); font-size: var(--text--1); cursor: pointer; }
+details.scope summary, details.tech summary { color: var(--ink-3); font-size: var(--text--1); cursor: pointer;
+  display: list-item; list-style: disclosure-closed inside; }
+details.scope[open] > summary, details.tech[open] > summary { list-style-type: disclosure-open; }
 details.tech code, details.tech dl { font-size: var(--text--1); }
 /* 거래 정책 체크박스: 설명은 자기 체크박스 묶음 안에 붙이고 다음 묶음과는 선·여백으로 떼어 근접성 오독을 막음 */
 .toggle-row { margin: 0 0 var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--line-soft); }
@@ -331,13 +333,15 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
   .console-status { display: flex; flex-wrap: wrap; gap: 0.2rem 0.9rem; padding: 0.4rem 0.7rem; }
   .console-status > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.35rem; padding: 0; border-left: 0; }
   .console-status dt::after { content: ":"; }
-  .console-status dd small { display: inline; margin: 0; }
+  .console-status dd small { display: inline; margin: 0 0 0 0.35rem; }
   header > div { flex-wrap: wrap; align-items: flex-start; gap: 0.5rem; }
   header > div > .header-note { margin-left: 0; width: 100%; }
   nav { display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem; min-width: 0; }
   dl { grid-template-columns: minmax(7rem, auto) minmax(0, 1fr); }
   .card-current, dl.card-preview, .entry-list { grid-template-columns: minmax(0, 1fr); }
   button, summary, nav a, .filter-group a { min-height: 44px; display: inline-flex; align-items: center; }
+  /* 위 규칙이 summary 를 flex 로 바꾸면 펼침 표식이 사라지므로 경계·기술 정보 요약은 list-item 으로 되돌림 */
+  details.scope summary, details.tech summary { display: list-item; }
   .detail-grid { grid-template-columns: 1fr; }
   .data-table { display: block; }
   .data-table caption { display: block; width: 100%; }
