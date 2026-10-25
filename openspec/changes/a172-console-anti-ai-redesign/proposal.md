@@ -11,11 +11,13 @@
 - 3단계 디자인 시스템 무결성: 타입 스케일·팔레트·대비·CSS 변수 재조정.
 - 4단계 스프링 물리 인터랙션 + GPU 가속 최적화(`prefers-reduced-motion` 존중).
 - 5단계 검증·포트.
+- 6단계 셰이더 인터랙션(사용자 지시 2026-10-25): 헤더/상태 스트립 뒤 환경 셰이더 배경 + 카드 포인터 조명. JS 자산 1개를 `embed` 로 바이너리에 넣어 같은 출처 `/static/` 로 서빙한다.
 
 ## Scope / Non-goals
 
 - 범위: `{{define "style"}}` CSS + `internal/console/*.go` 템플릿의 class·장식 요소 마크업.
-- 비목표: Go 로직·핸들러·라우트·템플릿 데이터, 비콘솔 패키지, class 이름 변경(추가만 허용), 웹폰트·JS·의존성·CDN, 밀도(a058 12px/18px) 변경, 새 UI 기능.
+- 6단계 추가 범위: `internal/console/static/*.js`(순수 ES 모듈, 빌드·npm 없음), `embed.FS` + `/static/` 라우트(인증 불필요 GET, 내용 해시 URL, immutable 캐시), CSP `script-src 'self'` 추가. Go 변경은 `internal/console` 자산 서빙·CSP 상수·템플릿 `<script type="module" src>` 1줄로 한정한다.
+- 비목표: Go 로직·핸들러·라우트·템플릿 데이터, 비콘솔 패키지, class 이름 변경(추가만 허용), 웹폰트·CDN·외부 네트워크(6단계 제외 시 JS·의존성도 비목표였으나 6단계가 same-origin 1파일 JS 만 허용; CDN·fetch·WebSocket·npm 의존성은 여전히 금지), 밀도(a058 12px/18px) 변경, 새 UI 기능.
 
 ## Risk
 
@@ -28,3 +30,5 @@ Low. 주문·승인 버튼은 장식 때문에 지연되지 않는다(전환은 
 ## not-applicable
 
 FLM/BTM·변이 원장·다중 적대 리뷰: Go 함수 내부 로직을 편집하지 않고 High-risk 경로·게이트 판정을 바꾸지 않는다(docs/WORKFLOW.md 「비례 원칙」). 시험 + lint + 렌더 확인 + 경량 리뷰로 갈음한다.
+
+6단계 위험: Low 유지(읽기 전용 화면의 장식 캔버스, 주문 경로 무관). 단 CSP 에 `script-src 'self'` 가 생기므로 "스크립트 없음"을 고정한 시험(<script·script-src 금지)을 정당 사유로 고치고 tasks.md 에 전수 기록한다. FLM/BTM·변이·다중 적대 리뷰 `not-applicable`: Go 함수 내부 분기 편집이 아니라 정적 자산 서빙 추가이고 High-risk 경로·게이트 판정을 바꾸지 않음(비례 원칙).

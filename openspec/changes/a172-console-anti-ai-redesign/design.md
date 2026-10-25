@@ -29,3 +29,9 @@
 - `--dur-3` 360 → 300ms. 모달 열림은 전용 `--ease-pop`(12점, 정점 약 1.11~1.13, 오버슈트 약 12%), nav·눌림은 `--ease-spring`(정점 1.287) 그대로. `.choice-tile` scale 은 정적 상태에 전환이 일어날 수 없어 삭제(`--tile-on` 토큰 삭제).
 - 제외 선택자에 `[formmethod]`, `[formaction]`, `form button`, `form input[type=submit]` 추가. 서버가 `data-mutating` 표식을 붙이는 방식은 Go 변경이라 이번 change 범위 밖(후속 후보).
 - 모달 스크림: 열린 모달이 있는 `.detail-cell::before`(`position: fixed; inset: 0; z-index: 20`), `opacity` 만 애니메이션, `pointer-events: none` 이라 뒤의 어떤 버튼도 막지 않음. 모달 너비는 `100vw` 대신 `100%`(스크롤바 폭 어긋남 제거).
+
+## 6단계 — 셰이더 인터랙션 (6.1 정찰 결과)
+- 라이브러리: 후보 실측(esbuild 최소 사용 트리셰이킹 min/gz) raw WebGL2 290B/240B · twgl 32.6KB/11.1KB · OGL 44.4KB/12.7KB · three 529KB/132KB. 전체판 twgl 81.7KB/24.7KB, OGL 132.7KB/38.9KB. 전체화면 삼각형 프래그먼트 셰이더 한 장에 라이브러리 이득이 없어 **raw WebGL2**. "Radiance" 는 npm `radiance@0.0.1`(2022, 무관한 의존성 3개)·zbanks/radiance(Qt/C++ VJ 앱)뿐이고 WebGL 셰이더 라이브러리가 아니라 제외.
+- 출처: 동일 출처 `embed` 자산, CDN·네트워크 호출 0.
+- CSP: 현재 `default-src 'none'` + script-src 없음 → `script-src 'self'` 필요. 최적화 미리보기는 `consoleHTMLCSP + "; script-src 'sha256-…'"` 를 이어 붙이므로 지시어가 중복되면 첫 번째만 유효해 미리보기 인라인 스크립트가 깨진다 → 구현 시 해시 변형이 `script-src 'self' 'sha256-…'` 가 되도록 조립부를 고친다.
+- refresh: 대시보드·검증 2초, 주문·포지션도 주기 reload. 컨텍스트는 페이지마다 새로 만들어짐(웜 약 3~5ms SwiftShader, GPU 프로세스 콜드 첫 컨텍스트 약 95~127ms는 브라우저당 1회). 결정: 모듈 로드 시 동기 1프레임을 그려 reload 공백을 막고, 애니메이션 위상은 `sessionStorage` 로 이어 가며, 초기화는 `requestIdleCallback` 으로 미루지 않는다(미루면 빈 배경이 보임). 6.3 에서 실측해 부적합하면 refresh 화면은 정지 프레임으로 한다.
