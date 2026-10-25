@@ -34,7 +34,7 @@
 - 앰비언트: `body > header`·`.console-status` 의 `::before`/`::after` 가 정적 저채도 radial-gradient 덩어리(투명 가장자리, blur 없음)다. 움직임은 `translate`·`rotate`·`opacity` 만, 20~40초 `alternate` 루프. 배경·그라디언트 자체는 애니메이션하지 않는다. `mix-blend-mode`·`filter` 0.
 - 톤이 정보를 나른다: `body:has(...)` 가 `--tone` 을 정함 — 기본 `--accent`, 엔진 running + 데이터 ok 면 `--ok`, 데이터 warn 또는 엔진 stopped 면 `--warn`, 데이터 stale 이면 `--bad`. 알파 10% 이하(`color-mix`). 톤은 이미 텍스트 단어로도 렌더되므로 색만이 전달 수단이 아니다.
 - 새로고침 화면: 상태 스트립이 이미 `data-reload="on"` 을 렌더하므로 마크업 변경 없이 `body:has([data-reload=on])` 에서 `animation: none`(2초마다 재시작해 튀는 것을 막음). 움직이는 것은 새로고침이 없는 화면뿐.
-- hover 조명: `.optimization-nav a`·`.settings-tabs a`·`.choice-tile`·`.tier-card` 의 `::after` radial 하이라이트를 `opacity` 로만 페이드(`--dur-2`, `--ease-settle`), 포인터 추적 없음. 주문·승인 영역(`.sticky-save`·`.approval-actions`·`.confirm-check`·`.console-approval`) 안에는 적용하지 않는다.
+- hover 조명: `.optimization-nav a`·`.settings-tabs a` 의 `::after` radial 하이라이트를 `opacity` 로만 페이드(`--dur-2`, `--ease-settle`), 포인터 추적 없음. POST 폼을 품은 `.tier-card`·`.choice-tile` 은 대상에서 뺀다(리뷰 F2). 주문·승인 영역(`.sticky-save`·`.approval-actions`·`.confirm-check`·`.console-approval`) 안에는 적용하지 않는다(방어).
 - 방어: `prefers-reduced-motion` 에서 `animation: none`, `prefers-reduced-transparency` 에서 덩어리 제거. `will-change` 총량 ≤2 유지.
 
 ## 6.1 정찰: 검토했으나 채택 안 함 (JS·WebGL 안)

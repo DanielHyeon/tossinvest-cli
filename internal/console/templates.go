@@ -393,31 +393,36 @@ body:where(:has(.console-status [data-engine-state=running]):has(.console-status
 body:where(:has(.console-status :is([data-data-tone=warn], [data-engine-state=stopped]))) { --tone: var(--warn); }
 body:where(:has(.console-status [data-data-tone=stale])) { --tone: var(--bad); }
 body > header, .console-status { position: relative; isolation: isolate; }
+/* 덩어리가 헤더 밖 본문 위로 번지면 h1 대비가 떨어지므로 헤더를 잘라 냄(.console-status 는 이미 overflow: hidden).
+   overflow-clip-margin 은 nav 포커스 링(offset 2px + 3px)이 잘리지 않게 하는 여유 */
+body > header { overflow: clip; overflow-clip-margin: 6px; }
 body > header::before, body > header::after, .console-status::before, .console-status::after {
   content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%;
-  width: 42%; height: 170%; top: -35%;
+  width: min(42%, 30rem); height: min(170%, 22rem); top: max(-35%, -7rem);
   background: radial-gradient(closest-side, color-mix(in srgb, var(--tone) 10%, transparent), transparent); }
 body > header::before, .console-status::before { left: 8%; animation: amb-a 34s linear infinite alternate; }
 body > header::after, .console-status::after { right: 8%; animation: amb-b 41s linear -9s infinite alternate; }
 @keyframes amb-a { from { translate: -10% -6%; rotate: -6deg; opacity: 0.75; } to { translate: 10% 6%; rotate: 8deg; opacity: 1; } }
 @keyframes amb-b { from { translate: 8% 5%; rotate: 5deg; opacity: 1; } to { translate: -9% -5%; rotate: -7deg; opacity: 0.7; } }
 /* 자동 새로고침 화면(상태 스트립이 data-reload=on 을 렌더, 대시보드·검증 2초)은 정지 프레임: 재시작해 튀지 않게 */
-body:has([data-reload=on]) :is(header, .console-status)::before,
-body:has([data-reload=on]) :is(header, .console-status)::after { animation: none; }
+body:has([data-reload=on]) :is(body > header, .console-status)::before,
+body:has([data-reload=on]) :is(body > header, .console-status)::after { animation: none; }
 @media (prefers-reduced-motion: reduce) {
   body > header::before, body > header::after, .console-status::before, .console-status::after { animation: none; }
 }
 @media (prefers-reduced-transparency: reduce) {
-  body > header::before, body > header::after, .console-status::before, .console-status::after { background: none; }
+  body > header::before, body > header::after, .console-status::before, .console-status::after,
+  :is(.optimization-nav a, .settings-tabs a)::after { background: none; }
 }
-/* 카드 hover 조명: ::after 하이라이트를 opacity 로만 페이드(포인터 추적 없음). 주문·승인 영역 안에는 적용하지 않음 */
+/* hover 조명: ::after 하이라이트를 opacity 로만 페이드(포인터 추적 없음). 대상은 읽기 전용 이동 링크(최적화 nav·설정 탭)뿐임.
+   POST 폼을 품은 카드(.tier-card·.choice-tile)에는 걸지 않고, 제외 선택자는 승인 영역에 나중에 링크가 생겨도 막는 방어 */
 @media (hover: hover) {
-  .optimization-nav a, .settings-tabs a, .choice-tile, .tier-card { position: relative; isolation: isolate; }
-  :is(.optimization-nav a, .settings-tabs a, .choice-tile, .tier-card):not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *))::after {
+  .optimization-nav a, .settings-tabs a { position: relative; isolation: isolate; }
+  :is(.optimization-nav a, .settings-tabs a):not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *))::after {
     content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit; opacity: 0;
     background: radial-gradient(circle at 28% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%);
     transition: opacity var(--dur-2) var(--ease-settle); }
-  :is(.optimization-nav a, .settings-tabs a, .choice-tile, .tier-card):not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)):is(:hover, :focus-visible)::after { opacity: 1; }
+  :is(.optimization-nav a, .settings-tabs a):not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)):is(:hover, :focus-visible)::after { opacity: 1; }
 }
 /* 다크: 변수만 재정의함. 개별 규칙의 색 덮어쓰기는 두지 않음 */
 @media (prefers-color-scheme: dark) {

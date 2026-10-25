@@ -18,6 +18,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"golang.org/x/net/html"
 )
 
 // TestEveryTableIsResponsiveOrScrolls (task 4.2).
@@ -518,7 +520,7 @@ func TestAmbientMotionContract(t *testing.T) {
 		}
 	}
 	// (b) 합성 비용이 큰 것 금지: filter·mix-blend-mode·배경/그라디언트 애니메이션
-	for _, banned := range []string{"mix-blend-mode", "background-position", "background-size"} {
+	for _, banned := range []string{"mix-blend-mode", "background-position", "background-size", "backdrop-filter"} {
 		if strings.Contains(css, banned) {
 			t.Errorf("stylesheet uses %s", banned)
 		}
@@ -532,6 +534,13 @@ func TestAmbientMotionContract(t *testing.T) {
 		if !strings.Contains(pseudo, want) {
 			t.Errorf("ambient blob rule lacks %q: %q", want, pseudo)
 		}
+	}
+	header := regexp.MustCompile(`(?m)^body > header \{[^}]*\}`).FindString(css)
+	if !strings.Contains(header, "overflow: clip") {
+		t.Errorf("header does not clip the ambient blobs: %q", header)
+	}
+	if !strings.Contains(pseudo+css, "width: min(42%, 30rem)") || !strings.Contains(css, "height: min(170%, 22rem)") {
+		t.Error("ambient blob size is not capped")
 	}
 	// (d) 새로고침 화면(상태 스트립이 data-reload=on 을 렌더)은 애니메이션 정지
 	refresh := regexp.MustCompile(`(?s)body:has\(\[data-reload=on\]\)[^{]*\{[^}]*\}`).FindString(css)
@@ -547,18 +556,77 @@ func TestAmbientMotionContract(t *testing.T) {
 	if !regexp.MustCompile(`(?s)@media \(prefers-reduced-motion: reduce\) \{[^@]*?animation: none`).MatchString(css) {
 		t.Error("reduced-motion does not stop the ambient animation")
 	}
-	if !strings.Contains(css, "@media (prefers-reduced-transparency: reduce)") {
-		t.Error("prefers-reduced-transparency has no rule")
+	rt := regexp.MustCompile(`(?s)@media \(prefers-reduced-transparency: reduce\) \{.*?\n\}`).FindString(css)
+	if !strings.Contains(rt, "background: none") || !strings.Contains(rt, ".settings-tabs a)::after") || !strings.Contains(rt, ".console-status::before") {
+		t.Errorf("prefers-reduced-transparency does not clear both the ambient blobs and the hover glow: %q", rt)
 	}
-	// (g) hover 조명: opacity 로만 페이드하고 주문·승인 영역 안에는 적용하지 않음
-	glow := regexp.MustCompile(`(?s)\.choice-tile[^{]*:not\(:where\([^{]*\)::after[^{]*\{[^}]*\}`).FindString(css)
+	// (g) hover 조명: opacity 로만 페이드하고, 대상은 렌더된 화면에서 POST 폼을 품지 않은 이동 링크뿐이어야 함.
+	// 문자열(제외 선택자 존재)만 보면 .tier-card·.choice-tile 처럼 폼을 품은 카드가 조명을 받는 실제 위반을 통과시킨다.
+	glow := regexp.MustCompile(`(?s):is\(([^)]*)\):not\(:where\(([^{]*)\)\)::after\s*\{[^}]*\}`).FindStringSubmatch(css)
+	if glow == nil {
+		t.Fatal("hover glow rule is missing")
+	}
+	if !strings.Contains(glow[0], "opacity: 0") || !strings.Contains(glow[0], "transition: opacity") {
+		t.Errorf("hover glow does not fade by opacity only: %q", glow[0])
+	}
 	for _, container := range []string{".sticky-save", ".approval-actions", ".confirm-check", ".console-approval", "form:not([method=get])"} {
-		if !strings.Contains(glow, container) {
-			t.Errorf("hover glow rule does not exclude %s: %q", container, glow)
+		if !strings.Contains(glow[2], container) {
+			t.Errorf("hover glow rule does not exclude %s: %q", container, glow[2])
 		}
 	}
 	if !strings.Contains(css, "(hover: hover)") {
 		t.Error("hover glow is not limited to hover-capable pointers")
+	}
+	for _, banned := range []string{".tier-card", ".choice-tile"} {
+		if strings.Contains(glow[1], banned) {
+			t.Errorf("hover glow targets %s, which holds a POST form", banned)
+		}
+	}
+	h := newSettingsWiredHarness(t)
+	h.authenticate(t)
+	checked := 0
+	for _, screen := range append([]struct {
+		path   string
+		reload int
+	}{}, consoleScreens...) {
+		doc, err := html.Parse(strings.NewReader(h.page(t, screen.path)))
+		if err != nil {
+			t.Fatalf("parse %s: %v", screen.path, err)
+		}
+		for _, target := range strings.Split(glow[1], ",") {
+			fields := strings.Fields(strings.TrimSpace(target))
+			class, tag := strings.TrimPrefix(fields[0], "."), ""
+			if len(fields) > 1 {
+				tag = fields[1]
+			}
+			walkHTML(doc, func(n *html.Node) {
+				if n.Type != html.ElementNode || !hasClass(n, class) {
+					return
+				}
+				// 최적화 nav·설정 탭은 컨테이너 클래스 아래의 <a> 가 대상이다.
+				var hits []*html.Node
+				if tag == "" {
+					hits = []*html.Node{n}
+				} else {
+					walkHTML(n, func(c *html.Node) {
+						if c.Type == html.ElementNode && c.Data == tag {
+							hits = append(hits, c)
+						}
+					})
+				}
+				for _, hit := range hits {
+					checked++
+					walkHTML(hit, func(c *html.Node) {
+						if c.Type == html.ElementNode && c.Data == "form" {
+							t.Errorf("%s: hover glow target %q contains a <form>", screen.path, target)
+						}
+					})
+				}
+			})
+		}
+	}
+	if checked == 0 {
+		t.Error("no rendered element matched the hover glow selectors; the check proved nothing")
 	}
 	// (h) 스크립트 0, CSP 불변: script-src 는 여전히 없음
 	if strings.Contains(strings.ToLower(css), "<script") || strings.Contains(consoleHTMLCSP, "script-src") {
@@ -568,6 +636,19 @@ func TestAmbientMotionContract(t *testing.T) {
 	if n := strings.Count(css, "will-change"); n > 2 {
 		t.Errorf("will-change appears %d times, want at most 2", n)
 	}
+}
+
+func hasClass(n *html.Node, class string) bool {
+	for _, a := range n.Attr {
+		if a.Key == "class" {
+			for _, c := range strings.Fields(a.Val) {
+				if c == class {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 // TestEveryPostFormButtonIsExcludedFromMotion walks the real templates: every

@@ -59,6 +59,18 @@ Story: `STORY-TOS-a172` · Low risk(CSS·장식 마크업만). FLM/BTM·변이·
 11. 다크 카드 경계 1.1:1 · 반영: 다크 `--surface-1` `#1d1c19` → `#201f1b` + 다크 `--lift` 에 `--line-soft` 1px 윤곽. 대비 시험 재실행 통과
 12. 위계 · 부분: 정보 섹션은 상단 구분선만(면·그림자 제거), 떠 있는 면은 상태 스트립·`.notice`/`.danger`·`.sticky-save`·`.order-summary` 에만. 「첫 섹션 h2 한 단계 키움」은 h2 가 이미 `--text-2` 이고 텍스트·순서 변경 없이 키울 근거 측정이 없어 미반영(사유: 효과 미측정)
 
+### 6단계 Impeccable 리뷰 반영 (review-phase6.md: critique 25/32, audit 15/20, avoid-ai-design 신규 0, 대비 최저 5.10:1)
+번호 · 처리 · 사유
+- 1 · 반영 · `body > header { overflow: clip; overflow-clip-margin: 6px }`(nav 포커스 링 여유) + 의사요소 `width: min(42%, 30rem); height: min(170%, 22rem); top: max(-35%, -7rem)`. 헤더 밖 번짐·h1 대비는 아래 실측
+- 2 · 반영 · `.tier-card`(POST 폼 부모)·`.choice-tile`(POST 폼 포함)을 hover 조명 목록에서 뺌(`:has()` 부정보다 단순·확실). 주석·design.md·console-design.md 문구를 실제와 맞춤
+- 3 · 반영 · 시험 (g) 렌더 기반: 설정 wired 하네스로 `consoleScreens` 전부를 렌더·파싱해 조명 대상(`.optimization-nav a`·`.settings-tabs a`) 하위 `<form` 0 단언 + 목록에 `.tier-card`/`.choice-tile` 재진입 시 실패 + 매칭 0건이면 실패(빈 표본 통과 방지). 변이 1회(`.tier-card` 를 목록에 되돌림 → FAIL, 렌더 기반 단언이 `/settings/daily` 에서 `<form>` 3건을 잡음)
+- 4 · 반영 · `prefers-reduced-transparency` 가 hover `::after` 도 `background: none`, 시험이 앰비언트·조명 둘 다 요구
+- 5 · 거절 · 키프레임 `ease-in-out`: `TestMotionContract` 가 `ease-in-out` 을 금지(4단계 계약, 단일 곡선 이징 금지). `linear alternate` 유지, 끝점 속도 꺾임은 약 3px/s 라 지각 불가
+- 6 · 반영 · 새로고침 정지 선택자를 `:is(body > header, .console-status)` 로 좁힘(`.choice-tile header` 등 중첩 header 제외)
+- 7 · 반영 · 문서 「정보를 나른다」→「약한 질감, 상태 단어가 정본」 + 톤 매핑 한 줄(ok=실행+신선, warn=정지·지연, bad=stale, 그 외 accent)
+- 8 · 반영 · 시험 (b) 금지 목록에 `backdrop-filter` 추가
+- do not fix 유지 · 톤 농도 상향·JS 포인터 추적·CSP/WebGL·blob 전면 제거 (사람 결정 / 브리프 충돌)
+
 ### 6단계 고정 시험 수정 기록
 - `TestMotionContract` 허용 속성 맵에 `rotate` 1개 추가(앰비언트 키프레임이 개별 `rotate` 속성을 씀). 이 밖의 기존 시험·CSP 핀 수정 0, `<script`·`script-src` 부재 핀 전부 그대로 통과.
 
