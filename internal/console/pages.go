@@ -79,10 +79,11 @@ var pages = func() *template.Template {
 
 type dashboardPage struct {
 	chrome
-	CSRF   string
-	Notice string
-	Snap   snapshot
-	Run    *runView
+	CSRF      string
+	Notice    string
+	Snap      snapshot
+	Readiness []readinessRow
+	Run       *runView
 	// CanRestart and CanRestartSoak report that the caller wired the seam. A
 	// button for something this build cannot do would be a button that answers
 	// with an apology.
@@ -114,6 +115,7 @@ func (c *Console) handleDashboard(w http.ResponseWriter, r *http.Request) {
 		CSRF:           c.csrf,
 		Notice:         r.URL.Query().Get("notice"),
 		Snap:           c.snapshot(),
+		Readiness:      c.startupReadiness(),
 		CanRestart:     c.opts.Relaunch != nil,
 		CanRestartSoak: c.opts.RestartSoak != nil,
 	}

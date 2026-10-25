@@ -24,11 +24,16 @@ Story: `STORY-TOS-a174` · Low~Medium(설정 폼 마크업 재배치, 설정 저
   - 증거(Terra, 2026-10-26): `go test ./internal/console -run 'Test(EachUnmeasuredCauseIsExplainedOnce|FloatingNoticesAreAtMostThree|OperatorBodyCarriesNoDeveloperIdentifiers|EveryScreenHeadHasScopeBadgeAndFoldedBoundary|StatusStripCellsAreOneLine|ProseWidthAndToggleSpacingRulesExist|DisclosureMarkerSurvivesTheMobileBlock)$' -count=1` PASS(9.538s).
 
 ## 3. GREEN (design §2 순서)
-- [ ] 3.1 **편집 전에** `pages.go:Console.handleDashboard` FLM 번들(`tools/logic-map`, `analysis/function-logic/`)을 만든다. 그다음 `readiness.go`(새 파일: `settingsPage.StartupReadiness`·`Console.startupReadiness`, 금지 철자 0 — design §1 이름 금지 시험) + `readiness` define(`templates_settings.go`) + `dashboardPage.Readiness` 필드 + `handleDashboard` 한 줄 + 세 자리 배치 + 기존 사전 판정 표(`templates_settings.go:145-149`) 정리. CSS 는 `templates.go` `style` 끝 a174 블록에만(design §2.5)
-- [ ] 3.2 프리셋 비교표(뷰 모델 새 함수 + 템플릿 + CSS `.preset-matrix`, 모바일 규칙)
-- [ ] 3.3 거래 정책 한 줄 형식
-- [ ] 3.4 외부 편입 설명 중복 정리(상시·`/position-management`)
-- [ ] 3.5 `gofmt -l`·`go vet ./internal/console/`·`go test ./internal/console/ -count=1`·`go test ./cmd/tossctl/ -run Console -count=1`. 고정 리터럴을 바꾼 시험은 아래에 전수 기록. `check_analysis.py` 결과(required N) 기록
+- [x] 3.1 **편집 전에** `pages.go:Console.handleDashboard` FLM 번들(`tools/logic-map`, `analysis/function-logic/`)을 만든다. 그다음 `readiness.go`(새 파일: `settingsPage.StartupReadiness`·`Console.startupReadiness`, 금지 철자 0 — design §1 이름 금지 시험) + `readiness` define(`templates_settings.go`) + `dashboardPage.Readiness` 필드 + `handleDashboard` 한 줄 + 세 자리 배치 + 기존 사전 판정 표(`templates_settings.go:145-149`) 정리. CSS 는 `templates.go` `style` 끝 a174 블록에만(design §2.5)
+  - 증거(Terra, 2026-10-26): 편집 전 번들은 `analysis/function-logic/internal-console--console.handledashboard/`에 작성했고, 구현 후 `go run ./tools/logic-map --file internal/console/pages.go --func Console.handleDashboard`와 risk report로 AST SHA `d676ff005fdae0bfa6a4ef2b49415f7b7d99029b2bf68067a8b8776838244096`를 갱신함. `pages.go` 기존 함수 본문 변경은 `Readiness: c.startupReadiness(),` 한 줄뿐임.
+- [x] 3.2 프리셋 비교표(뷰 모델 새 함수 + 템플릿 + CSS `.preset-matrix`, 모바일 규칙)
+  - 증거(Terra, 2026-10-26): `LimitTierMatrices`는 `LimitTierCards()`의 Preview 값을 통화별로만 옮기고, 모바일 `table-scroll`·`min-width` 규칙을 a174 CSS 블록에 추가함.
+- [x] 3.3 거래 정책 한 줄 형식
+  - 증거(Terra, 2026-10-26): 기존 현재값 표를 제거하고 동일 `/settings/trading` form 안에서 `toggle-row` 네 줄에 checkbox·배지·설명을 함께 렌더함.
+- [x] 3.4 외부 편입 설명 중복 정리(상시·`/position-management`)
+  - 증거(Terra, 2026-10-26): 상시 탭은 기존 단일 편입 설명을 유지하고, `/position-management` 읽기 전용 표의 설명은 설정·상시 소유 링크 한 줄로 축소함.
+- [x] 3.5 `gofmt -l`·`go vet ./internal/console/`·`go test ./internal/console/ -count=1`·`go test ./cmd/tossctl/ -run Console -count=1`. 고정 리터럴을 바꾼 시험은 아래에 전수 기록. `check_analysis.py` 결과(required N) 기록
+  - 증거(Terra, 2026-10-26): `gofmt -l internal/console` 빈 출력, `go vet ./internal/console/` PASS, `go test ./internal/console/ -count=1` PASS, `go test ./cmd/tossctl/ -run Console -count=1` PASS. `check_analysis.py`는 required **1**(`Console.handleDashboard`) 및 `evidence complete or diff-proven exempt`를 출력함(착지 커밋 전이라 landing record 없음).
 
 ## 4. 측정·리뷰
 - [ ] 4.1 하네스 재촬영 → `measure/after-<utc>.json`, 전후 표(`/settings/daily` 높이·상자·폼·입력, 세 화면 체크리스트 유무)
@@ -41,4 +46,4 @@ Story: `STORY-TOS-a174` · Low~Medium(설정 폼 마크업 재배치, 설정 저
 - [ ] 5.1 rebase → FLM 번들(required 가 0 이 아니면) → tracker → sdd-sync → `make gate` → archive → push → retain
 
 ## 고정 리터럴 시험 수정 기록
-(없으면 "없음")
+(없음 — 기존 시험 함수 수정 0, 새 `readiness_test.go`만 추가)

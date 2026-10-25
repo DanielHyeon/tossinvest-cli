@@ -47,6 +47,7 @@ const settingsTemplates = `
   {{end}}
 </dl>
 
+{{if or (eq .Tab "standing") (eq .Tab "daily")}}{{template "readiness" .StartupReadiness}}{{end}}
 {{with .OrphanNotice}}<p class="aside">{{.}}</p>{{end}}
 
 {{if eq .Tab "standing"}}{{template "settings-standing" .}}
@@ -74,6 +75,22 @@ const settingsTemplates = `
 {{define "cardcautions"}}
 {{range .Cautions}}<p class="notice" data-save-caution="{{.Name}}"><strong>{{.Name}}</strong> — {{.Detail}}</p>
 {{end}}{{end}}
+
+{{define "readiness"}}
+<section class="readiness" aria-labelledby="readiness-title">
+  <h2 id="readiness-title">기동 준비</h2>
+  <p class="muted">파일에서 읽을 수 있는 절만 옮겨 보인다. 사전 판정을 통과해도 기동이 보장되지 않는다.</p>
+  <ol>
+    {{range .}}
+    <li class="readiness-row" data-readiness-state="{{.State}}">
+      <div><strong>{{.Label}}</strong>{{if .Href}} <a href="{{.Href}}">설정 열기</a>{{end}}</div>
+      <span class="status-pill readiness-state {{.State}}">{{.StatusText}}</span>
+      <span class="muted">{{.Detail}}</span>
+    </li>
+    {{end}}
+  </ol>
+</section>
+{{end}}
 
 {{/* --- 상시 — 비가역 · 주 1회 미만 --------------------------------------------- */}}
 
@@ -141,17 +158,6 @@ const settingsTemplates = `
   <code>engine.automation_gate.enabled</code> 한 키만 쓴다 — 다섯 한도의 바이트는 건드리지 않는다.</p>
 
   {{with $.NoticeFor "gate"}}<p class="notice" data-save-result="gate">{{.}}</p>{{end}}
-
-  <div class="table-scroll" role="region" aria-label="기동 인터록 사전 판정" tabindex="0"><table>
-    <tr><th>기동 인터록 사전 판정</th><th>결과</th></tr>
-    {{range .GatePreflight}}
-    <tr><td>{{.Name}}<br><span class="muted">{{.Detail}}</span></td>
-    <td>{{if not .Judgeable}}판정 불가{{else if .OK}}통과{{else}}<strong>미충족</strong>{{end}}</td></tr>
-    {{end}}
-  </table></div>
-  <p class="aside">이 판정은 <strong>파일이 답하는 절에 한한다</strong>. Guardian 주입·게이트웨이
-  배선·전송의 키 운반은 구성된 프로세스에서만 알 수 있으므로 화면이 판정하지 못한다 —
-  <strong>사전 판정을 통과해도 기동이 보장되지 않는다.</strong> 최종 판단은 엔진의 인터록이다.</p>
 
   <p class="notice"><strong>게이트를 켜면 시작되는 것.</strong> 다음 엔진 기동에서 대사·exit 관측·
   체결 감지 세 루프가 돈다. 그 중 대사 루프의 마지막 단계가 <strong>편입</strong>이고,
@@ -247,53 +253,28 @@ const settingsTemplates = `
   주장은 아니다(같은 숫자를 손으로 적었을 수도 있다).</p>
   {{end}}{{end}}
 
-  <p class="notice" data-currency-consequence="true">{{.LimitCurrencyConsequence}}</p>
-
-  {{/*
-    The gate's state, read-only, with a link to the tab that owns the switch. The
-    "one control, one tab" rule bans the SWITCH from appearing twice; it requires
-    this, because an operator setting a ceiling has to be able to see whether the
-    thing the ceiling constrains is even on.
-  */}}
-  <p class="muted">automation gate는 지금 <strong>{{if .Gate.Enabled}}ON{{else}}OFF{{end}}</strong>이다.
-  스위치는 <a href="/settings/standing#gate">상시 탭</a>에 있고 이 카드에서는
-  <strong>콘솔에서 편집할 수 없다</strong> — 이 카드의 저장은 그 키의 바이트를 건드리지 않는다.</p>
-
   {{if .LimitGuard.Blocked}}{{template "cardblocked" .LimitGuard}}
   {{else}}
   <h3>프리셋</h3>
   <p class="muted">StockOS <code>risk_profiles.py</code>의 티어를 옮긴 것이다. 클릭 한 번이 다섯 값과
   통화를 함께 기록한다. <strong>등록된 티어 위로는 올릴 수 없다</strong> — 상한은 그 통화에 등록된
   티어의 필드별 최대이고, 그보다 큰 값은 서버가 거부한다.</p>
-  {{range .LimitTierCards}}
-  <div class="tier-card" data-tier="{{.ID}}">
-    <form method="post" action="/settings/limits/preset">
-      <input type="hidden" name="csrf" value="{{$.CSRF}}">
-      <input type="hidden" name="tier" value="{{.ID}}">
-      {{/*
-        The preview replaces a dead confirm(). This is the one settings card where
-        the server knows both sides before the click, so it is the one card that
-        can say 현재 → 변경 rather than 현재 alone.
-      */}}
-      <dl class="card-preview" aria-label="{{.Label}} 적용 후">
-        {{range .Preview.Rows}}
-        <dt>{{.Label}}</dt>
-        <dd>{{.From}} → <strong>{{.To}}</strong>{{if .Axis}}
-          <span class="status-pill" data-limit-axis="{{.Axis}}">{{.Axis}}</span>{{end}}</dd>
-        {{end}}
-        {{if .Preview.FirstTime}}
-        <dt>방향</dt><dd data-limit-axis="최초 설정"><strong>최초 설정</strong> — 이전 값이 없으므로
-        강화도 완화도 아니다</dd>
-        {{else if .Preview.CurrencyChange}}
-        <dt>통화</dt><dd data-limit-axis="통화 변경"><strong>{{.Preview.CurrencyFrom}} → {{.Preview.CurrencyTo}} 통화 변경</strong>
-        — 강화도 완화도 아닌 별개의 변경이다. 숫자가 작아져도 조인 것이 아니다</dd>
-        {{end}}
-      </dl>
-      <p class="aside" data-currency-consequence="{{.ID}}">{{.Preview.Consequence}}</p>
-      <p><button type="submit">{{.Label}}{{if .Recommended}} · 권장{{end}} 기록</button>
-      <span class="muted">[{{.Limits.Currency}}] {{.Summary}}</span></p>
-    </form>
+  {{range .LimitTierMatrices}}
+  <div class="table-scroll" role="region" aria-label="{{.Currency}} Guardian 프리셋 비교표" tabindex="0">
+    <table class="preset-matrix" data-preset-currency="{{.Currency}}">
+      <thead><tr><th scope="col">한도</th><th scope="col">현재</th>
+      {{range .Tiers}}<th scope="col"><form method="post" action="/settings/limits/preset" data-preset-tier="{{.ID}}">
+        <input type="hidden" name="csrf" value="{{$.CSRF}}">
+        <input type="hidden" name="tier" value="{{.ID}}">
+        <button type="submit">{{.Label}}{{if .Recommended}} · 권장{{end}} 기록</button>
+      </form></th>{{end}}</tr></thead>
+      <tbody>{{range $row := .Rows}}<tr data-preset-row="{{$row.Label}}"><th scope="row">{{$row.Label}}</th>
+        <td data-preset-current="{{$row.Label}}">{{$row.Current}}</td>{{range .Values}}<td data-preset-tier="{{.TierID}}" data-preset-limit="{{$row.Label}}">{{.Value}}{{if .Axis}}
+          <span class="status-pill" data-limit-axis="{{.Axis}}">{{.Axis}}</span>{{end}}</td>{{end}}</tr>{{end}}</tbody>
+    </table>
   </div>
+  {{if .Note}}<p class="muted">{{.Note}}</p>{{end}}
+  <p class="muted" data-currency-consequence="{{.Currency}}">{{.Consequence}}</p>
   {{end}}
 
   <details class="explain">
@@ -342,19 +323,14 @@ const settingsTemplates = `
   {{with $.NoticeFor "trading"}}<p class="notice" data-save-result="trading">{{.}}</p>{{end}}
   {{if .TradingLoadErr}}<p class="danger">거래 정책을 읽을 수 없다: <code>{{.TradingLoadErr}}</code></p>{{end}}
 
-  <div class="table-scroll" role="region" aria-label="거래 정책 현재값" tabindex="0"><table>
-    <tr><th>토글</th><th>현재</th></tr>
-    {{range .TradingRows}}<tr><td>{{.Label}}</td><td>{{if .On}}켜짐{{else}}꺼짐{{end}}</td></tr>{{end}}
-  </table></div>
-
   {{if .TradingGuard.Blocked}}{{template "cardblocked" .TradingGuard}}
   {{else}}
   <form method="post" action="/settings/trading">
     <input type="hidden" name="csrf" value="{{.CSRF}}">
     {{range .TradingRows}}
-    <p class="toggle-row"><label><input type="checkbox" name="{{.Key}}" {{if .On}}checked{{end}}>
-    <strong>{{.Label}}</strong></label><br>
-    <span class="muted">{{.Why}}</span></p>
+    <div class="toggle-row" data-toggle-key="{{.Key}}"><label><input type="checkbox" name="{{.Key}}" {{if .On}}checked{{end}}>
+    <strong>{{.Label}}</strong></label> <span class="status-pill {{if .On}}ok{{else}}warn{{end}}">{{if .On}}켜짐{{else}}꺼짐{{end}}</span>
+    <span class="muted">{{.Why}}</span></div>
     {{end}}
     <p class="card-preview" aria-label="거래 정책 적용 후"><strong>적용 후</strong> 네 값이 체크 상태대로 기록된다. 네 개가 모두 켜져야 기동 인터록 3절을 통과한다 · <strong>승인의 의미</strong> 이 조합은 "엔진이 내 주식을 팔아도 된다"는 승인이다 — 켜는 것은 사람이고 저장은 audit에 남는다</p>
     <p><button type="submit">거래 정책 저장</button></p>

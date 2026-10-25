@@ -19,8 +19,7 @@ const positionPolicyTemplates = `
 
 <section aria-labelledby="auto-adoption-heading">
 <h2 id="auto-adoption-heading">{{.Descriptor.AutoAdoptionSection}}</h2>
-<p class="muted">기본 정책, 파일에 저장된 desired, 실행 중 엔진이 시작할 때 읽은 effective를 분리해 표시한다.
-desired와 effective가 달라도 어느 한쪽으로 덮어쓰지 않는다.</p>
+<p class="muted">외부 편입의 저장·편집은 <a href="/settings/standing#adoption">설정·상시</a>에서 한다. 이 표는 기본값·저장된 desired·실행 중 엔진이 읽은 effective를 분리해 보이며, 어느 한쪽으로 덮어쓰지 않는다.</p>
 <table class="data-table"><caption>자동편입 설정의 기본값·저장값·실행값</caption><thead><tr>
 <th scope="col">구분</th><th scope="col">enabled</th><th scope="col">합성 손절</th><th scope="col">include</th><th scope="col">exclude</th>
 </tr></thead><tbody>

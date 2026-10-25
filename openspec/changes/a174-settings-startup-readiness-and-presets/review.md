@@ -16,3 +16,15 @@
 - `openspec validate a174-settings-startup-readiness-and-presets --strict --no-interactive`: `Change 'a174-settings-startup-readiness-and-presets' is valid`(2026-10-26).
 - 남은 위험: 검증 콘솔은 2초마다 다시 읽으므로 설정 파일 파싱이 3회 늘어난다(브로커 호출 0). `Validate()` 내부(config 패키지)는 읽지 않았다 — 그 오류 문장을 그대로 옮길 뿐이다.
 - 결론: proposal-freeze 승인. 구현 착수 가능. 위치 `/mnt/D/Axipient/workspace/TossOS.worktrees/a174-settings-startup-readiness-and-presets`, 구현자 GPT-5.6 Terra. 단 정정본이 **커밋된 뒤에** worktree 를 만든다(미커밋 편집은 worktree 에 들어가지 않는다).
+
+## Pre-Edit Gate — a174 3.1
+
+- 대상 심볼: `console.Console.handleDashboard`
+- CodeGraph: 정의·호출자·callee·impact는 `analysis/code-context/codegraph-baseline.md`에 기록함. 호출자는 `/verify-console` 하나이며 영향은 handler와 route로 한정됨.
+- CodeGraphContext: 새 worktree 미등록으로 미가용. 현재 HEAD·CodeGraph·현재 소스·기존 시험으로 조정한 근거는 `analysis/code-context/` 세 파일에 기록함.
+- 기존 동작: dashboard 리터럴은 chrome·CSRF·notice·snapshot·재시작 seam을 조립하고, B1은 현재 run이 있을 때만 `Run`·`Refresh`를 채운 뒤 한 번 렌더함.
+- Function Logic Map / Branch Test Map: `analysis/function-logic/internal-console--console.handledashboard/`.
+- upstream 상속 시험 영향: 있음. 설정·검증 콘솔 렌더와 폼 리터럴을 새 RED 2.1~2.4 및 기존 console 패키지 회귀로 확인함.
+- 실패 시험 선행: RED 2.1~2.4를 production 편집 전에 작성·실행함.
+- 설정·DB·journal 변경과 rollback: 없음. 읽기 전용 뷰 모델과 템플릿 배치만 추가하며, 되돌림은 이 change의 코드·템플릿 커밋을 되돌리는 것으로 충분함.
+- 안전 불변식: 통과. live 주문·운영 토글·엔진 제어 handler와 POST 계약을 변경하지 않음.

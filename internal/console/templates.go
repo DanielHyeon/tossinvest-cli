@@ -477,6 +477,28 @@ body:has([data-reload=on]) :is(body > header, .console-status)::after { animatio
     --shadow-bar: 0 -5px 20px rgba(0, 0, 0, 0.5);
   }
 }
+/* a174 — 기동 준비·프리셋 비교표·거래 정책 줄 */
+.readiness { border-top-color: var(--line-strong); }
+.readiness > ol { display: grid; gap: var(--space-1); margin: var(--space-2) 0 0; padding: 0; list-style: none; }
+.readiness-row { display: grid; grid-template-columns: minmax(11rem, 1fr) auto; gap: var(--space-1) var(--space-2); align-items: baseline;
+  padding: var(--space-2) 0; border-bottom: 1px solid var(--line-soft); }
+.readiness-row > .muted { grid-column: 1 / -1; font-size: var(--text--1); }
+.readiness-row .status-pill.ok { color: var(--ok); }
+.readiness-row .status-pill.warn { color: var(--warn); }
+.readiness-row .status-pill.unknown { color: var(--ink-3); }
+.preset-matrix { min-width: 42rem; }
+.preset-matrix th { min-width: 9rem; }
+.preset-matrix form { display: block; }
+.preset-matrix button { white-space: normal; text-align: left; }
+form[action="/settings/trading"] { display: block; }
+.toggle-row { display: grid; grid-template-columns: minmax(12rem, auto) auto; gap: var(--space-1) var(--space-2); align-items: center; }
+.toggle-row .muted { grid-column: 1 / -1; margin-inline-start: 0; }
+@media (max-width: 44rem) {
+  .readiness-row { grid-template-columns: 1fr; gap: var(--space-1); }
+  .readiness-row > .muted { grid-column: auto; }
+  .preset-matrix { min-width: 36rem; }
+  .toggle-row { grid-template-columns: 1fr; }
+}
 {{end}}
 
 {{define "head"}}<!doctype html>
@@ -690,6 +712,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   <p class="muted">엔진 상태 배선이 없다 (활성 마커 경로 미지정).</p>
   {{end}}
 
+  {{template "readiness" $.Readiness}}
   {{if .CanStart}}
   <form method="post" action="/engine/start">
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
