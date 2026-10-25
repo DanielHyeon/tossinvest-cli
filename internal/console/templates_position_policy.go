@@ -8,11 +8,11 @@ const positionPolicyTemplates = `
 직접 입력은 없고 서버가 제공한 현재 행 action과 preset만 선택한다.</p>
 {{if .Notice}}<p class="notice" role="status">{{.Notice}}</p>{{end}}
 {{if .LoadErr}}<p class="danger" role="alert">불러오기 실패: <code>{{.LoadErr}}</code></p>{{end}}
-{{if not .Wired}}<p class="notice">engine-owned PositionPolicyCommander가 배선되지 않아 조회만 가능하다.</p>{{end}}
-{{if .QuarantineErr}}<p class="notice" role="status">판정 격리 상태를 읽지 못했다: <code>{{.QuarantineErr}}</code>. 격리된 포지션이 있어도 이 화면에 표시되지 않는다.</p>{{end}}
+{{if not .Wired}}<p class="aside">engine-owned PositionPolicyCommander가 배선되지 않아 조회만 가능하다.</p>{{end}}
+{{if .QuarantineErr}}<p class="aside" role="status">판정 격리 상태를 읽지 못했다: <code>{{.QuarantineErr}}</code>. 격리된 포지션이 있어도 이 화면에 표시되지 않는다.</p>{{end}}
 {{if .ExitJournalKnown}}{{if not .ExitJournal.Readable}}
 {{template "journalstate" .ExitJournal}}
-<p class="notice" role="status">exit 평가 근거를 확인할 수 없어 현재 보호선과 다음 exit 단계를 표시하지 않는다.</p>
+<p class="aside" role="status">exit 평가 근거를 확인할 수 없어 현재 보호선과 다음 exit 단계를 표시하지 않는다.</p>
 {{end}}{{end}}
 
 <section aria-labelledby="auto-adoption-heading">
@@ -28,9 +28,9 @@ desired와 effective가 달라도 어느 한쪽으로 덮어쓰지 않는다.</p
 <tr><th scope="row" data-label="구분">실행값 · effective</th><td data-label="enabled"><strong>{{.Effective.EnabledText}}</strong></td><td data-label="합성 손절"><strong>{{.Effective.StopText}}</strong></td>
 <td data-label="include"><code>{{.Effective.IncludesText}}</code></td><td data-label="exclude"><code>{{.Effective.ExcludesText}}</code></td></tr>
 </tbody></table>
-{{if .DesiredErr}}<p class="notice" role="status">desired 알 수 없음 · <code>{{.DesiredErr}}</code></p>{{end}}
+{{if .DesiredErr}}<p class="aside" role="status">desired 알 수 없음 · <code>{{.DesiredErr}}</code></p>{{end}}
 {{if .DesiredVerdict}}<p class="danger" role="alert">desired validation 거부 · <code>{{.DesiredVerdict}}</code></p>{{end}}
-{{if .RuntimeErr}}<p class="notice" role="status">effective 알 수 없음 · <code>{{.RuntimeErr}}</code></p>{{end}}
+{{if .RuntimeErr}}<p class="aside" role="status">effective 알 수 없음 · <code>{{.RuntimeErr}}</code></p>{{end}}
 <p class="muted">손절 option 2~20%, 0.5% step · {{.Descriptor.ExcludePrecedence}} · 1주: {{.Descriptor.OneShareBehavior}} · 적용 시점: {{.Descriptor.ApplyTiming}}</p>
 
 <h3>실행 중 편입 대사 차단</h3>
@@ -40,7 +40,7 @@ desired와 effective가 달라도 어느 한쪽으로 덮어쓰지 않는다.</p
 <dl><dt>scope</dt><dd><code>{{.Scope}}</code></dd><dt>reason</dt><dd><code>{{.Reason}}</code></dd>
 <dt>detail</dt><dd>{{if .Detail}}{{.Detail}}{{else}}—{{end}}</dd><dt>시작·경과</dt><dd>{{.StartedAt}} · {{.Age}}</dd>
 <dt>지속성</dt><dd>{{if .Permanent}}<strong class="danger">영구 차단</strong>{{else}}일시 차단{{end}}</dd></dl></article>{{end}}</div>
-{{else}}<p class="notice">현재 runtime projection에 active 대사 차단이 없다.</p>{{end}}
+{{else}}<p class="aside">현재 runtime projection에 active 대사 차단이 없다.</p>{{end}}
 </section>
 
 <section aria-labelledby="position-policy-heading">
@@ -71,7 +71,7 @@ desired와 effective가 달라도 어느 한쪽으로 덮어쓰지 않는다.</p
 <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="quarantine_token" value="{{.Quarantine.Token}}">
 <button type="submit" class="secondary" aria-label="판정 격리 해제 preview">판정 격리 해제</button></form>{{end}}</div></td>
 </tr>{{end}}</tbody></table>
-{{else}}<p class="notice">관리할 현재 포지션 행이 없다.</p>{{end}}
+{{else}}<p class="aside">관리할 현재 포지션 행이 없다.</p>{{end}}
 </section>
 <details class="explain"><summary>서버 제공 손절 option 37개 보기</summary><div class="filter-group">{{range .Descriptor.StopOptions}}<span class="status-pill" data-option-id="{{.ID}}">{{.Label}}</span>{{end}}</div></details>
 <p class="muted">이 change는 LIVE/automation toggle을 켜지 않는다. 외부 편입 ON/OFF는 canonical control plane 승인과 함께 별도 적용된다.</p>
@@ -90,7 +90,7 @@ desired와 effective가 달라도 어느 한쪽으로 덮어쓰지 않는다.</p
 <dt>restart</dt><dd>불필요 · LIVE toggle은 변경하지 않음</dd></dl></section>
 {{if .Danger}}<p class="danger" role="alert"><strong>보호 공백 위험.</strong> active exit가 있으면 409로 거부된다.
 이 화면을 읽고 최소 {{.WaitSecs}}초 후 명시적으로 체크한 뒤 진행하라. 문구 입력은 요구하지 않는다.</p>{{end}}
-{{if not .Danger}}<p class="notice">일반 정책 변경은 추가 대기나 입력 없이 이 preview 그대로 적용된다.</p>{{end}}
+{{if not .Danger}}<p class="aside">일반 정책 변경은 추가 대기나 입력 없이 이 preview 그대로 적용된다.</p>{{end}}
 <form method="post" action="/position-management/apply">
 <input type="hidden" name="csrf" value="{{.CSRF}}"><input type="hidden" name="capability" value="{{.Token}}">
 {{if .Danger}}<label><input type="checkbox" name="confirm" value="yes" required> 보호 공백 설명을 확인했다</label>{{end}}

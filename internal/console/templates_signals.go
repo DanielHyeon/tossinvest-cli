@@ -50,7 +50,7 @@ const signalsTemplates = `
   저장한 것을 읽는다 — 새 스캔을 일으키지 않는다.</p>
   {{end}}
   {{if not .Markets}}
-  <p class="notice"><strong>시장이 하나도 없다.</strong> 저장소는 읽혔는데 평가된 시장이
+  <p class="aside"><strong>시장이 하나도 없다.</strong> 저장소는 읽혔는데 평가된 시장이
   없다 — "조용하다"가 아니라 배선을 봐야 한다.</p>
   {{end}}
 {{else}}
@@ -94,7 +94,7 @@ const signalsTemplates = `
   <dd>{{if .Degraded}}<strong class="bad">있음</strong>{{else if .NothingAttempted}}<strong>판단 불가 — 시도한 원천이 없다</strong>{{else}}<span class="ok">없음 — 전 원천 응답</span>{{end}}</dd>
 </dl>
 {{if .NothingAttempted}}
-<p class="notice"><strong>이 스캔은 원천을 하나도 부르지 않았다.</strong> 일정상 아직 부를
+<p class="aside"><strong>이 스캔은 원천을 하나도 부르지 않았다.</strong> 일정상 아직 부를
 때가 아닌 원천만 있었다는 뜻이다(엔진 양보로 간격이 두 배가 됐거나, tick이 모든 원천의
 간격보다 짧거나, 시각이 뒤로 갔을 때). 강등이 아니므로 찾아야 할 고장난 원천은 없지만,
 "전 원천 응답"도 아니다 — 아래 숫자들은 이번 통과가 아니라 마지막으로 실제 읽은 통과의
@@ -116,7 +116,7 @@ const signalsTemplates = `
 <p class="muted">공식 랭킹에는 WTS 우회가 없다(D14) — 429 한 번이면 그 원천이 통째로
 사라진다. 결손율이 미문서화 RANKING 한도의 유일한 측정값이다.</p>
 {{else if .Unnamed}}
-<p class="notice"><strong>강등인데 빠진 원천 이름이 없다.</strong> 스캔이 결손을 보고하면서
+<p class="aside"><strong>강등인데 빠진 원천 이름이 없다.</strong> 스캔이 결손을 보고하면서
 어느 원천인지 남기지 않았다 — 사유 없는 불리언은 대응할 수 없는 표시이므로, 없다고
 적는 대신 없다는 사실을 적는다.</p>
 {{end}}

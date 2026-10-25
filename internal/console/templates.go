@@ -103,6 +103,12 @@ dl { display: grid; grid-template-columns: 8rem 1fr; gap: 0.25rem var(--space-3)
 dt { color: var(--ink-3); } dd { margin: 0; }
 .notice { border: 1px solid var(--warn-line); background: var(--warn-bg); box-shadow: var(--lift); padding: var(--space-2) var(--space-3); border-radius: var(--radius-soft); }
 .danger { border: 1px solid var(--bad-line); background: var(--bad-bg); box-shadow: var(--lift); padding: var(--space-2) var(--space-3); border-radius: var(--radius-soft); }
+/* 알림 3단계(change a173): .danger = 차단, .notice = 결과가 따르는 사실, 그 밖의 안내는 상자 없는 본문(.aside) */
+.aside { color: var(--ink-2); }
+.status-pill.warn { color: var(--warn); }
+.effect-timing { margin: var(--space-2) 0 0; }
+.cause-banner p { margin: 0 0 var(--space-1); }
+.cause-banner ul { margin: 0 0 var(--space-2); padding-inline-start: 1.2rem; }
 .ok { color: var(--ok); } .bad { color: var(--bad); } .muted { color: var(--ink-3); }
 input[type=text] { font: var(--text-0)/1.4 ui-monospace, Menlo, Consolas, monospace; padding: 0.45rem 0.6rem; min-height: 44px;
                    width: 22rem; max-width: 100%; border: 1px solid var(--line-strong); border-radius: var(--radius-control);
@@ -536,7 +542,7 @@ body:has([data-reload=on]) :is(body > header, .console-status)::after { animatio
 */}}
 {{define "hours"}}
 {{if .Outside}}
-<p class="notice"><strong>지금은 KR 정규장(평일 09:00–15:30 KST) 밖이다.</strong>
+<p class="aside"><strong>지금은 KR 정규장(평일 09:00–15:30 KST) 밖이다.</strong>
 {{.Detail}}
 <br>그래도 <strong>시작은 막지 않는다</strong> — 주문 접수 창의 실제 경계는 미측정이고, 휴장 달력을
 도구에 박아 넣으면 관측하지 않은 것을 단언하게 된다.</p>
@@ -569,10 +575,10 @@ body:has([data-reload=on]) :is(body > header, .console-status)::after { animatio
 <title>재시작 중 — tossctl console</title>
 <style>{{template "style"}}</style></head><body><main>
 <h1>콘솔을 다시 시작하는 중</h1>
-<p class="notice">같은 바이너리를 같은 포트로 다시 실행한다. <strong>{{.Delay}}초 뒤</strong> 이 페이지가
+<p class="aside">같은 바이너리를 같은 포트로 다시 실행한다. <strong>{{.Delay}}초 뒤</strong> 이 페이지가
 자동으로 새 프로세스로 돌아간다 — 돌아오지 않으면 아래 링크를 누르거나 터미널에 출력된 새 세션 링크를 열어라.</p>
 <p><a href="{{.Target}}">지금 새 프로세스로 이동</a></p>
-{{if .Note}}<p class="notice">{{.Note}}</p>{{end}}
+{{if .Note}}<p class="aside">{{.Note}}</p>{{end}}
 <p class="muted">재시작이 하는 일은 하나뿐이다: <strong>새 프로세스 인스턴스</strong>를 만든다.
 조건주문 존속 판정은 증거 기록의 <code>process.instance_id</code>(기동마다 새로 발급)를 보므로,
 이것이 그 측정에 필요한 프로세스 경계다. 게이트·설정·계좌는 아무것도 바뀌지 않고, 배치 승인은
@@ -667,7 +673,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   {{end}}
 
   {{if .Note}}
-  <p class="notice">마지막 응답 ({{.NoteAtText}}):</p>
+  <p class="aside">마지막 응답 ({{.NoteAtText}}):</p>
   <pre>{{.Note}}</pre>
   {{end}}
 
@@ -721,11 +727,11 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   <p class="muted">attestation 파일이 없다 ({{.Path}}). <code>tossctl soak attest</code>가 조건을 만족할 때 쓴다.</p>
   {{end}}
   {{if .Reasons}}
-  <p class="notice">게이트가 열리지 않는 이유:</p>
+  <p class="aside">게이트가 열리지 않는 이유:</p>
   <ul>{{range .Reasons}}<li>{{.}}</li>{{end}}</ul>
   {{end}}
-  {{if .ExpiryHorizon}}<p class="notice" role="status">attestation 만료까지 {{.ExpiryHorizon}} 남았다.{{if .ExpiryWarning}} 72시간 이내다.{{end}}</p>{{end}}
-  <p class="notice" role="status">renewal 진단: {{.RenewalState}}{{if not .RenewalAttemptedAt.IsZero}} · 마지막 시도 {{.RenewalAttemptedAt.Format "2006-01-02 15:04Z"}} ({{.RenewalAge}} 전){{end}}</p>
+  {{if .ExpiryHorizon}}<p class="aside" role="status">attestation 만료까지 {{.ExpiryHorizon}} 남았다.{{if .ExpiryWarning}} 72시간 이내다.{{end}}</p>{{end}}
+  <p class="aside" role="status">renewal 진단: {{.RenewalState}}{{if not .RenewalAttemptedAt.IsZero}} · 마지막 시도 {{.RenewalAttemptedAt.Format "2006-01-02 15:04Z"}} ({{.RenewalAge}} 전){{end}}</p>
   {{if .RenewalReasons}}<ul>{{range .RenewalReasons}}<li>{{.}}</li>{{end}}</ul>{{end}}
   <p class="muted">이 콘솔은 게이트를 켜지 않는다. 자동매매 토글은 사람이 직접 승인한다.</p>
   {{end}}
@@ -869,7 +875,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   그 목록을 승인하는 버튼을 누르기 전에는 아무것도 전송되지 않는다.</p>
   {{$nothingToResume := and .Resuming (not .Snap.Verify.Pending) (not .Snap.Verify.Cleanup)}}
   {{if $nothingToResume}}
-  <p class="notice"><strong>이어할 단계가 없다</strong> — 모든 단계에 판정이 있어 이어하기는 아무것도
+  <p class="aside"><strong>이어할 단계가 없다</strong> — 모든 단계에 판정이 있어 이어하기는 아무것도
   측정하지 않는다(2026-07-27에 이 버튼이 두 번 눌려 장중 창이 측정 0건으로 끝났다).
   {{if .Snap.Verify.Redo}}다시 측정하려면 아래 <strong>재측정</strong>을 사용하라.{{end}}</p>
   {{end}}
@@ -894,7 +900,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
     {{range .Steps}}{{if inRedo $redo .Step}}<tr><td><code>{{.Step}}</code></td><td>{{stepLabel .Step}}</td><td>{{verdict .Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}{{end}}
   </table></div>
   <p class="muted">대상: {{.RedoList}}</p>
-  <p class="notice"><code>deferred</code>·<code>refused</code> 단계는 대상이 아니다. <code>pass</code>도
+  <p class="aside"><code>deferred</code>·<code>refused</code> 단계는 대상이 아니다. <code>pass</code>도
   대상이 아니다 — 이미 측정된 속성을 위해 실주문을 다시 내지 않는다. 단 하나의 예외는
   <strong>그 통과가 확립한 성질이 더 이상 참이 아닌 경우</strong>다: 조건주문 등록이 남긴 조건주문이
   사라지면 존속·정정·취소는 영원히 <code>skipped</code>가 되므로, 그 전제를 다시 세우는 것은

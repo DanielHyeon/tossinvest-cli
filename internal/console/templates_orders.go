@@ -85,13 +85,13 @@ const ordersTemplates = `
 */}}
 {{define "orderbroker"}}
 {{if not .Broker.Wired}}
-<p class="notice"><strong>주문 조회가 배선되지 않았다.</strong> 이 빌드의 콘솔에 주문 조회 seam이
+<p class="aside"><strong>주문 조회가 배선되지 않았다.</strong> 이 빌드의 콘솔에 주문 조회 seam이
 연결되어 있지 않다 — 건수는 0이 아니라 미측정이다.</p>
 {{else if and .Broker.Held (not .Broker.Present)}}
-<p class="notice"><strong>검증 중 — 데이터 없음.</strong> {{.Broker.HeldReason}}.
+<p class="aside"><strong>검증 중 — 데이터 없음.</strong> {{.Broker.HeldReason}}.
 검증이 rate limit을 쓰고 있어 이 화면은 브로커를 부르지 않는다.</p>
 {{else if .Broker.Held}}
-<p class="notice"><strong>검증 중 — 갱신 보류.</strong> {{.Broker.HeldReason}}.
+<p class="aside"><strong>검증 중 — 갱신 보류.</strong> {{.Broker.HeldReason}}.
 위 값은 {{.Broker.TakenAt}}에 읽은 것이다({{.Broker.AgeSeconds}}초 전).</p>
 {{else if .Broker.Present}}
 <p class="muted">브로커 조회 {{.Broker.TakenAt}} ({{.Broker.AgeSeconds}}초 전) ·
@@ -99,7 +99,7 @@ const ordersTemplates = `
 <strong class="bad">캐시 TTL({{.Broker.TTLSeconds}}초)을 넘었다 — 지금 계좌의 값이 아니다</strong>{{end}}{{if .Broker.Error}} ·
 <span class="bad">마지막 갱신 실패: {{.Broker.Error}}</span>{{end}}</p>
 {{else}}
-<p class="notice"><strong>아직 읽지 않았다.</strong>
+<p class="aside"><strong>아직 읽지 않았다.</strong>
 {{if .Broker.Error}}<code>{{.Broker.Error}}</code>{{end}}</p>
 {{end}}
 {{end}}
@@ -122,7 +122,7 @@ const ordersTemplates = `
   <p class="muted">{{.Selected.SummaryText}} — <strong>{{.Shown}}</strong>/{{.Total}}건{{if .Truncated}}
   이상{{end}} 표시</p>
   {{else}}
-  <p class="notice"><strong>필터를 쓸 수 없다.</strong> 목록을 가져오지 못했으므로 걸러 낼 것이 없다.
+  <p class="aside"><strong>필터를 쓸 수 없다.</strong> 목록을 가져오지 못했으므로 걸러 낼 것이 없다.
   건수를 표시하지 않는 이유도 같다 — 0건은 "일치하는 것이 없다"로 읽히는데, 여기서는 아무것도
   읽지 못한 것이다.</p>
   {{end}}
@@ -179,7 +179,7 @@ const ordersTemplates = `
   {{end}}
 
   {{if not .Journal.Readable}}
-  <p class="notice"><strong>발주 주체는 전부 "불명"이다.</strong> 원장을 읽지 못했으므로 어느 주문이
+  <p class="aside"><strong>발주 주체는 전부 "불명"이다.</strong> 원장을 읽지 못했으므로 어느 주문이
   엔진이 낸 것인지 판정할 수 없다. "그 밖"으로 적으면 엔진이 아무 일도 안 한 것처럼 보이므로
   그렇게 적지 않는다. 사유는 위의 원장 안내에 있다.</p>
   {{end}}

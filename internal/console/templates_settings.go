@@ -47,7 +47,7 @@ const settingsTemplates = `
   {{end}}
 </dl>
 
-{{with .OrphanNotice}}<p class="notice">{{.}}</p>{{end}}
+{{with .OrphanNotice}}<p class="aside">{{.}}</p>{{end}}
 
 {{if eq .Tab "standing"}}{{template "settings-standing" .}}
 {{else if eq .Tab "daily"}}{{template "settings-daily" .}}
@@ -66,7 +66,7 @@ const settingsTemplates = `
   for a disabled attribute would find nothing and pass.
 */}}
 {{define "cardblocked"}}
-{{range .Blocks}}<p class="notice" data-save-block="{{.Name}}"><strong>{{.Name}}</strong> — {{.Detail}}</p>
+{{range .Blocks}}<p class="aside" data-save-block="{{.Name}}"><strong>{{.Name}}</strong> — {{.Detail}}</p>
 {{end}}{{end}}
 
 {{/* "cardcautions" is a reason that does NOT stop the save. The engine has the
@@ -124,7 +124,7 @@ const settingsTemplates = `
   </form>
   {{end}}
   {{template "cardcautions" .AdoptionGuard}}
-  <p class="notice" data-effect-timing="adoption">반영 시점 — {{.EffectNotice}}</p>
+  <p class="muted effect-timing" data-effect-timing="adoption">반영 시점 — {{.EffectNotice}}</p>
 
   <details class="explain">
     <summary>편입의 귀결과 이 규칙의 경계</summary>
@@ -152,7 +152,7 @@ const settingsTemplates = `
     <td>{{if not .Judgeable}}판정 불가{{else if .OK}}통과{{else}}<strong>미충족</strong>{{end}}</td></tr>
     {{end}}
   </table></div>
-  <p class="notice">이 판정은 <strong>파일이 답하는 절에 한한다</strong>. Guardian 주입·게이트웨이
+  <p class="aside">이 판정은 <strong>파일이 답하는 절에 한한다</strong>. Guardian 주입·게이트웨이
   배선·전송의 키 운반은 구성된 프로세스에서만 알 수 있으므로 화면이 판정하지 못한다 —
   <strong>사전 판정을 통과해도 기동이 보장되지 않는다.</strong> 최종 판단은 엔진의 인터록이다.</p>
 
@@ -179,7 +179,7 @@ const settingsTemplates = `
   </form>
   {{end}}
   {{template "cardcautions" .GateGuard}}
-  <p class="notice" data-effect-timing="gate">반영 시점 — {{.EffectNotice}}</p>
+  <p class="muted effect-timing" data-effect-timing="gate">반영 시점 — {{.EffectNotice}}</p>
 </section>
 
 <section id="autostart" data-settings-card="autostart">
@@ -210,7 +210,7 @@ const settingsTemplates = `
   {{end}}
   {{template "cardcautions" .AutostartGuard}}
   {{if .AutostartNote}}
-  <p class="notice">마지막 엔진 기동 결과:</p>
+  <p class="aside">마지막 엔진 기동 결과:</p>
   <pre>{{.AutostartNote}}</pre>
   {{end}}
 </section>
@@ -231,7 +231,7 @@ const settingsTemplates = `
   reaches the server, so the browser brings it here — to the default tab, which
   does not have that section. This is the one thing that can meet it.
 */}}
-<p id="adoption" class="notice">편입 규칙은 <a href="/settings/standing#adoption">상시 탭</a>으로
+<p id="adoption" class="aside">편입 규칙은 <a href="/settings/standing#adoption">상시 탭</a>으로
 옮겼다 — 비가역이고 주 1회 미만으로 만지는 설정이라 당일 조정과 같은 화면에 두지 않는다.</p>
 
 <section id="limits" data-settings-card="limits">
@@ -298,7 +298,7 @@ const settingsTemplates = `
         — 강화도 완화도 아닌 별개의 변경이다. 숫자가 작아져도 조인 것이 아니다</dd>
         {{end}}
       </dl>
-      <p class="notice" data-currency-consequence="{{.ID}}">{{.Preview.Consequence}}</p>
+      <p class="aside" data-currency-consequence="{{.ID}}">{{.Preview.Consequence}}</p>
       <p><button type="submit">{{.Label}}{{if .Recommended}} · 권장{{end}} 기록</button>
       <span class="muted">[{{.Limits.Currency}}] {{.Summary}}</span></p>
     </form>
@@ -339,7 +339,7 @@ const settingsTemplates = `
   </details>
   {{end}}
   {{template "cardcautions" .LimitGuard}}
-  <p class="notice" data-effect-timing="limits">반영 시점 — {{.EffectNotice}}</p>
+  <p class="muted effect-timing" data-effect-timing="limits">반영 시점 — {{.EffectNotice}}</p>
 </section>
 
 <section id="trading" data-settings-card="trading">
@@ -373,7 +373,7 @@ const settingsTemplates = `
   </form>
   {{end}}
   {{template "cardcautions" .TradingGuard}}
-  <p class="notice" data-effect-timing="trading">반영 시점 — {{.EffectNotice}}</p>
+  <p class="muted effect-timing" data-effect-timing="trading">반영 시점 — {{.EffectNotice}}</p>
 </section>
 {{end}}
 
@@ -414,7 +414,7 @@ const settingsTemplates = `
   </table></div>
 
   {{if .NotificationSubscribeURL}}
-  <p class="notice" data-notification-subscribe>
+  <p class="aside" data-notification-subscribe>
     <strong>구독 주소</strong> — 이 주소를 열면 알림을 받는다.<br>
     <a href="{{.NotificationSubscribeURL}}" target="_blank" rel="noreferrer noopener"><code>{{.NotificationSubscribeURL}}</code></a><br>
     이 주소를 아는 것이 곧 이 알림을 받을 자격이므로 공유하지 않는다.
@@ -480,7 +480,7 @@ const settingsTemplates = `
   접근 제어</strong>이고, 이 주소는 기계가 만든 128비트다. 자체 호스팅 ntfy를 토큰 뒤에
   두고 쓰는 경우에는 엔진 프로세스의 환경에 <code>TOSSCTL_NTFY_TOKEN</code>을 넣는다 —
   이 화면은 토큰을 받지 않고, 받을 입력란도 두지 않는다.</p>
-  <p class="notice" data-effect-timing="notifications">반영 시점 — {{.EffectNotice}}
+  <p class="muted effect-timing" data-effect-timing="notifications">반영 시점 — {{.EffectNotice}}
   테스트 발송은 콘솔이 직접 보내므로 지금 확인할 수 있고, 엔진이 보내는 실제 알림은
   다음 엔진 기동부터다.</p>
 </section>

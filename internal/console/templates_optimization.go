@@ -20,7 +20,7 @@ const optimizationTemplates = `
 {{if .Notice}}<p class="notice" role="status">{{.Notice}}</p>{{end}}
 {{if .Warning}}<p class="notice" role="alert">{{.Warning}}</p>{{end}}
 {{if .LifecycleErr}}<p class="danger" role="alert">lifecycle을 읽지 못했다: <code>{{.LifecycleErr}}</code>. 마지막 값을 현재값처럼 사용하지 않고 모든 변경을 닫았다.</p>{{end}}
-{{if and .LifecycleReady (ne .Evidence.Status "complete")}}<p class="notice evidence-banner" role="status"><strong>성과 근거 {{.Evidence.Status}}</strong> · 근거 기반 추천 candidate를 만들지 않는다.{{range .Evidence.Missing}} <code>{{.}}</code>{{end}}</p>{{end}}
+{{if and .LifecycleReady (ne .Evidence.Status "complete")}}<p class="aside evidence-banner" role="status"><strong>성과 근거 {{.Evidence.Status}}</strong> · 근거 기반 추천 candidate를 만들지 않는다.{{range .Evidence.Missing}} <code>{{.}}</code>{{end}}</p>{{end}}
 <nav class="filter-bar" aria-label="최적화 관련 읽기 전용 화면">
   <a href="/strategy-runtime">전략 lane</a>
   <a href="/strategy-runtime/market-schedule">시장·일정</a>
@@ -72,7 +72,7 @@ const optimizationTemplates = `
         <li><strong>3 · 3초 확인 후 적용</strong><span>체크박스와 승인 버튼으로 명시적 적용</span></li>
       </ol>
       {{if .LegacyLoadErr}}<p class="danger">legacy effective config를 읽지 못했다: <code>{{.LegacyLoadErr}}</code></p>{{end}}
-      {{if eq .Snapshot.Version 0}}<p class="notice">lifecycle command seam 미배선 · 조회만 가능하다.</p>{{end}}
+      {{if eq .Snapshot.Version 0}}<p class="aside">lifecycle command seam 미배선 · 조회만 가능하다.</p>{{end}}
       {{range .Fields}}
       <fieldset class="setting-row{{if .ConfigurationError}} setting-error{{end}}" {{if .ConfigurationError}}aria-readonly="true"{{end}}>
         <legend>{{.Label}} <code>{{.Key}}</code></legend>
@@ -183,7 +183,7 @@ const optimizationTemplates = `
   {{if .CandidateFilters}}
     <section id="candidate-filters" aria-labelledby="candidate-filters-title">
       <h2 id="candidate-filters-title">후보 필터</h2>
-      <p class="notice"><strong>미승인 · passed 구조적 0 · verdict 비활성</strong></p>
+      <p class="aside"><strong>미승인 · passed 구조적 0 · verdict 비활성</strong></p>
       <p class="muted">a046 owner가 승인한 registry option 전에는 숫자 0을 기본 threshold처럼 표시하지 않고 모든 행을 읽기 전용으로 유지한다. 주문·RiskIntent·LIVE 상태는 변경하지 않는다.</p>
       <nav class="filter-bar" aria-label="후보 필터 시장 전환"><a href="#candidate-filters-KR">KR regular</a><a href="#candidate-filters-US">US regular</a></nav>
       {{range .CandidateFilterMarkets}}
@@ -202,7 +202,7 @@ const optimizationTemplates = `
   {{if .StrategyRuntime}}
     <section aria-labelledby="strategy-runtime-title">
       <h2 id="strategy-runtime-title">전략·실행</h2>
-      <p class="notice"><strong>lane desired OFF · engine autostart OFF · scheduler desired OFF</strong></p>
+      <p class="aside"><strong>lane desired OFF · engine autostart OFF · scheduler desired OFF</strong></p>
       <p>lane ON, autostart, automation gate, LIVE trading은 서로 다른 권한이다. 이 카테고리는 서버가 확정한 desired/effective와 blocker를 읽기만 하며 어느 권한도 켜지 않는다.</p>
       <div class="actions">
         <a class="button-link" href="/strategy-runtime">전략 lane 상태 보기</a>
@@ -214,7 +214,7 @@ const optimizationTemplates = `
   {{if .PerformanceHistory}}
     <section aria-labelledby="performance-history-title">
       <h2 id="performance-history-title">성과·이력</h2>
-      <p class="notice"><strong>{{.PerformanceWindow.Text}} · 읽기 전용</strong></p>
+      <p class="aside"><strong>{{.PerformanceWindow.Text}} · 읽기 전용</strong></p>
       <p>서버가 고정한 조회 범위의 성과를 보여주며 이 카테고리에서 값을 입력하거나 저장하지 않는다. 측정 불가를 0으로 꾸며내지 않고 누락 사유를 함께 표시한다.</p>
       <p><a class="button-link" href="/performance-history">레인 성과 상세 보기</a></p>
       {{if .Audit}}<div class="table-scroll" role="region" aria-label="설정 변경 감사 이력" tabindex="0"><table>
@@ -310,7 +310,7 @@ const optimizationTemplates = `
 </section>
 
 {{if .Unwired}}
-<p class="notice"><strong>performance.db 조회 seam 미배선</strong> — 성과를 0으로 꾸미지 않는다.</p>
+<p class="aside"><strong>performance.db 조회 seam 미배선</strong> — 성과를 0으로 꾸미지 않는다.</p>
 {{else if .LoadErr}}
 <p class="danger">성과를 읽지 못했다. 값은 변경되지 않았다: <code>{{.LoadErr}}</code></p>
 {{else}}
@@ -329,7 +329,7 @@ const optimizationTemplates = `
 <section aria-labelledby="lane-{{.LaneID}}-{{.PolicyID}}">
   <h2 id="lane-{{.LaneID}}-{{.PolicyID}}"><code>{{.LaneID}}</code> · <code>{{.PolicyID}}</code></h2>
   {{if eq .Status "insufficient_sample"}}
-  <p class="notice"><strong>insufficient_sample · 추천 근거로 사용 불가</strong></p>
+  <p class="aside"><strong>insufficient_sample · 추천 근거로 사용 불가</strong></p>
   {{else}}<p class="ok"><strong>complete</strong></p>{{end}}
   <dl>
     <dt>시장 / 표본 / 기간</dt><dd>{{.Market}} / {{.Samples}}건 / 최근 {{$.View.Query.PeriodDays}}일</dd>
@@ -356,13 +356,13 @@ const optimizationTemplates = `
 </section>
 {{end}}
 {{else}}
-<p class="notice">고정 조회 범위에 complete lineage 거래가 없다. 빈 결과는 성과 0이 아닙니다.</p>
+<p class="aside">고정 조회 범위에 complete lineage 거래가 없다. 빈 결과는 성과 0이 아닙니다.</p>
 {{end}}
 
 <section aria-labelledby="performance-attribution-title">
   <h2 id="performance-attribution-title">Market · campaign attribution</h2>
   <p class="muted">파생 DB에 저장된 exact identifier chain만 표시한다. 누락값은 symbol/time으로 추정하지 않는다.</p>
-  {{if .AttributionErr}}<p class="notice">Attribution generation을 읽지 못했다. aggregate를 0으로 바꾸지 않는다: <code>{{.AttributionErr}}</code></p>
+  {{if .AttributionErr}}<p class="aside">Attribution generation을 읽지 못했다. aggregate를 0으로 바꾸지 않는다: <code>{{.AttributionErr}}</code></p>
   {{else if .Attributions}}
   <div class="table-scroll" role="region" aria-label="Market · campaign attribution" tabindex="0"><table class="data-table">
     <thead><tr><th scope="col">계좌</th><th scope="col">시장·종목</th><th scope="col">Lane</th><th scope="col">Campaign·leg</th><th scope="col">상태</th><th scope="col">수량</th><th scope="col">원통화 PnL</th><th scope="col">보고통화 PnL·FX</th><th scope="col">누락 근거</th></tr></thead>
@@ -378,7 +378,7 @@ const optimizationTemplates = `
       <td data-label="누락 근거">lineage {{range .Row.MissingLineage}}<code>{{.}}</code> {{end}} measurement {{range .Row.MissingMeasurements}}<code>{{.}}</code> {{end}}</td>
     </tr>{{end}}</tbody>
   </table></div>
-  {{else}}<p class="notice">저장된 attribution generation에 표시할 row가 없다. 이는 손익 0이 아니다.</p>{{end}}
+  {{else}}<p class="aside">저장된 attribution generation에 표시할 row가 없다. 이는 손익 0이 아니다.</p>{{end}}
 </section>
 {{end}}
 {{template "foot" .}}
@@ -407,7 +407,7 @@ const optimizationTemplates = `
 <h1>시장·일정</h1>
 <p class="muted">서버가 정의한 시장·세션 선택지와 official exchange calendar 근거를 읽는 화면이다. 임의 종목, 운영 사유, 시각 또는 휴장일을 입력하지 않으며 주문·운영 토글·설정을 변경하지 않는다.</p>
 {{if .LoadErr}}<p class="danger">상태를 읽지 못해 닫힌 기본값을 표시한다. 신규 진입은 fail-closed다.</p>{{end}}
-{{if .Unwired}}<p class="notice">scheduler seam 미배선 — 닫힌 기본값만 표시한다.</p>{{end}}
+{{if .Unwired}}<p class="aside">scheduler seam 미배선 — 닫힌 기본값만 표시한다.</p>{{end}}
 <section aria-labelledby="scheduler-state-heading"><h2 id="scheduler-state-heading">Scheduler 상태</h2><div class="table-scroll" role="region" aria-label="Scheduler 상태" tabindex="0"><table>
 <tr><th>항목</th><th>기본값</th><th>Desired</th><th>Effective</th></tr>
 <tr><th>Scheduler</th><td>OFF</td><td>{{.SchedulerDesired}}</td><td><strong>{{.SchedulerEffective}}</strong></td></tr>
@@ -431,7 +431,7 @@ const optimizationTemplates = `
 <h1>KR · US strategy runtime</h1>
 <p class="muted page-intro">서버 소유 market-keyed projection을 읽기만 한다. 입력·저장·활성화·LIVE·주문·보호 변경 기능은 없다.</p>
 {{if .LoadErr}}<p class="danger" role="alert">runtime projection을 읽지 못했다. 두 시장 모두 신규 진입 OFF와 typed unknown을 표시한다.</p>{{end}}
-{{if .Unwired}}<p class="notice">runtime endpoint 미기동 — KR과 US의 dormant OFF/UNOBSERVED/UNWIRED truth를 표시한다.</p>{{end}}
+{{if .Unwired}}<p class="aside">runtime endpoint 미기동 — KR과 US의 dormant OFF/UNOBSERVED/UNWIRED truth를 표시한다.</p>{{end}}
 <section aria-labelledby="strategy-runtime-contract"><h2 id="strategy-runtime-contract">Shared projection contract</h2>
 <dl><dt>Schema</dt><dd><code>{{.SchemaVersion}}</code></dd><dt>Generated at</dt><dd>{{.GeneratedAt}}</dd>
 <dt>Config digest</dt><dd><code>{{.ConfigDigest}}</code></dd><dt>Build digest</dt><dd><code>{{.BuildDigest}}</code></dd></dl>

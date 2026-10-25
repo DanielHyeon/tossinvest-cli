@@ -95,7 +95,7 @@ const overviewTemplates = `
 <section class="overview-holdings" aria-labelledby="overview-holdings-heading">
   <h2 id="overview-holdings-heading">보유 종목</h2>
   {{if .Snap.Account.Rows}}
-  {{if .Snap.Account.AnyJournalAbsent}}<p class="notice"><strong>엔진 원장에 포지션이 없는 보유가 있다</strong> — 엔진이 진입한 포지션이 아니므로 손절·익절 라인도 없다.</p>{{end}}
+  {{if .Snap.Account.AnyJournalAbsent}}<p class="aside"><strong>엔진 원장에 포지션이 없는 보유가 있다</strong> — 엔진이 진입한 포지션이 아니므로 손절·익절 라인도 없다.</p>{{end}}
   {{template "holdingstable" .Snap.Account}}
   <p class="muted">세부 관리 근거와 원장 식별자는 각 종목의 <strong>상세 보기</strong>에서 확인한다.
   보유 캐시는 <a href="/positions">포지션</a> 화면이 갱신하며, 이 대시보드는 추가 브로커 호출 없이 같은 값을 읽는다.</p>
@@ -116,10 +116,10 @@ const overviewTemplates = `
     <dt>마지막 갱신</dt><dd>{{.RefreshedAtText}}</dd>
   </dl>
   {{else}}
-  <p class="notice"><strong>엔진 상태 배선이 없다</strong> (활성 마커 경로 미지정) — 정지로 읽지 않는다.</p>
+  <p class="aside"><strong>엔진 상태 배선이 없다</strong> (활성 마커 경로 미지정) — 정지로 읽지 않는다.</p>
   {{end}}
   {{if .Note}}
-  <p class="notice">기동 거부 사유를 포함한 마지막 응답 ({{.NoteAtText}}):</p>
+  <p class="aside">기동 거부 사유를 포함한 마지막 응답 ({{.NoteAtText}}):</p>
   <pre>{{.Note}}</pre>
   {{else}}
   <p class="muted"><strong>기동 거부 사유 없음.</strong> 사유는 이 콘솔 프로세스에서 [엔진 시작]·[엔진 정지]를
@@ -165,7 +165,7 @@ const overviewTemplates = `
   {{if .Error}}<p class="danger">마지막 브로커 조회 실패: <code>{{.Error}}</code></p>{{end}}
   {{end}}
   {{if .Snap.VerifyRunning}}
-  <p class="notice"><strong>실계좌 검증이 실행 중이다</strong> ({{.Snap.VerifyNote}}). 이 화면은 원래
+  <p class="aside"><strong>실계좌 검증이 실행 중이다</strong> ({{.Snap.VerifyNote}}). 이 화면은 원래
   브로커를 부르지 않으므로 여기서 보류되는 것은 없다 — 다만 캐시를 채우는 <a href="/positions">포지션</a>
   화면의 갱신은 검증이 끝날 때까지 보류된다.</p>
   {{end}}
@@ -248,7 +248,7 @@ const overviewTemplates = `
     — 존속 측정을 위해 의도적으로 남긴 것{{else}} — <strong>취소되지 않았다.</strong>{{end}}</li>{{end}}</ul>
   {{end}}{{end}}
   {{if $any}}
-  <p class="notice">잔여물은 <strong>다음 검증의 노출 상한을 먼저 채운다</strong> — 그것이 남아 있는 동안
+  <p class="aside">잔여물은 <strong>다음 검증의 노출 상한을 먼저 채운다</strong> — 그것이 남아 있는 동안
   이어지는 단계들은 아무것도 보낼 수 없다. <a href="/verify">검증 화면</a>에서 이어하기가 먼저 취소한다.</p>
   {{else}}
   <p class="muted">두 시장 모두 잔여물 없음. 이 확인은 <strong>KR과 US 기록을 각각</strong> 읽은 결과다 —
@@ -277,7 +277,7 @@ const overviewTemplates = `
   {{range .Axes}}
   <p><strong>{{.Label}}</strong></p>
   {{if .Structural}}
-  <p class="notice">{{.Structural}}</p>
+  <p class="aside">{{.Structural}}</p>
   {{else}}
   <div class="table-scroll" role="region" aria-label="오늘 소진분" tabindex="0"><table>
     <tr><th>시장</th><th>소진</th></tr>
@@ -299,7 +299,7 @@ const overviewTemplates = `
   <h2>최근 exit 판정</h2>
   {{with .Snap.Recent}}
   {{if .Blocked}}
-  <p class="notice">{{template "unmeasured" .Unreadable}}</p>
+  <p class="aside">{{template "unmeasured" .Unreadable}}</p>
   {{else if .Events}}
   <div class="table-scroll" role="region" aria-label="최근 exit 판정" tabindex="0"><table>
     <tr><th>시각</th><th>심볼</th><th>관측가</th><th>워터마크</th><th>기준선</th><th>단계</th><th>발의</th></tr>

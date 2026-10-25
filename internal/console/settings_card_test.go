@@ -92,8 +92,10 @@ func TestEveryCardShowsWhatChangesAndWhen(t *testing.T) {
 		}
 	}
 
-	// 반영 시점 is one of the eight things that may never be folded, so it is a
-	// notice and not muted prose, and it is on every card that writes a file.
+	// 반영 시점 is one of the eight things that may never be folded, so it is always
+	// rendered. a173 알림 3단계: it is a one-line sentence beside the button
+	// (class "muted effect-timing"), not a floating box — a box is for blocks and
+	// for facts with consequences, and "다음 엔진 기동부터" is neither.
 	standing := body(t, h.get(t, pathSettingsStanding))
 	for _, card := range []string{"adoption", "gate"} {
 		marker := `data-effect-timing="` + card + `"`
@@ -102,9 +104,9 @@ func TestEveryCardShowsWhatChangesAndWhen(t *testing.T) {
 			t.Errorf("the %s card does not say when a save takes effect", card)
 			continue
 		}
-		if !strings.Contains(standing[max(0, i-60):i], `class="notice"`) {
-			t.Errorf("the %s card states 반영 시점 as something other than a notice; it is on the "+
-				"never-folded list", card)
+		if !strings.Contains(standing[max(0, i-60):i], `class="muted effect-timing"`) {
+			t.Errorf("the %s card states 반영 시점 as something other than the one-line "+
+				"effect-timing sentence; it is on the never-folded list", card)
 		}
 	}
 }

@@ -20,10 +20,10 @@ const portfolioTemplates = `
 */}}
 {{define "journalstate"}}
 {{if .Unwired}}
-<p class="notice"><strong>원장 경로가 배선되지 않았다.</strong> 이 빌드의 콘솔은 엔진 journal을 읽도록
+<p class="aside"><strong>원장 경로가 배선되지 않았다.</strong> 이 빌드의 콘솔은 엔진 journal을 읽도록
 연결되어 있지 않다 — 브로커 보유만 표시된다.</p>
 {{else if .Missing}}
-<p class="notice"><strong>엔진 미가동 — 원장 파일이 아직 없다.</strong> {{.Path}}
+<p class="aside"><strong>엔진 미가동 — 원장 파일이 아직 없다.</strong> {{.Path}}
 <br>엔진이 한 번도 기동하지 않았거나 다른 데이터 디렉터리를 쓰고 있다. 콘솔은 원장을 만들지 않는다(읽기 전용).
 브로커 보유는 그대로 표시된다.</p>
 {{else if .TooNew}}
@@ -46,13 +46,13 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
 */}}
 {{define "brokerstate"}}
 {{if not .Wired}}
-<p class="notice"><strong>브로커 조회가 배선되지 않았다.</strong> 수량·평단·현재가·평가손익은 표시되지 않고,
+<p class="aside"><strong>브로커 조회가 배선되지 않았다.</strong> 수량·평단·현재가·평가손익은 표시되지 않고,
 원장 기준 정보만 표시된다.</p>
 {{else if and .Held (not .Present)}}
-<p class="notice"><strong>검증 중 — 데이터 없음.</strong> {{.HeldReason}}. 실계좌 검증이 rate limit을 쓰고 있으므로
+<p class="aside"><strong>검증 중 — 데이터 없음.</strong> {{.HeldReason}}. 실계좌 검증이 rate limit을 쓰고 있으므로
 브로커 조회를 보류한다(캐시도 비어 있다). 원장 기준 표시는 계속 동작한다.</p>
 {{else if .Held}}
-<p class="notice"><strong>검증 중 — 갱신 보류.</strong> {{.HeldReason}}. 아래 브로커 수치는 캐시된
+<p class="aside"><strong>검증 중 — 갱신 보류.</strong> {{.HeldReason}}. 아래 브로커 수치는 캐시된
 {{.TakenAt}} 시점 값이다({{.AgeSeconds}}초 전).</p>
 {{else if .Present}}
 <div class="explain-link" data-explain="holdings-basis">
@@ -62,7 +62,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
 현재가는 holdings 응답의 lastPrice이며 종목별 시세를 따로 조회하지 않는다.</p></div>{{end}}
 </div>
 {{else}}
-<p class="notice"><strong>브로커 보유를 아직 읽지 못했다.</strong></p>
+<p class="aside"><strong>브로커 보유를 아직 읽지 못했다.</strong></p>
 {{end}}
 {{if .Error}}<p class="danger">브로커 조회 실패: <code>{{.Error}}</code>{{if .Present}} — 위 표는 실패 이전의
 캐시 값이다.{{end}}</p>{{end}}
@@ -133,8 +133,8 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
         {{if .Managed}}<span>자격 근거 {{.Basis}}</span>{{end}}
         {{if .HasManagementProjection}}<span>관리 상태 <code>{{.Management.Status}}</code> · 이유 <code>{{.Management.Reason}}</code></span>{{end}}
         {{if .ManagementBlocked}}<span class="bad">대사 차단 {{.ManagementBlock.Target}} · {{.ManagementBlock.Reason}}{{if .ManagementBlock.Detail}} · {{.ManagementBlock.Detail}}{{end}} · {{.ManagementBlock.Age}}{{if .ManagementBlock.Permanent}} · 영구 차단{{end}}</span>{{end}}
-        {{if .ManagementPending}}<span class="notice">편입 예약됨 · 아직 보호 미적용</span>{{end}}
-        {{if .PendingDesignation}}<span class="notice">편입 예약됨 · 실행 상태 미확인 · 아직 보호 미적용</span>{{end}}
+        {{if .ManagementPending}}<span class="status-pill warn">편입 예약됨 · 아직 보호 미적용</span>{{end}}
+        {{if .PendingDesignation}}<span class="status-pill warn">편입 예약됨 · 실행 상태 미확인 · 아직 보호 미적용</span>{{end}}
         {{if .ManagementExcluded}}<span>자동관리 제외 정책 적용 중</span>{{end}}
         {{if and .InBroker (not .Managed) (not .Unknown) .Excluded (not .HasManagementProjection)}}<span>자동관리 제외 정책 적용 중</span>{{end}}
         {{if .ExitLine.Reason}}<span class="bad">{{.ExitLine.Reason}}</span>{{end}}
@@ -149,10 +149,10 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
         <span>observation <code>{{.ExitLine.ObservationID}}</code> · {{.ExitLine.ObservationSource}}</span>
         <span>평가 시각 {{.ExitLine.EvaluatedAt}} · 유효 근거 {{.ExitLine.EffectiveSource}}</span>
         {{if .ExitLine.OneShare}}<span class="ok">{{.ExitLine.OneShareText}}</span><span>{{.ExitLine.FinalExitText}}</span>{{end}}{{end}}
-        {{if .HasExitReference}}<span>{{.ExitReference.Basis}}</span>{{if .ExitReference.Reason}}<span class="notice">{{.ExitReference.Reason}}</span>{{end}}
+        {{if .HasExitReference}}<span>{{.ExitReference.Basis}}</span>{{if .ExitReference.Reason}}<span class="status-pill warn">{{.ExitReference.Reason}}</span>{{end}}
         {{if .ExitReference.AdoptionPlan}}<span>현재 실행 중 엔진 정책: 최초 손절폭 <strong>{{.ExitReference.StopPercent}}</strong></span>{{end}}
         {{if or .ExitReference.GenerationMismatch .ExitReference.RuntimeUnknown .ExitReference.LifecycleUnknown}}<span>손절 <strong>—</strong> · 기준 <strong>—</strong> · 익절 <strong>—</strong></span>{{end}}{{end}}
-        {{if .HasStoredExitEvidence}}<span class="notice"><strong>원장 기록 · 실효 미확인</strong></span>
+        {{if .HasStoredExitEvidence}}<span class="status-pill warn"><strong>원장 기록 · 실효 미확인</strong></span>
         <span>t0 진입가 <strong>{{.StoredExit.EntryPrice}}</strong> · 저장 최초 손절 <strong>{{.StoredExit.InitialStop}}</strong></span>
         <span>손절 <strong>{{.StoredExit.InitialStop}}</strong> · 기준 <strong>{{.StoredExit.Baseline}}</strong> · 익절 <strong>—</strong> (저장값 · 실효 미확인)</span>
         <span>원장 기준선 <strong>{{.StoredExit.Baseline}}</strong> · 원장 high-water <strong>{{.StoredExit.HighWater}}</strong></span>{{end}}
@@ -178,7 +178,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
 {{with .Snap}}
 {{template "journalstate" .Journal}}
 {{if .NoManaged}}
-<p class="notice"><strong>관리 포지션 없음.</strong> 원장은 정상적으로 읽혔고, 엔진이 관리 중인 미청산
+<p class="aside"><strong>관리 포지션 없음.</strong> 원장은 정상적으로 읽혔고, 엔진이 관리 중인 미청산
 포지션이 하나도 없다. 아래 보유가 있다면 전부 엔진 밖에서 생긴 것이다.</p>
 {{end}}
 {{template "brokerstate" $.BrokerState}}
@@ -192,11 +192,11 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
   표가 아니라 같은 문단의 목록이 된다 (change refresh-positions-screen).
 */}}
   {{if .AnyUnknown}}
-  <p class="notice"><strong>관리 여부 불명 보유가 있다.</strong> 엔진 원장을 읽지 못했으므로 아래
+  <p class="aside"><strong>관리 여부 불명 보유가 있다.</strong> 엔진 원장을 읽지 못했으므로 아래
   해당 보유가 엔진 관리 대상인지 알 수 없다 — 위의 원장 안내를 보라. 관리 중이 아니라고 단정하지 않는다.</p>
   {{end}}
   {{if .AnyJournalAbsent}}
-  <p class="notice"><strong>엔진 원장에 포지션이 없는 보유가 있다</strong> — 엔진이 진입한 포지션이
+  <p class="aside"><strong>엔진 원장에 포지션이 없는 보유가 있다</strong> — 엔진이 진입한 포지션이
   아니므로 손절·익절 라인도 없다. 편입 정책은 포지션 관리 최적화 화면에서 확인할 수 있다.</p>
   {{end}}
   {{template "holdingstable" .}}
@@ -254,7 +254,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
 
 {{with .Snap}}
 {{template "journalstate" .Journal}}
-{{if .NameNotice}}<p class="notice">{{.NameNotice}}</p>{{end}}
+{{if .NameNotice}}<p class="aside">{{.NameNotice}}</p>{{end}}
 
 <section>
   <h2>완결 왕복 거래</h2>
@@ -282,7 +282,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
   {{else if .Journal.Readable}}
   <p class="muted">완결 거래 없음 — 아직 왕복이 끝난 포지션이 없다.</p>
   {{end}}
-  <p class="notice"><strong>이 표의 한계.</strong> 성과 행(trade_outcomes)은 엔진이 관리하던 포지션이
+  <p class="aside"><strong>이 표의 한계.</strong> 성과 행(trade_outcomes)은 엔진이 관리하던 포지션이
   엔진 매도로 닫히고 수량·가격이 맞을 때만 동결된다. 외부 매도로 종결된 포지션은 여기에 행이 생기지 않으므로, 그 공백은 아래 exit 이벤트
   스트림이 보완한다. 그 밖에 행이 없는 경우는 엔진이 관리하지 않던 포지션, 편입 뒤 대사 조정으로 늘어난 수량이 있어
   그 조정 시각의 브로커 1분봉으로 다시 계산해야 하는 경우(사람이 돌리는 backfill 도구가 채운다), 편입 뒤 수량이
@@ -295,7 +295,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
   <h2>exit 이벤트</h2>
   {{if .Events}}
   <p class="muted">엔진이 내린 exit 판정 기록이다(시간순). 성과 행이 없는 종결도 여기에는 흔적이 남는다.</p>
-  {{if .Truncated}}<p class="notice">최근 기록만 표시한다 — 창을 넘는 오래된 판정은 생략되었다.</p>{{end}}
+  {{if .Truncated}}<p class="aside">최근 기록만 표시한다 — 창을 넘는 오래된 판정은 생략되었다.</p>{{end}}
   <div class="table-scroll" role="region" aria-label="exit 이벤트" tabindex="0"><table>
     <thead><tr>
       {{if .Multi}}<th scope="col">계좌</th>{{end}}
