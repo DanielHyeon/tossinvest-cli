@@ -99,10 +99,10 @@ const ordersTemplates = `
 <p class="muted">브로커 조회 {{.Broker.TakenAt}} ({{.Broker.AgeSeconds}}초 전) ·
 갱신 1회 = 미체결 1콜 + 종결 1콜 + 조건주문 1콜{{if .Broker.Stale}} ·
 <strong class="bad">캐시 TTL({{.Broker.TTLSeconds}}초)을 넘었다 — 지금 계좌의 값이 아니다</strong>{{end}}{{if .Broker.Error}} ·
-<span class="bad">마지막 갱신 실패: {{.Broker.Error}}</span>{{end}}</p>
+<span class="bad" title="{{.Broker.Error}}">마지막 갱신 실패 — 사유는 이 문장의 title 과 위 원인 배너에 있다</span>{{end}}</p>
 {{else}}
 <p class="aside"><strong>아직 읽지 않았다.</strong>
-{{if .Broker.Error}}<code>{{.Broker.Error}}</code>{{end}}</p>
+{{if .Broker.Error}}<span title="{{.Broker.Error}}">사유는 위 원인 배너에 있다.</span>{{end}}</p>
 {{end}}
 {{end}}
 

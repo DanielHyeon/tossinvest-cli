@@ -136,6 +136,25 @@ func TestEachUnmeasuredCauseIsExplainedOnce(t *testing.T) {
 	}
 }
 
+// TestCauseBannerSplitsBlockingFromStateNotes — 읽기 실패는 .danger 상자, 상태 설명은 상자 없는 .aside (spec 「알림은 세 단계」).
+func TestCauseBannerSplitsBlockingFromStateNotes(t *testing.T) {
+	page := a173Fixtures(t)[0].get("/dashboard") // 개요: seam_unwired + journal_unreadable 가 함께 나온다.
+	if n := strings.Count(page, `class="danger cause-banner"`); n != 1 {
+		t.Errorf(".danger.cause-banner %d개, 1개여야 한다", n)
+	}
+	if n := strings.Count(page, `class="aside cause-banner"`); n != 1 {
+		t.Errorf(".aside.cause-banner %d개, 1개여야 한다", n)
+	}
+	danger := page[strings.Index(page, `class="danger cause-banner"`):]
+	danger = danger[:strings.Index(danger, "</div>")]
+	if !strings.Contains(danger, "journal_unreadable") || strings.Contains(danger, "seam_unwired") {
+		t.Errorf("차단 묶음은 읽기 실패만 담아야 한다: %.200s", danger)
+	}
+	if strings.Index(page, `class="danger cause-banner"`) > strings.Index(page, `class="aside cause-banner"`) {
+		t.Error("차단 묶음이 먼저 나와야 한다")
+	}
+}
+
 // --- ② 알림 3단계 -----------------------------------------------------------------------
 
 var a173Box = regexp.MustCompile(`class="[^"]*\b(?:notice|danger)\b`)

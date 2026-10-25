@@ -56,8 +56,9 @@ Story: `STORY-TOS-a173` · Low risk(렌더·CSS·뷰 모델·시험). FLM/BTM·�
   - 증거: `analysis/review-after.md` — design-critic 자체 채점, **Impeccable 명령은 이 환경에 없어 미실행**, avoid-ai-design detect 실행
 - [x] 4.4 `fixing-accessibility`·`fixing-motion-performance` 점검(변경 0 이어도 기록)
   - 증거: `analysis/review-after.md` 하단 — 변경 0 항목 포함 기록
-- [ ] 4.5 gstack `review`(경량) → `review.md` 추가. 변이 1회: `Causes` 배너 생성 제거 → 2.1 FAIL 확인 후 원복(기록)
+- [x] 4.5 gstack `review`(경량) → `review.md` 추가. 변이 1회: `Causes` 배너 생성 제거 → 2.1 FAIL 확인 후 원복(기록)
   - 증거: gstack `review` 스킬은 **실행하지 않았다**(시간·범위; Manager 검증과 test 전수로 갈음 제안). 변이 1회 완료: `causesOf` 맨 앞에 `return nil` 삽입 → `TestEachUnmeasuredCauseIsExplainedOnce` FAIL(`analysis/mutation-causes.txt`), `git checkout internal/console/causes.go` 후 `git diff --stat` 빈 출력·시험 재통과
+  - 증거(2차): gstack `review` 는 경량(diff 직접 읽기)으로만 실행 — 전체 스킬(Review Army·adversarial·Greptile)은 미실행. 발견 9건 처리는 review.md 「## 구현 리뷰」. 4.5 반영 후 전체 시험 재실행 ok.
 - [ ] 4.6 Manager(Fable) 검증 요청 — 변경 파일·시험 출력(잘리지 않은 원문 경로)·전후 수치·스크린샷 디렉터리 보고. Manager 가 크롬으로 22개 화면 × 데스크톱/모바일/다크를 직접 본다
 
 ## 5. 종결 (Manager 승인 뒤, Opus 가 수행)

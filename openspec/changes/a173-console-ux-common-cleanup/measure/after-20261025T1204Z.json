@@ -1,8 +1,8 @@
 {
- "commit": "feat/a173 HEAD",
+ "commit": "feat/a173 HEAD (4.5 반영)",
  "metrics": {
   "light/d/dashboard": {
-   "h": 4458,
+   "h": 4453,
    "forms": 0,
    "inputs": 0,
    "buttons": 0,
@@ -35,14 +35,14 @@
    "status": 200
   },
   "light/d/orders": {
-   "h": 1894,
+   "h": 1806,
    "forms": 0,
    "inputs": 0,
    "buttons": 0,
    "notices": 1,
    "stripH": 71,
    "maxP": 672,
-   "words": 278,
+   "words": 258,
    "status": 200
   },
   "light/d/history": {
@@ -57,11 +57,11 @@
    "status": 200
   },
   "light/d/signals": {
-   "h": 3166,
+   "h": 3134,
    "forms": 0,
    "inputs": 0,
    "buttons": 0,
-   "notices": 1,
+   "notices": 0,
    "stripH": 68,
    "maxP": 672,
    "words": 607,
@@ -299,14 +299,14 @@
    "status": 200
   },
   "light/m/orders": {
-   "h": 2151,
+   "h": 1995,
    "forms": 0,
    "inputs": 0,
    "buttons": 0,
    "notices": 1,
    "stripH": 82,
    "maxP": 366,
-   "words": 277,
+   "words": 257,
    "status": 200
   },
   "light/m/history": {
@@ -321,11 +321,11 @@
    "status": 200
   },
   "light/m/signals": {
-   "h": 3660,
+   "h": 3609,
    "forms": 0,
    "inputs": 0,
    "buttons": 0,
-   "notices": 1,
+   "notices": 0,
    "stripH": 80,
    "maxP": 366,
    "words": 605,
@@ -563,14 +563,14 @@
    "status": 200
   },
   "dark/d/orders": {
-   "h": 1894,
+   "h": 1806,
    "forms": 0,
    "inputs": 0,
    "buttons": 0,
    "notices": 1,
    "stripH": 71,
    "maxP": 672,
-   "words": 278,
+   "words": 258,
    "status": 200
   },
   "dark/d/history": {
@@ -585,11 +585,11 @@
    "status": 200
   },
   "dark/d/signals": {
-   "h": 3166,
+   "h": 3134,
    "forms": 0,
    "inputs": 0,
    "buttons": 0,
-   "notices": 1,
+   "notices": 0,
    "stripH": 68,
    "maxP": 672,
    "words": 607,
@@ -827,14 +827,14 @@
    "status": 200
   },
   "dark/m/orders": {
-   "h": 2151,
+   "h": 1995,
    "forms": 0,
    "inputs": 0,
    "buttons": 0,
    "notices": 1,
    "stripH": 82,
    "maxP": 366,
-   "words": 277,
+   "words": 257,
    "status": 200
   },
   "dark/m/history": {
@@ -849,11 +849,11 @@
    "status": 200
   },
   "dark/m/signals": {
-   "h": 3660,
+   "h": 3609,
    "forms": 0,
    "inputs": 0,
    "buttons": 0,
-   "notices": 1,
+   "notices": 0,
    "stripH": 80,
    "maxP": 366,
    "words": 605,
@@ -1212,7 +1212,7 @@
    "unmeasured": 0
   },
   "signals.html": {
-   "notice_danger": 1,
+   "notice_danger": 0,
    "change_id_body": 0,
    "abs_path_body": 0,
    "hex64_body": 0,

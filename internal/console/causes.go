@@ -38,6 +38,26 @@ var causeLinks = map[unmeasuredReason][2]string{
 
 var readingType = reflect.TypeOf(reading{})
 
+// blockingCauses 는 읽기 실패 사유임(차단 상자 `.danger`). 나머지는 상태 설명이라 상자 없는 `.aside`.
+// 스펙 「알림은 세 단계로만 쓰인다」의 차단 정의(읽기 실패)에 맞춤.
+var blockingCauses = map[unmeasuredReason]bool{
+	reasonJournalUnreadable: true, reasonBrokerReadFailed: true, reasonConfigUnreadable: true,
+	reasonJournalValueUnparsable: true, reasonDiscoveryUnreadable: true,
+}
+
+func causesBlocking(view any) []causeBanner { return filterCauses(view, true) }
+func causesNote(view any) []causeBanner     { return filterCauses(view, false) }
+
+func filterCauses(view any, blocking bool) []causeBanner {
+	var out []causeBanner
+	for _, b := range causesOf(view) {
+		if blockingCauses[unmeasuredReason(b.Code)] == blocking {
+			out = append(out, b)
+		}
+	}
+	return out
+}
+
 // causesOf 는 뷰 모델 안의 미측정 reading 을 사유 코드별로 모아 배너 목록을 돌려줌.
 // 뷰 모델은 템플릿이 읽는 값이라 필드가 전부 내보내진(exported) 것이어야 하고, 내보내지지 않은
 // 필드는 템플릿도 못 읽으므로 건너뜀.

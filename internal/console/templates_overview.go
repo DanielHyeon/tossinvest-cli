@@ -28,8 +28,14 @@ const overviewTemplates = `
   "causes" 는 읽지 못한 원인의 설명을 화면당 한 번 그림(change a173). 칸은 사유 코드만 갖는다.
   차단(읽기 실패) 하나의 상자 안에 사유별 문단을 모아 상자 수를 늘리지 않는다.
 */}}
-{{define "causes"}}{{with causes .}}
+{{define "causes"}}{{with causesBlocking .}}
 <div class="danger cause-banner" role="status">
+  {{range .}}<p data-cause="{{.Code}}"><code>{{.Code}}</code> {{.Sentence}}{{if .Href}} <a href="{{.Href}}">{{.HrefLabel}}</a>{{end}}</p>
+  {{with .Details}}<ul>{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
+  {{end}}
+</div>
+{{end}}{{with causesNote .}}
+<div class="aside cause-banner">
   {{range .}}<p data-cause="{{.Code}}"><code>{{.Code}}</code> {{.Sentence}}{{if .Href}} <a href="{{.Href}}">{{.HrefLabel}}</a>{{end}}</p>
   {{with .Details}}<ul>{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
   {{end}}

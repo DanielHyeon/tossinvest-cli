@@ -128,7 +128,8 @@ button:disabled { cursor: not-allowed; opacity: 0.65; }
 .secondary-link { background: transparent; color: var(--ink-1); }
 form { display: inline; }
 /* 산문 줄 길이: 한 줄 70자 안팎(42rem). 표·폼·코드 블록·그리드는 제외 */
-main p:not(td p, th p, .console-status p), main li, main details > :not(summary) { max-inline-size: 42rem; }
+main p, main li, main details > :not(summary) { max-inline-size: 42rem; }
+td p, th p, .console-status p { max-inline-size: none; }
 .page-intro { max-inline-size: 42rem; }
 /* 경계 배지는 h1 바로 옆, 접힌 경계·기술 정보는 본문보다 한 단 낮은 보조선 */
 h1:has(+ .scope) { display: inline-block; margin-inline-end: var(--space-2); }

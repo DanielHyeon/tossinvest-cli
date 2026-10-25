@@ -56,7 +56,7 @@
 
 ## 정보 구조 규칙 (change a173)
 
-- **원인 1회**: 값을 읽지 못한 원인(`unmeasuredReason`)의 설명 문장은 화면당 한 번 `causes` 배너(상자 하나)에만 쓴다. 각 칸은 `미측정 · <사유 코드>`(`.muted.unmeasured` + `<code>`)만 남기고 구체 사유는 칸 `title`·배너 목록에 둔다. 새 칸을 만들면 뷰 모델에 `reading` 필드(내보내짐)로 두어야 배너가 훑는다.
+- **원인 1회**: 값을 읽지 못한 원인(`unmeasuredReason`)의 설명 문장은 화면당 한 번 `causes` 배너(상자 하나)에만 쓴다. 각 칸은 `미측정 · <사유 코드>`(`.muted.unmeasured` + `<code>`)만 남기고 구체 사유는 칸 `title`·배너 목록에 둔다. 새 칸을 만들면 뷰 모델에 `reading` 필드(내보내짐)로 두어야 배너가 훑는다. 배너는 읽기 실패(`.danger.cause-banner`)와 상태 설명(`.aside.cause-banner`) 두 묶음. `{{template "causes" .}}` 는 복사본 뷰 모델에만 건다(공유 가변 포인터를 품은 페이지에는 걸지 않는다).
 - **알림 3단계**: `.danger` = 차단(읽기 실패·기동 거부), `.notice` = 결과가 따르는 사실(승인 대기·구버전 바이너리·저장 결과·비가역), `.aside` = 상자 없는 본문(경계·설명·빈 상태). 반영 시점은 저장 버튼 옆 `muted effect-timing` 한 줄. 한 화면의 떠 있는 상자 ≤ 3. 행 단위 표시(상태 알약·보조 지표)에는 `.notice`/`.danger` 를 쓰지 않는다(`status-pill warn`, `submetric bad|warn`).
 - **경계 배지**: `<h1>` 바로 뒤 `<span class="status-pill scope">읽기 전용|편집 가능</span>`, "이 화면은 ~하지 않는다" 류 경계 문단은 `<details class="scope"><summary>이 화면의 경계</summary>` 하나. 배지는 `<h1>` 밖.
 - **기술 정보**: change ID·절대경로·digest·SHA 는 `{{template "tech" 값}}`(`<details class="tech">`)로 접는다. 값은 DOM 에 남는다. 안전 상태(UNWIRED·OFF·미충족·stale)는 접지 않는다. `.notice`/`.danger` 는 `<details>` 안에 두지 않는다.
