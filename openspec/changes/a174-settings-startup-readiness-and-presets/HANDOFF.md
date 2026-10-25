@@ -6,7 +6,8 @@
 - 프로그램 정의: `openspec/changes/archive/2026-10-25-a173-console-ux-common-cleanup/proposal.md` 「프로그램 개요」(a173 archive 뒤 경로; archive 전이면 `openspec/changes/a173-…/proposal.md`). S1=a173, S2=a174, S3=a175, S4=a176, S5=a177.
 - 끝난 것: **a177**(성과 조회 창 표기 단일화) archive·push(`abe803db4`). **a173**(공통 정리) 구현·Manager 검증 완료, main `2036fd41b` 에 ff 병합됨, 종결(FLM 번들 7·격리 gate·archive·push) 진행 중 — 시작 전에 `git log --oneline -5` 와 `ls openspec/changes/archive | grep a173` 으로 끝났는지 확인하라. 끝나지 않았으면 **a174 를 시작하지 말고** a173 종결 상태(`openspec/changes/a173-…/tasks.md` 5.1 영수증, `/tmp/claude-1000/…/scratchpad/a173-close/gate.log`)부터 본다.
 - 정의만 된 것: a174·a175·a176 — 각 change 디렉터리에 `proposal.md`·`design.md`·`tasks.draft.md`·`specs/operator-console/spec.md`(ADDED 델타)·`.openspec.yaml`·`base-commit.txt`(= `b27a1ea87`, **착수 시 a173 착지 커밋으로 갱신**). Story YAML `STORY-TOS-a17[4-6]` 등록, tracker 상태 `designed`.
-- 동시 착수 상한 4(기억 `tossos-sdd-workflow`). 순서: a174 → a175(a174 와 병행 가능, 파일 안 겹침) → a176(a174·a175 와 병행 가능).
+- 동시 착수 상한 4(기억 `tossos-sdd-workflow`). 순서: a174 + a175 병행 → a176 은 **a174 착지 뒤**.
+  - 정정(Manager Opus 5.5, 2026-10-26): "파일 안 겹침"은 사실이 아니었다. 콘솔 CSS 는 전부 `templates.go` `style` 한 곳에 있어서 세 change 가 모두 그 블록을 고친다. 그리고 a174(`dashboard` define)와 a176(`verify` define)은 같은 `templates.go` 를 고친다. 규칙은 a174 design §2.5: `style` 끝에 change 마다 블록 하나만 덧붙인다.
 
 ## 2. 사람 결정 (확정)
 1. 설정 탭 축은 **가역성·빈도 유지**(spec `operator-console` 851 SHALL). 5묶음 안은 철회.
@@ -14,13 +15,22 @@
 3. 개발자 식별자는 **접힌 기술 정보**(`details.tech`, a173 define)로. 안전 상태 단어는 접지 않는다.
 4. 확인 문구·추가 확인 단계 금지(사용자 지시, 기억 `no-typed-confirmation-friction`). 주문·토글·승인·엔진 버튼 클릭 수 불변.
 
-## 3. 사람 결정 (미확정 — 다음 세션이 먼저 물을 것)
+## 3. 사람 결정 — 2026-10-26 확정 (사용자 "권장 대로 진행", Manager Opus 5.5 가 물음)
+1. worktree 위치 = **형제 디렉터리** `/mnt/D/Axipient/workspace/TossOS.worktrees/<change-id>`. 종결 gate 는 지금처럼 `/tmp/tossos-<id>-close-<date>` 격리 worktree 에서 돌린다.
+2. `docs/WORKFLOW.md` 비례 원칙 = **문구를 게이트에 맞춘다**(게이트는 완화하지 않는다). docs 커밋 1건, a174 와 따로. 넣을 문장은 아래 §3.1.
+3. a177 교훈 = ai-memory durable page **1장을 쓴다**. 근거: GPT 계열 팀메이트는 Claude 로컬 기억을 못 본다. 검증된 교훈 둘만 담는다 — ① 기존 함수 1줄 편집 = gate ⑤ 번들 1, ② 미배선·오류 갈래 전에 뷰 모델 값을 그리면 0값이 샌다. a173 종결 뒤 Opus 종결자가 쓴다.
+4. 팀메이트 = **GPT-5.6 Terra**. 커밋 트레일러는 실제 작성 모델 이름으로 쓴다. Terra 하네스의 관례가 있으면 그것, 없으면 `Co-Authored-By: GPT-5.6 Terra <noreply@openai.com>`(메일 주소는 추정 — 첫 커밋 전에 사람이 확인).
+
+### 3.1 WORKFLOW 에 넣을 문장 (`docs/WORKFLOW.md:164` "…경량 리뷰로 충분하다." 뒤)
+> 단 gate ⑤(`tools/logic-map/check_analysis.py`)는 위험 등급과 관계없이, base→착지 창에서 본문이 바뀐 기존 Go 함수(시험 파일 포함)마다 FLM 번들을 요구하고, `not-applicable` 표지는 그런 함수가 0개일 때만 받는다. 그래서 저위험 change 는 새 함수·새 파일로 구현해 required 0 을 목표로 하고, 기존 함수를 고쳤으면 번들을 만든다(사후에 만들었으면 review.md 에 그렇게 적는다).
+
+### 3.2 (기록) 확정 전 원문
 1. **구현 worktree 위치**: 저장소 안 `worktree/<id>` 는 저장소 전수 census 시험을 오염시켜 main 체크아웃 `make test` 가 빨갛고 CodeGraph 색인이 부푼다(a177 실측). 권장: `/mnt/D/Axipient/workspace/TossOS.worktrees/<id>`(형제 디렉터리). 사용자는 앞서 `./worktree` 를 지시했었다 → 확인 뒤 진행.
 2. **`docs/WORKFLOW.md` 비례 원칙 문구 vs gate ⑤**: 기존 Go 함수를 한 줄이라도 고치면 `check_analysis.py` 가 FLM 번들을 요구하고 `not-applicable` 표지는 required 0 일 때만 통한다(기억 `flm-exemption-only-when-no-function-modified`). 권장: WORKFLOW 문구를 게이트에 맞춘다(docs 커밋 1건).
 3. a177 의 ai-memory durable page(교훈) 작성 여부 — 규칙 18 은 change 종결 시 검증된 교훈을 허용, 스킬은 명시 요청 요구. 사용자에게 한 번 물을 것.
 
 ## 4. 작업 방식 (이 프로그램에서 쓴 것, 그대로 반복)
-- 역할: Manager = OpenSpec 작성·검토·최종 검증만. 구현(코드·시험·측정) = Sonnet 5.5 Teammate. 종결(FLM 번들·tracker·sdd-sync·격리 gate·archive·push·retain) = Opus.
+- 역할: Manager(2026-10-26 부터 Opus 5.5) = OpenSpec 작성·검토·최종 검증만. 구현(코드·시험·측정) = **GPT-5.6 Terra** Teammate(아래 브리프의 "Sonnet" 트레일러는 §3-4 로 대체). 종결(FLM 번들·tracker·sdd-sync·격리 gate·archive·push·retain) = Opus. 작업 위치는 §3-1 의 형제 디렉터리다(아래 ③의 worktree 도 거기에 만든다).
 - 착수 절차: ① `tasks.draft.md` → `tasks.md` 로 이름 변경, `base-commit.txt` 를 현재 main 으로 갱신, `review.md` 에 proposal-freeze 경량 리뷰(validate + Manager 셀프리뷰) 기록 → ② `openspec validate --all --strict --no-interactive` 0 failed 확인 → ③ worktree 생성(브랜치 `feat/<change-id>`) → ④ Sonnet 브리프(아래 5) → ⑤ 구현 보고 뒤 Manager 가 diff 읽기·시험 재실행·크롬 실측(데스크톱 1280·모바일 390 × 라이트·다크, `chrome-devtools` `emulate`) → ⑥ 수정 라운드 → ⑦ Opus 종결.
 - 구현 브리프 필수 항목: 작업 디렉터리 한정 · 운영 콘솔 37085·`~/.config/tossctl`·docker 금지 · 격리 콘솔은 빈 설정 폴더 + 새 포트(383xx) + PID 종료 증명 · 버튼 0 · TDD(RED 출력 기록) · **기존 Go 함수 편집 0 목표(새 함수·새 파일·템플릿 함수)** · `check_analysis.py --change <id>` 의 required N 보고 · 고정 리터럴 시험 수정은 tasks.md 에 전수 기록(약화 금지) · 측정 하네스 `openspec/changes/archive/2026-10-25-a173-…/measure/{shoot.cjs,outline.py,README.md}` 재사용 · gstack `review` 경량 → review.md · 커밋 `[<id> <task>]` + `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>` · main 미접촉·푸시 금지.
 - 종결 브리프 필수 항목: a177·a173 선례 그대로(rebase → ff → tasks 종결 체크 → FLM 번들 → tracker → `/tmp/tossos-<id>-close-<date>` 격리 worktree 에서 `make sdd-infra` → `sdd_sync.py --no-gbrain` → `make sdd-check` → `make gate` → `openspec archive <id> --yes` → Story YAML 경로 갱신 → validate → commit → push → worktree/branch 제거 → Hindsight retain). gate ⑥ CodeGraph 15초 probe 는 `codegraph status .` 워밍업 후 재시도, Pending 이 있으면 `codegraph sync .`.
@@ -40,7 +50,8 @@
 - 구현 중 무거운 `go test ./...` 와 gate 를 동시에 돌리지 말 것(타임아웃 유발).
 - `AskUserQuestion` 도구는 이 환경에서 조용히 실패 — 선택지는 번호 매긴 평문으로.
 
-## 7. 다음 한 걸음
-1. a173 종결 완료 확인(archive 디렉터리 존재 + `origin/main` 에 푸시).
-2. 사용자에게 §3-1·3-2 를 물어 답을 받는다.
-3. a174 착수: `tasks.draft.md` → `tasks.md`, `base-commit.txt` 갱신, review.md proposal-freeze, worktree 생성, Sonnet 브리프.
+## 7. 다음 한 걸음 (2026-10-26 갱신)
+1. a173 종결 완료 확인(archive 디렉터리 존재 + `origin/main` 에 푸시). 2026-10-25 23:42 에는 아직 아니었다: 1차 gate 는 7/11 `make test` FAIL(`strategyworker`·`testenv`), 2차는 8/11 진행 중이었다.
+2. ~~사용자에게 §3-1·3-2 를 물어 답을 받는다.~~ 끝남(§3).
+3. a174 착수: `tasks.draft.md` → `tasks.md`, `base-commit.txt` 갱신, design §1 재확인, `GatePreflight` AST 증거, review.md proposal-freeze, `openspec validate --all --strict --no-interactive`, Terra 브리프. design·proposal·tasks.draft 는 Manager 가 2026-10-26 에 이미 정정했다(검증 콘솔 데이터 경로·절 단위 행·프리셋 한도 다섯과 `tier`·이름 금지 시험·파일 겹침).
+4. 착수 전 Manager 리뷰에서 나온 설계 정정(design 반영됨): ① `pageFuncs` 는 전역이라 템플릿 함수로 seam 을 못 읽는다 → `handleDashboard` 한 줄 + 번들 1. ② `GatePreflight` 는 한도·정책을 절 하나씩으로 낸다 → 행 여섯, 한도 다섯 행으로 쪼개면 재계산. ③ `engineproc_test.go:194` 이름 금지 → `readiness.go`·`templates.go` 에 `AutomationGate` 철자 금지. ④ 프리셋 폼 hidden 필드는 `tier`, 한도는 다섯.

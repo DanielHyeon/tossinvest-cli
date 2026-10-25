@@ -1,6 +1,7 @@
 # a176 design
 
-전제: a173 착지 뒤(a174·a175 와 병행 가능 — 파일: `templates_overview.go`, `templates.go` 의 `verify` 템플릿(:762 부근), `pages.go` 는 편집하지 않는다). file:line 은 정찰(2026-10-25) 값.
+전제: a173 착지 뒤. 파일: `templates_overview.go`, `templates.go` 의 `verify` 템플릿(HEAD `4e20c5df5` 에서 :802), `pages.go` 는 편집하지 않는다. file:line 은 정찰(2026-10-25) 값.
+**순서 정정(Manager, 2026-10-26)**: "a174·a175 와 병행 가능"을 거둔다. a174 가 같은 `templates.go` 의 `dashboard` define 과 `style` 을 고치고, a175 도 `style` 을 고친다. 그래서 a176 은 **a174 착지 뒤** 착수한다. CSS 는 `style` **끝에** `/* a176 — … */` 블록 하나만 덧붙인다(a174 design §2.5). 착수 시 `base-commit.txt` 를 그때 main HEAD 로 갱신하고, 작업 위치는 `/mnt/D/Axipient/workspace/TossOS.worktrees/a176-overview-summary-and-verify-steps`(사람 결정 2026-10-26).
 
 ## 1. 지형
 | 대상 | 위치 | 비고 |

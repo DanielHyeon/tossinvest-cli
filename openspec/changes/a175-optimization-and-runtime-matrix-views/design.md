@@ -1,6 +1,7 @@
 # a175 design
 
-전제: a173 착지 뒤 트리(a174 와 병행 가능 — 파일이 겹치지 않는다: a174 는 `templates_settings.go`·`templates.go` 검증 콘솔 절, a175 는 `templates_optimization.go`·`templates_signals.go`). file:line 은 정찰(2026-10-25) 값, 편집 전 재확인.
+전제: a173 착지 뒤 트리(a174 와 병행 가능 — 주 파일은 a174 가 `templates_settings.go`·`templates.go` `dashboard` define, a175 가 `templates_optimization.go`·`templates_signals.go`). file:line 은 정찰(2026-10-25) 값, 편집 전 재확인.
+**겹침 정정(Manager, 2026-10-26)**: 콘솔 CSS 는 전부 `templates.go` `style` define(:17-481) 한 곳에 있어서 a174·a175·a176 이 모두 그 블록을 고친다(계산기 `.hypothetical-fields` 도 거기 있다). 규칙: `style` **끝에** `/* a175 — … */` 블록 하나만 덧붙이고 기존 규칙은 고치지 않는다(a174 design §2.5). a174 가 먼저 착지하면 a175 의 gate ⑤ 창에 `pages.go:Console.handleDashboard` 가 든다 — a174 번들을 sha 를 대조한 뒤 복사한다. 착수 시 `base-commit.txt` 를 그때 main HEAD 로 갱신하고, 작업 위치는 `/mnt/D/Axipient/workspace/TossOS.worktrees/a175-optimization-and-runtime-matrix-views`(사람 결정 2026-10-26).
 
 ## 1. 지형
 | 대상 | 위치 | 비고 |

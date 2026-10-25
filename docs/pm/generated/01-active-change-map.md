@@ -170,7 +170,7 @@
 | `a171-entry-place-ambiguous-resend` | STORY-TOS-a171 | in_progress |
 | `a172-console-anti-ai-redesign` | STORY-TOS-a172 | in_progress |
 | `a173-console-ux-common-cleanup` | STORY-TOS-a173 | archived |
-| `a174-settings-startup-readiness-and-presets` | STORY-TOS-a174 | designed |
+| `a174-settings-startup-readiness-and-presets` | STORY-TOS-a174 | in_progress |
 | `a175-optimization-and-runtime-matrix-views` | STORY-TOS-a175 | designed |
 | `a176-overview-summary-and-verify-steps` | STORY-TOS-a176 | designed |
 | `a177-performance-window-single-source` | STORY-TOS-a177 | archived |

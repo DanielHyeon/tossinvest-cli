@@ -1,0 +1,255 @@
+{
+  "file": "internal/console/settings_operating.go",
+  "source_sha256": "2a29caa23e01a8eb4bf35cc2b3ed49217744ec74dc992efd61bedebb0157f271",
+  "package": "console",
+  "function": "GatePreflight",
+  "receiver": "settingsPage",
+  "signature": "settingsPage.GatePreflight(params=0, results=1)",
+  "start": {
+    "line": 84,
+    "column": 1
+  },
+  "end": {
+    "line": 122,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "else",
+      "at": {
+        "line": 92,
+        "column": 9
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "switch",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 12
+      },
+      "text": "p.Gate.Limits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 12
+      },
+      "text": "limits.Validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 9
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 69
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 9
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 12
+      },
+      "text": "limitSummary"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 12
+      },
+      "text": "config.TradingPolicyOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 7
+      },
+      "text": "policy.Complete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 9
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 9
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 12
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 25
+      },
+      "text": "policy.Missing"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 8
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 8
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 88,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 89,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 93,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 102,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 107,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
