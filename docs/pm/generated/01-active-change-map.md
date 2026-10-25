@@ -168,4 +168,4 @@
 | `a169-breakout-universes-are-compared-in-shadow` | STORY-TOS-a169 | in_progress |
 | `a170-inspection-guard-reconciles-offline-assessment` | STORY-TOS-a170 | implemented |
 | `a171-entry-place-ambiguous-resend` | STORY-TOS-a171 | in_progress |
-| `a172-console-anti-ai-redesign` | STORY-TOS-a172 | in_progress |
+| `a172-console-anti-ai-redesign` | STORY-TOS-a172 | implemented |

@@ -29,7 +29,7 @@ Story: `STORY-TOS-a172` · Low risk(CSS·장식 마크업만). FLM/BTM·변이·
 - [x] 4.4 reduced-motion(토큰 리셋), 프레임 측정(`scratchpad/a172/frames.cjs`: 모달 10회·nav hover 20회, p95 16.8ms, 32ms 초과 0)
 
 ## 5. 검증·포트
-- [ ] 5.1 전체 콘솔 시험 · 렌더 · 경량 리뷰 · 포트
+- [x] 5.1 전체 콘솔 시험 · 렌더 · 경량 리뷰 · 포트 — 2026-10-25 main ff `79d32f9af`(비캐시 console 48.3s · cmd/tossctl 63.3s, 검출기 `[]`); 사람 결정 2건은 권장안 확정(POST 폼 버튼 전환 전부 제외 유지, 스프링 유지·모달 오버슈트 12%)
 
 ## 고정 리터럴 시험 수정 기록
 - 2단계 `display_primitives_test.go` `TestTheHeadingStepsAreDistinguishable` + 헬퍼(`declaredFontSize`·`declaredBodyFontSize`): 제목·본문 크기가 `clamp()` 라 `Nrem`/`Npx/` 리터럴 파서가 읽지 못함. 파서가 clamp 의 최소·최대를 읽도록 바꾸고, 제목 단계 순서(h1>h2>h3>본문)를 가장 좁은 뷰포트와 가장 넓은 뷰포트 양쪽에서 검사하며 본문 최소 15px 기준은 유지(본문 clamp 최소 0.9375rem = 15px). 약화 아님: 검사 지점이 1곳에서 2곳으로 늘어남.
