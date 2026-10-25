@@ -173,4 +173,4 @@
 | `a174-settings-startup-readiness-and-presets` | STORY-TOS-a174 | designed |
 | `a175-optimization-and-runtime-matrix-views` | STORY-TOS-a175 | designed |
 | `a176-overview-summary-and-verify-steps` | STORY-TOS-a176 | designed |
-| `a177-performance-window-single-source` | STORY-TOS-a177 | implemented |
+| `a177-performance-window-single-source` | STORY-TOS-a177 | archived |

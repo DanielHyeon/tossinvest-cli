@@ -27,6 +27,9 @@ Story: `STORY-TOS-a177` · Low risk(표시 문자열 출처). FLM/BTM·변이 �
   - main 병합: `worktree/a177` 를 main(`794f9e95a`) 위로 rebase(충돌 0) → `git merge --ff-only` → main `3b558d3ba`(fe7e187a3 · 7d6df0927 · 3b558d3ba).
   - gate ⑤ 사전 실행: review.md 「FLM 면제」만으로는 FAIL — `missing Function Logic Map for 3 function(s)` (`Console.handleOptimization` · `Console.handlePerformanceHistory` · `fakePerformanceReader.Dashboard`). 면제 표지는 required 0 일 때만 받는다(`check_analysis._verdict`). → `analysis/function-logic/` 번들 3 을 AST(`tools/logic-map`) + 시험별 coverprofile 측정으로 작성 → `evidence complete or diff-proven exempt` rc 0.
   - 이후 단계(tracker · sdd-sync · gate · archive · push · retain)의 영수증은 아래 줄과 review.md 「완료 게이트」에 적는다.
+  - tracker 재생성 · `--check` rc 0(게이트 전 커밋 `d4dca0062`).
+  - `make gate` — 격리 worktree `/tmp/tossos-a177-close-20261025`(`d4dca0062`)에서 GATE PASS 11/11. main 체크아웃 실행 2 회는 a177 무관 환경 실패(CodeGraph probe 타임아웃 · 저장소 안 체크아웃 사본) — review.md 「완료 게이트 실행 영수증」.
+  - archive: `openspec archive --yes` → `openspec/specs/lane-performance/spec.md` + 1 Requirement, Story `openspec.path` · `found_by.record` 를 아카이브 경로로.
 
 ## 구현 증거 (Sonnet 5.5, 2026-10-25)
 - 1.1 확정: 리터럴 `templates_optimization.go:217`(데이터 미참조, 구 템플릿 `optimizationPage`). 칩 `templates_optimization.go:306,337,352` 가 `.View.Query.PeriodDays` 를 찍고 `handlePerformanceHistory`(`performance_history.go:35-56`) 는 Performance==nil→`Unwired`, 오류→`LoadErr` 로 `View` 영값 → 0일. 성공 경로 `performance.DefaultQuery`(`query.go:36`) PeriodDays 30.

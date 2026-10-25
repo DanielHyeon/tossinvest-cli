@@ -88,3 +88,16 @@ performance collector와 query는 order mutation, config write, lane toggle 또�
 #### Scenario: dependency 검사
 - **WHEN** performance package의 dependency closure를 검사한다
 - **THEN** broker mutation과 operating-setting writer가 존재하지 않는다
+
+### Requirement: 성과 조회 기본값 표기는 한 출처에서 온다
+
+성과 이력의 서버 조회 기본값(조회 창 일수·시장·lane·lineage)을 표시하는 모든 콘솔 화면은 같은 값 객체에서 읽어야 한다(SHALL). 그 값을 템플릿 안의 글자로 적어서는 안 된다(SHALL NOT — 두 화면이 같은 사실을 다른 숫자로 말하게 된다). 값이 없으면 0일로 꾸미지 않고 "미측정" 과 사유를 같은 형식으로 렌더한다(SHALL).
+
+#### Scenario: 두 화면의 같은 조회 창
+- **WHEN** 성과 이력 화면과 최적화의 성과·이력 카테고리를 같은 기본값으로 렌더하면
+- **THEN** 두 화면의 조회 창 문구는 같다
+
+#### Scenario: 기본값이 없는 경우
+- **WHEN** 서버 조회 기본값을 얻지 못한 상태로 두 화면을 렌더하면
+- **THEN** 두 화면 모두 "0일" 이 아니라 같은 형식의 미측정과 사유를 표시한다
+

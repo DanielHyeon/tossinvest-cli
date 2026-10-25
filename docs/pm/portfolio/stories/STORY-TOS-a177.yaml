@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a177-performance-window-single-source",
-    "path": "openspec/changes/a177-performance-window-single-source"
+    "path": "openspec/changes/archive/2026-10-25-a177-performance-window-single-source"
   },
   "found_by": {
     "date": "2026-10-25",
     "how": "2026-10-25 UX 전수 검사: /optimization?category=performance-history 는 '최근 30일 · 전체 시장 · 전체 lane · complete lineage · 읽기 전용' 을 표시하고 /performance-history 는 칩 '최근 0일' 을 표시한다. internal/console/templates_optimization.go:217 의 30일은 템플릿 리터럴이고 성과 이력 화면은 서버 기본값을 렌더한다. 사용자 결정: 배치가 아니라 값 문제이므로 별도 버그 Story 로 근본 원인부터 찾는다(규칙 3).",
-    "record": "openspec/changes/a177-performance-window-single-source/proposal.md"
+    "record": "openspec/changes/archive/2026-10-25-a177-performance-window-single-source/proposal.md"
   },
   "acceptance": [
     "근본 원인을 코드로 확정해 proposal 에 적는다: 두 값의 출처(리터럴 vs 서버 기본값)와 '0일' 이 올바른 기본값인지 아니면 기본값 배선 결함인지",
