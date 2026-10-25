@@ -48,6 +48,7 @@
 
 ## 모션 (4단계, 순수 CSS)
 - 토큰: `--dur-1/2/3` = 120/220/300ms, `--ease-spring`(14점 `linear()` 감쇠 스프링, 약 29% overshoot, nav·눌림), `--ease-pop`(12점, 모달 열림 전용, 약 12%), `--ease-settle`(10점, 약 5%). `linear()` 미지원이면 `@supports` 바깥 기본값 `ease-out`. 움직임 크기(`--nudge --press --pop-from`)도 토큰.
+- 6단계 앰비언트(순수 CSS, JS·CSP 불변): `body > header`·`.console-status` 의 `::before/::after` 정적 radial-gradient 덩어리(색 `--tone` 10% 이하)가 `translate/rotate/opacity` 로만 34/41초 루프. `--tone` 은 엔진·데이터 톤(ok/warn/bad, 기본 `--accent`)이라 정보를 나른다. `data-reload=on`(자동 재로드 화면)에서는 정지, reduced-motion·reduced-transparency 에서 정지/제거. 카드 hover 조명(`.optimization-nav a`·`.settings-tabs a`·`.choice-tile`·`.tier-card` 의 `::after`, `opacity` 페이드)은 주문·승인 영역 안에 적용하지 않는다. 시험 `TestAmbientMotionContract`.
 - 대상: 상단 nav·설정 탭·최적화 nav(hover/focus 시 `translate`), POST 폼 밖의 일반 `button`/`.button-link`(`:active` 에서 `scale`), 상세 모달 열림(`opacity` + 개별 `scale`, 위치용 `transform` 은 그대로)과 그 뒤 스크림(셀 `::before`, `opacity` 만, `pointer-events: none`).
 - 제외(전환 0, 안전 불변식 4): `form:not([method=get])`·`form button`·`form input[type=submit]`·`[formmethod]`·`[formaction]` 로 잡히는 모든 버튼(주문·승인·청산·토글·엔진 시작/정지·재시작 등 모든 POST 폼), `.sticky-save`, `.approval-actions`, `.confirm-check`, `.console-approval`. 데이터 값이 바뀌는 자리에는 애니메이션 없음.
 - 성능: 전환 속성은 `translate/scale/opacity` 와 hover 색(`background-color/color`, ≤ `--dur-1`)뿐. `all`·레이아웃 속성·`box-shadow`·blur 금지, `will-change` 는 열린 모달 1곳. 시험 `TestMotionContract`.

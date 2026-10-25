@@ -42,3 +42,8 @@
 - "Radiance": 웹 셰이더 라이브러리가 아님 — npm `radiance@0.0.1`(2022, 무관), `@radiance/core` 404, zbanks/radiance 는 Qt/C++ VJ 앱.
 - 이유: 콘솔 CSP 는 `default-src 'none'` 에 `script-src` 가 없고, 시험이 `<script`·`script-src` 부재를 여러 곳에서 고정(`display_primitives_test.go:296,304`, `market_schedule_test.go:142`, `optimization_ui_contract_test.go:107`, `performance_history_test.go:98` 등). 최적화 미리보기는 `consoleHTMLCSP + "; script-src 'sha256-…'"` 이어 붙이기라 `script-src 'self'` 를 넣으면 지시어가 중복돼 깨진다. 스펙이 script·CSP 완화를 SHALL NOT 으로 금지.
 - 자동 새로고침은 대시보드·검증 2초(주문·포지션도 주기 reload): WebGL 컨텍스트가 페이지마다 새로 생겨 SwiftShader 첫 컨텍스트 95~127 ms, 이후 2.7~5.9 ms.
+
+## 6단계 실측 (헤드리스 chromium, SwiftShader 소프트웨어 렌더 — 실 GPU 값 아님)
+- rAF 프레임(1280 light·dark): 유휴 15초 899프레임, hover 20회, 모달 10회, 대시보드 2초 refresh 5회 전부 p50 16.7·p95 ≤16.8·max 16.8ms, 32ms 초과 0, longtask 0, 콘솔 에러 0, 가로 스크롤 0. 앰비언트 on/정지/제거 세 변형이 같다 — rAF 간격은 컴포지터 전용 애니메이션 비용을 못 본다.
+- 트레이싱(설정 화면 유휴 10초): 앰비언트 on 은 대부분 `BeginMainFrame` 0건(Paint 0, 컴포지터 전용). 3회 중 1회·8회 중 1회는 메인 스레드 구동으로 떨어져 600프레임/10s(프레임당 UpdateLayoutTree 0.10ms + PrePaint 0.09ms, 합 약 0.35ms, Paint 0)였음. `will-change` 로 막히는지는 8:0 대 8:1 로 유의하지 않아 도입하지 않음(총량 ≤2 유지).
+- `fixing-motion-performance` 점검: 금지 패턴 0(JS 0, 레이아웃·paint 애니메이션 0, 애니메이션 CSS 변수 0, blur 0), 레이어는 의사요소 4개(자동 승격), 새로고침 화면 정지. 수정 0.

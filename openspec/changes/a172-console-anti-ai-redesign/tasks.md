@@ -33,8 +33,8 @@ Story: `STORY-TOS-a172` · Low risk(CSS·장식 마크업만). FLM/BTM·변이·
 
 ## 6. 6단계 — CSS-only 셰이더풍 인터랙션(사용자 지시 2026-10-25, 사람 결정: JS·CSP 완화 불채택)
 - [x] 6.1 정찰 — JS·WebGL 안 검토 후 불채택(design.md 「6.1 정찰: 검토했으나 채택 안 함」), 범위 CSS-only 로 정정
-- [ ] 6.2 구현: 앰비언트 톤 배경·새로고침 화면 정지·카드 hover 조명·방어, `TestMotionContract` 확장 + 변이 1회
-- [ ] 6.3 측정(`frames.cjs` 확장) · 6.4 `fixing-motion-performance` 소독 before/after · 6.5 `avoid-ai-design` detect · 20장 렌더
+- [x] 6.2 구현: 앰비언트 톤 배경·새로고침 화면 정지(`data-reload=on`, 마크업 변경 0)·카드 hover 조명·방어. 신규 `TestAmbientMotionContract`(RED→GREEN), 변이 2회 CAUGHT(hover 제외 규칙 `.sticky-save *` 삭제 / 새로고침 `animation: none` 삭제)
+- [x] 6.3 측정(`frames6.cjs`·`trace6.cjs`, light·dark) · 6.4 `fixing-motion-performance` 점검(수정 0) · 6.5 `avoid-ai-design` detect P0 0 · Impeccable `[]` · 20장+hover 2+톤 6장(`scratchpad/a172/phase6/shots/`)
 - [ ] 6.6 main 병합(사람 승인 뒤)
 
 ## 고정 리터럴 시험 수정 기록
@@ -58,6 +58,9 @@ Story: `STORY-TOS-a172` · Low risk(CSS·장식 마크업만). FLM/BTM·변이·
 10. 다크 그림자 덮어쓰기 · 반영: `--shadow-pop`·`--shadow-bar` 토큰, 다크 `:root` 에서 값만 재정의, 개별 규칙 덮어쓰기 삭제
 11. 다크 카드 경계 1.1:1 · 반영: 다크 `--surface-1` `#1d1c19` → `#201f1b` + 다크 `--lift` 에 `--line-soft` 1px 윤곽. 대비 시험 재실행 통과
 12. 위계 · 부분: 정보 섹션은 상단 구분선만(면·그림자 제거), 떠 있는 면은 상태 스트립·`.notice`/`.danger`·`.sticky-save`·`.order-summary` 에만. 「첫 섹션 h2 한 단계 키움」은 h2 가 이미 `--text-2` 이고 텍스트·순서 변경 없이 키울 근거 측정이 없어 미반영(사유: 효과 미측정)
+
+### 6단계 고정 시험 수정 기록
+- `TestMotionContract` 허용 속성 맵에 `rotate` 1개 추가(앰비언트 키프레임이 개별 `rotate` 속성을 씀). 이 밖의 기존 시험·CSP 핀 수정 0, `<script`·`script-src` 부재 핀 전부 그대로 통과.
 
 ## Impeccable 4단계 리뷰 반영 (review-stage4.md)
 번호 · 처리 · 사유

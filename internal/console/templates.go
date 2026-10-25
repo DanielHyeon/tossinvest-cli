@@ -383,6 +383,42 @@ form:not([method=get]) button, form:not([method=get]) .button-link, form button,
 @media (prefers-reduced-motion: reduce) {
   :root { --dur-1: 0.01ms; --dur-2: 0.01ms; --dur-3: 0.01ms; --nudge: 0px; --press: 1; --pop-from: 1; }
 }
+/* --- 앰비언트 톤 배경과 hover 조명(change a172 6단계, CSS 만) ------------------------
+   헤더·상태 스트립 뒤에 정적 저채도 radial-gradient 덩어리 둘을 두고, 움직이는 것은 덩어리의
+   translate·rotate·opacity 뿐임(20~40초 루프). 그라디언트·배경 위치는 애니메이션하지 않음(매 프레임 paint 금지).
+   색은 --tone 이고 --tone 은 상태 스트립이 이미 단어로도 말하는 엔진·데이터 톤을 따름: 정보 없는 장식이 아님.
+   혼합 모드·필터·흐림 효과는 쓰지 않음. 덩어리는 pointer-events: none 이고 콘텐츠 아래(z-index: -1). */
+body { --tone: var(--accent); }
+body:where(:has(.console-status [data-engine-state=running]):has(.console-status [data-data-tone=ok])) { --tone: var(--ok); }
+body:where(:has(.console-status :is([data-data-tone=warn], [data-engine-state=stopped]))) { --tone: var(--warn); }
+body:where(:has(.console-status [data-data-tone=stale])) { --tone: var(--bad); }
+body > header, .console-status { position: relative; isolation: isolate; }
+body > header::before, body > header::after, .console-status::before, .console-status::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%;
+  width: 42%; height: 170%; top: -35%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--tone) 10%, transparent), transparent); }
+body > header::before, .console-status::before { left: 8%; animation: amb-a 34s linear infinite alternate; }
+body > header::after, .console-status::after { right: 8%; animation: amb-b 41s linear -9s infinite alternate; }
+@keyframes amb-a { from { translate: -10% -6%; rotate: -6deg; opacity: 0.75; } to { translate: 10% 6%; rotate: 8deg; opacity: 1; } }
+@keyframes amb-b { from { translate: 8% 5%; rotate: 5deg; opacity: 1; } to { translate: -9% -5%; rotate: -7deg; opacity: 0.7; } }
+/* 자동 새로고침 화면(상태 스트립이 data-reload=on 을 렌더, 대시보드·검증 2초)은 정지 프레임: 재시작해 튀지 않게 */
+body:has([data-reload=on]) :is(header, .console-status)::before,
+body:has([data-reload=on]) :is(header, .console-status)::after { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  body > header::before, body > header::after, .console-status::before, .console-status::after { animation: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  body > header::before, body > header::after, .console-status::before, .console-status::after { background: none; }
+}
+/* 카드 hover 조명: ::after 하이라이트를 opacity 로만 페이드(포인터 추적 없음). 주문·승인 영역 안에는 적용하지 않음 */
+@media (hover: hover) {
+  .optimization-nav a, .settings-tabs a, .choice-tile, .tier-card { position: relative; isolation: isolate; }
+  :is(.optimization-nav a, .settings-tabs a, .choice-tile, .tier-card):not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *))::after {
+    content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit; opacity: 0;
+    background: radial-gradient(circle at 28% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%);
+    transition: opacity var(--dur-2) var(--ease-settle); }
+  :is(.optimization-nav a, .settings-tabs a, .choice-tile, .tier-card):not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)):is(:hover, :focus-visible)::after { opacity: 1; }
+}
 /* 다크: 변수만 재정의함. 개별 규칙의 색 덮어쓰기는 두지 않음 */
 @media (prefers-color-scheme: dark) {
   :root {

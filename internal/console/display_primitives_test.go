@@ -431,7 +431,7 @@ func TestMotionContract(t *testing.T) {
 	// (b) 전환·키프레임 속성 목록에 레이아웃·paint-heavy 속성 0건. 허용: translate scale opacity
 	// transform background-color color. 이 밖의 이름이 하나라도 있으면 실패.
 	allowed := map[string]bool{"translate": true, "scale": true, "opacity": true, "transform": true,
-		"background-color": true, "color": true, "none": true}
+		"rotate": true, "background-color": true, "color": true, "none": true}
 	for _, m := range regexp.MustCompile(`(?m)transition\s*:\s*([^;}]*)`).FindAllStringSubmatch(css, -1) {
 		for _, part := range strings.Split(m[1], ",") {
 			fields := strings.Fields(part)
@@ -491,6 +491,82 @@ func TestMotionContract(t *testing.T) {
 	}
 	if strings.Contains(css, "cubic-bezier") || strings.Contains(css, "ease-in-out") {
 		t.Error("stylesheet uses a single-curve easing")
+	}
+}
+
+// TestAmbientMotionContract (change a172 6단계, 사람 결정: CSS 만, JS·CSP 완화 없음).
+//
+// 앰비언트 배경은 정보(엔진·데이터 톤)를 나르는 정적 그라디언트 덩어리이고, 움직이는 것은 덩어리의
+// translate·rotate·opacity 뿐이다. 그라디언트·배경 위치·필터를 애니메이션하면 매 프레임 paint 가 되고,
+// 새로고침 화면(2초)에서는 애니메이션이 재시작해 튀므로 멈춰야 하며, 호버 조명은 주문·승인 영역에
+// 닿지 않아야 한다. 이 시험이 그 계약을 고정한다.
+func TestAmbientMotionContract(t *testing.T) {
+	css := styleBlock(t)
+
+	// (a) 키프레임: 속성은 compositor 화이트리스트뿐이고, 앰비언트 키프레임이 실제로 존재
+	allowed := map[string]bool{"translate": true, "rotate": true, "scale": true, "opacity": true, "transform": true,
+		"from": true, "to": true}
+	ambient := regexp.MustCompile(`@keyframes\s+(amb-[a-z-]+)\s*\{([^@]*?)\}\s*\n`).FindAllStringSubmatch(css, -1)
+	if len(ambient) < 2 {
+		t.Fatalf("ambient keyframes amb-* = %d, want at least 2", len(ambient))
+	}
+	for _, m := range ambient {
+		for _, prop := range regexp.MustCompile(`([a-z-]+)\s*:`).FindAllStringSubmatch(m[2], -1) {
+			if !allowed[prop[1]] {
+				t.Errorf("@keyframes %s animates %q", m[1], prop[1])
+			}
+		}
+	}
+	// (b) 합성 비용이 큰 것 금지: filter·mix-blend-mode·배경/그라디언트 애니메이션
+	for _, banned := range []string{"mix-blend-mode", "background-position", "background-size"} {
+		if strings.Contains(css, banned) {
+			t.Errorf("stylesheet uses %s", banned)
+		}
+	}
+	if regexp.MustCompile(`(^|[;{\s])filter\s*:`).MatchString(css) {
+		t.Error("stylesheet uses filter")
+	}
+	// (c) 장식은 클릭을 가로채지 않고 콘텐츠 아래에 있음
+	pseudo := regexp.MustCompile(`(?s)body > header::before[^{]*\{[^}]*\}`).FindString(css)
+	for _, want := range []string{"pointer-events: none", "z-index: -1", "radial-gradient(", "color-mix("} {
+		if !strings.Contains(pseudo, want) {
+			t.Errorf("ambient blob rule lacks %q: %q", want, pseudo)
+		}
+	}
+	// (d) 새로고침 화면(상태 스트립이 data-reload=on 을 렌더)은 애니메이션 정지
+	refresh := regexp.MustCompile(`(?s)body:has\(\[data-reload=on\]\)[^{]*\{[^}]*\}`).FindString(css)
+	if !strings.Contains(refresh, "animation: none") || !strings.Contains(refresh, ".console-status") {
+		t.Errorf("refreshing screens are not pinned to animation: none: %q", refresh)
+	}
+	// (e) 톤: 알림색 토큰이 --tone 으로 이어지고, 가장 나쁜 톤이 마지막에 이겨야 함
+	iok, iwarn, ibad := strings.Index(css, "--tone: var(--ok)"), strings.Index(css, "--tone: var(--warn)"), strings.Index(css, "--tone: var(--bad)")
+	if iok < 0 || iwarn < iok || ibad < iwarn {
+		t.Errorf("tone rules must be ordered ok < warn < bad (got %d %d %d)", iok, iwarn, ibad)
+	}
+	// (f) 방어 미디어
+	if !regexp.MustCompile(`(?s)@media \(prefers-reduced-motion: reduce\) \{[^@]*?animation: none`).MatchString(css) {
+		t.Error("reduced-motion does not stop the ambient animation")
+	}
+	if !strings.Contains(css, "@media (prefers-reduced-transparency: reduce)") {
+		t.Error("prefers-reduced-transparency has no rule")
+	}
+	// (g) hover 조명: opacity 로만 페이드하고 주문·승인 영역 안에는 적용하지 않음
+	glow := regexp.MustCompile(`(?s)\.choice-tile[^{]*:not\(:where\([^{]*\)::after[^{]*\{[^}]*\}`).FindString(css)
+	for _, container := range []string{".sticky-save", ".approval-actions", ".confirm-check", ".console-approval", "form:not([method=get])"} {
+		if !strings.Contains(glow, container) {
+			t.Errorf("hover glow rule does not exclude %s: %q", container, glow)
+		}
+	}
+	if !strings.Contains(css, "(hover: hover)") {
+		t.Error("hover glow is not limited to hover-capable pointers")
+	}
+	// (h) 스크립트 0, CSP 불변: script-src 는 여전히 없음
+	if strings.Contains(strings.ToLower(css), "<script") || strings.Contains(consoleHTMLCSP, "script-src") {
+		t.Error("the console permits scripts")
+	}
+	// (i) will-change 총량
+	if n := strings.Count(css, "will-change"); n > 2 {
+		t.Errorf("will-change appears %d times, want at most 2", n)
 	}
 }
 
