@@ -27,10 +27,13 @@ package console
 
 const signalsTemplates = `
 {{define "signals"}}{{template "head" .}}
-<h1>신호 <span class="muted">발굴 후보</span></h1>
+<h1>신호 <span class="muted">발굴 후보</span></h1><span class="status-pill scope">읽기 전용</span>
+<details class="scope"><summary>이 화면의 경계</summary>
 <p class="muted">순위 원천이 시간에 걸쳐 무엇을 말했는지, 그리고 <strong>무엇을 확인하지
 못했는지</strong>를 본다. 읽기 전용 — 이 화면은 주문을 내지 않고, 원천을 부르지도 않는다
-(저장소 읽기뿐이다). {{.Snap.NowText}} 기준.</p>
+(저장소 읽기뿐이다).</p>
+</details>
+<p class="muted">{{.Snap.NowText}} 기준</p>
 
 {{template "causes" .}}
 {{template "signalsread" .Snap}}

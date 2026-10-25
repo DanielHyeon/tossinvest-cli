@@ -5,7 +5,7 @@ const optimizationTemplates = `
 {{template "head" .}}
 <div class="optimization-title">
   <div>
-    <h1>최적화 <span class="muted">전략 파라미터</span></h1>
+    <h1>최적화 <span class="muted">전략 파라미터</span></h1><span class="status-pill scope">{{if .ExitProtection}}편집 가능{{else}}읽기 전용{{end}}</span>
     <p class="muted">서버가 정한 preset 하나를 골라 before/after를 검토한 뒤 적용한다. 설정과 LIVE 권한은 항상 분리된다.</p>
   </div>
   <dl class="status-strip" aria-label="최적화 최상위 상태" {{if .LifecycleErr}}data-lifecycle-state="error"{{else if not .LifecycleReady}}data-lifecycle-state="unavailable"{{else}}data-lifecycle-state="ready"{{end}}>
@@ -20,7 +20,7 @@ const optimizationTemplates = `
 {{if .Notice}}<p class="notice" role="status">{{.Notice}}</p>{{end}}
 {{if .Warning}}<p class="notice" role="alert">{{.Warning}}</p>{{end}}
 {{if .LifecycleErr}}<p class="danger" role="alert">lifecycle을 읽지 못했다: <code>{{.LifecycleErr}}</code>. 마지막 값을 현재값처럼 사용하지 않고 모든 변경을 닫았다.</p>{{end}}
-{{if and .LifecycleReady (ne .Evidence.Status "complete")}}<p class="aside evidence-banner" role="status"><strong>성과 근거 {{.Evidence.Status}}</strong> · 근거 기반 추천 candidate를 만들지 않는다.{{range .Evidence.Missing}} <code>{{.}}</code>{{end}}</p>{{end}}
+{{if and .LifecycleReady (ne .Evidence.Status "complete")}}<p class="aside evidence-banner" role="status"><strong>성과 근거 {{.Evidence.Status}}</strong> · 근거 기반 추천 candidate를 만들지 않는다.</p>{{with .Evidence.Missing}}<details class="tech"><summary>기술 정보</summary>{{range .}} <code>{{.}}</code>{{end}}</details>{{end}}{{end}}
 <nav class="filter-bar" aria-label="최적화 관련 읽기 전용 화면">
   <a href="/strategy-runtime">전략 lane</a>
   <a href="/strategy-runtime/market-schedule">시장·일정</a>
@@ -34,6 +34,7 @@ const optimizationTemplates = `
       <span>{{.Label}}</span><small>{{.Status}}</small>
     </a>
     {{end}}
+    <details class="tech"><summary>기술 정보</summary><dl>{{range .Categories}}{{$label := .Label}}{{with .Tech}}<dt>{{$label}}</dt><dd><code>{{.}}</code></dd>{{end}}{{end}}</dl></details>
   </nav>
 
   <div class="optimization-content">
@@ -53,8 +54,8 @@ const optimizationTemplates = `
       <dl>
         <dt>마지막 actor</dt><dd>{{if .Snapshot.Actor}}<code>{{.Snapshot.Actor}}</code>{{else}}없음{{end}}</dd>
         <dt>마지막 reason</dt><dd>{{if .Snapshot.Reason}}<code>{{.Snapshot.Reason}}</code>{{else}}없음{{end}}</dd>
-        <dt>settings digest</dt><dd>{{if .Snapshot.SettingsDigest}}<code>{{.Snapshot.SettingsDigest}}</code>{{else}}미생성{{end}}</dd>
-        <dt>evidence</dt><dd><code>{{.Evidence.Status}}</code>{{range .Evidence.Missing}} · {{.}}{{end}}</dd>
+        <dt>settings digest</dt><dd>{{if .Snapshot.SettingsDigest}}{{template "tech" .Snapshot.SettingsDigest}}{{else}}미생성{{end}}</dd>
+        <dt>evidence</dt><dd><code>{{.Evidence.Status}}</code>{{with .Evidence.Missing}}<details class="tech"><summary>기술 정보</summary>{{range .}} <code>{{.}}</code>{{end}}</details>{{end}}</dd>
         <dt>effective entry</dt><dd>{{if .Snapshot.EffectiveEntry}}ON{{else}}OFF · manifest 재승인 필요{{end}}</dd>
       </dl>
     </section>
@@ -85,7 +86,7 @@ const optimizationTemplates = `
           <div><dt>단위</dt><dd>{{.Unit}}</dd></div>
           <div><dt>적용</dt><dd>{{.ApplyTiming}}</dd></div>
           <div><dt>안전 방향</dt><dd>{{.Safety}}</dd></div>
-          <div><dt>Owner</dt><dd><code>{{.Owner}}</code></dd></div>
+          <div><dt>Owner</dt><dd>{{template "tech" .Owner}}</dd></div>
           <div><dt>출처</dt><dd><code>{{.PolicyID}}</code> {{.PolicyVersion}} {{if .Evidence}}· evidence <code>{{.Evidence}}</code>{{end}}</dd></div>
         </dl>
       </fieldset>
@@ -128,7 +129,7 @@ const optimizationTemplates = `
         {{if .ProtectionLoadErr}}<p class="danger" role="alert">보호 상태를 읽지 못했다: {{.ProtectionLoadErr}}</p>{{end}}
         {{if not .ProtectionWired}}
         <div class="detail-grid" aria-readonly="true">
-          <div><strong>a045 브로커 보호: 미검증/사용 불가</strong><p class="muted">엔진이 꺼져도 손절이 남는 기능이다.</p></div>
+          <div><strong>브로커 보호: 미검증/사용 불가</strong>{{template "tech" "a045"}}<p class="muted">엔진이 꺼져도 손절이 남는 기능이다.</p></div>
           <dl><dt>Capability</dt><dd>지원 확인 전 사용 불가</dd><dt>Activation</dt><dd>OFF</dd>
             <dt>Desired</dt><dd>OFF</dd><dt>Effective</dt><dd>UNWIRED</dd><dt>적용 시점</dt><dd>운영자 별도 승인 후 다음 엔진 기동</dd>
             <dt>Provenance</dt><dd>signed attestation 및 engine command seam 없음</dd></dl>
@@ -174,9 +175,9 @@ const optimizationTemplates = `
   {{if .PositionManagement}}
     <section aria-labelledby="position-management-title">
       <h2 id="position-management-title">종목별 관리</h2>
-      <p>설정 저장과 position lifecycle command를 섞지 않는다. 현재 row의 stable identity로만 동작하는 a044 화면을 쓴다.</p>
+      <p>설정 저장과 position lifecycle command를 섞지 않는다. 현재 row의 stable identity로만 동작하는 전용 화면을 쓴다.</p>
       <p><a class="button-link" href="/position-management">현재 포지션 상속·override·release 상태 보기</a></p>
-      <p class="muted">a044 owner descriptor adapter가 아직 settingmeta registry에 연결되지 않아 이 category는 현재 read-only다. label/default를 임의로 만들지 않았다.</p>
+      <p class="muted">owner descriptor adapter가 아직 settingmeta registry에 연결되지 않아 이 category는 현재 read-only다. label/default를 임의로 만들지 않았다.</p>{{template "tech" "a044"}}
     </section>
   {{end}}
 
@@ -184,7 +185,7 @@ const optimizationTemplates = `
     <section id="candidate-filters" aria-labelledby="candidate-filters-title">
       <h2 id="candidate-filters-title">후보 필터</h2>
       <p class="aside"><strong>미승인 · passed 구조적 0 · verdict 비활성</strong></p>
-      <p class="muted">a046 owner가 승인한 registry option 전에는 숫자 0을 기본 threshold처럼 표시하지 않고 모든 행을 읽기 전용으로 유지한다. 주문·RiskIntent·LIVE 상태는 변경하지 않는다.</p>
+      <p class="muted">owner가 승인한 registry option 전에는 숫자 0을 기본 threshold처럼 표시하지 않고 모든 행을 읽기 전용으로 유지한다. 주문·RiskIntent·LIVE 상태는 변경하지 않는다.</p>{{template "tech" "a046"}}
       <nav class="filter-bar" aria-label="후보 필터 시장 전환"><a href="#candidate-filters-KR">KR regular</a><a href="#candidate-filters-US">US regular</a></nav>
       {{range .CandidateFilterMarkets}}
       <article id="candidate-filters-{{.Market}}" aria-label="{{.Market}} {{.Session}} 후보 필터">
@@ -296,9 +297,11 @@ const optimizationTemplates = `
 {{define "performance-history"}}
 {{template "head" .}}
 <p><a href="/optimization">최적화</a> / <code>performance-history</code></p>
-<h1>성과 이력 <span class="muted">레인별 · 읽기 전용</span></h1>
+<h1>성과 이력 <span class="muted">레인별 · 읽기 전용</span></h1><span class="status-pill scope">읽기 전용</span>
+<details class="scope"><summary>이 화면의 경계</summary>
 <p class="page-intro muted">StockOS lane-console 정보 구조처럼 필터 상태, 결과, 근거와 누락 이유를 한 화면에 둡니다.
 이 화면은 기존 journal·position 관측에서 만든 파생 결과만 읽으며 주문, 설정 저장, lane 토글 또는 LIVE 승인을 제공하지 않는다.</p>
+</details>
 
 <section aria-labelledby="performance-filter-title">
   <h2 id="performance-filter-title">서버 조회 기본값</h2>
@@ -404,8 +407,10 @@ const optimizationTemplates = `
 {{define "market-schedule"}}
 {{template "head" .}}
 <p><a href="/optimization?category=strategy-runtime">최적화</a> / <code>strategy-runtime</code></p>
-<h1>시장·일정</h1>
+<h1>시장·일정</h1><span class="status-pill scope">읽기 전용</span>
+<details class="scope"><summary>이 화면의 경계</summary>
 <p class="muted">서버가 정의한 시장·세션 선택지와 official exchange calendar 근거를 읽는 화면이다. 임의 종목, 운영 사유, 시각 또는 휴장일을 입력하지 않으며 주문·운영 토글·설정을 변경하지 않는다.</p>
+</details>
 {{if .LoadErr}}<p class="danger">상태를 읽지 못해 닫힌 기본값을 표시한다. 신규 진입은 fail-closed다.</p>{{end}}
 {{if .Unwired}}<p class="aside">scheduler seam 미배선 — 닫힌 기본값만 표시한다.</p>{{end}}
 <section aria-labelledby="scheduler-state-heading"><h2 id="scheduler-state-heading">Scheduler 상태</h2><div class="table-scroll" role="region" aria-label="Scheduler 상태" tabindex="0"><table>
@@ -428,8 +433,10 @@ const optimizationTemplates = `
 {{define "strategy-runtime"}}
 {{template "head" .}}
 <p><a href="/optimization">최적화</a> / <code>strategy-runtime</code> / <a href="/strategy-runtime/market-schedule">시장·일정</a></p>
-<h1>KR · US strategy runtime</h1>
+<h1>KR · US strategy runtime</h1><span class="status-pill scope">읽기 전용</span>
+<details class="scope"><summary>이 화면의 경계</summary>
 <p class="muted page-intro">서버 소유 market-keyed projection을 읽기만 한다. 입력·저장·활성화·LIVE·주문·보호 변경 기능은 없다.</p>
+</details>
 {{if .LoadErr}}<p class="danger" role="alert">runtime projection을 읽지 못했다. 두 시장 모두 신규 진입 OFF와 typed unknown을 표시한다.</p>{{end}}
 {{if .Unwired}}<p class="aside">runtime endpoint 미기동 — KR과 US의 dormant OFF/UNOBSERVED/UNWIRED truth를 표시한다.</p>{{end}}
 <section aria-labelledby="strategy-runtime-contract"><h2 id="strategy-runtime-contract">Shared projection contract</h2>

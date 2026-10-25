@@ -107,6 +107,9 @@ type statusStrip struct {
 	// DataNote is the failure reason, or the known hold reason. When a hold is
 	// known DataTone is empty: see freshness.tone.
 	DataNote string
+	// DataTitle carries the long form of DataNote (hold reason, raw failure text)
+	// as a tooltip, so the cell stays one line.
+	DataTitle string
 
 	// PendingApproval reports a verification run parked on its approval, and
 	// PendingHref links to the screen that can approve it. The strip carries no
@@ -129,8 +132,12 @@ type freshness struct {
 	// come from. No new constant: a threshold that is not the screen's own period
 	// would warn about an age the screen itself considers current.
 	TTL time.Duration
-	// Reason explains a dataUnavailable reading.
+	// Reason explains a dataUnavailable reading. It is the full (possibly English
+	// and long) text and goes to the cell's title; the cell itself shows Code.
 	Reason string
+	// Code is the enumerated reason (unmeasuredReason) the cell shows beside
+	// "읽지 못함" — one short word instead of a raw error (change a173).
+	Code unmeasuredReason
 	// LastAt is the last successful read, rendered, and empty when there is no
 	// such record. The strip never invents one.
 	LastAt string
@@ -211,9 +218,12 @@ func (c *Console) chromeFor(nav, market string, f freshness) chrome {
 		s.DataText = f.At + " (" + strconv.Itoa(int(f.Age.Round(time.Second)/time.Second)) + "초 전)"
 	case dataUnavailable:
 		s.DataText = "읽지 못함"
-		s.DataNote = f.Reason
+		if f.Code != "" {
+			s.DataText += " · " + string(f.Code)
+		}
+		s.DataTitle = f.Reason
 		if f.LastAt != "" {
-			s.DataNote += " · 마지막 성공 " + f.LastAt
+			s.DataNote = "마지막 성공 " + f.LastAt
 		}
 	default:
 		// The render instant is the reading instant here, so this is not a
@@ -222,7 +232,8 @@ func (c *Console) chromeFor(nav, market string, f freshness) chrome {
 		s.DataNote = "요청 시 읽음"
 	}
 	if f.Hold != "" {
-		s.DataNote = f.Hold
+		s.DataNote = "갱신 보류"
+		s.DataTitle = f.Hold
 	}
 
 	if run := c.currentRun(); run != nil {
@@ -255,15 +266,15 @@ func (c *Console) chromeOnRequest(nav string) chrome {
 func (s holdingsSnapshot) freshness() freshness {
 	switch {
 	case !s.Wired:
-		return freshness{Mode: dataUnavailable, Reason: "브로커 배선 없음"}
+		return freshness{Mode: dataUnavailable, Reason: "브로커 배선 없음", Code: reasonSeamUnwired}
 	case s.Error != "":
-		f := freshness{Mode: dataUnavailable, Reason: s.Error}
+		f := freshness{Mode: dataUnavailable, Reason: s.Error, Code: reasonBrokerReadFailed}
 		if s.Present {
 			f.LastAt = s.TakenAt()
 		}
 		return f
 	case !s.Present:
-		return freshness{Mode: dataUnavailable, Reason: "아직 읽은 값이 없다"}
+		return freshness{Mode: dataUnavailable, Reason: "아직 읽은 값이 없다", Code: reasonNeverFetched}
 	}
 	f := freshness{Mode: dataCache, TTL: holdingsTTL, At: s.TakenAt(), Age: s.Age}
 	if s.Held {
@@ -276,15 +287,15 @@ func (s holdingsSnapshot) freshness() freshness {
 func (s ordersSnapshot) freshness() freshness {
 	switch {
 	case !s.Wired:
-		return freshness{Mode: dataUnavailable, Reason: "주문 조회 배선 없음"}
+		return freshness{Mode: dataUnavailable, Reason: "주문 조회 배선 없음", Code: reasonSeamUnwired}
 	case s.Error != "":
-		f := freshness{Mode: dataUnavailable, Reason: s.Error}
+		f := freshness{Mode: dataUnavailable, Reason: s.Error, Code: reasonBrokerReadFailed}
 		if s.Present {
 			f.LastAt = s.TakenAt()
 		}
 		return f
 	case !s.Present:
-		return freshness{Mode: dataUnavailable, Reason: "아직 읽은 값이 없다"}
+		return freshness{Mode: dataUnavailable, Reason: "아직 읽은 값이 없다", Code: reasonNeverFetched}
 	}
 	f := freshness{Mode: dataCache, TTL: ordersTTL, At: s.TakenAt(), Age: s.Age}
 	if s.Held {
@@ -311,7 +322,7 @@ func (s ordersSnapshot) freshness() freshness {
 // that is a bad trade.
 func (v signalsView) freshness() freshness {
 	if !v.Read.Known() {
-		return freshness{Mode: dataUnavailable, Reason: v.Read.Code()}
+		return freshness{Mode: dataUnavailable, Reason: v.Read.Code(), Code: unmeasuredReason(v.Read.Code())}
 	}
 	return freshness{
 		Mode: dataCache,

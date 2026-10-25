@@ -169,6 +169,7 @@ var (
 // TestOperatorBodyCarriesNoDeveloperIdentifiers (task 2.3).
 func TestOperatorBodyCarriesNoDeveloperIdentifiers(t *testing.T) {
 	techBlocks := 0
+	reported := map[string]bool{}
 	for _, fx := range a173Fixtures(t) {
 		for _, path := range a173Screens() {
 			raw := fx.get(path)
@@ -177,7 +178,8 @@ func TestOperatorBodyCarriesNoDeveloperIdentifiers(t *testing.T) {
 			for name, re := range map[string]*regexp.Regexp{
 				"change ID": a173ChangeID, "절대경로": a173AbsPath, "64자 hex": a173Hex64,
 			} {
-				if m := re.FindString(text); m != "" {
+				if m := re.FindString(text); m != "" && !reported[path+name] {
+					reported[path+name] = true
 					t.Errorf("%s %s: 운영 본문에 %s 가 있다: %q", fx.name, path, name, m)
 				}
 			}

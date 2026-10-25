@@ -45,6 +45,8 @@ type optimizationCategoryView struct {
 	Active    bool
 	Available bool
 	Status    string
+	// Tech 는 상태 문구에서 뺀 change ID(기술 정보로 렌더). 값은 DOM 에 남는다.
+	Tech string
 }
 
 type optimizationFieldView struct {
@@ -213,14 +215,14 @@ func optimizationCategoryViews(selected strategyopt.Category, writable bool) []o
 				view.Status = "command seam 미배선 · 읽기 전용"
 			}
 		case strategyopt.CategoryPositionManagement:
-			view.Available, view.Status = true, "a044 전용 command 화면으로 분리"
+			view.Available, view.Status, view.Tech = true, "전용 command 화면으로 분리", "a044"
 		case strategyopt.CategoryCandidateFilters:
-			view.Available, view.Status = true, "a046 evidence activation 전까지 읽기 전용"
+			view.Available, view.Status, view.Tech = true, "evidence activation 전까지 읽기 전용", "a046"
 		case strategyopt.CategoryStrategyRuntime:
-			view.Status = "a047 owner descriptor 미통합 · OFF/read-only"
+			view.Status, view.Tech = "owner descriptor 미통합 · OFF/read-only", "a047"
 		case strategyopt.CategoryPerformanceHistory:
 			view.Available = true
-			view.Status = "a049 결정적 성과 · 읽기 전용 (근거 상태는 본문 참조)"
+			view.Status, view.Tech = "결정적 성과 · 읽기 전용 (근거 상태는 본문 참조)", "a049"
 		}
 		views = append(views, view)
 	}

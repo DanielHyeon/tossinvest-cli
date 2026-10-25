@@ -344,7 +344,9 @@ type reportPage struct {
 	chrome
 	Snap  snapshot
 	Text  string
-	Error string
+	// Record 는 기록 파일 경로. 본문 첫 줄에서 빼서 접힌 기술 정보로 보냄(change a173).
+	Record string
+	Error  string
 }
 
 func (c *Console) handleReport(w http.ResponseWriter, r *http.Request) {
@@ -356,7 +358,8 @@ func (c *Console) handleReport(w http.ResponseWriter, r *http.Request) {
 	} else {
 		var buf bytes.Buffer
 		rep.WriteText(&buf)
-		page.Text = buf.String()
+		page.Record = rep.Record
+		page.Text = strings.Replace(buf.String(), "  기록             "+rep.Record+"\n", "", 1)
 	}
 	c.render(w, "report", page)
 }

@@ -40,12 +40,14 @@ const overviewTemplates = `
 
 {{define "overview"}}
 {{template "head" .}}
-<h1>개요</h1>
+<h1>개요</h1><span class="status-pill scope">읽기 전용</span>
+<details class="scope"><summary>이 화면의 경계</summary>
 <p class="muted">지금 계좌가 어떤 상태인지를 한 화면에 모은 <strong>읽기 전용</strong> 화면이다.
 누를 것이 없다 — 주문·정정·취소는 물론 어떤 설정 변경 폼도 이 화면에는 없다.
 <strong>브로커를 호출하지 않는다</strong>: 보유 수치는 <a href="/positions">포지션</a> 화면이 채운 캐시를
-갱신 없이 읽기만 한다. 검증 승인은 <a href="/verify-console">검증 콘솔</a>에 그대로 있다.
-<span class="muted">기준 시각 {{.Snap.NowText}} · {{.RefreshSeconds}}초마다 자동 재로드</span></p>
+갱신 없이 읽기만 한다. 검증 승인은 <a href="/verify-console">검증 콘솔</a>에 그대로 있다.</p>
+</details>
+<p class="muted">기준 시각 {{.Snap.NowText}} · {{.RefreshSeconds}}초마다 자동 재로드</p>
 
 {{/* 원장 상태는 화면 전체에 한 번. 계좌·오늘·최근 세 패널이 같은 핸들 하나로 읽으므로
      같은 사실을 세 번 적을 이유가 없고, 세 번 적으면 서로 다른 답이 나올 자리가 생긴다. */}}
@@ -236,7 +238,7 @@ const overviewTemplates = `
       <td><strong>{{.Market}}</strong></td>
       <td>{{if .Present}}{{.Done}} / {{.Total}} 단계{{else}}<span class="muted">기록 없음</span>{{end}}
         {{if .Error}}<br><span class="bad">{{.Error}}</span>{{end}}</td>
-      <td><code>{{if .Record}}{{.Record}}{{else}}(경로 미지정){{end}}</code></td>
+      <td>{{if .Record}}{{template "tech" .Record}}{{else}}<code>(경로 미지정)</code>{{end}}</td>
     </tr>
     {{end}}
   </table></div>

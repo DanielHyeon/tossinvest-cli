@@ -3,9 +3,11 @@ package console
 const positionPolicyTemplates = `
 {{define "position-policy"}}
 {{template "head" .}}
-<h1>포지션 정책 <span class="muted">관리 상태</span></h1>
+<h1>포지션 정책 <span class="muted">관리 상태</span></h1><span class="status-pill scope">편집 가능</span>
+<details class="scope"><summary>이 화면의 경계</summary>
 <p class="muted page-intro">StockOS lane console처럼 범위·현재값·실효값·적용 시점을 한 화면에서 확인한다.
 직접 입력은 없고 서버가 제공한 현재 행 action과 preset만 선택한다.</p>
+</details>
 {{if .Notice}}<p class="notice" role="status">{{.Notice}}</p>{{end}}
 {{if .LoadErr}}<p class="danger" role="alert">불러오기 실패: <code>{{.LoadErr}}</code></p>{{end}}
 {{if not .Wired}}<p class="aside">engine-owned PositionPolicyCommander가 배선되지 않아 조회만 가능하다.</p>{{end}}
@@ -46,7 +48,8 @@ desired와 effective가 달라도 어느 한쪽으로 덮어쓰지 않는다.</p
 <section aria-labelledby="position-policy-heading">
 <h2 id="position-policy-heading">{{.Descriptor.PositionSection}}</h2>
 <p>기본값 <strong>공통 정책 상속</strong> · desired는 generation별 override · effective는 저장된 exit snapshot이다.
-적용 시점: <strong>{{.Descriptor.ApplyTiming}}</strong> · provenance: <code>{{.Descriptor.Provenance}}</code>.</p>
+적용 시점: <strong>{{.Descriptor.ApplyTiming}}</strong>.</p>
+{{template "tech" .Descriptor.Provenance}}
 {{if .Rows}}
 <table class="data-table"><caption>현재 포지션 policy scope</caption><thead><tr>
 <th>계좌·종목</th><th>generation</th><th>현재 상태</th><th>desired/effective</th><th>현재 행 action</th>
@@ -56,8 +59,8 @@ desired와 effective가 달라도 어느 한쪽으로 덮어쓰지 않는다.</p
 <td data-label="현재 상태"><span class="status-pill">{{.Management.Label}}</span>
 <span class="submetric">status <code>{{.Management.Status}}</code> · reason <code>{{.Management.Reason}}</code></span>
 <span class="submetric">policy lifecycle {{.State.Status}} · provenance {{.State.Provenance}} · eligibility {{.State.Eligibility}}</span>
-{{if .Block.Present}}<span class="submetric danger">대사 차단 · {{.Block.Target}} · {{.Block.Reason}}{{if .Block.Detail}} · {{.Block.Detail}}{{end}} · {{.Block.Age}}{{if .Block.Permanent}} · 영구 차단{{end}}</span>{{end}}
-{{if .State.HasPendingExit}}<span class="submetric danger">active exit 있음</span>{{end}}
+{{if .Block.Present}}<span class="submetric bad">대사 차단 · {{.Block.Target}} · {{.Block.Reason}}{{if .Block.Detail}} · {{.Block.Detail}}{{end}} · {{.Block.Age}}{{if .Block.Permanent}} · 영구 차단{{end}}</span>{{end}}
+{{if .State.HasPendingExit}}<span class="submetric bad">active exit 있음</span>{{end}}
 {{if .Quarantine.Present}}<span class="submetric danger">판정 격리 v{{.Quarantine.Version}} · {{.Quarantine.ReasonText}} · {{.Quarantine.Age}} 경과 · 유지 보호선 {{.Quarantine.ProtectionText}}</span>
 <span class="submetric danger">이 포지션은 지금 exit 판정 대상이 아니다 — 손절도 평가되지 않는다</span>{{end}}</td>
 <td data-label="desired/effective"><strong>{{.State.DesiredLabel}}</strong><span class="submetric">effective {{.State.EffectiveLabel}}</span>

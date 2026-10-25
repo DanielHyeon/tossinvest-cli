@@ -23,9 +23,10 @@ const portfolioTemplates = `
 <p class="aside"><strong>원장 경로가 배선되지 않았다.</strong> 이 빌드의 콘솔은 엔진 journal을 읽도록
 연결되어 있지 않다 — 브로커 보유만 표시된다.</p>
 {{else if .Missing}}
-<p class="aside"><strong>엔진 미가동 — 원장 파일이 아직 없다.</strong> {{.Path}}
-<br>엔진이 한 번도 기동하지 않았거나 다른 데이터 디렉터리를 쓰고 있다. 콘솔은 원장을 만들지 않는다(읽기 전용).
+<p class="aside"><strong>엔진 미가동 — 원장 파일이 아직 없다.</strong>
+엔진이 한 번도 기동하지 않았거나 다른 데이터 디렉터리를 쓰고 있다. 콘솔은 원장을 만들지 않는다(읽기 전용).
 브로커 보유는 그대로 표시된다.</p>
+{{template "tech" .Path}}
 {{else if .TooNew}}
 <p class="danger"><strong>콘솔 업데이트 필요.</strong> 원장 스키마 v{{.Version}}는 이 콘솔이 이해하는
 v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면이 계좌에 대해 거짓을 말하게 되므로 읽지 않는다.
@@ -170,10 +171,12 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
 
 {{define "positions"}}
 {{template "head" .}}
-<h1>포지션</h1>
+<h1>포지션</h1><span class="status-pill scope">읽기 전용</span>
+<details class="scope"><summary>이 화면의 경계</summary>
 <p class="muted page-intro">보유별 손익과 엔진의 현재 보호선을 한곳에서 확인한다.
 <strong>계좌·주문·설정을 변경하지 않는 조회 전용 화면</strong>이다. 편입·제외 정책은
 <a href="/optimization?category=position-management">포지션 관리 최적화</a>에서 확인한다.</p>
+</details>
 
 {{with .Snap}}
 {{template "journalstate" .Journal}}
@@ -239,18 +242,20 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
 
 {{define "history"}}
 {{template "head" .}}
-<h1>이력 <span class="muted">거래 왕복</span></h1>
+<h1>이력 <span class="muted">거래 왕복</span></h1><span class="status-pill scope">읽기 전용</span>
 {{/*
   성과 이력's entry point (change a055 §7). It has a route of its own and had no
   navigation entry at all: it was reachable only from inside the optimization
   screen, which is a screen nobody opens looking for realised performance.
 */}}
 <p><a href="/performance-history">성과 이력 — 레인별 성과와 파라미터 version 이력</a></p>
+<details class="scope"><summary>이 화면의 경계</summary>
 <p class="muted">원장에 <strong>동결된 값</strong>만 표시한다. 실현손익·실현 R·초기 수량·보유 시간·도달 exit
 단계는 청산 트랜잭션에서 얼어붙은 값 그대로이고, 심볼(positions)과 진입가(exit_states)만 조인해서 붙인다.
 종목명은 현재 공식 종목 메타데이터를 읽어 덧붙인 설명이며 동결 성과 근거가 아니다.
 청산가는 스키마에 없으므로 표시하지 않으며 체결에서 재계산하지도 않는다 — 재계산한 값은 옆에 있는 동결 R과
 어긋난다.</p>
+</details>
 
 {{with .Snap}}
 {{template "journalstate" .Journal}}

@@ -127,7 +127,18 @@ button:disabled { cursor: not-allowed; opacity: 0.65; }
   color: var(--surface-0); text-decoration: none; }
 .secondary-link { background: transparent; color: var(--ink-1); }
 form { display: inline; }
-.page-intro { max-width: 52rem; }
+/* 산문 줄 길이: 한 줄 70자 안팎(42rem). 표·폼·코드 블록·그리드는 제외 */
+main p:not(td p, th p, .console-status p), main li, main details > :not(summary) { max-inline-size: 42rem; }
+.page-intro { max-inline-size: 42rem; }
+/* 경계 배지는 h1 바로 옆, 접힌 경계·기술 정보는 본문보다 한 단 낮은 보조선 */
+h1:has(+ .scope) { display: inline-block; margin-inline-end: var(--space-2); }
+.status-pill.scope { color: var(--ink-3); vertical-align: 0.5em; }
+details.scope, details.tech { margin: var(--space-1) 0 var(--space-2); }
+details.scope summary, details.tech summary { color: var(--ink-3); font-size: var(--text--1); cursor: pointer; }
+details.tech code, details.tech dl { font-size: var(--text--1); }
+/* 거래 정책 체크박스: 설명은 자기 체크박스 묶음 안에 붙이고 다음 묶음과는 선·여백으로 떼어 근접성 오독을 막음 */
+.toggle-row { margin: 0 0 var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--line-soft); }
+.toggle-row .muted { display: block; margin-inline-start: 2.1rem; }
 .data-table { table-layout: fixed; }
 .data-table caption { text-align: left; font-weight: 700; font-size: var(--text-0); padding: 0 0 0.65rem; }
 .data-table th, .data-table td { padding: 0.75rem 0.65rem; overflow-wrap: anywhere; }
@@ -516,11 +527,11 @@ body:has([data-reload=on]) :is(body > header, .console-status)::after { animatio
     that touches .Outside. A template is markup, so this is a render.
   */}}
   <div><dt>시장 세션</dt>
-    <dd data-session-state="{{if .Status.Session.Outside}}closed{{else}}open{{end}}">{{.Status.Session.Label}}<small>advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다</small></dd></div>
+    <dd data-session-state="{{if .Status.Session.Outside}}closed{{else}}open{{end}}">{{.Status.Session.Label}}<small title="요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다">advisory</small></dd></div>
   <div><dt>데이터 시각</dt>
-    <dd data-data-mode="{{.Status.DataMode}}" data-data-tone="{{.Status.DataTone}}">{{.Status.DataText}}{{if eq .Status.DataTone "warn"}} <span class="status-pill">주의</span>{{else if eq .Status.DataTone "stale"}} <span class="status-pill">경고</span>{{end}}{{if .Status.DataNote}}<small>{{.Status.DataNote}}</small>{{end}}</dd></div>
+    <dd data-data-mode="{{.Status.DataMode}}" data-data-tone="{{.Status.DataTone}}"{{with .Status.DataTitle}} title="{{.}}"{{end}}>{{.Status.DataText}}{{if eq .Status.DataTone "warn"}} <span class="status-pill">주의</span>{{else if eq .Status.DataTone "stale"}} <span class="status-pill">경고</span>{{end}}{{if .Status.DataNote}}<small>{{.Status.DataNote}}</small>{{end}}</dd></div>
   <div><dt>자동 재로드</dt>
-    <dd data-reload="{{if .Refresh}}on{{else}}off{{end}}">{{if .Refresh}}{{.RefreshSeconds}}초마다{{else}}걸려 있지 않음<small>이 화면은 스스로 갱신하지 않는다</small>{{end}}</dd></div>
+    <dd data-reload="{{if .Refresh}}on{{else}}off{{end}}">{{if .Refresh}}{{.RefreshSeconds}}초마다{{else}}걸려 있지 않음{{end}}</dd></div>
 </dl>
 {{if .Status.PendingApproval}}
 <p class="notice console-approval" data-pending-approval="true"><strong>승인을 기다리는 검증 run이 있다.</strong>
@@ -528,6 +539,12 @@ body:has([data-reload=on]) :is(body > header, .console-status)::after { animatio
 <a href="{{.Status.PendingHref}}">검증 콘솔에서 승인</a>. 승인은 그 화면에서 한다.</p>
 {{end}}
 {{end}}
+
+{{/*
+  "tech" 는 개발자 식별자(경로·change ID·digest)를 접힌 기술 정보 한 줄로 그림(change a173).
+  값은 DOM 에 남고 운영 본문에서만 빠진다. 안전 상태(UNWIRED·OFF·미충족)에는 쓰지 않는다.
+*/}}
+{{define "tech"}}<details class="tech"><summary>기술 정보</summary><code>{{.}}</code></details>{{end}}
 
 {{define "foot"}}
 </main></body></html>
@@ -605,9 +622,11 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
 
 {{define "dashboard"}}
 {{template "head" .}}
-<h1>검증 콘솔</h1>
+<h1>검증 콘솔</h1><span class="status-pill scope">편집 가능</span>
+<details class="scope"><summary>이 화면의 경계</summary>
 <p class="muted">이 화면은 로컬 파일만 읽는다. 네트워크 호출도, 설정 변경도 하지 않는다.
 계좌 보유·exit 라인은 <a href="/positions">포지션</a>, 완결 거래는 <a href="/history">거래 이력</a>에 있다.</p>
+</details>
 {{if .Notice}}<p class="notice">{{.Notice}}</p>{{end}}
 {{template "stalebinary" .Snap.Binary}}
 
@@ -646,7 +665,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
     <dt>기동 시각</dt><dd>{{.StartedAtText}}</dd>
     <dt>마지막 갱신</dt><dd>{{.RefreshedAtText}}</dd>
     <dt>실행 중 빌드</dt><dd>{{.BuildAt}}</dd>
-    <dt>활성 마커</dt><dd><code>{{.Marker}}</code></dd>
+    <dt>활성 마커</dt><dd>{{template "tech" .Marker}}</dd>
   </dl>
   {{if .Stale}}
   <p class="notice"><strong>실행 중인 엔진은 설치된 바이너리보다 오래되었다.</strong>
@@ -707,7 +726,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
     {{end}}
   </table></div>
   {{else}}
-  <p class="muted">아직 기록이 없다. <code>tossctl soak run</code>으로 시작하라. ({{.Record}})</p>
+  <p class="muted">아직 기록이 없다. <code>tossctl soak run</code>으로 시작하라.</p>{{template "tech" .Record}}
   {{end}}
   {{end}}
 </section>
@@ -724,7 +743,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
     <dt>검증된 endpoint</dt><dd>{{range .Endpoints}}{{.}}<br>{{end}}</dd>
   </dl>
   {{else}}
-  <p class="muted">attestation 파일이 없다 ({{.Path}}). <code>tossctl soak attest</code>가 조건을 만족할 때 쓴다.</p>
+  <p class="muted">attestation 파일이 없다. <code>tossctl soak attest</code>가 조건을 만족할 때 쓴다.</p>{{template "tech" .Path}}
   {{end}}
   {{if .Reasons}}
   <p class="aside">게이트가 열리지 않는 이유:</p>
@@ -742,7 +761,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   {{with .Snap.Verify}}
   {{if .Error}}<p class="danger">{{.Error}}</p>{{end}}
   <dl>
-    <dt>기록</dt><dd>{{.Record}}</dd>
+    <dt>기록</dt><dd>{{template "tech" .Record}}</dd>
     <dt>계좌</dt><dd>{{if .AccountRef}}{{.AccountRef}}{{else}}(없음){{end}}</dd>
     <dt>완료 / 전체</dt><dd>{{.Done}} / {{.Total}} 단계</dd>
   </dl>
@@ -767,7 +786,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
 
 {{define "verify"}}
 {{template "head" .}}
-<h1>검증 <span class="muted">실계좌 · {{.Market}} 시장</span></h1>
+<h1>검증 <span class="muted">실계좌 · {{.Market}} 시장</span></h1><span class="status-pill scope">편집 가능</span>
 <p class="muted">검증 능력은 계좌와 <strong>시장</strong>의 속성이다 — 아래 모든 것은 {{.Market}} 기록만 읽는다.
 한 시장의 판정은 다른 시장의 단계를 완료로 만들지 않는다.
 {{if .Snap.IsUS}}<a href="/verify?market=KR">KR 검증으로</a>{{else}}<a href="/verify?market=US">US 검증으로</a>{{end}}
@@ -928,9 +947,10 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
 
 {{define "report"}}
 {{template "head" .}}
-<h1>리포트</h1>
+<h1>리포트</h1><span class="status-pill scope">읽기 전용</span>
 {{if .Error}}<p class="danger">{{.Error}}</p>{{end}}
 <p><a href="/report.json">JSON 내려받기</a> — 측정된 속성과 미검증 목록 전체.</p>
+{{with .Record}}{{template "tech" .}}{{end}}
 <section><pre>{{.Text}}</pre></section>
 {{template "foot" .}}
 {{end}}

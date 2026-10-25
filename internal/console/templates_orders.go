@@ -10,9 +10,11 @@ package console
 
 const ordersTemplates = `
 {{define "orders"}}{{template "head" .}}
-<h1>주문</h1>
-<p class="muted page-intro">활성 상태와 최근 주문을 한 화면에서 확인한다. 읽기 전용 — 이 화면에서 주문을 내거나 정정·취소할 수 없다.
-{{.Snap.NowText}} 기준. 보호 정책은 <a href="/optimization?category=exit-protection">exit 보호 최적화</a>에서 확인한다.</p>
+<h1>주문</h1><span class="status-pill scope">읽기 전용</span>
+<details class="scope"><summary>이 화면의 경계</summary>
+<p class="muted page-intro">활성 상태와 최근 주문을 한 화면에서 확인한다. 이 화면에서 주문을 내거나 정정·취소할 수 없다. 보호 정책은 <a href="/optimization?category=exit-protection">exit 보호 최적화</a>에서 확인한다.</p>
+</details>
+<p class="muted">{{.Snap.NowText}} 기준</p>
 
 {{template "causes" .}}
 {{template "journalstate" .Snap.Journal}}

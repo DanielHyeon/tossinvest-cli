@@ -24,7 +24,7 @@ package console
 const settingsTemplates = `
 {{define "settings"}}
 {{template "head" .}}
-<h1>설정 <span class="muted">{{.CurrentTab.Label}}</span></h1>
+<h1>설정 <span class="muted">{{.CurrentTab.Label}}</span></h1><span class="status-pill scope">{{if eq .Tab "strategy"}}읽기 전용{{else}}편집 가능{{end}}</span>
 <p class="page-intro">{{.CurrentTab.Lead}}</p>
 
 {{/*
@@ -361,7 +361,7 @@ const settingsTemplates = `
   <form method="post" action="/settings/trading">
     <input type="hidden" name="csrf" value="{{.CSRF}}">
     {{range .TradingRows}}
-    <p><label><input type="checkbox" name="{{.Key}}" {{if .On}}checked{{end}}>
+    <p class="toggle-row"><label><input type="checkbox" name="{{.Key}}" {{if .On}}checked{{end}}>
     <strong>{{.Label}}</strong></label><br>
     <span class="muted">{{.Why}}</span></p>
     {{end}}
@@ -512,26 +512,28 @@ const settingsTemplates = `
   {{if .UpdateWired}}
   <h3>현재 실행 파일</h3>
   <div class="table-scroll" role="region" aria-label="현재 실행 파일" tabindex="0"><table>
-    <tr><th>경로</th><td><code>{{.Update.Current.Path}}</code></td></tr>
     <tr><th>크기·수정 시각</th><td>{{.Update.Current.Size}} bytes · {{.UpdateCurrentTime}}</td></tr>
-    <tr><th>SHA-256</th><td><code>{{.Update.Current.SHA256}}</code></td></tr>
   </table></div>
+  <details class="tech"><summary>기술 정보</summary><dl>
+    <dt>경로</dt><dd><code>{{.Update.Current.Path}}</code></dd>
+    <dt>SHA-256</dt><dd><code>{{.Update.Current.SHA256}}</code></dd>
+  </dl></details>
 
   <h3>staged candidate</h3>
-  <p><code>{{.Update.CandidatePath}}</code></p>
   {{if .Update.Installable}}
   {{if .ReleaseVerified}}
   <p class="notice"><strong>이 프로세스에서 서명 검증됨.</strong>
-  {{.ReleaseReceipt.Tag}} · <code>{{.ReleaseReceipt.AssetName}}</code> · archive
-  <code>{{.ReleaseReceipt.ArchiveSHA256}}</code><br>
-  signer <code>{{.ReleaseReceipt.Signer}}</code><br>
-  source commit <code>{{.ReleaseReceipt.SourceCommit}}</code>
+  {{.ReleaseReceipt.Tag}} · <code>{{.ReleaseReceipt.AssetName}}</code>
   {{if .ReleaseReceipt.Bootstrap}}<br>현재 빌드는 release semver가 없어 bootstrap으로 처리했다.
   버전 순서를 주장하지 않는다.{{end}}</p>
+  <details class="tech"><summary>기술 정보</summary><dl>
+    <dt>archive SHA-256</dt><dd><code>{{.ReleaseReceipt.ArchiveSHA256}}</code></dd>
+    <dt>signer</dt><dd><code>{{.ReleaseReceipt.Signer}}</code></dd>
+    <dt>source commit</dt><dd><code>{{.ReleaseReceipt.SourceCommit}}</code></dd>
+  </dl></details>
   {{end}}
   <div class="table-scroll" role="region" aria-label="staged candidate" tabindex="0"><table>
     <tr><th>크기·수정 시각</th><td>{{.Update.Candidate.Size}} bytes · {{.UpdateCandidateTime}}</td></tr>
-    <tr><th>SHA-256</th><td><code>{{.Update.Candidate.SHA256}}</code></td></tr>
     <tr><th>Go</th><td>{{.Update.Candidate.GoVersion}}</td></tr>
     <tr><th>module</th><td><code>{{.Update.Candidate.ModulePath}}</code> {{.Update.Candidate.ModuleVersion}}</td></tr>
     <tr><th>command</th><td><code>{{.Update.Candidate.CommandPath}}</code></td></tr>
@@ -539,6 +541,10 @@ const settingsTemplates = `
     <tr><th>VCS revision</th><td><code>{{.Update.Candidate.VCSRevision}}</code>
     {{if .Update.Candidate.VCSModified}}(modified){{else}}(clean){{end}}</td></tr>
   </table></div>
+  <details class="tech"><summary>기술 정보</summary><dl>
+    <dt>경로</dt><dd><code>{{.Update.CandidatePath}}</code></dd>
+    <dt>SHA-256</dt><dd><code>{{.Update.Candidate.SHA256}}</code></dd>
+  </dl></details>
   {{end}}
   {{end}}
 
