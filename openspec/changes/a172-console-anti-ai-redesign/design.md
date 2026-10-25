@@ -30,8 +30,15 @@
 - 제외 선택자에 `[formmethod]`, `[formaction]`, `form button`, `form input[type=submit]` 추가. 서버가 `data-mutating` 표식을 붙이는 방식은 Go 변경이라 이번 change 범위 밖(후속 후보).
 - 모달 스크림: 열린 모달이 있는 `.detail-cell::before`(`position: fixed; inset: 0; z-index: 20`), `opacity` 만 애니메이션, `pointer-events: none` 이라 뒤의 어떤 버튼도 막지 않음. 모달 너비는 `100vw` 대신 `100%`(스크롤바 폭 어긋남 제거).
 
-## 6단계 — 셰이더 인터랙션 (6.1 정찰 결과)
-- 라이브러리: 후보 실측(esbuild 최소 사용 트리셰이킹 min/gz) raw WebGL2 290B/240B · twgl 32.6KB/11.1KB · OGL 44.4KB/12.7KB · three 529KB/132KB. 전체판 twgl 81.7KB/24.7KB, OGL 132.7KB/38.9KB. 전체화면 삼각형 프래그먼트 셰이더 한 장에 라이브러리 이득이 없어 **raw WebGL2**. "Radiance" 는 npm `radiance@0.0.1`(2022, 무관한 의존성 3개)·zbanks/radiance(Qt/C++ VJ 앱)뿐이고 WebGL 셰이더 라이브러리가 아니라 제외.
-- 출처: 동일 출처 `embed` 자산, CDN·네트워크 호출 0.
-- CSP: 현재 `default-src 'none'` + script-src 없음 → `script-src 'self'` 필요. 최적화 미리보기는 `consoleHTMLCSP + "; script-src 'sha256-…'"` 를 이어 붙이므로 지시어가 중복되면 첫 번째만 유효해 미리보기 인라인 스크립트가 깨진다 → 구현 시 해시 변형이 `script-src 'self' 'sha256-…'` 가 되도록 조립부를 고친다.
-- refresh: 대시보드·검증 2초, 주문·포지션도 주기 reload. 컨텍스트는 페이지마다 새로 만들어짐(웜 약 3~5ms SwiftShader, GPU 프로세스 콜드 첫 컨텍스트 약 95~127ms는 브라우저당 1회). 결정: 모듈 로드 시 동기 1프레임을 그려 reload 공백을 막고, 애니메이션 위상은 `sessionStorage` 로 이어 가며, 초기화는 `requestIdleCallback` 으로 미루지 않는다(미루면 빈 배경이 보임). 6.3 에서 실측해 부적합하면 refresh 화면은 정지 프레임으로 한다.
+## 6단계 — CSS-only 앰비언트 톤 배경·hover 조명
+- 앰비언트: `body > header`·`.console-status` 의 `::before`/`::after` 가 정적 저채도 radial-gradient 덩어리(투명 가장자리, blur 없음)다. 움직임은 `translate`·`rotate`·`opacity` 만, 20~40초 `alternate` 루프. 배경·그라디언트 자체는 애니메이션하지 않는다. `mix-blend-mode`·`filter` 0.
+- 톤이 정보를 나른다: `body:has(...)` 가 `--tone` 을 정함 — 기본 `--accent`, 엔진 running + 데이터 ok 면 `--ok`, 데이터 warn 또는 엔진 stopped 면 `--warn`, 데이터 stale 이면 `--bad`. 알파 10% 이하(`color-mix`). 톤은 이미 텍스트 단어로도 렌더되므로 색만이 전달 수단이 아니다.
+- 새로고침 화면: 상태 스트립이 이미 `data-reload="on"` 을 렌더하므로 마크업 변경 없이 `body:has([data-reload=on])` 에서 `animation: none`(2초마다 재시작해 튀는 것을 막음). 움직이는 것은 새로고침이 없는 화면뿐.
+- hover 조명: `.optimization-nav a`·`.settings-tabs a`·`.choice-tile`·`.tier-card` 의 `::after` radial 하이라이트를 `opacity` 로만 페이드(`--dur-2`, `--ease-settle`), 포인터 추적 없음. 주문·승인 영역(`.sticky-save`·`.approval-actions`·`.confirm-check`·`.console-approval`) 안에는 적용하지 않는다.
+- 방어: `prefers-reduced-motion` 에서 `animation: none`, `prefers-reduced-transparency` 에서 덩어리 제거. `will-change` 총량 ≤2 유지.
+
+## 6.1 정찰: 검토했으나 채택 안 함 (JS·WebGL 안)
+- 후보(esbuild 0.25 로 최소 사용 트리셰이킹, min / gz): raw WebGL2 290 B / 240 B · twgl.js 7.0.0(MIT) 32.6 KB / 11.1 KB(전체판 81.7 / 24.7) · OGL 1.0.11(Unlicense) 44.4 KB / 12.7 KB(전체판 132.7 / 38.9) · regl 2.1.1(MIT) 전체판 86.7 / 28.4 · three 0.186.1(MIT) 529 KB / 132 KB · glslCanvas 0.2.6(xhr 의존). 전부 의존성 0(glslCanvas 제외). 1순위는 raw WebGL2.
+- "Radiance": 웹 셰이더 라이브러리가 아님 — npm `radiance@0.0.1`(2022, 무관), `@radiance/core` 404, zbanks/radiance 는 Qt/C++ VJ 앱.
+- 이유: 콘솔 CSP 는 `default-src 'none'` 에 `script-src` 가 없고, 시험이 `<script`·`script-src` 부재를 여러 곳에서 고정(`display_primitives_test.go:296,304`, `market_schedule_test.go:142`, `optimization_ui_contract_test.go:107`, `performance_history_test.go:98` 등). 최적화 미리보기는 `consoleHTMLCSP + "; script-src 'sha256-…'"` 이어 붙이기라 `script-src 'self'` 를 넣으면 지시어가 중복돼 깨진다. 스펙이 script·CSP 완화를 SHALL NOT 으로 금지.
+- 자동 새로고침은 대시보드·검증 2초(주문·포지션도 주기 reload): WebGL 컨텍스트가 페이지마다 새로 생겨 SwiftShader 첫 컨텍스트 95~127 ms, 이후 2.7~5.9 ms.

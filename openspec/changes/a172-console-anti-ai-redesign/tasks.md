@@ -31,12 +31,11 @@ Story: `STORY-TOS-a172` · Low risk(CSS·장식 마크업만). FLM/BTM·변이·
 ## 5. 검증·포트
 - [x] 5.1 전체 콘솔 시험 · 렌더 · 경량 리뷰 · 포트 — 2026-10-25 main ff `79d32f9af`(비캐시 console 48.3s · cmd/tossctl 63.3s, 검출기 `[]`); 사람 결정 2건은 권장안 확정(POST 폼 버튼 전환 전부 제외 유지, 스프링 유지·모달 오버슈트 12%)
 
-## 6. 6단계 — 셰이더 인터랙션(사용자 지시 2026-10-25)
-- [x] 6.1 정찰·선택 — 라이브러리 raw WebGL2 채택(0 KB), CSP·시험 핀·refresh 비용 실측(design.md 「6단계」)
-- [ ] 6.2 구현(TDD): 정적 라우트·해시·헤더 시험, 템플릿 `<script type="module">` 1회, JS 정적 분석 시험(fetch/XHR/WebSocket/eval/new Function/절대 URL import 0), CSP 핀 전수 수정 기록
-- [ ] 6.3 실측: 유휴 프레임·모달·nav hover·포인터 스윕·2초 refresh 재초기화 p50/p95/max, 32ms 초과, 60초 메모리
-- [ ] 6.4 `fixing-motion-performance` 소독 + `avoid-ai-design` detect + 20장 렌더 + 경량 리뷰
-- [ ] 6.5 main 병합(사람 승인 뒤)
+## 6. 6단계 — CSS-only 셰이더풍 인터랙션(사용자 지시 2026-10-25, 사람 결정: JS·CSP 완화 불채택)
+- [x] 6.1 정찰 — JS·WebGL 안 검토 후 불채택(design.md 「6.1 정찰: 검토했으나 채택 안 함」), 범위 CSS-only 로 정정
+- [ ] 6.2 구현: 앰비언트 톤 배경·새로고침 화면 정지·카드 hover 조명·방어, `TestMotionContract` 확장 + 변이 1회
+- [ ] 6.3 측정(`frames.cjs` 확장) · 6.4 `fixing-motion-performance` 소독 before/after · 6.5 `avoid-ai-design` detect · 20장 렌더
+- [ ] 6.6 main 병합(사람 승인 뒤)
 
 ## 고정 리터럴 시험 수정 기록
 - 2단계 `display_primitives_test.go` `TestTheHeadingStepsAreDistinguishable` + 헬퍼(`declaredFontSize`·`declaredBodyFontSize`): 제목·본문 크기가 `clamp()` 라 `Nrem`/`Npx/` 리터럴 파서가 읽지 못함. 파서가 clamp 의 최소·최대를 읽도록 바꾸고, 제목 단계 순서(h1>h2>h3>본문)를 가장 좁은 뷰포트와 가장 넓은 뷰포트 양쪽에서 검사하며 본문 최소 15px 기준은 유지(본문 clamp 최소 0.9375rem = 15px). 약화 아님: 검사 지점이 1곳에서 2곳으로 늘어남.
