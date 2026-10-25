@@ -1,0 +1,23 @@
+{
+  "id": "STORY-TOS-a174",
+  "title": "설정 화면 — 기동 준비 체크리스트·Guardian 프리셋 비교표·거래 정책 한 줄 형식(가역성 탭 축 유지)",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a174-settings-startup-readiness-and-presets",
+    "path": "openspec/changes/a174-settings-startup-readiness-and-presets"
+  },
+  "found_by": {
+    "date": "2026-10-25",
+    "how": "2026-10-25 UX 전수 검사: /settings/daily 가 5008px·폼 7·입력 24 로 프리셋 5장이 각각 7줄 표를 반복하고, 거래 정책 토글 4개가 현재 상태 표와 체크박스로 두 번 나오며 체크박스 설명이 다음 체크박스에 붙어 보인다(안전 오독 위험). /settings/standing 의 '지금 켜면 기동이 거부된다' 는 조건이 다른 탭(당일)에 있어 운영자가 기억해야 한다. 사용자 결정: 탭 축은 spec 851 대로 가역성·빈도를 유지하고 읽기 전용 표시+링크로 푼다.",
+    "record": "openspec/changes/a174-settings-startup-readiness-and-presets/proposal.md"
+  },
+  "acceptance": [
+    "기동 준비 체크리스트 한 카드(게이트·자동 시작·한도 5개·거래 정책 4개의 현재 상태와 소유 탭 링크)가 상시·당일 탭 머리와 검증 콘솔 엔진 버튼 위에 읽기 전용으로 나타나고, 어느 컨트롤도 두 화면에 복제되지 않는다(spec 851 '컨트롤의 단일 위치')",
+    "Guardian 프리셋은 KR/US 별 비교표 하나(행 = 한도 7개, 열 = 현재 | 스모크 | 소액 | 단일 종목, 열마다 버튼 1개)로 바뀌고 /settings/daily 전체 높이는 1280 에서 2500px 이하다(현재 5008)",
+    "거래 정책 4개 토글은 '체크박스 · 라벨 · 현재 배지 · 한 줄 설명' 한 줄 형식으로 1회만 나타나고 설명은 자기 체크박스와 같은 블록 안에 있다",
+    "POST 경로·필드명·CSRF·audit·저장 뒤 돌아갈 탭(settings_tabs.go 매핑)·기본 진입(당일)·탭 넷은 변경 0 이고 엔진 시작/정지 컨트롤은 검증 콘솔에 그대로 있다(spec 634·662)",
+    "확인 문구·추가 확인 단계는 넣지 않고 토글·저장 버튼의 클릭 수는 늘지 않는다(안전 불변식 4·사용자 지시)",
+    "22개 화면 × 데스크톱·모바일 × 라이트·다크 재촬영으로 전후를 대조한다"
+  ]
+}

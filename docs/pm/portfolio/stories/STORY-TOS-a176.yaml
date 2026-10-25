@@ -1,0 +1,21 @@
+{
+  "id": "STORY-TOS-a176",
+  "title": "개요 화면 한 화면 요약 정돈과 /verify 단계 목록 구조화",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a176-overview-summary-and-verify-steps",
+    "path": "openspec/changes/a176-overview-summary-and-verify-steps"
+  },
+  "found_by": {
+    "date": "2026-10-25",
+    "how": "2026-10-25 UX 전수 검사: /dashboard 는 4507px·851 단어로 요약 카드 행이 아래 섹션과 중복되고 '구조적으로 미측정' 문단이 같은 글로 3번, 검증 기록 경로가 본문에 나온다. /verify 는 단계 목록이 5188px 고정폭 CLI 텍스트 덤프다.",
+    "record": "openspec/changes/a176-overview-summary-and-verify-steps/proposal.md"
+  },
+  "acceptance": [
+    "개요 요약 영역은 spec 706·1374 의 여섯 사실과 시장별 분리·미측정 8사유·상세 링크를 유지한 채 1280 세로 스크롤 없이(≤ 900px) '지금 괜찮은가' 에 답하고, 기존 상세 섹션은 제거되지 않는다",
+    "'구조적으로 미측정' 류의 같은 설명은 1회만 나타나고 검증 기록 경로는 접힌 기술 정보로 옮겨진다",
+    "/verify 단계 목록은 단계별 접는 항목(제목·mutating 배지·요약)으로 렌더되고 `tossctl verify run --list` 와 같은 내용이 DOM 에 남으며, 검증 시작·승인·중단 폼과 CSRF·확인 문자열 절차는 변경 0 이다",
+    "브로커 호출 추가 0·새 상수 0·Go 핸들러·라우트 변경 0 이고 22개 화면 재촬영으로 전후를 대조한다"
+  ]
+}

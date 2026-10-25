@@ -169,3 +169,8 @@
 | STORY-TOS-a170 | 3 |
 | STORY-TOS-a171 | 5 |
 | STORY-TOS-a172 | 4 |
+| STORY-TOS-a173 | 8 |
+| STORY-TOS-a174 | 6 |
+| STORY-TOS-a175 | 7 |
+| STORY-TOS-a176 | 4 |
+| STORY-TOS-a177 | 4 |

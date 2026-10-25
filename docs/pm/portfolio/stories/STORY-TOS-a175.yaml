@@ -1,0 +1,24 @@
+{
+  "id": "STORY-TOS-a175",
+  "title": "최적화·전략 화면 — 중복 내비 제거·중계 페이지 축소·프리셋/후보 필터/runtime/신호의 행렬화",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a175-optimization-and-runtime-matrix-views",
+    "path": "openspec/changes/a175-optimization-and-runtime-matrix-views"
+  },
+  "found_by": {
+    "date": "2026-10-25",
+    "how": "2026-10-25 UX 전수 검사: /optimization 은 내비가 셋(상단·보조 링크·왼쪽 카테고리)이고 개요 카드 6개가 왼쪽 메뉴와 같다. 익절 프리셋 3장의 표가 오른쪽에서 잘려 비교가 안 되고, 후보 필터는 같은 11줄 블록이 6번(3932px), /strategy-runtime 은 KR·US 15줄이 위아래로 쌓여 not_observed 가 59번, /signals 는 KR·US 가 같은 구조로 두 번 나온다.",
+    "record": "openspec/changes/a175-optimization-and-runtime-matrix-views/proposal.md"
+  },
+  "acceptance": [
+    "/optimization 개요의 카테고리 카드 그리드는 사라지고 왼쪽 카테고리 메뉴 하나만 남으며, KPI 6칸은 개요 카테고리에서만 렌더된다",
+    "중계 카테고리 3개(종목별 관리·전략 실행·성과 이력)는 요약 한 줄 + 대상 화면 링크만 남기고(spec 851 진입점 규칙 준용·재계산 0) 1280 높이 ≤ 700px",
+    "익절 프리셋은 '단계 T1~T4 × 프리셋' 비교표 하나로 바뀌어 1280·390 어느 폭에서도 잘리지 않고 각 프리셋 선택 버튼은 그대로 1개씩이다",
+    "후보 필터는 행=사유 코드(seen_late·extended·near_high)·열=KR/US 행렬로, 공통 행(적용 시점·누락·preview/CAS)은 1회만 나타나 1280 높이 ≤ 1200px(현재 3932)",
+    "/strategy-runtime 은 KR/US 두 열 나란히이고 Shared projection contract·Golden field registry 는 접힌 기술 정보로 옮겨지며 모든 값·필드는 DOM 에 남는다",
+    "/signals 의 공통 설명은 시장 블록 위에 1회, veto 가 아닌 그림자 밴드 두 절은 기본 접힘이며 후보·veto 수치는 접히지 않는다",
+    "Go 핸들러·라우트·POST·카테고리 deep link(?category=)·spec 계약은 변경 0 이고 22개 화면 재촬영으로 전후를 대조한다"
+  ]
+}
