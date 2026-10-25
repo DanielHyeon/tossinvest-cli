@@ -35,6 +35,7 @@ Story: `STORY-TOS-a172` · Low risk(CSS·장식 마크업만). FLM/BTM·변이·
 - [x] 6.1 정찰 — JS·WebGL 안 검토 후 불채택(design.md 「6.1 정찰: 검토했으나 채택 안 함」), 범위 CSS-only 로 정정
 - [x] 6.2 구현: 앰비언트 톤 배경·새로고침 화면 정지(`data-reload=on`, 마크업 변경 0)·카드 hover 조명·방어. 신규 `TestAmbientMotionContract`(RED→GREEN), 변이 2회 CAUGHT(hover 제외 규칙 `.sticky-save *` 삭제 / 새로고침 `animation: none` 삭제)
 - [x] 6.3 측정(`frames6.cjs`·`trace6.cjs`, light·dark) · 6.4 `fixing-motion-performance` 점검(수정 0) · 6.5 `avoid-ai-design` detect P0 0 · Impeccable `[]` · 20장+hover 2+톤 6장(`scratchpad/a172/phase6/shots/`)
+- [x] 6.5b 라이트 테마 톤 구분(사용자 지시 2026-10-25, 리뷰어의 "강도 올리지 말 것" 번복): 전용 `--tint-*` 토큰+테마별 `--tone-alpha`(라이트 19%·다크 15%), 톤 쌍 ΔE76 렌더 실측 ≥14.1·글자 대비 ≥4.65. 신규 `TestAmbientToneLegibility`(변이: 라이트 alpha 10% → FAIL). 고정 리터럴 변경 1건: `TestAmbientMotionContract` (e) 의 `--tone: var(--ok|warn|bad)` → `--tone: var(--tint-*)`
 - [ ] 6.6 main 병합(사람 승인 뒤)
 
 ## 고정 리터럴 시험 수정 기록

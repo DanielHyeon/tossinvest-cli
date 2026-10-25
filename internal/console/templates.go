@@ -45,6 +45,10 @@ const pageTemplates = `
   --ok: #2f6a40; --ok-line: #5f8f6c; --ok-bg: #e6eee3;
   --warn: #7f540f; --warn-line: #a9761e; --warn-bg: #f8eed9;
   --bad: #9a3228; --bad-line: #b4503f; --bad-bg: #f6e6e1;
+  /* 앰비언트 톤 틴트(change a172 6단계): 글자색(--ok 등)은 어두워서 섞으면 바탕이 어두워지고 톤끼리 비슷해짐.
+     그래서 바탕과 밝기가 비슷하고 색상만 벌어진 전용 틴트를 두고 테마별 투명도로 섞음.
+     틴트 4색 쌍마다 ΔE76 12 이상, 글자 토큰 대비 4.5 이상을 TestAmbientToneLegibility 가 고정 */
+  --tint-accent: #5b85d0; --tint-ok: #52b96e; --tint-warn: #e9b207; --tint-bad: #d8614b; --tone-alpha: 19%;
   --lift: 0 1px 2px rgba(32, 30, 26, 0.07);
   /* 모션: 시간 토큰 3단과 스프링 이징 2종. 기본값은 linear() 미지원 브라우저용 짧은 ease-out 이고
      지원하면 아래 @supports 블록이 감쇠 스프링 근사로 덮음. 움직임 크기도 토큰이라 reduced-motion 에서 0 으로 리셋됨 */
@@ -386,12 +390,12 @@ form:not([method=get]) button, form:not([method=get]) .button-link, form button,
 /* --- 앰비언트 톤 배경과 hover 조명(change a172 6단계, CSS 만) ------------------------
    헤더·상태 스트립 뒤에 정적 저채도 radial-gradient 덩어리 둘을 두고, 움직이는 것은 덩어리의
    translate·rotate·opacity 뿐임(20~40초 루프). 그라디언트·배경 위치는 애니메이션하지 않음(매 프레임 paint 금지).
-   색은 --tone 이고 --tone 은 상태 스트립이 이미 단어로도 말하는 엔진·데이터 톤을 따름: 정보 없는 장식이 아님.
+   색은 --tone(전용 틴트 토큰, 투명도 --tone-alpha 는 테마별)이고 --tone 은 상태 스트립이 이미 단어로도 말하는 엔진·데이터 톤을 따름: 정보 없는 장식이 아님.
    혼합 모드·필터·흐림 효과는 쓰지 않음. 덩어리는 pointer-events: none 이고 콘텐츠 아래(z-index: -1). */
-body { --tone: var(--accent); }
-body:where(:has(.console-status [data-engine-state=running]):has(.console-status [data-data-tone=ok])) { --tone: var(--ok); }
-body:where(:has(.console-status :is([data-data-tone=warn], [data-engine-state=stopped]))) { --tone: var(--warn); }
-body:where(:has(.console-status [data-data-tone=stale])) { --tone: var(--bad); }
+body { --tone: var(--tint-accent); }
+body:where(:has(.console-status [data-engine-state=running]):has(.console-status [data-data-tone=ok])) { --tone: var(--tint-ok); }
+body:where(:has(.console-status :is([data-data-tone=warn], [data-engine-state=stopped]))) { --tone: var(--tint-warn); }
+body:where(:has(.console-status [data-data-tone=stale])) { --tone: var(--tint-bad); }
 body > header, .console-status { position: relative; isolation: isolate; }
 /* 덩어리가 헤더 밖 본문 위로 번지면 h1 대비가 떨어지므로 헤더를 잘라 냄(.console-status 는 이미 overflow: hidden).
    overflow-clip-margin 은 nav 포커스 링(offset 2px + 3px)이 잘리지 않게 하는 여유 */
@@ -399,7 +403,7 @@ body > header { overflow: clip; overflow-clip-margin: 6px; }
 body > header::before, body > header::after, .console-status::before, .console-status::after {
   content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%;
   width: min(42%, 30rem); height: min(170%, 22rem); top: max(-35%, -7rem);
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--tone) 10%, transparent), transparent); }
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--tone) var(--tone-alpha), transparent), transparent); }
 body > header::before, .console-status::before { left: 8%; animation: amb-a 34s linear infinite alternate; }
 body > header::after, .console-status::after { right: 8%; animation: amb-b 41s linear -9s infinite alternate; }
 @keyframes amb-a { from { translate: -10% -6%; rotate: -6deg; opacity: 0.75; } to { translate: 10% 6%; rotate: 8deg; opacity: 1; } }
@@ -434,6 +438,7 @@ body:has([data-reload=on]) :is(body > header, .console-status)::after { animatio
     --ok: #93c7a0; --ok-line: #5a9068; --ok-bg: #1b2a1f;
     --warn: #e0b765; --warn-line: #a97b2d; --warn-bg: #2a2314;
     --bad: #ea9a90; --bad-line: #c25f52; --bad-bg: #2d1a17;
+    --tint-accent: #7895dc; --tint-ok: #5bbe83; --tint-warn: #e4a722; --tint-bad: #d8565b; --tone-alpha: 15%;
     --lift: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--line-soft);
     --shadow-pop: 0 18px 54px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--line);
     --scrim: rgba(0, 0, 0, 0.55);

@@ -14,6 +14,7 @@ package console
 // as evidence (tasks.md 4.7).
 
 import (
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -548,7 +549,7 @@ func TestAmbientMotionContract(t *testing.T) {
 		t.Errorf("refreshing screens are not pinned to animation: none: %q", refresh)
 	}
 	// (e) 톤: 알림색 토큰이 --tone 으로 이어지고, 가장 나쁜 톤이 마지막에 이겨야 함
-	iok, iwarn, ibad := strings.Index(css, "--tone: var(--ok)"), strings.Index(css, "--tone: var(--warn)"), strings.Index(css, "--tone: var(--bad)")
+	iok, iwarn, ibad := strings.Index(css, "--tone: var(--tint-ok)"), strings.Index(css, "--tone: var(--tint-warn)"), strings.Index(css, "--tone: var(--tint-bad)")
 	if iok < 0 || iwarn < iok || ibad < iwarn {
 		t.Errorf("tone rules must be ordered ok < warn < bad (got %d %d %d)", iok, iwarn, ibad)
 	}
@@ -674,4 +675,104 @@ func TestEveryPostFormButtonIsExcludedFromMotion(t *testing.T) {
 			t.Errorf("transition: none rule does not list %q", selector)
 		}
 	}
+}
+
+// TestAmbientToneLegibility (change a172 6단계 사용자 지시 2026-10-25).
+//
+// 앰비언트 배경은 보조 신호지만 라이트·다크 모두에서 톤(accent·ok·warn·bad)이 눈으로 구분돼야 하고,
+// 그렇다고 그 위의 글자가 읽기 어려워지면 안 됨. 테마별 :root 토큰을 CSS 에서 직접 읽어
+// 가장 진한 키프레임(opacity 1)의 틴트를 --surface-0(헤더)·--surface-1(상태 스트립) 위에 섞고,
+// ① 모든 톤 쌍의 ΔE76 ≥ 12, ② 모든 글자 토큰의 대비 ≥ 4.5 를 단언함.
+func TestAmbientToneLegibility(t *testing.T) {
+	css := styleBlock(t)
+	dark := strings.Index(css, "@media (prefers-color-scheme: dark)")
+	if dark < 0 {
+		t.Fatal("dark theme block not found")
+	}
+	themes := map[string]string{"light": css[:dark], "dark": css[dark:]}
+	tones := []string{"accent", "ok", "warn", "bad"}
+	texts := []string{"ink-1", "ink-2", "ink-3", "accent", "ok", "warn", "bad"}
+	for name, block := range themes {
+		hex := func(token string) [3]float64 {
+			m := regexp.MustCompile(`--` + token + `:\s*#([0-9a-fA-F]{6})`).FindStringSubmatch(block)
+			if m == nil {
+				t.Fatalf("%s: token --%s not found", name, token)
+			}
+			v, _ := strconv.ParseUint(m[1], 16, 32)
+			return [3]float64{float64(v >> 16 & 255), float64(v >> 8 & 255), float64(v & 255)}
+		}
+		am := regexp.MustCompile(`--tone-alpha:\s*(\d+)%`).FindStringSubmatch(block)
+		if am == nil {
+			t.Fatalf("%s: --tone-alpha not found", name)
+		}
+		alpha, _ := strconv.ParseFloat(am[1], 64)
+		alpha /= 100
+		for _, surface := range []string{"surface-0", "surface-1"} {
+			bg := hex(surface)
+			blend := map[string][3]float64{}
+			for _, tone := range tones {
+				tint := hex("tint-" + tone)
+				var c [3]float64
+				for i := range c {
+					c[i] = math.Round(alpha*tint[i] + (1-alpha)*bg[i])
+				}
+				blend[tone] = c
+			}
+			for i, a := range tones {
+				for _, b := range tones[i+1:] {
+					if de := deltaE76(blend[a], blend[b]); de < 12 {
+						t.Errorf("%s over %s: tones %s/%s ΔE76 = %.1f, want >= 12", name, surface, a, b, de)
+					}
+				}
+				for _, text := range texts {
+					if cr := contrastRatio(hex(text), blend[a]); cr < 4.5 {
+						t.Errorf("%s over %s: --%s on %s tint contrast = %.2f, want >= 4.5", name, surface, text, a, cr)
+					}
+				}
+			}
+		}
+	}
+}
+
+func srgbLinear(c float64) float64 {
+	c /= 255
+	if c <= 0.04045 {
+		return c / 12.92
+	}
+	return math.Pow((c+0.055)/1.055, 2.4)
+}
+
+func relLuminance(c [3]float64) float64 {
+	return 0.2126*srgbLinear(c[0]) + 0.7152*srgbLinear(c[1]) + 0.0722*srgbLinear(c[2])
+}
+
+func contrastRatio(a, b [3]float64) float64 {
+	x, y := relLuminance(a), relLuminance(b)
+	if x < y {
+		x, y = y, x
+	}
+	return (x + 0.05) / (y + 0.05)
+}
+
+// deltaE76 은 sRGB → XYZ(D65) → CIELAB 변환 뒤 유클리드 거리를 잼
+func deltaE76(a, b [3]float64) float64 {
+	la, lb := toLab(a), toLab(b)
+	return math.Sqrt(math.Pow(la[0]-lb[0], 2) + math.Pow(la[1]-lb[1], 2) + math.Pow(la[2]-lb[2], 2))
+}
+
+func toLab(c [3]float64) [3]float64 {
+	r, g, b := srgbLinear(c[0]), srgbLinear(c[1]), srgbLinear(c[2])
+	xyz := [3]float64{
+		(0.4124*r + 0.3576*g + 0.1805*b) / 0.95047,
+		0.2126*r + 0.7152*g + 0.0722*b,
+		(0.0193*r + 0.1192*g + 0.9505*b) / 1.08883,
+	}
+	f := func(t float64) float64 {
+		if t > 216.0/24389 {
+			return math.Cbrt(t)
+		}
+		return (24389.0/27*t + 16) / 116
+	}
+	fx, fy, fz := f(xyz[0]), f(xyz[1]), f(xyz[2])
+	return [3]float64{116*fy - 16, 500 * (fx - fy), 200 * (fy - fz)}
 }
