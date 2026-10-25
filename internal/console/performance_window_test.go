@@ -1,6 +1,7 @@
 package console
 
 import (
+	"errors"
 	"regexp"
 	"strings"
 	"testing"
@@ -60,6 +61,23 @@ func TestPerformanceWindowIsSingleSourceAcrossScreens(t *testing.T) {
 		}
 		if strings.Contains(history, "0일") || strings.Contains(optimization, "0일") {
 			t.Fatal("미측정 상태가 0일로 꾸며짐")
+		}
+	})
+	// 변경 전 코드(칩이 .View.Query.PeriodDays 를 찍던 때)였다면 LoadErr 에서 "최근 0일" 로 FAIL 했을 시험임.
+	t.Run("loaderr", func(t *testing.T) {
+		h := newDashboardHarness(t, func(o *Options) { o.Performance = &fakePerformanceReader{err: errors.New("boom")} })
+		h.authenticate(t)
+		history := historyWindowChips(h.page(t, "/performance-history"))
+		optimization := optimizationWindowLine(h.page(t, "/optimization?category=performance-history"))
+		if len(history) == 0 || len(optimization) == 0 {
+			t.Fatalf("창 문구가 렌더되지 않음: history=%q optimization=%q", history, optimization)
+		}
+		const want = "최근 30일 · 전체 시장 · 전체 lane · complete lineage only"
+		if history != want || optimization != want {
+			t.Fatalf("LoadErr 창 문구 불일치: history=%q optimization=%q want=%q", history, optimization, want)
+		}
+		if strings.Contains(history, "최근 0일") || strings.Contains(optimization, "최근 0일") {
+			t.Fatal("LoadErr 상태가 0일로 찍힘")
 		}
 	})
 }

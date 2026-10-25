@@ -14,12 +14,16 @@ type fakePerformanceReader struct {
 	query        performance.Query
 	calls        int
 	attributions []performance.Attribution
+	err          error
 }
 
 func (f *fakePerformanceReader) Dashboard(_ context.Context, query performance.Query) (performance.DashboardView, error) {
 	f.calls++
 	f.query = query
 	f.view.Query = query
+	if f.err != nil {
+		return performance.DashboardView{}, f.err
+	}
 	return f.view, nil
 }
 

@@ -27,3 +27,9 @@ Scope Check: CLEAN. 의도=창 표기 한 출처 + 미측정 표기 / 실제=동
 | 4 | 정보 최적화 화면의 문구가 "complete lineage" → "complete lineage only" 로 바뀜 | 10/10 | 의도(두 화면 문구 통일, `performance_history_test.go:53` 고정 문구 유지) |
 
 반영할 수정 없음. 기존 시험 약화·삭제 0.
+
+### Manager 검증 (Fable, 2026-10-25)
+수용. LoadErr 편차 수용 사유: 창은 요청 상수(performance.DefaultQuery)이지 측정값이 아니며 실패 사유는 성과 이력 화면의 기존 danger 줄이 1회 말한다(spec 706 의 '0으로 꾸미지 않는다' 는 unwired 경로에서 충족, LoadErr 경로는 더 이상 0일을 찍지 않음 — loaderr 하위시험으로 고정). 재실행: gofmt 0 · vet OK · go test ./internal/console/ -count=1 ok.
+
+### FLM 면제 (비례 원칙)
+기존 함수 본문 편집: `(*Console).handlePerformanceHistory`(page.Window 대입 1줄 추가), `(*Console).handleOptimization`(page.PerformanceWindow 대입 1줄 추가). 콘솔 읽기 전용 렌더이며 High-risk 경로·게이트 판정을 바꾸지 않으므로 FLM/BTM not-applicable(docs/WORKFLOW.md 「비례 원칙」). 분기 추가 0.
