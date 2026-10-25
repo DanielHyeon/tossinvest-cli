@@ -15,3 +15,9 @@
 
 ## validate 기록
 - 2026-10-25: 델타 없음으로 FAIL → `specs/operator-console/spec.md` ADDED 5건 추가 후 재실행(결과는 구현자가 1.1 전에 다시 확인해 여기 적는다).
+
+## 구현 후 (2026-10-25, 구현자 Sonnet 5.5)
+- `openspec validate a173-console-ux-common-cleanup --strict` 는 이 구현자가 다시 돌리지 않았다(Manager 확인 필요).
+- 기존 함수 편집 7건(번들 필요): tasks.md 3.1 목록. FLM/BTM 면제 불가 — 종결 단계에서 Opus 가 번들 작성.
+- 고정 리터럴 시험 수정 1건: tasks.md 「고정 리터럴 시험 수정 기록」.
+- gstack review 미실행(tasks 4.5 미체크).

@@ -2,14 +2,14 @@
  "commit": "feat/a173 HEAD",
  "metrics": {
   "light/d/dashboard": {
-   "h": 4518,
+   "h": 4458,
    "forms": 0,
    "inputs": 0,
    "buttons": 0,
    "notices": 1,
    "stripH": 68,
    "maxP": 672,
-   "words": 687,
+   "words": 638,
    "status": 200
   },
   "light/d/verify-console": {
@@ -266,14 +266,14 @@
    "status": 403
   },
   "light/m/dashboard": {
-   "h": 5335,
+   "h": 5186,
    "forms": 0,
    "inputs": 0,
    "buttons": 0,
    "notices": 2,
    "stripH": 82,
    "maxP": 366,
-   "words": 729,
+   "words": 680,
    "status": 200
   },
   "light/m/verify-console": {
@@ -530,14 +530,14 @@
    "status": 403
   },
   "dark/d/dashboard": {
-   "h": 4758,
+   "h": 4697,
    "forms": 0,
    "inputs": 0,
    "buttons": 0,
    "notices": 2,
    "stripH": 71,
    "maxP": 672,
-   "words": 730,
+   "words": 681,
    "status": 200
   },
   "dark/d/verify-console": {
@@ -794,14 +794,14 @@
    "status": 403
   },
   "dark/m/dashboard": {
-   "h": 5335,
+   "h": 5186,
    "forms": 0,
    "inputs": 0,
    "buttons": 0,
    "notices": 2,
    "stripH": 82,
    "maxP": 366,
-   "words": 729,
+   "words": 680,
    "status": 200
   },
   "dark/m/verify-console": {

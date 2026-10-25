@@ -60,3 +60,7 @@
 
 ## 5. 인지 부하 목표 (cognitive-load-assessment 6항목)
 외재 부하만 줄인다. 완료 시 22개 화면 표에서 결정·기억·읽기·시각 항목 "높음" 0. 새 개념 항목은 내재 부하(업무 자체)라 제외하고 a174~a176 이 이어받는다.
+
+
+### §4 결과 (2026-10-25 구현자 측정, 격리 콘솔 38321, 빈 fixture, 데스크톱 1280/모바일 390)
+전 화면 표: `analysis/measure-table.md`. 요약: 같은 원인 문장 `/dashboard` seam_unwired 13→1·journal_unreadable 5→1·`/orders` 4→1(시험이 6 fixture 로 상시 확인) / 떠 있는 상자 최대 11→3 / 상태 표시줄 113~203px→≤71px, 모바일 229~374px→≤82px / 본문 change ID(최적화 5~10)·절대경로(`/dashboard` 3·`/verify-console` 4) 전부 0 / 가장 긴 p 1152→672px. 미달: `not_observed` 25(→a175), 설정 높이 +4%.
