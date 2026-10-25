@@ -1,0 +1,6 @@
+--- FAIL: TestEachUnmeasuredCauseIsExplainedOnce (2.22s)
+    a173_common_cleanup_test.go:122: empty /dashboard: journal_unreadable 설명 문장이 0회 나온다, 1회여야 한다
+    a173_common_cleanup_test.go:122: empty /dashboard: seam_unwired 설명 문장이 0회 나온다, 1회여야 한다
+    a173_common_cleanup_test.go:122: empty /orders: seam_unwired 설명 문장이 0회 나온다, 1회여야 한다
+    a173_common_cleanup_test.go:122: settings-full /dashboard: seam_unwired 설명 문장이 0회 나온다, 1회여야 한다
+    a173_common_cleanup_test.go:122: settings-full /dashboard: journal_unreadable 설명 문장이 0회 나온다, 1회여야 한다

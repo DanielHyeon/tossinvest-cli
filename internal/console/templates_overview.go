@@ -276,10 +276,13 @@ const overviewTemplates = `
   </table></div>
 
   <h2>오늘 소진분</h2>
+  {{$prevWhy := ""}}
   {{range .Axes}}
   <p><strong>{{.Label}}</strong></p>
   {{if .Structural}}
-  <p class="aside">{{.Structural}}</p>
+  {{/* 같은 사유 문장은 화면에 한 번(change a173): 이어지는 축은 "위와 같음" 한 줄 */}}
+  {{if ne .Structural $prevWhy}}<p class="aside">{{.Structural}}</p>{{else}}<p class="muted">구조적으로 미측정 — 위와 같은 사유다.</p>{{end}}
+  {{$prevWhy = .Structural}}
   {{else}}
   <div class="table-scroll" role="region" aria-label="오늘 소진분" tabindex="0"><table>
     <tr><th>시장</th><th>소진</th></tr>
@@ -315,8 +318,9 @@ const overviewTemplates = `
   <p class="muted">exit 판정 기록 없음 — 원장은 읽혔고, 판정이 하나도 없다.</p>
   {{end}}
   {{end}}
-  <p class="muted"><strong>체결은 이 화면에 없다.</strong> <code>journal.ReadOnly</code>에 체결 접근자가
-  없고, 만드는 것은 원장 읽기 표면 변경이라 <code>console-orders-screen</code>의 일이다.</p>
+  <p class="muted"><strong>체결은 이 화면에 없다.</strong> 원장 읽기 표면에 체결 접근자가
+  없고, 만드는 것은 읽기 표면 변경이라 별도 change 의 일이다.</p>
+  {{template "tech" "journal.ReadOnly · console-orders-screen"}}
 </section>
 {{template "foot" .}}
 {{end}}

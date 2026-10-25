@@ -53,3 +53,12 @@
 - 제외(전환 0, 안전 불변식 4): `form:not([method=get])`·`form button`·`form input[type=submit]`·`[formmethod]`·`[formaction]` 로 잡히는 모든 버튼(주문·승인·청산·토글·엔진 시작/정지·재시작 등 모든 POST 폼), `.sticky-save`, `.approval-actions`, `.confirm-check`, `.console-approval`. 데이터 값이 바뀌는 자리에는 애니메이션 없음.
 - 성능: 전환 속성은 `translate/scale/opacity` 와 hover 색(`background-color/color`, ≤ `--dur-1`)뿐. `all`·레이아웃 속성·`box-shadow`·blur 금지, `will-change` 는 열린 모달 1곳. 시험 `TestMotionContract`.
 - `prefers-reduced-motion: reduce`: 시간 토큰을 0.01ms, 움직임 토큰을 0/1 로 리셋.
+
+## 정보 구조 규칙 (change a173)
+
+- **원인 1회**: 값을 읽지 못한 원인(`unmeasuredReason`)의 설명 문장은 화면당 한 번 `causes` 배너(상자 하나)에만 쓴다. 각 칸은 `미측정 · <사유 코드>`(`.muted.unmeasured` + `<code>`)만 남기고 구체 사유는 칸 `title`·배너 목록에 둔다. 새 칸을 만들면 뷰 모델에 `reading` 필드(내보내짐)로 두어야 배너가 훑는다.
+- **알림 3단계**: `.danger` = 차단(읽기 실패·기동 거부), `.notice` = 결과가 따르는 사실(승인 대기·구버전 바이너리·저장 결과·비가역), `.aside` = 상자 없는 본문(경계·설명·빈 상태). 반영 시점은 저장 버튼 옆 `muted effect-timing` 한 줄. 한 화면의 떠 있는 상자 ≤ 3. 행 단위 표시(상태 알약·보조 지표)에는 `.notice`/`.danger` 를 쓰지 않는다(`status-pill warn`, `submetric bad|warn`).
+- **경계 배지**: `<h1>` 바로 뒤 `<span class="status-pill scope">읽기 전용|편집 가능</span>`, "이 화면은 ~하지 않는다" 류 경계 문단은 `<details class="scope"><summary>이 화면의 경계</summary>` 하나. 배지는 `<h1>` 밖.
+- **기술 정보**: change ID·절대경로·digest·SHA 는 `{{template "tech" 값}}`(`<details class="tech">`)로 접는다. 값은 DOM 에 남는다. 안전 상태(UNWIRED·OFF·미충족·stale)는 접지 않는다. `.notice`/`.danger` 는 `<details>` 안에 두지 않는다.
+- **상태 표시줄**: 칸 설명은 한 줄(≤40자), 긴 사유는 `title`. 실패는 `읽지 못함 · <사유 코드>`. 데스크톱 ≤72px, 좁은 화면 칩 묶음 ≤120px.
+- **산문 폭** `max-inline-size: 42rem`(표·폼·그리드 제외), 섹션 제목은 한글 우선(영문 식별자는 `<code>`), "적용 후/실행되는 것" 은 저장 버튼 옆 한 문단(`p.card-preview`), 비교 행이 있는 미리보기만 `dl.card-preview`.

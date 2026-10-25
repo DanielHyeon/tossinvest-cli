@@ -161,7 +161,7 @@ func TestFloatingNoticesAreAtMostThree(t *testing.T) {
 
 var (
 	a173TechBlock = regexp.MustCompile(`(?s)<details class="tech".*?</details>`)
-	a173ChangeID  = regexp.MustCompile(`\ba0\d{2,3}\b`)
+	a173ChangeID  = regexp.MustCompile(`\ba0\d{2,3}\b|\bconsole-[a-z]+-[a-z]+\b`)
 	a173AbsPath   = regexp.MustCompile(`(^|[\s(>"'])/(?:home|mnt|tmp|var|etc|root|Users)/[\w./-]+`)
 	a173Hex64     = regexp.MustCompile(`\b[0-9a-f]{64}\b`)
 )
@@ -294,5 +294,13 @@ func TestProseWidthAndToggleSpacingRulesExist(t *testing.T) {
 	policy := a173Fixtures(t)[1].get(pathSettingsDaily)
 	if n := strings.Count(policy, `class="toggle-row"`); n < 4 {
 		t.Errorf("거래 정책 토글 묶음(toggle-row)이 %d개 — 네 개여야 한다", n)
+	}
+}
+
+// TestStructuralUnmeasuredSentenceIsSaidOnce — 오늘 소진분 세 축이 같은 구조적 사유를 세 번 적던 것(a173).
+func TestStructuralUnmeasuredSentenceIsSaidOnce(t *testing.T) {
+	page := a173Text(a173Fixtures(t)[0].get("/dashboard"))
+	if n := strings.Count(page, "이 소진분은 엔진 프로세스가 메모리에서 계산해"); n != 1 {
+		t.Errorf("구조적 미측정 사유 문장이 %d회 — 1회여야 한다", n)
 	}
 }

@@ -1,0 +1,361 @@
+--- FAIL: TestEachUnmeasuredCauseIsExplainedOnce (2.01s)
+    a173_common_cleanup_test.go:126: empty /dashboard: journal_unreadable 설명 문장이 5회 반복된다
+    a173_common_cleanup_test.go:126: empty /dashboard: seam_unwired 설명 문장이 13회 반복된다
+    a173_common_cleanup_test.go:126: empty /orders: seam_unwired 설명 문장이 4회 반복된다
+    a173_common_cleanup_test.go:126: settings-full /dashboard: seam_unwired 설명 문장이 13회 반복된다
+    a173_common_cleanup_test.go:126: settings-full /dashboard: journal_unreadable 설명 문장이 5회 반복된다
+    a173_common_cleanup_test.go:126: settings-full /orders: seam_unwired 설명 문장이 4회 반복된다
+    a173_common_cleanup_test.go:126: journal-absent /dashboard: never_fetched 설명 문장이 4회 반복된다
+    a173_common_cleanup_test.go:126: journal-absent /dashboard: journal_unreadable 설명 문장이 5회 반복된다
+    a173_common_cleanup_test.go:126: journal-absent /dashboard: seam_unwired 설명 문장이 9회 반복된다
+    a173_common_cleanup_test.go:126: journal-absent /orders: seam_unwired 설명 문장이 4회 반복된다
+    a173_common_cleanup_test.go:126: journal-seeded /dashboard: seam_unwired 설명 문장이 9회 반복된다
+    a173_common_cleanup_test.go:126: journal-seeded /dashboard: never_fetched 설명 문장이 4회 반복된다
+    a173_common_cleanup_test.go:126: journal-seeded /orders: seam_unwired 설명 문장이 4회 반복된다
+    a173_common_cleanup_test.go:126: broker-down /dashboard: seam_unwired 설명 문장이 9회 반복된다
+    a173_common_cleanup_test.go:126: broker-down /dashboard: never_fetched 설명 문장이 4회 반복된다
+    a173_common_cleanup_test.go:126: broker-down /orders: seam_unwired 설명 문장이 4회 반복된다
+    a173_common_cleanup_test.go:126: orders-live /dashboard: seam_unwired 설명 문장이 11회 반복된다
+    a173_common_cleanup_test.go:126: orders-live /dashboard: never_fetched 설명 문장이 2회 반복된다
+    a173_common_cleanup_test.go:126: orders-error /dashboard: journal_unreadable 설명 문장이 5회 반복된다
+    a173_common_cleanup_test.go:126: orders-error /dashboard: seam_unwired 설명 문장이 11회 반복된다
+    a173_common_cleanup_test.go:126: orders-error /dashboard: never_fetched 설명 문장이 2회 반복된다
+    a173_common_cleanup_test.go:126: orders-error /orders: broker_read_failed 설명 문장이 4회 반복된다
+    a173_common_cleanup_test.go:132: 표본이 비었다(미측정 칸 0, 설명 0) — 전칭 판정이 공허하게 통과한다
+--- FAIL: TestFloatingNoticesAreAtMostThree (0.99s)
+    a173_common_cleanup_test.go:148: empty /dashboard: 떠 있는 상자 6개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: empty /orders: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: empty /settings/standing: 떠 있는 상자 9개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: empty /settings/daily: 떠 있는 상자 8개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: empty /settings/tools: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: empty /position-management: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: settings-full /dashboard: 떠 있는 상자 6개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: settings-full /orders: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: settings-full /settings/standing: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: settings-full /settings/daily: 떠 있는 상자 9개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: journal-absent /dashboard: 떠 있는 상자 6개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: journal-absent /orders: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: journal-absent /settings/standing: 떠 있는 상자 9개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: journal-absent /settings/daily: 떠 있는 상자 8개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: journal-absent /settings/tools: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: journal-absent /position-management: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: journal-seeded /dashboard: 떠 있는 상자 7개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: journal-seeded /positions: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: journal-seeded /settings/standing: 떠 있는 상자 9개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: journal-seeded /settings/daily: 떠 있는 상자 8개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: journal-seeded /settings/tools: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: journal-seeded /position-management: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: broker-down /dashboard: 떠 있는 상자 7개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: broker-down /positions: 떠 있는 상자 5개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: broker-down /settings/standing: 떠 있는 상자 9개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: broker-down /settings/daily: 떠 있는 상자 8개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: broker-down /settings/tools: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: broker-down /position-management: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: orders-live /dashboard: 떠 있는 상자 7개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: orders-live /positions: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: orders-live /settings/standing: 떠 있는 상자 9개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: orders-live /settings/daily: 떠 있는 상자 8개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: orders-live /settings/tools: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: orders-live /position-management: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: orders-error /dashboard: 떠 있는 상자 6개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: orders-error /orders: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: orders-error /settings/standing: 떠 있는 상자 9개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: orders-error /settings/daily: 떠 있는 상자 8개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: orders-error /settings/tools: 떠 있는 상자 4개 — 3개 이하여야 한다
+    a173_common_cleanup_test.go:148: orders-error /position-management: 떠 있는 상자 4개 — 3개 이하여야 한다
+--- FAIL: TestOperatorBodyCarriesNoDeveloperIdentifiers (1.21s)
+    a173_common_cleanup_test.go:178: empty /verify-console: 운영 본문에 절대경로 가 있다: "(/tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/001/capability-soak.jsonl"
+    a173_common_cleanup_test.go:178: empty /dashboard: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/001/capability-verify.jsonl"
+    a173_common_cleanup_test.go:178: empty /optimization: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: empty /position-management: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: empty /report: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/001/capability-verify.jsonl"
+    a173_common_cleanup_test.go:178: empty /optimization?category=exit-protection: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: empty /optimization?category=position-management: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: empty /optimization?category=strategy-runtime: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: empty /optimization?category=performance-history: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: empty /optimization?category=candidate-filters: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: settings-full /verify-console: 운영 본문에 절대경로 가 있다: "(/tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/002/capability-soak.jsonl"
+    a173_common_cleanup_test.go:178: settings-full /dashboard: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/002/capability-verify.jsonl"
+    a173_common_cleanup_test.go:178: settings-full /settings/tools: 운영 본문에 절대경로 가 있다: " /home/daniel/.local/bin/tossctl"
+    a173_common_cleanup_test.go:178: settings-full /optimization: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: settings-full /position-management: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: settings-full /report: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/002/capability-verify.jsonl"
+    a173_common_cleanup_test.go:178: settings-full /optimization?category=exit-protection: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: settings-full /optimization?category=position-management: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: settings-full /optimization?category=strategy-runtime: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: settings-full /optimization?category=performance-history: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: settings-full /optimization?category=candidate-filters: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: journal-absent /verify-console: 운영 본문에 절대경로 가 있다: "(/tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/004/capability-soak.jsonl"
+    a173_common_cleanup_test.go:178: journal-absent /dashboard: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/003/journal.db"
+    a173_common_cleanup_test.go:178: journal-absent /positions: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/003/journal.db"
+    a173_common_cleanup_test.go:178: journal-absent /orders: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/003/journal.db"
+    a173_common_cleanup_test.go:178: journal-absent /history: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/003/journal.db"
+    a173_common_cleanup_test.go:178: journal-absent /optimization: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: journal-absent /position-management: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: journal-absent /report: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/004/capability-verify.jsonl"
+    a173_common_cleanup_test.go:178: journal-absent /optimization?category=exit-protection: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: journal-absent /optimization?category=position-management: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: journal-absent /optimization?category=strategy-runtime: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: journal-absent /optimization?category=performance-history: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: journal-absent /optimization?category=candidate-filters: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: journal-seeded /verify-console: 운영 본문에 절대경로 가 있다: "(/tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/006/capability-soak.jsonl"
+    a173_common_cleanup_test.go:178: journal-seeded /dashboard: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/006/capability-verify.jsonl"
+    a173_common_cleanup_test.go:178: journal-seeded /optimization: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: journal-seeded /position-management: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: journal-seeded /report: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/006/capability-verify.jsonl"
+    a173_common_cleanup_test.go:178: journal-seeded /optimization?category=exit-protection: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: journal-seeded /optimization?category=position-management: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: journal-seeded /optimization?category=strategy-runtime: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: journal-seeded /optimization?category=performance-history: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: journal-seeded /optimization?category=candidate-filters: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: broker-down /verify-console: 운영 본문에 절대경로 가 있다: "(/tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/008/capability-soak.jsonl"
+    a173_common_cleanup_test.go:178: broker-down /dashboard: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/008/capability-verify.jsonl"
+    a173_common_cleanup_test.go:178: broker-down /optimization: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: broker-down /position-management: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: broker-down /report: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/008/capability-verify.jsonl"
+    a173_common_cleanup_test.go:178: broker-down /optimization?category=exit-protection: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: broker-down /optimization?category=position-management: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: broker-down /optimization?category=strategy-runtime: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: broker-down /optimization?category=performance-history: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: broker-down /optimization?category=candidate-filters: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: orders-live /verify-console: 운영 본문에 절대경로 가 있다: "(/tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/010/capability-soak.jsonl"
+    a173_common_cleanup_test.go:178: orders-live /dashboard: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/010/capability-verify.jsonl"
+    a173_common_cleanup_test.go:178: orders-live /optimization: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: orders-live /position-management: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: orders-live /report: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/010/capability-verify.jsonl"
+    a173_common_cleanup_test.go:178: orders-live /optimization?category=exit-protection: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: orders-live /optimization?category=position-management: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: orders-live /optimization?category=strategy-runtime: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: orders-live /optimization?category=performance-history: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: orders-live /optimization?category=candidate-filters: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: orders-error /verify-console: 운영 본문에 절대경로 가 있다: "(/tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/011/capability-soak.jsonl"
+    a173_common_cleanup_test.go:178: orders-error /dashboard: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/011/capability-verify.jsonl"
+    a173_common_cleanup_test.go:178: orders-error /optimization: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: orders-error /position-management: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: orders-error /report: 운영 본문에 절대경로 가 있다: " /tmp/TestOperatorBodyCarriesNoDeveloperIdentifiers806892836/011/capability-verify.jsonl"
+    a173_common_cleanup_test.go:178: orders-error /optimization?category=exit-protection: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: orders-error /optimization?category=position-management: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: orders-error /optimization?category=strategy-runtime: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: orders-error /optimization?category=performance-history: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:178: orders-error /optimization?category=candidate-filters: 운영 본문에 change ID 가 있다: "a044"
+    a173_common_cleanup_test.go:184: details.tech 가 한 번도 렌더되지 않았다 — 식별자를 어디에 옮겼는지 시험이 볼 수 없다
+--- FAIL: TestEveryScreenHeadHasScopeBadgeAndFoldedBoundary (0.76s)
+    a173_common_cleanup_test.go:214: /verify-console: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /verify-console: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:233: /verify-console: 머리 단락에 경계 문장이 남아 있다: 이 화면은 로컬 파일만 읽는다. 네트워크 호출도, 설정 변경도 하지 않는다. 계좌 보유·exit 라인은 포지션 , 완결 거래는 거래 이력 에 있다. <section
+    a173_common_cleanup_test.go:214: /dashboard: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /dashboard: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:233: /dashboard: 머리 단락에 경계 문장이 남아 있다: 지금 계좌가 어떤 상태인지를 한 화면에 모은 읽기 전용 화면이다. 누를 것이 없다 — 주문·정정·취소는 물론 어떤 설정 변경 폼도 이 화면에는 없다. 브로커를 호출하지 않는다 : 보유 수치는 포지션 화면이 채운 캐시
+    a173_common_cleanup_test.go:214: /positions: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /positions: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /orders: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /orders: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /signals: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /signals: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /history: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /history: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /settings/standing: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /settings/standing: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /settings/daily: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /settings/daily: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /settings/strategy: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /settings/strategy: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /settings/tools: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /settings/tools: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /optimization: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /optimization: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /performance-history: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /performance-history: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:233: /performance-history: 머리 단락에 경계 문장이 남아 있다: StockOS lane-console 정보 구조처럼 필터 상태, 결과, 근거와 누락 이유를 한 화면에 둡니다. 이 화면은 기존 journal·position 관측에서 만든 파생 결과만 읽으며 주문, 설정 저장, la
+    a173_common_cleanup_test.go:214: /position-management: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /position-management: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /strategy-runtime: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /strategy-runtime: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /strategy-runtime/market-schedule: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /strategy-runtime/market-schedule: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /verify: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /verify: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /report: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /report: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /optimization?category=exit-protection: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /optimization?category=exit-protection: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /optimization?category=position-management: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /optimization?category=position-management: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /optimization?category=strategy-runtime: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /optimization?category=strategy-runtime: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /optimization?category=performance-history: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /optimization?category=performance-history: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:214: /optimization?category=candidate-filters: 경계 배지가 0개 — h1 옆에 정확히 1개여야 한다
+    a173_common_cleanup_test.go:218: /optimization?category=candidate-filters: 배지가 </h1> 바로 뒤에 없다
+    a173_common_cleanup_test.go:237: 배지 표본이 한쪽뿐이다(편집 0, 읽기 0)
+--- FAIL: TestStatusStripCellsAreOneLine (0.91s)
+    a173_common_cleanup_test.go:257: empty /verify-console: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /dashboard: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /positions: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /orders: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /signals: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /settings/standing: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /settings/daily: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /settings/strategy: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /settings/tools: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /optimization: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /performance-history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /position-management: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /strategy-runtime: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /strategy-runtime/market-schedule: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /verify: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /report: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /optimization?category=exit-protection: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /optimization?category=position-management: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /optimization?category=strategy-runtime: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /optimization?category=performance-history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: empty /optimization?category=candidate-filters: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /verify-console: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /dashboard: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /positions: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /orders: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /signals: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /settings/standing: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /settings/daily: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /settings/strategy: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /settings/tools: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /optimization: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /performance-history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /position-management: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /strategy-runtime: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /strategy-runtime/market-schedule: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /verify: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /report: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /optimization?category=exit-protection: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /optimization?category=position-management: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /optimization?category=strategy-runtime: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /optimization?category=performance-history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: settings-full /optimization?category=candidate-filters: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /verify-console: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /dashboard: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /positions: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /orders: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /signals: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /settings/standing: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /settings/daily: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /settings/strategy: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /settings/tools: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /optimization: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /performance-history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /position-management: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /strategy-runtime: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /strategy-runtime/market-schedule: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /verify: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /report: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /optimization?category=exit-protection: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /optimization?category=position-management: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /optimization?category=strategy-runtime: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /optimization?category=performance-history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-absent /optimization?category=candidate-filters: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /verify-console: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /dashboard: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /positions: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /orders: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /signals: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /settings/standing: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /settings/daily: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /settings/strategy: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /settings/tools: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /optimization: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /performance-history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /position-management: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /strategy-runtime: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /strategy-runtime/market-schedule: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /verify: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /report: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /optimization?category=exit-protection: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /optimization?category=position-management: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /optimization?category=strategy-runtime: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /optimization?category=performance-history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: journal-seeded /optimization?category=candidate-filters: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /verify-console: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /dashboard: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /positions: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /positions: 칸 설명이 104자("verify: no Open API credentials — orders are placed through the official API only, never the web session") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:262: broker-down /positions: 상태 표시줄에 영문 원문 오류 "verify:" 가 보인다
+    a173_common_cleanup_test.go:262: broker-down /positions: 상태 표시줄에 영문 원문 오류 "Open API credentials" 가 보인다
+    a173_common_cleanup_test.go:257: broker-down /orders: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /signals: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /settings/standing: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /settings/daily: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /settings/strategy: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /settings/tools: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /optimization: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /performance-history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /position-management: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /strategy-runtime: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /strategy-runtime/market-schedule: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /verify: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /report: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /optimization?category=exit-protection: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /optimization?category=position-management: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /optimization?category=strategy-runtime: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /optimization?category=performance-history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: broker-down /optimization?category=candidate-filters: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /verify-console: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /dashboard: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /positions: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /orders: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /signals: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /settings/standing: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /settings/daily: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /settings/strategy: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /settings/tools: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /optimization: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /performance-history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /position-management: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /strategy-runtime: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /strategy-runtime/market-schedule: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /verify: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /report: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /optimization?category=exit-protection: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /optimization?category=position-management: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /optimization?category=strategy-runtime: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /optimization?category=performance-history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-live /optimization?category=candidate-filters: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /verify-console: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /dashboard: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /positions: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /orders: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /orders: 칸 설명이 104자("verify: no Open API credentials — orders are placed through the official API only, never the web session") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:262: orders-error /orders: 상태 표시줄에 영문 원문 오류 "verify:" 가 보인다
+    a173_common_cleanup_test.go:262: orders-error /orders: 상태 표시줄에 영문 원문 오류 "Open API credentials" 가 보인다
+    a173_common_cleanup_test.go:257: orders-error /signals: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /settings/standing: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /settings/daily: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /settings/strategy: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /settings/tools: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /optimization: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /performance-history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /position-management: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /strategy-runtime: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /strategy-runtime/market-schedule: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /verify: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /report: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /optimization?category=exit-protection: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /optimization?category=position-management: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /optimization?category=strategy-runtime: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /optimization?category=performance-history: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+    a173_common_cleanup_test.go:257: orders-error /optimization?category=candidate-filters: 칸 설명이 47자("advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다") — 40자 이하 한 줄이어야 한다
+--- FAIL: TestProseWidthAndToggleSpacingRulesExist (1.51s)
+    a173_common_cleanup_test.go:285: 스타일에 "max-inline-size: 42rem" 규칙이 없다
+    a173_common_cleanup_test.go:285: 스타일에 ".toggle-row" 규칙이 없다
+    a173_common_cleanup_test.go:285: 스타일에 ".aside" 규칙이 없다
+    a173_common_cleanup_test.go:285: 스타일에 "details.tech" 규칙이 없다
+    a173_common_cleanup_test.go:285: 스타일에 "details.scope" 규칙이 없다
+    a173_common_cleanup_test.go:291: 거래 정책 토글 묶음(toggle-row)이 0개 — 네 개여야 한다
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	7.406s
+FAIL
