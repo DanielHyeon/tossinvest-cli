@@ -169,7 +169,7 @@
 | `a170-inspection-guard-reconciles-offline-assessment` | STORY-TOS-a170 | implemented |
 | `a171-entry-place-ambiguous-resend` | STORY-TOS-a171 | in_progress |
 | `a172-console-anti-ai-redesign` | STORY-TOS-a172 | in_progress |
-| `a173-console-ux-common-cleanup` | STORY-TOS-a173 | in_progress |
+| `a173-console-ux-common-cleanup` | STORY-TOS-a173 | implemented |
 | `a174-settings-startup-readiness-and-presets` | STORY-TOS-a174 | designed |
 | `a175-optimization-and-runtime-matrix-views` | STORY-TOS-a175 | designed |
 | `a176-overview-summary-and-verify-steps` | STORY-TOS-a176 | designed |

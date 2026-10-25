@@ -31,3 +31,12 @@
 6~8. 시험 서버 다수 생성·문장 쪼개짐 시 FAIL 방향·`handleReport` 문자열 치환 의존(P3) — **수용**(회귀는 `/report` 본문 경로 0 시험이 잡는다).
 9. `<nav>` 안 `<details>`(P3) — **a175 이월**.
 - 추가 확인: `/verify-console` 의 `<details class="scope">` 안에 경계 문단("이 화면은 로컬 파일만 읽는다…")이 실제로 들어 있음(렌더 덤프로 확인).
+
+## 완료 게이트 (2026-10-25, 종결 에이전트 Opus 5.5)
+
+### gate ⑤ — 면제로는 통과 불가 → 번들 10 사후 작성
+- 사전 실행 `python3 tools/logic-map/check_analysis.py --change a173-console-ux-common-cleanup`(rebase 뒤 HEAD `2036fd41b`) → rc 1:
+  `missing Function Logic Map for 10 function(s) modified between base b27a1ea87d35 and working tree …: internal/console/chrome.go:Console.chromeFor, internal/console/chrome.go:holdingsSnapshot.freshness, internal/console/chrome.go:ordersSnapshot.freshness, internal/console/chrome.go:signalsView.freshness, internal/console/optimization.go:Console.handleOptimization, internal/console/optimization_view.go:optimizationCategoryViews, internal/console/pages.go:Console.handleReport, internal/console/performance_history.go:Console.handlePerformanceHistory, internal/console/performance_history_test.go:fakePerformanceReader.Dashboard, internal/console/settings_card_test.go:TestEveryCardShowsWhatChangesAndWhen`.
+- 원인 둘: (1) 면제 표지(`Function Logic Map: not-applicable`)는 required 가 0 일 때만 쓰인다(`_verdict`) — 기존 함수 본문을 한 줄이라도 고치면 비례 원칙과 무관하게 번들이 요구된다(a177 과 같은 결론). (2) a173 base `b27a1ea87` 는 a177 착지보다 앞이라 창(base→워킹트리)에 a177 함수 3 이 함께 든다. `--record-landing` 은 창의 **끝**만 좁히므로 이 셋을 빼지 못한다.
+- 처분: a173 편집 7 은 `analysis/function-logic/` 에 번들(ast.json · function-logic-map.md · branch-test-map.md · risk-pattern-report.md)을 새로 만들었다. 분기 행의 시험 인용은 커버리지 시험 바이너리로 top-level 시험 607 개를 하나씩 `-test.coverprofile` 실행해 분기 본문 블록 count>0 을 잰 것이다. 측정상 시험이 없는 기존 분기 3(`holdingsSnapshot.freshness` B4 · `ordersSnapshot.freshness` B6 · `Console.handleReport` B1)은 a173 무관 기존 공백으로 적었다. a177 함수 3 은 소스 sha256 이 a177 아카이브 번들과 같아 그 번들을 복사하고 출처 주석 한 줄만 더했다. 재실행 → `evidence complete or diff-proven exempt` rc 0.
+- 사후 작성임을 기록한다(FLM 이 구현 판단에 쓰이지 않음). a173 이 더한 분기는 `chromeFor` B11(`f.Code != ""`) 하나이고 나머지 편집은 반환 구조체 필드 · 문자열 배치다.

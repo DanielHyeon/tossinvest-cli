@@ -1,0 +1,95 @@
+{
+  "file": "internal/console/chrome.go",
+  "source_sha256": "367463d91837a4ab582fe7a976a1541d327ed1d6661766742158d88f9af0bfca",
+  "package": "console",
+  "function": "freshness",
+  "receiver": "signalsView",
+  "signature": "signalsView.freshness(params=0, results=1)",
+  "start": {
+    "line": 323,
+    "column": 1
+  },
+  "end": {
+    "line": 334,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 324,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 325,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 327,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 6
+      },
+      "text": "v.Read.Known"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 51
+      },
+      "text": "v.Read.Code"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 72
+      },
+      "text": "unmeasuredReason"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 89
+      },
+      "text": "v.Read.Code"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 330,
+        "column": 9
+      },
+      "text": "time.Duration"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 33
+      },
+      "text": "candidate.DefaultWatchInterval.String"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

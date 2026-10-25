@@ -59,10 +59,15 @@ Story: `STORY-TOS-a173` · Low risk(렌더·CSS·뷰 모델·시험). FLM/BTM·�
 - [x] 4.5 gstack `review`(경량) → `review.md` 추가. 변이 1회: `Causes` 배너 생성 제거 → 2.1 FAIL 확인 후 원복(기록)
   - 증거: gstack `review` 스킬은 **실행하지 않았다**(시간·범위; Manager 검증과 test 전수로 갈음 제안). 변이 1회 완료: `causesOf` 맨 앞에 `return nil` 삽입 → `TestEachUnmeasuredCauseIsExplainedOnce` FAIL(`analysis/mutation-causes.txt`), `git checkout internal/console/causes.go` 후 `git diff --stat` 빈 출력·시험 재통과
   - 증거(2차): gstack `review` 는 경량(diff 직접 읽기)으로만 실행 — 전체 스킬(Review Army·adversarial·Greptile)은 미실행. 발견 9건 처리는 review.md 「## 구현 리뷰」. 4.5 반영 후 전체 시험 재실행 ok.
-- [ ] 4.6 Manager(Fable) 검증 요청 — 변경 파일·시험 출력(잘리지 않은 원문 경로)·전후 수치·스크린샷 디렉터리 보고. Manager 가 크롬으로 22개 화면 × 데스크톱/모바일/다크를 직접 본다
+- [x] 4.6 Manager(Fable) 검증 요청 — 변경 파일·시험 출력(잘리지 않은 원문 경로)·전후 수치·스크린샷 디렉터리 보고. Manager 가 크롬으로 22개 화면 × 데스크톱/모바일/다크를 직접 본다
+  - Fable 2026-10-25 — go test ./internal/console/ -count=1 ok(157s) · gofmt 0 · vet OK · 크롬 실측: 데스크톱 라이트 9화면(dashboard·orders·positions·settings/daily·settings/standing·verify-console·optimization·strategy-runtime·signals) · 데스크톱 다크 1(settings/standing) · 모바일 라이트/다크 4(dashboard·positions·orders·settings/daily) · 모바일 결함 2건(접기 ▶ 표식·칩 간격)은 46e46ca24 로 수정 확인(evidence/after-mobile-dark-dashboard.png) · 버튼 클릭 0 · check_analysis required 7(종결 시 번들)
 
 ## 5. 종결 (Manager 승인 뒤, Opus 가 수행)
-- [ ] 5.1 `docs/console-design.md` 에 알림 3단계·경계 배지·기술 정보·원인 1회 규칙 추가 확인 → main 병합·푸시(사람 승인 뒤) → PM tracker 재생성 → `make sdd-sync` → 아카이브 → memory retain
+- [x] 5.1 `docs/console-design.md` 에 알림 3단계·경계 배지·기술 정보·원인 1회 규칙 추가 확인 → main 병합·푸시(사람 승인 뒤) → PM tracker 재생성 → `make sdd-sync` → 아카이브 → memory retain
+  - 사람 승인: 사용자가 커밋·푸시·아카이브를 명시 요청(2026-10-25, 전체 `make gate` 실행 포함 — 이 change 한정).
+  - `docs/console-design.md` 59~62행에 원인 1회·알림 3단계·경계 배지·기술 정보 규칙 있음(확인).
+  - main 병합: `worktree/a173` 를 main(`77e9604db`, a177 아카이브 뒤) 위로 rebase — 충돌 1(`templates_optimization.go` 성과·이력 머리 줄: a177 `{{.PerformanceWindow.Text}}` + a173 `class="aside"` 를 합침, 칩 `{{range .Window.Parts}}` 블록은 무충돌). rebase 뒤 `gofmt -l internal/console` 0 · `go vet ./internal/console/` OK · `go test ./internal/console/ -count=1` ok 67.9s(top-level 606 pass · 1 skip · fail 0) · `go test ./cmd/tossctl/ -run Console -count=1` ok(78 pass) → `git merge --ff-only` → main `2036fd41b`.
+  - gate ⑤ 사전 실행: rebase 뒤 required 10 — a173 편집 7 + base(`b27a1ea87`)가 a177 착지 앞이라 창에 든 a177 함수 3(`Console.handleOptimization` · `Console.handlePerformanceHistory` · `fakePerformanceReader.Dashboard`). 면제 표지는 required 0 일 때만 받는다(`check_analysis._verdict`). → `analysis/function-logic/` 번들 10: a173 7 은 AST(`tools/logic-map`) + 시험별 coverprofile 측정(607 시험 개별 실행)으로 작성, a177 3 은 소스 sha 동일 확인 뒤 a177 아카이브 번들 복사 → `evidence complete or diff-proven exempt` rc 0. review.md 「완료 게이트」.
 
 ## 고정 리터럴 시험 수정 기록
 1. `internal/console/settings_card_test.go` `TestEveryCardShowsWhatChangesAndWhen` 안 반영 시점 단언(약 105행): `class="notice"` → `class="muted effect-timing"`. 사유: 알림 3단계 스펙(ADDED 「알림은 세 단계로만」, 시나리오 「저장 버튼 옆 반영 시점」)이 반영 시점을 상자가 아니라 한 줄 본문으로 정함. 단언은 약화가 아니라 새 모양으로 교체(마커 앞 60자 안 해당 class 필수, 카드 전부). 나머지 고정 리터럴 시험은 수정 0.
