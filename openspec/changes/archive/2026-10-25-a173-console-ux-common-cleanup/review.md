@@ -40,3 +40,9 @@
 - 원인 둘: (1) 면제 표지(`Function Logic Map: not-applicable`)는 required 가 0 일 때만 쓰인다(`_verdict`) — 기존 함수 본문을 한 줄이라도 고치면 비례 원칙과 무관하게 번들이 요구된다(a177 과 같은 결론). (2) a173 base `b27a1ea87` 는 a177 착지보다 앞이라 창(base→워킹트리)에 a177 함수 3 이 함께 든다. `--record-landing` 은 창의 **끝**만 좁히므로 이 셋을 빼지 못한다.
 - 처분: a173 편집 7 은 `analysis/function-logic/` 에 번들(ast.json · function-logic-map.md · branch-test-map.md · risk-pattern-report.md)을 새로 만들었다. 분기 행의 시험 인용은 커버리지 시험 바이너리로 top-level 시험 607 개를 하나씩 `-test.coverprofile` 실행해 분기 본문 블록 count>0 을 잰 것이다. 측정상 시험이 없는 기존 분기 3(`holdingsSnapshot.freshness` B4 · `ordersSnapshot.freshness` B6 · `Console.handleReport` B1)은 a173 무관 기존 공백으로 적었다. a177 함수 3 은 소스 sha256 이 a177 아카이브 번들과 같아 그 번들을 복사하고 출처 주석 한 줄만 더했다. 재실행 → `evidence complete or diff-proven exempt` rc 0.
 - 사후 작성임을 기록한다(FLM 이 구현 판단에 쓰이지 않음). a173 이 더한 분기는 `chromeFor` B11(`f.Code != ""`) 하나이고 나머지 편집은 반환 구조체 필드 · 문자열 배치다.
+
+### 완료 게이트 실행 영수증
+- 1 차(격리 worktree `/tmp/tossos-a173-close-20261025`, detached `4e20c5df5`, 2026-10-25) FAIL 7 단계 `make test`: `error obtaining VCS status: exit status 128`(`updater_test.go:169`, `a112_capability_closure_test.go:34` 등). 빈 `/tmp/.git` 이 있을 때의 증상과 같다(Go 가 worktree 의 `.git` 파일을 지나 `/tmp` 까지 올라감). 재실행 시점에는 `/tmp/.git` 없음.
+- 2 차(같은 worktree) 7 단계 OK, 8 단계 `make test-seams` 도중 23:45 세션 종료로 `make: *** [Makefile:188: gate] Terminated` — 판정 없음.
+- 3 차(같은 worktree, HEAD `4e20c5df5`, 2026-10-26 05:3x~06:2x KST): `ls -d /tmp/.git` 없음 → `make sdd-infra` rc 2(앞 세션이 만든 `.sdd/.venv` 가 이미 있어 `uv venv` 가 거절 — 무해) → `python3 tools/sdd/sdd_sync.py --no-gbrain` rc 0 → `make sdd-check` rc 0 → `codegraph status .` `✓ Index is up to date` → `rtk proxy make gate CHANGE=a173-console-ux-common-cleanup` → **GATE PASS 11/11, rc 0**. 원문 로그는 세션 스크래치패드 `a173-close/gate-run3.log`.
+- archive: `openspec archive a173-console-ux-common-cleanup --yes`(1.4.1) → `operator-console: + 5 added`, `2026-10-25-a173-console-ux-common-cleanup`(openspec 은 UTC 날짜를 쓴다).

@@ -95,7 +95,7 @@
     - STORY-TOS-a115 — The console strategy screen reattaches [archived] → `a115-the-console-strategy-screen-reattaches`
     - STORY-TOS-a154 — 가정값 손절 정책 수치 비교 [archived] → `a154-preview-validated-stop-policy-options`
     - STORY-TOS-a172 — 콘솔 UI 의 AI 티 제거와 프리미엄 미니멀 테마(규칙 20) — 4단계 [in_progress] → `a172-console-anti-ai-redesign`
-    - STORY-TOS-a173 — 콘솔 공통 정리 — 같은 원인 1회·경고 3단계·경계 배지·상태 표시줄 압축·내부 식별자 접기 [implemented] → `a173-console-ux-common-cleanup`
+    - STORY-TOS-a173 — 콘솔 공통 정리 — 같은 원인 1회·경고 3단계·경계 배지·상태 표시줄 압축·내부 식별자 접기 [archived] → `a173-console-ux-common-cleanup`
     - STORY-TOS-a174 — 설정 화면 — 기동 준비 체크리스트·Guardian 프리셋 비교표·거래 정책 한 줄 형식(가역성 탭 축 유지) [designed] → `a174-settings-startup-readiness-and-presets`
     - STORY-TOS-a175 — 최적화·전략 화면 — 중복 내비 제거·중계 페이지 축소·프리셋/후보 필터/runtime/신호의 행렬화 [designed] → `a175-optimization-and-runtime-matrix-views`
     - STORY-TOS-a176 — 개요 화면 한 화면 요약 정돈과 /verify 단계 목록 구조화 [designed] → `a176-overview-summary-and-verify-steps`

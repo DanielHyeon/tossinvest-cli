@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a173-console-ux-common-cleanup",
-    "path": "openspec/changes/a173-console-ux-common-cleanup"
+    "path": "openspec/changes/archive/2026-10-25-a173-console-ux-common-cleanup"
   },
   "found_by": {
     "date": "2026-10-25",
     "how": "a172 배포 뒤 사용자가 design-critic·cognitive-load-assessment 스킬로 22개 화면을 전수 검사하게 했다. 데스크톱 1280 전수·모바일 2장 실측: 같은 오류 문장이 한 화면에 최대 5회(/orders), 경고 박스 최대 11개(/settings/daily), 본문 경로·change ID 노출, 상태 표시줄이 화면마다 약 115px. 사용자가 S1~S5 로 나눠 S1 부터 진행하라고 지시했다(2026-10-25).",
-    "record": "openspec/changes/a173-console-ux-common-cleanup/proposal.md"
+    "record": "openspec/changes/archive/2026-10-25-a173-console-ux-common-cleanup/proposal.md"
   },
   "acceptance": [
     "같은 원인(원장 미판독·브로커 조회 실패·자격증명 없음·seam 미배선)의 설명 문장은 한 화면에 1회만 나타나고, 미측정 칸은 '미측정 + 열거된 사유 코드'를 유지한다(spec 706·1374·1442)",
