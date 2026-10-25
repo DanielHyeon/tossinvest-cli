@@ -1,0 +1,2262 @@
+--- FAIL: TestStartupReadinessAppearsOnThreeScreensWithoutControls (0.01s)
+    readiness_test.go:16: 기동 준비 section이 없다:
+        
+        <!doctype html>
+        <html lang="ko"><head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="referrer" content="same-origin">
+        
+        <title>tossctl console</title>
+        <style>
+         
+        :root {
+          color-scheme: light dark;
+           
+          --space-1: clamp(0.25rem, 0.2rem + 0.15vw, 0.35rem);
+          --space-2: clamp(0.5rem, 0.42rem + 0.25vw, 0.7rem);
+          --space-3: clamp(0.8rem, 0.65rem + 0.55vw, 1.2rem);
+          --space-4: clamp(1.1rem, 0.85rem + 0.9vw, 1.75rem);
+          --space-5: clamp(1.6rem, 1.2rem + 1.4vw, 2.6rem);
+           
+          --text--1: clamp(0.78rem, 0.74rem + 0.15vw, 0.85rem);
+          --text-0: clamp(0.9375rem, 0.88rem + 0.25vw, 1.0625rem);
+          --text-1: clamp(1.125rem, 1.04rem + 0.4vw, 1.33rem);
+          --text-2: clamp(1.35rem, 1.2rem + 0.7vw, 1.66rem);
+          --text-3: clamp(1.62rem, 1.35rem + 1.3vw, 2.07rem);
+           
+          --radius-card: 0.9rem 0.35rem 0.8rem 0.3rem;
+          --radius-control: 0.35rem 0.7rem 0.35rem 0.6rem;
+          --radius-soft: 0.25rem 0.5rem 0.3rem 0.45rem;
+           
+          --surface-0: #f5f3ee; --surface-1: #fcfbf8; --surface-2: #ebe8e1;
+           
+          --line: #d9d5ca; --line-soft: #e7e3da; --line-strong: #857f73;
+           
+          --ink-1: #201e1a; --ink-2: #47433b; --ink-3: #625d54;
+          --accent: #2e5a86;
+           
+          --ok: #2f6a40; --ok-line: #5f8f6c; --ok-bg: #e6eee3;
+          --warn: #7f540f; --warn-line: #a9761e; --warn-bg: #f8eed9;
+          --bad: #9a3228; --bad-line: #b4503f; --bad-bg: #f6e6e1;
+           
+          --tint-accent: #5b85d0; --tint-ok: #52b96e; --tint-warn: #e9b207; --tint-bad: #d8614b; --tone-alpha: 19%;
+          --lift: 0 1px 2px rgba(32, 30, 26, 0.07);
+           
+          --dur-1: 120ms; --dur-2: 220ms; --dur-3: 300ms;
+          --ease-spring: ease-out; --ease-settle: ease-out; --ease-pop: ease-out;
+          --nudge: -2px; --press: 0.97; --pop-from: 0.96;
+           
+          --shadow-pop: 0 18px 54px rgba(20, 18, 14, 0.3), 0 0 0 1px var(--line);
+          --scrim: rgba(20, 18, 14, 0.32);
+          --shadow-bar: 0 -5px 20px rgba(20, 18, 14, 0.14);
+        }
+        * { box-sizing: border-box; }
+        body {
+          margin: 0; padding: 0 var(--space-3) 4rem;
+          font: var(--text-0)/1.65 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+          background: var(--surface-0); color: var(--ink-1);
+           
+          overflow-wrap: anywhere;
+        }
+        a { color: var(--accent); }
+        main, header > div { max-width: 72rem; margin: 0 auto; min-width: 0; }
+        header { border-bottom: 1px solid var(--line); margin-bottom: var(--space-4); }
+        header > div { display: flex; gap: var(--space-3); align-items: baseline; padding: var(--space-3) 0; }
+        header strong { font-size: var(--text-0); letter-spacing: 0.02em; }
+        nav { display: flex; flex-wrap: wrap; gap: 0.15rem var(--space-3); min-width: 0; }
+         
+        nav a { color: var(--ink-2); text-decoration: none; display: flex; flex-direction: column;
+          justify-content: center; min-height: 44px; padding: 0.2rem 0; min-width: 0; }
+        nav a small { color: var(--ink-3); font-size: var(--text--1); line-height: 1.3; font-weight: 400; }
+        nav a.on { font-weight: 600; text-decoration: underline; }
+        .header-note { margin-left: auto; }
+        h1 { font-size: var(--text-3); font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; margin: var(--space-5) 0 var(--space-1); text-wrap: balance; }
+        h2 { font-size: var(--text-2); font-weight: 650; line-height: 1.28; letter-spacing: -0.012em; margin: var(--space-4) 0 var(--space-1); text-wrap: balance; }
+        h3 { font-size: var(--text-1); line-height: 1.35; letter-spacing: -0.004em; margin: var(--space-3) 0 var(--space-1); }
+         
+        section { padding: var(--space-3) 0; margin: var(--space-5) 0; border-top: 1px solid var(--line); }
+         
+        .sticky-save, .order-summary { padding: var(--space-3) var(--space-4); border-top: 0; background: var(--surface-1);
+          border-radius: var(--radius-card); box-shadow: var(--lift); }
+        pre { overflow-x: auto; padding: var(--space-2) var(--space-3); background: var(--surface-2); border-radius: var(--radius-soft);
+              font: var(--text--1)/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+        table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+        th, td { text-align: left; padding: 0.3rem 0.6rem 0.3rem 0; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+        code { overflow-wrap: anywhere; }
+        dl { display: grid; grid-template-columns: 8rem 1fr; gap: 0.25rem var(--space-3); margin: var(--space-2) 0; }
+        dt { color: var(--ink-3); } dd { margin: 0; }
+        .notice { border: 1px solid var(--warn-line); background: var(--warn-bg); box-shadow: var(--lift); padding: var(--space-2) var(--space-3); border-radius: var(--radius-soft); }
+        .danger { border: 1px solid var(--bad-line); background: var(--bad-bg); box-shadow: var(--lift); padding: var(--space-2) var(--space-3); border-radius: var(--radius-soft); }
+         
+        .aside { color: var(--ink-2); }
+        .status-pill.warn, .submetric.warn { color: var(--warn); }
+        .effect-timing { margin: var(--space-2) 0 0; }
+        .cause-banner p { margin: 0 0 var(--space-1); }
+        .cause-banner ul { margin: 0 0 var(--space-2); padding-inline-start: 1.2rem; }
+        .ok { color: var(--ok); } .bad { color: var(--bad); } .muted { color: var(--ink-3); }
+        input[type=text] { font: var(--text-0)/1.4 ui-monospace, Menlo, Consolas, monospace; padding: 0.45rem 0.6rem; min-height: 44px;
+                           width: 22rem; max-width: 100%; border: 1px solid var(--line-strong); border-radius: var(--radius-control);
+                           background: var(--surface-2); color: var(--ink-1); }
+        button { font: inherit; padding: 0.45rem 1rem; border-radius: var(--radius-control); border: 1px solid var(--ink-3);
+                 background: var(--ink-1); color: var(--surface-0); cursor: pointer; }
+        button.secondary { background: transparent; color: var(--ink-1); }
+         
+        button:hover:not(:disabled), .button-link:hover { background: var(--ink-2); }
+        button:active:not(:disabled), .button-link:active { background: var(--ink-3); }
+        button.secondary:hover:not(:disabled), .secondary-link:hover { background: var(--surface-2); }
+        button.secondary:active:not(:disabled), .secondary-link:active { background: var(--line); }
+        button:disabled { cursor: not-allowed; opacity: 0.65; }
+        .button-link { min-height: 44px; display: inline-flex; align-items: center; justify-content: center;
+          padding: 0.45rem 1rem; border: 1px solid var(--ink-3); border-radius: var(--radius-control); background: var(--ink-1);
+          color: var(--surface-0); text-decoration: none; }
+        .secondary-link { background: transparent; color: var(--ink-1); }
+        form { display: inline; }
+         
+        main p, main li, main details > :not(summary) { max-inline-size: 42rem; }
+        td p, th p, .console-status p { max-inline-size: none; }
+        .page-intro { max-inline-size: 42rem; }
+         
+        h1:has(+ .scope) { display: inline-block; margin-inline-end: var(--space-2); }
+        .status-pill.scope { color: var(--ink-3); vertical-align: 0.5em; }
+        details.scope, details.tech { margin: var(--space-1) 0 var(--space-2); }
+        details.scope summary, details.tech summary { color: var(--ink-3); font-size: var(--text--1); cursor: pointer;
+          display: list-item; list-style: disclosure-closed inside; }
+        details.scope[open] > summary, details.tech[open] > summary { list-style-type: disclosure-open; }
+        details.tech code, details.tech dl { font-size: var(--text--1); }
+         
+        .toggle-row { margin: 0 0 var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--line-soft); }
+        .toggle-row .muted { display: block; margin-inline-start: 2.1rem; }
+        .data-table { table-layout: fixed; }
+        .data-table caption { text-align: left; font-weight: 700; font-size: var(--text-0); padding: 0 0 0.65rem; }
+        .data-table th, .data-table td { padding: 0.75rem 0.65rem; overflow-wrap: anywhere; }
+        .data-table tbody tr:last-child > * { border-bottom: 0; }
+        .positions-table { font-size: 12px; line-height: 18px; }
+        .positions-table thead { font-size: 10px; line-height: 15px; }
+        .positions-table th, .positions-table td { padding: 8px 12px; }
+        .positions-table .number-column { text-align: right; font-variant-numeric: tabular-nums; }
+        .positions-table thead th:nth-child(5) { text-align: right; }
+        .position-col-instrument { width: 31%; }
+        .position-col-quantity { width: 6%; }
+        .position-col-average, .position-col-current { width: 11%; }
+        .position-col-lines { width: 18%; }
+        .position-col-value { width: 12%; }
+        .position-col-pnl { width: 11%; }
+        .position-col-detail { width: 7%; }
+        .holding-name { display: block; margin-bottom: 0.12rem; font-weight: 700; }
+        .holding-name code { font-size: inherit; font-weight: 500; }
+        .holding-verdicts { display: flex; flex-wrap: wrap; gap: 3px 5px; align-items: center; margin-top: 4px; }
+        .holding-verdicts .submetric { display: inline; margin-top: 0; }
+        .number-cell { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .line-item { display: flex; justify-content: space-between; align-items: baseline;
+          gap: 5px; margin-top: 2px; font-size: 12px; line-height: 15px; font-variant-numeric: tabular-nums; }
+        .line-item > span { color: var(--ink-3); font-size: 10px; line-height: 12.5px; }
+        .line-item > strong { font-size: 11px; line-height: 13.75px; text-align: right; overflow-wrap: normal; }
+         
+        .status-pill { display: inline-block; border: 1px solid currentColor; border-radius: 999px;
+          padding: 0.08rem 0.55rem; font-size: var(--text--1); }
+        .positions-table .status-pill { padding: 1px 6px; font-size: 11px; line-height: 15px; }
+        .positions-table .submetric { font-size: 11px; line-height: 15px; }
+        .metric { display: block; font-size: var(--text-0); font-weight: 700; }
+        .submetric { display: block; margin-top: 0.15rem; color: var(--ink-3); font-size: var(--text--1); }
+        .exit-line-stack { text-align: right; font-variant-numeric: tabular-nums; }
+        .exit-line-status { display: block; margin-top: 0.2rem; }
+        .safety-line { display: block; margin-top: 0.2rem; font-size: 1rem; line-height: 1.5; }
+        .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: flex-start; }
+        .actions form { display: block; }
+        .actions button { padding: 0.32rem 0.65rem; font-size: var(--text--1); }
+         
+        summary { min-height: 44px; align-content: center; }
+        .row-details, .explain { margin-top: 0.45rem; }
+        .row-details summary, .explain summary { color: var(--ink-3); cursor: pointer; font-weight: 600; }
+        .row-details summary { min-height: 44px; display: flex; align-items: center; }
+        .detail-grid { display: grid; grid-template-columns: 1fr; gap: 0.25rem 0.9rem; margin-top: 0.5rem; }
+        .detail-grid span { min-width: 0; }
+        .detail-cell { min-height: 66px; text-align: right; white-space: nowrap; }
+        .detail-cell .row-details { min-height: 44px; margin: 0; }
+        .detail-cell .row-details summary { justify-content: flex-end; }
+        .detail-cell .row-details[open] { position: fixed; left: 50%; top: 50%;
+          z-index: 21; width: min(42rem, calc(100% - 2rem)); max-height: min(70vh, 42rem);
+          margin: 0; padding: 0.65rem 1.25rem 1.25rem; overflow: auto; transform: translate(-50%, -50%);
+          box-sizing: border-box; border-radius: var(--radius-card);
+          background: var(--surface-1); color: var(--ink-1); box-shadow: var(--shadow-pop);
+          text-align: left; white-space: normal; }
+        .detail-cell .row-details[open] summary { position: sticky; z-index: 22; top: 0; min-height: 44px;
+          justify-content: flex-end; padding: 0 0.4rem; border-radius: var(--radius-soft); background: var(--surface-1); }
+        .detail-cell .row-details[open] summary::after { content: "닫기"; margin-inline-start: 0.5em; }
+        .detail-cell .row-details[open] .detail-grid { align-content: start; margin-top: 0.25rem; }
+        .filter-bar { display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem; align-items: center; }
+        .filter-group { display: flex; flex-wrap: wrap; gap: 0.35rem 0.7rem; align-items: center; }
+        .filter-group .muted { margin-right: 0.15rem; }
+        .optimization-title { display: flex; gap: var(--space-3); align-items: flex-start; justify-content: space-between; }
+        .optimization-title > div { min-width: 0; }
+        .optimization-title, .optimization-shell, .optimization-content, .optimization-content > section,
+        .optimization-content article, .optimization-content fieldset { min-width: 0; max-width: 100%; }
+        .optimization-title code, .optimization-shell code, .preview-review code { overflow-wrap: anywhere; word-break: break-word; }
+        .status-strip { display: grid; grid-template-columns: repeat(2, minmax(7rem, 1fr)); min-width: min(100%, 28rem);
+          background: var(--surface-1); border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--lift); }
+        .status-strip > div { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--line-soft); }
+        .status-strip dt { font-size: var(--text--1); } .status-strip dd { font-size: var(--text-0); }
+        .status-strip dd small { display: block; margin-top: 0.1rem; color: var(--ink-3); font-size: var(--text--1); }
+        .status-strip[data-lifecycle-state=error] { box-shadow: inset 0 0 0 1px var(--warn-line); }
+        .status-strip[data-lifecycle-state=unavailable] { box-shadow: inset 0 0 0 1px var(--line-strong); }
+        .status-strip [data-evidence-state=stale], .status-strip [data-evidence-state=insufficient] { border-color: var(--warn-line); }
+        .status-strip [data-evidence-state=unavailable] { border-color: var(--line-strong); }
+         
+        .console-status, .console-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+          gap: 0; max-width: 72rem; margin: 0 auto var(--space-3); background: var(--surface-1);
+          border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--lift); }
+        .console-status > div, .console-summary > div { min-width: 0; padding: 0.5rem 0.75rem;
+          border-left: 1px solid var(--line-soft); }
+         
+        .console-status { line-height: 1.35; }
+        .console-status > div { padding-block: 0.2rem; }
+        .console-status dd small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .console-status > div:first-child, .console-summary > div:first-child { border-left: 0; }
+        .console-status dt, .console-summary dt { color: var(--ink-3); font-size: var(--text--1); }
+        .console-status dd, .console-summary dd { font-size: var(--text-0); overflow-wrap: anywhere; }
+        .console-status dd small, .console-summary dd small { display: block; margin-top: 0.1rem;
+          color: var(--ink-3); font-size: var(--text--1); }
+         
+        .console-summary { margin-bottom: var(--space-4); }
+        .console-summary dd { font-size: var(--text-0); font-weight: 600; }
+        .console-summary .summary-line { display: block; font-weight: 400; }
+        .console-summary .summary-line + .summary-line { margin-top: 0.15rem; }
+         
+        .console-status [data-data-tone=ok] { color: var(--ok); }
+        .console-status [data-data-tone=warn], .console-status [data-engine-state=stopped] { color: var(--warn); }
+        .console-status [data-data-tone=stale] { color: var(--bad); }
+        .console-approval { max-width: 72rem; margin: 0 auto 0.9rem; }
+         
+        .settings-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: var(--space-3) 0 var(--space-3); }
+        .settings-tabs a { min-height: 44px; display: inline-flex; align-items: center; padding: 0.4rem 1rem;
+          border-radius: var(--radius-control); background: var(--surface-2); color: var(--ink-2); text-decoration: none; }
+        .settings-tabs a.on { box-shadow: inset 0 -2px var(--accent); font-weight: 700; color: var(--ink-1); }
+        .settings-state { margin-bottom: var(--space-4); }
+        .settings-state [data-state-tone=ok] { color: var(--ok); }
+        .settings-state [data-state-tone=warn] { color: var(--warn); }
+         
+        .card-current, dl.card-preview { grid-template-columns: minmax(8rem, 14rem) 1fr; }
+        dl.card-preview { background: var(--surface-2); border-radius: var(--radius-soft); padding: var(--space-2) var(--space-3); margin: 0.7rem 0; }
+        p.card-preview { color: var(--ink-3); margin: 0.7rem 0; }
+        dl.card-preview dt { color: var(--ink-2); font-weight: 600; }
+        .tier-card { background: var(--surface-2); border-radius: var(--radius-soft); padding: var(--space-2) var(--space-3); margin: var(--space-2) 0; }
+        .tier-card form { display: block; }
+        [data-limit-axis=강화] { color: var(--ok); }
+        [data-limit-axis=완화] { color: var(--warn); }
+        [data-limit-axis="통화 변경"], [data-limit-axis="최초 설정"] { color: var(--ink-2); }
+        .entry-list { grid-template-columns: minmax(8rem, 12rem) 1fr; gap: var(--space-3) var(--space-3); }
+        .entry-list dt a { min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; }
+         
+        .explain-link { margin: 0.5rem 0; }
+        .explain-link > a { font-weight: 600; color: var(--ink-2); }
+        .explain-link > div { margin-top: 0.4rem; }
+        .hypothetical-results th, .hypothetical-results td { white-space: nowrap; }
+        .hypothetical-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: 0.8rem; }
+        .hypothetical-fields label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+        .hypothetical-fields input, .hypothetical-fields select { box-sizing: border-box; width: 100%; min-height: 44px; padding: 0.4rem; }
+        .hypothetical-fields .danger { display: block; margin-top: 0.25rem; }
+        .hypothetical-fields :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+        .optimization-shell { display: grid; grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr); gap: var(--space-3); align-items: start; }
+        .optimization-nav { position: sticky; top: 0.75rem; display: grid; gap: 0.35rem; }
+        .optimization-nav a { min-height: 56px; display: flex; flex-direction: column; justify-content: center; padding: 0.55rem 0.75rem;
+          border-radius: var(--radius-control); background: var(--surface-1); color: var(--ink-1); text-decoration: none; box-shadow: var(--lift); }
+        .optimization-nav a.on { box-shadow: inset 0 -2px var(--accent); }
+        .optimization-nav small { color: var(--ink-3); line-height: 1.35; }
+        .optimization-content { min-width: 0; }
+        .optimization-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); margin: var(--space-3) 0;
+          padding: 0; list-style: none; counter-reset: none; }
+        .optimization-steps li { min-width: 0; padding: var(--space-2) var(--space-3); background: var(--surface-2); border-radius: var(--radius-soft); }
+        .optimization-steps strong, .optimization-steps span { display: block; }
+        .optimization-steps span { margin-top: 0.2rem; color: var(--ink-3); font-size: var(--text--1); }
+        .category-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) var(--space-4); }
+        .category-summary article { border-top: 1px solid var(--line-soft); padding-top: 0.4rem; }
+        .category-summary h3 { margin-bottom: 0.1rem; font-size: var(--text-0); font-weight: 600; }
+        fieldset.setting-row { border: 0; border-radius: var(--radius-card); background: var(--surface-2); margin: var(--space-3) 0; padding: var(--space-3) var(--space-4); }
+        fieldset.setting-row legend { font-weight: 700; padding: 0 0.35rem; }
+        fieldset.setting-error { border: 1px solid var(--bad-line); }
+        .configuration-error { overflow-wrap: anywhere; }
+        .setting-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .setting-values > div { min-width: 0; border-top: 1px solid var(--line-soft); padding: 0.35rem 0; }
+        .choice-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+        .choice-tile { background: var(--surface-1); border-radius: var(--radius-soft); padding: var(--space-3); min-width: 0; }
+        .choice-tile[data-selected=true] { background: var(--ok-bg); box-shadow: inset 0 0 0 1px var(--ok-line); }
+        .choice-tile header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.4rem; }
+        .choice-tile h3 { margin: 0; } .choice-action { display: block; margin-top: 0.7rem; }
+        .optimization-nav a, .optimization-content button, .optimization-content .button-link,
+        .sticky-save button, .sticky-save .button-link, .confirm-check { min-height: 44px; }
+        .choice-action button { width: 100%; }
+        
+        .table-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
+        .table-scroll:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+        .table-scroll table { min-width: 36rem; }
+         
+        .table-scroll th, .table-scroll td { min-width: 4.5rem; }
+        .history-panel summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+        .preview-review { min-width: 0; max-width: 100%; }
+        .sticky-save { position: sticky; z-index: 4; bottom: 0.5rem; max-width: 100%; box-sizing: border-box;
+          box-shadow: var(--shadow-bar), inset 0 2px var(--warn-line); }
+        .confirm-check { display: flex; gap: 0.55rem; align-items: center; margin: 0.7rem 0; }
+        .confirm-check input { width: 1.25rem; height: 1.25rem; }
+         
+        label:not(.confirm-check):has(> input[type=checkbox]) { display: block; min-height: 44px; padding-block: 0.55rem; }
+        label:not(.confirm-check) > input[type=checkbox] { width: 1.25rem; height: 1.25rem; vertical-align: middle; margin-inline-end: var(--space-2); }
+        .approval-actions { align-items: stretch; }
+        .approval-actions > * { flex: 1 1 12rem; }
+        a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible {
+          outline: 3px solid var(--accent); outline-offset: 2px;
+        }
+        @media (max-width: 720px) {
+          body { padding-inline: 0.75rem; }
+           
+          .console-status { display: flex; flex-wrap: wrap; gap: 0.2rem 0.9rem; padding: 0.4rem 0.7rem; }
+          .console-status > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.35rem; padding: 0; border-left: 0; }
+          .console-status dt::after { content: ":"; }
+          .console-status dd small { display: inline; margin: 0 0 0 0.35rem; }
+          header > div { flex-wrap: wrap; align-items: flex-start; gap: 0.5rem; }
+          header > div > .header-note { margin-left: 0; width: 100%; }
+          nav { display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem; min-width: 0; }
+          dl { grid-template-columns: minmax(7rem, auto) minmax(0, 1fr); }
+          .card-current, dl.card-preview, .entry-list { grid-template-columns: minmax(0, 1fr); }
+          button, summary, nav a, .filter-group a { min-height: 44px; display: inline-flex; align-items: center; }
+           
+          details.scope summary, details.tech summary { display: list-item; }
+          .detail-grid { grid-template-columns: 1fr; }
+          .data-table { display: block; }
+          .data-table caption { display: block; width: 100%; }
+          .data-table thead { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+          .data-table tbody, .data-table tr { display: block; width: 100%; }
+          .data-table tr > * { width: 100% !important; min-width: 0; }
+          .data-table tr { background: var(--surface-2); border-radius: var(--radius-card); margin: 0.65rem 0; padding: 0.3rem 0.7rem; }
+          .data-table td, .data-table th[scope="row"] { display: grid; grid-template-columns: minmax(7rem, 40%) minmax(0, 1fr);
+            gap: 0.75rem; width: 100%; padding: 0.55rem 0; border-bottom: 1px solid var(--line-soft); }
+          .data-table td::before, .data-table th[scope="row"]::before { content: attr(data-label); color: var(--ink-3);
+            font-weight: 500; grid-column: 1; }
+          .data-table td > *, .data-table th[scope="row"] > * { grid-column: 2; min-width: 0; }
+          .data-table tr > :last-child { border-bottom: 0; }
+          .number-cell { text-align: left; white-space: normal; }
+          .line-item { justify-content: flex-start; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+          .line-item > strong { text-align: left; }
+          .detail-cell { text-align: left; white-space: normal; }
+          .detail-cell .row-details summary { justify-content: flex-start; }
+          .detail-cell .row-details[open] { width: calc(100% - 1.5rem); max-height: calc(100% - 3rem); }
+          .actions { min-width: 0; }
+          .optimization-title { display: block; }
+          .status-strip { width: 100%; }
+          .optimization-shell { display: block; }
+          .optimization-nav { position: static; display: flex; flex-wrap: wrap; margin: 0.8rem 0; }
+          .optimization-nav a { flex: 1 1 calc(50% - 0.35rem); min-width: 0; }
+          .category-summary, .setting-values, .choice-grid, .optimization-steps { grid-template-columns: 1fr; }
+          .sticky-save { bottom: 0; }
+        }
+        @media (max-width: 420px) {
+          .status-strip { grid-template-columns: 1fr 1fr; min-width: 0; }
+          .optimization-nav a { flex-basis: 100%; }
+          .optimization-content section { padding-inline: 0.75rem; }
+          .approval-actions > * { flex-basis: 100%; width: 100%; }
+        }
+         
+        @supports (animation-timing-function: linear(0, 1)) {
+          :root {
+            --ease-spring: linear(0, 0.5 7%, 1.143 14%, 1.287 21%, 1.097 29%, 0.934 36%, 0.923 43%, 0.986 50%, 1.024 57%, 1.019 64%, 1 71%, 0.992 79%, 0.996 86%, 1.001 93%, 1);
+            --ease-pop: linear(0, 0.547 8%, 1.053 17%, 1.114 25%, 1.028 33%, 0.986 42%, 0.989 50%, 0.999 58%, 1.002 67%, 1.001 75%, 1 83%, 1 92%, 1);
+            --ease-settle: linear(0, 0.488 10%, 0.933 20%, 1.045 30%, 1.028 40%, 1.005 50%, 0.998 60%, 0.999 70%, 1 80%, 1 90%, 1);
+          }
+        }
+        nav a, .settings-tabs a, .optimization-nav a { transition: translate var(--dur-2) var(--ease-spring),
+          background-color var(--dur-1) var(--ease-settle), color var(--dur-1) var(--ease-settle); }
+        nav a:hover, nav a:focus-visible, .settings-tabs a:hover, .settings-tabs a:focus-visible,
+        .optimization-nav a:hover, .optimization-nav a:focus-visible { translate: 0 var(--nudge); }
+        nav a:hover { color: var(--ink-1); }
+        .settings-tabs a:hover { background-color: var(--line-soft); }
+        .optimization-nav a:hover { background-color: var(--surface-2); }
+         
+        button:not(:where(form:not([method=get]) *, form button, form input[type=submit], [formmethod], [formaction], .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)),
+        .button-link:not(:where(form:not([method=get]) *, form button, form input[type=submit], [formmethod], [formaction], .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)) {
+          transition: scale var(--dur-2) var(--ease-spring), background-color var(--dur-1) var(--ease-settle), color var(--dur-1) var(--ease-settle); }
+        button:active:not(:disabled):not(:where(form:not([method=get]) *, form button, form input[type=submit], [formmethod], [formaction], .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)),
+        .button-link:active:not(:where(form:not([method=get]) *, form button, form input[type=submit], [formmethod], [formaction], .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)) {
+          scale: var(--press); transition-duration: var(--dur-1); }
+         
+        form:not([method=get]) button, form:not([method=get]) .button-link, form button, form input[type=submit],
+        [formmethod], [formaction], .sticky-save, .sticky-save *, .approval-actions *,
+        .confirm-check, .confirm-check *, .console-approval * { transition: none; }
+         
+        @keyframes pop-in { from { opacity: 0; scale: var(--pop-from); } }
+         
+        @keyframes scrim-in { from { opacity: 0; } }
+        .detail-cell:has(.row-details[open])::before { content: ""; position: fixed; inset: 0; z-index: 20; background: var(--scrim);
+          pointer-events: none; animation: scrim-in var(--dur-3) var(--ease-settle) both; }
+        .detail-cell .row-details[open] { transform-origin: 0 0; animation: pop-in var(--dur-3) var(--ease-pop) both;
+          will-change: opacity, scale; }
+        @media (prefers-reduced-motion: reduce) {
+          :root { --dur-1: 0.01ms; --dur-2: 0.01ms; --dur-3: 0.01ms; --nudge: 0px; --press: 1; --pop-from: 1; }
+        }
+         
+        body { --tone: var(--tint-accent); }
+        body:where(:has(.console-status [data-engine-state=running]):has(.console-status [data-data-tone=ok])) { --tone: var(--tint-ok); }
+        body:where(:has(.console-status :is([data-data-tone=warn], [data-engine-state=stopped]))) { --tone: var(--tint-warn); }
+        body:where(:has(.console-status [data-data-tone=stale])) { --tone: var(--tint-bad); }
+        body > header, .console-status { position: relative; isolation: isolate; }
+         
+        body > header { overflow: clip; overflow-clip-margin: 6px; }
+        body > header::before, body > header::after, .console-status::before, .console-status::after {
+          content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%;
+          width: min(42%, 30rem); height: min(170%, 22rem); top: max(-35%, -7rem);
+          background: radial-gradient(closest-side, color-mix(in srgb, var(--tone) var(--tone-alpha), transparent), transparent); }
+        body > header::before, .console-status::before { left: 8%; animation: amb-a 34s linear infinite alternate; }
+        body > header::after, .console-status::after { right: 8%; animation: amb-b 41s linear -9s infinite alternate; }
+        @keyframes amb-a { from { translate: -10% -6%; rotate: -6deg; opacity: 0.75; } to { translate: 10% 6%; rotate: 8deg; opacity: 1; } }
+        @keyframes amb-b { from { translate: 8% 5%; rotate: 5deg; opacity: 1; } to { translate: -9% -5%; rotate: -7deg; opacity: 0.7; } }
+         
+        body:has([data-reload=on]) :is(body > header, .console-status)::before,
+        body:has([data-reload=on]) :is(body > header, .console-status)::after { animation: none; }
+        @media (prefers-reduced-motion: reduce) {
+          body > header::before, body > header::after, .console-status::before, .console-status::after { animation: none; }
+        }
+        @media (prefers-reduced-transparency: reduce) {
+          body > header::before, body > header::after, .console-status::before, .console-status::after,
+          :is(.optimization-nav a, .settings-tabs a)::after { background: none; }
+        }
+         
+        @media (hover: hover) {
+          .optimization-nav a, .settings-tabs a { position: relative; isolation: isolate; }
+          :is(.optimization-nav a, .settings-tabs a):not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *))::after {
+            content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit; opacity: 0;
+            background: radial-gradient(circle at 28% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%);
+            transition: opacity var(--dur-2) var(--ease-settle); }
+          :is(.optimization-nav a, .settings-tabs a):not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)):is(:hover, :focus-visible)::after { opacity: 1; }
+        }
+         
+        @media (prefers-color-scheme: dark) {
+          :root {
+            --surface-0: #141311; --surface-1: #201f1b; --surface-2: #11100e;
+            --line: #38362f; --line-soft: #2a2924; --line-strong: #756f64;
+            --ink-1: #ece9e1; --ink-2: #cbc7bb; --ink-3: #a49f93;
+            --accent: #9fbbd8;
+            --ok: #93c7a0; --ok-line: #5a9068; --ok-bg: #1b2a1f;
+            --warn: #e0b765; --warn-line: #a97b2d; --warn-bg: #2a2314;
+            --bad: #ea9a90; --bad-line: #c25f52; --bad-bg: #2d1a17;
+            --tint-accent: #7895dc; --tint-ok: #5bbe83; --tint-warn: #e4a722; --tint-bad: #d8565b; --tone-alpha: 15%;
+            --lift: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--line-soft);
+            --shadow-pop: 0 18px 54px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--line);
+            --scrim: rgba(0, 0, 0, 0.55);
+            --shadow-bar: 0 -5px 20px rgba(0, 0, 0, 0.5);
+          }
+        }
+        </style>
+        </head><body>
+        <header><div>
+          <strong>tossctl console</strong>
+          
+          <nav aria-label="주요 화면">
+            <a href="/dashboard" >개요<small>지금 무엇이 참인가</small></a>
+            <a href="/signals" >신호<small>후보와 차단 사유</small></a>
+            <a href="/orders" >주문<small>대기와 종결</small></a>
+            <a href="/positions" >포지션<small>보유와 보호</small></a>
+            <a href="/history" >이력<small>왕복과 성과</small></a>
+            <a href="/settings/daily" class="on" aria-current="page">설정<small>상시 · 당일 · 전략 · 도구</small></a>
+          </nav>
+          <span class="muted header-note">127.0.0.1 전용 · 승인 외 읽기 전용</span>
+        </div>
+        
+        <dl class="console-status" aria-label="콘솔 상태">
+          <div><dt>엔진</dt>
+            <dd data-engine-state="unwired">미배선<small>이 빌드에 엔진 마커 경로가 없다 — 엔진이 꺼져 있다는 뜻이 아니다</small></dd></div>
+          
+          <div><dt>시장 세션</dt>
+            <dd data-session-state="closed">outside KR regular hours<small title="요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다">advisory</small></dd></div>
+          <div><dt>데이터 시각</dt>
+            <dd data-data-mode="on-request" data-data-tone="">2026-10-25 23:18:29Z<small>요청 시 읽음</small></dd></div>
+          <div><dt>자동 재로드</dt>
+            <dd data-reload="off">걸려 있지 않음</dd></div>
+        </dl>
+        
+        
+        </header>
+        <main>
+        
+        <h1>설정 <span class="muted">상시</span></h1><span class="status-pill scope">편집 가능</span>
+        <p class="page-intro">비가역 · 주 1회 미만 · 사람이 승인한다. 한 번 켜면 되돌릴 수 없는 것들이다.</p>
+        
+        
+        <nav class="settings-tabs" aria-label="설정 분류">
+          <a href="/settings/standing" class="on" aria-current="page">상시</a><a href="/settings/daily">당일</a><a href="/settings/strategy">전략</a><a href="/settings/tools">도구</a>
+        </nav>
+        
+        
+        <dl class="console-summary settings-state" aria-label="현재 운영 상태">
+          
+          <div><dt>자동화 게이트</dt>
+            <dd data-state-tone="warn">OFF</dd></div>
+          
+          <div><dt>엔진</dt>
+            <dd data-state-tone="">정지</dd></div>
+          
+          <div><dt>Guardian 한도</dt>
+            <dd data-state-tone="ok">설정됨<small><a href="/settings/daily#limits">스위치가 있는 탭으로</a></small></dd></div>
+          
+        </dl>
+        
+        
+        
+        
+        <section id="adoption" data-settings-card="adoption">
+          <h2>외부 종목 편입 규칙</h2>
+          <p>내가 직접 <strong>수동 매수</strong>한 무기록 보유를 엔진 관리에 편입하고, 편입 완료 후
+          <strong>기존 공통 익절·보호선·손익 극대화 정책</strong>을 그대로 적용하는 규칙이다.
+          <strong>저장 자체는 편입이나 주문을 실행하지 않는다</strong> — 이 화면은 계좌·주문·원장을
+          건드리지 않고 <code>engine.adoption</code> 설정만 기록하며, 실제 편입은 다음 엔진 기동의
+          <strong>엔진 대사 루프</strong>가 수행한다. 이 편입 카드의 저장으로는 automation gate(운영 게이트)의
+          ON/OFF와 kill switch를 <strong>콘솔에서 편집할 수 없다</strong> — 게이트는 아래의 별도 승인 표면이다.</p>
+        
+          
+          
+          
+        
+          <dl class="card-current" aria-label="편입 규칙 현재값">
+            <dt>자동 편입</dt><dd>꺼짐</dd>
+            <dt>합성 손절폭</dt><dd>5%</dd>
+            <dt>제외 목록</dt><dd>없음 — 무기록 보유 전부가 편입 대상이다</dd>
+            <dt>지정 목록</dt><dd>없음</dd>
+          </dl>
+        
+          
+          <form method="post" action="/settings/save">
+            <input type="hidden" name="csrf" value="C6IY3Q5M4BOX3GFCHAZCGITB7E">
+            <p><label><input type="checkbox" name="enabled" >
+            <strong>자동 편입</strong> — 계좌의 모든 무기록 보유(수동 매수)를 다음 대사 주기에 편입한다</label></p>
+            <p><label>합성 손절폭 — 편입가에서 얼마나 아래에 손절선을 둘지<br>
+            <input type="number" name="default_stop_percent" min="2" max="20" step="0.5"
+              value="5" style="width:8rem"> %</label>
+            <span class="muted">(2% ~ 20%, 0.5% 단위 · 기본값 5%)</span></p>
+            <details class="explain">
+              <summary>고급 — 목록 직접 편집 (보통은 포지션 화면의 버튼으로 관리한다)</summary>
+              <p><label>제외 목록 (쉼표 구분 — 어떤 경로로도 편입하지 않는다, 지정보다 우선)<br>
+              <input type="text" name="exclude_symbols" value=""></label></p>
+              <p><label>지정 목록 (자동 편입이 꺼져 있어도 이 심볼은 편입한다)<br>
+              <input type="text" name="include_symbols" value=""></label></p>
+            </details>
+            <p class="card-preview" aria-label="편입 규칙 적용 후"><strong>적용 후</strong> 체크·숫자·목록이 <code>engine.adoption</code>에 그대로 기록되고 audit에 남는다 · <strong>실행되는 것</strong> 없음 — 저장은 편입도 주문도 하지 않는다</p>
+            <p><button type="submit">편입 규칙 저장</button></p>
+          </form>
+          
+          
+        
+          <p class="muted effect-timing" data-effect-timing="adoption">반영 시점 — 다음 엔진 기동부터 반영된다.</p>
+        
+          <details class="explain">
+            <summary>편입의 귀결과 이 규칙의 경계</summary>
+            <p class="muted">자동 편입 ON은 제외 종목을 뺀 모든 외부 보유를 후보로 만들고, 종목별 지정은
+            자동 편입이 꺼져 있어도 선택한 심볼만 후보로 만든다. 제외가 항상 우선한다. 지정은
+            <strong>상시 규칙</strong>이다 — 청산 후 재매수해도 다시 편입된다. 지정 해제·제외 추가는
+            이미 편입된 포지션에 아무 효과가 없다(편입 해제 기능은 존재하지 않는다 — 가용 수단은
+            사전 제외·자동 편입 끄기·flatten뿐이다). 편입된 보유는 편입일 관측가를 t0으로 관리되며
+            +0.8R부터 편입가 기준 본전이 보호 바닥이 된다. 이 편입 섹션의 저장으로는 automation
+            gate와 kill switch를 편집할 수 없다.</p>
+          </details>
+        </section>
+        
+        <section id="gate" data-settings-card="gate">
+          <h2>자동화 게이트</h2>
+          <p>지금 <strong>OFF</strong>. 이 스위치는
+          <code>engine.automation_gate.enabled</code> 한 키만 쓴다 — 다섯 한도의 바이트는 건드리지 않는다.</p>
+        
+          
+        
+          <div class="table-scroll" role="region" aria-label="기동 인터록 사전 판정" tabindex="0"><table>
+            <tr><th>기동 인터록 사전 판정</th><th>결과</th></tr>
+            
+            <tr><td>1. 한도 다섯 개와 통화<br><span class="muted">주문 100주 · 500 USD / 총 노출 1,500 USD / 일일 손실 50 USD (자본비 1%)</span></td>
+            <td>통과</td></tr>
+            
+            <tr><td>3. 거래 정책<br><span class="muted">청산에 필요한 네 토글이 모두 켜져 있다</span></td>
+            <td>통과</td></tr>
+            
+            <tr><td>2·6. 능력 증명서<br><span class="muted">파일 경로·만료·계좌 일치는 엔진이 기동 시점에 판정한다</span></td>
+            <td>판정 불가</td></tr>
+            
+            <tr><td>4·5·7·8. Guardian 주입 · 게이트웨이 · 전송의 키 운반<br><span class="muted">구성된 프로세스에서만 알 수 있다 — 이 화면은 판정하지 못한다</span></td>
+            <td>판정 불가</td></tr>
+            
+          </table></div>
+          <p class="aside">이 판정은 <strong>파일이 답하는 절에 한한다</strong>. Guardian 주입·게이트웨이
+          배선·전송의 키 운반은 구성된 프로세스에서만 알 수 있으므로 화면이 판정하지 못한다 —
+          <strong>사전 판정을 통과해도 기동이 보장되지 않는다.</strong> 최종 판단은 엔진의 인터록이다.</p>
+        
+          <p class="notice"><strong>게이트를 켜면 시작되는 것.</strong> 다음 엔진 기동에서 대사·exit 관측·
+          체결 감지 세 루프가 돈다. 그 중 대사 루프의 마지막 단계가 <strong>편입</strong>이고,
+          <strong>편입은 되돌릴 수 없다</strong>.
+          지금은 자동 편입이 꺼져 있고 지정
+          목록도 비어 있어 편입 대상이 없다.
+          보호는 <strong>이 프로세스가 살아 있는 동안만</strong> 유효하다 — 브로커에 손절 주문이 남지
+          않으므로 프로세스가 죽으면 보호도 사라진다. 노출을 늘리는 주문은 게이트웨이에서 계속 거부된다.</p>
+        
+          
+          <form method="post" action="/settings/gate">
+            <input type="hidden" name="csrf" value="C6IY3Q5M4BOX3GFCHAZCGITB7E">
+            <p><label><input type="checkbox" name="enabled" >
+            <strong>자동화 게이트 ON</strong></label></p>
+            <p class="card-preview" aria-label="게이트 적용 후"><strong>적용 후</strong> OFF → 체크 상태대로 기록된다 · <strong>실행되는 것</strong> 없음 — 저장은 엔진을 기동하지 않는다</p>
+            <p><button type="submit">게이트 저장</button></p>
+          </form>
+          
+          
+        
+          <p class="muted effect-timing" data-effect-timing="gate">반영 시점 — 다음 엔진 기동부터 반영된다.</p>
+        </section>
+        
+        <section id="autostart" data-settings-card="autostart">
+          <h2>엔진 자동 시작</h2>
+          <p>지금 <strong>OFF</strong>.
+          이 값은 <code>engine.autostart</code> 한 키만 기록한다. ON 저장 직후 엔진 기동을 한 번
+          시도하고, 이후 TossOS 콘솔이 부팅·재기동될 때도 같은 시도를 한다.
+          OFF로 저장해도 현재 엔진은 정지하지 않는다 — 현재 프로세스를 끄려면 검증 콘솔의
+          [엔진 정지]를 쓴다.</p>
+        
+          
+          
+        
+          
+          <form method="post" action="/settings/autostart">
+            <input type="hidden" name="csrf" value="C6IY3Q5M4BOX3GFCHAZCGITB7E">
+            <p><label><input type="checkbox" name="enabled" >
+            <strong>엔진 자동 시작 ON</strong></label></p>
+            <p class="card-preview" aria-label="자동 시작 적용 후"><strong>적용 후</strong> 체크 상태가 기록되고, ON이면 즉시 기동을 <strong>한 번</strong> 시도한다 · <strong>최종 판단</strong> automation gate · Guardian 한도 · 능력 증명서 · 거래 정책 ·
+              journal 단일 writer 인터록이 그대로 결정한다</p>
+            <p><button type="submit">자동 시작 저장·적용</button></p>
+          </form>
+          
+          
+        
+          
+        </section>
+        
+        <section data-settings-entry="market-schedule">
+          <h2>시장·일정</h2>
+          <p><a href="/strategy-runtime/market-schedule">시장·일정 화면 열기</a></p>
+          <p class="muted">정규장·연장 시간대와 그 경계에서 무엇이 달라지는지를 읽는다.
+          이 화면에서 바꾸는 값은 없다.</p>
+        </section>
+        
+        
+        
+        </main></body></html>
+        
+--- FAIL: TestGuardianPresetsRenderAsOneMatrixPerCurrency (0.00s)
+    readiness_test.go:105: 프리셋 비교표 = 0, want 통화 수 2:
+        
+        <!doctype html>
+        <html lang="ko"><head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="referrer" content="same-origin">
+        
+        <title>tossctl console</title>
+        <style>
+         
+        :root {
+          color-scheme: light dark;
+           
+          --space-1: clamp(0.25rem, 0.2rem + 0.15vw, 0.35rem);
+          --space-2: clamp(0.5rem, 0.42rem + 0.25vw, 0.7rem);
+          --space-3: clamp(0.8rem, 0.65rem + 0.55vw, 1.2rem);
+          --space-4: clamp(1.1rem, 0.85rem + 0.9vw, 1.75rem);
+          --space-5: clamp(1.6rem, 1.2rem + 1.4vw, 2.6rem);
+           
+          --text--1: clamp(0.78rem, 0.74rem + 0.15vw, 0.85rem);
+          --text-0: clamp(0.9375rem, 0.88rem + 0.25vw, 1.0625rem);
+          --text-1: clamp(1.125rem, 1.04rem + 0.4vw, 1.33rem);
+          --text-2: clamp(1.35rem, 1.2rem + 0.7vw, 1.66rem);
+          --text-3: clamp(1.62rem, 1.35rem + 1.3vw, 2.07rem);
+           
+          --radius-card: 0.9rem 0.35rem 0.8rem 0.3rem;
+          --radius-control: 0.35rem 0.7rem 0.35rem 0.6rem;
+          --radius-soft: 0.25rem 0.5rem 0.3rem 0.45rem;
+           
+          --surface-0: #f5f3ee; --surface-1: #fcfbf8; --surface-2: #ebe8e1;
+           
+          --line: #d9d5ca; --line-soft: #e7e3da; --line-strong: #857f73;
+           
+          --ink-1: #201e1a; --ink-2: #47433b; --ink-3: #625d54;
+          --accent: #2e5a86;
+           
+          --ok: #2f6a40; --ok-line: #5f8f6c; --ok-bg: #e6eee3;
+          --warn: #7f540f; --warn-line: #a9761e; --warn-bg: #f8eed9;
+          --bad: #9a3228; --bad-line: #b4503f; --bad-bg: #f6e6e1;
+           
+          --tint-accent: #5b85d0; --tint-ok: #52b96e; --tint-warn: #e9b207; --tint-bad: #d8614b; --tone-alpha: 19%;
+          --lift: 0 1px 2px rgba(32, 30, 26, 0.07);
+           
+          --dur-1: 120ms; --dur-2: 220ms; --dur-3: 300ms;
+          --ease-spring: ease-out; --ease-settle: ease-out; --ease-pop: ease-out;
+          --nudge: -2px; --press: 0.97; --pop-from: 0.96;
+           
+          --shadow-pop: 0 18px 54px rgba(20, 18, 14, 0.3), 0 0 0 1px var(--line);
+          --scrim: rgba(20, 18, 14, 0.32);
+          --shadow-bar: 0 -5px 20px rgba(20, 18, 14, 0.14);
+        }
+        * { box-sizing: border-box; }
+        body {
+          margin: 0; padding: 0 var(--space-3) 4rem;
+          font: var(--text-0)/1.65 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+          background: var(--surface-0); color: var(--ink-1);
+           
+          overflow-wrap: anywhere;
+        }
+        a { color: var(--accent); }
+        main, header > div { max-width: 72rem; margin: 0 auto; min-width: 0; }
+        header { border-bottom: 1px solid var(--line); margin-bottom: var(--space-4); }
+        header > div { display: flex; gap: var(--space-3); align-items: baseline; padding: var(--space-3) 0; }
+        header strong { font-size: var(--text-0); letter-spacing: 0.02em; }
+        nav { display: flex; flex-wrap: wrap; gap: 0.15rem var(--space-3); min-width: 0; }
+         
+        nav a { color: var(--ink-2); text-decoration: none; display: flex; flex-direction: column;
+          justify-content: center; min-height: 44px; padding: 0.2rem 0; min-width: 0; }
+        nav a small { color: var(--ink-3); font-size: var(--text--1); line-height: 1.3; font-weight: 400; }
+        nav a.on { font-weight: 600; text-decoration: underline; }
+        .header-note { margin-left: auto; }
+        h1 { font-size: var(--text-3); font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; margin: var(--space-5) 0 var(--space-1); text-wrap: balance; }
+        h2 { font-size: var(--text-2); font-weight: 650; line-height: 1.28; letter-spacing: -0.012em; margin: var(--space-4) 0 var(--space-1); text-wrap: balance; }
+        h3 { font-size: var(--text-1); line-height: 1.35; letter-spacing: -0.004em; margin: var(--space-3) 0 var(--space-1); }
+         
+        section { padding: var(--space-3) 0; margin: var(--space-5) 0; border-top: 1px solid var(--line); }
+         
+        .sticky-save, .order-summary { padding: var(--space-3) var(--space-4); border-top: 0; background: var(--surface-1);
+          border-radius: var(--radius-card); box-shadow: var(--lift); }
+        pre { overflow-x: auto; padding: var(--space-2) var(--space-3); background: var(--surface-2); border-radius: var(--radius-soft);
+              font: var(--text--1)/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+        table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+        th, td { text-align: left; padding: 0.3rem 0.6rem 0.3rem 0; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+        code { overflow-wrap: anywhere; }
+        dl { display: grid; grid-template-columns: 8rem 1fr; gap: 0.25rem var(--space-3); margin: var(--space-2) 0; }
+        dt { color: var(--ink-3); } dd { margin: 0; }
+        .notice { border: 1px solid var(--warn-line); background: var(--warn-bg); box-shadow: var(--lift); padding: var(--space-2) var(--space-3); border-radius: var(--radius-soft); }
+        .danger { border: 1px solid var(--bad-line); background: var(--bad-bg); box-shadow: var(--lift); padding: var(--space-2) var(--space-3); border-radius: var(--radius-soft); }
+         
+        .aside { color: var(--ink-2); }
+        .status-pill.warn, .submetric.warn { color: var(--warn); }
+        .effect-timing { margin: var(--space-2) 0 0; }
+        .cause-banner p { margin: 0 0 var(--space-1); }
+        .cause-banner ul { margin: 0 0 var(--space-2); padding-inline-start: 1.2rem; }
+        .ok { color: var(--ok); } .bad { color: var(--bad); } .muted { color: var(--ink-3); }
+        input[type=text] { font: var(--text-0)/1.4 ui-monospace, Menlo, Consolas, monospace; padding: 0.45rem 0.6rem; min-height: 44px;
+                           width: 22rem; max-width: 100%; border: 1px solid var(--line-strong); border-radius: var(--radius-control);
+                           background: var(--surface-2); color: var(--ink-1); }
+        button { font: inherit; padding: 0.45rem 1rem; border-radius: var(--radius-control); border: 1px solid var(--ink-3);
+                 background: var(--ink-1); color: var(--surface-0); cursor: pointer; }
+        button.secondary { background: transparent; color: var(--ink-1); }
+         
+        button:hover:not(:disabled), .button-link:hover { background: var(--ink-2); }
+        button:active:not(:disabled), .button-link:active { background: var(--ink-3); }
+        button.secondary:hover:not(:disabled), .secondary-link:hover { background: var(--surface-2); }
+        button.secondary:active:not(:disabled), .secondary-link:active { background: var(--line); }
+        button:disabled { cursor: not-allowed; opacity: 0.65; }
+        .button-link { min-height: 44px; display: inline-flex; align-items: center; justify-content: center;
+          padding: 0.45rem 1rem; border: 1px solid var(--ink-3); border-radius: var(--radius-control); background: var(--ink-1);
+          color: var(--surface-0); text-decoration: none; }
+        .secondary-link { background: transparent; color: var(--ink-1); }
+        form { display: inline; }
+         
+        main p, main li, main details > :not(summary) { max-inline-size: 42rem; }
+        td p, th p, .console-status p { max-inline-size: none; }
+        .page-intro { max-inline-size: 42rem; }
+         
+        h1:has(+ .scope) { display: inline-block; margin-inline-end: var(--space-2); }
+        .status-pill.scope { color: var(--ink-3); vertical-align: 0.5em; }
+        details.scope, details.tech { margin: var(--space-1) 0 var(--space-2); }
+        details.scope summary, details.tech summary { color: var(--ink-3); font-size: var(--text--1); cursor: pointer;
+          display: list-item; list-style: disclosure-closed inside; }
+        details.scope[open] > summary, details.tech[open] > summary { list-style-type: disclosure-open; }
+        details.tech code, details.tech dl { font-size: var(--text--1); }
+         
+        .toggle-row { margin: 0 0 var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--line-soft); }
+        .toggle-row .muted { display: block; margin-inline-start: 2.1rem; }
+        .data-table { table-layout: fixed; }
+        .data-table caption { text-align: left; font-weight: 700; font-size: var(--text-0); padding: 0 0 0.65rem; }
+        .data-table th, .data-table td { padding: 0.75rem 0.65rem; overflow-wrap: anywhere; }
+        .data-table tbody tr:last-child > * { border-bottom: 0; }
+        .positions-table { font-size: 12px; line-height: 18px; }
+        .positions-table thead { font-size: 10px; line-height: 15px; }
+        .positions-table th, .positions-table td { padding: 8px 12px; }
+        .positions-table .number-column { text-align: right; font-variant-numeric: tabular-nums; }
+        .positions-table thead th:nth-child(5) { text-align: right; }
+        .position-col-instrument { width: 31%; }
+        .position-col-quantity { width: 6%; }
+        .position-col-average, .position-col-current { width: 11%; }
+        .position-col-lines { width: 18%; }
+        .position-col-value { width: 12%; }
+        .position-col-pnl { width: 11%; }
+        .position-col-detail { width: 7%; }
+        .holding-name { display: block; margin-bottom: 0.12rem; font-weight: 700; }
+        .holding-name code { font-size: inherit; font-weight: 500; }
+        .holding-verdicts { display: flex; flex-wrap: wrap; gap: 3px 5px; align-items: center; margin-top: 4px; }
+        .holding-verdicts .submetric { display: inline; margin-top: 0; }
+        .number-cell { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .line-item { display: flex; justify-content: space-between; align-items: baseline;
+          gap: 5px; margin-top: 2px; font-size: 12px; line-height: 15px; font-variant-numeric: tabular-nums; }
+        .line-item > span { color: var(--ink-3); font-size: 10px; line-height: 12.5px; }
+        .line-item > strong { font-size: 11px; line-height: 13.75px; text-align: right; overflow-wrap: normal; }
+         
+        .status-pill { display: inline-block; border: 1px solid currentColor; border-radius: 999px;
+          padding: 0.08rem 0.55rem; font-size: var(--text--1); }
+        .positions-table .status-pill { padding: 1px 6px; font-size: 11px; line-height: 15px; }
+        .positions-table .submetric { font-size: 11px; line-height: 15px; }
+        .metric { display: block; font-size: var(--text-0); font-weight: 700; }
+        .submetric { display: block; margin-top: 0.15rem; color: var(--ink-3); font-size: var(--text--1); }
+        .exit-line-stack { text-align: right; font-variant-numeric: tabular-nums; }
+        .exit-line-status { display: block; margin-top: 0.2rem; }
+        .safety-line { display: block; margin-top: 0.2rem; font-size: 1rem; line-height: 1.5; }
+        .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: flex-start; }
+        .actions form { display: block; }
+        .actions button { padding: 0.32rem 0.65rem; font-size: var(--text--1); }
+         
+        summary { min-height: 44px; align-content: center; }
+        .row-details, .explain { margin-top: 0.45rem; }
+        .row-details summary, .explain summary { color: var(--ink-3); cursor: pointer; font-weight: 600; }
+        .row-details summary { min-height: 44px; display: flex; align-items: center; }
+        .detail-grid { display: grid; grid-template-columns: 1fr; gap: 0.25rem 0.9rem; margin-top: 0.5rem; }
+        .detail-grid span { min-width: 0; }
+        .detail-cell { min-height: 66px; text-align: right; white-space: nowrap; }
+        .detail-cell .row-details { min-height: 44px; margin: 0; }
+        .detail-cell .row-details summary { justify-content: flex-end; }
+        .detail-cell .row-details[open] { position: fixed; left: 50%; top: 50%;
+          z-index: 21; width: min(42rem, calc(100% - 2rem)); max-height: min(70vh, 42rem);
+          margin: 0; padding: 0.65rem 1.25rem 1.25rem; overflow: auto; transform: translate(-50%, -50%);
+          box-sizing: border-box; border-radius: var(--radius-card);
+          background: var(--surface-1); color: var(--ink-1); box-shadow: var(--shadow-pop);
+          text-align: left; white-space: normal; }
+        .detail-cell .row-details[open] summary { position: sticky; z-index: 22; top: 0; min-height: 44px;
+          justify-content: flex-end; padding: 0 0.4rem; border-radius: var(--radius-soft); background: var(--surface-1); }
+        .detail-cell .row-details[open] summary::after { content: "닫기"; margin-inline-start: 0.5em; }
+        .detail-cell .row-details[open] .detail-grid { align-content: start; margin-top: 0.25rem; }
+        .filter-bar { display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem; align-items: center; }
+        .filter-group { display: flex; flex-wrap: wrap; gap: 0.35rem 0.7rem; align-items: center; }
+        .filter-group .muted { margin-right: 0.15rem; }
+        .optimization-title { display: flex; gap: var(--space-3); align-items: flex-start; justify-content: space-between; }
+        .optimization-title > div { min-width: 0; }
+        .optimization-title, .optimization-shell, .optimization-content, .optimization-content > section,
+        .optimization-content article, .optimization-content fieldset { min-width: 0; max-width: 100%; }
+        .optimization-title code, .optimization-shell code, .preview-review code { overflow-wrap: anywhere; word-break: break-word; }
+        .status-strip { display: grid; grid-template-columns: repeat(2, minmax(7rem, 1fr)); min-width: min(100%, 28rem);
+          background: var(--surface-1); border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--lift); }
+        .status-strip > div { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--line-soft); }
+        .status-strip dt { font-size: var(--text--1); } .status-strip dd { font-size: var(--text-0); }
+        .status-strip dd small { display: block; margin-top: 0.1rem; color: var(--ink-3); font-size: var(--text--1); }
+        .status-strip[data-lifecycle-state=error] { box-shadow: inset 0 0 0 1px var(--warn-line); }
+        .status-strip[data-lifecycle-state=unavailable] { box-shadow: inset 0 0 0 1px var(--line-strong); }
+        .status-strip [data-evidence-state=stale], .status-strip [data-evidence-state=insufficient] { border-color: var(--warn-line); }
+        .status-strip [data-evidence-state=unavailable] { border-color: var(--line-strong); }
+         
+        .console-status, .console-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+          gap: 0; max-width: 72rem; margin: 0 auto var(--space-3); background: var(--surface-1);
+          border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--lift); }
+        .console-status > div, .console-summary > div { min-width: 0; padding: 0.5rem 0.75rem;
+          border-left: 1px solid var(--line-soft); }
+         
+        .console-status { line-height: 1.35; }
+        .console-status > div { padding-block: 0.2rem; }
+        .console-status dd small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .console-status > div:first-child, .console-summary > div:first-child { border-left: 0; }
+        .console-status dt, .console-summary dt { color: var(--ink-3); font-size: var(--text--1); }
+        .console-status dd, .console-summary dd { font-size: var(--text-0); overflow-wrap: anywhere; }
+        .console-status dd small, .console-summary dd small { display: block; margin-top: 0.1rem;
+          color: var(--ink-3); font-size: var(--text--1); }
+         
+        .console-summary { margin-bottom: var(--space-4); }
+        .console-summary dd { font-size: var(--text-0); font-weight: 600; }
+        .console-summary .summary-line { display: block; font-weight: 400; }
+        .console-summary .summary-line + .summary-line { margin-top: 0.15rem; }
+         
+        .console-status [data-data-tone=ok] { color: var(--ok); }
+        .console-status [data-data-tone=warn], .console-status [data-engine-state=stopped] { color: var(--warn); }
+        .console-status [data-data-tone=stale] { color: var(--bad); }
+        .console-approval { max-width: 72rem; margin: 0 auto 0.9rem; }
+         
+        .settings-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: var(--space-3) 0 var(--space-3); }
+        .settings-tabs a { min-height: 44px; display: inline-flex; align-items: center; padding: 0.4rem 1rem;
+          border-radius: var(--radius-control); background: var(--surface-2); color: var(--ink-2); text-decoration: none; }
+        .settings-tabs a.on { box-shadow: inset 0 -2px var(--accent); font-weight: 700; color: var(--ink-1); }
+        .settings-state { margin-bottom: var(--space-4); }
+        .settings-state [data-state-tone=ok] { color: var(--ok); }
+        .settings-state [data-state-tone=warn] { color: var(--warn); }
+         
+        .card-current, dl.card-preview { grid-template-columns: minmax(8rem, 14rem) 1fr; }
+        dl.card-preview { background: var(--surface-2); border-radius: var(--radius-soft); padding: var(--space-2) var(--space-3); margin: 0.7rem 0; }
+        p.card-preview { color: var(--ink-3); margin: 0.7rem 0; }
+        dl.card-preview dt { color: var(--ink-2); font-weight: 600; }
+        .tier-card { background: var(--surface-2); border-radius: var(--radius-soft); padding: var(--space-2) var(--space-3); margin: var(--space-2) 0; }
+        .tier-card form { display: block; }
+        [data-limit-axis=강화] { color: var(--ok); }
+        [data-limit-axis=완화] { color: var(--warn); }
+        [data-limit-axis="통화 변경"], [data-limit-axis="최초 설정"] { color: var(--ink-2); }
+        .entry-list { grid-template-columns: minmax(8rem, 12rem) 1fr; gap: var(--space-3) var(--space-3); }
+        .entry-list dt a { min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; }
+         
+        .explain-link { margin: 0.5rem 0; }
+        .explain-link > a { font-weight: 600; color: var(--ink-2); }
+        .explain-link > div { margin-top: 0.4rem; }
+        .hypothetical-results th, .hypothetical-results td { white-space: nowrap; }
+        .hypothetical-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: 0.8rem; }
+        .hypothetical-fields label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+        .hypothetical-fields input, .hypothetical-fields select { box-sizing: border-box; width: 100%; min-height: 44px; padding: 0.4rem; }
+        .hypothetical-fields .danger { display: block; margin-top: 0.25rem; }
+        .hypothetical-fields :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+        .optimization-shell { display: grid; grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr); gap: var(--space-3); align-items: start; }
+        .optimization-nav { position: sticky; top: 0.75rem; display: grid; gap: 0.35rem; }
+        .optimization-nav a { min-height: 56px; display: flex; flex-direction: column; justify-content: center; padding: 0.55rem 0.75rem;
+          border-radius: var(--radius-control); background: var(--surface-1); color: var(--ink-1); text-decoration: none; box-shadow: var(--lift); }
+        .optimization-nav a.on { box-shadow: inset 0 -2px var(--accent); }
+        .optimization-nav small { color: var(--ink-3); line-height: 1.35; }
+        .optimization-content { min-width: 0; }
+        .optimization-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); margin: var(--space-3) 0;
+          padding: 0; list-style: none; counter-reset: none; }
+        .optimization-steps li { min-width: 0; padding: var(--space-2) var(--space-3); background: var(--surface-2); border-radius: var(--radius-soft); }
+        .optimization-steps strong, .optimization-steps span { display: block; }
+        .optimization-steps span { margin-top: 0.2rem; color: var(--ink-3); font-size: var(--text--1); }
+        .category-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) var(--space-4); }
+        .category-summary article { border-top: 1px solid var(--line-soft); padding-top: 0.4rem; }
+        .category-summary h3 { margin-bottom: 0.1rem; font-size: var(--text-0); font-weight: 600; }
+        fieldset.setting-row { border: 0; border-radius: var(--radius-card); background: var(--surface-2); margin: var(--space-3) 0; padding: var(--space-3) var(--space-4); }
+        fieldset.setting-row legend { font-weight: 700; padding: 0 0.35rem; }
+        fieldset.setting-error { border: 1px solid var(--bad-line); }
+        .configuration-error { overflow-wrap: anywhere; }
+        .setting-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .setting-values > div { min-width: 0; border-top: 1px solid var(--line-soft); padding: 0.35rem 0; }
+        .choice-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+        .choice-tile { background: var(--surface-1); border-radius: var(--radius-soft); padding: var(--space-3); min-width: 0; }
+        .choice-tile[data-selected=true] { background: var(--ok-bg); box-shadow: inset 0 0 0 1px var(--ok-line); }
+        .choice-tile header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.4rem; }
+        .choice-tile h3 { margin: 0; } .choice-action { display: block; margin-top: 0.7rem; }
+        .optimization-nav a, .optimization-content button, .optimization-content .button-link,
+        .sticky-save button, .sticky-save .button-link, .confirm-check { min-height: 44px; }
+        .choice-action button { width: 100%; }
+        
+        .table-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
+        .table-scroll:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+        .table-scroll table { min-width: 36rem; }
+         
+        .table-scroll th, .table-scroll td { min-width: 4.5rem; }
+        .history-panel summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+        .preview-review { min-width: 0; max-width: 100%; }
+        .sticky-save { position: sticky; z-index: 4; bottom: 0.5rem; max-width: 100%; box-sizing: border-box;
+          box-shadow: var(--shadow-bar), inset 0 2px var(--warn-line); }
+        .confirm-check { display: flex; gap: 0.55rem; align-items: center; margin: 0.7rem 0; }
+        .confirm-check input { width: 1.25rem; height: 1.25rem; }
+         
+        label:not(.confirm-check):has(> input[type=checkbox]) { display: block; min-height: 44px; padding-block: 0.55rem; }
+        label:not(.confirm-check) > input[type=checkbox] { width: 1.25rem; height: 1.25rem; vertical-align: middle; margin-inline-end: var(--space-2); }
+        .approval-actions { align-items: stretch; }
+        .approval-actions > * { flex: 1 1 12rem; }
+        a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible {
+          outline: 3px solid var(--accent); outline-offset: 2px;
+        }
+        @media (max-width: 720px) {
+          body { padding-inline: 0.75rem; }
+           
+          .console-status { display: flex; flex-wrap: wrap; gap: 0.2rem 0.9rem; padding: 0.4rem 0.7rem; }
+          .console-status > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.35rem; padding: 0; border-left: 0; }
+          .console-status dt::after { content: ":"; }
+          .console-status dd small { display: inline; margin: 0 0 0 0.35rem; }
+          header > div { flex-wrap: wrap; align-items: flex-start; gap: 0.5rem; }
+          header > div > .header-note { margin-left: 0; width: 100%; }
+          nav { display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem; min-width: 0; }
+          dl { grid-template-columns: minmax(7rem, auto) minmax(0, 1fr); }
+          .card-current, dl.card-preview, .entry-list { grid-template-columns: minmax(0, 1fr); }
+          button, summary, nav a, .filter-group a { min-height: 44px; display: inline-flex; align-items: center; }
+           
+          details.scope summary, details.tech summary { display: list-item; }
+          .detail-grid { grid-template-columns: 1fr; }
+          .data-table { display: block; }
+          .data-table caption { display: block; width: 100%; }
+          .data-table thead { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+          .data-table tbody, .data-table tr { display: block; width: 100%; }
+          .data-table tr > * { width: 100% !important; min-width: 0; }
+          .data-table tr { background: var(--surface-2); border-radius: var(--radius-card); margin: 0.65rem 0; padding: 0.3rem 0.7rem; }
+          .data-table td, .data-table th[scope="row"] { display: grid; grid-template-columns: minmax(7rem, 40%) minmax(0, 1fr);
+            gap: 0.75rem; width: 100%; padding: 0.55rem 0; border-bottom: 1px solid var(--line-soft); }
+          .data-table td::before, .data-table th[scope="row"]::before { content: attr(data-label); color: var(--ink-3);
+            font-weight: 500; grid-column: 1; }
+          .data-table td > *, .data-table th[scope="row"] > * { grid-column: 2; min-width: 0; }
+          .data-table tr > :last-child { border-bottom: 0; }
+          .number-cell { text-align: left; white-space: normal; }
+          .line-item { justify-content: flex-start; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+          .line-item > strong { text-align: left; }
+          .detail-cell { text-align: left; white-space: normal; }
+          .detail-cell .row-details summary { justify-content: flex-start; }
+          .detail-cell .row-details[open] { width: calc(100% - 1.5rem); max-height: calc(100% - 3rem); }
+          .actions { min-width: 0; }
+          .optimization-title { display: block; }
+          .status-strip { width: 100%; }
+          .optimization-shell { display: block; }
+          .optimization-nav { position: static; display: flex; flex-wrap: wrap; margin: 0.8rem 0; }
+          .optimization-nav a { flex: 1 1 calc(50% - 0.35rem); min-width: 0; }
+          .category-summary, .setting-values, .choice-grid, .optimization-steps { grid-template-columns: 1fr; }
+          .sticky-save { bottom: 0; }
+        }
+        @media (max-width: 420px) {
+          .status-strip { grid-template-columns: 1fr 1fr; min-width: 0; }
+          .optimization-nav a { flex-basis: 100%; }
+          .optimization-content section { padding-inline: 0.75rem; }
+          .approval-actions > * { flex-basis: 100%; width: 100%; }
+        }
+         
+        @supports (animation-timing-function: linear(0, 1)) {
+          :root {
+            --ease-spring: linear(0, 0.5 7%, 1.143 14%, 1.287 21%, 1.097 29%, 0.934 36%, 0.923 43%, 0.986 50%, 1.024 57%, 1.019 64%, 1 71%, 0.992 79%, 0.996 86%, 1.001 93%, 1);
+            --ease-pop: linear(0, 0.547 8%, 1.053 17%, 1.114 25%, 1.028 33%, 0.986 42%, 0.989 50%, 0.999 58%, 1.002 67%, 1.001 75%, 1 83%, 1 92%, 1);
+            --ease-settle: linear(0, 0.488 10%, 0.933 20%, 1.045 30%, 1.028 40%, 1.005 50%, 0.998 60%, 0.999 70%, 1 80%, 1 90%, 1);
+          }
+        }
+        nav a, .settings-tabs a, .optimization-nav a { transition: translate var(--dur-2) var(--ease-spring),
+          background-color var(--dur-1) var(--ease-settle), color var(--dur-1) var(--ease-settle); }
+        nav a:hover, nav a:focus-visible, .settings-tabs a:hover, .settings-tabs a:focus-visible,
+        .optimization-nav a:hover, .optimization-nav a:focus-visible { translate: 0 var(--nudge); }
+        nav a:hover { color: var(--ink-1); }
+        .settings-tabs a:hover { background-color: var(--line-soft); }
+        .optimization-nav a:hover { background-color: var(--surface-2); }
+         
+        button:not(:where(form:not([method=get]) *, form button, form input[type=submit], [formmethod], [formaction], .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)),
+        .button-link:not(:where(form:not([method=get]) *, form button, form input[type=submit], [formmethod], [formaction], .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)) {
+          transition: scale var(--dur-2) var(--ease-spring), background-color var(--dur-1) var(--ease-settle), color var(--dur-1) var(--ease-settle); }
+        button:active:not(:disabled):not(:where(form:not([method=get]) *, form button, form input[type=submit], [formmethod], [formaction], .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)),
+        .button-link:active:not(:where(form:not([method=get]) *, form button, form input[type=submit], [formmethod], [formaction], .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)) {
+          scale: var(--press); transition-duration: var(--dur-1); }
+         
+        form:not([method=get]) button, form:not([method=get]) .button-link, form button, form input[type=submit],
+        [formmethod], [formaction], .sticky-save, .sticky-save *, .approval-actions *,
+        .confirm-check, .confirm-check *, .console-approval * { transition: none; }
+         
+        @keyframes pop-in { from { opacity: 0; scale: var(--pop-from); } }
+         
+        @keyframes scrim-in { from { opacity: 0; } }
+        .detail-cell:has(.row-details[open])::before { content: ""; position: fixed; inset: 0; z-index: 20; background: var(--scrim);
+          pointer-events: none; animation: scrim-in var(--dur-3) var(--ease-settle) both; }
+        .detail-cell .row-details[open] { transform-origin: 0 0; animation: pop-in var(--dur-3) var(--ease-pop) both;
+          will-change: opacity, scale; }
+        @media (prefers-reduced-motion: reduce) {
+          :root { --dur-1: 0.01ms; --dur-2: 0.01ms; --dur-3: 0.01ms; --nudge: 0px; --press: 1; --pop-from: 1; }
+        }
+         
+        body { --tone: var(--tint-accent); }
+        body:where(:has(.console-status [data-engine-state=running]):has(.console-status [data-data-tone=ok])) { --tone: var(--tint-ok); }
+        body:where(:has(.console-status :is([data-data-tone=warn], [data-engine-state=stopped]))) { --tone: var(--tint-warn); }
+        body:where(:has(.console-status [data-data-tone=stale])) { --tone: var(--tint-bad); }
+        body > header, .console-status { position: relative; isolation: isolate; }
+         
+        body > header { overflow: clip; overflow-clip-margin: 6px; }
+        body > header::before, body > header::after, .console-status::before, .console-status::after {
+          content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%;
+          width: min(42%, 30rem); height: min(170%, 22rem); top: max(-35%, -7rem);
+          background: radial-gradient(closest-side, color-mix(in srgb, var(--tone) var(--tone-alpha), transparent), transparent); }
+        body > header::before, .console-status::before { left: 8%; animation: amb-a 34s linear infinite alternate; }
+        body > header::after, .console-status::after { right: 8%; animation: amb-b 41s linear -9s infinite alternate; }
+        @keyframes amb-a { from { translate: -10% -6%; rotate: -6deg; opacity: 0.75; } to { translate: 10% 6%; rotate: 8deg; opacity: 1; } }
+        @keyframes amb-b { from { translate: 8% 5%; rotate: 5deg; opacity: 1; } to { translate: -9% -5%; rotate: -7deg; opacity: 0.7; } }
+         
+        body:has([data-reload=on]) :is(body > header, .console-status)::before,
+        body:has([data-reload=on]) :is(body > header, .console-status)::after { animation: none; }
+        @media (prefers-reduced-motion: reduce) {
+          body > header::before, body > header::after, .console-status::before, .console-status::after { animation: none; }
+        }
+        @media (prefers-reduced-transparency: reduce) {
+          body > header::before, body > header::after, .console-status::before, .console-status::after,
+          :is(.optimization-nav a, .settings-tabs a)::after { background: none; }
+        }
+         
+        @media (hover: hover) {
+          .optimization-nav a, .settings-tabs a { position: relative; isolation: isolate; }
+          :is(.optimization-nav a, .settings-tabs a):not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *))::after {
+            content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit; opacity: 0;
+            background: radial-gradient(circle at 28% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%);
+            transition: opacity var(--dur-2) var(--ease-settle); }
+          :is(.optimization-nav a, .settings-tabs a):not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)):is(:hover, :focus-visible)::after { opacity: 1; }
+        }
+         
+        @media (prefers-color-scheme: dark) {
+          :root {
+            --surface-0: #141311; --surface-1: #201f1b; --surface-2: #11100e;
+            --line: #38362f; --line-soft: #2a2924; --line-strong: #756f64;
+            --ink-1: #ece9e1; --ink-2: #cbc7bb; --ink-3: #a49f93;
+            --accent: #9fbbd8;
+            --ok: #93c7a0; --ok-line: #5a9068; --ok-bg: #1b2a1f;
+            --warn: #e0b765; --warn-line: #a97b2d; --warn-bg: #2a2314;
+            --bad: #ea9a90; --bad-line: #c25f52; --bad-bg: #2d1a17;
+            --tint-accent: #7895dc; --tint-ok: #5bbe83; --tint-warn: #e4a722; --tint-bad: #d8565b; --tone-alpha: 15%;
+            --lift: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--line-soft);
+            --shadow-pop: 0 18px 54px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--line);
+            --scrim: rgba(0, 0, 0, 0.55);
+            --shadow-bar: 0 -5px 20px rgba(0, 0, 0, 0.5);
+          }
+        }
+        </style>
+        </head><body>
+        <header><div>
+          <strong>tossctl console</strong>
+          
+          <nav aria-label="주요 화면">
+            <a href="/dashboard" >개요<small>지금 무엇이 참인가</small></a>
+            <a href="/signals" >신호<small>후보와 차단 사유</small></a>
+            <a href="/orders" >주문<small>대기와 종결</small></a>
+            <a href="/positions" >포지션<small>보유와 보호</small></a>
+            <a href="/history" >이력<small>왕복과 성과</small></a>
+            <a href="/settings/daily" class="on" aria-current="page">설정<small>상시 · 당일 · 전략 · 도구</small></a>
+          </nav>
+          <span class="muted header-note">127.0.0.1 전용 · 승인 외 읽기 전용</span>
+        </div>
+        
+        <dl class="console-status" aria-label="콘솔 상태">
+          <div><dt>엔진</dt>
+            <dd data-engine-state="unwired">미배선<small>이 빌드에 엔진 마커 경로가 없다 — 엔진이 꺼져 있다는 뜻이 아니다</small></dd></div>
+          
+          <div><dt>시장 세션</dt>
+            <dd data-session-state="closed">outside KR regular hours<small title="요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다">advisory</small></dd></div>
+          <div><dt>데이터 시각</dt>
+            <dd data-data-mode="on-request" data-data-tone="">2026-10-25 23:18:29Z<small>요청 시 읽음</small></dd></div>
+          <div><dt>자동 재로드</dt>
+            <dd data-reload="off">걸려 있지 않음</dd></div>
+        </dl>
+        
+        
+        </header>
+        <main>
+        
+        <h1>설정 <span class="muted">당일</span></h1><span class="status-pill scope">편집 가능</span>
+        <p class="page-intro">가역 · 일 단위로 조절한다. 좁히는 쪽은 언제든 되돌릴 수 있다.</p>
+        
+        
+        <nav class="settings-tabs" aria-label="설정 분류">
+          <a href="/settings/standing">상시</a><a href="/settings/daily" class="on" aria-current="page">당일</a><a href="/settings/strategy">전략</a><a href="/settings/tools">도구</a>
+        </nav>
+        
+        
+        <dl class="console-summary settings-state" aria-label="현재 운영 상태">
+          
+          <div><dt>자동화 게이트</dt>
+            <dd data-state-tone="warn">OFF<small><a href="/settings/standing#gate">스위치가 있는 탭으로</a></small></dd></div>
+          
+          <div><dt>엔진</dt>
+            <dd data-state-tone="">정지</dd></div>
+          
+          <div><dt>Guardian 한도</dt>
+            <dd data-state-tone="ok">설정됨</dd></div>
+          
+        </dl>
+        
+        
+        
+        
+        
+        <p id="adoption" class="aside">편입 규칙은 <a href="/settings/standing#adoption">상시 탭</a>으로
+        옮겼다 — 비가역이고 주 1회 미만으로 만지는 설정이라 당일 조정과 같은 화면에 두지 않는다.</p>
+        
+        <section id="limits" data-settings-card="limits">
+          <h2>Guardian 한도</h2>
+          <p>자동 진입 하나가 얼마나 커질 수 있는지, 계좌가 얼마나 열릴 수 있는지, 하루에 얼마까지
+          잃으면 진입이 멈추는지. 다섯 값은 <strong>진입</strong>에만 적용된다 — 청산은 RISK_REDUCING이라
+          이 한도의 대상이 아니므로, 여기를 아무리 조여도 손절·비상 청산은 느려지지 않는다.</p>
+        
+          
+          
+        
+          <div class="table-scroll" role="region" aria-label="Guardian 한도" tabindex="0"><table id="guardian-current">
+            <tr><th>한도</th><th>설정값</th></tr>
+            <tr><td>1회 주문 수량 상한</td><td>100 주</td></tr>
+            <tr><td>1회 주문 금액 상한</td><td>500 USD</td></tr>
+            <tr><td>계좌 개방 노출 상한</td><td>1,500 USD</td></tr>
+            <tr><td>일일 손실 한도(금액)</td><td>50 USD</td></tr>
+            <tr><td>일일 손실 한도(비율)</td><td>1%</td></tr>
+            <tr><td>하루 매수 총액 상한</td><td>미설정 — USD 계좌에는 기본값이 없어 엔진이 기동을 거부한다. 값을 넣어야 한다</td></tr>
+            <tr><td>최대 보유 포지션 수</td><td>미설정 — 기본값 6 종목이 적용된다</td></tr>
+            
+            <tr><td>계좌 기준 통화</td><td>USD</td></tr>
+          </table></div>
+        
+          
+          <p class="muted">현재 값은 <strong>us-single-name</strong>와 일치한다 — 레지스트리와 대조한 결과이고, 누가 골랐는지에 대한
+          주장은 아니다(같은 숫자를 손으로 적었을 수도 있다).</p>
+          
+        
+          <p class="notice" data-currency-consequence="true">계좌 기준 통화는 USD다 — US는 identity FX, KR은 공식 KRW→USD FX가 각각 current일 때 같은 account-wide Guardian 한도를 사용한다. KR과 US는 같은 구현 웨이브이며 어느 시장도 peer 운영 안정화를 기다리지 않는다.</p>
+        
+          
+          <p class="muted">automation gate는 지금 <strong>OFF</strong>이다.
+          스위치는 <a href="/settings/standing#gate">상시 탭</a>에 있고 이 카드에서는
+          <strong>콘솔에서 편집할 수 없다</strong> — 이 카드의 저장은 그 키의 바이트를 건드리지 않는다.</p>
+        
+          
+          <h3>프리셋</h3>
+          <p class="muted">StockOS <code>risk_profiles.py</code>의 티어를 옮긴 것이다. 클릭 한 번이 다섯 값과
+          통화를 함께 기록한다. <strong>등록된 티어 위로는 올릴 수 없다</strong> — 상한은 그 통화에 등록된
+          티어의 필드별 최대이고, 그보다 큰 값은 서버가 거부한다.</p>
+          
+          <div class="tier-card" data-tier="kr-smoke">
+            <form method="post" action="/settings/limits/preset">
+              <input type="hidden" name="csrf" value="AJGAIDE2Q4AGHYHE6ZRX5NS5YU">
+              <input type="hidden" name="tier" value="kr-smoke">
+              
+              <dl class="card-preview" aria-label="국내 스모크 — 주문 하나가 실패해도 노출에 해가 없는 크기 적용 후">
+                
+                <dt>1회 주문 수량 상한</dt>
+                <dd>100 → <strong>100</strong></dd>
+                
+                <dt>1회 주문 금액 상한</dt>
+                <dd>500 → <strong>500,000</strong></dd>
+                
+                <dt>계좌 개방 노출 상한</dt>
+                <dd>1,500 → <strong>5,000,000</strong></dd>
+                
+                <dt>일일 손실 한도(금액)</dt>
+                <dd>50 → <strong>100,000</strong></dd>
+                
+                <dt>일일 손실 한도(비율)</dt>
+                <dd>1% → <strong>1%</strong></dd>
+                
+                
+                <dt>통화</dt><dd data-limit-axis="통화 변경"><strong>USD → KRW 통화 변경</strong>
+                — 강화도 완화도 아닌 별개의 변경이다. 숫자가 작아져도 조인 것이 아니다</dd>
+                
+              </dl>
+              <p class="aside" data-currency-consequence="kr-smoke">계좌 기준 통화는 KRW다 — KR은 identity FX, US는 공식 USD→KRW FX가 각각 current일 때 같은 account-wide Guardian 한도를 사용한다. KR과 US는 같은 구현 웨이브이며 어느 시장도 peer 운영 안정화를 기다리지 않는다.</p>
+              <p><button type="submit">국내 스모크 — 주문 하나가 실패해도 노출에 해가 없는 크기 기록</button>
+              <span class="muted">[KRW] 주문 100주 · 500,000 KRW / 총 노출 5,000,000 KRW / 일일 손실 100,000 KRW (자본비 1%)</span></p>
+            </form>
+          </div>
+          
+          <div class="tier-card" data-tier="kr-small-live">
+            <form method="post" action="/settings/limits/preset">
+              <input type="hidden" name="csrf" value="AJGAIDE2Q4AGHYHE6ZRX5NS5YU">
+              <input type="hidden" name="tier" value="kr-small-live">
+              
+              <dl class="card-preview" aria-label="국내 소액 실거래 (권장 기본값) 적용 후">
+                
+                <dt>1회 주문 수량 상한</dt>
+                <dd>100 → <strong>100</strong></dd>
+                
+                <dt>1회 주문 금액 상한</dt>
+                <dd>500 → <strong>1,000,000</strong></dd>
+                
+                <dt>계좌 개방 노출 상한</dt>
+                <dd>1,500 → <strong>10,000,000</strong></dd>
+                
+                <dt>일일 손실 한도(금액)</dt>
+                <dd>50 → <strong>100,000</strong></dd>
+                
+                <dt>일일 손실 한도(비율)</dt>
+                <dd>1% → <strong>1%</strong></dd>
+                
+                
+                <dt>통화</dt><dd data-limit-axis="통화 변경"><strong>USD → KRW 통화 변경</strong>
+                — 강화도 완화도 아닌 별개의 변경이다. 숫자가 작아져도 조인 것이 아니다</dd>
+                
+              </dl>
+              <p class="aside" data-currency-consequence="kr-small-live">계좌 기준 통화는 KRW다 — KR은 identity FX, US는 공식 USD→KRW FX가 각각 current일 때 같은 account-wide Guardian 한도를 사용한다. KR과 US는 같은 구현 웨이브이며 어느 시장도 peer 운영 안정화를 기다리지 않는다.</p>
+              <p><button type="submit">국내 소액 실거래 (권장 기본값) · 권장 기록</button>
+              <span class="muted">[KRW] 주문 100주 · 1,000,000 KRW / 총 노출 10,000,000 KRW / 일일 손실 100,000 KRW (자본비 1%)</span></p>
+            </form>
+          </div>
+          
+          <div class="tier-card" data-tier="us-smoke">
+            <form method="post" action="/settings/limits/preset">
+              <input type="hidden" name="csrf" value="AJGAIDE2Q4AGHYHE6ZRX5NS5YU">
+              <input type="hidden" name="tier" value="us-smoke">
+              
+              <dl class="card-preview" aria-label="미국 스모크 — USD 계좌 기준 한도 적용 후">
+                
+                <dt>1회 주문 수량 상한</dt>
+                <dd>100 → <strong>100</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                <dt>1회 주문 금액 상한</dt>
+                <dd>500 → <strong>100</strong>
+                  <span class="status-pill" data-limit-axis="강화">강화</span></dd>
+                
+                <dt>계좌 개방 노출 상한</dt>
+                <dd>1,500 → <strong>300</strong>
+                  <span class="status-pill" data-limit-axis="강화">강화</span></dd>
+                
+                <dt>일일 손실 한도(금액)</dt>
+                <dd>50 → <strong>10</strong>
+                  <span class="status-pill" data-limit-axis="강화">강화</span></dd>
+                
+                <dt>일일 손실 한도(비율)</dt>
+                <dd>1% → <strong>1%</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                
+              </dl>
+              <p class="aside" data-currency-consequence="us-smoke">계좌 기준 통화는 USD다 — US는 identity FX, KR은 공식 KRW→USD FX가 각각 current일 때 같은 account-wide Guardian 한도를 사용한다. KR과 US는 같은 구현 웨이브이며 어느 시장도 peer 운영 안정화를 기다리지 않는다.</p>
+              <p><button type="submit">미국 스모크 — USD 계좌 기준 한도 기록</button>
+              <span class="muted">[USD] 주문 100주 · 100 USD / 총 노출 300 USD / 일일 손실 10 USD (자본비 1%)</span></p>
+            </form>
+          </div>
+          
+          <div class="tier-card" data-tier="us-small-live">
+            <form method="post" action="/settings/limits/preset">
+              <input type="hidden" name="csrf" value="AJGAIDE2Q4AGHYHE6ZRX5NS5YU">
+              <input type="hidden" name="tier" value="us-small-live">
+              
+              <dl class="card-preview" aria-label="미국 소액 실거래 — USD 계좌 기준 한도 적용 후">
+                
+                <dt>1회 주문 수량 상한</dt>
+                <dd>100 → <strong>100</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                <dt>1회 주문 금액 상한</dt>
+                <dd>500 → <strong>300</strong>
+                  <span class="status-pill" data-limit-axis="강화">강화</span></dd>
+                
+                <dt>계좌 개방 노출 상한</dt>
+                <dd>1,500 → <strong>1,000</strong>
+                  <span class="status-pill" data-limit-axis="강화">강화</span></dd>
+                
+                <dt>일일 손실 한도(금액)</dt>
+                <dd>50 → <strong>50</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                <dt>일일 손실 한도(비율)</dt>
+                <dd>1% → <strong>1%</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                
+              </dl>
+              <p class="aside" data-currency-consequence="us-small-live">계좌 기준 통화는 USD다 — US는 identity FX, KR은 공식 KRW→USD FX가 각각 current일 때 같은 account-wide Guardian 한도를 사용한다. KR과 US는 같은 구현 웨이브이며 어느 시장도 peer 운영 안정화를 기다리지 않는다.</p>
+              <p><button type="submit">미국 소액 실거래 — USD 계좌 기준 한도 기록</button>
+              <span class="muted">[USD] 주문 100주 · 300 USD / 총 노출 1,000 USD / 일일 손실 50 USD (자본비 1%)</span></p>
+            </form>
+          </div>
+          
+          <div class="tier-card" data-tier="us-single-name">
+            <form method="post" action="/settings/limits/preset">
+              <input type="hidden" name="csrf" value="AJGAIDE2Q4AGHYHE6ZRX5NS5YU">
+              <input type="hidden" name="tier" value="us-single-name">
+              
+              <dl class="card-preview" aria-label="미국 단일 종목 실거래 — USD 계좌 기준 한도 적용 후">
+                
+                <dt>1회 주문 수량 상한</dt>
+                <dd>100 → <strong>100</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                <dt>1회 주문 금액 상한</dt>
+                <dd>500 → <strong>500</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                <dt>계좌 개방 노출 상한</dt>
+                <dd>1,500 → <strong>1,500</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                <dt>일일 손실 한도(금액)</dt>
+                <dd>50 → <strong>50</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                <dt>일일 손실 한도(비율)</dt>
+                <dd>1% → <strong>1%</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                
+              </dl>
+              <p class="aside" data-currency-consequence="us-single-name">계좌 기준 통화는 USD다 — US는 identity FX, KR은 공식 KRW→USD FX가 각각 current일 때 같은 account-wide Guardian 한도를 사용한다. KR과 US는 같은 구현 웨이브이며 어느 시장도 peer 운영 안정화를 기다리지 않는다.</p>
+              <p><button type="submit">미국 단일 종목 실거래 — USD 계좌 기준 한도 기록</button>
+              <span class="muted">[USD] 주문 100주 · 500 USD / 총 노출 1,500 USD / 일일 손실 50 USD (자본비 1%)</span></p>
+            </form>
+          </div>
+          
+        
+          <details class="explain">
+            <summary>고급 — 개별 값 직접 기입 (보통은 위의 프리셋으로 관리한다)</summary>
+            <p class="muted">낮추는 방향은 양수인 한 자유롭다. 다섯 값 중 하나라도 비거나 0이면 저장이
+            거부된다 — 엔진이 기동을 거부할 블록은 기록하지 않는다. 이 폼은 제출 전에는 미리보기를
+            낼 수 없다: 서버는 아직 입력값을 모른다.</p>
+            <form method="post" action="/settings/limits">
+              <input type="hidden" name="csrf" value="AJGAIDE2Q4AGHYHE6ZRX5NS5YU">
+              <p><label>1회 주문 수량 상한 (주)<br>
+              <input type="text" name="max_order_quantity" value="100"></label></p>
+              <p><label>1회 주문 금액 상한<br>
+              <input type="text" name="max_order_notional" value="500"></label></p>
+              <p><label>계좌 개방 노출 상한<br>
+              <input type="text" name="max_total_exposure" value="1500"></label></p>
+              <p><label>일일 손실 한도(금액)<br>
+              <input type="text" name="max_daily_loss_amount" value="50"></label></p>
+              <p><label>일일 손실 한도(비율 — 0.01 = 1%)<br>
+              <input type="text" name="max_daily_loss_ratio" value="0.01"></label></p>
+              <p><label>하루 매수 총액 상한 (계좌 기준 통화)<br>
+              <input type="text" inputmode="decimal" name="max_daily_buy_notional" value=""
+                aria-describedby="daily-buy-help"></label></p>
+              <p class="muted" id="daily-buy-help">KST 08:00 에 넘어가는 하루 동안 두 시장 매수 합계(엔진 밖 수동 매수 포함)의 상한.
+              비우면 미설정 — KRW 는 기본 10,000,000 KRW, USD 는 기본값이 없어 엔진이 기동을 거부한다. 프리셋은 이 값을 바꾸지 않는다.</p>
+              <p><label>최대 보유 포지션 수 (종목)<br>
+              <input type="text" inputmode="numeric" name="max_open_positions" value=""
+                aria-describedby="open-positions-help"></label></p>
+              <p class="muted" id="open-positions-help">계좌가 동시에 드는 서로 다른 종목 수의 상한(엔진 진입 · 편입 · 손으로 산 보유와 진행 중 진입을 두 시장 합쳐 셈).
+              넘게 될 신규 종목 진입만 거부되고, 이미 든 종목의 추가 매수와 매도 · 손절은 막지 않는다. 비우면 미설정 — 기본 6. 프리셋 · 통화 변경은 이 값을 바꾸지 않는다.</p>
+              <p><label>계좌 기준 통화 (KRW 또는 USD)<br>
+              <input type="text" name="limit_currency" value="USD"></label></p>
+              <p><button type="submit">한도 저장</button></p>
+            </form>
+          </details>
+          
+          
+        
+          <p class="muted effect-timing" data-effect-timing="limits">반영 시점 — 다음 엔진 기동부터 반영된다.</p>
+        </section>
+        
+        <section id="trading" data-settings-card="trading">
+          <h2>거래 정책</h2>
+          <p>엔진의 청산 경로가 실제로 쓰는 네 개다. <code>amend</code>·<code>conditional</code>·
+          <code>fractional</code>은 이 빌드의 어느 루프도 쓰지 않으므로 여기 없고, 저장은 그 세 값을
+          파일에 적힌 그대로 둔다.</p>
+        
+          
+          
+        
+          <div class="table-scroll" role="region" aria-label="거래 정책 현재값" tabindex="0"><table>
+            <tr><th>토글</th><th>현재</th></tr>
+            <tr><td>주문 제출</td><td>켜짐</td></tr><tr><td>매도</td><td>켜짐</td></tr><tr><td>취소</td><td>켜짐</td></tr><tr><td>실주문 실행</td><td>켜짐</td></tr>
+          </table></div>
+        
+          
+          <form method="post" action="/settings/trading">
+            <input type="hidden" name="csrf" value="AJGAIDE2Q4AGHYHE6ZRX5NS5YU">
+            
+            <p class="toggle-row"><label><input type="checkbox" name="place" checked>
+            <strong>주문 제출</strong></label><br>
+            <span class="muted">매도도 제출이다 — 이것이 꺼져 있으면 손절 주문 자체가 나가지 않는다</span></p>
+            
+            <p class="toggle-row"><label><input type="checkbox" name="sell" checked>
+            <strong>매도</strong></label><br>
+            <span class="muted">청산의 방향</span></p>
+            
+            <p class="toggle-row"><label><input type="checkbox" name="cancel" checked>
+            <strong>취소</strong></label><br>
+            <span class="muted">exit 관측 루프가 자기 발의를 취소한다 — 없으면 교체가 필요한 청산이 멈춘다</span></p>
+            
+            <p class="toggle-row"><label><input type="checkbox" name="allow_live_order_actions" checked>
+            <strong>실주문 실행</strong></label><br>
+            <span class="muted">모든 mutation의 마스터 스위치</span></p>
+            
+            <p class="card-preview" aria-label="거래 정책 적용 후"><strong>적용 후</strong> 네 값이 체크 상태대로 기록된다. 네 개가 모두 켜져야 기동 인터록 3절을 통과한다 · <strong>승인의 의미</strong> 이 조합은 "엔진이 내 주식을 팔아도 된다"는 승인이다 — 켜는 것은 사람이고 저장은 audit에 남는다</p>
+            <p><button type="submit">거래 정책 저장</button></p>
+          </form>
+          
+          
+        
+          <p class="muted effect-timing" data-effect-timing="trading">반영 시점 — 다음 엔진 기동부터 반영된다.</p>
+        </section>
+        
+        
+        
+        </main></body></html>
+        
+--- FAIL: TestTradingPolicyRowsAppearOnce (0.00s)
+    readiness_test.go:134: 거래 정책 현재 상태 표가 남아 있다
+    readiness_test.go:142: allow_live_order_actions 거래 정책 줄이 없다:
+        
+        <!doctype html>
+        <html lang="ko"><head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="referrer" content="same-origin">
+        
+        <title>tossctl console</title>
+        <style>
+         
+        :root {
+          color-scheme: light dark;
+           
+          --space-1: clamp(0.25rem, 0.2rem + 0.15vw, 0.35rem);
+          --space-2: clamp(0.5rem, 0.42rem + 0.25vw, 0.7rem);
+          --space-3: clamp(0.8rem, 0.65rem + 0.55vw, 1.2rem);
+          --space-4: clamp(1.1rem, 0.85rem + 0.9vw, 1.75rem);
+          --space-5: clamp(1.6rem, 1.2rem + 1.4vw, 2.6rem);
+           
+          --text--1: clamp(0.78rem, 0.74rem + 0.15vw, 0.85rem);
+          --text-0: clamp(0.9375rem, 0.88rem + 0.25vw, 1.0625rem);
+          --text-1: clamp(1.125rem, 1.04rem + 0.4vw, 1.33rem);
+          --text-2: clamp(1.35rem, 1.2rem + 0.7vw, 1.66rem);
+          --text-3: clamp(1.62rem, 1.35rem + 1.3vw, 2.07rem);
+           
+          --radius-card: 0.9rem 0.35rem 0.8rem 0.3rem;
+          --radius-control: 0.35rem 0.7rem 0.35rem 0.6rem;
+          --radius-soft: 0.25rem 0.5rem 0.3rem 0.45rem;
+           
+          --surface-0: #f5f3ee; --surface-1: #fcfbf8; --surface-2: #ebe8e1;
+           
+          --line: #d9d5ca; --line-soft: #e7e3da; --line-strong: #857f73;
+           
+          --ink-1: #201e1a; --ink-2: #47433b; --ink-3: #625d54;
+          --accent: #2e5a86;
+           
+          --ok: #2f6a40; --ok-line: #5f8f6c; --ok-bg: #e6eee3;
+          --warn: #7f540f; --warn-line: #a9761e; --warn-bg: #f8eed9;
+          --bad: #9a3228; --bad-line: #b4503f; --bad-bg: #f6e6e1;
+           
+          --tint-accent: #5b85d0; --tint-ok: #52b96e; --tint-warn: #e9b207; --tint-bad: #d8614b; --tone-alpha: 19%;
+          --lift: 0 1px 2px rgba(32, 30, 26, 0.07);
+           
+          --dur-1: 120ms; --dur-2: 220ms; --dur-3: 300ms;
+          --ease-spring: ease-out; --ease-settle: ease-out; --ease-pop: ease-out;
+          --nudge: -2px; --press: 0.97; --pop-from: 0.96;
+           
+          --shadow-pop: 0 18px 54px rgba(20, 18, 14, 0.3), 0 0 0 1px var(--line);
+          --scrim: rgba(20, 18, 14, 0.32);
+          --shadow-bar: 0 -5px 20px rgba(20, 18, 14, 0.14);
+        }
+        * { box-sizing: border-box; }
+        body {
+          margin: 0; padding: 0 var(--space-3) 4rem;
+          font: var(--text-0)/1.65 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+          background: var(--surface-0); color: var(--ink-1);
+           
+          overflow-wrap: anywhere;
+        }
+        a { color: var(--accent); }
+        main, header > div { max-width: 72rem; margin: 0 auto; min-width: 0; }
+        header { border-bottom: 1px solid var(--line); margin-bottom: var(--space-4); }
+        header > div { display: flex; gap: var(--space-3); align-items: baseline; padding: var(--space-3) 0; }
+        header strong { font-size: var(--text-0); letter-spacing: 0.02em; }
+        nav { display: flex; flex-wrap: wrap; gap: 0.15rem var(--space-3); min-width: 0; }
+         
+        nav a { color: var(--ink-2); text-decoration: none; display: flex; flex-direction: column;
+          justify-content: center; min-height: 44px; padding: 0.2rem 0; min-width: 0; }
+        nav a small { color: var(--ink-3); font-size: var(--text--1); line-height: 1.3; font-weight: 400; }
+        nav a.on { font-weight: 600; text-decoration: underline; }
+        .header-note { margin-left: auto; }
+        h1 { font-size: var(--text-3); font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; margin: var(--space-5) 0 var(--space-1); text-wrap: balance; }
+        h2 { font-size: var(--text-2); font-weight: 650; line-height: 1.28; letter-spacing: -0.012em; margin: var(--space-4) 0 var(--space-1); text-wrap: balance; }
+        h3 { font-size: var(--text-1); line-height: 1.35; letter-spacing: -0.004em; margin: var(--space-3) 0 var(--space-1); }
+         
+        section { padding: var(--space-3) 0; margin: var(--space-5) 0; border-top: 1px solid var(--line); }
+         
+        .sticky-save, .order-summary { padding: var(--space-3) var(--space-4); border-top: 0; background: var(--surface-1);
+          border-radius: var(--radius-card); box-shadow: var(--lift); }
+        pre { overflow-x: auto; padding: var(--space-2) var(--space-3); background: var(--surface-2); border-radius: var(--radius-soft);
+              font: var(--text--1)/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+        table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+        th, td { text-align: left; padding: 0.3rem 0.6rem 0.3rem 0; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+        code { overflow-wrap: anywhere; }
+        dl { display: grid; grid-template-columns: 8rem 1fr; gap: 0.25rem var(--space-3); margin: var(--space-2) 0; }
+        dt { color: var(--ink-3); } dd { margin: 0; }
+        .notice { border: 1px solid var(--warn-line); background: var(--warn-bg); box-shadow: var(--lift); padding: var(--space-2) var(--space-3); border-radius: var(--radius-soft); }
+        .danger { border: 1px solid var(--bad-line); background: var(--bad-bg); box-shadow: var(--lift); padding: var(--space-2) var(--space-3); border-radius: var(--radius-soft); }
+         
+        .aside { color: var(--ink-2); }
+        .status-pill.warn, .submetric.warn { color: var(--warn); }
+        .effect-timing { margin: var(--space-2) 0 0; }
+        .cause-banner p { margin: 0 0 var(--space-1); }
+        .cause-banner ul { margin: 0 0 var(--space-2); padding-inline-start: 1.2rem; }
+        .ok { color: var(--ok); } .bad { color: var(--bad); } .muted { color: var(--ink-3); }
+        input[type=text] { font: var(--text-0)/1.4 ui-monospace, Menlo, Consolas, monospace; padding: 0.45rem 0.6rem; min-height: 44px;
+                           width: 22rem; max-width: 100%; border: 1px solid var(--line-strong); border-radius: var(--radius-control);
+                           background: var(--surface-2); color: var(--ink-1); }
+        button { font: inherit; padding: 0.45rem 1rem; border-radius: var(--radius-control); border: 1px solid var(--ink-3);
+                 background: var(--ink-1); color: var(--surface-0); cursor: pointer; }
+        button.secondary { background: transparent; color: var(--ink-1); }
+         
+        button:hover:not(:disabled), .button-link:hover { background: var(--ink-2); }
+        button:active:not(:disabled), .button-link:active { background: var(--ink-3); }
+        button.secondary:hover:not(:disabled), .secondary-link:hover { background: var(--surface-2); }
+        button.secondary:active:not(:disabled), .secondary-link:active { background: var(--line); }
+        button:disabled { cursor: not-allowed; opacity: 0.65; }
+        .button-link { min-height: 44px; display: inline-flex; align-items: center; justify-content: center;
+          padding: 0.45rem 1rem; border: 1px solid var(--ink-3); border-radius: var(--radius-control); background: var(--ink-1);
+          color: var(--surface-0); text-decoration: none; }
+        .secondary-link { background: transparent; color: var(--ink-1); }
+        form { display: inline; }
+         
+        main p, main li, main details > :not(summary) { max-inline-size: 42rem; }
+        td p, th p, .console-status p { max-inline-size: none; }
+        .page-intro { max-inline-size: 42rem; }
+         
+        h1:has(+ .scope) { display: inline-block; margin-inline-end: var(--space-2); }
+        .status-pill.scope { color: var(--ink-3); vertical-align: 0.5em; }
+        details.scope, details.tech { margin: var(--space-1) 0 var(--space-2); }
+        details.scope summary, details.tech summary { color: var(--ink-3); font-size: var(--text--1); cursor: pointer;
+          display: list-item; list-style: disclosure-closed inside; }
+        details.scope[open] > summary, details.tech[open] > summary { list-style-type: disclosure-open; }
+        details.tech code, details.tech dl { font-size: var(--text--1); }
+         
+        .toggle-row { margin: 0 0 var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--line-soft); }
+        .toggle-row .muted { display: block; margin-inline-start: 2.1rem; }
+        .data-table { table-layout: fixed; }
+        .data-table caption { text-align: left; font-weight: 700; font-size: var(--text-0); padding: 0 0 0.65rem; }
+        .data-table th, .data-table td { padding: 0.75rem 0.65rem; overflow-wrap: anywhere; }
+        .data-table tbody tr:last-child > * { border-bottom: 0; }
+        .positions-table { font-size: 12px; line-height: 18px; }
+        .positions-table thead { font-size: 10px; line-height: 15px; }
+        .positions-table th, .positions-table td { padding: 8px 12px; }
+        .positions-table .number-column { text-align: right; font-variant-numeric: tabular-nums; }
+        .positions-table thead th:nth-child(5) { text-align: right; }
+        .position-col-instrument { width: 31%; }
+        .position-col-quantity { width: 6%; }
+        .position-col-average, .position-col-current { width: 11%; }
+        .position-col-lines { width: 18%; }
+        .position-col-value { width: 12%; }
+        .position-col-pnl { width: 11%; }
+        .position-col-detail { width: 7%; }
+        .holding-name { display: block; margin-bottom: 0.12rem; font-weight: 700; }
+        .holding-name code { font-size: inherit; font-weight: 500; }
+        .holding-verdicts { display: flex; flex-wrap: wrap; gap: 3px 5px; align-items: center; margin-top: 4px; }
+        .holding-verdicts .submetric { display: inline; margin-top: 0; }
+        .number-cell { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .line-item { display: flex; justify-content: space-between; align-items: baseline;
+          gap: 5px; margin-top: 2px; font-size: 12px; line-height: 15px; font-variant-numeric: tabular-nums; }
+        .line-item > span { color: var(--ink-3); font-size: 10px; line-height: 12.5px; }
+        .line-item > strong { font-size: 11px; line-height: 13.75px; text-align: right; overflow-wrap: normal; }
+         
+        .status-pill { display: inline-block; border: 1px solid currentColor; border-radius: 999px;
+          padding: 0.08rem 0.55rem; font-size: var(--text--1); }
+        .positions-table .status-pill { padding: 1px 6px; font-size: 11px; line-height: 15px; }
+        .positions-table .submetric { font-size: 11px; line-height: 15px; }
+        .metric { display: block; font-size: var(--text-0); font-weight: 700; }
+        .submetric { display: block; margin-top: 0.15rem; color: var(--ink-3); font-size: var(--text--1); }
+        .exit-line-stack { text-align: right; font-variant-numeric: tabular-nums; }
+        .exit-line-status { display: block; margin-top: 0.2rem; }
+        .safety-line { display: block; margin-top: 0.2rem; font-size: 1rem; line-height: 1.5; }
+        .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: flex-start; }
+        .actions form { display: block; }
+        .actions button { padding: 0.32rem 0.65rem; font-size: var(--text--1); }
+         
+        summary { min-height: 44px; align-content: center; }
+        .row-details, .explain { margin-top: 0.45rem; }
+        .row-details summary, .explain summary { color: var(--ink-3); cursor: pointer; font-weight: 600; }
+        .row-details summary { min-height: 44px; display: flex; align-items: center; }
+        .detail-grid { display: grid; grid-template-columns: 1fr; gap: 0.25rem 0.9rem; margin-top: 0.5rem; }
+        .detail-grid span { min-width: 0; }
+        .detail-cell { min-height: 66px; text-align: right; white-space: nowrap; }
+        .detail-cell .row-details { min-height: 44px; margin: 0; }
+        .detail-cell .row-details summary { justify-content: flex-end; }
+        .detail-cell .row-details[open] { position: fixed; left: 50%; top: 50%;
+          z-index: 21; width: min(42rem, calc(100% - 2rem)); max-height: min(70vh, 42rem);
+          margin: 0; padding: 0.65rem 1.25rem 1.25rem; overflow: auto; transform: translate(-50%, -50%);
+          box-sizing: border-box; border-radius: var(--radius-card);
+          background: var(--surface-1); color: var(--ink-1); box-shadow: var(--shadow-pop);
+          text-align: left; white-space: normal; }
+        .detail-cell .row-details[open] summary { position: sticky; z-index: 22; top: 0; min-height: 44px;
+          justify-content: flex-end; padding: 0 0.4rem; border-radius: var(--radius-soft); background: var(--surface-1); }
+        .detail-cell .row-details[open] summary::after { content: "닫기"; margin-inline-start: 0.5em; }
+        .detail-cell .row-details[open] .detail-grid { align-content: start; margin-top: 0.25rem; }
+        .filter-bar { display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem; align-items: center; }
+        .filter-group { display: flex; flex-wrap: wrap; gap: 0.35rem 0.7rem; align-items: center; }
+        .filter-group .muted { margin-right: 0.15rem; }
+        .optimization-title { display: flex; gap: var(--space-3); align-items: flex-start; justify-content: space-between; }
+        .optimization-title > div { min-width: 0; }
+        .optimization-title, .optimization-shell, .optimization-content, .optimization-content > section,
+        .optimization-content article, .optimization-content fieldset { min-width: 0; max-width: 100%; }
+        .optimization-title code, .optimization-shell code, .preview-review code { overflow-wrap: anywhere; word-break: break-word; }
+        .status-strip { display: grid; grid-template-columns: repeat(2, minmax(7rem, 1fr)); min-width: min(100%, 28rem);
+          background: var(--surface-1); border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--lift); }
+        .status-strip > div { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--line-soft); }
+        .status-strip dt { font-size: var(--text--1); } .status-strip dd { font-size: var(--text-0); }
+        .status-strip dd small { display: block; margin-top: 0.1rem; color: var(--ink-3); font-size: var(--text--1); }
+        .status-strip[data-lifecycle-state=error] { box-shadow: inset 0 0 0 1px var(--warn-line); }
+        .status-strip[data-lifecycle-state=unavailable] { box-shadow: inset 0 0 0 1px var(--line-strong); }
+        .status-strip [data-evidence-state=stale], .status-strip [data-evidence-state=insufficient] { border-color: var(--warn-line); }
+        .status-strip [data-evidence-state=unavailable] { border-color: var(--line-strong); }
+         
+        .console-status, .console-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+          gap: 0; max-width: 72rem; margin: 0 auto var(--space-3); background: var(--surface-1);
+          border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--lift); }
+        .console-status > div, .console-summary > div { min-width: 0; padding: 0.5rem 0.75rem;
+          border-left: 1px solid var(--line-soft); }
+         
+        .console-status { line-height: 1.35; }
+        .console-status > div { padding-block: 0.2rem; }
+        .console-status dd small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .console-status > div:first-child, .console-summary > div:first-child { border-left: 0; }
+        .console-status dt, .console-summary dt { color: var(--ink-3); font-size: var(--text--1); }
+        .console-status dd, .console-summary dd { font-size: var(--text-0); overflow-wrap: anywhere; }
+        .console-status dd small, .console-summary dd small { display: block; margin-top: 0.1rem;
+          color: var(--ink-3); font-size: var(--text--1); }
+         
+        .console-summary { margin-bottom: var(--space-4); }
+        .console-summary dd { font-size: var(--text-0); font-weight: 600; }
+        .console-summary .summary-line { display: block; font-weight: 400; }
+        .console-summary .summary-line + .summary-line { margin-top: 0.15rem; }
+         
+        .console-status [data-data-tone=ok] { color: var(--ok); }
+        .console-status [data-data-tone=warn], .console-status [data-engine-state=stopped] { color: var(--warn); }
+        .console-status [data-data-tone=stale] { color: var(--bad); }
+        .console-approval { max-width: 72rem; margin: 0 auto 0.9rem; }
+         
+        .settings-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: var(--space-3) 0 var(--space-3); }
+        .settings-tabs a { min-height: 44px; display: inline-flex; align-items: center; padding: 0.4rem 1rem;
+          border-radius: var(--radius-control); background: var(--surface-2); color: var(--ink-2); text-decoration: none; }
+        .settings-tabs a.on { box-shadow: inset 0 -2px var(--accent); font-weight: 700; color: var(--ink-1); }
+        .settings-state { margin-bottom: var(--space-4); }
+        .settings-state [data-state-tone=ok] { color: var(--ok); }
+        .settings-state [data-state-tone=warn] { color: var(--warn); }
+         
+        .card-current, dl.card-preview { grid-template-columns: minmax(8rem, 14rem) 1fr; }
+        dl.card-preview { background: var(--surface-2); border-radius: var(--radius-soft); padding: var(--space-2) var(--space-3); margin: 0.7rem 0; }
+        p.card-preview { color: var(--ink-3); margin: 0.7rem 0; }
+        dl.card-preview dt { color: var(--ink-2); font-weight: 600; }
+        .tier-card { background: var(--surface-2); border-radius: var(--radius-soft); padding: var(--space-2) var(--space-3); margin: var(--space-2) 0; }
+        .tier-card form { display: block; }
+        [data-limit-axis=강화] { color: var(--ok); }
+        [data-limit-axis=완화] { color: var(--warn); }
+        [data-limit-axis="통화 변경"], [data-limit-axis="최초 설정"] { color: var(--ink-2); }
+        .entry-list { grid-template-columns: minmax(8rem, 12rem) 1fr; gap: var(--space-3) var(--space-3); }
+        .entry-list dt a { min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; }
+         
+        .explain-link { margin: 0.5rem 0; }
+        .explain-link > a { font-weight: 600; color: var(--ink-2); }
+        .explain-link > div { margin-top: 0.4rem; }
+        .hypothetical-results th, .hypothetical-results td { white-space: nowrap; }
+        .hypothetical-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: 0.8rem; }
+        .hypothetical-fields label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+        .hypothetical-fields input, .hypothetical-fields select { box-sizing: border-box; width: 100%; min-height: 44px; padding: 0.4rem; }
+        .hypothetical-fields .danger { display: block; margin-top: 0.25rem; }
+        .hypothetical-fields :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+        .optimization-shell { display: grid; grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr); gap: var(--space-3); align-items: start; }
+        .optimization-nav { position: sticky; top: 0.75rem; display: grid; gap: 0.35rem; }
+        .optimization-nav a { min-height: 56px; display: flex; flex-direction: column; justify-content: center; padding: 0.55rem 0.75rem;
+          border-radius: var(--radius-control); background: var(--surface-1); color: var(--ink-1); text-decoration: none; box-shadow: var(--lift); }
+        .optimization-nav a.on { box-shadow: inset 0 -2px var(--accent); }
+        .optimization-nav small { color: var(--ink-3); line-height: 1.35; }
+        .optimization-content { min-width: 0; }
+        .optimization-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); margin: var(--space-3) 0;
+          padding: 0; list-style: none; counter-reset: none; }
+        .optimization-steps li { min-width: 0; padding: var(--space-2) var(--space-3); background: var(--surface-2); border-radius: var(--radius-soft); }
+        .optimization-steps strong, .optimization-steps span { display: block; }
+        .optimization-steps span { margin-top: 0.2rem; color: var(--ink-3); font-size: var(--text--1); }
+        .category-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) var(--space-4); }
+        .category-summary article { border-top: 1px solid var(--line-soft); padding-top: 0.4rem; }
+        .category-summary h3 { margin-bottom: 0.1rem; font-size: var(--text-0); font-weight: 600; }
+        fieldset.setting-row { border: 0; border-radius: var(--radius-card); background: var(--surface-2); margin: var(--space-3) 0; padding: var(--space-3) var(--space-4); }
+        fieldset.setting-row legend { font-weight: 700; padding: 0 0.35rem; }
+        fieldset.setting-error { border: 1px solid var(--bad-line); }
+        .configuration-error { overflow-wrap: anywhere; }
+        .setting-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .setting-values > div { min-width: 0; border-top: 1px solid var(--line-soft); padding: 0.35rem 0; }
+        .choice-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+        .choice-tile { background: var(--surface-1); border-radius: var(--radius-soft); padding: var(--space-3); min-width: 0; }
+        .choice-tile[data-selected=true] { background: var(--ok-bg); box-shadow: inset 0 0 0 1px var(--ok-line); }
+        .choice-tile header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.4rem; }
+        .choice-tile h3 { margin: 0; } .choice-action { display: block; margin-top: 0.7rem; }
+        .optimization-nav a, .optimization-content button, .optimization-content .button-link,
+        .sticky-save button, .sticky-save .button-link, .confirm-check { min-height: 44px; }
+        .choice-action button { width: 100%; }
+        
+        .table-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
+        .table-scroll:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+        .table-scroll table { min-width: 36rem; }
+         
+        .table-scroll th, .table-scroll td { min-width: 4.5rem; }
+        .history-panel summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+        .preview-review { min-width: 0; max-width: 100%; }
+        .sticky-save { position: sticky; z-index: 4; bottom: 0.5rem; max-width: 100%; box-sizing: border-box;
+          box-shadow: var(--shadow-bar), inset 0 2px var(--warn-line); }
+        .confirm-check { display: flex; gap: 0.55rem; align-items: center; margin: 0.7rem 0; }
+        .confirm-check input { width: 1.25rem; height: 1.25rem; }
+         
+        label:not(.confirm-check):has(> input[type=checkbox]) { display: block; min-height: 44px; padding-block: 0.55rem; }
+        label:not(.confirm-check) > input[type=checkbox] { width: 1.25rem; height: 1.25rem; vertical-align: middle; margin-inline-end: var(--space-2); }
+        .approval-actions { align-items: stretch; }
+        .approval-actions > * { flex: 1 1 12rem; }
+        a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible {
+          outline: 3px solid var(--accent); outline-offset: 2px;
+        }
+        @media (max-width: 720px) {
+          body { padding-inline: 0.75rem; }
+           
+          .console-status { display: flex; flex-wrap: wrap; gap: 0.2rem 0.9rem; padding: 0.4rem 0.7rem; }
+          .console-status > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.35rem; padding: 0; border-left: 0; }
+          .console-status dt::after { content: ":"; }
+          .console-status dd small { display: inline; margin: 0 0 0 0.35rem; }
+          header > div { flex-wrap: wrap; align-items: flex-start; gap: 0.5rem; }
+          header > div > .header-note { margin-left: 0; width: 100%; }
+          nav { display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem; min-width: 0; }
+          dl { grid-template-columns: minmax(7rem, auto) minmax(0, 1fr); }
+          .card-current, dl.card-preview, .entry-list { grid-template-columns: minmax(0, 1fr); }
+          button, summary, nav a, .filter-group a { min-height: 44px; display: inline-flex; align-items: center; }
+           
+          details.scope summary, details.tech summary { display: list-item; }
+          .detail-grid { grid-template-columns: 1fr; }
+          .data-table { display: block; }
+          .data-table caption { display: block; width: 100%; }
+          .data-table thead { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+          .data-table tbody, .data-table tr { display: block; width: 100%; }
+          .data-table tr > * { width: 100% !important; min-width: 0; }
+          .data-table tr { background: var(--surface-2); border-radius: var(--radius-card); margin: 0.65rem 0; padding: 0.3rem 0.7rem; }
+          .data-table td, .data-table th[scope="row"] { display: grid; grid-template-columns: minmax(7rem, 40%) minmax(0, 1fr);
+            gap: 0.75rem; width: 100%; padding: 0.55rem 0; border-bottom: 1px solid var(--line-soft); }
+          .data-table td::before, .data-table th[scope="row"]::before { content: attr(data-label); color: var(--ink-3);
+            font-weight: 500; grid-column: 1; }
+          .data-table td > *, .data-table th[scope="row"] > * { grid-column: 2; min-width: 0; }
+          .data-table tr > :last-child { border-bottom: 0; }
+          .number-cell { text-align: left; white-space: normal; }
+          .line-item { justify-content: flex-start; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+          .line-item > strong { text-align: left; }
+          .detail-cell { text-align: left; white-space: normal; }
+          .detail-cell .row-details summary { justify-content: flex-start; }
+          .detail-cell .row-details[open] { width: calc(100% - 1.5rem); max-height: calc(100% - 3rem); }
+          .actions { min-width: 0; }
+          .optimization-title { display: block; }
+          .status-strip { width: 100%; }
+          .optimization-shell { display: block; }
+          .optimization-nav { position: static; display: flex; flex-wrap: wrap; margin: 0.8rem 0; }
+          .optimization-nav a { flex: 1 1 calc(50% - 0.35rem); min-width: 0; }
+          .category-summary, .setting-values, .choice-grid, .optimization-steps { grid-template-columns: 1fr; }
+          .sticky-save { bottom: 0; }
+        }
+        @media (max-width: 420px) {
+          .status-strip { grid-template-columns: 1fr 1fr; min-width: 0; }
+          .optimization-nav a { flex-basis: 100%; }
+          .optimization-content section { padding-inline: 0.75rem; }
+          .approval-actions > * { flex-basis: 100%; width: 100%; }
+        }
+         
+        @supports (animation-timing-function: linear(0, 1)) {
+          :root {
+            --ease-spring: linear(0, 0.5 7%, 1.143 14%, 1.287 21%, 1.097 29%, 0.934 36%, 0.923 43%, 0.986 50%, 1.024 57%, 1.019 64%, 1 71%, 0.992 79%, 0.996 86%, 1.001 93%, 1);
+            --ease-pop: linear(0, 0.547 8%, 1.053 17%, 1.114 25%, 1.028 33%, 0.986 42%, 0.989 50%, 0.999 58%, 1.002 67%, 1.001 75%, 1 83%, 1 92%, 1);
+            --ease-settle: linear(0, 0.488 10%, 0.933 20%, 1.045 30%, 1.028 40%, 1.005 50%, 0.998 60%, 0.999 70%, 1 80%, 1 90%, 1);
+          }
+        }
+        nav a, .settings-tabs a, .optimization-nav a { transition: translate var(--dur-2) var(--ease-spring),
+          background-color var(--dur-1) var(--ease-settle), color var(--dur-1) var(--ease-settle); }
+        nav a:hover, nav a:focus-visible, .settings-tabs a:hover, .settings-tabs a:focus-visible,
+        .optimization-nav a:hover, .optimization-nav a:focus-visible { translate: 0 var(--nudge); }
+        nav a:hover { color: var(--ink-1); }
+        .settings-tabs a:hover { background-color: var(--line-soft); }
+        .optimization-nav a:hover { background-color: var(--surface-2); }
+         
+        button:not(:where(form:not([method=get]) *, form button, form input[type=submit], [formmethod], [formaction], .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)),
+        .button-link:not(:where(form:not([method=get]) *, form button, form input[type=submit], [formmethod], [formaction], .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)) {
+          transition: scale var(--dur-2) var(--ease-spring), background-color var(--dur-1) var(--ease-settle), color var(--dur-1) var(--ease-settle); }
+        button:active:not(:disabled):not(:where(form:not([method=get]) *, form button, form input[type=submit], [formmethod], [formaction], .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)),
+        .button-link:active:not(:where(form:not([method=get]) *, form button, form input[type=submit], [formmethod], [formaction], .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)) {
+          scale: var(--press); transition-duration: var(--dur-1); }
+         
+        form:not([method=get]) button, form:not([method=get]) .button-link, form button, form input[type=submit],
+        [formmethod], [formaction], .sticky-save, .sticky-save *, .approval-actions *,
+        .confirm-check, .confirm-check *, .console-approval * { transition: none; }
+         
+        @keyframes pop-in { from { opacity: 0; scale: var(--pop-from); } }
+         
+        @keyframes scrim-in { from { opacity: 0; } }
+        .detail-cell:has(.row-details[open])::before { content: ""; position: fixed; inset: 0; z-index: 20; background: var(--scrim);
+          pointer-events: none; animation: scrim-in var(--dur-3) var(--ease-settle) both; }
+        .detail-cell .row-details[open] { transform-origin: 0 0; animation: pop-in var(--dur-3) var(--ease-pop) both;
+          will-change: opacity, scale; }
+        @media (prefers-reduced-motion: reduce) {
+          :root { --dur-1: 0.01ms; --dur-2: 0.01ms; --dur-3: 0.01ms; --nudge: 0px; --press: 1; --pop-from: 1; }
+        }
+         
+        body { --tone: var(--tint-accent); }
+        body:where(:has(.console-status [data-engine-state=running]):has(.console-status [data-data-tone=ok])) { --tone: var(--tint-ok); }
+        body:where(:has(.console-status :is([data-data-tone=warn], [data-engine-state=stopped]))) { --tone: var(--tint-warn); }
+        body:where(:has(.console-status [data-data-tone=stale])) { --tone: var(--tint-bad); }
+        body > header, .console-status { position: relative; isolation: isolate; }
+         
+        body > header { overflow: clip; overflow-clip-margin: 6px; }
+        body > header::before, body > header::after, .console-status::before, .console-status::after {
+          content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%;
+          width: min(42%, 30rem); height: min(170%, 22rem); top: max(-35%, -7rem);
+          background: radial-gradient(closest-side, color-mix(in srgb, var(--tone) var(--tone-alpha), transparent), transparent); }
+        body > header::before, .console-status::before { left: 8%; animation: amb-a 34s linear infinite alternate; }
+        body > header::after, .console-status::after { right: 8%; animation: amb-b 41s linear -9s infinite alternate; }
+        @keyframes amb-a { from { translate: -10% -6%; rotate: -6deg; opacity: 0.75; } to { translate: 10% 6%; rotate: 8deg; opacity: 1; } }
+        @keyframes amb-b { from { translate: 8% 5%; rotate: 5deg; opacity: 1; } to { translate: -9% -5%; rotate: -7deg; opacity: 0.7; } }
+         
+        body:has([data-reload=on]) :is(body > header, .console-status)::before,
+        body:has([data-reload=on]) :is(body > header, .console-status)::after { animation: none; }
+        @media (prefers-reduced-motion: reduce) {
+          body > header::before, body > header::after, .console-status::before, .console-status::after { animation: none; }
+        }
+        @media (prefers-reduced-transparency: reduce) {
+          body > header::before, body > header::after, .console-status::before, .console-status::after,
+          :is(.optimization-nav a, .settings-tabs a)::after { background: none; }
+        }
+         
+        @media (hover: hover) {
+          .optimization-nav a, .settings-tabs a { position: relative; isolation: isolate; }
+          :is(.optimization-nav a, .settings-tabs a):not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *))::after {
+            content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit; opacity: 0;
+            background: radial-gradient(circle at 28% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%);
+            transition: opacity var(--dur-2) var(--ease-settle); }
+          :is(.optimization-nav a, .settings-tabs a):not(:where(form:not([method=get]) *, .sticky-save *, .approval-actions *, .confirm-check *, .console-approval *)):is(:hover, :focus-visible)::after { opacity: 1; }
+        }
+         
+        @media (prefers-color-scheme: dark) {
+          :root {
+            --surface-0: #141311; --surface-1: #201f1b; --surface-2: #11100e;
+            --line: #38362f; --line-soft: #2a2924; --line-strong: #756f64;
+            --ink-1: #ece9e1; --ink-2: #cbc7bb; --ink-3: #a49f93;
+            --accent: #9fbbd8;
+            --ok: #93c7a0; --ok-line: #5a9068; --ok-bg: #1b2a1f;
+            --warn: #e0b765; --warn-line: #a97b2d; --warn-bg: #2a2314;
+            --bad: #ea9a90; --bad-line: #c25f52; --bad-bg: #2d1a17;
+            --tint-accent: #7895dc; --tint-ok: #5bbe83; --tint-warn: #e4a722; --tint-bad: #d8565b; --tone-alpha: 15%;
+            --lift: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--line-soft);
+            --shadow-pop: 0 18px 54px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--line);
+            --scrim: rgba(0, 0, 0, 0.55);
+            --shadow-bar: 0 -5px 20px rgba(0, 0, 0, 0.5);
+          }
+        }
+        </style>
+        </head><body>
+        <header><div>
+          <strong>tossctl console</strong>
+          
+          <nav aria-label="주요 화면">
+            <a href="/dashboard" >개요<small>지금 무엇이 참인가</small></a>
+            <a href="/signals" >신호<small>후보와 차단 사유</small></a>
+            <a href="/orders" >주문<small>대기와 종결</small></a>
+            <a href="/positions" >포지션<small>보유와 보호</small></a>
+            <a href="/history" >이력<small>왕복과 성과</small></a>
+            <a href="/settings/daily" class="on" aria-current="page">설정<small>상시 · 당일 · 전략 · 도구</small></a>
+          </nav>
+          <span class="muted header-note">127.0.0.1 전용 · 승인 외 읽기 전용</span>
+        </div>
+        
+        <dl class="console-status" aria-label="콘솔 상태">
+          <div><dt>엔진</dt>
+            <dd data-engine-state="unwired">미배선<small>이 빌드에 엔진 마커 경로가 없다 — 엔진이 꺼져 있다는 뜻이 아니다</small></dd></div>
+          
+          <div><dt>시장 세션</dt>
+            <dd data-session-state="closed">outside KR regular hours<small title="요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다">advisory</small></dd></div>
+          <div><dt>데이터 시각</dt>
+            <dd data-data-mode="on-request" data-data-tone="">2026-10-25 23:18:29Z<small>요청 시 읽음</small></dd></div>
+          <div><dt>자동 재로드</dt>
+            <dd data-reload="off">걸려 있지 않음</dd></div>
+        </dl>
+        
+        
+        </header>
+        <main>
+        
+        <h1>설정 <span class="muted">당일</span></h1><span class="status-pill scope">편집 가능</span>
+        <p class="page-intro">가역 · 일 단위로 조절한다. 좁히는 쪽은 언제든 되돌릴 수 있다.</p>
+        
+        
+        <nav class="settings-tabs" aria-label="설정 분류">
+          <a href="/settings/standing">상시</a><a href="/settings/daily" class="on" aria-current="page">당일</a><a href="/settings/strategy">전략</a><a href="/settings/tools">도구</a>
+        </nav>
+        
+        
+        <dl class="console-summary settings-state" aria-label="현재 운영 상태">
+          
+          <div><dt>자동화 게이트</dt>
+            <dd data-state-tone="warn">OFF<small><a href="/settings/standing#gate">스위치가 있는 탭으로</a></small></dd></div>
+          
+          <div><dt>엔진</dt>
+            <dd data-state-tone="">정지</dd></div>
+          
+          <div><dt>Guardian 한도</dt>
+            <dd data-state-tone="ok">설정됨</dd></div>
+          
+        </dl>
+        
+        
+        
+        
+        
+        <p id="adoption" class="aside">편입 규칙은 <a href="/settings/standing#adoption">상시 탭</a>으로
+        옮겼다 — 비가역이고 주 1회 미만으로 만지는 설정이라 당일 조정과 같은 화면에 두지 않는다.</p>
+        
+        <section id="limits" data-settings-card="limits">
+          <h2>Guardian 한도</h2>
+          <p>자동 진입 하나가 얼마나 커질 수 있는지, 계좌가 얼마나 열릴 수 있는지, 하루에 얼마까지
+          잃으면 진입이 멈추는지. 다섯 값은 <strong>진입</strong>에만 적용된다 — 청산은 RISK_REDUCING이라
+          이 한도의 대상이 아니므로, 여기를 아무리 조여도 손절·비상 청산은 느려지지 않는다.</p>
+        
+          
+          
+        
+          <div class="table-scroll" role="region" aria-label="Guardian 한도" tabindex="0"><table id="guardian-current">
+            <tr><th>한도</th><th>설정값</th></tr>
+            <tr><td>1회 주문 수량 상한</td><td>100 주</td></tr>
+            <tr><td>1회 주문 금액 상한</td><td>500 USD</td></tr>
+            <tr><td>계좌 개방 노출 상한</td><td>1,500 USD</td></tr>
+            <tr><td>일일 손실 한도(금액)</td><td>50 USD</td></tr>
+            <tr><td>일일 손실 한도(비율)</td><td>1%</td></tr>
+            <tr><td>하루 매수 총액 상한</td><td>미설정 — USD 계좌에는 기본값이 없어 엔진이 기동을 거부한다. 값을 넣어야 한다</td></tr>
+            <tr><td>최대 보유 포지션 수</td><td>미설정 — 기본값 6 종목이 적용된다</td></tr>
+            
+            <tr><td>계좌 기준 통화</td><td>USD</td></tr>
+          </table></div>
+        
+          
+          <p class="muted">현재 값은 <strong>us-single-name</strong>와 일치한다 — 레지스트리와 대조한 결과이고, 누가 골랐는지에 대한
+          주장은 아니다(같은 숫자를 손으로 적었을 수도 있다).</p>
+          
+        
+          <p class="notice" data-currency-consequence="true">계좌 기준 통화는 USD다 — US는 identity FX, KR은 공식 KRW→USD FX가 각각 current일 때 같은 account-wide Guardian 한도를 사용한다. KR과 US는 같은 구현 웨이브이며 어느 시장도 peer 운영 안정화를 기다리지 않는다.</p>
+        
+          
+          <p class="muted">automation gate는 지금 <strong>OFF</strong>이다.
+          스위치는 <a href="/settings/standing#gate">상시 탭</a>에 있고 이 카드에서는
+          <strong>콘솔에서 편집할 수 없다</strong> — 이 카드의 저장은 그 키의 바이트를 건드리지 않는다.</p>
+        
+          
+          <h3>프리셋</h3>
+          <p class="muted">StockOS <code>risk_profiles.py</code>의 티어를 옮긴 것이다. 클릭 한 번이 다섯 값과
+          통화를 함께 기록한다. <strong>등록된 티어 위로는 올릴 수 없다</strong> — 상한은 그 통화에 등록된
+          티어의 필드별 최대이고, 그보다 큰 값은 서버가 거부한다.</p>
+          
+          <div class="tier-card" data-tier="kr-smoke">
+            <form method="post" action="/settings/limits/preset">
+              <input type="hidden" name="csrf" value="IXQHDC5EIRZ4SXXKOTRZGB2SKI">
+              <input type="hidden" name="tier" value="kr-smoke">
+              
+              <dl class="card-preview" aria-label="국내 스모크 — 주문 하나가 실패해도 노출에 해가 없는 크기 적용 후">
+                
+                <dt>1회 주문 수량 상한</dt>
+                <dd>100 → <strong>100</strong></dd>
+                
+                <dt>1회 주문 금액 상한</dt>
+                <dd>500 → <strong>500,000</strong></dd>
+                
+                <dt>계좌 개방 노출 상한</dt>
+                <dd>1,500 → <strong>5,000,000</strong></dd>
+                
+                <dt>일일 손실 한도(금액)</dt>
+                <dd>50 → <strong>100,000</strong></dd>
+                
+                <dt>일일 손실 한도(비율)</dt>
+                <dd>1% → <strong>1%</strong></dd>
+                
+                
+                <dt>통화</dt><dd data-limit-axis="통화 변경"><strong>USD → KRW 통화 변경</strong>
+                — 강화도 완화도 아닌 별개의 변경이다. 숫자가 작아져도 조인 것이 아니다</dd>
+                
+              </dl>
+              <p class="aside" data-currency-consequence="kr-smoke">계좌 기준 통화는 KRW다 — KR은 identity FX, US는 공식 USD→KRW FX가 각각 current일 때 같은 account-wide Guardian 한도를 사용한다. KR과 US는 같은 구현 웨이브이며 어느 시장도 peer 운영 안정화를 기다리지 않는다.</p>
+              <p><button type="submit">국내 스모크 — 주문 하나가 실패해도 노출에 해가 없는 크기 기록</button>
+              <span class="muted">[KRW] 주문 100주 · 500,000 KRW / 총 노출 5,000,000 KRW / 일일 손실 100,000 KRW (자본비 1%)</span></p>
+            </form>
+          </div>
+          
+          <div class="tier-card" data-tier="kr-small-live">
+            <form method="post" action="/settings/limits/preset">
+              <input type="hidden" name="csrf" value="IXQHDC5EIRZ4SXXKOTRZGB2SKI">
+              <input type="hidden" name="tier" value="kr-small-live">
+              
+              <dl class="card-preview" aria-label="국내 소액 실거래 (권장 기본값) 적용 후">
+                
+                <dt>1회 주문 수량 상한</dt>
+                <dd>100 → <strong>100</strong></dd>
+                
+                <dt>1회 주문 금액 상한</dt>
+                <dd>500 → <strong>1,000,000</strong></dd>
+                
+                <dt>계좌 개방 노출 상한</dt>
+                <dd>1,500 → <strong>10,000,000</strong></dd>
+                
+                <dt>일일 손실 한도(금액)</dt>
+                <dd>50 → <strong>100,000</strong></dd>
+                
+                <dt>일일 손실 한도(비율)</dt>
+                <dd>1% → <strong>1%</strong></dd>
+                
+                
+                <dt>통화</dt><dd data-limit-axis="통화 변경"><strong>USD → KRW 통화 변경</strong>
+                — 강화도 완화도 아닌 별개의 변경이다. 숫자가 작아져도 조인 것이 아니다</dd>
+                
+              </dl>
+              <p class="aside" data-currency-consequence="kr-small-live">계좌 기준 통화는 KRW다 — KR은 identity FX, US는 공식 USD→KRW FX가 각각 current일 때 같은 account-wide Guardian 한도를 사용한다. KR과 US는 같은 구현 웨이브이며 어느 시장도 peer 운영 안정화를 기다리지 않는다.</p>
+              <p><button type="submit">국내 소액 실거래 (권장 기본값) · 권장 기록</button>
+              <span class="muted">[KRW] 주문 100주 · 1,000,000 KRW / 총 노출 10,000,000 KRW / 일일 손실 100,000 KRW (자본비 1%)</span></p>
+            </form>
+          </div>
+          
+          <div class="tier-card" data-tier="us-smoke">
+            <form method="post" action="/settings/limits/preset">
+              <input type="hidden" name="csrf" value="IXQHDC5EIRZ4SXXKOTRZGB2SKI">
+              <input type="hidden" name="tier" value="us-smoke">
+              
+              <dl class="card-preview" aria-label="미국 스모크 — USD 계좌 기준 한도 적용 후">
+                
+                <dt>1회 주문 수량 상한</dt>
+                <dd>100 → <strong>100</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                <dt>1회 주문 금액 상한</dt>
+                <dd>500 → <strong>100</strong>
+                  <span class="status-pill" data-limit-axis="강화">강화</span></dd>
+                
+                <dt>계좌 개방 노출 상한</dt>
+                <dd>1,500 → <strong>300</strong>
+                  <span class="status-pill" data-limit-axis="강화">강화</span></dd>
+                
+                <dt>일일 손실 한도(금액)</dt>
+                <dd>50 → <strong>10</strong>
+                  <span class="status-pill" data-limit-axis="강화">강화</span></dd>
+                
+                <dt>일일 손실 한도(비율)</dt>
+                <dd>1% → <strong>1%</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                
+              </dl>
+              <p class="aside" data-currency-consequence="us-smoke">계좌 기준 통화는 USD다 — US는 identity FX, KR은 공식 KRW→USD FX가 각각 current일 때 같은 account-wide Guardian 한도를 사용한다. KR과 US는 같은 구현 웨이브이며 어느 시장도 peer 운영 안정화를 기다리지 않는다.</p>
+              <p><button type="submit">미국 스모크 — USD 계좌 기준 한도 기록</button>
+              <span class="muted">[USD] 주문 100주 · 100 USD / 총 노출 300 USD / 일일 손실 10 USD (자본비 1%)</span></p>
+            </form>
+          </div>
+          
+          <div class="tier-card" data-tier="us-small-live">
+            <form method="post" action="/settings/limits/preset">
+              <input type="hidden" name="csrf" value="IXQHDC5EIRZ4SXXKOTRZGB2SKI">
+              <input type="hidden" name="tier" value="us-small-live">
+              
+              <dl class="card-preview" aria-label="미국 소액 실거래 — USD 계좌 기준 한도 적용 후">
+                
+                <dt>1회 주문 수량 상한</dt>
+                <dd>100 → <strong>100</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                <dt>1회 주문 금액 상한</dt>
+                <dd>500 → <strong>300</strong>
+                  <span class="status-pill" data-limit-axis="강화">강화</span></dd>
+                
+                <dt>계좌 개방 노출 상한</dt>
+                <dd>1,500 → <strong>1,000</strong>
+                  <span class="status-pill" data-limit-axis="강화">강화</span></dd>
+                
+                <dt>일일 손실 한도(금액)</dt>
+                <dd>50 → <strong>50</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                <dt>일일 손실 한도(비율)</dt>
+                <dd>1% → <strong>1%</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                
+              </dl>
+              <p class="aside" data-currency-consequence="us-small-live">계좌 기준 통화는 USD다 — US는 identity FX, KR은 공식 KRW→USD FX가 각각 current일 때 같은 account-wide Guardian 한도를 사용한다. KR과 US는 같은 구현 웨이브이며 어느 시장도 peer 운영 안정화를 기다리지 않는다.</p>
+              <p><button type="submit">미국 소액 실거래 — USD 계좌 기준 한도 기록</button>
+              <span class="muted">[USD] 주문 100주 · 300 USD / 총 노출 1,000 USD / 일일 손실 50 USD (자본비 1%)</span></p>
+            </form>
+          </div>
+          
+          <div class="tier-card" data-tier="us-single-name">
+            <form method="post" action="/settings/limits/preset">
+              <input type="hidden" name="csrf" value="IXQHDC5EIRZ4SXXKOTRZGB2SKI">
+              <input type="hidden" name="tier" value="us-single-name">
+              
+              <dl class="card-preview" aria-label="미국 단일 종목 실거래 — USD 계좌 기준 한도 적용 후">
+                
+                <dt>1회 주문 수량 상한</dt>
+                <dd>100 → <strong>100</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                <dt>1회 주문 금액 상한</dt>
+                <dd>500 → <strong>500</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                <dt>계좌 개방 노출 상한</dt>
+                <dd>1,500 → <strong>1,500</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                <dt>일일 손실 한도(금액)</dt>
+                <dd>50 → <strong>50</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                <dt>일일 손실 한도(비율)</dt>
+                <dd>1% → <strong>1%</strong>
+                  <span class="status-pill" data-limit-axis="변경 없음">변경 없음</span></dd>
+                
+                
+              </dl>
+              <p class="aside" data-currency-consequence="us-single-name">계좌 기준 통화는 USD다 — US는 identity FX, KR은 공식 KRW→USD FX가 각각 current일 때 같은 account-wide Guardian 한도를 사용한다. KR과 US는 같은 구현 웨이브이며 어느 시장도 peer 운영 안정화를 기다리지 않는다.</p>
+              <p><button type="submit">미국 단일 종목 실거래 — USD 계좌 기준 한도 기록</button>
+              <span class="muted">[USD] 주문 100주 · 500 USD / 총 노출 1,500 USD / 일일 손실 50 USD (자본비 1%)</span></p>
+            </form>
+          </div>
+          
+        
+          <details class="explain">
+            <summary>고급 — 개별 값 직접 기입 (보통은 위의 프리셋으로 관리한다)</summary>
+            <p class="muted">낮추는 방향은 양수인 한 자유롭다. 다섯 값 중 하나라도 비거나 0이면 저장이
+            거부된다 — 엔진이 기동을 거부할 블록은 기록하지 않는다. 이 폼은 제출 전에는 미리보기를
+            낼 수 없다: 서버는 아직 입력값을 모른다.</p>
+            <form method="post" action="/settings/limits">
+              <input type="hidden" name="csrf" value="IXQHDC5EIRZ4SXXKOTRZGB2SKI">
+              <p><label>1회 주문 수량 상한 (주)<br>
+              <input type="text" name="max_order_quantity" value="100"></label></p>
+              <p><label>1회 주문 금액 상한<br>
+              <input type="text" name="max_order_notional" value="500"></label></p>
+              <p><label>계좌 개방 노출 상한<br>
+              <input type="text" name="max_total_exposure" value="1500"></label></p>
+              <p><label>일일 손실 한도(금액)<br>
+              <input type="text" name="max_daily_loss_amount" value="50"></label></p>
+              <p><label>일일 손실 한도(비율 — 0.01 = 1%)<br>
+              <input type="text" name="max_daily_loss_ratio" value="0.01"></label></p>
+              <p><label>하루 매수 총액 상한 (계좌 기준 통화)<br>
+              <input type="text" inputmode="decimal" name="max_daily_buy_notional" value=""
+                aria-describedby="daily-buy-help"></label></p>
+              <p class="muted" id="daily-buy-help">KST 08:00 에 넘어가는 하루 동안 두 시장 매수 합계(엔진 밖 수동 매수 포함)의 상한.
+              비우면 미설정 — KRW 는 기본 10,000,000 KRW, USD 는 기본값이 없어 엔진이 기동을 거부한다. 프리셋은 이 값을 바꾸지 않는다.</p>
+              <p><label>최대 보유 포지션 수 (종목)<br>
+              <input type="text" inputmode="numeric" name="max_open_positions" value=""
+                aria-describedby="open-positions-help"></label></p>
+              <p class="muted" id="open-positions-help">계좌가 동시에 드는 서로 다른 종목 수의 상한(엔진 진입 · 편입 · 손으로 산 보유와 진행 중 진입을 두 시장 합쳐 셈).
+              넘게 될 신규 종목 진입만 거부되고, 이미 든 종목의 추가 매수와 매도 · 손절은 막지 않는다. 비우면 미설정 — 기본 6. 프리셋 · 통화 변경은 이 값을 바꾸지 않는다.</p>
+              <p><label>계좌 기준 통화 (KRW 또는 USD)<br>
+              <input type="text" name="limit_currency" value="USD"></label></p>
+              <p><button type="submit">한도 저장</button></p>
+            </form>
+          </details>
+          
+          
+        
+          <p class="muted effect-timing" data-effect-timing="limits">반영 시점 — 다음 엔진 기동부터 반영된다.</p>
+        </section>
+        
+        <section id="trading" data-settings-card="trading">
+          <h2>거래 정책</h2>
+          <p>엔진의 청산 경로가 실제로 쓰는 네 개다. <code>amend</code>·<code>conditional</code>·
+          <code>fractional</code>은 이 빌드의 어느 루프도 쓰지 않으므로 여기 없고, 저장은 그 세 값을
+          파일에 적힌 그대로 둔다.</p>
+        
+          
+          
+        
+          <div class="table-scroll" role="region" aria-label="거래 정책 현재값" tabindex="0"><table>
+            <tr><th>토글</th><th>현재</th></tr>
+            <tr><td>주문 제출</td><td>켜짐</td></tr><tr><td>매도</td><td>켜짐</td></tr><tr><td>취소</td><td>켜짐</td></tr><tr><td>실주문 실행</td><td>켜짐</td></tr>
+          </table></div>
+        
+          
+          <form method="post" action="/settings/trading">
+            <input type="hidden" name="csrf" value="IXQHDC5EIRZ4SXXKOTRZGB2SKI">
+            
+            <p class="toggle-row"><label><input type="checkbox" name="place" checked>
+            <strong>주문 제출</strong></label><br>
+            <span class="muted">매도도 제출이다 — 이것이 꺼져 있으면 손절 주문 자체가 나가지 않는다</span></p>
+            
+            <p class="toggle-row"><label><input type="checkbox" name="sell" checked>
+            <strong>매도</strong></label><br>
+            <span class="muted">청산의 방향</span></p>
+            
+            <p class="toggle-row"><label><input type="checkbox" name="cancel" checked>
+            <strong>취소</strong></label><br>
+            <span class="muted">exit 관측 루프가 자기 발의를 취소한다 — 없으면 교체가 필요한 청산이 멈춘다</span></p>
+            
+            <p class="toggle-row"><label><input type="checkbox" name="allow_live_order_actions" checked>
+            <strong>실주문 실행</strong></label><br>
+            <span class="muted">모든 mutation의 마스터 스위치</span></p>
+            
+            <p class="card-preview" aria-label="거래 정책 적용 후"><strong>적용 후</strong> 네 값이 체크 상태대로 기록된다. 네 개가 모두 켜져야 기동 인터록 3절을 통과한다 · <strong>승인의 의미</strong> 이 조합은 "엔진이 내 주식을 팔아도 된다"는 승인이다 — 켜는 것은 사람이고 저장은 audit에 남는다</p>
+            <p><button type="submit">거래 정책 저장</button></p>
+          </form>
+          
+          
+        
+          <p class="muted effect-timing" data-effect-timing="trading">반영 시점 — 다음 엔진 기동부터 반영된다.</p>
+        </section>
+        
+        
+        
+        </main></body></html>
+        
+--- FAIL: TestSettingsFormsAreByteIdenticalAfterLayout (0.00s)
+    readiness_test.go:160: 폼 계약 비교 전에 프리셋 비교표가 렌더되지 않았다
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.029s
+FAIL

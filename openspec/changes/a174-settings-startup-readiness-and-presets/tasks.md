@@ -12,11 +12,16 @@ Story: `STORY-TOS-a174` · Low~Medium(설정 폼 마크업 재배치, 설정 저
   - 증거(Terra, 2026-10-26): `analysis/measure/baseline-20261025T230744Z.json`(96 metrics; `/settings/daily` light/1280 = 높이 5237px·상자 3·폼 7·입력 24), 격리 `shoot.cjs`는 빈 설정·자격증명 0·38321 포트 GET만으로 실행했고 PID 2377970 종료 뒤 포트 해제 확인. dashboard light/1280 screenshot 1장은 `Page.captureScreenshot` 프로토콜 오류로 누락했고 수치 JSON은 완성됨. 편집 전 gate 원문 `analysis/pre-edit-analysis.txt`에서 required 0 확인(분석 번들 미생성 표시는 사전 상태임).
 
 ## 2. RED
-- [ ] 2.1 `TestStartupReadinessAppearsOnThreeScreensWithoutControls`: 상시·당일·검증 콘솔 렌더에 `section.readiness` 1개, 그 안 `<form`·`<input`·`<button` 0, 행 = **절 단위 여섯**(게이트 · 자동 시작 · 한도 다섯과 통화 · 거래 정책 · 판정 불가 2 — design §2.1), 판정 가능한 줄에 소유 탭 링크, 합산 판정 문구("기동 가능" 류) 0, 검증 콘솔에서는 `/engine/start` 폼보다 **앞**에 위치. 한도·거래 정책 줄의 상태·사유가 같은 fixture 의 `GatePreflight()` 결과와 같음(옮김 단언). seam 미배선·읽기 실패 fixture 에서 해당 줄이 `unknown` + 사유(0값을 통과로 그리지 않음)
-- [ ] 2.2 `TestGuardianPresetsRenderAsOneMatrixPerCurrency`: 당일 렌더에 `table.preset-matrix` 가 `config.GuardianTiers()` 의 통화 수만큼, 행 = 한도 다섯 + 통화, 열 = 현재 + 그 통화 프리셋, 프리셋 열마다 `/settings/limits/preset` 폼 1개(hidden `tier` = 프리셋 ID), 통화 결과 설명 통화당 1회, 칸 값이 같은 fixture 의 `LimitTierCards()` `Preview.Rows` From/To 와 같음, 1280 에서 표 폭 ≤ 본문 폭(하네스로 측정 보조)
-- [ ] 2.3 `TestTradingPolicyRowsAppearOnce`: `.toggle-row` 4개, 각 행 안에 체크박스·배지·설명이 함께, 현재 상태 표 0, 필드 이름 집합 == {place, sell, cancel, allow_live_order_actions}
-- [ ] 2.4 `TestSettingsFormsAreByteIdenticalAfterLayout`: 폼 action/method/필드명/hidden 값 집합이 a173 착지 렌더와 동일(기준 스냅숏을 시험 fixture 로 고정)
-- [ ] 2.5 a173 계약 시험(상자 ≤3·원인 1회·식별자 0·경계 배지) 가 설정 세 탭에서 계속 통과하는지 먼저 확인(RED 가 아니라 회귀 가드)
+- [x] 2.1 `TestStartupReadinessAppearsOnThreeScreensWithoutControls`: 상시·당일·검증 콘솔 렌더에 `section.readiness` 1개, 그 안 `<form`·`<input`·`<button` 0, 행 = **절 단위 여섯**(게이트 · 자동 시작 · 한도 다섯과 통화 · 거래 정책 · 판정 불가 2 — design §2.1), 판정 가능한 줄에 소유 탭 링크, 합산 판정 문구("기동 가능" 류) 0, 검증 콘솔에서는 `/engine/start` 폼보다 **앞**에 위치. 한도·거래 정책 줄의 상태·사유가 같은 fixture 의 `GatePreflight()` 결과와 같음(옮김 단언). seam 미배선·읽기 실패 fixture 에서 해당 줄이 `unknown` + 사유(0값을 통과로 그리지 않음)
+  - 증거(Terra, 2026-10-26): 새 시험은 production 편집 전 `analysis/red-output.txt`에서 section 부재로 FAIL, 구현 뒤 `go test ./internal/console -run 'Test(StartupReadinessAppearsOnThreeScreensWithoutControls|GuardianPresetsRenderAsOneMatrixPerCurrency|TradingPolicyRowsAppearOnce|SettingsFormsAreByteIdenticalAfterLayout)$' -count=1` PASS.
+- [x] 2.2 `TestGuardianPresetsRenderAsOneMatrixPerCurrency`: 당일 렌더에 `table.preset-matrix` 가 `config.GuardianTiers()` 의 통화 수만큼, 행 = 한도 다섯 + 통화, 열 = 현재 + 그 통화 프리셋, 프리셋 열마다 `/settings/limits/preset` 폼 1개(hidden `tier` = 프리셋 ID), 통화 결과 설명 통화당 1회, 칸 값이 같은 fixture 의 `LimitTierCards()` `Preview.Rows` From/To 와 같음, 1280 에서 표 폭 ≤ 본문 폭(하네스로 측정 보조)
+  - 증거(Terra, 2026-10-26): `internal/console/readiness_test.go`가 registry 카드에서 통화 수·프리셋 ID·Preview From/To를 읽어 비교함. RED/GREEN 명령은 2.1 증거와 같음.
+- [x] 2.3 `TestTradingPolicyRowsAppearOnce`: `.toggle-row` 4개, 각 행 안에 체크박스·배지·설명이 함께, 현재 상태 표 0, 필드 이름 집합 == {place, sell, cancel, allow_live_order_actions}
+  - 증거(Terra, 2026-10-26): `internal/console/readiness_test.go` RED/GREEN; 기존 상태 표 부재와 네 필드 집합을 단언함.
+- [x] 2.4 `TestSettingsFormsAreByteIdenticalAfterLayout`: 폼 action/method/필드명/hidden 값 집합이 a173 착지 렌더와 동일(기준 스냅숏을 시험 fixture 로 고정)
+  - 증거(Terra, 2026-10-26): `a173SettingsFormContracts` 고정 fixture가 `/settings/save`·gate·autostart·limits·trading·5 preset의 method/action/필드/hidden csrf·tier를 비교함. RED/GREEN 명령은 2.1 증거와 같음.
+- [x] 2.5 a173 계약 시험(상자 ≤3·원인 1회·식별자 0·경계 배지) 가 설정 세 탭에서 계속 통과하는지 먼저 확인(RED 가 아니라 회귀 가드)
+  - 증거(Terra, 2026-10-26): `go test ./internal/console -run 'Test(EachUnmeasuredCauseIsExplainedOnce|FloatingNoticesAreAtMostThree|OperatorBodyCarriesNoDeveloperIdentifiers|EveryScreenHeadHasScopeBadgeAndFoldedBoundary|StatusStripCellsAreOneLine|ProseWidthAndToggleSpacingRulesExist|DisclosureMarkerSurvivesTheMobileBlock)$' -count=1` PASS(9.538s).
 
 ## 3. GREEN (design §2 순서)
 - [ ] 3.1 **편집 전에** `pages.go:Console.handleDashboard` FLM 번들(`tools/logic-map`, `analysis/function-logic/`)을 만든다. 그다음 `readiness.go`(새 파일: `settingsPage.StartupReadiness`·`Console.startupReadiness`, 금지 철자 0 — design §1 이름 금지 시험) + `readiness` define(`templates_settings.go`) + `dashboardPage.Readiness` 필드 + `handleDashboard` 한 줄 + 세 자리 배치 + 기존 사전 판정 표(`templates_settings.go:145-149`) 정리. CSS 는 `templates.go` `style` 끝 a174 블록에만(design §2.5)
