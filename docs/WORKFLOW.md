@@ -161,7 +161,11 @@ production 편집을 허용하지 않는다. GBrain은 식별자를 모르는 �
 **비례 원칙 (2026-09-27 사용자 지시).** 게이트의 목적은 트레이딩 코드의 안전이다. FLM/BTM
 선행·변이 원장·다중 보이스 적대 리뷰 같은 무거운 규율은 **High-risk 경로와 게이트 판정
 결과를 직접 바꾸는 변경**에만 의무다. 그 외(도구 내부 품질·시험 전용·문서·개발 편의)는
-`not-applicable` 사유 한 줄이 기본이고 시험 + lint + 경량 리뷰로 충분하다. 백로그 항목은
+`not-applicable` 사유 한 줄이 기본이고 시험 + lint + 경량 리뷰로 충분하다.
+단 gate ⑤(`tools/logic-map/check_analysis.py`)는 위험 등급과 관계없이, base→착지 창에서 본문이
+바뀐 기존 Go 함수(시험 파일 포함)마다 FLM 번들을 요구하고, `not-applicable` 표지는 그런 함수가
+0개일 때만 받는다. 그래서 저위험 change 는 새 함수·새 파일로 구현해 required 0 을 목표로 하고,
+기존 함수를 고쳤으면 번들을 만든다(사후에 만들었으면 review.md 에 그렇게 적는다). 백로그 항목은
 「실제 런타임 오류 / 개발 편의 / 감사·재현성 / 극단 edge case」 넷으로 분류해 **첫째만**
 change 의 blocker 로 잡는다 — 과거 이력 재현 전용 작업은 하지 않고, 극단 edge 는
 `unsupported` 로 명시해 닫는다. 게이트 계층은 SOURCE→PARSE→VALIDATE→PASS/FAIL→ARCHIVE 로
