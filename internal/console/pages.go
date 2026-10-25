@@ -37,7 +37,7 @@ import (
 // row that unblocks the chain while the button re-ran it.
 var pageFuncs = template.FuncMap{
 	"causes": causesOf,
-	"add1": func(value int) int { return value + 1 },
+	"add1":   func(value int) int { return value + 1 },
 	"inRedo": func(set []verifylive.StepID, id verifylive.StepID) bool {
 		for _, s := range set {
 			if s == id {
@@ -342,8 +342,8 @@ func (c *Console) redirectVerify(w http.ResponseWriter, r *http.Request, notice 
 
 type reportPage struct {
 	chrome
-	Snap  snapshot
-	Text  string
+	Snap snapshot
+	Text string
 	// Record 는 기록 파일 경로. 본문 첫 줄에서 빼서 접힌 기술 정보로 보냄(change a173).
 	Record string
 	Error  string
