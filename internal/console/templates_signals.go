@@ -32,6 +32,7 @@ const signalsTemplates = `
 못했는지</strong>를 본다. 읽기 전용 — 이 화면은 주문을 내지 않고, 원천을 부르지도 않는다
 (저장소 읽기뿐이다). {{.Snap.NowText}} 기준.</p>
 
+{{template "causes" .}}
 {{template "signalsread" .Snap}}
 {{range .Snap.Markets}}{{template "signalsmarket" .}}{{end}}
 
@@ -53,7 +54,7 @@ const signalsTemplates = `
   없다 — "조용하다"가 아니라 배선을 봐야 한다.</p>
   {{end}}
 {{else}}
-<p class="notice"><strong>미측정 ({{.Read.Code}})</strong> — {{.Read.Why}}
+<p class="aside"><strong>미측정</strong> · <code>{{.Read.Code}}</code>
 <br>0건이 아니다. 아무것도 읽지 못했다는 뜻이다.</p>
 {{end}}
 {{end}}
@@ -62,7 +63,7 @@ const signalsTemplates = `
 <section>
   <h2>{{.Market}}</h2>
   {{if not .Read.Known}}
-  <p class="notice"><strong>미측정 ({{.Read.Code}})</strong> — {{.Read.Why}}
+  <p class="aside"><strong>미측정</strong> · <code>{{.Read.Code}}</code>
   <br>이 시장의 후보가 0건이라는 뜻이 아니다.</p>
   {{else}}
   {{template "signalspanel" .Panel}}
@@ -83,7 +84,7 @@ const signalsTemplates = `
 {{define "signalspanel"}}
 <h3>원천</h3>
 {{if not .Read.Known}}
-<p class="notice"><strong>원천 상태 미측정 ({{.Read.Code}})</strong> — {{.Read.Why}}
+<p class="aside"><strong>원천 상태 미측정</strong> · <code>{{.Read.Code}}</code>
 <br>"강등 없음"이 아니다. 어느 원천이 빠졌는지 이 화면이 모른다는 뜻이다.</p>
 {{else}}
 <dl>

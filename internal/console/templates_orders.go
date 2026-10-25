@@ -14,6 +14,7 @@ const ordersTemplates = `
 <p class="muted page-intro">활성 상태와 최근 주문을 한 화면에서 확인한다. 읽기 전용 — 이 화면에서 주문을 내거나 정정·취소할 수 없다.
 {{.Snap.NowText}} 기준. 보호 정책은 <a href="/optimization?category=exit-protection">exit 보호 최적화</a>에서 확인한다.</p>
 
+{{template "causes" .}}
 {{template "journalstate" .Snap.Journal}}
 {{template "ordercounts" .Screen}}
 {{template "orderfilters" .Snap}}
@@ -38,16 +39,13 @@ const ordersTemplates = `
   <h2>미체결 주문 현황</h2>
   <dl>
     <dt>일반 주문 <span class="muted">OPEN 그룹</span></dt>
-    <dd>{{if .OpenLive.Known}}{{.OpenLive.Value}}{{else}}<span class="muted">미측정
-      ({{.OpenLive.Code}})</span> — {{.OpenLive.Why}}{{end}}</dd>
+    <dd>{{if .OpenLive.Known}}{{.OpenLive.Value}}{{else}}{{template "unmeasured" .OpenLive}}{{end}}</dd>
     <dt>조건주문</dt>
-    <dd>{{if .ConditionalLive.Known}}{{.ConditionalLive.Value}}{{else}}<span class="muted">미측정
-      ({{.ConditionalLive.Code}})</span> — {{.ConditionalLive.Why}}{{end}}</dd>
+    <dd>{{if .ConditionalLive.Known}}{{.ConditionalLive.Value}}{{else}}{{template "unmeasured" .ConditionalLive}}{{end}}</dd>
     <dt>합계</dt>
     <dd>{{if .Live.Known}}<strong>{{.Live.Value}}</strong>{{if .Broker.Present}}
       <span class="muted">— {{.Broker.TakenAt}}에 읽은 값 ({{.Broker.AgeSeconds}}초 전)</span>{{end}}
-      {{else}}<span class="muted">미측정
-      {{if .Live.Code}}({{.Live.Code}}){{end}}</span> — {{.Live.Why}}{{end}}</dd>
+      {{else}}{{template "unmeasured" .Live}}{{end}}</dd>
   </dl>
   {{template "orderbroker" .}}
   {{/*
@@ -64,8 +62,7 @@ const ordersTemplates = `
 
   <dl>
     <dt>종결 주문 <span class="muted">CLOSED 그룹 한 페이지</span></dt>
-    <dd>{{if .ClosedCount.Known}}{{.ClosedCount.Value}}{{else}}<span class="muted">미측정
-      ({{.ClosedCount.Code}})</span> — {{.ClosedCount.Why}}{{end}}</dd>
+    <dd>{{if .ClosedCount.Known}}{{.ClosedCount.Value}}{{else}}{{template "unmeasured" .ClosedCount}}{{end}}</dd>
   </dl>
   <div class="explain-link" data-explain="closed-basis">
     <a href="{{$.Explain.Href "closed-basis"}}">종결 목록 기준 {{$.Explain.Toggle "closed-basis"}}</a>

@@ -36,6 +36,7 @@ import (
 // verifylive/redo.go) — so a table asking the verdict would have hidden the one
 // row that unblocks the chain while the button re-ran it.
 var pageFuncs = template.FuncMap{
+	"causes": causesOf,
 	"add1": func(value int) int { return value + 1 },
 	"inRedo": func(set []verifylive.StepID, id verifylive.StepID) bool {
 		for _, s := range set {

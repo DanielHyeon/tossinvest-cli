@@ -22,8 +22,19 @@ const overviewTemplates = `
   edit a config file or to go and look at a ledger row, and those are seven
   different afternoons.
 */}}
-{{define "unmeasured"}}<span class="muted">미측정</span>{{if .Code}} <code>{{.Code}}</code>{{end}}
-<br><span class="muted">{{.Why}}</span>{{end}}
+{{define "unmeasured"}}{{if .Code}}<span class="muted unmeasured"{{with .Detail}} title="{{.}}"{{end}}>미측정</span> · <code>{{.Code}}</code>{{else}}<span class="muted">미측정</span> <span class="muted">{{.Why}}</span>{{end}}{{end}}
+
+{{/*
+  "causes" 는 읽지 못한 원인의 설명을 화면당 한 번 그림(change a173). 칸은 사유 코드만 갖는다.
+  차단(읽기 실패) 하나의 상자 안에 사유별 문단을 모아 상자 수를 늘리지 않는다.
+*/}}
+{{define "causes"}}{{with causes .}}
+<div class="danger cause-banner" role="status">
+  {{range .}}<p data-cause="{{.Code}}"><code>{{.Code}}</code> {{.Sentence}}{{if .Href}} <a href="{{.Href}}">{{.HrefLabel}}</a>{{end}}</p>
+  {{with .Details}}<ul>{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
+  {{end}}
+</div>
+{{end}}{{end}}
 
 {{define "cell"}}{{if .Known}}{{.Value}}{{else}}{{template "unmeasured" .}}{{end}}{{end}}
 
@@ -38,6 +49,7 @@ const overviewTemplates = `
 
 {{/* 원장 상태는 화면 전체에 한 번. 계좌·오늘·최근 세 패널이 같은 핸들 하나로 읽으므로
      같은 사실을 세 번 적을 이유가 없고, 세 번 적으면 서로 다른 답이 나올 자리가 생긴다. */}}
+{{template "causes" .}}
 {{template "journalstate" .Snap.Journal}}
 
 {{/*

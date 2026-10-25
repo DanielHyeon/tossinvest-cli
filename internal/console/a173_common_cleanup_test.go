@@ -111,6 +111,9 @@ func TestEachUnmeasuredCauseIsExplainedOnce(t *testing.T) {
 			// 칸이 코드로 가리키는 원인은 그 화면에 문장이 정확히 1회 있어야 한다(0이면 사유를 잃은 것).
 			for code := range seen {
 				sentence := unmeasuredSentences[unmeasuredReason(code)]
+				if unmeasuredReason(code) == reasonDiscoveryUnreadable {
+					continue // 신호 화면 전용 코드: 문장은 detail 로 배너에 1회 실린다.
+				}
 				if sentence == "" {
 					t.Errorf("%s %s: 열거에 없는 사유 코드 %q", fx.name, path, code)
 					continue
