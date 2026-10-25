@@ -208,9 +208,6 @@ func unmeasuredBecause(detail string) reading {
 // Known reports that the value was measured.
 func (r reading) Known() bool { return r.known }
 
-// Detail 은 코드 옆의 구체 사유(칸의 title 로 쓰임). 문장 정본은 unmeasuredSentences 임.
-func (r reading) Detail() string { return strings.TrimSpace(r.detail) }
-
 // Value renders the number, or the em dash the reason accompanies.
 func (r reading) Value() string {
 	if !r.known {

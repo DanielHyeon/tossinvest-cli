@@ -61,8 +61,8 @@ desired와 effective가 달라도 어느 한쪽으로 덮어쓰지 않는다.</p
 <span class="submetric">policy lifecycle {{.State.Status}} · provenance {{.State.Provenance}} · eligibility {{.State.Eligibility}}</span>
 {{if .Block.Present}}<span class="submetric bad">대사 차단 · {{.Block.Target}} · {{.Block.Reason}}{{if .Block.Detail}} · {{.Block.Detail}}{{end}} · {{.Block.Age}}{{if .Block.Permanent}} · 영구 차단{{end}}</span>{{end}}
 {{if .State.HasPendingExit}}<span class="submetric bad">active exit 있음</span>{{end}}
-{{if .Quarantine.Present}}<span class="submetric danger">판정 격리 v{{.Quarantine.Version}} · {{.Quarantine.ReasonText}} · {{.Quarantine.Age}} 경과 · 유지 보호선 {{.Quarantine.ProtectionText}}</span>
-<span class="submetric danger">이 포지션은 지금 exit 판정 대상이 아니다 — 손절도 평가되지 않는다</span>{{end}}</td>
+{{if .Quarantine.Present}}<span class="submetric bad">판정 격리 v{{.Quarantine.Version}} · {{.Quarantine.ReasonText}} · {{.Quarantine.Age}} 경과 · 유지 보호선 {{.Quarantine.ProtectionText}}</span>
+<span class="submetric bad">이 포지션은 지금 exit 판정 대상이 아니다 — 손절도 평가되지 않는다</span>{{end}}</td>
 <td data-label="desired/effective"><strong>{{.State.DesiredLabel}}</strong><span class="submetric">effective {{.State.EffectiveLabel}}</span>
 <span class="exit-line-status">exit <strong class="status-pill {{if .ExitLine.Fresh}}ok{{else}}bad{{end}}">{{.ExitLine.StatusText}}</strong>{{if .ExitLine.Reason}} · {{.ExitLine.Reason}}{{end}}</span>
 <span class="safety-line" role="group" aria-label="현재 exit 보호선과 다음 단계">현재 보호선 <strong>{{.ExitLine.CurrentProtection}}</strong> · 다음 익절 <strong>{{.ExitLine.NextTarget}}</strong> · 다음 보호선 <strong>{{.ExitLine.NextProtection}}</strong></span>

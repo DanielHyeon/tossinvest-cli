@@ -105,7 +105,7 @@ dt { color: var(--ink-3); } dd { margin: 0; }
 .danger { border: 1px solid var(--bad-line); background: var(--bad-bg); box-shadow: var(--lift); padding: var(--space-2) var(--space-3); border-radius: var(--radius-soft); }
 /* 알림 3단계(change a173): .danger = 차단, .notice = 결과가 따르는 사실, 그 밖의 안내는 상자 없는 본문(.aside) */
 .aside { color: var(--ink-2); }
-.status-pill.warn { color: var(--warn); }
+.status-pill.warn, .submetric.warn { color: var(--warn); }
 .effect-timing { margin: var(--space-2) 0 0; }
 .cause-banner p { margin: 0 0 var(--space-1); }
 .cause-banner ul { margin: 0 0 var(--space-2); padding-inline-start: 1.2rem; }

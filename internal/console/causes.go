@@ -110,3 +110,6 @@ func walkReadings(v reflect.Value, depth int, seen map[uintptr]bool, visit func(
 		}
 	}
 }
+
+// Detail 은 코드 옆의 구체 사유(칸의 title 로 쓰임). 문장 정본은 unmeasuredSentences 임.
+func (r reading) Detail() string { return strings.TrimSpace(r.detail) }
