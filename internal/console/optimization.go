@@ -12,6 +12,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 	strategyopt "github.com/JungHoonGhae/tossinvest-cli/internal/optimization"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/performance"
 )
 
 var (
@@ -81,6 +82,7 @@ func (c *Console) handleOptimization(w http.ResponseWriter, r *http.Request) {
 		page.Warning = "알 수 없는 카테고리다. 개요로 안전하게 이동했으며 어떤 동작도 실행하지 않았다."
 	}
 	page.Categories = optimizationCategoryViews(selected, c.opts.Optimization != nil)
+	page.PerformanceWindow = newPerformanceWindow(c.opts.Performance != nil, performance.DefaultQuery(c.now()))
 
 	if c.opts.ExitPolicies != nil {
 		value, err := c.opts.ExitPolicies.Load()

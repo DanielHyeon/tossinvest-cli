@@ -74,6 +74,7 @@ type optimizationPage struct {
 	ProtectionWired                bool
 	ProtectionLoadErr              string
 	Protections                    []ProtectionStatus
+	PerformanceWindow              performanceWindow
 }
 
 func (p optimizationPage) Overview() bool { return p.Selected == strategyopt.CategoryOverview }

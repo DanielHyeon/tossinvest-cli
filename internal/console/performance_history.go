@@ -3,7 +3,9 @@ package console
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
@@ -23,8 +25,44 @@ type performanceAttributionRow struct {
 	Row          performance.Attribution
 }
 
+// performanceWindow는 성과 조회 기본값(일수·시장·lane·lineage)의 표시 정본임.
+// 성과 이력 화면과 최적화 카테고리가 같은 값 객체에서 같은 문구를 렌더함.
+// Unmeasured가 차있으면 조회 기본값을 얻지 못한 상태 → 0일로 꾸미지 않고 사유 코드만 표시함.
+type performanceWindow struct {
+	Parts      []string
+	Unmeasured string
+}
+
+// newPerformanceWindow는 seam 배선 여부와 서버 조회 기본값으로 표시용 창을 만듦.
+func newPerformanceWindow(wired bool, q performance.Query) performanceWindow {
+	if !wired {
+		return performanceWindow{Unmeasured: string(reasonSeamUnwired)}
+	}
+	market, lane := "전체 시장", "전체 lane"
+	if q.Market != performance.AllMarkets {
+		market = q.Market
+	}
+	if q.Lane != performance.AllLanes {
+		lane = q.Lane
+	}
+	lineage := "complete lineage only"
+	if !q.CompleteOnly {
+		lineage = "all lineage"
+	}
+	return performanceWindow{Parts: []string{fmt.Sprintf("최근 %d일", q.PeriodDays), market, lane, lineage}}
+}
+
+// Text는 칩이 아닌 한 줄 표기(최적화 카테고리용). 칩과 같은 Parts에서 만듦.
+func (w performanceWindow) Text() string {
+	if w.Unmeasured != "" {
+		return "미측정 · " + w.Unmeasured
+	}
+	return strings.Join(w.Parts, " · ")
+}
+
 type performanceHistoryPage struct {
 	chrome
+	Window         performanceWindow
 	Unwired        bool
 	LoadErr        string
 	AttributionErr string
@@ -40,6 +78,7 @@ func (c *Console) handlePerformanceHistory(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	page := performanceHistoryPage{chrome: c.chromeOnRequest("performance-history"), Unwired: c.opts.Performance == nil}
+	page.Window = newPerformanceWindow(c.opts.Performance != nil, performance.DefaultQuery(c.now()))
 	if c.opts.Performance != nil {
 		view, err := c.opts.Performance.Dashboard(r.Context(), performance.DefaultQuery(c.now()))
 		if err != nil {

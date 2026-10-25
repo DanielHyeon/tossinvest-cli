@@ -214,7 +214,7 @@ const optimizationTemplates = `
   {{if .PerformanceHistory}}
     <section aria-labelledby="performance-history-title">
       <h2 id="performance-history-title">성과·이력</h2>
-      <p class="notice"><strong>최근 30일 · 전체 시장 · 전체 lane · complete lineage · 읽기 전용</strong></p>
+      <p class="notice"><strong>{{.PerformanceWindow.Text}} · 읽기 전용</strong></p>
       <p>서버가 고정한 조회 범위의 성과를 보여주며 이 카테고리에서 값을 입력하거나 저장하지 않는다. 측정 불가를 0으로 꾸며내지 않고 누락 사유를 함께 표시한다.</p>
       <p><a class="button-link" href="/performance-history">레인 성과 상세 보기</a></p>
       {{if .Audit}}<div class="table-scroll" role="region" aria-label="설정 변경 감사 이력" tabindex="0"><table>
@@ -303,10 +303,8 @@ const optimizationTemplates = `
 <section aria-labelledby="performance-filter-title">
   <h2 id="performance-filter-title">서버 조회 기본값</h2>
   <div class="filter-bar" aria-label="고정된 성과 조회 범위" aria-readonly="true">
-    <span class="status-pill">최근 {{.View.Query.PeriodDays}}일</span>
-    <span class="status-pill">전체 시장</span>
-    <span class="status-pill">전체 lane</span>
-    <span class="status-pill">complete lineage only</span>
+    {{if .Window.Unmeasured}}<span class="status-pill">{{.Window.Text}}</span>{{else}}{{range .Window.Parts}}<span class="status-pill">{{.}}</span>
+    {{end}}{{end}}
   </div>
   <p class="muted">화면 필터일 뿐 거래 정책 기본값이 아니다. 입력하거나 저장할 값이 없다.</p>
 </section>
