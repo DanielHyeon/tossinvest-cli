@@ -33,3 +33,12 @@ Scope Check: CLEAN. 의도=창 표기 한 출처 + 미측정 표기 / 실제=동
 
 ### FLM 면제 (비례 원칙)
 기존 함수 본문 편집: `(*Console).handlePerformanceHistory`(page.Window 대입 1줄 추가), `(*Console).handleOptimization`(page.PerformanceWindow 대입 1줄 추가). 콘솔 읽기 전용 렌더이며 High-risk 경로·게이트 판정을 바꾸지 않으므로 FLM/BTM not-applicable(docs/WORKFLOW.md 「비례 원칙」). 분기 추가 0.
+
+## 완료 게이트 (2026-10-25, 종결 에이전트 Opus 5.5)
+
+### gate ⑤ — FLM 면제 문구가 받아들여지지 않음 → 번들 3 작성
+- 사전 실행 `python3 tools/logic-map/check_analysis.py --change a177-performance-window-single-source` → rc 1:
+  `missing Function Logic Map for 3 function(s) modified between base b27a1ea87d35 and working tree …: internal/console/optimization.go:Console.handleOptimization, internal/console/performance_history.go:Console.handlePerformanceHistory, internal/console/performance_history_test.go:fakePerformanceReader.Dashboard`.
+- 원인: 면제 표지(`Function Logic Map: not-applicable`)는 required 가 0 일 때만 쓰인다(`tools/logic-map/check_analysis.py` `_verdict`). 기존 함수 본문을 한 줄이라도 고치면 비례 원칙과 무관하게 번들이 요구된다. 위 「FLM 면제」 절은 표지 철자도 없었고, 있었더라도 통과하지 못했다. 시험 가짜 `fakePerformanceReader.Dashboard`(오류 주입 분기 추가)도 required 에 든다.
+- 처분: 면제 문장을 고치는 대신(뜻을 바꾸지 않고는 통과 불가) `analysis/function-logic/` 에 번들 3(ast.json · function-logic-map.md · branch-test-map.md · risk-pattern-report.md)을 만들었다. 분기 행의 시험 인용은 시험별 `go test -run '^<Test>$' -coverprofile` 로 분기 본문 블록 count>0 을 측정한 것이다. 측정상 시험이 없는 기존 분기 3(`handleOptimization` B1 405 · B5 legacy Load 오류 · B13 protection List 오류)은 a177 무관 기존 공백으로 적었다. 재실행 → `evidence complete or diff-proven exempt` rc 0.
+- 사후 작성임을 기록한다(FLM 이 구현 판단에 쓰이지 않음). a177 편집은 두 핸들러에 분기 밖 직선 대입 한 문장씩이라 AST 분기 수는 편집 전후 같다(14 · 5).

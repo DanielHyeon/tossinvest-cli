@@ -18,10 +18,15 @@ Story: `STORY-TOS-a177` · Low risk(표시 문자열 출처). FLM/BTM·변이 �
 - [x] 3.1 `go test ./internal/console/` 전체(비캐시 1회) + `cmd/tossctl` 콘솔 관련 시험. 실행 범위·미실행 범위 기록
 - [x] 3.2 렌더 확인: 격리 콘솔(빈 설정 폴더, 자격증명 0, 버튼 0)로 두 화면을 띄워 같은 문구인지 스크린샷 2장(`openspec/changes/a177-…/evidence/`)
 - [x] 3.3 gstack `review`(경량) → 결과를 `review.md` 에 추가. 발견 사항 반영 여부 기록
-- [ ] 3.4 Manager(Fable) 검증 요청 — 변경 파일 목록·시험 출력·스크린샷 경로를 보고
+- [x] 3.4 Manager(Fable) 검증 요청 — 변경 파일 목록·시험 출력·스크린샷 경로를 보고
+  - Fable 2026-10-25 — gofmt 0 · vet OK · go test ./internal/console/ -count=1 ok · loaderr 하위시험 PASS 확인 · 증거 PNG 확인
 
 ## 4. 종결 (Manager 승인 뒤, Opus 가 수행)
-- [ ] 4.1 main 병합·푸시(사람 승인 뒤) · PM tracker 재생성 · `make sdd-sync` · 아카이브 · memory retain
+- [x] 4.1 main 병합·푸시(사람 승인 뒤) · PM tracker 재생성 · `make sdd-sync` · 아카이브 · memory retain
+  - 사람 승인: 사용자가 커밋·푸시·아카이브를 명시 요청(2026-10-25, 전체 `make gate` 실행 포함 — 이 change 한정).
+  - main 병합: `worktree/a177` 를 main(`794f9e95a`) 위로 rebase(충돌 0) → `git merge --ff-only` → main `3b558d3ba`(fe7e187a3 · 7d6df0927 · 3b558d3ba).
+  - gate ⑤ 사전 실행: review.md 「FLM 면제」만으로는 FAIL — `missing Function Logic Map for 3 function(s)` (`Console.handleOptimization` · `Console.handlePerformanceHistory` · `fakePerformanceReader.Dashboard`). 면제 표지는 required 0 일 때만 받는다(`check_analysis._verdict`). → `analysis/function-logic/` 번들 3 을 AST(`tools/logic-map`) + 시험별 coverprofile 측정으로 작성 → `evidence complete or diff-proven exempt` rc 0.
+  - 이후 단계(tracker · sdd-sync · gate · archive · push · retain)의 영수증은 아래 줄과 review.md 「완료 게이트」에 적는다.
 
 ## 구현 증거 (Sonnet 5.5, 2026-10-25)
 - 1.1 확정: 리터럴 `templates_optimization.go:217`(데이터 미참조, 구 템플릿 `optimizationPage`). 칩 `templates_optimization.go:306,337,352` 가 `.View.Query.PeriodDays` 를 찍고 `handlePerformanceHistory`(`performance_history.go:35-56`) 는 Performance==nil→`Unwired`, 오류→`LoadErr` 로 `View` 영값 → 0일. 성공 경로 `performance.DefaultQuery`(`query.go:36`) PeriodDays 30.
