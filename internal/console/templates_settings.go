@@ -116,10 +116,7 @@ const settingsTemplates = `
       <p><label>지정 목록 (자동 편입이 꺼져 있어도 이 심볼은 편입한다)<br>
       <input type="text" name="include_symbols" value="{{.Includes}}"></label></p>
     </details>
-    <dl class="card-preview" aria-label="편입 규칙 적용 후">
-      <dt>적용 후</dt><dd>체크·숫자·목록이 <code>engine.adoption</code>에 그대로 기록되고 audit에 남는다</dd>
-      <dt>실행되는 것</dt><dd>없음 — 저장은 편입도 주문도 하지 않는다</dd>
-    </dl>
+    <p class="card-preview" aria-label="편입 규칙 적용 후"><strong>적용 후</strong> 체크·숫자·목록이 <code>engine.adoption</code>에 그대로 기록되고 audit에 남는다 · <strong>실행되는 것</strong> 없음 — 저장은 편입도 주문도 하지 않는다</p>
     <p><button type="submit">편입 규칙 저장</button></p>
   </form>
   {{end}}
@@ -171,10 +168,7 @@ const settingsTemplates = `
     <input type="hidden" name="csrf" value="{{.CSRF}}">
     <p><label><input type="checkbox" name="enabled" {{if .Gate.Enabled}}checked{{end}}>
     <strong>자동화 게이트 ON</strong></label></p>
-    <dl class="card-preview" aria-label="게이트 적용 후">
-      <dt>적용 후</dt><dd>{{if .Gate.Enabled}}ON → 체크 상태대로{{else}}OFF → 체크 상태대로{{end}} 기록된다</dd>
-      <dt>실행되는 것</dt><dd>없음 — 저장은 엔진을 기동하지 않는다</dd>
-    </dl>
+    <p class="card-preview" aria-label="게이트 적용 후"><strong>적용 후</strong> {{if .Gate.Enabled}}ON → 체크 상태대로{{else}}OFF → 체크 상태대로{{end}} 기록된다 · <strong>실행되는 것</strong> 없음 — 저장은 엔진을 기동하지 않는다</p>
     <p><button type="submit">게이트 저장</button></p>
   </form>
   {{end}}
@@ -200,11 +194,8 @@ const settingsTemplates = `
     <input type="hidden" name="csrf" value="{{.CSRF}}">
     <p><label><input type="checkbox" name="enabled" {{if .Autostart}}checked{{end}}>
     <strong>엔진 자동 시작 ON</strong></label></p>
-    <dl class="card-preview" aria-label="자동 시작 적용 후">
-      <dt>적용 후</dt><dd>체크 상태가 기록되고, ON이면 즉시 기동을 <strong>한 번</strong> 시도한다</dd>
-      <dt>최종 판단</dt><dd>automation gate · Guardian 한도 · 능력 증명서 · 거래 정책 ·
-      journal 단일 writer 인터록이 그대로 결정한다</dd>
-    </dl>
+    <p class="card-preview" aria-label="자동 시작 적용 후"><strong>적용 후</strong> 체크 상태가 기록되고, ON이면 즉시 기동을 <strong>한 번</strong> 시도한다 · <strong>최종 판단</strong> automation gate · Guardian 한도 · 능력 증명서 · 거래 정책 ·
+      journal 단일 writer 인터록이 그대로 결정한다</p>
     <p><button type="submit">자동 시작 저장·적용</button></p>
   </form>
   {{end}}
@@ -365,10 +356,7 @@ const settingsTemplates = `
     <strong>{{.Label}}</strong></label><br>
     <span class="muted">{{.Why}}</span></p>
     {{end}}
-    <dl class="card-preview" aria-label="거래 정책 적용 후">
-      <dt>적용 후</dt><dd>네 값이 체크 상태대로 기록된다. 네 개가 모두 켜져야 기동 인터록 3절을 통과한다</dd>
-      <dt>승인의 의미</dt><dd>이 조합은 "엔진이 내 주식을 팔아도 된다"는 승인이다 — 켜는 것은 사람이고 저장은 audit에 남는다</dd>
-    </dl>
+    <p class="card-preview" aria-label="거래 정책 적용 후"><strong>적용 후</strong> 네 값이 체크 상태대로 기록된다. 네 개가 모두 켜져야 기동 인터록 3절을 통과한다 · <strong>승인의 의미</strong> 이 조합은 "엔진이 내 주식을 팔아도 된다"는 승인이다 — 켜는 것은 사람이고 저장은 audit에 남는다</p>
     <p><button type="submit">거래 정책 저장</button></p>
   </form>
   {{end}}
@@ -448,28 +436,18 @@ const settingsTemplates = `
   {{if .NotificationOn}}
   <form method="post" action="/settings/notifications/test">
     <input type="hidden" name="csrf" value="{{.CSRF}}">
-    <dl class="card-preview" aria-label="테스트 발송 적용 후">
-      <dt>적용 후</dt><dd>바뀌는 설정 없음 — 지금 이 주소로 한 통 보낸다</dd>
-      <dt>실패하면</dt><dd>사유만 표시된다. outbox·진입 게이트·운영 모드는 건드리지 않는다</dd>
-    </dl>
+    <p class="card-preview" aria-label="테스트 발송 적용 후"><strong>적용 후</strong> 바뀌는 설정 없음 — 지금 이 주소로 한 통 보낸다 · <strong>실패하면</strong> 사유만 표시된다. outbox·진입 게이트·운영 모드는 건드리지 않는다</p>
     <p><button type="submit">테스트 한 통 더</button></p>
   </form>
   <form method="post" action="/settings/notifications/off">
     <input type="hidden" name="csrf" value="{{.CSRF}}">
-    <dl class="card-preview" aria-label="알림 끄기 적용 후">
-      <dt>적용 후</dt><dd><code>enabled</code> 한 키만 false가 된다 — 구독 주소는 지우지 않는다</dd>
-      <dt>그 다음</dt><dd>critical 알림은 다시 outbox에 쌓이기만 한다</dd>
-    </dl>
+    <p class="card-preview" aria-label="알림 끄기 적용 후"><strong>적용 후</strong> <code>enabled</code> 한 키만 false가 된다 — 구독 주소는 지우지 않는다 · <strong>그 다음</strong> critical 알림은 다시 outbox에 쌓이기만 한다</p>
     <p><button type="submit">알림 끄기</button></p>
   </form>
   {{else}}
   <form method="post" action="/settings/notifications/on">
     <input type="hidden" name="csrf" value="{{.CSRF}}">
-    <dl class="card-preview" aria-label="알림 켜기 적용 후">
-      <dt>적용 후</dt><dd>{{if .NotificationChannel}}기존 구독 주소를 그대로 쓰고 <code>enabled</code>가 true가 된다{{else}}추측할 수 없는 구독 주소를 하나 만들고 <code>engine.notifications</code>의 세 키를 기록한다{{end}}</dd>
-      <dt>즉시 일어나는 것</dt><dd>그 주소로 테스트 알림 한 통 — 엔진 재시작을 기다리지 않는다</dd>
-      <dt>입력할 것</dt><dd>없다. 채널 이름도 토큰도 묻지 않는다</dd>
-    </dl>
+    <p class="card-preview" aria-label="알림 켜기 적용 후"><strong>적용 후</strong> {{if .NotificationChannel}}기존 구독 주소를 그대로 쓰고 <code>enabled</code>가 true가 된다{{else}}추측할 수 없는 구독 주소를 하나 만들고 <code>engine.notifications</code>의 세 키를 기록한다{{end}} · <strong>즉시 일어나는 것</strong> 그 주소로 테스트 알림 한 통 — 엔진 재시작을 기다리지 않는다 · <strong>입력할 것</strong> 없다. 채널 이름도 토큰도 묻지 않는다</p>
     <p><button type="submit">알림 켜기</button></p>
   </form>
   {{end}}
@@ -498,10 +476,7 @@ const settingsTemplates = `
   {{else}}
   <form method="post" action="/settings/system-update/download">
     <input type="hidden" name="csrf" value="{{.CSRF}}">
-    <dl class="card-preview" aria-label="릴리스 확인 적용 후">
-      <dt>적용 후</dt><dd>서명을 검증한 archive를 fixed candidate로 staging한다</dd>
-      <dt>실행되지 않는 것</dt><dd>설치와 재기동 — 다운로드는 둘 중 어느 것도 하지 않는다</dd>
-    </dl>
+    <p class="card-preview" aria-label="릴리스 확인 적용 후"><strong>적용 후</strong> 서명을 검증한 archive를 fixed candidate로 staging한다 · <strong>실행되지 않는 것</strong> 설치와 재기동 — 다운로드는 둘 중 어느 것도 하지 않는다</p>
     <p><button type="submit">서명된 최신 릴리스 확인·다운로드</button></p>
   </form>
   {{end}}
@@ -519,7 +494,7 @@ const settingsTemplates = `
     <dt>SHA-256</dt><dd><code>{{.Update.Current.SHA256}}</code></dd>
   </dl></details>
 
-  <h3>staged candidate</h3>
+  <h3>대기 중인 후보 <code>staged candidate</code></h3>
   {{if .Update.Installable}}
   {{if .ReleaseVerified}}
   <p class="notice"><strong>이 프로세스에서 서명 검증됨.</strong>
@@ -553,11 +528,7 @@ const settingsTemplates = `
   <form method="post" action="/settings/system-update/install">
     <input type="hidden" name="csrf" value="{{.CSRF}}">
     <input type="hidden" name="reviewed_sha256" value="{{.Update.Candidate.SHA256}}">
-    <dl class="card-preview" aria-label="설치 적용 후">
-      <dt>적용 후</dt><dd>위 SHA-256의 candidate를 설치하고 이 콘솔을 같은 포트로 재기동한다</dd>
-      <dt>보존</dt><dd>기존 실행 파일은 <code>.rollback</code>으로 남는다</dd>
-      <dt>선행 조건</dt><dd>엔진과 실계좌 검증이 모두 멈춘 상태여야 한다 — 서버가 확인하고 거부한다</dd>
-    </dl>
+    <p class="card-preview" aria-label="설치 적용 후"><strong>적용 후</strong> 위 SHA-256의 candidate를 설치하고 이 콘솔을 같은 포트로 재기동한다 · <strong>보존</strong> 기존 실행 파일은 <code>.rollback</code>으로 남는다 · <strong>선행 조건</strong> 엔진과 실계좌 검증이 모두 멈춘 상태여야 한다 — 서버가 확인하고 거부한다</p>
     <p><button type="submit">검토한 candidate 설치 및 재기동</button></p>
   </form>
   {{end}}

@@ -224,6 +224,9 @@ summary { min-height: 44px; align-content: center; }
   border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--lift); }
 .console-status > div, .console-summary > div { min-width: 0; padding: 0.5rem 0.75rem;
   border-left: 1px solid var(--line-soft); }
+/* 상태 표시줄은 칸당 한 줄(change a173): 칸 설명은 small 한 줄, 긴 사유는 title */
+.console-status > div { padding-block: 0.35rem; }
+.console-status dd small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .console-status > div:first-child, .console-summary > div:first-child { border-left: 0; }
 .console-status dt, .console-summary dt { color: var(--ink-3); font-size: var(--text--1); }
 .console-status dd, .console-summary dd { font-size: var(--text-0); overflow-wrap: anywhere; }
@@ -250,9 +253,10 @@ summary { min-height: 44px; align-content: center; }
 .settings-state [data-state-tone=ok] { color: var(--ok); }
 .settings-state [data-state-tone=warn] { color: var(--warn); }
 /* 현재값 and 적용 후 are the same grid so the eye compares them row for row. */
-.card-current, .card-preview { grid-template-columns: minmax(8rem, 14rem) 1fr; }
-.card-preview { background: var(--surface-2); border-radius: var(--radius-soft); padding: var(--space-2) var(--space-3); margin: 0.7rem 0; }
-.card-preview dt { color: var(--ink-2); font-weight: 600; }
+.card-current, dl.card-preview { grid-template-columns: minmax(8rem, 14rem) 1fr; }
+dl.card-preview { background: var(--surface-2); border-radius: var(--radius-soft); padding: var(--space-2) var(--space-3); margin: 0.7rem 0; }
+p.card-preview { color: var(--ink-3); margin: 0.7rem 0; }
+dl.card-preview dt { color: var(--ink-2); font-weight: 600; }
 .tier-card { background: var(--surface-2); border-radius: var(--radius-soft); padding: var(--space-2) var(--space-3); margin: var(--space-2) 0; }
 .tier-card form { display: block; }
 [data-limit-axis=강화] { color: var(--ok); }
@@ -321,11 +325,16 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
 }
 @media (max-width: 720px) {
   body { padding-inline: 0.75rem; }
+  /* 좁은 화면: 네 칸을 한 줄 칩 묶음으로 */
+  .console-status { display: flex; flex-wrap: wrap; gap: 0.2rem 0.9rem; padding: 0.4rem 0.7rem; }
+  .console-status > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.35rem; padding: 0; border-left: 0; }
+  .console-status dt::after { content: ":"; }
+  .console-status dd small { display: inline; margin: 0; }
   header > div { flex-wrap: wrap; align-items: flex-start; gap: 0.5rem; }
   header > div > .header-note { margin-left: 0; width: 100%; }
   nav { display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem; min-width: 0; }
   dl { grid-template-columns: minmax(7rem, auto) minmax(0, 1fr); }
-  .card-current, .card-preview, .entry-list { grid-template-columns: minmax(0, 1fr); }
+  .card-current, dl.card-preview, .entry-list { grid-template-columns: minmax(0, 1fr); }
   button, summary, nav a, .filter-group a { min-height: 44px; display: inline-flex; align-items: center; }
   .detail-grid { grid-template-columns: 1fr; }
   .data-table { display: block; }
@@ -732,7 +741,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
 </section>
 
 <section>
-  <h2>capability attestation</h2>
+  <h2>능력 증명 <code>attestation</code></h2>
   {{with .Snap.Attestation}}
   {{if .Present}}
   <dl>

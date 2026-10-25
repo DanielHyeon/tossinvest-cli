@@ -237,7 +237,7 @@ const optimizationTemplates = `
 <h1>설정 변경 미리보기</h1>
 <p class="notice"><strong>아직 적용되지 않았다.</strong> before/after, 적용 시점과 권한 불변을 확인한다.</p>
 <section class="preview-review" aria-labelledby="preview-diff-title" aria-readonly="true">
-  <h2 id="preview-diff-title">Changed subset · {{len .Preview.Changes}}개</h2>
+  <h2 id="preview-diff-title">바뀌는 항목 · {{len .Preview.Changes}}개</h2>
   <div class="table-scroll" role="region" aria-label="설정 변경 before after" tabindex="0"><table>
     <tr><th>Key</th><th>Before</th><th>After</th><th>적용</th><th>안전 방향</th></tr>
     {{range .Preview.Changes}}<tr><td><code>{{.Key}}</code></td><td>{{if .BeforeOptionID}}{{.BeforeOptionID}}{{else}}미승인{{end}}</td>
@@ -363,7 +363,7 @@ const optimizationTemplates = `
 {{end}}
 
 <section aria-labelledby="performance-attribution-title">
-  <h2 id="performance-attribution-title">Market · campaign attribution</h2>
+  <h2 id="performance-attribution-title">시장·캠페인별 성과 귀속 <code>attribution</code></h2>
   <p class="muted">파생 DB에 저장된 exact identifier chain만 표시한다. 누락값은 symbol/time으로 추정하지 않는다.</p>
   {{if .AttributionErr}}<p class="aside">Attribution generation을 읽지 못했다. aggregate를 0으로 바꾸지 않는다: <code>{{.AttributionErr}}</code></p>
   {{else if .Attributions}}
@@ -420,7 +420,7 @@ const optimizationTemplates = `
 <tr><th>시장</th><td>선택 시장 없음</td><td colspan="2">{{.Market}}</td></tr><tr><th>세션</th><td>정규장</td><td colspan="2">{{.Session}}</td></tr>
 <tr><th>적용 시점</th><td>다음 엔진 기동</td><td colspan="2">{{.ApplyTiming}}</td></tr></table></div>
 <p class="muted">서버 정의 시장 범위: 선택 시장 없음, 한국, 미국. 서버 정의 세션: 정규장.</p></section>
-<section aria-labelledby="calendar-heading"><h2 id="calendar-heading">Exchange calendar · 읽기 전용</h2><div class="table-scroll" role="region" aria-label="Exchange calendar · 읽기 전용" tabindex="0"><table>
+<section aria-labelledby="calendar-heading"><h2 id="calendar-heading">거래소 달력 · 읽기 전용</h2><div class="table-scroll" role="region" aria-label="Exchange calendar · 읽기 전용" tabindex="0"><table>
 <tr><th>Source</th><td>{{.CalendarSource}}</td></tr><tr><th>Version</th><td><code>{{.CalendarVersion}}</code></td></tr>
 <tr><th>Updated at</th><td>{{.CalendarUpdatedAt}}</td></tr></table></div>
 <p>6시간 freshness 또는 장 시작 전 refresh 조건이 실패하면 신규 entry는 대기한다. calendar는 이 화면에서 수정할 수 없다.</p></section>
@@ -439,7 +439,7 @@ const optimizationTemplates = `
 </details>
 {{if .LoadErr}}<p class="danger" role="alert">runtime projection을 읽지 못했다. 두 시장 모두 신규 진입 OFF와 typed unknown을 표시한다.</p>{{end}}
 {{if .Unwired}}<p class="aside">runtime endpoint 미기동 — KR과 US의 dormant OFF/UNOBSERVED/UNWIRED truth를 표시한다.</p>{{end}}
-<section aria-labelledby="strategy-runtime-contract"><h2 id="strategy-runtime-contract">Shared projection contract</h2>
+<section aria-labelledby="strategy-runtime-contract"><h2 id="strategy-runtime-contract">공통 투영 계약</h2>
 <dl><dt>Schema</dt><dd><code>{{.SchemaVersion}}</code></dd><dt>Generated at</dt><dd>{{.GeneratedAt}}</dd>
 <dt>Config digest</dt><dd><code>{{.ConfigDigest}}</code></dd><dt>Build digest</dt><dd><code>{{.BuildDigest}}</code></dd></dl>
 <p class="muted">활성화 매니페스트에 적는 두 값이다. 엔진이 보고한 값만 표시하며, 관측이 없으면 <code>not_observed</code>다.</p>
@@ -464,7 +464,7 @@ const optimizationTemplates = `
   </dl>
 </article>
 {{end}}
-<section aria-labelledby="projection-registry"><h2 id="projection-registry">Golden field registry</h2><p class="muted">Console, REST와 SSE가 공유하는 필드다.</p>
+<section aria-labelledby="projection-registry"><h2 id="projection-registry">필드 레지스트리 <code>golden</code></h2><p class="muted">Console, REST와 SSE가 공유하는 필드다.</p>
 <ul>{{range .Fields}}<li><code>{{.Key}}</code> · {{.Label}} · <code>{{.JSONPointer}}</code></li>{{end}}</ul></section>
 <p><strong>신규 entry가 OFF이거나 runtime이 unavailable이어도 exit·reconcile·보호 감독은 계속된다.</strong></p>
 {{template "foot" .}}
