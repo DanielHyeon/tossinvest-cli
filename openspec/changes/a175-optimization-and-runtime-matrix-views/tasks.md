@@ -28,8 +28,8 @@ Story: `STORY-TOS-a175` · Low(읽기 전용 렌더 재배치). FLM/BTM·변이 
 ## 3. GREEN (design §2 순서) 
 - [x] 3.1 내비 하나·KPI 개요 한정 · 3.2 중계 3개 · 3.3 프리셋 비교표(+`TestAmbientMotionContract` 제외 목록 확장 기록) · 3.4 후보 필터 행렬 · 3.5 runtime 두 열 + 기술 정보 · 3.6 신호
   - 구현자 증거: `internal/console/{optimization_matrix_view.go,templates_optimization.go,templates_signals.go,templates.go}`와 `a175_optimization_runtime_matrix_test.go` — registry 읽기 전용 행렬, 1·2·1 중계 링크, 999 sentinel 치환, runtime 독립 열, Help·shadow 설명만 접힘을 렌더함. lifecycle 미확인은 `OFF`가 아닌 `확인 불가`로, candidate preview 계약은 접힘 밖에 표시함. `TestOptimizationShowsExactlySixCategoriesAndThreeOwnerPolicies`·`TestOptimizationShowsExactlyThreePoliciesAndExternalBehavior`의 기존 `약 50%` 계약도 비교표 머리에 유지함.
-- [ ] 3.7 `gofmt`·`vet`·`go test ./internal/console/ -count=1`·`cmd/tossctl -run Console`. 고정 리터럴 수정 전수 기록 · `check_analysis.py` required N 기록
-  - 대기 사유: review 보완 뒤 외부 Go 시험이 실행 중이라 package-wide 재실행을 보류함. 완료 시 `analysis/{gofmt-output.txt,vet-output.txt,green-console-output.txt,tossctl-console-output.txt,check-analysis-output.txt}`에 exit=0을 기록하고 체크함. 대상 FLM 함수는 `TestAmbientMotionContract`, `TestCandidateFilterCardsContainExactMarketMetricMatrix`, `TestCandidateFilterCardsRemainMobileAndAccessibilityFriendly`, `TestOptimizationUsesOnePresetPreviewFlowWithoutClientDraft`임.
+- [x] 3.7 `gofmt`·`vet`·`go test ./internal/console/ -count=1`·`cmd/tossctl -run Console`. 고정 리터럴 수정 전수 기록 · `check_analysis.py` required N 기록
+  - 구현자 증거: `analysis/{gofmt-output.txt,vet-output.txt,green-console-output.txt,tossctl-console-output.txt,check-analysis-output.txt}` — 모두 exit=0. logic-map required 5이며 대상 FLM 함수는 `TestAmbientMotionContract`, `TestCandidateFilterCardsContainExactMarketMetricMatrix`, `TestCandidateFilterCardsRemainMobileAndAccessibilityFriendly`, `TestOptimizationUsesOnePresetPreviewFlowWithoutClientDraft`, `TestOptimizationDOMHasNoArbitraryInputAndSubmitsOnlyOwnerOptions`임.
 
 ## 4. 측정·리뷰
 - [x] 4.1 하네스 재촬영·전후 표(높이 5개 화면 + 잘림 측정)
@@ -47,5 +47,6 @@ Story: `STORY-TOS-a175` · Low(읽기 전용 렌더 재배치). FLM/BTM·변이 
 
 ## 고정 리터럴 시험 수정 기록
 - `TestCandidateFilterCardsContainExactMarketMetricMatrix`: 시장별 카드 3개라는 이전 구조 문자열 검사를 삭제하고, 실제 `.veto-matrix` 하나의 `scope=col` 3개·`scope=row` 3개·registry key 1회씩을 검사하도록 변경함.
-- `TestCandidateFilterCardsRemainMobileAndAccessibilityFriendly`: `<table>` 0개라는 이전 구조 검사를 삭제하고, 실제 행렬의 scope·시장 deep link·키보드 scroll region·readonly·`dl`을 검사하도록 변경함.
+- `TestCandidateFilterCardsRemainMobileAndAccessibilityFriendly`: `<table>` 0개라는 이전 구조 검사를 삭제하고, 실제 행렬의 scope·시장 deep link·키보드 scroll region·native 읽기 전용 표·`dl`을 검사하도록 변경함.
 - `TestAmbientMotionContract`: 사라진 `.choice-tile` 대신 POST form을 실제로 품는 `.preset-compare`를 glow 금지 대상에 넣음. 임의 속성 추가나 존재 전용 marker는 사용하지 않음.
+- `TestOptimizationDOMHasNoArbitraryInputAndSubmitsOnlyOwnerOptions`: lifecycle/evidence marker를 비개요 exit 화면에 가짜로 되살리지 않고, 실제 marker를 렌더하는 overview route에서 검사하도록 변경함.
