@@ -46,3 +46,20 @@
 - `TestPresetCompareDesktopStylesFillContainer`와 `TestOptimizationRelatedLinksAreLabelledPlainList` RED→GREEN을 남겼고, 격리 1280px 재측정에서 preset region `879/879`, 페이지 `1280/1280`을 확인함. 상세는 `analysis/p3-isolated-measurement.md`에 있음.
 - research: 기존 stylesheet·Go HTML template·DOM test helper로 충분했고, 새 utility·외부 UI library·의존성·라이선스 검토 대상은 없었음. Impeccable은 기존 Operate 콘솔 refinement로 적용하며 새 시각 세계·PRODUCT.md를 만들지 않았음.
 - UI 정적 검사: `analysis/p3-impeccable-detect.json`은 빈 배열임. a175 CSS 블록 안에서만 수정했고, 기존 preset form의 action·hidden field·버튼 문구·disabled 분기는 그대로임.
+
+### 완료 게이트 실행 영수증
+- 사전: main HEAD `526650e50`(origin/main `b7d34acad`, 로컬 1 앞) · W HEAD `efcd925f9` 확인 → Manager 편집 커밋 `a2eaf3458` → 5.1 체크·tracker 재생성 커밋 `d8ba4a1e3`(tracker `--check` rc 0) → `check_analysis.py --change a175-…` rc 0, required 5(번들 7) — `evidence complete or diff-proven exempt`. rebase 불필요(main 미이동).
+- 격리 worktree `/mnt/D/Axipient/workspace/TossOS.worktrees/a175-close`(detached `d8ba4a1e3`, 2026-10-27). **`/tmp` 밖**에 둔 것은 사람 결정이다. 빈 `/tmp/.git` 은 Codex `workspace-write` 샌드박스가 명령마다 만든다(2026-10-26 strace 확정). 그래서 `/tmp` 아래 worktree 의 go build 가 VCS status 128 로 무작위 실패한다(a174 1 차 실패). 이번 네 회차 내내 `/tmp/.git` 이 있었지만 rc 128 은 0 건이다.
+- 준비: `make sdd-infra` rc 0 → `python3 tools/sdd/sdd_sync.py --no-gbrain` 3 회 모두 codegraphcontext 단계만 300 초 시한 초과(advisory, CodeGraphContext 는 판정 밖) → `make sdd-check` 1 차 FAIL(sdd-test `test_codex_session_save` 5 건이 `save_session.py` 5 초 시한 초과, 당시 load average 195~460; 부하가 내려간 뒤 단독 7/7 PASS) → 재시도 rc 0 → `codegraph status .` `✓ Index is up to date`.
+- 1 차 gate(02:29~02:54 KST) FAIL ⑦ `make test`: `tools/a112-mb-us-source` `TestTrimpathBuiltCollectorCompletesOfflineIdentityPreflightBeforeReader`(248.71s) — `prescribed build identity: running executable does not match the prescribed rebuild`. 같은 worktree·HEAD 에서 그 시험만 단독으로 돌리면 PASS(89.97s).
+- 2 차 gate(03:22~04:14) ⑦ PASS, FAIL ⑧ `make test-seams`: 같은 패키지의 위 시험(211.35s)과 `TestTrimpathBuiltCollectorProcessHoldsBeforeExternalReadOnMissingCache`(203.20s)가 같은 문구로 실패(load 최대 약 15).
+  - 1·2 차 원인: a112 rebuild 가 실제 시각 120 초 시한(`main.go:82` `context.WithDeadline(… time.Now().Add(overallBudget))`) 안에서 돈다. 그 rebuild 오류가 `identity.go:488` 에서 digest 불일치와 같은 "does not match" 문구로 덮인다. 병렬 `make test` 아래에서 시한을 넘긴 것으로 판단한다. a175 diff(`internal/console/*`·문서) 밖이고, 이 패키지는 a174 PASS 뒤 커밋 0 이다. 원인을 구분하는 수정은 a178 에서 한다.
+- 3 차 gate(06:11~06:15, 시작 load 3.31) FAIL ⑥ `make sdd-check`: `CodeGraph status probe failed: … codegraph status . timed out after 15 seconds`. 직후 단독 실행은 3.38s rc 0. 원인은 gate 직전 CodeGraph 워밍업을 빠뜨린 것이다(a174 HANDOFF §4 에 기록된 함정, Manager 브리프 누락).
+- 4 차 gate(사용자 승인 "1 진행"):
+  - 조용함 확인: load 2.82, 다른 gate·go test 0.
+  - 워밍업 `codegraph status .`: 30.57s·37.77s·46.71s·16.84s 로 기준(15 초 미만)을 못 넘기다가 6.84s·8.95s 로 연속 2 회 통과. 전부 rc 0, Pending 0.
+  - 곧바로 `rtk proxy make -C /mnt/D/Axipient/workspace/TossOS.worktrees/a175-close gate CHANGE=a175-…`(07:53:37~08:22:12, 로그 `repo:` 는 격리 worktree) → **GATE PASS 11/11, rc 0**.
+  - ⑦ 의 a112 패키지는 `(cached)` 다. 같은 입력의 앞선 단독 진단 PASS 를 Go 테스트 캐시가 재사용했다. ⑧ 에서는 실제로 돌아 251.583s PASS.
+  - 1 초 간격 기록 1707 표본: `/tmp/.git` 1707/1707 있음, load 최대 10.82.
+- 원문 로그(잘리지 않음): `/tmp/a175-close-logs/{check_analysis,sdd-infra,sdd-sync{,2,3},sdd-check{,2},codex-save-solo,gate,gate2,gate3,gate4,a112-mb-solo,codegraph-status-diag,warmup.summary,watch3,watch4,archive}.log` — 세션 스크래치, 커밋 안 함.
+- archive: `openspec archive a175-optimization-and-runtime-matrix-views --yes`(1.4.1) → `operator-console: + 2 added`, `2026-10-26-a175-optimization-and-runtime-matrix-views`.
