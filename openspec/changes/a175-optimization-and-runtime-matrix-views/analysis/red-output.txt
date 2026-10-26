@@ -1,0 +1,23 @@
+--- FAIL: TestOptimizationHasOneNavigation (0.01s)
+    a175_optimization_runtime_matrix_test.go:25: optimization navigation link "/strategy-runtime" = 0, want 1
+    a175_optimization_runtime_matrix_test.go:25: optimization navigation link "/strategy-runtime/market-schedule" = 0, want 1
+    a175_optimization_runtime_matrix_test.go:25: optimization navigation link "/performance-history" = 0, want 1
+--- FAIL: TestRelayCategoriesAreOneLineAndKeepTheirLinks (0.01s)
+    --- FAIL: TestRelayCategoriesAreOneLineAndKeepTheirLinks/position-management (0.00s)
+        a175_optimization_runtime_matrix_test.go:67: position-management relay summary paragraphs = 3, want 1
+    --- FAIL: TestRelayCategoriesAreOneLineAndKeepTheirLinks/strategy-runtime (0.00s)
+        a175_optimization_runtime_matrix_test.go:67: strategy-runtime relay summary paragraphs = 2, want 1
+    --- FAIL: TestRelayCategoriesAreOneLineAndKeepTheirLinks/performance-history (0.00s)
+        a175_optimization_runtime_matrix_test.go:67: performance-history relay summary paragraphs = 3, want 1
+--- FAIL: TestExitPresetsCompareInOneTable (0.00s)
+    a175_optimization_runtime_matrix_test.go:92: preset comparison tables = 0, want 1
+--- FAIL: TestCandidateFiltersRenderAsMatrix (0.00s)
+    a175_optimization_runtime_matrix_test.go:135: candidate filter matrices = 0, want 1
+--- FAIL: TestStrategyRuntimeIsTwoColumnsWithFoldedContract (0.00s)
+    a175_optimization_runtime_matrix_test.go:158: runtime grids = 0, want 1
+--- FAIL: TestSignalsCommonCopyOnceAndShadowBandsFolded (0.00s)
+    a175_optimization_runtime_matrix_test.go:199: signals common copy = 0, want 1
+    a175_optimization_runtime_matrix_test.go:203: shadow-band details = 0, want 2
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.091s
+FAIL

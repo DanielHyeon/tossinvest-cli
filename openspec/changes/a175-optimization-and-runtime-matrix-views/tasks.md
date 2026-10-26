@@ -12,12 +12,18 @@ Story: `STORY-TOS-a175` · Low(읽기 전용 렌더 재배치). FLM/BTM·변이 
   - 구현자 증거: `analysis/measure/baseline-20261026T1019Z.json`(96 metrics), `baseline-20261026T1019Z-outline.json`(구조 count) — 빈 HOME/config·자격증명 0·127.0.0.1:38325 격리 콘솔에서 GET만 수행하고 PID `1467793` 종료·포트 해제를 확인함. `analysis/pre-edit-analysis.txt` — base→HEAD required 0.
 
 ## 2. RED
-- [ ] 2.1 `TestOptimizationHasOneNavigation`: 개요 렌더에 `optimization-nav` 1개, 카드 그리드 0, KPI 블록은 개요에만(다른 카테고리 렌더에서 0), 보조 링크 3개는 메뉴 안에 1회
-- [ ] 2.2 `TestRelayCategoriesAreOneLineAndKeepTheirLinks`: 종목별 관리·전략·실행·성과·이력 렌더에 요약 `<p>` 1, 링크 수는 base 와 같음(1·2·1), 머리 KPI 0, 성과·이력의 감사 표는 Audit fixture 가 있을 때 존재
-- [ ] 2.3 `TestExitPresetsCompareInOneTable`: `table.preset-compare` 1개, 열 수 = `len(.Policies)`(레지스트리에서 셈), `/optimization/exit-policy` 프리셋 폼 = 열 수(열마다 1, hidden 5개·버튼 문구·selected 의 disabled 바이트 동일), 칸 값 = 각 정책 `Ladder.Rungs`, runner sentinel 칸에 `999` 문자열 0·"고정 목표 없음" 1, `ExitPolicyWritable=false` fixture 에서 폼 0·읽기 전용 문구 열마다 1
-- [ ] 2.4 `TestCandidateFiltersRenderAsMatrix`: `table.veto-matrix` 1개(행 = 키 3 × 열 = 시장 2, 레지스트리에서 셈), 같은 값 행만 1회로 합치고 KR≠US fixture 에서는 시장별로 남음, 사유 코드·미측정 표기 전수 유지
-- [ ] 2.5 `TestStrategyRuntimeIsTwoColumnsWithFoldedContract`: `.runtime-grid` 안 KR·US 블록 2, `details.tech` 안에 Schema·Golden 레지스트리 항목 전부 존재, 안전 상태 단어(UNWIRED·NOT_CONFIGURED·UNKNOWN) 는 접히지 않음, KR 만 실패한 fixture 에서 US 블록 값이 그대로 렌더됨(독립 projection)
-- [ ] 2.6 `TestSignalsCommonCopyOnceAndShadowBandsFolded`: 공통 문장 1회, 그림자 밴드 `details` 2(기본 닫힘), veto 표·후보 수는 `details` 밖
+- [x] 2.1 `TestOptimizationHasOneNavigation`: 개요 렌더에 `optimization-nav` 1개, 카드 그리드 0, KPI 블록은 개요에만(다른 카테고리 렌더에서 0), 보조 링크 3개는 메뉴 안에 1회
+  - 구현자 증거: `analysis/red-output.txt` — 메뉴 안 보조 링크 3개가 모두 0으로 실패함.
+- [x] 2.2 `TestRelayCategoriesAreOneLineAndKeepTheirLinks`: 종목별 관리·전략·실행·성과·이력 렌더에 요약 `<p>` 1, 링크 수는 base 와 같음(1·2·1), 머리 KPI 0, 성과·이력의 감사 표는 Audit fixture 가 있을 때 존재
+  - 구현자 증거: `analysis/red-output.txt` — 기존 relay 요약 문단이 3·2·3으로 실패함.
+- [x] 2.3 `TestExitPresetsCompareInOneTable`: `table.preset-compare` 1개, 열 수 = `len(.Policies)`(레지스트리에서 셈), `/optimization/exit-policy` 프리셋 폼 = 열 수(열마다 1, hidden 5개·버튼 문구·selected 의 disabled 바이트 동일), 칸 값 = 각 정책 `Ladder.Rungs`, runner sentinel 칸에 `999` 문자열 0·"고정 목표 없음" 1, `ExitPolicyWritable=false` fixture 에서 폼 0·읽기 전용 문구 열마다 1
+  - 구현자 증거: `analysis/red-output.txt` — preset comparison table 0개로 실패함.
+- [x] 2.4 `TestCandidateFiltersRenderAsMatrix`: `table.veto-matrix` 1개(행 = 키 3 × 열 = 시장 2, 레지스트리에서 셈), 같은 값 행만 1회로 합치고 KR≠US fixture 에서는 시장별로 남음, 사유 코드·미측정 표기 전수 유지
+  - 구현자 증거: `analysis/red-output.txt` — candidate filter matrix 0개로 실패함.
+- [x] 2.5 `TestStrategyRuntimeIsTwoColumnsWithFoldedContract`: `.runtime-grid` 안 KR·US 블록 2, `details.tech` 안에 Schema·Golden 레지스트리 항목 전부 존재, 안전 상태 단어(UNWIRED·NOT_CONFIGURED·UNKNOWN) 는 접히지 않음, KR 만 실패한 fixture 에서 US 블록 값이 그대로 렌더됨(독립 projection)
+  - 구현자 증거: `analysis/red-output.txt` — runtime grid 0개로 실패함.
+- [x] 2.6 `TestSignalsCommonCopyOnceAndShadowBandsFolded`: 공통 문장 1회, 그림자 밴드 `details` 2(기본 닫힘), veto 표·후보 수는 `details` 밖
+  - 구현자 증거: `analysis/red-output.txt` — 공통 문장·shadow details가 각각 0개로 실패함.
 
 ## 3. GREEN (design §2 순서) 
 - [ ] 3.1 내비 하나·KPI 개요 한정 · 3.2 중계 3개 · 3.3 프리셋 비교표(+`TestAmbientMotionContract` 제외 목록 확장 기록) · 3.4 후보 필터 행렬 · 3.5 runtime 두 열 + 기술 정보 · 3.6 신호

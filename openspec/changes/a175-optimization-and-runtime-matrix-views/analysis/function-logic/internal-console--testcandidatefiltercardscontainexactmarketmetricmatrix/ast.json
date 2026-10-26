@@ -1,0 +1,211 @@
+{
+  "file": "internal/console/optimization_candidate_filters_test.go",
+  "source_sha256": "a6c1de25d4cf9a2a30a9ff12de849cce965d77f1475b7bbe65e804b46b6d1454",
+  "package": "console",
+  "function": "TestCandidateFilterCardsContainExactMarketMetricMatrix",
+  "signature": "TestCandidateFilterCardsContainExactMarketMetricMatrix(params=1, results=0)",
+  "start": {
+    "line": 39,
+    "column": 1
+  },
+  "end": {
+    "line": 58,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 43,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 45,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 49,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 52,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 53,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 7
+      },
+      "text": "newDashboardHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 13
+      },
+      "text": "candidateFilterNode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 36
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 15
+      },
+      "text": "nodesByAttribute"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 74
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 12
+      },
+      "text": "nodesByAttribute"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 78
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 14
+      },
+      "text": "exactElementTextCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 44,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 48,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 53,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
