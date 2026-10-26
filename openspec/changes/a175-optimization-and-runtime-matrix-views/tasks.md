@@ -48,8 +48,11 @@ Story: `STORY-TOS-a175` · Low(읽기 전용 렌더 재배치). FLM/BTM·변이 
   - Manager 실측(2026-10-26): 격리 콘솔 `127.0.0.1:38351`, HEAD `293a19f`, 빈 config·임시 HOME·클릭 0·콘솔 오류 0. PID `2355508` 종료와 포트 해제를 확인함. exit-protection 1280px는 KPI 0·요약 한 줄·열 4(단계+3)·폼 3·`999` 0·`고정 목표 없음` 1. candidate-filters는 1280px 높이 2083(본문 1533)·행 3·공통 3·잘림 0, 390px dark는 페이지 390·표 342/342·가로 스크롤 없음·펼침 표식 `list-item`. position-management 1280px는 페이지 1261·본문 386·nav 710·KPI 0·링크 1. `/strategy-runtime` 1280px는 KR·US 두 열(left 57/641)·계약 접힘·미기동 줄을 확인함.
 
 ## 5. 종결 (Opus)
-- [ ] 5.1 rebase → FLM 번들(필요 시) → tracker → sdd-sync → gate → archive → push → retain
+- [x] 5.1 rebase → FLM 번들(필요 시) → tracker → sdd-sync → gate → archive → push → retain
   - 사람 승인: 사용자가 a175 종결(Manager 편집 커밋·5.1 체크·tracker·`/tmp` 밖 격리 gate `/mnt/D/Axipient/workspace/TossOS.worktrees/a175-close`·전체 `make gate`·archive·ff·push(로컬 `526650e50` 포함)·정리·retain)을 "진행"으로 승인(2026-10-27, a175 한정). 격리 gate 를 /tmp 밖에 두는 것은 `/tmp/.git` 원인(Codex workspace-write 샌드박스) 조사의 결정 1. 운영 이미지·배포는 범위 밖.
+  - rebase: 불필요 — 브랜치가 main `526650e50` 에서 분기했고 main 이 그 뒤로 움직이지 않음(ff 가능). Manager 편집 커밋 `a2eaf3458`.
+  - gate ⑤ 사전 실행: `check_analysis.py --change a175-…` rc 0, base `b7d34acad` → working tree, required 5(`TestAmbientMotionContract` · `TestCandidateFilterCardsContainExactMarketMetricMatrix` · `TestCandidateFilterCardsRemainMobileAndAccessibilityFriendly` · `TestOptimizationUsesOnePresetPreviewFlowWithoutClientDraft` · `TestOptimizationDOMHasNoArbitraryInputAndSubmitsOnlyOwnerOptions`) — `analysis/function-logic/` 번들 7(Terra 작성, 새 함수 `candidateFilterDescriptorEqual`·`candidateFilterMatrixFromMarkets` 포함) → `evidence complete or diff-proven exempt`. 도구는 required 수만 찍고 이름은 찍지 않으므로 이름은 4.6 Terra 기록과 번들 디렉터리로 대조함. 창 안 base 뒤 커밋 10 개는 전부 이 change 의 것(`526650e50`~`a2eaf3458`).
+  - 완료 게이트 결과는 review.md 「완료 게이트 실행 영수증」에 적음(관례: 체크 → tracker → gate).
 
 ## 고정 리터럴 시험 수정 기록
 - `TestCandidateFilterCardsContainExactMarketMetricMatrix`: 시장별 카드 3개라는 이전 구조 문자열 검사를 삭제하고, 실제 `.veto-matrix` 하나의 `scope=col`·시장 순서 합집합 `scope=row`·registry key 1회씩을 검사하도록 변경함.
