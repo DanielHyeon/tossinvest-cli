@@ -23,4 +23,6 @@ Low~Medium. `/verify` 는 승인 창이 있는 화면이라 폼 마크업은 건
 Story acceptance(`STORY-TOS-a176`): 개요 요약 1280 ≤ 900px, 설명 중복 0, `/verify` 폼 바이트 동일.
 
 ## not-applicable
-FLM/BTM·변이 원장·다중 적대 리뷰: 비례 원칙.
+변이 원장·다중 적대 리뷰: 비례 원칙(읽기 전용 렌더, `/verify` 폼은 바이트 불변). FLM/BTM 은 면제를 미리 주장하지 않는다: 기존 Go 함수 본문(시험 함수 포함)을 고치면 gate ⑤ 가 함수마다 번들을 요구한다. 새 파일·새 메서드를 우선한다.
+
+Manager 착수 전 정정(2026-10-27): design §1·§2.2 ★ — 단계 데이터는 `WriteSteps` 문자열이라 verifylive 를 편집하지 않고 알려진 ID 경계에서 무손실 분할(이으면 원문과 바이트 동일, 실패 시 종전 `<pre>`), 개요 요약 `dl.console-summary` 와 구조적 미측정 1회 처리는 a173 이 이미 넣었음.
