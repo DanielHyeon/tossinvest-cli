@@ -92,6 +92,80 @@ func TestStartupReadinessAppearsOnThreeScreensWithoutControls(t *testing.T) {
 	}
 }
 
+func TestStartupReadinessMakesEachBrokenSeamUnknownOnEverySurface(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		tweak  func(*Options)
+		labels []string
+		reason string
+	}{
+		{
+			name:   "한도 미배선",
+			tweak:  func(o *Options) { o.Limits = nil },
+			labels: []string{"자동화 게이트", "1. 한도 다섯 개와 통화"},
+			reason: "설정 seam이 배선되지 않았다",
+		},
+		{
+			name:   "한도 읽기 실패",
+			tweak:  func(o *Options) { o.Limits = &fakeLimits{loadErr: errors.New("한도 읽기 실패")} },
+			labels: []string{"자동화 게이트", "1. 한도 다섯 개와 통화"},
+			reason: "설정을 읽을 수 없다: 한도 읽기 실패",
+		},
+		{
+			name:   "거래 정책 미배선",
+			tweak:  func(o *Options) { o.TradingPolicy = nil },
+			labels: []string{"3. 거래 정책"},
+			reason: "설정 seam이 배선되지 않았다",
+		},
+		{
+			name:   "거래 정책 읽기 실패",
+			tweak:  func(o *Options) { o.TradingPolicy = &fakeTrading{loadErr: errors.New("정책 읽기 실패")} },
+			labels: []string{"3. 거래 정책"},
+			reason: "설정을 읽을 수 없다: 정책 읽기 실패",
+		},
+		{
+			name:   "자동 시작 미배선",
+			tweak:  func(o *Options) { o.EngineBoot = nil },
+			labels: []string{"엔진 자동 시작"},
+			reason: "설정 seam이 배선되지 않았다",
+		},
+		{
+			name:   "자동 시작 읽기 실패",
+			tweak:  func(o *Options) { o.EngineBoot = &fakeAutostart{loadErr: errors.New("자동 시작 읽기 실패")} },
+			labels: []string{"엔진 자동 시작"},
+			reason: "설정을 읽을 수 없다: 자동 시작 읽기 실패",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			settings := fullSettingsHarness(t, tc.tweak)
+			settings.authenticate(t)
+			pages := map[string]string{
+				pathSettingsStanding: body(t, settings.get(t, pathSettingsStanding)),
+				pathSettingsDaily:    body(t, settings.get(t, pathSettingsDaily)),
+			}
+			console := newEngineHarness(t, func(o *Options) {
+				o.Settings = &fakeSettings{}
+				o.Limits = &fakeLimits{gate: fullLimits()}
+				o.TradingPolicy = &fakeTrading{block: fullPolicy()}
+				o.Gate = &fakeGate{}
+				o.EngineBoot = &fakeAutostart{}
+			}, tc.tweak)
+			console.authenticate(t)
+			pages[pathVerifyConsole] = body(t, console.get(t, pathVerifyConsole))
+
+			for path, page := range pages {
+				section := readinessSection(t, page)
+				for _, label := range tc.labels {
+					row := readinessRowFor(t, section, label)
+					if !strings.Contains(row, `data-readiness-state="unknown"`) || !strings.Contains(row, tc.reason) {
+						t.Errorf("%s %s의 %q 행이 unknown 사유를 그대로 보이지 않는다:\n%s", path, tc.name, label, row)
+					}
+				}
+			}
+		})
+	}
+}
+
 func TestGuardianPresetsRenderAsOneMatrixPerCurrency(t *testing.T) {
 	h := fullSettingsHarness(t)
 	h.authenticate(t)
@@ -206,6 +280,21 @@ func assertReadinessShape(t *testing.T, section string) {
 			t.Errorf("준비도에 %q가 없다:\n%s", want, section)
 		}
 	}
+}
+
+func readinessRowFor(t *testing.T, section, label string) string {
+	t.Helper()
+	marker := "<strong>" + label + "</strong>"
+	i := strings.Index(section, marker)
+	if i < 0 {
+		t.Fatalf("준비도에 %q 행이 없다:\n%s", label, section)
+	}
+	start := strings.LastIndex(section[:i], `<li class="readiness-row"`)
+	end := strings.Index(section[i:], "</li>")
+	if start < 0 || end < 0 {
+		t.Fatalf("준비도 %q 행 경계를 찾지 못했다", label)
+	}
+	return section[start : i+end+len("</li>")]
 }
 
 func toggleRowFragment(t *testing.T, page, key string) string {

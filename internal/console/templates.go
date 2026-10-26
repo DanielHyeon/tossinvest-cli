@@ -479,25 +479,37 @@ body:has([data-reload=on]) :is(body > header, .console-status)::after { animatio
 }
 /* a174 — 기동 준비·프리셋 비교표·거래 정책 줄 */
 .readiness { border-top-color: var(--line-strong); }
+.readiness, #limits, #trading { margin-block: var(--space-2); padding-block: 0; }
+#limits { margin-top: calc(var(--space-2) - 2px); }
+.readiness > h2, #limits > h2, #trading > h2 { margin-block: var(--space-2) var(--space-1); }
+.readiness > p { margin-block: var(--space-1); }
 .readiness > ol { display: grid; gap: var(--space-1); margin: var(--space-2) 0 0; padding: 0; list-style: none; }
 .readiness-row { display: grid; grid-template-columns: minmax(11rem, 1fr) auto; gap: var(--space-1) var(--space-2); align-items: baseline;
-  padding: var(--space-2) 0; border-bottom: 1px solid var(--line-soft); }
+  padding: 0; border-bottom: 1px solid var(--line-soft); }
 .readiness-row > .muted { grid-column: 1 / -1; font-size: var(--text--1); }
 .readiness-row .status-pill.ok { color: var(--ok); }
 .readiness-row .status-pill.warn { color: var(--warn); }
 .readiness-row .status-pill.unknown { color: var(--ink-3); }
-.preset-matrix { min-width: 42rem; }
-.preset-matrix th { min-width: 9rem; }
+.preset-matrix { width: max-content; min-width: 100%; line-height: 1.3; }
+.preset-matrix th, .preset-matrix td { padding: 0.1rem 0.3rem; white-space: nowrap; }
 .preset-matrix form { display: block; }
-.preset-matrix button { white-space: normal; text-align: left; }
-form[action="/settings/trading"] { display: block; }
-.toggle-row { display: grid; grid-template-columns: minmax(12rem, auto) auto; gap: var(--space-1) var(--space-2); align-items: center; }
-.toggle-row .muted { grid-column: 1 / -1; margin-inline-start: 0; }
+.preset-matrix button { padding: 0.2rem 0.45rem; white-space: nowrap; text-align: left; }
+#limits > p, #trading > p { margin-block: var(--space-1); }
+#adoption { margin-block: var(--space-1); }
+#limits .notice, #trading .notice { padding: 0.2rem var(--space-2); margin-block: var(--space-1); }
+#trading form { display: block; }
+.toggle-row { display: grid; grid-template-columns: minmax(12rem, auto) auto minmax(0, 1fr); gap: var(--space-1) var(--space-2); align-items: center; }
+.toggle-row .muted { margin-inline-start: 0; }
+#trading .toggle-row { min-height: 44px; margin: 0; padding-block: 0.15rem; }
+@media (min-width: 45rem) {
+  .readiness > ol { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--space-3); }
+}
 @media (max-width: 44rem) {
   .readiness-row { grid-template-columns: 1fr; gap: var(--space-1); }
   .readiness-row > .muted { grid-column: auto; }
   .preset-matrix { min-width: 36rem; }
   .toggle-row { grid-template-columns: 1fr; }
+  .toggle-row .muted { grid-column: auto; }
 }
 {{end}}
 

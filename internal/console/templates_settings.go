@@ -83,7 +83,7 @@ const settingsTemplates = `
   <ol>
     {{range .}}
     <li class="readiness-row" data-readiness-state="{{.State}}">
-      <div><strong>{{.Label}}</strong>{{if .Href}} <a href="{{.Href}}">설정 열기</a>{{end}}</div>
+      <div><strong>{{.Label}}</strong>{{if .Href}} <a href="{{.Href}}" aria-label="{{.Label}} 설정 열기">설정 열기</a>{{end}}</div>
       <span class="status-pill readiness-state {{.State}}">{{.StatusText}}</span>
       <span class="muted">{{.Detail}}</span>
     </li>
@@ -228,42 +228,41 @@ const settingsTemplates = `
   reaches the server, so the browser brings it here — to the default tab, which
   does not have that section. This is the one thing that can meet it.
 */}}
-<p id="adoption" class="aside">편입 규칙은 <a href="/settings/standing#adoption">상시 탭</a>으로
-옮겼다 — 비가역이고 주 1회 미만으로 만지는 설정이라 당일 조정과 같은 화면에 두지 않는다.</p>
+<p id="adoption" class="aside">편입 규칙은 <a href="/settings/standing#adoption">상시 탭</a>에서 관리한다.</p>
 
 <section id="limits" data-settings-card="limits">
   <h2>Guardian 한도</h2>
-  <p>자동 진입 하나가 얼마나 커질 수 있는지, 계좌가 얼마나 열릴 수 있는지, 하루에 얼마까지
-  잃으면 진입이 멈추는지. 다섯 값은 <strong>진입</strong>에만 적용된다 — 청산은 RISK_REDUCING이라
-  이 한도의 대상이 아니므로, 여기를 아무리 조여도 손절·비상 청산은 느려지지 않는다.</p>
+  <p>다섯 값은 <strong>자동 진입</strong>만 제한한다. 청산은 대상이 아니므로 손절·비상 청산은 느려지지 않는다.</p>
 
   {{with $.NoticeFor "limits"}}<p class="notice" data-save-result="limits">{{.}}</p>{{end}}
   {{if .LimitsLoadErr}}<p class="danger">한도를 읽을 수 없다: <code>{{.LimitsLoadErr}}</code></p>{{end}}
 
-  <div class="table-scroll" role="region" aria-label="Guardian 한도" tabindex="0"><table id="guardian-current">
-    <tr><th>한도</th><th>설정값</th></tr>
-    {{range .LimitRows}}<tr><td>{{.Label}}</td><td>{{.Value}}{{if .Unit}} {{.Unit}}{{end}}</td></tr>
-    {{end}}
-    <tr><td>계좌 기준 통화</td><td>{{.LimitCurrencyText}}</td></tr>
-  </table></div>
-
+  <details class="explain">
+    <summary>현재 Guardian 한도 전체 보기</summary>
+    <div class="table-scroll" role="region" aria-label="Guardian 한도" tabindex="0"><table id="guardian-current">
+      <tr><th>한도</th><th>설정값</th></tr>
+      {{range .LimitRows}}<tr><td>{{.Label}}</td><td>{{.Value}}{{if .Unit}} {{.Unit}}{{end}}</td></tr>
+      {{end}}
+      <tr><td>계좌 기준 통화</td><td>{{.LimitCurrencyText}}</td></tr>
+    </table></div>
   {{if not .LimitsUnset}}{{if not .LimitsPartlyConfigured}}
-  <p class="muted">현재 값은 {{with .MatchingTier}}<strong>{{.}}</strong>와 일치한다{{else}}
-  <strong>사용자 지정값</strong>이다{{end}} — 레지스트리와 대조한 결과이고, 누가 골랐는지에 대한
-  주장은 아니다(같은 숫자를 손으로 적었을 수도 있다).</p>
+    <p class="muted">현재 값은 {{with .MatchingTier}}<strong>{{.}}</strong>와 일치한다{{else}}
+    <strong>사용자 지정값</strong>이다{{end}} — 레지스트리와 대조한 결과이고, 누가 골랐는지에 대한
+    주장은 아니다(같은 숫자를 손으로 적었을 수도 있다).</p>
   {{end}}{{end}}
+  </details>
+
+  <p class="muted">automation gate는 지금 <strong>{{if .Gate.Enabled}}ON{{else}}OFF{{end}}</strong>이다.
+  스위치는 <a href="/settings/standing#gate">상시 탭</a>에 있고 이 카드에서는 <strong>콘솔에서 편집할 수 없다</strong>.</p>
 
   {{if .LimitGuard.Blocked}}{{template "cardblocked" .LimitGuard}}
   {{else}}
-  <h3>프리셋</h3>
-  <p class="muted">StockOS <code>risk_profiles.py</code>의 티어를 옮긴 것이다. 클릭 한 번이 다섯 값과
-  통화를 함께 기록한다. <strong>등록된 티어 위로는 올릴 수 없다</strong> — 상한은 그 통화에 등록된
-  티어의 필드별 최대이고, 그보다 큰 값은 서버가 거부한다.</p>
-  {{range .LimitTierMatrices}}
+  <p class="muted">프리셋 하나는 다섯 한도와 통화를 함께 기록한다. 등록된 티어 위 값은 서버가 거부한다.</p>
+  {{range $index, $matrix := .LimitTierMatrices}}
   <div class="table-scroll" role="region" aria-label="{{.Currency}} Guardian 프리셋 비교표" tabindex="0">
     <table class="preset-matrix" data-preset-currency="{{.Currency}}">
       <thead><tr><th scope="col">한도</th><th scope="col">현재</th>
-      {{range .Tiers}}<th scope="col"><form method="post" action="/settings/limits/preset" data-preset-tier="{{.ID}}">
+      {{range .Tiers}}<th scope="col"><form method="post" action="/settings/limits/preset" data-preset-tier="{{.ID}}" class="card-preview" data-limit-axis="비교표" aria-label="{{.Label}} 적용 후: 아래 표에서 현재와 다섯 한도를 비교">
         <input type="hidden" name="csrf" value="{{$.CSRF}}">
         <input type="hidden" name="tier" value="{{.ID}}">
         <button type="submit">{{.Label}}{{if .Recommended}} · 권장{{end}} 기록</button>
@@ -274,7 +273,7 @@ const settingsTemplates = `
     </table>
   </div>
   {{if .Note}}<p class="muted">{{.Note}}</p>{{end}}
-  <p class="muted" data-currency-consequence="{{.Currency}}">{{.Consequence}}</p>
+  <p class="{{if eq $index 0}}notice{{else}}aside{{end}}" data-currency-consequence="{{.Currency}}">{{.Consequence}}</p>
   {{end}}
 
   <details class="explain">
@@ -316,9 +315,7 @@ const settingsTemplates = `
 
 <section id="trading" data-settings-card="trading">
   <h2>거래 정책</h2>
-  <p>엔진의 청산 경로가 실제로 쓰는 네 개다. <code>amend</code>·<code>conditional</code>·
-  <code>fractional</code>은 이 빌드의 어느 루프도 쓰지 않으므로 여기 없고, 저장은 그 세 값을
-  파일에 적힌 그대로 둔다.</p>
+  <p>엔진 청산 경로가 쓰는 네 개만 조정한다. 다른 정책 값은 그대로 둔다.</p>
 
   {{with $.NoticeFor "trading"}}<p class="notice" data-save-result="trading">{{.}}</p>{{end}}
   {{if .TradingLoadErr}}<p class="danger">거래 정책을 읽을 수 없다: <code>{{.TradingLoadErr}}</code></p>{{end}}
