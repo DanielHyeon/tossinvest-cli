@@ -63,7 +63,7 @@
 
 ## 4. 측정 (a173 하네스 재사용: `openspec/changes/a173-console-ux-common-cleanup/measure/`)
 - 기준선: a173 after 값(`/settings/daily` 1280 높이 5237px, 상자 3, 폼 7, 입력 24).
-- 목표: `/settings/daily` ≤ 2500px, 상자 ≤ 3, 인지 부하 표 결정·기억 항목 "높음" 0, 모바일 390 에서 프리셋 표 가로 스크롤은 허용하되 잘림 0.
+- 목표: `/settings/daily` ≤ 2800px(정의 때 2500 — proposal 완료 기준 조정 참조), 상자 ≤ 3, 인지 부하 표 결정·기억 항목 "높음" 0, 모바일 390 에서 프리셋 표 가로 스크롤은 허용하되 잘림 0.
 
 ## 5. 안전
 - 토글·한도 저장 폼의 action/method/field/csrf 를 **렌더 비교 시험**으로 전후 동일 단언(폼 바이트 diff 0 또는 필드 집합 동일).
