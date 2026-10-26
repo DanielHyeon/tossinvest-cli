@@ -36,14 +36,18 @@ Story: `STORY-TOS-a174` · Low~Medium(설정 폼 마크업 재배치, 설정 저
   - 증거(Terra, 2026-10-26): `gofmt -l internal/console` 빈 출력, `go vet ./internal/console/` PASS, `go test ./internal/console/ -count=1` PASS, `go test ./cmd/tossctl/ -run Console -count=1` PASS. `check_analysis.py`는 required **1**(`Console.handleDashboard`) 및 `evidence complete or diff-proven exempt`를 출력함(착지 커밋 전이라 landing record 없음).
 
 ## 4. 측정·리뷰
-- [ ] 4.1 하네스 재촬영 → `measure/after-<utc>.json`, 전후 표(`/settings/daily` 높이·상자·폼·입력, 세 화면 체크리스트 유무)
-- [ ] 4.2 `cognitive-load-assessment` 설정 3탭 + 검증 콘솔 표(`analysis/cognitive-load-after.md`), 결정·기억 "높음" 0
-- [ ] 4.3 `design-critic` 재점수 + `fixing-accessibility`(체크박스 라벨·표 머리·링크 텍스트) 점검 → `analysis/review-after.md`
-- [ ] 4.4 gstack `review`(경량) → `review.md` 「구현 리뷰」. 변이 1회: `StartupReadiness` 에서 거래 정책 줄 제거 → 2.1 FAIL 확인 후 원복(기록, 원복은 심볼 수를 세어 확인)
+- [x] 4.1 하네스 재촬영 → `measure/after-<utc>.json`, 전후 표(`/settings/daily` 높이·상자·폼·입력, 세 화면 체크리스트 유무)
+  - 증거(Terra, 2026-10-26): `analysis/measure/after-20261026T013100Z.json`(96 metrics)·`after-20261026T013100Z-outline.json`. `/settings/daily` light/1280은 **5237→2445px**, 상자 3→3, form 7→7, input 24→24, button 7→7; `/settings/standing`·`/settings/daily`·`/verify-console`에 readiness를 렌더함. 격리 콘솔은 빈 설정·자격증명 0·38321 포트 GET만으로 실행했고 parent 2806550, child 2807015 종료 뒤 `port_38321_released=true` 확인.
+- [x] 4.2 `cognitive-load-assessment` 설정 3탭 + 검증 콘솔 표(`analysis/cognitive-load-after.md`), 결정·기억 "높음" 0
+  - 증거(Terra, 2026-10-26): `analysis/cognitive-load-after.md`; 전용 도구 부재를 기록하고 렌더 원문·격리 1280/390 화면·콘솔 규칙으로 수동 점검. 설정 3탭과 검증 콘솔 모두 결정·기억 "높음" 0.
+- [x] 4.3 `design-critic` 재점수 + `fixing-accessibility`(체크박스 라벨·표 머리·링크 텍스트) 점검 → `analysis/review-after.md`
+  - 증거(Terra, 2026-10-26): `analysis/review-after.md`; 전용 design-critic 미설치 사실과 수동 점검 범위를 기록함. `impeccable detect`는 변경 대상에서 `[]`, 접근성·모션·데스크톱/모바일 격리 렌더를 확인함.
+- [x] 4.4 gstack `review`(경량) → `review.md` 「구현 리뷰」. 변이 1회: `StartupReadiness` 에서 거래 정책 줄 제거 → 2.1 FAIL 확인 후 원복(기록, 원복은 심볼 수를 세어 확인)
+  - 증거(Terra, 2026-10-26): `review.md` 「구현 리뷰」. 거래 정책 행과 해당 지역 변수를 함께 제거한 변이에서 2.1이 행 수 5·거래 정책 부재로 FAIL했고, 원복 뒤 `거래 정책 행`·`tradingKnown` 심볼 수가 각각 1, 대상 시험 PASS를 확인함.
 - [ ] 4.5 Manager 검증 — 크롬으로 상시·당일·검증 콘솔 × 데스크톱/모바일 × 라이트/다크 직접 확인, 버튼 0
 
 ## 5. 종결 (Manager 승인 뒤, Opus)
 - [ ] 5.1 rebase → FLM 번들(required 가 0 이 아니면) → tracker → sdd-sync → `make gate` → archive → push → retain
 
 ## 고정 리터럴 시험 수정 기록
-(없음 — 기존 시험 함수 수정 0, 새 `readiness_test.go`만 추가)
+(없음 — 기존 시험 함수 수정 0. a174 새 `readiness_test.go`에 독립 seam 하위 시험만 추가했고 기존 고정 literal 단언은 약화하지 않음.)

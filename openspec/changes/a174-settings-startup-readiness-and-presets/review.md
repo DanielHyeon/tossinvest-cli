@@ -28,3 +28,15 @@
 - 실패 시험 선행: RED 2.1~2.4를 production 편집 전에 작성·실행함.
 - 설정·DB·journal 변경과 rollback: 없음. 읽기 전용 뷰 모델과 템플릿 배치만 추가하며, 되돌림은 이 change의 코드·템플릿 커밋을 되돌리는 것으로 충분함.
 - 안전 불변식: 통과. live 주문·운영 토글·엔진 제어 handler와 POST 계약을 변경하지 않음.
+
+## 구현 리뷰 (Terra, 2026-10-26, 경량)
+
+- 연구: `search-first` 빠른 점검에서 현 저장소의 `GatePreflight`·`LimitTierCards()`·`config.GuardianTiers()`와 기존 console 계약 시험을 확인함. 한도 값·프리셋·POST 계약은 새 의존성이나 외부 구현 없이 이 정본을 재사용하는 것으로 결정함. 외부 문서·레지스트리 검색은 로컬 정본이 충분해 수행하지 않았고, 새 의존성·라이선스 영향은 없음. 호환성은 기존 form 계약 시험과 console 회귀 시험으로 확인함.
+- 적용 범위: UI 변경이므로 `impeccable`·접근성·모션 지침을 적용함. `gstack review` 경량 절차로 독립 specialist 네 개를 실행했고, 전용 design-critic은 미설치여서 `analysis/review-after.md`의 수동 검토로 대체함.
+- 리뷰 기준: Manager가 지정한 구현 base `01e61a756`을 사용함. `origin/main` diff에는 선행 a173/Manager 문서가 섞여 있어 a174 구현 범위를 판정하는 기준으로 쓰지 않음.
+- 범위 검사: `gstack-diff-scope 01e61a756`은 backend 범위로 분류함(Go 템플릿 포함). 변경 대상 `impeccable detect` 결과는 `[]`임.
+- specialist 결과: security·performance는 `NO FINDINGS`. testing은 각 seam 단독 실패가 다른 unknown 행에 가려질 수 있음을 정보성으로 지적했고, 여섯 단독 nil/error 케이스를 상시·당일·검증 콘솔에 각각 단언하는 새 시험으로 보강함. maintainability는 `GatePreflight` 절 이름의 문자열 매핑 드리프트 위험을 정보성으로 지적함.
+- maintainability 처분: 미해결·정보성. 안정 ID 추가는 `preflightClause`/`GatePreflight` 계약 변경을 요구하고, 이 change는 본문·판정 구조 편집 금지이므로 수행하지 않음. 절 이름이 바뀌면 해당 행은 통과가 아니라 `unknown`과 사유를 표시함.
+- 변이: `StartupReadiness`에서 거래 정책 행과 그 지역 변수를 함께 제거했을 때 `TestStartupReadinessAppearsOnThreeScreensWithoutControls`가 행 수 5, 거래 정책 행 부재로 FAIL함. 원복 뒤 `거래 정책 행`·`tradingKnown` 심볼 수가 각각 1이고 대상 시험 PASS임.
+- 미실행: Claude/Codex 적대적 전체 리뷰와 구조화 리뷰는 Manager가 요청한 "경량" 범위를 넘고 종결자 검증과 중복되어 실행하지 않음. gstack 업그레이드는 사용자 범위 밖 전역 변경이므로 하지 않음.
+- 결론: 차단·고위험 발견 없음. 위 문자열 매핑 정보성 위험을 Manager handoff에 남김.
