@@ -1,0 +1,16 @@
+--- FAIL: TestOptimizationCategorySummaryFailsClosedForUnavailableLifecycle (0.01s)
+    a175_optimization_runtime_matrix_test.go:64: unavailable lifecycle entry = "Desired 확인 불가 · Effective 확인 불가 · entry OFF", want 확인 불가
+    a175_optimization_runtime_matrix_test.go:67: unavailable lifecycle entry is rendered as OFF: "Desired 확인 불가 · Effective 확인 불가 · entry OFF"
+--- FAIL: TestCandidateFilterMatrixFoldsDescriptionsOnly (0.00s)
+    a175_optimization_runtime_matrix_test.go:270: candidate filter folds preview contract into description details
+    a175_optimization_runtime_matrix_test.go:270: candidate filter folds preview contract into description details
+    a175_optimization_runtime_matrix_test.go:270: candidate filter folds preview contract into description details
+--- FAIL: TestRuntimeGridUsesSingleColumnAt720px (0.00s)
+    a175_optimization_runtime_matrix_test.go:277: runtime grid does not become one column at 720px
+--- FAIL: TestCandidateFilterCardsContainExactMarketMetricMatrix (0.00s)
+    optimization_candidate_filters_test.go:50: native candidate-filter table must not rely on aria-readonly
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.025s
+FAIL
+
+EXIT=1

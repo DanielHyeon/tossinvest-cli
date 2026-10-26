@@ -512,6 +512,40 @@ body:has([data-reload=on]) :is(body > header, .console-status)::after { animatio
   .toggle-row { grid-template-columns: 1fr; }
   .toggle-row .muted { grid-column: auto; }
 }
+/* a175 — 최적화 내비·행렬 */
+.optimization-related { display: grid; gap: var(--space-2); margin: var(--space-3) 0; }
+.optimization-related > p { margin: 0; }
+.optimization-related a { color: var(--accent); }
+.preset-compare { width: max-content; min-width: 100%; }
+.preset-compare th, .preset-compare td { min-width: 8rem; padding: var(--space-2); vertical-align: top; }
+.preset-compare th:first-child { min-width: 4.5rem; }
+.preset-compare dl { grid-template-columns: auto 1fr; gap: 0.25rem var(--space-2); margin: 0; }
+.preset-compare form { display: block; margin: 0; }
+.preset-compare .choice-action { margin-top: 0; }
+.preset-compare .choice-action button { width: 100%; min-width: 10rem; white-space: normal; text-align: left; }
+.veto-matrix { width: 100%; min-width: 0 !important; table-layout: fixed; }
+.veto-matrix th, .veto-matrix td { min-width: 0 !important; padding: var(--space-2); overflow-wrap: anywhere; vertical-align: top; }
+.veto-matrix th:first-child { width: 18%; }
+.veto-matrix dl { display: block; margin: 0; }
+.veto-matrix dt { margin-top: var(--space-1); }
+.veto-matrix dt:first-child { margin-top: 0; }
+.veto-matrix dd { overflow-wrap: anywhere; }
+.runtime-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.runtime-market { min-width: 0; }
+.runtime-contract { margin-block: var(--space-3); }
+.shadow-band { margin-block: var(--space-2); }
+@media (min-width: 45rem) {
+  .veto-matrix dl { display: grid; grid-template-columns: max-content minmax(8rem, 1fr) max-content minmax(8rem, 1fr); gap: var(--space-1) var(--space-2); }
+  .veto-matrix dt, .veto-matrix dt:first-child { margin-top: 0; }
+}
+@media (max-width: 45rem) {
+  .runtime-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 44rem) {
+  .optimization-related { gap: var(--space-1); }
+  .preset-compare { min-width: 36rem; }
+  details.shadow-band summary, details.filter-description summary { display: list-item; }
+}
 {{end}}
 
 {{define "head"}}<!doctype html>

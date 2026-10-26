@@ -37,6 +37,7 @@ const signalsTemplates = `
 
 {{template "causes" .}}
 {{template "signalsread" .Snap}}
+<p class="muted signal-shadow-common">그림자 지표는 기록만 하고 후보 판정에 참여하지 않는다.</p>
 {{range .Snap.Markets}}{{template "signalsmarket" .}}{{end}}
 
 {{template "foot" .}}
@@ -192,7 +193,6 @@ const signalsTemplates = `
 */}}
 {{define "signalsband"}}
 <h3>그림자 밴드 — {{.Code}} <span class="muted">(veto가 아니다)</span></h3>
-<p class="muted">{{.ShadowNote}}</p>
 {{if .Alarm}}
 <p class="bad">{{.Alarm}}</p>
 {{end}}
@@ -202,6 +202,7 @@ const signalsTemplates = `
 <p class="muted">미측정:
 {{range $i, $r := .NotMeasured}}{{if $i}} · {{end}}<code>{{$r.Reason}}</code> {{$r.Count}}{{end}}</p>
 {{end}}
+<details class="tech shadow-band"><summary>그림자 밴드 설명</summary><p class="muted">{{.ShadowNote}}</p></details>
 {{end}}
 
 {{/*

@@ -1,0 +1,11 @@
+--- FAIL: TestOptimizationHasOneNavigation (0.01s)
+    a175_optimization_runtime_matrix_test.go:33: overview category-card grid = 1, want 0
+    a175_optimization_runtime_matrix_test.go:45: exit-protection KPI block = 1, want 0 outside overview
+    a175_optimization_runtime_matrix_test.go:45: position-management KPI block = 1, want 0 outside overview
+    a175_optimization_runtime_matrix_test.go:45: candidate-filters KPI block = 1, want 0 outside overview
+    a175_optimization_runtime_matrix_test.go:45: strategy-runtime KPI block = 1, want 0 outside overview
+    a175_optimization_runtime_matrix_test.go:45: performance-history KPI block = 1, want 0 outside overview
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.024s
+FAIL
+exit=1

@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/candidate"
 	"golang.org/x/net/html"
 )
 
@@ -40,19 +41,24 @@ func TestCandidateFilterCardsContainExactMarketMetricMatrix(t *testing.T) {
 	h := newDashboardHarness(t, func(*Options) {})
 	h.authenticate(t)
 	section := candidateFilterNode(t, h.page(t, "/optimization?category=candidate-filters"))
-	for _, market := range []string{"KR", "US"} {
-		articles := nodesByAttribute(section, "article", "id", "candidate-filters-"+market)
-		if len(articles) != 1 {
-			t.Fatalf("%s candidate-filter articles = %d, want exactly 1", market, len(articles))
-		}
-		cards := nodesByAttribute(articles[0], "div", "class", "detail-grid")
-		if len(cards) != 3 {
-			t.Errorf("%s candidate-filter metric cards = %d, want exactly 3", market, len(cards))
-		}
-		for _, metric := range []string{"seen_late", "extended", "near_high"} {
-			if got := exactElementTextCount(articles[0], "code", metric); got != 1 {
-				t.Errorf("%s %s metric code count = %d, want exactly 1", market, metric, got)
-			}
+	tables := a175NodesByClass(section, "table", "veto-matrix")
+	markets := candidate.CandidateFilterMarkets()
+	if len(tables) != 1 {
+		t.Fatalf("candidate-filter matrices = %d, want exactly 1", len(tables))
+	}
+	if _, found := htmlAttribute(tables[0], "aria-readonly"); found {
+		t.Error("native candidate-filter table must not rely on aria-readonly")
+	}
+	if got := a175ColumnHeaderCount(tables[0]); got != len(markets)+1 {
+		t.Errorf("candidate-filter matrix columns = %d, want key plus %d markets", got, len(markets))
+	}
+	if got := a175MatrixDataRowCount(tables[0]); got != len(markets[0].Filters) {
+		t.Errorf("candidate-filter matrix rows = %d, want %d registry keys", got, len(markets[0].Filters))
+	}
+	for _, descriptor := range markets[0].Filters {
+		metric := descriptor.Key
+		if got := exactElementTextCount(tables[0], "code", metric); got != 1 {
+			t.Errorf("%s matrix key count = %d, want exactly 1", metric, got)
 		}
 	}
 }
@@ -62,11 +68,19 @@ func TestCandidateFilterCardsRemainMobileAndAccessibilityFriendly(t *testing.T) 
 	h.authenticate(t)
 	page := h.page(t, "/optimization?category=candidate-filters")
 	section := candidateFilterNode(t, page)
-	if len(nodesByName(section, "table")) != 0 {
-		t.Fatal("candidate filter cards use a wide table instead of wrapping definition lists")
+	tables := a175NodesByClass(section, "table", "veto-matrix")
+	markets := candidate.CandidateFilterMarkets()
+	if len(tables) != 1 {
+		t.Fatalf("candidate-filter matrices = %d, want exactly 1", len(tables))
+	}
+	if got := a175ColumnHeaderCount(tables[0]); got != len(markets)+1 {
+		t.Errorf("candidate-filter matrix scope=col headers = %d, want %d", got, len(markets)+1)
+	}
+	if got := a175MatrixDataRowCount(tables[0]); got != len(markets[0].Filters) {
+		t.Errorf("candidate-filter matrix scope=row headers = %d, want %d", got, len(markets[0].Filters))
 	}
 	for _, want := range []string{`aria-label="후보 필터 시장 전환"`, `href="#candidate-filters-KR"`,
-		`href="#candidate-filters-US"`, `aria-readonly="true"`, `<dl>`} {
+		`href="#candidate-filters-US"`, `aria-label="후보 필터 KR US 행렬"`, `<dl>`} {
 		if !strings.Contains(page, want) {
 			t.Errorf("candidate filter section lacks accessible/mobile marker %q", want)
 		}

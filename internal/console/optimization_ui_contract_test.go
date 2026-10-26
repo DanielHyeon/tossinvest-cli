@@ -15,6 +15,12 @@ func TestOptimizationDOMHasNoArbitraryInputAndSubmitsOnlyOwnerOptions(t *testing
 	commander := newFakeOptimizationCommander(t)
 	h := newDashboardHarness(t, func(options *Options) { options.Optimization = commander })
 	h.authenticate(t)
+	overview := h.page(t, "/optimization")
+	for _, marker := range []string{`data-lifecycle-state="ready"`, `data-evidence-state="unavailable"`} {
+		if !strings.Contains(overview, marker) {
+			t.Errorf("overview status block lacks %q", marker)
+		}
+	}
 	page := h.page(t, "/optimization?category=exit-protection")
 	page = optimizationPolicyOnly(t, page)
 	doc, err := html.Parse(strings.NewReader(page))
@@ -133,7 +139,7 @@ func TestOptimizationUsesOnePresetPreviewFlowWithoutClientDraft(t *testing.T) {
 	}
 	for _, marker := range []string{
 		`aria-label="익절 보호 설정 적용 순서"`, "1 · preset 선택", "2 · before/after 확인",
-		"3 · 3초 확인 후 적용", `data-lifecycle-state="ready"`, `data-evidence-state="unavailable"`,
+		"3 · 3초 확인 후 적용",
 		`href="/optimization?category=position-management"`, `href="/optimization?category=candidate-filters"`,
 		`href="/optimization?category=strategy-runtime"`, `href="/optimization?category=performance-history"`,
 	} {

@@ -1,6 +1,6 @@
 {
   "file": "internal/console/display_primitives_test.go",
-  "source_sha256": "e1769c98f96ed42d5f1bf0faf2bb5bacf171f80fdb72aeba34a1f04b72976656",
+  "source_sha256": "a6099f61c0850be2f5c179cde0aac6303b5320e616aed91c1572465430c3a0e4",
   "package": "console",
   "function": "TestAmbientMotionContract",
   "signature": "TestAmbientMotionContract(params=1, results=0)",

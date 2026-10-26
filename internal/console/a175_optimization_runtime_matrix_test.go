@@ -1,9 +1,11 @@
 package console
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/candidate"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 	strategyopt "github.com/JungHoonGhae/tossinvest-cli/internal/optimization"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection"
@@ -25,8 +27,11 @@ func TestOptimizationHasOneNavigation(t *testing.T) {
 			t.Errorf("optimization navigation link %q = %d, want 1", href, got)
 		}
 	}
-	if got := len(nodesByAttribute(overview, "div", "class", "category-summary")); got != 1 {
+	if got := len(a175NodesByClass(overview, "dl", "status-strip")); got != 1 {
 		t.Errorf("overview KPI block = %d, want 1", got)
+	}
+	if got := len(nodesByAttribute(overview, "div", "class", "category-summary")); got != 0 {
+		t.Errorf("overview category-card grid = %d, want 0", got)
 	}
 
 	for _, category := range []strategyopt.Category{
@@ -37,9 +42,29 @@ func TestOptimizationHasOneNavigation(t *testing.T) {
 		strategyopt.CategoryPerformanceHistory,
 	} {
 		document := a175HTML(t, h.page(t, "/optimization?category="+string(category)))
-		if got := len(nodesByAttribute(document, "div", "class", "category-summary")); got != 0 {
+		if got := len(a175NodesByClass(document, "dl", "status-strip")); got != 0 {
 			t.Errorf("%s KPI block = %d, want 0 outside overview", category, got)
 		}
+		if got := len(nodesByAttribute(document, "div", "class", "category-summary")); got != 0 {
+			t.Errorf("%s category-card grid = %d, want 0", category, got)
+		}
+	}
+}
+
+func TestOptimizationCategorySummaryFailsClosedForUnavailableLifecycle(t *testing.T) {
+	h := newDashboardHarness(t, func(options *Options) { options.Optimization = failedOptimizationCommander{} })
+	h.authenticate(t)
+	document := a175HTML(t, h.page(t, "/optimization?category=candidate-filters"))
+	summaries := a175NodesByClass(document, "p", "optimization-summary")
+	if len(summaries) != 1 {
+		t.Fatalf("unavailable lifecycle summaries = %d, want 1", len(summaries))
+	}
+	text := a175ElementText(summaries[0])
+	if !strings.Contains(text, "entry 확인 불가") {
+		t.Errorf("unavailable lifecycle entry = %q, want 확인 불가", text)
+	}
+	if strings.Contains(text, "entry OFF") {
+		t.Errorf("unavailable lifecycle entry is rendered as OFF: %q", text)
 	}
 }
 
@@ -106,6 +131,19 @@ func TestExitPresetsCompareInOneTable(t *testing.T) {
 			}
 		}
 	}
+	for _, fragment := range []string{
+		`<form method="post" action="/optimization/exit-policy" class="choice-action">`,
+		`<input type="hidden" name="csrf" value="{{$.CSRF}}">`,
+		`<input type="hidden" name="base_version" value="{{$.Snapshot.Version}}">`,
+		`<input type="hidden" name="category" value="exit-protection">`,
+		`<input type="hidden" name="setting_key" value="exit.common-policy">`,
+		`<input type="hidden" name="option_id" value="{{.ID}}">`,
+		`<button type="submit" {{if .Selected}}disabled aria-disabled="true"{{end}}>{{if .Selected}}현재 desired · 선택됨{{else}}이 preset 선택 · 미리보기{{end}}</button>`,
+	} {
+		if !strings.Contains(optimizationTemplates, fragment) {
+			t.Errorf("exit-policy form contract changed: %s", fragment)
+		}
+	}
 	text := a175ElementText(tables[0])
 	if strings.Contains(text, "999") {
 		t.Error("runner sentinel 999 is exposed in comparison table")
@@ -131,19 +169,112 @@ func TestCandidateFiltersRenderAsMatrix(t *testing.T) {
 	h.authenticate(t)
 	section := candidateFilterNode(t, h.page(t, "/optimization?category=candidate-filters"))
 	tables := a175NodesByClass(section, "table", "veto-matrix")
+	markets := candidate.CandidateFilterMarkets()
 	if len(tables) != 1 {
 		t.Fatalf("candidate filter matrices = %d, want 1", len(tables))
 	}
-	if got := a175MatrixDataRowCount(tables[0]); got != 3 {
-		t.Errorf("candidate filter matrix rows = %d, want 3 registry keys", got)
+	if got := a175MatrixDataRowCount(tables[0]); got != len(markets[0].Filters) {
+		t.Errorf("candidate filter matrix rows = %d, want %d registry keys", got, len(markets[0].Filters))
 	}
-	if got := a175ColumnHeaderCount(tables[0]); got != 3 {
-		t.Errorf("candidate filter matrix columns = %d, want key plus KR and US", got)
+	if got := a175ColumnHeaderCount(tables[0]); got != len(markets)+1 {
+		t.Errorf("candidate filter matrix columns = %d, want key plus %d markets", got, len(markets))
 	}
 	for _, reason := range []string{"sample_count", "missing_rate", "evidence_digest", "human_activation_record", "not_measured", "미승인"} {
 		if !strings.Contains(a175ElementText(tables[0]), reason) {
 			t.Errorf("candidate filter matrix omits state or reason %q", reason)
 		}
+	}
+}
+
+func TestCandidateFilterMatrixMergesEqualMarketDescriptors(t *testing.T) {
+	markets := candidate.CandidateFilterMarkets()
+	matrix := candidateFilterMatrixFromMarkets(markets)
+	if len(matrix.Rows) != len(markets[0].Filters) {
+		t.Fatalf("candidate filter matrix rows = %d, want %d registry keys", len(matrix.Rows), len(markets[0].Filters))
+	}
+	for _, row := range matrix.Rows {
+		if !row.Common {
+			t.Errorf("equal descriptors for %q were not merged", row.Key)
+		}
+	}
+
+	h := newDashboardHarness(t, func(*Options) {})
+	h.authenticate(t)
+	section := candidateFilterNode(t, h.page(t, "/optimization?category=candidate-filters"))
+	table := a175NodesByClass(section, "table", "veto-matrix")[0]
+	cells := a175NodesByClass(table, "td", "matrix-common")
+	if len(cells) != len(matrix.Rows) {
+		t.Fatalf("common matrix cells = %d, want %d", len(cells), len(matrix.Rows))
+	}
+	for _, cell := range cells {
+		wantSpan := strconv.Itoa(len(markets))
+		if got, ok := htmlAttribute(cell, "colspan"); !ok || got != wantSpan {
+			t.Errorf("common matrix cell colspan = %q, want %s", got, wantSpan)
+		}
+	}
+}
+
+func TestCandidateFilterMatrixKeepsDifferentMarketValuesSeparate(t *testing.T) {
+	markets := candidate.CandidateFilterMarkets()
+	markets[1].Filters[0].Help = "US 별도 설명"
+	matrix := candidateFilterMatrixFromMarkets(markets)
+	if len(matrix.Rows) == 0 {
+		t.Fatal("candidate-filter matrix rows = 0")
+	}
+	row := matrix.Rows[0]
+	if row.Common {
+		t.Fatal("different KR and US descriptors were merged")
+	}
+	if row.KR.Market != candidate.MarketKR || row.US.Market != candidate.MarketUS {
+		t.Errorf("separate market labels = %q / %q, want KR / US", row.KR.Market, row.US.Market)
+	}
+	if row.KR.Help == row.US.Help || row.US.Help != "US 별도 설명" {
+		t.Errorf("separate market help = %q / %q, want distinct values", row.KR.Help, row.US.Help)
+	}
+}
+
+func TestCandidateFilterMatrixFoldsDescriptionsOnly(t *testing.T) {
+	h := newDashboardHarness(t, func(*Options) {})
+	h.authenticate(t)
+	section := candidateFilterNode(t, h.page(t, "/optimization?category=candidate-filters"))
+	details := a175NodesByClass(section, "details", "filter-description")
+	previewContract := candidate.CandidateFilterMarkets()[0].Filters[0].PreviewContract
+	if len(details) != 3 {
+		t.Fatalf("candidate filter description details = %d, want 3", len(details))
+	}
+	for _, item := range details {
+		if _, open := htmlAttribute(item, "open"); open {
+			t.Error("candidate filter descriptions are open by default")
+		}
+		for _, forbidden := range []string{"notice", "danger"} {
+			if len(a175NodesByClass(item, "p", forbidden)) != 0 {
+				t.Errorf("candidate filter description contains .%s", forbidden)
+			}
+		}
+	}
+	for _, required := range []string{"미승인", "not_measured", "sample_count", "CAS 필수"} {
+		if !strings.Contains(a175ElementText(section), required) {
+			t.Errorf("candidate filter leaves required value or reason hidden: %q", required)
+		}
+		for _, detail := range details {
+			if strings.Contains(a175ElementText(detail), required) {
+				t.Errorf("candidate filter folds required value or reason %q", required)
+			}
+		}
+	}
+	if got := strings.Count(a175ElementText(section), previewContract); got != len(details) {
+		t.Errorf("visible preview contracts = %d, want %d", got, len(details))
+	}
+	for _, detail := range details {
+		if strings.Contains(a175ElementText(detail), previewContract) {
+			t.Error("candidate filter folds preview contract into description details")
+		}
+	}
+}
+
+func TestRuntimeGridUsesSingleColumnAt720px(t *testing.T) {
+	if !strings.Contains(pageTemplates, "@media (max-width: 45rem) {\n  .runtime-grid { grid-template-columns: 1fr; }") {
+		t.Error("runtime grid does not become one column at 720px")
 	}
 }
 
@@ -176,7 +307,7 @@ func TestStrategyRuntimeIsTwoColumnsWithFoldedContract(t *testing.T) {
 			t.Errorf("folded runtime registry omits %q", field.Key)
 		}
 	}
-	for _, safety := range []string{"UNWIRED", "NOT_CONFIGURED", "UNKNOWN"} {
+	for _, safety := range []string{"UNWIRED", "UNKNOWN"} {
 		if !strings.Contains(a175ElementText(document), safety) {
 			t.Errorf("runtime omits safety state %q", safety)
 		}
@@ -190,10 +321,27 @@ func TestStrategyRuntimeIsTwoColumnsWithFoldedContract(t *testing.T) {
 	if len(us) != 1 || !strings.Contains(a175ElementText(us[0]), "evidence-US") {
 		t.Error("KR failure hides or changes US runtime projection")
 	}
+
+	dormantHarness := newHarness(t)
+	dormantHarness.authenticate(t)
+	dormant := a175HTML(t, body(t, dormantHarness.get(t, "/strategy-runtime")))
+	for _, safety := range []string{"OFF", "UNWIRED", "NOT_CONFIGURED", "UNKNOWN"} {
+		if !strings.Contains(a175ElementText(dormant), safety) {
+			t.Errorf("dormant runtime omits safety state %q", safety)
+		}
+		for _, details := range a175NodesByClass(dormant, "details", "tech") {
+			if strings.Contains(a175ElementText(details), safety) {
+				t.Errorf("dormant runtime folds safety state %q", safety)
+			}
+		}
+	}
 }
 
 func TestSignalsCommonCopyOnceAndShadowBandsFolded(t *testing.T) {
-	page := renderSignals(t, newSignalsHarness(t, &stubSignals{reading: oneMarket(neverChecked("005930"))}))
+	page := renderSignals(t, newSignalsHarness(t, &stubSignals{reading: marketWithBands(map[candidate.VetoCode]candidate.BandTally{
+		candidate.VetoSeenLate: bandTally(2, map[string]int{"0": 2}),
+		candidate.VetoExtended: bandTally(3, map[string]int{"0": 3}),
+	})}))
 	document := a175HTML(t, page)
 	if got := strings.Count(page, "그림자 지표는 기록만 하고 후보 판정에 참여하지 않는다."); got != 1 {
 		t.Errorf("signals common copy = %d, want 1", got)

@@ -1,23 +1,23 @@
 {
   "file": "internal/console/optimization_candidate_filters_test.go",
-  "source_sha256": "a6c1de25d4cf9a2a30a9ff12de849cce965d77f1475b7bbe65e804b46b6d1454",
+  "source_sha256": "5905dd742e401d06df73db8ea780432f046a83ba1cc4c7ce57d900ef52ee67de",
   "package": "console",
   "function": "TestCandidateFilterCardsContainExactMarketMetricMatrix",
   "signature": "TestCandidateFilterCardsContainExactMarketMetricMatrix(params=1, results=0)",
   "start": {
-    "line": 39,
+    "line": 40,
     "column": 1
   },
   "end": {
-    "line": 58,
+    "line": 64,
     "column": 2
   },
   "branches": [
     {
       "id": "B1",
-      "kind": "range",
+      "kind": "if",
       "at": {
-        "line": 43,
+        "line": 46,
         "column": 2
       }
     },
@@ -25,32 +25,40 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 45,
-        "column": 3
+        "line": 49,
+        "column": 2
       }
     },
     {
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 49,
-        "column": 3
+        "line": 52,
+        "column": 2
       }
     },
     {
       "id": "B4",
-      "kind": "range",
+      "kind": "if",
       "at": {
-        "line": 52,
-        "column": 3
+        "line": 55,
+        "column": 2
       }
     },
     {
       "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
       "kind": "if",
       "at": {
-        "line": 53,
-        "column": 4
+        "line": 60,
+        "column": 3
       }
     }
   ],
@@ -59,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 40,
+        "line": 41,
         "column": 7
       },
       "text": "newDashboardHarness"
@@ -67,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 41,
+        "line": 42,
         "column": 2
       },
       "text": "h.authenticate"
@@ -75,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 42,
+        "line": 43,
         "column": 13
       },
       "text": "candidateFilterNode"
@@ -83,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 42,
+        "line": 43,
         "column": 36
       },
       "text": "h.page"
@@ -92,63 +100,71 @@
       "kind": "call",
       "at": {
         "line": 44,
-        "column": 15
+        "column": 12
       },
-      "text": "nodesByAttribute"
+      "text": "a175NodesByClass"
     },
     {
       "kind": "call",
       "at": {
         "line": 45,
-        "column": 6
+        "column": 13
+      },
+      "text": "candidate.CandidateFilterMarkets"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 5
       },
       "text": "len"
     },
     {
       "kind": "call",
       "at": {
-        "line": 46,
-        "column": 4
+        "line": 47,
+        "column": 3
       },
       "text": "t.Fatalf"
     },
     {
       "kind": "call",
       "at": {
-        "line": 46,
-        "column": 74
+        "line": 47,
+        "column": 62
       },
       "text": "len"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 48,
-        "column": 12
-      },
-      "text": "nodesByAttribute"
     },
     {
       "kind": "call",
       "at": {
         "line": 49,
-        "column": 6
+        "column": 17
       },
-      "text": "len"
+      "text": "htmlAttribute"
     },
     {
       "kind": "call",
       "at": {
         "line": 50,
-        "column": 4
+        "column": 3
       },
-      "text": "t.Errorf"
+      "text": "t.Error"
     },
     {
       "kind": "call",
       "at": {
-        "line": 50,
-        "column": 78
+        "line": 52,
+        "column": 12
+      },
+      "text": "a175ColumnHeaderCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 53
       },
       "text": "len"
     },
@@ -156,15 +172,63 @@
       "kind": "call",
       "at": {
         "line": 53,
-        "column": 14
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 83
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 12
+      },
+      "text": "a175MatrixDataRowCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 54
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 77
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 13
       },
       "text": "exactElementTextCount"
     },
     {
       "kind": "call",
       "at": {
-        "line": 54,
-        "column": 5
+        "line": 61,
+        "column": 4
       },
       "text": "t.Errorf"
     }
@@ -173,14 +237,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 40,
+        "line": 41,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 42,
+        "line": 43,
         "column": 2
       }
     },
@@ -188,21 +252,49 @@
       "kind": ":=",
       "at": {
         "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 49,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 52,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 55,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 59,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 48,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 53,
-        "column": 7
+        "line": 60,
+        "column": 6
       }
     }
   ],

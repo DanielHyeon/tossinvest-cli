@@ -562,7 +562,7 @@ func TestAmbientMotionContract(t *testing.T) {
 		t.Errorf("prefers-reduced-transparency does not clear both the ambient blobs and the hover glow: %q", rt)
 	}
 	// (g) hover 조명: opacity 로만 페이드하고, 대상은 렌더된 화면에서 POST 폼을 품지 않은 이동 링크뿐이어야 함.
-	// 문자열(제외 선택자 존재)만 보면 .tier-card·.choice-tile 처럼 폼을 품은 카드가 조명을 받는 실제 위반을 통과시킨다.
+	// 문자열(제외 선택자 존재)만 보면 .tier-card·.preset-compare 처럼 폼을 품은 카드가 조명을 받는 실제 위반을 통과시킨다.
 	glow := regexp.MustCompile(`(?s):is\(([^)]*)\):not\(:where\(([^{]*)\)\)::after\s*\{[^}]*\}`).FindStringSubmatch(css)
 	if glow == nil {
 		t.Fatal("hover glow rule is missing")
@@ -578,7 +578,7 @@ func TestAmbientMotionContract(t *testing.T) {
 	if !strings.Contains(css, "(hover: hover)") {
 		t.Error("hover glow is not limited to hover-capable pointers")
 	}
-	for _, banned := range []string{".tier-card", ".choice-tile"} {
+	for _, banned := range []string{".tier-card", ".preset-compare"} {
 		if strings.Contains(glow[1], banned) {
 			t.Errorf("hover glow targets %s, which holds a POST form", banned)
 		}

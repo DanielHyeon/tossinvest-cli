@@ -1,0 +1,9 @@
+2026/10/26 19:42:41 http: TLS handshake error from 127.0.0.1:49916: read tcp 127.0.0.1:40199->127.0.0.1:49916: use of closed network connection
+--- FAIL: TestOptimizationShowsExactlySixCategoriesAndThreeOwnerPolicies (0.00s)
+    optimization_lifecycle_test.go:99: optimization page does not contain "약 50%"
+--- FAIL: TestOptimizationShowsExactlyThreePoliciesAndExternalBehavior (0.00s)
+    optimization_test.go:53: optimization page does not contain "약 50%"
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	62.254s
+FAIL
+exit=1

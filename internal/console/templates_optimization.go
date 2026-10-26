@@ -8,25 +8,19 @@ const optimizationTemplates = `
     <h1>최적화 <span class="muted">전략 파라미터</span></h1><span class="status-pill scope">{{if .ExitProtection}}편집 가능{{else}}읽기 전용{{end}}</span>
     <p class="muted">서버가 정한 preset 하나를 골라 before/after를 검토한 뒤 적용한다. 설정과 LIVE 권한은 항상 분리된다.</p>
   </div>
-  <dl class="status-strip" aria-label="최적화 최상위 상태" {{if .LifecycleErr}}data-lifecycle-state="error"{{else if not .LifecycleReady}}data-lifecycle-state="unavailable"{{else}}data-lifecycle-state="ready"{{end}}>
+  {{if .Overview}}<dl class="status-strip" aria-label="최적화 최상위 상태" {{if .LifecycleErr}}data-lifecycle-state="error"{{else if not .LifecycleReady}}data-lifecycle-state="unavailable"{{else}}data-lifecycle-state="ready"{{end}}>
     <div><dt>Desired</dt><dd><strong>{{if .LifecycleReady}}v{{.Snapshot.Version}}{{else}}확인 불가{{end}}</strong></dd></div>
     <div><dt>Effective</dt><dd><strong>{{if .LifecycleReady}}v{{.Snapshot.EffectiveVersion}}{{else}}확인 불가{{end}}</strong>{{if .LifecycleReady}}<small>{{if eq .Snapshot.Version .Snapshot.EffectiveVersion}}desired와 일치{{else}}desired와 불일치{{end}}</small>{{end}}</dd></div>
     <div data-evidence-state="{{.Evidence.Status}}"><dt>성과 근거</dt><dd><strong>{{if not .LifecycleReady}}확인 불가{{else if eq .Evidence.Status "complete"}}완료{{else if eq .Evidence.Status "insufficient"}}부족 · 추천 불가{{else if eq .Evidence.Status "stale"}}오래됨 · 근거 추천 중지{{else}}사용 불가 · 추천 없음{{end}}</strong></dd></div>
     <div><dt>Effective entry</dt><dd><strong>{{if and .LifecycleReady .Snapshot.EffectiveEntry}}ON{{else}}OFF{{end}}</strong><small>{{if and .LifecycleReady .Snapshot.EffectiveEntry}}현재 manifest 승인됨{{else}}manifest 재승인 전 진입 없음{{end}}</small></dd></div>
     <div><dt>LIVE 권한</dt><dd><strong>별도 · 변경 안 함</strong></dd></div>
     <div><dt>재시작</dt><dd>{{if not .LifecycleReady}}확인 불가{{else if .Snapshot.RestartRequired}}필요{{else}}불필요{{end}}</dd></div>
-  </dl>
+  </dl>{{else}}<p class="muted optimization-summary">Desired {{if .LifecycleReady}}v{{.Snapshot.Version}}{{else}}확인 불가{{end}} · Effective {{if .LifecycleReady}}v{{.Snapshot.EffectiveVersion}}{{else}}확인 불가{{end}} · entry {{if not .LifecycleReady}}확인 불가 (lifecycle 미확인){{else if .Snapshot.EffectiveEntry}}ON{{else}}OFF{{end}}</p>{{end}}
 </div>
 {{if .Notice}}<p class="notice" role="status">{{.Notice}}</p>{{end}}
 {{if .Warning}}<p class="notice" role="alert">{{.Warning}}</p>{{end}}
 {{if .LifecycleErr}}<p class="danger" role="alert">lifecycle을 읽지 못했다: <code>{{.LifecycleErr}}</code>. 마지막 값을 현재값처럼 사용하지 않고 모든 변경을 닫았다.</p>{{end}}
 {{if and .LifecycleReady (ne .Evidence.Status "complete")}}<p class="aside evidence-banner" role="status"><strong>성과 근거 {{.Evidence.Status}}</strong> · 근거 기반 추천 candidate를 만들지 않는다.</p>{{with .Evidence.Missing}}<details class="tech"><summary>기술 정보</summary>{{range .}} <code>{{.}}</code>{{end}}</details>{{end}}{{end}}
-<nav class="filter-bar" aria-label="최적화 관련 읽기 전용 화면">
-  <a href="/strategy-runtime">전략 lane</a>
-  <a href="/strategy-runtime/market-schedule">시장·일정</a>
-  <a href="/performance-history">레인 성과</a>
-</nav>
-
 <div class="optimization-shell">
   <nav class="optimization-nav" aria-label="최적화 카테고리">
     {{range .Categories}}
@@ -35,6 +29,11 @@ const optimizationTemplates = `
     </a>
     {{end}}
     <details class="tech"><summary>기술 정보</summary><dl>{{range .Categories}}{{$label := .Label}}{{with .Tech}}<dt>{{$label}}</dt><dd><code>{{.}}</code></dd>{{end}}{{end}}</dl></details>
+    <div class="optimization-related" aria-label="최적화 관련 읽기 전용 화면">
+      <a href="/strategy-runtime">전략 lane</a>
+      <a href="/strategy-runtime/market-schedule">시장·일정</a>
+      <a href="/performance-history">레인 성과</a>
+    </div>
   </nav>
 
   <div class="optimization-content">
@@ -42,15 +41,6 @@ const optimizationTemplates = `
     <section aria-labelledby="optimization-overview-title">
       <h2 id="optimization-overview-title">개요</h2>
       <p>무엇을 바꿀 수 있는지와 실제 적용 여부를 먼저 확인한다. 설정 저장은 lane, LIVE, automation gate, kill switch 또는 현재 포지션을 바꾸지 않는다.</p>
-      <div class="category-summary">
-      {{range .Categories}}
-        <article>
-          <h3><a href="/optimization?category={{.ID}}">{{.Label}}</a></h3>
-          <p>{{.Purpose}}</p>
-          <span class="status-pill">{{.Status}}</span>
-        </article>
-      {{end}}
-      </div>
       <dl>
         <dt>마지막 actor</dt><dd>{{if .Snapshot.Actor}}<code>{{.Snapshot.Actor}}</code>{{else}}없음{{end}}</dd>
         <dt>마지막 reason</dt><dd>{{if .Snapshot.Reason}}<code>{{.Snapshot.Reason}}</code>{{else}}없음{{end}}</dd>
@@ -92,23 +82,12 @@ const optimizationTemplates = `
       </fieldset>
       {{end}}
 
-      <div class="choice-grid" aria-label="공통 익절 보호 정책 preset">
-      {{range .Policies}}
-        <article class="choice-tile" {{if .Selected}}data-selected="true"{{end}}>
-          <header><h3>{{.Label}}</h3>{{if .Recommended}}<span class="status-pill">추천 · 자동 저장 안 함</span>{{end}}</header>
-          <p><code>{{.ID}}</code>{{if .Selected}} · <strong>현재 desired</strong>{{end}}</p>
-          <div class="table-scroll" role="region" aria-label="{{.Label}} 보호 단계" tabindex="0">
-          <table>
-            <tr><th>단계</th><th>목표 수익률</th><th>진입가 대비 보호</th><th>잔량 기준 익절</th></tr>
-            {{range $i, $r := .Ladder.Rungs}}
-            <tr><td>T{{add1 $i}}</td><td>{{$r.TargetPct}}%</td><td>{{$r.StopPct}}%</td><td>{{$r.PartialRatio}}</td></tr>
-            {{end}}
-          </table>
-          </div>
-          {{if eq .ID "COMMON_LADDER_HYBRID_50"}}<p>약 50%를 남기고 T4부터 high-water -6.5% 보호를 사용한다.</p>
-          {{else if eq .ID "COMMON_LADDER_RUNNER"}}<p><strong>고정 목표 없음</strong>으로 표시하며 999% sentinel을 입력값으로 노출하지 않는다.</p>
-          {{else}}<p>T4에서 잔량을 전량익절하는 균형형이다.</p>{{end}}
-          {{if $.ExitPolicyWritable}}
+      {{with .PresetMatrix}}
+      <div class="table-scroll" role="region" aria-label="공통 익절 보호 정책 preset 비교" tabindex="0">
+        <table class="preset-compare">
+          <thead><tr><th scope="col">단계</th>{{range .Policies}}<th scope="col"><strong>{{.Label}}</strong>{{if .Recommended}}<br><span class="status-pill">추천 · 자동 저장 안 함</span>{{end}}<br><code>{{.ID}}</code>{{if .Selected}} · <strong>현재 desired</strong>{{end}}<br><small>{{.Summary}}</small>{{if eq .ID "COMMON_LADDER_HYBRID_50"}}<br><small>약 50%를 남기고 T4부터 high-water -6.5% 보호를 사용한다.</small>{{end}}</th>{{end}}</tr></thead>
+          <tbody>{{range .Rows}}<tr><th scope="row">{{.Label}}</th>{{range .Cells}}<td><dl><dt>목표 수익률</dt><dd><strong>{{.Target}}</strong></dd><dt>진입가 대비 보호</dt><dd>{{.Stop}}</dd><dt>잔량 기준 익절</dt><dd>{{.Partial}}</dd></dl></td>{{end}}</tr>{{end}}</tbody>
+          <tfoot><tr><th scope="row">선택</th>{{range .Policies}}<td>{{if $.ExitPolicyWritable}}
           <form method="post" action="/optimization/exit-policy" class="choice-action">
             <input type="hidden" name="csrf" value="{{$.CSRF}}">
             <input type="hidden" name="base_version" value="{{$.Snapshot.Version}}">
@@ -118,10 +97,10 @@ const optimizationTemplates = `
             <button type="submit" {{if .Selected}}disabled aria-disabled="true"{{end}}>{{if .Selected}}현재 desired · 선택됨{{else}}이 preset 선택 · 미리보기{{end}}</button>
           </form>
           {{else}}<p class="muted preset-readonly" role="status">읽기 전용 · owner descriptor 확인 필요</p>
-          {{end}}
-        </article>
-      {{end}}
+          {{end}}</td>{{end}}</tr></tfoot>
+        </table>
       </div>
+      {{end}}
 
       <section aria-labelledby="broker-protection-title">
         <h3 id="broker-protection-title">브로커 상주 보호</h3>
@@ -175,9 +154,7 @@ const optimizationTemplates = `
   {{if .PositionManagement}}
     <section aria-labelledby="position-management-title">
       <h2 id="position-management-title">종목별 관리</h2>
-      <p>설정 저장과 position lifecycle command를 섞지 않는다. 현재 row의 stable identity로만 동작하는 전용 화면을 쓴다.</p>
-      <p><a class="button-link" href="/position-management">현재 포지션 상속·override·release 상태 보기</a></p>
-      <p class="muted">owner descriptor adapter가 아직 settingmeta registry에 연결되지 않아 이 category는 현재 read-only다. label/default를 임의로 만들지 않았다.</p>{{template "tech" "a044"}}
+      <p class="relay-summary">설정 저장과 position lifecycle command를 섞지 않는다. <a class="button-link" href="/position-management">현재 포지션 상속·override·release 상태 보기</a> · owner descriptor adapter가 아직 settingmeta registry에 연결되지 않아 이 category는 읽기 전용이며 label/default를 임의로 만들지 않는다.</p>{{template "tech" "a044"}}
     </section>
   {{end}}
 
@@ -187,37 +164,29 @@ const optimizationTemplates = `
       <p class="aside"><strong>미승인 · passed 구조적 0 · verdict 비활성</strong></p>
       <p class="muted">owner가 승인한 registry option 전에는 숫자 0을 기본 threshold처럼 표시하지 않고 모든 행을 읽기 전용으로 유지한다. 주문·RiskIntent·LIVE 상태는 변경하지 않는다.</p>{{template "tech" "a046"}}
       <nav class="filter-bar" aria-label="후보 필터 시장 전환"><a href="#candidate-filters-KR">KR regular</a><a href="#candidate-filters-US">US regular</a></nav>
-      {{range .CandidateFilterMarkets}}
-      <article id="candidate-filters-{{.Market}}" aria-label="{{.Market}} {{.Session}} 후보 필터">
-        <h3>{{.Market}} · {{.Session}}</h3>
-        {{range .Filters}}<div class="detail-grid" aria-readonly="true"><div><strong><code>{{.Key}}</code> · {{.Label}}</strong><p class="muted">{{.Help}}</p></div>
-        <dl><dt>default state</dt><dd>미승인 (<code>{{.DefaultState}}</code>)</dd><dt>desired</dt><dd>미승인 — 숫자 값 없음</dd>
-        <dt>effective</dt><dd>미승인 — verdict 비활성</dd><dt>단위 / 유효 범위</dt><dd>{{.Unit}} / {{.ValidRange}}</dd>
-        <dt>판정 방향</dt><dd>{{.Direction}}</dd><dt>표본 / evidence</dt><dd><code>{{.SampleState}}</code> / <code>{{.EvidenceState}}</code></dd>
-        <dt>적용 시점</dt><dd>{{.ApplyTiming}}</dd><dt>누락</dt><dd>{{range .MissingEvidence}}<code>{{.}}</code> {{end}}</dd>
-        <dt>preview / CAS</dt><dd>{{.PreviewContract}} — CAS 필수</dd>{{if .LegacyValue}}<dt>legacy provenance</dt><dd><code>{{.LegacyValue}}</code> · <code>{{.Provenance}}</code> — desired/effective로 승격하지 않음</dd>{{end}}</dl></div>{{end}}
-      </article>{{end}}
+      {{with .CandidateFilterMatrix}}<div class="table-scroll" role="region" aria-label="후보 필터 KR US 행렬" tabindex="0"><table class="veto-matrix">
+        <thead><tr><th scope="col">판정 key</th><th id="candidate-filters-KR" scope="col">KR regular</th><th id="candidate-filters-US" scope="col">US regular</th></tr></thead>
+        <tbody>{{range .Rows}}<tr><th scope="row"><code>{{.Key}}</code><br>{{.Label}}</th>{{if .Common}}<td class="matrix-common" colspan="2">{{template "candidate-filter-matrix-cell" .KR}}</td>{{else}}<td>{{template "candidate-filter-matrix-cell" .KR}}</td><td>{{template "candidate-filter-matrix-cell" .US}}</td>{{end}}</tr>{{end}}</tbody>
+      </table></div>{{end}}
     </section>
   {{end}}
 
   {{if .StrategyRuntime}}
     <section aria-labelledby="strategy-runtime-title">
       <h2 id="strategy-runtime-title">전략·실행</h2>
-      <p class="aside"><strong>lane desired OFF · engine autostart OFF · scheduler desired OFF</strong></p>
-      <p>lane ON, autostart, automation gate, LIVE trading은 서로 다른 권한이다. 이 카테고리는 서버가 확정한 desired/effective와 blocker를 읽기만 하며 어느 권한도 켜지 않는다.</p>
-      <div class="actions">
+      <div class="aside"><strong>lane desired OFF · engine autostart OFF · scheduler desired OFF</strong></div>
+      <p class="relay-summary">lane ON, autostart, automation gate, LIVE trading은 서로 다른 권한이다. 이 카테고리는 서버가 확정한 desired/effective와 blocker를 읽기만 하며 어느 권한도 켜지 않는다. <span class="actions">
         <a class="button-link" href="/strategy-runtime">전략 lane 상태 보기</a>
         <a class="button-link secondary-link" href="/strategy-runtime/market-schedule">시장·일정 상태 보기</a>
-      </div>
+      </span></p>
     </section>
   {{end}}
 
   {{if .PerformanceHistory}}
     <section aria-labelledby="performance-history-title">
       <h2 id="performance-history-title">성과·이력</h2>
-      <p class="aside"><strong>{{.PerformanceWindow.Text}} · 읽기 전용</strong></p>
-      <p>서버가 고정한 조회 범위의 성과를 보여주며 이 카테고리에서 값을 입력하거나 저장하지 않는다. 측정 불가를 0으로 꾸며내지 않고 누락 사유를 함께 표시한다.</p>
-      <p><a class="button-link" href="/performance-history">레인 성과 상세 보기</a></p>
+      <div class="aside"><strong>{{.PerformanceWindow.Text}} · 읽기 전용</strong></div>
+      <p class="relay-summary">서버가 고정한 조회 범위의 성과를 보여주며 이 카테고리에서 값을 입력하거나 저장하지 않는다. 측정 불가를 0으로 꾸며내지 않고 누락 사유를 함께 표시한다. <a class="button-link" href="/performance-history">레인 성과 상세 보기</a></p>
       {{if .Audit}}<div class="table-scroll" role="region" aria-label="설정 변경 감사 이력" tabindex="0"><table>
         <tr><th>Version</th><th>Key</th><th>Before → After</th><th>Actor / reason</th><th>Audit</th></tr>
         {{range .Audit}}<tr><td>v{{.Version}}</td><td><code>{{.Key}}</code></td><td>{{if .BeforeOptionID}}{{.BeforeOptionID}}{{else}}미승인{{end}} → {{if .AfterOptionID}}{{.AfterOptionID}}{{else}}미승인{{end}}</td>
@@ -228,6 +197,16 @@ const optimizationTemplates = `
   </div>
 </div>
 {{template "foot" .}}
+{{end}}
+
+{{define "candidate-filter-matrix-cell"}}
+<dl><dt>시장 / 세션</dt><dd>{{.Market}} / {{.Session}}</dd>
+<dt>default state</dt><dd>미승인 (<code>{{.DefaultState}}</code>)</dd><dt>desired</dt><dd>미승인 — 숫자 값 없음 (<code>{{.DesiredState}}</code>)</dd>
+<dt>effective</dt><dd>미승인 — verdict 비활성 (<code>{{.EffectiveState}}</code>)</dd><dt>단위 / 유효 범위</dt><dd>{{.Unit}} / {{.ValidRange}}</dd>
+<dt>판정 방향</dt><dd>{{.Direction}}</dd><dt>표본 / evidence</dt><dd><code>{{.SampleState}}</code> / <code>{{.EvidenceState}}</code></dd>
+<dt>적용 시점</dt><dd>{{.ApplyTiming}}</dd><dt>누락</dt><dd>{{range .MissingEvidence}}<code>{{.}}</code> {{end}}</dd>
+<dt>preview / CAS</dt><dd>CAS 필수 · {{.PreviewContract}}</dd>{{if .LegacyValue}}<dt>legacy provenance</dt><dd><code>{{.LegacyValue}}</code> · <code>{{.Provenance}}</code> — desired/effective로 승격하지 않음</dd>{{end}}</dl>
+<details class="tech filter-description"><summary>설명</summary><p class="muted">{{.Help}}</p></details>
 {{end}}
 
 {{define "optimization-preview"}}
@@ -439,14 +418,17 @@ const optimizationTemplates = `
 </details>
 {{if .LoadErr}}<p class="danger" role="alert">runtime projection을 읽지 못했다. 두 시장 모두 신규 진입 OFF와 typed unknown을 표시한다.</p>{{end}}
 {{if .Unwired}}<p class="aside">runtime endpoint 미기동 — KR과 US의 dormant OFF/UNOBSERVED/UNWIRED truth를 표시한다.</p>{{end}}
+<details class="tech runtime-contract"><summary>공통 projection schema와 golden registry</summary>
 <section aria-labelledby="strategy-runtime-contract"><h2 id="strategy-runtime-contract">공통 투영 계약</h2>
 <dl><dt>Schema</dt><dd><code>{{.SchemaVersion}}</code></dd><dt>Generated at</dt><dd>{{.GeneratedAt}}</dd>
 <dt>Config digest</dt><dd><code>{{.ConfigDigest}}</code></dd><dt>Build digest</dt><dd><code>{{.BuildDigest}}</code></dd></dl>
 <p class="muted">활성화 매니페스트에 적는 두 값이다. 엔진이 보고한 값만 표시하며, 관측이 없으면 <code>not_observed</code>다.</p>
+<section aria-labelledby="projection-registry"><h2 id="projection-registry">필드 레지스트리 <code>golden</code></h2><p class="muted">Console, REST와 SSE가 공유하는 필드다.</p>
+<ul>{{range .Fields}}<li><code>{{.Key}}</code> · {{.Label}} · <code>{{.JSONPointer}}</code></li>{{end}}</ul></section>
+</section></details>
 <p><a href="/strategy-runtime">상태 새로고침</a> · GET으로 다시 읽기만 하며 설정이나 주문을 보내지 않는다.</p>
-</section>
-{{range .Markets}}
-<article class="detail-grid" aria-readonly="true" data-market="{{.Market}}" data-market-status="{{.Status}}">
+<div class="runtime-grid">{{range .Markets}}
+<article class="detail-grid runtime-market" aria-readonly="true" data-market="{{.Market}}" data-market-status="{{.Status}}">
   <div><h2>{{.Market}} strategy runtime</h2><span class="status-pill {{.StatusClass}}">{{.Status}}</span>{{if .ErrorCode}} <code>{{.ErrorCode}}</code>{{end}}</div>
   <dl>
     <dt>Lane ID / version</dt><dd><code>{{.LaneID}}</code> / <code>{{.LaneVersion}}</code></dd>
@@ -463,9 +445,7 @@ const optimizationTemplates = `
     <dt>First typed refusal</dt><dd><code>{{.FirstRefusal}}</code></dd><dt>Observed at</dt><dd>{{.ObservedAt}}</dd>
   </dl>
 </article>
-{{end}}
-<section aria-labelledby="projection-registry"><h2 id="projection-registry">필드 레지스트리 <code>golden</code></h2><p class="muted">Console, REST와 SSE가 공유하는 필드다.</p>
-<ul>{{range .Fields}}<li><code>{{.Key}}</code> · {{.Label}} · <code>{{.JSONPointer}}</code></li>{{end}}</ul></section>
+{{end}}</div>
 <p><strong>신규 entry가 OFF이거나 runtime이 unavailable이어도 exit·reconcile·보호 감독은 계속된다.</strong></p>
 {{template "foot" .}}
 {{end}}

@@ -1,0 +1,6 @@
+--- FAIL: TestCandidateFilterMatrixFoldsDescriptionsOnly (0.01s)
+    a175_optimization_runtime_matrix_test.go:195: candidate filter description details = 0, want 3
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.020s
+FAIL
+exit=1
