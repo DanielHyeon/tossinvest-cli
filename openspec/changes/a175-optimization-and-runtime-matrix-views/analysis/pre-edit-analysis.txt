@@ -1,0 +1,3 @@
+[logic-map] a175-optimization-and-runtime-matrix-views: base b7d34acad8d1 → working tree (no landed-commit.txt in HEAD) required 0 function(s) — judged at HEAD 4e0a530ff5ba
+[logic-map] a175-optimization-and-runtime-matrix-views: the target is the working tree, so this window also holds 2 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: no landing recorded — no ordinary commit on this history adds the pinning evidence — commit the bundles in an ordinary commit (a merge commit's own changes are not read)
+[logic-map] a175-optimization-and-runtime-matrix-views: evidence complete or diff-proven exempt

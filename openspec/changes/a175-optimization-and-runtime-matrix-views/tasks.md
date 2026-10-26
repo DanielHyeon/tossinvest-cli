@@ -8,7 +8,8 @@ Story: `STORY-TOS-a175` · Low(읽기 전용 렌더 재배치). FLM/BTM·변이 
 ## 1. 기준선·확인
 - [x] 1.1 (Manager 몫) `base-commit.txt` 갱신 · design §1 재확인 — 증거: base `b7d34acad`(a174 archive, origin/main), design §1 표를 HEAD 에서 다시 잼(★ 표시 6곳 정정). 구현자 몫으로 남는 것:  `strategy-optimization`·`candidate-veto-thresholds`·`strategy-runtime` spec 의 표시 요구 목록을 `analysis/spec-display-requirements.md` 에 전수(값·사유·미측정·독립 projection)
   - 구현자 증거: `analysis/spec-display-requirements.md` — 세 spec의 값·사유·미측정·독립 projection과 접근성 경계를 원문 기준으로 목록화함.
-- [ ] 1.2 a173 하네스 기준선(`measure/baseline-<utc>.json`) · `check_analysis.py` required 0 확인
+- [x] 1.2 a173 하네스 기준선(`measure/baseline-<utc>.json`) · `check_analysis.py` required 0 확인
+  - 구현자 증거: `analysis/measure/baseline-20261026T1019Z.json`(96 metrics), `baseline-20261026T1019Z-outline.json`(구조 count) — 빈 HOME/config·자격증명 0·127.0.0.1:38325 격리 콘솔에서 GET만 수행하고 PID `1467793` 종료·포트 해제를 확인함. `analysis/pre-edit-analysis.txt` — base→HEAD required 0.
 
 ## 2. RED
 - [ ] 2.1 `TestOptimizationHasOneNavigation`: 개요 렌더에 `optimization-nav` 1개, 카드 그리드 0, KPI 블록은 개요에만(다른 카테고리 렌더에서 0), 보조 링크 3개는 메뉴 안에 1회
