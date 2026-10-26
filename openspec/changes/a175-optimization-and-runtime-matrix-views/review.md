@@ -15,3 +15,17 @@
   6. FLM 면제 문장을 거뒀다: 기존 함수(시험 함수 포함)를 고치면 함수마다 번들이 필요하다.
 - 남은 위험: 신호 화면 정찰 값(3006px·공통 문장 수)은 Manager 가 다시 재지 않았다(구현자 1.2 기준선이 대신 잰다). `strategy-runtime` 두 열 배치가 한 시장 실패를 다른 시장 표시와 독립으로 유지하는지는 2.5 에 KR 실패 fixture 단언을 넣어 확인한다.
 - 결론: proposal-freeze 승인. 착수 가능. 위치 `/mnt/D/Axipient/workspace/TossOS.worktrees/a175-optimization-and-runtime-matrix-views`. 정정본을 커밋한 **뒤에** worktree 를 만든다.
+
+## gstack review 경량 (2026-10-26, 구현 후)
+
+- 적용성: UI/UX 변경이므로 `impeccable`·`fixing-accessibility` 정적/시각 검토와 gstack 체크리스트의 SQL·동시성·신뢰 경계·enum·frontend 항목을 적용함. 전역 gstack은 `1.91.223.0` 업데이트 가능 상태였으나, 전역 도구 업데이트는 작업 범위를 벗어나 수행하지 않음. worktree의 `.claude/skills/review/` 경로는 없어서 같은 설치본의 `/home/daniel/.claude/skills/gstack/review/{checklist,greptile-triage}.md`를 읽었음.
+- 범위 점검: handler·레지스트리·주문 경로·form action/hidden/button/disabled 계약 변경 없음. 새 view model은 읽기 전용 registry projection과 표시 문자열만 만듦. Greptile PR 댓글·Codex CLI 적대 검토는 경량 범위에서 실행하지 않음.
+- 독립 검토 결과와 처리:
+  1. 비개요 lifecycle 미확인을 `OFF`로 표시하던 경로를 `확인 불가 (lifecycle 미확인)`로 바꾸고 `TestOptimizationCategorySummaryFailsClosedForUnavailableLifecycle`로 고정함.
+  2. 후보 필터 preview 계약이 `<details>` 안에 있던 것을 본문 `preview / CAS` 항목으로 옮기고, Help 설명만 접도록 `TestCandidateFilterMatrixFoldsDescriptionsOnly`를 강화함.
+  3. 같은 KR·US descriptor의 공통 병합·`colspan`과 registry 유도 행·열 수를 `TestCandidateFilterMatrixMergesEqualMarketDescriptors`와 기존 DOM 시험으로 고정함.
+  4. native table의 `aria-readonly` 존재 검사를 제거하고 실제 input/form/contenteditable 부재와 읽기 전용 문구·scope/region을 검사함.
+  5. runtime의 720px 1열 계약을 `max-width: 45rem` CSS와 `TestRuntimeGridUsesSingleColumnAt720px`로 고정함.
+  6. 기존 preset 시험이 비개요에 사라진 overview-only `data-*` 상태를 요구하던 불일치를 overview 렌더 검사로 옮김. 가짜 속성은 추가하지 않음.
+- 검증: `analysis/review-red-output.txt`의 네 회귀 실패 후 `analysis/review-green-output.txt`·`analysis/review-contract-green-output.txt` 통과. 남은 정보성 위험은 현재 registry가 대칭인 KR·US key만 제공한다는 점임. 장래에 한 시장 전용 key를 도입하면 행렬 key 합집합과 명시적 unavailable cell을 별도 change에서 설계·시험해야 함.
+- 결론: 미해결 critical 0. 이 change의 경량 리뷰 범위에서는 ship-blocking 발견 없음.

@@ -26,16 +26,26 @@ Story: `STORY-TOS-a175` · Low(읽기 전용 렌더 재배치). FLM/BTM·변이 
   - 구현자 증거: `analysis/red-output.txt` — 공통 문장·shadow details가 각각 0개로 실패함.
 
 ## 3. GREEN (design §2 순서) 
-- [ ] 3.1 내비 하나·KPI 개요 한정 · 3.2 중계 3개 · 3.3 프리셋 비교표(+`TestAmbientMotionContract` 제외 목록 확장 기록) · 3.4 후보 필터 행렬 · 3.5 runtime 두 열 + 기술 정보 · 3.6 신호
+- [x] 3.1 내비 하나·KPI 개요 한정 · 3.2 중계 3개 · 3.3 프리셋 비교표(+`TestAmbientMotionContract` 제외 목록 확장 기록) · 3.4 후보 필터 행렬 · 3.5 runtime 두 열 + 기술 정보 · 3.6 신호
+  - 구현자 증거: `internal/console/{optimization_matrix_view.go,templates_optimization.go,templates_signals.go,templates.go}`와 `a175_optimization_runtime_matrix_test.go` — registry 읽기 전용 행렬, 1·2·1 중계 링크, 999 sentinel 치환, runtime 독립 열, Help·shadow 설명만 접힘을 렌더함. lifecycle 미확인은 `OFF`가 아닌 `확인 불가`로, candidate preview 계약은 접힘 밖에 표시함. `TestOptimizationShowsExactlySixCategoriesAndThreeOwnerPolicies`·`TestOptimizationShowsExactlyThreePoliciesAndExternalBehavior`의 기존 `약 50%` 계약도 비교표 머리에 유지함.
 - [ ] 3.7 `gofmt`·`vet`·`go test ./internal/console/ -count=1`·`cmd/tossctl -run Console`. 고정 리터럴 수정 전수 기록 · `check_analysis.py` required N 기록
+  - 대기 사유: review 보완 뒤 외부 Go 시험이 실행 중이라 package-wide 재실행을 보류함. 완료 시 `analysis/{gofmt-output.txt,vet-output.txt,green-console-output.txt,tossctl-console-output.txt,check-analysis-output.txt}`에 exit=0을 기록하고 체크함. 대상 FLM 함수는 `TestAmbientMotionContract`, `TestCandidateFilterCardsContainExactMarketMetricMatrix`, `TestCandidateFilterCardsRemainMobileAndAccessibilityFriendly`, `TestOptimizationUsesOnePresetPreviewFlowWithoutClientDraft`임.
 
 ## 4. 측정·리뷰
-- [ ] 4.1 하네스 재촬영·전후 표(높이 5개 화면 + 잘림 측정) · 4.2 인지 부하 표(최적화 6 + runtime + 신호) 시각 "높음" 0 · 4.3 `design-critic`·`fixing-accessibility`(표 머리·스코프·링크) → `analysis/review-after.md`
-- [ ] 4.4 gstack `review` 경량 → `review.md`. 변이 1회: 행렬에서 US 열 제거 → 2.4 FAIL 확인 후 원복
+- [x] 4.1 하네스 재촬영·전후 표(높이 5개 화면 + 잘림 측정)
+  - 구현자 증거: `analysis/measure/{after-review-20261026T1130Z.json,after-review-20261026T1130Z-outline.json,after-review-20261026T1130Z-run.txt}`, `analysis/measurement-comparison.md` — 96 GET-only metrics, preset 잘림 0, PID `1944443` 종료·38329 포트 해제.
+- [x] 4.2 인지 부하 표(최적화 6 + runtime + 신호) 시각 "높음" 0
+  - 구현자 증거: `analysis/cognitive-load.md` — 8개 대상 중 "높음" 0.
+- [x] 4.3 `design-critic`·`fixing-accessibility`(표 머리·스코프·링크) → `analysis/review-after.md`
+  - 구현자 증거: `analysis/{review-after.md,accessibility-static-check.txt,impeccable-detect.json}` — scope/region/summary 복원, 720px runtime 1열, Help 설명 전용 details 확인.
+- [x] 4.4 gstack `review` 경량 → `review.md`. 변이 1회: 행렬에서 US 열 제거 → 2.4 FAIL 확인 후 원복
+  - 구현자 증거: `analysis/{mutation-us-column-red-output.txt,mutation-us-column-green-output.txt,review-red-output.txt,review-green-output.txt,review-contract-green-output.txt}`, `review.md` — US 열 제거 시 2.4 FAIL, 원복 뒤 `candidate-filters-US` 2회·header 1회 확인; 독립 경량 리뷰의 4개 critical을 RED→GREEN으로 해소함.
 - [ ] 4.5 Manager 검증(Manager 가 체크 — 구현자는 체크하지 않음. 크롬: 최적화 6 카테고리·runtime·신호 × 데스크톱/모바일 × 라이트/다크)
 
 ## 5. 종결 (Opus)
 - [ ] 5.1 rebase → FLM 번들(필요 시) → tracker → sdd-sync → gate → archive → push → retain
 
 ## 고정 리터럴 시험 수정 기록
-(없으면 "없음")
+- `TestCandidateFilterCardsContainExactMarketMetricMatrix`: 시장별 카드 3개라는 이전 구조 문자열 검사를 삭제하고, 실제 `.veto-matrix` 하나의 `scope=col` 3개·`scope=row` 3개·registry key 1회씩을 검사하도록 변경함.
+- `TestCandidateFilterCardsRemainMobileAndAccessibilityFriendly`: `<table>` 0개라는 이전 구조 검사를 삭제하고, 실제 행렬의 scope·시장 deep link·키보드 scroll region·readonly·`dl`을 검사하도록 변경함.
+- `TestAmbientMotionContract`: 사라진 `.choice-tile` 대신 POST form을 실제로 품는 `.preset-compare`를 glow 금지 대상에 넣음. 임의 속성 추가나 존재 전용 marker는 사용하지 않음.

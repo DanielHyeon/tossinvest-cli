@@ -1,0 +1,3 @@
+PID=1944443; port=127.0.0.1:38329; empty HOME/config; GET-only harness
+화면수 96 -> openspec/changes/a175-optimization-and-runtime-matrix-views/analysis/measure/after-review-20261026T1130Z.json
+PID=1944443 observed terminated; port=127.0.0.1:38329 released in post-check

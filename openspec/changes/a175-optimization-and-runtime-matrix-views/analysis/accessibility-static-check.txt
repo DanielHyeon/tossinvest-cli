@@ -1,0 +1,42 @@
+internal/console/templates_signals.go:108:<div class="table-scroll" role="region" aria-label="원천" tabindex="0"><table>
+internal/console/templates_signals.go:157:<div class="table-scroll" role="region" aria-label="추격 veto 사유별 후보 수" tabindex="0"><table>
+internal/console/templates_signals.go:205:<details class="tech shadow-band"><summary>그림자 밴드 설명</summary><p class="muted">{{.ShadowNote}}</p></details>
+internal/console/templates_signals.go:222:<div class="table-scroll" role="region" aria-label="최초 관측 — 원천별" tabindex="0"><table>
+internal/console/templates_signals.go:244:<div class="table-scroll" role="region" aria-label="후보 목록" tabindex="0"><table>
+internal/console/templates_optimization.go:86:      <div class="table-scroll" role="region" aria-label="공통 익절 보호 정책 preset 비교" tabindex="0">
+internal/console/templates_optimization.go:88:          <thead><tr><th scope="col">단계</th>{{range .Policies}}<th scope="col"><strong>{{.Label}}</strong>{{if .Recommended}}<br><span class="status-pill">추천 · 자동 저장 안 함</span>{{end}}<br><code>{{.ID}}</code>{{if .Selected}} · <strong>현재 desired</strong>{{end}}<br><small>{{.Summary}}</small>{{if eq .ID "COMMON_LADDER_HYBRID_50"}}<br><small>약 50%를 남기고 T4부터 high-water -6.5% 보호를 사용한다.</small>{{end}}</th>{{end}}</tr></thead>
+internal/console/templates_optimization.go:89:          <tbody>{{range .Rows}}<tr><th scope="row">{{.Label}}</th>{{range .Cells}}<td><dl><dt>목표 수익률</dt><dd><strong>{{.Target}}</strong></dd><dt>진입가 대비 보호</dt><dd>{{.Stop}}</dd><dt>잔량 기준 익절</dt><dd>{{.Partial}}</dd></dl></td>{{end}}</tr>{{end}}</tbody>
+internal/console/templates_optimization.go:90:          <tfoot><tr><th scope="row">선택</th>{{range .Policies}}<td>{{if $.ExitPolicyWritable}}
+internal/console/templates_optimization.go:139:        <div class="table-scroll" role="region" aria-label="익절 보호 설정 이력" tabindex="0">
+internal/console/templates_optimization.go:166:      <nav class="filter-bar" aria-label="후보 필터 시장 전환"><a href="#candidate-filters-KR">KR regular</a><a href="#candidate-filters-US">US regular</a></nav>
+internal/console/templates_optimization.go:167:      {{with .CandidateFilterMatrix}}<div class="table-scroll" role="region" aria-label="후보 필터 KR US 행렬" tabindex="0"><table class="veto-matrix">
+internal/console/templates_optimization.go:168:        <thead><tr><th scope="col">판정 key</th><th id="candidate-filters-KR" scope="col">KR regular</th><th id="candidate-filters-US" scope="col">US regular</th></tr></thead>
+internal/console/templates_optimization.go:169:        <tbody>{{range .Rows}}<tr><th scope="row"><code>{{.Key}}</code><br>{{.Label}}</th>{{if .Common}}<td class="matrix-common" colspan="2">{{template "candidate-filter-matrix-cell" .KR}}</td>{{else}}<td>{{template "candidate-filter-matrix-cell" .KR}}</td><td>{{template "candidate-filter-matrix-cell" .US}}</td>{{end}}</tr>{{end}}</tbody>
+internal/console/templates_optimization.go:190:      {{if .Audit}}<div class="table-scroll" role="region" aria-label="설정 변경 감사 이력" tabindex="0"><table>
+internal/console/templates_optimization.go:208:<dt>preview / CAS</dt><dd>CAS 필수 · {{.PreviewContract}}</dd>{{if .LegacyValue}}<dt>legacy provenance</dt><dd><code>{{.LegacyValue}}</code> · <code>{{.Provenance}}</code> — desired/effective로 승격하지 않음</dd>{{end}}</dl>
+internal/console/templates_optimization.go:209:<details class="tech filter-description"><summary>설명</summary><p class="muted">{{.Help}}</p></details>
+internal/console/templates_optimization.go:220:  <div class="table-scroll" role="region" aria-label="설정 변경 before after" tabindex="0"><table>
+internal/console/templates_optimization.go:260:  <div class="table-scroll" role="region" aria-label="충돌한 설정 비교" tabindex="0"><table>
+internal/console/templates_optimization.go:325:    <thead><tr><th scope="col">지표</th><th scope="col">값</th><th scope="col">단위</th><th scope="col">표본</th><th scope="col">기간</th><th scope="col">provenance</th><th scope="col">쉬운 정의</th></tr></thead>
+internal/console/templates_optimization.go:328:        <th scope="row" data-label="지표">{{.Label}}</th>
+internal/console/templates_optimization.go:349:  <div class="table-scroll" role="region" aria-label="Market · campaign attribution" tabindex="0"><table class="data-table">
+internal/console/templates_optimization.go:350:    <thead><tr><th scope="col">계좌</th><th scope="col">시장·종목</th><th scope="col">Lane</th><th scope="col">Campaign·leg</th><th scope="col">상태</th><th scope="col">수량</th><th scope="col">원통화 PnL</th><th scope="col">보고통화 PnL·FX</th><th scope="col">누락 근거</th></tr></thead>
+internal/console/templates_optimization.go:395:<section aria-labelledby="scheduler-state-heading"><h2 id="scheduler-state-heading">Scheduler 상태</h2><div class="table-scroll" role="region" aria-label="Scheduler 상태" tabindex="0"><table>
+internal/console/templates_optimization.go:402:<section aria-labelledby="calendar-heading"><h2 id="calendar-heading">거래소 달력 · 읽기 전용</h2><div class="table-scroll" role="region" aria-label="Exchange calendar · 읽기 전용" tabindex="0"><table>
+internal/console/templates_optimization.go:406:<section aria-labelledby="decision-heading"><h2 id="decision-heading">현재 결정</h2><div class="table-scroll" role="region" aria-label="현재 결정" tabindex="0"><table>
+internal/console/templates_optimization.go:430:<div class="runtime-grid">{{range .Markets}}
+internal/console/templates_optimization.go:471:<div class="table-scroll" role="region" aria-label="연구 후보별 계산 결과" tabindex="0"><table class="hypothetical-results"><tr><th>연구 후보</th><th>상태</th><th>손절가</th><th>주당 거리</th><th>거리 비율 (반올림)</th><th>수량</th><th>가격 위험</th><th>매수금액</th></tr>
+internal/console/templates_optimization.go:472:{{range .Arms}}<tr><th scope="row">{{.Name}}</th><td>{{.State}}</td><td>{{if .Stop}}{{.Stop}}{{else}}알 수 없음{{end}}</td><td>{{if .Distance}}{{.Distance}}{{else}}알 수 없음{{end}}</td><td>{{if .Percent}}{{.Percent}}{{else}}알 수 없음{{end}}</td><td>{{if .Quantity}}{{.Quantity}}{{else}}알 수 없음{{end}}</td><td>{{if .Risk}}{{.Risk}}{{else}}알 수 없음{{end}}</td><td>{{if .Notional}}{{.Notional}}{{else}}알 수 없음{{end}}</td></tr>{{end}}
+internal/console/templates.go:353:  .data-table td, .data-table th[scope="row"] { display: grid; grid-template-columns: minmax(7rem, 40%) minmax(0, 1fr);
+internal/console/templates.go:355:  .data-table td::before, .data-table th[scope="row"]::before { content: attr(data-label); color: var(--ink-3);
+internal/console/templates.go:357:  .data-table td > *, .data-table th[scope="row"] > * { grid-column: 2; min-width: 0; }
+internal/console/templates.go:533:.runtime-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+internal/console/templates.go:536:.shadow-band { margin-block: var(--space-2); }
+internal/console/templates.go:541:@media (max-width: 45rem) {
+internal/console/templates.go:542:  .runtime-grid { grid-template-columns: 1fr; }
+internal/console/templates.go:547:  details.shadow-band summary, details.filter-description summary { display: list-item; }
+internal/console/templates.go:806:  <div class="table-scroll" role="region" aria-label="soak (조회 전용 서베이)" tabindex="0"><table>
+internal/console/templates.go:854:  <div class="table-scroll" role="region" aria-label="실계좌 검증 진행" tabindex="0"><table>
+internal/console/templates.go:936:  <div class="table-scroll" role="region" aria-label="결과" tabindex="0"><table>
+internal/console/templates.go:1001:  <div class="table-scroll" role="region" aria-label="재측정" tabindex="0"><table>
+EXIT=0
