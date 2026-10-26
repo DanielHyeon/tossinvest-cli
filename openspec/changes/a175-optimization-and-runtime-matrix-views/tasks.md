@@ -43,11 +43,13 @@ Story: `STORY-TOS-a175` · Low(읽기 전용 렌더 재배치). FLM/BTM·변이 
 - [x] 4.6 Manager 수정 라운드: 시장 key 합집합·미등록 cell·descriptor 전체 비교·동일 상태 신호 재측정
   - 구현자 증거: `analysis/{p2-red-output.txt,p2-green-output.txt,p2-signals-red-output.txt,p2-signals-green-output.txt,p2-isolated-measurement.md,p2-impeccable-detect.json,p2-final-{gofmt,vet,console,tossctl-console,check-analysis}-output.txt}`, `review.md` — KR/US 전용 key가 first-seen 합집합으로 남고 없는 시장은 실제 렌더에서 명시됨. 신호는 `discovery_unreadable` 동일 상태로 900/941px, 중계 본문·내비 분리값을 재측정했음. check_analysis required 5: `TestAmbientMotionContract`, `TestCandidateFilterCardsContainExactMarketMetricMatrix`, `TestCandidateFilterCardsRemainMobileAndAccessibilityFriendly`, `TestOptimizationUsesOnePresetPreviewFlowWithoutClientDraft`, `TestOptimizationDOMHasNoArbitraryInputAndSubmitsOnlyOwnerOptions`.
   - 라운드 2 구현자 증거: `analysis/{p3-red-output.txt,p3-green-output.txt,p3-isolated-measurement.md,p3-impeccable-detect.json,p3-final-{gofmt,vet,console,tossctl-console,check-analysis}-output.txt}` — 1280px preset region이 `879/879`으로 overflow 없이 맞고, 관련 화면은 제목 있는 목록이며 링크 수·href를 유지함. check_analysis required 5는 모두 complete임.
-- [ ] 4.5 Manager 검증(Manager 가 체크 — 구현자는 체크하지 않음. 크롬: 최적화 6 카테고리·runtime·신호 × 데스크톱/모바일 × 라이트/다크)
+- [x] 4.5 Manager 검증(Manager 가 체크 — 구현자는 체크하지 않음. 크롬: 최적화 6 카테고리·runtime·신호 × 데스크톱/모바일 × 라이트/다크)
+  - Manager 판정(Opus 5.5, 2026-10-26): 라운드 1(`293a19f`)·2(`efcd925`) diff 를 읽었다. 크롬 2차 실측(HEAD `efcd925`, 격리 38351, 1280 다크, 클릭 0)에서 프리셋 표 region 879/879 로 넘침 0, 폼 3, 관련 화면 소제목+평문 링크 3, nav 667. 콘솔 PID 종료·포트 해제를 확인했다. 직접 보지 않은 것: 신호 화면의 시장 데이터 상태(격리 콘솔에서 discovery_unreadable — fixture 시험으로 대신함), 390 라이트, `/strategy-runtime` 모바일. 완료 기준 조정은 proposal 에 적었다. 판정: 승인, 5.1 로 넘김.
   - Manager 실측(2026-10-26): 격리 콘솔 `127.0.0.1:38351`, HEAD `293a19f`, 빈 config·임시 HOME·클릭 0·콘솔 오류 0. PID `2355508` 종료와 포트 해제를 확인함. exit-protection 1280px는 KPI 0·요약 한 줄·열 4(단계+3)·폼 3·`999` 0·`고정 목표 없음` 1. candidate-filters는 1280px 높이 2083(본문 1533)·행 3·공통 3·잘림 0, 390px dark는 페이지 390·표 342/342·가로 스크롤 없음·펼침 표식 `list-item`. position-management 1280px는 페이지 1261·본문 386·nav 710·KPI 0·링크 1. `/strategy-runtime` 1280px는 KR·US 두 열(left 57/641)·계약 접힘·미기동 줄을 확인함.
 
 ## 5. 종결 (Opus)
 - [ ] 5.1 rebase → FLM 번들(필요 시) → tracker → sdd-sync → gate → archive → push → retain
+  - 사람 승인: 사용자가 a175 종결(Manager 편집 커밋·5.1 체크·tracker·`/tmp` 밖 격리 gate `/mnt/D/Axipient/workspace/TossOS.worktrees/a175-close`·전체 `make gate`·archive·ff·push(로컬 `526650e50` 포함)·정리·retain)을 "진행"으로 승인(2026-10-27, a175 한정). 격리 gate 를 /tmp 밖에 두는 것은 `/tmp/.git` 원인(Codex workspace-write 샌드박스) 조사의 결정 1. 운영 이미지·배포는 범위 밖.
 
 ## 고정 리터럴 시험 수정 기록
 - `TestCandidateFilterCardsContainExactMarketMetricMatrix`: 시장별 카드 3개라는 이전 구조 문자열 검사를 삭제하고, 실제 `.veto-matrix` 하나의 `scope=col`·시장 순서 합집합 `scope=row`·registry key 1회씩을 검사하도록 변경함.
