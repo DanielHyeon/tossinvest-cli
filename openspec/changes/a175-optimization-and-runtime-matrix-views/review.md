@@ -38,3 +38,11 @@
 - 중계 높이: 데스크톱 전체 1218→1261px 증가는 `.optimization-nav` 513→710px가 정하며 본문은 세 카테고리 모두 감소했음. 링크·설명·여백을 줄이지 않았고, 완료 기준 조정은 Manager 판단으로 남김.
 - P3 기록만: 후보 필터의 `미승인 — 숫자 값 없음`·`미승인 — verdict 비활성` 문구와 전략·실행의 `lane desired OFF · engine autostart OFF · scheduler desired OFF` 문구는 base부터 존재한 상태 비연동 고정 문구임. registry/runtime이 실제 승인·desired/effective를 제공하는 change에서 상태값으로 교체하지 않으면 표시와 값이 어긋날 위험이 남음.
 - skill·research: UI 영향이 있어 `impeccable`을 적용했고 `analysis/p2-impeccable-detect.json`은 빈 배열이었음. 기존 Go `html/template`와 표 DOM helper를 확장하고 Go 표준 라이브러리 `reflect.DeepEqual`만 사용했으며, 새 의존성·UI 라이브러리·라이선스 검토 대상은 추가하지 않았음. 이 선택은 행렬의 실제 렌더·접근성 역할을 기존 시험 방식으로 계속 검증할 수 있는 최소 변경임.
+
+## P3 프리셋 표·관련 화면 보정 (2026-10-26)
+
+- Manager 4.5 실측에서 1280px preset region이 `scrollWidth/clientWidth = 956/879`로 overflow를 보였음. `.preset-compare`를 컨테이너 폭의 fixed layout으로 바꾸고 header `small`·policy ID는 줄바꿈을 허용했음. 설명·폼 문구·폼 action/hidden/disabled 분기는 바꾸지 않았고 390px의 `min-width: 36rem` 표 스크롤은 유지함.
+- 관련 화면 세 링크는 category card와 다른 제목 있는 `<ul>` 평문 목록으로 바꿨음. 링크 수와 href는 그대로이며 nav 하단의 "관련 화면" 요구를 충족함.
+- `TestPresetCompareDesktopStylesFillContainer`와 `TestOptimizationRelatedLinksAreLabelledPlainList` RED→GREEN을 남겼고, 격리 1280px 재측정에서 preset region `879/879`, 페이지 `1280/1280`을 확인함. 상세는 `analysis/p3-isolated-measurement.md`에 있음.
+- research: 기존 stylesheet·Go HTML template·DOM test helper로 충분했고, 새 utility·외부 UI library·의존성·라이선스 검토 대상은 없었음. Impeccable은 기존 Operate 콘솔 refinement로 적용하며 새 시각 세계·PRODUCT.md를 만들지 않았음.
+- UI 정적 검사: `analysis/p3-impeccable-detect.json`은 빈 배열임. a175 CSS 블록 안에서만 수정했고, 기존 preset form의 action·hidden field·버튼 문구·disabled 분기는 그대로임.

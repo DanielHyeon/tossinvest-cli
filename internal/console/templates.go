@@ -513,12 +513,16 @@ body:has([data-reload=on]) :is(body > header, .console-status)::after { animatio
   .toggle-row .muted { grid-column: auto; }
 }
 /* a175 — 최적화 내비·행렬 */
-.optimization-related { display: grid; gap: var(--space-2); margin: var(--space-3) 0; }
+.optimization-related { display: grid; gap: var(--space-1); margin: var(--space-2) 0 0; padding-top: var(--space-2); border-top: 1px solid var(--line-soft); }
 .optimization-related > p { margin: 0; }
-.optimization-related a { color: var(--accent); }
-.preset-compare { width: max-content; min-width: 100%; }
-.preset-compare th, .preset-compare td { min-width: 8rem; padding: var(--space-2); vertical-align: top; }
-.preset-compare th:first-child { min-width: 4.5rem; }
+.optimization-related ul { display: grid; gap: var(--space-1); margin: 0; padding: 0; list-style: none; }
+.optimization-related a { display: inline; min-height: 0; padding: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--accent); text-decoration: underline; text-underline-offset: 0.16em; }
+.optimization-related a:is(:hover, :focus-visible) { background: transparent; translate: 0; }
+.preset-compare { width: 100%; table-layout: fixed; }
+.preset-compare th, .preset-compare td { min-width: 0; padding: var(--space-2); vertical-align: top; }
+.preset-compare th:first-child { width: 4.5rem; }
+.preset-compare th small { display: block; max-inline-size: 32ch; overflow-wrap: anywhere; }
+.preset-compare th code { overflow-wrap: anywhere; }
 .preset-compare dl { grid-template-columns: auto 1fr; gap: 0.25rem var(--space-2); margin: 0; }
 .preset-compare form { display: block; margin: 0; }
 .preset-compare .choice-action { margin-top: 0; }

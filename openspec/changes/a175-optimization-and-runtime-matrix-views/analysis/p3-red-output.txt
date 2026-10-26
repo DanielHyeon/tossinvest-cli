@@ -1,0 +1,11 @@
+--- FAIL: TestOptimizationRelatedLinksAreLabelledPlainList (0.00s)
+    a175_optimization_runtime_matrix_test.go:69: related links title = 0, want 1
+    a175_optimization_runtime_matrix_test.go:73: related link lists = 0, want 1
+--- FAIL: TestPresetCompareDesktopStylesFillContainer (0.00s)
+    a175_optimization_runtime_matrix_test.go:89: preset comparison desktop style lacks ".preset-compare { width: 100%; table-layout: fixed; }"
+    a175_optimization_runtime_matrix_test.go:89: preset comparison desktop style lacks ".preset-compare th, .preset-compare td { min-width: 0;"
+    a175_optimization_runtime_matrix_test.go:89: preset comparison desktop style lacks ".preset-compare th small { display: block; max-inline-size: 32ch; overflow-wrap: anywhere; }"
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.018s
+FAIL
+EXIT=1

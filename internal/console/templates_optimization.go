@@ -30,9 +30,12 @@ const optimizationTemplates = `
     {{end}}
     <details class="tech"><summary>기술 정보</summary><dl>{{range .Categories}}{{$label := .Label}}{{with .Tech}}<dt>{{$label}}</dt><dd><code>{{.}}</code></dd>{{end}}{{end}}</dl></details>
     <div class="optimization-related" aria-label="최적화 관련 읽기 전용 화면">
-      <a href="/strategy-runtime">전략 lane</a>
-      <a href="/strategy-runtime/market-schedule">시장·일정</a>
-      <a href="/performance-history">레인 성과</a>
+      <p class="muted optimization-related-title">관련 화면</p>
+      <ul>
+        <li><a href="/strategy-runtime">전략 lane</a></li>
+        <li><a href="/strategy-runtime/market-schedule">시장·일정</a></li>
+        <li><a href="/performance-history">레인 성과</a></li>
+      </ul>
     </div>
   </nav>
 

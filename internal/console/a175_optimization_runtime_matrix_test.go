@@ -52,6 +52,45 @@ func TestOptimizationHasOneNavigation(t *testing.T) {
 	}
 }
 
+func TestOptimizationRelatedLinksAreLabelledPlainList(t *testing.T) {
+	commander := newFakeOptimizationCommander(t)
+	h := newDashboardHarness(t, func(options *Options) { options.Optimization = commander })
+	h.authenticate(t)
+	document := a175HTML(t, h.page(t, "/optimization"))
+	navs := nodesByAttribute(document, "nav", "class", "optimization-nav")
+	if len(navs) != 1 {
+		t.Fatalf("optimization navigation = %d, want 1", len(navs))
+	}
+	related := a175NodesByClass(navs[0], "div", "optimization-related")
+	if len(related) != 1 {
+		t.Fatalf("optimization related link groups = %d, want 1", len(related))
+	}
+	if got := len(a175NodesByClass(related[0], "p", "optimization-related-title")); got != 1 {
+		t.Errorf("related links title = %d, want 1", got)
+	}
+	lists := nodesByName(related[0], "ul")
+	if len(lists) != 1 {
+		t.Fatalf("related link lists = %d, want 1", len(lists))
+	}
+	for _, href := range []string{"/strategy-runtime", "/strategy-runtime/market-schedule", "/performance-history"} {
+		if got := a175DescendantHrefCount(lists[0], href); got != 1 {
+			t.Errorf("related plain link %q = %d, want 1", href, got)
+		}
+	}
+}
+
+func TestPresetCompareDesktopStylesFillContainer(t *testing.T) {
+	for _, want := range []string{
+		`.preset-compare { width: 100%; table-layout: fixed; }`,
+		`.preset-compare th, .preset-compare td { min-width: 0;`,
+		`.preset-compare th small { display: block; max-inline-size: 32ch; overflow-wrap: anywhere; }`,
+	} {
+		if !strings.Contains(pageTemplates, want) {
+			t.Errorf("preset comparison desktop style lacks %q", want)
+		}
+	}
+}
+
 func TestOptimizationCategorySummaryFailsClosedForUnavailableLifecycle(t *testing.T) {
 	h := newDashboardHarness(t, func(options *Options) { options.Optimization = failedOptimizationCommander{} })
 	h.authenticate(t)
