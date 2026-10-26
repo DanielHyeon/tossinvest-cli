@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a174-settings-startup-readiness-and-presets",
-    "path": "openspec/changes/a174-settings-startup-readiness-and-presets"
+    "path": "openspec/changes/archive/2026-10-26-a174-settings-startup-readiness-and-presets"
   },
   "found_by": {
     "date": "2026-10-25",
     "how": "2026-10-25 UX 전수 검사: /settings/daily 가 5008px·폼 7·입력 24 로 프리셋 5장이 각각 7줄 표를 반복하고, 거래 정책 토글 4개가 현재 상태 표와 체크박스로 두 번 나오며 체크박스 설명이 다음 체크박스에 붙어 보인다(안전 오독 위험). /settings/standing 의 '지금 켜면 기동이 거부된다' 는 조건이 다른 탭(당일)에 있어 운영자가 기억해야 한다. 사용자 결정: 탭 축은 spec 851 대로 가역성·빈도를 유지하고 읽기 전용 표시+링크로 푼다.",
-    "record": "openspec/changes/a174-settings-startup-readiness-and-presets/proposal.md"
+    "record": "openspec/changes/archive/2026-10-26-a174-settings-startup-readiness-and-presets/proposal.md"
   },
   "acceptance": [
     "기동 준비 체크리스트 한 카드(게이트·자동 시작·한도 다섯과 통화·거래 정책·판정 불가 2 — GatePreflight 절 단위 여섯 줄의 현재 상태와 소유 탭 링크, 합산 판정 없음)가 상시·당일 탭 머리와 검증 콘솔 엔진 버튼 위에 읽기 전용으로 나타나고, 어느 컨트롤도 두 화면에 복제되지 않는다(spec 851 '컨트롤의 단일 위치')",

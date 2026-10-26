@@ -53,3 +53,15 @@
 - P3 기록(Manager 4.5, 2026-10-26): 한도 줄 사유는 `Validate()`의 영문 원문을 그대로 옮김. 재계산 금지 규칙 때문에 번역·재구성하지 않음.
 - P2 처분(Manager 4.5, 2026-10-26): 모바일 `details.explain > summary`의 펼침 표식은 a174 모바일 CSS에서 `display: list-item`으로 복원하고, a173 복원 계약과 같은 순서 단언을 새 독립 시험으로 RED→GREEN 확인함.
 - P2 처분(Manager 4.5, 2026-10-26): 비교표 셀은 기본 줄 간격과 `0.3rem` 세로 여백을 복원함. 열 머리 버튼은 줄바꿈과 최대 13rem 폭을 허용해 390 다크 표 폭을 640px·858px로 줄였음. 1280 높이는 2786px가 되어 2500 목표를 넘지만, 정보 여백을 다시 줄이지 않고 측정값을 기록함.
+
+## 완료 게이트
+
+### 완료 게이트 실행 영수증
+- 사전: `ls -d /tmp/.git` 없음 · main HEAD `01e61a756`(origin/main `28b438293`, 로컬 docs 2 앞) · W HEAD `54ce02572` 확인 → Manager 편집 커밋 `11be30b70` → 5.1 체크·tracker 재생성 커밋 `c7b33f96a`(tracker `--check` rc 0) → `check_analysis.py --change a174-…` rc 0, required 5(번들 6) — `evidence complete or diff-proven exempt`. rebase 불필요(main 미이동).
+- 격리 worktree `/tmp/tossos-a174-close-20261026`(detached `c7b33f96a`, 2026-10-26): `make sdd-infra` rc 0 → `python3 tools/sdd/sdd_sync.py --no-gbrain` rc 0(`all indexes current`) → `make sdd-check` rc 0 → `codegraph status .` `✓ Index is up to date`.
+- 1 차 `rtk proxy make gate CHANGE=a174-…` FAIL 7 단계 `make test`: `cmd/tossctl` `TestAssembleConsoleSystemUpdateUsesRealTossctlBinary`(`system_update_wiring_test.go:95`) — `building real tossctl: … error obtaining VCS status: exit status 128`. 직후 `/tmp/.git` 없음, 같은 시험 단독 재실행 PASS(1.50s). a174 변경(`internal/console`)과 무관한 VCS stamping 실패.
+- (무효 실행) 재시도 명령을 잘못 짜서 `make gate` 가 main 체크아웃에서 돌았고 2 단계(미완료 태스크 — main 쪽 tasks.md 는 미체크)에서 멈춤. 1~2 단계는 읽기 전용이라 main 작업 트리 변화 없음(status 확인). 종결 worktree 를 재지 않았으므로 재시도로 세지 않음.
+- 2 차(유효 재시도, `make -C /tmp/tossos-a174-close-20261026`, HEAD `c7b33f96a`, 13:5x~14:19 KST) → **GATE PASS 11/11, rc 0**. 같은 시간 1 초 간격 감시에서 빈 `/tmp/.git` 디렉터리가 gate 도중에만 반복 생성·삭제됨(13:51~14:19, 138 회 관측, gate 종료 뒤 30 초간 0 회) — 1 차 VCS 128 의 유력 원인(Go 가 worktree `.git` 파일을 지나 `/tmp` 까지 올라감). 만드는 주체는 이번 범위에서 찾지 않음(후속 조사 대상).
+- 원문 로그(잘리지 않음): `/tmp/a174-close-logs/{check_analysis,sdd-infra,sdd-sync,sdd-check,gate,gate2,gate3,env-watch3,archive}.log` — 세션 스크래치, 커밋 안 함.
+- archive: `openspec archive a174-settings-startup-readiness-and-presets --yes`(1.4.1) → `operator-console: + 3 added`, `2026-10-26-a174-settings-startup-readiness-and-presets`.
+
