@@ -171,6 +171,6 @@
 | `a172-console-anti-ai-redesign` | STORY-TOS-a172 | in_progress |
 | `a173-console-ux-common-cleanup` | STORY-TOS-a173 | archived |
 | `a174-settings-startup-readiness-and-presets` | STORY-TOS-a174 | archived |
-| `a175-optimization-and-runtime-matrix-views` | STORY-TOS-a175 | designed |
+| `a175-optimization-and-runtime-matrix-views` | STORY-TOS-a175 | in_progress |
 | `a176-overview-summary-and-verify-steps` | STORY-TOS-a176 | designed |
 | `a177-performance-window-single-source` | STORY-TOS-a177 | archived |
