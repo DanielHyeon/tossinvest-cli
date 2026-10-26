@@ -490,11 +490,10 @@ body:has([data-reload=on]) :is(body > header, .console-status)::after { animatio
 .readiness-row .status-pill.ok { color: var(--ok); }
 .readiness-row .status-pill.warn { color: var(--warn); }
 .readiness-row .status-pill.unknown { color: var(--ink-3); }
-.preset-matrix { width: max-content; min-width: 100%; line-height: 1.3; }
-.preset-matrix th, .preset-matrix td { padding: 0.1rem 0.3rem; white-space: nowrap; }
+.preset-matrix { width: max-content; min-width: 100%; }
+.preset-matrix th, .preset-matrix td { padding: 0.3rem; white-space: nowrap; }
 .preset-matrix form { display: block; }
-.preset-matrix button { padding: 0.2rem 0.45rem; white-space: nowrap; text-align: left; }
-#limits .preset-matrix th, #limits .preset-matrix td { padding-block: 0; }
+.preset-matrix button { max-inline-size: 13rem; padding: 0.2rem 0.45rem; white-space: normal; text-align: left; }
 #limits > p, #trading > p { margin-block: var(--space-1); }
 #adoption { margin-block: var(--space-1); }
 #limits .notice, #trading .notice { padding: 0.2rem var(--space-2); margin-block: var(--space-1); }
@@ -509,6 +508,7 @@ body:has([data-reload=on]) :is(body > header, .console-status)::after { animatio
   .readiness-row { grid-template-columns: 1fr; gap: var(--space-1); }
   .readiness-row > .muted { grid-column: auto; }
   .preset-matrix { min-width: 36rem; }
+  details.explain summary { display: list-item; }
   .toggle-row { grid-template-columns: 1fr; }
   .toggle-row .muted { grid-column: auto; }
 }

@@ -49,3 +49,7 @@
 - 분석 번들: 기존 함수 편집·삽입 경계 기준 required 5개(`Console.handleDashboard`, `TestEveryCardShowsWhatChangesAndWhen`, `TestTheCurrencyConsequenceIsRenderedAndNotFolded`, `TestThePresetControlsAskForNoTyping`, `limitCurrent`) 모두 `analysis/function-logic/`에 AST·FLM·BTM·risk report TODO 0으로 작성함. 두 인접 기존 함수는 본문 의미를 바꾸지 않아 base revision AST로 기록함.
 - UI·접근성: `impeccable` operate surface 기준으로 표 머리·scope, 버튼의 기존 이름과 즉시성을 유지함. 숨은 form 속성에 의존하지 않고 읽기 순서에서 현재 통화 notice→비교표 caption→표 아래 전환 문장을 제공함. 첫 렌더 2544px가 목표를 44px 넘어서 a174 CSS 블록에서 프리셋 셀의 세로 여백만 제거했고, 최종 격리 렌더는 2499px·상자 3으로 통과함. `impeccable detect --json internal/console/templates.go internal/console/templates_settings.go`는 `[]`임.
 - 연구: 현 저장소의 `LimitTierCards()`·`LimitCurrencyConsequence()`·`config.GuardianTiers()`와 기존 form 계약을 다시 검색해 재사용함. 외부 구현·새 의존성은 불필요하며 라이선스·호환성 영향 없음.
+- P3 기록(Manager 4.5, 2026-10-26): `/verify-console`의 체크리스트 `<h2>`가 「엔진 런타임」 `<h2>` 절 안에 중첩됨. define을 매개변수로 나누는 것은 현 범위에서 YAGNI라 보류함.
+- P3 기록(Manager 4.5, 2026-10-26): 한도 줄 사유는 `Validate()`의 영문 원문을 그대로 옮김. 재계산 금지 규칙 때문에 번역·재구성하지 않음.
+- P2 처분(Manager 4.5, 2026-10-26): 모바일 `details.explain > summary`의 펼침 표식은 a174 모바일 CSS에서 `display: list-item`으로 복원하고, a173 복원 계약과 같은 순서 단언을 새 독립 시험으로 RED→GREEN 확인함.
+- P2 처분(Manager 4.5, 2026-10-26): 비교표 셀은 기본 줄 간격과 `0.3rem` 세로 여백을 복원함. 열 머리 버튼은 줄바꿈과 최대 13rem 폭을 허용해 390 다크 표 폭을 640px·858px로 줄였음. 1280 높이는 2786px가 되어 2500 목표를 넘지만, 정보 여백을 다시 줄이지 않고 측정값을 기록함.

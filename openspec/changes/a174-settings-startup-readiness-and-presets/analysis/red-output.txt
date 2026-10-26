@@ -2291,3 +2291,10 @@ FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.039s
 FAIL
 FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.029s
 FAIL
+
+--- a174 수정 라운드 2 RED (모바일 explain 펼침 표식) ---
+--- FAIL: TestA174ExplainSummaryRestoresMobileDisclosureMarker (0.00s)
+    a174_mobile_disclosure_test.go:18: 모바일 블록이 summary를 inline-flex로 만든 뒤 explain summary를 list-item으로 되돌려야 한다
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.012s
+FAIL
