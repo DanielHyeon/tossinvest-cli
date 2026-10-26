@@ -1,0 +1,194 @@
+{
+ "dashboard.html": {
+  "notice_danger": 1,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 18
+ },
+ "history.html": {
+  "notice_danger": 0,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "openapi_login.html": {
+  "notice_danger": 1,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "optimization.html": {
+  "notice_danger": 0,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "optimization_category_candidate-filters.html": {
+  "notice_danger": 0,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "optimization_category_exit-protection.html": {
+  "notice_danger": 0,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "optimization_category_performance-history.html": {
+  "notice_danger": 0,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 1
+ },
+ "optimization_category_position-management.html": {
+  "notice_danger": 0,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "optimization_category_strategy-runtime.html": {
+  "notice_danger": 0,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "orders.html": {
+  "notice_danger": 1,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 4
+ },
+ "performance-history.html": {
+  "notice_danger": 0,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 1
+ },
+ "position-management.html": {
+  "notice_danger": 1,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "positions.html": {
+  "notice_danger": 1,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "report.html": {
+  "notice_danger": 0,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "settings.html": {
+  "notice_danger": 3,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "settings_daily.html": {
+  "notice_danger": 3,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "settings_standing.html": {
+  "notice_danger": 3,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "settings_strategy.html": {
+  "notice_danger": 0,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "settings_tools.html": {
+  "notice_danger": 0,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "signals.html": {
+  "notice_danger": 0,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 6
+ },
+ "strategy-runtime.html": {
+  "notice_danger": 0,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 25,
+  "unmeasured": 0
+ },
+ "strategy-runtime_market-schedule.html": {
+  "notice_danger": 0,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "verify-console.html": {
+  "notice_danger": 0,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 0
+ },
+ "verify.html": {
+  "notice_danger": 0,
+  "change_id_body": 0,
+  "abs_path_body": 0,
+  "hex64_body": 0,
+  "not_observed": 0,
+  "unmeasured": 2
+ }
+}

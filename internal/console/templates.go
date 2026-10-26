@@ -494,6 +494,7 @@ body:has([data-reload=on]) :is(body > header, .console-status)::after { animatio
 .preset-matrix th, .preset-matrix td { padding: 0.1rem 0.3rem; white-space: nowrap; }
 .preset-matrix form { display: block; }
 .preset-matrix button { padding: 0.2rem 0.45rem; white-space: nowrap; text-align: left; }
+#limits .preset-matrix th, #limits .preset-matrix td { padding-block: 0; }
 #limits > p, #trading > p { margin-block: var(--space-1); }
 #adoption { margin-block: var(--space-1); }
 #limits .notice, #trading .notice { padding: 0.2rem var(--space-2); margin-block: var(--space-1); }

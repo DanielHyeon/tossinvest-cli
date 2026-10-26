@@ -254,15 +254,17 @@ const settingsTemplates = `
 
   <p class="muted">automation gate는 지금 <strong>{{if .Gate.Enabled}}ON{{else}}OFF{{end}}</strong>이다.
   스위치는 <a href="/settings/standing#gate">상시 탭</a>에 있고 이 카드에서는 <strong>콘솔에서 편집할 수 없다</strong>.</p>
+  <p class="notice" data-currency-consequence="current">{{.LimitCurrencyConsequence}}</p>
 
   {{if .LimitGuard.Blocked}}{{template "cardblocked" .LimitGuard}}
   {{else}}
   <p class="muted">프리셋 하나는 다섯 한도와 통화를 함께 기록한다. 등록된 티어 위 값은 서버가 거부한다.</p>
-  {{range $index, $matrix := .LimitTierMatrices}}
+  {{range $matrix := .LimitTierMatrices}}
   <div class="table-scroll" role="region" aria-label="{{.Currency}} Guardian 프리셋 비교표" tabindex="0">
     <table class="preset-matrix" data-preset-currency="{{.Currency}}">
+      <caption>{{.Currency}} 프리셋 비교표</caption>
       <thead><tr><th scope="col">한도</th><th scope="col">현재</th>
-      {{range .Tiers}}<th scope="col"><form method="post" action="/settings/limits/preset" data-preset-tier="{{.ID}}" class="card-preview" data-limit-axis="비교표" aria-label="{{.Label}} 적용 후: 아래 표에서 현재와 다섯 한도를 비교">
+      {{range .Tiers}}<th scope="col"><form method="post" action="/settings/limits/preset" data-preset-tier="{{.ID}}">
         <input type="hidden" name="csrf" value="{{$.CSRF}}">
         <input type="hidden" name="tier" value="{{.ID}}">
         <button type="submit">{{.Label}}{{if .Recommended}} · 권장{{end}} 기록</button>
@@ -272,8 +274,8 @@ const settingsTemplates = `
           <span class="status-pill" data-limit-axis="{{.Axis}}">{{.Axis}}</span>{{end}}</td>{{end}}</tr>{{end}}</tbody>
     </table>
   </div>
-  {{if .Note}}<p class="muted">{{.Note}}</p>{{end}}
-  <p class="{{if eq $index 0}}notice{{else}}aside{{end}}" data-currency-consequence="{{.Currency}}">{{.Consequence}}</p>
+  {{if .Note}}<p class="muted" data-preset-note="{{.Currency}}">{{.Note}}</p>{{end}}
+  <p class="muted">이 통화의 프리셋을 고르면 {{.Consequence}}</p>
   {{end}}
 
   <details class="explain">

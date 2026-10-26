@@ -44,10 +44,15 @@ Story: `STORY-TOS-a174` · Low~Medium(설정 폼 마크업 재배치, 설정 저
   - 증거(Terra, 2026-10-26): `analysis/review-after.md`; 전용 design-critic 미설치 사실과 수동 점검 범위를 기록함. `impeccable detect`는 변경 대상에서 `[]`, 접근성·모션·데스크톱/모바일 격리 렌더를 확인함.
 - [x] 4.4 gstack `review`(경량) → `review.md` 「구현 리뷰」. 변이 1회: `StartupReadiness` 에서 거래 정책 줄 제거 → 2.1 FAIL 확인 후 원복(기록, 원복은 심볼 수를 세어 확인)
   - 증거(Terra, 2026-10-26): `review.md` 「구현 리뷰」. 거래 정책 행과 해당 지역 변수를 함께 제거한 변이에서 2.1이 행 수 5·거래 정책 부재로 FAIL했고, 원복 뒤 `거래 정책 행`·`tradingKnown` 심볼 수가 각각 1, 대상 시험 PASS를 확인함.
+- [x] 4.6 Manager 리뷰 보정: 현재 계좌 통화 결과 notice와 프리셋 가정 결과를 분리하고, 프리셋 form의 가짜 preview 속성을 제거한다. USD·미설정 current notice RED 후 GREEN, 각 티어 실제 표 열의 다섯 값·방향과 표 아래 전환 문장을 단언한다. 정상 fixture의 네 preflight 절 이름 매핑 이탈도 회귀 시험으로 막는다.
+  - 증거(Terra, 2026-10-26): `analysis/red-output.txt` 끝의 원문 RED(USD·미설정 current notice 0회, 가짜 form 속성, 표 아래 전환 문구 부재). `internal/console/settings_card_test.go:TestCurrentLimitCurrencyConsequenceMatchesConfiguredCurrency`, `settings_limits_test.go:TestThePresetControlsAskForNoTyping`, `readiness_test.go:TestGuardianPresetsRenderAsOneMatrixPerCurrency`, `readiness_test.go:TestStartupReadinessMapsEveryPreflightClause`의 집중 GREEN PASS. `check_analysis.py` required **5**(`Console.handleDashboard`, `TestEveryCardShowsWhatChangesAndWhen`, `TestTheCurrencyConsequenceIsRenderedAndNotFolded`, `TestThePresetControlsAskForNoTyping`, `limitCurrent`)와 `evidence complete or diff-proven exempt` 확인. 첫 보정 렌더 `analysis/measure/after-20261026T011645Z.json`은 2544px로 목표를 44px 초과해 프리셋 셀의 세로 여백만 a174 CSS 블록에서 제거함. 최종 `after-20261026T012343Z.json`·`after-20261026T012343Z-outline.json`은 `/settings/daily` light/1280 = **2499px**, 상자 **3**, form 7·input 24·button 7, 식별자·미측정 0을 기록함. 빈 설정·자격증명 0의 38321 GET 전용 격리 콘솔 parent 3135467·child 3144850은 종료됐고 `port_38321_released=true`을 재확인함. 최종 `gofmt -l internal/console` 빈 출력, `go vet ./internal/console/` PASS, `go test ./internal/console/ -count=1` PASS(59.845s), `go test ./cmd/tossctl/ -run Console -count=1` PASS(4.897s), strict OpenSpec PASS, `impeccable detect` `[]`을 확인함.
 - [ ] 4.5 Manager 검증 — 크롬으로 상시·당일·검증 콘솔 × 데스크톱/모바일 × 라이트/다크 직접 확인, 버튼 0
 
 ## 5. 종결 (Manager 승인 뒤, Opus)
 - [ ] 5.1 rebase → FLM 번들(required 가 0 이 아니면) → tracker → sdd-sync → `make gate` → archive → push → retain
 
 ## 고정 리터럴 시험 수정 기록
-(없음 — 기존 시험 함수 수정 0. a174 새 `readiness_test.go`에 독립 seam 하위 시험만 추가했고 기존 고정 literal 단언은 약화하지 않음.)
+
+- `internal/console/settings_limits_test.go:TestThePresetControlsAskForNoTyping` — 프리셋 form 안의 가짜 `card-preview`·`data-limit-axis` 문자열 검사를 실제 대응 표 열의 다섯 한도 값·방향 및 표 아래 전환 문장 검사로 교체함. 단언 수를 줄이지 않고 가짜 속성 부재 단언을 추가함.
+- `internal/console/settings_card_test.go:TestEveryCardShowsWhatChangesAndWhen` — 한도 카드는 form 안 preview가 아니라 비교표 열에서 적용 전후를 읽는 구조이므로 `preset-matrix` 존재를 단언하도록 정정함. 다른 카드의 preview 단언은 유지함.
+- `internal/console/readiness_test.go:TestGuardianPresetsRenderAsOneMatrixPerCurrency` — `data-currency-consequence`는 현재 계좌 통화 notice 한 번만 가져야 하므로, 프리셋별 결과를 세던 단언을 현재 notice 1회 단언으로 정정함.

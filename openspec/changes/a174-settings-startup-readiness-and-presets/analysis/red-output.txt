@@ -2258,5 +2258,36 @@
 --- FAIL: TestSettingsFormsAreByteIdenticalAfterLayout (0.00s)
     readiness_test.go:160: 폼 계약 비교 전에 프리셋 비교표가 렌더되지 않았다
 FAIL
+
+--- a174 수정 라운드 1 RED (현재 통화 결과·프리셋 표 계약) ---
+--- FAIL: TestGuardianPresetsRenderAsOneMatrixPerCurrency (0.01s)
+    readiness_test.go:185: 현재 통화 결과 notice = 0, want 1
+    readiness_test.go:188: data-currency-consequence 속성 = 2, want 현재 통화 1회
+--- FAIL: TestCurrentLimitCurrencyConsequenceMatchesConfiguredCurrency (0.01s)
+    --- FAIL: TestCurrentLimitCurrencyConsequenceMatchesConfiguredCurrency/USD_현재_통화 (0.00s)
+        settings_card_test.go:316: 현재 통화 결과 notice = 0, want 1
+    --- FAIL: TestCurrentLimitCurrencyConsequenceMatchesConfiguredCurrency/미설정_현재_통화 (0.00s)
+        settings_card_test.go:316: 현재 통화 결과 notice = 0, want 1
+--- FAIL: TestThePresetControlsAskForNoTyping (0.00s)
+    settings_limits_test.go:150: kr-smoke 프리셋 form이 표 열 대신 가짜 class="card-preview" 속성을 쓴다
+    settings_limits_test.go:150: kr-smoke 프리셋 form이 표 열 대신 가짜 data-limit-axis= 속성을 쓴다
+    settings_limits_test.go:150: kr-smoke 프리셋 form이 표 열 대신 가짜 aria-label= 속성을 쓴다
+    settings_limits_test.go:167: kr-smoke 통화 표 아래에 "USD → KRW 통화 변경 — 강화도 완화도 아닌 별개의 변경이다" 전환 문구가 없다
+    settings_limits_test.go:150: kr-small-live 프리셋 form이 표 열 대신 가짜 class="card-preview" 속성을 쓴다
+    settings_limits_test.go:150: kr-small-live 프리셋 form이 표 열 대신 가짜 data-limit-axis= 속성을 쓴다
+    settings_limits_test.go:150: kr-small-live 프리셋 form이 표 열 대신 가짜 aria-label= 속성을 쓴다
+    settings_limits_test.go:167: kr-small-live 통화 표 아래에 "USD → KRW 통화 변경 — 강화도 완화도 아닌 별개의 변경이다" 전환 문구가 없다
+    settings_limits_test.go:150: us-smoke 프리셋 form이 표 열 대신 가짜 class="card-preview" 속성을 쓴다
+    settings_limits_test.go:150: us-smoke 프리셋 form이 표 열 대신 가짜 data-limit-axis= 속성을 쓴다
+    settings_limits_test.go:150: us-smoke 프리셋 form이 표 열 대신 가짜 aria-label= 속성을 쓴다
+    settings_limits_test.go:150: us-small-live 프리셋 form이 표 열 대신 가짜 class="card-preview" 속성을 쓴다
+    settings_limits_test.go:150: us-small-live 프리셋 form이 표 열 대신 가짜 data-limit-axis= 속성을 쓴다
+    settings_limits_test.go:150: us-small-live 프리셋 form이 표 열 대신 가짜 aria-label= 속성을 쓴다
+    settings_limits_test.go:150: us-single-name 프리셋 form이 표 열 대신 가짜 class="card-preview" 속성을 쓴다
+    settings_limits_test.go:150: us-single-name 프리셋 form이 표 열 대신 가짜 data-limit-axis= 속성을 쓴다
+    settings_limits_test.go:150: us-single-name 프리셋 form이 표 열 대신 가짜 aria-label= 속성을 쓴다
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.039s
+FAIL
 FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.029s
 FAIL

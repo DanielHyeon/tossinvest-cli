@@ -132,41 +132,42 @@ func TestApplyingAPresetWritesAllFiveAtOnce(t *testing.T) {
 // TestThePresetControlsAskForNoTyping — the preset forms carry a hidden tier id
 // and nothing to fill in (타이핑 확인·추가 승인 마찰 금지, 사용자 결정 2026-07-27).
 func TestThePresetControlsAskForNoTyping(t *testing.T) {
-	h := limitsHarness(t, &fakeLimits{})
+	h := limitsHarness(t, &fakeLimits{gate: fullLimits()})
 	h.authenticate(t)
 	page := h.page(t, pathSettingsDaily)
-
-	start := strings.Index(page, `action="/settings/limits/preset"`)
-	if start < 0 {
-		t.Fatal("the settings screen offers no preset control")
-	}
-	end := strings.Index(page[start:], "</form>")
-	if end < 0 {
-		t.Fatal("the preset form is not closed")
-	}
-	form := page[start : start+end]
-	for _, forbidden := range []string{`type="text"`, `type="number"`, "<textarea"} {
-		if strings.Contains(form, forbidden) {
-			t.Errorf("the preset form contains %s; applying a preset must be one click", forbidden)
+	for _, card := range (settingsPage{Gate: fullLimits()}).LimitTierCards() {
+		form := presetForm(t, page, card.ID)
+		for _, forbidden := range []string{`type="text"`, `type="number"`, "<textarea"} {
+			if strings.Contains(form, forbidden) {
+				t.Errorf("%s 프리셋 form에 %s가 있다; 적용은 한 번의 클릭이어야 한다", card.ID, forbidden)
+			}
 		}
-	}
-	// It used to demand `onsubmit="return confirm(…)"` here, and that assertion was
-	// pinning something that had never once run: the deployed CSP is
-	// default-src 'none' with no script-src, so an inline handler is blocked. The
-	// operator has always experienced this button as recording five values with no
-	// confirmation at all. What replaces it is server-rendered and therefore
-	// actually visible — 현재 → 변경 for each of the five, before the click
-	// (change a055, issues.md I2).
-	if strings.Contains(form, "onsubmit=") {
-		t.Error("the preset form still carries an inline handler; under this CSP it cannot run, " +
-			"which makes it the appearance of a confirmation rather than one")
-	}
-	if !strings.Contains(form, `class="card-preview"`) {
-		t.Error("the preset form shows no 적용 후 preview; the click writes five values and the " +
-			"operator has to be able to read which five before pressing")
-	}
-	if !strings.Contains(form, "data-limit-axis=") {
-		t.Error("the preview does not say which way each ceiling moves")
+		if strings.Contains(form, "onsubmit=") {
+			t.Errorf("%s 프리셋 form에 inline 확인 handler가 남아 있다", card.ID)
+		}
+		for _, forbidden := range []string{`class="card-preview"`, "data-limit-axis=", "aria-label="} {
+			if strings.Contains(form, forbidden) {
+				t.Errorf("%s 프리셋 form이 표 열 대신 가짜 %s 속성을 쓴다", card.ID, forbidden)
+			}
+		}
+
+		matrix := presetMatrix(t, page, card.Limits.Currency)
+		for _, row := range card.Preview.Rows {
+			cell := presetTierCell(t, matrix, card.ID, row.Label)
+			if !strings.Contains(cell, `>`+row.To) {
+				t.Errorf("%s/%s 표 열 값이 Preview.To와 다르다: %s", card.ID, row.Label, cell)
+			}
+			if row.Axis != "" && !strings.Contains(cell, `data-limit-axis="`+row.Axis+`"`) {
+				t.Errorf("%s/%s 표 열 방향이 Preview.Axis %q와 다르다: %s", card.ID, row.Label, row.Axis, cell)
+			}
+		}
+		if card.Preview.FirstTime || card.Preview.CurrencyChange {
+			note := limitTierMatrixNote(card)
+			noteAt := strings.Index(page, `data-preset-note="`+card.Limits.Currency+`"`)
+			if noteAt < strings.Index(page, matrix) || !strings.Contains(page[noteAt:], note) {
+				t.Errorf("%s 통화 표 아래에 %q 전환 문구가 없다", card.ID, note)
+			}
+		}
 	}
 }
 
@@ -605,4 +606,47 @@ func limitCurrent(t *testing.T, page string) string {
 		t.Fatal("the current-limit table is not closed")
 	}
 	return page[start : start+end]
+}
+
+func presetForm(t *testing.T, page, tierID string) string {
+	t.Helper()
+	marker := `action="/settings/limits/preset" data-preset-tier="` + tierID + `"`
+	start := strings.Index(page, marker)
+	if start < 0 {
+		t.Fatalf("%s 프리셋 form이 없다", tierID)
+	}
+	end := strings.Index(page[start:], "</form>")
+	if end < 0 {
+		t.Fatalf("%s 프리셋 form이 닫히지 않았다", tierID)
+	}
+	return page[start : start+end+len("</form>")]
+}
+
+func presetMatrix(t *testing.T, page, currency string) string {
+	t.Helper()
+	marker := `data-preset-currency="` + currency + `"`
+	i := strings.Index(page, marker)
+	if i < 0 {
+		t.Fatalf("%s 프리셋 비교표가 없다", currency)
+	}
+	start := strings.LastIndex(page[:i], `<table class="preset-matrix"`)
+	end := strings.Index(page[i:], "</table>")
+	if start < 0 || end < 0 {
+		t.Fatalf("%s 프리셋 비교표 경계를 찾지 못했다", currency)
+	}
+	return page[start : i+end+len("</table>")]
+}
+
+func presetTierCell(t *testing.T, matrix, tierID, label string) string {
+	t.Helper()
+	marker := `data-preset-tier="` + tierID + `" data-preset-limit="` + label + `">`
+	start := strings.Index(matrix, marker)
+	if start < 0 {
+		t.Fatalf("%s/%s 프리셋 셀이 없다", tierID, label)
+	}
+	end := strings.Index(matrix[start:], "</td>")
+	if end < 0 {
+		t.Fatalf("%s/%s 프리셋 셀이 닫히지 않았다", tierID, label)
+	}
+	return matrix[start : start+end+len("</td>")]
 }

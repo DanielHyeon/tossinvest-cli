@@ -85,6 +85,12 @@ func TestEveryCardShowsWhatChangesAndWhen(t *testing.T) {
 	h.authenticate(t)
 	for _, path := range settingsTabPaths {
 		for name, card := range cardsOn(t, body(t, h.get(t, path))) {
+			if name == "limits" {
+				if !strings.Contains(card, `class="preset-matrix"`) {
+					t.Errorf("%s/%s renders no preset matrix; the operator cannot read what a preset writes", path, name)
+				}
+				continue
+			}
 			if !strings.Contains(card, `class="card-preview"`) {
 				t.Errorf("%s/%s renders no 적용 후 preview; the operator presses without being told "+
 					"what the press writes", path, name)
@@ -282,6 +288,57 @@ func TestTheCurrencyConsequenceIsRenderedAndNotFolded(t *testing.T) {
 			t.Errorf("the consequence does not name paired readiness %q", want)
 		}
 	}
+}
+
+func TestCurrentLimitCurrencyConsequenceMatchesConfiguredCurrency(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		gate      config.AutomationGate
+		want      []string
+		forbidden string
+	}{
+		{
+			name:      "USD 현재 통화",
+			gate:      fullLimits(),
+			want:      []string{"계좌 기준 통화는 USD다", "KRW→USD FX"},
+			forbidden: "계좌 기준 통화는 KRW다",
+		},
+		{
+			name:      "미설정 현재 통화",
+			gate:      config.AutomationGate{},
+			want:      []string{"계좌 기준 통화가 아직 없다", "신규 자동 진입 권위는 없다"},
+			forbidden: "계좌 기준 통화는 KRW다",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := limitsHarness(t, &fakeLimits{gate: tc.gate})
+			h.authenticate(t)
+			notice := currentCurrencyConsequence(t, h.page(t, pathSettingsDaily))
+			for _, want := range tc.want {
+				if !strings.Contains(notice, want) {
+					t.Errorf("현재 통화 결과 notice에 %q가 없다: %s", want, notice)
+				}
+			}
+			if strings.Contains(notice, tc.forbidden) {
+				t.Errorf("현재 통화 결과 notice가 %q를 현재 사실처럼 말한다: %s", tc.forbidden, notice)
+			}
+		})
+	}
+}
+
+func currentCurrencyConsequence(t *testing.T, page string) string {
+	t.Helper()
+	const marker = `data-currency-consequence="current"`
+	if got := strings.Count(page, marker); got != 1 {
+		t.Fatalf("현재 통화 결과 notice = %d, want 1", got)
+	}
+	i := strings.Index(page, marker)
+	start := strings.LastIndex(page[:i], `<p class="notice"`)
+	end := strings.Index(page[i:], "</p>")
+	if start < 0 || end < 0 {
+		t.Fatal("현재 통화 결과 notice 경계를 찾지 못했다")
+	}
+	return page[start : i+end+len("</p>")]
 }
 
 func TestMissingAccountBaseCurrencyKeepsBothEntriesUnready(t *testing.T) {

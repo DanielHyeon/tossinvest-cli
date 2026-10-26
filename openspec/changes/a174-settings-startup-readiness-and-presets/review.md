@@ -40,3 +40,12 @@
 - 변이: `StartupReadiness`에서 거래 정책 행과 그 지역 변수를 함께 제거했을 때 `TestStartupReadinessAppearsOnThreeScreensWithoutControls`가 행 수 5, 거래 정책 행 부재로 FAIL함. 원복 뒤 `거래 정책 행`·`tradingKnown` 심볼 수가 각각 1이고 대상 시험 PASS임.
 - 미실행: Claude/Codex 적대적 전체 리뷰와 구조화 리뷰는 Manager가 요청한 "경량" 범위를 넘고 종결자 검증과 중복되어 실행하지 않음. gstack 업그레이드는 사용자 범위 밖 전역 변경이므로 하지 않음.
 - 결론: 차단·고위험 발견 없음. 위 문자열 매핑 정보성 위험을 Manager handoff에 남김.
+
+## Manager 리뷰 보정 1 (Terra, 2026-10-26)
+
+- P1-1 처분: `LimitCurrencyConsequence`를 한도 카드의 `data-currency-consequence="current"` notice 한 번으로 복원함. 표별 결과는 "이 통화의 프리셋을 고르면"이라는 가정 문맥의 muted 문장으로 남기고, 현재 통화 속성을 갖지 않음. USD·미설정 fixture에서 각 현재 문장과 KRW 오독 부재를 RED→GREEN으로 확인함.
+- P1-2 처분: preset form에서 `card-preview`, `data-limit-axis="비교표"`, 가짜 `aria-label`을 제거함. 고정 리터럴 시험은 동일 form의 대응 표 열에서 `LimitTierCards()` preview 다섯 값·실제 방향을 확인하고, FirstTime·CurrencyChange 문장이 표 아래에 있는지 확인하도록 보강함. 수정 함수와 이유는 `tasks.md` 고정 리터럴 시험 수정 기록에 전수 기재함.
+- P3 처분: 정상 fixture의 네 `GatePreflight` 절 모두가 `사전 판정 항목을 찾을 수 없다`를 렌더하지 않는 회귀 단언을 추가함. 안정 ID 도입은 기존 `GatePreflight` 계약 변경 금지 범위를 넘으므로 하지 않음.
+- 분석 번들: 기존 함수 편집·삽입 경계 기준 required 5개(`Console.handleDashboard`, `TestEveryCardShowsWhatChangesAndWhen`, `TestTheCurrencyConsequenceIsRenderedAndNotFolded`, `TestThePresetControlsAskForNoTyping`, `limitCurrent`) 모두 `analysis/function-logic/`에 AST·FLM·BTM·risk report TODO 0으로 작성함. 두 인접 기존 함수는 본문 의미를 바꾸지 않아 base revision AST로 기록함.
+- UI·접근성: `impeccable` operate surface 기준으로 표 머리·scope, 버튼의 기존 이름과 즉시성을 유지함. 숨은 form 속성에 의존하지 않고 읽기 순서에서 현재 통화 notice→비교표 caption→표 아래 전환 문장을 제공함. 첫 렌더 2544px가 목표를 44px 넘어서 a174 CSS 블록에서 프리셋 셀의 세로 여백만 제거했고, 최종 격리 렌더는 2499px·상자 3으로 통과함. `impeccable detect --json internal/console/templates.go internal/console/templates_settings.go`는 `[]`임.
+- 연구: 현 저장소의 `LimitTierCards()`·`LimitCurrencyConsequence()`·`config.GuardianTiers()`와 기존 form 계약을 다시 검색해 재사용함. 외부 구현·새 의존성은 불필요하며 라이선스·호환성 영향 없음.

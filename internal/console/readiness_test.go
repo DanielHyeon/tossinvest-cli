@@ -181,12 +181,18 @@ func TestGuardianPresetsRenderAsOneMatrixPerCurrency(t *testing.T) {
 	if got := strings.Count(page, `data-preset-row=`); got != len(currencies)*6 {
 		t.Errorf("비교표 행 = %d, want 통화별 한도 다섯+통화 %d", got, len(currencies)*6)
 	}
-	if got := strings.Count(page, `data-currency-consequence=`); got != len(currencies) {
-		t.Errorf("통화 결과 설명 = %d, want 통화별 1회 %d", got, len(currencies))
+	if got := strings.Count(page, `data-currency-consequence="current"`); got != 1 {
+		t.Errorf("현재 통화 결과 notice = %d, want 1", got)
+	}
+	if got := strings.Count(page, `data-currency-consequence=`); got != 1 {
+		t.Errorf("data-currency-consequence 속성 = %d, want 현재 통화 1회", got)
 	}
 	for _, card := range cards {
 		if got := strings.Count(page, `action="/settings/limits/preset" data-preset-tier="`+card.ID+`"`); got != 1 {
 			t.Errorf("%s 프리셋 폼 = %d, want 1", card.ID, got)
+		}
+		if got := strings.Count(page, `이 통화의 프리셋을 고르면 `+card.Preview.Consequence); got != 1 {
+			t.Errorf("%s 가정 결과 문장 = %d, want 1", card.ID, got)
 		}
 		if !strings.Contains(page, `name="tier" value="`+card.ID+`"`) {
 			t.Errorf("%s 프리셋 hidden tier가 없다", card.ID)
@@ -200,6 +206,23 @@ func TestGuardianPresetsRenderAsOneMatrixPerCurrency(t *testing.T) {
 			if !strings.Contains(page, want) {
 				t.Errorf("%s/%s 값이 LimitTierCards Preview.To와 다르다", card.ID, row.Label)
 			}
+		}
+	}
+}
+
+func TestStartupReadinessMapsEveryPreflightClause(t *testing.T) {
+	h := fullSettingsHarness(t)
+	h.authenticate(t)
+	section := readinessSection(t, body(t, h.get(t, pathSettingsDaily)))
+	for _, label := range []string{
+		"1. 한도 다섯 개와 통화",
+		"3. 거래 정책",
+		"2·6. 능력 증명서",
+		"4·5·7·8. Guardian 주입 · 게이트웨이 · 전송의 키 운반",
+	} {
+		row := readinessRowFor(t, section, label)
+		if strings.Contains(row, "사전 판정 항목을 찾을 수 없다") {
+			t.Errorf("정상 fixture의 %q 절이 이름 짝을 잃었다: %s", label, row)
 		}
 	}
 }
