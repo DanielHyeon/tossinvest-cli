@@ -52,8 +52,11 @@ Story: `STORY-TOS-a174` · Low~Medium(설정 폼 마크업 재배치, 설정 저
   - 최종 검증(Terra, 2026-10-26): `gofmt -l internal/console`·`go vet ./internal/console/`·`git diff --check` 빈 출력, `go test ./internal/console/ -count=1` PASS(60.995s), `go test ./cmd/tossctl/ -run Console -count=1` PASS(3.924s), `check_analysis.py --change a174-settings-startup-readiness-and-presets` required **5**·증거 완비, strict OpenSpec PASS, `/home/daniel/.codex/skills/impeccable/scripts/impeccable detect --json --target internal/console/templates.go` `[]`.
 
 ## 5. 종결 (Manager 승인 뒤, Opus)
-- [ ] 5.1 rebase → FLM 번들(required 가 0 이 아니면) → tracker → sdd-sync → `make gate` → archive → push → retain
+- [x] 5.1 rebase → FLM 번들(required 가 0 이 아니면) → tracker → sdd-sync → `make gate` → archive → push → retain
   - 사람 승인: 사용자가 a174 종결 1~6(Manager 편집 커밋·rebase/ff·전체 `make gate`·archive·push(로컬 docs 커밋 `8d20453c8`·`01e61a756` 포함)·정리·retain)을 "진행"으로 승인(2026-10-26, a174 한정). 운영 이미지 재빌드·배포는 범위 밖.
+  - rebase: 불필요 — 브랜치가 main `01e61a756` 에서 분기했고 main 이 그 뒤로 움직이지 않음(ff 가능). Manager 편집 커밋 `11be30b70`.
+  - gate ⑤ 사전 실행: `check_analysis.py --change a174-…` rc 0, required 5(`Console.handleDashboard` · `TestEveryCardShowsWhatChangesAndWhen` · `TestTheCurrencyConsequenceIsRenderedAndNotFolded` · `TestThePresetControlsAskForNoTyping` · `limitCurrent`) — `analysis/function-logic/` 번들 6(Terra 작성, `TestGuardianPresetsRenderAsOneMatrixPerCurrency` 포함) → `evidence complete or diff-proven exempt`.
+  - 완료 게이트 결과는 review.md 「완료 게이트 실행 영수증」에 적음(관례: 체크 → tracker → gate).
 
 ## 고정 리터럴 시험 수정 기록
 
