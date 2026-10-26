@@ -1,6 +1,6 @@
 {
   "file": "internal/console/optimization_candidate_filters_test.go",
-  "source_sha256": "5905dd742e401d06df73db8ea780432f046a83ba1cc4c7ce57d900ef52ee67de",
+  "source_sha256": "488fe6d51591c1fe0b8d748c7eef047a885469fddcd6bec3dadbad7f3bac6f19",
   "package": "console",
   "function": "TestCandidateFilterCardsContainExactMarketMetricMatrix",
   "signature": "TestCandidateFilterCardsContainExactMarketMetricMatrix(params=1, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 64,
+    "line": 65,
     "column": 2
   },
   "branches": [
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 55,
+        "line": 56,
         "column": 2
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "range",
       "at": {
-        "line": 58,
+        "line": 59,
         "column": 2
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 60,
+        "line": 61,
         "column": 3
       }
     }
@@ -190,12 +190,20 @@
         "line": 55,
         "column": 12
       },
+      "text": "candidateFilterMatrixFromMarkets"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 12
+      },
       "text": "a175MatrixDataRowCount"
     },
     {
       "kind": "call",
       "at": {
-        "line": 55,
+        "line": 56,
         "column": 54
       },
       "text": "len"
@@ -203,7 +211,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 56,
+        "line": 57,
         "column": 3
       },
       "text": "t.Errorf"
@@ -211,15 +219,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 56,
-        "column": 77
+        "line": 57,
+        "column": 83
       },
       "text": "len"
     },
     {
       "kind": "call",
       "at": {
-        "line": 60,
+        "line": 61,
         "column": 13
       },
       "text": "exactElementTextCount"
@@ -227,7 +235,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 61,
+        "line": 62,
         "column": 4
       },
       "text": "t.Errorf"
@@ -280,20 +288,27 @@
       "kind": ":=",
       "at": {
         "line": 55,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 56,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 59,
+        "line": 60,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 60,
+        "line": 61,
         "column": 6
       }
     }

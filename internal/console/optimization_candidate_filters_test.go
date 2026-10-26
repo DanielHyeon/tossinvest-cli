@@ -52,11 +52,12 @@ func TestCandidateFilterCardsContainExactMarketMetricMatrix(t *testing.T) {
 	if got := a175ColumnHeaderCount(tables[0]); got != len(markets)+1 {
 		t.Errorf("candidate-filter matrix columns = %d, want key plus %d markets", got, len(markets))
 	}
-	if got := a175MatrixDataRowCount(tables[0]); got != len(markets[0].Filters) {
-		t.Errorf("candidate-filter matrix rows = %d, want %d registry keys", got, len(markets[0].Filters))
+	matrix := candidateFilterMatrixFromMarkets(markets)
+	if got := a175MatrixDataRowCount(tables[0]); got != len(matrix.Rows) {
+		t.Errorf("candidate-filter matrix rows = %d, want %d registry union keys", got, len(matrix.Rows))
 	}
-	for _, descriptor := range markets[0].Filters {
-		metric := descriptor.Key
+	for _, row := range matrix.Rows {
+		metric := row.Key
 		if got := exactElementTextCount(tables[0], "code", metric); got != 1 {
 			t.Errorf("%s matrix key count = %d, want exactly 1", metric, got)
 		}
@@ -76,8 +77,8 @@ func TestCandidateFilterCardsRemainMobileAndAccessibilityFriendly(t *testing.T) 
 	if got := a175ColumnHeaderCount(tables[0]); got != len(markets)+1 {
 		t.Errorf("candidate-filter matrix scope=col headers = %d, want %d", got, len(markets)+1)
 	}
-	if got := a175MatrixDataRowCount(tables[0]); got != len(markets[0].Filters) {
-		t.Errorf("candidate-filter matrix scope=row headers = %d, want %d", got, len(markets[0].Filters))
+	if got := a175MatrixDataRowCount(tables[0]); got != len(candidateFilterMatrixFromMarkets(markets).Rows) {
+		t.Errorf("candidate-filter matrix scope=row headers = %d, want registry union key count", got)
 	}
 	for _, want := range []string{`aria-label="후보 필터 시장 전환"`, `href="#candidate-filters-KR"`,
 		`href="#candidate-filters-US"`, `aria-label="후보 필터 KR US 행렬"`, `<dl>`} {

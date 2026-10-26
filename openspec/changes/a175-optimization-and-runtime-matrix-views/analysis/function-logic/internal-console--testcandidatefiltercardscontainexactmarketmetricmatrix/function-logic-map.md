@@ -9,7 +9,7 @@
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
 | 인증된 후보 필터 HTML | 현재 registry 시장·key를 포함한 읽기 전용 문서 | `newDashboardHarness`, `candidate.CandidateFilterMarkets` | DOM 누락은 `t.Fatal`/`t.Error`로 시험 실패 |
-| 행렬 행·열 | registry 시장 수 + key 열, registry key 수 행 | a175 표시 요구 목록 | 행렬 역할·키 누락을 시험 실패로 표시 |
+| 행렬 행·열 | registry 시장 수 + key 열, 시장 순서 합집합 key 수 행 | a175 표시 요구 목록 | 행렬 역할·키 누락을 시험 실패로 표시 |
 
 ## Branches and early returns
 
@@ -18,7 +18,7 @@
 | B1 | `.veto-matrix`가 없거나 복수임 | 없음 | `t.Fatal` | `TestCandidateFilterCardsContainExactMarketMetricMatrix` |
 | B2 | native table에 `aria-readonly`가 남음 | 없음 | `t.Error` | 같은 시험 |
 | B3 | `scope=col` 머리 수가 registry 시장 수와 다름 | 없음 | `t.Error` | 같은 시험 |
-| B4 | `scope=row` registry 행 수와 다름 | 없음 | `t.Error` | 같은 시험 |
+| B4 | `scope=row` 시장 합집합 registry 행 수와 다름 | 없음 | `t.Error` | 같은 시험 |
 | B5 | 각 registry key가 한 번이 아니거나 누락됨 | 없음 | `t.Error` | 같은 시험 |
 
 ## Calls and live bindings
@@ -26,7 +26,7 @@
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
 | `newDashboardHarness`·`h.page` | 인증된 로컬 렌더 수집 | in-process, retry 없음 | `ast.json` calls |
-| `candidate.CandidateFilterMarkets` | 현재 시장·필터 registry에서 기대 행·열·key를 유도 | in-process, retry 없음 | `ast.json` calls |
+| `candidate.CandidateFilterMarkets`·`candidateFilterMatrixFromMarkets` | 현재 시장·필터 registry에서 기대 열·합집합 행·key를 유도 | in-process, retry 없음 | `ast.json` calls |
 | `candidateFilterNode`·DOM helper | 실제 `<table>` 역할·scope·행과 native semantics를 확인 | parse 실패는 즉시 시험 실패 | `ast.json` calls |
 
 ## State mutations and fallbacks

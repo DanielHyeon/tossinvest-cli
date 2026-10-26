@@ -200,6 +200,7 @@ const optimizationTemplates = `
 {{end}}
 
 {{define "candidate-filter-matrix-cell"}}
+{{if not .Registered}}<p class="muted">{{.Market}} {{.Session}} · 이 시장에 등록 없음</p>{{else}}
 <dl><dt>시장 / 세션</dt><dd>{{.Market}} / {{.Session}}</dd>
 <dt>default state</dt><dd>미승인 (<code>{{.DefaultState}}</code>)</dd><dt>desired</dt><dd>미승인 — 숫자 값 없음 (<code>{{.DesiredState}}</code>)</dd>
 <dt>effective</dt><dd>미승인 — verdict 비활성 (<code>{{.EffectiveState}}</code>)</dd><dt>단위 / 유효 범위</dt><dd>{{.Unit}} / {{.ValidRange}}</dd>
@@ -207,6 +208,7 @@ const optimizationTemplates = `
 <dt>적용 시점</dt><dd>{{.ApplyTiming}}</dd><dt>누락</dt><dd>{{range .MissingEvidence}}<code>{{.}}</code> {{end}}</dd>
 <dt>preview / CAS</dt><dd>CAS 필수 · {{.PreviewContract}}</dd>{{if .LegacyValue}}<dt>legacy provenance</dt><dd><code>{{.LegacyValue}}</code> · <code>{{.Provenance}}</code> — desired/effective로 승격하지 않음</dd>{{end}}</dl>
 <details class="tech filter-description"><summary>설명</summary><p class="muted">{{.Help}}</p></details>
+{{end}}
 {{end}}
 
 {{define "optimization-preview"}}

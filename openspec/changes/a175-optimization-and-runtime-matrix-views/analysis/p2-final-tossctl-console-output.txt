@@ -1,0 +1,2 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	3.381s
+EXIT=0

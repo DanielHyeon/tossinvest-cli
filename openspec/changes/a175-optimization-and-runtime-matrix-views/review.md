@@ -29,3 +29,12 @@
   6. 기존 preset 시험이 비개요에 사라진 overview-only `data-*` 상태를 요구하던 불일치를 overview 렌더 검사로 옮김. 가짜 속성은 추가하지 않음.
 - 검증: `analysis/review-red-output.txt`의 네 회귀 실패 후 `analysis/review-green-output.txt`·`analysis/review-contract-green-output.txt` 통과. 남은 정보성 위험은 현재 registry가 대칭인 KR·US key만 제공한다는 점임. 장래에 한 시장 전용 key를 도입하면 행렬 key 합집합과 명시적 unavailable cell을 별도 change에서 설계·시험해야 함.
 - 결론: 미해결 critical 0. 이 change의 경량 리뷰 범위에서는 ship-blocking 발견 없음.
+
+## P2 Manager 수정 라운드 (2026-10-26)
+
+- 후보 필터 합집합: 행 key를 KR 전용이 아니라 registry 시장 순서의 first-seen 합집합으로 만들었음. 한 시장에 없는 key는 zero-value descriptor를 렌더하지 않고 `이 시장에 등록 없음`으로 표시하며 공통 행 병합에서 제외함. `TestCandidateFilterMatrixPreservesMarketOnlyKeys`가 KR 전용·US 전용 행 순서, 등록 상태, 실제 template unavailable cell을 검증함.
+- 공통 행 비교: `Market`만 중립화한 descriptor 사본을 `reflect.DeepEqual`로 비교해 새 field 누락이 공통 병합으로 이어지지 않게 했음. `Category`만 다른 fixture는 분리를 검증함. 이전 수동 비교도 이미 `Category`를 포함했으므로 이 단독 fixture는 RED가 아니었고, P2 RED는 미등록 cell 상태가 없어서 실패했음.
+- 신호 측정: 900px 기준선은 빈 격리 config에서 `discovery_unreadable`가 난 상태였음. 서로 다른 상태의 3243px/3640px 기록은 전후 비교에서 제외하고, base·HEAD 동일 상태를 900px/941px로 다시 측정했음. 시장 행 없는 오류 상태에만 불필요했던 공통 그림자 설명을 렌더하지 않도록 해 모바일 증가를 없앴으며 cause·안전 상태는 그대로 표시함. 상세값은 `analysis/p2-isolated-measurement.md`에 있음.
+- 중계 높이: 데스크톱 전체 1218→1261px 증가는 `.optimization-nav` 513→710px가 정하며 본문은 세 카테고리 모두 감소했음. 링크·설명·여백을 줄이지 않았고, 완료 기준 조정은 Manager 판단으로 남김.
+- P3 기록만: 후보 필터의 `미승인 — 숫자 값 없음`·`미승인 — verdict 비활성` 문구와 전략·실행의 `lane desired OFF · engine autostart OFF · scheduler desired OFF` 문구는 base부터 존재한 상태 비연동 고정 문구임. registry/runtime이 실제 승인·desired/effective를 제공하는 change에서 상태값으로 교체하지 않으면 표시와 값이 어긋날 위험이 남음.
+- skill·research: UI 영향이 있어 `impeccable`을 적용했고 `analysis/p2-impeccable-detect.json`은 빈 배열이었음. 기존 Go `html/template`와 표 DOM helper를 확장하고 Go 표준 라이브러리 `reflect.DeepEqual`만 사용했으며, 새 의존성·UI 라이브러리·라이선스 검토 대상은 추가하지 않았음. 이 선택은 행렬의 실제 렌더·접근성 역할을 기존 시험 방식으로 계속 검증할 수 있는 최소 변경임.

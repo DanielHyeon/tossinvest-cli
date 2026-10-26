@@ -1,0 +1,13 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/console [github.com/JungHoonGhae/tossinvest-cli/internal/console.test]
+internal/console/a175_optimization_runtime_matrix_test.go:257:24: matrix.Rows[0].KR.Registered undefined (type candidateFilterMatrixCell has no field or method Registered)
+internal/console/a175_optimization_runtime_matrix_test.go:257:56: matrix.Rows[0].US.Registered undefined (type candidateFilterMatrixCell has no field or method Registered)
+internal/console/a175_optimization_runtime_matrix_test.go:258:85: matrix.Rows[0].KR.Registered undefined (type candidateFilterMatrixCell has no field or method Registered)
+internal/console/a175_optimization_runtime_matrix_test.go:258:115: matrix.Rows[0].US.Registered undefined (type candidateFilterMatrixCell has no field or method Registered)
+internal/console/a175_optimization_runtime_matrix_test.go:260:23: matrix.Rows[1].KR.Registered undefined (type candidateFilterMatrixCell has no field or method Registered)
+internal/console/a175_optimization_runtime_matrix_test.go:260:56: matrix.Rows[1].US.Registered undefined (type candidateFilterMatrixCell has no field or method Registered)
+internal/console/a175_optimization_runtime_matrix_test.go:261:85: matrix.Rows[1].KR.Registered undefined (type candidateFilterMatrixCell has no field or method Registered)
+internal/console/a175_optimization_runtime_matrix_test.go:261:115: matrix.Rows[1].US.Registered undefined (type candidateFilterMatrixCell has no field or method Registered)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console [build failed]
+FAIL
+
+EXIT=1

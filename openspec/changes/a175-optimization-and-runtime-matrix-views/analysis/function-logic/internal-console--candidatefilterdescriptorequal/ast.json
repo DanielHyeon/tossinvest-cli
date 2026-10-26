@@ -1,0 +1,46 @@
+{
+  "file": "internal/console/optimization_matrix_view.go",
+  "source_sha256": "cd2cb7ebe51793f693412dadfc1f8c8c4e63ae6a5da7bb8533545dee24f01993",
+  "package": "console",
+  "function": "candidateFilterDescriptorEqual",
+  "signature": "candidateFilterDescriptorEqual(params=2, results=1)",
+  "start": {
+    "line": 146,
+    "column": 1
+  },
+  "end": {
+    "line": 149,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 148,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 9
+      },
+      "text": "reflect.DeepEqual"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 147,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

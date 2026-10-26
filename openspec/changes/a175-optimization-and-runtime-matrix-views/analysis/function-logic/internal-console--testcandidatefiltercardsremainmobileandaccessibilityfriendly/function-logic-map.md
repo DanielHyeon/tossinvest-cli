@@ -17,7 +17,7 @@
 |---|---|---|---|---|
 | B1 | `.veto-matrix`가 없거나 복수임 | 없음 | `t.Fatal` | `TestCandidateFilterCardsRemainMobileAndAccessibilityFriendly` |
 | B2 | `scope=col` 머리 수가 registry 시장 수와 다름 | 없음 | `t.Error` | 같은 시험 |
-| B3 | `scope=row` 행 머리 수가 registry key 수와 다름 | 없음 | `t.Error` | 같은 시험 |
+| B3 | `scope=row` 행 머리 수가 시장 합집합 key 수와 다름 | 없음 | `t.Error` | 같은 시험 |
 | B4 | 접근성·키보드 marker 반복 | 없음 | `t.Error` | 같은 시험 |
 | B5 | 시장 deep link·region·`dl` marker 누락 | 없음 | `t.Error` | 같은 시험 |
 
@@ -34,5 +34,5 @@
 
 ## Safety conclusion
 
-- Safe edit boundary: "표 0개" 고정 리터럴을 registry 유도 행렬 표의 scope·스크롤 역할 검증으로 교체함.
+- Safe edit boundary: "표 0개" 고정 리터럴을 시장 합집합으로 유도한 행렬 표의 scope·스크롤 역할 검증으로 교체함.
 - High-risk impact: no — 변경된 마크업 역할을 정직하게 검증함.

@@ -1,0 +1,5 @@
+--- FAIL: TestSignalsCommonCopyIsAbsentWithoutMarketRows (0.00s)
+    a175_optimization_runtime_matrix_test.go:416: market rows가 없는데 그림자 지표 설명이 렌더링됨
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.014s
+FAIL

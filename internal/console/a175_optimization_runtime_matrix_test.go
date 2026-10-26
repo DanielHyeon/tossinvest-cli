@@ -1,6 +1,7 @@
 package console
 
 import (
+	"bytes"
 	"strconv"
 	"strings"
 	"testing"
@@ -233,6 +234,57 @@ func TestCandidateFilterMatrixKeepsDifferentMarketValuesSeparate(t *testing.T) {
 	}
 }
 
+func TestCandidateFilterMatrixPreservesMarketOnlyKeys(t *testing.T) {
+	markets := candidate.CandidateFilterMarkets()
+	krOnly := markets[0].Filters[0]
+	krOnly.Key, krOnly.Label = "kr_only", "KR 전용 필터"
+	usOnly := markets[1].Filters[0]
+	usOnly.Key, usOnly.Label = "us_only", "US 전용 필터"
+	markets[0].Filters = []candidate.CandidateFilterDescriptor{krOnly}
+	markets[1].Filters = []candidate.CandidateFilterDescriptor{usOnly}
+
+	matrix := candidateFilterMatrixFromMarkets(markets)
+	if got := len(matrix.Rows); got != 2 {
+		t.Fatalf("market-only matrix rows = %d, want union 2", got)
+	}
+	if matrix.Rows[0].Key != "kr_only" || matrix.Rows[1].Key != "us_only" {
+		t.Fatalf("market-only matrix key order = %q, %q; want KR then US first-seen union", matrix.Rows[0].Key, matrix.Rows[1].Key)
+	}
+	for _, row := range matrix.Rows {
+		if row.Common {
+			t.Errorf("market-only key %q was merged as common", row.Key)
+		}
+	}
+	if !matrix.Rows[0].KR.Registered || matrix.Rows[0].US.Registered {
+		t.Errorf("KR-only registration = KR:%t US:%t, want true/false", matrix.Rows[0].KR.Registered, matrix.Rows[0].US.Registered)
+	}
+	if matrix.Rows[1].KR.Registered || !matrix.Rows[1].US.Registered {
+		t.Errorf("US-only registration = KR:%t US:%t, want false/true", matrix.Rows[1].KR.Registered, matrix.Rows[1].US.Registered)
+	}
+	var missingCell bytes.Buffer
+	if err := pages.ExecuteTemplate(&missingCell, "candidate-filter-matrix-cell", matrix.Rows[0].US); err != nil {
+		t.Fatalf("render unregistered market cell: %v", err)
+	}
+	if !strings.Contains(missingCell.String(), "이 시장에 등록 없음") {
+		t.Error("unregistered market cell lacks explicit unavailable label")
+	}
+	if strings.Contains(missingCell.String(), "미승인 — 숫자 값 없음") {
+		t.Error("unregistered market cell renders a zero-value descriptor as approved data")
+	}
+}
+
+func TestCandidateFilterMatrixKeepsCategoryDifferenceSeparate(t *testing.T) {
+	markets := candidate.CandidateFilterMarkets()
+	markets[1].Filters[0].Category = "candidate-filters-us"
+	matrix := candidateFilterMatrixFromMarkets(markets)
+	if len(matrix.Rows) == 0 {
+		t.Fatal("candidate-filter matrix rows = 0")
+	}
+	if matrix.Rows[0].Common {
+		t.Fatal("descriptor with a different category was merged")
+	}
+}
+
 func TestCandidateFilterMatrixFoldsDescriptionsOnly(t *testing.T) {
 	h := newDashboardHarness(t, func(*Options) {})
 	h.authenticate(t)
@@ -363,6 +415,13 @@ func TestSignalsCommonCopyOnceAndShadowBandsFolded(t *testing.T) {
 		if a175ContainsNode(band, vetoTables[0]) || strings.Contains(a175ElementText(band), "후보 1개") {
 			t.Error("veto table or candidate count is folded into shadow-band details")
 		}
+	}
+}
+
+func TestSignalsCommonCopyIsAbsentWithoutMarketRows(t *testing.T) {
+	page := renderSignals(t, newSignalsHarness(t, &stubSignals{reading: SignalsReading{}}))
+	if strings.Contains(page, "그림자 지표는 기록만 하고 후보 판정에 참여하지 않는다.") {
+		t.Error("market rows가 없는데 그림자 지표 설명이 렌더링됨")
 	}
 }
 

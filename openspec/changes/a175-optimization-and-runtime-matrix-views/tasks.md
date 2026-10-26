@@ -40,13 +40,15 @@ Story: `STORY-TOS-a175` · Low(읽기 전용 렌더 재배치). FLM/BTM·변이 
   - 구현자 증거: `analysis/{review-after.md,accessibility-static-check.txt,impeccable-detect.json}` — scope/region/summary 복원, 720px runtime 1열, Help 설명 전용 details 확인.
 - [x] 4.4 gstack `review` 경량 → `review.md`. 변이 1회: 행렬에서 US 열 제거 → 2.4 FAIL 확인 후 원복
   - 구현자 증거: `analysis/{mutation-us-column-red-output.txt,mutation-us-column-green-output.txt,review-red-output.txt,review-green-output.txt,review-contract-green-output.txt}`, `review.md` — US 열 제거 시 2.4 FAIL, 원복 뒤 `candidate-filters-US` 2회·header 1회 확인; 독립 경량 리뷰의 4개 critical을 RED→GREEN으로 해소함.
+- [x] 4.6 Manager 수정 라운드: 시장 key 합집합·미등록 cell·descriptor 전체 비교·동일 상태 신호 재측정
+  - 구현자 증거: `analysis/{p2-red-output.txt,p2-green-output.txt,p2-signals-red-output.txt,p2-signals-green-output.txt,p2-isolated-measurement.md,p2-impeccable-detect.json,p2-final-{gofmt,vet,console,tossctl-console,check-analysis}-output.txt}`, `review.md` — KR/US 전용 key가 first-seen 합집합으로 남고 없는 시장은 실제 렌더에서 명시됨. 신호는 `discovery_unreadable` 동일 상태로 900/941px, 중계 본문·내비 분리값을 재측정했음. check_analysis required 5: `TestAmbientMotionContract`, `TestCandidateFilterCardsContainExactMarketMetricMatrix`, `TestCandidateFilterCardsRemainMobileAndAccessibilityFriendly`, `TestOptimizationUsesOnePresetPreviewFlowWithoutClientDraft`, `TestOptimizationDOMHasNoArbitraryInputAndSubmitsOnlyOwnerOptions`.
 - [ ] 4.5 Manager 검증(Manager 가 체크 — 구현자는 체크하지 않음. 크롬: 최적화 6 카테고리·runtime·신호 × 데스크톱/모바일 × 라이트/다크)
 
 ## 5. 종결 (Opus)
 - [ ] 5.1 rebase → FLM 번들(필요 시) → tracker → sdd-sync → gate → archive → push → retain
 
 ## 고정 리터럴 시험 수정 기록
-- `TestCandidateFilterCardsContainExactMarketMetricMatrix`: 시장별 카드 3개라는 이전 구조 문자열 검사를 삭제하고, 실제 `.veto-matrix` 하나의 `scope=col` 3개·`scope=row` 3개·registry key 1회씩을 검사하도록 변경함.
-- `TestCandidateFilterCardsRemainMobileAndAccessibilityFriendly`: `<table>` 0개라는 이전 구조 검사를 삭제하고, 실제 행렬의 scope·시장 deep link·키보드 scroll region·native 읽기 전용 표·`dl`을 검사하도록 변경함.
+- `TestCandidateFilterCardsContainExactMarketMetricMatrix`: 시장별 카드 3개라는 이전 구조 문자열 검사를 삭제하고, 실제 `.veto-matrix` 하나의 `scope=col`·시장 순서 합집합 `scope=row`·registry key 1회씩을 검사하도록 변경함.
+- `TestCandidateFilterCardsRemainMobileAndAccessibilityFriendly`: `<table>` 0개라는 이전 구조 검사를 삭제하고, 실제 행렬의 scope·시장 합집합 행 수·시장 deep link·키보드 scroll region·native 읽기 전용 표·`dl`을 검사하도록 변경함.
 - `TestAmbientMotionContract`: 사라진 `.choice-tile` 대신 POST form을 실제로 품는 `.preset-compare`를 glow 금지 대상에 넣음. 임의 속성 추가나 존재 전용 marker는 사용하지 않음.
 - `TestOptimizationDOMHasNoArbitraryInputAndSubmitsOnlyOwnerOptions`: lifecycle/evidence marker를 비개요 exit 화면에 가짜로 되살리지 않고, 실제 marker를 렌더하는 overview route에서 검사하도록 변경함.

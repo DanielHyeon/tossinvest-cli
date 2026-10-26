@@ -1,0 +1,2 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	65.915s
+EXIT=0

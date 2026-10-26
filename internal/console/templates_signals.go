@@ -37,7 +37,9 @@ const signalsTemplates = `
 
 {{template "causes" .}}
 {{template "signalsread" .Snap}}
+{{if .Snap.Markets}}
 <p class="muted signal-shadow-common">그림자 지표는 기록만 하고 후보 판정에 참여하지 않는다.</p>
+{{end}}
 {{range .Snap.Markets}}{{template "signalsmarket" .}}{{end}}
 
 {{template "foot" .}}
