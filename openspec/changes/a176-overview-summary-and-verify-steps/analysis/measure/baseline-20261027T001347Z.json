@@ -1,0 +1,19 @@
+{
+ "harness": "archive a173 measure/shoot.cjs (GET only)",
+ "isolation": "empty config-dir, temporary HOME, empty OpenAPI environment, 127.0.0.1:38324",
+ "screens": {
+  "light/d/dashboard": {"h":4453,"forms":0,"inputs":0,"buttons":0,"notices":1,"stripH":68,"maxP":672,"words":640,"status":200},
+  "dark/d/dashboard": {"h":4697,"forms":0,"inputs":0,"buttons":0,"notices":2,"stripH":71,"maxP":672,"words":683,"status":200},
+  "light/m/dashboard": {"h":5186,"forms":0,"inputs":0,"buttons":0,"notices":2,"stripH":82,"maxP":366,"words":682,"status":200},
+  "dark/m/dashboard": {"h":5186,"forms":0,"inputs":0,"buttons":0,"notices":2,"stripH":82,"maxP":366,"words":682,"status":200},
+  "light/d/verify": {"h":5123,"forms":1,"inputs":3,"buttons":1,"notices":0,"stripH":68,"maxP":672,"words":1717,"status":200},
+  "dark/d/verify": {"h":5123,"forms":1,"inputs":3,"buttons":1,"notices":0,"stripH":68,"maxP":672,"words":1717,"status":200},
+  "light/m/verify": {"h":4859,"forms":1,"inputs":3,"buttons":1,"notices":0,"stripH":80,"maxP":366,"words":1715,"status":200},
+  "dark/m/verify": {"h":4859,"forms":1,"inputs":3,"buttons":1,"notices":0,"stripH":80,"maxP":366,"words":1715,"status":200}
+ },
+ "outline": {
+  "dashboard": {"notice_danger":1,"change_id_body":0,"abs_path_body":0,"hex64_body":0,"not_observed":0,"unmeasured":18},
+  "verify": {"notice_danger":0,"change_id_body":0,"abs_path_body":0,"hex64_body":0,"not_observed":0,"unmeasured":2}
+ },
+ "teardown": {"console_pid":1254588,"port_38324_released":true}
+}

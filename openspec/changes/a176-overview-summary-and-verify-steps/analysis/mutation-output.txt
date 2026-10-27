@@ -1,0 +1,20 @@
+$ go test ./internal/console -run '^TestVerifyStepsAreFoldableAndListTextIsPreserved$' -count=1
+--- FAIL: TestVerifyStepsAreFoldableAndListTextIsPreserved (0.00s)
+    a176_overview_verify_test.go:85: 단계 본문이 접힌 영역 안에 보존되지 않음: "read-fixtures"
+    a176_overview_verify_test.go:85: 단계 본문이 접힌 영역 안에 보존되지 않음: "sellable-baseline"
+    a176_overview_verify_test.go:85: 단계 본문이 접힌 영역 안에 보존되지 않음: "idempotency"
+    a176_overview_verify_test.go:85: 단계 본문이 접힌 영역 안에 보존되지 않음: "idempotency-ttl-edge"
+    a176_overview_verify_test.go:85: 단계 본문이 접힌 영역 안에 보존되지 않음: "order-cancel"
+    a176_overview_verify_test.go:85: 단계 본문이 접힌 영역 안에 보존되지 않음: "order-amend"
+    a176_overview_verify_test.go:85: 단계 본문이 접힌 영역 안에 보존되지 않음: "sell-boundary"
+    a176_overview_verify_test.go:85: 단계 본문이 접힌 영역 안에 보존되지 않음: "conditional-register"
+    a176_overview_verify_test.go:85: 단계 본문이 접힌 영역 안에 보존되지 않음: "sellable-reserved"
+    a176_overview_verify_test.go:85: 단계 본문이 접힌 영역 안에 보존되지 않음: "conditional-persist"
+    a176_overview_verify_test.go:85: 단계 본문이 접힌 영역 안에 보존되지 않음: "conditional-trigger"
+    a176_overview_verify_test.go:85: 단계 본문이 접힌 영역 안에 보존되지 않음: "conditional-modify"
+    a176_overview_verify_test.go:85: 단계 본문이 접힌 영역 안에 보존되지 않음: "conditional-cancel"
+    a176_overview_verify_test.go:85: 단계 본문이 접힌 영역 안에 보존되지 않음: "costs"
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.015s
+FAIL
+exit_status=1

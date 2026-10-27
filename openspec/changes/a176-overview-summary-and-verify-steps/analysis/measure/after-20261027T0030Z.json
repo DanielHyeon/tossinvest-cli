@@ -1,0 +1,22 @@
+{
+ "harness": "archive a173 measure/shoot.cjs (GET only)",
+ "isolation": "empty config-dir, temporary HOME, empty OpenAPI environment, 127.0.0.1:38326",
+ "screens": {
+  "light/d/dashboard": {"h":4542,"forms":0,"inputs":0,"buttons":0,"notices":1,"stripH":68,"maxP":672,"words":682,"status":200},
+  "dark/d/dashboard": {"h":4787,"forms":0,"inputs":0,"buttons":0,"notices":2,"stripH":71,"maxP":672,"words":725,"status":200},
+  "light/m/dashboard": {"h":5289,"forms":0,"inputs":0,"buttons":0,"notices":2,"stripH":82,"maxP":366,"words":724,"status":200},
+  "dark/m/dashboard": {"h":5289,"forms":0,"inputs":0,"buttons":0,"notices":2,"stripH":82,"maxP":366,"words":724,"status":200},
+  "light/d/verify": {"h":2047,"forms":1,"inputs":3,"buttons":1,"notices":0,"stripH":68,"maxP":672,"words":355,"status":200},
+  "dark/d/verify": {"h":2047,"forms":1,"inputs":3,"buttons":1,"notices":0,"stripH":68,"maxP":672,"words":355,"status":200},
+  "light/m/verify": {"h":2368,"forms":1,"inputs":3,"buttons":1,"notices":0,"stripH":80,"maxP":366,"words":353,"status":200},
+  "dark/m/verify": {"h":2368,"forms":1,"inputs":3,"buttons":1,"notices":0,"stripH":80,"maxP":366,"words":353,"status":200}
+ },
+ "summary_bottom": {"before_reorder_light_d":1009,"after_light_d":624,"after_light_m":1034,"target_light_d_max":900},
+ "verify_folded": {"light_d":2047,"dark_d":2047,"light_m":2368,"dark_m":2368,"target_max":1800,"step_count":14,"open_step_count":0,"step_summary_height_light_d":44,"step_summary_height_light_m":66},
+ "overflow": {"dashboard_light_d":"1280/1280","dashboard_light_m":"390/390","verify_light_d":"1280/1280","verify_light_m":"390/390"},
+ "outline": {
+  "dashboard": {"notice_danger":1,"change_id_body":0,"abs_path_body":0,"hex64_body":0,"not_observed":0,"unmeasured":22},
+  "verify": {"notice_danger":0,"change_id_body":0,"abs_path_body":0,"hex64_body":0,"not_observed":0,"unmeasured":2}
+ },
+ "teardown": {"console_pid":1359298,"port_38326_released":true,"button_clicks":0}
+}

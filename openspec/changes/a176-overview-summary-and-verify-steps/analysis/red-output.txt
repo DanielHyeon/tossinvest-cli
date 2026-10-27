@@ -1,0 +1,5 @@
+$ go test ./internal/console -run 'Test(OverviewSummaryAnswersSixFactsAboveTheFold|StructuralUnmeasuredIsExplainedOnce|VerifyStepsAreFoldableAndListTextIsPreserved|VerifyFormsAreByteIdentical)$' -count=1
+# github.com/JungHoonGhae/tossinvest-cli/internal/console [github.com/JungHoonGhae/tossinvest-cli/internal/console.test]
+internal/console/a176_overview_verify_test.go:54:13: p.StepItems undefined (type verifyPage has no field or method StepItems)
+internal/console/a176_overview_verify_test.go:88:23: brokenPage.StepItems undefined (type verifyPage has no field or method StepItems)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console [build failed]
