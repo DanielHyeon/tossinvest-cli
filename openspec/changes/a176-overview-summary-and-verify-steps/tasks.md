@@ -33,10 +33,12 @@ Story: `STORY-TOS-a176` · Low~Medium(`/verify` 는 승인 화면 — 폼 불변
   - 증거: `review.md` 구현 후 경량 리뷰. 자동 gstack CLI는 사용할 수 없어 설치된 checklist 수동 적용(발견 0)으로 대체함. 변이 원문 `analysis/mutation-output.txt`, 원복 후 심볼 수 1·시험 PASS.
 - [x] 4.6 Manager 수정 라운드 1: 검증 보류 표식·소진분 근거·원인 배너 순서 복구, 정상/장애 실측
   - 증거: `TestOverviewSummaryKeepsHoldAndConsumptionEvidence` RED `analysis/review-round1-red-output.txt` → GREEN. 정상 fake-console(원인 배너 0) 요약 하단 644px(1280)·1092px(390), 실제 빈 config-dir 격리 콘솔 장애 상태(원인 배너 1) 1036px(1280)·1581px(390), 가로 넘침 0px — `analysis/measure/review-round1-normal.json`, `analysis/measure/review-round1-isolated-empty.json`. 장애 데스크톱은 900px을 136px 넘지만 여백·내용 압축은 하지 않음. 단계 `details`·`/verify` 폼은 변경하지 않음.
-- [ ] 4.5 Manager 검증(Manager 가 체크 — 구현자는 체크하지 않음. 크롬: 개요·verify × 데스크톱/모바일 × 라이트/다크, 승인 버튼 0)
+- [x] 4.5 Manager 검증(Manager 가 체크 — 구현자는 체크하지 않음. 크롬: 개요·verify × 데스크톱/모바일 × 라이트/다크, 승인 버튼 0)
+  - Manager 판정(Opus 5.5, 2026-10-27): 라운드 0(`206cea5f6`~`b716734f8`)·1(`34e66d7ad`) diff 를 읽었다. 크롬 실측(HEAD `34e66d7ad`, 격리 38361, 클릭 0, 콘솔 오류 0)에서 `/verify` 1280 라이트는 `details.step` 14개(전부 접힘)·머리 줄 태그 그대로(mutating 9)·머리말 원문 `<pre>`·summary 44px·폼은 `/verify/start` 하나(상태대로), 높이 2054. 390 다크는 페이지 폭 390, summary list-item, 단계 `<pre>` 는 가로 스크롤(base 의 단일 `<pre>` 와 같은 동작). 개요 1280(장애 상태)은 원인 배너가 요약 앞에 있고, 요약 하단 940, 세 묶음, 미측정 칸마다 사유 코드. 콘솔 PID 종료와 포트 해제를 확인했다. 직접 보지 않은 것: 정상 상태 개요(Terra fake-console 측정 644 로 대신함), 390 라이트. 완료 기준 조정은 proposal 에 적었다. 판정: 승인, 5.1 로 넘김.
 
 ## 5. 종결 (Opus)
 - [ ] 5.1 rebase → FLM 번들(필요 시) → tracker → sdd-sync → gate → archive → push → retain
+  - 사람 승인: 사용자가 a178·a176 종결(Manager 편집 커밋·5.1 체크·tracker·`/tmp` 밖 격리 worktree 워밍업 뒤 전체 `make gate`·archive·ff·push(로컬 `77d82b327`·`4b868a18d` 포함)·정리·retain, 재시도는 a112 e2e `prescribed rebuild failed … deadline exceeded` 또는 ⑥ CodeGraph 15초 시한 초과일 때만 change 당 1회)을 "진행"으로 승인(2026-10-27, 두 change 한정). 운영 이미지·배포는 범위 밖.
 
 ## 고정 리터럴 시험 수정 기록
 (없으면 "없음")
