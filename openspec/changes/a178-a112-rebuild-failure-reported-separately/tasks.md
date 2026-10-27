@@ -16,7 +16,7 @@ Story: `STORY-TOS-a178` · Low(측정 도구 진단 문구, 판정 불변). FLM/
 
 ## 4. 리뷰
 - [x] 4.1 변이 1회: rebuild 갈래 `%w`→`%v` → 2.1 FAIL 확인 후 원복(심볼 수로 확인)
-- [ ] 4.2 gstack review 경량 → `review.md`
+- [x] 4.2 gstack review 경량 → `review.md`
 - [ ] 4.3 Manager 검증(diff·시험 원문)
 
 ## 5. 종결 (Opus)
