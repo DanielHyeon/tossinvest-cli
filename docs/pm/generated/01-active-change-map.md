@@ -168,7 +168,7 @@
 | `a169-breakout-universes-are-compared-in-shadow` | STORY-TOS-a169 | in_progress |
 | `a170-inspection-guard-reconciles-offline-assessment` | STORY-TOS-a170 | implemented |
 | `a171-entry-place-ambiguous-resend` | STORY-TOS-a171 | in_progress |
-| `a172-console-anti-ai-redesign` | STORY-TOS-a172 | implemented |
+| `a172-console-anti-ai-redesign` | STORY-TOS-a172 | archived |
 | `a173-console-ux-common-cleanup` | STORY-TOS-a173 | archived |
 | `a174-settings-startup-readiness-and-presets` | STORY-TOS-a174 | archived |
 | `a175-optimization-and-runtime-matrix-views` | STORY-TOS-a175 | archived |

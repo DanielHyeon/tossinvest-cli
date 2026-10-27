@@ -75,3 +75,15 @@ change: `a172-console-anti-ai-redesign` · Story `STORY-TOS-a172` · 위험 Low(
 
 - a172 커밋은 이미 main 의 조상이다: `git merge-base --is-ancestor b27a1ea87 eaf713ff9` 참. 5.1 포트(main ff `79d32f9af`, 2026-10-25),
   6단계(`156340d04` · `4f3b94e28` · `b27a1ea87`) 와 spec 델타(`794f9e95a`) 모두 main 역사에 있다. 2026-10-25 배포 · 운영 중(Manager 실측).
+
+## 완료 게이트 실행 영수증
+
+- 격리 worktree `/mnt/D/Axipient/workspace/TossOS.worktrees/a172-close`(`/tmp` 밖), detached `7cbbbc378`(종결 증거 커밋), 2026-10-28 KST.
+- 준비: `make sdd-infra` rc 0 → `python3 tools/sdd/sdd_sync.py --no-gbrain` rc 1 — CodeGraph 색인은 됨(3,021 파일, 13.7s),
+  **advisory CodeGraphContext 색인만 300초 시한 초과**(`codegraphcontext index .` timed out) → `make sdd-check` rc 0 →
+  `codegraph status .` 37.0s · 3.29s · 3.00s · 2.71s · 2.75s(연속 2회 15초 미만 충족). `/tmp/.git` 은 있었지만 worktree 가 `/tmp` 밖이라 무관.
+- 조용함: 시작 직전 1분 load 3.47, 다른 gate · go test 없음.
+- `rtk proxy make -C <격리> gate CHANGE=a172-console-anti-ai-redesign` 1 회차(06:39~07:31) → **GATE PASS 11/11, rc 0**, `repo:` 줄 = 격리 worktree.
+  ①~④ OK · ⑤ `OK: Function Logic Map` · ⑥ sdd-check · ⑦ test · ⑧ test-seams · ⑨ test-race · ⑩ vet · ⑪ validate 전부 OK. 재시도 없음
+  (`deadline exceeded` · VCS status 128 0건). 원문 로그는 `reviews/gate-run1.log`(세션 스크래치패드에서 복사).
+- archive: `openspec archive a172-console-anti-ai-redesign --yes` → `operator-console: + 1 added`, `2026-10-27-a172-console-anti-ai-redesign`(openspec 은 UTC 날짜).
