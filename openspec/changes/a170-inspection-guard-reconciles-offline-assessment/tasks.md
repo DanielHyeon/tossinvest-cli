@@ -18,3 +18,4 @@ Story: `STORY-TOS-a170` · **Small**(시험 전용, 생산 함수 편집 0). 게
 - [x] 2.1 `go test ./internal/campaignstateevidence/ ./internal/offlinecontinuation/` · `make test`(이 change 에 승인됨) · `make lint` — rc 0 · 0 · 0, ok 115(`analysis/red/verify.txt` · `green.txt`)
 - [x] 2.2 경량 리뷰 → `review.md`
 - [x] 2.3 sdd-sync → gate → archive → Story 경로 갱신 — 2026-10-23 사용자 승인(Manager 전달): 완료 gate → archive, base 창 형제 착지 시 base 재고정(review §4)
+  - 종결(2026-10-28, 사용자 승인 "1" — base 재고정 금지): 재고정 뒤 창에 든 형제 함수 26 을 a172 아카이브 번들 복사로 덮음(review §5), gate ⑤ 사전 실행 rc 0. 완료 게이트 결과는 review.md 「완료 게이트 실행 영수증」.
