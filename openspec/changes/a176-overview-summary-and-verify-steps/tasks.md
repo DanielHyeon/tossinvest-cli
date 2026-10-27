@@ -37,8 +37,11 @@ Story: `STORY-TOS-a176` · Low~Medium(`/verify` 는 승인 화면 — 폼 불변
   - Manager 판정(Opus 5.5, 2026-10-27): 라운드 0(`206cea5f6`~`b716734f8`)·1(`34e66d7ad`) diff 를 읽었다. 크롬 실측(HEAD `34e66d7ad`, 격리 38361, 클릭 0, 콘솔 오류 0)에서 `/verify` 1280 라이트는 `details.step` 14개(전부 접힘)·머리 줄 태그 그대로(mutating 9)·머리말 원문 `<pre>`·summary 44px·폼은 `/verify/start` 하나(상태대로), 높이 2054. 390 다크는 페이지 폭 390, summary list-item, 단계 `<pre>` 는 가로 스크롤(base 의 단일 `<pre>` 와 같은 동작). 개요 1280(장애 상태)은 원인 배너가 요약 앞에 있고, 요약 하단 940, 세 묶음, 미측정 칸마다 사유 코드. 콘솔 PID 종료와 포트 해제를 확인했다. 직접 보지 않은 것: 정상 상태 개요(Terra fake-console 측정 644 로 대신함), 390 라이트. 완료 기준 조정은 proposal 에 적었다. 판정: 승인, 5.1 로 넘김.
 
 ## 5. 종결 (Opus)
-- [ ] 5.1 rebase → FLM 번들(필요 시) → tracker → sdd-sync → gate → archive → push → retain
+- [x] 5.1 rebase → FLM 번들(필요 시) → tracker → sdd-sync → gate → archive → push → retain
   - 사람 승인: 사용자가 a178·a176 종결(Manager 편집 커밋·5.1 체크·tracker·`/tmp` 밖 격리 worktree 워밍업 뒤 전체 `make gate`·archive·ff·push(로컬 `77d82b327`·`4b868a18d` 포함)·정리·retain, 재시도는 a112 e2e `prescribed rebuild failed … deadline exceeded` 또는 ⑥ CodeGraph 15초 시한 초과일 때만 change 당 1회)을 "진행"으로 승인(2026-10-27, 두 change 한정). 운영 이미지·배포는 범위 밖.
+  - rebase: main `73a9ee414`(a178 archive) 위로 rebase, 충돌 0. 브랜치는 `4b868a18d` 에서 분기했었다. sha 대응: `206cea5f6`→`98b886644`, `683760bd1`→`f597a67d2`, `b716734f8`→`7ba139743`, `34e66d7ad`→`902dae159`, Manager 편집 커밋 `b658889d8`→`75dcdde91`. 위 4.5·4.6 기록의 sha 는 rebase 전 값이다.
+  - gate ⑤ 사전 실행: rebase 전 required 0. rebase 뒤 `check_analysis.py --change a176-…` 가 base `0e8ba1c7c` → working tree 창에서 required 3(`verifyPrescribedBinary` · `TestVerifyPrescribedBinaryRejectsExecutableHashMismatch` · `fakeBuildRunner.rebuild` — 전부 a178 함수, a176 편집 0)을 요구해 rc 1. 소스 sha256(identity.go `5512e488…`, main_test.go `8008db70…`)이 a178 아카이브 번들의 `source_sha256` 와 같음을 대조한 뒤, 그 번들 3을 `analysis/function-logic/` 에 복사하고 출처 주석 한 줄을 닮(a173 이 a177 번들을 복사한 선례). 재실행 rc 0, `evidence complete or diff-proven exempt`.
+  - 완료 게이트 결과는 review.md 「완료 게이트 실행 영수증」에 적음(관례: 체크 → tracker → gate).
 
 ## 고정 리터럴 시험 수정 기록
 (없으면 "없음")
