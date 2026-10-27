@@ -287,6 +287,8 @@ a120 의 a063 전용 실행 기준선 이관 특례는 지웠다(사용자 결�
 그러니 각 단계가 어디서 막히는지 여기에 적어 둔다. `없음`은 면제가 아니라 **사람이 지켜야
 하고 리뷰에서만 잡히는 것**이라는 뜻이다.
 
+- a112 e2e 시험(`tools/a112-mb-us-source`)이 `prescribed rebuild failed: … deadline exceeded` 로 실패하면 부하가 원인이므로 조용할 때 1회 재시도하고, `running executable does not match the prescribed rebuild` 면 재시도하지 않고 조사한다.
+
 | SDD 사이클 단계 | 기계 검사 |
 | --- | --- |
 | 0 기억 회고 | **없음** — 원장 무결성만 `memory_index.py check`(sdd-check) |

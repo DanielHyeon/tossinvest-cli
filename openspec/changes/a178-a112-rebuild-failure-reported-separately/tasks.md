@@ -12,7 +12,7 @@ Story: `STORY-TOS-a178` · Low(측정 도구 진단 문구, 판정 불변). FLM/
 - [x] 2.1 `TestVerifyPrescribedBinaryReportsRebuildFailureSeparately` · 2.2 `…ReportsUnexpectedCommandSeparately` · 2.3 기존 hash-mismatch 시험에 문구 단언 추가 — FAIL 원문을 `analysis/red-output.txt` 에
 
 ## 3. GREEN
-- [ ] 3.1 **편집 전에** `verifyPrescribedBinary` FLM 번들(TODO 0) → B6 분리(design §2) → 3.2 `docs/WORKFLOW.md` 함정 절에 재시도 관례 1줄 → 3.3 gofmt·vet·`go test ./tools/a112-mb-us-source/ -count=1`·check_analysis(required N 기록)
+- [x] 3.1 **편집 전에** `verifyPrescribedBinary` FLM 번들(TODO 0) → B6 분리(design §2) → 3.2 `docs/WORKFLOW.md` 함정 절에 재시도 관례 1줄 → 3.3 gofmt·vet·`go test ./tools/a112-mb-us-source/ -count=1`·check_analysis(required N 기록)
 
 ## 4. 리뷰
 - [ ] 4.1 변이 1회: rebuild 갈래 `%w`→`%v` → 2.1 FAIL 확인 후 원복(심볼 수로 확인) · 4.2 gstack review 경량 → `review.md` · 4.3 Manager 검증(diff·시험 원문)

@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -485,7 +486,13 @@ func verifyPrescribedBinary(ctx context.Context, snapshot identitySnapshot, buil
 		return errors.New("selected Go binary changed before prescribed rebuild")
 	}
 	rebuilt, command, err := builder.rebuild(ctx, snapshot.RepoRoot, goBinary)
-	if err != nil || command != prescribedBuildCommand || digestBytes(rebuilt) != snapshot.ExecutableSHA256 {
+	if err != nil {
+		return fmt.Errorf("prescribed rebuild failed: %w", err)
+	}
+	if command != prescribedBuildCommand {
+		return errors.New("prescribed rebuild used an unexpected command")
+	}
+	if digestBytes(rebuilt) != snapshot.ExecutableSHA256 {
 		return errors.New("running executable does not match the prescribed rebuild")
 	}
 	if goBinary.Path != "" && goBinary.revalidate() != nil {
