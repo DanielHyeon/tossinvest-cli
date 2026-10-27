@@ -67,7 +67,7 @@ const overviewTemplates = `
   읽지 못한 칸은 0이 아니라 "미측정 + 사유"다. 0은 "재봤고 없었다"는 뜻이고 미측정은 다른
   사실이며, 둘을 같은 글자로 쓰면 빈 계좌와 읽히지 않는 계좌가 구분되지 않는다.
 */}}
-<dl class="console-summary summary-groups" aria-label="개요 요약">
+<dl class="console-summary" aria-label="개요 요약">
   <div class="summary-group"><dt>엔진·보호</dt><dd><ul class="summary-facts">
     <li><a href="/verify-console">엔진 상태</a> — {{if not .Snap.Engine.Wired}}<span class="muted">미배선</span>
       {{- else if .Snap.Engine.Running}}<span class="ok">실행 중</span>

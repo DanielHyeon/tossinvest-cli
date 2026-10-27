@@ -551,8 +551,8 @@ body:has([data-reload=on]) :is(body > header, .console-status)::after { animatio
   details.shadow-band summary, details.filter-description summary { display: list-item; }
 }
 /* a176 — 개요 요약·검증 단계 */
-.console-summary.summary-groups { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.console-summary.summary-groups > .summary-group { padding: var(--space-2); }
+main > .console-summary[aria-label="개요 요약"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+main > .console-summary[aria-label="개요 요약"] > .summary-group { padding: var(--space-2); }
 .summary-facts { display: grid; gap: var(--space-1); margin: 0; padding: 0; list-style: none; }
 .summary-facts li { min-width: 0; }
 .summary-facts a { color: var(--ink-1); font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
@@ -562,7 +562,7 @@ details.step summary { min-height: 44px; padding: 0.45rem 0.2rem; cursor: pointe
 details.step summary code { white-space: pre-wrap; overflow-wrap: anywhere; }
 details.step pre { margin-top: 0; }
 @media (max-width: 44rem) {
-  .console-summary.summary-groups { grid-template-columns: 1fr; }
+  main > .console-summary[aria-label="개요 요약"] { grid-template-columns: 1fr; }
   details.step summary { display: list-item; }
 }
 {{end}}

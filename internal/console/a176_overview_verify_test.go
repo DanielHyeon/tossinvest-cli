@@ -18,7 +18,7 @@ func TestOverviewSummaryAnswersSixFactsAboveTheFold(t *testing.T) {
 	page := h.page(t, "/dashboard")
 	summary := a176Summary(t, page)
 
-	if !strings.Contains(summary, `class="console-summary summary-groups"`) {
+	if !strings.Contains(summary, `class="console-summary"`) {
 		t.Fatalf("개요 요약이 세 묶음 구조가 아님:\n%s", summary)
 	}
 	for _, want := range []string{
