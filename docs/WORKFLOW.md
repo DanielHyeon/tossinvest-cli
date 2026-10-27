@@ -280,6 +280,7 @@ a120 의 a063 전용 실행 기준선 이관 특례는 지웠다(사용자 결�
 ⑨ `make test-race` ⑩ `make vet` ⑪ `make validate`.
 규율이 아니라 스크립트가 게이트다.
 
+- 격리 gate worktree 는 `/tmp` 밖(`/mnt/D/Axipient/workspace/TossOS.worktrees/<id>-close`)에 둔다 — 빈 `/tmp/.git` 은 Codex workspace-write 샌드박스가 명령마다 만들어 /tmp 아래 worktree 의 Go 를 VCS status 128 로 깨뜨린다. gate 직전 격리 worktree 에서 `codegraph status .` 를 연속 2회 15초 미만이 될 때까지 워밍업한다(⑥ probe 시한 15초, 저장소가 ntfs-3g).
 - a112 e2e 시험(`tools/a112-mb-us-source`)이 `prescribed rebuild failed: … deadline exceeded` 로 실패하면 부하가 원인이므로 조용할 때 1회 재시도하고, `running executable does not match the prescribed rebuild` 면 재시도하지 않고 조사한다.
 
 ### 단계별 강제 지점 — 무엇이 기계 검사이고 무엇이 규율인가
