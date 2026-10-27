@@ -1,0 +1,157 @@
+{
+  "file": "internal/console/trading_views_test.go",
+  "source_sha256": "95187c81f864cabb3620ffae13377e8bea03e178efb62108f350512be0b16a11",
+  "revision": "base",
+  "package": "console",
+  "function": "TestTradingViewsDarkSemanticStatusColorsMeetWCAGAA",
+  "signature": "TestTradingViewsDarkSemanticStatusColorsMeetWCAGAA(params=1, results=0)",
+  "start": {
+    "line": 170,
+    "column": 1
+  },
+  "end": {
+    "line": 195,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 173,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 181,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 188,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 191,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 15
+      },
+      "text": "strings.Index"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 176,
+        "column": 13
+      },
+      "text": "strings.Index"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 15
+      },
+      "text": "wcagContrastRatio"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 172,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 176,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 191,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

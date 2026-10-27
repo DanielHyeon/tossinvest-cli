@@ -1,0 +1,353 @@
+{
+  "file": "internal/console/settings_limits_test.go",
+  "source_sha256": "458b76e24765012dd9a67dbeae4288067c38e3ab8169488619729b9ead8cd252",
+  "package": "console",
+  "function": "TestThePresetControlsAskForNoTyping",
+  "signature": "TestThePresetControlsAskForNoTyping(params=1, results=0)",
+  "start": {
+    "line": 134,
+    "column": 1
+  },
+  "end": {
+    "line": 172,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 140,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 141,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 145,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 148,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 149,
+        "column": 4
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "range",
+      "at": {
+        "line": 155,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 157,
+        "column": 4
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 4
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 164,
+        "column": 3
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 167,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 7
+      },
+      "text": "limitsHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 42
+      },
+      "text": "fullLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 10
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 23
+      },
+      "text": "LimitTierCards"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 43
+      },
+      "text": "fullLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 11
+      },
+      "text": "presetForm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 13
+      },
+      "text": "presetMatrix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 12
+      },
+      "text": "presetTierCell"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 8
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 26
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 165,
+        "column": 12
+      },
+      "text": "limitTierMatrixNote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 14
+      },
+      "text": "strings.Index"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 16
+      },
+      "text": "strings.Index"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 48
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 139,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 154,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 156,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 165,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 166,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

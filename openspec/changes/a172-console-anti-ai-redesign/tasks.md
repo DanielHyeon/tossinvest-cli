@@ -36,7 +36,11 @@ Story: `STORY-TOS-a172` · Low risk(CSS·장식 마크업만). FLM/BTM·변이·
 - [x] 6.2 구현: 앰비언트 톤 배경·새로고침 화면 정지(`data-reload=on`, 마크업 변경 0)·카드 hover 조명·방어. 신규 `TestAmbientMotionContract`(RED→GREEN), 변이 2회 CAUGHT(hover 제외 규칙 `.sticky-save *` 삭제 / 새로고침 `animation: none` 삭제)
 - [x] 6.3 측정(`frames6.cjs`·`trace6.cjs`, light·dark) · 6.4 `fixing-motion-performance` 점검(수정 0) · 6.5 `avoid-ai-design` detect P0 0 · Impeccable `[]` · 20장+hover 2+톤 6장(`scratchpad/a172/phase6/shots/`)
 - [x] 6.5b 라이트 테마 톤 구분(사용자 지시 2026-10-25, 리뷰어의 "강도 올리지 말 것" 번복): 전용 `--tint-*` 토큰+테마별 `--tone-alpha`(라이트 19%·다크 15%), 톤 쌍 ΔE76 렌더 실측 ≥14.1·글자 대비 ≥4.65. 신규 `TestAmbientToneLegibility`(변이: 라이트 alpha 10% → FAIL). 고정 리터럴 변경 1건: `TestAmbientMotionContract` (e) 의 `--tone: var(--ok|warn|bad)` → `--tone: var(--tint-*)`
-- [ ] 6.6 main 병합(사람 승인 뒤)
+- [x] 6.6 main 병합(사람 승인 뒤)
+  - 증거(2026-10-28 종결): `git merge-base --is-ancestor b27a1ea87 eaf713ff9` 참 — a172 커밋(5.1 포트 main ff `79d32f9af`, 6단계 `156340d04`·`4f3b94e28`·`b27a1ea87`, spec 델타 `794f9e95a`)이 main 의 조상, 2026-10-25 배포·운영 중.
+  - 종결 승인: 사용자 "1"(2026-10-28) — FLM 번들 작성·복사, review.md 작성, 커밋, `/tmp` 밖 격리 worktree 워밍업 뒤 전체 `make gate`, archive, Story 경로, tracker, push, 정리, retain. base 재고정 금지.
+  - gate ⑤ 사전 실행: required 26 → 번들 복사 18 · 새로 작성 8 → rc 0 (review.md 「gate ⑤」). 리뷰 원문 3 + 징후 측정 1 은 스크래치패드에서 찾아 `reviews/` 로 복사.
+  - 완료 게이트 결과는 review.md 「완료 게이트 실행 영수증」에 적음(관례: 체크 → tracker → gate).
 
 ## 고정 리터럴 시험 수정 기록
 - 2단계 `display_primitives_test.go` `TestTheHeadingStepsAreDistinguishable` + 헬퍼(`declaredFontSize`·`declaredBodyFontSize`): 제목·본문 크기가 `clamp()` 라 `Nrem`/`Npx/` 리터럴 파서가 읽지 못함. 파서가 clamp 의 최소·최대를 읽도록 바꾸고, 제목 단계 순서(h1>h2>h3>본문)를 가장 좁은 뷰포트와 가장 넓은 뷰포트 양쪽에서 검사하며 본문 최소 15px 기준은 유지(본문 clamp 최소 0.9375rem = 15px). 약화 아님: 검사 지점이 1곳에서 2곳으로 늘어남.
