@@ -1,0 +1,17 @@
+# RED 실행 원문 (2026-10-27)
+
+명령:
+```text
+go test ./tools/a112-mb-us-source/ -run 'TestVerifyPrescribedBinary(RejectsExecutableHashMismatch|ReportsRebuildFailureSeparately|ReportsUnexpectedCommandSeparately)$' -count=1
+```
+
+출력:
+```text
+--- FAIL: TestVerifyPrescribedBinaryReportsRebuildFailureSeparately (0.00s)
+    main_test.go:1112: rebuild error does not wrap deadline exceeded: running executable does not match the prescribed rebuild
+--- FAIL: TestVerifyPrescribedBinaryReportsUnexpectedCommandSeparately (0.00s)
+    main_test.go:1125: unexpected command error = running executable does not match the prescribed rebuild
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a112-mb-us-source	0.004s
+FAIL
+```

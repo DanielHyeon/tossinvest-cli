@@ -9,7 +9,7 @@ Story: `STORY-TOS-a178` · Low(측정 도구 진단 문구, 판정 불변). FLM/
 - [x] 1.1 design §1 재확인 · `fakeBuildRunner` 가 명령 문자열을 바꿀 수 있는지 · HOLD 오류 원문이 receipt 에 쓰이는지 확인해 design 에 기록 · `check_analysis.py --change a178-…` 로 편집 전 required 0 확인
 
 ## 2. RED
-- [ ] 2.1 `TestVerifyPrescribedBinaryReportsRebuildFailureSeparately` · 2.2 `…ReportsUnexpectedCommandSeparately` · 2.3 기존 hash-mismatch 시험에 문구 단언 추가 — FAIL 원문을 `analysis/red-output.txt` 에
+- [x] 2.1 `TestVerifyPrescribedBinaryReportsRebuildFailureSeparately` · 2.2 `…ReportsUnexpectedCommandSeparately` · 2.3 기존 hash-mismatch 시험에 문구 단언 추가 — FAIL 원문을 `analysis/red-output.txt` 에
 
 ## 3. GREEN
 - [ ] 3.1 **편집 전에** `verifyPrescribedBinary` FLM 번들(TODO 0) → B6 분리(design §2) → 3.2 `docs/WORKFLOW.md` 함정 절에 재시도 관례 1줄 → 3.3 gofmt·vet·`go test ./tools/a112-mb-us-source/ -count=1`·check_analysis(required N 기록)

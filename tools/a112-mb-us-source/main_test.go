@@ -1101,6 +1101,29 @@ func TestVerifyPrescribedBinaryRejectsExecutableHashMismatch(t *testing.T) {
 	if err == nil {
 		t.Fatal("prescribed rebuild mismatch was accepted")
 	}
+	if !strings.Contains(err.Error(), "running executable does not match the prescribed rebuild") {
+		t.Fatalf("prescribed rebuild mismatch error = %v", err)
+	}
+}
+
+func TestVerifyPrescribedBinaryReportsRebuildFailureSeparately(t *testing.T) {
+	err := verifyPrescribedBinary(context.Background(), testSnapshot(), fakeBuildRunner{err: context.DeadlineExceeded})
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("rebuild error does not wrap deadline exceeded: %v", err)
+	}
+	if !strings.Contains(err.Error(), "prescribed rebuild failed") {
+		t.Fatalf("rebuild error is not reported separately: %v", err)
+	}
+	if strings.Contains(err.Error(), "does not match") {
+		t.Fatalf("rebuild error was reported as digest mismatch: %v", err)
+	}
+}
+
+func TestVerifyPrescribedBinaryReportsUnexpectedCommandSeparately(t *testing.T) {
+	err := verifyPrescribedBinary(context.Background(), testSnapshot(), fakeBuildRunner{binary: []byte("running"), command: "unexpected command"})
+	if err == nil || !strings.Contains(err.Error(), "unexpected command") {
+		t.Fatalf("unexpected command error = %v", err)
+	}
 }
 
 func TestValidateFrozenBaseRejectsInvalidOrUnknownCommit(t *testing.T) {
@@ -1984,10 +2007,18 @@ func (*errorReader) Calendar(context.Context, string) (sourceResult, error) {
 	panic("must not call calendar")
 }
 
-type fakeBuildRunner struct{ binary []byte }
+type fakeBuildRunner struct {
+	binary  []byte
+	command string
+	err     error
+}
 
 func (f fakeBuildRunner) rebuild(context.Context, string, goBinaryIdentity) ([]byte, string, error) {
-	return f.binary, prescribedBuildCommand, nil
+	command := f.command
+	if command == "" {
+		command = prescribedBuildCommand
+	}
+	return f.binary, command, f.err
 }
 
 func testIdentity() fixedIdentity {
