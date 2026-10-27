@@ -280,14 +280,14 @@ a120 의 a063 전용 실행 기준선 이관 특례는 지웠다(사용자 결�
 ⑨ `make test-race` ⑩ `make vet` ⑪ `make validate`.
 규율이 아니라 스크립트가 게이트다.
 
+- a112 e2e 시험(`tools/a112-mb-us-source`)이 `prescribed rebuild failed: … deadline exceeded` 로 실패하면 부하가 원인이므로 조용할 때 1회 재시도하고, `running executable does not match the prescribed rebuild` 면 재시도하지 않고 조사한다.
+
 ### 단계별 강제 지점 — 무엇이 기계 검사이고 무엇이 규율인가
 
 게이트가 보지 않는 단계는 **조용히 사라진다**. 2026-07-31 개정 4가 무관한 커밋에 삭제된 뒤
 6주 동안 아무도 몰랐고, 5단계 증거 조정 산출물은 2026-08-02 이후 한 건도 생산되지 않았다.
 그러니 각 단계가 어디서 막히는지 여기에 적어 둔다. `없음`은 면제가 아니라 **사람이 지켜야
 하고 리뷰에서만 잡히는 것**이라는 뜻이다.
-
-- a112 e2e 시험(`tools/a112-mb-us-source`)이 `prescribed rebuild failed: … deadline exceeded` 로 실패하면 부하가 원인이므로 조용할 때 1회 재시도하고, `running executable does not match the prescribed rebuild` 면 재시도하지 않고 조사한다.
 
 | SDD 사이클 단계 | 기계 검사 |
 | --- | --- |
