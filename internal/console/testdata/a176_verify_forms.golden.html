@@ -1,0 +1,15 @@
+<pre>fixture prompt</pre>
+<form method="post" action="/verify/approve">
+    <input type="hidden" name="csrf" value="a176-csrf">
+    <button type="submit">위 목록을 승인하고 실행</button>
+  </form>
+<form method="post" action="/verify/abort">
+    <input type="hidden" name="csrf" value="a176-csrf">
+    <button type="submit" class="secondary">거부</button>
+  </form>
+<form method="post" action="/verify/start">
+    <input type="hidden" name="csrf" value="a176-csrf">
+    <input type="hidden" name="market" value="KR">
+    <input type="hidden" name="mode" value="resume">
+    <button type="submit" >검증 시작</button>
+  </form>

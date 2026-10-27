@@ -550,6 +550,21 @@ body:has([data-reload=on]) :is(body > header, .console-status)::after { animatio
   .preset-compare { min-width: 36rem; }
   details.shadow-band summary, details.filter-description summary { display: list-item; }
 }
+/* a176 — 개요 요약·검증 단계 */
+.console-summary.summary-groups { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.console-summary.summary-groups > .summary-group { padding: var(--space-2); }
+.summary-facts { display: grid; gap: var(--space-1); margin: 0; padding: 0; list-style: none; }
+.summary-facts li { min-width: 0; }
+.summary-facts a { color: var(--ink-1); font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
+.summary-facts .summary-line { margin-top: 0.15rem; }
+details.step { margin-top: var(--space-1); border-top: 1px solid var(--line-soft); }
+details.step summary { min-height: 44px; padding: 0.45rem 0.2rem; cursor: pointer; }
+details.step summary code { white-space: pre-wrap; overflow-wrap: anywhere; }
+details.step pre { margin-top: 0; }
+@media (max-width: 44rem) {
+  .console-summary.summary-groups { grid-template-columns: 1fr; }
+  details.step summary { display: list-item; }
+}
 {{end}}
 
 {{define "head"}}<!doctype html>
@@ -1028,7 +1043,12 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
 <section>
   <h2>단계 목록</h2>
   <p class="muted"><code>tossctl verify run --list</code>와 같은 내용이다. 계좌를 건드리지 않는다.</p>
-  <pre>{{.Steps}}</pre>
+  {{$items := .StepItems}}
+  {{if $items}}
+  {{range $items}}{{if .Preamble}}<pre>{{.Preamble}}</pre>{{end}}
+  <details class="step"><summary><code>{{.Header}}</code></summary><pre>{{.Body}}</pre></details>
+  {{end}}
+  {{else}}<pre>{{.Steps}}</pre>{{end}}
 </section>
 {{end}}
 {{template "foot" .}}

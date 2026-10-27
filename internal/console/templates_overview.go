@@ -57,9 +57,6 @@ const overviewTemplates = `
 
 {{/* 원장 상태는 화면 전체에 한 번. 계좌·오늘·최근 세 패널이 같은 핸들 하나로 읽으므로
      같은 사실을 세 번 적을 이유가 없고, 세 번 적으면 서로 다른 답이 나올 자리가 생긴다. */}}
-{{template "causes" .}}
-{{template "journalstate" .Snap.Journal}}
-
 {{/*
   상단 요약 (change a054). "지금 무엇이 잘못됐는가"를 세로 스크롤 없이 답한다.
 
@@ -70,34 +67,38 @@ const overviewTemplates = `
   읽지 못한 칸은 0이 아니라 "미측정 + 사유"다. 0은 "재봤고 없었다"는 뜻이고 미측정은 다른
   사실이며, 둘을 같은 글자로 쓰면 빈 계좌와 읽히지 않는 계좌가 구분되지 않는다.
 */}}
-<dl class="console-summary" aria-label="개요 요약">
-  <div><dt><a href="/verify-console">엔진</a></dt>
-    <dd>{{if not .Snap.Engine.Wired}}<span class="muted">미배선</span>
+<dl class="console-summary summary-groups" aria-label="개요 요약">
+  <div class="summary-group"><dt>엔진·보호</dt><dd><ul class="summary-facts">
+    <li><a href="/verify-console">엔진 상태</a> — {{if not .Snap.Engine.Wired}}<span class="muted">미배선</span>
       {{- else if .Snap.Engine.Running}}<span class="ok">실행 중</span>
-      {{- else}}<span class="muted">정지</span>{{end}}</dd></div>
-
-  <div><dt><a href="/positions">계좌 보유</a></dt>
-    <dd>{{range .Snap.Account.Markets}}<span class="summary-line">{{.Market}}
-      {{- if .Blocked}} {{template "unmeasured" .Unreadable}}
-      {{- else if .Empty}} <span class="muted">보유 없음</span>
-      {{- else}} {{template "cell" .Value}} <span class="muted">{{.Currency}}</span>{{end}}</span>{{end}}</dd></div>
-
-  <div><dt><a href="/history">오늘 실현손익</a></dt>
-    <dd>{{range .Snap.Today.Markets}}<span class="summary-line">{{.Market}}
-      {{- if .Blocked}} {{template "unmeasured" .Unreadable}}
-      {{- else if .NoTrades}} <span class="muted">거래 없음</span>
-      {{- else}} {{template "cell" .PnL}} <span class="muted">{{.Currency}}</span>{{end}}</span>{{end}}</dd></div>
-
-  <div><dt><a href="/orders">미체결</a></dt>
-    <dd>{{with .Snap.Open.Count}}{{if .Known}}{{.Value}}건{{else}}{{template "unmeasured" .}}{{end}}{{end}}
-      {{- if .Snap.Open.VerifyHeld}}<small class="muted">검증 중 — 갱신 보류</small>{{end}}</dd></div>
-
-  <div><dt><a href="/verify-console">안전</a></dt>
-    <dd>{{range .Snap.Safety.Markets}}<span class="summary-line">{{.Market}}
+      {{- else}}<span class="muted">정지</span>{{end}}</li>
+    <li><a href="/verify-console">안전·Guardian 한도</a> — {{range .Snap.Safety.Markets}}<span class="summary-line">{{.Market}}
       {{- if not .Present}} <span class="muted">기록 없음</span>
       {{- else if .Leftovers}} <span class="bad">잔여물</span>
-      {{- else}} <span class="ok">잔여물 없음</span>{{end}}</span>{{end}}</dd></div>
+      {{- else}} <span class="ok">잔여물 없음</span>{{end}}</span>{{end}}
+      {{with .Snap.Safety.Guardian}}{{if .Read}}<small class="muted">{{if .Currency}}{{.Currency}}{{else}}통화 미지정{{end}} 한도</small>{{else if .Wired}}<small class="muted">미측정 · <code>config_unreadable</code></small>{{else}}<small class="muted">미배선</small>{{end}}{{end}}</li>
+  </ul></dd></div>
+
+  <div class="summary-group"><dt>오늘·한도</dt><dd><ul class="summary-facts">
+    <li><a href="/history">오늘 실현손익</a> — {{range .Snap.Today.Markets}}<span class="summary-line">{{.Market}}
+      {{- if .Blocked}} {{template "unmeasured" .Unreadable}}
+      {{- else if .NoTrades}} <span class="muted">거래 없음</span>
+      {{- else}} {{template "cell" .PnL}} <span class="muted">{{.Currency}}</span>{{end}}</span>{{end}}</li>
+    <li><a href="/verify-console">오늘 소진분</a> — {{range .Snap.Safety.Guardian.Axes}}{{if .Structural}}<span class="muted">{{.Label}} 미측정</span>{{else}}<span class="muted">{{.Label}} 측정</span>{{end}}{{end}}</li>
+  </ul></dd></div>
+
+  <div class="summary-group"><dt>예외</dt><dd><ul class="summary-facts">
+    <li><a href="/positions">계좌 보유</a> — {{range .Snap.Account.Markets}}<span class="summary-line">{{.Market}}
+      {{- if .Blocked}} {{template "unmeasured" .Unreadable}}
+      {{- else if .Empty}} <span class="muted">보유 없음</span>
+      {{- else}} {{template "cell" .Value}} <span class="muted">{{.Currency}}</span>{{end}}</span>{{end}}</li>
+    <li><a href="/orders">미체결 · 살아 있는 주문</a> — {{with .Snap.Open.Count}}{{if .Known}}{{.Value}}건{{else}}{{template "unmeasured" .}}{{end}}{{end}}</li>
+    <li><a href="/history">최근 exit</a> — {{with .Snap.Recent}}{{if .Blocked}}{{template "unmeasured" .Unreadable}}{{else if .Events}}{{len .Events}}건{{else}}<span class="muted">기록 없음</span>{{end}}{{end}}</li>
+  </ul></dd></div>
 </dl>
+
+{{template "causes" .}}
+{{template "journalstate" .Snap.Journal}}
 
 {{/* The concrete holdings scan comes before operational diagnostics (a057). */}}
 <section class="overview-holdings" aria-labelledby="overview-holdings-heading">
