@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a176-overview-summary-and-verify-steps",
-    "path": "openspec/changes/a176-overview-summary-and-verify-steps"
+    "path": "openspec/changes/archive/2026-10-27-a176-overview-summary-and-verify-steps"
   },
   "found_by": {
     "date": "2026-10-25",
     "how": "2026-10-25 UX 전수 검사: /dashboard 는 4507px·851 단어로 요약 카드 행이 아래 섹션과 중복되고 '구조적으로 미측정' 문단이 같은 글로 3번, 검증 기록 경로가 본문에 나온다. /verify 는 단계 목록이 5188px 고정폭 CLI 텍스트 덤프다.",
-    "record": "openspec/changes/a176-overview-summary-and-verify-steps/proposal.md"
+    "record": "openspec/changes/archive/2026-10-27-a176-overview-summary-and-verify-steps/proposal.md"
   },
   "acceptance": [
     "개요 요약 영역은 spec 706·1374 의 여섯 사실과 시장별 분리·미측정 8사유·상세 링크를 유지한 채 1280 세로 스크롤 없이(정상 상태 ≤ 900px — 장애 상태는 원인 배너가 먼저라 측정값만 기록) '지금 괜찮은가' 에 답하고, 기존 상세 섹션은 제거되지 않는다",
