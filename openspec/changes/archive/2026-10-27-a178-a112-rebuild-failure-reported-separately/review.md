@@ -17,3 +17,16 @@
 - 변이: `%w`→`%v` 1회에서 deadline wrapping 시험이 FAIL하여 killed, 즉시 `%w`로 원복하고 대상 리터럴 1개·`%v` 0개를 확인함. 원문은 `analysis/mutation-output.txt`.
 - gstack 한계: 이 격리 worktree의 CodeGraph는 초기화되지 않아 질의가 불가했음. gstack local review log는 start capture 부재로 freshness `UNVERIFIED`이며 Manager 독립 리뷰를 대체하지 않음. 현재 소스·AST/FLM·패키지 시험을 직접 대조했으며, 기능상 남은 위험은 바쁜 호스트의 rebuild deadline뿐임.
 - 결론: 경량 리뷰 통과. Manager의 4.3 독립 diff·시험 원문 검증은 미수행으로 유지.
+
+### 완료 게이트 실행 영수증
+- 사전: main HEAD `4b868a18d`(origin/main `0e8ba1c7c`, 로컬 2 앞) · W HEAD `65c5f183d` 확인 → Manager 편집 커밋 `d58a3a755` → 5.1 체크·tracker 재생성 커밋 `95459b4e0`(tracker `--check` rc 0) → `check_analysis.py --change a178-…` rc 0, required 3(번들 3) — `evidence complete or diff-proven exempt`. rebase 불필요(main 미이동).
+- 격리 worktree `/mnt/D/Axipient/workspace/TossOS.worktrees/a178-close`(detached `95459b4e0`, 2026-10-27, `/tmp` 밖).
+- 준비: `make sdd-infra` rc 0 → `python3 tools/sdd/sdd_sync.py --no-gbrain` rc 1(codegraphcontext 단계만 300 초 시한 초과 — advisory, 판정 밖. CodeGraph 단계는 완료) → `make sdd-check` rc 0.
+- 워밍업 `codegraph status .`: 2.61s·2.70s 로 연속 2 회 15 초 미만, 둘 다 `✓ Index is up to date`.
+- 조용함 확인: 시작 load 3.52, 다른 gate·go test 0(a128 그림자 프로브 타이머 프로세스만 있음, 무관).
+- gate: `rtk proxy make -C /mnt/D/Axipient/workspace/TossOS.worktrees/a178-close gate CHANGE=a178-…`(14:09:32~14:54:14 KST, 로그 `Entering directory` 는 격리 worktree) → **GATE PASS 11/11, rc 0**. 1 회차 통과라 재시도 없음.
+  - ⑦⑧ 의 `tools/a112-mb-us-source` 는 실제로 돌았다(⑦ 378.665s · ⑧ 354.820s PASS, `(cached)` 아님).
+  - `(cached)` 는 ⑥ 의 `tools/logic-map` 1 건뿐이다. 직전 단독 `make sdd-check` 결과를 Go 테스트 캐시가 재사용했다.
+  - 1 초 간격 기록 2664 표본: `/tmp/.git` 2664/2664 있음, load 최대 18.49.
+- 원문 로그(잘리지 않음): `/tmp/a178-close-logs/{check_analysis,check_analysis2,tracker,sdd-infra,sdd-sync,sdd-check,gate,gate.meta,warmup.summary,watch,watch.gatewindow,archive}.log` — 세션 스크래치, 커밋 안 함.
+- archive: `openspec archive a178-a112-rebuild-failure-reported-separately --yes`(1.4.1) → `breakout-retest-strategy-lane: + 1 added`, `2026-10-27-a178-a112-rebuild-failure-reported-separately`.
