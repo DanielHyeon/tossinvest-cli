@@ -172,5 +172,6 @@
 | `a173-console-ux-common-cleanup` | STORY-TOS-a173 | archived |
 | `a174-settings-startup-readiness-and-presets` | STORY-TOS-a174 | archived |
 | `a175-optimization-and-runtime-matrix-views` | STORY-TOS-a175 | archived |
-| `a176-overview-summary-and-verify-steps` | STORY-TOS-a176 | designed |
+| `a176-overview-summary-and-verify-steps` | STORY-TOS-a176 | in_progress |
 | `a177-performance-window-single-source` | STORY-TOS-a177 | archived |
+| `a178-a112-rebuild-failure-reported-separately` | STORY-TOS-a178 | in_progress |

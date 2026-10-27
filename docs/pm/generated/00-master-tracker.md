@@ -98,7 +98,7 @@
     - STORY-TOS-a173 — 콘솔 공통 정리 — 같은 원인 1회·경고 3단계·경계 배지·상태 표시줄 압축·내부 식별자 접기 [archived] → `a173-console-ux-common-cleanup`
     - STORY-TOS-a174 — 설정 화면 — 기동 준비 체크리스트·Guardian 프리셋 비교표·거래 정책 한 줄 형식(가역성 탭 축 유지) [archived] → `a174-settings-startup-readiness-and-presets`
     - STORY-TOS-a175 — 최적화·전략 화면 — 중복 내비 제거·중계 페이지 축소·프리셋/후보 필터/runtime/신호의 행렬화 [archived] → `a175-optimization-and-runtime-matrix-views`
-    - STORY-TOS-a176 — 개요 화면 한 화면 요약 정돈과 /verify 단계 목록 구조화 [designed] → `a176-overview-summary-and-verify-steps`
+    - STORY-TOS-a176 — 개요 화면 한 화면 요약 정돈과 /verify 단계 목록 구조화 [in_progress] → `a176-overview-summary-and-verify-steps`
     - STORY-TOS-a177 — 성과 이력 조회 창 표기 단일화 — 최적화 카테고리의 '최근 30일' 글자와 /performance-history 의 '최근 0일' 불일치 [archived] → `a177-performance-window-single-source`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
@@ -193,3 +193,4 @@
     - STORY-TOS-a162 — 기존 전략 평가기를 재사용하는 오프라인 후속 진입 위험 판정 [archived] → `a162-assess-follow-on-risk-offline`
     - STORY-TOS-a169 — breakout 그림자 신호를 같은 정의로 종목군 셋(거래대금 · 거래량 · 거래량 증가율)에서 다시 잰다 [in_progress] → `a169-breakout-universes-are-compared-in-shadow`
     - STORY-TOS-a170 — 검사 증거 가드가 a162 오프라인 평가를 이름으로 받고 그 평가의 런타임 소비자를 막는다 [implemented] → `a170-inspection-guard-reconciles-offline-assessment`
+    - STORY-TOS-a178 — a112 M-B1 수집기 — prescribed rebuild 실패 원인(시한 초과·명령 불일치·digest 불일치)을 구분해 보고 [in_progress] → `a178-a112-rebuild-failure-reported-separately`

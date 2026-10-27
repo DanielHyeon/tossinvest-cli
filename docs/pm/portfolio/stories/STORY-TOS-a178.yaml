@@ -1,0 +1,21 @@
+{
+  "id": "STORY-TOS-a178",
+  "title": "a112 M-B1 수집기 — prescribed rebuild 실패 원인(시한 초과·명령 불일치·digest 불일치)을 구분해 보고",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a178-a112-rebuild-failure-reported-separately",
+    "path": "openspec/changes/a178-a112-rebuild-failure-reported-separately"
+  },
+  "found_by": {
+    "date": "2026-10-27",
+    "how": "a175 완료 gate 1차 ⑦·2차 ⑧ 이 tools/a112-mb-us-source e2e 시험에서 'running executable does not match the prescribed rebuild' 로 실패(단독 실행은 PASS). identity.go:488 이 rebuild 오류(120초 collector deadline 초과 포함)·명령 불일치·digest 불일치를 한 문구로 합쳐 부하로 인한 시한 초과를 신원 불일치처럼 보이게 했다. 사람 결정 B-1: spec 101행의 120초 SHALL 은 유지하고 원인 구분만 한다.",
+    "record": "openspec/changes/a178-a112-rebuild-failure-reported-separately/proposal.md"
+  },
+  "acceptance": [
+    "verifyPrescribedBinary 는 rebuild 오류를 'prescribed rebuild failed: %w' 로 감싸 errors.Is(err, context.DeadlineExceeded) 가 참이고, 명령 불일치와 digest 불일치는 각자의 문구로 보고된다",
+    "세 경우 모두 collector 는 전과 같이 HOLD 하고 성공 경로는 바뀌지 않는다; 120초 overallBudget·spec 101행·HOLD 조건은 변경 0 이다",
+    "세 갈래 각각의 단위 시험이 RED→GREEN 으로 남고, rebuild 갈래의 %w 를 %v 로 바꾸는 변이가 시험을 FAIL 시킨다",
+    "docs/WORKFLOW.md 에 'a112 e2e 시험이 deadline 초과 문구로 실패하면 조용할 때 1회 재시도, digest 불일치면 재시도하지 않고 조사' 관례가 1줄 있다"
+  ]
+}
