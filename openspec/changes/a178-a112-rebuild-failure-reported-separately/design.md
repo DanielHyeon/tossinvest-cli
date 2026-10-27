@@ -9,6 +9,11 @@
 | 실제 builder | `identity.go:155` `systemBuildRunner.rebuild(ctx, …)` — `exec.CommandContext(ctx, …)` 들이 ctx 시한을 따른다 | 시한 초과 오류가 여기서 올라온다 |
 | 시험 | `main_test.go:1099` `TestVerifyPrescribedBinaryRejectsExecutableHashMismatch`(err != nil 만 단언), e2e `:1005`·`:1080` 근처 | 문구를 고정한 시험 0(grep) |
 
+### 1.1 확인 기록 (2026-10-27)
+- `fakeBuildRunner`는 현재 `binary`만 받고 `prescribedBuildCommand`, `nil` 오류를 고정 반환하므로 명령 문자열이나 rebuild 오류를 바꿀 수 없음. RED 시험을 위해 명령과 오류를 주입할 최소 필드를 추가함.
+- `run`은 receipt를 연 뒤 `verifyPrescribedBinary` 실패를 `holdf("prescribed build identity: %v", err)`로 반환하고, deferred `taint()`는 `TAINTED` 파일에 `HOLD\n`만 기록함. `receiptStore`에는 오류 원문 기록 API가 없고 preflight도 이 검증 뒤에 쓰므로 rebuild 오류 원문은 receipt에 기록되지 않음. 터미널 HOLD 오류에만 그대로 포함됨.
+- 편집 전 `python3 tools/logic-map/check_analysis.py --change a178-a112-rebuild-failure-reported-separately`는 required 0 function(s)를 보고함. 비교 창의 후속 커밋 경고와 분석/면제 표지 부재 메시지는 기존 본문 수정 함수가 0개인 현재 상태의 required 판정을 바꾸지 않음.
+
 ## 2. 설계
 B6 을 순서 있는 세 검사로 나눈다(앞의 것이 먼저 판정):
 ```go

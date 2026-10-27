@@ -6,7 +6,7 @@ Story: `STORY-TOS-a178` · Low(측정 도구 진단 문구, 판정 불변). FLM/
 - [x] 0.1 Story 등록(FEAT 는 a112 와 같음) · change 정의 · spec 델타(ADDED 1) · proposal-freeze 경량 리뷰(`review.md`)
 
 ## 1. 확인
-- [ ] 1.1 design §1 재확인 · `fakeBuildRunner` 가 명령 문자열을 바꿀 수 있는지 · HOLD 오류 원문이 receipt 에 쓰이는지 확인해 design 에 기록 · `check_analysis.py --change a178-…` 로 편집 전 required 0 확인
+- [x] 1.1 design §1 재확인 · `fakeBuildRunner` 가 명령 문자열을 바꿀 수 있는지 · HOLD 오류 원문이 receipt 에 쓰이는지 확인해 design 에 기록 · `check_analysis.py --change a178-…` 로 편집 전 required 0 확인
 
 ## 2. RED
 - [ ] 2.1 `TestVerifyPrescribedBinaryReportsRebuildFailureSeparately` · 2.2 `…ReportsUnexpectedCommandSeparately` · 2.3 기존 hash-mismatch 시험에 문구 단언 추가 — FAIL 원문을 `analysis/red-output.txt` 에
