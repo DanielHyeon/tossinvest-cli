@@ -57,6 +57,9 @@ const overviewTemplates = `
 
 {{/* 원장 상태는 화면 전체에 한 번. 계좌·오늘·최근 세 패널이 같은 핸들 하나로 읽으므로
      같은 사실을 세 번 적을 이유가 없고, 세 번 적으면 서로 다른 답이 나올 자리가 생긴다. */}}
+{{template "causes" .}}
+{{template "journalstate" .Snap.Journal}}
+
 {{/*
   상단 요약 (change a054). "지금 무엇이 잘못됐는가"를 세로 스크롤 없이 답한다.
 
@@ -84,7 +87,7 @@ const overviewTemplates = `
       {{- if .Blocked}} {{template "unmeasured" .Unreadable}}
       {{- else if .NoTrades}} <span class="muted">거래 없음</span>
       {{- else}} {{template "cell" .PnL}} <span class="muted">{{.Currency}}</span>{{end}}</span>{{end}}</li>
-    <li><a href="/verify-console">오늘 소진분</a> — {{range .Snap.Safety.Guardian.Axes}}{{if .Structural}}<span class="muted">{{.Label}} 미측정</span>{{else}}<span class="muted">{{.Label}} 측정</span>{{end}}{{end}}</li>
+    <li><a href="/verify-console">오늘 소진분</a> — {{range .Snap.Safety.Guardian.Axes}}{{if not .Structural}}{{range .Rows}}<span class="summary-line">{{.Market}} {{template "cell" .Consumed}}</span>{{end}}{{end}}{{end}}<a href="/verify-console">상세 보기</a></li>
   </ul></dd></div>
 
   <div class="summary-group"><dt>예외</dt><dd><ul class="summary-facts">
@@ -92,13 +95,10 @@ const overviewTemplates = `
       {{- if .Blocked}} {{template "unmeasured" .Unreadable}}
       {{- else if .Empty}} <span class="muted">보유 없음</span>
       {{- else}} {{template "cell" .Value}} <span class="muted">{{.Currency}}</span>{{end}}</span>{{end}}</li>
-    <li><a href="/orders">미체결 · 살아 있는 주문</a> — {{with .Snap.Open.Count}}{{if .Known}}{{.Value}}건{{else}}{{template "unmeasured" .}}{{end}}{{end}}</li>
+    <li><a href="/orders">미체결 · 살아 있는 주문</a> — {{with .Snap.Open.Count}}{{if .Known}}{{.Value}}건{{else}}{{template "unmeasured" .}}{{end}}{{end}}{{- if .Snap.Open.VerifyHeld}}<small class="muted">검증 중 — 갱신 보류</small>{{end}}</li>
     <li><a href="/history">최근 exit</a> — {{with .Snap.Recent}}{{if .Blocked}}{{template "unmeasured" .Unreadable}}{{else if .Events}}{{len .Events}}건{{else}}<span class="muted">기록 없음</span>{{end}}{{end}}</li>
   </ul></dd></div>
 </dl>
-
-{{template "causes" .}}
-{{template "journalstate" .Snap.Journal}}
 
 {{/* The concrete holdings scan comes before operational diagnostics (a057). */}}
 <section class="overview-holdings" aria-labelledby="overview-holdings-heading">

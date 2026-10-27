@@ -1,0 +1,12 @@
+명령:
+go test ./internal/console/ -run 'TestOverviewSummaryKeepsHoldAndConsumptionEvidence' -count=1
+
+결과: FAIL
+
+TestOverviewSummaryKeepsHoldAndConsumptionEvidence/검증_보류와_측정값
+- 검증 중인 미체결 요약에 "검증 중 — 갱신 보류" 표식이 없음.
+- 오늘 소진분 요약에 "100,000 / 1,000,000 KRW (소진 0%)"이 없음.
+- 오늘 소진분 요약에 "250.5 USD / 1,000,000 KRW"이 없음.
+
+TestOverviewSummaryKeepsHoldAndConsumptionEvidence/미측정_사유_코드
+- 오늘 소진분의 미측정 값이 class="muted unmeasured"와 사유 코드 표식이 아님.

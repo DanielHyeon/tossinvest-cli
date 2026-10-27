@@ -48,6 +48,42 @@ func TestStructuralUnmeasuredIsExplainedOnce(t *testing.T) {
 	}
 }
 
+func TestOverviewSummaryKeepsHoldAndConsumptionEvidence(t *testing.T) {
+	limits := func(o *Options) {
+		o.GateLimits = fakeGateLimits{limits: GateLimits{
+			MaxDailyLossAmount: 1_000_000,
+			Currency:           "KRW",
+		}}
+	}
+
+	t.Run("검증 보류와 측정값", func(t *testing.T) {
+		h := newOverviewHarness(t, limits)
+		seedEngineJournal(t, h.journal, overviewTripsFixture)
+		holdRunLock(t, h.runlock, h.clock.Now())
+		summary := a176Summary(t, h.page(t, "/dashboard"))
+
+		if !strings.Contains(summary, "검증 중 — 갱신 보류") {
+			t.Errorf("검증 중인 미체결 요약에 갱신 보류 표식이 없음:\n%s", summary)
+		}
+
+		consumption := a176SummaryFact(t, summary, "오늘 소진분")
+		for _, row := range h.overview(t.Context()).Safety.Guardian.Axes[0].Rows {
+			if !strings.Contains(consumption, row.Consumed.Value()) {
+				t.Errorf("오늘 소진분 요약에 측정값 %q이 없음:\n%s", row.Consumed.Value(), consumption)
+			}
+		}
+	})
+
+	t.Run("미측정 사유 코드", func(t *testing.T) {
+		h := newOverviewHarness(t, limits)
+		summary := a176Summary(t, h.page(t, "/dashboard"))
+		consumption := a176SummaryFact(t, summary, "오늘 소진분")
+		if !a173UnmeasuredCell.MatchString(consumption) {
+			t.Errorf("오늘 소진분의 미측정 값이 a173 사유 코드 표식이 아님:\n%s", consumption)
+		}
+	})
+}
+
 func TestVerifyStepsAreFoldableAndListTextIsPreserved(t *testing.T) {
 	p := verifyPage{Market: verifylive.MarketKR, Steps: a176StepText(t), ShowStart: true}
 	items := p.StepItems()
@@ -146,6 +182,19 @@ func a176Summary(t *testing.T, page string) string {
 		t.Fatal("개요 요약의 끝이 없음")
 	}
 	return page[start : start+end+len("</dl>")]
+}
+
+func a176SummaryFact(t *testing.T, summary, label string) string {
+	t.Helper()
+	start := strings.Index(summary, ">"+label+"<")
+	if start < 0 {
+		t.Fatalf("개요 요약에 %q 항목이 없음:\n%s", label, summary)
+	}
+	end := strings.Index(summary[start:], "</li>")
+	if end < 0 {
+		t.Fatalf("개요 요약의 %q 항목 끝이 없음:\n%s", label, summary[start:])
+	}
+	return summary[start : start+end+len("</li>")]
 }
 
 func a176FormContract(t *testing.T, page string) string {

@@ -31,6 +31,8 @@ Story: `STORY-TOS-a176` · Low~Medium(`/verify` 는 승인 화면 — 폼 불변
   - 증거: `analysis/measure/baseline-20261027T001347Z.json`, `analysis/measure/after-20261027T0030Z.json`, `analysis/cognitive-load-after.md`, `analysis/review-after.md`. 개요 데스크톱 요약 하단 624px, 가로 넘침 0, 단계 summary 44px(모바일 66px). `/verify` 접힌 전체 2047px로 1800px 목표는 미달하며 은닉·간격 압축은 하지 않음.
 - [x] 4.4 gstack `review` 경량 → `review.md`. 변이 1회: 단계 `details` 에서 `<pre>` 제거 → 2.3 FAIL 확인 후 원복
   - 증거: `review.md` 구현 후 경량 리뷰. 자동 gstack CLI는 사용할 수 없어 설치된 checklist 수동 적용(발견 0)으로 대체함. 변이 원문 `analysis/mutation-output.txt`, 원복 후 심볼 수 1·시험 PASS.
+- [x] 4.6 Manager 수정 라운드 1: 검증 보류 표식·소진분 근거·원인 배너 순서 복구, 정상/장애 실측
+  - 증거: `TestOverviewSummaryKeepsHoldAndConsumptionEvidence` RED `analysis/review-round1-red-output.txt` → GREEN. 정상 fake-console(원인 배너 0) 요약 하단 644px(1280)·1092px(390), 실제 빈 config-dir 격리 콘솔 장애 상태(원인 배너 1) 1036px(1280)·1581px(390), 가로 넘침 0px — `analysis/measure/review-round1-normal.json`, `analysis/measure/review-round1-isolated-empty.json`. 장애 데스크톱은 900px을 136px 넘지만 여백·내용 압축은 하지 않음. 단계 `details`·`/verify` 폼은 변경하지 않음.
 - [ ] 4.5 Manager 검증(Manager 가 체크 — 구현자는 체크하지 않음. 크롬: 개요·verify × 데스크톱/모바일 × 라이트/다크, 승인 버튼 0)
 
 ## 5. 종결 (Opus)

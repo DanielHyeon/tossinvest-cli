@@ -24,3 +24,12 @@
 - 안전 계약: `internal/verifylive`, `pages.go`, `renderVerify`·`handleVerify`·`handleOverview`·패널 함수 본문을 편집하지 않음. `/verify` 시작·승인·중단 폼, CSRF, 승인 프롬프트는 `a176_verify_forms.golden.html` 렌더 fixture로 고정함.
 - 변이: `templates.go`의 단계 본문 `<pre>{{.Body}}</pre>`를 한 번 제거하면 `TestVerifyStepsAreFoldableAndListTextIsPreserved`가 14개 단계 모두에 대해 FAIL함(`analysis/mutation-output.txt`). 원복 뒤 심볼 수 `1`, 같은 시험 PASS를 확인함.
 - 판정: 구현 범위 안에서 blocker 없음. `/verify` 접힌 전체 높이 2047px는 목표 1800px을 넘음. 설계가 요구한 머리말 `<pre>`와 44px 단계 표식을 압축·은닉하지 않아 남은 측정 위험으로 보류함.
+
+## Manager 수정 라운드 1 (2026-10-27, Terra)
+
+- P2 검증 보류: 요약의 `미체결 · 살아 있는 주문` 행에 기존 조건 `{{if .Snap.Open.VerifyHeld}}`와 문구 `검증 중 — 갱신 보류`를 복원함. 같은 행만 추출하는 새 시험은 다른 프로세스의 활성 run-lock fixture에서 해당 문구를 확인함.
+- P2 오늘 소진분: 기존 요약은 `.Structural`을 `미측정`이라고만 쓰고, 계산 가능한 축도 `측정`이라는 글자만 썼음. 구조적 세 축에는 `reading`·열거 사유 코드가 없으므로 코드처럼 꾸미지 않았음. 대신 이미 계산된 비구조 축의 `guardianAxisRow.Consumed`를 `cell` 템플릿으로 그대로 렌더하고 상세 링크를 둠. 값이 미측정이면 기존 `unmeasured` define을 통과하므로 a173의 `class="muted unmeasured"` 표본·사유 코드 검사에 포함됨. 기존 a173 시험이 놓친 이유는 옛 행이 `muted`만 사용해 표본 정의 자체에 들어오지 않았기 때문임.
+- P2 원인 우선순위: `causes`·`journalstate`를 개요 요약 앞의 원래 위치로 되돌림. 정상 fake-console fixture는 원인 배너 0개와 데스크톱 요약 하단 644px을 기록함. 실제 빈 config-dir 격리 콘솔 장애 상태는 배너 1개와 1036px(390px 1581px)으로 900px을 136px 넘음. 초과를 줄이려고 여백·글꼴·원인 문구를 압축하지 않았으며, 정상·장애의 모바일·다크 수치는 측정 JSON에 남김.
+- P3 Guardian: 요약은 현재 `Currency`와 시장별 잔여물만 갖고, `Limits`는 의미가 서로 다른 다섯 값의 배열이라 단일 한도 값으로 옮길 수 없었음. `/verify-console` 링크도 이번 수정 범위에서 설정 링크로 바꾸지 않았음. 설계의 "값 + 설정 링크" 충족 여부는 Manager 4.5 판단으로 남김.
+- P3 `/verify`: 빈 config-dir 격리 콘솔에서 접힌 높이 2047px(390px 2368px, 목표 1800px 초과)을 재확인함. 단계 머리말 `<pre>`와 44px summary를 유지했으며 높이만 맞추기 위한 축소는 하지 않았음.
+- 안전·검증: `internal/verifylive`, 기존 핸들러·패널 함수, `/verify` 시작·승인·중단 폼과 fixture는 변경하지 않았음. 임시 fake-console 측정 서버는 test 종료와 함께 포트 38327·38328을 해제함. Playwright는 GET만 수행했고 버튼 클릭 0회.
