@@ -17,10 +17,12 @@ Story: `STORY-TOS-a178` · Low(측정 도구 진단 문구, 판정 불변). FLM/
 ## 4. 리뷰
 - [x] 4.1 변이 1회: rebuild 갈래 `%w`→`%v` → 2.1 FAIL 확인 후 원복(심볼 수로 확인)
 - [x] 4.2 gstack review 경량 → `review.md`
-- [ ] 4.3 Manager 검증(diff·시험 원문)
+- [x] 4.3 Manager 검증(diff·시험 원문)
+  - Manager 판정(Opus 5.5, 2026-10-27): `4b868a18d..65c5f183d` diff 를 읽었다. 범위는 `tools/a112-mb-us-source/`·a178 문서·`docs/WORKFLOW.md` 뿐이다. `identity.go` 는 B6 하나만 순서 있는 세 검사로 나눴고, 판정(셋 중 하나면 오류)·성공 경로·120초 시한·HOLD 조건은 그대로다. 시험 세 갈래(DeadlineExceeded 감싸기·명령 불일치·digest 문구)와 가짜 builder 확장(기본값 불변)도 맞다. WORKFLOW 줄은 리뷰 뒤 「완료 게이트 (자동화)」 절로 옮겼다(`65c5f183d`, +2줄). 시험 원문 `analysis/verification-output.txt` 를 확인했다. Manager 는 시험을 다시 돌리지 않았다. 판정: 승인, 5.1 로 넘김.
 
 ## 5. 종결 (Opus)
 - [ ] 5.1 FLM 번들 · tracker · sdd-sync · `/tmp` 밖 격리 worktree 에서 워밍업(`codegraph status .`) 뒤 `make gate` · archive · push · retain
+  - 사람 승인: 사용자가 a178·a176 종결(Manager 편집 커밋·5.1 체크·tracker·`/tmp` 밖 격리 worktree 워밍업 뒤 전체 `make gate`·archive·ff·push(로컬 `77d82b327`·`4b868a18d` 포함)·정리·retain, 재시도는 a112 e2e `prescribed rebuild failed … deadline exceeded` 또는 ⑥ CodeGraph 15초 시한 초과일 때만 change 당 1회)을 "진행"으로 승인(2026-10-27, 두 change 한정). 운영 이미지·배포는 범위 밖.
 
 ## 고정 리터럴 시험 수정 기록
 (없으면 "없음")
