@@ -751,3 +751,62 @@ a165 3판(`bc56522c7`)의 범위는 취소 409 처리(R3 엔진 · R4 flatten) +
 **새 파일의 새 함수**로 둔다. 창의 형제 함수는 P2-3.
 
 Function Logic Map: not-applicable — 이 리뷰와 7판 개정은 문서만 바꿨다. 분기 주장은 `analysis/evidence/` AST(HEAD `0c9bfd272`, stale 0)와 기존 0.5·3.6 AST 에서만 인용했다.
+
+## 0.10 독립 리뷰 (GPT-5.6 Terra, 2026-10-28)
+
+- **대상**: 7판 proposal 머리말·design D3/D6/D7/D8·order-execution delta Requirement 1·2와 시나리오·tasks 0.10/2.6.x/5.2/5.3·issues 사용자 결정·0.10 기존 리뷰·`analysis/evidence/` AST 20개와 `enumerate-output.md`.
+- **독립성**: 7판 작성자와 다른 GPT 세션에서 수행. 현재 HEAD `f8ff5a626`(증거 AST 기준 `0c9bfd272`, `enumerate-output.md` stale 0)을 현재 소스와 다시 대조했다.
+- **실행 범위**: 소스·시험 미편집, 시험·gate·브로커/계좌/운영 콘솔·mutating 명령·push 실행 0. ai-memory `a087`/`protective exit` 검색은 빈 결과였고 Hindsight MCP는 이 세션에 노출되지 않아 미실행이다.
+- **SDD 적용**: impeccable N/A — 백엔드 주문 형태·문서 리뷰라 UI/UX 표면 0. search-first N/A — 기능·의존성·통합을 만들지 않은 read-only 리뷰이며 저장소·OpenAPI snapshot·AST만 확인했다. grill-me는 Q1~Q4와 Manager P2-2~P2-4가 이미 사람/Manager 결정이라 새 질문 0이다.
+
+### 판정: **FAIL (blocker)** — §1~§3 착수 금지 유지
+
+P0 1 · P1 2 · P2 3 · P3 1. Manager P2-2·P2-3·P2-4 처분은 `issues.md` 사용자 결정 절에 기록했지만 아래 P0/P1을 닫지 않는다.
+
+### P0-1 — `NewOrderPath`는 엔진 전용 인스턴스가 아니다
+
+**근거:** design D3는 `engine.go`의 `NewOrderPath` 생성 자리에서만 `WithProtectiveMarketSell()`을 켜겠다고 제안한다(design.md:211-243, tasks.md:113-142). 그러나 현재 `cmd/tossctl/flatten.go:200`도 `engine.NewOrderPath(...)`를 사용한다. `NewOrderPath`는 `engine.go:401`에서 같은 `*trading.Service`를 만들고, 실제 엔진 조립은 그 뒤 `NewContext`가 `engine.go:438`에서 이 함수를 호출한다. 따라서 제안대로 :401에 옵션을 붙이면 CLI `tossctl flatten`도 시장가 허용 Service를 받는다. `app.go:158`·`mcp.go:74`의 직접 `NewService` 두 자리만 세는 1.5.5(c)는 이 우회 경로를 보지 못한다. 호출 관계는 **손으로 읽음**; `NewOrderPath` 본문 분기·반환은 `analysis/evidence/engine--neworderpath.ast.json`으로 확인했다.
+
+**위험:** 불변식 3의 “엔진 인스턴스만” 경계가 깨진다. flatten이 현재 LIMIT만 만들더라도, 사람이 호출하는 공유 Service에 비분수 MARKET SELL 권한을 심는 설계 자체가 금지한 표면 확장이다. a165 R4도 같은 `cmd/tossctl/flatten.go` 배선을 바꾼다.
+
+**착수 전 처분:** 옵션 부착은 공유 빌더 `NewOrderPath` 밖, 엔진 전용 조립 지점(`NewContext` 이후 등)으로 옮긴다. 1.5.5(c)는 `NewOrderPath`의 모든 비시험 호출자(특히 flatten)를 열거해 옵션 부착 0을 고정하고, 옵션을 받은 객체가 ExitObserver 게이트웨이로만 흘러감을 구조 시험으로 고정한다. a165 착지 뒤 `flatten.go`와 해당 AST를 재대조한다.
+
+### P1-1 — 달력 형 확장만으로 KRX 접속매매를 증명할 수 없다
+
+**근거:** OpenAPI의 KR `regularMarket`은 KRX·NXT의 합집합이고 `startTime`은 가장 이른 시작, `endTime`은 가장 늦은 종료다(`docs/migration/openapi.latest.json:9793-9822`). KRX 기준 필드는 종가단일가 시작 하나뿐이다. KRX 개장 지연 중 NXT가 09:00에 열고 KRX 종가단일가가 15:20이면 design D7의 정상 모양(09:00·15:30·15:20)을 그대로 만족한다. 장중 VI·일시 거래정지 상태도 이 스키마와 typed 형에 없다. 더구나 현 `MarketCalendarSession`은 시작·끝만 보관(`internal/official/typed_calendar_reads.go:11-14`)하고, `adaptCalendarDay`는 `Integrated.RegularMarket`을 `SessionWindow{Open, Close}`로 축약한다(`internal/scheduler/calendar.go:110-133`). 즉 2.6.4가 typed struct에 `singlePriceAuctionStartTime`만 더해도 canonical snapshot까지 전달되지 않는다. 이 분기 사실은 `scheduler--adaptcalendarday.ast.json`으로 확인했고, OpenAPI 계약과 필드 누락은 **손으로 읽음**이다.
+
+**위험:** MARKET이 실제 KRX 접속매매가 아닌 개장 지연·VI·거래정지 시각에 나가 400 거부되거나 단일가에서 의도하지 않은 체결을 할 수 있다. D8도 VI를 미측정 잔존 위험으로 남긴다(design.md:481-483, 497-502). 그래서 “정상 영업일 KRX 접속매매만 MARKET”이라는 현 수용 기준은 구현할 입력이 없다.
+
+**착수 전 처분:** KRX 고유 개장·현재 거래 가능/정지 상태를 권위 있게 주는 브로커 입력을 특정하고, raw 응답→검증 snapshot→판정까지 보존하는 형·RED 표를 설계한다. 그 입력을 못 얻으면 해당 불명 구간은 LIMIT으로 좁혀야 한다. 조기 폐장·개장 지연·KRX 휴장·VI/정지의 실제 응답 표본 또는 권위 문서를 붙이기 전에는 2.6.4만으로 착수 불가다.
+
+### P1-2 — KR 보호 MARKET의 정수 수량이 계약으로 고정되지 않았다
+
+**근거:** OpenAPI는 수량의 기본을 양의 정수로 하고, 소수 수량은 US MARKET SELL에만 허용하며 그 밖은 400이라고 명시한다(`docs/migration/openapi.latest.json:10864-10880`). 그런데 `checkOrderShape`는 `Quantity <= 0`만 검사한다(B12, `analysis/evidence/execgw--checkordershape.ast.json`; 현 소스 `internal/execgw/failclosed.go:91-92`). `sellIntent`는 원장 decimal 문자열을 `ParseFloat`로 받아(`internal/app/engine/exitloop.go:1815-1829`, 2014-2019), `buildOrderCreate`는 shortest decimal로 그대로 전송한다(`internal/official/orders_write.go:136-159`). 투영 Position도 decimal 문자열이다(`internal/journal/position_projection.go:507-510`). 정수성은 보호 진입 readiness에만 별도로 있다(`internal/execgw/protection.go:112-122`), 청산에는 없다. 이 함수 내 분기는 각각의 AST로, 자료형·wire 변환은 **손으로 읽음**이다.
+
+**위험:** KR 위치에서 `1.5` 같은 값이 MARKET으로 나가면 브로커 400이고, `submit`은 B13 기본 거부 처리로 proposal을 해제한다(`analysis/evidence/engine--exitobserver.submit.ast.json` B13~B15; 현 소스 `exitloop.go:1582-1594`). tasks 1.1a의 “브로커 400 위임” 선택지는 이 보호 주문의 무제출을 의도적으로 허용하므로 불충분하다.
+
+**착수 전 처분:** MARKET 자격에 KR 양의 정확 정수를 명시적으로 더하고, 불일치면 오늘의 LIMIT 경로로 기울인다. `checkOrderShape`와 `placeIntentSupported`에는 비분수 MARKET의 정수성 backstop을 두며, decimal KR 입력이 broker/wire에 도달하지 않음을 고정한다. 동시에 KR Position·sellable 수량의 정수 불변을 입구에서 증명하거나 위반 경보를 설계한다.
+
+### P2-1 — 즉시성 제약은 맞지만 구현 실수 지점이 명확하다
+
+design D7의 “제출 경로 GET 0·판정 실패 = LIMIT” 처분은 타당하다. `submit`의 `sellIntent` 오류는 B5에서 alert·release로 끝나므로, 판정 helper가 error를 반환하거나 cache miss를 GET으로 복구하면 오늘 LIMIT보다 한 주기 약해진다(`analysis/evidence/engine--exitobserver.submit.ast.json` B5). 2.6.3의 B5 미도달·GET 호출계수 RED는 이 반례를 겨냥한다. 구현은 오류 없는 `marketEligible` 결과와 동기화된 read-only snapshot을 분리해야 하며, 갱신 goroutine/채널의 경합·초기 cache 없음도 LIMIT으로 시험한다. 차단은 P0/P1 해결 뒤에 이 RED를 먼저 쓰면 닫힌다.
+
+### P2-2 — LIMIT 골든과 변이 축을 더 명시해야 한다
+
+2.6.3의 `PlaceIntent` 전체 골든은 LIMIT 칸을 고정하는 올바른 방향이다. 단 “오늘 `sellIntent` 출력”을 바뀐 함수를 다시 호출해 비교하면 자기비교가 된다. pre-change literal fixture(가격·수량·통화·유형 전체) 또는 독립 baseline renderer로 고정해야 한다. 2.6.5에는 결측·US·시간외·종가단일가·KRX 필드·GET 등이 있으나, **신선도 6시간/미래 fetchedAt/오늘 날짜/주말 검사 제거** 변이가 없다. 2.6.3 행은 있으나 mutation ledger에도 각각 넣어야 fail-open 회귀가 잡힌다.
+
+### P2-3 — a165 교차 계획은 공유 flatten builder를 추가해야 한다
+
+기존 a165 계획의 AST 재생성·gate ⑤ archive bundle 복사는 유지한다. 다만 a165 R4가 CLI flatten 취소 배선과 `buildFlattenWiring`을 소유하고(a165 tasks.md:22, 30), a087의 P0 수정도 이 경계에 의존한다. a165 먼저 착지하면 a087은 `cmd/tossctl/flatten.go:200`의 호출 관계, `NewOrderPath`의 옵션 부착 0, 관련 AST/구조 시험을 다시 확인한 뒤에만 착수한다. bundle 복사는 gate 작업량 처분일 뿐 이 의미 충돌의 대체 증거가 아니다.
+
+### P3-1 — MARKET 칸의 남은 거부·체결 반례
+
+1억원 이상 주문은 `ConfirmHighValueOrder:false`로 400이 될 수 있고(`internal/official/orders_write.go:118-124`, OpenAPI `:11307`), 하한가 매수호가 공백·거래정지에서는 MARKET도 체결을 보장하지 않는다. D8이 이미 유형 무관/잔존 위험으로 적어 둔 범위라 새 blocker로 승격하지 않는다. 다만 P1-1의 VI·정지 무판정과 섞어 “정상 접속매매 MARKET”으로 표현해서는 안 된다.
+
+### 구현 착수 전 고칠 것
+
+1. P0-1: 옵션을 `NewOrderPath` 밖의 엔진 전용 조립으로 이동하고 flatten을 포함한 구조 시험을 명시.
+2. P1-1: KRX 고유 개장·정지/VI를 판별할 권위 입력과 snapshot 전달 계약을 정하거나, 불명은 LIMIT으로 축소.
+3. P1-2: KR MARKET 정수 수량 불변·fallback/backstop·wire 미도달 시험으로 1.1a의 broker 400 위임 선택지를 제거.
+
+Function Logic Map: not-applicable — 이 독립 리뷰와 Manager 처분 기록은 문서만 바꿨다. 현재 함수 내부 분기 주장은 `analysis/evidence/` AST 20개(열거 stale 0) 또는 위에 표시한 손 읽음 근거에서만 인용했다.
