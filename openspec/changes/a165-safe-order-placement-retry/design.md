@@ -1,6 +1,7 @@
 # a165 design (3판) — 취소 409 `already-processing` 처리 · 401 재전송 근거 고정
 
 > **상태**: 3판. 사용자 결정 3차(2026-10-23, F3 = 1)로 진입 재전송(R1·R2)을 a171 로 옮겼다. 1판·2판과 리뷰 처분은 `review.md`.
+> 1.3 3차 리뷰(2026-10-28) **PASS** — 처분으로 D10 에 배선 시험·`definitiveRefusalCodes` 불변 두 항목을 더했다(본문 결정 변경 없음). 사람 결정 H1: D3 의 최악 추가 지연은 그대로 둔다.
 > base `34e12967e`. 함수 내부 주장은 `analysis/function-logic/*/ast.json` 의 AST 좌표로만 한다(23 번들).
 > 실계좌 주문·`mutating: true` 명령·운영 토글 flip 은 없다. 시험은 httptest/fake 만.
 
@@ -117,4 +118,11 @@ AST `client.send` B4(344) `attempt < 2 && code == http.StatusUnauthorized`, 루�
   R5 ①②③.
 - 변이 원장: code 판정(EqualFold→status 만, 모순 검사 제거), 409 검사, kind 검사, Definitive 분기, 대기 상한(누적·창), 횟수 경계, NOT_SENT→오늘 되돌림 제거,
   재전송 경계 재검사 제거(deadline 검사 제거), 엔진 정책 Retries 0→2(지연 0 시험이 잡아야 함). 양성 대조군 + 「변이가 대상 줄에 닿음」 표식.
+- **배선 시험(1.3 3차 P1-1, 2026-10-28 추가)**: 취소의 FAILED_CONFIRMED 는 경로마다 뜻이 반대다 — 엔진(R3)에서는 「그 취소가 실행되지 않음, 주문은 살아 있음」이고
+  flatten 의 `classifyCancel` B3(458)은 FAILED_CONFIRMED 를 「주문이 이미 없음」(`FlattenStepFailed` → `planLiquidation` B5(307) 보류 안 함)으로 읽는다. 그래서
+  **`buildFlattenWiring` 의 필드 하나가 안전과 oversell 을 가른다** — 거기에 `EngineCancelRefusal()`(Definitive true)이 꽂히면 F1 이 그대로 돌아온다. Saga 시험은 자기 게이트웨이를
+  직접 만들므로 이 배선 변이를 못 본다. 시험: `cmd/tossctl` 에서 `buildFlattenWiring` 이 만든 게이트웨이의 정책이 flatten 정책(Definitive false)임을, `internal/app/engine` 에서
+  `buildGateway` 의 정책이 엔진 정책(Retries 0)임을 단언한다(값 비교 또는 409 AP fake 한 번으로 행동 비교). 변이 원장에 배선 교차 둘과 배선 nil 둘을 더한다.
+- **`definitiveRefusalCodes` 불변(1.3 3차 P3-3)**: already-processing 판정은 새 함수에만 두고 공유 목록(`refusal_code.go:46`)에 넣지 않는다 — 넣으면 place·amend·flatten 취소의 409 AP 가
+  `classifyMutation` B4(45)에서 확정 거절이 된다(flatten 은 F1 재발). 변이 「목록에 already-processing 추가」는 place·amend 409 AP → 오늘(IN_DOUBT) 시험과 flatten 소진 → Held 시험이 잡아야 한다.
 - 영향 범위: `internal/execgw`(+`-race`), `internal/official`, `internal/flatten`, `internal/app/engine`(clear·배선), `cmd/tossctl`(flatten 배선), `internal/journal`(dispatch).

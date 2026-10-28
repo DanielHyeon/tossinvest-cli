@@ -60,3 +60,20 @@
 - `check_analysis.py --change a165` 가 2026-10-23 오후부터 `missing evidence for modified function internal/official/stock_reads.go:adaptStocks` 를 낸다 — a165 base 뒤 착지한
   형제 커밋(a169 `064f67297`, `security_type` 노출)이 고친 함수가 워킹트리 창에 들어온 것이다(a165 자기 편집 아님). GREEN 뒤 `--record-landing` 으로 창을 좁히거나,
   안 되면 WORKFLOW 「사람 승인 base 재고정」 절차가 필요하다.
+
+## 사용자 결정 (2026-10-28, 「권장대로」) — 1.3 3차 리뷰 전 H1·H2
+
+| # | 결정 | a165 에 남는 것 |
+|---|---|---|
+| H1 | R4(CLI flatten 취소 409 재시도)의 최악 지연 — 막힌 취소 1건마다 오늘 경로 앞에 최대 ≤8s, flatten 전체로는 N×8s 가능 — 를 3차 결정대로 **유지**한다. 3차 리뷰는 불변식 4 판정을 명시해 남긴다 | design D3·D4 그대로. 판정은 review.md 「1.3 3차」 불변식 4 |
+| H2 | 형제 a169 `064f67297` 의 `adaptStocks` 가 a165 gate ⑤ 창에 들어온 문제 → GREEN 뒤 `--record-landing` 을 먼저 시도하고, 안 되면 archive 번들 복사로 처리한다. **base 재고정은 하지 않는다** | 아래 「H2 실측」 |
+
+### H2 실측 (1.3 3차, 2026-10-28, HEAD `0c9bfd272`)
+
+- `check_analysis.py --change a165-safe-order-placement-retry` rc=1, `missing evidence` **29건**(2026-10-23 의 1건에서 늘었다): `internal/console/*` 23 · `internal/campaignstateevidence` 2 ·
+  `tools/a112-mb-us-source` 3 · `internal/official/stock_reads.go:adaptStocks` 1. 전부 base `34e12967e` 뒤 착지한 형제 커밋의 함수이고 a165 자기 편집은 0 이다.
+- `--record-landing` 은 창의 **끝**만 좁힌다(WORKFLOW 「착지 지점」, README). 형제 커밋은 base 와 a165 착지 사이에 있으므로 기록해도 창에 남는다 — **H2 의 1차 경로로는 이 29건이 안 풀릴 것으로 본다**
+  (예상, 도구로 확인은 GREEN 뒤). 그러면 2차 경로(아카이브 번들 복사, a170 선례 `10cbb15c0`)이고 건수는 a165 GREEN 까지 형제 착지마다 는다.
+  복사본은 HEAD 에서 `ast.json` 을 다시 뽑아 같은지 볼 것(a170·a172 교훈). `adaptStocks` 번들은 아카이브가 아니라 진행 중 change 디렉터리(`a169-breakout-universes-are-compared-in-shadow`)에 있다.
+- base 재고정은 하지 않는다(H2). 비용을 줄이는 길은 a165 를 빨리 닫는 것뿐이다.
+

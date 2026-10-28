@@ -1,4 +1,4 @@
-> 착수 2026-10-23(Terra). 1.3 1차·2차 FAIL → 사용자 3차 결정(F3=1)으로 범위 = R3·R4·R5. design·delta 3판 → 1.3 3차 리뷰.
+> 착수 2026-10-23(Terra). 1.3 1차·2차 FAIL → 사용자 3차 결정(F3=1)으로 범위 = R3·R4·R5. design·delta 3판 → **1.3 3차 리뷰 PASS(2026-10-28, review.md 「1.3 3차」)**. 다음 = 2.1 Pre-Edit(P2 셋 처분 포함).
 
 ## 0. 착수 준비
 
@@ -7,25 +7,33 @@
 - [x] 0.3 `make sdd-sync` 후 CodeGraph hard evidence(`Gateway.Place`·`Cancel`·`Amend`·`submit`·`classifyMutation`·`Client.send` 의
   callers/callees/impact)와 `analysis/code-context/` 증거 조정 3파일. — codegraph 1.6.0, `raw/` 원문, CGC 는 다른 체크아웃(advisory 불가).
 - [x] 0.4 FLM/BTM: 위 함수와 design 이 고르는 접수 조회 함수, 그리고 `withStrategyEntryGateAuthority`(클로저 호출 횟수) — High-risk, 면제 없음. — 9 번들(`analysis/function-logic/`, 생성기 `analysis/measure/gen_flm.py`), `check_analysis.py --change` rc=0.
-- [x] 0.4.1 (1.3 S8/A10) 추가 번들: 조회 경로(`Resolver.scanBoth`·`ScanOrders`·`newMatcher`·`parseOrderFacts`), `unwrapAndDecode`, `tokenManager.refresh`, `refusalCodes`, `trading.Service.Cancel`, D7 의 `ExitObserver.ObserveOnce`·`clearTheSymbol`·`Saga` 루프·`resolveStep`·`Resolver.resolveCancel`. — 2차 결정으로 범위가 줄어 남는 범위가 기대는 14 번들을 만들었다(3차 결정 뒤 재조정 — issues.md 「3차」, 합계 23)(classifyStatus·doRequest·unwrapAndDecode·tokenManager.refresh·refusalCodes·parseOrderFacts·newMatcher·matcher.matches·roundTripFor·DispatchVerified·Service.Cancel·Saga.settleStep·classifyCancel·clearTheSymbol). ObserveOnce·Saga sell 루프·resolveCancel 은 청산 place·엔진 같은 주기 재시도가 범위 밖이 되어 not-applicable. 합계 23 번들, `check_analysis.py --change` rc=0.
+- [x] 0.4.1 (1.3 S8/A10) 추가 번들 — 2차 결정 뒤 14 번들을 더했고(029e1d6f6), 3차 결정(F3=1) 뒤 진입 재전송 전용 10개(조회 경로·place·Amend·strategy 게이트 등)를 지우고
+  남는 범위가 기대는 10개(New·buildGateway·buildFlattenWiring·resolveStep·planLiquidation·UnsettledCancelSymbols·classifyRefusalCode·PlaceOrder·CancelOrder·postWithHeaders)를 더했다(bc56522c7, issues.md 「3차」).
+  **현재 23 번들**: Gateway.submit·Gateway.Cancel·New·classifyMutation·statusOf·classifyRefusalCode·refusalCodes(execgw), buildGateway·ExitObserver.clearTheSymbol(engine), buildFlattenWiring(cmd/tossctl),
+  Saga.settleStep·Saga.resolveStep·classifyCancel·Saga.planLiquidation(flatten), Attempt.DispatchVerified·ClassifyHTTPMutation·Journal.UnsettledCancelSymbols(journal), Client.send·Client.postWithHeaders·Client.PlaceOrder·Client.CancelOrder·tokenManager.refresh(official), Service.Cancel(trading).
+  2026-10-28 HEAD `0c9bfd272` 에서 23 개 모두 `source_sha256` 일치(1.3 3차 (f)). 1판 문구의 조회 경로·`unwrapAndDecode`·`parseOrderFacts`·`newMatcher`·`roundTripFor`·`ObserveOnce` 번들은 이제 없다(범위 밖).
 
 ## 1. 계약 (design freeze)
 
-- [ ] 1.1 design.md — 갈래표(미접수 확정 / 결과 불명 / 확정 거절)를 FLM 반환 지점에 매핑, 같은 키 강제, 8s·최대 2회 시간 상한,
-  재시도 중 재시작·ctx 취소·조회-재전송 경합, 손절·flatten 즉시성 영향, 401 기존 재전송(`client.go:344`)을 「확실히 미접수」로 넣고 근거를 시험으로 고정(사람 결정 3). — 첫 판(1.3 FAIL) → 2판 [design.md](design.md)(사용자 2차 결정 반영, 2026-10-23).
-- [ ] 1.2 spec delta — order-execution 「Retry Matrix 산출물」·「취소의 일시적 거절 처리」 MODIFIED. — 2판: 「Retry Matrix 산출물」·「취소의 일시적 거절 처리」·「IN_DOUBT 해소」 MODIFIED(strict validate 통과).
-- [ ] 1.3 proposal-freeze 리뷰(적대적 Eng 보이스 포함) → `review.md`. — 1차 2026-10-23 **FAIL(blocker 3: A1·S1·S2)**. D7 사람 결정(review.md 질문 1~7) 뒤 1.1·1.2 재작성 → 재리뷰. — 2차(2판) 2026-10-23 **FAIL(blocker F1·F2·F3)**. F3(R1·R2 생산 도달 0) 사람 결정 대기(review.md 「1.3 재리뷰(2판)」).
+- [x] 1.1 design.md 3판 — R3(엔진 취소 409 already-processing → FAILED_CONFIRMED, 지연 0)·R4(CLI flatten 취소 409 재시도, 누적 5s·2회·8s 창, 소진·중단·전송 전 실패 → 오늘 경로 AMBIGUOUS → `resolveStep`)·R5(401 재전송 근거 시험)의
+  갈래를 FLM 반환 지점에 매핑, 즉시성 표(D4), 정책 nil = 오늘 동작(D5·D8), 기록(D6), 시험·변이 전략(D10). 진입 재전송·같은 키 재전송·조회-재전송 경합은 a171 로 이관(사용자 3차 결정).
+  — 1판(1.3 FAIL) → 2판(재리뷰 FAIL F1~F10) → 3판 [design.md](design.md)(bc56522c7). 1.3 3차 처분으로 D10 에 배선 교차 변이·시험 추가(이번 커밋).
+- [x] 1.2 spec delta 3판 — order-execution 「Retry Matrix 산출물」·「취소의 일시적 거절 처리」 MODIFIED(2판의 「IN_DOUBT 해소」 MODIFIED 는 진입 재전송과 함께 a171 로 빠짐).
+  1.3 3차 처분으로 검증 도구 시나리오 둘의 적용 대상을 명시(이번 커밋). `openspec validate --strict` 통과.
+- [x] 1.3 proposal-freeze 리뷰(적대적 Eng 보이스 포함) → `review.md`. — 1차 2026-10-23 **FAIL(blocker A1·S1·S2)** → 사용자 2차 결정 →
+  2차(2판) 2026-10-23 **FAIL(blocker F1·F2·F3)** → 사용자 3차 결정 F3=1(R1·R2 를 a171 로; F2·F4·F6·A2·F8 이관, F1·F5·F7·F9·F10 은 3판에서 처분) →
+  **3차(3판) 2026-10-28 PASS**(P0 0 · P1 2 는 이번 커밋 문서 수리 · P2 3 은 2.1 Pre-Edit 전 처분). 사람 결정 H1(R4 최악 지연 유지)·H2(gate ⑤ 창 — base 재고정 없음) 기록(review.md·issues.md).
 
 ## 2. 구현 (RED → GREEN → REFACTOR → VERIFY)
 
-- [ ] 2.1 Pre-Edit 선언.
+- [ ] 2.1 Pre-Edit 선언 — 1.3 3차 P2-1(gate ⑤ 창 형제 함수 처리 계획)·P2-2(D5 편집 경계 선택)·P2-3(R3 가 종목 SymbolInFlight 를 푸는 효과의 수락 또는 시험) 처분을 포함한다.
 - [ ] 2.2 RED: 취소 409 already-processing — 엔진 정책(확정 미수락·호출 1회·지연 0) / flatten 정책(재시도·누적 5s·창·소진 → IN_DOUBT·종목 보류·전송 전 실패 → IN_DOUBT) / code 불일치·모순·place·amend·정책 nil → 오늘과 같음 / 401 재전송 본문 동일·비 401 1회(design D10).
 - [ ] 2.3 GREEN: 최소 구현 + 배선 2곳 + 정본 retry matrix §0.1·§1·§4 와 `execgw` 기본값을 같은 커밋에서 갱신.
 - [ ] 2.4 attempt 기록에 재시도 횟수·갈래·확정 거절 분류(detail 꼬리표, 재시도 성공을 첫 시도 성공으로 기록하지 않음).
 
 ## 3. 검증
 
-- [ ] 3.1 변이 원장 — 409 code 판정·kind·정책 구분·대기 상한·횟수·창·소진 되돌림·경계 재검사, 양성 대조군 포함(design D10).
+- [ ] 3.1 변이 원장 — 409 code 판정·kind·정책 구분·대기 상한·횟수·창·소진 되돌림·경계 재검사, **배선 교차(flatten←엔진 정책 · 엔진←flatten 정책 · 배선 nil)·`definitiveRefusalCodes` 에 already-processing 추가**(1.3 3차 P1-1·P3-3), 양성 대조군 포함(design D10).
 - [ ] 3.2 다중 적대 리뷰(중복 주문 반례 레드팀) + gstack review/security.
 - [ ] 3.3 영향 범위 시험(`internal/execgw`·`internal/official`·`internal/flatten`·엔진 clear 경로·배선, 필요 시 `-race`)과 미실행 범위 기록.
 - [ ] 3.4 Manager 독립 검증.

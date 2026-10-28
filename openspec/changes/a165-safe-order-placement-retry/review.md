@@ -95,3 +95,103 @@ R1·R2(진입 결과 불명 재전송 + 정착 전 목록 대조)는 지금 설�
 1. **R1·R2 를 a165 에서 뺀다(권고).** a165 = 엔진 취소 409 확정 미수락(R3) + flatten 취소 409 재시도(R4, 소진 시 오늘 경로) + 401 근거 시험(R5). 진입 재전송은 전략 claimed 경로와 함께 후속 change 로 설계한다(F2·F4·F6 도 그쪽으로).
 2. **꺼진 채로 만든다** — 생산 도달 0 을 문서에 밝히고 배선은 후속. High-risk 검증 비용(변이·적대 리뷰)은 그대로 든다.
 3. **D9 를 철회** — `PlaceClaimedStrategy`(EntryGate 잠금·SUBMITTING 리스 안)까지 재전송을 넓혀 새로 설계한다.
+
+## 1.3 3차 proposal-freeze 리뷰(3판) — 2026-10-28 — **PASS** (P0 0 · P1 2 이번 커밋 수리 · P2 3 · P3 7)
+
+- 대상: design 3판(`bc56522c7`) · delta 3판 · 23 번들. 리뷰 HEAD `0c9bfd272`(origin/main), worktree `TossOS.worktrees/docs-a165`, 브랜치 `docs/a165-review3`.
+- 보이스: 독립 적대 리뷰어 1(새 컨텍스트, 작성 세션과 분리) — **적대 Eng 레드팀**(oversell·지연·오분류 반례)과 **안전·범위**(불변식 3·4·5·6, 사람 결정 충실도) 점검표를 한 보이스가 함.
+  autoplan 의 CEO·design·DX 관점은 not-applicable — 3판에 UI·CLI 표면·제품 범위 변경이 없다(사람 결정으로 범위가 이미 정해짐).
+- 소스 편집·시험 실행·운영 접근 0. 실행한 것: `go run ./tools/logic-map`(AST 8개), `check_analysis.py --change`(읽기 전용 판정), `openspec validate --strict`.
+- 사람 결정(2026-10-28 「권장대로」): **H1** R4 최악 지연 유지 · **H2** gate ⑤ 창 — `--record-landing` 먼저, 안 되면 archive 번들 복사, base 재고정 없음(issues.md).
+
+### 새 AST 증거 (`analysis/evidence/`, HEAD `0c9bfd272`)
+
+번들 밖 함수의 분기를 근거로 쓰므로 먼저 뽑았다: `journal--journal.liveordersforsymbol` · `execgw--classifybrokerrefusal` · `execgw--classifyrefusalbody` ·
+`execgw--gateway.checksymbolfree` · `execgw--gateway.unsettledfor` · `journal--releasesreservations` · `journal--exitintentattemptsq` · `engine--onlyenginecancelsinflight` (`*.ast.json`).
+
+### (a) 2차 FAIL F1~F10 처분의 3판 반영
+
+| id | 3판 | 판정 |
+|---|---|---|
+| F1 | D3 「최종」: 소진·중단·재전송 NOT_SENT → 첫 409 의 AMBIGUOUS → `DispatchVerified` B16(204) IN_DOUBT → `classifyCancel` B5(464) → `settleStep` B9(395) `resolveStep`. `resolveStep` 의 결과는 B4(434) Done · B5(437) **Pending**(취소 미실행 관측 = 보류) · B6(443)/B1/B2 InDoubt 뿐이고 Failed 가 없다 → `UnsettledCancelSymbols`(Pending·InDoubt·Held) → `planLiquidation` B5(307) 보류 | **반영** (단 배선 하나가 이것을 무너뜨릴 수 있음 → P1-1) |
+| F2·F4·F6 | 진입 재전송과 함께 a171 로 이관(a171 proposal 표 24–28행 확인) | 반영(범위 밖) |
+| F3 | 사용자 3차 결정 =1, design §0 | 반영 |
+| F5 | D1: 세션 중 해소기 없음. `Resolver.Resolve` 생산 호출자 = `reconcile/recovery.go:300`·`flatten.go:428` 둘뿐(grep 재확인) | 반영 |
+| F7 | 남는 범위가 기대는 함수 번들화(23). `tokenManager.token/exchange` 는 3판이 내부를 주장하지 않아 불필요 | 반영 |
+| F8 | place 재전송이 없어 소멸 | 반영 |
+| F9 | 401 기록 면제(delta)·D5 인용 646 정정·flatten 소진 시나리오. flatten 성공 시나리오는 이번 커밋에서 범위 명시로 보강(P1-2) | 반영 |
+| F10 | D10 「1회 409 뒤 ACK → CONFIRMED」가 재전송이 자기 결정·예약 재검사(B31·B36)에 막히지 않음의 양성 대조군 | 반영 |
+
+### (b) 갈래표 → FLM 반환 지점 (AST 좌표)
+
+**R3 엔진**: 409 AP(코드 일치·모순 없음) + 엔진 정책 → 새 함수가 REJECTED → `DispatchVerified` B6(158)→B7(160) FAILED_CONFIRMED → `submit` B57(758) 반환 759 →
+`clearTheSymbol` B11(1697) `cleared=false; continue` → B13(1706) 반환 1707. 다음 주기 B3(1639) 는 종결 attempt 를 안 셈(`unsettledFor` 는 원장의 미종결 목록만 돈다 — B2(36)) → 재취소.
+아니면(코드 불일치 `classifyRefusalCode` B6(74)/반환 75 · 모순 B3(63)/64 → `classifyMutation` B5(52)/53 · 코드 없음 → `classifyMutation` B6(66) `ClassifyBrokerRefusal`
+(본문 표지 없으면 B10(182) 거짓, 반환 188) → B8(84) `statusOf` B1(127)/128 → `ClassifyHTTPMutation` B7(337)/338) AMBIGUOUS → B16(204) IN_DOUBT — 오늘과 같음.
+**매도는 B11 이 참일 때만 막히고 거짓일 때만 나간다** — R3 는 `cleared` 를 참으로 만드는 경로를 하나도 더하지 않는다(확인).
+`LiveOrdersForSymbol`(1854) 는 SQL CTE 가 `kind IN ('PLACE','AMEND')`·CONFIRMED 만 보므로 취소 FAILED_CONFIRMED 는 주문을 닫지 않는다(분기 B1~B7 은 오류·스캔뿐).
+
+**R4 flatten**: 첫 결과 비 AP → 그대로. AP → 루프(누적 5s·창 8s·횟수 2·Sleep 실패에서 중단). 재전송은 `submit` 의 결정 재읽기 B30(648)·B31(651)·키 B32(654)·보호 B33(658)·
+진입 B34(665)·예약 B36(673)·ctx B37(685) 를 다시 지남(거절은 `notSent` → D3 규칙으로 AMBIGUOUS). 재전송 ACK → B8(165)…B15(199) CONFIRMED → `classifyCancel` B2(456) Done.
+재전송 확정 거절(404·422 등) → B6(158) → `classifyCancel` B3(458) Failed → 매도 진행 — **오늘 첫 전송 4xx 와 같은 해석**(새 가정 아님). 재전송 모호 → IN_DOUBT → `resolveStep`.
+**R5**: `send` B4(344) 루프 조건 `attempt<2 && code==401` · B5(347)/348 refresh 오류 · B7(355)/356 전송 오류 · B8(358) `!adopted` break · B9(362)/363 비 2xx · 365 정상.
+`refresh` B1(119) 채택 121 / 교환 125. `postWithHeaders` B1(431) 본문 1회 마샬(435 클로저가 같은 `encoded` 재사용) → 바이트 동일.
+
+### (c) 불변식 판정
+
+| 불변식 | 판정 | 근거 |
+|---|---|---|
+| 3 토글 OFF = upstream | **PASS** | 런타임 토글 없음. 바뀌는 경로는 TossOS 전용(엔진 게이트웨이, `flatten-all` — 2026-07-26 `2910ddfbd`·`4734c5dfe` 추가). upstream `tossctl order cancel`(`order.go:295` → `tradingService` 직행)·`ops/write_operations.go:214` 와 공식 클라이언트(R5 는 시험만)는 무변. `Options.CancelRefusal == nil` = 오늘 동작(D5·D8) |
+| 4 손절·비상 청산 즉시성 | **엔진: PASS** / **CLI flatten: 사람 수락 PASS(H1)** | 엔진 청산 전 취소 409 AP 는 같은 주기 추가 지연 0(대기·재전송 0, 시험 고정)이고, 오늘의 「재시작까지 그 종목 손절 막힘」(D1)을 없앤다. flatten 은 흔한 경우 단축(동기 해소 ≥45s → ~1s)이나 **최악은 막힌 취소 1건마다 오늘 경로 앞에 ≤8s, N건이면 N×8s 를 더한다 — 무조건 PASS 가 아니다.** 그 최악은 그 뒤의 `resolveStep`(≥45s)이 지배하고, 사람이 H1 로 수락했다 |
+| 5 High-risk 의무 | **PASS(조건: P1-1 반영)** | 23 번들 유효((f)), Pre-Edit(2.1)·RED/GREEN·변이 원장(3.1)·다중 적대 리뷰(3.2) 계획 있음 |
+| 6 손절·익절·사이징 보수 방향 | **해당 없음 / PASS** | 수준·수량·사이징 변경 0. 매도는 여전히 확정 취소(`clearTheSymbol` B11) 또는 oversell 가드(`planLiquidation` B5) 뒤에서만 |
+| WORKFLOW §0.4 rate 예산 | PASS | D9 계상(엔진 ≈0.4 req/s/막힌 종목, flatten 취소당 ≤(GET+POST)×2). GREEN 에서 정본 §0.4 갱신 |
+
+### (d)(e)(f)(g)
+
+- (d) **공유 `definitiveRefusalCodes`(refusal_code.go:46)를 넓히지 않는다** — D2 는 새 순수 함수, place·amend 409 AP 는 오늘 그대로. 단 문서에 명시 문장이 없었음 → P3-3 로 D10 에 추가.
+- (e) 정책 nil = 오늘 동작: D5 세 조건(nil · 비취소 · 전송 없음) → 첫 분류 그대로, D6 detail 바이트 동일, D10 시험. 통과. 편집 경계는 P2-2.
+- (f) **23 번들 유효**: base `34e12967e`→HEAD 116 커밋 중 번들 소스 파일을 만진 것은 0(`git log --full-history` 대상: `internal/{execgw,official,flatten,trading}` 전체와 journal `flatten.go`·`dispatch.go`·`fills.go`·`classify.go`, engine `exitloop.go`·`gateway.go`, `cmd/tossctl/flatten.go` —
+  걸린 것은 a169 `064f67297` 하나로 `internal/official/stock_reads.go`·a169 시험 파일뿐, 번들 소스 아님). 23 개 `source_sha256` 전부 HEAD 소스와 일치(실측). 다만 gate ⑤ 창 자체는 29건으로 불었다 → P2-1.
+- (g) **a087 과의 `exitloop.go`**: a165 3판은 `exitloop.go` 를 **편집하지 않는다**(R3 은 게이트웨이 분류 + `engine/gateway.go:311` 배선 한 줄). 텍스트 충돌 0. a087 Phase 2 는 `ExitObserver.sellIntent` 를 고친다(a087 tasks 2.0~2.2, 미착수).
+  계획: ① a087 이 먼저 착지하면 a165 의 `clearTheSymbol` 번들(`revision: current`)은 줄 이동으로 sha 가 낡는다 → a165 GREEN 전에 HEAD 에서 재추출하고 좌표(B3 1639·B11 1697)를 재대조.
+  ② a087 의 `sellIntent` 편집은 a165 gate ⑤ 창의 형제 함수가 된다(H2 와 같은 처리). ③ 의미 충돌 없음 — a087 은 매도 주문 유형만 바꾸고 취소 분류에 기대지 않는다.
+  ④ a167(잔량 재가격: 취소 → 재제출)이 엔진 취소를 쓰면 R3 의 「취소 FAILED_CONFIRMED = 주문 살아 있음」을 따라야 한다 — a167 착수 때 재대조.
+
+### 발견
+
+| id | 심각도 | 요약 | 처분 |
+|---|---|---|---|
+| P1-1 | **P1** | 취소 FAILED_CONFIRMED 의 뜻이 경로마다 반대다 — 엔진(R3) 「주문 살아 있음」, flatten `classifyCancel` B3(458) 「주문 없음」. 그래서 `buildFlattenWiring` 의 정책 필드 하나가 oversell(F1)을 가른다. Saga 시험은 자기 게이트웨이를 만들어 이 배선 변이(flatten ← `EngineCancelRefusal`)를 못 잡고, D10 변이 원장에도 없었다 | **수리(이번 커밋)** — design D10 「배선 시험」, tasks 3.1 에 배선 교차 둘·nil 둘 추가 |
+| P1-2 | **P1** | delta 의 시나리오 「재시도 상한 소진 → 실패로 기록」·「일시적 거절 후 성공(정정 포함)」이 적용 대상을 말하지 않아 게이트웨이 flatten(소진 = IN_DOUBT)·엔진(정정 미적용)과 모순 — 그대로 구현하면 F1 이 돌아올 수 있다 | **수리(이번 커밋)** — 두 시나리오에 「검증 도구」/「CLI flatten 게이트웨이」 명시, strict validate 통과 |
+| P2-1 | P2 | H2 의 전제가 낡았다 — gate ⑤ 창의 형제 함수는 1건이 아니라 **29건**(console 23·campaignstateevidence 2·a112 도구 3·adaptStocks 1). `--record-landing` 은 창의 끝만 좁히므로 base~착지 사이 형제는 남을 것으로 본다(예상) | issues.md 「H2 실측」. 2.1 에 처리 계획, GREEN 뒤 도구로 확인. 빨리 닫을수록 싸다 |
+| P2-2 | P2 | D5 의 `sendOnce` 추출(646–725)은 strategy 갈래(B38–B46)까지 옮겨 High-risk 진입 경로를 리팩터한다. 더 작은 대안: 기존 `dispatch` 클로저를 **그대로** 두고 바깥 래퍼가 취소·정책·첫 결과 409 AP 일 때만 같은 클로저를 `winCtx` 로 다시 부른다 — B37(685) `dctx.Err()` 가 이미 `plan.call` 직전 마지막 검사이고, 결정·보호·진입·예약 재검사도 그대로 다시 돈다. 클로저 본문 편집 0 | 2.1 Pre-Edit 에서 선택. 어느 쪽이든 `winCtx` 는 재전송·대기에만 쓰고 정착(`DispatchVerified` 의 Settle/MarkInDoubt)은 바깥 ctx(P3-7) |
+| P2-3 | P2 | R3 의 FAILED_CONFIRMED 는 그 종목의 `SymbolInFlight`(`checkSymbolFree` B2(804), `unsettledFor`)도 푼다 — 노출을 늘리는 진입도 그 종목에 다시 가능해진다. 오늘은 IN_DOUBT 가 재시작까지 진입까지 우연히 막았다. 나머지 FAILED_CONFIRMED 소비자(`releasesReservations` B2(121) — 취소 결정은 예약 없음 · `exitIntentAttemptsQ` B8(211) — 발의 intent 만 봄 · `onlyEngineCancelsInFlight` B6(72) · `ConfirmedCancelOf` CONFIRMED 만)는 취소 FAILED_CONFIRMED 가 오늘도 4xx 로 생기므로 새 상태 조합이 아니다 | 2.1 에서 「청산 중 종목의 진입은 어느 게이트가 막는가」를 적고 수락하거나 시험으로 고정 |
+| P3-1 | P3 | D1 이 `classifyMutation` B6(66) `ClassifyBrokerRefusal`(본문 표지 `interactive`·`입금` 등)을 건너뛴다. AP 본문에 표지가 있으면 오늘은 REJECTED(flatten 에서는 Failed = 매도). AP 판정을 원 오류에서 분류보다 **먼저** 하도록 순서를 적을 것 | 2.1 |
+| P3-2 | P3 | D3 「종목은 UnsettledCancelSymbols 에 남아」는 부정확 — `resolveStep` B4(434) Done(취소 실행 관측)이면 매도된다(올바름) | 기록 |
+| P3-3 | P3 | `definitiveRefusalCodes` 불변이 문서에 없었다 | 수리(이번 커밋, D10·3.1) |
+| P3-4 | P3 | R3 재취소는 막힌 종목마다 5s 에 결정·intent·attempt 1벌(시간당 ≈720행)과 경보 연속 계수를 만든다. 안전 문제는 아니고 운영 비용 | 기록 |
+| P3-5 | P3 | R-a165-1 이 a165 잔여(issues)와 a171 이관(D7) 양쪽에 적힘 — 둘 다 맞게 「a165 잔여, a171 에도 기록」으로 읽는다 | 기록 |
+| P3-6 | P3 | (g) a087 계획이 design 에 없었다 | 위 (g) 로 기록 |
+| P3-7 | P3 | `winCtx` 가 만료된 뒤 정착을 같은 ctx 로 하면 기록이 실패한다 — 재전송 ctx 와 정착 ctx 분리를 Pre-Edit 에 적을 것 | 2.1 |
+| P3-8 | P3 | tasks 0.4.1·1.1~1.3 의 낡은 문구(조회 경로 번들·「2판」·「F3 사람 결정 대기」) | 수리(이번 커밋) |
+
+깨지지 않은 반례: R3 가 매도를 내보내는 경로(없음 — B11) · R4 소진·중단·전송 전 실패가 Failed 로 닫힘(없음 — D3 + `resolveStep` 에 Failed 반환 없음) · 재전송 중 프로세스 재시작(attempt DISPATCH_STARTED → 복구 IN_DOUBT, 취소라 중복 생성 없음) ·
+place·amend 409 AP 의 분류 변경(없음 — kind 검사) · 엔진 지연(대기 0) · 재전송 사전 확인 GET 오류(엔진 `officialBroker` 의 `GetOrderAvailableActions` 는 오류를 내지 않음 — broker.go:57, flatten 도 같은 `engine.NewOrderPath`).
+
+### 구현 착수 시 편집될 기존 함수(FLM 대상 — 모두 번들 있음)
+
+`execgw.Gateway.submit`(dispatch 경계 — P2-2 선택에 따라 범위가 다름) · `execgw.New`(정책 필드 저장) · `engine.buildGateway`(필드 1) · `cmd/tossctl.buildFlattenWiring`(필드 1).
+새 함수(`alreadyProcessingRefusal`·재시도 루프·`EngineCancelRefusal`·`FlattenCancelRefusal`)는 새 파일에 둔다. 기존 시험 파일의 fake·헬퍼를 고치면 그것도 gate ⑤ 대상이다.
+`classifyMutation`·`classifyRefusalCode`·`Gateway.Cancel`·`Client.send` 는 편집 대상이 아니다(편집하면 번들 갱신 필요).
+
+### 변이 원장 항목(3.1)
+
+code 판정 EqualFold→status 만 · 두 자리 모순 검사 제거 · 409 검사 제거 · kind==Cancel 검사 제거(place·amend 에 적용) · Definitive 분기 뒤집기 · 누적 MaxWait 상한 제거 · 8s 창 검사 제거 ·
+횟수 경계(2→3) · retryAfter 기본값 1s 변경 · NOT_SENT→첫 AMBIGUOUS 되돌림 제거 · 소진 시 마지막 결과로 정착 · 재전송 경계 재검사(ctx/deadline) 제거 · 엔진 정책 Retries 0→2 ·
+**배선 교차 flatten←엔진 정책 / 엔진←flatten 정책 / 배선 nil 둘**(P1-1) · **`definitiveRefusalCodes` 에 already-processing 추가**(P3-3) · R5: `attempt<2`→`<3` · `code==401`→`code>=400` · `makeReq` 가 본문을 새로 마샬.
+양성 대조군과 「변이가 대상 줄에 닿음」 표식 필수.
+
+### 실행하지 않은 것
+
+시험 전부(지시상 금지), `make sdd-sync`·`make gate`, 실계좌·운영 접근, CodeGraphContext·GBrain(advisory). `--record-landing` 효과는 GREEN 전이라 추정(P2-1).
