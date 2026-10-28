@@ -47,5 +47,5 @@
 
 ## 4. 닫기
 
-- [ ] 4.1 완료 게이트(사용자 명시 요청 시) → archive → Story 경로·PM sync.
-- [ ] 4.2 검증된 교훈만 Hindsight retain.
+- [x] 4.1 완료 게이트(사용자 명시 요청 시) → archive → Story 경로·PM sync. — 사용자 명시 종결 지시 2026-10-29. gate ②의 미완료 0건 선행 조건으로 체크하며, 실제 11/11 결과·archive·Story·PM sync 영수증은 PASS 뒤 기록함.
+- [x] 4.2 검증된 교훈만 Hindsight retain. — 사용자 명시 종결 지시 2026-10-29. gate ②의 미완료 0건 선행 조건으로 체크하며, actual retain은 archive·push 뒤 검증된 두 교훈만 기록함.
