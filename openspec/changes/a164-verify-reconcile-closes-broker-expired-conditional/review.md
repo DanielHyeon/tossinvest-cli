@@ -222,3 +222,24 @@ verifylive·official·cmd/tossctl `go test` Manager 재실행 PASS) 5.1 의 미�
     계좌 마스크가 평문으로 들어간 판은 0.
 - 승인된 재시도 조건(VCS 128 · ⑥ CodeGraph 15초 시한 초과)에 해당하지 않아 **재시도하지 않음.** 시험 수정은 이 종결의 승인 범위 밖(시험 약화 금지 · 다른 change 몫)이라 하지 않음.
   archive · Story 경로 · main 병합 · push 하지 않음 — Manager/사용자 결정 대기.
+
+## 종결 차단 결함 수정 — a131 시험의 우연 일치(0.17%), a164 범위 밖이지만 같은 브랜치에서 근본 수정 (2026-10-28)
+
+- 승인: 사용자 「a164 A」(2026-10-28, Manager 전달) — 같은 브랜치 `chore/close-a164` 에서 근본 원인대로 고치고, gate 를 다시 돌려 통과하면 archive · main ff · push · 정리 · retain.
+- 원인: `internal/verifylive` `TestRecordCarriesNoUnmaskedAccountNumber`(a131 `f269c6157`)의 마스크 검사가 기록 **원 바이트 전체**에서 부분 문자열 `8901`(가짜 계좌 마스크 꼬리)을 찾았음.
+  기록에는 실행마다 바뀌는 `sha256:` 16진 digest 가 여러 개 있어 우연히 일치함 — 단독 `-count=3000` 에서 5 실패, 실패 판의 일치 자리는 전부 digest 안(위 「완료 게이트 실행 영수증」).
+  값 모양 실측(임시 진단, 커밋 안 함 · 삭제): 숫자 4연속을 품는 값은 digest(`calls[].request_digest`·`response_digest`·`observations[].value`), 봉인 봉투(`account_ref_sealed`, `v1.`+base64url),
+  `process.pid`(숫자), 시각(`YYYY-MM-DDThh:mm:ss…`, 4연속은 연도뿐), 종목 `005930`, 관측 키·값의 종목 코드였음.
+- 수정(약화 아님 — 「평문 계좌·마스크가 기록에 들어가면 FAIL」 유지):
+  - 원 바이트에서는 마스크 **전체** `maskedAccount("123-45-678901")` = `*********8901` 을 찾음. `*` 는 16진 · base64url · 시각 · 숫자에 나오지 않아 우연 일치가 불가능함.
+  - 꼬리만 새는 경우는 새 헬퍼 `recordStringsContaining`(새 파일 `internal/verifylive/record_mask_leak_test.go`)으로 찾음: 줄마다 JSON 을 풀어 **키와 문자열 값**에서 `8901` 을 찾음.
+    건너뛰는 것은 계좌를 실을 수 없는 두 모양뿐 — 값 전체가 `^sha256:[0-9a-f]+$`(해시 출력) · 키 `account_ref_sealed`(AES-GCM 암호문). 숫자 값(pid·지연·수량)은 보지 않음(계좌 참조 필드는 문자열).
+    못 푸는 줄은 원 바이트로 판정함.
+  - 평문 계좌 검사(B3)와 봉인을 열면 마스크가 나오는지(B6)는 그대로 둠. 생산 코드 무변경.
+- FLM: 편집 **전** 번들을 먼저 만들어 커밋(`3bf5c6043`, 분기 5), 편집 뒤 AST 재추출(분기 6)과 대응표를 BTM 에 적음. `check_analysis.py --change a164-…` rc 0.
+- 측정: 편집 뒤 `go test -count=3000 -run '^TestRecordCarriesNoUnmaskedAccountNumber$' ./internal/verifylive/` → **3000/3000 ok**(120.224s) ·
+  `go test -count=1 ./internal/verifylive/` ok(23.6s) · `go vet`(무태그 · `-tags tossos_testseams`) ok · gofmt 0.
+- 변이(생산 `internal/verifylive/record.go` 를 잠시 바꿈, 매번 원본 복사로 원복하고 sha 일치 확인):
+  - M0 무변이 대조군 → ok.
+  - M1 `Recorder.Append` 의 `redact.SealRecordLine` 생략(마스크가 `account_ref` 평문) → **FAIL** — 172 「masked account reference in the clear」 + 176 꼬리 검사(`account_ref=*********8901`).
+  - M2 `Title` 에 마스크 꼬리 4자 덧붙임(별표 없는 꼬리만 평문) → **FAIL** — 176 꼬리 검사(`title=… tail 8901`). 마스크 전체 검사는 안 걸림 — 두 검사가 각자 다른 누출을 잡음.
