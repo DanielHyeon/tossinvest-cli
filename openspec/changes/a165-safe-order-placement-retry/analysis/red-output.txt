@@ -1,0 +1,19 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/execgw [github.com/JungHoonGhae/tossinvest-cli/internal/execgw.test]
+internal/execgw/cancel_refusal_test.go:15:18: undefined: EngineCancelRefusal
+internal/execgw/cancel_refusal_test.go:15:42: undefined: CancelRefusalPolicy
+internal/execgw/cancel_refusal_test.go:18:18: undefined: FlattenCancelRefusal
+internal/execgw/cancel_refusal_test.go:18:43: undefined: CancelRefusalPolicy
+internal/execgw/cancel_refusal_test.go:42:15: undefined: alreadyProcessingRefusal
+internal/execgw/cancel_refusal_test.go:52:26: unknown field cancelRefusal in struct literal of type Gateway
+internal/execgw/cancel_refusal_test.go:52:41: undefined: EngineCancelRefusal
+internal/execgw/cancel_refusal_test.go:54:11: g.withCancelRefusal undefined (type *Gateway has no field or method withCancelRefusal)
+internal/execgw/cancel_refusal_test.go:74:26: unknown field cancelRefusal in struct literal of type Gateway
+internal/execgw/cancel_refusal_test.go:74:41: undefined: FlattenCancelRefusal
+internal/execgw/cancel_refusal_test.go:74:26: too many errors
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw [build failed]
+# github.com/JungHoonGhae/tossinvest-cli/internal/journal [github.com/JungHoonGhae/tossinvest-cli/internal/journal.test]
+internal/journal/confirmed_cancel_after_latch_test.go:24:24: j.ConfirmedCancelAfterLatch undefined (type *Journal has no field or method ConfirmedCancelAfterLatch)
+internal/journal/confirmed_cancel_after_latch_test.go:30:23: j.ConfirmedCancelAfterLatch undefined (type *Journal has no field or method ConfirmedCancelAfterLatch)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal [build failed]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.041s
+FAIL
