@@ -337,3 +337,20 @@ R3-1의 `attempt_transitions.id` 순서 비교와 NULL fail-closed는 맞다. �
 - 정적 확인: HEAD `e10f45500`; 지정된 design/spec/tasks/issues/review 및 journal·engine·filldetect·CLI source 대조, `git diff --check` 통과.
 - `ai-memory-retrieval`: MCP 조회 도구가 없어 CLI 색인으로 a165를 찾았으나 결과 0. `search-first`: 저장소 심볼·기존 구현을 우선 검색했고 새 기능·의존성·통합을 만들지 않아 외부 패키지/레지스트리 채널은 N/A. `grill-me`/`grilling`: 기존 사람 결정과 승인 범위가 확정돼 새 질문 N/A. `impeccable: N/A — backend/documentation-only`.
 - 지시상 소스·시험 편집·시험 실행·운영 콘솔·docker·sqlite3 운영 원장·주문·mutating 명령 0. `openspec validate`, `check_analysis.py`, `make sdd-sync`, `make gate`도 실행하지 않았다.
+
+### 1.3 3차 재리뷰 처분 (2026-10-28, 작성자)
+
+소스·시험 편집 0, 시험 실행 0, 운영 접근 0. `openspec validate --strict` 통과.
+
+| 발견 | 처분 | 반영 위치 |
+|---|---|---|
+| R3-3 P1 거래일 경계 뒤 재취소가 r2 로 안 풀림 | **r2 비교 축에서 거래일을 뺀다.** 대상 주문의 정규 범위 = L 의 계좌(`intents.account_ref`, schema.go:206)·시장(204)·종목(207)·`target_order_id`(230)를 질의 안에서 읽어 C 와 비교(정규화는 `ConfirmedCancelOf` 와 같음, exit_proposal_release.go:156–158). 순번 `r_C > s_L` 그대로. 근거: C 의 intent 거래일은 C 를 준비한 날(`Gateway.prepareRequest` 1011 `market.TradingDay(g.clk.Now())` → 1039, evidence AST B3(1012) 만 실패 반환)이고 재취소 대상은 거래일 인자 없는 `LiveOrdersForSymbol`(1630)의 `order.OrderID`(`clearTheSymbol` 1686). 「latch 거래일 이후(`>=`)」 안은 순번이 이미 정한 순서를 벽시계로 다시 묻는 판정이라 버림. **번호 재사용은 거래일 대신 주인 유일성으로 막는다** — L 의 계좌·시장·종목에서 `broker_order_id = target` 인 접수 확정 PLACE/AMEND(schema.go:231)의 `COUNT(DISTINCT intent_id) = 1`; `LiveOrdersForSymbol` 의 주인 술어(fills.go:1871–1877)를 거래일·매매방향 없이 센 것. 0·2 이상이면 해제 아님(r1 은 그대로). 재리뷰가 권한 「target 원 거래일 상속」은 CANCEL intent 에 target 의 거래일 자리가 없어(schema 36) 새 열이 필요하므로 택하지 않음 — 주인 행에서 유도. RED (h) 갱신·(i1) D0 latch → D1 재취소 = 해제 ·(i2) D1 terminal(r1) = 해제 ·(j1~j3) 다른 계좌·시장·종목의 같은 id = 거절 ·(k1) 주인 둘 ·(k2) 주인 0 = 거절 ·(k3) 대조군. 변이 ⑩ 교체(거래일 같음 복원 → i1) ·⑪a/b/c(계좌·시장·종목 비교 제거 → j1/j2/j3) ·⑫(주인 유일성 제거 → k1, `<= 1` → k2) | design 머리말·D11(해제 조건·「범위·대상」 축별 표·「거래일을 뺀 이유」·「번호 재사용」·「r2 질의 모양」 SQL·RED·변이), delta R3 bullet + 시나리오 둘, tasks 1.3·2.2·3.1, issues R-a165-5·7 |
+| R3-4 P2 D12 질의 2 가 코드 r2 범위를 재현 못 함 | 질의 1 에 `account_ref` 열. 질의 2 를 latch 하나(`<latch_attempt>`)에서 시작해 r2 와 **같은** 범위 조인(계좌·시장·종목·바이트 같은 대상 id)·주인 수·`recorded_seq > latch_seq` 를 SQL 에서 판정하고 범위 열(계좌·시장·종목·대상 id·latch 거래일·취소 거래일·두 순번·`owner_count`·`r2`)을 출력. 결과는 **후보 목록이지 판정이 아님**을 다시 적음(코드가 정본, 2.3 이식 때 구현 SQL 과 대조) | design D12 ①·②-1, issues R-a165-6 |
+
+- 새 AST(HEAD `5e1ae6260`, `go run ./tools/logic-map`): `analysis/evidence/execgw--gateway.preparerequest.ast.json`(1002–1086, branches 10 — B3(1012) 거래일 실패 반환, 1011 `:=` 대입·`market.TradingDay`/`g.clk.Now` 호출).
+  기존 `journal--journal.liveordersforsymbol.ast.json` 은 HEAD 에서 다시 뽑아 `source_sha256`·범위·branches 7 이 같음을 확인(파일 그대로). `clearTheSymbol` 번들 ast 도 HEAD sha 일치(호출 1630·1650·1686).
+- 손으로 읽은 근거(AST 아님): `LiveOrdersForSymbol` 의 SQL(`confirmed_orders` 1860–1867·주인 술어 1871–1877), `confirmedOrderTerminalEvidence`(exit_proposal_release.go:281–294 — terminal 증거는 주인의 거래일로 범위를 잡아 r1 은 거래일을 넘겨도 맞음), 재사용 시험 이름 fills_test.go:635·985.
+- 임시 검증(증거 아님): design 의 r2 SQL·D12 질의 2 를 메모리 SQLite 최소 표에 돌려 (f) 앞선 C1 → 없음, (j1~j3) → 없음, (i1) D1 C → 찾음, (k1) 주인 둘 → 없음을 봤다(구문·조인 확인용, 시험 아님 — RED 는 2.2).
+- 새 잔여 R-a165-7: 원장 밖 주문의 번호 재사용은 주인 유일성이 못 본다(측정 0, 수락 사유 issues).
+- 실행하지 않은 것: 시험 전부·coverprofile, `check_analysis.py`, `make sdd-sync`·`make gate`.
+- **다음**: GPT 보이스 재리뷰. 꼭 볼 곳 — 거래일을 뺀 뒤의 번호 재사용 방어(주인 유일성이 거래일 비교를 대신하는가, 원장 밖 재사용 R-a165-7 수락), 주인 술어를 거래일·매매방향 없이 센 선택, 「target 거래일 상속」을 택하지 않은 이유(schema 36).

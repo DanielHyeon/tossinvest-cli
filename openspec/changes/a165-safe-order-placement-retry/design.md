@@ -6,6 +6,9 @@
 > P2-3(R3 뒤 그 종목 진입은 계속 막음)을 **진입 전용 latch**(D11)로 정의, D10 배선 시험·변이 원장 보강, 8s 창 시작점을 dispatch 진입 직전으로(P3).
 > **재리뷰 처분(1.3 재리뷰 GPT-5.6 Terra FAIL P1 1·P2 1, 2026-10-28)**: D11 해제 r2 에 원장 순번 경계(latch 정착 transition 뒤에 **기록이 시작된** 같은 대상 주문의 CONFIRMED 취소만)와
 > 새 질의 함수(기존 `ConfirmedCancelOf` 불변), RED (f)~(h)·변이 ⑦~⑨, 운영 절 D12(조회·journalled 해제·경보). 새 evidence AST `journal--attempt.transition`·`journal--journal.prepare`(HEAD `d64620457`). schema 36 그대로.
+> **3차 재리뷰 처분(1.3 3차 재리뷰 GPT-5.6 Terra FAIL P1 1·P2 1, 2026-10-28)**: D11 r2 의 비교 축에서 **거래일을 뺐다** — 대상 주문의 정규 범위(계좌·시장·종목·`target_order_id`)를 L 에서 읽어
+> 비교하고, 번호 재사용은 거래일 대신 **주인 유일성**(그 범위에서 그 번호의 접수 확정 주인 intent 가 정확히 하나)으로 막는다. 순번 조건 `r_C > s_L` 은 그대로. RED (h) 갱신·(i)~(k) 추가, 변이 ⑩ 교체·⑪·⑫ 추가.
+> D12 질의 2 를 r2 와 같은 조인으로. 새 evidence AST `execgw--gateway.preparerequest`(HEAD `5e1ae6260`). schema 36 그대로.
 > 새 AST: `analysis/function-logic/internal-execgw--gateway.checksymbolfree/`(편집 대상 번들, 24번째) · `analysis/evidence/` 의 `execgw--gateway.checkentry` ·
 > `journal--journal.confirmedcancelof` · `execgw--entrygate.blocksymbol` · `journal--journal.recoverpending`(HEAD `e4724910b`).
 > base `34e12967e`. 함수 내부 주장은 `analysis/function-logic/*/ast.json` 의 AST 좌표로만 한다(23 번들).
@@ -179,7 +182,10 @@ AST `client.send` B4(344) `attempt < 2 && code == http.StatusUnauthorized`, 루�
   - **배선**: flatten←엔진 정책 · 엔진←flatten 정책 · 배선 nil 둘 · **혼성 `{Retries 2, Definitive true}`**(W1 의 정확 값 + Held 단언이 잡음).
   - **latch(D11)**: ① latch 호출을 `checkSymbolFree` B3(810) 앞으로 옮김(exit 도 latch 를 봄) → RED-b ② latch 를 `unsettledFor` 에 넣음 → RED-b(`clearTheSymbol` 이 막힘) ③ 해제 r1(대상 주문 terminal) 누락 → RED-c1
     ④ 해제 r2(확인된 취소) 누락 → RED-c2 ⑤ 키에서 종목 비교 제거 → RED-e ⑥ latch 를 메모리(`EntryGate.BlockSymbol`)로만 → RED-d
-    ⑦ **r2 순서 경계 제거**(`r_C > s_L` 삭제 또는 r2 를 `ConfirmedCancelOf` 호출로 되돌림) → RED-f ⑧ **r2 대상 id 비교 제거**(`c.target_order_id = L.target_order_id` 삭제) → RED-h ⑨ 순번 비교를 C 의 정착(CONFIRMED) transition 으로 → RED-g2 ⑩ r2 범위에서 거래일 비교 제거 → RED-h(다른 거래일).
+    ⑦ **r2 순서 경계 제거**(`r_C > s_L` 삭제 또는 r2 를 `ConfirmedCancelOf` 호출로 되돌림) → RED-f ⑧ **r2 대상 id 비교 제거**(`c.target_order_id = L.target_order_id` 삭제) → RED-h ⑨ 순번 비교를 C 의 정착(CONFIRMED) transition 으로 → RED-g2
+    ⑩ **r2 거래일 같음 조건 복원**(`TRIM(ci.trading_day) = TRIM(l.trading_day)` 추가 — 또는 r2 를 `ConfirmedCancelOf(…, L 의 거래일, …)` 로 되돌림) → RED-i1. 1.3 3차 재리뷰 R3-3 으로 옛 ⑩(「r2 거래일 비교 제거 → RED-h(다른 거래일)」)은 **폐기** — 거래일 비교 제거가 이제 설계다.
+    ⑪ **r2 계좌·시장 비교 제거**(⑪a `account` 줄 삭제 → RED-j1, ⑪b `market` 줄 삭제 → RED-j2, ⑪c `symbol` 줄 삭제 → RED-j3 — 각각 따로 심는다)
+    ⑫ **r2 주인 유일성 제거**(`owners.n = 1` 삭제 또는 `>= 1`) → RED-k1, `n = 1` 을 `n <= 1` 로 → RED-k2.
   - 공유 목록: `definitiveRefusalCodes` 에 already-processing 추가(아래).
 - **`definitiveRefusalCodes` 불변(1.3 3차 P3-3)**: already-processing 판정은 새 함수에만 두고 공유 목록(`refusal_code.go:46`)에 넣지 않는다 — 넣으면 place·amend·flatten 취소의 409 AP 가
   `classifyMutation` B4(45)에서 확정 거절이 된다(flatten 은 F1 재발). 변이 「목록에 already-processing 추가」는 place·amend 409 AP → 오늘(IN_DOUBT) 시험과 flatten 소진 → Held 시험이 잡아야 한다.
@@ -195,7 +201,7 @@ AST `client.send` B4(344) `attempt < 2 && code == http.StatusUnauthorized`, 루�
 | **기록 위치** | **새 표·새 열 없음 — schema 36 그대로.** R3 attempt 행 자체가 latch 다: `mutation_attempts`(schema.go:224–238)의 `kind='CANCEL'`·`state='FAILED_CONFIRMED'`·`reason_code='broker_rejected'`·`target_order_id`(230) 와 `detail` 끝의 D6 꼬리표(`branch=cancel_already_processing … outcome=definitive`). 종목·시장·계좌·거래일은 그 행의 `intents`(202–218). |
 | **키** | (계좌 `intents.account_ref`, 시장 `intents.market`, 종목 `intents.symbol`, 원 주문 id `mutation_attempts.target_order_id`). 진입 판정은 (plan.market, plan.symbol) 로 그 키의 행을 찾는다(`attemptTargets` 와 같은 대소문자 무시 비교, gateway.go:838–839). |
 | **세우는 조건** | R3: 엔진 정책 게이트웨이의 취소가 409 AP(D2 판정)이고 래퍼가 REJECTED + `outcome=definitive` 꼬리표로 정착(`DispatchVerified` B7(160) Settle FAILED_CONFIRMED). 따로 쓰는 단계가 없다 — 정착이 곧 세움(같은 트랜잭션). R4(flatten)는 FAILED_CONFIRMED 를 만들지 않으므로(D3: 재시도 성공 → CONFIRMED, 소진 → IN_DOUBT) latch 를 세우지 않는다. |
-| **해제 조건** | 키의 행마다 아래 중 하나가 원장에 있으면 그 행은 풀림. 모든 행이 풀려야 진입 허용. **r1 원 주문 terminal**: `target_order_id` 가 그 계좌·시장·종목의 `Journal.LiveOrdersForSymbol` 결과에 없음 — 「working」 의 정의를 새로 만들지 않고 exit 청소가 쓰는 같은 판정(fills.go:1854–1918, `confirmedOrderTerminalEvidence` exit_proposal_release.go:281–294 = `terminal=1` fill snapshot)을 쓴다. terminal 은 `brokerstate.State.IsTerminal`(derive.go:94–102: FILLED·CANCELLED·CANCELLED_PARTIALLY_FILLED·REPLACED·REJECTED·REJECTED_PARTIALLY_FILLED). **r2 latch 뒤의 취소 성공(1.3 재리뷰 R3-1)**: 그 latch 행의 `FAILED_CONFIRMED` 정착 transition 보다 **뒤에 기록이 시작된**(RECORDED transition 이 더 큰 순번) 같은 대상 주문 id 의 CONFIRMED CANCEL 이 같은 (계좌·시장·거래일·종목)에 있음 — 새 질의 `Journal.ConfirmedCancelAfterLatch`(아래 「r2 질의」). 엔진 다음 주기 재취소가 이 경로다. latch 보다 **앞선** CONFIRMED 취소는 해제 근거가 아니다 — 반례: C1 CONFIRMED(BUY 취소 접수, terminal snapshot 없음 → `LiveOrdersForSymbol` 에 남음) → 다음 주기 재취소 R3=409 AP → 시각을 안 보는 r2 는 C1 을 찾아 latch 를 즉시 풀고 살아 있을 수 있는 주문 위에 BUY 가 나간다. 순서는 벽시계(`settled_at`·`recorded_at`)가 아니라 원장 순번으로 정한다. 운영자가 원장 밖에서 낸 취소(`tossctl order cancel`·브로커 앱)는 r2 가 아니다 — D12. **r3 대사로 종결**: 별도 갈래가 아니다 — 원장에 terminal 증거를 쓰는 생산 호출자는 체결 감지·대사 경로의 `filldetect/ledger.go:80` `Journal.RecordFill` 하나뿐(grep, 2026-10-28)이므로 r3 은 r1 과 같은 술어로 판정된다. 대사의 불일치 상태(RECONCILE)는 차단이지 해제가 아니다. **증거 기준**: 원장 행만(브로커 즉석 조회 0, 메모리 상태 0). 읽기 오류는 해제가 아니라 오류(진입 전송 없음). |
+| **해제 조건** | 키의 행마다 아래 중 하나가 원장에 있으면 그 행은 풀림. 모든 행이 풀려야 진입 허용. **r1 원 주문 terminal**: `target_order_id` 가 그 계좌·시장·종목의 `Journal.LiveOrdersForSymbol` 결과에 없음 — 「working」 의 정의를 새로 만들지 않고 exit 청소가 쓰는 같은 판정(fills.go:1854–1918, `confirmedOrderTerminalEvidence` exit_proposal_release.go:281–294 = `terminal=1` fill snapshot)을 쓴다. terminal 은 `brokerstate.State.IsTerminal`(derive.go:94–102: FILLED·CANCELLED·CANCELLED_PARTIALLY_FILLED·REPLACED·REJECTED·REJECTED_PARTIALLY_FILLED). **r2 latch 뒤의 취소 성공(1.3 재리뷰 R3-1)**: 그 latch 행의 `FAILED_CONFIRMED` 정착 transition 보다 **뒤에 기록이 시작된**(RECORDED transition 이 더 큰 순번) 같은 대상 주문 id 의 CONFIRMED CANCEL 이 같은 대상 주문의 정규 범위(계좌·시장·종목·`target_order_id`, **거래일은 비교하지 않음** — 1.3 3차 재리뷰 R3-3)에 있고 그 번호의 주인이 하나뿐임 — 새 질의 `Journal.ConfirmedCancelAfterLatch`(아래 「r2 질의」). 엔진 다음 주기 재취소가 이 경로다. latch 보다 **앞선** CONFIRMED 취소는 해제 근거가 아니다 — 반례: C1 CONFIRMED(BUY 취소 접수, terminal snapshot 없음 → `LiveOrdersForSymbol` 에 남음) → 다음 주기 재취소 R3=409 AP → 시각을 안 보는 r2 는 C1 을 찾아 latch 를 즉시 풀고 살아 있을 수 있는 주문 위에 BUY 가 나간다. 순서는 벽시계(`settled_at`·`recorded_at`)가 아니라 원장 순번으로 정한다. 운영자가 원장 밖에서 낸 취소(`tossctl order cancel`·브로커 앱)는 r2 가 아니다 — D12. **r3 대사로 종결**: 별도 갈래가 아니다 — 원장에 terminal 증거를 쓰는 생산 호출자는 체결 감지·대사 경로의 `filldetect/ledger.go:80` `Journal.RecordFill` 하나뿐(grep, 2026-10-28)이므로 r3 은 r1 과 같은 술어로 판정된다. 대사의 불일치 상태(RECONCILE)는 차단이지 해제가 아니다. **증거 기준**: 원장 행만(브로커 즉석 조회 0, 메모리 상태 0). 읽기 오류는 해제가 아니라 오류(진입 전송 없음). |
 | **재시작 내구성** | 판정을 진입마다 원장에서 다시 계산하므로 메모리 투영이 없다 — 재구성할 것이 없다. FAILED_CONFIRMED 는 terminal 이라 `RecoverPending` 이 건드리지 않는다(evidence AST B2(93) range 의 입력이 `PendingAttempts`(87) — 상태 목록 recovery.go:32 에 FAILED_CONFIRMED 없음). `internal/journal` 에 `DELETE FROM mutation_attempts` 0 건(grep, 2026-10-28) — 행이 지워지지 않는다. |
 | **보는 경로** | `Gateway.checkSymbolFree` 의 B3(810) `!plan.raisesExposure` 반환 **뒤**, B7 뒤·828 앞(번들 `internal-execgw--gateway.checksymbolfree`). `raisesExposure` 가 참인 것은 place 매수(gateway.go:377)·amend 증량(447)뿐이고 취소는 거짓(416) — **AST 상 취소·청산 매도·flatten·보호 매도는 B3(811)에서 반환해 latch 질의에 닿지 않는다.** exit 청소 `clearTheSymbol` 은 `checkSymbolFree` 가 아니라 `UnsettledOnSymbol`(=`unsettledFor`, 편집 0)을 읽고, flatten 은 `UnsettledCancelSymbols`(편집 0)를 읽으며, reconcile 은 주문 경로가 아니다. |
 | **사유 어휘** | 기존 `ReasonSymbolInFlight`(failclosed.go:266) — a165 이전 같은 상황(취소 IN_DOUBT)이 진입에 준 사유와 같다. detail: `cancel of order <id> on <symbol> was refused as already-processing (attempt <id>); the order is still working`. `AllReasonCodes` 변경 0. |
@@ -210,8 +216,56 @@ AST `client.send` B4(344) `attempt < 2 && code == http.StatusUnauthorized`, 루�
   - **비교**: latch 행 L 의 `to_state='FAILED_CONFIRMED'` transition 순번 `s_L` 과, 후보 C 의 `from_state='' AND to_state='RECORDED'` transition 순번 `r_C` 에 대해 `r_C > s_L`(엄격). 정착 순번(C 의 CONFIRMED transition)이 아니라 **기록 시작 순번**을 비교한다 —
     「L 정착 뒤 정착」만 보면 L 보다 먼저 보내져 브로커가 먼저 받은 취소가 늦게 커밋되기만 해도 해제가 된다(인과가 아니라 커밋 지연에 기댐). `r_C > s_L` 이면 C 의 정착 순번도 `s_L` 보다 크다(같은 attempt 의 RECORDED 가 먼저) — 「latch 뒤에 정착」 조건을 포함한다.
     순번은 유일하므로 동률이 없다. `s_L` 이나 `r_C` 행이 없으면 SQL 비교가 NULL → 해제 아님(fail-closed).
-  - **범위·대상**: L 의 행에서 (계좌·시장·거래일·종목)과 `target_order_id` 를 **질의 안에서** 읽는다 — 호출자가 범위를 넘기지 않으므로 다른 주문·다른 범위를 섞을 자리가 없다. C 는 `kind='CANCEL' AND state='CONFIRMED' AND c.target_order_id = L.target_order_id`(바이트 비교 — `ConfirmedCancelOf` 와 같은 규칙) `AND c.id <> L.id`,
-    범위 비교는 `ConfirmedCancelOf` 와 같은 정규화(`TRIM`·`LOWER(market)`·`UPPER(symbol)`, exit_proposal_release.go:158)를 양쪽에 적용. L 이 `kind='CANCEL' AND state='FAILED_CONFIRMED'` 가 아니거나 `target_order_id=''` 면 found=false(해제 아님). 읽기 오류는 오류(진입 전송 없음). `ORDER BY r_C LIMIT 1`.
+  - **범위·대상 = 대상 주문의 정규 범위(1.3 3차 재리뷰 R3-3 으로 고침)**: L 의 행에서 계좌·시장·종목과 `target_order_id` 를 **질의 안에서** 읽는다 — 호출자가 범위를 넘기지 않으므로 다른 주문·다른 범위를 섞을 자리가 없다.
+    축별 계약(L·C 양쪽에 같은 정규화 — `ConfirmedCancelOf` 의 `TRIM(account_ref)`·`LOWER(TRIM(market))`·`UPPER(TRIM(symbol))`, exit_proposal_release.go:156–158):
+
+    | 축 | 원장 자리 | 규칙 |
+    |---|---|---|
+    | 계좌 | `intents.account_ref`(schema.go:206) — L·C 각자의 intent | `TRIM` 같음 |
+    | 시장 | `intents.market`(schema.go:204) | `LOWER(TRIM)` 같음 |
+    | 종목 | `intents.symbol`(schema.go:207) | `UPPER(TRIM)` 같음 |
+    | 대상 주문 id | `mutation_attempts.target_order_id`(schema.go:230) | 바이트 같음, L 의 값이 `''` 면 found=false |
+    | **거래일** | `intents.trading_day`(schema.go:205) | **비교하지 않음** — 아래 「거래일을 뺀 이유」 |
+    | 순번 | `attempt_transitions.id`(schema.go:246) | `r_C > s_L`(그대로) |
+    | **주인 유일성**(번호 재사용 방어) | 접수 확정 주인 = `mutation_attempts.state='CONFIRMED' AND kind IN ('PLACE','AMEND') AND broker_order_id`(schema.go:231) + 그 intent | L 의 계좌·시장·종목에서 `broker_order_id = L.target_order_id`(바이트) 인 주인의 `COUNT(DISTINCT intent_id) = 1`. 0 이거나 2 이상이면 found=false |
+
+    C 는 `kind='CANCEL' AND state='CONFIRMED' AND c.id <> L.id`. L 이 `kind='CANCEL' AND state='FAILED_CONFIRMED'` 가 아니면 found=false(해제 아님). 읽기 오류는 오류(진입 전송 없음). `ORDER BY r_C LIMIT 1`.
+  - **거래일을 뺀 이유(R3-3)**: latch 는 진입 판정에서 시장·종목으로만 찾으므로(`attemptTargets` 와 같은 비교, gateway.go:838–839) D0 의 latch 는 D1 에도 선다. 그런데 엔진 재취소 C 의 intent 거래일은 **대상 주문의 거래일이 아니라 C 를 준비한 날**이다 —
+    `Gateway.prepareRequest`(evidence `execgw--gateway.preparerequest`, 1002–1086)의 1011 `day, err := market.TradingDay(g.clk.Now())` 대입, 실패는 B3(1012) 반환뿐이고 그 `day` 가 intent `TradingDay`(1039)로 들어간다.
+    재취소의 대상 id 는 `clearTheSymbol`(번들 `internal-app-engine--exitobserver.clearthesymbol`)이 B4(1645) `range live` 의 `order.OrderID` 를 1686 `o.opts.Submit.Cancel` 에 넘긴 값이고 `live` 는 1630 `LiveOrdersForSymbol(계좌, 시장, 종목)` — 거래일 인자가 없다.
+    그래서 거래일을 같게 요구하면 D0 latch → D1 재취소 CONFIRMED 는 `r_C > s_L` 이어도 r2 가 아니어서, 체결 감지 r1 이 늦거나 실패하면 진입 차단이 풀리지 않는다(재리뷰 반례). 「latch 거래일 이후」(`>=`) 로 바꾸는 안은 버렸다 — 순번 `r_C > s_L` 이 이미 시간 순서를 정하므로 날짜 조건은
+    벽시계(intent 의 `g.clk.Now()`)로 같은 것을 다시 묻는 판정이 되고(판정이 둘), 어느 시험도 그 조건만 따로 죽이지 못한다.
+  - **번호 재사용은 주인 유일성으로 막는다**: 주문 번호는 거래일을 건너 재사용된다(exit_proposal_release.go:151–152 주석, 시험 `TestLiveOrdersForSymbolKeepsAReusedCurrentDayOrderAfterThePriorDayTerminal` fills_test.go:985 ·
+    `TestTrackedAndLiveOrdersKeepTwoNonterminalReusedTradingDays` fills_test.go:635). 원장은 주문의 정규 범위를 그 번호를 받은 **접수 확정 주인**(PLACE/AMEND attempt + intent)에서 읽는다 —
+    `LiveOrdersForSymbol`(evidence `journal--journal.liveordersforsymbol`, 1854–1919; SQL 은 손으로 읽음)의 `confirmed_orders`(fills.go:1860–1867)와 주인 술어 `1 = COUNT(DISTINCT owner.intent_id)`(1871–1878, 같은 계좌·시장·거래일·종목·매매방향).
+    r2 는 거래일 축이 없으므로 그 술어를 **거래일·매매방향 없이** L 의 계좌·시장·종목 전체에서 센다: 같은 번호의 주인이 둘이면(재사용) C 가 어느 주문을 취소했는지 원장이 말하지 못하므로 해제하지 않는다(fail-closed, r1 은 그대로).
+    다른 계좌·시장·종목의 같은 번호는 계좌·시장·종목 축이 거른다. 매 진입마다 다시 세므로, 해제 뒤에 재사용 주인이 생기면 latch 가 다시 선다(보수 방향).
+  - **r2 질의 모양**(구현 자리는 journal 새 파일, SQL 은 이 모양을 따른다 — D12 질의 2 가 같은 조건을 쓴다):
+
+    ```sql
+    WITH l AS (
+      SELECT a.id, a.target_order_id AS target, TRIM(i.account_ref) AS account,
+             LOWER(TRIM(i.market)) AS market, UPPER(TRIM(i.symbol)) AS symbol,
+             (SELECT MAX(t.id) FROM attempt_transitions t
+               WHERE t.attempt_id = a.id AND t.to_state = 'FAILED_CONFIRMED') AS latch_seq
+        FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
+       WHERE a.id = ? AND a.kind = 'CANCEL' AND a.state = 'FAILED_CONFIRMED' AND a.target_order_id <> ''
+    ), owners AS (
+      SELECT COUNT(DISTINCT o.intent_id) AS n
+        FROM l, mutation_attempts o JOIN intents oi ON oi.id = o.intent_id
+       WHERE o.state = 'CONFIRMED' AND o.kind IN ('PLACE','AMEND') AND o.broker_order_id = l.target
+         AND TRIM(oi.account_ref) = l.account AND LOWER(TRIM(oi.market)) = l.market AND UPPER(TRIM(oi.symbol)) = l.symbol
+    )
+    SELECT c.id, (SELECT MIN(t.id) FROM attempt_transitions t
+                   WHERE t.attempt_id = c.id AND t.from_state = '' AND t.to_state = 'RECORDED') AS recorded_seq
+      FROM l, owners, mutation_attempts c JOIN intents ci ON ci.id = c.intent_id
+     WHERE c.kind = 'CANCEL' AND c.state = 'CONFIRMED' AND c.id <> l.id AND c.target_order_id = l.target
+       AND TRIM(ci.account_ref) = l.account AND LOWER(TRIM(ci.market)) = l.market AND UPPER(TRIM(ci.symbol)) = l.symbol
+       AND owners.n = 1 AND recorded_seq > l.latch_seq
+     ORDER BY recorded_seq LIMIT 1;
+    ```
+
+    `latch_seq` 는 `MAX`, `recorded_seq` 는 `MIN` — 행이 여럿이어도 보수 쪽(늦은 latch·이른 기록)이고, 없으면 NULL 이라 비교가 거짓(fail-closed).
   - **기존 `ConfirmedCancelOf` 는 바꾸지 않는다**: 질문이 다르다 — 그것은 「그 거래일에 그 주문의 엔진 취소가 접수 확정된 적이 있는가(가장 이른 것)」(exit 의 역사 조회, 「판정이 둘」이 아님)이고 r2 는 「이 latch 뒤에」다. 생산 호출자 둘(grep `ConfirmedCancelOf(`, 2026-10-28):
     `internal/app/engine/exitloop.go:1650`(`clearTheSymbol` — 엔진 취소가 확정된 매도는 종결 증거를 기다림), `internal/app/engine/exit_held_proposal.go:178`; 시험 `internal/journal/a094_exit_proposal_release_test.go:311·315·319`. 시간 경계를 넣으면 이 둘의 손절 보류 판정이 바뀐다 — 그래서 새 함수.
   - **schema 영향 0**: 새 표·열·색인 없음, schema 36 그대로. 질의는 `idx_transitions_attempt(attempt_id, id)`(schema.go:255)와 `idx_attempts_state` 로 걷는다.
@@ -229,7 +283,15 @@ AST `client.send` B4(344) `attempt < 2 && code == http.StatusUnauthorized`, 루�
   - (d) 재시작: R3 행을 쓴 뒤 Journal·Gateway 를 닫고 같은 파일로 새로 열어(`RecoverPending` 포함) → 진입 거절 유지. 메모리 latch 변이(⑥)는 여기서 FAIL.
   - (f) **latch 앞의 확인된 취소(1.3 재리뷰 R3-1 반례)**: 대상 주문 X 의 CANCEL C1 을 Prepare·CONFIRMED 정착 → 같은 X 의 엔진 재취소 409 AP → R3 latch → 종목 A 매수 place 는 `ReasonSymbolInFlight` 로 거절, 브로커 place 호출 0. terminal snapshot 은 쓰지 않는다(r1 이 우연히 풀지 않게).
   - (g) **latch 뒤의 확인된 취소만**: (g1) (f) 상태에서 X 의 CANCEL C2 를 Prepare·CONFIRMED → 진입 허용. (g2) 기록 시작과 정착의 구분 — C3 를 latch **전에** Prepare 하고 latch 정착 **뒤에** CONFIRMED 로 정착(journal 직접, 게이트웨이 우회) → 계속 거절. 순번 비교 대상을 C 의 정착 transition 으로 바꾸면 (g2) 가 FAIL.
-  - (h) **다른 대상**: latch 뒤 같은 종목·같은 범위의 다른 주문 Y 의 CANCEL CONFIRMED → 계속 거절. 같은 X 라도 다른 거래일의 CONFIRMED 취소 → 계속 거절. (f)~(h) 는 `ConfirmedCancelAfterLatch` 단위 시험(journal)과 진입 판정 시험(execgw) 두 층에 둔다 — journal 층은 found/AttemptRecord.ID, execgw 층은 거절 사유·브로커 호출 수.
+  - (h) **다른 대상**: latch 뒤 같은 계좌·시장·종목의 다른 주문 Y 의 CANCEL CONFIRMED → 계속 거절.
+    **갱신 기록(1.3 3차 재리뷰 R3-3)**: 옛 (h) 의 둘째 문장 「같은 X 라도 다른 거래일의 CONFIRMED 취소 → 계속 거절」은 **뜻이 뒤집혀 지웠다** — 그 모양은 이제 (i1) 의 양성(해제)이다. 거래일이 막던 번호 재사용은 (k) 가 맡는다.
+  - (i) **거래일을 넘긴 해제(R3-3 반례)**: (i1) D0 에 X 의 엔진 재취소 409 AP → R3 latch L(L 의 intent 거래일 D0) → 게이트웨이 fake 시계를 다음 거래일 D1 로 → 엔진 재취소 C 가 CONFIRMED(C 의 intent 거래일 D1, `r_C > s_L`), terminal snapshot 없음
+    → 종목 A 매수 place 허용(브로커 place 호출 1). 거래일 같음 조건을 되살리면(⑩) FAIL. (i2) D0 latch → D1 에 X 의 terminal fill snapshot(X 의 주인 범위 = D0) 기록 → 허용(r1 도 거래일을 넘겨 푼다; `LiveOrdersForSymbol` 이 거래일 인자를 받지 않음 — evidence AST 1854).
+  - (j) **다른 범위의 같은 번호**: latch L(계좌 acct-1·시장 kr·종목 A·대상 X) 뒤, `r_C > s_L` 인 CONFIRMED CANCEL 의 대상이 바이트 같은 X 이지만 (j1) 계좌가 다름 (j2) 시장이 다름(us) (j3) 종목이 다름 → 셋 다 계속 거절(found=false).
+    게이트웨이는 계좌가 하나라 (j1) 은 journal 층에서만(원장 직접 기록), (j2)·(j3) 은 두 층.
+  - (k) **번호 재사용(주인 유일성)**: (k1) X 의 접수 확정 주인이 L 의 계좌·시장·종목에 둘(D0 BUY 주인 + D1 에 같은 번호를 받은 다른 intent 의 주인 — `TestTrackedAndLiveOrdersKeepTwoNonterminalReusedTradingDays` 와 같은 모양)이면
+    latch 뒤 X 의 CONFIRMED 취소가 있어도 계속 거절. (k2) X 의 주인이 0(주인 행 없이 L·C 만 원장에 직접 기록) → 계속 거절. (k3) 대조군: 주인 하나 + latch 뒤 CONFIRMED 취소 → 허용((g1)과 같은 모양, ⑫ 변이가 대상 줄에 닿는지의 양성 대조).
+  - (f)~(k) 는 `ConfirmedCancelAfterLatch` 단위 시험(journal)과 진입 판정 시험(execgw) 두 층에 둔다 — journal 층은 found/AttemptRecord.ID, execgw 층은 거절 사유·브로커 호출 수.
   - (e) 다른 종목 B·같은 종목의 다른 시장 진입은 영향 0. latch 읽기 오류 → 진입 거절(전송 0)은 오류 주입 seam 이 있을 때만 시험하고, 없으면 2.1 Pre-Edit 에 `not-applicable` 사유를 남긴다(오류 경로는 submit B8(525) 의 기존 처리).
 
 ## D12. 운영 — latch 조회·journalled 해제·경보 (1.3 재리뷰 R3-2, R-a165-5·6)
@@ -249,21 +311,44 @@ AST `client.send` B4(344) `attempt < 2 && code == http.StatusUnauthorized`, 루�
 
 → 정한 수단: **읽기 전용 원장 조회 절차**(새 읽기 표면 0). 원장은 `sqlite3 'file:<journal.db>?mode=ro'` 로만 연다(경로는 엔진 profile 규칙 — `consoleJournalPath`, cmd/tossctl/console_journal.go:12–17. 원장을 읽기 전용으로 여는 선례: operations.md:264 의 `mode=ro`·`query_only`).
 조회는 **후보 목록**이다 — 해제 판정은 코드(`cancelRefusalLatch`·`ConfirmedCancelAfterLatch`)의 것이고, 이 결과로 원장을 고치지 않는다.
+질의 2 는 같은 범위(계좌·시장·종목·바이트 같은 대상 id)의 CANCEL 을 **상태와 무관하게** 나열하고 `r2` 열(1 = r2 후보)을 붙인다 — `r2=1` 인 행이 있어도 **판정이 아니라 후보**다(코드의 SQL 과 이 문구가 갈리면 코드가 정본; 2.3 이식 때 구현 SQL 과 다시 대조). `owner_count` 가 1 이 아니면 그 대상의 r2 는 없다(번호 재사용·주인 없음 — r1 만 남음).
 
 ```sql
--- 질의 1: latch 후보(R3 행)와 그 정착 순번
-SELECT a.id AS latch_attempt, i.market, i.trading_day, i.symbol, a.target_order_id, a.settled_at,
-       (SELECT t.id FROM attempt_transitions t WHERE t.attempt_id = a.id AND t.to_state = 'FAILED_CONFIRMED') AS latch_seq
+-- 질의 1: latch 후보(R3 행)와 그 정착 순번 — 계좌 열 포함(1.3 3차 재리뷰 R3-4)
+SELECT a.id AS latch_attempt, i.account_ref, i.market, i.trading_day, i.symbol, a.target_order_id, a.settled_at,
+       (SELECT MAX(t.id) FROM attempt_transitions t WHERE t.attempt_id = a.id AND t.to_state = 'FAILED_CONFIRMED') AS latch_seq
   FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
  WHERE a.kind = 'CANCEL' AND a.state = 'FAILED_CONFIRMED'
    AND a.detail LIKE '%[a165 %branch=cancel_already_processing%outcome=definitive]'
  ORDER BY latch_seq DESC;
 
--- 질의 2: 그 대상 주문의 취소 attempt 와 기록 시작 순번 — latch_seq 보다 큰 recorded_seq 의 CONFIRMED 가 r2
-SELECT c.id, c.state, i.trading_day,
-       (SELECT t.id FROM attempt_transitions t WHERE t.attempt_id = c.id AND t.from_state = '' AND t.to_state = 'RECORDED') AS recorded_seq
-  FROM mutation_attempts c JOIN intents i ON i.id = c.intent_id
- WHERE c.kind = 'CANCEL' AND c.target_order_id = '<target_order_id>'
+-- 질의 2: 질의 1 의 latch 하나에 대한 r2 후보 — 코드 r2(D11 「r2 질의 모양」)와 같은 범위 조인·주인 유일성·순번을 SQL 에서 직접 판정
+--         (1.3 3차 재리뷰 R3-4). 거래일은 출력만 하고 비교하지 않는다(D11 「거래일을 뺀 이유」).
+WITH l AS (
+  SELECT a.id, a.target_order_id AS target, TRIM(i.account_ref) AS account,
+         LOWER(TRIM(i.market)) AS market, UPPER(TRIM(i.symbol)) AS symbol, i.trading_day AS latch_day,
+         (SELECT MAX(t.id) FROM attempt_transitions t
+           WHERE t.attempt_id = a.id AND t.to_state = 'FAILED_CONFIRMED') AS latch_seq
+    FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
+   WHERE a.id = '<latch_attempt>' AND a.kind = 'CANCEL' AND a.state = 'FAILED_CONFIRMED' AND a.target_order_id <> ''
+), owners AS (
+  SELECT COUNT(DISTINCT o.intent_id) AS n
+    FROM l, mutation_attempts o JOIN intents oi ON oi.id = o.intent_id
+   WHERE o.state = 'CONFIRMED' AND o.kind IN ('PLACE','AMEND') AND o.broker_order_id = l.target
+     AND TRIM(oi.account_ref) = l.account AND LOWER(TRIM(oi.market)) = l.market AND UPPER(TRIM(oi.symbol)) = l.symbol
+)
+SELECT c.id AS cancel_attempt, c.state, TRIM(ci.account_ref) AS account, LOWER(TRIM(ci.market)) AS market,
+       UPPER(TRIM(ci.symbol)) AS symbol, c.target_order_id, l.latch_day, ci.trading_day AS cancel_day,
+       l.latch_seq,
+       (SELECT MIN(t.id) FROM attempt_transitions t
+         WHERE t.attempt_id = c.id AND t.from_state = '' AND t.to_state = 'RECORDED') AS recorded_seq,
+       owners.n AS owner_count,
+       (c.state = 'CONFIRMED' AND owners.n = 1
+        AND (SELECT MIN(t.id) FROM attempt_transitions t
+              WHERE t.attempt_id = c.id AND t.from_state = '' AND t.to_state = 'RECORDED') > l.latch_seq) AS r2
+  FROM l, owners, mutation_attempts c JOIN intents ci ON ci.id = c.intent_id
+ WHERE c.kind = 'CANCEL' AND c.id <> l.id AND c.target_order_id = l.target
+   AND TRIM(ci.account_ref) = l.account AND LOWER(TRIM(ci.market)) = l.market AND UPPER(TRIM(ci.symbol)) = l.symbol
  ORDER BY recorded_seq;
 ```
 
@@ -271,7 +356,7 @@ r1(대상 주문 terminal)의 원장 확인은 체결 감지가 쓰는 종결 �
 
 **② 지원되는 journalled 해제 경로** — 원장에 해제 근거가 남는 것만
 
-1. **r2 엔진 재취소**(자동): 청산 루프가 그 주문을 계속 치우려 하면 다음 주기 `clearTheSymbol` 이 `Gateway.Cancel` 로 다시 취소한다. latch 정착 뒤에 기록이 시작된 그 CANCEL 이 CONFIRMED 로 정착하면 풀린다. 근거 행 = 그 CANCEL attempt + RECORDED transition 순번(질의 2).
+1. **r2 엔진 재취소**(자동): 청산 루프가 그 주문을 계속 치우려 하면 다음 주기 `clearTheSymbol` 이 `Gateway.Cancel` 로 다시 취소한다. latch 정착 뒤에 기록이 시작된 그 CANCEL 이 CONFIRMED 로 정착하면 풀린다 — **거래일을 넘긴 재취소도 푼다**(D0 latch → D1 재취소, D11 「거래일을 뺀 이유」). 단 그 대상 번호의 접수 확정 주인이 그 계좌·시장·종목에 둘 이상이면(번호 재사용) r2 는 없고 r1 만 남는다. 근거 행 = 그 CANCEL attempt + RECORDED transition 순번 + `owner_count`(질의 2 의 `r2` 열).
 2. **r1 대상 주문 종결**: 브로커에서 그 주문이 체결·취소·거부로 끝나면 체결 감지(`filldetect`)가 종결 fill snapshot 을 쓰고(`JournalLedger.Apply` → `Journal.RecordFill`, internal/filldetect/ledger.go:80) 풀린다. 대상 주문은 엔진이 CONFIRMED 로 낸 주문이라(`LiveOrdersForSymbol` 의 `confirmed_orders`) 체결 감지의 추적 목록에 든다(ledger.go:112–113 「the orders that are not terminal, plus the ones a confirmed attempt named」 — 손으로 읽음).
    - **운영자가 그 주문을 직접 취소하는 것(브로커 앱 · `tossctl order cancel`)은 그 자체로 원장 해제가 아니다.** `tossctl order cancel` 은 `app.tradingService.Cancel` 직행(cmd/tossctl/order.go:295)이라 journal attempt 를 남기지 않고, 그래서 r2 가 되지 않는다. 해제는 그 뒤 체결 감지가 그 주문의 종결을 읽어 원장에 쓸 때(r1) 일어난다 — 체결 감지가 멈췄으면 풀리지 않는다.
 3. **해제가 아닌 것**: `tossctl engine attempt-resolve` — park 가 아니면 거절하므로 R3 행(FAILED_CONFIRMED)에 쓸 수 없다(engine_attempt_resolve.go:9–11 「명령 시점에 park 가 아니면 거절」). 원장 손 편집 — 금지(operations.md 「④ 하지 말 것」과 같은 이유). `tossctl flatten-all [--cancel-only]` — 같은 원장에 `Gateway.Cancel` 로 기록하므로 r2 를 만들 수 있으나 계좌 전체를 취소하고 진입 차단을 스스로 세운다(cmd/tossctl/flatten.go:69–80) — 해제 수단이 아니라 비상 청산이다.
