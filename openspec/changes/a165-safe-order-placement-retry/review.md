@@ -257,3 +257,36 @@ P2-2(작은 바깥 래퍼)·P2-3(R3 뒤 그 종목 진입 계속 막음)은 사�
   `IsTerminal` derive.go:94–102, `DELETE FROM mutation_attempts` 0 건(grep), terminal 증거 생산자 1 곳(grep).
 - 실행하지 않은 것: 시험 전부·coverprofile(새 번들의 실행 칸은 「미측정」), `check_analysis.py`, `make sdd-sync`·`make gate`.
 - **다음**: GPT 보이스 재리뷰. 재리뷰가 꼭 볼 곳 — D11 해제 r2 가 시각 순서를 안 보는 것, r3 를 r1 로 접은 근거, latch 위치(B3 뒤) AST, D5 정착 ctx 불변식, D10 (w3) 의 실시간 시험 안정성.
+
+## 1.3 재리뷰 (GPT-5.6 Terra, 2026-10-28)
+
+### 결론: **FAIL (구현 전 blocker 1)**
+
+P2-2 바깥 래퍼·정착 ctx 분리와 P2-3의 진입 전용 위치는 2차 처분대로 반영됐다. 다만 D11 r2가 **현재 latch보다 앞선** 같은 주문의 CONFIRMED 취소도 해제 증거로 받아, 새 R3 latch를 즉시 풀 수 있다. 살아 있는 주문에 새 진입이 나가는 반례라 2.1 착수 금지다.
+
+- 범위: change 전부, D3·D5·D10·D11, delta, tasks 2.1/2.2/3.1, issues R-a165-5·6, 24 FLM/BTM 목록과 latch/dispatch evidence AST를 읽었다. `Gateway.submit`·`Gateway.checkSymbolFree` AST의 source SHA-256은 현재 `internal/execgw/gateway.go`와 일치한다.
+- 실행 0: 소스·시험 편집 0, 시험·gate·운영 콘솔·docker·주문·mutating 명령 0.
+- skill 적용: `ai-memory-retrieval` 지침은 읽었으나 현재 세션에 ai-memory MCP 조회 도구가 없어 로컬 memory 색인만 확인했고 a165 직접 기록은 없었다. `search-first`는 새 코드·의존성·통합을 만드는 라운드가 아니라 N/A. `grill-me`/`grilling`은 확정된 사람 결정을 재질문할 권한이 없는 FAIL 재리뷰라 N/A. `impeccable: N/A — backend/documentation-only`.
+
+### 발견
+
+| id | 심각도 | 발견 | 근거 | 구현 전 처분 |
+|---|---|---|---|---|
+| R3-1 | **P1** | **r2에 시간/인과 경계가 없어 오래된 취소 성공이 새 R3 latch를 푼다.** D11은 같은 `(계좌, 시장, 거래일, 종목, target_order_id)`의 CONFIRMED CANCEL이면 시각을 보지 않고 해제한다고 쓴다. 그러나 `ConfirmedCancelOf`도 그 범위의 모든 CONFIRMED CANCEL 중 가장 이른 행을 돌려줄 뿐이다. working BUY는 CONFIRMED 취소만으로 `LiveOrdersForSymbol`에서 빠지지 않아 다음 엔진 주기에 다시 취소될 수 있다. 따라서 `C1=CONFIRMED`(terminal snapshot 없음) → 다음 주기 `R3=409 AP/FAILED_CONFIRMED` → 새 진입 검사 순서에서 r2가 C1을 찾아 해제 → 살아 있을 수 있는 대상 주문 위에 BUY가 나가는 반례가 성립한다. | `design.md:195`; `specs/order-execution/spec.md:33,70`; `internal/journal/exit_proposal_release.go:155-161`; `internal/journal/fills.go:1849-1883`; `internal/app/engine/exitloop.go:1645-1700`. `ConfirmedCancelOf`의 현 테스트도 시간 경계를 고정하지 않는다(`internal/journal/a094_exit_proposal_release_test.go:275-321`). | D11·delta를 고쳐 r2를 **latch R3 정착 뒤의** 같은 대상 주문 CONFIRMED CANCEL로 한정한다. 기존 `ConfirmedCancelOf`는 exit의 역사 조회이므로 재사용하지 말고, latch attempt의 durable settle cursor 뒤만 찾는 별도 질의를 둔다. 동시/동일 시각은 해제 증거가 아니게 fail-closed 처리한다. RED에 `C1(과거 성공) → R3 → 여전히 진입 거절`, 그 뒤의 `C2(새 성공) → 해제`를 추가하고 D10·tasks 2.2/3.1 변이에 시간 경계 제거를 넣는다. |
+| R3-2 | P2 | **R-a165-5·6의 운영 해제/가시성은 아직 충분히 명시되지 않았다.** R3 행은 console `SymbolBlocks`에 안 보이고, 일반 `tossctl order cancel`은 `tradingService.Cancel` 직행이라 journal CONFIRMED CANCEL을 남기지 않는다. 현재 production `Gateway.Cancel` 호출자는 engine과 flatten뿐이다. 따라서 문서의 “운영자 취소”는 어떤 journalled 경로·동일 journal·대상 order id가 필요한지 명확하지 않다. | `issues.md:35-37`; `design.md:195,205-208`; `cmd/tossctl/order.go:285-303`; `internal/flatten/flatten.go:382-386`; `internal/app/engine/exitloop.go:1686-1699`. | P1 수리 뒤에도 2.1 전에 R-a165-6에 운영자에게 보이는 latch 조회/경보와 지원되는 해제 경로를 적는다. 직접 cancel이 해제하지 않는다는 사실, terminal snapshot 또는 **시간 경계 뒤 journalled cancel**만 해제한다는 사실, 불가하면 진입 차단을 유지하고 누가 어떤 증거로 조치하는지를 runbook에 명시한다. |
+
+### 재검증한 처분
+
+- **P2-2/D5: 통과.** B49만 래핑하고 취소는 strategy nil이다(`gateway.go:403-421, 728-733`). `DispatchVerified`는 받은 바깥 `ctx`로 dispatch와 Settle/MarkInDoubt를 수행한다(`journal/dispatch.go:140-160, 199-207`). 래퍼가 `DispatchOutcome` 값만 반환한다는 D5 모델이면 `winCtx`가 정착에 닿지 않는다. nil/비취소면 원 `dispatch` 값을 그대로 반환하므로 첫 호출·detail·reason·state는 오늘과 동일하다는 주장도 맞다. RED w5 골든은 여전히 필수다.
+- **D11 위치: 통과.** `checkSymbolFree` B3(`gateway.go:810-811`)가 `raisesExposure=false`를 즉시 반환하고, 계획 삽입점은 B7 뒤·828 앞이다. `submit`은 이 함수를 모든 mutation 전에 부르지만(`gateway.go:525-529`), cancel·청산 SELL·flatten은 latch 질의까지 오지 않는다. `unsettledFor`를 넓히지 않는 판단도 맞다. exit가 latch로 막히는 불변식 4 위반은 이 설계 위치에서는 없다.
+- **r3=r1: 통과.** production `Journal.RecordFill` 호출은 `internal/filldetect/ledger.go:80` 한 곳이고, terminal fill snapshot DML은 `RecordFill` 내부다. 별도 reconciliation terminal 생산자는 찾지 못했다. 그러므로 r3를 r1과 같은 `LiveOrdersForSymbol` 술어로 접는 것은 현재 소스와 일치한다.
+- **D10 w3: 통과.** 10ms 창보다 50ms가 긴 첫 broker 지연 뒤에야 `winCtx`를 만들므로 deadline은 이미 과거다. CI 부하는 지연을 더 길게 할 뿐, 이 시험은 정확한 소요 시간을 단언하지 않고 `winCtx`가 정착 ctx가 아님만 단언한다. 실시간 50ms 비용은 남지만 timing-flake 근거는 아니다.
+
+### 구현 착수 전 필수 조치
+
+1. R3-1의 durable 시간/인과 경계를 D11·delta·RED·변이 원장에 반영한다. 이 재리뷰의 P1이 닫히기 전 2.1을 시작하지 않는다.
+2. R3-2의 운영자 가시성·지원 해제 경로를 R-a165-5·6과 runbook에 정확히 기록한다.
+
+### 미실행
+
+지시상 소스·시험 실행 0. 따라서 RED/coverage/`check_analysis.py`/`make sdd-sync`/`make gate`/strict validate는 이번 재리뷰에서 실행하지 않았다.
