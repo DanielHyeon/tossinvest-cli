@@ -256,3 +256,33 @@
 
 재리뷰가 꼭 볼 곳: design §7.5 가드 표와 「한도가 키별인가」 판단 규칙(측정 0 조건이 충분한가) · §4.5 마감과 재시작 · §14 runbook 의 `.env` 파서와
 확인 단계 · spec 본문의 새 문단.
+
+## §8 재리뷰 (GPT-5.6 Terra, 2026-10-29)
+
+- 보이스: §7 작성자와 분리된 읽기 전용 재리뷰. 지정 worktree `TossOS.worktrees/a169-docs`, HEAD `a98475faa`를 대상으로 했다. `.env`·tossctl 설정/토큰 파일 내용, Docker·브로커·운영 명령은 보지 않았다.
+- 결론: **FAIL(blocker 4)**. §6의 P2-1(`--top`)과 P2-2(U2 마감)는 계약·RED 목록까지 닫혔다. 그러나 별도 키의 실제 격리와 계좌/IP 한도 미확정 중 엔진 보호 호가 보장은 아직 fail-closed가 아니다.
+
+### 발견
+
+| # | 심각도 | file:line | 근거 | 처분 제안 |
+|---|---|---|---|---|
+| P1-4 | **P1** | `design.md:397`, `internal/official/token.go:72-74,178-193` | G6는 `os.SameFile` 또는 파일 바이트 sha256만 비교한다. 그러나 `tokenManager.token`은 JSON의 유효한 `access_token`·`expires_at`만 읽어 그대로 재사용하며 키 식별자는 없다. 엔진 토큰을 공백·필드 순서·무관 필드·만료 시각만 다르게 직렬화한 복사본은 바이트가 달라도 같은 bearer token으로 통과한다. 이는 G6가 막겠다는 토큰 재사용 경로다. | G6를 두 캐시의 파싱된 비공개 `access_token` 동등성(값 비출력, 상수시간 비교)으로 판정하고, 링크·파일 동일성 검사는 보조로 둔다. 재직렬화한 같은 token, 하드링크, 심볼릭 링크, 다른 token 양성 대조 RED를 추가한다. spec의 “a copy of an engine token”과 tasks의 구현 전제도 이 의미로 명확히 한다. |
+| P1-5 | **P1** | `design.md:627-629`, `cmd/tossctl/openapi.go:377-396`, `internal/official/token.go:72-78,130-173` | runbook은 G5를 실행하지 않는 `tossctl --config-dir "$A169_DIR" openapi test`를 먼저 네트워크 호출한다. 캐시가 없거나 만료면 새 토큰을 발급하며, 같은 키였다면 엔진 토큰을 이미 무효화할 수 있다. 그 뒤 엔진 토큰 mtime이 그대로인 것은 엔진이 아직 다시 호출하지 않은 경우에도 가능하므로 토큰 전쟁을 잡지 못한다. “mtime 변경이면 중단”은 안전한 단방향 신호일 뿐이다. | 네트워크·원장 접근 0의 `a169 profile preflight`(G1~G6)을 만들고 `openapi test`보다 먼저 실행한다. preflight가 실제 엔진 프로필과 다른 키를 증명한 뒤에만 IP/키 검사를 허용한다. 같은 키 RED에서 HTTP 요청 0을 단언하고, runbook의 mtime 검사는 사후 이상 징후로만 낮춘다. |
+| P1-6 | **P1** | `design.md:411-425,639-643`, `tasks.md:42-44`, `internal/official/client.go:191-206` | 한도 단위가 계좌/IP일 수 있는데, 도구의 rate budget은 자기 client 응답만 기록한다. 엔진 429와 도구 `gap`은 리허설이 끝난 뒤 로그에서 세므로 해당 리허설 또는 이후 측정 중 보호 호가가 굶는 것을 막지 못한다. “엔진 보유 0인 날”도 권장일 뿐 검증·강제가 아니다. 429 0은 키별 한도의 증명이 아니다. | 한도 단위가 확인되기 전에는 권위 있는 실시간 interlock을 선행 조건으로 한다: 엔진 429 1건을 감지하면 도구 context를 즉시 중단하고 그 시험을 RED로 검증한다. 그런 신호/중단 권한을 만들 수 없으면 리허설·측정 모두 fail-closed로 막고 별 change로 분리한다. 사후 Docker 로그 계수와 보유 0 권장은 대체물이 아니다. |
+| P1-7 | **P1** | `design.md:589-590,626,634`, `internal/app/paths/paths.go:31-36,48-54` | §14-1은 실제 `TOSSOS_CONFIG_DIR`을 확인하라지만, mtime 비교와 실행 예시는 모두 `~/.config/tossctl`로 고정한다. 실제 엔진 override가 다르면 `--config-dir`이 정한 다른 E만 G5/G6가 비교하므로 실제 엔진 키·토큰 보호를 증명하지 못한다. | runbook에서 사람 확인값을 단일 비밀 아닌 `ENGINE_CONFIG_DIR`로 고정하고 mtime·`--config-dir`·G2/G5/G6의 모두에 같은 canonical 경로를 쓴다. 비기본 엔진 경로 fixture와 잘못된 E를 준 거부 RED를 추가한다. |
+| P2-3 | P2 | `design.md:393-397`, `internal/app/paths/paths.go:31-36,48-54` | G2는 `--openapi-dir`만 `EvalSymlinks`한다고 적고 E·기본 경로의 절대화·링크 해제·경계 비교 알고리즘은 명시하지 않는다. `Resolve`/`OpenAPI`는 받은 상대 경로를 그대로 `Join`한다. 상대 경로·심볼릭 링크·접두사 형제 디렉터리에서 같은/하위 판정이 문자열 구현에 따라 갈릴 수 있다. | 비교 대상 전부를 `Abs` 후 존재하는 것은 `EvalSymlinks`로 canonicalize하고, 포함 여부는 `filepath.Rel`의 경계로 판정한다고 design·RED에 고정한다. `../`, 엔진 경로 심볼릭 링크, `/x/engine2` 접두사, 기본 cache의 상대 경로를 시험한다. |
+| P2-4 | P2 | `design.md:396,400-401`, `review.md:252-253` | G5가 엔진 자격증명 파일을 읽는 것은 a169 별도 프로필 프로세스에는 새 시크릿 노출 표면이다. a140 기본 모드가 읽는다는 사실은 별도 프로필 도구가 엔진 `SecretKey`를 메모리에 가져올 필요의 근거가 아니다. | 최소안은 엔진 `APIKey`만 비교하는 좁은 reader로 `SecretKey`를 `Credentials` 객체에 만들거나 전달하지 않는 것이다. 더 강한 격리는 신뢰된 등록 단계가 남긴 프로필 식별자/지문만 런타임에 읽는 설계다. 어느 쪽이든 G7 정적 시험 범위를 엔진 secret의 보관·출력 금지까지 넓힌다. |
+
+### 확인한 것
+
+- **AST로 확인**: 현행 `runCommand`는 `apppaths.OpenAPI`(121) 뒤 `official.LoadCredentials`(125)와 `official.New`(133)를 호출한다. 설계의 `checkSeparateProfile` 삽입 위치는 이 앞이라 일반 자격증명 로드·client 생성·원장 열기·브로커 GET보다 앞에 둘 수 있다. 다만 G4/G5 자체가 파일을 읽어야 하므로 “자격증명 읽기 전”은 문자 그대로 성립하지 않는다. 계약은 **일반 loader/client/ledger/broker보다 전**, 실패 시 GET·원장 0이어야 한다.
+- **AST로 확인**: `LoadCredentials`는 두 환경 변수가 모두 있으면 파일보다 우선하고(`credentials.go:29-48`), token cache는 키 식별 없이 유효하면 그대로 쓴다(`token.go:60-79`). `apppaths.OpenAPI`의 명시 경로는 자격증명·토큰 둘 다 그 디렉터리에 둔다(`paths.go:48-60`).
+- **손으로 읽음**: config.json이 없는 `$A169_DIR`에서도 `openapi test`의 명령 본문은 config를 load하지 않고 경로·자격증명·`Accounts()`만 쓴다(`openapi.go:372-396`). root의 config 상태 조회 실패도 무시된다(`root.go:79-81,370-376`). 따라서 이 주장은 정적 코드상 참이다. 실제 네트워크 실행은 하지 않았다.
+- **손으로 읽음**: a169 `--top != 30` GET 0 거부와 기본 모드 보존은 `design.md:53-57`, spec 시나리오 `:63-66`, RED `:529-530`이 일치한다. U2는 `D=09:30:55` 전 미완이면 U2만 제외하고 09:31:05 폴을 보존하며, 가짜 시계 (i)~(v)가 이를 단언한다(`design.md:189-212,531-537`, spec `:68-71`). 구현 전 계약으로는 충분하다.
+- spec delta·tasks·issues를 대조했다. P1-4~P1-7은 아직 spec/tasks/issues에 없으므로 이 결론을 닫기 전 세 문서에 같은 선행 조건·중단 규칙을 반영해야 한다. `openspec validate a169-breakout-universes-are-compared-in-shadow --strict`는 rc 0이었다.
+- UI/UX: N/A — 문서·CLI/도구 계약 검토뿐이고 렌더 UI 변경은 없다.
+
+### 확인하지 않은 것
+
+- 소스·시험 편집, 시험·build·vet·lint·gstack, 실제 키/IP/토큰·환경 변수·파일 권한, Docker/엔진 로그, 브로커 호출, 리허설·측정은 실행하지 않았다.
+- `checkSeparateProfile`·U2 구현은 아직 존재하지 않아 AST로 런타임 순서를 인증할 수 없다. 위 AST는 기준 HEAD의 기존 경로이고, 설계상 RED 목록의 구현 전 검증만 했다.
