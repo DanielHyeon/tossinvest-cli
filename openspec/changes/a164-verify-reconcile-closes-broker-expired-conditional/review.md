@@ -205,3 +205,20 @@ verifylive·official·cmd/tossctl `go test` Manager 재실행 PASS) 5.1 의 미�
 - 쓰지 않은 길: 도구가 권한 `--record-landing`(창 끝을 착지 커밋으로 좁힘)은 승인된 절차(번들 복사, a170 선례)가 아니라 기록하지 않음. base 재고정 안 함.
 - 완료 게이트 결과는 아래 「완료 게이트 실행 영수증」(archive 뒤 추가).
 
+
+## 완료 게이트 실행 영수증 (2026-10-28) — 1 회차 FAIL ⑦, 재시도 조건 밖이라 멈춤
+
+- 격리 worktree `/mnt/D/Axipient/workspace/TossOS.worktrees/a164-close`(`/tmp` 밖), detached `a8e9042e2`(종결 증거 커밋, main `0c9bfd272` 위).
+- 준비: `make sdd-infra` rc 0 → `python3 tools/sdd/sdd_sync.py --no-gbrain` rc 1 — CodeGraph 색인은 됨(3,021 파일), advisory CodeGraphContext 색인만 300초 시한 초과
+  → `make sdd-check` rc 0 → `codegraph status .` 3.20 · 3.22 · 3.70 · 3.45 · 3.57 · 3.64s(load 4.95, 다른 gate · go test 없음).
+- 1 회차(16:24~16:46 KST): ①~⑥ OK(⑤ `OK: Function Logic Map`, ⑥ `OK: make sdd-check`) → **FAIL ⑦ `make test`**, rc 2.
+  실패 시험 하나: `internal/verifylive` `TestRecordCarriesNoUnmaskedAccountNumber` — `record_test.go:171: the record contains the masked account reference in the clear`.
+  나머지 패키지 ok(`tools/a112-mb-us-source` 419.976s ok, `deadline exceeded` · VCS status 128 0건). 로그 `analysis/gate/gate-run1-fail.log`.
+- 원인(측정): **시험 판정식의 우연 일치 — a164 회귀 아님.** 이 시험(a131 `f269c6157` 이 단 줄)은 기록 전체에 부분 문자열 `"8901"`(가짜 계좌 `123-45-678901` 의 마스크 꼬리)이
+  있으면 실패한다. 기록에는 실행마다 바뀌는 `sha256:` 16진 digest(`request_digest` · `response_digest`)가 여러 개 있어서 그 안에 `8901` 이 우연히 나온다.
+  - 단독 재실행: `go test -count=200 -run '^TestRecordCarriesNoUnmaskedAccountNumber$' ./internal/verifylive/` → 200/200 ok; `-count=3000` → **5/3000 실패**(같은 줄 171).
+  - 임시 진단 시험(커밋 안 함, 실행 뒤 삭제 · worktree clean 확인)으로 실패 판의 일치 자리를 출력: 전부 digest 안 —
+    예 `"response_digest":"sha256:a604f74635bf9a0d128901a3b9…"`, `"request_digest":"sha256:e08267f3de6bc76128901779fe…"`, `"sha256:338901da85…"`, `"sha256:d89016f2ae…"`.
+    계좌 마스크가 평문으로 들어간 판은 0.
+- 승인된 재시도 조건(VCS 128 · ⑥ CodeGraph 15초 시한 초과)에 해당하지 않아 **재시도하지 않음.** 시험 수정은 이 종결의 승인 범위 밖(시험 약화 금지 · 다른 change 몫)이라 하지 않음.
+  archive · Story 경로 · main 병합 · push 하지 않음 — Manager/사용자 결정 대기.
