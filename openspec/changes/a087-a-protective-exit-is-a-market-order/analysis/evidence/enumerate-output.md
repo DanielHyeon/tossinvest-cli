@@ -60,6 +60,66 @@
      R return  :80    return AuxiliaryExecutor{Name: manualBuyRefreshName, Run: r.Run, StopEvent: obs.EventManualBuyRefreshFailed}
   branches=5 returns=1
 
+## ExitObserver.noteHeldProposal — internal/app/engine/exit_held_proposal.go:126-173 (fresh, sha bc7a564eb8b1)
+    B1 if      :127   if !m.state.Pending() {
+     R return  :128   return false
+    B2 if      :130   if strings.TrimSpace(m.state.PendingIntentID) == "" {
+     R return  :133   return false
+    B3 if      :136   if err != nil {
+     R return  :138   return false
+    B4 if      :140   if facts.Verdict == journal.ExitIntentUnaccepted {
+    B5 if      :142   if err != nil {
+     R return  :145   return released
+    B6 range   :148   for _, rec := range facts.Parked {
+    B7 range   :154   for _, order := range facts.Awaiting {
+    B8 if      :155   if !strings.EqualFold(strings.TrimSpace(order.Side), "SELL") || strings.TrimSpace(order.OrderID) == "" {
+    B9 if      :162   if err != nil {
+     R return  :164   return false
+   B10 range   :166   for _, order := range live {
+   B11 if      :167   if !strings.EqualFold(strings.TrimSpace(order.Side), "SELL") || seen[order.OrderID] {
+     R return  :172   return false
+  branches=11 returns=6
+
+## ExitObserver.observe — internal/app/engine/exitloop.go:860-931 (fresh, sha 4d92acb6e7e1)
+    B1 if      :867   if qerr != nil {
+     R return  :868   return qerr
+    B2 range   :876   for _, symbol := range symbols {
+    B3 range   :880   for _, q := range quotes {
+    B4 if      :882   if _, needed := wanted[symbol]; !needed || q.Last <= 0 || math.IsNaN(q.Last) || math.IsInf(q.Last, 0) {
+    B5 if      :886   if q.FetchedAt.IsZero() {
+    B6 else    :889   } else if effectiveAt.After(validatedAt) ||
+    B7 if      :889   } else if effectiveAt.After(validatedAt) ||
+    B8 if      :896   if len(next) == 0 {
+     R return  :897   return execgw.NewEvidenceInvalidError(fmt.Sprintf("no valid quote evidence for %d managed symbol(s)", len(symbols)))
+     R return  :900   return nil
+    B9 if      :902   if err != nil {
+     R return  :903   return nil, err
+   B10 if      :905   if needsFallback {
+   B11 if      :911   if err != nil {
+     R return  :912   return nil, err
+   B12 for     :914   for {
+   B13 if      :916   if current >= maximum || o.observationSequence.CompareAndSwap(current, maximum) {
+   B14 range   :922   for symbol, quote := range out {
+   B15 if      :923   if quote.Source != "" {
+     R return  :930   return out, nil
+  branches=15 returns=6
+
+## ExitObserver.ObserveOnce — internal/app/engine/exitloop.go:469-541 (fresh, sha 4d92acb6e7e1)
+    B1 if      :477   if o.opts.SLO != nil && o.opts.SLO.FillDetectionBehind() {
+     R return  :483   return cycle
+    B2 if      :487   if err != nil {
+     R return  :489   return cycle
+    B3 if      :491   if len(states) == 0 {
+     R return  :501   return cycle
+    B4 if      :504   if err != nil {
+     R return  :507   return cycle
+    B5 range   :513   for _, state := range states {
+    B6 if      :515   if !ok {
+    B7 if      :523   if !o.quoteUsable(quote) {
+    B8 if      :531   if err := o.judge(ctx, state, quote, observation, &cycle); err != nil && cycle.Err == nil {
+     R return  :540   return cycle
+  branches=8 returns=5
+
 ## ExitObserver.Run — internal/app/engine/exitloop.go:407-417 (fresh, sha 4d92acb6e7e1)
     B1 for     :408   for {
     B2 if      :409   if err := ctx.Err(); err != nil {
@@ -241,6 +301,32 @@
      R return  :44    return p.checkFunding(ctx, intent)
   branches=1 returns=2
 
+## Retrier.Query — internal/execgw/retry.go:335-389 (fresh, sha 1036f9ee8394)
+    B1 if      :337   if policy.MaxAttempts <= 0 {
+    B2 if      :341   if clk == nil {
+    B3 for     :347   for attempt := 1; attempt <= policy.MaxAttempts; attempt++ {
+    B4 switch  :350   switch ClassifyQueryError(err) {
+    B5 case    :351   case ClassOK:
+    B6 if      :352   if r.Gate != nil {
+     R return  :355   return nil
+    B7 case    :357   case ClassAuthFatal:
+    B8 if      :361   if r.Gate != nil {
+     R return  :365   return errors.Join(err, r.escalateCredentialFailure(ctx))
+    B9 case    :367   case ClassPermanent, ClassCanceled:
+     R return  :368   return err
+   B10 case    :370   case ClassRateLimited:
+   B11 if      :372   if !ok {
+     R return  :373   return fmt.Errorf("%w (Retry-After beyond the %s cap)", err, policy.MaxRetryAfter)
+   B12 if      :375   if !r.sleepWithin(ctx, clk, wait, deadline) {
+     R return  :376   return err
+   B13 case    :379   default: // ClassTransient
+   B14 if      :380   if attempt == policy.MaxAttempts {
+     R return  :381   return err
+   B15 if      :383   if !r.sleepWithin(ctx, clk, policy.BackoffFor(attempt, policy.BaseBackoff), deadline) {
+     R return  :384   return err
+     R return  :388   return lastErr
+  branches=15 returns=8
+
 ## Saga.aggressivePrice — internal/flatten/liquidate.go:372-398 (fresh, sha ef9ad2603edf)
     B1 if      :373   if s.Prices != nil {
     B2 if      :374   if limits, err := s.Prices.PriceLimits(ctx, symbol); err == nil && limits.LowerLimit > 0 {
@@ -253,6 +339,47 @@
      R return  :394   return roundDownToTick(q.Last*(1-discount), market), "last trade less the aggressive discount", nil
      R return  :397   return 0, "", fmt.Errorf("no usable price for %s; a liquidation order cannot be priced", symbol)
   branches=6 returns=4
+
+## Attempt.transition — internal/journal/durability.go:548-674 (fresh, sha 29ec7a1849fa)
+    B1 if      :554   if err != nil {
+     R return  :555   return fmt.Errorf("journal: starting the transition transaction for %s: %w", a.id, err)
+    B2 if      :560   if err := tx.QueryRowContext(ctx,
+    B3 if      :562   if errors.Is(err, sql.ErrNoRows) {
+     R return  :563   return fmt.Errorf("%w: %s", ErrAttemptNotFound, a.id)
+     R return  :565   return fmt.Errorf("journal: reading attempt %s: %w", a.id, err)
+    B4 if      :567   if err := checkTransitionAllowed(a.id, current, to, o.from); err != nil {
+     R return  :568   return err
+    B5 if      :570   if o.consumeNonce {
+    B6 if      :571   if err := consumeDecisionNonce(ctx, tx, a.id, now); err != nil {
+     R return  :572   return err
+    B7 if      :575   if to == StateConfirmed && (a.kind == KindPlace || a.kind == KindAmend) {
+    B8 if      :577   if orderID == "" {
+    B9 if      :578   if err := tx.QueryRowContext(ctx,
+     R return  :580   return fmt.Errorf("journal: reading confirmed order id for %s: %w", a.id, err)
+   B10 if      :584   if err := tx.QueryRowContext(ctx, `
+     R return  :600   return fmt.Errorf("journal: reading prior evidence for confirmed order %s: %w", orderID, err)
+   B11 if      :604   if orderErr != nil {
+     R return  :605   return fmt.Errorf("journal: ordering confirmed ownership of %s: %w", orderID, orderErr)
+   B12 if      :611   if o.setDispatchStarted {
+   B13 if      :615   if o.setSettled {
+   B14 if      :619   if o.brokerOrderID != "" {
+   B15 if      :623   if o.reasonCode != "" {
+   B16 if      :627   if o.detail != "" {
+   B17 if      :635   if err != nil {
+     R return  :636   return fmt.Errorf("journal: updating attempt %s: %w", a.id, err)
+   B18 if      :639   if err != nil {
+     R return  :640   return fmt.Errorf("journal: updating attempt %s: %w", a.id, err)
+   B19 if      :642   if affected != 1 {
+     R return  :646   return &StateError{AttemptID: a.id, Want: o.from, Got: current, To: to}
+   B20 if      :649   if _, err := tx.ExecContext(ctx,
+     R return  :653   return fmt.Errorf("journal: recording the %s->%s transition for %s: %w", current, to, a.id, err)
+   B21 if      :662   if releasesReservations(to) {
+   B22 if      :663   if _, err := releaseReservationsForAttempt(ctx, tx, a.id, ReleaseReasonBrokerTerminal,
+     R return  :665   return err
+   B23 if      :668   if err := tx.Commit(); err != nil {
+     R return  :669   return fmt.Errorf("journal: committing the %s->%s transition for %s: %w", current, to, a.id, err)
+     R return  :673   return nil
+  branches=23 returns=15
 
 ## adaptPriceLimits — internal/official/price_limits_reads.go:55-62 (fresh, sha c7331f5b21e8)
      R return  :56    return domain.PriceLimits{
@@ -274,6 +401,14 @@
      R return  :146   return nil, fmt.Errorf("limit order requires a positive price, got %v", intent.Price)
      R return  :152   return v0, nil
   branches=7 returns=7
+
+## Client.doRequest — internal/official/client.go:191-207 (fresh, sha 6d145916a679)
+    B1 if      :194   if err != nil {
+     R return  :196   return 0, nil, fmt.Errorf("%w: %s", ErrTransport, err)
+    B2 if      :201   if err != nil {
+     R return  :203   return resp.StatusCode, nil, fmt.Errorf("%w: reading body: %s", ErrTransport, err)
+     R return  :206   return resp.StatusCode, body, nil
+  branches=2 returns=3
 
 ## Client.PriceLimits — internal/official/price_limits_reads.go:31-39 (fresh, sha c7331f5b21e8)
     B1 if      :35    if err := c.get(ctx, "/api/v1/price-limits", q, &raw); err != nil {

@@ -890,3 +890,22 @@ Function Logic Map: not-applicable — 문서 개정만 했다. 분기 주장은
 - 거래소 체결 규정 원문과 실주문 영수증은 새로 조사하지 않았다. `impeccable: N/A — backend/documentation-only`.
 - a165 main/착지 worktree는 금지 범위라 열지 않았다. 위 a165 판단은 의뢰 정보와 이 change의 오래된 D11 기록의 불일치다.
 - `grill-me`: D-1은 확정값으로 사용했고 새 사람 결정은 만들지 않았다. `search-first`: 구현·의존성 채택이 아닌 독립 문서/소스 적대 검토라 현재 저장소·AST·OpenSpec 근거만 사용했다.
+
+## 9판 개정 (2026-10-29, Manager 결정 — 8판 독립 재리뷰 FAIL 처분) — **독립 재리뷰 대기**
+
+OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서와 `tools/logic-map` AST 만 다뤘다 — 소스 · 시험 편집 0, 시험 · gate 실행 0, 브로커 · 계좌 · 운영 접근 0.
+새 AST 6개(HEAD `5e691ac4e`, 소스 바이트 = origin/main `4b67dd6a9`), `enumerate.py` 42개 stale 0.
+
+| 8판 재리뷰 발견 | 9판 처분 | 위치 |
+| --- | --- | --- |
+| P0 전일 하한가가 같은 날 항목이 됨 | 엔진 전용 읽기 형(timestamp · raw decimal 보존), 조건 = timestamp KST 날짜 = 그날 거래일 · 09:00 이후, 거름 사유 10종 따로. 「데이터 시각」 뜻 `[미측정]` → 5.4 ②. 전일 값 논증(⑥ 이 위쪽 범위를 막고, 아래쪽은 되먹임) — 제도 근거 `[미인용]` | design D12.1 · spec Req 1 · tasks 2.8 · 5.4 |
+| P0 `MARKET_DATA` 버스트 | 가) 관측 주기 끝 토큰(`Run` 한 줄) · 주기당 ≤ 1 · GET 시한 ≤ 2초 < 5초 · 429 세 입력 → 5분 정지. 나)는 다음 주기를 GET 시간만큼 늦춰 기각. 새 압력 0.2/s(2%) | design D12.2 · tasks 2.4 |
+| P0 IN_DOUBT → 비수용 → 같은 하한가 반복 | `CONFIRMED` 아닌 모든 결과에서 제출 순간 그날 금지(B8 포함) · 술어 하나 · 재시작 재구성. 꼬리표 수단은 detail 덮어쓰기(`durability.go:627`) 때문에 T3 유도를 기본으로 두고 Manager 결정(D-2 ⑤) | design D12.3 · tasks 2.5 · 2.9 |
+| P1 float · 결측 사유 합침 | raw 정수 decimal · 사유별 기록 · B5 도달 불가 시험 | design D12.1 |
+| P1 단정 문장 · 5.4 gate 아님 | 조건형으로 · 5.4 착지 전 필수 gate · 처분 셋 | design D11 (c) · D12.4 · tasks 5.4 · issues D-2 ② |
+| P1 a165 「코드 0」 | 8판 시점 사실로 낮춤 · a165 archive/push sha 재대조 = tasks 1.0 착수 조건 | design D11 (g) · D12.5 · tasks 1.0 |
+| P2 `price_source` 골든 | 필수 키 · 값 셋 · B1/B5/B7/B13/비동기 행 | design D12.6 · tasks 3.1 |
+
+불변식 4 표는 design D12.7 이 대체한다(나빠질 수 있는 칸 셋과 상한).
+
+Function Logic Map: not-applicable — 문서 개정만 했다. 분기 주장은 `analysis/evidence/` AST 42개에서만 인용했다(`a129_exit_order_log_test.go` helper · `doRequest` 의 기록 줄 · `Retrier.Query` 오류 사슬은 손 읽기로 표시).
