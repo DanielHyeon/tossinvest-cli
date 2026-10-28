@@ -862,3 +862,31 @@ OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서와 `tools/logic-map
 ③ `exitOrderLineFor` 사본 사다리 제거(결정 값 한 번) ④ 갱신기의 `MARKET_DATA` 공유 ⑤ 사람 확인 4건(`issues.md` D-2). 착수 시 FLM 대상은 design D11 「착수 시 FLM 대상」이 대체한다.
 
 Function Logic Map: not-applicable — 문서 개정만 했다. 분기 주장은 `analysis/evidence/` AST 36개에서만 인용했다.
+
+## 8판 독립 재리뷰 (GPT-5.6 Terra, 2026-10-29)
+
+**결론: FAIL (blocker 3).** D-1(다)의 KR 정규장 하한가 LIMIT 자체는 명확하다. 그러나 8판은 “같은 날”을 수신 시각으로만 라벨링하고, 공유 `MARKET_DATA` 버스트와 비동기 비수용 해제 경로를 누락했다. 따라서 “오늘보다 나빠지는 칸은 하한가 직접 거부 뒤 1주기뿐”은 성립하지 않는다.
+
+| 심각도 | 발견 | 위치 | 근거 | 처분 제안 |
+| --- | --- | --- | --- | --- |
+| P0 | 응답의 `timestamp`는 디코드 뒤 버려지고 board에는 읽은 KST 날짜만 남는다. 전일 하한가 응답을 오늘 10:00에 받아도 같은 날 항목이 된다. `하한가 ≤ 관측가`는 전일 값이 더 높은 경우만 거르고, 더 낮은 전일 값은 통과한다. 고정 시각 창은 주말만 거르므로 평일 휴장·개장 지연도 이 반례를 막지 않는다. spec의 “같은 KST 날짜에 얻은”을 실제 당일 가격으로 증명할 수 없다. | `design.md:70-97,107-113`; `specs/order-execution/spec.md:17`; `internal/official/price_limits_reads.go:20-62`; `internal/clock/market.go:128-152` | AST: `Client.PriceLimits`, `adaptPriceLimits`, `parseDecimal`; 손으로 읽음: raw `timestamp` 미전파, `parseDecimal` null/오류→0 | 응답 timestamp를 보존·검증하는 엔진 전용 읽기 형을 둔다. CLI `domain.PriceLimits` 출력은 그대로 유지할 수 있다. “오늘 수신한 전일 payload”, null, parse 오류, 기준가 변경일을 분리한 시험과 변이를 추가하기 전 구현 금지. |
+| P0 | 갱신기 5개 순차 GET은 관측 `/prices`와 같은 `Context.Official`·`MARKET_DATA` 10/s를 쓴다. 현 클라이언트는 응답 헤더를 기록할 뿐 요청을 예약·제한하지 않는다. 버스트/재시도/다른 소비자와 겹친 429가 `/prices`에 오면 `ObserveOnce`는 판단·제출 전체를 건너뛰고 outage 경로로 간다. 이는 하한가 1회 거부가 아니라 보호 판단 자체의 지연 칸이다. | `design.md:99-101,179-181`; `internal/app/engine/exitwiring.go:333`; `internal/official/client.go:191-207`; `internal/app/engine/exitloop.go:493-500,860-900` | AST: `Client.doRequest`; 손으로 읽음: `Context.ExitObserver`가 `c.Official` 주입, price-read 오류의 주기 조기 반환 | 같은 rate group에서 exit 가격 읽기에 우선 예약을 주고 auxiliary는 남은 예산에서만 실행하거나, 동등한 강제 배분 근거를 설계·시험으로 제시한다. “updater 429 중단”만이 아니라 `/prices` 429에서도 손절 판단이 굶지 않음을 검증한다. |
+| P0 | 되먹임은 `submit` B13 직접 비수용에만 있다. B8/미상 결과는 안전상 무장 유지하지만, 뒤에 원장이 `ExitIntentUnaccepted`로 확정하면 `noteHeldProposal`이 발의를 푼다. board의 lower-limit 거부 표시는 없으므로 다음 관측은 같은 하한가를 다시 낸다. 즉 `IN_DOUBT → 확정 비수용 → 해제 → 동일 하한가`가 반복될 수 있다. | `design.md:117-124`; `internal/app/engine/exitloop.go:1547-1592`; `internal/app/engine/exit_held_proposal.go:126-145` | AST: `ExitObserver.submit`(기존 evidence), `ExitObserver.noteHeldProposal` B4; 손으로 읽음: 해제 후 source/rejection feedback 부재 | 가격 출처를 attempt/해제 상관관계까지 보존하고, 직접 B13과 비동기 확정 비수용 모두 같은 날 board를 거부 처리한다. `IN_DOUBT → StateFailedConfirmed → release → 다음 주기 observed fallback` 종단 시험을 추가한다. |
+| P1 | board는 “decimal 문자열”을 저장한다고 하나 현재 표면은 `float64`뿐이다. null·파싱 오류 모두 0이어서 결측 사유도 합쳐진다. 새 문자열의 정본 변환·tick/정밀도 계약과 B5 도달 불가 증명이 없다. | `design.md:79-82,107-116`; `internal/official/market_reads.go:15-24`; `internal/official/price_limits_reads.go:55-62`; `internal/app/engine/exitloop.go:1806-1832` | AST: `adaptPriceLimits`, `parseDecimal`, `ExitObserver.sellIntent` | raw decimal과 timestamp를 함께 보존하거나 canonical formatting·허용 tick을 명시하고 시험한다. 결측·형식 오류는 별도 telemetry를 남긴다. |
+| P1 | `[미측정]` 표시는 대체로 남아 있으나 “체결될 것이다”, “접수돼 참여할 것이다”처럼 영수증·규정 원문 없이 단정한 문장이 남는다. tasks 5.4는 착수/착지 전 조건을 아직 사람 결정으로만 남겨 착지 gate가 아니다. 거부면 되먹임이 기본 경로가 된다는 사실도 gate로 고정되지 않았다. | `design.md:153-156`; `tasks.md:393-400`; `issues.md` D-2 ② | 손으로 읽음 | 문장을 조건형으로 낮추고, 5.4의 수용·거부·판정 불가 각각에 대한 **착지 전** 사람 처분을 D-2에서 확정해 task check/gate로 만든다. |
+| P1 | D11은 a165를 “코드 0, 미착지”로 적지만, 의뢰 시점 정보는 a165가 `clearTheSymbol`·`checkSymbolFree` 변경과 함께 착지 중이다. 같은 `exitloop.go`의 자료·좌표·시험 double 재대조 범위가 문서보다 넓다. 이 worktree에서 main/a165를 열지 않았으므로 충돌 없음은 확인하지 못했다. | `design.md:193-205` | 손으로 읽음 + 의뢰 정보 | a165 착지 SHA에서 `clearTheSymbol`과 `checkSymbolFree`를 포함해 FLM/BTM·AST·공유 double을 다시 대조하고, 그 증거 전 a087 구현 착수 금지. |
+| P2 | `exitOrderLineFor` 사본 제거와 `price_source` 추가는 방향이 맞다. 현재 a129 golden helper는 예상 키만 부분 비교하므로 추가 키가 기존 golden을 즉시 깨지는 않는다. 반대로 새 키의 존재·값·모든 제출 결과의 소비 계약을 보장하지도 않는다. | `internal/app/engine/exit_order_log.go:102-114`; `internal/app/engine/a129_exit_order_log_test.go:204-211`; `design.md:128-138`; `tasks.md` 3.1 | AST: `exitOrderLineFor`; 손으로 읽음: a129 helper 부분 비교, `cmd`/`internal` 검색에서 exit-order `price_source` 소비자 미발견 | 복사 제거 후 선택값·source를 한 번 전달하고, a129 golden에 `lower_limit|observed|baseline`의 필수 키/값과 B1·B5·B13·비동기 결과 행을 명시한다. 소비자 0은 구현 시 재검색으로 확인한다. |
+
+### 확인한 것
+
+- D-1(다)와 D11(a): KR 보호 매도만 `[09:00,15:30)`에서 하한가 LIMIT, 나머지는 현재 LIMIT 사다리라는 범위는 일관됐다.
+- AST/손으로 읽음: 현재 `sellIntent` B1~B4는 관측가→기준선→거부 사다리와 `OrderType: "limit"`을 유지한다. `NewContext`의 비시험 조립은 `cmd/tossctl/engine_assembly.go:40` 한 곳이고 flatten은 별도 `NewOrderPath`다. v8의 board가 아직 없으므로 P0-1 배선은 설계·task만 확인했다.
+- `analysis/evidence/enumerate.py`: `stale=0`. `openspec validate a087-a-protective-exit-is-a-market-order --strict --no-interactive`: 통과.
+- `exitOrderLineFor`의 기존 사본과 a129 golden의 부분 비교를 대조했다. 현재 알려진 golden 파손은 없으나 새 contract 검증은 없다.
+
+### 안 본 것·제한
+
+- v8 구현은 없으므로 코드·단위/종단/변이 시험, 전체 gate, 렌더 UI 검증은 실행하지 않았다. 브로커·계좌·운영·mutating 명령도 실행하지 않았다.
+- 거래소 체결 규정 원문과 실주문 영수증은 새로 조사하지 않았다. `impeccable: N/A — backend/documentation-only`.
+- a165 main/착지 worktree는 금지 범위라 열지 않았다. 위 a165 판단은 의뢰 정보와 이 change의 오래된 D11 기록의 불일치다.
+- `grill-me`: D-1은 확정값으로 사용했고 새 사람 결정은 만들지 않았다. `search-first`: 구현·의존성 채택이 아닌 독립 문서/소스 적대 검토라 현재 저장소·AST·OpenSpec 근거만 사용했다.
