@@ -290,3 +290,18 @@ P2-2 바깥 래퍼·정착 ctx 분리와 P2-3의 진입 전용 위치는 2차 �
 ### 미실행
 
 지시상 소스·시험 실행 0. 따라서 RED/coverage/`check_analysis.py`/`make sdd-sync`/`make gate`/strict validate는 이번 재리뷰에서 실행하지 않았다.
+
+### 1.3 재리뷰 처분 (2026-10-28, 작성자)
+
+소스·시험 편집 0, 시험 실행 0, 운영 접근 0. `openspec validate --strict` 통과.
+
+| 발견 | 처분 | 반영 위치 |
+|---|---|---|
+| R3-1 P1 r2 시간·인과 경계 없음 | **원장 순번 경계.** r2 = latch 행의 `FAILED_CONFIRMED` transition 순번 `s_L` 보다 RECORDED transition 순번 `r_C` 가 큰(엄격) 같은 대상 주문 id·같은 (계좌·시장·거래일·종목)의 CONFIRMED CANCEL. 순번 = `attempt_transitions.id`(`INTEGER PRIMARY KEY AUTOINCREMENT`, schema.go:246; 쓰기 직렬 `_txlock=immediate`, journal.go:216–218·225; UPDATE/DELETE 0 건). 정착이 아니라 기록 시작을 비교해 「latch 뒤 정착」을 포함하고 커밋 지연에 기대지 않는다. 벽시계 0. 새 질의 `ConfirmedCancelAfterLatch(ctx, latchAttemptID)`(journal 새 파일, 범위·대상은 latch 행에서 질의 안에서 읽음). 기존 `ConfirmedCancelOf` 불변 — 생산 호출자 exitloop.go:1650·exit_held_proposal.go:178. RED (f) latch 앞 확인 취소 → 거절 유지 · (g1) 뒤 → 해제 · (g2) 앞에 기록·뒤에 정착 → 거절 유지 · (h) 다른 대상 id·다른 거래일 → 거절 유지. 변이 ⑦ 순서 경계 제거 · ⑧ 대상 id 비교 제거 · ⑨ 순번을 정착 transition 으로 · ⑩ 거래일 비교 제거 | design 머리말·D11(해제 조건 r2·「r2 질의」·RED·변이), delta R3 bullet + 시나리오 「진입 거절보다 앞선 취소 확정은 거절을 풀지 않는다」, tasks 1.3·2.2·3.1 |
+| R3-2 P2 운영 해제·가시성 | **design D12 운영 절.** 조회 = 읽기 전용 원장 질의 1·2(기존 콘솔 `SymbolBlocks`·주문 화면·`engine alerts list`·`attempt-resolve` 어느 것도 latch 를 안 보여 줌을 확인). journalled 해제 = r2 엔진 재취소 · r1 체결 감지 종결 기록. `tossctl order cancel`(order.go:295 `tradingService.Cancel` 직행)·브로커 앱 취소는 그 자체로 해제가 아니고 r1 로만 이어짐. `attempt-resolve`·원장 손 편집·`flatten-all` 은 해제 수단 아님. 경보 = 기존 `exit.liquidation_delayed`(`noteDelay`·`noteClearFailure`, 코드 변경 0); latch 만 남은 상태의 경보 없음은 잔여(새 채널·게이트웨이 경보 배선 안 함). 운영 문서 이식은 2.3 | design D12, issues R-a165-5·6, tasks 2.3 |
+
+- 새 AST(HEAD `d64620457`, `go run ./tools/logic-map`): `analysis/evidence/journal--attempt.transition.ast.json`(branches 23 — B17(635)·B19(642)·B20(649)·B23(668), defer `tx.Rollback` 557) ·
+  `analysis/evidence/journal--journal.prepare.ast.json`(branches 16 — B14(450) RECORDED transition INSERT, Commit B16(466)).
+- 손으로 읽은 근거(AST 아님): lineage.go:157→174·strategy_dispatch_runtime.go:787→795·928→935 의 UPDATE→transition INSERT 쌍, filldetect 추적 목록(ledger.go:112–113), 콘솔·CLI 표면의 latch 미표시, `exit.liquidation_delayed` 두 경로의 문구·임계.
+- 실행하지 않은 것: 시험 전부·coverprofile, `check_analysis.py`, `make sdd-sync`·`make gate`. 진입 거절 사유가 운영자 화면까지 가는 경로는 추적하지 않았다(D12 ① 표).
+- **다음**: GPT 보이스 재리뷰. 꼭 볼 곳 — r2 를 기록 시작 순번으로 비교한 선택(정착 순번 대비), 질의 1·2 가 코드 판정과 갈릴 가능성(후보 목록으로만 쓰는가), latch 만 남은 상태의 경보 부재 수락.

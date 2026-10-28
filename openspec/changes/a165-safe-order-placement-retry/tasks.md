@@ -1,4 +1,4 @@
-> 착수 2026-10-23(Terra). 1.3 1차·2차 FAIL → 사용자 3차 결정(F3=1)으로 범위 = R3·R4·R5. design·delta 3판 → 1.3 3차 리뷰 PASS(2026-10-28) → **1.3 2차 독립 리뷰(GPT-5.6 Terra) FAIL → 보완 완료(2026-10-28, design D5·D11), GPT 보이스 재리뷰 대기**. 다음 = 재리뷰 → 2.1 Pre-Edit.
+> 착수 2026-10-23(Terra). 1.3 1차·2차 FAIL → 사용자 3차 결정(F3=1)으로 범위 = R3·R4·R5. design·delta 3판 → 1.3 3차 리뷰 PASS(2026-10-28) → **1.3 2차 독립 리뷰(GPT-5.6 Terra) FAIL → 보완 완료(2026-10-28, design D5·D11) → 재리뷰 FAIL(P1 1·P2 1) → 보완 완료(design D11 r2·D12), 재리뷰 대기**. 다음 = 재리뷰 → 2.1 Pre-Edit.
 
 ## 0. 착수 준비
 
@@ -24,18 +24,20 @@
   2차(2판) 2026-10-23 **FAIL(blocker F1·F2·F3)** → 사용자 3차 결정 F3=1(R1·R2 를 a171 로; F2·F4·F6·A2·F8 이관, F1·F5·F7·F9·F10 은 3판에서 처분) →
   **3차(3판) 2026-10-28 PASS**(P0 0 · P1 2 는 이번 커밋 문서 수리 · P2 3 은 2.1 Pre-Edit 전 처분). 사람 결정 H1(R4 최악 지연 유지)·H2(gate ⑤ 창 — base 재고정 없음) 기록(review.md·issues.md).
   → **2차 독립 리뷰(GPT-5.6 Terra) 2026-10-28 FAIL(P1 2 · P2 2 · P3 1) → 보완 완료**(사람 결정 「1」): P2-2 바깥 래퍼를 D3·D5·submit FLM/BTM 에 일관 명세(`sendOnce` 폐기, B37 재적용·정착 ctx 분리·nil 동일성 AST 근거),
-  P2-3 진입 전용 latch D11(schema 변경 없음, `checkSymbolFree` B3 뒤), D10 배선 4 시험 값+행동·ctx/latch 변이, 8s 창 시작 = dispatch 진입 직전. 새 번들 `checkSymbolFree`(24번째)·evidence AST 4. **GPT 보이스 재리뷰 대기** — 통과 전 2.1 착수 금지.
+  P2-3 진입 전용 latch D11(schema 변경 없음, `checkSymbolFree` B3 뒤), D10 배선 4 시험 값+행동·ctx/latch 변이, 8s 창 시작 = dispatch 진입 직전. 새 번들 `checkSymbolFree`(24번째)·evidence AST 4.
+  → **재리뷰(GPT-5.6 Terra) 2026-10-28 FAIL(P1 1·P2 1) → 보완 완료, 재리뷰 대기** — R3-1: D11 r2 를 latch 정착 transition(`attempt_transitions.id`) 뒤에 기록이 시작된 같은 대상 주문 CONFIRMED 취소로 한정, 새 질의 `ConfirmedCancelAfterLatch`(기존 `ConfirmedCancelOf` 불변), RED (f)~(h)·변이 ⑦~⑩, evidence AST 2(`Attempt.transition`·`Journal.Prepare`), schema 36 그대로 /
+    R3-2: design D12 운영 절(읽기 전용 원장 조회·journalled 해제 r1/r2·`tossctl order cancel` 은 해제 아님·기존 `exit.liquidation_delayed` 경보), issues R-a165-5·6 처분 갱신. 통과 전 2.1 착수 금지.
 
 ## 2. 구현 (RED → GREEN → REFACTOR → VERIFY)
 
 - [ ] 2.1 Pre-Edit 선언 — 1.3 3차 P2-1(gate ⑤ 창 형제 함수 처리 계획)·P2-2(바깥 래퍼 — design D5 로 확정)·P2-3(진입 전용 latch — design D11 로 확정) 처분을 포함한다. 새 번들 `checkSymbolFree` 실행 칸 coverprofile 측정, 배선 시험 seam·latch 오류 주입 seam 유무 결정(D10·D11).
-- [ ] 2.2 RED: 취소 409 already-processing — 엔진 정책(확정 미수락·호출 1회·지연 0) / flatten 정책(재시도·누적 5s·창·소진 → IN_DOUBT·종목 보류·전송 전 실패 → IN_DOUBT) / code 불일치·모순·place·amend·정책 nil → 오늘과 같음 / 401 재전송 본문 동일·비 401 1회 / 바깥 래퍼 (w1)~(w5) / 배선 W1~W4 / latch (a)~(e)(design D10·D11).
-- [ ] 2.3 GREEN: 최소 구현 + 배선 2곳 + 정본 retry matrix §0.1·§1·§4 와 `execgw` 기본값을 같은 커밋에서 갱신.
+- [ ] 2.2 RED: 취소 409 already-processing — 엔진 정책(확정 미수락·호출 1회·지연 0) / flatten 정책(재시도·누적 5s·창·소진 → IN_DOUBT·종목 보류·전송 전 실패 → IN_DOUBT) / code 불일치·모순·place·amend·정책 nil → 오늘과 같음 / 401 재전송 본문 동일·비 401 1회 / 바깥 래퍼 (w1)~(w5) / 배선 W1~W4 / latch (a)~(h)(design D10·D11).
+- [ ] 2.3 GREEN: 최소 구현 + 배선 2곳 + 정본 retry matrix §0.1·§1·§4 와 `execgw` 기본값을 같은 커밋에서 갱신. design D12 를 `docs/operations.md` 운영 절로 옮긴다(r1 확인 SQL 확정 포함).
 - [ ] 2.4 attempt 기록에 재시도 횟수·갈래·확정 거절 분류(detail 꼬리표, 재시도 성공을 첫 시도 성공으로 기록하지 않음).
 
 ## 3. 검증
 
-- [ ] 3.1 변이 원장 — 409 code 판정·kind·정책 구분·대기 상한·횟수·창·소진 되돌림·경계 재검사, **배선 교차(flatten←엔진 정책 · 엔진←flatten 정책 · 배선 nil · 혼성 `{2, true}`)·`definitiveRefusalCodes` 에 already-processing 추가**(1.3 3차 P1-1·P3-3), **ctx(`winCtx` 부모 분리 · 정착 ctx 를 `winCtx` 로 · 재호출에 원 dctx · 창 시작점 이동)·latch(exit 도 latch 를 봄 · `unsettledFor` 에 넣음 · 해제 r1/r2 누락 · 종목 키 제거 · 메모리 latch)**(1.3 2차 독립 리뷰 P2·P1), 양성 대조군 포함(design D10).
+- [ ] 3.1 변이 원장 — 409 code 판정·kind·정책 구분·대기 상한·횟수·창·소진 되돌림·경계 재검사, **배선 교차(flatten←엔진 정책 · 엔진←flatten 정책 · 배선 nil · 혼성 `{2, true}`)·`definitiveRefusalCodes` 에 already-processing 추가**(1.3 3차 P1-1·P3-3), **ctx(`winCtx` 부모 분리 · 정착 ctx 를 `winCtx` 로 · 재호출에 원 dctx · 창 시작점 이동)·latch(exit 도 latch 를 봄 · `unsettledFor` 에 넣음 · 해제 r1/r2 누락 · 종목 키 제거 · 메모리 latch · r2 순서 경계 제거 · r2 대상 id 비교 제거 · 순번을 정착 transition 으로 · r2 거래일 비교 제거)**(1.3 2차 독립 리뷰 P2·P1), 양성 대조군 포함(design D10).
 - [ ] 3.2 다중 적대 리뷰(중복 주문 반례 레드팀) + gstack review/security.
 - [ ] 3.3 영향 범위 시험(`internal/execgw`·`internal/official`·`internal/flatten`·엔진 clear 경로·배선, 필요 시 `-race`)과 미실행 범위 기록.
 - [ ] 3.4 Manager 독립 검증.

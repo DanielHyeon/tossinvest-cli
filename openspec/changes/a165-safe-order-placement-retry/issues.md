@@ -33,8 +33,14 @@
 - R-a165-3 **실패 응답(5xx·429·전송 후 끊김) 뒤 같은 `clientOrderId` 재요청의 멱등 동작 미측정** — R11(M14·M35)은 2xx 직후 재요청만 쟀고 openapi 는 실패 경로를 말하지 않는다(1.3 A1).
 - R-a165-4 HTTP/2 transport 내부 재전송(REFUSED_STREAM·GOAWAY) 가능성 — 「attempt 당 1회」는 `plan.call` 기준이다(1.3 A11).
 - R-a165-5 **latch 해제 r1 은 원장의 terminal fill snapshot 에 기댄다** — 브로커가 종결을 `IsTerminal` 밖의 상태(예: 만료 표기 미측정)로만 보고하면 원장이 그 주문을 계속 working 으로 보고 latch 도 남는다.
-  이는 `LiveOrdersForSymbol`·exit 청소가 이미 같은 판정에 기대는 것과 같은 한계다(진입만 더 막힘 — 보수 방향). 운영자 해소 수단은 그 주문의 취소 성공(r2).
+  이는 `LiveOrdersForSymbol`·exit 청소가 이미 같은 판정에 기대는 것과 같은 한계다(진입만 더 막힘 — 보수 방향).
+  **처분(1.3 재리뷰 R3-1·R3-2, 2026-10-28): 수락.** r2 는 latch 정착 transition 뒤에 기록이 시작된 같은 대상 주문의 journalled CONFIRMED 취소(엔진 재취소)만이다(design D11 「r2 질의」).
+  운영자가 원장 밖에서 낸 취소(브로커 앱·`tossctl order cancel` — `tradingService.Cancel` 직행, journal attempt 없음)는 r2 가 아니며, 그 결과 체결 감지가 쓴 종결 기록(r1)으로만 풀린다.
+  r1·r2 둘 다 오지 않으면 진입 거절을 유지하고 운영자가 design D12 ④ 로 조치한다(수동 해제 명령 없음).
 - R-a165-6 **latch 는 콘솔 `SymbolBlocks` 에 보이지 않는다**(EntryGate 투영이 아니므로) — 진입 거절 사유(`symbol_in_flight`)·detail 로만 보인다.
+  **처분(1.3 재리뷰 R3-2, 2026-10-28): 부분 해소 + 수락 잔여.** 조회 = 읽기 전용 원장 질의 절차(design D12 ① — 기존 콘솔·`engine alerts list`·`attempt-resolve` 어느 것도 latch 를 보여 주지 않음을 확인, 새 읽기 표면 0).
+  경보 = 기존 `exit.liquidation_delayed` 두 경로(`noteDelay`·`noteClearFailure`, 코드 변경 0)가 R3 가 반복되는 동안 사람에게 알린다. **남는 것**: 청산 루프가 그 주문을 더는 치우지 않는데 latch 만 남은 상태는 경보가 없다 —
+  게이트웨이에 경보 sink 가 없고 새 배선은 High-risk 라 하지 않는다(진입만 막는 보수 방향). 운영 문서 이식은 2.3(`docs/operations.md`).
 - 별건(a165 밖): `strategyDispatchOwnerTakeoverGrace` 20s 가 「15초 클라이언트 timeout」을 전제(strategy_dispatch_runtime.go:664–667)하나 401 루프·timeout 없는 토큰 교환으로 그 전제가 이미 깨져 있다(1.3 A7). 담당 change 미정.
 
 ## 사용자 결정 (2026-10-23 2차, Manager 전달 — review.md 「사람 결정 요청」 1~7 전부 권장안)
