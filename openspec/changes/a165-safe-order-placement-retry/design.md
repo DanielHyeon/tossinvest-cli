@@ -1,4 +1,4 @@
-# a165 design (3판) — 취소 409 `already-processing` 처리 · 401 재전송 근거 고정
+# a165 design (4판 정정) — 취소 409 `already-processing` 처리 · 401 재전송 근거 고정
 
 > **상태**: 3판. 사용자 결정 3차(2026-10-23, F3 = 1)로 진입 재전송(R1·R2)을 a171 로 옮겼다. 1판·2판과 리뷰 처분은 `review.md`.
 > 1.3 3차 리뷰(2026-10-28) **PASS** — 처분으로 D10 에 배선 시험·`definitiveRefusalCodes` 불변 두 항목을 더했다(본문 결정 변경 없음). 사람 결정 H1: D3 의 최악 추가 지연은 그대로 둔다.
@@ -9,6 +9,7 @@
 > **3차 재리뷰 처분(1.3 3차 재리뷰 GPT-5.6 Terra FAIL P1 1·P2 1, 2026-10-28)**: D11 r2 의 비교 축에서 **거래일을 뺐다** — 대상 주문의 정규 범위(계좌·시장·종목·`target_order_id`)를 L 에서 읽어
 > 비교하고, 번호 재사용은 거래일 대신 **주인 유일성**(그 범위에서 그 번호의 접수 확정 주인 intent 가 정확히 하나)으로 막는다. 순번 조건 `r_C > s_L` 은 그대로. RED (h) 갱신·(i)~(k) 추가, 변이 ⑩ 교체·⑪·⑫ 추가.
 > D12 질의 2 를 r2 와 같은 조인으로. 새 evidence AST `execgw--gateway.preparerequest`(HEAD `5e1ae6260`). schema 36 그대로.
+> **4판 정정 — Manager 결정 2026-10-29(구현 리뷰 P2-1)**: D5의 창 **판정**은 주입 `g.clk` 하나로 하고, 재전송 `winCtx`는 매달린 broker 왕복을 끊는 실시간 상한으로만 둔다. 8초 창·재전송 2회·누적 5초 요구는 바뀌지 않음.
 > 새 AST: `analysis/function-logic/internal-execgw--gateway.checksymbolfree/`(편집 대상 번들, 24번째) · `analysis/evidence/` 의 `execgw--gateway.checkentry` ·
 > `journal--journal.confirmedcancelof` · `execgw--entrygate.blocksymbol` · `journal--journal.recoverpending`(HEAD `e4724910b`).
 > base `34e12967e`. 함수 내부 주장은 `analysis/function-logic/*/ast.json` 의 AST 좌표로만 한다(23 번들).
@@ -95,15 +96,14 @@
   취소 계획은 `strategy` 를 갖지 않는다(`Gateway.Cancel` 의 plan 구성 404–417, 손으로 읽음; `plan.strategy` 는 PlaceClaimedStrategy 만).
 - `withCancelRefusal(plan, dispatch) journal.DispatchFunc`(새 함수, 새 파일): `g.cancelRefusal == nil || plan.kind != journal.KindCancel` 이면 **받은 `dispatch` 를 그대로 돌려준다.**
 - 래퍼 본문(취소 + 정책 있음일 때만):
-  1. `start := g.clk.Now()`, `wallStart := time.Now()` — **원 클로저를 처음 부르기 전**(P3 — 창 시작점은 dispatch 진입 직전, 보수적. 첫 전송의 B30–B36 재검사 시간도 창에 든다).
+  1. `start := g.clk.Now()` — **원 클로저를 처음 부르기 전**(P3 — 창 시작점은 dispatch 진입 직전, 보수적. 첫 전송의 B30–B36 재검사 시간도 창에 든다). 창 판정은 이후에도 `g.clk.Since(start)`만 사용함.
   2. `first := dispatch(dctx, a)` — 원 클로저를 **원 ctx** 로 1회. 첫 전송은 오늘과 같은 클로저·같은 ctx 이므로 같은 순서·같은 거절·같은 분류.
   3. `alreadyProcessingRefusal(first.Err)`(D2)가 참이고 `first.Class == DispatchAmbiguous` 일 때만 계속(그 밖은 `first` 그대로). `first.Err` 는 `classifyMutation` 의 status 갈래가
      원 오류를 그대로 싣는다(`classifyMutation` 번들 B8(84) 갈래의 `outcome.Err = err`(86) — 줄은 손으로 읽음).
   4. 엔진 정책(`Definitive`): 재호출·대기 없이 REJECTED + 꼬리표(D2·D6).
-  5. flatten 정책: `winCtx, cancel := context.WithDeadline(dctx, wallStart.Add(Window)); defer cancel()` 뒤 D3 루프 — **재전송은 `dispatch(winCtx, a)`, 즉 같은 클로저를 `winCtx` 로 다시 부름.**
+  5. flatten 정책: `winCtx, cancel := context.WithTimeout(dctx, Window); defer cancel()` 뒤 D3 루프 — **재전송은 `dispatch(winCtx, a)`, 즉 같은 클로저를 `winCtx` 로 다시 부름.** `winCtx` 시한은 창 판정이 아니라 매달린 재전송을 끊는 실시간 상한임. 생산에서는 systemClock과 같은 진행이라 Clock 판정과 일치하고, Fake Clock 시험에서는 실시간 8초 전에 Clock 판정이 먼저 끝남.
 - **B37(685) 마지막 취소 확인은 각 재호출 직전에도 적용된다**: 재호출은 클로저 전체를 다시 들어가므로 B30–B36 재검사 뒤 `call` 클로저의 첫 문장
-  `if err := dctx.Err(); err != nil { return err }`(685)를 `plan.call`(708) 바로 앞에서 다시 지난다. 그 `dctx` 가 `winCtx` 이므로 창 마감(실시간)·`cancel()`·호출자 취소 셋 다
-  여기서 걸린다 → `call()` 오류 → B47(717) `notSent(…)` → 래퍼가 「재전송의 전송 전 실패」로 받아 첫 409 의 AMBIGUOUS 로 정착(D3 최종). 주입 시계 판정(D3 2)과 실시간 deadline 의 두 겹.
+  `if err := dctx.Err(); err != nil { return err }`(685)를 `plan.call`(708) 바로 앞에서 다시 지난다. 그 `dctx` 가 `winCtx` 이므로 호출자 취소·실시간 전송 상한이 여기서 걸린다 → `call()` 오류 → B47(717) `notSent(…)` → 래퍼가 「재전송의 전송 전 실패」로 받아 첫 409 의 AMBIGUOUS 로 정착(D3 최종). **실시간 상한이 Clock 판정보다 먼저 끝나도 `stop=cancelled outcome=today`로 첫 409를 보존하므로 IN_DOUBT fail-closed이고, 오늘보다 덜 안전한 갈래는 없음.**
 - **정착 ctx 는 `winCtx` 와 분리된다(불변식)**: `DispatchVerified` 는 받은 `ctx` 를 그대로 dispatch 에 넘기고(dispatch.go:144 `outcome := dispatch(ctx, a)`) 모든 정착을 같은 `ctx` 로 한다 —
   번들 `internal-journal--attempt.dispatchverified` B5(153 Settle NotDispatched)·B7(160 Settle FailedConfirmed)·B9(174)·B11(181 MarkAcked)·B12(185 verify)·B13(191)·B15(199 Settle Confirmed)·
   B17(206 MarkInDoubt)·B19(215). 래퍼는 `DispatchOutcome` **값**만 돌려주고 ctx 를 돌려주지 않으므로 `winCtx` 는 정착에 닿을 수 없다. 그래서 재시도 창이 끝나거나 `defer cancel()` 이 돌아도
@@ -195,6 +195,8 @@ AST `client.send` B4(344) `attempt < 2 && code == http.StatusUnauthorized`, 루�
 
 **목적**: R3 가 취소를 FAILED_CONFIRMED(종결)로 닫으면 그 attempt 가 `PendingAttempts` 에서 빠져 `checkSymbolFree` B2(804)의 SymbolInFlight 가 풀린다(D2 부작용). 대상 주문은 살아 있으므로
 그 종목의 **새 진입만** 다시 막는다. exit·손절·flatten·reconcile·보호 경로는 막지 않는다(안전 불변식 4).
+
+**writer TOCTOU 측정(Manager 결정 2026-10-29, 갈래 A)**: R3 `FAILED_CONFIRMED` latch를 만드는 자동 취소와 이 절이 지키는 진입 PLACE `Prepare`는 `tossctl engine run`의 engine Gateway에서만 난다. `cmd/tossctl/engine.go:204-210`은 journal open·assembly 전에 journal directory `enginelock.Acquire`를 잡고 런타임 동안 보유하며, `internal/enginelock/enginelock.go`의 kernel `flock`은 같은 directory 두 instance를 거절한다. `TestASecondAcquireIsRefused`와 `TestTheJournalDirectoryIsLockedBeforeAnythingIsAssembled`가 이 순서와 거절을 고정한다. 별도 프로세스 flatten은 같은 journal을 열 수 있으나 R4 정책으로 latch를 만들지 않고 진입 PLACE를 만들지 않으며, 수동 `tossctl order place`는 `execgw`/Journal을 통과하지 않는다. 따라서 latch 확인 뒤 다른 자동 writer가 latch를 정착하는 공존은 없음. 상세 열거는 `analysis/toctou-writer-measurement.md`.
 
 | 항목 | 정의 |
 |---|---|

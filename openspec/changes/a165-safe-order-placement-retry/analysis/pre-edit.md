@@ -67,3 +67,10 @@ Pre-Edit Gate:
 - research-first 결론: 기존 `journal.DispatchFunc`·`clock.Clock`·표준 `context.WithDeadline`를 확장함. 외부 backoff 의존성은 도입하지 않음.
 - `impeccable`: N/A — backend/documentation-only. 신규 UI·운영 콘솔·명령을 추가하지 않음.
 - `grill-me`: N/A — Manager가 2026-10-28 proposal-freeze 1.3을 최종 승인했고, 본 단계는 승인된 계약의 구현임.
+
+## D5 4판 정정 Pre-Edit (2026-10-29)
+
+- 편집 대상: 기존 새 leaf `internal/execgw.Gateway.withCancelRefusal`만. Manager 결정 D5에 따라 판정 시계는 주입 `g.clk` 하나로 유지하고, 재전송 context는 매달린 broker 왕복을 끊는 실시간 상한으로만 바꿈.
+- 새 FLM/BTM/AST: `analysis/function-logic/internal-execgw--gateway.withcancelrefusal/`. 편집 직전 `cancel_refusal.go` SHA-256은 `576b7752ce9dac5121d61a83f2bdbc5a65c1c71b22b185f4c338e47655586485`이며 AST가 그 SHA와 일치함.
+- 기존 시험 영향: `cancel_refusal_test.go`와 `a165_retry_structure_test.go`에 새 시험을 더함. 기존 fake·시험 함수는 편집하지 않음.
+- CodeGraph 보조 문맥은 기존 Pre-Edit과 같아 unavailable이며, 현재 source·AST와 Manager 결정이 정본임.
