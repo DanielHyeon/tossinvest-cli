@@ -2,7 +2,7 @@
 
 ## 판정
 
-base는 `34e12967ed7d`로 유지함. base 재고정과 `--record-landing`은 사람 결정으로 금지됨. `check_analysis.py`는 이 base에서 HEAD `27a012ce0d06`까지 a165 밖의 **139 commit**을 함께 보아 총 35개 함수를 요구했음. a165 자신의 required bundle만 현재 change에 유지하고, archive 단계에서 Manager가 source SHA 대조 뒤 bundle을 복사하는 a170 방식으로 형제 bundle을 처리함.
+base는 `34e12967ed7d`로 유지함. base 재고정과 `--record-landing`은 사람 결정으로 금지됨. 최초 기록(HEAD `27a012ce0d06`)은 a165 밖의 **139 commit**을 함께 보아 총 35개 함수를 요구했음. D5 후속 5개 a165 commit 뒤 최신 `check_analysis.py`는 **144 commit**, required 35개를 보고함. a165 자신의 required bundle은 현재 change에 모두 유지하고, archive 단계에서 Manager가 source SHA 대조 뒤 bundle을 복사하는 a170 방식으로 형제 bundle을 처리함.
 
 ## 형제 함수 목록
 
@@ -41,6 +41,6 @@ base는 `34e12967ed7d`로 유지함. base 재고정과 `--record-landing`은 사
 
 ## 현재 change의 경계
 
-- `check_analysis.py`의 sibling 누락은 source SHA 기반 archive 복사 전에는 의도적으로 PASS가 될 수 없음.
+- 최신 `check_analysis.py`는 a165 자체 누락 0이고, source SHA 기반 archive 복사 전에는 30개 sibling 누락 때문에 의도적으로 PASS가 될 수 없음.
 - a165가 새로 편집한 `Gateway.withCancelRefusal`은 자체 FLM/BTM/AST를 이 change에 기록함.
 - 형제 source·문서·base는 수정하지 않음.

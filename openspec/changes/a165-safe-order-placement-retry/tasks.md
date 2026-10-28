@@ -34,15 +34,15 @@
 ## 2. 구현 (RED → GREEN → REFACTOR → VERIFY)
 
 - [x] 2.1 Pre-Edit 선언 — [pre-edit.md](analysis/pre-edit.md)에 1.3 3차 P2-1(gate ⑤ 창 형제 함수 처리 계획)·P2-2(바깥 래퍼 — design D5 로 확정)·P2-3(진입 전용 latch — design D11 로 확정) 처분을 기록함. `checkSymbolFree` coverprofile 66.7%를 측정했고, 기존 시험·fake를 고치지 않고 새 a165 시험 파일에 seam을 둠. 기준선 `go test ./internal/execgw`는 coverprofile 뒤 상위 프로세스가 25분 이상 종료하지 않아 TERM으로 중단했으며 PASS/FAIL 미판정으로 기록함.
-- [ ] 2.2 RED: 취소 409 already-processing — 엔진 정책(확정 미수락·호출 1회·지연 0) / flatten 정책(재시도·누적 5s·창·소진 → IN_DOUBT·종목 보류·전송 전 실패 → IN_DOUBT) / code 불일치·모순·place·amend·정책 nil → 오늘과 같음 / 401 재전송 본문 동일·비 401 1회 / 바깥 래퍼 (w1)~(w5) / 배선 W1~W4 / latch (a)~(k)(design D10·D11 — (h) 는 3차 재리뷰로 갱신, (i) 거래일을 넘긴 해제 · (j) 다른 계좌·시장·종목의 같은 번호 · (k) 번호 재사용·주인 0).
-- [ ] 2.3 GREEN: 최소 구현 + 배선 2곳 + 정본 retry matrix §0.1·§1·§4 와 `execgw` 기본값을 같은 커밋에서 갱신. design D12 를 `docs/operations.md` 운영 절로 옮긴다(r1 확인 SQL 확정 포함).
-- [ ] 2.4 attempt 기록에 재시도 횟수·갈래·확정 거절 분류(detail 꼬리표, 재시도 성공을 첫 시도 성공으로 기록하지 않음).
+- [x] 2.2 RED: 취소 409 already-processing — 엔진 정책(확정 미수락·호출 1회·지연 0) / flatten 정책(재시도·누적 5s·창·소진 → IN_DOUBT·종목 보류·전송 전 실패 → IN_DOUBT) / code 불일치·모순·place·amend·정책 nil → 오늘과 같음 / 401 재전송 본문 동일·비 401 1회 / 바깥 래퍼 (w1)~(w5) / 배선 W1~W4 / latch (a)~(k)(design D10·D11 — (h) 는 3차 재리뷰로 갱신, (i) 거래일을 넘긴 해제 · (j) 다른 계좌·시장·종목의 같은 번호 · (k) 번호 재사용·주인 0). — 원문 [red-output.txt](analysis/red-output.txt), D5 재전송 중 실시간 상한 RED 포함.
+- [x] 2.3 GREEN: 최소 구현 + 배선 2곳 + 정본 retry matrix §0.1·§1·§4 와 `execgw` 기본값을 같은 커밋에서 갱신. design D12 를 `docs/operations.md` 운영 절로 옮긴다(r1 확인 SQL 확정 포함). — D5 4판은 `g.clk` 판정 및 `WithTimeout(dctx, Window)` 전송 상한으로 수정했고, retry dispatch timeout도 첫 409 AMBIGUOUS로 보존함.
+- [x] 2.4 attempt 기록에 재시도 횟수·갈래·확정 거절 분류(detail 꼬리표, 재시도 성공을 첫 시도 성공으로 기록하지 않음). — retry 성공/미수락/중단 꼬리표 시험 및 변이로 고정함.
 
 ## 3. 검증
 
-- [ ] 3.1 변이 원장 — 409 code 판정·kind·정책 구분·대기 상한·횟수·창·소진 되돌림·경계 재검사, **배선 교차(flatten←엔진 정책 · 엔진←flatten 정책 · 배선 nil · 혼성 `{2, true}`)·`definitiveRefusalCodes` 에 already-processing 추가**(1.3 3차 P1-1·P3-3), **ctx(`winCtx` 부모 분리 · 정착 ctx 를 `winCtx` 로 · 재호출에 원 dctx · 창 시작점 이동)·latch(exit 도 latch 를 봄 · `unsettledFor` 에 넣음 · 해제 r1/r2 누락 · 종목 키 제거 · 메모리 latch · r2 순서 경계 제거 · r2 대상 id 비교 제거 · 순번을 정착 transition 으로 · r2 거래일 같음 조건 복원(옛 「거래일 비교 제거」 폐기) · r2 계좌·시장·종목 비교 제거 · r2 주인 유일성 제거)**(1.3 2차 독립 리뷰 P2·P1, 3차 재리뷰 R3-3), 양성 대조군 포함(design D10).
-- [ ] 3.2 다중 적대 리뷰(중복 주문 반례 레드팀) + gstack review/security.
-- [ ] 3.3 영향 범위 시험(`internal/execgw`·`internal/official`·`internal/flatten`·엔진 clear 경로·배선, 필요 시 `-race`)과 미실행 범위 기록.
+- [x] 3.1 변이 원장 — 409 code 판정·kind·정책 구분·대기 상한·횟수·창·소진 되돌림·경계 재검사, **배선 교차(flatten←엔진 정책 · 엔진←flatten 정책 · 배선 nil · 혼성 `{2, true}`)·`definitiveRefusalCodes` 에 already-processing 추가**(1.3 3차 P1-1·P3-3), **ctx(`winCtx` 부모 분리 · 정착 ctx 를 `winCtx` 로 · 재호출에 원 dctx · 창 시작점 이동)·latch(exit 도 latch 를 봄 · `unsettledFor` 에 넣음 · 해제 r1/r2 누락 · 종목 키 제거 · 메모리 latch · r2 순서 경계 제거 · r2 대상 id 비교 제거 · 순번을 정착 transition 으로 · r2 거래일 같음 조건 복원(옛 「거래일 비교 제거」 폐기) · r2 계좌·시장·종목 비교 제거 · r2 주인 유일성 제거)**(1.3 2차 독립 리뷰 P2·P1, 3차 재리뷰 R3-3), 양성 대조군 포함(design D10). — M01~M38 모두 잡힘, 살아남은 변이 없음([mutation-ledger.md](analysis/mutation-ledger.md)).
+- [x] 3.2 다중 적대 리뷰(중복 주문 반례 레드팀) + gstack review/security. — gstack 적대 패스 P2(D5 retry timeout 결과 덮어쓰기)를 수리·M38로 고정했고, 보안/시험/유지보수 패스와 사후 독립 적대 패스는 발견 없음. 사후 Codex CLI 재호출은 저장소 훅의 `ai-memory query` 오류로 결론을 못 냈으며 review에 미완료 도구로 기록함.
+- [x] 3.3 영향 범위 시험(`internal/execgw`·`internal/official`·`internal/flatten`·엔진 clear 경로·배선, 필요 시 `-race`)과 미실행 범위 기록. — 무태그·`tossos_testseams`·관련 `-race` 및 vet/gofmt 통과, 전체 시험과 `make gate`는 지시상 미실행([review.md](review.md)).
 - [ ] 3.4 Manager 독립 검증.
 
 ## 4. 닫기

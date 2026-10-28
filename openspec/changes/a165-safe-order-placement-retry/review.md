@@ -402,3 +402,27 @@ R3-1의 `attempt_transitions.id` 순서 비교와 NULL fail-closed는 맞다. �
 - `search-first`: 기존 `journal.DispatchFunc`·`clock.Clock`·표준 `context`를 확인했고, 새 의존성은 도입하지 않음. 외부 라이브러리는 브로커 거절 의미를 보증하지 못하므로 불채택.
 - `grill-me`/`grilling`: proposal-freeze와 사람 결정은 확정돼 재질문 권한 없음.
 - `impeccable: N/A — backend/documentation-only`.
+
+## 구현 재리뷰 (2026-10-29)
+
+**PASS — 현재 a165 구현의 P0/P1/P2 없음.** D5의 최초 gstack 적대 패스가 발견한 재전송 timeout 결과 덮어쓰기를 수리했고, D11은 단일 writer 보장을 코드·시험으로 확인해 갈래 A로 종결함. sibling을 포함한 `check_analysis.py` 전체 PASS, 전체 시험, `make gate`, archive·push와 Manager 독립 검증은 이 범위에서 수행하지 않음.
+
+### P2 처분
+
+- **D5 단일 Clock:** `cancel_refusal.go`에서 직접 `time.Now`·`time.Since`·`context.WithDeadline`을 제거함. 창 판정은 `g.clk.Now`·`g.clk.Since`만 사용하고, `context.WithTimeout(dctx, policy.Window)` 하나는 매달린 재전송 전송 상한임. Fake Clock 정지 상태에서 부모 context 실시간 만료도 첫 409 AMBIGUOUS를 `stop=cancelled outcome=today`로 보존하는 시험을 추가함.
+- **D5 재전송 dispatch 상한:** 최초 gstack/Codex 적대 패스가 `winCtx`가 retry dispatch 중 끝나면 둘째 AMBIGUOUS가 `stop=ack outcome=retried`로 첫 409를 덮는 P2를 발견함. `winCtx.Err()`와 둘째 AMBIGUOUS/NOT_SENT를 확인해 첫 결과를 보존하도록 수리함. RED 원문은 `analysis/red-output.txt`, GREEN은 `analysis/green-output.txt`, 실제 제거 변이는 M38로 잡힘. ACK·REJECTED는 기존 실제 응답 갈래를 유지함.
+- **D11 TOCTOU:** 측정 결과는 [toctou-writer-measurement.md](analysis/toctou-writer-measurement.md)에 기록함. R3 latch를 쓰는 자동 취소와 D11 대상 PLACE `Prepare`는 `engine run` 하나에만 있고, assembly 전 journal directory kernel `flock`을 잡음. `TestASecondAcquireIsRefused` 및 `TestTheJournalDirectoryIsLockedBeforeAnythingIsAssembled`가 이 보장을 고정함. 별도 flatten은 공존할 수 있어도 R3 latch/진입 PLACE writer가 아니므로 마지막 전송 경계 재조회는 추가하지 않음.
+
+### 리뷰·검증
+
+- gstack 적대·보안·시험·유지보수 패스를 수행함. 적대 패스의 P2는 위 수리 뒤 M38 및 사후 독립 적대 패스(발견 없음)로 재검증함. 유지보수 패스가 찾은 submit FLM의 낡은 `WithDeadline` 기술과 D8의 잘못된 `*CancelRefusal` 타입도 정정함.
+- 사후 Codex CLI 교차 패스는 `/tmp/a165-gstack-codex-postfix2.err`에 source 열람까지 남았으나, 저장소 훅의 `ai-memory query` 미지원 오류 때문에 최종 `Recommendation`을 내지 못함. 이 도구 실패를 PASS 증거로 취급하지 않음. 사후 독립 적대 패스는 D5 보존 조건·D11 범위에 발견 없음으로 판정함.
+- `gofmt -l` 변경 패키지 출력 없음. `go vet ./internal/execgw/ ./internal/journal/ ./internal/app/engine/ ./cmd/tossctl/` 통과. ext4 TMP/cache 조건의 무태그 패키지 시험, `-tags tossos_testseams`, `-race`(execgw·journal·flatten) 통과. 원문: `/tmp/a165-package-notag-m38.out`, `/tmp/a165-package-seams-m38.out`, `/tmp/a165-package-race-m38.out`.
+- `check_analysis.py --change a165-safe-order-placement-retry`는 a165 자체 누락 0을 확인했으나 base부터 144 commit의 형제 함수 30개 evidence 누락으로 nonzero임. base 재고정·`--record-landing`은 하지 않았고, 목록은 `analysis/sibling-bundles.md`에 남김.
+- 불변식 4: 엔진 취소는 대기·재전송 0, latch는 노출 증가 PLACE만 막으며 cancel·청산 SELL·flatten·보호 경로를 막지 않음. 같은 journal 자동 engine writer의 동시성은 flock으로 불가함. **PASS.**
+- `impeccable: N/A — backend/documentation-only`. UI 변경 0. gstack 업그레이드는 `1.91.265.0 → 1.91.294.0` 제안이 있었으나 전역 도구 변경 권한이 없어 미실행함.
+
+### 남은 범위·위험
+
+- `go test ./...`, `make gate`, archive, push, Manager 3.4 독립 검증은 지시 범위 밖이라 미실행.
+- R-a165-7(원장 밖 주문 번호 재사용)은 사람 수락 잔여로 유지함. `check_analysis.py`의 sibling evidence는 archive 단계 Manager source SHA 대조·복사 전까지 PASS가 아님.
