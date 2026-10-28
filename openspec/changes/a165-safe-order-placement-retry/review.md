@@ -195,3 +195,45 @@ code 판정 EqualFold→status 만 · 두 자리 모순 검사 제거 · 409 검
 ### 실행하지 않은 것
 
 시험 전부(지시상 금지), `make sdd-sync`·`make gate`, 실계좌·운영 접근, CodeGraphContext·GBrain(advisory). `--record-landing` 효과는 GREEN 전이라 추정(P2-1).
+
+## 1.3 2차 독립 리뷰 (GPT-5.6 Terra, 2026-10-28)
+
+### 결론: **FAIL (구현 전 blocker 2)**
+
+R3의 매도 방지·R4의 소진 시 IN_DOUBT 복귀·R5의 동일 본문은 3판 근거와 맞는다. 그러나 2026-10-28 사람 결정 P2-2·P2-3은 현재 design/FLM에 아직 반영되지 않았고, 특히 P2-3은 현재 공용 판정을 재사용하면 exit도 막히거나 차단 자체가 사라진다. blocker를 설계·FLM·RED에 반영하기 전 코드 착수 금지.
+
+- 범위·증거: 23 FLM/BTM/위험 보고서와 `analysis/evidence` AST 8개를 읽었다. 분기 좌표는 아래 AST를 우선했고, `cmd/tossctl/flatten_test.go`의 현 시험 형식은 **손으로 읽음**이다.
+- 실행 0: 소스·시험 편집 0, 시험·gate·운영 접근 0.
+- skill 적용: `ai-memory-retrieval`은 a165 직접 결정 페이지를 찾지 못해 현재 HEAD/OpenSpec을 정본으로 삼았다. `search-first`는 새 코드·의존성·통합이 없는 독립 리뷰라 N/A. `grill-me`/`grilling`은 사람 결정이 이미 확정돼 재질문 권한이 없는 리뷰라 N/A. `impeccable: N/A — backend/documentation-only`.
+
+### 확인된 안전 성질
+
+- **중복 주문/oversell:** R4 대상은 `plan.kind == Cancel`뿐이고, `Gateway.Cancel`은 같은 `intent.OrderID`를 닫는다(`internal/execgw/gateway.go:402-421`, 손으로 읽음). `Gateway.submit` AST B30-B37은 재호출 때도 결정 재읽기·키 일치·보호·진입·예약·`dctx.Err()`를 `plan.call` 직전에 수행한다. 재전송 소진/중단/NOT_SENT를 첫 409의 AMBIGUOUS로 되돌리면 `DispatchVerified` B16(204)→IN_DOUBT, `classifyCancel` B5(464), `resolveStep` B4-B6(434-443), `UnsettledCancelSymbols` B2(335)·`planLiquidation` B5(307) 순으로 매도를 보류한다. 이 갈래는 AST 확인.
+- **R3 청산 지연/매도:** 엔진 정책의 409 AP를 FAILED_CONFIRMED로 정착하면 `clearTheSymbol` B11(1697)이 `cleared=false`로 남겨 같은 주기 매도를 내지 않는다. 다음 주기에는 `unsettledFor`가 `PendingAttempts`만 읽으므로(B1(32), B2(36), evidence AST), 재취소가 가능하다. 재시작 중 DISPATCH_STARTED는 `RecoverPending`이 IN_DOUBT로 바꾸므로 재전송 중복 생성 대신 fail-closed 차단이다(`internal/journal/recovery.go:74-124`, 손으로 읽음).
+- **토글 OFF/CLI upstream:** 새 배선은 엔진 `buildGateway`와 `flatten-all`에 한정되고, `Gateway.Options.CancelRefusal == nil`은 첫 dispatch를 그대로 한 번 돌려야 한다. `tossctl order` 경로·공식 클라이언트는 R5 시험 외 변경 대상이 아니다. 이 판정은 현 design D8과 호출 소스를 대조했다.
+- **R5 동일 바이트:** `Client.send` AST B4(344)만 401에 재요청하고, `postWithHeaders`는 JSON을 한 번 마샬한 `encoded`를 두 `makeReq`에 재사용한다(`internal/official/client.go:320-365, 427-449`, AST 확인). 401 외 응답의 새 재시도는 없다.
+
+### 발견
+
+| 심각도 | 발견 | 근거 | 구현 전 처분 |
+|---|---|---|---|
+| **P1** | **P2-3은 현 구조로 아직 구현 불능이다.** `FAILED_CONFIRMED`는 terminal이라 `PendingAttempts`에서 빠지고, `checkSymbolFree` B2(804)는 미종결만 막는다. 반대로 공용 `unsettledFor`/`UnsettledOnSymbol`을 넓히면 `clearTheSymbol`도 같은 판정을 써 exit를 막는다. 현재 문서에는 entry-only 차단의 원장 질의·해제 조건이 없다. | evidence `gateway.checkSymbolFree` B1-B7(801-822), `gateway.unsettledFor` B1-B4(32-41), `clearTheSymbol` B3(1639); `releasesReservations` B2(121)는 FAILED_CONFIRMED에서 예약도 푼다. AST 확인. | P2-3 전용의 **entry-only** 판정과 해제 증거를 Pre-Edit에 명시한다. 공용 `unsettledFor`는 바꾸지 않는다. RED는 (1) R3 409 AP 뒤 새 진입 거절, (2) 같은 종목 재취소·exit 청소 진행, (3) flatten `resolveStep`·reconcile 진행, (4) 확인된 취소/주문 종결 뒤 차단 해제를 각각 고정한다. |
+| **P1** | **P2-2와 design D3/D5·submit FLM이 모순된다.** 현 문서는 646-725를 `sendOnce`로 추출한다고 하지만 사람 결정은 원 dispatch를 보존한 바깥 래퍼다. 둘을 동시에 구현하면 고위험 dispatch 경계가 달라져 nil byte-identical 주장과 B37 최종 검사 범위가 불명확하다. | `gateway.submit` AST B29-B57(636-761), 특히 B30-B37(648-685); design D3/D5; `internal-execgw--gateway.submit/function-logic-map.md:100`. AST 및 문서 확인. | 코드 전 D3/D5/D10과 해당 FLM/BTM을 래퍼 모델로 고친다. 래퍼는 `first.Err`의 HTTP 409+code 일치만 보고 원 dispatch를 `winCtx`로 재호출한다. `winCtx`는 `dctx`의 자식이고, deadline·취소·NOT_SENT면 첫 409의 AMBIGUOUS를 반환한다. `DispatchVerified` 정착에는 바깥 ctx만 준다. |
+| **P2** | 배선 교차·nil 네 시험은 **정확한 정책 값과 행동**을 함께 확인할 때만 F1을 잡는다. 현재 `cmd/tossctl`에는 `buildFlattenWiring` 행동 시험이 없고 기존 시험은 소스 문자열만 읽는다. 포인터/비nil 비교만으로는 `Retries=2, Definitive=true` 혼성 변이를 놓칠 수 있다. | `cmd/tossctl/flatten_test.go:115-144` 손으로 읽음; `classifyCancel` AST B3(458), `planLiquidation` AST B5(307). | flatten 배선은 `Retries=2, MaxWait=5s, Window=8s, Definitive=false`, 엔진은 `Retries=0, Definitive=true`를 정확히 단언한다. 실제 배선+409 AP로 flatten 소진→Held/매도 보류 행동까지 한 시험에서 확인한다. nil 둘은 한 번 호출·detail 바이트 동일까지 확인한다. |
+| **P2** | 변이 원장에 P2-2의 취소 전파 축이 명시돼 있지 않다. `winCtx`를 `context.Background`/`WithoutCancel`에서 만들면 호출자 취소 뒤에도 재전송할 수 있고, 정착에 `winCtx`를 쓰면 창 만료 뒤 기록이 실패한다. | `gateway.submit` AST B37(685), `Attempt.DispatchVerified` AST B4-B19(151-215), `clock.Sleep`의 ctx 취소 계약(`internal/clock/clock.go:35-42`, 손으로 읽음). | 변이 두 개를 추가한다: `winCtx` 부모를 `dctx`에서 분리, 정착 ctx를 `winCtx`로 교체. 둘 다 취소 시 재전송 0·첫 409 IN_DOUBT 영속으로 CAUGHT여야 한다. |
+| **P3** | 바깥 래퍼가 첫 `plan.call` 내부 시각을 볼 수 없으면 8초 기준을 dispatch 진입 전으로 잡아야 한다. 이는 재시도를 보수적으로 줄일 뿐 8초를 넘기지 않지만, 성공률 저하를 숨기면 안 된다. | `gateway.submit` AST B30-B37(648-685), P2-2 결정. | Pre-Edit에 보수적 시작점과 fake-clock 경계 시험을 기록한다. 첫 전송 뒤에 시각을 잡아 창을 연장하면 FAIL이다. |
+
+### 사람 결정 안전 판단
+
+| 결정 | 판단 |
+|---|---|
+| H1 | 사람 수락 범위에서 유지 가능. R4는 취소당 최대 8초를 직렬로 더하므로 N×8초라는 운영 위험은 남는다. 소진·중단이 Held/IN_DOUBT로 끝나고 매도에 진행하지 않는 RED가 전제다. |
+| P2-1 | 안전성 동작에는 영향 없음. 단 archive 복사는 landed commit의 대상 함수·SHA-256·생성 도구를 각각 대조한 증거일 때만 gate ⑤ 충족으로 취급한다. |
+| P2-2 | 조건부 안전. 원 dispatch 재호출은 같은 취소 대상·결정 재검사·B37 최종 ctx 검사를 보존한다. 위 P1 문서/FLM 모순과 ctx 변이를 먼저 닫아야 한다. |
+| P2-3 | 의도는 보수적이고 타당하나 현재 설계에는 entry-only 판정과 해제 조건이 없다. 위 P1을 닫기 전에는 안전하다고 판정할 수 없다. |
+
+### 구현 착수 전 필수 조치
+
+1. P2-2 래퍼 모델을 design D3/D5/D10·submit FLM/BTM에 반영하고 ctx/정착 불변식을 RED로 만든다.
+2. P2-3 entry-only 차단의 원장 근거·해제 조건을 정하고, exit/flatten/reconcile 비차단 네 갈래를 RED로 고정한다.
+3. 배선 교차·nil 네 시험을 실제 정책 값+flatten Held 행동 검증으로 구체화하고, `Definitive` 혼성 및 ctx 부모/정착 변이를 원장에 더한다.

@@ -67,6 +67,9 @@
 |---|---|---|
 | H1 | R4(CLI flatten 취소 409 재시도)의 최악 지연 — 막힌 취소 1건마다 오늘 경로 앞에 최대 ≤8s, flatten 전체로는 N×8s 가능 — 를 3차 결정대로 **유지**한다. 3차 리뷰는 불변식 4 판정을 명시해 남긴다 | design D3·D4 그대로. 판정은 review.md 「1.3 3차」 불변식 4 |
 | H2 | 형제 a169 `064f67297` 의 `adaptStocks` 가 a165 gate ⑤ 창에 들어온 문제 → GREEN 뒤 `--record-landing` 을 먼저 시도하고, 안 되면 archive 번들 복사로 처리한다. **base 재고정은 하지 않는다** | 아래 「H2 실측」 |
+| P2-1 | gate ⑤ 창의 형제 함수가 29건 이상이면 종결 때 archive 번들 복사로 처리한다 | 복사 대상별 landed source SHA-256·생성 커밋을 대조해 기록한다. base 재고정 없음 |
+| P2-2 | `sendOnce` 추출 대신 작은 바깥 래퍼를 쓴다. 기존 dispatch 클로저는 그대로 두고 취소·정책 있음·첫 결과가 code 일치 409 already-processing일 때만 같은 클로저를 `winCtx`로 다시 부른다 | `winCtx`는 재전송·대기에만 쓰고 정착은 바깥 ctx로 한다 |
+| P2-3 | R3 취소가 FAILED_CONFIRMED여도 그 종목의 진입(`checkSymbolFree`)은 계속 막는다 | 차단은 진입만. flatten·reconcile·exit는 막지 않으며 RED 시험으로 고정한다 |
 
 ### H2 실측 (1.3 3차, 2026-10-28, HEAD `0c9bfd272`)
 
@@ -76,4 +79,3 @@
   (예상, 도구로 확인은 GREEN 뒤). 그러면 2차 경로(아카이브 번들 복사, a170 선례 `10cbb15c0`)이고 건수는 a165 GREEN 까지 형제 착지마다 는다.
   복사본은 HEAD 에서 `ast.json` 을 다시 뽑아 같은지 볼 것(a170·a172 교훈). `adaptStocks` 번들은 아카이브가 아니라 진행 중 change 디렉터리(`a169-breakout-universes-are-compared-in-shadow`)에 있다.
 - base 재고정은 하지 않는다(H2). 비용을 줄이는 길은 a165 를 빨리 닫는 것뿐이다.
-
