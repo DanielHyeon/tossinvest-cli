@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a164-verify-reconcile-closes-broker-expired-conditional",
-    "path": "openspec/changes/a164-verify-reconcile-closes-broker-expired-conditional"
+    "path": "openspec/changes/archive/2026-10-28-a164-verify-reconcile-closes-broker-expired-conditional"
   },
   "found_by": {
     "date": "2026-10-22",
     "how": "읽기 전용 감사가 엔진 프로필 KR 검증 기록에 2026-07-31 의 333430 조건주문이 outstanding 으로 남아 --include-trigger 를 HOLD 시키고, 정리 DELETE 가 404 로만 실패하며, verify reconcile 은 생산 Q1 nil(retention-unmeasured)과 Q6(만료 영구 거절)로 받을 수 없음을 보였다. 사용자는 2026-10-22 (a) 리뷰된 코드 변경으로 만료 artifact 정리 경로를 여는 것을 결정했다.",
-    "record": "openspec/changes/a164-verify-reconcile-closes-broker-expired-conditional/proposal.md"
+    "record": "openspec/changes/archive/2026-10-28-a164-verify-reconcile-closes-broker-expired-conditional/proposal.md"
   },
   "acceptance": [
     "verify reconcile 은 명시 --expired 모드에서만 만료 대사를 하고, 플래그가 없으면 a121 부재 대사와 동작이 같다",

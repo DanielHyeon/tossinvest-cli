@@ -666,8 +666,10 @@ otherwise:
   artifact's identifier, and contains no row of any identifier whose triggered
   order identifier is non-empty or whose status is `COMPLETED` (a successor that
   fired is listed under its own identifier); an artifact found there as
-  `EXPIRED` is refused, and the refusal SHALL state that an expired artifact
-  cannot be reconciled through this operation at all;
+  `EXPIRED` is refused by this absence rule, and the refusal SHALL state that
+  an expiry is an ending rather than an absence and that a broker-confirmed
+  expiry is reconciled only through the explicit expiry mode (see
+  "verification cleanup reconciliation records a broker-confirmed expiry");
 - the complete OPEN plain-order group for the symbol contains no order (a fired
   child that has not filled rests there);
 - a conditional that fired and has left the lists is excluded by the Q1 rule
@@ -795,6 +797,13 @@ and refuse if it changed since the candidate was selected.
 - **WHEN** the record has zero or more than one eligible outstanding conditional
   artifact
 - **THEN** the operation refuses before any order-list or conditional-order-list read (the account-list and instrument reads these checks use are the only permitted earlier reads)
+
+#### Scenario: an expired artifact in absence mode points to the expiry mode
+
+- **WHEN** reconciliation runs without the expiry mode and the artifact's
+  identifier is listed in the CLOSED group as `EXPIRED`
+- **THEN** no reconciliation event is appended, and the refusal states that an
+  expiry is not an absence and names the expiry mode
 
 ### Requirement: reconciliation binds account, profile and market before reading
 
@@ -925,4 +934,153 @@ The Runner SHALL not execute the TTL step body, send a TTL broker mutation, or a
 
 - **WHEN** the only unresolved M0 checkpoint is `pending-create`
 - **THEN** the system retains existing read-only broker recovery and ends HOLD with zero confirmation, cleanup, or mutation regardless of TTL's verdict
+
+### Requirement: verification cleanup reconciliation records a broker-confirmed expiry
+
+The reconciliation operation SHALL close an outstanding verification conditional
+artifact (one left after a failed cleanup) as `reconciled expired` only through an explicit
+expiry mode of the reconciliation operation, chosen by the operator before
+approval, and only on positive evidence from official GET reads made within the
+same run that the broker ended that exact identifier as `EXPIRED` without
+firing. Without the expiry mode the operation SHALL behave exactly as before.
+The operation SHALL send no order, cancel or modify request; its broker reader
+SHALL expose read-only GET methods only.
+
+The expiry mode SHALL keep every common precondition of the absence
+reconciliation: strict record decoding, exactly one record-selected candidate,
+account, profile and market binding, human approval before any
+account-scoped order or conditional-order read, including the by-id reads,
+positive instrument controls, two complete list
+reads compared as a multiset with schema validation and row checks, the Q3
+freshness bound through append admission, and the locked re-read before the
+append. It SHALL NOT require the Q1 retention measurement, because it infers
+nothing from absence.
+
+In addition it SHALL read the artifact by identifier twice, once before the
+first list read and once after the second, with the freshness window
+starting before the first by-id read, and classify each response as a
+statement (HTTP 200 passing schema validation), as silent (HTTP 404 whose error
+code is `conditional-order-not-found`), or as a refusal (any other outcome).
+The two classifications SHALL match, and two statements SHALL agree on status,
+first-leg status, triggered order identifier and second-leg presence.
+
+The operation SHALL append only when all of the following hold, and SHALL
+refuse otherwise:
+
+- both by-id reads are statements; an HTTP 404 and an identifier absent from
+  the lists SHALL NOT count as evidence, and two silent by-id reads SHALL refuse
+  whether or not the CLOSED group lists the identifier (a CLOSED row the detail
+  read cannot find contradicts the detail contract and matches the signature of
+  a modify);
+- every by-id statement and every CLOSED-group row with the artifact's
+  identifier reports top-level status `EXPIRED`, a first-leg status from the
+  measured expiry vocabulary, an empty triggered order identifier and no second
+  leg, and a by-id statement echoes the exact identifier, the artifact's symbol,
+  the record's market and type `SINGLE`;
+- the symbol's complete OPEN conditional-order group is empty, its complete
+  OPEN plain-order group is empty, and no CLOSED row of any identifier carries
+  a triggered order identifier or status `COMPLETED`; these liveness checks
+  SHALL NOT be skipped or relaxed for any combination of expiry evidence;
+- every CLOSED row's status is in the expiry-mode terminal vocabulary, which
+  SHALL be a reviewed in-code value sourced from a measured receipt and is
+  empty, refusing every row, until that receipt exists;
+- every other record artifact sharing the artifact's chain identifier is
+  already terminal.
+
+The append SHALL be one new record line that never rewrites an earlier line.
+It SHALL mark the artifact with a distinct `reconciled expired` ending, carry a
+basis fingerprint over the rows and by-id statements judged, the raw statuses
+and response classifications of each source, and the run's timestamps, and
+SHALL carry no account number in clear and no raw response body. It SHALL be
+idempotent, SHALL NOT carry request call records, so the by-id and list reads
+cannot become successful-endpoint evidence, and SHALL carry no broker
+identifier that the artifact's own record line does not already carry. It
+SHALL preserve the original cleanup failure and SHALL NOT alter a step verdict
+or count as a cancellation, fill, successful endpoint, soak proof,
+capability-attestation evidence or engine-interlock satisfaction. Every reader
+of the outstanding set SHALL treat that ending as terminal, and status and
+report output SHALL show it apart from cancellation, fill and reconciled
+absence.
+
+The expiry mode SHALL be registered under the operation's existing
+`mutating: true` annotation, so a conversational agent does not run it.
+
+#### Scenario: the broker names the artifact EXPIRED by identifier
+
+- **WHEN** both by-id reads return the artifact's identifier as `EXPIRED`
+  (first leg `EXPIRED`, type `SINGLE`) with no triggered order and no second
+  leg, any CLOSED row for it says the same or the CLOSED group no longer lists
+  it, and every other condition holds
+- **THEN** exactly one `reconciled expired` line is appended and the artifact
+  leaves the outstanding set and the cleanup plan
+
+#### Scenario: only the CLOSED list names the artifact
+
+- **WHEN** both by-id reads are silent (`conditional-order-not-found`) but
+  both list reads hold the identifier in the CLOSED group as `EXPIRED` and
+  untriggered, and every other condition holds
+- **THEN** no line is appended and the refusal states that the detail read and
+  the list disagree
+
+#### Scenario: a 404 alone is not an ending
+
+- **WHEN** both by-id reads are silent and the CLOSED group does not hold the
+  identifier
+- **THEN** no line is appended and the refusal states that a 404 or an absence
+  is not evidence of an ending
+
+#### Scenario: the broker reports the artifact live or fired
+
+- **WHEN** any response naming the identifier reports an OPEN-family status,
+  `COMPLETED`, a non-empty triggered order identifier or a second leg
+- **THEN** no line is appended and the artifact remains outstanding
+
+#### Scenario: a by-id read fails otherwise
+
+- **WHEN** a by-id read returns rate limiting, a server, authentication or
+  transport error, a 404 with another or unreadable error code, or a response
+  failing schema validation, or the two by-id reads disagree
+- **THEN** no line is appended
+
+#### Scenario: another order is live on the symbol
+
+- **WHEN** the symbol's OPEN conditional-order group or OPEN plain-order group
+  holds any order, or a CLOSED row of another identifier shows a fired trace
+- **THEN** no line is appended
+
+#### Scenario: expiry evidence never relaxes the liveness checks
+
+- **WHEN** both by-id reads and the CLOSED row report the artifact `EXPIRED`
+  and untriggered but the symbol's OPEN conditional-order group holds one order
+- **THEN** no line is appended and the refusal is the open-conditional refusal
+
+#### Scenario: the approval is declined
+
+- **WHEN** the operator does not approve the expiry reconciliation
+- **THEN** no by-id read, no account-scoped list read and no append occur
+
+#### Scenario: repeated expiry reconciliation
+
+- **WHEN** expiry reconciliation is requested again for an artifact already
+  marked `reconciled expired`
+- **THEN** no duplicate event or broker mutation occurs
+
+#### Scenario: expiry attestation remains unchanged
+
+- **WHEN** an artifact is reconciled expired after a failed cleanup
+- **THEN** the appended line carries no request call records, existing failed
+  conditional capability evidence remains failed and no new engine-start
+  coverage is produced
+
+#### Scenario: the expiry vocabulary has no receipt yet
+
+- **WHEN** every other condition holds but the expiry-mode terminal
+  vocabulary is still empty
+- **THEN** no line is appended
+
+#### Scenario: an older binary reads the new line
+
+- **WHEN** a binary without the `reconciled expired` ending reads a record
+  holding that line
+- **THEN** it treats the artifact as outstanding, as before the line existed
 

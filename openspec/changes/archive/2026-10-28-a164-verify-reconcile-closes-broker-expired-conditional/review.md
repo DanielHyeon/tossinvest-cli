@@ -243,3 +243,15 @@ verifylive·official·cmd/tossctl `go test` Manager 재실행 PASS) 5.1 의 미�
   - M0 무변이 대조군 → ok.
   - M1 `Recorder.Append` 의 `redact.SealRecordLine` 생략(마스크가 `account_ref` 평문) → **FAIL** — 172 「masked account reference in the clear」 + 176 꼬리 검사(`account_ref=*********8901`).
   - M2 `Title` 에 마스크 꼬리 4자 덧붙임(별표 없는 꼬리만 평문) → **FAIL** — 176 꼬리 검사(`title=… tail 8901`). 마스크 전체 검사는 안 걸림 — 두 검사가 각자 다른 누출을 잡음.
+
+## 완료 게이트 실행 영수증 — 2 회차 PASS (2026-10-28)
+
+- 1 회차 FAIL ⑦(위 영수증)은 재시도 조건 밖이라 재시도로 세지 않음. 사용자 「a164 A」 승인으로 시험을 근본 수정(위 「종결 차단 결함 수정」, `b2f53091c`)한 뒤 새 HEAD 에서 다시 돌림. 재시도 0 회.
+- 격리 worktree `/mnt/D/Axipient/workspace/TossOS.worktrees/a164-close` 를 detached `b2f53091c` 로 옮김(clean).
+- 준비: `make sdd-infra` rc 2 — `.sdd/.venv` 가 1 회차에 이미 만들어져 `uv venv` 가 거절(기존 venv 그대로 씀) → `python3 tools/sdd/sdd_sync.py --no-gbrain` rc 1 —
+  `codegraph sync .` 됨, advisory CodeGraphContext `update` 만 300초 시한 초과 → `make sdd-check` rc 0 → `codegraph status .` 31.13s 3.32s 3.53s 2.66s 2.80s (load 3.65, 다른 gate · go test 없음).
+- 2 회차(19:32~20:11 KST) → **GATE PASS 11/11, rc 0**, `repo:` 줄 = 격리 worktree. `deadline exceeded` · VCS status 128 0 건.
+  ⑦ `internal/verifylive` ok 14.898s · ⑧ ok 75.024s · `tools/a112-mb-us-source` ⑧ ok 443.139s. 로그 `analysis/gate/gate-run2.log`(1 회차 `gate-run1-fail.log`).
+- archive: `openspec archive a164-verify-reconcile-closes-broker-expired-conditional --yes` → order-execution `+ 1 added · ~ 1 modified`, `2026-10-28-a164-verify-reconcile-closes-broker-expired-conditional`.
+- Story `STORY-TOS-a164` openspec.path · found_by.record 를 아카이브 디렉터리로. tracker 재생성, PM `--check` rc 0, `openspec validate --all --strict` 56/56.
+- 남은 것: `STORY-TOS-a168.yaml` 의 found_by.record 가 옛 경로 `openspec/changes/a164-…/review.md` 를 가리킴(PM 검사는 이 필드를 보지 않아 통과) — a168 소유 파일이라 고치지 않음.
