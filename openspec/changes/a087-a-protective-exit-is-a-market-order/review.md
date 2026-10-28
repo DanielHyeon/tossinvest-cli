@@ -639,3 +639,115 @@ RUN 51 · PASS 51 · FAIL 0 · SKIP 0.
 1 A-P1-1 — 인스턴스 한정 개방으로 design D3 ③·spec Req 2·tasks 1.5.x 개정 **완료**. 2 A-P1-2 — **완료**. 3 B-P1-1 — **완료**(사본 실행 + §5
 실행 전제). 4 P2 6·P3 10 — 전부 처분(위 표). **남은 것**: tasks 0.9 — Manager 대조 + ③ 인스턴스 옵션 설계 문단(design D3 ③) 독립 확인 1회.
 그 전 §1~§3 착수 금지는 그대로다.
+
+---
+
+## 0.10 requirement 변경 리뷰 — D7 7판 (2026-10-28, 적대적 Eng 관점)
+
+- **대상**: spec Requirement 1(2026-10-22 개정 + 2026-10-28 7판) · design D7 「처분」·「구간 입력」·「§5.2 처분」 · tasks 2.4~2.6 · 5.2·5.3 · §1 착수 조건 ④.
+  입력은 사용자 결정 2026-10-28 Q1~Q4(`issues.md` 「사용자 결정 (2026-10-28)」).
+- **리뷰어**: 이 문서를 7판으로 고친 작성자와 같은 세션이다(작성자 겸 리뷰어 지시). 그래서 독립 리뷰가 아니다 — 착수 전 Manager 대조 1회가 이 한계를 메운다.
+- **본 것**: HEAD `0c9bfd272` 의 `checkOrderShape`·`Preflight.CheckPlace`(failclosed.go) · `placeIntentSupported`·`Service.Place`·`PreviewPlace`·`guard`(trading/service.go) ·
+  `ExitObserver.sellIntent`·`submit`·`isProtective`(exitloop.go) · `Context.ExitObserver`(exitwiring.go) · `NewOrderPath`(engine.go) · `clock` 의 `Location`·`RegularSession`·
+  `Session.Contains`·`InRegularSession` · `official.Client.TypedMarketCalendar` · `scheduler` 의 `AdaptOfficialCalendar`·`adaptCalendarDay`·`CalendarSnapshot.ValidityAt` ·
+  `strategyScheduleAuthorityLoader.prepare`. 분기 근거는 전부 `tools/logic-map` AST — `analysis/evidence/*.ast.json` 20개, 열거 `analysis/evidence/enumerate-output.md`
+  (`enumerate.py` 가 각 `source_sha256` 을 현재 바이트와 대조, stale 0). openapi `docs/migration/openapi.latest.json` 의 `RegularMarketSession`·`IntegratedHour`·
+  달력 예시. `trading.NewService(` 비시험 호출 자리(`rg`): `cmd/tossctl/mcp.go:74` · `internal/app/app.go:158` · `internal/app/engine/engine.go:401` — 셋.
+  a165 proposal·design 3판·tasks(`bc56522c7`).
+- **하지 않은 것**: 시험·게이트·`make sdd-sync` 실행 0, production 편집 0, 브로커·계좌 접근 0. gate ⑤ 함수 단위 창 계산(`check_analysis.py`) 미실행 — 아래 P2-3 은 파일 수만 쟀다.
+
+### 판정: **PASS** — §1~§3 착수 조건 ② 충족
+
+P0 0 · P1 2(둘 다 이 개정에서 문서로 닫음) · P2 4(닫음 1 · Manager 확인 3) · P3 6. 열린 P2 셋 중 P2-2·P2-4 는 **MARKET 칸을 좁히는 쪽이 현재 문서의 기본값**이라
+확인 전에도 불변식 위반이 없다. P2-3 은 안전이 아니라 완료 게이트의 작업량 문제다. 착수 전 Manager 가 P2-2·P2-3·P2-4 셋을 처분한다.
+
+### 불변식 판정
+
+| 축 | 판정 | 근거 |
+| --- | --- | --- |
+| 불변식 3 — 토글 OFF·CLI 경로 = upstream (spec Req 2) | **유지** | ③ 개방은 엔진 인스턴스 옵션뿐이고 `NewService` 비시험 자리 셋 중 옵션을 켜는 것은 `engine.go:401`(`NewOrderPath` 성공 반환 :396) 하나로 설계됐다(1.5.5 (c) 구조 시험이 고정). 7판이 더하는 달력 갱신·판정은 `Context.ExitObserver`(엔진 청산 관측자 생성, B1~B3 이 자동화 검증 전에는 관측자를 만들지 않음) 뒤에만 선다 — 엔진이 꺼지면 달력 GET 0. CLI·ops·MCP 는 달력을 읽지 않는다 |
+| 불변식 4 — 손절 즉시성 | **유지(조건부 — P1-2 의 제약을 구현이 지킬 때)** | MARKET 칸(정상일 KRX 접속매매)은 그리드·밴드 거부 클래스를 없앤다(§5.1 M50, n=1). 나머지 칸은 오늘과 같은 LIMIT. 6판에는 판정 입력의 **읽기 시점과 실패 처리**가 없어서 「제출 경로의 달력 GET」(대기)이나 「판정 오류 → `submit` B5 `:1533` 거부 갈래」(미제출)로 구현되면 LIMIT 칸조차 오늘보다 약해질 수 있었다 → P1-2 로 닫음 |
+| 불변식 5 — High-risk 경로 | **유지** | 새로 닿는 High-risk 함수: `Context.ExitObserver`(배선) · `sellIntent`·`submit`(시그니처) · `NewOrderPath` · `checkOrderShape` · `placeIntentSupported`·`Place`·`PreviewPlace`. Pre-Edit 1.0·1.5.0·2.0·2.6.0 과 FLM 1.0.1·1.5.1·2.1·2.6.1·2.6.2 가 그 집합을 덮는다(아래 「착수 시 FLM 대상」) |
+| 불변식 6 — 손절·익절·사이징은 보수 방향만 | **유지** | 7판은 6판보다 MARKET 칸이 좁다(US 정규장 삭제 · 비정상일 종일 LIMIT · 종가단일가 LIMIT). 익절·사이징·floor(`applyFloor`)·Guardian `IssueReduction` 무변경 |
+| LIMIT 칸 = 오늘과 바이트 같은 주문 | **설계상 성립, 시험 요구 추가** | 오늘 `sellIntent`(AST B1~B4, 반환 :1823)는 관측가 → 기준선 → 거부 사다리로 `OrderType "limit"` 리터럴을 만든다. 7판의 LIMIT 갈래는 같은 사다리를 그대로 탄다. ②·③ 의 limit 갈래(② B11~B13, ③ B4·:287)는 바뀌지 않는다(1.1·1.5.2). 엔진은 `PreviewPlace` 에서 `ConfirmToken` 만 쓰고(`gateway.go:396`), `guard`(B1~B4)는 `LiveReady`·`Warnings` 를 보지 않으므로 1.5.4 의 엔진 인스턴스 문구 처리도 LIMIT 주문 바이트에 닿지 않는다. 다만 「유형만 limit」 시험은 이 성질을 못 잡는다 → 2.6.3 에 **`PlaceIntent` 전체 골든 동일** 행을 넣었다(P3-3 범위 주의) |
+| 달력 결측 fail-closed | **성립(문서)** | `TypedMarketCalendar` B1·B2·B4 오류 · `AdaptOfficialCalendar` B1~B8 오류 · 오늘 `integrated` null(`adaptCalendarDay` B8 이 **오류 없이** `Regular == nil` 반환 — 휴장일 모양) · KRX 기준 필드 null · 6시간 이상 · 읽은 시각 미래 · 날짜 불일치 · 기동 직후 응답 없음 → 전부 LIMIT(D7 조건 1~5). 2.6.3 RED 가 각 행을, 2.6.5 가 「결측 → market」 등 변이를 잡는다 |
+| a165 와의 충돌 | **코드 충돌 낮음 · 착지 뒤 재대조 필요** | 아래 「a165 대조」 |
+
+### 발견
+
+**P1-1 (닫음 — 이 개정) — 달력의 KR 정규장은 KRX·NXT 합집합이라 KRX 조기 폐장을 숨긴다.** openapi `RegularMarketSession`: 「KRX·NXT 정규장의 합집합(가장 이른
+시작 ~ 가장 늦은 종료). 종가단일가 구간을 포함」. `adaptCalendarDay` 는 KR 에서 `Integrated.RegularMarket` 만 읽고(B4·B5), Go 형 `official.MarketCalendarSession`
+(`typed_calendar_reads.go:11-14`)은 `startTime`·`endTime` 만 있다 — KRX 기준 `singlePriceAuctionStartTime` 을 읽지 않는다. 그래서 Q3 문언을 「달력 창 ∩ `clock` 고정 창」으로
+구현하면 KRX 가 13:00 에 닫고 NXT 가 정상 운영하는 날 합집합이 정상 모양이 되어 **Q3 가 막으려던 13:00~15:30 MARKET 누출이 다시 열린다.** 처분: D7 「구간 입력」 조건 4 —
+정상 영업일 모양(09:00 · 15:30 · KRX 기준 종가단일가 시작 15:20)이 아니면 종일 LIMIT, 형 확장은 2.6.4. 잔존 `[미측정]`: 브로커가 조기 폐장일에 이 필드를 실제로 바꾸는지(openapi
+예시 표본 없음) — `issues.md` I-R4 (라).
+
+**P1-2 (닫음 — 이 개정) — 판정 입력의 즉시성 제약이 없었다.** 6판 D7·2.6.4 는 「입력을 배선한다 · 실패는 LIMIT 갈래」만 적었다. ① 달력을 제출 순간에 읽으면 오늘의 LIMIT 손절이
+겪지 않는 왕복이 더해진다. ② 판정 함수가 오류를 반환하면 `sellIntent` 오류 → `submit` B5(`:1533`) → `alertRefused`·`release` 로 **그 주기 보호 청산이 안 나간다**(오늘은
+LIMIT 으로 나간다). ③ 갱신을 청산 관측 주기 안에서 하면 GET 지연이 `Run` 의 5초 주기 판정을 늦춘다. 처분: D7 「즉시성 제약」(제출 경로 GET 0 · 판정 실패 = LIMIT ≠ 거부 · 갱신은
+관측 주기 밖), spec Req 1 SHALL NOT 두 문장, 2.6.3 RED 행(「판정 실패 행에서 거부 갈래 미도달」·「제출 경로 GET 0」), 2.6.5 변이 둘.
+
+**P2-1 (닫음) — `ValidityAt` 을 그대로 쓰면 매일 장 끝이 LIMIT 으로 강등된다.** AST B3: 정규장 중에 장 개시 뒤 읽은 달력은 `REFRESH_TOO_LATE`. B2 6시간 상한과 겹치면 장 개시 전에
+읽은 달력은 늦어도 15:00 전에 낡고, 다시 읽으면 B3 에 걸린다. 안전 약화가 아니라 이득 손실이지만 규칙을 가져올 이유가 청산에 없다. 처분: D7 조건 3(B1·B2 만, B3 미적용) + 2.6.3 행 +
+2.6.5 변이.
+
+**P2-2 (열림 — Manager 확인) — 「고정 시각」의 해석.** 문서는 「달력이 정상 영업일이 아니면 종일 LIMIT, 정상일이면 고정 창」으로 읽었다. 대안(교집합)은 조기 폐장일 오전에 MARKET 이득을
+더 얻지만 P1-1 의 합집합 문제로 KRX 기준 필드 없이는 안전하지 않다. 현재 문서 해석은 MARKET 칸을 대안보다 좁히기만 한다(보수 방향). 확인 질문: 「비정상 영업일(휴장·조기 폐장·개장 지연)에는
+종일 지정가로 둔다 — 권장: 그대로」.
+
+**P2-3 (열림 — Manager 결정, 공정) — gate ⑤ 창이 크다.** 창의 시작은 `base-commit.txt` = `102d4e99`(2026-09-30)이고, base 는 proposal freeze 뒤 불변이다(`check_analysis.py`
+착지 판정 docstring 「spec 이 불변을 SHALL 로 요구」). `git diff --name-only 102d4e99 0c9bfd272 -- '*.go'` = **756 파일(비시험 294)**. gate ⑤ 는 창에서 본문이 바뀐 기존 Go 함수마다
+번들을 요구하므로(WORKFLOW 「비례 원칙」 단서) 착지 때 a087 이 만들지 않은 형제 함수 다수가 요구될 수 있다 — **함수 수는 미측정**(check_analysis 미실행). a165 착지가 창을 더 키운다.
+선례는 a170(창에 든 형제 함수 26 을 a172 아카이브 번들 복사로 덮음). 착수 전 처분: 형제 번들 복사·빌림 방식과 범위를 Manager 가 정한다.
+
+**P2-4 (열림 — Manager 확인) — 종가단일가(15:20~15:30)를 LIMIT 으로 뺐다.** openapi 가 정규장을 「종가단일가 구간을 포함」으로 정의하므로 6판 「KRX 정규장 = MARKET」은 이 구간을 포함했다.
+§5.1 은 14:59 접속매매 한 건이라 이 구간의 MARKET 접수를 재지 않았다. 수락된 Q1 원칙(접수 미측정 → LIMIT)을 이 하위 구간에 적용해 D7 표·spec Req 1·2.6.3 을 고쳤다(오늘과 같은
+동작이라 약화 없음, 하루 10분의 이득 손실). 이것은 사용자 답의 직접 문언이 아니라 원칙의 적용이다. 확인 질문: 「종가 단일가 10분은 지정가 — 권장: 그대로」.
+
+**P3-1 — US 생산자 0 이 된 게이트 갈래.** ②·③ 의 `sell+market` 예외는 시장 무관 한 갈래라 US 에도 열린다. Q2 로 엔진의 US 시장가 생산자는 0 이다(`sellIntent` US → LIMIT, `flatten` LIMIT,
+a112 레인 매수 전용). 별도 US 코드가 아니므로 도달 불가 코드 문제(I-P1 의 기각 사유)는 아니다. 1.1·1.5.2 의 US 행은 단위 행으로 남기고, 1.6 종단 시험은 KR 만 잰다.
+
+**P3-2 — design D3 의 「두 호출자가 같은 값」 근거가 결과를 과장한다.** AST: `Service.Place` B4(`:200`)가 넘긴 `PreviewPlace` 결과에서 `guard`(B1~B4)는 `ConfirmToken` 만 비교하고
+`LiveReady` 를 읽지 않는다. 그래서 옵션을 한쪽만 보면 주문이 갈라지는 것이 아니라 **미리보기 표시(`LiveReady`)만** 갈라진다. 설계 결론(술어 인자로 같은 값을 넘긴다)은 그대로 옳다 — 근거
+문장만 정정 대상. 1.5.1 FLM 이 이 열거를 다시 적을 때 고친다.
+
+**P3-3 — 「바이트 같은」의 범위.** 성립하는 것은 **주문**(`PlaceIntent` → wire body → `intents` 행)이다. 3.4(화면·알림·`obs` 의 시장가 표시)가 LIMIT 줄에 유형 필드를 더하면 로그·화면 바이트는
+달라진다. 3.4 는 LIMIT 줄의 기존 필드를 바꾸지 않는다는 것을 시험 이름으로 고정한다(새 필드 추가는 허용).
+
+**P3-4 — 호스트 시계 가정.** 조건 5 는 엔진 시계를 믿는다. 호스트 시계가 크게 어긋나면 접속매매 밖에 MARKET 이 나갈 수 있다. 엔진 전반의 가정(NTP)이라 새 가드를 제안하지 않고 잔존 위험으로
+적는다. 달력의 `fetchedAt` 미래 검사(조건 3)는 역행 하나만 잡는다.
+
+**P3-5 — 달력 GET 의 자원 공유.** 갱신은 OpenAPI 토큰·레이트 제한(a166)을 손절 경로와 공유한다. 하루 수 회 · KR 만이라 경합은 무시할 수준이지만 2.6.4 가 갱신 주기와 실패 시 재시도 간격을
+명시한다(토큰 교대 사고 — `--config-dir` 없는 도구가 토큰을 번갈아 무효화한 2026-10-19 실측 — 와 같은 캐시를 써야 한다).
+
+**P3-6 — I-R2 는 판정 입력 없이 무소유로 남는다.** `order-type-not-allowed` 분류는 「§5.2 결과 뒤」였는데 Q4 로 §5.2 가 없다. 정규장 밖 MARKET 생산이 0 이므로 차단 아님.
+
+### a165 대조 (a165 가 먼저 착지할 계획)
+
+a165 3판(`bc56522c7`)의 범위는 취소 409 처리(R3 엔진 · R4 flatten) + 401 근거 시험(R5)이고, 문서상 편집 표면은 `internal/execgw`(dispatch 클로저 — D5) · `internal/official` ·
+`internal/flatten` · `internal/app/engine` 의 **clear 경로·배선** · `cmd/tossctl`(flatten 배선) · `internal/journal`(dispatch)이다. 엔진 결과는 `clearTheSymbol` 의 기존 갈래(B3·B11)에 기대고
+그 함수 본문을 바꾼다는 문장은 없다. 엔진 게이트웨이 생성은 `buildGateway`(`internal/app/engine/gateway.go:311`)다.
+
+| 표면 | a087 | a165 | 판정 |
+| --- | --- | --- | --- |
+| `exitloop.go` | `sellIntent`·`submit` 본문(시그니처) | 문서상 본문 편집 없음(clear 경로 시험·인용 좌표 `:1539`·`:1686`) | 코드 충돌 낮음. a165 가 `exitloop.go` 를 한 줄이라도 바꾸면 a087 의 줄 좌표·HEAD AST 가 낡는다 |
+| `execgw` | `failclosed.go` `checkOrderShape` | `gateway.go` dispatch 클로저 | 다른 파일. a087 문서가 인용한 `gateway.go:383-384`·`:396`·`:594-595` 좌표는 a165 D5 뒤 옮겨질 수 있다 |
+| 엔진 배선 | `NewOrderPath`(engine.go) · `Context.ExitObserver`(exitwiring.go) | `buildGateway`(engine/gateway.go) 추정 | 다른 함수 |
+| 행동 | 보호 청산 1차 제출의 유형 | 청산 전 취소 409 → 다음 주기 재취소(오늘은 재시작까지 막힘) | 상호 보완. a165 는 「엔진 청산 매도 접수 변화 없음」(a165 D4) — MARKET/LIMIT 과 독립 |
+
+### a165 착지 뒤 a087 이 다시 할 일
+
+1. 새 main 에서 `python3 -I analysis/evidence/enumerate.py` 를 돌려 stale 을 센다. stale 인 AST 는 그 HEAD 에서 다시 만들고, design·proposal·tasks 의 줄 좌표(`exitloop.go`·`gateway.go`)를 고친다.
+2. a165 가 바꾼 함수 중 a087 이 인용하거나 편집하는 것(특히 `exitloop.go`·`execgw` 패키지)을 열거해 D3·D7 주장을 재대조한다.
+3. gate ⑤ 창(P2-3)에 a165 의 함수가 더해진다 — Manager 가 정한 방식(아카이브 번들 복사 등)으로 덮을 목록에 넣는다.
+4. a165 의 엔진 취소 409 정책 시험과 a087 1.6 종단 시험이 같은 시험 더블을 쓰면 서로의 기대값을 깨지 않는지 확인한다(엔진 패키지 시험 파일 공유).
+5. a171(place 재전송)은 청산 매도 접수를 범위에서 뺐다(a165 D4 표) — a171 이 그 범위를 바꾸면 MARKET 보호 청산 재전송(같은 `clientOrderId`)을 a087 D7 표와 대조한다.
+
+### 착수 시 FLM 대상 (gate ⑤ — 본문을 고치는 기존 함수)
+
+`execgw.checkOrderShape`(1.0.1) · `trading.placeIntentSupported`·`Service.PreviewPlace`·`Service.Place`(1.5.1 — 술어 인자 추가로 두 호출 자리 본문이 바뀜) ·
+`engine.NewOrderPath`(엔진 인스턴스 옵션) · `ExitObserver.sellIntent`(2.1·2.6.2) · `ExitObserver.submit`(호출부 — 2.3) · `Context.ExitObserver`(달력 배선 — 2.6.1) ·
+달력 형을 바꾸며 본문이 바뀌는 기존 함수가 있으면 그것(2.6.1) · 3.x 원장·화면 경로에서 고치는 기존 함수 · 바뀌는 기존 시험 함수(시험 파일 포함). 판정 함수와 달력 보관 갱신은
+**새 파일의 새 함수**로 둔다. 창의 형제 함수는 P2-3.
+
+Function Logic Map: not-applicable — 이 리뷰와 7판 개정은 문서만 바꿨다. 분기 주장은 `analysis/evidence/` AST(HEAD `0c9bfd272`, stale 0)와 기존 0.5·3.6 AST 에서만 인용했다.

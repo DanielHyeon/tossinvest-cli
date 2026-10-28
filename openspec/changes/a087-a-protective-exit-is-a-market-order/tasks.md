@@ -8,6 +8,8 @@
 > §4 에 4.5·4.6, §5 에 실행 수단과 결과 → 처분 표.
 > **2026-10-10 3차 개정**: 3차 재리뷰 처분(0.8) + 사용자 결정 2차 — 1.5.x 를 **엔진 인스턴스 한정 개방**으로 다시 썼고
 > (1.5.5 = upstream 동일성 고정 시험), §5 「수용」 기준에 주문 상태 확인·누락 결과 3행·실행 전제를 더했다.
+> **2026-10-28 7판**: 사용자 결정 Q1~Q4 — US 정규장 LIMIT(2.6.3), 구간 입력 = 브로커 달력 + 고정 시각(2.6.1·2.6.4), §5.2 not-applicable(5.2·5.3·2.6.6 닫음),
+> 착수 조건 ④ 「US 미개방」 확인, 0.10 리뷰 PASS.
 
 ## 0. 게이트 선행
 
@@ -51,10 +53,14 @@
       부정확; 실측 422 거부 시 재검토가 §5 표에 이미 있음). I-R8: 0.5 는 §1~§3 착수 전 조건
       유지(freeze 는 문서 상태 판정, §1~§3 은 어차피 §5 실측 대기).
       → **proposal-freeze 재개 선언.** 남은 §1~§3 착수 조건 = §5 실측(결과→처분 표) + 0.5.
-- [ ] 0.10 **requirement 변경 리뷰 (2026-10-22 D7 처분)** — spec Requirement 1 에 「시장가를 받지 않는 구간은 오늘처럼 지정가」 예외를 넣은
+- [x] 0.10 **requirement 변경 리뷰 (2026-10-22 D7 처분)** — spec Requirement 1 에 「시장가를 받지 않는 구간은 오늘처럼 지정가」 예외를 넣은
       것은 Requirement 수준 수정이다(WORKFLOW 「리뷰 게이트」). 수정분(spec Requirement 1 · design D7 「처분」 · tasks 2.4~2.6)에 적대적 Eng
       관점 포함 리뷰 1회를 받아 `review.md` 에 남긴다. Manager 확인 항목 하나를 함께 판정한다 — **접수 미측정 구간과 구간 판정 불가를 LIMIT
       으로 두는 것**은 사용자 문언(「시장가가 안 되는 시간대」)이 아니라 design D7 의 불변식 4 유도다. **§1~§3 착수 조건**
+      — 2026-10-28: 사용자 결정 Q1~Q4(「권장대로」) 반영 뒤 리뷰(`review.md` 「0.10 requirement 변경 리뷰 — D7 7판」). **판정 PASS** — P0 0 · P1 2(합집합 달력이
+      KRX 조기 폐장을 숨김 · 즉시성 제약 부재 — 둘 다 이 개정에서 닫음) · P2 4(닫음 1, **Manager 처분 대기 3**: P2-2 「고정 시각」 해석 · P2-3 gate ⑤ 창 크기 ·
+      P2-4 종가단일가 LIMIT) · P3 6. Q1(위 유도) **수락**. 근거 AST `analysis/evidence/`(HEAD `0c9bfd272`, 20개, stale 0). 작성자와 같은 세션의 리뷰라 독립 리뷰 아님 —
+      착수 전 Manager 대조 1회
 
 ## P1. Phase 1 — 가격 사다리 KR 하한가 단 (선행 · 실측 불요 · design D2a)
 
@@ -78,6 +84,10 @@
 > **아래 §1~§3(Phase 2)의 착수 조건 (2026-10-10 개정)**: ① §5 실측 기록과 그 결과가 아래 §5 표의 「§1~§3 착수 가능」
 > 행일 것(§0.7 사람 승인), ② 0.5 확인 + D7 처분(**처분 결정됨 2026-10-22** — 남은 것은 0.10 리뷰), ③ 0.9 통과(0.7 은 재개 불가로 끝났다), ④ §5 표 아래 「US」 행 사람 확인.
 > Phase 1 은 그 실측을 기다리지 않았다(종결).
+>
+> **상태 (2026-10-28, 사용자 결정 「권장대로」)**: ① **충족** — 5.1 수용(2026-10-19 M50, FILLED), 5.2 not-applicable(Q4). ② 0.5 완료 ·
+> D7 처분 7판(Q1~Q3) · 0.10 리뷰 결과는 0.10 줄. ③ **충족**(0.9, 2026-10-10). ④ **확인 처리 — 「US 미개방」**(Q2: US 보호 청산은 실측 전까지
+> LIMIT 이라 「US 를 미측정으로 착지」할 MARKET 칸이 없다).
 
 ## 1. 실행 관문 두 곳(②·③)을 축소 시장가에 연다 (Phase 2)
 
@@ -158,18 +168,30 @@
       AST 12개에서 세션 입력 0). 그래서 `sellIntent` 가 MARKET/LIMIT 을 가를 **구간·접수 입력**을 새로 받아야 한다.
   - [ ] 2.6.0 **Pre-Edit 선언** — 입력 출처 함수 · `sellIntent`(시그니처 변경) · `submit` 호출부 · 엔진 배선(WORKFLOW §Pre-Edit 형식).
         불변식 4: 이 입력이 거짓·결측이면 LIMIT(오늘 동작)으로 기운다
-  - [ ] 2.6.1 **Function Logic Map — 입력 출처** — 후보 출처(예: `clock` 시장 시계 `InRegularSession` 계열)를 `tools/logic-map` 으로 먼저
-        열거하고(`ast.json` + `function-logic-map.md` + `branch-test-map.md` + `risk-pattern-report.md`), 시간외단일가·휴장일·조기 폐장·
-        시장 현지 시각을 어떻게 가르는지 **AST 로** 적는다. 손으로 읽은 분기 주장 금지(design D7 「새 설계 의무」). 출처가 그 구간을 가르지
-        못하면 새 술어가 필요하고, 그 경우 멈추고 design D7 을 개정해 0.10 리뷰에 올린다
+  - [ ] 2.6.1 **Function Logic Map — 입력 출처** — 출처는 확정됐다(사용자 결정 2026-10-28 Q3: 브로커 달력 `official.Client.TypedMarketCalendar` +
+        고정 시각 `clock`, 달력 오류·결측이면 LIMIT — design D7 「구간 입력」). 0.10 리뷰용 HEAD `0c9bfd272` AST 가 `analysis/evidence/` 에 있다
+        (`TypedMarketCalendar` · `scheduler.AdaptOfficialCalendar` · `adaptCalendarDay` · `CalendarSnapshot.ValidityAt` · `clock.Market.RegularSession` ·
+        `Session.Contains` · `InRegularSession` · `Location` · 진입 쪽 `strategyScheduleAuthorityLoader.prepare`). 그 열거가 보인 것: `clock` 술어에는
+        휴장·조기 폐장·개장 지연 분기가 없고, 달력 KR 정규장은 KRX·NXT 합집합이며 현재 Go 형은 KRX 기준 필드를 읽지 않는다. 착수 시 할 일: 본문을
+        **고치는** 기존 함수(예: `official.MarketCalendarSession` 을 읽는 함수, 배선 함수 `Context.ExitObserver`)의 FLM 번들을 HEAD 에서 만들고,
+        판정 함수는 **새 파일의 새 함수**로 둔다(비례 원칙 — gate ⑤ required 를 늘리지 않음). 출처가 D7 조건 ①~⑤ 를 못 가르면 멈추고 design D7 을 개정해 리뷰에 올린다
   - [ ] 2.6.2 **FLM 재생성** — 2.1 의 `sellIntent` FLM 을 시그니처 변경 뒤 분기 집합으로 같은 로트에서 다시 만든다(분기 번호는 위치다 —
         옛/새 `ast.json` 정렬)
-  - [ ] 2.6.3 **RED** — 구간 표(design D7) 전 행: KRX 정규장 → market · KRX 시간외단일가 → limit · KRX 장 마감 후/장 개시 전(§5.2 미측정) →
-        limit · US 정규장 → market · US 프리/애프터(미측정) → limit · 입력 오류/결측 → limit. 시계는 시험 더블로 고정(벽시계 금지)
-  - [ ] 2.6.4 **GREEN** — 입력을 엔진에서 `sellIntent` 까지 배선. 구간 판정 실패는 LIMIT 갈래로(fail-to-today)
-  - [ ] 2.6.5 **변이** — 「입력 결측 → market」·「시간외단일가 → market」·「구간 무시(항상 market)」 셋이 CAUGHT 인지 원장에 남긴다
-  - [ ] 2.6.6 §5.2 결과 반영 — §5.2 가 어떤 구간의 MARKET 접수를 보이면 그 구간을 MARKET 칸으로 옮기는 것은 spec·design 개정 + 리뷰 뒤에만 한다
-        (이 task 는 표를 바꾸지 않는다)
+  - [ ] 2.6.3 **RED** — 구간 표(design D7 7판) 전 행. 시계·달력은 시험 더블로 고정(벽시계·실제 브로커 금지):
+        정상 영업일 KRX 정규장 접속매매(09:00:00 · 15:19:59) → market · 종가단일가(15:20:00 · 15:29:59) → limit(반열림) · 정상일 08:59:59 → limit ·
+        KRX 시간외단일가 → limit ·
+        KRX 장 마감 후/장 개시 전 → limit · **조기 폐장일**(합집합 끝 13:00, 또는 합집합은 정상인데 KRX 기준 종가단일가 시작 ≠ 15:20) 10:00·14:00 → limit ·
+        **개장 지연일**(시작 10:00) 10:30 → limit · 휴장일(`integrated` null) → limit · 주말 → limit · **US 정규장 → limit** · US 프리/애프터 → limit ·
+        달력 GET 오류 · 응답 없음(기동 직후) · `AdaptOfficialCalendar` 오류 · 읽은 지 6시간 이상 · 읽은 시각이 미래 · 오늘 날짜 불일치 · 시장 문자열 판정 불가 → limit.
+        **limit 행은 `PlaceIntent` 전체가 오늘 `sellIntent` 출력과 같음**(유형만이 아니라 가격·수량·통화까지 — 골든) · **판정 실패 행에서 청산이 거부되지 않음**
+        (`submit` B5 거부 갈래에 닿지 않음) · **제출 경로의 달력 GET 0**(호출 계수 더블) · 정상일 정규장 중 장 개시 뒤 읽은 달력도 market(`ValidityAt` B3 미적용 고정)
+  - [ ] 2.6.4 **GREEN** — 입력을 엔진에서 `sellIntent` 까지 배선. 구간 판정 실패는 LIMIT 갈래로(fail-to-today). 범위: KR 달력 응답을 메모리에 두는
+        갱신(청산 관측 주기 밖 · 6시간보다 짧은 주기 · KR 만), `official.MarketCalendarSession` 에 `singlePriceAuctionStartTime` 추가, 판정 함수(새 파일),
+        `Context.ExitObserver` 배선. 엔진이 꺼지면 갱신·판정 0(불변식 3)
+  - [ ] 2.6.5 **변이** — 「입력 결측 → market」·「시간외단일가 → market」·「구간 무시(항상 market)」·「US → market」·「조기 폐장 무시(합집합 창만 봄)」·
+        「KRX 기준 필드 무시」·「고정 시각 조건 제거」·「종가단일가(15:20~15:30) → market」·「판정 실패 → 거부」·「제출 경로에서 달력 GET」·「`ValidityAt` 그대로 사용(B3)」이 CAUGHT 인지 원장에 남긴다
+  - [x] 2.6.6 ~~§5.2 결과 반영~~ — **not-applicable (2026-10-28 Q4)**: §5.2 를 측정하지 않으므로 반영할 결과가 없다. LIMIT 칸을 MARKET 으로 옮기는 것은
+        새 실측 · spec 개정 · 리뷰 뒤에만 한다(이 change 밖 — spec Requirement 1 「옮기려면」 문장)
 
 ## 3. 원장·관측·화면 (Phase 2)
 
@@ -282,14 +304,17 @@
       그 화면은 OpenAPI orderId 를 싣지 않아 시각(+0.2s) · 종목 · 방향 · 수량으로 대조했고 같은 시각의 다른 010170 매도 1주는 없음. 체결 품질은 재지 않음(도구 범위 밖).
       10-15 의 401 원인 정정: 그날 명령에는 `--config-dir` 가 없어 도구가 기본 토큰 캐시(`~/.cache/tossctl`)로 새 토큰을 받는 구조였다 — 2026-10-19 같은 구조의 도구가
       엔진 토큰과 번갈아 무효화하는 것을 실측(인수인계 §4 정정). 이웃 제품 가설보다 이쪽이 유력(10-15 당시 재현은 안 함)
-- [ ] 5.2 **세션 경계.** 정규장 밖 KR MARKET 매도(1주)의 응답 코드 관측. **예상 응답 집합**(재리뷰 P1-4):
+- [x] 5.2 **세션 경계.** 정규장 밖 KR MARKET 매도(1주)의 응답 코드 관측. **예상 응답 집합**(재리뷰 P1-4):
       `422 order-hours-closed` · **`422 order-type-not-allowed`**(openapi `POST /api/v1/orders` 422 예시 「현재 사용할 수 없는
       호가 유형」 — 저장소 Go 코드 참조 0, `refusal_code.go` 목록에도 없음) · 그 밖의 코드(있는 그대로 기록).
       시간외단일가에는 시장가가 없다
-- [ ] 5.3 `openspec/changes/verify-execution-capability/measurements.md`에 M계열로 기록
+      — **not-applicable (사용자 결정 2026-10-28 Q4)**: 실측하지 않는다. 사유 — design D7 이 정규장 밖의 모름을 LIMIT 으로 고정했으므로 실측의 이득은
+      「나중에 그 칸을 MARKET 으로 옮길 근거」뿐이고, 실측은 실주문이 다음 세션에 체결될 위험이 있다(아래 표 「세션 밖인데 200」 행). 실주문 0 · 5.2 몫
+      (010170 경계 1주)은 쓰지 않는다. design D7 「§5.2 처분」
+- [x] 5.3 `openspec/changes/verify-execution-capability/measurements.md`에 M계열로 기록
       (`docs/trading/measurements.md`는 **존재하지 않는다** — 초안 리뷰 M7)
       — 5.1 분만 기록(2026-10-20): 「9차」 절 **M50**(KR 정규장 MARKET 매도 1주 접수·`체결완료`) + 10-15 401 두 시도 처분.
-      **5.2 미측정이라 미체크** — 5.2 측정 뒤 같은 절에 M 행을 더하고 체크한다
+      ~~5.2 미측정이라 미체크~~ — **2026-10-28 닫음**: 5.2 가 not-applicable(Q4)이라 기록할 M 행이 더 없다. 기록 대상은 M50 하나로 끝난다
 
 ### 실측 결과 → 처분 (재리뷰 P1-1·P1-4, 사용자 결정 2026-10-10)
 
@@ -301,9 +326,9 @@
 | 5.1 | **판정 불가 — 종목 상태 사유** — VI 발동 중 단일가·투자경고·단일가 매매 종목·거래정지 등 **그 종목의 그 시각** 상태를 말하는 거부(4xx 또는 200 뒤 `REJECTED`) | MARKET 유형 일반의 반증이 아니다. 구분 기준: 오류 code·message 가 종목·시장 상태를 가리키면 이 행, 주문 유형을 가리키면(`order-type-not-allowed` 류) 「거부」 행. 애매하면 이 행. 다른 종목·시각으로 재측정할지는 사람 결정 |
 | 5.1 | **판정 불가 — 매도가능수량 사유** — 같은 종목의 상주 SELL 조건주문(a100 M-A 당일 등록분·R0-3 retain 잔여분)이나 다른 미체결이 매도가능수량을 묶어 수량 사유로 거부 | MARKET 반증 아님. 위 「실행 전제」 2 의 사전 스냅숏으로 피해야 하는 행이다 — 실측 당일 a100 runbook §2 종목 확정 때 겹침을 확인하고(M-A retain 결정과 교차: 잔여 조건주문은 취소하지 않으므로 5.1 종목을 바꾼다), 그래도 나오면 기록 후 사람 결정 |
 | 5.1 | **판정 불가 — 그 밖** — 인증(401·403)·한도(429)·장 시간 등 MARKET 유형과 무관한 사유의 4xx, 5xx·타임아웃·409·in-doubt(도구 `unknown`) | 수용도 반증도 아니다. 원인·주문 상태(브로커 조회로 확정)를 기록하고 재측정 여부는 사람 결정. §1~§3 착수 안 함. 도구의 `refused` 는 4xx 라는 뜻뿐이라 이 행일 수 있다(B-P3-2) |
-| 5.2 | 세션 밖 — 거부 응답(`422 order-hours-closed`·`order-type-not-allowed`·그 밖) | **응답 코드 기록.** 처분은 사용자 결정 2026-10-22(design D7 「처분」)로 정해졌다 — 그 구간의 보호 청산은 LIMIT(오늘과 같음)으로 확정. MARKET 유형 거부(`order-type-not-allowed`)가 아니라 장 시간 거부(`order-hours-closed`)이면 그 구간은 LIMIT 접수 여부도 따로 봐야 하므로 기록 후 사람 결정 |
+| 5.2 | ~~세션 밖 — 거부 응답~~ — **5.2 not-applicable(2026-10-28 Q4) — 아래 5.2 두 행은 실행하지 않으므로 기록으로만 남긴다** · 세션 밖 — 거부 응답(`422 order-hours-closed`·`order-type-not-allowed`·그 밖) | **응답 코드 기록.** 처분은 사용자 결정 2026-10-22(design D7 「처분」)로 정해졌다 — 그 구간의 보호 청산은 LIMIT(오늘과 같음)으로 확정. MARKET 유형 거부(`order-type-not-allowed`)가 아니라 장 시간 거부(`order-hours-closed`)이면 그 구간은 LIMIT 접수 여부도 따로 봐야 하므로 기록 후 사람 결정 |
 | 5.2 | **세션 밖인데 200 으로 접수됨** (장전 동시호가 대기·익일 이월 등) | 실주문이 다음 세션에 체결될 수 있다. 즉시 `tossctl orders list` 로 상태를 읽고 **취소 여부는 사람이 그 자리에서 결정**(취소는 mutating — 사람 실행). 체결되면 010170 매수 산식의 5.2 몫(경계 1주)을 소진한 것으로 기록하고 추가 측정 수량을 다시 잡지 않는다. D7 표의 해당 구간은 「MARKET 접수됨(체결 시점 미확정)」으로 기록 |
-| US | 측정 없음 | 자동 처분 없음. §1~§3 착수 전 사람이 「US 를 미측정으로 착지」(proposal 「US 한계」)를 확인한다 |
+| US | 측정 없음 | 자동 처분 없음. §1~§3 착수 전 사람이 「US 를 미측정으로 착지」(proposal 「US 한계」)를 확인한다 → **2026-10-28 확인 처리(Q2): US 미개방** — US 보호 청산은 실측 전까지 LIMIT(design D7 7판). 미측정 착지하는 US MARKET 칸이 없다 |
 
 상태 어휘는 openapi 주문 상태 enum 10개(`PENDING`·`PENDING_CANCEL`·`PENDING_REPLACE`·`PARTIAL_FILLED`·`FILLED`·`CANCELED`·`REJECTED`·
 `CANCEL_REJECTED`·`REPLACE_REJECTED`·`REPLACED`)다. 위 표가 이름 붙이지 않은 상태(예: 사람이 취소하지 않았는데 `CANCELED` — 잔량 소멸 등)는

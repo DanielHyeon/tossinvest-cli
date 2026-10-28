@@ -1,0 +1,79 @@
+{
+  "file": "internal/clock/market.go",
+  "source_sha256": "85264b6e9b4e6b13ddee690ca62e0d30cbd73efeb6926e626abc3d20c622f7a9",
+  "package": "clock",
+  "function": "Contains",
+  "receiver": "Session",
+  "signature": "Session.Contains(params=1, results=1)",
+  "start": {
+    "line": 113,
+    "column": 1
+  },
+  "end": {
+    "line": 118,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 114,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 115,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 18
+      },
+      "text": "s.Open.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 37
+      },
+      "text": "s.Close.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 10
+      },
+      "text": "t.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 30
+      },
+      "text": "t.Before"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

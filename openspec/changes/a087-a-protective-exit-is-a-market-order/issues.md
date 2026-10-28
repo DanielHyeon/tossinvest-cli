@@ -160,3 +160,31 @@ Manager 가 번호 매긴 질문으로 묻고 사용자가 답했다. 답 원문
 이 결정 반영은 문서만 바꿨다. production 코드 · 주문 · 계좌 조회는 0 이다.
 Function Logic Map: not-applicable — 문서 개정만 했다. 새 분기 주장은 0.5 AST(`analysis/session-gate-0.5/`)와 3.6 AST(`analysis/partial-fill-3.6/ast/`)
 산출물에서만 인용했다. 입력 출처 함수의 분기는 아직 주장하지 않았다(2.6.1 이 AST 로 먼저 연다).
+
+## 사용자 결정 (2026-10-28) — D7 Q1~Q4 (「권장대로」)
+
+Manager 가 번호 매긴 질문 넷으로 묻고 사용자가 「권장대로」로 답했다. 처분과 반영 위치를 적는다.
+
+1. **Q1 — 접수 미측정 구간과 구간 판정 불가를 LIMIT 으로 둔다(design D7 의 불변식 4 유도)** → **수락.** spec Requirement 1 의 그 문장은 그대로다.
+   2026-10-22 결정 1 의 「해석 한 줄 (Manager 확인 대상)」은 이 답으로 닫혔다. design D7 「불변식 4 근거」에 수락을 적었다.
+2. **Q2 — US 정규장도 실측 전까지 LIMIT** → design D7 처분 표의 US 정규장 칸을 MARKET → LIMIT 으로 고쳤고 spec Requirement 1 에 「미국 시장의 모든 구간
+   (정규장 포함)」을 지정가 구간으로 넣었다(시나리오 「미국 정규장의 보호 청산」 추가). tasks 2.6.3 의 US 정규장 기대값을 limit 으로 바꿨다. §1 착수 조건 ④ 는
+   **「US 미개방」으로 확인 처리**했다 — 미측정 착지하는 US MARKET 칸이 없다. proposal 「US 한계」 절은 7판 머리말로 대체됐다.
+3. **Q3 — 구간 입력 출처 = 브로커 달력(`official.Client.TypedMarketCalendar`, `internal/official/typed_calendar_reads.go:37`) + 고정 시각, 달력 오류·결측이면 LIMIT**
+   → design D7 「구간 입력」 절. 근거는 HEAD `0c9bfd272` AST(`analysis/evidence/`). AST 가 보인 두 사실이 규칙을 정했다 — ① `clock` 술어에는 휴장·조기 폐장·개장 지연
+   분기가 없다(Q3 가 말한 13:00~15:30 누출), ② 달력의 KR 정규장은 openapi 정의상 KRX·NXT **합집합**이라 KRX 조기 폐장을 가릴 수 있고, 현재 Go 형은 KRX 기준 필드
+   (`singlePriceAuctionStartTime`)를 읽지 않는다. 그래서 MARKET 은 「달력이 정상 영업일 모양(09:00·15:30·KRX 종가단일가 15:20)을 보이는 날의 고정 접속매매 창(09:00~15:20 KST)」뿐이고,
+   그 밖의 날은 종일 LIMIT 이다. 이 「고정 시각」 해석은 문서의 유도라 Manager 확인 항목으로 남겼다(`review.md` 0.10 P2-2) — MARKET 칸을 좁히기만 하므로 보수 방향이다.
+4. **Q4 — §5.2 세션 경계 실측 not-applicable** → tasks 5.2·5.3 을 처분 사유와 함께 닫았다(5.2 n/a, 5.3 은 M50 하나로 끝). 2.6.6 도 n/a. design D7 「§5.2 처분」.
+
+이 결정 반영은 문서만 바꿨다. production 코드 · 시험 · 주문 · 계좌 조회 · 운영 접근은 0 이다.
+
+### 이 결정이 바꾼 기존 항목
+
+- **I-R2** (`order-type-not-allowed` 422 분류) — 「§5.2 결과 뒤 판정」이었으나 §5.2 를 하지 않는다. 정규장 밖에서 보호 청산 MARKET 을 내지 않으므로 그 코드를 받을
+  생산 경로가 없다. **무소유 · 판정 입력 없음**으로 남긴다(차단 아님).
+- **I-R4** (경계 조건 미측정) — 한 줄 더한다: (다) 정규장 칸 안의 **KRX 종가단일가(15:20~15:30)** 에서 MARKET 접수 거동. §5.1 은 14:59 접속매매 한 건이다.
+  Q1 원칙을 적용해 그 구간을 **LIMIT** 으로 뺐다(design D7 표 · D8 행) — 이 적용은 문서 유도라 Manager 확인(`review.md` 0.10 P2-4). (라) 브로커 달력이 KRX 조기 폐장·개장 지연을 KRX 기준 필드로 실제로 보이는지 — openapi 예시에 표본이 없다(design D7 「잔존」).
+
+Function Logic Map: not-applicable — 문서 개정만 했다. 분기 주장은 `analysis/evidence/*.ast.json`(HEAD `0c9bfd272`, `enumerate.py` 로 sha 대조 stale 0) 과
+기존 0.5·3.6 AST 에서만 인용했다. 구현 FLM(1.0.1·1.5.1·2.1·2.6.1·2.6.2)은 착수 시 HEAD 에서 만든다.

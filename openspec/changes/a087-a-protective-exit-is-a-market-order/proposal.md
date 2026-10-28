@@ -39,6 +39,11 @@
 > (KRX 시간외단일가, 그리고 접수가 실측되지 않았거나 거부가 실측된 정규장 밖 구간)과 구간 판정 불가에서는 보호 청산을 **오늘처럼 지정가**로
 > 낸다. spec Requirement 1 에 그 예외를 넣었고, 엔진에 세션 게이트가 없으므로(tasks 0.5) 구간 입력 배선이 구현 task 2.6 이 됐다
 > (design D7 「처분」). ② **I-R9** — 비종결 잔량의 자동 재가격·재주문은 새 change **a167** 로 이연(design D10). ③ **I-R10** — 필요 없음으로 종결.
+>
+> **7판 (2026-10-28, 사용자 결정 「권장대로」 — `issues.md` 「사용자 결정 (2026-10-28)」)**: ① 접수 미측정 구간·구간 판정 불가 = LIMIT(불변식 4 유도) **수락**.
+> ② **US 정규장도 실측 전까지 LIMIT** — 아래 What Changes 1 표의 US 칸과 「US 한계」 절은 이 결정으로 대체됐다(US 보호 청산은 오늘과 같다). ③ 구간 입력 =
+> **브로커 시장 달력(`TypedMarketCalendar`) + 고정 시각**, 달력 오류·결측이면 LIMIT — MARKET 은 달력이 정상 영업일로 보이는 날의 KRX 정규장 접속매매(09:00~15:20 KST)뿐(design D7
+> 「구간 입력」). ④ §5.2 세션 경계 실측은 **not-applicable**(아래 「실측 필요」 2). 결과적으로 Phase 2 의 MARKET 은 **KR 정규장 한 칸**이다.
 
 ## Why
 
@@ -200,11 +205,13 @@ reader 인터페이스에 선언된 `PriceLimits`(reads.go:72, 비시험 호출�
 
 | 제안 | KR | US |
 | --- | --- | --- |
-| 보호 (`isProtective` — `BASELINE_BREACH`·`STOP_LOSS_LADDER`) | **MARKET** — 단 시장가를 받지 않는 구간·구간 판정 불가는 오늘과 같은 LIMIT(6판, design D7) | **MARKET** — 같은 예외 |
+| 보호 (`isProtective` — `BASELINE_BREACH`·`STOP_LOSS_LADDER`) | **MARKET** — 단 시장가를 받지 않는 구간·구간 판정 불가는 오늘과 같은 LIMIT(6판, design D7). 7판: 정상 영업일(브로커 달력)의 정규장 접속매매(09:00~15:20)만 MARKET | ~~**MARKET** — 같은 예외~~ **LIMIT(현행 유지) — 실측 전까지**(7판 Q2) |
 | 익절 (`LADDER_TAKE_PROFIT`) | LIMIT (현행 유지) | LIMIT (현행 유지) |
 
 익절을 그대로 두는 것이 §0.9다. 익절은 즉시성이 목적이 아니고, 시장가로 바꾸면 체결가
 불확실성이 이익 쪽으로 열린다 — 보수 방향이 아니다. 보호만 바꾼다.
+
+> **7판 (2026-10-28 Q2)**: 아래 「US도 MARKET인 근거」와 「US 한계」는 **대체됐다** — US 보호 청산은 실측 전까지 LIMIT 이다. 기록으로 남긴다.
 
 US도 MARKET인 근거: openapi가 US 온주 MARKET 매도에 제약을 두지 않는다. StockOS가 US에
 MARKETABLE_LIMIT을 쓴 것은 KIS 계약 때문이며 토스 계약에는 그 제약이 없다. M12 는 US **조건주문**
@@ -251,7 +258,8 @@ side == "buy"  && orderType == "market"                → 거부 (현행 유지
   (`checkOrderShape` + 「internal/trading is not ours to change」 주석), **`internal/trading/service.go`
   (`placeIntentSupported` + 엔진 전용 생성자 옵션 — 기본값은 upstream 동일, 2026-10-10 사용자 결정 2차)**,
   **`internal/app/engine/engine.go`(엔진 `trading.Service` 생성에서만 옵션을 켠다)**, 관측·원장 표시부,
-  **구간·접수 입력 배선(6판 — 출처 함수는 tasks 2.6.1 의 AST 열거 뒤 정한다)**.
+  **구간·접수 입력 배선(6판 — 7판에서 출처 확정: 브로커 달력 `official.Client.TypedMarketCalendar` + `clock` 고정 시각, KR 만 · 타입
+  `official.MarketCalendarSession` 에 KRX 기준 필드 추가 — design D7 「구간 입력」)**.
   ~~Phase 1 은 `PriceLimits` 배선 추가~~
   (불구현 — Phase 1 의 코드 산출물은 `internal/exitpolicy/a087_observed_price_pin_test.go` 시험 1개)
 - **영향받는 표면 (무변경이어도 시험 대상)**: 전송 `official.buildOrderCreate` 와 그 사본 `execgw.PlaceWireBody`
@@ -297,6 +305,6 @@ side == "buy"  && orderType == "market"                → 거부 (현행 유지
    ~~엔진 청산 루프는 정규장 기준이라 차단 요소는 아니지만~~ — **정정(재리뷰 P1-2 · 2차 리뷰 H1)**: 엔진에
    `InRegularSession` 호출자가 없다(비시험 호출자는 `verifylive` 하나). 엔진이 정규장 밖에서 보호 청산을 제출하는지와
    그때의 처분은 design D7 — **미해결, §1~§3 착수 전 확인**
-   → 0.5(2026-10-20)가 엔진에 세션 게이트가 없음을 AST 로 확인했고, D7 처분은 사용자 결정 2026-10-22 로 정해졌다(6판). §5.2 는 여전히
-   측정 대상이다 — 그 결과는 구간 표의 칸을 확정하는 입력이다
-3. **US** — 실측 없음. 한계는 위 What Changes §1 「US 한계」
+   → 0.5(2026-10-20)가 엔진에 세션 게이트가 없음을 AST 로 확인했고, D7 처분은 사용자 결정 2026-10-22 로 정해졌다(6판). ~~§5.2 는 여전히
+   측정 대상이다~~ → **7판: §5.2 는 not-applicable**(2026-10-28 Q4 — 모름은 LIMIT 으로 고정됐고 실측은 다음 세션 체결 위험만 남긴다. design D7 「§5.2 처분」)
+3. **US** — 실측 없음. ~~한계는 위 What Changes §1 「US 한계」~~ → 7판: US 보호 청산은 실측 전까지 LIMIT(Q2)이라 미측정 착지 위험이 없다

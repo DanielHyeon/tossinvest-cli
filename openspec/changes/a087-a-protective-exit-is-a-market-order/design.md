@@ -250,6 +250,27 @@ func placeIntentSupported(intent orderintent.PlaceIntent, protectiveMarketSell b
 ([[two-judgements-cover-for-each-other]]). 그러므로 RED 는 두 관문을 **각각 단독으로** 잰다(한 관문을 우회한 직접 호출
 시험 각 1벌) — tasks 1.1·1.5.2.
 
+### ②·③ 손 읽기 주장의 AST 대조 (2026-10-28, HEAD `0c9bfd272` — 0.10 리뷰 증거)
+
+위의 「검증 필요 — AST 미작성」 주장 넷을 HEAD AST(`analysis/evidence/execgw--checkordershape.ast.json` ·
+`trading--placeintentsupported.ast.json` · `trading--service.place.ast.json` · `trading--service.previewplace.ast.json`, 열거
+`analysis/evidence/enumerate-output.md`)로 대조했다. 이 대조는 구현 전 FLM(1.0.1·1.5.1)을 **대체하지 않는다** — 그 번들은 착수 시 HEAD 에서
+다시 만든다. base `102d4e99` 이후 `failclosed.go` 의 변경은 `AllReasonCodes` 의 6줄(a112 `3260f4eb6` · a094 `766a8456c`)뿐이고
+`checkOrderShape`·`trading/service.go` 본문은 base 와 같다(`git diff 102d4e99 HEAD`).
+
+- **② 위치**: `checkOrderShape` B10(`:84` `orderType != "limit"` 거부) 뒤에 B11(`:88` KR 통화) · B12(`:91` 수량 `<= 0`) · B13(`:94` 가격 `<= 0`)이
+  온다. 손 읽기와 같다 — `sell+market` 예외를 B10 의 조기 `return nil` 로 넣으면 B11·B12 를 건너뛰고, B13 은 `sell+market` 에서 `Price != 0` 거부로
+  갈라야 한다.
+- **③ 위치**: `placeIntentSupported` B3(`:281` 비지정가 `return false`) 뒤에 B4(`:284` KR → KRW) 와 마지막 반환(`:287` US → KRW|USD)이 온다. 손 읽기와 같다.
+  ③ 에는 **수량·가격 검사가 없다**(분기 4개 전부 시장·분수·유형·통화).
+- **정수 수량 (1.1a 입력)**: ② B12 는 `<= 0` 만, ③ 은 수량을 보지 않는다 — **어느 관문도 비분수 MARKET 의 정수성을 검사하지 않는다.** 1.1a 의
+  처분(로컬 거부 추가 / 브로커 400 위임)은 이 사실에서 출발한다.
+- **두 호출자**: `Service.Place` B1(`:188`)이 술어를 부르고 B4(`:200`)에서 `s.guard(…, s.PreviewPlace(intent), …)` 를 부른다. `PreviewPlace`(:109-143,
+  분기 6)는 `:115` 에서 술어를 다시 부른다. 한쪽만 옵션을 보면 갈라진다는 위 「두 호출자가 같은 값」 주장과 같다.
+- **문자열 정규화 차이**: ② 는 `ToLower`·`TrimSpace` 로 정규화하고(`:54-57`), ③ 은 `"kr"`·`"market"` 을 그대로 비교한다. 엔진 `sellIntent` 는
+  `m.position.Market` 을 그대로 싣는다. 오늘 LIMIT 보호 청산이 ③ 을 지나므로 생산 값은 소문자다 — 새 판정(D7 「구간 입력」 조건 1)은 `clock.ParseMarket`
+  으로 정규화하고, 실패는 LIMIT 이다.
+
 ### 왜 진입은 계속 막는가
 
 `riskcalc`의 근거가 진입에서는 여전히 옳다 — 시장가 매수는 노출 평가가가 없고, Guardian이
@@ -310,7 +331,7 @@ D2a 는 그것을 관측가·기준선 **뒤의 셋째 폴백 단**으로 좁혔
 | 세 관문 | 전부 통과(여전히 LIMIT — ③ 변경 불요) | ②·③ 변경 필요(D3) — ③ 은 엔진 인스턴스 옵션, upstream 동작 변화 0(2차 결정) |
 | 245,750 사건 | 해소(거래소 공표값 = 온그리드) | 해소(가격 없음) |
 | 원장 가격 | 남는다 | 비운다(D4·§3 화면 작업 필요) |
-| 시장 | **KR 전용**(`client/marketdata.go` 「미국장은 일일 가격제한 제도가 없음」) | KR·US |
+| 시장 | **KR 전용**(`client/marketdata.go` 「미국장은 일일 가격제한 제도가 없음」) | KR 만(7판 — US 는 실측 전까지 LIMIT, D7 Q2) |
 | 브로커 호출 | 보호 청산마다 `PriceLimits` GET 1회(§0.4) | 추가 0 |
 | 시간외단일가 | 가격 범위 밖일 가능성 `[미측정]` | MARKET 불가 → 오늘과 같은 LIMIT(D7 처분 2026-10-22) |
 | 체결 품질 | 하한가 도달·매수 호가 공백 시 미체결 | 같음(D8) |
@@ -364,25 +385,32 @@ spec Requirement 1 은 보호 청산의 지정가를 **금지**한다(SHALL NOT)
 Manager 질문 「시장가가 안 되는 시간대에 손절을 어떻게 낼지. 권장: 그 시간대에는 지금처럼 지정가」에 사용자가 그 권장대로 답했다.
 그래서 spec Requirement 1 을 다음처럼 개정했다(requirement 수준 변경 — WORKFLOW 「리뷰 게이트」에 따라 수정분 리뷰를 다시 받는다, tasks 0.10).
 
+> **7판 개정 (사용자 결정 2026-10-28 「권장대로」 — `issues.md` 「사용자 결정 (2026-10-28)」)**: 아래 표는 Q2·Q3·Q4 를 반영한
+> 판본이다. 바뀐 칸은 넷이다 — ① **US 정규장 MARKET → LIMIT**(Q2, 실측 전까지), ② KRX 정규장 MARKET 칸을 **브로커 달력이 정상 영업일로
+> 보이는 날**로 좁혔다(Q3 — 휴장·조기 폐장·개장 지연일은 종일 LIMIT), ③ 「§5.2 가 접수를 보이기 전까지」 문구를 **LIMIT 확정**으로 바꿨다
+> (Q4 — §5.2 not-applicable), ④ 종가단일가(15:20~15:30)를 LIMIT 으로 뺐다(Q1 원칙 적용 — `review.md` 0.10 P2-4). 6판 표의 US 정규장 행 「MARKET — 미측정 착지」는 **철회**됐다. 구간 판정 규칙은 아래 「구간 입력」 절.
+
 | 구간 | 보호 청산 유형 | 근거 |
 | --- | --- | --- |
-| KRX 정규장 | MARKET | §5.1 접수 실측(M50) |
+| KRX 정규장 접속매매 — 브로커 달력이 그날을 **정상 영업일**로 보이고(아래 「구간 입력」 조건 1~5) 그 시각이 09:00~15:20 KST 안 | MARKET | §5.1 접수 실측(M50, 14:59 접속매매) |
+| KRX 정규장 종가단일가(15:20~15:30) | **LIMIT(오늘과 같음)** | Q1 원칙(접수 미측정 → LIMIT)을 이 하위 구간에 적용 — §5.1 은 이 구간을 재지 않았다. 문서 유도, Manager 확인(`review.md` 0.10 P2-4) |
+| KRX 휴장일 · 조기 폐장일 · 개장 지연일 (달력의 그날 정규장이 정상 영업일 모양이 아님) | **LIMIT — 그날 종일** | Q3(조기 폐장일 13:00~15:30 MARKET 누출 방지) + 아래 「구간 입력」 해석 |
 | KRX 시간외단일가 | **LIMIT(오늘과 같음)** | 거래소 제도상 시장가 없음 |
-| KRX 장 마감 후·장 개시 전 그 밖의 구간 | §5.2 가 접수를 보이기 전까지 **LIMIT** · 거부를 보이면 LIMIT 확정 | 사용자 결정 + 아래 불변식 4 유도 |
-| US 정규장 | MARKET | proposal 「US 한계」 — 미측정 착지, §1~§3 착수 전 사람 확인 항목(변경 없음) |
-| US 프리/애프터 | 접수 실측 전까지 **LIMIT** · 거부가 관측되면 LIMIT 확정 | 사용자 결정 + 아래 불변식 4 유도 |
-| 구간 판정 입력을 못 읽음 | **LIMIT** | 아래 불변식 4 유도 |
+| KRX 장 마감 후·장 개시 전 그 밖의 구간 | **LIMIT 확정** | 사용자 결정 2026-10-22 · Q4(§5.2 not-applicable — 이 칸을 옮길 실측을 하지 않는다) |
+| US 정규장 | **LIMIT — 실측 전까지** | Q2(2026-10-28). US MARKET 접수 실측 0(M12 는 조건주문). 6판의 「미측정 착지」 철회 |
+| US 프리/애프터 | **LIMIT** | 사용자 결정 2026-10-22 · Q2 |
+| 구간 판정 입력을 못 읽음 — 달력 오류·결측·낡음·시계 역행·시장 문자열 판정 불가 | **LIMIT** | Q1(불변식 4 유도 수락) · Q3(달력 오류·결측이면 LIMIT) |
 
 LIMIT 의 가격은 오늘 `sellIntent` 사다리 그대로다(관측가 → 기준선 → 거부 — `analysis/function-logic/internal-app-engine--exitobserver.sellintent/`
-base `102d4e99` 산출물. 구현 때 HEAD 에서 다시 만든다 — tasks 2.1).
+base `102d4e99` 산출물. HEAD `0c9bfd272` AST `analysis/evidence/engine--exitobserver.sellintent.ast.json` 도 분기 4·반환 4 로 같다. 구현 때 HEAD 에서 FLM 으로 다시 만든다 — tasks 2.1).
 
 **불변식 4 근거 (약화 없음).** 기준선은 오늘의 동작(보호 청산은 언제나 LIMIT)이다. 이 처분은 오늘보다 나빠지는 칸을 만들지 않는다.
 
-- MARKET 칸은 접수가 실측된 구간(KRX 정규장)과, 사람이 이미 미측정 착지를 확인하기로 한 US 정규장뿐이다.
+- MARKET 칸은 접수가 실측된 구간 하나 — 정상 영업일의 KRX 정규장 접속매매(09:00~15:20) — 뿐이다(7판: US 정규장 칸 삭제 Q2 · 종가단일가 제외 P2-4).
 - 그 밖의 칸은 LIMIT 이라 오늘과 바이트 같은 주문을 낸다.
 - 접수가 실측되지 않은 구간과 판정 입력이 없는 경우를 LIMIT 으로 둔 것은 이 문서의 유도다. 사용자 문언은 「시장가가 안 되는 시간대」다.
   모르는 구간에 MARKET 을 내면 거부될 수 있고, 같은 구간에 LIMIT 은 오늘 접수될 수 있다. 그러면 그 칸은 오늘보다 약해진다(§0.3 위반).
-  그래서 모름은 LIMIT 으로 기운다. 이 유도는 Manager 확인 대상이다(tasks 0.10).
+  그래서 모름은 LIMIT 으로 기운다. **이 유도는 사용자가 수락했다(2026-10-28 Q1).**
 - 반대 방향(실제로는 MARKET 을 받는 구간인데 LIMIT 을 냄)은 오늘과 같은 동작이다. 그러므로 약화가 아니다. 이득을 덜 얻을 뿐이다.
 
 **무효화된 줄.**
@@ -391,10 +419,76 @@ base `102d4e99` 산출물. 구현 때 HEAD 에서 다시 만든다 — tasks 2.1
 - tasks 2.4 「보호 제안일 때 가격을 읽지 않는다」 — **MARKET 구간에서만** 참이다. LIMIT 구간에서는 오늘처럼 가격을 읽는다. tasks 2.4·2.5 를 그에 맞춰 고쳤다.
 
 **새 설계 의무 (구현 task 2.6).** 엔진은 오늘 세션 입력을 하나도 읽지 않는다(0.5). 그래서 구현은 MARKET/LIMIT 을 가를 **구간·접수
-입력**을 새로 배선해야 한다. 이 입력의 출처는 이 문서가 정하지 않는다. 후보는 저장소에 이미 있는 `clock` 시장 시계 술어
-(`InRegularSession` — 비시험 호출자는 `verifylive/hours.go` 하나, 0.5 「한계」)이다. 다만 그 술어가 시간외단일가·휴장일을 어떻게
-가르는지는 이 문서가 주장하지 않는다. 손으로 읽지 않았기 때문이다. 입력 출처의 함수는 2.6 에서 `tools/logic-map` AST 로 먼저 열거한다.
+입력**을 새로 배선해야 한다. ~~이 입력의 출처는 이 문서가 정하지 않는다.~~ 출처는 7판에서 정해졌다(아래 「구간 입력」, Q3).
 `sellIntent` 시그니처에 시각 또는 구간 인자가 더해지면 2.1 FLM 의 분기 집합이 바뀐다. 그래서 2.1·2.6 은 같은 로트에서 재생성한다.
+
+### 구간 입력 (7판 — 사용자 결정 2026-10-28 Q3)
+
+**출처 = 브로커 시장 달력 + 고정 시각.** 달력 읽기는 `official.Client.TypedMarketCalendar`(`internal/official/typed_calendar_reads.go:37`)이고,
+엔진 진입 쪽 `strategyScheduleAuthorityLoader.prepare`(`strategy_schedule_authority.go:220`)가 이미 같은 함수를 부른다. **달력 오류·결측이면 LIMIT.**
+분기 근거는 손 읽기가 아니라 HEAD `0c9bfd272` 의 AST 다 — `analysis/evidence/*.ast.json`, 열거 `analysis/evidence/enumerate-output.md`
+(재생성 `python3 -I …/analysis/evidence/enumerate.py`, `source_sha256` 대조 stale 0).
+
+**`clock` 술어만으로는 안 되는 이유 (AST).** `Market.RegularSession`(`clock/market.go:122-143`)의 분기는 B1(`Location` 오류)·B2(시장 표 없음)
+둘뿐이고 성공 반환(:136)은 고정 표 `regularHours`(:55-58, KR 09:00~15:30)로 창을 만든다. `Session.Contains`(:113-118)는 B1 에서 주말·0 값만 거른다.
+휴장일·조기 폐장·개장 지연을 가르는 분기는 **없다** — 파일 주석(:49-54)도 휴일은 브로커 달력 몫이라 적는다. 그래서 `InRegularSession` 만 쓰면
+조기 폐장일 13:00~15:30 에 MARKET 이 나간다(Q3 의 누출).
+
+**달력 함수의 분기 (AST).**
+
+- `TypedMarketCalendar`: B1 나라 문자열(KR·US 외 오류) · B2 날짜 검증 · B4 GET 오류 → 오류 반환. 응답을 해석하지 않고 그대로 돌려준다.
+- `scheduler.adaptCalendarDay`(`scheduler/calendar.go:103-134`): KR 은 B4·B5 에서 `Integrated.RegularMarket` 만 읽는다. B8 — 세션이 없으면
+  `Regular == nil` 인 **정상 반환**(오류 아님 — 휴장일 모양). B9 — 시작·끝 0 값·역순 오류, B10 — 거래소 현지 날짜 밖 오류.
+- `scheduler.AdaptOfficialCalendar`(`:56-101`): B6 이전 < 오늘 < 다음 영업일 순서, B7 이전·다음 영업일의 정규장 존재를 요구한다. **오늘의
+  `Regular == nil` 은 통과한다**(휴장일). `EarlyClose`(:132)는 길이가 6h30m 미만인지만 본다 — 개장 지연(길이 같고 시각이 밀림)은 못 가른다.
+- `CalendarSnapshot.ValidityAt`(`:138-149`): B1 시계 역행 · B2 6시간 신선도 · **B3 `REFRESH_TOO_LATE` — 정규장 중에 장 개시 뒤 읽은 달력을 거부**.
+
+**openapi 의 KR 정규장 의미 (`docs/migration/openapi.latest.json` 스키마 `RegularMarketSession`·`IntegratedHour`)**: 달력의 KR 정규장은
+「**KRX·NXT 정규장의 합집합**(가장 이른 시작 ~ 가장 늦은 종료). 종가단일가 구간을 포함」이다. 같은 스키마의 `singlePriceAuctionStartTime` 은
+「정규장 내 종가단일가 구간 시작 (**KRX 기준**). KRX 휴장이면 null」이다. 즉 합집합 창은 **KRX 자신의 조기 폐장을 숨길 수 있다**(NXT 가 정상
+운영하면 합집합은 정상 모양). 그리고 현재 Go 형 `official.MarketCalendarSession`(`typed_calendar_reads.go:11-14`)은 `startTime`·`endTime` 둘만
+읽는다 — KRX 기준 필드가 없다. openapi 예시에 조기 폐장일 표본은 없다(예시 요약: 영업일 · 휴장일 · 부분 휴장 — `[미측정]`).
+
+**판정 규칙 (MARKET 은 다섯 조건이 모두 참일 때만, 하나라도 거짓·불명이면 LIMIT).**
+
+1. 시장이 KR 이다 — `clock.ParseMarket` 으로 정규화. 실패 → LIMIT. US 는 Q2 로 언제나 LIMIT 이므로 US 달력은 읽지 않는다.
+2. 엔진 메모리에 KR 달력 응답이 있고, 그 응답이 `AdaptOfficialCalendar` 검증을 통과한다(위 B1~B8 — 오류면 LIMIT).
+3. 응답의 신선도: 읽은 시각이 `now` 보다 미래가 아니고 읽은 지 6시간 미만(`ValidityAt` B1·B2 와 같은 값·같은 의미). **`ValidityAt` 을 그대로
+   쓰지 않는다** — B3 `REFRESH_TOO_LATE` 는 진입 활성화의 규칙이고, 청산에 쓰면 6시간 상한과 겹쳐 KRX 정규장 끝 구간이 매일 LIMIT 으로 강등된다
+   (장 개시 전에 읽은 달력은 늦어도 장 개시 6시간 뒤 낡는데 정규장은 6시간 30분이다). 강등은 안전 약화가 아니라 이득 손실이지만, 규칙을 가져오는
+   이유가 청산에 없다.
+4. 응답의 오늘 날짜가 `now` 의 KST 날짜와 같고, 그날 KR 정규장이 **정상 영업일 모양**이다 — 시작 09:00 · 끝 15:30 KST(합집합) **그리고**
+   KRX 기준 종가단일가 시작 15:20 KST. 이 셋 중 하나라도 다르거나 없으면(휴장 `integrated` null · 조기 폐장 · 개장 지연 · KRX 휴장) **그날 종일 LIMIT**.
+   KRX 기준 필드를 읽으려면 `official.MarketCalendarSession` 에 `singlePriceAuctionStartTime` 을 더해야 한다(타입 확장 — 2.6.4).
+5. 고정 시각: `now` 가 `[09:00, 15:20)` KST 안이고 주말이 아니다. 시작과 주말은 `clock.MarketKR.RegularSession(now)`(`Open` · `Weekend`)를 쓰고, 끝 15:20 은
+   종가단일가 시작 상수다 — `Session.Contains` 의 끝(15:30)은 종가단일가를 포함하므로 그대로 쓰지 않는다(위 표 종가단일가 행).
+
+「고정 시각」의 이 해석(정상 영업일이 아니면 종일 LIMIT, 정상일이면 고정 창)은 이 문서의 유도다 — 사용자 문언은 「브로커 달력 + 고정 시각」이다.
+대안(달력 창과 고정 창의 교집합)은 조기 폐장일 09:00~13:00 에 MARKET 이득을 더 얻지만, 합집합 의미 때문에 KRX 조기 폐장을 NXT 창이 가리면
+교집합이 13:00~15:30 을 다시 연다. 이 해석은 MARKET 칸을 대안보다 좁히기만 하므로 불변식 4 에 대해 보수 방향이다. Manager 확인 항목으로 남긴다
+(`review.md` 0.10 P2-2).
+
+**즉시성 제약 (불변식 4 — 이 절의 가장 무거운 요구).**
+
+- **제출 경로에서 브로커를 부르지 않는다.** 판정은 메모리의 마지막 달력 응답만 읽는다. 응답이 없거나 낡았으면 그 자리에서 LIMIT 이다 —
+  달력 GET 을 기다리지 않는다. 오늘의 LIMIT 보호 청산이 겪지 않는 대기를 더하면 그것이 지연이다.
+- **판정 실패는 거부가 아니라 LIMIT 이다.** 판정 함수는 오류를 반환해 `sellIntent`·`submit` 의 거부 갈래(`submit` B5 `:1533` → 해제)로 보내지
+  않는다. 달력 문제로 보호 청산이 **안 나가는** 갈래가 생기면 오늘보다 약해진다.
+- **달력 갱신은 청산 관측 주기 밖에서 한다.** 관측 루프(`Run` B3 `o.clk.Sleep(ctx, o.Interval())` — 0.5 AST)가 달력 GET 에 묶이면 판정이 늦어진다.
+  갱신 주기는 6시간 상한보다 짧아야 하고 KR 만 읽는다(§0.4 — 하루 수 회의 GET). 구조(별도 루프·기존 엔진 루프 목록 등록 등)는 2.6.4 가 정한다.
+- 엔진이 꺼져 있으면 이 갱신·판정이 없다(불변식 3 — CLI·ops·MCP 경로는 달력을 읽지 않는다).
+
+**잔존 `[미측정]`**: ① 브로커 달력이 KRX 조기 폐장·개장 지연을 위 필드로 실제로 보이는지(openapi 예시 없음). 거짓으로 정상 모양을 보이면 그날
+조기 폐장 뒤 MARKET 이 나갈 수 있다 — 그 시각 MARKET 이 거부되면 오늘보다 약하다. ② 정규장 칸 안의 종가단일가(15:20~15:30)와 VI 단일가는 §5.1
+(14:59 접속매매) 밖이다 — 종가단일가는 LIMIT 으로 뺐고(위 표), VI 단일가는 예측 입력이 없어 D8 잔존 행이다.
+
+### §5.2 처분 (7판 — 사용자 결정 2026-10-28 Q4): not-applicable
+
+§5.2(정규장 밖 KR MARKET 매도 1주 실측)는 하지 않는다. 사유: D7 이 모름을 LIMIT 으로 고정했으므로 실측의 이득은 「나중에 어떤 칸을 MARKET 으로
+옮길 근거」뿐이다. 그 칸은 오늘 LIMIT 이고 바뀌지 않는다. 반대로 실측은 실주문이 다음 세션에 체결될 위험이 있다(tasks §5 표 「세션 밖인데 200」 행).
+이득 0 · 위험 1 이다. 그래서 tasks 5.2 는 not-applicable 로, 5.3 은 5.1 분(M50)만으로 닫는다. LIMIT 칸을 MARKET 으로 옮기려면 새 실측 · spec 개정 ·
+리뷰를 거친다(이 change 밖). `issues.md` I-R2(`order-type-not-allowed` 422 분류)는 「§5.2 결과 뒤 판정」이었으므로 **판정할 입력이 없는 채 무소유로 남는다**
+— 정규장 밖 MARKET 을 내지 않으므로 그 코드를 받을 생산 경로가 없다.
 
 ## D8 — 시장가가 지정가보다 낫지 않거나 나빠지는 경계 조건 (재리뷰 P2-3)
 
@@ -402,6 +496,7 @@ base `102d4e99` 산출물. 구현 때 HEAD 에서 다시 만든다 — tasks 2.1
 | --- | --- | --- |
 | 하한가 도달·매수 호가 공백 | **범위 밖 — 잔존 위험** | MARKET 매도도 체결되지 않는다. 하한가 지정가 대비 이득 0. 체결 보장 주장 철회(proposal §0.3)가 이 행의 기록 |
 | VI(변동성 완화장치) 단일가 구간 | **범위 밖 — `[미측정]`** | 단일가 매매 중 MARKET 접수·체결 거동 실측 없음. §5 측정 항목도 아니다. `issues.md` I-R4 |
+| KRX 종가단일가(15:20~15:30 — 7판) | **다룬다 — LIMIT(오늘과 같음)** | openapi `RegularMarketSession` 이 정규장을 「종가단일가 구간을 포함」으로 정의한다. §5.1 은 14:59 접속매매 한 건이라 이 구간을 재지 않았다. D7 Q1 원칙(접수 미측정 → LIMIT)을 적용해 MARKET 칸에서 뺐다 — Manager 확인(`review.md` 0.10 P2-4) |
 | 부분체결 잔량 (1차 리뷰 A14 의 행방) | **다룬다 — tasks 3.6** → 갭 I-R9 는 **새 change a167 로 이연**(사용자 결정 2026-10-22: 경보만이 아니라 자동 재가격·재주문) | MARKET 잔량이 남는지·`filldetect` 가 그 잔량을 어떻게 닫는지 확인하고, 갭이면 issues 에 기록. 3.6 결과: 잔량이 비종결로 남는 동안 시간 상한·경보 없음(`analysis/partial-fill-3.6/`). 처분은 아래 D10 |
 | 1억 이상 주문 | **범위 밖 — 유형 무관 기존 위험** | `orders_write.go` `ConfirmHighValueOrder: false` → `400 confirm-high-value-required`(재리뷰 인용)는 LIMIT 에도 같다. MARKET 의 금액 평가 기준 `[미측정]` — `issues.md` I-R4 |
 | 갭다운·거래정지 | **범위 밖 — 잔존 위험** | 접수 ≠ 체결. 거래정지 중 제출 응답 `[미측정]` |
@@ -444,7 +539,9 @@ a087 이 남기는 것:
 ## 검증
 
 - `sellIntent` 분기: 보호 2종 → market·익절 → limit·시장가에 가격 없음·**보호가 가격
-  없음으로 거부되지 않음**(MARKET 구간) · **D7 LIMIT 구간·구간 판정 불가에서 보호 2종 → 오늘과 같은 limit**
+  없음으로 거부되지 않음**(MARKET 구간) · **D7 LIMIT 구간·구간 판정 불가에서 보호 2종 → 오늘과 같은 limit**(7판: US 정규장 포함 ·
+  휴장·조기 폐장·개장 지연일 종일 · 달력 오류·결측·낡음 — `PlaceIntent` 전체가 오늘 출력과 같음) · **판정 실패가 거부가 아니라 LIMIT** ·
+  **제출 경로의 브로커 호출 0**(D7 「구간 입력」 즉시성 제약)
 - `checkOrderShape` 표: `sell+market` 통과 / `buy+market` 거부 / 가격 실린 시장가 거부 /
   `sell+market` 의 통화·수량 검사 생존 / fractional·limit 기존 분기 무변화
 - `placeIntentSupported` 표(③, 단독 시험, **엔진 인스턴스 옵션 켬**): `sell+market`·가격 없음 지원 / `buy+market` 비지원 /
@@ -458,4 +555,5 @@ a087 이 남기는 것:
 - 전송 표류 가드: KR market sell 골든 행(`decision_test.go` — 현재 US 만)
 - `flatten`·`verifylive`·조건주문 무변화
 - 전체 `go test ./... -race` 회귀 0, upstream 650 green 유지
-- **실계좌 1회**(사용자 승인, `tools/a087-market-sell-probe/`): KR MARKET 매도 접수 + 세션 경계 응답 — 결과 → 처분은 tasks §5
+- **실계좌 1회**(사용자 승인, `tools/a087-market-sell-probe/`): KR MARKET 매도 접수(5.1 — 2026-10-19 M50 수용) — 세션 경계(5.2)는
+  not-applicable(7판 Q4, D7 「§5.2 처분」)
