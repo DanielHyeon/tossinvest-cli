@@ -305,3 +305,35 @@ P2-2 바깥 래퍼·정착 ctx 분리와 P2-3의 진입 전용 위치는 2차 �
 - 손으로 읽은 근거(AST 아님): lineage.go:157→174·strategy_dispatch_runtime.go:787→795·928→935 의 UPDATE→transition INSERT 쌍, filldetect 추적 목록(ledger.go:112–113), 콘솔·CLI 표면의 latch 미표시, `exit.liquidation_delayed` 두 경로의 문구·임계.
 - 실행하지 않은 것: 시험 전부·coverprofile, `check_analysis.py`, `make sdd-sync`·`make gate`. 진입 거절 사유가 운영자 화면까지 가는 경로는 추적하지 않았다(D12 ① 표).
 - **다음**: GPT 보이스 재리뷰. 꼭 볼 곳 — r2 를 기록 시작 순번으로 비교한 선택(정착 순번 대비), 질의 1·2 가 코드 판정과 갈릴 가능성(후보 목록으로만 쓰는가), latch 만 남은 상태의 경보 부재 수락.
+
+## 1.3 3차 재리뷰 (GPT-5.6 Terra, 2026-10-28)
+
+### 결론: **FAIL (구현 전 blocker 1)**
+
+R3-1의 `attempt_transitions.id` 순서 비교와 NULL fail-closed는 맞다. 같은 attempt의 재시도·재시작 `RecoverPending`·두 프로세스의 journal 쓰기는 이 판정을 우회하지 않는다. 그러나 latch는 거래일을 넘어서도 진입을 막는데, 다음 날/세션의 재취소는 현재 거래일로 기록되어 r2 후보에서 제외된다. D12의 자동 r2 해제 주장이 성립하지 않아 2.1 착수 금지다.
+
+### 발견
+
+| id | 심각도 | 발견 | 근거 | 구현 전 처분 |
+|---|---|---|---|---|
+| R3-3 | **P1** | **거래일 경계 뒤 재취소가 r2로 latch를 풀 수 없다.** `checkSymbolFree`의 latch 검색은 현재 plan의 거래일을 받지 않고 시장·종목만 비교하므로 D0의 latch는 D1에도 남는다. 반면 `Gateway.prepareRequest`는 재취소의 intent 거래일을 실행 시각의 `market.TradingDay(g.clk.Now())`로 기록한다. D11 r2는 latch L의 D0 범위를 후보 C에도 강제하고, 심지어 RED (h)는 같은 target X의 다른 거래일 C를 거절으로 고정한다. 따라서 D0 R3 → 거래일 경계 → D1 엔진 재취소 CONFIRMED는 `r_C > s_L`이어도 범위 불일치로 r2가 아니며, 체결 감지 r1이 지연·실패하면 진입 차단이 계속된다. | `design.md:196,198,213-214,232`; `internal/execgw/gateway.go:798-840,1011-1041`; `internal/journal/fills.go:1854-1918`; `internal/filldetect/ledger.go:125-148`; `internal/filldetect/payload.go:105-109,144-159`. | D11의 시간축을 정한다. 권장: CANCEL attempt의 기록일이 아니라 **target order의 canonical scope**(L이 읽은 D0 account·market·trading_day·symbol)를 r2 비교에 보존한다. 즉 재취소 intent가 target의 원 거래일을 상속하거나, 질의가 C의 현재 intent가 아닌 target의 durable owner scope로 같은 대상임을 증명해야 한다. broker order id가 거래일을 넘어 재사용될 수 있으므로 거래일 비교 자체를 제거하면 안 된다. 어느 쪽이든 D0→D1 r2 양성, D0 latch와 다른 범위/다른 target 음성, D0 terminal r1 양성을 RED·변이에 추가한다. |
+| R3-4 | P2 | **D12의 읽기 전용 질의 2는 코드 r2 범위를 재현하지 못한다.** Q1은 account를 출력하지 않고, Q2는 `target_order_id`만 거르며 account·market·symbol·latch 거래일을 출력·비교하지 않는다. 재사용된 order id의 다른 범위 CANCEL도 `recorded_seq > latch_seq`처럼 보일 수 있다. 코드 판정은 fail-closed라 잘못 풀리지는 않지만, 직전 R3-2를 해소하려는 운영 조회가 잘못된 후보를 제시한다. | `design.md:253-267`; `design.md:213-214`; `internal/journal/exit_proposal_release.go:150-173`; `internal/journal/schema.go:205-207,223-255`. | Q2를 `latch_attempt`에서 시작해 C와 account·market·trading_day·symbol·byte-exact target id를 모두 조인·출력하고 `recorded_seq > latch_seq`를 SQL에서 직접 판정하게 고친다. P1의 거래일 정책을 먼저 확정한 뒤 같은 조건을 사용한다. |
+
+### 재검증한 처분
+
+- **R3-1 순서 경계: 통과.** `attempt_transitions.id`는 AUTOINCREMENT append-only이며 BEGIN IMMEDIATE 쓰기로 직렬화된다. `Prepare`의 RECORDED와 `transition`의 FAILED_CONFIRMED는 각각 상태 행과 같은 트랜잭션에서 기록된다. 누락 transition은 SQL NULL 비교로 해제되지 않는다. `FAILED_CONFIRMED`는 `PendingAttempts` 대상이 아니므로 `RecoverPending`도 latch를 변경하지 않는다.
+- **동시 engine/flatten: 통과.** 같은 journal을 쓰는 후행 CONFIRMED CANCEL만 r2 후보가 되고, latch 이전에 RECORDED된 뒤 늦게 CONFIRMED된 attempt는 `r_C > s_L`을 만족하지 않는다. `flatten-all`은 비상 청산이지 일반 해제 수단이 아니라는 D12 처분도 유지된다.
+- **r1·운영 경로: 수락 가능한 잔여.** `JournalTracked`는 terminal이 아닌 주문과 CONFIRMED attempt가 명명한 주문을 추적한다. broker 종료인데 감지가 종결 snapshot을 쓰지 못하면 r1은 오지 않고, `order cancel`·`attempt-resolve`은 journalled 해제가 아니다. D12는 엔진을 계속 돌려 r2를 기다리고 감지 장애 runbook을 따르도록 하며, 진입만 막고 exit·손절·flatten은 열어 둔다. 별도 수동 해제 명령을 추가하지 않는 것은 보수 방향으로 수락한다. 단, 위 P1 때문에 거래일 경계를 넘긴 r2는 현재 그 잔여의 완화책이 아니다.
+- **사유 가시성: 수락 가능한 잔여.** 기존 `ReasonSymbolInFlight` 재사용은 API detail의 `already-processing`, attempt id, target order id로 일반 in-flight와 구분된다. 콘솔까지 detail이 전달되는지는 추적하지 않았고 D12 읽기 전용 조회가 보완한다. 새 reason code·UI는 이 라운드 범위 밖이다.
+
+### 구현 착수 전 필수 조치
+
+1. R3-3 거래일 경계 계약·r2 SQL·D11 RED/변이를 수리한다.
+2. R3-4 Q2를 확정한 r2 범위와 동일하게 고친다.
+3. 수리 뒤 별도 재리뷰를 통과하기 전 2.1을 시작하지 않는다.
+
+### 검증·스킬·미실행
+
+- 정적 확인: HEAD `e10f45500`; 지정된 design/spec/tasks/issues/review 및 journal·engine·filldetect·CLI source 대조, `git diff --check` 통과.
+- `ai-memory-retrieval`: MCP 조회 도구가 없어 CLI 색인으로 a165를 찾았으나 결과 0. `search-first`: 저장소 심볼·기존 구현을 우선 검색했고 새 기능·의존성·통합을 만들지 않아 외부 패키지/레지스트리 채널은 N/A. `grill-me`/`grilling`: 기존 사람 결정과 승인 범위가 확정돼 새 질문 N/A. `impeccable: N/A — backend/documentation-only`.
+- 지시상 소스·시험 편집·시험 실행·운영 콘솔·docker·sqlite3 운영 원장·주문·mutating 명령 0. `openspec validate`, `check_analysis.py`, `make sdd-sync`, `make gate`도 실행하지 않았다.
