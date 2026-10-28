@@ -354,3 +354,25 @@ R3-1의 `attempt_transitions.id` 순서 비교와 NULL fail-closed는 맞다. �
 - 새 잔여 R-a165-7: 원장 밖 주문의 번호 재사용은 주인 유일성이 못 본다(측정 0, 수락 사유 issues).
 - 실행하지 않은 것: 시험 전부·coverprofile, `check_analysis.py`, `make sdd-sync`·`make gate`.
 - **다음**: GPT 보이스 재리뷰. 꼭 볼 곳 — 거래일을 뺀 뒤의 번호 재사용 방어(주인 유일성이 거래일 비교를 대신하는가, 원장 밖 재사용 R-a165-7 수락), 주인 술어를 거래일·매매방향 없이 센 선택, 「target 거래일 상속」을 택하지 않은 이유(schema 36).
+
+## 1.3 4차 재리뷰 (GPT-5.6 Terra, 2026-10-28)
+
+**PASS — P0 0 · P1 0 · P2 0 · P3 1(기록된 수락 잔여 R-a165-7).** 3차 재리뷰 R3-3·R3-4 보완은 계약과 현재 HEAD에서 서로 맞는다. 구현 전 추가 설계 수리 없음. Manager 최종 판정 전에는 2.1을 시작하지 않는다.
+
+### 확인 결과
+
+- **R3-3 거래일 경계**: D11 r2는 L에서 정규화한 계좌·시장·종목과 바이트 동일 `target_order_id`만 C와 비교하고 거래일은 비교하지 않는다. `Gateway.prepareRequest`는 실행일을 새 intent에 기록하고, `clearTheSymbol`은 거래일 인자 없는 `LiveOrdersForSymbol`의 현재 `OrderID`를 재취소에 넘긴다. 따라서 D0 latch → D1 재취소 CONFIRMED가 `r_C > s_L`이면 풀리고, 계좌·시장·종목·target 중 하나가 다르면 풀리지 않는다.
+- **주인 유일성**: r2의 주인은 같은 정규화 계좌·시장·종목에서 `broker_order_id = target`인 CONFIRMED PLACE/AMEND의 `COUNT(DISTINCT intent_id)=1`이다. 같은 intent의 여러 attempt는 1로 유지된다. AMEND가 새 broker id를 받으면 옛 target의 주인 수를 늘리지 않으며, 같은 id를 다시 쓰면 2가 되어 해제하지 않는다. 부분 체결로 원 주문이 남아도 주인 수는 유지되고, latch 뒤 CONFIRMED CANCEL이 있어야 r2가 된다.
+- **LiveOrdersForSymbol 대조**: 상태·kind·broker id·`DISTINCT intent_id`라는 주인 정의는 같다. 기존 목록은 거래일·매매방향까지 같은 범위에서 live 목록을 만들고, r2는 재사용을 보수적으로 잡기 위해 두 축을 의도적으로 빼 더 넓게 센다. 설계·RED (i)~(k)·변이 ⑩~⑫가 이 차이를 명시하고 고정한다.
+- **R3-4 D12**: 질의 2는 L에서 출발해 코드 r2와 같은 계좌·시장·종목·바이트 target 조인, `owners.n = 1`, `recorded_seq > latch_seq`를 적용한다. 거래일은 두 값 모두 출력만 한다. 상태 무관 CANCEL 목록에 `r2` 열을 붙이는 조회라, `r2=1`도 코드 판정이 아닌 후보라는 표기가 있다.
+- **기존 통과 항목**: D5의 바깥 래퍼·`winCtx`와 정착 ctx 분리, D11 삽입점(B3 뒤), 엄격 순번·NULL fail-closed, 원장 재계산 재시작 내구성·journal transition 직렬성은 3차 보완으로 변경되지 않았다. `execgw--gateway.preparerequest.ast.json`의 `source_sha256`은 현재 `gateway.go`와 일치한다.
+
+### R-a165-7 판단
+
+**P3 수락 유지.** 원장 밖 주문이 같은 번호를 재사용하면 현재 원장에는 그 주문 instance를 구별할 durable broker 키가 없어 r2가 그 충돌을 볼 수 없다. r2 자체를 폐지해 r1만 기다리는 방법은 fail-closed이지만 D0→D1 재취소 해제 계약을 포기한다. 현재 범위에서 그 둘을 함께 만족하는 구현 수단은 없다. 잔여를 `issues.md`에 남기고, 구현은 k1·k2의 journal 내 충돌을 fail-closed로 고정해야 한다. 원장 밖 충돌을 다루려면 별도 change에서 broker가 보증하는 instance identity 또는 권위 있는 대사 근거를 도입해야 한다.
+
+### 검증·스킬·미실행
+
+- 정적 확인: HEAD `2528e7491`; D11/D12·delta·tasks·issues·3차 처분, 지정 journal/execgw/engine source와 evidence AST를 읽어 대조했다. 소스 SHA-256 일치 확인.
+- `ai-memory-retrieval`: CLI 검색과 Hindsight recall에 a165 직접 근거 없음. `search-first`: 기존 저장소 코드·시험·evidence를 우선 대조했고, 새 기능·의존성·통합을 만들지 않아 외부 채널 N/A. `impeccable: N/A — backend/documentation-only`.
+- 지시상 소스·시험 편집·시험 실행·운영 콘솔·docker·원장·주문·mutating 명령 0. `openspec validate`, `check_analysis.py`, `make sdd-sync`, `make gate`도 실행하지 않았다.

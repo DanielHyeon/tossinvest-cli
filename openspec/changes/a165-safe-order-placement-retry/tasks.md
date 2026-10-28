@@ -1,4 +1,4 @@
-> 착수 2026-10-23(Terra). 1.3 1차·2차 FAIL → 사용자 3차 결정(F3=1)으로 범위 = R3·R4·R5. design·delta 3판 → 1.3 3차 리뷰 PASS(2026-10-28) → **1.3 2차 독립 리뷰(GPT-5.6 Terra) FAIL → 보완 완료(2026-10-28, design D5·D11) → 재리뷰 FAIL(P1 1·P2 1) → 보완 완료(design D11 r2·D12) → 3차 재리뷰 FAIL(P1 1·P2 1) → 보완 완료(r2 거래일 경계를 정규 범위로·D12 질의 2 범위 조인), 재리뷰 대기**. 다음 = 재리뷰 → 2.1 Pre-Edit.
+> 착수 2026-10-23(Terra). 1.3 1차·2차 FAIL → 사용자 3차 결정(F3=1)으로 범위 = R3·R4·R5. design·delta 3판 → 1.3 3차 리뷰 PASS(2026-10-28) → **1.3 2차 독립 리뷰(GPT-5.6 Terra) FAIL → 보완 완료(2026-10-28, design D5·D11) → 재리뷰 FAIL(P1 1·P2 1) → 보완 완료(design D11 r2·D12) → 3차 재리뷰 FAIL(P1 1·P2 1) → 보완 완료(r2 거래일 경계를 정규 범위로·D12 질의 2 범위 조인) → 4차 재리뷰 PASS — Manager 최종 판정 대기**. 다음 = Manager 최종 판정 → 2.1 Pre-Edit.
 
 ## 0. 착수 준비
 
@@ -29,7 +29,7 @@
     R3-2: design D12 운영 절(읽기 전용 원장 조회·journalled 해제 r1/r2·`tossctl order cancel` 은 해제 아님·기존 `exit.liquidation_delayed` 경보), issues R-a165-5·6 처분 갱신.
   → **3차 재리뷰(GPT-5.6 Terra) 2026-10-28 FAIL(P1 1·P2 1) → 보완 완료, 재리뷰 대기** — R3-3: r2 비교에서 거래일을 빼고 대상 주문의 정규 범위(계좌·시장·종목·`target_order_id`)를 L 에서 읽어 비교, 번호 재사용은 주인 유일성(그 범위의 접수 확정 주인 intent 정확히 1)으로 막음, 순번 `r_C > s_L` 그대로,
     RED (h) 갱신(「다른 거래일 → 거절」 삭제)·(i)~(k) 추가, 변이 ⑩ 교체(거래일 같음 복원)·⑪(계좌·시장·종목 비교 제거)·⑫(주인 유일성 제거), evidence AST `execgw--gateway.preparerequest`, schema 36 그대로 /
-    R3-4: D12 질의 1 에 계좌 열, 질의 2 를 r2 와 같은 범위 조인·주인 수·순번을 SQL 에서 판정하고 범위 열 출력(후보 목록 — 판정 아님). issues R-a165-5·6 갱신, 새 잔여 R-a165-7. 통과 전 2.1 착수 금지.
+    R3-4: D12 질의 1 에 계좌 열, 질의 2 를 r2 와 같은 범위 조인·주인 수·순번을 SQL 에서 판정하고 범위 열 출력(후보 목록 — 판정 아님). issues R-a165-5·6 갱신, 새 잔여 R-a165-7. **4차 재리뷰 PASS — Manager 최종 판정 대기.**
 
 ## 2. 구현 (RED → GREEN → REFACTOR → VERIFY)
 
