@@ -1,6 +1,6 @@
 {
   "file": "internal/execgw/cancel_refusal.go",
-  "source_sha256": "576b7752ce9dac5121d61a83f2bdbc5a65c1c71b22b185f4c338e47655586485",
+  "source_sha256": "fd04d50f9a03ee097a0e1a0b336d0b1faaf3794d8e061c24820cca3c780b2ebf",
   "package": "execgw",
   "function": "withCancelRefusal",
   "receiver": "Gateway",
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 54,
+        "line": 53,
         "column": 3
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 57,
+        "line": 56,
         "column": 3
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 62,
+        "line": 61,
         "column": 3
       }
     },
@@ -129,21 +129,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 55,
+        "line": 54,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 60,
+        "line": 59,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 63,
+        "line": 62,
         "column": 4
       }
     },
@@ -210,14 +210,6 @@
       "kind": "call",
       "at": {
         "line": 51,
-        "column": 16
-      },
-      "text": "time.Now"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 52,
         "column": 12
       },
       "text": "dispatch"
@@ -225,7 +217,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 53,
+        "line": 52,
         "column": 15
       },
       "text": "alreadyProcessingRefusal"
@@ -233,7 +225,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 58,
+        "line": 57,
         "column": 11
       },
       "text": "decorateCancelRefusal"
@@ -241,7 +233,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 59,
+        "line": 58,
         "column": 21
       },
       "text": "string"
@@ -249,7 +241,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 63,
+        "line": 62,
         "column": 11
       },
       "text": "decorateCancelRefusal"
@@ -260,15 +252,7 @@
         "line": 66,
         "column": 21
       },
-      "text": "context.WithDeadline"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 66,
-        "column": 48
-      },
-      "text": "wallStart.Add"
+      "text": "context.WithTimeout"
     },
     {
       "kind": "call",
@@ -415,21 +399,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 53,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 58,
+        "line": 57,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 59,
+        "line": 58,
         "column": 4
       }
     },

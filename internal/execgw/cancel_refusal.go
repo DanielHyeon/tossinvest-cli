@@ -48,7 +48,6 @@ func (g *Gateway) withCancelRefusal(plan mutationPlan, dispatch journal.Dispatch
 	policy := *g.cancelRefusal
 	return func(dctx context.Context, a *journal.Attempt) journal.DispatchOutcome {
 		start := g.clk.Now()
-		wallStart := time.Now()
 		first := dispatch(dctx, a)
 		wait, ok := alreadyProcessingRefusal(first.Err)
 		if !ok || first.Class != journal.DispatchAmbiguous {
@@ -63,7 +62,8 @@ func (g *Gateway) withCancelRefusal(plan mutationPlan, dispatch journal.Dispatch
 			return decorateCancelRefusal(first, 1, "policy", "today", first.Class)
 		}
 
-		winCtx, cancel := context.WithDeadline(dctx, wallStart.Add(policy.Window))
+		// winCtx 시한은 판정이 아니라 매달린 재전송을 끊는 실시간 상한임. 생산에서는 systemClock과 같은 시계라 창 판정과 일치함. Fake 시계 시험에서는 실시간 8초 전에 Clock 판정이 먼저 끝남.
+		winCtx, cancel := context.WithTimeout(dctx, policy.Window)
 		defer cancel()
 		waited := time.Duration(0)
 		sends := 1

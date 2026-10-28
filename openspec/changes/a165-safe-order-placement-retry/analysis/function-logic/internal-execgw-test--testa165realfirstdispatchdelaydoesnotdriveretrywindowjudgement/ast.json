@@ -1,0 +1,193 @@
+{
+  "file": "internal/execgw/a165_cancel_refusal_boundary_test.go",
+  "source_sha256": "e728c257f29ffaedbf547080c55c64c836b900c8859895bd4563a1d2d276883e",
+  "package": "execgw_test",
+  "function": "TestA165RealFirstDispatchDelayDoesNotDriveRetryWindowJudgement",
+  "signature": "TestA165RealFirstDispatchDelayDoesNotDriveRetryWindowJudgement(params=1, results=0)",
+  "start": {
+    "line": 85,
+    "column": 1
+  },
+  "end": {
+    "line": 107,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 104,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 34
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 7
+      },
+      "text": "openJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 8
+      },
+      "text": "a165BoundaryGateway"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 14
+      },
+      "text": "a165BoundaryCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 23
+      },
+      "text": "j.LookupAttempt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 39
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 12
+      },
+      "text": "clk.Since"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 104,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

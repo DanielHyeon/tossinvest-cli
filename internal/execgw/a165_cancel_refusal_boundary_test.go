@@ -82,7 +82,7 @@ func a165BoundaryCancel(t *testing.T, gw *execgw.Gateway, j *journal.Journal, cl
 	})
 }
 
-func TestA165ExpiredRetryWindowDoesNotCancelSettlement(t *testing.T) {
+func TestA165RealFirstDispatchDelayDoesNotDriveRetryWindowJudgement(t *testing.T) {
 	clk := a165AdvancingClock{Fake: clock.NewFake(fixedNow)}
 	j := openJournal(t, clk)
 	broker := &a165BoundaryBroker{firstDelay: 25 * time.Millisecond, retryAfter: "0.001"}
@@ -91,15 +91,18 @@ func TestA165ExpiredRetryWindowDoesNotCancelSettlement(t *testing.T) {
 	}, broker)
 
 	out, err := a165BoundaryCancel(t, gw, j, clk)
-	if err == nil || out.State != journal.StateInDoubt {
-		t.Fatalf("outcome=%+v err=%v, want settled IN_DOUBT", out, err)
+	if err != nil || out.State != journal.StateConfirmed {
+		t.Fatalf("outcome=%+v err=%v, want settled CONFIRMED", out, err)
 	}
-	if broker.calls != 1 {
-		t.Fatalf("broker calls=%d, want one before the expired retry window", broker.calls)
+	if broker.calls != 2 {
+		t.Fatalf("broker calls=%d, want two because the injected clock advanced only by retry-after", broker.calls)
 	}
 	record, lookupErr := j.LookupAttempt(context.Background(), out.AttemptID)
-	if lookupErr != nil || record.State != journal.StateInDoubt {
-		t.Fatalf("settled record=%+v err=%v, want IN_DOUBT", record, lookupErr)
+	if lookupErr != nil || record.State != journal.StateConfirmed {
+		t.Fatalf("settled record=%+v err=%v, want CONFIRMED", record, lookupErr)
+	}
+	if got := clk.Since(fixedNow); got != time.Millisecond {
+		t.Fatalf("fake clock elapsed=%s, want retry-after only", got)
 	}
 }
 

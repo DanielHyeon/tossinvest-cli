@@ -2,9 +2,9 @@
 
 - Source: `internal/execgw/cancel_refusal.go` (44-102)
 - Qualified function: `Gateway.withCancelRefusal`
-- Revision: pre-D5 4판 정정, `source_sha256` `576b7752ce9dac5121d61a83f2bdbc5a65c1c71b22b185f4c338e47655586485`
+- Revision: D5 4판 GREEN, `source_sha256` `fd04d50f9a03ee097a0e1a0b336d0b1faaf3794d8e061c24820cca3c780b2ebf`
 - AST evidence: `ast.json` — AST 분기 12, 반환 12, 호출 18(`go run ./tools/logic-map`, 2026-10-29).
-- Risk scan: 직접 `time.Now`/`context.WithDeadline`가 판정 시계와 분리되어 있음. Manager D5 결정에 따라 이 부분만 `context.WithTimeout(dctx, policy.Window)`로 바꾸고 판정은 `g.clk`만 사용함.
+- Risk scan: 직접 `time.Now`/`time.Since`/`context.WithDeadline` 호출 0. `context.WithTimeout(dctx, policy.Window)` 하나는 매달린 재전송 상한일 뿐이고 판정은 `g.clk`만 사용함.
 
 ## 역할
 
@@ -24,15 +24,15 @@
 | 분기 | 좌표 | 조건 | 결과 | 시험 |
 |---|---|---|---|---|
 | B1 | 45 | 정책 nil 또는 취소 외 | 원 dispatch 반환 | `TestA165NilPolicyAndNonCancelKeepTheOriginalOutcome` |
-| B2 | 54 | 첫 결과가 AP 409 AMBIGUOUS 아님 | 첫 결과 보존 | `TestA165CancelRefusalDoesNotOverrideNonAmbiguousDispatch` |
-| B3 | 57 | definitive 엔진 정책 | REJECTED/FAILED_CONFIRMED, 재전송 0 | `TestA165EngineAlreadyProcessingIsOneConfirmedRefusalWithoutDelay` |
-| B4 | 62 | flatten 정책 값 무효 | 오늘의 첫 결과 | 정책 정확값 시험 |
+| B2 | 53 | 첫 결과가 AP 409 AMBIGUOUS 아님 | 첫 결과 보존 | `TestA165CancelRefusalDoesNotOverrideNonAmbiguousDispatch` |
+| B3 | 56 | definitive 엔진 정책 | REJECTED/FAILED_CONFIRMED, 재전송 0 | `TestA165EngineAlreadyProcessingIsOneConfirmedRefusalWithoutDelay` |
+| B4 | 61 | flatten 정책 값 무효 | 오늘의 첫 결과 | 정책 정확값 시험 |
 | B5 | 70 | 재전송 loop | 최대 Retries회 | exhaustion 시험 |
 | B6-B8 | 72-82 | 대기 상한·Clock 창·sleep context | 첫 AMBIGUOUS + stop 꼬리표 | `TestA165WindowStartsBeforeFirstDispatch`, caller cancellation 시험 |
 | B9 | 85 | sleep 뒤 Clock 창 만료 | 첫 AMBIGUOUS | 경계 시험 |
 | B10-B12 | 92-96 | 재호출 결과 | NOT_SENT는 첫 결과, 성공은 재시도 결과, AP는 다음 loop | NOT_SENT·success·exhaustion 시험 |
 
-## D5 4판 편집 계획
+## D5 4판 구현 결과
 
 - 삭제: `wallStart := time.Now()` 및 `context.WithDeadline(dctx, wallStart.Add(policy.Window))`.
 - 추가: `context.WithTimeout(dctx, policy.Window)`. 이것은 판정 시계가 아니라 매달린 재전송을 끊는 실시간 상한임. 생산에서는 systemClock과 같은 진행이라 Clock 판정과 일치하고, Fake Clock 시험에서는 Clock 판정이 먼저 끝나도록 시험함.

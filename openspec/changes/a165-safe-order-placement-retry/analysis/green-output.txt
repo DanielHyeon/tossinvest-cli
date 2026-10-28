@@ -67,3 +67,9 @@ $ go test -race ./internal/execgw ./internal/journal ./internal/flatten -run A16
 ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	34.823s
 ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	31.981s
 ok  	github.com/JungHoonGhae/tossinvest-cli/internal/flatten	4.333s
+
+[2026-10-29 D5 GREEN exit=0]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.036s
+
+[2026-10-29 D5 boundary GREEN exit=0]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.277s

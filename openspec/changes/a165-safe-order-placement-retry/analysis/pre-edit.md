@@ -74,3 +74,10 @@ Pre-Edit Gate:
 - 새 FLM/BTM/AST: `analysis/function-logic/internal-execgw--gateway.withcancelrefusal/`. 편집 직전 `cancel_refusal.go` SHA-256은 `576b7752ce9dac5121d61a83f2bdbc5a65c1c71b22b185f4c338e47655586485`이며 AST가 그 SHA와 일치함.
 - 기존 시험 영향: `cancel_refusal_test.go`와 `a165_retry_structure_test.go`에 새 시험을 더함. 기존 fake·시험 함수는 편집하지 않음.
 - CodeGraph 보조 문맥은 기존 Pre-Edit과 같아 unavailable이며, 현재 source·AST와 Manager 결정이 정본임.
+
+## D5 기존 경계 시험 Pre-Edit (2026-10-29)
+
+- 편집 대상: `internal/execgw/a165_cancel_refusal_boundary_test.go`의 `TestA165ExpiredRetryWindowDoesNotCancelSettlement`만. D5 결정 후 영향 패키지 시험에서 첫 실제 broker 지연을 Clock 창 판정으로 간주한 이전 기대가 드러났음.
+- 동작 fake: `a165BoundaryBroker.CancelPendingOrder`은 변경하지 않으나, 첫 실제 `time.Sleep`과 Fake Clock 분리를 시험 계약에 쓰므로 함께 FLM/BTM/AST를 기록함.
+- 편집 전 source SHA-256: `70ec4addd02ca8554550d44194212fde8293419e9940383111f6cd8b1c9f8a6e`. 두 bundle의 `ast.json`이 동일 SHA를 가리킴.
+- 변경 범위: test 이름·D5 기대값만. 생산 코드·fake·정책 값·schema는 편집하지 않음.

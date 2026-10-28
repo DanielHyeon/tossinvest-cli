@@ -1,0 +1,86 @@
+{
+  "file": "internal/execgw/a165_cancel_refusal_boundary_test.go",
+  "source_sha256": "70ec4addd02ca8554550d44194212fde8293419e9940383111f6cd8b1c9f8a6e",
+  "package": "execgw_test",
+  "function": "CancelPendingOrder",
+  "receiver": "a165BoundaryBroker",
+  "signature": "a165BoundaryBroker.CancelPendingOrder(params=2, results=2)",
+  "start": {
+    "line": 40,
+    "column": 1
+  },
+  "end": {
+    "line": 51,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 43,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 46,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 4
+      },
+      "text": "time.Sleep"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 24
+      },
+      "text": "ctx.Deadline"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "++",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

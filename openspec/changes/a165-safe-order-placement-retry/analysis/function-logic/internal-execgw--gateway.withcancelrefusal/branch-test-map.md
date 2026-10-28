@@ -1,6 +1,6 @@
 # Branch Test Map: `Gateway.withCancelRefusal`
 
-- Source: `internal/execgw/cancel_refusal.go` (44-102), pre-D5 4판 정정 AST
+- Source: `internal/execgw/cancel_refusal.go` (44-102), D5 4판 GREEN AST
 - AST 분기 12. 새/변경 대상은 window context 생성과 취소 갈래뿐이며, 기존 정책·latch·정착 경계는 유지함.
 
 | 분기 | 시나리오 | RED | GREEN/회귀 |
