@@ -1,0 +1,69 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	176.811s	coverage: 73.7% of statements
+
+$ go test ./internal/execgw -count=1 -run A165
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	2.156s
+
+$ go test ./internal/journal -count=1 -run A165
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	2.108s
+
+$ go test ./internal/official -count=1 -run A165
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.008s
+
+$ go test ./internal/flatten -count=1 -run A165
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/flatten	0.261s
+
+$ go test ./internal/app/engine -count=1 -run A165
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.218s
+
+$ go test ./cmd/tossctl -count=1 -run A165
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.012s
+
+$ go test -tags tossos_testseams ./internal/execgw -count=1 -run A165
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	2.132s
+
+$ go test -tags tossos_testseams ./internal/journal -count=1 -run A165
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	2.166s
+
+$ go test -tags tossos_testseams ./internal/official -count=1 -run A165
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.026s
+
+$ go test -tags tossos_testseams ./internal/flatten -count=1 -run A165
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/flatten	0.281s
+
+$ go test -tags tossos_testseams ./internal/app/engine -count=1 -run A165
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.210s
+
+$ go test -tags tossos_testseams ./cmd/tossctl -count=1 -run A165
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.016s
+
+$ go test -race ./internal/execgw -count=1 -run A165
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	29.052s
+
+$ go test -race ./internal/journal -count=1 -run A165
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	30.005s
+
+$ go test -race ./internal/flatten -count=1 -run A165
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/flatten	4.093s
+$ go test ./internal/execgw -run A165 -count=1 -timeout 3m
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	2.410s
+$ go test ./internal/journal -run A165 -count=1 -timeout 3m
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	2.210s
+$ go test ./internal/official -run A165 -count=1 -timeout 3m
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.011s
+$ go test ./internal/flatten -run A165 -count=1 -timeout 3m
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/flatten	0.256s
+$ go test ./internal/app/engine -run A165 -count=1 -timeout 3m
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.224s
+$ go test ./cmd/tossctl -run A165 -count=1 -timeout 3m
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.021s
+$ go test -tags tossos_testseams ./internal/execgw ./internal/journal ./internal/official ./internal/flatten ./internal/app/engine ./cmd/tossctl -run A165 -count=1 -timeout 3m
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	3.114s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	2.975s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.034s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/flatten	0.345s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.314s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.039s
+$ go test -race ./internal/execgw ./internal/journal ./internal/flatten -run A165 -count=1 -timeout 5m
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	34.823s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	31.981s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/flatten	4.333s

@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/gateway.go",
-  "source_sha256": "497ec967c114b5e7a9c1f9a80f129b381b160252dc0296ff71f95aca983d57e1",
+  "source_sha256": "c1b7c08f60614957211539b58388c05dc76c58746732c395123df15afa40e0c1",
   "package": "engine",
   "function": "buildGateway",
   "signature": "buildGateway(params=2, results=2)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 370,
+    "line": 371,
     "column": 2
   },
   "branches": [
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 332,
+        "line": 333,
         "column": 2
       }
     }
@@ -108,14 +108,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 333,
+        "line": 334,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 355,
+        "line": 356,
         "column": 2
       }
     }
@@ -268,7 +268,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 323,
+        "line": 318,
+        "column": 18
+      },
+      "text": "execgw.EngineCancelRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
         "column": 13
       },
       "text": "in.official.BaseURL"
@@ -276,7 +284,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 333,
+        "line": 334,
         "column": 26
       },
       "text": "fmt.Errorf"
@@ -284,7 +292,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 338,
+        "line": 339,
         "column": 14
       },
       "text": "newNotifier"
@@ -292,7 +300,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 339,
+        "line": 340,
         "column": 13
       },
       "text": "newRetrier"
@@ -400,13 +408,6 @@
     {
       "kind": ":=",
       "at": {
-        "line": 338,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
         "line": 339,
         "column": 2
       }
@@ -414,7 +415,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 346,
+        "line": 340,
         "column": 2
       }
     },
@@ -435,7 +436,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 351,
+        "line": 349,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 352,
         "column": 2
       }
     }

@@ -1,8 +1,8 @@
 # Function Logic Map: `Gateway.Cancel`
 
-- Source: `internal/execgw/gateway.go` (403-422)
+- Source: `internal/execgw/gateway.go` (407-426)
 - Qualified function: `Gateway.Cancel`
-- Revision: `current` (a165 base `34e12967e`, `source_sha256` b4b020607839345a…)
+- Revision: `current` (a165 base `34e12967e`, `source_sha256` c304e32a62e42759…)
 - AST evidence: `ast.json` — AST branches 0, 반환 2, 호출 13
 - Risk scan: `risk-pattern-report.md`
 - 실행 칸 측정: 편집 전 기준선 `go test -count=1 -coverprofile` (execgw·official·trading·flatten 패키지 전체, journal `-run 'Classify|SendTracker|Dispatch'`, app/engine `-run 'Clear|Cancel'` — journal·engine 은 부분 실행이라 count=0 이 「미실행」을 뜻하지 않을 수 있음, cmd/tossctl 은 미측정) — 분기 줄에서 시작하는 본문 블록의 실행 수. 시험 이름별 귀속은 GREEN 재추출에서 함.
@@ -21,7 +21,7 @@ cancel 계획. `plan.call` 은 `g.trading.Cancel` 이고 trading.Service.Cancel 
 
 AST 열거 순서 그대로. Condition 칸은 AST 좌표 줄의 원문.
 
-Exact AST return positions: 419:3, 421:2
+Exact AST return positions: 423:3, 425:2
 
 | Branch | Coordinate | Condition | Mutation/side effect | Return/error | Executed (baseline) |
 |---|---|---|---|---|---|

@@ -1,8 +1,8 @@
 # Function Logic Map: `buildFlattenWiring`
 
-- Source: `cmd/tossctl/flatten.go` (199-272)
+- Source: `cmd/tossctl/flatten.go` (199-273)
 - Qualified function: `buildFlattenWiring`
-- Revision: `current` (a165 base `34e12967e`, `source_sha256` 3a2b20f4c145d7f1…)
+- Revision: `current` (a165 base `34e12967e`, `source_sha256` 65eade0e7c0b063d…; GREEN 뒤 AST 재추출 2026-10-29)
 - AST evidence: `ast.json` — AST branches 8, 반환 6, 호출 15
 - Risk scan: `risk-pattern-report.md`
 - 실행 칸 측정: 편집 전 기준선 `go test -count=1 -coverprofile` (execgw·official·trading·flatten 패키지 전체, journal `-run 'Classify|SendTracker|Dispatch'`, app/engine `-run 'Clear|Cancel'` — journal·engine 은 부분 실행이라 count=0 이 「미실행」을 뜻하지 않을 수 있음, cmd/tossctl 은 미측정) — 분기 줄에서 시작하는 본문 블록의 실행 수. 시험 이름별 귀속은 GREEN 재추출에서 함.
@@ -21,7 +21,7 @@ CLI `tossctl flatten` 배선(execgw.New 233, `flatten.Saga` 247 — 생산 유�
 
 AST 열거 순서 그대로. Condition 칸은 AST 좌표 줄의 원문.
 
-Exact AST return positions: 202:3, 207:3, 217:3, 228:3, 243:3, 265:2
+Exact AST return positions: 202:3, 207:3, 217:3, 228:3, 244:3, 266:2
 
 | Branch | Coordinate | Condition | Mutation/side effect | Return/error | Executed (baseline) |
 |---|---|---|---|---|---|
@@ -32,7 +32,7 @@ Exact AST return positions: 202:3, 207:3, 217:3, 228:3, 243:3, 265:2
 | B5 | `if at 216:2` | if accountRef == "" { | 아래 「State mutations」 | 소스 줄 216 이하 | 미측정 — 이 패키지 coverprofile 없음 |
 | B6 | `if at 221:2` | if root.configDir != "" { | 아래 「State mutations」 | 소스 줄 221 이하 | 미측정 — 이 패키지 coverprofile 없음 |
 | B7 | `if at 227:2` | if err != nil { | 아래 「State mutations」 | 소스 줄 227 이하 | 미측정 — 이 패키지 coverprofile 없음 |
-| B8 | `if at 241:2` | if err != nil { | 아래 「State mutations」 | 소스 줄 241 이하 | 미측정 — 이 패키지 coverprofile 없음 |
+| B8 | `if at 242:2` | if err != nil { | 아래 「State mutations」 | 소스 줄 241 이하 | 미측정 — 이 패키지 coverprofile 없음 |
 
 ## Calls and live bindings
 

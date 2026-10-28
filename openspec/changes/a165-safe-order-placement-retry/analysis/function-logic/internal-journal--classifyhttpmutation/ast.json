@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/dispatch.go",
-  "source_sha256": "42165f21f0707b4d6424907acb386e3ec6475402d975e8c09e40ddd0cd058536",
+  "source_sha256": "f77e0bab6044ecb1fab0c55ab0bd3fab2411939687ffdcc68ea7d785b2b1d679",
   "package": "journal",
   "function": "ClassifyHTTPMutation",
   "signature": "ClassifyHTTPMutation(params=3, results=1)",

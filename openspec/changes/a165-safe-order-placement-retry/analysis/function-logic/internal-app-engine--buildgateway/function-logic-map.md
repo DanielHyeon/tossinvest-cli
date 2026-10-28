@@ -1,8 +1,8 @@
 # Function Logic Map: `buildGateway`
 
-- Source: `internal/app/engine/gateway.go` (245-370)
+- Source: `internal/app/engine/gateway.go` (245-371)
 - Qualified function: `buildGateway`
-- Revision: `current` (a165 base `34e12967e`, `source_sha256` 497ec967c114b5e7…)
+- Revision: `current` (a165 base `34e12967e`, `source_sha256` c1b7c08f60614957…; GREEN 뒤 AST 재추출 2026-10-29)
 - AST evidence: `ast.json` — AST branches 6, 반환 8, 호출 22
 - Risk scan: `risk-pattern-report.md`
 - 실행 칸 측정: 편집 전 기준선 `go test -count=1 -coverprofile` (execgw·official·trading·flatten 패키지 전체, journal `-run 'Classify|SendTracker|Dispatch'`, app/engine `-run 'Clear|Cancel'` — journal·engine 은 부분 실행이라 count=0 이 「미실행」을 뜻하지 않을 수 있음, cmd/tossctl 은 미측정) — 분기 줄에서 시작하는 본문 블록의 실행 수. 시험 이름별 귀속은 GREEN 재추출에서 함.
@@ -21,7 +21,7 @@
 
 AST 열거 순서 그대로. Condition 칸은 AST 좌표 줄의 원문.
 
-Exact AST return positions: 251:3, 273:3, 281:3, 285:3, 288:3, 309:3, 333:3, 355:2
+Exact AST return positions: 251:3, 273:3, 281:3, 285:3, 288:3, 309:3, 334:3, 356:2
 
 | Branch | Coordinate | Condition | Mutation/side effect | Return/error | Executed (baseline) |
 |---|---|---|---|---|---|
@@ -30,7 +30,7 @@ Exact AST return positions: 251:3, 273:3, 281:3, 285:3, 288:3, 309:3, 333:3, 355
 | B3 | `if at 280:2` | if err := restoreAlertEntryLatch(ctx, in.journal, entry); err != nil { | 아래 「State mutations」 | 소스 줄 280 이하 | 미실행 — 패키지 스위트 count=0 |
 | B4 | `if at 284:2` | if err := bindOperatingModeProjection(ctx, in.journal, entry, in.accountRef, in.logger); err != nil { | 아래 「State mutations」 | 소스 줄 284 이하 | 미실행 — 패키지 스위트 count=0 |
 | B5 | `if at 308:2` | if err != nil { | 아래 「State mutations」 | 소스 줄 308 이하 | 미실행 — 패키지 스위트 count=0 |
-| B6 | `if at 332:2` | if err != nil { | 아래 「State mutations」 | 소스 줄 332 이하 | 미실행 — 패키지 스위트 count=0 |
+| B6 | `if at 333:2` | if err != nil { | 아래 「State mutations」 | 소스 줄 332 이하 | 미실행 — 패키지 스위트 count=0 |
 
 ## Calls and live bindings
 

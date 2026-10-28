@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/flatten.go",
-  "source_sha256": "3a2b20f4c145d7f152dad06a5ffd48e2921b05a5d2ec0ed496c6dfe7fdca3b27",
+  "source_sha256": "65eade0e7c0b063d90335f735ae5335897383eea30ea464bca5e1b1094214893",
   "package": "main",
   "function": "buildFlattenWiring",
   "signature": "buildFlattenWiring(params=3, results=2)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 272,
+    "line": 273,
     "column": 2
   },
   "branches": [
@@ -73,7 +73,7 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 241,
+        "line": 242,
         "column": 2
       }
     }
@@ -110,14 +110,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 243,
+        "line": 244,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 265,
+        "line": 266,
         "column": 2
       }
     }
@@ -214,7 +214,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 242,
+        "line": 240,
+        "column": 18
+      },
+      "text": "execgw.FlattenCancelRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
         "column": 7
       },
       "text": "j.Close"
@@ -222,7 +230,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 253,
+        "line": 254,
         "column": 15
       },
       "text": "obs.NewLogger"
@@ -230,7 +238,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 256,
+        "line": 257,
         "column": 15
       },
       "text": "os.Getenv"
@@ -238,7 +246,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 270,
+        "line": 271,
         "column": 25
       },
       "text": "j.Close"
@@ -318,15 +326,8 @@
     {
       "kind": "=",
       "at": {
-        "line": 242,
+        "line": 243,
         "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 246,
-        "column": 2
       }
     },
     {
@@ -337,9 +338,16 @@
       }
     },
     {
+      "kind": ":=",
+      "at": {
+        "line": 248,
+        "column": 2
+      }
+    },
+    {
       "kind": "=",
       "at": {
-        "line": 270,
+        "line": 271,
         "column": 21
       }
     }
