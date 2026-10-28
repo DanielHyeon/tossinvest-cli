@@ -33,7 +33,7 @@
 
 ## 2. 구현 (RED → GREEN → REFACTOR → VERIFY)
 
-- [ ] 2.1 Pre-Edit 선언 — 1.3 3차 P2-1(gate ⑤ 창 형제 함수 처리 계획)·P2-2(바깥 래퍼 — design D5 로 확정)·P2-3(진입 전용 latch — design D11 로 확정) 처분을 포함한다. 새 번들 `checkSymbolFree` 실행 칸 coverprofile 측정, 배선 시험 seam·latch 오류 주입 seam 유무 결정(D10·D11).
+- [x] 2.1 Pre-Edit 선언 — [pre-edit.md](analysis/pre-edit.md)에 1.3 3차 P2-1(gate ⑤ 창 형제 함수 처리 계획)·P2-2(바깥 래퍼 — design D5 로 확정)·P2-3(진입 전용 latch — design D11 로 확정) 처분을 기록함. `checkSymbolFree` coverprofile 66.7%를 측정했고, 기존 시험·fake를 고치지 않고 새 a165 시험 파일에 seam을 둠. 기준선 `go test ./internal/execgw`는 coverprofile 뒤 상위 프로세스가 25분 이상 종료하지 않아 TERM으로 중단했으며 PASS/FAIL 미판정으로 기록함.
 - [ ] 2.2 RED: 취소 409 already-processing — 엔진 정책(확정 미수락·호출 1회·지연 0) / flatten 정책(재시도·누적 5s·창·소진 → IN_DOUBT·종목 보류·전송 전 실패 → IN_DOUBT) / code 불일치·모순·place·amend·정책 nil → 오늘과 같음 / 401 재전송 본문 동일·비 401 1회 / 바깥 래퍼 (w1)~(w5) / 배선 W1~W4 / latch (a)~(k)(design D10·D11 — (h) 는 3차 재리뷰로 갱신, (i) 거래일을 넘긴 해제 · (j) 다른 계좌·시장·종목의 같은 번호 · (k) 번호 재사용·주인 0).
 - [ ] 2.3 GREEN: 최소 구현 + 배선 2곳 + 정본 retry matrix §0.1·§1·§4 와 `execgw` 기본값을 같은 커밋에서 갱신. design D12 를 `docs/operations.md` 운영 절로 옮긴다(r1 확인 SQL 확정 포함).
 - [ ] 2.4 attempt 기록에 재시도 횟수·갈래·확정 거절 분류(detail 꼬리표, 재시도 성공을 첫 시도 성공으로 기록하지 않음).
