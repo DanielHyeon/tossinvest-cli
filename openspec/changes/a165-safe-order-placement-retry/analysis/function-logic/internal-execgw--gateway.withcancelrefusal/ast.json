@@ -1,6 +1,6 @@
 {
   "file": "internal/execgw/cancel_refusal.go",
-  "source_sha256": "fd04d50f9a03ee097a0e1a0b336d0b1faaf3794d8e061c24820cca3c780b2ebf",
+  "source_sha256": "acd4d7de2fb725dcfae60314d164a13116be4d47d0e07ea2010237228f4a68e9",
   "package": "execgw",
   "function": "withCancelRefusal",
   "receiver": "Gateway",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 102,
+    "line": 106,
     "column": 2
   },
   "branches": [
@@ -106,7 +106,15 @@
       "id": "B12",
       "kind": "if",
       "at": {
-        "line": 93,
+        "line": 96,
+        "column": 4
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 97,
         "column": 5
       }
     }
@@ -178,21 +186,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 94,
-        "column": 6
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 96,
+        "line": 93,
         "column": 5
       }
     },
     {
       "kind": "return",
       "at": {
+        "line": 98,
+        "column": 6
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
         "line": 100,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 104,
         "column": 3
       }
     }
@@ -337,23 +352,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 91,
-        "column": 41
+        "line": 92,
+        "column": 7
       },
-      "text": "alreadyProcessingRefusal"
+      "text": "winCtx.Err"
     },
     {
       "kind": "call",
       "at": {
-        "line": 94,
-        "column": 13
-      },
-      "text": "decorateCancelRefusal"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 96,
+        "line": 93,
         "column": 12
       },
       "text": "decorateCancelRefusal"
@@ -361,7 +368,31 @@
     {
       "kind": "call",
       "at": {
+        "line": 95,
+        "column": 41
+      },
+      "text": "alreadyProcessingRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 13
+      },
+      "text": "decorateCancelRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
         "line": 100,
+        "column": 12
+      },
+      "text": "decorateCancelRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
         "column": 10
       },
       "text": "decorateCancelRefusal"
@@ -497,14 +528,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 91,
+        "line": 95,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 98,
+        "line": 102,
         "column": 4
       }
     }

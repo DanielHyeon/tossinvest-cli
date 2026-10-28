@@ -1,9 +1,9 @@
 # Function Logic Map: `Gateway.withCancelRefusal`
 
-- Source: `internal/execgw/cancel_refusal.go` (44-102)
+- Source: `internal/execgw/cancel_refusal.go` (44-106)
 - Qualified function: `Gateway.withCancelRefusal`
-- Revision: D5 4판 GREEN, `source_sha256` `fd04d50f9a03ee097a0e1a0b336d0b1faaf3794d8e061c24820cca3c780b2ebf`
-- AST evidence: `ast.json` — AST 분기 12, 반환 12, 호출 18(`go run ./tools/logic-map`, 2026-10-29).
+- Revision: D5 4판 재전송 중 실시간 상한 GREEN, `source_sha256` `acd4d7de2fb725dcfae60314d164a13116be4d47d0e07ea2010237228f4a68e9`
+- AST evidence: `ast.json` — AST 분기 13, 반환 13, 호출 23(`go run ./tools/logic-map`, 2026-10-29).
 - Risk scan: `risk-pattern-report.md`. 직접 `time.Now`/`time.Since`/`context.WithDeadline` 호출 0. `context.WithTimeout(dctx, policy.Window)` 하나는 매달린 재전송 상한일 뿐이고 판정은 `g.clk`만 사용함.
 
 ## 역할
@@ -28,34 +28,36 @@
 | B3 | 56 | definitive 엔진 정책 | REJECTED/FAILED_CONFIRMED, 재전송 0 | `TestA165EngineAlreadyProcessingIsOneConfirmedRefusalWithoutDelay` |
 | B4 | 61 | flatten 정책 값 무효 | 오늘의 첫 결과 | 정책 정확값 시험 |
 | B5 | 70 | 재전송 loop | 최대 Retries회 | exhaustion 시험 |
-| B6 | 72 | 누적 대기 상한 | 첫 AMBIGUOUS + stop=max_wait | `TestA165FlattenRetriesWithinCumulativeBudget` |
-| B7 | 75 | sleep 전 Clock 창 경계 | 첫 AMBIGUOUS + stop=window | `TestA165WindowStartsBeforeFirstDispatch` |
-| B8 | 78 | sleep context 종료 | 첫 AMBIGUOUS + stop=cancelled | `TestA165RealTimeoutKeepsFirstAmbiguousAsCancelled` |
-| B9 | 85 | sleep 뒤 Clock 창 만료 | 첫 AMBIGUOUS | 경계 시험 |
-| B10 | 85 | 재호출 결과가 AP 아님 | NOT_SENT 또는 ACK 분기 | `TestA165FlattenRetryNotSentKeepsTheFirstAmbiguousOutcome` |
-| B11 | 92 | retry NOT_SENT | 첫 결과 + stop=not_sent | `TestA165FlattenRetryNotSentKeepsTheFirstAmbiguousOutcome` |
-| B12 | 93 | retry ACK | 재시도 결과 + stop=ack | `TestA165RealFirstDispatchDelayDoesNotDriveRetryWindowJudgement` |
+| B6 | 72 | 남은 MaxWait보다 retry-after가 큼 | 대기를 남은 상한으로 자름 | `TestA165FlattenRetriesWithinCumulativeBudget` |
+| B7 | 75 | 남은 대기가 0 이하 | 첫 AMBIGUOUS + stop=max_wait | `TestA165FlattenRetriesWithinCumulativeBudget` |
+| B8 | 78 | sleep 전 Clock 창 경계 | 첫 AMBIGUOUS + stop=window | `TestA165WindowStartsBeforeFirstDispatch` |
+| B9 | 81 | sleep context 종료 | 첫 AMBIGUOUS + stop=cancelled | `TestA165RealTimeoutKeepsFirstAmbiguousAsCancelled` |
+| B10 | 85 | sleep 뒤 Clock 창 만료 | 첫 AMBIGUOUS + stop=window | `TestA165WindowStartsBeforeFirstDispatch` |
+| B11 | 92 | 재전송 dispatch 뒤 `winCtx` 종료 + AMBIGUOUS/NOT_SENT | 첫 결과 + stop=cancelled | `TestA165RetryDeadlineKeepsFirstAmbiguousAsCancelled` |
+| B12 | 96 | 재호출 결과가 AP 아님 | NOT_SENT 또는 ACK 분기 | `TestA165FlattenRetryNotSentKeepsTheFirstAmbiguousOutcome` |
+| B13 | 97 | retry NOT_SENT | 첫 결과 + stop=not_sent | `TestA165FlattenRetryNotSentKeepsTheFirstAmbiguousOutcome` |
 
 ## D5 4판 구현 결과
 
 - 삭제: `wallStart := time.Now()` 및 `context.WithDeadline(dctx, wallStart.Add(policy.Window))`.
 - 추가: `context.WithTimeout(dctx, policy.Window)`. 이것은 판정 시계가 아니라 매달린 재전송을 끊는 실시간 상한임. 생산에서는 systemClock과 같은 진행이라 Clock 판정과 일치하고, Fake Clock 시험에서는 Clock 판정이 먼저 끝나도록 시험함.
-- 실시간 상한이 먼저 끝나면 `Sleep` 오류가 `stop=cancelled outcome=today`로 첫 409 AMBIGUOUS를 보존함. 더 덜 안전한 갈래는 없음.
+- 실시간 상한이 먼저 끝나면 `Sleep` 오류 또는 재전송 dispatch의 AMBIGUOUS/NOT_SENT가 `stop=cancelled outcome=today`로 첫 409 AMBIGUOUS를 보존함. ACK·REJECTED 같은 실제 broker 응답은 기존 ACK 갈래를 유지함.
 - AST 핀: 이 파일에서 `time.Now`·`time.Since` 0, `context.WithTimeout` 1, `context.WithDeadline` 0을 고정함.
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `g.clk.Now`/`g.clk.Since` | 창 판정 | 주입 Clock만 사용함 | AST 50·75·81 |
+| `g.clk.Now`/`g.clk.Since` | 창 판정 | 주입 Clock만 사용함 | AST 50·78·85 |
 | `context.WithTimeout` | 매달린 retry 상한 | 부모는 `dctx`, 판정에 쓰지 않음 | AST 66 |
-| `g.clk.Sleep` | retry-after 대기 | 취소되면 첫 결과 보존 | AST 79 |
-| `dispatch` | 원 cancel call | 첫 호출 `dctx`, retry `winCtx` | AST 51·89 |
+| `g.clk.Sleep` | retry-after 대기 | 취소되면 첫 결과 보존 | AST 81 |
+| `dispatch` | 원 cancel call | 첫 호출 `dctx`, retry `winCtx`; retry 중 context 종료의 불명 결과는 첫 409 보존 | AST 51·90·92 |
+| `winCtx.Err` | 재전송 context 종료 확인 | AMBIGUOUS/NOT_SENT면 첫 409를 cancelled로 보존 | AST 92 |
 
 ## State mutations and fallbacks
 
 - 직접 journal mutation 없음. 결과 class/detail만 반환함.
-- retry 상한·호출자 취소·NOT_SENT·소진은 모두 첫 409 AMBIGUOUS를 보존함.
+- retry 상한·호출자 취소·retry 중 context 종료·NOT_SENT·소진은 모두 첫 409 AMBIGUOUS를 보존함.
 
 ## Safety conclusion
 

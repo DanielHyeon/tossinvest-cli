@@ -73,3 +73,6 @@ ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.036s
 
 [2026-10-29 D5 boundary GREEN exit=0]
 ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.277s
+
+[2026-10-29 D5 재전송 중 실시간 상한 GREEN exit=0]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.056s

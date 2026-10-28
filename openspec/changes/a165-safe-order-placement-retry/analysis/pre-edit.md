@@ -64,7 +64,7 @@ Pre-Edit Gate:
 
 ## 결정
 
-- research-first 결론: 기존 `journal.DispatchFunc`·`clock.Clock`·표준 `context.WithDeadline`를 확장함. 외부 backoff 의존성은 도입하지 않음.
+- research-first 결론: 기존 `journal.DispatchFunc`·`clock.Clock`·표준 `context` 파생을 확장함. D5 4판은 판정 Clock과 별개의 재전송 실시간 상한에 `context.WithTimeout`을 사용함. 외부 backoff 의존성은 도입하지 않음.
 - `impeccable`: N/A — backend/documentation-only. 신규 UI·운영 콘솔·명령을 추가하지 않음.
 - `grill-me`: N/A — Manager가 2026-10-28 proposal-freeze 1.3을 최종 승인했고, 본 단계는 승인된 계약의 구현임.
 
@@ -81,3 +81,9 @@ Pre-Edit Gate:
 - 동작 fake: `a165BoundaryBroker.CancelPendingOrder`은 변경하지 않으나, 첫 실제 `time.Sleep`과 Fake Clock 분리를 시험 계약에 쓰므로 함께 FLM/BTM/AST를 기록함.
 - 편집 전 source SHA-256: `70ec4addd02ca8554550d44194212fde8293419e9940383111f6cd8b1c9f8a6e`. 두 bundle의 `ast.json`이 동일 SHA를 가리킴.
 - 변경 범위: test 이름·D5 기대값만. 생산 코드·fake·정책 값·schema는 편집하지 않음.
+
+## D5 재전송 중 실시간 상한 Pre-Edit (2026-10-29)
+
+- 편집 대상: 기존 새 leaf `internal/execgw.Gateway.withCancelRefusal`만. 현재 SHA-256 `fd04d50f9a03ee097a0e1a0b336d0b1faaf3794d8e061c24820cca3c780b2ebf`가 `analysis/function-logic/internal-execgw--gateway.withcancelrefusal/ast.json`과 일치함. FLM·BTM은 재전송 dispatch 뒤 `winCtx` 취소 갈래를 아직 분리하지 않았으므로 GREEN 뒤 같은 bundle을 갱신함.
+- RED는 새 파일 `internal/execgw/a165_retry_timeout_test.go`에 둠. 기존 시험 함수·fake는 편집하지 않음. 첫 409 AP 뒤 Fake Clock으로 retry sleep만 깨우고 재전송 dispatch가 `winCtx` 만료로 AMBIGUOUS를 돌려줄 때도, 첫 409의 `stop=cancelled outcome=today`가 보존되어야 함.
+- 범위: `cancel_refusal.go`의 retry 결과 분기와 새 시험·D5 FLM/BTM·변이 원장만. 배선·latch·schema·정착 경로는 편집하지 않음.

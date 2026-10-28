@@ -104,8 +104,8 @@ AST 호출 이름 전체: `ReasonCode`, `attempt.DispatchStrategyVerified`, `att
 | B50/B51(730–731)·B52(732–733) | strategy 정착 | **편집 0**(`dispatch` 그대로) | strategy 는 PlaceClaimedStrategy 만 |
 | B53–B57 정착 뒤 반환 | — | 편집 0 | — |
 
-- **B37 의 재적용**: 재호출은 클로저 전체를 다시 지나므로 각 재전송의 `plan.call` 바로 앞에 B37 이 다시 선다. 그 `dctx` 는 `winCtx`(=`context.WithDeadline(dctx, wallStart+8s)`, 래퍼가 `defer cancel()`)라
-  창 마감·cancel·호출자 취소가 여기서 걸려 B47(717) `notSent` 가 된다.
+- **B37 의 재적용**: 재호출은 클로저 전체를 다시 지나므로 각 재전송의 `plan.call` 바로 앞에 B37 이 다시 선다. 그 `dctx` 는 `winCtx`(=`context.WithTimeout(dctx, policy.Window)`, 래퍼가 `defer cancel()`)라
+  매달린 재전송의 실시간 상한·cancel·호출자 취소가 여기서 걸려 B47(717) `notSent` 가 된다. 창 판정은 `g.clk`만 하며, 이 `winCtx` 시한은 판정이 아니다. B37 거절은 첫 AMBIGUOUS를 보존한다.
 - **정착 ctx 분리**: 정착은 `DispatchVerified` 가 자기 `ctx` 로 한다(번들 `internal-journal--attempt.dispatchverified` B5·B7·B9·B11–B13·B15·B17·B19 전부 `ctx`). 래퍼는 `DispatchOutcome` 값만 돌려주므로 `winCtx` 는 정착에 닿지 않는다.
 - **정책 nil 동일성**: `withCancelRefusal` 은 정책 nil 이거나 `plan.kind != KindCancel` 이면 받은 `dispatch` 를 그대로 돌려준다 — B49 의 인자 값이 오늘과 같고 B29–B48·B50–B57 편집 0.
 - **창 시작점(P3)**: 래퍼가 원 클로저를 처음 부르기 **전**에 잰다(첫 전송의 B30–B36 시간이 창에 듦 — 보수적).

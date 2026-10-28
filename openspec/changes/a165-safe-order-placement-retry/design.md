@@ -133,7 +133,7 @@ AST `client.send` B4(344) `attempt < 2 && code == http.StatusUnauthorized`, 루�
 
 ## D8. 켜는 법·되돌리기
 
-- `execgw.Options.CancelRefusal *CancelRefusal`. nil = 오늘 동작.
+- `execgw.Options.CancelRefusal *CancelRefusalPolicy`. nil = 오늘 동작.
 - 엔진 `buildGateway`(internal/app/engine/gateway.go:311): `CancelRefusal: execgw.EngineCancelRefusal()`.
 - CLI `buildFlattenWiring`(cmd/tossctl/flatten.go:233): `CancelRefusal: execgw.FlattenCancelRefusal()`.
 - 되돌리기: 그 필드 삭제 → 재빌드(교체는 KST 05–09). 런타임 스위치 없음. 스키마·설정 변경 없음.
@@ -157,8 +157,10 @@ AST `client.send` B4(344) `attempt < 2 && code == http.StatusUnauthorized`, 루�
     시작점을 첫 결과 뒤로 옮기면 재전송 1 이 되어 FAIL 이다.
   - (w2) **호출자 취소**: fake broker 가 첫 409 AP 를 돌려주기 직전에 시험의 바깥 ctx 를 취소 → `Sleep(winCtx)` 실패 → 브로커 호출 1(재전송 0), attempt 는 CONFIRMED·FAILED_CONFIRMED 가 아님
     (바깥 ctx 가 죽어 정착도 실패하므로 DISPATCH_STARTED 로 남고 `RecoverPending` 이 IN_DOUBT 로 바꿈 — 오늘의 호출자 취소와 같은 결과).
-  - (w3) **창 마감 뒤 정착**: 시험용 `CancelRefusal{Retries 2, MaxWait 5s, Window 10ms(실시간), Definitive false}` + fake broker 가 첫 호출에서 실시간 50ms 늦게 409 AP →
-    `winCtx` 는 이미 마감 → 재전송 0 → attempt 가 **IN_DOUBT 로 영속**(정착 성공, `res.Err` 는 409). 정착 ctx 가 `winCtx` 면 Settle 이 `context deadline exceeded` 로 실패해 FAIL.
+  - (w3) **실시간 상한 우선**: Fake Clock을 멈춘 채 부모 ctx의 실시간 시한을 짧게 둔다. 첫 409 AP 뒤 fake sleeper가 `Sleep(winCtx)`에 들어가면 부모 취소가 재전송을 끊고,
+    재전송 0·첫 409의 AMBIGUOUS·`stop=cancelled outcome=today`를 단언한다. `winCtx`가 정착 ctx이면 Settle이 `context deadline exceeded`로 실패해 FAIL이다.
+  - (w3-1) **재전송 중 실시간 상한**: Fake Clock으로 retry sleep만 깨운 뒤 둘째 dispatch가 `winCtx` 만료로 AMBIGUOUS를 돌려주면, broker 응답이 확정되지 않았으므로
+    첫 409의 AMBIGUOUS·`stop=cancelled outcome=today`를 보존한다. 이 갈래가 `stop=ack outcome=retried`로 둘째 timeout을 기록하면 FAIL이다.
   - (w4) **B37 재적용**: 재전송 직전 경계(B33 보호·B34 진입·B36 예약 중 하나를 fake 로 거절)를 둘째 호출에만 켬 → 브로커 호출 1, IN_DOUBT. 그리고 `winCtx` 를 `cancel()` 한 뒤의
     재호출이 `plan.call` 에 닿지 않음(B37 → B47 `notSent`)을 호출 수로 단언.
   - (w5) **nil 동일성**: 정책 nil 게이트웨이의 취소 409 AP → 브로커 호출 1, detail·reason·state 가 a165 이전 골든과 바이트 동일. 정책 있음 + place/amend 409 AP 도 같은 골든.
@@ -176,9 +178,9 @@ AST `client.send` B4(344) `attempt < 2 && code == http.StatusUnauthorized`, 루�
 - **변이 원장**(3.1 — 각 변이에 잡는 시험 이름을 적고, 양성 대조군 + 「변이가 대상 줄에 닿음」 표식):
   - 판정: code 판정(EqualFold→status 만), 두 자리 모순 검사 제거, 409 검사 제거, kind==Cancel 검사 제거, `first.Class == AMBIGUOUS` 검사 제거, Definitive 분기 뒤집기.
   - 루프: 누적 MaxWait 상한 제거, 창 검사 제거, 횟수 경계(2→3), retryAfter 기본값 1s 변경, NOT_SENT→첫 AMBIGUOUS 되돌림 제거, 소진 시 마지막 결과로 정착, 엔진 정책 Retries 0→2.
-  - **ctx(2차 리뷰 P2)**: ① `winCtx` 부모를 `dctx` 에서 분리(`context.Background()`/`context.WithoutCancel(dctx)`) → (w2) 가 재전송 1 로 잡음 ② 정착 ctx 를 `winCtx` 로 교체(`winCtx` 를 submit 에서 만들어
+  - **ctx(2차 리뷰 P2, 4판 재전송 상한 보완)**: ① `winCtx` 부모를 `dctx` 에서 분리(`context.Background()`/`context.WithoutCancel(dctx)`) → (w2) 가 재전송 1 로 잡음 ② 정착 ctx 를 `winCtx` 로 교체(`winCtx` 를 submit 에서 만들어
     `DispatchVerified(winCtx, …)`) → (w3) 가 Settle 실패로 잡음 + AST 구조 시험(B49 갈래 `DispatchVerified` 첫 인자 = `submit` 의 `ctx` 매개변수) ③ 재호출에 `winCtx` 대신 원 `dctx` → (w3)/(w4) 의 실시간 마감 단언
-    ④ 창 시작점을 첫 결과 뒤로 → (w1).
+    ④ 창 시작점을 첫 결과 뒤로 → (w1) ⑤ retry dispatch 뒤 `winCtx.Err()` 보존 분기 제거 → (w3-1)의 둘째 timeout `stop=ack outcome=retried`가 잡음.
   - **배선**: flatten←엔진 정책 · 엔진←flatten 정책 · 배선 nil 둘 · **혼성 `{Retries 2, Definitive true}`**(W1 의 정확 값 + Held 단언이 잡음).
   - **latch(D11)**: ① latch 호출을 `checkSymbolFree` B3(810) 앞으로 옮김(exit 도 latch 를 봄) → RED-b ② latch 를 `unsettledFor` 에 넣음 → RED-b(`clearTheSymbol` 이 막힘) ③ 해제 r1(대상 주문 terminal) 누락 → RED-c1
     ④ 해제 r2(확인된 취소) 누락 → RED-c2 ⑤ 키에서 종목 비교 제거 → RED-e ⑥ latch 를 메모리(`EntryGate.BlockSymbol`)로만 → RED-d

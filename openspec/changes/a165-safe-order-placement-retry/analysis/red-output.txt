@@ -18,6 +18,13 @@ FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal [build failed]
 ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.041s
 FAIL
 
+[2026-10-29 D5 재전송 중 실시간 상한 RED exit=1]
+--- FAIL: TestA165RetryDeadlineKeepsFirstAmbiguousAsCancelled (0.03s)
+    a165_retry_timeout_test.go:56: outcome={Class:AMBIGUOUS BrokerOrderID: ReasonCode:broker_outcome_unknown Detail:retry transport timeout [a165 sends=2 branch=cancel_already_processing stop=ack outcome=retried] Err:context deadline exceeded}, want first 409 AMBIGUOUS preserved as cancelled
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.031s
+FAIL
+
 [2026-10-29 D5 RED exit=1]
 --- FAIL: TestA165CancelRefusalUsesOnlyInjectedClockForJudgement (0.01s)
     a165_clock_judgement_test.go:57: cancel_refusal.go contains "time.Now("; D5 judgement must use g.clk and a timeout cap

@@ -88,6 +88,10 @@ func (g *Gateway) withCancelRefusal(plan mutationPlan, dispatch journal.Dispatch
 
 			sends++
 			next := dispatch(winCtx, a)
+			// 재전송 중 context 종료는 응답 불명으로 보고 첫 409를 보존함.
+			if winCtx.Err() != nil && (next.Class == journal.DispatchAmbiguous || next.Class == journal.DispatchNotSent) {
+				return decorateCancelRefusal(first, sends, "cancelled", "today", first.Class)
+			}
 			nextWait, nextIsAlreadyProcessing := alreadyProcessingRefusal(next.Err)
 			if !nextIsAlreadyProcessing || next.Class != journal.DispatchAmbiguous {
 				if next.Class == journal.DispatchNotSent {

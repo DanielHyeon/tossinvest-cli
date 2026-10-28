@@ -5,7 +5,7 @@
 ## 공통 대조군과 원복
 
 - 무변이 대조군: `TestA165...` 표적 시험군 및 영향 패키지 시험은 GREEN에서 통과함.
-- 원복 확인 SHA-256: `cancel_refusal.go` `fd04d50f9a03ee097a0e1a0b336d0b1faaf3794d8e061c24820cca3c780b2ebf`, `cancel_refusal_latch.go` `27002543995267a9c961eae26432922eba7ae3b2a949c4509120bd9548a94a56`, `journal/cancel_refusal_latch.go` `6debab689bcc9650fe64aa19af89f001b43fb8ba457ca39e041615d05364d784`, `gateway.go` `c304e32a62e42759ad1ffb857ca90461068301707dadb5ca7bd8c46dba8af2de`, `dispatch.go` `f77e0bab6044ecb1fab0c55ab0bd3fab2411939687ffdcc68ea7d785b2b1d679`.
+- 원복 확인 SHA-256: `cancel_refusal.go` `acd4d7de2fb725dcfae60314d164a13116be4d47d0e07ea2010237228f4a68e9`, `cancel_refusal_latch.go` `27002543995267a9c961eae26432922eba7ae3b2a949c4509120bd9548a94a56`, `journal/cancel_refusal_latch.go` `6debab689bcc9650fe64aa19af89f001b43fb8ba457ca39e041615d05364d784`, `gateway.go` `c304e32a62e42759ad1ffb857ca90461068301707dadb5ca7bd8c46dba8af2de`, `dispatch.go` `f77e0bab6044ecb1fab0c55ab0bd3fab2411939687ffdcc68ea7d785b2b1d679`.
 - 변이 원문 중 대표 실패: `TestA165WindowStartsBeforeFirstDispatch`는 경계 `>=`를 `>`로 바꾸자 8초 뒤 `stop=cancelled`가 되어 실패함. `TestA165FlattenExhaustionKeepsTheFirstAmbiguousOutcome`은 소진 결과를 `outcome=last`로 바꾸자 실패함. 이 둘은 대상 줄 도달을 직접 보인 추가 경계 변이임.
 
 ## 판정·정책·루프
@@ -40,6 +40,7 @@
 | M21 | flatten 정책을 혼성 `{Retries: 2, Definitive: true}`로 변경 | `TestA165FlattenWiringUsesTheBoundedNonDefinitivePolicy` | 잡힘 |
 | M36 | `WithTimeout` 부모를 `context.Background()`로 분리 | `TestA165RealTimeoutKeepsFirstAmbiguousAsCancelled`가 fake-clock sleeper가 부모 timeout에 끝나지 않음을 관측, 구조 핀도 부모 식 0을 관측 | 잡힘 — 대상 `cancel_refusal.go:66` 도달 |
 | M37 | `time.Now` 기반 `WithDeadline` 판정을 복원 | `TestA165CancelRefusalUsesOnlyInjectedClockForJudgement`가 `time.Now(`를 관측 | 잡힘 — 대상 `cancel_refusal.go:66` 도달 |
+| M38 | retry dispatch 뒤 `winCtx.Err()` 보존 분기 제거 | `TestA165RetryDeadlineKeepsFirstAmbiguousAsCancelled`가 둘째 timeout의 `stop=ack outcome=retried`를 관측 | 잡힘 — 대상 `cancel_refusal.go:92` 도달, 원복 SHA 일치 |
 
 ## D11 latch·해제 범위
 
