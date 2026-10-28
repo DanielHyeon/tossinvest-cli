@@ -80,9 +80,44 @@
      R return  :1594  return releaseErr
   branches=15 returns=10
 
+## floatOf — internal/app/engine/exitloop.go:2014-2020 (fresh, sha 4d92acb6e7e1)
+    B1 if      :2016  if err != nil {
+     R return  :2017  return 0, fmt.Errorf("engine: %s %q is not a number: %w", field, s, err)
+     R return  :2019  return v, nil
+  branches=1 returns=2
+
 ## isProtective — internal/app/engine/exitloop.go:1463-1465 (fresh, sha 4d92acb6e7e1)
      R return  :1464  return p.Action == exitpolicy.ActionBaselineBreach || p.Action == exitpolicy.ActionLadderStop
   branches=0 returns=1
+
+## NewContext — internal/app/engine/engine.go:437-607 (fresh, sha 60e3a8d45487)
+    B1 if      :439   if err != nil {
+     R return  :440   return nil, err
+    B2 if      :446   if err != nil {
+     R return  :447   return nil, err
+    B3 if      :450   if clk == nil {
+    B4 if      :464   if opts.Publisher != nil {
+    B5 if      :472   if err := recordGateSettings(auditLog, gate, cfg.Engine.Adoption, notifications,
+     R return  :477   return nil, fmt.Errorf("engine: recording the automation-gate audit trail: %w", err)
+    B6 if      :487   if err != nil {
+     R return  :488   return nil, refuseStartup(auditLog, gate, fmt.Errorf("%w: %w", ErrAccountUnresolved, err))
+    B7 if      :494   if err != nil {
+     R return  :495   return nil, refuseStartup(auditLog, gate, err)
+    B8 if      :503   if err := bindApplyHooks(jrn, tradeOutcomeRefusalSink(opts.Logger)); err != nil {
+     R return  :505   return nil, refuseStartup(auditLog, gate, err)
+    B9 if      :522   if err != nil {
+     R return  :524   return nil, refuseStartup(auditLog, gate, err)
+   B10 if      :537   if gate.Enabled && guardian == nil && !opts.disableProductionGuardian {
+   B11 if      :539   if factory == nil {
+   B12 if      :545   if err != nil {
+     R return  :547   return nil, refuseStartup(auditLog, gate,
+   B13 if      :565   if err != nil {
+     R return  :567   return nil, err
+   B14 if      :569   if !automation.Verified {
+   B15 if      :574   if err != nil {
+     R return  :576   return nil, fmt.Errorf("engine: initialize strategy runtime projection: %w", err)
+     R return  :578   return &Context{
+  branches=15 returns=11
 
 ## NewOrderPath — internal/app/engine/engine.go:359-406 (fresh, sha 60e3a8d45487)
     B1 if      :361   if getenv == nil {
@@ -118,6 +153,14 @@
      R return  :232   return value
   branches=8 returns=8
 
+## canonicalProtectionQuantity — internal/execgw/protection.go:112-123 (fresh, sha 71e4923e1301)
+    B1 if      :115   if canonical == "" || strings.ContainsAny(canonical, ".eE-+") {
+     R return  :116   return 0, false
+    B2 if      :119   if err != nil || quantity == 0 || quantity > maximumExactlyRepresentableInteger || float64(quantity) != value {
+     R return  :120   return 0, false
+     R return  :122   return quantity, true
+  branches=2 returns=3
+
 ## checkOrderShape — internal/execgw/failclosed.go:53-98 (fresh, sha fbe97b79db74)
     B1 if      :59    if market != "kr" && market != "us" {
      R return  :60    return reject(ReasonUnsupportedOrderType,
@@ -152,6 +195,23 @@
      R return  :42    return rejected
      R return  :44    return p.checkFunding(ctx, intent)
   branches=1 returns=2
+
+## buildOrderCreate — internal/official/orders_write.go:100-153 (fresh, sha d89e0bdbffdc)
+    B1 if      :103   if intent.Fractional && intent.Side == "buy" {
+    B2 if      :105   if intent.Amount <= 0 {
+     R return  :106   return nil, fmt.Errorf("fractional buy requires a positive amount, got %v", intent.Amount)
+     R return  :108   return orderCreateV1{
+    B3 if      :126   if intent.Fractional && intent.Side == "sell" {
+    B4 if      :128   if intent.Quantity <= 0 {
+     R return  :129   return nil, fmt.Errorf("fractional sell requires a positive quantity, got %v", intent.Quantity)
+     R return  :133   return v0, nil
+    B5 if      :136   if intent.Quantity <= 0 {
+     R return  :137   return nil, fmt.Errorf("order requires a positive quantity, got %v", intent.Quantity)
+    B6 if      :144   if orderType == "LIMIT" {
+    B7 if      :145   if intent.Price <= 0 {
+     R return  :146   return nil, fmt.Errorf("limit order requires a positive price, got %v", intent.Price)
+     R return  :152   return v0, nil
+  branches=7 returns=7
 
 ## Client.TypedMarketCalendar — internal/official/typed_calendar_reads.go:37-54 (fresh, sha 5f97bf011626)
     B1 if      :39    if country != "KR" && country != "US" {
@@ -213,6 +273,23 @@
      R return  :146   return CalendarRefreshTooLate
      R return  :148   return CalendarValid
   branches=3 returns=4
+
+## buildFlattenWiring — cmd/tossctl/flatten.go:199-272 (fresh, sha 3a2b20f4c145)
+    B1 if      :201   if err != nil {
+     R return  :202   return nil, err
+    B2 if      :206   if err != nil {
+     R return  :207   return nil, fmt.Errorf("flatten-all: the account could not be identified: %w", err)
+    B3 range   :210   for _, a := range accounts {
+    B4 if      :211   if strings.TrimSpace(a.DisplayName) != "" {
+    B5 if      :216   if accountRef == "" {
+     R return  :217   return nil, errors.New("flatten-all: the broker returned no account number")
+    B6 if      :221   if root.configDir != "" {
+    B7 if      :227   if err != nil {
+     R return  :228   return nil, err
+    B8 if      :241   if err != nil {
+     R return  :243   return nil, err
+     R return  :265   return &flattenWiring{
+  branches=8 returns=6
 
 ## placeIntentSupported — internal/trading/service.go:269-288 (fresh, sha 631b2f02437e)
     B1 if      :270   if intent.Market != "us" && intent.Market != "kr" {

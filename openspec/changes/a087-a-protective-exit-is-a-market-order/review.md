@@ -810,3 +810,35 @@ design D7의 “제출 경로 GET 0·판정 실패 = LIMIT” 처분은 타당�
 3. P1-2: KR MARKET 정수 수량 불변·fallback/backstop·wire 미도달 시험으로 1.1a의 broker 400 위임 선택지를 제거.
 
 Function Logic Map: not-applicable — 이 독립 리뷰와 Manager 처분 기록은 문서만 바꿨다. 현재 함수 내부 분기 주장은 `analysis/evidence/` AST 20개(열거 stale 0) 또는 위에 표시한 손 읽음 근거에서만 인용했다.
+
+## 0.10 독립 리뷰 처분 (2026-10-28, OpenSpec 작성자 — HEAD `3e9989f61`)
+
+판정: **보완 완료(P0-1 · P1-2 · P2 · P3) · P1-1 은 사람 결정 대기.** 재리뷰는 사람 결정 뒤에 받는다. 문서와 `tools/logic-map` AST 만 다뤘다 — 소스 · 시험 편집 0,
+시험 · gate 실행 0, 브로커 · 계좌 · 운영 접근 0. 새 AST 5개(`analysis/evidence/engine--newcontext` · `tossctl--buildflattenwiring` · `execgw--canonicalprotectionquantity` ·
+`official--buildordercreate` · `engine--floatof`)를 HEAD 에서 만들었고 `enumerate.py` 로 25개 전부 stale 0 을 확인했다(`enumerate-output.md` 재생성).
+기억: ai-memory `a087 OR NewOrderPath` 검색은 세션 기록만 나왔고 관련 결정 페이지는 0 이다. Hindsight 는 이 세션에 없다 — 미실행.
+
+| 발견 | 처분 | 위치 |
+| --- | --- | --- |
+| P0-1 `NewOrderPath` 는 엔진 전용이 아니다 | **수용 · 닫음.** 비시험 호출 자리 2(`engine.go:438` `NewContext` · `cmd/tossctl/flatten.go:200` `buildFlattenWiring`), 시험 호출 0(문자열 확인 2). 옵션은 `NewOrderPath` 에 두지 않고 `NewContext` B1(`:439`) 뒤에서 `path.Trading` 에만 덧입힌다. 1.5.5 에 (c) 함수 단위 구조 시험 · (d) `NewOrderPath`·flatten 인스턴스 `LiveReady=false` · (e) 엔진 `LiveReady=true`, 변이 「flatten 경로에 옵션 켜기」 2종 + 「엔진에서 옵션 제거」 | design D3 「0.10 독립 리뷰 반영」 · tasks 1.5.0·1.5.3·1.5.5 · spec Req 2 |
+| P1-1 KRX 접속매매를 증명할 입력 | **조사 완료 · 사람 결정.** KRX 휴장·조기 폐장 = 달력 KRX 필드(openapi `:9808`, Go 미디코드 `typed_calendar_reads.go:11-14`). 종목별 KRX 정지(`:8815`, Go 미디코드 `stock_reads.go:30-40`)·VI(`/warnings` `:1268`) = 종목별 GET 이라 GET 0 아래 「지금」 불가. **KRX 단독 개장 시각·시장 전체 정지 = 입력 없음.** 그대로 두면 KR 도 LIMIT → Phase 2 의 실제 변경 0. 선택지 (가)(나)(다), 권장 (다) | design D7 「KRX 단독 판정 입력 조사」 · issues D-1 · tasks 0.10 |
+| P1-2 KR 정수 수량 | **수용 · 닫음.** 판정 조건 6(같은 float · execgw 정수 술어 하나), 불일치 → 오늘 LIMIT. ②·③ backstop, wire 미도달. backstop 은 도달 불가여야 함(도달하면 B13 해제 루프) — 수량 표 · 종단 「LIMIT 제출이지 해제가 아님」 시험. 1.1a 브로커 400 위임 철회 | design D3 · D7 조건 6 · tasks 1.1a·2.6.3·2.6.5 · spec Req 1·2 |
+| P2-1 B5 와 캐시 미준비 | **수용.** 판정은 `(bool, reason)` 총함수, 불변 스냅숏 원자 교체, 캐시 미준비 = LIMIT 사다리, B5 는 오늘의 사유로만 | design D7 「판정 함수의 모양」 · tasks 2.6.3 |
+| P2-2 LIMIT 골든 · 변이 축 | **수용.** 골든은 편집 전 HEAD 의 `sellIntent` 출력을 RED 커밋에 literal fixture 로 먼저 커밋하고 바뀐 함수끼리 비교하지 않는다. 변이에 신선도 6시간 · 미래 `fetchedAt` · 오늘 날짜 · 주말 검사 제거 추가 | tasks 2.6.3·2.6.5 |
+| P2-3 a165 와 flatten builder | **수용.** a165 착지 뒤 다시 할 일에 6 을 더한다(아래) | 이 절 |
+| P3-1 1억 이상 · 하한가 공백 | 유지 — D8 잔존. 「정상 접속매매 MARKET」 표현은 P1-1 결정 전까지 보류 머리말로 덮었다 | design D7 |
+
+### 착수 시 FLM 대상 정정 (위 「착수 시 FLM 대상」 목록)
+
+- `engine.NewOrderPath`(엔진 인스턴스 옵션) → **`engine.NewContext`** 로 바꾼다. `NewOrderPath` 본문은 바이트 그대로다.
+- 더한다: `execgw.canonicalProtectionQuantity`(내보내기로 이름·호출자가 바뀌면), `official` 달력 형을 디코드하는 함수 본문이 바뀌면 그것.
+  `cmd/tossctl/flatten.go` 는 **편집 대상이 아니다**(구조 시험이 읽기만 한다).
+
+### a165 착지 뒤 a087 이 다시 할 일 (추가)
+
+6. **flatten 경계 재대조** — 새 main 에서 `rg -n 'NewOrderPath\(' --type go` 로 호출 자리를 다시 센다(지금 2). a165 R4 가 `buildFlattenWiring` 을 바꾸면
+   `tools/logic-map` 으로 `cmd/tossctl/flatten.go` `buildFlattenWiring` · `engine.go` `NewOrderPath` · `NewContext` AST 를 그 HEAD 에서 다시 만들고, 1.5.5 (c)(d) 가
+   새 배선에서도 「옵션 0」을 재는지(새 자리에서 `NewOrderPath` 를 부르거나 다른 빌더로 인스턴스를 받으면 그것도 센다) 확인한 뒤에만 착수한다.
+   bundle 복사는 gate 작업량 처분이지 이 의미 충돌의 증거가 아니다.
+
+Function Logic Map: not-applicable — 이 처분은 문서만 바꿨다. 분기 주장은 `analysis/evidence/` AST 25개(HEAD `3e9989f61`, stale 0)에서만 인용했고, 호출 자리 수는 `rg` 와 AST 로 셌다.

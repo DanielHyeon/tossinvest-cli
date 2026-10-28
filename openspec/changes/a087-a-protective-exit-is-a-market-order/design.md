@@ -192,7 +192,8 @@ buy  + market       → 거부 (현행 유지)
 **비분수 MARKET 의 정수 수량 (재리뷰 P2-2)**: openapi 는 소수 수량을 US 시장가 매도에만 허용하고 그 외는 400 이다.
 현재 어느 관문이 비분수 MARKET 의 정수성을 검사하는지는 **미확인**(검증 필요 — task 1.0.1·1.5.1 AST). 처분은 그 열거
 뒤 tasks 1.1a 에서 정한다 — 로컬 거부를 넣거나, 브로커 400 에 맡기고 그 사실을 시험 이름으로 고정하거나. 어느 쪽이든
-침묵한 생략은 없다.
+침묵한 생략은 없다. **→ 정해짐(0.10 독립 리뷰 P1-2)**: 「브로커 400 위임」은 철회한다. KR 정수 수량은 MARKET 자격 조건이고 두 관문에
+backstop 을 둔다 — 아래 「0.10 독립 리뷰 반영」 P1-2.
 
 ### ③ `placeIntentSupported` (`internal/trading/service.go`, 비시험 호출자 `PreviewPlace`·`Place`) — 엔진 인스턴스 한정
 
@@ -215,8 +216,9 @@ if intent.OrderType != "limit" { return false }   // Place → ErrPlaceUnsupport
 // 제안 (tasks 1.5.3 에서 확정)
 func (s *Service) WithProtectiveMarketSell() *Service { s.protectiveMarketSell = true; return s }
 
-// engine.go — 엔진 인스턴스에서만 켠다
-trading.NewService(cfg.Trading, broker).WithConditional(broker).WithProtectiveMarketSell()
+// ~~engine.go:401(NewOrderPath) — 엔진 인스턴스에서만 켠다~~ — 철회(0.10 독립 리뷰 P0-1): NewOrderPath 는
+// flatten-all 도 쓰는 공용 빌더다. 옵션은 NewContext 안에서만 덧입힌다 — 아래 「0.10 독립 리뷰 반영」 P0-1.
+trading.NewService(cfg.Trading, broker).WithConditional(broker) // NewOrderPath — 바이트 그대로
 
 // 술어는 인스턴스 값을 인자로 받는다 — PreviewPlace·Place 두 호출자가 같은 값을 넘긴다
 func placeIntentSupported(intent orderintent.PlaceIntent, protectiveMarketSell bool) bool
@@ -241,8 +243,9 @@ func placeIntentSupported(intent orderintent.PlaceIntent, protectiveMarketSell b
   `internal/trading` 에 옵션을 더하므로 「기본 동작은 upstream 그대로, 엔진 인스턴스만 옵션」으로 고친다(1.5.4).
 - **불변식 3** — 엔진이 꺼져 있으면 엔진 인스턴스가 만들어지지 않으므로 이 개방의 흔적은 0 이다. CLI·ops·MCP 는 엔진 토글과
   무관하게 upstream 동일. `issues.md` I-R1 종결.
-- **엔진 인스턴스 안의 다른 생산자** — 엔진 인스턴스를 지나는 매도 조립은 `sellIntent`·`flatten` 둘이고(2차 재리뷰 P3-3,
-  `flatten` 은 LIMIT) a112 전략 레인은 매수 전용이다. 그 열거를 1.5.1 risk-pattern-report 가 CodeGraph 로 다시 적는다(엔진
+- **엔진 인스턴스 안의 다른 생산자** — ~~엔진 인스턴스를 지나는 매도 조립은 `sellIntent`·`flatten` 둘이고~~ **정정(0.10 독립 리뷰 P0-1)**:
+  `tossctl flatten-all` 은 엔진 인스턴스가 아니라 `NewOrderPath` 로 **자기 인스턴스**를 만든다(`cmd/tossctl/flatten.go:200`). 엔진
+  인스턴스를 지나는 보호 매도 조립은 `sellIntent` 하나이고(2차 재리뷰 P3-3, `flatten` 은 LIMIT) a112 전략 레인은 매수 전용이다. 그 열거를 1.5.1 risk-pattern-report 가 CodeGraph 로 다시 적는다(엔진
   `tradingService` 소비자 포함). 엔진 인스턴스를 쓰는 사람 조작 표면이 발견되면 그 표면은 엔진 토글 뒤에 있으므로 불변식 3 은
   유지되지만, 그 사실을 1.5.0 Pre-Edit 에 적는다.
 
@@ -270,6 +273,67 @@ func placeIntentSupported(intent orderintent.PlaceIntent, protectiveMarketSell b
 - **문자열 정규화 차이**: ② 는 `ToLower`·`TrimSpace` 로 정규화하고(`:54-57`), ③ 은 `"kr"`·`"market"` 을 그대로 비교한다. 엔진 `sellIntent` 는
   `m.position.Market` 을 그대로 싣는다. 오늘 LIMIT 보호 청산이 ③ 을 지나므로 생산 값은 소문자다 — 새 판정(D7 「구간 입력」 조건 1)은 `clock.ParseMarket`
   으로 정규화하고, 실패는 LIMIT 이다.
+
+### 0.10 독립 리뷰 반영 (2026-10-28, HEAD `3e9989f61`) — 엔진 전용 배선(P0-1) · KR 정수 수량(P1-2)
+
+근거 AST 는 `analysis/evidence/` 에 새로 만든 다섯(`engine--newcontext` · `tossctl--buildflattenwiring` · `execgw--canonicalprotectionquantity` ·
+`official--buildordercreate` · `engine--floatof`)과 기존 `engine--neworderpath` · `execgw--checkordershape` · `engine--exitobserver.submit` ·
+`engine--exitobserver.sellintent` 다. 소스 바이트는 `0c9bfd272` 와 같다(`enumerate.py` 재실행 stale 0, 25개). 호출 자리 수는 `rg` 와 AST 로 셌다.
+
+**P0-1 — `NewOrderPath` 호출 자리 (비시험 코드, 호출 자리 단위)**
+
+| # | 자리 | 감싼 함수 | 무엇을 만드나 |
+| --- | --- | --- | --- |
+| 1 | `internal/app/engine/engine.go:438` | `NewContext` (B1 `:439` 가 그 오류 반환) | 엔진 프로필. `path.Trading` 이 `buildGateway`(`:511`)와 `Context.tradingService`(`:603`)로 간다 |
+| 2 | `cmd/tossctl/flatten.go:200` | `buildFlattenWiring` (B1 `:201`) | 사람 명령 `tossctl flatten-all` 의 자기 배선. `orderPath.Trading` 이 자기 게이트웨이(`:235`)로 간다 |
+
+시험 코드에는 호출 자리가 0 이다. 문자열로 이름을 확인하는 시험이 둘 있다(`cmd/tossctl/flatten_test.go:141` — flatten 이 `engine.NewOrderPath(` 로 만든다는 구조
+고정, `cmd/tossctl/engine_reconcile_test.go:112` — 금지 토큰 목록). `NewOrderPath` 안의 `trading.NewService` 생성은 `:401` 하나다. 같은 생성자의 다른 비시험 자리는
+`internal/app/app.go:158` · `cmd/tossctl/mcp.go:74` 둘이다(1.5.5 가 이미 센 것). **그래서 `:401` 에 옵션을 붙이면 자리 2(사람 CLI)가 시장가 허용 인스턴스를 받는다** — 리뷰 지적이 맞다.
+
+**새 배선**: 옵션은 공용 빌더가 아니라 엔진 조립에서만 덧입힌다.
+
+```go
+// NewOrderPath(engine.go:359-406) — 바이트 그대로. 옵션 없음.
+
+// NewContext(engine.go:437-) — B1(:439) 바로 뒤, buildGateway(:509) 앞에 한 줄
+path, err := NewOrderPath(opts)
+if err != nil { return nil, err }
+path.Trading.WithProtectiveMarketSell() // 엔진만 — flatten-all 은 NewOrderPath 를 따로 불러 새 인스턴스를 받는다
+```
+
+- `WithX` 는 받은 `*Service` 를 고쳐서 돌려주는 기존 관례다(`WithLineage` `service.go:69` · `WithConditional` `conditional.go:60`). `NewOrderPath` 는 호출마다
+  `trading.NewService` 를 새로 부르므로(`:401`) `NewContext` 가 고친 인스턴스는 자리 2 와 공유되지 않는다. 같은 인스턴스가 게이트웨이(`:511`)와
+  `tradingService`(`:603`)에 함께 가므로 엔진 안의 두 소비자는 같은 값을 본다.
+- 이제 고치는 기존 함수는 `NewOrderPath` 가 아니라 `NewContext` 다(gate ⑤ FLM 대상 교체 — 「착수 시 FLM 대상」 목록 정정은 `review.md` 0.10 독립 리뷰 처분).
+- 불변식 3: 엔진이 꺼져 있으면 `NewContext` 가 불리지 않는다. 자리 2·`app.go`·`mcp.go` 는 옵션 0 이다.
+
+**시험 (tasks 1.5.5 개정)**: (c) 구조 시험은 **옵션 호출 자리가 비시험 코드 전체에서 `NewContext` 본문 하나뿐**이고 `NewOrderPath` · `buildFlattenWiring` ·
+`app.go` · `mcp.go` 에는 0 임을 함수 단위 AST 로 센다. (d) 행동 시험 — `engine.NewOrderPath`(임시 config dir · 시험 자격 증명, 네트워크 없음 — 그 함수 문서
+「It performs no network call」)가 돌려준 `Trading.PreviewPlace(KR sell+market).LiveReady == false`, 그리고 `buildFlattenWiring` 이 게이트웨이에 넘기는
+인스턴스도 같은 판정. (e) 엔진 시험 — `NewContext` 로 만든 엔진의 게이트웨이 경로에서 같은 의도가 `LiveReady == true`. 변이: 「`NewOrderPath` 반환식에 옵션」·
+「`buildFlattenWiring` 에서 `orderPath.Trading` 에 옵션」(= flatten 경로에 옵션 켜기) 둘은 (c)(d) 가, 「`NewContext` 에서 옵션 제거」는 (e)·1.6 이 잡아야 한다.
+
+**P1-2 — KR MARKET 은 정확한 양의 정수 수량일 때만**
+
+- 사실(AST): `checkOrderShape` B12(`:91`)는 `<= 0` 만, ③ `placeIntentSupported` 는 수량을 안 본다. `buildOrderCreate` B5(`:136`)도 `<= 0` 만 보고
+  `formatDecimal` 로 그대로 싣는다. `floatOf`(B1 `:2016`)는 `ParseFloat` 실패만 거른다. 정수 검사는 `canonicalProtectionQuantity`(`protection.go:112-123`,
+  B1 소수점·지수·부호 문자, B2 0·2^53-1 초과·왕복 불일치)에 있고 보호 진입 readiness 만 쓴다.
+- **판정 조건으로 넣는다(1차 방어).** D7 판정 규칙에 조건 6 「시장이 KR 이면 `sellIntent` 가 싣을 **그 float 수량**이 정확한 양의 정수」를 더한다. 거짓이면
+  MARKET 자격이 없고 **오늘의 LIMIT 경로**(가격 사다리 그대로)로 간다 — 거부가 아니다. 소수 KR 수량의 LIMIT 은 오늘도 같은 주문이라 약화가 아니다.
+  이 경우 관측 줄에 판정 사유 `kr-quantity-not-integral` 을 남긴다(입구 정수 불변의 위반 신호 — 새 경보 경로는 만들지 않는다. 입구 증명은 원장 투영 소관이라 범위 밖).
+- **술어는 하나다.** 판정과 ② backstop 이 같은 함수를 부른다 — `canonicalProtectionQuantity` 를 execgw 에서 내보내 쓴다(엔진은 이미 execgw 를 import 한다,
+  `exitloop.go:87`). 같은 규칙을 두 자리에 쓰면 서로의 시험을 대신 통과시킨다([[two-judgements-cover-for-each-other]]). ③(`internal/trading`)은 execgw 를
+  import 하지 않으므로 그 자리의 검사는 따로 서고, 1.5.2 가 단독으로 잰다.
+- **2차 방어(backstop)**: ② 의 `sell+market`(비분수) 갈래와 ③ 엔진 인스턴스의 `sell+market` 예외에 정수성 검사를 더한다(B10 예외 조건 안 — 조기 통과 금지 유지).
+  소수 KR 수량은 **전송 본문에 닿지 않는다**.
+- **제출 실패 갈래가 제안을 해제하는 문제**: backstop 이 거부하면 게이트웨이 결과는 `submit` B13(`:1582` default)로 가서 alert · `ProposalRefused` 해제 →
+  다음 관측이 다시 발의한다. 판정이 그 수량에 MARKET 을 계속 고르면 「거부 → 해제 → 재발의」가 반복되고 보호 청산은 0 이 된다(오늘보다 약함). 그래서
+  backstop 은 **도달 불가여야 한다** — 판정이 같은 술어로 같은 float 값을 먼저 보기 때문이다. 이것을 시험으로 고정한다: 수량 표(`1` · `1.5` · `1e-9` ·
+  `2^53+1` · `0` · `-1` · `NaN` · `+Inf` · `"1.0"` · `" 2 "`)에서 「판정 = MARKET ⇒ ②·③ 통과」, 그리고 소수 KR 행의 엔진 종단 결과가 **B13 해제가 아니라 LIMIT
+  제출**이다. backstop 이 거부한 경우의 관측 사유는 기존 `ReasonInvalidRequest` 와 다른 문구로 남겨 「판정·관문 불일치(버그)」로 읽히게 한다.
+- 변이: 「판정에서 정수 조건 제거」(종단 시험이 B13 해제 또는 wire 소수로 잡음) · 「② backstop 제거」 · 「③ backstop 제거」(각 관문 단독 시험이 잡음) ·
+  「판정이 다른(문자열) 수량으로 정수성 판정」(float 왕복 행이 잡음).
 
 ### 왜 진입은 계속 막는가
 
@@ -449,7 +513,11 @@ base `102d4e99` 산출물. HEAD `0c9bfd272` AST `analysis/evidence/engine--exito
 운영하면 합집합은 정상 모양). 그리고 현재 Go 형 `official.MarketCalendarSession`(`typed_calendar_reads.go:11-14`)은 `startTime`·`endTime` 둘만
 읽는다 — KRX 기준 필드가 없다. openapi 예시에 조기 폐장일 표본은 없다(예시 요약: 영업일 · 휴장일 · 부분 휴장 — `[미측정]`).
 
-**판정 규칙 (MARKET 은 다섯 조건이 모두 참일 때만, 하나라도 거짓·불명이면 LIMIT).**
+> **보류 (0.10 독립 리뷰 P1-1, 2026-10-28)**: 아래 규칙은 「정상 영업일 KRX 접속매매」를 증명하지 못한다는 판정을 받았다 — KRX 단독 개장 시각·VI·
+> 거래정지를 가르는 입력이 없다. 조사 결과와 선택지는 아래 「KRX 단독 판정 입력 조사」 절이고, **사람 결정 전까지 이 규칙으로 착수하지 않는다**.
+> 조건 6(정수 수량, P1-2)은 결정과 무관하게 MARKET 이 남는 모든 선택지에 붙는다.
+
+**판정 규칙 (MARKET 은 여섯 조건이 모두 참일 때만, 하나라도 거짓·불명이면 LIMIT).**
 
 1. 시장이 KR 이다 — `clock.ParseMarket` 으로 정규화. 실패 → LIMIT. US 는 Q2 로 언제나 LIMIT 이므로 US 달력은 읽지 않는다.
 2. 엔진 메모리에 KR 달력 응답이 있고, 그 응답이 `AdaptOfficialCalendar` 검증을 통과한다(위 B1~B8 — 오류면 LIMIT).
@@ -462,6 +530,27 @@ base `102d4e99` 산출물. HEAD `0c9bfd272` AST `analysis/evidence/engine--exito
    KRX 기준 필드를 읽으려면 `official.MarketCalendarSession` 에 `singlePriceAuctionStartTime` 을 더해야 한다(타입 확장 — 2.6.4).
 5. 고정 시각: `now` 가 `[09:00, 15:20)` KST 안이고 주말이 아니다. 시작과 주말은 `clock.MarketKR.RegularSession(now)`(`Open` · `Weekend`)를 쓰고, 끝 15:20 은
    종가단일가 시작 상수다 — `Session.Contains` 의 끝(15:30)은 종가단일가를 포함하므로 그대로 쓰지 않는다(위 표 종가단일가 행).
+6. (0.10 독립 리뷰 P1-2) 시장이 KR 이면 `sellIntent` 가 싣을 float 수량이 정확한 양의 정수다 — execgw 의 정수 술어(`canonicalProtectionQuantity` 를 내보낸 것)
+   하나로 판정한다. 거짓이면 LIMIT(D3 「0.10 독립 리뷰 반영」 P1-2).
+
+**판정 함수의 모양 (0.10 독립 리뷰 P2-1 · 보완 조건 「B5 와 캐시 미준비 구분」)**: 판정은 `(market bool, reason string)` 를 돌려주는 **총함수**다 — error 를 돌려주지
+않고, 패닉하지 않고, 브로커·디스크를 부르지 않는다(GET 0 · 비차단). 입력은 엔진 메모리의 **불변 스냅숏 한 개**(원자 포인터 교체로 갱신 — 읽는 쪽은 잠금 대기 없음)와
+`now` · 수량뿐이다. 그래서 두 실패가 갈린다.
+
+| 상황 | 판정 | 그다음 | `submit` 갈래 |
+| --- | --- | --- | --- |
+| 달력 캐시 미준비(기동 직후 · 갱신 실패 · 낡음 · 미래 `fetchedAt` · 날짜 불일치) | `false`, `calendar-not-ready` 등 | 오늘의 LIMIT 사다리 | 오늘과 같다(가격이 있으면 Place, B5 는 오늘의 사유로만) |
+| `sellIntent` 자체 실패(가격 없음 · 수량/가격 파싱 불가 — `sellIntent` B2·B3·B4) | 판정과 무관 | — | B5(`:1533`) → alert · 해제 — **오늘과 같은 사유만** |
+
+판정이 B5 에 닿는 새 사유를 만들면 안 된다 — 시험은 「캐시 미준비 행에서 B5 미도달 · 결과 intent = 오늘 LIMIT 골든」과 「GET 호출 계수 0」을 함께 잰다.
+갱신 goroutine 과 판정의 경합은 `-race` 아래 시험한다(스냅숏 교체 중 판정이 반쪽 스냅숏을 보지 않음 · 스냅숏 nil 이면 LIMIT).
+
+**스냅숏 형 (보완 조건 「raw → 검증 snapshot → 판정 보존」)**: KRX 기준 필드는 `official.MarketCalendarSession` 에 `SinglePriceAuctionStartTime *time.Time` 을 더해
+디코드한다(디코드 전용 — 그 형을 그대로 출력하는 비시험 자리는 `rg` 로 0). 그러나 `scheduler.CalendarDay` 에는 **더하지 않는다** — `AdaptOfficialCalendar` 는
+`CalendarDay` JSON 의 sha256 을 `Version` 으로 쓰고(`calendar.go:85-98`), 그 값이 콘솔 `CalendarVersion`(`marketschedule.go:105`)과 a112 전략 권한 수집에 쓰인다.
+필드를 더하면 같은 달력의 Version 이 바뀐다. 그래서 a087 판정 스냅숏은 엔진 새 파일의 자기 형이다 — 같은 응답을 `AdaptOfficialCalendar` 로 검증(오류면 스냅숏 없음)한 뒤
+그 결과의 오늘 정규장 창 · `FetchedAt` 과 원 응답의 `Today.Integrated.RegularMarket.SinglePriceAuctionStartTime` 을 한 값으로 묶는다. 시험: openapi 예시 응답으로
+만든 `Version` 이 필드 추가 전후 바이트 같음.
 
 「고정 시각」의 이 해석(정상 영업일이 아니면 종일 LIMIT, 정상일이면 고정 창)은 이 문서의 유도다 — 사용자 문언은 「브로커 달력 + 고정 시각」이다.
 대안(달력 창과 고정 창의 교집합)은 조기 폐장일 09:00~13:00 에 MARKET 이득을 더 얻지만, 합집합 의미 때문에 KRX 조기 폐장을 NXT 창이 가리면
@@ -481,6 +570,25 @@ base `102d4e99` 산출물. HEAD `0c9bfd272` AST `analysis/evidence/engine--exito
 **잔존 `[미측정]`**: ① 브로커 달력이 KRX 조기 폐장·개장 지연을 위 필드로 실제로 보이는지(openapi 예시 없음). 거짓으로 정상 모양을 보이면 그날
 조기 폐장 뒤 MARKET 이 나갈 수 있다 — 그 시각 MARKET 이 거부되면 오늘보다 약하다. ② 정규장 칸 안의 종가단일가(15:20~15:30)와 VI 단일가는 §5.1
 (14:59 접속매매) 밖이다 — 종가단일가는 LIMIT 으로 뺐고(위 표), VI 단일가는 예측 입력이 없어 D8 잔존 행이다.
+
+### KRX 단독 판정 입력 조사 (0.10 독립 리뷰 P1-1, 2026-10-28) — **사람 결정 대기**
+
+조사 범위: `docs/migration/openapi.latest.json`(경로 목록 전수 · 스키마 전수에서 KRX·NXT·정지·VI·status 검색)과 저장소 Go 형. 브로커 호출 0.
+
+| 필요한 사실 | openapi 에 있나 | Go 가 읽나 | 제출 경로 GET 0 아래에서 「지금」을 말하나 |
+| --- | --- | --- | --- |
+| KRX 휴장 | 있음 — `RegularMarketSession.singlePriceAuctionStartTime` 「KRX 기준. KRX 휴장이면 null」(`:9808`) | 아니다 — `MarketCalendarSession` 은 시작·끝만(`typed_calendar_reads.go:11-14`) | 예 — 하루 단위 값이라 백그라운드 캐시로 충분 |
+| KRX 조기 폐장(종가단일가 시작이 당겨짐) | 같은 필드(KRX 기준) | 아니다(같음) | 예(같음). 실제 조기 폐장일 응답 표본은 0 — `[미측정]` |
+| **KRX 개장 시각 · 개장 지연** | **없다** — 정규장 `startTime` 은 「가장 이른 KRX/NXT 정규장 시작」(`:9804`). 프리마켓은 NXT(`:9719` `IntegratedHour`) | — | **아니다** — NXT 가 제때 열면 합집합 시작이 KRX 지연을 가린다 |
+| 종목별 KRX 거래정지 | 있음 — `StockInfo.koreanMarketDetail.krxTradingSuspended`(`KrMarketDetail` `:8797`, `:8815`; 경로 `/api/v1/stocks` `:849`) | 아니다 — `apiStockInfo` 에 `koreanMarketDetail` 필드 없음(`stock_reads.go:30-40`, 주석 `:29` 에만 있음) | **아니다** — 종목별 GET 이 필요하고, 장중 정지는 캐시 사이에 생긴다 |
+| 종목별 VI(정적·동적) | 있음 — `/api/v1/stocks/{symbol}/warnings` `VI_STATIC`·`VI_DYNAMIC`(`StockWarning` `:8830`, 「VI 발동/해제는 수 초 내 반영」 `:1268`), `exchange` 로 KRX 구분 | 예 — `apiStockWarning`(`warnings_reads.go:20-25`), 다만 엔진은 안 부른다 | **아니다** — VI 는 수 분짜리 장중 사건이라 캐시가 「지금」을 못 말한다. 제출 직전 GET 은 즉시성 제약 위반 |
+| 시장 전체 매매 정지(서킷브레이커·사이드카) | **없다**(검색 0) | — | 아니다 |
+
+**결론**: KRX 전용 입력은 **일부만 있다.** KRX 휴장·조기 폐장은 달력의 KRX 기준 필드로 가를 수 있고(형 확장 = 위 「스냅숏 형」), 종목별 정지·VI 는 openapi 에 있으나
+종목별 GET 이라 제출 경로 GET 0 아래에서는 「지금」의 증거가 되지 못한다. **KRX 단독 개장 지연과 시장 전체 정지는 입력 자체가 없다.** 그래서 리뷰가 요구한
+「정상 KRX 접속매매의 증명」은 이 입력으로 닫히지 않고, Q1 원칙(불명 → LIMIT)을 그대로 적용하면 **KR MARKET 칸도 비고 a087 Phase 2 가 바꾸는 주문이 0** 이 된다.
+이것은 사용자 결정(2026-10-10 시장가 방향 · 2026-10-28 Q1~Q3)의 전제를 바꾸므로 문서가 고르지 않는다. 선택지(권장 포함)는 `issues.md` 「사람 결정 필요 (2026-10-28,
+0.10 독립 리뷰)」 D-1 · `review.md` 0.10 독립 리뷰 처분 절. 결정 전까지 D7 판정 규칙·2.6.x 는 착수 금지이고, 이 절의 표와 「스냅숏 형」은 결정 입력이다.
 
 ### §5.2 처분 (7판 — 사용자 결정 2026-10-28 Q4): not-applicable
 
