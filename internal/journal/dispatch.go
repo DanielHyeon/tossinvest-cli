@@ -45,8 +45,8 @@ type DispatchOutcome struct {
 	Err error
 }
 
-// DispatchFunc performs the actual broker call. It must not retry: the journal
-// records exactly one dispatch per attempt.
+// DispatchFunc 는 브로커 호출을 수행함. journal 자체는 재시도하지 않으며, a165의
+// 취소 409 already-processing 예외만 같은 attempt의 바깥 래퍼가 기록 꼬리표와 함께 처리함.
 type DispatchFunc func(ctx context.Context, a *Attempt) DispatchOutcome
 
 // ExistenceCheck confirms that the order id a broker ack named exists at the

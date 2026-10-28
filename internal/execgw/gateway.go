@@ -109,6 +109,8 @@ type Options struct {
 	// verify-execution-capability and the replay path stays off until then
 	// [미측정 — 2b 전 비활성].
 	Attested func(ctx context.Context) bool
+	// CancelRefusal은 취소의 명시적 일시 거절을 처리함. nil은 기존 1회 전송을 보존함.
+	CancelRefusal *CancelRefusalPolicy
 }
 
 // Gateway is the engine's only order mutation surface.
@@ -116,18 +118,19 @@ type Options struct {
 // Every field is unexported on purpose: the wrapped trading service is a mutator,
 // and a caller that could read it back could bypass the journal and the Guardian.
 type Gateway struct {
-	journal    *journal.Journal
-	trading    *trading.Service
-	clk        clock.Clock
-	accountRef string
-	source     string
-	entry      *EntryGate
-	preflight  *Preflight
-	orders     OrderReader
-	newID      func() string
-	replay     ReplayTransport
-	replayCfg  ReplayConfig
-	attested   func(ctx context.Context) bool
+	journal       *journal.Journal
+	trading       *trading.Service
+	clk           clock.Clock
+	accountRef    string
+	source        string
+	entry         *EntryGate
+	preflight     *Preflight
+	orders        OrderReader
+	newID         func() string
+	replay        ReplayTransport
+	replayCfg     ReplayConfig
+	attested      func(ctx context.Context) bool
+	cancelRefusal *CancelRefusalPolicy
 
 	protectionReadiness          *protection.ReadinessAdapter
 	forceReadinessAdapterForTest bool
@@ -159,18 +162,19 @@ func New(opts Options) (*Gateway, error) {
 		protectionCheckForTest = defaultProtectionCheckForTest
 	}
 	g := &Gateway{
-		journal:    opts.Journal,
-		trading:    opts.Trading,
-		clk:        opts.Clock,
-		accountRef: strings.TrimSpace(opts.AccountRef),
-		source:     strings.TrimSpace(opts.Source),
-		entry:      opts.Entry,
-		preflight:  opts.Preflight,
-		orders:     opts.Orders,
-		newID:      opts.NewID,
-		replay:     opts.Replay,
-		replayCfg:  opts.ReplayConfig,
-		attested:   opts.Attested,
+		journal:       opts.Journal,
+		trading:       opts.Trading,
+		clk:           opts.Clock,
+		accountRef:    strings.TrimSpace(opts.AccountRef),
+		source:        strings.TrimSpace(opts.Source),
+		entry:         opts.Entry,
+		preflight:     opts.Preflight,
+		orders:        opts.Orders,
+		newID:         opts.NewID,
+		replay:        opts.Replay,
+		replayCfg:     opts.ReplayConfig,
+		attested:      opts.Attested,
+		cancelRefusal: opts.CancelRefusal,
 
 		protectionReadiness:          opts.ProtectionReadiness,
 		forceReadinessAdapterForTest: opts.forceReadinessAdapterForTest,
@@ -726,7 +730,7 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 	}
 	var res journal.Result
 	if plan.strategy == nil {
-		res, err = attempt.DispatchVerified(ctx, dispatch, g.roundTripFor(plan))
+		res, err = attempt.DispatchVerified(ctx, g.withCancelRefusal(plan, dispatch), g.roundTripFor(plan))
 	} else if g.dispatchStrategyVerified != nil {
 		res, err = g.dispatchStrategyVerified(ctx, attempt, plan.strategy.lease, dispatch, g.roundTripFor(plan))
 	} else {
@@ -824,6 +828,11 @@ func (g *Gateway) checkSymbolFree(ctx context.Context, plan mutationPlan) (*Reje
 				"attempt %s on %s is unresolved; an operator has to close it before new exposure is added",
 				rec.ID, plan.symbol), nil
 		}
+	}
+	if rejected, err := g.cancelRefusalLatch(ctx, plan); err != nil {
+		return nil, err
+	} else if rejected != nil {
+		return rejected, nil
 	}
 	return nil, nil
 }

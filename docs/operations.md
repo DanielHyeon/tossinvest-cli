@@ -614,6 +614,67 @@ UNKNOWN_BROKER_STATE, 그 종목의 신규 진입 차단) 손절은 계속 보�
 이름 붙인 후속 change 후보). 브로커 앱에서 그 주문을 확인하고 개발 · 운영 책임자에게 에스컬레이션한다. 그동안 필요하면 사람이
 브로커 앱에서 직접 매도하는 것이 유일한 즉시 수단이다(이후 대사가 그 차이를 다룬다).
 
+## 엔진 취소의 `already-processing` 뒤 진입이 막힐 때
+
+엔진 청산 전 취소가 `409 already-processing`으로 확정 미수락(FAILED_CONFIRMED)되면 대상 주문이 살아 있을 수 있으므로 같은 종목의 신규 진입만 차단한다. 청산·손절·flatten·대사·보호 경로는 계속 열린다. **엔진을 멈추지 않는다.**
+
+### ① 읽기 전용 확인
+
+원장은 읽기 전용으로만 열고 수정하지 않는다. 아래 질의의 결과는 후보 목록이며 해제 판정은 실행 중인 gateway가 한다.
+
+```sql
+sqlite3 'file:<journal.db>?mode=ro'
+
+SELECT a.id AS latch_attempt, i.account_ref, i.market, i.trading_day, i.symbol, a.target_order_id, a.settled_at,
+       (SELECT MAX(t.id) FROM attempt_transitions t WHERE t.attempt_id = a.id AND t.to_state = 'FAILED_CONFIRMED') AS latch_seq
+  FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
+ WHERE a.kind = 'CANCEL' AND a.state = 'FAILED_CONFIRMED'
+   AND a.detail LIKE '%[a165 %branch=cancel_already_processing%outcome=definitive]'
+ ORDER BY latch_seq DESC;
+```
+
+특정 `latch_attempt`의 r2 후보는 다음처럼 읽는다. `r2=1`은 후보 표지일 뿐이며 원장을 고치거나 수동 해제하지 않는다.
+
+```sql
+WITH l AS (
+  SELECT a.id, a.target_order_id AS target, TRIM(i.account_ref) AS account,
+         LOWER(TRIM(i.market)) AS market, UPPER(TRIM(i.symbol)) AS symbol, i.trading_day AS latch_day,
+         (SELECT MAX(t.id) FROM attempt_transitions t WHERE t.attempt_id = a.id AND t.to_state = 'FAILED_CONFIRMED') AS latch_seq
+    FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
+   WHERE a.id = '<latch_attempt>' AND a.kind = 'CANCEL' AND a.state = 'FAILED_CONFIRMED' AND a.target_order_id <> ''
+), owners AS (
+  SELECT COUNT(DISTINCT o.intent_id) AS n
+    FROM l, mutation_attempts o JOIN intents oi ON oi.id = o.intent_id
+   WHERE o.state = 'CONFIRMED' AND o.kind IN ('PLACE','AMEND') AND o.broker_order_id = l.target
+     AND TRIM(oi.account_ref) = l.account AND LOWER(TRIM(oi.market)) = l.market AND UPPER(TRIM(oi.symbol)) = l.symbol
+)
+SELECT c.id AS cancel_attempt, c.state, TRIM(ci.account_ref) AS account, LOWER(TRIM(ci.market)) AS market,
+       UPPER(TRIM(ci.symbol)) AS symbol, c.target_order_id, l.latch_day, ci.trading_day AS cancel_day,
+       l.latch_seq,
+       (SELECT MIN(t.id) FROM attempt_transitions t WHERE t.attempt_id = c.id AND t.from_state = '' AND t.to_state = 'RECORDED') AS recorded_seq,
+       owners.n AS owner_count,
+       (c.state = 'CONFIRMED' AND owners.n = 1
+        AND (SELECT MIN(t.id) FROM attempt_transitions t
+              WHERE t.attempt_id = c.id AND t.from_state = '' AND t.to_state = 'RECORDED') > l.latch_seq) AS r2
+  FROM l, owners, mutation_attempts c JOIN intents ci ON ci.id = c.intent_id
+ WHERE c.kind = 'CANCEL' AND c.id <> l.id AND c.target_order_id = l.target
+   AND TRIM(ci.account_ref) = l.account AND LOWER(TRIM(ci.market)) = l.market AND UPPER(TRIM(ci.symbol)) = l.symbol
+ ORDER BY recorded_seq;
+```
+
+대상 주문 상태는 브로커 앱에서 읽기만 확인한다. 체결 감지 상태와 위 `latch_attempt`를 함께 기록해 에스컬레이션한다.
+
+### ② 지원되는 해제 경로
+
+1. 엔진의 다음 주기 재취소가, latch 뒤에 기록을 시작한 같은 계좌·시장·종목·바이트 동일 주문 번호의 CANCEL attempt로 CONFIRMED가 되면 해제한다. 거래일은 비교하지 않는다. 단 그 범위에서 같은 주문 번호의 PLACE/AMEND 주인이 정확히 하나여야 한다. 번호 재사용·주인 없음·다른 범위는 해제 근거가 아니다.
+2. 체결 감지가 대상 주문의 terminal snapshot을 원장에 기록하면 해제한다.
+
+브로커 앱이나 `tossctl order cancel`로 직접 취소한 사실만으로는 해제하지 않는다. 그 뒤 체결 감지가 종결을 원장에 기록해야 한다. `tossctl engine attempt-resolve`는 R3 FAILED_CONFIRMED 행의 해제 수단이 아니며, 원장을 손으로 고치거나 수동 해제 명령을 만들지 않는다.
+
+### ③ 경보와 에스컬레이션
+
+청산 루프가 계속 취소하지 못하면 기존 `exit.liquidation_delayed` 경보가 유지된다. 브로커에서 주문이 이미 끝났는데 latch가 남으면 「체결 감지가 멈췄을 때」 절을 따른다. 주문이 아직 working이면 차단은 의도된 상태다. 진입이 필요해도 먼저 사람의 브로커 확인과 종결 증거를 기다린다.
+
 ## 손절이 한 주도 나가지 않았을 때 (`exit.stop_sold_nothing`)
 
 엔진이 보호하기로 한 포지션의 손절(기준선 이탈 전량 · 사다리 손절)이 RECONCILE 확정 하한 때문에 **0주**로 깎이면, 알림이 켜진 엔진은

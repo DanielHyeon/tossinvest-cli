@@ -231,12 +231,13 @@ func buildFlattenWiring(ctx context.Context, root *rootOptions, opts *flattenOpt
 	clk := clock.System()
 	gate := execgw.NewEntryGate(clk, nil)
 	gateway, err := execgw.New(execgw.Options{
-		Journal:    j,
-		Trading:    orderPath.Trading,
-		Clock:      clk,
-		AccountRef: accountRef,
-		Source:     "flatten-all",
-		Entry:      gate,
+		Journal:       j,
+		Trading:       orderPath.Trading,
+		Clock:         clk,
+		AccountRef:    accountRef,
+		Source:        "flatten-all",
+		Entry:         gate,
+		CancelRefusal: execgw.FlattenCancelRefusal(),
 	})
 	if err != nil {
 		_ = j.Close()

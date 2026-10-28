@@ -309,12 +309,13 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 		return engineWiring{}, fmt.Errorf("engine: constructing the paired read-only protection readiness adapter: %w", err)
 	}
 	gateway, err := execgw.New(execgw.Options{
-		Journal:    in.journal,
-		Trading:    in.trading,
-		Clock:      in.clock,
-		AccountRef: in.accountRef,
-		Source:     engineSource,
-		Entry:      entry,
+		Journal:       in.journal,
+		Trading:       in.trading,
+		Clock:         in.clock,
+		AccountRef:    in.accountRef,
+		Source:        engineSource,
+		Entry:         entry,
+		CancelRefusal: execgw.EngineCancelRefusal(),
 
 		ProtectionReadiness: readiness,
 		Preflight:           &execgw.Preflight{Account: account, Clock: in.clock},
