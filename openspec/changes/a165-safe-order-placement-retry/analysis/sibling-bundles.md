@@ -2,11 +2,17 @@
 
 ## 판정
 
-base는 `34e12967ed7d`로 유지함. base 재고정과 `--record-landing`은 사람 결정으로 금지됨. 최초 기록(HEAD `27a012ce0d06`)은 a165 밖의 **139 commit**을 함께 보아 총 35개 함수를 요구했음. D5 후속 5개 a165 commit 뒤 최신 `check_analysis.py`는 **144 commit**, required 35개를 보고함. a165 자신의 required bundle은 현재 change에 모두 유지하고, archive 단계에서 Manager가 source SHA 대조 뒤 bundle을 복사하는 a170 방식으로 형제 bundle을 처리함.
+base는 `34e12967ed7d`로 유지함. base 재고정과 `--record-landing`은 사람 결정으로 금지됨. a165 자신의 required bundle 5개는 기존 change 기록을 유지함. 형제 30개는 AST의 `source_sha256`과 `revision`을 대조하여 archive bundle을 그대로 복사함. 새 bundle 생성은 0개임.
+
+- a170 archive에서 28개를 복사함. 이 중 `revision: current` 23개와 `revision: base` 5개임.
+- a164 archive에서 `revision: current` 2개를 복사함.
+- `revision: base` bundle은 현재 소스와 다르거나 현재 소스에서 함수가 사라진 경우에도 base SHA 증거가 필요하므로 재생성하지 않음.
+- 최신 확인 명령: `python3 tools/logic-map/check_analysis.py --change a165-safe-order-placement-retry`
+- 확인 HEAD: `6a7c6ffe7fff`. 결과: base부터 working tree까지 147 commit, required 35개, `evidence complete or diff-proven exempt` 및 종료 코드 0.
 
 ## 형제 함수 목록
 
-도구 원문: `/tmp/a165-check-analysis-postcommit-20261029.txt`. 원문이 표시한 missing sibling 함수는 30개이며, a165 자체 함수 5개와 합쳐 required 35개임.
+도구 원문: `/tmp/a165-check-analysis-siblings.out`. 형제 함수는 30개이며, a165 자체 함수 5개와 합쳐 required 35개임. 아래 30개 모두 source SHA 대조 archive bundle을 복사해 충족함.
 
 1. `internal/campaignstateevidence/authority_guard_test.go:allowedImport`
 2. `internal/campaignstateevidence/authority_guard_test.go:TestGuardRejectsRuntimeCaptureUse`
@@ -41,6 +47,5 @@ base는 `34e12967ed7d`로 유지함. base 재고정과 `--record-landing`은 사
 
 ## 현재 change의 경계
 
-- 최신 `check_analysis.py`는 a165 자체 누락 0이고, source SHA 기반 archive 복사 전에는 30개 sibling 누락 때문에 의도적으로 PASS가 될 수 없음.
 - a165가 새로 편집한 `Gateway.withCancelRefusal`은 자체 FLM/BTM/AST를 이 change에 기록함.
 - 형제 source·문서·base는 수정하지 않음.

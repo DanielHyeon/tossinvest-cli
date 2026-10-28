@@ -1,0 +1,38 @@
+{
+  "file": "internal/console/display_primitives_test.go",
+  "source_sha256": "a6099f61c0850be2f5c179cde0aac6303b5320e616aed91c1572465430c3a0e4",
+  "package": "console",
+  "function": "declaredBodyFontSize",
+  "signature": "declaredBodyFontSize(params=1, results=3)",
+  "start": {
+    "line": 250,
+    "column": 1
+  },
+  "end": {
+    "line": 252,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 251,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 9
+      },
+      "text": "declaredFontSize"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

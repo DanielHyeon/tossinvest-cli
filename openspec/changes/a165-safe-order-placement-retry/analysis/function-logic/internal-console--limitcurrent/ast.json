@@ -1,0 +1,103 @@
+{
+  "file": "internal/console/settings_limits_test.go",
+  "source_sha256": "5524583f2caa46cb87fac4b07587bbced5fec18bd1c1862b3ff28602fad69436",
+  "revision": "base",
+  "package": "console",
+  "function": "limitCurrent",
+  "signature": "limitCurrent(params=2, results=1)",
+  "start": {
+    "line": 597,
+    "column": 1
+  },
+  "end": {
+    "line": 608,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 600,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 604,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 607,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 598,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 599,
+        "column": 11
+      },
+      "text": "strings.Index"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 601,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 603,
+        "column": 9
+      },
+      "text": "strings.Index"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 605,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 599,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 603,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
