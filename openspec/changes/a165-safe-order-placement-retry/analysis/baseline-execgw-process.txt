@@ -1,0 +1,426 @@
+go_test_pid=2875804
+2026-10-28T22:40:09+09:00
+2875781 2359507       00:00 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       00:00  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2875812 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2875813 2875781       00:00  \_ tail -n 40
+2026-10-28T22:40:14+09:00
+2875781 2359507       00:05 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       00:05  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2876037 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2876038 2875781       00:00  \_ tail -n 40
+2026-10-28T22:40:19+09:00
+2875781 2359507       00:10 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       00:10  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2876302 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2876303 2875781       00:00  \_ tail -n 40
+2026-10-28T22:40:24+09:00
+2875781 2359507       00:15 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       00:15  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2876796 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2876797 2875781       00:00  \_ tail -n 40
+2026-10-28T22:40:29+09:00
+2875781 2359507       00:20 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       00:20  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877219 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2877220 2875781       00:00  \_ tail -n 40
+2026-10-28T22:40:34+09:00
+2877708 2875804       00:01 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       00:25 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       00:25  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       00:01  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2877806 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2877807 2875781       00:00  \_ tail -n 40
+2026-10-28T22:40:39+09:00
+2877708 2875804       00:06 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       00:31 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       00:30  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       00:06  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2878415 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2878416 2875781       00:00  \_ tail -n 40
+2026-10-28T22:40:44+09:00
+2877708 2875804       00:11 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       00:36 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       00:36  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       00:11  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2878762 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2878763 2875781       00:00  \_ tail -n 40
+2026-10-28T22:40:50+09:00
+2877708 2875804       00:16 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       00:41 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       00:41  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       00:16  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2879232 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2879233 2875781       00:00  \_ tail -n 40
+2026-10-28T22:40:55+09:00
+2877708 2875804       00:21 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       00:46 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       00:46  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       00:21  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2879783 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2879784 2875781       00:00  \_ tail -n 40
+2026-10-28T22:41:00+09:00
+2877708 2875804       00:26 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       00:51 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       00:51  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       00:26  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2880140 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2880141 2875781       00:00  \_ tail -n 40
+2026-10-28T22:41:05+09:00
+2877708 2875804       00:31 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       00:56 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       00:56  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       00:31  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2880446 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2880447 2875781       00:00  \_ tail -n 40
+2026-10-28T22:41:10+09:00
+2877708 2875804       00:36 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       01:01 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       01:01  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       00:37  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2880750 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2880751 2875781       00:00  \_ tail -n 40
+2026-10-28T22:41:15+09:00
+2877708 2875804       00:42 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       01:06 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       01:06  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       00:42  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2881048 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2881049 2875781       00:00  \_ tail -n 40
+2026-10-28T22:41:20+09:00
+2877708 2875804       00:47 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       01:11 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       01:11  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       00:47  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2881363 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2881364 2875781       00:00  \_ tail -n 40
+2026-10-28T22:41:25+09:00
+2877708 2875804       00:52 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       01:17 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       01:16  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       00:52  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2881658 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2881659 2875781       00:00  \_ tail -n 40
+2026-10-28T22:41:30+09:00
+2877708 2875804       00:57 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       01:22 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       01:22  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       00:57  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2882280 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2882281 2875781       00:00  \_ tail -n 40
+2026-10-28T22:41:36+09:00
+2877708 2875804       01:02 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       01:27 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       01:27  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       01:02  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2882664 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2882665 2875781       00:00  \_ tail -n 40
+2026-10-28T22:41:41+09:00
+2877708 2875804       01:07 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       01:32 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       01:32  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       01:07  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2882882 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2882883 2875781       00:00  \_ tail -n 40
+2026-10-28T22:41:46+09:00
+2877708 2875804       01:12 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       01:37 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       01:37  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       01:12  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2883324 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2883325 2875781       00:00  \_ tail -n 40
+2026-10-28T22:41:51+09:00
+2877708 2875804       01:17 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       01:42 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       01:42  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       01:18  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2883580 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2883581 2875781       00:00  \_ tail -n 40
+2026-10-28T22:41:56+09:00
+2877708 2875804       01:23 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       01:47 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       01:47  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       01:23  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2883867 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2883868 2875781       00:00  \_ tail -n 40
+2026-10-28T22:42:01+09:00
+2877708 2875804       01:28 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       01:53 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       01:52  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       01:28  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2884234 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2884235 2875781       00:00  \_ tail -n 40
+2026-10-28T22:42:07+09:00
+2877708 2875804       01:33 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       01:58 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       01:58  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       01:33  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2884575 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2884576 2875781       00:00  \_ tail -n 40
+2026-10-28T22:42:12+09:00
+2877708 2875804       01:38 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       02:03 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       02:03  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       01:38  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2884898 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2884899 2875781       00:00  \_ tail -n 40
+2026-10-28T22:42:17+09:00
+2877708 2875804       01:43 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       02:08 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       02:08  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       01:43  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2885451 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2885452 2875781       00:00  \_ tail -n 40
+2026-10-28T22:42:22+09:00
+2877708 2875804       01:48 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       02:13 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       02:13  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       01:48  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2885830 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2885831 2875781       00:00  \_ tail -n 40
+2026-10-28T22:42:27+09:00
+2877708 2875804       01:53 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       02:18 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       02:18  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       01:54  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2886247 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2886248 2875781       00:00  \_ tail -n 40
+2026-10-28T22:42:32+09:00
+2877708 2875804       01:59 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       02:23 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       02:23  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       01:59  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2886614 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2886615 2875781       00:00  \_ tail -n 40
+2026-10-28T22:42:37+09:00
+2877708 2875804       02:04 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       02:29 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       02:28  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       02:04  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2887023 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2887024 2875781       00:00  \_ tail -n 40
+2026-10-28T22:42:42+09:00
+2877708 2875804       02:09 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       02:34 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       02:33  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       02:09  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2887232 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2887233 2875781       00:00  \_ tail -n 40
+2026-10-28T22:42:48+09:00
+2877708 2875804       02:14 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       02:39 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       02:39  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       02:14  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2887469 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2887470 2875781       00:00  \_ tail -n 40
+2026-10-28T22:42:53+09:00
+2877708 2875804       02:19 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       02:44 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       02:44  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       02:19  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2887902 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2887903 2875781       00:00  \_ tail -n 40
+2026-10-28T22:42:58+09:00
+2877708 2875804       02:24 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       02:49 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       02:49  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       02:24  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2888399 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2888400 2875781       00:00  \_ tail -n 40
+2026-10-28T22:43:03+09:00
+2877708 2875804       02:29 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       02:54 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       02:54  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       02:29  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2888721 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2888722 2875781       00:00  \_ tail -n 40
+2026-10-28T22:43:08+09:00
+2877708 2875804       02:34 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       02:59 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       02:59  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       02:34  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2889121 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2889122 2875781       00:00  \_ tail -n 40
+2026-10-28T22:43:13+09:00
+2877708 2875804       02:39 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       03:04 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       03:04  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       02:40  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2889384 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2889385 2875781       00:00  \_ tail -n 40
+2026-10-28T22:43:18+09:00
+2877708 2875804       02:45 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       03:09 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       03:09  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       02:45  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2889682 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2889683 2875781       00:00  \_ tail -n 40
+2026-10-28T22:43:23+09:00
+2877708 2875804       02:50 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       03:15 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       03:14  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       02:50  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2890106 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2890107 2875781       00:00  \_ tail -n 40
+2026-10-28T22:43:28+09:00
+2877708 2875804       02:55 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       03:20 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       03:20  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       02:55  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2890357 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2890358 2875781       00:00  \_ tail -n 40
+2026-10-28T22:43:34+09:00
+2877708 2875804       03:00 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       03:25 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       03:25  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       03:00  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2890670 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2890671 2875781       00:00  \_ tail -n 40
+2026-10-28T22:43:39+09:00
+2877708 2875804       03:05 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       03:30 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       03:30  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       03:05  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2891072 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2891073 2875781       00:00  \_ tail -n 40
+2026-10-28T22:43:44+09:00
+2877708 2875804       03:10 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       03:35 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       03:35  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       03:10  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2891410 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2891411 2875781       00:00  \_ tail -n 40
+2026-10-28T22:43:49+09:00
+2877708 2875804       03:15 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       03:40 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       03:40  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       03:15  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2891666 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2891667 2875781       00:00  \_ tail -n 40
+2026-10-28T22:43:54+09:00
+2877708 2875804       03:20 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       03:45 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       03:45  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       03:20  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2891894 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2891895 2875781       00:00  \_ tail -n 40
+2026-10-28T22:43:59+09:00
+2877708 2875804       03:25 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       03:50 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       03:50  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       03:26  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2892296 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2892297 2875781       00:00  \_ tail -n 40
+2026-10-28T22:44:04+09:00
+2877708 2875804       03:31 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       03:55 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       03:55  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       03:31  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2892544 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2892545 2875781       00:00  \_ tail -n 40
+2026-10-28T22:44:09+09:00
+2877708 2875804       03:36 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       04:00 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       04:00  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       03:36  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2892904 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2892905 2875781       00:00  \_ tail -n 40
+2026-10-28T22:44:14+09:00
+2877708 2875804       03:41 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       04:06 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       04:05  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       03:41  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2893370 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2893371 2875781       00:00  \_ tail -n 40
+2026-10-28T22:44:19+09:00
+2877708 2875804       03:46 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       04:11 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       04:10  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       03:46  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2893844 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2893845 2875781       00:00  \_ tail -n 40
+2026-10-28T22:44:25+09:00
+2877708 2875804       03:51 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       04:16 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       04:16  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       03:51  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2894169 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2894171 2875781       00:00  \_ tail -n 40
+2026-10-28T22:44:30+09:00
+2877708 2875804       03:56 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       04:21 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       04:21  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       03:56  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2894586 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2894587 2875781       00:00  \_ tail -n 40
+2026-10-28T22:44:35+09:00
+2877708 2875804       04:01 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       04:26 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       04:26  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       04:01  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2894889 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2894890 2875781       00:00  \_ tail -n 40
+2026-10-28T22:44:40+09:00
+2877708 2875804       04:06 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       04:31 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       04:31  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       04:06  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2895191 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2895192 2875781       00:00  \_ tail -n 40
+2026-10-28T22:44:45+09:00
+2877708 2875804       04:11 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       04:36 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       04:36  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       04:11  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2895635 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2895636 2875781       00:00  \_ tail -n 40
+2026-10-28T22:44:50+09:00
+2877708 2875804       04:16 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       04:41 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       04:41  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       04:16  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2896010 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2896011 2875781       00:00  \_ tail -n 40
+2026-10-28T22:44:55+09:00
+2877708 2875804       04:22 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       04:46 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       04:46  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       04:22  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2896318 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2896319 2875781       00:00  \_ tail -n 40
+2026-10-28T22:45:00+09:00
+2877708 2875804       04:27 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       04:51 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       04:51  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       04:27  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2896571 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2896572 2875781       00:00  \_ tail -n 40
+2026-10-28T22:45:05+09:00
+2877708 2875804       04:32 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       04:57 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       04:56  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       04:32  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2896982 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2896983 2875781       00:00  \_ tail -n 40
+2026-10-28T22:45:10+09:00
+2877708 2875804       04:37 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       05:02 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       05:02  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       04:37  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2897196 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2897197 2875781       00:00  \_ tail -n 40
+2026-10-28T22:45:16+09:00
+2877708 2875804       04:42 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       05:07 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       05:07  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       04:42  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2897417 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2897418 2875781       00:00  \_ tail -n 40
+2026-10-28T22:45:21+09:00
+2877708 2875804       04:47 /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2875781 2359507       05:12 /bin/bash -lc test -d openspec/changes/a165-safe-order-placement-retry/analysis pgrep -af 'go test|make .*gate' || true A165_ANALYSIS=openspec/changes/a165-safe-order-placement-retry/analysis go test ./internal/execgw/ -count=1 -json -timeout 10m > "$A165_ANALYSIS/baseline-execgw.jsonl" 2>&1 & a165_test_pid=$! {   printf 'go_test_pid=%s\n' "$a165_test_pid"   while kill -0 "$a165_test_pid" 2>/dev/null; do     date -Iseconds     ps -o pid=,ppid=,etime=,args= --ppid "$a165_test_pid"     ps -o pid=,ppid=,etime=,args= --forest -g "$(ps -o sid= -p "$a165_test_pid" | tr -d ' ')" | tail -n 40     sleep 5   done   wait "$a165_test_pid"   printf 'go_test_exit=%s\n' "$?" } > "$A165_ANALYSIS/baseline-execgw-process.txt" 2>&1
+2875804 2875781       05:12  \_ go test ./internal/execgw/ -count=1 -json -timeout 10m
+2877708 2875804       04:47  |   \_ /tmp/go-build3729827768/b001/execgw.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.timeout=10m0s
+2897833 2875781       00:00  \_ ps -o pid=,ppid=,etime=,args= --forest -g 2875781
+2897834 2875781       00:00  \_ tail -n 40
+go_test_exit=0

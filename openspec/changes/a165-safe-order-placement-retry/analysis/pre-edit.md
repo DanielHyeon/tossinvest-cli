@@ -51,7 +51,15 @@ Pre-Edit Gate:
 - 실행 전 `pgrep -af 'go test|make .*gate'`에는 이 선언의 자체 검사 프로세스 외 실행 중인 시험/gate가 없었음.
 - 실행: `go test ./internal/execgw -coverprofile=/tmp/a165-preedit-cover.out`.
 - 측정: `Gateway.checkSymbolFree` 66.7%, package total 73.2%.
-- 상태: test binary는 coverprofile을 완성했지만 상위 `go test` 프로세스가 종료 상태를 반환하지 않고 25분 이상 futex 대기했음. 해당 비운영 진단 프로세스만 TERM으로 종료함. PASS/FAIL은 주장하지 않으며, 후속 a165 시험은 정확한 `-run` 범위로 분리 실행함.
+- 이전 상태: coverprofile 실행의 상위 `go test`가 종료 상태를 반환하지 않아 진단 프로세스를 종료했음. 아래 지연 판정으로 이 기록을 대체함.
+
+## baseline 지연 판정 (2026-10-28)
+
+- 원문: [baseline-execgw.jsonl](baseline-execgw.jsonl), [baseline-execgw-process.txt](baseline-execgw-process.txt), [baseline-execgw-ext4.jsonl](baseline-execgw-ext4.jsonl).
+- 기본 조건: `go test ./internal/execgw/ -count=1 -json -timeout 10m`은 **289.4s PASS**. 프로세스 기록은 `go test` 아래 `execgw.test` 하나만 보이고, 종료 직후 `go_test_exit=0`임. stdout/stderr pipe를 붙든 잔여 자식이나 종료 뒤 병합 대기는 관측하지 못함.
+- 지연 위치: JSON의 장시간 항목은 repository-wide AST/파일 census인 `TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/*`(각 약 17s)와 `TestNoShippedFileClaimsProtection`(24.95s)였음. 즉 지연은 시험 본문임.
+- A/B: worktree는 `/mnt/D`의 `fuseblk`, `/home/daniel/.cache/a165-go`는 `ext4`임. `TMPDIR`·`GOTMPDIR`·`GOCACHE`를 후자로 옮긴 같은 명령은 **205.5s PASS**. `/tmp/.git`은 건드리지 않았고 TMPDIR도 `/tmp` 밖임.
+- 판정: a165 범위 밖의 기존 census 시험 I/O 성능 문제임. coverprofile 병합이나 pipe 종료가 원인이라는 증거는 없음. 이후 a165의 RED/GREEN은 `TMPDIR=/home/daniel/.cache/a165-go/tmp GOTMPDIR=/home/daniel/.cache/a165-go/tmp GOCACHE=/home/daniel/.cache/a165-go/cache`와 패키지별 `-run`으로 실행하고, 최종 영향 범위 검증은 같은 조건의 package test로 실행함.
 
 ## 결정
 

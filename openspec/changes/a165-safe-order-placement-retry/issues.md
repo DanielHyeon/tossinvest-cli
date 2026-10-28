@@ -47,6 +47,7 @@
   D12 질의 2 는 3차 재리뷰 R3-4 로 r2 와 같은 범위 조인(계좌·시장·종목·대상 id + 주인 수 + 순번)을 SQL 에서 판정하고 범위 열을 출력한다 — 결과는 후보 목록이지 판정이 아니다.
 - R-a165-7 **원장 밖 주문의 번호 재사용은 r2 의 주인 유일성이 못 본다**(1.3 3차 재리뷰 처분에서 생김) — 위 R-a165-5 「새 한계」. **사람 수락 2026-10-28.** 대상 번호가 거래일을 넘긴 working 원 주문과 원장 밖 새 주문에 동시에 쓰이는 일은 관측된 적이 없고(측정 0), 거래일 같음을 되살리면 재리뷰 반례(D1 재취소로 안 풀림)가 돌아온다.
 - 별건(a165 밖): `strategyDispatchOwnerTakeoverGrace` 20s 가 「15초 클라이언트 timeout」을 전제(strategy_dispatch_runtime.go:664–667)하나 401 루프·timeout 없는 토큰 교환으로 그 전제가 이미 깨져 있다(1.3 A7). 담당 change 미정.
+- 별건(a165 밖, 2026-10-28): `internal/execgw` 전체 시험의 repository-wide AST/파일 census가 fuseblk worktree에서 289.4s를 사용함(`TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/*`, `TestNoShippedFileClaimsProtection`). ext4 cache·TMP 조건은 205.5s PASS. a165는 정해진 ext4 `TMPDIR`·`GOTMPDIR`·`GOCACHE`와 package별 `-run`으로만 우회하며, census 시험 구조는 고치지 않음.
 
 ## 사용자 결정 (2026-10-23 2차, Manager 전달 — review.md 「사람 결정 요청」 1~7 전부 권장안)
 
