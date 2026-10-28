@@ -59,6 +59,7 @@ Pre-Edit Gate:
 - 기본 조건: `go test ./internal/execgw/ -count=1 -json -timeout 10m`은 **289.4s PASS**. 프로세스 기록은 `go test` 아래 `execgw.test` 하나만 보이고, 종료 직후 `go_test_exit=0`임. stdout/stderr pipe를 붙든 잔여 자식이나 종료 뒤 병합 대기는 관측하지 못함.
 - 지연 위치: JSON의 장시간 항목은 repository-wide AST/파일 census인 `TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/*`(각 약 17s)와 `TestNoShippedFileClaimsProtection`(24.95s)였음. 즉 지연은 시험 본문임.
 - A/B: worktree는 `/mnt/D`의 `fuseblk`, `/home/daniel/.cache/a165-go`는 `ext4`임. `TMPDIR`·`GOTMPDIR`·`GOCACHE`를 후자로 옮긴 같은 명령은 **205.5s PASS**. `/tmp/.git`은 건드리지 않았고 TMPDIR도 `/tmp` 밖임.
+- coverage 계측 아래 census 시험이 느려졌을 가능성 — 미재현.
 - 판정: a165 범위 밖의 기존 census 시험 I/O 성능 문제임. coverprofile 병합이나 pipe 종료가 원인이라는 증거는 없음. 이후 a165의 RED/GREEN은 `TMPDIR=/home/daniel/.cache/a165-go/tmp GOTMPDIR=/home/daniel/.cache/a165-go/tmp GOCACHE=/home/daniel/.cache/a165-go/cache`와 패키지별 `-run`으로 실행하고, 최종 영향 범위 검증은 같은 조건의 package test로 실행함.
 
 ## 결정
