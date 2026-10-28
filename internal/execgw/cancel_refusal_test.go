@@ -12,12 +12,12 @@ import (
 )
 
 func TestA165CancelRefusalPoliciesAreExact(t *testing.T) {
-	if got, want := EngineCancelRefusal(), (CancelRefusalPolicy{Definitive: true}); got != want {
+	if got, want := EngineCancelRefusal(), (CancelRefusalPolicy{Definitive: true}); got == nil || *got != want {
 		t.Fatalf("engine policy: got %+v, want %+v", got, want)
 	}
 	if got, want := FlattenCancelRefusal(), (CancelRefusalPolicy{
 		Retries: 2, MaxWait: 5 * time.Second, Window: 8 * time.Second,
-	}); got != want {
+	}); got == nil || *got != want {
 		t.Fatalf("flatten policy: got %+v, want %+v", got, want)
 	}
 }
@@ -30,7 +30,7 @@ func TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode(t *testing.T) {
 		ok   bool
 	}{
 		{"top-level code", `{"code":"ALREADY-PROCESSING","data":{"retryAfterSeconds":3}}`, 3 * time.Second, true},
-		{"nested code", `{"error":{"code":"already-processing"}}`, time.Second, true},
+		{"nested code and retry after", `{"error":{"code":"already-processing","data":{"retryAfterSeconds":2}}}`, 2 * time.Second, true},
 		{"matching codes", `{"code":"already-processing","error":{"code":"ALREADY-PROCESSING"},"data":{"retryAfterSeconds":0}}`, time.Second, true},
 		{"contradictory codes", `{"code":"already-processing","error":{"code":"other"}}`, 0, false},
 		{"missing code", `{"data":{"retryAfterSeconds":3}}`, 0, false},
@@ -133,6 +133,50 @@ func TestA165CallerCancellationStopsRetry(t *testing.T) {
 	})(ctx, nil)
 	if calls != 1 || out.Class != journal.DispatchAmbiguous {
 		t.Fatalf("calls=%d outcome=%+v", calls, out)
+	}
+}
+
+func TestA165FlattenRetryNotSentKeepsTheFirstAmbiguousOutcome(t *testing.T) {
+	clk := clock.NewFake(time.Date(2026, 10, 28, 0, 0, 0, 0, time.UTC))
+	g := &Gateway{clk: clk, cancelRefusal: FlattenCancelRefusal()}
+	calls := 0
+	done := make(chan journal.DispatchOutcome, 1)
+	go func() {
+		done <- g.withCancelRefusal(mutationPlan{kind: journal.KindCancel}, func(context.Context, *journal.Attempt) journal.DispatchOutcome {
+			calls++
+			if calls == 1 {
+				return a165AlreadyProcessingOutcome(1)
+			}
+			return journal.DispatchOutcome{Class: journal.DispatchNotSent, Detail: "pre-send boundary refused"}
+		})(context.Background(), nil)
+	}()
+	if !clk.WaitForSleepers(1, time.Second) {
+		t.Fatal("retry sleep was not reached")
+	}
+	clk.Advance(time.Second)
+	out := <-done
+	if calls != 2 || out.Class != journal.DispatchAmbiguous || !strings.Contains(out.Detail, "stop=not_sent outcome=today") {
+		t.Fatalf("calls=%d outcome=%+v", calls, out)
+	}
+}
+
+func TestA165NilPolicyAndNonCancelKeepTheOriginalOutcome(t *testing.T) {
+	original := a165AlreadyProcessingOutcome(1)
+	dispatch := func(context.Context, *journal.Attempt) journal.DispatchOutcome { return original }
+	for _, tc := range []struct {
+		name string
+		g    *Gateway
+		plan mutationPlan
+	}{
+		{"nil policy cancel", &Gateway{clk: clock.NewFake(time.Now())}, mutationPlan{kind: journal.KindCancel}},
+		{"flatten policy place", &Gateway{clk: clock.NewFake(time.Now()), cancelRefusal: FlattenCancelRefusal()}, mutationPlan{kind: journal.KindPlace}},
+		{"flatten policy amend", &Gateway{clk: clock.NewFake(time.Now()), cancelRefusal: FlattenCancelRefusal()}, mutationPlan{kind: journal.KindAmend}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.g.withCancelRefusal(tc.plan, dispatch)(context.Background(), nil); got != original {
+				t.Fatalf("outcome changed: got %+v want %+v", got, original)
+			}
+		})
 	}
 }
 
