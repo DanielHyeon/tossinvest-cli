@@ -2,17 +2,40 @@
 
 - Source: `internal/execgw/a165_cancel_refusal_boundary_test.go` (85-107)
 - Revision: D5 4판 GREEN, `source_sha256` `e728c257f29ffaedbf547080c55c64c836b900c8859895bd4563a1d2d276883e`
-- AST evidence: `ast.json` — AST 분기 4, 반환 0, 호출 11.
+- AST evidence: `ast.json` — AST branches 4, returns 0, calls 11.
+- Risk scan: `risk-pattern-report.md`, configured pattern 발견 0.
 
-## 역할
+## Inputs and invariants
 
-첫 broker 호출의 실제 25ms 지연이 Fake Clock 10ms 창을 소진시키지 않음을 고정함. D5의 판정은 `g.clk` 하나이고, retry sleep 1ms만 Fake Clock을 움직이므로 재전송은 CONFIRMED로 정착해야 함.
+| Input/state | Valid range | Source of truth | Failure behavior |
+|---|---|---|---|
+| `firstDelay` | 실제 25ms | fixture | Clock 창 판정으로 쓰면 안 됨 |
+| Fake Clock | 0에서 retry-after만 전진 | `a165AdvancingClock` | 1ms가 아니면 판정 경계 오류 |
+| `Window` | 10ms | 정책 | retry 확인은 주입 Clock 결과를 따름 |
 
-| 분기 | 계약 |
-|---|---|
-| B1 | 결과는 오류 없이 `StateConfirmed` |
-| B2 | broker 호출은 첫 409 + retry ACK, 정확히 2회 |
-| B3 | journal record도 `StateConfirmed` |
-| B4 | Fake Clock 경과는 retry-after 1ms뿐 |
+## Branches and early returns
 
-실시간 전송 상한이 먼저 끝나는 별도 갈래는 `TestA165RealTimeoutKeepsFirstAmbiguousAsCancelled`가 첫 AMBIGUOUS/`stop=cancelled outcome=today`로 고정함.
+| Branch | Coordinate | Condition | Mutation/side effect | Return/error | Required test |
+|---|---|---|---|---|---|
+| B1 | `if at 94:2` | cancel 결과 | 없음 | CONFIRMED 요구 | 함수 자신 |
+| B2 | `if at 97:2` | broker calls | 없음 | 2회 요구 | 함수 자신 |
+| B3 | `if at 101:2` | journal record | 없음 | CONFIRMED 요구 | 함수 자신 |
+| B4 | `if at 104:2` | Fake Clock elapsed | 없음 | 1ms 요구 | 함수 자신 |
+
+## Calls and live bindings
+
+| Callee | Why called | Error/timeout/retry contract | Evidence |
+|---|---|---|---|
+| `a165BoundaryCancel` | production wrapper 호출 | AP 뒤 retry를 관찰 | AST 93 |
+| `j.LookupAttempt` | 정착 상태 확인 | CONFIRMED가 아니면 실패 | AST 100 |
+| `clk.Since` | 판정 시계 확인 | 실제 지연과 분리 | AST 104 |
+
+## State mutations and fallbacks
+
+- fixture journal에 cancel attempt 하나를 기록함.
+- 실패는 test fatal이며 production fallback을 변경하지 않음.
+
+## Safety conclusion
+
+- Safe edit boundary: D5 시험 기대값임.
+- High-risk impact: yes — wall clock이 창 판정으로 되돌아가는 회귀를 막음. 실시간 상한 갈래는 `TestA165RealTimeoutKeepsFirstAmbiguousAsCancelled`가 첫 AMBIGUOUS/`stop=cancelled outcome=today`로 고정함.

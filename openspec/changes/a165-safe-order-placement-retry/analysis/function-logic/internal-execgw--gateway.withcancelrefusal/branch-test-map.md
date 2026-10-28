@@ -9,10 +9,14 @@
 | B2 | 비 AP 또는 비 AMBIGUOUS | 기존 RED | `TestA165CancelRefusalDoesNotOverrideNonAmbiguousDispatch` |
 | B3 | engine AP 409 | 기존 RED | 같은 주기 지연 0·호출 1 시험 |
 | B4 | 무효 flatten 정책 | 기존 RED | 정책 정확값 시험 |
-| B5-B9 | flatten 대기·누적 상한·Clock 창 | 기존 RED | cumulative/window 경계 시험 |
-| B8 | 호출자 취소 | 기존 RED | `TestA165CallerCancellationStopsRetry` |
-| B8 | Fake Clock 정지 중 실시간 상한 만료 | D5 RED | `TestA165RealTimeoutKeepsFirstAmbiguousAsCancelled` |
+| B5 | `for at 70:3` retry loop | 기존 RED | `TestA165FlattenExhaustionKeepsTheFirstAmbiguousOutcome` |
+| B6 | `if at 72:4` 누적 상한 | 기존 RED | `TestA165FlattenRetriesWithinCumulativeBudget` |
+| B7 | `if at 75:4` sleep 전 창 | 기존 RED | `TestA165WindowStartsBeforeFirstDispatch` |
+| B8 | `if at 78:4` context 취소 | D5 RED | `TestA165RealTimeoutKeepsFirstAmbiguousAsCancelled` |
+| B9 | `if at 81:4` sleep 뒤 창 | 기존 RED | `TestA165WindowStartsBeforeFirstDispatch` |
 | 생성 식 | 직접 wall-clock 판정 금지 | D5 RED | `TestA165CancelRefusalUsesOnlyInjectedClockForJudgement` |
-| B10-B12 | retry 결과 분기 | 기존 RED | NOT_SENT·ACK·exhaustion 시험 |
+| B10 | `if at 85:4` retry 결과 | 기존 RED | `TestA165FlattenRetryNotSentKeepsTheFirstAmbiguousOutcome` |
+| B11 | `if at 92:4` NOT_SENT | 기존 RED | `TestA165FlattenRetryNotSentKeepsTheFirstAmbiguousOutcome` |
+| B12 | `if at 93:5` ACK | D5 GREEN | `TestA165RealFirstDispatchDelayDoesNotDriveRetryWindowJudgement` |
 
 변이 대조군: `WithTimeout` 부모를 `context.Background()`로 분리하면 caller timeout 동작/구조 핀이 실패해야 하며, `time.Now` 기반 deadline을 되살리면 구조 핀이 실패해야 함.
