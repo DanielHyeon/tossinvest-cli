@@ -17,3 +17,10 @@ internal/journal/confirmed_cancel_after_latch_test.go:30:23: j.ConfirmedCancelAf
 FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal [build failed]
 ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.041s
 FAIL
+
+[2026-10-29 D5 RED exit=1]
+--- FAIL: TestA165CancelRefusalUsesOnlyInjectedClockForJudgement (0.01s)
+    a165_clock_judgement_test.go:57: cancel_refusal.go contains "time.Now("; D5 judgement must use g.clk and a timeout cap
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.059s
+FAIL
