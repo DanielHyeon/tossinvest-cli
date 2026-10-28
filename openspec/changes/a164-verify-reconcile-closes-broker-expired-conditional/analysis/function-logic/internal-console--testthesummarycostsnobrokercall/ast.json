@@ -1,0 +1,118 @@
+{
+  "file": "internal/console/display_primitives_test.go",
+  "source_sha256": "2bcf341060f8b0d2edb304593402c24d46c1b34de337faf6f5d80f3272ebe21a",
+  "revision": "base",
+  "package": "console",
+  "function": "TestTheSummaryCostsNoBrokerCall",
+  "signature": "TestTheSummaryCostsNoBrokerCall(params=1, results=0)",
+  "start": {
+    "line": 359,
+    "column": 1
+  },
+  "end": {
+    "line": 371,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 364,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 367,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 360,
+        "column": 7
+      },
+      "text": "newOverviewHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 361,
+        "column": 2
+      },
+      "text": "seedJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 362,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 363,
+        "column": 12
+      },
+      "text": "h.holdings.count"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 365,
+        "column": 3
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 367,
+        "column": 12
+      },
+      "text": "h.holdings.count"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 360,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 363,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 367,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

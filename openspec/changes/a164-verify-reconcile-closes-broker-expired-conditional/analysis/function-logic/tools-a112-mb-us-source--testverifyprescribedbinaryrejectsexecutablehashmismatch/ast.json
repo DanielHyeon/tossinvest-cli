@@ -1,0 +1,125 @@
+{
+  "file": "tools/a112-mb-us-source/main_test.go",
+  "source_sha256": "8008db70f4704cccfb00ce751439302ca80b4d42b4d03e45440aa756e5647bd0",
+  "package": "main",
+  "function": "TestVerifyPrescribedBinaryRejectsExecutableHashMismatch",
+  "signature": "TestVerifyPrescribedBinaryRejectsExecutableHashMismatch(params=1, results=0)",
+  "start": {
+    "line": 1099,
+    "column": 1
+  },
+  "end": {
+    "line": 1107,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1101,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1104,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1100,
+        "column": 9
+      },
+      "text": "verifyPrescribedBinary"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1100,
+        "column": 32
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1100,
+        "column": 81
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1100,
+        "column": 112
+      },
+      "text": "digestBytes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1100,
+        "column": 124
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1100,
+        "column": 169
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1102,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1104,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1104,
+        "column": 23
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1105,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1100,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

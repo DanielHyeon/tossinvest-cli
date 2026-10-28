@@ -1,0 +1,155 @@
+{
+  "file": "internal/app/engine/a074_notification_audit_test.go",
+  "source_sha256": "d3e80adad9d3f7a1b0ea57662f16998fad965c3293b73170ad28f0c417ea3e9a",
+  "package": "engine",
+  "function": "TestNotificationSettingsAreAudited",
+  "signature": "TestNotificationSettingsAreAudited(params=1, results=0)",
+  "start": {
+    "line": 49,
+    "column": 1
+  },
+  "end": {
+    "line": 76,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 68,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 72,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 9
+      },
+      "text": "auditFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 19
+      },
+      "text": "resolveNotificationPublisher"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 5
+      },
+      "text": "fixedEnv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 12
+      },
+      "text": "recordGateSettings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 14
+      },
+      "text": "settingsFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 55,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 67,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

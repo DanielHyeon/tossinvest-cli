@@ -180,3 +180,28 @@ verifylive·official·cmd/tossctl `go test` Manager 재실행 PASS) 5.1 의 미�
   advisory WARN(real 119 s). 재시도 루프는 돌리지 않음.
 - 판정: 착지 커밋 `34e12967e` 에서 CodeGraph fingerprint 신선 확인(③). 프로브는 `/mnt/D` 지연으로 간헐 실패. 이 절을 쓰는 커밋이
   fingerprint 를 다시 낡게 하므로 gate(7.1) 직전 재동기화가 필요함.
+
+## 종결 (2026-10-28, 종결 에이전트 Opus 5.5)
+
+- 사용자 승인 「권장대로」(2026-10-28, a164 한정, Manager 전달): 6.x 체크 · 영수증 · 격리 gate(**사용자 명시 요청**) · archive · Story 경로 · tracker ·
+  origin/main push · 정리 · Hindsight retain. 재시도 1회(VCS 128 또는 ⑥ CodeGraph 15초 시한 초과일 때만). 금지: `verify reconcile`·`verify run` 재실행,
+  시험 약화, base 재고정, docker 교체·이미지·배포, 운영 토글, live 주문, mutating 명령, 공유 stash, 다른 change 파일 편집. 코드 변경 0.
+- 6.1~6.3 증거: `analysis/receipts/2026-10-28-verify-status-KR.md`. 한계 — 「이전 줄 바이트 불변」은 실행 전 해시 기준선이 없어 직접 증명하지 못함(간접 근거만).
+- gate ⑤ 사전 실행(HEAD `0c9bfd272`, a170 archive 뒤): base `4cd7af19d` → 워킹트리, 창에 착지 151 커밋, required 58 중 a164 자기 번들이 덮는 14 외 **44 누락** → rc 1.
+  귀속: 44 는 모두 base 뒤 형제 착지의 함수다(a164 자기 Go 편집은 6 커밋 전부 a164 번들 16이 이미 덮음).
+- 처분: **복사 41 · 새로 작성 3.** 후보는 활성·archive 전 change 의 번들 중 `file`·함수·`revision`·`source_sha256` 이 gate 의 요구(`changed_existing_functions`)와
+  같은 것만 골랐고, 복사 직전 다시 직접 잼(`revision: current` = 워킹트리 `sha256sum`, `revision: base` = `git show 4cd7af19d:<file> | sha256sum`). 같은 함수에 후보가
+  여럿이면 가장 나중 것(날짜 접두사 순)을 씀. 복사한 FLM 머리에 출처 한 줄을 닮.
+  - 출처별: `a169-breakout-universes-are-compared-in-shadow` 1 · `archive/2026-10-22-a163-quote-freshness-uses-trade-time` 12 · `archive/2026-10-28-a170-inspection-guard-reconciles-offline-assessment` 28
+  - `revision: base` 5: `internal/campaignstateevidence/authority_guard_test.go:TestGuardRejectsRuntimeCaptureUse` · `internal/console/display_primitives_test.go:TestTheSummaryCostsNoBrokerCall` · `internal/console/settings_card_test.go:TestTheCurrencyConsequenceIsRenderedAndNotFolded` · `internal/console/settings_limits_test.go:limitCurrent` · `internal/console/trading_views_test.go:TestTradingViewsDarkSemanticStatusColorsMeetWCAGAA` — a164 base 의 파일 sha 와 일치.
+  - `internal/official/stock_reads.go:adaptStocks` 는 archive 에 일치 번들이 없고 **활성** change `a169-breakout-universes-are-compared-in-shadow` 의 커밋된 번들만
+    일치함(그 함수를 고친 착지 `064f67297` 이 a169). sha 일치를 확인하고 복사함 — a169 파일은 읽기만 함.
+  - 새로 작성 3: `internal/weeklyvaluelane/strategyflow_testseam.go` 의 `StrategyflowKRFixture` · `StrategyflowUSFixture` · `strategyflowEvaluation`.
+    고친 착지 `3f8e34632`(feat(offline), STORY-TOS-a162)가 번들을 남기지 않아 어느 change 에도 후보가 0. `tools/logic-map` 으로 AST 추출(분기 0 · return 1 씩,
+    셋 다 위임 한 줄), `risk_pattern_report.py`(일치 0), FLM/BTM 은 현재 소스와 호출 시험에서 작성. 시험 실행:
+    `go test -tags tossos_testseams -count=1 -run 'TestProductionEvaluateUsesRealRouterAndTheSixLaneProductionFixtures|TestStrategyflowFollowOnFixtureBuildsNativePrefixThroughOrdinalSeven' ./internal/strategyflow/ ./internal/weeklyvaluelane/`
+    → 두 패키지 ok. 사후 작성 증거라 RED 관측 없음(BTM 에 적음). `//go:build tossos_testseams` 파일이라 생산 빌드 밖 — High-risk 무접촉.
+- 재실행 `check_analysis.py --change a164-…` → `evidence complete or diff-proven exempt`, rc 0.
+- 쓰지 않은 길: 도구가 권한 `--record-landing`(창 끝을 착지 커밋으로 좁힘)은 승인된 절차(번들 복사, a170 선례)가 아니라 기록하지 않음. base 재고정 안 함.
+- 완료 게이트 결과는 아래 「완료 게이트 실행 영수증」(archive 뒤 추가).
+

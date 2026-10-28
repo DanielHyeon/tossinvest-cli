@@ -39,7 +39,7 @@
     - STORY-TOS-010 — Verify the exact object a mutation plan will change [archived] → `verify-plans-the-object-it-mutates`
     - STORY-TOS-011 — Verify conditional orders await the object they hold [archived] → `verify-holds-what-it-awaits`
     - STORY-TOS-012 — Verify conditional trigger observation [in_progress] → `verify-observes-the-trigger`
-    - STORY-TOS-a164 — 브로커가 만료로 확인한 검증 조건주문을 검증 기록에서 양성 증거로만 닫는다 [in_progress] → `a164-verify-reconcile-closes-broker-expired-conditional`
+    - STORY-TOS-a164 — 브로커가 만료로 확인한 검증 조건주문을 검증 기록에서 양성 증거로만 닫는다 [implemented] → `a164-verify-reconcile-closes-broker-expired-conditional`
     - STORY-TOS-a165 — 엔진 취소의 409 already-processing 은 같은 주기 지연 없이 확정 미수락으로 기록하고, CLI flatten 취소는 그것에 한해 유한 재시도한다(주문 접수 재전송은 a171) [in_progress] → `a165-safe-order-placement-retry`
     - STORY-TOS-a166 — 같은 계좌를 치는 모든 TossOS 프로세스가 하나의 3 req/s 예산을 나눠 쓰고, 엔진 폴링 GET 은 429 에 같은 주기 안 재시도하지 않는다 [in_progress] → `a166-account-shared-rate-limit`
     - STORY-TOS-a168 — 검증 대사 읽기가 중복 키·모호한 성공 상태의 브로커 응답을 거절한다 [in_progress] → `a168-verify-read-decode-hardening`

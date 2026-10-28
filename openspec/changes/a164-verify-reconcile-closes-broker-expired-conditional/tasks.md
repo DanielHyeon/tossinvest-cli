@@ -159,14 +159,20 @@
 
 ## 6. 사람 실행 — 실기록 대사
 
-- [ ] 6.1 배포(이미지 재빌드 + 교체, 사람 실행 — `make image CHANGE=…`) 또는 같은 커밋의 로컬 바이너리
-- [ ] 6.2 **사람이** `tossctl --config-dir <엔진 프로필> verify reconcile --market KR --expired` 실행, 화면의 두 마스크·계좌 수 확인 뒤 y.
+- [x] 6.1 배포(이미지 재빌드 + 교체, 사람 실행 — `make image CHANGE=…`) 또는 같은 커밋의 로컬 바이너리
+      — 사람이 2026-10-27 교체. a164 커밋 6개 모두 `eaf713ff9` 의 조상, 운영 이미지 `sha256:e6d61dd0…`, 바이너리에 `reconciled_expired`·`expiry-evidence-absent`·`expiry-sources-disagree` 문자열 있음 — `analysis/receipts/2026-10-28-verify-status-KR.md` 「6.1」
+- [x] 6.2 **사람이** `tossctl --config-dir <엔진 프로필> verify reconcile --market KR --expired` 실행, 화면의 두 마스크·계좌 수 확인 뒤 y.
       에이전트는 실행하지 않는다(`mutating: true`)
-- [ ] 6.3 에이전트 읽기 전용 확인(사람 승인 뒤): `tossctl verify status --market KR` 의 outstanding 0 · reconciled expired 1 · 기록 줄 수 +1 ·
+      — 사람 실행 2026-10-23T00:24:48Z(09:24 KST): 기록 28번째 줄 `step_id=reconcile-expired`, artifact 333430 `reconciled_expired=true`. 실행 중 엔진 약 12초 정지(장중, 정지 창 관례 밖 — 사실 기록) — `analysis/receipts/2026-10-28-verify-status-KR.md` 「6.2」
+- [x] 6.3 에이전트 읽기 전용 확인(사람 승인 뒤): `tossctl verify status --market KR` 의 outstanding 0 · reconciled expired 1 · 기록 줄 수 +1 ·
       이전 줄 바이트 불변. 결과를 `analysis/receipts/` 에
+      — 2026-10-28 `docker exec … verify status --market KR`(local 읽기, 네트워크·lock 없음): outstanding 0 · reconciled expired 1 · 기록 28줄. 「이전 줄 바이트 불변」은 실행 전 해시 기준선이 없어 직접 증명 불가 — mtime = finished_at 과 append 계약이 간접 근거 — `analysis/receipts/2026-10-28-verify-status-KR.md` 「6.3」
 
 ## 7. 확정
 
-- [ ] 7.1 `make gate CHANGE=a164-verify-reconcile-closes-broker-expired-conditional` — 사용자 명시 요청 때만
-- [ ] 7.2 archive → Story 경로 · `generate_master_tracker.py` · `--check`
-- [ ] 7.3 Hindsight `tossos-dev-episodes` 에 검증된 교훈 후보만 retain(예: 「by-id ok 는 생존이 아니다」)
+- [x] 7.1 `make gate CHANGE=a164-verify-reconcile-closes-broker-expired-conditional` — 사용자 명시 요청 때만
+      — 2026-10-28 사용자 「권장대로」(a164 한정, Manager 전달)로 격리 gate 요청됨. gate ⑤ 창의 형제 함수 44: 복사 41 · 새로 작성 3(review.md 「종결」). 결과는 review.md 「완료 게이트 실행 영수증」
+- [x] 7.2 archive → Story 경로 · `generate_master_tracker.py` · `--check`
+      — gate PASS 뒤 수행(관례: 체크는 gate 전, ② 미완료 0)
+- [x] 7.3 Hindsight `tossos-dev-episodes` 에 검증된 교훈 후보만 retain(예: 「by-id ok 는 생존이 아니다」)
+      — archive·push 뒤 종결 에이전트가 수행(관례: 체크는 gate 전)

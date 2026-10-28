@@ -1,0 +1,318 @@
+{
+  "file": "internal/console/optimization_candidate_filters_test.go",
+  "source_sha256": "488fe6d51591c1fe0b8d748c7eef047a885469fddcd6bec3dadbad7f3bac6f19",
+  "package": "console",
+  "function": "TestCandidateFilterCardsContainExactMarketMetricMatrix",
+  "signature": "TestCandidateFilterCardsContainExactMarketMetricMatrix(params=1, results=0)",
+  "start": {
+    "line": 40,
+    "column": 1
+  },
+  "end": {
+    "line": 65,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 46,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 52,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 59,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 61,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 7
+      },
+      "text": "newDashboardHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 13
+      },
+      "text": "candidateFilterNode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 36
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 12
+      },
+      "text": "a175NodesByClass"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 13
+      },
+      "text": "candidate.CandidateFilterMarkets"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 62
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 17
+      },
+      "text": "htmlAttribute"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 12
+      },
+      "text": "a175ColumnHeaderCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 53
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 83
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 12
+      },
+      "text": "candidateFilterMatrixFromMarkets"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 12
+      },
+      "text": "a175MatrixDataRowCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 54
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 83
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 13
+      },
+      "text": "exactElementTextCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 43,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 49,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 52,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 56,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 60,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 61,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

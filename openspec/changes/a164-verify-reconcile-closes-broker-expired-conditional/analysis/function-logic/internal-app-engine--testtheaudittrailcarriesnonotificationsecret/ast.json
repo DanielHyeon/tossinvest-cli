@@ -1,0 +1,171 @@
+{
+  "file": "internal/app/engine/a074_notification_audit_test.go",
+  "source_sha256": "d3e80adad9d3f7a1b0ea57662f16998fad965c3293b73170ad28f0c417ea3e9a",
+  "package": "engine",
+  "function": "TestTheAuditTrailCarriesNoNotificationSecret",
+  "signature": "TestTheAuditTrailCarriesNoNotificationSecret(params=1, results=0)",
+  "start": {
+    "line": 78,
+    "column": 1
+  },
+  "end": {
+    "line": 99,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 84,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 95,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 9
+      },
+      "text": "auditFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 19
+      },
+      "text": "resolveNotificationPublisher"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 5
+      },
+      "text": "fixedEnv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 12
+      },
+      "text": "recordGateSettings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 18
+      },
+      "text": "log.Entries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 11
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 80,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 84,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 94,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

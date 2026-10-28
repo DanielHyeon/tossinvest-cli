@@ -1,0 +1,46 @@
+{
+  "file": "internal/weeklyvaluelane/strategyflow_testseam.go",
+  "source_sha256": "b96d09bcef8fc3faf0082973267b744e30ec20f51f9fdb643982e983c03029b5",
+  "package": "weeklyvaluelane",
+  "function": "strategyflowEvaluation",
+  "signature": "strategyflowEvaluation(params=4, results=2)",
+  "start": {
+    "line": 147,
+    "column": 1
+  },
+  "end": {
+    "line": 150,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 149,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 9
+      },
+      "text": "strategyflowEvaluationWithPlan"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 148,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

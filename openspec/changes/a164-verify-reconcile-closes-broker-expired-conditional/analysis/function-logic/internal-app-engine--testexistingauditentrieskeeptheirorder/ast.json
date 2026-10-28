@@ -1,0 +1,203 @@
+{
+  "file": "internal/app/engine/a074_notification_audit_test.go",
+  "source_sha256": "d3e80adad9d3f7a1b0ea57662f16998fad965c3293b73170ad28f0c417ea3e9a",
+  "package": "engine",
+  "function": "TestExistingAuditEntriesKeepTheirOrder",
+  "signature": "TestExistingAuditEntriesKeepTheirOrder(params=1, results=0)",
+  "start": {
+    "line": 119,
+    "column": 1
+  },
+  "end": {
+    "line": 154,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 124,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 149,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 150,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 9
+      },
+      "text": "auditFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 19
+      },
+      "text": "resolveNotificationPublisher"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 72
+      },
+      "text": "fixedEnv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 12
+      },
+      "text": "recordGateSettings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 18
+      },
+      "text": "log.Entries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 20
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 66
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 80
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 122,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 124,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 129,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 133,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
