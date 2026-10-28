@@ -2,6 +2,10 @@
 
 > **상태**: 3판. 사용자 결정 3차(2026-10-23, F3 = 1)로 진입 재전송(R1·R2)을 a171 로 옮겼다. 1판·2판과 리뷰 처분은 `review.md`.
 > 1.3 3차 리뷰(2026-10-28) **PASS** — 처분으로 D10 에 배선 시험·`definitiveRefusalCodes` 불변 두 항목을 더했다(본문 결정 변경 없음). 사람 결정 H1: D3 의 최악 추가 지연은 그대로 둔다.
+> **3판 보완(1.3 2차 독립 리뷰 GPT-5.6 Terra FAIL 처분, 2026-10-28)**: 사람 결정 P2-2(작은 바깥 래퍼)를 D3·D5 에 일관되게 반영(`sendOnce` 추출 폐기),
+> P2-3(R3 뒤 그 종목 진입은 계속 막음)을 **진입 전용 latch**(D11)로 정의, D10 배선 시험·변이 원장 보강, 8s 창 시작점을 dispatch 진입 직전으로(P3).
+> 새 AST: `analysis/function-logic/internal-execgw--gateway.checksymbolfree/`(편집 대상 번들, 24번째) · `analysis/evidence/` 의 `execgw--gateway.checkentry` ·
+> `journal--journal.confirmedcancelof` · `execgw--entrygate.blocksymbol` · `journal--journal.recoverpending`(HEAD `e4724910b`).
 > base `34e12967e`. 함수 내부 주장은 `analysis/function-logic/*/ast.json` 의 AST 좌표로만 한다(23 번들).
 > 실계좌 주문·`mutating: true` 명령·운영 토글 flip 은 없다. 시험은 httptest/fake 만.
 
@@ -9,7 +13,7 @@
 
 | | 내용 | 근거 결정 |
 |---|---|---|
-| **R3** | 엔진 게이트웨이의 **취소**가 `409` + 본문 code `already-processing` → **FAILED_CONFIRMED(확정 미수락)**. 같은 dispatch 안 재시도 0, 대기 0 | 2차 결정 1(D) |
+| **R3** | 엔진 게이트웨이의 **취소**가 `409` + 본문 code `already-processing` → **FAILED_CONFIRMED(확정 미수락)**. 같은 dispatch 안 재시도 0, 대기 0. 대상 주문이 살아 있는 동안 그 종목 **진입만** 거절(D11 latch) | 2차 결정 1(D), 사람 결정 P2-3 |
 | **R4** | CLI `tossctl flatten` 게이트웨이의 취소 409 `already-processing` → `retryAfterSeconds` 를 따라 누적 5s·최대 2회 재시도. **소진·중단 시 오늘 경로(AMBIGUOUS → IN_DOUBT → `resolveStep`)** | 2차 결정 2, 1.3 재리뷰 F1 |
 | **R5** | 기존 401 재전송(`Client.send`)을 「확실히 미접수」로 — **코드 불변, 시험 고정** | 1차 결정 3 |
 
@@ -38,6 +42,9 @@
   **대기·재전송 0** — 브로커 호출 1회, 시계 진행 0(시험으로 고정).
 - 결과(AST `ExitObserver.clearTheSymbol`): B11(1697) `out.State != StateConfirmed` → `cleared=false; continue` — 같은 주기의 다음 주문으로 바로 간다(지연 0).
   attempt 는 종결이므로 다음 주기 B3(1639) `UnsettledOnSymbol` 에 걸리지 않고, 같은 working order 를 새 결정으로 **다시 취소**한다.
+- 부작용(1.3 2차 리뷰 P1): 종결된 attempt 는 `PendingAttempts`(recovery.go:30–32, 상태 RECORDED·DISPATCH_STARTED·ACKED·IN_DOUBT 만)에서 빠지므로
+  `checkSymbolFree` B2(804)의 SymbolInFlight 도 풀린다 — a165 이전(취소 IN_DOUBT)에는 그 종목 진입이 막혀 있었다. 사람 결정 P2-3 으로 **진입만** 다시 막는다: D11.
+  공용 `unsettledFor`(evidence AST B1–B4, 32–41)를 넓히지 않는다 — `clearTheSymbol` B3(1639)이 같은 판정을 읽으므로 넓히면 exit 이 막힌다.
 - 안전: 그 주문은 살아 있다(취소가 실행되지 않음). 엔진은 그 주문을 지우지 않는다 — `LiveOrdersForSymbol` 은 CONFIRMED place·amend 와 체결 종결 증거만 보고
   취소의 FAILED_CONFIRMED 로 주문을 닫지 않는다(1.3 재리뷰 A2 확인, `journal/fills.go:1854–1885` `LiveOrdersForSymbol`). 매도는 `cleared` 가 참일 때만 나간다.
   잘못 분류됐을 때(취소가 실은 실행됨)의 결과는 다음 주기 재취소가 「이미 취소됨」 응답을 받는 것뿐이다.
@@ -46,12 +53,13 @@
 
 ## D3. R4 — CLI flatten: 재시도, 소진하면 오늘 경로
 
-- flatten 정책 `FlattenCancelRefusal()`: `Retries 2`, `MaxWait 5s`(누적), `Window 8s`(첫 전송 시작부터), `Definitive false`.
-- 루프(새 함수 `settleCancelRefusal`, dispatch 클로저에서 첫 결과 뒤 1회 호출):
-  1. 첫 결과가 409 AP 가 아니면 그대로.
-  2. 매 재시도 전: `d = min(wait, MaxWait − 누적)`, `d ≤ 0` 이거나 `since(첫 전송) + d ≥ Window` 이면 중단. `g.clk.Sleep(winCtx, d)` 실패면 중단.
-  3. 재전송은 첫 전송과 같은 `sendOnce`(D5) — 마지막 경계 검사(결정 재읽기·`checkDecision`·키 일치·`checkProtection`·`checkEntry`·`checkReservation`)를
-     다시 통과하고, `plan.call` 바로 앞에서 창을 다시 본다. 거절·창 닫힘이면 보낸 것이 없으므로 중단.
+- flatten 정책 `FlattenCancelRefusal()`: `Retries 2`, `MaxWait 5s`(누적), `Window 8s`(**바깥 래퍼가 원 dispatch 클로저를 처음 부르기 직전**부터 — P3, D5), `Definitive false`.
+- 루프(새 함수, D5 의 바깥 래퍼 안 — 원 dispatch 클로저는 고치지 않는다):
+  1. 첫 결과가 409 AP(D2 판정 + `Class == AMBIGUOUS`)가 아니면 그대로.
+  2. 매 재시도 전: `d = min(wait, MaxWait − 누적)`, `d ≤ 0` 이거나 `since(start) + d ≥ Window` 이면 중단. `g.clk.Sleep(winCtx, d)` 실패면 중단. 잠든 뒤 `since(start) ≥ Window` 면 중단.
+  3. 재전송은 **같은 원 dispatch 클로저를 `winCtx` 로 다시 부르는 것**이다(D5) — 클로저가 마지막 경계 검사(결정 재읽기 B30·`checkDecision` B31·키 일치 B32·
+     `checkProtection` B33·`checkEntry` B34·`checkReservation` B36)와 `call` 안의 B37(685) `dctx.Err()` 를 그대로 다시 지난다. 그 `dctx` 가 이제 `winCtx` 이므로
+     B37 이 창 마감(실시간 deadline)·호출자 취소를 `plan.call` 바로 앞에서 잡는다. 거절·창 닫힘이면 클로저가 NOT_SENT 를 돌려주므로(보낸 것 없음) 중단.
   4. 재전송 결과가 409 AP 면 계속, 아니면 그 결과로 끝.
 - 최종(F1 수리): **브로커가 ACK 하거나 409 AP 가 아닌 자기 답(확정 거절·결과 불명)을 줬을 때만 그 답**으로 정착한다. 소진·중단·재전송의 전송 전 실패
   (`NOT_SENT`)이면 **첫 409 의 오늘 분류(AMBIGUOUS)** 로 정착한다 — 그래서 `settleStep` B9·B10(395·400) → `resolveStep` 동기 해소, 종목은
@@ -70,22 +78,43 @@
 | 엔진 청산 전 취소 | 409 AP 1건당 같은 주기 지연 **0**(시험 고정). 다음 주기 재취소 — 오늘은 재시작까지 막힘(D1) |
 | CLI flatten 취소 | 흔한 경우 단축(동기 해소 45s+ → ~1s). 최악 +≤8s 뒤 오늘 경로(D3) |
 | CLI flatten 매도 접수 | 변화 없음 |
-| 진입 접수 | 변화 없음(a171) |
+| 진입 접수 | 변화 없음(a171). 단 R3 latch(D11)가 선 종목은 진입 거절 — a165 이전(취소 IN_DOUBT 로 SymbolInFlight)과 같은 방향 |
+| 엔진 exit·손절·flatten·reconcile | latch 를 읽지 않음(D11 — `checkSymbolFree` B3(810)에서 반환). 지연 0 |
 
-## D5. 구현 구조 — `submit` dispatch 클로저
+## D5. 구현 구조 — 원 dispatch 클로저는 그대로, 작은 바깥 래퍼 (사람 결정 P2-2)
 
-- 첫 전송까지의 본문(AST `gateway.submit` 646–725: 결정 재읽기 646 … `classifyMutation` 725)을 지역 클로저 `sendOnce(sctx, deadline)` 로 옮긴다.
-  반환: (분류, 그 전송의 오류, 전송 여부). 첫 호출은 `deadline` 0 — **첫 전송은 오늘과 같은 순서·같은 거절 반환**(회귀 시험).
-- `plan.call` 바로 앞(`call` 클로저 안)에 `deadline` 이 있으면 `g.clk.Now()` 가 그 앞인지 본다. 아니면 전송하지 않는다.
-- `CancelRefusal == nil` 이거나 `plan.kind != KindCancel` 이거나 첫 전송이 없었으면 첫 분류를 그대로 반환 — **오늘 동작과 같다**.
-- 재시도 ctx: 첫 전송 직전 시각부터 `Window` 인 `context.WithDeadline(dctx, …)`(단조 timer)와 주입 시계 판정 두 겹. 엔진 정책은 재시도가 없어 쓰이지 않는다.
-- strategy 경로는 취소가 없으므로 해당 없음(`plan.strategy` 는 PlaceClaimedStrategy 만).
+**3판의 `sendOnce` 추출(646–725 를 지역 클로저로 옮김)은 폐기한다.** 기존 dispatch 클로저(AST `gateway.submit` B29–B48, 636–726)의 본문·순서·반환은 한 글자도 바꾸지 않는다.
+
+- `submit` 편집은 **한 줄**: B49(728) `if plan.strategy == nil` 갈래의 `attempt.DispatchVerified(ctx, dispatch, g.roundTripFor(plan))`(729)를
+  `attempt.DispatchVerified(ctx, g.withCancelRefusal(plan, dispatch), g.roundTripFor(plan))` 로 바꾼다. B50/B51(730–731)·B52(732–733) strategy 갈래는 `dispatch` 그대로 —
+  취소 계획은 `strategy` 를 갖지 않는다(`Gateway.Cancel` 의 plan 구성 404–417, 손으로 읽음; `plan.strategy` 는 PlaceClaimedStrategy 만).
+- `withCancelRefusal(plan, dispatch) journal.DispatchFunc`(새 함수, 새 파일): `g.cancelRefusal == nil || plan.kind != journal.KindCancel` 이면 **받은 `dispatch` 를 그대로 돌려준다.**
+- 래퍼 본문(취소 + 정책 있음일 때만):
+  1. `start := g.clk.Now()`, `wallStart := time.Now()` — **원 클로저를 처음 부르기 전**(P3 — 창 시작점은 dispatch 진입 직전, 보수적. 첫 전송의 B30–B36 재검사 시간도 창에 든다).
+  2. `first := dispatch(dctx, a)` — 원 클로저를 **원 ctx** 로 1회. 첫 전송은 오늘과 같은 클로저·같은 ctx 이므로 같은 순서·같은 거절·같은 분류.
+  3. `alreadyProcessingRefusal(first.Err)`(D2)가 참이고 `first.Class == DispatchAmbiguous` 일 때만 계속(그 밖은 `first` 그대로). `first.Err` 는 `classifyMutation` 의 status 갈래가
+     원 오류를 그대로 싣는다(`classifyMutation` 번들 B8(84) 갈래의 `outcome.Err = err`(86) — 줄은 손으로 읽음).
+  4. 엔진 정책(`Definitive`): 재호출·대기 없이 REJECTED + 꼬리표(D2·D6).
+  5. flatten 정책: `winCtx, cancel := context.WithDeadline(dctx, wallStart.Add(Window)); defer cancel()` 뒤 D3 루프 — **재전송은 `dispatch(winCtx, a)`, 즉 같은 클로저를 `winCtx` 로 다시 부름.**
+- **B37(685) 마지막 취소 확인은 각 재호출 직전에도 적용된다**: 재호출은 클로저 전체를 다시 들어가므로 B30–B36 재검사 뒤 `call` 클로저의 첫 문장
+  `if err := dctx.Err(); err != nil { return err }`(685)를 `plan.call`(708) 바로 앞에서 다시 지난다. 그 `dctx` 가 `winCtx` 이므로 창 마감(실시간)·`cancel()`·호출자 취소 셋 다
+  여기서 걸린다 → `call()` 오류 → B47(717) `notSent(…)` → 래퍼가 「재전송의 전송 전 실패」로 받아 첫 409 의 AMBIGUOUS 로 정착(D3 최종). 주입 시계 판정(D3 2)과 실시간 deadline 의 두 겹.
+- **정착 ctx 는 `winCtx` 와 분리된다(불변식)**: `DispatchVerified` 는 받은 `ctx` 를 그대로 dispatch 에 넘기고(dispatch.go:144 `outcome := dispatch(ctx, a)`) 모든 정착을 같은 `ctx` 로 한다 —
+  번들 `internal-journal--attempt.dispatchverified` B5(153 Settle NotDispatched)·B7(160 Settle FailedConfirmed)·B9(174)·B11(181 MarkAcked)·B12(185 verify)·B13(191)·B15(199 Settle Confirmed)·
+  B17(206 MarkInDoubt)·B19(215). 래퍼는 `DispatchOutcome` **값**만 돌려주고 ctx 를 돌려주지 않으므로 `winCtx` 는 정착에 닿을 수 없다. 그래서 재시도 창이 끝나거나 `defer cancel()` 이 돌아도
+  결과 기록은 끊기지 않는다. 호출자가 바깥 `ctx` 를 취소하면 정착도 실패하는 것은 오늘과 같다(그 attempt 는 DISPATCH_STARTED 로 남고 `RecoverPending` B6(103)·B7(105)이 재시작 때 IN_DOUBT 로 바꾼다 — evidence `journal--journal.recoverpending`).
+- **정책 nil = 오늘과 바이트 동일(AST 근거)**: 정책 nil 이면 `withCancelRefusal` 이 받은 클로저 값을 그대로 돌려주므로 B49 갈래가 `DispatchVerified` 에 넘기는 함수 값이 오늘과 같다.
+  클로저 B29–B48 은 편집 0, `DispatchVerified` 는 그것을 dispatch.go:144 에서 정확히 1회 부른다(편집 0). 취소가 아닌 계획(place·amend)도 같은 이유로 동일. strategy 갈래 B50–B52 는 편집 0.
+  달라지는 것은 B49 의 인자 식 하나뿐이고, 그 식의 값은 nil 정책에서 원 `dispatch` 다. 회귀 시험: 정책 nil 취소 409 AP → IN_DOUBT, detail 바이트 동일, 브로커 호출 1.
+- 클로저가 바깥 변수 `result` 를 덮으므로 `out.Result` 는 마지막 `plan.call` 의 값이다(정착 분류와 무관 — 2.1 Pre-Edit 에서 소비자 확인).
+- `journal.DispatchFunc` 의 문서 주석 「It must not retry」(dispatch.go:48–49)는 GREEN 에서 「a165 취소 409 AP 예외 — 같은 attempt·같은 대상 주문, 재전송 횟수는 detail 꼬리표」로 고친다(주석만).
 
 ## D6. 기록
 
 - 스키마 변경 없음. R3·R4 가 분류를 바꾸거나 재전송했으면 detail 끝에 `[a165 sends=<N> branch=cancel_already_processing stop=<사유> outcome=<definitive|retried|today>]`.
   ReasonCode 는 기존 어휘(`broker_rejected` / 원래 값)만 쓴다(`AllReasonCodes` 고정, `failclosed.go:254`).
 - 409 가 아니거나 정책이 nil 이면 detail 은 오늘과 바이트 동일.
+- 꼬리표는 D11 latch 의 식별자이기도 하다. 쓰는 함수(꼬리표 생성)와 읽는 함수(끝의 `[a165 …]` 한 덩어리만 파싱)는 같은 새 파일의 한 상수를 공유하고, 왕복 시험으로 묶는다.
 - 401 재전송(R5)은 공식 클라이언트 안의 일이라 attempt 기록에 남지 않는다 — spec 에서 명시 면제(오늘 동작).
 
 ## D7. R5 — 401 재전송 근거 시험
@@ -103,6 +132,8 @@ AST `client.send` B4(344) `attempt < 2 && code == http.StatusUnauthorized`, 루�
 - 엔진 `buildGateway`(internal/app/engine/gateway.go:311): `CancelRefusal: execgw.EngineCancelRefusal()`.
 - CLI `buildFlattenWiring`(cmd/tossctl/flatten.go:233): `CancelRefusal: execgw.FlattenCancelRefusal()`.
 - 되돌리기: 그 필드 삭제 → 재빌드(교체는 KST 05–09). 런타임 스위치 없음. 스키마·설정 변경 없음.
+  필드를 지워도 latch 판정(D11)은 남는다 — 이미 쓴 R3 행이 해제될 때까지 진입을 막는다(보수 방향). 새 R3 행은 더 생기지 않는다.
+  이전 바이너리로 되돌리면 latch 판정 자체가 없으므로 R3 행이 있어도 진입이 허용된다(그 바이너리는 R3 행을 만들지 않으므로 오늘 동작과 같음).
 - 정본 retry matrix §0.1·§1·§4 와 이 기본값 상수를 GREEN 커밋에서 함께 바꾼다.
 
 ## D9. rate 예산(§0.4)
@@ -115,14 +146,69 @@ AST `client.send` B4(344) `attempt < 2 && code == http.StatusUnauthorized`, 루�
   code 불일치·두 자리 모순·status 만 409 → 오늘(IN_DOUBT) / place·amend 409 AP → 오늘 / 정책 nil → 오늘과 바이트 동일 / flatten 정책: 1회 409 뒤 ACK →
   CONFIRMED + detail 꼬리표, 대기 = retryAfter, 누적 5s 상한·횟수 상한·창 경계(가짜 시계) / 소진 → IN_DOUBT → `resolveStep` → 그 종목 Held(매도 보류) /
   재전송이 전송 전 실패 → IN_DOUBT(Failed 아님) / 재전송 직전 경계 거절 → 중단·IN_DOUBT / retryAfter 비숫자·없음 → 1s / 엔진 `clearTheSymbol` 다음 주기 재취소.
-  R5 ①②③.
-- 변이 원장: code 판정(EqualFold→status 만, 모순 검사 제거), 409 검사, kind 검사, Definitive 분기, 대기 상한(누적·창), 횟수 경계, NOT_SENT→오늘 되돌림 제거,
-  재전송 경계 재검사 제거(deadline 검사 제거), 엔진 정책 Retries 0→2(지연 0 시험이 잡아야 함). 양성 대조군 + 「변이가 대상 줄에 닿음」 표식.
-- **배선 시험(1.3 3차 P1-1, 2026-10-28 추가)**: 취소의 FAILED_CONFIRMED 는 경로마다 뜻이 반대다 — 엔진(R3)에서는 「그 취소가 실행되지 않음, 주문은 살아 있음」이고
+  R5 ①②③. D11 latch RED (a)~(e).
+- **바깥 래퍼 RED(P2-2, 1.3 2차 처분)**:
+  - (w1) **창 시작점(P3)**: fake broker 가 첫 호출 안에서 가짜 시계를 7s 진행시킨 뒤 409 AP(retryAfter 1)를 돌려주면 `since(start)+1s ≥ 8s` → 재전송 0 → IN_DOUBT.
+    시작점을 첫 결과 뒤로 옮기면 재전송 1 이 되어 FAIL 이다.
+  - (w2) **호출자 취소**: fake broker 가 첫 409 AP 를 돌려주기 직전에 시험의 바깥 ctx 를 취소 → `Sleep(winCtx)` 실패 → 브로커 호출 1(재전송 0), attempt 는 CONFIRMED·FAILED_CONFIRMED 가 아님
+    (바깥 ctx 가 죽어 정착도 실패하므로 DISPATCH_STARTED 로 남고 `RecoverPending` 이 IN_DOUBT 로 바꿈 — 오늘의 호출자 취소와 같은 결과).
+  - (w3) **창 마감 뒤 정착**: 시험용 `CancelRefusal{Retries 2, MaxWait 5s, Window 10ms(실시간), Definitive false}` + fake broker 가 첫 호출에서 실시간 50ms 늦게 409 AP →
+    `winCtx` 는 이미 마감 → 재전송 0 → attempt 가 **IN_DOUBT 로 영속**(정착 성공, `res.Err` 는 409). 정착 ctx 가 `winCtx` 면 Settle 이 `context deadline exceeded` 로 실패해 FAIL.
+  - (w4) **B37 재적용**: 재전송 직전 경계(B33 보호·B34 진입·B36 예약 중 하나를 fake 로 거절)를 둘째 호출에만 켬 → 브로커 호출 1, IN_DOUBT. 그리고 `winCtx` 를 `cancel()` 한 뒤의
+    재호출이 `plan.call` 에 닿지 않음(B37 → B47 `notSent`)을 호출 수로 단언.
+  - (w5) **nil 동일성**: 정책 nil 게이트웨이의 취소 409 AP → 브로커 호출 1, detail·reason·state 가 a165 이전 골든과 바이트 동일. 정책 있음 + place/amend 409 AP 도 같은 골든.
+- **배선 시험 4 건(1.3 3차 P1-1 + 2차 독립 리뷰 P2 — 정책 값과 행동을 함께)**: 취소의 FAILED_CONFIRMED 는 경로마다 뜻이 반대다 — 엔진(R3)에서는 「그 취소가 실행되지 않음, 주문은 살아 있음」이고
   flatten 의 `classifyCancel` B3(458)은 FAILED_CONFIRMED 를 「주문이 이미 없음」(`FlattenStepFailed` → `planLiquidation` B5(307) 보류 안 함)으로 읽는다. 그래서
-  **`buildFlattenWiring` 의 필드 하나가 안전과 oversell 을 가른다** — 거기에 `EngineCancelRefusal()`(Definitive true)이 꽂히면 F1 이 그대로 돌아온다. Saga 시험은 자기 게이트웨이를
-  직접 만들므로 이 배선 변이를 못 본다. 시험: `cmd/tossctl` 에서 `buildFlattenWiring` 이 만든 게이트웨이의 정책이 flatten 정책(Definitive false)임을, `internal/app/engine` 에서
-  `buildGateway` 의 정책이 엔진 정책(Retries 0)임을 단언한다(값 비교 또는 409 AP fake 한 번으로 행동 비교). 변이 원장에 배선 교차 둘과 배선 nil 둘을 더한다.
+  **`buildFlattenWiring` 의 필드 하나가 안전과 oversell 을 가른다**. Saga 시험은 자기 게이트웨이를 직접 만들므로 배선 변이를 못 보고, 포인터·non-nil 비교는 `Retries=2, Definitive=true` 같은 혼성 변이를 놓친다.
+  - (W1) `cmd/tossctl` flatten 배선: `buildFlattenWiring` 이 만든 게이트웨이의 정책이 **정확히** `{Retries 2, MaxWait 5s, Window 8s, Definitive false}` 이고, **같은 시험에서** 그 실제 배선 +
+    409 AP 를 계속 주는 fake broker 로 flatten 을 돌려 취소 소진 → IN_DOUBT → `resolveStep` → 그 종목 Held, 그 종목 매도 POST 0(`planLiquidation` B5(307) 보류)을 단언한다.
+  - (W2) `internal/app/engine` 엔진 배선: `buildGateway` 의 정책이 **정확히** `{Retries 0, Definitive true}`(MaxWait·Window 는 0 — 쓰이지 않음)이고, 같은 시험에서 409 AP 1회 →
+    FAILED_CONFIRMED·브로커 호출 1·가짜 시계 불변, `clearTheSymbol` 은 `cleared=false` 로 같은 주기 매도 POST 0.
+  - (W3) flatten 모양 nil: `CancelRefusal` 없는 게이트웨이로 같은 flatten → 409 AP 1회에 브로커 호출 1, detail 바이트 동일(a165 이전 골든), IN_DOUBT → `resolveStep` → Held·매도 보류(오늘 경로).
+  - (W4) 엔진 모양 nil: `CancelRefusal` 없는 게이트웨이로 같은 청산 전 취소 → 브로커 호출 1, detail 바이트 동일, IN_DOUBT, 다음 주기 `clearTheSymbol` B3(1639)이 막힘(오늘 경로).
+  - 기존 `cmd/tossctl/flatten_test.go:115–144` 는 소스 문자열만 읽는다(손으로 읽음) — W1 이 행동 시험의 첫 자리다. 배선 seam 이 없으면 2.1 Pre-Edit 에서 정하되, 생산 `buildFlattenWiring`
+    이 지도자인 실행이 하나는 있어야 한다.
+- **변이 원장**(3.1 — 각 변이에 잡는 시험 이름을 적고, 양성 대조군 + 「변이가 대상 줄에 닿음」 표식):
+  - 판정: code 판정(EqualFold→status 만), 두 자리 모순 검사 제거, 409 검사 제거, kind==Cancel 검사 제거, `first.Class == AMBIGUOUS` 검사 제거, Definitive 분기 뒤집기.
+  - 루프: 누적 MaxWait 상한 제거, 창 검사 제거, 횟수 경계(2→3), retryAfter 기본값 1s 변경, NOT_SENT→첫 AMBIGUOUS 되돌림 제거, 소진 시 마지막 결과로 정착, 엔진 정책 Retries 0→2.
+  - **ctx(2차 리뷰 P2)**: ① `winCtx` 부모를 `dctx` 에서 분리(`context.Background()`/`context.WithoutCancel(dctx)`) → (w2) 가 재전송 1 로 잡음 ② 정착 ctx 를 `winCtx` 로 교체(`winCtx` 를 submit 에서 만들어
+    `DispatchVerified(winCtx, …)`) → (w3) 가 Settle 실패로 잡음 + AST 구조 시험(B49 갈래 `DispatchVerified` 첫 인자 = `submit` 의 `ctx` 매개변수) ③ 재호출에 `winCtx` 대신 원 `dctx` → (w3)/(w4) 의 실시간 마감 단언
+    ④ 창 시작점을 첫 결과 뒤로 → (w1).
+  - **배선**: flatten←엔진 정책 · 엔진←flatten 정책 · 배선 nil 둘 · **혼성 `{Retries 2, Definitive true}`**(W1 의 정확 값 + Held 단언이 잡음).
+  - **latch(D11)**: ① latch 호출을 `checkSymbolFree` B3(810) 앞으로 옮김(exit 도 latch 를 봄) → RED-b ② latch 를 `unsettledFor` 에 넣음 → RED-b(`clearTheSymbol` 이 막힘) ③ 해제 r1(대상 주문 terminal) 누락 → RED-c1
+    ④ 해제 r2(확인된 취소) 누락 → RED-c2 ⑤ 키에서 종목 비교 제거 → RED-e ⑥ latch 를 메모리(`EntryGate.BlockSymbol`)로만 → RED-d.
+  - 공유 목록: `definitiveRefusalCodes` 에 already-processing 추가(아래).
 - **`definitiveRefusalCodes` 불변(1.3 3차 P3-3)**: already-processing 판정은 새 함수에만 두고 공유 목록(`refusal_code.go:46`)에 넣지 않는다 — 넣으면 place·amend·flatten 취소의 409 AP 가
   `classifyMutation` B4(45)에서 확정 거절이 된다(flatten 은 F1 재발). 변이 「목록에 already-processing 추가」는 place·amend 409 AP → 오늘(IN_DOUBT) 시험과 flatten 소진 → Held 시험이 잡아야 한다.
-- 영향 범위: `internal/execgw`(+`-race`), `internal/official`, `internal/flatten`, `internal/app/engine`(clear·배선), `cmd/tossctl`(flatten 배선), `internal/journal`(dispatch).
+- 영향 범위: `internal/execgw`(+`-race`), `internal/official`, `internal/flatten`, `internal/app/engine`(clear·배선), `cmd/tossctl`(flatten 배선), `internal/journal`(dispatch·latch 질의).
+
+## D11. R3 진입 전용 latch (사람 결정 P2-3, 1.3 2차 리뷰 P1)
+
+**목적**: R3 가 취소를 FAILED_CONFIRMED(종결)로 닫으면 그 attempt 가 `PendingAttempts` 에서 빠져 `checkSymbolFree` B2(804)의 SymbolInFlight 가 풀린다(D2 부작용). 대상 주문은 살아 있으므로
+그 종목의 **새 진입만** 다시 막는다. exit·손절·flatten·reconcile·보호 경로는 막지 않는다(안전 불변식 4).
+
+| 항목 | 정의 |
+|---|---|
+| **기록 위치** | **새 표·새 열 없음 — schema 36 그대로.** R3 attempt 행 자체가 latch 다: `mutation_attempts`(schema.go:224–238)의 `kind='CANCEL'`·`state='FAILED_CONFIRMED'`·`reason_code='broker_rejected'`·`target_order_id`(230) 와 `detail` 끝의 D6 꼬리표(`branch=cancel_already_processing … outcome=definitive`). 종목·시장·계좌·거래일은 그 행의 `intents`(202–218). |
+| **키** | (계좌 `intents.account_ref`, 시장 `intents.market`, 종목 `intents.symbol`, 원 주문 id `mutation_attempts.target_order_id`). 진입 판정은 (plan.market, plan.symbol) 로 그 키의 행을 찾는다(`attemptTargets` 와 같은 대소문자 무시 비교, gateway.go:838–839). |
+| **세우는 조건** | R3: 엔진 정책 게이트웨이의 취소가 409 AP(D2 판정)이고 래퍼가 REJECTED + `outcome=definitive` 꼬리표로 정착(`DispatchVerified` B7(160) Settle FAILED_CONFIRMED). 따로 쓰는 단계가 없다 — 정착이 곧 세움(같은 트랜잭션). R4(flatten)는 FAILED_CONFIRMED 를 만들지 않으므로(D3: 재시도 성공 → CONFIRMED, 소진 → IN_DOUBT) latch 를 세우지 않는다. |
+| **해제 조건** | 키의 행마다 아래 중 하나가 원장에 있으면 그 행은 풀림. 모든 행이 풀려야 진입 허용. **r1 원 주문 terminal**: `target_order_id` 가 그 계좌·시장·종목의 `Journal.LiveOrdersForSymbol` 결과에 없음 — 「working」 의 정의를 새로 만들지 않고 exit 청소가 쓰는 같은 판정(fills.go:1854–1918, `confirmedOrderTerminalEvidence` exit_proposal_release.go:281–294 = `terminal=1` fill snapshot)을 쓴다. terminal 은 `brokerstate.State.IsTerminal`(derive.go:94–102: FILLED·CANCELLED·CANCELLED_PARTIALLY_FILLED·REPLACED·REJECTED·REJECTED_PARTIALLY_FILLED). **r2 다음 취소 성공**: `Journal.ConfirmedCancelOf(account, market, trading_day, symbol, target_order_id)` 가 found(evidence AST B1(152) 빈 id 면 false · B2/B3(163–164) 없음이면 false) — 엔진 다음 주기 재취소·운영자 취소 어느 쪽이든 같은 원장 행. 시각 순서는 보지 않는다(브로커가 그 주문의 취소를 받아들인 증거면 충분). **r3 대사로 종결**: 별도 갈래가 아니다 — 원장에 terminal 증거를 쓰는 생산 호출자는 체결 감지·대사 경로의 `filldetect/ledger.go:80` `Journal.RecordFill` 하나뿐(grep, 2026-10-28)이므로 r3 은 r1 과 같은 술어로 판정된다. 대사의 불일치 상태(RECONCILE)는 차단이지 해제가 아니다. **증거 기준**: 원장 행만(브로커 즉석 조회 0, 메모리 상태 0). 읽기 오류는 해제가 아니라 오류(진입 전송 없음). |
+| **재시작 내구성** | 판정을 진입마다 원장에서 다시 계산하므로 메모리 투영이 없다 — 재구성할 것이 없다. FAILED_CONFIRMED 는 terminal 이라 `RecoverPending` 이 건드리지 않는다(evidence AST B2(93) range 의 입력이 `PendingAttempts`(87) — 상태 목록 recovery.go:32 에 FAILED_CONFIRMED 없음). `internal/journal` 에 `DELETE FROM mutation_attempts` 0 건(grep, 2026-10-28) — 행이 지워지지 않는다. |
+| **보는 경로** | `Gateway.checkSymbolFree` 의 B3(810) `!plan.raisesExposure` 반환 **뒤**, B7 뒤·828 앞(번들 `internal-execgw--gateway.checksymbolfree`). `raisesExposure` 가 참인 것은 place 매수(gateway.go:377)·amend 증량(447)뿐이고 취소는 거짓(416) — **AST 상 취소·청산 매도·flatten·보호 매도는 B3(811)에서 반환해 latch 질의에 닿지 않는다.** exit 청소 `clearTheSymbol` 은 `checkSymbolFree` 가 아니라 `UnsettledOnSymbol`(=`unsettledFor`, 편집 0)을 읽고, flatten 은 `UnsettledCancelSymbols`(편집 0)를 읽으며, reconcile 은 주문 경로가 아니다. |
+| **사유 어휘** | 기존 `ReasonSymbolInFlight`(failclosed.go:266) — a165 이전 같은 상황(취소 IN_DOUBT)이 진입에 준 사유와 같다. detail: `cancel of order <id> on <symbol> was refused as already-processing (attempt <id>); the order is still working`. `AllReasonCodes` 변경 0. |
+
+- **구현**: 새 파일의 `g.cancelRefusalLatch(ctx, plan) (*RejectedError, error)` + journal 새 파일의 읽기 함수(종목의 FAILED_CONFIRMED CANCEL 행 목록 — 일반 질의, a165 의미는 execgw 의 꼬리표 판정이 가짐).
+  해제는 기존 `LiveOrdersForSymbol`·`ConfirmedCancelOf` 를 **호출**한다 — 같은 판정을 SQL 로 다시 쓰지 않는다(판정이 둘이면 서로의 시험을 통과시킨다). 같은 (계좌·거래일·대상 id) 는 한 번만 묻는다.
+- **비용**: 노출을 늘리는 제출마다 질의 1(종목 필터, `idx_attempts_state`) + R3 행이 있는 종목만 대상 id 별 2 질의. 엔진 진입 빈도에서 무시할 수준(측정 안 함 — 3.3 에서 잴 것).
+- **오탐 방향**: 꼬리표는 우리 코드가 detail **끝**에 붙이고 읽는 쪽은 끝의 한 덩어리만 본다. 브로커 문구가 우연히 같은 꼬리표로 끝나는 비-R3 행은 진입을 더 막을 뿐이다(보수 방향).
+  꼬리표 형식이 바뀌어 읽기가 놓치는 것(진입 허용 — 위험 방향)은 쓰기·읽기 상수 공유 + 왕복 시험 + RED-a 가 막는다.
+- **고려하고 버린 안 — `EntryGate.BlockSymbol`**(symbolgate.go:64–89): 진입 전용 축은 같다(`Gateway.checkEntry` evidence AST B1(851) `g.entry == nil || !plan.raisesExposure` → nil — `checkSymbolFree` B3 와 같은 `raisesExposure`).
+  그러나 evidence AST(`execgw--entrygate.blocksymbol`)의 호출은 `strings.*`·`g.Block`·`symbolKey`·`g.mu.*`·`make`·`g.clk.Now` 뿐이고 원장 쓰기가 0 — 메모리 map(81) 이다. 재시작 내구성에는
+  `RebuildReconcileProjection`(symbolgate.go:183–218, reconcile 사유만 재구성) 같은 원장 투영을 새로 만들어야 하고, 해제 생산자 셋(체결 감지·취소 성공·…)에 `ClearSymbol` 호출을 심어야 하며, 새 사유 코드(`AllReasonCodes` 고정,
+  failclosed.go:245–250 「rename 은 data migration」)가 필요하다 — High-risk 편집이 셋 이상 는다. 원장 유도는 편집 1(checkSymbolFree 한 문장) + 새 파일 둘이다. 대가: 콘솔 `SymbolBlocks` 에 보이지 않는다(거절 사유·detail 로만 보임 — 잔여 R-a165-6).
+- **RED 계획**(`internal/execgw` 실 journal + fake broker, 실계좌 0):
+  - (a) 엔진 정책 게이트웨이로 종목 A 의 working BUY 주문 취소가 409 AP → R3 행 → 같은 종목 A 매수 place 가 `ReasonSymbolInFlight` 로 거절, 브로커 place 호출 0, journal 에 place attempt 없음.
+  - (b) 같은 상태에서 종목 A 의 엔진 재취소(cancel)·청산 매도(place SELL)·flatten 취소/매도가 `checkSymbolFree` 를 통과하고 브로커 호출에 닿음, `clearTheSymbol` 은 다음 주기 재취소를 냄, reconcile 주기는 영향 없음. `g.journal` 은 구체 타입(`*journal.Journal`)이라 질의 횟수 계측 fake 가 없다 — 「exit 은 latch 질의에 닿지 않음」은 AST 구조 시험(`checkSymbolFree` 안 `cancelRefusalLatch` 호출이 B3 반환 뒤에 있음)으로 고정한다.
+  - (c) 해제: (c1) 대상 주문에 terminal fill snapshot 기록 → 진입 허용 (c2) 대상 주문의 CANCEL attempt CONFIRMED 기록 → 진입 허용 (c3) 둘 다 없고 R3 행이 둘(연속 주기) → 계속 거절 (c4) 다른 주문의 terminal·취소 성공은 해제하지 않음.
+  - (d) 재시작: R3 행을 쓴 뒤 Journal·Gateway 를 닫고 같은 파일로 새로 열어(`RecoverPending` 포함) → 진입 거절 유지. 메모리 latch 변이(⑥)는 여기서 FAIL.
+  - (e) 다른 종목 B·같은 종목의 다른 시장 진입은 영향 0. latch 읽기 오류 → 진입 거절(전송 0)은 오류 주입 seam 이 있을 때만 시험하고, 없으면 2.1 Pre-Edit 에 `not-applicable` 사유를 남긴다(오류 경로는 submit B8(525) 의 기존 처리).

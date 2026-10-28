@@ -13,7 +13,7 @@ from pathlib import Path
 NOTES = {
     "Gateway.submit": dict(
         role="게이트웨이 순서(결정 읽기 → Prepare → 거절 → DISPATCH_STARTED → 직전 재검증 → 브로커 1회 → 정착)의 본체. "
-             "a165 는 이 함수의 dispatch 클로저 안에 재전송 루프를 넣는다(design D1).",
+             "a165 는 dispatch 클로저를 고치지 않고, B49 갈래가 `DispatchVerified` 에 넘기는 함수만 바깥 래퍼로 감싼다(design D5, 사람 결정 P2-2).",
         inputs=[("plan mutationPlan", "place/cancel/amend 계획", "Gateway.place·Cancel·Amend", "prepareRequest 오류면 기록 없이 반환"),
                 ("ref GuardianDecision", "결정 id", "journal", "읽기 실패는 refusePrepared 로 기록"),
                 ("plan.strategy", "nil 또는 paired KR/US first-leg 능력", "PlaceClaimedStrategy", "nil 이면 일반 경로")],
@@ -22,7 +22,7 @@ NOTES = {
               "attempt 당 브로커 호출이 정확히 1회다. 결과는 725 의 `classifyMutation(tracker.State(), result, callErr)` 한 자리에서 분류된다.",
         mutations="journal Prepare(RECORDED) · DispatchVerified/DispatchStrategyVerified(DISPATCH_STARTED → 정착) · 심볼 claim/release. "
                   "재시도가 생기면 같은 attempt·같은 nonce·같은 clientOrderId 로 브로커 호출이 늘 뿐 journal 행은 늘지 않는다(design D1).",
-        safety="a165 3판 편집 경계: dispatch 클로저(636–726)의 첫 전송 본문을 `sendOnce` 로 묶고, 취소일 때만 409 already-processing 처리(R3·R4)를 그 뒤에 둔다. 클로저 밖 거절 순서(B6–B28)와 정착(B49–B57)은 바꾸지 않는다. High-risk: yes."),
+        safety="a165 편집 경계(3판 보완, P2-2): dispatch 클로저(B29–B48, 636–726)·클로저 밖 거절 순서(B6–B28)·정착(B53–B57)은 바꾸지 않는다. 편집은 B49 갈래 729 의 인자 식 하나(`dispatch` → `g.withCancelRefusal(plan, dispatch)`)뿐이고, 정책 nil 이거나 취소가 아니면 그 식의 값이 원 `dispatch` 다. 3판의 `sendOnce` 추출은 폐기. High-risk: yes."),
     "Gateway.place": dict(
         role="place 계획을 만들고 `plan.call` 클로저(394–397)를 정의한다. 클로저는 호출마다 같은 `keyed(key)` 로 PlaceIntent 를 만들므로 "
              "같은 key 면 같은 본문이다.",

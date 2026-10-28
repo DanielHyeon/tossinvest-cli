@@ -32,6 +32,9 @@
 - R-a165-2 **429 를 받은 POST 가 실제 미접수라는 것은 사용자 결정의 전제**(확정표 §2.1).
 - R-a165-3 **실패 응답(5xx·429·전송 후 끊김) 뒤 같은 `clientOrderId` 재요청의 멱등 동작 미측정** — R11(M14·M35)은 2xx 직후 재요청만 쟀고 openapi 는 실패 경로를 말하지 않는다(1.3 A1).
 - R-a165-4 HTTP/2 transport 내부 재전송(REFUSED_STREAM·GOAWAY) 가능성 — 「attempt 당 1회」는 `plan.call` 기준이다(1.3 A11).
+- R-a165-5 **latch 해제 r1 은 원장의 terminal fill snapshot 에 기댄다** — 브로커가 종결을 `IsTerminal` 밖의 상태(예: 만료 표기 미측정)로만 보고하면 원장이 그 주문을 계속 working 으로 보고 latch 도 남는다.
+  이는 `LiveOrdersForSymbol`·exit 청소가 이미 같은 판정에 기대는 것과 같은 한계다(진입만 더 막힘 — 보수 방향). 운영자 해소 수단은 그 주문의 취소 성공(r2).
+- R-a165-6 **latch 는 콘솔 `SymbolBlocks` 에 보이지 않는다**(EntryGate 투영이 아니므로) — 진입 거절 사유(`symbol_in_flight`)·detail 로만 보인다.
 - 별건(a165 밖): `strategyDispatchOwnerTakeoverGrace` 20s 가 「15초 클라이언트 timeout」을 전제(strategy_dispatch_runtime.go:664–667)하나 401 루프·timeout 없는 토큰 교환으로 그 전제가 이미 깨져 있다(1.3 A7). 담당 change 미정.
 
 ## 사용자 결정 (2026-10-23 2차, Manager 전달 — review.md 「사람 결정 요청」 1~7 전부 권장안)
@@ -70,6 +73,14 @@
 | P2-1 | gate ⑤ 창의 형제 함수가 29건 이상이면 종결 때 archive 번들 복사로 처리한다 | 복사 대상별 landed source SHA-256·생성 커밋을 대조해 기록한다. base 재고정 없음 |
 | P2-2 | `sendOnce` 추출 대신 작은 바깥 래퍼를 쓴다. 기존 dispatch 클로저는 그대로 두고 취소·정책 있음·첫 결과가 code 일치 409 already-processing일 때만 같은 클로저를 `winCtx`로 다시 부른다 | `winCtx`는 재전송·대기에만 쓰고 정착은 바깥 ctx로 한다 |
 | P2-3 | R3 취소가 FAILED_CONFIRMED여도 그 종목의 진입(`checkSymbolFree`)은 계속 막는다 | 차단은 진입만. flatten·reconcile·exit는 막지 않으며 RED 시험으로 고정한다 |
+
+### P2-2·P2-3 명세 완료 (2026-10-28, 1.3 2차 독립 리뷰 FAIL 처분 — 사람 결정 「1」)
+
+- **P2-2**: design D5 를 바깥 래퍼 모델로 고쳤다. `submit` 편집은 B49 갈래 729 의 인자 식 하나, 원 dispatch 클로저 편집 0, 재호출은 같은 클로저를 `winCtx` 로.
+  B37(685)은 재호출마다 다시 서고, 정착 ctx 는 `DispatchVerified` 의 `ctx` 라 `winCtx` 와 분리된다. 8s 창 시작점은 dispatch 진입 직전(P3). submit FLM·BTM·생성기 NOTES 를 맞췄다.
+- **P2-3**: design D11 — **진입 전용 latch**. R3 attempt 행 자체가 기록이다(**schema 영향 없음 — 36 그대로**, 새 표·열 0). 해제는 대상 주문 terminal(`LiveOrdersForSymbol` 에서 빠짐) 또는
+  그 주문의 확인된 취소(`ConfirmedCancelOf`). 판정은 `checkSymbolFree` 의 `!raisesExposure` 반환 뒤에만 있으므로 exit·flatten·reconcile·보호 경로는 읽지 않는다. 새 편집 대상 함수 1(`Gateway.checkSymbolFree`) → 번들 24개.
+- 남는 것: GPT 보이스 재리뷰. 새 번들 실행 칸 coverprofile(2.1 전).
 
 ### H2 실측 (1.3 3차, 2026-10-28, HEAD `0c9bfd272`)
 

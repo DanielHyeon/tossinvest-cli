@@ -237,3 +237,23 @@ R3의 매도 방지·R4의 소진 시 IN_DOUBT 복귀·R5의 동일 본문은 3�
 1. P2-2 래퍼 모델을 design D3/D5/D10·submit FLM/BTM에 반영하고 ctx/정착 불변식을 RED로 만든다.
 2. P2-3 entry-only 차단의 원장 근거·해제 조건을 정하고, exit/flatten/reconcile 비차단 네 갈래를 RED로 고정한다.
 3. 배선 교차·nil 네 시험을 실제 정책 값+flatten Held 행동 검증으로 구체화하고, `Definitive` 혼성 및 ctx 부모/정착 변이를 원장에 더한다.
+
+### 1.3 2차 독립 리뷰 처분 (2026-10-28, 작성자 — 사람 결정 「1」 = 설계 보완 라운드)
+
+P2-2(작은 바깥 래퍼)·P2-3(R3 뒤 그 종목 진입 계속 막음)은 사람 결정대로 유지하고 설계로 일관되게 명세했다. 소스·시험 편집 0, 시험 실행 0, 운영 접근 0.
+
+| 발견 | 처분 | 반영 위치 |
+|---|---|---|
+| P1 P2-3 구현 불능 | **진입 전용 latch 정의.** 기록 = R3 attempt 행 자체(새 표·열 없음, schema 36 그대로) · 키 = (계좌·시장·종목·`target_order_id`) · 세움 = R3 정착(FAILED_CONFIRMED + `outcome=definitive` 꼬리표) · 해제 = r1 대상 주문이 `LiveOrdersForSymbol` 에 없음(terminal fill snapshot) / r2 `ConfirmedCancelOf` found / r3 대사 종결은 r1 과 같은 술어(terminal 증거 생산자 `filldetect/ledger.go:80` 하나) · 내구성 = 진입마다 원장 재계산(메모리 투영 0, `RecoverPending` 은 FAILED_CONFIRMED 를 안 건드림, 행 삭제 경로 0) · 보는 곳 = `checkSymbolFree` B3(810) `!raisesExposure` 반환 **뒤**(B7 뒤·828 앞). 공용 `unsettledFor` 편집 0. `EntryGate.BlockSymbol` 은 진입 전용 축은 같지만 메모리 map 이라 버림(사유 D11) | design D2 부작용·D4·D8·D11, spec delta(R3 bullet + 시나리오 「엔진 취소 확정 미수락 뒤 같은 종목 진입」), 새 번들 `internal-execgw--gateway.checksymbolfree`(24번째) |
+| P1 P2-2 ↔ D3/D5·submit FLM 모순 | **`sendOnce` 추출 폐기.** submit 편집은 B49 갈래 729 의 인자 식 하나(`dispatch` → `g.withCancelRefusal(plan, dispatch)`). 래퍼는 첫 결과가 409 AP(code 일치)·AMBIGUOUS 일 때만 같은 클로저를 `winCtx`(dctx 의 자식, `defer cancel()`)로 다시 부른다. B37(685) 은 재호출마다 `plan.call` 직전에 다시 선다. 정착은 `DispatchVerified` 의 `ctx`(dispatch.go:144 및 B5·B7·B9·B11–B13·B15·B17·B19) — `winCtx` 는 닿지 않음. 정책 nil 은 원 `dispatch` 값 그대로(B29–B48·B50–B57 편집 0) | design D3·D5, submit FLM 「a165 편집 계획」·Safety, BTM B37·B47·B49·B50·B52, `measure/gen_flm.py` NOTES |
+| P2 배선 4 시험 | W1 flatten 배선 정확 값 `{2, 5s, 8s, false}` + 같은 시험에서 409 AP 소진 → IN_DOUBT → Held·매도 POST 0 / W2 엔진 `{0, true}` + FAILED_CONFIRMED·호출 1·시계 불변·같은 주기 매도 0 / W3·W4 nil 은 호출 1·detail 바이트 동일·오늘 경로(Held / 다음 주기 막힘). 혼성 `{2, true}` 변이 추가 | design D10 |
+| P2 ctx 변이 | 원장에 `winCtx` 부모 분리((w2) 호출자 취소 → 재전송 0)·정착 ctx 를 `winCtx` 로((w3) 실시간 창 10ms + 50ms 지연 → IN_DOUBT 영속 + AST 구조 시험)·재호출에 원 dctx·창 시작점 이동((w1)) 추가 | design D10 |
+| P3 8s 시작점 | 래퍼가 원 클로저를 처음 부르기 **전**(`g.clk.Now()`·`time.Now()`). 첫 호출 안 7s 진행 fake 로 경계 시험 (w1) | design D3·D5, spec delta |
+
+- 새 AST(HEAD `e4724910b`, `go run ./tools/logic-map`): `analysis/function-logic/internal-execgw--gateway.checksymbolfree/ast.json`(branches 7 — 기존 evidence 와 열거 일치) ·
+  `analysis/evidence/execgw--gateway.checkentry.ast.json` · `journal--journal.confirmedcancelof.ast.json` · `execgw--entrygate.blocksymbol.ast.json` · `journal--journal.recoverpending.ast.json`.
+  base `34e12967e` → HEAD 사이 a165 관련 Go 파일 변경은 `internal/official/stock_reads.go`(a169)뿐이라 다른 번들의 좌표는 그대로다(`git diff --stat`).
+- 손으로 읽은 근거(AST 아님): `raisesExposure` 대입 377·416·447, `Gateway.Cancel` plan 404–417, `classifyMutation` 86 `outcome.Err = err`, `PendingAttempts` 상태 목록 recovery.go:32,
+  `IsTerminal` derive.go:94–102, `DELETE FROM mutation_attempts` 0 건(grep), terminal 증거 생산자 1 곳(grep).
+- 실행하지 않은 것: 시험 전부·coverprofile(새 번들의 실행 칸은 「미측정」), `check_analysis.py`, `make sdd-sync`·`make gate`.
+- **다음**: GPT 보이스 재리뷰. 재리뷰가 꼭 볼 곳 — D11 해제 r2 가 시각 순서를 안 보는 것, r3 를 r1 로 접은 근거, latch 위치(B3 뒤) AST, D5 정착 ctx 불변식, D10 (w3) 의 실시간 시험 안정성.

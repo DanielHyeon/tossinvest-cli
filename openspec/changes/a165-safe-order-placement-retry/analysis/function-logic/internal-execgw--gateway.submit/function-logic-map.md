@@ -9,7 +9,7 @@
 
 ## 역할 (a165)
 
-게이트웨이 순서(결정 읽기 → Prepare → 거절 → DISPATCH_STARTED → 직전 재검증 → 브로커 1회 → 정착)의 본체. a165 는 이 함수의 dispatch 클로저 안에 재전송 루프를 넣는다(design D1).
+게이트웨이 순서(결정 읽기 → Prepare → 거절 → DISPATCH_STARTED → 직전 재검증 → 브로커 1회 → 정착)의 본체. a165 는 dispatch 클로저를 고치지 않고, B49 갈래가 `DispatchVerified` 에 넘기는 함수만 바깥 래퍼로 감싼다(design D5, 사람 결정 P2-2).
 
 ## Inputs and invariants
 
@@ -95,6 +95,23 @@ AST 호출 이름 전체: `ReasonCode`, `attempt.DispatchStrategyVerified`, `att
 
 - journal Prepare(RECORDED) · DispatchVerified/DispatchStrategyVerified(DISPATCH_STARTED → 정착) · 심볼 claim/release. 재시도가 생기면 같은 attempt·같은 nonce·같은 clientOrderId 로 브로커 호출이 늘 뿐 journal 행은 늘지 않는다(design D1).
 
+## a165 편집 계획 (3판 보완 — 사람 결정 P2-2 바깥 래퍼, design D5)
+
+| 위치 | 오늘 | a165 뒤 | 근거(AST) |
+|---|---|---|---|
+| B29–B48 dispatch 클로저(636–726) | 결정 재읽기 B30·checkDecision B31·키 B32·protection B33·entry B34·reservation B36 → `call` 의 B37(685) `dctx.Err()` → `plan.call`(708) 1회 → `classifyMutation`(725) | **편집 0.** 정책이 있는 취소에서만 래퍼가 같은 클로저 값을 `winCtx` 로 최대 2회 더 부른다 | 클로저 본문 그대로 |
+| B49(728) `if plan.strategy == nil` → 729 | `attempt.DispatchVerified(ctx, dispatch, g.roundTripFor(plan))` | `attempt.DispatchVerified(ctx, g.withCancelRefusal(plan, dispatch), g.roundTripFor(plan))` — 유일한 편집 | 취소 계획은 strategy nil(`Gateway.Cancel` 404–417, 손으로 읽음) → 취소는 이 갈래로만 옴 |
+| B50/B51(730–731)·B52(732–733) | strategy 정착 | **편집 0**(`dispatch` 그대로) | strategy 는 PlaceClaimedStrategy 만 |
+| B53–B57 정착 뒤 반환 | — | 편집 0 | — |
+
+- **B37 의 재적용**: 재호출은 클로저 전체를 다시 지나므로 각 재전송의 `plan.call` 바로 앞에 B37 이 다시 선다. 그 `dctx` 는 `winCtx`(=`context.WithDeadline(dctx, wallStart+8s)`, 래퍼가 `defer cancel()`)라
+  창 마감·cancel·호출자 취소가 여기서 걸려 B47(717) `notSent` 가 된다.
+- **정착 ctx 분리**: 정착은 `DispatchVerified` 가 자기 `ctx` 로 한다(번들 `internal-journal--attempt.dispatchverified` B5·B7·B9·B11–B13·B15·B17·B19 전부 `ctx`). 래퍼는 `DispatchOutcome` 값만 돌려주므로 `winCtx` 는 정착에 닿지 않는다.
+- **정책 nil 동일성**: `withCancelRefusal` 은 정책 nil 이거나 `plan.kind != KindCancel` 이면 받은 `dispatch` 를 그대로 돌려준다 — B49 의 인자 값이 오늘과 같고 B29–B48·B50–B57 편집 0.
+- **창 시작점(P3)**: 래퍼가 원 클로저를 처음 부르기 **전**에 잰다(첫 전송의 B30–B36 시간이 창에 듦 — 보수적).
+- GREEN 뒤 이 번들의 `ast.json` 을 다시 뽑는다(B49 갈래의 호출 식 변화 — 분기 수 불변 예상, 확인은 재추출로).
+- 이 표와 BTM 의 B37·B47·B49·B50·B52 행 「RED observed」 계획 칸은 1.3 2차 처분(2026-10-28)에서 손으로 적었다 — `measure/gen_flm.py` 로 재생성하면 지워지므로 재생성 뒤 다시 옮길 것.
+
 ## Safety conclusion
 
-- a165 3판 편집 경계: dispatch 클로저(636–726)의 첫 전송 본문을 `sendOnce` 로 묶고, 취소일 때만 409 already-processing 처리(R3·R4)를 그 뒤에 둔다. 클로저 밖 거절 순서(B6–B28)와 정착(B49–B57)은 바꾸지 않는다. High-risk: yes.
+- a165 편집 경계(3판 보완, P2-2): dispatch 클로저(B29–B48, 636–726)·클로저 밖 거절 순서(B6–B28)·정착(B53–B57)은 바꾸지 않는다. 편집은 B49 갈래 729 의 인자 식 하나(`dispatch` → `g.withCancelRefusal(plan, dispatch)`)뿐이고, 정책 nil 이거나 취소가 아니면 그 식의 값이 원 `dispatch` 다. 3판의 `sendOnce` 추출은 폐기. High-risk: yes.
