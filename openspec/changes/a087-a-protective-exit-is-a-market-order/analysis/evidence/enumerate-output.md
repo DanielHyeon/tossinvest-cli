@@ -1,3 +1,13 @@
+## Client.GetPriceLimits — internal/client/marketdata.go:91-115 (fresh, sha 57bf3ef2c147)
+    B1 if      :93    if err != nil {
+     R return  :94    return domain.PriceLimits{}, err
+    B2 if      :96    if deriveSecurityType(productCode) != "kr-s" {
+     R return  :97    return domain.PriceLimits{}, fmt.Errorf("상/하한가는 국내(KRX) 종목만 제공됩니다 (미국장은 일일 가격제한 제도가 없음): %s", symbol)
+    B3 if      :103   if err := c.getJSON(ctx, endpoint, &envelope); err != nil {
+     R return  :104   return domain.PriceLimits{}, err
+     R return  :107   return domain.PriceLimits{
+  branches=3 returns=4
+
 ## Market.InRegularSession — internal/clock/market.go:146-152 (fresh, sha 85264b6e9b4e)
     B1 if      :148   if err != nil {
      R return  :149   return false, err
@@ -41,6 +51,23 @@
      R return  :363   return NewExitObserver(opts)
   branches=6 returns=4
 
+## Context.ManualBuyRefresher — internal/app/engine/manual_buy_refresh.go:62-81 (fresh, sha 4d6a361efa0c)
+    B1 if      :64    if c != nil {
+    B2 if      :65    if guardian, ok := c.Guardian.(*execgw.RiskGuardian); ok {
+    B3 if      :68    if c.Official != nil {
+    B4 if      :71    if c.Journal != nil {
+    B5 if      :76    if r.clock == nil {
+     R return  :80    return AuxiliaryExecutor{Name: manualBuyRefreshName, Run: r.Run, StopEvent: obs.EventManualBuyRefreshFailed}
+  branches=5 returns=1
+
+## ExitObserver.Run — internal/app/engine/exitloop.go:407-417 (fresh, sha 4d92acb6e7e1)
+    B1 for     :408   for {
+    B2 if      :409   if err := ctx.Err(); err != nil {
+     R return  :410   return err
+    B3 if      :413   if err := o.clk.Sleep(ctx, o.Interval()); err != nil {
+     R return  :414   return err
+  branches=3 returns=2
+
 ## ExitObserver.sellIntent — internal/app/engine/exitloop.go:1806-1832 (fresh, sha 4d92acb6e7e1)
     B1 if      :1808  if price == "" {
     B2 if      :1811  if price == "" {
@@ -80,6 +107,16 @@
      R return  :1594  return releaseErr
   branches=15 returns=10
 
+## exitOrderLine.args — internal/app/engine/exit_order_log.go:140-169 (fresh, sha 4d4ef9eb1630)
+    B1 if      :161   if l.fill {
+     R return  :168   return args
+  branches=1 returns=1
+
+## exitOrderLineFor — internal/app/engine/exit_order_log.go:102-114 (fresh, sha 4d4ef9eb1630)
+    B1 if      :104   if price == "" {
+     R return  :107   return exitOrderLine{
+  branches=1 returns=1
+
 ## floatOf — internal/app/engine/exitloop.go:2014-2020 (fresh, sha 4d92acb6e7e1)
     B1 if      :2016  if err != nil {
      R return  :2017  return 0, fmt.Errorf("engine: %s %q is not a number: %w", field, s, err)
@@ -89,6 +126,14 @@
 ## isProtective — internal/app/engine/exitloop.go:1463-1465 (fresh, sha 4d92acb6e7e1)
      R return  :1464  return p.Action == exitpolicy.ActionBaselineBreach || p.Action == exitpolicy.ActionLadderStop
   branches=0 returns=1
+
+## manualBuyRefresh.Run — internal/app/engine/manual_buy_refresh.go:84-99 (fresh, sha 4d6a361efa0c)
+    B1 if      :85    if r.board == nil || r.reads == nil || r.orders == nil {
+     R return  :87    return ctx.Err()
+    B2 for     :91    for {
+    B3 select  :93    select {
+     R return  :95    return ctx.Err()
+  branches=3 returns=2
 
 ## NewContext — internal/app/engine/engine.go:437-607 (fresh, sha 60e3a8d45487)
     B1 if      :439   if err != nil {
@@ -196,6 +241,23 @@
      R return  :44    return p.checkFunding(ctx, intent)
   branches=1 returns=2
 
+## Saga.aggressivePrice — internal/flatten/liquidate.go:372-398 (fresh, sha ef9ad2603edf)
+    B1 if      :373   if s.Prices != nil {
+    B2 if      :374   if limits, err := s.Prices.PriceLimits(ctx, symbol); err == nil && limits.LowerLimit > 0 {
+     R return  :377   return limits.LowerLimit, "exchange lower limit", nil
+    B3 if      :381   if err != nil {
+     R return  :382   return 0, "", fmt.Errorf("no price for %s, so no limit can be set: %w", symbol, err)
+    B4 range   :384   for _, q := range quotes {
+    B5 if      :385   if !strings.EqualFold(strings.TrimSpace(q.Symbol), symbol) || q.Last <= 0 {
+    B6 if      :389   if discount <= 0 {
+     R return  :394   return roundDownToTick(q.Last*(1-discount), market), "last trade less the aggressive discount", nil
+     R return  :397   return 0, "", fmt.Errorf("no usable price for %s; a liquidation order cannot be priced", symbol)
+  branches=6 returns=4
+
+## adaptPriceLimits — internal/official/price_limits_reads.go:55-62 (fresh, sha c7331f5b21e8)
+     R return  :56    return domain.PriceLimits{
+  branches=0 returns=1
+
 ## buildOrderCreate — internal/official/orders_write.go:100-153 (fresh, sha d89e0bdbffdc)
     B1 if      :103   if intent.Fractional && intent.Side == "buy" {
     B2 if      :105   if intent.Amount <= 0 {
@@ -213,6 +275,12 @@
      R return  :152   return v0, nil
   branches=7 returns=7
 
+## Client.PriceLimits — internal/official/price_limits_reads.go:31-39 (fresh, sha c7331f5b21e8)
+    B1 if      :35    if err := c.get(ctx, "/api/v1/price-limits", q, &raw); err != nil {
+     R return  :36    return domain.PriceLimits{}, err
+     R return  :38    return adaptPriceLimits(symbol, raw), nil
+  branches=1 returns=2
+
 ## Client.TypedMarketCalendar — internal/official/typed_calendar_reads.go:37-54 (fresh, sha 5f97bf011626)
     B1 if      :39    if country != "KR" && country != "US" {
      R return  :40    return MarketCalendarResponse{}, fmt.Errorf("market calendar country must be KR or US, got %q", country)
@@ -223,6 +291,14 @@
      R return  :51    return MarketCalendarResponse{}, err
      R return  :53    return out, nil
   branches=4 returns=4
+
+## parseDecimal — internal/official/market_reads.go:15-24 (fresh, sha a2c2f01619e0)
+    B1 if      :16    if s == "" {
+     R return  :17    return 0
+    B2 if      :20    if err != nil {
+     R return  :21    return 0
+     R return  :23    return f
+  branches=2 returns=3
 
 ## adaptCalendarDay — internal/scheduler/calendar.go:103-134 (fresh, sha 004b8011b160)
     B1 if      :104   if day.Date == "" {
@@ -290,6 +366,22 @@
      R return  :243   return nil, err
      R return  :265   return &flattenWiring{
   branches=8 returns=6
+
+## engineRuntime — cmd/tossctl/engine.go:655-752 (fresh, sha 753594c5667b)
+    B1 if      :658   if err != nil {
+     R return  :659   return nil, err
+    B2 if      :667   if err != nil {
+     R return  :668   return nil, err
+    B3 if      :684   if err != nil {
+     R return  :685   return nil, err
+    B4 if      :689   if err != nil {
+     R return  :690   return nil, err
+    B5 if      :693   if err != nil {
+     R return  :694   return nil, err
+    B6 if      :705   if err != nil {
+     R return  :706   return nil, err
+     R return  :709   return engine.NewRuntime(engine.RuntimeOptions{
+  branches=6 returns=7
 
 ## placeIntentSupported — internal/trading/service.go:269-288 (fresh, sha 631b2f02437e)
     B1 if      :270   if intent.Market != "us" && intent.Market != "kr" {

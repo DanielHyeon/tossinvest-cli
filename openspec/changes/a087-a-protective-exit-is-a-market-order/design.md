@@ -1,6 +1,15 @@
-# a087 설계 — 보호 청산에서 가격을 없앤다
+# a087 설계 — 보호 청산의 가격 (8판: 그날 거래소 하한가 지정가 · 1~7판: 시장가)
+
+> **8판 (사람 결정 2026-10-28 「3은 3」 — `issues.md` D-1 (다))**: 보호 청산 매도는 시장가가 아니라 **그날 거래소 하한가로 낸 지정가(LIMIT)** 다.
+> 2026-10-10 「시장가 방향」 결정을 이것으로 대체한다. **정본은 D11** 이다. 아래 「문제의 형태」·D1~D10 의 시장가 전용 설계는 지우지 않고 절마다
+> 「8판에서 대체됨」을 달았다. 8판에서도 그대로 유효한 것: D1 의 `isProtective` 재사용 원칙과 익절 무변경, D2a 「반증」, D3 「왜 진입은 계속 막는가」,
+> D4 의 원칙(원장은 보낸 것을 적는다), D5 대조, D8 의 잔존 위험 행, D9, D10. change id(`…-is-a-market-order`)는 경로 안정성 때문에 바꾸지 않는다.
 
 ## 문제의 형태
+
+> **8판에서 대체됨(일부)**: 「가격을 없앤다」는 1~7판의 축이다. 8판은 가격을 없애지 않고 **거래소가 공표한 가격(하한가)으로 바꾼다** — 아래 표의
+> 「시장가에서」 칸 대부분(그리드 이탈 · 중간가 · override · KOSDAQ 표 · `big.Rat` · 사본 정본화)은 하한가 지정가에서도 같은 이유(관측가를 가격으로 쓰지 않음)로 성립한다.
+> 「가격 밴드 clamp — 브로커가 처리」 칸은 8판에서 「하한가는 밴드의 끝값 그 자체」로 읽는다(D11 (a)).
 
 초안은 "제출가가 호가 그리드 위에 있게 하자"였다. proposal-freeze 리뷰가 그 설계를 무너뜨렸고
 (`review.md`), 무너진 자리에서 더 단순한 질문이 남았다.
@@ -25,7 +34,191 @@
 | 세 사본 정본화·AST 가드 | 이 경로에서는 불필요 |
 | 가격 밴드 clamp | 브로커가 처리 |
 
+## D11 — 8판 정본: 보호 매도 = 그날 하한가 지정가 (사람 결정 2026-10-28 「3은 3」, `issues.md` D-1 (다))
+
+> 번호 D11 은 기존 D1~D10 을 인용한 문서를 깨지 않으려고 뒤에 붙였고, 읽는 순서를 위해 앞에 둔다. 아래 D1~D10 의 시장가 전용 설계는
+> 지우지 않고 각 절 머리에 「8판에서 대체됨」을 달았다. 분기 근거는 HEAD `1f4145c77`(origin/main `4b67dd6a9` 위 문서 커밋 3개 — 소스 바이트는 main 과 같다)의
+> AST 36개(`analysis/evidence/*.ast.json`, `python3 -I …/analysis/evidence/enumerate.py` stale 0, 열거 `enumerate-output.md`)다. 이 판에서 새로 만든 AST 는
+> 11개다 — `flatten--saga.aggressiveprice` · `official--client.pricelimits` · `official--adaptpricelimits` · `official--parsedecimal` · `client--client.getpricelimits` ·
+> `engine--exitorderlinefor` · `engine--exitorderline.args` · `engine--context.manualbuyrefresher` · `engine--manualbuyrefresh.run` · `engine--exitobserver.run` ·
+> `tossctl--engineruntime`.
+
+### (a) 주문 형태 — 유형은 LIMIT 그대로, KR 정규장 보호 매도의 가격만 하한가
+
+| 제안 | 시장 | 조건 | 주문 |
+| --- | --- | --- | --- |
+| 보호(`isProtective` — `BASELINE_BREACH` · `STOP_LOSS_LADDER`) | KR | KRX 정규장 고정 창 `[09:00, 15:30)` KST · 평일(`clock.MarketKR.InRegularSession`) **그리고** 엔진 메모리에 그 종목의 그날 하한가가 유효하게 있다(아래 (b) 조건 ①~⑥) | **LIMIT @ 그날 하한가** |
+| 보호 | KR | 그 밖 — 창 밖 · 하한가 없음 · 낡음 · 검사 실패 · 그날 거부됨 | **오늘과 같은 LIMIT**(관측가 → 기준선 → 거부) |
+| 보호 | US | 언제나 | 오늘과 같은 LIMIT — 가격제한 제도가 없다((d)) |
+| 익절(`LADDER_TAKE_PROFIT`) | 모두 | 언제나 | 오늘과 같은 LIMIT(§0.9 — D1 「익절을 안 바꾸는 이유」 그대로) |
+
+- 유형이 바뀌지 않으므로 바뀌는 것은 **가격 인자 하나**다. `sellIntent`(`exitloop.go:1806-1832`, B1 `:1808` 관측가 빔 → 기준선 · B2 `:1811` 가격 없음 거부 · B3·B4 파싱)는
+  **바이트 그대로** 둔다. `submit` 이 `sellIntent` 를 부르는 자리(`:1532` `o.sellIntent(m, submitQuantity, observed)`)에 관측가 대신 아래 (b) 의 결정 가격을 넘긴다.
+- **그리드 위라는 근거**: ① 하한가는 거래소가 그날 공표하는 가격제한폭의 끝값이다 — openapi `/api/v1/price-limits` 「종목의 당일 상한가 및 하한가를 조회합니다」
+  (`docs/migration/openapi.latest.json:573`), 응답 `lowerLimitPrice`(`:8577`). ② 저장소 선례: `flatten` 이 이미 이 값을 1순위 매도 지정가로 쓴다 —
+  `Saga.aggressivePrice` B2(`internal/flatten/liquidate.go:374`, `:377` 반환 출처 문자열 `"exchange lower limit"`), 주석 「maximally aggressive, always a valid tick,
+  and never rejected for being outside the band」(`:375-376`). ③ **[미측정]** — 이 저장소에 하한가 지정가 주문의 접수·체결 영수증은 **0 건**이다
+  (`verify-execution-capability/measurements.md` 검색 0, flatten-all 실주문 기록 없음). 「호가 단위 위」는 제도와 flatten 주석에 기댄 주장이지 측정이 아니다.
+  틀려도 오늘보다 나빠지는 폭은 (b) 의 거부 되먹임이 종목당 하루 1 주기로 묶는다. 실측은 tasks 5.4(사람 결정).
+- 2026-08-05 245,750 그리드 불일치 거부(proposal Why)는 KR 정규장 창 안에서 해소된다 — 관측가를 가격으로 쓰지 않는다. 창 밖과 폴백 칸은 오늘과 같으므로 그 칸에서
+  그 클래스는 남는다(그리드 정본화는 무소유 Non-goal).
+
+### (b) 하한가 출처 · 캐시 · fail-safe · 기록
+
+**출처 — 이미 있는 것만 쓴다(새 브로커 메서드 · 새 의존성 0)**
+
+- openapi: `GET /api/v1/price-limits`(`openapi.latest.json:567`, `**Rate Limits Group**: MARKET_DATA` `:573`, 쿼리 `symbol` 하나), 스키마 `PriceLimitResponse`
+  (`:8547` — `lowerLimitPrice` decimal nullable 「하한가. 미국 주식 등 가격제한이 없는 시장에서는 null」 `:8577`, `timestamp` required 「데이터 시각」).
+- Go: `official.Client.PriceLimits`(`internal/official/price_limits_reads.go:31-39`, B1 `:35` GET 오류 → 반환) → `adaptPriceLimits`(`:55-62`, 분기 0) →
+  `domain.PriceLimits.LowerLimit float64`(`internal/domain/models.go:116`). null · 빈 값 · 파싱 불가는 `parseDecimal`(`internal/official/market_reads.go:15-24` —
+  B1 `:16` 빈 값 → 0, B2 `:20` 파싱 실패 → 0)이 **0** 으로 만든다. 그래서 「0 이하 = 없음」이 유일한 결측 표시다.
+- 엔진: 읽기 표면 `OfficialReads.PriceLimits`(`internal/app/engine/reads.go:72`)에 이미 선언돼 있고 비시험 호출자 0 이다. `Context.Official` 이 그 표면이다.
+- 응답 `timestamp` 는 `apiPriceLimits` 가 디코드하지만(`price_limits_reads.go:26`) `adaptPriceLimits` 가 버리고 `domain.PriceLimits` 에 칸이 없다. **칸을 더하지 않는다** —
+  `domain.PriceLimits` 는 사람 CLI `tossctl quote limits` 출력(`cmd/tossctl/quote.go:200-204` → `internal/output/marketdata.go:57`)에도 쓰여 upstream 출력이 바뀐다(불변식 3).
+  신선도는 아래 「언제 읽나」로 대신 세운다.
+- WTS `client.GetPriceLimits` B2(`internal/client/marketdata.go:96-97` 「미국장은 일일 가격제한 제도가 없음」)는 KR 전용이라는 사실의 근거로만 인용한다 — 엔진은 WTS 를 쓰지 않는다.
+
+**캐시 = 엔진 메모리의 하루치 하한가 판(board)** — 새 파일 `internal/app/engine/exit_lower_limit.go`
+
+- 판은 `symbol → {하한가 decimal 문자열, 읽은 날(KST Session.Day), 그날 거부됨}` 의 **불변 스냅숏**이다. 쓰는 쪽(갱신기 · 거부 되먹임)은 잠금 아래 사본을 만들어 원자 포인터를
+  바꾸고, 읽는 쪽(가격 결정)은 포인터 한 번 읽기만 한다 — 판정 쪽 잠금 대기 0(7판 「판정 함수의 모양」 요구 승계).
+- **만드는 자리 = `NewContext` 한 곳**(반환 리터럴 `engine.go:578` 에 필드 한 줄). `NewOrderPath`(`engine.go:359-406`) · `buildFlattenWiring`(`cmd/tossctl/flatten.go:199-272`) ·
+  `internal/app/app.go` · `cmd/tossctl/mcp.go` 에는 0 이다. 0.10 독립 리뷰 P0-1 의 규칙(엔진 전용 상태는 공용 빌더가 아니라 `NewContext` 의 엔진 조립에서만)을 그대로 따른다 —
+  8판에서 붙는 것은 `trading` 옵션이 아니라 이 판 하나다. `Context.ExitObserver`(`exitwiring.go:319-364`)가 판을 관측자 옵션에 넣는다 — 호출자 값과 무관하게 덮는
+  기존 규칙(`:336-342` 의 `Journal`·`Prices`·`Retrier`·`Issuer`·`Submit` 과 같은 자리).
+- **갱신기 = 보조 실행자(AuxiliaryExecutor) 하나.** 선례가 있다 — a136 `Context.ManualBuyRefresher`(`internal/app/engine/manual_buy_refresh.go:62-81`)가 판을 채우는
+  보조 실행자를 돌려주고 `engineRuntime` 의 `Auxiliary` 목록(`cmd/tossctl/engine.go:748`)에 들어간다. `manualBuyRefresh.Run` B1(`:85`)처럼 입력(판 · 읽기 · 원장)이 없으면
+  아무것도 읽지 않고 취소를 기다린다. 보조 실행자는 감독 루프 밖이다(`cmd/tossctl/engine.go:746-747` 주석 「감독 밖이라 그 결함이 손절 루프를 내리지 않음」) — 갱신기의 결함이
+  `exit` 루프(`:735-736` `observer.Run`)를 멈추지 않는다. `ExitObserver.Run`(`exitloop.go:407-417`, B1~B3)은 무변경이다 — 관측 주기에 GET 이 끼지 않는다.
+- **언제 읽나 (신선도)**: 갱신기는 `clock.MarketKR.InRegularSession(now)` 이 `(true, nil)` 일 때만 GET 한다 — KRX 정규장 고정 창 안. 정규장이 열린 뒤의 「당일 상한가 및
+  하한가」는 그날 값이라는 것이 이 설계의 신선도 근거다(브로커가 정규장 중에 전일 값을 줄 가능성은 `[미측정]` — 되먹임이 묶는다). 항목의 날 = 읽은 시각의 `Session.Day`.
+  가격 결정은 **결정 시각의 `Session.Day` 와 같은 날의 항목만** 쓴다 — 날이 바뀌면 판 전체가 저절로 무효다. 장전(NXT 프리마켓 · KRX 장전 동시호가)에 읽지 않는 이유:
+  그 시각에 브로커가 오늘 값을 주는지 모르고, 그 구간은 창 밖이라 어차피 쓰지 않는다.
+- **무엇을 읽나**: 원장 보유 포지션(`Journal.Positions` — 관측 루프 `exitloop.go:566` 과 같은 로컬 원장 읽기) 중 시장이 KR 이고 그날 항목이 없는 종목. 한 번 채우면 그날 다시 읽지
+  않는다(종목당 하루 1 GET + 실패 재시도).
+- **얼마나 자주**: 주기 30초(상수), 한 주기에 최대 5 종목을 순서대로, 첫 오류에서 그 주기를 멈춘다(429 포함 — 다음 주기에 재시도). `MARKET_DATA` 한도 초당 10회
+  (`docs/migration/open-api.md:75`)를 관측 루프 `/prices`(5초에 1회 묶음)와 나눠 쓴다. 상한 5 GET / 30초는 한도의 약 1.7% 다. 다른 `MARKET_DATA` 소비자와 합친 실제 부하는
+  `[미측정]`(7판 P3-5 와 같은 처분). 토큰은 같은 `Context.Official` 클라이언트의 캐시를 쓴다 — `--config-dir` 없는 다른 도구가 토큰을 번갈아 무효화한 2026-10-19 사고 경로가 아니다.
+- 새로 산 포지션: 체결 뒤 최대 30초 + GET 1회 동안 판에 없다 → 그동안의 보호 매도는 오늘과 같은 LIMIT 이다(약화 아님).
+
+**가격 결정 = 총함수** — 같은 새 파일, 모양 `exitLimitPrice(m, proposal, observed, board, now) (price, source string)`
+
+- error 를 돌려주지 않고, 패닉하지 않고, 브로커 · 디스크를 부르지 않는다 — **제출 경로 GET 0**(7판 D7 「즉시성 제약」과 0.10 독립 리뷰 P2-1 의 요구를 그대로 잇는다).
+- 하한가를 고르는 조건 — **전부 참일 때만**: ① `isProtective(proposal)`(`exitloop.go:1463-1465`, 술어 무변경 — D1) ② `clock.ParseMarket(m.position.Market)` 이 KR
+  ③ `clock.MarketKR.InRegularSession(now)` 이 `(true, nil)`(`clock/market.go:146-152` — B 오류면 거짓) ④ 판에 그 종목의 결정 시각 `Session.Day` 항목이 있고 「그날 거부됨」이 아님
+  ⑤ 하한가 > 0 ⑥ 하한가 ≤ 관측가(관측가를 파싱할 수 없으면 거짓). 하나라도 거짓이면 오늘 사다리 — `price = observed`, 비면 `m.state.Baseline`(오늘 `sellIntent` B1 과 같은 규칙),
+  `source = observed | baseline`(둘 다 비면 `price = ""` 그대로 넘겨 오늘의 B2 거부를 받는다).
+- ⑥ 은 낡은 판을 거르는 값싼 검사다 — 그날 가격제한폭 안의 체결가는 그날 하한가보다 낮을 수 없으므로 하한가 > 관측가면 그 하한가는 그날 것이 아니다. 반대 방향(낡은 하한가가
+  그날 하한가보다 낮음 → 범위 밖 거부)은 못 거른다 → 되먹임이 받는다.
+- 결정 가격은 `sellIntent` 의 `observed` 인자 자리로 들어간다. 하한가를 고른 경우 그 값은 비지 않고 파싱되는 decimal 문자열이라 `sellIntent` B2·B3·B4 는 오늘과 같은 입력에서만
+  닿는다. **그러므로 이 결정이 `submit` B5(`:1533` alert · 해제)에 닿는 새 사유를 만들지 않는다.**
+- 결정은 `submit` 머리에서 **한 번** 한다(`applyFloor` 앞 — 수량이 필요 없다). 그 값이 a129 줄과 `sellIntent` 둘 다로 간다(아래 「기록」).
+
+**fail-safe — 결측 · 낡음 · 거부 → 오늘의 LIMIT**
+
+- 판이 없음(기동 직후 · 갱신 실패) · 그날 항목 없음 · 하한가 0(null) · 창 밖 · 시장 판정 불가 · ⑥ 실패 → 오늘의 가격 산출. 결과 `PlaceIntent` 는 오늘과 바이트 같다.
+- **거부 되먹임(이 설계의 일부)**: `submit` 의 기본 거부 갈래 B13(`:1582` default — alert · `ProposalRefused` 해제)에 닿은 주문의 가격 출처가 하한가였으면 그 종목의 그날 항목에
+  「그날 거부됨」을 적는다. 해제된 발의는 다음 관측(5초 — `DefaultExitObservationInterval` `exitloop.go:98`)에 다시 발의되고, 그때 ④ 가 거짓이라 오늘의 LIMIT 이 나간다.
+  하한가 값이 틀린 모든 경우(낡음 · SOR 경로의 허용 범위 차이 · 그리드 밖 — 전부 `[미측정]`)의 피해가 **종목당 하루 첫 1 주기**로 묶인다. B7(확정) · B8·B9(결과 미상 — 무장 유지) ·
+  B10(종목 진행 중 — 취소 해제) · B11(attempt 결과 미기록 — 무장 유지)에서는 적지 않는다 — 거부가 입증되지 않았다.
+- 되먹임이 없으면 낡은 하한가가 매 주기 같은 거부를 받아 그날 보호 매도가 0 이 된다(오늘보다 약함). 그래서 되먹임은 빼면 안 되는 갈래이고 RED · 변이 대상이다.
+
+**기록 — 원장 · 로그**
+
+- 원장: `intents.price` 는 **실제로 보낸 가격**(하한가)이다. D4 의 원칙 「원장은 실제로 보낸 것을 적어야 한다」가 그대로 적용된다. schema 변경 없음(`internal/journal/schema.go:6`
+  `SchemaVersion = 36` 무변경). 출처 칸을 원장에 더하지 않는다 — schema 를 올려야 하고, 출처는 판정 근거가 아니라 관측이다. `intents.price` 의 Go 소비 4자리(3.7 census —
+  `Prepare` 비교 · `workingOrderPrice` · matcher 와일드카드 · `intentNotional`)는 가격이 NULL 이 아닌 보통의 LIMIT 으로 읽는다(오늘과 같은 갈래). 값만 작아진다 — `intentNotional`
+  (`execgw/indoubt.go:545-555`)의 매수가능금액 대조 임계(`:490-495`, 0.5×notional)가 낮아져 「부재 확증」을 더 잘 거절하는 쪽(보수)이다.
+- 로그: a129 청산 주문 줄(`exitOrderLine` 화이트리스트, `exit_order_log.go:85-100`)에 `price_source` 필드 하나를 더한다(값 `lower_limit` · `observed` · `baseline` —
+  `exitOrderTokenPattern` `^[A-Za-z_]{1,64}$` 모양). 줄의 `price` 는 **보낸 가격**으로 맞춘다. 오늘 `exitOrderLineFor`(`:102-114`, B1 `:104`)는 `sellIntent` 의 사다리를 **베껴**
+  가격을 다시 계산한다(`:101` 주석 「지정가는 sellIntent 와 같은 규칙(관측가, 비면 기준선)」). 사본을 그대로 두면 줄은 관측가를 적고 브로커는 하한가를 받는다
+  ([[transcribed-code-needs-both-sides-pinned]]). 그래서 `exitOrderLineFor` 는 사본 사다리 대신 `submit` 의 결정 값(가격 · 출처)을 받는다(편집 대상). `exitOrderLine.args`
+  (`:140-169`, B1 `:161` 체결 줄)에 `"price_source"` 한 쌍을 더하고 `"order_type", "LIMIT"`(`:146`)은 그대로다. `observed_price` · `baseline` 필드는 관측가 · 기준선을 그대로 적는다.
+- 생산 배선: a129 줄의 싱크 `ExitOrderLog` 는 생산에서 엔진 로거로 간다(`cmd/tossctl/engine.go:680`).
+- 3.8 슬리피지 질의(`analysis/exit-slippage-3.8/exit_slippage.sql` — 관측가 vs 체결 평균가)는 무변경으로 쓴다. 「하한가 지정가는 시장가와 거의 같다」의 착지 뒤 증거가 이 질의다.
+
+### (c) 구간별 거동과 위험 (KR)
+
+사용자에게 한 설명의 확인 결과:
+
+| 설명 | 확인 |
+| --- | --- |
+| 접속매매에서 하한가 매도 지정가는 상대 최우선 매수 호가부터 체결되므로 시장가와 거의 같다 | **[미측정]** — 가격 우선 체결(매도 지정가는 그 가격 이상의 매수 호가와 높은 호가부터 체결)은 거래소 매매 제도의 일반 원칙이지만 이 저장소에 규정 원문도, 하한가 지정가의 체결 영수증도 없다(M 계열 0 건). flatten 주석(`liquidate.go:375-376`)은 코드 주석이지 실측이 아니다. 확인 수단: 착지 전 tasks 5.4(사람 결정) · 착지 뒤 3.8 질의 |
+| 하한가는 「이보다 싸게는 안 판다」는 바닥일 뿐이다 | **부분 확인** — openapi 는 `LIMIT` 을 「지정가」로만 정의한다(`:11178`). 「지정가 매도는 그 가격 미만으로 체결되지 않는다」는 문장은 openapi 에 없다 — 지정가의 정의상 성질이지만 문서 근거는 `[미인용]`. 같은 날 가격제한폭 밖에서는 어떤 주문도 체결될 수 없으므로 이 바닥은 시장가 매도의 바닥과 같다(제도 사실 — 저장소 근거 `[미인용]`) |
+| 동시호가 구간에서는 단일가로 체결된다 | **부분 확인** — openapi 달력 스키마가 단일가 구간의 **존재**를 적는다(정규장 안 종가단일가 「KRX 기준」 `:9808`, 프리마켓 시가단일가 `:9773`). 단일가 **체결 방식**은 openapi 에 없다 — `[미측정]` |
+
+| 구간 | 8판 주문 | 거동 · 위험 |
+| --- | --- | --- |
+| 장전 — NXT 프리마켓 · KRX 장전 동시호가 · 장전 시간외 (09:00 전) | 오늘 LIMIT(창 밖) | 무변화 |
+| 정규장 접속매매(09:00~15:20, 평상일) | 하한가 LIMIT | 매수 호가를 위에서부터 쓸어 내린다. 얇은 호가에서는 관측가보다 훨씬 낮게 체결될 수 있다 — 시장가와 같은 성질(D8 「하한가 도달」 행과 별개의 잔존 위험). `[미측정]` |
+| 정규장 종가단일가(15:20~15:30) | 하한가 LIMIT | 단일가 경매에 가장 공격적인 매도로 들어간다 — 경매 가격(≥ 하한가)으로 체결될 것이다. 오늘의 관측가 LIMIT 은 경매 가격이 관측가보다 낮으면 미체결이므로 8판이 더 확실히 나간다. 큰 수량은 경매 가격을 끌어내릴 수 있다. `[미측정]`. 7판이 이 구간을 LIMIT 으로 뺀 이유(MARKET 접수 미측정)는 8판에 없다 — 유형이 이미 LIMIT 이다 |
+| VI 단일가(장중) | 하한가 LIMIT | VI 중에도 가격제한폭 안의 지정가는 받는다는 것은 제도 일반 원칙 — `[미측정]`. 거부되면 되먹임으로 다음 주기 오늘 LIMIT. 7판 P1-1 의 「VI 를 가를 입력이 없다」는 8판에서 판정 입력이 아니다 — 같은 LIMIT 유형이라 VI 여부로 갈래를 나눌 필요가 없다 |
+| 개장 지연일(예: 연초 첫 거래일 · 수능일) 09:00~실제 개장 | 하한가 LIMIT(고정 창은 09:00 부터) | KRX 는 장전 동시호가 중이고 NXT 는 열려 있을 수 있다. 하한가는 그날 범위 안이라 접수돼 경매 · 접속에 참여할 것이다 — `[미측정]`. 거부되면 되먹임. 개장이 늦어 마감도 늦은 날의 15:30 뒤는 창 밖이라 오늘 LIMIT(이득을 덜 얻을 뿐, 약화 아님) |
+| 정규장 후 — NXT 애프터마켓 · KRX 장후 시간외 · 시간외단일가(15:30 뒤) | 오늘 LIMIT(창 밖) | 무변화. **창을 15:30 에서 자르는 이유**: KRX 시간외단일가의 가격 범위는 그날 가격제한폭보다 좁다(제도 — 저장소 근거 `[미인용]`). 거기에 하한가를 내면 openapi 「주문 가격 허용 범위 초과」(`:5800-5805`)로 거부될 수 있다 — 그 칸은 오늘보다 약해진다 |
+| 주말 | 오늘 LIMIT(창 밖 — `Session.Contains` 주말 거름 `clock/market.go:114`) | 무변화 |
+| 평일 휴장일 | 판에 그날 값이 있으면 하한가 LIMIT | 휴장이면 가격과 무관하게 접수 · 체결될 수 없다(openapi 「현재 해당 주문을 접수할 수 없는 시간입니다」 `:5777-5782` 류) — 오늘과 같은 결과. 갱신기가 휴장일 GET 에 무엇을 받는지 `[미측정]`. 거부되면 되먹임 → 다음 주기 오늘 LIMIT(역시 접수 불가 — 오늘과 같다) |
+| 종목 거래정지 · 시장 전체 정지(서킷브레이커 · 사이드카) | 하한가 LIMIT | 가격과 무관한 거부 · 대기 — 오늘과 같다. 거부되면 되먹임 |
+| 하한가 도달 · 매수 호가 공백 | 하한가 LIMIT | 체결 안 됨 — 시장가 · 오늘 LIMIT 과 같다(D8). 잔량은 a167 |
+
+**NXT · SOR**: KR 주문은 투자자지시 거래소가 통합(SOR)이어야 한다(openapi 422 예시 「투자자지시 거래소가 통합(SOR) 으로 설정되어 있어야 주문할 수 있습니다」 `:5840-5845`).
+창 안의 하한가 지정가가 KRX · NXT 중 어디서 체결되는지, `/price-limits` 의 하한가가 NXT 의 허용 범위와 같은지는 `[미측정]` 이다. 다르면 그 주문은 거부되고 되먹임이 1 주기로 묶는다.
+
+### (d) 적용 범위 — KR 만
+
+`lowerLimitPrice` 는 「미국 주식 등 가격제한이 없는 시장에서는 null」(`openapi.latest.json:8577`, 예시 `usStock` `upperLimitPrice: null`)이고, `apiPriceLimits` 주석도
+「US stocks have no daily price limits」(`price_limits_reads.go:19-20`)다. 그래서 US 보호 매도는 오늘 그대로(관측가 LIMIT)이고 갱신기는 US 종목을 읽지 않는다(조건 ②).
+7판 Q2(US 정규장 LIMIT)와 결과가 같다.
+
+### (e) 불변식 판정
+
+- **불변식 3 (엔진 전용 · 토글 OFF = upstream)** — **PASS.** ②`checkOrderShape` · ③`placeIntentSupported` · `trading.Service` · `NewOrderPath` · flatten · CLI · ops · MCP 는
+  **바이트 그대로**다 — 유형이 LIMIT 이라 관문을 열 일이 없다. 엔진 전용 상태는 하한가 판 하나이고 `NewContext` 에서만 만든다(P0-1 규칙 유지). 갱신기는 `engineRuntime` 의
+  보조 실행자로만 산다. 엔진이 꺼지면 `NewContext` 도 `engineRuntime` 도 없으므로 흔적 0.
+- **불변식 4 (손절 즉시성 — 오늘보다 약해지지 않음)** — **조건부 PASS, 사람 확인 1건.**
+  - 제출 경로 GET 0(가격 결정은 메모리 읽기) · 결정 실패 = 오늘 LIMIT(거부 아님) · 새 B5 사유 0 · 갱신기는 관측 주기 밖(보조 실행자, `Run` 무변경).
+  - 오늘보다 나빠질 수 있는 칸은 하나다 — **하한가 가격이 브로커에 거부되는 경우**(낡음 · SOR 범위 차이 · 개장 지연 · VI 중 거동 — 전부 `[미측정]`). 피해는 그 종목 그날 첫 보호
+    매도가 1 주기(5초) 늦는 것이고 되먹임이 그 뒤를 오늘과 같게 만든다. 이 1 주기를 수락할지는 **사람 확인**(`issues.md` D-2 ①). tasks 5.4 실측이 그 칸의 확률을 잰다.
+  - 나아지는 칸: 창 안의 그리드 밖 관측가(245,750 클래스) 거부 소멸, 단일가 구간 미체결 감소.
+- **불변식 6 (손절·익절·사이징은 보수 방향만)** — **PASS(근거 명시).** 손절 수준 · 수량 · 발의 조건은 무변경이다. 바뀌는 것은 보호 매도의 지정가를 더 체결 쪽으로 낮추는
+  것뿐이고, 보호가 실제로 나가는 확률이 오르는 방향이다. 대가는 얇은 호가에서의 체결가 하락(시장가와 같은 성질)이며 그 축은 2026-10-10 시장가 결정과 2026-10-28 D-1 (다)
+  결정이 받아들였다. 익절은 무변경(§0.9).
+
+### (f) 정수 수량(0.10 독립 리뷰 P1-2) — 8판에서 필요 없음
+
+P1-2 의 문제는 「MARKET 자격」이었다 — openapi 는 소수 수량을 US MARKET SELL 에만 허용하고 그 밖(국내 · 지정가 포함)은 `400 invalid-request` 다(`:11197`). 8판은 유형을
+바꾸지 않으므로 KR 보호 매도의 수량 경로는 오늘의 LIMIT 과 바이트 같다 — 소수 KR 수량이 있다면 오늘도 400 이고 8판도 400 이다. 새 약화가 아니다. 그래서 7판의 판정 조건 6 ·
+②③ 정수 backstop · `canonicalProtectionQuantity` 내보내기는 **하지 않는다**(D3 「0.10 독립 리뷰 반영」 P1-2 는 8판에서 대체됨). KR 포지션 수량의 정수 불변(입구 증명)은
+원장 투영 소관이라 이 change 범위 밖으로 남는다(0.10 독립 리뷰 「착수 전 처분」 마지막 문장의 그 부분 — 오늘 동작과 같으므로 차단 아님).
+
+### (g) a165 와의 충돌 재대조 (a165 3판 `bc56522c7` — 코드 0, 미착지)
+
+| 표면 | a087 8판 | a165 3판 | 판정 |
+| --- | --- | --- | --- |
+| `internal/app/engine/exitloop.go` | `submit` 본문(결정 한 번 · 되먹임) · `ExitObserverOptions` 필드 하나 | `clearTheSymbol` FLM 번들(인용 `:1686` · `:1639`, 본문 편집 문장 없음) | 같은 파일 · 다른 함수. a165 가 이 파일을 바꾸면 좌표 · AST 가 낡는다 |
+| `internal/execgw` | **0**(8판에서 `failclosed.go` 편집 소멸) | `gateway.go` dispatch 클로저 · 분류 함수 번들 | 겹침 0 |
+| `internal/trading` · `engine.NewOrderPath` | **0** | `trading.Service.Cancel` 번들 | 겹침 0 |
+| `cmd/tossctl` | `engine.go` `engineRuntime` 의 `Auxiliary` 목록 한 줄 | `flatten.go` `buildFlattenWiring` | 다른 파일. 7판 P2-3 의 「flatten 경계」 의존은 **소멸** — 8판은 flatten 경로에 아무것도 붙이지 않는다 |
+| `internal/flatten` | 0 — 판을 공유하지 않는다(flatten 은 제출 시점 `PriceLimits` GET 을 그대로 쓴다) | saga 취소 409 번들 | 겹침 0 |
+| 행동 | 보호 매도 가격 | 청산 전 취소 409 → 다음 주기 재취소 | 독립. 하한가 지정가가 하한가 도달로 미체결로 남으면 다음 발의 전 `clearTheSymbol` 이 그 주문을 취소한다 — a165 의 409 처리가 그 취소를 돕는다 |
+
+a165 착지 뒤 다시 할 일(8판): ① `enumerate.py` stale 확인 → stale 인 AST 재생성 · 좌표 재기록 ② `clearTheSymbol` 시험과 a087 종단 시험(1.6)이 같은 시험 더블을 쓰면 기대값 대조
+③ gate ⑤ 창의 형제 함수(Manager 처분 P2-3 — archive 번들 복사). 7판 「a165 착지 뒤 할 일」 6(flatten 경계 재대조)은 8판에서 대상이 없다.
+
+a167(잔량 재가격) 교차: 창 안의 첫 제출이 이미 하한가라 그 잔량을 더 낮게 다시 매길 가격이 없다. a167 의 KR 지정가 구간 규칙(「매수 1호가 / 하한가」)은 이 판을 재사용할 수 있다.
+a167 문서 반영은 이 디렉터리 범위 밖 — `issues.md` D-2 ④.
+
+### 착수 시 FLM 대상 (8판 — gate ⑤, 본문을 고치는 기존 함수)
+
+`ExitObserver.submit`(`exitloop.go:1483-1596`) · `exitOrderLineFor`(`exit_order_log.go:102-114`) · `exitOrderLine.args`(`:140-169`) · `NewContext`(`engine.go:437-607`) ·
+`Context.ExitObserver`(`exitwiring.go:319-364`) · `engineRuntime`(`cmd/tossctl/engine.go`) · 바뀌는 기존 시험 함수(시험 파일 포함). HEAD AST 는 `analysis/evidence/` 에 있다 —
+구현 때 그 HEAD 에서 번들(`ast.json` + `function-logic-map.md` + `branch-test-map.md` + `risk-pattern-report.md`)로 다시 만든다. 새 함수(판 · 갱신기 · `exitLimitPrice`)는 새 파일이다.
+**`sellIntent` · `checkOrderShape` · `placeIntentSupported` · `Service.PreviewPlace` · `Service.Place` · `NewOrderPath` · `buildFlattenWiring` 은 8판에서 대상이 아니다**(본문 무변경 —
+시험이 읽기만 한다). 7판 목록(`review.md` 「착수 시 FLM 대상」·「착수 시 FLM 대상 정정」)은 8판에서 대체됨.
+
 ## D1 — 유형은 제안의 성격이 정한다
+
+> **8판에서 대체됨(코드 블록)**: 유형은 바뀌지 않는다 — 보호 제안이 정하는 것은 **가격**이다(D11 (a)·(b) 조건 ①). 「`isProtective` 를 재사용한다」·
+> 「새 술어를 만들지 않는다」·「`isFullExit` 를 쓰지 않는다」·「익절을 안 바꾸는 이유」는 8판에서도 그대로다 — 셋째 소비자는 유형 결정이 아니라 `exitLimitPrice` 다.
 
 `sellIntent`는 지금 유형을 상수로 쓴다. 제안을 인자로 받아 판정한다.
 
@@ -129,6 +322,9 @@ fail-closed 방어다. **B1·B2 는 fail-closed 방어 반환으로 남고, 닫�
 
 ### D2b — 시장가 전환 (실측 §0.7 뒤): 거부의 구조적 소멸
 
+> **8판에서 대체됨**: 8판은 가격을 읽지 않는 갈래를 만들지 않는다. 창 안의 보호 매도는 판의 하한가를 가격으로 쓰고, 그 밖은 오늘의 사다리다 — `sellIntent` B1·B2 는
+> 오늘처럼 남는다(D11 (b) 「가격 결정」). 245,750 사건을 고치는 것은 8판에서 D11 이다.
+
 시장가 경로는 가격을 필요로 하지 않으므로 **보호 제안에서는 이 거부가 도달 불가가 된다.**
 초안 리뷰의 H1이 "새 거부 경로를 만들지 말라"고 한 것의 반대편 — 있던 거부 경로 하나가
 사라진다.
@@ -145,6 +341,11 @@ D2a 는 가격 부재 거부만 다룬다.
 
 ## D3 — 게이트는 축소에 한해서만 연다 (두 관문 — 2026-10-10 개정)
 
+> **8판에서 대체됨 — 관문을 열지 않는다.** 보호 매도가 LIMIT 이므로 ②`checkOrderShape` · ③`placeIntentSupported` · `trading.Service` 옵션 · `NewContext` 의
+> 옵션 부착 · KR 정수 backstop 이 전부 필요 없다(D11 (e)·(f)). 이 절의 ②·③ AST 대조와 「0.10 독립 리뷰 반영」은 7판의 기록으로 남는다. 그대로 유효한 것은
+> 맨 끝 「왜 진입은 계속 막는가」 — 진입 시장가 거부는 8판에서도 바뀌지 않고, 그 고정 시험은 tasks 1.1 이 잇는다. P0-1 의 규칙(엔진 전용 상태는 `NewContext` 에서만)은
+> 8판의 하한가 판 생성 자리에 그대로 적용된다(D11 (b)).
+
 > **개정 (재리뷰 P0-1 · 사용자 결정 2026-10-10)**: 3판의 D3 는 `checkOrderShape`(②) 하나만 다뤘다. 엔진 주문은
 > 그 뒤에 `trading.Service.Place` → `placeIntentSupported`(③)를 지나고, ③은 비분수 비지정가를 `ErrPlaceUnsupported`
 > 로 거부한다. **②만 열면 보호 청산은 100% 로컬 거부된다.** 사용자 결정으로 ③도 같은 모양으로 연다.
@@ -152,7 +353,7 @@ D2a 는 가격 부재 거부만 다룬다.
 > **재개정 (3차 재리뷰 A-P1-1 · 사용자 결정 2차 2026-10-10)**: ③ 개방은 **엔진 인스턴스 한정**이다(아래 ③). CLI·ops·MCP
 > 기본 경로는 upstream 과 바이트 동일. 1차 결정의 「사람 CLI upstream 동작 변경 수용」은 철회됐다.
 
-### ② `checkOrderShape` (`internal/execgw/failclosed.go`, 호출자 `CheckPlace` 1)
+### ② `checkOrderShape` (`internal/execgw/failclosed.go`, 호출자 `CheckPlace` 1) — 8판에서 대체됨(무변경)
 
 ```go
 if orderType != "limit" {
@@ -195,7 +396,7 @@ buy  + market       → 거부 (현행 유지)
 침묵한 생략은 없다. **→ 정해짐(0.10 독립 리뷰 P1-2)**: 「브로커 400 위임」은 철회한다. KR 정수 수량은 MARKET 자격 조건이고 두 관문에
 backstop 을 둔다 — 아래 「0.10 독립 리뷰 반영」 P1-2.
 
-### ③ `placeIntentSupported` (`internal/trading/service.go`, 비시험 호출자 `PreviewPlace`·`Place`) — 엔진 인스턴스 한정
+### ③ `placeIntentSupported` (`internal/trading/service.go`, 비시험 호출자 `PreviewPlace`·`Place`) — 엔진 인스턴스 한정 — 8판에서 대체됨(무변경)
 
 ```go
 // 비분수 주문 (재리뷰 인용, 검증 필요 — AST 미작성: task 1.5.1)
@@ -274,7 +475,7 @@ func placeIntentSupported(intent orderintent.PlaceIntent, protectiveMarketSell b
   `m.position.Market` 을 그대로 싣는다. 오늘 LIMIT 보호 청산이 ③ 을 지나므로 생산 값은 소문자다 — 새 판정(D7 「구간 입력」 조건 1)은 `clock.ParseMarket`
   으로 정규화하고, 실패는 LIMIT 이다.
 
-### 0.10 독립 리뷰 반영 (2026-10-28, HEAD `3e9989f61`) — 엔진 전용 배선(P0-1) · KR 정수 수량(P1-2)
+### 0.10 독립 리뷰 반영 (2026-10-28, HEAD `3e9989f61`) — 엔진 전용 배선(P0-1) · KR 정수 수량(P1-2) — 8판에서 대체됨(P0-1 규칙은 판 생성 자리에 승계, P1-2 는 D11 (f))
 
 근거 AST 는 `analysis/evidence/` 에 새로 만든 다섯(`engine--newcontext` · `tossctl--buildflattenwiring` · `execgw--canonicalprotectionquantity` ·
 `official--buildordercreate` · `engine--floatof`)과 기존 `engine--neworderpath` · `execgw--checkordershape` · `engine--exitobserver.submit` ·
@@ -343,6 +544,10 @@ path.Trading.WithProtectiveMarketSell() // 엔진만 — flatten-all 은 NewOrde
 
 ## D4 — 원장이 무엇을 기록하는가
 
+> **8판에서 대체됨(가격 칸)**: 8판의 `intents.price` 는 비지 않는다 — 보낸 가격(창 안 보호 매도면 하한가, 그 밖이면 오늘의 관측가 · 기준선)이다. 아래 「원장은 실제로
+> 보낸 것을 적어야 한다」는 원칙은 그대로이고 그 원칙의 8판 적용이 D11 (b) 「기록」이다. 「화면은 `—`가 아니라 "시장가"」 요구(tasks 3.4)는 생산할 가격 없는 청산이 없어
+> 8판에서 대상이 없다.
+
 시장가는 제출 시점에 가격이 없다. 원장의 `intents.price`는 빈 문자열이 된다.
 
 **이것이 정보 손실처럼 보이지만 아니다.** 지금 그 칸에 들어가는 값은 관측가이고, 그것은
@@ -359,6 +564,10 @@ path.Trading.WithProtectiveMarketSell() // 엔진만 — flatten-all 은 NewOrde
 화면·알림은 빈 값을 결측으로 그리면 안 된다. `—`가 아니라 "시장가"다.
 
 ## D5 — StockOS 대조 (승계와 미승계)
+
+> **8판 정정(첫 행 판정)**: 8판의 a087 1차 보호 매도는 **하한가 지정가**다. StockOS 1차 손절도 LIMIT 이지만 가격 규칙이 다르므로(StockOS 는 0.5% 초과 이탈 · EOD 에서만
+> MARKET) 첫 행은 여전히 **이탈**이다 — 근거는 사용자 결정(2026-10-28 D-1 (다))이고 StockOS 는 근거가 아니다. 「US = MARKETABLE_LIMIT」 행 아래의 「양 시장 모두
+> MARKET으로 간다」는 7판에서 이미 철회됐고(Q2) 8판에서도 US 는 오늘 LIMIT 이다.
 
 > **정정 (재리뷰 P1-2 · 2차 리뷰 C2)**: 3판의 첫 행은 「KRX 긴급 청산 = MARKET → **승계**」였다. StockOS 의 평범한
 > 손절 1차 제출은 LIMIT 이고 MARKET 은 0.5% 초과 이탈·EOD 에스컬레이션에서만 쓰인다(`_apply_exit_order_style`).
@@ -381,6 +590,11 @@ StockOS가 US에 marketable limit을 쓰는 것은 `protective_order_capability`
 `[미측정 — US MARKET 매도 실주문 없음]` — 이 한계의 처분은 proposal What Changes §1 「US 한계」.
 
 ## D6 — 거래소 하한가 지정가 원안 (미채택 기록 — 재리뷰 P1-3, 3차 A-P2-3 정정)
+
+> **8판에서 채택됨 (사람 결정 2026-10-28 「3은 3」 — `issues.md` D-1 (다))**. 아래 「미채택」 처분과 그 사유는 7판까지의 기록이다. 표의 두 칸은 8판 설계가 고쳤다 —
+> 「브로커 호출: 보호 청산마다 `PriceLimits` GET 1회」 → **제출 경로 GET 0**, 백그라운드 판(종목당 하루 1 GET — D11 (b)). 「시간외단일가: 가격 범위 밖일 가능성」 →
+> **창 밖이라 오늘 LIMIT**(D11 (c)). 원안의 범위는 「KR 정규장 보호 청산의 가격 = 그날 하한가」로 확정됐다(D11 (a)). I-R3(bps 재비교)는 비교 대상(MARKET)이 없어져
+> 3.8 질의가 「하한가 지정가 vs 관측가」 체결 품질 기록으로만 남는다.
 
 **원안은 평가된 적이 없다.** 2026-08-06 2차 리뷰 C3·「3차 교정 방향」 2 는 보호 청산의 가격으로 **거래소 하한가
 지정가**를 쓰라고 했다(`flatten` 이 이미 그렇게 한다 — `internal/flatten/liquidate.go` 「The exchange's own floor」).
@@ -415,6 +629,13 @@ A-P2-3: 4판은 「기각 (사용자 결정)」이라 적었으나 사용자 결
 
 ## D7 — 세션 교집합: MARKET 불가 ∩ LIMIT 금지 = 제출 불가 (재리뷰 P1-4)
 
+> **8판에서 대체됨 — 세션 교집합 문제는 생기지 않는다.** 8판에는 MARKET 칸이 없어 「MARKET 불가 ∩ LIMIT 금지」 구간이 없다. 이 절의 처분 표 · 「구간 입력」(브로커 달력 +
+> 고정 시각 · 판정 조건 1~6 · 스냅숏 형) · 「KRX 단독 판정 입력 조사」는 7판의 기록으로 남는다. 8판에서 쓰는 것은 셋뿐이다 — ① 0.5 의 사실(엔진에 세션 게이트 없음 →
+> 시각 입력을 새로 배선해야 한다) ② 「즉시성 제약」의 원칙(제출 경로 GET 0 · 판정 실패 = 오늘 LIMIT · 갱신은 관측 주기 밖) ③ 고정 시각 술어 `clock.MarketKR.InRegularSession`
+> (AST `clock--market.inregularsession` 등). **브로커 달력은 8판에서 읽지 않는다** — 하한가 지정가는 휴장 · 조기 폐장 · 개장 지연 · VI 에서도 같은 LIMIT 유형이라 그 날을
+> 가를 필요가 없고, 가격이 틀린 경우는 되먹임이 묶는다(D11 (c)·(b)). 그래서 `official.MarketCalendarSession` 형 확장 · `scheduler` 대조 · 달력 갱신은 하지 않는다.
+> §5.2 처분(not-applicable)은 그대로다 — 8판에는 정규장 밖 MARKET 이 없다.
+
 spec Requirement 1 은 보호 청산의 지정가를 **금지**한다(SHALL NOT). 브로커가 MARKET 은 받지 않고 LIMIT 은 받는
 구간에서는 두 조건의 교집합으로 보호 청산의 **제출 가능성이 0** 이 된다:
 
@@ -440,7 +661,7 @@ spec Requirement 1 은 보호 청산의 지정가를 **금지**한다(SHALL NOT)
 - tasks 2.4 의 「보호 제안일 때 가격을 읽지 않는다」는 그 구간에서 LIMIT 가격이 필요하므로 무효가 된다.
 - 엔진이 그 구간에 판정하지 않음이 확인되면 교집합은 공집합이고 위 두 줄은 유지된다.
 
-### 처분 (사용자 결정 2026-10-22) — 시장가를 받지 않는 구간은 오늘처럼 지정가
+### 처분 (사용자 결정 2026-10-22) — 시장가를 받지 않는 구간은 오늘처럼 지정가 — **8판에서 대체됨**(8판의 폴백 칸 = 「오늘처럼 지정가」 원칙은 승계)
 
 입력 둘이 나왔다. ① tasks 0.5(2026-10-20, `analysis/gate-0.5-session-inputs.md`): 청산 판정 상류 AST 12개에서 **세션 입력 0 ·
 시각 입력 40(전부 경과 시간)** — 엔진에 세션 게이트가 없다. 정규장 밖에도 시세가 오면 판정·제출 시도가 일어난다. 그래서 위
@@ -486,7 +707,7 @@ base `102d4e99` 산출물. HEAD `0c9bfd272` AST `analysis/evidence/engine--exito
 입력**을 새로 배선해야 한다. ~~이 입력의 출처는 이 문서가 정하지 않는다.~~ 출처는 7판에서 정해졌다(아래 「구간 입력」, Q3).
 `sellIntent` 시그니처에 시각 또는 구간 인자가 더해지면 2.1 FLM 의 분기 집합이 바뀐다. 그래서 2.1·2.6 은 같은 로트에서 재생성한다.
 
-### 구간 입력 (7판 — 사용자 결정 2026-10-28 Q3)
+### 구간 입력 (7판 — 사용자 결정 2026-10-28 Q3) — **8판에서 대체됨**(D7 머리말 · 브로커 달력을 읽지 않는다)
 
 **출처 = 브로커 시장 달력 + 고정 시각.** 달력 읽기는 `official.Client.TypedMarketCalendar`(`internal/official/typed_calendar_reads.go:37`)이고,
 엔진 진입 쪽 `strategyScheduleAuthorityLoader.prepare`(`strategy_schedule_authority.go:220`)가 이미 같은 함수를 부른다. **달력 오류·결측이면 LIMIT.**
@@ -571,7 +792,9 @@ base `102d4e99` 산출물. HEAD `0c9bfd272` AST `analysis/evidence/engine--exito
 조기 폐장 뒤 MARKET 이 나갈 수 있다 — 그 시각 MARKET 이 거부되면 오늘보다 약하다. ② 정규장 칸 안의 종가단일가(15:20~15:30)와 VI 단일가는 §5.1
 (14:59 접속매매) 밖이다 — 종가단일가는 LIMIT 으로 뺐고(위 표), VI 단일가는 예측 입력이 없어 D8 잔존 행이다.
 
-### KRX 단독 판정 입력 조사 (0.10 독립 리뷰 P1-1, 2026-10-28) — **사람 결정 대기**
+### KRX 단독 판정 입력 조사 (0.10 독립 리뷰 P1-1, 2026-10-28) — **사람 결정됨 2026-10-28 (다) → 8판에서 대체됨**
+
+> 이 조사가 D-1 의 입력이었다. 결정 (다)로 KRX 단독 「정상 접속매매」를 증명할 필요가 사라졌다 — 8판의 창 안 보호 매도는 KRX 상태와 무관하게 같은 LIMIT 유형이다(D11 (c)).
 
 조사 범위: `docs/migration/openapi.latest.json`(경로 목록 전수 · 스키마 전수에서 KRX·NXT·정지·VI·status 검색)과 저장소 Go 형. 브로커 호출 0.
 
@@ -600,6 +823,10 @@ base `102d4e99` 산출물. HEAD `0c9bfd272` AST `analysis/evidence/engine--exito
 
 ## D8 — 시장가가 지정가보다 낫지 않거나 나빠지는 경계 조건 (재리뷰 P2-3)
 
+> **8판 읽기**: 아래 표의 「MARKET」을 「하한가 지정가」로 읽는다 — 하한가 도달 · 매수 호가 공백 · 갭다운 · 거래정지 행은 같은 처분이다. VI · 종가단일가 행은 8판에서
+> D11 (c) 구간 표가 대신한다(유형이 LIMIT 이라 접수 미측정 사유가 없다). 1억 이상 행: 지정가 금액이 하한가 × 수량이라 관측가 기준보다 작다 — 브로커가 그 금액으로
+> `confirm-high-value-required` 를 판정하는지는 `[미측정]`(그렇다면 오늘보다 덜 거부된다). 부분체결 잔량은 a167(D10).
+
 | 경계 조건 | 처분 | 사유 |
 | --- | --- | --- |
 | 하한가 도달·매수 호가 공백 | **범위 밖 — 잔존 위험** | MARKET 매도도 체결되지 않는다. 하한가 지정가 대비 이득 0. 체결 보장 주장 철회(proposal §0.3)가 이 행의 기록 |
@@ -610,6 +837,8 @@ base `102d4e99` 산출물. HEAD `0c9bfd272` AST `analysis/evidence/engine--exito
 | 갭다운·거래정지 | **범위 밖 — 잔존 위험** | 접수 ≠ 체결. 거래정지 중 제출 응답 `[미측정]` |
 
 ## D9 — a100 D8 이중 매도 계약과의 상호작용 (재리뷰 P2-4 — a100 으로 명시 이연)
+
+> **8판 읽기**: 창 안의 하한가 지정가는 즉시 체결 가능한(시장성 있는) 매도라 아래 「인프로세스 보호 매도가 MARKET 이 되면 즉시 체결」의 의미가 그대로 적용된다. 처분(a100 이연)은 같다.
 
 a100 design D8 은 계약 1 을 「a087 Phase 2 가 착지하면 창은 줄어든다」로 개정해 a087 을 전제로 삼았고, 계약 2 는 「상주
 조건주문 취소 확인 실패는 인프로세스 매도를 막지 않는다」이다. 인프로세스 보호 매도가 MARKET 이 되면 즉시 체결되고,
@@ -622,6 +851,9 @@ a087 은 이 상호작용을 바꾸는 코드를 갖지 않는다(조건주문 �
 이 개정의 디렉터리 범위 밖이다 — `issues.md` I-R5 에 Manager 반영 요청으로 남긴다.
 
 ## D10 — 비종결 잔량의 자동 재가격·재주문은 새 change a167 이 소유한다 (사용자 결정 2026-10-22, I-R9)
+
+> **8판 읽기**: 아래 「a167 의 재제출 유형은 D7 의 구간 표를 따라야 한다」는 8판에서 「D11 (a) 표를 따른다」로 읽는다. a167 의 「구간 입력(tasks 2.6) 뒤 착지」 선행 조건은
+> 8판에서 「하한가 판(tasks 2.3·2.4) 뒤」가 된다 — a167 문서 반영은 범위 밖(`issues.md` D-2 ④).
 
 Manager 질문 「남은 잔량 경보. 권장: 가격을 자동으로 다시 정해 재주문」에 사용자가 그 권장대로 답했다. 고른 것은 **경보만이 아니라
 자동 재가격·재주문**이다. 이것은 청산 경로에 새 주문 행동(취소 → 재제출 또는 정정)을 더하는 High-risk 변경이다. a087 의 범위
@@ -637,6 +869,10 @@ a087 이 남기는 것:
 
 ## 건드리지 않는 것
 
+- **(8판) 실행 관문 ②·③ · `internal/trading` · `engine.NewOrderPath` · `buildFlattenWiring` · CLI · ops · MCP.** 유형이 LIMIT 이라 열 것이 없다(D11 (e))
+- **(8판) `sellIntent` 본문.** 결정 가격이 인자로 들어갈 뿐 사다리 · 거부 갈래는 바이트 그대로다(D11 (a))
+- **(8판) 브로커 달력 · `official.MarketCalendarSession` · `scheduler.CalendarDay`.** 7판의 구간 입력은 대체됐다(D7 머리말)
+- **(8판) 원장 schema.** `intents.price` 는 보낸 가격 그대로, 출처는 a129 줄에만(D11 (b))
 - **진입 주문 유형.** riskcalc 규칙이 실제로 적용되는 곳
 - **`flatten`.** 이미 거래소 하한가를 1순위로 쓴다(`liquidate.go` 「The exchange's own floor」). 무변경. 하한가를 보호 청산에
   쓰는 원안은 D6(미채택 기록)
@@ -645,6 +881,25 @@ a087 이 남기는 것:
 - **호가 그리드 정본화.** **무소유**(옛 표기 「a088」은 존재한 적 없다 — 3차 재리뷰 A-P3-1, proposal Non-goals)
 
 ## 검증
+
+### 8판 검증 (정본)
+
+- **가격 결정 표**(`exitLimitPrice` 단독, 시계 · 판은 시험 더블): 창 안 보호 2종 + 유효 판 → 하한가 · `lower_limit` / 익절 → 관측가(판 무시) / US → 관측가(판에 값이 있어도) /
+  창 밖(08:59:59 · 15:30:00 · 주말 · 시간외) → 오늘 사다리 / 판 nil · 그날 항목 없음 · 전날 항목 · 하한가 0 · 하한가 > 관측가 · 관측가 파싱 불가 · 그날 거부됨 · 시장 문자열 판정 불가 →
+  오늘 사다리 / 관측가 빔 → 기준선 · `baseline` / 둘 다 빔 → `""`(오늘의 B2 거부를 받음)
+- **`PlaceIntent` 골든**: 폴백 행 전부의 `PlaceIntent` 가 편집 전 HEAD 의 `sellIntent` 출력과 같다 — 골든은 RED 커밋에 literal fixture 로 먼저 커밋(0.10 독립 리뷰 P2-2 승계,
+  바뀐 함수끼리 비교 금지). 하한가 행은 유형 `limit` · 가격 = 판 값 · 수량 · 통화가 오늘과 같다
+- **제출 경로 GET 0**(호출 계수 더블) · **결정이 `submit` B5 에 닿지 않음**(판 미준비 행) · 판 교체와 결정의 경합(`-race`)
+- **거부 되먹임**: 하한가 주문이 B13 으로 거부 → 다음 주기 발의가 오늘 LIMIT 으로 나감(엔진 종단) · B7/B8/B10/B11 에서는 적지 않음
+- **갱신기**: 창 밖 GET 0 · KR 만 · 그날 항목 있으면 다시 안 읽음 · 한 주기 상한 5 · 첫 오류에서 멈춤 · 입력 없으면 취소 대기 · 감독 밖(결함이 `exit` 루프를 멈추지 않음)
+- **배선**: 판 생성 자리가 비시험 코드에서 `NewContext` 하나뿐(함수 단위 AST 계수 — `NewOrderPath` · `buildFlattenWiring` · `app.go` · `mcp.go` 0) · `Context.ExitObserver` 가 덮음 ·
+  `engineRuntime` 의 `Auxiliary` 에 갱신기
+- **기록**: a129 줄 `price` = 보낸 가격 · `price_source` 3값 · `observed_price` 는 관측가 그대로 / `intents.price` = 보낸 가격
+- **관문 무변경 고정**: 하한가 LIMIT 보호 매도가 ②·③ 의 limit 갈래로 통과해 전송 계층에 닿음(종단) · 비분수 `sell+market` · `buy+market` 은 엔진 인스턴스에서도 계속 거부
+- `flatten` · `verifylive` · 조건주문 무변화(4.1~4.3 기존 핀) · upstream 상속 시험 green · 전체 `go test ./... -race` 는 사용자 명시 요청 시에만
+- **실계좌**: 하한가 지정가 매도 1주 접수 · 체결가 기록(tasks 5.4 — 사람 결정, 사람 터미널)
+
+### 7판까지의 검증 (8판에서 대체됨 — 기록)
 
 - `sellIntent` 분기: 보호 2종 → market·익절 → limit·시장가에 가격 없음·**보호가 가격
   없음으로 거부되지 않음**(MARKET 구간) · **D7 LIMIT 구간·구간 판정 불가에서 보호 2종 → 오늘과 같은 limit**(7판: US 정규장 포함 ·

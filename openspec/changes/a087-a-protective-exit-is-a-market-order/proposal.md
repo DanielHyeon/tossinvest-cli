@@ -1,4 +1,4 @@
-# a087 · 보호 청산은 시장가 주문이다
+# a087 · 보호 청산은 그날 하한가 지정가다 (8판 — 1~7판: 시장가)
 
 - **Feature**: `FEAT-TOS-009` — Exit line truth and position policy lifecycle
 - **Story**: `STORY-TOS-a087`
@@ -47,6 +47,14 @@
 >
 > **0.10 독립 리뷰 (2026-10-28, FAIL → 보완)**: 그 한 칸을 증명할 KRX 단독 입력(개장 시각·시장 전체 정지, GET 0 아래의 종목 정지·VI)이 없다 —
 > 그대로면 KR 도 LIMIT 이 되어 Phase 2 의 실제 변경이 0 이다. 범위 재정의는 **사람 결정 대기**(`issues.md` D-1). 엔진 전용 배선·KR 정수 수량은 design D3 에서 닫았다.
+>
+> **8판 (사람 결정 2026-10-28 「3은 3」 — `issues.md` D-1 (다))**: 보호 청산 매도는 **시장가가 아니라 그날 거래소 하한가로 낸 지정가**다. 2026-10-10
+> 「시장가 방향」 결정을 대체한다. 범위: **KR** 보호 제안(`BASELINE_BREACH`·`STOP_LOSS_LADDER`)이 **KRX 정규장 고정 창(평일 09:00~15:30 KST)** 안이고 엔진 메모리에
+> 그 종목의 그날 하한가가 유효하게 있을 때만 그 가격을 쓴다. 그 밖(창 밖 · 하한가 결측 · 낡음 · 그날 거부됨 · US · 익절)은 **오늘과 같은 관측가 지정가**다. 유형이 LIMIT 이라
+> 실행 관문 ②·③ · `internal/trading` · `NewOrderPath` 는 **무변경**이고 7판의 P0-1 · P1-1 · P1-2 는 문제 자체가 사라진다. 하한가는 이미 있는 `PriceLimits` 읽기
+> (`/api/v1/price-limits`)를 엔진 보조 실행자가 정규장 중 종목당 하루 1회 읽어 메모리 판에 두고, 제출 경로는 판만 읽는다(GET 0). 하한가 주문이 거부되면 그 종목은
+> 그날 오늘의 지정가로 돌아간다(지연 상한 1 관측 주기). 설계 정본 design **D11**, spec delta 3 Requirement 교체, tasks §1~§3 재편. 0.10 은 **8판 재리뷰 대기**.
+> 아래 본문(Why 이하)의 「시장가」 서술은 1~7판 기록이다 — 8판에서 바뀐 절에는 머리말을 달았다.
 
 ## Why
 
@@ -204,6 +212,9 @@ reader 인터페이스에 선언된 `PriceLimits`(reads.go:72, 비시험 호출�
 
 ### 1. Phase 2 — 보호 청산의 주문 유형을 시장으로 결정한다 (착수 조건: §0.7 실측)
 
+> **8판에서 대체됨**: 유형은 LIMIT 그대로이고 KR 정규장 창 안의 보호 매도 **가격**이 그날 하한가가 된다(design D11 (a)). 아래 표의 KR 칸은
+> 「하한가 LIMIT(창 안 · 판 유효) / 오늘 LIMIT(그 밖)」, US 칸은 「오늘 LIMIT」으로 읽는다. 익절 행 · §0.9 문단은 그대로다.
+
 `sellIntent`가 유형을 하드코딩하지 않고 **제안의 성격과 시장**으로 정한다.
 
 | 제안 | KR | US |
@@ -229,6 +240,8 @@ SINGLE+MARKET 등록 실측이라 `/api/v1/orders` MARKET 접수의 증거가 �
 
 ### 2. 게이트를 축소 주문에 한해 연다 — 두 관문 (②·③)
 
+> **8판에서 대체됨 — 관문을 열지 않는다.** 하한가 지정가는 오늘의 limit 갈래로 ②·③ 을 지난다. 이 절의 개방 · 엔진 인스턴스 옵션은 하지 않는다(design D3 머리말 · D11 (e)).
+
 `checkOrderShape`(②)와 `placeIntentSupported`(③ — 엔진 인스턴스 한정)의 `orderType != "limit"` 거부에 **축소(매도)
 시장가·가격 없음** 분기를 추가한다. **비분수** 진입(매수) 시장가는 두 관문 모두 계속 거부한다 — 그것이 riskcalc의 실제
 규칙이고 노출 평가가 없다. (US 분수 시장가 매수 — 금액 기반 — 는 오늘처럼 기존 fractional 분기가 통과시킨다. 무변경.)
@@ -245,6 +258,9 @@ side == "buy"  && orderType == "market"                → 거부 (현행 유지
 
 ### 3. 원장이 잃는 것을 명시한다
 
+> **8판에서 대체됨**: 원장은 아무것도 잃지 않는다 — `intents.price` 는 보낸 가격(하한가 또는 오늘의 값)이고, 가격 출처는 a129 청산 주문 줄의 `price_source` 에 남는다
+> (design D11 (b) 「기록」). schema 무변경.
+
 시장가는 제출 시점에 가격이 없다. 원장의 `intents.price`는 비고, 체결가는 체결 조회로
 확정된다. **그것이 정직한 기록이다** — 지금은 "받을 것으로 기대한 가격"을 적고 있고,
 그 값은 체결가가 아니며, 위 5건은 아예 주문이 되지도 못했다.
@@ -252,6 +268,12 @@ side == "buy"  && orderType == "market"                → 거부 (현행 유지
 관측·화면이 가격 없는 청산 의도를 표시할 수 있어야 한다.
 
 ## Impact
+
+> **8판 Impact**: **Specs** — `order-execution` ADDED 3 을 교체(국내 정규장 보호 청산 = 하한가 지정가 · 관문 무변경 · 지정가 출처 기록). **Code** —
+> `internal/app/engine/exitloop.go`(`submit` 본문 · `ExitObserverOptions` 필드), 새 파일 `internal/app/engine/exit_lower_limit.go`(판 · 갱신기 · 가격 결정),
+> `exit_order_log.go`(`exitOrderLineFor` · `exitOrderLine.args`), `engine.go`(`NewContext` 판 한 줄), `exitwiring.go`(`Context.ExitObserver`), `cmd/tossctl/engine.go`
+> (`engineRuntime` 보조 실행자 한 줄). **무변경**: `execgw/failclosed.go` · `internal/trading` · `NewOrderPath` · flatten · CLI · ops · MCP · 달력. **Schema** — 없음.
+> **§0.4** — 관측 루프 무변화, 보조 실행자가 정규장 중 KR 보유 종목당 하루 1회 `GET /api/v1/price-limits`(`MARKET_DATA`, 주기당 상한 5). 아래 7판 Impact 는 기록이다.
 
 - **Specs**: `order-execution` (ADDED 3 — 보호 청산의 주문 유형, 축소 시장가의 게이트
   통과, 가격 없는 청산 의도의 원장·화면). **Phase 1 은 델타에 기여하지 않는다** — 하한가
@@ -311,3 +333,6 @@ side == "buy"  && orderType == "market"                → 거부 (현행 유지
    → 0.5(2026-10-20)가 엔진에 세션 게이트가 없음을 AST 로 확인했고, D7 처분은 사용자 결정 2026-10-22 로 정해졌다(6판). ~~§5.2 는 여전히
    측정 대상이다~~ → **7판: §5.2 는 not-applicable**(2026-10-28 Q4 — 모름은 LIMIT 으로 고정됐고 실측은 다음 세션 체결 위험만 남긴다. design D7 「§5.2 처분」)
 3. **US** — 실측 없음. ~~한계는 위 What Changes §1 「US 한계」~~ → 7판: US 보호 청산은 실측 전까지 LIMIT(Q2)이라 미측정 착지 위험이 없다
+4. **(8판) KR 하한가 지정가 매도 1주** — 정규장 접속매매 중 그날 하한가로 LIMIT SELL 1주(사람 CLI `tossctl order place` 지정가 경로 — upstream 그대로라 새 도구 불요).
+   하한가 가격의 접수(호가 단위 · 허용 범위)와 체결가 vs 매수 1호가를 잰다. 이 저장소에 하한가 지정가 영수증은 0 건이다. 착수 조건인지 착지 전 조건인지는 사람 결정
+   (`issues.md` D-2 ②, tasks 5.4)

@@ -1,0 +1,86 @@
+{
+  "file": "internal/official/price_limits_reads.go",
+  "source_sha256": "c7331f5b21e8ba4363c089b6afa3bcc765487ef9c8fa73cee5324458fe646f99",
+  "package": "official",
+  "function": "PriceLimits",
+  "receiver": "Client",
+  "signature": "Client.PriceLimits(params=2, results=2)",
+  "start": {
+    "line": 31,
+    "column": 1
+  },
+  "end": {
+    "line": 39,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 35,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 36,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 38,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 2
+      },
+      "text": "q.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 12
+      },
+      "text": "c.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 9
+      },
+      "text": "adaptPriceLimits"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 32,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 35,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

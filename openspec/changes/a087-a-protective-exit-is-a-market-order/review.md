@@ -842,3 +842,23 @@ Function Logic Map: not-applicable — 이 독립 리뷰와 Manager 처분 기�
    bundle 복사는 gate 작업량 처분이지 이 의미 충돌의 증거가 아니다.
 
 Function Logic Map: not-applicable — 이 처분은 문서만 바꿨다. 분기 주장은 `analysis/evidence/` AST 25개(HEAD `3e9989f61`, stale 0)에서만 인용했고, 호출 자리 수는 `rg` 와 AST 로 셌다.
+
+## 8판 개정 (2026-10-28, 사람 결정 D-1 (다) 「3은 3」) — **독립 재리뷰 대기**
+
+OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서와 `tools/logic-map` AST 만 다뤘다 — 소스 · 시험 편집 0, 시험 · gate 실행 0, 브로커 · 계좌 · 운영 접근 0.
+새 AST 11개를 HEAD `1f4145c77`(origin/main `4b67dd6a9` 위)에서 만들었고 `enumerate.py` 로 36개 전부 stale 0 을 확인했다.
+
+| 0.10 독립 리뷰 발견 | 8판에서 | 재리뷰가 판정할 것 |
+| --- | --- | --- |
+| P0-1 `NewOrderPath` 는 엔진 전용이 아니다 | **소멸** — `trading` 옵션 없음. 규칙(엔진 전용 상태는 `NewContext` 에서만)은 하한가 판 생성 자리에 승계, tasks 1.2 구조 시험 | 판 생성 · 갱신기 등록이 엔진 밖으로 새지 않는가 |
+| P1-1 KRX 접속매매를 증명할 입력이 없다 | **소멸** — 유형이 LIMIT 이라 KRX 상태로 갈래를 나누지 않는다. 고정 창 `InRegularSession` 만 쓰고, 하한가 거부는 되먹임이 1 주기로 묶는다 | design D11 (c) 구간 표와 (e) 불변식 4 「1 주기」 칸이 맞는가 · 15:30 창 끝 |
+| P1-2 KR 정수 수량 | **소멸** — 수량 경로가 오늘의 LIMIT 과 같다 | design D11 (f) |
+| P2-1 B5 · 캐시 미준비 | **승계** — `exitLimitPrice` 총함수 · 불변 스냅숏 · 판 미준비 = 오늘 LIMIT | D11 (b) 「가격 결정」 |
+| P2-2 LIMIT 골든 · 변이 축 | **승계** — 폴백 행 literal 골든 선커밋, 변이 13종(tasks 2.7) | tasks 2.2 · 2.7 |
+| P2-3 a165 · flatten builder | **소멸** — 8판은 flatten 경로에 아무것도 붙이지 않는다. a165 재대조는 D11 (g) | D11 (g) |
+| P3-1 1억 이상 · 하한가 공백 | 유지 — D8 잔존(8판 읽기 머리말) | — |
+
+새로 판정받을 것: ① 거부 되먹임(B13 만, 출처가 하한가일 때만)이 「하한가 값이 틀린 모든 경우」를 덮는가 ② 하한가 ≤ 관측가 검사 · 같은 날 검사 · 정규장 중에만 읽기가 신선도 근거로 충분한가
+③ `exitOrderLineFor` 사본 사다리 제거(결정 값 한 번) ④ 갱신기의 `MARKET_DATA` 공유 ⑤ 사람 확인 4건(`issues.md` D-2). 착수 시 FLM 대상은 design D11 「착수 시 FLM 대상」이 대체한다.
+
+Function Logic Map: not-applicable — 문서 개정만 했다. 분기 주장은 `analysis/evidence/` AST 36개에서만 인용했다.
