@@ -3,7 +3,7 @@
 - Source: `internal/execgw/gateway.go` (802-838)
 - Qualified function: `Gateway.checkSymbolFree`
 - Revision: `current` (a165 base `34e12967e`, `source_sha256` c304e32a62e42759…; GREEN 뒤 AST 재추출 2026-10-29)
-- AST evidence: `ast.json` — AST branches 10, 반환 9, 호출 10(`go run ./tools/logic-map`, 2026-10-29). 1.3의 기존 분기 7개 뒤에 latch 읽기/거절 분기 3개가 추가됨.
+- AST evidence: `ast.json` — AST branches 10, 반환 9, 호출 10(`go run ./tools/logic-map`, 2026-10-29). 1.3의 기존 B1~B7 뒤에 latch 읽기/거절 B8~B10이 추가됨.
 - Risk scan: `risk-pattern-report.md`
 - 실행 칸 측정: 2.1 Pre-Edit에서 기준선을 기록했고, A165 GREEN은 B3·B8~B10의 경로를 실행함. 기존 오류 주입 경로는 이번 범위에서 미측정으로 남김.
 

@@ -376,3 +376,29 @@ R3-1의 `attempt_transitions.id` 순서 비교와 NULL fail-closed는 맞다. �
 - 정적 확인: HEAD `2528e7491`; D11/D12·delta·tasks·issues·3차 처분, 지정 journal/execgw/engine source와 evidence AST를 읽어 대조했다. 소스 SHA-256 일치 확인.
 - `ai-memory-retrieval`: CLI 검색과 Hindsight recall에 a165 직접 근거 없음. `search-first`: 기존 저장소 코드·시험·evidence를 우선 대조했고, 새 기능·의존성·통합을 만들지 않아 외부 채널 N/A. `impeccable: N/A — backend/documentation-only`.
 - 지시상 소스·시험 편집·시험 실행·운영 콘솔·docker·원장·주문·mutating 명령 0. `openspec validate`, `check_analysis.py`, `make sdd-sync`, `make gate`도 실행하지 않았다.
+
+## 구현 리뷰 (2026-10-29, 중단)
+
+**FAIL — P2 1건.** `D5`의 두 시간원천 요구가 주문 실행 경로의 단일 주입 `Clock` 불변식과 모순하므로, High-risk 구현을 더 진행하지 않는다. 3.2·3.3 완료 표시는 하지 않는다.
+
+### 발견
+
+| 심각도 | 위치 | 근거 | 처분 |
+|---|---|---|---|
+| P2 FIXABLE | `internal/execgw/cancel_refusal.go:50-67` | 창 판정은 `g.clk.Now()`·`g.clk.Since()`인데 `winCtx` deadline은 별도 `time.Now()`로 만든다. `internal/clock/clock.go:3-14`는 주문 제출 창을 포함한 모든 시간 판정을 주입 `Clock` 하나로 하며 실행 경로의 직접 `time.Now()`를 금지한다. 반면 D5 98·103·105~106은 `wallStart := time.Now()`와 `context.WithDeadline`의 실시간 마감을 요구한다. Fake clock으로 8초를 넘겨도 wall deadline은 남고, wall deadline만 만료돼도 fake clock 창은 남는 두 계약이 생긴다. | Manager가 D5를 주입 `Clock` 단일 계약으로 고칠지, 명시적·시험 가능한 예외를 둘지 결정해야 함. 결정 전 코드·시험을 고치지 않음. |
+| P2 INVESTIGATE | `internal/execgw/gateway.go:529-533`, `645-712`, `802-837` | durable latch는 `Prepare` 전 `checkSymbolFree`에서만 읽고 마지막 전송 경계는 `checkEntry`만 재확인한다. 동일 Gateway의 `inflight`는 막지만, 같은 journal을 공유하는 별도 process가 latch 검사 뒤 FAILED_CONFIRMED를 기록하면 진입이 broker call까지 갈 수 있다. | 단일 runtime writer 보장을 정본 근거로 고정하거나, 보장되지 않으면 마지막 전송 경계에서 durable latch 재확인 설계를 추가해야 함. |
+
+### 수행한 리뷰와 검증
+
+- `gstack review` 절차의 독립 적대 리뷰를 실행함. 테스트·fixture는 요약만 보고, runtime source·D5·D11·배선·원장 질의를 원문으로 대조함.
+- 독립 리뷰 결론: `Request changes because dual-clock retry-window enforcement makes the 8-second safety bound non-deterministic.`
+- 정적 대조: `internal/clock/clock.go`, `cancel_refusal.go`, `gateway.go`, `journal/cancel_refusal_latch.go`, D3·D5·D10·D11 및 delta를 읽음. `git diff --check`은 발견 없음.
+- `check_analysis.py`는 후속 실행에서 a165 map 수 불일치가 아니라 base 이후 139개 sibling commit의 evidence 누락으로 실패함. `--record-landing`은 현재 검토 중단 상태에서 실행하지 않음.
+- Codex CLI 적대 패스·최종 패키지 재실행·전체 `go test ./...`·`make gate`는 이 설계 모순을 고치지 못하므로 미실행. 운영 명령·live 주문·schema 변경은 0.
+
+### skill 적용
+
+- `ai-memory-retrieval`: CLI 검색에서 a165 직접 기록 0. 현재 checkout·OpenSpec을 정본으로 삼음.
+- `search-first`: 기존 `journal.DispatchFunc`·`clock.Clock`·표준 `context`를 확인했고, 새 의존성은 도입하지 않음. 외부 라이브러리는 브로커 거절 의미를 보증하지 못하므로 불채택.
+- `grill-me`/`grilling`: proposal-freeze와 사람 결정은 확정돼 재질문 권한 없음.
+- `impeccable: N/A — backend/documentation-only`.
