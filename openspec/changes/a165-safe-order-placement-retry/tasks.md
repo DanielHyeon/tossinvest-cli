@@ -43,7 +43,7 @@
 - [x] 3.1 변이 원장 — 409 code 판정·kind·정책 구분·대기 상한·횟수·창·소진 되돌림·경계 재검사, **배선 교차(flatten←엔진 정책 · 엔진←flatten 정책 · 배선 nil · 혼성 `{2, true}`)·`definitiveRefusalCodes` 에 already-processing 추가**(1.3 3차 P1-1·P3-3), **ctx(`winCtx` 부모 분리 · 정착 ctx 를 `winCtx` 로 · 재호출에 원 dctx · 창 시작점 이동)·latch(exit 도 latch 를 봄 · `unsettledFor` 에 넣음 · 해제 r1/r2 누락 · 종목 키 제거 · 메모리 latch · r2 순서 경계 제거 · r2 대상 id 비교 제거 · 순번을 정착 transition 으로 · r2 거래일 같음 조건 복원(옛 「거래일 비교 제거」 폐기) · r2 계좌·시장·종목 비교 제거 · r2 주인 유일성 제거)**(1.3 2차 독립 리뷰 P2·P1, 3차 재리뷰 R3-3), 양성 대조군 포함(design D10). — M01~M38 모두 잡힘, 살아남은 변이 없음([mutation-ledger.md](analysis/mutation-ledger.md)).
 - [x] 3.2 다중 적대 리뷰(중복 주문 반례 레드팀) + gstack review/security. — gstack 적대 패스 P2(D5 retry timeout 결과 덮어쓰기)를 수리·M38로 고정했고, 보안/시험/유지보수 패스와 사후 독립 적대 패스는 발견 없음. 사후 Codex CLI 재호출은 저장소 훅의 `ai-memory query` 오류로 결론을 못 냈으며 review에 미완료 도구로 기록함.
 - [x] 3.3 영향 범위 시험(`internal/execgw`·`internal/official`·`internal/flatten`·엔진 clear 경로·배선, 필요 시 `-race`)과 미실행 범위 기록. — 무태그·`tossos_testseams`·관련 `-race` 및 vet/gofmt 통과, 전체 시험과 `make gate`는 지시상 미실행([review.md](review.md)).
-- [ ] 3.4 Manager 독립 검증.
+- [x] 3.4 Manager 독립 검증 — **PASS (2026-10-29)**. `origin/main..bbd501c12` 생산 diff를 대조해 submit 래핑 인자·`Options`/`Gateway`/`New` 정책 필드·`checkSymbolFree`의 노출 증가 뒤 latch·엔진/flatten 배선·`DispatchFunc` 주석만 바뀜을 확인함. D5 직접 `time.Now`/`time.Since` 0, `WithTimeout(dctx, policy.Window)` 1을 확인했고, D11은 engine journal-open 전 `enginelock.Acquire` 및 flatten non-definitive 정책으로 갈래 A를 재확인함. ext4 TMP/GOCACHE에서 지정 시험 무태그·`tossos_testseams`, `-race`(execgw·journal), vet·gofmt를 독립 재실행해 통과함. 전체 `go test ./...`와 Codex CLI 교차 패스는 미검증(훅 오류, PASS 근거 아님).
 
 ## 4. 닫기
 
