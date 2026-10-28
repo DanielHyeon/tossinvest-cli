@@ -1,0 +1,453 @@
+{
+  "file": "tools/a140-breakout-signal-shadow/shadow.go",
+  "source_sha256": "62c2fe84d04026f1f398a01cb97b270880c82f1f355ad0a6b2841ccb59e62de1",
+  "package": "main",
+  "function": "armedAttempt",
+  "receiver": "probe",
+  "signature": "probe.armedAttempt(params=4, results=1)",
+  "start": {
+    "line": 435,
+    "column": 1
+  },
+  "end": {
+    "line": 474,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 436,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 439,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 446,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 454,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "switch",
+      "at": {
+        "line": 460,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 461,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "case",
+      "at": {
+        "line": 465,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 469,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 443,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 447,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 455,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 473,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 5
+      },
+      "text": "state.armedSince.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 437,
+        "column": 22
+      },
+      "text": "p.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 439,
+        "column": 5
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 439,
+        "column": 5
+      },
+      "text": "p.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 440,
+        "column": 10
+      },
+      "text": "signalRow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 80
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 80
+      },
+      "text": "state.armedSince.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 10
+      },
+      "text": "p.write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 445,
+        "column": 16
+      },
+      "text": "p.fetchQuote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 447,
+        "column": 10
+      },
+      "text": "p.gap"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 452,
+        "column": 17
+      },
+      "text": "max"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 452,
+        "column": 21
+      },
+      "text": "uint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 452,
+        "column": 28
+      },
+      "text": "UnixMilli"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 452,
+        "column": 28
+      },
+      "text": "p.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 453,
+        "column": 13
+      },
+      "text": "evaluateSetup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 455,
+        "column": 10
+      },
+      "text": "p.gap"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 458,
+        "column": 9
+      },
+      "text": "signalRow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 459,
+        "column": 48
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 459,
+        "column": 48
+      },
+      "text": "state.armedSince.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 464,
+        "column": 21
+      },
+      "text": "uint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 464,
+        "column": 28
+      },
+      "text": "UnixMilli"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 464,
+        "column": 28
+      },
+      "text": "Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 464,
+        "column": 28
+      },
+      "text": "Truncate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 464,
+        "column": 28
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 464,
+        "column": 28
+      },
+      "text": "time.UnixMilli"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 464,
+        "column": 43
+      },
+      "text": "int64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 473,
+        "column": 9
+      },
+      "text": "p.write"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 437,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 440,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 441,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 442,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 445,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 449,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 452,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 453,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 457,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 458,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 459,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 462,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 464,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 466,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 468,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 470,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 471,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

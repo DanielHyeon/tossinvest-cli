@@ -1,0 +1,194 @@
+{
+  "file": "tools/a140-breakout-signal-shadow/source.go",
+  "source_sha256": "85c8bef9911f08375b270459f037ab4dc50f6665529178aa707c6b571f5f1b8a",
+  "package": "main",
+  "function": "quoteRead",
+  "signature": "quoteRead(params=3, results=2)",
+  "start": {
+    "line": 107,
+    "column": 1
+  },
+  "end": {
+    "line": 126,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 112,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 115,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 120,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 113,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 116,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 125,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 2
+      },
+      "text": "p.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 15
+      },
+      "text": "Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 15
+      },
+      "text": "p.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 2
+      },
+      "text": "p.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 12
+      },
+      "text": "p.pause"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 2
+      },
+      "text": "p.count"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 16
+      },
+      "text": "call"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 5
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 3
+      },
+      "text": "p.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 20
+      },
+      "text": "Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 20
+      },
+      "text": "p.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 3
+      },
+      "text": "p.mu.Unlock"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 115,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 119,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 122,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
