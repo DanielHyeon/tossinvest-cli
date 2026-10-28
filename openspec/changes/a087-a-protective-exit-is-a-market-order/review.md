@@ -909,3 +909,28 @@ OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서와 `tools/logic-map
 불변식 4 표는 design D12.7 이 대체한다(나빠질 수 있는 칸 셋과 상한).
 
 Function Logic Map: not-applicable — 문서 개정만 했다. 분기 주장은 `analysis/evidence/` AST 42개에서만 인용했다(`a129_exit_order_log_test.go` helper · `doRequest` 의 기록 줄 · `Retrier.Query` 오류 사슬은 손 읽기로 표시).
+
+## 9판 재리뷰 (GPT-5.6 Terra, 2026-10-29)
+
+**결론: FAIL (blocker 1).** D12.1의 raw/timestamp 보존, D12.2의 주기 끝 토큰, D12.6의 `price_source` 골든은 전진했다. 그러나 T3의 “최신 PLACE 상태”는 같은 날의 **단조 금지**를 재시작 뒤 복원하지 못한다. 8판 P0-3은 닫히지 않았다.
+
+| 심각도 | 발견 | 위치 | 근거 | 처분 제안 |
+| --- | --- | --- | --- | --- |
+| P0 | T3는 가격이 같은 intent의 **최신** PLACE 상태만 본다. runtime 규칙은 하한가 시도가 한 번이라도 `CONFIRMED`가 아니면 그날 금지를 풀지 않는데, `IN_DOUBT → CONFIRMED` 전이는 허용된다. 재시작 뒤 최신 상태만 읽으면 금지가 허용으로 바뀐다. 앞선 하한가 비수용 뒤 관측가가 우연히 같은 가격으로 제출·확정돼도 더 늦은 관측가 intent가 거부 증거를 덮는다. account/market scope도 T3 설명에 명시돼 있지 않다. | `design.md:287-312`; `specs/order-execution/spec.md:17-33`; `internal/journal/lifecycle.go:43-48`; `internal/journal/schema.go:202-224` | AST: `Attempt.transition` B16 및 상태 갱신; 손으로 읽음: `IN_DOUBT → CONFIRMED` 허용, intents가 immutable decimal string·account/market/day 보유 | T3를 최신 상태 판정으로 쓰지 않는다. `account_ref`·`market`·`trading_day`·symbol·보호 청산 scope를 고정하고, 정규화한 같은 가격 후보의 **전이 이력 전체**에서 한 번이라도 비수용/IN_DOUBT가 있으면 하루 금지인 단조 술어로 바꾼다. source를 T3로 구별할 수 없는 우연 일치는 금지로 남긴다. `IN_DOUBT → CONFIRMED → restart`, `하한가 FAILED → 같은 가격 observed CONFIRMED → restart`, 타 계좌/시장 격리 시험을 추가한다. |
+| P1 | D12.2의 “어디서든 429 → 5분 정지”는 헤더 없는 429가 `Retrier.Query` 안에서 재시도 후 성공하면 성립하지 않는다. `cycle.Err`는 nil, rate budget은 `Reported=false`라 `Exhausted()`도 false다. ②·③ 모두 멈춤 입력을 놓친다. 헤더 없는 429의 **실제 빈도**는 `[미측정]`이 맞지만, 그 응답을 놓치는 **구조**는 소스상 확정 사실이다. | `design.md:253-286,334-344`; `specs/order-execution/spec.md:31-33`; `internal/execgw/retry.go:347-377`; `internal/official/ratebudget.go:175-177,227-243`; `internal/official/errors.go:54-55` | AST: `Retrier.Query` B10~B12; 손으로 읽음: 재시도 성공은 nil 반환, headerless budget은 미보고 | HTTP 429를 헤더와 무관하게 기록하는 공유 rate-limited latch/epoch를 D12.2 정지 입력으로 쓴다. `headerless 429 → retry success → 5분 GET 0` 시험을 추가한다. 그 전에는 429 정지 SHALL과 D12.7 #4 상한을 주장할 수 없다. |
+| P1 | D12.7 #1·#2 상한은 `release` 성공을 가정한다. B13과 비동기 비수용 해제는 `ReleaseUnacceptedExitProposal` 오류를 반환하고, 무장 상태가 남으면 복구 시간은 5초/해소 시간 상한에 없다. 새 하한가 거부가 이 경로를 새로 밟게 하므로 표 상한은 완전하지 않다. | `design.md:334-344`; `internal/app/engine/exitloop.go:1567-1596,1601-1607`; `internal/app/engine/exit_held_proposal.go:126-145` | AST: `ExitObserver.submit` B8~B13, `noteHeldProposal` B4; 손으로 읽음: release 오류 전파 | 표에 journal release 실패·복구 칸과 비유한 상한을 넣거나 기존 관측 불능/지연 contract에 합친다. 직접 거부·IN_DOUBT 해제에서 release 실패 종단 시험을 추가한다. |
+| P1 | D12.1은 raw decimal·timestamp 유실을 고쳤지만 timestamp가 효력 날짜인지 응답 시각인지는 아직 모른다. 5.4 착지 전 gate는 맞지만 KST 날짜를 KRX 거래일로 등치한 문구는 평일 휴장·기준가 변경을 증명하지 않는다. P0-1은 **착지 전 gate로 보류**됐을 뿐 현재 사실로 닫힌 것이 아니다. | `design.md:228-251,314-320`; `tasks.md:216-223,422-426`; `internal/clock/market.go:128-152` | 손으로 읽음 | 5.4에서 timestamp가 응답 시각이면 KR off 또는 별도 권위 있는 효력일 검증 중 하나를 사람이 확정해 gate를 닫는다. 구현/배포 완료 주장 금지. |
+| P2 | T3 오탐은 시도 당시 관측가와 하한가가 같으면 주문 가격도 같아 즉시 가격 결과는 같다. 다만 재시작 뒤 관측가가 높아지면 금지는 오늘 LIMIT(더 높은 가격)으로 남아 하한가의 공격성을 잃는다. 보수적이고 불변식 4에는 무해하지만 “결과가 같다”는 문장은 그 시점에 한정해야 한다. 원장 읽기 오류 → 항목 없음은 설계대로 fail-closed다. | `design.md:305-312`; `tasks.md:220-229`; `internal/journal/durability.go:113-145` | 손으로 읽음 | T3 오탐을 의도된 보수적 손실로 명시하고, 양의 정수 canonical 비교와 파싱 불가 후보 → 금지/항목 없음의 규칙·시험을 고정한다. |
+
+### 확인한 것
+
+- D12.2 가) 토큰을 `Run`의 `ObserveOnce` 반환 뒤·`Sleep` 앞에 넣으면, AST상 그 주기의 `/prices`·재시도·판정·제출·defer가 끝난 뒤다. GET 시한이 2초 이하로 지켜지면 자기 `/prices`와 시간상 겹침 0이라는 설계는 성립한다. 구현 전이라 실행 증거는 아니다.
+- D12.1의 엔진 전용 raw 읽기는 기존 CLI 형을 건드리지 않고 null/형식/timestamp 사유를 분리한다. D12.4의 5.4는 착지 전 필수 gate, D12.6은 a129 `price_source` 필수 키 시험이다.
+- `analysis/evidence/enumerate.py`: `stale=0`. `openspec validate a087-a-protective-exit-is-a-market-order --strict --no-interactive`: 통과.
+
+### 안 본 것·제한
+
+- 9판 구현·단위/종단/변이 시험·전체 gate·실주문은 실행하지 않았다. 브로커·계좌·운영·mutating 명령 0.
+- a165 main/착지 worktree는 금지 범위라 열지 않았다. D12.5 재대조는 a165 archive/push SHA 뒤 작업이다.
+- 거래소 timestamp 의미와 헤더 없는 429의 실제 빈도는 외부 영수증/규정으로 검증하지 않았다. `impeccable: N/A — backend/documentation-only`.
+- `grill-me`: D-1·D-2 ⑤는 확정값으로 사용했고 새 사람 결정을 요구하지 않았다. `search-first`: 구현·의존성 채택이 아닌 독립 문서/소스 적대 검토라 현재 저장소·AST·OpenSpec 근거만 사용했다.
