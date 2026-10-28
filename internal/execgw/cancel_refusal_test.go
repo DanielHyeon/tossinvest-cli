@@ -2,6 +2,7 @@ package execgw
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -156,6 +157,31 @@ func TestA165FlattenRetryNotSentKeepsTheFirstAmbiguousOutcome(t *testing.T) {
 	clk.Advance(time.Second)
 	out := <-done
 	if calls != 2 || out.Class != journal.DispatchAmbiguous || !strings.Contains(out.Detail, "stop=not_sent outcome=today") {
+		t.Fatalf("calls=%d outcome=%+v", calls, out)
+	}
+}
+
+func TestA165FlattenExhaustionKeepsTheFirstAmbiguousOutcome(t *testing.T) {
+	clk := clock.NewFake(time.Date(2026, 10, 28, 0, 0, 0, 0, time.UTC))
+	g := &Gateway{clk: clk, cancelRefusal: FlattenCancelRefusal()}
+	calls := 0
+	done := make(chan journal.DispatchOutcome, 1)
+	go func() {
+		done <- g.withCancelRefusal(mutationPlan{kind: journal.KindCancel}, func(context.Context, *journal.Attempt) journal.DispatchOutcome {
+			calls++
+			out := a165AlreadyProcessingOutcome(1)
+			out.Detail = fmt.Sprintf("ambiguous-%d", calls)
+			return out
+		})(context.Background(), nil)
+	}()
+	for retry := 0; retry < 2; retry++ {
+		if !clk.WaitForSleepers(1, time.Second) {
+			t.Fatal("retry sleep was not reached")
+		}
+		clk.Advance(time.Second)
+	}
+	out := <-done
+	if calls != 3 || out.Class != journal.DispatchAmbiguous || !strings.Contains(out.Detail, "ambiguous-1") || !strings.Contains(out.Detail, "stop=retries outcome=today") {
 		t.Fatalf("calls=%d outcome=%+v", calls, out)
 	}
 }
