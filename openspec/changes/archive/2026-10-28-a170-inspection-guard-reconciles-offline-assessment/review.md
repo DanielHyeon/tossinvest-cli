@@ -56,3 +56,14 @@
   번들 내용의 근거(시험 실행 · 커버리지 · 사후 작성 사유)는 a172 review.md 「gate ⑤」 에 있다.
 - 쓰지 않은 길: 도구는 a170 에 `--record-landing`(창 끝을 착지 커밋으로 좁힘)을 권했다. 승인된 절차가 번들 복사라 기록하지 않았다.
 - 완료 게이트 결과는 아래 「완료 게이트 실행 영수증」(archive 뒤 추가).
+
+## 완료 게이트 실행 영수증 (2026-10-28)
+
+- 격리 worktree `/mnt/D/Axipient/workspace/TossOS.worktrees/a170-close`(`/tmp` 밖), detached `10cbb15c0`(종결 증거 커밋, a172 archive `8fdce8aaf` 위).
+- 준비: `make sdd-infra` rc 0 → `python3 tools/sdd/sdd_sync.py --no-gbrain` rc 1 — CodeGraph 색인은 됨(3,021 파일, 2m36s),
+  advisory CodeGraphContext 색인만 300초 시한 초과 → `make sdd-check` rc 0 → `codegraph status .` 57.3s · 5.70s · 5.32s · 4.86s.
+- 1 회차(09:08~09:14 KST, load 4.71) **FAIL ⑥** `make sdd-check`: `[index-freshness] FAIL: CodeGraph hard-evidence index is unusable: CodeGraph status probe failed: … timed out after 15 seconds`, rc 2.
+  ①~⑤ OK(⑤ `OK: Function Logic Map`). 승인된 재시도 조건(⑥ CodeGraph 15초 시한 초과)에 해당. 로그 `analysis/gate/gate-run1-fail.log`.
+- 재워밍업 `codegraph status .` 3.05 · 3.26 · 3.49 · 3.43 · 3.36 · 3.25s(load 3.79, 다른 gate · go test 없음).
+- 2 회차(재시도 1회, 09:17~10:29) → **GATE PASS 11/11, rc 0**, `repo:` 줄 = 격리 worktree. `deadline exceeded` · VCS status 128 0건. 로그 `analysis/gate/gate-run2.log`.
+- archive: `openspec archive a170-inspection-guard-reconciles-offline-assessment --yes` → `+ 1 added`, `2026-10-28-a170-inspection-guard-reconciles-offline-assessment`.

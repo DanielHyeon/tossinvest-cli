@@ -1,0 +1,64 @@
+make: Entering directory '/mnt/D/Axipient/workspace/TossOS.worktrees/a170-close'
+bash tools/gate.sh a170-inspection-guard-reconciles-offline-assessment
+GATE: a170-inspection-guard-reconciles-offline-assessment
+repo: /mnt/D/Axipient/workspace/TossOS.worktrees/a170-close
+
+==> 1/11 tasks.md 확인
+OK: openspec/changes/a170-inspection-guard-reconciles-offline-assessment/tasks.md
+
+==> 2/11 미완료 태스크 확인
+OK: 미완료 태스크 0건
+
+==> 3/11 짝 change 확인 (deploy-pair.txt)
+OK: 짝 선언 없음 — 이 change 는 혼자 배포한다
+
+==> 4/11 gstack 리뷰 기록 확인
+OK: openspec/changes/a170-inspection-guard-reconciles-offline-assessment/review.md
+
+==> 5/11 Function Logic Map 증거 확인
+[logic-map] a170-inspection-guard-reconciles-offline-assessment: base 0d168e0a3550 → working tree (no landed-commit.txt in HEAD) required 26 function(s) — judged at HEAD 10cbb15c061c
+[logic-map] a170-inspection-guard-reconciles-offline-assessment: the target is the working tree, so this window also holds 87 commit(s) that landed after the base and every existing function they changed is required here too — run `python3 tools/logic-map/check_analysis.py --change a170-inspection-guard-reconciles-offline-assessment --record-landing` to let the gate compute `landed-commit.txt` from this change's evidence and record it, which narrows it to this change's own work; if no commit on this history is accepted as the landing, the command says so instead of recording
+[logic-map] a170-inspection-guard-reconciles-offline-assessment: evidence complete or diff-proven exempt
+OK: Function Logic Map
+
+==> 6/11 make sdd-check
+make[1]: Entering directory '/mnt/D/Axipient/workspace/TossOS.worktrees/a170-close'
+python3 tools/sdd/sdd_doctor.py
+[tools]
+  OK   rtk: rtk 0.42.0
+  OK   openspec: 1.4.1
+  OK   codegraph: 1.6.0
+  OK   codegraphcontext: Usage: codegraphcontext [OPTIONS] COMMAND [ARGS]...                            
+  OK   create-context-graph: create-context-graph, version 0.13.1
+  OK   ast-grep: ast-grep 0.45.0
+  OK   gbrain: gbrain 0.42.51.0
+  OK   docker: Docker version 29.9.2, build a82e528
+[skills]
+  OK   gstack: /home/daniel/.agents/skills/gstack
+  OK   superpowers: /home/daniel/.codex/.tmp/plugins/plugins/superpowers
+[python_modules]
+  OK   typedb-driver: mode=local raw=/mnt/D/Axipient/workspace/TossOS.worktrees/a170-close/.sdd/.venv/bin/python resolved=/home/daniel/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/bin/python3.13; typedb-driver 3.11.5
+[files]
+  OK   .mcp.json: present
+  OK   .codex/config.toml: present
+  OK   .codex/hooks.json: present
+  OK   .claude/settings.json: present
+  OK   .githooks/pre-commit: present
+  OK   .githooks/post-commit: present
+  OK   .gbrain-source: present
+  OK   tools/sdd/gbrain_project.py: present
+  OK   tools/sdd-history/refresh_indexes.py: present
+[services]
+  OK   typedb(shared): running
+  OK   neo4j(shared): running
+python3 tools/sdd/check_index_freshness.py
+[index-freshness] WARN: codegraphcontext advisory index is missing or stale
+[index-freshness] WARN: gbrain advisory index is missing or stale
+[index-freshness] FAIL: CodeGraph hard-evidence index is unusable: CodeGraph status probe failed: Command '['/home/daniel/.local/bin/codegraph', 'status', '.']' timed out after 15 seconds
+make[1]: *** [Makefile:173: sdd-check] Error 1
+make[1]: Leaving directory '/mnt/D/Axipient/workspace/TossOS.worktrees/a170-close'
+
+GATE FAIL: a170-inspection-guard-reconciles-offline-assessment — make sdd-check 실패
+make: *** [Makefile:188: gate] Error 1
+make: Leaving directory '/mnt/D/Axipient/workspace/TossOS.worktrees/a170-close'
+gate rc=2

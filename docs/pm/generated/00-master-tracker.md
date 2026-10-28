@@ -192,5 +192,5 @@
     - STORY-TOS-a161 — 오프라인 캠페인 계획 및 위험 상태 보존 [archived] → `a161-preserve-offline-campaign-plan-risk-state`
     - STORY-TOS-a162 — 기존 전략 평가기를 재사용하는 오프라인 후속 진입 위험 판정 [archived] → `a162-assess-follow-on-risk-offline`
     - STORY-TOS-a169 — breakout 그림자 신호를 같은 정의로 종목군 셋(거래대금 · 거래량 · 거래량 증가율)에서 다시 잰다 [in_progress] → `a169-breakout-universes-are-compared-in-shadow`
-    - STORY-TOS-a170 — 검사 증거 가드가 a162 오프라인 평가를 이름으로 받고 그 평가의 런타임 소비자를 막는다 [implemented] → `a170-inspection-guard-reconciles-offline-assessment`
+    - STORY-TOS-a170 — 검사 증거 가드가 a162 오프라인 평가를 이름으로 받고 그 평가의 런타임 소비자를 막는다 [archived] → `a170-inspection-guard-reconciles-offline-assessment`
     - STORY-TOS-a178 — a112 M-B1 수집기 — prescribed rebuild 실패 원인(시한 초과·명령 불일치·digest 불일치)을 구분해 보고 [archived] → `a178-a112-rebuild-failure-reported-separately`

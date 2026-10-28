@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a170-inspection-guard-reconciles-offline-assessment",
-    "path": "openspec/changes/a170-inspection-guard-reconciles-offline-assessment"
+    "path": "openspec/changes/archive/2026-10-28-a170-inspection-guard-reconciles-offline-assessment"
   },
   "found_by": {
     "date": "2026-10-23",
     "how": "a140 완료 gate 2 차의 make test 가 campaignstateevidence 의 TestInspectionPackageHasNoRuntimeConsumers 에서 실패했다. a162 가 설계대로 검사 전용 오프라인 평가에서 캡처 증거를 쓰기 시작했지만 전체 시험을 돌리지 않아 a161 가드를 갱신하지 않았다.",
-    "record": "openspec/changes/a170-inspection-guard-reconciles-offline-assessment/proposal.md"
+    "record": "openspec/changes/archive/2026-10-28-a170-inspection-guard-reconciles-offline-assessment/proposal.md"
   },
   "acceptance": [
     "가드가 internal/offlinecontinuation/assessment.go 를 이름으로만 허용하고 같은 원문을 다른 경로에 두면 거절한다",
