@@ -1080,3 +1080,30 @@ OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서만 다뤘다(새 AS
 - 13판은 문서 단계다. a087·a166 구현, unit/통합/변이 시험, 전체 gate, 실제 공유 admission, 브로커·계좌·실주문은 실행하지 않았다. 운영·`mutating` 명령은 0이다.
 - a166의 공유 키·공정성·429 수명·wire 관문은 현재 정의/실측 전이다. 이것들은 5.5 전 a087 nil 기본값을 바꾸지 않지만, 위 a166 요구와 사람 승인 없이는 활성화할 수 없다.
 - `impeccable: N/A — backend/documentation-only`. `grill-me`: D-1·D-2 및 Manager 결정을 확정값으로 사용했고 새 사람 결정을 만들지 않았다. `search-first`: 구현·의존성 채택이 아닌 독립 문서/소스 적대 검토라 현재 저장소·a166 OpenSpec·AST만 대조했다. `ai-memory-retrieval`: 이 세션에는 `memory_query` 등 MCP가 없어 현재 source와 대화 내 결정만 검증에 썼다.
+
+## 구현 Pre-Edit · a165 재대조 (2026-10-29, HEAD `a284a2b0a`)
+
+### a165 재대조 — 1.0
+
+- a165 착지 `5e2facaee`는 archive 이동만 포함하며, 현재 `main`의 `clearTheSymbol`·`checkSymbolFree`·공유 `fakeSubmitter`를 다시 읽었다.
+- `checkSymbolFree`는 노출 증가 주문만 a165 latch를 읽고, exit/flatten/reconcile 축소 주문은 그 입력을 읽지 않는다. a087은 `ExitObserver.submit`의 LIMIT 가격만 고치므로 이 경계를 넓히지 않는다.
+- `clearTheSymbol`과 `cancel_refusal*.go`의 취소·정리 계약은 a087에서 호출하거나 수정하지 않는다. `NewOrderPath` 호출부·`buildFlattenWiring`도 무변경 범위다.
+- `analysis/evidence/tossctl--buildflattenwiring.ast.json`을 현 HEAD로 재생성했고 `enumerate.py`는 `stale=0`이다. 공유 `fakeSubmitter`는 기존 시험 보조물로 재사용하며, a165와 충돌하는 state를 추가하지 않는다.
+
+### Pre-Edit Gate — 2.0
+
+- change id / task id: `a087-a-protective-exit-is-a-market-order`, 1.0·2.0·2.1
+- 대상 심볼: `ExitObserver.submit`, `ExitObserver.Run`, `exitOrderLineFor`, `exitOrderLine.args`, `NewContext`, `Context.ExitObserver`, `engineRuntime`; 새 파일은 engine board·official raw reader·journal read-only reader.
+- CodeGraph definition/callers/callees/impact: `submit`은 `sellIntent`와 `Gateway.Place` 사이의 LIMIT 가격 인자만 받는다. `Run`은 `ObserveOnce` 뒤·`Sleep` 앞에만 token을 보낸다. `NewContext`가 board를 한 번 만들고 `Context.ExitObserver`가 caller 값과 무관하게 덮는다. `engineRuntime`은 Auxiliary에만 새 executor를 넣는다.
+- CodeGraphContext 후보와 evidence reconciliation: 현재 source·AST·a165 archive를 우선으로 대조했다. 오래된 `buildFlattenWiring` AST 하나만 재생성했고 나머지 43개 증거는 fresh다.
+- 기존 동작 파악 근거: Pre-Edit HEAD `a284a2b0a`, `exitloop_test.go`의 real journal/Guardian + `fakeSubmitter`, a129 log golden, cmd a129 runtime wiring structure test.
+- Function Logic Map / Branch Test Map: `analysis/function-logic/`의 7개 번들(각 `ast.json`·FLM·BTM·risk report). `official.Client.doRequest`는 D15.1에 따라 제외하며 변경 0이다.
+- upstream 상속 테스트 영향: yes. LIMIT order gate·a129 line whitelist·runtime auxiliary 목록이 영향권이며, new tests와 기존 focused tests로 회귀를 막는다.
+- 실패 테스트 선행 작성: yes. RED commit은 board price table, nil admission GET 0/literal PlaceIntent, first attempt/restart, wire admission double, raw reader, journal reconstruction, price_source를 포함한다.
+- 설정·DB·journal 변경과 rollback: config·schema 변경 없음(v36 유지). journal은 SELECT-only function 추가이며 오류는 lower-limit 사용 금지로 fallback한다. rollback은 board admission을 nil로 유지하거나 code revert이며 주문 type·quantity는 변경하지 않는다.
+
+### SDD 적용 기록
+
+- `search-first`: 기존 `PriceLimits`는 raw null/timestamp를 유실하므로 재사용하지 않는다. 공식 client의 read path·engine Context/private `official`·`ManualBuyRefresher`·표준 `math/big.Rat`를 확인했다. 새 외부 의존성은 채택하지 않는다.
+- `grill-me`: D-1(다), D-2 ①·⑥, a166 전 nil dormant가 확정되어 새 사람 결정·가정이 없다.
+- `impeccable: N/A — backend/documentation-only`; UI·접근성·화면 상태 변경 없음.

@@ -491,7 +491,7 @@
      R return  :148   return CalendarValid
   branches=3 returns=4
 
-## buildFlattenWiring — cmd/tossctl/flatten.go:199-272 (fresh, sha 3a2b20f4c145)
+## buildFlattenWiring — cmd/tossctl/flatten.go:199-273 (fresh, sha 65eade0e7c0b)
     B1 if      :201   if err != nil {
      R return  :202   return nil, err
     B2 if      :206   if err != nil {
@@ -503,9 +503,9 @@
     B6 if      :221   if root.configDir != "" {
     B7 if      :227   if err != nil {
      R return  :228   return nil, err
-    B8 if      :241   if err != nil {
-     R return  :243   return nil, err
-     R return  :265   return &flattenWiring{
+    B8 if      :242   if err != nil {
+     R return  :244   return nil, err
+     R return  :266   return &flattenWiring{
   branches=8 returns=6
 
 ## engineRuntime — cmd/tossctl/engine.go:655-752 (fresh, sha 753594c5667b)

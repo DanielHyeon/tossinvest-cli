@@ -133,7 +133,7 @@
 > **8판**: 보호 매도가 LIMIT 이므로 ②`checkOrderShape` · ③`placeIntentSupported` · `trading.Service` · `NewOrderPath` 는 **편집하지 않는다**(design D11 (e)).
 > 남는 일은 「바뀌지 않았다」를 시험으로 고정하는 것뿐이다. FLM: not-applicable — 기존 함수 본문 편집 0(시험 전용, 비례 원칙).
 
-- [ ] 1.0 **구현 착수 조건 — a165 재대조 (9판 — design D12.5)** — a165 archive · push 가 확인된 sha 에서 `clearTheSymbol` · `checkSymbolFree` · `cancel_refusal*.go` 와 a087 이
+- [x] 1.0 **구현 착수 조건 — a165 재대조 (9판 — design D12.5)** — a165 archive · push 가 확인된 sha 에서 `clearTheSymbol` · `checkSymbolFree` · `cancel_refusal*.go` 와 a087 이
       인용 · 편집하는 `exitloop.go` 함수(`submit` · `Run` · `ObserveOnce` 인용 좌표)의 AST(`analysis/evidence/` 재생성, `enumerate.py` stale 0) · FLM · 공유 시험 더블을 다시 대조하고
       design D11 (g) · D12 좌표를 고친다. T2 를 고르면 `Gateway.submit` 도. **이 줄 전 §1~§3 착수 금지**
 - [ ] 1.1 **관문 무변경 고정 시험** (7판 1.3 승계) — 엔진 인스턴스(`NewContext` 로 만든 경로)와 기본 인스턴스 각각에서 비분수 `sell+market` · `buy+market` 이 오늘처럼
@@ -210,9 +210,9 @@
 > 설계 정본 design D11. 편집하는 기존 함수(FLM 대상)는 `ExitObserver.submit` · `exitOrderLineFor` · `exitOrderLine.args` · `NewContext` · `Context.ExitObserver` ·
 > `engineRuntime` + **9판 `ExitObserver.Run`** + ~~10판 `official.Client.doRequest`~~(12판에서 뺌)(design D11 「착수 시 FLM 대상」 · D12). `sellIntent` · `noteHeldProposal` 은 본문 무변경. 새 함수(판 · 갱신기 · `exitLimitPrice`)는 새 파일 `internal/app/engine/exit_lower_limit.go`.
 
-- [ ] 2.0 **Pre-Edit 선언** — 위 기존 함수 7(9판: `Run` 추가 · 10판의 `official.Client.doRequest` 는 12판에서 뺌 — D15.1) + 새 파일 셋(엔진 판 · 엔진 전용 읽기 · 원장 읽기)(WORKFLOW §Pre-Edit 형식). 불변식 3: 판은 `NewContext` 에서만 · 갱신기는 보조 실행자 · 엔진 꺼짐 ⇒ 흔적 0.
+- [x] 2.0 **Pre-Edit 선언** — 위 기존 함수 7(9판: `Run` 추가 · 10판의 `official.Client.doRequest` 는 12판에서 뺌 — D15.1) + 새 파일 셋(엔진 판 · 엔진 전용 읽기 · 원장 읽기)(WORKFLOW §Pre-Edit 형식). 불변식 3: 판은 `NewContext` 에서만 · 갱신기는 보조 실행자 · 엔진 꺼짐 ⇒ 흔적 0.
       불변식 4: 제출 경로 GET 0 · 결정 실패 = 오늘 LIMIT · 되먹임. 불변식 6: 손절 수준 · 수량 무변경, 가격만 체결 쪽
-- [ ] 2.1 **Function Logic Map** — 위 기존 함수 7 의 번들(12판: `doRequest` 제외)(`ast.json` + `function-logic-map.md` + `branch-test-map.md` + `risk-pattern-report.md`)을 착수 HEAD 에서 만든다.
+- [x] 2.1 **Function Logic Map** — 위 기존 함수 7 의 번들(12판: `doRequest` 제외)(`ast.json` + `function-logic-map.md` + `branch-test-map.md` + `risk-pattern-report.md`)을 착수 HEAD 에서 만든다.
       `analysis/evidence/` 의 HEAD `1f4145c77` AST 는 0.10 증거이지 번들이 아니다. risk-pattern-report 에 `isProtective` 의 세 소비자(`record` · `submit` a091 floor ·
       a087 가격 결정)와 `exitOrderLineFor` 의 사다리 사본(design D11 (b) 「기록」)을 적는다
 - [ ] 2.2 **RED — 가격 결정 표** (`exitLimitPrice` 단독, 시계 · 판 시험 더블, 벽시계 · 실제 브로커 금지): design D11 「8판 검증」 첫 항목 전 행 — 창 경계 09:00:00 · 15:29:59 → 하한가,
