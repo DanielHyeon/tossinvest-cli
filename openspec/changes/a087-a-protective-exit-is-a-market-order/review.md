@@ -1018,3 +1018,25 @@ OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서만 다뤘다(새 AS
 | P1 Action 열거 규칙 | `go/types` 로 타입이 `exitpolicy.Action` 인 상수 전부를 모아 `go/constant` 로 평가한 값 집합 비교, 같은 값 두 이름 기록, 비면 실패 | design D15.2 · tasks 2.9 |
 
 불변식 4 표는 design D15.3 이 대체한다(a166 전 전부 0). Function Logic Map: not-applicable — 문서 개정만 했다.
+
+## 12판 재리뷰 (GPT-5.6 Terra, 2026-10-29)
+
+**결론: FAIL (blocker 1).** D15.1의 nil 기본값은 하한가 GET 0·빈 판·기존 오늘 LIMIT 사다리로 fail-closed이며, D15.2의 평가된 `Action` 값 집합은 이름 존재 검사 함정을 닫는다. 그러나 활성화 뒤에도 401 재전송 **매 wire** admission을 보장하는 a166 계약이 아직 없다. a166은 `doRequest`와 `send`를 모두 삽입 후보로만 남겼고, `send` 하나에 admission을 두면 첫 승인 뒤 401 재전송 두 wire가 통과한다. 이 상태에서 admission을 주입해 활성화하면 계좌 공유 3 req/s 보호가 다시 깨질 수 있다.
+
+| 심각도 | 발견 | 위치 | 근거 | 처분 제안 |
+| --- | --- | --- | --- | --- |
+| P0 | D15는 “각 wire”를 요구하지만 이를 만족하는 a166의 확정 인터페이스·삽입 자리·실제 관문 종단 시험을 묶지 않았다. 현 `send`는 최초 `doRequest` 뒤 401 loop에서 다시 `doRequest`를 최대 두 번 부른다. 따라서 admission을 `send` 입구에 한 번만 두는 a166 구현도 후보 문서와 양립하지만, 401→401→200에서 한 승인으로 3 wire를 보낸다. a087의 갱신기 래퍼나 시험 더블은 unexported 재전송 loop의 둘째·셋째 요청을 대신 막지 못한다. | `design.md:498-510`; `tasks.md:1472-1474`; `openspec/changes/a166-account-shared-rate-limit/proposal.md:43-46,76`; `internal/official/client.go:191-206,320-365` | AST: `Client.send` B4의 최초·loop `doRequest` 호출, `Client.doRequest`의 유일한 `c.hc.Do` 자리. 손으로 읽음: a166은 proposal/tasks만 있고 design/spec/구현이 없으며 두 후보 중 하나를 고르지 않았다. | D-2 ⑥ 활성화 조건을 a166의 구체 SHA·공개 capability·통합 시험에 결속하라. admission은 `doRequest`의 각 `c.hc.Do` 직전(또는 매 `doRequest`마다 반드시 도는 동등 관문)에 한 번이어야 하며, 둘째 admission 거절이면 셋째 `hc.Do` 0을 **실제 a166 관문**으로 증명해야 한다. 그 전까지는 nil을 유지한다. |
+| P2 | “생산 동작 변화 0”은 broker wire와 `PlaceIntent` 가격으로 한정해야 한다. D11/tasks 3.1은 a129 출력에 새 `price_source` 키를 추가하므로 nil admission에서도 관측 로그 바이트는 바뀐다. 판이 비면 `lower_limit`은 될 수 없고 값은 `observed` 또는 `baseline`이어야 한다. | `design.md:502-503`; `design.md:144-149`; `tasks.md:1568-1571`; `internal/app/engine/exit_order_log.go:101-114` | AST: 현 `exitOrderLineFor` B1은 `observed`가 비면 `Baseline`으로만 내리고, 현재 줄에는 아직 `price_source`가 없다. 손으로 읽음: tasks 3.1은 세 값을 필수 golden으로 요구한다. | D15.1의 “0”을 주문 가격·wire 동작으로 명시하고, nil/빈 판 golden에 `price_source ∈ {observed, baseline}` 및 `lower_limit` 부재를 명시해 로그 계약도 고정하라. |
+
+### 확인한 것
+
+- AST: 현 `exitOrderLineFor` B1과 `sellIntent`의 기존 fallback은 `observed`를 먼저 쓰고 비면 `Baseline`을 쓴다. D11·tasks 2.3의 pre-edit literal `PlaceIntent` golden과 D15 nil GET 0을 결합하면, board nil의 broker 주문 가격·유형·수량은 오늘 LIMIT 사다리와 같아야 한다. 이는 구현 전 문서 대조이며 새 `exitLimitPrice`의 AST는 아직 없다.
+- AST: `Client.doRequest`의 유일한 transport 호출은 `c.hc.Do`; `send`는 최초 1회와 401 loop 최대 2회에서 이를 다시 부른다. 그러므로 request별 admission의 검증 위치는 outer `send`가 아니라 매 transport 전송을 포괄하는 관문이어야 한다. D15가 a087의 `doRequest` 편집을 0으로 둔 것 자체는 a166 단일 소유와 맞다.
+- D15.2의 `go/types` 타입 동일성 + `go/constant` 평가값 집합은 파일명·식별자명·`Action("…")` 표기 차이를 보지 않는다. 값 집합과 `isProtective(Proposal{Action: Action(v)})` 참 집합을 비교하고 양쪽 공집합을 실패시키므로 단순 존재/개수 검사의 허점을 닫는다. 같은 문자열 값의 alias는 런타임 `Action`에서 구별 불가라 값→이름 기록만 하는 처분도 맞다.
+- `analysis/evidence/enumerate.py`: `stale=0`. `openspec validate a087-a-protective-exit-is-a-market-order --strict --no-interactive`: 통과.
+
+### 안 본 것·제한
+
+- 12판은 설계 단계다. a087·a166 구현, 단위/종단/변이 시험, 전체 gate, 실제 공유 admission, 브로커·계좌·실주문은 실행하지 않았다. 운영·`mutating` 명령은 0이다.
+- a166의 wire 관문, 429 수명, 공정성·1초 창 배분은 아직 정의/측정되지 않았다. D15의 nil fail-closed는 이를 숨기지 않지만, P0 활성화 결속을 대신하지 않는다.
+- `impeccable: N/A — backend/documentation-only`. `grill-me`: D-1·D-2 및 Manager 결정을 확정값으로 사용했고 새 사람 결정을 만들지 않았다. `search-first`: 구현·의존성 채택이 아닌 독립 문서/소스 적대 검토라 현재 저장소·a166 OpenSpec·AST만 대조했다.
