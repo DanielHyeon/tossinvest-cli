@@ -310,3 +310,27 @@
 - `openspec validate a169-breakout-universes-are-compared-in-shadow --strict` → rc 0(2026-10-29, 이 절을 쓴 뒤).
 
 재리뷰가 꼭 볼 곳: design §7.5 감시기(회전 · 정지 · 재시작 거부 · 취소에서 GET 0 까지의 사슬) · G6 판정 규칙 · G2(b) 의 E 신원 조건이 충분한가 · §14-4 순서.
+
+## §10 재리뷰 (GPT-5.6 Terra, 2026-10-29)
+
+### 결론: **FAIL (blocker 3)**
+
+§9가 고친 G6의 파싱 동등 비교·preflight 순서·경로 정규화·좁은 reader와 되살린 §8 원장은 설계상 일관된다. 그러나 한도 단위가 [미측정]인 동안 엔진 보호 호가를 지키는 유일한 근거로 올린 감시기는 아직 (i) 취소 뒤 호출을 원자적으로 막지 못하고, (ii) 엔진 429 전부를 보지 못하며, (iii) 시작 때 실제 살아 있는 엔진의 로그를 보고 있음을 확인하지 않는다. 이 셋이 닫히기 전에는 리허설·측정을 시작하면 안 된다.
+
+| ID | 심각도 | file:line | 근거 | 처분 제안 |
+|---|---|---|---|---|
+| P1-8 | P1 | `tools/a140-breakout-signal-shadow/source.go:77-82,92-96,115-119`; `design.md:443-445`; `specs/breakout-retest-strategy-lane/spec.md:79-80` | **AST** `pacedSource.pause` B1@78은 그 순간의 `ctx.Err()`만 반환한다. 이어 `retrying` B3@92 또는 `quoteRead` B2@115가 통과한 뒤 각각 `p.count`와 `call(ctx)`가 있다. 따라서 감시기가 `CancelCause`를 부르는 시점이 `pause` 반환 뒤·`call` 전이면 새 호출이 하나 이상 시작할 수 있다. `pacedSource`에는 호출을 직렬화하거나 cancel과 호출 시작을 한 임계구역에 묶는 장치도 없다. “취소 뒤 새 GET 0, 최대 1”은 이 AST에서 나오지 않는다. | `pause` 뒤 검사 하나를 덧붙이는 것으로 닫지 말 것. 감시기가 먼저 닫는 admission gate와 실제 broker `call` 시작을 같은 동기화 경계에 두고, 이미 admission한 호출 수의 상한도 명시할 것. 취소를 `pause`와 `call` 사이에 주입하고 동시 호출을 여럿 대기시킨 RED에서, cancel 완료 뒤 broker 호출 계수가 늘지 않음을 증명하라. 그때까지 spec의 “all further broker calls”와 design의 “새 GET 0”을 주장하지 말 것. |
+| P1-9 | P1 | `internal/official/errors.go:54-55`; `internal/execgw/retry.go:347-355,370-377,430-439`; `internal/app/engine/exitloop.go:435-441,864-904`; `design.md:431-434,459-464`; `issues.md:69`; `tasks.md:40-41` | **손으로 읽음.** 429는 `official: rate limited` sentinel이 된다. 엔진 exit loop는 `Retrier.Query`로 가격을 읽고, 429에서 대기 후 재시도가 성공하면 351~355에서 로그·alert 없이 성공 반환한다. `Retry-After`가 없는 429도 430~439의 보통 backoff를 거쳐 똑같이 숨겨진다. 즉 “모든 429가 engine.log에 남는다”는 [미측정]이 아니라 현재 반례가 있는 거짓이며 감시기는 그 429를 볼 수 없다. issues §5 P1-6a가 이 눈먼 칸을 적었지만, design·tasks는 이를 가진 채 감시기만으로 리허설·측정을 허용해 서로 모순된다. | 엔진이 `ErrRateLimited`를 받은 **모든** 경로(재시도 전·재시도 성공·Retry-After 유무·fallback 포함)에 비밀 없는 정규 rate-limit 이벤트를 남기고, a169은 그 이벤트를 감시하도록 별 change/계약을 선행하라. 그 계약이 없으면 한도 단위가 확인될 때까지 a169 리허설·측정을 fail-closed로 막아야 한다. 해당 네 경우가 각각 도구 중단으로 이어지는 통합 RED를 추가하라. |
+| P1-10 | P1 | `design.md:435-452,730-733`; `internal/enginelock/enginelock.go:84-93,361-385,487-516` | **손으로 읽음.** Manager가 제공한 사실에 따르면 현재 호스트 사용자는 실제 `ENGINE_CONFIG_DIR/engine.log`를 읽을 수 있다. 하지만 설계의 시작 검사는 일반 파일을 열어 끝으로 이동할 뿐이고, “세션 중 한두 번 크기가 커지는지”를 사람이 뒤늦게 보는 절차다. stale·다른 프로세스·더 이상 쓰지 않는 로그를 시작 뒤 첫 GET부터 감시 대상으로 받아들일 수 있다. 같은 디렉터리에는 이미 1분 갱신·5분 stale 판정의 `engine-run.json` marker가 있으나 새 감시기 계약은 이를 확인하지 않는다. | 감시기 시작 전에 `ENGINE_CONFIG_DIR`의 fresh·ready 엔진 marker(필요하면 현재 콘솔의 process-instance 대조까지)를 비밀 없이 확인하고, 실패·stale·unready면 HTTP/원장 0으로 거부하라. marker와 로그 모두가 같은 canonical E 아래임을 시험하고, 시작 뒤 marker가 stale/사라져도 즉시 abort하도록 정하라. 로그 성장의 사후 사람 확인은 보조로만 남긴다. |
+
+### 확인한 것
+
+- **G6 도구 토큰 파싱 실패 → 통과:** **AST** `tokenManager.loadCache` B3@190은 JSON 파싱 오류를 돌리고, `token`은 `err == nil`인 cache만 재사용한 뒤 실패하면 새 exchange로 간다(`internal/official/token.go:72-78,178-193`). 그래서 G5가 별도 API key를 먼저 증명한다는 전제에서는 malformed 도구 cache가 엔진 bearer token을 재사용하는 경로가 아니다. 이 판정은 설계 수준이며 `profile.go` 구현은 아직 없다.
+- **§8 원장 복구:** **손으로 읽음.** `a98475faa`에는 §7 다음이 §9였고, 현재 `design.md:471-488`은 `## 8. 원장`과 `abort` 행을 복구했다. 현재 최상위 절 0~14는 연속하고 `abort` schema는 §7.5·§9·spec의 제외 규칙과 맞는다. `git diff --check a98475faa..c1af3177b -- <a169 change>`도 출력 0이었다. 이 비교에서 다른 제목/절 번호 손상은 찾지 못했다.
+- **문서 간 정합:** G6·preflight·E 경로·`--top`/U2 RED 항목은 design·spec·tasks에 남아 있다. 다만 P1-9의 눈먼 429를 “별 change가 필요할 수 있음”으로만 남기면서 현 change의 실행을 허용한 부분은 위 blocker다.
+
+### 안 본 것
+
+- 소스·시험 편집, 시험/build/vet/lint, 브로커·Docker·운영 명령, 리허설·측정은 실행하지 않았다.
+- `.env`, tossctl 설정·캐시, 실제 `engine.log`·`engine.lock`·marker의 내용과 권한은 읽지 않았다. Manager가 제공한 경로·소유자·mode·mtime 사실은 독립 검증하지 않았다.
+- `profile.go`·`enginewatch.go`는 HEAD에 아직 없어 실제 런타임 순서·로그 follower·원장 abort 구현은 인증하지 못했다. 이 절의 AST는 기존 `pause`·429 분류·토큰 cache·엔진 marker 경로만 대상으로 한다.
