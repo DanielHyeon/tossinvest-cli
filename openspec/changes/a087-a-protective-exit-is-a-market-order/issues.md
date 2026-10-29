@@ -246,6 +246,11 @@ Function Logic Map: not-applicable — 문서 개정만 했다. 분기 주장은
 
 ### D-2 — 8판에서 사람 확인이 필요한 것 (2026-10-28 · **9판 갱신 2026-10-29**)
 
+> **사람 결정 2026-10-29 (사용자 「권장대로」): ① · ⑥ 수락.**
+> - **① 수락** — design D15.3 불변식 4 표의 상한(a166 admission 전 칸 1~4 전부 0, 활성화 뒤 열의 상한)을 수락한다.
+> - **⑥ 수락** — a166 전에 착지하면 기능은 휴면(admission nil)이고 broker wire · `PlaceIntent` 가격은 변하지 않는다(a129 줄에 `price_source=observed|baseline` 키만 늘어남). 이것을 수락한다.
+>   **a166 은 착수한다**(Manager 가 별도 시작). a087 활성화(tasks 5.5)는 여전히 ⑦ 의 조건(wire 단위 admission + 그 통합 시험 sha)에 묶인다.
+>
 > **13판 갱신 (Manager 결정 2026-10-29 — 12판 재리뷰 FAIL 처분)**: ⑥ 의 활성화 조건이 「a166 착지」에서 아래 ⑦ 로 좁혀졌다.
 > - **⑦ (13판 — a166 쪽 요구, a166 착수 때 Manager 가 a166 문서에 반영)** **a166 은 wire 단위 admission 이어야 한다 — `send` 단위 불가(a087 활성화 조건).** 자리는 `official.Client.doRequest` 의
 >   `c.hc.Do` 직전이고 `send` 의 401 재전송 두 요청도 각각 지난다. a166 착지 sha 에 그것을 증명하는 통합 시험(401 → 401 → 200 에서 admission 3회 · 거절이면 `c.hc.Do` 0)이 있어야 하고,
