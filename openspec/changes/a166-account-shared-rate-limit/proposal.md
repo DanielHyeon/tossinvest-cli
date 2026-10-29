@@ -1,7 +1,7 @@
 # a166 — 계좌 공유 요청 속도 상한(3 req/s)과 엔진 GET 429 처리
 
-> **정의만 — 착수 전.** 이 문서는 proposal 수준이다. 아래 「선택지」는 스케치이고 고른 것이 아니다. design freeze·base
-> commit·FLM/BTM·코드는 아직 없다. 계좌 API 를 부르는 측정도 이 change 를 정의하면서 하지 않았다.
+> **착수(사용자 승인 2026-10-29) · design 1판 있음(`design.md`).** 아래 「선택지」 스케치의 비교와 권장(①)은 design §4 에 있고 Manager·사람 결정
+> (design §8) 전이다. base commit·FLM/BTM 번들·코드는 아직 없다(1판 AST 는 `analysis/evidence/`). 계좌 API 를 부르는 측정은 하지 않았다.
 
 ## Why
 
@@ -85,7 +85,7 @@ retry matrix·rate limit 은 WORKFLOW 「위험도 분류」의 High-risk 경로
 
 ### Modified Capabilities
 
-- `order-execution`: 「Retry Matrix 산출물」(429 처리·클라이언트 속도 상한·계좌 공유 예산). spec delta 는 proposal 단계 초안(ADDED)만 있다 — design 단계에서 기존 요구의 MODIFIED 로 다시 쓴다.
+- `order-execution`: 「Retry Matrix 산출물」(429 처리·클라이언트 속도 상한·계좌 공유 예산). spec delta 는 design 1판에서 「Retry Matrix 산출물」 MODIFIED + 「계좌 공유 요청 admission」 ADDED 로 다시 썼다.
 
 ## Impact
 

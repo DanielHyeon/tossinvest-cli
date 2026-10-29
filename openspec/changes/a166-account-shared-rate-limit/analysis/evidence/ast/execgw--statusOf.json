@@ -1,0 +1,147 @@
+{
+  "file": "internal/execgw/classify.go",
+  "source_sha256": "020dba811b666e941e863c051751197d53c65ff230a56d98628755886896fe2c",
+  "package": "execgw",
+  "function": "statusOf",
+  "signature": "statusOf(params=1, results=2)",
+  "start": {
+    "line": 125,
+    "column": 1
+  },
+  "end": {
+    "line": 143,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 127,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 131,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 134,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 140,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 128,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 133,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 137,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 139,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 141,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 5
+      },
+      "text": "errors.As"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 7
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 41
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 7
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 7
+      },
+      "text": "errors.Is"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

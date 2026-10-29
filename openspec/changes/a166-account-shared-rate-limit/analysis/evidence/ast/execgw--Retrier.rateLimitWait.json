@@ -1,0 +1,94 @@
+{
+  "file": "internal/execgw/retry.go",
+  "source_sha256": "1036f9ee8394207779ccb33cc920bdf1d26cb8400f6a32c68db9e9050d327de2",
+  "package": "execgw",
+  "function": "rateLimitWait",
+  "receiver": "Retrier",
+  "signature": "Retrier.rateLimitWait(params=2, results=2)",
+  "start": {
+    "line": 430,
+    "column": 1
+  },
+  "end": {
+    "line": 440,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 431,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 432,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 433,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 434,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 436,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 439,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 432,
+        "column": 15
+      },
+      "text": "r.RetryAfter.RetryAfter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 439,
+        "column": 9
+      },
+      "text": "policy.BackoffFor"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 432,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
