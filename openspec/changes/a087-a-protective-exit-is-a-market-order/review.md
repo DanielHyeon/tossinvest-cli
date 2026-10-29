@@ -1081,6 +1081,36 @@ OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서만 다뤘다(새 AS
 - a166의 공유 키·공정성·429 수명·wire 관문은 현재 정의/실측 전이다. 이것들은 5.5 전 a087 nil 기본값을 바꾸지 않지만, 위 a166 요구와 사람 승인 없이는 활성화할 수 없다.
 - `impeccable: N/A — backend/documentation-only`. `grill-me`: D-1·D-2 및 Manager 결정을 확정값으로 사용했고 새 사람 결정을 만들지 않았다. `search-first`: 구현·의존성 채택이 아닌 독립 문서/소스 적대 검토라 현재 저장소·a166 OpenSpec·AST만 대조했다. `ai-memory-retrieval`: 이 세션에는 `memory_query` 등 MCP가 없어 현재 source와 대화 내 결정만 검증에 썼다.
 
+## 구현 리뷰 (GPT-5.6 Terra, 2026-10-29)
+
+**결론: 조건부 PASS — a087 구현 범위의 보호 매도 가격 변경은 통과함.** admission은 production에서 literal `nil`로 고정되어 a166 전 하한가 GET이 0이며, 휴면 보호 매도는 기존 LIMIT `PlaceIntent`·wire body를 유지함. a166 매 wire admission과 사람 실측/활성화는 아직 통과 판정 대상이 아님.
+
+### 구현·적대 검토 발견과 처분
+
+| 심각도 | 발견 | 처분·증거 |
+| --- | --- | --- |
+| P0 | 하한가가 아닌 fallback 보호 매도는 첫 시도 금지를 남기지 않아 같은 날 다음 하한가 시도가 가능했음 | `Place` 반환 직후 모든 보호 action에 `markProtectiveAttempt`를 적용함. RED는 `analysis/red-output.txt`, GREEN은 `TestA087FallbackProtectivePlaceStillClosesFirstAttempt`로 확인함. |
+| P0 | positions/attempt 원장 읽기가 주기를 넘기면 다음 관측과 하한가 GET가 겹칠 수 있었음 | 사전 원장 읽기에 `interval - readLimit` deadline을 두고, 만료 시 reader 시작 전 반환함. `TestA087ExpiredPrefetchContextSkipsLowerLimitWire`·`TestA087ExpiredAttemptReadSkipsLowerLimitWire`가 각각 변이를 잡음. |
+| P1 | 실제 broker wire마다 admission을 강제하는 구현은 없음 | 의도된 a166 소유 범위임. a087 production wiring은 literal `nil`; 구조 시험이 non-nil 흐름을 거부함. 5.5는 a166의 `doRequest`별 실제 `official.Client` 통합 시험·착지 SHA와 사람 승인이 있어야만 가능함. |
+| P2 | cycle마다 positions 전체 조회와 종목별 journal EXISTS, snapshot 복사는 보유 종목 수에 따라 비용이 증가함 | schema v36 유지·새 auxiliary 한 종목/cycle 계약을 우선하여 현 change에서 재설계하지 않음. 실측 부하/인덱스 근거 없음; 활성화 전 용량 점검 위험으로 남김. |
+
+### 확인 결과
+
+- 불변식 4 판정: **조건부 충족**. nil admission에서 `Run`은 취소까지 대기해 하한가 GET 0이고, `TestA087DormantBoardKeepsLegacyPlaceIntent`는 기존 LIMIT 가격 `67900`, 직렬화 wire body, journal price가 동일함을 고정함. `TestA087RunSendsLowerLimitTokenBetweenObserveAndSleep`는 token이 관측 뒤·sleep 앞에만 보내지고 비차단임을 고정함. 새 로그 `price_source`는 D15가 허용한 별도 관측 정보이며 broker wire에는 없음.
+- 가격·시점: KR 평일 `[09:00, 15:30)`의 첫 보호 매도만 유효한 당일 하한가를 사용하며, 정수 canonical·당일 timestamp·하한가 ≤ 관측가가 아니면 기존 관측가/기준선 LIMIT으로 fallback함.
+- 재시작: journal SELECT-only 존재 질의가 account/market/trading day/symbol/protective action으로 scope를 고정하며 상태와 가격을 읽지 않음. 오류는 하한가 사용 금지임.
+- concurrency: snapshot은 atomic read와 writer lock을 쓰며 `-race` A087 focused tests를 통과함.
+- gstack 독립 적대 경로에서 위 P0 두 건을 찾고 수정 후 재검증함. gstack 자체 업그레이드 제안은 범위 밖이라 수행하지 않음. PR/Greptile 입력은 없었음.
+- `openspec validate a087-a-protective-exit-is-a-market-order --strict --no-interactive` 통과. 영향 패키지 `go vet`, 일반·`tossos_testseams` `go test`, A087 focused 일반·tagged `-race`를 통과함.
+- `check_analysis.py --change a087-a-protective-exit-is-a-market-order`는 이 change의 `base-commit.txt`가 오래되어 base→working tree의 기존 함수 378개 증거를 요구해 실패함. 이번에 편집한 7개 FLM/BTM의 stale 오류는 재생성 후 없음. base 재고정·`--record-landing`은 금지 지시대로 하지 않음.
+
+### 범위·미실행·남은 위험
+
+- `doRequest` 편집, schema 변경, 실제 broker/계좌/주문, 운영 토글, 사람 실측 5.4, 활성화 5.5, 전체 `go test ./...`, `make gate`는 실행하지 않음.
+- a166이 매 `c.hc.Do` 직전 admission을 401 재전송까지 강제하고 실제 client 통합 시험으로 증명하기 전에는 non-nil admission 배선을 금지함.
+- timestamp가 실제 효력일인지와 KRX 휴장/기준가 규칙은 5.4 사람 gate 전 미검증임. 이 구현 PASS는 주문 활성화 또는 실제 체결 PASS가 아님.
+- `impeccable: N/A — backend/documentation-only`. 화면·접근성 변경 없음.
+
 ## 구현 Pre-Edit · a165 재대조 (2026-10-29, HEAD `a284a2b0a`)
 
 ### a165 재대조 — 1.0

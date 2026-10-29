@@ -33,7 +33,7 @@
 
 ## State mutations and fallbacks
 
-- `opts.LowerLimitBoard` is always overwritten from `Context`, following Retrier/Issuer/Submit authority.
+- 비공개 `opts.lowerLimitBoard`는 항상 `Context` 소유 판으로 덮어씀.
 - caller-supplied board or admission cannot affect production observer.
 
 ## Safety conclusion

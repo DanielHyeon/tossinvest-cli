@@ -1,6 +1,6 @@
 # Function Logic Map: `ExitObserver.submit`
 
-- Source: `internal/app/engine/exitloop.go:1483-1596`
+- Source: `internal/app/engine/exitloop.go:1486-1603`
 - AST evidence: `ast.json` (Pre-Edit HEAD `a284a2b0a`)
 - Risk scan: `risk-pattern-report.md`
 
@@ -17,7 +17,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | floor 산술 오류 | 미발송 줄 기록 | 오류 반환 | floor 실패 가격 출처 baseline/observed |
+| B1 | floor 산술 오류 | 미발송 줄 기록 | 오류 반환 | 이미 고른 가격 출처를 줄에 보존 |
 | B2 | floor가 0 수량 | proposal release·미발송 줄 | release 결과 | 보호 가격 선택이 B2를 바꾸지 않음 |
 | B3 | Guardian 거절 | alert·release·미발송 줄 | release 결과 | 하한가 판이어도 Guardian 경로 동일 |
 | B4 | intent attach 실패 | 미발송 줄 | wrapped error | 제출 전 price 결정은 broker GET 0 |
@@ -37,8 +37,8 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `applyFloor` | 기존 RECONCILE 상한 | 오류는 B1 | AST B1 |
-| `exitLimitPrice` | 한 번만 가격과 출처 선택 | total; broker·network 호출 없음 | a087 insertion point before line construction |
+| `exitLimitPrice` | 모든 제출 갈래보다 먼저 가격과 출처를 한 번 선택 | total; broker·network 호출 없음 | AST :1489 |
+| `applyFloor` | 기존 RECONCILE 상한 | 오류는 B1 | AST :1490 |
 | `exitOrderLineFor` | 전송 가격과 원 관측가를 줄에 기록 | 오류 없음 | AST B1~B15 |
 | `sellIntent` | 기존 LIMIT intent 조립 | B5 기존 계약 | AST B5 |
 | `Submit.Place` | Guardian 보장 제출 | 결과 switch B6~B15 | AST B6 |

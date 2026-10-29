@@ -215,16 +215,16 @@
 - [x] 2.1 **Function Logic Map** — 위 기존 함수 7 의 번들(12판: `doRequest` 제외)(`ast.json` + `function-logic-map.md` + `branch-test-map.md` + `risk-pattern-report.md`)을 착수 HEAD 에서 만든다.
       `analysis/evidence/` 의 HEAD `1f4145c77` AST 는 0.10 증거이지 번들이 아니다. risk-pattern-report 에 `isProtective` 의 세 소비자(`record` · `submit` a091 floor ·
       a087 가격 결정)와 `exitOrderLineFor` 의 사다리 사본(design D11 (b) 「기록」)을 적는다
-- [ ] 2.2 **RED — 가격 결정 표** (`exitLimitPrice` 단독, 시계 · 판 시험 더블, 벽시계 · 실제 브로커 금지): design D11 「8판 검증」 첫 항목 전 행 — 창 경계 09:00:00 · 15:29:59 → 하한가,
+- [x] 2.2 **RED — 가격 결정 표** (`exitLimitPrice` 단독, 시계 · 판 시험 더블, 벽시계 · 실제 브로커 금지): design D11 「8판 검증」 첫 항목 전 행 — 창 경계 09:00:00 · 15:29:59 → 하한가,
       08:59:59 · 15:30:00 · 주말 → 오늘 사다리 · 익절 → 관측가 · US → 관측가 · 판 nil / 그날 항목 없음 / 전날 항목 / 하한가 0 / 하한가 > 관측가 / 관측가 파싱 불가 / 그날 거부됨 /
       시장 문자열 판정 불가 → 오늘 사다리 · 관측가 빔 → 기준선 · 둘 다 빔 → `""`. **폴백 행의 `PlaceIntent` 는 편집 전 HEAD 의 `sellIntent` 출력 literal 골든과 같다**
       (골든은 이 RED 커밋에 먼저 커밋 — 바뀐 함수끼리 비교 금지, 0.10 독립 리뷰 P2-2 승계)
       **9판 추가 행**: 판 항목 「금지」 → 오늘 사다리 · 판 값이 정수 decimal 문자열 그대로 `sellIntent` 로 감(B3·B4 통과)
       **10판 추가 행(D13.4)**: 하한가 정본 `^[1-9][0-9]*$` · 정수 파싱, 관측가 decimal 값 비교 — `"50400"` vs 관측가 `"50400"`/`"50401"` → 하한가, `"50399"` → 관측가 · 하한가 `"050400"` · `"50400.0"` · `" 50400"` ·
       `"5.04e4"` · `""` → 관측가 · 관측가 파싱 불가 → 관측가 · 판 항목 「금지」 → 관측가
-- [ ] 2.3 **GREEN — 판 · 가격 결정** — 새 파일에 불변 스냅숏 판(원자 포인터, 쓰기 잠금) · `exitLimitPrice` 총함수(error 없음 · 패닉 없음 · GET 0). `submit` 머리에서 한 번
+- [x] 2.3 **GREEN — 판 · 가격 결정** — 새 파일에 불변 스냅숏 판(원자 포인터, 쓰기 잠금) · `exitLimitPrice` 총함수(error 없음 · 패닉 없음 · GET 0). `submit` 머리에서 한 번
       결정하고 그 값을 `sellIntent`(`observed` 자리)와 `exitOrderLineFor` 로 넘긴다. `NewContext` 반환 리터럴에 판 한 줄, `Context.ExitObserver` 가 덮음
-- [ ] 2.4 **RED/GREEN — 갱신기 (9판 D12.2 가) 토큰 · 10판 D13.2 429 기록)** — 보조 실행자(선례 `Context.ManualBuyRefresher`)가 **관측 주기 끝 토큰**(`ExitObserver.Run` 이
+- [x] 2.4 **RED/GREEN — 갱신기 (9판 D12.2 가) 토큰 · 10판 D13.2 429 기록)** — 보조 실행자(선례 `Context.ManualBuyRefresher`)가 **관측 주기 끝 토큰**(`ExitObserver.Run` 이
       `ObserveOnce` 반환 뒤 · `Sleep` 앞에서 용량 1 채널에 막히지 않게 보냄 — `Run` 편집은 이 한 줄)을 받을 때만 GET 1건(시한 min(주기/2, 2초)). 창 안 · KR · 그날 항목 없는 종목만.
       **429 정지 = 입력 하나**: `official.Client` 의 「마지막 HTTP 429 시각」(헤더 무관, `doRequest` 가 기록 — 2.10)이 5분 안이면 GET 0. 입력 없으면 취소 대기. `engineRuntime` `Auxiliary` 등록.
       **시험**: 가짜 transport 로 관측 `/prices` 진행 중 하한가 요청 동시 수 = 0 · 한 주기 `MARKET_DATA` 요청 수 ≤ 오늘(판 없는 같은 시나리오) + 1 · **헤더 없는 429 → 재시도 성공(`cycle.Err == nil`) → 5분 GET 0** ·
@@ -243,16 +243,16 @@
       (새 파일). 반환값 · 오류 · `rates.record` 무변경(기존 ratebudget · client 시험 green). **착수 전 겹침 대조**: a166(삽입 후보 `doRequest` · `send`) · a100(`client.dorequest` FLM 번들) ·
       a165(`client.send` 번들 — `doRequest` 호출자) 의 그 시점 상태를 1.0 과 같은 방식으로 대조. a166 이 먼저 계좌 공유 429 기록을 착지하면 이 task 는 그것을 읽는 쪽으로 줄인다~~
       — **not-applicable (12판 — design D15.1)**: `doRequest` 429 원자 기록은 a166 이 계좌 공유 예산과 함께 가져간다. a087 의 `doRequest` 편집 0 — a100 · a166 겹침 소멸
-- [ ] 2.5 **RED/GREEN — 첫 시도 한정 (10판 — design D13.1)** — 하한가는 그날 그 종목의 첫 보호 매도 시도에만. 술어 하나 = 「같은 `account_ref` · `market` · `trading_day` · symbol 에
+- [x] 2.5 **RED/GREEN — 첫 시도 한정 (10판 — design D13.1)** — 하한가는 그날 그 종목의 첫 보호 매도 시도에만. 술어 하나 = 「같은 `account_ref` · `market` · `trading_day` · symbol 에
       보호 청산 매도 intent 존재」. `submit` 이 보호 청산 `Place` 를 부르면 결과와 무관하게 메모리 「금지」. **종단 시험**: 첫 시도 하한가 CONFIRMED → 둘째 시도 관측가 LIMIT ·
       직접 거부 B13 → 다음 주기 관측가 LIMIT · `IN_DOUBT → StateFailedConfirmed → noteHeldProposal B4 해제 → 다음 주기 관측가 LIMIT` · 첫 시도 창 밖(오늘 LIMIT) → 창 안 재발의 관측가 LIMIT.
       **release 실패 종단 시험(D13.5 #3)**: 직접 거부 B13 에서 `ReleaseUnacceptedExitProposal` 오류 → 발의 무장 유지 → 다음 주기 `noteHeldProposal` B4→B5 재해제 → 관측가 LIMIT ·
       IN_DOUBT → 비수용 확정 해제(B4)에서 release 오류 → 같은 복구 → 관측가 LIMIT(두 경우 모두 하한가 재제출 0). `noteHeldProposal` · `release` 는 편집하지 않는다
-- [ ] 2.8 **RED/GREEN — 엔진 전용 하한가 읽기 (9판 — design D12.1)** — 새 파일 `internal/official/a087_price_limits_raw.go`: `lowerLimitPrice *string` · `timestamp` 원문 보존.
+- [x] 2.8 **RED/GREEN — 엔진 전용 하한가 읽기 (9판 — design D12.1)** — 새 파일 `internal/official/a087_price_limits_raw.go`: `lowerLimitPrice *string` · `timestamp` 원문 보존.
       `Client.PriceLimits` · `adaptPriceLimits` · `domain.PriceLimits` · `tossctl quote limits` 출력 바이트 무변경(골든). 쓰는 조건 = timestamp KST 날짜 = 그날 거래일 **그리고** ≥ 09:00 KST.
       **사유별 행**: null · 파싱 불가 · 0 이하 · 정수 아님 · timestamp 결측 · 파싱 불가 · 다른 날 · 09:00 전 · 「오늘 수신한 전일 payload」(timestamp 가 전날) → 항목 없음 + 그 사유 줄 1회.
       판 값 → `sellIntent` → B5 미도달
-- [ ] 2.9 **RED/GREEN — 재시작 재구성 (10판 — design D13.1)** — 새 파일의 읽기 전용 원장 함수 하나: 같은 `account_ref` · `market`(소문자) · `trading_day` · `UPPER(TRIM(symbol))` 의
+- [x] 2.9 **RED/GREEN — 재시작 재구성 (10판 — design D13.1)** — 새 파일의 읽기 전용 원장 함수 하나: 같은 `account_ref` · `market`(소문자) · `trading_day` · `UPPER(TRIM(symbol))` 의
       `intents` 중 `side='SELL'` 이고 `exit_events.proposed_intent_id` 로 가리켜진 판정의 `action` 이 `BASELINE_BREACH_EXIT` · `STOP_LOSS_LADDER` 인 행의 **존재 여부**. 가격 · 상태 · 출처는 읽지 않는다.
       갱신기는 항목을 내기 **전에** 이것으로 금지를 정한다. 원장 읽기 오류 · 파싱 불가 → 금지(fail-closed). **재시작 시험**: `IN_DOUBT → CONFIRMED → restart` → 관측가 LIMIT ·
       하한가 FAILED → 관측가 CONFIRMED → restart → 관측가 LIMIT · 다른 계좌 · 다른 시장의 같은 종목 intent 만 있음 → 하한가 · 익절 intent 만 있음 → 하한가 · 원장 오류 → 관측가 LIMIT.
@@ -262,8 +262,8 @@
       **행동 시험**: 기준선 이탈 하한가 시도(CONFIRMED · FAILED_CONFIRMED · IN_DOUBT→비수용 각각) → 재시작 → 그날 금지(관측가 LIMIT), 손절 사다리도 같은 세 행
       **12판 (design D15.2)**: 구조 시험은 상수 이름 수가 아니라 **평가된 값 집합** — `go/packages`/`go/types` 로 `internal/exitpolicy` 패키지 범위의 타입이 `exitpolicy.Action` 인
       `*types.Const` 전부를 모으고 `go/constant` 로 값을 평가한다(다른 파일 · `Action("…")` 형 선언 포함). 같은 값의 두 이름은 값 → 이름 목록으로 기록. 값 집합 · 참 집합이 비면 실패
-- [ ] 2.6 **RED — 즉시성 · 경합** — 제출 경로 GET 0(호출 계수 더블) · 판 미준비에서 `submit` B5 미도달 · 갱신기 쓰기와 결정 읽기의 경합(`-race`, 반쪽 스냅숏 없음)
-- [ ] 2.7 **변이** — 「창 조건 제거」 · 「창 끝 15:30 → 16:00 이상(시간외 누출)」 · 「익절에도 하한가」 · 「US 에도 하한가」 · 「날짜 대조 제거」 · 「하한가 ≤ 관측가 검사 제거」 ·
+- [x] 2.6 **RED — 즉시성 · 경합** — 제출 경로 GET 0(호출 계수 더블) · 판 미준비에서 `submit` B5 미도달 · 갱신기 쓰기와 결정 읽기의 경합(`-race`, 반쪽 스냅숏 없음)
+- [x] 2.7 **변이** — 「창 조건 제거」 · 「창 끝 15:30 → 16:00 이상(시간외 누출)」 · 「익절에도 하한가」 · 「US 에도 하한가」 · 「날짜 대조 제거」 · 「하한가 ≤ 관측가 검사 제거」 ·
       「하한가 0 허용」 · 「되먹임 제거」 · 「되먹임을 B8(결과 미상)에도」 · 「결정에서 GET」 · 「결정 실패 → 오류 반환」 · 「`exitOrderLineFor` 가 사본 사다리 유지(줄 가격 ≠ 보낸 가격)」 ·
       「`NewOrderPath` 에서 판 생성」이 CAUGHT 인지 원장에 남긴다
       **9판 추가 변이**: 「timestamp 날짜 대조 제거」 · 「09:00 이전 허용」 · 「null 을 0 으로 합침(사유 하나)」 · 「토큰 없이 GET」 · 「주기당 2건 이상」 · 「429 정지 제거(세 입력 각각)」 ·
@@ -332,12 +332,12 @@
 
 ## 3. 원장·관측·화면 (Phase 2)
 
-- [ ] 3.1 **RED/GREEN — a129 줄의 가격 · 출처** — `exitOrderLine` 에 `price_source`(`lower_limit` · `observed` · `baseline`), 줄의 `price` = 보낸 가격, `observed_price` ·
+- [x] 3.1 **RED/GREEN — a129 줄의 가격 · 출처** — `exitOrderLine` 에 `price_source`(`lower_limit` · `observed` · `baseline`), 줄의 `price` = 보낸 가격, `observed_price` ·
       `baseline` 은 그대로. 하한가 행 · 폴백 행 · 거부 행(B13 줄도 같은 출처)
       **9판 (design D12.6)**: a129 골든에 `price_source` 를 **필수 키**로(부분 비교 helper 가 빠뜨리지 못하게 키 존재를 따로 단언), 값 `lower_limit` · `observed` · `baseline` 각각.
       행: B1(하한 산술 실패) · B5(관측가 · 기준선 행) · B7 · B13 · B8 → 비수용 확정(비동기 결과 · 체결 따라가기 줄) · 폴백. 소비자 0 은 구현 시 재검색
       **13판 재리뷰 P2**: admission nil · 빈 판 골든은 `price_source ∈ {observed, baseline}` 이고 `lower_limit` 부재를 단언(design D15 의 무변화 범위 = broker wire · `PlaceIntent` 가격)
-- [ ] 3.2 **RED — 원장 가격** — 하한가 보호 청산의 `intents.price` = 하한가, 폴백은 오늘과 같은 값(schema 무변경)
+- [x] 3.2 **RED — 원장 가격** — 하한가 보호 청산의 `intents.price` = 하한가, 폴백은 오늘과 같은 값(schema 무변경)
 - [x] 3.3 ~~원장 기록 경로 GREEN~~ — **not-applicable (8판)**: 원장 쓰기 경로는 `PlaceIntent.Price` 를 그대로 적는다 — 바꿀 코드가 없다(3.2 RED 가 고정)
 - [x] 3.4 ~~화면 「시장가」 표시~~ — **not-applicable (8판)**: 가격 없는 청산 의도를 생산하지 않는다(design D4 머리말)
 

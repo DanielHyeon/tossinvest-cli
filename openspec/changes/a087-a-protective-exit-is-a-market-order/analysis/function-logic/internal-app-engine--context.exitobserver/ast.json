@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/exitwiring.go",
-  "source_sha256": "6020a40b20302b0dae0565247bae10c7a24af17be1514f450c45e37d972e2aa4",
+  "source_sha256": "e8f131a312ece6fbaadecd1c71131d7db892c9ab64ac2f9254d56ec1936c8c30",
   "package": "engine",
   "function": "ExitObserver",
   "receiver": "Context",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 364,
+    "line": 365,
     "column": 2
   },
   "branches": [
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 343,
+        "line": 344,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 348,
+        "line": 349,
         "column": 2
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 360,
+        "line": 361,
         "column": 2
       }
     }
@@ -88,7 +88,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 363,
+        "line": 364,
         "column": 2
       }
     }
@@ -129,7 +129,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 361,
+        "line": 362,
         "column": 16
       },
       "text": "exitSideFloor"
@@ -137,7 +137,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 363,
+        "line": 364,
         "column": 9
       },
       "text": "NewExitObserver"
@@ -217,14 +217,14 @@
     {
       "kind": "=",
       "at": {
-        "line": 344,
-        "column": 3
+        "line": 343,
+        "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 349,
+        "line": 345,
         "column": 3
       }
     },
@@ -238,35 +238,42 @@
     {
       "kind": "=",
       "at": {
-        "line": 352,
+        "line": 351,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 355,
+        "line": 353,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 356,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 357,
+        "line": 358,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 359,
+        "line": 360,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 361,
+        "line": 362,
         "column": 3
       }
     }

@@ -17,4 +17,4 @@
 | B13 | interlock error | existing startup test | 기존 green | unchanged |
 | B14 | unverified automation | existing startup test | 기존 green | unchanged |
 | B15 | projection error | existing startup test | 기존 green | unchanged |
-| B15 | context return | a087 board construction dataflow | 작성 전 | one constructor·nil admission |
+| success | context return | a087 board construction dataflow | 작성 전 | one constructor·nil admission |

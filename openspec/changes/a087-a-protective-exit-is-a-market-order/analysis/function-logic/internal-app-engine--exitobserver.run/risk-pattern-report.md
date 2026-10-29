@@ -2,6 +2,6 @@
 
 | Rule | Location | Message |
 |---|---|---|
-| go-panic | `internal/app/engine/exitloop.go:2034` | panic can bypass normal error and shutdown handling; map the recovery boundary. |
+| go-panic | `internal/app/engine/exitloop.go:2033` | panic can bypass normal error and shutdown handling; map the recovery boundary. |
 
 > Findings are review candidates, not automatic defect verdicts.

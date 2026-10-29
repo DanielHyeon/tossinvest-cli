@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/exit_order_log.go",
-  "source_sha256": "4d4ef9eb163048ec263098dd5e6155d2e4e9fcad311a3c58c94b5d9facbe6bda",
+  "source_sha256": "419352e976848c9e210a08cf897d3495f84029e8ca54ed2bfcb79fbc2c2bd7b1",
   "package": "engine",
   "function": "args",
   "receiver": "exitOrderLine",
   "signature": "exitOrderLine.args(params=0, results=1)",
   "start": {
-    "line": 140,
+    "line": 138,
     "column": 1
   },
   "end": {
-    "line": 169,
+    "line": 168,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 161,
+        "line": 160,
         "column": 2
       }
     }
@@ -27,7 +27,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 168,
+        "line": 167,
         "column": 2
       }
     }
@@ -36,7 +36,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 158,
+        "line": 147,
+        "column": 19
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
         "column": 21
       },
       "text": "exitOrderToken"
@@ -44,7 +52,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 159,
+        "line": 158,
         "column": 20
       },
       "text": "exitOrderToken"
@@ -52,7 +60,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 162,
+        "line": 161,
         "column": 10
       },
       "text": "append"
@@ -62,14 +70,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 141,
+        "line": 139,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 162,
+        "line": 161,
         "column": 3
       }
     }

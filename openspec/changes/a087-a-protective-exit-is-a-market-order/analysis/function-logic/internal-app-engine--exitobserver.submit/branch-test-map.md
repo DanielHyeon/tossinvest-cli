@@ -17,3 +17,4 @@
 | B13 | refusal default | a087 rejection fallback | 작성 전 | source 보존 |
 | B14 | failed confirmed | a087 rejection fallback | 작성 전 | source 보존 |
 | B15 | empty detail | a087 rejection fallback | 작성 전 | whitelist 유지 |
+| B16 | default refusal | a087 rejection fallback | 작성 전 | 기존 release 유지 |

@@ -1,0 +1,60 @@
+$ GOCACHE=$HOME/.cache/a087-go/cache go test ./internal/app/engine -run '^TestA087' -count=1
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a087_lower_limit_internal_test.go:18:12: undefined: exitLowerLimitBoard
+internal/app/engine/a087_lower_limit_internal_test.go:19:16: undefined: lowerLimitSnapshot
+internal/app/engine/a087_lower_limit_internal_test.go:19:55: undefined: lowerLimitRecord
+internal/app/engine/a087_lower_limit_internal_test.go:20:3: undefined: lowerLimitKey
+internal/app/engine/a087_lower_limit_internal_test.go:29:12: undefined: exitLimitChoice
+internal/app/engine/a087_lower_limit_internal_test.go:31:74: undefined: exitLimitChoice
+internal/app/engine/a087_lower_limit_internal_test.go:31:114: undefined: exitPriceSourceLowerLimit
+internal/app/engine/a087_lower_limit_internal_test.go:32:90: undefined: exitLimitChoice
+internal/app/engine/a087_lower_limit_internal_test.go:32:130: undefined: exitPriceSourceObserved
+internal/app/engine/a087_lower_limit_internal_test.go:33:119: undefined: exitLimitChoice
+internal/app/engine/a087_lower_limit_internal_test.go:33:119: too many errors
+FAIL github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [build failed]
+FAIL
+--- FAIL: TestA087SubmitUsesOneChoiceAndMarksOnlyAfterPlace (0.00s)
+    a087_submit_structure_test.go:41: 가격 결정=/home/daniel/tossos-work/a087-impl/internal/app/engine/exitloop.go:1497:12 applyFloor=/home/daniel/tossos-work/a087-impl/internal/app/engine/exitloop.go:1490:33; 가격 결정은 모든 제출 갈래보다 먼저여야 함
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.007s
+FAIL
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine_test [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a087_exit_wire_test.go:13:10: undefined: engine.SetA087LowerLimitForTest
+internal/app/engine/a087_exit_wire_test.go:15:11: h.breach undefined (type *exitHarness has no field or method breach)
+internal/app/engine/a087_exit_wire_test.go:27:11: h.breach undefined (type *exitHarness has no field or method breach)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [build failed]
+FAIL
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a087_lower_limit_refresher_test.go:80:11: board.canRefresh undefined (type *exitLowerLimitBoard has no field or method canRefresh)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [build failed]
+FAIL
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine_test [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a087_exit_wire_test.go:22:13: undefined: engine.A087LowerLimitAttemptedForTest
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [build failed]
+FAIL
+--- FAIL: TestA087LowerLimitRefresherSkipsOutsideKoreanLimitWindow (0.00s)
+    a087_lower_limit_refresher_test.go:179: 장외 하한가 wire GET = 1, want 0
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.004s
+FAIL
+
+$ GOCACHE=$HOME/.cache/a087-go/cache go test ./internal/app/engine -run '^TestA087FallbackProtectivePlaceStillClosesFirstAttempt$' -count=1
+--- FAIL: TestA087FallbackProtectivePlaceStillClosesFirstAttempt (0.76s)
+    a087_exit_wire_test.go:90: 하한가가 아닌 첫 보호 매도 뒤 첫 시도 금지 표시가 없음
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.767s
+FAIL
+
+$ GOCACHE=$HOME/.cache/a087-go/cache go test ./internal/app/engine -run '^TestA087ExpiredPrefetchContextSkipsLowerLimitWire$' -count=1
+--- FAIL: TestA087ExpiredPrefetchContextSkipsLowerLimitWire (0.01s)
+    a087_lower_limit_refresher_test.go:212: 만료된 사전 원장 읽기 뒤 하한가 wire GET = 1, want 0
+FAIL
+
+$ GOCACHE=$HOME/.cache/a087-go/cache go test ./internal/app/engine -run '^TestA087ExpiredAttemptReadSkipsLowerLimitWire$' -count=1
+--- FAIL: TestA087ExpiredAttemptReadSkipsLowerLimitWire (0.01s)
+    a087_lower_limit_refresher_test.go:235: 만료된 시도 원장 읽기 뒤 하한가 wire GET = 1, want 0
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.015s
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.014s
+FAIL

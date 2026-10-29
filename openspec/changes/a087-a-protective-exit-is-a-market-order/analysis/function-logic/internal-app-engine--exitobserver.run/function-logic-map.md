@@ -1,6 +1,6 @@
 # Function Logic Map: `ExitObserver.Run`
 
-- Source: `internal/app/engine/exitloop.go:407-417`
+- Source: `internal/app/engine/exitloop.go:409-420`
 - AST evidence: `ast.json` (Pre-Edit HEAD `a284a2b0a`)
 - Risk scan: `risk-pattern-report.md`
 
@@ -24,8 +24,8 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `ObserveOnce` | complete judgement/submission cycle | errors stay in cycle | AST line 412 |
-| `reportCycle` | existing diagnostic output | does not alter loop result | AST line 412 |
+| `ObserveOnce` | complete judgement/submission cycle | errors stay in cycle | AST line 414 |
+| `reportCycle` | existing diagnostic output | does not alter loop result | AST line 414 |
 | `lowerLimitBoard.cycleComplete` | after observe, before sleep token | nonblocking, no broker call | a087 insertion |
 | `clk.Sleep` | preserve cycle cadence | B3 returns its error | AST B3 |
 

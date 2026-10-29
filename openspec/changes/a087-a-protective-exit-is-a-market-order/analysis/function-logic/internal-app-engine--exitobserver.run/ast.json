@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "4d92acb6e7e17a25d759d1cef27294f7bb74031ac2f17fe53c516357c94cc3d9",
+  "source_sha256": "27ae828542d30f31271138d62866a933ee582d3b92d87c8e47ae1298e4e7627d",
   "package": "engine",
   "function": "Run",
   "receiver": "ExitObserver",
   "signature": "ExitObserver.Run(params=1, results=1)",
   "start": {
-    "line": 407,
+    "line": 409,
     "column": 1
   },
   "end": {
-    "line": 417,
+    "line": 420,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "for",
       "at": {
-        "line": 408,
+        "line": 410,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 409,
+        "line": 411,
         "column": 3
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 413,
+        "line": 416,
         "column": 3
       }
     }
@@ -43,14 +43,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 410,
+        "line": 412,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 414,
+        "line": 417,
         "column": 4
       }
     }
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 409,
+        "line": 411,
         "column": 13
       },
       "text": "ctx.Err"
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 412,
+        "line": 414,
         "column": 3
       },
       "text": "o.reportCycle"
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 412,
+        "line": 414,
         "column": 17
       },
       "text": "o.ObserveOnce"
@@ -83,7 +83,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 413,
+        "line": 415,
+        "column": 3
+      },
+      "text": "o.opts.lowerLimitBoard.cycleComplete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 415,
+        "column": 40
+      },
+      "text": "o.Interval"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 416,
         "column": 13
       },
       "text": "o.clk.Sleep"
@@ -91,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 413,
+        "line": 416,
         "column": 30
       },
       "text": "o.Interval"
@@ -101,14 +117,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 409,
+        "line": 411,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 413,
+        "line": 416,
         "column": 6
       }
     }

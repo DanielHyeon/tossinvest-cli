@@ -1,6 +1,6 @@
 # Function Logic Map: `exitOrderLineFor`
 
-- Source: `internal/app/engine/exit_order_log.go:102-114`
+- Source: `internal/app/engine/exit_order_log.go:103-112`
 - AST evidence: `ast.json` (Pre-Edit HEAD `a284a2b0a`)
 - Risk scan: `risk-pattern-report.md`
 
@@ -16,13 +16,13 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | observed blank | price uses baseline | return line | baseline source golden |
+| — | 분기 없음 | 고른 price/source와 원 관측가를 사본에 함께 고정 | return line | lower_limit/observed/baseline golden |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `strings.TrimSpace` | current fallback canonicalization | no error | AST B1 |
+| — | 호출 없음 | — | — |
 
 ## State mutations and fallbacks
 
