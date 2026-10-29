@@ -21,6 +21,8 @@
 > 하나(2.4 · 2.10), release 실패 종단 시험(2.5). 0.10 = **10판 — 재리뷰 대기**.
 > **2026-10-29 11판 (Manager 결정 — 10판 재리뷰 FAIL 처분)**: design D14. 재구성 action = `isProtective` 와 같은 Go 상수(2.9 구조 · 행동 시험), 시작 정숙 5분 · 401 시 wire 3(2.4),
 > 예산 기준 계좌 공유 3 req/s. 0.10 = **11판 — 재리뷰 대기**.
+> **2026-10-29 12판 (Manager 결정 — 11판 재리뷰 FAIL 처분)**: design D15. 하한가 GET 은 a166 계좌 공유 admission 이 주입될 때만(2.4 — 엔진 배선은 그 전까지 nil, 생산 변화 0),
+> 2.10 not-applicable(429 기록은 a166), 구조 시험은 평가된 `Action` 값 집합(2.9). 0.10 = **12판 — 재리뷰 대기**.
 
 ## 0. 게이트 선행
 
@@ -64,7 +66,7 @@
       부정확; 실측 422 거부 시 재검토가 §5 표에 이미 있음). I-R8: 0.5 는 §1~§3 착수 전 조건
       유지(freeze 는 문서 상태 판정, §1~§3 은 어차피 §5 실측 대기).
       → **proposal-freeze 재개 선언.** 남은 §1~§3 착수 조건 = §5 실측(결과→처분 표) + 0.5.
-- [ ] 0.10 **requirement 변경 리뷰 (2026-10-22 D7 처분) — 11판 — 재리뷰 대기 (2026-10-29)** — spec Requirement 1 에 「시장가를 받지 않는 구간은 오늘처럼 지정가」 예외를 넣은
+- [ ] 0.10 **requirement 변경 리뷰 (2026-10-22 D7 처분) — 12판 — 재리뷰 대기 (2026-10-29)** — spec Requirement 1 에 「시장가를 받지 않는 구간은 오늘처럼 지정가」 예외를 넣은
       것은 Requirement 수준 수정이다(WORKFLOW 「리뷰 게이트」). 수정분(spec Requirement 1 · design D7 「처분」 · tasks 2.4~2.6)에 적대적 Eng
       관점 포함 리뷰 1회를 받아 `review.md` 에 남긴다. Manager 확인 항목 하나를 함께 판정한다 — **접수 미측정 구간과 구간 판정 불가를 LIMIT
       으로 두는 것**은 사용자 문언(「시장가가 안 되는 시간대」)이 아니라 design D7 의 불변식 4 유도다. **§1~§3 착수 조건**
@@ -88,6 +90,8 @@
       근거 AST 43개(새 1, stale 0). **10판 — 재리뷰 대기.** 재리뷰 전 §1~§3 착수 금지
       — **2026-10-29 10판 재리뷰(`review.md` 「10판 재리뷰」, `4242ce3ed`) FAIL: P0 1 · P1 1 → 11판(Manager 결정).** design D14(D14.1 보호 action 상수 유도 · `BASELINE_BREACH_EXIT` 오기 정정 ·
       D14.2 401 시 토큰당 wire 3 · 엔진 시작 뒤 5분 GET 0 · D14.3 예산 기준 계좌 공유 3 req/s · D14.4 불변식 4 표) · tasks 2.4 · 2.7 · 2.9. **11판 — 재리뷰 대기.** 재리뷰 전 §1~§3 착수 금지
+      — **2026-10-29 11판 재리뷰(`review.md` 「11판 재리뷰」, `bb0080ecd`) FAIL: P0 1 · P1 1 → 12판(Manager 결정).** design D15(D15.1 a166 admission 주입 시에만 하한가 GET — 그 전 nil · 생산 변화 0 ·
+      `doRequest` 429 기록은 a166 으로 · D15.2 `Action` 값 집합 비교 · D15.3 불변식 4 표) · spec Req 1 · tasks 2.0 · 2.1 · 2.4 · 2.7 · 2.9 · 2.10(n/a) · issues D-2 ⑥. **12판 — 재리뷰 대기.** 재리뷰 전 §1~§3 착수 금지
 
 ## P1. Phase 1 — 가격 사다리 KR 하한가 단 (선행 · 실측 불요 · design D2a)
 
@@ -199,11 +203,11 @@
 ## 2. 보호 청산의 가격 — 8판: 그날 하한가 (High-risk 본체 · Phase 2)
 
 > 설계 정본 design D11. 편집하는 기존 함수(FLM 대상)는 `ExitObserver.submit` · `exitOrderLineFor` · `exitOrderLine.args` · `NewContext` · `Context.ExitObserver` ·
-> `engineRuntime` + **9판 `ExitObserver.Run`** + **10판 `official.Client.doRequest`**(design D11 「착수 시 FLM 대상」 · D12). `sellIntent` · `noteHeldProposal` 은 본문 무변경. 새 함수(판 · 갱신기 · `exitLimitPrice`)는 새 파일 `internal/app/engine/exit_lower_limit.go`.
+> `engineRuntime` + **9판 `ExitObserver.Run`** + ~~10판 `official.Client.doRequest`~~(12판에서 뺌)(design D11 「착수 시 FLM 대상」 · D12). `sellIntent` · `noteHeldProposal` 은 본문 무변경. 새 함수(판 · 갱신기 · `exitLimitPrice`)는 새 파일 `internal/app/engine/exit_lower_limit.go`.
 
-- [ ] 2.0 **Pre-Edit 선언** — 위 기존 함수 8(9판: `Run` · 10판: `official.Client.doRequest` 추가) + 새 파일 셋(엔진 판 · 엔진 전용 읽기 · 원장 읽기)(WORKFLOW §Pre-Edit 형식). 불변식 3: 판은 `NewContext` 에서만 · 갱신기는 보조 실행자 · 엔진 꺼짐 ⇒ 흔적 0.
+- [ ] 2.0 **Pre-Edit 선언** — 위 기존 함수 7(9판: `Run` 추가 · 10판의 `official.Client.doRequest` 는 12판에서 뺌 — D15.1) + 새 파일 셋(엔진 판 · 엔진 전용 읽기 · 원장 읽기)(WORKFLOW §Pre-Edit 형식). 불변식 3: 판은 `NewContext` 에서만 · 갱신기는 보조 실행자 · 엔진 꺼짐 ⇒ 흔적 0.
       불변식 4: 제출 경로 GET 0 · 결정 실패 = 오늘 LIMIT · 되먹임. 불변식 6: 손절 수준 · 수량 무변경, 가격만 체결 쪽
-- [ ] 2.1 **Function Logic Map** — 위 기존 함수 8 의 번들(10판: `doRequest` 포함)(`ast.json` + `function-logic-map.md` + `branch-test-map.md` + `risk-pattern-report.md`)을 착수 HEAD 에서 만든다.
+- [ ] 2.1 **Function Logic Map** — 위 기존 함수 7 의 번들(12판: `doRequest` 제외)(`ast.json` + `function-logic-map.md` + `branch-test-map.md` + `risk-pattern-report.md`)을 착수 HEAD 에서 만든다.
       `analysis/evidence/` 의 HEAD `1f4145c77` AST 는 0.10 증거이지 번들이 아니다. risk-pattern-report 에 `isProtective` 의 세 소비자(`record` · `submit` a091 floor ·
       a087 가격 결정)와 `exitOrderLineFor` 의 사다리 사본(design D11 (b) 「기록」)을 적는다
 - [ ] 2.2 **RED — 가격 결정 표** (`exitLimitPrice` 단독, 시계 · 판 시험 더블, 벽시계 · 실제 브로커 금지): design D11 「8판 검증」 첫 항목 전 행 — 창 경계 09:00:00 · 15:29:59 → 하한가,
@@ -222,9 +226,13 @@
       헤더 있는 429 · 갱신기 자신의 429 → 5분 GET 0 · 토큰 없으면 GET 0 · 결함이 `exit` 루프를 멈추지 않음
       **11판 (design D14.2)**: **엔진 시작 뒤 5분 GET 0**(시작 정숙 — 갱신기 `Run` 시작 시각 기준). 시험: 4분 59초 토큰 GET 0 · 5분 뒤 토큰 GET 1 · 헤더 없는 429 → 재시도 성공 → 재시작 → 5분 GET 0 ·
       401 → 401 → 200 에서 토큰 하나의 wire GET = 3(표준 `Client.send` 재전송 — 새 경로 없음) · 다음 토큰까지 추가 0. 수치 기준은 계좌 공유 3 req/s(D14.3)
-- [ ] 2.10 **RED/GREEN — `official.Client.doRequest` 의 HTTP 429 기록 (10판 — design D13.2)** — `c.hc.Do` 성공 뒤 `resp.StatusCode == 429` 이면 헤더와 무관하게 원자 값에 시각 저장, 읽기 접근자 하나
+      **12판 (design D15.1)**: 갱신기는 계좌 공유 예산 **admission 함수가 주입될 때만** 돈다 — nil 이면 GET 0. 엔진 배선은 a166 착지 전까지 **nil**(생산 동작 변화 0 · 활성화 조건).
+      **시험 셋**: ① admission nil → 하한가 GET 0 · 판 비어 있음 · 창 안 보호 매도 = 오늘 LIMIT 골든 ② admission 거절 → 그 요청 GET 0 ③ 401 → 401 → 200 의 wire 요청 3건이 **각각** admission 을 탐
+      (호출 계수 3 · 둘째 거절이면 셋째 wire 0 — 시험 더블 관문). 위 「429 정지 = 입력 하나(`doRequest` 기록)」는 12판에서 대체됨 — 429 뒤 정지는 a166 admission 의 거절로 표현
+- [x] 2.10 ~~**RED/GREEN — `official.Client.doRequest` 의 HTTP 429 기록 (10판 — design D13.2)** — `c.hc.Do` 성공 뒤 `resp.StatusCode == 429` 이면 헤더와 무관하게 원자 값에 시각 저장, 읽기 접근자 하나
       (새 파일). 반환값 · 오류 · `rates.record` 무변경(기존 ratebudget · client 시험 green). **착수 전 겹침 대조**: a166(삽입 후보 `doRequest` · `send`) · a100(`client.dorequest` FLM 번들) ·
-      a165(`client.send` 번들 — `doRequest` 호출자) 의 그 시점 상태를 1.0 과 같은 방식으로 대조. a166 이 먼저 계좌 공유 429 기록을 착지하면 이 task 는 그것을 읽는 쪽으로 줄인다
+      a165(`client.send` 번들 — `doRequest` 호출자) 의 그 시점 상태를 1.0 과 같은 방식으로 대조. a166 이 먼저 계좌 공유 429 기록을 착지하면 이 task 는 그것을 읽는 쪽으로 줄인다~~
+      — **not-applicable (12판 — design D15.1)**: `doRequest` 429 원자 기록은 a166 이 계좌 공유 예산과 함께 가져간다. a087 의 `doRequest` 편집 0 — a100 · a166 겹침 소멸
 - [ ] 2.5 **RED/GREEN — 첫 시도 한정 (10판 — design D13.1)** — 하한가는 그날 그 종목의 첫 보호 매도 시도에만. 술어 하나 = 「같은 `account_ref` · `market` · `trading_day` · symbol 에
       보호 청산 매도 intent 존재」. `submit` 이 보호 청산 `Place` 를 부르면 결과와 무관하게 메모리 「금지」. **종단 시험**: 첫 시도 하한가 CONFIRMED → 둘째 시도 관측가 LIMIT ·
       직접 거부 B13 → 다음 주기 관측가 LIMIT · `IN_DOUBT → StateFailedConfirmed → noteHeldProposal B4 해제 → 다음 주기 관측가 LIMIT` · 첫 시도 창 밖(오늘 LIMIT) → 창 안 재발의 관측가 LIMIT.
@@ -242,6 +250,8 @@
       **11판 (design D14.1)**: action 은 리터럴이 아니라 `string(exitpolicy.ActionBaselineBreach)`(`BASELINE_BREACH_EXIT`) · `string(exitpolicy.ActionLadderStop)` — `isProtective` 와 같은 상수.
       **구조 시험**: `internal/exitpolicy` 의 `Action` 상수 전부를 AST 로 열거 → `isProtective` 참 집합 = 질의 action 집합(열거 0 · 참 집합 0 이면 실패 — 새 보호 action 이 생기면 실패).
       **행동 시험**: 기준선 이탈 하한가 시도(CONFIRMED · FAILED_CONFIRMED · IN_DOUBT→비수용 각각) → 재시작 → 그날 금지(관측가 LIMIT), 손절 사다리도 같은 세 행
+      **12판 (design D15.2)**: 구조 시험은 상수 이름 수가 아니라 **평가된 값 집합** — `go/packages`/`go/types` 로 `internal/exitpolicy` 패키지 범위의 타입이 `exitpolicy.Action` 인
+      `*types.Const` 전부를 모으고 `go/constant` 로 값을 평가한다(다른 파일 · `Action("…")` 형 선언 포함). 같은 값의 두 이름은 값 → 이름 목록으로 기록. 값 집합 · 참 집합이 비면 실패
 - [ ] 2.6 **RED — 즉시성 · 경합** — 제출 경로 GET 0(호출 계수 더블) · 판 미준비에서 `submit` B5 미도달 · 갱신기 쓰기와 결정 읽기의 경합(`-race`, 반쪽 스냅숏 없음)
 - [ ] 2.7 **변이** — 「창 조건 제거」 · 「창 끝 15:30 → 16:00 이상(시간외 누출)」 · 「익절에도 하한가」 · 「US 에도 하한가」 · 「날짜 대조 제거」 · 「하한가 ≤ 관측가 검사 제거」 ·
       「하한가 0 허용」 · 「되먹임 제거」 · 「되먹임을 B8(결과 미상)에도」 · 「결정에서 GET」 · 「결정 실패 → 오류 반환」 · 「`exitOrderLineFor` 가 사본 사다리 유지(줄 가격 ≠ 보낸 가격)」 ·
@@ -251,6 +261,7 @@
       **10판 추가 변이**: 「첫 시도 술어를 최신 상태로」 · 「계좌 조건 제거」 · 「시장 조건 제거」 · 「trading_day 조건 제거」 · 「익절 intent 도 셈」(이득 손실 쪽 — 기록) · 「원장 오류 → 허용」 ·
       「`Place` 결과가 CONFIRMED 면 금지 안 함」 · 「`doRequest` 가 헤더 있는 429 만 기록」 · 「429 기록 제거」 · 「정지 5분 → 0」 · 「하한가 문자열 비교」 · 「선행 0 허용」
       **11판 추가 변이**: 「질의 action 을 리터럴 `BASELINE_BREACH` 로」 · 「질의에서 손절 사다리 상수 제거」 · 「시작 정숙 구간 제거」 · 「정숙 5분 → 0」
+      **12판 추가 변이**: 「admission nil 이어도 GET」 · 「admission 을 첫 요청에만」(401 재전송이 우회) · 「거절 뒤에도 GET」 · 「엔진 배선에 admission 주입」(a166 전 활성화 — 구조 시험이 잡아야 함) · 「구조 시험이 이름 수로 셈」
 
 ### 7판 원문 (8판에서 대체됨 — 시장가 유형 결정 · 달력 구간 입력)
 

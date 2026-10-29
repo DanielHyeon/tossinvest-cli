@@ -1007,3 +1007,14 @@ OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서만 다뤘다(새 AS
 - 11판은 설계 단계다. 구현·단위/종단/변이 시험·전체 gate·실주문은 실행하지 않았다. 브로커·계좌·운영·`mutating` 명령은 0이다.
 - 브로커의 실제 rate-window 집계 방식과 다른 프로세스와의 429 빈도는 `[미측정]`이다. 이는 공유 admission 부재라는 정적 사실이나 그 부재를 a166 전까지 허용하는 결론을 해소하지 않는다.
 - `impeccable: N/A — backend/documentation-only`. `grill-me`: 확정 D-1·D-2 및 Manager 결정을 재질문하지 않았다. `search-first`: 구현·의존성 채택이 아닌 독립 문서/소스 적대 검토라 현재 저장소·OpenSpec·AST만 대조했다.
+
+## 12판 개정 (2026-10-29, Manager 결정 — 11판 재리뷰 FAIL 처분) — **독립 재리뷰 대기**
+
+OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서만 다뤘다(새 AST 0). 소스 · 시험 · 브로커 0.
+
+| 발견 | 12판 처분 | 위치 |
+| --- | --- | --- |
+| P0 401 재전송 3건 버스트가 계좌 공유 3 req/s 한 초 창을 넘을 수 있음 | 하한가 GET 은 a166 계좌 공유 admission 이 주입될 때만, wire 요청마다(401 재전송 포함). nil → GET 0 · 판 비어 오늘 LIMIT. 엔진 배선은 a166 전까지 nil — 생산 변화 0(활성화 조건, 사람 확인 D-2 ⑥). `doRequest` 429 기록은 a166 으로 옮겨 a087 `doRequest` 편집 0. 시험 셋 | design D15.1 · spec Req 1 · tasks 2.4 · 2.10 · issues D-2 ⑥ |
+| P1 Action 열거 규칙 | `go/types` 로 타입이 `exitpolicy.Action` 인 상수 전부를 모아 `go/constant` 로 평가한 값 집합 비교, 같은 값 두 이름 기록, 비면 실패 | design D15.2 · tasks 2.9 |
+
+불변식 4 표는 design D15.3 이 대체한다(a166 전 전부 0). Function Logic Map: not-applicable — 문서 개정만 했다.

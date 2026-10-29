@@ -1,4 +1,4 @@
-# a087 설계 — 보호 청산의 가격 (11판: 그날 거래소 하한가 지정가 · 1~7판: 시장가)
+# a087 설계 — 보호 청산의 가격 (12판: 그날 거래소 하한가 지정가 · 1~7판: 시장가)
 
 > **9판 (Manager 결정 2026-10-29 — 8판 독립 재리뷰 FAIL 처분)**: 정본은 **D11 + D12** 다. D12 가 D11 의 신선도(timestamp · raw decimal) · 갱신 주기(관측 주기 끝 토큰 ·
 > 주기당 1건 · 429 뒤 5분 정지) · 되먹임(`CONFIRMED` 아닌 모든 결과 · 재시작 재구성) · 불변식 4 표 · a165 문장을 대체한다.
@@ -8,6 +8,9 @@
 >
 > **11판 (Manager 결정 2026-10-29 — 10판 재리뷰 FAIL 처분)**: 정본은 **D11 ~ D14** 다. D14 가 재구성 술어의 action 을 Go 상수에서 유도하고(`BASELINE_BREACH_EXIT` 오기 정정),
 > wire 상한(401 시 토큰당 3) · 엔진 시작 뒤 5분 GET 0 · 예산 기준 계좌 공유 3 req/s 를 적고, 불변식 4 표를 D14.4 로 바꾼다.
+>
+> **12판 (Manager 결정 2026-10-29 — 11판 재리뷰 FAIL 처분)**: 정본은 **D11 ~ D15** 다. D15 — 하한가 GET 은 a166 계좌 공유 admission 이 주입될 때만(엔진 배선은 그 전까지 nil →
+> 생산 동작 변화 0, 활성화 조건), `doRequest` 429 기록은 a166 으로 옮겨 a087 의 `doRequest` 편집 0, 구조 시험은 평가된 `Action` 값 집합 비교, 불변식 4 표 D15.3.
 
 > **8판 (사람 결정 2026-10-28 「3은 3」 — `issues.md` D-1 (다))**: 보호 청산 매도는 시장가가 아니라 **그날 거래소 하한가로 낸 지정가(LIMIT)** 다.
 > 2026-10-10 「시장가 방향」 결정을 이것으로 대체한다. **정본은 D11** 이다. 아래 「문제의 형태」·D1~D10 의 시장가 전용 설계는 지우지 않고 절마다
@@ -219,7 +222,7 @@ a167 문서 반영은 이 디렉터리 범위 밖 — `issues.md` D-2 ④.
 ### 착수 시 FLM 대상 (8판 — gate ⑤, 본문을 고치는 기존 함수)
 
 `ExitObserver.submit`(`exitloop.go:1483-1596`) · `exitOrderLineFor`(`exit_order_log.go:102-114`) · `exitOrderLine.args`(`:140-169`) · `NewContext`(`engine.go:437-607`) ·
-`Context.ExitObserver`(`exitwiring.go:319-364`) · `engineRuntime`(`cmd/tossctl/engine.go`) · 바뀌는 기존 시험 함수(시험 파일 포함). **9판 추가**: `ExitObserver.Run`(`exitloop.go:407-417` — 주기 끝 토큰 · 429 정지 알림, D12.2). **10판**: `Run` 은 토큰 한 줄만(429 알림 대체), **`official.Client.doRequest`(`client.go:191-207`) 추가**(D13.2 — a166 · a100 과 같은 함수), T3 원장 읽기 → 「그날 보호 청산 매도 intent 존재」 읽기(D13.1), T2 갈래 삭제. 새 파일의 새 함수: 엔진 전용 하한가 읽기(`internal/official`) · T3 원장 읽기(`internal/journal`, D12.3). T2 를 고르면 `Gateway.Place` · `Gateway.submit` · `Attempt.MarkDispatchStarted`(또는 `Prepare`)가 더해진다. HEAD AST 는 `analysis/evidence/` 에 있다 —
+`Context.ExitObserver`(`exitwiring.go:319-364`) · `engineRuntime`(`cmd/tossctl/engine.go`) · 바뀌는 기존 시험 함수(시험 파일 포함). **9판 추가**: `ExitObserver.Run`(`exitloop.go:407-417` — 주기 끝 토큰 · 429 정지 알림, D12.2). **10판**: `Run` 은 토큰 한 줄만(429 알림 대체), **`official.Client.doRequest`(`client.go:191-207`) 추가**(D13.2 — a166 · a100 과 같은 함수), **(12판: `doRequest` 는 다시 뺀다 — D15.1, a166 소유)** T3 원장 읽기 → 「그날 보호 청산 매도 intent 존재」 읽기(D13.1), T2 갈래 삭제. 새 파일의 새 함수: 엔진 전용 하한가 읽기(`internal/official`) · T3 원장 읽기(`internal/journal`, D12.3). T2 를 고르면 `Gateway.Place` · `Gateway.submit` · `Attempt.MarkDispatchStarted`(또는 `Prepare`)가 더해진다. HEAD AST 는 `analysis/evidence/` 에 있다 —
 구현 때 그 HEAD 에서 번들(`ast.json` + `function-logic-map.md` + `branch-test-map.md` + `risk-pattern-report.md`)로 다시 만든다. 새 함수(판 · 갱신기 · `exitLimitPrice`)는 새 파일이다.
 **`sellIntent` · `checkOrderShape` · `placeIntentSupported` · `Service.PreviewPlace` · `Service.Place` · `NewOrderPath` · `buildFlattenWiring` 은 8판에서 대상이 아니다**(본문 무변경 —
 시험이 읽기만 한다). 7판 목록(`review.md` 「착수 시 FLM 대상」·「착수 시 FLM 대상 정정」)은 8판에서 대체됨.
@@ -376,7 +379,7 @@ a129 골든 helper 는 기대 키만 부분 비교한다(재리뷰 — `a129_exi
   전부 오늘의 LIMIT(관측가)으로 나간다. 하한가의 공격성을 그 시도들에서 잃을 뿐, 오늘보다 나빠지지 않는다. 잔량의 재가격은 a167 소관이다.
 - 이 규칙으로 8판 · 9판의 되먹임(B13 · 결과별 금지 · T3 재구성)은 **전부 대체**된다. 9판 D12.3 의 「술어 하나」 원칙은 남는다 — 술어는 「그날 보호 청산 매도 intent 존재」 하나다.
 
-### D13.2 — HTTP 429 를 헤더와 무관하게 기록 (P1 — 헤더 없는 429)
+### D13.2 — HTTP 429 를 헤더와 무관하게 기록 (P1 — 헤더 없는 429) — **12판에서 대체됨 → D15.1**(429 기록은 a166 으로, a087 `doRequest` 편집 0)
 
 - **사실(재리뷰 · AST)**: 헤더 없는 429 가 `Retrier.Query` 안에서 재시도로 성공하면(B10 대기 → 다음 시도 B5 `ClassOK` `retry.go:351-355`) `cycle.Err` 는 nil 이고, 그 응답의 budget 은
   `Reported=false` 라 `Exhausted()`(`ratebudget.go:177`)도 거짓이다 — 9판의 정지 입력 ②③ 이 둘 다 놓친다.
@@ -440,7 +443,7 @@ a129 골든 helper 는 기대 키만 부분 비교한다(재리뷰 — `a129_exi
 - **유도 규칙**: 재구성 질의는 action 을 **리터럴 문자열로 쓰지 않는다.** 질의 인자는 `string(exitpolicy.ActionBaselineBreach)` · `string(exitpolicy.ActionLadderStop)` — `isProtective`
   (`exitloop.go:1463-1465`, `p.Action == exitpolicy.ActionBaselineBreach || p.Action == exitpolicy.ActionLadderStop`)가 참을 내는 **같은 상수**다. `isProtective` 본문은 편집하지 않는다.
   `exit_events.action` 에는 판정의 `Action` 이 `string(...)` 그대로 기록된다(재리뷰 손 읽기 — `exitloop.go:1401-1415`).
-- **구조 시험**: `internal/exitpolicy` 의 `Action` 상수 선언 전부를 AST 로 열거하고, 각 값 `a` 에 대해 `isProtective(Proposal{Action: a})` 가 참인 집합 = 질의 action 집합임을 단언한다.
+- **구조 시험**(**12판 정정 → D15.2**: 이름 열거가 아니라 타입 검사로 평가한 `Action` 값 집합): `internal/exitpolicy` 의 `Action` 상수 선언 전부를 AST 로 열거하고, 각 값 `a` 에 대해 `isProtective(Proposal{Action: a})` 가 참인 집합 = 질의 action 집합임을 단언한다.
   새 보호 action 이 생겨 `isProtective` 가 바뀌면(또는 새 상수가 `isProtective` 에 들어가면) 질의 쪽이 따라오지 않는 한 실패한다. 상수 열거가 0개이거나 `isProtective` 참 집합이 비면 실패한다
   (표본 0 통과 금지).
 - **행동 시험**: 기준선 이탈(`ActionBaselineBreach`) 하한가 시도 → 재시작 → 같은 종목 보호 청산 = 관측가 LIMIT. 손절 사다리도 같은 행. 결과별(CONFIRMED · FAILED_CONFIRMED · IN_DOUBT→비수용)
@@ -455,7 +458,7 @@ a129 골든 helper 는 기대 키만 부분 비교한다(재리뷰 — `a129_exi
   시작 정숙 구간이 「429 직후 재시작」 칸을 닫는다 — 429 를 저장하지 않아도 재시작 뒤 첫 5분은 어떤 경우든 GET 0 이다. 그동안의 보호 매도는 오늘 LIMIT(약화 아님).
 - **시험**: 401 → 401 → 200 에서 wire GET 3 · 토큰 하나 · 다음 토큰까지 추가 0 / 헤더 없는 429 → 재시도 성공 → 재시작 → 5분 GET 0 / 시작 직후 4분 59초 토큰 GET 0, 5분 뒤 토큰 GET 1.
 
-### D14.3 — 예산 기준 = 계좌 공유 3 req/s (Manager 발견 — 재리뷰 밖)
+### D14.3 — 예산 기준 = 계좌 공유 3 req/s (Manager 발견 — 재리뷰 밖) — 기준은 유지, 「a087 은 a166 을 기다리지 않는다」 · 평균 수치는 **12판에서 대체됨 → D15.1**(a166 admission 전 GET 0)
 
 - **근거**: 사용자 결정(2026-10-22) — 「요청 속도 상한 3 req/s 는 계좌 전체 공유다 — 엔진 · soak · verify · 프로브 · CLI 등 같은 계좌를 치는 모든 프로세스의 합」
   (`openspec/changes/verify-execution-capability/issues.md` 「사용자 결정 (2026-10-22, 1.3 확정)」 결정 3, `:578`), 같은 절 Q2 — 3 req/s 는 우리 키 하나의 예산(`:616`). 소유 change 는
@@ -465,7 +468,7 @@ a129 골든 helper 는 기대 키만 부분 비교한다(재리뷰 — `a129_exi
 - **a166 과의 관계**: a166 이 계좌 공유 상한을 착지하면 갱신기 GET 도 그 예산을 탄다(같은 `official.Client` 전송 자리 `doRequest` 를 지나므로). a087 은 a166 을 **기다리지 않는다** —
   a166 전에는 위 수치가 a087 이 더하는 압력의 상한이고, a166 뒤에는 a166 의 배분이 그 위에 선다. D13.2 의 429 기록이 a166 과 겹치는 처리는 D13.2 그대로다.
 
-### D14.4 — 불변식 4 표 (11판 — D13.5 를 대체)
+### D14.4 — 불변식 4 표 (11판) — **12판에서 대체됨 → D15.3**
 
 오늘(모든 보호 매도 = 관측가 LIMIT)보다 나빠질 수 있는 칸과 상한:
 
@@ -481,6 +484,55 @@ a129 골든 helper 는 기대 키만 부분 비교한다(재리뷰 — `a129_exi
 | 8 | 체결가(얇은 호가 sweep · 종가단일가 대량 충격) | 즉시성이 아니라 가격 | 불변식 4 밖 — 불변식 6 · D-1 (다) | 3.8 질의 |
 
 1~4 가 「오늘보다 나빠질 수 있는」 칸이다. 1~3 은 종목당 하루 1회 이하, 4 는 위 수치 상한. 수락은 사람 확인(`issues.md` D-2 ①).
+
+## D15 — 12판: 11판 재리뷰 처분 — a166 admission 전 하한가 GET 0 · Action 값 집합 비교 (Manager 결정 2026-10-29)
+
+> 11판 재리뷰(`review.md` 「11판 재리뷰」, `bb0080ecd`)는 FAIL(P0 1 · P1 1)이었다. 이 절이 D13.2(`doRequest` 429 기록) · D14.2 (a) 의 「상한에 그대로 적는다」 · D14.3 의
+> 「a087 은 a166 을 기다리지 않는다」 · D14.1 의 구조 시험 방식 · D14.4 표를 **대체**한다. 새 AST 0(문서만). `enumerate.py` 43개 stale 0.
+
+### D15.1 — 하한가 GET 은 계좌 공유 예산의 admission 을 받을 때만 (P0)
+
+- **재리뷰 사실**: 401 → 401 → 200 은 토큰 하나에 wire GET 3 이고, 그 셋 사이에 pacing · admission 이 없다. 토큰은 `ObserveOnce` 반환 직후(`Sleep` 전)에 나오므로 직전 관측 `/prices` 와
+  동시 실행은 0 이어도 **같은 1초 창**일 수 있다. 계좌 공유 상한은 **3 req/s**(사용자 결정 2026-10-22 결정 3 — D14.3)라 그 창에서 3 + `/prices` 1 은 상한을 넘는다. 「≤ 3/5초 = 0.6/s」는
+  평균일 뿐 한 초 창의 상한이 아니다. 429 기록 · 시작 정숙은 응답을 받은 **뒤** 다음 GET 만 멈춘다.
+- **처분 (fail-closed)**: 갱신기는 「계좌 공유 예산의 admission」 함수가 **주입될 때만** 돈다. 모양(제안): `admit(ctx) error` — 요청 하나를 보내기 전에 부르고, 거절이면 그 요청을 보내지 않는다.
+  **nil 이면 GET 0** 이고 판은 비어 있으므로 보호 매도는 전부 오늘의 LIMIT 이다. 401 재전송의 둘째 · 셋째 요청도 각각 admission 을 탄다 — 그래서 admission 은 갱신기 쪽 래퍼가 아니라
+  **wire 요청마다** 걸려야 하고, 그 자리는 a166 이 소유하는 계좌 공유 전송 관문이다(a166 proposal `:43` · `:76` — 삽입 후보 `official.Client.doRequest` · `send`). a087 은 그 관문의
+  admission 결과(허용 · 거절)만 받는다.
+- **엔진 배선**: a166 착지 전까지 **nil**. a087 의 `Context.ExitObserver` · 갱신기 생성 자리는 admission 을 받는 칸만 두고 값을 넣지 않는다. 그러므로 **a166 전에 a087 이 착지해도 생산 동작
+  변화는 0** 이다 — 판이 늘 비어 가격 결정이 언제나 오늘 사다리를 고른다(D11 (b) fail-safe). 이것은 착수 조건이 아니라 **활성화 조건**이다. 사람 확인 대상: `issues.md` D-2 ⑥.
+- **10판 `doRequest` 429 원자 기록 — a166 으로 옮긴다(권장안 채택).** 비용 비교: a087 에 남기면 `doRequest`(High-risk, a166 · a100 과 같은 함수)를 편집하고 a166 착지 때 그 기록과
+  a166 의 공유 예산이 두 판정이 된다([[two-judgements-cover-for-each-other]]). 옮기면 a087 의 `doRequest` 편집이 **0** 이 되고 a100 · a166 과의 겹침도 사라진다. 429 뒤 정지는 a166 admission 이
+  거절로 표현한다(a166 이 정한다). 그래서 D13.2 · tasks 2.10 은 **12판에서 대체됨**이고, a087 의 Pre-Edit · FLM 목록에서 `official.Client.doRequest` 를 뺀다. a166 문서 반영(429 기록을
+  가져갈 것)은 이 디렉터리 범위 밖 — Manager 요청으로 남긴다(`issues.md` D-2 ⑥).
+- 남는 것: 토큰(주기 끝 · 주기당 1건 · GET 시한 ≤ 2초 — D12.2), 시작 정숙 5분(D14.2 (b) — 갱신기 로컬, `doRequest` 편집 아님), 401 재전송 3건(표준 `send` — 새 경로 없음).
+- **시험(셋)**: ① admission nil → 하한가 GET 0 · 판 비어 있음 · 창 안 보호 매도 = 오늘 LIMIT 골든 ② admission 이 거절 → 그 요청 GET 0(그 주기 추가 wire 0) ③ 401 → 401 → 200 에서 wire 요청 3건이
+  **각각** admission 을 한 번씩 탐(호출 계수 3, 거절이 둘째에 오면 셋째 wire 0). ③ 은 시험 더블의 계좌 공유 관문으로 잰다 — 실제 관문은 a166 이 만든다.
+
+### D15.2 — 구조 시험은 평가된 `exitpolicy.Action` 값 전체 집합을 비교 (P1)
+
+- 구조 시험은 상수 **이름 수**나 식별자 prefix 로 세지 않는다. `go/packages`(또는 `go/types` 로 타입 검사한 패키지)로 `internal/exitpolicy` 의 패키지 범위 객체 전체를 훑어
+  **타입이 `exitpolicy.Action` 인 모든 상수**(`*types.Const`, `types.Identical(obj.Type(), Action)`)를 모으고, 각 값을 `go/constant` 로 평가한 `string` 값의 **집합**을 만든다.
+  `const ActionFuture = Action("...")` · 다른 파일의 상수 · 타입 자리가 다른 선언도 타입 검사로 같은 집합에 든다.
+- 같은 값을 가진 두 이름(별칭)은 집합에서 하나가 되므로, 시험은 따로 **값 → 이름 목록** 지도를 만들어 이름이 둘 이상인 값을 보고(실패가 아니라 기록 — 같은 값이면 `isProtective` 판정이
+  같으므로 집합 비교는 여전히 옳다).
+- 단언: { v ∈ 값 집합 | `isProtective(Proposal{Action: Action(v)})` } = 재구성 질의의 action 값 집합. 값 집합이 비거나 참 집합이 비면 실패(표본 0 통과 금지). 새 보호 값이 생기면 질의 쪽이
+  따라오기 전까지 실패한다.
+
+### D15.3 — 불변식 4 표 (12판 — D14.4 를 대체)
+
+| # | 칸 | 상한 — **a166 admission 전(생산 기본)** | 상한 — a166 admission 뒤(활성화 시) | 근거 |
+| --- | --- | --- | --- | --- |
+| 1 | 첫 하한가 시도의 직접 거부 | **0** — 판이 비어 하한가 시도가 없다 | 종목당 하루 1회 × (거부 응답 + 5초), 재시작 포함 | D13.1 · D14.1 · D15.1 |
+| 2 | 첫 하한가 시도의 IN_DOUBT → 비수용 확정 | **0** | 종목당 하루 1회 × (오늘과 같은 해소 시간 + 5초) | D13.1 |
+| 3 | 1 · 2 의 journal release 실패 · 복구 | **0** | 오늘의 비수용 해제 실패 경로와 같은 상한, 종목당 하루 1회 이하 | D13.5 #3 |
+| 4 | 계좌 공유 3 req/s 압력 → 관측 `/prices` 429 · 지연 | **0** — 하한가 GET 0 | wire 요청마다 a166 admission 이 허용한 것만(401 재전송 포함) · 토큰 주기당 1 · 시작 뒤 5분 0. 한 초 창의 상한은 a166 의 배분이 정한다 | D15.1 · D12.2 · D14.2 (b) |
+| 5 | 재시작 · 판 · 갱신기 고장 · 원장 읽기 실패 · admission nil/거절 · 시작 정숙 | 0 | 0 — 오늘 LIMIT | D13.1 · D15.1 |
+| 6 | 전일 하한가 > 그날 하한가(⑥ 통과) | 0 | 0 — 바닥이 관측가 이하 | D12.1 |
+| 7 | 첫 시도 뒤의 보호 매도 | 0 | 0 — 오늘 LIMIT(보수적 손실) | D13.1 |
+| 8 | 체결가(얇은 호가 · 종가단일가) | 0 | 불변식 4 밖 — 불변식 6 · D-1 (다) | 3.8 |
+
+a166 admission 전에는 a087 이 오늘보다 나빠지게 하는 칸이 **없다**(생산 동작 변화 0). 활성화 뒤의 1~4 수락은 사람 확인(`issues.md` D-2 ①).
 
 ## D1 — 유형은 제안의 성격이 정한다
 
