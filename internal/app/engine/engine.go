@@ -238,6 +238,9 @@ type Context struct {
 	// manual flatten reads its own sellable quantity and must keep doing so).
 	exitFloor *reconcileFloor
 
+	// exitLowerLimits 는 보호 청산 전용 하한가 스냅샷임. a166 전에는 admission nil로 휴면함.
+	exitLowerLimits *exitLowerLimitBoard
+
 	// normalRelay 는 exit 관측 goroutine 의 일반 등급 알림 유계 이관임(a092 C8). 처음 쓸 때 만들고(normal_relay_wiring.go),
 	// exit 관측기와 런타임 보조 실행자가 같은 인스턴스를 씀.
 	normalRelayOnce sync.Once
@@ -592,6 +595,7 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		Converge:              wiring.converge,
 		Names:                 wiring.names,
 		exitFloor:             wiring.floor,
+		exitLowerLimits:       newExitLowerLimitBoard(clk, off, jrn, jrn, accountRef, nil),
 		Automation:            automation,
 		Guardian:              guardian,
 		Audit:                 auditLog,

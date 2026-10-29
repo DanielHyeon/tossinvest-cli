@@ -228,7 +228,7 @@ func TestA129AConfirmedStopAndItsFillsEachLeaveALine(t *testing.T) {
 	}
 	a129Want(t, confirmed[0], map[string]any{
 		"origin": "exit", "symbol": "005930", "market": "kr", "side": "SELL", "order_type": "LIMIT",
-		"quantity": "10", "price": "67900", "observed_price": "67900", "baseline": "68000",
+		"quantity": "10", "price": "67900", "price_source": "observed", "observed_price": "67900", "baseline": "68000",
 		"action": string(exitpolicy.ActionBaselineBreach), "exit_level": state.PendingLevel,
 		"intent_id": place.IntentID, "position_id": redact.String(p.ID),
 		"to_state": string(journal.StateConfirmed), "capped": false, "level": "INFO",

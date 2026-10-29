@@ -338,6 +338,7 @@ func (c *Context) ExitObserver(opts ExitObserverOptions) (*ExitObserver, error) 
 	opts.Retrier = exitRetrier
 	opts.Issuer = issuer
 	opts.Submit = c.Gateway
+	opts.lowerLimitBoard = c.exitLowerLimits
 	opts.AccountRef = c.AccountRef
 	opts.CommonPolicy = c.Config.Engine.ExitPolicy.CommonPolicy
 	if opts.Names == nil {

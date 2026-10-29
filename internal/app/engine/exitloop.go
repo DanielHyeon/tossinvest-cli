@@ -179,6 +179,8 @@ type ExitObserverOptions struct {
 	Issuer ReductionIssuer
 	// Submit is the order surface. Required.
 	Submit ExitSubmitter
+	// lowerLimitBoard 는 보호 청산의 하한가 스냅샷임. nil이면 기존 지정가 경로만 사용함.
+	lowerLimitBoard *exitLowerLimitBoard
 	// Alerts receives the operator alerts. Optional only so the loop can be unit
 	// tested; an engine without one judges silently.
 	Alerts ExitAlerter
@@ -410,6 +412,7 @@ func (o *ExitObserver) Run(ctx context.Context) error {
 			return err
 		}
 		o.reportCycle(o.ObserveOnce(ctx))
+		o.opts.lowerLimitBoard.cycleComplete(o.Interval())
 		if err := o.clk.Sleep(ctx, o.Interval()); err != nil {
 			return err
 		}
@@ -1483,14 +1486,15 @@ func reJudgingVersion(m managed) int64 {
 func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolicy.Proposal,
 	quantity, intentID, observed string, provenance journal.ExitDecisionProvenance) error {
 	// 보호/익절 구분은 호출자가 넘김 — applyFloor 는 제안이 손절인지 모름(a091 D2). 반환값은 그 구분과 무관함.
+	choice := exitLimitPrice(o.clk.Now(), m, proposal, observed, o.opts.lowerLimitBoard)
 	submitQuantity, capped, err := o.applyFloor(ctx, m, quantity, isProtective(proposal))
 	if err != nil {
 		// a129: 하한 산술 실패 — 해제 없음, 줄은 주기 끝에 씀(이하 모든 갈래 같음: noteExitOrder 는 대기열에 넣기만 함).
 		o.noteExitOrder(obs.EventOrderNotDispatched, true, true, false,
-			exitOrderLineFor(m, proposal, quantity, intentID, observed, false).because(exitOrderFloorArithmeticFailed))
+			exitOrderLineFor(m, proposal, quantity, intentID, observed, choice, false).because(exitOrderFloorArithmeticFailed))
 		return err
 	}
-	line := exitOrderLineFor(m, proposal, submitQuantity, intentID, observed, capped)
+	line := exitOrderLineFor(m, proposal, submitQuantity, intentID, observed, choice, capped)
 	if isZeroQuantity(submitQuantity) {
 		// The confirmed floor authorises nothing — an absent or stale snapshot
 		// while the account is in RECONCILE. Release the proposal so the same
@@ -1529,7 +1533,7 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 		return fmt.Errorf("engine: attaching the exit intent of %s: %w", m.position.ID, err)
 	}
 
-	intent, err := o.sellIntent(m, submitQuantity, observed)
+	intent, err := o.sellIntent(m, submitQuantity, choice.price)
 	if err != nil {
 		o.alertRefused(ctx, m, err)
 		releaseErr := o.release(ctx, m, intentID, journal.ProposalRefused)
@@ -1542,6 +1546,9 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 		IntentID:       intentID,
 		ExitProvenance: &provenance,
 	})
+	if isProtective(proposal) {
+		o.opts.lowerLimitBoard.markProtectiveAttempt(m.position.Market, m.position.Symbol, o.clk.Now())
+	}
 	// a129: 이 아래 줄은 전부 Place 가 돌아온 뒤임 — 키 · 상태 · 사유만 옮기고 Detail · Result 는 싣지 않음.
 	line = line.placed(out)
 	switch {
@@ -1789,20 +1796,12 @@ func (o *ExitObserver) applyFloor(ctx context.Context, m managed, quantity strin
 
 // sellIntent renders the order a proposal becomes.
 //
-// The limit price is the **observed price** — the one this judgement was made
-// from — and not the baseline. Automated orders are LIMIT only (riskcalc's rule,
-// kept on the exit side because a market sell has no price the ledger can record
-// an intent against), and a limit has to be marketable to be an exit at all: a
-// breach means the price is already *below* the baseline, so a sell limited at
-// the baseline would rest above the market and protect nothing. Pricing at the
-// observation makes the order marketable in both directions — a take-profit is
-// observed above its trigger and a liquidation below its baseline — and it is
-// the number the judgement itself is explained by.
+// 지정가는 호출자가 고른 가격임. 평소에는 관측가, 관측가가 비면 기준선이며 a087 보호 청산의
+// 첫 시도만 유효한 그날 하한가가 될 수 있음. 자동 주문은 모두 LIMIT으로 남아 원장에 가격을
+// 기록할 수 있고, 기준선보다 이미 낮은 관측가에서 기준선 매도를 내어 대기시키지 않음.
 //
-// The residual is named rather than hidden: between the observation and the
-// broker receiving the order the price can move further, and a limit does not
-// chase it. That is the same sampling window design.md lists as the risk 2c's
-// broker-resident stop closes, not a new one.
+// 관측과 브로커 수신 사이 가격은 더 움직일 수 있고 LIMIT은 이를 따라가지 않음. 이는 기존
+// sampling window 잔여 위험이며 a087이 새로 만드는 지연이 아님.
 func (o *ExitObserver) sellIntent(m managed, quantity, observed string) (orderintent.PlaceIntent, error) {
 	price := strings.TrimSpace(observed)
 	if price == "" {

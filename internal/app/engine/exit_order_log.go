@@ -86,6 +86,7 @@ type exitOrderLine struct {
 	symbol, market          string
 	quantity, price         string
 	action, level           string
+	priceSource             exitPriceSource
 	observedPrice, baseline string
 	capped                  bool
 	intentID, positionID    string
@@ -98,15 +99,12 @@ type exitOrderLine struct {
 	terminal                                    bool
 }
 
-// exitOrderLineFor 는 submit 의 문맥에서 줄의 공통 필드를 채움. 지정가는 sellIntent 와 같은 규칙(관측가, 비면 기준선).
-func exitOrderLineFor(m managed, proposal exitpolicy.Proposal, quantity, intentID, observed string, capped bool) exitOrderLine {
-	price := strings.TrimSpace(observed)
-	if price == "" {
-		price = strings.TrimSpace(m.state.Baseline)
-	}
+// exitOrderLineFor 는 submit 이 고른 지정가와 출처를 같은 줄에 고정함.
+func exitOrderLineFor(m managed, proposal exitpolicy.Proposal, quantity, intentID, observed string,
+	choice exitLimitChoice, capped bool) exitOrderLine {
 	return exitOrderLine{
 		symbol: m.position.Symbol, market: m.position.Market,
-		quantity: quantity, price: price,
+		quantity: quantity, price: choice.price, priceSource: choice.source,
 		action: string(proposal.Action), level: proposal.Level,
 		observedPrice: observed, baseline: m.state.Baseline, capped: capped,
 		intentID: intentID, positionID: m.position.ID,
@@ -146,6 +144,7 @@ func (l exitOrderLine) args() []any {
 		"order_type", "LIMIT",
 		obs.FieldQuantity, l.quantity,
 		obs.FieldPrice, l.price,
+		"price_source", string(l.priceSource),
 		"action", l.action,
 		"exit_level", l.level,
 		"observed_price", l.observedPrice,
