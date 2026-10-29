@@ -67,7 +67,7 @@
       부정확; 실측 422 거부 시 재검토가 §5 표에 이미 있음). I-R8: 0.5 는 §1~§3 착수 전 조건
       유지(freeze 는 문서 상태 판정, §1~§3 은 어차피 §5 실측 대기).
       → **proposal-freeze 재개 선언.** 남은 §1~§3 착수 조건 = §5 실측(결과→처분 표) + 0.5.
-- [ ] 0.10 **requirement 변경 리뷰 (2026-10-22 D7 처분) — 13판 — 재리뷰 대기 (2026-10-29)** — spec Requirement 1 에 「시장가를 받지 않는 구간은 오늘처럼 지정가」 예외를 넣은
+- [x] 0.10 **requirement 변경 리뷰 (2026-10-22 D7 처분) — 13판 — 재리뷰 대기 (2026-10-29)** — spec Requirement 1 에 「시장가를 받지 않는 구간은 오늘처럼 지정가」 예외를 넣은
       것은 Requirement 수준 수정이다(WORKFLOW 「리뷰 게이트」). 수정분(spec Requirement 1 · design D7 「처분」 · tasks 2.4~2.6)에 적대적 Eng
       관점 포함 리뷰 1회를 받아 `review.md` 에 남긴다. Manager 확인 항목 하나를 함께 판정한다 — **접수 미측정 구간과 구간 판정 불가를 LIMIT
       으로 두는 것**은 사용자 문언(「시장가가 안 되는 시간대」)이 아니라 design D7 의 불변식 4 유도다. **§1~§3 착수 조건**
@@ -95,6 +95,8 @@
       `doRequest` 429 기록은 a166 으로 · D15.2 `Action` 값 집합 비교 · D15.3 불변식 4 표) · spec Req 1 · tasks 2.0 · 2.1 · 2.4 · 2.7 · 2.9 · 2.10(n/a) · issues D-2 ⑥. **12판 — 재리뷰 대기.** 재리뷰 전 §1~§3 착수 금지
       — **2026-10-29 12판 재리뷰(`review.md` 「12판 재리뷰」, `752ccfb39`) FAIL: P0 1 → 13판(Manager 결정).** 활성화 조건을 wire 단위 admission + 그 통합 시험의 a166 착지 sha 에 결속(design D15.4),
       활성화 task 5.5 신설(별도 착지), issues D-2 ⑦. **13판 — 재리뷰 대기.** 재리뷰 전 §1~§3 착수 금지
+      — **2026-10-29 종결: 13판 재리뷰(GPT) PASS `87d945220` · Manager 승인 2026-10-29 → proposal-freeze 승인.** 비차단 둘은 구현 task 로 옮겼다 — P1 → 2.4 Pre-Edit 항목(admission 주입 자리 구조 시험의 `go/types` 추적),
+      P2 → design D15 「생산 동작 변화 0」 범위 정정 + 3.1 골든. §1~§3 착수 조건은 tasks 1.0(a165 archive · push sha 재대조) 그대로
 
 ## P1. Phase 1 — 가격 사다리 KR 하한가 단 (선행 · 실측 불요 · design D2a)
 
@@ -233,6 +235,10 @@
       **시험 셋**: ① admission nil → 하한가 GET 0 · 판 비어 있음 · 창 안 보호 매도 = 오늘 LIMIT 골든 ② admission 거절 → 그 요청 GET 0 ③ 401 → 401 → 200 의 wire 요청 3건이 **각각** admission 을 탐
       (호출 계수 3 · 둘째 거절이면 셋째 wire 0 — 시험 더블 관문). 위 「429 정지 = 입력 하나(`doRequest` 기록)」는 12판에서 대체됨 — 429 뒤 정지는 a166 admission 의 거절로 표현
       **13판 (design D15.4)**: 이 task 의 배선은 nil 그대로 착지한다. non-nil 로 바꾸는 것은 5.5(별도 착지)뿐 — 구조 시험이 비시험 코드의 admission 주입 자리 0 을 단언(5.5 커밋에서만 그 단언을 바꿈)
+      **Pre-Edit 항목 (13판 재리뷰 P1 — Manager 이관 2026-10-29)**: 「비시험 admission 주입 자리 0」 구조 시험의 세는 방법 — 이름 · 필드명 · 식별자를 세지 않는다. `go/types` 로 타입 검사한
+      비시험 Go 패키지 전체에서 `*official.Client` 값과 admission capability 타입 값이 갱신기(유일한 생성자)에 닿는 **모든 할당 · 인자 · 반환 · closure 포획 · 옵션 함수**를 추적하고,
+      갱신기 생성자의 admission 입력은 **상수 `nil` 만** 허용한다. 추적할 수 없는 흐름(helper 반환 · 인터페이스 경유 등)은 실패로 분류. Pre-Edit 에서 갱신기 생성자와 admission capability 의
+      타입 · 생성 경로를 고정한다. 변이: 「helper 반환으로 non-nil 주입」 · 「옵션 closure 로 주입」 · 「다른 필드명으로 주입」이 잡혀야 한다. 5.5 에서만 이 단언을 a166-owned capability 로 바꾼다
 - [x] 2.10 ~~**RED/GREEN — `official.Client.doRequest` 의 HTTP 429 기록 (10판 — design D13.2)** — `c.hc.Do` 성공 뒤 `resp.StatusCode == 429` 이면 헤더와 무관하게 원자 값에 시각 저장, 읽기 접근자 하나
       (새 파일). 반환값 · 오류 · `rates.record` 무변경(기존 ratebudget · client 시험 green). **착수 전 겹침 대조**: a166(삽입 후보 `doRequest` · `send`) · a100(`client.dorequest` FLM 번들) ·
       a165(`client.send` 번들 — `doRequest` 호출자) 의 그 시점 상태를 1.0 과 같은 방식으로 대조. a166 이 먼저 계좌 공유 429 기록을 착지하면 이 task 는 그것을 읽는 쪽으로 줄인다~~
@@ -330,6 +336,7 @@
       `baseline` 은 그대로. 하한가 행 · 폴백 행 · 거부 행(B13 줄도 같은 출처)
       **9판 (design D12.6)**: a129 골든에 `price_source` 를 **필수 키**로(부분 비교 helper 가 빠뜨리지 못하게 키 존재를 따로 단언), 값 `lower_limit` · `observed` · `baseline` 각각.
       행: B1(하한 산술 실패) · B5(관측가 · 기준선 행) · B7 · B13 · B8 → 비수용 확정(비동기 결과 · 체결 따라가기 줄) · 폴백. 소비자 0 은 구현 시 재검색
+      **13판 재리뷰 P2**: admission nil · 빈 판 골든은 `price_source ∈ {observed, baseline}` 이고 `lower_limit` 부재를 단언(design D15 의 무변화 범위 = broker wire · `PlaceIntent` 가격)
 - [ ] 3.2 **RED — 원장 가격** — 하한가 보호 청산의 `intents.price` = 하한가, 폴백은 오늘과 같은 값(schema 무변경)
 - [x] 3.3 ~~원장 기록 경로 GREEN~~ — **not-applicable (8판)**: 원장 쓰기 경로는 `PlaceIntent.Price` 를 그대로 적는다 — 바꿀 코드가 없다(3.2 RED 가 고정)
 - [x] 3.4 ~~화면 「시장가」 표시~~ — **not-applicable (8판)**: 가격 없는 청산 의도를 생산하지 않는다(design D4 머리말)

@@ -250,6 +250,11 @@ Function Logic Map: not-applicable — 문서 개정만 했다. 분기 주장은
 > - **⑦ (13판 — a166 쪽 요구, a166 착수 때 Manager 가 a166 문서에 반영)** **a166 은 wire 단위 admission 이어야 한다 — `send` 단위 불가(a087 활성화 조건).** 자리는 `official.Client.doRequest` 의
 >   `c.hc.Do` 직전이고 `send` 의 401 재전송 두 요청도 각각 지난다. a166 착지 sha 에 그것을 증명하는 통합 시험(401 → 401 → 200 에서 admission 3회 · 거절이면 `c.hc.Do` 0)이 있어야 하고,
 >   a087 의 활성화 커밋(tasks 5.5 — 별도 착지)은 그 시험 이름과 sha 를 인용한다. `send` 단위로 착지하면 a087 은 활성화하지 않는다(생산 변화 0 유지).
+>   **13판 재리뷰(`87d945220`) 「a166 착수 시 문서로 옮길 요구」 원문**:
+>   - `official.Client.doRequest`의 매 `c.hc.Do` 직전에 계좌 공유 admission을 한 번 적용한다. `send` 단위 admission은 금지하고 401 재전송도 같은 관문을 지나야 한다.
+>   - a166-owned, account-keyed admission capability와 a087이 쓰는 `*official.Client` 인스턴스가 동일함을 계약화한다. a087의 별도 preflight가 실제 토큰을 또 소비하거나, 다른/dummy admission이 활성화를 가능하게 해서는 안 된다.
+>   - 실제 `official.Client` 통합 시험에 401 → 401 → 200의 admission 3회, 둘째 거절 뒤 셋째 `c.hc.Do` 0, 첫 거절의 `c.hc.Do` 0을 고정한다. a087 5.5는 이 시험 이름·착지 sha를 인용한다.
+>   - 헤더 없는 HTTP 429도 a166 admission 거절로 표현하는 수명·재시작 처분을 계약·시험으로 정한다. 이는 a087에서 제거한 `doRequest` 429 기록의 소유권이다.
 >
 > **12판 갱신 (Manager 결정 2026-10-29 — 11판 재리뷰 FAIL 처분)**: ① 의 대상 표는 design D15.3 이다 — a166 admission 전에는 a087 이 나빠지게 하는 칸이 없고(전부 0), 활성화 뒤 칸 1~4 의 상한이 수락 대상이다.
 > - **⑥ (12판 — 사람 확인)** 하한가 GET 은 **a166 계좌 공유 admission 이 착지 · 주입될 때만** 일어난다(활성화 조건 — 착수 조건 아님). a087 코드는 a166 전에 착지할 수 있고, 그때 엔진 배선은

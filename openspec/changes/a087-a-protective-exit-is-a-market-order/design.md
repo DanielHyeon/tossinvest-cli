@@ -10,7 +10,7 @@
 > wire 상한(401 시 토큰당 3) · 엔진 시작 뒤 5분 GET 0 · 예산 기준 계좌 공유 3 req/s 를 적고, 불변식 4 표를 D14.4 로 바꾼다.
 >
 > **12판 (Manager 결정 2026-10-29 — 11판 재리뷰 FAIL 처분)**: 정본은 **D11 ~ D15** 다. D15 — 하한가 GET 은 a166 계좌 공유 admission 이 주입될 때만(엔진 배선은 그 전까지 nil →
-> 생산 동작 변화 0, 활성화 조건), `doRequest` 429 기록은 a166 으로 옮겨 a087 의 `doRequest` 편집 0, 구조 시험은 평가된 `Action` 값 집합 비교, 불변식 4 표 D15.3.
+> broker wire · `PlaceIntent` 가격 무변화(a129 줄에는 `price_source=observed|baseline` 키가 늘어남 — `lower_limit` 은 나오지 않음), 활성화 조건), `doRequest` 429 기록은 a166 으로 옮겨 a087 의 `doRequest` 편집 0, 구조 시험은 평가된 `Action` 값 집합 비교, 불변식 4 표 D15.3.
 >
 > **13판 (Manager 결정 2026-10-29 — 12판 재리뷰 FAIL 처분)**: 활성화 조건을 D15.4 로 바꾼다 — a166 이 `doRequest` 의 `c.hc.Do` 직전에서 wire 요청마다 admission 을 강제하고(401 재전송 포함,
 > `send` 단위 불가) 그 통합 시험이 a166 착지 sha 에 있을 때만, 그 시험 이름 · sha 를 인용한 별도 커밋(tasks 5.5)이 엔진에 admission 을 주입한다.
@@ -502,8 +502,8 @@ a129 골든 helper 는 기대 키만 부분 비교한다(재리뷰 — `a129_exi
   **nil 이면 GET 0** 이고 판은 비어 있으므로 보호 매도는 전부 오늘의 LIMIT 이다. 401 재전송의 둘째 · 셋째 요청도 각각 admission 을 탄다 — 그래서 admission 은 갱신기 쪽 래퍼가 아니라
   **wire 요청마다** 걸려야 하고, 그 자리는 a166 이 소유하는 계좌 공유 전송 관문이다(a166 proposal `:43` · `:76` — 삽입 후보 `official.Client.doRequest` · `send`). a087 은 그 관문의
   admission 결과(허용 · 거절)만 받는다.
-- **엔진 배선**(**13판 정정 → D15.4**: non-nil 로 바꾸는 조건은 「a166 착지」가 아니라 「wire 단위 admission + 그 통합 시험이 a166 착지 sha 에 있음」이고, 바꾸는 커밋은 별도 착지 · 활성화 task 5.5): a166 착지 전까지 **nil**. a087 의 `Context.ExitObserver` · 갱신기 생성 자리는 admission 을 받는 칸만 두고 값을 넣지 않는다. 그러므로 **a166 전에 a087 이 착지해도 생산 동작
-  변화는 0** 이다 — 판이 늘 비어 가격 결정이 언제나 오늘 사다리를 고른다(D11 (b) fail-safe). 이것은 착수 조건이 아니라 **활성화 조건**이다. 사람 확인 대상: `issues.md` D-2 ⑥.
+- **엔진 배선**(**13판 정정 → D15.4**: non-nil 로 바꾸는 조건은 「a166 착지」가 아니라 「wire 단위 admission + 그 통합 시험이 a166 착지 sha 에 있음」이고, 바꾸는 커밋은 별도 착지 · 활성화 task 5.5): a166 착지 전까지 **nil**. a087 의 `Context.ExitObserver` · 갱신기 생성 자리는 admission 을 받는 칸만 두고 값을 넣지 않는다. 그러므로 **a166 전에 a087 이 착지해도 broker wire
+  · `PlaceIntent` 가격 무변화(a129 줄에는 `price_source=observed|baseline` 키가 늘어남 — `lower_limit` 은 나오지 않음)** 이다 — 판이 늘 비어 가격 결정이 언제나 오늘 사다리를 고른다(D11 (b) fail-safe). 이것은 착수 조건이 아니라 **활성화 조건**이다. 사람 확인 대상: `issues.md` D-2 ⑥.
 - **10판 `doRequest` 429 원자 기록 — a166 으로 옮긴다(권장안 채택).** 비용 비교: a087 에 남기면 `doRequest`(High-risk, a166 · a100 과 같은 함수)를 편집하고 a166 착지 때 그 기록과
   a166 의 공유 예산이 두 판정이 된다([[two-judgements-cover-for-each-other]]). 옮기면 a087 의 `doRequest` 편집이 **0** 이 되고 a100 · a166 과의 겹침도 사라진다. 429 뒤 정지는 a166 admission 이
   거절로 표현한다(a166 이 정한다). 그래서 D13.2 · tasks 2.10 은 **12판에서 대체됨**이고, a087 의 Pre-Edit · FLM 목록에서 `official.Client.doRequest` 를 뺀다. a166 문서 반영(429 기록을
@@ -521,7 +521,7 @@ a129 골든 helper 는 기대 키만 부분 비교한다(재리뷰 — `a129_exi
   1. a166 이 **wire 요청마다** admission 을 강제한다 — 자리는 `Client.doRequest` 의 `c.hc.Do`(`client.go:193`) **직전**이고, `send` 의 401 재전송 요청도 각각 그 자리를 지난다. `send` 단위 admission 은 이 조건을 충족하지 못한다.
   2. 그것을 증명하는 **통합 시험**이 a166 착지 sha 에 있다 — 최소한 「401 → 401 → 200 에서 admission 호출 3회 · 둘째 거절이면 셋째 wire 0」과 「admission 거절이면 `c.hc.Do` 0」을 실제 `official.Client` 로 잰 시험.
 - **활성화 커밋 = 별도 착지**: 엔진 배선을 non-nil 로 바꾸는 커밋은 위 시험의 **이름과 a166 착지 sha** 를 커밋 메시지와 tasks 에 인용해야 한다. 그 커밋이 a087 tasks 의 활성화 task(5.5)이고,
-  a087 본 구현 착지와도 a166 착지와도 다른 **a166 착지 뒤의 별도 착지**다. 그 전까지 a087 의 생산 동작 변화는 0 이다(D15.1 · D15.3 그대로).
+  a087 본 구현 착지와도 a166 착지와도 다른 **a166 착지 뒤의 별도 착지**다. 그 전까지 a087 의 broker wire · `PlaceIntent` 가격은 무변화다(a129 줄에는 `price_source=observed|baseline` 키가 늘어남 — `lower_limit` 은 나오지 않음)(D15.1 · D15.3 그대로).
 - **a166 쪽 요구**: 「a166 은 wire 단위 admission 이어야 함 — `send` 단위 불가(a087 활성화 조건)」. `issues.md` D-2 ⑦ 에 적었다. a166 문서 반영은 a166 착수 때 Manager 가 한다.
 - 불변식 4 표(D15.3)는 그대로다 — a166 전 전부 0, 활성화 뒤 칸 4 의 「wire 요청마다 a166 admission 이 허용한 것만」은 이제 조건 1 · 2 로 증명된 뒤에만 참이 된다.
 
@@ -548,7 +548,7 @@ a129 골든 helper 는 기대 키만 부분 비교한다(재리뷰 — `a129_exi
 | 7 | 첫 시도 뒤의 보호 매도 | 0 | 0 — 오늘 LIMIT(보수적 손실) | D13.1 |
 | 8 | 체결가(얇은 호가 · 종가단일가) | 0 | 불변식 4 밖 — 불변식 6 · D-1 (다) | 3.8 |
 
-a166 admission 전에는 a087 이 오늘보다 나빠지게 하는 칸이 **없다**(생산 동작 변화 0). 활성화 뒤의 1~4 수락은 사람 확인(`issues.md` D-2 ①).
+a166 admission 전에는 a087 이 오늘보다 나빠지게 하는 칸이 **없다**(broker wire · `PlaceIntent` 가격 무변화(a129 줄에는 `price_source=observed|baseline` 키가 늘어남 — `lower_limit` 은 나오지 않음)). 활성화 뒤의 1~4 수락은 사람 확인(`issues.md` D-2 ①).
 
 ## D1 — 유형은 제안의 성격이 정한다
 
