@@ -426,3 +426,12 @@ R3-1의 `attempt_transitions.id` 순서 비교와 NULL fail-closed는 맞다. �
 
 - `go test ./...`, `make gate`, archive, push, Manager 3.4 독립 검증은 지시 범위 밖이라 미실행.
 - R-a165-7(원장 밖 주문 번호 재사용)은 사람 수락 잔여로 유지함. `check_analysis.py`의 sibling evidence는 archive 단계 Manager source SHA 대조·복사 전까지 PASS가 아님.
+
+## 종결 gate 기록 (2026-10-29)
+
+**PASS — 격리 ext4 worktree에서 11/11 완료 게이트를 통과함.** `make -C /home/daniel/tossos-gate/a165-close gate CHANGE=a165-safe-order-placement-retry`가 `rc=0`으로 끝났고, 영수증은 `/home/daniel/.cache/a165-close/gate-run7-ext4.log`에 남김.
+
+- **환경·사전조건:** HEAD `fa5b18c7b1b6e54cfcb45b9db94ab59ba682476a`, tracked diff 0, `/tmp/.git` 부재를 확인함. 개발 시험용 긴 `TMPDIR`·`GOTMPDIR`를 해제하여 기본 `/tmp`를 사용했고 `GOCACHE=/home/daniel/.cache/a165-go/gocache`만 유지함. 환경 원문은 `/home/daniel/.cache/a165-close/gate-run7-ext4-env.txt`에 남김. gate 직전 CodeGraph status 2회는 각각 5,651ms·5,049ms로 15초 기준을 충족함.
+- **GBrain advisory:** `python3 tools/sdd/sdd_sync.py --no-gbrain`으로 GBrain advisory sync를 생략함. 새 worktree의 전체 GBrain sync가 30분 시한을 초과했기 때문이며 Manager가 2026-10-29에 승인함. CodeGraph hard-evidence fingerprint는 현재 worktree와 일치함. gate의 GBrain stale 표시는 WARN이며 통과 근거로 사용하지 않음.
+- **11단계 결과:** tasks, 미완료 태스크, deploy pair, gstack 기록, Function Logic Map, SDD check, 무태그 전체 시험, seams 전체 시험, race, vet, validate 모두 PASS함. `make validate`은 56 passed·0 failed임.
+- **종결 전 잔여:** archive, origin/main fast-forward push, main fast-forward 동기화, hindsight retain, 격리 worktree 정리는 이 기록 뒤 승인된 순서로 수행함. R-a165-7은 사람 수락 잔여로 유지함.

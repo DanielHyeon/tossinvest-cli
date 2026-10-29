@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a165-safe-order-placement-retry",
-    "path": "openspec/changes/a165-safe-order-placement-retry"
+    "path": "openspec/changes/archive/2026-10-29-a165-safe-order-placement-retry"
   },
   "found_by": {
     "date": "2026-10-22",
