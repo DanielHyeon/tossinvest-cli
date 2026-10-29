@@ -985,3 +985,25 @@ OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서만 다뤘다(새 AS
 | (Manager 발견) 예산 기준 | 그룹 10/s → 계좌 공유 3 req/s(사용자 결정 2026-10-22 결정 3): 주기당 ≤ 1 ≈ 6.7%, 401 시 ≤ 3 ≈ 20%. a166 착지 시 그 예산을 탐, a087 은 기다리지 않음 | design D14.3 |
 
 불변식 4 표는 design D14.4 가 대체한다. Function Logic Map: not-applicable — 문서 개정만 했다.
+
+## 11판 재리뷰 (GPT-5.6 Terra, 2026-10-29)
+
+**결론: FAIL (blocker 1).** D14.1은 실제 두 action 상수를 질의에 쓰도록 고쳐 10판 P0의 현재 오기를 닫았고, 시작 정숙 5분도 제출 경로를 멈추지 않는다. 그러나 D14.3의 `0.6/s ≈ 20%`는 5초 평균일 뿐 계좌 공유 **3 req/s**의 한 초 창 상한이 아니다. a087이 a166의 공유 admission 전에 최대 3회 GET burst를 추가하므로 D14.4 #4의 즉시성 상한은 성립하지 않는다.
+
+| 심각도 | 발견 | 위치 | 근거 | 처분 제안 |
+| --- | --- | --- | --- | --- |
+| P0 | `401 → 401 → 200` 한 토큰은 최대 3 wire GET이나, 세 요청 사이의 pacing/admission이 없다. 더구나 토큰은 `ObserveOnce` 반환 직후, 5초 `Sleep` 전에 보내므로 직전 관측 `/prices`와 **동시 실행 0**이어도 같은 1초 rate 창일 수 있다. 다른 계좌 공유 소비자도 같은 창에 들어온다. `last HTTP 429`와 시작 정숙은 응답을 **받은 뒤** 다음 GET만 멈출 뿐, 이미 초과한 창이나 그 창의 `/prices` 지연을 막지 못한다. 따라서 `≤3/5초 = 0.6/s ≈ 20%`는 계좌 3 req/s에 대한 안전 상한이 아니며, “a087은 a166을 기다리지 않음”은 공유 예산 결정과 충돌한다. D14.4 #4는 새 `/prices` 429·재시도 대기의 상한을 실제로 닫지 못했다. | `design.md:463-477`; `tasks.md:218-224`; `internal/app/engine/exitloop.go:407-417`; `internal/official/client.go:329-365`; `openspec/changes/verify-execution-capability/issues.md:578-579,593-600` | AST: `ExitObserver.Run`은 `ObserveOnce` 뒤 `Sleep` 전 별도 대기 없음; `Client.send` B4 loop 안 `doRequest`와 최초 호출로 최대 3회. 손으로 읽음: loop 조건·계좌 공유 결정 | a087의 하한가 GET을 a166의 실제 계좌 공유 admission 뒤로 gate하거나, 그 전에는 GET 0(오늘 LIMIT)으로 fail-closed 하라. 단순 평균/자체 비동시성으로 대체하지 말고, 같은 1초 창의 `/prices`·401 3회·다른 소비자 합계를 넣은 시험과 admission 거절 시 GET 0 시험을 고정하라. |
+| P1 | D14.1의 **현재** 비교는 이름 수가 아니라 실제 `Action` 값을 `isProtective`에 넣어 집합을 비교하므로 방향은 맞다. 다만 “Action 상수 전부를 AST 열거”의 type 판별 규칙이 없다. 현 `tools/logic-map`의 `isProtective` AST는 반환 좌표만 내고 비교 피연산자를 내지 않는다. 식별자 prefix/존재 수로 구현하면 `const ActionFuture = Action("...")`처럼 명시 type 자리가 다른 선언이나 새 파일의 상수를 빼고도 통과할 수 있다. | `design.md:440-445`; `tasks.md:242-244,253`; `internal/exitpolicy/ratchet.go:92-104`; `internal/app/engine/exitloop.go:1463-1465` | AST: `engine--isprotective`는 branch 0·return 좌표 하나라 selector 집합 증거가 아님. 손으로 읽음: 현재 두 selector와 모든 Action 선언 | 구조 시험은 `go/types` 등으로 package 전체의 **평가된 `exitpolicy.Action` 상수값**을 열거하고, 실제 `isProtective` 호출 결과와 질의 집합을 값으로 비교한다고 명시하라. `ActionFuture = Action("...")` 추가 + `isProtective` 편집 변이를 넣어 이름/개수 검사만으로는 통과할 수 없게 하라. |
+
+### 확인한 것
+
+- 손으로 읽음: 현재 `isProtective`의 참 집합은 `ActionBaselineBreach`(`BASELINE_BREACH_EXIT`)와 `ActionLadderStop`뿐이다. `ExitProposal.Action`은 `string(proposal.Action)`으로 기록된다. D14.1의 현행 상수 유도와 기준선·손절 재시작 행동 시험은 10판의 문자열 오기를 닫는다.
+- AST: `Gateway.submit`의 `claimSymbol`·`checkSymbolFree`는 `Prepare` 전, 실제 `plan.call`은 `Prepare` 뒤다. `Prepare` 전 로컬 종료를 재시작 뒤 재허용하는 갈래는 브로커에 닿지 않는다는 10판 판단을 유지한다.
+- 설계상 시작 정숙은 보조 갱신기의 GET만 5분 0으로 한다. 새 판이 없거나 금지면 오늘 LIMIT이라는 가격 결정 표와 결합하므로, 보호 `submit` 자체를 5분 멈추는 경로는 보이지 않는다. 구현 전 문서 대조이며 실행 증거는 아니다.
+- `analysis/evidence/enumerate.py`: `stale=0`. `openspec validate a087-a-protective-exit-is-a-market-order --strict --no-interactive`: 통과.
+
+### 안 본 것·제한
+
+- 11판은 설계 단계다. 구현·단위/종단/변이 시험·전체 gate·실주문은 실행하지 않았다. 브로커·계좌·운영·`mutating` 명령은 0이다.
+- 브로커의 실제 rate-window 집계 방식과 다른 프로세스와의 429 빈도는 `[미측정]`이다. 이는 공유 admission 부재라는 정적 사실이나 그 부재를 a166 전까지 허용하는 결론을 해소하지 않는다.
+- `impeccable: N/A — backend/documentation-only`. `grill-me`: 확정 D-1·D-2 및 Manager 결정을 재질문하지 않았다. `search-first`: 구현·의존성 채택이 아닌 독립 문서/소스 적대 검토라 현재 저장소·OpenSpec·AST만 대조했다.
