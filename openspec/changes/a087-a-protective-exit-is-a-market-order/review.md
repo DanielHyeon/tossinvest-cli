@@ -934,3 +934,18 @@ Function Logic Map: not-applicable — 문서 개정만 했다. 분기 주장은
 - a165 main/착지 worktree는 금지 범위라 열지 않았다. D12.5 재대조는 a165 archive/push SHA 뒤 작업이다.
 - 거래소 timestamp 의미와 헤더 없는 429의 실제 빈도는 외부 영수증/규정으로 검증하지 않았다. `impeccable: N/A — backend/documentation-only`.
 - `grill-me`: D-1·D-2 ⑤는 확정값으로 사용했고 새 사람 결정을 요구하지 않았다. `search-first`: 구현·의존성 채택이 아닌 독립 문서/소스 적대 검토라 현재 저장소·AST·OpenSpec 근거만 사용했다.
+
+## 10판 개정 (2026-10-29, Manager 결정 — 9판 재리뷰 FAIL 처분, KISS) — **독립 재리뷰 대기**
+
+OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서와 `tools/logic-map` AST 만 다뤘다 — 소스 · 시험 편집 0, 시험 · gate 실행 0, 브로커 · 계좌 · 운영 접근 0.
+새 AST 1개(`engine--exitobserver.release`, HEAD `525b4fb6c`), `enumerate.py` 43개 stale 0.
+
+| 9판 재리뷰 발견 | 10판 처분 | 위치 |
+| --- | --- | --- |
+| P0 T3 최신 상태 판정은 재시작 뒤 단조 금지를 복원 못 함 | 가격 · 상태 · 출처 판정을 없앴다 — 하한가는 그날 그 종목의 첫 보호 매도 시도에만. 술어 = 같은 `account_ref` · `market` · `trading_day` · symbol 의 보호 청산 매도 intent 존재(`intents` 는 갱신 · 삭제 없음 → 단조). 원장 오류 → 금지. 첫 시도 뒤는 오늘 LIMIT(보수적 손실). T2/T3 · D-2 ⑤ 대체 | design D13.1 · spec Req 1 · tasks 2.5 · 2.9 |
+| P1 헤더 없는 429 를 놓침 | `doRequest` 가 HTTP 429 를 헤더 무관하게 마지막 시각으로 기록(원자 값 · 접근자 하나), 갱신기는 5분 GET 0. 9판 입력 ②③ 대체. `doRequest` 를 Pre-Edit · FLM 에 추가 — a166 · a100 과 같은 함수(대조 기록) | design D13.2 · tasks 2.4 · 2.10 |
+| P1 release 실패가 상한에 없음 | 불변식 4 표 #3 — 오늘의 비수용 해제 실패 경로와 같은 상한, 발생 종목당 하루 1회 이하. 직접 거부 · IN_DOUBT 해제 각각의 release 실패 종단 시험 | design D13.5 · tasks 2.5 |
+| P1 timestamp 뜻 · KST 날짜 등치 | P0-1 은 5.4 gate 로 **보류**라고 정정. 기본 처분 = 응답 시각이면 KR off(사람 확인). 「KST 날짜 일치」는 평일 휴장 · 기준가 변경을 증명하지 않음 | design D13.3 · issues D-2 ② |
+| P2 T3 오탐 · 정본 비교 | 첫 시도 규칙으로 오탐 문장 소멸. 남은 ⑥ 비교는 양의 정수 정본 · 값 비교, 파싱 불가 → 쓰지 않음(시험 행) | design D13.4 · tasks 2.2 |
+
+Function Logic Map: not-applicable — 문서 개정만 했다. 분기 주장은 `analysis/evidence/` AST 43개에서만 인용했다(`intents` 불변 · `exit_events` 결속 쿼리는 schema 주석 손 읽기로 표시).

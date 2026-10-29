@@ -1,7 +1,10 @@
-# a087 설계 — 보호 청산의 가격 (9판: 그날 거래소 하한가 지정가 · 1~7판: 시장가)
+# a087 설계 — 보호 청산의 가격 (10판: 그날 거래소 하한가 지정가 · 1~7판: 시장가)
 
 > **9판 (Manager 결정 2026-10-29 — 8판 독립 재리뷰 FAIL 처분)**: 정본은 **D11 + D12** 다. D12 가 D11 의 신선도(timestamp · raw decimal) · 갱신 주기(관측 주기 끝 토큰 ·
 > 주기당 1건 · 429 뒤 5분 정지) · 되먹임(`CONFIRMED` 아닌 모든 결과 · 재시작 재구성) · 불변식 4 표 · a165 문장을 대체한다.
+>
+> **10판 (Manager 결정 2026-10-29 — 9판 재리뷰 FAIL 처분, KISS)**: 정본은 **D11 + D12 + D13** 이다. D13 이 되먹임을 「그날 그 종목의 첫 보호 매도 시도에만 하한가」로,
+> 429 정지 입력을 `doRequest` 의 HTTP 429 시각 하나로 바꾸고, 불변식 4 표(D13.5)에 release 실패 칸을 더한다. timestamp 뜻은 5.4 gate 로 보류(D13.3).
 
 > **8판 (사람 결정 2026-10-28 「3은 3」 — `issues.md` D-1 (다))**: 보호 청산 매도는 시장가가 아니라 **그날 거래소 하한가로 낸 지정가(LIMIT)** 다.
 > 2026-10-10 「시장가 방향」 결정을 이것으로 대체한다. **정본은 D11** 이다. 아래 「문제의 형태」·D1~D10 의 시장가 전용 설계는 지우지 않고 절마다
@@ -213,7 +216,7 @@ a167 문서 반영은 이 디렉터리 범위 밖 — `issues.md` D-2 ④.
 ### 착수 시 FLM 대상 (8판 — gate ⑤, 본문을 고치는 기존 함수)
 
 `ExitObserver.submit`(`exitloop.go:1483-1596`) · `exitOrderLineFor`(`exit_order_log.go:102-114`) · `exitOrderLine.args`(`:140-169`) · `NewContext`(`engine.go:437-607`) ·
-`Context.ExitObserver`(`exitwiring.go:319-364`) · `engineRuntime`(`cmd/tossctl/engine.go`) · 바뀌는 기존 시험 함수(시험 파일 포함). **9판 추가**: `ExitObserver.Run`(`exitloop.go:407-417` — 주기 끝 토큰 · 429 정지 알림, D12.2). 새 파일의 새 함수: 엔진 전용 하한가 읽기(`internal/official`) · T3 원장 읽기(`internal/journal`, D12.3). T2 를 고르면 `Gateway.Place` · `Gateway.submit` · `Attempt.MarkDispatchStarted`(또는 `Prepare`)가 더해진다. HEAD AST 는 `analysis/evidence/` 에 있다 —
+`Context.ExitObserver`(`exitwiring.go:319-364`) · `engineRuntime`(`cmd/tossctl/engine.go`) · 바뀌는 기존 시험 함수(시험 파일 포함). **9판 추가**: `ExitObserver.Run`(`exitloop.go:407-417` — 주기 끝 토큰 · 429 정지 알림, D12.2). **10판**: `Run` 은 토큰 한 줄만(429 알림 대체), **`official.Client.doRequest`(`client.go:191-207`) 추가**(D13.2 — a166 · a100 과 같은 함수), T3 원장 읽기 → 「그날 보호 청산 매도 intent 존재」 읽기(D13.1), T2 갈래 삭제. 새 파일의 새 함수: 엔진 전용 하한가 읽기(`internal/official`) · T3 원장 읽기(`internal/journal`, D12.3). T2 를 고르면 `Gateway.Place` · `Gateway.submit` · `Attempt.MarkDispatchStarted`(또는 `Prepare`)가 더해진다. HEAD AST 는 `analysis/evidence/` 에 있다 —
 구현 때 그 HEAD 에서 번들(`ast.json` + `function-logic-map.md` + `branch-test-map.md` + `risk-pattern-report.md`)로 다시 만든다. 새 함수(판 · 갱신기 · `exitLimitPrice`)는 새 파일이다.
 **`sellIntent` · `checkOrderShape` · `placeIntentSupported` · `Service.PreviewPlace` · `Service.Place` · `NewOrderPath` · `buildFlattenWiring` 은 8판에서 대상이 아니다**(본문 무변경 —
 시험이 읽기만 한다). 7판 목록(`review.md` 「착수 시 FLM 대상」·「착수 시 FLM 대상 정정」)은 8판에서 대체됨.
@@ -231,7 +234,7 @@ a167 문서 반영은 이 디렉터리 범위 밖 — `issues.md` D-2 ④.
   `timestamp string` 그대로 디코드해 돌려준다. 기존 `Client.PriceLimits` · `adaptPriceLimits` · `domain.PriceLimits` · CLI `tossctl quote limits` 출력은 **바이트 그대로**다
   (D11 (b) 의 「칸을 더하지 않는다」는 CLI 형에 대해서만 참으로 남는다). 엔진은 `Context.Official` 이 이 메서드를 가질 때만 쓴다(좁은 인터페이스 단언 — `OfficialReads`
   인터페이스는 무변경이라 그것을 구현한 시험 더블이 깨지지 않는다. 없으면 갱신기는 아무것도 읽지 않는다 — `manualBuyRefresh.Run` B1 `:85` 와 같은 모양).
-- **쓰는 조건(Manager 결정)** — 둘 다 참일 때만 판 항목이 된다: ① `timestamp` 를 RFC 3339 로 파싱한 시각의 **KST 날짜 = 결정 시각의 KRX 거래일**(KST `Session.Day` —
+- **쓰는 조건(Manager 결정)** — 둘 다 참일 때만 판 항목이 된다(10판 정정 → D13.3: 이 조건은 신선도 증명이 아니고, 「KST 날짜」 일치는 평일 휴장 · 기준가 변경을 증명하지 않는다 — 5.4 gate 로 보류): ① `timestamp` 를 RFC 3339 로 파싱한 시각의 **KST 날짜 = 결정 시각의 KRX 거래일**(KST `Session.Day` —
   창이 평일만 열리므로 평일 날짜) ② 그 시각이 **그날 09:00 KST 이후**.
 - **거르는 것 — 사유를 따로 남긴다**(한 사유가 다른 사유를 덮지 않게, P1-1): `lower_limit_null` · `lower_limit_unparsable` · `lower_limit_not_positive`(0 이하) ·
   `lower_limit_not_integral`(KR 가격은 원 단위 정수 — openapi 주문 `price` 「KR: 정수 (원 단위)」 `:11205`) · `timestamp_missing` · `timestamp_unparsable` ·
@@ -272,7 +275,7 @@ a167 문서 반영은 이 디렉터리 범위 밖 — `issues.md` D-2 ④.
   **시한 = min(관측 주기/2, 2초)** 를 건다. 다음 `/prices` 는 `Sleep(Interval)`(기본 5초 — `DefaultExitObservationInterval` `:98`) 뒤에 시작하므로, 시한 안에 끝나거나 취소된 GET 은
   다음 `/prices` 와 겹치지 않는다. 토큰이 없으면(tracer 가 `ObserveOnce` 를 직접 돌림 · 관측자 없음) GET 0.
 - **주기당 1건**: 채널 용량 1 + 토큰당 GET 1. 밀린 토큰은 쌓이지 않는다(막히지 않는 보내기는 꽉 차 있으면 버린다).
-- **5분 정지 — 세 입력**: ① 갱신기 자신의 GET 이 `official.ErrRateLimited` ② `Run` 이 받은 주기 결과 `cycle.Err` 가 `errors.Is(…, official.ErrRateLimited)`(관측 `/prices` 의 429 —
+- **5분 정지 — 세 입력**(**10판에서 대체됨 → D13.2**: `doRequest` 의 HTTP 429 시각 하나가 셋을 대신한다): ① 갱신기 자신의 GET 이 `official.ErrRateLimited` ② `Run` 이 받은 주기 결과 `cycle.Err` 가 `errors.Is(…, official.ErrRateLimited)`(관측 `/prices` 의 429 —
   `Retrier.Query` B11·B12 반환은 `%w` 또는 원 오류라 사슬이 남는다는 것은 손 읽기, 구현 시 시험으로 고정) ③ 같은 클라이언트의 `RateBudgets()`(`internal/official/ratebudget.go:220` —
   모든 경로의 마지막 허용량, 429 응답 포함 `:224` 주석)에 `ObservedAt` 이 5분 안이고 `Exhausted()` 인 항목이 있으면(다른 소비자의 429 — 헤더가 없는 429 는 `Reported=false` 라 못 본다:
   `[미측정]` 잔여). 정지 중에는 판에 새 항목이 생기지 않는다 → 오늘의 LIMIT(약화 아님).
@@ -284,7 +287,7 @@ a167 문서 반영은 이 디렉터리 범위 밖 — `issues.md` D-2 ④.
   (오늘의 수 = 같은 시나리오를 판 없이 돌린 계수) · 429 뒤 5분 동안 하한가 GET 0(가짜 시계) · `/prices` 429 주기 뒤 5분 정지 · 토큰 없으면 GET 0.
 - D11 (b) 「얼마나 자주」(30초 · 주기당 5)와 「갱신기 = 보조 실행자」의 독립 주기는 이것으로 **대체**된다. 보조 실행자 등록(`engineRuntime` `Auxiliary`)과 감독 밖 성질은 그대로다.
 
-### D12.3 — 비동기 비수용까지 덮는 되먹임 · 재시작 재구성 (P0-3)
+### D12.3 — 비동기 비수용까지 덮는 되먹임 · 재시작 재구성 (P0-3) — **10판에서 대체됨 → D13.1**(첫 시도 한정 · T2/T3 · D-2 ⑤ 대체)
 
 **규칙(Manager 결정)**: 그 종목에서 그날 하한가로 낸 시도가 **없거나**, 가장 최근의 하한가 시도가 **브로커 수용으로 확정**(`CONFIRMED`)된 경우에만 하한가를 쓴다. 그 밖 — 직접 거부(B13),
 IN_DOUBT, 확정 비수용(`FAILED_CONFIRMED`), `NOT_DISPATCHED`, 종목 진행 중(B10), 미상 — 은 전부 **그날 남은 시간 동안 오늘의 LIMIT**.
@@ -331,7 +334,7 @@ a129 골든 helper 는 기대 키만 부분 비교한다(재리뷰 — `a129_exi
 `lower_limit` · `observed` · `baseline` 셋을 각각 기대한다. 행: B1(하한 산술 실패 — 결정은 이미 됐으므로 출처가 실림) · B5(`sellIntent` 실패 — 하한가 행에서는 도달 불가이므로
 관측가 · 기준선 행만) · B13(직접 거부) · B7(확정) · B8 → 비수용 확정(비동기 결과 — 체결 따라가기 줄까지) · 폴백 행. 소비자 0(재리뷰 검색)은 구현 시 다시 센다.
 
-### D12.7 — 불변식 4 표 (9판 — D11 (e) 의 불변식 4 문단을 대체)
+### D12.7 — 불변식 4 표 (9판) — **10판에서 대체됨 → D13.5**
 
 오늘(모든 보호 매도 = 관측가 LIMIT)보다 나빠질 수 있는 칸 전부와 각 칸의 상한:
 
@@ -346,6 +349,79 @@ a129 골든 helper 는 기대 키만 부분 비교한다(재리뷰 — `a129_exi
 | 7 | 체결가(얇은 호가 sweep · 종가단일가 대량 가격 충격) | 즉시성이 아니라 가격 | 불변식 4 밖 — 불변식 6 · D-1 (다) 결정이 받은 축 | 3.8 질의로 착지 뒤 기록 |
 
 1·2·4 가 「오늘보다 나빠질 수 있는」 칸이고 각각 위 상한을 갖는다. 1·2 의 수락은 사람 확인(`issues.md` D-2 ①), 4 는 수치 상한으로 판정한다.
+
+## D13 — 10판: 9판 재리뷰 처분 — 첫 시도 한정 · 429 기록 · release 실패 칸 (Manager 결정 2026-10-29, KISS)
+
+> 9판 재리뷰(`review.md` 「9판 재리뷰」, `525b4fb6c`)는 FAIL(P0 1 · P1 3 · P2 1)이었다. Manager 는 **복잡도를 줄이는 쪽**으로 정했다. 이 절이 D12.2 의 429 입력 · D12.3 전체 ·
+> D12.7 표를 **대체**한다(그 자리에 「10판에서 대체됨」 표시). D12.1(엔진 전용 읽기) · D12.2 의 토큰 · 주기당 1건 · 겹침 0 · D12.4~D12.6 은 그대로다. 새 AST 는
+> `engine--exitobserver.release` 1개다(HEAD `525b4fb6c`, 소스 바이트 = origin/main `4b67dd6a9`, `enumerate.py` 43개 stale 0).
+
+### D13.1 — 하한가는 그날 그 종목의 **첫 보호 매도 시도**에만 (P0 — T3 단조성)
+
+- **규칙**: 원장에 같은 `account_ref` · `market` · `trading_day` · symbol 의 **보호 청산 매도 intent 가 하나라도** 있으면 그날 그 종목은 하한가 금지다. 그 intent 의 가격 · 상태 · 출처는 묻지 않는다.
+  「보호 청산 매도 intent」 = `intents`(`internal/journal/schema.go:202-217` — `market` · `trading_day` · `account_ref` · `symbol` · `side` 칸을 가진다) 행 중 `side = 'SELL'` 이고
+  `exit_events.proposed_intent_id` 로 그 행을 가리키는 판정의 `action` 이 `BASELINE_BREACH` · `STOP_LOSS_LADDER` 인 것(`exit_events` `core_domain.go:251-261`, 색인
+  `account_views.go:113` — 손 읽기, 구현 때 쿼리 시험으로 고정). symbol 은 `UPPER(TRIM())` 로, market 은 소문자로 맞춘다.
+- **왜 단조인가**: `intents` 는 「Immutable record … Never updated」(`schema.go:201` 주석)이고 지우는 경로가 없다 — 행이 한 번 생기면 그날 끝까지 있다. 그래서 재시작 뒤에도 같은 답이 나오고,
+  9판의 「최신 PLACE 상태」 같은 비단조 입력(`IN_DOUBT → CONFIRMED` 전이로 금지가 풀림 — 재리뷰 P0)이 없다. 꼬리표도 출처 판정도 필요 없다 — **T2 · T3 · `issues.md` D-2 ⑤ 는 10판에서 대체됨.**
+- **원장 읽기 오류 · 파싱 불가 → 금지**(fail-closed — 항목을 세우지 않아 오늘 LIMIT).
+- **메모리 쪽**: `submit` 이 보호 청산의 `Place` 를 부르면 그 결과와 무관하게 그 종목의 그날 항목을 「금지」로 바꾼다(제출 순간 — 9판의 결과별 갈래가 필요 없다). 재시작 뒤에는 갱신기가 항목을
+  세우기 **전에** 위 원장 질의로 같은 술어(「그날 보호 청산 매도 intent 가 있나」)를 계산한다. 두 경로가 다를 수 있는 한 경우: `Place` 가 `Prepare` 전에 로컬에서 끝나 intent 행이 생기지
+  않으면(예: `ReasonSymbolInFlight` B10 류) 메모리는 금지, 재시작 뒤 원장은 허용이다. 그 시도는 브로커에 닿지 않았으므로 재시작 뒤 하한가 1회는 「같은 거부의 반복」이 아니다 —
+  보수적 쪽(메모리)이 운영 중 기본이고, 재시작은 많아야 하루 1회 하한가를 더 허용한다.
+- **보수적 손실(의도)**: 첫 시도 뒤의 보호 매도 — 부분 체결 뒤 잔량, 첫 시도가 창 밖(08:59 등)이었던 날의 창 안 재발의, 첫 하한가 시도가 수용됐지만 미체결로 끝난 뒤의 재발의 — 는
+  전부 오늘의 LIMIT(관측가)으로 나간다. 하한가의 공격성을 그 시도들에서 잃을 뿐, 오늘보다 나빠지지 않는다. 잔량의 재가격은 a167 소관이다.
+- 이 규칙으로 8판 · 9판의 되먹임(B13 · 결과별 금지 · T3 재구성)은 **전부 대체**된다. 9판 D12.3 의 「술어 하나」 원칙은 남는다 — 술어는 「그날 보호 청산 매도 intent 존재」 하나다.
+
+### D13.2 — HTTP 429 를 헤더와 무관하게 기록 (P1 — 헤더 없는 429)
+
+- **사실(재리뷰 · AST)**: 헤더 없는 429 가 `Retrier.Query` 안에서 재시도로 성공하면(B10 대기 → 다음 시도 B5 `ClassOK` `retry.go:351-355`) `cycle.Err` 는 nil 이고, 그 응답의 budget 은
+  `Reported=false` 라 `Exhausted()`(`ratebudget.go:177`)도 거짓이다 — 9판의 정지 입력 ②③ 이 둘 다 놓친다.
+- **처분**: `official.Client` 에 「마지막 HTTP 429 시각」 원자 값 하나와 읽기 접근자 하나를 둔다. 기록 자리는 모든 응답이 지나는 유일한 `c.hc.Do` 자리인 `Client.doRequest`
+  (`internal/official/client.go:191-207`) — `c.hc.Do` 성공 뒤(B1 `:194` 다음), `resp.StatusCode == 429` 이면 헤더와 무관하게 `time.Now()` 를 저장한다(같은 함수가 이미
+  `time.Now()` 로 `c.rates.record` 를 한다 `:199`). 반환값 · 오류는 바뀌지 않는다. 갱신기는 토큰을 받을 때 그 시각이 5분 안이면 GET 0 이다. 비교는 같은 벽시계(`time.Since`)로 한다 —
+  엔진 시계가 시험 더블인 시험에서는 정지 판정 함수에 두 시각을 넣어 잰다.
+- 9판의 정지 입력 ②(`Run` 의 `cycle.Err`)와 ③(`RateBudgets()` `Exhausted()`)은 **10판에서 대체됨** — 이 하나가 셋을 다 덮는다(갱신기 자신의 GET 도 `doRequest` 를 지난다).
+  그래서 `ExitObserver.Run` 편집은 토큰 보내기 한 줄로 줄어든다.
+- **편집하는 기존 함수 = `Client.doRequest`** — Pre-Edit · FLM 대상에 넣는다. 다른 change 와의 겹침(문서 대조, 이 worktree 기준):
+  - **a166**(`a166-account-shared-rate-limit`, proposal 단계 · 코드 0): 삽입 자리 후보가 `official.Client.doRequest` · `send`(a166 proposal `:43` · `:76`). **같은 함수 · 같은 관심사(429)** 다 —
+    둘 중 먼저 착지하는 쪽 뒤에 다른 쪽이 그 sha 에서 AST 를 다시 만든다. a166 이 계좌 공유 429 기록을 만들면 a087 은 그것을 읽기만 하는 쪽으로 줄일 수 있다(그때 편집 0).
+  - **a100**(HOLD): `internal-official--client.dorequest` FLM 번들이 있다(a100 tasks `:67` — 계측 transport). 착수 순서는 열려 있다 — 같은 처리.
+  - **a165**: FLM 번들 목록에 `client.send` · `client.postwithheaders` 는 있고 `client.dorequest` 는 없다(`openspec/changes/a165-safe-order-placement-retry/analysis/function-logic/` 목록).
+    `send` 가 `doRequest` 를 부르므로(`client.go:329` · `:354`) 호출자 쪽 좌표는 tasks 1.0 재대조에 넣는다.
+- **시험**: httptest 가 헤더 없는 429 를 한 번 주고 다음 시도에 200 → `Retrier.Query` 성공 · `cycle.Err == nil` → 그 뒤 5분 안의 토큰에서 하한가 GET 0. 헤더 있는 429 · 갱신기 자신의 429 행도 같은 결과.
+  `doRequest` 의 반환값 · 오류 · `rates.record` 동작이 편집 전과 같다(기존 ratebudget 시험 그대로 green).
+
+### D13.3 — timestamp 의 뜻은 5.4 착지 전 gate 로 **보류** (P1)
+
+- 정확한 상태: 9판 P0-1(전일 하한가)은 **닫히지 않았다** — D12.1 은 raw · timestamp 를 보존하고 조건 ①② 를 세웠을 뿐, timestamp 가 효력 날짜인지 응답 시각인지 모르는 한 신선도 증명이 아니다.
+  그 판정을 tasks 5.4(착지 전 필수 gate)로 **보류**한다. 구현 · 배포 완료를 주장하지 않는다.
+- **기본 처분(사람 확인 대상 — `issues.md` D-2 ②)**: 5.4 에서 timestamp 가 **응답 시각**으로 드러나면 **KR 하한가를 끈다(off — 보호 매도 전부 오늘 LIMIT)**. 다른 권위 있는 효력일 검증은 별도 change 로 한다.
+- 문구 정정: D12.1 의 「timestamp 의 KST 날짜 = 결정 시각의 KRX 거래일」은 **KST 달력 날짜(평일)의 일치**일 뿐이다 — 평일 휴장과 기준가 변경(권리락 등)을 증명하지 않는다. 그 둘은 timestamp 뜻과 함께 5.4 · 별도 change 몫이다.
+
+### D13.4 — 하한가 값 비교의 정본 (P2)
+
+- 첫 시도 규칙으로 T3 의 가격 일치 비교와 그 오탐 문장은 사라졌다. 남은 비교는 D11 조건 ⑥(하한가 ≤ 관측가) 하나다.
+- **정본**: 하한가 원 문자열은 앞뒤 공백 없는 양의 정수 decimal(`^[1-9][0-9]*$`)이어야 하고 정수로 파싱한다. 관측가는 decimal 로 파싱해 정수 하한가와 값으로 비교한다(문자열 비교 금지).
+  어느 쪽이든 파싱 불가면 하한가를 쓰지 않는다(오늘 LIMIT, 사유 기록). 시험 행: `"50400"` vs 관측가 `"50400"` · `"50401"` · `"50399"` / 하한가 `"050400"` · `"50400.0"` · `" 50400"` · `"5.04e4"` · `""` →
+  쓰지 않음 / 관측가 파싱 불가 → 쓰지 않음.
+
+### D13.5 — 불변식 4 표 (10판 — D12.7 을 대체)
+
+오늘(모든 보호 매도 = 관측가 LIMIT)보다 나빠질 수 있는 칸과 상한:
+
+| # | 칸 | 무엇이 나빠지나 | 상한 | 근거 · 남은 `[미측정]` |
+| --- | --- | --- | --- | --- |
+| 1 | 첫 하한가 시도가 브로커에 **직접 거부**(전일 값 < 그날 하한가 · SOR/NXT 범위 차이 · VI · 개장 지연 거동) | 거부 → 해제 → 다음 관측에서 오늘 LIMIT | **종목당 하루 1회** × (거부 응답 시간 + 관측 주기 5초) | D13.1 첫 시도 규칙. 거부가 실제로 나는지 `[미측정]` → 5.4 |
+| 2 | 첫 하한가 시도가 **IN_DOUBT → 비수용 확정** | 오늘의 IN_DOUBT 와 같은 해소 대기 + 해제 뒤 1 주기 | **종목당 하루 1회** × (오늘과 같은 해소 시간 + 5초) | D13.1. `noteHeldProposal` B4(`exit_held_proposal.go:140`)가 해제. 하한가가 IN_DOUBT 확률을 바꾸는지 `[미측정]` |
+| 3 | 위 1 · 2 의 **journal release 실패 · 복구** | `release`(`exitloop.go:1603-1608`, B1 `:1604` `ReleaseUnacceptedExitProposal` 오류 → 반환)가 실패하면 발의가 무장된 채 남고, 다음 주기부터 `noteHeldProposal` B4 → B5(`:142`)가 해제를 다시 시도 | **오늘의 비수용 해제 실패 경로와 같은 상한**(같은 함수 · 같은 재시도) · 발생은 **종목당 하루 1회 이하**(첫 시도 규칙 — 하한가가 새로 만드는 거부는 하루 1번뿐) | 원장 쓰기 실패의 지속 시간 자체는 오늘과 같은 미지수 — a087 이 바꾸지 않는다 |
+| 4 | `MARKET_DATA` 압력 → 관측 `/prices` 429 → 주기 건너뛰기 · 재시도 대기(오늘도 있는 동작) | 그 대기가 더 자주 일어날 가능성 | 추가 요청 **주기당 ≤ 1 = 0.2/s(한도 10/s 의 2%)** · 자기 `/prices` 와 겹침 0 · **HTTP 429(헤더 유무 무관)를 본 뒤 5분 GET 0** | D12.2 토큰 + D13.2. 다른 소비자와 같은 초에 겹칠 때의 효과 `[미측정]`. 다른 프로세스(사람 CLI 등)의 429 는 이 클라이언트에 안 보인다 — a166(계좌 공유) 몫 |
+| 5 | 재시작 · 판 · 갱신기 고장 · 원장 읽기 실패 · 정지 | — | **0** — 항목이 없거나 금지면 오늘 LIMIT | D13.1 fail-closed |
+| 6 | 전일 하한가가 그날 하한가보다 높음(⑥ 통과) | — | **0** — 바닥이 관측가 이하라 오늘보다 공격적이거나 같다 | D12.1 논증(제도 근거 `[미인용]`) |
+| 7 | 첫 시도 뒤의 보호 매도(잔량 · 재발의) | — | **0** — 오늘 LIMIT(보수적 손실, D13.1) | — |
+| 8 | 체결가(얇은 호가 sweep · 종가단일가 대량 가격 충격) | 즉시성이 아니라 가격 | 불변식 4 밖 — 불변식 6 · D-1 (다) 결정의 축 | 3.8 질의 |
+
+1 · 2 · 3 · 4 가 「오늘보다 나빠질 수 있는」 칸이다. 1~3 의 발생은 모두 종목당 하루 1회 이하로 묶인다. 수락은 사람 확인(`issues.md` D-2 ①).
 
 ## D1 — 유형은 제안의 성격이 정한다
 

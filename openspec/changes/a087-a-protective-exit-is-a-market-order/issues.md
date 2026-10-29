@@ -246,6 +246,15 @@ Function Logic Map: not-applicable — 문서 개정만 했다. 분기 주장은
 
 ### D-2 — 8판에서 사람 확인이 필요한 것 (2026-10-28 · **9판 갱신 2026-10-29**)
 
+> **10판 갱신 (Manager 결정 2026-10-29 — 9판 재리뷰 FAIL 처분, KISS)**: 아래 9판 ① ② 는 이 문구로 대체되고 ⑤ 는 **10판에서 대체됨**(첫 시도 규칙이 출처 기록을 필요 없게 했다 — design D13.1).
+>
+> - **① (10판)** design D13.5 의 「오늘보다 나빠질 수 있는 칸」 넷의 수락 — #1 첫 하한가 시도 직접 거부 · #2 IN_DOUBT → 비수용 확정 · #3 그 둘의 journal release 실패 · 복구(오늘의 비수용 해제
+>   실패 경로와 같은 상한) — 셋 다 **종목당 하루 1회 이하** · #4 `MARKET_DATA` 압력(주기당 ≤ 1건 · 겹침 0 · HTTP 429 를 헤더 무관하게 본 뒤 5분 정지). **권장: 수락.**
+> - **② (10판)** tasks 5.4 착지 전 필수 gate 의 처분 셋(수용 → 진행 · 거부 → KR off · 판정 불가 → 착지 보류)에 **기본 처분 하나를 더해 사람이 확인한다**: 5.4 에서 timestamp 가
+>   **응답 시각**으로 드러나면 **KR 하한가를 끈다(off)**. 다른 권위 있는 효력일 검증은 별도 change 다. 9판 P0-1(전일 하한가)은 닫히지 않고 이 gate 로 **보류**돼 있다. 「timestamp 의 KST
+>   날짜 = KRX 거래일」은 평일 휴장 · 기준가 변경을 증명하지 않는다(design D13.3). **권장: 기본 처분 확인.**
+> - **새 결정 없음(10판)** — 단, `official.Client.doRequest` 는 a166(proposal 단계 — 삽입 후보 같은 함수) · a100(HOLD — FLM 번들)과 겹친다. 착지 순서는 Manager 가 조정한다(design D13.2).
+>
 > **9판 갱신 (Manager 결정 2026-10-29 — 8판 독립 재리뷰 FAIL 처분)**: 아래 ① ② 는 9판 문구로 대체되고 ⑤ 가 새로 생겼다. ③ ④ 는 그대로다.
 >
 > - **① (9판)** design D12.7 불변식 4 표의 「오늘보다 나빠질 수 있는 칸」 셋과 상한의 수락 — #1 하한가 직접 거부: 종목당 하루 1회 × (거부 응답 + 5초) · #2 IN_DOUBT → 비수용 확정:
@@ -253,7 +262,7 @@ Function Logic Map: not-applicable — 문서 개정만 했다. 분기 주장은
 > - **② (9판)** tasks 5.4 는 **착지 전 필수 gate** 다(Manager 결정). 사람이 정할 것은 결과별 처분 셋 — **수용 → 착지 진행 · 거부 → 범위를 KR off 로 축소(보호 매도 전부 오늘 LIMIT) ·
 >   판정 불가 → 착지 보류** — 를 이대로 확정할지, 그리고 「timestamp 가 응답 시각으로 드러나면」 D12.1 의 신선도 조건을 무엇으로 바꿀지(후보: 장전 · 장중 두 읽기의 값 비교 /
 >   그날 기준가와의 비율 검사 / KR off). **권장: 처분 셋 확정, timestamp 처분은 5.4 결과를 보고.**
-> - **⑤ (9판 새 결정 — Manager)** 가격 출처의 원장 기록 수단. Manager 결정은 「attempt 꼬리표(a165 detail 방식)」였으나 `mutation_attempts.detail` 은 뒤 전이가 비지 않은 detail 을 주면
+> - **⑤ (9판 새 결정 — Manager) — 10판에서 대체됨(design D13.1)** 가격 출처의 원장 기록 수단. Manager 결정은 「attempt 꼬리표(a165 detail 방식)」였으나 `mutation_attempts.detail` 은 뒤 전이가 비지 않은 detail 을 주면
 >   덮어쓴다(`internal/journal/durability.go:627` — `Attempt.transition` B16, AST). 그대로 쓰면 IN_DOUBT · 거부 전이에서 꼬리표가 사라진다. 대안:
 >   **T2** — append-only `attempt_transitions.detail` 의 PLACE 첫 전이에 꼬리표(High-risk 3 함수 편집, 그중 `Gateway.submit` 은 a165 FLM 번들과 같은 함수) /
 >   **T3** — 쓰지 않고 유도: 그날 `intents.trading_day` · 종목 · 보호 청산 매도 · `price` = 판의 하한가(값 비교) → 최신 PLACE attempt 상태(새 읽기 함수 1개, 기존 편집 0, a165 겹침 0).

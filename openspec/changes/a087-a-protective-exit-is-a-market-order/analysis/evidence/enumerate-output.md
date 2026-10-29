@@ -120,6 +120,12 @@
      R return  :540   return cycle
   branches=8 returns=5
 
+## ExitObserver.release — internal/app/engine/exitloop.go:1603-1608 (fresh, sha 4d92acb6e7e1)
+    B1 if      :1604  if _, _, err := o.opts.Journal.ReleaseUnacceptedExitProposal(ctx, m.position.ID, intentID, how); err != nil {
+     R return  :1605  return fmt.Errorf("engine: releasing the exit proposal of %s: %w", m.position.ID, err)
+     R return  :1607  return nil
+  branches=1 returns=2
+
 ## ExitObserver.Run — internal/app/engine/exitloop.go:407-417 (fresh, sha 4d92acb6e7e1)
     B1 for     :408   for {
     B2 if      :409   if err := ctx.Err(); err != nil {

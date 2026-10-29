@@ -1,0 +1,71 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "4d92acb6e7e17a25d759d1cef27294f7bb74031ac2f17fe53c516357c94cc3d9",
+  "package": "engine",
+  "function": "release",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.release(params=4, results=1)",
+  "start": {
+    "line": 1603,
+    "column": 1
+  },
+  "end": {
+    "line": 1608,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1604,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1605,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1607,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1604,
+        "column": 18
+      },
+      "text": "o.opts.Journal.ReleaseUnacceptedExitProposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1605,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1604,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
