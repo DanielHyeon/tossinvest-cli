@@ -19,6 +19,8 @@
 > 2.9(재시작 재구성) · 3.1(골든) · 5.4(착지 전 필수 gate). 0.10 = **9판 — 재리뷰 대기**.
 > **2026-10-29 10판 (Manager 결정 — 9판 재리뷰 FAIL 처분, KISS)**: design D13. 하한가는 그날 그 종목의 첫 보호 매도 시도에만(2.5 · 2.9), 429 정지 입력 = `doRequest` 의 HTTP 429 시각
 > 하나(2.4 · 2.10), release 실패 종단 시험(2.5). 0.10 = **10판 — 재리뷰 대기**.
+> **2026-10-29 11판 (Manager 결정 — 10판 재리뷰 FAIL 처분)**: design D14. 재구성 action = `isProtective` 와 같은 Go 상수(2.9 구조 · 행동 시험), 시작 정숙 5분 · 401 시 wire 3(2.4),
+> 예산 기준 계좌 공유 3 req/s. 0.10 = **11판 — 재리뷰 대기**.
 
 ## 0. 게이트 선행
 
@@ -62,7 +64,7 @@
       부정확; 실측 422 거부 시 재검토가 §5 표에 이미 있음). I-R8: 0.5 는 §1~§3 착수 전 조건
       유지(freeze 는 문서 상태 판정, §1~§3 은 어차피 §5 실측 대기).
       → **proposal-freeze 재개 선언.** 남은 §1~§3 착수 조건 = §5 실측(결과→처분 표) + 0.5.
-- [ ] 0.10 **requirement 변경 리뷰 (2026-10-22 D7 처분) — 10판 — 재리뷰 대기 (2026-10-29)** — spec Requirement 1 에 「시장가를 받지 않는 구간은 오늘처럼 지정가」 예외를 넣은
+- [ ] 0.10 **requirement 변경 리뷰 (2026-10-22 D7 처분) — 11판 — 재리뷰 대기 (2026-10-29)** — spec Requirement 1 에 「시장가를 받지 않는 구간은 오늘처럼 지정가」 예외를 넣은
       것은 Requirement 수준 수정이다(WORKFLOW 「리뷰 게이트」). 수정분(spec Requirement 1 · design D7 「처분」 · tasks 2.4~2.6)에 적대적 Eng
       관점 포함 리뷰 1회를 받아 `review.md` 에 남긴다. Manager 확인 항목 하나를 함께 판정한다 — **접수 미측정 구간과 구간 판정 불가를 LIMIT
       으로 두는 것**은 사용자 문언(「시장가가 안 되는 시간대」)이 아니라 design D7 의 불변식 4 유도다. **§1~§3 착수 조건**
@@ -84,6 +86,8 @@
       — **2026-10-29 9판 재리뷰(`review.md` 「9판 재리뷰」, `525b4fb6c`) FAIL: P0 1 · P1 3 · P2 1 → 10판(Manager 결정, KISS).** design D13(D13.1 첫 시도 한정 · D13.2 `doRequest` 429 기록 ·
       D13.3 timestamp 5.4 보류 · D13.4 정수 정본 비교 · D13.5 불변식 4 표 + release 실패 칸) · spec Req 1 개정 · tasks 2.2 · 2.4 · 2.5 · 2.7 · 2.9 · 2.10 · issues D-2 ① ② · ⑤ 대체.
       근거 AST 43개(새 1, stale 0). **10판 — 재리뷰 대기.** 재리뷰 전 §1~§3 착수 금지
+      — **2026-10-29 10판 재리뷰(`review.md` 「10판 재리뷰」, `4242ce3ed`) FAIL: P0 1 · P1 1 → 11판(Manager 결정).** design D14(D14.1 보호 action 상수 유도 · `BASELINE_BREACH_EXIT` 오기 정정 ·
+      D14.2 401 시 토큰당 wire 3 · 엔진 시작 뒤 5분 GET 0 · D14.3 예산 기준 계좌 공유 3 req/s · D14.4 불변식 4 표) · tasks 2.4 · 2.7 · 2.9. **11판 — 재리뷰 대기.** 재리뷰 전 §1~§3 착수 금지
 
 ## P1. Phase 1 — 가격 사다리 KR 하한가 단 (선행 · 실측 불요 · design D2a)
 
@@ -216,6 +220,8 @@
       **429 정지 = 입력 하나**: `official.Client` 의 「마지막 HTTP 429 시각」(헤더 무관, `doRequest` 가 기록 — 2.10)이 5분 안이면 GET 0. 입력 없으면 취소 대기. `engineRuntime` `Auxiliary` 등록.
       **시험**: 가짜 transport 로 관측 `/prices` 진행 중 하한가 요청 동시 수 = 0 · 한 주기 `MARKET_DATA` 요청 수 ≤ 오늘(판 없는 같은 시나리오) + 1 · **헤더 없는 429 → 재시도 성공(`cycle.Err == nil`) → 5분 GET 0** ·
       헤더 있는 429 · 갱신기 자신의 429 → 5분 GET 0 · 토큰 없으면 GET 0 · 결함이 `exit` 루프를 멈추지 않음
+      **11판 (design D14.2)**: **엔진 시작 뒤 5분 GET 0**(시작 정숙 — 갱신기 `Run` 시작 시각 기준). 시험: 4분 59초 토큰 GET 0 · 5분 뒤 토큰 GET 1 · 헤더 없는 429 → 재시도 성공 → 재시작 → 5분 GET 0 ·
+      401 → 401 → 200 에서 토큰 하나의 wire GET = 3(표준 `Client.send` 재전송 — 새 경로 없음) · 다음 토큰까지 추가 0. 수치 기준은 계좌 공유 3 req/s(D14.3)
 - [ ] 2.10 **RED/GREEN — `official.Client.doRequest` 의 HTTP 429 기록 (10판 — design D13.2)** — `c.hc.Do` 성공 뒤 `resp.StatusCode == 429` 이면 헤더와 무관하게 원자 값에 시각 저장, 읽기 접근자 하나
       (새 파일). 반환값 · 오류 · `rates.record` 무변경(기존 ratebudget · client 시험 green). **착수 전 겹침 대조**: a166(삽입 후보 `doRequest` · `send`) · a100(`client.dorequest` FLM 번들) ·
       a165(`client.send` 번들 — `doRequest` 호출자) 의 그 시점 상태를 1.0 과 같은 방식으로 대조. a166 이 먼저 계좌 공유 429 기록을 착지하면 이 task 는 그것을 읽는 쪽으로 줄인다
@@ -229,10 +235,13 @@
       **사유별 행**: null · 파싱 불가 · 0 이하 · 정수 아님 · timestamp 결측 · 파싱 불가 · 다른 날 · 09:00 전 · 「오늘 수신한 전일 payload」(timestamp 가 전날) → 항목 없음 + 그 사유 줄 1회.
       판 값 → `sellIntent` → B5 미도달
 - [ ] 2.9 **RED/GREEN — 재시작 재구성 (10판 — design D13.1)** — 새 파일의 읽기 전용 원장 함수 하나: 같은 `account_ref` · `market`(소문자) · `trading_day` · `UPPER(TRIM(symbol))` 의
-      `intents` 중 `side='SELL'` 이고 `exit_events.proposed_intent_id` 로 가리켜진 판정의 `action` 이 `BASELINE_BREACH` · `STOP_LOSS_LADDER` 인 행의 **존재 여부**. 가격 · 상태 · 출처는 읽지 않는다.
+      `intents` 중 `side='SELL'` 이고 `exit_events.proposed_intent_id` 로 가리켜진 판정의 `action` 이 `BASELINE_BREACH_EXIT` · `STOP_LOSS_LADDER` 인 행의 **존재 여부**. 가격 · 상태 · 출처는 읽지 않는다.
       갱신기는 항목을 내기 **전에** 이것으로 금지를 정한다. 원장 읽기 오류 · 파싱 불가 → 금지(fail-closed). **재시작 시험**: `IN_DOUBT → CONFIRMED → restart` → 관측가 LIMIT ·
       하한가 FAILED → 관측가 CONFIRMED → restart → 관측가 LIMIT · 다른 계좌 · 다른 시장의 같은 종목 intent 만 있음 → 하한가 · 익절 intent 만 있음 → 하한가 · 원장 오류 → 관측가 LIMIT.
       9판의 T2/T3 갈래는 10판에서 대체됨
+      **11판 (design D14.1)**: action 은 리터럴이 아니라 `string(exitpolicy.ActionBaselineBreach)`(`BASELINE_BREACH_EXIT`) · `string(exitpolicy.ActionLadderStop)` — `isProtective` 와 같은 상수.
+      **구조 시험**: `internal/exitpolicy` 의 `Action` 상수 전부를 AST 로 열거 → `isProtective` 참 집합 = 질의 action 집합(열거 0 · 참 집합 0 이면 실패 — 새 보호 action 이 생기면 실패).
+      **행동 시험**: 기준선 이탈 하한가 시도(CONFIRMED · FAILED_CONFIRMED · IN_DOUBT→비수용 각각) → 재시작 → 그날 금지(관측가 LIMIT), 손절 사다리도 같은 세 행
 - [ ] 2.6 **RED — 즉시성 · 경합** — 제출 경로 GET 0(호출 계수 더블) · 판 미준비에서 `submit` B5 미도달 · 갱신기 쓰기와 결정 읽기의 경합(`-race`, 반쪽 스냅숏 없음)
 - [ ] 2.7 **변이** — 「창 조건 제거」 · 「창 끝 15:30 → 16:00 이상(시간외 누출)」 · 「익절에도 하한가」 · 「US 에도 하한가」 · 「날짜 대조 제거」 · 「하한가 ≤ 관측가 검사 제거」 ·
       「하한가 0 허용」 · 「되먹임 제거」 · 「되먹임을 B8(결과 미상)에도」 · 「결정에서 GET」 · 「결정 실패 → 오류 반환」 · 「`exitOrderLineFor` 가 사본 사다리 유지(줄 가격 ≠ 보낸 가격)」 ·
@@ -241,6 +250,7 @@
       「GET 시한 제거」 · 「되먹임을 B13 만」 · 「B8 에서 금지 안 함」 · 「CONFIRMED 뒤에도 금지」(이득 손실 쪽 — 잡히는지 기록) · 「재구성 생략」 · 「재구성 전에 항목 공개」
       **10판 추가 변이**: 「첫 시도 술어를 최신 상태로」 · 「계좌 조건 제거」 · 「시장 조건 제거」 · 「trading_day 조건 제거」 · 「익절 intent 도 셈」(이득 손실 쪽 — 기록) · 「원장 오류 → 허용」 ·
       「`Place` 결과가 CONFIRMED 면 금지 안 함」 · 「`doRequest` 가 헤더 있는 429 만 기록」 · 「429 기록 제거」 · 「정지 5분 → 0」 · 「하한가 문자열 비교」 · 「선행 0 허용」
+      **11판 추가 변이**: 「질의 action 을 리터럴 `BASELINE_BREACH` 로」 · 「질의에서 손절 사다리 상수 제거」 · 「시작 정숙 구간 제거」 · 「정숙 5분 → 0」
 
 ### 7판 원문 (8판에서 대체됨 — 시장가 유형 결정 · 달력 구간 입력)
 
@@ -252,7 +262,7 @@
       `analysis/function-logic/internal-app-engine--exitobserver.sellintent/ast.json` 은 base `102d4e99`(start.line 1571)
       산출물이라 재사용 금지(재리뷰 P2-5; 본문 바이트 동일이라 분기 집합은 같을 것 — 검증 필요). risk-pattern-report 에
       `isProtective` 의 세 소비자(`record` 재판정 보류 예외·`submit` a091 floor·a087 유형 결정 — design D1)를 적는다
-- 2.2 **RED** — `sellIntent` 분기: `BASELINE_BREACH`→market·`STOP_LOSS_LADDER`→market·
+- 2.2 **RED** — `sellIntent` 분기: `BASELINE_BREACH_EXIT`→market·`STOP_LOSS_LADDER`→market·
       `LADDER_TAKE_PROFIT`→limit(가격은 종전대로 관측가)·시장가에는 가격이 실리지 않음.
       그리고 `isProtective` **술어 자체가 바뀌지 않음**을 고정(재리뷰 P3-2 — 세 행동 집합 그대로).
       **D7 구간 행 (2026-10-22)**: MARKET 구간에서 보호 2종 → market, LIMIT 구간(KRX 시간외단일가 · 접수 미측정 구간)과 구간 판정 불가에서

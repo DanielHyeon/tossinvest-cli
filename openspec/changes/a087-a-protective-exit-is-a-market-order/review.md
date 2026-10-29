@@ -973,3 +973,15 @@ Function Logic Map: not-applicable — 문서 개정만 했다. 분기 주장은
 - 10판은 설계 단계다. 구현·단위/종단/변이 시험·전체 gate·실주문은 실행하지 않았다. 브로커·계좌·운영·mutating 명령은 0이다.
 - 거래소 timestamp 의미, 하한가 지정가 접수·체결, 다른 프로세스와의 실제 `MARKET_DATA` 경쟁은 검증하지 않았다. `[미측정]`은 tasks 5.4 사람 gate로 남는다.
 - `impeccable: N/A — backend/documentation-only`. `grill-me`: D-1·D-2와 두 Manager 결정을 확정값으로 사용했고 새 사람 결정을 만들지 않았다. `search-first`: 구현·의존성 채택이 아닌 독립 문서/소스 적대 검토라 현재 저장소·OpenSpec·AST만 대조했다.
+
+## 11판 개정 (2026-10-29, Manager 결정 — 10판 재리뷰 FAIL 처분) — **독립 재리뷰 대기**
+
+OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서만 다뤘다(새 AST 0 — `engine--isprotective` 등 기존 AST 인용, `send` 의 401 재전송은 손 읽기로 표시). 소스 · 시험 · 브로커 0.
+
+| 발견 | 11판 처분 | 위치 |
+| --- | --- | --- |
+| P0 재구성 술어의 `BASELINE_BREACH` 오기 | 질의 action 은 `isProtective` 와 같은 Go 상수(`ActionBaselineBreach` = `BASELINE_BREACH_EXIT` · `ActionLadderStop`)에서 유도, 리터럴 금지. 구조 시험(상수 AST 열거 → `isProtective` 참 집합 = 질의 집합) · 행동 시험(기준선 이탈 · 손절 사다리 × 세 결과 → 재시작 → 금지). design · tasks · proposal 의 같은 오기 9곳 정정 | design D14.1 · tasks 2.9 · 2.7 |
+| P1 wire 상한 · 재시작 수명 | (a) 401 시 표준 `send` 재전송으로 토큰당 wire GET ≤ 3 — 상한에 그대로 적음, 새 경로 없음 (b) 엔진 시작 뒤 5분 GET 0 — 429 기록 없이 「429 직후 재시작」 닫음. 시험 3종 | design D14.2 · tasks 2.4 |
+| (Manager 발견) 예산 기준 | 그룹 10/s → 계좌 공유 3 req/s(사용자 결정 2026-10-22 결정 3): 주기당 ≤ 1 ≈ 6.7%, 401 시 ≤ 3 ≈ 20%. a166 착지 시 그 예산을 탐, a087 은 기다리지 않음 | design D14.3 |
+
+불변식 4 표는 design D14.4 가 대체한다. Function Logic Map: not-applicable — 문서 개정만 했다.

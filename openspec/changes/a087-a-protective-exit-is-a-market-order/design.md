@@ -1,10 +1,13 @@
-# a087 설계 — 보호 청산의 가격 (10판: 그날 거래소 하한가 지정가 · 1~7판: 시장가)
+# a087 설계 — 보호 청산의 가격 (11판: 그날 거래소 하한가 지정가 · 1~7판: 시장가)
 
 > **9판 (Manager 결정 2026-10-29 — 8판 독립 재리뷰 FAIL 처분)**: 정본은 **D11 + D12** 다. D12 가 D11 의 신선도(timestamp · raw decimal) · 갱신 주기(관측 주기 끝 토큰 ·
 > 주기당 1건 · 429 뒤 5분 정지) · 되먹임(`CONFIRMED` 아닌 모든 결과 · 재시작 재구성) · 불변식 4 표 · a165 문장을 대체한다.
 >
 > **10판 (Manager 결정 2026-10-29 — 9판 재리뷰 FAIL 처분, KISS)**: 정본은 **D11 + D12 + D13** 이다. D13 이 되먹임을 「그날 그 종목의 첫 보호 매도 시도에만 하한가」로,
 > 429 정지 입력을 `doRequest` 의 HTTP 429 시각 하나로 바꾸고, 불변식 4 표(D13.5)에 release 실패 칸을 더한다. timestamp 뜻은 5.4 gate 로 보류(D13.3).
+>
+> **11판 (Manager 결정 2026-10-29 — 10판 재리뷰 FAIL 처분)**: 정본은 **D11 ~ D14** 다. D14 가 재구성 술어의 action 을 Go 상수에서 유도하고(`BASELINE_BREACH_EXIT` 오기 정정),
+> wire 상한(401 시 토큰당 3) · 엔진 시작 뒤 5분 GET 0 · 예산 기준 계좌 공유 3 req/s 를 적고, 불변식 4 표를 D14.4 로 바꾼다.
 
 > **8판 (사람 결정 2026-10-28 「3은 3」 — `issues.md` D-1 (다))**: 보호 청산 매도는 시장가가 아니라 **그날 거래소 하한가로 낸 지정가(LIMIT)** 다.
 > 2026-10-10 「시장가 방향」 결정을 이것으로 대체한다. **정본은 D11** 이다. 아래 「문제의 형태」·D1~D10 의 시장가 전용 설계는 지우지 않고 절마다
@@ -53,7 +56,7 @@
 
 | 제안 | 시장 | 조건 | 주문 |
 | --- | --- | --- | --- |
-| 보호(`isProtective` — `BASELINE_BREACH` · `STOP_LOSS_LADDER`) | KR | KRX 정규장 고정 창 `[09:00, 15:30)` KST · 평일(`clock.MarketKR.InRegularSession`) **그리고** 엔진 메모리에 그 종목의 그날 하한가가 유효하게 있다(아래 (b) 조건 ①~⑥) | **LIMIT @ 그날 하한가** |
+| 보호(`isProtective` — `BASELINE_BREACH_EXIT` · `STOP_LOSS_LADDER`) | KR | KRX 정규장 고정 창 `[09:00, 15:30)` KST · 평일(`clock.MarketKR.InRegularSession`) **그리고** 엔진 메모리에 그 종목의 그날 하한가가 유효하게 있다(아래 (b) 조건 ①~⑥) | **LIMIT @ 그날 하한가** |
 | 보호 | KR | 그 밖 — 창 밖 · 하한가 없음 · 낡음 · 검사 실패 · 그날 거부됨 | **오늘과 같은 LIMIT**(관측가 → 기준선 → 거부) |
 | 보호 | US | 언제나 | 오늘과 같은 LIMIT — 가격제한 제도가 없다((d)) |
 | 익절(`LADDER_TAKE_PROFIT`) | 모두 | 언제나 | 오늘과 같은 LIMIT(§0.9 — D1 「익절을 안 바꾸는 이유」 그대로) |
@@ -279,7 +282,7 @@ a167 문서 반영은 이 디렉터리 범위 밖 — `issues.md` D-2 ④.
   `Retrier.Query` B11·B12 반환은 `%w` 또는 원 오류라 사슬이 남는다는 것은 손 읽기, 구현 시 시험으로 고정) ③ 같은 클라이언트의 `RateBudgets()`(`internal/official/ratebudget.go:220` —
   모든 경로의 마지막 허용량, 429 응답 포함 `:224` 주석)에 `ObservedAt` 이 5분 안이고 `Exhausted()` 인 항목이 있으면(다른 소비자의 429 — 헤더가 없는 429 는 `Reported=false` 라 못 본다:
   `[미측정]` 잔여). 정지 중에는 판에 새 항목이 생기지 않는다 → 오늘의 LIMIT(약화 아님).
-- **새 압력의 수치**: 관측 주기 5초 · 그룹 한도 초당 10회(`docs/migration/open-api.md:75`)에서 갱신기의 추가는 **주기당 최대 1건 = 초당 0.2건 = 한도의 2%** 이고, 그 1건은 자기 관측
+- **새 압력의 수치**(**11판 정정 → D14.3**: 기준은 그룹 10/s 가 아니라 계좌 공유 3 req/s — 주기당 ≤ 1 ≈ 6.7%, 401 시 ≤ 3): 관측 주기 5초 · 그룹 한도 초당 10회(`docs/migration/open-api.md:75`)에서 갱신기의 추가는 **주기당 최대 1건 = 초당 0.2건 = 한도의 2%** 이고, 그 1건은 자기 관측
   주기의 `/prices` 와 다른 초에 있다(겹침 0 · 시한 ≤ 2초 < 5초). `/prices` 429 로 주기를 건너뛰는 것은 **오늘도 있는 동작**이다 — 새로 더해지는 것은 「같은 초에 다른 소비자가 이미
   한도 근처일 때 그 1건이 429 를 앞당길 가능성」뿐이고, 그 크기는 다른 소비자 부하에 달려 `[미측정]` 이다. 종목당 하루 1 GET 이라 보유 종목 N 개면 그날 GET 은 N + 재시도이고,
   새로 산 종목은 다음 토큰부터 채워진다(그 사이 오늘 LIMIT).
@@ -360,7 +363,7 @@ a129 골든 helper 는 기대 키만 부분 비교한다(재리뷰 — `a129_exi
 
 - **규칙**: 원장에 같은 `account_ref` · `market` · `trading_day` · symbol 의 **보호 청산 매도 intent 가 하나라도** 있으면 그날 그 종목은 하한가 금지다. 그 intent 의 가격 · 상태 · 출처는 묻지 않는다.
   「보호 청산 매도 intent」 = `intents`(`internal/journal/schema.go:202-217` — `market` · `trading_day` · `account_ref` · `symbol` · `side` 칸을 가진다) 행 중 `side = 'SELL'` 이고
-  `exit_events.proposed_intent_id` 로 그 행을 가리키는 판정의 `action` 이 `BASELINE_BREACH` · `STOP_LOSS_LADDER` 인 것(`exit_events` `core_domain.go:251-261`, 색인
+  `exit_events.proposed_intent_id` 로 그 행을 가리키는 판정의 `action` 이 `BASELINE_BREACH_EXIT` · `STOP_LOSS_LADDER` 인 것(**11판 정정 → D14.1**: 질의는 이 값을 리터럴로 쓰지 않고 `isProtective` 와 같은 Go 상수에서 유도한다 — 10판 원문은 `_EXIT` 가 빠진 오기였다)(`exit_events` `core_domain.go:251-261`, 색인
   `account_views.go:113` — 손 읽기, 구현 때 쿼리 시험으로 고정). symbol 은 `UPPER(TRIM())` 로, market 은 소문자로 맞춘다.
 - **왜 단조인가**: `intents` 는 「Immutable record … Never updated」(`schema.go:201` 주석)이고 지우는 경로가 없다 — 행이 한 번 생기면 그날 끝까지 있다. 그래서 재시작 뒤에도 같은 답이 나오고,
   9판의 「최신 PLACE 상태」 같은 비단조 입력(`IN_DOUBT → CONFIRMED` 전이로 금지가 풀림 — 재리뷰 P0)이 없다. 꼬리표도 출처 판정도 필요 없다 — **T2 · T3 · `issues.md` D-2 ⑤ 는 10판에서 대체됨.**
@@ -406,7 +409,7 @@ a129 골든 helper 는 기대 키만 부분 비교한다(재리뷰 — `a129_exi
   어느 쪽이든 파싱 불가면 하한가를 쓰지 않는다(오늘 LIMIT, 사유 기록). 시험 행: `"50400"` vs 관측가 `"50400"` · `"50401"` · `"50399"` / 하한가 `"050400"` · `"50400.0"` · `" 50400"` · `"5.04e4"` · `""` →
   쓰지 않음 / 관측가 파싱 불가 → 쓰지 않음.
 
-### D13.5 — 불변식 4 표 (10판 — D12.7 을 대체)
+### D13.5 — 불변식 4 표 (10판) — **11판에서 대체됨 → D14.4**
 
 오늘(모든 보호 매도 = 관측가 LIMIT)보다 나빠질 수 있는 칸과 상한:
 
@@ -423,6 +426,62 @@ a129 골든 helper 는 기대 키만 부분 비교한다(재리뷰 — `a129_exi
 
 1 · 2 · 3 · 4 가 「오늘보다 나빠질 수 있는」 칸이다. 1~3 의 발생은 모두 종목당 하루 1회 이하로 묶인다. 수락은 사람 확인(`issues.md` D-2 ①).
 
+## D14 — 11판: 10판 재리뷰 처분 — 보호 action 상수 유도 · 시작 정숙 · 3 req/s 기준 (Manager 결정 2026-10-29)
+
+> 10판 재리뷰(`review.md` 「10판 재리뷰」, `4242ce3ed`)는 FAIL(P0 1 · P1 1)이었다. 이 절이 D13.1 의 action 문자열 · D13.2 의 수명 범위 · D12.2 「새 압력의 수치」 · D13.5 표를 **대체**한다.
+> 새 AST 는 없다 — 인용은 기존 `engine--isprotective`(`exitloop.go:1463-1465`) · `engine--exitobserver.submit` 과 손 읽기(`client.go:317-365` `send`, 표시함)다. `enumerate.py` 43개 stale 0.
+
+### D14.1 — 재구성 술어의 action 집합은 Go 상수에서 유도 (P0)
+
+- **오기 정정**: 기준선 이탈 action 의 실제 값은 `exitpolicy.ActionBaselineBreach = "BASELINE_BREACH_EXIT"`(`internal/exitpolicy/ratchet.go:97`), 손절 사다리는
+  `exitpolicy.ActionLadderStop = "STOP_LOSS_LADDER"`(`:104`)다. 10판 D13.1 · tasks 2.9 의 `BASELINE_BREACH`(접미사 `_EXIT` 없음) 는 존재하지 않는 값이었다 — 그대로면 첫 기준선 이탈 하한가 시도가
+  재시작 뒤 질의에 보이지 않아 금지가 풀린다. 이 change 문서의 같은 오기(1~10판 서술 포함)를 전부 `BASELINE_BREACH_EXIT` 로 고쳤다(재검: 이 change 의 design · tasks · proposal · issues · spec 에서 「`_EXIT` 없는 기준선 이탈 값」 0건, 이 문장의 인용과 `review.md` 의 리뷰어 원문 · `analysis/` 기록물은 제외 —
+  StockOS 쪽 `STOP_LOSS` 는 StockOS 어휘라 그대로).
+- **유도 규칙**: 재구성 질의는 action 을 **리터럴 문자열로 쓰지 않는다.** 질의 인자는 `string(exitpolicy.ActionBaselineBreach)` · `string(exitpolicy.ActionLadderStop)` — `isProtective`
+  (`exitloop.go:1463-1465`, `p.Action == exitpolicy.ActionBaselineBreach || p.Action == exitpolicy.ActionLadderStop`)가 참을 내는 **같은 상수**다. `isProtective` 본문은 편집하지 않는다.
+  `exit_events.action` 에는 판정의 `Action` 이 `string(...)` 그대로 기록된다(재리뷰 손 읽기 — `exitloop.go:1401-1415`).
+- **구조 시험**: `internal/exitpolicy` 의 `Action` 상수 선언 전부를 AST 로 열거하고, 각 값 `a` 에 대해 `isProtective(Proposal{Action: a})` 가 참인 집합 = 질의 action 집합임을 단언한다.
+  새 보호 action 이 생겨 `isProtective` 가 바뀌면(또는 새 상수가 `isProtective` 에 들어가면) 질의 쪽이 따라오지 않는 한 실패한다. 상수 열거가 0개이거나 `isProtective` 참 집합이 비면 실패한다
+  (표본 0 통과 금지).
+- **행동 시험**: 기준선 이탈(`ActionBaselineBreach`) 하한가 시도 → 재시작 → 같은 종목 보호 청산 = 관측가 LIMIT. 손절 사다리도 같은 행. 결과별(CONFIRMED · FAILED_CONFIRMED · IN_DOUBT→비수용)
+  세 행을 두 action 에 각각.
+
+### D14.2 — wire 요청 상한 (P1)
+
+- **(a) 401 재전송**: 엔진 전용 하한가 읽기(D12.1)는 표준 `Client.get` → `Client.send`(`internal/official/client.go:317-365` — 손 읽기)를 탄다. `send` 는 첫 `doRequest` 가 401 이면 토큰을
+  새로 받아 **최대 두 번 더** `doRequest` 를 부른다(`:340` `for attempt := 0; attempt < 2 && code == http.StatusUnauthorized`). 그래서 토큰 하나의 wire GET 상한은 **최대 3** 이다.
+  새 전송 경로는 만들지 않는다 — 401 은 드물고(토큰 교대 사고는 `--config-dir` 처분으로 닫힘), 재전송 정책을 두 벌로 두지 않는다. 상한을 표에 그대로 적는다(D14.4).
+- **(b) 시작 정숙 구간**: 갱신기는 **엔진이 시작한 뒤 5분 동안 GET 0** 이다(갱신기 `Run` 시작 시각 기준). 마지막 429 시각(D13.2)은 프로세스 메모리라 재시작하면 0 이 되지만,
+  시작 정숙 구간이 「429 직후 재시작」 칸을 닫는다 — 429 를 저장하지 않아도 재시작 뒤 첫 5분은 어떤 경우든 GET 0 이다. 그동안의 보호 매도는 오늘 LIMIT(약화 아님).
+- **시험**: 401 → 401 → 200 에서 wire GET 3 · 토큰 하나 · 다음 토큰까지 추가 0 / 헤더 없는 429 → 재시도 성공 → 재시작 → 5분 GET 0 / 시작 직후 4분 59초 토큰 GET 0, 5분 뒤 토큰 GET 1.
+
+### D14.3 — 예산 기준 = 계좌 공유 3 req/s (Manager 발견 — 재리뷰 밖)
+
+- **근거**: 사용자 결정(2026-10-22) — 「요청 속도 상한 3 req/s 는 계좌 전체 공유다 — 엔진 · soak · verify · 프로브 · CLI 등 같은 계좌를 치는 모든 프로세스의 합」
+  (`openspec/changes/verify-execution-capability/issues.md` 「사용자 결정 (2026-10-22, 1.3 확정)」 결정 3, `:578`), 같은 절 Q2 — 3 req/s 는 우리 키 하나의 예산(`:616`). 소유 change 는
+  `a166-account-shared-rate-limit`(proposal 단계 · 정의만 — `proposal.md`).
+- **정정**: 9판 D12.2 · 10판 D13.5 의 「그룹 한도 10/s 의 2%」는 openapi 의 그룹 한도(`docs/migration/open-api.md:75`)를 기준으로 삼은 잘못이다. 기준은 **계좌 공유 3 req/s** 다 —
+  갱신기 추가는 **주기당 ≤ 1(평균 0.2/s ≈ 3 req/s 의 6.7%)**, 401 이면 그 주기에 **최대 3(0.6/s ≈ 20%)**. 그 1~3 건은 자기 관측 `/prices` 와 다른 초에 있다(D12.2 겹침 0).
+- **a166 과의 관계**: a166 이 계좌 공유 상한을 착지하면 갱신기 GET 도 그 예산을 탄다(같은 `official.Client` 전송 자리 `doRequest` 를 지나므로). a087 은 a166 을 **기다리지 않는다** —
+  a166 전에는 위 수치가 a087 이 더하는 압력의 상한이고, a166 뒤에는 a166 의 배분이 그 위에 선다. D13.2 의 429 기록이 a166 과 겹치는 처리는 D13.2 그대로다.
+
+### D14.4 — 불변식 4 표 (11판 — D13.5 를 대체)
+
+오늘(모든 보호 매도 = 관측가 LIMIT)보다 나빠질 수 있는 칸과 상한:
+
+| # | 칸 | 무엇이 나빠지나 | 상한 | 근거 · 남은 `[미측정]` |
+| --- | --- | --- | --- | --- |
+| 1 | 첫 하한가 시도의 **직접 거부** | 거부 → 해제 → 다음 관측에서 오늘 LIMIT | **종목당 하루 1회**(재시작 포함 — D14.1 상수 유도로 두 보호 action 모두 재구성에 보임) × (거부 응답 + 5초) | D13.1 · D14.1. 실제 거부 여부 `[미측정]` → 5.4 |
+| 2 | 첫 하한가 시도의 **IN_DOUBT → 비수용 확정** | 오늘의 IN_DOUBT 와 같은 해소 대기 + 해제 뒤 1 주기 | **종목당 하루 1회** × (오늘과 같은 해소 시간 + 5초) | D13.1 · `noteHeldProposal` B4 |
+| 3 | 1 · 2 의 **journal release 실패 · 복구** | 발의 무장 유지 → 다음 주기 `noteHeldProposal` B4→B5 재해제 | **오늘의 비수용 해제 실패 경로와 같은 상한**, 발생 **종목당 하루 1회 이하** | `release` B1(`exitloop.go:1604`) |
+| 4 | **계좌 공유 3 req/s** 압력 → 관측 `/prices` 429 → 주기 건너뛰기 · 재시도 대기(오늘도 있는 동작) | 그 대기가 더 자주 일어날 가능성 | 추가 wire GET **주기당 ≤ 1(평균 0.2/s ≈ 6.7%), 401 이면 ≤ 3(≈ 20%)** · 자기 `/prices` 와 겹침 0 · **HTTP 429(헤더 무관)를 본 뒤 5분 GET 0** · **엔진 시작 뒤 5분 GET 0**(재시작이 429 기록을 지워도 닫힘) | D12.2 · D13.2 · D14.2 · D14.3. 다른 프로세스(사람 CLI · soak · verify)와 같은 초에 겹칠 때의 효과 `[미측정]` — 그 배분은 a166 몫 |
+| 5 | 재시작 · 판 · 갱신기 고장 · 원장 읽기 실패 · 정지 · 시작 정숙 구간 | — | **0** — 항목이 없거나 금지면 오늘 LIMIT | D13.1 · D14.2 (b) |
+| 6 | 전일 하한가가 그날 하한가보다 높음(⑥ 통과) | — | **0** — 바닥이 관측가 이하 | D12.1 논증(`[미인용]`) |
+| 7 | 첫 시도 뒤의 보호 매도(잔량 · 재발의) | — | **0** — 오늘 LIMIT(보수적 손실) | D13.1 |
+| 8 | 체결가(얇은 호가 sweep · 종가단일가 대량 충격) | 즉시성이 아니라 가격 | 불변식 4 밖 — 불변식 6 · D-1 (다) | 3.8 질의 |
+
+1~4 가 「오늘보다 나빠질 수 있는」 칸이다. 1~3 은 종목당 하루 1회 이하, 4 는 위 수치 상한. 수락은 사람 확인(`issues.md` D-2 ①).
+
 ## D1 — 유형은 제안의 성격이 정한다
 
 > **8판에서 대체됨(코드 블록)**: 유형은 바뀌지 않는다 — 보호 제안이 정하는 것은 **가격**이다(D11 (a)·(b) 조건 ①). 「`isProtective` 를 재사용한다」·
@@ -432,7 +491,7 @@ a129 골든 helper 는 기대 키만 부분 비교한다(재리뷰 — `a129_exi
 
 ```go
 orderType := "limit"
-if isProtective(proposal) {   // BASELINE_BREACH · STOP_LOSS_LADDER
+if isProtective(proposal) {   // BASELINE_BREACH_EXIT · STOP_LOSS_LADDER
     orderType = "market"
 }
 ```
