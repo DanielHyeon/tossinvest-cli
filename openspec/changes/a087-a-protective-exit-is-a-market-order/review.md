@@ -949,3 +949,27 @@ OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서와 `tools/logic-map
 | P2 T3 오탐 · 정본 비교 | 첫 시도 규칙으로 오탐 문장 소멸. 남은 ⑥ 비교는 양의 정수 정본 · 값 비교, 파싱 불가 → 쓰지 않음(시험 행) | design D13.4 · tasks 2.2 |
 
 Function Logic Map: not-applicable — 문서 개정만 했다. 분기 주장은 `analysis/evidence/` AST 43개에서만 인용했다(`intents` 불변 · `exit_events` 결속 쿼리는 schema 주석 손 읽기로 표시).
+
+## 10판 재리뷰 (GPT-5.6 Terra, 2026-10-29)
+
+**결론: FAIL (blocker 1).** D13.1의 첫 시도 단조 규칙은 T3 최신 상태 문제를 제거한다. 그러나 재시작 재구성 술어가 실제 기준선 이탈 action 값 `BASELINE_BREACH_EXIT`가 아니라 존재하지 않는 `BASELINE_BREACH`를 찾는다. 첫 기준선 이탈 하한가 시도 뒤 재시작하면 금지가 풀려 같은 하한가를 다시 낼 수 있으므로, D13.5의 종목당 하루 1회 상한은 성립하지 않는다.
+
+| 심각도 | 발견 | 위치 | 근거 | 처분 제안 |
+| --- | --- | --- | --- | --- |
+| P0 | 재구성 술어의 `BASELINE_BREACH`는 이벤트에 쓰이지 않는 값이다. 실제 `ActionBaselineBreach` 값은 `BASELINE_BREACH_EXIT`이고, 판단은 `string(proposal.Action)` 그대로 `exit_events.action`에 기록된다. 따라서 첫 기준선 이탈 하한가 시도는 runtime 메모리에서는 금지되지만, 재시작 뒤 D13.1 질의에는 보이지 않는다. 새 board가 다시 공개되어 같은 가격의 직접 거부·비수용이 재시작마다 반복될 수 있다. `STOP_LOSS_LADDER`만 이 술어에 남는다. | `design.md:361-371`; `tasks.md:231-234`; `internal/exitpolicy/ratchet.go:94-104`; `internal/app/engine/exitloop.go:1401-1415,1459-1465` | AST: `ExitObserver.submit` B1이 `isProtective`를 호출하고 B6 뒤 `Place`를 호출함; 손으로 읽음: `isProtective`의 두 enum과 `ExitProposal.Action` 기록값 | D13.1·tasks 2.9를 실제 enum 값 `BASELINE_BREACH_EXIT`로 고치거나 query가 `string(exitpolicy.ActionBaselineBreach)`를 쓰게 명시한다. 기준선 이탈의 CONFIRMED·FAILED_CONFIRMED·IN_DOUBT→비수용 각각에서 restart 뒤 관측가 LIMIT인 종단 시험을 추가한다. |
+| P1 | D13.5 #4의 “주기당 ≤1 = 0.2/s”와 “429 뒤 5분 GET 0”은 wire 요청 상한·수명 범위가 빠졌다. 기존 `Client.send`은 401이면 `doRequest`를 최대 두 번 더 호출하므로, 새 raw `PriceLimits`가 표준 official GET 경로를 재사용하면 토큰 하나가 최대 3회 `MARKET_DATA` GET가 된다. 또 D13.2의 원자 `last HTTP 429`는 새 `Client`에서 0이므로 429 직후 엔진 재시작은 남은 5분 안에도 다음 토큰의 GET를 허용한다. 이는 headerless 429 재시도 성공의 **같은 Client** 경로는 고치지만 표의 무조건 상한은 고치지 못한다. | `design.md:274-287,380-393,415-418`; `tasks.md:214-220`; `internal/official/client.go:317-365` | AST: `Client.doRequest` B1 뒤 응답 반환 구조, `Retrier.Query` B10→B5 재시도 성공; 손으로 읽음: `send`의 401 재전송 최대 2회와 process-local 원자 값 | raw read의 실제 wire-call 상한을 명시·시험해 표를 최대 3회/0.6/s로 바로잡거나, 하한가 읽기에는 1회 전송만 허용한다. 429 epoch를 durable하게 보존하거나 기동 뒤 5분 fail-closed warm-up을 둬 restart 시나리오도 5분 GET 0으로 고정한다. 401→401→200, headerless 429→성공→restart 두 종단 시험을 추가한다. |
+
+### 확인한 것
+
+- 보호 범위는 현재 `isProtective`의 기준선 이탈·손절 사다리 두 action뿐이다. 익절(`LADDER_TAKE_PROFIT` 등)은 orderable이어도 이 범위 밖이므로 D13.1이 익절 intent만으로 금지하지 않는 것은 의도와 맞다. action 결속은 flatten의 별도 원장 사슬과 수동 일반 매도를 보호 action으로 오인하지 않는 방향이다(손으로 읽음).
+- D13.1의 “`Prepare` 전 로컬 종료이면 재시작 뒤 한 번 더 허용”은 현재 `ReasonSymbolInFlight`에 대해 성립한다. AST상 `Gateway.submit`은 `claimSymbol`·`checkSymbolFree`를 `journal.Prepare`보다 먼저 실행하고, 실제 broker `plan.call`은 `Prepare` 뒤 dispatch 안에만 있다. 그 갈래에 intent가 없고 broker에도 닿지 않는다.
+- D13.2는 같은 Client 수명 안에서 headerless 429→`Retrier.Query` 재시도 성공(`cycle.Err == nil`)을 덮는다. 제안한 store가 `c.hc.Do` 성공 직후, status 분류·재시도 전에 실행되므로 뒤 200이 그 시각을 지우지 않는다. 반환값·rate-budget 기록을 보존한다는 범위도 맞다.
+- D13.3은 timestamp 의미가 확인될 때까지 5.4 착지 전 gate로 보류한다고 정확히 적었다. 이것은 현재 신선도 증명이 아니며, gate·사람 처분 전 구현/배포 PASS가 아니다. D13.4의 정수 문자열·값 비교와 D12.6의 `price_source` 골든 요구는 문서상 유지된다.
+- Manager의 `doRequest` 소유 순서와 a165의 `send` 호출자 재대조 task는 서로 모순되지 않는다. a165의 `clearTheSymbol`·`checkSymbolFree`는 a087 착수 시점 재대조 대상으로 남는다.
+- `analysis/evidence/enumerate.py`: `stale=0`. `openspec validate a087-a-protective-exit-is-a-market-order --strict --no-interactive`: 통과.
+
+### 안 본 것·제한
+
+- 10판은 설계 단계다. 구현·단위/종단/변이 시험·전체 gate·실주문은 실행하지 않았다. 브로커·계좌·운영·mutating 명령은 0이다.
+- 거래소 timestamp 의미, 하한가 지정가 접수·체결, 다른 프로세스와의 실제 `MARKET_DATA` 경쟁은 검증하지 않았다. `[미측정]`은 tasks 5.4 사람 gate로 남는다.
+- `impeccable: N/A — backend/documentation-only`. `grill-me`: D-1·D-2와 두 Manager 결정을 확정값으로 사용했고 새 사람 결정을 만들지 않았다. `search-first`: 구현·의존성 채택이 아닌 독립 문서/소스 적대 검토라 현재 저장소·OpenSpec·AST만 대조했다.
