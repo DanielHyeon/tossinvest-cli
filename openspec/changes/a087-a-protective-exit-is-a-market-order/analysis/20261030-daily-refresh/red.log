@@ -1,0 +1,5 @@
+--- FAIL: TestA087PreviousDayRecordDoesNotBlockTodayRefresh (0.00s)
+    a087_lower_limit_refresher_test.go:344: today wire GET = 0, want 1
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.005s
+FAIL

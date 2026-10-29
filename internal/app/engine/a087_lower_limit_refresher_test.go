@@ -332,3 +332,19 @@ func a087WaitFor(t *testing.T, ready func() bool) {
 		time.Sleep(time.Millisecond)
 	}
 }
+
+func TestA087PreviousDayRecordDoesNotBlockTodayRefresh(t *testing.T) {
+	now := time.Date(2026, 3, 31, 1, 0, 0, 0, time.UTC)
+	gate := &a087Admission{}
+	reader := &a087LowerLimitReader{admission: gate, statuses: []int{200}, raw: official.ProtectivePriceLimits{LowerLimitPrice: a087String("50400"), Timestamp: a087String(now.Format(time.RFC3339))}}
+	board := a087RefreshBoard(now, gate, reader)
+	board.publish(lowerLimitSnapshot{records: map[string]lowerLimitRecord{lowerLimitKey("kr", "005930"): {price: "50000", timestamp: now.AddDate(0, 0, -1)}}})
+	board.refresh(t.Context(), 5*time.Second)
+	if got := reader.wires.Load(); got != 1 {
+		t.Fatalf("today wire GET = %d, want 1", got)
+	}
+	record, ok := board.record("kr", "005930")
+	if !ok || record.price != "50400" {
+		t.Fatalf("today record = %+v, exists %t", record, ok)
+	}
+}

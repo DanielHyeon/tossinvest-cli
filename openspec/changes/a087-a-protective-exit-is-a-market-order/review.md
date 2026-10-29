@@ -1137,3 +1137,16 @@ OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서만 다뤘다(새 AS
 - `search-first`: 기존 `PriceLimits`는 raw null/timestamp를 유실하므로 재사용하지 않는다. 공식 client의 read path·engine Context/private `official`·`ManualBuyRefresher`·표준 `math/big.Rat`를 확인했다. 새 외부 의존성은 채택하지 않는다.
 - `grill-me`: D-1(다), D-2 ①·⑥, a166 전 nil dormant가 확정되어 새 사람 결정·가정이 없다.
 - `impeccable: N/A — backend/documentation-only`; UI·접근성·화면 상태 변경 없음.
+
+## 추가 검증 Pre-Edit (2026-10-30)
+
+- 범위: `exitLowerLimitBoard.refresh`의 전일 판 항목이 당일 갱신을 막는 결함. 이 함수는 새 함수이며 기존 FLM의 적용 대상은 아니지만 현재 AST `/tmp/a087-terra-refresh-ast.json` B7과 원본을 대조했다. 동일 날짜 유효 항목만 건너뛰고 오래된 항목은 기존 검증과 원장 조회를 거쳐 교체한다. 실패 시 기존 항목은 가격 선택에서 거부된다.
+- search-first: 저장소 `recordValidNow`, 기존 board 및 Go context/time을 재사용한다. 새 의존성·라이선스 변경 없음. 외부 패키지 탐색 불필요. ai-memory 해당 질의 결과 없음.
+- 별도 미해결: 지연 토큰이 다음 관측과 겹치는 문제는 deadline만으로 시작 경합을 막을 수 없어 Manager 설계 판단 전 수정하지 않는다. 생산 admission nil 유지.
+
+### 추가 검증 결과 · 미해결
+
+- P1: `exit_lower_limit.go:210`의 존재만 확인하는 분기는 전일 판을 당일에도 건너뛰어 당일 GET을 막았다. `recordValidNow`로 당일 유효 항목만 건너뛰도록 수정. RED `analysis/20261030-daily-refresh/red.log`, GREEN race `analysis/20261030-daily-refresh/green-race.log`; 전후 AST는 같은 폴더에 있다. 기존 분기를 되돌린 원본이 RED이므로 그 변이의 검출을 확인했다.
+- P1 활성화 차단: D12.2(`design.md:265-284`)는 관측 `/prices`와 GET 겹침 0을 요구한다. 손으로 읽음: `exit_lower_limit.go:142-149,176-180,191,221`은 토큰 생성 시점이 아닌 소비 시점부터 timeout을 주므로 지연 토큰이 다음 관측과 겹칠 수 있다. 동기화 방식은 Manager 설계 판단을 기다린다. production admission nil 유지, 5.5 활성화 금지.
+- `analysis/evidence/enumerate.py`의 이전 설계 증거는 소스 파일 hash 기준 stale 14; 이는 현재 구현 FLM 번들과 별도다. 기존 base→착지 창의 378개 형제 함수 증거 누락은 해결되지 않았다. base 변경이나 landing 기록은 하지 않았다.
+- gstack review skill 검토는 시작했으나 독립 다중 모델 전체 절차 및 최종 gate는 미완료다. 5.4 사람 실측과 5.5 활성화 미실행, archive·운영 완료 아님. `impeccable: N/A — backend/documentation-only`.

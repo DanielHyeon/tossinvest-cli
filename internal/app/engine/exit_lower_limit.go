@@ -207,7 +207,7 @@ func (b *exitLowerLimitBoard) refresh(ctx context.Context, interval time.Duratio
 		if !strings.EqualFold(position.Market, "kr") || position.State == journal.PositionClosed {
 			continue
 		}
-		if _, exists := b.record(position.Market, position.Symbol); exists {
+		if record, exists := b.record(position.Market, position.Symbol); exists && recordValidNow(now, record) {
 			continue
 		}
 		attempted, err := b.attempts.HasProtectiveExitAttempt(prefetchCtx, b.account, position.Market, day, position.Symbol, protectiveActionValues())
