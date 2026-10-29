@@ -1,0 +1,368 @@
+{
+  "file": "cmd/tossctl/engineproc.go",
+  "source_sha256": "502362c0b925e09f57b5253ad92e1ce1bbcfe0d1f601869e76c44ff6f9d13439",
+  "package": "main",
+  "function": "startEngine",
+  "signature": "startEngine(params=1, results=2)",
+  "start": {
+    "line": 177,
+    "column": 1
+  },
+  "end": {
+    "line": 227,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 199,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 204,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 210,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "select",
+      "at": {
+        "line": 217,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 220,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 180,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 184,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 201,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 205,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 211,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 221,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 223,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 14
+      },
+      "text": "engineJournalDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 17
+      },
+      "text": "binstamp.SelfPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 19
+      },
+      "text": "engineFindProcesses"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 32
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 15
+      },
+      "text": "enginelock.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 31
+      },
+      "text": "enginelock.MarkerPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 59
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 72
+      },
+      "text": "markerRefusesStart"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 23
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 23
+      },
+      "text": "status.RefreshedAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 70
+      },
+      "text": "joinPIDs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 13
+      },
+      "text": "engineLogPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 15
+      },
+      "text": "engineSpawnDetached"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 52
+      },
+      "text": "engineArgs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 11
+      },
+      "text": "readLogTail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 221,
+        "column": 17
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 16
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 9
+      },
+      "text": "time.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 9
+      },
+      "text": "fmt.Sprintf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 178,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 182,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 199,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 208,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 209,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 218,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 219,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

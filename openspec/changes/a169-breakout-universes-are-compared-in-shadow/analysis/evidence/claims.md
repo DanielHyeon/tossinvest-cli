@@ -3,6 +3,8 @@
 - 2026-10-28 review §4 반영 때 2 개 추가(`probe.armedAttempt` · `parseDecimal`, 같은 HEAD `0c9bfd272` · 같은 명령) — 합계 15.
 - 2026-10-29 review §6 반영 때 5 개 추가(`LoadCredentials` · `apppaths.OpenAPI` · `tokenManager.token` · `quoteRead` · `probe.gap`, 같은 HEAD `0c9bfd272` ·
   같은 명령, design §7.5 를 쓰기 전) — 합계 20. 다섯 다 이 change 가 **바꾸지 않는** 함수다(근거로만).
+- 2026-10-29 review §8 반영 때 6 개 추가(`engineJournalDir` · `spawnDetachedEngine` · `startEngine` · `classifyStatus` · `pacedSource.pause` ·
+  `tokenManager.loadCache`, 같은 HEAD `0c9bfd272` · 같은 명령, design §7.5 감시기 · G6 를 쓰기 전) — 합계 26. 여섯 다 바꾸지 않는 함수다.
 
 - 생성: 2026-10-28, HEAD `0c9bfd272`, `GOFLAGS=-trimpath go run ./tools/logic-map --file <f> --func <fn>`(규칙 5 — design 을 쓰기 **전에** 만듦).
 - 각 JSON 머리의 `source_sha256` 이 판정 대상 바이트다. `tools/a140-breakout-signal-shadow/shadow.go` 는 `62c2fe84…` 로
@@ -28,6 +30,12 @@
 | `internal-official-token.go--tokenManager.token.json` | `tokenManager.token` | 60–79 | B 2 · R 3 | (review §6) B1@67 메모리 토큰, B2@72 디스크 토큰이 유효하면 그대로 채택(74) — 키 비교 없음, §7.5 G6 의 근거 |
 | `tools-a140-breakout-signal-shadow-source.go--quoteRead.json` | `quoteRead` | 107–126 | B 3 · R 3 | (review §6) B1@112 정지 중이면 GET 없이 `errQuoteSuspended`(113), B3@120 rate limit 이면 정지 시작 — 도구 MARKET_DATA 429 의 흔적 |
 | `tools-a140-breakout-signal-shadow-shadow.go--probe.gap.json` | `probe.gap` | 140–153 | B 2 · R 2 | (review §6) 141 사유 = `err.Error()`(B1@142 길이 상한), B2@148 같은 분 같은 결손은 접음(149) |
+| `cmd-tossctl-engine.go--engineJournalDir.json` | `engineJournalDir` | 185–194 | B 2 · R 3 | (review §8) B1@186 `--config-dir` 가 있으면 그 디렉터리가 엔진 디렉터리(187), 아니면 journal 기본 경로의 디렉터리(193) |
+| `cmd-tossctl-engineproc.go--startEngine.json` | `startEngine` | 177–227 | B 7 · R 8 | (review §8) 208 `logPath := engineLogPath(dir)` → 209 `engineSpawnDetached` — 엔진 로그 = 엔진 디렉터리의 `engine.log`(152 · 67) |
+| `cmd-tossctl-engineproc.go--spawnDetachedEngine.json` | `spawnDetachedEngine` | 436–461 | B 3 · R 4 | (review §8) 440 `O_APPEND\|O_CREATE\|O_WRONLY` 로 열고(B2@441 실패 → 442) 446~447 stdout · stderr 를 그 파일에 붙임 — 회전 없음 |
+| `internal-official-errors.go--classifyStatus.json` | `classifyStatus` | 39–61 | B 6 · R 5 | (review §8) B4@54 429 → `ErrRateLimited`(55, HTTP 코드 없음), 401 · 403 만 `(HTTP %d)`(B3@50 → 51 · 53) — 감시기 패턴의 근거 |
+| `tools-a140-breakout-signal-shadow-source.go--pacedSource.pause.json` | `pacedSource.pause` | 77–82 | B 1 · R 2 | (review §8) B1@78 지연 0 이어도 `ctx.Err()`(79), 아니면 `sleep(ctx, d)`(81) — 취소 뒤 새 GET 0 의 근거 |
+| `internal-official-token.go--tokenManager.loadCache.json` | `tokenManager.loadCache` | 178–194 | B 3 · R 4 | (review §8) B1@180 읽기 실패 → 없음이면 (nil, nil)(182) · 그 밖 오류(187), B3@190 JSON 실패 → 오류(191) — 파싱 못 하는 도구 토큰은 채택되지 않음 |
 | `internal-breakoutlane-machine.go--evaluateFresh.json` | `evaluateFresh` | 36–128 | B 20 · R 9 | B4@52 opening range 뒤 봉을 순서대로, B6@57 처음 돌파 조건을 만족한 봉에서 `break`(66) — **세션당 종목 하나에 돌파 봉 하나** |
 | `internal-breakoutsignal-signal.go--Derive.json` | `Derive` | 202–256 | B 14 · R 11 | B11@238 봉마다 지표(윗꼬리는 그 봉만), B13@245 i ≥ 15 일 때만 `RVOLPPM(bars, i)`(246, 직전 15 봉) — 앞부분에 대해 안정 |
 | `internal-breakoutsignal-signal.go--OpeningRangeATR.json` | `OpeningRangeATR` | 120–149 | B 7 · R 6 | B2@125 첫 15 봉만 읽음 — ATR 은 앞부분 길이와 무관(주석 117–118) |

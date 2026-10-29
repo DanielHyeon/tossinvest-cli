@@ -21,10 +21,19 @@ read accounts, read or write signed manifests, or call an external judgment API.
 keep the a140 behaviour and the a140 lot digest unchanged.
 
 In the universe mode the tool SHALL use only a dedicated Open API key held in its own profile directory (human decision
-2026-10-28), and SHALL refuse to start, before any broker call or ledger write, when that directory is missing, is or lies inside
-the engine's profile directory or the default token cache directory, when the credential environment variables are set, when the
-credential file is not a regular 0600 file, when the engine's credentials cannot be read or carry the same key, or when the token
-file is a copy of an engine token. It SHALL NOT print, log or record any key, secret or token value. It SHALL refuse an a140
+2026-10-28) and SHALL take the engine's profile directory as an explicit, operator-confirmed argument. Before any HTTP request,
+evidence or ledger access it SHALL refuse to start when either directory is missing; when the engine directory does not hold the
+engine's lock file, log file and credentials; when, after making both paths absolute and resolving symbolic links, the tool's
+directory is or lies inside the engine's profile directory, the default config directory or the default token cache directory;
+when the credential environment variables are set; when the credential file is not a regular 0600 file; when the engine's API key
+cannot be read or equals the tool's; or when the tool's cached access token, compared after parsing, equals an engine access token
+or the token file is a link to one. It SHALL read only the API key from the engine's credential file, never holding the engine's
+secret as a credential value, and SHALL NOT print, log or record any key, secret, token or engine log line. It SHALL offer a
+profile preflight that runs exactly these checks with no network, evidence or ledger access and then exits. While running it SHALL
+follow the engine's log file read-only from its start offset, and on the first rate-limit line, or when the log cannot be read, is
+rotated or truncated, or the follower stops, it SHALL cancel all further broker calls, record the session as aborted with the
+reason, exclude that session from every lot total and refuse to restart the same session; failing to open the log SHALL refuse
+the start. It SHALL refuse an a140
 reconstruction size other than 30. The volume-increase universe SHALL be fixed before the deadline 10 seconds ahead of the first
 minute poll after its selection time or not at all that session: when its baselines are not complete by the deadline, the
 universe-session SHALL be recorded as late, kept out of the measured set and both lot totals, and the poll of the other universes
@@ -59,6 +68,16 @@ SHALL NOT be delayed.
 
 - **WHEN** the universe mode is started without a separate profile directory, with the engine's profile directory, with the credential environment variables set, or with a profile whose key equals the engine's key
 - **THEN** the tool exits before any broker call and before writing the ledger, naming the refused guard and the path only, with no key, secret or token value in its output
+
+#### Scenario: the preflight proves the separate key without the network
+
+- **WHEN** the profile preflight runs against a profile whose key equals the engine's key, or whose token cache holds the engine's access token re-serialised with different whitespace, field order or expiry
+- **THEN** it refuses with the guard number and paths only and makes no HTTP request, and against a profile with a different key and token it reports success, still with no HTTP request, evidence or ledger file
+
+#### Scenario: an engine rate-limit line stops the measurement
+
+- **WHEN** a rate-limit line is appended to the engine's log file after the tool started
+- **THEN** the tool makes no further broker call, records the session as aborted with reason `engine_rate_limited` and without the line's content, the report excludes that session from both lot totals, and a restart on the same day is refused before any broker call
 
 #### Scenario: the a140 reconstruction stays at 30
 

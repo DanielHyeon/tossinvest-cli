@@ -286,3 +286,27 @@
 
 - 소스·시험 편집, 시험·build·vet·lint·gstack, 실제 키/IP/토큰·환경 변수·파일 권한, Docker/엔진 로그, 브로커 호출, 리허설·측정은 실행하지 않았다.
 - `checkSeparateProfile`·U2 구현은 아직 존재하지 않아 AST로 런타임 순서를 인증할 수 없다. 위 AST는 기준 HEAD의 기존 경로이고, 설계상 RED 목록의 구현 전 검증만 했다.
+
+## §9 처분 (작성자, 2026-10-29) · **재리뷰 대기**
+
+- §8 의 발견을 Manager 결정(2026-10-29)대로 문서에 옮긴 기록이다. **리뷰가 아니다** — 판정은 다른 보이스의 다음 재리뷰가 낸다. 소스 · 시험 편집 0, 시험
+  실행 0, 운영 · 브로커 · Docker 접근 0, 자격증명 · 토큰 · `.env` · `engine.log` 내용 읽기 0(경로 · 파일 이름 · 코드만).
+- 새 AST 6(design §7.5 를 쓰기 전에 생성, 전부 편집하지 않는 함수): `engineJournalDir` · `startEngine` · `spawnDetachedEngine` · `classifyStatus` ·
+  `pacedSource.pause` · `tokenManager.loadCache` — `analysis/evidence/claims.md` 합계 26.
+- 함께 고친 것: a98475faa 의 §7.5 편집이 `## 8. 원장` 제목을 지웠었다(§7.5 마지막 줄에 붙음) — 되살림. §8 리뷰는 이것을 짚지 않았다.
+
+| §8 | 처분 | 반영 위치 | 무엇을 바꿨나 |
+|---|---|---|---|
+| P1-4 | 수용(Manager 결정) | design §7.5 G6 · §10.3-13 G6 넷, spec 본문 · 시나리오 「the preflight proves the separate key without the network」 | 판정 = 두 캐시를 **파싱한 `access_token`** 의 상수 시간 동등(빈 값 제외). 링크 · `SameFile` 은 보조 거부. 엔진 토큰 읽기 · 파싱 실패 → 거부, 도구 토큰 파싱 실패 → 통과(`loadCache` B3@190 · `token` B2@72 — 채택 안 됨). RED: 재직렬화한 같은 토큰 · 하드링크 · 심볼릭 링크 · 다른 토큰(양성) |
+| P1-5 | 수용 | design §7.5 배선 「`--profile-preflight`」 · §10.2 · §10.3-13 · §14-4, spec 본문 · 같은 시나리오 | 플래그 검사 + G1~G6 만, config · evidence · 원장 · 달력 · 네트워크 0 으로 끝나는 모드. runbook 은 `openapi test` 보다 먼저, 실패면 거기서 멈춤. 같은 키 RED 에서 HTTP 요청 0 단언. 엔진 토큰 mtime 은 「사후 이상 징후 — 안 바뀐 것은 증명 아님」으로 낮춤 |
+| P1-6 | 수용 — **엔진 편집 0 으로 가능**(멈출 조건 아님) | design §7.5 「엔진 rate limit 실시간 감시기」 · 「한도가 키별인가」 판단 · §8 `abort` 행 · §9 · §10.1 `enginewatch.go` · §10.2 · §10.3-16 · §11 · §12-7 · §14-5, spec 본문 · 시나리오 「an engine rate-limit line stops the measurement」, tasks 3.1, issues §5 P1-6a~d | 엔진은 이미 `ENGINE_CONFIG_DIR/engine.log` 에 stdout · stderr 를 붙인다(`engineJournalDir` B1@186 · `startEngine` 208 · `spawnDetachedEngine` 440 · 446~447). 도구가 시작 때 그 파일을 읽기 전용으로 열고 끝으로 이동(못 열면 시작 거부), 250 ms 폴로 rate limit 패턴 · 회전 · 잘림 · 읽기 오류 · 감시기 종료/정지를 보면 `CancelCause` → `pause` 가 `ctx.Err()`(B1@78)라 새 GET 0 → `abort` 행(줄 내용 안 남김) · 판 합계 제외 · 같은 날 재시작 거부. 429 문구는 코드에서 찾음: `official: rate limited`(`classifyStatus` B4@54 → 55, HTTP 코드 없음). 엔진이 모든 429 를 로그에 남기는지는 [미측정] → 보수 패턴. 보유 0 권장은 보조로 유지 · 대체물 아님 명시 |
+| P1-7 | 수용 | design §7.5 배선 · G1 · G2(b) · §10.3-13 · §14-1 · §14-4 · §14-5 | a169 모드 `--config-dir` 필수(기본값 거부). runbook 은 사람이 확인한 `ENGINE_CONFIG_DIR` 하나를 `--config-dir` · G2/G5/G6 · 감시기 · mtime 에 씀. 틀린 E 거부 = `engine.lock` · `engine.log` · 자격증명이 일반 파일로 없으면 거부. RED: 비기본 엔진 경로 fixture · 틀린 E |
+| P2-3 | 수용 | design §7.5 「경로 정규화」 · G2(a) · §10.3-13 | `canon` = `Abs` → 있으면 `EvalSymlinks` → `Clean`, 포함 = `filepath.Rel` 경계(문자열 접두사 금지). 시험 넷: `../` · 엔진 경로 심볼릭 링크 · `/x/engine2` 접두사(통과) · 기본 cache 상대 경로 |
+| P2-4 | 수용(최소안) | design §7.5 「좁은 reader」 · G4 · G5 · G7 · §10.3-13 G5 · G7, issues §5 P2-4a | 엔진 파일은 `apiKey` 만 디코드 — `official.Credentials` · `SecretKey` 값을 안 만듦. G7 정적 시험이 `profile.go` 의 `Credentials` · `LoadCredentials` · `secretKey` · `SecretKey` 이름과 값 출력 · 원장 기록을 막음. 빈 키/비밀 검사는 일반 loader 뒤 `runCommand` 로 옮김. 버퍼 잔존 한계와 더 강한 격리(지문)는 issues 에 남김 |
+
+새로 생긴 사람 결정: (1) `ENGINE_CONFIG_DIR` 값 확인(§14-1), (2) 리허설이 `abort` 로 끝났을 때 · 세션 중 `engine.log` 가 안 자랄 때의 다음 걸음(§12-7),
+(3) 엔진이 모든 429 를 로그로 남기게 하는 엔진 쪽 계약이 필요하다고 보면 별 change 로 할지(issues §5 P1-6a — 이 change 는 엔진을 고치지 않음).
+
+- `openspec validate a169-breakout-universes-are-compared-in-shadow --strict` → rc 0(2026-10-29, 이 절을 쓴 뒤).
+
+재리뷰가 꼭 볼 곳: design §7.5 감시기(회전 · 정지 · 재시작 거부 · 취소에서 GET 0 까지의 사슬) · G6 판정 규칙 · G2(b) 의 E 신원 조건이 충분한가 · §14-4 순서.

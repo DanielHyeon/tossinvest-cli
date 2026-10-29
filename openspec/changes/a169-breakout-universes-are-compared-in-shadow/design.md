@@ -1,6 +1,6 @@
 # a169 설계 — breakout 그림자 신호를 종목군 셋으로 다시 잰다
 
-기준 HEAD `0c9bfd272` · codegraph 1.6.0 · 분기 근거 `analysis/evidence/claims.md`(AST 20 개 — 13 개는 초안 전, 2 개는 review §4 반영 전, 5 개는 review §6 반영 전에 생성) ·
+기준 HEAD `0c9bfd272` · codegraph 1.6.0 · 분기 근거 `analysis/evidence/claims.md`(AST 26 개 — 13 개는 초안 전, 2 개는 review §4 반영 전, 5 개는 review §6 반영 전, 6 개는 review §8 반영 전에 생성) ·
 호출 근거 `analysis/code-context/`(0.3 절). 사람 결정은 proposal 「사람 결정 (2026-10-23)」 표(Q1~Q12 전부 권장)가 정본이고, 이 문서는
 그 답을 코드 위에 옮긴다. 줄 번호는 모두 HEAD `0c9bfd272` 기준이다.
 
@@ -20,6 +20,8 @@
 - **review §4 반영(2026-10-28)**: 독립 리뷰 FAIL(P1 2 · P2 6 · P3 7)의 발견을 본문에 옮겼다. 발견별 위치는 review §5 표.
 - **review §6 반영(2026-10-29)**: 재리뷰 FAIL(P1 1 · P2 2)의 발견을 본문에 옮겼다 — P1-3 별도 키(§7.5 · §14), P2-1 `--top` 고정(§1),
   P2-2 U2 마감(§2 · §4.5). 발견별 위치는 review §7 표.
+- **review §8 반영(2026-10-29)**: 재리뷰 FAIL(P1 4 · P2 2) — 토큰 동등 판정 · `--profile-preflight` · 엔진 rate limit 실시간 감시기 · 엔진 경로 단일 변수 ·
+  경로 정규화 · 좁은 reader(§7.5 · §14). 발견별 위치는 review §9 표.
 
 ## 1. 실행 형태 (Q6 = (a))
 
@@ -377,52 +379,96 @@ a140 은 시작 때 끝나지 않은 종목마다 구조 호가 1 줄(GET 2)을 
 토큰 전쟁 선례(2026-10-19 실측): `--config-dir` 없이 돈 도구가 기본 토큰 캐시 `~/.cache/tossctl/` 로 새 토큰을 사서 엔진(`~/.config/tossctl/`
 의 토큰)을 무효화했다. 키가 다르면 토큰도 client 마다 따로라 이 전쟁은 구조상 없다 — 단 **키가 정말 다를 때만**이다. 아래 가드가 그것을 시작 전에 증명한다.
 
-**배선 — 새 플래그 `--openapi-dir <dir>`(a169 모드 필수)**
+**배선 — `--openapi-dir <dir>`(a169 모드 필수) · `--config-dir` = 사람이 확인한 엔진 프로필(a169 모드 필수)**
 
 - `--openapi-dir` 은 자격증명 · 토큰 **만** 정한다: `apppaths.OpenAPI(openapiDir)` → `<dir>/openapi-credentials.json` · `<dir>/openapi-token.json`.
-- `--config-dir` 은 지금 뜻 그대로 **엔진 프로필**(읽기 전용 config.json 한도 · evidence 가드 후보)이다. 그래서 가상 사이징 값과 생산 evidence 가드가
-  a140 과 같고, config.json 을 복사할 필요가 없다. 엔진 프로필 `E` = `apppaths.Resolve(*configDir, "")` 의 `ConfigDir`(빈 값이면 `~/.config/tossctl`).
-- 기본 모드(a140)는 바뀌지 않는다 — `--openapi-dir` 을 주면 거부한다(기본 모드는 아카이브된 판 재현용이고 측정에 쓰지 않음).
-- 새 함수 `checkSeparateProfile`(새 파일 `profile.go`, §10.1)이 `runCommand` 에서 자격증명을 읽기 **전에** 돈다. 하나라도 걸리면 브로커 GET 0 으로 거부한다.
+- `--config-dir` 은 지금 뜻 그대로 **엔진 프로필** `E`(읽기 전용 config.json 한도 · evidence 가드 후보)이고, a169 모드에서는 **비우면 거부**한다(기본값
+  `~/.config/tossctl` 로 떨어지지 않게 — review §8 P1-7). runbook 은 사람이 확인한 값 하나 `ENGINE_CONFIG_DIR` 를 `--config-dir` · G2/G5/G6 · 엔진 로그
+  감시기 · 사후 mtime 확인에 똑같이 넘긴다(§14).
+- 기본 모드(a140)는 바뀌지 않는다 — `--openapi-dir` · `--profile-preflight` 를 주면 거부한다(기본 모드는 아카이브된 판 재현용이고 측정에 쓰지 않음).
+- 새 함수 `checkSeparateProfile`(새 파일 `profile.go`, §10.1)은 `runCommand` 에서 **일반 자격증명 loader(`LoadCredentials`, main.go:125) · client 생성(133) ·
+  evidence 저장소 · 원장 · 브로커보다 먼저** 돈다(review §8 「확인한 것」 — G4~G6 자체는 파일을 읽으므로 「자격증명 읽기 전」이 아니라 이 순서가 계약).
+  하나라도 걸리면 HTTP 요청 0 · 원장 파일 0 으로 거부하고, 오류에는 가드 번호와 경로만 싣는다.
+- **`--profile-preflight`(review §8 P1-5)**: `run --universes a169 --openapi-dir … --config-dir … --profile-preflight` 는 플래그 검사 · G1~G6 만 하고
+  `preflight ok: openapi-dir=<경로> engine=<경로>` 한 줄로 끝난다(rc 0). config.json · evidence · 원장 · 달력 · 네트워크 0 — `--evidence-db` · `--out` 도
+  요구하지 않는다. runbook 은 이것을 `tossctl … openapi test`(네트워크로 토큰을 받음)보다 **먼저** 돌린다(§14-4).
 
-**fail-closed 가드(G1~G7) — 모두 시작 전, 원장 · 브로커 접근 전**
+**경로 정규화(review §8 P2-3)** — 모든 비교에 같은 알고리즘을 쓴다.
+
+- `canon(p)` = `filepath.Abs(p)` → 그 경로가 있으면 `filepath.EvalSymlinks` → `filepath.Clean`. 없는 경로는 `Abs` · `Clean` 까지만(있어야 하는 경로는 따로
+  존재 검사로 거부).
+- `inside(a, b)` = `rel, err := filepath.Rel(canon(b), canon(a))` 가 오류 없이 `.` 이거나, `..` 도 아니고 `../` 로 시작하지도 않음. 문자열 접두사 비교는
+  쓰지 않는다(`/x/engine2` 는 `/x/engine` 의 안이 아님).
+- 비교 대상: `E`(= `canon(--config-dir)`), 기본 설정 `canon(~/.config/tossctl)`, 기본 캐시 `canon(~/.cache/tossctl)`(둘 다 `apppaths.Resolve("", "")` 의
+  `ConfigDir` · `CacheDir` — 그 함수는 받은 경로를 그대로 `Join` 하므로(paths.go:31~36 · 48~54) 정규화는 이 함수가 한다).
+
+**fail-closed 가드(G1~G7)**
 
 | # | 거부 조건 | 막는 것 |
 |---|---|---|
-| G1 | a169 모드인데 `--openapi-dir` 이 비었음 | 기본 경로(엔진 자격증명 + `~/.cache/tossctl` 토큰) = 10-19 토큰 전쟁 그대로 |
-| G2 | `--openapi-dir` 이 없거나 디렉터리가 아님, 또는 심볼릭 링크를 푼 경로(`filepath.EvalSymlinks`)가 `E` · `~/.config/tossctl` · `~/.cache/tossctl` 와 **같거나 그 안** | 엔진 프로필 · 기본 토큰 캐시 재사용 |
-| G3 | 환경 변수 `TOSSCTL_OPENAPI_KEY` 또는 `TOSSCTL_OPENAPI_SECRET` 이 비어 있지 않음 | `LoadCredentials` 의 환경 우선(credentials.go:30~34)이 `--openapi-dir` 을 조용히 건너뜀 |
-| G4 | `<dir>/openapi-credentials.json` 이 일반 파일이 아님(`Lstat` — 링크 거부) 또는 권한이 `0600` 이 아님, 또는 키 · 비밀이 빔 | 링크로 엔진 파일을 가리킴 · 권한이 무의미한 파일 시스템(fuseblk 등) 위의 비밀 |
-| G5 | 엔진 자격증명 `E/openapi-credentials.json` 을 못 읽음, 또는 그 `APIKey` 와 도구 `APIKey` 가 같음(`crypto/subtle.ConstantTimeCompare`) | 엔진 파일을 복사해 온 경우. 엔진 파일을 못 읽으면 「다름」을 증명 못 하므로 거부 |
-| G6 | `<dir>/openapi-token.json` 이 있고 그 바이트가 `E/openapi-token.json` 또는 `~/.cache/tossctl/openapi-token.json` 과 같음(`os.SameFile` 또는 sha256 동일) | 토큰 파일 복사 · 하드링크 — 토큰이 키와 묶이지 않아(token.go:60~80) 엔진 토큰을 그대로 씀 |
-| G7 | 두 키의 비교 결과 · 경로 외의 값을 출력하려는 코드 | 정적 시험(§10.3-13): `profile.go` 가 `APIKey` · `SecretKey` · 토큰 값을 `fmt` · `log` · 원장 쓰기 인자로 넘기지 않음 |
+| G1 | a169 모드인데 `--openapi-dir` 또는 `--config-dir` 이 비었음 | 기본 경로(엔진 자격증명 + `~/.cache/tossctl` 토큰) = 10-19 토큰 전쟁 · 사람이 확인 안 한 E |
+| G2 | (a) `--openapi-dir` 이 없거나 디렉터리가 아님, 또는 `inside(openapiDir, x)` 가 참인 `x` ∈ {E, 기본 설정, 기본 캐시}. (b) **E 가 엔진 프로필이 아님**: `E/engine.lock`(enginelock.go:82 `LockFileName`) · `E/engine.log`(engineproc.go:67 `engineLogName`) · `E/openapi-credentials.json` 중 하나라도 일반 파일로 없음 | 엔진 프로필 · 기본 토큰 캐시 재사용, **틀린 E**(엔진이 안 쓰는 디렉터리를 비교 대상으로 삼는 것 — review §8 P1-7) |
+| G3 | 환경 변수 `TOSSCTL_OPENAPI_KEY` 또는 `TOSSCTL_OPENAPI_SECRET` 이 비어 있지 않음 | `LoadCredentials` 의 환경 우선(B1@32 → 33)이 `--openapi-dir` 을 조용히 건너뜀 |
+| G4 | `<dir>/openapi-credentials.json` 이 일반 파일이 아님(`Lstat` — 링크 거부) 또는 권한이 `0600` 이 아님 | 링크로 엔진 파일을 가리킴 · 권한이 무의미한 파일 시스템(fuseblk 등) 위의 비밀. 키 · 비밀이 빈 경우는 G1~G6 뒤 일반 loader 결과로 `runCommand` 가 거부(엔진 engine.go:386~388 과 같은 검사) |
+| G5 | 엔진 `E/openapi-credentials.json` 의 `apiKey` 를 못 읽음, 또는 도구 파일의 `apiKey` 와 같음(`crypto/subtle.ConstantTimeCompare`) | 엔진 키 재사용. 못 읽으면 「다름」을 증명 못 하므로 거부 |
+| G6 | 도구 토큰 `<dir>/openapi-token.json` 이 있고 **파싱한 `access_token` 이** 엔진 토큰 캐시 `E/openapi-token.json` · `canon(~/.cache/tossctl)/openapi-token.json` 중 하나의 파싱한 `access_token` 과 같음(상수 시간 비교, 빈 값끼리는 같다고 보지 않음). 보조: 도구 토큰 경로가 링크이거나(`Lstat`) 엔진 토큰과 `os.SameFile` 이면 거부. 엔진 토큰이 있는데 못 읽거나 파싱 못 하면 거부. 도구 토큰을 파싱 못 하면 통과(그 경우 `tokenManager` 는 캐시를 버리고 새로 받음 — `loadCache` B3@190 → 191, `token` B2@72) | 토큰 복사 · 재직렬화 · 하드링크 · 링크 — 토큰 캐시에 키 칸이 없어(token.go:24~28) 유효한 엔진 토큰을 그대로 씀(`token` B2@72 → 74). **바이트 비교로는 공백 · 필드 순서만 바꾼 사본이 통과한다**(review §8 P1-4) |
+| G7 | 정적 시험(§10.3-13) — `profile.go` · `enginewatch.go` 가 키 · 비밀 · 토큰 · 엔진 로그 줄을 `fmt` · `log` · `os.Stderr` · 원장 쓰기 호출의 인자로 넘기지 않고, `profile.go` 가 `official.Credentials` · `LoadCredentials` · 문자열 `secretKey` · 필드 `SecretKey` 를 이름으로 쓰지 않음 | 값 출력 · 엔진 비밀의 Go 값 생성 |
 
-- 엔진 자격증명을 읽는 것(G5)은 새 접근이 아니다 — 지금 a140 기본 모드가 바로 그 파일로 브로커를 부른다. a169 는 그 파일을 **비교에만** 쓰고 메모리에서
-  버리며, 값 · 마스크 · 해시를 어디에도 남기지 않는다.
-- 원장에는 `cohort` U0 행에 `separate_key_checked: true` 한 칸만 남긴다(경로 · 키 정보 0). 시작 stderr 한 줄에는 `--openapi-dir` **경로**만 더한다.
-- `E` 가 실제 엔진 컨테이너의 bind 원본(`${TOSSOS_CONFIG_DIR}`)과 같다는 것은 **[가정]**(운영 기억: 저널 · 토큰이 `~/.config/tossctl`). 다르면 G2 · G5 · G6 가
-  엉뚱한 곳과 비교한다 — 그래서 runbook(§14-1)이 사람에게 그 값을 확인받고 `--config-dir` 로 명시하게 한다.
+- **좁은 reader(review §8 P2-4)**: G5 는 엔진 파일을 `struct{ APIKey string `json:"apiKey"` }` 로만 디코드한다 — `SecretKey` 를 담는 Go 값(`official.Credentials`)을
+  만들지 않는다. 도구 쪽 비교 키도 같은 좁은 reader 로 읽는다. G6 도 `struct{ AccessToken string `json:"access_token"` }` 만 쓴다. 한계: 디코드할 때
+  파일 바이트(엔진 비밀 포함)는 버퍼에 잠시 있고 Go 는 그 버퍼를 지우는 것을 보장하지 않는다 — 버퍼는 그 함수 밖으로 나가지 않는다. 신뢰된 등록
+  단계가 남긴 지문만 읽는 더 강한 격리는 등록 도구가 하나 더 필요해 넣지 않았다(issues §5).
+- 원장에는 `cohort` U0 행에 `separate_key_checked: true` 한 칸만 남긴다(경로 · 키 정보 0). 시작 stderr 한 줄에는 두 디렉터리의 **경로**만 더한다.
+
+**엔진 rate limit 실시간 감시기(review §8 P1-6) — 엔진 편집 0**
+
+한도 단위가 [미측정]인 동안의 interlock 이다. 사후 계수와 「보유 0 인 날」 권장은 **대체물이 아니다**(아래 권장은 유지하되 보조).
+
+- 엔진 로그 위치(코드 사실): 콘솔이 띄운 엔진은 `--config-dir` 이 있으면 그 디렉터리를 엔진 디렉터리로 쓰고(`engineJournalDir` B1@186 → 187),
+  `startEngine` 이 `engineLogPath(dir)`(engineproc.go:152, 208)로 `engine.log` 를 열어 엔진 프로세스의 stdout · stderr 를 거기에 붙인다
+  (`spawnDetachedEngine` 440 `O_APPEND|O_CREATE|O_WRONLY` · 446~447). 운영 컨테이너는 `--config-dir /var/lib/tossos/config`(compose.yaml:18~19)로 뜨므로
+  호스트에서는 `ENGINE_CONFIG_DIR/engine.log` 다. 회전 · 잘림 코드는 `cmd/tossctl/engine*.go` · `internal/app/engine` 에서 찾지 못했다(`rotat|truncat` 검색 0).
+- 엔진 429 문구(코드 사실): 브로커 429 는 `classifyStatus` B4@54 → 55 에서 `ErrRateLimited` = `official: rate limited`(errors.go:15) 로 바뀌고 HTTP 코드를
+  싣지 않는다(401 · 403 만 `(HTTP %d)`, B3@50 → 51 · 53). 엔진이 **모든** 429 를 로그 한 줄로 남기는지는 **[미측정]** — `internal/app/engine` 에 rate limit
+  전용 로그 줄은 없고(검색 결과는 precheck.go:41 주석 1 건뿐) 오류 문자열이 그대로 찍히는 경로에서만 보인다. 그래서 패턴은 보수 쪽: 대소문자 무시 `rate limited` · `rate_limited` ·
+  `too many requests` · 단어 경계 `429`. `429` 는 가격 · 수량 · id 에도 걸릴 수 있다 — 거짓 양성은 세션 하나를 버리는 쪽(보수)이다.
+- 새 파일 `enginewatch.go` 의 감시기:
+  1. 시작(가드 뒤, evidence · 원장 · client 전): `ENGINE_CONFIG_DIR/engine.log` 를 **읽기 전용**으로 열고 일반 파일인지 · 크기를 보고 **끝으로 이동**한다
+     (도구 시작 전 줄은 보지 않음). 못 열면 시작 거부(`engine_log_unreadable`).
+  2. 250 ms(= `ReadGap`)마다: 새로 붙은 바이트를 읽어 패턴을 본다(줄바꿈 전 조각도 본다 — 보수). 같은 경로를 다시 `Stat` 해서 열어 둔 파일과
+     `os.SameFile` 이 아니면 회전(`engine_log_rotated`), 크기가 읽은 위치보다 작으면 잘림(`engine_log_truncated`), 읽기 오류면 `engine_log_unreadable`.
+  3. 패턴을 보면 `engine_rate_limited`. 어느 경우든 `context.WithCancelCause` 의 cancel 을 그 사유로 부른다.
+  4. 감시기 고루틴이 어떤 이유로든 끝나면 `defer` 로 `watcher_stopped` 취소. 별도 점검 고루틴이 마지막 폴 시각이 2 초보다 오래되면(파일 시스템 멈춤)
+     `watcher_stalled` 로 취소한다.
+- 취소가 GET 을 멈추는 근거: 도구의 모든 GET 은 `pacedSource.pause` 를 먼저 지나고(`retrying` B3@92 · `quoteRead` 115), `pause` 는 지연이 0 이어도
+  `ctx.Err()` 를 돌려준다(B1@78 → 79). 그래서 취소 뒤 **새 GET 은 0** 이고, 이미 나간 GET 하나는 요청 context 로 끊기지만 서버에 닿았을 수 있다(최대 1).
+  첫 엔진 429 자체는 막지 못한다 — 감시기는 그 다음을 막는다.
+- 기록: `runCommand` 가 `context.Cause` 를 보고 원장에 `abort` 행(`reason` = 위 사유 하나, 로그 줄 내용 · 매칭 문자열은 **안 남김**)을 쓰고 rc 1 로 끝난다.
+  그 세션은 `report-universes` 의 판 합계 둘 다에서 빠지고 `aborted: <reason>` 수로만 보인다. 같은 날 다시 띄우면 원장에 오늘(KST 날짜로 만든
+  `KRX:<date>`)의 `abort` 행이 있으므로 달력 GET 전에 거부한다(사람이 원인을 본 뒤 다른 날 다시).
+- 엔진을 고치지 않는다: 감시기는 엔진이 이미 쓰는 파일을 읽기만 한다. 엔진 쪽에 신호 · 중단 권한을 새로 만들 필요는 없었다(멈추고 보고할 조건 아님).
+- 한계 **[가정]**: 운영 엔진이 콘솔의 `startEngine` 으로 떴다는 것(그래야 stdout 이 `engine.log`). 다른 방식으로 뜨면 그 파일이 자라지 않는다 —
+  runbook §14-5 가 세션 중 `engine.log` 크기가 느는지 사람이 확인하고, 안 늘면 감시가 눈먼 것이므로 측정에 안 센다. 파일 권한(0600, 컨테이너 UID)이
+  도구를 돌리는 호스트 사용자와 맞는지도 [가정] — 안 맞으면 1 단계가 시작을 거부한다(fail-closed).
 
 **한도가 키별인가 계좌별인가 — [미측정]**
 
 공식 문서는 그룹별 초당 한도만 적고(open-api.md:67~78) 그 단위(키 · 계좌 · IP)를 적지 않는다. 두 키가 같은 계좌에 묶여 있으므로 계좌별이면 별도 키도
-MARKET_DATA 예산을 나눈다. 그래서 별도 키는 **토큰 전쟁은 구조로 닫고, 예산 공유는 리허설에서 판별한다**:
+MARKET_DATA 예산을 나눈다. 그래서 별도 키는 **토큰 전쟁은 구조로 닫고, 예산 공유는 실시간 감시기로 끊고, 리허설로 판별한다**:
 
-1. **엔진 429 = 0 확인(읽기만)**: 리허설 세션 창(개장 ~ 마감 + 30 분) 동안 엔진 로그에서 rate limit 줄 수를 센다(§14-5). 기준선으로 도구를 돌리지 않은
-   직전 세션 같은 창의 수를 같이 센다. 엔진의 429 오류 문구는 `official: rate limited`(internal/official/errors.go:15 · 54~55)지만 엔진 로그가 그
-   문구를 어떻게 싸서 찍는지는 **[미측정]** — 그래서 `rate limited` · `429` 둘을 같이 센다. 리허설 창의 수 > 0 이면(기준선과 무관하게) 측정하지 않고 묻는다.
+1. 실시간: 위 감시기 — 엔진 rate limit 줄 하나면 그 세션 중단.
 2. 도구 쪽: 도구가 받은 429 는 결손(`gap`) 행의 사유 문구(`probe.gap` 141 `err.Error()` 그대로)에 `official: rate limited` 로 남고, MARKET_DATA 면
    `quoteRead` B3@120 이 정지를 걸어 그 뒤 읽기가 B1@112 → 113 `quote reads are suspended…` 사유로 이어진다(source.go:39). 리허설 원장에서 이 두 문구가 든 `gap` 행을 센다.
    도구는 초당 4 GET 을 넘지 못하므로(§7.1) MARKET_DATA(10/s) 429 를 받았다면 그 예산을 다른 소비자가 같이 쓴다는 신호다.
-3. 판단: 리허설 창의 엔진 rate limit 줄 > 0 **또는** 도구 MARKET_DATA 429 > 0 → 측정 0, 사람에게 묻는다(선택지 예: 공유를 받아들이고 a140 처럼
-   D11 로 진행 · 도구 속도 낮춤 · 중단 — 이 design 은 고르지 않음). 둘 다 0 → §7.4 순서대로 측정.
+3. 판단: 리허설이 `abort`(어떤 사유든)로 끝났거나 도구 MARKET_DATA 429 > 0 → 측정 0, 사람에게 묻는다(선택지 예: 공유를 받아들이고 a140 처럼
+   D11 로 진행 · 도구 속도 낮춤 · 중단 — 이 design 은 고르지 않음). 둘 다 아님 → §7.4 순서대로 측정. 측정 세션에서도 감시기는 같은 규칙으로 돈다.
 - 이것은 **키별의 증명이 아니다** — 엔진이 그 창에 MARKET_DATA 를 얼마나 불렀는지에 따라 0 이 우연일 수 있다. 응답 헤더 `X-RateLimit-Remaining`
   (`(*Client).RateBudgets()`, ratebudget.go:217~220)을 원장에 남기면 GET 0 으로 공유 여부를 더 직접 볼 수 있지만, `official.RateBudget` 이름을 쓰려면
-  기존 시험 `TestNoMutatingAccountOrWriteSurfaceIsNamed`(static_test.go:70~115)의 허용 목록을 고쳐야 해 FLM 대상이 하나 는다. 사용자가 요구한
-  범위(엔진 429 = 0 확인) 밖이라 넣지 않았다 — issues §4 에 선택지로 남긴다.
+  기존 시험 `TestNoMutatingAccountOrWriteSurfaceIsNamed`(static_test.go:70~115)의 허용 목록을 고쳐야 해 FLM 대상이 하나 는다 — issues §4 에 선택지로 남긴다.
+- 보조(대체물 아님): 엔진 보호 호가가 의미 있는 것은 엔진이 포지션을 들고 있을 때뿐이라, runbook 은 리허설을 엔진 보유 0 인 날에 하기를 **권장**한다
+  (사람 결정 §12-7). 감시기 · 사후 로그 계수를 빼도 된다는 뜻이 아니다.
 
-- 남는 위험(측정 전): 한도가 계좌별이면 **리허설 1 세션 자체**는 a140 과 같은 공유 예산으로 돈다. a140 은 같은 키로 5 세션을 돌았다. 그 창의 엔진
-  보호 호가가 의미 있는 것은 엔진이 포지션을 들고 있을 때뿐이라, runbook 은 리허설을 엔진 보유 0 인 날에 하기를 **권장**한다(사람 결정 §12-7). — 행 종류 추가 (schema 문자열 불변)
+## 8. 원장 — 행 종류 추가 (schema 문자열 불변)
 
 | 종류 | 언제 | 칸 |
 |---|---|---|
@@ -433,6 +479,7 @@ MARKET_DATA 예산을 나눈다. 그래서 별도 키는 **토큰 전쟁은 구�
 | `numerator_check`(새) | 세션 끝 | `symbol` · `V` · `lower` · `upper` · `pass` · 기준 시각 `R` 과 출처 · 불합격 크기(§4.4) |
 | `budget`(기존) | 10 분마다 | 계수에 `daily_prefetch` · `daily_topup` · `types_calls` 추가 |
 | `gap`(기존) | 읽기 포기 | 새 단계 이름 `ranking_u2` · `ranking_a140` · `daily` · `types` |
+| `abort`(새) | 감시기 취소로 끝날 때 1 회 | `at` · `session` · `reason`(`engine_rate_limited` · `engine_log_rotated` · `engine_log_truncated` · `engine_log_unreadable` · `watcher_stopped` · `watcher_stalled`, §7.5). 엔진 로그 줄 · 매칭 문자열은 넣지 않음 |
 
 - 모든 새 칸은 `omitempty` 이고, 구조체 칸은 **포인터**로 둔다 — `encoding/json` 의 `omitempty` 는 구조체 값을 빼지 않으므로(포인터 · 슬라이스 · 맵 ·
   기본형만 빠짐) 값 구조체로 두면 a140 모드 행에 빈 객체가 생긴다(review §4 P3-5). 그래서 a140 모드 행의 바이트는 그대로다. 행 하나의 최대 크기는 랭킹 100 항목 × 2 정도 — `readLedger` 의 줄 상한 4 MiB
@@ -456,6 +503,7 @@ MARKET_DATA 예산을 나눈다. 그래서 별도 키는 **토큰 전쟁은 구�
     > 0 이 나올 수 있다(다중 비교). 결정된 임계(Q8)는 바꾸지 않는다 — 표기와 표준오차는 읽는 사람이 그것을 보게 하려는 것이다.
 - 판 합계는 두 번 낸다(Q10): (1) 정시 선정 종목군-세션 전부, (2) 그중 N 미만 종목군-세션을 뺀 것. 두 판정이 다르면 그 칸에 「표본 경계 —
   사람 판단」을 붙인다. 늦은 선정 종목군-세션(§2 — U2 마감 미완 §4.5 포함, 사유별 수)과 「귀속 불일치」 종목-세션(§5.3)은 두 합계 모두에서 빼고 따로 보인다.
+  `abort` 행이 있는 세션(§7.5 감시기)은 세션 전체를 두 합계에서 빼고 `aborted: <reason>` 수로만 보인다.
 - **예상(측정 아님) — 5 세션이면 9 칸 거의 전부 「보류」(review §4 P2-3)**: a140 은 30 종목 × 5 세션 = 종목-세션 150 에서 라벨 22 였다(proposal Why).
   U0 는 a140 과 거의 같은 정의(투자유의 제외 · 1,000 원 하한만 다름)라 U0 전체 라벨도 20 개 안팎으로 예상되고, 이를 STOCK · ETF · ETN 셋으로
   나누면 칸마다 30 미만이다. U1 도 비슷하고, U2 는 첫 30 분 돌파를 못 세므로(§5.2) 더 적다. D3 (a) 로 20 판이 되면 더 적다. 그래서 측정 전에
@@ -474,7 +522,8 @@ MARKET_DATA 예산을 나눈다. 그래서 별도 키는 **토큰 전쟁은 구�
 
 | 파일 | 내용 |
 |---|---|
-| `tools/a140-breakout-signal-shadow/profile.go` | `checkSeparateProfile` — §7.5 의 G1~G6(경로 · 환경 · 파일 모드 · 키 비교 · 토큰 비교), 오류에는 경로와 가드 번호만 |
+| `tools/a140-breakout-signal-shadow/profile.go` | `checkSeparateProfile` — §7.5 의 경로 정규화 · G1~G6(경로 · E 신원 · 환경 · 파일 모드 · 좁은 reader 키 비교 · 파싱한 토큰 비교), 오류에는 경로와 가드 번호만 |
+| `tools/a140-breakout-signal-shadow/enginewatch.go` | 엔진 `engine.log` 읽기 전용 감시기(§7.5) — 끝으로 이동 · 250 ms 폴 · 패턴 · 회전/잘림/오류 · 정지 점검 → `context.CancelCauseFunc`, 오늘 `abort` 행 검사 |
 | `tools/a140-breakout-signal-shadow/universe.go` | `universePolicy` · `universeSource` 인터페이스(`Candles` · `Stocks`) · U2 마감(§4.5) · `pacedSource` 의 `Candles` · `Stocks`(그룹 `MARKET_DATA_CHART` · `STOCK`, `retrying` 재사용) · 공통 필터 · U0/U1/U2 선정 · U2 식 · 일봉 캐시 · 미리 읽기 · 유형 영수증 · 재시작 복원 |
 | `tools/a140-breakout-signal-shadow/attribution.go` | 돌파 봉 번호(§5.3) · `numerator_check`(§4.4) |
 | `tools/a140-breakout-signal-shadow/report_universes.go` | §9 보고서 |
@@ -486,7 +535,7 @@ MARKET_DATA 예산을 나눈다. 그래서 별도 키는 **토큰 전쟁은 구�
 
 | 함수 | 줄(현재) | 편집 | AST(편집 전) |
 |---|---|---|---|
-| `runCommand` | main.go:68~165 | `--universes` · `--openapi-dir` 플래그 · a169 에서 `--out` · `--openapi-dir` 필수, `--top` ≠ 30 거부(§1), 기본 모드에서 `--openapi-dir` 거부 · 자격증명 읽기(121~131) 앞에 `checkSeparateProfile` · a169 에서 `apppaths.OpenAPI(openapiDir)` · `cfg.Universes` · `official.New` 값을 두 번째 표면에도 넘김 | `analysis/evidence/…main.go--runCommand.json` |
+| `runCommand` | main.go:68~165 | `--universes` · `--openapi-dir` · `--profile-preflight` 플래그 · a169 에서 `--openapi-dir` · `--config-dir` 필수(preflight 아닐 때 `--out` 도), `--top` ≠ 30 거부(§1), 기본 모드에서 `--openapi-dir` · `--profile-preflight` 거부 · config.json · evidence · 일반 loader(92~131) 앞에 `checkSeparateProfile`, preflight 면 거기서 끝 · 감시기 시작(실패 시 거부) · 오늘 `abort` 행이면 거부 · `p.run` 뒤 `context.Cause` 면 `abort` 행 · 일반 loader 뒤 키 · 비밀 빈 값 거부 · a169 에서 `apppaths.OpenAPI(openapiDir)` · `cfg.Universes` · `official.New` 값을 두 번째 표면에도 넘김 | `analysis/evidence/…main.go--runCommand.json` |
 | `dispatch` | main.go:53~65 | `report-universes` 갈래 하나 | `…main.go--dispatch.json` |
 | `effectivePolicyFor` | policy.go:54~69 | 리터럴에 `Universes: cfg.Universes` | `…policy.go--effectivePolicyFor.json` |
 | `probe.startSession` | shadow.go:164~261 | B9@200: a169 모드면 `selectUniverse` 대신 U0/U1 선정(+ A140 재구성). B22@249 시작 호가는 편집 안 함(D2 — §7.3) | `…shadow.go--probe.startSession.json` |
@@ -520,12 +569,27 @@ MARKET_DATA 예산을 나눈다. 그래서 별도 키는 **토큰 전쟁은 구�
 11. 보고서: 9 칸 판정 셋 · 두 판 합계 · 표본 경계 표시 · 기타/미분류 개수만 · 칸마다 n · 평균 · 표준편차 · 표준오차와 「통계 판정 아님 · 9 칸 동시 비교」
     표기(P2-4) · 보조 열 U0@T_U2 · U1@T_U2(P2-5) · 늦은 선정 · 귀속 불일치 제외.
 12. `selected_at` = 두 랭킹 중 늦게 받은 시각(P3-2) · `numerator_check` 기준 시각 `R` = `rankedAt`(파싱 실패 시 `selected_at`)과 불합격 크기(P3-3).
-13. 별도 프로필 가드(§7.5, review §6 P1-3) — 임시 HOME(`XDG_CONFIG_HOME` · `XDG_CACHE_HOME` · `HOME` 을 `t.TempDir()` 로)과 가짜 자격증명 파일로,
-    각 가드가 **브로커 GET 0 · 원장 파일 0** 으로 거부하고 오류에 그 가드 번호가 있음을 단언한다: G1 빈 `--openapi-dir` · G2 `E` 와 같음 · `E` 의 하위 ·
-    `~/.cache/tossctl` · `E` 를 가리키는 심볼릭 링크 · G3 환경 변수 하나만 · 둘 다 · G4 링크 파일 · `0644` · 빈 키 · G5 엔진 파일 없음 · 같은 키 ·
-    G6 엔진 토큰 복사본 · 하드링크. 양성 대조: 다른 키 · `0600` · 토큰 없음 → 통과하고 `cohort` U0 행에 `separate_key_checked: true`.
-    기본 모드에 `--openapi-dir` → 거부. 정적 시험: `profile.go` 가 `APIKey` · `SecretKey` · 토큰 바이트를 `fmt` · `log` · `os.Stderr` · 원장 쓰기 호출의
-    인자로 넘기지 않음(AST 로 셈, G7).
+13. 별도 프로필 가드(§7.5, review §6 P1-3 · §8) — 임시 HOME(`XDG_CONFIG_HOME` · `XDG_CACHE_HOME` · `HOME` 을 `t.TempDir()` 로), **비기본 엔진 경로 fixture**
+    `E = <tmp>/engine-profile`(기본 `~/.config/tossctl` 이 아님 — `engine.lock` · `engine.log` · 가짜 `openapi-credentials.json` · `openapi-token.json`),
+    HTTP 요청을 세는 가짜 전송(`httptest` 서버 + 호출 계수)으로, 각 가드가 **HTTP 요청 0 · 원장 파일 0 · evidence 파일 0** 으로 거부하고 오류에 그 가드
+    번호가 있음을 단언한다(`run` 과 `--profile-preflight` 둘 다):
+    - G1: 빈 `--openapi-dir` · 빈 `--config-dir`.
+    - G2(a)·P2-3: `E` 와 같음 · `E` 의 하위 · `E/../engine-profile/sub` 처럼 `../` 를 섞은 하위 · `E` 를 가리키는 심볼릭 링크 · 기본 캐시를 상대 경로로 준 것 ·
+      기본 설정의 하위. 경계 양성 대조: `E` 가 `/x/engine` 일 때 `/x/engine2` 는 통과.
+    - G2(b)·P1-7: **틀린 E** — `engine.lock` 없음 · `engine.log` 없음 · 자격증명 없음인 디렉터리를 `--config-dir` 로 줌 → 거부. 기본 경로에 다른 엔진 파일이
+      있어도 `--config-dir` 의 E 만 비교 대상임(기본 `~/.config/tossctl` 에 같은 키를 두고 E 에는 다른 키 → G5 는 E 기준으로 판정).
+    - G3: 환경 변수 하나만 · 둘 다.
+    - G4: 링크 파일 · `0644`.
+    - G5·P2-4: 엔진 파일 없음 · `apiKey` 칸 없음 · 같은 키(**같은 키 경우 HTTP 요청 0 을 따로 단언** — review §8 P1-5). 엔진 파일의 `secretKey` 값은 시험이
+      심은 표식 문자열이고, 도구 프로세스 출력 · 원장 · 반환 오류 어디에도 그 표식이 없음.
+    - G6·P1-4 넷: (i) 엔진 토큰을 공백 · 필드 순서 · 무관 필드 · `expires_at` 만 바꿔 **재직렬화한 같은 `access_token`** → 거부, (ii) 하드링크 → 거부,
+      (iii) 심볼릭 링크 → 거부, (iv) **다른 `access_token`**(양성 대조) → 통과. 그리고 엔진 토큰 파싱 실패 → 거부, 도구 토큰 파싱 실패 → 통과.
+    - 양성 대조: 다른 키 · `0600` · 토큰 없음 → `--profile-preflight` 는 `preflight ok` · rc 0 · HTTP 0 · 원장 0, `run` 은 통과하고 `cohort` U0 행에
+      `separate_key_checked: true`. 기본 모드에 `--openapi-dir` · `--profile-preflight` → 거부.
+    - G7 정적 시험(AST): `profile.go` · `enginewatch.go` 가 키 · 비밀 · 토큰 · 읽은 로그 바이트를 담은 식별자를 `fmt` · `log` · `os.Stderr` · `led.write`
+      의 인자로 넘기지 않음, `profile.go` 에 `official.Credentials` · `LoadCredentials` 선택자 · `"secretKey"` 문자열 · `SecretKey` 필드 이름이 없음.
+      `engineLogName` 값(cmd/tossctl/engineproc.go:67)과 `enginelock.LockFileName`(enginelock.go:82)이 `profile.go` 의 두 이름과 같음(시험 파일이 AST ·
+      import 로 대조 — 이름이 바뀌면 시험이 깨짐).
 14. `--top` 계약(§1, review §6 P2-1): a169 모드 `--top 20` · `--top 31` → GET 0 거부, `--top` 생략 · `--top 30` → 통과. 가짜 브로커 한 세션에서
     A140 cohort 30 개 · U0 · U1 각 `per_universe`(30 판 30, 20 판 20) · `effective_policy.top` 30 을 함께 단언. 기본 모드 `--top 20` 은 지금처럼 통과.
 15. U2 마감(§4.5, review §6 P2-2) — 가짜 시계 + GET 마다 250 ms 를 쓰는 가짜 브로커:
@@ -535,6 +599,16 @@ MARKET_DATA 예산을 나눈다. 그래서 별도 키는 **토큰 전쟁은 구�
     (iii) 경계: 보충 GET 시작이 `now + ReadGap = D` → 시작 안 함. rate limit 재시도 대기가 `D` 를 넘김 → 기다리지 않음.
     (iv) 유형 GET 이 마감 안에 못 들어가면 09:31:05 폴 뒤에 읽힘, 늦은 선정이어도 U0 ∪ U1 유형은 읽힘.
     (v) `D` 뒤 재시작 · cohort 행 없음 → 늦은 선정 행만, 다시 고르지 않음.
+16. 엔진 rate limit 감시기(§7.5, review §8 P1-6) — 가짜 시계 · 가짜 브로커(호출 계수) · `t.TempDir()` 의 가짜 `engine.log`:
+    - 도구 시작 **전** 로그에 있던 `official: rate limited` 줄 → 무시(끝으로 이동 확인).
+    - 시작 뒤 그 줄을 덧붙임 → 다음 감시 폴 이후 **새 GET 0**(가짜 브로커 계수 불변), 원장 `abort` 행 `reason: engine_rate_limited`, 줄 내용 · 매칭
+      문자열이 원장 · 출력에 없음, rc 1. 패턴 넷(`rate limited` · `RATE_LIMITED` · `Too Many Requests` · 단어 `429`) 각각 · 줄바꿈 없는 조각도 잡음,
+      `14290` 같은 숫자 안의 429 는 안 잡음.
+    - 로그를 못 엶(없음 · 권한 0) → 시작 거부, HTTP 0 · 원장 0.
+    - 회전(같은 경로에 새 파일로 바꿈) → `engine_log_rotated` 중단, 잘림(크기 감소) → `engine_log_truncated` 중단.
+    - 감시기 고루틴 종료 → `watcher_stopped`, 폴 시각이 2 초 넘게 안 바뀜(가짜 파일 시스템이 막힘) → `watcher_stalled`.
+    - 같은 날 다시 시작 → 오늘 `abort` 행 때문에 달력 GET 전에 거부(HTTP 0).
+    - `report-universes`: `abort` 세션은 두 판 합계에서 빠지고 `aborted` 수로만 나옴.
 
 ## 11. 안전 경계 (a140 §7 그대로 + 추가 둘)
 
@@ -542,7 +616,7 @@ MARKET_DATA 예산을 나눈다. 그래서 별도 키는 **토큰 전쟁은 구�
   설정 쓰기 · 엔진 `evidence.db` · 저널 쓰기 · 서명 매니페스트 · Jev 0(정적 시험이 이름을 금지).
 - 엔진 프로세스 밖이고 손절 · 비상 청산과 공유하는 코드 0. **Open API 키도 공유하지 않는다** — a169 모드는 별도 앱 키만 쓰고, 엔진 프로필 ·
   엔진 키 · 엔진 토큰 · 환경 변수 덮어쓰기를 시작 전에 거부한다(§7.5 G1~G6). 남는 공유 가능성은 한도가 계좌별일 때의 예산 하나이고 **[미측정]** —
-  리허설의 엔진 429 확인(§7.5)과 §7 의 계수 · 리허설 WARNING 규칙(§7.4 재리허설 포함) · D11 재승인으로 다룬다. 시작 호가는 a140 과 같이 읽는다
+  엔진 `engine.log` 를 읽기만 하는 실시간 감시기가 엔진 rate limit 줄 하나에 세션을 끊고(§7.5, 엔진 편집 0), 리허설 판단(§7.5)과 §7 의 계수 · 리허설 WARNING 규칙(§7.4 재리허설 포함) · D11 재승인으로 다룬다. 시작 호가는 a140 과 같이 읽는다
   (§7.3 — 생략은 GET 을 줄이지 않음).
 - 자격증명 값은 문서 · 원장 · 로그 · 기억 어디에도 넣지 않는다. 도구는 경로와 가드 번호만 출력하고, 원장에는 `separate_key_checked` 불리언 하나만 남는다.
 - **수익성 결론을 기억에 남기지 않는다(안전 부트스트랩 8 · review §4 P2-4)**: change 종결 때 ai-memory 페이지 · Hindsight retain 에는 「후속 검토 후보」
@@ -559,8 +633,8 @@ MARKET_DATA 예산을 나눈다. 그래서 별도 키는 **토큰 전쟁은 구�
 5. **새(review §4 P2-3)**: 5 세션이면 9 칸 거의 전부 「보류」가 예상된다(§9). 측정 전에 (i) 세션 연장 여부 · 세션 수, (ii) 갈래 합친 종목군별 보조
    집계를 낼지.
 6. 리허설 영수증의 일봉 경계(§4.2)가 예상(직전 거래일 00:00 KST · 오늘 00:00 KST)과 다르면 측정 전에 멈추고 묻는다.
-7. **새(review §6 P1-3)**: 별도 키 등록(§14) 완료 확인, 엔진 프로필 경로 `${TOSSOS_CONFIG_DIR}` 확인(§7.5 [가정]), 리허설을 엔진 보유 0 인 날에 할지(권장),
-   리허설 창의 엔진 · 도구 rate limit 이 0 이 아닐 때의 다음 걸음(§7.5).
+7. **새(review §6 P1-3 · §8)**: 별도 키 등록과 `--profile-preflight` 통과(§14), `ENGINE_CONFIG_DIR` 확인(§14-1), 리허설을 엔진 보유 0 인 날에 할지(권장 —
+   감시기의 대체물 아님), 리허설이 `abort` 로 끝나거나 도구 rate limit 이 0 이 아닐 때의 다음 걸음(§7.5), 세션 중 `engine.log` 가 안 자랄 때(감시 눈멂)의 처리.
 8. **새(review §6 P2-2)**: 리허설에서 U2 가 「늦은 선정 — U2 마감」이면 측정 전에 묻는다(09:2x 후보 갱신 · 미리 읽기 늘림 등, issues §3 P3-2).
 
 (처음 초안의 5 「시작 호가 생략」은 D2 변경으로 닫힘 — §7.3.)
@@ -586,12 +660,19 @@ MARKET_DATA 예산을 나눈다. 그래서 별도 키는 **토큰 전쟁은 구�
 출처: 저장소 루트 `.env`(gitignore 됨)의 `TOSSOS_AUTH_CLIENT_ID2`(앱 키) · `TOSSOS_AUTH_CLIENT_SECRET2`(비밀). 엔진 키는 같은 파일의
 `TOSSOS_AUTH_CLIENT_ID` · `TOSSOS_AUTH_CLIENT_SECRET` 이다. 이 변수 이름들을 읽는 TossOS 코드는 없다(Manager grep 실측) — `.env` 는 사람의 보관 장소일 뿐이다.
 
-1. **엔진 프로필 확인**: 운영 compose override(`~/.local/share/tossos-deploy/`)의 `TOSSOS_CONFIG_DIR` 값이 `~/.config/tossctl` 인지 본다. 다르면 아래
-   `--config-dir` 에 그 경로를 쓴다(G2 · G5 · G6 의 비교 대상).
+1. **엔진 프로필을 한 변수로 고정(review §8 P1-7)**: 운영 compose override(`~/.local/share/tossos-deploy/`)의 `TOSSOS_CONFIG_DIR` 값을 사람이 보고,
+   그 값을 아래 모든 단계가 같이 쓰는 **한 변수**로 둔다(비밀 아님 — 경로):
+
+   ```bash
+   export ENGINE_CONFIG_DIR="<확인한 TOSSOS_CONFIG_DIR 값>"   # 예: ~/.config/tossctl 이라고 가정하지 말고 확인한 값을 그대로
+   ls -l "$ENGINE_CONFIG_DIR/engine.lock" "$ENGINE_CONFIG_DIR/engine.log"   # 둘 다 일반 파일이어야 함(G2(b)) — 내용은 열지 않음
+   ```
+
+   이후 `--config-dir` · G2/G5/G6 의 비교 대상 · 감시기가 읽는 `engine.log` · 사후 mtime 확인이 전부 이 변수 하나다. `~/.config/tossctl` 을 직접 쓰지 않는다.
 2. **허용 IP 등록**: 토스증권 WTS 설정 > Open API > 허용 IP 관리에서 새 앱 키에 이 호스트의 IP 를 등록한다(허용 IP 는 client 마다 — OpenAPI 403
-   `IP address not allowed`). 안 하면 아래 4 가 `forbidden_ip` 류로 실패한다.
+   `IP address not allowed`). 안 하면 아래 4-5 의 `openapi test` 가 `forbidden_ip` 류로 실패한다.
 3. **측정 프로필 만들기 — 값이 화면 · 인자 · 기록에 안 나오게**. 프로필은 홈 파일 시스템에 둔다(`/mnt/D` 는 fuseblk 라 권한이 무의미할 수 있어 G4 가
-   거부함). 이름은 예시이고 `~/.config/tossctl` 의 안이면 안 된다(G2).
+   거부함). 이름은 예시이고 `$ENGINE_CONFIG_DIR` · `~/.config/tossctl` · `~/.cache/tossctl` 의 안이면 안 된다(G2).
 
    ```bash
    set +o history                      # 이 셸의 이후 명령을 기록에 남기지 않음
@@ -620,26 +701,38 @@ MARKET_DATA 예산을 나눈다. 그래서 별도 키는 **토큰 전쟁은 구�
      — G5 · G6 가 거부하지만 처음부터 하지 않음).
    - 대안: `tossctl --config-dir "$A169_DIR" init` 의 숨김 입력(cmd/tossctl/init.go:72~79)에 붙여 넣기 — 값을 화면에 띄워 복사해야 하므로 위 방법을 권장.
    - 위 `.env` 파서는 `KEY=value` 한 줄 형식만 읽는다(줄 끝 주석 · 여러 줄 값은 못 읽음) — 형식이 다르면 실패 문구만 내고 멈춘다.
-4. **확인 — 값 없이**:
-   - `env | grep -c '^TOSSCTL_OPENAPI_'` → `0`(1 이상이면 G3 가 거부. 그 셸에서 `unset TOSSCTL_OPENAPI_KEY TOSSCTL_OPENAPI_SECRET`).
-   - `stat -c '%a %F' "$A169_DIR/openapi-credentials.json"` → `600 regular file`.
-   - `stat -c '%y' ~/.config/tossctl/openapi-token.json` 을 적어 둔다(엔진 토큰 시각).
-   - `tossctl --config-dir "$A169_DIR" openapi test` → `ok`. 이 명령은 새 키로 토큰을 받아 `$A169_DIR/openapi-token.json` 에만 쓴다(openapi.go:368~395
-     — 출력에 키가 없음). 그 뒤 엔진 토큰 시각을 다시 봐서 **바뀌지 않았는지** 확인한다(바뀌었으면 키가 같다는 뜻일 수 있음 — 엔진의 24 시간 재발급과
-     겹쳤을 수도 있으니 멈추고 알림). config.json 이 없는 디렉터리에서 `openapi test` 가 그대로 도는지는 이 문서 작성 때 실행해 보지 않았다.
-5. **리허설 실행과 엔진 429 확인(읽기만)**: 장 시작 전에 사람이 띄운다.
+4. **확인 — 네트워크 없이 먼저, 그다음 키 시험(review §8 P1-5)**:
+   1. `env | grep -c '^TOSSCTL_OPENAPI_'` → `0`(1 이상이면 G3 가 거부. 그 셸에서 `unset TOSSCTL_OPENAPI_KEY TOSSCTL_OPENAPI_SECRET`).
+   2. `stat -c '%a %F' "$A169_DIR/openapi-credentials.json"` → `600 regular file`.
+   3. **preflight(HTTP 0 · 원장 0)** — 엔진과 다른 키 · 다른 토큰 · 맞는 엔진 프로필을 네트워크 전에 증명한다:
+
+      ```bash
+      go run ./tools/a140-breakout-signal-shadow run --universes a169 --profile-preflight \
+        --openapi-dir "$A169_DIR" --config-dir "$ENGINE_CONFIG_DIR"
+      ```
+
+      `preflight ok: …` 와 rc 0 이 아니면 **여기서 멈춘다**(가드 번호와 경로만 나옴 — 키 값은 안 나옴). 아래 5 의 `openapi test` 는 preflight 통과 뒤에만.
+   4. `stat -c '%y' "$ENGINE_CONFIG_DIR/openapi-token.json"` 을 적어 둔다(엔진 토큰 시각).
+   5. `tossctl --config-dir "$A169_DIR" openapi test` → `ok`. 새 키로 토큰을 받아 `$A169_DIR/openapi-token.json` 에만 쓴다(openapi.go:368~395 — 출력에 키가
+      없음, config 를 load 하지 않음 — review §8 「확인한 것」). 허용 IP 가 빠졌으면 여기서 실패한다.
+   6. 사후 이상 징후(증명 아님): 엔진 토큰 시각을 다시 본다. 바뀌었으면 멈추고 알린다 — 다만 **안 바뀐 것은 아무것도 증명하지 않는다**(엔진이 아직 다시
+      부르지 않았을 수 있음). 키가 다르다는 증명은 3 의 preflight 다.
+5. **리허설 실행 — 감시기가 엔진 rate limit 에 세션을 끊는다(review §8 P1-6)**: 장 시작 전에 사람이 띄운다.
 
    ```bash
+   stat -c '%s' "$ENGINE_CONFIG_DIR/engine.log"   # 시작 크기 START 를 적어 둠
    go run ./tools/a140-breakout-signal-shadow run --universes a169 \
-     --openapi-dir "$A169_DIR" --config-dir ~/.config/tossctl \
+     --openapi-dir "$A169_DIR" --config-dir "$ENGINE_CONFIG_DIR" \
      --evidence-db <도구 전용 새 파일> \
      --out openspec/changes/a169-breakout-universes-are-compared-in-shadow/analysis/rehearsal-ledger
    ```
 
-   세션이 끝나면(마감 + 30 분 뒤) 엔진 로그에서 그 창의 rate limit 줄 수를 센다 — 값 없는 개수만:
-   `docker logs --since <개장 ISO 시각> --until <마감+30분 ISO 시각> <엔진 컨테이너> 2>&1 | grep -ciE 'rate limited|429'`.
-   `429` 는 다른 숫자(시각 · id)에도 걸릴 수 있어 보수 쪽으로 센다 — 0 이 아니면 그 줄을 눈으로 보고 rate limit 인지 가른다(줄을 문서에 붙이지 않음).
-   같은 명령을 도구를 돌리지 않은 직전 세션 창으로 한 번 더 세어 기준선으로 남긴다(로그 보관 기간은 [미측정]). 리허설 원장의 `gap` 행 중
-   `official: rate limited` · `quote reads are suspended` 사유 수도 함께 적는다. 둘 중 하나라도 0 이 아니면 측정하지 않고 Manager 에게 알린다(§7.5).
-   엔진 컨테이너 이름은 `docker ps` 로 확인한다. 이 단계는 로그 읽기뿐 — 컨테이너 · 토글 · 설정은 만지지 않는다.
+   - 도구는 시작 때 `$ENGINE_CONFIG_DIR/engine.log` 를 읽기 전용으로 열고(못 열면 시작 거부), 그 뒤 붙는 줄에서 rate limit 을 보면 즉시 멈추고 원장에
+     `abort` 행을 쓴다(§7.5). 이때 사람은 도구를 다시 띄우지 않는다(같은 날 재시작은 도구가 거부) — Manager 에게 알린다.
+   - 세션 중 한두 번 `stat -c '%s' "$ENGINE_CONFIG_DIR/engine.log"` 가 START 보다 **커지는지** 본다. 장중 내내 안 자라면 엔진이 그 파일에 안 쓰는 것이라
+     감시가 눈멀었다 — 그 세션은 측정에 안 세고 알린다(§7.5 [가정]).
+   - 사후 보조 계수(값 없는 개수만): `tail -c +$((START + 1)) "$ENGINE_CONFIG_DIR/engine.log" | grep -ciE 'rate limited|rate_limited|too many requests|\b429\b'`.
+     0 이 아니면 그 줄을 눈으로 보고 가른다(줄을 문서에 붙이지 않음). 리허설 원장의 `gap` 행 중 `official: rate limited` · `quote reads are suspended` 사유 수도
+     적는다. `abort` 가 있었거나 이 둘 중 하나라도 0 이 아니면 측정하지 않는다(§7.5).
+   - 이 단계는 파일 읽기뿐 — 컨테이너 · 토글 · 설정은 만지지 않는다. 엔진 보유 0 인 날 권장(§12-7)은 보조이고 감시기를 대신하지 않는다.
 6. 끝나면 `$A169_DIR` 는 그대로 둔다(측정 5 세션에 다시 씀). 키를 폐기할 때는 WTS 에서 키를 지우고 `$A169_DIR` 를 지운다.
