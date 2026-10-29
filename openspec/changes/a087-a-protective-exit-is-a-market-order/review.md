@@ -1040,3 +1040,13 @@ OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서만 다뤘다(새 AS
 - 12판은 설계 단계다. a087·a166 구현, 단위/종단/변이 시험, 전체 gate, 실제 공유 admission, 브로커·계좌·실주문은 실행하지 않았다. 운영·`mutating` 명령은 0이다.
 - a166의 wire 관문, 429 수명, 공정성·1초 창 배분은 아직 정의/측정되지 않았다. D15의 nil fail-closed는 이를 숨기지 않지만, P0 활성화 결속을 대신하지 않는다.
 - `impeccable: N/A — backend/documentation-only`. `grill-me`: D-1·D-2 및 Manager 결정을 확정값으로 사용했고 새 사람 결정을 만들지 않았다. `search-first`: 구현·의존성 채택이 아닌 독립 문서/소스 적대 검토라 현재 저장소·a166 OpenSpec·AST만 대조했다.
+
+## 13판 개정 (2026-10-29, Manager 결정 — 12판 재리뷰 FAIL 처분) — **독립 재리뷰 대기**
+
+OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서만 다뤘다(새 AST 0). 소스 · 시험 · 브로커 0.
+
+| 발견 | 13판 처분 | 위치 |
+| --- | --- | --- |
+| P0 a166 의 `send` 단위 admission 후보는 401 재전송 두 wire 를 우회 | 활성화 조건 = a166 이 `doRequest` 의 `c.hc.Do` 직전에서 wire 요청마다 admission 강제(401 재전송 포함, `send` 단위 불가) **그리고** 그 통합 시험이 a166 착지 sha 에 있음. 엔진 배선을 non-nil 로 바꾸는 커밋은 그 시험 이름 · sha 를 인용하는 별도 착지(tasks 5.5). a166 쪽 요구는 issues D-2 ⑦ | design D15.4 · tasks 2.4 · 5.5 · issues D-2 ⑦ |
+
+불변식 4 표(D15.3)는 그대로다(a166 전 전부 0). Function Logic Map: not-applicable — 문서 개정만 했다.
