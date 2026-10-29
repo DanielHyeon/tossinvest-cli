@@ -1050,3 +1050,33 @@ OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서만 다뤘다(새 AS
 | P0 a166 의 `send` 단위 admission 후보는 401 재전송 두 wire 를 우회 | 활성화 조건 = a166 이 `doRequest` 의 `c.hc.Do` 직전에서 wire 요청마다 admission 강제(401 재전송 포함, `send` 단위 불가) **그리고** 그 통합 시험이 a166 착지 sha 에 있음. 엔진 배선을 non-nil 로 바꾸는 커밋은 그 시험 이름 · sha 를 인용하는 별도 착지(tasks 5.5). a166 쪽 요구는 issues D-2 ⑦ | design D15.4 · tasks 2.4 · 5.5 · issues D-2 ⑦ |
 
 불변식 4 표(D15.3)는 그대로다(a166 전 전부 0). Function Logic Map: not-applicable — 문서 개정만 했다.
+
+## 13판 재리뷰 (GPT-5.6 Terra, 2026-10-29)
+
+**결론: proposal-freeze 재리뷰 PASS — Manager 승인 대기.** 12판 P0는 D15.4가 “a166 착지”가 아니라 `doRequest`의 매 wire admission·실제 `official.Client` 통합 시험·그 sha를 인용하는 **별도 5.5 활성화 커밋**으로 바꿔 닫았다. 현재 a166은 아직 이 계약을 갖지 않지만, 그 사이 a087의 admission은 nil이고 하한가 GET은 0이다. 따라서 미완성 a166은 현재 보호 매도를 약화시키지 않는다.
+
+| 심각도 | 발견 | 위치 | 근거 | 처분 제안 |
+| --- | --- | --- | --- | --- |
+| P1 | “비시험 코드의 admission 주입 자리 0”은 목표만 있고, helper 반환값·다른 필드명·옵션 closure를 거친 non-nil 값까지 포함해 어떻게 세는지 정하지 않았다. `admit` 식별자나 특정 필드의 존재 수만 세면 helper 안의 non-nil 주입을 놓치며, 반대로 이름을 바꾼 정상 구현을 오판할 수 있다. | `tasks.md:232-235,268`; `design.md:505,520-524` | 손으로 읽음: 새 갱신기/필드의 구체 API는 아직 없고 task는 “구조 시험 0”만 적는다. AST: 현 `NewContext`와 `Context.ExitObserver`는 새 admission 값을 아직 갖지 않아 현재 source에서 이름 독립 census를 검증할 대상은 없다. | 2.0 Pre-Edit에서 sole refresher constructor와 admission capability의 타입·생성 경로를 고정하고, 2.4 구조 시험은 비시험 Go 파일 전체의 그 constructor/capability 입력을 열거해 **상수 `nil`만** 허용하라. 직접 인자·식별자·selector·helper 반환·옵션 closure를 모두 추적 불가로 분류해 실패시키고, helper로 non-nil을 넘기는 변이를 추가하라. 5.5에서만 이 단언을 실제 a166-owned capability로 바꾼다. |
+| P2 | “생산 동작 변화 0”은 여전히 broker wire·`PlaceIntent` 가격의 무변화로 한정해야 한다. a129은 새 `price_source` 출력 키를 받으므로 nil admission에서도 로그 바이트는 바뀐다. 빈 판에서는 `lower_limit`이 아니라 `observed` 또는 `baseline`이어야 한다. | `design.md:505-506`; `design.md:144-149`; `tasks.md:1568-1571` | AST: 현 `exitOrderLineFor` B1은 관측가가 비면 기준선만 쓰며, 현재 출력에는 `price_source`가 없다. 손으로 읽음: tasks 3.1은 세 출처 값을 golden으로 요구한다. | D15의 “0” 범위를 주문 가격·wire로 명시하고, nil/빈 판 golden에 `price_source ∈ {observed, baseline}` 및 `lower_limit` 부재를 적어 둔다. |
+
+### 확인한 것
+
+- AST: `Client.send`은 최초 `doRequest` 뒤 B4 401 loop에서 최대 두 번 더 `doRequest`를 부른다. `Client.doRequest`의 유일한 transport 호출은 `c.hc.Do`다. D15.4의 `c.hc.Do` 직전·둘째 거절 뒤 셋째 wire 0 요구는 이 실제 분기와 맞고, `send` 입구 한 번의 admission은 명시적으로 배제됐다.
+- 손으로 읽음: 현재 a166은 proposal·tasks·초안 spec delta뿐이며 `doRequest` 삽입/공개 capability/통합 시험을 아직 계약화하지 않았다. 그러나 D15.4·tasks 5.5·issues D-2 ⑦은 그 사실을 활성화 전제로 바꾸고, a166 sha·시험 이름이 없는 커밋에는 non-nil 배선을 허용하지 않는다. 현행 nil은 board 없음 → 오늘 LIMIT이라 fail-closed다.
+- D15.2의 `go/types` 타입 동일성 + `go/constant` 평가값 집합은 action 이름·파일·선언 표기 차이를 보지 않고, `isProtective` 참 값 집합과 질의 집합 및 두 공집합 실패를 비교한다. 11판 P1 존재 검사 함정은 다시 열리지 않았다.
+- 첫 보호 시도 단조 규칙·원장 오류 fail-closed·시작 정숙·가격 사다리/`price_source`의 기존 시험 요구도 D15.4로 완화되지 않았다. D15.3은 admission 전 1~4를 0으로 유지한다.
+- `analysis/evidence/enumerate.py`: `stale=0`. `openspec validate a087-a-protective-exit-is-a-market-order --strict --no-interactive`: 통과.
+
+### a166 착수 시 문서로 옮길 요구
+
+- `official.Client.doRequest`의 매 `c.hc.Do` 직전에 계좌 공유 admission을 한 번 적용한다. `send` 단위 admission은 금지하고 401 재전송도 같은 관문을 지나야 한다.
+- a166-owned, account-keyed admission capability와 a087이 쓰는 `*official.Client` 인스턴스가 동일함을 계약화한다. a087의 별도 preflight가 실제 토큰을 또 소비하거나, 다른/dummy admission이 활성화를 가능하게 해서는 안 된다.
+- 실제 `official.Client` 통합 시험에 401 → 401 → 200의 admission 3회, 둘째 거절 뒤 셋째 `c.hc.Do` 0, 첫 거절의 `c.hc.Do` 0을 고정한다. a087 5.5는 이 시험 이름·착지 sha를 인용한다.
+- 헤더 없는 HTTP 429도 a166 admission 거절로 표현하는 수명·재시작 처분을 계약·시험으로 정한다. 이는 a087에서 제거한 `doRequest` 429 기록의 소유권이다.
+
+### 안 본 것·제한
+
+- 13판은 문서 단계다. a087·a166 구현, unit/통합/변이 시험, 전체 gate, 실제 공유 admission, 브로커·계좌·실주문은 실행하지 않았다. 운영·`mutating` 명령은 0이다.
+- a166의 공유 키·공정성·429 수명·wire 관문은 현재 정의/실측 전이다. 이것들은 5.5 전 a087 nil 기본값을 바꾸지 않지만, 위 a166 요구와 사람 승인 없이는 활성화할 수 없다.
+- `impeccable: N/A — backend/documentation-only`. `grill-me`: D-1·D-2 및 Manager 결정을 확정값으로 사용했고 새 사람 결정을 만들지 않았다. `search-first`: 구현·의존성 채택이 아닌 독립 문서/소스 적대 검토라 현재 저장소·a166 OpenSpec·AST만 대조했다. `ai-memory-retrieval`: 이 세션에는 `memory_query` 등 MCP가 없어 현재 source와 대화 내 결정만 검증에 썼다.
