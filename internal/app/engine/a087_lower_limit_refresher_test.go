@@ -348,3 +348,30 @@ func TestA087PreviousDayRecordDoesNotBlockTodayRefresh(t *testing.T) {
 		t.Fatalf("today record = %+v, exists %t", record, ok)
 	}
 }
+
+func TestA087PreviousDayRecordFailsClosedOnAttemptOrJournalError(t *testing.T) {
+	now := time.Date(2026, 3, 31, 1, 0, 0, 0, time.UTC)
+	for _, tc := range []struct {
+		name     string
+		attempts lowerLimitAttempts
+	}{
+		{"today attempt", a087Attempts(true)},
+		{"journal error", a087FailingAttempts{errors.New("journal unavailable")}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			gate := &a087Admission{}
+			reader := &a087LowerLimitReader{admission: gate, statuses: []int{200}, raw: official.ProtectivePriceLimits{LowerLimitPrice: a087String("50400"), Timestamp: a087String(now.Format(time.RFC3339))}}
+			board := newExitLowerLimitBoard(clock.NewFake(now), reader, a087Positions{{Market: "kr", Symbol: "005930", State: "OPEN"}}, tc.attempts, "acct-a087", gate)
+			board.publish(lowerLimitSnapshot{records: map[string]lowerLimitRecord{lowerLimitKey("kr", "005930"): {price: "50000", timestamp: now.AddDate(0, 0, -1)}}})
+			board.refresh(t.Context(), 5*time.Second)
+			if got := reader.wires.Load(); got != 0 {
+				t.Fatalf("wire GET = %d, want 0", got)
+			}
+			m := managed{position: journal.Position{Market: "kr", Symbol: "005930"}, state: journal.ExitState{Baseline: "49000"}}
+			got := exitLimitPrice(now, m, exitpolicy.Proposal{Action: exitpolicy.ActionBaselineBreach}, "51000", board)
+			if want := (exitLimitChoice{price: "51000", source: exitPriceSourceObserved}); got != want {
+				t.Fatalf("choice = %#v, want %#v", got, want)
+			}
+		})
+	}
+}
