@@ -30,6 +30,7 @@
   — 2026-10-29 재리뷰(GPT) `review.md` §8: **FAIL — P1 4(토큰 바이트 비교 · preflight 순서 · 실시간 엔진 429 차단 · 엔진 경로) · P2 2(경로 정규화 · 엔진 비밀)**.
   — 2026-10-29 **재리뷰 FAIL → 보완 완료(Manager 결정: 토큰 동등 판정 · `--profile-preflight` · 엔진 로그 감시기 · `ENGINE_CONFIG_DIR`), 재리뷰 대기**:
   위치 `review.md` §9, 남긴 것 `issues.md` §5, 새 AST 6(합계 26). `openspec validate --strict` rc=0.
+  — 2026-10-29 **§10 재리뷰 FAIL(P1-8~10) — a166 착지까지 보류(사람 결정 2026-10-29)**. 리허설 · 측정 보류, 재개 조건 `issues.md` §6, 처분 `review.md` §11.
 
 ## 2. 구현 (RED → GREEN → REFACTOR → VERIFY)
 
