@@ -1171,3 +1171,7 @@ OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서만 다뤘다(새 AS
 - 함수 분기표: 두 함수의 B1은 `board == nil || admission == nil`이면 return; non-nil일 때 `cycleComplete`는 채널 select 송신 또는 default, `markProtectiveAttempt`는 거래일 오류면 return, 성공 시 lock/map 기록이다. RED/GREEN과 기존 `TestA087FirstProtectiveAttemptIsMonotonic`, A087 활성 wire 시험이 이를 확인한다. 신규 함수 본문에 한정한 변경이며 관측 겹침 문제는 미해결이다.
 - 1.6: `TestA087RealGatewayLowerLimitAndDormantFallback`은 실 Guardian·Gateway·Trading·official.Client와 httptest를 사용한다. 하한가 50400, 판 없음·창 밖 67900 세 행의 실제 전송 body 전체를 골든과 비교한다(동적 `clientOrderId`는 비어 있지 않음을 별도 확인). 원본 `analysis/20261030-daily-refresh/real-gateway-full-wire-race.log` GREEN. Manager가 시험과 영수증을 수동 검토했다. 실제 broker·live 검증은 아님.
 - `price_source` 로그는 휴면 경로에도 추가되는 관측 정보다. 사용자 승인된 dormant 착지 검토와 별개로 5.4·5.5, 겹침 0, gate ⑤ 형제 증거, 전체 gstack 절차, archive는 미완료다.
+
+## 2026-10-31 D16 문서 정합 검토
+
+Terra 독립 문서 검토에서 보호 우선·대기 정책과 a166 gate의 P1 거절 경계를 수정 후 PASS로 확인했다. a087 scoped OpenSpec 1.4.1 strict 검증과 PM tracker 검사, diff whitespace 검사를 수행했다. 문서 범위 판정이며 코드 시험·gstack 전체 검토·전체 gate 및 운영 검증은 수행하지 않았다. 5.4·5.5 미완료와 admission nil을 유지한다.
