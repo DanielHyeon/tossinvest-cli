@@ -1,0 +1,88 @@
+{
+  "file": "internal/accountbudget/budget_linux.go",
+  "source_sha256": "682c61e9a48e7a2442c5cec01835b1616b8660ed32d4c81856731c58b1708356",
+  "package": "accountbudget",
+  "function": "Close",
+  "receiver": "Budget",
+  "signature": "Budget.Close(params=0, results=1)",
+  "start": {
+    "line": 152,
+    "column": 1
+  },
+  "end": {
+    "line": 160,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 155,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 156,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 159,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 2
+      },
+      "text": "b.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 8
+      },
+      "text": "b.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 9
+      },
+      "text": "unix.Close"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 158,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 154,
+        "column": 2
+      },
+      "text": "b.mu.Unlock"
+    }
+  ]
+}

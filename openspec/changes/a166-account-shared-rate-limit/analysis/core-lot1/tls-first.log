@@ -1,0 +1,6 @@
+--- FAIL: TestTransportOwnsFullBody (0.49s)
+    transport_test.go:67: EOF
+        use of closed network connection
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.961s
+FAIL
