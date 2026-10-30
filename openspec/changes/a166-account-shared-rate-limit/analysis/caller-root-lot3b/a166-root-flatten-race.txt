@@ -1,0 +1,4 @@
+=== RUN   TestA166FlattenBootstrapUsesBorrowedBudget
+--- PASS: TestA166FlattenBootstrapUsesBorrowedBudget (0.48s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	1.523s

@@ -1,0 +1,46 @@
+{
+  "file": "cmd/tossctl/root.go",
+  "source_sha256": "0518c98a96a67e9a85eafc2e7fd6a93937b3bf0166c61327c1c15c1327082cac",
+  "package": "main",
+  "function": "newRootCmd",
+  "signature": "newRootCmd(params=0, results=1)",
+  "start": {
+    "line": 57,
+    "column": 1
+  },
+  "end": {
+    "line": 59,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 9
+      },
+      "text": "newRootCmdWithOptions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 57
+      },
+      "text": "newRootBudgetOwner"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
@@ -18,7 +19,16 @@ func assembleEngine(ctx context.Context, root *rootOptions, clk clock.Clock,
 	if root != nil {
 		configDir = root.configDir
 	}
+	var budget *accountbudgetruntime.Factory
+	if root != nil && root.budgetOwner != nil {
+		var err error
+		budget, err = root.budgetOwner.get(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
 	opts := engine.Options{
+		BudgetFactory:   budget,
 		ConfigDir:       configDir,
 		Clock:           clk,
 		Logger:          logger,
@@ -36,6 +46,9 @@ func assembleEngine(ctx context.Context, root *rootOptions, clk clock.Clock,
 	}
 	if decorate != nil {
 		decorate(&opts)
+	}
+	if root != nil && root.budgetOwner != nil {
+		opts.BudgetFactory = budget
 	}
 	return engine.NewContext(ctx, opts)
 }

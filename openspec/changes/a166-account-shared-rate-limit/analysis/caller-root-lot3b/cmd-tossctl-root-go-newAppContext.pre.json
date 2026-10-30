@@ -1,0 +1,62 @@
+{
+  "file": "cmd/tossctl/root.go",
+  "source_sha256": "6146622f5e142a62e6e58ec1117c534dda57d19ea1de9995f82cba8ebbd94ce9",
+  "package": "main",
+  "function": "newAppContext",
+  "signature": "newAppContext(params=1, results=2)",
+  "start": {
+    "line": 523,
+    "column": 1
+  },
+  "end": {
+    "line": 546,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 530,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 531,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 533,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 524,
+        "column": 16
+      },
+      "text": "tossapp.New"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 524,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

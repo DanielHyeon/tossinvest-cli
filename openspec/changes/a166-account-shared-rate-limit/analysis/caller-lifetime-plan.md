@@ -4,6 +4,8 @@
 
 ## 실행 한 번의 소유자
 
+app.New는 기존 config의 Enabled/prefer 판정 뒤에 공식 client 생성 여부를 정한다. 이 판정을 root에서 중복하지 않는다. app.Options는 해당 분기에서만 호출하는 lazy provider `func() (*accountbudgetruntime.Factory, error)` 하나를 받는다. 기존 New(opts)에 context 인자가 없으므로 root closure가 실제 명령 context를 capture하며 별도의 BudgetContext 옵션을 추가하지 않는다. required 초기화의 context가 없으면 오류로 처리하고 Background 잠금 대기를 추가하지 않는다. nil provider는 기존 OFF 호환이며, 설정된 provider가 nil factory/nil error를 반환하면 오류다. provider 오류를 optional client 없음이나 WTS fallback으로 바꾸지 않는다. 명시 WTS·monitor에서 공식 client를 만들지 않는 경우 factory도 열지 않는다. engine.Options는 borrowed concrete factory를 직접 받는다. 실제 env snapshot은 실행에 고정하되 그 검증 오류는 공식 client가 필요한 지점에서 드러나게 할 수 있다.
+
 CLI의 rootOptions는 factory 하나를 지연 생성해 보유한다. 모든 공식 client builder는 이 객체를 빌려 사용한다. app/engine Options에 주입된 factory는 borrowed이며 Context.Close가 닫지 않는다. 같은 프로세스에서 새 profile/계좌 선택으로 client를 다시 만들더라도 factory를 새로 만들지 않는다. 별도 프로세스는 같은 trusted manifest의 파일 ID를 독립 검증한다.
 
 실행 helper는 root.Execute가 성공하거나 오류로 반환한 뒤 factory Close를 호출하고 그 결과를 반환한다. main의 os.Exit 이전에 종료 처리가 끝나야 한다. Cobra PersistentPostRun은 오류 시 호출되지 않을 수 있으므로 유일한 종료 경계로 쓰지 않는다. 기존 newRootCmd의 이름과 반환 타입은 보존하고, 명시 rootOptions를 받는 생성 함수로 실행 helper와 모든 하위 명령이 같은 소유자를 사용한다. Close 오류가 없으면 기존 실행 오류 객체/출력 의미를 유지하고, Close도 실패하면 errors.Join으로 두 오류를 보존한다. 기존 redaction과 종료 코드 정책은 유지한다.

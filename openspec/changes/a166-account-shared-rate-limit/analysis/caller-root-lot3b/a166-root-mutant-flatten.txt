@@ -1,0 +1,5 @@
+--- FAIL: TestA166FlattenBootstrapUsesBorrowedBudget (0.39s)
+    a166_root_budget_test.go:297: flatten bootstrap bypass: flatten-all: the account could not be identified: official: server error
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.401s
+FAIL

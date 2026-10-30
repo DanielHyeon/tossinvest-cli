@@ -1,0 +1,231 @@
+{
+  "file": "cmd/tossctl/monitor.go",
+  "source_sha256": "86cafcbda651cb8d3da0d215c5ce8a1839591f8824c7a365a78848b7a8949602",
+  "package": "main",
+  "function": "newMonitorCmd",
+  "signature": "newMonitorCmd(params=1, results=1)",
+  "start": {
+    "line": 13,
+    "column": 1
+  },
+  "end": {
+    "line": 48,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 26,
+        "column": 4
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 29,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 35,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 36,
+        "column": 5
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 27,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 30,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 38,
+        "column": 6
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 41,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 47,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 16,
+        "column": 10
+      },
+      "text": "i18n.T"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 16
+      },
+      "text": "i18n.T"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 16
+      },
+      "text": "i18n.T"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 16
+      },
+      "text": "newAppContextWithBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 12
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 15
+      },
+      "text": "runMonitor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 26
+      },
+      "text": "cmd.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 4
+      },
+      "text": "printResults"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 17
+      },
+      "text": "cmd.OutOrStdout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 36
+      },
+      "text": "cmd.OutOrStderr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 2
+      },
+      "text": "BoolVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 2
+      },
+      "text": "apiCmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 2
+      },
+      "text": "cmd.AddCommand"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 14,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 19,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 25,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 33,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 37,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

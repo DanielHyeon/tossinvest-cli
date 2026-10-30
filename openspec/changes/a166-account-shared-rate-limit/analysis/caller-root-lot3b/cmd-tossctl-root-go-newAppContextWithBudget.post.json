@@ -1,0 +1,107 @@
+{
+  "file": "cmd/tossctl/root.go",
+  "source_sha256": "0518c98a96a67e9a85eafc2e7fd6a93937b3bf0166c61327c1c15c1327082cac",
+  "package": "main",
+  "function": "newAppContextWithBudget",
+  "signature": "newAppContextWithBudget(params=2, results=2)",
+  "start": {
+    "line": 536,
+    "column": 1
+  },
+  "end": {
+    "line": 569,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 538,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 540,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 553,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 541,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 543,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 554,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 556,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 543,
+        "column": 11
+      },
+      "text": "opts.budgetOwner.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 546,
+        "column": 16
+      },
+      "text": "tossapp.New"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 539,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 546,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

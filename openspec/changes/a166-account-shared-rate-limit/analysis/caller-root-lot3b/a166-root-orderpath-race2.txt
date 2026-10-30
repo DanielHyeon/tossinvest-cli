@@ -1,0 +1,6 @@
+=== RUN   TestA166OrderPathUsesBorrowedFactoryBeforeBootstrap
+--- PASS: TestA166OrderPathUsesBorrowedFactoryBeforeBootstrap (0.48s)
+=== RUN   TestA166OrderPathFixtureOverrideHasNoAuthority
+--- PASS: TestA166OrderPathFixtureOverrideHasNoAuthority (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	1.498s

@@ -1,0 +1,427 @@
+{
+  "file": "internal/app/app.go",
+  "source_sha256": "e9cdd710ab0607656be237e7c897c37978944ed0d2b5241a7526b500b654162f",
+  "package": "app",
+  "function": "New",
+  "signature": "New(params=1, results=2)",
+  "start": {
+    "line": 87,
+    "column": 1
+  },
+  "end": {
+    "line": 162,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 122,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 131,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 90,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 95,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 101,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 108,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 118,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 123,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 127,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 17
+      },
+      "text": "output.ParseFormat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 16
+      },
+      "text": "ResolvePaths"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 11
+      },
+      "text": "session.NewFileStore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 15
+      },
+      "text": "store.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 26
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 20
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 17
+      },
+      "text": "auth.DefaultLoginConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 19
+      },
+      "text": "config.NewService"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 14
+      },
+      "text": "configService.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 33
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 15
+      },
+      "text": "tossclient.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 17
+      },
+      "text": "ResolveBackend"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 30
+      },
+      "text": "ResolveOpenAPIPaths"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 16
+      },
+      "text": "official.LoadCredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 9
+      },
+      "text": "official.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 7
+      },
+      "text": "hybrid.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 13
+      },
+      "text": "orderlineage.NewService"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 16
+      },
+      "text": "auth.NewService"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 19
+      },
+      "text": "WithConditional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 19
+      },
+      "text": "WithLineage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 19
+      },
+      "text": "trading.NewService"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 51
+      },
+      "text": "h.Broker"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 98,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 104,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 125,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 132,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

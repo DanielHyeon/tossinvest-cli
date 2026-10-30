@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/i18n"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/monitor"
@@ -23,7 +22,7 @@ func newMonitorCmd(opts *rootOptions) *cobra.Command {
 		Annotations: map[string]string{"source": "wts"},
 		Long:        i18n.T("monitor.api.long"),
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			app, err := newAppContext(opts)
+			app, err := newAppContextWithBudget(opts, false)
 			if err != nil {
 				return err
 			}
@@ -31,11 +30,12 @@ func newMonitorCmd(opts *rootOptions) *cobra.Command {
 				return errors.New("no active session; run `tossctl auth login` first")
 			}
 
-			results := monitor.Run(cmd.Context(), app.session)
+			results := runMonitor(cmd.Context(), app.session)
 			printResults(cmd.OutOrStdout(), cmd.OutOrStderr(), results, monitorQuiet)
 			for _, r := range results {
 				if !r.OK {
-					os.Exit(1)
+					cmd.SilenceErrors = true
+					return errMonitorFailed
 				}
 			}
 			return nil
@@ -46,6 +46,8 @@ func newMonitorCmd(opts *rootOptions) *cobra.Command {
 	cmd.AddCommand(apiCmd)
 	return cmd
 }
+
+var runMonitor = monitor.Run
 
 var monitorQuiet bool
 

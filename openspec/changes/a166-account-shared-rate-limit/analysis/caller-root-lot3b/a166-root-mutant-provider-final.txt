@@ -1,0 +1,6 @@
+--- FAIL: TestA166AppBudgetProviderFollowsRouting (0.00s)
+    --- FAIL: TestA166AppBudgetProviderFollowsRouting/official (0.00s)
+        a166_budget_provider_test.go:28: wanted fail closed calls=0 err=<nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app	0.005s
+FAIL

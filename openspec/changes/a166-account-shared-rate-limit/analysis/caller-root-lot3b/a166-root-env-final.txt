@@ -1,0 +1,4 @@
+=== RUN   TestA166RootBudgetEnvMatrix
+--- PASS: TestA166RootBudgetEnvMatrix (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.010s

@@ -1,0 +1,80 @@
+=== RUN   TestA166RootBudgetEnvMatrix
+--- PASS: TestA166RootBudgetEnvMatrix (0.00s)
+=== RUN   TestA166RootFactoryConcurrentReuseAndClose
+--- PASS: TestA166RootFactoryConcurrentReuseAndClose (0.39s)
+=== RUN   TestA166RootFailureCanRetry
+--- PASS: TestA166RootFailureCanRetry (0.02s)
+=== RUN   TestA166ExecuteClosesOnSuccessAndFailure
+Usage:
+  test [flags]
+
+Flags:
+  -h, --help   help for test
+
+--- PASS: TestA166ExecuteClosesOnSuccessAndFailure (0.03s)
+=== RUN   TestA166RootWaitHonorsContext
+--- PASS: TestA166RootWaitHonorsContext (0.02s)
+=== RUN   TestA166ExecutePreservesCommandAndCloseErrors
+--- PASS: TestA166ExecutePreservesCommandAndCloseErrors (0.38s)
+=== RUN   TestA166MonitorSentinelIsSilent
+--- PASS: TestA166MonitorSentinelIsSilent (0.00s)
+=== RUN   TestA166RootCachedFactoryRejectsCanceledContext
+--- PASS: TestA166RootCachedFactoryRejectsCanceledContext (0.02s)
+=== RUN   TestA166EngineAndFlattenRequiredMissingFailBeforeBootstrap
+--- PASS: TestA166EngineAndFlattenRequiredMissingFailBeforeBootstrap (0.00s)
+=== RUN   TestA166RootEnvSnapshot
+--- PASS: TestA166RootEnvSnapshot (0.00s)
+=== RUN   TestA166FlattenBootstrapUsesBorrowedBudget
+--- PASS: TestA166FlattenBootstrapUsesBorrowedBudget (0.48s)
+=== RUN   TestA166MonitorFailureOutputAndNoBudgetOpen
+--- PASS: TestA166MonitorFailureOutputAndNoBudgetOpen (0.01s)
+=== RUN   TestA166MonitorMainExitOne
+--- PASS: TestA166MonitorMainExitOne (0.05s)
+=== RUN   TestA166EngineDecoratorCannotRemoveRequiredBudget
+--- PASS: TestA166EngineDecoratorCannotRemoveRequiredBudget (0.68s)
+=== RUN   TestA166DirectAppBuilderMissingContextFailsClosed
+--- PASS: TestA166DirectAppBuilderMissingContextFailsClosed (0.02s)
+=== RUN   TestA166CanceledRequiredStartupNoWire
+--- PASS: TestA166CanceledRequiredStartupNoWire (0.01s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	3.139s
+=== RUN   TestA166AppBudgetProviderFollowsRouting
+=== RUN   TestA166AppBudgetProviderFollowsRouting/wts
+=== RUN   TestA166AppBudgetProviderFollowsRouting/disabled
+=== RUN   TestA166AppBudgetProviderFollowsRouting/official
+--- PASS: TestA166AppBudgetProviderFollowsRouting (0.00s)
+    --- PASS: TestA166AppBudgetProviderFollowsRouting/wts (0.00s)
+    --- PASS: TestA166AppBudgetProviderFollowsRouting/disabled (0.00s)
+    --- PASS: TestA166AppBudgetProviderFollowsRouting/official (0.00s)
+=== RUN   TestA166AppNilFactoryIsError
+--- PASS: TestA166AppNilFactoryIsError (0.00s)
+=== RUN   TestNewOfficialClientTruthTable
+=== RUN   TestNewOfficialClientTruthTable/creds+enabled+auto
+=== RUN   TestNewOfficialClientTruthTable/creds+enabled+openapi
+=== RUN   TestNewOfficialClientTruthTable/creds+enabled+wts
+=== RUN   TestNewOfficialClientTruthTable/creds+disabled+auto
+=== RUN   TestNewOfficialClientTruthTable/nocreds+enabled+auto
+=== RUN   TestNewOfficialClientTruthTable/nocreds+enabled+openapi
+=== RUN   TestNewOfficialClientTruthTable/backend_flag_beats_prefer_wts
+=== RUN   TestNewOfficialClientTruthTable/backend_flag_wts_beats_prefer_auto
+--- PASS: TestNewOfficialClientTruthTable (0.01s)
+    --- PASS: TestNewOfficialClientTruthTable/creds+enabled+auto (0.00s)
+    --- PASS: TestNewOfficialClientTruthTable/creds+enabled+openapi (0.00s)
+    --- PASS: TestNewOfficialClientTruthTable/creds+enabled+wts (0.00s)
+    --- PASS: TestNewOfficialClientTruthTable/creds+disabled+auto (0.00s)
+    --- PASS: TestNewOfficialClientTruthTable/nocreds+enabled+auto (0.00s)
+    --- PASS: TestNewOfficialClientTruthTable/nocreds+enabled+openapi (0.00s)
+    --- PASS: TestNewOfficialClientTruthTable/backend_flag_beats_prefer_wts (0.00s)
+    --- PASS: TestNewOfficialClientTruthTable/backend_flag_wts_beats_prefer_auto (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app	1.026s
+=== RUN   TestA166OrderPathUsesBorrowedFactoryBeforeBootstrap
+--- PASS: TestA166OrderPathUsesBorrowedFactoryBeforeBootstrap (0.48s)
+=== RUN   TestA166OrderPathFixtureOverrideHasNoAuthority
+--- PASS: TestA166OrderPathFixtureOverrideHasNoAuthority (0.00s)
+=== RUN   TestContextExposesNoRawMutator
+--- PASS: TestContextExposesNoRawMutator (0.00s)
+=== RUN   TestContextOfficialIsReadOnly
+--- PASS: TestContextOfficialIsReadOnly (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	1.502s

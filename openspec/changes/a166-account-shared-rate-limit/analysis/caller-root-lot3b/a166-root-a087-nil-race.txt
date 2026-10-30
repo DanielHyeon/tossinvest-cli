@@ -1,0 +1,4 @@
+=== RUN   TestA087ProductionBoardAdmissionFlowIsOnlyLiteralNil
+--- PASS: TestA087ProductionBoardAdmissionFlowIsOnlyLiteralNil (3.52s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	4.544s

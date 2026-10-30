@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
 	tossapp "github.com/JungHoonGhae/tossinvest-cli/internal/app"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/auth"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
@@ -29,10 +31,13 @@ import (
 )
 
 type rootOptions struct {
-	outputFormat string
-	configDir    string
-	sessionFile  string
-	backend      string // --backend flag: overrides cfg.OpenAPI.Prefer for this run
+	budgetOwner     *rootBudgetOwner
+	budgetContext   context.Context
+	officialOptions []official.Option
+	outputFormat    string
+	configDir       string
+	sessionFile     string
+	backend         string // --backend flag: overrides cfg.OpenAPI.Prefer for this run
 }
 
 type appContext struct {
@@ -50,7 +55,10 @@ type appContext struct {
 }
 
 func newRootCmd() *cobra.Command {
-	opts := &rootOptions{}
+	return newRootCmdWithOptions(&rootOptions{budgetOwner: newRootBudgetOwner(os.LookupEnv, os.Stderr)})
+}
+
+func newRootCmdWithOptions(opts *rootOptions) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:          "tossctl",
@@ -58,6 +66,7 @@ func newRootCmd() *cobra.Command {
 		Long:         i18n.T("root.long"),
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			opts.budgetContext = cmd.Context()
 			format, err := output.ParseFormat(opts.outputFormat)
 			if err != nil {
 				return err
@@ -521,11 +530,25 @@ func humanizeDuration(d time.Duration) string {
 // app.config, and renaming those call sites across the CLI would be a much
 // larger diff than this mapping — with no behaviour change to show for it.
 func newAppContext(opts *rootOptions) (*appContext, error) {
+	return newAppContextWithBudget(opts, true)
+}
+
+func newAppContextWithBudget(opts *rootOptions, enabled bool) (*appContext, error) {
+	var provider func() (*accountbudgetruntime.Factory, error)
+	if enabled && opts.budgetOwner != nil {
+		provider = func() (*accountbudgetruntime.Factory, error) {
+			if opts.budgetContext == nil {
+				return nil, accountbudget.ErrUnavailable
+			}
+			return opts.budgetOwner.get(opts.budgetContext)
+		}
+	}
 	built, err := tossapp.New(tossapp.Options{
-		OutputFormat: opts.outputFormat,
-		ConfigDir:    opts.configDir,
-		SessionFile:  opts.sessionFile,
-		Backend:      opts.backend,
+		BudgetProvider: provider,
+		OutputFormat:   opts.outputFormat,
+		ConfigDir:      opts.configDir,
+		SessionFile:    opts.sessionFile,
+		Backend:        opts.backend,
 	})
 	if err != nil {
 		return nil, err
