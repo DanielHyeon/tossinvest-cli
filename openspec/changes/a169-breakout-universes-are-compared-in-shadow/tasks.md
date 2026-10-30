@@ -62,5 +62,5 @@
 전체 1.3 재동결과 측정은 보류한다. 아래는 기존 승인 정책의 순수 계산만 독립 검토한 제한 freeze다. `analysis/selection-core-plan.md`와 검토 기록 참조.
 
 - [x] P1 U0/U1·유형 순수 로트 설계 및 독립 검토, Manager 제한 READY. HTTP/CLI/원장/기존 함수 배선 없음.
-- [ ] P2 신규 순수 함수 RED/GREEN·변이·선택 normal/tagged race·gstack 범위 리뷰.
+- [x] P2 신규 순수 함수 RED/GREEN·변이·선택 normal/tagged race·gstack 범위 리뷰 — `analysis/selection-core-lot/review.md`.
 - [ ] P3 독립 검증·Manager 판정 뒤 commit/merge/push. a169 archive 및 측정 없음.
