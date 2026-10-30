@@ -13,3 +13,5 @@ Aux 최초 허가 거절 token/GET0과 token이 이미 나간 뒤 GET0은 분리
 정본 design/tasks는 a166 API·actual client 인계와 a087 D16/5.5·a169의 실제 소비자 연결을 분리했다. 독립 설계 P1 해소 후 구현했으며 소비자 후속 작업을 삭제하지 않았다. 함께 보존한 a169 draft/research/review는 미해결 fence·신원·영속 abort를 명시하며 freeze 전이다.
 
 작성자 gstack은 수동 API/오류/수명 범위 checklist, 독립 리뷰는 별도다. 새 의존성·기존 함수 본문 변경 없음, impeccable N/A — backend/documentation-only. 전체 tests/gate·실제 broker/계좌·운영 전환·최신 CodeGraph 검증은 미실행. 최신 main enginepoll과 통합한 뒤 정확 영향 선택과 scoped a166/a169 strict·PM·diff를 확인해 Terra가 정상 게시한다. 최종 wire census와 사람4.2는 남아 archive하지 않는다.
+
+게시 후 갱신: consumer는 `d9827f316`로 enginepoll과 합성한 정확 선택 normal/tagged race·scoped strict/PM/diff를 통과해 게시됐다. 구조 census도 `7d68c9ef6`로 게시됐다. 당시 남았던 개발 단계가 해소됐음을 인계표에 반영하며 운영·활성화·사람 확인 경계는 그대로다. 새 코드나 시험 재실행은 없다.
