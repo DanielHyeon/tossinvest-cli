@@ -36,6 +36,7 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"golang.org/x/term"
@@ -61,6 +62,7 @@ type deps struct {
 	stdinIsTerminal func() bool
 	openClient      func(configDir string) (headerSource, string, error)
 	sendTimeout     time.Duration
+	prepareBudget   func(context.Context, string) (*accountbudgetruntime.Factory, *accountbudget.Budget, *official.Client, error)
 	budgetRequired  bool
 	budget          *accountbudget.Budget
 	budgetClient    *official.Client
@@ -71,7 +73,12 @@ type deps struct {
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	mode, modeSet := os.LookupEnv("TOSSOS_ACCOUNT_BUDGET_MODE")
+	manifest, manifestSet := os.LookupEnv("TOSSOS_ACCOUNT_BUDGET_MANIFEST")
 	code, err := run(ctx, os.Args[1:], deps{
+		prepareBudget: func(ctx context.Context, dir string) (*accountbudgetruntime.Factory, *accountbudget.Budget, *official.Client, error) {
+			return prepareProbeBudget(ctx, dir, mode, modeSet, manifest, manifestSet)
+		},
 		now:             time.Now,
 		random:          newRandom(),
 		stdout:          os.Stdout,
@@ -187,7 +194,7 @@ func preview(o options, d deps) (int, error) {
 
 // execute 의 순서가 안전 계약임: 로컬 판정 전부 → 자격증명·헤더 → 배타 영수증 → 단 1회 전송 → 최종 영수증.
 // 전송 앞의 어느 단계든 실패하면 아무것도 보내지 않음.
-func execute(ctx context.Context, o options, d deps) (int, error) {
+func execute(ctx context.Context, o options, d deps) (code int, outErr error) {
 	// TTY 검사는 우발 실행 방지임 — pty 래퍼로 통과되므로 "사람만 실행" 의 증명이 아님(3차 재리뷰 B-P3-1).
 	// 에이전트 차단은 권한 체계·안전 불변식 2 가 맡음.
 	if !d.stdinIsTerminal() {
@@ -216,6 +223,25 @@ func execute(ctx context.Context, o options, d deps) (int, error) {
 		return exitError, fmt.Errorf("checking the receipt path (nothing was sent): %w", err)
 	}
 
+	if d.prepareBudget != nil {
+		factory, budget, client, err := d.prepareBudget(ctx, o.configDir)
+		if err != nil {
+			return exitError, err
+		}
+		defer func() {
+			if err := factory.Close(); err != nil {
+				outErr = errors.Join(outErr, err)
+				if code == exitOK {
+					code = exitError
+				}
+			}
+		}()
+		if budget != nil {
+			d.budgetRequired, d.budget, d.budgetClient = true, budget, client
+			d.budgetCleanup = func(error) { fmt.Fprintln(os.Stderr, "budget cleanup failed") }
+		}
+	}
+
 	var source headerSource
 	var baseURL string
 	var sendClient *http.Client
@@ -228,7 +254,7 @@ func execute(ctx context.Context, o options, d deps) (int, error) {
 			return exitError, err
 		}
 		source, baseURL = d.budgetClient, d.budgetClient.BaseURL()
-		ctx = accountbudget.WithPriority(ctx, accountbudget.Critical)
+		ctx = accountbudget.WithPriority(ctx, accountbudget.Normal)
 	} else {
 		source, baseURL, err = d.openClient(o.configDir)
 		if err != nil {
@@ -297,4 +323,39 @@ func printOutcome(w io.Writer, r receipt, path string, writeErr error) {
 		return
 	}
 	fmt.Fprintf(w, "receipt: %s\n", path)
+}
+
+func prepareProbeBudget(ctx context.Context, dir, mode string, modeSet bool, manifest string, manifestSet bool) (*accountbudgetruntime.Factory, *accountbudget.Budget, *official.Client, error) {
+	cfg, err := accountbudgetruntime.ParseLaunchConfig(mode, modeSet, manifest, manifestSet)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	cfg.CleanupError = func(error) { fmt.Fprintln(os.Stderr, "budget cleanup failed") }
+	f, err := accountbudgetruntime.Open(ctx, cfg)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	budget, err := f.Budget()
+	if err != nil {
+		return nil, nil, nil, errors.Join(err, f.Close())
+	}
+	if budget == nil {
+		return f, nil, nil, nil
+	}
+	credentialFile, tokenFile, err := apppaths.OpenAPI(dir)
+	if err != nil {
+		return nil, nil, nil, errors.Join(err, f.Close())
+	}
+	credentials, err := official.LoadCredentials(os.Getenv, credentialFile)
+	if err != nil {
+		return nil, nil, nil, errors.Join(err, f.Close())
+	}
+	if credentials == nil {
+		return nil, nil, nil, errors.Join(errors.New("no Open API credentials; run `tossctl openapi login` first"), f.Close())
+	}
+	client, err := f.NewClient(*credentials, tokenFile)
+	if err != nil {
+		return nil, nil, nil, errors.Join(err, f.Close())
+	}
+	return f, budget, client, nil
 }

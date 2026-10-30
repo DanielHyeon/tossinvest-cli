@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -26,9 +27,18 @@ func main() {
 	cfg.before = []byte(*before)
 	ctx, stop := signal.NotifyContext(context.Background(), measurementSignals()...)
 	defer stop()
-	if err := run(ctx, cfg, newProductionDependencies(cfg)); err != nil {
+	if err := runProduction(ctx, cfg); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
 	fmt.Println("A112 M-B1 receipt sealed; independent review and Manager PASS are still required")
+}
+
+func runProduction(ctx context.Context, cfg config) (result error) {
+	deps, factory, err := openProductionDependencies(ctx, cfg)
+	if err != nil {
+		return err
+	}
+	defer func() { result = errors.Join(result, factory.Close()) }()
+	return run(ctx, cfg, deps)
 }

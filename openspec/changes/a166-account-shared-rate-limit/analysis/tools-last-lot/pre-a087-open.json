@@ -1,0 +1,154 @@
+{
+  "file": "tools/a087-market-sell-probe/main.go",
+  "source_sha256": "9a5d66fd55930d57561412cfadadd0f413039f41f0c8c6ece55f7a4348a4a399",
+  "package": "main",
+  "function": "openOfficial",
+  "signature": "openOfficial(params=1, results=3)",
+  "start": {
+    "line": 90,
+    "column": 1
+  },
+  "end": {
+    "line": 104,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 93,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 97,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 100,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 36
+      },
+      "text": "apppaths.OpenAPI"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 19
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 22
+      },
+      "text": "official.LoadCredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 19
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 19
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 12
+      },
+      "text": "official.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 17
+      },
+      "text": "client.BaseURL"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

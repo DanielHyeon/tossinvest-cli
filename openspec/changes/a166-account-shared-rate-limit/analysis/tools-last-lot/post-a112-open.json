@@ -1,0 +1,183 @@
+{
+  "file": "tools/a112-mb-us-source/official_reader.go",
+  "source_sha256": "1882880a60a81f775741254e60e87525eddf878f59adf7e4e9eb0278c4c8dbe7",
+  "package": "main",
+  "function": "openProductionDependencies",
+  "signature": "openProductionDependencies(params=2, results=3)",
+  "start": {
+    "line": 20,
+    "column": 1
+  },
+  "end": {
+    "line": 37,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 24,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 29,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 25,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 30,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 34,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 19
+      },
+      "text": "os.LookupEnv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 22,
+        "column": 27
+      },
+      "text": "os.LookupEnv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 15
+      },
+      "text": "accountbudgetruntime.ParseLaunchConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 36
+      },
+      "text": "fmt.Fprintln"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 18
+      },
+      "text": "accountbudgetruntime.Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 17
+      },
+      "text": "factory.NewClient"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 31
+      },
+      "text": "errors.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 48
+      },
+      "text": "factory.Close"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 21,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 22,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 23,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 27,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 32,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

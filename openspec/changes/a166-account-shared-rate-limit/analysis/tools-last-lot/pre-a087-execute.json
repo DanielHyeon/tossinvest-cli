@@ -1,0 +1,724 @@
+{
+  "file": "tools/a087-market-sell-probe/main.go",
+  "source_sha256": "9a5d66fd55930d57561412cfadadd0f413039f41f0c8c6ece55f7a4348a4a399",
+  "package": "main",
+  "function": "execute",
+  "signature": "execute(params=3, results=2)",
+  "start": {
+    "line": 190,
+    "column": 1
+  },
+  "end": {
+    "line": 275,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 193,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 202,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 205,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 209,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 213,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "else",
+      "at": {
+        "line": 215,
+        "column": 9
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 215,
+        "column": 9
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 222,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "else",
+      "at": {
+        "line": 232,
+        "column": 9
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 223,
+        "column": 3
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 227,
+        "column": 3
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 234,
+        "column": 3
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 240,
+        "column": 2
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 243,
+        "column": 2
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    },
+    {
+      "id": "B17",
+      "kind": "if",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    },
+    {
+      "id": "B18",
+      "kind": "if",
+      "at": {
+        "line": 255,
+        "column": 2
+      }
+    },
+    {
+      "id": "B19",
+      "kind": "if",
+      "at": {
+        "line": 264,
+        "column": 2
+      }
+    },
+    {
+      "id": "B20",
+      "kind": "switch",
+      "at": {
+        "line": 267,
+        "column": 2
+      }
+    },
+    {
+      "id": "B21",
+      "kind": "case",
+      "at": {
+        "line": 268,
+        "column": 2
+      }
+    },
+    {
+      "id": "B22",
+      "kind": "case",
+      "at": {
+        "line": 270,
+        "column": 2
+      }
+    },
+    {
+      "id": "B23",
+      "kind": "case",
+      "at": {
+        "line": 272,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 194,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 199,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 203,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 206,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 210,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 214,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 216,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 224,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 228,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 235,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 241,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 244,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 247,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 251,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 256,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 265,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 269,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 271,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 273,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 6
+      },
+      "text": "d.stdinIsTerminal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 21
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 13
+      },
+      "text": "splitConfirmToken"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 16
+      },
+      "text": "assembleOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 30
+      },
+      "text": "specFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 12
+      },
+      "text": "verifyConfirm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 44
+      },
+      "text": "d.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 14
+      },
+      "text": "filepath.Abs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 10
+      },
+      "text": "receiptPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 15
+      },
+      "text": "os.Lstat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 13
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 21
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 77
+      },
+      "text": "d.budgetClient.UsesAccountBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 21
+      },
+      "text": "newBudgetedSendClient"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 37
+      },
+      "text": "d.budgetClient.BaseURL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 9
+      },
+      "text": "accountbudget.WithPriority"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 26
+      },
+      "text": "d.openClient"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 16
+      },
+      "text": "newSendClient"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 18
+      },
+      "text": "source.AuthHeaders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 21
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 26
+      },
+      "text": "d.budgetClient.UsesAccountBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 14
+      },
+      "text": "buildRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 13
+      },
+      "text": "newPendingReceipt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 49
+      },
+      "text": "d.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 58
+      },
+      "text": "headerNames"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 12
+      },
+      "text": "createPendingReceipt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 256,
+        "column": 21
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 12
+      },
+      "text": "sendOnce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 11
+      },
+      "text": "completeReceipt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 14
+      },
+      "text": "finalizeReceipt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 263,
+        "column": 2
+      },
+      "text": "printOutcome"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 23
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 197,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 201,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 205,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 208,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 213,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 226,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 230,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 231,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 233,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 237,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 249,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 254,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 255,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 259,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 261,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 262,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

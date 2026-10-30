@@ -1,0 +1,196 @@
+{
+  "file": "tools/a087-market-sell-probe/main.go",
+  "source_sha256": "0176e57ae45436626e6456635f12ac855706c4d5ff5e57873e3f853d363199cf",
+  "package": "main",
+  "function": "main",
+  "signature": "main(params=0, results=0)",
+  "start": {
+    "line": 73,
+    "column": 1
+  },
+  "end": {
+    "line": 93,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 80,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 85,
+        "column": 34
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 15
+      },
+      "text": "signal.NotifyContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 36
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 8
+      },
+      "text": "stop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 19
+      },
+      "text": "os.LookupEnv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 27
+      },
+      "text": "os.LookupEnv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 15
+      },
+      "text": "run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 11
+      },
+      "text": "prepareProbeBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 20
+      },
+      "text": "newRandom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 41
+      },
+      "text": "term.IsTerminal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 57
+      },
+      "text": "int"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 61
+      },
+      "text": "os.Stdin.Fd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 3
+      },
+      "text": "fmt.Fprintln"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 54
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 2
+      },
+      "text": "os.Exit"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 75,
+        "column": 2
+      },
+      "text": "stop"
+    }
+  ]
+}

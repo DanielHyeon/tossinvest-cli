@@ -1,0 +1,256 @@
+{
+  "file": "tools/a112-mb-us-source/cli.go",
+  "source_sha256": "3ea36e0a85a563e1248a62dd6dc00148fbf5acc53bafe86cf9f3caf13a2cbc8c",
+  "package": "main",
+  "function": "main",
+  "signature": "main(params=0, results=0)",
+  "start": {
+    "line": 12,
+    "column": 1
+  },
+  "end": {
+    "line": 35,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 23,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 30,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 14,
+        "column": 11
+      },
+      "text": "flag.NewFlagSet"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 15,
+        "column": 2
+      },
+      "text": "flags.StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 16,
+        "column": 2
+      },
+      "text": "flags.StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 17,
+        "column": 2
+      },
+      "text": "flags.StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 18,
+        "column": 2
+      },
+      "text": "flags.StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 12
+      },
+      "text": "flags.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 20,
+        "column": 6
+      },
+      "text": "flags.Parse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 22,
+        "column": 2
+      },
+      "text": "flags.Visit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 24,
+        "column": 3
+      },
+      "text": "fmt.Fprintln"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 3
+      },
+      "text": "os.Exit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 15
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 15
+      },
+      "text": "signal.NotifyContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 36
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 58
+      },
+      "text": "measurementSignals"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 8
+      },
+      "text": "stop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 12
+      },
+      "text": "runProduction"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 3
+      },
+      "text": "fmt.Fprintln"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 3
+      },
+      "text": "os.Exit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 2
+      },
+      "text": "fmt.Println"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 14,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 19,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 20,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 21,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 22,
+        "column": 38
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 27,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 30,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 29,
+        "column": 2
+      },
+      "text": "stop"
+    }
+  ]
+}
