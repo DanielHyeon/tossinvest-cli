@@ -1,0 +1,8 @@
+--- FAIL: TestA166UsesAccountBudgetBinding (0.03s)
+    --- FAIL: TestA166UsesAccountBudgetBinding/token_missing (0.00s)
+        a166_binding_test.go:44: binding after drift = true
+    --- FAIL: TestA166UsesAccountBudgetBinding/token_client_drift (0.00s)
+        a166_binding_test.go:44: binding after drift = true
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.037s
+FAIL

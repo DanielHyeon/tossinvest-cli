@@ -1,0 +1,6 @@
+--- FAIL: TestA166TokenPrewriteIdentity (0.01s)
+    a166_admission_test.go:187: lost token prewrite identity: official: transport error: Post "https://openapi.tossinvest.com/oauth2/token": account budget: request not sent
+        context canceled
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.017s
+FAIL

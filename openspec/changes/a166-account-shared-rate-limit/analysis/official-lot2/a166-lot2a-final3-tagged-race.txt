@@ -1,0 +1,23 @@
+=== RUN   TestA166A112CloneSharesBudget
+    a112_mbus_a166_test.go:36: dialtls=false dial=false next=false tls=false
+--- PASS: TestA166A112CloneSharesBudget (0.50s)
+=== RUN   TestA166RequiredBudgetMissing
+--- PASS: TestA166RequiredBudgetMissing (0.00s)
+=== RUN   TestA166AuthorityAndClientIsolation
+--- PASS: TestA166AuthorityAndClientIsolation (0.01s)
+=== RUN   TestA166ActualClientToken401Redirect
+--- PASS: TestA166ActualClientToken401Redirect (1.93s)
+=== RUN   TestA166CanceledPrewriteIdentity
+--- PASS: TestA166CanceledPrewriteIdentity (0.02s)
+=== RUN   TestA166RejectsNilClient
+--- PASS: TestA166RejectsNilClient (0.01s)
+=== RUN   TestA166OffErrorContract
+--- PASS: TestA166OffErrorContract (0.00s)
+=== RUN   TestA166TokenPrewriteIdentity
+--- PASS: TestA166TokenPrewriteIdentity (0.03s)
+=== RUN   TestA166Prior401IsNotErasedByLaterPrewriteError
+--- PASS: TestA166Prior401IsNotErasedByLaterPrewriteError (0.39s)
+=== RUN   TestA166RequiredCleanupMissing
+--- PASS: TestA166RequiredCleanupMissing (0.01s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	3.937s

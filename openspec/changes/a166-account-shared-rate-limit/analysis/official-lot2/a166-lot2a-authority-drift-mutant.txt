@@ -1,0 +1,8 @@
+--- FAIL: TestA166AuthorityRejectsEnforcingTransportDrift (0.03s)
+    --- FAIL: TestA166AuthorityRejectsEnforcingTransportDrift/raw_original (0.00s)
+        a166_admission_test.go:254: drift restored authority
+    --- FAIL: TestA166AuthorityRejectsEnforcingTransportDrift/missing_both_raw (0.00s)
+        a166_admission_test.go:254: drift restored authority
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.030s
+FAIL

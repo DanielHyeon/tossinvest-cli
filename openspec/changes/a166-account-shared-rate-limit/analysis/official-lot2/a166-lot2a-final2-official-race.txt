@@ -1,0 +1,143 @@
+=== RUN   TestA166A112CloneSharesBudget
+    a112_mbus_a166_test.go:36: dialtls=false dial=false next=false tls=false
+--- PASS: TestA166A112CloneSharesBudget (0.51s)
+=== RUN   TestA112MBUSCandlePreservesOneAttemptRawEvidenceAndWireHeaders
+--- PASS: TestA112MBUSCandlePreservesOneAttemptRawEvidenceAndWireHeaders (0.01s)
+=== RUN   TestA112MBUSRejectsDeadlineAndConfiguredClientBeforeDataGET
+--- PASS: TestA112MBUSRejectsDeadlineAndConfiguredClientBeforeDataGET (0.00s)
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_absent
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_empty
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_number
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_object
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_array
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/duplicate_rate
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/unauthorized
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/forbidden
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/429
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/server_error
+--- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry (0.08s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_absent (0.01s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_empty (0.01s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_number (0.01s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_object (0.01s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_array (0.01s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/duplicate_rate (0.01s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/unauthorized (0.01s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/forbidden (0.01s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/429 (0.01s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/server_error (0.01s)
+=== RUN   TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8
+=== RUN   TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8/duplicate_top_level_result
+=== RUN   TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8/duplicate_payload_nextBefore
+=== RUN   TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8/invalid_UTF-8_source
+--- PASS: TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8 (0.02s)
+    --- PASS: TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8/duplicate_top_level_result (0.01s)
+    --- PASS: TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8/duplicate_payload_nextBefore (0.01s)
+    --- PASS: TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8/invalid_UTF-8_source (0.01s)
+=== RUN   TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates
+=== RUN   TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates/unpaired_high_surrogate
+=== RUN   TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates/unpaired_low_surrogate
+=== RUN   TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates/misordered_low_then_high_surrogate
+=== RUN   TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates/valid_surrogate_pair
+--- PASS: TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates (0.03s)
+    --- PASS: TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates/unpaired_high_surrogate (0.01s)
+    --- PASS: TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates/unpaired_low_surrogate (0.01s)
+    --- PASS: TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates/misordered_low_then_high_surrogate (0.01s)
+    --- PASS: TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates/valid_surrogate_pair (0.01s)
+=== RUN   TestA112MBUSRejectsCrossClientTokenManagerBinding
+--- PASS: TestA112MBUSRejectsCrossClientTokenManagerBinding (0.00s)
+=== RUN   TestA112MBUSRejectsInvalidInitialCursorBeforeRequest
+--- PASS: TestA112MBUSRejectsInvalidInitialCursorBeforeRequest (0.00s)
+=== RUN   TestA112MBUSOrderbookAndCalendarRejectMissingOrNullResult
+=== RUN   TestA112MBUSOrderbookAndCalendarRejectMissingOrNullResult/{}
+=== RUN   TestA112MBUSOrderbookAndCalendarRejectMissingOrNullResult/{"result":null}
+--- PASS: TestA112MBUSOrderbookAndCalendarRejectMissingOrNullResult (0.02s)
+    --- PASS: TestA112MBUSOrderbookAndCalendarRejectMissingOrNullResult/{} (0.01s)
+    --- PASS: TestA112MBUSOrderbookAndCalendarRejectMissingOrNullResult/{"result":null} (0.01s)
+=== RUN   TestA112MBUSExactOrderbookAndCalendarDescriptors
+--- PASS: TestA112MBUSExactOrderbookAndCalendarDescriptors (0.01s)
+=== RUN   TestA112MBUSDoesNotWidenRawMinuteCandlesUSRefusal
+--- PASS: TestA112MBUSDoesNotWidenRawMinuteCandlesUSRefusal (0.00s)
+=== RUN   TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold
+=== RUN   TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold/cursor_bytes_percent_encoded_once
+=== RUN   TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold/unexpected_gzip
+=== RUN   TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold/unexpected_br
+=== RUN   TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold/chunked_limit_plus_one
+--- PASS: TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold (0.07s)
+    --- PASS: TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold/cursor_bytes_percent_encoded_once (0.01s)
+    --- PASS: TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold/unexpected_gzip (0.01s)
+    --- PASS: TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold/unexpected_br (0.01s)
+    --- PASS: TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold/chunked_limit_plus_one (0.05s)
+=== RUN   TestA112MBUSRedirectAndUnsafeCacheHoldBeforeRetry
+--- PASS: TestA112MBUSRedirectAndUnsafeCacheHoldBeforeRetry (0.01s)
+=== RUN   TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET
+=== RUN   TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET/cache_miss
+=== RUN   TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET/expired
+=== RUN   TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET/symlink_leaf
+=== RUN   TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET/symlink_ancestor
+--- PASS: TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET (0.01s)
+    --- PASS: TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET/cache_miss (0.00s)
+    --- PASS: TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET/expired (0.01s)
+    --- PASS: TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET/symlink_leaf (0.00s)
+    --- PASS: TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET/symlink_ancestor (0.00s)
+=== RUN   TestA112MBUSStaticNoProductCallerOrForbiddenPath
+--- PASS: TestA112MBUSStaticNoProductCallerOrForbiddenPath (4.52s)
+=== RUN   TestA112MBUSResolvedASTGuardCatchesProductSelectorAndTypeReference
+--- PASS: TestA112MBUSResolvedASTGuardCatchesProductSelectorAndTypeReference (0.00s)
+=== RUN   TestA112MBUSResolvedASTGuardCatchesSamePackageUnqualifiedReference
+--- PASS: TestA112MBUSResolvedASTGuardCatchesSamePackageUnqualifiedReference (0.00s)
+=== RUN   TestA112MBUSResolvedASTGuardIgnoresUnrelatedOfficialPackageLocal
+--- PASS: TestA112MBUSResolvedASTGuardIgnoresUnrelatedOfficialPackageLocal (0.00s)
+=== RUN   TestA112MBUSClonedTransportNeverCallsConfiguredProxy
+--- PASS: TestA112MBUSClonedTransportNeverCallsConfiguredProxy (0.01s)
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/2097152
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/2097153
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_valid
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_missing_limit
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_missing_remaining
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_missing_reset
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_malformed
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_negative
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_zero_limit
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_success_retry-after
+--- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix (0.17s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/2097152 (0.16s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/2097153 (0.01s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_valid (0.00s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_missing_limit (0.00s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_missing_remaining (0.00s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_missing_reset (0.00s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_malformed (0.00s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_negative (0.00s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_zero_limit (0.00s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_success_retry-after (0.00s)
+=== RUN   TestA112MBUSClockSkewAndDeadlineBoundariesArePrivate
+--- PASS: TestA112MBUSClockSkewAndDeadlineBoundariesArePrivate (0.00s)
+=== RUN   TestA112MBUSReadAtUsesPrivateClockOnlyForDeadlineAndTokenValidation
+--- PASS: TestA112MBUSReadAtUsesPrivateClockOnlyForDeadlineAndTokenValidation (0.01s)
+=== RUN   TestA166RequiredBudgetMissing
+--- PASS: TestA166RequiredBudgetMissing (0.00s)
+=== RUN   TestA166AuthorityAndClientIsolation
+--- PASS: TestA166AuthorityAndClientIsolation (0.02s)
+=== RUN   TestA166ActualClientToken401Redirect
+--- PASS: TestA166ActualClientToken401Redirect (2.00s)
+=== RUN   TestA166CanceledPrewriteIdentity
+--- PASS: TestA166CanceledPrewriteIdentity (0.02s)
+=== RUN   TestA166RejectsNilClient
+--- PASS: TestA166RejectsNilClient (0.02s)
+=== RUN   TestA166OffErrorContract
+--- PASS: TestA166OffErrorContract (0.00s)
+=== RUN   TestA166TokenPrewriteIdentity
+--- PASS: TestA166TokenPrewriteIdentity (0.02s)
+=== RUN   TestAuthorityOriginRejectsConfiguredTransport
+--- PASS: TestAuthorityOriginRejectsConfiguredTransport (0.00s)
+=== RUN   TestClientConfigurationCannotBeMutatedByRetainedOptionPointer
+--- PASS: TestClientConfigurationCannotBeMutatedByRetainedOptionPointer (0.00s)
+=== RUN   TestClientConfigurationOptionReplayIsRaceFreeAndFailClosed
+--- PASS: TestClientConfigurationOptionReplayIsRaceFreeAndFailClosed (0.00s)
+=== RUN   TestAttemptTracePublicSurfaceIsReadOnly
+--- PASS: TestAttemptTracePublicSurfaceIsReadOnly (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	8.598s
