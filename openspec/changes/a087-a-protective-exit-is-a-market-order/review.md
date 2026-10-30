@@ -1150,3 +1150,7 @@ OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서만 다뤘다(새 AS
 - P1 활성화 차단: D12.2(`design.md:265-284`)는 관측 `/prices`와 GET 겹침 0을 요구한다. 손으로 읽음: `exit_lower_limit.go:142-149,176-180,191,221`은 토큰 생성 시점이 아닌 소비 시점부터 timeout을 주므로 지연 토큰이 다음 관측과 겹칠 수 있다. 동기화 방식은 Manager 설계 판단을 기다린다. production admission nil 유지, 5.5 활성화 금지.
 - `analysis/evidence/enumerate.py`의 이전 설계 증거는 소스 파일 hash 기준 stale 14; 이는 현재 구현 FLM 번들과 별도다. 기존 base→착지 창의 378개 형제 함수 증거 누락은 해결되지 않았다. base 변경이나 landing 기록은 하지 않았다.
 - gstack 범위 checklist와 독립 Terra 수동 리뷰를 수행했다. 독립 리뷰는 수정 분기의 새 안전 결함을 발견하지 않았고 원장 기시도·오류 조합 시험 공백을 지적했다. 해당 조합은 `TestA087PreviousDayRecordFailsClosedOnAttemptOrJournalError`의 GET 0·관측가 fallback 시험으로 확인했다 (`analysis/20261030-daily-refresh/combination-race.log`). Claude·Codex 독립 음성은 실행하지 않아 gstack skill 전체 절차 및 최종 gate는 미완료다. 5.4 사람 실측과 5.5 활성화 미실행, archive·운영 완료 아님. `impeccable: N/A — backend/documentation-only`.
+
+### 2026-10-31 실제 게이트 종단 시험
+
+`TestA087RealGatewayLowerLimitAndDormantFallback`은 테스트 전용 판 주입과 nil 판을 각각 실제 RiskGuardian → Gateway → Trading → official.Client → httptest 수신까지 연결한다. KR 정규장 하한가 50400, 판 없음 67900, 정규장 밖 67900의 LIMIT SELL wire를 검증했다. `go test -race -count=1 -run '^TestA087RealGatewayLowerLimitAndDormantFallback$' ./internal/app/engine` 통과, 영수증 `analysis/20261030-daily-refresh/real-gateway-race.log`. 실제 주문·운영 설정 변경 없음. 지연 토큰 겹침과 5.4·5.5는 여전히 차단이며 task 전체 완료를 주장하지 않는다. 별도 독립 검토 미완료.
