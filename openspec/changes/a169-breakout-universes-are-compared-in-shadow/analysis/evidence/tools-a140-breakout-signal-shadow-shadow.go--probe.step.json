@@ -1,0 +1,217 @@
+{
+  "file": "tools/a140-breakout-signal-shadow/shadow.go",
+  "source_sha256": "62c2fe84d04026f1f398a01cb97b270880c82f1f355ad0a6b2841ccb59e62de1",
+  "package": "main",
+  "function": "step",
+  "receiver": "probe",
+  "signature": "probe.step(params=1, results=1)",
+  "start": {
+    "line": 314,
+    "column": 1
+  },
+  "end": {
+    "line": 336,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 317,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 318,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 321,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 324,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 327,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 332,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 319,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 328,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 333,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 335,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 315,
+        "column": 13
+      },
+      "text": "p.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 318,
+        "column": 13
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 7
+      },
+      "text": "Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 7
+      },
+      "text": "p.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 13
+      },
+      "text": "p.stepSymbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 15
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 15
+      },
+      "text": "p.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 332,
+        "column": 5
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 332,
+        "column": 5
+      },
+      "text": "p.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 10
+      },
+      "text": "p.writeBudget"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 315,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 316,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 318,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 327,
+        "column": 6
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 331,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

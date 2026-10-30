@@ -1,0 +1,101 @@
+{
+  "file": "cmd/tossctl/engine.go",
+  "source_sha256": "753594c5667be708ea24c213901ac51fa0cc3052f11a83f71cbb162333356ee0",
+  "package": "main",
+  "function": "engineJournalDir",
+  "signature": "engineJournalDir(params=1, results=2)",
+  "start": {
+    "line": 185,
+    "column": 1
+  },
+  "end": {
+    "line": 194,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 186,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 190,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 187,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 191,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 193,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 20
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 15
+      },
+      "text": "journal.DefaultPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 9
+      },
+      "text": "filepath.Dir"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 189,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

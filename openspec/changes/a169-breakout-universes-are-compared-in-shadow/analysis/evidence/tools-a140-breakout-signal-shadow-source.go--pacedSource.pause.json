@@ -1,0 +1,63 @@
+{
+  "file": "tools/a140-breakout-signal-shadow/source.go",
+  "source_sha256": "85c8bef9911f08375b270459f037ab4dc50f6665529178aa707c6b571f5f1b8a",
+  "package": "main",
+  "function": "pause",
+  "receiver": "pacedSource",
+  "signature": "pacedSource.pause(params=2, results=1)",
+  "start": {
+    "line": 77,
+    "column": 1
+  },
+  "end": {
+    "line": 82,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 79,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 10
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 9
+      },
+      "text": "p.sleep"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}
