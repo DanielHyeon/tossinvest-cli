@@ -1,0 +1,16 @@
+--- FAIL: TestA166ObservationDiskFaults (2.89s)
+    --- FAIL: TestA166ObservationDiskFaults/marker-sync (0.44s)
+        observation_store_test.go:270: dirty state accepted
+    --- FAIL: TestA166ObservationDiskFaults/state-write (0.41s)
+        observation_store_test.go:270: dirty state accepted
+    --- FAIL: TestA166ObservationDiskFaults/state-sync (0.40s)
+        observation_store_test.go:270: dirty state accepted
+    --- FAIL: TestA166ObservationDiskFaults/rename (0.41s)
+        observation_store_test.go:270: dirty state accepted
+    --- FAIL: TestA166ObservationDiskFaults/directory-before (0.40s)
+        observation_store_test.go:270: dirty state accepted
+    --- FAIL: TestA166ObservationDiskFaults/directory-after-rename (0.41s)
+        observation_store_test.go:270: dirty state accepted
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	2.894s
+FAIL

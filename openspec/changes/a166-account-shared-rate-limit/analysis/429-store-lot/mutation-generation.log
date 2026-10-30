@@ -1,0 +1,5 @@
+--- FAIL: TestA166ObservationSnapshotGenerationRace (0.48s)
+    observation_store_test.go:527: generation drift accepted: <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.482s
+FAIL

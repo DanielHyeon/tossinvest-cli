@@ -1,0 +1,5 @@
+--- FAIL: TestA166ObservationBeginCancellationDuringSync (0.41s)
+    observation_store_test.go:650: cancel hidden: <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.414s
+FAIL

@@ -433,11 +433,13 @@ func (b *Budget) persist(s queueState, dead []string) error {
 }
 
 type Lease struct {
-	b          *Budget
-	wire       *os.File
-	mu         sync.Mutex
-	released   bool
-	releaseErr error
+	b                   *Budget
+	wire                *os.File
+	mu                  sync.Mutex
+	released            bool
+	releaseErr          error
+	observationStarted  bool
+	observationSequence uint64
 }
 
 func (l *Lease) Release() error {

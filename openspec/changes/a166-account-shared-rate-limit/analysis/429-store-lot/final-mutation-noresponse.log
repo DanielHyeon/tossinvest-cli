@@ -1,0 +1,6 @@
+--- FAIL: TestA166ObservationFinishContextAndNoResponse (0.46s)
+    observation_store_test.go:200: account budget unavailable
+        invalid completion presence
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.463s
+FAIL

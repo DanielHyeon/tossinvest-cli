@@ -1,0 +1,5 @@
+--- FAIL: TestA166ObservationRootAndLockSafety (0.03s)
+    observation_store_test.go:414: wrong event inode accepted
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.037s
+FAIL

@@ -1,0 +1,5 @@
+--- FAIL: TestA166ObservationReservesFinishGeneration (0.43s)
+    observation_store_test.go:881: Begin exhausted Finish generation
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.429s
+FAIL
