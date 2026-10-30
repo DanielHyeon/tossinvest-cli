@@ -30,7 +30,7 @@
 
 ## 3. 호출자·폴링·설정
 
-- [ ] 3.1 사전 FLM/BTM과 RED: critical 의존 사슬, normal/auxiliary, 모든 config/profile의 명시 같은 예산 결속, enforcing 누락 wire0.
+- [ ] 3.1 사전 FLM/BTM과 RED: critical 의존 사슬, normal/auxiliary, 모든 config/profile의 단일 공통 group 결속. trusted launch manifest의 예상 root/queue/wire device·inode/instance 검증, marker 복사 root와 required 누락은 bootstrap wire0. 여러 credentials/accounts도 그룹 총량 안에서 기존 계좌 선택을 유지한다(`analysis/budget-group-binding.md`).
 - [ ] 3.2 GREEN: 앱·엔진·flatten·CLI·console·soak·verify·프로브 배선. 실제 운영 env/toggle 변경 없음.
 - [ ] 3.3 RED/GREEN: 모든 429 이벤트, 엔진 폴링 같은 조회 재시도 금지, 유효 ≤30s hint 범위·복원·invalid/초과 처리. 비지연 walk와 POST 판정 보존.
 - [ ] 3.4 retry matrix와 코드 동시 정합화. a087·a169 후속 계약과 통합 시험 SHA 목록 작성. a087 production admission nil 유지.
