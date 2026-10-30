@@ -37,23 +37,26 @@ const (
 
 // judgmentRow — 판단 행. 모든 필드는 공개 시장 데이터 또는 질문·모델 메타뿐임.
 type judgmentRow struct {
-	Schema         string  `json:"schema"`
-	Kind           string  `json:"kind"`
-	ID             string  `json:"id"`
-	At             string  `json:"at"`
-	Market         string  `json:"market"`
-	Symbol         string  `json:"symbol"`
-	QuestionID     string  `json:"question_id"`
-	QuestionRev    string  `json:"question_rev"`
-	QuestionDigest string  `json:"question_digest"`
-	ModelRequested string  `json:"model_requested"`
-	ModelAnswered  string  `json:"model_answered"`
-	StateDigest    string  `json:"state_digest"`
-	P              float64 `json:"p"`
-	BasePrice      float64 `json:"base_price"`
-	Currency       string  `json:"currency"`
-	HorizonMinutes int     `json:"horizon_minutes"`
-	LabelDueAt     string  `json:"label_due_at"`
+	Schema            string  `json:"schema"`
+	Kind              string  `json:"kind"`
+	ID                string  `json:"id"`
+	At                string  `json:"at"`
+	Market            string  `json:"market"`
+	Symbol            string  `json:"symbol"`
+	QuestionID        string  `json:"question_id"`
+	QuestionRev       string  `json:"question_rev"`
+	QuestionDigest    string  `json:"question_digest"`
+	ModelRequested    string  `json:"model_requested"`
+	ModelAnswered     string  `json:"model_answered"`
+	StateDigest       string  `json:"state_digest"`
+	SourceStateDigest string  `json:"source_state_digest,omitempty"`
+	InputProfile      string  `json:"input_profile,omitempty"`
+	Cohort            string  `json:"cohort,omitempty"`
+	P                 float64 `json:"p"`
+	BasePrice         float64 `json:"base_price"`
+	Currency          string  `json:"currency"`
+	HorizonMinutes    int     `json:"horizon_minutes"`
+	LabelDueAt        string  `json:"label_due_at"`
 	// InputTokens 는 요청 단위 값임 — 한 요청이 질문 수만큼 행을 만들므로(s3 까지 J1·J2 = 2, s4 부터 J1~J4 = 4)
 	// 행 합산은 비용을 그 배수로 셈. 요청 단위 비용은 (at, symbol, state_digest) 로 묶어 한 번만 셀 것.
 	InputTokens    int      `json:"input_tokens"`
@@ -80,13 +83,16 @@ type labelRow struct {
 
 // gapRow — 판단 행을 만들지 못한 결손.
 type gapRow struct {
-	Schema string `json:"schema"`
-	Kind   string `json:"kind"`
-	At     string `json:"at"`
-	Market string `json:"market"`
-	Stage  string `json:"stage"`
-	Symbol string `json:"symbol,omitempty"`
-	Reason string `json:"reason"`
+	Schema            string `json:"schema"`
+	Kind              string `json:"kind"`
+	At                string `json:"at"`
+	Market            string `json:"market"`
+	Stage             string `json:"stage"`
+	Symbol            string `json:"symbol,omitempty"`
+	Reason            string `json:"reason"`
+	SourceStateDigest string `json:"source_state_digest,omitempty"`
+	InputProfile      string `json:"input_profile,omitempty"`
+	Cohort            string `json:"cohort,omitempty"`
 }
 
 // ledger 는 여러 고루틴(시장별 수집 + 라벨러)이 함께 쓰므로 한 줄 쓰기를 잠금으로 묶음.

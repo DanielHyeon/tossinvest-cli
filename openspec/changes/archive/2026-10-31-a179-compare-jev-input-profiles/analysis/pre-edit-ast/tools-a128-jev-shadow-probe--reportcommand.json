@@ -1,0 +1,184 @@
+{
+  "file": "tools/a128-jev-shadow-probe/main.go",
+  "source_sha256": "b26186169dff18bc930095f35a0b42a800ba559a695b0d553143db2353acbe47",
+  "package": "main",
+  "function": "reportCommand",
+  "signature": "reportCommand(params=2, results=1)",
+  "start": {
+    "line": 211,
+    "column": 1
+  },
+  "end": {
+    "line": 225,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 214,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 218,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 215,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 219,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 224,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 11
+      },
+      "text": "flag.NewFlagSet"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 16
+      },
+      "text": "flags.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 39
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 12
+      },
+      "text": "flags.Parse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 19
+      },
+      "text": "readLedger"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 26
+      },
+      "text": "readStateMinutes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 43
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 57
+      },
+      "text": "filepath.Dir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 11
+      },
+      "text": "io.WriteString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 34
+      },
+      "text": "renderCalibrationReport"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 213,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 214,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 217,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 222,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
