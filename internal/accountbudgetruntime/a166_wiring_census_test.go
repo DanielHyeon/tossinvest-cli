@@ -101,11 +101,11 @@ func wiringInspect(root string, c wiringCorpus, overrides map[string][]byte) err
 			if walkErr != nil {
 				return walkErr
 			}
-			if d.IsDir() || !strings.HasSuffix(d.Name(), ".go") || strings.HasSuffix(d.Name(), "_test.go") {
-				return nil
-			}
 			if d.Type()&os.ModeSymlink != 0 {
 				return fmt.Errorf("source symlink: %s", full)
+			}
+			if d.IsDir() || !strings.HasSuffix(d.Name(), ".go") || strings.HasSuffix(d.Name(), "_test.go") {
+				return nil
 			}
 			rel, e := filepath.Rel(root, full)
 			if e != nil {
@@ -343,5 +343,21 @@ func TestA166WiringCensusRejectsBypasses(t *testing.T) {
 			}
 			t.Logf("source-copy mutation rejected: %v", err)
 		})
+	}
+}
+
+func TestA166WiringCensusRejectsDirectorySymlink(t *testing.T) {
+	root := t.TempDir()
+	for _, dir := range []string{"cmd", "internal", "tools"} {
+		if err := os.Mkdir(filepath.Join(root, dir), 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.Symlink(t.TempDir(), filepath.Join(root, "cmd", "linked-directory")); err != nil {
+		t.Fatal(err)
+	}
+	err := wiringInspect(root, wiringCorpus{}, nil)
+	if err == nil || !strings.Contains(err.Error(), "source symlink:") {
+		t.Fatalf("directory symlink was not rejected: %v", err)
 	}
 }
