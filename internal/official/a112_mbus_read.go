@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"time"
 	"unicode/utf8"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
 )
 
 // A112MBUSResult is one opaque, bounded measurement response. It is only for
@@ -144,8 +146,16 @@ func a112MBUSReadAt(ctx context.Context, client *Client, descriptor a112MBUSDesc
 	// An empty slice suppresses net/http's default Go user agent on the wire.
 	req.Header["User-Agent"] = nil
 
+	var requestTransport http.RoundTripper = transport
+	if client.budget != nil {
+		wrapped, err := accountbudget.NewTransport(client.budget, transport, client.budgetCleanup)
+		if err != nil {
+			return A112MBUSResult{}, a112MBUSHoldf("account budget: %v", err)
+		}
+		requestTransport = wrapped
+	}
 	hc := &http.Client{
-		Transport: transport,
+		Transport: requestTransport,
 		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 			return errors.New("a112 measurement redirects are refused")
 		},

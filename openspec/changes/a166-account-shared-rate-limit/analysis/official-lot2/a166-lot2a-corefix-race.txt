@@ -1,0 +1,7 @@
+=== RUN   TestA166AuthorityAndClientIsolation
+--- PASS: TestA166AuthorityAndClientIsolation (0.02s)
+=== RUN   TestA166A112CloneSharesBudget
+    a166_admission_test.go:181: dialtls=false dial=false next=false tls=false
+--- PASS: TestA166A112CloneSharesBudget (0.50s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	1.528s

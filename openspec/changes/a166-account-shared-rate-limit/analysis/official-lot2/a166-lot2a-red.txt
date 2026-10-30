@@ -1,0 +1,4 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/official [github.com/JungHoonGhae/tossinvest-cli/internal/official.test]
+internal/official/a166_admission_test.go:11:12: undefined: NewWithAccountBudget
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official [build failed]
+FAIL

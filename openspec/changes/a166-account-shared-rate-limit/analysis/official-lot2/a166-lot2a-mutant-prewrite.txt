@@ -1,0 +1,6 @@
+--- FAIL: TestA166CanceledPrewriteIdentity (0.01s)
+    a166_admission_test.go:148: lost prewrite evidence: official: transport error: Get "https://example.invalid/": account budget: request not sent
+        context canceled
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.018s
+FAIL

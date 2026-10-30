@@ -1,0 +1,6 @@
+--- FAIL: TestA166A112CloneSharesBudget (0.39s)
+    a112_mbus_a166_test.go:36: dialtls=false dial=false next=false tls=false
+    a112_mbus_a166_test.go:42: clone escaped shared budget: a112 m-b us measurement hold: one-shot GET: Get "https://openapi.tossinvest.com/api/v1/candles?adjusted=false&count=200&interval=1m&symbol=AAPL": test dial refused
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.390s
+FAIL
