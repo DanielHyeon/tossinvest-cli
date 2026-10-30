@@ -40,6 +40,7 @@ type Client struct {
 	budget             *accountbudget.Budget
 	budgetTransport    *accountbudget.Transport
 	budgetCleanup      func(error)
+	budgetEnforced     bool
 	// mu serializes unresolved account discovery and validates later public
 	// discovery against an implicit selection. accountsLocked requires it and
 	// may perform the /accounts HTTP request while held.
@@ -169,8 +170,11 @@ func (c *Client) hcTransport() (*http.Transport, bool) {
 	if c.hc == nil {
 		return nil, false
 	}
-	if c.budgetTransport != nil && c.budget != nil && c.hc.Transport == c.budgetTransport {
-		return c.authorityTransport, c.authorityOrigin && c.authorityTransport != nil
+	if c.budgetEnforced || c.budget != nil || c.budgetTransport != nil {
+		if c.budgetEnforced && c.budget != nil && c.budgetTransport != nil && c.hc.Transport == c.budgetTransport {
+			return c.authorityTransport, c.authorityOrigin && c.authorityTransport != nil
+		}
+		return nil, false
 	}
 	transport, ok := c.hc.Transport.(*http.Transport)
 	return transport, ok

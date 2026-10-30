@@ -1,16 +1,16 @@
 {
   "file": "internal/official/client.go",
-  "source_sha256": "d48b80a63c34abf8b0f372a818cff0b1b208e9418fda76ddc0e4b92620ac3e53",
+  "source_sha256": "85220792224bfc75dc9d8d475e0392c683e02fec5769048685495b4ca38c43ec",
   "package": "official",
   "function": "doRequest",
   "receiver": "Client",
   "signature": "Client.doRequest(params=1, results=3)",
   "start": {
-    "line": 199,
+    "line": 203,
     "column": 1
   },
   "end": {
-    "line": 218,
+    "line": 222,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 202,
+        "line": 206,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 204,
+        "line": 208,
         "column": 3
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 212,
+        "line": 216,
         "column": 2
       }
     }
@@ -43,28 +43,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 205,
+        "line": 209,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 207,
+        "line": 211,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 214,
+        "line": 218,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 217,
+        "line": 221,
         "column": 2
       }
     }
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 200,
+        "line": 204,
         "column": 13
       },
       "text": "time.Now"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 201,
+        "line": 205,
         "column": 15
       },
       "text": "c.hc.Do"
@@ -89,34 +89,10 @@
     {
       "kind": "call",
       "at": {
-        "line": 203,
+        "line": 207,
         "column": 3
       },
       "text": "observeAttempt"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 203,
-        "column": 18
-      },
-      "text": "req.Context"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 203,
-        "column": 87
-      },
-      "text": "time.Now"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 205,
-        "column": 19
-      },
-      "text": "fmt.Errorf"
     },
     {
       "kind": "call",
@@ -124,68 +100,12 @@
         "line": 207,
         "column": 18
       },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 209,
-        "column": 8
-      },
-      "text": "resp.Body.Close"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 210,
-        "column": 2
-      },
-      "text": "c.rates.record"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 210,
-        "column": 17
-      },
-      "text": "readRateBudget"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 210,
-        "column": 59
-      },
-      "text": "time.Now"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 211,
-        "column": 15
-      },
-      "text": "io.ReadAll"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 213,
-        "column": 3
-      },
-      "text": "observeAttempt"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 213,
-        "column": 18
-      },
       "text": "req.Context"
     },
     {
       "kind": "call",
       "at": {
-        "line": 213,
+        "line": 207,
         "column": 87
       },
       "text": "time.Now"
@@ -193,7 +113,87 @@
     {
       "kind": "call",
       "at": {
+        "line": 209,
+        "column": 19
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 18
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 8
+      },
+      "text": "resp.Body.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
         "line": 214,
+        "column": 2
+      },
+      "text": "c.rates.record"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 17
+      },
+      "text": "readRateBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 59
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 15
+      },
+      "text": "io.ReadAll"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 3
+      },
+      "text": "observeAttempt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 18
+      },
+      "text": "req.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 87
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
         "column": 32
       },
       "text": "fmt.Errorf"
@@ -201,7 +201,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 216,
+        "line": 220,
         "column": 2
       },
       "text": "observeAttempt"
@@ -209,7 +209,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 216,
+        "line": 220,
         "column": 17
       },
       "text": "req.Context"
@@ -217,7 +217,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 216,
+        "line": 220,
         "column": 86
       },
       "text": "time.Now"
@@ -225,7 +225,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 216,
+        "line": 220,
         "column": 133
       },
       "text": "append"
@@ -233,7 +233,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 216,
+        "line": 220,
         "column": 140
       }
     }
@@ -242,21 +242,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 200,
+        "line": 204,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 201,
+        "line": 205,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 211,
+        "line": 215,
         "column": 2
       }
     }
@@ -266,7 +266,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 209,
+        "line": 213,
         "column": 2
       },
       "text": "resp.Body.Close"

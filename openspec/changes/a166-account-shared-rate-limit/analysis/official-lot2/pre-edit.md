@@ -20,3 +20,7 @@ core draft `abaa22aaa`에서 시작해 후보 `dc149bc51`, 수정 `cbf53d452`를
 테스트 원문은 이 디렉터리의 `a166-lot2a-*.txt`에 보존했다. 최초 normal 정규식의 official `[no tests to run]`은 미실행이며 corrected 파일만 통과 근거다. 중간 a112 guard 실패 원문 두 파일은 실수로 재실행 출력에 덮여 보존하지 못했다. 이후 실행별 고유 파일을 사용했다. 모든 테스트는 local fake 또는 임시 디렉터리이며 live broker 호출 없음.
 
 수동 gstack 범위 검토: 권한/외부 override 경계, 오류 identity, token client alias, a112 clone, body와 기존 OFF 분기·사용자 입력/비밀 출력, 테스트 효과를 검토했다. 전체 mixed-model gstack 절차와 독립 검증은 미실행이다. replay/probe·전 생산 호출자 구조·429 이벤트 및 폴링은 후속 lot2b/3; tasks 2.1–2.5는 완료로 체크하지 않는다. 실제 wire 집계 및 운영 활성화는 검증하지 않았다.
+
+## private authority drift 수정
+
+Manager가 enforcing 중 wrapper 교체 후 raw constructor transport fallback으로 권한이 복원될 수 있는 private 봉인 계약 위반을 지적했다. 공개 악용 경로를 주장하지 않는다. `hcTransport`는 enforcing 표지가 있거나 budget 관련 필드가 있으면 정확한 표지·budget·wrapper 결속만 승인하고 나머지는 false를 반환한다. 독립 enforcing 표지는 두 budget 필드가 함께 손상돼도 OFF fallback으로 오인하지 않기 위해 필요하다. 정상 OFF 직접 transport fallback은 보존한다. RED는 raw 원본 복원에서 실패했고 수정 후 다른 wrapper·일부/양쪽 필드 누락 및 raw 복원, 정상 wrapper와 OFF를 포함해 통과했다. 기존 fallback 복원 변이는 두 갈래에서 검출됐다. 정상·태그 scoped race 원문은 `a166-lot2a-drift-*.txt`다.

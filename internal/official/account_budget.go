@@ -30,6 +30,7 @@ func NewWithAccountBudget(creds Credentials, cacheFile string, budget *accountbu
 	hc.Transport = wrapped
 	c.hc = &hc
 	c.tm.hc = c.hc
+	c.budgetEnforced = true
 	c.budget = budget
 	c.budgetTransport = wrapped
 	c.budgetCleanup = cleanup

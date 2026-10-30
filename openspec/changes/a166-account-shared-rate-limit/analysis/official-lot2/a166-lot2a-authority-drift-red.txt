@@ -1,0 +1,14 @@
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift/raw_original
+    a166_admission_test.go:250: drift restored authority
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift/other_wrapper
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift/missing_budget
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift/missing_wrapper
+--- FAIL: TestA166AuthorityRejectsEnforcingTransportDrift (0.01s)
+    --- FAIL: TestA166AuthorityRejectsEnforcingTransportDrift/raw_original (0.00s)
+    --- PASS: TestA166AuthorityRejectsEnforcingTransportDrift/other_wrapper (0.00s)
+    --- PASS: TestA166AuthorityRejectsEnforcingTransportDrift/missing_budget (0.00s)
+    --- PASS: TestA166AuthorityRejectsEnforcingTransportDrift/missing_wrapper (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.016s
+FAIL

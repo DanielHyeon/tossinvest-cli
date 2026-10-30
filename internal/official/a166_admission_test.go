@@ -224,3 +224,38 @@ func TestA166RequiredCleanupMissing(t *testing.T) {
 		t.Fatalf("missing cleanup accepted: %v", e)
 	}
 }
+
+func TestA166AuthorityRejectsEnforcingTransportDrift(t *testing.T) {
+	b := a166Budget(t)
+	for _, kind := range []string{"raw_original", "other_wrapper", "missing_budget", "missing_wrapper", "missing_both_raw"} {
+		t.Run(kind, func(t *testing.T) {
+			c, e := NewWithAccountBudget(Credentials{}, "", b, func(error) {})
+			if e != nil {
+				t.Fatal(e)
+			}
+			if _, ok := c.AuthorityOrigin(); !ok {
+				t.Fatal("original wrapper must retain authority")
+			}
+			switch kind {
+			case "raw_original":
+				c.hc.Transport = c.authorityTransport
+			case "other_wrapper":
+				c.hc.Transport = &http.Transport{}
+			case "missing_budget":
+				c.budget = nil
+			case "missing_wrapper":
+				c.budgetTransport = nil
+			case "missing_both_raw":
+				c.budget = nil
+				c.budgetTransport = nil
+				c.hc.Transport = c.authorityTransport
+			}
+			if _, ok := c.AuthorityOrigin(); ok {
+				t.Fatal("drift restored authority")
+			}
+		})
+	}
+	if _, ok := New(Credentials{}, "").AuthorityOrigin(); !ok {
+		t.Fatal("OFF authority changed")
+	}
+}
