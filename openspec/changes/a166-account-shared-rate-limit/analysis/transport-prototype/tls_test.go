@@ -3,24 +3,29 @@ package prototype
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 )
 
 type lease struct {
-	mu     sync.Mutex
-	closed bool
-	conn   net.Conn
-	starts *[]time.Time
-	logMu  *sync.Mutex
-	once   bool
-	pause  chan struct{}
-	resume chan struct{}
+	mu       sync.Mutex
+	closed   bool
+	conn     net.Conn
+	starts   *[]time.Time
+	logMu    *sync.Mutex
+	once     bool
+	pause    chan struct{}
+	resume   chan struct{}
+	evidence string
 }
 
 func (l *lease) register(c net.Conn) bool {
@@ -37,9 +42,6 @@ func (l *lease) revoke() {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.closed = true
-	if l.conn != nil {
-		l.conn.Close()
-	}
 }
 
 type guarded struct {
@@ -61,6 +63,17 @@ func (c *guarded) Write(p []byte) (int, error) {
 		c.l.logMu.Lock()
 		*c.l.starts = append(*c.l.starts, time.Now())
 		c.l.logMu.Unlock()
+		if c.l.evidence != "" {
+			f, e := os.OpenFile(c.l.evidence, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+			if e != nil {
+				return 0, e
+			}
+			_, e = fmt.Fprintf(f, "%d\n", time.Now().UnixNano())
+			f.Close()
+			if e != nil {
+				return 0, e
+			}
+		}
 		c.l.once = true
 	}
 	return c.Conn.Write(p)
@@ -75,13 +88,26 @@ type limiter struct {
 	resume      chan struct{}
 	dialStart   chan struct{}
 	dialResume  chan struct{}
+	lockPath    string
+	evidence    string
 }
 
 func (l *limiter) RoundTrip(req *http.Request) (*http.Response, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
+	if l.lockPath != "" {
+		f, e := os.OpenFile(l.lockPath, os.O_CREATE|os.O_RDWR, 0600)
+		if e != nil {
+			return nil, e
+		}
+		defer f.Close()
+		if e = syscall.Flock(int(f.Fd()), syscall.LOCK_EX); e != nil {
+			return nil, e
+		}
+		defer syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+	}
 	time.Sleep(350 * time.Millisecond)
-	lease := &lease{starts: &l.starts, logMu: &l.logMu, pause: l.beforeWrite, resume: l.resume}
+	lease := &lease{starts: &l.starts, logMu: &l.logMu, pause: l.beforeWrite, resume: l.resume, evidence: l.evidence}
 	defer lease.revoke()
 	tr := &http.Transport{DisableKeepAlives: true, ForceAttemptHTTP2: false, TLSNextProto: map[string]func(string, *tls.Conn) http.RoundTripper{}, Proxy: nil}
 	tr.DialTLSContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -248,4 +274,47 @@ func TestEarlyResponseWithSlowBody(t *testing.T) {
 		t.Fatal("early response did not return")
 	}
 	close(body.release)
+}
+
+func TestChunkedResponseBodySurvivesRevoke(t *testing.T) {
+	data := strings.Repeat("body-data-", 50000)
+	s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(data[:100]))
+		w.(http.Flusher).Flush()
+		time.Sleep(50 * time.Millisecond)
+		w.Write([]byte(data[100:]))
+	}))
+	defer s.Close()
+	lim := &limiter{tls: s.Client().Transport.(*http.Transport).TLSClientConfig}
+	client := &http.Client{Transport: lim, Timeout: 5 * time.Second}
+	resp, err := client.Get(s.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	b, err := io.ReadAll(resp.Body)
+	if err != nil || string(b) != data {
+		t.Fatalf("body len=%d want=%d err=%v", len(b), len(data), err)
+	}
+}
+
+func TestTLSRejectsUntrustedAndWrongHost(t *testing.T) {
+	s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { t.Error("untrusted request reached handler") }))
+	defer s.Close()
+	for _, cfg := range []*tls.Config{{}, {RootCAs: s.Client().Transport.(*http.Transport).TLSClientConfig.RootCAs, ServerName: "wrong.invalid"}} {
+		lim := &limiter{tls: cfg}
+		c := &http.Client{Transport: lim, Timeout: 3 * time.Second}
+		resp, err := c.Get(s.URL)
+		if resp != nil {
+			resp.Body.Close()
+		}
+		if err == nil {
+			t.Error("TLS verification accepted invalid certificate or name")
+		}
+		lim.logMu.Lock()
+		if len(lim.starts) != 0 {
+			t.Error("request write after failed TLS verification")
+		}
+		lim.logMu.Unlock()
+	}
 }

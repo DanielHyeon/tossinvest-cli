@@ -1,0 +1,5 @@
+--- FAIL: TestChunkedResponseBodySurvivesRevoke (0.41s)
+    tls_test.go:272: body len=100 want=500000 err=read tcp 127.0.0.1:44402->127.0.0.1:43827: use of closed network connection
+FAIL
+FAIL	_/home/daniel/tossos-work/a166-tls-prototype/openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype	0.410s
+FAIL
