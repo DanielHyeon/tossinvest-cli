@@ -1,0 +1,5 @@
+--- FAIL: TestA166RuntimeFactoryTwoProcessesTLSStarts (1.24s)
+    runtime_wire_external_test.go:233: first Write gap 22.7657ms
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	1.255s
+FAIL

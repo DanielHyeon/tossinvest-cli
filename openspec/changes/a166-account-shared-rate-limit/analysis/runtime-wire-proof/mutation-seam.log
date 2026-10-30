@@ -1,0 +1,5 @@
+--- FAIL: TestA166RuntimeFactoryTwoProcessesTLSStarts (4.13s)
+    runtime_wire_external_test.go:208: open /tmp/TestA166RuntimeFactoryTwoProcessesTLSStarts2009268719/001/first-write-0: no such file or directory
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	4.141s
+FAIL

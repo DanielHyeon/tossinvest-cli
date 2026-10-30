@@ -1,0 +1,4 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget_test [github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget.test]
+internal/accountbudget/runtime_wire_external_test.go:10:69: undefined: accountbudget.InstallFirstWriteForTest
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget [build failed]
+FAIL

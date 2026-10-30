@@ -1,0 +1,7 @@
+=== RUN   TestA166RuntimeWireSeamAvailable
+--- PASS: TestA166RuntimeWireSeamAvailable (0.00s)
+=== RUN   TestA166RuntimeFactoryTwoProcessesTLSStarts
+    runtime_wire_external_test.go:236: first-write samples=8 adjacent=[383.041222ms 384.589138ms 365.985541ms 383.29216ms 388.449123ms 382.421888ms 369.811154ms]; per process token=2 accounts=2
+--- PASS: TestA166RuntimeFactoryTwoProcessesTLSStarts (3.08s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	3.087s
