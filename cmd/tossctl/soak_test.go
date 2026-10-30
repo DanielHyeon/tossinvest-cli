@@ -113,7 +113,7 @@ func (s *soakServer) orderLists() []url.Values {
 func pointSoakAt(t *testing.T, srv *soakServer, tokenFile string) {
 	t.Helper()
 	previous := soakReadsFactory
-	soakReadsFactory = func(*rootOptions) (soakWiring, error) {
+	soakReadsFactory = func(context.Context, *rootOptions) (soakWiring, error) {
 		client := official.New(
 			official.Credentials{APIKey: "k", SecretKey: "s"},
 			tokenFile,

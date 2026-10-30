@@ -1,0 +1,12 @@
+# 원문 영수증
+
+- a166-candidate-soak-red.log: c5a833b2d5f3ac84dc0a351d9859cfe730568936386e588ef26293e4782870bb
+- a166-candidate-soak-green.log: c29807f3174c7fc823f8a3d02b83dcfe89ffaaf93175885cabf6625759a6090f
+- a166-candidate-soak-local-normal.log: 6ad85335f206e9655d57a170e4ea4b3f7c3933cbf9fca6be04a31291642c61f3
+- a166-candidate-soak-required-green.log: 91228f17cb927bafd70638002c72843c88aaeb0286c64d8caa0115733e52c536
+- a166-candidate-cleanup-green.log: 82c337cb3eca8b92c656e859042d4736295dd26e33156fa9b9e44b2ef3cb454c
+- a166-candidate-mutant.log: 9343dc36a4ae00cff1f6981e3da0a098b58490cb297e7bc3467fa723569b55b1
+- a166-soak-mutant.log: e542aebfd9cb0697fe33561b67a0951b1d67f46aafefe65afbb5e8a377e1ef77
+- a166-candidate-soak-freeze-normal.log: dbc7d4932fe85fc7ceae956d0ecf7c14e73d599472625dcad5971d8fab76e44c
+- a166-candidate-soak-freeze-tag-race.log: 7f4e79d45bc3c3856207cb783e1b4cd4fa8492b0010a032a7c26424092296ccc
+- a166-candidate-soak-required-mutant.log: 787b5876558405f218fcc37cb7c4285072085e078539d066526ade4ddef51dd0
