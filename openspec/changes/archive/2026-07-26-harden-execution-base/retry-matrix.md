@@ -11,9 +11,9 @@
 
 ## 0. 최상위 규칙
 
-1. **주문 mutation(POST place/cancel/modify, 조건주문 create/modify/cancel)은 어떤 오류에도 자동 재시도하지 않는다.**
-   토스 공식 API에 멱등성 키가 없다 — 재시도는 곧 주문 중복이다. 결과 불명은 재시도가 아니라
-   IN_DOUBT 해소 절차(task 2.7/2.8)로 처리한다. 단, `409 already-processing`이 HTTP 상태와
+1. **주문 mutation의 맹목 재전송은 금지하며 기본 자동 재시도는 0회다.** 결과 불명은
+   IN_DOUBT 해소 절차(task 2.7/2.8)로 처리하고, 같은 키·본문을 쓰는 별도 replay도 그 절차의
+   원장·권한·멱등성 창 가드를 충족해야 한다. `409 already-processing`이 HTTP 상태와
    본문 code 양쪽에서 일치한 **취소**는 a165의 경로 한정 예외다: 엔진은 재전송 없이
    FAILED_CONFIRMED로 끝내고, CLI flatten만 최초 전송을 포함한 8초 창 안에서 추가 2회까지
    재전송한다. 주문 제출·정정·조건주문에는 이 예외가 없다.
