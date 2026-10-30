@@ -7,6 +7,8 @@
 > `verify-execution-capability`의 rate-limit·지연 측정 결과로 갱신한다. 갱신 시 이 파일과
 > `execgw.DefaultRetryPolicy()`·`DefaultStaleness()`를 같은 커밋에서 함께 바꾼다.
 
+> **a166 정합화(2026-10-31):** 아래의 required engine-poll은 검증된 v2 공통 Budget과 poll binding이 연결된 경우다. OFF/legacy는 기존 동작을 보존한다. 운영자가 required로 전환했거나 모든 참여자 검증이 끝났다는 뜻이 아니다. transient/default staleness 수치는 이 로트에서 변경하지 않는다.
+
 ## 0. 최상위 규칙
 
 1. **주문 mutation(POST place/cancel/modify, 조건주문 create/modify/cancel)은 어떤 오류에도 자동 재시도하지 않는다.**
@@ -16,11 +18,10 @@
    FAILED_CONFIRMED로 끝내고, CLI flatten만 최초 전송을 포함한 8초 창 안에서 추가 2회까지
    재전송한다. 주문 제출·정정·조건주문에는 이 예외가 없다.
 2. 조회(GET)만 재시도한다. 재시도는 **횟수 예산 + 총 시간 예산 + bounded jitter** 세 가지로 동시에 제한한다.
-3. 429는 `Retry-After`를 존중하되 **상한**을 둔다. 상한 초과 값이 오면 대기하지 않고 그 조회를 포기한다
-   (진입은 staleness 규칙으로 차단된다).
-4. 401/403은 재시도 0회 + **즉시 신규 진입 차단(latch)** + 알림. 자동 해제 없음 — 자격증명 갱신 후 운영자가 해제.
+3. required engine-poll은 429를 관측한 같은 논리 Query를 재시도하지 않는다. 유효한 `Retry-After` ≤30s는 같은 계좌·역할·RequiredQuery의 다음 호출을 새 wire 없이 보류한다. 누락·invalid·초과 값은 새 hint를 만들거나 기존 유효 hint를 지우지 않는다. 보호·일반 price가 같은 slot을 공유하며 주문 본체·flatten·별도 walk를 계좌 전역 cooldown으로 막지 않는다. OFF/legacy는 기존 RetryAfterSource와 backoff를 유지한다.
+4. Retrier까지 반환된 401/403은 재시도 0회 + **즉시 신규 진입 차단(latch)** + durable escalation/알림. 자동 해제 없음 — 자격증명 갱신 후 운영자가 해제. official.Client 내부의 기존 token refresh·401 재전송은 이 최종 오류 처리와 별개이며 required에서는 각각 공통 admission을 거친다. 중간401을 새 AuthFatal로 승격하지 않는다.
 5. 필수 조회의 staleness가 임계를 넘으면 신규 진입 차단. 조회가 성공하면 **자동 해제**된다.
-6. 차단은 항상 "신규 진입"에만 적용된다. 취소·청산 등 노출을 줄이는 mutation은 차단하지 않는다(§0.3).
+6. EntryGate 차단은 "신규 진입"에만 적용된다. 취소·청산 mutation에 이 gate를 적용하지 않는다. 다만 사용자가 승인한 a166 required 공통 admission에서는 보호 요청도 간격·소유권을 기다리며, 보호 무지연을 보장하지 않는다.
 
 ## 1. endpoint × method × 오류 클래스
 
@@ -37,8 +38,10 @@
 | `/api/v1/buying-power` | GET | 매수가능금액 | transient | 최대 2회 재시도 | backoff+jitter | 성공 시 freshness 갱신 |
 | `/api/v1/holdings` | GET | 보유수량 | transient | 최대 2회 재시도 | backoff+jitter | 성공 시 freshness 갱신 |
 | 가격·시세 GET | GET | 진입 판단 | transient | 최대 2회 재시도 | backoff+jitter | 성공 시 freshness 갱신 |
-| 모든 GET | GET | — | **429** | Retry-After ≤ 상한이면 1회 대기 후 재시도 | `min(Retry-After, 30s)` + jitter | 상한 초과면 즉시 포기 |
-| 모든 GET | GET | — | **401/403** | **0회** | — | **즉시 신규 진입 차단(latch)** + critical 알림 |
+| required engine-poll GET | GET | 같은 논리 Query | **429** | **0회** | 현재 Query는 종료; 유효 ≤30s hint 동안 후속 동종 poll은 wire0 | freshness 성공 0; token429도 Query 종료, poll hint는 생성하지 않음 |
+| OFF/legacy Retrier GET | GET | 기존 동작 유지 | **429** | 기존 MaxAttempts/8s budget 안 | RetryAfterSource가 있으면 상한 검사; 없으면 기존 backoff | 현재 생산 OFF 엔진은 source nil; 과거 '1회 대기' 문구를 실제 보장으로 쓰지 않음 |
+| 별도 비지연 walk GET | GET | soak·verify·IN_DOUBT 스캔 | **429** | 기존 추가 2회 | 기존 15s → 30s | a166에서 호출자 재시도 정책 변경 없음; required wire별 admission/기록 적용 |
+| Retrier에 최종 반환된 오류 | GET | — | **401/403** | **0회** | — | **즉시 신규 진입 차단(latch)** + durable escalation/알림 |
 | 모든 GET | GET | — | 그 외 4xx(permanent) | **0회** | — | 호출자에게 오류 반환, freshness 미갱신 |
 
 오류 클래스 판정(`execgw.ClassifyQueryError`):
@@ -46,7 +49,7 @@
 | 관측 | 클래스 |
 |---|---|
 | `official.ErrTransport`(연결·타임아웃), 5xx(`official.ErrServer`) | `ClassTransient` |
-| 429(`official.ErrRateLimited`) | `ClassRateLimited` |
+| 429(`official.ErrRateLimited` 또는 `official.APIError.Code == 429`) | `ClassRateLimited` |
 | 401/403(`official.ErrAuth`, `official.ErrIPNotAllowed`) | `ClassAuthFatal` |
 | 그 외 `*official.APIError`(400/404/422 …) | `ClassPermanent` |
 | `context.Canceled`/`DeadlineExceeded` | `ClassCanceled`(재시도 없음) |
@@ -61,7 +64,7 @@
 | backoff 배수 | **2×** | 400ms → 800ms → 1.6s |
 | backoff 상한 | **3s** | 총 예산 8s 안에서 3회 시도가 가능한 최대값 |
 | jitter | **±25% bounded** | 동시 재시도 동기화(thundering herd) 방지. 상·하한이 있는 곱셈 jitter |
-| `Retry-After` 상한 | **30s** | 그 이상 기다리느니 진입을 막는 편이 안전하다 |
+| `Retry-After` 상한 | **30s** | required는 응답별 hint로 후속 동종 poll에 적용; OFF/legacy 기존 정책은 유지 |
 | 재시도 대상 | GET만 | §0.1 |
 
 ### staleness 임계 (신규 진입 차단 기준)
@@ -89,8 +92,7 @@
 | 주문 단건 GET | in-flight 주문당 3s마다 1회 (심볼당 in-flight 1건 제한) | 2.7/3.1 |
 | IN_DOUBT 해소 스캔 | 발생 시에만, OPEN+CLOSED 각 페이지 1회 × 안정화 3회 | 2.7 |
 
-정상 상태 합계 ≈ **0.5 req/s 미만**. 재시도 최악값은 조회당 3배이나 총 시간 예산 8s가 상한이므로
-버스트도 1.5 req/s를 넘지 않는다. 실제 rate limit 값은 verify-execution-capability에서 측정한다.
+위 빈도표는 초기 설계의 평균 추정이며 현재 전체 호출자·token·재전송을 포함한 상한 증거가 아니다. 총 시간 예산 8s만으로 순간 버스트 1.5 req/s 이하를 증명할 수 없다. a166 required의 로컬 요청 시작은 같은 공통 group wire 소유권과 350ms 최소 간격으로 제한한다. 기준은 TLS 연결의 첫 HTTP plaintext Write이며 브로커 도착률·처리 완료·429 미발생을 보장하지 않는다. OFF와 required 미참여 프로세스까지 포함한 운영 총량은 별도 참여자 검증 없이는 주장하지 않는다.
 
 ## 4. 구현 대응표
 
@@ -98,6 +100,9 @@
 |---|---|
 | mutation 무재시도 | `execgw.Gateway.submit`이 `journal.Attempt.Dispatch`를 1회만 호출. `Retrier`에 mutation 진입점 자체가 없음. a165 예외는 `CancelRefusalPolicy`: 엔진 `EngineCancelRefusal()`은 409 already-processing을 재전송 없이 확정 거절로 분류하고, flatten `FlattenCancelRefusal()`만 제한된 취소 재전송을 허용함 |
 | 조회 예산·jitter | `execgw.Retrier.Query` + `execgw.RetryPolicy` |
-| 429 Retry-After 상한 | `execgw.RetryAfterTransport`(헤더 포착) + `RetryPolicy.MaxRetryAfter` |
+| required 429·후속 poll hint | `accountbudget.Transport` 응답별 event/hint + token collector 전파 + `Retrier`의 검증된 poll binding; 같은 Query collector 429/기록 오류 뒤 후속 wire·freshness 성공 금지 |
+| OFF/legacy 429 | `Retrier.rateLimitWait`와 선택적 `RetryAfterSource`; `RetryAfterTransport`의 존재만으로 생산 배선을 주장하지 않음 |
 | 401/403 즉시 차단 | `execgw.Retrier.Query` → `EntryGate.Block(ReasonBrokerAuthRejected)` (latch) |
 | staleness 진입 차단 | `execgw.EntryGate.CheckEntry()` — 게이트웨이가 노출 증가 mutation 직전에 조회 |
+
+required hint는 boot source와 동일 slot의 영속 state로 복원하며 반복 reboot의 wall-time 상한은 주장하지 않는다. 기록 오류·orphan poison은 성공으로 처리하지 않는다. 응답 수용을 이미 관측한 뒤 기록 실패했다고 원래 HTTP/원장 결과를 NOT_SENT로 바꾸지 않는다. 상세 계약과 고정 시험 영수증은 a166의 engine-poll-observation-plan 및 해당 구현 로트를 참조한다.

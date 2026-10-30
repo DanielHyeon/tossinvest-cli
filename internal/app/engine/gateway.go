@@ -343,6 +343,16 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 	// its transitions through the Notifier, so the Notifier has to exist first.
 	notifier := newNotifier(in.journal, entry, in.accountRef, in.logger, in.publisher, in.clock)
 	retrier := newRetrier(in.journal, entry, in.accountRef, notifier, nil, in.clock)
+	if in.budget != nil {
+		seq, ok := in.official.SelectedAccountSeq()
+		if !ok {
+			return engineWiring{}, accountbudget.ErrUnavailable
+		}
+		retrier, err = execgw.NewEnginePollRetrier(retrier, in.budget, in.official, in.accountRef, seq)
+		if err != nil {
+			return engineWiring{}, err
+		}
+	}
 
 	// The two writers a reconciliation pass needs. They are separate because the
 	// events are: a holding with no local instance is folded in and reported
