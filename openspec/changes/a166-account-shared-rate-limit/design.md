@@ -111,3 +111,7 @@ READY는 구현 계약·기술 가능성·실패 처분·증거 계획이 확정
 grill-me/grilling: 확정 정책을 재질문하지 않고 미증명 요구와 수용 기준을 분리했다. search-first: 기존 flock·stdlib 후보, TLS 국소 연구와 공식 Go 문서를 조사했다. 버전·라이선스·미확인 채널은 연구 README와 `analysis/manager-review-v4.md`에 기록했다. impeccable: N/A — backend/documentation-only; UI 변경 없음. 현재 판정은 개발 착수이며 제품 구현·실제 계좌 합산·배포 검증 완료를 뜻하지 않는다.
 
 환경 차이: 초기 연구는 Go 1.26.5, 저장소 `go.mod`와 `Dockerfile`의 build 버전은 Go 1.25.0이다. 독립 Linux fixture는 두 버전에서 통과했다. 실제 Alpine 이미지·운영 환경 호환 PASS로 확대하지 않으며 배포 toolchain을 조용히 올리지 않는다.
+
+## a169의 선택적 관측 fence 후속 로트
+
+2026-10-31 사용자 결정은 안정된 현재 cursor부터 시작하고 과거 gap은 제외하는 것이다. a169 `analysis/prewire-fence-plan.md`와 `specs/official-read-compatibility/spec.md`에서 optional same-Budget fence를 정의한다. 기존 a166 전 참여자에게 자동 적용하지 않고 명시 context에만 적용하며, absent fence·OFF·schema·manifest·운영 설정은 유지한다. Transport.RoundTrip 기존 함수 편집은 High-risk FLM/BTM 및 독립 검토 대상이다. 이 설계는 검토 중이며 실제 측정/운영 완료 판정이 아니다.

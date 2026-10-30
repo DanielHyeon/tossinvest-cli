@@ -39,3 +39,7 @@
 정확한 local TLS official.Client/401/token 경로에서 shared group429→후속 wire0, own Finish fault→후속 wire0, orphan/gap/overrun/instance mismatch, cancel-vs-firstWrite, 감시기 중단, same-day abort 재시작을 분리 검증한다. profile guard는 fake private temp 파일만 사용하고 secret 값 출력 금지를 확인한다. fake clock으로 랭킹 지연·보충 deadline·선정시각 양측·late 전체제외, 순수 U0/U1/U2 계산과 report 제외를 검증한다. 후보200개를 실제 브로커에 조회하지 않는다.
 
 search-first: existing a140 factory/pacedSource, accountbudget store/collector/transport, official token 및 Go context 재사용. 읽기 전용 연구와 Manager의 Snapshot/transport/profile/tasks 원문 대조를 사용했다. 외부 package 조사 없이 충분한 기존 부분 해법을 확인했으며 새 의존성 도입은 없다. grill-me/grilling: 확정 정책은 재질문하지 않고 위 구현 계약 반례를 source·독립 검토로 먼저 해소한다. impeccable N/A — CLI/backend·문서만 영향. AST·시험·CodeGraph 최신 검증은 이 초안에서 수행하지 않았다.
+
+## 2026-10-31 기준점 결정 반영
+
+사용자가 현재 안정 시점부터 시작하고 과거 gap 제외를 선택했다(issues §7). 위 baseline 과거 gap 선택 미결 부분은 이 결정으로 대체한다. 현재 pending·dirty·손상·읽기 오류는 계속 거절한다. lease 아래 실제 전송 검사는 `prewire-fence-plan.md`의 독립 검토 대상이며 기존 Snapshot 자체를 원자 전송 허가로 취급하지 않는다.

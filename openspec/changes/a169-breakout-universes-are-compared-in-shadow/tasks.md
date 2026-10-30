@@ -66,3 +66,7 @@
 - [x] P3 독립 검증·Manager 판정 뒤 commit/merge/push. a169 archive 및 측정 없음.
 - [x] P4 U2 단일 후보 점수 순수 로트: 선택 normal/tagged race·변이·독립 검토 후 게시. `analysis/u2-score-lot/` 및 `analysis/u2-score-independent-review.md`. caller·원장과 2.2 전체는 미완.
 - [x] P5 U2 후보 합집합·순위 순수 로트: 선택 normal/tagged race·변이·독립 검토 후 게시. `analysis/u2-union-lot/`. 실제 caller·원장·측정과 2.2 전체는 미완.
+
+- [x] P6 안정 current cursor·과거 gap 제외 사람 결정과 optional prewire fence 제한 설계. `issues.md` §7, `analysis/prewire-fence-plan.md`; cleanup 경합 P1 수정 후 독립 bounded READY.
+- [ ] P7 High-risk pre-edit FLM/BTM → 내부 fence RED/GREEN·필요 race/process/변이·gstack 범위 리뷰. production measurement caller 연결 없음.
+- [ ] P8 독립 검증·Manager 판정·scoped strict/PM 후 Terra commit/merge/push. 전체1.3/2.2/측정/archive와 별도.
