@@ -1,0 +1,128 @@
+{
+  "file": "internal/accountbudget/transport_linux.go",
+  "source_sha256": "a1a8ba47a19b577790f529e0a019a18cca8994c206eac08ff9c5684ba164e01a",
+  "package": "accountbudget",
+  "function": "Write",
+  "receiver": "gatedConn",
+  "signature": "gatedConn.Write(params=1, results=2)",
+  "start": {
+    "line": 107,
+    "column": 1
+  },
+  "end": {
+    "line": 120,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 115,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 113,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 119,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 2
+      },
+      "text": "c.gate.writeMu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 8
+      },
+      "text": "c.gate.writeMu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 2
+      },
+      "text": "c.gate.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 3
+      },
+      "text": "c.gate.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 3
+      },
+      "text": "c.gate.sent.Store"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 2
+      },
+      "text": "c.gate.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 9
+      },
+      "text": "c.Conn.Write"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 109,
+        "column": 2
+      },
+      "text": "c.gate.writeMu.Unlock"
+    }
+  ]
+}

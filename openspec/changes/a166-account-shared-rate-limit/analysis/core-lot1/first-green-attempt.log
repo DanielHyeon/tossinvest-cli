@@ -1,0 +1,6 @@
+--- FAIL: TestWaitRespectsCallerDeadline (0.00s)
+    budget_test.go:19: account budget unavailable
+        unsafe root
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.010s
+FAIL

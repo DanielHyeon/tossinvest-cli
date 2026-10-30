@@ -1,0 +1,10 @@
+--- FAIL: TestProxySelectionRefusedBeforeAdmission (0.23s)
+    --- FAIL: TestProxySelectionRefusedBeforeAdmission/proxy (0.12s)
+        transport_test.go:156: proxy not refused: account budget: request not sent
+            context deadline exceeded
+    --- FAIL: TestProxySelectionRefusedBeforeAdmission/error (0.11s)
+        transport_test.go:156: proxy not refused: account budget: request not sent
+            context deadline exceeded
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.243s
+FAIL

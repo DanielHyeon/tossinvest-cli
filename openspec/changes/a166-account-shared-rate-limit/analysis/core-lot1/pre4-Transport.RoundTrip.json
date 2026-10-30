@@ -1,0 +1,901 @@
+{
+  "file": "internal/accountbudget/transport_linux.go",
+  "source_sha256": "a357d5ae893b23fc3ef3542b624d3fb259424b6b1d366f51c752881efbcb1e47",
+  "package": "accountbudget",
+  "function": "RoundTrip",
+  "receiver": "Transport",
+  "signature": "Transport.RoundTrip(params=1, results=2)",
+  "start": {
+    "line": 144,
+    "column": 1
+  },
+  "end": {
+    "line": 245,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 147,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 152,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 153,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "else",
+      "at": {
+        "line": 155,
+        "column": 10
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 161,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 162,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 165,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 178,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 183,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "else",
+      "at": {
+        "line": 185,
+        "column": 10
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 191,
+        "column": 3
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 195,
+        "column": 3
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 201,
+        "column": 3
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 205,
+        "column": 3
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 209,
+        "column": 3
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 215,
+        "column": 2
+      }
+    },
+    {
+      "id": "B17",
+      "kind": "if",
+      "at": {
+        "line": 216,
+        "column": 3
+      }
+    },
+    {
+      "id": "B18",
+      "kind": "if",
+      "at": {
+        "line": 228,
+        "column": 2
+      }
+    },
+    {
+      "id": "B19",
+      "kind": "select",
+      "at": {
+        "line": 236,
+        "column": 3
+      }
+    },
+    {
+      "id": "B20",
+      "kind": "if",
+      "at": {
+        "line": 238,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 158,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 168,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 179,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 196,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 207,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 210,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 212,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 224,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 233,
+        "column": 168
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 8
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 10
+      },
+      "text": "errors.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 7
+      },
+      "text": "PriorityFromContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 27
+      },
+      "text": "req.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 10
+      },
+      "text": "errors.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 38
+      },
+      "text": "req.Body.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 14
+      },
+      "text": "t.budget.Acquire"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 31
+      },
+      "text": "req.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 8
+      },
+      "text": "errors.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 23
+      },
+      "text": "req.Body.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 8
+      },
+      "text": "t.base.Clone"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 17
+      },
+      "text": "net.SplitHostPort"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 10
+      },
+      "text": "strings.Trim"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 10
+      },
+      "text": "cfg.Clone"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 13
+      },
+      "text": "dial"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 9
+      },
+      "text": "tls.Client"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 27
+      },
+      "text": "context.WithTimeout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 9
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 10
+      },
+      "text": "tc.HandshakeContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 4
+      },
+      "text": "raw.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 7
+      },
+      "text": "gate.register"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 12
+      },
+      "text": "tr.RoundTrip"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 4
+      },
+      "text": "t.beforeStop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 14
+      },
+      "text": "gate.stop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 221,
+        "column": 10
+      },
+      "text": "gate.sent.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 14
+      },
+      "text": "errors.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 35
+      },
+      "text": "lease.Release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 3
+      },
+      "text": "tr.CloseIdleConnections"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 15
+      },
+      "text": "errors.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 9
+      },
+      "text": "gate.sent.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 2
+      },
+      "text": "gate.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 2
+      },
+      "text": "gate.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 49
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 98
+      },
+      "text": "errors.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 110
+      },
+      "text": "gate.stop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 123
+      },
+      "text": "lease.Release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 141
+      },
+      "text": "tr.CloseIdleConnections"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 5
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 10
+      },
+      "text": "Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 10
+      },
+      "text": "req.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 12
+      },
+      "text": "owner.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 5
+      },
+      "text": "t.cleanupError"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 145,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 148,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 151,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 154,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 156,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 163,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 166,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 170,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 171,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 172,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 173,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 174,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 175,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 176,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 177,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 181,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 182,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 184,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 186,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 188,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 189,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 190,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 192,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 194,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 198,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 199,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 200,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 202,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 205,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 214,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 219,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 221,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 222,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 229,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 230,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 233,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 233,
+        "column": 93
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 234,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 238,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 235,
+        "column": 2
+      }
+    }
+  ],
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 204,
+        "column": 3
+      },
+      "text": "cancel"
+    }
+  ]
+}

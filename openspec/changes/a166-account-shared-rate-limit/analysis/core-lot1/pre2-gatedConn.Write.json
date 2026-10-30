@@ -1,0 +1,167 @@
+{
+  "file": "internal/accountbudget/transport_linux.go",
+  "source_sha256": "cf40216288a795937a83a671576087e00101b162453dafb5775d4d66f62002e7",
+  "package": "accountbudget",
+  "function": "Write",
+  "receiver": "gatedConn",
+  "signature": "gatedConn.Write(params=1, results=2)",
+  "start": {
+    "line": 108,
+    "column": 1
+  },
+  "end": {
+    "line": 125,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 112,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 120,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 114,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 118,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 124,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 2
+      },
+      "text": "c.gate.writeMu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 8
+      },
+      "text": "c.gate.writeMu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 2
+      },
+      "text": "c.gate.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 3
+      },
+      "text": "c.gate.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 12
+      },
+      "text": "c.gate.ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 3
+      },
+      "text": "c.gate.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 3
+      },
+      "text": "c.gate.sent.Store"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 2
+      },
+      "text": "c.gate.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 9
+      },
+      "text": "c.Conn.Write"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 116,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 110,
+        "column": 2
+      },
+      "text": "c.gate.writeMu.Unlock"
+    }
+  ]
+}

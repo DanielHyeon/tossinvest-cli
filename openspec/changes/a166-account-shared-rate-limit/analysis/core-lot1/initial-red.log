@@ -1,0 +1,11 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget [github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget.test]
+internal/accountbudget/budget_test.go:15:9: undefined: Open
+internal/accountbudget/budget_test.go:15:14: undefined: Config
+internal/accountbudget/budget_test.go:16:20: undefined: ErrUnavailable
+internal/accountbudget/budget_test.go:19:28: undefined: Provision
+internal/accountbudget/budget_test.go:20:9: undefined: Open
+internal/accountbudget/budget_test.go:20:14: undefined: Config
+internal/accountbudget/budget_test.go:21:44: undefined: Critical
+internal/accountbudget/budget_test.go:23:22: undefined: Critical
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget [build failed]
+FAIL
