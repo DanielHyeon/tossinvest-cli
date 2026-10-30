@@ -154,4 +154,3 @@ function    TestTokenEmptyAccessTokenErrors
 
 function    TestTokenExchangeError
   internal/official/token_test.go:100
-
