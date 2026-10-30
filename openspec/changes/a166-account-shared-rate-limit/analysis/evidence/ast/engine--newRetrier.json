@@ -1,0 +1,38 @@
+{
+  "file": "internal/app/engine/exitwiring.go",
+  "source_sha256": "6020a40b20302b0dae0565247bae10c7a24af17be1514f450c45e37d972e2aa4",
+  "package": "engine",
+  "function": "newRetrier",
+  "signature": "newRetrier(params=6, results=1)",
+  "start": {
+    "line": 45,
+    "column": 1
+  },
+  "end": {
+    "line": 56,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 47,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 15
+      },
+      "text": "execgw.DefaultRetryPolicy"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

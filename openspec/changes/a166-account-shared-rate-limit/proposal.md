@@ -1,7 +1,6 @@
 # a166 — 계좌 공유 요청 속도 상한(3 req/s)과 엔진 GET 429 처리
 
-> **정의만 — 착수 전.** 이 문서는 proposal 수준이다. 아래 「선택지」는 스케치이고 고른 것이 아니다. design freeze·base
-> commit·FLM/BTM·코드는 아직 없다. 계좌 API 를 부르는 측정도 이 change 를 정의하면서 하지 않았다.
+> **3판 초안 · NOT READY (2026-10-30).** 사용자는 계좌 전체 3건/초 상한 우선과 보호 요청 대기 허용 방향을 승인했다. a166 재설계에 한정된 보호 대기 허용은 승인 완료이며, 구체 지연·장애 정책이나 구현·활성화 승인은 아니다. 독립 리뷰 `analysis/review-v2-20261030.md`는 FAIL이다.
 
 ## Why
 
@@ -28,12 +27,11 @@
 
 ## What Changes
 
-- 같은 계좌를 치는 모든 TossOS 프로세스가 **하나의** 3 req/s 예산을 나눠 쓴다(페이지 간 최소 간격 350ms 는 확정 표의 값).
+- 같은 계좌를 치는 모든 TossOS 프로세스가 **하나의** 3 req/s 예산을 나눠 쓴다(간격 350ms 는 3 req/s 에서 유도한 미승인 후보이며 확정 표에는 없다 — 1판의 「확정 표의 값」은 오기, design 2판 §0에서 정정).
 - 엔진 폴링 경로의 GET 429 처리를 확정 표대로 바꾼다(같은 주기 안 즉시 재시도 금지).
 - 비지연 walk(soak·verify·IN_DOUBT 스캔)의 15s→30s 백오프(`ReadRetryBackoff`)는 그대로다.
 - 정본 retry matrix §1·§2·§3(예산 계상)을 **코드와 같은 커밋에서** 고친다.
-- **바뀌지 않는 것**: 손절·비상 청산(flatten-all)의 즉시성. 상한이 노출을 줄이는 mutation 을 늦추면 안 된다 — design 은
-  예산 안에서 그 요청의 우선순위(또는 예외)를 정하고 증명해야 한다(안전 불변식 3·4).
+- 보호 요청도 상한 안에서 기다린다. 보호 우선은 순서 정책이며 상한 면제가 아니다. 공유 장애 시에도 우회하지 않는다. 구체 지연과 실패 결과는 미결이다.
 
 ## 지금 코드 — 상한이 들어갈 자리 후보
 
@@ -85,7 +83,7 @@ retry matrix·rate limit 은 WORKFLOW 「위험도 분류」의 High-risk 경로
 
 ### Modified Capabilities
 
-- `order-execution`: 「Retry Matrix 산출물」(429 처리·클라이언트 속도 상한·계좌 공유 예산). spec delta 는 proposal 단계 초안(ADDED)만 있다 — design 단계에서 기존 요구의 MODIFIED 로 다시 쓴다.
+- `order-execution`: 「Retry Matrix 산출물」(429 처리·클라이언트 속도 상한·계좌 공유 예산). spec delta 는 design 1판에서 「Retry Matrix 산출물」 MODIFIED + 「계좌 공유 요청 admission」 ADDED 로 다시 썼다.
 
 ## Impact
 

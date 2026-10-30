@@ -1,0 +1,94 @@
+{
+  "file": "internal/official/errors.go",
+  "source_sha256": "5f9cc4baf967a604a7382e6904679caf8f42ea51438854b9efe1261872ab7627",
+  "package": "official",
+  "function": "ShouldFallback",
+  "signature": "ShouldFallback(params=1, results=1)",
+  "start": {
+    "line": 66,
+    "column": 1
+  },
+  "end": {
+    "line": 76,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 68,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 69,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 5
+      },
+      "text": "errors.As"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 9
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 3
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 3
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 3
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 3
+      },
+      "text": "errors.Is"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}
