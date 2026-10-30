@@ -99,7 +99,7 @@ func a108SnapshotReader(t *testing.T, strategy *a108StrategyRuntimeFixture) *htt
 			}},
 		}},
 		signals:           a108SignalsFixture{},
-		accountRef:        func() (string, error) { return "raw-account-1234", nil },
+		accountRef:        func(context.Context) (string, error) { return "raw-account-1234", nil },
 		performance:       a108PerformanceFixture{},
 		optimization:      store,
 		adoptionDesired:   func() (config.Adoption, string, error) { return config.Adoption{}, "", nil },

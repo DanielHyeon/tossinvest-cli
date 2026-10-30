@@ -339,7 +339,7 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 	}
 	defer budgetLease.Release()
 
-	broker, accountRef, err := verifyBrokerFactory(root)
+	broker, accountRef, err := verifyBrokerFactory(ctx, root)
 	if err != nil {
 		return err
 	}
@@ -642,7 +642,7 @@ func runVerifyAbort(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) 
 		return nil
 	}
 
-	broker, accountRef, err := verifyBrokerFactory(root)
+	broker, accountRef, err := verifyBrokerFactory(ctx, root)
 	if err != nil {
 		return err
 	}
@@ -872,7 +872,10 @@ func verifyRunLockPause(lockPath string) func() (bool, string) {
 // note at the top of this file about why there is no flag for it.
 var verifyBrokerFactory = buildVerifyBroker
 
-func buildVerifyBroker(root *rootOptions) (verifylive.Broker, string, error) {
+func buildVerifyBroker(ctx context.Context, root *rootOptions) (verifylive.Broker, string, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, "", err
+	}
 	credFile, tokenFile, err := resolveOpenAPIPaths(root)
 	if err != nil {
 		return nil, "", err
@@ -886,9 +889,12 @@ func buildVerifyBroker(root *rootOptions) (verifylive.Broker, string, error) {
 			"verify: no Open API credentials — orders are placed through the official API only, never the " +
 				"web session. Run `tossctl openapi login` or set TOSSCTL_OPENAPI_KEY/TOSSCTL_OPENAPI_SECRET")
 	}
-	client := official.New(*creds, tokenFile)
+	client, err := newRootOfficialClient(ctx, root, *creds, tokenFile, root.officialOptions...)
+	if err != nil {
+		return nil, "", err
+	}
 
-	ref, seq, err := resolveVerifyAccount(context.Background(), client, sleepFor)
+	ref, seq, err := resolveVerifyAccount(ctx, client, sleepFor)
 	if err != nil {
 		return nil, "", err
 	}
@@ -903,7 +909,12 @@ func buildVerifyBroker(root *rootOptions) (verifylive.Broker, string, error) {
 	// three steps (measurements.md M4); it was also redundant, because the read
 	// above already had the answer. The token is cached on disk, so the second
 	// client re-uses it rather than exchanging again.
-	return official.New(*creds, tokenFile, official.WithAccountSeq(seq)), ref, nil
+	opts := append(append([]official.Option(nil), root.officialOptions...), official.WithAccountSeq(seq))
+	bound, err := newRootOfficialClient(ctx, root, *creds, tokenFile, opts...)
+	if err != nil {
+		return nil, "", err
+	}
+	return bound, ref, nil
 }
 
 // resolveVerifyAccount names the account every prompt and every record line will

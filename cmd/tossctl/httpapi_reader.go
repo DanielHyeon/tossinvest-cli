@@ -23,7 +23,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection"
 )
 
-type httpAPIAccountRef func() (string, error)
+type httpAPIAccountRef func(context.Context) (string, error)
 type httpAPIAdoptionSettingsRead func() (config.Adoption, string, error)
 
 type httpAPIManagementRuntimeReader interface {
@@ -108,7 +108,7 @@ func (r *httpAPIReader) readPositionBrokerSnapshot(ctx context.Context) (httpAPI
 	if r == nil || r.holdings == nil || r.accountRef == nil {
 		return httpAPIPositionBrokerSnapshot{}, errors.New("httpapi: position read is unavailable")
 	}
-	accountRef, err := r.accountRef()
+	accountRef, err := r.accountRef(ctx)
 	if err != nil {
 		return httpAPIPositionBrokerSnapshot{}, err
 	}
@@ -448,7 +448,7 @@ func (r *httpAPIReader) Performance(ctx context.Context) (performance.DashboardV
 	if r.accountRef == nil {
 		return view, nil
 	}
-	accountRef, err := r.accountRef()
+	accountRef, err := r.accountRef(ctx)
 	if err != nil {
 		return performance.DashboardView{}, err
 	}

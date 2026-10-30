@@ -56,7 +56,7 @@ func TestHTTPAPIProductionReaderMasksAccountAndCachesBrokerResources(t *testing.
 	}}
 	reader := &httpAPIReader{
 		now: func() time.Time { return now }, holdings: holdings, orders: orders,
-		accountRef: func() (string, error) { return "raw-account-1234", nil },
+		accountRef: func(context.Context) (string, error) { return "raw-account-1234", nil },
 	}
 
 	for range 2 {

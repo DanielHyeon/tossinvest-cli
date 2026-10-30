@@ -122,7 +122,10 @@ func buildConsoleAccountBroker(ctx context.Context, root *rootOptions) (verifyli
 	if err := ctx.Err(); err != nil {
 		return nil, "", err
 	}
-	client := official.New(*creds, tokenFile)
+	client, err := newRootOfficialClient(ctx, root, *creds, tokenFile, root.officialOptions...)
+	if err != nil {
+		return nil, "", err
+	}
 	accountRef, _, err := resolveVerifyAccount(ctx, client, sleepFor)
 	if err != nil {
 		return nil, "", err

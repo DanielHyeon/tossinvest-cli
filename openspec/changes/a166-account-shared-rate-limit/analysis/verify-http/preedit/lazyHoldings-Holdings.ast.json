@@ -1,0 +1,71 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "583d25f3d2dd202d865e6177f8f2a0bf7d8654d8d45df12db74712e7fafc83d7",
+  "package": "main",
+  "function": "Holdings",
+  "receiver": "lazyHoldings",
+  "signature": "lazyHoldings.Holdings(params=2, results=2)",
+  "start": {
+    "line": 914,
+    "column": 1
+  },
+  "end": {
+    "line": 921,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 916,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 917,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 920,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 915,
+        "column": 20
+      },
+      "text": "l.shared.resolve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 920,
+        "column": 9
+      },
+      "text": "read"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 915,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

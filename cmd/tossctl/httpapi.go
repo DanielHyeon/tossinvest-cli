@@ -196,24 +196,30 @@ func runHTTPAPI(cmd *cobra.Command, root *rootOptions, opts *httpAPIOptions) err
 	}()
 	fmt.Fprintf(cmd.OutOrStdout(), "httpapi private endpoint %s/api/v1\n", strings.TrimSuffix(opts.publicURL, "/"))
 
+	var firstErr error
+	received := false
 	select {
-	case err := <-serveErr:
-		if errors.Is(err, http.ErrServerClosed) {
-			return nil
-		}
-		return err
+	case firstErr = <-serveErr:
+		received = true
 	case <-ctx.Done():
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := server.Shutdown(shutdownCtx); err != nil {
-			return err
-		}
-		err := <-serveErr
-		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			return err
-		}
-		return nil
 	}
+	return finishHTTPAPIServer(server, serveErr, firstErr, received, 5*time.Second)
+}
+
+func finishHTTPAPIServer(server *http.Server, served <-chan error, firstErr error, received bool, wait time.Duration) error {
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), wait)
+	shutdownErr := server.Shutdown(shutdownCtx)
+	cancel()
+	if shutdownErr != nil {
+		shutdownErr = errors.Join(shutdownErr, server.Close())
+	}
+	if !received {
+		firstErr = <-served
+	}
+	if errors.Is(firstErr, http.ErrServerClosed) {
+		firstErr = nil
+	}
+	return errors.Join(firstErr, shutdownErr)
 }
 
 // unavailableStrategyRuntime 은 붙지 못한 endpoint 자리에 꽂는 **항상 실패하는** reader 다.
@@ -644,15 +650,15 @@ func openHTTPAPIResources(ctx context.Context, root *rootOptions, now func() tim
 	}
 	resources.optimization = store
 
-	shared := newConsoleBroker(root)
+	shared := newConsoleBroker(root, ctx)
 	adoptionSettings := newAdoptionSettingsSeam(root)
 	reader := &httpAPIReader{
 		now: now, holdings: newConsoleHoldings(shared), orders: consoleOrdersSeam(shared),
 		signals: consoleSignalsSeam(root), journal: journalReader, journalErr: journalErr,
 		performance: resources.performance.Performance, performanceErr: performanceErr,
 		optimization: store,
-		accountRef: func() (string, error) {
-			_, accountRef, err := shared.resolve()
+		accountRef: func(ctx context.Context) (string, error) {
+			_, accountRef, err := shared.resolve(ctx)
 			return accountRef, err
 		},
 	}
