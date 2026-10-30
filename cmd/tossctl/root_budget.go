@@ -8,6 +8,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/redact"
 )
 
@@ -96,3 +97,18 @@ func (o *rootBudgetOwner) Close() error {
 }
 
 var errMonitorFailed = errors.New("monitor api failed")
+
+// newRootOfficialClient borrows the root's factory; an absent owner preserves legacy OFF callers.
+func newRootOfficialClient(ctx context.Context, root *rootOptions, creds official.Credentials, tokenFile string, opts ...official.Option) (*official.Client, error) {
+	if root == nil || root.budgetOwner == nil {
+		return official.New(creds, tokenFile, opts...), nil
+	}
+	if ctx == nil {
+		return nil, accountbudget.ErrUnavailable
+	}
+	factory, err := root.budgetOwner.get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return factory.NewClient(creds, tokenFile, opts...)
+}
