@@ -40,7 +40,7 @@ const (
 	// error is treated as transient too — for a *query* that is the safe
 	// direction, because the alternative is giving up on data the engine needs.
 	ClassTransient ErrorClass = "transient"
-	// ClassRateLimited is 429: retryable only within the Retry-After cap.
+	// ClassRateLimited is 429: OFF retries within the cap; bound engine polls stop.
 	ClassRateLimited ErrorClass = "rate_limited"
 	// ClassAuthFatal is 401/403: never retried, and it latches the entry gate.
 	ClassAuthFatal ErrorClass = "auth_fatal"
@@ -303,6 +303,7 @@ type ModeEscalation interface {
 // Retrier runs required queries under the matrix and reports their outcome to the
 // entry gate.
 type Retrier struct {
+	poll   *enginePollBinding
 	Policy RetryPolicy
 	Clock  clock.Clock
 	// Gate is notified of successes (freshness) and auth failures (latch).
@@ -333,6 +334,10 @@ type Retrier struct {
 // freshness (which is what auto-clears a staleness block) and a 401/403 latches
 // the entry gate before the error is even returned.
 func (r *Retrier) Query(ctx context.Context, kind RequiredQuery, fn func(context.Context) error) error {
+	ctx, collector, err := r.pollContext(ctx, kind)
+	if err != nil {
+		return err
+	}
 	policy := r.Policy
 	if policy.MaxAttempts <= 0 {
 		policy = DefaultRetryPolicy()
@@ -347,7 +352,17 @@ func (r *Retrier) Query(ctx context.Context, kind RequiredQuery, fn func(context
 	for attempt := 1; attempt <= policy.MaxAttempts; attempt++ {
 		err := fn(ctx)
 		lastErr = err
-		switch ClassifyQueryError(err) {
+		class := ClassifyQueryError(err)
+		if collector != nil && class == ClassAuthFatal {
+			if r.Gate != nil {
+				r.Gate.Block(ReasonBrokerAuthRejected, fmt.Sprintf("%s was refused by the broker: %v", kind, err))
+			}
+			return errors.Join(err, r.escalateCredentialFailure(ctx), pollError(collector, err))
+		}
+		if observedErr := pollError(collector, err); observedErr != nil {
+			return observedErr
+		}
+		switch class {
 		case ClassOK:
 			if r.Gate != nil {
 				r.Gate.RecordSuccess(kind)

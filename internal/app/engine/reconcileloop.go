@@ -371,6 +371,9 @@ func (c *Context) ReconcileDriver(opts ReconcileDriverOptions) (*ReconcileDriver
 	if opts.Prices == nil {
 		opts.Prices = c.Official
 	}
+	if !opts.Retrier.EnginePollReaderAllowed(opts.Prices) {
+		return nil, fmt.Errorf("%w: reader does not match poll binding", ErrReconcileDriverUnavailable)
+	}
 	if opts.Alerts == nil && c.Notifier != nil {
 		opts.Alerts = c.Notifier
 	}

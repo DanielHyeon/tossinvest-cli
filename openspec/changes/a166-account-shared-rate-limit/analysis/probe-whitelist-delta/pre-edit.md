@@ -1,0 +1,2 @@
+# 사전 FLM/BTM — a087 probe test import allowlist
+기준 6e0968222. TestImportsStayInsideTheAllowlist는 non-test 소스를 parse하고 import 경로를 allowlist와 비교한다. 현재 production main.go가 이미 사용하는 accountbudgetruntime만 허용 목록에 추가한다. 다른 패키지·금지 경계와 production 코드는 건드리지 않는다. 사전 AST pre-ast.json. 실제 RED는 accountbudgetruntime 미허용 하나이며 wire/network 실행 없는 정적 시험이다. 변경 후 같은 정확 시험 normal/tagged race를 확인하고, 미허용 import 제거 또는 전체 허용 등 범위 확장은 하지 않는다. 테스트 함수 한 값 추가이므로 이 문서가 비례 FLM/BTM이다.

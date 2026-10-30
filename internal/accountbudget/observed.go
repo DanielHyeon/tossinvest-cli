@@ -68,6 +68,7 @@ func requestObservation(ctx context.Context) observedScope {
 }
 
 var ErrObservationDeferred = errors.New("observation poll deferred")
+var ErrObservationRateLimited = errors.New("observation recorded rate limit")
 
 func retryAfterHint(value string, now time.Time) *time.Duration {
 	value = strings.TrimSpace(value)

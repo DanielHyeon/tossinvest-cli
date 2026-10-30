@@ -338,6 +338,10 @@ func NewExitObserver(opts ExitObserverOptions) (*ExitObserver, error) {
 			"prices the round trip as free and drops the break-even baseline onto the entry price")
 	}
 
+	if !opts.Retrier.EnginePollReaderAllowed(opts.Prices) {
+		return nil, errors.New("engine: exit reader does not match poll binding")
+	}
+
 	ratchet := exitpolicy.DefaultRatchetConfig()
 	if opts.Ratchet != nil {
 		ratchet = *opts.Ratchet
