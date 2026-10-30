@@ -1,3 +1,13 @@
+# 현재 결론과 읽는 법 (2026-10-31)
+
+현재 통합 prototype은 동일 응답 본문의 `Read` 종료, 사용자 `Close`, context 취소에 따른 `Close`가 경합할 때 기저 `Close`와 finish를 각각 정확히 한 번 실행하며, 기저 Close 오류가 있으면 각 명시적 `Close` 반환값으로 보존한다. `TestResponseOwnerConcurrentReadCloseCancelExactlyOnce`는 정상 및 Close 오류 두 경우를 counter와 race detector로 확인했다. 최종 대상 전체 `go test -race -count=1 -timeout=50s ./openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype` 결과는 `owner-final-green.log` (Go 1.26.5, 20.560s)다. 이 counter 시험은 모의 body를 사용하고, 아래 TLS fixture는 별개다.
+
+아래 절들은 시점별 **과거 연구 기록**이다. 옛 절에서 표현한 `resp.TLS nil`, body Close 누락, 헤더 시점 소유권 해제, 별도 취소 helper의 미통합은 이후 절의 수정·시험으로 대체되며 현재 최종 결론이 아니다. 실패·변이 기록은 당시 증거로 유지한다. 위 race 단위 시험은 임의의 비협조 transport 또는 무한 OS 정지를 보장하지 않는다.
+
+판단: 제한된 지원환경의 transport 설계 후보로 독립 리뷰·Manager 판단에 제공 가능하다. 제품 승인·활성화·브로커 도착률 보장은 아니다. 공유 inode 신뢰, priority, 429, production authority/OFF, 전 경로 배선·실패 정책은 별도이며 끝나지 않았다. Background 요청 + timeout 0 + caller 미종료 body는 자원과 gate를 계속 보유한다. gstack checklist 수동 검토: Close 오류를 반환하면서 finish가 1회 실행되는 fixture를 확인했으나, production에서 오류 관측/정책과 별도 전송 경로는 미검증. 외부 CLI 리뷰 및 전체 gate는 미실행.
+
+---
+
 # TLS 전송 연구 (2026-10-31)
 
 기준 `e32606d4bd44de3142f3c732ab86ecee913e3ab0`; Go 1.26.5; 표준 라이브러리만. 이 디렉터리는 실험이며 제품 코드가 아니다. 테스트 전용 자체 서명 TLS server만 사용했다.
