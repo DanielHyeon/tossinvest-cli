@@ -1,0 +1,5 @@
+--- FAIL: TestTransportTemplateDoesNotMutateOfficialAndAcceptsA112Clone (0.02s)
+    template_test.go:30: input changed: next=map[h2:0x89eac0 unencrypted_http2:0x89e8c0] protos=[h2 http/1.1]
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.037s
+FAIL
