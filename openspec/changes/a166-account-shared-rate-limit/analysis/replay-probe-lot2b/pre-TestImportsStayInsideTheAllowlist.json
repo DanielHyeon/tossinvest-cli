@@ -1,0 +1,102 @@
+{
+  "file": "tools/a087-market-sell-probe/static_test.go",
+  "source_sha256": "c3c08f73bd1949b544c556d8c79b5060cef38a24430ce38e18e0ab8c7b2edef4",
+  "package": "main",
+  "function": "TestImportsStayInsideTheAllowlist",
+  "signature": "TestImportsStayInsideTheAllowlist(params=1, results=0)",
+  "start": {
+    "line": 189,
+    "column": 1
+  },
+  "end": {
+    "line": 204,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 197,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 199,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 2
+      },
+      "text": "t.Parallel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 26
+      },
+      "text": "nonTestSources"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 15
+      },
+      "text": "strconv.Unquote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 198,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

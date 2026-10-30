@@ -1,0 +1,5 @@
+--- FAIL: TestA166ProbeRequiredNilRejectsBeforeOpenAndReceipt (0.00s)
+    a166_budget_test.go:147: nil budget produced side effect
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a087-market-sell-probe	0.015s
+FAIL

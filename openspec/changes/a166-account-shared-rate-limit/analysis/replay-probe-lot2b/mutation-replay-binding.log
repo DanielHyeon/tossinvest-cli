@@ -1,0 +1,5 @@
+--- FAIL: TestA166ReplayRejectsForeignBudgetAndEndpointBeforeHeaders (0.04s)
+    a166_replay_budget_test.go:116: mismatch accepted <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.064s
+FAIL

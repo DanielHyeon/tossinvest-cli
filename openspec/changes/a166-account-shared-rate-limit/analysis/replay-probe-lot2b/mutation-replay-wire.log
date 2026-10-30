@@ -1,0 +1,5 @@
+--- FAIL: TestA166ReplayDirectPostCannotBypassHeldBudget (0.77s)
+    a166_replay_budget_test.go:198: error=<nil> posts=1
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.786s
+FAIL

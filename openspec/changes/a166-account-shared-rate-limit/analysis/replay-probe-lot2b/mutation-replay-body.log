@@ -1,0 +1,5 @@
+--- FAIL: TestA166ReplayTokenAndStoredBodyShareBudget (0.79s)
+    a166_replay_budget_test.go:99: wire body/header mismatch
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.798s
+FAIL

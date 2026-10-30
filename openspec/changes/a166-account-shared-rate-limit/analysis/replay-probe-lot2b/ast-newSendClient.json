@@ -1,0 +1,36 @@
+{
+  "file": "tools/a087-market-sell-probe/send.go",
+  "source_sha256": "ed2cbc3e339eaffa7ea56edce370e18e3c3e050875e026f0de53933de7f575d7",
+  "package": "main",
+  "function": "newSendClient",
+  "signature": "newSendClient(params=1, results=1)",
+  "start": {
+    "line": 54,
+    "column": 1
+  },
+  "end": {
+    "line": 65,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 63,
+        "column": 63
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -28,12 +28,14 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"syscall"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"golang.org/x/term"
@@ -59,6 +61,11 @@ type deps struct {
 	stdinIsTerminal func() bool
 	openClient      func(configDir string) (headerSource, string, error)
 	sendTimeout     time.Duration
+	budgetRequired  bool
+	budget          *accountbudget.Budget
+	budgetClient    *official.Client
+	budgetCleanup   func(error)
+	budgetTemplate  *http.Transport
 }
 
 func main() {
@@ -209,13 +216,32 @@ func execute(ctx context.Context, o options, d deps) (int, error) {
 		return exitError, fmt.Errorf("checking the receipt path (nothing was sent): %w", err)
 	}
 
-	source, baseURL, err := d.openClient(o.configDir)
-	if err != nil {
-		return exitError, err
+	var source headerSource
+	var baseURL string
+	var sendClient *http.Client
+	if d.budgetRequired {
+		if d.budget == nil || d.budgetClient == nil || d.budgetCleanup == nil || !d.budgetClient.UsesAccountBudget(d.budget) {
+			return exitError, accountbudget.ErrUnavailable
+		}
+		sendClient, err = newBudgetedSendClient(d.sendTimeout, d.budget, d.budgetCleanup, d.budgetTemplate)
+		if err != nil {
+			return exitError, err
+		}
+		source, baseURL = d.budgetClient, d.budgetClient.BaseURL()
+		ctx = accountbudget.WithPriority(ctx, accountbudget.Critical)
+	} else {
+		source, baseURL, err = d.openClient(o.configDir)
+		if err != nil {
+			return exitError, err
+		}
+		sendClient = newSendClient(d.sendTimeout)
 	}
 	headers, err := source.AuthHeaders(ctx)
 	if err != nil {
 		return exitError, fmt.Errorf("getting headers from the shared token manager (nothing was sent): %w", err)
+	}
+	if d.budgetRequired && !d.budgetClient.UsesAccountBudget(d.budget) {
+		return exitError, accountbudget.ErrUnavailable
 	}
 	if headers[official.HeaderAuthorization] == "" || headers[official.HeaderAccount] == "" {
 		return exitError, errNoHeaders
@@ -230,7 +256,7 @@ func execute(ctx context.Context, o options, d deps) (int, error) {
 		return exitError, fmt.Errorf("%w (nothing was sent)", err)
 	}
 
-	result := sendOnce(newSendClient(d.sendTimeout), req, d.now)
+	result := sendOnce(sendClient, req, d.now)
 
 	final := completeReceipt(pending, result, id)
 	writeErr := finalizeReceipt(path, final)

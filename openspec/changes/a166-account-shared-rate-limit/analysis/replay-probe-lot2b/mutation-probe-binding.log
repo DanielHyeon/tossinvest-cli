@@ -1,0 +1,5 @@
+--- FAIL: TestA166ProbeBudgetMismatchBeforeToken (0.43s)
+    a166_budget_test.go:129: code 1 err getting headers from the shared token manager (nothing was sent): official: server error
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a087-market-sell-probe	0.444s
+FAIL

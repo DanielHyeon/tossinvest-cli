@@ -1,0 +1,245 @@
+{
+  "file": "tools/a087-market-sell-probe/a166_budget_test.go",
+  "source_sha256": "5e81d4e12b8fc77ce1d1115028fdd536faaab2cf7f8dafbddfaf5734ecd945bf",
+  "package": "main",
+  "function": "TestA166ProbeBudgetMismatchBeforeToken",
+  "signature": "TestA166ProbeBudgetMismatchBeforeToken(params=1, results=0)",
+  "start": {
+    "line": 104,
+    "column": 1
+  },
+  "end": {
+    "line": 126,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 120,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 7
+      },
+      "text": "newHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 11
+      },
+      "text": "h.previewToken"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 7
+      },
+      "text": "probeBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 11
+      },
+      "text": "probeBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 15
+      },
+      "text": "official.NewWithAccountBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 7
+      },
+      "text": "h.deps"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 13
+      },
+      "text": "run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 17
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 27
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 5
+      },
+      "text": "h.mock.totalCalls"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 50
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 54
+      },
+      "text": "h.receiptFiles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 108,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 109,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 114,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 115,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 119,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

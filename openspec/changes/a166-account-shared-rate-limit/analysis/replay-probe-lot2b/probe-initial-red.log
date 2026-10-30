@@ -1,0 +1,4 @@
+# github.com/JungHoonGhae/tossinvest-cli/tools/a087-market-sell-probe [github.com/JungHoonGhae/tossinvest-cli/tools/a087-market-sell-probe.test]
+tools/a087-market-sell-probe/a166_budget_test.go:12:12: undefined: newBudgetedSendClient
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a087-market-sell-probe [build failed]
+FAIL
