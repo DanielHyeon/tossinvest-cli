@@ -1,0 +1,5 @@
+--- FAIL: TestA166RootFactoryConcurrentReuseAndClose (0.39s)
+    a166_root_budget_test.go:122: closing owner reopened
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.405s
+FAIL

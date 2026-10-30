@@ -1,0 +1,5 @@
+--- FAIL: TestA166EngineDecoratorCannotRemoveRequiredBudget (0.43s)
+    a166_root_budget_test.go:389: engine bootstrap bypass: engine: the account could not be resolved from GET /api/v1/accounts, so nothing the engine records could be attributed to it: official: server error
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.442s
+FAIL

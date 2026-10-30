@@ -40,6 +40,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
@@ -197,7 +198,15 @@ func runFlatten(cmd *cobra.Command, root *rootOptions, opts *flattenOptions) err
 // policy, same journal path, same gateway options, same refusal without
 // credentials.
 func buildFlattenWiring(ctx context.Context, root *rootOptions, opts *flattenOptions) (*flattenWiring, error) {
-	orderPath, err := engine.NewOrderPath(engine.Options{ConfigDir: root.configDir})
+	var budget *accountbudgetruntime.Factory
+	if root.budgetOwner != nil {
+		var err error
+		budget, err = root.budgetOwner.get(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	orderPath, err := engine.NewOrderPath(engine.Options{ConfigDir: root.configDir, BudgetFactory: budget, OfficialOptions: root.officialOptions})
 	if err != nil {
 		return nil, err
 	}

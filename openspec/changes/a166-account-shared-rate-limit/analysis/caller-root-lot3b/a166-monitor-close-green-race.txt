@@ -1,0 +1,8 @@
+=== RUN   TestA166ExecutePreservesCommandAndCloseErrors
+--- PASS: TestA166ExecutePreservesCommandAndCloseErrors (0.41s)
+=== RUN   TestA166MonitorMainExitOne
+--- PASS: TestA166MonitorMainExitOne (0.04s)
+=== RUN   TestA166MonitorAndCloseErrorPreserveBothCauses
+--- PASS: TestA166MonitorAndCloseErrorPreserveBothCauses (0.39s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	1.880s

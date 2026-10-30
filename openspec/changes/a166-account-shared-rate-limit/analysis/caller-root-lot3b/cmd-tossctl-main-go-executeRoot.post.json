@@ -1,0 +1,108 @@
+{
+  "file": "cmd/tossctl/main.go",
+  "source_sha256": "e805e81790c54ca3309ed188e6d4791ddfc472a772822c076a44f231b0da6755",
+  "package": "main",
+  "function": "executeRoot",
+  "signature": "executeRoot(params=2, results=1)",
+  "start": {
+    "line": 29,
+    "column": 1
+  },
+  "end": {
+    "line": 42,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 32,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 35,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 38,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 36,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 39,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 9
+      },
+      "text": "root.Execute"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 14
+      },
+      "text": "opts.budgetOwner.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 9
+      },
+      "text": "errors.Join"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 30,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 33,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

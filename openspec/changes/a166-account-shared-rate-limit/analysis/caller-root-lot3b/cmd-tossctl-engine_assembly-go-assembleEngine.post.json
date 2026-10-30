@@ -1,0 +1,146 @@
+{
+  "file": "cmd/tossctl/engine_assembly.go",
+  "source_sha256": "312d0f89d7d90bac731ea56b06e4706f78d6761e802cf92b7ba2b0d581671872",
+  "package": "main",
+  "function": "assembleEngine",
+  "signature": "assembleEngine(params=6, results=2)",
+  "start": {
+    "line": 15,
+    "column": 1
+  },
+  "end": {
+    "line": 54,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 19,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 23,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 26,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 47,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 27,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 53,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 17
+      },
+      "text": "root.budgetOwner.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 20
+      },
+      "text": "engineOperator"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 3
+      },
+      "text": "decorate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 9
+      },
+      "text": "engine.NewContext"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 18,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 20,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 25,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 30,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 51,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

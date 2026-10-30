@@ -1,0 +1,141 @@
+{
+  "file": "cmd/tossctl/main.go",
+  "source_sha256": "e805e81790c54ca3309ed188e6d4791ddfc472a772822c076a44f231b0da6755",
+  "package": "main",
+  "function": "main",
+  "signature": "main(params=0, results=0)",
+  "start": {
+    "line": 13,
+    "column": 1
+  },
+  "end": {
+    "line": 27,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 21,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 22,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 14,
+        "column": 2
+      },
+      "text": "i18n.SetLang"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 14,
+        "column": 15
+      },
+      "text": "i18n.Resolve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 16,
+        "column": 36
+      },
+      "text": "newRootBudgetOwner"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 17,
+        "column": 10
+      },
+      "text": "newRootCmdWithOptions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 20,
+        "column": 2
+      },
+      "text": "root.SetErr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 20,
+        "column": 14
+      },
+      "text": "redact.Writer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 12
+      },
+      "text": "executeRoot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 4
+      },
+      "text": "fmt.Fprintln"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 17
+      },
+      "text": "redact.Writer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 3
+      },
+      "text": "os.Exit"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 16,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 17,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 21,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

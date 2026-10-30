@@ -1,0 +1,813 @@
+{
+  "file": "cmd/tossctl/root.go",
+  "source_sha256": "0518c98a96a67e9a85eafc2e7fd6a93937b3bf0166c61327c1c15c1327082cac",
+  "package": "main",
+  "function": "newRootCmdWithOptions",
+  "signature": "newRootCmdWithOptions(params=1, results=1)",
+  "start": {
+    "line": 61,
+    "column": 1
+  },
+  "end": {
+    "line": 211,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 71,
+        "column": 4
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 80,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 88,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 94,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 96,
+        "column": 5
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 97,
+        "column": 6
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 105,
+        "column": 5
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 72,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 110,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 210,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 17
+      },
+      "text": "i18n.T"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 17
+      },
+      "text": "i18n.T"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 25
+      },
+      "text": "cmd.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 19
+      },
+      "text": "output.ParseFormat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 13
+      },
+      "text": "session.NewFileStore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 34
+      },
+      "text": "resolveSessionFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 15
+      },
+      "text": "store.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 26
+      },
+      "text": "cmd.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 25
+      },
+      "text": "resolveUpdateCachePath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 16
+      },
+      "text": "updatecheck.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 4
+      },
+      "text": "writeExpiryWarningIfNeeded"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 31
+      },
+      "text": "cmd.ErrOrStderr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 56
+      },
+      "text": "cmd.Name"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 76
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 22
+      },
+      "text": "loadConfigStatus"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 5
+      },
+      "text": "writeConfigLegacyWarningIfNeeded"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 38
+      },
+      "text": "cmd.ErrOrStderr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 65
+      },
+      "text": "cmd.Name"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 28
+      },
+      "text": "resolveOpenAPIPaths"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 23
+      },
+      "text": "official.LoadCredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 8
+      },
+      "text": "shouldHintOnboarding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 36
+      },
+      "text": "tui.IsInteractive"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 76
+      },
+      "text": "cmd.Name"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 6
+      },
+      "text": "fmt.Fprintln"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 19
+      },
+      "text": "cmd.ErrOrStderr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 4
+      },
+      "text": "writeUpdateNoticeIfNeeded"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 30
+      },
+      "text": "cmd.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 45
+      },
+      "text": "cmd.ErrOrStderr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 2
+      },
+      "text": "cmd.PersistentFlags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 3
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 2
+      },
+      "text": "cmd.PersistentFlags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 2
+      },
+      "text": "cmd.PersistentFlags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 2
+      },
+      "text": "cmd.PersistentFlags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 2
+      },
+      "text": "String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 2
+      },
+      "text": "cmd.PersistentFlags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 2
+      },
+      "text": "cmd.AddCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 3
+      },
+      "text": "newInitCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 3
+      },
+      "text": "newVersionCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 3
+      },
+      "text": "newUpdateCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 3
+      },
+      "text": "newDoctorCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 3
+      },
+      "text": "newConfigCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 3
+      },
+      "text": "newAuthCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 3
+      },
+      "text": "newOpenAPICmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 3
+      },
+      "text": "newAccountCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 3
+      },
+      "text": "newPortfolioCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 3
+      },
+      "text": "newLendingCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 3
+      },
+      "text": "newAccumulateCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 3
+      },
+      "text": "newProfitCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 3
+      },
+      "text": "newTaxCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 3
+      },
+      "text": "newOrdersCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 3
+      },
+      "text": "newTransactionsCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 3
+      },
+      "text": "newWatchlistCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 3
+      },
+      "text": "newQuoteCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 3
+      },
+      "text": "newMarketCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 162,
+        "column": 3
+      },
+      "text": "newCommunityCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 3
+      },
+      "text": "newOrderCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 3
+      },
+      "text": "newFlattenCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 3
+      },
+      "text": "newExportCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 3
+      },
+      "text": "newPushCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 3
+      },
+      "text": "newMonitorCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 3
+      },
+      "text": "newMCPCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 3
+      },
+      "text": "newOpsCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 3
+      },
+      "text": "newSoakCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 3
+      },
+      "text": "newVerifyCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 3
+      },
+      "text": "newConsoleCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 3
+      },
+      "text": "newEngineCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 3
+      },
+      "text": "newHTTPAPICmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 3
+      },
+      "text": "newCandidateCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 3
+      },
+      "text": "newPerformanceCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 3
+      },
+      "text": "newScrubAccountRecordsCmd"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 69,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 70,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 74,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 75,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 80,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 81,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 82,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 83,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 84,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 85,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 88,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 95,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 96,
+        "column": 8
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 97,
+        "column": 9
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 98,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 101,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

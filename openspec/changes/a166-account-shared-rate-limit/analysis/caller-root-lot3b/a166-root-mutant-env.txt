@@ -1,0 +1,5 @@
+--- FAIL: TestA166RootBudgetEnvMatrix (0.00s)
+    a166_root_budget_test.go:42: case {mode: modeSet:true manifest: manifestSet:false valid:false}: <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.011s
+FAIL

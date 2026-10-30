@@ -1,0 +1,4 @@
+# github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl [github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl.test]
+cmd/tossctl/a166_root_budget_test.go:436:12: undefined: monitorCloseError
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl [build failed]
+FAIL

@@ -1,0 +1,18 @@
+=== RUN   TestA166DirectAppBuilderMissingContextFailsClosed
+--- PASS: TestA166DirectAppBuilderMissingContextFailsClosed (0.01s)
+=== RUN   TestA166CanceledRequiredStartupNoWire
+--- PASS: TestA166CanceledRequiredStartupNoWire (0.02s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	1.078s
+=== RUN   TestA166AppBudgetProviderFollowsRouting
+=== RUN   TestA166AppBudgetProviderFollowsRouting/wts
+=== RUN   TestA166AppBudgetProviderFollowsRouting/disabled
+=== RUN   TestA166AppBudgetProviderFollowsRouting/official
+--- PASS: TestA166AppBudgetProviderFollowsRouting (0.00s)
+    --- PASS: TestA166AppBudgetProviderFollowsRouting/wts (0.00s)
+    --- PASS: TestA166AppBudgetProviderFollowsRouting/disabled (0.00s)
+    --- PASS: TestA166AppBudgetProviderFollowsRouting/official (0.00s)
+=== RUN   TestA166AppNilFactoryIsError
+--- PASS: TestA166AppNilFactoryIsError (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app	1.016s

@@ -1,0 +1,251 @@
+{
+  "file": "internal/app/engine/engine.go",
+  "source_sha256": "8e6c823871045e4eb770b44a18be51fb7acc3602b444d4af87bb9ac6eaf7d8da",
+  "package": "engine",
+  "function": "NewOrderPath",
+  "signature": "NewOrderPath(params=1, results=2)",
+  "start": {
+    "line": 362,
+    "column": 1
+  },
+  "end": {
+    "line": 409,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 364,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 369,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 374,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 379,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 383,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 389,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 370,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 375,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 380,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 384,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 390,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 399,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 16
+      },
+      "text": "apppaths.Resolve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 373,
+        "column": 14
+      },
+      "text": "Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 373,
+        "column": 14
+      },
+      "text": "config.NewService"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 373,
+        "column": 55
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 378,
+        "column": 30
+      },
+      "text": "apppaths.OpenAPI"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 382,
+        "column": 16
+      },
+      "text": "official.LoadCredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 393,
+        "column": 9
+      },
+      "text": "official.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 404,
+        "column": 16
+      },
+      "text": "WithConditional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 404,
+        "column": 16
+      },
+      "text": "trading.NewService"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 363,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 365,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 368,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 373,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 378,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 382,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 393,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 394,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

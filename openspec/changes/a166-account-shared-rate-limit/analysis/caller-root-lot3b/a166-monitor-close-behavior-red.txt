@@ -1,0 +1,6 @@
+=== RUN   TestA166MonitorAndCloseErrorPreserveBothCauses
+    a166_root_budget_test.go:452: wrong combined monitor result: budget has active owners
+--- FAIL: TestA166MonitorAndCloseErrorPreserveBothCauses (0.39s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.405s
+FAIL

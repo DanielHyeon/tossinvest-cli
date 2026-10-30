@@ -29,6 +29,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
@@ -64,6 +65,7 @@ var ErrAccountUnresolved = errors.New(
 
 // Options are the engine's startup inputs.
 type Options struct {
+	BudgetFactory *accountbudgetruntime.Factory
 	// ConfigDir overrides the config directory, exactly as the CLI's
 	// --config-dir does. Empty uses the per-user default.
 	ConfigDir string
@@ -390,7 +392,15 @@ func NewOrderPath(opts Options) (*OrderPath, error) {
 		return nil, ErrOfficialCredentialsRequired
 	}
 
-	off := official.New(*creds, tokenFile, opts.OfficialOptions...)
+	var off *official.Client
+	if opts.BudgetFactory == nil {
+		off = official.New(*creds, tokenFile, opts.OfficialOptions...)
+	} else {
+		off, err = opts.BudgetFactory.NewClient(*creds, tokenFile, opts.OfficialOptions...)
+		if err != nil {
+			return nil, err
+		}
+	}
 	broker := &officialBroker{off: off}
 
 	// No lineage recorder: order lineage is recorded in the journal transaction

@@ -1,0 +1,6 @@
+=== RUN   TestA166MonitorFailureOutputAndNoBudgetOpen
+    a166_root_budget_test.go:327: output: "  ✗ fixture — status=503: unavailable\n\n0 passed, 1 failed\n" ""
+--- FAIL: TestA166MonitorFailureOutputAndNoBudgetOpen (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.046s
+FAIL

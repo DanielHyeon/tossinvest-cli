@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/auth"
 	tossclient "github.com/JungHoonGhae/tossinvest-cli/internal/client"
@@ -41,6 +42,7 @@ import (
 // The zero value is meaningful for every field except OutputFormat, which is
 // parsed strictly (as the --output flag always is).
 type Options struct {
+	BudgetProvider func() (*accountbudgetruntime.Factory, error)
 	// OutputFormat is the --output value: "table", "json" or "csv".
 	OutputFormat string
 	// ConfigDir overrides the config directory (--config-dir). When set, the
@@ -129,7 +131,21 @@ func New(opts Options) (*Context, error) {
 
 	var off *official.Client
 	if creds != nil && cfg.OpenAPI.Enabled && prefer != "wts" {
-		off = official.New(*creds, tokenFile)
+		if opts.BudgetProvider == nil {
+			off = official.New(*creds, tokenFile)
+		} else {
+			factory, err := opts.BudgetProvider()
+			if err != nil {
+				return nil, err
+			}
+			if factory == nil {
+				return nil, errors.New("budget factory missing")
+			}
+			off, err = factory.NewClient(*creds, tokenFile)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	h := hybrid.New(wtsClient, off, hybrid.Policy{Prefer: prefer, Fallback: cfg.OpenAPI.Fallback}, os.Stderr)

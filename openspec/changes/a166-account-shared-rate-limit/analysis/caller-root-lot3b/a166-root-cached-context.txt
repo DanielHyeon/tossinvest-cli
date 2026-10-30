@@ -1,0 +1,4 @@
+=== RUN   TestA166RootCachedFactoryRejectsCanceledContext
+--- PASS: TestA166RootCachedFactoryRejectsCanceledContext (0.02s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	1.069s

@@ -1,0 +1,5 @@
+--- FAIL: TestA166MonitorAndCloseErrorPreserveBothCauses (0.00s)
+    a166_root_budget_test.go:438: lost cause
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.011s
+FAIL
