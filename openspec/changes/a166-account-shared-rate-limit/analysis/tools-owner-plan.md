@@ -1,6 +1,6 @@
 # 독립 도구의 budget 수명 — 검토안
 
-기준 `686842b0889f257389b1ab99fcc31cf5f1dea674`. `/tmp/a166-tools-lifetime.md`는 source 검색·손읽기 지도이며 실행·배포 증명이 아니다. Manager는 a112 cached-token reader, a130 method closure, a087 probe opener와 각 run/exit 경계를 대조했다. 독립 설계 검토 전 구현 승인은 아니다.
+기준 `686842b0889f257389b1ab99fcc31cf5f1dea674`. `/tmp/a166-tools-lifetime.md`는 source 검색·손읽기 지도이며 실행·배포 증명이 아니다. Manager는 a112 cached-token reader, a130 method closure, a087 probe opener와 각 run/exit 경계를 대조했다. 마지막 절의 독립 검토 처분을 반영해 이 문서 범위 구현을 승인했으며, 각 완성 로트는 별도 독립 검증 후 게시한다.
 
 ## 공통 설정과 소유
 

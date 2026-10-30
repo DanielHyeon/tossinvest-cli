@@ -40,6 +40,8 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/costs"
@@ -60,12 +62,16 @@ type deps struct {
 	// candles 는 config 디렉터리의 공유 토큰 캐시로 생산 client 를 열고, 읽기 함수와 그 토큰 파일 경로를 돌려줌.
 	candles func(configDir string) (candleReader, string, error)
 	pace    time.Duration
+	close   func() error
 }
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	code, err := run(ctx, os.Args[1:], deps{now: time.Now, stdout: os.Stdout, candles: openCandles, pace: candlePace})
+	mode, modeSet := os.LookupEnv("TOSSOS_ACCOUNT_BUDGET_MODE")
+	manifest, manifestSet := os.LookupEnv("TOSSOS_ACCOUNT_BUDGET_MANIFEST")
+	owner := &candleOwner{ctx: ctx, mode: mode, modeSet: modeSet, manifest: manifest, manifestSet: manifestSet}
+	code, err := run(ctx, os.Args[1:], deps{now: time.Now, stdout: os.Stdout, candles: owner.openCandles, pace: candlePace, close: owner.close})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "a130 outcome backfill: "+err.Error())
 	}
@@ -74,7 +80,22 @@ func main() {
 
 // openCandles 는 a087 · a128 도구와 같은 방식으로 생산 client 를 만듦 — 같은 토큰 캐시 파일을 공유해야 엔진 · 콘솔의 토큰을 무효화하는
 // 토큰 전쟁(a082)이 나지 않음.
-func openCandles(configDir string) (candleReader, string, error) {
+type candleOwner struct {
+	ctx                  context.Context
+	mode, manifest       string
+	modeSet, manifestSet bool
+	factory              *accountbudgetruntime.Factory
+	opts                 []official.Option
+}
+
+func (o *candleOwner) close() error {
+	if o.factory == nil {
+		return nil
+	}
+	return o.factory.Close()
+}
+
+func (o *candleOwner) openCandles(configDir string) (candleReader, string, error) {
 	credentialFile, tokenFile, err := apppaths.OpenAPI(configDir)
 	if err != nil {
 		return nil, "", fmt.Errorf("resolving the Open API paths: %w", err)
@@ -86,7 +107,22 @@ func openCandles(configDir string) (candleReader, string, error) {
 	if credentials == nil {
 		return nil, "", errors.New("no Open API credentials; run `tossctl openapi login` first")
 	}
-	return official.New(*credentials, tokenFile).MinuteCandleClosingAt, tokenFile, nil
+	cfg, err := accountbudgetruntime.ParseLaunchConfig(o.mode, o.modeSet, o.manifest, o.manifestSet)
+	if err != nil {
+		return nil, "", err
+	}
+	cfg.CleanupError = func(error) { fmt.Fprintln(os.Stderr, "budget cleanup failed") }
+	o.factory, err = accountbudgetruntime.Open(o.ctx, cfg)
+	if err != nil {
+		return nil, "", err
+	}
+	client, err := o.factory.NewClient(*credentials, tokenFile, o.opts...)
+	if err != nil {
+		return nil, "", err
+	}
+	return func(ctx context.Context, market, symbol string, label time.Time) (string, time.Time, bool, error) {
+		return client.MinuteCandleClosingAt(accountbudget.WithPriority(ctx, accountbudget.Auxiliary), market, symbol, label)
+	}, tokenFile, nil
 }
 
 type options struct {
@@ -121,7 +157,17 @@ func parseOptions(args []string) (options, error) {
 	return o, nil
 }
 
-func run(ctx context.Context, args []string, d deps) (int, error) {
+func run(ctx context.Context, args []string, d deps) (code int, result error) {
+	if d.close != nil {
+		defer func() {
+			if err := d.close(); err != nil {
+				result = errors.Join(result, err)
+				if code == 0 {
+					code = 1
+				}
+			}
+		}()
+	}
 	o, err := parseOptions(args)
 	if err != nil {
 		return 1, err

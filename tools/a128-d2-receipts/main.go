@@ -21,6 +21,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
@@ -52,6 +54,10 @@ func main() {
 }
 
 func run(market, date, configDir, ledgerPath, out string, gap time.Duration, maxSymbols int, dryRun, types bool) error {
+	return runWithOptions(market, date, configDir, ledgerPath, out, gap, maxSymbols, dryRun, types)
+}
+
+func runWithOptions(market, date, configDir, ledgerPath, out string, gap time.Duration, maxSymbols int, dryRun, types bool, opts ...official.Option) (result error) {
 	day, err := time.Parse("2006-01-02", date)
 	if err != nil {
 		return fmt.Errorf("--date: %w", err)
@@ -96,9 +102,25 @@ func run(market, date, configDir, ledgerPath, out string, gap time.Duration, max
 	if credentials == nil {
 		return errors.New("no Open API credentials; run `tossctl openapi login` first")
 	}
-	client := official.New(*credentials, tokenFile)
 	ctx, cancel := context.WithTimeout(context.Background(), runBudget)
 	defer cancel()
+	mode, modeSet := os.LookupEnv("TOSSOS_ACCOUNT_BUDGET_MODE")
+	manifest, manifestSet := os.LookupEnv("TOSSOS_ACCOUNT_BUDGET_MANIFEST")
+	cfg, err := accountbudgetruntime.ParseLaunchConfig(mode, modeSet, manifest, manifestSet)
+	if err != nil {
+		return err
+	}
+	cfg.CleanupError = func(error) { fmt.Fprintln(os.Stderr, "budget cleanup failed") }
+	factory, err := accountbudgetruntime.Open(ctx, cfg)
+	if err != nil {
+		return err
+	}
+	defer func() { result = errors.Join(result, factory.Close()) }()
+	client, err := factory.NewClient(*credentials, tokenFile, opts...)
+	if err != nil {
+		return err
+	}
+	ctx = accountbudget.WithPriority(ctx, accountbudget.Auxiliary)
 	if types {
 		path := filepath.Join(out, "security-types.json")
 		tr, err := updateTypes(ctx, client, path, market, date, symbols, time.Now)
