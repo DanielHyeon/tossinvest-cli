@@ -1,0 +1,10 @@
+2fd06d898368e0b536e4b9dbd0520ddb2d9085895e576546d58aa9dd61b0a99e  openspec/changes/a169-breakout-universes-are-compared-in-shadow/analysis/selection-core-lot/a169-mutant-final-cap.log.gz
+be1e5d9e4557ff1aacde2180c4a6b8375e4c326e17cafe0acaa70cca369c6f6c  openspec/changes/a169-breakout-universes-are-compared-in-shadow/analysis/selection-core-lot/a169-mutant-final-floor.log.gz
+79d4bf68831f474043643204c503ce98df05ab12040668e6dd57a983077b20bd  openspec/changes/a169-breakout-universes-are-compared-in-shadow/analysis/selection-core-lot/a169-mutant-final-n.log.gz
+529c30350b16efed8d43293e44fcac62f71ea28d7ffff55602094639265a901d  openspec/changes/a169-breakout-universes-are-compared-in-shadow/analysis/selection-core-lot/a169-mutant-final-symbol.log.gz
+4a90247140e171f3b5a54c66924796c45d503591755e1d4570ade917cee64cba  openspec/changes/a169-breakout-universes-are-compared-in-shadow/analysis/selection-core-lot/a169-mutant-final-type.log.gz
+88a11147f125bbd5f00545b5e6f72560f195f8dcc911bc3e77f5f5e5b8a6a971  openspec/changes/a169-breakout-universes-are-compared-in-shadow/analysis/selection-core-lot/a169-selection-empty-green.log.gz
+8befe0469de60801fd291b803e16644687ea0c382a163eb68e1ab0fc55717433  openspec/changes/a169-breakout-universes-are-compared-in-shadow/analysis/selection-core-lot/a169-selection-green3.log.gz
+5bce3a843049b294385577ccf2b36de3fd91bba551c9bd2200efd55f3095ce36  openspec/changes/a169-breakout-universes-are-compared-in-shadow/analysis/selection-core-lot/a169-selection-red.log.gz
+40c50f6654d77fa4db4a672a51692fdf51308727a15dff892706f543c0440b10  openspec/changes/a169-breakout-universes-are-compared-in-shadow/analysis/selection-core-lot/a169-selection-snapshot-normal.log.gz
+4c0eccfa216336e79d4a204e0d57ce740d6c59f3a5e0dc4bbd569154373518f7  openspec/changes/a169-breakout-universes-are-compared-in-shadow/analysis/selection-core-lot/a169-selection-snapshot-race.log.gz
