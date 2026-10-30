@@ -98,6 +98,13 @@ func TestA166EngineReconcileLocalTLS(t *testing.T) {
 		t.Fatal(err)
 	}
 	owner := a166LocalRequiredOwner(t)
+	canceled, cancel := context.WithCancel(context.Background())
+	cancel()
+	before := calls.Load()
+	_, err = buildReconcileResolveRuntime(canceled, &rootOptions{configDir: dir, budgetOwner: owner, officialOptions: opts})
+	if !errors.Is(err, context.Canceled) || calls.Load() != before {
+		t.Fatalf("canceled startup: err=%v local calls=%d", err, calls.Load()-before)
+	}
 	rt, err = buildReconcileResolveRuntime(context.Background(), &rootOptions{configDir: dir, budgetOwner: owner, officialOptions: opts})
 	if err != nil {
 		t.Fatal(err)
