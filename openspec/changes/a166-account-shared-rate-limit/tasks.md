@@ -12,10 +12,12 @@
 
 ## 1. 내부 모듈 — 배선하지 않는 첫 로트
 
-- [ ] 1.1 source 기준·영향 지도·CodeGraph/AST·Pre-Edit 기록. 기존 함수 변경이 없으면 FLM 해당 없음 사유; 기존 함수 편집 시 사전 FLM/BTM.
-- [ ] 1.2 RED: queue 우선/취소/사망·dirty·파일 검증·동일 scope, 전체 요청 수명과 local request start 간격, OFF와 required 오류 분리.
-- [ ] 1.3 GREEN: internal/accountbudget 신규 모듈. caller context, 주입 clock, 소유권·취소·응답·이벤트 오류 계약. 기존 실행 배선/운영 기본값 무변경.
-- [ ] 1.4 targeted normal/race·다중 프로세스·변이·gstack 리뷰·독립 검토. 연구 복사를 제품 검증으로 대체하지 않음.
+- [x] 1.1 source 기준·영향 지도·CodeGraph/AST·Pre-Edit 기록. 기존 함수 변경이 없으면 FLM 해당 없음 사유; 기존 함수 편집 시 사전 FLM/BTM.
+- [x] 1.2 RED: queue 우선/취소/사망·dirty·파일 검증·동일 scope, 전체 요청 수명과 local request start 간격, OFF와 required 오류 분리.
+- [x] 1.3 GREEN: internal/accountbudget 신규 모듈. caller context, 주입 clock, 소유권·취소·응답·이벤트 오류 계약. 기존 실행 배선/운영 기본값 무변경.
+- [x] 1.4 targeted normal/race·다중 프로세스·변이·gstack 리뷰·독립 검토. 연구 복사를 제품 검증으로 대체하지 않음.
+
+첫 로트 판정: `analysis/core-lot1/manager-verification.md`. OFF 기존 실행은 미배선 상태로 보존했으며 공식 클라이언트 OFF golden·전체 배선·429/운영 검증은 후속 로트다. CodeGraph 미초기화, 실제 namespace·live·전체 테스트/gate는 미검증이다.
 
 ## 2. 공식 클라이언트와 별도 전송
 
