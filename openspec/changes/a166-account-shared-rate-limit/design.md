@@ -100,7 +100,7 @@ enforcing 배포는 **기존 예산을 연다**. 각 프로세스가 시작 때 
 
 생성·점검은 운영자용 로컬 provisioning 절차로 분리한다. directory/파일 소유권·mode·symlink/hardlink·regular-file·fs 종류·device/inode·boot/time namespace를 검증한다. active 참여자가 있는 상태에서 root·lock inode·instance를 바꾸거나 자동 복구하지 않는다. 지원하지 않는 host/namespace/fs와 검증 실패는 enforcing에서 새 wire 0이며 upstream으로 돌아가지 않는다. non-Linux는 enforcing 미지원으로 명시하고 OFF의 기존 지원을 유지한다. CLI 플래그/env를 추가하더라도 실제 운영 값을 자동으로 설정하지 않는다.
 
-마지막 통합 로트에서 엔진 폴링의 응답별 429 hint, replay·token·별도 측정 전송, a087 후속 활성화 API, a169 공유 이벤트 독자를 연결한다. a087 admission의 production nil은 이 change에서 해제하지 않는다. a169 도구 구현은 검증된 계좌 admission/event API를 받는 후속 작업이다.
+마지막 통합 로트에서 엔진 폴링의 응답별 429 hint, replay·token·별도 측정 전송을 연결한다. 후속 소비자에게는 검증된 동일 Budget의 snapshot API와 실제 official.Client/ProtectivePriceLimits의 auxiliary·token·401·전체 wire 수명 통합 시험 이름 및 착지 SHA를 제공한다(`analysis/consumer-api-handoff-plan.md`). snapshot은 다음 wire와 원자적인 허가가 아니다. a087 admission의 production nil은 이 change에서 해제하지 않으며 실제 board·epoch/만료 토큰·갱신 전용 정지는 a087 D16/5.5에서 결합한다. a169의 실제 공유 이벤트 독자·prewire 중단·abort 영속성·활성 엔진 신원은 a169 도구의 후속 설계·구현이며 API 제공만으로 완료했다고 표시하지 않는다. 두 소비자의 후속 작업과 사람 단계를 삭제하거나 승인한 것이 아니다.
 
 ## 착수와 검증의 구분
 
