@@ -1,7 +1,0 @@
-net:[4026534674]
-lo               UNKNOWN        127.0.0.1/8 ::1/128 
---- FAIL: TestA166Official401TokenInheritsCritical (1.23s)
-    a166_priority_inheritance_test.go:126: 401 token did not inherit critical
-FAIL
-FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	1.240s
-FAIL

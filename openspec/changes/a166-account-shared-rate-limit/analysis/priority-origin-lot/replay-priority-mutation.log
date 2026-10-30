@@ -1,7 +1,0 @@
-net:[4026534438]
-lo               UNKNOWN        127.0.0.1/8 ::1/128 
---- FAIL: TestA166FlattenReplayQueuesCritical (1.39s)
-    a166_priority_origin_test.go:186: critical=false posts=1
-FAIL
-FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	1.393s
-FAIL
