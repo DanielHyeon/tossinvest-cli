@@ -25,11 +25,13 @@ core Provision 이후 임시 Budget을 열어 ProvisionObservation을 한 번 �
 
 v2 manifest는 budget root 외부의 소유자 전용 일반 파일 0600, nlink=1로 둔다. `version`, `root`, `scope`, `instance`, `identity.root/queue/wire`, `event_lock`을 정확하게 기록한다. 비밀키·토큰·계좌 원문은 없다. 원자적 게시와 파일/부모 fsync가 성공한 뒤에만 사용하며, 이전 manifest를 조용히 업그레이드하지 않는다. v1은 required에서 거절된다.
 
+게시 뒤 parent fsync 실패로 남은 manifest가 후속 `check`에 통과하더라도 이전 provision 실패를 성공으로 바꾸거나 crash 내구성을 증명하지 않는다. 실패 영수증과 부분 결과를 보존하고 사람이 처분하기 전에는 운영에 사용하지 않는다. check는 수리 명령이 아니다.
+
 단일 v2 manifest에 root 절대 경로가 하나이므로 모든 참여 namespace에서 그 동일 문자열 경로로 같은 root/lock 객체를 열도록 mount를 구성한다. namespace별 별도 manifest나 자동 경로 변환은 이 절차에서 허용하지 않는다. observed device/inode, effective UID, BOOTTIME/time namespace가 지원 계약에 맞는지 사람이 확인한다. 복사 디렉터리·별도 volume·다른 event.lock을 동일 group으로 승인하지 않는다. 경로 문자열만 같다는 것으로 충분하지 않다. 아래 복구 절의 구 root/manifest/바이너리 재기동 fencing은 v1→v2 첫 전환에도 동일하게 적용한다.
 
 ## 실행 전 확인과 전환
 
-네트워크 없는 검증 helper는 manifest v2 parser와 required Factory.Open/Close만 실행한다. client 생성·Accounts·token exchange·브로커 probe를 포함하지 않는다. event state/dirty/root/lock 검사가 실패하면 wire0 상태로 중단한다. 별도의 두 local process·local TLS fixture로 같은 group의 wire 간격과 event 공유를 검증하지만 실제 namespace 증거를 대체하지 않는다.
+네트워크 없는 검증 helper는 manifest v2 parser와 required Factory.Open, 현재 SystemBootSource.Snapshot, Factory.Close를 실행한다. client 생성·Accounts·token exchange·브로커 probe를 포함하지 않는다. event state/dirty/root/lock 또는 boot 검사가 실패하면 wire0 상태로 중단한다. 별도의 두 local process·local TLS fixture로 같은 group의 wire 간격과 event 공유를 검증하지만 실제 namespace 증거를 대체하지 않는다.
 
 launch 입력은 `TOSSOS_ACCOUNT_BUDGET_MODE=required`와 명시 manifest 경로 두 값이다. 둘 모두 없는 상태는 기존 OFF이며 required 운영 보장이라고 부르지 않는다. required 누락·빈 값·unknown mode를 OFF로 내리지 않는다. 설정 적용은 별도 승인 후 운영자가 수행하고 각 참여자의 실제 launch 입력을 다시 확인한다. a087 admission은 계속 nil, a169 측정은 계속 보류다.
 
@@ -47,4 +49,4 @@ required 오류를 이유로 프로세스 하나만 OFF나 raw client로 내리�
 
 ## 남은 검증
 
-독립 runbook 검토, 운영용 installer/preflight의 필요 최소 구현 또는 검증된 수동 대안, 임시 디렉터리 fixture 및 fault 시험, 실제 사람 namespace/참여자 확인이 남아 있다. impeccable: N/A — 운영 문서/backend-only. 검색한 저장소에는 runtime factory·provision leaf API와 fixture가 있으며 별도 운영 installer는 찾지 못했다. 새 의존성을 설치하거나 운영 값을 읽지 않았다.
+개발 도구 후보 ef62f4cdd792290987ada38a7830c36548627dc7의 임시 디렉터리·fault·선택 normal/tagged race와 독립 검토는 `offline-budget-tool-lot/manager-verification.md`에 기록했다. 실제 사람 namespace/UID/filesystem·참여자·drain·배포 확인은 남아 있다. impeccable: N/A — 운영 문서/backend-only. 기존 runtime factory·provision leaf API를 확장했으며 새 의존성을 설치하거나 운영 값을 읽지 않았다.
