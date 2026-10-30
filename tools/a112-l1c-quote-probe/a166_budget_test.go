@@ -4,14 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"syscall"
 	"testing"
+	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
@@ -114,5 +117,77 @@ func TestA166L1CAuxiliaryBusySendsNothing(t *testing.T) {
 	err = runWithOptions("KR", "005930", t.TempDir(), official.WithBaseURL(server.URL), official.WithHTTPClient(&http.Client{Transport: tr}))
 	if !errors.Is(err, accountbudget.ErrUnavailable) || calls.Load() != 0 {
 		t.Fatalf("busy err=%v calls=%d", err, calls.Load())
+	}
+}
+
+func TestA166L1CCloseErrorRetainsOriginal(t *testing.T) {
+	original := errors.New("fixture operation")
+	closing := errors.New("fixture close")
+	err := finishL1C(original, func() error { return closing })
+	if !errors.Is(err, original) || !errors.Is(err, closing) {
+		t.Fatalf("missing cause: %v", err)
+	}
+	if err = finishL1C(nil, func() error { return closing }); !errors.Is(err, closing) {
+		t.Fatalf("close failure hidden: %v", err)
+	}
+}
+
+type a166DeadlineTransport struct {
+	base    http.RoundTripper
+	checked atomic.Int32
+}
+
+func (d *a166DeadlineTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	deadline, ok := req.Context().Deadline()
+	if !ok || time.Until(deadline) <= 0 || time.Until(deadline) > probeBudget {
+		return nil, errors.New("missing probe deadline")
+	}
+	d.checked.Add(1)
+	return d.base.RoundTrip(req)
+}
+
+func TestA166L1COffTwoReadsOutputAndDeadline(t *testing.T) {
+	t.Setenv("TOSSCTL_OPENAPI_KEY", "fixture-key")
+	t.Setenv("TOSSCTL_OPENAPI_SECRET", "fixture-secret")
+	t.Setenv("TOSSOS_ACCOUNT_BUDGET_MODE", "off")
+	var calls atomic.Int32
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		switch r.URL.Path {
+		case "/oauth2/token":
+			_, _ = w.Write([]byte(`{"access_token":"fixture","expires_in":3600,"token_type":"Bearer"}`))
+		case "/api/v1/orderbook":
+			_, _ = w.Write([]byte(`{"result":{"timestamp":"2026-08-18T03:29:14.120+09:00","currency":"USD","asks":[{"price":"231.7000","volume":"160"}],"bids":[{"price":"231.6500","volume":"40"}]}}`))
+		case "/api/v1/prices":
+			_, _ = w.Write([]byte(`{"result":[{"symbol":"AAPL","lastPrice":"231.6800","currency":"USD","timestamp":"2026-08-18T03:29:14.100+09:00"}]}`))
+		default:
+			t.Errorf("unexpected local path: %s", r.URL.Path)
+			w.WriteHeader(404)
+		}
+	}))
+	defer server.Close()
+	tr := server.Client().Transport.(*http.Transport).Clone()
+	tr.Proxy = nil
+	want := server.Listener.Addr().String()
+	tr.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
+		if address != want {
+			return nil, errors.New("fixture refused address")
+		}
+		return (&net.Dialer{}).DialContext(ctx, network, want)
+	}
+	tracker := &a166DeadlineTransport{base: tr}
+	read, write, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	prior := os.Stdout
+	os.Stdout = write
+	defer func() { os.Stdout = prior; _ = read.Close() }()
+	err = runWithOptions("US", "AAPL", t.TempDir(), official.WithBaseURL(server.URL), official.WithHTTPClient(&http.Client{Transport: tracker}))
+	_ = write.Close()
+	os.Stdout = prior
+	out, readErr := io.ReadAll(read)
+	if err != nil || readErr != nil || calls.Load() != 3 || tracker.checked.Load() != 3 || !strings.Contains(string(out), "AAPL") {
+		t.Fatalf("err=%v read=%v calls=%d deadlines=%d output=%q", err, readErr, calls.Load(), tracker.checked.Load(), out)
 	}
 }

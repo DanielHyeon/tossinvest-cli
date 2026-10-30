@@ -76,7 +76,7 @@ func runWithOptions(market, symbol, configDir string, opts ...official.Option) (
 	if err != nil {
 		return err
 	}
-	defer func() { result = errors.Join(result, factory.Close()) }()
+	defer func() { result = finishL1C(result, factory.Close) }()
 	client, err := factory.NewClient(*credentials, tokenFile, opts...)
 	if err != nil {
 		return err
@@ -94,4 +94,8 @@ func runWithOptions(market, symbol, configDir string, opts ...official.Option) (
 	}
 	fmt.Print(renderReport(observation{Market: market, Symbol: symbol, Top: top, Last: last}))
 	return nil
+}
+
+func finishL1C(result error, closeFactory func() error) error {
+	return errors.Join(result, closeFactory())
 }
