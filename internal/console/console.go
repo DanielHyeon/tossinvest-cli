@@ -352,11 +352,13 @@ type Options struct {
 
 // Console is the server.
 type Console struct {
-	opts    Options
-	now     func() time.Time
-	out     io.Writer
-	handler http.Handler
-	remote  *remoteRuntime
+	settleWait   time.Duration
+	shutdownWait time.Duration
+	opts         Options
+	now          func() time.Time
+	out          io.Writer
+	handler      http.Handler
+	remote       *remoteRuntime
 
 	// session and csrf are minted once, per process. There is no way to set
 	// either from outside: a preset session token would be a non-interactive
@@ -578,28 +580,42 @@ func (c *Console) Serve(ctx context.Context, ln net.Listener) error {
 	}()
 
 	relaunchPort := 0
+	var serveErr error
+	servedReceived := false
 	select {
-	case err := <-served:
-		if errors.Is(err, http.ErrServerClosed) {
-			return nil
-		}
-		return err
+	case serveErr = <-served:
+		servedReceived = true
 	case relaunchPort = <-c.relaunch:
 		fmt.Fprintf(c.out, "\n재시작 요청 — 이 프로세스를 같은 바이너리로 다시 실행한다 (포트 %d 유지).\n", relaunchPort)
 	case <-ctx.Done():
 	}
 
-	c.settle()
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
+	shutdownWait := c.shutdownWait
+	if shutdownWait <= 0 {
+		shutdownWait = 5 * time.Second
+	}
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownWait)
+	shutdownErr := srv.Shutdown(shutdownCtx)
+	cancel()
+	if shutdownErr != nil {
+		shutdownErr = errors.Join(shutdownErr, srv.Close())
+	}
+	if !servedReceived {
+		serveErr = <-served
+	}
+	if errors.Is(serveErr, http.ErrServerClosed) {
+		serveErr = nil
+	}
+
+	wait := c.settleWait
+	if wait <= 0 {
+		wait = settleTimeout
+	}
+	settleErr := c.settle(wait)
+	if err := errors.Join(serveErr, shutdownErr, settleErr); err != nil {
 		return err
 	}
-	<-served
-
 	if relaunchPort != 0 && c.opts.Relaunch != nil {
-		// The socket is closed, so the port the new process has to bind is free.
-		// A successful implementation replaces this process and never returns.
 		return c.opts.Relaunch(relaunchPort)
 	}
 	return nil
@@ -682,26 +698,33 @@ func (c *Console) writeBanner() {
 }
 
 // settle waits for a run in progress, then reports what is still live.
-func (c *Console) settle() {
+func (c *Console) settle(wait time.Duration) error {
 	c.mu.Lock()
 	run := c.run
 	c.mu.Unlock()
-	if run == nil || run.finished() {
+	if run == nil {
 		c.writeOutstanding(run)
-		return
+		return nil
 	}
-
+	select {
+	case <-run.done:
+		c.writeOutstanding(run)
+		return nil
+	default:
+	}
 	fmt.Fprintf(c.out, "\nstopping — a verification is in progress. Waiting for its steps to settle; the account\n"+
 		"must not be left mid-cancel.\n")
 	run.cancel()
+	timer := time.NewTimer(wait)
+	defer timer.Stop()
 	select {
 	case <-run.done:
-	case <-time.After(settleTimeout):
-		fmt.Fprintf(c.out, "the run did not settle within %s. `tossctl verify status` lists anything left live.\n",
-			settleTimeout)
-		return
+		c.writeOutstanding(run)
+		return nil
+	case <-timer.C:
+		fmt.Fprintf(c.out, "the run did not settle within %s. `tossctl verify status` lists anything left live.\n", wait)
+		return fmt.Errorf("console: verification did not settle within %s", wait)
 	}
-	c.writeOutstanding(run)
 }
 
 // settleTimeout bounds the wait. It is generous because a step in the middle of

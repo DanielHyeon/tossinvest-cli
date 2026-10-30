@@ -172,7 +172,7 @@ func buildVerifyReconcileReader(ctx context.Context, root *rootOptions) (verifyl
 		return nil, verifylive.ReconcileAccount{}, reconcileRefusal(verifylive.RefuseNoCredentials,
 			"no Open API credentials in this profile — run `tossctl openapi login --config-dir …`")
 	}
-	return newVerifyReconcileReader(ctx, *creds, tokenFile)
+	return newVerifyReconcileReaderForRoot(ctx, root, *creds, tokenFile, root.officialOptions...)
 }
 
 // newVerifyReconcileReader 는 Broker 를 절대 반환하지 않는 좁은 생성자임(design G2 P1-1, G3-2 P1-2·R2-2).
@@ -180,7 +180,15 @@ func buildVerifyReconcileReader(ctx context.Context, root *rootOptions) (verifyl
 // 래퍼에 담아 돌려줌. 계좌 판정용 첫 클라이언트는 밖으로 나가지 않음.
 func newVerifyReconcileReader(ctx context.Context, creds official.Credentials, tokenFile string,
 	opts ...official.Option) (verifylive.ReconcileReader, verifylive.ReconcileAccount, error) {
-	accounts, err := official.New(creds, tokenFile, opts...).Accounts(ctx)
+	return newVerifyReconcileReaderForRoot(ctx, nil, creds, tokenFile, opts...)
+}
+
+func newVerifyReconcileReaderForRoot(ctx context.Context, root *rootOptions, creds official.Credentials, tokenFile string, opts ...official.Option) (verifylive.ReconcileReader, verifylive.ReconcileAccount, error) {
+	client, err := newRootOfficialClient(ctx, root, creds, tokenFile, opts...)
+	if err != nil {
+		return nil, verifylive.ReconcileAccount{}, err
+	}
+	accounts, err := client.Accounts(ctx)
 	if err != nil {
 		return nil, verifylive.ReconcileAccount{}, reconcileRefusal(verifylive.RefuseAccountsRead,
 			"the account list could not be read: "+err.Error())
@@ -201,7 +209,10 @@ func newVerifyReconcileReader(ctx context.Context, creds official.Credentials, t
 		return nil, verifylive.ReconcileAccount{}, reconcileRefusal(verifylive.RefuseAccountSeqZero,
 			"the account's sequence is not a positive number — the request header cannot be pinned")
 	}
-	bound := official.New(creds, tokenFile, append(append([]official.Option(nil), opts...), official.WithAccountSeq(seq))...)
+	bound, err := newRootOfficialClient(ctx, root, creds, tokenFile, append(append([]official.Option(nil), opts...), official.WithAccountSeq(seq))...)
+	if err != nil {
+		return nil, verifylive.ReconcileAccount{}, err
+	}
 	ref := strings.TrimSpace(accounts[0].DisplayName)
 	return &reconcileReads{client: bound, ref: ref, seq: seq},
 		verifylive.ReconcileAccount{Ref: ref, Seq: seq, Count: len(accounts)}, nil

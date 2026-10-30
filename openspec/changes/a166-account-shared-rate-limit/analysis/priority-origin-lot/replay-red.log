@@ -1,0 +1,5 @@
+--- FAIL: TestA166RequiredReplayUnknownOriginFallsBack (1.00s)
+    a166_priority_origin_test.go:71: unexpected fallback: {AttemptID:80228a32c0303f2d4e9ada2b97887609 Symbol:005930 State:CONFIRMED BrokerOrderID:fixture-order Reason:replay_identity_recovered Detail:replaying the stored body under key tos-Ctfc3uZ4shkRVKhV5jyBhz-PnMojyaSU returned order fixture-order (serializer official/order-create/v1, replay 1) Sent:1 ReplayCount:1 QueryFallback:false}
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	1.007s
+FAIL

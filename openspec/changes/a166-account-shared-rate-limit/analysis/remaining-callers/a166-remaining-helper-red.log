@@ -1,0 +1,5 @@
+# github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl [github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl.test]
+cmd/tossctl/a166_remaining_helper_test.go:12:17: undefined: newRootOfficialClient
+cmd/tossctl/a166_remaining_helper_test.go:15:16: undefined: newRootOfficialClient
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl [build failed]
+FAIL

@@ -41,11 +41,15 @@ type consoleOpenAPIDeps struct {
 	clear    func(string) error
 }
 
-func defaultConsoleOpenAPIDeps() consoleOpenAPIDeps {
+func defaultConsoleOpenAPIDeps(roots ...*rootOptions) consoleOpenAPIDeps {
+	var root *rootOptions
+	if len(roots) > 0 {
+		root = roots[0]
+	}
 	return consoleOpenAPIDeps{
 		getenv: os.Getenv,
 		validate: func(ctx context.Context, creds official.Credentials, tokenFile string) (probeResult, error) {
-			return validateOpenAPICredentials(ctx, creds, tokenFile)
+			return validateOpenAPICredentialsForRoot(ctx, root, creds, tokenFile)
 		},
 		save: saveOpenAPICredentials,
 		remove: func(path string) error {

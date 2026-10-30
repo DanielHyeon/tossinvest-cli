@@ -1,0 +1,5 @@
+--- FAIL: TestA166AckReadInheritsPriorityAndDeadline (0.00s)
+    a166_origin_internal_test.go:166: priority=0 deadline=2026-10-31 04:15:01.245719421 +0900 KST m=+3.001003501
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.004s
+FAIL

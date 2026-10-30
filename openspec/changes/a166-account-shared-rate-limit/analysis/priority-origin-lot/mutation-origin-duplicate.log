@@ -1,0 +1,6 @@
+--- FAIL: TestA166ExactExitOrigin (1.66s)
+    --- FAIL: TestA166ExactExitOrigin/duplicate (0.28s)
+        a166_replay_origin_test.go:33: action="BASELINE_BREACH_EXIT" ok=true err=<nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	1.668s
+FAIL

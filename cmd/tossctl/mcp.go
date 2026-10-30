@@ -65,7 +65,10 @@ func newMCPCmd(opts *rootOptions) *cobra.Command {
 			var officialClient *official.Client
 			var tradingSvc *trading.Service
 			if mcpOfficialEligible(creds, cfg.OpenAPI, prefer) {
-				officialClient = official.New(*creds, tokenFile)
+				officialClient, err = newRootOfficialClient(cmd.Context(), opts, *creds, tokenFile)
+				if err != nil {
+					return err
+				}
 				// Order place/cancel/modify: gated by config exactly as the CLI's
 				// `tossctl order` is, routed through an official-only broker so
 				// writes never touch a WTS session.

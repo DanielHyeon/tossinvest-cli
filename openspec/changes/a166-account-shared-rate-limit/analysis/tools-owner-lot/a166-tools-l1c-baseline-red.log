@@ -1,0 +1,5 @@
+--- FAIL: TestA166L1CRequiredMissingManifestFailsBeforeWire (0.00s)
+    a166_budget_test.go:14: expected required refusal, got reading the top of book: official: transport error: Post "https://openapi.tossinvest.com/oauth2/token": dial tcp: lookup openapi.tossinvest.com on [fd7a:115c:a1e0::53]:53: dial udp [fd7a:115c:a1e0::53]:53: connect: network is unreachable
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a112-l1c-quote-probe	0.004s
+FAIL

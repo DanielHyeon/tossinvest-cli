@@ -1,0 +1,5 @@
+--- FAIL: TestA166MCPRequiredFailureDoesNotFallback (0.00s)
+    a166_remaining_helper_test.go:56: expected budget error, got <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.012s
+FAIL

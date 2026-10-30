@@ -237,7 +237,7 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	if err != nil {
 		return err
 	}
-	openAPISeam, err := newConsoleOpenAPISeam(root, defaultConsoleOpenAPIDeps())
+	openAPISeam, err := newConsoleOpenAPISeam(root, defaultConsoleOpenAPIDeps(root))
 	if err != nil {
 		return err
 	}
@@ -472,7 +472,7 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		// The three seams task 1.8 puts behind the console's two restart buttons.
 		// internal/console executes nothing: it decides whether the person asking
 		// has cleared the session and CSRF gates, and then calls one of these.
-		Relaunch: consoleRelaunch(out),
+		Relaunch: consoleRelaunch(out, root.budgetOwner.Close),
 		Handoff:  handoff.New(consoleHandoffPath(verifyRecord)),
 		RestartSoak: func() (string, error) {
 			// Pressing this is the operator saying "this profile runs the survey".
@@ -1108,15 +1108,22 @@ func consoleHandoffPath(recordPath string) string {
 // The port is pinned so the browser comes back to the address it is already on.
 // Everything else about the command line is kept: the same subcommand, the same
 // --config-dir, the same flags the operator typed.
-func consoleRelaunch(out io.Writer) console.Relaunch {
+func consoleRelaunch(out io.Writer, closeOwner func() error) console.Relaunch {
+	return consoleRelaunchWithExec(out, closeOwner, reexecSelf)
+}
+
+func consoleRelaunchWithExec(out io.Writer, closeOwner func() error, execSelf func(string, []string) error) console.Relaunch {
 	return func(port int) error {
+		if err := closeOwner(); err != nil {
+			return err
+		}
 		path, err := binstamp.SelfPath()
 		if err != nil {
 			return err
 		}
 		argv := argvWithPort(os.Args, port)
 		fmt.Fprintf(out, "  %s\n\n", strings.Join(argv, " "))
-		return reexecSelf(path, argv)
+		return execSelf(path, argv)
 	}
 }
 

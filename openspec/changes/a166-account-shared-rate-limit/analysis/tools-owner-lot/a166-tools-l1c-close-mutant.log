@@ -1,0 +1,5 @@
+--- FAIL: TestA166L1CCloseErrorRetainsOriginal (0.00s)
+    a166_budget_test.go:128: missing cause: fixture operation
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a112-l1c-quote-probe	0.004s
+FAIL

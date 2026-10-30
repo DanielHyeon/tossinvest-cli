@@ -1,0 +1,313 @@
+{
+  "file": "cmd/tossctl/doctor_openapi.go",
+  "source_sha256": "95f3b3c5d8f582f7d6bc3f2df85e13ec65a219d7db465440f66ca60e93d2c067",
+  "package": "main",
+  "function": "computeDoctorOpenAPISummary",
+  "signature": "computeDoctorOpenAPISummary(params=3, results=1)",
+  "start": {
+    "line": 91,
+    "column": 1
+  },
+  "end": {
+    "line": 133,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 98,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 108,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 111,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 124,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "else",
+      "at": {
+        "line": 127,
+        "column": 9
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 94,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 99,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 132,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 30
+      },
+      "text": "resolveOpenAPIPaths"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 16
+      },
+      "text": "official.LoadCredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 10
+      },
+      "text": "doctorOpenAPISummary"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 24
+      },
+      "text": "context.WithTimeout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 9
+      },
+      "text": "wtsCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 23
+      },
+      "text": "app.client.OpenAPIClientInfo"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 8
+      },
+      "text": "info.ExpiresAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 27
+      },
+      "text": "context.WithTimeout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 8
+      },
+      "text": "probeCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 16
+      },
+      "text": "validateOpenAPICredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 21
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 9
+      },
+      "text": "doctorOpenAPISummary"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 106,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 108,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 109,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 110,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 112,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 113,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 120,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 126,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 128,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 129,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 107,
+        "column": 3
+      },
+      "text": "wtsCancel"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 121,
+        "column": 2
+      },
+      "text": "probeCancel"
+    }
+  ]
+}

@@ -81,6 +81,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/costs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
@@ -864,7 +865,7 @@ func (o *ExitObserver) observe(ctx context.Context, symbols []string, observatio
 	var quotes []domain.Quote
 	var out map[string]observedQuote
 	needsFallback := false
-	err := o.opts.Retrier.Query(ctx, execgw.QueryPrice, func(ctx context.Context) error {
+	err := o.opts.Retrier.Query(accountbudget.WithPriority(ctx, accountbudget.Critical), execgw.QueryPrice, func(ctx context.Context) error {
 		var qerr error
 		quotes, qerr = o.opts.Prices.Prices(ctx, symbols)
 		if qerr != nil {
@@ -1383,7 +1384,11 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 			orderable = false
 			judgement.ArmSuppressedReason = journal.ArmSuppressedReJudge
 		} else {
-			cleared, err := o.clearTheSymbol(ctx, m, snapshot.CancelPendingFirst)
+			clearCtx := accountbudget.WithPriority(ctx, accountbudget.Normal)
+			if isProtective(proposal) {
+				clearCtx = accountbudget.WithPriority(ctx, accountbudget.Critical)
+			}
+			cleared, err := o.clearTheSymbol(clearCtx, m, snapshot.CancelPendingFirst)
 			if err != nil {
 				return err
 			}
@@ -1540,7 +1545,11 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 		o.noteExitOrder(obs.EventOrderNotDispatched, true, true, false, line.because(exitOrderIntentInvalid))
 		return releaseErr
 	}
-	out, err := o.opts.Submit.Place(ctx, execgw.PlaceRequest{
+	placeCtx := accountbudget.WithPriority(ctx, accountbudget.Normal)
+	if isProtective(proposal) {
+		placeCtx = accountbudget.WithPriority(ctx, accountbudget.Critical)
+	}
+	out, err := o.opts.Submit.Place(placeCtx, execgw.PlaceRequest{
 		Intent:         intent,
 		Decision:       issued.Decision,
 		IntentID:       intentID,

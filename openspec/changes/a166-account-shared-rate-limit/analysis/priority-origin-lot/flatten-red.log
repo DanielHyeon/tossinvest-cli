@@ -1,0 +1,5 @@
+--- FAIL: TestA166FlattenBootstrapPriority (0.41s)
+    a166_flatten_priority_test.go:71: bootstrap queued as normal
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.424s
+FAIL

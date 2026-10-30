@@ -1,0 +1,5 @@
+--- FAIL: TestA166FullTakeProfitCancelIsNormal (0.26s)
+    a166_priority_origin_test.go:97: cancel=[1] place=[1] result={Deferred:false Observed:1 Judged:1 Proposed:1 Opened:0 Unmanaged:0 Escalated:false Unobserved:0 Err:<nil>} alerts=[]
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.265s
+FAIL

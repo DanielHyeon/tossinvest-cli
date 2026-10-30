@@ -40,6 +40,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
@@ -124,6 +125,7 @@ func runFlatten(cmd *cobra.Command, root *rootOptions, opts *flattenOptions) err
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	ctx = accountbudget.WithPriority(ctx, accountbudget.Critical)
 	format, err := output.ParseFormat(root.outputFormat)
 	if err != nil {
 		return err

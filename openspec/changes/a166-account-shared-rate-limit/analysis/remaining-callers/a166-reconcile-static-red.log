@@ -1,0 +1,5 @@
+--- FAIL: TestA166EngineReconcileOptionsGuard (0.00s)
+    a166_reconcile_safety_test.go:42: engine reconcile must pass fixture options to root client
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.015s
+FAIL
