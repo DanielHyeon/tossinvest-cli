@@ -63,4 +63,4 @@
 
 - [x] P1 U0/U1·유형 순수 로트 설계 및 독립 검토, Manager 제한 READY. HTTP/CLI/원장/기존 함수 배선 없음.
 - [x] P2 신규 순수 함수 RED/GREEN·변이·선택 normal/tagged race·gstack 범위 리뷰 — `analysis/selection-core-lot/review.md`.
-- [ ] P3 독립 검증·Manager 판정 뒤 commit/merge/push. a169 archive 및 측정 없음.
+- [x] P3 독립 검증·Manager 판정 뒤 commit/merge/push. a169 archive 및 측정 없음.
