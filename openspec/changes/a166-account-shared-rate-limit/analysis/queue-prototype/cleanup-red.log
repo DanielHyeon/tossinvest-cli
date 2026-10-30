@@ -1,0 +1,5 @@
+--- FAIL: TestCloseRemovesTicketAndLiveness (0.03s)
+    protocol_test.go:278: liveness remains: <nil>
+FAIL
+FAIL	_/home/daniel/tossos-work/a166-queue/openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype	0.047s
+FAIL

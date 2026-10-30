@@ -1,0 +1,48 @@
+{
+  "file": "openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype/queue.go",
+  "source_sha256": "5347912054f3e5269c343347e9586c52f06283a39c982fef092297f7cbd88e0f",
+  "package": "queueprototype",
+  "function": "Close",
+  "receiver": "Waiter",
+  "signature": "Waiter.Close(params=0, results=0)",
+  "start": {
+    "line": 171,
+    "column": 1
+  },
+  "end": {
+    "line": 176,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 172,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 3
+      },
+      "text": "unlock"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 174,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

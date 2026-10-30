@@ -1,0 +1,156 @@
+{
+  "file": "openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype/queue.go",
+  "source_sha256": "b8cb985835486e3e9a82e4428967d40e7cdbb2fd2b0cf97ed22f484be5bddda6",
+  "package": "queueprototype",
+  "function": "Wait",
+  "receiver": "Waiter",
+  "signature": "Waiter.Wait(params=1, results=2)",
+  "start": {
+    "line": 221,
+    "column": 1
+  },
+  "end": {
+    "line": 240,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "for",
+      "at": {
+        "line": 222,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 224,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 227,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 228,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "select",
+      "at": {
+        "line": 234,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 225,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 230,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 232,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 236,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 11
+      },
+      "text": "w.tryContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 11
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 5
+      },
+      "text": "unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 10
+      },
+      "text": "ctx.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 16
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 10
+      },
+      "text": "time.After"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 223,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 228,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
