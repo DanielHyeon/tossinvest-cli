@@ -1,0 +1,10 @@
+--- FAIL: TestPreAdmissionCancelClosesBody (0.15s)
+    --- FAIL: TestPreAdmissionCancelClosesBody/local (0.05s)
+        a166-bodyclose-mutant_test.go:549: close calls=0
+    --- FAIL: TestPreAdmissionCancelClosesBody/flock (0.05s)
+        a166-bodyclose-mutant_test.go:549: close calls=0
+    --- FAIL: TestPreAdmissionCancelClosesBody/cooldown (0.05s)
+        a166-bodyclose-mutant_test.go:549: close calls=0
+FAIL
+FAIL	command-line-arguments	0.157s
+FAIL

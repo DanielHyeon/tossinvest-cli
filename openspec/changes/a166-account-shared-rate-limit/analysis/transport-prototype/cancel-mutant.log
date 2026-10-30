@@ -1,0 +1,6 @@
+--- FAIL: TestAcquireCancellationAtLocalFlockAndCooldown (0.05s)
+    --- FAIL: TestAcquireCancellationAtLocalFlockAndCooldown/cooldown (0.05s)
+        a166-cancel-mutant_test.go:87: cancel err=<nil> elapsed=50.139885ms
+FAIL
+FAIL	command-line-arguments	0.054s
+FAIL

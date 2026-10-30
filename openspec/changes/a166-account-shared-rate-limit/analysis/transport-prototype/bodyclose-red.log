@@ -1,0 +1,10 @@
+--- FAIL: TestPreAdmissionCancelClosesBody (0.15s)
+    --- FAIL: TestPreAdmissionCancelClosesBody/local (0.05s)
+        tls_test.go:536: close calls=0
+    --- FAIL: TestPreAdmissionCancelClosesBody/flock (0.05s)
+        tls_test.go:536: close calls=0
+    --- FAIL: TestPreAdmissionCancelClosesBody/cooldown (0.05s)
+        tls_test.go:536: close calls=0
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype	0.160s
+FAIL
