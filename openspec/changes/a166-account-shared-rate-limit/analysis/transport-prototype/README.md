@@ -1,5 +1,7 @@
 # 현재 결론과 읽는 법 (2026-10-31)
 
+Linux 전용 TLS/flock 실험과 그 타입을 참조하는 시험은 `//go:build linux`로 제한했다. Linux 대상 핵심 취소·종료 경합 시험 `-race` 1.323s 통과(`linux-focused-green.log`); Windows `go list`의 테스트 파일은 독립 가능한 `lifecycle_test.go` 하나다. Windows 컴파일·실행 자체는 하지 않았다.
+
 현재 통합 prototype은 동일 응답 본문의 `Read` 종료, 사용자 `Close`, context 취소에 따른 `Close`가 경합할 때 기저 `Close`와 finish를 각각 정확히 한 번 실행하며, 기저 Close 오류가 있으면 각 명시적 `Close` 반환값으로 보존한다. `TestResponseOwnerConcurrentReadCloseCancelExactlyOnce`는 정상 및 Close 오류 두 경우를 counter와 race detector로 확인했다. 최종 대상 전체 `go test -race -count=1 -timeout=50s ./openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype` 결과는 `owner-final-green.log` (Go 1.26.5, 20.560s)다. 이 counter 시험은 모의 body를 사용하고, 아래 TLS fixture는 별개다.
 
 아래 절들은 시점별 **과거 연구 기록**이다. 옛 절에서 표현한 `resp.TLS nil`, body Close 누락, 헤더 시점 소유권 해제, 별도 취소 helper의 미통합은 이후 절의 수정·시험으로 대체되며 현재 최종 결론이 아니다. 실패·변이 기록은 당시 증거로 유지한다. 위 race 단위 시험은 임의의 비협조 transport 또는 무한 OS 정지를 보장하지 않는다.
