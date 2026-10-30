@@ -10,6 +10,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -79,6 +80,17 @@ func TestA166CandidateSoakBudgetLocalTLS(t *testing.T) {
 			defer server.Close()
 			tr := server.Client().Transport.(*http.Transport).Clone()
 			tr.Proxy = nil
+			want := server.Listener.Addr().String()
+			tr.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
+				if network != "tcp" || address != want {
+					return nil, errors.New("fixture refused destination")
+				}
+				return (&net.Dialer{}).DialContext(ctx, network, want)
+			}
+			if conn, err := tr.DialContext(context.Background(), "tcp", "127.0.0.1:1"); err == nil {
+				conn.Close()
+				t.Fatal("fixture accepted a different destination")
+			}
 			opts := []official.Option{official.WithBaseURL(server.URL), official.WithHTTPClient(&http.Client{Transport: tr})}
 			owner := a166LocalRequiredOwner(t)
 			factory, err := owner.get(context.Background())
