@@ -50,7 +50,10 @@ import (
 // now dates the reading it remembers: the new-entrant fact is only an answer while
 // the reading it is measured against is recent enough to be the previous one, and a
 // source that cannot date its own memory cannot tell a tick from an outage.
-func buildCandidatePanel(root *rootOptions, market string) ([]candidate.Source, error) {
+func buildCandidatePanel(ctx context.Context, root *rootOptions, market string) ([]candidate.Source, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	credFile, tokenFile, err := resolveOpenAPIPaths(root)
 	if err != nil {
 		return nil, err
@@ -64,12 +67,15 @@ func buildCandidatePanel(root *rootOptions, market string) ([]candidate.Source, 
 			"candidate: no Open API credentials. The official rankings are discovery's " +
 				"required source — run `tossctl openapi login`")
 	}
-	client := official.New(*creds, tokenFile)
+	client, err := newRootOfficialClient(ctx, root, *creds, tokenFile, root.officialOptions...)
+	if err != nil {
+		return nil, err
+	}
 
 	// The WTS half is optional and its absence is ordinary. A missing or unreadable
 	// session degrades the panel; it does not stop it.
 	var wts *tossclient.Client
-	if sess, serr := session.NewFileStore(resolveSessionFile(root)).Load(context.Background()); serr == nil && sess != nil {
+	if sess, serr := session.NewFileStore(resolveSessionFile(root)).Load(ctx); serr == nil && sess != nil {
 		if cfg, cerr := loadConfig(root); cerr == nil {
 			wts = tossclient.New(tossclient.Config{Session: sess, TradingPolicy: cfg.Trading})
 		}

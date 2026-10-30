@@ -320,7 +320,7 @@ func candidateWiring(ctx context.Context, root *rootOptions, market string) (
 	if err != nil {
 		return nil, nil, func() {}, err
 	}
-	sources, err := candidatePanelFactory(root, market)
+	sources, err := candidatePanelFactory(ctx, root, market)
 	if err != nil {
 		release()
 		return nil, nil, func() {}, err

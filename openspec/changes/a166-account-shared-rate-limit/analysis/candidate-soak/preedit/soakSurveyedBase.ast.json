@@ -1,0 +1,62 @@
+{
+  "file": "cmd/tossctl/soak.go",
+  "source_sha256": "12399e6d9acffc7ac2e4e035e9dfdc9ff9a5aa404bd4637fe106924ebef20963",
+  "package": "main",
+  "function": "soakSurveyedBase",
+  "signature": "soakSurveyedBase(params=1, results=1)",
+  "start": {
+    "line": 738,
+    "column": 1
+  },
+  "end": {
+    "line": 744,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 740,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 741,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 743,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 739,
+        "column": 17
+      },
+      "text": "soakReadsFactory"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 739,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
