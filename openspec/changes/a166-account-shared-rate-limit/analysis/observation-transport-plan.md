@@ -1,6 +1,6 @@
 # 공유 429 관측의 전송·poll 통합 — 검토안
 
-기준 main `bbe5066ec`와 미확정 store leaf의 API. 구현 승인 전 독립 검토가 필요하다. `429-store-draft.md`의 상태·복구 계약을 바꾸지 않는다. 기존 Transport.RoundTrip/connectionGate/responseOwner, runtime Factory, official token.exchange/doRequest, execgw.Retrier.Query 원문을 Manager가 손으로 읽었다. source 검색 결과 기존 ParseRetryAfter는 초 overflow와 HTTP-date 반올림 위험이 있으므로 신규 required 관측의 parser로 그대로 재사용하지 않는다. 기존 OFF parser·동작은 보존한다.
+기준 main `bbe5066ec`와 store leaf API; store 최종 delta `04fdd134c`는 독립 검증 후 `5f681f2a5`로 게시됐다. 독립 설계 검토를 거쳐 마지막 절의 미배선 observed-open/Transport 첫 로트만 구현 승인했다. runtime v2·token·Retrier·전체 caller 통합은 후속이다. `429-store-draft.md`의 상태·복구 계약을 바꾸지 않는다. 기존 Transport.RoundTrip/connectionGate/responseOwner, runtime Factory, official token.exchange/doRequest, execgw.Retrier.Query 원문을 Manager가 손으로 읽었다. source 검색 결과 기존 ParseRetryAfter는 초 overflow와 HTTP-date 반올림 위험이 있으므로 신규 required 관측의 parser로 그대로 재사용하지 않는다. 기존 OFF parser·동작은 보존한다.
 
 ## 소유와 constructor
 

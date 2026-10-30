@@ -180,7 +180,7 @@ func a111NewHTTPRouteSession(t *testing.T, observedAt, asOf time.Time,
 	now := asOf
 	reader := &httpAPIReader{
 		now: func() time.Time { return now }, engineMarker: engineMarker, holdings: holdings,
-		accountRef: func() (string, error) { return "account-a111", nil }, journal: readOnly,
+		accountRef: func(context.Context) (string, error) { return "account-a111", nil }, journal: readOnly,
 	}
 	router, err := httpapi.NewRouter(httpapi.Options{Reader: reader, Now: func() time.Time { return now }})
 	if err != nil {

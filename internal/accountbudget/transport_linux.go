@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 type priorityKey struct{}
@@ -40,8 +41,9 @@ type Transport struct {
 // NewTransport does not grant trading authority. The official constructor owns
 // that decision and must not unwrap a caller-supplied transport as authority.
 // cleanupError receives close/revoke/release errors from asynchronous context
-// cancellation after response handoff. It must be concurrency-safe and return
-// promptly. Synchronous RoundTrip and Body.Close errors return to the caller.
+// cancellation after response handoff and observation Finish failures. It must
+// be concurrency-safe and return promptly. Synchronous cleanup errors are also
+// returned or stored in the request-local observation collector.
 func NewTransport(b *Budget, base *http.Transport, cleanupError func(error)) (*Transport, error) {
 	if b == nil || base == nil || cleanupError == nil {
 		return nil, ErrUnavailable
@@ -220,6 +222,44 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		}
 		return nil, e
 	}
+	var sequence uint64
+	obs := t.budget.observation
+	scope := requestObservation(req.Context())
+	if obs != nil {
+		var obsErr error
+		if scope.kind == ObservationPoll && req.Method != http.MethodGet {
+			obsErr = ErrUnavailable
+		} else {
+			sequence, obsErr = obs.Begin(req.Context(), lease, scope.kind, scope.key)
+		}
+		if obsErr == nil && scope.kind == ObservationPoll {
+			var remaining time.Duration
+			remaining, obsErr = obs.PollRemaining(req.Context(), scope.key)
+			if obsErr == nil && remaining > 0 {
+				obsErr = ErrObservationDeferred
+			}
+		}
+		obsErr = errors.Join(obsErr, req.Context().Err())
+		if obsErr != nil {
+			scope.collector.record(false, obsErr)
+			if req.Body != nil {
+				obsErr = errors.Join(obsErr, req.Body.Close())
+			}
+			if sequence != 0 {
+				settle, cancel := context.WithTimeout(context.WithoutCancel(req.Context()), 2*time.Second)
+				finishErr := obs.Finish(settle, lease, sequence, ObservationNoResponse, nil)
+				cancel()
+				scope.collector.record(false, finishErr)
+				if finishErr != nil {
+					t.cleanupError(finishErr)
+				}
+				obsErr = errors.Join(obsErr, finishErr)
+			}
+			obsErr = errors.Join(obsErr, lease.Release())
+			scope.collector.record(false, obsErr)
+			return nil, obsErr
+		}
+	}
 	gate := &connectionGate{ctx: req.Context(), firstWrite: t.firstWrite, inflight: t.inflight}
 	tr := t.base.Clone()
 	tr.Proxy = nil
@@ -272,11 +312,39 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		stopErr := gate.stop()
 		// revoke/drain 뒤에만 현재 시도의 첫 Write 여부를 확정함.
 		sent = gate.sent.Load()
-		cleanup := errors.Join(stopErr, lease.Release())
+		var finishErr error
+		if obs != nil {
+			settle, cancel := context.WithTimeout(context.WithoutCancel(req.Context()), 2*time.Second)
+			finishErr = obs.Finish(settle, lease, sequence, ObservationNoResponse, nil)
+			cancel()
+			scope.collector.record(false, finishErr)
+			if finishErr != nil {
+				t.cleanupError(finishErr)
+			}
+		}
+		cleanup := errors.Join(stopErr, finishErr, lease.Release())
 		tr.CloseIdleConnections()
 		return nil, errors.Join(e, cleanup)
 	}
 	sent = gate.sent.Load()
+	if obs != nil {
+		result := ObservationResponse
+		var hint *time.Duration
+		if resp.StatusCode == http.StatusTooManyRequests {
+			result = ObservationRateLimited
+			scope.collector.record(true, nil)
+			if scope.kind == ObservationPoll {
+				hint = retryAfterHint(resp.Header.Get("Retry-After"), t.budget.clk.Now())
+			}
+		}
+		settle, cancel := context.WithTimeout(context.WithoutCancel(req.Context()), 2*time.Second)
+		finishErr := obs.Finish(settle, lease, sequence, result, hint)
+		cancel()
+		if finishErr != nil {
+			scope.collector.record(false, finishErr)
+			t.cleanupError(finishErr)
+		}
+	}
 	gate.mu.Lock()
 	if resp.TLS == nil && gate.tlsState != nil {
 		state := *gate.tlsState

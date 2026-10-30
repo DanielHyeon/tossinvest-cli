@@ -1,0 +1,13 @@
+# Transport.RoundTrip BTM
+- Begin 실패: TestObservedTransportBeginFaultClosesBody, body close 1·wire0·오류 보존.
+- poll non-GET: TestObservedTransportPollRejectsPost, wire0.
+- Begin 후 기존 orphan poison: TestObservedTransportOrphanRecheck, gap 1·wire0.
+- 429 유효 hint 및 후속 skip: TestObservedTransportRateLimitAndPoison, 응답/body·event 보존.
+- 429 invalid hint: TestObservedTransportInvalid429HintStillEvent.
+- Finish write 실패: TestObservedTransportFinishFaultPreservesResponse, 응답/body·callback/collector.
+- 응답 없음: TestObservedTransportNoResponseAfterSent, drain 후 sent·NoResponse.
+- 기존 unobserved 소유/취소/분류: 기존 Transport 선택 시험. 전원 손실·실제 외부 서비스 미시험.
+- Begin 도중 취소의 seq0·orphan: TestObservedTransportCancelDuringBeginLeavesGap. Begin 성공 후 취소·별도 settle: TestObservedTransportCancelAfterBeginSettles.
+- 사전 거절의 release 오류: TestObservedTransportPreSendReleaseError. Finish 실패 후 기존 response는 유지한다.
+- skip과 동시에 취소된 사실 보존: TestObservedTransportCancelAfterBeginSettles 및 취소 오류 제거 변이.
+- 429 body read 실패: TestObserved429BodyFailureRetainsEvent.

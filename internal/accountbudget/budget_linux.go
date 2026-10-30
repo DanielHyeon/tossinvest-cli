@@ -42,6 +42,7 @@ type Config struct {
 	Clock    clock.Clock
 }
 type Budget struct {
+	observation     *ObservationStore
 	root            string
 	scope           string
 	instance        string

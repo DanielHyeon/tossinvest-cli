@@ -149,7 +149,7 @@ func TestVerificationEntryPointsRefuseWhileSystemUpdateOwnsEngineExclusion(t *te
 
 		brokerBuilds := 0
 		previous := verifyBrokerFactory
-		verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+		verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 			brokerBuilds++
 			return nil, "", errors.New("broker construction must not be reached")
 		}
