@@ -175,3 +175,4 @@
 | `a176-overview-summary-and-verify-steps` | STORY-TOS-a176 | archived |
 | `a177-performance-window-single-source` | STORY-TOS-a177 | archived |
 | `a178-a112-rebuild-failure-reported-separately` | STORY-TOS-a178 | archived |
+| `a179-compare-jev-input-profiles` | STORY-TOS-a179 | archived |
