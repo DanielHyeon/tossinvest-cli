@@ -1,0 +1,79 @@
+cmd/tossctl/console.go:815:	c.gateOnce.Do(func() {
+cmd/tossctl/engine_alerts_client.go:95:	response, err := c.http.Do(req)
+cmd/tossctl/engine_mode_release.go:185:	response, err := c.http.Do(httpReq)
+cmd/tossctl/root_budget.go:104:	return factory.NewClient(creds, tokenFile, opts...)
+cmd/tossctl/root_budget.go:95:		return official.New(creds, tokenFile, opts...), nil
+internal/accountbudget/transport_linux.go:103:	g.closeOnce.Do(func() {
+internal/accountbudget/transport_linux.go:176:	o.once.Do(func() { o.closeErr = errors.Join(o.body.Close(), o.finish()); close(o.done) })
+internal/accountbudget/transport_linux.go:307:	resp, e = tr.RoundTrip(req)
+internal/accountbudgetruntime/offline_linux.go:188:	b, err := accountbudget.OpenContext(ctx, accountbudget.Config{Root: root, Scope: scope, Instance: instance, Clock: clock.System()})
+internal/accountbudgetruntime/runtime_linux.go:114:		return official.New(creds, cache, opts...), nil
+internal/accountbudgetruntime/runtime_linux.go:119:	return official.NewWithAccountBudget(creds, cache, f.budget, f.cleanup, opts...)
+internal/accountbudgetruntime/runtime_linux.go:95:	b, e := accountbudget.OpenObserved(ctx, accountbudget.Config{Root: m.Root, Scope: m.Scope, Instance: m.Instance, Clock: clock.System()}, m.EventLock, clock.SystemBootSource())
+internal/accountbudgetruntime/runtime_unsupported.go:64:	return official.New(creds, cache, opts...), nil
+internal/app/app.go:135:			off = official.New(*creds, tokenFile)
+internal/app/app.go:144:			off, err = factory.NewClient(*creds, tokenFile)
+internal/app/engine/alert_control_transport_unix.go:181:	s.once.Do(func() {
+internal/app/engine/engine.go:398:		off = official.New(*creds, tokenFile, opts.OfficialOptions...)
+internal/app/engine/engine.go:400:		off, err = opts.BudgetFactory.NewClient(*creds, tokenFile, opts.OfficialOptions...)
+internal/app/engine/engine.go:525:		borrowed, err = opts.BudgetFactory.Budget()
+internal/app/engine/mode_control_transport_unix.go:137:	s.once.Do(func() {
+internal/app/engine/normal_relay_wiring.go:17:	c.normalRelayOnce.Do(func() {
+internal/app/engine/position_policy_runtime_transport_unix.go:159:	s.once.Do(func() {
+internal/app/engine/position_policy_transport.go:200:	s.once.Do(func() {
+internal/client/account.go:284:	resp, err := c.httpClient.Do(req)
+internal/client/auth_extend.go:138:	resp, err := c.httpClient.Do(req)
+internal/client/auth_extend.go:84:	resp, err := c.httpClient.Do(req)
+internal/client/client.go:149:	resp, err := c.httpClient.Do(req)
+internal/client/client.go:171:	resp, err = c.httpClient.Do(req)
+internal/client/dividends.go:25:	resp, err := c.httpClient.Do(req)
+internal/client/portfolio.go:140:	resp, err := c.httpClient.Do(req)
+internal/client/probe.go:55:	resp, err := c.httpClient.Do(req)
+internal/client/trading.go:665:	resp, err := c.httpClient.Do(req)
+internal/client/watchlist_manage.go:165:	resp, err := c.httpClient.Do(req)
+internal/clock/market.go:83:	locOnce.Do(loadLocations)
+internal/console/instrument_names.go:63:	c.gateOnce.Do(func() {
+internal/enginelock/enginelock.go:269:	h.once.Do(func() {
+internal/execgw/replay_transport.go:172:	guard, err := accountbudget.NewTransport(budget, template, cleanup)
+internal/execgw/replay_transport.go:98:	resp, err := h.HTTP.Do(req)
+internal/execgw/retry.go:238:	resp, err := t.base.RoundTrip(req)
+internal/filldetect/detect.go:563:	d.once.Do(func() {
+internal/filldetect/hints.go:253:	h.once.Do(func() {
+internal/httpapi/stream.go:325:	s.once.Do(func() {
+internal/monitor/probes.go:183:	resp, err := (&http.Client{}).Do(req)
+internal/obs/notifier.go:799:	n.leaseOnce.Do(func() {
+internal/obs/ntfy.go:128:	resp, err := client.Do(req)
+internal/official/a112_mbus_read.go:151:		wrapped, err := accountbudget.NewTransport(client.budget, transport, client.budgetCleanup)
+internal/official/a112_mbus_read.go:163:	resp, err := hc.Do(req)
+internal/official/account_budget.go:25:	wrapped, err := accountbudget.NewTransport(budget, base, cleanup)
+internal/official/client.go:205:	resp, err := c.hc.Do(req)
+internal/official/token.go:149:	resp, err := m.hc.Do(req)
+internal/positionpolicyrpc/attempt_thaw_client.go:35:	response, err := c.http.Do(req)
+internal/positionpolicyrpc/client.go:265:	response, err := c.http.Do(req)
+internal/positionpolicyrpc/exit_quarantine_client.go:59:	response, err := c.http.Do(req)
+internal/positionpolicyrpc/risk_relaxation_client.go:51:	response, err := c.http.Do(req)
+internal/positionpolicyrpc/runtime.go:133:	response, err := c.http.Do(req)
+internal/push/listen.go:96:	resp, err := l.httpClient.Do(req)
+internal/releaseupdate/client.go:330:	resp, err := client.Do(req)
+internal/releaseupdate/tuf.go:72:	response, err := client.Do(request)
+internal/runlock/runlock.go:179:		once.Do(func() {
+internal/strategyevidence/source.go:430:		response, err := a.transport.Do(requestCtx, TransportRequest{Metadata: metadata, Attempt: attempt, Page: request.Page, PageSize: request.PageSize, Resource: request.Resource, ResponseByteLimit: request.ResponseByteLimit, requestIdentity: a.policy.RequestIdentity}, credential)
+internal/strategyprojectionrpc/transport.go:65:	response, err := c.http.Do(request)
+internal/strategyprojectionrpc/transport_unix.go:446:	s.once.Do(func() {
+internal/testenv/testenv.go:129:	return base.RoundTrip(req)
+internal/updatecheck/checker.go:136:	resp, err := c.httpClient.Do(req)
+internal/verifylive/receipt.go:114:	l.once.Do(func() {
+tools/a087-market-sell-probe/main.go:109:	client := official.New(*credentials, tokenFile)
+tools/a087-market-sell-probe/main.go:338:	budget, err := f.Budget()
+tools/a087-market-sell-probe/main.go:356:	client, err := f.NewClient(*credentials, tokenFile)
+tools/a087-market-sell-probe/send.go:105:	resp, err := client.Do(req)
+tools/a087-market-sell-probe/send.go:79:	guard, err := accountbudget.NewTransport(budget, base, cleanup)
+tools/a112-l1c-quote-probe/main.go:80:	client, err := factory.NewClient(*credentials, tokenFile, opts...)
+tools/a112-mb-us-source/go_distribution_snapshot_unix.go:236:		once.Do(func() {
+tools/a112-mb-us-source/official_reader.go:32:	client, err := factory.NewClient(official.Credentials{}, cfg.tokenCache)
+tools/a128-d2-receipts/main.go:119:	client, err := factory.NewClient(*credentials, tokenFile, opts...)
+tools/a128-jev-shadow-probe/judge.go:187:	resp, err := c.hc.Do(req)
+tools/a128-jev-shadow-probe/main.go:145:	client, err := factory.NewClient(*credentials, tokenFile, opts...)
+tools/a128-jev-shadow-probe/wts.go:111:	return t.base.RoundTrip(req)
+tools/a130-outcome-backfill/main.go:119:	client, err := o.factory.NewClient(*credentials, tokenFile, o.opts...)
+tools/a140-breakout-signal-shadow/main.go:151:	client, err := factory.NewClient(*credentials, tokenFile, opts...)
