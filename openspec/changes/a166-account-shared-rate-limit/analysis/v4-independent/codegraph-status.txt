@@ -35,4 +35,3 @@ Files by Language:
   javascript      5
 
 ✓ Index is up to date
-

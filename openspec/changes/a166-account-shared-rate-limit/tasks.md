@@ -7,7 +7,7 @@
 - [x] 0.3 TLS 수명 연구: actual official.Client token/401, full response, context, multi-process·kill, TLS 검증 및 변이. Linux 연구 SHA d0485309a. 핵심 b90524af6 독립 Go1.25.0/1.26.5 race 통과, 추가 owner counter 1b5f09589 Go1.25 통과. 연구 경계와 제품 검증을 구별함.
 - [x] 0.4 queue 연구: liveness·priority·FIFO·취소·dirty marker·fault 주입·aux cleanup, targeted race와 변이. Linux 연구 SHA 41c8c16a7. 445419bc1 독립 race 통과, 최신 후속 독립 확인은 다음 항목.
 - [x] 0.5 최신 연구 후속 diff의 독립 확인. queue 41c8c16a7 독립 race 6.152초, TLS 최종 build-tag diff 확인. `analysis/v4-independent/`의 원문·AST·CodeGraph 교차 확인 기록 보존. 제품 전체 증거와 구별.
-- [ ] 0.6 proposal/design/spec delta/tasks 정합화, research-first 버전/출처/라이선스·도구 제한, scoped strict validation·PM check.
+- [x] 0.6 proposal/design/spec delta/tasks 정합화, research-first 버전/출처/라이선스·도구 제한, scoped strict validation·PM check. 근거: `analysis/manager-review-v4.md`, OpenSpec 1.4.1 scoped a087/a166 valid 및 PM check.
 - [ ] 0.7 독립 설계 리뷰 및 Manager READY. 미해결 기술 계약을 2판 값으로 추정하지 않음.
 
 ## 1. 내부 모듈 — 배선하지 않는 첫 로트
