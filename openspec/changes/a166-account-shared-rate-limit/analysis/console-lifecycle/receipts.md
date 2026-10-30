@@ -13,3 +13,6 @@
 - a166-console-owner-mutant.log: 5bbf9a1f13e5857d413f79fe36407978ebcfb4951bc9f5b2900b41efd359d54b
 - a166-console-freeze-normal.log: 74c04aef0ce3b595eed13ae160418b68d0921356b4e2328d4aa3fab79fe2c1d3
 - a166-console-freeze-tag-race.log: 03db9ea52e5e751d1d523855977a74ab3bb230e698fd7365bd18e17ba59db61d
+- a166-console-handler-delta-normal.log: 5a7e63f8f133671ec2450769fca792bc12f081f7a98afcd01fd4efc2eef647bd
+- a166-console-handler-delta-tag-race.log: c6ca03f4659d1892f0b86f3dd3acb2578f03d2f2a62567abcbe3e0112936792c
+- a166-console-handler-mutant.log: f040af1511574d6f1bfbb96cefbb39846b0a731425d88cfcb963f45b41a302df
