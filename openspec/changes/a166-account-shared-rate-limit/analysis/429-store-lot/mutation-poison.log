@@ -1,0 +1,5 @@
+--- FAIL: TestA166ObservationMissingHintsAndPoisonStay (2.42s)
+    observation_store_test.go:713: poison cleared: <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	2.425s
+FAIL

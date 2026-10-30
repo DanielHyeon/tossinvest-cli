@@ -1,0 +1,5 @@
+--- FAIL: TestA166ObservationHintMaxAndRestore (0.90s)
+    observation_store_test.go:180: anchor=10s <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.907s
+FAIL

@@ -1,0 +1,5 @@
+--- FAIL: TestA166ObservationForeignStateRejected (0.03s)
+    observation_store_test.go:826: foreign state accepted
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.048s
+FAIL

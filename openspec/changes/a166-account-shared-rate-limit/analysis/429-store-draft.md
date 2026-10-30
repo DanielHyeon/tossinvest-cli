@@ -24,6 +24,8 @@ queue state/dirty 파일은 재사용하지 않는다. 별도 event lock과 제�
 
 이 모델은 신뢰된 파일 시스템·fsync·동일 namespace·관리자 비변조 전제다. 파일 시스템이 성공을 거짓 보고하거나 모든 내구 기록 자체를 유실시키는 장애까지 검출한다고 주장하지 않는다. 추가 서비스·DB·비동기 메모리 큐·계좌 동등성 DB는 도입하지 않는다.
 
+저장 오류의 정확한 경계: 새 state file fsync와 rename 이후 directory fsync까지 성공하면 state는 commit됐다. 그 뒤 dirty unlink의 마지막 directory fsync만 실패한 경우에는 원 오류를 반환하지만, 현재 dirty가 없고 검증된 state가 읽히면 이미 commit된 상태를 사용할 수 있다. 이것은 dirty·부분 저장·상태 무결성 오류의 자동 복구가 아니다. Begin의 이 오류는 caller에게 sequence 0과 전송 거절이며, commit된 pending은 다음 owner가 보수적인 gap/poison으로 처리한다. Finish의 이 오류는 이미 commit된 event/hint/pending 제거를 되돌리거나 같은 event를 다시 세지 않는다. crash 뒤 dirty가 재등장하면 거절한다. 신뢰 filesystem의 순서·내구 보장에 대한 소스 판단이며 실제 전원 손실 실측으로 주장하지 않는다. 해당 postcommit Begin/Finish 오류 이후 새 owner의 gap·중복 없음 fixture를 요구한다.
+
 ## poll hint의 저장과 전달
 
 RequiredQuery 호출은 명시적 poll scope를 전달한다. slot key는 domain separator와 길이 구분한 group instance·기존 canonical account reference·고정 engine-poll role·RequiredQuery enum의 SHA-256이다. 이 값은 파일 경로·event payload·로그에 쓰지 않고 0600 상태 내부의 key로만 쓴다. credential/token을 hash하지 않으며, hash는 계좌 동일성이나 권한 증명이 아니다. 기존 caller의 계좌 결속을 먼저 확인하고 byte identity 및 SHA-256 충돌 저항을 전제로 사용한다. raw account는 저장하지 않지만 pseudonymous key도 비공개 정보로 취급한다.

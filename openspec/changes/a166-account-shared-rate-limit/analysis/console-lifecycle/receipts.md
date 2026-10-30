@@ -1,0 +1,18 @@
+# 원문 영수증
+
+- a166-lifecycle-worker-red.log: 87630f28d6c83b31747916a2c7e05ea179072b24f36c03e70dfc2d77b8f3c9c0
+- a166-lifecycle-worker-green.log: a4c84d8f88bbb12c44353a210e3b06916b33a5e270648dfc56510ad8c8e0d50d
+- a166-lifecycle-relaunch-red.log: 45b61b3e67fd05a5c73096bdfd2c5c41316ffa6eba723bb24f458f4c8e8f9392
+- a166-lifecycle-console-green.log: 55711c4a0147a2a0e376a549b9bb280aca0b0560700e9b76141a1d52bbbdc66b
+- a166-relaunch-owner-red.log: 291a824354616695619106762618ec66c98f198dd36331fe3f5fe8f2dac90e18
+- a166-relaunch-owner-green.log: 91228f17cb927bafd70638002c72843c88aaeb0286c64d8caa0115733e52c536
+- a166-relaunch-exec-red.log: 7841659f80090bcec83015d4ca9e287f56876e36ea8045a8067e94d01cf2c379
+- a166-relaunch-exec-green.log: 883a81cb57667ac421298a16190487d09958051d9caee0573149f2b5f6c3a974
+- a166-lifecycle-exact-green.log: 5113cce1c911dbd428abf8ffb1ec79a65b763504778cd36ea2ab7c81403b66b0
+- a166-console-settle-mutant.log: c2fed6fd179828a5c5c985dbcfcc5ce36edebc3c0a9b50fb161c6d76717e1b3a
+- a166-console-owner-mutant.log: 5bbf9a1f13e5857d413f79fe36407978ebcfb4951bc9f5b2900b41efd359d54b
+- a166-console-freeze-normal.log: 74c04aef0ce3b595eed13ae160418b68d0921356b4e2328d4aa3fab79fe2c1d3
+- a166-console-freeze-tag-race.log: 03db9ea52e5e751d1d523855977a74ab3bb230e698fd7365bd18e17ba59db61d
+- a166-console-handler-delta-normal.log: 5a7e63f8f133671ec2450769fca792bc12f081f7a98afcd01fd4efc2eef647bd
+- a166-console-handler-delta-tag-race.log: c6ca03f4659d1892f0b86f3dd3acb2578f03d2f2a62567abcbe3e0112936792c
+- a166-console-handler-mutant.log: f040af1511574d6f1bfbb96cefbb39846b0a731425d88cfcb963f45b41a302df

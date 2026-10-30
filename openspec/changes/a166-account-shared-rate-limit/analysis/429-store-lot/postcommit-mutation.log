@@ -1,0 +1,7 @@
+--- FAIL: TestA166ObservationPostcommitBeginFailureBecomesGap (0.41s)
+    observation_postcommit_test.go:42: begin seq=1 writes=1 err=<nil>
+--- FAIL: TestA166ObservationPostcommitFinishFailureNoDuplicate (0.42s)
+    observation_postcommit_test.go:83: finish error=<nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.825s
+FAIL

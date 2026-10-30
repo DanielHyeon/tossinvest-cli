@@ -1,0 +1,5 @@
+--- FAIL: TestA166ObservationMissingRingIsCorrupt (0.00s)
+    observation_store_test.go:734: missing gap ring accepted
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.017s
+FAIL
