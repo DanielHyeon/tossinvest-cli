@@ -146,7 +146,7 @@ func TestSendClientRefusesRedirectsAndConnectionReuse(t *testing.T) {
 }
 
 // TestNoProductionOrderSurfaceIsNamed 는 생산 주문·계좌 메서드를 부르지 않고 official 사용이 허용 목록 안임을 봄.
-// AuthHeaders 는 headerSource 인터페이스 메서드로만 불림.
+// AuthHeaders 는 headerSource 인터페이스로 호출하고 concrete client 는 예산 결속과 BaseURL 확인에 사용함.
 func TestNoProductionOrderSurfaceIsNamed(t *testing.T) {
 	t.Parallel()
 	forbidden := map[string]bool{
