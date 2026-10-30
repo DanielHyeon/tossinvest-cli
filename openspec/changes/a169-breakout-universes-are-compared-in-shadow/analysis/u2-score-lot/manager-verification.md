@@ -9,3 +9,5 @@ KST 날짜 자정 이전 봉만 복사·정렬하고 최신20개를 사용한다
 PriorDays는 선택20개의 수가 아니라 시간0/오늘 이후를 제외한 전체 prior 봉 수(최대25)이며 ZeroVolumeDays는 선택20개만 센다. 실제 거래일/시장 timestamp 품질은 인증하지 않는다. 수치·중복 지원 제한, 원문 유실/0 구분 불가능성은 계획대로 남는다.
 
 impeccable N/A — backend 계산만. 기존 함수 FLM 변경·신규 의존성 없음. gstack 범위 수동 checklist, CodeGraph index 미초기화, AST 직접 caller0와 source 손읽기 구분. 전체 tests/gate·실제 네트워크·계좌·운영·archive 미실행. 최신 U0/U1 main 통합 후 정확 선택 검증·scoped strict/PM/diff를 통과하면 Terra가 게시한다. 전체 a169 tasks2.2/1.3 및 측정은 미완 유지한다.
+
+게시 합성: selection main `54f1dc59b`와 통합한 source에서 U2 score source/test 원문 차이 없음. Go1.25 `^TestA169(Selection|SecurityType|U2Score)` 정확 선택 normal/tagged race PASS. 결과 원문은 receipts/merged-*. 전체 test/gate·운영·네트워크 미실행. 2.2 및 전체 freeze 미완 유지.
