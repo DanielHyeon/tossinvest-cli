@@ -1,0 +1,7 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/official [github.com/JungHoonGhae/tossinvest-cli/internal/official.test]
+internal/official/a166_binding_test.go:14:15: nilClient.UsesAccountBudget undefined (type *Client has no field or method UsesAccountBudget)
+internal/official/a166_binding_test.go:18:9: off.UsesAccountBudget undefined (type *Client has no field or method UsesAccountBudget)
+internal/official/a166_binding_test.go:39:10: c.UsesAccountBudget undefined (type *Client has no field or method UsesAccountBudget)
+internal/official/a166_binding_test.go:43:16: c.UsesAccountBudget undefined (type *Client has no field or method UsesAccountBudget)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official [build failed]
+FAIL

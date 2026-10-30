@@ -1,0 +1,22 @@
+=== RUN   TestA166UsesAccountBudgetBinding
+=== RUN   TestA166UsesAccountBudgetBinding/none
+=== RUN   TestA166UsesAccountBudgetBinding/unsealed
+=== RUN   TestA166UsesAccountBudgetBinding/not_enforced
+=== RUN   TestA166UsesAccountBudgetBinding/budget_missing
+=== RUN   TestA166UsesAccountBudgetBinding/wrapper_missing
+=== RUN   TestA166UsesAccountBudgetBinding/wrapper_drift
+=== RUN   TestA166UsesAccountBudgetBinding/client_missing
+=== RUN   TestA166UsesAccountBudgetBinding/token_missing
+=== RUN   TestA166UsesAccountBudgetBinding/token_client_drift
+--- PASS: TestA166UsesAccountBudgetBinding (0.03s)
+    --- PASS: TestA166UsesAccountBudgetBinding/none (0.00s)
+    --- PASS: TestA166UsesAccountBudgetBinding/unsealed (0.00s)
+    --- PASS: TestA166UsesAccountBudgetBinding/not_enforced (0.00s)
+    --- PASS: TestA166UsesAccountBudgetBinding/budget_missing (0.00s)
+    --- PASS: TestA166UsesAccountBudgetBinding/wrapper_missing (0.00s)
+    --- PASS: TestA166UsesAccountBudgetBinding/wrapper_drift (0.00s)
+    --- PASS: TestA166UsesAccountBudgetBinding/client_missing (0.00s)
+    --- PASS: TestA166UsesAccountBudgetBinding/token_missing (0.00s)
+    --- PASS: TestA166UsesAccountBudgetBinding/token_client_drift (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	1.042s

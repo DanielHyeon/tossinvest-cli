@@ -36,3 +36,16 @@ func NewWithAccountBudget(creds Credentials, cacheFile string, budget *accountbu
 	c.budgetCleanup = cleanup
 	return c, nil
 }
+
+// UsesAccountBudget reports the sealed transport and token-client binding.
+// It does not grant monetary authority or expose the budget.
+func (c *Client) UsesAccountBudget(expected *accountbudget.Budget) bool {
+	if c == nil || expected == nil {
+		return false
+	}
+	c.configMu.RLock()
+	defer c.configMu.RUnlock()
+	return c.configurationSealed && c.budgetEnforced && c.budget == expected &&
+		c.budgetTransport != nil && c.hc != nil && c.hc.Transport == c.budgetTransport &&
+		c.tm != nil && c.tm.hc == c.hc
+}
