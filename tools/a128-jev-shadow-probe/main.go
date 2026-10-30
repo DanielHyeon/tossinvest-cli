@@ -22,6 +22,8 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"flag"
 	"fmt"
@@ -70,18 +72,15 @@ func dispatch(ctx context.Context, args []string, getenv func(string) string, st
 	}
 }
 
-// runCommand 는 키 검사를 가장 먼저 함 — 키가 없으면 브로커에 한 번도 묻지 않고 거부.
+// runCommand 는 입력군·출력 경로와 키를 외부 요청 전에 검사함.
 func runCommand(ctx context.Context, args []string, getenv func(string) string) error {
 	return runCommandWithOptions(ctx, args, getenv)
 }
 
 func runCommandWithOptions(ctx context.Context, args []string, getenv func(string) string, opts ...official.Option) (result error) {
-	judge, err := newJudgeClient(getenv(typeSafeAPIKeyEnv), defaultTypeSafeBase, "")
-	if err != nil {
-		return err
-	}
 
 	flags := flag.NewFlagSet("run", flag.ContinueOnError)
+	profile := flags.String("input-profile", "compare", "current, initial, or compare; compare makes two model requests per snapshot")
 	market := flags.String("market", "", `required: "KR", "US" or "BOTH"`)
 	interval := flags.Duration("interval", defaultInterval, "sampling interval")
 	top := flags.Int("top", 10,
@@ -91,13 +90,28 @@ func runCommandWithOptions(ctx context.Context, args []string, getenv func(strin
 			"every pool judgment is written and labeled (non-finalists are the control group); --top ≤ --pool ≤ 100")
 	horizon := flags.Int("horizon", 60, "label horizon in minutes")
 	model := flags.String("model", defaultJudgeModel, "TypeSafe model id (pinned version by default)")
-	out := flags.String("out", defaultLedgerDir, "ledger directory (ledger.jsonl + states/)")
+	out := flags.String("out", "", "ledger directory (ledger.jsonl + states/)")
 	configDir := flags.String("config-dir", "",
 		"optional: the tossctl config directory (Open API credentials + config.json, read only, for the order cap)")
 	waitOpen := flags.Bool("wait-open", false, "wait for the regular session to open instead of refusing")
 	sessionWindow := flags.String("session", "",
 		`optional: bypass the market calendar with a market-local window "HH:MM-HH:MM" (e.g. "09:00-15:30"); use only when the calendar is wrong`)
 	if err := flags.Parse(args); err != nil {
+		return err
+	}
+	explicitOut := false
+	flags.Visit(func(f *flag.Flag) {
+		if f.Name == "out" {
+			explicitOut = true
+		}
+	})
+	resolvedOut, err := resolveProfileOutput(*profile, *out, explicitOut)
+	if err != nil {
+		return err
+	}
+	*out = resolvedOut
+	judge, err := newJudgeClient(getenv(typeSafeAPIKeyEnv), defaultTypeSafeBase, "")
+	if err != nil {
 		return err
 	}
 	markets, err := parseMarkets(*market)
@@ -171,8 +185,16 @@ func runCommandWithOptions(ctx context.Context, args []string, getenv func(strin
 	}
 	defer l.Close()
 
+	cohort := ""
+	if *profile != "current" {
+		var token [16]byte
+		if _, err := rand.Read(token[:]); err != nil {
+			return err
+		}
+		cohort = hex.EncodeToString(token[:])
+	}
 	p := newProbe(src, judge, l, config{
-		Interval: *interval, TopK: *top, Pool: *pool, Horizon: time.Duration(*horizon) * time.Minute, WaitOpen: *waitOpen,
+		InputProfile: *profile, Cohort: cohort, Interval: *interval, TopK: *top, Pool: *pool, Horizon: time.Duration(*horizon) * time.Minute, WaitOpen: *waitOpen,
 		LabelTick: 30 * time.Second, ReadGap: 250 * time.Millisecond,
 		RetryDelays:  []time.Duration{5 * time.Second, 10 * time.Second, 20 * time.Second, 40 * time.Second},
 		ManualWindow: manualSess, CapSource: capSource,
@@ -187,6 +209,7 @@ func runCommandWithOptions(ctx context.Context, args []string, getenv func(strin
 		"finalists %d by J1 after excluding J2 ≥ %.1f · rule %s · horizon %dm · restored %d pending",
 		ledgerDir, markets, judge.model, *interval, *pool, rankingFetch, configFile,
 		*top, redFlagExclusionP, selectionRuleFor(*top, *pool), *horizon, p.pendingCount())
+	p.logf("input profile %s · cohort %s · model requests per candidate %d", *profile, cohort, map[bool]int{true: 2, false: 1}[*profile == "compare"])
 	p.logf("WTS read-only inputs (news feed %v · major indices · KR per-stock investor flows): session %s",
 		newsFeedScopes, wtsStatus)
 	if manualSess != nil {
@@ -233,17 +256,34 @@ func parseMarkets(value string) ([]string, error) {
 
 func reportCommand(args []string, stdout io.Writer) error {
 	flags := flag.NewFlagSet("report", flag.ContinueOnError)
-	ledgerPath := flags.String("ledger", filepath.Join(defaultLedgerDir, ledgerFileName), "ledger.jsonl path")
+	ledgerPath := flags.String("ledger", "", "ledger.jsonl path (default: comparison ledger)")
+	compare := flags.Bool("compare", false, "compare paired input profiles")
 	if err := flags.Parse(args); err != nil {
 		return err
+	}
+	explicitLedger := false
+	flags.Visit(func(f *flag.Flag) {
+		if f.Name == "ledger" {
+			explicitLedger = true
+		}
+	})
+	if !explicitLedger {
+		*ledgerPath = filepath.Join(defaultLedgerDir+"-compare", ledgerFileName)
 	}
 	contents, err := readLedger(*ledgerPath)
 	if err != nil {
 		return err
 	}
+	if *compare {
+		_, err := io.WriteString(stdout, renderProfileComparison(verifyComparisonStates(contents, filepath.Join(filepath.Dir(*ledgerPath), statesDirName))))
+		return err
+	}
 	// 시간대 표(s4)의 minutes_since_open 은 원장 옆 states/ 의 state 파일에만 있음 — 읽기만 함.
 	contents.StateMinutes = readStateMinutes(filepath.Join(filepath.Dir(*ledgerPath), statesDirName), contents.Judgments)
 	_, err = io.WriteString(stdout, renderCalibrationReport(contents, *ledgerPath))
+	if err == nil && !explicitLedger {
+		_, err = io.WriteString(stdout, "\n"+renderProfileComparison(verifyComparisonStates(contents, filepath.Join(filepath.Dir(*ledgerPath), statesDirName))))
+	}
 	return err
 }
 

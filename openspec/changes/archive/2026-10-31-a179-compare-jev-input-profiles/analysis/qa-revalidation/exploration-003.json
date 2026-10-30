@@ -1,0 +1,22 @@
+{
+  "observationCapture": "002",
+  "observationArgv": [
+    "/tmp/a179-probe-final2",
+    "run",
+    "--market",
+    "KR",
+    "--input-profile",
+    "compare",
+    "--out",
+    "openspec/changes/a128-jev-shadow-judgment-probe/analysis/shadow-ledger"
+  ],
+  "observed": "",
+  "hypothesis": "Rejected command still has no filesystem effect.",
+  "nextCapture": "003",
+  "nextArgv": [
+    "/usr/bin/test",
+    "!",
+    "-e",
+    "openspec/changes/a128-jev-shadow-judgment-probe/analysis/shadow-ledger"
+  ]
+}

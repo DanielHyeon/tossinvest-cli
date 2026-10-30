@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a179",
+  "title": "Compare initial data fields and current Jev input on identical snapshots",
+  "feature": "FEAT-TOS-006",
+  "intent": "archive",
+  "openspec": {
+    "change_id": "a179-compare-jev-input-profiles",
+    "path": "openspec/changes/archive/2026-10-31-a179-compare-jev-input-profiles"
+  },
+  "found_by": {
+    "date": "2026-10-31",
+    "how": "User requested Manager OpenSpec and Terra implementation/review/targeted tests then archive commit push; no live calls or operational changes.",
+    "record": "openspec/changes/archive/2026-10-31-a179-compare-jev-input-profiles/proposal.md"
+  },
+  "acceptance": [
+    "Initial-fields-v1 projects basic public fields without mutating full source; questions remain unchanged",
+    "No-profile run automatically compares current and initial with dedicated default output; explicit current preserves legacy behavior and output; invalid or unsafe paths fail before calls",
+    "Paired profiles share collection time/base/questions/model and label prices, persist source/input provenance and independent failures",
+    "Reports separate profiles, validate pairs and use source prices without changing prior preregistration",
+    "Targeted offline tests, Terra gstack review, Manager verification and archive/PM/commit/push receipts; no live calls"
+  ]
+}

@@ -243,5 +243,8 @@ func selectionLot(row judgmentRow) string {
 	if row.StateRev != "" {
 		lot += "@" + row.StateRev
 	}
+	if row.InputProfile != "" {
+		lot += "#" + row.InputProfile
+	}
 	return lot
 }

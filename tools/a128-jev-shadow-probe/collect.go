@@ -93,7 +93,9 @@ const (
 
 // config 는 실행 매개변수. 기본값은 main.go 플래그에 있음.
 type config struct {
-	Interval time.Duration
+	InputProfile string
+	Cohort       string
+	Interval     time.Duration
 	// TopK 는 사이클당 결선 수 — 풀 판단 뒤 J2 악재 제외·J1 내림차순 상위 K(screen.go).
 	TopK int
 	// Pool 은 사이클당 판단하는 풀 크기(상위 100 중 상한 이하 후보에서 무작위 추출). TopK ≤ Pool ≤ 100.
@@ -238,10 +240,11 @@ func (p *probe) manualSession(market string) (session, error) {
 	openAt := time.Date(y, m, d, w.StartHour, w.StartMin, 0, 0, loc)
 	closeAt := time.Date(y, m, d, w.EndHour, w.EndMin, 0, 0, loc)
 	// 명시적 우회를 원장에 1행 남김 — 보고서가 gap 단계 "session" 으로 override 혼입을 봄.
-	if err := p.ledger.gap(gapRow{
-		At: stamp(p.now()), Market: market, Stage: "session",
-		Reason: fmt.Sprintf("calendar bypassed by --session, window=%s, reason=operator", w.Raw),
-	}); err != nil {
+	row := gapRow{At: stamp(p.now()), Market: market, Stage: "session", Reason: fmt.Sprintf("calendar bypassed by --session, window=%s, reason=operator", w.Raw)}
+	if p.cfg.InputProfile != "" && p.cfg.InputProfile != "current" {
+		row.Cohort = p.cfg.Cohort
+	}
+	if err := p.ledger.gap(row); err != nil {
 		return session{}, err
 	}
 	return session{Open: openAt, Close: closeAt, Source: sessionSourceManual}, nil
@@ -342,7 +345,11 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 	collectStarted := p.now()
 	gap := func(stage, symbol string, err error) error {
 		p.logf("%s %s %s: %s", market, stage, symbol, reasonOf(err))
-		return p.ledger.gap(gapRow{At: stamp(at), Market: market, Stage: stage, Symbol: symbol, Reason: reasonOf(err)})
+		row := gapRow{At: stamp(at), Market: market, Stage: stage, Symbol: symbol, Reason: reasonOf(err)}
+		if p.cfg.InputProfile != "" && p.cfg.InputProfile != "current" {
+			row.Cohort = p.cfg.Cohort
+		}
+		return p.ledger.gap(row)
 	}
 
 	// 상한·환율을 못 읽으면 옛 규칙으로 폴백하지 않고 이 사이클을 판단 없이 gap 으로 남김.
@@ -417,14 +424,15 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 
 	// judgedSymbol 은 판단에 성공한 풀 종목 하나 — 선별이 끝날 때까지 메모리에 둠(랭킹 순서 유지).
 	type judgedSymbol struct {
-		symbol string
-		base   float64
-		digest string
-		state  PublicState
-		result judgeResult
+		symbol       string
+		base         float64
+		digest       string
+		state        PublicState
+		result       judgeResult
+		profile      string
+		sourceDigest string
 	}
 	var judged []judgedSymbol
-	var screenInputs []screenInput
 	for _, item := range items {
 		base := last[item.Symbol]
 		if base <= 0 {
@@ -470,61 +478,106 @@ func (p *probe) cycle(ctx context.Context, market string, sess session, at time.
 		if err != nil {
 			return err
 		}
-		result, err := p.judge.judge(ctx, state, p.questions)
-		if err != nil {
-			if err := gap("judgment", item.Symbol, err); err != nil {
-				return err
+		profiles := []string{"current"}
+		if p.cfg.InputProfile == "initial" {
+			profiles = []string{"initial"}
+		}
+		if p.cfg.InputProfile == "compare" {
+			profiles = []string{"current", "initial"}
+		}
+		for _, profile := range profiles {
+			input, inputDigest := state, digest
+			if profile == "initial" {
+				input = initialState(state)
+				inputDigest, err = p.ledger.storeState(input)
+				if err != nil {
+					return err
+				}
 			}
-			continue
+			result, judgeErr := p.judge.judge(ctx, input, p.questions)
+			if judgeErr != nil {
+				if p.cfg.InputProfile == "" || p.cfg.InputProfile == "current" {
+					if err := gap("judgment", item.Symbol, judgeErr); err != nil {
+						return err
+					}
+				} else if err := p.ledger.gap(gapRow{At: stamp(at), Market: market, Stage: "judgment", Symbol: item.Symbol, Reason: reasonOf(judgeErr), InputProfile: profile, Cohort: p.cfg.Cohort, SourceStateDigest: digest}); err != nil {
+					return err
+				}
+				continue
+			}
+			_, haveJ1 := result.P[screenUpQuestion]
+			_, haveJ2 := result.P[screenRedFlagQuestion]
+			if !haveJ1 || !haveJ2 {
+				return fmt.Errorf("screen inputs %q/%q missing from the judgment of %s", screenUpQuestion, screenRedFlagQuestion, item.Symbol)
+			}
+			judged = append(judged, judgedSymbol{symbol: item.Symbol, base: base, digest: inputDigest, state: input, result: result, profile: profile, sourceDigest: digest})
 		}
-		// 선별 입력 p 가 응답에 없으면(질문 집합이 바뀐 경우) 0 으로 읽지 않고 측정을 멈춤.
-		j1, haveJ1 := result.P[screenUpQuestion]
-		j2, haveJ2 := result.P[screenRedFlagQuestion]
-		if !haveJ1 || !haveJ2 {
-			return fmt.Errorf("screen inputs %q/%q missing from the judgment of %s", screenUpQuestion, screenRedFlagQuestion, item.Symbol)
-		}
-		judged = append(judged, judgedSymbol{symbol: item.Symbol, base: base, digest: digest, state: state, result: result})
-		screenInputs = append(screenInputs, screenInput{J1: j1, J2: j2})
 	}
 
-	// 선별은 판단이 다 끝난 뒤 한 번 — 사이클의 selection 수치를 행을 쓰기 전에 확정함.
-	screens := screenFinalists(screenInputs, p.cfg.TopK)
-	selection.Judged = len(judged)
+	// 선별 결과와 집계는 입력군마다 분리함.
 	collect := p.now().Sub(collectStarted)
 	selection.ReadsByGroup = readGroupsOf(reads.byGroup)
 	selection.BrokerReads, selection.CacheHits = selection.ReadsByGroup.total(), reads.cacheHits
 	selection.WTSRequests = reads.byGroup[groupWTS]
 	selection.CollectSeconds = round(collect.Seconds(), 1)
-	for _, screen := range screens {
-		if screen.RedFlagExcluded {
-			selection.RedFlagExcluded++
+	due := at.Add(p.cfg.Horizon)
+	pending := map[string]*pendingLabel{}
+	var pendingOrder []string
+	baseSelection := *selection
+	for _, profile := range []string{"current", "initial"} {
+		var entries []judgedSymbol
+		var inputs []screenInput
+		for _, entry := range judged {
+			if entry.profile == profile {
+				entries = append(entries, entry)
+				inputs = append(inputs, screenInput{J1: entry.result.P[screenUpQuestion], J2: entry.result.P[screenRedFlagQuestion]})
+			}
 		}
-		if screen.Finalist {
-			selection.Finalists++
+		if len(entries) == 0 {
+			continue
+		}
+		screens := screenFinalists(inputs, p.cfg.TopK)
+		profileSelection := baseSelection
+		profileSelection.Judged = len(entries)
+		for _, screen := range screens {
+			if screen.RedFlagExcluded {
+				profileSelection.RedFlagExcluded++
+			}
+			if screen.Finalist {
+				profileSelection.Finalists++
+			}
+		}
+		for i, entry := range entries {
+			item := pending[entry.symbol]
+			if item == nil {
+				item = &pendingLabel{Market: market, Symbol: entry.symbol, BasePrice: entry.base, Due: due}
+				pending[entry.symbol] = item
+				pendingOrder = append(pendingOrder, entry.symbol)
+			}
+			for _, q := range p.questions {
+				id := fmt.Sprintf("%s-%s-%s-%s", at.UTC().Format("20060102T150405Z"), market, entry.symbol, q.ID)
+				if p.cfg.InputProfile != "" && p.cfg.InputProfile != "current" {
+					id += "-" + p.cfg.Cohort + "-" + profile
+				}
+				row := judgmentRow{ID: id, At: stamp(at), Market: market, Symbol: entry.symbol, QuestionID: q.ID, QuestionRev: q.Rev, QuestionDigest: q.digest(), ModelRequested: p.judge.model, ModelAnswered: entry.result.Model, StateDigest: entry.digest, P: entry.result.P[q.ID], BasePrice: entry.base, Currency: entry.state.Currency, HorizonMinutes: entry.state.HorizonMinutes, LabelDueAt: stamp(due), InputTokens: entry.result.InputTokens, CollectionGaps: entry.state.MissingInputs, Selection: &profileSelection, Screen: &screens[i], StateRev: stateRev}
+				if p.cfg.InputProfile != "" && p.cfg.InputProfile != "current" {
+					row.InputProfile, row.Cohort, row.SourceStateDigest = profile, p.cfg.Cohort, entry.sourceDigest
+					if profile == "initial" {
+						row.StateRev = initialProfile
+					}
+				}
+				if err := p.ledger.judgment(row); err != nil {
+					return err
+				}
+				item.JudgmentIDs = append(item.JudgmentIDs, id)
+			}
+		}
+		if profile == "current" || p.cfg.InputProfile == "initial" {
+			*selection = profileSelection
 		}
 	}
-
-	// 결선·비결선 모두 행을 쓰고 라벨 대기에 올림 — 비결선은 보고서의 대조군.
-	due := at.Add(p.cfg.Horizon)
-	for index, entry := range judged {
-		screen := screens[index]
-		pending := pendingLabel{Market: market, Symbol: entry.symbol, BasePrice: entry.base, Due: due}
-		for _, q := range p.questions {
-			id := fmt.Sprintf("%s-%s-%s-%s", at.UTC().Format("20060102T150405Z"), market, entry.symbol, q.ID)
-			if err := p.ledger.judgment(judgmentRow{
-				ID: id, At: stamp(at), Market: market, Symbol: entry.symbol,
-				QuestionID: q.ID, QuestionRev: q.Rev, QuestionDigest: q.digest(),
-				ModelRequested: p.judge.model, ModelAnswered: entry.result.Model,
-				StateDigest: entry.digest, P: entry.result.P[q.ID], BasePrice: entry.base, Currency: entry.state.Currency,
-				HorizonMinutes: entry.state.HorizonMinutes, LabelDueAt: stamp(due),
-				InputTokens: entry.result.InputTokens, CollectionGaps: entry.state.MissingInputs,
-				Selection: selection, Screen: &screen, StateRev: stateRev,
-			}); err != nil {
-				return err
-			}
-			pending.JudgmentIDs = append(pending.JudgmentIDs, id)
-		}
-		p.addPending(pending)
+	for _, symbol := range pendingOrder {
+		p.addPending(*pending[symbol])
 	}
 	// 공유 Open API 예산 관측: 사이클당 GET 수·수집 시간. 간격의 절반을 넘으면 경고(다음 사이클이 밀리기 시작함).
 	p.logf("%s cycle %s: pool %d · judged %d · finalists %d · broker GETs %d %+v · WTS requests %d · day-cache hits %d · collect %s",
@@ -755,6 +808,9 @@ func (p *probe) restorePending(contents ledgerContents) {
 			continue // 기한을 못 읽는 행은 보고서에서 "미라벨"로 드러남
 		}
 		key := row.Market + "|" + row.Symbol + "|" + row.LabelDueAt
+		if row.Cohort != "" {
+			key += "|" + row.Cohort + "|" + row.SourceStateDigest + "|" + fmt.Sprint(row.BasePrice)
+		}
 		if groups[key] == nil {
 			groups[key] = &pendingLabel{Market: row.Market, Symbol: row.Symbol, BasePrice: row.BasePrice, Due: due}
 			order = append(order, key)

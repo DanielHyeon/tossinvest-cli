@@ -1,0 +1,68 @@
+{
+  "file": "tools/a128-jev-shadow-probe/selection.go",
+  "source_sha256": "2bb0844430a12507075144ff65456264d404f0b1273ce2c720b56df52658adc7",
+  "package": "main",
+  "function": "selectionLot",
+  "signature": "selectionLot(params=1, results=1)",
+  "start": {
+    "line": 238,
+    "column": 1
+  },
+  "end": {
+    "line": 247,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 240,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 243,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 241,
+        "column": 3
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 244,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
