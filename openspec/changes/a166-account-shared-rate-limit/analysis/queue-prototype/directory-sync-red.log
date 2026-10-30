@@ -1,0 +1,5 @@
+--- FAIL: TestDirectorySyncFailureBlocksOtherProcesses (0.01s)
+    durability_counterexample_test.go:29: another participant admitted after uncertain directory fsync
+FAIL
+FAIL	_/home/daniel/tossos-work/a166-queue/openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype	0.018s
+FAIL

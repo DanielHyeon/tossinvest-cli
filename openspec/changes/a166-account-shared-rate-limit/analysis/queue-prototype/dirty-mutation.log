@@ -1,0 +1,7 @@
+--- FAIL: TestPostRenameSyncFaultRejectsOtherProcesses (0.03s)
+    protocol_test.go:86: aux: exit status 1 --- FAIL: TestProtocolChild (0.00s)
+            protocol_test.go:37: aux admitted
+        FAIL
+FAIL
+FAIL	_/tmp/a166-queue-dirty-mutation	0.041s
+FAIL

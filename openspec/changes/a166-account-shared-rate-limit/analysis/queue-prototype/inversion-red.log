@@ -1,0 +1,5 @@
+--- FAIL: TestSelectedCloseDoesNotWaitForQueue (0.14s)
+    protocol_test.go:334: selected close waited for queue while holding wire
+FAIL
+FAIL	_/home/daniel/tossos-work/a166-queue/openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype	0.146s
+FAIL

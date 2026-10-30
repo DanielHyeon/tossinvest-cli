@@ -1,0 +1,5 @@
+--- FAIL: TestDeadTicketReclaimsLivenessAfterStateCommit (0.03s)
+    protocol_test.go:307: dead liveness remains: <nil>
+FAIL
+FAIL	_/home/daniel/tossos-work/a166-queue/openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype	0.048s
+FAIL

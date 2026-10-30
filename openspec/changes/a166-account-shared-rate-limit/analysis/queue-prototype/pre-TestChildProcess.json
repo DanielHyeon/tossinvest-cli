@@ -1,0 +1,368 @@
+{
+  "file": "openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype/queue_test.go",
+  "source_sha256": "6e8b490d9e616242703ffdfef539f6f5b8f216b6a021c93092174f50a9e1c08a",
+  "package": "queueprototype",
+  "function": "TestChildProcess",
+  "signature": "TestChildProcess(params=1, results=0)",
+  "start": {
+    "line": 94,
+    "column": 1
+  },
+  "end": {
+    "line": 122,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 104,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 114,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 115,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 119,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 96,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 5
+      },
+      "text": "os.Getenv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 19
+      },
+      "text": "os.Getenv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 10
+      },
+      "text": "q.Register"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 21
+      },
+      "text": "os.Getenv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 8
+      },
+      "text": "w.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 9
+      },
+      "text": "os.WriteFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 22
+      },
+      "text": "q.path"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 38
+      },
+      "text": "os.Getenv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 65
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 17
+      },
+      "text": "context.WithTimeout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 37
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 8
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 10
+      },
+      "text": "w.Wait"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 8
+      },
+      "text": "unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 5
+      },
+      "text": "os.Getenv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 14
+      },
+      "text": "os.Stat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 22
+      },
+      "text": "q.path"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 9
+      },
+      "text": "os.WriteFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 22
+      },
+      "text": "q.path"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 36
+      },
+      "text": "os.Getenv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 63
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 98,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 104,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 109,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 115,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 119,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 103,
+        "column": 2
+      },
+      "text": "w.Close"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 108,
+        "column": 2
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 113,
+        "column": 2
+      },
+      "text": "unlock"
+    }
+  ]
+}

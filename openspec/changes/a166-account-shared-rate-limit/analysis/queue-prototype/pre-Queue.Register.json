@@ -1,0 +1,338 @@
+{
+  "file": "openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype/queue.go",
+  "source_sha256": "5347912054f3e5269c343347e9586c52f06283a39c982fef092297f7cbd88e0f",
+  "package": "queueprototype",
+  "function": "Register",
+  "receiver": "Queue",
+  "signature": "Queue.Register(params=1, results=2)",
+  "start": {
+    "line": 138,
+    "column": 1
+  },
+  "end": {
+    "line": 170,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 140,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 145,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 148,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 165,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 141,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 146,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 150,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 156,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 167,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 169,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 7
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 13
+      },
+      "text": "rand.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 8
+      },
+      "text": "hex.EncodeToString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 10
+      },
+      "text": "os.OpenFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 22
+      },
+      "text": "q.path"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 9
+      },
+      "text": "syscall.Flock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 23
+      },
+      "text": "int"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 27
+      },
+      "text": "f.Fd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 3
+      },
+      "text": "f.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 10
+      },
+      "text": "lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 15
+      },
+      "text": "q.path"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 3
+      },
+      "text": "w.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 8
+      },
+      "text": "unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 10
+      },
+      "text": "q.read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 15
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 7
+      },
+      "text": "q.write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 3
+      },
+      "text": "w.Close"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 139,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 140,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 143,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 144,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 148,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 152,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 153,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 159,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 161,
+        "column": 3
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 162,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 163,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 158,
+        "column": 2
+      },
+      "text": "unlock"
+    }
+  ]
+}

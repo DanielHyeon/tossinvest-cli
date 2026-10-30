@@ -1,0 +1,256 @@
+{
+  "file": "openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype/queue.go",
+  "source_sha256": "b8cb985835486e3e9a82e4428967d40e7cdbb2fd2b0cf97ed22f484be5bddda6",
+  "package": "queueprototype",
+  "function": "write",
+  "receiver": "Queue",
+  "signature": "Queue.write(params=1, results=1)",
+  "start": {
+    "line": 67,
+    "column": 1
+  },
+  "end": {
+    "line": 90,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 69,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 72,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 80,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 70,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 73,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 77,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 87,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 10
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 10
+      },
+      "text": "q.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 18
+      },
+      "text": "q.path"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 10
+      },
+      "text": "os.CreateTemp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 8
+      },
+      "text": "os.Remove"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 18
+      },
+      "text": "f.Name"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 12
+      },
+      "text": "f.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 7
+      },
+      "text": "f.Sync"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 10
+      },
+      "text": "f.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 9
+      },
+      "text": "os.Rename"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 19
+      },
+      "text": "f.Name"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 29
+      },
+      "text": "q.path"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 68,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 80,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 81,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 83,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 84,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 79,
+        "column": 2
+      },
+      "text": "os.Remove"
+    }
+  ]
+}
