@@ -3,6 +3,8 @@
 8050ce905201f9d690165915e4f571bb561e105de527c558707726660dbf9a9c  openspec/changes/a166-account-shared-rate-limit/analysis/consumer-api-lot/a166-consumer-body-green.log.gz
 996f3b82246c6b350488e60709d466ce8a6493d2eb06b0d57f18f7965d72832d  openspec/changes/a166-account-shared-rate-limit/analysis/consumer-api-lot/a166-consumer-close-green.log.gz
 583b2024013caa74e694ee05beac644c8907b6bcbee36a1afee4becedd4a529a  openspec/changes/a166-account-shared-rate-limit/analysis/consumer-api-lot/a166-consumer-darwin-compile.log.gz
+a1e5e41d4e4ac10edd733c14c0e38ff9d3773dc222a03d4a0a00bcfea82c728f  openspec/changes/a166-account-shared-rate-limit/analysis/consumer-api-lot/a166-consumer-delta-normal.log.gz
+e181491bbe165e97b0fb31b81203ab992c851fb6c24137cae0a887da4f451ebb  openspec/changes/a166-account-shared-rate-limit/analysis/consumer-api-lot/a166-consumer-delta-race.log.gz
 248cb6117c276d087cdfdd16fb61748a8d7d58f7078a7c42bcc1630891e6f683  openspec/changes/a166-account-shared-rate-limit/analysis/consumer-api-lot/a166-consumer-factory-green.log.gz
 214a6d167cac8f0c3dd8e65fbcde5344bfc8c2d2d20606d9dfddbbcb8d862ebd  openspec/changes/a166-account-shared-rate-limit/analysis/consumer-api-lot/a166-consumer-final-normal.log.gz
 8babd88eceba1dfa33efb636d599a141d034885450da2cdaca28f1482f8dbeeb  openspec/changes/a166-account-shared-rate-limit/analysis/consumer-api-lot/a166-consumer-final-race.log.gz

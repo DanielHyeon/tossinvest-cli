@@ -7,3 +7,5 @@
 - 위임 제거·nil Budget guard 제거 변이 RED. nil context guard만 제거한 변이는 기존 Snapshot이 별도 nil 검사를 수행하므로 동등변이로 살아남았으며 유효 변이로 세지 않는다. 선택 Go1.25 normal/tagged race의 원문과 컴파일 RED 및 변이 원문은 gzip 보존. fake credentials, local TLS exact DialContext, 별도 user/net namespace lo-only/no-route. Darwin accountbudget compile-only는 구현 컴파일 확인이지 운영 지원 PASS가 아니다.
 - `TestA087ProductionBoardAdmissionFlowIsOnlyLiteralNil`, `TestA087NilAdmissionMakesNoLowerLimitWire` 선택 실행. a087 활성화/인간 실측 및 a169 소비자 구현은 별도 미완. 전체 tests/gate·실제 broker/운영·activation/archive 미실행.
 - gstack 관련 API 수명·오류·동시성·사본·wire/취소 항목 수동 리뷰만 수행, 자동 mixed-model 전체 pipeline·독립 리뷰는 미실행. 신규 dependency 없음, impeccable N/A backend-only. 테스트 전용 unsafe는 firstWrite 관측 및 postcommit fsync fault만 주입하며 제품 authority를 부여하지 않는다.
+
+후속 delta는 `delta-review.md`와 `handoff-table.md` 참조. 실제 PriceLimits 단일 논리 요청의 401→401→200은 cached 최초 GET + 채택 token GET + 새 token POST + 성공 GET, 총 4 wire다. 기존 generic `TestA166RuntimeToken401AndCached`의 5 wire는 401 한 번을 포함한 두 논리 호출의 합이다. 두 증거를 합쳐 한 시험이 모두 수행했다고 주장하지 않는다.

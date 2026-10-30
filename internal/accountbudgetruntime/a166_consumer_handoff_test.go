@@ -466,3 +466,169 @@ func TestA166ConsumerFinishFaultPreservesHTTP429(t *testing.T) {
 		t.Fatalf("view=%+v err=%v", view, err)
 	}
 }
+
+func TestA166ConsumerToken429CrossFactorySnapshot(t *testing.T) {
+	_, path, _ := setupGroup(t)
+	cfg := Config{Mode: ModeRequired, Manifest: path, CleanupError: func(error) {}}
+	a, err := Open(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer a.Close()
+	z, err := Open(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer z.Close()
+	ba, err := a.Budget()
+	if err != nil {
+		t.Fatal(err)
+	}
+	bz, err := z.Budget()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ba == bz {
+		t.Fatal("factory budget pointers equal")
+	}
+	var tokens, gets atomic.Int32
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/oauth2/token":
+			tokens.Add(1)
+			w.WriteHeader(429)
+		case "/api/v1/price-limits":
+			gets.Add(1)
+		default:
+			t.Error("unexpected request")
+		}
+	}))
+	defer srv.Close()
+	roots := x509.NewCertPool()
+	roots.AddCert(srv.Certificate())
+	want := srv.Listener.Addr().String()
+	tr := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: roots}, DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
+		if network != "tcp" || address != want {
+			return nil, errors.New("fixture refused address")
+		}
+		return (&net.Dialer{}).DialContext(ctx, network, want)
+	}}
+	c, err := a.NewClient(official.Credentials{APIKey: "fake", SecretKey: "fake"}, "", official.WithBaseURL(srv.URL), official.WithHTTPClient(&http.Client{Transport: tr}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !c.UsesAccountBudget(ba) || c.UsesAccountBudget(bz) {
+		t.Fatal("incorrect budget binding")
+	}
+	before, err := bz.ObservationSnapshot(context.Background(), accountbudget.ObservationCursor{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.ProtectivePriceLimits(accountbudget.WithPriority(context.Background(), accountbudget.Auxiliary), "005930")
+	if !errors.Is(err, official.ErrRateLimited) || tokens.Load() != 1 || gets.Load() != 0 {
+		t.Fatalf("err=%v tokens=%d gets=%d", err, tokens.Load(), gets.Load())
+	}
+	after, err := bz.ObservationSnapshot(context.Background(), before.Cursor)
+	if err != nil || len(after.Events) != 1 || after.Events[0].Kind != accountbudget.ObservationToken || after.Cursor.Event != before.Cursor.Event+1 {
+		t.Fatalf("view=%+v err=%v", after, err)
+	}
+}
+
+func TestA166ConsumerPriceLimitsTwo401AdoptAndMint(t *testing.T) {
+	_, path, _ := setupGroup(t)
+	f, err := Open(context.Background(), Config{Mode: ModeRequired, Manifest: path, CleanupError: func(error) {}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	b, err := f.Budget()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cache := filepath.Join(t.TempDir(), "cache.json")
+	writeToken := func(value string) {
+		data, e := json.Marshal(map[string]any{"access_token": value, "expires_at": time.Now().Add(time.Hour)})
+		if e != nil {
+			t.Fatal(e)
+		}
+		if e = os.WriteFile(cache, data, 0600); e != nil {
+			t.Fatal(e)
+		}
+	}
+	writeToken("fake-initial")
+	var tokens, gets atomic.Int32
+	var mu sync.Mutex
+	var attempts []accountbudget.ObservationPending
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		view, e := b.ObservationSnapshot(r.Context(), accountbudget.ObservationCursor{})
+		if e != nil || view.Pending == nil {
+			t.Errorf("missing pending: %v", e)
+			return
+		}
+		mu.Lock()
+		attempts = append(attempts, *view.Pending)
+		mu.Unlock()
+		switch r.URL.Path {
+		case "/oauth2/token":
+			tokens.Add(1)
+			fmt.Fprint(w, `{"access_token":"fake-minted","expires_in":3600,"token_type":"Bearer"}`)
+		case "/api/v1/price-limits":
+			n := gets.Add(1)
+			if n == 1 {
+				writeToken("fake-adopted")
+				w.WriteHeader(401)
+				return
+			}
+			if n == 2 {
+				w.WriteHeader(401)
+				return
+			}
+			fmt.Fprint(w, `{"result":{"lowerLimitPrice":"50400","timestamp":"2026-03-30T09:30:00+09:00"}}`)
+		default:
+			t.Error("unexpected request")
+		}
+	}))
+	defer srv.Close()
+	roots := x509.NewCertPool()
+	roots.AddCert(srv.Certificate())
+	want := srv.Listener.Addr().String()
+	tr := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: roots}, DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
+		if network != "tcp" || address != want {
+			return nil, errors.New("fixture refused address")
+		}
+		return (&net.Dialer{}).DialContext(ctx, network, want)
+	}}
+	c, err := f.NewClient(official.Credentials{APIKey: "fake", SecretKey: "fake"}, cache, official.WithBaseURL(srv.URL), official.WithHTTPClient(&http.Client{Transport: tr}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	field := reflect.ValueOf(c).Elem().FieldByName("budgetTransport")
+	guard := *(**accountbudget.Transport)(unsafe.Pointer(field.UnsafeAddr()))
+	first := reflect.ValueOf(guard).Elem().FieldByName("firstWrite")
+	callback := (*func())(unsafe.Pointer(first.UnsafeAddr()))
+	var writes []time.Time
+	*callback = func() { mu.Lock(); writes = append(writes, time.Now()); mu.Unlock() }
+	collector := &accountbudget.ObservationCollector{}
+	ctx := accountbudget.WithObservation(accountbudget.WithPriority(context.Background(), accountbudget.Auxiliary), accountbudget.ObservationOther, accountbudget.ObservationKey{}, collector)
+	result, err := c.ProtectivePriceLimits(ctx, "005930")
+	if err != nil || result.LowerLimitPrice == nil || gets.Load() != 3 || tokens.Load() != 1 {
+		t.Fatalf("err=%v gets=%d tokens=%d", err, gets.Load(), tokens.Load())
+	}
+	if got := collector.Snapshot(); got.RateLimited || got.LocalError != nil {
+		t.Fatalf("collector %+v", got)
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if len(writes) != 4 || len(attempts) != 4 {
+		t.Fatalf("writes=%d attempts=%d", len(writes), len(attempts))
+	}
+	kinds := []accountbudget.ObservationKind{accountbudget.ObservationOther, accountbudget.ObservationOther, accountbudget.ObservationToken, accountbudget.ObservationOther}
+	for i := range writes {
+		if attempts[i].Sequence != uint64(i+1) || attempts[i].Kind != kinds[i] {
+			t.Fatalf("attempts=%+v", attempts)
+		}
+		if i > 0 && writes[i].Sub(writes[i-1]) < 350*time.Millisecond {
+			t.Fatalf("write gap %v", writes[i].Sub(writes[i-1]))
+		}
+	}
+}
