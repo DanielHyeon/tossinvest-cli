@@ -1,0 +1,5 @@
+--- FAIL: TestBootIDRejectsInvalidUUIDVersionAndVariant (0.00s)
+    bootstamp_linux_test.go:143: invalid UUID metadata accepted
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.020s
+FAIL

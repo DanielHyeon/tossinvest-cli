@@ -1,0 +1,5 @@
+--- FAIL: TestBootRemainingBoundariesAndRestarts (0.00s)
+    bootstamp_test.go:80: reboot {Remaining:-499h59m30s NeedsAnchor:true} <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.008s
+FAIL

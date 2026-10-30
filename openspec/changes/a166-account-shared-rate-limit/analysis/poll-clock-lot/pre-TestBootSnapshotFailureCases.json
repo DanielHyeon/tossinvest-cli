@@ -1,0 +1,208 @@
+{
+  "file": "internal/clock/bootstamp_linux_test.go",
+  "source_sha256": "1222e890f7666163b21a66e4a07646c75b733d156601b647f6abea2d566ab4f7",
+  "package": "clock",
+  "function": "TestBootSnapshotFailureCases",
+  "signature": "TestBootSnapshotFailureCases(params=1, results=0)",
+  "start": {
+    "line": 57,
+    "column": 1
+  },
+  "end": {
+    "line": 78,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 68,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 73,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 17
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 9
+      },
+      "text": "goodProbe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 4
+      },
+      "text": "tc.mutate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 12
+      },
+      "text": "Snapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 8
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 59,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 63,
+        "column": 39
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 63,
+        "column": 99
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 63,
+        "column": 168
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 63,
+        "column": 233
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 64,
+        "column": 45
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 64,
+        "column": 113
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 65,
+        "column": 48
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 65,
+        "column": 121
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 65,
+        "column": 195
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 66,
+        "column": 47
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 66,
+        "column": 139
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 66,
+        "column": 205
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 70,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 72,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

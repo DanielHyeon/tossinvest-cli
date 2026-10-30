@@ -1,0 +1,5 @@
+--- FAIL: TestBootRemainingConservative (0.00s)
+    bootstamp_test.go:24: other boot {Remaining:10s NeedsAnchor:false} <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.009s
+FAIL

@@ -1,0 +1,5 @@
+--- FAIL: TestBootZeroDurationDoesNotHideInvalidClock (0.00s)
+    bootstamp_test.go:67: zero masked mismatch <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.002s
+FAIL

@@ -1,0 +1,5 @@
+--- FAIL: TestBootRemainingSameProvenanceStillRejectsNamespaceDriftAfterAnchor (0.00s)
+    bootstamp_test.go:49: namespace drift accepted {Remaining:10s NeedsAnchor:true} <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.009s
+FAIL

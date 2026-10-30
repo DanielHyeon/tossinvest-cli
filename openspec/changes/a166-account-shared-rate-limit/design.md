@@ -74,7 +74,7 @@ earliest-start는 `Retrier.Query`의 계좌 + 엔진 폴링 역할 + `RequiredQu
 
 hint는 해당 429 응답에 직접 결속해 파싱한다. 503이나 다른 응답의 전역 마지막 값을 소비하는 기존 도구를 재사용하지 않는다. 유효한 ≤30s만 기록하며 기존 미만료 유효 값과 최대값을 취한다. 누락·invalid·초과 값은 새 deadline을 만들거나 기존 유효 값을 지우지 않는다. HTTP-date는 응답 시각 기준이며 반올림으로 조기 만료시키지 않는다. overflow와 음수는 invalid다.
 
-재시작은 새 30초 일괄 기동 정지가 아니라 해당 유효 hint의 영속 레코드 복원으로 처리한다. 같은 boot/time namespace에서는 주입된 공유 boottime 표본과 duration으로 남은 시간을 구한다. host reboot로 boot ID가 바뀌면 이전 ≤30s hint가 새 boot 이후 uptime만큼은 이미 경과했다는 보수 경계로 처리한다. clock/namespace/레코드 무결성을 확인할 수 없으면 해당 engine poll을 fail-closed로 유지하고 오류를 드러낸다. rate 간격은 이 레코드와 독립적인 매 소유권 획득 후 상대 대기로 지킨다. 시스템 clock 직접 호출을 주문 경로에 흩뿌리지 않고 clock provider로 주입한다. 이 복구 방식은 해당 제품 로트에서 source 적합성과 수용 시험을 확인한다.
+재시작은 새 30초 일괄 기동 정지가 아니라 해당 유효 hint의 영속 레코드 복원으로 처리한다. 같은 boot/time namespace에서는 주입된 공유 boottime 표본과 duration으로 남은 시간을 구한다. 다른 boot는 계보를 입증하지 못하므로 현재 uptime을 차감하지 않는다. 해당 유효 레코드의 원래 duration만 보수적으로 보류하고 현재 boot의 첫 복원 anchor를 원자적으로 저장한다. 후속 같은 boot 재시작은 저장 anchor를 재사용하며 기간을 새로 시작하지 않는다. 레코드 없는 조회에는 기동 정지를 넣지 않는다. 실제 reboot 반복의 wall-time 상한은 보장하지 않는다. clock/namespace/레코드·복원 anchor의 무결성을 확인할 수 없으면 해당 engine poll을 fail-closed로 유지하고 오류를 드러낸다. rate 간격은 이 레코드와 독립적인 매 소유권 획득 후 상대 대기로 지킨다. 시스템 clock 직접 호출을 주문 경로에 흩뿌리지 않고 clock provider로 주입한다. 상세 지원 범위와 검토 반례는 `analysis/poll-clock-contract.md`에 기록하며 제품 로트에서 수용 시험을 확인한다.
 
 공유 이벤트를 읽는 a087/a169의 정지 규칙은 각 change에서 정한다. 공유 패널티를 새로 도입하려면 보호까지 추가로 멈추는 정책을 별도로 명시해야 하며, 사용자에게 확정되지 않은 2판의 기본값을 복원하지 않는다.
 

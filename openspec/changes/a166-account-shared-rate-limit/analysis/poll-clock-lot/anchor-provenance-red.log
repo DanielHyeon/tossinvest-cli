@@ -1,0 +1,5 @@
+--- FAIL: TestBootRemainingRejectsAnchorBeforeSameBootProvenance (0.00s)
+    bootstamp_test.go:125: early anchor accepted {Remaining:0s NeedsAnchor:false} <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.002s
+FAIL

@@ -1,0 +1,4 @@
+=== RUN   TestBootLocalSmoke
+--- PASS: TestBootLocalSmoke (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.002s

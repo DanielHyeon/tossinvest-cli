@@ -1,0 +1,6 @@
+--- FAIL: TestBootSnapshotFailureCases (0.00s)
+    --- FAIL: TestBootSnapshotFailureCases/boot-changed (0.00s)
+        bootstamp_linux_test.go:75: failure accepted: <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.012s
+FAIL

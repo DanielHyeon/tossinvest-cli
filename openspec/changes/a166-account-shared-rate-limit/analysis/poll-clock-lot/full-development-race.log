@@ -1,0 +1,5 @@
+--- FAIL: TestBootRemainingBoundariesAndRestarts (0.00s)
+    bootstamp_test.go:89: expiry {Remaining:999.999999ms NeedsAnchor:false} <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.010s
+FAIL

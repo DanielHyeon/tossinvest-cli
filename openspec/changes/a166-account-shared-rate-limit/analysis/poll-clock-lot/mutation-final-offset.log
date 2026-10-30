@@ -1,0 +1,5 @@
+--- FAIL: TestBootOffsetParserStrict (0.00s)
+    bootstamp_linux_test.go:90: invalid offset accepted "monotonic 0 0\nboottime 0 1\n"
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.009s
+FAIL

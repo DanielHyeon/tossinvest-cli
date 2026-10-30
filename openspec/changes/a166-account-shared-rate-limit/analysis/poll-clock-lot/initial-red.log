@@ -1,0 +1,11 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/clock [github.com/JungHoonGhae/tossinvest-cli/internal/clock.test]
+internal/clock/bootstamp_test.go:13:11: undefined: BootStamp
+internal/clock/bootstamp_test.go:13:51: undefined: BootNamespace
+internal/clock/bootstamp_test.go:16:10: undefined: RemainingBootHint
+internal/clock/bootstamp_test.go:22:9: undefined: RemainingBootHint
+internal/clock/bootstamp_test.go:28:9: undefined: RemainingBootHint
+internal/clock/bootstamp_test.go:33:9: undefined: RemainingBootHint
+internal/clock/bootstamp_test.go:37:9: undefined: RemainingBootHint
+internal/clock/bootstamp_test.go:38:19: undefined: ErrBootStamp
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/clock [build failed]
+FAIL
