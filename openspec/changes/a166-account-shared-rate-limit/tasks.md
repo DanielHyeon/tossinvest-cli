@@ -22,25 +22,30 @@
 ## 2. 공식 클라이언트와 별도 전송
 
 - [ ] 2.1 official constructor/authority/doRequest 및 token 전달 경계, a112 clone, replay/probe 기존 함수 FLM/BTM·Pre-Edit.
-  - lot2a 공식 constructor·authority·token·a112 연결은 부분 완료 및 Manager 승인. replay/probe와 전체 배선·운영 검증은 미완: `analysis/official-lot2/manager-verification.md`.
-- [ ] 2.2 RED/GREEN: private constructor-owned guard, exact OFF 보존, 외부 client override authority 거절, actual token/401/redirect별 중재, response TLS/body/timeout.
-- [ ] 2.3 RED/GREEN: 보내기 전 admission 거절과 기존 attempt 결과 구분, a165 첫 AMBIGUOUS 보존 및 journal/멱등키 회귀.
-- [ ] 2.4 별도 공식 API 전송 경로를 같은 예산에 결속. WTS/judge 분류와 지원 범위 명시. 전체 배선 구조 검사.
-- [ ] 2.5 targeted normal/tag/race·mutation·gstack·독립 리뷰·Manager 검증.
+  - 현재 함수 증거와 구현 검증은 로트별 완료했지만 a130/d2 상세 FLM/BTM의 사전 작성 위반은 소급 준수로 바꿀 수 없다. `analysis/tools-outcome-lot/manager-verification.md`에 예외 수용과 미검증 범위를 보존한다. 따라서 이 절차 항목은 완전 준수로 체크하지 않는다.
+- [x] 2.2 RED/GREEN: private constructor-owned guard, exact OFF 보존, 외부 client override authority 거절, actual token/401/redirect별 중재, response TLS/body/timeout.
+- [x] 2.3 RED/GREEN: 보내기 전 admission 거절과 기존 attempt 결과 구분, a165 첫 AMBIGUOUS 보존 및 journal/멱등키 회귀.
+- [x] 2.4 별도 공식 API 전송 경로를 같은 예산에 결속. WTS/judge 분류와 지원 범위 명시. 전체 배선 구조 검사.
+- [x] 2.5 targeted normal/tag/race·mutation·gstack·독립 리뷰·Manager 검증.
 
 ## 3. 호출자·폴링·설정
 
 - [ ] 3.1 사전 FLM/BTM과 RED: critical 의존 사슬, normal/auxiliary, 모든 config/profile의 단일 공통 group 결속. trusted launch manifest의 예상 root/queue/wire device·inode/instance 검증, marker 복사 root와 required 누락은 bootstrap wire0. 여러 credentials/accounts도 그룹 총량 안에서 기존 계좌 선택을 유지한다(`analysis/budget-group-binding.md`).
-- [ ] 3.2 GREEN: 앱·엔진·flatten·CLI·console·soak·verify·프로브 배선. 실제 운영 env/toggle 변경 없음.
-- [ ] 3.3 RED/GREEN: 모든 429 이벤트, 엔진 폴링 같은 조회 재시도 금지, 유효 ≤30s hint 범위·복원·invalid/초과 처리. 비지연 walk와 POST 판정 보존.
-- [ ] 3.4 retry matrix와 코드 동시 정합화. a087·a169 후속 계약과 통합 시험 SHA 목록 작성. a087 production admission nil 유지.
+- [x] 3.2 GREEN: 앱·엔진·flatten·CLI·console·soak·verify·프로브 배선. 실제 운영 env/toggle 변경 없음.
+- [x] 3.3 RED/GREEN: 모든 429 이벤트, 엔진 폴링 같은 조회 재시도 금지, 유효 ≤30s hint 범위·복원·invalid/초과 처리. 비지연 walk와 POST 판정 보존.
+- [x] 3.4 retry matrix와 코드 동시 정합화. a087·a169 후속 계약과 통합 시험 SHA 목록 작성. a087 production admission nil 유지.
   - a166 인계 범위는 동일 검증 Budget의 read-only snapshot API와 실제 official/PriceLimits auxiliary·token·401·wire 수명 증거다. a087 board/epoch/429 정지의 실제 연결은 D16/5.5, a169 event 독자/prewire fence/영속 abort/엔진 신원은 a169 후속 작업으로 남긴다. API만 제공하고 그 소비자 구현을 완료로 체크하지 않는다.
-- [ ] 3.5 영향 범위 normal/tag/race·변이·gstack 적대/보안 리뷰, Manager 독립 검증. 전체 미실행 범위 기록.
+- [x] 3.5 영향 범위 normal/tag/race·변이·gstack 적대/보안 리뷰, Manager 독립 검증. 전체 미실행 범위 기록.
+
+개발 증거 교차표: `analysis/development-status.md`. 3.1의 manifest/group·우선순위 fixture 및 현재 함수 증거는 완료했지만, 2.1의 사전 작성 예외 때문에 포괄적 절차 준수 체크는 보류한다. 2.4는 문서화한 source 범위의 분류·형태 검사와 로트별 행동 시험이며 모든 동적 호출 또는 운영 중 참여자 증명이 아니다.
 
 ## 4. 종결과 운영 경계
 
 - [ ] 4.1 운영자 provisioning·동일 inode/namespace 확인·dirty 복구·rollback 절차 작성. 라이브 접근 없이 fixture 검증.
+  - offline provision/check와 fixture는 완료. operator-cutover-draft는 개발용 초안이며 최종 운영 절차 검증으로 표시하지 않는다. 실환경 결속 확인과 함께 마무리한다.
 - [ ] 4.2 배포 전 사람 확인: 실제 호스트/컨테이너 namespace·UID·filesystem·동일 계좌 scope와 모든 참여자 포함.
-- [ ] 4.3 변경 범위 검증·strict OpenSpec·PM 최종 확인. 전체 시험/전체 gate는 해당 작업의 명시 요청 때만 실행.
+- [x] 4.3 변경 범위 검증·strict OpenSpec·PM 최종 확인. 전체 시험/전체 gate는 해당 작업의 명시 요청 때만 실행.
 - [ ] 4.4 Manager 완료 판정 뒤 Terra commit/merge/push/archive·Story/PM 정합화. 사람 단계 미완료를 완료로 체크하거나 active change를 허위 archive하지 않음.
 - [ ] 4.5 운영 이미지/설정 적용은 별도 사람 승인. a087 5.4/5.5, a169 리허설·측정은 자동 실행하지 않음.
+
+현재 종결 판정: 코드 로트는 선택 검증 뒤 게시한다. 4.2 실환경 사람 확인 미완료로 active change를 유지하고 archive하지 않는다. 4.3은 해당 change strict·PM tracker·diff 범위 검사만 확인했다. 전체 시험·전체 gate는 미실행이다.
