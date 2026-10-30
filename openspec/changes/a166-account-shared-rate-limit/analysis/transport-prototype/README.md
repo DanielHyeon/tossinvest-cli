@@ -44,3 +44,13 @@ TLS 첫 plaintext Write 이후 서버 handler 대기 중 owner child를 SIGKILL�
 | 변이 | `revoke-mutant.log`: revoke 삭제 후 write 허용해 실패. `integrated-cancel-mutant.log`: cooldown 취소 오류 nil 변이에서 통합 호출 panic으로 실패 | 두 개 변이 외 전체 분기 변이 아님 |
 
 기록된 시작은 TLS plaintext 첫 `Write` 진입이며 kernel/TLS record 전송 또는 브로커 도착률이 아니다. 시간 기록은 wall UnixNano이며 단일 실험이다. lock 단일 inode·단일 host·모든 참여자 준수 가정, priority·429·파일 무결성·authority 계약·rollout·경합 중 deadline에는 독립 설계/시험이 필요하다. gstack 수동 검토: wait 취소 함수가 실제 limiter에 연결됐지만 local/공유 획득 사이 취소 경합, 거부 시 request body Close, Close/error 처리, 느린 TLS Write와 취소, late dial, 장기간 누수는 추가 증거가 필요하다. 표준 `net.Conn.Close`는 block된 read/write를 깨우는 계약이고 Go1.26.5 TLS Close는 진행 중 Write에 underlying close를 사용한다; 강제-block 통합 재현은 미실행. 외부 CLI review·전체 gate 미실행. 제품 채택 결정이 아니라 기술 가능성의 제한된 근거다.
+
+## transport 후보 검증 추가
+
+전송에 넘기기 전 거절의 request Body.Close 누락을 `bodyclose-red.log`로 확인해 수정했다. body Close 삭제 변이 `bodyclose-mutant.log`도 세 대기 단계에서 실패했다. 로컬 잠금·flock·cooldown 각 단계의 실제 limiter 취소는 body Close 1회, TLS Write 0을 확인했다.
+
+서버가 request body를 읽지 않는 실제 로컬 TLS fixture에서 128 MiB body 전송 중 guarded TLS Write가 진행 중임을 확인하고 context 취소했다. 호출이 종료되고 Body.Close 1회, 후속 GET 및 body read가 성공했다. response body read가 막힌 상황의 context 취소와 EOF·early Close 연결 정리도 확인했다. 첫 실험의 서버 handler는 미읽은 body 때문에 서버 context 종료만 기다리다가 fixture `Server.Close` timeout이 발생했다. 제어 채널을 추가해 fixture를 정리했고 초기 timeout의 원문 로그는 덮어써 보존하지 못했다. 현재 테스트는 소켓에서 임의 스케줄 중단이나 절대 지연 상한을 보장하지 않는다.
+
+`transport-green.log`: `go test -race -count=1 -timeout=40s ./openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype` PASS 14.545s. 401·redirect·2 process·kill·TLS verify·fresh HTTP1 retry fault와 앞선 변이 기록을 포함한다. 취소 직전/동시 전송 경합은 하나의 검증 완료 증명이 아니라 기존 fixture 범위의 관찰이다.
+
+판단: 직접 TLS·HTTP/1·keepalive OFF·요청당 연결 및 신뢰할 수 있는 단일 host 참여자라는 조건 아래, 이 transport 생명주기는 **후속 독립 리뷰를 거쳐 설계 후보로 채택 가능**하다. 제품 준비나 strict wire/server arrival 보장은 아니다. 취소와 첫 실제 write의 모든 동시 경계, 반복 시험·버전 고정·권위 및 OFF 호환, 공통 inode 신뢰·priority·429·운영 정책은 별도 증거/설계가 필요하다. 적용 전 독립 리뷰가 본 source의 context 경합과 io.Close 오류 처분을 확인해야 한다. gstack 수동 점검상 production-grade 보안·지원환경·실패 분류는 여전히 미완이며 전체 gate·외부 CLI review 미실행.

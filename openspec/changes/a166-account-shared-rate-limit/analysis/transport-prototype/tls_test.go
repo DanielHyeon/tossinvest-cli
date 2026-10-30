@@ -30,6 +30,7 @@ type lease struct {
 	pause    chan struct{}
 	resume   chan struct{}
 	evidence string
+	inFlight *atomic.Int32
 }
 
 func (l *lease) register(c net.Conn) bool {
@@ -84,10 +85,15 @@ func (c *guarded) Write(p []byte) (int, error) {
 		}
 		c.l.once = true
 	}
+	if c.l.inFlight != nil {
+		c.l.inFlight.Add(1)
+		defer c.l.inFlight.Add(-1)
+	}
 	return c.Conn.Write(p)
 }
 
 type limiter struct {
+	inFlight    atomic.Int32
 	gateOnce    sync.Once
 	gate        chan struct{}
 	logMu       sync.Mutex
@@ -102,6 +108,12 @@ type limiter struct {
 }
 
 func (l *limiter) RoundTrip(req *http.Request) (*http.Response, error) {
+	handedOff := false
+	defer func() {
+		if !handedOff && req.Body != nil {
+			req.Body.Close()
+		}
+	}()
 	l.gateOnce.Do(func() { l.gate = make(chan struct{}, 1) })
 	var f *os.File
 	if l.lockPath != "" {
@@ -118,7 +130,7 @@ func (l *limiter) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 	defer release()
 
-	lease := &lease{starts: &l.starts, logMu: &l.logMu, pause: l.beforeWrite, resume: l.resume, evidence: l.evidence}
+	lease := &lease{starts: &l.starts, logMu: &l.logMu, pause: l.beforeWrite, resume: l.resume, evidence: l.evidence, inFlight: &l.inFlight}
 	defer lease.revoke()
 	tr := &http.Transport{DisableKeepAlives: true, ForceAttemptHTTP2: false, TLSNextProto: map[string]func(string, *tls.Conn) http.RoundTripper{}, Proxy: nil}
 	tr.DialTLSContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -150,6 +162,7 @@ func (l *limiter) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 
 	defer tr.CloseIdleConnections()
+	handedOff = true
 	resp, err := tr.RoundTrip(req)
 	if resp != nil && resp.TLS == nil {
 		lease.mu.Lock()
@@ -487,5 +500,168 @@ func TestRevokedTLSWriteFails(t *testing.T) {
 	}
 	if len(starts) != 0 {
 		t.Fatal("recorded write after revoke")
+	}
+}
+
+type trackedBody struct {
+	io.Reader
+	closed atomic.Int32
+}
+
+func (b *trackedBody) Close() error { b.closed.Add(1); return nil }
+func TestPreAdmissionCancelClosesBody(t *testing.T) {
+	for _, stage := range []string{"local", "flock", "cooldown"} {
+		t.Run(stage, func(t *testing.T) {
+			s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { t.Error("unexpected request") }))
+			defer s.Close()
+			l := &limiter{tls: s.Client().Transport.(*http.Transport).TLSClientConfig}
+			var other *os.File
+			if stage == "local" {
+				l.gateOnce.Do(func() { l.gate = make(chan struct{}, 1) })
+				l.gate <- struct{}{}
+				defer func() { <-l.gate }()
+			}
+			if stage == "flock" {
+				l.lockPath = filepath.Join(t.TempDir(), "lock")
+				var e error
+				other, e = os.OpenFile(l.lockPath, os.O_CREATE|os.O_RDWR, 0600)
+				if e != nil {
+					t.Fatal(e)
+				}
+				defer other.Close()
+				if e = syscall.Flock(int(other.Fd()), syscall.LOCK_EX); e != nil {
+					t.Fatal(e)
+				}
+				defer syscall.Flock(int(other.Fd()), syscall.LOCK_UN)
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+			defer cancel()
+			body := &trackedBody{Reader: strings.NewReader("payload")}
+			req, _ := http.NewRequestWithContext(ctx, "POST", s.URL, body)
+			resp, err := l.RoundTrip(req)
+			if resp != nil {
+				resp.Body.Close()
+			}
+			if !errors.Is(err, context.DeadlineExceeded) {
+				t.Fatalf("err=%v", err)
+			}
+			if body.closed.Load() != 1 {
+				t.Fatalf("close calls=%d", body.closed.Load())
+			}
+			l.logMu.Lock()
+			defer l.logMu.Unlock()
+			if len(l.starts) != 0 {
+				t.Fatal("write after cancel")
+			}
+		})
+	}
+}
+
+func TestCancelBlockedTLSWriteDrainsAndAllowsNext(t *testing.T) {
+	entered := make(chan struct{})
+	hold := make(chan struct{})
+	var count atomic.Int32
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if count.Add(1) == 1 {
+			close(entered)
+			select {
+			case <-r.Context().Done():
+			case <-hold:
+			}
+			return
+		}
+		fmt.Fprint(w, "ok")
+	}))
+	defer server.Close()
+	defer close(hold)
+	l := &limiter{tls: server.Client().Transport.(*http.Transport).TLSClientConfig}
+	ctx, cancel := context.WithCancel(context.Background())
+	body := &trackedBody{Reader: io.LimitReader(zeroReader{}, 128<<20)}
+	req, _ := http.NewRequestWithContext(ctx, "POST", server.URL, body)
+	req.ContentLength = 128 << 20
+	done := make(chan error, 1)
+	go func() {
+		resp, err := l.RoundTrip(req)
+		if resp != nil {
+			resp.Body.Close()
+		}
+		done <- err
+	}()
+	select {
+	case <-entered:
+	case <-time.After(5 * time.Second):
+		cancel()
+		t.Fatal("server did not receive request")
+	}
+	select {
+	case err := <-done:
+		t.Fatalf("expected blocked write, returned %v", err)
+	case <-time.After(200 * time.Millisecond):
+	}
+	if l.inFlight.Load() != 1 {
+		cancel()
+		t.Fatal("no TLS Write blocked at cancellation")
+	}
+	cancel()
+	select {
+	case err := <-done:
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("err=%v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("cancel did not drain write")
+	}
+	req2, _ := http.NewRequest("GET", server.URL, nil)
+	resp, err := l.RoundTrip(req2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	b, err := io.ReadAll(resp.Body)
+	if err != nil || string(b) != "ok" {
+		t.Fatalf("body=%q err=%v", b, err)
+	}
+	if body.closed.Load() != 1 {
+		t.Fatalf("body closes=%d", body.closed.Load())
+	}
+}
+
+type zeroReader struct{}
+
+func (zeroReader) Read(p []byte) (int, error) { clear(p); return len(p), nil }
+
+func TestCancelDuringBlockedResponseRead(t *testing.T) {
+	hold := make(chan struct{})
+	s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "first"); w.(http.Flusher).Flush(); <-hold }))
+	defer s.Close()
+	defer close(hold)
+	l := &limiter{tls: s.Client().Transport.(*http.Transport).TLSClientConfig}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	req, _ := http.NewRequestWithContext(ctx, "GET", s.URL, nil)
+	resp, err := (&http.Client{Transport: l}).Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	b := make([]byte, 5)
+	if _, err = io.ReadFull(resp.Body, b); err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() { _, err := resp.Body.Read(b); done <- err }()
+	select {
+	case err := <-done:
+		t.Fatalf("expected blocked read, got %v", err)
+	case <-time.After(100 * time.Millisecond):
+	}
+	cancel()
+	select {
+	case err := <-done:
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("read error=%v", err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("read did not cancel")
 	}
 }
