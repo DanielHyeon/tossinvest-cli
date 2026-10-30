@@ -1,4 +1,4 @@
-> **4판 proposal-freeze 후보.** 개발 진행은 승인됐으며 Manager READY 및 로트별 검증 뒤 구현한다. 운영·실계좌·활성화 승인은 별도다. 현재 연구 GREEN을 제품 PASS로 해석하지 않는다.
+> **4판 proposal-freeze READY(2026-10-31 Manager).** 개발 진행은 승인됐으며 로트별 Pre-Edit와 검증을 수행한다. 운영·실계좌·활성화 승인은 별도다. 현재 연구 GREEN을 제품 PASS로 해석하지 않는다.
 
 ## MODIFIED Requirements
 

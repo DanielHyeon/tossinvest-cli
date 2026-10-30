@@ -4,7 +4,7 @@
 
 사용자 확정 정책은 계좌 공유 3건/초 우선·보호 대기, 이후 개발 진행·검증 뒤 종결이다. Manager는 OpenSpec 작성·검토만 수행하고 모든 코딩·시험을 Terra에 위임했다. 운영·실계좌·배포·전체 시험·전체 gate는 수행하지 않았다.
 
-현재 판정은 **설계 freeze 조건부 PASS**다. 현재 코드의 전체 계좌 상한 또는 실제 활성화 PASS가 아니다. 연구 핵심은 제품 구현의 기술 선택 근거로 수락하며, 제품 RED/GREEN·기존 함수의 사전 FLM/BTM·배선·권한·환경 검증을 건너뛰지 않는다.
+현재 판정은 **설계 freeze PASS / READY — 개발 착수**다. eef74a163 통합의 연구 원문·독립 검증·strict·PM·diff check 및 Story 정책 정렬을 확인했다. 현재 코드의 전체 계좌 상한 또는 실제 활성화 PASS가 아니다. 연구 핵심은 제품 구현의 기술 선택 근거로 수락하며, 제품 RED/GREEN·기존 함수의 사전 FLM/BTM·배선·권한·환경 검증을 건너뛰지 않는다.
 
 ## 원문 검증
 
@@ -35,4 +35,4 @@ OpenSpec 검증은 과거 프로젝트 사용 근거가 있는 1.4.1을 임시 �
 
 ## 남은 조건
 
-최신 원문 증거를 현재 change에 보존하고, 연구 branch와 Manager 계약을 통합한 commit에서 scoped strict·PM·diff check를 통과한 뒤 Manager READY를 기록한다. 이후 미사용 내부 모듈 로트부터 제품 구현을 시작한다. namespace/계좌 scope/provisioning, clock provider와 hint 복원, authority/OFF·모든 호출자 배선은 각 제품 로트의 수용 시험이며 연구 완료로 체크하지 않는다. a087 admission nil, a169 리허설·측정 보류는 유지한다.
+최신 원문 보존과 연구/계약 통합 뒤 scoped strict·PM·diff check는 통과했다. READY 표지 및 Story 정책 정렬 후 마지막 scoped 검사를 다시 고정하고 미사용 내부 모듈 로트부터 제품 구현을 시작한다. namespace/계좌 scope/provisioning, clock provider와 hint 복원, authority/OFF·모든 호출자 배선은 각 제품 로트의 수용 시험이며 연구 완료로 체크하지 않는다. a087 admission nil, a169 리허설·측정 보류는 유지한다.

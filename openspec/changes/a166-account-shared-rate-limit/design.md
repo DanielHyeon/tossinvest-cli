@@ -1,6 +1,6 @@
-# a166 4판 구현 계약 초안 — 계좌 상한 우선
+# a166 4판 구현 계약 — 계좌 상한 우선
 
-상태: **NOT READY / 독립 검토 전**. 2026-10-31 사용자 개발 진행 지시를 반영한 Manager 초안이다. 기술 연구 결과와 독립 검토를 반영한 뒤 proposal·design·spec delta·tasks를 함께 확정한다. 본 문서만으로 운영 구현·활성화를 시작하지 않는다. 2판의 허용 초과·local fallback·보호 무대기 계약은 복원하지 않는다.
+상태: **READY — 개발 착수, 2026-10-31 Manager 판정**. 사용자 개발 진행 지시, 연구 원문과 독립 검토, scoped strict·PM 증거를 반영해 proposal·design·spec delta·tasks를 정렬했다. 첫 로트는 기존 경로에 연결하지 않는 내부 모듈이다. 기존 함수 편집은 해당 로트의 최신 증거·Pre-Edit 후 진행한다. 제품 완료·운영·활성화 PASS는 아니다. 2판의 허용 초과·local fallback·보호 무대기 계약은 복원하지 않는다. 판정 근거는 `analysis/manager-review-v4.md`다.
 
 ## 결정과 범위
 
@@ -11,7 +11,7 @@
 - 수치로 된 보호 wall-time 상한을 주장하지 않는다. 기존 요청 context/HTTP timeout은 대기와 I/O에 적용하고 상한을 위해 시한을 연장하지 않는다. OS 선점·진행 중 쓰기·네트워크의 실제 종료가 지연될 수 있다.
 - 배포·실계좌·운영 토글은 이번 개발과 분리한다. a087 admission nil, a169 리허설·측정 보류를 유지한다.
 
-## 가장 작은 구현 후보
+## 구현 방식
 
 신규 외부 의존성 없이 기존 Linux flock 선례, Go 표준 `net/http`, `crypto/tls`, context를 확장한다. 프로세스별 token bucket과 예약시각 기반 허가는 사용하지 않는다.
 
@@ -22,11 +22,11 @@
 5. **응답 본문을 보존한다.** `RoundTrip`의 header 반환 시점에 연결을 닫지 않는다. 정상 body EOF/Close, 오류, 취소를 각각 다루고 실제 요청 writer의 revoke/drain이 끝난 뒤 소유권을 반환한다. 호출자가 body를 읽지 않는 경우에도 기존 전체 요청 deadline/cancel로 정리가 진행되어야 한다. 무한 종료 보장을 만들기 위해 새 요청을 우회시키지 않는다.
 6. 기본 OFF transport와 authority 판정은 그대로다. enforcing transport도 공식 constructor가 만든 구성만 금전 권한을 가질 수 있다. 사용자 `WithHTTPClient`·endpoint override는 wrapping 후에도 authority가 없다. TLS 서버명·인증서 검증·ALPN·응답 `TLS` 상태·timeout 보존을 시험한다.
 
-위 방식은 동시 연결을 줄여 처리량을 낮출 수 있다. 이 비용을 숨기거나 3건/초를 항상 달성한다고 주장하지 않는다. prototype 결과만으로 채택 확정하지 않는다.
+위 방식은 동시 연결을 줄여 처리량을 낮출 수 있다. 이 비용을 숨기거나 3건/초를 항상 달성한다고 주장하지 않는다. 연구와 독립 검토를 근거로 구현 방향을 채택하며 제품 수용 시험을 대체하지 않는다.
 
 ## 보호 사슬과 대기 결과
 
-Manager 설계안: 보호 판단 가격 조회, 보호 매도·그 취소, flatten의 선행 조회와 주문, 보호 주문의 접수 확인 및 이 사슬에서 필요한 token 교환은 critical로 분류한다. 신규 진입은 normal, a087 캐시 갱신과 a169 측정은 auxiliary다. 경로 이름이나 HTTP method만으로 매도/진입을 추측하지 않고 호출자의 명시 context를 따라간다. token 교환은 부모 등급을 계승한다.
+보호 판단 가격 조회, 보호 매도·그 취소, flatten의 선행 조회와 주문, 보호 주문의 접수 확인 및 이 사슬에서 필요한 token 교환은 critical로 분류한다. 신규 진입은 normal, a087 캐시 갱신과 a169 측정은 auxiliary다. 경로 이름이나 HTTP method만으로 매도/진입을 추측하지 않고 호출자의 명시 context를 따라간다. token 교환은 부모 등급을 계승한다.
 
 - critical 대기자가 등록되면 새 normal/auxiliary가 앞지르지 않는다. 이미 전송 중인 소유자는 강제 추월하지 않는다. 동일 등급은 등록 순서로 처리하고, 소유자가 아닌 대기자의 사망·취소 정리는 PID 숫자만으로 판단하지 않는다.
 - normal의 기아 가능성은 허용하되 관측 가능해야 한다. auxiliary는 대기열을 쌓지 않는 try-admit 방식으로, 거절되면 해당 갱신·표본을 생략한다. a087 만료 토큰은 전송 전에 버린다.
@@ -35,7 +35,7 @@ Manager 설계안: 보호 판단 가격 조회, 보호 매도·그 취소, flatt
 - 보호 ACK 뒤 확인 GET이 실패하면 기존 IN_DOUBT 절차를 보존한다. 예산 때문에 늦어졌다는 이유로 주문을 중복 전송하거나 원장을 확정하지 않는다.
 - a087의 활성 경로에서는 고루틴의 동시 생존과 실제 요청 전송의 중첩을 구분한다. 공통 a166 gate에 보호 관측과 캐시 갱신을 모두 연결하고, 기존 「관측 지연 0」을 enforcing 모드에서도 성립한다고 주장하지 않는다. 이 변경은 a087 5.5 계약에도 반영해야 한다. 휴면 OFF 동작은 동일하다.
 
-## 우선 중재 후보 — 두 잠금의 역할 분리
+## 우선 중재 — 두 잠금의 역할 분리
 
 요청 수명 동안 잡는 `wire.lock`과 짧은 대기열 변경에만 쓰는 `queue.lock`을 분리한다. 요청 소유자는 네트워크 I/O 중 `queue.lock`을 잡지 않는다. 따라서 느린 요청 동안에도 critical 대기자는 등록할 수 있다. 모든 경로의 잠금 순서는 queue → wire(비차단 try-lock)이며 wire를 잡은 채 queue를 기다리는 역순은 금지한다.
 
@@ -58,7 +58,7 @@ rename 뒤 directory fsync가 실패하면 새 state가 다른 프로세스에�
 - state가 완전히 내구화된 뒤 dirty 삭제의 마지막 directory sync만 실패: state의 내구성과 dirty 삭제의 내구성을 구별한다. runtime에서 dirty가 없고 state가 유효하면 이를 불확실한 state로 취급하지 않는다. 재기동 시 dirty가 재등장하면 보수적으로 거부한다.
 - crash로 남은 dirty는 자동 초기화하지 않는다. 운영자가 모든 참여자를 정지하고 상태·namespace를 확인하는 별도 복구 절차를 명시한다. 실패한 파일시스템에 어떤 표지도 영구 기록할 수 있다고 주장하지 않는다. dirty가 내구화되기 전에 state를 변경하지 않는 순서가 핵심이다.
 
-이는 파일 상태 프로토콜 후보다. 실제 kernel fsync EIO나 전원 장애를 주입한 증거 없이 fake fault 시험을 실측으로 보고하지 않는다.
+이는 제품 구현과 검증의 파일 상태 계약이다. 실제 kernel fsync EIO나 전원 장애를 주입한 증거 없이 fake fault 시험을 실측으로 보고하지 않는다.
 
 ## 장애와 429
 
@@ -70,11 +70,11 @@ rename 뒤 directory fsync가 실패하면 새 state가 다른 프로세스에�
 
 **Manager 최소 변경안:** a166에서 새 계좌 전체 5분/30초 cooldown을 도입하지 않는다. 계좌 전체 admission은 항상 350ms 최소 간격을 적용하고, 429에 대한 호출자 동작은 이미 확정된 `verify-execution-capability/analysis/retry-matrix-slo-2026-10-22.md` §2를 따른다. 엔진 폴링은 429가 나면 그 조회를 끝내며 같은 조회 안에서 재전송하지 않는다. 유효한 Retry-After ≤30초는 해당 폴링 소비자가 다음 호출의 earliest-start로 존중하는 방안을 명세·시험한다. 누락·invalid·30초 초과는 그 조회 포기이며 30초로 잘라 재전송하지 않는다. 별도 비지연 walk의 기존 15s/30s backoff는 유지한다. POST 429의 원장 판정을 바꾸지 않는다.
 
-earliest-start는 `Retrier.Query`의 계좌 + 엔진 폴링 역할 + `RequiredQuery` 종류에만 적용하는 후보로 좁힌다. price 종류를 공유하는 보호·일반 가격 조회가 함께 보류될 수 있지만, 주문 본체·그 token 교환·flatten·별도 walk를 새로운 계좌 전역 패널티로 막지는 않는다. 429를 반환한 호출은 즉시 종료하고 후속 cycle이 유효한 제한 안에 있으면 새 wire 없이 그 조회를 생략한다. 이 생략은 freshness 성공으로 기록하지 않는다. 이미 시작한 동시 요청을 되돌렸다고 주장하지 않는다.
+earliest-start는 `Retrier.Query`의 계좌 + 엔진 폴링 역할 + `RequiredQuery` 종류에만 적용한다. price 종류를 공유하는 보호·일반 가격 조회가 함께 보류될 수 있지만, 주문 본체·그 token 교환·flatten·별도 walk를 새로운 계좌 전역 패널티로 막지는 않는다. 429를 반환한 호출은 즉시 종료하고 후속 cycle이 유효한 제한 안에 있으면 새 wire 없이 그 조회를 생략한다. 이 생략은 freshness 성공으로 기록하지 않는다. 이미 시작한 동시 요청을 되돌렸다고 주장하지 않는다.
 
 hint는 해당 429 응답에 직접 결속해 파싱한다. 503이나 다른 응답의 전역 마지막 값을 소비하는 기존 도구를 재사용하지 않는다. 유효한 ≤30s만 기록하며 기존 미만료 유효 값과 최대값을 취한다. 누락·invalid·초과 값은 새 deadline을 만들거나 기존 유효 값을 지우지 않는다. HTTP-date는 응답 시각 기준이며 반올림으로 조기 만료시키지 않는다. overflow와 음수는 invalid다.
 
-재시작 후보는 새 30초 일괄 기동 정지가 아니라 해당 유효 hint의 영속 레코드 복원이다. 같은 boot/time namespace에서는 주입된 공유 boottime 표본과 duration으로 남은 시간을 구한다. host reboot로 boot ID가 바뀌면 이전 ≤30s hint가 새 boot 이후 uptime만큼은 이미 경과했다는 보수 경계로 처리한다. clock/namespace/레코드 무결성을 확인할 수 없으면 해당 engine poll을 fail-closed로 유지하고 오류를 드러낸다. rate 간격은 이 레코드와 독립적인 매 소유권 획득 후 상대 대기로 지킨다. 시스템 clock 직접 호출을 주문 경로에 흩뿌리지 않고 clock provider로 주입한다. 이 복구 방식의 source 적합성·시험은 아직 미완이다.
+재시작은 새 30초 일괄 기동 정지가 아니라 해당 유효 hint의 영속 레코드 복원으로 처리한다. 같은 boot/time namespace에서는 주입된 공유 boottime 표본과 duration으로 남은 시간을 구한다. host reboot로 boot ID가 바뀌면 이전 ≤30s hint가 새 boot 이후 uptime만큼은 이미 경과했다는 보수 경계로 처리한다. clock/namespace/레코드 무결성을 확인할 수 없으면 해당 engine poll을 fail-closed로 유지하고 오류를 드러낸다. rate 간격은 이 레코드와 독립적인 매 소유권 획득 후 상대 대기로 지킨다. 시스템 clock 직접 호출을 주문 경로에 흩뿌리지 않고 clock provider로 주입한다. 이 복구 방식은 해당 제품 로트에서 source 적합성과 수용 시험을 확인한다.
 
 공유 이벤트를 읽는 a087/a169의 정지 규칙은 각 change에서 정한다. 공유 패널티를 새로 도입하려면 보호까지 추가로 멈추는 정책을 별도로 명시해야 하며, 사용자에게 확정되지 않은 2판의 기본값을 복원하지 않는다.
 
@@ -106,6 +106,6 @@ READY는 구현 계약·기술 가능성·실패 처분·증거 계획이 확정
 
 ## skill 적용과 검증 상태
 
-grill-me/grilling: 확정 정책을 재질문하지 않고 미증명 요구와 수용 기준을 분리했다. search-first: 기존 flock·stdlib 후보를 우선하며 TLS 국소 연구와 공식 Go 문서를 조사 중이다. 버전·라이선스·미확인 채널은 연구 README와 최종 review에서 고정한다. impeccable: N/A — backend/documentation-only; UI 변경 없음. 현재 문서는 설계 초안이며 제품 구현·실제 계좌 합산·배포 검증 완료를 뜻하지 않는다.
+grill-me/grilling: 확정 정책을 재질문하지 않고 미증명 요구와 수용 기준을 분리했다. search-first: 기존 flock·stdlib 후보, TLS 국소 연구와 공식 Go 문서를 조사했다. 버전·라이선스·미확인 채널은 연구 README와 `analysis/manager-review-v4.md`에 기록했다. impeccable: N/A — backend/documentation-only; UI 변경 없음. 현재 판정은 개발 착수이며 제품 구현·실제 계좌 합산·배포 검증 완료를 뜻하지 않는다.
 
-환경 차이: 현재 연구는 Go 1.26.5로 실행했지만 저장소 `go.mod`와 `Dockerfile`의 build 버전은 Go 1.25.0이다. 두 버전의 fresh HTTP/1 retry·TLS·body 종료 동작을 검증하기 전 배포 버전 호환 PASS로 기록하지 않는다. 배포 toolchain을 조용히 올리지 않는다.
+환경 차이: 초기 연구는 Go 1.26.5, 저장소 `go.mod`와 `Dockerfile`의 build 버전은 Go 1.25.0이다. 독립 Linux fixture는 두 버전에서 통과했다. 실제 Alpine 이미지·운영 환경 호환 PASS로 확대하지 않으며 배포 toolchain을 조용히 올리지 않는다.

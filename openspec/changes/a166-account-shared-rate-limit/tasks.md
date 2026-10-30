@@ -1,4 +1,4 @@
-> **4판 proposal-freeze 후보 (2026-10-31), 제품 구현 READY 판정 대기.** 사용자는 strict 3건/초·보호 대기 및 남은 개발 진행을 승인했다. Manager가 계약·완료를 판정하고 Terra가 구현·시험·gstack 리뷰·종결한다. 배포·실계좌·a087 활성화·a169 측정은 별도다. 2·3판 작업표는 `analysis/tasks-through-v3-history.md`의 역사 기록이며 현재 작업 지시가 아니다.
+> **4판 proposal-freeze READY — 개발 착수 (2026-10-31 Manager).** 사용자는 strict 3건/초·보호 대기 및 남은 개발 진행을 승인했다. Manager가 계약·완료를 판정하고 Terra가 구현·시험·gstack 리뷰·종결한다. 배포·실계좌·a087 활성화·a169 측정은 별도다. 2·3판 작업표는 `analysis/tasks-through-v3-history.md`의 역사 기록이며 현재 작업 지시가 아니다.
 
 ## 0. 설계와 연구
 
@@ -8,7 +8,7 @@
 - [x] 0.4 queue 연구: liveness·priority·FIFO·취소·dirty marker·fault 주입·aux cleanup, targeted race와 변이. Linux 연구 SHA 41c8c16a7. 445419bc1 독립 race 통과, 최신 후속 독립 확인은 다음 항목.
 - [x] 0.5 최신 연구 후속 diff의 독립 확인. queue 41c8c16a7 독립 race 6.152초, TLS 최종 build-tag diff 확인. `analysis/v4-independent/`의 원문·AST·CodeGraph 교차 확인 기록 보존. 제품 전체 증거와 구별.
 - [x] 0.6 proposal/design/spec delta/tasks 정합화, research-first 버전/출처/라이선스·도구 제한, scoped strict validation·PM check. 근거: `analysis/manager-review-v4.md`, OpenSpec 1.4.1 scoped a087/a166 valid 및 PM check.
-- [ ] 0.7 독립 설계 리뷰 및 Manager READY. 미해결 기술 계약을 2판 값으로 추정하지 않음.
+- [x] 0.7 독립 설계 리뷰 및 Manager READY. P1 dirty sync 모순 해소, 추가 P0/P1 발견 없음; 최신 연구 독립 증거·research-first·scoped strict·PM·diff check eef74a163 확인. 승인된 보호 대기 정책과 단계별 제품 검증을 구별하며 2판 값으로 계약을 추정하지 않음. Story의 옛 무지연 문구도 최신 정책에 맞춤.
 
 ## 1. 내부 모듈 — 배선하지 않는 첫 로트
 

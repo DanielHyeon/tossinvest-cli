@@ -1,6 +1,6 @@
 # a166 — 계좌 공유 요청 상한과 폴링 429 처리
 
-> 4판 proposal-freeze 후보, Manager READY 대기. 사용자 승인: 계좌 합산 3건/초 우선·보호 요청 대기 허용, 남은 개발 진행. Manager는 OpenSpec/완료 판정, Terra는 구현/시험/gstack/종결. 운영 활성화·배포·실계좌는 별도다.
+> 4판 proposal-freeze, **READY — 개발 착수(2026-10-31 Manager)**. 사용자 승인: 계좌 합산 3건/초 우선·보호 요청 대기 허용, 남은 개발 진행. Manager는 OpenSpec/완료 판정, Terra는 구현/시험/gstack/종결. 운영 활성화·배포·실계좌는 별도다.
 
 ## Why
 
@@ -35,4 +35,4 @@
 
 예상 대상: 신규 `internal/accountbudget`, `internal/official` constructor/authority/전송, execgw 재시도/재생 경계, 엔진/CLI/도구 생성자와 설정, 내부 clock의 공유 시간 표본, 정본 retry matrix. 기존 함수는 편집 전 현재 AST·FLM/BTM·Pre-Edit를 수행한다. 원장 schema 변경은 계획하지 않는다.
 
-High-risk. 현재 문서는 검토 후보이며 READY 전 제품 편집을 허용하지 않는다. UI 영향 없음: impeccable N/A — backend/documentation-only. 연구는 기존 flock/Go stdlib와 설치된 x/sys를 우선 검토했고 런타임 의존성 추가는 없다. 과거 proposal은 `analysis/proposal-through-v3-history.md`에 보존한다.
+High-risk. 첫 로트부터 Pre-Edit와 해당 검증을 수행하며 제품 완료는 별도 판정한다. UI 영향 없음: impeccable N/A — backend/documentation-only. 연구는 기존 flock/Go stdlib와 설치된 x/sys를 우선 검토했고 런타임 의존성 추가는 없다. 과거 proposal은 `analysis/proposal-through-v3-history.md`에 보존한다.
