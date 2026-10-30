@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"testing"
 	"time"
@@ -20,6 +21,7 @@ type lease struct {
 	mu       sync.Mutex
 	closed   bool
 	conn     net.Conn
+	state    *tls.ConnectionState
 	starts   *[]time.Time
 	logMu    *sync.Mutex
 	once     bool
@@ -36,6 +38,10 @@ func (l *lease) register(c net.Conn) bool {
 		return false
 	}
 	l.conn = c
+	if tc, ok := c.(*tls.Conn); ok {
+		state := tc.ConnectionState()
+		l.state = &state
+	}
 	return true
 }
 func (l *lease) revoke() {
@@ -139,7 +145,16 @@ func (l *limiter) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 
 	defer tr.CloseIdleConnections()
-	return tr.RoundTrip(req)
+	resp, err := tr.RoundTrip(req)
+	if resp != nil && resp.TLS == nil {
+		lease.mu.Lock()
+		if lease.state != nil && len(lease.state.VerifiedChains) > 0 {
+			state := *lease.state
+			resp.TLS = &state
+		}
+		lease.mu.Unlock()
+	}
+	return resp, err
 }
 func TestTLSRedirectAnd401AttemptsAreSpaced(t *testing.T) {
 	var mu sync.Mutex
@@ -316,5 +331,35 @@ func TestTLSRejectsUntrustedAndWrongHost(t *testing.T) {
 			t.Error("request write after failed TLS verification")
 		}
 		lim.logMu.Unlock()
+	}
+}
+
+func TestFreshHTTP1FailedRequestIsNotRetried(t *testing.T) {
+	var count atomic.Int32
+	s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		count.Add(1)
+		c, _, err := w.(http.Hijacker).Hijack()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		c.Close()
+	}))
+	defer s.Close()
+	l := &limiter{tls: s.Client().Transport.(*http.Transport).TLSClientConfig}
+	resp, err := (&http.Client{Transport: l, Timeout: 3 * time.Second}).Get(s.URL)
+	if resp != nil {
+		resp.Body.Close()
+	}
+	if err == nil {
+		t.Fatal("expected connection error")
+	}
+	if count.Load() != 1 {
+		t.Fatalf("requests=%d", count.Load())
+	}
+	l.logMu.Lock()
+	defer l.logMu.Unlock()
+	if len(l.starts) != 1 {
+		t.Fatalf("writes=%d", len(l.starts))
 	}
 }

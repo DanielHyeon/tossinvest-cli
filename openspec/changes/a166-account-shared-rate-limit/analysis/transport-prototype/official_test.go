@@ -62,7 +62,7 @@ func TestWrappedTLSResponseState(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer resp.Body.Close()
-	if resp.TLS != nil {
-		t.Fatal("expected documented prototype loss of response TLS state")
+	if resp.TLS == nil || len(resp.TLS.VerifiedChains) == 0 {
+		t.Fatal("verified response TLS state missing")
 	}
 }

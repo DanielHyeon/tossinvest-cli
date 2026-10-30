@@ -1,0 +1,5 @@
+--- FAIL: TestWrappedTLSResponseState (0.35s)
+    official_test.go:66: verified response TLS state missing
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype	0.358s
+FAIL

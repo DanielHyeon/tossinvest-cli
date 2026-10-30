@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"syscall"
 	"testing"
 	"time"
@@ -143,5 +144,65 @@ func TestKilledLockOwnerReleases(t *testing.T) {
 	time.Sleep(350 * time.Millisecond)
 	if time.Since(start) < 350*time.Millisecond {
 		t.Fatal("cooldown")
+	}
+}
+
+func TestKillAfterTLSFirstWriteAndRestart(t *testing.T) {
+	var calls atomic.Int32
+	entered := make(chan struct{})
+	release := make(chan struct{})
+	s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if calls.Add(1) == 1 {
+			close(entered)
+			<-release
+		}
+		fmt.Fprint(w, "ok")
+	}))
+	defer s.Close()
+	d := t.TempDir()
+	cert := filepath.Join(d, "cert.pem")
+	if err := os.WriteFile(cert, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: s.Certificate().Raw}), 0600); err != nil {
+		t.Fatal(err)
+	}
+	log := filepath.Join(d, "attempts")
+	lock := filepath.Join(d, "lock")
+	run := func() *exec.Cmd {
+		c := exec.Command(os.Args[0], "-test.run=^TestProcessFlock$", "-test.timeout=10s")
+		c.Env = append(os.Environ(), "A166_CHILD=1", "A166_CERT="+cert, "A166_LOG="+log, "A166_LOCK="+lock, "A166_URL="+s.URL)
+		return c
+	}
+	first := run()
+	if err := first.Start(); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-entered:
+	case <-time.After(5 * time.Second):
+		first.Process.Kill()
+		first.Wait()
+		close(release)
+		t.Fatal("first request missing")
+	}
+	if err := first.Process.Kill(); err != nil {
+		t.Fatal(err)
+	}
+	first.Wait()
+	close(release)
+	second := run()
+	if err := second.Run(); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(log)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lines := strings.Fields(string(data))
+	if len(lines) != 3 {
+		t.Fatalf("writes=%d", len(lines))
+	}
+	a, _ := strconv.ParseInt(lines[0], 10, 64)
+	b, _ := strconv.ParseInt(lines[1], 10, 64)
+	if time.Duration(b-a) < 350*time.Millisecond {
+		t.Fatalf("restart spacing=%v", time.Duration(b-a))
 	}
 }
