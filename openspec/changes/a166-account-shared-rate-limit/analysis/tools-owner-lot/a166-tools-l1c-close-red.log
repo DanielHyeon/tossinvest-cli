@@ -1,0 +1,5 @@
+# github.com/JungHoonGhae/tossinvest-cli/tools/a112-l1c-quote-probe [github.com/JungHoonGhae/tossinvest-cli/tools/a112-l1c-quote-probe.test]
+tools/a112-l1c-quote-probe/a166_budget_test.go:123:9: undefined: finishL1C
+tools/a112-l1c-quote-probe/a166_budget_test.go:127:11: undefined: finishL1C
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a112-l1c-quote-probe [build failed]
+FAIL

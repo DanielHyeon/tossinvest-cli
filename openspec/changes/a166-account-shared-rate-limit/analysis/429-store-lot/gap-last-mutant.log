@@ -1,0 +1,5 @@
+--- FAIL: TestA166ObservationRejectsRetainedGapAsNoResponse (0.02s)
+    observation_gap_last_test.go:24: retained gap accepted as completed no-response
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.023s
+FAIL

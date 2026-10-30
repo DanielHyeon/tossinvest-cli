@@ -1,0 +1,5 @@
+--- FAIL: TestA166ObservationPendingReservesFinishGeneration (0.50s)
+    observation_store_test.go:905: reader spent finish generation
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.512s
+FAIL

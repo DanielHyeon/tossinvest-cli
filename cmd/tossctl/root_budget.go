@@ -22,18 +22,9 @@ type rootBudgetOwner struct {
 }
 
 func parseBudgetEnv(mode string, modeSet bool, manifest string, manifestSet bool) (accountbudgetruntime.Config, error) {
-	if !modeSet && !manifestSet {
-		return accountbudgetruntime.Config{Mode: accountbudgetruntime.ModeOff}, nil
-	}
-	switch {
-	case modeSet && mode == "off" && !manifestSet:
-		return accountbudgetruntime.Config{Mode: accountbudgetruntime.ModeOff}, nil
-	case modeSet && mode == "required" && manifestSet && manifest != "":
-		return accountbudgetruntime.Config{Mode: accountbudgetruntime.ModeRequired, Manifest: manifest}, nil
-	default:
-		return accountbudgetruntime.Config{}, fmt.Errorf("%w: invalid budget launch mode", accountbudget.ErrUnavailable)
-	}
+	return accountbudgetruntime.ParseLaunchConfig(mode, modeSet, manifest, manifestSet)
 }
+
 func newRootBudgetOwner(lookup func(string) (string, bool), cleanup io.Writer) *rootBudgetOwner {
 	mode, modeSet := lookup("TOSSOS_ACCOUNT_BUDGET_MODE")
 	manifest, manifestSet := lookup("TOSSOS_ACCOUNT_BUDGET_MANIFEST")

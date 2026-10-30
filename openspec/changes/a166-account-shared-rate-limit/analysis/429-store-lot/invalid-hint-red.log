@@ -1,0 +1,5 @@
+--- FAIL: TestA166ObservationInvalidHintStillRecords429 (0.80s)
+    observation_store_test.go:855: account budget unavailable
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.804s
+FAIL

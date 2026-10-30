@@ -1,0 +1,3 @@
+# retained gap/Last 상태 검증 Pre-Edit
+
+기준 22784a1b53bbb7390089f6dc2af1c4bcaca3899a. validateObservationState의 pre-AST는 `gap-last-validation-pre.json`. 기존 분기: version/scope·ring 길이·counter→event sequence/attempt→gap sequence/attempt·event 중복→Last presence/type/event 충돌→slot·clock 검증. 현재 seenAttempts에 event만 넣어 gap과 Last.NoResponse의 동일 attempt를 놓친다. retained gap도 집합에 넣어 기존 Last의 충돌 검증이 거절하도록 최소 수정한다. 이전 ring 밖의 완전한 이력을 주장하지 않는다. BTM: canonical JSON 저장 후 Snapshot 오류 RED→GREEN, 해당 집합 추가 제거 변이 RED; state API/형식 및 정상 writer 결과 불변. 단일 함수 기존 본문 변경이므로 사전 AST/FLM/BTM을 기록한다. impeccable N/A — backend, 의존성 추가 없음.

@@ -1,0 +1,5 @@
+--- FAIL: TestA166ObservationLeaseAndOrphan (0.48s)
+    observation_store_test.go:101: same lease began twice
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.483s
+FAIL

@@ -22,6 +22,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
@@ -42,6 +44,10 @@ func main() {
 }
 
 func run(market, symbol, configDir string) error {
+	return runWithOptions(market, symbol, configDir)
+}
+
+func runWithOptions(market, symbol, configDir string, opts ...official.Option) (result error) {
 	// 기본값을 두지 않는다. 시장과 종목을 손으로 적어야만 요청이 나간다.
 	if market == "" || symbol == "" {
 		return errors.New("--market and --symbol are required; this probe has no defaults")
@@ -57,10 +63,25 @@ func run(market, symbol, configDir string) error {
 	if credentials == nil {
 		return errors.New("no Open API credentials; run `tossctl openapi login` first")
 	}
-	client := official.New(*credentials, tokenFile)
-
 	ctx, cancel := context.WithTimeout(context.Background(), probeBudget)
 	defer cancel()
+	mode, modeSet := os.LookupEnv("TOSSOS_ACCOUNT_BUDGET_MODE")
+	manifest, manifestSet := os.LookupEnv("TOSSOS_ACCOUNT_BUDGET_MANIFEST")
+	cfg, err := accountbudgetruntime.ParseLaunchConfig(mode, modeSet, manifest, manifestSet)
+	if err != nil {
+		return err
+	}
+	cfg.CleanupError = func(error) { fmt.Fprintln(os.Stderr, "budget cleanup failed") }
+	factory, err := accountbudgetruntime.Open(ctx, cfg)
+	if err != nil {
+		return err
+	}
+	defer func() { result = finishL1C(result, factory.Close) }()
+	client, err := factory.NewClient(*credentials, tokenFile, opts...)
+	if err != nil {
+		return err
+	}
+	ctx = accountbudget.WithPriority(ctx, accountbudget.Auxiliary)
 
 	// 순서는 생산자와 같다: 호가가 먼저다. 실패한 절반은 다시 부르지 않는다.
 	top, err := client.StrictOrderbookTop(ctx, market, symbol)
@@ -73,4 +94,8 @@ func run(market, symbol, configDir string) error {
 	}
 	fmt.Print(renderReport(observation{Market: market, Symbol: symbol, Top: top, Last: last}))
 	return nil
+}
+
+func finishL1C(result error, closeFactory func() error) error {
+	return errors.Join(result, closeFactory())
 }

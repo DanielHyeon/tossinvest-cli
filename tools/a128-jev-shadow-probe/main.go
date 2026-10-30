@@ -34,6 +34,8 @@ import (
 	"time"
 	_ "time/tzdata" // 수동 세션창(--session)의 시장 현지 시각 해석이 컨테이너 tz DB 없이도 맞도록 tz 를 바이너리에 포함
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	wtssession "github.com/JungHoonGhae/tossinvest-cli/internal/session"
@@ -70,6 +72,10 @@ func dispatch(ctx context.Context, args []string, getenv func(string) string, st
 
 // runCommand 는 키 검사를 가장 먼저 함 — 키가 없으면 브로커에 한 번도 묻지 않고 거부.
 func runCommand(ctx context.Context, args []string, getenv func(string) string) error {
+	return runCommandWithOptions(ctx, args, getenv)
+}
+
+func runCommandWithOptions(ctx context.Context, args []string, getenv func(string) string, opts ...official.Option) (result error) {
 	judge, err := newJudgeClient(getenv(typeSafeAPIKeyEnv), defaultTypeSafeBase, "")
 	if err != nil {
 		return err
@@ -124,7 +130,24 @@ func runCommand(ctx context.Context, args []string, getenv func(string) string) 
 	}
 	// 같은 토큰 캐시 파일을 공유하는 생산 client 를 그대로 씀 — 따로 토큰을 사면 엔진·콘솔의
 	// 토큰을 무효화하는 토큰 전쟁이 남(a082). 이 도구는 이 값을 marketSource 로만 다룸.
-	var src marketSource = official.New(*credentials, tokenFile)
+	mode, modeSet := os.LookupEnv("TOSSOS_ACCOUNT_BUDGET_MODE")
+	manifest, manifestSet := os.LookupEnv("TOSSOS_ACCOUNT_BUDGET_MANIFEST")
+	budgetConfig, err := accountbudgetruntime.ParseLaunchConfig(mode, modeSet, manifest, manifestSet)
+	if err != nil {
+		return err
+	}
+	budgetConfig.CleanupError = func(error) { fmt.Fprintln(os.Stderr, "budget cleanup failed") }
+	factory, err := accountbudgetruntime.Open(ctx, budgetConfig)
+	if err != nil {
+		return err
+	}
+	defer func() { result = finishTool(result, factory.Close) }()
+	client, err := factory.NewClient(*credentials, tokenFile, opts...)
+	if err != nil {
+		return err
+	}
+	var src marketSource = client
+	ctx = accountbudget.WithPriority(ctx, accountbudget.Auxiliary)
 
 	// 주문 상한은 사이클마다 config 파일에서 읽음(읽기 전용) — 못 읽으면 그 사이클은 gap(selection).
 	paths, err := apppaths.Resolve(*configDir, "")
@@ -222,4 +245,8 @@ func reportCommand(args []string, stdout io.Writer) error {
 	contents.StateMinutes = readStateMinutes(filepath.Join(filepath.Dir(*ledgerPath), statesDirName), contents.Judgments)
 	_, err = io.WriteString(stdout, renderCalibrationReport(contents, *ledgerPath))
 	return err
+}
+
+func finishTool(result error, closeFactory func() error) error {
+	return errors.Join(result, closeFactory())
 }

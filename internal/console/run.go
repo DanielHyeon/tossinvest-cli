@@ -306,10 +306,14 @@ func (c *Console) startRun(market string, redo []verifylive.StepID) (*runState, 
 		c.mu.Unlock()
 		return nil, errProcessSpent
 	}
-	if c.run != nil && !c.run.finished() {
-		run := c.run
-		c.mu.Unlock()
-		return run, errRunInProgress
+	if c.run != nil {
+		select {
+		case <-c.run.done:
+		default:
+			run := c.run
+			c.mu.Unlock()
+			return run, errRunInProgress
+		}
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

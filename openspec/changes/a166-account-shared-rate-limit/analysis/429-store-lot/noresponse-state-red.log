@@ -1,0 +1,4 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget [github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget.test]
+internal/accountbudget/observation_store_test.go:206:95: snap.Last undefined (type ObservationView has no field or method Last)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget [build failed]
+FAIL

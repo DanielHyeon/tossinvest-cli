@@ -1,0 +1,5 @@
+--- FAIL: TestA166ObservationMissingRingIsCorrupt (0.00s)
+    observation_store_test.go:724: missing event ring accepted
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.004s
+FAIL
