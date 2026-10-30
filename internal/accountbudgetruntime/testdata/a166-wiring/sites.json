@@ -1,0 +1,582 @@
+[
+  {
+    "site": "cmd/tossctl/console.go|consoleBroker.lock|c.gateOnce.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "cmd/tossctl/engine_alerts_client.go|alertControlClient.call|c.http.Do",
+    "class": "local-rpc",
+    "reason": "local service control/RPC client"
+  },
+  {
+    "site": "cmd/tossctl/engine_mode_release.go|modeControlClient.Release|c.http.Do",
+    "class": "local-rpc",
+    "reason": "local service control/RPC client"
+  },
+  {
+    "site": "cmd/tossctl/root_budget.go|newRootOfficialClient|factory.NewClient",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "cmd/tossctl/root_budget.go|newRootOfficialClient|official.New",
+    "class": "legacy-off",
+    "reason": "raw constructor only OFF or nil-provider compatibility; check guarded shape"
+  },
+  {
+    "site": "cmd/tossctl/root_budget.go|rootBudgetOwner.get|accountbudgetruntime.Open",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "internal/accountbudget/transport_linux.go|Transport.RoundTrip|tr.RoundTrip",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "internal/accountbudget/transport_linux.go|connectionGate.closeConn|g.closeOnce.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "internal/accountbudget/transport_linux.go|responseOwner.Close|o.once.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "internal/accountbudgetruntime/offline_linux.go|provisionOffline|accountbudget.OpenContext",
+    "class": "offline-provision",
+    "reason": "temporary provision budget, no client or HTTP"
+  },
+  {
+    "site": "internal/accountbudgetruntime/runtime_linux.go|Factory.NewClient|official.New",
+    "class": "legacy-off",
+    "reason": "raw constructor only OFF or nil-provider compatibility; check guarded shape"
+  },
+  {
+    "site": "internal/accountbudgetruntime/runtime_linux.go|Factory.NewClient|official.NewWithAccountBudget",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "internal/accountbudgetruntime/runtime_linux.go|Open|accountbudget.OpenObserved",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "internal/accountbudgetruntime/runtime_unsupported.go|Factory.NewClient|official.New",
+    "class": "legacy-off",
+    "reason": "raw constructor only OFF or nil-provider compatibility; check guarded shape"
+  },
+  {
+    "site": "internal/app/app.go|New|factory.NewClient",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "internal/app/app.go|New|official.New",
+    "class": "legacy-off",
+    "reason": "raw constructor only OFF or nil-provider compatibility; check guarded shape"
+  },
+  {
+    "site": "internal/app/engine/alert_control_transport_unix.go|AlertControlServer.Close|s.once.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "internal/app/engine/engine.go|NewContext|opts.BudgetFactory.Budget",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "internal/app/engine/engine.go|NewOrderPath|official.New",
+    "class": "legacy-off",
+    "reason": "raw constructor only OFF or nil-provider compatibility; check guarded shape"
+  },
+  {
+    "site": "internal/app/engine/engine.go|NewOrderPath|opts.BudgetFactory.NewClient",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "internal/app/engine/mode_control_transport_unix.go|ModeControlServer.Close|s.once.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "internal/app/engine/normal_relay_wiring.go|Context.NormalAlertRelay|c.normalRelayOnce.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "internal/app/engine/position_policy_runtime_transport_unix.go|PositionPolicyRuntimeServer.Close|s.once.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "internal/app/engine/position_policy_transport.go|PositionPolicyCommandServer.Close|s.once.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "internal/campaignstateevidence/codec.go|validText|VALUE:p.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/campaignstateevidence/codec.go|validText|VALUE:r.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/campaignstateevidence/codec.go|validate|VALUE:p.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/campaignstateevidence/codec.go|validate|VALUE:p.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/campaignstateevidence/codec.go|validate|VALUE:r.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/campaignstateevidence/codec.go|validate|VALUE:r.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/campaignstateevidence/codec.go|validate|VALUE:r.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/candidate/scan.go|Collect|VALUE:reading.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/candidatesrc/candidatesrc.go|officialRanking.rateBudget|VALUE:candidate.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/candidatesrc/candidatesrc.go|officialRanking.rateBudget|VALUE:candidate.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/candidatesrc/candidatesrc.go|officialRanking.rateBudget|VALUE:candidate.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/client/account.go|Client.getJSON|c.httpClient.Do",
+    "class": "wts",
+    "reason": "WTS session client/monitor; official registry contract-only"
+  },
+  {
+    "site": "internal/client/auth_extend.go|Client.FinalizeExtension|c.httpClient.Do",
+    "class": "wts",
+    "reason": "WTS session client/monitor; official registry contract-only"
+  },
+  {
+    "site": "internal/client/auth_extend.go|Client.RequestExtension|c.httpClient.Do",
+    "class": "wts",
+    "reason": "WTS session client/monitor; official registry contract-only"
+  },
+  {
+    "site": "internal/client/client.go|Client.ensureTradingMetadata|c.httpClient.Do",
+    "class": "wts",
+    "reason": "WTS session client/monitor; official registry contract-only"
+  },
+  {
+    "site": "internal/client/client.go|Client.ensureTradingMetadata|c.httpClient.Do",
+    "class": "wts",
+    "reason": "WTS session client/monitor; official registry contract-only"
+  },
+  {
+    "site": "internal/client/dividends.go|Client.getJSONWithAccountKey|c.httpClient.Do",
+    "class": "wts",
+    "reason": "WTS session client/monitor; official registry contract-only"
+  },
+  {
+    "site": "internal/client/portfolio.go|Client.postJSON|c.httpClient.Do",
+    "class": "wts",
+    "reason": "WTS session client/monitor; official registry contract-only"
+  },
+  {
+    "site": "internal/client/probe.go|Client.probeOne|c.httpClient.Do",
+    "class": "wts",
+    "reason": "WTS session client/monitor; official registry contract-only"
+  },
+  {
+    "site": "internal/client/trading.go|Client.postJSONBytes|c.httpClient.Do",
+    "class": "wts",
+    "reason": "WTS session client/monitor; official registry contract-only"
+  },
+  {
+    "site": "internal/client/watchlist_manage.go|Client.mutateJSON|c.httpClient.Do",
+    "class": "wts",
+    "reason": "WTS session client/monitor; official registry contract-only"
+  },
+  {
+    "site": "internal/clock/market.go|Market.Location|locOnce.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "internal/console/a154_hypothetical.go|calculateHypothetical|VALUE:in.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/console/a154_hypothetical.go|calculateHypothetical|VALUE:in.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/console/a154_hypothetical_http.go|hypotheticalFields|VALUE:in.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/console/instrument_names.go|instrumentNameCache.lock|c.gateOnce.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "internal/enginelock/enginelock.go|Held.Release|h.once.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "internal/execgw/replay_transport.go|HTTPReplay.ReplayPlace|h.HTTP.Do",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "internal/execgw/replay_transport.go|NewBudgetedHTTPReplay|accountbudget.NewTransport",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "internal/execgw/retry.go|Retrier.Query|VALUE:policy.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/execgw/retry.go|RetryAfterTransport.RoundTrip|t.base.RoundTrip",
+    "class": "legacy-helper",
+    "reason": "unwired RetryAfterTransport; nil base default is not a required path"
+  },
+  {
+    "site": "internal/filldetect/detect.go|Detector.ensure|d.once.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "internal/filldetect/hints.go|Hints.ensure|h.once.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "internal/httpapi/stream.go|streamSubscription.close|s.once.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "internal/journal/reservations.go|RecollectPolicy.resolve|VALUE:p.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/journal/reservations.go|RecollectPolicy.resolve|VALUE:p.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/journal/reservations.go|recollectLoop|VALUE:policy.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/journal/reservations.go|recollectLoop|VALUE:policy.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/monitor/probes.go|runOne|(&http.Client{}).Do",
+    "class": "wts",
+    "reason": "WTS session client/monitor; official registry contract-only"
+  },
+  {
+    "site": "internal/obs/notifier.go|Notifier.checkAlertLease|n.leaseOnce.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "internal/obs/ntfy.go|Ntfy.Publish|client.Do",
+    "class": "external-nonofficial",
+    "reason": "update, notifications or WTS push"
+  },
+  {
+    "site": "internal/official/a112_mbus_read.go|a112MBUSReadAt|accountbudget.NewTransport",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "internal/official/a112_mbus_read.go|a112MBUSReadAt|hc.Do",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "internal/official/account_budget.go|NewWithAccountBudget|accountbudget.NewTransport",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "internal/official/client.go|Client.doRequest|c.hc.Do",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "internal/official/token.go|tokenManager.exchange|m.hc.Do",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "internal/officialbars/producer.go|PollClosedBars|VALUE:page.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/offlinecontinuation/assessment.go|calculate|VALUE:e.Plan.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/offlinecontinuation/assessment.go|calculate|VALUE:out.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/positionpolicyrpc/attempt_thaw_client.go|Client.ResolveParkedAttempt|c.http.Do",
+    "class": "local-rpc",
+    "reason": "local service control/RPC client"
+  },
+  {
+    "site": "internal/positionpolicyrpc/client.go|Client.call|c.http.Do",
+    "class": "local-rpc",
+    "reason": "local service control/RPC client"
+  },
+  {
+    "site": "internal/positionpolicyrpc/exit_quarantine_client.go|Client.callQuarantine|c.http.Do",
+    "class": "local-rpc",
+    "reason": "local service control/RPC client"
+  },
+  {
+    "site": "internal/positionpolicyrpc/risk_relaxation_client.go|Client.callRiskRelaxation|c.http.Do",
+    "class": "local-rpc",
+    "reason": "local service control/RPC client"
+  },
+  {
+    "site": "internal/positionpolicyrpc/runtime.go|RuntimeClient.Runtime|c.http.Do",
+    "class": "local-rpc",
+    "reason": "local service control/RPC client"
+  },
+  {
+    "site": "internal/push/listen.go|Listener.Listen|l.httpClient.Do",
+    "class": "external-nonofficial",
+    "reason": "update, notifications or WTS push"
+  },
+  {
+    "site": "internal/releaseupdate/client.go|Client.get|client.Do",
+    "class": "external-nonofficial",
+    "reason": "update, notifications or WTS push"
+  },
+  {
+    "site": "internal/releaseupdate/tuf.go|tufFetcher.DownloadFile|client.Do",
+    "class": "external-nonofficial",
+    "reason": "update, notifications or WTS push"
+  },
+  {
+    "site": "internal/runlock/runlock.go|Hold|once.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "internal/scheduler/decision.go|Decide|VALUE:in.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/scheduler/decision.go|Decide|VALUE:in.Budget",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "internal/strategyevidence/source.go|Adapter.Fetch|a.transport.Do",
+    "class": "external-data",
+    "reason": "SEC/DART restricted policy transport"
+  },
+  {
+    "site": "internal/strategyprojectionrpc/transport.go|Client.Read|c.http.Do",
+    "class": "local-rpc",
+    "reason": "local service control/RPC client"
+  },
+  {
+    "site": "internal/strategyprojectionrpc/transport_unix.go|Server.Close|s.once.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "internal/testenv/testenv.go|Guard.RoundTrip|base.RoundTrip",
+    "class": "test-support",
+    "reason": "network test guard only"
+  },
+  {
+    "site": "internal/updatecheck/checker.go|Checker.fetch|c.httpClient.Do",
+    "class": "external-nonofficial",
+    "reason": "update, notifications or WTS push"
+  },
+  {
+    "site": "internal/verifylive/receipt.go|CausalReceiptLease.Release|l.once.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "tools/a087-market-sell-probe/main.go|openOfficial|official.New",
+    "class": "legacy-off",
+    "reason": "raw constructor only OFF or nil-provider compatibility; check guarded shape"
+  },
+  {
+    "site": "tools/a087-market-sell-probe/main.go|prepareProbeBudget|accountbudgetruntime.Open",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a087-market-sell-probe/main.go|prepareProbeBudget|f.Budget",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a087-market-sell-probe/main.go|prepareProbeBudget|f.NewClient",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a087-market-sell-probe/send.go|newBudgetedSendClient|accountbudget.NewTransport",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a087-market-sell-probe/send.go|sendOnce|client.Do",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a112-l1c-quote-probe/main.go|runWithOptions|accountbudgetruntime.Open",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a112-l1c-quote-probe/main.go|runWithOptions|factory.NewClient",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a112-mb-us-source/go_distribution_snapshot_unix.go|copyGoDistributionInputs|once.Do",
+    "class": "nonhttp-once",
+    "reason": "sync.Once; not HTTP"
+  },
+  {
+    "site": "tools/a112-mb-us-source/official_reader.go|openProductionDependencies|accountbudgetruntime.Open",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a112-mb-us-source/official_reader.go|openProductionDependencies|factory.NewClient",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a128-d2-receipts/main.go|runWithOptions|accountbudgetruntime.Open",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a128-d2-receipts/main.go|runWithOptions|factory.NewClient",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a128-jev-shadow-probe/judge.go|judgeClient.post|c.hc.Do",
+    "class": "judge",
+    "reason": "TypeSafe SystemOne external judge"
+  },
+  {
+    "site": "tools/a128-jev-shadow-probe/main.go|runCommandWithOptions|accountbudgetruntime.Open",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a128-jev-shadow-probe/main.go|runCommandWithOptions|factory.NewClient",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a128-jev-shadow-probe/wts.go|countingTransport.RoundTrip|t.base.RoundTrip",
+    "class": "wts",
+    "reason": "WTS counting transport"
+  },
+  {
+    "site": "tools/a130-outcome-backfill/main.go|candleOwner.openCandles|accountbudgetruntime.Open",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a130-outcome-backfill/main.go|candleOwner.openCandles|o.factory.NewClient",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a140-breakout-signal-shadow/evaluate.go|evaluateSetup|VALUE:plan.RoundTrip",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "tools/a140-breakout-signal-shadow/main.go|runCommandWithOptions|accountbudgetruntime.Open",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a140-breakout-signal-shadow/main.go|runCommandWithOptions|factory.NewClient",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a140-breakout-signal-shadow/shadow.go|probe.label|VALUE:row.RoundTrip",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "tools/a140-breakout-signal-shadow/shadow.go|signalRow|VALUE:ev.Plan.RoundTrip",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "tools/a140-breakout-signal-shadow/shadow.go|signalRow|VALUE:row.RoundTrip",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "tools/a140-breakout-signal-shadow/sizing.go|rMultiplePPM|VALUE:plan.RoundTrip",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  }
+]
