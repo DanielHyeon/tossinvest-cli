@@ -1,6 +1,6 @@
 # 나머지 CLI 호출자와 콘솔 수명 — Manager 설계안
 
-기준 root 후보 `a8b7afd2966ad0f079be7df9c0c611e5db5bd18c`. `/tmp/a166-remaining-callers.md`, `/tmp/a166-console-lifetime.md`의 원문 위치와 해당 생산 함수를 Manager가 손읽기했다. 기존 `caller-lifetime-plan.md`의 borrowed factory 계약을 확장한다. 독립 검토 전 구현 승인 문서가 아니다.
+기준 root 후보 `a8b7afd2966ad0f079be7df9c0c611e5db5bd18c`. `/tmp/a166-remaining-callers.md`, `/tmp/a166-console-lifetime.md`의 원문 위치와 해당 생산 함수를 Manager가 손읽기했다. 기존 `caller-lifetime-plan.md`의 borrowed factory 계약을 확장한다. 독립 delta 검토 후 Manager가 구현 착수를 승인했으며, 구현 완료 판정은 별도다.
 
 ## 생성과 계좌 선택
 
