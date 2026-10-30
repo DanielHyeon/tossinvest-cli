@@ -189,9 +189,10 @@ func TestNoProductionOrderSurfaceIsNamed(t *testing.T) {
 func TestImportsStayInsideTheAllowlist(t *testing.T) {
 	t.Parallel()
 	allowedModule := map[string]bool{
-		"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget": true,
-		"github.com/JungHoonGhae/tossinvest-cli/internal/official":      true,
-		"github.com/JungHoonGhae/tossinvest-cli/internal/app/paths":     true,
+		"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget":        true,
+		"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime": true,
+		"github.com/JungHoonGhae/tossinvest-cli/internal/official":             true,
+		"github.com/JungHoonGhae/tossinvest-cli/internal/app/paths":            true,
 		"golang.org/x/term": true,
 	}
 	for name, file := range nonTestSources(t) {

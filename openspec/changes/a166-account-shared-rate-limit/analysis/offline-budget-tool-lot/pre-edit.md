@@ -1,0 +1,5 @@
+# 사전 분기·시험 지도 — offline v2 상태 도구
+
+기준 cf0f0919e19bd384995b8bfb7fb8ee44a42031a7. search-first: core Provision/OpenContext/ProvisionObservation·runtime private manifest/Open/strict parser·clock SystemBootSource 및 Go stdlib, 기존 x/sys v0.46.0 재사용. 별도 installer는 저장소에서 찾지 못했다. 기존 함수 본문 수정 없이 runtime에 좁은 신규 offline helper와 CLI를 추가하므로 기존 함수 FLM 대상 없음; 핵심 선례 Open/readManifest 및 checkedDir/Provision/OpenContext는 소스 원문을 확인했다. 새 helper 분기: ctx 취소 → clean absolute/root 빈 0700 + parent 0700 안전검사 → 기존 destination 거절 → core Provision(전후 ctx) → OpenContext·ProvisionObservation → identity/Close → root 경로 동등성 재검사 → parent fd O_EXCL 임시 write/sync/close → RENAME_NOREPLACE → parent fsync. 실패는 root·게시된 최종 파일 보존, 임시 파일만 정리.
+
+check: required Factory.Open → SystemBootSource.Snapshot → Factory.Close, client 없음. BTM: empty roundtrip, 재실행/기존 destination/nonempty/inside-root/symlink/권한/dirty/v1/pin·취소 거부, write/file-sync/close/rename/dirsync fault별 결과와 잔여 상태, root 교체 감지, CLI usage·출력·HTTP 생성 0. 테스트는 개발 tmpdir·no-route만. 동일 UID 적대적 교체·kernel IO 취소·실 powerloss·운영 namespace는 보장하지 않는다. impeccable N/A — CLI/backend-only.
