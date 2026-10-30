@@ -81,7 +81,7 @@ func withCandidateFixture(t *testing.T, clk clock.Clock, free int64, sources ...
 			releases++
 		}, nil
 	}
-	candidatePanelFactory = func(*rootOptions, string) ([]candidate.Source, error) {
+	candidatePanelFactory = func(context.Context, *rootOptions, string) ([]candidate.Source, error) {
 		return sources, nil
 	}
 	return func() int {

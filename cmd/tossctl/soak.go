@@ -252,7 +252,7 @@ func runSoakRun(cmd *cobra.Command, root *rootOptions, opts *soakOptions) error 
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
 	defer stop()
 
-	wiring, err := soakReadsFactory(root)
+	wiring, err := soakReadsFactory(ctx, root)
 	if err != nil {
 		return err
 	}
@@ -512,7 +512,7 @@ func runSoakAttest(cmd *cobra.Command, root *rootOptions, opts *soakOptions) (re
 	}
 
 	notes := opts.notes
-	if base := soakSurveyedBase(root); base != "" {
+	if base := soakSurveyedBase(cmd.Context(), root); base != "" {
 		notes = strings.TrimSpace(notes + " surveyed base: " + base)
 	}
 
@@ -709,7 +709,10 @@ type soakWiring struct {
 // at the top of this file about why there is no flag for it.
 var soakReadsFactory = buildSoakWiring
 
-func buildSoakWiring(root *rootOptions) (soakWiring, error) {
+func buildSoakWiring(ctx context.Context, root *rootOptions) (soakWiring, error) {
+	if err := ctx.Err(); err != nil {
+		return soakWiring{}, err
+	}
 	credFile, tokenFile, err := resolveOpenAPIPaths(root)
 	if err != nil {
 		return soakWiring{}, err
@@ -724,7 +727,10 @@ func buildSoakWiring(root *rootOptions) (soakWiring, error) {
 				"so it cannot start without them. Run `tossctl openapi login` or set %s/%s",
 			"TOSSCTL_OPENAPI_KEY", "TOSSCTL_OPENAPI_SECRET")
 	}
-	client := official.New(*creds, tokenFile)
+	client, err := newRootOfficialClient(ctx, root, *creds, tokenFile, root.officialOptions...)
+	if err != nil {
+		return soakWiring{}, err
+	}
 	return soakWiring{
 		reads:       soakReads{api: client},
 		tokenExpiry: func() (time.Time, bool) { return soakTokenExpiry(tokenFile) },
@@ -735,8 +741,8 @@ func buildSoakWiring(root *rootOptions) (soakWiring, error) {
 // soakSurveyedBase reports the base URL the survey would use, for the
 // attestation's notes. It is best-effort: a missing credential here only costs
 // the note.
-func soakSurveyedBase(root *rootOptions) string {
-	wiring, err := soakReadsFactory(root)
+func soakSurveyedBase(ctx context.Context, root *rootOptions) string {
+	wiring, err := soakReadsFactory(ctx, root)
 	if err != nil {
 		return ""
 	}

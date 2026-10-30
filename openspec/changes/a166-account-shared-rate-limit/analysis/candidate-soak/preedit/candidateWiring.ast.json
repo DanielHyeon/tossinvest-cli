@@ -1,0 +1,139 @@
+{
+  "file": "cmd/tossctl/candidate.go",
+  "source_sha256": "459cb41dfc6cd8fb14a5f6944af27d7f4d1735ab12292842cd634dd6d026daaa",
+  "package": "main",
+  "function": "candidateWiring",
+  "signature": "candidateWiring(params=3, results=4)",
+  "start": {
+    "line": 316,
+    "column": 1
+  },
+  "end": {
+    "line": 336,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 320,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 324,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 328,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 321,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 326,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 330,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 335,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 319,
+        "column": 25
+      },
+      "text": "candidateStoreFactory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 323,
+        "column": 18
+      },
+      "text": "candidatePanelFactory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 3
+      },
+      "text": "release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 329,
+        "column": 3
+      },
+      "text": "release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 330,
+        "column": 31
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 319,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 323,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
