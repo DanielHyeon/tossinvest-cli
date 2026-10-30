@@ -1,0 +1,8 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime [github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime.test]
+internal/accountbudgetruntime/runtime_test.go:14:24: undefined: Config
+internal/accountbudgetruntime/runtime_test.go:14:38: undefined: ModeRequired
+internal/accountbudgetruntime/runtime_test.go:14:60: undefined: ModeOff
+internal/accountbudgetruntime/runtime_test.go:14:102: undefined: Mode
+internal/accountbudgetruntime/runtime_test.go:15:11: undefined: Open
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime [build failed]
+FAIL

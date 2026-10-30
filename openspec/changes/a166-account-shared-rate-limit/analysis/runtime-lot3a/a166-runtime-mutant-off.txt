@@ -1,0 +1,5 @@
+--- FAIL: TestEnvMode (0.00s)
+    runtime_test.go:130: empty accepted
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	0.003s
+FAIL
