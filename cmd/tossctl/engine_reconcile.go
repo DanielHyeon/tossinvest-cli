@@ -251,7 +251,10 @@ func buildReconcileResolveRuntime(ctx context.Context, root *rootOptions) (recon
 		return reconcileResolveRuntime{}, engine.ErrOfficialCredentialsRequired
 	}
 
-	client := official.New(*creds, tokenFile)
+	client, err := newRootOfficialClient(ctx, root, *creds, tokenFile, root.officialOptions...)
+	if err != nil {
+		return reconcileResolveRuntime{}, fmt.Errorf("engine reconcile-resolve: opening official client: %w", err)
+	}
 	accounts, err := client.Accounts(ctx)
 	if err != nil {
 		return reconcileResolveRuntime{}, fmt.Errorf("engine reconcile-resolve: resolving the official account: %w", err)
