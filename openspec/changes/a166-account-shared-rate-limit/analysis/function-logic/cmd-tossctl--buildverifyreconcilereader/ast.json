@@ -1,0 +1,169 @@
+{
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "source_sha256": "4008a00b6a32f2da1a15092a10f14280d3de718537b5b652401e2bdbf032535a",
+  "package": "main",
+  "function": "buildVerifyReconcileReader",
+  "signature": "buildVerifyReconcileReader(params=2, results=3)",
+  "start": {
+    "line": 160,
+    "column": 1
+  },
+  "end": {
+    "line": 176,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 162,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 171,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 163,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 165,
+        "column": 33
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 168,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 172,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 175,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 30
+      },
+      "text": "resolveOpenAPIPaths"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 46
+      },
+      "text": "reconcileRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 95
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 16
+      },
+      "text": "official.LoadCredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 46
+      },
+      "text": "reconcileRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 53
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 46
+      },
+      "text": "reconcileRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 9
+      },
+      "text": "newVerifyReconcileReader"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 161,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 165,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 166,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

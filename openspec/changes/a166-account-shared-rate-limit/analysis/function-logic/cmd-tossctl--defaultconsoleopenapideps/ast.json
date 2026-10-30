@@ -1,0 +1,145 @@
+{
+  "file": "cmd/tossctl/console_openapi.go",
+  "source_sha256": "8318dbba2b5b5d82475f0b2d53ac9650e3599b1fddfe19bbb2b20261e34a94e7",
+  "package": "main",
+  "function": "defaultConsoleOpenAPIDeps",
+  "signature": "defaultConsoleOpenAPIDeps(params=0, results=1)",
+  "start": {
+    "line": 44,
+    "column": 1
+  },
+  "end": {
+    "line": 75,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 53,
+        "column": 4
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 64,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 48,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 54,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 56,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 65,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 67,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 11
+      },
+      "text": "validateOpenAPICredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 11
+      },
+      "text": "os.Remove"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 7
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 11
+      },
+      "text": "openAuditLog"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 12
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 11
+      },
+      "text": "log.RecordAction"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 52,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 63,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

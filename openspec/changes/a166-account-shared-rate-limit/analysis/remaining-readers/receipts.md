@@ -1,0 +1,18 @@
+# 원문 영수증
+
+gzip 압축 해제 후 원문 바이트와 SHA-256이 일치함을 확인했다.
+
+- a166-verifyrec-static-red.log: 8a18377fef89de72791a2d54773966ce3d00d6a04c7cce150baec03b2a337acd
+- a166-verifyrec-static-green.log: c586c9eea65eee52ba6e77edc5d38c17e09215a53dd9ffb346748e5dbefd3400
+- a166-verifyrec-local-green.log: 7f1563a32d81fe1d56b18206de3e223360f3a826c531ae1b5bf6aea7fc77dba0
+- a166-verifyrec-tag-race.log: 35a9b63f1988753f2d8ef9e0bcd52b8da8e01c4a7f70bfc221d879e3cd60c4dd
+- a166-verifyrec-first-mutant.log: 4e88e31b6b3d73499e7cf7ec950e3288b533bac6e8d243ca5fee6f79fde65933
+- a166-verifyrec-bound-mutant.log: 882212a44ef5e588a2a72b7e5aa99b362fc3cdebca994e6a70be401aee7fef30
+- a166-openapi-static-red.log: 17a7244023b4db1e0d47e36f34b75575e0d165421c53611c166d18c662df13d8
+- a166-openapi-static-green.log: 28a5ff073f239662182f27b656756cdd53cfc39432eb45df5af0daf57bc7c331
+- a166-openapi-bypass-mutant.log: d68e93e3aaf6abf65ea6b77bc80ae612ce4c31d8f3a90c1ef15cb8e7dbf011a5
+- a166-openapi-onboarding-green.log: fa63758ee6b871b45c455c040038e2236144447115dd8442c97b9f3dc17c81ae
+- a166-onboarding-wiring-green.log: c586c9eea65eee52ba6e77edc5d38c17e09215a53dd9ffb346748e5dbefd3400
+- a166-onboarding-root-mutant.log: 4027435cec63d2c8f4c13ce69d16e16b478632b8f24980a944a16c8d311517f2
+- a166-readers-exact-normal.log: e18650819a79eb60b2530ba39798f78bb163487895526236ee84e73b0f4f4ca2
+- a166-readers-exact-tag-race.log: 7df44a3dba02beef8a970cf6f50dc45e4753e0476d758ed514cddfc3095615eb

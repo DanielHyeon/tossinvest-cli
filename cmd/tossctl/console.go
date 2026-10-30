@@ -237,7 +237,7 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	if err != nil {
 		return err
 	}
-	openAPISeam, err := newConsoleOpenAPISeam(root, defaultConsoleOpenAPIDeps())
+	openAPISeam, err := newConsoleOpenAPISeam(root, defaultConsoleOpenAPIDeps(root))
 	if err != nil {
 		return err
 	}

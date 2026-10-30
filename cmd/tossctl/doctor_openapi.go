@@ -120,9 +120,9 @@ func computeDoctorOpenAPISummary(ctx context.Context, opts *rootOptions, app *ap
 	probeCtx, probeCancel := context.WithTimeout(ctx, 5*time.Second)
 	defer probeCancel()
 
-	probe, err := validateOpenAPICredentials(probeCtx, *creds, tokenFile)
+	probe, err := validateOpenAPICredentialsForRoot(probeCtx, opts, *creds, tokenFile)
 	if err != nil {
-		// validateOpenAPICredentials always returns nil error; defensive path.
+		// Factory and context errors must remain visible.
 		in.probeCallErr = err.Error()
 	} else {
 		in.probeOK = probe.OK
