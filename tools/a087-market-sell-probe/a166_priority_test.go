@@ -21,6 +21,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
@@ -92,6 +93,18 @@ func TestA166ProbeFactoryLocalTokenAndPost(t *testing.T) {
 	if err := accountbudget.Provision(root, "scope", "instance"); err != nil {
 		t.Fatal(err)
 	}
+	eventID := func() accountbudget.FileID {
+		b, err := accountbudget.Open(accountbudget.Config{Root: root, Scope: "scope", Instance: "instance", Clock: clock.System()})
+		if err != nil {
+			t.Fatal(err)
+		}
+		id, err := accountbudget.ProvisionObservation(b)
+		err = errors.Join(err, b.Close())
+		if err != nil {
+			t.Fatal(err)
+		}
+		return id
+	}()
 	fileID := func(path string) accountbudget.FileID {
 		info, err := os.Stat(path)
 		if err != nil {
@@ -101,7 +114,7 @@ func TestA166ProbeFactoryLocalTokenAndPost(t *testing.T) {
 		return accountbudget.FileID{Device: uint64(st.Dev), Inode: st.Ino}
 	}
 	identity := accountbudget.Identity{Root: fileID(root), Queue: fileID(filepath.Join(root, "queue.lock")), Wire: fileID(filepath.Join(root, "wire.lock"))}
-	data, err := json.Marshal(map[string]any{"version": 1, "root": root, "scope": "scope", "instance": "instance", "identity": identity})
+	data, err := json.Marshal(map[string]any{"event_lock": eventID, "version": 2, "root": root, "scope": "scope", "instance": "instance", "identity": identity})
 	if err != nil {
 		t.Fatal(err)
 	}
