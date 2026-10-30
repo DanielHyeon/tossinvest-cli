@@ -5,7 +5,7 @@
 | 대상 | 정확 근거 | 증명 범위와 한계 |
 |---|---|---|
 | Budget snapshot | `internal/accountbudget/consumer_snapshot_linux.go` `Budget.ObservationSnapshot`; `TestA166ConsumerSnapshotBoundary`, `TestA166ConsumerSnapshotCopyAndPastCursor`, `TestA166ConsumerSnapshotPinsDuringClose` at 89c9a5b7e | nil/context/closed/unobserved·wrong/future/past cursor, view 사본, 소유자 Close 경쟁. 다음 wire에 대한 원자 허가가 아님. |
-| 공유 429 | `TestA166ConsumerTwoFactoriesPriceLimits` at 89c9a5b7e | 두 Factory의 서로 다른 Budget 포인터 각각에 client 결속, 공통 event 조회, token + Other429, 성공 noevent. |
+| 공유 Other429 | `TestA166ConsumerTwoFactoriesPriceLimits` at 89c9a5b7e | 두 Factory의 서로 다른 Budget 포인터 각각에 client 결속, token 성공 뒤 Other429를 다른 factory의 wrapper로 조회, 성공 noevent. Token429 교차 wrapper는 아래 delta의 별도 시험이다. |
 | a087 실제 PriceLimits | `TestA166ConsumerPriceLimits401EachWire` at 89c9a5b7e | 한 logical PriceLimits 호출: token200→GET401→token200→GET200, 총 첫 plaintext Write 4회, pending 종류/순서 및 ≥350ms. 단일 요청에서 GET401 두 번을 시험한 것은 아님. |
 | 우선순위·수명 | `TestA166ConsumerTwoFactoriesPriceLimits`, `TestA166ConsumerTokenSentThenAuxGETRefused`, `TestA166ConsumerPriceLimitsBodyOwnership`, `TestA166ConsumerObservedBodyCloseReleasesWire` at 89c9a5b7e | 최초 Aux 거절 token/GET0; 이미 token이 나간 경우 token1/GET0; EOF/cancel 및 별도 응답 Close 후 wire 소유권 해제. 이미 시작한 wire의 소급 취소나 유한 wall-time 상한은 아님. |
 | 오류 보존 | `TestA166ConsumerFinishFaultPreservesHTTP429` at 89c9a5b7e | postcommit Finish fsync 오류 보고, 해당 429 결과를 NOT_SENT로 바꾸지 않음. 다른 failure 단계가 모두 event를 남긴다는 뜻은 아님. |
@@ -20,4 +20,4 @@
 
 `/tmp/a166-completion-crosswalk.md`의 cf0 시점 손읽기·lot별 Manager 증거를 재사용하되 최종 완성으로 확대하지 않는다. 2.1–2.3은 각 lot 원문 및 FLM/BTM 대조 뒤 개별 판정; 2.4의 모든 공식 wire/caller 구조 census는 진행 중이므로 pending, 2.5의 최종 통합 검증도 pending. 3.1–3.2의 전체 프로필·호출자 census와 결합 검증 pending. 3.3 engine poll 구현은 bc8ae32ee 이후 최신 결합 증거 확인 후 판정; 3.4 matrix와 이 인계표를 최종 SHA에 동기화한 후 판정하며 후속 소비자 구현을 완료로 표시하지 않는다. 3.5 최종 통합 및 독립 검증 pending. 4.2 사람 namespace·참여자 확인과 a087 5.4/5.5는 미완이며 archive 금지. 소스/test/운영 실행 없음.
 
-후속 test delta: `TestA166ConsumerToken429CrossFactorySnapshot`은 두 factory 간 Token429 event와 GET0; `TestA166ConsumerPriceLimitsTwo401AdoptAndMint`는 실제 한 logical 요청 cached GET401→adopted GET401→token 발급→GET200, GET3+token1=4 wire, 각 pending 및 첫 Write 간격을 검증했다. 대상은 부모 89c9a5b7e의 테스트 보완 커밋이며 source 변경0. `/tmp/a166-consumer-delta-normal.log`, `/tmp/a166-consumer-delta-race.log` Go1.25 선택 PASS. 최종 commit SHA와 enginepoll 이후 통합 결과는 별도 추가한다.
+후속 test delta `7609ff48d`: `TestA166ConsumerToken429CrossFactorySnapshot`은 두 factory 간 Token429 event와 GET0; `TestA166ConsumerPriceLimitsTwo401AdoptAndMint`는 실제 한 logical 요청 cached GET401→adopted GET401→token 발급→GET200, GET3+token1=4 wire, 각 pending 및 첫 Write 간격을 검증했다. 부모 89c9a5b7e의 테스트 보완이며 source 변경0. 작성자 및 독립 Go1.25 선택 normal/tagged race PASS. enginepoll 이후 최종 통합 SHA와 선택 결과는 게시 기록에 추가한다.
