@@ -1,0 +1,14 @@
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift/raw_original
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift/other_wrapper
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift/missing_budget
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift/missing_wrapper
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift/missing_both_raw
+--- PASS: TestA166AuthorityRejectsEnforcingTransportDrift (0.02s)
+    --- PASS: TestA166AuthorityRejectsEnforcingTransportDrift/raw_original (0.00s)
+    --- PASS: TestA166AuthorityRejectsEnforcingTransportDrift/other_wrapper (0.00s)
+    --- PASS: TestA166AuthorityRejectsEnforcingTransportDrift/missing_budget (0.00s)
+    --- PASS: TestA166AuthorityRejectsEnforcingTransportDrift/missing_wrapper (0.00s)
+    --- PASS: TestA166AuthorityRejectsEnforcingTransportDrift/missing_both_raw (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	1.034s

@@ -1,0 +1,7 @@
+=== RUN   TestA166A112CloneSharesBudget
+    a166_admission_test.go:172: dialtls=false dial=false next=true tls=true
+    a166_admission_test.go:177: clone escaped shared budget: a112 m-b us measurement hold: account budget: account budget unavailable
+--- FAIL: TestA166A112CloneSharesBudget (0.39s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.402s
+FAIL

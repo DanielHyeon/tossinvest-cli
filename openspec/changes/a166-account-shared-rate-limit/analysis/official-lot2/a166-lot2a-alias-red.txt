@@ -1,0 +1,6 @@
+=== RUN   TestA166AuthorityAndClientIsolation
+    a166_admission_test.go:68: caller transport mutated
+--- FAIL: TestA166AuthorityAndClientIsolation (0.02s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.024s
+FAIL

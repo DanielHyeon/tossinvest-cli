@@ -14,6 +14,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
 )
 
 const defaultBaseURL = "https://openapi.tossinvest.com"
@@ -35,6 +37,10 @@ type Client struct {
 	// an overridden transport can never attest official monetary authority.
 	authorityOrigin    bool
 	authorityTransport *http.Transport
+	budget             *accountbudget.Budget
+	budgetTransport    *accountbudget.Transport
+	budgetCleanup      func(error)
+	budgetEnforced     bool
 	// mu serializes unresolved account discovery and validates later public
 	// discovery against an implicit selection. accountsLocked requires it and
 	// may perform the /accounts HTTP request while held.
@@ -164,6 +170,12 @@ func (c *Client) hcTransport() (*http.Transport, bool) {
 	if c.hc == nil {
 		return nil, false
 	}
+	if c.budgetEnforced || c.budget != nil || c.budgetTransport != nil {
+		if c.budgetEnforced && c.budget != nil && c.budgetTransport != nil && c.hc.Transport == c.budgetTransport {
+			return c.authorityTransport, c.authorityOrigin && c.authorityTransport != nil
+		}
+		return nil, false
+	}
 	transport, ok := c.hc.Transport.(*http.Transport)
 	return transport, ok
 }
@@ -193,6 +205,9 @@ func (c *Client) doRequest(req *http.Request) (int, []byte, error) {
 	resp, err := c.hc.Do(req)
 	if err != nil {
 		observeAttempt(req.Context(), AttemptTrace{RequestStart: started, BodyReadComplete: time.Now(), Err: err})
+		if c.budget != nil {
+			return 0, nil, fmt.Errorf("%w: %w", ErrTransport, err)
+		}
 		return 0, nil, fmt.Errorf("%w: %s", ErrTransport, err)
 	}
 	defer resp.Body.Close()

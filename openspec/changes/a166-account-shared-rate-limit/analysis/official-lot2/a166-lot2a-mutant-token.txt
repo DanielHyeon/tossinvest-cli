@@ -1,0 +1,5 @@
+--- FAIL: TestA166AuthorityAndClientIsolation (0.02s)
+    a166_admission_test.go:52: token client differs
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.020s
+FAIL

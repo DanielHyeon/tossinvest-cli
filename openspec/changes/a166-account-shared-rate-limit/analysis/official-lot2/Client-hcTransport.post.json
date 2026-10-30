@@ -1,0 +1,84 @@
+{
+  "file": "internal/official/client.go",
+  "source_sha256": "85220792224bfc75dc9d8d475e0392c683e02fec5769048685495b4ca38c43ec",
+  "package": "official",
+  "function": "hcTransport",
+  "receiver": "Client",
+  "signature": "Client.hcTransport(params=0, results=2)",
+  "start": {
+    "line": 169,
+    "column": 1
+  },
+  "end": {
+    "line": 181,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 170,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 173,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 174,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 171,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 175,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 177,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

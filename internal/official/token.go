@@ -12,6 +12,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
 )
 
 // tokenResponse is the JSON payload returned by POST /oauth2/token.
@@ -143,6 +145,9 @@ func (m *tokenManager) exchange(ctx context.Context) (string, error) {
 
 	resp, err := m.hc.Do(req)
 	if err != nil {
+		if _, ok := m.hc.Transport.(*accountbudget.Transport); ok {
+			return "", fmt.Errorf("%w: %w", ErrTransport, err)
+		}
 		return "", fmt.Errorf("%w: %s", ErrTransport, err)
 	}
 	defer resp.Body.Close()

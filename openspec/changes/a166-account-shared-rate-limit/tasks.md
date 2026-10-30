@@ -22,6 +22,7 @@
 ## 2. 공식 클라이언트와 별도 전송
 
 - [ ] 2.1 official constructor/authority/doRequest 및 token 전달 경계, a112 clone, replay/probe 기존 함수 FLM/BTM·Pre-Edit.
+  - lot2a 공식 constructor·authority·token·a112 연결은 부분 완료 및 Manager 승인. replay/probe와 전체 배선·운영 검증은 미완: `analysis/official-lot2/manager-verification.md`.
 - [ ] 2.2 RED/GREEN: private constructor-owned guard, exact OFF 보존, 외부 client override authority 거절, actual token/401/redirect별 중재, response TLS/body/timeout.
 - [ ] 2.3 RED/GREEN: 보내기 전 admission 거절과 기존 attempt 결과 구분, a165 첫 AMBIGUOUS 보존 및 journal/멱등키 회귀.
 - [ ] 2.4 별도 공식 API 전송 경로를 같은 예산에 결속. WTS/judge 분류와 지원 범위 명시. 전체 배선 구조 검사.
