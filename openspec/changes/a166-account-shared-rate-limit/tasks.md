@@ -1,59 +1,42 @@
-> **3판 초안 NOT READY (2026-10-30).** 사용자 결정은 엄격 3건/초와 보호 대기 방향뿐이다. 구현·활성화 승인이 아니다. 아래 2판 구현·시험 계획은 역사 기록이며 착수 지시가 아니다.
+> **4판 proposal-freeze 후보 (2026-10-31), 제품 구현 READY 판정 대기.** 사용자는 strict 3건/초·보호 대기 및 남은 개발 진행을 승인했다. Manager가 계약·완료를 판정하고 Terra가 구현·시험·gstack 리뷰·종결한다. 배포·실계좌·a087 활성화·a169 측정은 별도다. 2·3판 작업표는 `analysis/tasks-through-v3-history.md`의 역사 기록이며 현재 작업 지시가 아니다.
 
-- [ ] 3판 차단 해소: 실제 wire 재시도 중재 증명, 우선 중재 및 crash/reboot·inode·body 수명 검증 설계.
-- [ ] 사람 결정: 보호 의존 사슬 범위·장애 결과·지연 수용 기준·429 정책.
-- [ ] 3판 재설계 후 독립 적대 리뷰 및 scoped gstack review; 실패 시 구현 금지. a087 admission nil, a169 보류.
-- [ ] research-first 결과의 공식 출처·버전·라이선스와 채널 미확인 사항 정리. UI/UX 없음: impeccable N/A — backend/documentation-only.
+## 0. 설계와 연구
 
-## 2판 작업 목록 — 역사 기록, 실행 금지
+- [x] 0.1 사용자 정책·역할·개발 진행 승인 반영. UI 없음: impeccable N/A — backend/documentation-only.
+- [x] 0.2 기존 검증 도구 복구: OpenSpec 1.4.1 임시 pin, e32606d4b의 a087/a166/a169 strict valid. 원 설치 버전으로 단정하지 않음.
+- [x] 0.3 TLS 수명 연구: actual official.Client token/401, full response, context, multi-process·kill, TLS 검증 및 변이. Linux 연구 SHA d0485309a. 핵심 b90524af6 독립 Go1.25.0/1.26.5 race 통과, 추가 owner counter 1b5f09589 Go1.25 통과. 연구 경계와 제품 검증을 구별함.
+- [x] 0.4 queue 연구: liveness·priority·FIFO·취소·dirty marker·fault 주입·aux cleanup, targeted race와 변이. Linux 연구 SHA 41c8c16a7. 445419bc1 독립 race 통과, 최신 후속 독립 확인은 다음 항목.
+- [x] 0.5 최신 연구 후속 diff의 독립 확인. queue 41c8c16a7 독립 race 6.152초, TLS 최종 build-tag diff 확인. `analysis/v4-independent/`의 원문·AST·CodeGraph 교차 확인 기록 보존. 제품 전체 증거와 구별.
+- [ ] 0.6 proposal/design/spec delta/tasks 정합화, research-first 버전/출처/라이선스·도구 제한, scoped strict validation·PM check.
+- [ ] 0.7 독립 설계 리뷰 및 Manager READY. 미해결 기술 계약을 2판 값으로 추정하지 않음.
 
-## 0. 착수 준비
+## 1. 내부 모듈 — 배선하지 않는 첫 로트
 
-- [ ] 0.1 단일 writer 배정, `python3 tools/sdd/capture_change_base.py --change a166-account-shared-rate-limit` 로 base 고정(a165 착지 `5e2facaee` 이후).
-- [ ] 0.2 2026-10-22 「엔진 + 수동 조회 동시 429」 관측의 로그 영수증 확보(로컬 기록만 — 계좌 API 재호출 금지). 없으면 「영수증 없음」으로 기록.
-- [x] 0.3 전송 자리 전수 — design §2.1(S1~S5 + 대상 아님), §2.2 프로세스, §2.3 파일시스템. CodeGraph 1.6.0 영수증 `analysis/code-context/codegraph-{callers,affected}-1st.txt`·`codegraph-callers-2nd.txt`(주 체크아웃 인덱스, 같은 코드 트리 `5e2facaee` — 이 worktree 인덱스 미초기화).
-- [ ] 0.4 search-first(외부 레지스트리·MCP) — 저장소만 봤다. 외부 채널은 **안 봤음**. 들이는 것은 사람 승인 + `dependency-auditor`.
-- [ ] 0.5 FLM/BTM 번들(gate ⑤ 형식) — design §10 목록(삭제 대상은 revision base). `analysis/evidence/ast/`(1판 15 + 2판 8)와 `source_sha256` 대조.
-- [ ] 0.6 evidence reconciliation — `analysis/code-context/codegraph-baseline.md`·`codegraphcontext-context.md`·`evidence-reconciliation.md`(CodeGraph 가 `tokenManager.exchange` 호출자를 못 찾은 것, worktree 인덱스 미초기화 포함).
+- [ ] 1.1 source 기준·영향 지도·CodeGraph/AST·Pre-Edit 기록. 기존 함수 변경이 없으면 FLM 해당 없음 사유; 기존 함수 편집 시 사전 FLM/BTM.
+- [ ] 1.2 RED: queue 우선/취소/사망·dirty·파일 검증·동일 scope, 전체 요청 수명과 local request start 간격, OFF와 required 오류 분리.
+- [ ] 1.3 GREEN: internal/accountbudget 신규 모듈. caller context, 주입 clock, 소유권·취소·응답·이벤트 오류 계약. 기존 실행 배선/운영 기본값 무변경.
+- [ ] 1.4 targeted normal/race·다중 프로세스·변이·gstack 리뷰·독립 검토. 연구 복사를 제품 검증으로 대체하지 않음.
 
-## 1. 계약 (design freeze)
+## 2. 공식 클라이언트와 별도 전송
 
-- [x] 1.1 design 1판.
-- [x] 1.2 spec delta 1판.
-- [x] 1.3 1판 독립 적대 리뷰(GPT 보이스) → `review.md` — FAIL(P0 4·P1 4·P2 2).
-- [x] 1.4 design 2판 — 단일 RoundTripper 경계(D2), 명시 예산 주입·instance(D1), wire 시점 계약·ε 재admission(D3), critical 범위·안 A/B(D4), Close drain(D7), 실패·OFF(D9), wall clock 단일 판정(D10), 불변식 4 표(§6), 처분 대조(§11). spec delta 2판.
-- [ ] 1.5 사람 결정: **H2(안 A/B)** · **H11(exit `/prices`·보호 매도 접수 확인 GET 등급)** · **H12(시계 역행 1회당 초과 수락)** · **H13(350ms·ε 40ms)** · H4 값 확인 → design 3판(필요 시).
-- [ ] 1.6 2판 재리뷰(적대적 Eng 포함, 작성자와 다른 계열) → `review.md`.
+- [ ] 2.1 official constructor/authority/doRequest 및 token 전달 경계, a112 clone, replay/probe 기존 함수 FLM/BTM·Pre-Edit.
+- [ ] 2.2 RED/GREEN: private constructor-owned guard, exact OFF 보존, 외부 client override authority 거절, actual token/401/redirect별 중재, response TLS/body/timeout.
+- [ ] 2.3 RED/GREEN: 보내기 전 admission 거절과 기존 attempt 결과 구분, a165 첫 AMBIGUOUS 보존 및 journal/멱등키 회귀.
+- [ ] 2.4 별도 공식 API 전송 경로를 같은 예산에 결속. WTS/judge 분류와 지원 범위 명시. 전체 배선 구조 검사.
+- [ ] 2.5 targeted normal/tag/race·mutation·gstack·독립 리뷰·Manager 검증.
 
-## 2. RED (design §9 이름 — a087·a169 가 인용)
+## 3. 호출자·폴링·설정
 
-- [ ] 2.1 Pre-Edit 선언(`review.md`) — 대상 design §10.
-- [ ] 2.2 RED `internal/accountbudget` 단위: T-WIRE-1 · T-SYNC-1(프로세스 안) · T-PRIO-A 또는 T-PRIO-B(H2 결과) · T-FS-1 · 패널티(H4 값) · 시계(단일 프로세스 fake).
-- [ ] 2.3 RED `internal/official` 통합: T-INT-1~3 · T-OFF-1 · T-AUTH-1 · T-429-S 의 S1·S2·S3.
-- [ ] 2.4 RED 엔진·호출자·도구: T-RET-1 · T-MUT-1~3(`DispatchVerified` 종단, a165 두 경우) · T-429-S 의 S4·S5 · T-STR-2 · T-WALK-1.
-- [ ] 2.5 RED 구조: T-STR-1(`go/types` 전수 — 분류 안 된 http.Client 자리 0, 수집 자리 수·허용 목록 수 단언).
-- [ ] 2.6 RED 다중 프로세스(`-race`): T-MP-1(지연 주입, `base.RoundTrip` 시작 시각 기준) · T-MP-CLK(offset ±1s·역행 1h) · T-SYNC-1 의 `StopOnShared429` 자식 판.
+- [ ] 3.1 사전 FLM/BTM과 RED: critical 의존 사슬, normal/auxiliary, 모든 config/profile의 명시 같은 예산 결속, enforcing 누락 wire0.
+- [ ] 3.2 GREEN: 앱·엔진·flatten·CLI·console·soak·verify·프로브 배선. 실제 운영 env/toggle 변경 없음.
+- [ ] 3.3 RED/GREEN: 모든 429 이벤트, 엔진 폴링 같은 조회 재시도 금지, 유효 ≤30s hint 범위·복원·invalid/초과 처리. 비지연 walk와 POST 판정 보존.
+- [ ] 3.4 retry matrix와 코드 동시 정합화. a087·a169 후속 계약과 통합 시험 SHA 목록 작성. a087 production admission nil 유지.
+- [ ] 3.5 영향 범위 normal/tag/race·변이·gstack 적대/보안 리뷰, Manager 독립 검증. 전체 미실행 범위 기록.
 
-## 3. GREEN · REFACTOR · VERIFY
+## 4. 종결과 운영 경계
 
-- [ ] 3.1 GREEN `internal/accountbudget`(새 패키지: Budget·Transport·instance·상태 파일·이벤트).
-- [ ] 3.2 GREEN `official`: `WithAccountBudget`·`AccountBudget()`·`New` 안 감싸기·`hcTransport` 벗기기·`ErrAdmissionRefused`·`a112MBUSReadAt` clone 감싸기. `doRequest`·`send`·`exchange` 본문 무변경 확인.
-- [ ] 3.3 GREEN 엔진: `NewOrderPath` Budget·marker `account_budget_instance`·`ReasonAccountBudgetUnavailable`·`WithCritical`(보호 dispatch)·precheck `WithTryOnce`·`buildGateway` 재생 client·`Retrier.Query` 즉시 반환·H9 삭제.
-- [ ] 3.4 GREEN 그 밖: 루트 플래그 `--account-budget-dir`·env, flatten ctx 뿌리 `WithCritical`, a087 probe(`newSendClient` 감싸기·주입 없으면 시작 거부), `compose.yaml` env. **정본 retry matrix §0.3·§1·§2·§3·§4 와 코드 기본값을 같은 커밋에서**.
-- [ ] 3.5 VERIFY 영향 범위 시험 + `-race`(`make test-race` 목록에 새 패키지) — 선택 이유·미실행 범위 기록.
-- [ ] 3.6 변이 원장(design §9 목록, S1~S5 `Wrap` 삭제 양성 대조군 포함) — 사본 하네스는 무변이 대조군 GREEN 확인 뒤.
-- [ ] 3.7 FLM/BTM 최신화, `check_analysis.py --change a166-account-shared-rate-limit`.
-
-## 4. 리뷰
-
-- [ ] 4.1 다중 적대 리뷰(적대적 Eng 포함) — 반례 목표: 손절·flatten 지연(§6 표 수치 대조), 잠금 쥔 채 정지, 시계 역행·offset, 독점, 래퍼 없는 http.Client, 보호 ctx 경로 누락, admission 거절의 IN_DOUBT 오분류, Close 뒤 시작.
-- [ ] 4.2 gstack review + cso.
-- [ ] 4.3 Manager 독립 검증.
-
-## 5. 배포·닫기
-
-- [ ] 5.1 **사람 gate H10**(배포 전, 브로커 호출 0): 실제 bind path 에서 컨테이너·호스트 두 프로세스가 같은 `instance`·같은 `dev/ino` 를 로그에 남기는지, flock 교차 배제, 다른 uid 열기 실패, fuseblk 거부.
-- [ ] 5.2 **사람**: 이미지 재빌드 + 두 서비스 재시작(KST 05:00~09:00). **배포 체크**: 두 서비스 env `TOSSOS_ACCOUNT_BUDGET_DIR` 존재 + 엔진 기동 로그 `account_budget_open` 의 instance 가 marker 와 같음. 배포 뒤 `wire_429`·`admission_refused` 를 로컬 기록으로만 관찰.
-- [ ] 5.3 (선택, **사람 승인 시에만**) 합산 한도 실측 — 이 change 는 요구하지 않는다.
-- [ ] 5.4 완료 게이트(사용자 명시 요청 시) → archive → Story 경로·PM sync. a087 5.5·a169 재개에 착지 sha 와 T-INT·T-429-S·T-SYNC·T-MP 시험 이름 전달.
-- [ ] 5.5 검증된 교훈만 Hindsight retain.
+- [ ] 4.1 운영자 provisioning·동일 inode/namespace 확인·dirty 복구·rollback 절차 작성. 라이브 접근 없이 fixture 검증.
+- [ ] 4.2 배포 전 사람 확인: 실제 호스트/컨테이너 namespace·UID·filesystem·동일 계좌 scope와 모든 참여자 포함.
+- [ ] 4.3 변경 범위 검증·strict OpenSpec·PM 최종 확인. 전체 시험/전체 gate는 해당 작업의 명시 요청 때만 실행.
+- [ ] 4.4 Manager 완료 판정 뒤 Terra commit/merge/push/archive·Story/PM 정합화. 사람 단계 미완료를 완료로 체크하거나 active change를 허위 archive하지 않음.
+- [ ] 4.5 운영 이미지/설정 적용은 별도 사람 승인. a087 5.4/5.5, a169 리허설·측정은 자동 실행하지 않음.
