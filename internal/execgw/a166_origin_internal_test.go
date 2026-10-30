@@ -4,9 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"go/ast"
-	"go/parser"
-	"go/token"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -87,42 +85,12 @@ func TestA166ReplayOriginClassification(t *testing.T) {
 }
 
 func TestA166OrderableActionCoverage(t *testing.T) {
-	parse := func(path, fn string) map[string]bool {
-		f, err := parser.ParseFile(token.NewFileSet(), path, nil, 0)
-		if err != nil {
-			t.Fatal(err)
-		}
-		out := map[string]bool{}
-		for _, decl := range f.Decls {
-			fd, ok := decl.(*ast.FuncDecl)
-			if !ok || fd.Name.Name != fn {
-				continue
-			}
-			ast.Inspect(fd.Body, func(n ast.Node) bool {
-				switch v := n.(type) {
-				case *ast.Ident:
-					if strings.HasPrefix(v.Name, "Action") && v.Name != "Action" {
-						out[v.Name] = true
-					}
-				case *ast.SelectorExpr:
-					if strings.HasPrefix(v.Sel.Name, "Action") && v.Sel.Name != "Action" {
-						out[v.Sel.Name] = true
-					}
-				}
-				return true
-			})
-		}
-		return out
+	data, err := os.ReadFile("a166_replay_origin.go")
+	if err != nil {
+		t.Fatal(err)
 	}
-	expected := parse("../exitpolicy/ratchet.go", "Orderable")
-	got := parse("a166_replay_origin.go", "replayOrigin")
-	if len(expected) == 0 {
-		t.Fatal("orderable action source not found")
-	}
-	for action := range expected {
-		if !got[action] {
-			t.Errorf("unclassified orderable action %s", action)
-		}
+	if err = a166CheckActionCoverage(data); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -164,5 +132,21 @@ func TestA166AckReadInheritsPriorityAndDeadline(t *testing.T) {
 	}
 	if reader.priority != accountbudget.Critical || reader.deadline.After(deadline) || reader.deadline.IsZero() {
 		t.Fatalf("priority=%v deadline=%v", reader.priority, reader.deadline)
+	}
+}
+
+func TestA166OrderableUnusedReferenceIsRejected(t *testing.T) {
+	data, err := os.ReadFile("a166_replay_origin.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	original := string(data)
+	original = strings.Replace(original, "switch exitpolicy.Action(action) {", "_ = exitpolicy.ActionRatchetPartial\n\t\tswitch exitpolicy.Action(action) {", 1)
+	mutated := strings.Replace(original, "case exitpolicy.ActionRatchetPartial, exitpolicy.ActionLadderPartial, exitpolicy.ActionLadderTakeProfit:", "case exitpolicy.ActionLadderPartial, exitpolicy.ActionLadderTakeProfit:", 1)
+	if mutated == original {
+		t.Fatal("fixture did not remove case")
+	}
+	if err = a166CheckActionCoverage([]byte(mutated)); err == nil {
+		t.Fatal("unused reference hid an unclassified action")
 	}
 }

@@ -1,0 +1,4 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/execgw [github.com/JungHoonGhae/tossinvest-cli/internal/execgw.test]
+internal/execgw/a166_origin_internal_test.go:182:11: undefined: a166CheckActionCoverage
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw [build failed]
+FAIL
