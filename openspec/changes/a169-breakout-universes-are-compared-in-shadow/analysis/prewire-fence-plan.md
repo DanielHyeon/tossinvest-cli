@@ -10,6 +10,8 @@
 
 새 `(*ObservationFence).Context(ctx) (context.Context,error)`는 유효한 fence와 nonnil ctx를 private context 값으로 결속한다. 외부에서 zero-value fence를 만들거나 다른 Budget에 붙여도 실제 전송 경계에서 거절한다. absence는 기존 동작이며 명시적 잘못된 fence를 absence로 낮추지 않는다. scope/instance가 같아도 다른 Budget 포인터이면 거절한다. 생성 함수 context는 읽기 수명만, 요청 context는 개별 전송 수명이다. fence는 Budget을 영구 pin하지 않고 실제 사용 시 기존 pin/lease 소유권을 검사한다.
 
+`Pending=nil`은 관측 원장의 기준점이며 모든 client가 idle이거나 응답 body를 닫았다는 증거가 아니다. 기존 transport는 응답 headers의 결과를 Finish로 기록한 뒤에도 body 종료까지 wire를 보유할 수 있다. 이미 기록된 사건은 기준점 이전 이력으로 제외하고, 이후 fenced Acquire는 그 wire 해제까지 기다리거나 Auxiliary로 즉시 거절된다. 이 기준점으로 이전 응답의 미래 cleanup 성공이나 전체 시스템 건강을 보증하지 않는다. 현재 pending·dirty 상태의 거절 규칙은 그대로다.
+
 ## 2. 각 실제 wire 전 검사
 
 기존 `Transport.RoundTrip`에서 fence가 있을 때만 sticky failure를 확인하고, 정상 Acquire 뒤 **자기 observation Begin 전**에 fence 검사를 한다. 동일 Budget의 유효 lease이며 observationStarted가 아직 거짓이어야 한다. 기존 withLease·event lock·state read를 재사용하는 좁은 내부 메서드로 읽고, wire→event 잠금 순서를 유지한다. Snapshot을 lease 아래 재호출하거나 범용 callback/외부 mutable store를 만들지 않는다.

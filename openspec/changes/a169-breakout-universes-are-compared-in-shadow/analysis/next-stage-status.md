@@ -19,3 +19,5 @@ U0/U1 정상30·승인된 별도20판, 숫자6자리·KRW·가격 경계, 정확
 U2 양 랭킹 가격이 다를 때 단일 last_price projection은 아직 정하지 않았다. 순수 결과는 두 원문/사유를 보존하며 원장 parsing/schema를 바꾸지 않는다. 선정 ready deadline·cache·일봉 provenance·late 전체제외, 귀속의 무돌파/신호 없음/identity mismatch, lot별 보고와 중복 집계는 후속이다. `attribution-report-research.md`는 연구이며 승인된 구현 명세가 아니다. Q8은 n과 평균 순R을 함께 사용하고, 기억에 수익성 결론을 남기지 않는 규칙과 보고 계산을 혼동하지 않는다.
 
 a166의 실제 namespace·UID·filesystem·모든 참여자 확인 및 운영 전환은 별도 사람 단계다. 별도 키는 토큰 격리이며 3req/s 예산 분리가 아니다. a087 production admission nil과 사람5.4/활성화5.5는 유지한다. 시크릿·실계좌·브로커·실측·서비스/설정 변경은 수행하지 않았다. 전체 tests/gate도 미실행이며 로트별 지정 시험 결과만 인정한다.
+
+2026-10-31 후속 조사 `abort-engine-research.md`: 기존 ledger append/fsync와 advisory runlock만으로 첫 wire 전 durable in-progress·당일 abort·다중 process 재시작 금지를 증명하지 못한다. 기존 엔진 marker도 budget manifest 결속을 담지 않는다. 이 연구는 소스 사실과 최소 후보를 분리하며 새 저장소/엔진 배선을 승인하지 않는다.
