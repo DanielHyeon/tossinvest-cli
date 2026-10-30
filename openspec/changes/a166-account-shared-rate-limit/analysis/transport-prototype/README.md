@@ -29,3 +29,18 @@ TLS 첫 plaintext Write 이후 서버 handler 대기 중 owner child를 SIGKILL�
 실제 source `internal/official/client.go:376,399,436`은 nil 본문 GET/DELETE와 `bytes.NewReader(encoded)` POST를 사용하고, `internal/official/token.go:138`은 `strings.NewReader(form.Encode())`를 쓴다. 자체 `Request.Write`/`ReadResponse` one-shot 전송은 가능성만 비교했으며 TLS, 취소, proxy, redirect, 오류, body 생명주기와 기존 권위·호환 계약을 새로 책임져야 한다. 표준 Transport 래핑 후보가 아직 실제 계약을 충족한다고 보지 않는다.
 
 수동 gstack 점검 결과: 유효한 상태만 복구하고 인증 오류를 보존해야 하며, deadline 경합·무한 Write 및 body 누수·owner 죽음 후 inode 교체·재시도·동시 프로세스 우선권은 추가 검증이 필요하다. 전체 게이트·외부 CLI review 미실행. 최종 국소 테스트 `go test -race -count=1 -timeout=40s ./openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype` PASS 11.830s.
+
+## 통합 TLS limiter 연구
+
+동일 prototype RoundTrip에 context-aware process-local channel, `LOCK_NB` + context 재시도, acquire 후 350ms timer, write revoke, 검증된 TLS state 복원을 연결했다. `go test -race -count=1 -timeout=40s ./openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype` → `integrated-green.log` 13.031s. 이 test-only 구현은 nil lockPath를 허용하므로 production에 사용하지 않는다.
+
+| 경계 | 통합 prototype fixture 결과 | 미검증·한계 |
+|---|---|---|
+| 획득 취소 | local·다른 fd flock·cooldown timeout 시 실제 limiter Write/서버 요청 0 | 취소와 허가 경합 전체, goroutine 정지 상한 |
+| 응답 수명 | 분할 500 KB `ReadAll`, EOF·조기 Close·context cancel에서 서버 연결 종료 | 강제 block Write 중 cancel→Close→revoke의 실제 종료, 서버 악의적 행위 |
+| TLS | 검증된 연결 상태 복원, 미신뢰 CA·잘못된 hostname 거절 | production authority, 모든 TLS state·버전·프록시 호환 |
+| 재전송 | official.Client fixture token→401→token→200, 307, 새 HTTP1 연결 서버 강제종료 각 시도 계수 | 전 운용 진입점·모든 retry 원인 |
+| 다중 프로세스 | 두 child 네 시작 간격, 첫 Write 후 owner kill과 새 child | wall clock 이상·부팅 재시작·inode 변경·공유장애·운영 부하 |
+| 변이 | `revoke-mutant.log`: revoke 삭제 후 write 허용해 실패. `integrated-cancel-mutant.log`: cooldown 취소 오류 nil 변이에서 통합 호출 panic으로 실패 | 두 개 변이 외 전체 분기 변이 아님 |
+
+기록된 시작은 TLS plaintext 첫 `Write` 진입이며 kernel/TLS record 전송 또는 브로커 도착률이 아니다. 시간 기록은 wall UnixNano이며 단일 실험이다. lock 단일 inode·단일 host·모든 참여자 준수 가정, priority·429·파일 무결성·authority 계약·rollout·경합 중 deadline에는 독립 설계/시험이 필요하다. gstack 수동 검토: wait 취소 함수가 실제 limiter에 연결됐지만 local/공유 획득 사이 취소 경합, 거부 시 request body Close, Close/error 처리, 느린 TLS Write와 취소, late dial, 장기간 누수는 추가 증거가 필요하다. 표준 `net.Conn.Close`는 block된 read/write를 깨우는 계약이고 Go1.26.5 TLS Close는 진행 중 Write에 underlying close를 사용한다; 강제-block 통합 재현은 미실행. 외부 CLI review·전체 gate 미실행. 제품 채택 결정이 아니라 기술 가능성의 제한된 근거다.

@@ -17,7 +17,7 @@ func acquireContext(ctx context.Context, ch chan struct{}, f *os.File) (func(), 
 		return nil, ctx.Err()
 	}
 	fail := func(err error) (func(), error) { <-ch; return nil, err }
-	for {
+	for f != nil {
 		if err := ctx.Err(); err != nil {
 			return fail(err)
 		}
@@ -36,7 +36,12 @@ func acquireContext(ctx context.Context, ch chan struct{}, f *os.File) (func(), 
 		case <-timer.C:
 		}
 	}
-	release := func() { syscall.Flock(int(f.Fd()), syscall.LOCK_UN); <-ch }
+	release := func() {
+		if f != nil {
+			syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+		}
+		<-ch
+	}
 	timer := time.NewTimer(350 * time.Millisecond)
 	select {
 	case <-ctx.Done():

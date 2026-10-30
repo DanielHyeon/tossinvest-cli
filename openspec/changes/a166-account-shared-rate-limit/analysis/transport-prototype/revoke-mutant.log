@@ -1,0 +1,5 @@
+--- FAIL: TestRevokedTLSWriteFails (0.00s)
+    a166-revoke-mutant_test.go:486: err=<nil>
+FAIL
+FAIL	command-line-arguments	0.003s
+FAIL

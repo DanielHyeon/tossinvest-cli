@@ -3,12 +3,14 @@ package prototype
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -86,7 +88,8 @@ func (c *guarded) Write(p []byte) (int, error) {
 }
 
 type limiter struct {
-	mu          sync.Mutex
+	gateOnce    sync.Once
+	gate        chan struct{}
 	logMu       sync.Mutex
 	starts      []time.Time
 	tls         *tls.Config
@@ -99,20 +102,22 @@ type limiter struct {
 }
 
 func (l *limiter) RoundTrip(req *http.Request) (*http.Response, error) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
+	l.gateOnce.Do(func() { l.gate = make(chan struct{}, 1) })
+	var f *os.File
 	if l.lockPath != "" {
-		f, e := os.OpenFile(l.lockPath, os.O_CREATE|os.O_RDWR, 0600)
+		var e error
+		f, e = os.OpenFile(l.lockPath, os.O_CREATE|os.O_RDWR, 0600)
 		if e != nil {
 			return nil, e
 		}
 		defer f.Close()
-		if e = syscall.Flock(int(f.Fd()), syscall.LOCK_EX); e != nil {
-			return nil, e
-		}
-		defer syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
 	}
-	time.Sleep(350 * time.Millisecond)
+	release, e := acquireContext(req.Context(), l.gate, f)
+	if e != nil {
+		return nil, e
+	}
+	defer release()
+
 	lease := &lease{starts: &l.starts, logMu: &l.logMu, pause: l.beforeWrite, resume: l.resume, evidence: l.evidence}
 	defer lease.revoke()
 	tr := &http.Transport{DisableKeepAlives: true, ForceAttemptHTTP2: false, TLSNextProto: map[string]func(string, *tls.Conn) http.RoundTripper{}, Proxy: nil}
@@ -242,7 +247,7 @@ func TestPausedFirstWritePreventsNextAttempt(t *testing.T) {
 	}()
 	<-lim.beforeWrite
 	next := make(chan struct{})
-	go func() { lim.mu.Lock(); lim.mu.Unlock(); close(next) }()
+	go func() { lim.gate <- struct{}{}; <-lim.gate; close(next) }()
 	select {
 	case <-next:
 		t.Fatal("lock released during paused write")
@@ -361,5 +366,126 @@ func TestFreshHTTP1FailedRequestIsNotRetried(t *testing.T) {
 	defer l.logMu.Unlock()
 	if len(l.starts) != 1 {
 		t.Fatalf("writes=%d", len(l.starts))
+	}
+}
+
+func TestIntegratedCancellationBeforeWrite(t *testing.T) {
+	for _, stage := range []string{"local", "flock", "cooldown"} {
+		t.Run(stage, func(t *testing.T) {
+			var received atomic.Int32
+			s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { received.Add(1) }))
+			defer s.Close()
+			l := &limiter{tls: s.Client().Transport.(*http.Transport).TLSClientConfig}
+			var other *os.File
+			if stage == "local" {
+				l.gateOnce.Do(func() { l.gate = make(chan struct{}, 1) })
+				l.gate <- struct{}{}
+				defer func() { <-l.gate }()
+			}
+			if stage == "flock" {
+				l.lockPath = filepath.Join(t.TempDir(), "lock")
+				var e error
+				other, e = os.OpenFile(l.lockPath, os.O_CREATE|os.O_RDWR, 0600)
+				if e != nil {
+					t.Fatal(e)
+				}
+				defer other.Close()
+				if e = syscall.Flock(int(other.Fd()), syscall.LOCK_EX); e != nil {
+					t.Fatal(e)
+				}
+				defer syscall.Flock(int(other.Fd()), syscall.LOCK_UN)
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+			defer cancel()
+			req, _ := http.NewRequestWithContext(ctx, "GET", s.URL, nil)
+			resp, err := l.RoundTrip(req)
+			if resp != nil {
+				resp.Body.Close()
+			}
+			if !errors.Is(err, context.DeadlineExceeded) {
+				t.Fatalf("err=%v", err)
+			}
+			l.logMu.Lock()
+			defer l.logMu.Unlock()
+			if len(l.starts) != 0 || received.Load() != 0 {
+				t.Fatal("request sent after cancel")
+			}
+		})
+	}
+}
+
+func TestResponseBodyCleanup(t *testing.T) {
+	for _, mode := range []string{"eof", "close", "cancel"} {
+		t.Run(mode, func(t *testing.T) {
+			closed := make(chan struct{}, 1)
+			hold := make(chan struct{})
+			server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Write([]byte("head"))
+				w.(http.Flusher).Flush()
+				if mode != "eof" {
+					select {
+					case <-r.Context().Done():
+					case <-hold:
+					}
+				} else {
+					w.Write([]byte("tail"))
+				}
+			}))
+			server.Config.ConnState = func(_ net.Conn, state http.ConnState) {
+				if state == http.StateClosed {
+					select {
+					case closed <- struct{}{}:
+					default:
+					}
+				}
+			}
+			server.StartTLS()
+			defer server.Close()
+			defer close(hold)
+			l := &limiter{tls: server.Client().Transport.(*http.Transport).TLSClientConfig}
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			req, _ := http.NewRequestWithContext(ctx, "GET", server.URL, nil)
+			resp, err := (&http.Client{Transport: l}).Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if mode == "eof" {
+				b, err := io.ReadAll(resp.Body)
+				if err != nil || string(b) != "headtail" {
+					t.Fatalf("body=%q err=%v", b, err)
+				}
+			}
+			if mode == "cancel" {
+				cancel()
+			}
+			resp.Body.Close()
+			select {
+			case <-closed:
+			case <-time.After(3 * time.Second):
+				t.Fatal("connection not closed")
+			}
+		})
+	}
+}
+
+func TestRevokedTLSWriteFails(t *testing.T) {
+	a, b := net.Pipe()
+	defer a.Close()
+	defer b.Close()
+	go io.Copy(io.Discard, b)
+	starts := []time.Time{}
+	var mu sync.Mutex
+	l := &lease{starts: &starts, logMu: &mu}
+	if !l.register(a) {
+		t.Fatal("register")
+	}
+	l.revoke()
+	c := &guarded{Conn: a, l: l}
+	if _, err := c.Write([]byte("x")); !errors.Is(err, io.ErrClosedPipe) {
+		t.Fatalf("err=%v", err)
+	}
+	if len(starts) != 0 {
+		t.Fatal("recorded write after revoke")
 	}
 }
