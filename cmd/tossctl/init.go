@@ -79,7 +79,7 @@ func runInitOfficialFlow(cmd *cobra.Command, opts *rootOptions) error {
 	}
 
 	creds := official.Credentials{APIKey: key, SecretKey: secret}
-	result, err := validateOpenAPICredentials(cmd.Context(), creds, tokenFile)
+	result, err := validateOpenAPICredentialsForRoot(cmd.Context(), opts, creds, tokenFile)
 	if err != nil {
 		return err
 	}

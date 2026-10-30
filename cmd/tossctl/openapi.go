@@ -41,8 +41,18 @@ func saveOpenAPICredentials(path string, key, secret string) error {
 // It probes the official API using Accounts() and classifies any error into a
 // probeResult. opts allows overriding base URL and HTTP client for tests.
 func validateOpenAPICredentials(ctx context.Context, creds official.Credentials, tokenFile string, opts ...official.Option) (probeResult, error) {
-	client := official.New(creds, tokenFile, opts...)
-	_, err := client.Accounts(ctx)
+	return validateOpenAPICredentialsForRoot(ctx, nil, creds, tokenFile, opts...)
+}
+
+func validateOpenAPICredentialsForRoot(ctx context.Context, root *rootOptions, creds official.Credentials, tokenFile string, opts ...official.Option) (probeResult, error) {
+	if root != nil {
+		opts = append(opts, root.officialOptions...)
+	}
+	client, err := newRootOfficialClient(ctx, root, creds, tokenFile, opts...)
+	if err != nil {
+		return probeResult{}, err
+	}
+	_, err = client.Accounts(ctx)
 	if err == nil {
 		return probeResult{OK: true, Message: "ok"}, nil
 	}
@@ -389,7 +399,7 @@ func newOpenAPICmd(opts *rootOptions) *cobra.Command {
 					Message:   "No saved credentials. Run `tossctl openapi login --key K --secret S` first.",
 				})
 			}
-			result, err := validateOpenAPICredentials(cmd.Context(), *creds, tokenFile)
+			result, err := validateOpenAPICredentialsForRoot(cmd.Context(), opts, *creds, tokenFile)
 			if err != nil {
 				return err
 			}
@@ -479,7 +489,10 @@ func newOpenAPICmd(opts *rootOptions) *cobra.Command {
 			tokenExpiry := readTokenExpiry(tokenFile)
 
 			// Live probe: ground truth for "is it working".
-			probe, _ := validateOpenAPICredentials(cmd.Context(), *creds, tokenFile)
+			probe, probeErr := validateOpenAPICredentialsForRoot(cmd.Context(), opts, *creds, tokenFile)
+			if probeErr != nil {
+				probe = probeResult{ErrorKind: "unknown", Message: probeErr.Error()}
+			}
 
 			// Read config for routing info.
 			prefer := "auto"
