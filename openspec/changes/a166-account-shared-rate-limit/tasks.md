@@ -34,6 +34,7 @@
 - [ ] 3.2 GREEN: 앱·엔진·flatten·CLI·console·soak·verify·프로브 배선. 실제 운영 env/toggle 변경 없음.
 - [ ] 3.3 RED/GREEN: 모든 429 이벤트, 엔진 폴링 같은 조회 재시도 금지, 유효 ≤30s hint 범위·복원·invalid/초과 처리. 비지연 walk와 POST 판정 보존.
 - [ ] 3.4 retry matrix와 코드 동시 정합화. a087·a169 후속 계약과 통합 시험 SHA 목록 작성. a087 production admission nil 유지.
+  - a166 인계 범위는 동일 검증 Budget의 read-only snapshot API와 실제 official/PriceLimits auxiliary·token·401·wire 수명 증거다. a087 board/epoch/429 정지의 실제 연결은 D16/5.5, a169 event 독자/prewire fence/영속 abort/엔진 신원은 a169 후속 작업으로 남긴다. API만 제공하고 그 소비자 구현을 완료로 체크하지 않는다.
 - [ ] 3.5 영향 범위 normal/tag/race·변이·gstack 적대/보안 리뷰, Manager 독립 검증. 전체 미실행 범위 기록.
 
 ## 4. 종결과 운영 경계
