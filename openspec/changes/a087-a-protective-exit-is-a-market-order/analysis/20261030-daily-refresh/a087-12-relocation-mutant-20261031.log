@@ -1,0 +1,5 @@
+--- FAIL: TestA087ProductionBoardAdmissionFlowIsOnlyLiteralNil (3.04s)
+    a087_admission_dataflow_test.go:78: /tmp/a087-structure-mutant-20261031/internal/app/engine/engine.go:363:6: 하한가 판 생성은 NewContext 안에만 있어야 함
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	3.048s
+FAIL

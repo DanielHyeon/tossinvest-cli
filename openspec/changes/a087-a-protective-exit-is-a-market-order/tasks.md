@@ -136,9 +136,9 @@
 - [x] 1.0 **구현 착수 조건 — a165 재대조 (9판 — design D12.5)** — a165 archive · push 가 확인된 sha 에서 `clearTheSymbol` · `checkSymbolFree` · `cancel_refusal*.go` 와 a087 이
       인용 · 편집하는 `exitloop.go` 함수(`submit` · `Run` · `ObserveOnce` 인용 좌표)의 AST(`analysis/evidence/` 재생성, `enumerate.py` stale 0) · FLM · 공유 시험 더블을 다시 대조하고
       design D11 (g) · D12 좌표를 고친다. T2 를 고르면 `Gateway.submit` 도. **이 줄 전 §1~§3 착수 금지**
-- [ ] 1.1 **관문 무변경 고정 시험** (7판 1.3 승계) — 엔진 인스턴스(`NewContext` 로 만든 경로)와 기본 인스턴스 각각에서 비분수 `sell+market` · `buy+market` 이 오늘처럼
+- [x] 1.1 **관문 무변경 고정 시험** (7판 1.3 승계) — 엔진 인스턴스(`NewContext` 로 만든 경로)와 기본 인스턴스 각각에서 비분수 `sell+market` · `buy+market` 이 오늘처럼
       거부됨. 진입 시장가 거부가 살아 있음(riskcalc 규칙 — design D3 「왜 진입은 계속 막는가」)
-- [ ] 1.2 **하한가 판 생성 자리 구조 시험** (7판 1.5.5 (c) 의 8판 판본 — 0.10 독립 리뷰 P0-1 규칙) — 판 생성 호출이 비시험 코드에서 `NewContext` 본문 하나뿐이고
+- [x] 1.2 **하한가 판 생성 자리 구조 시험** (7판 1.5.5 (c) 의 8판 판본 — 0.10 독립 리뷰 P0-1 규칙) — 판 생성 호출이 비시험 코드에서 `NewContext` 본문 하나뿐이고
       `NewOrderPath` · `buildFlattenWiring` · `app.go` · `mcp.go` 에는 0 임을 함수 단위 AST 로 센다. 변이: 「`NewOrderPath` 에서 판 생성」이 잡혀야 한다
 - [ ] 1.6 **종단 회귀 시험** — 엔진 보호 청산 하한가 LIMIT 이 `sellIntent` · ② · ③ 을 **모두** 지나 전송 계층(시험 더블)에 닿고 wire body 의 `price` 가 판의 하한가다.
       창 밖 · 판 없음 행은 오늘 LIMIT 골든과 같은 wire body

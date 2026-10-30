@@ -1154,3 +1154,9 @@ OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서만 다뤘다(새 AS
 ### 2026-10-31 실제 게이트 종단 시험
 
 `TestA087RealGatewayLowerLimitAndDormantFallback`은 테스트 전용 판 주입과 nil 판을 각각 실제 RiskGuardian → Gateway → Trading → official.Client → httptest 수신까지 연결한다. KR 정규장 하한가 50400, 판 없음 67900, 정규장 밖 67900의 LIMIT SELL wire를 검증했다. `go test -race -count=1 -run '^TestA087RealGatewayLowerLimitAndDormantFallback$' ./internal/app/engine` 통과, 영수증 `analysis/20261030-daily-refresh/real-gateway-race.log`. 실제 주문·운영 설정 변경 없음. 지연 토큰 겹침과 5.4·5.5는 여전히 차단이며 task 전체 완료를 주장하지 않는다. 별도 독립 검토 미완료.
+
+### 2026-10-31 관문·생성 위치 시험
+
+- 1.1: `TestA087EngineAndDefaultServiceRejectNonfractionalMarket`는 실제 엔진 Context와 기본 trading Service의 KR/US buy/sell 시장가가 `LiveReady=false`임을 확인한다. `LiveReady`는 운영 토글과 별도로 지원 여부를 나타낸다. `TestA087NonfractionalMarketShapeRejected`는 동일 네 행의 execgw 사유를 확인하고, 기존 riskcalc 시장가 진입 거부 두 시험도 통과했다. 브리지는 `_test.go` 전용이다.
+- 1.2: `TestA087ProductionBoardAdmissionFlowIsOnlyLiteralNil`은 go/types로 engine 생산 Go 파일 전체의 생성자 참조가 `NewContext` 한 곳뿐임을 검사한다. 생성자는 비공개이므로 다른 패키지는 직접 호출할 수 없다. `git archive HEAD` 격리 사본의 정상 시험 PASS 후 생성자를 `NewContext`에서 `NewOrderPath`로 이동한 변이는 해당 위치 오류로 FAIL했다. 영수증은 `analysis/20261030-daily-refresh/a087-12-{baseline,relocation-mutant}-20261031.log`.
+- Manager가 세 신규 파일과 `PreviewPlace`의 판단 순서를 독립 수동 검토하여 blocking finding 없음. 전 범위 gstack 인증은 아님. UI 미변경: `impeccable: N/A — backend/documentation-only`.
