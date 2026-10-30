@@ -1,0 +1,5 @@
+--- FAIL: TestRequiredMissingAndOffContradiction (0.00s)
+    runtime_test.go:29: accepted invalid mode 0
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	0.002s
+FAIL

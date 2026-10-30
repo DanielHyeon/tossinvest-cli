@@ -1,0 +1,102 @@
+{
+  "file": "internal/accountbudgetruntime/runtime_linux.go",
+  "source_sha256": "524a354b569c9b8783a97fca0e12c00e7a94dbbb746b3d2b5dd8e04d657e0f4c",
+  "package": "accountbudgetruntime",
+  "function": "Budget",
+  "receiver": "Factory",
+  "signature": "Factory.Budget(params=0, results=2)",
+  "start": {
+    "line": 282,
+    "column": 1
+  },
+  "end": {
+    "line": 295,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 283,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 288,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 291,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 284,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 289,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 292,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 294,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 2
+      },
+      "text": "f.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 8
+      },
+      "text": "f.mu.Unlock"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 287,
+        "column": 2
+      },
+      "text": "f.mu.Unlock"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+--- FAIL: TestIdentityMismatchFails (0.01s)
+    runtime_test.go:105: accepted mismatch: <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	0.018s
+FAIL
