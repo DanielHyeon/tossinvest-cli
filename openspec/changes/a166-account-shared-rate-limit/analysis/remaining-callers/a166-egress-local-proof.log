@@ -1,4 +1,4 @@
 net:[4026534437]
-lo               UNKNOWN        127.0.0.1/8 ::1/128 
+lo               UNKNOWN        127.0.0.1/8 ::1/128
 loopback: connected
 nonloopback connect errno: 101

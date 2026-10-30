@@ -1,5 +1,5 @@
 net:[4026534438]
-lo               UNKNOWN        127.0.0.1/8 ::1/128 
+lo               UNKNOWN        127.0.0.1/8 ::1/128
 ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.012s
 --- FAIL: TestA166EngineReconcileLocalTLS (0.21s)
     a166_reconcile_safety_test.go:88: required failure: err=<nil> local calls=2
