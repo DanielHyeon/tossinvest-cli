@@ -46,15 +46,41 @@ func NewTransport(b *Budget, base *http.Transport, cleanupError func(error)) (*T
 	if b == nil || base == nil || cleanupError == nil {
 		return nil, ErrUnavailable
 	}
-	// Caller must provide its own constructor-owned base; this wrapper grants no authority.
-	// Custom TLS hooks and legacy dialers remain outside the proof.
-	if base.DialTLSContext != nil || base.DialTLS != nil || base.Dial != nil || base.TLSNextProto != nil {
+	// 공식 constructor 소유 base의 지원 필드만 복사하며 원본 Clone을 호출하지 않음.
+	if base.DialTLSContext != nil || base.DialTLS != nil || base.Dial != nil || base.TLSNextProto != nil || base.OnProxyConnectResponse != nil || base.GetProxyConnectHeader != nil || len(base.ProxyConnectHeader) != 0 || base.HTTP2 != nil || base.Protocols != nil {
 		return nil, ErrUnavailable
 	}
-	if c := base.TLSClientConfig; c != nil && (c.InsecureSkipVerify || c.VerifyPeerCertificate != nil || c.VerifyConnection != nil || c.ServerName != "" || len(c.NextProtos) > 0) {
-		return nil, ErrUnavailable
+	var config *tls.Config
+	if c := base.TLSClientConfig; c != nil {
+		if c.InsecureSkipVerify || c.VerifyPeerCertificate != nil || c.VerifyConnection != nil || c.ServerName != "" || c.Time != nil || c.GetCertificate != nil || c.GetClientCertificate != nil || c.GetConfigForClient != nil || c.UnwrapSession != nil || c.WrapSession != nil || c.EncryptedClientHelloRejectionVerify != nil || c.GetEncryptedClientHelloKeys != nil {
+			return nil, ErrUnavailable
+		}
+		if len(c.NextProtos) != 0 && !(len(c.NextProtos) == 2 && c.NextProtos[0] == "h2" && c.NextProtos[1] == "http/1.1") {
+			return nil, ErrUnavailable
+		}
+		config = c.Clone()
+		config.NextProtos = nil
 	}
-	return &Transport{budget: b, base: base.Clone(), cleanupError: cleanupError}, nil
+	template := &http.Transport{
+		Proxy:                  base.Proxy,
+		DialContext:            base.DialContext,
+		TLSClientConfig:        config,
+		TLSHandshakeTimeout:    base.TLSHandshakeTimeout,
+		DisableKeepAlives:      true,
+		DisableCompression:     base.DisableCompression,
+		MaxIdleConns:           base.MaxIdleConns,
+		MaxIdleConnsPerHost:    base.MaxIdleConnsPerHost,
+		MaxConnsPerHost:        base.MaxConnsPerHost,
+		IdleConnTimeout:        base.IdleConnTimeout,
+		ResponseHeaderTimeout:  base.ResponseHeaderTimeout,
+		ExpectContinueTimeout:  base.ExpectContinueTimeout,
+		MaxResponseHeaderBytes: base.MaxResponseHeaderBytes,
+		WriteBufferSize:        base.WriteBufferSize,
+		ReadBufferSize:         base.ReadBufferSize,
+		ForceAttemptHTTP2:      false,
+		TLSNextProto:           map[string]func(string, *tls.Conn) http.RoundTripper{},
+	}
+	return &Transport{budget: b, base: template, cleanupError: cleanupError}, nil
 }
 
 type connectionGate struct {

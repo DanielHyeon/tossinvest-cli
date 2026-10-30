@@ -1,0 +1,12 @@
+--- FAIL: TestTransportRejectsTLSCallbacks (0.02s)
+    --- FAIL: TestTransportRejectsTLSCallbacks/server-cert (0.00s)
+        template_test.go:110: TLS callback accepted
+    --- FAIL: TestTransportRejectsTLSCallbacks/server-config (0.00s)
+        template_test.go:110: TLS callback accepted
+    --- FAIL: TestTransportRejectsTLSCallbacks/clock (0.00s)
+        template_test.go:110: TLS callback accepted
+    --- FAIL: TestTransportRejectsTLSCallbacks/client-cert (0.00s)
+        template_test.go:110: TLS callback accepted
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.027s
+FAIL
