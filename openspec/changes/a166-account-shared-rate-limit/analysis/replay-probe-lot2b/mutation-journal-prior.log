@@ -1,0 +1,5 @@
+--- FAIL: TestA166ReplayAdmissionRefusalPreservesInDoubtJournal (4.12s)
+    a166_replay_journal_test.go:81: posts=0 state=CONFIRMED count=1
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	4.137s
+FAIL

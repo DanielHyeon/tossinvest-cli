@@ -1,0 +1,4 @@
+# github.com/JungHoonGhae/tossinvest-cli/tools/a087-market-sell-probe [github.com/JungHoonGhae/tossinvest-cli/tools/a087-market-sell-probe.test]
+tools/a087-market-sell-probe/main.go:222:92: d.budgetClient.UsesAccountBudget undefined (type *official.Client has no field or method UsesAccountBudget)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a087-market-sell-probe [build failed]
+FAIL

@@ -1,0 +1,5 @@
+--- FAIL: TestA166ProbeDirectPostCannotBypassHeldBudget (0.79s)
+    a166_budget_test.go:242: code=0 error=<nil> posts=1
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a087-market-sell-probe	0.806s
+FAIL

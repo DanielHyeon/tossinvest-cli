@@ -1,0 +1,4 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/execgw [github.com/JungHoonGhae/tossinvest-cli/internal/execgw.test]
+internal/execgw/a166_replay_budget_test.go:12:20: undefined: NewBudgetedHTTPReplay
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw [build failed]
+FAIL

@@ -1,0 +1,8 @@
+--- FAIL: TestImportsStayInsideTheAllowlist (0.00s)
+    static_test.go:200: main.go imports "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget", outside the allowlist
+    static_test.go:200: send.go imports "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget", outside the allowlist
+--- FAIL: TestNoProductionOrderSurfaceIsNamed (0.00s)
+    static_test.go:176: main.go uses official.Client, outside the allowlist
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a087-market-sell-probe	0.005s
+FAIL

@@ -23,6 +23,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
 )
 
 // maxResponseBytes 는 읽어 올 응답 상한임. 주문 응답은 작은 JSON 이고 그보다 크면 프록시 오류 페이지임.
@@ -62,6 +64,24 @@ func newSendClient(timeout time.Duration) *http.Client {
 		},
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 	}
+}
+
+// newBudgetedSendClient는 별도 POST를 인증 소유자와 같은 예산에 연결함.
+func newBudgetedSendClient(timeout time.Duration, budget *accountbudget.Budget, cleanup func(error), template *http.Transport) (*http.Client, error) {
+	if timeout <= 0 || budget == nil || cleanup == nil {
+		return nil, accountbudget.ErrUnavailable
+	}
+	client := newSendClient(timeout)
+	base := template
+	if base == nil {
+		base = client.Transport.(*http.Transport)
+	}
+	guard, err := accountbudget.NewTransport(budget, base, cleanup)
+	if err != nil {
+		return nil, err
+	}
+	client.Transport = guard
+	return client, nil
 }
 
 // buildRequest 는 본문 바이트를 그대로 실은 요청을 만듦. 헤더는 받은 것 + Content-Type 뿐임.

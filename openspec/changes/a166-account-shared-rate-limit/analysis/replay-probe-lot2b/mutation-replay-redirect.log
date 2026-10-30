@@ -1,0 +1,5 @@
+--- FAIL: TestA166ReplayEnforcingRefusesRedirectAndPreservesCallerClient (1.18s)
+    a166_replay_budget_test.go:157: status=200 token=1 post=1 redirected=1
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	1.199s
+FAIL

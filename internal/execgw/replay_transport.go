@@ -32,6 +32,9 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
 // replayPlacePath is the order-creation endpoint, the only one that accepts an
@@ -149,3 +152,50 @@ func parseReplayResponse(status int, raw []byte) ReplayResponse {
 // Compile-time proof that the HTTP transport is a ReplayTransport, and that a
 // ReplayTransport is all the gateway asks for.
 var _ ReplayTransport = HTTPReplay{}
+
+// budgetedHTTPReplay는 검증된 인증 소유자와 단일 POST를 같은 예산에 결속함.
+type budgetedHTTPReplay struct {
+	client *official.Client
+	budget *accountbudget.Budget
+	replay HTTPReplay
+}
+
+// NewBudgetedHTTPReplay는 기존 공개 HTTPReplay의 OFF 동작을 변경하지 않음.
+func NewBudgetedHTTPReplay(baseURL string, client *http.Client, auth *official.Client, budget *accountbudget.Budget, cleanup func(error)) (ReplayTransport, error) {
+	if client == nil || client.Timeout <= 0 || auth == nil || budget == nil || cleanup == nil || !auth.UsesAccountBudget(budget) || baseURL != auth.BaseURL() {
+		return nil, accountbudget.ErrUnavailable
+	}
+	template, ok := client.Transport.(*http.Transport)
+	if !ok || template == nil {
+		return nil, accountbudget.ErrUnavailable
+	}
+	guard, err := accountbudget.NewTransport(budget, template, cleanup)
+	if err != nil {
+		return nil, err
+	}
+	copyClient := *client
+	copyClient.Transport = guard
+	copyClient.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
+	return &budgetedHTTPReplay{client: auth, budget: budget, replay: HTTPReplay{BaseURL: baseURL, HTTP: &copyClient}}, nil
+}
+
+func (r *budgetedHTTPReplay) ReplayPlace(ctx context.Context, body ReplayBody) (ReplayResponse, error) {
+	if r == nil || r.client == nil || r.budget == nil || !r.client.UsesAccountBudget(r.budget) {
+		return ReplayResponse{}, errors.Join(accountbudget.ErrUnavailable, accountbudget.ErrNotSent)
+	}
+	copyReplay := r.replay
+	copyReplay.Headers = func(ctx context.Context) (map[string]string, error) {
+		if !r.client.UsesAccountBudget(r.budget) {
+			return nil, errors.Join(accountbudget.ErrUnavailable, accountbudget.ErrNotSent)
+		}
+		headers, err := r.client.AuthHeaders(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if !r.client.UsesAccountBudget(r.budget) {
+			return nil, errors.Join(accountbudget.ErrUnavailable, accountbudget.ErrNotSent)
+		}
+		return headers, nil
+	}
+	return copyReplay.ReplayPlace(ctx, body)
+}

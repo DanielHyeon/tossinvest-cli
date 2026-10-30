@@ -1,0 +1,5 @@
+--- FAIL: TestA166ReplayTokenAndStoredBodyShareBudget (0.02s)
+    a166_replay_budget_test.go:83: account budget unavailable
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.030s
+FAIL

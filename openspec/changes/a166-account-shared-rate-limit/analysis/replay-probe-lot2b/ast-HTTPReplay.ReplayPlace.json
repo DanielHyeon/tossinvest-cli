@@ -1,0 +1,359 @@
+{
+  "file": "internal/execgw/replay_transport.go",
+  "source_sha256": "4a956d5a59a19c07eadf57d5d6ddb230d3b07c9e8e298f291d87098a15b143ab",
+  "package": "execgw",
+  "function": "ReplayPlace",
+  "receiver": "HTTPReplay",
+  "signature": "HTTPReplay.ReplayPlace(params=2, results=2)",
+  "start": {
+    "line": 68,
+    "column": 1
+  },
+  "end": {
+    "line": 110,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 69,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 72,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 87,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "range",
+      "at": {
+        "line": 90,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 70,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 73,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 76,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 82,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 88,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 97,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 106,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 109,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 5
+      },
+      "text": "body.Empty"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 28
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 28
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 28
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 14
+      },
+      "text": "http.NewRequestWithContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 3
+      },
+      "text": "strings.TrimRight"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 54
+      },
+      "text": "bytes.NewReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 70
+      },
+      "text": "body.Bytes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 28
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 2
+      },
+      "text": "req.Header.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 19
+      },
+      "text": "h.Headers"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 29
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 4
+      },
+      "text": "req.Header.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 15
+      },
+      "text": "h.HTTP.Do"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 28
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 8
+      },
+      "text": "resp.Body.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 14
+      },
+      "text": "io.ReadAll"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 25
+      },
+      "text": "io.LimitReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 4
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 9
+      },
+      "text": "parseReplayResponse"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 86,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 99,
+        "column": 2
+      },
+      "text": "resp.Body.Close"
+    }
+  ]
+}

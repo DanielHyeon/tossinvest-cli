@@ -146,7 +146,7 @@ func TestSendClientRefusesRedirectsAndConnectionReuse(t *testing.T) {
 }
 
 // TestNoProductionOrderSurfaceIsNamed 는 생산 주문·계좌 메서드를 부르지 않고 official 사용이 허용 목록 안임을 봄.
-// AuthHeaders 는 headerSource 인터페이스 메서드로만 불림.
+// AuthHeaders 는 headerSource 인터페이스로 호출하고 concrete client 는 예산 결속과 BaseURL 확인에 사용함.
 func TestNoProductionOrderSurfaceIsNamed(t *testing.T) {
 	t.Parallel()
 	forbidden := map[string]bool{
@@ -158,7 +158,7 @@ func TestNoProductionOrderSurfaceIsNamed(t *testing.T) {
 		"WithHTTPClient": true, "WithAccountSeq": true,
 	}
 	allowedOfficial := map[string]bool{
-		"New": true, "LoadCredentials": true, "HeaderAuthorization": true, "HeaderAccount": true,
+		"New": true, "Client": true, "LoadCredentials": true, "HeaderAuthorization": true, "HeaderAccount": true,
 	}
 	sawOfficial := false
 	for name, file := range nonTestSources(t) {
@@ -184,13 +184,14 @@ func TestNoProductionOrderSurfaceIsNamed(t *testing.T) {
 	}
 }
 
-// TestImportsStayInsideTheAllowlist 는 생산 패키지 import 를 official·app/paths·x/term 으로 묶음 —
+// TestImportsStayInsideTheAllowlist 는 생산 패키지 import 를 accountbudget·official·app/paths·x/term 으로 묶음 —
 // internal/trading·execgw 같은 주문 경로가 들어오지 않게 함.
 func TestImportsStayInsideTheAllowlist(t *testing.T) {
 	t.Parallel()
 	allowedModule := map[string]bool{
-		"github.com/JungHoonGhae/tossinvest-cli/internal/official":  true,
-		"github.com/JungHoonGhae/tossinvest-cli/internal/app/paths": true,
+		"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget": true,
+		"github.com/JungHoonGhae/tossinvest-cli/internal/official":      true,
+		"github.com/JungHoonGhae/tossinvest-cli/internal/app/paths":     true,
 		"golang.org/x/term": true,
 	}
 	for name, file := range nonTestSources(t) {
