@@ -1,0 +1,6 @@
+--- FAIL: TestPriorityOvertakesQueuedNormal (0.77s)
+    safety_test.go:206: first normal <nil>
+    transport_test.go:44: budget has active owners
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.782s
+FAIL

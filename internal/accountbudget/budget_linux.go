@@ -42,17 +42,18 @@ type Config struct {
 	Clock    clock.Clock
 }
 type Budget struct {
-	root        string
-	scope       string
-	instance    string
-	clk         clock.Clock
-	dir         int
-	dirStat     unix.Stat_t
-	locks       map[string]unix.Stat_t
-	mu          sync.Mutex
-	closed      bool
-	active      int
-	testSyncDir func(int) error
+	root            string
+	scope           string
+	instance        string
+	clk             clock.Clock
+	dir             int
+	dirStat         unix.Stat_t
+	locks           map[string]unix.Stat_t
+	mu              sync.Mutex
+	closed          bool
+	active          int
+	testSyncDir     func(int) error
+	testWireRelease func(*os.File) error
 }
 type entry struct {
 	ID       string `json:"id"`
@@ -98,7 +99,12 @@ func Provision(root, scope, instance string) error {
 	}
 	return nil
 }
-func Open(c Config) (*Budget, error) {
+func Open(c Config) (*Budget, error) { return OpenContext(context.Background(), c) }
+
+func OpenContext(ctx context.Context, c Config) (*Budget, error) {
+	if e := ctx.Err(); e != nil {
+		return nil, e
+	}
 	if !validScope(c.Scope) || !validScope(c.Instance) || c.Clock == nil {
 		return nil, fmt.Errorf("%w: invalid config", ErrUnavailable)
 	}
@@ -139,7 +145,7 @@ func Open(c Config) (*Budget, error) {
 		}
 		b.locks[name] = st
 	}
-	l, e := b.lock(context.Background(), "queue.lock", true)
+	l, e := b.lock(ctx, "queue.lock", true)
 	if e != nil {
 		return fail(e)
 	}
@@ -306,7 +312,7 @@ func (b *Budget) syncDir() error {
 	}
 	return unix.Fsync(b.dir)
 }
-func (b *Budget) write(s queueState) error {
+func (b *Budget) write(s queueState) (result error) {
 	data, e := json.Marshal(s)
 	if e != nil || len(data) > maxStateBytes {
 		return errors.New("invalid state size")
@@ -331,7 +337,12 @@ func (b *Budget) write(s queueState) error {
 	if e != nil {
 		return e
 	}
-	defer unix.Unlinkat(b.dir, name, 0)
+	renamed := false
+	defer func() {
+		if !renamed {
+			result = errors.Join(result, unix.Unlinkat(b.dir, name, 0))
+		}
+	}()
 	n, e := f.Write(data)
 	if e == nil && n != len(data) {
 		e = io.ErrShortWrite
@@ -346,6 +357,7 @@ func (b *Budget) write(s queueState) error {
 	if e = unix.Renameat(b.dir, name, b.dir, "state"); e != nil {
 		return e
 	}
+	renamed = true
 	if e = b.syncDir(); e != nil {
 		return e
 	}
@@ -421,24 +433,35 @@ func (b *Budget) persist(s queueState, dead []string) error {
 }
 
 type Lease struct {
-	b        *Budget
-	wire     *os.File
-	mu       sync.Mutex
-	released bool
+	b          *Budget
+	wire       *os.File
+	mu         sync.Mutex
+	released   bool
+	releaseErr error
 }
 
 func (l *Lease) Release() error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if l.released {
-		return nil
+		return l.releaseErr
 	}
 	l.released = true
-	err := release(l.wire)
+	err := l.b.releaseWire(l.wire)
+	l.releaseErr = err
 	l.b.mu.Lock()
 	l.b.active--
 	l.b.mu.Unlock()
 	return err
+}
+func (b *Budget) releaseWire(f *os.File) error {
+	if f == nil {
+		return nil
+	}
+	if b.testWireRelease != nil {
+		return b.testWireRelease(f)
+	}
+	return release(f)
 }
 func (b *Budget) Acquire(ctx context.Context, p Priority) (lease *Lease, err error) {
 	if p != Normal && p != Critical && p != Auxiliary {
@@ -487,6 +510,10 @@ func (b *Budget) Acquire(ctx context.Context, p Priority) (lease *Lease, err err
 	if e == nil {
 		e = ctx.Err()
 	}
+	var deadBeforeRegister []string
+	if e == nil && len(s.Tickets) >= maxTickets {
+		s, deadBeforeRegister, _, e = b.clean(s, "")
+	}
 	if e == nil && (len(s.Tickets) >= maxTickets || s.Next == math.MaxUint64) {
 		e = errors.New("queue full")
 	}
@@ -494,7 +521,7 @@ func (b *Budget) Acquire(ctx context.Context, p Priority) (lease *Lease, err err
 		s.Tickets = append(s.Tickets, entry{id, s.Next, p == Critical})
 		s.Next++
 		published = true
-		e = b.write(s)
+		e = b.persist(s, deadBeforeRegister)
 	}
 	e = errors.Join(e, release(q))
 	if e != nil {
@@ -539,17 +566,17 @@ func (b *Budget) Acquire(ctx context.Context, p Priority) (lease *Lease, err err
 		}
 		e = errors.Join(e, release(q))
 		if e != nil {
-			return nil, errors.Join(ErrUnavailable, e, release(wire))
+			return nil, errors.Join(ErrUnavailable, e, b.releaseWire(wire))
 		}
 		if wire != nil {
 			published = false
 			ce := errors.Join(release(live), unix.Unlinkat(b.dir, "live-"+id, 0))
 			live = nil
 			if ce != nil {
-				return nil, errors.Join(ErrUnavailable, ce, release(wire))
+				return nil, errors.Join(ErrUnavailable, ce, b.releaseWire(wire))
 			}
 			if e = b.clk.Sleep(ctx, interval); e != nil {
-				return nil, errors.Join(e, release(wire))
+				return nil, errors.Join(e, b.releaseWire(wire))
 			}
 			return &Lease{b: b, wire: wire}, nil
 		}
@@ -598,13 +625,13 @@ func (b *Budget) tryAux(ctx context.Context) (*Lease, error) {
 	}
 	e = errors.Join(e, release(q))
 	if e != nil {
-		return nil, errors.Join(ErrUnavailable, e, release(wire))
+		return nil, errors.Join(ErrUnavailable, e, b.releaseWire(wire))
 	}
 	if wire == nil {
 		return nil, nil
 	}
 	if e = b.clk.Sleep(ctx, interval); e != nil {
-		return nil, errors.Join(e, release(wire))
+		return nil, errors.Join(e, b.releaseWire(wire))
 	}
 	return &Lease{b: b, wire: wire}, nil
 }

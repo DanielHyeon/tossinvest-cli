@@ -34,10 +34,14 @@ type Transport struct {
 	cleanupError func(error)
 	beforeStop   func(*connectionGate) // 시험에서 RoundTrip 반환 직후 경합을 동기화함.
 	firstWrite   func()
+	inflight     *atomic.Int32
 }
 
 // NewTransport does not grant trading authority. The official constructor owns
 // that decision and must not unwrap a caller-supplied transport as authority.
+// cleanupError receives close/revoke/release errors from asynchronous context
+// cancellation after response handoff. It must be concurrency-safe and return
+// promptly. Synchronous RoundTrip and Body.Close errors return to the caller.
 func NewTransport(b *Budget, base *http.Transport, cleanupError func(error)) (*Transport, error) {
 	if b == nil || base == nil || cleanupError == nil {
 		return nil, ErrUnavailable
@@ -64,6 +68,7 @@ type connectionGate struct {
 	closeOnce  sync.Once
 	closeErr   error
 	firstWrite func()
+	inflight   *atomic.Int32
 }
 
 func (g *connectionGate) closeConn() error {
@@ -123,6 +128,10 @@ func (c *gatedConn) Write(p []byte) (int, error) {
 	c.gate.mu.Unlock()
 	if first && c.gate.firstWrite != nil {
 		c.gate.firstWrite()
+	}
+	if c.gate.inflight != nil {
+		c.gate.inflight.Add(1)
+		defer c.gate.inflight.Add(-1)
 	}
 	return c.Conn.Write(p)
 }
@@ -185,7 +194,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		}
 		return nil, e
 	}
-	gate := &connectionGate{ctx: req.Context(), firstWrite: t.firstWrite}
+	gate := &connectionGate{ctx: req.Context(), firstWrite: t.firstWrite, inflight: t.inflight}
 	tr := t.base.Clone()
 	tr.Proxy = nil
 	tr.DisableKeepAlives = true
