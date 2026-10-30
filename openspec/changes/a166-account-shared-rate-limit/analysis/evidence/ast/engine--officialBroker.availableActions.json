@@ -1,0 +1,150 @@
+{
+  "file": "internal/app/engine/precheck.go",
+  "source_sha256": "1ef569176914063c64a85f44d25364fe9e4ef87757473749e0aa46d110462d03",
+  "package": "engine",
+  "function": "availableActions",
+  "receiver": "officialBroker",
+  "signature": "officialBroker.availableActions(params=2, results=1)",
+  "start": {
+    "line": 98,
+    "column": 1
+  },
+  "end": {
+    "line": 128,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 114,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 18
+      },
+      "text": "context.WithTimeout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 8
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 14
+      },
+      "text": "b.off.OrderRawByID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 10
+      },
+      "text": "inconclusiveActions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 71
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 7
+      },
+      "text": "brokerstate.DeriveOfficialOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 24
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 24
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 24
+      },
+      "text": "isOpen"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 112,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 100,
+        "column": 2
+      },
+      "text": "cancel"
+    }
+  ]
+}

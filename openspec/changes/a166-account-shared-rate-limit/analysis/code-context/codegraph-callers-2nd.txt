@@ -1,0 +1,163 @@
+# codegraph 1.6.0, main checkout index /mnt/D/Axipient/workspace/TossOS (HEAD 5e2facaee = design worktree code tree; worktree index 미초기화), 2026-10-29T11:30:14Z
+
+$ codegraph callers A112MBUSCandle
+
+Callers of "A112MBUSCandle" (13):
+
+function    TestA112MBUSCandlePreservesOneAttemptRawEvidenceAndWireHeaders
+  internal/official/a112_mbus_read_test.go:18
+
+function    TestA112MBUSRejectsDeadlineAndConfiguredClientBeforeDataGET
+  internal/official/a112_mbus_read_test.go:75
+
+function    TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry
+  internal/official/a112_mbus_read_test.go:99
+
+function    TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8
+  internal/official/a112_mbus_read_test.go:143
+
+function    TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates
+  internal/official/a112_mbus_read_test.go:177
+
+function    TestA112MBUSRejectsCrossClientTokenManagerBinding
+  internal/official/a112_mbus_read_test.go:215
+
+function    TestA112MBUSRejectsInvalidInitialCursorBeforeRequest
+  internal/official/a112_mbus_read_test.go:240
+
+function    TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold
+  internal/official/a112_mbus_static_test.go:22
+
+function    TestA112MBUSRedirectAndUnsafeCacheHoldBeforeRetry
+  internal/official/a112_mbus_static_test.go:86
+
+function    TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET
+  internal/official/a112_mbus_static_test.go:117
+
+function    TestA112MBUSClonedTransportNeverCallsConfiguredProxy
+  internal/official/a112_mbus_static_test.go:229
+
+function    TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix
+  internal/official/a112_mbus_static_test.go:255
+
+method      Candle
+  tools/a112-mb-us-source/official_reader.go:20
+
+
+$ codegraph callers A112MBUSOrderbook
+
+Callers of "A112MBUSOrderbook" (3):
+
+function    TestA112MBUSOrderbookAndCalendarRejectMissingOrNullResult
+  internal/official/a112_mbus_read_test.go:254
+
+function    TestA112MBUSExactOrderbookAndCalendarDescriptors
+  internal/official/a112_mbus_read_test.go:279
+
+method      Orderbook
+  tools/a112-mb-us-source/official_reader.go:25
+
+
+$ codegraph callers A112MBUSCalendar
+
+Callers of "A112MBUSCalendar" (3):
+
+function    TestA112MBUSOrderbookAndCalendarRejectMissingOrNullResult
+  internal/official/a112_mbus_read_test.go:254
+
+function    TestA112MBUSExactOrderbookAndCalendarDescriptors
+  internal/official/a112_mbus_read_test.go:279
+
+method      Calendar
+  tools/a112-mb-us-source/official_reader.go:30
+
+
+$ codegraph callers a112MBUSRead
+
+Callers of "a112MBUSRead" (3):
+
+function    A112MBUSCandle
+  internal/official/a112_mbus_read.go:72
+
+function    A112MBUSOrderbook
+  internal/official/a112_mbus_read.go:84
+
+function    A112MBUSCalendar
+  internal/official/a112_mbus_read.go:89
+
+
+$ codegraph callers a112MBUSReadAt
+
+Callers of "a112MBUSReadAt" (2):
+
+function    a112MBUSRead
+  internal/official/a112_mbus_read.go:96
+
+function    TestA112MBUSReadAtUsesPrivateClockOnlyForDeadlineAndTokenValidation
+  internal/official/a112_mbus_static_test.go:360
+
+
+$ codegraph callers sendOnce
+
+Callers of "sendOnce" (1):
+
+function    execute
+  tools/a087-market-sell-probe/main.go:183
+
+
+$ codegraph callers newOfficialHTTPClient
+
+Callers of "newOfficialHTTPClient" (1):
+
+function    New
+  internal/official/client.go:99
+
+
+$ codegraph callers hcTransport
+
+Callers of "hcTransport" (1):
+
+method      authorityOriginLocked
+  internal/official/client.go:157
+
+
+$ codegraph callers authorityOriginLocked
+
+Callers of "authorityOriginLocked" (3):
+
+function    a112MBUSReadAt
+  internal/official/a112_mbus_read.go:103
+
+method      AuthoritativeExchangeRate
+  internal/official/market_reads.go:70
+
+method      AuthorityOrigin
+  internal/official/client.go:145
+
+
+$ codegraph callers AuthorityOrigin
+
+Callers of "AuthorityOrigin" (4):
+
+method      VerifyAuthoritativeAccountIdentity
+  internal/official/account_identity_authority.go:17
+
+function    TestClientConfigurationCannotBeMutatedByRetainedOptionPointer
+  internal/official/client_test.go:97
+
+function    TestClientConfigurationOptionReplayIsRaceFreeAndFailClosed
+  internal/official/client_test.go:119
+
+method      AuthorityOrigin
+  internal/official/client.go:145
+
+
+$ codegraph callers ReplayPlace
+
+Callers of "ReplayPlace" (2):
+
+method      ReplayInDoubt
+  internal/execgw/replay.go:228
+
+method      ReplayPlace
+  internal/execgw/replay.go:192

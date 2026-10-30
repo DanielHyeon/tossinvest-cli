@@ -1,5 +1,4 @@
-> design 1판(2026-10-29) delta. 기존 요구 「Retry Matrix 산출물」을 MODIFIED 로 다시 쓰고(429 문장), 계좌 공유 admission 을 새 요구로 더한다.
-> 수치(350ms·15s·30s)와 critical 예외는 design §8 의 사람 결정 H2·H4 를 받기 전 권장값이다.
+> **3판 초안 · NOT READY.** 기존 정본을 변경하는 승인이나 구현 허가가 아니다. design 3판 차단 조건 해소와 독립 리뷰 필요.
 
 ## MODIFIED Requirements
 
@@ -29,24 +28,24 @@
 ## ADDED Requirements
 
 ### Requirement: 계좌 공유 요청 admission
-같은 계좌로 공식 Open API 를 치는 모든 TossOS 프로세스(엔진·콘솔·httpapi·soak·verify·CLI·측정 도구)는 wire 요청 하나마다 — `official.Client` 의 401 재전송과 토큰 교환을 포함해 — 하나의 계좌 공유 예산의 admission 을 받은 뒤에만 보내야 한다(SHALL). admission 은 HTTP 전송 직전에 걸리고, 거절이면 그 요청은 보내지 않으며 그 오류는 브로커 429 와 구별된다(SHALL — 주문 mutation 의 admission 거절은 미전송으로 분류된다). 예산의 키는 프로세스·config 디렉터리·앱 키가 아니라 계좌여야 한다(SHALL); 한 예산 디렉터리는 한 계좌를 나타낸다. 손절·비상 청산·취소·주문 mutation·보호 판단 조회·토큰 교환(critical)을 제외한 요청의 합은 어떤 1초 창에서도 3건을 넘어서는 안 된다(SHALL NOT). critical 요청은 admission 때문에 기다려서는 안 된다(SHALL NOT — 안전 불변식 3). 모든 wire 429 는 `Retry-After` 유무와 호출자의 재시도 결과와 무관하게 비밀 없는 정규 이벤트로 남고 프로세스 재시작을 견디는 공유 패널티가 된다(SHALL). 판정 시각은 주입 clock 하나로 정하고 시계 역행이 대기를 30초 넘게 만들어서는 안 된다(SHALL NOT). 예산을 쓸 수 없으면 엔진은 보호를 계속하되 신규 진입을 막는다(SHALL). admission 이 없는 구성은 upstream 과 같은 요청을 보낸다(SHALL).
+계좌 공유 예산 적용 시 참여하는 모든 프로세스의 공식 API 실제 wire 시도는 각 1초 창에 합계 3건을 넘어서는 안 된다(SHALL NOT). 보호 요청 및 그 재전송에도 예외는 없다(SHALL). 보호 우선은 상한 내의 순서 정책이다. 공유 상태 또는 동일 중재 경계를 신뢰할 수 없으면 모든 등급을 fail-closed로 막아야 한다(SHALL). 상한 적용이 필요한 배포에서 예산이 누락되거나 유효하지 않으면 모든 등급의 새 전송을 거부해야 한다(SHALL). 의도된 OFF 경로와 이를 혼동하거나 설정 기본값을 조용히 바꾸어서는 안 된다(SHALL NOT). 활성화와 배포는 사람의 명시적 승인이 필요하다. 보호 요청의 유한 대기 시간은 아직 정하지 않았다. 401 재전송, token exchange, HTTP 내부 재시도를 포함하는 실제 wire 경계는 미증명이며 구현 차단 조건이다.
 
-#### Scenario: 두 프로세스의 합산
-- **WHEN** 엔진과 soak 이 같은 계좌로 동시에 normal 조회를 내면
-- **THEN** 두 프로세스의 normal 요청 합은 어떤 1초 창에서도 3건을 넘지 않는다
+#### Scenario: 합산 상한과 보호 대기
+- **WHEN** 동일 계좌의 여러 참여자가 일반 요청과 보호 요청을 동시에 전송하려 하면
+- **THEN** 모든 실제 wire 시도는 합산 상한을 지키며 보호 요청도 필요한 만큼 기다린다
 
-#### Scenario: 401 재전송도 관문을 지난다
-- **WHEN** 한 요청이 401 → 401 → 200 으로 끝나면
-- **THEN** admission 은 3번 일어나고, 둘째 admission 이 거절되면 둘째·셋째 HTTP 전송은 일어나지 않는다
+#### Scenario: 공유 상태 장애
+- **WHEN** 공유 파일이나 잠금의 무결성 또는 동일성을 확인할 수 없으면
+- **THEN** 보호를 포함한 모든 등급의 새 전송을 막고 로컬 예산으로 우회하지 않는다
 
-#### Scenario: 헤더 없는 429 뒤 재시작
-- **WHEN** 한 프로세스가 `Retry-After` 없는 429 를 받고 다른 프로세스가 곧바로 재시작해 normal 조회를 내면
-- **THEN** 그 조회는 패널티 안이라 보내지 않고 거절되며, critical 요청은 기다리지 않고 보내진다
+#### Scenario: 내부 재전송
+- **WHEN** 인증 또는 HTTP 전송 계층에서 재전송을 시도하면
+- **THEN** 각 실제 wire 시도는 같은 계좌 상한에 포함되며 이를 보장하지 못하는 경로는 활성화하지 않는다
 
-#### Scenario: 보호 청산은 굶지 않는다
-- **WHEN** normal 조회가 예산을 다 쓰고 대기 중일 때 엔진이 보호 매도를 내면
-- **THEN** 보호 매도는 admission 대기 없이 보내진다
+#### Scenario: 의도된 OFF는 upstream
+- **WHEN** 의도된 OFF 경로에서 요청하면
+- **THEN** 기존 upstream 동작을 유지한다
 
-#### Scenario: 닫은 뒤 새 전송 없음
-- **WHEN** 측정 도구가 자기 admission 을 닫으면
-- **THEN** 닫기가 반환된 뒤 새로 admission 을 얻는 요청은 없고, 닫기는 그 순간 이미 admission 을 받은 요청 수를 돌려준다
+#### Scenario: 상한 필수 배포의 예산 누락
+- **WHEN** 상한 적용이 필요한 배포에 예산이 없거나 유효하지 않으면
+- **THEN** 보호를 포함한 모든 등급의 새 전송을 거부한다

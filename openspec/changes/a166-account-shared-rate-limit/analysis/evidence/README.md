@@ -1,4 +1,4 @@
-# a166 evidence — design 1판 AST (2026-10-29)
+# a166 evidence — design 1판·2판 AST (2026-10-29)
 
 - 기준: `origin/main` = `5e2facaee`(a165 착지 뒤). 도구: `go build -trimpath -o /tmp/a166-logicmap ./tools/logic-map` 후
   `/tmp/a166-logicmap --file <f> --func <F> > ast/<pkg>--<F>.json`.
@@ -23,3 +23,16 @@
 | `internal/execgw/replay_transport.go` | `HTTPReplay.ReplayPlace` | 68–110 | 9 | `4a956d5a59a19c07` | `ast/execgw--HTTPReplay.ReplayPlace.json` |
 | `internal/app/engine/exitwiring.go` | `newRetrier` | 45–56 | 0 | `6020a40b20302b0d` | `ast/engine--newRetrier.json` |
 | `tools/a087-market-sell-probe/send.go` | `sendOnce` | 83–99 | 2 | `ed2cbc3e339eaffa` | `ast/a087probe--sendOnce.json` |
+
+2판에서 더한 것(같은 HEAD `5e2facaee` 코드 트리 — 2판 커밋 전 worktree 는 문서 커밋만 앞섬):
+
+| 파일 | 함수 | 줄 | 분기 수 | source_sha256(앞 16) | AST |
+|---|---|---|---|---|---|
+| `internal/official/client.go` | `New` | 99–119 | 1 | `6d145916a6797f3a` | `ast/official--New.json` |
+| `internal/official/client.go` | `newOfficialHTTPClient` | 121–132 | 0 | `6d145916a6797f3a` | `ast/official--newOfficialHTTPClient.json` |
+| `internal/official/client.go` | `Client.authorityOriginLocked` | 157–161 | 0 | `6d145916a6797f3a` | `ast/official--Client.authorityOriginLocked.json` |
+| `internal/official/client.go` | `Client.hcTransport` | 163–169 | 1 | `6d145916a6797f3a` | `ast/official--Client.hcTransport.json` |
+| `tools/a087-market-sell-probe/send.go` | `newSendClient` | 54–65 | 0 | `ed2cbc3e339eaffa` | `ast/a087probe--newSendClient.json` |
+| `internal/app/engine/gateway.go` | `buildGateway` | 245–371 | 6 | `c1b7c08f60614957` | `ast/engine--buildGateway.json` |
+| `internal/app/engine/engine.go` | `NewOrderPath` | 359–406 | 6 | `60e3a8d45487301e` | `ast/engine--NewOrderPath.json` |
+| `internal/app/engine/precheck.go` | `officialBroker.availableActions` | 98–128 | 1 | `1ef569176914063c` | `ast/engine--officialBroker.availableActions.json` |
