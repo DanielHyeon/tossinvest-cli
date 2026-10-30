@@ -1,3 +1,5 @@
+//go:build linux
+
 // Package queueprototype explores ordering only; it is not production code.
 package queueprototype
 
@@ -137,6 +139,13 @@ func (q *Queue) write(s state) error {
 	return q.syncDir()
 }
 func (q *Queue) Register(critical bool) (*Waiter, error) {
+	return q.RegisterContext(context.Background(), critical)
+}
+
+func (q *Queue) RegisterContext(ctx context.Context, critical bool) (*Waiter, error) {
+	if e := ctx.Err(); e != nil {
+		return nil, e
+	}
 	b := make([]byte, 16)
 	if _, e := rand.Read(b); e != nil {
 		return nil, e
@@ -152,7 +161,7 @@ func (q *Queue) Register(critical bool) (*Waiter, error) {
 		return nil, e
 	}
 	w := &Waiter{q: q, id: id, live: f}
-	l, e := lock(q.path("queue.lock"), syscall.LOCK_EX)
+	l, e := lockContext(ctx, q.path("queue.lock"))
 	if e != nil {
 		unlock(w.live)
 		os.Remove(w.live.Name())
@@ -161,11 +170,16 @@ func (q *Queue) Register(critical bool) (*Waiter, error) {
 	defer unlock(l)
 	s, e := q.read()
 	if e == nil {
-		s.Tickets = append(s.Tickets, ticket{id, critical, s.Next})
-		s.Next++
-		e = q.write(s)
+		e = ctx.Err()
 	}
 	if e != nil {
+		unlock(w.live)
+		os.Remove(w.live.Name())
+		return nil, e
+	}
+	s.Tickets = append(s.Tickets, ticket{id, critical, s.Next})
+	s.Next++
+	if e = q.write(s); e != nil {
 		unlock(w.live)
 		return nil, e
 	}
@@ -210,17 +224,14 @@ func (w *Waiter) Try() (*os.File, error) {
 	return w.tryContext(context.Background())
 }
 
-func (w *Waiter) tryContext(ctx context.Context) (*os.File, error) {
-	q := w.q
-	var l *os.File
-	var e error
+func lockContext(ctx context.Context, path string) (*os.File, error) {
 	for {
-		if e = ctx.Err(); e != nil {
+		if e := ctx.Err(); e != nil {
 			return nil, e
 		}
-		l, e = lock(q.path("queue.lock"), syscall.LOCK_EX|syscall.LOCK_NB)
+		l, e := lock(path, syscall.LOCK_EX|syscall.LOCK_NB)
 		if !errors.Is(e, syscall.EWOULDBLOCK) {
-			break
+			return l, e
 		}
 		select {
 		case <-ctx.Done():
@@ -228,26 +239,22 @@ func (w *Waiter) tryContext(ctx context.Context) (*os.File, error) {
 		case <-time.After(5 * time.Millisecond):
 		}
 	}
-	if e != nil {
-		return nil, e
-	}
-	defer unlock(l)
-	s, e := q.read()
-	if e != nil {
-		return nil, e
-	}
+}
+
+// 큐 잠금 아래 살아 있는 파일을 확인하고 죽은 ticket만 분리함.
+func (q *Queue) cleanDead(s state, self string) (state, []string, bool, error) {
 	var dead []string
 	live := s.Tickets[:0]
 	found := false
 	for _, t := range s.Tickets {
-		if t.ID == w.id {
+		if t.ID == self {
 			found = true
 			live = append(live, t)
 			continue
 		}
 		f, e := os.OpenFile(q.path("live-"+t.ID), os.O_RDWR, 0)
 		if e != nil {
-			return nil, e
+			return s, nil, false, e
 		}
 		e = syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
 		if e == nil {
@@ -257,11 +264,29 @@ func (w *Waiter) tryContext(ctx context.Context) (*os.File, error) {
 		}
 		f.Close()
 		if !errors.Is(e, syscall.EWOULDBLOCK) {
-			return nil, e
+			return s, nil, false, e
 		}
 		live = append(live, t)
 	}
 	s.Tickets = live
+	return s, dead, found, nil
+}
+
+func (w *Waiter) tryContext(ctx context.Context) (*os.File, error) {
+	q := w.q
+	l, e := lockContext(ctx, q.path("queue.lock"))
+	if e != nil {
+		return nil, e
+	}
+	defer unlock(l)
+	s, e := q.read()
+	if e != nil {
+		return nil, e
+	}
+	s, dead, found, e := q.cleanDead(s, w.id)
+	if e != nil {
+		return nil, e
+	}
 	if !found {
 		return nil, errors.New("ticket missing")
 	}
@@ -343,6 +368,15 @@ func (q *Queue) TryAux() (*os.File, error) {
 	s, e := q.read()
 	if e != nil {
 		return nil, e
+	}
+	s, dead, _, e := q.cleanDead(s, "")
+	if e != nil {
+		return nil, e
+	}
+	if len(dead) > 0 {
+		if e = q.writeClean(s, dead); e != nil {
+			return nil, e
+		}
 	}
 	if len(s.Tickets) != 0 {
 		return nil, nil

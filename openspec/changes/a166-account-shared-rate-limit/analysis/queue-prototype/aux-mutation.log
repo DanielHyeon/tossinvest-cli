@@ -1,0 +1,8 @@
+--- FAIL: TestAuxReclaimsDeadButRefusesUnknown (0.03s)
+    --- FAIL: TestAuxReclaimsDeadButRefusesUnknown/dead (0.01s)
+        registration_test.go:117: dead ticket: <nil>
+    --- FAIL: TestAuxReclaimsDeadButRefusesUnknown/missing (0.01s)
+        registration_test.go:129: missing error
+FAIL
+FAIL	_/tmp/a166-registration-mutation	0.043s
+FAIL

@@ -1,0 +1,8 @@
+--- FAIL: TestRegisterFailuresPreserveOnlyUncertainLiveness (0.01s)
+    --- FAIL: TestRegisterFailuresPreserveOnlyUncertainLiveness/write (0.01s)
+        registration_test.go:88: live files 0 want 1
+    --- FAIL: TestRegisterFailuresPreserveOnlyUncertainLiveness/published (0.01s)
+        registration_test.go:88: live files 0 want 1
+FAIL
+FAIL	_/tmp/a166-registration-mutation	0.022s
+FAIL

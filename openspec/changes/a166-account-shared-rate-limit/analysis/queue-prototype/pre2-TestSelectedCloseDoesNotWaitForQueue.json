@@ -1,0 +1,243 @@
+{
+  "file": "openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype/protocol_test.go",
+  "source_sha256": "cb5ca798a755dbdf77901328650f94d6d01bce2ed4abf2e7f4e47bc1a8ad0123",
+  "package": "queueprototype",
+  "function": "TestSelectedCloseDoesNotWaitForQueue",
+  "signature": "TestSelectedCloseDoesNotWaitForQueue(params=1, results=0)",
+  "start": {
+    "line": 311,
+    "column": 1
+  },
+  "end": {
+    "line": 336,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 314,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 318,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 323,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "select",
+      "at": {
+        "line": 328,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 312,
+        "column": 7
+      },
+      "text": "setup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 313,
+        "column": 10
+      },
+      "text": "q.Register"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 315,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 317,
+        "column": 13
+      },
+      "text": "w.Try"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 319,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 8
+      },
+      "text": "unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 13
+      },
+      "text": "lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 18
+      },
+      "text": "q.path"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 10
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 5
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 14
+      },
+      "text": "w.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 25
+      },
+      "text": "close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 330,
+        "column": 3
+      },
+      "text": "unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 9
+      },
+      "text": "time.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 332,
+        "column": 3
+      },
+      "text": "unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 334,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 312,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 313,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 317,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 322,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 326,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 327,
+        "column": 2
+      }
+    }
+  ],
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 321,
+        "column": 2
+      },
+      "text": "unlock"
+    }
+  ]
+}

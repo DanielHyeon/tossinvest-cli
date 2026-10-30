@@ -1,3 +1,5 @@
+//go:build linux
+
 package queueprototype
 
 import (
@@ -25,12 +27,12 @@ func TestPriorityAndLiveOwner(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	n, e := q.Register(false)
+	n, e := q.RegisterContext(context.Background(), false)
 	if e != nil {
 		t.Fatal(e)
 	}
 	defer n.Close()
-	c, e := q.Register(true)
+	c, e := q.RegisterContext(context.Background(), true)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -55,7 +57,7 @@ func TestPriorityAndLiveOwner(t *testing.T) {
 }
 func TestFaultDoesNotTransferWire(t *testing.T) {
 	q := setup(t)
-	w, e := q.Register(true)
+	w, e := q.RegisterContext(context.Background(), true)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -72,12 +74,12 @@ func TestFaultDoesNotTransferWire(t *testing.T) {
 }
 func TestCancelAndDeadTicket(t *testing.T) {
 	q := setup(t)
-	w, e := q.Register(true)
+	w, e := q.RegisterContext(context.Background(), true)
 	if e != nil {
 		t.Fatal(e)
 	}
 	w.Close()
-	n, e := q.Register(false)
+	n, e := q.RegisterContext(context.Background(), false)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -96,7 +98,7 @@ func TestChildProcess(t *testing.T) {
 		return
 	}
 	q := &Queue{Dir: os.Getenv("QUEUE_DIR")}
-	w, e := q.Register(os.Getenv("QUEUE_CHILD") == "critical")
+	w, e := q.RegisterContext(context.Background(), os.Getenv("QUEUE_CHILD") == "critical")
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -202,7 +204,7 @@ func TestKilledWaiterCleanup(t *testing.T) {
 		t.Fatal(e)
 	}
 	c.Wait()
-	w, e := q.Register(false)
+	w, e := q.RegisterContext(context.Background(), false)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -218,7 +220,7 @@ func TestKilledWaiterCleanup(t *testing.T) {
 
 func TestAuxRefusesQueuedWaiter(t *testing.T) {
 	q := setup(t)
-	w, e := q.Register(true)
+	w, e := q.RegisterContext(context.Background(), true)
 	if e != nil {
 		t.Fatal(e)
 	}

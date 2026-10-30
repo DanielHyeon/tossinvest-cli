@@ -1,0 +1,5 @@
+# _/home/daniel/tossos-work/a166-queue/openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype [_/home/daniel/tossos-work/a166-queue/openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype.test]
+./registration_test.go:32:13: q.RegisterContext undefined (type *Queue has no field or method RegisterContext)
+./registration_test.go:66:14: q.RegisterContext undefined (type *Queue has no field or method RegisterContext)
+FAIL	_/home/daniel/tossos-work/a166-queue/openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype [build failed]
+FAIL

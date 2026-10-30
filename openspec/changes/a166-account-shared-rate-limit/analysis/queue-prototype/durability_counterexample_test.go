@@ -1,3 +1,5 @@
+//go:build linux
+
 package queueprototype
 
 import (
@@ -12,7 +14,7 @@ import (
 // 디렉터리 fsync 실패가 rename 뒤에 발생한 상태를 모사함.
 func TestDirectorySyncFailureBlocksOtherProcesses(t *testing.T) {
 	q := setup(t)
-	w, err := q.Register(true)
+	w, err := q.RegisterContext(context.Background(), true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +53,7 @@ func TestDirectorySyncFailureBlocksOtherProcesses(t *testing.T) {
 
 func TestCanceledWaitDoesNotAcquireWire(t *testing.T) {
 	q := setup(t)
-	w, err := q.Register(true)
+	w, err := q.RegisterContext(context.Background(), true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +72,7 @@ func TestCanceledWaitDoesNotAcquireWire(t *testing.T) {
 
 func TestWaitCancelsWhileQueueLockHeld(t *testing.T) {
 	q := setup(t)
-	w, err := q.Register(true)
+	w, err := q.RegisterContext(context.Background(), true)
 	if err != nil {
 		t.Fatal(err)
 	}

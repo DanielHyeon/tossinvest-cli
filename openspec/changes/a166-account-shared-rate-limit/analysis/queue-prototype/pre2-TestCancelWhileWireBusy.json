@@ -1,0 +1,313 @@
+{
+  "file": "openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype/protocol_test.go",
+  "source_sha256": "cb5ca798a755dbdf77901328650f94d6d01bce2ed4abf2e7f4e47bc1a8ad0123",
+  "package": "queueprototype",
+  "function": "TestCancelWhileWireBusy",
+  "signature": "TestCancelWhileWireBusy(params=1, results=0)",
+  "start": {
+    "line": 234,
+    "column": 1
+  },
+  "end": {
+    "line": 267,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 237,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 242,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 250,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "select",
+      "at": {
+        "line": 259,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 261,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 253,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 7
+      },
+      "text": "setup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 14
+      },
+      "text": "lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 19
+      },
+      "text": "q.path"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 8
+      },
+      "text": "unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 10
+      },
+      "text": "q.Register"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 8
+      },
+      "text": "w.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 17
+      },
+      "text": "context.WithCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 36
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 10
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 5
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 11
+      },
+      "text": "w.Wait"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 4
+      },
+      "text": "unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 12
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 2
+      },
+      "text": "time.Sleep"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 258,
+        "column": 2
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 7
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 264,
+        "column": 9
+      },
+      "text": "time.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 235,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 236,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 241,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 247,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 249,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 260,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 248,
+        "column": 2
+      }
+    }
+  ],
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 240,
+        "column": 2
+      },
+      "text": "unlock"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 245,
+        "column": 2
+      },
+      "text": "w.Close"
+    }
+  ]
+}

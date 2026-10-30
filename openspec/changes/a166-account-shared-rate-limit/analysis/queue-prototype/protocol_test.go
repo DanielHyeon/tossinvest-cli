@@ -1,3 +1,5 @@
+//go:build linux
+
 package queueprototype
 
 import (
@@ -41,7 +43,7 @@ func TestProtocolChild(t *testing.T) {
 		}
 		return
 	}
-	w, e := q.Register(mode == "critical")
+	w, e := q.RegisterContext(context.Background(), mode == "critical")
 	if w != nil {
 		w.Close()
 		t.Fatal("waiter admitted")
@@ -53,7 +55,7 @@ func TestProtocolChild(t *testing.T) {
 
 func TestPostRenameSyncFaultRejectsOtherProcesses(t *testing.T) {
 	q := setup(t)
-	w, e := q.Register(true)
+	w, e := q.RegisterContext(context.Background(), true)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -91,12 +93,12 @@ func TestPostRenameSyncFaultRejectsOtherProcesses(t *testing.T) {
 func TestSamePriorityFIFO(t *testing.T) {
 	for _, critical := range []bool{false, true} {
 		q := setup(t)
-		first, e := q.Register(critical)
+		first, e := q.RegisterContext(context.Background(), critical)
 		if e != nil {
 			t.Fatal(e)
 		}
 		defer first.Close()
-		second, e := q.Register(critical)
+		second, e := q.RegisterContext(context.Background(), critical)
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -143,7 +145,7 @@ func TestKilledWireOwnerReleases(t *testing.T) {
 		}
 		time.Sleep(5 * time.Millisecond)
 	}
-	w, e := q.Register(true)
+	w, e := q.RegisterContext(context.Background(), true)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -169,7 +171,7 @@ func TestDirtyStages(t *testing.T) {
 	for _, failAt := range []int{1, 2, 3} {
 		t.Run(fmt.Sprint(failAt), func(t *testing.T) {
 			q := setup(t)
-			w, e := q.Register(true)
+			w, e := q.RegisterContext(context.Background(), true)
 			if e != nil {
 				t.Fatal(e)
 			}
@@ -238,7 +240,7 @@ func TestCancelWhileWireBusy(t *testing.T) {
 		t.Fatal(e)
 	}
 	defer unlock(owner)
-	w, e := q.Register(true)
+	w, e := q.RegisterContext(context.Background(), true)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -268,7 +270,7 @@ func TestCancelWhileWireBusy(t *testing.T) {
 
 func TestCloseRemovesTicketAndLiveness(t *testing.T) {
 	q := setup(t)
-	w, e := q.Register(true)
+	w, e := q.RegisterContext(context.Background(), true)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -286,14 +288,14 @@ func TestCloseRemovesTicketAndLiveness(t *testing.T) {
 
 func TestDeadTicketReclaimsLivenessAfterStateCommit(t *testing.T) {
 	q := setup(t)
-	dead, e := q.Register(true)
+	dead, e := q.RegisterContext(context.Background(), true)
 	if e != nil {
 		t.Fatal(e)
 	}
 	id := dead.id
 	unlock(dead.live)
 	dead.live = nil
-	w, e := q.Register(false)
+	w, e := q.RegisterContext(context.Background(), false)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -310,7 +312,7 @@ func TestDeadTicketReclaimsLivenessAfterStateCommit(t *testing.T) {
 
 func TestSelectedCloseDoesNotWaitForQueue(t *testing.T) {
 	q := setup(t)
-	w, e := q.Register(true)
+	w, e := q.RegisterContext(context.Background(), true)
 	if e != nil {
 		t.Fatal(e)
 	}
