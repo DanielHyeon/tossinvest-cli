@@ -190,6 +190,7 @@ func validateObservationState(s observationState) error {
 			return errors.New("invalid observation gap")
 		}
 		previous = g.Attempt
+		seenAttempts[g.Attempt] = true
 	}
 	completed := s.Attempt - s.Gap
 	if s.Pending != nil {

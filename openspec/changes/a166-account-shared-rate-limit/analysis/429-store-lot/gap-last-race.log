@@ -1,0 +1,28 @@
+=== RUN   TestA166ObservationRejectsRetainedGapAsNoResponse
+--- PASS: TestA166ObservationRejectsRetainedGapAsNoResponse (0.04s)
+=== RUN   TestA166ObservationFinishContextAndNoResponse
+--- PASS: TestA166ObservationFinishContextAndNoResponse (0.80s)
+=== RUN   TestA166ObservationDiskFaults
+=== RUN   TestA166ObservationDiskFaults/marker-sync
+=== RUN   TestA166ObservationDiskFaults/state-write
+=== RUN   TestA166ObservationDiskFaults/state-sync
+=== RUN   TestA166ObservationDiskFaults/rename
+=== RUN   TestA166ObservationDiskFaults/directory-before
+=== RUN   TestA166ObservationDiskFaults/directory-after-rename
+=== RUN   TestA166ObservationDiskFaults/directory-after-unlink
+--- PASS: TestA166ObservationDiskFaults (2.96s)
+    --- PASS: TestA166ObservationDiskFaults/marker-sync (0.40s)
+    --- PASS: TestA166ObservationDiskFaults/state-write (0.42s)
+    --- PASS: TestA166ObservationDiskFaults/state-sync (0.42s)
+    --- PASS: TestA166ObservationDiskFaults/rename (0.41s)
+    --- PASS: TestA166ObservationDiskFaults/directory-before (0.42s)
+    --- PASS: TestA166ObservationDiskFaults/directory-after-rename (0.46s)
+    --- PASS: TestA166ObservationDiskFaults/directory-after-unlink (0.44s)
+=== RUN   TestA166ObservationProcessCrash
+--- PASS: TestA166ObservationProcessCrash (1.84s)
+=== RUN   TestA166ObservationGapRingOverrun
+--- PASS: TestA166ObservationGapRingOverrun (0.42s)
+=== RUN   TestA166ObservationFullBoundedState
+--- PASS: TestA166ObservationFullBoundedState (0.07s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	7.170s
