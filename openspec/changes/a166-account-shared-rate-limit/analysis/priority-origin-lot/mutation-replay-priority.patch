@@ -1,0 +1,12 @@
+--- internal/execgw/replay.go
++++ mutation-replay-priority
+@@ -315,7 +315,8 @@
+ 			if !proven {
+ 				return declineReplay(out, ReasonReplayIneligible, "replay origin is unverified; observation takes over"), nil
+ 			}
+-			replayCtx = accountbudget.WithPriority(ctx, priority)
++			replayCtx = accountbudget.WithPriority(ctx, accountbudget.Normal)
++			_ = priority
+ 		}
+ 
+ 		state, err := g.journal.MarkReplayStarted(ctx, attemptID, cfg.MaxReplays)

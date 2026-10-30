@@ -1,0 +1,11 @@
+--- internal/journal/a166_replay_origin.go
++++ mutation-origin-duplicate
+@@ -38,7 +38,7 @@
+ 		case ExitEventOpened, ExitEventReadopted, ExitEventProposalRefused, ExitEventProposalCancelled, ExitEventProposalFilled, ExitEventCompleted, ExitEventAdjustmentClosed:
+ 			continue
+ 		}
+-		if !exitpolicy.Action(action.String).Orderable() || proposal != "" {
++		if !exitpolicy.Action(action.String).Orderable() || false {
+ 			invalid = true
+ 			continue
+ 		}

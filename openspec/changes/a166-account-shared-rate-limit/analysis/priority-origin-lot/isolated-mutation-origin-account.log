@@ -1,0 +1,20 @@
+net:[4026534731]
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+--- FAIL: TestA166ReplayOriginClassification (0.65s)
+    --- FAIL: TestA166ReplayOriginClassification/entry (0.00s)
+        a166_origin_internal_test.go:81: foreign gateway accepted: true <nil>
+    --- FAIL: TestA166ReplayOriginClassification/flatten (0.00s)
+        a166_origin_internal_test.go:81: foreign gateway accepted: true <nil>
+    --- FAIL: TestA166ReplayOriginClassification/stop (0.01s)
+        a166_origin_internal_test.go:81: foreign gateway accepted: true <nil>
+    --- FAIL: TestA166ReplayOriginClassification/baseline (0.01s)
+        a166_origin_internal_test.go:81: foreign gateway accepted: true <nil>
+    --- FAIL: TestA166ReplayOriginClassification/ratchet (0.01s)
+        a166_origin_internal_test.go:81: foreign gateway accepted: true <nil>
+    --- FAIL: TestA166ReplayOriginClassification/ladder (0.01s)
+        a166_origin_internal_test.go:81: foreign gateway accepted: true <nil>
+    --- FAIL: TestA166ReplayOriginClassification/profit (0.01s)
+        a166_origin_internal_test.go:81: foreign gateway accepted: true <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.652s
+FAIL

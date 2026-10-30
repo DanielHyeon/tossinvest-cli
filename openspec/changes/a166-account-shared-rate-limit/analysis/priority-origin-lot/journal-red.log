@@ -1,0 +1,4 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/journal [github.com/JungHoonGhae/tossinvest-cli/internal/journal.test]
+internal/journal/a166_replay_origin_test.go:21:20: j.ExitProposalForIntent undefined (type *Journal has no field or method ExitProposalForIntent)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal [build failed]
+FAIL

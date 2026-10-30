@@ -1,0 +1,4 @@
+net:[4026534438]
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	5.409s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	5.158s

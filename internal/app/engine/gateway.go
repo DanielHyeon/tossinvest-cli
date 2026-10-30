@@ -39,9 +39,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
+	"os"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/costs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
@@ -51,6 +54,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/protection"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/protectionreadiness"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/redact"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
 
@@ -75,6 +79,7 @@ type gatewayInputs struct {
 	journal     *journal.Journal
 	trading     *trading.Service
 	official    *official.Client
+	budget      *accountbudget.Budget
 	accountRef  string
 	clock       clock.Clock
 	configDir   string
@@ -308,6 +313,10 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 	if err != nil {
 		return engineWiring{}, fmt.Errorf("engine: constructing the paired read-only protection readiness adapter: %w", err)
 	}
+	replay, err := newGatewayReplay(in.official, in.budget, func(err error) { fmt.Fprintln(redact.Writer(os.Stderr), err) })
+	if err != nil {
+		return engineWiring{}, fmt.Errorf("engine: constructing replay transport: %w", err)
+	}
 	gateway, err := execgw.New(execgw.Options{
 		Journal:       in.journal,
 		Trading:       in.trading,
@@ -320,11 +329,7 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 		ProtectionReadiness: readiness,
 		Preflight:           &execgw.Preflight{Account: account, Clock: in.clock},
 		Orders:              orders,
-		Replay: execgw.HTTPReplay{
-			BaseURL: in.official.BaseURL(),
-			HTTP:    &http.Client{Timeout: replayTimeout},
-			Headers: in.official.AuthHeaders,
-		},
+		Replay:              replay,
 		// Attested stays nil: the replay capability has not been verified against
 		// the real broker, and nil is what makes the entry point resend nothing.
 		// Turning replay on is 2b's job and it is one field.
@@ -368,4 +373,13 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 			retrier: retrier, clk: in.clock, account: in.accountRef,
 		},
 	}, nil
+}
+
+// newGatewayReplay는 OFF를 유지하고 required에 별도 직접 연결 template를 사용함.
+func newGatewayReplay(client *official.Client, budget *accountbudget.Budget, cleanup func(error)) (execgw.ReplayTransport, error) {
+	if budget == nil {
+		return execgw.HTTPReplay{BaseURL: client.BaseURL(), HTTP: &http.Client{Timeout: replayTimeout}, Headers: client.AuthHeaders}, nil
+	}
+	template := &http.Transport{Proxy: http.ProxyFromEnvironment, DialContext: (&net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}).DialContext, MaxIdleConns: 100, IdleConnTimeout: 90 * time.Second, TLSHandshakeTimeout: 10 * time.Second, ExpectContinueTimeout: time.Second}
+	return execgw.NewBudgetedHTTPReplay(client.BaseURL(), &http.Client{Transport: template, Timeout: replayTimeout}, client, budget, cleanup)
 }

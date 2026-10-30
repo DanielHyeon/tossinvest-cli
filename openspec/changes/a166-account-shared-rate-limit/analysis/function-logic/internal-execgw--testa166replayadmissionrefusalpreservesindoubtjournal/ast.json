@@ -1,0 +1,763 @@
+{
+  "file": "internal/execgw/a166_replay_journal_test.go",
+  "source_sha256": "0b4da5a2502fd99882416a415f7f52ac6d0a537ae2e274cb59d5fd2c151d634f",
+  "package": "execgw_test",
+  "function": "TestA166ReplayAdmissionRefusalPreservesInDoubtJournal",
+  "signature": "TestA166ReplayAdmissionRefusalPreservesInDoubtJournal(params=1, results=0)",
+  "start": {
+    "line": 22,
+    "column": 1
+  },
+  "end": {
+    "line": 89,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 26,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 46,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 65,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 69,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 48,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 68,
+        "column": 254
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 7
+      },
+      "text": "newReplayFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 23
+      },
+      "text": "execgw.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 72
+      },
+      "text": "trading.NewService"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 91
+      },
+      "text": "openPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 9
+      },
+      "text": "f.inDoubtPlace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 2
+      },
+      "text": "f.clk.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 10
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 10
+      },
+      "text": "os.Chmod"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 10
+      },
+      "text": "accountbudget.Provision"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 10
+      },
+      "text": "accountbudget.OpenContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 36
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 136
+      },
+      "text": "clock.System"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 8
+      },
+      "text": "b.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 9
+      },
+      "text": "httptest.NewTLSServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 31
+      },
+      "text": "http.HandlerFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 4
+      },
+      "text": "w.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 12
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 3
+      },
+      "text": "posts.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 3
+      },
+      "text": "w.WriteHeader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 8
+      },
+      "text": "srv.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 11
+      },
+      "text": "x509.NewCertPool"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 2
+      },
+      "text": "roots.AddCert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 16
+      },
+      "text": "srv.Certificate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 107
+      },
+      "text": "a166FixtureDial"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 13
+      },
+      "text": "official.NewWithAccountBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 124
+      },
+      "text": "official.WithBaseURL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 155
+      },
+      "text": "official.WithHTTPClient"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 184
+      },
+      "text": "official.WithAccountSeq"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 12
+      },
+      "text": "auth.AuthHeaders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 29
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 15
+      },
+      "text": "execgw.NewBudgetedHTTPReplay"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 11
+      },
+      "text": "execgw.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 60
+      },
+      "text": "trading.NewService"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 79
+      },
+      "text": "openPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 13
+      },
+      "text": "b.Acquire"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 23
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 17
+      },
+      "text": "context.WithTimeout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 37
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 8
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 9
+      },
+      "text": "gw.ReplayInDoubt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 9
+      },
+      "text": "held.Release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 14
+      },
+      "text": "f.j.LookupAttempt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 32
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 5
+      },
+      "text": "posts.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 42
+      },
+      "text": "posts.Load"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 23,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 25,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 29,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 30,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 32,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 33,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 39,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 57,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 61,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 68,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 72,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 79,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 82,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 43,
+        "column": 2
+      },
+      "text": "b.Close"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 53,
+        "column": 2
+      },
+      "text": "srv.Close"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 77,
+        "column": 2
+      },
+      "text": "cancel"
+    }
+  ]
+}

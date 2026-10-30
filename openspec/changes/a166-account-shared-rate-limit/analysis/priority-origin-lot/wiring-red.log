@@ -1,0 +1,6 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a166_replay_wiring_internal_test.go:20:12: undefined: newGatewayReplay
+internal/app/engine/a166_replay_wiring_internal_test.go:22:11: undefined: newGatewayReplay
+internal/app/engine/a166_replay_wiring_internal_test.go:23:11: undefined: newGatewayReplay
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [build failed]
+FAIL

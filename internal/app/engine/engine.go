@@ -29,6 +29,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
@@ -519,10 +520,19 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 	}
 
 	// --- 3. the gateway -----------------------------------------------------
+	var borrowed *accountbudget.Budget
+	if opts.BudgetFactory != nil {
+		borrowed, err = opts.BudgetFactory.Budget()
+		if err != nil {
+			_ = jrn.Close()
+			return nil, refuseStartup(auditLog, gate, err)
+		}
+	}
 	wiring, err := buildGateway(ctx, gatewayInputs{
 		journal:     jrn,
 		trading:     path.Trading,
 		official:    off,
+		budget:      borrowed,
 		accountRef:  accountRef,
 		clock:       clk,
 		configDir:   paths.ConfigDir,

@@ -1,0 +1,6 @@
+namespace: net:[4026534437]
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	4.556s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	5.772s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	1.656s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	1.021s

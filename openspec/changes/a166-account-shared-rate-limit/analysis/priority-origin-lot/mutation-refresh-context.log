@@ -1,0 +1,5 @@
+--- FAIL: TestA166Official401TokenInheritsCritical (1.20s)
+    a166_priority_inheritance_test.go:125: 401 token did not inherit critical
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	1.207s
+FAIL

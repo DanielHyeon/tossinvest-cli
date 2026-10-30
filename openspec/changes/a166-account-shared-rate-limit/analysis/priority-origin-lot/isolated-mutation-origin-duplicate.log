@@ -1,0 +1,8 @@
+net:[4026534788]
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+--- FAIL: TestA166ExactExitOrigin (1.94s)
+    --- FAIL: TestA166ExactExitOrigin/duplicate (0.26s)
+        a166_replay_origin_test.go:33: action="BASELINE_BREACH_EXIT" ok=true err=<nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	1.944s
+FAIL

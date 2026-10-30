@@ -1,0 +1,11 @@
+--- internal/execgw/a166_replay_origin.go
++++ mutation-origin-account
+@@ -12,7 +12,7 @@
+ 
+ // replayOrigin는 원장에 기록된 decision과 정확한 intent 출처만 분류함.
+ func (g *Gateway) replayOrigin(ctx context.Context, rec journal.AttemptRecord, intent journal.Intent) (accountbudget.Priority, bool, error) {
+-	if rec.IntentID == "" || rec.IntentID != intent.ID || rec.AccountRef == "" || rec.AccountRef != intent.AccountRef || rec.AccountRef != g.accountRef || rec.DecisionID == "" || rec.ClientOrderID == "" || (intent.Market != "kr" && intent.Market != "us") || strings.TrimSpace(intent.Symbol) == "" {
++	if rec.IntentID == "" || rec.IntentID != intent.ID || rec.AccountRef == "" || rec.AccountRef != intent.AccountRef || false || rec.DecisionID == "" || rec.ClientOrderID == "" || (intent.Market != "kr" && intent.Market != "us") || strings.TrimSpace(intent.Symbol) == "" {
+ 		return accountbudget.Normal, false, nil
+ 	}
+ 	dec, err := g.journal.LookupDecision(ctx, rec.DecisionID)

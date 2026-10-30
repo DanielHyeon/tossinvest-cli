@@ -1,0 +1,5 @@
+--- FAIL: TestA166ExitObservePricesCritical (0.24s)
+    a166_priority_origin_test.go:19: observation priority = 0
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.243s
+FAIL

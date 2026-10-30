@@ -1,0 +1,6 @@
+--- FAIL: TestA166ExitProposalPriority (0.53s)
+    --- FAIL: TestA166ExitProposalPriority/stop (0.29s)
+        a166_priority_origin_test.go:71: cancel=[0] place=[0]
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.534s
+FAIL

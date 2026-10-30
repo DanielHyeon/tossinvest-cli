@@ -21,6 +21,12 @@ import (
 
 func TestA166ReplayAdmissionRefusalPreservesInDoubtJournal(t *testing.T) {
 	f := newReplayFixture(t, execgw.ReplayConfig{})
+	// 실제 engine entry 출처로 기록해 admission 실패 경계에 도달하게 함.
+	entryGateway, err := execgw.New(execgw.Options{Journal: f.j, Trading: trading.NewService(openPolicy(), &fakeBroker{err: official.ErrServer}), Clock: f.clk, AccountRef: "acct-7", Source: "engine", Entry: f.gate})
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.gw = entryGateway
 	rec := f.inDoubtPlace(t)
 	f.clk.Advance(execgw.DefaultReplayMinInterval)
 	root := t.TempDir()
@@ -47,7 +53,7 @@ func TestA166ReplayAdmissionRefusalPreservesInDoubtJournal(t *testing.T) {
 	defer srv.Close()
 	roots := x509.NewCertPool()
 	roots.AddCert(srv.Certificate())
-	hc := &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: roots}}, Timeout: 3 * time.Second}
+	hc := &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: roots}, DialContext: a166FixtureDial(srv)}, Timeout: 3 * time.Second}
 	auth, e := official.NewWithAccountBudget(official.Credentials{APIKey: "key", SecretKey: "secret"}, "", b, func(error) {}, official.WithBaseURL(srv.URL), official.WithHTTPClient(hc), official.WithAccountSeq(17))
 	if e != nil {
 		t.Fatal(e)

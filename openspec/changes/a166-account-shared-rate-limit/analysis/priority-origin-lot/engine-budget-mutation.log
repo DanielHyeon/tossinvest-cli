@@ -1,0 +1,7 @@
+net:[4026534366]
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+--- FAIL: TestA166RequiredEngineBuildsWithBorrowedReplayBudget (1.06s)
+    a166_runtime_replay_wiring_test.go:95: required engine lacks private budgeted replay
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	1.064s
+FAIL
