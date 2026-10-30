@@ -1,6 +1,7 @@
 package engine_test
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -51,8 +52,13 @@ func TestA087RealGatewayLowerLimitAndDormantFallback(t *testing.T) {
 			if len(orders) != 1 {
 				t.Fatalf("orders = %v", orders)
 			}
-			if orders[0]["orderType"] != "LIMIT" || orders[0]["price"] != tc.want || orders[0]["side"] != "SELL" {
-				t.Fatalf("wire order = %v, want LIMIT SELL price %s", orders[0], tc.want)
+			if id, ok := orders[0]["clientOrderId"].(string); !ok || id == "" {
+				t.Fatalf("missing clientOrderId in %v", orders[0])
+			}
+			delete(orders[0], "clientOrderId")
+			want := map[string]any{"symbol": "005930", "side": "SELL", "orderType": "LIMIT", "quantity": "10", "price": tc.want, "timeInForce": "DAY", "confirmHighValueOrder": false}
+			if !reflect.DeepEqual(orders[0], want) {
+				t.Fatalf("wire order = %v, want %v", orders[0], want)
 			}
 		})
 	}

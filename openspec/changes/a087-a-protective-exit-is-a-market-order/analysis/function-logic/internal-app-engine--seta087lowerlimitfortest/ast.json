@@ -1,0 +1,78 @@
+{
+  "file": "internal/app/engine/a087_export_test.go",
+  "source_sha256": "428bdea34ae06c593897dc43884d9b11bdd64c3a34f26bf4c2d8577b4498b2f8",
+  "package": "engine",
+  "function": "SetA087LowerLimitForTest",
+  "signature": "SetA087LowerLimitForTest(params=5, results=0)",
+  "start": {
+    "line": 7,
+    "column": 1
+  },
+  "end": {
+    "line": 16,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 8,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 9,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 11,
+        "column": 11
+      },
+      "text": "newExitLowerLimitBoard"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 12,
+        "column": 2
+      },
+      "text": "board.publish"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 13,
+        "column": 3
+      },
+      "text": "lowerLimitKey"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 11,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 15,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

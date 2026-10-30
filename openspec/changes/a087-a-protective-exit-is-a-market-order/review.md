@@ -1160,3 +1160,14 @@ OpenSpec 작성자 기록이다. 리뷰가 아니다. 문서만 다뤘다(새 AS
 - 1.1: `TestA087EngineAndDefaultServiceRejectNonfractionalMarket`는 실제 엔진 Context와 기본 trading Service의 KR/US buy/sell 시장가가 `LiveReady=false`임을 확인한다. `LiveReady`는 운영 토글과 별도로 지원 여부를 나타낸다. `TestA087NonfractionalMarketShapeRejected`는 동일 네 행의 execgw 사유를 확인하고, 기존 riskcalc 시장가 진입 거부 두 시험도 통과했다. 브리지는 `_test.go` 전용이다.
 - 1.2: `TestA087ProductionBoardAdmissionFlowIsOnlyLiteralNil`은 go/types로 engine 생산 Go 파일 전체의 생성자 참조가 `NewContext` 한 곳뿐임을 검사한다. 생성자는 비공개이므로 다른 패키지는 직접 호출할 수 없다. `git archive HEAD` 격리 사본의 정상 시험 PASS 후 생성자를 `NewContext`에서 `NewOrderPath`로 이동한 변이는 해당 위치 오류로 FAIL했다. 영수증은 `analysis/20261030-daily-refresh/a087-12-{baseline,relocation-mutant}-20261031.log`.
 - Manager가 세 신규 파일과 `PreviewPlace`의 판단 순서를 독립 수동 검토하여 blocking finding 없음. 전 범위 gstack 인증은 아님. UI 미변경: `impeccable: N/A — backend/documentation-only`.
+
+### 휴면 자원 사용 Pre-Edit (2026-10-31)
+
+`exitLowerLimitBoard.cycleComplete`와 `markProtectiveAttempt`는 a087 신규 함수다. 현재 nil admission에서도 토큰과 일자별 시도 map을 채운다. 두 함수에서 admission nil일 때 즉시 반환해 휴면 상태의 자원 누적을 없앤다. non-nil fixture에서 기존 동작과 첫 시도 금지를 유지한다. `a087_export_test.go` 및 `TestA087FirstProtectiveAttemptIsMonotonic`은 하한가를 인위 주입하므로 활성 fixture에만 non-nil test admission을 명시한다. 기존 시험 함수 변경 전 원본과 실행 분기를 확인했다. Go 기존 `nil` 검사 및 repository 시험 더블 재사용, 새 의존성 없음. 활성 겹침 문제는 별도 미해결, 생산 admission은 nil 유지.
+
+### 2026-10-31 휴면 자원 수정과 1.6 최종 근거
+
+- `cycleComplete`·`markProtectiveAttempt`는 nil admission이면 즉시 반환한다. 기존에는 휴면 상태에서 토큰과 일자별 map이 누적됐다. 각 함수 선행·후행 AST는 `analysis/20261030-daily-refresh/{cycleComplete,markProtectiveAttempt}-{pre,post}.ast.json`. 선행 RED는 토큰 1·시도 1, 후행 일반·`tossos_testseams` A087 집중 race 각각 42.464초·43.769초 GREEN이다. 활성 fixture는 test admission을 명시해 기존 첫 시도 금지 동작을 시험한다. nil 생산 배선은 그대로다.
+- 함수 분기표: 두 함수의 B1은 `board == nil || admission == nil`이면 return; non-nil일 때 `cycleComplete`는 채널 select 송신 또는 default, `markProtectiveAttempt`는 거래일 오류면 return, 성공 시 lock/map 기록이다. RED/GREEN과 기존 `TestA087FirstProtectiveAttemptIsMonotonic`, A087 활성 wire 시험이 이를 확인한다. 신규 함수 본문에 한정한 변경이며 관측 겹침 문제는 미해결이다.
+- 1.6: `TestA087RealGatewayLowerLimitAndDormantFallback`은 실 Guardian·Gateway·Trading·official.Client와 httptest를 사용한다. 하한가 50400, 판 없음·창 밖 67900 세 행의 실제 전송 body 전체를 골든과 비교한다(동적 `clientOrderId`는 비어 있지 않음을 별도 확인). 원본 `analysis/20261030-daily-refresh/real-gateway-full-wire-race.log` GREEN. Manager가 시험과 영수증을 수동 검토했다. 실제 broker·live 검증은 아님.
+- `price_source` 로그는 휴면 경로에도 추가되는 관측 정보다. 사용자 승인된 dormant 착지 검토와 별개로 5.4·5.5, 겹침 0, gate ⑤ 형제 증거, 전체 gstack 절차, archive는 미완료다.

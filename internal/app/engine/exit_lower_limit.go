@@ -124,7 +124,7 @@ func (b *exitLowerLimitBoard) attemptedOn(market, symbol string, now time.Time) 
 }
 
 func (b *exitLowerLimitBoard) markProtectiveAttempt(market, symbol string, now time.Time) {
-	if b == nil {
+	if b == nil || b.admission == nil {
 		return
 	}
 	day, err := clock.MarketKR.TradingDay(now)
@@ -140,7 +140,7 @@ func (b *exitLowerLimitBoard) markProtectiveAttempt(market, symbol string, now t
 }
 
 func (b *exitLowerLimitBoard) cycleComplete(interval time.Duration) {
-	if b == nil {
+	if b == nil || b.admission == nil {
 		return
 	}
 	select {

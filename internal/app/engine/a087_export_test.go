@@ -8,7 +8,7 @@ func SetA087LowerLimitForTest(options *ExitObserverOptions, market, symbol, pric
 	if options == nil {
 		return
 	}
-	board := newExitLowerLimitBoard(options.Clock, nil, nil, nil, options.AccountRef, nil)
+	board := newExitLowerLimitBoard(options.Clock, nil, nil, nil, options.AccountRef, &a087Admission{})
 	board.publish(lowerLimitSnapshot{records: map[string]lowerLimitRecord{
 		lowerLimitKey(market, symbol): {price: price, timestamp: timestamp},
 	}})

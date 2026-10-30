@@ -88,7 +88,7 @@ func TestA087FirstProtectiveAttemptIsMonotonic(t *testing.T) {
 	}
 	now := time.Date(2026, 3, 30, 10, 0, 0, 0, kst)
 	m := managed{position: journal.Position{Market: "kr", Symbol: "005930"}, state: journal.ExitState{Baseline: "50000"}}
-	board := &exitLowerLimitBoard{}
+	board := &exitLowerLimitBoard{admission: &a087Admission{}}
 	board.publish(lowerLimitSnapshot{records: map[string]lowerLimitRecord{
 		lowerLimitKey("kr", "005930"): {price: "50400", timestamp: now},
 	}})

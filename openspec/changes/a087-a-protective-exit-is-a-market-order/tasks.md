@@ -140,7 +140,7 @@
       거부됨. 진입 시장가 거부가 살아 있음(riskcalc 규칙 — design D3 「왜 진입은 계속 막는가」)
 - [x] 1.2 **하한가 판 생성 자리 구조 시험** (7판 1.5.5 (c) 의 8판 판본 — 0.10 독립 리뷰 P0-1 규칙) — 판 생성 호출이 비시험 코드에서 `NewContext` 본문 하나뿐이고
       `NewOrderPath` · `buildFlattenWiring` · `app.go` · `mcp.go` 에는 0 임을 함수 단위 AST 로 센다. 변이: 「`NewOrderPath` 에서 판 생성」이 잡혀야 한다
-- [ ] 1.6 **종단 회귀 시험** — 엔진 보호 청산 하한가 LIMIT 이 `sellIntent` · ② · ③ 을 **모두** 지나 전송 계층(시험 더블)에 닿고 wire body 의 `price` 가 판의 하한가다.
+- [x] 1.6 **종단 회귀 시험** — 엔진 보호 청산 하한가 LIMIT 이 `sellIntent` · ② · ③ 을 **모두** 지나 전송 계층(시험 더블)에 닿고 wire body 의 `price` 가 판의 하한가다.
       창 밖 · 판 없음 행은 오늘 LIMIT 골든과 같은 wire body
 
 ### 7판 원문 (8판에서 대체됨 — 관문을 열지 않는다)
