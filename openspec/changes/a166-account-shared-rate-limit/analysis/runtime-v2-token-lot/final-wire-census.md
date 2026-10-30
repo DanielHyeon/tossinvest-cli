@@ -25,3 +25,7 @@
 4. candidate/soak 164db는 ec8에 게시됐으나 v2 후보와 아직 물리적으로 통합되지 않았다. 통합 시 공유 root fixture와 최신 변경 census·선택 시험을 다시 확인해야 한다.
 
 실제 배포 manifest의 동등 inode·namespace, 브로커, 실계좌, 운영, 전체 test/gate와 전체 a166 완료는 미검증이다.
+
+## 결합 후 확인
+
+통합 commit 3b7f5922e2789a483d50c9db852e80ed21a1ddb3은 ec8 candidate/soak와 288358373 v2 후보를 실제로 합쳤다. 두 생산 client 생성은 동일 root factory를 사용하고, runtime/official 제품 3파일 및 공유 root fixture는 288358373과 byte-identical이다. candidate/soak 정확 5개 Go1.25 normal/tagged race는 임시 v2 root·lo-only/no-route local TLS에서 PASS했다. 이 결합은 여전히 Retrier poll·실제 운영 namespace·전체 a166 완료 증거가 아니다.

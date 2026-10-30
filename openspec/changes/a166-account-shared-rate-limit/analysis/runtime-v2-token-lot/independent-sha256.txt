@@ -6,3 +6,5 @@
 7b6cb9eb88419ccd069c3848fceb038b6fa3e9557f370438f5397fbe4f77a1ad  /tmp/a166-v2-independent-delta-tag-race.log
 d4a9d21eeea9e91ba684b9bdd40ea1493e9456389140881e54dfa144c4bf5694  /tmp/a166-v2-independent-nil-normal.log
 3dc66477535e1832d1b34c29036dcb637d47b6a3941080238d615ffc08c31ac1  /tmp/a166-v2-independent-nil-tag-race.log
+1168d936998d8edfe8f21abe6870c6677cf200d214c99b3836d0f5e201cc1265  /tmp/a166-v2-candidate-normal.log
+84f28c4d993dae852867fa51143bdfce45205827e4bdd4f470e83c536586d5ab  /tmp/a166-v2-candidate-tag-race.log
