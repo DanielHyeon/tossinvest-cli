@@ -54,6 +54,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 )
 
@@ -305,6 +306,18 @@ func (g *Gateway) ReplayInDoubt(ctx context.Context, attemptID string) (ReplayOu
 			continue
 		}
 
+		replayCtx := ctx
+		if _, required := g.replay.(*budgetedHTTPReplay); required {
+			priority, proven, err := g.replayOrigin(ctx, rec, intent)
+			if err != nil {
+				return out, err
+			}
+			if !proven {
+				return declineReplay(out, ReasonReplayIneligible, "replay origin is unverified; observation takes over"), nil
+			}
+			replayCtx = accountbudget.WithPriority(ctx, priority)
+		}
+
 		state, err := g.journal.MarkReplayStarted(ctx, attemptID, cfg.MaxReplays)
 		switch {
 		case errors.Is(err, journal.ErrReplayCapReached):
@@ -320,7 +333,7 @@ func (g *Gateway) ReplayInDoubt(ctx context.Context, attemptID string) (ReplayOu
 		out.Sent++
 
 		// The stored bytes, and only the stored bytes.
-		resp, callErr := g.replay.ReplayPlace(ctx, ReplayBody{stored: rec.WireBody})
+		resp, callErr := g.replay.ReplayPlace(replayCtx, ReplayBody{stored: rec.WireBody})
 		verdict := classifyReplay(rec, resp, callErr)
 
 		switch verdict.kind {

@@ -1,0 +1,6 @@
+--- FAIL: TestA166ReplayOriginClassification (0.23s)
+    --- FAIL: TestA166ReplayOriginClassification/entry-contradiction (0.01s)
+        a166_origin_internal_test.go:71: priority=0 ok=true err=<nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.236s
+FAIL

@@ -1,0 +1,5 @@
+--- FAIL: TestA166OrderableUnusedReferenceIsRejected (0.10s)
+    a166_origin_internal_test.go:150: unused reference hid an unclassified action
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.105s
+FAIL
