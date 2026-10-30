@@ -64,4 +64,5 @@
 - [x] P1 U0/U1·유형 순수 로트 설계 및 독립 검토, Manager 제한 READY. HTTP/CLI/원장/기존 함수 배선 없음.
 - [x] P2 신규 순수 함수 RED/GREEN·변이·선택 normal/tagged race·gstack 범위 리뷰 — `analysis/selection-core-lot/review.md`.
 - [x] P3 독립 검증·Manager 판정 뒤 commit/merge/push. a169 archive 및 측정 없음.
-- [x] P4 U2 단일 후보 점수 순수 로트: 선택 normal/tagged race·변이·독립 검토 후 게시. `analysis/u2-score-lot/` 및 `analysis/u2-score-independent-review.md`. 후보 합집합·caller·원장과 2.2 전체는 미완.
+- [x] P4 U2 단일 후보 점수 순수 로트: 선택 normal/tagged race·변이·독립 검토 후 게시. `analysis/u2-score-lot/` 및 `analysis/u2-score-independent-review.md`. caller·원장과 2.2 전체는 미완.
+- [x] P5 U2 후보 합집합·순위 순수 로트: 선택 normal/tagged race·변이·독립 검토 후 게시. `analysis/u2-union-lot/`. 실제 caller·원장·측정과 2.2 전체는 미완.
