@@ -36,7 +36,13 @@ func executeRoot(root *cobra.Command, opts *rootOptions) error {
 		return err
 	}
 	if err == errMonitorFailed {
-		return closeErr
+		return monitorCloseError{cause: closeErr}
 	}
 	return errors.Join(err, closeErr)
 }
+
+// monitorCloseError preserves both causes while displaying only the cleanup error.
+type monitorCloseError struct{ cause error }
+
+func (e monitorCloseError) Error() string   { return e.cause.Error() }
+func (e monitorCloseError) Unwrap() []error { return []error{errMonitorFailed, e.cause} }

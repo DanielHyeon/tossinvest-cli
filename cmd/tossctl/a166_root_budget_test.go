@@ -430,3 +430,39 @@ func TestA166CanceledRequiredStartupNoWire(t *testing.T) {
 		t.Fatalf("startup cancellation err=%v calls=%d", e, calls.Load())
 	}
 }
+
+func TestA166MonitorAndCloseErrorPreserveBothCauses(t *testing.T) {
+	closeErr := errors.New("close fixture")
+	joined := monitorCloseError{cause: closeErr}
+	if !errors.Is(joined, errMonitorFailed) || !errors.Is(joined, closeErr) {
+		t.Fatal("lost cause")
+	}
+	if strings.Contains(joined.Error(), errMonitorFailed.Error()) || joined.Error() != closeErr.Error() {
+		t.Fatalf("unexpected display: %q", joined.Error())
+	}
+
+	o := a166Owner(a166RootManifest(t))
+	f, e := o.get(context.Background())
+	if e != nil {
+		t.Fatal(e)
+	}
+	b, e := f.Budget()
+	if e != nil {
+		t.Fatal(e)
+	}
+	lease, e := b.Acquire(context.Background(), accountbudget.Critical)
+	if e != nil {
+		t.Fatal(e)
+	}
+	root := &cobra.Command{Use: "test", SilenceErrors: true, SilenceUsage: true, RunE: func(*cobra.Command, []string) error { return errMonitorFailed }}
+	e = executeRoot(root, &rootOptions{budgetOwner: o})
+	if !errors.Is(e, errMonitorFailed) || !strings.Contains(e.Error(), "active owners") || strings.Contains(e.Error(), errMonitorFailed.Error()) {
+		t.Fatalf("wrong combined monitor result: %v", e)
+	}
+	if e = lease.Release(); e != nil {
+		t.Fatal(e)
+	}
+	if e = o.Close(); e != nil {
+		t.Fatal(e)
+	}
+}

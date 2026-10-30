@@ -30,3 +30,9 @@
 추가 설계 결정: app.New에는 인자 없는 provider 하나만 추가하고 root closure가 Cobra command context를 사용한다. 직접 required builder에서 context가 없으면 오류로 거절하며 Background 잠금 대기를 새로 추가하지 않는다. Manager 승인에 따라 적용했다. `rootOptions.officialOptions`는 flatten의 local TLS fixture용 비공개 seam이며 기본 nil, CLI flag/env로 노출하지 않는다.
 
 최종 provider는 Manager 승인대로 `func() (*Factory,error)` 하나다. root closure가 실행 중 Cobra의 `cmd.Context()`를 캡처하고 직접 required builder에 context가 없으면 오류다. 취소된 required startup의 local TLS fake wire 0과 context 없는 직접 builder의 fail-closed를 추가했다. Manager의 caller-lifetime-plan 단일 문단만 새 signature와 동기화했다. Go 1.25 Linux tagged race 선택 시험도 통과했으나 Alpine/운영 실행이 아니다. hard exit130 및 커널 kill의 실제 child crash 시험은 미실행이다.
+
+## monitor sentinel + Close 오류 delta 사전 선언
+
+기준 `06066149be49ac09da2f0f891a70a89baad80d98`. `executeRoot`는 root.Execute 뒤 Close하고, Close 성공이면 기존 err, 일반 복합 오류는 errors.Join을 반환한다. monitor sentinel + Close 오류 분기는 현재 Close 오류만 반환해 sentinel 원인 identity를 잃는다. 사용자 출력은 sentinel 문구 없이 Close 오류만, 종료 코드는 1을 유지하면서 `errors.Is`가 양 원인을 인식해야 한다. RED: 두 원인 identity, 표기에서 sentinel 미노출, 실제 helper active-owner 오류 및 기존 monitor subprocess 출력. 수정은 private 오류 표현만 추가하며 다른 source·운영 범위 변경 없음.
+
+monitor delta GREEN: private `monitorCloseError`는 Error 문자열에 cleanup 오류만 표시하고 Unwrap에서 monitor sentinel과 cleanup 오류를 둘 다 제공한다. 일반 오류는 기존 errors.Join, monitor 단독은 기존 sentinel을 반환한다. `errors.Is` 양 원인, active lease Close 실패, fake child monitor exit1/출력, sentinel 제거 변이 및 normal/tagged race를 동봉 원문으로 확인했다. 수동 gstack delta는 오류 표현·원인 보존·redaction·close 재시도와 숨김 출력만 검토했다. 전체 gate/운영 미실행.
