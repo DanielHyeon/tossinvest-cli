@@ -1,0 +1,46 @@
+{
+  "file": "tools/a112-mb-us-source/official_reader.go",
+  "source_sha256": "a2202d8f60e096233e9b358cd23a489693019bd100092bf46a4cf0d69df09c8a",
+  "package": "main",
+  "function": "newProductionDependencies",
+  "signature": "newProductionDependencies(params=1, results=1)",
+  "start": {
+    "line": 15,
+    "column": 1
+  },
+  "end": {
+    "line": 18,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 17,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 16,
+        "column": 12
+      },
+      "text": "official.New"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 16,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

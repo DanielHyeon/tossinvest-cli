@@ -1,0 +1,108 @@
+{
+  "file": "tools/a112-mb-us-source/cli.go",
+  "source_sha256": "3ea36e0a85a563e1248a62dd6dc00148fbf5acc53bafe86cf9f3caf13a2cbc8c",
+  "package": "main",
+  "function": "runProduction",
+  "signature": "runProduction(params=2, results=1)",
+  "start": {
+    "line": 37,
+    "column": 1
+  },
+  "end": {
+    "line": 44,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 39,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 40,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 43,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 24
+      },
+      "text": "openProductionDependencies"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 8
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 26
+      },
+      "text": "errors.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 46
+      },
+      "text": "factory.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 9
+      },
+      "text": "run"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 38,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 42,
+        "column": 17
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "file": "tools/a087-market-sell-probe/main.go",
+  "source_sha256": "9a5d66fd55930d57561412cfadadd0f413039f41f0c8c6ece55f7a4348a4a399",
+  "package": "main",
+  "function": "main",
+  "signature": "main(params=0, results=0)",
+  "start": {
+    "line": 71,
+    "column": 1
+  },
+  "end": {
+    "line": 86,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 82,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 78,
+        "column": 34
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 15
+      },
+      "text": "signal.NotifyContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 36
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 8
+      },
+      "text": "stop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 15
+      },
+      "text": "run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 20
+      },
+      "text": "newRandom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 41
+      },
+      "text": "term.IsTerminal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 57
+      },
+      "text": "int"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 61
+      },
+      "text": "os.Stdin.Fd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 3
+      },
+      "text": "fmt.Fprintln"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 54
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 2
+      },
+      "text": "os.Exit"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 72,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 73,
+        "column": 2
+      },
+      "text": "stop"
+    }
+  ]
+}
