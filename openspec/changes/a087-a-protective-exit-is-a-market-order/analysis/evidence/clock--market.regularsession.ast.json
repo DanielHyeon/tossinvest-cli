@@ -1,0 +1,170 @@
+{
+  "file": "internal/clock/market.go",
+  "source_sha256": "85264b6e9b4e6b13ddee690ca62e0d30cbd73efeb6926e626abc3d20c622f7a9",
+  "package": "clock",
+  "function": "RegularSession",
+  "receiver": "Market",
+  "signature": "Market.RegularSession(params=1, results=2)",
+  "start": {
+    "line": 122,
+    "column": 1
+  },
+  "end": {
+    "line": 143,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 124,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 128,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 125,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 129,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 136,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 14
+      },
+      "text": "m.Location"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 21
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 60
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 11
+      },
+      "text": "t.In"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 133,
+        "column": 22
+      },
+      "text": "local.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 13
+      },
+      "text": "local.Weekday"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 12
+      },
+      "text": "local.Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 12
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 12
+      },
+      "text": "time.Date"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 127,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 132,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 133,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 134,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

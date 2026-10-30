@@ -1,0 +1,177 @@
+{
+  "file": "internal/app/engine/a087_lower_limit_internal_test.go",
+  "source_sha256": "c8d147876272d68cc6db8695311b7b8ccc943bf0fcbefb88d0991cc0df96731f",
+  "package": "engine",
+  "function": "TestA087FirstProtectiveAttemptIsMonotonic",
+  "signature": "TestA087FirstProtectiveAttemptIsMonotonic(params=1, results=0)",
+  "start": {
+    "line": 84,
+    "column": 1
+  },
+  "end": {
+    "line": 103,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 14
+      },
+      "text": "time.LoadLocation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 9
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 2
+      },
+      "text": "board.publish"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 3
+      },
+      "text": "lowerLimitKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 12
+      },
+      "text": "exitLimitPrice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 2
+      },
+      "text": "board.markProtectiveAttempt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 12
+      },
+      "text": "exitLimitPrice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 96,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 100,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

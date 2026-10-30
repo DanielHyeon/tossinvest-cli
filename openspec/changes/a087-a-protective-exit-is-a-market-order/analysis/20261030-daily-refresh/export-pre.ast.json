@@ -1,0 +1,78 @@
+{
+  "file": "/tmp/a087-export-pre.go",
+  "source_sha256": "1b2494d28c616d5e61d245ea2bf0309b1b4e79a2dd4ea878e840b119028588e0",
+  "package": "engine",
+  "function": "SetA087LowerLimitForTest",
+  "signature": "SetA087LowerLimitForTest(params=5, results=0)",
+  "start": {
+    "line": 7,
+    "column": 1
+  },
+  "end": {
+    "line": 16,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 8,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 9,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 11,
+        "column": 11
+      },
+      "text": "newExitLowerLimitBoard"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 12,
+        "column": 2
+      },
+      "text": "board.publish"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 13,
+        "column": 3
+      },
+      "text": "lowerLimitKey"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 11,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 15,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,38 @@
+{
+  "file": "internal/app/engine/exit_order_log.go",
+  "source_sha256": "419352e976848c9e210a08cf897d3495f84029e8ca54ed2bfcb79fbc2c2bd7b1",
+  "package": "engine",
+  "function": "exitOrderLineFor",
+  "signature": "exitOrderLineFor(params=7, results=1)",
+  "start": {
+    "line": 103,
+    "column": 1
+  },
+  "end": {
+    "line": 112,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 11
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

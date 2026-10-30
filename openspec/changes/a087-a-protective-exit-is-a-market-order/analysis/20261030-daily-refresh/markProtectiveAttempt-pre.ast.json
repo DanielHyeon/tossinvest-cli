@@ -1,0 +1,125 @@
+{
+  "file": "/tmp/a087-lower-pre.go",
+  "source_sha256": "d98d21c84ad4b9bdc405a674543570b1e560c21a7662c8127715dfb3b7cb5cc3",
+  "package": "engine",
+  "function": "markProtectiveAttempt",
+  "receiver": "exitLowerLimitBoard",
+  "signature": "exitLowerLimitBoard.markProtectiveAttempt(params=3, results=0)",
+  "start": {
+    "line": 126,
+    "column": 1
+  },
+  "end": {
+    "line": 140,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 127,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 131,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 128,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 132,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 14
+      },
+      "text": "clock.MarketKR.TradingDay"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 2
+      },
+      "text": "b.write.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 17
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 22
+      },
+      "text": "lowerLimitKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 2
+      },
+      "text": "b.write.Unlock"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 136,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

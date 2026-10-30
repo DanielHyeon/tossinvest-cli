@@ -1,0 +1,116 @@
+{
+  "file": "internal/execgw/protection.go",
+  "source_sha256": "71e4923e1301555808b3c65b437d1d20906f9d633d8eef52ac676a1433cd8267",
+  "package": "execgw",
+  "function": "canonicalProtectionQuantity",
+  "signature": "canonicalProtectionQuantity(params=1, results=2)",
+  "start": {
+    "line": 112,
+    "column": 1
+  },
+  "end": {
+    "line": 123,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 115,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 119,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 116,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 120,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 122,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 45
+      },
+      "text": "uint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 15
+      },
+      "text": "decimalString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 24
+      },
+      "text": "strings.ContainsAny"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 19
+      },
+      "text": "strconv.ParseUint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 85
+      },
+      "text": "float64"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 114,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,138 @@
+{
+  "file": "internal/trading/service.go",
+  "source_sha256": "631b2f02437e510698ffc06a1124bc11176d005a61956a61b4560e874d1e9f34",
+  "package": "trading",
+  "function": "guard",
+  "receiver": "Service",
+  "signature": "Service.guard(params=4, results=1)",
+  "start": {
+    "line": 237,
+    "column": 1
+  },
+  "end": {
+    "line": 251,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 238,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 241,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 247,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 239,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 242,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 245,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 248,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 12
+      },
+      "text": "s.requireActionEnabled"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 5
+      },
+      "text": "subtle.ConstantTimeCompare"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 32
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 54
+      }
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 238,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

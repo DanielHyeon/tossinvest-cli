@@ -1,0 +1,154 @@
+{
+  "file": "internal/client/marketdata.go",
+  "source_sha256": "57bf3ef2c14724f4411478ec6b8e5a6981c78595cd6ea80243d8c957a734cd6c",
+  "package": "client",
+  "function": "GetPriceLimits",
+  "receiver": "Client",
+  "signature": "Client.GetPriceLimits(params=2, results=2)",
+  "start": {
+    "line": 91,
+    "column": 1
+  },
+  "end": {
+    "line": 115,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 94,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 97,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 22
+      },
+      "text": "c.resolveProductCode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 5
+      },
+      "text": "deriveSecurityType"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 32
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 13
+      },
+      "text": "c.getStockInfo"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 14
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 12
+      },
+      "text": "c.getJSON"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 103,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,71 @@
+{
+  "file": "internal/clock/market.go",
+  "source_sha256": "85264b6e9b4e6b13ddee690ca62e0d30cbd73efeb6926e626abc3d20c622f7a9",
+  "package": "clock",
+  "function": "InRegularSession",
+  "receiver": "Market",
+  "signature": "Market.InRegularSession(params=1, results=2)",
+  "start": {
+    "line": 146,
+    "column": 1
+  },
+  "end": {
+    "line": 152,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 148,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 149,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 151,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 12
+      },
+      "text": "m.RegularSession"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 9
+      },
+      "text": "s.Contains"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 147,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

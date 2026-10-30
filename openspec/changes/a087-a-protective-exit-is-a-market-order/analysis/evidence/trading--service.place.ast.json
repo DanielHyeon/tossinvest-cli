@@ -1,0 +1,155 @@
+{
+  "file": "internal/trading/service.go",
+  "source_sha256": "631b2f02437e510698ffc06a1124bc11176d005a61956a61b4560e874d1e9f34",
+  "package": "trading",
+  "function": "Place",
+  "receiver": "Service",
+  "signature": "Service.Place(params=3, results=2)",
+  "start": {
+    "line": 186,
+    "column": 1
+  },
+  "end": {
+    "line": 208,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 188,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 204,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 189,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 193,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 197,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 201,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 205,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 207,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 6
+      },
+      "text": "placeIntentSupported"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 12
+      },
+      "text": "s.guard"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 38
+      },
+      "text": "s.PreviewPlace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 9
+      },
+      "text": "s.withLineage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 23
+      },
+      "text": "s.broker.PlacePendingOrder"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 200,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

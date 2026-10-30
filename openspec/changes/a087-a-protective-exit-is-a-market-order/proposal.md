@@ -1,4 +1,4 @@
-# a087 · 보호 청산은 시장가 주문이다
+# a087 · 보호 청산은 그날 하한가 지정가다 (8판 — 1~7판: 시장가)
 
 - **Feature**: `FEAT-TOS-009` — Exit line truth and position policy lifecycle
 - **Story**: `STORY-TOS-a087`
@@ -39,6 +39,42 @@
 > (KRX 시간외단일가, 그리고 접수가 실측되지 않았거나 거부가 실측된 정규장 밖 구간)과 구간 판정 불가에서는 보호 청산을 **오늘처럼 지정가**로
 > 낸다. spec Requirement 1 에 그 예외를 넣었고, 엔진에 세션 게이트가 없으므로(tasks 0.5) 구간 입력 배선이 구현 task 2.6 이 됐다
 > (design D7 「처분」). ② **I-R9** — 비종결 잔량의 자동 재가격·재주문은 새 change **a167** 로 이연(design D10). ③ **I-R10** — 필요 없음으로 종결.
+>
+> **7판 (2026-10-28, 사용자 결정 「권장대로」 — `issues.md` 「사용자 결정 (2026-10-28)」)**: ① 접수 미측정 구간·구간 판정 불가 = LIMIT(불변식 4 유도) **수락**.
+> ② **US 정규장도 실측 전까지 LIMIT** — 아래 What Changes 1 표의 US 칸과 「US 한계」 절은 이 결정으로 대체됐다(US 보호 청산은 오늘과 같다). ③ 구간 입력 =
+> **브로커 시장 달력(`TypedMarketCalendar`) + 고정 시각**, 달력 오류·결측이면 LIMIT — MARKET 은 달력이 정상 영업일로 보이는 날의 KRX 정규장 접속매매(09:00~15:20 KST)뿐(design D7
+> 「구간 입력」). ④ §5.2 세션 경계 실측은 **not-applicable**(아래 「실측 필요」 2). 결과적으로 Phase 2 의 MARKET 은 **KR 정규장 한 칸**이다.
+>
+> **0.10 독립 리뷰 (2026-10-28, FAIL → 보완)**: 그 한 칸을 증명할 KRX 단독 입력(개장 시각·시장 전체 정지, GET 0 아래의 종목 정지·VI)이 없다 —
+> 그대로면 KR 도 LIMIT 이 되어 Phase 2 의 실제 변경이 0 이다. 범위 재정의는 **사람 결정 대기**(`issues.md` D-1). 엔진 전용 배선·KR 정수 수량은 design D3 에서 닫았다.
+>
+> **8판 (사람 결정 2026-10-28 「3은 3」 — `issues.md` D-1 (다))**: 보호 청산 매도는 **시장가가 아니라 그날 거래소 하한가로 낸 지정가**다. 2026-10-10
+> 「시장가 방향」 결정을 대체한다. 범위: **KR** 보호 제안(`BASELINE_BREACH_EXIT`·`STOP_LOSS_LADDER`)이 **KRX 정규장 고정 창(평일 09:00~15:30 KST)** 안이고 엔진 메모리에
+> 그 종목의 그날 하한가가 유효하게 있을 때만 그 가격을 쓴다. 그 밖(창 밖 · 하한가 결측 · 낡음 · 그날 거부됨 · US · 익절)은 **오늘과 같은 관측가 지정가**다. 유형이 LIMIT 이라
+> 실행 관문 ②·③ · `internal/trading` · `NewOrderPath` 는 **무변경**이고 7판의 P0-1 · P1-1 · P1-2 는 문제 자체가 사라진다. 하한가는 이미 있는 `PriceLimits` 읽기
+> (`/api/v1/price-limits`)를 엔진 보조 실행자가 정규장 중 종목당 하루 1회 읽어 메모리 판에 두고, 제출 경로는 판만 읽는다(GET 0). 하한가 주문이 거부되면 그 종목은
+> 그날 오늘의 지정가로 돌아간다(지연 상한 1 관측 주기). 설계 정본 design **D11**, spec delta 3 Requirement 교체, tasks §1~§3 재편. 0.10 은 **8판 재리뷰 대기**.
+> 아래 본문(Why 이하)의 「시장가」 서술은 1~7판 기록이다 — 8판에서 바뀐 절에는 머리말을 달았다.
+>
+> **9판 (Manager 결정 2026-10-29 — 8판 독립 재리뷰 FAIL 처분, design D12)**: ① 하한가는 응답 `timestamp`(KST 날짜 = 그날 거래일 · 09:00 이후)와 raw decimal 을 보존하는
+> 엔진 전용 읽기로만 쓴다(CLI 출력 무변경, 거름 사유 10종) ② 하한가 GET 은 관측 주기가 판정 · 제출을 끝낸 뒤 주기당 최대 1건, 자기 `/prices` 와 겹침 0, 어디서든 429 를 보면 5분 정지
+> ③ 그날 그 종목의 최근 하한가 시도가 수용 확정이 아니면(직접 거부 · IN_DOUBT · 뒤늦은 비수용 포함) 그날 남은 시간은 오늘의 지정가, 재시작 뒤 원장에서 재구성 ④ tasks 5.4 실측이
+> 착지 전 필수 gate. 아래 Impact 의 「주기당 상한 5」는 「관측 주기당 1」로 대체됐다. 0.10 은 **9판 재리뷰 대기**.
+>
+> **10판 (Manager 결정 2026-10-29 — 9판 재리뷰 FAIL 처분, KISS, design D13)**: ③ 을 대체한다 — 하한가는 **그날 그 종목의 첫 보호 매도 시도에만** 쓴다(원장에 같은 계좌 · 시장 · 거래일 ·
+> 종목의 보호 청산 매도 intent 가 하나라도 있으면 그날 금지, 원장 오류면 금지). ② 의 429 정지 입력은 `official.Client` 가 헤더와 무관하게 기록하는 마지막 HTTP 429 시각 하나다
+> (`doRequest` 편집 — a166 · a100 과 같은 함수). timestamp 뜻은 5.4 gate 로 보류되고, 응답 시각이면 기본 처분은 KR off 다. 0.10 은 **10판 재리뷰 대기**.
+>
+> **11판 (Manager 결정 2026-10-29 — 10판 재리뷰 FAIL 처분, design D14)**: 재구성 술어의 보호 action 은 `isProtective` 와 같은 Go 상수에서 유도한다(기준선 이탈의 실제 값은
+> `BASELINE_BREACH_EXIT` — 문서 오기 정정). 갱신기는 엔진 시작 뒤 5분 GET 0 이고, 401 이면 토큰 하나가 wire GET 최대 3 이다. 예산 기준은 계좌 공유 3 req/s(주기당 ≤ 1 ≈ 6.7%) —
+> a166 이 착지하면 갱신기도 그 예산을 탄다(a087 은 a166 을 기다리지 않는다). 0.10 은 **11판 재리뷰 대기**.
+>
+> **12판 (Manager 결정 2026-10-29 — 11판 재리뷰 FAIL 처분, design D15)**: 위 「a087 은 a166 을 기다리지 않는다」를 대체한다 — 하한가 GET 은 **a166 계좌 공유 admission 이 주입될 때만**
+> 일어나고(wire 요청마다, 401 재전송 포함), 엔진 배선은 a166 착지 전까지 nil 이다. a087 코드는 a166 전에 착지할 수 있지만 그때 생산 동작 변화는 0 이다(활성화 조건). `doRequest` 429 기록은 a166 으로
+> 옮겨 a087 의 `doRequest` 편집은 0 이다. 0.10 은 **12판 재리뷰 대기**.
+>
+> **13판 (2026-10-29, design D15.4)**: 활성화(엔진에 admission 주입)는 a166 이 `doRequest` 의 `c.hc.Do` 직전에서 wire 요청마다 admission 을 강제하고(401 재전송 포함 — `send` 단위 불가)
+> 그 통합 시험이 a166 착지 sha 에 있을 때만, 그 시험 이름 · sha 를 인용한 별도 착지(tasks 5.5)로 한다. 0.10 은 **13판 재리뷰 대기**.
 
 ## Why
 
@@ -196,15 +232,20 @@ reader 인터페이스에 선언된 `PriceLimits`(reads.go:72, 비시험 호출�
 
 ### 1. Phase 2 — 보호 청산의 주문 유형을 시장으로 결정한다 (착수 조건: §0.7 실측)
 
+> **8판에서 대체됨**: 유형은 LIMIT 그대로이고 KR 정규장 창 안의 보호 매도 **가격**이 그날 하한가가 된다(design D11 (a)). 아래 표의 KR 칸은
+> 「하한가 LIMIT(창 안 · 판 유효) / 오늘 LIMIT(그 밖)」, US 칸은 「오늘 LIMIT」으로 읽는다. 익절 행 · §0.9 문단은 그대로다.
+
 `sellIntent`가 유형을 하드코딩하지 않고 **제안의 성격과 시장**으로 정한다.
 
 | 제안 | KR | US |
 | --- | --- | --- |
-| 보호 (`isProtective` — `BASELINE_BREACH`·`STOP_LOSS_LADDER`) | **MARKET** — 단 시장가를 받지 않는 구간·구간 판정 불가는 오늘과 같은 LIMIT(6판, design D7) | **MARKET** — 같은 예외 |
+| 보호 (`isProtective` — `BASELINE_BREACH_EXIT`·`STOP_LOSS_LADDER`) | **MARKET** — 단 시장가를 받지 않는 구간·구간 판정 불가는 오늘과 같은 LIMIT(6판, design D7). 7판: 정상 영업일(브로커 달력)의 정규장 접속매매(09:00~15:20)만 MARKET | ~~**MARKET** — 같은 예외~~ **LIMIT(현행 유지) — 실측 전까지**(7판 Q2) |
 | 익절 (`LADDER_TAKE_PROFIT`) | LIMIT (현행 유지) | LIMIT (현행 유지) |
 
 익절을 그대로 두는 것이 §0.9다. 익절은 즉시성이 목적이 아니고, 시장가로 바꾸면 체결가
 불확실성이 이익 쪽으로 열린다 — 보수 방향이 아니다. 보호만 바꾼다.
+
+> **7판 (2026-10-28 Q2)**: 아래 「US도 MARKET인 근거」와 「US 한계」는 **대체됐다** — US 보호 청산은 실측 전까지 LIMIT 이다. 기록으로 남긴다.
 
 US도 MARKET인 근거: openapi가 US 온주 MARKET 매도에 제약을 두지 않는다. StockOS가 US에
 MARKETABLE_LIMIT을 쓴 것은 KIS 계약 때문이며 토스 계약에는 그 제약이 없다. M12 는 US **조건주문**
@@ -218,6 +259,8 @@ SINGLE+MARKET 등록 실측이라 `/api/v1/orders` MARKET 접수의 증거가 �
 > 사람 확인 항목이다(tasks §5 표 아래 「US」 행). 세션 교집합은 design D7.
 
 ### 2. 게이트를 축소 주문에 한해 연다 — 두 관문 (②·③)
+
+> **8판에서 대체됨 — 관문을 열지 않는다.** 하한가 지정가는 오늘의 limit 갈래로 ②·③ 을 지난다. 이 절의 개방 · 엔진 인스턴스 옵션은 하지 않는다(design D3 머리말 · D11 (e)).
 
 `checkOrderShape`(②)와 `placeIntentSupported`(③ — 엔진 인스턴스 한정)의 `orderType != "limit"` 거부에 **축소(매도)
 시장가·가격 없음** 분기를 추가한다. **비분수** 진입(매수) 시장가는 두 관문 모두 계속 거부한다 — 그것이 riskcalc의 실제
@@ -235,6 +278,9 @@ side == "buy"  && orderType == "market"                → 거부 (현행 유지
 
 ### 3. 원장이 잃는 것을 명시한다
 
+> **8판에서 대체됨**: 원장은 아무것도 잃지 않는다 — `intents.price` 는 보낸 가격(하한가 또는 오늘의 값)이고, 가격 출처는 a129 청산 주문 줄의 `price_source` 에 남는다
+> (design D11 (b) 「기록」). schema 무변경.
+
 시장가는 제출 시점에 가격이 없다. 원장의 `intents.price`는 비고, 체결가는 체결 조회로
 확정된다. **그것이 정직한 기록이다** — 지금은 "받을 것으로 기대한 가격"을 적고 있고,
 그 값은 체결가가 아니며, 위 5건은 아예 주문이 되지도 못했다.
@@ -242,6 +288,12 @@ side == "buy"  && orderType == "market"                → 거부 (현행 유지
 관측·화면이 가격 없는 청산 의도를 표시할 수 있어야 한다.
 
 ## Impact
+
+> **8판 Impact**: **Specs** — `order-execution` ADDED 3 을 교체(국내 정규장 보호 청산 = 하한가 지정가 · 관문 무변경 · 지정가 출처 기록). **Code** —
+> `internal/app/engine/exitloop.go`(`submit` 본문 · `ExitObserverOptions` 필드), 새 파일 `internal/app/engine/exit_lower_limit.go`(판 · 갱신기 · 가격 결정),
+> `exit_order_log.go`(`exitOrderLineFor` · `exitOrderLine.args`), `engine.go`(`NewContext` 판 한 줄), `exitwiring.go`(`Context.ExitObserver`), `cmd/tossctl/engine.go`
+> (`engineRuntime` 보조 실행자 한 줄). **무변경**: `execgw/failclosed.go` · `internal/trading` · `NewOrderPath` · flatten · CLI · ops · MCP · 달력. **Schema** — 없음.
+> **§0.4** — 관측 루프 무변화, 보조 실행자가 정규장 중 KR 보유 종목당 하루 1회 `GET /api/v1/price-limits`(`MARKET_DATA`, 주기당 상한 5). 아래 7판 Impact 는 기록이다.
 
 - **Specs**: `order-execution` (ADDED 3 — 보호 청산의 주문 유형, 축소 시장가의 게이트
   통과, 가격 없는 청산 의도의 원장·화면). **Phase 1 은 델타에 기여하지 않는다** — 하한가
@@ -251,7 +303,8 @@ side == "buy"  && orderType == "market"                → 거부 (현행 유지
   (`checkOrderShape` + 「internal/trading is not ours to change」 주석), **`internal/trading/service.go`
   (`placeIntentSupported` + 엔진 전용 생성자 옵션 — 기본값은 upstream 동일, 2026-10-10 사용자 결정 2차)**,
   **`internal/app/engine/engine.go`(엔진 `trading.Service` 생성에서만 옵션을 켠다)**, 관측·원장 표시부,
-  **구간·접수 입력 배선(6판 — 출처 함수는 tasks 2.6.1 의 AST 열거 뒤 정한다)**.
+  **구간·접수 입력 배선(6판 — 7판에서 출처 확정: 브로커 달력 `official.Client.TypedMarketCalendar` + `clock` 고정 시각, KR 만 · 타입
+  `official.MarketCalendarSession` 에 KRX 기준 필드 추가 — design D7 「구간 입력」)**.
   ~~Phase 1 은 `PriceLimits` 배선 추가~~
   (불구현 — Phase 1 의 코드 산출물은 `internal/exitpolicy/a087_observed_price_pin_test.go` 시험 1개)
 - **영향받는 표면 (무변경이어도 시험 대상)**: 전송 `official.buildOrderCreate` 와 그 사본 `execgw.PlaceWireBody`
@@ -297,6 +350,9 @@ side == "buy"  && orderType == "market"                → 거부 (현행 유지
    ~~엔진 청산 루프는 정규장 기준이라 차단 요소는 아니지만~~ — **정정(재리뷰 P1-2 · 2차 리뷰 H1)**: 엔진에
    `InRegularSession` 호출자가 없다(비시험 호출자는 `verifylive` 하나). 엔진이 정규장 밖에서 보호 청산을 제출하는지와
    그때의 처분은 design D7 — **미해결, §1~§3 착수 전 확인**
-   → 0.5(2026-10-20)가 엔진에 세션 게이트가 없음을 AST 로 확인했고, D7 처분은 사용자 결정 2026-10-22 로 정해졌다(6판). §5.2 는 여전히
-   측정 대상이다 — 그 결과는 구간 표의 칸을 확정하는 입력이다
-3. **US** — 실측 없음. 한계는 위 What Changes §1 「US 한계」
+   → 0.5(2026-10-20)가 엔진에 세션 게이트가 없음을 AST 로 확인했고, D7 처분은 사용자 결정 2026-10-22 로 정해졌다(6판). ~~§5.2 는 여전히
+   측정 대상이다~~ → **7판: §5.2 는 not-applicable**(2026-10-28 Q4 — 모름은 LIMIT 으로 고정됐고 실측은 다음 세션 체결 위험만 남긴다. design D7 「§5.2 처분」)
+3. **US** — 실측 없음. ~~한계는 위 What Changes §1 「US 한계」~~ → 7판: US 보호 청산은 실측 전까지 LIMIT(Q2)이라 미측정 착지 위험이 없다
+4. **(8판) KR 하한가 지정가 매도 1주** — 정규장 접속매매 중 그날 하한가로 LIMIT SELL 1주(사람 CLI `tossctl order place` 지정가 경로 — upstream 그대로라 새 도구 불요).
+   하한가 가격의 접수(호가 단위 · 허용 범위)와 체결가 vs 매수 1호가를 잰다. 이 저장소에 하한가 지정가 영수증은 0 건이다. 착수 조건인지 착지 전 조건인지는 사람 결정
+   (`issues.md` D-2 ②, tasks 5.4)

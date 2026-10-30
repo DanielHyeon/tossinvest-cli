@@ -1,0 +1,136 @@
+{
+  "file": "internal/app/engine/manual_buy_refresh.go",
+  "source_sha256": "4d6a361efa0c0d86c9bbd7dc221e64ccacc2995eaa17e1c6ec699031c00a34a2",
+  "package": "engine",
+  "function": "Run",
+  "receiver": "manualBuyRefresh",
+  "signature": "manualBuyRefresh.Run(params=1, results=1)",
+  "start": {
+    "line": 84,
+    "column": 1
+  },
+  "end": {
+    "line": 99,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "for",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "select",
+      "at": {
+        "line": 93,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 87,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 95,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 5
+      },
+      "text": "ctx.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 10
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 12
+      },
+      "text": "time.NewTicker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 8
+      },
+      "text": "ticker.Stop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 3
+      },
+      "text": "r.refreshOnce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 10
+      },
+      "text": "ctx.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 11
+      },
+      "text": "ctx.Err"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 90,
+        "column": 2
+      },
+      "text": "ticker.Stop"
+    }
+  ]
+}

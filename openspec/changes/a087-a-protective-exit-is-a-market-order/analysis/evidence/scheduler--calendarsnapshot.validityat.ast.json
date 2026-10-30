@@ -1,0 +1,125 @@
+{
+  "file": "internal/scheduler/calendar.go",
+  "source_sha256": "004b8011b16021f4922a46c54b6a0e3278aaca9876018269dd548fd47ffa33f4",
+  "package": "scheduler",
+  "function": "ValidityAt",
+  "receiver": "CalendarSnapshot",
+  "signature": "CalendarSnapshot.ValidityAt(params=1, results=1)",
+  "start": {
+    "line": 138,
+    "column": 1
+  },
+  "end": {
+    "line": 149,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 139,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 142,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 145,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 140,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 143,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 146,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 148,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 5
+      },
+      "text": "c.FetchedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 29
+      },
+      "text": "now.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 5
+      },
+      "text": "now.Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 32
+      },
+      "text": "now.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 68
+      },
+      "text": "now.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 106
+      },
+      "text": "c.FetchedAt.Before"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}
