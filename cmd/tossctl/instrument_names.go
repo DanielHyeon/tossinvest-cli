@@ -39,6 +39,8 @@ type consoleInstrumentMetadata interface {
 const consoleInstrumentBatchLimit = 200
 
 func (l *lazyInstrumentNames) Names(ctx context.Context, refs []consoleInstrumentRef) ([]consoleInstrumentName, error) {
+	ctx, cancel := l.shared.requestContext(ctx)
+	defer cancel()
 	budgetPath := strings.TrimSpace(l.budgetPath)
 	if !l.budgetConfigured {
 		var err error

@@ -886,6 +886,8 @@ func (c *consoleBroker) instrumentMetadata(ctx context.Context) (consoleInstrume
 }
 
 func (c *consoleBroker) TypedMarketCalendar(ctx context.Context, country, date string) (official.MarketCalendarResponse, error) {
+	ctx, cancel := c.requestContext(ctx)
+	defer cancel()
 	broker, _, err := c.resolve(ctx)
 	if err != nil {
 		return official.MarketCalendarResponse{}, err
@@ -939,6 +941,8 @@ type lazyHoldings struct {
 // client's PlaceOrder / CancelOrder / ModifyOrder are not reachable from the value
 // that crosses into internal/console.
 func (l *lazyHoldings) Holdings(ctx context.Context, symbol string) ([]domain.Position, error) {
+	ctx, cancel := l.shared.requestContext(ctx)
+	defer cancel()
 	broker, _, err := l.shared.resolve(ctx)
 	if err != nil {
 		return nil, err
@@ -1029,6 +1033,8 @@ type lazyOrders struct {
 // An error is returned only when there is no reading at all to describe — no
 // credentials, or a client that does not have these reads.
 func (l *lazyOrders) Orders(ctx context.Context) (console.OrdersReading, error) {
+	ctx, cancel := l.shared.requestContext(ctx)
+	defer cancel()
 	broker, accountRef, err := l.shared.resolve(ctx)
 	if err != nil {
 		return console.OrdersReading{}, err

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 	"go/ast"
@@ -264,5 +265,171 @@ func TestA166ConsoleBrokerLifetimeCancelsPending(t *testing.T) {
 		}
 	case <-time.After(time.Second):
 		t.Fatal("pending factory did not cancel")
+	}
+}
+
+type a166BlockingCalendar struct {
+	*official.Client
+	started chan struct{}
+	release chan struct{}
+	calls   atomic.Int32
+}
+
+func (b *a166BlockingCalendar) TypedMarketCalendar(ctx context.Context, _, _ string) (official.MarketCalendarResponse, error) {
+	b.calls.Add(1)
+	close(b.started)
+	select {
+	case <-ctx.Done():
+		return official.MarketCalendarResponse{}, ctx.Err()
+	case <-b.release:
+		return official.MarketCalendarResponse{}, errors.New("fixture released")
+	}
+}
+func TestA166ReadLifetimeAfterCachedBootstrap(t *testing.T) {
+	lifetime, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	fixture := &a166BlockingCalendar{Client: official.New(official.Credentials{}, ""), started: make(chan struct{}), release: make(chan struct{})}
+	defer close(fixture.release)
+	prior := verifyBrokerFactory
+	verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) { return fixture, "fake", nil }
+	t.Cleanup(func() { verifyBrokerFactory = prior })
+	broker := newConsoleBroker(&rootOptions{}, lifetime)
+	if _, _, err := broker.resolve(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	ctx, requestCancel := context.WithCancel(context.Background())
+	requestCancel()
+	if _, err := broker.TypedMarketCalendar(ctx, "KR", "20261031"); !errors.Is(err, context.Canceled) || fixture.calls.Load() != 0 {
+		t.Fatalf("pre-cancel err=%v calls=%d", err, fixture.calls.Load())
+	}
+	result := make(chan error, 1)
+	go func() { _, err := broker.TypedMarketCalendar(context.Background(), "KR", "20261031"); result <- err }()
+	select {
+	case <-fixture.started:
+	case <-time.After(time.Second):
+		t.Fatal("read did not start")
+	}
+	cancel()
+	select {
+	case err := <-result:
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("lifetime cancellation lost: %v", err)
+		}
+	case <-time.After(200 * time.Millisecond):
+		t.Fatal("read outlived signal lifetime")
+	}
+}
+
+type a166BlockingReads struct {
+	*official.Client
+	started  chan struct{}
+	release  chan struct{}
+	once     sync.Once
+	observed chan error
+}
+
+func (b *a166BlockingReads) wait(ctx context.Context) error {
+	b.once.Do(func() { close(b.started) })
+	select {
+	case <-ctx.Done():
+		err := ctx.Err()
+		select {
+		case b.observed <- err:
+		default:
+		}
+		return err
+	case <-b.release:
+		return errors.New("fixture released")
+	}
+}
+func (b *a166BlockingReads) Holdings(ctx context.Context, _ string) ([]domain.Position, error) {
+	return nil, b.wait(ctx)
+}
+func (b *a166BlockingReads) OrdersRaw(ctx context.Context, _ official.OrdersFilter) (official.RawOrderList, error) {
+	return official.RawOrderList{}, b.wait(ctx)
+}
+func (b *a166BlockingReads) ConditionalOrdersRaw(ctx context.Context, _, _, _ string, _ int) (official.RawConditionalOrderList, error) {
+	return official.RawConditionalOrderList{}, b.wait(ctx)
+}
+func (b *a166BlockingReads) Stocks(ctx context.Context, _ []string) ([]domain.Quote, error) {
+	return nil, b.wait(ctx)
+}
+
+func TestA166ReadLifetimeForHoldingsOrdersAndNames(t *testing.T) {
+	for _, kind := range []string{"holdings", "orders", "names"} {
+		t.Run(kind, func(t *testing.T) {
+			lifetime, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			fixture := &a166BlockingReads{Client: official.New(official.Credentials{}, ""), started: make(chan struct{}), release: make(chan struct{}), observed: make(chan error, 4)}
+			defer close(fixture.release)
+			prior := verifyBrokerFactory
+			verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) { return fixture, "fake", nil }
+			t.Cleanup(func() { verifyBrokerFactory = prior })
+			broker := newConsoleBroker(&rootOptions{}, lifetime)
+			if _, _, err := broker.resolve(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			done := make(chan struct{})
+			go func() {
+				defer close(done)
+				switch kind {
+				case "holdings":
+					_, _ = newConsoleHoldings(broker).Holdings(context.Background(), "")
+				case "orders":
+					_, _ = consoleOrdersSeam(broker).Orders(context.Background())
+				case "names":
+					_, _ = newConsoleInstrumentNamesWithBudget(broker, "").Names(context.Background(), []consoleInstrumentRef{{Market: "kr", Symbol: "005930"}})
+				}
+			}()
+			select {
+			case <-fixture.started:
+			case <-time.After(time.Second):
+				t.Fatal("read did not start")
+			}
+			cancel()
+			select {
+			case err := <-fixture.observed:
+				if !errors.Is(err, context.Canceled) {
+					t.Fatalf("read ctx=%v", err)
+				}
+			case <-time.After(time.Second):
+				t.Fatal("signal did not cancel read")
+			}
+			select {
+			case <-done:
+			case <-time.After(time.Second):
+				t.Fatal("read did not finish")
+			}
+		})
+	}
+}
+
+func TestA166ReadOriginalRequestCancellation(t *testing.T) {
+	fixture := &a166BlockingCalendar{Client: official.New(official.Credentials{}, ""), started: make(chan struct{}), release: make(chan struct{})}
+	defer close(fixture.release)
+	prior := verifyBrokerFactory
+	verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) { return fixture, "fake", nil }
+	t.Cleanup(func() { verifyBrokerFactory = prior })
+	broker := newConsoleBroker(&rootOptions{}, context.Background())
+	if _, _, err := broker.resolve(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	result := make(chan error, 1)
+	go func() { _, err := broker.TypedMarketCalendar(ctx, "KR", "20261031"); result <- err }()
+	select {
+	case <-fixture.started:
+	case <-time.After(time.Second):
+		t.Fatal("read did not start")
+	}
+	cancel()
+	select {
+	case err := <-result:
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("request cancellation lost: %v", err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("request did not cancel")
 	}
 }
