@@ -14,6 +14,7 @@ package main
 //	--list                        reads nothing, sends nothing
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -77,7 +78,7 @@ func TestM0CLIForbiddenModesRefuseBeforeBrokerFactoryOrConfirmation(t *testing.T
 			}
 			factoryCalls := 0
 			previous := verifyBrokerFactory
-			verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+			verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 				factoryCalls++
 				return nil, "", fmt.Errorf("factory must not run")
 			}
@@ -159,7 +160,7 @@ func (s *verifyServer) seen() []string {
 func pointVerifyAt(t *testing.T, srv *verifyServer, tokenFile string) {
 	t.Helper()
 	previous := verifyBrokerFactory
-	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+	verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 		client := official.New(
 			official.Credentials{APIKey: "k", SecretKey: "s"},
 			tokenFile,

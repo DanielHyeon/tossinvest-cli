@@ -55,7 +55,7 @@ func TestConsoleBrokerTypedMarketCalendarReusesResolutionAndKeepsExactAccountRef
 	calendar := &stubScheduleCalendar{response: productionKRCalendar()}
 	built := 0
 	previous := verifyBrokerFactory
-	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+	verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 		built++
 		return scheduleCalendarBroker{calendar: calendar}, "  123-45-678901  ", nil
 	}
@@ -70,7 +70,7 @@ func TestConsoleBrokerTypedMarketCalendarReusesResolutionAndKeepsExactAccountRef
 	if built != 1 {
 		t.Fatalf("calendar adapter built the shared broker %d times, want 1", built)
 	}
-	_, accountRef, err := shared.resolve()
+	_, accountRef, err := shared.resolve(context.Background())
 	if err != nil {
 		t.Fatalf("resolve cached broker: %v", err)
 	}
@@ -87,7 +87,7 @@ func TestConsoleBrokerTypedMarketCalendarFailsClosed(t *testing.T) {
 	t.Run("resolver error", func(t *testing.T) {
 		want := errors.New("account resolution unavailable")
 		previous := verifyBrokerFactory
-		verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+		verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 			return nil, "", want
 		}
 		t.Cleanup(func() { verifyBrokerFactory = previous })
@@ -102,7 +102,7 @@ func TestConsoleBrokerTypedMarketCalendarFailsClosed(t *testing.T) {
 
 	t.Run("broker lacks typed calendar", func(t *testing.T) {
 		previous := verifyBrokerFactory
-		verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+		verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 			return brokerWithoutCalendar{}, "123-45-678901", nil
 		}
 		t.Cleanup(func() { verifyBrokerFactory = previous })

@@ -1,0 +1,24 @@
+# 원문 영수증
+
+- a166-verify-context-red.log: 7c423cb0abbe8f2307dcb0e4acac4cb1dd4d98fb733d0dd1a3c9ad1a902c983b
+- a166-verify-context-green.log: 46f95f803ffca77d4738857f4464c0fced9ec94f5bbd793093f144b9385ea8fd
+- a166-verify-context-green-v2.log: 91228f17cb927bafd70638002c72843c88aaeb0286c64d8caa0115733e52c536
+- a166-console-lifetime-red.log: 1d46f789864dc6d862e626b03d5a516c6905bb299c4892213a024366484bb143
+- a166-console-lifetime-green.log: 28a5ff073f239662182f27b656756cdd53cfc39432eb45df5af0daf57bc7c331
+- a166-httpapi-context-red.log: 279199b0856ed3f42ac3ee030f3c8218b5d6c5f004dc80a3afc1ae3adbc2c6df
+- a166-httpapi-context-green.log: 38efd06e7a0544f7583fd49231fc0fdd58abb347c99dc59ffd6f531d58b512cb
+- a166-httpapi-context-green-v2.log: 82c337cb3eca8b92c656e859042d4736295dd26e33156fa9b9e44b2ef3cb454c
+- a166-httpapi-shutdown-red.log: 0d0fab085c592041fec439ad278c1c84df8548b123a3a83e59a41a9e25ad5e9f
+- a166-httpapi-shutdown-green.log: acb2487c4b4d05616a0872955a4ed9c2abcbf235d5cbb22abdcd271f488fb462
+- a166-httpapi-shutdown-both-green.log: d541d4cea7719febf137c8ef18ce235ac4b6ca9484887d013041385c4f981ef6
+- a166-verify-http-normal.log: 07351646a6f424a8259ecfaa4a560e7bc9e52bc0be5a387ad23eb839ed4ecb47
+- a166-console-cache-green.log: 7543eeed16f5894dcfe4ba8935fb7fa64bbffe5470c604271a70ca8c40d361af
+- a166-console-pending-green.log: 91228f17cb927bafd70638002c72843c88aaeb0286c64d8caa0115733e52c536
+- a166-verify-new-client-green.log: a0c8016ed80965d40eedc1dc391d2534376f04fb383822a3d568602f8d639ca6
+- a166-verify-first-mutant.log: dedbf5b4099af935bbf2e86f5ffa2b323a32b71c9e0f1be41278e1cacf93e47f
+- a166-verify-bound-mutant.log: 3c01c027e9a0bbf8fc51d85ed9549501e378432fa53a11d3a840728fab249cbd
+- a166-httpapi-context-mutant.log: 147f069a0cf8192f801603f1e6c1bb99c06841aa3551f9bafa4d1e609864a33e
+- a166-httpapi-shutdown-mutant.log: c762786506c49d3122d25829bb7b3d40f1c4146358d7536576244ab7edc44011
+- a166-console-lifetime-mutant.log: de5b65690c5926f8589dd5a303cf1ed4b153b039deb769c13e238a3d7c76e047
+- a166-verify-http-freeze-normal.log: b802d3bacad858460d3488005495bf6b2ce24419444fb38739dd4b6893c5607c
+- a166-verify-http-freeze-tag-race.log: 5008c4be3deaa09797e9b0e0eab960eeabd46978848230ae3fb36b854b3ff269

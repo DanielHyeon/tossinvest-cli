@@ -330,7 +330,7 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	// screen opens first lazily resolves the account and caches that exact official
 	// client, so history's /stocks read and every account-scoped screen reuse one
 	// OAuth token manager and one account resolution per console process.
-	reads := newConsoleBroker(root)
+	reads := newConsoleBroker(root, ctx)
 	engineBoot := consoleEngineBootSeam(root)
 	var engineBootLoad func() (bool, error)
 	if engineBoot != nil {
@@ -775,7 +775,8 @@ func (s consoleGateLimits) GateLimits() (console.GateLimits, error) {
 // a bound method pins its receiver, and it is reachable from the console neither
 // before nor after.
 type consoleBroker struct {
-	root *rootOptions
+	lifetime context.Context
+	root     *rootOptions
 
 	gateOnce   sync.Once
 	gate       chan struct{}
@@ -790,8 +791,24 @@ type consoleBroker struct {
 // makes a network request. Neither should be a precondition for the console coming
 // up when the operator may never open a live-data screen. The first relevant
 // render pays that cost; a failure is a sentence on the page.
-func newConsoleBroker(root *rootOptions) *consoleBroker {
-	return &consoleBroker{root: root, build: buildConsoleAccountBroker}
+func newConsoleBroker(root *rootOptions, lifetime ...context.Context) *consoleBroker {
+	c := &consoleBroker{root: root, build: buildConsoleAccountBroker}
+	if len(lifetime) > 0 {
+		c.lifetime = lifetime[0]
+	}
+	return c
+}
+
+func (c *consoleBroker) requestContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(ctx)
+	if c.lifetime == nil {
+		return ctx, cancel
+	}
+	stop := context.AfterFunc(c.lifetime, cancel)
+	if c.lifetime.Err() != nil {
+		cancel()
+	}
+	return ctx, func() { stop(); cancel() }
 }
 
 func (c *consoleBroker) lock(ctx context.Context) error {
@@ -820,15 +837,20 @@ func (c *consoleBroker) unlock() { c.gate <- struct{}{} }
 // when the console started may be there after `tossctl openapi login`, and what
 // stops a failing build from being retried on every render is the console's own
 // cache (holdings.go bounds attempts by the TTL, not by successes).
-func (c *consoleBroker) resolve() (verifylive.Broker, string, error) {
-	if err := c.lock(context.Background()); err != nil {
+func (c *consoleBroker) resolve(ctx context.Context) (verifylive.Broker, string, error) {
+	ctx, cancel := c.requestContext(ctx)
+	defer cancel()
+	if err := c.lock(ctx); err != nil {
 		return nil, "", err
 	}
 	defer c.unlock()
+	if err := ctx.Err(); err != nil {
+		return nil, "", err
+	}
 	if c.client != nil {
 		return c.client, c.accountRef, nil
 	}
-	broker, accountRef, err := verifyBrokerFactory(c.root)
+	broker, accountRef, err := verifyBrokerFactory(ctx, c.root)
 	if err != nil {
 		return nil, "", err
 	}
@@ -837,10 +859,15 @@ func (c *consoleBroker) resolve() (verifylive.Broker, string, error) {
 }
 
 func (c *consoleBroker) instrumentMetadata(ctx context.Context) (consoleInstrumentMetadata, error) {
+	ctx, cancel := c.requestContext(ctx)
+	defer cancel()
 	if err := c.lock(ctx); err != nil {
 		return nil, err
 	}
 	defer c.unlock()
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if c.client == nil {
 		if c.build == nil {
 			return nil, fmt.Errorf("console: context-aware broker builder is not configured")
@@ -859,7 +886,9 @@ func (c *consoleBroker) instrumentMetadata(ctx context.Context) (consoleInstrume
 }
 
 func (c *consoleBroker) TypedMarketCalendar(ctx context.Context, country, date string) (official.MarketCalendarResponse, error) {
-	broker, _, err := c.resolve()
+	ctx, cancel := c.requestContext(ctx)
+	defer cancel()
+	broker, _, err := c.resolve(ctx)
 	if err != nil {
 		return official.MarketCalendarResponse{}, err
 	}
@@ -912,7 +941,9 @@ type lazyHoldings struct {
 // client's PlaceOrder / CancelOrder / ModifyOrder are not reachable from the value
 // that crosses into internal/console.
 func (l *lazyHoldings) Holdings(ctx context.Context, symbol string) ([]domain.Position, error) {
-	broker, _, err := l.shared.resolve()
+	ctx, cancel := l.shared.requestContext(ctx)
+	defer cancel()
+	broker, _, err := l.shared.resolve(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1002,7 +1033,9 @@ type lazyOrders struct {
 // An error is returned only when there is no reading at all to describe — no
 // credentials, or a client that does not have these reads.
 func (l *lazyOrders) Orders(ctx context.Context) (console.OrdersReading, error) {
-	broker, accountRef, err := l.shared.resolve()
+	ctx, cancel := l.shared.requestContext(ctx)
+	defer cancel()
+	broker, accountRef, err := l.shared.resolve(ctx)
 	if err != nil {
 		return console.OrdersReading{}, err
 	}
@@ -1231,7 +1264,7 @@ func consoleVerifyStarter(root *rootOptions) console.StartVerify {
 			return empty, nil, err
 		}
 		defer budgetLease.Release()
-		broker, accountRef, err := verifyBrokerFactory(root)
+		broker, accountRef, err := verifyBrokerFactory(ctx, root)
 		if err != nil {
 			return empty, nil, err
 		}

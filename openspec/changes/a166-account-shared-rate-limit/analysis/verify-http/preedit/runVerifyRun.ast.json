@@ -1,0 +1,783 @@
+{
+  "file": "cmd/tossctl/verify.go",
+  "source_sha256": "d863c1de6b2af55c56a1da9bd0124dcd81a2e8348c7eec4a2a72b662c3ce8ef7",
+  "package": "main",
+  "function": "runVerifyRun",
+  "signature": "runVerifyRun(params=3, results=1)",
+  "start": {
+    "line": 273,
+    "column": 1
+  },
+  "end": {
+    "line": 401,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 279,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 285,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 294,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 303,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 307,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 310,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 314,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 316,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 324,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 332,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 337,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 343,
+        "column": 2
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 348,
+        "column": 2
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 352,
+        "column": 2
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 360,
+        "column": 2
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 387,
+        "column": 2
+      }
+    },
+    {
+      "id": "B17",
+      "kind": "if",
+      "at": {
+        "line": 396,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 281,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 295,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 304,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 308,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 311,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 317,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 325,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 333,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 338,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 344,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 361,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 388,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 398,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 400,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 274,
+        "column": 9
+      },
+      "text": "cmd.OutOrStdout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 3
+      },
+      "text": "verifylive.WriteSteps"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 284,
+        "column": 9
+      },
+      "text": "cmd.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 15
+      },
+      "text": "signal.NotifyContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 8
+      },
+      "text": "stop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 24
+      },
+      "text": "acquireVerifyExecutionLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
+        "column": 8
+      },
+      "text": "executionLock.Release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 298,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 3
+      },
+      "text": "executionLock.Path"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 301,
+        "column": 12
+      },
+      "text": "verifylive.NormalizeMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 21
+      },
+      "text": "resolveVerifyRecordFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 306,
+        "column": 16
+      },
+      "text": "verifylive.LoadEntries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 310,
+        "column": 12
+      },
+      "text": "validateM0TriggerMode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 315,
+        "column": 18
+      },
+      "text": "verifylive.OpenCausalReceipt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 319,
+        "column": 9
+      },
+      "text": "receipt.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 14
+      },
+      "text": "verifylive.StepCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 72
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 24
+      },
+      "text": "holdVerifyRateBudgetIntent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
+        "column": 8
+      },
+      "text": "releaseIntent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 336,
+        "column": 22
+      },
+      "text": "acquireVerifyRateBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 340,
+        "column": 8
+      },
+      "text": "budgetLease.Release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 342,
+        "column": 29
+      },
+      "text": "verifyBrokerFactory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 347,
+        "column": 13
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 349,
+        "column": 13
+      },
+      "text": "firstUsableHoldingIn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 12
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 352,
+        "column": 39
+      },
+      "text": "verifylive.SameMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 352,
+        "column": 61
+      },
+      "text": "verifylive.MarketOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 359,
+        "column": 19
+      },
+      "text": "verifylive.OpenRecorder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 363,
+        "column": 8
+      },
+      "text": "recorder.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 365,
+        "column": 17
+      },
+      "text": "verifylive.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 20
+      },
+      "text": "terminalConfirmer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 369,
+        "column": 20
+      },
+      "text": "terminalBatchConfirmer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 20
+      },
+      "text": "toStepIDs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 391,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 393,
+        "column": 21
+      },
+      "text": "runner.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 394,
+        "column": 2
+      },
+      "text": "writeVerifySummary"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 396,
+        "column": 23
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 396,
+        "column": 62
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 397,
+        "column": 3
+      },
+      "text": "fmt.Fprintln"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 274,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 284,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 286,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 290,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 293,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 301,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 302,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 306,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 310,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 315,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 324,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 331,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 336,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 342,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 347,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 349,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 351,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 356,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 359,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 365,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 393,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 291,
+        "column": 2
+      },
+      "text": "stop"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 297,
+        "column": 2
+      },
+      "text": "executionLock.Release"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 319,
+        "column": 3
+      },
+      "text": "receipt.Close"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 335,
+        "column": 2
+      },
+      "text": "releaseIntent"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 340,
+        "column": 2
+      },
+      "text": "budgetLease.Release"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 363,
+        "column": 2
+      },
+      "text": "recorder.Close"
+    }
+  ]
+}

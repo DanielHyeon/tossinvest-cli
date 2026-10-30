@@ -1,0 +1,231 @@
+{
+  "file": "cmd/tossctl/httpapi_reader.go",
+  "source_sha256": "0e66e9a41935c5d42cca47fff2c9d4b33aeab50d17065ed7a2c0dfe4ff729d17",
+  "package": "main",
+  "function": "Performance",
+  "receiver": "httpAPIReader",
+  "signature": "httpAPIReader.Performance(params=1, results=2)",
+  "start": {
+    "line": 437,
+    "column": 1
+  },
+  "end": {
+    "line": 467,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 438,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 439,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 445,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 448,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 452,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 455,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 458,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 461,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 440,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 442,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 446,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 449,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 453,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 462,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 466,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 442,
+        "column": 39
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 15
+      },
+      "text": "r.performance.Dashboard"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 44
+      },
+      "text": "performance.DefaultQuery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 69
+      },
+      "text": "r.clockNow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 451,
+        "column": 21
+      },
+      "text": "r.accountRef"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 456,
+        "column": 20
+      },
+      "text": "r.performance.AttributionRows"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 458,
+        "column": 6
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 464,
+        "column": 23
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 444,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 451,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 456,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 464,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

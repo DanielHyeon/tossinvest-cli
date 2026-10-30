@@ -39,6 +39,8 @@ type consoleInstrumentMetadata interface {
 const consoleInstrumentBatchLimit = 200
 
 func (l *lazyInstrumentNames) Names(ctx context.Context, refs []consoleInstrumentRef) ([]consoleInstrumentName, error) {
+	ctx, cancel := l.shared.requestContext(ctx)
+	defer cancel()
 	budgetPath := strings.TrimSpace(l.budgetPath)
 	if !l.budgetConfigured {
 		var err error
@@ -122,7 +124,10 @@ func buildConsoleAccountBroker(ctx context.Context, root *rootOptions) (verifyli
 	if err := ctx.Err(); err != nil {
 		return nil, "", err
 	}
-	client := official.New(*creds, tokenFile)
+	client, err := newRootOfficialClient(ctx, root, *creds, tokenFile, root.officialOptions...)
+	if err != nil {
+		return nil, "", err
+	}
 	accountRef, _, err := resolveVerifyAccount(ctx, client, sleepFor)
 	if err != nil {
 		return nil, "", err

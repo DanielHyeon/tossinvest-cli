@@ -235,7 +235,7 @@ func TestA061RecordOverrideCannotMoveTheProfileRateBudgetLock(t *testing.T) {
 func TestA061RunAndConsoleVerificationDoNotBuildBrokerWhileTheProfileBudgetIsOccupied(t *testing.T) {
 	previousFactory := verifyBrokerFactory
 	var brokerCalls atomic.Int32
-	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+	verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 		brokerCalls.Add(1)
 		return nil, "", errors.New("broker must not be built while the rate budget is occupied")
 	}
@@ -315,7 +315,7 @@ func TestA061VerificationRefusesBeforeBrokerWhenItsIntentCannotBePublished(t *te
 
 	previousFactory := verifyBrokerFactory
 	var brokerCalls atomic.Int32
-	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+	verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 		brokerCalls.Add(1)
 		return nil, "", errors.New("unexpected broker construction")
 	}
@@ -349,7 +349,7 @@ func TestA061RunVerifyAbortPublishesItsMarkerBeforeWaitingForTheProfileBudget(t 
 
 	previousFactory := verifyBrokerFactory
 	var brokerCalls atomic.Int32
-	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+	verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 		brokerCalls.Add(1)
 		return nil, "", errors.New("broker must not be built while the rate budget is occupied")
 	}
@@ -410,7 +410,7 @@ func TestA061RunVerifyAbortPublishesItsMarkerBeforeWaitingForTheProfileBudget(t 
 func TestA061AbortListAndRefreshedEmptyRecordNeverBuildABroker(t *testing.T) {
 	previousFactory := verifyBrokerFactory
 	var brokerCalls atomic.Int32
-	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+	verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 		brokerCalls.Add(1)
 		return nil, "", errors.New("unexpected broker construction")
 	}
@@ -465,7 +465,7 @@ func TestA061ActiveVerificationExclusionRefusesAbortWithoutErasingItsMarker(t *t
 
 	previousFactory := verifyBrokerFactory
 	var brokerCalls atomic.Int32
-	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+	verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 		brokerCalls.Add(1)
 		return nil, "", errors.New("unexpected broker construction")
 	}
@@ -500,7 +500,7 @@ func TestA061AbortReloadsOutstandingTargetsAfterExclusiveAdmission(t *testing.T)
 	}
 
 	previousFactory := verifyBrokerFactory
-	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+	verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 		return nil, "", errors.New("stop after refreshed target projection")
 	}
 	t.Cleanup(func() { verifyBrokerFactory = previousFactory })
@@ -634,7 +634,7 @@ func TestA061MetadataAndAccountReadsShareOneOfficialClient(t *testing.T) {
 	}
 	previous := verifyBrokerFactory
 	var factoryCalls atomic.Int32
-	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+	verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 		factoryCalls.Add(1)
 		return nil, "", errors.New("unexpected second client")
 	}
@@ -650,7 +650,7 @@ func TestA061MetadataAndAccountReadsShareOneOfficialClient(t *testing.T) {
 	}()
 	go func() {
 		defer wg.Done()
-		_, _, err := shared.resolve()
+		_, _, err := shared.resolve(context.Background())
 		errs <- err
 	}()
 	wg.Wait()

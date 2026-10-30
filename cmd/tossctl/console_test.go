@@ -633,7 +633,7 @@ func TestOneRefreshAsksTheOpenGroupAndTheClosedGroupSeparatelyAndTheLiveOneWhole
 	t.Cleanup(srv.Close)
 
 	previous := verifyBrokerFactory
-	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+	verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 		return official.New(
 			official.Credentials{APIKey: "k", SecretKey: "s"},
 			filepath.Join(t.TempDir(), "token.json"),
@@ -721,7 +721,7 @@ func TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient(t *testing.T
 	srv := newVerifyServer(t)
 	built := 0
 	previous := verifyBrokerFactory
-	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+	verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 		built++
 		return official.New(
 			official.Credentials{APIKey: "k", SecretKey: "s"},
@@ -791,7 +791,7 @@ func TestTheOrdersSeamCarriesEachListsOutcomeSeparately(t *testing.T) {
 	t.Cleanup(srv.Close)
 
 	previous := verifyBrokerFactory
-	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+	verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 		return official.New(
 			official.Credentials{APIKey: "k", SecretKey: "s"},
 			filepath.Join(t.TempDir(), "token.json"),
@@ -882,7 +882,7 @@ func TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce(t *testing.T) {
 	previous := verifyBrokerFactory
 	// The factory stands in for buildVerifyBroker, whose body is the
 	// /api/v1/accounts read this test counts: one call here is one resolution.
-	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+	verifyBrokerFactory = func(context.Context, *rootOptions) (verifylive.Broker, string, error) {
 		mu.Lock()
 		built++
 		mu.Unlock()
