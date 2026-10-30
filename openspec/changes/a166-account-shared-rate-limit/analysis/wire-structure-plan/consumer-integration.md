@@ -1,0 +1,5 @@
+# consumer 합성 검증
+
+게시 `d9827f31661e60209b75f8fa0370e9525e48e225`를 census 후보에 통합한 source `6c229aac9ea880ae0e6cc1223f1dced6c197dd01`. 새 `internal/accountbudget/consumer_snapshot_linux.go`의 `Budget.ObservationSnapshot`은 nil/closed를 거절하고 같은 budget의 observation store `Snapshot(ctx,cursor)`에 위임한다. `Snapshot`은 저장 상태 및 잠금을 읽으며 HTTP 전송·공식 client 생성을 하지 않는다. 비Linux stub은 `ErrUnavailable`만 반환한다. 비test production source에 이 새 API 호출자는 아직 없다. 이 변경에서 기존 83개 reviewed function shape와 116개 selector 목록의 추가·수정은 필요 없다. 이는 source 손읽기 및 한정 census 결과이며 임의 동적 호출에 대한 증명은 아니다.
+
+Go1.25 정확 선택 normal/tagged race 각각 `TestA166WiringCensusBaseline`, `TestA166WiringCensusRejectsBypasses` 8변이, `TestA166WiringCensusRejectsDirectorySymlink` 및 `TestA166CancelRetryAdmissionRefusalPreservesFirstAmbiguous`, `TestA165FlattenRetryNotSentKeepsTheFirstAmbiguousOutcome`, `TestA166ReplayAdmissionRefusalPreservesInDoubtJournal` PASS. normal 1.454s/1.399s, race 10.264s/8.243s. 각각 별도 lo-only net namespace, route 없음. 앞 두 회귀는 fake broker, replay는 exact local TLS dial fixture. gzip -n 원문과 SHA는 receipts. 전체 test/gate·운영·실계좌·외부 broker 미실행. 본 합성은 Manager 승인이나 a166 전체 완료를 뜻하지 않는다.
