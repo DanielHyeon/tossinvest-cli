@@ -137,7 +137,7 @@ func (m *tokenManager) exchange(ctx context.Context) (string, error) {
 	form.Set("client_id", m.creds.APIKey)
 	form.Set("client_secret", m.creds.SecretKey)
 
-	if _, ok := m.hc.Transport.(*accountbudget.Transport); ok {
+	if _, ok := m.hc.Transport.(*accountbudget.Transport); ok && ctx != nil {
 		ctx = accountbudget.WithTokenObservation(ctx)
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, strings.NewReader(form.Encode()))
