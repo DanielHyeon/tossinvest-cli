@@ -30,12 +30,14 @@ func PriorityFromContext(ctx context.Context) Priority {
 }
 
 type Transport struct {
-	budget       *Budget
-	base         *http.Transport
-	cleanupError func(error)
-	beforeStop   func(*connectionGate) // 시험에서 RoundTrip 반환 직후 경합을 동기화함.
-	firstWrite   func()
-	inflight     *atomic.Int32
+	budget            *Budget
+	base              *http.Transport
+	cleanupError      func(error)
+	beforeStop        func(*connectionGate) // 시험에서 RoundTrip 반환 직후 경합을 동기화함.
+	firstWrite        func()
+	inflight          *atomic.Int32
+	testFenceInitial  func()
+	testFenceAcquired func()
 }
 
 // NewTransport does not grant trading authority. The official constructor owns
@@ -193,22 +195,52 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			err = errors.Join(ErrNotSent, err)
 		}
 	}()
+	fence, hasFence := req.Context().Value(observationFenceKey{}).(*ObservationFence)
+	if hasFence {
+		if e := fence.initial(t.budget); e != nil {
+			if req.Body != nil {
+				closeErr := req.Body.Close()
+				if fence != nil && fence.budget == t.budget {
+					fence.latch(closeErr)
+				}
+				e = errors.Join(e, closeErr)
+			}
+			requestObservation(req.Context()).collector.record(false, e)
+			return nil, e
+		}
+		if t.testFenceInitial != nil {
+			t.testFenceInitial()
+		}
+	}
 
 	previous := requestObservation(req.Context()).collector.Snapshot()
 	if previous.RateLimited || previous.LocalError != nil {
 		err = previous.LocalError
 		if previous.RateLimited {
 			err = errors.Join(err, ErrObservationRateLimited)
+			if hasFence {
+				fence.latch(ErrObservationRateLimited)
+			}
 		}
 		if req.Body != nil {
-			err = errors.Join(err, req.Body.Close())
+			closeErr := req.Body.Close()
+			if hasFence {
+				fence.latch(closeErr)
+				requestObservation(req.Context()).collector.record(false, closeErr)
+			}
+			err = errors.Join(err, closeErr)
 		}
 		return nil, err
 	}
 	p := PriorityFromContext(req.Context())
 	if p > Auxiliary || req.URL == nil || req.URL.Scheme != "https" || req.URL.Host == "" {
 		if req.Body != nil {
-			err = errors.Join(ErrUnavailable, req.Body.Close())
+			closeErr := req.Body.Close()
+			if hasFence {
+				fence.latch(closeErr)
+				requestObservation(req.Context()).collector.record(false, closeErr)
+			}
+			err = errors.Join(ErrUnavailable, closeErr)
 		} else {
 			err = ErrUnavailable
 		}
@@ -219,7 +251,12 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		if proxyErr != nil || proxy != nil {
 			err = errors.Join(ErrUnavailable, proxyErr)
 			if req.Body != nil {
-				err = errors.Join(err, req.Body.Close())
+				closeErr := req.Body.Close()
+				if hasFence {
+					fence.latch(closeErr)
+					requestObservation(req.Context()).collector.record(false, closeErr)
+				}
+				err = errors.Join(err, closeErr)
 			}
 			return nil, err
 		}
@@ -227,12 +264,32 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	lease, e := t.budget.Acquire(req.Context(), p)
 	if e != nil || lease == nil {
 		if req.Body != nil {
-			e = errors.Join(e, req.Body.Close())
+			closeErr := req.Body.Close()
+			if hasFence {
+				fence.latch(closeErr)
+				requestObservation(req.Context()).collector.record(false, closeErr)
+			}
+			e = errors.Join(e, closeErr)
 		}
 		if e == nil {
 			e = ErrUnavailable
 		}
 		return nil, e
+	}
+	if hasFence {
+		if t.testFenceAcquired != nil {
+			t.testFenceAcquired()
+		}
+		if e = fence.check(req.Context(), t.budget, lease); e != nil {
+			if req.Body != nil {
+				closeErr := req.Body.Close()
+				fence.latch(closeErr)
+				e = errors.Join(e, closeErr)
+			}
+			e = errors.Join(e, fence.release(lease, nil))
+			requestObservation(req.Context()).collector.record(false, e)
+			return nil, e
+		}
 	}
 	var sequence uint64
 	obs := t.budget.observation
@@ -244,9 +301,15 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		} else {
 			sequence, obsErr = obs.Begin(req.Context(), lease, scope.kind, scope.key)
 		}
+		if hasFence && obsErr != nil {
+			fence.latch(obsErr)
+		}
 		if obsErr == nil && scope.kind == ObservationPoll {
 			var remaining time.Duration
 			remaining, obsErr = obs.PollRemaining(req.Context(), scope.key)
+			if hasFence && obsErr != nil {
+				fence.latch(obsErr)
+			}
 			if obsErr == nil && remaining > 0 {
 				obsErr = ErrObservationDeferred
 			}
@@ -255,7 +318,11 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		if obsErr != nil {
 			scope.collector.record(false, obsErr)
 			if req.Body != nil {
-				obsErr = errors.Join(obsErr, req.Body.Close())
+				closeErr := req.Body.Close()
+				if hasFence {
+					fence.latch(closeErr)
+				}
+				obsErr = errors.Join(obsErr, closeErr)
 			}
 			if sequence != 0 {
 				settle, cancel := context.WithTimeout(context.WithoutCancel(req.Context()), 2*time.Second)
@@ -263,11 +330,20 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 				cancel()
 				scope.collector.record(false, finishErr)
 				if finishErr != nil {
+					if hasFence {
+						fence.latch(finishErr)
+					}
 					t.cleanupError(finishErr)
 				}
 				obsErr = errors.Join(obsErr, finishErr)
 			}
-			obsErr = errors.Join(obsErr, lease.Release())
+			var releaseErr error
+			if hasFence {
+				releaseErr = fence.release(lease, nil)
+			} else {
+				releaseErr = lease.Release()
+			}
+			obsErr = errors.Join(obsErr, releaseErr)
 			scope.collector.record(false, obsErr)
 			return nil, obsErr
 		}
@@ -334,7 +410,14 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 				t.cleanupError(finishErr)
 			}
 		}
-		cleanup := errors.Join(stopErr, finishErr, lease.Release())
+		var releaseErr error
+		if hasFence {
+			releaseErr = fence.release(lease, errors.Join(stopErr, finishErr))
+			scope.collector.record(false, errors.Join(stopErr, finishErr, releaseErr))
+		} else {
+			releaseErr = lease.Release()
+		}
+		cleanup := errors.Join(stopErr, finishErr, releaseErr)
 		tr.CloseIdleConnections()
 		return nil, errors.Join(e, cleanup)
 	}
@@ -344,6 +427,9 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		var hint *time.Duration
 		if resp.StatusCode == http.StatusTooManyRequests {
 			result = ObservationRateLimited
+			if hasFence {
+				fence.latch(ErrObservationRateLimited)
+			}
 			scope.collector.record(true, nil)
 			if scope.kind == ObservationPoll {
 				hint = retryAfterHint(resp.Header.Get("Retry-After"), t.budget.clk.Now())
@@ -353,6 +439,9 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		finishErr := obs.Finish(settle, lease, sequence, result, hint)
 		cancel()
 		if finishErr != nil {
+			if hasFence {
+				fence.latch(finishErr)
+			}
 			scope.collector.record(false, finishErr)
 			t.cleanupError(finishErr)
 		}
@@ -363,7 +452,22 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		resp.TLS = &state
 	}
 	gate.mu.Unlock()
-	owner := &responseOwner{body: resp.Body, done: make(chan struct{}), finish: func() error { e := errors.Join(gate.stop(), lease.Release()); tr.CloseIdleConnections(); return e }}
+	body := resp.Body
+	if hasFence {
+		body = &observationFenceBody{ReadCloser: body, fence: fence, collector: scope.collector}
+	}
+	owner := &responseOwner{body: body, done: make(chan struct{}), finish: func() error {
+		stopErr := gate.stop()
+		var releaseErr error
+		if hasFence {
+			releaseErr = fence.release(lease, stopErr)
+			scope.collector.record(false, errors.Join(stopErr, releaseErr))
+		} else {
+			releaseErr = lease.Release()
+		}
+		tr.CloseIdleConnections()
+		return errors.Join(stopErr, releaseErr)
+	}}
 	resp.Body = owner
 	go func() {
 		select {
