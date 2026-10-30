@@ -1,0 +1,11 @@
+# a169 선택적 prewire fence 독립 최종 검토
+
+고정 source/test/census 2764aa7016182eb6d62ced48871618900d09abdc (원본 b0f7f1d93). 한정 제품 로트 PASS, P0/P1/P2 새 발견 없음. Manager 미커밋 plan/status는 별도 문서이며 이 판정은 위 고정 source에 한정한다. a169 실행 연결·실측·운영 승인이 아니다.
+
+- baseline은 `prewire_fence_linux.go:24-35`에서 기존 validated Snapshot의 no-pending cursor/generation을 고정한다. 이전 gap/event/ring overrun을 삭제하지 않고 기준점 이전으로 제외한다. pending/dirty/identity 오류는 실패한다. no pending은 전체 wire idle 증명이 아니며 response body 소유 중 baseline fixture가 이 차이를 고정한다.
+- 매 fenced wire는 owner pointer·sticky 선확인, Acquire 후 `check`에서 fence mutex→lease 검증→event lock/read 및 counter/세대/pending 재검사를 수행한다. 검사와 Begin 사이 wire lease를 유지한다. release helper는 fence mutex 아래 알려진 오류 저장→실제 Release→반환 오류 저장 순이며 body wrapper Close 오류는 owner.finish 전에 기록한다. 이미 응답받은 경우 429/Finish fault가 HTTP 의미를 미전송으로 낮추지 않고, 실제 미전송 오류에만 ErrNotSent를 결합한다. nil fence는 기존 분기를 따른다. token/401 context 전파는 실제 local TLS official fixture로 별도 확인됐다.
+- 대기 B 반례 fixture는 postcommit Finish, 실제 unlock 뒤 Release 오류, response body Close 오류를 채널/TryLock으로 조정하고 B Write0을 단언한다. historical gap·overrun·새 gap·counter rollback은 local state fixture다. 동일 fence만의 sticky 수명이며 같은 날 재발급 금지·활성 엔진 신원·비협조 writer는 아직 지원하지 않는다. bounded OS/cleanup 시간이나 broker 도착률은 보장하지 않는다.
+- 독립 Go1.25 정확 선택 `^(TestA169Fence.*|TestObservedTransportFinishFaultPreservesResponse|TestTransportOwnsFullBody|TestA166WiringCensusBaseline)$`, accountbudget 및 accountbudgetruntime 각각 normal 11.571/5.022초, tagged race 12.589/8.508초 PASS. `/tmp/a169-prewire-independent-normal.log`, `/tmp/a169-prewire-independent-tag-race.log`, 각각 lo-only/no-route·fake local TLS. 전체 작성자 regex 재실행이 아닌 지정 축소 독립 범위다.
+- 원본 AST 41개와 현재 68개 source SHA를 각 해당 커밋과 대조해 일치, 90 shape/116 selector census의 선택 baseline PASS. shape pin은 의미적 control flow proof가 아니다. 작성자 최종 normal/race 및 4 mutant gzip 압축해제 SHA와 목록 일치, post-Acquire sticky·release 순서·event·gap 우회 변이는 RED 원문 확인; 독립 재변이는 하지 않았다. test hooks는 nil 기본 private seam이며 production 직접 할당 없음이라는 작성자 AST 기록이다.
+- **절차 예외:** 원본 AST와 요약은 편집 전에 있었으나 완전 FLM/BTM은 첫 소스 편집 후 작성됐다. 원본 41분기 교차표 독립 점검과 Manager 재개 승인은 절차 위반을 소급 준수로 만들지 않는다. current 68분기 지도는 별도로 보존한다.
+- 수동 gstack 범위: lock order·에러/response/body 소유·취소·owner·OFF·fixture 확인. 전체 자동 specialist pipeline, 최신 CodeGraph index, 전체 tests/gate, 실제 브로커/계좌·운영·배포, a169 fence caller·abort 영속성·engine identity·전체 freeze/측정/archive 미검증.

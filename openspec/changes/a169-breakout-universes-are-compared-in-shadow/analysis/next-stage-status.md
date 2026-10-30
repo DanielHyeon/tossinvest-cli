@@ -1,6 +1,6 @@
 # 순수 계산 이후 남은 a169 계약
 
-2026-10-31 Manager. U0/U1·유형 게시 `54f1dc59b`, U2 단일 점수 게시 `789ed34fb`. U2 합집합 `9ebb80d62`는 독립 검증과 Manager 게시 승인을 받았고 이 기록과 함께 게시한다. 모두 기존 runtime caller에 연결되지 않은 순수 계산이다. 전체 design freeze1.3, tasks2.2, 리허설·측정·archive는 미완이다.
+2026-10-31 Manager. U0/U1·유형 게시 `54f1dc59b`, U2 단일 점수 게시 `789ed34fb`. U2 합집합 `9ebb80d62`는 `b0f7f1d93`으로 게시됐다. 모두 기존 runtime caller에 연결되지 않은 순수 계산이다. 전체 design freeze1.3, tasks2.2, 리허설·측정·archive는 미완이다.
 
 ## 확정한 범위
 
@@ -8,9 +8,9 @@ U0/U1 정상30·승인된 별도20판, 숫자6자리·KRW·가격 경계, 정확
 
 ## 시작·전송 차단 설계에서 남은 결정
 
-현재 Snapshot API만으로 전송 직전의 shared event fence는 구현되지 않았다. source 조사 `prewire-fence-research.md`는 wire lease Acquire 뒤 자기 Begin 전에 lease 소유를 검증해 event 상태를 읽는 최소안을 제시한다. 기존 Snapshot은 pending 상태에서 wire lock을 다시 검사하므로 같은 lease 아래 그대로 재사용하지 않는다. 새로운 내부 읽기와 transport 결속은 기존 함수 변경이므로 별도 FLM/BTM·독립 설계·실제 local TLS token/401 반례 검증을 거쳐야 한다. 일반 callback framework를 만들지 않는다.
+선택적 shared event fence 내부 API는 `2764aa701`에서 구현하고 선택 시험 및 독립 검토를 마쳤다. wire lease 획득 뒤 자기 Begin 전에 현재 관측 상태를 검사하며, 실제 a169 runtime caller·세션 결속은 아직 연결되지 않았다. `prewire-fence-plan.md`와 `prewire-fence-lot/manager-verification.md`의 한정 범위 및 절차 예외를 따른다.
 
-**사람 결정 완료(2026-10-31):** 「현재 안정된 시점부터 시작하고 과거 gap은 제외」. immutable 시작 cursor 이전 이력은 제외하되 현재 pending/dirty/손상/읽기 오류는 거절한다. `prewire-fence-plan.md`로 구현 계약을 검토한다. gap 삭제·새 instance 자동 전환은 하지 않는다. 이 결정만으로 actual measurement fence와 실행 모드가 완료되는 것은 아니다.
+**사람 결정 완료(2026-10-31):** 「현재 안정된 시점부터 시작하고 과거 gap은 제외」. immutable 시작 cursor 이전 이력은 제외하되 현재 pending/dirty/손상/읽기 오류는 거절한다. `prewire-fence-plan.md`의 한정 구현 계약에 반영했다. gap 삭제·새 instance 자동 전환은 하지 않는다. 이 결정만으로 actual measurement fence와 실행 모드가 완료되는 것은 아니다.
 
 별도 미완: 감시 실패/취소와 first Write의 선형화·공유 abort latch 수명, 실제 활성 엔진·프로필·동일 예산 identity 결속, 같은 날 abort의 영속성/동시 writer/재시작. 이미 전송을 시작한 요청을 없던 것으로 주장하거나 broker 도착 시각을 보장하지 않는다.
 

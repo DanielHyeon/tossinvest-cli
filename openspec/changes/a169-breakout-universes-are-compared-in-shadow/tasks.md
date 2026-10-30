@@ -68,5 +68,5 @@
 - [x] P5 U2 후보 합집합·순위 순수 로트: 선택 normal/tagged race·변이·독립 검토 후 게시. `analysis/u2-union-lot/`. 실제 caller·원장·측정과 2.2 전체는 미완.
 
 - [x] P6 안정 current cursor·과거 gap 제외 사람 결정과 optional prewire fence 제한 설계. `issues.md` §7, `analysis/prewire-fence-plan.md`; cleanup 경합 P1 수정 후 독립 bounded READY.
-- [ ] P7 High-risk pre-edit FLM/BTM → 내부 fence RED/GREEN·필요 race/process/변이·gstack 범위 리뷰. production measurement caller 연결 없음.
-- [ ] P8 독립 검증·Manager 판정·scoped strict/PM 후 Terra commit/merge/push. 전체1.3/2.2/측정/archive와 별도.
+- [x] P7 내부 fence 한정 RED/GREEN·선택 normal/tagged race·process·변이·수동 gstack. 완전 FLM/BTM은 첫 source 수정 뒤 작성된 절차 예외로 남음 (`analysis/prewire-fence-lot/manager-verification.md`). production measurement caller 연결 없음.
+- [x] P8 한정 독립 검증·Manager 판정·scoped strict/PM 후 Terra commit/merge/push. 전체1.3/2.2/측정/archive와 별도.
