@@ -72,6 +72,18 @@ func TestA166L1CAuxiliaryBusySendsNothing(t *testing.T) {
 	if err := accountbudget.Provision(root, "scope", "instance"); err != nil {
 		t.Fatal(err)
 	}
+	eventID := func() accountbudget.FileID {
+		b, err := accountbudget.Open(accountbudget.Config{Root: root, Scope: "scope", Instance: "instance", Clock: clock.System()})
+		if err != nil {
+			t.Fatal(err)
+		}
+		id, err := accountbudget.ProvisionObservation(b)
+		err = errors.Join(err, b.Close())
+		if err != nil {
+			t.Fatal(err)
+		}
+		return id
+	}()
 	fileID := func(path string) accountbudget.FileID {
 		t.Helper()
 		st, err := os.Stat(path)
@@ -82,7 +94,7 @@ func TestA166L1CAuxiliaryBusySendsNothing(t *testing.T) {
 		return accountbudget.FileID{Device: uint64(v.Dev), Inode: v.Ino}
 	}
 	identity := accountbudget.Identity{Root: fileID(root), Queue: fileID(filepath.Join(root, "queue.lock")), Wire: fileID(filepath.Join(root, "wire.lock"))}
-	raw, err := json.Marshal(map[string]any{"version": 1, "root": root, "scope": "scope", "instance": "instance", "identity": identity})
+	raw, err := json.Marshal(map[string]any{"event_lock": eventID, "version": 2, "root": root, "scope": "scope", "instance": "instance", "identity": identity})
 	if err != nil {
 		t.Fatal(err)
 	}

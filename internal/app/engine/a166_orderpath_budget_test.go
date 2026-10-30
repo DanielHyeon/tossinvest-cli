@@ -5,6 +5,7 @@ package engine
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
@@ -27,6 +29,18 @@ func TestA166OrderPathUsesBorrowedFactoryBeforeBootstrap(t *testing.T) {
 	if e := accountbudget.Provision(root, "scope", "instance"); e != nil {
 		t.Fatal(e)
 	}
+	eventID := func() accountbudget.FileID {
+		b, err := accountbudget.Open(accountbudget.Config{Root: root, Scope: "scope", Instance: "instance", Clock: clock.System()})
+		if err != nil {
+			t.Fatal(err)
+		}
+		id, err := accountbudget.ProvisionObservation(b)
+		err = errors.Join(err, b.Close())
+		if err != nil {
+			t.Fatal(err)
+		}
+		return id
+	}()
 	id := func(p string) accountbudget.FileID {
 		st, e := os.Stat(p)
 		if e != nil {
@@ -35,7 +49,7 @@ func TestA166OrderPathUsesBorrowedFactoryBeforeBootstrap(t *testing.T) {
 		v := st.Sys().(*syscall.Stat_t)
 		return accountbudget.FileID{Device: uint64(v.Dev), Inode: v.Ino}
 	}
-	data, e := json.Marshal(map[string]any{"version": 1, "root": root, "scope": "scope", "instance": "instance", "identity": accountbudget.Identity{Root: id(root), Queue: id(filepath.Join(root, "queue.lock")), Wire: id(filepath.Join(root, "wire.lock"))}})
+	data, e := json.Marshal(map[string]any{"event_lock": eventID, "version": 2, "root": root, "scope": "scope", "instance": "instance", "identity": accountbudget.Identity{Root: id(root), Queue: id(filepath.Join(root, "queue.lock")), Wire: id(filepath.Join(root, "wire.lock"))}})
 	if e != nil {
 		t.Fatal(e)
 	}

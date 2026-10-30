@@ -33,11 +33,12 @@ type Config struct {
 	CleanupError func(error)
 }
 type manifest struct {
-	Version  int                    `json:"version"`
-	Root     string                 `json:"root"`
-	Scope    string                 `json:"scope"`
-	Instance string                 `json:"instance"`
-	Identity accountbudget.Identity `json:"identity"`
+	Version   int                    `json:"version"`
+	Root      string                 `json:"root"`
+	Scope     string                 `json:"scope"`
+	Instance  string                 `json:"instance"`
+	Identity  accountbudget.Identity `json:"identity"`
+	EventLock accountbudget.FileID   `json:"event_lock"`
 }
 type Factory struct {
 	mode    Mode
@@ -91,7 +92,7 @@ func Open(ctx context.Context, cfg Config) (*Factory, error) {
 	if e != nil {
 		return nil, errors.Join(accountbudget.ErrUnavailable, e)
 	}
-	b, e := accountbudget.OpenContext(ctx, accountbudget.Config{Root: m.Root, Scope: m.Scope, Instance: m.Instance, Clock: clock.System()})
+	b, e := accountbudget.OpenObserved(ctx, accountbudget.Config{Root: m.Root, Scope: m.Scope, Instance: m.Instance, Clock: clock.System()}, m.EventLock, clock.SystemBootSource())
 	if e != nil {
 		return nil, e
 	}
@@ -212,7 +213,7 @@ func readManifest(path string) (manifest, error) {
 			return m, errors.New("manifest is inside budget root")
 		}
 	}
-	if m.Version != 1 || m.Root == "" || m.Scope == "" || m.Instance == "" {
+	if m.Version != 2 || m.Root == "" || m.Scope == "" || m.Instance == "" || m.EventLock.Device == 0 || m.EventLock.Inode == 0 {
 		return m, errors.New("invalid manifest fields")
 	}
 	return m, nil
@@ -220,8 +221,9 @@ func readManifest(path string) (manifest, error) {
 func rejectDuplicates(data []byte) error {
 	d := json.NewDecoder(bytes.NewReader(data))
 	allowed := map[string]map[string]bool{
-		"":              {"version": true, "root": true, "scope": true, "instance": true, "identity": true},
+		"":              {"version": true, "root": true, "scope": true, "instance": true, "identity": true, "event_lock": true},
 		"identity":      {"root": true, "queue": true, "wire": true},
+		"event_lock":    {"device": true, "inode": true},
 		"identity.root": {"device": true, "inode": true}, "identity.queue": {"device": true, "inode": true}, "identity.wire": {"device": true, "inode": true},
 	}
 	var walk func(string) error

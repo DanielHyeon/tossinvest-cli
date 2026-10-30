@@ -50,6 +50,15 @@ type observedScopeKey struct{}
 func WithObservation(ctx context.Context, kind ObservationKind, key ObservationKey, collector *ObservationCollector) context.Context {
 	return context.WithValue(ctx, observedScopeKey{}, observedScope{kind, key, collector})
 }
+
+// WithTokenObservation preserves the request collector and context values while
+// removing poll scope from an OAuth token wire attempt.
+func WithTokenObservation(ctx context.Context) context.Context {
+	s := requestObservation(ctx)
+	s.kind = ObservationToken
+	s.key = ObservationKey{}
+	return context.WithValue(ctx, observedScopeKey{}, s)
+}
 func requestObservation(ctx context.Context) observedScope {
 	s, ok := ctx.Value(observedScopeKey{}).(observedScope)
 	if !ok {

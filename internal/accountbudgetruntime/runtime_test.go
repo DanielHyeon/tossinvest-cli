@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
@@ -41,6 +42,18 @@ func setupGroup(t *testing.T) (string, string, manifest) {
 	if e := accountbudget.Provision(root, "scope", "instance"); e != nil {
 		t.Fatal(e)
 	}
+	eventID := func() accountbudget.FileID {
+		b, err := accountbudget.Open(accountbudget.Config{Root: root, Scope: "scope", Instance: "instance", Clock: clock.System()})
+		if err != nil {
+			t.Fatal(err)
+		}
+		id, err := accountbudget.ProvisionObservation(b)
+		err = errors.Join(err, b.Close())
+		if err != nil {
+			t.Fatal(err)
+		}
+		return id
+	}()
 	id := func(p string) accountbudget.FileID {
 		st, e := os.Stat(p)
 		if e != nil {
@@ -49,7 +62,7 @@ func setupGroup(t *testing.T) (string, string, manifest) {
 		v := st.Sys().(*syscall.Stat_t)
 		return accountbudget.FileID{Device: uint64(v.Dev), Inode: v.Ino}
 	}
-	m := manifest{Version: 1, Root: root, Scope: "scope", Instance: "instance", Identity: accountbudget.Identity{Root: id(root), Queue: id(filepath.Join(root, "queue.lock")), Wire: id(filepath.Join(root, "wire.lock"))}}
+	m := manifest{EventLock: eventID, Version: 2, Root: root, Scope: "scope", Instance: "instance", Identity: accountbudget.Identity{Root: id(root), Queue: id(filepath.Join(root, "queue.lock")), Wire: id(filepath.Join(root, "wire.lock"))}}
 	path := filepath.Join(base, "launch.json")
 	writeManifest(t, path, m)
 	return root, path, m

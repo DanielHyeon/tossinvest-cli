@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"go/ast"
@@ -128,6 +129,18 @@ func a166LocalRequiredOwner(t *testing.T) *rootBudgetOwner {
 	if err := accountbudget.Provision(root, "scope", "instance"); err != nil {
 		t.Fatal(err)
 	}
+	eventID := func() accountbudget.FileID {
+		b, err := accountbudget.Open(accountbudget.Config{Root: root, Scope: "scope", Instance: "instance", Clock: clock.System()})
+		if err != nil {
+			t.Fatal(err)
+		}
+		id, err := accountbudget.ProvisionObservation(b)
+		err = errors.Join(err, b.Close())
+		if err != nil {
+			t.Fatal(err)
+		}
+		return id
+	}()
 	id := func(path string) accountbudget.FileID {
 		st, err := os.Stat(path)
 		if err != nil {
@@ -137,12 +150,13 @@ func a166LocalRequiredOwner(t *testing.T) *rootBudgetOwner {
 		return accountbudget.FileID{Device: uint64(v.Dev), Inode: v.Ino}
 	}
 	manifest := struct {
-		Version  int                    `json:"version"`
-		Root     string                 `json:"root"`
-		Scope    string                 `json:"scope"`
-		Instance string                 `json:"instance"`
-		Identity accountbudget.Identity `json:"identity"`
-	}{Version: 1, Root: root, Scope: "scope", Instance: "instance", Identity: accountbudget.Identity{Root: id(root), Queue: id(filepath.Join(root, "queue.lock")), Wire: id(filepath.Join(root, "wire.lock"))}}
+		Version   int                    `json:"version"`
+		Root      string                 `json:"root"`
+		Scope     string                 `json:"scope"`
+		Instance  string                 `json:"instance"`
+		Identity  accountbudget.Identity `json:"identity"`
+		EventLock accountbudget.FileID   `json:"event_lock"`
+	}{EventLock: eventID, Version: 2, Root: root, Scope: "scope", Instance: "instance", Identity: accountbudget.Identity{Root: id(root), Queue: id(filepath.Join(root, "queue.lock")), Wire: id(filepath.Join(root, "wire.lock"))}}
 	data, err := json.Marshal(manifest)
 	if err != nil {
 		t.Fatal(err)

@@ -10,6 +10,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -26,6 +27,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"golang.org/x/sys/unix"
 )
@@ -79,7 +81,17 @@ func TestA166RuntimeWireChild(t *testing.T) {
 	if !roots.AppendCertsFromPEM(cert) {
 		t.Fatal("fixture certificate")
 	}
-	base := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: roots}}
+	want := strings.TrimPrefix(os.Getenv("RUNTIME_WIRE_URL"), "https://")
+	host, _, err := net.SplitHostPort(want)
+	if err != nil || net.ParseIP(host) == nil || !net.ParseIP(host).IsLoopback() {
+		t.Fatal("invalid local fixture address")
+	}
+	base := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: roots}, DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+		if network != "tcp" || addr != want {
+			return nil, errors.New("unexpected fixture address")
+		}
+		return (&net.Dialer{}).DialContext(ctx, network, addr)
+	}}
 	client, e := f.NewClient(official.Credentials{APIKey: "fake-" + id, SecretKey: "fake-secret"}, "", official.WithBaseURL(os.Getenv("RUNTIME_WIRE_URL")), official.WithHTTPClient(&http.Client{Transport: base, Timeout: 10 * time.Second}))
 	if e != nil {
 		t.Fatal(e)
@@ -120,6 +132,14 @@ func TestA166RuntimeFactoryTwoProcessesTLSStarts(t *testing.T) {
 	if e := accountbudget.Provision(root, "opaque-scope", "opaque-instance"); e != nil {
 		t.Fatal(e)
 	}
+	b, err := accountbudget.Open(accountbudget.Config{Root: root, Scope: "opaque-scope", Instance: "opaque-instance", Clock: clock.System()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	eventID, err := accountbudget.ProvisionObservation(b)
+	if err = errors.Join(err, b.Close()); err != nil {
+		t.Fatal(err)
+	}
 	id := func(path string) accountbudget.FileID {
 		t.Helper()
 		var s unix.Stat_t
@@ -129,12 +149,13 @@ func TestA166RuntimeFactoryTwoProcessesTLSStarts(t *testing.T) {
 		return accountbudget.FileID{Device: uint64(s.Dev), Inode: s.Ino}
 	}
 	manifest := struct {
-		Version  int                    `json:"version"`
-		Root     string                 `json:"root"`
-		Scope    string                 `json:"scope"`
-		Instance string                 `json:"instance"`
-		Identity accountbudget.Identity `json:"identity"`
-	}{1, root, "opaque-scope", "opaque-instance", accountbudget.Identity{Root: id(root), Queue: id(filepath.Join(root, "queue.lock")), Wire: id(filepath.Join(root, "wire.lock"))}}
+		Version   int                    `json:"version"`
+		Root      string                 `json:"root"`
+		Scope     string                 `json:"scope"`
+		Instance  string                 `json:"instance"`
+		Identity  accountbudget.Identity `json:"identity"`
+		EventLock accountbudget.FileID   `json:"event_lock"`
+	}{2, root, "opaque-scope", "opaque-instance", accountbudget.Identity{Root: id(root), Queue: id(filepath.Join(root, "queue.lock")), Wire: id(filepath.Join(root, "wire.lock"))}, eventID}
 	data, e := json.Marshal(manifest)
 	if e != nil {
 		t.Fatal(e)

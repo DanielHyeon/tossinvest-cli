@@ -59,6 +59,18 @@ func a166RootManifest(t *testing.T) string {
 	if e := accountbudget.Provision(root, "scope", "instance"); e != nil {
 		t.Fatal(e)
 	}
+	eventID := func() accountbudget.FileID {
+		b, err := accountbudget.Open(accountbudget.Config{Root: root, Scope: "scope", Instance: "instance", Clock: clock.System()})
+		if err != nil {
+			t.Fatal(err)
+		}
+		id, err := accountbudget.ProvisionObservation(b)
+		err = errors.Join(err, b.Close())
+		if err != nil {
+			t.Fatal(err)
+		}
+		return id
+	}()
 	id := func(path string) accountbudget.FileID {
 		st, e := os.Stat(path)
 		if e != nil {
@@ -67,7 +79,7 @@ func a166RootManifest(t *testing.T) string {
 		v := st.Sys().(*syscall.Stat_t)
 		return accountbudget.FileID{Device: uint64(v.Dev), Inode: v.Ino}
 	}
-	m := map[string]any{"version": 1, "root": root, "scope": "scope", "instance": "instance", "identity": accountbudget.Identity{Root: id(root), Queue: id(filepath.Join(root, "queue.lock")), Wire: id(filepath.Join(root, "wire.lock"))}}
+	m := map[string]any{"event_lock": eventID, "version": 2, "root": root, "scope": "scope", "instance": "instance", "identity": accountbudget.Identity{Root: id(root), Queue: id(filepath.Join(root, "queue.lock")), Wire: id(filepath.Join(root, "wire.lock"))}}
 	data, e := json.Marshal(m)
 	if e != nil {
 		t.Fatal(e)

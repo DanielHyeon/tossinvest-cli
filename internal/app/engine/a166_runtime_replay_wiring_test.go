@@ -5,6 +5,7 @@ package engine_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -18,6 +19,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
@@ -33,6 +35,18 @@ func TestA166RequiredEngineBuildsWithBorrowedReplayBudget(t *testing.T) {
 	if err := accountbudget.Provision(root, "scope", "instance"); err != nil {
 		t.Fatal(err)
 	}
+	eventID := func() accountbudget.FileID {
+		b, err := accountbudget.Open(accountbudget.Config{Root: root, Scope: "scope", Instance: "instance", Clock: clock.System()})
+		if err != nil {
+			t.Fatal(err)
+		}
+		id, err := accountbudget.ProvisionObservation(b)
+		err = errors.Join(err, b.Close())
+		if err != nil {
+			t.Fatal(err)
+		}
+		return id
+	}()
 	id := func(path string) accountbudget.FileID {
 		st, err := os.Stat(path)
 		if err != nil {
@@ -41,7 +55,7 @@ func TestA166RequiredEngineBuildsWithBorrowedReplayBudget(t *testing.T) {
 		s := st.Sys().(*syscall.Stat_t)
 		return accountbudget.FileID{Device: uint64(s.Dev), Inode: s.Ino}
 	}
-	data, err := json.Marshal(map[string]any{"version": 1, "root": root, "scope": "scope", "instance": "instance", "identity": accountbudget.Identity{Root: id(root), Queue: id(filepath.Join(root, "queue.lock")), Wire: id(filepath.Join(root, "wire.lock"))}})
+	data, err := json.Marshal(map[string]any{"event_lock": eventID, "version": 2, "root": root, "scope": "scope", "instance": "instance", "identity": accountbudget.Identity{Root: id(root), Queue: id(filepath.Join(root, "queue.lock")), Wire: id(filepath.Join(root, "wire.lock"))}})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -84,6 +84,18 @@ func TestA166JEVBusyAuxiliaryNoWire(t *testing.T) {
 	if err := accountbudget.Provision(root, "scope", "instance"); err != nil {
 		t.Fatal(err)
 	}
+	eventID := func() accountbudget.FileID {
+		b, err := accountbudget.Open(accountbudget.Config{Root: root, Scope: "scope", Instance: "instance", Clock: clock.System()})
+		if err != nil {
+			t.Fatal(err)
+		}
+		id, err := accountbudget.ProvisionObservation(b)
+		err = errors.Join(err, b.Close())
+		if err != nil {
+			t.Fatal(err)
+		}
+		return id
+	}()
 	id := func(path string) accountbudget.FileID {
 		t.Helper()
 		s, e := os.Stat(path)
@@ -94,7 +106,7 @@ func TestA166JEVBusyAuxiliaryNoWire(t *testing.T) {
 		return accountbudget.FileID{Device: uint64(v.Dev), Inode: v.Ino}
 	}
 	ident := accountbudget.Identity{Root: id(root), Queue: id(filepath.Join(root, "queue.lock")), Wire: id(filepath.Join(root, "wire.lock"))}
-	raw, e := json.Marshal(map[string]any{"version": 1, "root": root, "scope": "scope", "instance": "instance", "identity": ident})
+	raw, e := json.Marshal(map[string]any{"event_lock": eventID, "version": 2, "root": root, "scope": "scope", "instance": "instance", "identity": ident})
 	if e != nil {
 		t.Fatal(e)
 	}
