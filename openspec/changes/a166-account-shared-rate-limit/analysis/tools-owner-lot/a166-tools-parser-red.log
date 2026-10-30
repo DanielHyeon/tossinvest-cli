@@ -1,0 +1,4 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime [github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime.test]
+internal/accountbudgetruntime/launch_config_test.go:13:15: undefined: ParseLaunchConfig
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime [build failed]
+FAIL

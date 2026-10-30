@@ -1,0 +1,38 @@
+{
+  "file": "cmd/tossctl/root_budget.go",
+  "source_sha256": "04b27a5b2d7e78f1d9efcb33ce5b1336c58427538622547ddf3528003f1cf737",
+  "package": "main",
+  "function": "parseBudgetEnv",
+  "signature": "parseBudgetEnv(params=4, results=2)",
+  "start": {
+    "line": 24,
+    "column": 1
+  },
+  "end": {
+    "line": 26,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 25,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 9
+      },
+      "text": "accountbudgetruntime.ParseLaunchConfig"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}
