@@ -94,6 +94,9 @@ func NewPositionPolicyCommandService(ectx *Context, clk clock.Clock) (*PositionP
 	if ectx == nil || ectx.Journal == nil {
 		return nil, errors.New("engine: position policy command service requires the owned journal")
 	}
+	if ectx.Retrier != nil && !ectx.Retrier.EnginePollReaderAllowed(ectx.Official) {
+		return nil, errors.New("engine: position policy reader does not match poll binding")
+	}
 	if clk == nil {
 		clk = clock.System()
 	}

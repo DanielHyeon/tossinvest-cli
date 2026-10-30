@@ -99,7 +99,8 @@ func TestObservedTransportRateLimitAndPoison(t *testing.T) {
 	if err != nil || remaining <= 0 {
 		t.Fatalf("remaining %v %v", remaining, err)
 	}
-	req, _ = http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	nextCtx := WithObservation(context.Background(), ObservationPoll, key, &ObservationCollector{})
+	req, _ = http.NewRequestWithContext(nextCtx, http.MethodGet, url, nil)
 	_, err = tr.RoundTrip(req)
 	if !errors.Is(err, ErrObservationDeferred) || !errors.Is(err, ErrNotSent) || calls.Load() != 1 {
 		t.Fatalf("defer: %v calls %d", err, calls.Load())

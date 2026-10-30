@@ -193,6 +193,18 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			err = errors.Join(ErrNotSent, err)
 		}
 	}()
+
+	previous := requestObservation(req.Context()).collector.Snapshot()
+	if previous.RateLimited || previous.LocalError != nil {
+		err = previous.LocalError
+		if previous.RateLimited {
+			err = errors.Join(err, ErrObservationRateLimited)
+		}
+		if req.Body != nil {
+			err = errors.Join(err, req.Body.Close())
+		}
+		return nil, err
+	}
 	p := PriorityFromContext(req.Context())
 	if p > Auxiliary || req.URL == nil || req.URL.Scheme != "https" || req.URL.Host == "" {
 		if req.Body != nil {

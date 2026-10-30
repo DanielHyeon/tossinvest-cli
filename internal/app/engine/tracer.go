@@ -256,6 +256,9 @@ func NewTracer(opts TracerOptions) (*Tracer, error) {
 	case strings.TrimSpace(opts.AccountRef) == "":
 		return nil, fmt.Errorf("%w: a tracer is scoped to one account", ErrTracerRefused)
 	}
+	if !opts.Retrier.EnginePollReaderAllowed(opts.Reads) {
+		return nil, errors.New("engine: tracer reader does not match poll binding")
+	}
 	if opts.Clock == nil {
 		opts.Clock = clock.System()
 	}

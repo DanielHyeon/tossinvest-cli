@@ -1,0 +1,15 @@
+0d6451949f75e73de3beb010f563410c7968e5ca08ecd63b5a3923af93d3ce1d  openspec/changes/a166-account-shared-rate-limit/analysis/engine-poll-lot/a166-engine-401-finish-green.log.gz
+6acc1e84b942625f05a639f7cf255d4ff84130602e7e1ce263220e7deb047172  openspec/changes/a166-account-shared-rate-limit/analysis/engine-poll-lot/a166-engine-401-finish-mutant.log.gz
+16e3d4ab9a2ec416c3aa6d3fcea051220c14c95125acdb6e5b23ad3d1ff97af4  openspec/changes/a166-account-shared-rate-limit/analysis/engine-poll-lot/a166-engine-adoption-shared.log.gz
+39d49a792207bf21c9d7c7acdb2800feb039084c4d36098fff80ae41e2de853a  openspec/changes/a166-account-shared-rate-limit/analysis/engine-poll-lot/a166-engine-api429-green.log.gz
+3577dc47428e9ecfd97ebcd61612ac1f7e2db3aa37a2c1a7d8f206a1b6fe8937  openspec/changes/a166-account-shared-rate-limit/analysis/engine-poll-lot/a166-engine-api429-red.log.gz
+4817594ce4b1b0aaba9cec1bd8adfad4957bcbbc585f0e5bb8c987e90391cc92  openspec/changes/a166-account-shared-rate-limit/analysis/engine-poll-lot/a166-engine-final-normal.log.gz
+d185ee2e840605325c8af4dc64f970ea31d4bf6a76ee2e69ca00271fcd563f80  openspec/changes/a166-account-shared-rate-limit/analysis/engine-poll-lot/a166-engine-final-race.log.gz
+f33f326a9ed3a008170aba0828d243720bc70af47be18760673ddc3370eedf90  openspec/changes/a166-account-shared-rate-limit/analysis/engine-poll-lot/a166-engine-key-green.log.gz
+daf1f1677f3e7c0676d067145560641d4329d178d5576e7085ae301fad1e6c0f  openspec/changes/a166-account-shared-rate-limit/analysis/engine-poll-lot/a166-engine-key-red.log.gz
+af096cd47c93e3c02dcd314df093b5a0332021278c64d83242b24f7cd342144b  openspec/changes/a166-account-shared-rate-limit/analysis/engine-poll-lot/a166-engine-latch-green.log.gz
+d5b661c6610dbe3fc5a2094a4589459fc0047d87abd73cb52f213a869f212333  openspec/changes/a166-account-shared-rate-limit/analysis/engine-poll-lot/a166-engine-latch-red-v2.log.gz
+fb419379cdee893bdd906c9d33d117a0f1b77ab434d3b8d2b19f38f2076a4ee7  openspec/changes/a166-account-shared-rate-limit/analysis/engine-poll-lot/a166-engine-reader-mutant-final.log.gz
+7d80411854e4829e3120c5d181b2e1278248431001188f4b8153afcc3f5f3de0  openspec/changes/a166-account-shared-rate-limit/analysis/engine-poll-lot/a166-engine-reader-mutant.log.gz
+a4243d640eccf5ac2244641b690e324f3bb3e8e790a78a91ee37743ecb776a23  openspec/changes/a166-account-shared-rate-limit/analysis/engine-poll-lot/a166-engine-token-finish-green.log.gz
+7d55afe13dd83cf4e70c1dd7c02424bd4be14c76bfdf1d7cbc3963e451325f59  openspec/changes/a166-account-shared-rate-limit/analysis/engine-poll-lot/a166-engine-token-finish-mutant.log.gz
