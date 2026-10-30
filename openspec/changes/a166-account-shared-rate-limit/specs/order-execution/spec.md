@@ -7,7 +7,7 @@
 
 엔진 폴링 조회가 429 또는 계좌 공유 admission 거절을 받으면 같은 조회 안에서 다시 보내서는 안 된다(SHALL NOT). 그 조회는 실패로 끝나고 기존 staleness 판정을 유지한다(SHALL). 해당 429 응답에 결속된 유효 `Retry-After`가 30초 이하이면 지정한 엔진 폴링 `RequiredQuery` 종류의 후속 시작을 제한해야 한다(SHALL). 누락·invalid·30초 초과이면 그 조회를 포기하며 30초로 잘라 재전송하거나 기본 대기 후 같은 조회를 재전송해서는 안 된다(SHALL NOT). 기존 유효 미만료 hint를 누락 응답으로 지워서는 안 된다(SHALL NOT). 새 계좌 전역 cooldown을 만들지 않는다. soak·verify·IN_DOUBT 스캔 같은 비지연 walk의 기존 429 백오프(추가 2회, 15s → 30s)는 유지한다.
 
-공식 클라이언트가 401 에 토큰을 갱신해 같은 요청을 다시 보내는 기존 동작(최대 2회, 같은 본문 바이트)은 브로커가 그 요청을 받지 않은 경우로 본다(SHALL — 근거는 시험으로 고정한다; 실측 근거는 없다). 이 재전송은 클라이언트 안의 일이라 attempt 기록 대상이 아니다. 그 재전송 요청도 각각 계좌 공유 admission 을 지난다(SHALL).
+공식 클라이언트가 401 에 토큰을 갱신해 같은 요청을 다시 보내는 기존 동작(최대 2회, 같은 본문 바이트)과 별도 journal attempt를 추가하지 않는 기존 계약을 보존한다(SHALL). 이 내부 재전송도 각각 공유 admission을 지난다(SHALL). 동일 주문 attempt의 선행 주문 본체 HTTP 요청의 실제 Write 이력을 후속 admission 거절로 지워서는 안 되며, 마지막 HTTP의 미전송 오류만으로 전체 주문 attempt를 미전송으로 낮춰서는 안 된다(SHALL NOT). token 요청과 주문 본체의 전송은 구분한다(SHALL).
 
 #### Scenario: 재생과 재시도의 구분
 - **WHEN** 멱등키 없이 전송된 mutation이 모호한 오류로 끝나면
@@ -34,7 +34,17 @@
 
 응답 header 반환만으로 다음 소유자에게 예산을 넘겨서는 안 된다(SHALL NOT). 응답 EOF/Close/취소의 정리와 실제 요청 writer의 revoke/drain을 완료하고 잠금을 정확히 한 번 반환해야 한다(SHALL). 기존 caller 시한을 연장해서는 안 되며, 대기 중 종료가 확인된 요청은 새 Write가 없어야 한다(SHALL). 전송 전 거절의 판단은 현재 주문 본체 attempt에 결속하며, 이미 전송한 결과 또는 a165의 최초 AMBIGUOUS를 후속 거절로 지워서는 안 된다(SHALL NOT).
 
-공유 상태를 갱신하는 중에는 내구화된 dirty 표지를 유지해야 한다(SHALL). 불확실한 갱신 실패 이후 다른 참여자가 그 state를 새 허가로 사용해서는 안 된다(SHALL NOT). dirty를 자동 초기화하거나 살아 있는 waiter를 PID/TTL만으로 지워서는 안 된다(SHALL NOT). namespace/계좌 scope/동일 inode/지원 환경은 실제 활성화 전에 검증해야 한다(SHALL).
+공유 상태를 갱신하는 중에는 내구화된 dirty 표지를 유지해야 한다(SHALL). 불확실한 갱신 실패 이후 다른 참여자가 그 state를 새 허가로 사용해서는 안 된다(SHALL NOT). dirty를 자동 초기화하거나 살아 있는 waiter를 PID/TTL만으로 지워서는 안 된다(SHALL NOT). namespace/group scope/동일 inode/지원 환경은 실제 활성화 전에 검증해야 한다(SHALL).
+
+첫 지원 모드는 모든 참여 profile/계좌를 하나의 보수적 예산 그룹으로 묶어 합계 3건/초를 지켜야 한다(SHALL). 앱 키·accountSeq·config-dir로 그룹을 분할하거나 계좌 동등성을 추정해서는 안 된다(SHALL NOT). 신뢰된 공통 launch manifest의 예상 root·queue.lock·wire.lock device/inode와 instance를 bootstrap 전에 대조하고 누락·불일치는 새 wire 없이 거절해야 한다(SHALL). 여러 계좌의 합산 처리량도 제한됨을 명시해야 하며 계좌마다 독립 3건/초를 제공한다고 주장해서는 안 된다(SHALL NOT).
+
+#### Scenario: 여러 profile의 공통 bootstrap
+- **WHEN** 서로 다른 자격증명과 계좌 목록을 사용하는 참여자들이 같은 검증된 launch manifest로 시작하면
+- **THEN** token/accounts를 포함한 모든 요청을 공통 그룹에서 중재하며 계좌 선택은 각 기존 호출자 계약을 보존한다
+
+#### Scenario: marker만 복사한 별도 root
+- **WHEN** scope와 instance 문자열은 같지만 root 또는 잠금 파일의 device/inode가 공통 manifest의 예상 값과 다르면
+- **THEN** token 교환을 포함한 최초 네트워크 요청 전에 거절하며 새 예산을 만들거나 OFF로 돌아가지 않는다
 
 #### Scenario: 합산 상한과 보호 대기
 - **WHEN** 동일 계좌의 여러 참여자가 일반 요청과 보호 요청을 동시에 전송하려 하면

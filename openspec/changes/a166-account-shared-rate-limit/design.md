@@ -94,7 +94,9 @@ hint는 해당 429 응답에 직접 결속해 파싱한다. 503이나 다른 응
 
 배선 로트는 `official.New`의 모든 호출자뿐 아니라 token 교환, `a112MBUSReadAt`의 별도 clone, `HTTPReplayTransport`, a087 probe의 직접 POST를 포함한다. 원장 재생 본문·멱등키·a165 첫 AMBIGUOUS 보존을 바꾸지 않는다. WTS monitor와 a128 judge HTTP는 공식 API로 분류하지 않는다. WTS와 동일 브로커 예산인지는 미확인이므로 지원환경에서 별도로 확인하며, 실제 활성화 전에 영향을 모르는 외부 소비자를 동시에 켜놓고 계좌 전체 보장을 주장하지 않는다.
 
-enforcing 배포는 **기존 예산을 연다**. 각 프로세스가 시작 때 임의 계좌 폴더·instance를 만들지 않는다. 같은 계좌의 profile들이 동일 root/instance/잠금 inode를 열도록 배포 manifest에서 명시한다. 계좌 scope는 앱 키나 config-dir로 대체하지 않는다. 자격증명·계좌 원문을 경로나 이벤트로 저장하지 않고, 검증된 계좌 식별에 결속한 opaque scope를 사용한다. 최초 scope 검증에 필요한 인증·계좌 조회도 미리 구성된 공통 예산 안에서 수행하며 실제 계좌가 예상 scope와 다르면 이후 요청을 거부한다. bootstrap을 예산 없이 보낸 뒤 나중에 합치지 않는다.
+enforcing 배포는 **기존 예산을 연다**. 각 프로세스가 시작 때 임의 폴더·instance를 만들지 않는다. 첫 지원 방식은 설치의 모든 참여 profile/계좌를 **하나의 보수적 예산 그룹**에 넣는 것이다. 그룹 총량이 3건/초 이하이면 각 계좌의 부분집합도 그 상한 이하다. 여러 계좌를 함께 쓰면 합산 처리량도 제한된다. 계좌마다 독립 3건/초를 제공하거나 서로 다른 앱 키의 accountSeq가 같은 물리 계좌라고 주장하지 않는다. 기존 계좌 선택·권한·원장 검증은 유지한다. 기존 「계좌 식별에 결속한 scope」는 이 명시적 group scope로 대체한다.
+
+신뢰된 공통 launch manifest가 모든 참여자에 동일 opaque scope·instance 및 예상 root/queue.lock/wire.lock device·inode를 고정한다. factory는 trusted clock.System 계열로 기존 예산을 열어 이 예상 파일 ID와 비교한 뒤 token/accounts를 포함한 첫 요청부터 같은 guard를 사용한다. 입력 누락·다른 ID·미지원 상태는 bootstrap 전 wire 0이다. 열려는 root에서 marker를 읽고 그 값을 자기 승인 기준으로 삼지 않는다. 같은 marker 문자열을 복사한 다른 디렉터리도 거절한다. manifest를 임의 교체하는 관리자까지 막는다고 주장하지 않으며 모든 launch 경로의 실제 일치는 운영 전 사람 확인이다. 같은 프로세스의 재생성 client는 Budget 객체를 재사용하고 다른 프로세스는 동일 파일/instance를 검증한다. 계좌번호·키·토큰을 scope/경로/event에 넣지 않고 새 계좌 동등성 데이터베이스를 만들지 않는다. bootstrap을 무예산으로 보낸 뒤 나중에 합치지 않는다. 상세 근거·수용 반례는 `analysis/budget-group-binding.md`다.
 
 생성·점검은 운영자용 로컬 provisioning 절차로 분리한다. directory/파일 소유권·mode·symlink/hardlink·regular-file·fs 종류·device/inode·boot/time namespace를 검증한다. active 참여자가 있는 상태에서 root·lock inode·instance를 바꾸거나 자동 복구하지 않는다. 지원하지 않는 host/namespace/fs와 검증 실패는 enforcing에서 새 wire 0이며 upstream으로 돌아가지 않는다. non-Linux는 enforcing 미지원으로 명시하고 OFF의 기존 지원을 유지한다. CLI 플래그/env를 추가하더라도 실제 운영 값을 자동으로 설정하지 않는다.
 
