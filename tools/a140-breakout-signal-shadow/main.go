@@ -30,6 +30,8 @@ import (
 	"time"
 	_ "time/tzdata" // 시장 현지 시각 해석이 tz DB 없는 환경에서도 맞도록
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime"
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
 	marketclock "github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	tossconfig "github.com/JungHoonGhae/tossinvest-cli/internal/config"
@@ -66,6 +68,10 @@ func dispatch(ctx context.Context, args []string, stdout io.Writer) error {
 
 // runCommand 는 브로커를 부르기 전에 경로 가드 · 설정 · 플래그를 전부 검사함(어느 하나라도 틀리면 GET 0 으로 거부).
 func runCommand(ctx context.Context, args []string) error {
+	return runCommandWithOptions(ctx, args)
+}
+
+func runCommandWithOptions(ctx context.Context, args []string, opts ...official.Option) (result error) {
 	cfg := defaultProbeConfig()
 	flags := flag.NewFlagSet("run", flag.ContinueOnError)
 	market := flags.String("market", "KR", `only "KR" (design D1)`)
@@ -130,7 +136,24 @@ func runCommand(ctx context.Context, args []string) error {
 		return errors.New("no Open API credentials; run `tossctl openapi login` first")
 	}
 	// 엔진과 같은 토큰 캐시를 공유하는 생산 client — 이 도구는 이 값을 marketSource(읽기 GET 다섯)로만 다룸.
-	var src marketSource = official.New(*credentials, tokenFile)
+	mode, modeSet := os.LookupEnv("TOSSOS_ACCOUNT_BUDGET_MODE")
+	manifest, manifestSet := os.LookupEnv("TOSSOS_ACCOUNT_BUDGET_MANIFEST")
+	budgetConfig, err := accountbudgetruntime.ParseLaunchConfig(mode, modeSet, manifest, manifestSet)
+	if err != nil {
+		return err
+	}
+	budgetConfig.CleanupError = func(error) { fmt.Fprintln(os.Stderr, "budget cleanup failed") }
+	factory, err := accountbudgetruntime.Open(ctx, budgetConfig)
+	if err != nil {
+		return err
+	}
+	defer func() { result = finishTool(result, factory.Close) }()
+	client, err := factory.NewClient(*credentials, tokenFile, opts...)
+	if err != nil {
+		return err
+	}
+	var src marketSource = client
+	ctx = accountbudget.WithPriority(ctx, accountbudget.Auxiliary)
 
 	store, err := strategyevidence.Open(ctx, strategyevidence.Options{Path: *evidenceDB})
 	if err != nil {
@@ -276,4 +299,8 @@ func reportCommand(args []string, stdout io.Writer) error {
 	}
 	_, err = io.WriteString(stdout, renderReport(rows))
 	return err
+}
+
+func finishTool(result error, closeFactory func() error) error {
+	return errors.Join(result, closeFactory())
 }
