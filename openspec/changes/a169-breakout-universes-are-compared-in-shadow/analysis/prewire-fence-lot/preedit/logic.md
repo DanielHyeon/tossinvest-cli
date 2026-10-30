@@ -7,3 +7,7 @@ base b0f7f1d93, 계획 40ac5b116. AST는 변경 전 source SHA 포함. source �
 BTM: nil fence 기존 회귀; baseline historical event/gap/overrun 허용, pending Busy/Orphan·dirty·closed/owner 오류 거절; baseline 뒤 event/gap/rollback/overrun 첫 write 0; Begin·Finish·postcommit·body·release 실패 sticky와 동일 fence 새 collector; B 이미 Acquire 대기 중 A 실패 시 B의 Acquire 후 재확인; clean release B 성공; Aux busy/cancel 정상 settlement 후 재시도; 실 TLS token/401 및 crossprocess429 각 시도 첫 write0; response/ErrNotSent 분리; body close·release 한번·race. 통제는 channel barriers, sleep을 경합 증거로 사용하지 않는다. 구조 검사 JSON의 RoundTrip body shape만 재생성·재검토, 기존 AST helper 편집 없음.
 
 새 fence/OS stub은 신규 함수만, 공용 기존 함수는 RoundTrip 외 수정하지 않는다. 기존 hook으로 B 진입 증명이 부족하여 Manager에 private 시험 hook 추가 허가 요청. no-fence 동작·공식 클라이언트·생산 caller/설정 불변. 미실행 전체 tests/gate·운영·실 broker/실계좌. CodeGraph index 부재면 source/AST 대체를 표시한다.
+
+Manager 승인: Transport 구조체에 nil 기본 private testFenceInitial/testFenceAcquired 두 hook만 추가한다. fence가 있는 요청의 초기 검사 직후 및 Acquire 직후만 호출하며 공개 setter·production 할당은 없다. Go build tag로 제거되는 hook이 아닌 private 컴파일 시험 seam이다. B 경합은 channel 동기화와 fence mutex TryLock 확인을 사용한다.
+
+절차 예외: 위 요약과 원본 AST만 선커밋했고 필수 상세 분기별 FLM/BTM은 source 첫 수정 이후 작성했다. 사전 준수 주장을 하지 않는다. 사후 원본 대비 상세 지도는 `analysis/function-logic/internal-accountbudget--transport.roundtrip/`에 보완했으며 Manager 검토 대기한다.
