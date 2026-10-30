@@ -26,3 +26,9 @@ probe의 required 경계는 현재 실행파일 내부 `deps`와 `newBudgetedSen
 로컬 gstack review checklist를 수동 적용했다. critical 관점에서 concrete 결속·동일 Budget·원장상 기존 불명 상태·single POST·body와 header 바이트 및 callback/URL 경계를 검토했고, 발견된 기존 static allowlist 실패는 최소 수정했다. 변경 없음/미해결 항목을 추가 자동 승인한 것은 아니다. telemetry·설치·업그레이드·다른 specialist 호출은 하지 않았다. 독립 Manager 검증은 별도다.
 
 전체 저장소/전체 gate, 실제 계좌·브로커·운영·실행 probe·배포, a087 activation, a169 측정, 타 OS 실행, 전체 caller wiring 및 권한/동일 namespace·clock 운영 검증은 미실행. 기존 a166은 진행 중이며 push/merge/archive하지 않았다. 신규 `accountbudget` test import는 probe의 static allowlist에 명시적으로 추가했으나 기존 생산 주문 API 금지는 변경하지 않았다.
+
+## Manager 후속: enforcing nil transport 거절
+
+`6099998ed`의 budgeted constructor가 nil client transport를 `http.DefaultTransport`로 대체하던 경로는 명시 constructor-owned template 계약과 어긋났다. 사전 AST `pre2-NewBudgetedHTTPReplay.json`, 변경 후 AST `post2-NewBudgetedHTTPReplay.json`. 새 `TestA166ReplayRequiredNilTransportRejectedBeforeHeaders`는 로컬 TLS fixture의 token/POST 0을 확인하며 `nil-transport-red.log`에 이전 실패를 보존했다. 강제 모드에서 명시 `*http.Transport`가 없으면 `ErrUnavailable`을 반환하도록 수정했고 OFF `HTTPReplay`는 그대로다. `TestA166ReplayOffNilTransportStillWorks`는 OFF에서 nil/default가 기존대로 동작함을 local HTTP fixture로 확인한다. `nil-transport-green.log` GREEN, fallback 복원 Go overlay 변이 `nil-transport-mutation.log` RED. 명시적으로 전역 DefaultTransport를 수정하거나 임의 TLSNextProto를 허용하지 않았다.
+
+`nil-go{125,126}-{normal,race}.log`는 해당 replay 패키지의 기존 OFF·journal·새 forcing 선택 시험이다. probe 코드는 이 후속 수정에서 변경하지 않아 기존 `final-probe-go{125,126}-{normal,race}.log`를 재사용한다. gstack checklist 수동 재검토: global fallback 삭제와 헤더 이전 거절 및 OFF 경계 확인. probe static guard의 concrete client selector 제한 범위는 독립 reviewer가 별도 지적했으며 이 작은 후속 수정으로 해결했다고 주장하지 않는다.

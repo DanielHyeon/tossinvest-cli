@@ -165,11 +165,7 @@ func NewBudgetedHTTPReplay(baseURL string, client *http.Client, auth *official.C
 	if client == nil || client.Timeout <= 0 || auth == nil || budget == nil || cleanup == nil || !auth.UsesAccountBudget(budget) || baseURL != auth.BaseURL() {
 		return nil, accountbudget.ErrUnavailable
 	}
-	base := client.Transport
-	if base == nil {
-		base = http.DefaultTransport
-	}
-	template, ok := base.(*http.Transport)
+	template, ok := client.Transport.(*http.Transport)
 	if !ok || template == nil {
 		return nil, accountbudget.ErrUnavailable
 	}

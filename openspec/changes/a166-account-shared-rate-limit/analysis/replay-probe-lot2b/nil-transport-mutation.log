@@ -1,0 +1,5 @@
+--- FAIL: TestA166ReplayRequiredNilTransportRejectedBeforeHeaders (0.02s)
+    a166_replay_budget_test.go:216: nil transport accepted: <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.031s
+FAIL

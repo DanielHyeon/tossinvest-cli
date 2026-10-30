@@ -198,3 +198,37 @@ func TestA166ReplayDirectPostCannotBypassHeldBudget(t *testing.T) {
 		t.Fatalf("error=%v posts=%d", e, posts.Load())
 	}
 }
+
+func TestA166ReplayRequiredNilTransportRejectedBeforeHeaders(t *testing.T) {
+	b := a166ReplayBudget(t)
+	var calls atomic.Int32
+	s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { calls.Add(1); w.WriteHeader(500) }))
+	defer s.Close()
+	roots := x509.NewCertPool()
+	roots.AddCert(s.Certificate())
+	source := &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: roots}}, Timeout: time.Second}
+	auth, e := official.NewWithAccountBudget(official.Credentials{}, "", b, func(error) {}, official.WithBaseURL(s.URL), official.WithHTTPClient(source), official.WithAccountSeq(17))
+	if e != nil {
+		t.Fatal(e)
+	}
+	replay, e := NewBudgetedHTTPReplay(s.URL, &http.Client{Timeout: time.Second}, auth, b, func(error) {})
+	if replay != nil || !errors.Is(e, accountbudget.ErrUnavailable) {
+		t.Fatalf("nil transport accepted: %v", e)
+	}
+	if calls.Load() != 0 {
+		t.Fatalf("network calls %d", calls.Load())
+	}
+}
+func TestA166ReplayOffNilTransportStillWorks(t *testing.T) {
+	var calls atomic.Int32
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		w.Write([]byte(`{"result":{"orderId":"off"}}`))
+	}))
+	defer s.Close()
+	r := HTTPReplay{BaseURL: s.URL, HTTP: &http.Client{Timeout: time.Second}}
+	response, e := r.ReplayPlace(context.Background(), ReplayBody{stored: `{"clientOrderId":"off"}`})
+	if e != nil || response.OrderID != "off" || calls.Load() != 1 {
+		t.Fatalf("response=%+v err=%v calls=%d", response, e, calls.Load())
+	}
+}
