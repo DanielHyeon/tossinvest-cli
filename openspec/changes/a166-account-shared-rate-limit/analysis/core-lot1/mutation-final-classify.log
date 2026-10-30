@@ -1,0 +1,7 @@
+2026/10/31 02:36:43 http: TLS handshake error from 127.0.0.1:36620: remote error: tls: bad certificate
+--- FAIL: TestAttemptClassificationAfterDrain (0.49s)
+    transport_test.go:139: first write must not be marked NOT_SENT: account budget: request not sent
+        tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.506s
+FAIL

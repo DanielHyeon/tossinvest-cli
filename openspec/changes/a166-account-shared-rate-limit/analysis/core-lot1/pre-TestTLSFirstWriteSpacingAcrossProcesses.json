@@ -1,0 +1,465 @@
+{
+  "file": "internal/accountbudget/transport_test.go",
+  "source_sha256": "d039fd419ef7c0a886fa668908eca4bfc6d00fdfd4d757d6f8f4a501f798d671",
+  "package": "accountbudget",
+  "function": "TestTLSFirstWriteSpacingAcrossProcesses",
+  "signature": "TestTLSFirstWriteSpacingAcrossProcesses(params=1, results=0)",
+  "start": {
+    "line": 208,
+    "column": 1
+  },
+  "end": {
+    "line": 248,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 213,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 217,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 220,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 225,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 226,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 231,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 233,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 237,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 242,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 245,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 13
+      },
+      "text": "fixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 12
+      },
+      "text": "httptest.NewTLSServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 34
+      },
+      "text": "http.HandlerFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 98
+      },
+      "text": "w.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 106
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 8
+      },
+      "text": "server.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 10
+      },
+      "text": "pem.EncodeToMemory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 68
+      },
+      "text": "server.Certificate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 10
+      },
+      "text": "os.WriteFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 23
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 14
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 8
+      },
+      "text": "exec.Command"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 11
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 18
+      },
+      "text": "os.Environ"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 104
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 11
+      },
+      "text": "c.Start"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 221,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 11
+      },
+      "text": "c.Wait"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 11
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 11
+      },
+      "text": "os.ReadFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 23
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 57
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 17
+      },
+      "text": "strconv.ParseInt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 34
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 5
+      },
+      "text": "time.Duration"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 38
+      },
+      "text": "time.Duration"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 209,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 210,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 213,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 216,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 218,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 219,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 220,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 223,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 226,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 230,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 232,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 236,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 241,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 243,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 211,
+        "column": 2
+      },
+      "text": "server.Close"
+    }
+  ]
+}

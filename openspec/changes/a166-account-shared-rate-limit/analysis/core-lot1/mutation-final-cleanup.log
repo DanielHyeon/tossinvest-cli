@@ -1,0 +1,5 @@
+--- FAIL: TestWireCleanupErrorIsReported (0.07s)
+    safety_test.go:317: lost errors: delay failure
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.083s
+FAIL

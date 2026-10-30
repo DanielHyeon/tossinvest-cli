@@ -1,0 +1,6 @@
+--- FAIL: TestFullDeadQueueAllowsCriticalRegistration (0.03s)
+    safety_test.go:376: account budget unavailable
+        queue full
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.040s
+FAIL

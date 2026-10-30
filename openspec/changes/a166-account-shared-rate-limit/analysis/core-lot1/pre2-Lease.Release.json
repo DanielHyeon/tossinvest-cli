@@ -1,0 +1,118 @@
+{
+  "file": "internal/accountbudget/budget_linux.go",
+  "source_sha256": "a3750e3e094ad589751ba859af7b1f54de5336f35ed43207b6e60a11e6f49926",
+  "package": "accountbudget",
+  "function": "Release",
+  "receiver": "Lease",
+  "signature": "Lease.Release(params=0, results=1)",
+  "start": {
+    "line": 430,
+    "column": 1
+  },
+  "end": {
+    "line": 442,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 433,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 434,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 441,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 431,
+        "column": 2
+      },
+      "text": "l.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 432,
+        "column": 8
+      },
+      "text": "l.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 437,
+        "column": 9
+      },
+      "text": "release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 438,
+        "column": 2
+      },
+      "text": "l.b.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 440,
+        "column": 2
+      },
+      "text": "l.b.mu.Unlock"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 436,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 437,
+        "column": 2
+      }
+    },
+    {
+      "kind": "--",
+      "at": {
+        "line": 439,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 432,
+        "column": 2
+      },
+      "text": "l.mu.Unlock"
+    }
+  ]
+}

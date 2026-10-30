@@ -33,6 +33,7 @@ type Lease struct{}
 type Transport struct{}
 
 func Provision(string, string, string) error                      { return ErrUnavailable }
+func OpenContext(context.Context, Config) (*Budget, error)        { return nil, ErrUnavailable }
 func Open(Config) (*Budget, error)                                { return nil, ErrUnavailable }
 func (*Budget) Close() error                                      { return nil }
 func (*Budget) Acquire(context.Context, Priority) (*Lease, error) { return nil, ErrUnavailable }

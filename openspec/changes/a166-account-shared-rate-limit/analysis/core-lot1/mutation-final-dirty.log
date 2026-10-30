@@ -1,0 +1,7 @@
+--- FAIL: TestDirtySyncFaultBlocksOtherProcess (0.05s)
+    safety_test.go:277: peer: exit status 1 --- FAIL: TestDirtyFaultHelper (0.00s)
+            safety_test.go:247: dirty state opened
+        FAIL
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.066s
+FAIL

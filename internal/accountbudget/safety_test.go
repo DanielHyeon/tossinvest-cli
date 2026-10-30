@@ -297,3 +297,120 @@ func TestMarkerSyncFaultLeavesStateUnchanged(t *testing.T) {
 		t.Fatal("state changed before durable marker")
 	}
 }
+
+var errTestDelay = errors.New("delay failure")
+var errTestRelease = errors.New("wire cleanup failure")
+
+type delayFailureClock struct{ clock.Clock }
+
+func (delayFailureClock) Sleep(context.Context, time.Duration) error { return errTestDelay }
+func TestWireCleanupErrorIsReported(t *testing.T) {
+	b, _ := fixture(t)
+	b.clk = delayFailureClock{clock.System()}
+	b.testWireRelease = func(f *os.File) error { return errors.Join(release(f), errTestRelease) }
+	l, e := b.Acquire(context.Background(), Critical)
+	if l != nil {
+		l.Release()
+		t.Fatal("failed cleanup returned lease")
+	}
+	if !errors.Is(e, errTestDelay) || !errors.Is(e, errTestRelease) {
+		t.Fatalf("lost errors: %v", e)
+	}
+}
+
+func TestOpenContextCancelsQueueLockWait(t *testing.T) {
+	b, root := fixture(t)
+	held, e := b.lock(context.Background(), "queue.lock", true)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer release(held)
+	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Millisecond)
+	defer cancel()
+	peer, e := OpenContext(ctx, Config{Root: root, Scope: "scope-a", Instance: "instance-a", Clock: clock.System()})
+	if peer != nil {
+		peer.Close()
+		t.Fatal("open ignored deadline")
+	}
+	if !errors.Is(e, context.DeadlineExceeded) {
+		t.Fatalf("got %v", e)
+	}
+}
+
+func TestReleaseRepeatsCleanupError(t *testing.T) {
+	b, _ := fixture(t)
+	l, e := b.Acquire(context.Background(), Critical)
+	if e != nil {
+		t.Fatal(e)
+	}
+	b.testWireRelease = func(f *os.File) error { return errors.Join(release(f), errTestRelease) }
+	if e = l.Release(); !errors.Is(e, errTestRelease) {
+		t.Fatalf("first release %v", e)
+	}
+	if e = l.Release(); !errors.Is(e, errTestRelease) {
+		t.Fatalf("second release lost error: %v", e)
+	}
+}
+
+func assertFullDeadQueue(t *testing.T, p Priority) {
+	t.Helper()
+	b, root := fixture(t)
+	s := queueState{Next: maxTickets, Tickets: make([]entry, 0, maxTickets)}
+	for i := 0; i < maxTickets; i++ {
+		id := fmt.Sprintf("%032x", i)
+		s.Tickets = append(s.Tickets, entry{ID: id, Seq: uint64(i)})
+		if e := os.WriteFile(filepath.Join(root, "live-"+id), nil, 0600); e != nil {
+			t.Fatal(e)
+		}
+	}
+	data, e := json.Marshal(s)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e = os.WriteFile(filepath.Join(root, "state"), data, 0600); e != nil {
+		t.Fatal(e)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	l, e := b.Acquire(ctx, p)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if l == nil {
+		t.Fatal("missing lease")
+	}
+	if e = l.Release(); e != nil {
+		t.Fatal(e)
+	}
+}
+func TestFullDeadQueueAllowsCriticalRegistration(t *testing.T) { assertFullDeadQueue(t, Critical) }
+func TestFullDeadQueueAllowsNormalRegistration(t *testing.T)   { assertFullDeadQueue(t, Normal) }
+func TestFullQueueUnknownLivenessFailsClosed(t *testing.T) {
+	b, root := fixture(t)
+	s := queueState{Next: maxTickets, Tickets: make([]entry, 0, maxTickets)}
+	for i := 0; i < maxTickets; i++ {
+		id := fmt.Sprintf("%032x", i)
+		s.Tickets = append(s.Tickets, entry{ID: id, Seq: uint64(i)})
+		if i > 0 {
+			if e := os.WriteFile(filepath.Join(root, "live-"+id), nil, 0600); e != nil {
+				t.Fatal(e)
+			}
+		}
+	}
+	data, _ := json.Marshal(s)
+	if e := os.WriteFile(filepath.Join(root, "state"), data, 0600); e != nil {
+		t.Fatal(e)
+	}
+	l, e := b.Acquire(context.Background(), Critical)
+	if l != nil {
+		l.Release()
+		t.Fatal("unknown admitted")
+	}
+	if !errors.Is(e, ErrUnavailable) {
+		t.Fatalf("error %v", e)
+	}
+	after, e := os.ReadFile(filepath.Join(root, "state"))
+	if e != nil || !bytes.Equal(data, after) {
+		t.Fatal("uncertain queue changed")
+	}
+}
