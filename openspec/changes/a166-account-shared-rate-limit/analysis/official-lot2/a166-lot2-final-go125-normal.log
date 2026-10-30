@@ -1,0 +1,13 @@
+go: downloading github.com/charmbracelet/lipgloss v1.1.0
+go: downloading github.com/rivo/uniseg v0.4.7
+go: downloading github.com/charmbracelet/x/ansi v0.9.3
+go: downloading github.com/charmbracelet/x/cellbuf v0.0.13
+go: downloading github.com/muesli/termenv v0.16.0
+go: downloading github.com/charmbracelet/x/term v0.2.1
+go: downloading github.com/mattn/go-runewidth v0.0.16
+go: downloading github.com/lucasb-eyer/go-colorful v1.2.0
+go: downloading github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc
+go: downloading github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
+go: downloading github.com/mattn/go-isatty v0.0.20
+go: downloading github.com/aymanbagabas/go-osc52/v2 v2.0.1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	3.858s
