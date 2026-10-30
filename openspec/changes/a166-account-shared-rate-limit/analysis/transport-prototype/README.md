@@ -54,3 +54,11 @@ TLS 첫 plaintext Write 이후 서버 handler 대기 중 owner child를 SIGKILL�
 `transport-green.log`: `go test -race -count=1 -timeout=40s ./openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype` PASS 14.545s. 401·redirect·2 process·kill·TLS verify·fresh HTTP1 retry fault와 앞선 변이 기록을 포함한다. 취소 직전/동시 전송 경합은 하나의 검증 완료 증명이 아니라 기존 fixture 범위의 관찰이다.
 
 판단: 직접 TLS·HTTP/1·keepalive OFF·요청당 연결 및 신뢰할 수 있는 단일 host 참여자라는 조건 아래, 이 transport 생명주기는 **후속 독립 리뷰를 거쳐 설계 후보로 채택 가능**하다. 제품 준비나 strict wire/server arrival 보장은 아니다. 취소와 첫 실제 write의 모든 동시 경계, 반복 시험·버전 고정·권위 및 OFF 호환, 공통 inode 신뢰·priority·429·운영 정책은 별도 증거/설계가 필요하다. 적용 전 독립 리뷰가 본 source의 context 경합과 io.Close 오류 처분을 확인해야 한다. gstack 수동 점검상 production-grade 보안·지원환경·실패 분류는 여전히 미완이며 전체 gate·외부 CLI review 미실행.
+
+## 응답 본문 전체 소유권 (v4 검증)
+
+앞선 `52d64223a`는 response header 반환 시 lock을 해제하므로 v4의 본문 전체 소유권을 충족하지 않았다. 이번 연구는 response wrapper가 EOF·read error·Close 또는 원래 request context 취소 시 원본 body close 후 write revoke/drain, 공유 flock과 local gate 해제를 `sync.Once`로 수행한다. 추가 timeout을 만들지 않는다. `http.Client.Timeout=2s`와 Background 요청을 사용해 호출자가 body를 닫지 않아도 기존 client timeout이 해제하는 fixture를 확인했다. Background 및 timeout 0이며 호출자도 닫지 않는 경우 무기한 보유는 명시적 미완 사용 계약이다.
+
+느린 body를 보낸 첫 요청이 유지되는 동안 둘째 요청을 500ms 관찰했다(350ms cooldown보다 김). EOF·Close·cancel·기존 client timeout 전 둘째 요청은 서버에 도착하지 않았고 각 종료 뒤 진행했다. header에서 release하는 변이 `earlyrelease-mutant.log`는 `second request during first body`로 실패한다. 최초 fixture는 채널 변수 재할당으로 data race 및 이중 close 실패했고 해당 원문은 덮어쓰기로 보존하지 못했다. 이를 `sync.Once`로 고친 뒤 targeted race GREEN.
+
+최종 전체 국소 회귀 `go test -race -count=1 -timeout=50s ./openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype` → `fullownership-green.log` PASS 20.546s. 128MiB TLS blocked Write 취소·본문 Close·후속 요청, pre-admission body close, 분할 본문, verified TLS state, 401/307, 두 프로세스·kill 재시작 시험을 포함한다. 표준 HTTP1 신선한 연결의 단일 실패 fixture이지 모든 장애/버전의 숨은 재시도 증명은 아니다. production authority·OFF·inode 신뢰·공정성/priority·429·lock 오류·전 경로 wiring은 별도 scope. 서버 도착률과 무한 scheduler 정지의 유한 상한은 보장하지 않는다. 수동 gstack 관점에서 `sync.Once`에 body.Close를 포함한 상태에서 요청 취소와 사용자 Read/Close가 경쟁할 때의 모든 구현체 동작, Close 오류 처리 및 writer drain·timeout의 production 통합은 독립 검토가 필요하다.

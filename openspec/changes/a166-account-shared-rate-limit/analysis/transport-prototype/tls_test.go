@@ -122,16 +122,16 @@ func (l *limiter) RoundTrip(req *http.Request) (*http.Response, error) {
 		if e != nil {
 			return nil, e
 		}
-		defer f.Close()
 	}
 	release, e := acquireContext(req.Context(), l.gate, f)
 	if e != nil {
+		if f != nil {
+			f.Close()
+		}
 		return nil, e
 	}
-	defer release()
 
 	lease := &lease{starts: &l.starts, logMu: &l.logMu, pause: l.beforeWrite, resume: l.resume, evidence: l.evidence, inFlight: &l.inFlight}
-	defer lease.revoke()
 	tr := &http.Transport{DisableKeepAlives: true, ForceAttemptHTTP2: false, TLSNextProto: map[string]func(string, *tls.Conn) http.RoundTripper{}, Proxy: nil}
 	tr.DialTLSContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 		if l.dialStart != nil {
@@ -172,7 +172,50 @@ func (l *limiter) RoundTrip(req *http.Request) (*http.Response, error) {
 		}
 		lease.mu.Unlock()
 	}
+	if resp == nil {
+		lease.revoke()
+		release()
+		if f != nil {
+			f.Close()
+		}
+		return nil, err
+	}
+	owner := &responseOwner{body: resp.Body, done: make(chan struct{}), finish: func() {
+		lease.revoke()
+		release()
+		if f != nil {
+			f.Close()
+		}
+	}}
+	resp.Body = owner
+	go func() {
+		select {
+		case <-req.Context().Done():
+			owner.Close()
+		case <-owner.done:
+		}
+	}()
 	return resp, err
+}
+
+type responseOwner struct {
+	body     io.ReadCloser
+	once     sync.Once
+	done     chan struct{}
+	finish   func()
+	closeErr error
+}
+
+func (o *responseOwner) Close() error {
+	o.once.Do(func() { o.closeErr = o.body.Close(); o.finish(); close(o.done) })
+	return o.closeErr
+}
+func (o *responseOwner) Read(p []byte) (int, error) {
+	n, e := o.body.Read(p)
+	if e != nil {
+		o.Close()
+	}
+	return n, e
 }
 func TestTLSRedirectAnd401AttemptsAreSpaced(t *testing.T) {
 	var mu sync.Mutex
@@ -663,5 +706,78 @@ func TestCancelDuringBlockedResponseRead(t *testing.T) {
 		}
 	case <-time.After(3 * time.Second):
 		t.Fatal("read did not cancel")
+	}
+}
+
+func TestResponseOwnershipBlocksNextUntilFinished(t *testing.T) {
+	for _, mode := range []string{"eof", "close", "cancel", "client_timeout"} {
+		t.Run(mode, func(t *testing.T) {
+			var calls atomic.Int32
+			secondEntered := make(chan struct{})
+			bodyRelease := make(chan struct{})
+			var releaseOnce sync.Once
+			releaseBody := func() { releaseOnce.Do(func() { close(bodyRelease) }) }
+			s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if calls.Add(1) == 1 {
+					fmt.Fprint(w, "first")
+					w.(http.Flusher).Flush()
+					<-bodyRelease
+					fmt.Fprint(w, "last")
+					return
+				}
+				close(secondEntered)
+				fmt.Fprint(w, "ok")
+			}))
+			defer s.Close()
+			defer releaseBody()
+			l := &limiter{tls: s.Client().Transport.(*http.Transport).TLSClientConfig}
+			c := &http.Client{Transport: l}
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			if mode == "client_timeout" {
+				c.Timeout = 2 * time.Second
+			}
+			req, _ := http.NewRequestWithContext(ctx, "GET", s.URL, nil)
+			first, err := c.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			done := make(chan error, 1)
+			go func() {
+				resp, err := (&http.Client{Transport: l, Timeout: 5 * time.Second}).Get(s.URL)
+				if resp != nil {
+					io.Copy(io.Discard, resp.Body)
+					resp.Body.Close()
+				}
+				done <- err
+			}()
+			select {
+			case <-secondEntered:
+				t.Fatal("second request during first body")
+			case <-time.After(500 * time.Millisecond):
+			}
+			switch mode {
+			case "eof":
+				releaseBody()
+				b, err := io.ReadAll(first.Body)
+				if err != nil || string(b) != "firstlast" {
+					t.Fatalf("body=%q err=%v", b, err)
+				}
+			case "close":
+				first.Body.Close()
+			case "cancel":
+				cancel()
+			case "client_timeout":
+			}
+			select {
+			case err := <-done:
+				if err != nil {
+					t.Fatal(err)
+				}
+			case <-time.After(4 * time.Second):
+				t.Fatal("second request remained blocked")
+			}
+			first.Body.Close()
+		})
 	}
 }
