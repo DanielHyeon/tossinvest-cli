@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 tools/sdd-history/agent_save_hook.py"
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/sdd-history/agent_save_hook.py\""
           }
         ]
       },
@@ -35,7 +35,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./save-session.sh > /dev/null 2>&1"
+            "command": "bash \"$CLAUDE_PROJECT_DIR/save-session.sh\" --hook > /dev/null 2>&1",
+            "async": true
           }
         ]
       },
@@ -47,6 +48,17 @@
             "command": "codegraph sync 2>/dev/null || true",
             "async": true,
             "statusMessage": "Updating codegraph index..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/save-session.sh\" > /dev/null 2>&1",
+            "async": true
           }
         ]
       }

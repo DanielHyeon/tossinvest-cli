@@ -176,3 +176,4 @@
 | `a177-performance-window-single-source` | STORY-TOS-a177 | archived |
 | `a178-a112-rebuild-failure-reported-separately` | STORY-TOS-a178 | archived |
 | `a179-compare-jev-input-profiles` | STORY-TOS-a179 | archived |
+| `a180-claude-session-save-hook-repair` | STORY-TOS-a180 | in_progress |

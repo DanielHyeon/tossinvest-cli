@@ -13,12 +13,38 @@ MEMORY_DIR="$HOME/.claude/projects/$(echo "$PROJECT_DIR" | tr '/' '-')/memory"
 
 mkdir -p "$OUTPUT_DIR"
 
+# 비동기로 도는 동안 git status 가 index.lock 을 잡으면 다른 git add·commit 이 실패하므로 index 갱신을 끔
+export GIT_OPTIONAL_LOCKS=0
+
+# 자동 실행은 표준 오류가 버려지므로 실패 사유를 파일에도 남김
+fail() {
+  echo "$1" >&2
+  printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" 2>/dev/null >> "$OUTPUT_DIR/save-failures.log"
+  exit 1
+}
+
+# --hook(도구 호출마다 실행)은 겹치면 건너뛰고 간격도 제한함.
+# 인자 없는 실행(수동·턴 종료)은 진행 중인 저장을 기다린 뒤 반드시 저장하고, 못 하면 실패로 알림
+HOOK_MIN_INTERVAL_SEC=300
+LOCK_WAIT_SEC="${SAVE_SESSION_LOCK_WAIT_SEC:-120}"
+exec 9>"$OUTPUT_DIR/.save-session.lock"
+if [ "${1:-}" = "--hook" ]; then
+  flock -n 9 || exit 0
+  if [ -f "$OUTPUT_FILE" ] \
+    && [ $(( $(date +%s) - $(stat -c %Y "$OUTPUT_FILE") )) -lt "$HOOK_MIN_INTERVAL_SEC" ]; then
+    exit 0
+  fi
+else
+  flock -w "$LOCK_WAIT_SEC" 9 || fail "다른 저장이 끝나지 않아 저장 실패"
+fi
+
 # 기존 세션 파일이 있으면 타임스탬프 백업 (덮어쓰기 방지)
 if [ -f "$OUTPUT_FILE" ]; then
   PREV_TS=$(date -r "$OUTPUT_FILE" '+%Y%m%d_%H%M%S')
-  cp "$OUTPUT_FILE" "$OUTPUT_DIR/session-summary_${PREV_TS}.md"
-  # 백업은 최근 5개만 유지 (오래된 것 자동 삭제)
-  ls -t "$OUTPUT_DIR"/session-summary_*.md 2>/dev/null | tail -n +6 | xargs -r rm -f
+  # 백업은 최근 5개만 유지 (오래된 것 자동 삭제). 백업에 실패하면 기존 백업을 밀어내지 않음
+  if cp "$OUTPUT_FILE" "$OUTPUT_DIR/session-summary_${PREV_TS}.md"; then
+    ls -t "$OUTPUT_DIR"/session-summary_*.md 2>/dev/null | tail -n +6 | xargs -r rm -f
+  fi
 fi
 
 # 현재 시각
@@ -26,13 +52,23 @@ TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 
 # Git 상태 수집
 BRANCH=$(git -C "$PROJECT_DIR" branch --show-current 2>/dev/null)
-GIT_STATUS=$(git -C "$PROJECT_DIR" status --short 2>/dev/null)
-GIT_DIFF_STAT=$(git -C "$PROJECT_DIR" diff --stat 2>/dev/null)
+# 미추적 파일이 수천 개면 요약이 MB 단위로 불어 이어받기에 못 쓰므로 앞부분만 남김(변경 파일이 미추적보다 먼저 출력됨)
+GIT_STATUS_MAX_LINES=200
+GIT_STATUS_ALL=$(git -C "$PROJECT_DIR" status --short 2>/dev/null)
+GIT_STATUS=$(printf '%s\n' "$GIT_STATUS_ALL" | head -n "$GIT_STATUS_MAX_LINES")
+GIT_STATUS_TOTAL=$(printf '%s\n' "$GIT_STATUS_ALL" | wc -l)
+if [ "$GIT_STATUS_TOTAL" -gt "$GIT_STATUS_MAX_LINES" ]; then
+  GIT_STATUS+=$'\n'"... 외 $((GIT_STATUS_TOTAL - GIT_STATUS_MAX_LINES))개 생략"
+fi
+# git diff 는 GIT_OPTIONAL_LOCKS=0 을 무시하고 index 를 갱신하므로 자동 갱신을 따로 끔(git 2.43 실측)
+GIT_DIFF_STAT=$(git -C "$PROJECT_DIR" -c diff.autoRefreshIndex=false diff --stat 2>/dev/null)
 GIT_DIFF_STAGED=$(git -C "$PROJECT_DIR" diff --cached --stat 2>/dev/null)
 RECENT_COMMITS=$(git -C "$PROJECT_DIR" log --oneline -10 2>/dev/null)
 
 # 최근 수정된 파일 (30분 이내)
+# archive 는 파일이 수십만 개라 탐색 시간 대부분을 차지하므로 들어가지 않음(prune)
 RECENT_FILES=$(find "$PROJECT_DIR" \
+  -path "$PROJECT_DIR/openspec/changes/archive" -prune -o \
   -not -path "*/.git/*" \
   -not -path "*/node_modules/*" \
   -not -path "*/target/*" \
@@ -40,7 +76,7 @@ RECENT_FILES=$(find "$PROJECT_DIR" \
   -not -path "*/__pycache__/*" \
   -not -path "*/.ai-context/*" \
   -type f \
-  -mmin -30 \
+  -mmin -30 -print \
   2>/dev/null | head -30 | sed "s|$PROJECT_DIR/||g")
 
 # Claude Code 메모리 파일 내용 (있으면)
@@ -136,8 +172,22 @@ except Exception as e:
   fi
 fi
 
-# 세션 요약 파일 생성
-cat > "$OUTPUT_FILE" << HEREDOC
+# 사람이 적은 수동 메모가 저장 때마다 지워지지 않도록 이전 요약에서 옮김. 없으면 안내문을 씀
+MANUAL_MEMO=""
+if [ -f "$OUTPUT_FILE" ]; then
+  # 메모 안의 비슷한 줄에서 잘리지 않도록 제목 전체가 일치할 때만 구역 경계로 봄
+  MANUAL_MEMO=$(awk '/^## Claude Code 최근 대화 — 사용자 요청 \+ Claude 완료 작업 \(자동 수집\)$/{exit} found; /^## 수동 메모 \(세션 종료 전 직접 기록\)$/{found=1}' "$OUTPUT_FILE")
+fi
+if [ -z "$MANUAL_MEMO" ]; then
+  MANUAL_MEMO='<!-- 여기에 현재 하고 있던 작업, 다음에 할 작업을 적으세요 -->
+<!-- 예: "Plan 47 Phase 3 구현 중, NoticeInboxService 작업 완료, 다음은 프론트엔드 연동" -->'
+fi
+
+# 세션 요약 파일 생성: 쓰다 실패해도 기존 요약과 수동 메모가 남도록 임시 파일에 쓴 뒤 교체함
+# 임시 이름은 백업 회전 대상(session-summary_*.md)에 걸리지 않음
+TMP_FILE=$(mktemp "$OUTPUT_DIR/.session-summary.XXXXXX") || fail "임시 파일을 못 만들어 저장 실패"
+trap 'rm -f "$TMP_FILE"' EXIT
+if ! cat > "$TMP_FILE" << HEREDOC
 # 이전 세션 컨텍스트
 
 > 저장 시각: $TIMESTAMP
@@ -169,9 +219,7 @@ $RECENT_FILES
 \`\`\`
 
 ## 수동 메모 (세션 종료 전 직접 기록)
-<!-- 여기에 현재 하고 있던 작업, 다음에 할 작업을 적으세요 -->
-<!-- 예: "Plan 47 Phase 3 구현 중, NoticeInboxService 작업 완료, 다음은 프론트엔드 연동" -->
-
+$MANUAL_MEMO
 
 ## Claude Code 최근 대화 — 사용자 요청 + Claude 완료 작업 (자동 수집)
 $CLAUDE_CODE_CHAT
@@ -180,6 +228,10 @@ $CLAUDE_CODE_CHAT
 $MEMORY_CONTENT
 
 HEREDOC
+then
+  fail "요약을 쓰지 못해 저장 실패"
+fi
+mv -f "$TMP_FILE" "$OUTPUT_FILE" || fail "요약을 교체하지 못해 저장 실패"
 
 echo "✅ 세션 저장 완료: $OUTPUT_FILE"
 echo "📝 필요하면 $OUTPUT_FILE 열어서 '수동 메모' 섹션에 현재 작업 내용을 적으세요."
@@ -187,3 +239,4 @@ echo ""
 echo "🔄 새 세션에서 이어하려면:"
 echo "   Claude Code에서 다음과 같이 입력:"
 echo "   '@.ai-context/session-summary.md 이전 세션 이어서 작업해줘'"
+echo "   ※ 같은 저장소의 다른 세션 대화가 섞일 수 있으니 현재 HEAD 와 대조할 것"

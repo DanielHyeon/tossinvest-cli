@@ -14,6 +14,7 @@
     - STORY-TOS-a122 — Keep the Function Logic Map gate answerable after a merge [archived] → `a122-the-logic-map-gate-outlives-a-merge`
     - STORY-TOS-a123 — An empty window is derived, not declared [archived] → `a123-an-empty-window-is-derived-not-declared`
     - STORY-TOS-a125 — a063 is judged against its own base like every change [archived] → `a125-the-a063-exception-retires`
+    - STORY-TOS-a180 — Claude 세션 저장 훅 수리 — 어느 작업 폴더에서도 돌고 도구 호출을 막지 않음 [in_progress] → `a180-claude-session-save-hook-repair`
 - EPIC-TOS-005 — Secure delivery and engineering operations [active]
   - FEAT-TOS-007 — Secure remote access and signed releases [active]
     - STORY-TOS-031 — Enable trusted-network VPN console access [archived] → `enable-vpn-console-access`
