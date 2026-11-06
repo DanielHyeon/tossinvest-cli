@@ -1,0 +1,207 @@
+{
+  "file": "internal/shadowsession/session_linux.go",
+  "source_sha256": "ce79892b33822c1f670eab66bf9d2bffc239c9e972b43a64cc9e1491eed8d29a",
+  "package": "shadowsession",
+  "function": "openFile",
+  "signature": "openFile(params=3, results=3)",
+  "start": {
+    "line": 127,
+    "column": 1
+  },
+  "end": {
+    "line": 143,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 131,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 134,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 135,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 140,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 142,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 13
+      },
+      "text": "unix.Openat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 25
+      },
+      "text": "int"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 29
+      },
+      "text": "dir.Fd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 5
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 13
+      },
+      "text": "unix.Openat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 25
+      },
+      "text": "int"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 29
+      },
+      "text": "dir.Fd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 7
+      },
+      "text": "os.NewFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 18
+      },
+      "text": "uintptr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 11
+      },
+      "text": "checkFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 7
+      },
+      "text": "f.Close"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 128,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 129,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 132,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 138,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 139,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
