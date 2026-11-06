@@ -1,5 +1,5 @@
 {
-  "purpose": "Branch inventory only. test:null means no branch-level attribution has been established, not a defect. Behavioral scenarios are in review.md.",
+  "purpose": "AST branch inventory. related_tests are structural function-level links, not proof each branch executed. test:null means branch-level execution attribution remains unverified, not a defect.",
   "branches": [
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -7,7 +7,12 @@
       "function": "Begin",
       "branch": "B1",
       "line": 258,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestSimultaneousInitialLock",
+        "TestActiveAndInputsFailClosed"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -15,7 +20,12 @@
       "function": "Begin",
       "branch": "B2",
       "line": 261,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestSimultaneousInitialLock",
+        "TestActiveAndInputsFailClosed"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -23,7 +33,12 @@
       "function": "Begin",
       "branch": "B3",
       "line": 265,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestSimultaneousInitialLock",
+        "TestActiveAndInputsFailClosed"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -31,7 +46,12 @@
       "function": "Begin",
       "branch": "B4",
       "line": 272,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestSimultaneousInitialLock",
+        "TestActiveAndInputsFailClosed"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -39,7 +59,12 @@
       "function": "Begin",
       "branch": "B5",
       "line": 275,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestSimultaneousInitialLock",
+        "TestActiveAndInputsFailClosed"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -47,7 +72,12 @@
       "function": "Begin",
       "branch": "B6",
       "line": 276,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestSimultaneousInitialLock",
+        "TestActiveAndInputsFailClosed"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -55,7 +85,12 @@
       "function": "Begin",
       "branch": "B7",
       "line": 281,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestSimultaneousInitialLock",
+        "TestActiveAndInputsFailClosed"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -63,7 +98,12 @@
       "function": "Begin",
       "branch": "B8",
       "line": 284,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestSimultaneousInitialLock",
+        "TestActiveAndInputsFailClosed"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -71,7 +111,12 @@
       "function": "Begin",
       "branch": "B9",
       "line": 287,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestSimultaneousInitialLock",
+        "TestActiveAndInputsFailClosed"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -79,7 +124,12 @@
       "function": "Begin",
       "branch": "B10",
       "line": 296,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestSimultaneousInitialLock",
+        "TestActiveAndInputsFailClosed"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -87,7 +137,12 @@
       "function": "Begin",
       "branch": "B11",
       "line": 299,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestSimultaneousInitialLock",
+        "TestActiveAndInputsFailClosed"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -95,7 +150,12 @@
       "function": "Begin",
       "branch": "B12",
       "line": 302,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestSimultaneousInitialLock",
+        "TestActiveAndInputsFailClosed"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -103,7 +163,12 @@
       "function": "Begin",
       "branch": "B13",
       "line": 305,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestSimultaneousInitialLock",
+        "TestActiveAndInputsFailClosed"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -111,7 +176,12 @@
       "function": "Begin",
       "branch": "B14",
       "line": 309,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestSimultaneousInitialLock",
+        "TestActiveAndInputsFailClosed"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -119,7 +189,12 @@
       "function": "Begin",
       "branch": "B15",
       "line": 312,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestSimultaneousInitialLock",
+        "TestActiveAndInputsFailClosed"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -127,7 +202,12 @@
       "function": "Begin",
       "branch": "B16",
       "line": 315,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestSimultaneousInitialLock",
+        "TestActiveAndInputsFailClosed"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -135,7 +215,11 @@
       "function": "Close",
       "branch": "B1",
       "line": 386,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestConcurrentFinish",
+        "TestChildLockAndCrash"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -143,7 +227,11 @@
       "function": "Close",
       "branch": "B2",
       "line": 391,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestConcurrentFinish",
+        "TestChildLockAndCrash"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -151,7 +239,11 @@
       "function": "Close",
       "branch": "B3",
       "line": 394,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestConcurrentFinish",
+        "TestChildLockAndCrash"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -159,7 +251,12 @@
       "function": "appendState",
       "branch": "B1",
       "line": 206,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestTerminalFaultRestartMatrix",
+        "TestPostCommitAndShortWrite"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -167,7 +264,12 @@
       "function": "appendState",
       "branch": "B2",
       "line": 209,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestTerminalFaultRestartMatrix",
+        "TestPostCommitAndShortWrite"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -175,7 +277,12 @@
       "function": "appendState",
       "branch": "B3",
       "line": 213,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestTerminalFaultRestartMatrix",
+        "TestPostCommitAndShortWrite"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -183,7 +290,12 @@
       "function": "appendState",
       "branch": "B4",
       "line": 217,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestTerminalFaultRestartMatrix",
+        "TestPostCommitAndShortWrite"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -191,7 +303,12 @@
       "function": "appendState",
       "branch": "B5",
       "line": 220,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestTerminalFaultRestartMatrix",
+        "TestPostCommitAndShortWrite"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -199,7 +316,12 @@
       "function": "appendState",
       "branch": "B6",
       "line": 226,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestTerminalFaultRestartMatrix",
+        "TestPostCommitAndShortWrite"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -207,7 +329,12 @@
       "function": "appendState",
       "branch": "B7",
       "line": 228,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestTerminalFaultRestartMatrix",
+        "TestPostCommitAndShortWrite"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -215,7 +342,12 @@
       "function": "appendState",
       "branch": "B8",
       "line": 231,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestTerminalFaultRestartMatrix",
+        "TestPostCommitAndShortWrite"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -223,7 +355,12 @@
       "function": "appendState",
       "branch": "B9",
       "line": 236,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestTerminalFaultRestartMatrix",
+        "TestPostCommitAndShortWrite"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -231,7 +368,12 @@
       "function": "appendState",
       "branch": "B10",
       "line": 239,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestTerminalFaultRestartMatrix",
+        "TestPostCommitAndShortWrite"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -239,7 +381,12 @@
       "function": "appendState",
       "branch": "B11",
       "line": 242,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestTerminalFaultRestartMatrix",
+        "TestPostCommitAndShortWrite"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -247,7 +394,12 @@
       "function": "appendState",
       "branch": "B12",
       "line": 247,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestTerminalFaultRestartMatrix",
+        "TestPostCommitAndShortWrite"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -255,7 +407,12 @@
       "function": "appendState",
       "branch": "B13",
       "line": 251,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestTerminalFaultRestartMatrix",
+        "TestPostCommitAndShortWrite"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -263,7 +420,11 @@
       "function": "cleanup",
       "branch": "B1",
       "line": 323,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestTerminalFaultRestartMatrix",
+        "TestChildLockAndCrash"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -271,7 +432,11 @@
       "function": "cleanup",
       "branch": "B2",
       "line": 326,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestTerminalFaultRestartMatrix",
+        "TestChildLockAndCrash"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -279,7 +444,11 @@
       "function": "cleanup",
       "branch": "B3",
       "line": 330,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestTerminalFaultRestartMatrix",
+        "TestChildLockAndCrash"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -287,7 +456,11 @@
       "function": "cleanup",
       "branch": "B4",
       "line": 336,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestTerminalFaultRestartMatrix",
+        "TestChildLockAndCrash"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -295,7 +468,11 @@
       "function": "cleanup",
       "branch": "B5",
       "line": 338,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestTerminalFaultRestartMatrix",
+        "TestChildLockAndCrash"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -303,7 +480,11 @@
       "function": "cleanup",
       "branch": "B6",
       "line": 343,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestTerminalFaultRestartMatrix",
+        "TestChildLockAndCrash"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -311,7 +492,11 @@
       "function": "cleanup",
       "branch": "B7",
       "line": 347,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestTerminalFaultRestartMatrix",
+        "TestChildLockAndCrash"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -319,7 +504,11 @@
       "function": "cleanup",
       "branch": "B8",
       "line": 353,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestTerminalFaultRestartMatrix",
+        "TestChildLockAndCrash"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -327,7 +516,11 @@
       "function": "cleanup",
       "branch": "B9",
       "line": 355,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestTerminalFaultRestartMatrix",
+        "TestChildLockAndCrash"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -335,7 +528,11 @@
       "function": "cleanup",
       "branch": "B10",
       "line": 359,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestTerminalFaultRestartMatrix",
+        "TestChildLockAndCrash"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -343,7 +540,11 @@
       "function": "finish",
       "branch": "B1",
       "line": 369,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestConcurrentFinish",
+        "TestTerminalFaultRestartMatrix"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -351,7 +552,11 @@
       "function": "finish",
       "branch": "B2",
       "line": 374,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestConcurrentFinish",
+        "TestTerminalFaultRestartMatrix"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -359,7 +564,11 @@
       "function": "operation",
       "branch": "B1",
       "line": 62,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestTerminalFaultRestartMatrix"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -367,7 +576,11 @@
       "function": "operation",
       "branch": "B2",
       "line": 63,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestTerminalFaultRestartMatrix"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -375,7 +588,11 @@
       "function": "operation",
       "branch": "B3",
       "line": 68,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestBeginFaultRestartMatrix",
+        "TestTerminalFaultRestartMatrix"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -383,7 +600,10 @@
       "function": "verify",
       "branch": "B1",
       "line": 147,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestRuntimeIdentityReplacement"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -391,7 +611,10 @@
       "function": "verify",
       "branch": "B2",
       "line": 151,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestRuntimeIdentityReplacement"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -399,7 +622,10 @@
       "function": "verify",
       "branch": "B3",
       "line": 154,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestRuntimeIdentityReplacement"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -407,7 +633,11 @@
       "function": "checkFile",
       "branch": "B1",
       "line": 112,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestRootAndFileGuards",
+        "TestRuntimeIdentityReplacement"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -415,7 +645,11 @@
       "function": "checkFile",
       "branch": "B2",
       "line": 115,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestRootAndFileGuards",
+        "TestRuntimeIdentityReplacement"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -423,7 +657,11 @@
       "function": "checkFile",
       "branch": "B3",
       "line": 118,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestRootAndFileGuards",
+        "TestRuntimeIdentityReplacement"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -431,7 +669,11 @@
       "function": "checkFile",
       "branch": "B4",
       "line": 121,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestRootAndFileGuards",
+        "TestRuntimeIdentityReplacement"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -439,7 +681,8 @@
       "function": "marshal",
       "branch": "B1",
       "line": 163,
-      "test": null
+      "test": null,
+      "related_tests": []
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -447,7 +690,11 @@
       "function": "openFile",
       "branch": "B1",
       "line": 131,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestSimultaneousInitialLock",
+        "TestBeginFaultRestartMatrix"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -455,7 +702,11 @@
       "function": "openFile",
       "branch": "B2",
       "line": 134,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestSimultaneousInitialLock",
+        "TestBeginFaultRestartMatrix"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -463,7 +714,11 @@
       "function": "openFile",
       "branch": "B3",
       "line": 138,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestSimultaneousInitialLock",
+        "TestBeginFaultRestartMatrix"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -471,7 +726,12 @@
       "function": "openRoot",
       "branch": "B1",
       "line": 83,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestRootAndFileGuards",
+        "TestRuntimeIdentityReplacement",
+        "TestNonExt4Refused"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -479,7 +739,12 @@
       "function": "openRoot",
       "branch": "B2",
       "line": 87,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestRootAndFileGuards",
+        "TestRuntimeIdentityReplacement",
+        "TestNonExt4Refused"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -487,7 +752,12 @@
       "function": "openRoot",
       "branch": "B3",
       "line": 90,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestRootAndFileGuards",
+        "TestRuntimeIdentityReplacement",
+        "TestNonExt4Refused"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -495,7 +765,12 @@
       "function": "openRoot",
       "branch": "B4",
       "line": 93,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestRootAndFileGuards",
+        "TestRuntimeIdentityReplacement",
+        "TestNonExt4Refused"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -503,7 +778,12 @@
       "function": "openRoot",
       "branch": "B5",
       "line": 100,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestRootAndFileGuards",
+        "TestRuntimeIdentityReplacement",
+        "TestNonExt4Refused"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -511,7 +791,12 @@
       "function": "openRoot",
       "branch": "B6",
       "line": 103,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestRootAndFileGuards",
+        "TestRuntimeIdentityReplacement",
+        "TestNonExt4Refused"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -519,7 +804,12 @@
       "function": "readState",
       "branch": "B1",
       "line": 173,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestCanonicalAndTransitions",
+        "TestPausedPrefixPartialEOF",
+        "TestBeginFaultRestartMatrix"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -527,7 +817,12 @@
       "function": "readState",
       "branch": "B2",
       "line": 176,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestCanonicalAndTransitions",
+        "TestPausedPrefixPartialEOF",
+        "TestBeginFaultRestartMatrix"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -535,7 +830,12 @@
       "function": "readState",
       "branch": "B3",
       "line": 180,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestCanonicalAndTransitions",
+        "TestPausedPrefixPartialEOF",
+        "TestBeginFaultRestartMatrix"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -543,7 +843,12 @@
       "function": "readState",
       "branch": "B4",
       "line": 183,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestCanonicalAndTransitions",
+        "TestPausedPrefixPartialEOF",
+        "TestBeginFaultRestartMatrix"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -551,7 +856,12 @@
       "function": "readState",
       "branch": "B5",
       "line": 188,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestCanonicalAndTransitions",
+        "TestPausedPrefixPartialEOF",
+        "TestBeginFaultRestartMatrix"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -559,7 +869,12 @@
       "function": "readState",
       "branch": "B6",
       "line": 190,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestCanonicalAndTransitions",
+        "TestPausedPrefixPartialEOF",
+        "TestBeginFaultRestartMatrix"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -567,7 +882,12 @@
       "function": "readState",
       "branch": "B7",
       "line": 193,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestCanonicalAndTransitions",
+        "TestPausedPrefixPartialEOF",
+        "TestBeginFaultRestartMatrix"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -575,7 +895,12 @@
       "function": "readState",
       "branch": "B8",
       "line": 197,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestCanonicalAndTransitions",
+        "TestPausedPrefixPartialEOF",
+        "TestBeginFaultRestartMatrix"
+      ]
     },
     {
       "file": "internal/shadowsession/session_linux.go",
@@ -583,7 +908,10 @@
       "function": "validDay",
       "branch": "B1",
       "line": 75,
-      "test": null
+      "test": null,
+      "related_tests": [
+        "TestActiveAndInputsFailClosed"
+      ]
     }
   ]
 }
