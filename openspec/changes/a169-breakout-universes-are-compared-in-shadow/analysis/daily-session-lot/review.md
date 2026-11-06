@@ -1,5 +1,7 @@
 # P10 작업자 검증 기록 — 독립 리뷰 대기
 
+> 초기 검증 당시 기록이다. 이후 fixture 보강과 독립 재검토·Manager 한정 판정은 `fixture-revision/report.md`, `independent-final/`, `manager-verification.md`를 참조한다. 아래의 옛 SHA·미완 목록은 당시 상태로 보존한다.
+
 대상 source SHA-256: `session_linux.go ce79892b33822c1f670eab66bf9d2bffc239c9e972b43a64cc9e1491eed8d29a`, `session_unsupported.go 7f759c52141012b7d48356bdefdb5363a490f222be625012d328be1cbdcc4745`, `types.go 3affc279a5116e5f51b748e295f1d417b301242c90bc6c56d19a2c6aa90ff51f`; test `85ddd35359cac1c24b6d69dc45dd375cd39f48bf27fe3107f155f5775b84081e`. 기준 계약 커밋 `1a53b8917`. Source·test 미커밋이며 실제 caller 연결 없음.
 
 - 최초 `go test ./internal/shadowsession`은 새 API 미정의로 컴파일 실패했다. 행동 RED로 주장하지 않는다. 이후 같은 package normal 통과; `go test -count=5 -run '^TestChildLockAndCrash$' ./internal/shadowsession` 통과; `go test -race -count=1 -tags tossos_testseams ./internal/shadowsession` 통과. 실제 ext4 fixture는 `/home/daniel/tossos-work`의 각 테스트 전용 디렉터리다.

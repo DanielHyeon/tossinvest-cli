@@ -72,5 +72,5 @@
 - [x] P8 한정 독립 검증·Manager 판정·scoped strict/PM 후 Terra commit/merge/push. 전체1.3/2.2/측정/archive와 별도.
 
 - [x] P9 기존 Q2 정상 재개를 보존하는 영속 세션 제한 계약·연구·독립 설계 리뷰·Manager READY와 Pre-Edit 고정. `analysis/daily-session-plan.md`.
-- [ ] P10 신규 shadowsession 컴포넌트 RED/GREEN·선택 normal/tagged race·subprocess/fault/변이·gstack. 실제 measurement caller 연결 없음.
-- [ ] P11 독립 구현 검증·Manager 판정·scoped strict/PM 뒤 Terra commit/merge/push. 기존 미완 단계와 실제 운영 검증을 완료로 표시하거나 archive하지 않는다.
+- [x] P10 신규 shadowsession 컴포넌트 선택 시험·subprocess/fault/변이·한정 수동 gstack 및 독립 검증. 최초 RED는 API 미정의 컴파일 실패다. 실제 measurement caller 연결 없음.
+- [ ] P11 독립 구현 검증·Manager 한정 PASS; scoped strict/PM과 승인된 원격 게시 후 확인. 기존 미완 단계와 실제 운영 검증을 완료로 표시하거나 archive하지 않는다.
