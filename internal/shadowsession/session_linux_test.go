@@ -16,11 +16,27 @@ import (
 	"sync"
 	"syscall"
 	"testing"
+
+	"golang.org/x/sys/unix"
 )
 
 func fixture(t *testing.T) Root {
 	t.Helper()
-	dir, err := os.MkdirTemp("/home/daniel/tossos-work", "shadowsession-test-")
+	parent, specified := os.LookupEnv("A169_SHADOWSESSION_TEST_ROOT")
+	if !specified {
+		parent = os.TempDir()
+	}
+	if specified && (!filepath.IsAbs(parent) || filepath.Clean(parent) != parent) {
+		t.Fatalf("A169_SHADOWSESSION_TEST_ROOT must be an absolute, clean path: %q", parent)
+	}
+	var fs unix.Statfs_t
+	if err := unix.Statfs(parent, &fs); err != nil || uint64(fs.Type) != ext4Magic {
+		if specified {
+			t.Fatalf("invalid A169_SHADOWSESSION_TEST_ROOT %q: filesystem=%x err=%v", parent, fs.Type, err)
+		}
+		t.Skipf("default temp directory is unavailable or not ext4: filesystem=%x err=%v", fs.Type, err)
+	}
+	dir, err := os.MkdirTemp(parent, "shadowsession-test-")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -231,8 +247,30 @@ func TestChildLockAndCrash(t *testing.T) {
 		t.Fatal(err)
 	}
 	_ = cmd.Wait()
-	if _, err := Begin(context.Background(), r, "2026-11-06"); err == nil {
-		t.Fatal("crashed active reopened")
+	lock, err := os.OpenFile(filepath.Join(r.Path, "2026-11-06.lock"), os.O_RDWR, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = unix.Flock(int(lock.Fd()), unix.LOCK_EX|unix.LOCK_NB); err != nil {
+		t.Fatalf("lock not released: %v", err)
+	}
+	if err = unix.Flock(int(lock.Fd()), unix.LOCK_UN); err != nil {
+		t.Fatal(err)
+	}
+	if err = lock.Close(); err != nil {
+		t.Fatal(err)
+	}
+	f, err := os.Open(filepath.Join(r.Path, "2026-11-06.state"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, state, _, err := readState(f, "2026-11-06")
+	_ = f.Close()
+	if err != nil || state != "active" {
+		t.Fatalf("state=%q err=%v", state, err)
+	}
+	if _, err := Begin(context.Background(), r, "2026-11-06"); !errors.Is(err, ErrInvalid) || errors.Is(err, ErrBusy) {
+		t.Fatalf("crashed active: %v", err)
 	}
 }
 
