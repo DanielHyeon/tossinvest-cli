@@ -48,95 +48,108 @@ func TestSimultaneousInitialLock(t *testing.T) {
 		fmt.Println("CLOSED")
 		return
 	}
-	r := fixture(t)
-	type child struct {
-		cmd *exec.Cmd
-		in  io.WriteCloser
-		out *bufio.Reader
-	}
-	children := make([]child, 2)
-	for i := range children {
-		c := exec.Command(os.Args[0], "-test.run=^TestSimultaneousInitialLock$")
-		c.Env = append(os.Environ(), "A169_BARRIER_CHILD=1", "A169_BARRIER_ROOT="+r.Path, fmt.Sprintf("A169_BARRIER_ID=%d %d", r.Device, r.Inode))
-		stdin, e := c.StdinPipe()
-		if e != nil {
-			t.Fatal(e)
-		}
-		stdout, e := c.StdoutPipe()
-		if e != nil {
-			t.Fatal(e)
-		}
-		if e = c.Start(); e != nil {
-			t.Fatal(e)
-		}
-		children[i] = child{c, stdin, bufio.NewReader(stdout)}
-		defer func() {
-			if c.ProcessState == nil {
-				_ = c.Process.Kill()
-				_ = c.Wait()
+	for _, prior := range []string{"absent", "paused"} {
+		t.Run(prior, func(t *testing.T) {
+			r := fixture(t)
+			if prior == "paused" {
+				s, err := Begin(context.Background(), r, "2026-11-06")
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := s.Pause(); err != nil {
+					t.Fatal(err)
+				}
 			}
-		}()
-	}
-	read := func(c child) string {
-		t.Helper()
-		s, e := c.out.ReadString('\n')
-		if e != nil {
-			t.Fatalf("child output %q: %v", s, e)
-		}
-		return strings.TrimSpace(s)
-	}
-	for _, c := range children {
-		if s := read(c); s != "OPEN" {
-			t.Fatalf("barrier: %q", s)
-		}
-	}
-	for _, c := range children {
-		if _, e := io.WriteString(c.in, "go\n"); e != nil {
-			t.Fatal(e)
-		}
-	}
-	winner := -1
-	busy := 0
-	for i, c := range children {
-		switch s := read(c); s {
-		case "WON":
-			winner = i
-		case "BUSY":
-			busy++
-		default:
-			t.Fatalf("child result: %q", s)
-		}
-	}
-	if winner < 0 || busy != 1 {
-		t.Fatalf("winner=%d busy=%d", winner, busy)
-	}
-	if _, err := Begin(context.Background(), r, "2026-11-06"); !errors.Is(err, ErrBusy) {
-		t.Fatalf("third: %v", err)
-	}
-	if _, err := io.WriteString(children[winner].in, "close\n"); err != nil {
-		t.Fatal(err)
-	}
-	if s := read(children[winner]); s != "CLOSED" {
-		t.Fatalf("close: %q", s)
-	}
-	for _, c := range children {
-		if e := c.cmd.Wait(); e != nil {
-			t.Fatal(e)
-		}
-	}
-	lock, err := os.OpenFile(filepath.Join(r.Path, "2026-11-06.lock"), os.O_RDWR, 0)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer lock.Close()
-	if err = unix.Flock(int(lock.Fd()), unix.LOCK_EX|unix.LOCK_NB); err != nil {
-		t.Fatalf("lock not free: %v", err)
-	}
-	if err = unix.Flock(int(lock.Fd()), unix.LOCK_UN); err != nil {
-		t.Fatal(err)
-	}
-	if _, err = Begin(context.Background(), r, "2026-11-06"); !errors.Is(err, ErrInvalid) || errors.Is(err, ErrBusy) {
-		t.Fatalf("active: %v", err)
+			type child struct {
+				cmd *exec.Cmd
+				in  io.WriteCloser
+				out *bufio.Reader
+			}
+			children := make([]child, 2)
+			for i := range children {
+				c := exec.Command(os.Args[0], "-test.run=^TestSimultaneousInitialLock$")
+				c.Env = append(os.Environ(), "A169_BARRIER_CHILD=1", "A169_BARRIER_ROOT="+r.Path, fmt.Sprintf("A169_BARRIER_ID=%d %d", r.Device, r.Inode))
+				stdin, e := c.StdinPipe()
+				if e != nil {
+					t.Fatal(e)
+				}
+				stdout, e := c.StdoutPipe()
+				if e != nil {
+					t.Fatal(e)
+				}
+				if e = c.Start(); e != nil {
+					t.Fatal(e)
+				}
+				children[i] = child{c, stdin, bufio.NewReader(stdout)}
+				defer func() {
+					if c.ProcessState == nil {
+						_ = c.Process.Kill()
+						_ = c.Wait()
+					}
+				}()
+			}
+			read := func(c child) string {
+				t.Helper()
+				s, e := c.out.ReadString('\n')
+				if e != nil {
+					t.Fatalf("child output %q: %v", s, e)
+				}
+				return strings.TrimSpace(s)
+			}
+			for _, c := range children {
+				if s := read(c); s != "OPEN" {
+					t.Fatalf("barrier: %q", s)
+				}
+			}
+			for _, c := range children {
+				if _, e := io.WriteString(c.in, "go\n"); e != nil {
+					t.Fatal(e)
+				}
+			}
+			winner := -1
+			busy := 0
+			for i, c := range children {
+				switch s := read(c); s {
+				case "WON":
+					winner = i
+				case "BUSY":
+					busy++
+				default:
+					t.Fatalf("child result: %q", s)
+				}
+			}
+			if winner < 0 || busy != 1 {
+				t.Fatalf("winner=%d busy=%d", winner, busy)
+			}
+			if _, err := Begin(context.Background(), r, "2026-11-06"); !errors.Is(err, ErrBusy) {
+				t.Fatalf("third: %v", err)
+			}
+			if _, err := io.WriteString(children[winner].in, "close\n"); err != nil {
+				t.Fatal(err)
+			}
+			if s := read(children[winner]); s != "CLOSED" {
+				t.Fatalf("close: %q", s)
+			}
+			for _, c := range children {
+				if e := c.cmd.Wait(); e != nil {
+					t.Fatal(e)
+				}
+			}
+			lock, err := os.OpenFile(filepath.Join(r.Path, "2026-11-06.lock"), os.O_RDWR, 0)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer lock.Close()
+			if err = unix.Flock(int(lock.Fd()), unix.LOCK_EX|unix.LOCK_NB); err != nil {
+				t.Fatalf("lock not free: %v", err)
+			}
+			if err = unix.Flock(int(lock.Fd()), unix.LOCK_UN); err != nil {
+				t.Fatal(err)
+			}
+			if _, err = Begin(context.Background(), r, "2026-11-06"); !errors.Is(err, ErrInvalid) || errors.Is(err, ErrBusy) {
+				t.Fatalf("active: %v", err)
+			}
+		})
 	}
 }
 
@@ -335,5 +348,76 @@ func TestNonExt4Refused(t *testing.T) {
 	}
 	if _, e = Begin(context.Background(), Root{Path: dir, Device: uint64(st.Dev), Inode: st.Ino}, "2026-11-06"); !errors.Is(e, ErrInvalid) {
 		t.Fatalf("non-ext4 accepted: %v", e)
+	}
+}
+
+func TestPauseCommitThenChildKill(t *testing.T) {
+	if os.Getenv("A169_PAUSED_CHILD") == "1" {
+		var dev, ino uint64
+		_, _ = fmt.Sscan(os.Getenv("A169_BARRIER_ID"), &dev, &ino)
+		s, err := Begin(context.Background(), Root{Path: os.Getenv("A169_BARRIER_ROOT"), Device: dev, Inode: ino}, "2026-11-06")
+		if err != nil {
+			fmt.Println("ERROR", err)
+			return
+		}
+		if err = s.Pause(); err != nil {
+			fmt.Println("ERROR", err)
+			return
+		}
+		fmt.Println("PAUSED")
+		_, _ = bufio.NewReader(os.Stdin).ReadString('\n')
+		return
+	}
+	r := fixture(t)
+	c := exec.Command(os.Args[0], "-test.run=^TestPauseCommitThenChildKill$")
+	c.Env = append(os.Environ(), "A169_PAUSED_CHILD=1", "A169_BARRIER_ROOT="+r.Path, fmt.Sprintf("A169_BARRIER_ID=%d %d", r.Device, r.Inode))
+	input, err := c.StdinPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer input.Close()
+	out, err := c.StdoutPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Start(); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if c.ProcessState == nil {
+			_ = c.Process.Kill()
+			_ = c.Wait()
+		}
+	}()
+	line, err := bufio.NewReader(out).ReadString('\n')
+	if err != nil || strings.TrimSpace(line) != "PAUSED" {
+		t.Fatalf("child=%q err=%v", line, err)
+	}
+	if err = c.Process.Kill(); err != nil {
+		t.Fatal(err)
+	}
+	_ = c.Wait()
+	lock, err := os.OpenFile(filepath.Join(r.Path, "2026-11-06.lock"), os.O_RDWR, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = unix.Flock(int(lock.Fd()), unix.LOCK_EX|unix.LOCK_NB); err != nil {
+		t.Fatalf("lock: %v", err)
+	}
+	if err = unix.Flock(int(lock.Fd()), unix.LOCK_UN); err != nil {
+		t.Fatal(err)
+	}
+	if err = lock.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if got := observed(t, r); got != "paused" {
+		t.Fatalf("state=%s", got)
+	}
+	s, err := Begin(context.Background(), r, "2026-11-06")
+	if err != nil {
+		t.Fatalf("resume: %v", err)
+	}
+	if err = s.Close(); err != nil {
+		t.Fatal(err)
 	}
 }
