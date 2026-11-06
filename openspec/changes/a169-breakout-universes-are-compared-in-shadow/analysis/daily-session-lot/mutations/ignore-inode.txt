@@ -1,0 +1,7 @@
+command: go test -count=1 -overlay <temporary ignore-inode> ./internal/shadowsession
+exit: 1
+--- FAIL: TestCorruptAndIdentity (0.02s)
+    session_linux_test.go:110: wrong inode
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	0.187s
+FAIL

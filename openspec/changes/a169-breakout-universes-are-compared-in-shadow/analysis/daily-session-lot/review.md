@@ -1,0 +1,11 @@
+# P10 작업자 검증 기록 — 독립 리뷰 대기
+
+대상 source SHA-256: `session_linux.go ce79892b33822c1f670eab66bf9d2bffc239c9e972b43a64cc9e1491eed8d29a`, `session_unsupported.go 7f759c52141012b7d48356bdefdb5363a490f222be625012d328be1cbdcc4745`, `types.go 3affc279a5116e5f51b748e295f1d417b301242c90bc6c56d19a2c6aa90ff51f`; test `85ddd35359cac1c24b6d69dc45dd375cd39f48bf27fe3107f155f5775b84081e`. 기준 계약 커밋 `1a53b8917`. Source·test 미커밋이며 실제 caller 연결 없음.
+
+- 최초 `go test ./internal/shadowsession`은 새 API 미정의로 컴파일 실패했다. 행동 RED로 주장하지 않는다. 이후 같은 package normal 통과; `go test -count=5 -run '^TestChildLockAndCrash$' ./internal/shadowsession` 통과; `go test -race -count=1 -tags tossos_testseams ./internal/shadowsession` 통과. 실제 ext4 fixture는 `/home/daniel/tossos-work`의 각 테스트 전용 디렉터리다.
+- `GOOS=darwin GOARCH=amd64 go test -c -o /tmp/a169-shadowsession-unsupported.test ./internal/shadowsession` 성공(`[no test files]`); unsupported 실행 시험은 아니다. 시스템 TMPDIR·운영 파일 변경 없음.
+- child process가 lock을 잡았을 때 충돌, child kill 뒤 active 재시작 거절; 유효 pause 뒤 재개·completed/aborted 거절; context 취소·nil/zero handle; 파일 손상·noncanonical·checksum·identity·symlink·hardlink·mode; write/sync/cleanup 오류 및 실제 commit 뒤 오류를 선택 검증했다. kill은 전원 차단 시험이 아니다.
+- `mutations/`에 `go test -overlay` 원문 결과 보존. state sync 생략, active/aborted 재개, flock 제거, root inode 무시 각 검출. checksum 무시 변이는 두 차례 미검출 후 정상적으로 재개 가능한 paused 행 손상 fixture를 추가해 검출했다. 최초 실패 없는 기록도 보존한다. production 소스는 overlay로 변경하지 않았다.
+- `ast/`는 구현 후 각 신규 함수 Go AST 전체 출력과 source SHA다. 기존 함수 내부 변경 0이므로 사전 FLM/BTM 면제이며 기존 함수 사전 지도 생략 예외를 주장하지 않는다. 분기 구조는 AST, 의미와 테스트 대응은 소스·테스트 수동 읽기다. CodeGraph 1.6.0 sync 후 3,181 files, pending 0; `.sdd/index-state` freshness 검사는 미수행이다.
+- gstack `review/SKILL.md`, `review/checklist.md`를 읽고 scoped 수동 검토: SQL·LLM·shell·UI 해당 없음. 네 상태 및 lock 수명·동시 종료·JSON 검증·파일 identity와 오류 반영 구분을 대조했다. 이는 전체 gstack workflow나 독립 적대 리뷰 PASS가 아니다. preamble의 전역 상태 쓰기·원격 실행·자동 병렬 리뷰는 수행하지 않았다.
+- 미완: 동시 최초 생성의 독립 두 child 경합, 모든 file operation의 before/after 오류 조합·subprocess 재시작, 실제 non-ext4/권한 소유자·mode 조합, 모든 단계별 kill 및 완전한 분기별 테스트 매핑은 아직 입증되지 않았다. 실제 storage crash/power loss, HTTP drain·wire 결속, KST 거래일 권위·runtime 원장 복원·운영은 검증하지 않았다. 전체 테스트/gate·배포·측정·archive 미실행. 독립 리뷰와 Manager 판정 전 P10 미완료.

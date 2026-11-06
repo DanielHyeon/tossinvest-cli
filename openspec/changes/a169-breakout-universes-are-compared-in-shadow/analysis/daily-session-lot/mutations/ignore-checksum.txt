@@ -1,0 +1,3 @@
+command: go test -count=1 -overlay <temporary ignore-checksum> ./internal/shadowsession
+exit: 0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	0.177s
