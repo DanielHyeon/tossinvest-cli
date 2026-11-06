@@ -95,3 +95,7 @@
 ## 7. 측정 시작 기준점의 과거 gap 처리 (2026-10-31 사람 결정)
 
 사용자 답: 「현재 안정된 시점부터 시작하고 과거 gap은 제외」. stable snapshot에서 얻은 현재 Event/Gap cursor를 시작 기준점으로 잡고 이전 gap을 측정 중 새 사건으로 세지 않는다. 기록 삭제·복구 완료·현재 pending/dirty/읽기 오류 허용을 뜻하지 않는다. 기준점 뒤 gap/429와 무결성 오류는 전송 전 거절한다. `analysis/prewire-fence-plan.md`가 구체 계약이며 독립 검토 전에는 구현하지 않는다. 실제 a169 모드 연결·활성 엔진 결속·당일 abort 저장·운영 재개는 별도다.
+
+## 8. 당일 영속 상태의 정상 재개 계약 유지 (2026-11-06 Manager)
+
+사용자 「네 진행하세요」에 따라 다음 내부 로트를 준비한다. 최초 검토한 일별 immutable claim은 Q2의 정상 재개까지 금지하므로 채택하지 않는다. 정상 재개 여부를 질문했으나 기존 사람 결정 Q2로 이미 해소돼 질문을 철회했다. 정상 일시중단은 paused에서 재개, 오류중단/실행 중 비정상 종료/수집 완료는 aborted/active/completed로 새 수집을 막는다. Pause의 caller drain·이후 전송 금지와 저장 commit 후 오류의 의미는 `analysis/daily-session-plan.md`에 명시한다. 이 로트는 storage 내부 기능이며 실제 measurement·engine identity·first Write 결속·운영 승인이 아니다.

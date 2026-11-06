@@ -1,5 +1,7 @@
 # a169 설계 — breakout 그림자 신호를 종목군 셋으로 다시 잰다
 
+> 2026-11-06 영속 세션 상태 제한 로트: 기존 Q2 정상 재개를 보존하며 `active/paused/aborted/completed`와 저장 실패의 반영 여부를 구분한다. `analysis/daily-session-plan.md` 및 `daily-session-research.md` 참조. 새 저장 컴포넌트는 High-risk, runtime 미연결이며 전체 freeze·실측·archive와 별도다. 독립 설계 리뷰 및 사전 증거 고정 뒤 구현한다.
+
 > 2026-10-31 정합화 진행: 사용자 승인 정책은 공통 그룹 합계 3건/초 우선·보호 대기 허용이다. 아래 과거 판의 4 GET/s, 별도 키의 독립 예산, engine.log 감시만으로 취소 후 새 wire0을 보장한다는 설명을 현재 안전 근거로 사용하지 않는다. 별도 키는 토큰 격리를 위해 유지하고 U2 09:30:55 마감·미완 전체 late도 유지한다. a166 부분 착지는 재개 승인이 아니다. `analysis/a166-bridge-draft.md`, `a166-bridge-research.md`, `a166-bridge-independent-review.md`에 현재 source와 미해결 event fence·활성 엔진 신원·영속 abort 계약을 기록했다. 초안은 freeze 전이며 1.3 FAIL·리허설/측정 보류는 그대로다.
 
 > 2026-10-31 추가 사람 결정: 안정된 현재 cursor를 기준점으로 시작하고 이전 gap은 제외한다(issues §7). 현재 pending/dirty/오류를 허용하거나 기록을 지우지 않는다. `analysis/prewire-fence-plan.md`의 선택적 내부 전송 fence 로트는 **High-risk**로 FLM/BTM·독립 적대 검토를 적용한다. 아래 과거 Normal 분류는 이 새 전송 계층 편집에 적용하지 않는다. 전체 측정 모드 freeze와 운영 재개는 여전히 미완이다.

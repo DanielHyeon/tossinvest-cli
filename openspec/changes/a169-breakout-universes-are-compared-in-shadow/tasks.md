@@ -70,3 +70,7 @@
 - [x] P6 안정 current cursor·과거 gap 제외 사람 결정과 optional prewire fence 제한 설계. `issues.md` §7, `analysis/prewire-fence-plan.md`; cleanup 경합 P1 수정 후 독립 bounded READY.
 - [x] P7 내부 fence 한정 RED/GREEN·선택 normal/tagged race·process·변이·수동 gstack. 완전 FLM/BTM은 첫 source 수정 뒤 작성된 절차 예외로 남음 (`analysis/prewire-fence-lot/manager-verification.md`). production measurement caller 연결 없음.
 - [x] P8 한정 독립 검증·Manager 판정·scoped strict/PM 후 Terra commit/merge/push. 전체1.3/2.2/측정/archive와 별도.
+
+- [x] P9 기존 Q2 정상 재개를 보존하는 영속 세션 제한 계약·연구·독립 설계 리뷰·Manager READY와 Pre-Edit 고정. `analysis/daily-session-plan.md`.
+- [ ] P10 신규 shadowsession 컴포넌트 RED/GREEN·선택 normal/tagged race·subprocess/fault/변이·gstack. 실제 measurement caller 연결 없음.
+- [ ] P11 독립 구현 검증·Manager 판정·scoped strict/PM 뒤 Terra commit/merge/push. 기존 미완 단계와 실제 운영 검증을 완료로 표시하거나 archive하지 않는다.

@@ -1,0 +1,49 @@
+[
+  {
+    "node": {
+      "id": "function:84feb71dcb96a5e4de1a2cc9b2c9f706",
+      "kind": "function",
+      "name": "ProvisionObservation",
+      "qualifiedName": "ProvisionObservation",
+      "filePath": "internal/accountbudget/observation_unsupported.go",
+      "language": "go",
+      "startLine": 13,
+      "endLine": 13,
+      "startColumn": 0,
+      "endColumn": 86,
+      "signature": "(*Budget) (FileID, error)",
+      "visibility": null,
+      "isExported": true,
+      "isAsync": false,
+      "isStatic": false,
+      "isAbstract": false,
+      "returnType": "FileID",
+      "updatedAt": 1793960291027
+    },
+    "score": 124.42581869832978
+  },
+  {
+    "node": {
+      "id": "function:b1589e05d3fa8b2e4223cfe3abda20cf",
+      "kind": "function",
+      "name": "ProvisionObservation",
+      "qualifiedName": "ProvisionObservation",
+      "filePath": "internal/accountbudget/observation_linux.go",
+      "language": "go",
+      "startLine": 54,
+      "endLine": 97,
+      "startColumn": 0,
+      "endColumn": 1,
+      "docstring": "ProvisionObservation는 이미 준비된 root에 별도 event 저장소를 명시적으로 한 번만 만듦.",
+      "signature": "(b *Budget) (FileID, error)",
+      "visibility": null,
+      "isExported": true,
+      "isAsync": false,
+      "isStatic": false,
+      "isAbstract": false,
+      "returnType": "FileID",
+      "updatedAt": 1793960291025
+    },
+    "score": 123.95778353469277
+  }
+]
