@@ -1,0 +1,171 @@
+{
+  "file": "internal/accountbudget/files_linux.go",
+  "source_sha256": "d2c6c8bf5a8df35e406fe7c2720770b0a00eb4cfe9c05a3dc4830aec2624b8ff",
+  "package": "accountbudget",
+  "function": "checkedFile",
+  "signature": "checkedFile(params=3, results=3)",
+  "start": {
+    "line": 69,
+    "column": 1
+  },
+  "end": {
+    "line": 83,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 72,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 76,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 80,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 82,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 19
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 19
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 11
+      },
+      "text": "unix.Openat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 9
+      },
+      "text": "unix.Fstat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 116
+      },
+      "text": "uint32"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 123
+      },
+      "text": "os.Geteuid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 3
+      },
+      "text": "unix.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 19
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 9
+      },
+      "text": "os.NewFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 20
+      },
+      "text": "uintptr"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 78,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

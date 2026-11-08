@@ -1,0 +1,39 @@
+{
+  "file": "internal/shadowsession/session_linux.go",
+  "source_sha256": "ce79892b33822c1f670eab66bf9d2bffc239c9e972b43a64cc9e1491eed8d29a",
+  "package": "shadowsession",
+  "function": "Pause",
+  "receiver": "Session",
+  "signature": "Session.Pause(params=0, results=1)",
+  "start": {
+    "line": 382,
+    "column": 1
+  },
+  "end": {
+    "line": 382,
+    "column": 65
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 382,
+        "column": 38
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 382,
+        "column": 45
+      },
+      "text": "s.finish"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

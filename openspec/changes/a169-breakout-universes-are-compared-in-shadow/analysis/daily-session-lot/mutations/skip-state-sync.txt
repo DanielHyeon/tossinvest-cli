@@ -1,0 +1,11 @@
+command: go test -count=1 -overlay <temporary skip-state-sync> ./internal/shadowsession
+exit: 1
+--- FAIL: TestPostCommitAndShortWrite (0.08s)
+    --- FAIL: TestPostCommitAndShortWrite/state-sync (0.01s)
+        session_linux_test.go:137: pause: <nil>
+--- FAIL: TestPrecommitFailuresAndCancellation (0.03s)
+    --- FAIL: TestPrecommitFailuresAndCancellation/state-sync (0.01s)
+        session_linux_test.go:174: s=&{{{} {0 0}} {/home/daniel/tossos-work/shadowsession-test-145390440 66309 12740811} 0x214549402618 0x214549402620 0x214549402630 2026-11-06 1 141 false <nil> 0x2145494269f0} err=<nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	0.176s
+FAIL

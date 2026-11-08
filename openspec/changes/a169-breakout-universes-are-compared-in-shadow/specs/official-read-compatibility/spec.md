@@ -1,5 +1,37 @@
 ## ADDED Requirements
 
+### Requirement: dormant shadow session storage preserves same-day interruption state
+
+A runtime-unconnected shadow-session component SHALL persist `active` before granting a session handle and retain a process-exclusive owner lock until the handle is retired. It SHALL use one trusted root identity and validated civil day, validate all stored frames and transitions, and refuse ambiguous, corrupt, inaccessible or mismatched storage. It SHALL NOT automatically delete or repair records. File and directory synchronization SHALL precede a successful Begin result. The implementation boundary and supported storage SHALL follow `analysis/daily-session-plan.md`.
+
+The permitted transitions SHALL be absent to active, paused to active, and active to paused, aborted or completed. A new Begin SHALL refuse existing active, aborted or completed. Only paused permits same-day collection resumption. Pause and Complete SHALL require the caller to stop new transmissions, drain prior work and retire that handle permanently. The storage component alone SHALL NOT claim to enforce HTTP draining, current trading-day identity or operational engine identity.
+
+#### Scenario: a process exits while a session is active
+- **WHEN** a process terminates with a durable active record and a new process begins the same root and day
+- **THEN** acquisition SHALL fail even though the previous process lock has been released
+
+#### Scenario: a quiescent session pauses and resumes normally
+- **WHEN** the caller drains and retires its handle and a valid paused record is persisted
+- **THEN** a later Begin MAY resume by persisting a new active record before granting its handle
+- **AND** previously selected universes SHALL remain the responsibility of the existing caller-side restoration contract
+
+#### Scenario: an ending operation returns an error after its record is committed
+- **WHEN** Pause has recorded a valid paused state but a subsequent synchronization or cleanup step returns an error
+- **THEN** the error SHALL NOT be reported as proof that the state was never recorded
+- **AND** a later Begin SHALL decide from the validated durable record under the declared storage-preservation and caller-drain assumptions
+
+#### Scenario: concurrent processes contend for the same day
+- **WHEN** multiple processes begin against one trusted root and day
+- **THEN** at most one active handle SHALL be granted at a time and competing acquisition SHALL fail without waiting
+
+#### Scenario: an explicit abort or completion is followed by another collection attempt
+- **WHEN** a valid aborted or completed record exists
+- **THEN** a new Begin for that day SHALL fail without truncating or resetting the record
+
+#### Scenario: the dormant storage component is published
+- **WHEN** this internal component passes its scoped verification
+- **THEN** no production measurement caller SHALL be connected by this lot and no live measurement or activation authority SHALL be inferred
+
 ### Requirement: an optional measurement observation fence starts from a stable current cursor
 
 The shared observed budget SHALL support an optional immutable measurement fence bound to one verified Budget owner.

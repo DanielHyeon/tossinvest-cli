@@ -1,0 +1,20 @@
+{"Time":"2026-11-06T19:45:29.462629425+09:00","Action":"start","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession"}
+{"Time":"2026-11-06T19:45:29.464382105+09:00","Action":"run","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock"}
+{"Time":"2026-11-06T19:45:29.464399126+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock","Output":"=== RUN   TestSimultaneousInitialLock\n"}
+{"Time":"2026-11-06T19:45:29.464423081+09:00","Action":"run","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock/absent"}
+{"Time":"2026-11-06T19:45:29.464426619+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock/absent","Output":"=== RUN   TestSimultaneousInitialLock/absent\n"}
+{"Time":"2026-11-06T19:45:29.477356941+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock/absent","Output":"--- PASS: TestSimultaneousInitialLock/absent (0.01s)\n"}
+{"Time":"2026-11-06T19:45:29.477385351+09:00","Action":"pass","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock/absent","Elapsed":0.01}
+{"Time":"2026-11-06T19:45:29.477393248+09:00","Action":"run","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock/paused"}
+{"Time":"2026-11-06T19:45:29.477394988+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock/paused","Output":"=== RUN   TestSimultaneousInitialLock/paused\n"}
+{"Time":"2026-11-06T19:45:29.500148885+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock/paused","Output":"--- PASS: TestSimultaneousInitialLock/paused (0.02s)\n"}
+{"Time":"2026-11-06T19:45:29.500187813+09:00","Action":"pass","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock/paused","Elapsed":0.02}
+{"Time":"2026-11-06T19:45:29.500197573+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock","Output":"--- PASS: TestSimultaneousInitialLock (0.04s)\n"}
+{"Time":"2026-11-06T19:45:29.500202003+09:00","Action":"pass","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock","Elapsed":0.04}
+{"Time":"2026-11-06T19:45:29.500208137+09:00","Action":"run","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestPauseCommitThenChildKill"}
+{"Time":"2026-11-06T19:45:29.500211315+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestPauseCommitThenChildKill","Output":"=== RUN   TestPauseCommitThenChildKill\n"}
+{"Time":"2026-11-06T19:45:29.514234792+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestPauseCommitThenChildKill","Output":"--- PASS: TestPauseCommitThenChildKill (0.01s)\n"}
+{"Time":"2026-11-06T19:45:29.514255239+09:00","Action":"pass","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestPauseCommitThenChildKill","Elapsed":0.01}
+{"Time":"2026-11-06T19:45:29.514259343+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Output":"PASS\n"}
+{"Time":"2026-11-06T19:45:29.514436014+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Output":"ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/shadowsession\t0.052s\n"}
+{"Time":"2026-11-06T19:45:29.514449563+09:00","Action":"pass","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Elapsed":0.052}

@@ -1,0 +1,9 @@
+command: go test -count=1 -overlay <temporary skip-flock> ./internal/shadowsession
+exit: 1
+--- FAIL: TestLifecycle (0.01s)
+    session_linux_test.go:42: busy: shadowsession: invalid or unavailable state
+--- FAIL: TestChildLockAndCrash (0.01s)
+    session_linux_test.go:228: lock: shadowsession: invalid or unavailable state
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	0.169s
+FAIL

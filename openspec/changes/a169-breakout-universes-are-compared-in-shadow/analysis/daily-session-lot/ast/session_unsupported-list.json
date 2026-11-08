@@ -1,0 +1,71 @@
+[
+  {
+    "file": "internal/shadowsession/session_unsupported.go",
+    "source_sha256": "7f759c52141012b7d48356bdefdb5363a490f222be625012d328be1cbdcc4745",
+    "function": "Begin",
+    "start": {
+      "line": 9,
+      "column": 1
+    },
+    "end": {
+      "line": 9,
+      "column": 87
+    }
+  },
+  {
+    "file": "internal/shadowsession/session_unsupported.go",
+    "source_sha256": "7f759c52141012b7d48356bdefdb5363a490f222be625012d328be1cbdcc4745",
+    "function": "Pause",
+    "receiver": "Session",
+    "start": {
+      "line": 10,
+      "column": 1
+    },
+    "end": {
+      "line": 10,
+      "column": 81
+    }
+  },
+  {
+    "file": "internal/shadowsession/session_unsupported.go",
+    "source_sha256": "7f759c52141012b7d48356bdefdb5363a490f222be625012d328be1cbdcc4745",
+    "function": "Abort",
+    "receiver": "Session",
+    "start": {
+      "line": 11,
+      "column": 1
+    },
+    "end": {
+      "line": 11,
+      "column": 81
+    }
+  },
+  {
+    "file": "internal/shadowsession/session_unsupported.go",
+    "source_sha256": "7f759c52141012b7d48356bdefdb5363a490f222be625012d328be1cbdcc4745",
+    "function": "Complete",
+    "receiver": "Session",
+    "start": {
+      "line": 12,
+      "column": 1
+    },
+    "end": {
+      "line": 12,
+      "column": 81
+    }
+  },
+  {
+    "file": "internal/shadowsession/session_unsupported.go",
+    "source_sha256": "7f759c52141012b7d48356bdefdb5363a490f222be625012d328be1cbdcc4745",
+    "function": "Close",
+    "receiver": "Session",
+    "start": {
+      "line": 13,
+      "column": 1
+    },
+    "end": {
+      "line": 13,
+      "column": 81
+    }
+  }
+]

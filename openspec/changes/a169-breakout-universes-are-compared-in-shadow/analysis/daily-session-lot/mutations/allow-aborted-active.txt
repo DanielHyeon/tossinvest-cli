@@ -1,0 +1,24 @@
+command: go test -count=1 -overlay <temporary allow-aborted-active> ./internal/shadowsession
+exit: 1
+--- FAIL: TestActiveAndInputsFailClosed (0.01s)
+    session_linux_test.go:69: active reopened
+--- FAIL: TestPostCommitAndShortWrite (0.10s)
+    --- FAIL: TestPostCommitAndShortWrite/state-sync (0.02s)
+        session_linux_test.go:147: aborted resumed
+    --- FAIL: TestPostCommitAndShortWrite/state-dir-sync (0.02s)
+        session_linux_test.go:147: aborted resumed
+    --- FAIL: TestPostCommitAndShortWrite/unlock (0.02s)
+        session_linux_test.go:147: aborted resumed
+    --- FAIL: TestPostCommitAndShortWrite/state-close (0.02s)
+        session_linux_test.go:147: aborted resumed
+    --- FAIL: TestPostCommitAndShortWrite/lock-close (0.02s)
+        session_linux_test.go:147: aborted resumed
+    --- FAIL: TestPostCommitAndShortWrite/dir-close (0.02s)
+        session_linux_test.go:147: aborted resumed
+--- FAIL: TestPrecommitFailuresAndCancellation (0.03s)
+    session_linux_test.go:190: cancelled active reopened
+--- FAIL: TestChildLockAndCrash (0.01s)
+    session_linux_test.go:235: crashed active reopened
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	0.208s
+FAIL

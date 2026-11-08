@@ -1,0 +1,109 @@
+{
+  "file": "internal/shadowsession/session_linux.go",
+  "source_sha256": "ce79892b33822c1f670eab66bf9d2bffc239c9e972b43a64cc9e1491eed8d29a",
+  "package": "shadowsession",
+  "function": "operation",
+  "receiver": "Session",
+  "signature": "Session.operation(params=2, results=1)",
+  "start": {
+    "line": 61,
+    "column": 1
+  },
+  "end": {
+    "line": 72,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 62,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 63,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 68,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 64,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 13
+      },
+      "text": "s.hooks.before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 9
+      },
+      "text": "fn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 9
+      },
+      "text": "s.hooks.after"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 63,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 69,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

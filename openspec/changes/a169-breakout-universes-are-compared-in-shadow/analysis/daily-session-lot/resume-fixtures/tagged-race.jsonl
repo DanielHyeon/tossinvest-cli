@@ -1,0 +1,20 @@
+{"Time":"2026-11-06T19:45:19.327147821+09:00","Action":"start","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession"}
+{"Time":"2026-11-06T19:45:19.340289649+09:00","Action":"run","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock"}
+{"Time":"2026-11-06T19:45:19.340414302+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock","Output":"=== RUN   TestSimultaneousInitialLock\n"}
+{"Time":"2026-11-06T19:45:19.340667143+09:00","Action":"run","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock/absent"}
+{"Time":"2026-11-06T19:45:19.34067765+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock/absent","Output":"=== RUN   TestSimultaneousInitialLock/absent\n"}
+{"Time":"2026-11-06T19:45:20.381888252+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock/absent","Output":"--- PASS: TestSimultaneousInitialLock/absent (1.04s)\n"}
+{"Time":"2026-11-06T19:45:20.381922349+09:00","Action":"pass","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock/absent","Elapsed":1.04}
+{"Time":"2026-11-06T19:45:20.38193588+09:00","Action":"run","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock/paused"}
+{"Time":"2026-11-06T19:45:20.381939804+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock/paused","Output":"=== RUN   TestSimultaneousInitialLock/paused\n"}
+{"Time":"2026-11-06T19:45:21.411233773+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock/paused","Output":"--- PASS: TestSimultaneousInitialLock/paused (1.03s)\n"}
+{"Time":"2026-11-06T19:45:21.411267128+09:00","Action":"pass","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock/paused","Elapsed":1.03}
+{"Time":"2026-11-06T19:45:21.411277013+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock","Output":"--- PASS: TestSimultaneousInitialLock (2.07s)\n"}
+{"Time":"2026-11-06T19:45:21.411300728+09:00","Action":"pass","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestSimultaneousInitialLock","Elapsed":2.07}
+{"Time":"2026-11-06T19:45:21.411354962+09:00","Action":"run","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestPauseCommitThenChildKill"}
+{"Time":"2026-11-06T19:45:21.411359655+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestPauseCommitThenChildKill","Output":"=== RUN   TestPauseCommitThenChildKill\n"}
+{"Time":"2026-11-06T19:45:21.432812754+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestPauseCommitThenChildKill","Output":"--- PASS: TestPauseCommitThenChildKill (0.02s)\n"}
+{"Time":"2026-11-06T19:45:21.432845611+09:00","Action":"pass","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Test":"TestPauseCommitThenChildKill","Elapsed":0.02}
+{"Time":"2026-11-06T19:45:21.432854594+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Output":"PASS\n"}
+{"Time":"2026-11-06T19:45:22.434561471+09:00","Action":"output","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Output":"ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/shadowsession\t3.107s\n"}
+{"Time":"2026-11-06T19:45:22.43459815+09:00","Action":"pass","Package":"github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession","Elapsed":3.107}

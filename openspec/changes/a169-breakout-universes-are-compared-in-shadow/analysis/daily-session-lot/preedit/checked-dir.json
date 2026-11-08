@@ -1,0 +1,25 @@
+[
+  {
+    "node": {
+      "id": "function:ca2a85ea57da0224978c5fbfa9725e9b",
+      "kind": "function",
+      "name": "checkedDir",
+      "qualifiedName": "checkedDir",
+      "filePath": "internal/accountbudget/files_linux.go",
+      "language": "go",
+      "startLine": 29,
+      "endLine": 68,
+      "startColumn": 0,
+      "endColumn": 1,
+      "signature": "(path string) (int, error)",
+      "visibility": null,
+      "isExported": false,
+      "isAsync": false,
+      "isStatic": false,
+      "isAbstract": false,
+      "returnType": "int",
+      "updatedAt": 1793960291019
+    },
+    "score": 112.47519752556236
+  }
+]

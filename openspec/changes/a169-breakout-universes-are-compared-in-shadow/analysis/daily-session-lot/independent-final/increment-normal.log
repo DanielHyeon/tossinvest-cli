@@ -1,0 +1,9 @@
+=== RUN   TestSimultaneousInitialLock
+=== RUN   TestSimultaneousInitialLock/absent
+=== RUN   TestSimultaneousInitialLock/paused
+--- PASS: TestSimultaneousInitialLock (0.02s)
+    --- PASS: TestSimultaneousInitialLock/absent (0.01s)
+    --- PASS: TestSimultaneousInitialLock/paused (0.01s)
+=== RUN   TestPauseCommitThenChildKill
+--- PASS: TestPauseCommitThenChildKill (0.02s)
+PASS

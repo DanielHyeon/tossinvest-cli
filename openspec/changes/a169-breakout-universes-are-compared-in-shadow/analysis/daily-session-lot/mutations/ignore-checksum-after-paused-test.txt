@@ -1,0 +1,8 @@
+command: go test -count=1 -overlay <temporary checksum> ./internal/shadowsession
+exit: 1
+--- FAIL: TestCanonicalAndTransitions (0.04s)
+    --- FAIL: TestCanonicalAndTransitions/0 (0.01s)
+        session_linux_test.go:262: invalid accepted
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	0.402s
+FAIL

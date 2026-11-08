@@ -1,0 +1,30 @@
+{
+  "file": "internal/shadowsession/session_unsupported.go",
+  "source_sha256": "7f759c52141012b7d48356bdefdb5363a490f222be625012d328be1cbdcc4745",
+  "package": "shadowsession",
+  "function": "Complete",
+  "receiver": "Session",
+  "signature": "Session.Complete(params=0, results=1)",
+  "start": {
+    "line": 12,
+    "column": 1
+  },
+  "end": {
+    "line": 12,
+    "column": 81
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 12,
+        "column": 63
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

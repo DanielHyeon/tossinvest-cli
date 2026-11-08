@@ -1,0 +1,293 @@
+{
+  "file": "internal/shadowsession/session_linux.go",
+  "source_sha256": "ce79892b33822c1f670eab66bf9d2bffc239c9e972b43a64cc9e1491eed8d29a",
+  "package": "shadowsession",
+  "function": "openRoot",
+  "signature": "openRoot(params=1, results=2)",
+  "start": {
+    "line": 82,
+    "column": 1
+  },
+  "end": {
+    "line": 108,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 93,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 84,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 88,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 94,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 105,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 45
+      },
+      "text": "filepath.IsAbs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 94
+      },
+      "text": "filepath.Clean"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 13
+      },
+      "text": "unix.Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 23
+      },
+      "text": "strings.Split"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 37
+      },
+      "text": "strings.TrimPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 14
+      },
+      "text": "unix.Openat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 7
+      },
+      "text": "unix.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 11
+      },
+      "text": "unix.Fstat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 9
+      },
+      "text": "unix.Fstatfs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 19
+      },
+      "text": "uint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 86
+      },
+      "text": "uint32"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 93
+      },
+      "text": "os.Geteuid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 135
+      },
+      "text": "uint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 7
+      },
+      "text": "unix.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 15
+      },
+      "text": "errors.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 9
+      },
+      "text": "os.NewFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 20
+      },
+      "text": "uintptr"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 91,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 92,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 96,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 100,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 101,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
