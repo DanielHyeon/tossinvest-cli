@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design · UI · UX 설계와 개선"
+  short_description: "신규 화면 설계부터 기존 UI/UX 진단·개선·검증까지 수행"
+  default_prompt: "$design-ui-ux를 사용해 대상 화면을 Design, UI, UX 관점으로 설계하거나 개선하고 검증 근거와 산출물을 정리해 줘."

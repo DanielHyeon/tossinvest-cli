@@ -10,7 +10,7 @@
 2. **KISS (Keep It Simple, Stupid)**
 3. 버그 수정 시 **근본 원인** 파악 → 정석 수정 (증상 우회 금지)
 4. 코드 수정 후 반드시 관련 테스트 실행 확인
-5. 운영 반영 = 이미지 재빌드 + 컨테이너 재시작 (위 절차)
+5. 운영 반영 = 이미지 재빌드 + 컨테이너 재시작 (`docs/operations.md`의 `make image CHANGE=<change-id>`)
 6. DB 상태 확인은 Postgres 직접 쿼리
 7. 문서.코드.테스트 일치 → docs/WORKFLOW.md의 SDD 방법론을 반드시 따를것
 8. 직관적이고 명확한 한글 주석을 쉽게 이해할 수 있게 작성
