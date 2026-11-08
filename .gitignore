@@ -86,3 +86,12 @@ docs/superpowers/
 /docs/memory/.ledger.lock
 /docs/memory/.index-*
 /docs/memory/.index.*.backup-*
+
+# 로컬 검증 도구(Reticle)의 실행 기록 — 재생성되는 개인 세션 산출물임.
+/.reticle/
+
+# a128 shadow 측정 원본 — 타이머가 계속 쌓고 단일 파일이 GitHub 100MB 한도를 넘음.
+# 이미 커밋된 옛 state 파일은 추적을 유지하고, 새 파일만 제외함.
+/openspec/changes/a128-jev-shadow-judgment-probe/analysis/shadow-ledger/ledger.jsonl
+/openspec/changes/a128-jev-shadow-judgment-probe/analysis/shadow-ledger/states/
+/openspec/changes/a128-jev-shadow-judgment-probe/analysis/shadow-ledger-compare/
