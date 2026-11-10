@@ -35,6 +35,131 @@
 
 **역할 표기**: κ = 사람 콘솔 클릭, ⌨ = 사람 터미널(mutating 전부), 👁 = 에이전트 read-only 관측·기록.
 
+> **2026-11-10 준비 착수 정정(사용자: 준비만 승인, live 세션 승인 아님).** blocker 원장은
+> `measurement-prereq.md` 「2026-11-10 M-A 준비 착수 — blocker 원장」이다. 이 런북에서 결정 없이
+> 고친 것은 셋이다. ① 모든 `tossctl` 명령과 측정 도구 명령에 `--config-dir ~/.config/tossctl`을
+> 붙였다(2026-10-19 토큰 무효화·401 기록, `docs/handoff/2026-10-19-manager-handoff.md:124-127`).
+> ② R1 §6 M0 명령에 코드가 요구하는 `--trigger-receipt-dir`를 적었다(`cmd/tossctl/verify.go:201-206`
+> — `--include-trigger`에 필수). ③ R2 동승 A는 a087 5.1~5.3 완료로 소멸했다고 적었다.
+> **verify 명령의 `--config-dir`는 기록 경로까지 바꾸므로 Q5가 정해지기 전에는 그 명령을 쓰지 않는다.**
+> 아래 R0-2의 SHA, R0-4의 후보, 2026-10-07 표본 문단은 2026-11-10 현재 사실이 아니다(원장 B1·B3).
+
+## Manager 결정 필요 (2026-11-10 — 답은 고르지 않았다)
+
+각 질문은 서로 맞지 않는 두 문장과 고르는 데 필요한 코드 증거만 적는다. 분기를 근거로 쓴 함수는
+`analysis/ma-prep-2026-11-10/citation-ast/`의 `tools/logic-map` AST(HEAD `6dbb752f6`)로 열거했다.
+「Teammate 의견」으로 표시한 줄만 이 문서 작성자의 의견이고 나머지는 사실 기록이다.
+
+### Q1. M-A의 parent 조건주문은 누가 만드는가 — CLI `order conditional place`인가, M0 verify인가
+
+- 충돌하는 문장:
+  - `ma-runbook.md:63-65`(6dbb752f6 판)(R1): "§5 ⌨ 등록(preview → 사람 확인 → `--execute --confirm`, trigger 는
+    현재가 1~2틱 아래 SELL stop) → §6 👁 M0 관측 루프(`--include-trigger --confirm-each --resume
+    --redo conditional-trigger` 만, …)". 역사본 §5(6dbb752f6 판 `:197-213`)는 그 등록을 `tossctl order conditional
+    place … --execute --confirm <TOKEN>`으로 적는다.
+  - `tasks.md:90-92`(0.2a.6): "human gate 승인 뒤 broker create **전에** unique client ID, run ID와 approved
+    market/symbol/SINGLE/MARKET/SELL/qty=1/trigger/expiry를 owner-only verify record의 pending intent로
+    append+fsync한다." `design.md:581-583`(D10-A)도 같다.
+- 코드 증거(AST 열거 기준):
+  - `verifylive.Runner.stepConditionalTrigger`(`internal/verifylive/steps_trigger.go:91-166`, 분기 6)는
+    L144에서 `r.createConditional`을 불러 **자기 parent를 새로 만든다.** 그 전에 L97 매도가능수량,
+    L110 호가, L114 `NearStopTrigger`를 읽고, 본문은 `SINGLE`·`MARKET`·수량 `MinQuantity`·SELL·
+    `r.expireDate()`로 고정된다(L124-132).
+  - `verifylive.Runner.createConditional`(`internal/verifylive/mutate.go:503-556`, 분기 11)은 L508 `r.gate`
+    (사람 확인) → L515 `appendM0Checkpoint(Kind "pending-create")` → L532 `r.broker.CreateConditionalOrder`
+    → L545 `appendM0Checkpoint(Kind "parent-created")` 순서로 호출한다. 0.2a.6의 pending-before-create는
+    이 경로에만 있다(`"pending-create"` 쓰기 자리는 비시험 소스에서 `mutate.go:516` 하나, `rg` 기준).
+  - CLI 경로 `trading.Service.ConditionalPlace`(`internal/trading/conditional.go:123-131`, 분기 2)는 L124
+    `ConditionalGate`와 L130 `s.conditional.CreateConditionalOrder`만 부른다. verify 기록·M0 checkpoint
+    호출이 없다. 이를 부르는 cobra 명령은 `newOrderConditionalCmd`(`cmd/tossctl/order.go:456-647`)의
+    `place` 하위 명령이다.
+  - `verify run`에는 이미 있는 parent id를 넘기는 flag가 없다(`cmd/tossctl/verify.go:185-215`의 flag 목록).
+  - M0 parent의 trigger는 「현재가 1~2틱 아래」가 아니라 **최우선 매수호가 바로 위 첫 틱**이며
+    마지막 체결가 이하여야 한다(`NearStopTrigger`, `internal/verifylive/pricing.go:221-256`, 분기 5 —
+    B3 `bid >= last`·B4 틱 격자에 자리 없음이면 오류로 step skip). expire는 당일이 아니라 KST 기준
+    **오늘+7일**이다(`internal/verifylive/steps.go:1253-1256`).
+  - `cmd/tossctl/verify.go`와 `internal/verifylive`의 비시험 소스에 `trading.conditional` 토글 참조가
+    `rg`로 0건이었다. M0 경로가 §4의 토글 flip을 요구하는지는 이 정적 검색만으로 확정하지 않는다
+    (호출 그래프 미추적 — 미검증).
+- 선택지:
+  1. M0가 parent를 만든다. §5 CLI 등록을 런북에서 빼고, §6 한 번의 `verify run`이 등록·관측을
+     함께 한다. 0.2a.6·D10-A와 맞는다. trigger·expire는 위 코드가 정한다.
+  2. CLI `order conditional place`로 만든 parent를 관측한다. 이 parent에는 pending intent·checkpoint가
+     없고, M0가 그것을 받을 입력이 현재 코드에 없다. 코드 변경이 필요하며 0.2a 재리뷰 대상이다.
+- Teammate 의견: 선택지 1이 현재 코드·tasks·design과 맞는다. 2는 새 구현이다.
+
+### Q2. soak/attestation은 M-A 실행의 필수 입력인가, 참고 기록인가
+
+- 충돌하는 문장:
+  - `measurement-prereq.md:68-72`: 다음 세션의 필수 fresh input 중 "(6) binary와 일치하는
+    soak/attestation authority" — "하나라도 없으면 preview나 config flip을 열지 않는다."
+  - `ma-runbook.md:56-57`(6dbb752f6 판)(R0-6): "👁 soak/attestation 상태 기록(참고용 — attestation 은 2026-08-29 만료.
+    재발급은 오늘 하지 않는다 …)".
+- 코드·문서 증거:
+  - `cmd/tossctl/verify.go`와 `internal/verifylive`의 비시험 소스에 `attest` 참조가 `rg`로 0건이었다
+    (정적 검색 — 미검증). 즉 verify 명령이 attestation을 읽어 거부한다는 근거는 찾지 못했다.
+  - tasks 0.10(`tasks.md:203-205`)과 D11은 재발급 순서를 「verify DELETE·modify 증거 → a100
+    바이너리로 `soak attest` → 배포」로 고정한다. 그 순서에서 attestation은 M-A **뒤**에 온다.
+  - 2026-10-07 R0-6 기록은 `ready=false`·만료였다(`ma-runbook.md:29-30`(6dbb752f6 판)). 현재 상태는 미확인이다.
+- 선택지:
+  1. 필수 — soak ready와 측정 바이너리에 결속된 attestation이 생길 때까지 M-A를 열지 않는다.
+  2. 참고 — 상태만 기록하고 M-A를 막지 않는다. measurement-prereq.md (6)을 정정한다.
+- Teammate 의견: 없음(운영 정책 판단).
+
+### Q3. 새 표본 종목을 엔진 편입에서 어떻게 떼어 두는가
+
+- 낡은 문장:
+  - `tasks.md:180-185`(0.9): "`include_symbols = [272210, 333430, IONQ, TSLA]` — **제외 목록이 아니라
+    포함 목록이므로 a100의 대상은 정확히 이 4종목이다.**"
+  - `ma-runbook.md:32-33`(6dbb752f6 판): "종목은 09:00 직후 호가·틱 실측으로 확정, 제외 = 엔진 adoption 272210·333430 +
+    잔여 108490."
+- 코드 증거(`ReconcileDriver.judgeHoldings`, `internal/app/engine/adoption.go:107-193`, 분기 16):
+  - B7(L140) `p.ExitEligible()`이면 수량 증가 검사만 하고 `continue`한다. 이 분기가 B12보다 **앞**이므로
+    이미 편입된 포지션은 exclude 목록에 나중에 넣어도 이 함수에서 미관리로 돌아가지 않는다.
+  - B12(L163) `Adoption.Excludes(symbol)`가 참이면 미관리. B13(L171) `!Enabled && !Included(symbol)`이
+    참일 때만 미관리. `enabled=true`이면 B13은 항상 거짓이라 exclude 밖의 보유가 전부 후보가 된다.
+  - `internal/config/engine.go:115-125` 주석: exclude는 "never adopted", include는 "adoption candidates even
+    with Enabled false".
+  - 2026-10-07 표본 010170은 편입된 뒤 엔진 손절이 같은 날 전량 매도했다(STORY-TOS-a129·a130).
+  - exclude 변경은 콘솔 설정 경로에서 audit 기록을 남긴다(`cmd/tossctl/adoptionsettings.go:88-91`).
+    변경이 실행 중 엔진에 언제 반영되는지는 확인하지 않았다(미확인).
+- 선택지:
+  1. 표본 매수 **전에** 사람이 그 종목을 `adoption.exclude_symbols`에 넣고, 엔진이 그 값을 읽었음을
+     확인한 뒤 매수한다(B7 순서 때문에 매수 뒤 추가는 늦다).
+  2. 측정 세션 동안 `adoption.enabled`를 끈다. 모든 미편입 보유에 영향이 있다.
+  3. 편입을 허용한다. 엔진 손절과 M-A 조건주문이 같은 주식을 두고 경쟁한다(10-07에 엔진이 먼저 팔았다).
+- Teammate 의견: 선택지 1이 영향 범위가 가장 좁다. 설정 변경은 운영 설정이므로 사람 승인과 audit가
+  필요하다(§0-5·§0-7).
+
+### Q4. 어느 바이너리로 측정하는가
+
+- 낡은 문장: `ma-runbook.md:41-45`(6dbb752f6 판)(R0-2) "설치본(`/home/daniel/.local/bin/tossctl`, SHA `899a74ac…e882`,
+  commit `882a0b49` …)으로 측정한다."
+- 증거: 현재 설치본은 SHA-256 `5287fe3c…3807`, `vcs.revision=488b370f`, `vcs.modified=true`다(원장 B1).
+  `899a74ac` 판의 파일과 8/15 artifact·receipt 디렉터리는 2026-11-10 현재 없다. a144 TTL-edge 예외
+  `6f06eee8e`는 `488b370f`와 `882a0b49`보다 뒤다(원장 B2). 예외 이전 판의 `M0ExactPrerequisites`
+  (`internal/verifylive/m0_recovery.go`, 분기 3)는 trigger 외 **모든** step의 PASS를 요구하므로, 기록에
+  TTL-edge PASS가 없으면 M0 진입을 거부한다.
+- 선택지:
+  1. 현재 main(≥`6f06eee8e`)에서 재현 가능한 후보를 새로 만들고, 8/15과 같은 별도 적대 검토와
+     사람 승인 원자 설치를 거친다.
+  2. 현재 설치본을 쓴다. dirty라 소스 결속이 없고 R0-2 신원 게이트와 맞지 않는다.
+  3. `882a0b49` 판을 다시 만든다. 기록에 TTL-edge PASS가 있어야만 M0가 열린다.
+- Teammate 의견: 없음(설치는 사람 승인 작업).
+
+### Q5. `--config-dir`를 붙인 verify 명령은 어느 기록을 쓰는가
+
+- 증거: `resolveVerifyRecordFor`(`cmd/tossctl/verify.go:765-778`, 분기 3) — B1 `--record`가 있으면 그 경로,
+  B2 `--config-dir`가 있으면 `<config-dir>/capability-verify.jsonl`, 아니면 `journal.DataDir()` 아래 같은 이름.
+  2026-10-19 이전 런북·역사 명령은 `--config-dir` 없이 쓰였다. 2026-10-20 기록은 KR 기록 파일이 두 곳에
+  모두 있다고 적는다(`docs/remaining-work-reconciliation-2026-10-20.md:14`). M0 진입(이전 PASS·outstanding·
+  M0 checkpoint)은 고른 기록으로 판정된다. 콘솔 `/verify`(§3)가 어느 기록을 쓰는지도 확인하지 않았다.
+- 선택지:
+  1. `--config-dir ~/.config/tossctl`만 붙인다 — 기록은 config 디렉터리 쪽이다.
+  2. `--config-dir ~/.config/tossctl --record <data dir 기록 경로>`로 기존 기록을 명시한다.
+- 필요한 실측(read-only): 두 KR 기록의 step별 최신 판정·outstanding·M0 checkpoint를 대조한다.
+- Teammate 의견: 없음. 실측 전에는 판단할 근거가 없다.
+
 ## R0. 재발행 preflight — 당일 장 전/직후, 전부 read-only receipt 로 동결
 
 1. 👁 시장: 당일이 KR 정규장(09:00~15:30 KST)인지, expire = 당일로 재동결.
@@ -43,7 +168,9 @@
    2026-08-15 설치 게이트 통과본)으로 측정한다. 근거: M-A 핵심 증거인 M0 transport 다섯
    플래그가 그 빌드에 완결, 설치 이후 커밋은 verifylive·문서뿐이라 conditional 주문 경로
    기여 0. 당일 신원 재확인만 남음: `sha256sum ~/.local/bin/tossctl` = 위 SHA 일치 확인.
-3. 👁 잔여 조건주문: `tossctl order conditional list --status OPEN` — 8-15 관측은 5건
+   **2026-11-10: 일치하지 않는다**(현재 `5287fe3c…`, revision `488b370f`, dirty — 원장 B1·B2). 이 결정은
+   그 설치본이 남아 있다는 전제였으므로 Q4가 정해지기 전에는 측정 바이너리가 없다.
+3. 👁 잔여 조건주문: `tossctl --config-dir ~/.config/tossctl order conditional list --status OPEN` — 8-15 관측은 5건
    (PAUSED 2·WATCHING 3). **기본 retain (2026-10-07 사용자 동의)** — WATCHING 건은 실보유의
    손절 역할일 수 있어 cancel 은 보호 약화(안전 불변식 4). 섞임 방지는 취소가 아니라 분리:
    M-A 관측은 당일 등록한 주문 id 로 추적하고, 잔여 건과 심볼이 겹치면 그 심볼을 M-A
@@ -65,6 +192,11 @@
   trigger 는 현재가 1~2틱 아래 SELL stop) → §6 👁 M0 관측 루프(`--include-trigger
   --confirm-each --resume --redo conditional-trigger` 만, raw 응답·receipt seq·monotonic 시각) →
   §7 기록·4갈래 판정 → §8 ⌨ 원복(false) + 잔여물 0 확인.
+- §6 명령의 현재 코드 형태(2026-11-10 정정 — `--trigger-receipt-dir`는 `--include-trigger`에 필수,
+  `cmd/tossctl/verify.go:201-206`; `--record`는 Q5, §5와의 관계는 Q1이 정하기 전 실행 금지):
+  `tossctl --config-dir ~/.config/tossctl verify run --market KR --holding-symbol <SYM> --include-trigger
+  --confirm-each --resume --redo conditional-trigger --trigger-receipt-dir <현재 uid 소유 0700 디렉터리>
+  [--record <Q5 결정>]`
 - **판정 효과**: 완전 통과만 tasks 0.2 체크 + 0.11 raw-status 판정표 동결 → T2-A 개방
   (단, 2.7 D3 실측 결함 수리가 배선 선행). 부분 통과·4b 실패·실패는 D2/D8/3.10 재설계로.
 
@@ -74,6 +206,9 @@
 > `placeIntentSupported`(`internal/trading/service.go:281`) 가 비지정가를 로컬 거부해 **5.1·5.2 에
 > 못 쓴다**. 실행 수단 = `tools/a087-market-sell-probe/`(2단 confirm·단일 전송·영수증 JSON,
 > 사람 터미널 전용). 도구가 착지·검증되기 전에는 R2 는 큐에서 보류 — M-A 본체는 영향 없음.
+>
+> **2026-11-10 정정: R2는 끝났다.** `openspec/changes/a087-a-protective-exit-is-a-market-order/tasks.md`의
+> 5.1·5.2·5.3이 모두 `[x]`다. M-A 세션에 동승하지 않는다. 아래 항목은 역사 기록이다.
 
 - 5.1 ⌨ **KR MARKET 매도 1회**: 최소 수량·장중. 종목은 사용자와 합의(§2 유동성 실측 결과
   재사용 가능). 성공·실패 모두 기록.
@@ -97,7 +232,7 @@
 
 ## R4. 동승 C — a112 L1c 프로브 (read-only, 1회로 수락 성립)
 
-- ⌨ 장중 1회: `go run ./tools/a112-l1c-quote-probe --market KR --symbol <R1 종목>` —
+- ⌨ 장중 1회: `go run ./tools/a112-l1c-quote-probe --config-dir ~/.config/tossctl --market KR --symbol <R1 종목>` —
   결정 46 잔여(9/2 실행은 두 시장 마감이라 수락 아님). 산출 보고서를 a112 에 기록.
 
 ## 하지 않는 것 (역사본 승계 + 추가)
@@ -109,6 +244,9 @@
 ---
 
 # M-A 실행 명령서 — 2026-08-14 역사본(만료, 실행 금지)
+
+> **2026-11-10 기계적 정정:** 이 역사본의 `tossctl` 명령에 `--config-dir ~/.config/tossctl`을 덧붙였다
+> (복사 실행 금지는 그대로다). 다른 글자는 바꾸지 않았다. 원문은 `6dbb752f6` 판에 있다.
 
 > **이 명령서는 실행 권위가 아니다.** 아래 날짜·expire·종목 후보·보유·잔여 주문·토글·attestation은
 > 2026-08-14 세션 전제라 2026-08-15 이후 재사용할 수 없다. 새 세션은
@@ -167,14 +305,14 @@ config 편집은 전부 사람 몫), 👁 = 에이전트 read-only 관측·기�
 
 ### 1. 👁 잔여물·보유 확인 (개장 전 가능)
 
-- `tossctl order conditional list --status OPEN` — 잔여 조건주문 목록·시각 기록
+- `tossctl --config-dir ~/.config/tossctl order conditional list --status OPEN` — 잔여 조건주문 목록·시각 기록
   (measurement-prereq 단계 0). 예상: 333430 한 건.
 - 보유 확인: 콘솔 /positions 또는 read 명령. 대상 후보 046890·466100의 보유 수량 기록.
 
 ### 2. 👁 유동성 실측 → 종목 확정 (09:00 직후)
 
-- `tossctl quote get 046890` / `tossctl quote get 466100` — 호가 스프레드.
-- `tossctl quote trades <sym>` — 틱 간격(체결 빈도).
+- `tossctl --config-dir ~/.config/tossctl quote get 046890` / `tossctl --config-dir ~/.config/tossctl quote get 466100` — 호가 스프레드.
+- `tossctl --config-dir ~/.config/tossctl quote trades <sym>` — 틱 간격(체결 빈도).
 - **판정: 스프레드가 좁고 틱이 조밀한 쪽 1종목.** 둘 다 얇으면 발동 대기가 길어지고
   INCONCLUSIVE 위험이 커진다 — 그 경우 관리 대상이지만 유동성이 확실한 종목으로의 변경을
   사람에게 다시 물어 결정한다(자동 결정 금지).
@@ -198,11 +336,11 @@ config 편집은 전부 사람 몫), 👁 = 에이전트 read-only 관측·기�
 
 ```bash
 # ① preview — confirm token을 받는다 (브로커 전송 없음)
-tossctl order conditional place --symbol <SYM> --type SINGLE --order-type MARKET \
+tossctl --config-dir ~/.config/tossctl order conditional place --symbol <SYM> --type SINGLE --order-type MARKET \
   --qty 1 --first-side SELL --first-trigger <T> --expire 2026-08-14
 
 # ② 사람이 preview 내용을 확인·승인한 뒤 실행
-tossctl order conditional place --symbol <SYM> --type SINGLE --order-type MARKET \
+tossctl --config-dir ~/.config/tossctl order conditional place --symbol <SYM> --type SINGLE --order-type MARKET \
   --qty 1 --first-side SELL --first-trigger <T> --expire 2026-08-14 \
   --execute --confirm <TOKEN>
 ```
@@ -214,7 +352,7 @@ tossctl order conditional place --symbol <SYM> --type SINGLE --order-type MARKET
 
 ### 6. 👁 관측 루프 (에이전트, read-only)
 
-- 등록 직후: `tossctl order conditional get <id>` — trigger·수량이 요청과 비교 가능한
+- 등록 직후: `tossctl --config-dir ~/.config/tossctl order conditional get <id>` — trigger·수량이 요청과 비교 가능한
   형태로 돌아오는지(단계 4b, **실패 시 tasks 3.3 수렴 정의 재설계**). sellable-quantity
   재확인(M13 재확인 — 예약 없음 예상).
 - 이후 M0의 기존 verify trigger poll만 사용한다. M0 mode는 exact
@@ -238,7 +376,7 @@ tossctl order conditional place --symbol <SYM> --type SINGLE --order-type MARKET
 
 ### 8. ⌨ 원복 (사람)
 
-`"conditional": true` → `false` 되돌림. 잔여물 0 확인(`order conditional list --status OPEN`).
+`"conditional": true` → `false` 되돌림. 잔여물 0 확인(`tossctl --config-dir ~/.config/tossctl order conditional list --status OPEN`).
 
 ## 하지 않는 것
 
