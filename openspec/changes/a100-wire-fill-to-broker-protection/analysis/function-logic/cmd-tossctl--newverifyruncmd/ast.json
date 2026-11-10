@@ -1,15 +1,15 @@
 {
   "file": "cmd/tossctl/verify.go",
-  "source_sha256": "77d33e4d7375aa6857e0ff69dda5ad4d083ace0f62878a9b1db152967435d4f7",
+  "source_sha256": "95da4a2dfa9716f304680f1084391c3119fced41452b10a0f605a4e54f1e37b3",
   "package": "main",
   "function": "newVerifyRunCmd",
   "signature": "newVerifyRunCmd(params=2, results=1)",
   "start": {
-    "line": 131,
+    "line": 132,
     "column": 1
   },
   "end": {
-    "line": 217,
+    "line": 218,
     "column": 2
   },
   "branches": null,
@@ -17,14 +17,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 180,
+        "line": 181,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 216,
+        "line": 217,
         "column": 2
       }
     }
@@ -33,7 +33,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 135,
+        "line": 136,
         "column": 9
       },
       "text": "strings.TrimSpace"
@@ -41,7 +41,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 180,
+        "line": 181,
         "column": 11
       },
       "text": "runVerifyRun"
@@ -49,7 +49,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 184,
+        "line": 185,
         "column": 2
       },
       "text": "BoolVar"
@@ -57,7 +57,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 184,
+        "line": 185,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -65,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 186,
+        "line": 187,
         "column": 2
       },
       "text": "BoolVar"
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 186,
+        "line": 187,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 188,
+        "line": 189,
         "column": 2
       },
       "text": "StringVar"
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 188,
+        "line": 189,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 190,
+        "line": 191,
         "column": 2
       },
       "text": "StringVar"
@@ -105,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 190,
+        "line": 191,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -113,7 +113,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 192,
+        "line": 193,
         "column": 2
       },
       "text": "StringVar"
@@ -121,7 +121,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 192,
+        "line": 193,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -129,7 +129,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 194,
+        "line": 195,
         "column": 2
       },
       "text": "Float64Var"
@@ -137,7 +137,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 194,
+        "line": 195,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -145,7 +145,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 196,
+        "line": 197,
         "column": 2
       },
       "text": "Float64Var"
@@ -153,7 +153,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 196,
+        "line": 197,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -161,7 +161,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 198,
+        "line": 199,
         "column": 2
       },
       "text": "BoolVar"
@@ -169,7 +169,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 198,
+        "line": 199,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -177,7 +177,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 200,
+        "line": 201,
         "column": 2
       },
       "text": "BoolVar"
@@ -185,7 +185,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 200,
+        "line": 201,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -193,7 +193,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 205,
         "column": 2
       },
       "text": "StringVar"
@@ -201,7 +201,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 205,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -209,7 +209,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 206,
+        "line": 207,
         "column": 2
       },
       "text": "DurationVar"
@@ -217,7 +217,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 206,
+        "line": 207,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -225,7 +225,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 208,
+        "line": 209,
         "column": 2
       },
       "text": "BoolVar"
@@ -233,7 +233,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 208,
+        "line": 209,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -241,7 +241,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 210,
+        "line": 211,
         "column": 2
       },
       "text": "DurationVar"
@@ -249,7 +249,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 210,
+        "line": 211,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -257,7 +257,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 212,
+        "line": 213,
         "column": 2
       },
       "text": "StringSliceVar"
@@ -265,7 +265,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 212,
+        "line": 213,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -273,7 +273,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 214,
+        "line": 215,
         "column": 2
       },
       "text": "StringVar"
@@ -281,7 +281,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 214,
+        "line": 215,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -291,7 +291,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 132,
+        "line": 133,
         "column": 2
       }
     }

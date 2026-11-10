@@ -1,6 +1,6 @@
 # Function Logic Map: `TestUnreachableBrokerIsNotDispatched`
 
-- Source: `internal/execgw/gateway_test.go` (727-757)
+- Source: `internal/execgw/gateway_test.go` (729-759)
 - AST evidence: `ast.json` — AST branches 4 (B1-B4).
 - Risk scan: `risk-pattern-report.md` — no configured pattern matched.
 

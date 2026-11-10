@@ -1,6 +1,6 @@
 # Branch Test Map: `Journal.OpenExitStates`
 
-Source: `internal/journal/apply_hook.go` (621-644).
+Source: `internal/journal/apply_hook.go` (631-654).
 
 | Branch | Scenario | Test |
 |---|---|---|

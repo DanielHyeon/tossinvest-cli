@@ -1,15 +1,15 @@
 {
   "file": "internal/execgw/gateway_test.go",
-  "source_sha256": "88da54abf4f207ebd9d69fdf6b5fecd38f6ff484431eb9b4f53b0f8264390df3",
+  "source_sha256": "2ba8f933ab152173c690cf96fffff91e1877ba46c2314d0022465f345dbdd957",
   "package": "execgw_test",
   "function": "TestUnreachableBrokerIsNotDispatched",
   "signature": "TestUnreachableBrokerIsNotDispatched(params=1, results=0)",
   "start": {
-    "line": 727,
+    "line": 729,
     "column": 1
   },
   "end": {
-    "line": 757,
+    "line": 759,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 741,
+        "line": 743,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 746,
+        "line": 748,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 751,
+        "line": 753,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 754,
+        "line": 756,
         "column": 2
       }
     }
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 731,
+        "line": 733,
         "column": 9
       },
       "text": "official.New"
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 732,
+        "line": 734,
         "column": 3
       },
       "text": "filepath.Join"
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 732,
+        "line": 734,
         "column": 17
       },
       "text": "t.TempDir"
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 733,
+        "line": 735,
         "column": 3
       },
       "text": "official.WithBaseURL"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 733,
+        "line": 735,
         "column": 48
       },
       "text": "official.WithHTTPClient"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 733,
+        "line": 735,
         "column": 81
       },
       "text": "official.WithAccountSeq"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 735,
+        "line": 737,
         "column": 9
       },
       "text": "clock.NewFake"
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 736,
+        "line": 738,
         "column": 7
       },
       "text": "openJournal"
@@ -115,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 737,
+        "line": 739,
         "column": 13
       },
       "text": "execgw.New"
@@ -123,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 738,
+        "line": 740,
         "column": 24
       },
       "text": "trading.NewService"
@@ -131,7 +131,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 738,
+        "line": 740,
         "column": 43
       },
       "text": "openPolicy"
@@ -139,7 +139,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 742,
+        "line": 744,
         "column": 3
       },
       "text": "t.Fatalf"
@@ -147,7 +147,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 745,
+        "line": 747,
         "column": 12
       },
       "text": "gw.Place"
@@ -155,7 +155,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 745,
+        "line": 747,
         "column": 21
       },
       "text": "context.Background"
@@ -163,7 +163,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 745,
+        "line": 747,
         "column": 43
       },
       "text": "placeRequest"
@@ -171,7 +171,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 747,
+        "line": 749,
         "column": 3
       },
       "text": "t.Errorf"
@@ -179,7 +179,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 752,
+        "line": 754,
         "column": 3
       },
       "text": "t.Errorf"
@@ -187,7 +187,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 755,
+        "line": 757,
         "column": 3
       },
       "text": "t.Errorf"
@@ -197,14 +197,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 728,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 729,
+        "line": 730,
         "column": 2
       }
     },
@@ -218,14 +211,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 735,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 736,
+        "line": 733,
         "column": 2
       }
     },
@@ -239,7 +225,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 745,
+        "line": 738,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 739,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 747,
         "column": 2
       }
     }

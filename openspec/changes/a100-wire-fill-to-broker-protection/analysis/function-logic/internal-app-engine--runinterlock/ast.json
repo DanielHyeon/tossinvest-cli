@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/interlock.go",
-  "source_sha256": "a2277d4bd3a76152d91c9feb46309b7e07d74a1689d736b6a9020c55ecc20baf",
+  "source_sha256": "d018e5cf62544eef99ad68fadebdbe0de63f4677d0bea51d39a33ccc18f037e1",
   "package": "engine",
   "function": "runInterlock",
   "signature": "runInterlock(params=5, results=2)",
   "start": {
-    "line": 376,
+    "line": 390,
     "column": 1
   },
   "end": {
-    "line": 407,
+    "line": 421,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 379,
+        "line": 393,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 386,
+        "line": 400,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 396,
+        "line": 410,
         "column": 2
       }
     }
@@ -42,14 +42,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 383,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 389,
+        "line": 397,
         "column": 3
       }
     },
@@ -63,7 +56,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 406,
+        "line": 417,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 420,
         "column": 2
       }
     }
@@ -72,7 +72,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 382,
+        "line": 396,
         "column": 3
       },
       "text": "logGateDecision"
@@ -80,7 +80,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 386,
+        "line": 400,
         "column": 12
       },
       "text": "verifyGate"
@@ -88,7 +88,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 387,
+        "line": 401,
         "column": 7
       },
       "text": "refuseStartup"
@@ -96,7 +96,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 388,
+        "line": 402,
         "column": 3
       },
       "text": "logGateDecision"
@@ -104,7 +104,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 396,
+        "line": 410,
         "column": 12
       },
       "text": "log.Record"
@@ -112,7 +112,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 401,
+        "line": 415,
         "column": 12
       },
       "text": "acceptanceDetail"
@@ -120,7 +120,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 403,
+        "line": 417,
         "column": 18
       },
       "text": "fmt.Errorf"
@@ -128,7 +128,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 405,
+        "line": 419,
         "column": 2
       },
       "text": "logGateDecision"
@@ -138,35 +138,35 @@
     {
       "kind": ":=",
       "at": {
-        "line": 386,
+        "line": 400,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 387,
+        "line": 401,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 392,
+        "line": 406,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 395,
+        "line": 409,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 396,
+        "line": 410,
         "column": 5
       }
     }

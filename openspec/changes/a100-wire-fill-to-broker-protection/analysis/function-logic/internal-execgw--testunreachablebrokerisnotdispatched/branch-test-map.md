@@ -1,6 +1,6 @@
 # Branch Test Map: `TestUnreachableBrokerIsNotDispatched`
 
-Source: `internal/execgw/gateway_test.go` (727-757).
+Source: `internal/execgw/gateway_test.go` (729-759).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|

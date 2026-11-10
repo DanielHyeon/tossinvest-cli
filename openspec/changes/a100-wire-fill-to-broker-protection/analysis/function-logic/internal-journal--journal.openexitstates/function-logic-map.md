@@ -1,6 +1,6 @@
 # Function Logic Map: `Journal.OpenExitStates`
 
-- Source: `internal/journal/apply_hook.go` (621-644)
+- Source: `internal/journal/apply_hook.go` (631-654)
 - AST evidence: `ast.json` — AST branches 4.
 
 ## Inputs and invariants

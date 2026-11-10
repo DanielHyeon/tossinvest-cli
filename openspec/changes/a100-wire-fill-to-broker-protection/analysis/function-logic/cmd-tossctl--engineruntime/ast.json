@@ -1,15 +1,15 @@
 {
   "file": "cmd/tossctl/engine.go",
-  "source_sha256": "6844d37952bf3b9fe8b3738e1f0748b08c40f2b0fc5e7a63982f5f264394d745",
+  "source_sha256": "ec77f4d643ec8d7fe614fd938cd0e6da49e4840791ca44c98c712d6773cb90e3",
   "package": "main",
   "function": "engineRuntime",
   "signature": "engineRuntime(params=5, results=2)",
   "start": {
-    "line": 649,
+    "line": 655,
     "column": 1
   },
   "end": {
-    "line": 739,
+    "line": 752,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 652,
+        "line": 658,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 661,
+        "line": 667,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 674,
+        "line": 684,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 679,
+        "line": 689,
         "column": 2
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 683,
+        "line": 693,
         "column": 2
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 695,
+        "line": 705,
         "column": 2
       }
     }
@@ -66,49 +66,49 @@
     {
       "kind": "return",
       "at": {
-        "line": 653,
+        "line": 659,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 662,
+        "line": 668,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 675,
+        "line": 685,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 680,
+        "line": 690,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 684,
+        "line": 694,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 696,
+        "line": 706,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 699,
+        "line": 709,
         "column": 2
       }
     }
@@ -117,7 +117,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 651,
+        "line": 657,
         "column": 19
       },
       "text": "engineFillDetector"
@@ -125,7 +125,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 656,
+        "line": 662,
         "column": 17
       },
       "text": "ectx.ReconcileDriver"
@@ -133,7 +133,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 657,
+        "line": 663,
         "column": 18
       },
       "text": "ectx.SnapshotCollector"
@@ -141,7 +141,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 665,
+        "line": 671,
         "column": 19
       },
       "text": "ectx.ExitObserver"
@@ -149,7 +149,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 667,
+        "line": 673,
         "column": 13
       },
       "text": "costs.DefaultModel"
@@ -157,7 +157,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 678,
+        "line": 688,
         "column": 19
       },
       "text": "ectx.Recovery"
@@ -165,7 +165,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 682,
+        "line": 692,
         "column": 24
       },
       "text": "ectx.NewRefreshingPairedStrategyEntrySupervisor"
@@ -173,7 +173,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 694,
+        "line": 704,
         "column": 24
       },
       "text": "ectx.AlertDeliverer"
@@ -181,7 +181,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 699,
+        "line": 709,
         "column": 9
       },
       "text": "engine.NewRuntime"
@@ -189,7 +189,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 712,
+        "line": 722,
         "column": 12
       },
       "text": "recoverThenReady"
@@ -197,7 +197,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 712,
+        "line": 722,
         "column": 29
       },
       "text": "engineRecoverySequence"
@@ -205,7 +205,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 712,
+        "line": 722,
         "column": 70
       },
       "text": "engineRecoveryObserver"
@@ -213,7 +213,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 734,
+        "line": 744,
         "column": 4
       },
       "text": "strategyEntry.SupervisedLoop"
@@ -221,52 +221,76 @@
     {
       "kind": "call",
       "at": {
-        "line": 737,
+        "line": 748,
         "column": 56
       },
       "text": "ectx.NormalAlertRelayExecutor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 748,
+        "column": 89
+      },
+      "text": "ectx.AttestationWatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 749,
+        "column": 4
+      },
+      "text": "ectx.ManualBuyRefresher"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 749,
+        "column": 34
+      },
+      "text": "ectx.ExitLowerLimitRefresher"
     }
   ],
   "assignments": [
     {
       "kind": ":=",
       "at": {
-        "line": 651,
+        "line": 657,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 656,
+        "line": 662,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 665,
+        "line": 671,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 678,
+        "line": 688,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 682,
+        "line": 692,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 694,
+        "line": 704,
         "column": 2
       }
     }
