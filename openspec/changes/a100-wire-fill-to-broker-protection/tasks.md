@@ -127,6 +127,17 @@ worker construction/start와 broker mutation 도달 경로를 열지 않는다. 
   **HOLD/NO-GO**다. corrected receipt `/tmp/a100-ma-preflight-corrected.kSn14D`는 같은 Terra
   adversary가 evidence `P0=0/P1=0`으로 수용했지만 live 실행을 수용한 것은 아니다. preview·주문·
   config·verify run/resume는 0건이며 이 체크박스와 0.11, T1은 계속 미완료다.
+  — **2026-11-10 M-A 준비 착수 blocker 원장(read-only 대조, 실측 아님):** 사용자는 준비 착수만
+  승인했다. 원장 전문과 증거는 `measurement-prereq.md` 「2026-11-10 M-A 준비 착수 — blocker 원장」이다.
+  **미해소:** B1 설치 바이너리가 runbook R0-2의 `899a74ac…`가 아니다(현재 `5287fe3c…`, revision
+  `488b370f`, `vcs.modified=true`) · B2 그 revision은 a144 TTL-edge 예외 `6f06eee8e` 이전이다 · B3 표본
+  010170은 2026-10-07 엔진 편입 뒤 엔진 손절로 전량 매도됐다(STORY-TOS-a129·a130) · B4 0.9의
+  「포함 목록이므로 4종목」은 `enabled=true`에서 성립하지 않는다(`judgeHoldings` B12·B13) ·
+  B5 parent 생성 주체 모순(runbook §5 CLI place 대 M0 pending-before-create) · B6 attestation 필수/참고
+  모순 · B7 runbook 명령의 `--config-dir` 누락 · B9 base `882a0b49` 대비 1,378 커밋 표류와 FLM stale.
+  **미확인 — 실측 필요:** B2 기록의 TTL-edge 판정 · B8 `--config-dir`가 고르는 verify 기록 · B10
+  soak/attestation · B11 잔여 조건주문 · B13 세션 날짜. **해소:** B12 a087 5.1~5.3 완료로 R2 동승 소멸.
+  이 체크박스·0.11은 계속 미완료다.
 - [x] 0.3 **선행 실측 M-B — 엔진 사망부터 exit observer 재무장까지의 무보호 창.** 이 change가
   사려는 안전의 크기다. 측정하지 않으면 개선 폭을 주장할 수 없다.
   — 2026-08-11 14:00Z, 0.10b의 배포 재시작에서 측정. **≤ 6.7초**(명령 발행 → 첫 `exit.*` 관측).

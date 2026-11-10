@@ -1,0 +1,94 @@
+{
+  "file": "internal/trading/conditional.go",
+  "source_sha256": "ae4986ab2c72172bb789699ee2fb362e015c724d12458cb87227c3a83a48e03a",
+  "package": "trading",
+  "function": "ConditionalPlace",
+  "receiver": "Service",
+  "signature": "Service.ConditionalPlace(params=3, results=2)",
+  "start": {
+    "line": 123,
+    "column": 1
+  },
+  "end": {
+    "line": 131,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 124,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 127,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 125,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 128,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 12
+      },
+      "text": "ConditionalGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 38
+      },
+      "text": "orderintent.CanonicalConditionalPlace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 9
+      },
+      "text": "s.conditional.CreateConditionalOrder"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 124,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,86 @@
+{
+  "file": "internal/verifylive/m0_recovery.go (git show 488b370fddb4903568aef70615fa0fb953a71ba1)",
+  "source_sha256": "5f0b32779e5a8922df115276d88128a3a617eac9aad442d32d7d2f1da4f5fbb4",
+  "package": "verifylive",
+  "function": "M0ExactPrerequisites",
+  "signature": "M0ExactPrerequisites(params=1, results=1)",
+  "start": {
+    "line": 97,
+    "column": 1
+  },
+  "end": {
+    "line": 107,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 98,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 99,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 102,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 103,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 23
+      },
+      "text": "Steps"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 7
+      },
+      "text": "Passed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 11
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}
