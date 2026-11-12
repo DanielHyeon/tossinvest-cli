@@ -1,8 +1,8 @@
 ## 1. 고정과 증거
 
-- [ ] 1.1 `capture_change_base.py` 로 base commit 을 고정한다.
-- [ ] 1.2 편집할 함수 `strictMinuteCheckCandleSymbol` 의 편집 전 AST 로 Function Logic Map·Branch Test Map 번들을 만든다. `analysis/pre-edit-ast/` 의 열거가 design Context 와 다르면 멈추고 보고한다.
-- [ ] 1.3 CodeGraph 로 `strictMinuteCheckSymbol`·`strictQuoteIdentity`·두 호가 리더의 호출자를 다시 열거해 proposal Impact 의 `grep` 전수와 대조한다(`codegraph affected` 는 `--filter '*_test.go'`, 수치에 버전을 적는다).
+- [x] 1.1 `capture_change_base.py` 로 base commit 을 고정한다.
+- [x] 1.2 편집할 함수 `strictMinuteCheckCandleSymbol` 의 편집 전 AST 로 Function Logic Map·Branch Test Map 번들을 만든다. `analysis/pre-edit-ast/` 의 열거가 design Context 와 다르면 멈추고 보고한다.
+- [x] 1.3 CodeGraph 로 `strictMinuteCheckSymbol`·`strictQuoteIdentity`·두 호가 리더의 호출자를 다시 열거해 proposal Impact 의 `grep` 전수와 대조한다(`codegraph affected` 는 `--filter '*_test.go'`, 수치에 버전을 적는다).
 
 ## 2. 구현 (RED → GREEN)
 
