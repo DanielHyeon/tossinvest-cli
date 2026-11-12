@@ -10,7 +10,7 @@
 
 ### Requirement: KR alphanumeric symbol compatibility covers strict reads but not order policy
 
-The minute-candle reader and both strict quote readers SHALL accept KR symbols of exactly six ASCII uppercase alphanumeric characters through one shared lexical predicate. Other forms MUST be refused before any request and MUST NOT be normalized. Order intent validation and the a087 executable order probe policy MUST remain numeric-only for KR symbols. No strategy universe or order permission SHALL change.
+The minute-candle reader and both strict quote readers SHALL accept KR symbols of exactly six ASCII uppercase alphanumeric characters through one shared lexical predicate. Other forms MUST be refused before any request and MUST NOT be normalized. Order intent normalization, including its numeric-only KR market inference, and the a087 executable order probe policy MUST remain unchanged. No order path, strategy universe or order permission SHALL change.
 
 #### Scenario: Same alphanumeric input reaches every strict reader
 - **WHEN** KR 0101N0 is passed to the minute reader and each strict quote reader using offline fixtures
@@ -26,7 +26,7 @@ The minute-candle reader and both strict quote readers SHALL accept KR symbols o
 
 #### Scenario: Order policy is not widened
 - **WHEN** the order intent market inference and the a087 request-schema test are evaluated with KR 0101N0
-- **THEN** their existing numeric-only behavior, request body and execution guards remain unchanged
+- **THEN** market inference still returns us for 0101N0 and kr only for six digits, and the a087 request body and execution guards remain unchanged
 
 #### Scenario: Updated published symbol wording
 - **WHEN** the a087 request-schema test reads the refreshed snapshot

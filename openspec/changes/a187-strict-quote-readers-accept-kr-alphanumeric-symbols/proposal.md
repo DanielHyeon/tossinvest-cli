@@ -29,7 +29,7 @@
 
 ## Non-goals
 
-- 주문 경로. `internal/orderintent` 의 `krSymbolPattern`(`^\d{6}$`)과 a087 주문 탐침 정책은 고치지 않음. 영문 섞인 코드의 종목은 이 change 뒤에도 엔진 주문 경로로 나가지 않음.
+- 주문 경로. `internal/orderintent` 와 a087 주문 탐침 정책은 고치지 않음. 이 change 는 주문 경로를 새로 만들지도, 호가 리더의 결과를 주문 경로에 잇지도 않음. 주의: 주문 의도 정규화가 숫자 전용인 것은 **시장 추론**뿐임(`krSymbolPattern`, `looksLikeKRSymbol`). 시장을 `kr` 로 명시한 주문은 이 change 전부터 종목 모양으로 거절되지 않음(design Context). 그 경로를 막는 것은 이 change 의 범위가 아님.
 - 전략 유니버스·후보 선정의 변경. 어떤 종목이 리더에 넘어오는지는 호출자가 정하며 이 change 는 바꾸지 않음.
 - `RawMinuteCandles` 의 `krxRawCandleSymbol`(`internal/official/candle_raw.go:22`). 운영 코드 호출자가 없음(시험 제외 `grep` 0건).
 - 응답 쪽 검증의 변경. 호가 본문 해독, 통화 검사, 현재가의 종목 메아리 검사는 그대로임.
@@ -43,6 +43,6 @@
 - 넓어진 검사를 타는 호출자(시험 제외, `grep` 전수):
   - `internal/officialbars/quote.go:113·117` `PollQuoteL1`. 이 함수를 부르는 운영 코드는 `tools/a140-breakout-signal-shadow/shadow.go:289` 하나임. 엔진 패키지 호출자는 없음.
   - `tools/a128-jev-shadow-probe/collect.go:453`(프로브), `tools/a184-jev-warning-signal/main.go:287`(a184 브랜치), `tools/a140-breakout-signal-shadow/source.go:148·154`, `tools/a112-l1c-quote-probe/main.go:87·91`.
-- 프로브 입력이 달라짐: 프로브는 `go run` 으로 main 체크아웃에서 돎(`run-probe.sh`). 반영 즉시 영문 섞인 종목의 입력 상태에 호가가 들어감. 지금은 그 종목에 `top_of_book` 결손이 붙고 호가 없이 판단함. 입력 판본 `a128-s3` 은 그대로라 원장만으로는 반영 전후를 가를 수 없음. 반영 시각을 기록으로 남겨 가름.
+- 프로브 입력이 달라짐: 프로브는 `go run` 으로 main 체크아웃에서 돎(`run-probe.sh`). 반영 즉시 영문 섞인 종목의 입력 상태에 호가가 들어감. 지금은 그 종목에 `top_of_book` 결손이 붙고 호가 없이 판단함. 입력 판본 `a128-s3` 은 그대로라 원장만으로는 반영 전후를 가를 수 없음. 반영 시각을 기록으로 남겨 가름. `initial` 입력도 호가를 복사하므로(`profile.go` `initialState`) compare 원장의 `current`·`initial` 두 입력군이 모두 달라짐. 그 종목의 판단값, J1/J2 선별 결과, 입력 토큰 수, 수집 시간도 달라질 수 있음.
 - 공식 조회가 영문 섞인 코드를 실제로 받는지는 호가·현재가 경로로 보낸 적이 없어 모름. 일반 봉 조회는 2026-11-12 에 `0158S0` 으로 200 을 받았음(a184 예산 원장). 사람 승인 뒤 읽기 전용 실측으로 확인함.
-- 호출량: 지금까지 요청 전에 거절되던 종목이 실제 GET 을 보내게 됨. 프로브는 회차마다 판단 종목 수만큼 호가를 읽으므로 총량은 같고(그 종목 몫이 0 에서 1 로), a184 신호 도구는 A 후보 중 그런 종목 수만큼 늘어남.
+- 호출량: 지금까지 요청 전에 거절되던 종목이 실제 GET 을 보내게 됨. 재시도가 없으면 영문 섞인 종목 N개당 실제 GET 이 N회 늘어남(프로브는 회차마다, a184 신호 도구는 A 후보마다). 프로브의 조회 계수(`broker_reads`)는 리더를 부르기 전에 세므로(`collect.go:189`) 거절되던 호출도 이미 세고 있었음 — 계수는 그대로이고 실제 HTTP 시도만 늘어남. 실제 요청이 되면 그 호출도 429 재시도와 401 토큰 갱신 경로를 탐.
