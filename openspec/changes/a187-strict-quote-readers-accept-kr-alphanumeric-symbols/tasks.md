@@ -12,8 +12,8 @@
 
 ## 3. 검증
 
-- [ ] 3.1 사본 변이 시험(무변이 대조군 GREEN 먼저): 정규식을 숫자 전용으로 되돌림, 길이 고정 제거, 양끝 고정 제거, 소문자 허용, 래퍼가 검사를 건너뜀. 각 변이가 어느 시험에 잡히는지 원문을 `analysis/` 에 남긴다.
-- [ ] 3.2 영향 패키지(`internal/official`, `internal/officialbars`, `internal/orderintent`, `tools/a128-jev-shadow-probe`, `tools/a140-breakout-signal-shadow`, `tools/a112-l1c-quote-probe`) 시험과 `go vet`·gofmt 를 돌리고 원문을 기록한다. 전체 gate 는 사용자가 요청할 때만 실행한다.
+- [x] 3.1 사본 변이 시험(무변이 대조군 GREEN 먼저): 정규식을 숫자 전용으로 되돌림, 길이 고정 제거, 양끝 고정 제거, 소문자 허용, 래퍼가 검사를 건너뜀. 각 변이가 어느 시험에 잡히는지 원문을 `analysis/` 에 남긴다.
+- [x] 3.2 영향 패키지(`internal/official`, `internal/officialbars`, `internal/orderintent`, `tools/a128-jev-shadow-probe`, `tools/a140-breakout-signal-shadow`, `tools/a112-l1c-quote-probe`) 시험과 `go vet`·gofmt 를 돌리고 원문을 기록한다. 전체 gate 는 사용자가 요청할 때만 실행한다.
 - [ ] 3.3 다른 계열 모델의 리뷰와 gstack 리뷰를 받고 처리 결과를 `review.md` 에 기록한다.
 - [ ] 3.4 Manager 가 diff, 시험 원문, 변이 결과를 독립 재검증한다.
 
