@@ -49,7 +49,7 @@ const (
 
 var (
 	// strictMinuteKRSymbol 은 분봉 리더와 두 엄격 호가 리더가 함께 쓰는 한국 종목 문법 하나임(a187).
-	// ASCII 대문자·숫자 6자리, 양끝 고정, 정규화 없음. 주문 정책(internal/orderintent)은 숫자 전용 그대로이고 이 값을 읽지 않음.
+	// ASCII 대문자·숫자 6자리, 양끝 고정, 정규화 없음. 주문 쪽(internal/orderintent)은 이 값을 읽지 않음 — 그쪽에서 숫자 전용인 것은 시장 추론뿐임.
 	strictMinuteKRSymbol  = regexp.MustCompile(`^[A-Z0-9]{6}$`)
 	strictMinuteUSSymbol  = regexp.MustCompile(`^[A-Z][A-Z0-9.]{0,9}$`)
 	strictMinuteTimestamp = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?[+-]\d{2}:\d{2}$`)
