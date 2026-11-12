@@ -3,9 +3,11 @@
 
 HEAD 를 git archive 로 pid 붙은 임시 디렉터리에 풀고 그 사본에서만 변이함(작업 트리는 건드리지 않음).
 무변이 대조군이 GREEN 이 아니면 멈춤. 변이마다 대상 문자열이 정확히 1회인지 단언 → 적용 → 시험 → 원복 후 SHA-256 단언.
-환경: GOFLAGS=-trimpath, 전용 GOCACHE. -trimpath 에서는 runtime.Caller 가 모듈 경로를 돌려줘 소스 파일을 못 찾는
-정적 소스 가드 3개를 -skip 으로 뺌(무변이 대조군 1차에서 실측: 셋 다 경로 문제로 실패, 종목 문법과 무관).
-그 셋은 -trimpath 없는 3.2 패키지 시험에서 돎.
+환경: GOFLAGS=-trimpath, 전용 GOCACHE. 무변이 대조군 1차(history-1-control-trimpath.txt)에서 실패한 정적 가드 3개를
+-skip 으로 뺌. 둘(TestStrictMinuteCandlesFilesCarryNoSeamIdentifier·TestStrictMinutePageLiteralLivesOnlyInItsOwnFile)은
+-trimpath 에서 runtime.Caller 가 모듈 경로를 돌려줘 소스 파일을 못 찾는 것이고, 하나
+(TestA112MBUSStaticNoProductCallerOrForbiddenPath)는 base 6dbb752f6 에서도 실패하는 기존 결함임(analysis/verify/base-failures.txt).
+셋 다 종목 문법과 무관함. 앞의 둘은 -trimpath 없는 3.2 패키지 시험에서 통과함.
 사용: python3 -I mutation.py [ID…]
 """
 from __future__ import annotations

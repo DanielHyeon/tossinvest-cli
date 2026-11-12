@@ -1,0 +1,22 @@
+# base 6dbb752f6 사본 /tmp/a187-base-3265112-0SBy 에서 같은 시험 실행
+--- FAIL: TestA112MBUSStaticNoProductCallerOrForbiddenPath (0.70s)
+    a112_mbus_static_test.go:178: forbidden resolved A112 M-B0 references: []string{"internal/accountbudgetruntime/v2_token_test.go: selector official.A112MBUSCandle"}
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.705s
+FAIL
+--- FAIL: TestNoMutatingOrAccountSurfaceIsNamed (0.01s)
+    static_test.go:111: source uses official.Option, outside the read-only allowlist
+--- FAIL: TestImportsStayInsideTheAllowlist (0.01s)
+    static_test.go:177: import "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget" is outside the allowlist (stdlib + official/domain/app-paths/config/client/session only)
+    static_test.go:177: import "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime" is outside the allowlist (stdlib + official/domain/app-paths/config/client/session only)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a128-jev-shadow-probe	0.012s
+FAIL
+--- FAIL: TestNoMutatingAccountOrWriteSurfaceIsNamed (0.01s)
+    static_test.go:104: source uses official.Option, outside the allowlist
+--- FAIL: TestImportsStayInsideTheAllowlist (0.01s)
+    static_test.go:132: import "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget" is outside the allowlist
+    static_test.go:132: import "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime" is outside the allowlist
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow	0.010s
+FAIL
