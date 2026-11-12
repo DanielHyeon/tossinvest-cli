@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a187",
+  "title": "엄격 호가·현재가 조회가 영문자가 섞인 한국 종목 코드를 받는다",
+  "feature": "FEAT-TOS-014",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a187-strict-quote-readers-accept-kr-alphanumeric-symbols",
+    "path": "openspec/changes/a187-strict-quote-readers-accept-kr-alphanumeric-symbols"
+  },
+  "found_by": {
+    "date": "2026-11-12",
+    "how": "On 2026-11-12 the a184 signal tool dropped KR symbol 0158S0 from its live arm as ask_unavailable although it passed the drop filter: the strict orderbook read refuses alphanumeric KR symbols before any request, a numeric-only rule a143 kept for the two strict quote readers while the published contract documents alphanumeric six-character codes. The user directed a separate change to widen the rule first.",
+    "record": "openspec/changes/a187-strict-quote-readers-accept-kr-alphanumeric-symbols/proposal.md"
+  },
+  "acceptance": [
+    "Both strict quote readers accept KR symbols of exactly six ASCII uppercase alphanumeric characters through the same single predicate the minute-candle reader uses.",
+    "Lowercase, whitespace, newline, other lengths, punctuation and non-ASCII KR forms are still refused with zero requests and are not normalized; US lexical policy is unchanged.",
+    "Order intent normalization, its numeric-only KR market inference and the a087 order probe policy are unchanged, and no order path is added.",
+    "A human-approved read-only measurement records whether the official orderbook and price reads accept an alphanumeric KR symbol.",
+    "The main landing commit and time are recorded so probe judgments before and after the change can be separated."
+  ]
+}
