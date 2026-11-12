@@ -25,8 +25,8 @@ The minute-candle reader and both strict quote readers SHALL accept KR symbols o
 - **THEN** request query, returned symbol and currency are the same as before this change
 
 #### Scenario: Order policy is not widened
-- **WHEN** the order intent market inference and the a087 request-schema test are evaluated with KR 0101N0
-- **THEN** market inference still returns us for 0101N0 and kr only for six digits, and the a087 request body and execution guards remain unchanged
+- **WHEN** order intent market inference is evaluated with KR 0101N0 and the a087 probe tests run with their existing numeric inputs
+- **THEN** market inference still returns us for 0101N0 and kr only for six digits, and the a087 symbol policy, request body and execution guards are untouched by this change
 
 #### Scenario: Updated published symbol wording
 - **WHEN** the a087 request-schema test reads the refreshed snapshot
