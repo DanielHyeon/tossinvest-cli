@@ -1,0 +1,1 @@
+Change 'a187-strict-quote-readers-accept-kr-alphanumeric-symbols' is valid

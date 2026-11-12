@@ -20,7 +20,7 @@
 - 2.1 RED(48f84887e): 새 시험 `a187_kr_alphanumeric_test.go`(수락 4종목·거절 9모양·숫자 KR·US 불변), `internal/orderintent/a187_order_policy_test.go`(주문 쪽 숫자 전용 불변). 기존 거절 표의 `00593A`·`0101N0` 두 줄은 지우고 수락 시험으로 뜻을 뒤집어 옮김. 실패 원문 `analysis/tdd/red-2.1.txt`: `StrictOrderbookTop(KR, 0101N0): official strict quote: SYMBOL_INVALID: symbol "0101N0" is not canonical for market KR`(00593A·0158S0·18064K 같음).
 - 2.2 GREEN(305733da1): design D1·D2 그대로. 공용 `strictMinuteKRSymbol` = `^[A-Z0-9]{6}$`, `strictMinuteCandleKRSymbol` 삭제, 래퍼는 한 줄 위임, 주석 정정. 다른 함수 본문·주문 정책·프로브 무편집. 원문 `analysis/tdd/green-2.2.txt`(PASS 106, FAIL 0).
 - 2.3: 편집 뒤 AST·FLM/BTM 재생성, `check_analysis.py` 통과(원문 `analysis/tdd/check-analysis-2.3.txt`: required 2, 「evidence complete or diff-proven exempt」).
-- 3.1 변이(`analysis/mutation/mutation.py`, 원문 `mutation-3.1.txt`): 사본 `/tmp/a187-mut-<pid>-…`, `GOFLAGS=-trimpath`, 전용 GOCACHE. 무변이 대조군 GREEN. 6개 모두 CAUGHT — 숫자 전용 되돌림(`TestA187StrictQuoteReadersAcceptKRAlphanumeric`·분봉 수락 시험), 길이 고정 제거(`TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/kr_symbol_too_short`·`TestA187…StillRefuseOtherKRForms/0101N`·`0101N00`·분봉 거절 시험), 앞 고정 제거(`…StillRefuseOtherKRForms/0101N00`·`_0101N0`), 뒤 고정 제거, 소문자 허용(`…StillRefuseOtherKRForms/0101n0`·분봉 `kr_symbol_lowercase`), 래퍼가 검사를 건너뜀(`TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest` 11 갈래).
+- 3.1 변이(`analysis/mutation/mutation.py`, 원문 `mutation-3.1.txt`): 사본 `/tmp/a187-mut-<pid>-…`, `GOFLAGS=-trimpath`, 전용 GOCACHE. 무변이 대조군 GREEN. 6개 모두 CAUGHT — 숫자 전용 되돌림(`TestA187StrictQuoteReadersAcceptKRAlphanumeric`·분봉 수락 시험), 길이 고정 제거(`TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/kr_symbol_too_short`·`TestA187…StillRefuseOtherKRForms/0101N`·`0101N00`·분봉 거절 시험), 앞 고정 제거(`…StillRefuseOtherKRForms/0101N00`·`_0101N0`), 뒤 고정 제거, 소문자 허용(`…StillRefuseOtherKRForms/0101n0`·분봉 `kr_symbol_lowercase`), 래퍼가 검사를 건너뜀(`TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest` 실패 하위 시험 10개 + 부모 1개 — 리뷰 r1 지적으로 「11 갈래」를 정정함).
   - 대조군 1차는 FAIL 이었음(`history-1-control-trimpath.txt`): 정적 가드 3개. 둘은 `-trimpath` 에서 `runtime.Caller` 경로를 못 여는 것, 하나는 아래 base 기존 결함. 셋을 `-skip` 으로 빼고 다시 돌림.
 - 3.2(원문 `analysis/verify/`): `go test -count=1 -v` 6개 패키지 범위 — 최상위 PASS 507, 서브 포함 PASS 919, **FAIL 5**, SKIP 0. `go vet` rc 0, gofmt 0줄, `openspec validate --strict` valid.
   - FAIL 5개는 모두 **base 6dbb752f6 에서도 같은 문구로 실패**함(`analysis/verify/base-failures.txt`, base 사본에서 같은 시험을 돌림). 이 change 와 무관하며 고치지 않음:
@@ -29,6 +29,43 @@
     3. `tools/a128-jev-shadow-probe` `TestNoMutatingOrAccountSurfaceIsNamed`: `source uses official.Option, outside the read-only allowlist`
     4. `tools/a140-breakout-signal-shadow` `TestImportsStayInsideTheAllowlist`: 같은 두 import
     5. `tools/a140-breakout-signal-shadow` `TestNoMutatingAccountOrWriteSurfaceIsNamed`: `source uses official.Option, outside the allowlist`
-  - 숫자 전용을 고정한 시험은 위 두 사례 말고 6개 패키지에서 더 나오지 않음(실패 5개 모두 무관). 주문(`internal/orderintent`)·a087 쪽 시험은 통과.
+  - 숫자 전용을 고정한 시험은 위 두 사례 말고 6개 패키지에서 더 나오지 않음(실패 5개 모두 무관). 주문(`internal/orderintent`)·a087 쪽 시험은 통과. (리뷰 r1 발견 4 로 정정: 여기서 돈 a087 관련 시험은 `internal/official` 의 가격제한폭 필드 시험 `TestA087ProtectivePriceLimitsPreservesNullableRawFields`·`TestA087ProtectivePriceLimitsKeepsJSONNullDistinctFromZero` 두 개뿐이고 주문 스키마 시험이 아님. `tools/a087-market-sell-probe` 패키지 시험은 3.2 범위에 없어 그때는 미실행이었음 — 아래 r1 처리 절에서 따로 돌림.)
 - 하지 않은 것: 3.3(다른 계열 리뷰·gstack), 3.4, 4.x(실측·반영). 전체 gate·전체 시험. 공식 API 호출.
 - 남은 위험: design Risks 그대로(공식이 영숫자 코드를 호가·현재가에서 받는지 미실측, 프로브 입력의 조용한 변화, 주문 쪽 시장 추론이 영숫자 KR 을 `us` 로 봄). 그리고 main 의 정적 가드 5개가 base 에서 이미 깨져 있음 — 별도 처리가 필요함.
+
+## 구현 리뷰 r1 (gpt-6-astra) 처리 — 2026-11-12
+
+- 원문: `analysis/impl-review-r1-gpt-6-astra.md`(그대로 복사). 판정 FAIL: blocker 0, major 1, minor 3, note 1. 운영 코드 수정 없음.
+- 문서 정정(발견 1·2·5)은 Manager 가 했고 커밋 760fc7c42 에 그대로 넣음(proposal Non-goals 주문 문구·Impact 호출량·프로브 두 입력군, design Context 의 `NormalizePlace` 분기·D4·Risks, spec delta 의 주문 문장, `analysis/pre-edit-ast/normalizeplace.ast.json`).
+
+| # | 분류 | 처리 | 근거 위치 |
+|---|---|---|---|
+| 1 | major | 문서 정정(Manager): 유지 대상은 「시장 추론·주문 정책 무변경」이고 주문 검증 전체가 숫자 전용인 것은 아님. 시험 정정(이번): `TestA187OrderPolicyStaysNumericOnly` → `TestA187MarketInferenceStaysNumericOnly`(이름·주석을 시장 추론 고정으로), `TestA187NormalizePlaceExplicitKRAlphanumericUnchanged` 추가 — `NormalizePlace{Market:"kr", Symbol:"0101N0", Side:"buy", OrderType:"limit", Quantity:1, Price:1000}` 가 오류 없이 Market "kr"·Symbol "0101N0" 을 돌려주는 현 동작(a187 이전부터)을 고정. 판단 없이 현 동작 고정만 함. 통과 | spec delta·proposal·design(760fc7c42), `internal/orderintent/a187_order_policy_test.go`, `analysis/verify-r1/go-test-official-orderintent.txt` |
+| 2 | minor | 문서 정정(Manager): 리더 호출 계수와 실제 HTTP 시도를 구분, 재시도·인증 영향 | proposal Impact(760fc7c42) |
+| 3 | minor | 시험 보강: 수락에 `A12345`·`ABCDEF`, 거절에 `"0101N0\n"`·`"\n0101N0"`, KR 현재가 메아리 불일치(`StrictLastPrice(KR, "0158S0")` 에 행 symbol `0101N0` → `SYMBOL_ECHO_MISMATCH`, 요청 1회). 리뷰가 생존 예상으로 짚은 변이 3종을 보강 전·후로 돌림(아래) | `internal/official/a187_kr_alphanumeric_test.go`, `analysis/mutation/mutation-r1-before.txt`·`mutation-r1-after.txt` |
+| 4 | minor | 기록 정정: 3.2 에서 돈 a087 관련 시험은 가격제한폭 필드 시험 두 개뿐(위 구현 기록 정정). `tools/a087-market-sell-probe` 는 3.2 범위 밖이라 미실행이었음 → 이번에 `go test -count=1 -v ./tools/a087-market-sell-probe/...` 를 돌림: ok, 최상위 PASS 39·서브 포함 62·FAIL 0·SKIP 0. 그 패키지의 스키마 시험은 숫자 코드(`goodSpec()` 의 `005930`)를 씀 — 영숫자 KR 로 a087 스키마를 돌린 시험은 없음 | `analysis/verify-r1/go-test-a087.txt` |
+| 5 | note | 문서 정정(Manager): 프로브 반영 경계를 `current`·`initial/compare` 두 입력군 모두에 적용, digest·토큰 수·선별·수집 시간 변화 가능성 기록 | proposal Impact·design Risks(760fc7c42) |
+
+### 리뷰 r1 변이 3종 (보강 전·후)
+
+- 하네스는 `analysis/mutation/mutation.py` 에 3종을 더함(변이 대상이 둘째 파일이어도 사본에서만 바꿈 — `strict_quote_reads.go` 원본 무편집). 대조군은 둘 다 GREEN.
+- 보강 전(기준 HEAD 760fc7c42, `mutation-r1-before.txt`): 리뷰 예상대로 **3종 모두 SURVIVED**.
+  - `r1-leading-digits` `^[0-9]{4}[A-Z0-9]{2}$`
+  - `r1-multiline` `(?m)^[A-Z0-9]{6}$`
+  - `r1-echo-skip-krw` `if echoed != symbol && currency != "KRW"`
+- 보강 뒤(기준 HEAD 3355528bb, `mutation-r1-after.txt`, 9종 전체 재실행): **9종 모두 CAUGHT**.
+  - `r1-leading-digits` → `TestA187StrictQuoteReadersAcceptKRAlphanumeric/A12345`·`/ABCDEF`(`SYMBOL_INVALID: symbol "A12345" is not canonical for market KR`)
+  - `r1-multiline` → `TestA187StrictQuoteReadersStillRefuseOtherKRForms/_0101N0#01`·`/0101N0_#01`(개행 두 사례 — go 가 하위 시험 이름의 개행을 `_` 로 바꾸고 공백 사례와 겹쳐 `#01` 을 붙임; `StrictOrderbookTop accepted`)
+  - `r1-echo-skip-krw` → `TestA187StrictLastPriceRefusesKREchoMismatch`(`StrictLastPrice accepted a row answering for another KR symbol`)
+  - 앞의 6종도 다시 CAUGHT.
+
+### 검증 (원문 `analysis/verify-r1/`)
+
+- `go test -count=1 -v ./internal/official/ ./internal/orderintent/`: 최상위 PASS 289, 서브 포함 584, FAIL 1 — base 기존 결함 `TestA112MBUSStaticNoProductCallerOrForbiddenPath` 하나뿐(`analysis/verify/base-failures.txt`). 그 밖 FAIL 0.
+- `go vet`(official·orderintent·a087 probe) rc 0, gofmt 0줄, `openspec validate --strict` valid, `check_analysis.py` rc 0(「evidence complete or diff-proven exempt」 — 이름을 바꾼 시험 함수는 이 change 에서 새로 만든 것이라 base 함수가 아님).
+
+### 미실행
+
+- gstack 리뷰, Manager 재확인(tasks 3.3 은 체크하지 않음), 3.4, 4.x, 전체 gate, 공식 API.
+- `tools/a087-market-sell-probe` 의 변이(`mutants.sh`)는 돌리지 않음.
+
