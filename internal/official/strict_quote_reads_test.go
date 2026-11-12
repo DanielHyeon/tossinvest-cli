@@ -78,9 +78,9 @@ func TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest(t *testing.T) {
 		wantReason     string
 	}{
 		{"lower case market", "us", "AAPL", ""},
-		{"unknown market", "JP", "AAPL", ""},
+		{"unknown market", "JP", "AAPL", StrictQuoteReasonMarket},
 		{"empty market", "", "AAPL", ""},
-		{"kr symbol too short", "KR", "00593", ""},
+		{"kr symbol too short", "KR", "00593", StrictQuoteReasonSymbol},
 		{"us symbol lower case", "US", "aapl", ""},
 		{"us symbol too long", "US", "ABCDEFGHIJK", ""},
 		{"empty symbol", "US", "", ""},

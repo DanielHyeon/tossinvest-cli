@@ -38,6 +38,15 @@ MUTANTS = [
     ("r1-leading-digits", TARGET, "`^[A-Z0-9]{6}$`", "`^[0-9]{4}[A-Z0-9]{2}$`", "r1 앞 네 자리를 숫자로 축소"),
     ("r1-multiline", TARGET, "`^[A-Z0-9]{6}$`", "`(?m)^[A-Z0-9]{6}$`", "r1 여러 줄 모드(개행 허용)"),
     ("r1-echo-skip-krw", QUOTES, "\tif echoed != symbol {\n", "\tif echoed != symbol && currency != \"KRW\" {\n", "r1 KR 현재가 메아리 검사 건너뜀"),
+    # gstack 리뷰 발견 2·7
+    ("g-wrapper-own-regex", TARGET, WRAPPER,
+     WRAPPER.replace("\treturn strictMinuteCheckSymbol(market, symbol)",
+                     "\tif market == \"KR\" && regexp.MustCompile(`^[A-Z0-9]{6}$|^[a-z0-9]{6}$`).MatchString(symbol) {\n\t\treturn nil\n\t}\n\treturn strictMinuteCheckSymbol(market, symbol)"),
+     "gstack 래퍼가 자기 정규식을 다시 들여 공용 검사와 갈라짐"),
+    ("g-order-inference-widened", "internal/orderintent/intent.go",
+     "\tif intent.Market == \"us\" && looksLikeKRSymbol(intent.Symbol) {\n",
+     "\tif intent.Market == \"us\" && regexp.MustCompile(`^A?[A-Z0-9]{6}$`).MatchString(intent.Symbol) {\n",
+     "gstack 주문 시장 추론 호출 자리를 영숫자 6자리로 넓힘"),
 ]
 
 
@@ -45,9 +54,12 @@ def sha(p: Path) -> str:
     return hashlib.sha256(p.read_bytes()).hexdigest()
 
 
-def run_tests(base: Path) -> tuple[int, str]:
+def run_tests(base: Path, verbose: bool = False) -> tuple[int, str]:
+    # 변이 판에서는 -v 를 끔: go test 는 그때 실패한 시험의 출력만 찍으므로, 통과한 시험의 t.Log 가
+    # 「실패 원문」에 섞이지 않음(gstack 발견 16). 대조군만 -v 로 PASS 줄을 셈.
     env = dict(os.environ, GOFLAGS="-trimpath", GOCACHE="/tmp/a187-mut-gocache")
-    proc = subprocess.run(["go", "test", "-count=1", "-v", "-skip", SKIP, *PACKAGES], cwd=base, env=env,
+    flags = ["-v"] if verbose else []
+    proc = subprocess.run(["go", "test", "-count=1", *flags, "-skip", SKIP, *PACKAGES], cwd=base, env=env,
                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     return proc.returncode, proc.stdout
 
@@ -80,7 +92,7 @@ def main() -> int:
         print(f"기준 HEAD {head}, 사본 {base}")
         for f in files:
             print(f"  {f} sha256={starts[f]}")
-        status, out = run_tests(base)
+        status, out = run_tests(base, verbose=True)
         if status != 0:
             print(out)
             print("control: FAIL — 변이 판정 중단")

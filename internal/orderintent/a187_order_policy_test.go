@@ -28,3 +28,24 @@ func TestA187NormalizePlaceExplicitKRAlphanumericUnchanged(t *testing.T) {
 		t.Fatalf("market=%q symbol=%q", got.Market, got.Symbol)
 	}
 }
+
+// 현 동작 고정(gstack 발견 7): 시장을 "us" 로 주거나 생략하면 영문 섞인 6자리는 KR 로 추론되지 않고 "us" 로 남고,
+// 숫자 6자리는 "kr" 로 바뀜. 시장 추론 호출 자리(intent.go 의 looksLikeKRSymbol)를 넓히는 변경을 잡기 위함.
+func TestA187NormalizePlaceMarketInferenceUnchanged(t *testing.T) {
+	for _, c := range []struct {
+		market, symbol, want string
+	}{
+		{"us", "0101N0", "us"},
+		{"", "0101N0", "us"},
+		{"us", "005930", "kr"},
+		{"", "005930", "kr"},
+	} {
+		got, err := NormalizePlace(PlaceInput{Market: c.market, Symbol: c.symbol, Side: "buy", OrderType: "limit", Quantity: 1, Price: 1000})
+		if err != nil {
+			t.Fatalf("NormalizePlace(%q, %q): %v", c.market, c.symbol, err)
+		}
+		if got.Market != c.want || got.Symbol != c.symbol {
+			t.Fatalf("NormalizePlace(%q, %q) market=%q symbol=%q, want market %q", c.market, c.symbol, got.Market, got.Symbol, c.want)
+		}
+	}
+}

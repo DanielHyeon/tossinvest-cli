@@ -99,3 +99,43 @@ func TestA187StrictLastPriceRefusesKREchoMismatch(t *testing.T) {
 		t.Fatalf("requests = %d", harness.hitCount())
 	}
 }
+
+// 분봉 리더도 같은 공용 문법으로 영숫자 KR 을 받고 종목마다 요청은 정확히 1회임(gstack 발견 2: 기존 분봉 수락 시험은
+// 0101N0 하나에 요청 수 단언이 없었음). 래퍼가 공용 검사와 갈라지면 여기서 드러남.
+func TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce(t *testing.T) {
+	t.Parallel()
+	for _, symbol := range []string{"0158S0", "A12345", "18064K"} {
+		t.Run(symbol, func(t *testing.T) {
+			t.Parallel()
+			harness := newStrictMinuteBodyHarness(t, strictMinuteBody(`null`,
+				strictMinuteCandleJSON("2026-08-14T09:31:00.000+09:00", "71000", "71100", "70900", "71050", "12", "KRW")))
+			page, err := harness.client.StrictMinuteCandles(context.Background(), "KR", symbol, 200, "")
+			if err != nil {
+				t.Fatalf("StrictMinuteCandles(KR, %s): %v", symbol, err)
+			}
+			want := "adjusted=false&count=200&interval=1m&symbol=" + symbol
+			if page.Symbol != symbol || harness.hitCount() != 1 || harness.lastQuery() != want {
+				t.Fatalf("symbol=%q hits=%d query=%q", page.Symbol, harness.hitCount(), harness.lastQuery())
+			}
+		})
+	}
+}
+
+// 분봉 리더도 영숫자 문법 밖의 KR 모양(소문자·개행)은 요청 0회로 거절함 — 래퍼가 자기 정규식을 다시 들이면 드러남.
+func TestA187StrictMinuteCandlesStillRefuseOtherKRForms(t *testing.T) {
+	t.Parallel()
+	for _, symbol := range []string{"0158s0", "0101N0\n", "\n0101N0", "a12345"} {
+		t.Run(symbol, func(t *testing.T) {
+			t.Parallel()
+			harness := newStrictMinuteBodyHarness(t, strictMinuteBody(`null`))
+			if _, err := harness.client.StrictMinuteCandles(context.Background(), "KR", symbol, 200, ""); err == nil {
+				t.Fatal("StrictMinuteCandles accepted")
+			} else if refusal := strictMinuteRefusal(t, err); refusal.Reason != StrictReasonSymbol {
+				t.Fatalf("reason = %q", refusal.Reason)
+			}
+			if harness.hitCount() != 0 {
+				t.Fatalf("requests = %d", harness.hitCount())
+			}
+		})
+	}
+}
