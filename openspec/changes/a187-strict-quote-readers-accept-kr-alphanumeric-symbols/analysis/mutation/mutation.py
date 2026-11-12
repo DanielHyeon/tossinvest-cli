@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+"""a187 tasks 3.1 사본 변이 하네스.
+
+HEAD 를 git archive 로 pid 붙은 임시 디렉터리에 풀고 그 사본에서만 변이함(작업 트리는 건드리지 않음).
+무변이 대조군이 GREEN 이 아니면 멈춤. 변이마다 대상 문자열이 정확히 1회인지 단언 → 적용 → 시험 → 원복 후 SHA-256 단언.
+환경: GOFLAGS=-trimpath, 전용 GOCACHE. -trimpath 에서는 runtime.Caller 가 모듈 경로를 돌려줘 파일을 못 여는
+TestStrictMinuteCandlesFilesCarryNoSeamIdentifier 하나를 -skip 으로 뺌(변이 대상과 무관한 바이트열 검사).
+사용: python3 -I mutation.py [ID…]
+"""
+from __future__ import annotations
+
+import hashlib
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+TARGET = "internal/official/strict_minute_candles.go"
+PACKAGES = ["./internal/official/", "./internal/orderintent/"]
+SKIP = "TestStrictMinuteCandlesFilesCarryNoSeamIdentifier"
+WRAPPER = "func strictMinuteCheckCandleSymbol(market, symbol string) error {\n\treturn strictMinuteCheckSymbol(market, symbol)\n}"
+MUTANTS = [
+    ("numeric-only", "`^[A-Z0-9]{6}$`", "`^[0-9]{6}$`", "숫자 전용으로 되돌림"),
+    ("no-length", "`^[A-Z0-9]{6}$`", "`^[A-Z0-9]+$`", "길이 고정 제거"),
+    ("no-start-anchor", "`^[A-Z0-9]{6}$`", "`[A-Z0-9]{6}$`", "앞 고정 제거"),
+    ("no-end-anchor", "`^[A-Z0-9]{6}$`", "`^[A-Z0-9]{6}`", "뒤 고정 제거"),
+    ("lowercase", "`^[A-Z0-9]{6}$`", "`^[A-Za-z0-9]{6}$`", "소문자 허용"),
+    ("wrapper-skips-check", WRAPPER, WRAPPER.replace("return strictMinuteCheckSymbol(market, symbol)", "return nil"), "래퍼가 검사를 건너뜀"),
+]
+
+
+def sha(p: Path) -> str:
+    return hashlib.sha256(p.read_bytes()).hexdigest()
+
+
+def run_tests(base: Path) -> tuple[int, str]:
+    env = dict(os.environ, GOFLAGS="-trimpath", GOCACHE="/tmp/a187-mut-gocache")
+    proc = subprocess.run(["go", "test", "-count=1", "-v", "-skip", SKIP, *PACKAGES], cwd=base, env=env,
+                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    return proc.returncode, proc.stdout
+
+
+def summary(out: str) -> str:
+    fails = [l.strip() for l in out.splitlines() if l.strip().startswith("--- FAIL")]
+    msgs = []
+    for l in out.splitlines():
+        if re.match(r"^\s+\S+_test\.go:\d+: ", l) and len(msgs) < 6:
+            msgs.append(l.strip())
+    build = [l for l in out.splitlines() if l.startswith("#") or ": undefined" in l or "declared and not used" in l][:4]
+    return "\n".join(["  잡은 시험:"] + ["    " + f for f in fails] + ["  실패 원문(앞 6줄):"] + ["    " + m for m in msgs] + (["  빌드:"] + ["    " + b for b in build] if build else []))
+
+
+def main() -> int:
+    root = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip())
+    head = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
+    wanted = set(sys.argv[1:])
+    base = Path(tempfile.mkdtemp(prefix=f"a187-mut-{os.getpid()}-"))
+    try:
+        archive = subprocess.run(["git", "-C", str(root), "archive", "HEAD", "go.mod", "go.sum", "internal", "cmd", "tools", "docs/migration"],
+                                 check=True, stdout=subprocess.PIPE).stdout
+        subprocess.run(["tar", "-x", "-C", str(base)], input=archive, check=True)
+        assert (base / "go.mod").is_file() and str(base).startswith(tempfile.gettempdir())
+        target = base / TARGET
+        original = target.read_text()
+        start = sha(target)
+        assert start == sha(root / TARGET), "작업 트리 대상 파일이 HEAD 와 다름 — 커밋 뒤 돌릴 것"
+        print(f"기준 HEAD {head}, 사본 {base}, {TARGET} sha256={start}")
+        status, out = run_tests(base)
+        if status != 0:
+            print(out)
+            print("control: FAIL — 변이 판정 중단")
+            return 1
+        print(f"control: GREEN ({out.count('--- PASS')} PASS 줄, -skip {SKIP})")
+        issues = 0
+        for mid, old, new, label in MUTANTS:
+            if wanted and mid not in wanted:
+                continue
+            n = original.count(old)
+            if n != 1:
+                print(f"{mid}: TARGET-COUNT {n} — {label}")
+                issues += 1
+                continue
+            target.write_text(original.replace(old, new, 1))
+            status, out = run_tests(base)
+            target.write_text(original)
+            assert sha(target) == start
+            if status == 0:
+                print(f"{mid}: SURVIVED — {label}")
+                issues += 1
+            elif "[build failed]" in out or "setup failed" in out:
+                print(f"{mid}: INVALID — {label}")
+                print(summary(out))
+                issues += 1
+            else:
+                print(f"{mid}: CAUGHT — {label}")
+                print(summary(out))
+        return 1 if issues else 0
+    finally:
+        shutil.rmtree(base, ignore_errors=True)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
