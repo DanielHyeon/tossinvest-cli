@@ -1,0 +1,426 @@
+=== RUN   TestA187StrictQuoteReadersAcceptKRAlphanumeric
+=== PAUSE TestA187StrictQuoteReadersAcceptKRAlphanumeric
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms
+=== RUN   TestA187NumericKRAndUSUnchanged
+=== PAUSE TestA187NumericKRAndUSUnchanged
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest
+=== RUN   TestStrictMinuteCandlesSendsTheCanonicalQueryAndReturnsThePage
+=== PAUSE TestStrictMinuteCandlesSendsTheCanonicalQueryAndReturnsThePage
+=== RUN   TestStrictMinuteCandlesAcceptsTheKoreanMarket
+=== PAUSE TestStrictMinuteCandlesAcceptsTheKoreanMarket
+=== RUN   TestStrictMinuteCandlesAcceptsDomesticAlphanumericAndPreservesRequestSymbol
+=== PAUSE TestStrictMinuteCandlesAcceptsDomesticAlphanumericAndPreservesRequestSymbol
+=== RUN   TestStrictMinuteCandlesAcceptsASubMinuteCursor
+=== PAUSE TestStrictMinuteCandlesAcceptsASubMinuteCursor
+=== RUN   TestStrictMinuteCandlesAcceptsAnEmptyPageThatStillCarriesACursor
+=== PAUSE TestStrictMinuteCandlesAcceptsAnEmptyPageThatStillCarriesACursor
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies
+=== RUN   TestStrictMinuteCandlesAcceptsNestingUpToTheBound
+=== PAUSE TestStrictMinuteCandlesAcceptsNestingUpToTheBound
+=== RUN   TestStrictMinuteCandlesRefusesInvalidUTF8
+=== PAUSE TestStrictMinuteCandlesRefusesInvalidUTF8
+=== RUN   TestStrictMinuteCandlesRefusesMoreCandlesThanRequested
+=== PAUSE TestStrictMinuteCandlesRefusesMoreCandlesThanRequested
+=== RUN   TestStrictMinuteCandlesRefusesInstantsNewerThanBefore
+=== PAUSE TestStrictMinuteCandlesRefusesInstantsNewerThanBefore
+=== RUN   TestStrictMinuteCandlesRefusesABodyAboveTwoMebibytes
+=== PAUSE TestStrictMinuteCandlesRefusesABodyAboveTwoMebibytes
+=== RUN   TestStrictMinuteCandlesIgnoresUnknownEnvelopeKeys
+=== PAUSE TestStrictMinuteCandlesIgnoresUnknownEnvelopeKeys
+=== RUN   TestStrictMinuteCandlesUsesTheLastSuccessfulAttemptAndChainsTheOuterObserver
+=== PAUSE TestStrictMinuteCandlesUsesTheLastSuccessfulAttemptAndChainsTheOuterObserver
+=== RUN   TestStrictMinuteCandlesPropagatesTransportClassification
+=== PAUSE TestStrictMinuteCandlesPropagatesTransportClassification
+=== RUN   TestStrictMinuteCandlesReportsTheRateBudgetOfTheSameResponse
+=== PAUSE TestStrictMinuteCandlesReportsTheRateBudgetOfTheSameResponse
+=== RUN   TestStrictMinuteCandlesRefusesANilClient
+=== PAUSE TestStrictMinuteCandlesRefusesANilClient
+=== RUN   TestStrictMinuteCandlesFilesCarryNoSeamIdentifier
+=== PAUSE TestStrictMinuteCandlesFilesCarryNoSeamIdentifier
+=== RUN   TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest
+=== PAUSE TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest
+=== CONT  TestA187StrictQuoteReadersAcceptKRAlphanumeric
+=== RUN   TestA187StrictQuoteReadersAcceptKRAlphanumeric/0101N0
+=== CONT  TestStrictMinuteCandlesRefusesInvalidUTF8
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101n0
+=== CONT  TestStrictMinuteCandlesPropagatesTransportClassification
+=== CONT  TestStrictMinuteCandlesRefusesInstantsNewerThanBefore
+=== CONT  TestStrictMinuteCandlesRefusesABodyAboveTwoMebibytes
+=== CONT  TestStrictMinuteCandlesUsesTheLastSuccessfulAttemptAndChainsTheOuterObserver
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101n0
+=== CONT  TestStrictMinuteCandlesAcceptsNestingUpToTheBound
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies
+=== CONT  TestStrictMinuteCandlesAcceptsAnEmptyPageThatStillCarriesACursor
+=== CONT  TestStrictMinuteCandlesAcceptsASubMinuteCursor
+=== CONT  TestStrictMinuteCandlesRefusesANilClient
+=== CONT  TestStrictMinuteCandlesAcceptsDomesticAlphanumericAndPreservesRequestSymbol
+--- PASS: TestStrictMinuteCandlesRefusesANilClient (0.00s)
+=== CONT  TestStrictMinuteCandlesReportsTheRateBudgetOfTheSameResponse
+=== CONT  TestStrictMinuteCandlesAcceptsTheKoreanMarket
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/_0101N0
+=== CONT  TestStrictMinuteCandlesSendsTheCanonicalQueryAndReturnsThePage
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest
+=== CONT  TestA187NumericKRAndUSUnchanged
+=== PAUSE TestA187StrictQuoteReadersAcceptKRAlphanumeric/0101N0
+=== CONT  TestStrictMinuteCandlesFilesCarryNoSeamIdentifier
+=== CONT  TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest
+=== CONT  TestStrictMinuteCandlesIgnoresUnknownEnvelopeKeys
+=== RUN   TestStrictMinuteCandlesPropagatesTransportClassification/rate_limited
+--- PASS: TestStrictMinuteCandlesFilesCarryNoSeamIdentifier (0.00s)
+=== CONT  TestStrictMinuteCandlesRefusesMoreCandlesThanRequested
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/_0101N0
+=== PAUSE TestStrictMinuteCandlesPropagatesTransportClassification/rate_limited
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_the_envelope
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_the_envelope
+=== RUN   TestA187StrictQuoteReadersAcceptKRAlphanumeric/00593A
+=== PAUSE TestA187StrictQuoteReadersAcceptKRAlphanumeric/00593A
+=== RUN   TestA187StrictQuoteReadersAcceptKRAlphanumeric/0158S0
+=== PAUSE TestA187StrictQuoteReadersAcceptKRAlphanumeric/0158S0
+=== RUN   TestA187StrictQuoteReadersAcceptKRAlphanumeric/18064K
+=== PAUSE TestA187StrictQuoteReadersAcceptKRAlphanumeric/18064K
+=== CONT  TestA187StrictQuoteReadersAcceptKRAlphanumeric/0101N0
+=== RUN   TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/lower_case_market
+=== PAUSE TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/lower_case_market
+=== RUN   TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/unknown_market
+=== PAUSE TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/unknown_market
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/lower_case_market
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N0_
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/lower_case_market
+=== RUN   TestStrictMinuteCandlesPropagatesTransportClassification/server_error
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N0_
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_the_result
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/unknown_market
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N
+=== RUN   TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/empty_market
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_the_result
+--- PASS: TestStrictMinuteCandlesReportsTheRateBudgetOfTheSameResponse (0.00s)
+=== CONT  TestA187StrictQuoteReadersAcceptKRAlphanumeric/0158S0
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_a_candle
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_a_candle
+--- PASS: TestStrictMinuteCandlesAcceptsAnEmptyPageThatStillCarriesACursor (0.00s)
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/result_absent
+=== CONT  TestA187StrictQuoteReadersAcceptKRAlphanumeric/18064K
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/result_absent
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/result_is_not_an_object
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/result_is_not_an_object
+--- PASS: TestStrictMinuteCandlesSendsTheCanonicalQueryAndReturnsThePage (0.00s)
+=== CONT  TestA187StrictQuoteReadersAcceptKRAlphanumeric/00593A
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/unknown_result_key
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/unknown_result_key
+=== PAUSE TestStrictMinuteCandlesPropagatesTransportClassification/server_error
+=== CONT  TestStrictMinuteCandlesPropagatesTransportClassification/rate_limited
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/candles_absent
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/candles_absent
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/unknown_market
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/candles_is_not_an_array
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/candles_is_not_an_array
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/candles_is_null
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N
+--- PASS: TestStrictMinuteCandlesAcceptsTheKoreanMarket (0.00s)
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/candles_is_null
+--- PASS: TestStrictMinuteCandlesAcceptsNestingUpToTheBound (0.01s)
+=== CONT  TestStrictMinuteCandlesPropagatesTransportClassification/server_error
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_lowercase
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_lowercase
+--- PASS: TestStrictMinuteCandlesRefusesInvalidUTF8 (0.01s)
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N00
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N00
+--- PASS: TestStrictMinuteCandlesRefusesMoreCandlesThanRequested (0.00s)
+--- PASS: TestStrictMinuteCandlesAcceptsDomesticAlphanumericAndPreservesRequestSymbol (0.01s)
+--- PASS: TestStrictMinuteCandlesRefusesInstantsNewerThanBefore (0.01s)
+--- PASS: TestStrictMinuteCandlesAcceptsASubMinuteCursor (0.01s)
+--- PASS: TestStrictMinuteCandlesIgnoresUnknownEnvelopeKeys (0.00s)
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/unknown_candle_key
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/unknown_candle_key
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_punctuation
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101-0
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_punctuation
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101-0
+=== PAUSE TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/empty_market
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/missing_candle_key
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/missing_candle_key
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/candle_is_not_an_object
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/candle_is_not_an_object
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_whitespace
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_whitespace
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/가101N0
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/가101N0
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_non-ascii
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101.0
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_non-ascii
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101.0
+=== RUN   TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/kr_symbol_too_short
+=== PAUSE TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/kr_symbol_too_short
+=== RUN   TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/us_symbol_lower_case
+=== PAUSE TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/us_symbol_lower_case
+=== RUN   TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/us_symbol_too_long
+=== PAUSE TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/us_symbol_too_long
+=== RUN   TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/empty_symbol
+=== PAUSE TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/empty_symbol
+=== CONT  TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/lower_case_market
+=== CONT  TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/us_symbol_lower_case
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/bare_number_price
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/bare_number_price
+=== CONT  TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/empty_market
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/bare_number_volume
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/bare_number_volume
+=== CONT  TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/empty_symbol
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/null_price
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/null_price
+--- PASS: TestStrictMinuteCandlesPropagatesTransportClassification (0.00s)
+    --- PASS: TestStrictMinuteCandlesPropagatesTransportClassification/rate_limited (0.00s)
+    --- PASS: TestStrictMinuteCandlesPropagatesTransportClassification/server_error (0.00s)
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/empty_price_string
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/empty_price_string
+=== CONT  TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/kr_symbol_too_short
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_short
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_short
+=== CONT  TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/unknown_market
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_long
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_long
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_lower_case
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_lower_case
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_too_long
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_too_long
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_leading_digit
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_leading_digit
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/empty_symbol
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/empty_symbol
+=== CONT  TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/us_symbol_too_long
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_zero
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_zero
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_above_the_page_cap
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_above_the_page_cap
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/#00
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/#00
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101n0
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101-0
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/#00
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/over_long_decimal
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N00
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N0_
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101.0
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/가101N0
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/_0101N0
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_negative
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_negative
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/over_long_decimal
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_a_zulu_offset
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_a_zulu_offset
+--- PASS: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest (0.01s)
+    --- PASS: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/us_symbol_lower_case (0.00s)
+    --- PASS: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/lower_case_market (0.00s)
+    --- PASS: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/kr_symbol_too_short (0.00s)
+    --- PASS: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/empty_symbol (0.00s)
+    --- PASS: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/unknown_market (0.00s)
+    --- PASS: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/empty_market (0.00s)
+    --- PASS: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/us_symbol_too_long (0.00s)
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/foreign_currency
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/foreign_currency
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_without_an_offset
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_without_an_offset
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_without_an_offset
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_without_an_offset
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_four_fractional_digits
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_four_fractional_digits
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_with_a_zulu_offset
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_with_a_zulu_offset
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_that_does_not_exist
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_that_does_not_exist
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_a_named_zone
+--- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms (0.01s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101n0 (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101-0 (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/#00 (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N0_ (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101.0 (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/가101N0 (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N00 (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/_0101N0 (0.00s)
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_a_named_zone
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/ascending_instants
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/ascending_instants
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_that_does_not_exist
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_that_does_not_exist
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/lower_case_market
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/empty_symbol
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_long
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_punctuation
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_short
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_whitespace
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_lowercase
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_that_does_not_exist
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_negative
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_too_long
+--- PASS: TestA187StrictQuoteReadersAcceptKRAlphanumeric (0.00s)
+    --- PASS: TestA187StrictQuoteReadersAcceptKRAlphanumeric/0158S0 (0.00s)
+    --- PASS: TestA187StrictQuoteReadersAcceptKRAlphanumeric/18064K (0.00s)
+    --- PASS: TestA187StrictQuoteReadersAcceptKRAlphanumeric/0101N0 (0.01s)
+    --- PASS: TestA187StrictQuoteReadersAcceptKRAlphanumeric/00593A (0.00s)
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_lower_case
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_non-ascii
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_instants
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_leading_digit
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_instants
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_absent
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_absent
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_replaced_by_another_key
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_replaced_by_another_key
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_empty_string
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_empty_string
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_a_number
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_a_number
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_object
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_object
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_array
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_array
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_a_named_zone
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_a_boolean
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_a_boolean
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_zero
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/unknown_market
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_four_fractional_digits
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_breaks_the_timestamp_grammar
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_breaks_the_timestamp_grammar
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_not_older_than_the_oldest_bar
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_not_older_than_the_oldest_bar
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_newer_than_the_oldest_bar
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_newer_than_the_oldest_bar
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/trailing_json_value
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_without_an_offset
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/trailing_json_value
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/body_is_not_an_object
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/body_is_not_an_object
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_a_zulu_offset
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/empty_body
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/empty_body
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_inside_an_ignored_sibling
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_inside_an_ignored_sibling
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/seventeen_levels_of_nesting
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/seventeen_levels_of_nesting
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/instant_with_non-zero_seconds
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/instant_with_non-zero_seconds
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/instant_with_a_fraction
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/instant_with_a_fraction
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_above_the_page_cap
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/invalid_utf-8_inside_a_price
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/invalid_utf-8_inside_a_price
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/invalid_utf-8_inside_a_price
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/empty_body
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/body_is_not_an_object
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/seventeen_levels_of_nesting
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_a_number
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_instants
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_newer_than_the_oldest_bar
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_not_older_than_the_oldest_bar
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_array
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_inside_an_ignored_sibling
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_breaks_the_timestamp_grammar
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/instant_with_a_fraction
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_the_envelope
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_without_an_offset
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_object
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/instant_with_non-zero_seconds
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/bare_number_price
+--- PASS: TestA187NumericKRAndUSUnchanged (0.01s)
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/foreign_currency
+--- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest (0.01s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/lower_case_market (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_short (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_whitespace (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_lower_case (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_too_long (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_punctuation (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_that_does_not_exist (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_negative (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_non-ascii (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_leading_digit (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_four_fractional_digits (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_a_named_zone (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/unknown_market (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_zero (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_lowercase (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_without_an_offset (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/empty_symbol (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_long (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_a_zulu_offset (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_above_the_page_cap (0.00s)
+--- PASS: TestStrictMinuteCandlesRefusesABodyAboveTwoMebibytes (0.01s)
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/over_long_decimal
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/empty_price_string
+--- PASS: TestStrictMinuteCandlesUsesTheLastSuccessfulAttemptAndChainsTheOuterObserver (0.01s)
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/candle_is_not_an_object
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/unknown_candle_key
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/missing_candle_key
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/null_price
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_replaced_by_another_key
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/bare_number_volume
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_empty_string
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_absent
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/unknown_result_key
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/candles_is_null
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/candles_is_not_an_array
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/candles_absent
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/trailing_json_value
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_a_boolean
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_that_does_not_exist
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/ascending_instants
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_with_a_zulu_offset
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/result_absent
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/result_is_not_an_object
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_the_result
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_a_candle
+--- PASS: TestStrictMinuteCandlesRefusesMalformedBodies (0.01s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/invalid_utf-8_inside_a_price (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/empty_body (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_a_number (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/body_is_not_an_object (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_the_envelope (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_array (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/seventeen_levels_of_nesting (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_inside_an_ignored_sibling (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_object (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_without_an_offset (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_instants (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_breaks_the_timestamp_grammar (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/instant_with_non-zero_seconds (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/foreign_currency (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/bare_number_price (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/unknown_result_key (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/candle_is_not_an_object (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_absent (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_empty_string (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/candles_is_not_an_array (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/unknown_candle_key (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/candles_is_null (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/candles_absent (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_not_older_than_the_oldest_bar (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_a_boolean (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/trailing_json_value (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/result_absent (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/ascending_instants (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_that_does_not_exist (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_with_a_zulu_offset (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/result_is_not_an_object (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_the_result (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_a_candle (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/missing_candle_key (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/over_long_decimal (0.01s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/instant_with_a_fraction (0.02s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_newer_than_the_oldest_bar (0.02s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/empty_price_string (0.01s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/null_price (0.01s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_replaced_by_another_key (0.01s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/bare_number_volume (0.01s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.038s
+=== RUN   TestA187OrderPolicyStaysNumericOnly
+--- PASS: TestA187OrderPolicyStaysNumericOnly (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/orderintent	0.002s

@@ -48,10 +48,11 @@ const (
 )
 
 var (
-	strictMinuteKRSymbol       = regexp.MustCompile(`^[0-9]{6}$`)
-	strictMinuteCandleKRSymbol = regexp.MustCompile(`^[A-Z0-9]{6}$`)
-	strictMinuteUSSymbol       = regexp.MustCompile(`^[A-Z][A-Z0-9.]{0,9}$`)
-	strictMinuteTimestamp      = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?[+-]\d{2}:\d{2}$`)
+	// strictMinuteKRSymbol 은 분봉 리더와 두 엄격 호가 리더가 함께 쓰는 한국 종목 문법 하나임(a187).
+	// ASCII 대문자·숫자 6자리, 양끝 고정, 정규화 없음. 주문 정책(internal/orderintent)은 숫자 전용 그대로이고 이 값을 읽지 않음.
+	strictMinuteKRSymbol  = regexp.MustCompile(`^[A-Z0-9]{6}$`)
+	strictMinuteUSSymbol  = regexp.MustCompile(`^[A-Z][A-Z0-9.]{0,9}$`)
+	strictMinuteTimestamp = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?[+-]\d{2}:\d{2}$`)
 )
 
 // 봉 하나가 반드시 가져야 하는 일곱 개의 열쇠. 더도 덜도 안 된다.
@@ -207,12 +208,9 @@ func strictMinuteMarketCurrency(market string) (string, error) {
 	}
 }
 
-// strictMinuteCheckCandleSymbol widens only the minute-candle KR lexical contract.
-// The shared validator remains numeric-only for strict quote readers.
+// strictMinuteCheckCandleSymbol 은 분봉 리더의 종목 검사임. a187 부터 엄격 호가 리더와 같은 공용 검사에
+// 위임만 함(분봉 리더 본문을 고치지 않으려고 래퍼를 남김).
 func strictMinuteCheckCandleSymbol(market, symbol string) error {
-	if market == "KR" && strictMinuteCandleKRSymbol.MatchString(symbol) {
-		return nil
-	}
 	return strictMinuteCheckSymbol(market, symbol)
 }
 

@@ -45,3 +45,8 @@
 
 - Safe edit boundary: 사례 표 두 줄. 분기·단언 코드는 그대로.
 - High-risk impact: 없음(시험).
+
+## 편집 뒤 (tasks 2.3)
+
+- `ast.json` 은 편집 뒤 본문(73~106행)으로 다시 뽑음: 분기 8 그대로(B1 75, B2 91, B3·B4 93, B5 96, B6·B7 98, B8 101). 두 줄을 빼서 B2 이하가 2행씩 올라감.
+- 뺀 두 사례(`00593A`·`0101N0`)는 `a187_kr_alphanumeric_test.go` 의 `TestA187StrictQuoteReadersAcceptKRAlphanumeric` 이 수락(요청 1회·정확한 query·같은 종목 반환)으로 고정함.

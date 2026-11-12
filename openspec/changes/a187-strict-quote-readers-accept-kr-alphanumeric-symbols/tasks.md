@@ -6,9 +6,9 @@
 
 ## 2. 구현 (RED → GREEN)
 
-- [ ] 2.1 실패 시험을 먼저 쓴다: 두 호가 리더가 KR `0101N0`·`00593A` 로 요청 1회와 정확한 query 를 보내고 그 종목을 돌려줌, 소문자·공백·길이 5·7·구두점은 요청 0회로 거절, KR `005930`·US `AAPL` 의 query 와 결과 불변, 분봉 리더의 기존 수락·거절 사례 불변, 주문 쪽 `InferMarketFromStockCode`·`looksLikeKRSymbol` 의 `0101N0` 결과 불변.
-- [ ] 2.2 정규식 변수를 하나로 합치고 `strictMinuteCheckCandleSymbol` 을 한 줄 위임으로 줄인다. 주석을 사실에 맞게 고친다. 다른 함수 본문은 고치지 않는다.
-- [ ] 2.3 편집 뒤 Function Logic Map 을 재생성하고 `check_analysis.py --change a187-strict-quote-readers-accept-kr-alphanumeric-symbols` 를 통과시킨다.
+- [x] 2.1 실패 시험을 먼저 쓴다: 두 호가 리더가 KR `0101N0`·`00593A` 로 요청 1회와 정확한 query 를 보내고 그 종목을 돌려줌, 소문자·공백·길이 5·7·구두점은 요청 0회로 거절, KR `005930`·US `AAPL` 의 query 와 결과 불변, 분봉 리더의 기존 수락·거절 사례 불변, 주문 쪽 `InferMarketFromStockCode`·`looksLikeKRSymbol` 의 `0101N0` 결과 불변.
+- [x] 2.2 정규식 변수를 하나로 합치고 `strictMinuteCheckCandleSymbol` 을 한 줄 위임으로 줄인다. 주석을 사실에 맞게 고친다. 다른 함수 본문은 고치지 않는다.
+- [x] 2.3 편집 뒤 Function Logic Map 을 재생성하고 `check_analysis.py --change a187-strict-quote-readers-accept-kr-alphanumeric-symbols` 를 통과시킨다.
 
 ## 3. 검증
 

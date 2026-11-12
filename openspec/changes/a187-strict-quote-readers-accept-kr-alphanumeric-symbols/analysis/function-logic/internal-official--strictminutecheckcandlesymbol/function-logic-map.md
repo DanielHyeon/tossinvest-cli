@@ -42,3 +42,9 @@
 
 - Safe edit boundary: 이 함수 본문과 정규식 변수 선언 2줄, 주석. `strictMinuteCheckSymbol`·`strictQuoteIdentity`·두 호가 리더·`Client.StrictMinuteCandles` 본문은 고치지 않음.
 - High-risk impact: 엔진 증거로 쓰이는 엄격 리더의 입력 문법(a143 design 결정 2 분류). 주문 경로(`internal/orderintent`)는 건드리지 않음.
+
+## 편집 뒤 (tasks 2.3)
+
+- `ast.json` 은 편집 뒤 본문(213~215행)으로 다시 뽑음: 분기 0, return 1(`strictMinuteCheckSymbol(market, symbol)` 위임). 편집 전 B1(213행)은 사라짐.
+- 편집 전 열거는 `../../pre-edit-ast/strictminutecheckcandlesymbol.ast.json` 에 남음.
+- 수락 집합 동치: 편집 전 KR 수락 = B1(`^[A-Z0-9]{6}$`) ∪ 공용(`^[0-9]{6}$`) = `^[A-Z0-9]{6}$`. 편집 뒤 KR 수락 = 공용(`^[A-Z0-9]{6}$`). US 는 편집 전후 모두 공용 검사. 분봉 리더의 수락·거절 시험(`TestStrictMinuteCandles*`)은 편집 뒤 그대로 통과(`analysis/tdd/green-2.2.txt`).
