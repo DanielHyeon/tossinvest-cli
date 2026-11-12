@@ -1,6 +1,6 @@
 {
   "file": "internal/official/strict_quote_reads_test.go",
-  "source_sha256": "26c367cc1c829a34a70450847f992b414bd325dba4dc664f8ac374d0bfee6d81",
+  "source_sha256": "637f80a16324851182fb231bb0e3413205be06ea3b3e8cb94b50b17a2a1a52ef",
   "package": "official",
   "function": "TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest",
   "signature": "TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest(params=1, results=0)",

@@ -69,3 +69,48 @@
 - gstack 리뷰, Manager 재확인(tasks 3.3 은 체크하지 않음), 3.4, 4.x, 전체 gate, 공식 API.
 - `tools/a087-market-sell-probe` 의 변이(`mutants.sh`)는 돌리지 않음.
 
+## gstack 리뷰 처리 — 2026-11-13
+
+- 원문: `analysis/gstack-review.md`(그대로 복사). gstack 1.98.0.0 `review`. blocker 0, major 1, minor 6, note 11. 운영 코드 동작 변경 없음 — 운영 파일 편집은 주석 한 줄뿐(`analysis/verify-gstack/production-diff-vs-d5a2738bf.txt`).
+- 문서 정정(Manager, f367081f7): spec delta 「Order policy is not widened」 시나리오(발견 1), proposal 프로브 적용 시점·행으로 가르는 법·수급 결손·실측 결과(발견 5·6), design Open Questions(발견 6), tasks 4.2 문장(발견 5).
+
+| # | 분류 | 처리 | 근거 위치 |
+|---|---|---|---|
+| 1 | major | 수정(Manager 문서): 시나리오를 실제 시험(시장 추론 고정·`NormalizePlace` 현 동작 고정)으로 고쳐 씀. a087 무편집. `rg -n 0101N0 tools/a087-market-sell-probe/` 일치 0건(rc 1) | spec delta(f367081f7), `analysis/verify-gstack/rg-a087-0101N0.txt` |
+| 2 | minor | 수정(시험): `TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce`(분봉 `0158S0`·`A12345`·`18064K`, 요청 1회·정확한 query·종목), `TestA187StrictMinuteCandlesStillRefuseOtherKRForms`(분봉 `0158s0`·`0101N0\n`·`\n0101N0`·`a12345`, 요청 0회·`SYMBOL_INVALID`). 기존 분봉 시험 파일은 고치지 않음. 변이 (d) 로 확인 | `internal/official/a187_kr_alphanumeric_test.go`, `analysis/mutation/mutation-gstack-*.txt` |
+| 3 | minor | 수정(주석): `strictMinuteKRSymbol` 위 둘째 줄을 「주문 쪽(internal/orderintent)은 이 값을 읽지 않음 — 그쪽에서 숫자 전용인 것은 시장 추론뿐임」으로. 줄 수 같음, gofmt 0줄, `strictMinuteCheckSymbol`·`strictMinuteCheckCandleSymbol` 의 logic-map AST 가 행까지 편집 전과 같음(source_sha256 제외) | c917ccf55 |
+| 4 | minor | 수정(시험 표): `unknown market` 행에 `StrictQuoteReasonMarket`, `kr symbol too short` 행에 `StrictQuoteReasonSymbol` 을 채워 사유 비교 갈래(B4·B7)를 살림. 실행에서 두 리더의 실제 사유와 맞음(통과) | `internal/official/strict_quote_reads_test.go`, `analysis/verify-gstack/go-test-official-orderintent.txt` |
+| 5 | minor | 수정(Manager 문서): 프로브 경계는 「main 반영 시각」이 아니라 프로브 기동(`go run`)이고, 반영 전 행에는 `top_of_book: …SYMBOL_INVALID` 결손 문구가 남음 | proposal·tasks 4.2(f367081f7) |
+| 6 | minor | 수정(Manager 문서): Open Questions·Impact 를 4.1 실측(장 밖 1회, 종목 1개)과 맞춤 | design·proposal(f367081f7) |
+| 7 | minor | 수정(시험): `TestA187NormalizePlaceMarketInferenceUnchanged` — `NormalizePlace` 에 시장 `us` 또는 생략 + `0101N0` 은 `us` 로 남고 `005930` 은 `kr` 로 바뀜(현 동작 고정). 변이 (e) 로 확인 | `internal/orderintent/a187_order_policy_test.go` |
+| 8 | note | 기록만: 호가 본문에 종목 필드가 없어 `top.Symbol` 은 요청값임(a143 부터의 한계, design Risks) | gstack 원문 |
+| 9 | note | 기록만: KR 문법과 US 문법이 `A12345`·`ABCDEF` 에서 처음 겹침. 시장 인자로 가르고 실재 KR 코드는 영문자가 5·6번째 자리뿐이라 지금은 이론적 | gstack 원문, design D3 |
+| 10 | note | 후속: 숫자 전용 시장 분류가 있는 다른 자리 — `internal/verifylive/pricing.go`, `internal/flatten/flatten.go`, `internal/client/trading.go`, `tools/a087-market-sell-probe/order.go`, `internal/official/candle_raw.go` — 를 a184 실거래 전환 change 로 인계 | gstack 원문 |
+| 11 | note | 기록만: 「유니버스 불변」 문장과 사실상 후보가 넓어지는 것의 읽기 차이. 유니버스 코드는 안 고침 | gstack 원문 |
+| 12 | note | 기록만(사실): FLM 번들은 본문을 고친 래퍼(동작은 안 바뀜)와 거절 시험 함수에 붙고, 동작이 바뀐 `strictMinuteCheckSymbol`(패키지 변수 값만 바뀜)에는 없음 — gate ⑤ 는 함수 본문 편집만 셈. 실질은 시험과 변이 11종이 덮음 | `analysis/function-logic/`, `analysis/verify-gstack/check-analysis.txt` |
+| 13 | note | 후속: `tools/a112-l1c-quote-probe/main.go:36` 도움말 「KR six digits」 갱신(diff 밖) | gstack 원문 |
+| 14 | note | 기록만: a185 브랜치가 같은 PM 줄을 고침 — 둘째로 반영되는 쪽이 충돌을 풂 | gstack 원문 |
+| 15 | note | 처리: a184 가 가져간 사본(d5a2738bf 기준)은 이번 수정 뒤 다시 가져감(a184 브랜치 기록) | a184 review.md |
+| 16 | note | 수정: 하네스가 변이 판에서 `-v` 를 끄고 돌려, 통과한 시험의 `t.Log` 가 「실패 원문」에 섞이지 않음. 대조군만 `-v` 로 PASS 줄을 셈 | `analysis/mutation/mutation.py` |
+| 17 | note | 후속(advisory): 한 줄 위임 래퍼 제거. a187 에서는 design D2 대로 둠 | gstack 원문 |
+| 18 | note | 기록만: `openspec/config.yaml` 은 추적 안 되는 파일이고 건드리지 않음 | `git status` |
+
+### 변이 (d)(e) — 보강 전·후
+
+- (d) `g-wrapper-own-regex`: 래퍼가 `^[A-Z0-9]{6}$|^[a-z0-9]{6}$` 를 다시 들여 공용 검사와 갈라짐.
+  - 보강 전(c917ccf55, `mutation-gstack-before.txt`): CAUGHT — 기존 `TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_lowercase`.
+  - 보강 뒤(677ac969b, `mutation-gstack-after.txt`): CAUGHT — 위 시험에 더해 `TestA187StrictMinuteCandlesStillRefuseOtherKRForms/0158s0`·`/a12345`(「StrictMinuteCandles accepted」). gstack 이 생존을 예상한 여러 줄 모드 래퍼 변형은 새 분봉 개행 사례(`0101N0\n`·`\n0101N0`)가 막음.
+- (e) `g-order-inference-widened`: `intent.go` 의 `looksLikeKRSymbol(intent.Symbol)` 호출을 `^A?[A-Z0-9]{6}$` 인라인 검사로.
+  - 보강 전: **SURVIVED**(gstack 예상과 같음).
+  - 보강 뒤: CAUGHT — `TestA187NormalizePlaceMarketInferenceUnchanged`(「NormalizePlace("us", "0101N0") market="kr" … want market "us"」).
+- 보강 뒤 11종 전체 재실행: 대조군 GREEN, **11/11 CAUGHT**.
+
+### 검증 (원문 `analysis/verify-gstack/`)
+
+- `go test -count=1 -v ./internal/official/ ./internal/orderintent/`: 최상위 PASS 292, 서브 포함 594, FAIL 1 — base 기존 결함 `TestA112MBUSStaticNoProductCallerOrForbiddenPath` 뿐. 그 밖 FAIL 0.
+- `go vet` rc 0, gofmt 0줄, `openspec validate --strict` valid, `check_analysis.py` rc 0, PM check current.
+
+### 미실행
+
+- Manager 재확인(3.4), 4.2·4.3, 전체 gate, 공식 API. 후속 항목 10·13·17 은 이 change 에서 하지 않음.
+

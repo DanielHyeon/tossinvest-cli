@@ -7,8 +7,8 @@
 | B1 | 75행 사례 표 순회(남은 7개) | `TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest` | 통과(red-2.1.txt) | yes(green-2.2.txt) |
 | B2 | 91행 호가 리더가 받아들이면 실패 | `TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest` | 통과 | yes |
 | B3 | 93행 호가 리더 거절(else) | `TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest` | 통과 | yes |
-| B4 | 93행 기대 사유와 다르면 실패 | `TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest` | 통과 | yes |
+| B4 | 93행 기대 사유와 다르면 실패(gstack 발견 4 뒤 `unknown market`=MARKET_INVALID·`kr symbol too short`=SYMBOL_INVALID 행이 이 비교를 실제로 탐) | `TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest` | 통과 | yes |
 | B5 | 96행 현재가 리더가 받아들이면 실패 | `TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest` | 통과 | yes |
 | B6 | 98행 현재가 리더 거절(else) | `TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest` | 통과 | yes |
-| B7 | 98행 기대 사유와 다르면 실패 | `TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest` | 통과 | yes |
+| B7 | 98행 기대 사유와 다르면 실패(같은 두 행이 실제로 탐) | `TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest` | 통과 | yes |
 | B8 | 101행 요청이 0회가 아니면 실패 | `TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest` | 통과 | yes |

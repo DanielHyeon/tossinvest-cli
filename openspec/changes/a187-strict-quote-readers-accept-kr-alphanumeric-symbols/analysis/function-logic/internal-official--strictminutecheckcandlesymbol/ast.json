@@ -1,6 +1,6 @@
 {
   "file": "internal/official/strict_minute_candles.go",
-  "source_sha256": "0b044f952109fd4a3646241c33887c81ee9036d95a75d2be2eb70e6b3d6d2a56",
+  "source_sha256": "828ad2ed3df5457b7ee59a6a650527224ce4cf16efbf413b2473422a86f16e7d",
   "package": "official",
   "function": "strictMinuteCheckCandleSymbol",
   "signature": "strictMinuteCheckCandleSymbol(params=2, results=1)",
