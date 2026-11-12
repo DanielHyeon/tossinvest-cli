@@ -1,0 +1,108 @@
+{
+  "file": "internal/official/strict_quote_reads.go",
+  "source_sha256": "d77e35eb3a967379a138c90b23914c49daa908816094157f8d4e4d87cbba70cc",
+  "package": "official",
+  "function": "strictQuoteIdentity",
+  "signature": "strictQuoteIdentity(params=2, results=2)",
+  "start": {
+    "line": 196,
+    "column": 1
+  },
+  "end": {
+    "line": 205,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 201,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 199,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 202,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 204,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 19
+      },
+      "text": "strictMinuteMarketCurrency"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 14
+      },
+      "text": "strictQuoteAdopt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 12
+      },
+      "text": "strictMinuteCheckSymbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 14
+      },
+      "text": "strictQuoteAdopt"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 197,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 201,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
