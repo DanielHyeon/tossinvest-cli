@@ -1,0 +1,7 @@
+기준 HEAD 760fc7c423a84c72bf05cef7148dd2b9731366f4, 사본 /tmp/a187-mut-3343661-ctpsjutv
+  internal/official/strict_minute_candles.go sha256=0b044f952109fd4a3646241c33887c81ee9036d95a75d2be2eb70e6b3d6d2a56
+  internal/official/strict_quote_reads.go sha256=d77e35eb3a967379a138c90b23914c49daa908816094157f8d4e4d87cbba70cc
+control: GREEN (576 PASS 줄, -skip ^(TestStrictMinuteCandlesFilesCarryNoSeamIdentifier|TestStrictMinutePageLiteralLivesOnlyInItsOwnFile|TestA112MBUSStaticNoProductCallerOrForbiddenPath)$)
+r1-leading-digits: SURVIVED — r1 앞 네 자리를 숫자로 축소
+r1-multiline: SURVIVED — r1 여러 줄 모드(개행 허용)
+r1-echo-skip-krw: SURVIVED — r1 KR 현재가 메아리 검사 건너뜀

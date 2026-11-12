@@ -25,13 +25,19 @@ TARGET = "internal/official/strict_minute_candles.go"
 PACKAGES = ["./internal/official/", "./internal/orderintent/"]
 SKIP = "^(TestStrictMinuteCandlesFilesCarryNoSeamIdentifier|TestStrictMinutePageLiteralLivesOnlyInItsOwnFile|TestA112MBUSStaticNoProductCallerOrForbiddenPath)$"
 WRAPPER = "func strictMinuteCheckCandleSymbol(market, symbol string) error {\n\treturn strictMinuteCheckSymbol(market, symbol)\n}"
+QUOTES = "internal/official/strict_quote_reads.go"
+# (ID, 변이할 파일, 원문, 변이, 설명)
 MUTANTS = [
-    ("numeric-only", "`^[A-Z0-9]{6}$`", "`^[0-9]{6}$`", "숫자 전용으로 되돌림"),
-    ("no-length", "`^[A-Z0-9]{6}$`", "`^[A-Z0-9]+$`", "길이 고정 제거"),
-    ("no-start-anchor", "`^[A-Z0-9]{6}$`", "`[A-Z0-9]{6}$`", "앞 고정 제거"),
-    ("no-end-anchor", "`^[A-Z0-9]{6}$`", "`^[A-Z0-9]{6}`", "뒤 고정 제거"),
-    ("lowercase", "`^[A-Z0-9]{6}$`", "`^[A-Za-z0-9]{6}$`", "소문자 허용"),
-    ("wrapper-skips-check", WRAPPER, WRAPPER.replace("return strictMinuteCheckSymbol(market, symbol)", "return nil"), "래퍼가 검사를 건너뜀"),
+    ("numeric-only", TARGET, "`^[A-Z0-9]{6}$`", "`^[0-9]{6}$`", "숫자 전용으로 되돌림"),
+    ("no-length", TARGET, "`^[A-Z0-9]{6}$`", "`^[A-Z0-9]+$`", "길이 고정 제거"),
+    ("no-start-anchor", TARGET, "`^[A-Z0-9]{6}$`", "`[A-Z0-9]{6}$`", "앞 고정 제거"),
+    ("no-end-anchor", TARGET, "`^[A-Z0-9]{6}$`", "`^[A-Z0-9]{6}`", "뒤 고정 제거"),
+    ("lowercase", TARGET, "`^[A-Z0-9]{6}$`", "`^[A-Za-z0-9]{6}$`", "소문자 허용"),
+    ("wrapper-skips-check", TARGET, WRAPPER, WRAPPER.replace("return strictMinuteCheckSymbol(market, symbol)", "return nil"), "래퍼가 검사를 건너뜀"),
+    # 구현 리뷰 r1(gpt-6-astra)이 「생존 예상」으로 짚은 셋
+    ("r1-leading-digits", TARGET, "`^[A-Z0-9]{6}$`", "`^[0-9]{4}[A-Z0-9]{2}$`", "r1 앞 네 자리를 숫자로 축소"),
+    ("r1-multiline", TARGET, "`^[A-Z0-9]{6}$`", "`(?m)^[A-Z0-9]{6}$`", "r1 여러 줄 모드(개행 허용)"),
+    ("r1-echo-skip-krw", QUOTES, "\tif echoed != symbol {\n", "\tif echoed != symbol && currency != \"KRW\" {\n", "r1 KR 현재가 메아리 검사 건너뜀"),
 ]
 
 
@@ -66,11 +72,14 @@ def main() -> int:
                                  check=True, stdout=subprocess.PIPE).stdout
         subprocess.run(["tar", "-x", "-C", str(base)], input=archive, check=True)
         assert (base / "go.mod").is_file() and str(base).startswith(tempfile.gettempdir())
-        target = base / TARGET
-        original = target.read_text()
-        start = sha(target)
-        assert start == sha(root / TARGET), "작업 트리 대상 파일이 HEAD 와 다름 — 커밋 뒤 돌릴 것"
-        print(f"기준 HEAD {head}, 사본 {base}, {TARGET} sha256={start}")
+        files = sorted({m[1] for m in MUTANTS})
+        originals = {f: (base / f).read_text() for f in files}
+        starts = {f: sha(base / f) for f in files}
+        for f in files:
+            assert starts[f] == sha(root / f), f"작업 트리 {f} 가 HEAD 와 다름 — 커밋 뒤 돌릴 것"
+        print(f"기준 HEAD {head}, 사본 {base}")
+        for f in files:
+            print(f"  {f} sha256={starts[f]}")
         status, out = run_tests(base)
         if status != 0:
             print(out)
@@ -78,9 +87,10 @@ def main() -> int:
             return 1
         print(f"control: GREEN ({out.count('--- PASS')} PASS 줄, -skip {SKIP})")
         issues = 0
-        for mid, old, new, label in MUTANTS:
+        for mid, fname, old, new, label in MUTANTS:
             if wanted and mid not in wanted:
                 continue
+            target, original, start = base / fname, originals[fname], starts[fname]
             n = original.count(old)
             if n != 1:
                 print(f"{mid}: TARGET-COUNT {n} — {label}")
