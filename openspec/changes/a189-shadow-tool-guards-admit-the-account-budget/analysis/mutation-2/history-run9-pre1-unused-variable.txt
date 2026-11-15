@@ -1,0 +1,37 @@
+기준 HEAD 13c3b3b2afadd6101a4e687423171c77f9017a4d, 사본 a189-mut2-2212101-xndhupep($HOME/tossos-work 아래), 전용 GOCACHE, HOME·XDG 격리
+  cmd/tossctl/console.go sha256=db6a8e5efe06b35096ae027dfb9b8c2c6cea2a113f48276c66cd3a2de75bca6b
+  cmd/tossctl/console_test.go sha256=177cc4b10a6ad5acce3e62a2a7050a18eddadbd396a679d21a0751a17928d765
+  internal/app/engine/exitloop.go sha256=bc81b5fddef6b143157d516cec371de0336c1aa0ad11a2149c8e0420bb7b8bc8
+  internal/app/engine/strategy_dispatch_handoff.go sha256=e541876ee046c38c4f4c3636aeb78586967c099438bad58b1c1d6bcdfece270b
+  internal/app/engine/strategy_dispatch_handoff_guard_test.go sha256=416234e3f0d656ec90c432a650ebdec884f0fb3c00ef9e9dc2c191c44c6d92a6
+  tools/a128-jev-shadow-probe/static_test.go sha256=3773b3fb8087d55de1edf29fbaaf2bd0b6d256e766a8b9fadc6c9be391fa2fa6
+  tools/a140-breakout-signal-shadow/static_test.go sha256=e97e28db22da709306f50b80a0e025b18c09f84a501bdac12da5c39a1fad0f96
+control[현재]: 기대대로
+    ok  기대 PASS TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+    ok  기대 PASS TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange (./internal/app/engine/)
+    ok  기대 PASS TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+    ok  기대 PASS TestAdmitCensusSeesEverySpellingItClaims (./internal/app/engine/)
+    ok  기대 PASS TestA189AdmitCensusIgnoresSameNamedMembersOutsideTheSeam (./internal/app/engine/)
+    ok  기대 PASS TestA189AdmitCensusCountsTheUnaliasedSeamName (./internal/app/engine/)
+    ok  기대 PASS TestA189AdmitCensusIsConservativeInADotImportedFile (./internal/app/engine/)
+    ok  기대 PASS TestA189AdmitCensusDecodesTheImportPathLiteral (./internal/app/engine/)
+    ok  기대 PASS TestImportsStayInsideTheAllowlist (./tools/a128-jev-shadow-probe/)
+    ok  기대 PASS TestNoMutatingOrAccountSurfaceIsNamed (./tools/a128-jev-shadow-probe/)
+    ok  기대 PASS TestImportsStayInsideTheAllowlist (./tools/a140-breakout-signal-shadow/)
+    ok  기대 PASS TestNoMutatingAccountOrWriteSurfaceIsNamed (./tools/a140-breakout-signal-shadow/)
+    ok  기대 PASS TestOnlyTheEngineImportsThisSeam (./internal/strategyhandoff/)
+      dependency_closure_test.go:246: importers of the handoff seam: [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine] (scanned 2775 package entries across 3 universes)
+control[OLD]: 기대대로
+    ok  기대 FAIL TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+    ok  기대 PASS TestAdmitCensusSeesEverySpellingItClaims (./internal/app/engine/)
+      strategy_dispatch_admit_census_a189_test.go:67: admitSites=[Admit:Admit, benign:Admit, local:Admit, type 블록:Admit, type 블록:Admit, viaAlias:Admit, viaValue:AdmitEachOwnerScope], want [viaAlias:Admit, viaValue:AdmitEachOwnerScope] — 경계 밖의 같은 이름을 세거나 경계 이름을 놓침
+      --- FAIL: TestA189AdmitCensusIgnoresSameNamedMembersOutsideTheSeam (0.00s)
+      strategy_dispatch_admit_census_a189_test.go:102: admitSites=[bare:Admit, type 블록:Admit, viaValue:Admit], want [bare:Admit, type 블록:Admit]
+      --- FAIL: TestA189AdmitCensusIsConservativeInADotImportedFile (0.00s)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope type 블록:Admit], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.02s)
+    OLD 대조군 생산 자리 목록: ['dispatchHandoff:Admit', 'dispatchHandoffs:AdmitEachOwnerScope', 'type 블록:Admit']
+control[PRE1]: MISMATCH — 변이 판정 중단
+    MISS 기대 PASS TestImportsStayInsideTheAllowlist (./tools/a128-jev-shadow-probe/)
+    MISS 기대 PASS TestImportsStayInsideTheAllowlist (./tools/a140-breakout-signal-shadow/)
+rc=1

@@ -1,6 +1,6 @@
 # Branch Test Map: `admitSites` (internal/app/engine)
 
-변이 원문: `../../mutation-2/mutation2-run7.txt`. RED = 편집 전 판본으로 `TestExactlyOneProductionSiteAdmitsIntoTheSeam` 이 `type 블록:Admit` 로 실패(경계 실측 `../../boundary/boundary.txt`, OLD 대조군).
+변이 원문: `../../mutation-2/mutation2-run10.txt`. RED = 편집 전 판본으로 `TestExactlyOneProductionSiteAdmitsIntoTheSeam` 이 `type 블록:Admit` 로 실패(경계 실측 `../../boundary/boundary.txt`, OLD 대조군).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|

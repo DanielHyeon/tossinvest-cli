@@ -70,3 +70,11 @@
 - 4회차 리뷰: skill 상한(편집 회차 3)에 닿아 돌리지 않음. 3회차 수리는 변이 51/51 로만 확인 — **수렴 미확인**.
 - Exploratory QA(Step 4.7): 시험 전용 diff 라 기능 표면이 없음. 대신 대상 패키지 시험·태그 seam 시험·변이 하네스가 판정 근거(`verify-4/`, `mutation-2/`).
 - Aside 웹 조사: 쓰지 않음(외부 라이브러리 판단 없음).
+
+## Manager 결정 반영 (2026-11-16)
+
+- 16·24번(별칭·dot import 로 보조 등급 고정 우회): 결정 1 로 고침 — 두 도구 import 시험이 세 패키지의 이름 붙인 import 를 금지. 변이 d1a·d1b·d1c(두 도구) FAIL, 결정 전 판본은 d1a·d1b PASS.
+- 4·10·19·20번 수리로 더했던 시험 둘(엔진 `unsafe` 금지·모듈 linkname 금지): 결정 2 로 **삭제**. 해당 발견은 「편집 전부터의 맹점, 범위 밖(R8)」 으로 재분류. 변이 a9~a14 는 「잡지 못함」 으로 원장 갱신(run10).
+- 7·8번(R5·R6)·R4 l1: 결정 3 으로 기록만.
+- Gate 처분 3건: 결정 5 로 Keep(B) 승인 — `Gate edits: 8 listed, 8 read, 3 findings — 3 kept (Manager 승인: verified 근거), 0 restored, 0 open`.
+- 리뷰 루프: 결정 4 로 Manager 가 닫음 — 수렴하지 않았고, 4회차는 돌리지 않음.

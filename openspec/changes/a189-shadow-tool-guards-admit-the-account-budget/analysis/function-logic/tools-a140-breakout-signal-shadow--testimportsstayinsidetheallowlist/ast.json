@@ -1,6 +1,6 @@
 {
   "file": "tools/a140-breakout-signal-shadow/static_test.go",
-  "source_sha256": "7c57bab2b7f24447a3f657749b82adf8fc89ec35dd2c3766c642a8f79725d181",
+  "source_sha256": "e97e28db22da709306f50b80a0e025b18c09f84a501bdac12da5c39a1fad0f96",
   "package": "main",
   "function": "TestImportsStayInsideTheAllowlist",
   "signature": "TestImportsStayInsideTheAllowlist(params=1, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 162,
+    "line": 168,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 151,
+        "line": 154,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "range",
       "at": {
-        "line": 152,
+        "line": 155,
         "column": 3
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 154,
+        "line": 157,
         "column": 4
       }
     },
@@ -41,7 +41,15 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 157,
+        "line": 160,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 163,
         "column": 4
       }
     }
@@ -59,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 151,
+        "line": 154,
         "column": 23
       },
       "text": "nonTestSources"
@@ -67,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 153,
+        "line": 156,
         "column": 15
       },
       "text": "strconv.Unquote"
@@ -75,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 154,
+        "line": 157,
         "column": 8
       },
       "text": "strings.Contains"
@@ -83,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 157,
+        "line": 160,
         "column": 8
       },
       "text": "strings.HasPrefix"
@@ -91,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 157,
+        "line": 160,
         "column": 52
       },
       "text": "strings.TrimPrefix"
@@ -99,7 +107,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 158,
+        "line": 161,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 7
+      },
+      "text": "strings.HasPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 54
+      },
+      "text": "strings.TrimPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
         "column": 5
       },
       "text": "t.Errorf"
@@ -117,6 +149,13 @@
       "kind": ":=",
       "at": {
         "line": 153,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 156,
         "column": 4
       }
     }

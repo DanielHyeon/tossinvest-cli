@@ -232,3 +232,33 @@ Pre-Edit Gate:
 3. R5(표지 없는 context 는 Normal)·R6(reflect 이름 우회): 스펙 문장을 가드가 재는 만큼 좁힐지, 런타임 단언을 넓힐지.
 4. gstack 리뷰 비수렴: 4회차(3회차 수리에 대한 재리뷰)를 돌릴지.
 5. Gate 처분 3건(`gstack-review-2.md` 「Gate edits」): 추천 B(Keep — justified, verified).
+
+## Manager 결정 반영 (2026-11-16, 범위 확장 2 마무리 로트)
+
+### 결정 원문 요지와 처리
+
+1. **결정 1 = (A) a189 에서 고침**: a128·a140 의 `TestImportsStayInsideTheAllowlist` 가 `official`·`accountbudget`·`accountbudgetruntime` import 의 `spec.Name` 이 nil 이 아니면(별칭·dot·blank 전부) 실패함. 별칭을 쫓지 않고 금지함. 두 시험 함수 FLM 번들 갱신(편집 전 AST `pre-edit-ast/*.before-decision1.ast.json`). 오늘 두 도구 비시험 소스에서 세 패키지를 이름 붙여 import 한 자리는 0건(grep) — 정상 입력 거절 0.
+   - 변이(`analysis/mutation-2/mutation2-run10.txt`): d1a(둘째 파일 별칭 + `ab.WithPriority(ctx, ab.Critical)`)·d1b(dot + `WithPriority(ctx, Critical)`)·d1c(blank) 를 두 도구마다 — 전부 `TestImportsStayInsideTheAllowlist` FAIL(문구 「is renamed to …」). 결정 전 판본(PRE1 — 금지 갈래만 뺀 사본)에서는 d1a·d1b 가 import·이름 시험 둘 다 PASS(못 잡음). 무변이 대조군 GREEN(두 도구 import·이름 시험 PASS).
+2. **결정 2**: `TestA189EngineProductionNeverImportsUnsafe`·`TestA189NoPackageLinknamesTheSeamDoors` 삭제, 새 파일 머리 주석의 (마)(바)와 안 쓰게 된 import(`os`·`path/filepath`·`strconv`) 정리. 이유(Manager 원문 그대로):
+   - 요청 범위는 낡은 가드 3건 수리다. 모듈 전체 `//go:linkname` 금지·엔진 `unsafe` 금지는 아무도 요청하지 않은 새 저장소 정책이고, 리뷰 루프가 만든 규칙이다.
+   - linkname 경로는 좁힘으로 잃은 검출이 아니다(이름 기반 앞 판본도 이름이 다르면 못 셌다) — 편집 전부터 있던 맹점이다.
+   - 모듈 전체 walk 는 환경에 따라 실패한다(비-점 디렉터리 심링크, `scanned < 500` 문턱). 엔진 스위트가 seam 과 무관한 이유로 빨개지는 길을 새로 만든다.
+   - 변이 a9~a14 는 「잡지 못함(기존 맹점, 범위 밖)」 으로 재분류하고 하네스를 다시 돌려 원장이 실제 결과와 같게 함(run10: 여섯 다 census PASS 로 기록). 그 시험만 겨누던 무해 대조 b3 는 뺌. `strconv.Unquote` 해독과 `TestA189AdmitCensusDecodesTheImportPathLiteral` 은 유지.
+3. **결정 3**: R4(l1)·R5·R6 은 기록만 함(아래 「남은 위험」). 가드를 넓히지 않음. 스펙 무편집.
+4. **결정 4 — Manager 가 리뷰 루프를 닫음**: gstack 4회차는 돌리지 않음. 사유: 시험 전용 diff(운영 Go 0줄)라 비례 원칙상 경량 리뷰가 기본이고, 3회차까지의 새 발견은 모두 「가드를 의도적으로 우회하는 저자」 모양이며 남은 것은 아래 「남은 위험」에 열거됨. **수렴하지 않았고 닫았음** — 「새 발견 0 수렴」 을 주장하지 않음.
+5. **결정 5**: gate 처분 3건(a163 고정값 `49234f885d5c` · admitSites 좁힘 `aad7cf1b05f0` · shapes.json `c98da0370da7`) 모두 Keep(B), Manager 승인.
+6. **결정 6**: #1 콘솔 시험의 다섯 수 AST 단언 유지(Manager 가 실제 `(*lazyOrders).Orders` 본문과 대조해 확인).
+
+### 남은 위험 (범위 확장 2 최종)
+
+- R8 linkname/unsafe 로 census 밖에서 경계 문에 닿는 길 — 편집 전부터의 맹점, Manager 결정으로 범위 밖, 후속(변이 a9~a14 「잡지 못함」).
+- R4 l1: 허용 자리 안에서 문을 문 이름 필드로 빼돌림 — 좁힘으로 잃은 검출(앞 판본은 이름 우연으로 잡음). 기록만, 후속.
+- R5: 표지 없는 context 는 `Normal` 로 돎 — 보조 등급 고정은 명시 `WithPriority` 표지만 잼. 기록만, **a166 후속으로 넘김**.
+- R6: 예산 핸들·주문 이름 금지는 선택자 이름 단위라 `reflect.MethodByName` 으로 비켜 감(기존 한계). 기록만.
+- R7: 콘솔 단언 뒤 흐름(`reads`·`plain` 다시 대입)과 다른 파일의 `official.New(` — 편집 전부터의 한계, 후속.
+- R1 잔여: `tossconfig`(internal/config) 별칭은 결정 1 범위 밖 — 기존 한계 그대로.
+
+### 스펙 델타 중 가드가 검증하지 않는 것을 단언하는 문장 (고치지 않음 — Manager 에게 올림)
+
+- `specs/breakout-retest-strategy-lane/spec.md:10` 「우선순위는 보조 등급만 써야 한다 (SHALL)」·「측정 도구의 정적 검사는 … 우선순위 인자가 보조 등급임을 확인해야 한다 (SHALL)」: 정적 검사가 확인하는 것은 **명시적 `accountbudget.WithPriority` 직접 호출의 둘째 인자**뿐임. 표지 없는 context 의 기본값 `Normal`(transport_linux.go:24~29)로 도는 요청은 검사 밖(R5). 결정 1 로 별칭·dot 우회는 닫힘.
+- 같은 줄 「측정 도구는 예산 핸들을 직접 잡거나 관측 상태를 읽어서는 안 되고 (MUST NOT)」: 검사는 메서드 이름 7개의 선택자 금지라 `reflect` 문자열 호출은 못 봄(R6).

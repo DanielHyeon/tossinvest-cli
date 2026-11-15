@@ -1,6 +1,6 @@
 # Branch Test Map: `TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient` (cmd/tossctl)
 
-변이 원문: `../../mutation-2/mutation2-run7.txt`. RED = 편집 전 판본이 a166 `3dc0c776b` 뒤 console_test.go:755 로 실패(`../../boundary/boundary.txt`).
+변이 원문: `../../mutation-2/mutation2-run10.txt`. RED = 편집 전 판본이 a166 `3dc0c776b` 뒤 console_test.go:755 로 실패(`../../boundary/boundary.txt`).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|

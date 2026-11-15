@@ -65,6 +65,7 @@ a189 의 목적(main 의 `go test ./...` 를 다시 초록으로)을 막는 가�
 
 - `cmd/tossctl/console_test.go` `TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient`: 파일 전체 문자열 검사 `strings.Contains(src, "l.shared.resolve()")` 를 `(*lazyOrders).Orders` 본문 안의 `<수신자>.shared.resolve` 참조 수 == 1 AST 단언으로 바꿈(D11). 나머지(빌드 횟수 1, `official.New(` 금지)는 그대로.
 - `internal/app/engine/a163_judgement_pin_test.go`: 패키지 수준 `a163JudgementRenderHashes["record"]` 값 하나를 a166 `9c4bdf4de` 의 렌더로 갱신하고, 가드 주석이 요구하는 이유를 그 자리에 적음(D12). 나머지 9개 값과 시험 함수 본문은 그대로.
+- Manager 결정 1(2026-11-16, gstack 리뷰 발견): `tools/a128-jev-shadow-probe/static_test.go`·`tools/a140-breakout-signal-shadow/static_test.go` 의 `TestImportsStayInsideTheAllowlist` 가 `official`·`accountbudget`·`accountbudgetruntime` 를 별칭·dot·blank 로 import 하면 실패함(이름 시험이 선택자 철자로 패키지를 가리므로 별칭으로 Critical 우선순위를 달 수 있었음).
 - `internal/app/engine/strategy_dispatch_handoff_guard_test.go` `admitSites`: 경계 패키지(import 경로 끝 `/strategyhandoff`)를 가리키는 지역 이름(별칭 포함)의 선택자 참조와, dot import 가 있는 파일의 선택자 아닌 문 이름만 셈(D13). 새 fixture 시험은 새 파일에 둠.
 
 ### 정본 스펙

@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/home/daniel/tossos-work/a189-shadow-guards/openspec/changes/a189-shadow-tool-guards-admit-the-account-budget/analysis/mutation-2/mutation2.py", line 545, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/daniel/tossos-work/a189-shadow-guards/openspec/changes/a189-shadow-tool-guards-admit-the-account-budget/analysis/mutation-2/mutation2.py", line 480, in main
+    starts = {f: sha(base / f) for f in tracked}
+                 ^^^^^^^^^^^^^
+  File "/home/daniel/tossos-work/a189-shadow-guards/openspec/changes/a189-shadow-tool-guards-admit-the-account-budget/analysis/mutation-2/mutation2.py", line 342, in sha
+    return hashlib.sha256(p.read_bytes()).hexdigest()
+                          ^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/pathlib.py", line 1021, in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/daniel/tossos-work/a189-mut2-2211371-jx84ealu/tools/a128-jev-shadow-probe/static_test.go'
+rc=1

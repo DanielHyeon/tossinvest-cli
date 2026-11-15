@@ -20,6 +20,7 @@
   - 2026-11-15 실행(`analysis/verify/`): 다섯 가드 포함 PASS(최상위 551·서브 포함 961), **FAIL 3**(`internal/accountbudgetruntime` `TestA166WiringCensusBaseline`·`TestA166WiringCensusRejectsBypasses`·그 하위 `new-unclassified-http`), SKIP 2, vet rc 0, gofmt 0. FAIL 3 은 base 7d1e3163a 사본에서 같은 문구(`reviewed function shape changed: tools/a128-jev-shadow-probe/main.go||runCommandWithOptions`)로 실패 — `analysis/verify/base-a166-census.txt`. 이 change 범위(D1) 밖이라 고치지 않음 → Manager 결정 대기로 미체크.
   - 보강 뒤 재실행(`analysis/verify-2/`, HEAD a16dc8292): 같은 결과 — PASS 551·961, FAIL 3(같은 census 셋), SKIP 2, vet rc 0, gofmt 0. census 는 Manager 결정 5 로 사용자 결정 대기.
 - [x] 3.3 gstack `review` 1회(다중 적대 리뷰는 not-applicable — 비례 원칙), 처리 결과를 `review.md` 에 기록. 원문 `analysis/gstack-review.md`. Manager 결정 대기 4건(발견 1·9·10, gate G1~G3)은 review.md 「Manager 에게 올림」.
+  - 마무리 로트(2026-11-16, `analysis/verify-5/`): 4개 패키지(official·accountbudgetruntime·a128·a140) FAIL 0. `tools/a112-mb-us-source` 는 Manager 지시로 이번에도 안 돌림 → 이 항목은 미체크 유지.
 - [ ] 3.4 Manager 독립 재검증.
 
 ## 3b. a166 census 고정 모양 (사용자 결정 2026-11-15 으로 범위 포함)
@@ -38,7 +39,9 @@
 - [x] 3c.5 사본 변이(대조군 GREEN 먼저, 기대 시험 이름 단언) — 하네스·원문 `analysis/mutation-2/`. #3 은 좁힘으로 잃는 검출을 열거해 잼.
 - [x] 3c.6 FLM/BTM 번들, `check_analysis.py` required 수·rc 실측.
 - [x] 3c.7 대상 패키지 시험·vet·gofmt·strict validate — 원문 `analysis/verify-4/`(Go 마지막 커밋 d9d6772fc): cmd/tossctl·engine PASS 최상위 1549·서브 포함 2251, FAIL 0, SKIP 2; a189 앞 로트 4패키지 PASS 485·882, FAIL 0; 태그 seam(바뀐 가드만) PASS 38·47; vet rc 0; gofmt 위반 0(8파일); validate rc 0; check_analysis required 7, rc 0. 리뷰 전 원문은 `verify-4/pre-review/`.
-- [ ] 3c.8 gstack `review`(최종 diff 전체) + 다른 계열 적대 보이스 1, 새 발견 0 까지 — `analysis/gstack-review-2.md`. 3회 돌림(Codex 1·3회차), 회차마다 발견을 고침 — skill 상한 3 에 닿아 **수렴 미확인**. Manager 결정 대기: R1(별칭·dot import 로 보조 등급 고정 우회, High), 4회차 여부, gate 처분 3건(review.md 「Manager 에게 올림 (범위 확장 2)」).
+- [x] 3c.8 gstack `review`(최종 diff 전체) + 다른 계열 적대 보이스(Codex) — `analysis/gstack-review-2.md`. 3회 돌림, **수렴하지 않음 — Manager 가 리뷰 루프를 닫음**(결정 4, 2026-11-16). Manager 결정 1~6 반영(review.md 「Manager 결정 반영」): 별칭·dot·blank import 금지, 범위 밖 시험 둘 삭제와 a9~a14 재분류, R4·R5·R6 기록만, gate 3건 Keep(B).
+
+- [x] 3c.9 마무리 검증(`analysis/verify-5/`)과 변이 최종판(`analysis/mutation-2/mutation2-run10.txt`: 대조군 4 + 변이 60 전부 기대대로).
 
 ## 4. 종결
 

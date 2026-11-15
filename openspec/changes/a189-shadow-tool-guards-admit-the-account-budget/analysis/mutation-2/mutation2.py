@@ -55,8 +55,7 @@ T3_UNALIASED = "TestA189AdmitCensusCountsTheUnaliasedSeamName"
 T3_DOT = "TestA189AdmitCensusIsConservativeInADotImportedFile"
 T_ONLY_ENGINE = "TestOnlyTheEngineImportsThisSeam"
 T3_LITERAL = "TestA189AdmitCensusDecodesTheImportPathLiteral"
-T3_UNSAFE = "TestA189EngineProductionNeverImportsUnsafe"
-T3_NOLINK = "TestA189NoPackageLinknamesTheSeamDoors"
+# T3_UNSAFE·T3_NOLINK 시험은 Manager 결정 2(2026-11-16)로 삭제됨 — a9~a14 는 「잡지 못함(기존 맹점, 범위 밖)」 으로 재분류
 LINKPKG = "internal/a189link/link.go"
 RELAY = "internal/app/engine/testdata/a189relay/relay.go"
 SEAMFILE = "internal/strategyhandoff/handoff.go"
@@ -66,7 +65,14 @@ HIDDEN = "internal/.a189hidden/h.go"
 
 PKG1 = ("./cmd/tossctl/", f"^{T1}$")
 PKG2 = ("./internal/app/engine/", f"^{T2}$")
-PKG3 = ("./internal/app/engine/", f"^({T3}|{T3_SPELL}|{T3_OUTSIDE}|{T3_UNALIASED}|{T3_DOT}|{T3_LITERAL}|{T3_UNSAFE}|{T3_NOLINK})$")
+PKG3 = ("./internal/app/engine/", f"^({T3}|{T3_SPELL}|{T3_OUTSIDE}|{T3_UNALIASED}|{T3_DOT}|{T3_LITERAL})$")
+# Manager 결정 1(2026-11-16): 두 그림자 도구의 import 시험이 official·accountbudget·accountbudgetruntime 의 별칭·dot·blank 를 금지함
+A128_DIR, A140_DIR = "tools/a128-jev-shadow-probe", "tools/a140-breakout-signal-shadow"
+T_IMP = "TestImportsStayInsideTheAllowlist"
+T_A128_NAMES, T_A140_NAMES = "TestNoMutatingOrAccountSurfaceIsNamed", "TestNoMutatingAccountOrWriteSurfaceIsNamed"
+PKG_A128 = ("./" + A128_DIR + "/", f"^({T_IMP}|{T_A128_NAMES})$")
+PKG_A140 = ("./" + A140_DIR + "/", f"^({T_IMP}|{T_A140_NAMES})$")
+
 PKG_SEAM = ("./internal/strategyhandoff/", f"^{T_ONLY_ENGINE}$")
 
 RESOLVE = "\tbroker, accountRef, err := l.shared.resolve(ctx)\n"
@@ -97,12 +103,26 @@ OLD_ADMIT = '''func admitSites(file *ast.File, doors map[string]bool) []string {
 '''
 
 
+PRE1_A128 = """			if ownNameOnly[path] && spec.Name != nil {
+				t.Errorf("import %q is renamed to %q; official/accountbudget/accountbudgetruntime must be imported under their own name so the name pins see every use", path, spec.Name.Name)
+			}
+"""
+PRE1_A140 = """			if strings.HasPrefix(path, module) && ownNameOnly[strings.TrimPrefix(path, module)] && spec.Name != nil {
+				t.Errorf("import %q is renamed to %q; official/accountbudget/accountbudgetruntime must be imported under their own name so the name pins see every use", path, spec.Name.Name)
+			}
+"""
+
+
 def variant_edits(name: str, text_of) -> list:
     if name == "S":
         src = text_of(CONSOLE_TEST)
         i, j = src.find(S_START), src.find(S_END)
         check(i > 0 and j > i, "S 판본 표식을 못 찾음")
         return [(CONSOLE_TEST, "once", src[i:j + len(S_END)], S_BODY)]
+    if name == "PRE1":
+        # Manager 결정 1 이전 판본(별칭 금지 갈래 없음) — 같은 변이를 결정 전 가드가 못 잡았음을 잼
+        return [(A128_DIR + "/static_test.go", "once", PRE1_A128, "\t\t\t_ = ownNameOnly // PRE1: 금지 갈래만 뺌(미사용 변수 컴파일 오류 방지)\n"),
+                (A140_DIR + "/static_test.go", "once", PRE1_A140, "\t\t\t_ = ownNameOnly // PRE1: 금지 갈래만 뺌(미사용 변수 컴파일 오류 방지)\n")]
     if name == "OLD":
         src = text_of(GUARD)
         i = src.find("func admitSites(")
@@ -161,7 +181,28 @@ FLOW_SEAM = f'(\n\t"{MOD}internal/strategyflow"\n\t{SEAM_IMPORT}\n)'
 
 ONE = lambda name, verdict="FAIL": [(PKG1, name, verdict)]
 
+def tool_alias(dir_: str, imp: str, body: str):
+    return (dir_ + "/zz_a189_decision1.go", "new", "", "package main\n\nimport (\n\t\"context\"\n\n\t" + imp + "\n)\n\n" + body)
+
+
+AB = '"' + MOD + 'internal/accountbudget"'
+D1_ALIAS = "func a189Escalate(ctx context.Context) context.Context { return ab.WithPriority(ctx, ab.Critical) }\n"
+D1_DOT = "func a189Escalate(ctx context.Context) context.Context { return WithPriority(ctx, Critical) }\n"
+D1_BLANK = "func a189Touch(ctx context.Context) context.Context { return ctx }\n"
+
+
 MUTANTS = [
+    # Manager 결정 1 — 둘째 파일의 별칭·dot·blank import(전부 FAIL), PRE1 판본은 별칭·dot 을 못 잡았음
+    ("d1a-a128-alias-critical", "", [tool_alias(A128_DIR, "ab " + AB, D1_ALIAS)], [(PKG_A128, T_IMP, "FAIL")], "a128 둘째 파일에서 별칭 import + WithPriority(ctx, ab.Critical)"),
+    ("d1a-a128-alias-critical-PRE1", "PRE1", [tool_alias(A128_DIR, "ab " + AB, D1_ALIAS)], [(PKG_A128, T_IMP, "PASS"), (PKG_A128, T_A128_NAMES, "PASS")], "[PRE1 판본] 같은 변이 — 결정 전 가드는 import·이름 시험 둘 다 통과(못 잡음)"),
+    ("d1b-a128-dot-critical", "", [tool_alias(A128_DIR, ". " + AB, D1_DOT)], [(PKG_A128, T_IMP, "FAIL")], "a128 둘째 파일에서 dot import + WithPriority(ctx, Critical)"),
+    ("d1b-a128-dot-critical-PRE1", "PRE1", [tool_alias(A128_DIR, ". " + AB, D1_DOT)], [(PKG_A128, T_IMP, "PASS"), (PKG_A128, T_A128_NAMES, "PASS")], "[PRE1 판본] 같은 변이 — 못 잡음"),
+    ("d1c-a128-blank", "", [tool_alias(A128_DIR, "_ " + AB, D1_BLANK)], [(PKG_A128, T_IMP, "FAIL")], "a128 둘째 파일에서 blank import"),
+    ("d1a-a140-alias-critical", "", [tool_alias(A140_DIR, "ab " + AB, D1_ALIAS)], [(PKG_A140, T_IMP, "FAIL")], "a140 둘째 파일에서 별칭 import + WithPriority(ctx, ab.Critical)"),
+    ("d1a-a140-alias-critical-PRE1", "PRE1", [tool_alias(A140_DIR, "ab " + AB, D1_ALIAS)], [(PKG_A140, T_IMP, "PASS"), (PKG_A140, T_A140_NAMES, "PASS")], "[PRE1 판본] 같은 변이 — 못 잡음"),
+    ("d1b-a140-dot-critical", "", [tool_alias(A140_DIR, ". " + AB, D1_DOT)], [(PKG_A140, T_IMP, "FAIL")], "a140 둘째 파일에서 dot import + WithPriority(ctx, Critical)"),
+    ("d1b-a140-dot-critical-PRE1", "PRE1", [tool_alias(A140_DIR, ". " + AB, D1_DOT)], [(PKG_A140, T_IMP, "PASS"), (PKG_A140, T_A140_NAMES, "PASS")], "[PRE1 판본] 같은 변이 — 못 잡음"),
+    ("d1c-a140-blank-official", "", [tool_alias(A140_DIR, '_ "' + MOD + 'internal/official"', D1_BLANK)], [(PKG_A140, T_IMP, "FAIL")], "a140 둘째 파일에서 official blank import"),
     # #1 콘솔 orders seam
     ("o1-second-resolve", "", O1, ONE(T1), "Orders 가 공유 resolver 를 두 번 부름(캐시라 빌드는 1회)"),
     ("o1-second-resolve-S", "S", O1, ONE(T1, "PASS"), "[S 판본] 같은 변이 — 철자만 고친 판본은 못 잡음(기대 PASS)"),
@@ -204,31 +245,28 @@ MUTANTS = [
                                  f'//go:linkname a189Mint {MOD}internal/strategyhandoff.Admit\n'
                                  'func a189Mint(bool, []strategyflow.Result) strategyhandoff.Handoff\n\n'
                                  'func a189ViaLink() { _ = a189Mint(true, nil) }\n')],
-     [(PKG3, T3_UNSAFE, "FAIL"), (PKG3, T3, "PASS")], "//go:linkname 으로 문을 다른 이름 몸체 없는 함수에 묶음 — census 는 못 셈(PASS), unsafe 금지가 막음(2차 리뷰)"),
+     [(PKG3, T3, "PASS")], "[잡지 못함 — 기존 맹점, 범위 밖] 엔진 안 //go:linkname 몸체 없는 다른 이름 함수(census PASS)"),
     ("a11-linkname-testdata-relay", "", [(RELAY, "new", "", f'package a189relay\n\nimport _ "unsafe"\n\n'
                                          f'//go:linkname door {MOD}internal/strategyhandoff.AdmitEachOwnerScope\n'
                                          'func door(bool, []struct{}) []struct{}\n\nvar Door = door\n')],
-     [(PKG3, T3_NOLINK, "FAIL")], "testdata 아래 import 가능한 중계 패키지의 linkname(3회차 리뷰 — 2회차 판본은 testdata 를 건너뜀)"),
+     [(PKG3, T3, "PASS")], "[잡지 못함 — 기존 맹점, 범위 밖] testdata 아래 중계 패키지의 linkname(census PASS)"),
     ("a12-linkname-dispatch-target", "", [(LINKPKG, "new", "", 'package a189link\n\nimport _ "unsafe"\n\n'
                                           f'//go:linkname hand {MOD}internal/app/engine.(*strategyDispatchCycle).dispatch\n'
                                           'func hand()\n\nvar Hand = hand\n')],
-     [(PKG3, T3_NOLINK, "FAIL")], "엔진 사설 dispatch 를 대상으로 하는 linkname(3회차 리뷰 — 대상 이름 필터를 비켜 감)"),
+     [(PKG3, T3, "PASS")], "[잡지 못함 — 기존 맹점, 범위 밖] 엔진 사설 dispatch 대상 linkname(census PASS)"),
     ("a13-push-linkname", "", [("internal/strategyhandoff/zz_a189push.go", "new", "", 'package strategyhandoff\n\nimport _ "unsafe"\n\n'
                                 f'//go:linkname Admit {MOD}internal/a189push.door\n'),
                                (PUSHPKG, "new", "", 'package a189push\n\nfunc door()\n\nvar Door = door\n'),
                                ("internal/a189push/empty.s", "new", "", "")],
-     [(PKG3, T3_NOLINK, "FAIL")], "경계 패키지 안에서 문을 다른 패키지 이름으로 밀어내는 linkname(3회차 리뷰)"),
+     [(PKG3, T3, "PASS")], "[잡지 못함 — 기존 맹점, 범위 밖] 경계 패키지 안 push 형태 linkname(census PASS)"),
     ("a14-symlinked-dir", "", [(".a189hiddenreal/h.go", "new", "", "package a189hidden\n"),
                                (SYMDIR, "symlink", "../.a189hiddenreal", "")],
-     [(PKG3, T3_NOLINK, "FAIL")], "디렉터리 심링크 뒤의 패키지(WalkDir 는 안 따라감 — 만나면 실패)(3회차 리뷰)"),
-    ("b3-hidden-dir-linkname", "", [(HIDDEN, "new", "", 'package h\n\nimport _ "unsafe"\n\n//go:linkname x runtime.nanotime\nfunc x() int64\n')],
-     [(PKG3, T3_NOLINK, "PASS")], "점으로 시작하는 디렉터리(import 불가)는 훑지 않음 — 무해 대조(기대 PASS)"),
+     [(PKG3, T3, "PASS")], "[잡지 못함 — 범위 밖] 디렉터리 심링크 뒤 패키지(census 는 엔진 파일만 봄 — PASS)"),
     ("a10-linkname-other-package", "", [(LINKPKG, "new", "", f'package a189link\n\nimport (\n\t_ "unsafe"\n\n\t"{MOD}internal/strategyflow"\n)\n\n'
                                        'type look struct{ a, b uintptr }\n\n'
                                        f'//go:linkname door {MOD}internal/strategyhandoff.Admit\n'
                                        'func door(bool, []strategyflow.Result) look\n\nvar Door = door\n')],
-     [(PKG3, T3_NOLINK, "FAIL"), (PKG3, T3_UNSAFE, "PASS"), (PKG3, T3, "PASS")],
-     "엔진 밖 패키지가 unsafe·linkname 으로 문을 다시 내보냄 — 엔진 unsafe 금지·census 는 못 봄, 모듈 linkname 금지가 막음(2회차 리뷰)"),
+     [(PKG3, T3, "PASS")], "[잡지 못함 — 기존 맹점, 범위 밖] 엔진 밖 패키지가 linkname 으로 문을 다시 내보냄(census PASS)"),
     # #3 무해한 같은 이름(안 잡혀야 함)
     ("b1-benign-method-call", "", [newfile('import "context"\n\nfunc a189Benign(ctx context.Context, b *exitLowerLimitBoard) error {\n'
                                            '\treturn b.admission.Admit(ctx)\n}\n')],
@@ -291,9 +329,11 @@ MUTANTS = [
 
 CONTROLS = {
     "": [(PKG1, T1, "PASS"), (PKG2, T2, "PASS"), (PKG3, T3, "PASS"), (PKG3, T3_SPELL, "PASS"), (PKG3, T3_OUTSIDE, "PASS"),
-         (PKG3, T3_UNALIASED, "PASS"), (PKG3, T3_DOT, "PASS"), (PKG3, T3_LITERAL, "PASS"), (PKG3, T3_UNSAFE, "PASS"), (PKG3, T3_NOLINK, "PASS"),
+         (PKG3, T3_UNALIASED, "PASS"), (PKG3, T3_DOT, "PASS"), (PKG3, T3_LITERAL, "PASS"),
+         (PKG_A128, T_IMP, "PASS"), (PKG_A128, T_A128_NAMES, "PASS"), (PKG_A140, T_IMP, "PASS"), (PKG_A140, T_A140_NAMES, "PASS"),
          (PKG_SEAM, T_ONLY_ENGINE, "PASS")],
     "S": [(PKG1, T1, "PASS")],
+    "PRE1": [(PKG_A128, T_IMP, "PASS"), (PKG_A140, T_IMP, "PASS")],
     # OLD 판본 대조군은 base 실패가 기대값(type 블록:Admit) — 이 변경이 없으면 생산 census 가 빨갛다는 것을 다시 잼
     "OLD": [(PKG3, T3, "FAIL"), (PKG3, T3_SPELL, "PASS")],
 }
@@ -433,11 +473,11 @@ def main() -> int:
     base = Path(tempfile.mkdtemp(prefix=f"a189-mut2-{os.getpid()}-", dir=work))
     cache = Path(tempfile.mkdtemp(prefix=f"a189-mut2-gocache-{os.getpid()}-", dir=work))
     try:
-        archive = subprocess.run(["git", "-C", str(root), "archive", "HEAD", "go.mod", "go.sum", "cmd", "internal"],
+        archive = subprocess.run(["git", "-C", str(root), "archive", "HEAD", "go.mod", "go.sum", "cmd", "internal", "tools", "docs/migration"],
                                  check=True, stdout=subprocess.PIPE).stdout
         subprocess.run(["tar", "-x", "-C", str(base)], input=archive, check=True)
         check((base / "go.mod").is_file() and not (base / ".git").exists(), "사본 모양이 다름")
-        tracked = [CONSOLE, CONSOLE_TEST, EXITLOOP, HANDOFF, GUARD]
+        tracked = [CONSOLE, CONSOLE_TEST, EXITLOOP, HANDOFF, GUARD, A128_DIR + "/static_test.go", A140_DIR + "/static_test.go"]
         starts = {f: sha(base / f) for f in tracked}
         for f in tracked:
             check(starts[f] == sha(root / f), f"작업 트리 {f} 가 HEAD 와 다름 — 커밋 뒤 돌릴 것")

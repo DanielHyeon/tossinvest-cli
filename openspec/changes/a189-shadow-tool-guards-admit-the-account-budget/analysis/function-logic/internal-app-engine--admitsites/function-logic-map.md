@@ -46,7 +46,7 @@
 ## 편집
 
 - 앞 판본(B1 range·B2 if 「이름이 문과 같은 모든 `*ast.Ident`」)을 둘로 좁힘(design D13): 경계 패키지 지역 이름의 선택자 참조(B9)와 dot import 파일의 선택자 아닌 맨 이름(B11).
-- gstack 리뷰 1회차(2026-11-16): 따옴표만 벗기던 경로 해독을 `strconv.Unquote` 로 바꿈(원시 문자열·이스케이프 철자 fail-open, 테스팅 전문가·적대 보이스). `//go:linkname` 우회는 이 함수가 아니라 새 시험 `TestA189EngineProductionNeverImportsUnsafe` 가 막음(변이 a9).
+- gstack 리뷰 1회차(2026-11-16): 따옴표만 벗기던 경로 해독을 `strconv.Unquote` 로 바꿈(원시 문자열·이스케이프 철자 fail-open, 테스팅 전문가·적대 보이스). `//go:linkname`·`unsafe` 로 census 밖에서 문에 닿는 길은 편집 전부터의 맹점 — 리뷰 중 더했던 금지 시험 둘은 Manager 결정 2(2026-11-16)로 삭제했고 범위 밖 후속임(변이 a9~a14 「잡지 못함」).
 - 잃는 검출(`analysis/mutation-2/`, design R4): 경계 밖 이름으로 문을 다시 부르는 자리 — 허용 자리 안에서 문 이름 필드로 빼돌린 뒤 다른 자리에서 부름(l1), 엔진 밖 래퍼 패키지의 같은 이름(l3, `TestOnlyTheEngineImportsThisSeam` 이 대신 막음). 다른 이름 필드 빼돌리기(l2)는 앞 판본도 못 잡던 것.
 
 ## Safety conclusion
