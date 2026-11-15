@@ -1,0 +1,12 @@
+# a189 census 고정값 갱신 — 키별 비교 원문, HEAD 6f5b9dc3a 대 작업 트리, 2026-11-15T23:43:57+09:00
+# 정식 생성 경로: 저장소에 없음(grep 'a166-wiring|shapes.json' — 읽는 곳은 a166_wiring_census_test.go:35~36 뿐). 값은 census 와 같은 추출(../census-investigation/shape.go.txt: format.Node, Doc 제거)로 만들고, Go encoding/json 문자열 인코딩(enc.go.txt)으로 기존 값 표기를 재현함을 먼저 단언한 뒤 그 값 하나만 바꿈.
+## git diff --stat
+ internal/accountbudgetruntime/testdata/a166-wiring/shapes.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+## git diff --numstat
+1	1	internal/accountbudgetruntime/testdata/a166-wiring/shapes.json
+## 키별 비교
+shapes.json: keys HEAD 90 now 90, added [], removed [], changed ['tools/a128-jev-shadow-probe/main.go||runCommandWithOptions'], unchanged 89
+sites.json: entries HEAD 116 now 116, identical True
+## sites.json 바이트 비교
+sites.json 무변경(git diff --quiet rc 0)
