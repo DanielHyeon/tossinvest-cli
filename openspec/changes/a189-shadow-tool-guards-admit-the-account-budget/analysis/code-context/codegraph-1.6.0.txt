@@ -1,0 +1,118 @@
+# codegraph 1.6.0, index = main checkout /mnt/D/Axipient/workspace/TossOS (HEAD 7d1e3163a, clean), 실행 2026-11-15T22:26:36+09:00
+
+CodeGraph Status
+
+Project: /mnt/D/Axipient/workspace/TossOS
+
+Index Statistics:
+  Files:     3,191
+  Nodes:     55,114
+  Edges:     195,451
+  DB Size:   1139.73 MB
+  Backend:   node:sqlite — built-in (full WAL)
+  Journal:   wal
+
+Nodes by Kind:
+  import          18,510
+## codegraph callers a112MBUSReferenceAllowed
+
+Callers of "a112MBUSReferenceAllowed" (1):
+
+function    a112MBUSFindForbiddenRefs
+  internal/official/a112_mbus_static_test.go:423
+
+## codegraph callers a112MBUSFindForbiddenRefs
+
+Callers of "a112MBUSFindForbiddenRefs" (4):
+
+function    TestA112MBUSResolvedASTGuardCatchesProductSelectorAndTypeReference
+  internal/official/a112_mbus_static_test.go:193
+
+function    TestA112MBUSResolvedASTGuardCatchesSamePackageUnqualifiedReference
+  internal/official/a112_mbus_static_test.go:204
+
+function    TestA112MBUSResolvedASTGuardIgnoresUnrelatedOfficialPackageLocal
+  internal/official/a112_mbus_static_test.go:220
+
+function    a112MBUSRepositoryForbiddenRefs
+  internal/official/a112_mbus_static_test.go:394
+
+## codegraph callers a112MBUSRepositoryForbiddenRefs
+
+Callers of "a112MBUSRepositoryForbiddenRefs" (1):
+
+function    TestA112MBUSStaticNoProductCallerOrForbiddenPath
+  internal/official/a112_mbus_static_test.go:170
+
+## codegraph callers a112MBUSSurfaceName
+
+Callers of "a112MBUSSurfaceName" (1):
+
+function    a112MBUSFindForbiddenRefs
+  internal/official/a112_mbus_static_test.go:423
+
+## codegraph callers nonTestSources
+
+Callers of "nonTestSources" (13):
+
+function    TestMarketSourceIsTheReadOnlyGets
+  tools/a128-jev-shadow-probe/static_test.go:49
+
+function    TestNoMutatingOrAccountSurfaceIsNamed
+  tools/a128-jev-shadow-probe/static_test.go:78
+
+function    TestOutboundBytesPassTheStateGuard
+  tools/a128-jev-shadow-probe/static_test.go:131
+
+function    TestImportsStayInsideTheAllowlist
+  tools/a128-jev-shadow-probe/static_test.go:162
+
+function    TestWTSSourceIsTheThreeReads
+  tools/a128-jev-shadow-probe/static_test.go:186
+
+function    TestMarketSourceIsTheFiveReadOnlyGets
+  tools/a140-breakout-signal-shadow/static_test.go:46
+
+function    TestNoMutatingAccountOrWriteSurfaceIsNamed
+  tools/a140-breakout-signal-shadow/static_test.go:70
+
+function    TestImportsStayInsideTheAllowlist
+  tools/a140-breakout-signal-shadow/static_test.go:118
+
+function    funcDecl
+  tools/a087-market-sell-probe/static_test.go:43
+
+function    TestOnlySendOnceCallsDoAndItHasNoLoop
+  tools/a087-market-sell-probe/static_test.go:58
+
+function    TestSendOnceIsCalledOnceFromExecute
+  tools/a087-market-sell-probe/static_test.go:101
+
+function    TestNoProductionOrderSurfaceIsNamed
+  tools/a087-market-sell-probe/static_test.go:150
+
+function    TestImportsStayInsideTheAllowlist
+  tools/a087-market-sell-probe/static_test.go:189
+
+## codegraph callers TestNoMutatingOrAccountSurfaceIsNamed
+ℹ No callers found for "TestNoMutatingOrAccountSurfaceIsNamed"
+## codegraph callers TestNoMutatingAccountOrWriteSurfaceIsNamed
+ℹ No callers found for "TestNoMutatingAccountOrWriteSurfaceIsNamed"
+## codegraph callers TestImportsStayInsideTheAllowlist
+ℹ No callers found for "TestImportsStayInsideTheAllowlist"
+## codegraph callers TestA166RuntimeV2A112CloneRecordsPending
+ℹ No callers found for "TestA166RuntimeV2A112CloneRecordsPending"
+## codegraph affected --filter '*_test.go' (3 guard files)
+
+Affected test files (3):
+
+  internal/official/a112_mbus_static_test.go
+  tools/a128-jev-shadow-probe/static_test.go
+  tools/a140-breakout-signal-shadow/static_test.go
+
+## codegraph affected (default, 비교용)
+
+Affected test files (1):
+
+  auth-helper/tests/test_cli.py
+

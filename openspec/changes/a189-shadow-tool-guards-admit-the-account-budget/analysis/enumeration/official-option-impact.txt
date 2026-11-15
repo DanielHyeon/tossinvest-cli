@@ -1,0 +1,47 @@
+# a189 D5 — official.Option 허용의 영향 원문, HEAD 7d1e3163a, 2026-11-15T22:27:59+09:00
+## go doc ./internal/official Option (타입과 Option 을 돌려주는 생성자)
+package official // import "github.com/JungHoonGhae/tossinvest-cli/internal/official"
+
+type Option func(*Client)
+    Option configures a Client.
+
+func WithAccountSeq(seq int) Option
+func WithBaseURL(u string) Option
+func WithHTTPClient(hc *http.Client) Option
+
+## go doc -u=false ./internal/official Client 의 struct 부분(내보낸 필드 유무)
+package official // import "github.com/JungHoonGhae/tossinvest-cli/internal/official"
+
+type Client struct {
+	// Has unexported fields.
+}
+    Client is the official Toss Open API client. It manages OAuth2 token
+    acquisition/refresh and provides authed HTTP helpers.
+
+func New(creds Credentials, cacheFile string, opts ...Option) *Client
+
+## 내보낸 생성자 중 Option 반환 — grep '^func With' internal/official/*.go (비시험)
+internal/official/client.go:62:func WithBaseURL(u string) Option {
+internal/official/client.go:75:func WithHTTPClient(hc *http.Client) Option {
+internal/official/client.go:91:func WithAccountSeq(seq int) Option {
+internal/official/trace.go:29:func WithAttemptObserver(ctx context.Context, observer AttemptObserver) context.Context {
+
+## 두 도구 비시험 소스의 official.With* / official.Option( 출현 — grep
+(0건)
+
+## 두 도구 시험 소스에서 With* 를 쓰는 자리(nonTestSources 밖 — 가드 대상 아님)
+tools/a128-jev-shadow-probe/a166_budget_test.go:70:	err := runCommandWithOptions(ctx, []string{"--market", "KR", "--out", filepath.Join(base, "ledger")}, func(string) string { return "fixture" }, official.WithBaseURL(server.URL), official.WithHTTPClient(&http.Client{Transport: a166AuxTransport{base: tr}}))
+tools/a128-jev-shadow-probe/a166_budget_test.go:143:	err := runCommandWithOptions(ctx, []string{"--market", "KR", "--out", filepath.Join(base, "ledger")}, func(string) string { return "fixture" }, official.WithBaseURL(server.URL), official.WithHTTPClient(&http.Client{Transport: tr}))
+tools/a128-jev-shadow-probe/helpers_test.go:190:		filepath.Join(t.TempDir(), "openapi-token.json"), official.WithBaseURL(m.server.URL))
+tools/a128-jev-shadow-probe/profile_cycle_test.go:33:	src := official.New(official.Credentials{APIKey: "mock", SecretKey: "mock"}, filepath.Join(t.TempDir(), "token"), official.WithBaseURL("http://fixture"), official.WithHTTPClient(handlerTransport(m.serve)))
+tools/a128-jev-shadow-probe/profile_cycle_test.go:193:	src := official.New(official.Credentials{APIKey: "mock", SecretKey: "mock"}, filepath.Join(t.TempDir(), "token"), official.WithBaseURL("http://fixture"), official.WithHTTPClient(handlerTransport(m.serve)))
+tools/a128-jev-shadow-probe/profile_cycle_test.go:255:	src := official.New(official.Credentials{APIKey: "mock", SecretKey: "mock"}, filepath.Join(t.TempDir(), "token"), official.WithBaseURL("http://fixture"), official.WithHTTPClient(handlerTransport(m.serve)))
+tools/a128-jev-shadow-probe/profile_cycle_test.go:329:	src := official.New(official.Credentials{APIKey: "mock", SecretKey: "mock"}, filepath.Join(t.TempDir(), "token"), official.WithBaseURL("http://fixture"), official.WithHTTPClient(handlerTransport(m.serve)))
+tools/a140-breakout-signal-shadow/a166_budget_test.go:69:	err := runCommandWithOptions(ctx, []string{"--evidence-db", filepath.Join(base, "shadow.sqlite"), "--out", filepath.Join(base, "ledger"), "--risk-budget-krw", "1000", "--notional-cap-krw", "10000"}, official.WithBaseURL(server.URL), official.WithHTTPClient(&http.Client{Transport: a166AuxTransport{base: tr}}))
+tools/a140-breakout-signal-shadow/a166_budget_test.go:142:	err := runCommandWithOptions(ctx, []string{"--evidence-db", filepath.Join(base, "shadow.sqlite"), "--out", filepath.Join(base, "ledger"), "--risk-budget-krw", "1000", "--notional-cap-krw", "10000"}, official.WithBaseURL(server.URL), official.WithHTTPClient(&http.Client{Transport: tr}))
+
+## runCommandWithOptions 호출자(비시험)
+tools/a140-breakout-signal-shadow/main.go:71:	return runCommandWithOptions(ctx, args)
+tools/a140-breakout-signal-shadow/main.go:74:func runCommandWithOptions(ctx context.Context, args []string, opts ...official.Option) (result error) {
+tools/a128-jev-shadow-probe/main.go:77:	return runCommandWithOptions(ctx, args, getenv)
+tools/a128-jev-shadow-probe/main.go:80:func runCommandWithOptions(ctx context.Context, args []string, getenv func(string) string, opts ...official.Option) (result error) {

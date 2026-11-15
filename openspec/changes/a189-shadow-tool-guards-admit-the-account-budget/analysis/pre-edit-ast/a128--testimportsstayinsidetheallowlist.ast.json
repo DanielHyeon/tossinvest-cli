@@ -1,0 +1,102 @@
+{
+  "file": "tools/a128-jev-shadow-probe/static_test.go",
+  "source_sha256": "dd2ead3aef6040be1084fa693c3ac741a0ffd347bc22cb69a3b962c5a5375756",
+  "package": "main",
+  "function": "TestImportsStayInsideTheAllowlist",
+  "signature": "TestImportsStayInsideTheAllowlist(params=1, results=0)",
+  "start": {
+    "line": 162,
+    "column": 1
+  },
+  "end": {
+    "line": 181,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 173,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 174,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 176,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 2
+      },
+      "text": "t.Parallel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 23
+      },
+      "text": "nonTestSources"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 15
+      },
+      "text": "strconv.Unquote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 176,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 164,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 175,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,132 @@
+# Design
+
+## Context
+
+### 가드가 이름을 세는 방법 (편집 전 AST, `analysis/pre-edit-ast/`, base `7d1e3163a`)
+
+- 두 도구의 `nonTestSources` 는 `<도구 디렉터리>/*.go` 중 `_test.go` 를 뺀 파일을 `parser.ParseFile(…, 0)` 로 읽음. 빌드 태그는 보지 않음.
+- a128 `TestNoMutatingOrAccountSurfaceIsNamed`(static_test.go:78~126, 분기 8):
+  - B1 range(99) 파일마다 `ast.Inspect`.
+  - B2 if(102) `SelectorExpr` 아니면 계속.
+  - B3 if(105) **모든** 선택자의 `Sel` 이름이 `forbidden` 에 있으면 실패 — 패키지와 무관함.
+  - B4 if(108) X 식별자가 `official` 이면 B5 if(110) `allowedOfficial` 밖이면 실패.
+  - B6 if(114) X 가 `tossconfig` 이면 B7 if(116) `allowedConfig` 밖이면 실패.
+  - B8 if(123) `official`·`tossconfig` 중 하나라도 못 봤으면 Fatal.
+- a128 `TestImportsStayInsideTheAllowlist`(162~181, 분기 3): B1·B2 range(173·174), B3 if(176) 경로에 `.` 이 있고 `allowedModule` 밖이면 실패.
+- a140 `TestNoMutatingAccountOrWriteSurfaceIsNamed`(70~116, 분기 8):
+  - B3 if(97) `forbidden` 은 a128 과 같은 전역 검사.
+  - B4 if(100)·B5 if(101) X 식별자가 `allowed` 맵의 키이면 B6 if(103) 그 패키지 목록 밖이면 실패.
+  - B7 range(111)·B8 if(112) `allowed` 의 키마다 `saw` 가 없으면 실패.
+  - 그래서 `allowed` 에 패키지를 더하면 「본 것 없음」 검사도 자동으로 그 패키지에 걸림.
+- a140 `TestImportsStayInsideTheAllowlist`(118~136, 분기 4): B3 if(128) 표준 라이브러리 건너뜀, B4 if(131) 모듈 접두사 밖이거나 접미사가 `allowed` 밖이면 실패.
+- 두 도구 모두 패키지는 **선택자의 X 식별자 철자**로 가림. import 경로가 아님.
+- A112 `a112MBUSReferenceAllowed`(a112_mbus_static_test.go:489~498, 분기 2, return 3):
+  - B1 if(491) `tools/a112-mb-us-source/` 접두사 → true.
+  - B2 if(494) `internal/official/a112_mbus_` 접두사이면서 `_test.go` 접미사 → true.
+  - 마지막 return(497) 정의 파일 세 경로와의 정확한 비교.
+  - 호출자는 `a112MBUSFindForbiddenRefs` 하나(CodeGraph 1.6.0, `analysis/code-context/codegraph-1.6.0.txt`). 그 함수가 true 이면 파일을 파싱하지도 않고 위반 0 을 돌려줌.
+
+### 지금 비시험 소스가 쓰는 이름 (D2 열거, `analysis/enumeration/selectors-and-imports.txt`)
+
+열거는 `nonTestSources` 와 같은 파일 집합(a128 12개, a140 13개)을 같은 파서 모드로 읽음.
+
+| 도구 | import (새 것) | `official.*` | `accountbudget.*` | `accountbudgetruntime.*` |
+|---|---|---|---|---|
+| a128 | `internal/accountbudget`, `internal/accountbudgetruntime`(둘 다 별칭 없음) | ErrRateLimited, LoadCredentials, MarketCalendarResponse, **Option**(main.go:80), StrictMinutePage, StrictTopOfBook | Auxiliary·WithPriority(main.go:164) | Open(main.go:154), ParseLaunchConfig(main.go:149) |
+| a140 | 같은 둘(별칭 없음) | ErrRateLimited, LoadCredentials, MarketCalendarResponse, **Option**(main.go:74), StrictLastPrice, StrictMinutePage, StrictTopOfBook | Auxiliary·WithPriority(main.go:156) | Open(main.go:146), ParseLaunchConfig(main.go:141) |
+
+- 굵은 `Option` 만 현 허용 목록 밖임. 나머지 `official.*` 는 이미 허용됨.
+- 열거에 따르면 현 허용 목록 중 a128 `New`·`Client`·`Credentials`, a140 `New`·`Client` 는 지금 쓰이지 않음. 이 change 에서는 정리하지 않음(Non-goals).
+- 예산 쪽 다른 호출(`factory.NewClient`, `factory.Close`, `budgetConfig.CleanupError`)은 X 가 지역 변수라 패키지 추적 대상이 아님. 이름이 `forbidden` 에 없음을 base 실패 원문으로 확인함: B3 실패 줄이 0개.
+
+## Goals / Non-Goals
+
+- Goal: 실패하는 가드 5개를 시험 파일 편집만으로 통과시킴. 넓히는 폭은 위 표의 이름만큼만이고, 새로 들이는 두 패키지는 선택자 이름까지 고정함.
+- Non-goal: 비시험 코드, 금지 목록 약화, 미사용 허용 이름 정리, 별칭 우회 막기, a128 요구사항 신설.
+
+## Decisions
+
+### D1. 고치는 것은 시험 파일의 허용 목록뿐
+
+a166 의 배선(`78d777cfe`)은 의도된 것임. 되돌리면 두 도구가 공유 예산 밖에서 요청을 보내므로 a166 요구사항(계좌 공유 요청 admission)과 어긋남.
+
+### D2. 새 패키지는 기존 패키지별 허용 맵 모양으로 고정
+
+- a140: 기존 `allowed` 맵에 두 키를 더함. B7·B8 이 「본 것 없음」을 같이 잼.
+- a128: `TestNoMutatingOrAccountSurfaceIsNamed` 안에 같은 파일 `TestWTSSourceIsTheThreeReads` 의 `allowedPackage`+`saw` 모양을 그대로 둠(새 헬퍼 없음). 같은 `ast.Inspect` 콜백에 갈래 하나를 더하고, 루프 뒤에 두 패키지의 `saw` 검사를 더함.
+- import 허용 목록은 두 경로만 더함.
+
+### D3. 금지 목록과 기존 검사는 그대로
+
+`forbidden` 맵, `allowedConfig`, `journal`·`tossconfig` 항목, `marketSource`·`wtsSource` 메서드 고정 시험은 글자 하나 바꾸지 않음.
+
+### D4. A112 가드 — 선택지 비교 (Manager 결정)
+
+| | A. 경로 한 줄 허용 | B. 참조를 없앰(시험 이동) | A-wide. 모든 `_test.go` 면제 |
+|---|---|---|---|
+| 편집 | `a112MBUSReferenceAllowed` 마지막 return 의 정확한 경로 비교에 `internal/accountbudgetruntime/v2_token_test.go` 를 더함(1줄) | `TestA166RuntimeV2A112CloneRecordsPending`(v2_token_test.go:392~470, 분기 14·호출 76)을 지우고, `internal/official/a112_mbus_*_test.go` 에 다시 씀 | `strings.HasSuffix(path, "_test.go")` 면 true |
+| 새로 통과하는 입력 | 그 파일 하나. 그 안에서는 M-B0 이름 다섯(`A112MBUSResult`·`HoldError`·`Candle`·`Orderbook`·`Calendar`) 전부 허용 — 파일 단위 면제라 이름 단위로는 못 좁힘 | 없음(가드 무편집) | 저장소의 모든 시험 파일 |
+| 비용 | FLM 번들 1개 | 옮길 자리에서 `accountbudgetruntime` 의 비공개 시험 도우미 `setupGroup`·`manifest`·`a166RuntimeStore` 를 쓸 수 없음. 패키지 `official` 안 시험은 `accountbudgetruntime` 을 import 하면 순환이 되므로 `official_test` 외부 시험으로 써야 하고 매니페스트 준비를 새로 짜야 함. 삭제한 base 함수에 `revision: base` 번들 필요. 활성 change a166 의 파일을 건드림 | 1줄 |
+| 위험 | 판정 범위가 파일 하나로 닫힘 | 옮기는 중 시험이 지키던 것(복제 전송의 대기 관측 계수)을 잃을 수 있음 | 시험 파일에서 M-B0 를 부르는 새 경로를 아무도 못 봄. 가드 목적(제품 caller 0)에는 맞지만 범위가 열림 — 추천하지 않음 |
+| 스펙 | 정본 문장 「M-B0 exported-symbol references are allowed only in their definitions, M-B0 tests and the exact tool」(breakout-retest-strategy-lane:91)과의 관계가 결정 대상(아래) | 문장 그대로 | 문장을 넓혀야 함 |
+
+**추천: A.**
+- 가장 작은 변경임.
+- 그 시험은 M-B0 복제 전송이 공유 예산에 대기 관측으로 계수되는지를 증명함. 그대로 두는 것이 a166 증거를 지킴.
+- 이미 같은 계열 시험이 M-B0 명명 규칙 안에 있음: `internal/official/a112_mbus_a166_test.go` `TestA166A112CloneSharesBudget`. 다만 그것은 `accountbudget` 만 쓰고 런타임 팩토리·관측 저장소는 쓰지 않아 대체가 아님.
+
+A 를 고를 때 스펙 처리 둘 중 하나를 Manager 가 정함:
+- A-1(해석): 그 시험은 실질적으로 「M-B0 test」이고, 가드의 경로 접두사는 구현의 더 좁은 정의임 → 스펙 개정 없음. 문장 해석이 기록에만 남음.
+- A-2(개정): `analysis/option-a-mb0-delta-draft.md`(정본 90~126행 블록을 그대로 복사하고 한 문장만 바꾼 MODIFIED 초안)를 specs/ 로 옮김. 블록이 커서 옮겨 적는 오류 위험은 생성 스크립트(정확한 문자열 대조 assert)로 줄였음.
+
+A 의 부수 영향:
+- `internal/official/a112_mbus_static_test.go` 는 M-B1 도구의 측정 소스 신원 집합에 들어 있음(`tools/a112-mb-us-source/identity.go:802` `measurementSourceDigests`).
+- 그래서 앞으로의 M-B 영수증에 적히는 이 파일의 sha256 이 바뀜(현재 `a6cbe55c…bf9659`).
+- 저장소에서 이 값을 상수로 고정한 곳은 없음(`grep` 0건, `.gz` 는 안 봤음). 신원 비교는 한 실행 안의 전후 대조임.
+- 이 파일이 바뀌는 것은 2026-08-17(`29f050545`) 이후 처음임.
+- B 는 이 파일을 건드리지 않음.
+
+### D5. `official.Option` 허용의 영향
+
+원문: `analysis/enumeration/official-option-impact.txt`.
+
+- 가드는 `official.<이름>` 을 이름 하나씩 봄(B5/B6). `Option` 을 더하면 새로 통과하는 것은 선택자 `official.Option` 하나뿐임. 위치는 타입 자리(가변 인자 `...official.Option`, 변수·슬라이스 타입)와 변환식 `official.Option(f)` 둘 다임.
+- `Option` 을 돌려주는 생성자 `WithBaseURL`·`WithHTTPClient`·`WithAccountSeq` 는 각자 다른 선택자 이름이라 여전히 개별 허용이 필요함 — 둘 다 허용 목록에 없음. `WithAccountSeq` 는 `forbidden` 에도 있어 어느 패키지 앞에서든 실패함. `WithAttemptObserver`(trace.go:29)는 `Option` 이 아니지만 역시 목록 밖임.
+- 지금 비시험 소스에서 `official.With*`·`official.Option(` 출현은 0건임. 운영 경로 `runCommand` 는 옵션 없이 `runCommandWithOptions` 를 부르고, 옵션을 넘기는 곳은 시험 파일뿐임(가드 대상 밖).
+- 변환식 경로: `official.Option(func(c *official.Client){…})` 는 이름 검사를 통과할 수 있음. 그 클로저가 얻는 것은 `*official.Client` 하나임.
+  - `Client` 에는 내보낸 필드가 없음(`go doc`: 「Has unexported fields」).
+  - 그래서 할 수 있는 것은 내보낸 메서드 호출뿐이고, 그 이름도 B3 `forbidden` 검사를 그대로 받음.
+  - 도구는 이미 `factory.NewClient` 가 돌려준 `*official.Client` 를 들고 있음. 그러니 도달 범위가 새로 늘지 않음.
+  - 생성 뒤에는 `configurationSealed` 로 표준 옵션 재적용이 막힘(client.go:30~32 주석).
+
+### D6. 고칠 함수와 FLM 번들
+
+- 선택지 A 기준 5개. 편집 전 AST 는 `analysis/pre-edit-ast/` 의 5개 파일이고, B 비교용으로 `optionB-…` 1개를 더 둠. 편집 뒤 번들은 2단계에서 `scaffold_analysis.py` 와 `go run ./tools/logic-map` 으로 만듦.
+- 같은 이름 `TestImportsStayInsideTheAllowlist` 가 두 패키지에 있음. 번들 디렉터리는 패키지 경로로 갈림.
+
+### D7. 위험도와 검증
+
+- 주문·손절 경로가 아니고 시험 전용임(Small). 다만 읽기 전용 프로브의 안전 가드 판정을 바꿈.
+- 2단계에서 사본 변이(양성 대조군)를 돌림. 넓힌 뒤에도 다음을 각각 넣으면 해당 가드가 실패하는지 봄:
+  - 목록 밖 예산 이름(예: `accountbudget.Critical`, `accountbudgetruntime.Config`)
+  - 금지 이름(예: `PlaceOrder`)
+  - 목록 밖 official 이름(예: `official.WithBaseURL`)
+  - 목록 밖 import
+  - 예산 패키지 선택자 전부 제거(「본 것 없음」)
+  - A112: 허용 경로 밖 시험 파일의 M-B0 참조
+- 다중 적대 리뷰는 `not-applicable`(비례 원칙: High-risk 경로·게이트 판정 직접 변경 아님). gstack `review` 1회.
+
+## Risks / Trade-offs
+
+- R1 별칭 우회: 두 도구의 가드는 X 식별자 철자로 패키지를 가림. 그래서 `ab "…/accountbudget"` 처럼 별칭으로 import 하면 import 검사는 통과하고 선택자 이름 고정은 비켜 감. `official`·`tossconfig` 도 지금 같은 한계가 있음(기존). 이 change 는 이 구멍을 넓히지도 좁히지도 않음. 막으려면 import 의 지역 이름을 함께 고정해야 함 — 별도 결정.
+- R2 A 의 파일 단위 면제: v2_token_test.go 에 M-B0 이름이 더 들어와도 가드가 안 봄. 그 파일은 시험 파일이라 제품 caller 0 이라는 가드 목적은 유지됨.
+- R3 M-B1 신원 집합의 파일 변경(D4 부수 영향).
+
+## Migration Plan
+
+없음 — 시험 파일만 바뀜. 되돌리기는 커밋 revert.
+
+## Open Questions
+
+- D4 선택지(A/B/A-wide)와 A 일 때 스펙 처리(A-1/A-2).
+- R1 을 이 change 에서 다룰지 여부(추천: 다루지 않음 — 요청 범위 밖).
