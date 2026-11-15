@@ -2,7 +2,9 @@
 """a189 tasks 3.1 사본 변이 하네스(양성 대조군).
 
 HEAD 를 git archive 로 pid 붙은 임시 디렉터리에 풀고 그 사본에서만 변이함(작업 트리는 건드리지 않음).
-사본에는 go.mod·go.sum·cmd·internal·tools 와 openspec 아래 추적된 .go 파일을 넣음(A112 가드의 저장소 순회 대상과 같게).
+사본에는 go.mod·go.sum·cmd·internal·tools·docs/migration 과 openspec 아래 추적된 .go 파일을 넣음(A112 가드의 저장소 순회 대상과 같게).
+docs/migration 은 a140 TestA169SecurityTypeOpenAPIEnum 이 ../../docs/migration/openapi.latest.json 을 읽기 때문임
+(1차 대조군이 그 파일 없음으로 FAIL — history-1-control-missing-docs-migration.txt).
 - 작업 트리의 변이 대상 파일이 HEAD 와 같은지 먼저 단언함(커밋 뒤 돌릴 것).
 - 무변이 대조군이 GREEN 이 아니면 멈춤.
 - 변이마다: 대상 문자열이 정확히 1회인지 단언 → 적용 → 변이 문자열이 사본에 들어갔는지 단언 →
@@ -113,7 +115,7 @@ def main() -> int:
     cache = Path(tempfile.mkdtemp(prefix=f"a189-mut-gocache-{os.getpid()}-"))
     try:
         extra = subprocess.check_output(["git", "-C", str(root), "ls-files", "openspec/*.go"], text=True).split()
-        archive = subprocess.run(["git", "-C", str(root), "archive", "HEAD", "go.mod", "go.sum", "cmd", "internal", "tools", *extra],
+        archive = subprocess.run(["git", "-C", str(root), "archive", "HEAD", "go.mod", "go.sum", "cmd", "internal", "tools", "docs/migration", *extra],
                                  check=True, stdout=subprocess.PIPE).stdout
         subprocess.run(["tar", "-x", "-C", str(base)], input=archive, check=True)
         assert (base / "go.mod").is_file() and not (base / ".git").exists()
