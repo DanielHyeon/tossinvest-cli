@@ -1,0 +1,200 @@
+{
+  "file": "tools/a140-breakout-signal-shadow/static_test.go",
+  "source_sha256": "e26c7d67b76851aadaa12b3d9c2b9c01e546f4860f895e7bc1d952082722a1cc",
+  "package": "main",
+  "function": "TestNoMutatingAccountOrWriteSurfaceIsNamed",
+  "signature": "TestNoMutatingAccountOrWriteSurfaceIsNamed(params=1, results=0)",
+  "start": {
+    "line": 70,
+    "column": 1
+  },
+  "end": {
+    "line": 121,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 99,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 102,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 105,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 106,
+        "column": 5
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 108,
+        "column": 6
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "range",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 117,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 100,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 113,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 2
+      },
+      "text": "t.Parallel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 23
+      },
+      "text": "nonTestSources"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 3
+      },
+      "text": "ast.Inspect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 7
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 72,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 98,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 105,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 106,
+        "column": 8
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 107,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
