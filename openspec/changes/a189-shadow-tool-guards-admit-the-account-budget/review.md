@@ -67,3 +67,17 @@ Pre-Edit Gate:
 - design Risks R1~R3.
 - `tools/a112-mb-us-source` 시험이 가드 파일 sha 변경에 반응하는지는 아직 안 돌려 봄(3.2).
 - `.gz` 영수증 안의 sha 고정 여부는 안 봤음.
+
+## Manager 결정 (2026-11-15)
+
+- D4 = A: `a112MBUSReferenceAllowed` 의 마지막 정확 경로 비교에 `internal/accountbudgetruntime/v2_token_test.go` 하나만 더함. 접두사·접미사 조건 무편집. A-wide 기각.
+- 스펙 = A-2: M-B0 요구사항의 한 문장만 개정. 정본 블록과의 차이가 그 문장 하나뿐임은 `analysis/spec-a2-mb0-diff.txt`(글자 단위 차이 2건이 같은 문장 안, 옛 문장 제거·새 문장 제거 뒤 블록 동일 True).
+- R1(별칭 import 우회) = 범위 밖. 후속 항목은 아래 「후속」.
+
+## 2단계 기록 (구현 팀메이트 Opus, 2026-11-15)
+
+- 2.1 RED(`analysis/tdd/red-2.1.txt`, HEAD cade0c638): 다섯 시험 FAIL 5·PASS 0, 문구는 base 실패 원문과 같음.
+- 2.2 GREEN(acc14449d, `analysis/tdd/green-2.2.txt`): PASS 5·FAIL 0. 편집은 proposal 「What Changes」의 이름뿐. a128 import 실패 문구의 괄호 목록에 두 패키지를 더함(proposal 에 적은 대로 — 문구가 허용 목록과 어긋나지 않게).
+- 3.1 변이 중 **시험 1개 추가**(6e6b29a5e): `internal/official/a112_mbus_a189_static_test.go` `TestA189MBUSGuardAdmitsOnlyTheExactA166RuntimeTestFile`. 1차 변이에서 정확 경로를 접두사(g2)·접미사(g3)로 넓힌 변이가 **SURVIVED** 했기 때문임(`analysis/mutation/mutation-before-fixture.txt`). 그 수리 없이 Manager 지시 g 항목(「접두사로 넓힌 변이 → 그 픽스처에 잡혀야 함」)을 만족할 커밋된 시험이 없었음. 새 파일·새 함수라 gate ⑤ required 는 5 그대로.
+- 2.3 FLM/BTM 번들 5개(d929433ba), `check_analysis.py` 원문 `analysis/tdd/check-analysis-2.3.txt`: `evidence complete or diff-proven exempt`, rc 0.
+- 3.1 변이: 1차 대조군은 사본에 `docs/migration` 이 없어 a140 `TestA169SecurityTypeOpenAPIEnum` 이 FAIL → 판정 중단(`history-1-control-missing-docs-migration.txt`). 사본 목록을 고쳐 다시 돎. 픽스처 전 18종 중 16 CAUGHT·2 SURVIVED(g2·g3), 픽스처 뒤 18/18 CAUGHT(`mutation-after-fixture.txt`, 기준 6e6b29a5e). gstack 리뷰 반영 뒤 하네스(기대 시험 이름 단언·HOME/XDG 격리)로 3차(`mutation-after-review.txt`).
