@@ -45,7 +45,7 @@
     - STORY-TOS-a166 — 같은 계좌를 치는 모든 TossOS 프로세스가 하나의 3 req/s 예산을 나눠 쓰고, 엔진 폴링 GET 은 429 에 같은 주기 안 재시도하지 않는다 [in_progress] → `a166-account-shared-rate-limit`
     - STORY-TOS-a168 — 검증 대사 읽기가 중복 키·모호한 성공 상태의 브로커 응답을 거절한다 [in_progress] → `a168-verify-read-decode-hardening`
     - STORY-TOS-a171 — 진입 접수의 결과 불명은 8s 창 안에서 조회 후 부재일 때만 같은 키로 재전송하고, 재전송 ACK 는 목록 대조 뒤에만 확정한다 [in_progress] → `a171-entry-place-ambiguous-resend`
-    - STORY-TOS-a189 — 그림자 측정 도구·M-B0 정적 가드가 a166 계좌 공유 요청 예산 배선을 이름 단위로 받아 main 의 go test 를 다시 통과시킴 [implemented] → `a189-shadow-tool-guards-admit-the-account-budget`
+    - STORY-TOS-a189 — 그림자 측정 도구·M-B0 정적 가드가 a166 계좌 공유 요청 예산 배선을 이름 단위로 받아 main 의 go test 를 다시 통과시킴 [in_progress] → `a189-shadow-tool-guards-admit-the-account-budget`
   - FEAT-TOS-003 — Engine interlocks and Guardian controls [active]
     - STORY-TOS-013 — Attest supervised mutation coverage [archived] → `attest-covers-supervised-mutations`
     - STORY-TOS-014 — Size the US Guardian risk tier [archived] → `size-us-guardian-tier`

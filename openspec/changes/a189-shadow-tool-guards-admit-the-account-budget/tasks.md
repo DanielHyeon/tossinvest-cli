@@ -47,5 +47,5 @@
 
 ## 4. 종결
 
-- [x] 4.1 PM check, strict validate, archive 와 Story 경로 동기화. 검증된 교훈만 retain.
-  - 사용자 지시(2026-11-15, Manager 전달)로 병합·push·`make gate`·archive 를 종결 팀메이트 Opus 가 수행. gate ②의 미완료 0건 선행 조건으로 gate 전에 체크하며(선례 a165 4.1), 실제 gate 결과·archive·Story 경로·PM check 영수증은 PASS 뒤 review.md 「종결」에 기록함. retain 은 이 종결 위임 범위(병합·push·gate·archive) 밖이라 종결 팀메이트는 하지 않음 — Manager 몫으로 넘김.
+- [ ] 4.1 PM check, strict validate, archive 와 Story 경로 동기화. 검증된 교훈만 retain.
+  - 2026-11-16 종결 시도(종결 팀메이트 Opus): gate ② 선행 조건으로 체크했던 것을 되돌림 — 완료 gate 가 ⑪ 에서 FAIL 해 archive 하지 못함. 1회차 ⑦ FAIL(`internal/performance` p95 2.22s > 2s, 부하 — 단독 재실행 p95 596ms), 2회차 ①~⑩ OK · ⑪ `make validate` FAIL(openspec 1.16.0 strict 경고로 51/59 실패, a189·a187 자체는 valid). 원문 `analysis/gate/`, 기록 review.md 「종결 시도 — 2026-11-16」. Manager·사람 결정 대기.

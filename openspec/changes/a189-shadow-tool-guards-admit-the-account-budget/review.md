@@ -280,3 +280,14 @@ Manager(Fable) 가 HEAD `974a9c623` 에서 한 독립 재검증. 원문은 `anal
   - M5 a128·a140 에 별칭 import → 두 도구 `TestImportsStayInsideTheAllowlist` FAIL.
 - Manager 결정(스펙 문장 2건, 위 절): 고치지 않음. 스펙 문장은 도구가 지켜야 할 요구이고 정적 검사는 그 일부를 강제함. 강제하지 못하는 부분은 남은 위험 R5·R6.
 - tasks 3.2 의 `tools/a112-mb-us-source` 는 위 Manager 전체 시험(`make test`)에 포함돼 ok 임. 종결 팀메이트가 `full2-test.txt` 125행을 직접 확인함: `ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-mb-us-source	(cached)` — go 시험 캐시 적중(같은 입력의 앞선 통과 결과 재사용)으로 찍힌 ok 임. 이 근거로 3.2 와 3.4 를 체크함.
+
+## 종결 시도 — 2026-11-16 (종결 팀메이트 Opus) — gate ⑪ FAIL 로 중단, archive 안 함
+
+권한: 사용자 지시(2026-11-15, Manager 전달) — main 으로의 fast-forward 병합·origin/main push·`make gate`·archive.
+
+- 병합·push: a189 브랜치를 main 에 `--ff-only` 로 병합(`7d1e3163a` → `b1e399001`), `origin/main` = `b1e399001` 확인. 그 전 커밋 `70dafb082`(위 「Manager 재검증 (3.4)」)·`b1e399001`(4.1 선체크 + tracker).
+- 격리 gate worktree: `~/tossos-work/a189-close`(ext4, detached `b1e399001`). `make sdd-infra` rc 0 → `sdd_sync.py --no-gbrain` rc 1(advisory `codegraphcontext index .` 300초 timeout, codegraph fingerprint 는 기록됨) → `codegraph status` 0.3초 ×3 → `make sdd-check` rc 0(advisory WARN 둘). 원문 `analysis/gate/sdd-sync.txt`·`sdd-check.txt`.
+- gate 1회차(07:56:55~08:14:03 KST, 원문 `analysis/gate/gate.txt`·`gate-status.txt`): ①~⑥ OK, ⑦ `make test` FAIL — `internal/performance` `TestMaximumAttributionGenerationIntegrityScanMeetsP95Target` p95=2.222864825s > 2s(7회 중 6회는 0.93~1.47s). base 대비 `internal/performance` 변경 0. 단독 재실행 p95=595.928263ms PASS(`analysis/gate/perf-isolated.txt`). 부하로 판정해 gate 를 한 번 다시 돎.
+- gate 2회차(08:14:36~08:42:47 KST, 원문 `analysis/gate/gate2.txt`·`gate2-status.txt`, 전후 HEAD `b1e399001` 동일·dirty 0): ① OK · ② OK(미완료 0) · ③ OK(짝 없음) · ④ OK · ⑤ OK(required 7, evidence complete) · ⑥ OK · ⑦ OK · ⑧ OK · ⑨ OK · ⑩ OK · **⑪ FAIL** — `openspec validate --all --strict --no-interactive`: 「Totals: 8 passed, 51 failed (59 items)」.
+- ⑪ 원인 실측: 실패 51건은 전부 기존 활성 change·main spec 의 strict **경고**(요구 문장 500자 초과, Purpose 자리표시, 첫 `##` 위 텍스트). 이 change(`a189-…`)와 a187 은 목록에 없고 단독 `openspec validate <id> --strict` 는 둘 다 valid. 설치된 openspec 은 1.16.0, 설치 시각 2026-11-04 21:48(`~/.npm-global/lib/node_modules/@fission-ai/openspec/package.json` mtime). 마지막으로 gate 를 거친 archive a164(2026-10-28)는 「openspec validate --all --strict 56/56」 이었음. 저장소에 CLI 판올림 기록은 못 찾음.
+- 판단: a189 의 결함이 아니고 문서·tracker·fingerprint 류로 이 change 안에서 고칠 수도 없음 — 고치려면 (가) 다른 CLI 판을 설치(사람 승인 필요) 또는 (나) 남의 활성 change·main spec 51곳 문장 편집(범위 밖)이 필요함. 그래서 archive·Story 경로 변경을 하지 않고 멈춤. gate ② 선행 조건으로 붙였던 4.1 체크는 거짓이 되므로 되돌림(tracker 도 재생성).

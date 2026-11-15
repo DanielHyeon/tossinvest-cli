@@ -1,0 +1,763 @@
+bash tools/gate.sh a189-shadow-tool-guards-admit-the-account-budget
+GATE: a189-shadow-tool-guards-admit-the-account-budget
+repo: /home/daniel/tossos-work/a189-close
+
+==> 1/11 tasks.md 확인
+OK: openspec/changes/a189-shadow-tool-guards-admit-the-account-budget/tasks.md
+
+==> 2/11 미완료 태스크 확인
+OK: 미완료 태스크 0건
+
+==> 3/11 짝 change 확인 (deploy-pair.txt)
+OK: 짝 선언 없음 — 이 change 는 혼자 배포한다
+
+==> 4/11 gstack 리뷰 기록 확인
+OK: openspec/changes/a189-shadow-tool-guards-admit-the-account-budget/review.md
+
+==> 5/11 Function Logic Map 증거 확인
+[logic-map] a189-shadow-tool-guards-admit-the-account-budget: base 7d1e3163a704 → working tree (no landed-commit.txt in HEAD) required 7 function(s) — judged at HEAD b1e3990012e9
+[logic-map] a189-shadow-tool-guards-admit-the-account-budget: the target is the working tree, so this window also holds 34 commit(s) that landed after the base and every existing function they changed is required here too — run `python3 tools/logic-map/check_analysis.py --change a189-shadow-tool-guards-admit-the-account-budget --record-landing` to let the gate compute `landed-commit.txt` from this change's evidence and record it, which narrows it to this change's own work; if no commit on this history is accepted as the landing, the command says so instead of recording
+[logic-map] a189-shadow-tool-guards-admit-the-account-budget: evidence complete or diff-proven exempt
+OK: Function Logic Map
+
+==> 6/11 make sdd-check
+make[1]: Entering directory '/home/daniel/tossos-work/a189-close'
+python3 tools/sdd/sdd_doctor.py
+[tools]
+  OK   rtk: rtk 1.1.0
+  OK   openspec: 1.16.0
+  OK   codegraph: 1.6.0
+  OK   codegraphcontext: Usage: codegraphcontext [OPTIONS] COMMAND [ARGS]...                            
+  OK   create-context-graph: create-context-graph, version 0.13.1
+  OK   ast-grep: ast-grep 0.45.0
+  OK   gbrain: gbrain 0.42.51.0
+  OK   docker: Docker version 29.9.2, build a82e528
+[skills]
+  OK   gstack: /home/daniel/.agents/skills/gstack
+  OK   superpowers: /home/daniel/.codex/.tmp/plugins/plugins/superpowers
+[python_modules]
+  OK   typedb-driver: mode=local raw=/home/daniel/tossos-work/a189-close/.sdd/.venv/bin/python resolved=/home/daniel/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/bin/python3.13; typedb-driver 3.11.5
+[files]
+  OK   .mcp.json: present
+  OK   .codex/config.toml: present
+  OK   .codex/hooks.json: present
+  OK   .claude/settings.json: present
+  OK   .githooks/pre-commit: present
+  OK   .githooks/post-commit: present
+  OK   .gbrain-source: present
+  OK   tools/sdd/gbrain_project.py: present
+  OK   tools/sdd-history/refresh_indexes.py: present
+[services]
+  OK   typedb(shared): running
+  OK   neo4j(shared): running
+python3 tools/sdd/check_index_freshness.py
+[index-freshness] WARN: codegraphcontext advisory index is missing or stale
+[index-freshness] WARN: gbrain advisory index is missing or stale
+[index-freshness] CodeGraph hard-evidence index matches the worktree
+make sdd-check-ci
+make[2]: Entering directory '/home/daniel/tossos-work/a189-close'
+python3 tools/sdd/check_agent_config_sync.py
+[agent-config] Claude/Codex safety bootstrap and workflow routing are synchronized
+python3 scripts/memory_index.py check
+valid
+python3 tools/pm/generate_master_tracker.py --check
+[pm] hierarchy and generated trackers are current
+python3 -m compileall -q scripts tools/logic-map tools/sdd tools/sdd-history tools/pm tools/deploy
+make sdd-test
+make[3]: Entering directory '/home/daniel/tossos-work/a189-close'
+python3 -m unittest discover -s scripts -p 'test_*.py'
+...............
+----------------------------------------------------------------------
+Ran 15 tests in 0.731s
+
+OK
+python3 -m unittest discover -s tools/logic-map -p 'test_*.py'
+.......................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 503 tests in 77.830s
+
+OK
+python3 -m unittest discover -s tools/sdd -p 'test_*.py'
+.....................................................................source registration failed
+..[gbrain-project] busy: owner pid=456 command='gbrain serve'
+.schema read failed
+........
+----------------------------------------------------------------------
+Ran 80 tests in 0.663s
+
+OK
+[sdd-sync] GBrain source 'tossos-x' is registered at /mnt/D/project/axipient/TossOS, not /home/daniel/tossos-work/a189-close. Sync would read the old path. Repair is destructive (it deletes this source's pages, then re-indexes):
+  python3 /home/daniel/tossos-work/a189-close/tools/sdd/gbrain_project.py sources remove tossos-x --confirm-destructive
+  python3 /home/daniel/tossos-work/a189-close/tools/sdd/gbrain_project.py sources add tossos-x --path /home/daniel/tossos-work/a189-close
++ /usr/bin/python3 /home/daniel/tossos-work/a189-close/tools/sdd/gbrain_project.py sync --source tossos-x --strategy code --no-embed --yes
+SOURCES
+───────
+  default               federated          0 pages  never synced
+  tossos-x              isolated        4261 pages  never synced
+                        /home/daniel/tossos-work/a189-close
+[sdd-sync] WARN: GBrain advisory busy; keeping its previous freshness ([gbrain-project] busy: owner pid=123 command='gbrain serve' home=/tmp/project/.sdd/gbrain-home)
+  codegraphcontext stats timed out
+  codegraphcontext stats timed out
++ /usr/bin/python3 /home/daniel/tossos-work/a189-close/tools/sdd/gbrain_project.py sources add tossos-x --path /home/daniel/tossos-work/a189-close
+[sdd-sync] GBrain source probe failed: schema read failed
++ /usr/bin/python3 /home/daniel/tossos-work/a189-close/tools/sdd/gbrain_project.py sync --source tossos-x --strategy code --no-embed --yes
+[sdd-sync] WARN: GBrain advisory busy; keeping its previous freshness ([gbrain-project] busy: owner pid=456 command='gbrain serve')
++ /usr/bin/python3 /tmp/tmpfu87f5hl/repo/tools/sdd/gbrain_project.py sources list
+python3 -m unittest discover -s tools/sdd-history -p 'test_*.py'
+...............................[sdd-hook] warning: offline
+...[commit-event] warning: offline
+..[context-graph] CCG adapter failed; its checkpoint was not advanced
+..........
+----------------------------------------------------------------------
+Ran 46 tests in 4.506s
+
+OK
+python3 -m unittest discover -s tools/pm -p 'test_*.py'
+................
+----------------------------------------------------------------------
+Ran 16 tests in 0.026s
+
+OK
+python3 -m unittest discover -s tools/deploy -p 'test_*.py'
+..................
+----------------------------------------------------------------------
+Ran 18 tests in 0.000s
+
+OK
+go test ./tools/logic-map
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/logic-map	(cached)
+make[3]: Leaving directory '/home/daniel/tossos-work/a189-close'
+make[2]: Leaving directory '/home/daniel/tossos-work/a189-close'
+make[1]: Leaving directory '/home/daniel/tossos-work/a189-close'
+OK: make sdd-check
+
+==> 7/11 make test
+make[1]: Entering directory '/home/daniel/tossos-work/a189-close'
+go test -timeout 30m ./...
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	69.173s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	25.846s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	362.303s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/app/paths	[no test files]
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/attemptthaw	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/attest	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/audit	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/auth	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/binstamp	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutsignal	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/brokerstate	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.501s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/candidate	7.574s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/candidatesrc	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/client	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/config	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/costs	0.629s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/dailyloss	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/deployguard	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/doctor	(cached)
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/domain	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/enginelock	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/enginewatch	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	164.070s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/exitquarantine	(cached)
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/export	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/filldetect	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/flatten	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/handoff	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/httpapi	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/hybrid	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/i18n	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/localupdate	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/manualbuy	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/markout	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/mcp	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/measure	2.368s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/measure/degrade	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/monitor	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/networkboundary	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/obs	31.018s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	4.984s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialbars	5.193s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialfx	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/offlinecontinuation	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/onboarding	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/operatorview	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/ops	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/optimization	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/optimizationevidence	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/orderintent	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/orderlineage	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/output	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/performance	21.244s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/performancejournal	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/position	0.065s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positioncampaign	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protection	6.900s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionlifecycle	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionofficial	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionreadiness	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/push	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/qr	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/ratebudget	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/redact	1.244s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/releaseupdate	(cached)
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/replay	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reversallane	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/risk	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc	(cached)
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/riskrelaxation	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/runlock	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/scheduler	2.853s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/selfupdate	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/session	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/settingmeta	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/soak	(cached)
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/strategy	[no test files]
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/strategyaccount	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycandidate	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycandle	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategydispatch	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyengine	1.039s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyevidence	4.275s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategymarket	0.730s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	0.832s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal	4.208s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	2.692s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyruntime	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow	1.090s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	2.000s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/testenv	1.230s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/trading	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/tui	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/updatecheck	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/verifylive	(cached)
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/version	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a087-market-sell-probe	(cached)
+?   	github.com/JungHoonGhae/tossinvest-cli/tools/a112-family-activation	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-family-shadow	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-l1c-quote-probe	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-mb-us-source	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a128-d2-receipts	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a128-jev-shadow-probe	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a130-outcome-backfill	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a138-held-preimage-check	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a155-observe-versioned-strategy-decisions	(cached)
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a166-budget-state	(cached)
+?   	github.com/JungHoonGhae/tossinvest-cli/tools/boundarymap	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/logic-map	(cached)
+make[1]: Leaving directory '/home/daniel/tossos-work/a189-close'
+OK: make test
+
+==> 8/11 make test-seams
+make[1]: Entering directory '/home/daniel/tossos-work/a189-close'
+go test -timeout 45m -tags tossos_testseams ./...
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	88.705s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	70.236s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	30.501s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app	0.009s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	803.534s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/app/paths	[no test files]
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/attemptthaw	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/attest	0.106s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/audit	0.906s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/auth	0.017s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/binstamp	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.395s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutsignal	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/brokerstate	0.009s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.424s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/candidate	9.538s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/candidatesrc	0.010s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/client	0.086s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.070s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/config	0.059s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	154.141s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane	0.457s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/costs	0.544s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/dailyloss	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/deployguard	0.012s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/doctor	0.006s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/domain	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/enginelock	0.418s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/enginewatch	0.011s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	307.473s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy	0.455s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/exitquarantine	0.002s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/export	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/filldetect	7.173s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/flatten	15.366s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/handoff	0.146s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/httpapi	0.680s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/hybrid	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/i18n	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	966.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/localupdate	3.758s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/manualbuy	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/markout	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/mcp	0.082s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/measure	2.474s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/measure/degrade	1.549s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/monitor	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/networkboundary	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/obs	51.981s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	5.256s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialbars	4.680s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialfx	0.369s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/offlinecontinuation	0.018s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/onboarding	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/operatorview	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/ops	0.215s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/optimization	6.440s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/optimizationevidence	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/orderintent	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/orderlineage	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/output	0.017s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/performance	28.913s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/performancejournal	0.006s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/position	0.072s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positioncampaign	0.010s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc	0.013s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protection	7.414s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionlifecycle	0.016s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionofficial	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionreadiness	0.418s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/push	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/qr	0.173s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/ratebudget	0.024s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	68.661s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/redact	1.134s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/releaseupdate	0.103s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/replay	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reversallane	0.554s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/risk	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	7.334s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc	0.003s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/riskrelaxation	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/runlock	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/scheduler	2.622s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/selfupdate	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/session	0.002s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/settingmeta	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	4.243s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/soak	0.589s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/strategy	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyaccount	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	0.008s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycandidate	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycandle	0.006s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	0.098s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategydispatch	0.006s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyengine	0.910s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyevidence	4.645s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	0.133s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	13.584s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategymarket	0.705s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve	0.708s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	0.643s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc	5.058s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal	11.224s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	4.295s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyruntime	0.008s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow	2.144s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	2.964s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/testenv	1.012s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/trading	0.009s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/tui	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/updatecheck	0.020s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/verifylive	56.964s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/version	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane	0.449s
+ok  	github.com/JungHoonGhae/tossinvest-cli/openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype	2.284s
+ok  	github.com/JungHoonGhae/tossinvest-cli/openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype	17.321s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a087-market-sell-probe	4.857s
+?   	github.com/JungHoonGhae/tossinvest-cli/tools/a112-family-activation	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-family-shadow	0.009s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-l1c-quote-probe	0.493s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-mb-us-source	336.046s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a128-d2-receipts	0.543s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a128-jev-shadow-probe	5.574s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a130-outcome-backfill	2.685s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a138-held-preimage-check	3.075s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow	1.831s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a155-observe-versioned-strategy-decisions	0.084s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a166-budget-state	0.091s
+?   	github.com/JungHoonGhae/tossinvest-cli/tools/boundarymap	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/logic-map	0.006s
+make[1]: Leaving directory '/home/daniel/tossos-work/a189-close'
+OK: make test-seams
+
+==> 9/11 make test-race
+make[1]: Entering directory '/home/daniel/tossos-work/a189-close'
+go test -race -timeout 15m -count=1 -tags tossos_testseams ./internal/strategyworker ./internal/strategycoordinator ./internal/strategyhandoff ./internal/strategyarbiter ./internal/strategyrouter ./internal/strategyflow ./internal/clock
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	4.051s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	1.608s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	29.887s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	1.038s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	10.612s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	1.281s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	1.081s
+go test -race -timeout 10m -count=1 -tags tossos_testseams -run 'TestTwoMarketsRideOneAuthorityWaveInsteadOfTakingTurns|TestOnlyOneMarketEverLeadsAWave|TestAFailedWaveReachesEveryMarketAndIsNeverCached|TestAMarketWaitingOnTheWaveLeavesWhenItsOwnCycleIsCancelled|TestTheCacheWindowStillMeasuresFromTheWaveStart|TestAPanickingWaveNeverStrandsTheMarketsWaitingOnIt|TestTheMarketThatLeadsAWaveAlwaysPublishesIt|TestARefreshWithoutAClockRefusesBeforeItCanMintAWave|TestAFailedWaveCarriesNoAssemblyForEitherMarket|TestALatchedLaneComesBackLatchedAfterTheProcessRestarts|TestALatchOnlyReopensForAStrictlyNewerVerifiedActivation|TestARestoredLatchKeepsTheFirstCauseAcrossTheRestart|TestOneLatchedLaneLeavesItsSevenPeersOpenAcrossARestart|TestADurableLatchThatNamesNoLaneInThisBuildStopsTheCycleLoudlyAndCanBeClosed|TestALedgerThatCannotTakeTheLatchStopsTheCycle|TestTheRecoveryGenerationComesFromTheVerifiedActivationAndNothingElse|TestTheProductionStepNeverLatchesSoTheLedgerStaysEmpty|TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther|TestAHungLaneDoesNotDelayItsPeersInTheSameWave|TestAPanicOutsideALaneStepStillReachesTheMarketCycle|TestAProjectedLaneRowIsNeverTorn|TestTheLaneProjectionReadsALaneRowUnderOneLock|TestAStalledRemoteWaveNeverBlocksTheProjectionRead|TestSafetyLoopsKeepTheirCadenceWhileEveryEntryQueueIsSaturated|TestSafetyLoopsKeepTheirCadenceThroughEveryEntryFailureKind|TestTheProductionActivationLoaderRunsAndFindsNoManifest|TestWithoutAVerifiedActivationCoordinationIsUnchanged|TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt|TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading|TestAClosedMarketStillCarriesTheGatesActivation|TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope|TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor|TestAProposalNoLaneOwnsIsStoppedRatherThanPassedThrough|TestTheLanesAreBuiltBeforeTheProposalsAreCollected|TestAGatedFamilyMustNotShrinkTheMarketIntoTheExactlyOneValve|TestTheGateSaysWhichKindOfStopItMade|TestADeclaredActivationThatLapsesRollsItsMarketBackInsteadOfWidening|TestRollingBackLeavesALatchedLaneLatched|TestTheRollbackPathOnlyReads|TestTheOrderLeaseCannotOutliveTheFamilyActivation|TestARolledBackGateClosesTheMarketEvenWithoutLanes|TestAnUndeclaredMarketStaysUndeclaredWhateverItsCalibrationSays|TestAnUnverifiedActivationWithoutAnErrorStillRollsBack|TestADeclaredMarketWhoseCalibrationDoesNotAgreeIsRolledBack|TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires|TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission|TestTheDispatchJudgesFamilyExpiryBeforeAdmissionAndInsideTheFinalCheck|TestTheProductionAssemblyGivesTheDispatchCycleTheRealClock|TestAVerifiedGateWithoutLanesClosesInsteadOfFallingBackToTheLegacyPath|TestADeclaredMarketWhoseCycleIsCancelledRollsBack|TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder|TestAVerifiedPromotionLetsTheOwningLaneEmitThroughTheLaneRuntime|TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten|TestTheRouterRuntimeStaysUnobservedAndOnlyTheProjectionAddsShadow|TestACancelDuringTheProposalLoadClosesTheMarketAtTheDecision|TestARevocationDuringTheProposalLoadClosesTheMarketAtTheDecision|TestAnUndeclaredMarketCancelledDuringTheLoadKeepsTheLegacyPath|TestANilEnvironmentReaderRollsTheGateBackInsteadOfPanicking|TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle|TestTheShadowPinLeavesTheDispatchTraceUnchanged|TestAFailingShadowStepChangesNothingButItsOwnObservation|TestAStuckShadowStepNeitherLatchesNorRefreshesTheOtherMarket|TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive|TestALateNilCycleIsAFailureAtTheLimit|TestTheShadowDeferNeverRewritesAFirstCycleError|TestCentralIntegrityKeepsItsIdentityThroughTheShadowDefer|TestARestartNeverRestoresShadow|TestTheNextWaveClearsAnUnusableShadow|TestWithoutANewWaveExpiryAndAgeStillEndTheShadow|TestTheShadowAgeLimitIsDerivedAndRejectsNoHealthyGap|TestTheGapBetweenRecordAndPublishIsUnobservedByDesign|TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow|TestOnlyOneShadowStepRunsPerMarket|TestNeitherTheStepNorTheProjectionShadowsAnOnLane|TestASuccessfulShadowStepLeavesEveryLaneStatusUnchanged|TestTheProjectionShadowsOnlyAnOffOffObservation|TestA146ASkipIsCountedAndAnnouncedOncePerDayAndSymbol|TestA146ACapZeroEntryIsNotASwallowedFaultOnARefreshOnlyMarket|TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops' ./internal/app/engine
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	203.014s
+make[1]: Leaving directory '/home/daniel/tossos-work/a189-close'
+OK: make test-race
+
+==> 10/11 make vet
+make[1]: Entering directory '/home/daniel/tossos-work/a189-close'
+go vet ./...
+make[1]: Leaving directory '/home/daniel/tossos-work/a189-close'
+OK: make vet
+
+==> 11/11 make validate
+make[1]: Entering directory '/home/daniel/tossos-work/a189-close'
+openspec validate --all --strict --no-interactive
+✗ change/a063-align-attestation-renewal-profile
+  ⚠ [WARNING] engine-safety/spec.md: ADDED "deployment acceptance retains actual approved operational evidence": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ change/a087-a-protective-exit-is-a-market-order
+  ⚠ [WARNING] order-execution/spec.md: Text above the first "## " section is not carried into the main spec by archive. Move it into a requirement, or into proposal.md or design.md.
+  ⚠ [WARNING] order-execution/spec.md: ADDED "국내 정규장의 보호 청산은 그날 하한가 지정가로 제출한다": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ change/a100-wire-fill-to-broker-protection
+  ⚠ [WARNING] engine-safety/spec.md: ADDED "보호 배선 봉인은 명시된 하나만 해제되고 경계는 넓어진다": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] fill-detection/spec.md: ADDED "체결 감지 경로는 보호를 계획하지 않는다": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] protection-orders/spec.md: ADDED "M-A 발동 측정은 durable local causal receipt를 사용해야 한다": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] protection-orders/spec.md: ADDED "보호는 journal에 커밋된 상태로 수렴하며 촉발은 이벤트가 아니라 상태다": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] protection-orders/spec.md: ADDED "보호 미설치 시간은 관측 가능하고 상한을 갖는다": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] protection-orders/spec.md: ADDED "보호 상태는 additive-nullable journal 컬럼으로만 영속된다": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] protection-orders/spec.md: ADDED "브로커측 매도 청구권이 둘이 되는 창을 최소화하고 남는 창을 밝힌다": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] protection-orders/spec.md: ADDED "상주 보호의 trigger는 영속된 보호 baseline에서만 유도된다": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✓ change/a105-protection-supervision-goes-wired
+✗ change/a107-retire-the-second-protection-core
+  ⚠ [WARNING] protection-orders/spec.md: Text above the first "## " section is not carried into the main spec by archive. Move it into a requirement, or into proposal.md or design.md.
+✗ change/a166-account-shared-rate-limit
+  ⚠ [WARNING] order-execution/spec.md: Text above the first "## " section is not carried into the main spec by archive. Move it into a requirement, or into proposal.md or design.md.
+  ⚠ [WARNING] order-execution/spec.md: ADDED "계좌 공유 요청 admission": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ change/a167-a-protective-remainder-is-re-priced
+  ⚠ [WARNING] order-execution/spec.md: Text above the first "## " section is not carried into the main spec by archive. Move it into a requirement, or into proposal.md or design.md.
+  ⚠ [WARNING] order-execution/spec.md: ADDED "비종결 보호 청산 잔량은 시간 상한 뒤 다시 낸다": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ change/a168-verify-read-decode-hardening
+  ⚠ [WARNING] order-execution/spec.md: ADDED "verification reconciliation reads refuse ambiguous broker responses": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✓ change/a128-jev-shadow-judgment-probe
+✓ change/a156-gate-live-strategy-policy-rollout
+✗ change/a169-breakout-universes-are-compared-in-shadow
+  ⚠ [WARNING] breakout-retest-strategy-lane/spec.md: ADDED "breakout universe variants are measured against the a140 baseline without changing the signal": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] official-read-compatibility/spec.md: ADDED "dormant shadow session storage preserves same-day interruption state": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] official-read-compatibility/spec.md: ADDED "an optional measurement observation fence starts from a stable current cursor": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ change/a171-entry-place-ambiguous-resend
+  ⚠ [WARNING] order-execution/spec.md: Text above the first "## " section is not carried into the main spec by archive. Move it into a requirement, or into proposal.md or design.md.
+✓ change/a180-claude-session-save-hook-repair
+✓ change/a187-strict-quote-readers-accept-kr-alphanumeric-symbols
+✓ change/a189-shadow-tool-guards-admit-the-account-budget
+✗ spec/breakout-retest-strategy-lane
+  ⚠ [WARNING] requirements[1]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[4]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[5]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[6]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[8]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[9]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/campaign-state-evidence
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+  ⚠ [WARNING] requirements[4]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/candidate-discovery
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+  ⚠ [WARNING] requirements[0]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[3]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[4]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[7]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[9]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/candidate-veto-thresholds
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+✗ spec/codex-session-save
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+  ⚠ [WARNING] requirements[0]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/common-exit-policy
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+✗ spec/console-request-origin
+  ⚠ [WARNING] requirements[0]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/container-deployment
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+✗ spec/engine-safety
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[3]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[4]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[6]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[8]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[11]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[12]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[16]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[19]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[23]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[24]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[25]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[27]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[29]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[32]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[33]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[35]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[39]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[40]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[42]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[44]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[45]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[47]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[50]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[51]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[53]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[54]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[55]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[56]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[57]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[58]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[59]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[60]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/exit-policy
+  ⚠ [WARNING] requirements[0]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[1]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[3]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[4]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[6]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[21]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[22]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[24]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[25]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[26]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[28]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[29]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/fill-detection
+  ⚠ [WARNING] requirements[3]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/four-family-strategy-runtime
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[7]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[8]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/gbrain-codex-mcp-startup
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+  ⚠ [WARNING] requirements[0]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/http-api-service
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+  ⚠ [WARNING] requirements[3]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[5]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[12]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[13]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/lane-performance
+  ⚠ [WARNING] requirements[1]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/market-aware-scheduler
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+  ⚠ [WARNING] requirements[0]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/mcp-backend-and-number-integrity
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+✗ spec/multi-horizon-risk-buckets
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[3]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[5]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[7]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/multi-market-strategy-evidence
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[5]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/official-account-scope
+  ⚠ [WARNING] requirements[1]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/official-read-compatibility
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+  ⚠ [WARNING] requirements[4]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/offline-follow-on-assessment
+  ⚠ [WARNING] requirements[1]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/openapi-onboarding
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+  ⚠ [WARNING] requirements[0]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[1]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/operator-console
+  ⚠ [WARNING] requirements[0]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[1]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[4]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[5]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[6]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[7]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[8]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[27]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[28]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[29]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[32]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[38]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[39]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[40]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[41]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[42]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[43]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[44]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[45]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[46]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[47]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[49]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[52]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[54]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[55]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[56]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[57]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[66]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[67]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[69]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[70]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[71]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[72]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[74]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/order-execution
+  ⚠ [WARNING] requirements[1]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[3]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[5]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[8]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[9]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[10]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[15]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[16]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[17]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[19]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[20]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[21]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[22]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[23]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[24]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[25]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[26]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/position-campaigns
+  ⚠ [WARNING] requirements[0]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[1]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[3]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[4]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[5]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[6]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/position-exit-policy-management
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/position-ledger
+  ⚠ [WARNING] requirements[0]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[10]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✓ spec/product-fork
+✗ spec/protection-orders
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+  ⚠ [WARNING] requirements[3]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[4]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[5]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/reconciliation
+  ⚠ [WARNING] requirements[0]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[7]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[8]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/risk-management
+  ⚠ [WARNING] requirements[0]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[1]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[4]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[5]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[6]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[8]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[9]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[10]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[12]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[17]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[18]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[19]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[20]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[21]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[22]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[24]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/sdd-workflow
+  ⚠ [WARNING] requirements[9]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[22]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/semantic-input-profile-comparison
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+✗ spec/semantic-judgment-shadow
+  ⚠ [WARNING] requirements[0]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[1]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[3]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[4]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[5]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[6]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[7]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/signed-release-distribution
+  ⚠ [WARNING] requirements[0]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[1]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[3]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[4]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/strategy-engine
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+  ⚠ [WARNING] requirements[1]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[3]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[4]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[5]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[6]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[7]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[11]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[12]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[15]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[16]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[17]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/strategy-optimization
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+  ⚠ [WARNING] requirements[9]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[11]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[13]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[14]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[17]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[18]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/strategy-runtime
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+  ⚠ [WARNING] requirements[0]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[2]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[3]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[4]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[5]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[6]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[7]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[9]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/trade-analytics
+  ⚠ [WARNING] requirements[0]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[1]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[5]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[6]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+  ⚠ [WARNING] requirements[8]: Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ change/verify-observes-the-trigger
+  ⚠ [WARNING] order-execution/spec.md: ADDED "발동 관측은 체결을 의도한 주문을 만들며 옵트인 없이는 실행되지 않는다": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+✗ spec/vpn-console-access
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+✗ spec/wts-read-integrity
+  ⚠ [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+✓ change/verify-execution-capability
+Totals: 8 passed, 51 failed (59 items)
+Details: openspec validate a063-align-attestation-renewal-profile --type change
+make[1]: *** [Makefile:131: validate] Error 1
+make[1]: Leaving directory '/home/daniel/tossos-work/a189-close'
+GATE FAIL: a189-shadow-tool-guards-admit-the-account-budget — make validate 실패
+
+make: *** [Makefile:188: gate] Error 1
