@@ -1,0 +1,110 @@
+기준 HEAD 6e6b29a5eab0f2b4cdba50108aaeb0b661ef47f2, 사본 a189-mut-257142-ubdzbxrn(TMPDIR 아래), 전용 GOCACHE
+  internal/accountbudgetruntime/runtime_test.go sha256=caffde1fe1e2cb8f88c06e120e7213fb72453c505621088b541b2905dbe4643a
+  internal/official/a112_mbus_static_test.go sha256=93184c817ac0ae4da3ef1501913f146d3dd39a184d54e4478716060dcfee2eee
+  tools/a128-jev-shadow-probe/main.go sha256=aee2ce827f2888e6761c728173b242ab015eee7e7d77be4295772aa381c099de
+  tools/a140-breakout-signal-shadow/main.go sha256=56fab140558fb83cf96c1089ea0f9c26e762855e2bae29989d09301c3a3a6aea
+control ('./internal/official/', '^(TestA112MBUS|TestA189)'): GREEN (59 PASS 줄, FAIL 0)
+control ('./tools/a128-jev-shadow-probe/', None): GREEN (127 PASS 줄, FAIL 0)
+control ('./tools/a140-breakout-signal-shadow/', None): GREEN (104 PASS 줄, FAIL 0)
+a128-a-budget-name: CAUGHT — 목록 밖 accountbudget 이름  (컴파일 ./tools/a128-jev-shadow-probe/ ok)
+  잡은 시험:
+    --- FAIL: TestNoMutatingOrAccountSurfaceIsNamed (0.02s)
+  실패 원문(앞 6줄):
+    static_test.go:131: source uses accountbudget.Critical, outside the budget allowlist
+a128-a-runtime-name: CAUGHT — 목록 밖 accountbudgetruntime 이름  (컴파일 ./tools/a128-jev-shadow-probe/ ok)
+  잡은 시험:
+    --- FAIL: TestNoMutatingOrAccountSurfaceIsNamed (0.07s)
+  실패 원문(앞 6줄):
+    static_test.go:131: source uses accountbudgetruntime.Config, outside the budget allowlist
+a128-c-official-with: CAUGHT — 목록 밖 official.With… 호출(D5)  (컴파일 ./tools/a128-jev-shadow-probe/ ok)
+  잡은 시험:
+    --- FAIL: TestNoMutatingOrAccountSurfaceIsNamed (0.03s)
+  실패 원문(앞 6줄):
+    static_test.go:119: source uses official.WithBaseURL, outside the read-only allowlist
+a128-d-forbidden: CAUGHT — 금지 이름 PlaceOrder 선택자  (컴파일 ./tools/a128-jev-shadow-probe/ ok)
+  잡은 시험:
+    --- FAIL: TestNoMutatingOrAccountSurfaceIsNamed (0.02s)
+  실패 원문(앞 6줄):
+    static_test.go:114: source names PlaceOrder; the probe never reaches order or account surfaces
+a128-e-import: CAUGHT — 목록 밖 내부 패키지 import  (컴파일 ./tools/a128-jev-shadow-probe/ ok)
+  잡은 시험:
+    --- FAIL: TestImportsStayInsideTheAllowlist (0.06s)
+  실패 원문(앞 6줄):
+    static_test.go:197: import "github.com/JungHoonGhae/tossinvest-cli/internal/orderintent" is outside the allowlist (stdlib + official/domain/app-paths/config/client/session/accountbudget/accountbudgetruntime only)
+a128-f-no-accountbudget: CAUGHT — accountbudget 사용 전부 제거(본 것 없음)  (컴파일 ./tools/a128-jev-shadow-probe/ ok)
+  잡은 시험:
+    --- FAIL: TestA166JEVOffLocalTokenFailure (1.00s)
+    --- FAIL: TestNoMutatingOrAccountSurfaceIsNamed (0.01s)
+  실패 원문(앞 6줄):
+    a166_budget_test.go:72: err=context deadline exceeded calls=0
+    static_test.go:141: the guard saw accountbudget.* false / accountbudgetruntime.* true — a side it saw nothing of is measured by nothing
+a128-f-alias-runtime: CAUGHT — accountbudgetruntime 를 별칭으로만 씀(본 것 없음)  (컴파일 ./tools/a128-jev-shadow-probe/ ok)
+  잡은 시험:
+    --- FAIL: TestNoMutatingOrAccountSurfaceIsNamed (0.04s)
+  실패 원문(앞 6줄):
+    static_test.go:141: the guard saw accountbudget.* true / accountbudgetruntime.* false — a side it saw nothing of is measured by nothing
+a140-a-budget-name: CAUGHT — 목록 밖 accountbudget 이름  (컴파일 ./tools/a140-breakout-signal-shadow/ ok)
+  잡은 시험:
+    --- FAIL: TestNoMutatingAccountOrWriteSurfaceIsNamed (0.01s)
+  실패 원문(앞 6줄):
+    static_test.go:109: source uses accountbudget.Critical, outside the allowlist
+a140-a-runtime-name: CAUGHT — 목록 밖 accountbudgetruntime 이름  (컴파일 ./tools/a140-breakout-signal-shadow/ ok)
+  잡은 시험:
+    --- FAIL: TestNoMutatingAccountOrWriteSurfaceIsNamed (0.01s)
+  실패 원문(앞 6줄):
+    static_test.go:109: source uses accountbudgetruntime.Config, outside the allowlist
+a140-c-official-with: CAUGHT — 목록 밖 official.With… 호출(D5)  (컴파일 ./tools/a140-breakout-signal-shadow/ ok)
+  잡은 시험:
+    --- FAIL: TestNoMutatingAccountOrWriteSurfaceIsNamed (0.01s)
+  실패 원문(앞 6줄):
+    static_test.go:109: source uses official.WithBaseURL, outside the allowlist
+a140-d-forbidden: CAUGHT — 금지 이름 PlaceOrder 선택자  (컴파일 ./tools/a140-breakout-signal-shadow/ ok)
+  잡은 시험:
+    --- FAIL: TestNoMutatingAccountOrWriteSurfaceIsNamed (0.01s)
+  실패 원문(앞 6줄):
+    static_test.go:103: source names PlaceOrder; the tool never reaches order, account or config-write surfaces
+a140-e-import: CAUGHT — 목록 밖 내부 패키지 import  (컴파일 ./tools/a140-breakout-signal-shadow/ ok)
+  잡은 시험:
+    --- FAIL: TestImportsStayInsideTheAllowlist (0.01s)
+  실패 원문(앞 6줄):
+    static_test.go:139: import "github.com/JungHoonGhae/tossinvest-cli/internal/orderintent" is outside the allowlist
+a140-f-no-accountbudget: CAUGHT — accountbudget 사용 전부 제거(본 것 없음)  (컴파일 ./tools/a140-breakout-signal-shadow/ ok)
+  잡은 시험:
+    --- FAIL: TestA166BreakoutOffLocalTokenFailure (0.28s)
+    --- FAIL: TestA166BreakoutBusyAuxiliaryNoWire (1.41s)
+    --- FAIL: TestNoMutatingAccountOrWriteSurfaceIsNamed (0.01s)
+  실패 원문(앞 6줄):
+    a166_budget_test.go:71: err=reading the KR market calendar: official: transport error: Post "https://127.0.0.1:41259/oauth2/token": missing auxiliary priority calls=0
+    a166_budget_test.go:144: busy err=reading the KR market calendar: official: transport error: Post "https://127.0.0.1:42997/oauth2/token": account budget: request not sent
+    static_test.go:118: the guard saw nothing of accountbudget.* — a side it saw nothing of is measured by nothing
+a140-f-alias-runtime: CAUGHT — accountbudgetruntime 를 별칭으로만 씀(본 것 없음)  (컴파일 ./tools/a140-breakout-signal-shadow/ ok)
+  잡은 시험:
+    --- FAIL: TestNoMutatingAccountOrWriteSurfaceIsNamed (0.01s)
+  실패 원문(앞 6줄):
+    static_test.go:118: the guard saw nothing of accountbudgetruntime.* — a side it saw nothing of is measured by nothing
+g1-planted-ref: CAUGHT — 허용 밖 시험 파일(runtime_test.go)에 M-B0 참조  (컴파일 ./internal/accountbudgetruntime/ ok)
+  잡은 시험:
+    --- FAIL: TestA112MBUSStaticNoProductCallerOrForbiddenPath (0.94s)
+  실패 원문(앞 6줄):
+    a112_mbus_static_test.go:178: forbidden resolved A112 M-B0 references: []string{"internal/accountbudgetruntime/runtime_test.go: selector official.A112MBUSCandle"}
+g2-prefix-widen: CAUGHT — 정확 경로 비교를 디렉터리 접두사로 넓힘  (컴파일 ./internal/official/ ok)
+  잡은 시험:
+    --- FAIL: TestA189MBUSGuardAdmitsOnlyTheExactA166RuntimeTestFile (0.00s)
+  실패 원문(앞 6줄):
+    a112_mbus_a189_static_test.go:22: internal/accountbudgetruntime/runtime_test.go: violations = []string(nil), want exactly the selector violation
+    a112_mbus_a189_static_test.go:22: internal/accountbudgetruntime/v2_token.go: violations = []string(nil), want exactly the selector violation
+g3-suffix-widen: CAUGHT — 정확 경로 비교를 파일 이름 접미사로 넓힘  (컴파일 ./internal/official/ ok)
+  잡은 시험:
+    --- FAIL: TestA189MBUSGuardAdmitsOnlyTheExactA166RuntimeTestFile (0.00s)
+  실패 원문(앞 6줄):
+    a112_mbus_a189_static_test.go:22: internal/other/internal/accountbudgetruntime/v2_token_test.go: violations = []string(nil), want exactly the selector violation
+    a112_mbus_a189_static_test.go:22: tools/other/v2_token_test.go: violations = []string(nil), want exactly the selector violation
+g4-revert: CAUGHT — 허용 경로 추가를 되돌림(base 동작)  (컴파일 ./internal/official/ ok)
+  잡은 시험:
+    --- FAIL: TestA189MBUSGuardAdmitsOnlyTheExactA166RuntimeTestFile (0.00s)
+    --- FAIL: TestA112MBUSStaticNoProductCallerOrForbiddenPath (0.77s)
+  실패 원문(앞 6줄):
+    a112_mbus_a189_static_test.go:13: the admitted a166 runtime test file produced violations: []string{"selector official.A112MBUSCandle"}
+    a112_mbus_static_test.go:178: forbidden resolved A112 M-B0 references: []string{"internal/accountbudgetruntime/v2_token_test.go: selector official.A112MBUSCandle"}
+끝: 원복 sha 전부 일치, 판정 이상 0건
+# rc=0
