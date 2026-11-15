@@ -262,3 +262,21 @@ Pre-Edit Gate:
 
 - `specs/breakout-retest-strategy-lane/spec.md:10` 「우선순위는 보조 등급만 써야 한다 (SHALL)」·「측정 도구의 정적 검사는 … 우선순위 인자가 보조 등급임을 확인해야 한다 (SHALL)」: 정적 검사가 확인하는 것은 **명시적 `accountbudget.WithPriority` 직접 호출의 둘째 인자**뿐임. 표지 없는 context 의 기본값 `Normal`(transport_linux.go:24~29)로 도는 요청은 검사 밖(R5). 결정 1 로 별칭·dot 우회는 닫힘.
 - 같은 줄 「측정 도구는 예산 핸들을 직접 잡거나 관측 상태를 읽어서는 안 되고 (MUST NOT)」: 검사는 메서드 이름 7개의 선택자 금지라 `reflect` 문자열 호출은 못 봄(R6).
+
+## Manager 재검증 (3.4) — 2026-11-16
+
+Manager(Fable) 가 HEAD `974a9c623` 에서 한 독립 재검증. 원문은 `analysis/verify-manager-2/`(Manager 스크래치패드에서 원문 그대로 복사, 편집 없음 — 종결 팀메이트 Opus 가 옮김).
+
+- 전체 시험을 격리 worktree `~/tossos-work/a189-fulltest`(detached `974a9c623`)에서 실행: `make test` rc 0(ok 122 패키지, FAIL 0) · `make test-seams` rc 0(ok 123, FAIL 0) · `make test-race` rc 0 · `make vet` rc 0. 실행 07:21:59~07:43:27 KST, 전후 HEAD 동일·dirty 0. 원문 `full2-status.txt`·`full2-test.txt`·`full2-test-seams.txt`·`full2-test-race.txt`·`full2-vet.txt`.
+- 이전에 빨갛던 패키지가 모두 ok: `cmd/tossctl` · `internal/app/engine` · `internal/accountbudgetruntime` · `internal/official` · `tools/a128-jev-shadow-probe` · `tools/a140-breakout-signal-shadow`(`full2-test.txt` 2·4·6·51·127·130행).
+- `tools/logic-map/check_analysis.py --change a189-shadow-tool-guards-admit-the-account-budget`: required 7, rc 0. 원문 `a189-mgr-check-analysis.txt`.
+- `openspec validate --strict`: valid.
+- base 대비 비시험 Go 변경 0 파일.
+- Manager 독립 변이 6개(팀메이트 하네스와 별개, 사본 worktree, 원복 뒤 dirty 0), 원문 `a189-mgr-mutation2.txt`:
+  - M1 엔진 생산 파일에 둘째 `strategyhandoff.Admit` 참조 → `TestExactlyOneProductionSiteAdmitsIntoTheSeam` FAIL(기대 FAIL).
+  - M2 같은 이름 인터페이스 메서드 선언 → PASS(기대 PASS).
+  - M3 `record` 의 clearCtx Critical→Normal → `TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange` FAIL.
+  - M4 `(*lazyOrders).Orders` 에 resolve 둘째 호출 → `TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient` FAIL.
+  - M5 a128·a140 에 별칭 import → 두 도구 `TestImportsStayInsideTheAllowlist` FAIL.
+- Manager 결정(스펙 문장 2건, 위 절): 고치지 않음. 스펙 문장은 도구가 지켜야 할 요구이고 정적 검사는 그 일부를 강제함. 강제하지 못하는 부분은 남은 위험 R5·R6.
+- tasks 3.2 의 `tools/a112-mb-us-source` 는 위 Manager 전체 시험(`make test`)에 포함돼 ok 임. 종결 팀메이트가 `full2-test.txt` 125행을 직접 확인함: `ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-mb-us-source	(cached)` — go 시험 캐시 적중(같은 입력의 앞선 통과 결과 재사용)으로 찍힌 ok 임. 이 근거로 3.2 와 3.4 를 체크함.
