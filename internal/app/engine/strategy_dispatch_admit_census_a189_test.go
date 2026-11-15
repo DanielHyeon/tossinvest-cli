@@ -7,7 +7,7 @@ package engine
 // 좁힌 판본이 (가) 경계 밖의 같은 이름은 세지 않고 (나) 경계 패키지의 이름은 별칭 · 함수 값으로도 여전히 세며
 // (다) dot import 파일에서는 보수적으로 맨 이름을 다 센다는 것을 여기서 셈. 기존 TestAdmitCensusSeesEverySpellingItClaims 는
 // 무편집으로 같은 철자 다섯을 계속 잼. gstack 리뷰로 더한 것: (라) 원시 문자열·이스케이프 import 경로 해독, (마) 엔진 생산
-// 파일의 unsafe import 금지, (바) 모듈 전체의 경계 문 //go:linkname 금지 — 셋 다 철자를 세는 census 밖에서 문에 닿는 길임.
+// 파일의 unsafe import 금지, (바) 모듈 전체의 //go:linkname 금지 — 셋 다 철자를 세는 census 밖에서 문에 닿는 길임.
 
 import (
 	"go/parser"
@@ -136,10 +136,13 @@ func TestA189EngineProductionNeverImportsUnsafe(t *testing.T) {
 	}
 }
 
-// 모듈의 어느 비시험 Go 파일도 //go:linkname 으로 경계(strategyhandoff)의 이름에 묶지 않음. 엔진 밖 패키지가 unsafe 를 들여와
-// 문을 다른 이름으로 다시 내보내면 strategyhandoff 를 import 하지 않으므로 TestOnlyTheEngineImportsThisSeam 도, 엔진이
-// 그 이름을 부르면 admitSites 도 못 봄(gstack 리뷰 2회차 실측). unsafe 는 모듈의 다른 자리(strategyprojectionrpc)가 정당하게
-// 쓰므로 모듈 전체 import 금지 대신 지시어의 대상 이름을 봄.
+// 모듈의 어느 비시험 Go 파일에도 //go:linkname 지시어가 없음. 엔진 밖 패키지가 unsafe 를 들여와 경계 문(또는 엔진의 사설
+// dispatch)을 다른 이름으로 다시 내보내면 strategyhandoff 를 import 하지 않으므로 TestOnlyTheEngineImportsThisSeam 도,
+// 엔진이 그 이름을 부르면 admitSites 도 못 봄(gstack 리뷰 2·3회차 실측). 오늘 생산 사용은 0 이므로 대상 이름을 고르지 않고
+// 지시어 전부를 금지함 — 대상 이름만 보던 판본은 엔진 dispatch 대상·경계 패키지 안에서 밀어내는(push) 형태를 놓쳤음.
+// 훑는 범위는 go 도구가 import 할 수 있는 것 전부임: 점으로 시작하는 디렉터리만 건너뜀(그런 경로는 import 할 수 없음).
+// testdata·node_modules·vendor 도 import 될 수 있어 훑음(3회차: testdata 아래 중계 패키지가 빌드·실행됨). 디렉터리 심링크는
+// WalkDir 가 따라가지 않으므로 만나면 실패시킴. 지시어는 소스에 글자 그대로 있어야 하므로 파싱하지 않고 줄 머리를 봄.
 func TestA189NoPackageLinknamesTheSeamDoors(t *testing.T) {
 	root := filepath.Join("..", "..", "..")
 	scanned := 0
@@ -147,29 +150,33 @@ func TestA189NoPackageLinknamesTheSeamDoors(t *testing.T) {
 		if err != nil {
 			return err
 		}
+		name := d.Name()
 		if d.IsDir() {
-			name := d.Name()
-			if path != root && (strings.HasPrefix(name, ".") || name == "testdata" || name == "node_modules" || name == "vendor") {
+			if path != root && strings.HasPrefix(name, ".") {
 				return filepath.SkipDir
 			}
 			return nil
 		}
-		if !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+		if d.Type()&os.ModeSymlink != 0 {
+			if info, serr := os.Stat(path); serr == nil && info.IsDir() {
+				t.Errorf("%s is a symlinked directory — the walk does not follow it, so a package behind it is unscanned", path)
+			}
 			return nil
 		}
-		file, perr := parser.ParseFile(token.NewFileSet(), path, nil, parser.ParseComments) // 지시어는 import 뒤에 오므로 ImportsOnly 로 자르면 안 보임
-		if perr != nil {
-			// 조용히 건너뛰면 그 파일이 문이 됨 — 못 읽는 Go 파일은 실패시킴
-			t.Errorf("parse %s: %v", path, perr)
+		// go 도구가 무시하는 파일 이름(점·밑줄 시작)과 시험 파일은 생산 빌드에 안 들어감
+		if !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") ||
+			strings.HasPrefix(name, ".") || strings.HasPrefix(name, "_") {
+			return nil
+		}
+		src, rerr := os.ReadFile(path)
+		if rerr != nil {
+			t.Errorf("read %s: %v", path, rerr) // 조용히 건너뛰면 그 파일이 문이 됨
 			return nil
 		}
 		scanned++
-		for _, group := range file.Comments {
-			for _, c := range group.List {
-				fields := strings.Fields(c.Text)
-				if len(fields) >= 3 && fields[0] == "//go:linkname" && strings.Contains(fields[2], "internal/strategyhandoff.") {
-					t.Errorf("%s: %s — 몸체 없는 별칭이 admit census 밖에서 경계 문에 닿음", path, c.Text)
-				}
+		for _, line := range strings.Split(string(src), "\n") {
+			if strings.HasPrefix(strings.TrimSpace(line), "//go:linkname") {
+				t.Errorf("%s: %s — linkname 별칭은 import 와 admit census 밖에서 경계 문·엔진 dispatch 에 닿음", path, strings.TrimSpace(line))
 			}
 		}
 		return nil

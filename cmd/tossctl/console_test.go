@@ -754,7 +754,7 @@ func TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient(t *testing.T
 	// 공유 resolver 사용은 (*lazyOrders).Orders 본문 안에서만 셈(a189 D11). 파일 전체 문자열 검사는
 	// lazyHoldings.Holdings 가 같은 철자(수신자 l)를 써서 Orders 가 공유 resolver 를 버려도 통과했음.
 	// 참조 수만 세면 안 쓰는 참조 한 줄(`_ = l.shared.resolve`)로 통과하므로(a189 리뷰) 다섯 수가 모두 1 이어야 함:
-	// 선언 · 선택자 참조 · 그 참조의 직접 호출을 받는 변수(broker) 대입문 · broker 이름의 대입(안쪽 var 가림 포함) ·
+	// 선언 · 선택자 참조 · 그 참조의 직접 호출을 받는 변수(broker) 대입문 · broker 이름의 대입(안쪽 var 가림·&broker 포함) ·
 	// consoleOrdersReader 단언(본문 전체에서 하나이고 그 대상이 broker 와 같은 객체 — 이름이 아니라 파서가 해소한 객체로
 	// 대조하므로 range·함수 리터럴 인자 등 어떤 가림도 다른 객체로 갈림).
 	file, err := parser.ParseFile(token.NewFileSet(), "console.go", src, 0)
@@ -796,6 +796,10 @@ func TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient(t *testing.T
 					if id, ok := lhs.(*ast.Ident); ok && broker != "" && id.Name == broker {
 						rebinds++
 					}
+				}
+			case *ast.UnaryExpr: // `&broker` 는 포인터로 바꿔 쓸 길이므로 다시 대입으로 셈(3회차 리뷰)
+				if id, ok := v.X.(*ast.Ident); ok && v.Op == token.AND && brokerObj != nil && id.Obj == brokerObj {
+					rebinds++
 				}
 			case *ast.ValueSpec: // 안쪽 블록의 `var broker = …` 가림도 다시 대입으로 셈
 				for _, name := range v.Names {
