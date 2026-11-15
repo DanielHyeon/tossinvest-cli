@@ -71,6 +71,17 @@ def tool_mutants(path: str, tag: str) -> list:
         (f"{tag}-f-no-accountbudget", path, [("once", PRIO, ""), ("once", IMP_AB, "")], pkg, "accountbudget 사용 전부 제거(본 것 없음)", names),
         (f"{tag}-f-alias-runtime", path, [("once", IMP_RT, f'\tabr "{MOD}accountbudgetruntime"\n'), ("all", "accountbudgetruntime.", "abr.")], pkg,
          "accountbudgetruntime 를 별칭으로만 씀(본 것 없음)", names),
+        # Manager 결정 2026-11-15(gstack 발견 1): 보조 등급 고정과 예산 핸들 메서드 금지
+        (f"{tag}-h-priority-critical", path, [("once", PRIO, "\tctx = accountbudget.WithPriority(ctx, accountbudget.Critical)\n")], pkg,
+         "WithPriority 에 accountbudget.Critical", names),
+        (f"{tag}-i-priority-literal", path, [("once", PRIO, "\tctx = accountbudget.WithPriority(ctx, 1)\n")], pkg,
+         "WithPriority 에 상수 리터럴 1(= Critical)", names),
+        (f"{tag}-j-budget-handle", path, after("\tif b, err := factory.Budget(); err == nil {\n\t\t_ = b.Acquire\n\t}\n"), pkg,
+         "factory.Budget() 로 예산 핸들을 잡고 Acquire 를 꺼냄", names),
+        (f"{tag}-k-no-priority-call", path, [("once", PRIO, "\t_ = accountbudget.Auxiliary\n")], pkg,
+         "WithPriority 호출을 전부 지움(표본 0)", names),
+        (f"{tag}-l-priority-func-value", path, [("once", PRIO, "\tsetPriority := accountbudget.WithPriority\n\tctx = setPriority(ctx, 1)\n")], pkg,
+         "WithPriority 를 함수 값으로 빼서 리터럴 1 로 부름", names),
     ]
 
 
