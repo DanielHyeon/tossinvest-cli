@@ -164,6 +164,12 @@ A 의 부수 영향:
 - R1 별칭 우회: 두 도구의 가드는 X 식별자 철자로 패키지를 가림. 그래서 `ab "…/accountbudget"` 처럼 별칭으로 import 하면 import 검사는 통과하고 선택자 이름 고정은 비켜 감. `official`·`tossconfig` 도 지금 같은 한계가 있음(기존). (gstack 리뷰로 정정, 2026-11-15) 이 change 는 이 구멍을 새 두 패키지로 **넓힘**: 편집 전에는 두 예산 경로가 import 단계에서 막혔고, 이제 import 는 통과하므로 별칭 쪽 이름은 안 보임. 「본 것 없음」 검사는 **모든** 사용을 별칭으로 바꾼 경우만 잡음(변이 f-alias-runtime) — 정식 이름 사용을 남긴 채 같은 경로를 별칭으로 한 번 더 import 하면(Go 는 허용) 통과함. 막으려면 import 의 지역 이름을 함께 고정해야 함. Manager 결정(2026-11-15)으로 범위 밖.
 - R2 A 의 파일 단위 면제: v2_token_test.go 에 M-B0 이름이 더 들어와도 가드가 안 봄. 그 파일은 시험 파일이라 제품 caller 0 이라는 가드 목적은 유지됨.
 - R3 M-B1 신원 집합의 파일 변경(D4 부수 영향).
+- R4 admitSites 좁힘이 잃는 검출(D13, 변이 `analysis/mutation-2/`). 앞 판본은 이름만 보아 넓었으므로, 경계 밖 이름으로 문을 다시 부르는 자리를 이름이 같을 때만 우연히 잡았음. 좁힌 판본은 그것을 못 잡음:
+  - l1 허용 자리 안에서 문을 문 이름 필드(`x.Admit = strategyhandoff.Admit`)로 빼돌리고 다른 자리에서 `x.Admit(…)` 로 부름 — 앞 판본 FAIL(잡음), 새 판본 PASS(잃음).
+  - l3 엔진 밖 래퍼 패키지가 문을 같은 이름으로 다시 내보냄(`a189wrap.Admit`) — 앞 판본 FAIL, 새 판본 PASS. 이 모양은 strategyhandoff `TestOnlyTheEngineImportsThisSeam` 이 래퍼 패키지의 import 로 막음(변이에서 FAIL 확인).
+  - 같은 빼돌리기를 다른 이름으로 하면(l2, `x.mint`) 앞 판본도 못 잡았음 — 두 판본 같은 한계.
+  - 남는 진짜 위험은 l1 하나(엔진 패키지 안에서만 가능, 허용 자리의 본문 편집이 필요). 그 편집은 허용 자리 함수 `dispatchHandoff` 본문을 바꾸므로 gate ⑤ FLM 번들(High-risk 주문 경로)과 리뷰를 거침. 가드로 막으려면 「허용 자리 안의 문 참조는 호출의 Fun 이어야 함」 단언이 필요함 — Manager 결정 대상으로 올림.
+
 
 ## Migration Plan
 

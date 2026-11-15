@@ -35,8 +35,8 @@
 - [x] 3c.2 #1 `TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient` — `(*lazyOrders).Orders` 본문의 공유 resolver 참조 수 단언(D11).
 - [x] 3c.3 #2 `a163JudgementRenderHashes["record"]` 갱신과 이유 주석(D12).
 - [x] 3c.4 #3 `admitSites` 좁힘(D13)과 새 파일의 fixture 시험.
-- [ ] 3c.5 사본 변이(대조군 GREEN 먼저, 기대 시험 이름 단언) — 하네스·원문 `analysis/mutation-2/`. #3 은 좁힘으로 잃는 검출을 열거해 잼.
-- [ ] 3c.6 FLM/BTM 번들, `check_analysis.py` required 수·rc 실측.
+- [x] 3c.5 사본 변이(대조군 GREEN 먼저, 기대 시험 이름 단언) — 하네스·원문 `analysis/mutation-2/`. #3 은 좁힘으로 잃는 검출을 열거해 잼.
+- [x] 3c.6 FLM/BTM 번들, `check_analysis.py` required 수·rc 실측.
 - [ ] 3c.7 대상 패키지 시험·vet·gofmt·strict validate — 원문 `analysis/verify-4/`.
 - [ ] 3c.8 gstack `review`(최종 diff 전체) + 다른 계열 적대 보이스 1, 새 발견 0 까지 — `analysis/gstack-review-2.md`.
 
