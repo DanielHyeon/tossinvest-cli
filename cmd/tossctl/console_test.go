@@ -753,12 +753,14 @@ func TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient(t *testing.T
 	}
 	// 공유 resolver 사용은 (*lazyOrders).Orders 본문 안에서만 셈(a189 D11). 파일 전체 문자열 검사는
 	// lazyHoldings.Holdings 가 같은 철자(수신자 l)를 써서 Orders 가 공유 resolver 를 버려도 통과했음.
-	// 호출이 아니라 선택자 참조를 셈 — 메서드 값으로 빼 둔 resolver 도 한 번으로 셈.
+	// 참조 수만 세면 안 쓰는 참조 한 줄(`_ = l.shared.resolve`)로 통과하므로(a189 리뷰) 셋을 같이 셈:
+	// 선택자 참조 1, 그 참조가 직접 호출이고 결과를 받는 변수(broker)에 대입되는 문 1, 그 변수에 대한 대입은 그 문뿐이고
+	// 주문 읽기 단언 broker.(consoleOrdersReader) 가 그 변수에서 나옴.
 	file, err := parser.ParseFile(token.NewFileSet(), "console.go", src, 0)
 	if err != nil {
 		t.Fatalf("parse console.go: %v", err)
 	}
-	resolves, found := 0, 0
+	found, resolves, feeds, rebinds, asserted := 0, 0, 0, 0, 0
 	for _, decl := range file.Decls {
 		fd, ok := decl.(*ast.FuncDecl)
 		if !ok || fd.Name.Name != "Orders" || fd.Recv == nil || len(fd.Recv.List) != 1 ||
@@ -767,17 +769,46 @@ func TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient(t *testing.T
 		}
 		found++
 		want := fd.Recv.List[0].Names[0].Name + ".shared.resolve"
+		broker := ""
 		ast.Inspect(fd.Body, func(n ast.Node) bool {
-			if sel, ok := n.(*ast.SelectorExpr); ok && types.ExprString(sel) == want {
-				resolves++
+			switch v := n.(type) {
+			case *ast.SelectorExpr:
+				if types.ExprString(v) == want {
+					resolves++
+				}
+			case *ast.AssignStmt:
+				if call, ok := v.Rhs[0].(*ast.CallExpr); ok && len(v.Rhs) == 1 && types.ExprString(call.Fun) == want {
+					if id, ok := v.Lhs[0].(*ast.Ident); ok && id.Name != "_" {
+						feeds++
+						broker = id.Name
+					}
+				}
+			}
+			return true
+		})
+		// 공유 resolver 가 준 값만 주문 읽기에 쓰이는지 — 다시 대입·가림이 없고 단언의 대상이 그 변수임
+		ast.Inspect(fd.Body, func(n ast.Node) bool {
+			switch v := n.(type) {
+			case *ast.AssignStmt:
+				for _, lhs := range v.Lhs {
+					if id, ok := lhs.(*ast.Ident); ok && broker != "" && id.Name == broker {
+						rebinds++
+					}
+				}
+			case *ast.TypeAssertExpr:
+				if id, ok := v.X.(*ast.Ident); ok && broker != "" && id.Name == broker &&
+					types.ExprString(v.Type) == "consoleOrdersReader" {
+					asserted++
+				}
 			}
 			return true
 		})
 	}
-	if found != 1 || resolves != 1 {
-		t.Errorf("(*lazyOrders).Orders declarations=%d, shared resolver references=%d, want 1 and 1 — "+
-			"the orders seam no longer reads through the console's shared client exactly once; a resolver "+
-			"of its own is a second /api/v1/accounts read per session", found, resolves)
+	if found != 1 || resolves != 1 || feeds != 1 || rebinds != 1 || asserted != 1 {
+		t.Errorf("(*lazyOrders).Orders declarations=%d, shared resolver references=%d, calls feeding the broker=%d, "+
+			"assignments to that broker=%d, consoleOrdersReader assertions on it=%d, want 1 each — the orders seam no "+
+			"longer reads through the console's shared client exactly once; a resolver of its own is a second "+
+			"/api/v1/accounts read per session", found, resolves, feeds, rebinds, asserted)
 	}
 }
 

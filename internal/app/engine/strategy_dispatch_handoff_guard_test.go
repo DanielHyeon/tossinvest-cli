@@ -624,11 +624,13 @@ func TestOnlyTheSeamsEnvelopeCanReachTheSharedDispatch(t *testing.T) {
 // TestSeamConsumersCannotReadTheRawEntryListAgain 은 `entries` 라는 토큰을
 // **네 함수의 본문 안에서만** 셌다. 헬퍼 함수 하나를 한 다리 건너 두면
 // 사라졌고, 적대 리뷰어 셋이 각자 그렇게 뚫었다. 여기서는 이 패키지의 **모든**
-// 생산 파일에서 문 이름(strategyHandoffDoors)이 나오는 자리를 전부 센다 — 헬퍼를 만들면
+// 생산 파일에서 경계 문(strategyHandoffDoors)을 가리키는 자리를 전부 센다 — 헬퍼를 만들면
 // 그 헬퍼가 세어진다. 문 목록 자체가 빠짐없는지는 TestEveryNameTheEngineTakesFromTheSeamIsClassified 가 지킨다.
+// a189 부터 세는 것은 경계 패키지 지역 이름의 선택자와 dot import 파일의 맨 이름뿐이다(admitSites 주석) —
+// 경계와 무관한 같은 이름 멤버는 세지 않고, 그 범위는 strategy_dispatch_admit_census_a189_test.go 가 센다.
 //
 // 별칭 import(`sh.Admit`), dot import(`Admit`), 함수 값(`var f = …Admit`)은
-// 전부 이 토큰을 쓰므로 이 세기 안에 들어온다 — **그리고 그 말은 아래
+// 전부 이 세기 안에 들어온다 — **그리고 그 말은 아래
 // TestAdmitCensusSeesEverySpellingItClaims 가 fixture 로 확인한다.** 앞 판본은
 // 같은 문장을 주석으로만 적었고 순회는 `*ast.FuncDecl` 안에만 들어갔다. 함수
 // 본문 밖의 `var f = …Admit` 은 `*ast.GenDecl` 이라 안 보였고, 4차 적대 리뷰가
@@ -798,11 +800,13 @@ func admitSites(file *ast.File, doors map[string]bool) []string {
 	seamNames := map[string]bool{}
 	dotted := false
 	for _, spec := range file.Imports {
-		importPath := strings.Trim(spec.Path.Value, `"`)
+		// 경로는 Go 문자열 리터럴로 해독함 — 따옴표 벗기기만 하면 원시 문자열(`…`)·이스케이프(\x68) 철자의 경계 import 를
+		// 못 알아봐 조용히 통과했음(a189 리뷰). 해독 실패는 경계로 간주해 실패 쪽으로 틀림.
+		importPath, err := strconv.Unquote(spec.Path.Value)
 		switch {
 		case spec.Name != nil && spec.Name.Name == ".":
 			dotted = true
-		case importPath == "strategyhandoff" || strings.HasSuffix(importPath, "/strategyhandoff"):
+		case err != nil || importPath == "strategyhandoff" || strings.HasSuffix(importPath, "/strategyhandoff"):
 			local := "strategyhandoff"
 			if spec.Name != nil {
 				local = spec.Name.Name

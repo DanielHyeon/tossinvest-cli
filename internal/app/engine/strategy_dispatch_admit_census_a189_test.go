@@ -11,7 +11,9 @@ package engine
 import (
 	"go/parser"
 	"go/token"
+	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -99,5 +101,34 @@ func viaValue(b gate) { b.Admit() }
 	want := "bare:Admit, type 블록:Admit"
 	if got := a189AdmitSites(t, fixture); got != want {
 		t.Fatalf("admitSites=[%s], want [%s]", got, want)
+	}
+}
+
+// 원시 문자열(`…`)·이스케이프(\x68) 철자의 경계 import 도 경계로 알아봄 — 따옴표만 벗기던 판본은 둘 다 놓쳤음(a189 리뷰).
+// gofmt 가 두 철자를 큰따옴표로 정규화하지만, census 는 lint 를 건너뛴 소스에서도 같은 답을 내야 함.
+func TestA189AdmitCensusDecodesTheImportPathLiteral(t *testing.T) {
+	for name, imp := range map[string]string{
+		"raw-string": "sh `example.com/internal/strategyhandoff`",
+		"escaped":    `sh "example.com/internal/strategy\x68andoff"`,
+	} {
+		fixture := "package engine\n\nimport " + imp + "\n\nfunc second() { _ = sh.Admit(true, nil) }\n"
+		if got, want := a189AdmitSites(t, fixture), "second:Admit"; got != want {
+			t.Errorf("%s: admitSites=[%s], want [%s] — 경계 import 철자를 못 알아봄", name, got, want)
+		}
+	}
+}
+
+// 엔진 생산 파일은 unsafe 를 import 하지 않음 — //go:linkname 으로 경계 문을 다른 이름의 몸체 없는 함수에 묶으면 선택자도
+// 맨 이름도 남지 않아 admitSites 가 못 셈(a189 리뷰, 이름 기반 앞 판본도 이름이 다르면 못 셈). linkname 지시어는 unsafe
+// import 가 있는 파일에서만 컴파일되므로 import 금지 하나로 그 모양 전부를 닫음.
+func TestA189EngineProductionNeverImportsUnsafe(t *testing.T) {
+	files := engineProductionFiles(t)
+	for _, path := range files {
+		for _, spec := range parseEngineFile(t, path).Imports {
+			importPath, err := strconv.Unquote(spec.Path.Value)
+			if err != nil || importPath == "unsafe" {
+				t.Errorf("%s imports %s — unsafe 는 //go:linkname 으로 경계 문을 census 밖에서 부를 길을 엶", filepath.Base(path), spec.Path.Value)
+			}
+		}
 	}
 }
