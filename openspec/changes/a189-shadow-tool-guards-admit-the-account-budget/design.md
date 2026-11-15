@@ -99,6 +99,16 @@ A 의 부수 영향:
   - 도구는 이미 `factory.NewClient` 가 돌려준 `*official.Client` 를 들고 있음. 그러니 도달 범위가 새로 늘지 않음.
   - 생성 뒤에는 `configurationSealed` 로 표준 옵션 재적용이 막힘(client.go:30~32 주석).
 
+### D9. 보조 등급 고정과 예산 핸들 메서드 금지 (보강, Manager 결정 2026-11-15)
+
+- 이유: 공유 예산에서 Critical 은 엔진 보호 주문 몫임. 측정 도구가 Critical 을 달면 손절 즉시성을 깎을 수 있음(안전 불변식 4). 2.2 의 이름 고정은 패키지 한정 선택자만 봐서 `WithPriority(ctx, 1)`(리터럴 1 = Critical)과 `factory.Budget()` 핸들 경로를 못 막았음(gstack 발견 1).
+- 우선순위: `types.ExprString(call.Fun) == "accountbudget.WithPriority"` 인 직접 호출마다 인자 2개·둘째 인자 `accountbudget.Auxiliary` 를 요구함. 같은 선택자의 참조 수와 직접 호출 수가 같아야 하고(함수 값으로 빼서 부르면 실패), 호출이 0 이면 실패(전칭 판정이 표본 0 으로 통과하지 않게).
+- 금지 이름: `go doc -all` 로 두 패키지의 내보낸 메서드를 전수 열거함 — `accountbudget`: `Budget.{Acquire,Close,EnginePollKey,NewObservationFence,ObservationSnapshot,PollRemaining,VerifyIdentity}`, `Lease.Release`, `ObservationCollector.Snapshot`, `ObservationFence.Context`, `ObservationStore.{Begin,Finish,PollRemaining,Snapshot}`, `Transport.RoundTrip`; `accountbudgetruntime`: `Factory.{Budget,Close,NewClient}`.
+  - 더한 것 7개: `Budget`, `Acquire`, `EnginePollKey`, `NewObservationFence`, `ObservationSnapshot`, `PollRemaining`, `VerifyIdentity`.
+  - 뺀 것: 도구가 쓰는 `NewClient`·`Close`, 흔한 이름이라 오탐 위험이 큰 `Release`·`Begin`·`Finish`·`Snapshot`·`Context`·`RoundTrip`.
+  - 0건 근거: 두 도구 비시험 소스에서 `\.(Budget|Acquire|EnginePollKey|NewObservationFence|ObservationSnapshot|PollRemaining|VerifyIdentity|Release|Begin|Finish)\b` grep 0건, 보강 뒤 두 시험 PASS.
+  - 앞으로 거절하게 될 정상 사용: 다른 패키지의 같은 이름 — a140 이 import 하는 `internal/scheduler` 결정 구조의 `Budget` 필드(`decision.go:39·47`)와 `internal/strategyrouter` `QuotaAuthority.Acquire`(quota.go:205) 를 도구가 언젠가 쓰면 그것도 거절함(이름 단위 금지라 받는 쪽 타입을 안 봄).
+
 ### D6. 고칠 함수와 FLM 번들
 
 - 선택지 A 기준 5개. 편집 전 AST 는 `analysis/pre-edit-ast/` 의 5개 파일이고, B 비교용으로 `optionB-…` 1개를 더 둠. 편집 뒤 번들은 2단계에서 `scaffold_analysis.py` 와 `go run ./tools/logic-map` 으로 만듦.

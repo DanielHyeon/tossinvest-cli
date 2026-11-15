@@ -1,0 +1,78 @@
+# a166 census 의 runCommandWithOptions 고정 모양 대 현재(HEAD ab7023901) — 읽기 전용 조사, 2026-11-15T23:12:49+09:00
+# 고정 모양: internal/accountbudgetruntime/testdata/a166-wiring/shapes.json 키 'tools/a128-jev-shadow-probe/main.go||runCommandWithOptions'
+# 뽑는 법: shape.go.txt(census 와 같은 format.Node, Doc=nil)로 각 리비전의 main.go 에서 추출
+# 고정 모양 == 78d777cfe 시점 모양: yes ; == 2764aa701(corpus 마지막 커밋) 시점: yes
+# git log 4d5884cbc..7d1e3163a -- tools/a128-jev-shadow-probe/main.go:
+#   d7c078ffc 2026-10-31 merge: integrate a179 input profiles with a166 budget
+#   9abcb631a 2026-10-31 feat(probe): compare Jev input profiles [STORY-TOS-a179]
+--- shapes.json(=78d777cfe)
++++ 현재 HEAD
+@@ -1,10 +1,7 @@
+ func runCommandWithOptions(ctx context.Context, args []string, getenv func(string) string, opts ...official.Option) (result error) {
+-	judge, err := newJudgeClient(getenv(typeSafeAPIKeyEnv), defaultTypeSafeBase, "")
+-	if err != nil {
+-		return err
+-	}
+ 
+ 	flags := flag.NewFlagSet("run", flag.ContinueOnError)
++	profile := flags.String("input-profile", "compare", "current, initial, or compare; compare makes two model requests per snapshot")
+ 	market := flags.String("market", "", `required: "KR", "US" or "BOTH"`)
+ 	interval := flags.Duration("interval", defaultInterval, "sampling interval")
+ 	top := flags.Int("top", 10,
+@@ -14,7 +11,7 @@
+ 			"every pool judgment is written and labeled (non-finalists are the control group); --top ≤ --pool ≤ 100")
+ 	horizon := flags.Int("horizon", 60, "label horizon in minutes")
+ 	model := flags.String("model", defaultJudgeModel, "TypeSafe model id (pinned version by default)")
+-	out := flags.String("out", defaultLedgerDir, "ledger directory (ledger.jsonl + states/)")
++	out := flags.String("out", "", "ledger directory (ledger.jsonl + states/)")
+ 	configDir := flags.String("config-dir", "",
+ 		"optional: the tossctl config directory (Open API credentials + config.json, read only, for the order cap)")
+ 	waitOpen := flags.Bool("wait-open", false, "wait for the regular session to open instead of refusing")
+@@ -23,6 +20,21 @@
+ 	if err := flags.Parse(args); err != nil {
+ 		return err
+ 	}
++	explicitOut := false
++	flags.Visit(func(f *flag.Flag) {
++		if f.Name == "out" {
++			explicitOut = true
++		}
++	})
++	resolvedOut, err := resolveProfileOutput(*profile, *out, explicitOut)
++	if err != nil {
++		return err
++	}
++	*out = resolvedOut
++	judge, err := newJudgeClient(getenv(typeSafeAPIKeyEnv), defaultTypeSafeBase, "")
++	if err != nil {
++		return err
++	}
+ 	markets, err := parseMarkets(*market)
+ 	if err != nil {
+ 		return err
+@@ -90,8 +102,16 @@
+ 	}
+ 	defer l.Close()
+ 
++	cohort := ""
++	if *profile != "current" {
++		var token [16]byte
++		if _, err := rand.Read(token[:]); err != nil {
++			return err
++		}
++		cohort = hex.EncodeToString(token[:])
++	}
+ 	p := newProbe(src, judge, l, config{
+-		Interval: *interval, TopK: *top, Pool: *pool, Horizon: time.Duration(*horizon) * time.Minute, WaitOpen: *waitOpen,
++		InputProfile: *profile, Cohort: cohort, Interval: *interval, TopK: *top, Pool: *pool, Horizon: time.Duration(*horizon) * time.Minute, WaitOpen: *waitOpen,
+ 		LabelTick: 30 * time.Second, ReadGap: 250 * time.Millisecond,
+ 		RetryDelays:  []time.Duration{5 * time.Second, 10 * time.Second, 20 * time.Second, 40 * time.Second},
+ 		ManualWindow: manualSess, CapSource: capSource,
+@@ -106,6 +126,7 @@
+ 		"finalists %d by J1 after excluding J2 ≥ %.1f · rule %s · horizon %dm · restored %d pending",
+ 		ledgerDir, markets, judge.model, *interval, *pool, rankingFetch, configFile,
+ 		*top, redFlagExclusionP, selectionRuleFor(*top, *pool), *horizon, p.pendingCount())
++	p.logf("input profile %s · cohort %s · model requests per candidate %d", *profile, cohort, map[bool]int{true: 2, false: 1}[*profile == "compare"])
+ 	p.logf("WTS read-only inputs (news feed %v · major indices · KR per-stock investor flows): session %s",
+ 		newsFeedScopes, wtsStatus)
+ 	if manualSess != nil {

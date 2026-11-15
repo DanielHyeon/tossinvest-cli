@@ -127,3 +127,28 @@ Pre-Edit Gate:
   - `TestA166WiringCensusRejectsBypasses` 와 하위 `new-unclassified-http` — `mutant new-unclassified-http not caught by "callsite inventory count changed": reviewed function shape changed: tools/a128-jev-shadow-probe/main.go||runCommandWithOptions`
 - base `7d1e3163a` 사본(git archive)에서 같은 두 시험이 같은 문구로 실패함(`analysis/verify/base-a166-census.txt`). 이 change 는 `main.go` 를 건드리지 않음. `4d5884cbc..7d1e3163a` 사이에 그 파일을 바꾼 커밋은 `9abcb631a`(a179 입력 프로필 비교)와 병합 `d7c078ffc` 둘 — census 의 검토된 함수 모양을 a179 가 바꾼 것으로 보임(원인 확정은 안 함).
 - 의미: Manager 배경의 「정적 가드 5개」 목록에 없는 실패가 하나 더 있음. a187 의 3.2 범위(6개 패키지)에 `internal/accountbudgetruntime` 가 없어서 안 보였던 것으로 보임. 이 change 를 main 에 넣어도 `go test ./...` 는 이 census 로 계속 FAIL 함 → `make test` 7단계는 아직 못 통과함.
+
+## 보강 (Manager 결정 2026-11-15 — gstack 발견 1·9·10, gate hunk)
+
+- Manager 확인: Go diff 4파일은 D1~D3 범위 안. 새 시험 파일 `a112_mbus_a189_static_test.go` 추가와 a128 실패 문구의 괄호 목록 갱신을 승인함.
+- 발견 1 = (a) 적용(커밋 ab7023901): 두 도구 이름 시험이 `accountbudget.WithPriority` 의 둘째 인자를 선택자 `accountbudget.Auxiliary` 로 고정함. 직접 호출만 받음(함수 값 참조 수 ≠ 직접 호출 수면 실패), 호출이 0 이면 실패. `forbidden` 에 예산 핸들 메서드 7개(`Budget`·`Acquire`·`EnginePollKey`·`NewObservationFence`·`ObservationSnapshot`·`PollRemaining`·`VerifyIdentity`)를 더함. 열거·0건 근거·앞으로 거절할 정상 사용은 design D9.
+- 발견 9 = 스펙 문장 정정(같은 커밋). 전·후 원문 `analysis/spec-shadow-requirement-revision.txt`.
+  - 전: 「예산 참여는 읽기 요청의 전송 허가와 시점만 정하며, 주문 · 계좌 · 보유 · 매수 가능 표면을 열어서는 안 된다 (MUST NOT).」
+  - 후: 「예산 참여는 읽기 요청의 전송 허가와 시점을 정하고, 요청마다 계좌 공유 예산의 관측 상태(요청의 시작 · 끝)를 기록한다. 이 관측 상태는 예산이 소유하는 공유 상태이며 측정 evidence 가 아니다 — 위 「evidence 쓰기는 자기 전용 evidence 저장소에만」 은 측정 evidence 에 대한 것이고 이 기록에는 적용되지 않는다. 측정 도구는 예산 핸들을 직접 잡거나 관측 상태를 읽어서는 안 되고 (MUST NOT), 예산 참여로 주문 · 계좌 · 보유 · 매수 가능 표면을 열어서는 안 된다 (MUST NOT).」
+  - 「보조 등급」 SHALL 은 유지하고 「우선순위는 보조 등급만 써야 한다 (SHALL)」·「우선순위 인자가 보조 등급임을 확인해야 한다 (SHALL)」 를 더함(이제 가드가 잼). 시나리오 THEN 에 「우선순위 인자가 보조 등급이 아니거나 우선순위 표시 호출이 없거나 예산 핸들 메서드 이름이 나오면 실패」 를 더함.
+- 발견 10 = 스펙에 넣지 않음. 델타 문장은 「보조 등급 참여자로 연결될 수 있다」(허용)이고 「참여한다」(보장)가 아님을 확인함. 후속: ModeOff(예산 환경 변수 없음 = 예산 없이 돎)는 a166 launch 계약 — a166 에 인계.
+- gate hunk 3건(`80d9fc903a8e`·`cfe5b07efdd8`·`976f27364b5d`) = Keep(B). 근거: AST 열거와 변이 결과.
+- 변이 4차(`analysis/mutation/mutation-after-priority-pin.txt`, 기준 ab7023901): **28/28 CAUGHT**(기존 18 + 새 10 = 두 도구 × h·i·j·k·l). 새 변이는 모두 기대 시험(이름 시험)의 새 문구로 잡힘 — i 「source calls accountbudget.WithPriority(ctx, 1); … only accountbudget.Auxiliary …」, l 「direct calls 0 / references 1」, k 「direct calls 0 / references 0」, j 「source names Budget」·「source names Acquire」. h 는 인자 고정과 이름 허용 목록 둘 다에 걸림. l(함수 값)은 Manager 지시 밖으로 더함 — 참조 수 검사가 실제로 일하는지 재려고.
+- 재리뷰: Manager 지시대로 이번 호출에서는 gstack 재리뷰를 돌리지 않음(범위 확정 뒤).
+
+## a166 census 조사 (읽기 전용, Manager 결정 5)
+
+- 실패 시험: `internal/accountbudgetruntime/a166_wiring_census_test.go` `TestA166WiringCensusBaseline`(301행) → `wiringInspect`(96행) 의 모양 검사(209~217행) 「reviewed function shape changed」.
+- corpus: `internal/accountbudgetruntime/testdata/a166-wiring/shapes.json`(고정 함수 모양 90개)·`sites.json`(분류된 호출 자리 116개), `loadWiringCorpus`(29행)가 읽음. 마지막 갱신 커밋 `2764aa701`(2026-10-31).
+- 고정 모양 = `78d777cfe` 시점의 `runCommandWithOptions` 모양(같은 `format.Node`·Doc 제거 방식으로 뽑아 비교, 바이트 동일). 현재와의 diff 원문 `analysis/census-investigation/shape-diff.txt`(추출기 `shape.go.txt`).
+  - 바뀐 것(전부 a179 입력 프로필 — `9abcb631a`, 병합 `d7c078ffc`): `--input-profile` 플래그 추가, `--out` 기본값 `""` + `resolveProfileOutput` 로 해석, `newJudgeClient` 를 플래그 파싱 뒤로 옮김, `cohort` 무작위 토큰 생성, `config{InputProfile, Cohort, …}`, 시작 로그 한 줄.
+  - 예산 배선 줄(`ParseLaunchConfig`·`Open`·`factory.NewClient`·`WithPriority(ctx, accountbudget.Auxiliary)`)은 바뀌지 않음.
+- census 자체의 판정(모양 검사 외 단계): HEAD 사본(git archive)에서 `shapes.json` 의 그 키 하나만 현재 모양으로 바꾼 뒤 census 시험 셋을 돌리면 **전부 PASS** — `TestA166WiringCensusBaseline`·`RejectsBypasses`(`new-unclassified-http` 는 의도대로 「callsite inventory count changed: got 117 expected 116」 로 잡힘)·`RejectsDirectorySymlink`. 즉 호출 자리 116개 분류(`sites.json`)는 그대로 맞고, HTTP 호출 자리가 전부 예산을 거친다는 census 판정은 a179 변경 뒤에도 성립함. 원문 `analysis/census-investigation/trial-shape-updated-copy.txt`. 저장소 파일은 바꾸지 않음.
+- `RejectsBypasses/new-unclassified-http` 실패는 같은 원인의 부수 효과임: 변이가 기대한 「callsite inventory count changed」 보다 모양 검사 실패가 먼저 남.
+- 고치려면: `internal/accountbudgetruntime/testdata/a166-wiring/shapes.json` 의 키 `tools/a128-jev-shadow-probe/main.go||runCommandWithOptions` 값을 현재 모양으로 갱신(사람이 새 모양을 리뷰한 뒤). 다른 파일은 안 바꿔도 됨(사본 실측). 그 파일은 활성 change a166 의 시험 corpus 이고 비 Go 파일이라 gate ⑤ FLM 대상은 아님.
+- 판단: 이 실패는 a179 가 병합 때 a166 의 모양 corpus 를 갱신하지 않아 생긴 것으로, 안전 결함이 아니라 corpus 낡음임(사본에서 다른 단계 전부 통과). 범위 결정은 사용자에게 올라가 있음.

@@ -1,15 +1,15 @@
 {
   "file": "tools/a140-breakout-signal-shadow/static_test.go",
-  "source_sha256": "e26c7d67b76851aadaa12b3d9c2b9c01e546f4860f895e7bc1d952082722a1cc",
+  "source_sha256": "7c57bab2b7f24447a3f657749b82adf8fc89ec35dd2c3766c642a8f79725d181",
   "package": "main",
   "function": "TestImportsStayInsideTheAllowlist",
   "signature": "TestImportsStayInsideTheAllowlist(params=1, results=0)",
   "start": {
-    "line": 123,
+    "line": 142,
     "column": 1
   },
   "end": {
-    "line": 143,
+    "line": 162,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 132,
+        "line": 151,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "range",
       "at": {
-        "line": 133,
+        "line": 152,
         "column": 3
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 135,
+        "line": 154,
         "column": 4
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 138,
+        "line": 157,
         "column": 4
       }
     }
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 124,
+        "line": 143,
         "column": 2
       },
       "text": "t.Parallel"
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 132,
+        "line": 151,
         "column": 23
       },
       "text": "nonTestSources"
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 134,
+        "line": 153,
         "column": 15
       },
       "text": "strconv.Unquote"
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 135,
+        "line": 154,
         "column": 8
       },
       "text": "strings.Contains"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 138,
+        "line": 157,
         "column": 8
       },
       "text": "strings.HasPrefix"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 138,
+        "line": 157,
         "column": 52
       },
       "text": "strings.TrimPrefix"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 139,
+        "line": 158,
         "column": 5
       },
       "text": "t.Errorf"
@@ -109,14 +109,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 126,
+        "line": 145,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 134,
+        "line": 153,
         "column": 4
       }
     }

@@ -1,6 +1,6 @@
 # Function Logic Map: `TestImportsStayInsideTheAllowlist` (tools/a140-breakout-signal-shadow)
 
-- Source: `tools/a140-breakout-signal-shadow/static_test.go`(편집 뒤 123~143행). 편집 전 AST `../../pre-edit-ast/a140--testimportsstayinsidetheallowlist.ast.json`(118~136행, 분기 4).
+- Source: `tools/a140-breakout-signal-shadow/static_test.go`(편집 뒤 142~162행). 편집 전 AST `../../pre-edit-ast/a140--testimportsstayinsidetheallowlist.ast.json`(118~136행, 분기 4).
 - AST evidence: `ast.json`(편집 뒤, 분기 4 그대로)
 - Risk scan: `risk-pattern-report.md`(일치 0)
 
@@ -14,10 +14,10 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (132) | `range` 파일 | — | — | 자신 |
-| B2 (133) | `range` import | — | — | 자신 |
-| B3 (135) | 표준 라이브러리 | — | continue | 자신 |
-| B4 (138) | 모듈 밖이거나 접미사 목록 밖 | — | Errorf | 자신(편집 전 두 예산 경로 RED, 변이 a140-e-import) |
+| B1 (151) | `range` 파일 | — | — | 자신 |
+| B2 (152) | `range` import | — | — | 자신 |
+| B3 (154) | 표준 라이브러리 | — | continue | 자신 |
+| B4 (157) | 모듈 밖이거나 접미사 목록 밖 | — | Errorf | 자신(편집 전 두 예산 경로 RED, 변이 a140-e-import) |
 
 ## Calls and live bindings
 
@@ -32,6 +32,8 @@
 ## 편집
 
 - `allowed` 에 `accountbudget`·`accountbudgetruntime` 와 한글 주석 한 줄. 분기 무변.
+
+- 보강(2026-11-15)에서 이 함수 본문은 바뀌지 않았고 같은 파일의 위쪽 편집으로 행만 내려가 AST 를 다시 뽑음.
 
 ## Safety conclusion
 

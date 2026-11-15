@@ -38,13 +38,18 @@ main HEAD `7d1e3163a`(= origin/main)에서 `go test ./...` 가 정적 가드 5�
   - `official` 목록에 `Option` 을 더함.
   - 새 항목 `accountbudget`: `WithPriority`, `Auxiliary` / `accountbudgetruntime`: `ParseLaunchConfig`, `Open`. 기존 `for pkg := range allowed { if !saw[pkg] … }` 가 두 패키지의 「본 것 없음」도 자동으로 실패시킴.
 
+### 보강 (Manager 결정 2026-11-15, gstack 발견 1)
+
+- 두 도구의 이름 시험이 `accountbudget.WithPriority` 를 직접 호출로만 받고 둘째 인자가 정확히 `accountbudget.Auxiliary` 인지 고정함. 호출이 0 이거나 함수 값 참조가 있으면 실패.
+- 두 도구의 `forbidden` 에 예산 핸들 메서드 7개를 더함: `Budget`, `Acquire`, `EnginePollKey`, `NewObservationFence`, `ObservationSnapshot`, `PollRemaining`, `VerifyIdentity`.
+
 ### `internal/official/a112_mbus_static_test.go`
 
 - 선택지 A(Manager 결정 2026-11-15, design D4): `a112MBUSReferenceAllowed` 의 마지막 정확 경로 비교에 `internal/accountbudgetruntime/v2_token_test.go` 한 경로를 더함. 접두사·접미사 조건은 그대로임. 그 파일 하나만 통과하고 다른 모든 파일의 판정은 그대로임.
 
 ### 정본 스펙
 
-- `breakout-retest-strategy-lane` 「breakout 그림자 신호 측정은 주문 권위가 없다」를 MODIFIED: 측정 도구가 계좌 공유 요청 예산에 보조 등급으로 참여할 수 있고, 그 표면은 정적 검사가 패키지별 이름으로 고정하며, 주문·계좌·보유·매수 가능 표면 금지는 그대로임을 적음. 시나리오 하나를 더함.
+- `breakout-retest-strategy-lane` 「breakout 그림자 신호 측정은 주문 권위가 없다」를 MODIFIED: 측정 도구가 계좌 공유 요청 예산에 보조 등급으로 참여할 수 있고(허용이지 보장 아님), 우선순위는 보조 등급만 쓰며, 정적 검사가 이름과 우선순위 인자를 고정함. 예산 참여가 요청마다 예산의 관측 상태를 기록하되 그것은 측정 evidence 가 아님을 적음(gstack 발견 9). 주문·계좌·보유·매수 가능 표면 금지는 그대로. 시나리오 하나를 더함.
 - `breakout-retest-strategy-lane` 「M-B0/M-B1 measurement는 production evidence authority와 분리된다」를 MODIFIED(A-2): 「M-B0 exported-symbol references are allowed only …」 한 문장에 a166 런타임 시험 파일 하나를 더함. 다른 문장은 무편집(`analysis/spec-a2-mb0-diff.txt`).
 
 ## Capabilities
