@@ -81,3 +81,38 @@ Pre-Edit Gate:
 - 3.1 변이 중 **시험 1개 추가**(6e6b29a5e): `internal/official/a112_mbus_a189_static_test.go` `TestA189MBUSGuardAdmitsOnlyTheExactA166RuntimeTestFile`. 1차 변이에서 정확 경로를 접두사(g2)·접미사(g3)로 넓힌 변이가 **SURVIVED** 했기 때문임(`analysis/mutation/mutation-before-fixture.txt`). 그 수리 없이 Manager 지시 g 항목(「접두사로 넓힌 변이 → 그 픽스처에 잡혀야 함」)을 만족할 커밋된 시험이 없었음. 새 파일·새 함수라 gate ⑤ required 는 5 그대로.
 - 2.3 FLM/BTM 번들 5개(d929433ba), `check_analysis.py` 원문 `analysis/tdd/check-analysis-2.3.txt`: `evidence complete or diff-proven exempt`, rc 0.
 - 3.1 변이: 1차 대조군은 사본에 `docs/migration` 이 없어 a140 `TestA169SecurityTypeOpenAPIEnum` 이 FAIL → 판정 중단(`history-1-control-missing-docs-migration.txt`). 사본 목록을 고쳐 다시 돎. 픽스처 전 18종 중 16 CAUGHT·2 SURVIVED(g2·g3), 픽스처 뒤 18/18 CAUGHT(`mutation-after-fixture.txt`, 기준 6e6b29a5e). gstack 리뷰 반영 뒤 하네스(기대 시험 이름 단언·HOME/XDG 격리)로 3차(`mutation-after-review.txt`).
+
+## gstack 리뷰 처리 (tasks 3.3, 2026-11-15)
+
+- 원문: `analysis/gstack-review.md`. 디스패치: specialists 5(testing·maintainability·security·performance·simplification), Red Team 1, Claude 적대 패스 1, Codex(gpt-6-astra) 적대 패스 1(OUTSIDE_STATUS completed, `VERDICT: FINDINGS`, P3 1건). maintainability·security·performance·simplification 은 NO FINDINGS.
+- 다중 적대 리뷰는 비례 원칙상 not-applicable 이지만, gstack `review` 스킬이 DIFF_LINES(5370, 대부분 증거 파일)로 Red Team·적대 패스를 자동으로 켰음. 그 결과를 그대로 기록함.
+- 결론: 오늘 시험을 깨거나 운영을 깨는 발견은 0. Medium 2건(발견 1·2)과 스펙 문구 2건(발견 9·10)은 Manager 결정으로 올림 — 「기록만」으로 닫지 않음.
+
+| # | 출처 | 등급 | 내용 | 처리 | 근거 위치 |
+|---|---|---|---|---|---|
+| 1 | Claude 적대 1 + Red Team 2 | Medium, Blocks no | 예산 이름 고정이 패키지 한정 선택자만 봄. `accountbudget.WithPriority(ctx, 1)`(상수 1 = Critical)나 `factory.Budget()` → `Acquire`·`EnginePollKey`·`PollRemaining`·`ObservationSnapshot`·`NewObservationFence` 가 가드를 통과함. 스펙 델타의 SHALL(「예산 시작과 보조 우선순위 표시 … 로 한정」)과 시나리오(「목록 밖 이름 … 여전히 실패」)가 가드보다 넓게 말함 | **Manager 결정 대기**. 안 (a) 두 이름 시험에 `WithPriority` 둘째 인자가 정확히 `accountbudget.Auxiliary` 선택자인지 AST 로 고정하고, `Budget`·`Acquire` 등 예산 메서드 이름을 두 `forbidden` 에 더함(두 도구 비시험 소스에 0건 — 오탐 없음), 변이 2종 추가. 기존 두 함수 본문 안이라 번들 수 불변. 안 (b) 스펙 문장을 가드가 실제로 재는 범위로 좁힘 | 아래 「Manager 에게 올림」 |
+| 2 | testing + Claude 적대 2 | Medium, Blocks no | 별칭 import 우회가 새 두 패키지까지 넓어짐(편집 전에는 import 단계에서 막혔음). 「본 것 없음」 검사는 전부 별칭일 때만 잡음 | design R1 문장을 사실대로 정정(9dbe116c7). 수리는 Manager 결정(2026-11-15)으로 범위 밖 → 후속 | design.md Risks R1 |
+| 3 | Claude 적대 3 | Low | M-B0 허용이 파일 전체 면제(오늘 참조 1개, v2_token_test.go:463) | 기록만 — design R2 에 이미 적힌 한계, Manager D4 결정 범위 | design.md R2 |
+| 4 | Claude 적대 4 | Low | 하네스가 패키지 안 아무 시험이나 실패하면 CAUGHT 로 셈 | 수정: 변이마다 기대 시험 이름, `--- FAIL: <이름> (` 가 없으면 WRONG-CATCH | mutation.py, `mutation-after-review.txt` |
+| 5 | Claude 적대 5 | Low | 하네스가 HOME/XDG 격리 없이 돎(기존 a166 도구 시험이 기본 토큰 캐시 경로를 읽음) | 수정: 하네스의 go 실행을 HOME·XDG_* 임시 디렉터리로 격리(모듈 캐시·go env 파일 경로는 원래 값 명시). 기존 a166 시험 자체의 경로 의존은 a166 파일이라 후속 | mutation.py `isolated_env` |
+| 6 | Claude 적대 6 | Low | 하네스 무결성 검사가 `assert`(python -O 에서 사라짐) | 수정: `Fail` 예외 + `check()` | mutation.py |
+| 7 | Codex | P3/Low | 알 수 없는 변이 ID 가 아무것도 안 돌고 성공 | 수정: 사본 만들기 전에 거절, rc 2(실측 `알 수 없는 변이 ID: ['nope-id']`, rc=2) | mutation.py |
+| 8 | Red Team 1 | Low | 커밋된 `mutation-after-fixture.txt` 가 빈 파일(진행 중에 커밋됨) | 수정: 완성본 커밋(a50e7bec9, 기준 6e6b29a5e 명시는 파일 첫 줄) | analysis/mutation/ |
+| 9 | Red Team 3 | Low(c6) | 스펙 델타 「예산 참여는 읽기 요청의 전송 허가와 시점만 정한다」가 사실보다 좁음 — ModeRequired 에서 클라이언트 전송이 요청마다 계좌 공유 관측 상태(engine 이 읽는 event.state)에 Begin/Finish 를 씀. 같은 요구사항의 「evidence 쓰기는 자기 저장소에만」과 대조가 없음 | **Manager 결정 대기**(요구사항 문장 변경 → 리뷰 재실행 대상). 제안 문장은 아래 | 아래 |
+| 10 | Red Team 4 | Low(c5) | 예산 환경 변수가 없으면 ModeOff = 예산 없이 돎(a166 기존 동작). 스펙 델타가 그것을 말하지 않음 | **Manager 결정 대기**(스펙에 한 문장 또는 운영 문서) | 아래 |
+| G1~G3 | gate scan | — | 가드 허용 목록을 넓힌 hunk 3개(`80d9fc903a8e` a112 정확 경로, `cfe5b07efdd8` a128 import, `976f27364b5d` a140 이름) | **open**(서브에이전트는 사람에게 묻지 못함). 추천: B) Keep — 정당화됨(검증됨: AST 열거 `analysis/enumeration/selectors-and-imports.txt` 와 변이 18/18) | gate scan 원문 |
+
+### Manager 에게 올림
+
+1. 발견 1: 안 (a) 를 추천함 — 안전 불변식 4(손절 즉시성)와 직결되는 우선순위 상승을 정적으로 막고, 편집은 이미 고친 두 함수 안이라 번들 수가 늘지 않음. 대략 함수당 10줄 안팎 + 변이 2종. 안 (b) 는 스펙이 약속을 덜 하게 될 뿐 구멍은 남음.
+2. 발견 9 제안 문장: 「예산 참여는 읽기 요청의 전송 허가와 시점을 정하고, 그 요청의 시작·끝을 계좌 공유 관측 상태에 기록한다. 이 기록은 측정 도구가 자기 evidence 저장소 밖에 쓰는 유일한 상태이며, 주문 · 계좌 · 보유 · 매수 가능 표면을 열어서는 안 된다 (MUST NOT).」
+3. 발견 10 제안 문장: 「예산 환경 변수가 없으면 측정 도구는 예산 없이 돈다(OFF — upstream 동작).」 또는 운영 문서에만 적음.
+
+### 후속 (범위 밖, 기록)
+
+- R1 별칭 import 우회 — 두 도구 가드를 import 경로 기준으로 바꾸기(별도 change).
+- 기존 a166 도구 시험(`tools/a128-jev-shadow-probe/a166_budget_test.go`·`tools/a140-breakout-signal-shadow/a166_budget_test.go`)이 `--config-dir` 없이 기본 토큰 캐시 경로를 읽음 — a166 쪽 시험 격리.
+
+### 리뷰 재실행
+
+- 리뷰 뒤 편집은 하네스(Python)·문서뿐이고 Go 변경 없음. 수정분은 변이 3차로 다시 잼(`mutation-after-review.txt`). gstack 의 전체 재리뷰 패스(Steps 3~5 재실행)는 돌리지 않음 — converged 아님으로 기록.
