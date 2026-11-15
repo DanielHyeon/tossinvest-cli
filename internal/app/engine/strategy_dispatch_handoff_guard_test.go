@@ -783,14 +783,48 @@ func TestEveryNameTheEngineTakesFromTheSeamIsClassified(t *testing.T) {
 	}
 }
 
-// admitSites 는 한 파일에서 경계 문 이름(doors)이 나오는 자리를 전부 세고, 각 자리를 「감싼 최상위 선언:문 이름」으로
+// admitSites 는 한 파일에서 경계 문(doors)을 가리키는 자리를 전부 세고, 각 자리를 「감싼 최상위 선언:문 이름」으로
 // 부른다. 함수 본문만이 아니라 **선언 전부**를 훑는다.
+//
+// 세는 것은 둘뿐임(a189 D13). 앞 판본은 이름이 문과 같은 식별자를 전부 셌고, 경계와 무관한 엔진 사설 인터페이스의
+// 메서드 선언(a087 lowerLimitAdmission.Admit)까지 경계 자리로 잡았음.
+//  1. import 경로가 "/strategyhandoff" 로 끝나는 패키지의 이 파일 지역 이름(별칭 포함)을 X 로 갖는 선택자 X.<문> —
+//     호출이 아니라 참조를 셈(함수 값 · 합성 리터럴 안 함수 값도 셈). 경로 끝 원소 비교는 정확 비교보다 넓어 실패 쪽으로 틀림.
+//  2. dot import 가 하나라도 있는 파일에서 선택자의 Sel 이 아닌 맨 이름 <문> — dot import 된 패키지가 무엇이든 보수적으로 셈.
+//
+// 다른 값의 같은 이름 메서드(b.admission.Admit)와 인터페이스 메서드 선언은 dot import 없는 파일에서는 세지 않음.
+// 이 좁힘이 놓치는 모양은 a189 review 「남은 위험」에 적음.
 func admitSites(file *ast.File, doors map[string]bool) []string {
+	seamNames := map[string]bool{}
+	dotted := false
+	for _, spec := range file.Imports {
+		importPath := strings.Trim(spec.Path.Value, `"`)
+		switch {
+		case spec.Name != nil && spec.Name.Name == ".":
+			dotted = true
+		case importPath == "strategyhandoff" || strings.HasSuffix(importPath, "/strategyhandoff"):
+			local := "strategyhandoff"
+			if spec.Name != nil {
+				local = spec.Name.Name
+			}
+			seamNames[local] = true
+		}
+	}
 	sites := make([]string, 0, 1)
 	for _, decl := range file.Decls {
+		// 선택자의 Sel 자리 식별자 — dot import 파일의 맨 이름 세기에서 뺌(Inspect 는 선택자를 그 Sel 보다 먼저 방문함).
+		qualified := map[*ast.Ident]bool{}
 		ast.Inspect(decl, func(node ast.Node) bool {
-			if ident, ok := node.(*ast.Ident); ok && doors[ident.Name] {
-				sites = append(sites, declName(decl)+":"+ident.Name)
+			switch value := node.(type) {
+			case *ast.SelectorExpr:
+				qualified[value.Sel] = true
+				if pkg, ok := value.X.(*ast.Ident); ok && seamNames[pkg.Name] && doors[value.Sel.Name] {
+					sites = append(sites, declName(decl)+":"+value.Sel.Name)
+				}
+			case *ast.Ident:
+				if dotted && doors[value.Name] && !qualified[value] {
+					sites = append(sites, declName(decl)+":"+value.Name)
+				}
 			}
 			return true
 		})

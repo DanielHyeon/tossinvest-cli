@@ -30,13 +30,19 @@ import (
 
 // a163JudgementRenderHashes 는 render-hash-base.txt 의 ExitObserver 행 열 개임(손으로 옮김 — 변경은 a163 계약 위반이므로
 // 갱신하려면 새 change 가 이유를 적어야 함).
+//
+// a189 갱신 — "record" 하나(이유): a166 9c4bdf4de 가 청산 정리 갈래의 clearTheSymbol 에 넘기는 context 에 계좌 예산
+// 우선순위 표지를 더함(Normal, isProtective 이면 Critical). 이전 값 f3458b84…efb499ea 는 9c4bdf4de 의 부모 렌더이고, 그 뒤
+// base 7d1e3163a 까지 record 렌더는 새 값 하나뿐임(rev-list 전수). 편집 전·후 logic-map AST 대조: 분기 18→19(우선순위를
+// 고르는 if 하나), return 6→6, 빠진 항목 0 — 청산 여부·순서를 정하는 분기는 그대로임. 나머지 아홉 값은 무변경.
+// 근거 원문 openspec/changes/a189-shadow-tool-guards-admit-the-account-budget/analysis/render-hash/.
 var a163JudgementRenderHashes = map[string]string{
 	"judge":                 "a3d5c5625182180a44789e394b3c9a93f0af05e70f37a8f41b004bd1052ab570",
 	"judgeLadder":           "12a3a2b27be71f00697bfc0ea2474419e083dbabbe7dcf8fa58e8ccb884360b2",
 	"judgeRatchet":          "de9209b6f33481e5634bf612b0224dcda3d4e629680d9b35b161b21b7bd37c47",
 	"noteHeldProposal":      "2232f89dc1f62d1e63b83eacae0c9c65d44ecdd626a18d57cdd3f9aca38de015",
 	"quoteUsable":           "54da8fc5f48d567d5f0dba98b99b4e87ed0318d13340c5f0d172f72b846ff49b",
-	"record":                "f3458b84adf93b386bf17d6ae42e49d3a7d49e407829a7c7c10ea789efb499ea",
+	"record":                "0a776329cc53083ba44e4b93e5bce0e384ec88b9e540e317c10f4c28784686d5",
 	"refreshObservation":    "9cf96697467eb3c3d1b15bb6bc496a0bf5d9276b19583884dc2168beeeb2eeaa",
 	"requiresFullJudgement": "a0778e2b9397c7b93ba37dca99ff0ee11a8f92ff1ddca54781e6303f16ff49c6",
 	"snapshotContext":       "72e0ece21373fb4556fff202e5bea7e12e73a720440545f90780901c466aab86",

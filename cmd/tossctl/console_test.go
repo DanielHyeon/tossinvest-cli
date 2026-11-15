@@ -751,9 +751,33 @@ func TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient(t *testing.T
 			"verifyBrokerFactory already resolved the account for; a second one duplicates that " +
 			"resolution and doubles the 429 exposure")
 	}
-	if !strings.Contains(src, "l.shared.resolve()") {
-		t.Error("the orders seam no longer reads through the console's shared client; a resolver " +
-			"of its own is a second /api/v1/accounts read per session")
+	// 공유 resolver 사용은 (*lazyOrders).Orders 본문 안에서만 셈(a189 D11). 파일 전체 문자열 검사는
+	// lazyHoldings.Holdings 가 같은 철자(수신자 l)를 써서 Orders 가 공유 resolver 를 버려도 통과했음.
+	// 호출이 아니라 선택자 참조를 셈 — 메서드 값으로 빼 둔 resolver 도 한 번으로 셈.
+	file, err := parser.ParseFile(token.NewFileSet(), "console.go", src, 0)
+	if err != nil {
+		t.Fatalf("parse console.go: %v", err)
+	}
+	resolves, found := 0, 0
+	for _, decl := range file.Decls {
+		fd, ok := decl.(*ast.FuncDecl)
+		if !ok || fd.Name.Name != "Orders" || fd.Recv == nil || len(fd.Recv.List) != 1 ||
+			types.ExprString(fd.Recv.List[0].Type) != "*lazyOrders" || len(fd.Recv.List[0].Names) != 1 {
+			continue
+		}
+		found++
+		want := fd.Recv.List[0].Names[0].Name + ".shared.resolve"
+		ast.Inspect(fd.Body, func(n ast.Node) bool {
+			if sel, ok := n.(*ast.SelectorExpr); ok && types.ExprString(sel) == want {
+				resolves++
+			}
+			return true
+		})
+	}
+	if found != 1 || resolves != 1 {
+		t.Errorf("(*lazyOrders).Orders declarations=%d, shared resolver references=%d, want 1 and 1 — "+
+			"the orders seam no longer reads through the console's shared client exactly once; a resolver "+
+			"of its own is a second /api/v1/accounts read per session", found, resolves)
 	}
 }
 
