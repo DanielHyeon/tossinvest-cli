@@ -116,3 +116,14 @@ Pre-Edit Gate:
 ### 리뷰 재실행
 
 - 리뷰 뒤 편집은 하네스(Python)·문서뿐이고 Go 변경 없음. 수정분은 변이 3차로 다시 잼(`mutation-after-review.txt`). gstack 의 전체 재리뷰 패스(Steps 3~5 재실행)는 돌리지 않음 — converged 아님으로 기록.
+
+## 3.2 영향 패키지 시험 (2026-11-15, HEAD 844611265)
+
+- 명령·원문: `analysis/verify/go-test-5pkg.txt`(`rtk proxy go test -count=1 -v` 5개 패키지), `go-vet-5pkg.txt`(rc 0), `gofmt.txt`(0줄).
+- 결과: `internal/official` ok, `tools/a128-jev-shadow-probe` ok, `tools/a140-breakout-signal-shadow` ok, `tools/a112-mb-us-source` ok(163.1s, SKIP 2 — 기존 skip), `internal/accountbudgetruntime` **FAIL**.
+- 수치: 최상위 PASS 551, 서브 포함 PASS 961, FAIL 3, SKIP 2.
+- FAIL 3 은 모두 a166 배선 census:
+  - `TestA166WiringCensusBaseline` — `a166_wiring_census_test.go:303: reviewed function shape changed: tools/a128-jev-shadow-probe/main.go||runCommandWithOptions`
+  - `TestA166WiringCensusRejectsBypasses` 와 하위 `new-unclassified-http` — `mutant new-unclassified-http not caught by "callsite inventory count changed": reviewed function shape changed: tools/a128-jev-shadow-probe/main.go||runCommandWithOptions`
+- base `7d1e3163a` 사본(git archive)에서 같은 두 시험이 같은 문구로 실패함(`analysis/verify/base-a166-census.txt`). 이 change 는 `main.go` 를 건드리지 않음. `4d5884cbc..7d1e3163a` 사이에 그 파일을 바꾼 커밋은 `9abcb631a`(a179 입력 프로필 비교)와 병합 `d7c078ffc` 둘 — census 의 검토된 함수 모양을 a179 가 바꾼 것으로 보임(원인 확정은 안 함).
+- 의미: Manager 배경의 「정적 가드 5개」 목록에 없는 실패가 하나 더 있음. a187 의 3.2 범위(6개 패키지)에 `internal/accountbudgetruntime` 가 없어서 안 보였던 것으로 보임. 이 change 를 main 에 넣어도 `go test ./...` 는 이 census 로 계속 FAIL 함 → `make test` 7단계는 아직 못 통과함.

@@ -1,0 +1,35 @@
+# base 7d1e3163a 사본(a189-base-387501-BnwH, git archive)에서 같은 시험, 2026-11-15T23:06:07+09:00
+# rtk proxy go test -count=1 -v -run '^TestA166WiringCensus(Baseline|RejectsBypasses)$' ./internal/accountbudgetruntime/
+=== RUN   TestA166WiringCensusBaseline
+    a166_wiring_census_test.go:303: reviewed function shape changed: tools/a128-jev-shadow-probe/main.go||runCommandWithOptions
+--- FAIL: TestA166WiringCensusBaseline (0.43s)
+=== RUN   TestA166WiringCensusRejectsBypasses
+=== RUN   TestA166WiringCensusRejectsBypasses/root-error-to-off
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: cmd/tossctl/root_budget.go||newRootOfficialClient
+=== RUN   TestA166WiringCensusRejectsBypasses/required-raw-constructor
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/accountbudgetruntime/runtime_linux.go|Factory|NewClient
+=== RUN   TestA166WiringCensusRejectsBypasses/token-default-http
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/official/token.go|tokenManager|exchange
+=== RUN   TestA166WiringCensusRejectsBypasses/replay-raw-template
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/execgw/replay_transport.go||NewBudgetedHTTPReplay
+=== RUN   TestA166WiringCensusRejectsBypasses/probe-raw-send
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: tools/a087-market-sell-probe/main.go||execute
+=== RUN   TestA166WiringCensusRejectsBypasses/dead-guard-raw-return
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/accountbudgetruntime/runtime_linux.go|Factory|NewClient
+=== RUN   TestA166WiringCensusRejectsBypasses/new-unclassified-http
+    a166_wiring_census_test.go:342: mutant new-unclassified-http not caught by "callsite inventory count changed": reviewed function shape changed: tools/a128-jev-shadow-probe/main.go||runCommandWithOptions
+=== RUN   TestA166WiringCensusRejectsBypasses/escaped-http-method
+    a166_wiring_census_test.go:344: source-copy mutation rejected: unresolved function value: internal/official/token.go Do
+--- FAIL: TestA166WiringCensusRejectsBypasses (1.29s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/root-error-to-off (0.03s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/required-raw-constructor (0.04s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/token-default-http (0.20s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/replay-raw-template (0.13s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/probe-raw-send (0.32s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/dead-guard-raw-return (0.04s)
+    --- FAIL: TestA166WiringCensusRejectsBypasses/new-unclassified-http (0.35s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/escaped-http-method (0.19s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	1.725s
+FAIL
+# rc=1
