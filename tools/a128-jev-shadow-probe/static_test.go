@@ -209,11 +209,22 @@ func TestImportsStayInsideTheAllowlist(t *testing.T) {
 		"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget":        true,
 		"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime": true,
 	}
+	// a189 Manager 결정 1(2026-11-16): 이 셋은 패키지 이름 그대로만 들임. 위 이름 시험은 선택자의 X 철자
+	// (official·accountbudget·accountbudgetruntime)로 패키지를 가리므로 별칭·dot·blank import 는 그 고정을 비켜 감 —
+	// 별칭을 쫓지 않고 금지함(별칭 ab 로 WithPriority(ctx, ab.Critical) 을 달아도 이름 시험이 통과하던 길).
+	ownNameOnly := map[string]bool{
+		"github.com/JungHoonGhae/tossinvest-cli/internal/official":             true,
+		"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget":        true,
+		"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime": true,
+	}
 	for _, file := range nonTestSources(t) {
 		for _, spec := range file.Imports {
 			path, _ := strconv.Unquote(spec.Path.Value)
 			if strings.Contains(path, ".") && !allowedModule[path] {
 				t.Errorf("import %q is outside the allowlist (stdlib + official/domain/app-paths/config/client/session/accountbudget/accountbudgetruntime only)", path)
+			}
+			if ownNameOnly[path] && spec.Name != nil {
+				t.Errorf("import %q is renamed to %q; official/accountbudget/accountbudgetruntime must be imported under their own name so the name pins see every use", path, spec.Name.Name)
 			}
 		}
 	}

@@ -148,6 +148,9 @@ func TestImportsStayInsideTheAllowlist(t *testing.T) {
 		// a166: 계좌 공유 요청 예산 연결(쓰는 이름은 위 시험이 고정).
 		"accountbudget": true, "accountbudgetruntime": true,
 	}
+	// a189 Manager 결정 1(2026-11-16): 이 셋은 패키지 이름 그대로만 들임. 위 이름 시험은 선택자의 X 철자로 패키지를
+	// 가리므로 별칭·dot·blank import 는 그 고정을 비켜 감 — 별칭을 쫓지 않고 금지함.
+	ownNameOnly := map[string]bool{"official": true, "accountbudget": true, "accountbudgetruntime": true}
 	for _, file := range nonTestSources(t) {
 		for _, spec := range file.Imports {
 			path, _ := strconv.Unquote(spec.Path.Value)
@@ -156,6 +159,9 @@ func TestImportsStayInsideTheAllowlist(t *testing.T) {
 			}
 			if !strings.HasPrefix(path, module) || !allowed[strings.TrimPrefix(path, module)] {
 				t.Errorf("import %q is outside the allowlist", path)
+			}
+			if strings.HasPrefix(path, module) && ownNameOnly[strings.TrimPrefix(path, module)] && spec.Name != nil {
+				t.Errorf("import %q is renamed to %q; official/accountbudget/accountbudgetruntime must be imported under their own name so the name pins see every use", path, spec.Name.Name)
 			}
 		}
 	}
