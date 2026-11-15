@@ -52,7 +52,7 @@ git -C "$REPO" show "$CAUSE^:$FILE" > "$WORK/p.go"; git -C "$REPO" show "$CAUSE:
 diff -u "$WORK/p.txt" "$WORK/c.txt" | sed '1,2d' || true
 echo "# record 렌더 원문 diff: $CAUSE → $BASE"
 git -C "$REPO" show "$BASE:$FILE" > "$WORK/b.go"; "$WORK/render" -src record "$WORK/b.go" > "$WORK/b.txt"
-if cmp -s "$WORK/c.txt" "$WORK/b.txt"; then echo "동일(0 바이트 차이)"; else diff -u "$WORK/c.txt" "$WORK/b.txt" | sed '1,2d'; fi
+if cmp -s "$WORK/c.txt" "$WORK/b.txt"; then echo "동일(0 바이트 차이)"; else diff -u "$WORK/c.txt" "$WORK/b.txt" | sed '1,2d' || true; fi
 
 echo "# record 해시가 바뀐 커밋(부모 대비) — rev-list 전수, 병합은 첫 부모 대비"
 git -C "$REPO" rev-list "$CAUSE^..$BASE" | while read -r c; do

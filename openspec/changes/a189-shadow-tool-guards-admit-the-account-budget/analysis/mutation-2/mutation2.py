@@ -56,10 +56,12 @@ T3_DOT = "TestA189AdmitCensusIsConservativeInADotImportedFile"
 T_ONLY_ENGINE = "TestOnlyTheEngineImportsThisSeam"
 T3_LITERAL = "TestA189AdmitCensusDecodesTheImportPathLiteral"
 T3_UNSAFE = "TestA189EngineProductionNeverImportsUnsafe"
+T3_NOLINK = "TestA189NoPackageLinknamesTheSeamDoors"
+LINKPKG = "internal/a189link/link.go"
 
 PKG1 = ("./cmd/tossctl/", f"^{T1}$")
 PKG2 = ("./internal/app/engine/", f"^{T2}$")
-PKG3 = ("./internal/app/engine/", f"^({T3}|{T3_SPELL}|{T3_OUTSIDE}|{T3_UNALIASED}|{T3_DOT}|{T3_LITERAL}|{T3_UNSAFE})$")
+PKG3 = ("./internal/app/engine/", f"^({T3}|{T3_SPELL}|{T3_OUTSIDE}|{T3_UNALIASED}|{T3_DOT}|{T3_LITERAL}|{T3_UNSAFE}|{T3_NOLINK})$")
 PKG_SEAM = ("./internal/strategyhandoff/", f"^{T_ONLY_ENGINE}$")
 
 RESOLVE = "\tbroker, accountRef, err := l.shared.resolve(ctx)\n"
@@ -133,6 +135,12 @@ O9 = [(CONSOLE, "once", RESOLVE, RESOLVE + "\tbroker = l.shared.client\n")]
 O10 = [(CONSOLE, "once", "\treads, ok := broker.(consoleOrdersReader)\n",
         "\tvar reads consoleOrdersReader\n\tok := false\n\t{\n\t\tvar broker verifylive.Broker = l.shared.client\n"
         "\t\treads, ok = broker.(consoleOrdersReader)\n\t}\n")]
+ASSERT = "\treads, ok := broker.(consoleOrdersReader)\n"
+O11 = [(CONSOLE, "once", ASSERT, "\tvar reads consoleOrdersReader\n\tok := false\n"
+        "\tfor _, broker := range []verifylive.Broker{l.shared.client} {\n\t\treads, ok = broker.(consoleOrdersReader)\n\t}\n")]
+O12 = [(CONSOLE, "once", ASSERT, "\treads, ok := func(broker verifylive.Broker) (consoleOrdersReader, bool) {\n"
+        "\t\tr, ok := broker.(consoleOrdersReader)\n\t\treturn r, ok\n\t}(l.shared.client)\n")]
+O13 = [(CONSOLE, "once", ASSERT, ASSERT + "\tif r2, ok2 := verifylive.Broker(l.shared.client).(consoleOrdersReader); ok2 {\n\t\treads = r2\n\t}\n")]
 O6 = [(CONSOLE, "once", RESOLVE, RESOLVE + "\t_ = official.New(official.Credentials{}, \"\")\n")]
 
 PRIO_CRIT = "\t\t\t\tclearCtx = accountbudget.WithPriority(ctx, accountbudget.Critical)\n"
@@ -160,6 +168,9 @@ MUTANTS = [
     ("o7-dead-reference", "", O7, ONE(T1), "o4 에 안 쓰는 참조 `_ = l.shared.resolve` 한 줄을 더함(1차 판본을 뚫던 모양)"),
     ("o8-discarded-call", "", O8, ONE(T1), "o4 에 결과를 버리는 직접 호출 `_, _, _ = l.shared.resolve(ctx)` 를 더함"),
     ("o10-var-shadow", "", O10, ONE(T1), "안쪽 블록의 var broker 로 가린 뒤 그 값을 주문 읽기로 단언"),
+    ("o11-range-shadow", "", O11, ONE(T1), "range 의 broker 로 가린 값을 단언(2회차 리뷰)"),
+    ("o12-funclit-param", "", O12, ONE(T1), "함수 리터럴 인자 broker 로 가린 값을 단언(2회차 리뷰)"),
+    ("o13-second-assertion", "", O13, ONE(T1), "둘째 단언으로 reads 를 다른 값으로 바꿈(2회차 리뷰)"),
     ("o9-rebind", "", O9, ONE(T1), "공유 resolver 결과를 받은 뒤 broker 를 공유 캐시 필드로 다시 대입"),
     ("o6-official-new", "", O6, ONE(T1), "console.go 가 official.New 로 둘째 클라이언트를 만듦"),
     # #2 a163 렌더 해시
@@ -187,6 +198,12 @@ MUTANTS = [
                                  'func a189Mint(bool, []strategyflow.Result) strategyhandoff.Handoff\n\n'
                                  'func a189ViaLink() { _ = a189Mint(true, nil) }\n')],
      [(PKG3, T3_UNSAFE, "FAIL"), (PKG3, T3, "PASS")], "//go:linkname 으로 문을 다른 이름 몸체 없는 함수에 묶음 — census 는 못 셈(PASS), unsafe 금지가 막음(2차 리뷰)"),
+    ("a10-linkname-other-package", "", [(LINKPKG, "new", "", f'package a189link\n\nimport (\n\t_ "unsafe"\n\n\t"{MOD}internal/strategyflow"\n)\n\n'
+                                       'type look struct{ a, b uintptr }\n\n'
+                                       f'//go:linkname door {MOD}internal/strategyhandoff.Admit\n'
+                                       'func door(bool, []strategyflow.Result) look\n\nvar Door = door\n')],
+     [(PKG3, T3_NOLINK, "FAIL"), (PKG3, T3_UNSAFE, "PASS"), (PKG3, T3, "PASS")],
+     "엔진 밖 패키지가 unsafe·linkname 으로 문을 다시 내보냄 — 엔진 unsafe 금지·census 는 못 봄, 모듈 linkname 금지가 막음(2회차 리뷰)"),
     # #3 무해한 같은 이름(안 잡혀야 함)
     ("b1-benign-method-call", "", [newfile('import "context"\n\nfunc a189Benign(ctx context.Context, b *exitLowerLimitBoard) error {\n'
                                            '\treturn b.admission.Admit(ctx)\n}\n')],
@@ -249,7 +266,7 @@ MUTANTS = [
 
 CONTROLS = {
     "": [(PKG1, T1, "PASS"), (PKG2, T2, "PASS"), (PKG3, T3, "PASS"), (PKG3, T3_SPELL, "PASS"), (PKG3, T3_OUTSIDE, "PASS"),
-         (PKG3, T3_UNALIASED, "PASS"), (PKG3, T3_DOT, "PASS"), (PKG3, T3_LITERAL, "PASS"), (PKG3, T3_UNSAFE, "PASS"),
+         (PKG3, T3_UNALIASED, "PASS"), (PKG3, T3_DOT, "PASS"), (PKG3, T3_LITERAL, "PASS"), (PKG3, T3_UNSAFE, "PASS"), (PKG3, T3_NOLINK, "PASS"),
          (PKG_SEAM, T_ONLY_ENGINE, "PASS")],
     "S": [(PKG1, T1, "PASS")],
     # OLD 판본 대조군은 base 실패가 기대값(type 블록:Admit) — 이 변경이 없으면 생산 census 가 빨갛다는 것을 다시 잼
@@ -334,8 +351,18 @@ def write(base: Path, rel: str, text: str | None) -> None:
 
 
 def apply(base: Path, edits) -> dict[str, str | None]:
-    """편집을 적용하고, 원복용 원래 내용(새 파일이면 None)을 돌려줌."""
+    """편집을 적용하고, 원복용 원래 내용(새 파일이면 None)을 돌려줌. 중간 편집이 실패하면 앞 편집을 되돌린 뒤 다시 던짐
+    (gstack 리뷰 2회차: 앞 편집이 디스크에 남아 다음 변이의 기준이 되던 결함)."""
     saved: dict[str, str | None] = {}
+    try:
+        _apply_into(base, edits, saved)
+    except Fail:
+        restore(base, saved)
+        raise
+    return saved
+
+
+def _apply_into(base: Path, edits, saved: dict[str, str | None]) -> None:
     for rel, kind, old, new in edits:
         p = base / rel
         if kind == "new":
@@ -351,7 +378,6 @@ def apply(base: Path, edits) -> dict[str, str | None]:
         if new:
             check(new in text, f"변이 문자열이 사본에 없음: {new[:80]!r}")
         p.write_text(text)
-    return saved
 
 
 def restore(base: Path, saved: dict[str, str | None]) -> None:
@@ -380,7 +406,7 @@ def main() -> int:
         starts = {f: sha(base / f) for f in tracked}
         for f in tracked:
             check(starts[f] == sha(root / f), f"작업 트리 {f} 가 HEAD 와 다름 — 커밋 뒤 돌릴 것")
-        check(not (base / NEWFILE).exists() and not (base / WRAP).exists(), "새 파일 자리가 사본에 이미 있음")
+        check(not (base / NEWFILE).exists() and not (base / WRAP).exists() and not (base / LINKPKG).exists(), "새 파일 자리가 사본에 이미 있음")
         print(f"기준 HEAD {head}, 사본 {base.name}($HOME/tossos-work 아래), 전용 GOCACHE, HOME·XDG 격리")
         for f in tracked:
             print(f"  {f} sha256={starts[f]}")
@@ -431,7 +457,7 @@ def main() -> int:
             issues += 0 if ok else 1
         for f in tracked:
             check(sha(base / f) == starts[f], f"{f} 끝 원복 sha 불일치")
-        check(not (base / NEWFILE).exists() and not (base / WRAP).exists(), "새 파일이 남음")
+        check(not (base / NEWFILE).exists() and not (base / WRAP).exists() and not (base / LINKPKG).exists(), "새 파일이 남음")
         print(f"끝: 원복 sha 전부 일치, 새 파일 0, 판정 이상 {issues}건")
         return 1 if issues else 0
     finally:
