@@ -5,11 +5,11 @@
 - [x] 1.3 CodeGraph(1.6.0) 호출자·`affected --filter '*_test.go'` 원문을 `analysis/code-context/` 에 남김.
 - [x] 1.4 D2 열거(`analysis/enumeration/`), D5 영향 원문, 편집 전 AST 5+1개(`analysis/pre-edit-ast/`)를 만듦.
 - [x] 1.5 `openspec validate --strict`·PM `--check` 원문을 `analysis/verify-1/` 에 남김.
-- [ ] 1.6 Manager 결정: D4 선택지(A/B/A-wide)와 A 일 때 스펙 처리(A-1 해석 / A-2 개정). A-2 이면 `analysis/option-a-mb0-delta-draft.md` 를 specs/ 로 옮기고 strict validate 를 다시 돎.
+- [x] 1.6 Manager 결정(2026-11-15): D4 = **A**(마지막 정확 경로 비교에 `internal/accountbudgetruntime/v2_token_test.go` 하나만, 접두사·접미사 조건 무편집; A-wide 기각), 스펙 = **A-2**(초안의 한 문장 개정을 specs/ 로 옮김 — 정본 블록과의 차이가 그 문장 하나뿐인 원문 `analysis/spec-a2-mb0-diff.txt`), R1 = 범위 밖. strict validate 재실행.
 
 ## 2. 구현 (RED → GREEN)
 
-- [ ] 2.1 RED: 편집 전 다섯 시험이 base 와 같은 문구로 실패함을 이 worktree 에서 원문으로 남김(5개 패키지 시험 지정 실행).
+- [x] 2.1 RED: 편집 전 다섯 시험이 base 와 같은 문구로 실패함을 이 worktree 에서 원문으로 남김(5개 패키지 시험 지정 실행). 원문 `analysis/tdd/red-2.1.txt`: FAIL 5·PASS 0, 문구는 base 와 같음.
 - [ ] 2.2 GREEN: proposal 「What Changes」의 이름만 더함. 다른 함수 본문은 고치지 않음. 기존 문구·금지 목록 무편집.
 - [ ] 2.3 편집 뒤 FLM/BTM 번들(함수 5개, 선택지 B 면 그에 맞게)을 만들고 `check_analysis.py --change a189-shadow-tool-guards-admit-the-account-budget` 를 통과시킴.
 
