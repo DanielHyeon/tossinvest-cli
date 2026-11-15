@@ -29,6 +29,17 @@
 - [x] 3b.3 반증(`analysis/census-repair/falsify.txt`): 대조군 GREEN, 고정 함수 안 `http.Get` → 「reviewed function shape changed」, 새 함수 안 `http.Get` → 「callsite inventory count changed: got 117 expected 116」, 둘 다 CAUGHT.
 - [x] 3b.4 영향 패키지 재확인(`analysis/verify-3/`, `tools/a112-mb-us-source` 는 Manager 지시로 제외): 4개 패키지 ok, PASS 최상위 485·서브 포함 882, FAIL 0, SKIP 0. `internal/accountbudgetruntime` 최상위 53·서브 포함 77, census 3개 시험 PASS. vet rc 0.
 
+## 3c. 낡은 시험 가드 3건 (사용자 결정 2026-11-16 「1번 — a189 에 전부 포함」, design D11~D13)
+
+- [x] 3c.1 범위 확장을 proposal·design·tasks 에 반영. 원인 커밋과 부모에서 세 시험의 PASS→FAIL 경계 실측(`analysis/boundary/`), #2 렌더 해시 커밋별 측정·`record` AST 대조(`analysis/render-hash/`), 편집 전 AST(`analysis/pre-edit-ast/` 두 파일).
+- [ ] 3c.2 #1 `TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient` — `(*lazyOrders).Orders` 본문의 공유 resolver 참조 수 단언(D11).
+- [ ] 3c.3 #2 `a163JudgementRenderHashes["record"]` 갱신과 이유 주석(D12).
+- [ ] 3c.4 #3 `admitSites` 좁힘(D13)과 새 파일의 fixture 시험.
+- [ ] 3c.5 사본 변이(대조군 GREEN 먼저, 기대 시험 이름 단언) — 하네스·원문 `analysis/mutation-2/`. #3 은 좁힘으로 잃는 검출을 열거해 잼.
+- [ ] 3c.6 FLM/BTM 번들, `check_analysis.py` required 수·rc 실측.
+- [ ] 3c.7 대상 패키지 시험·vet·gofmt·strict validate — 원문 `analysis/verify-4/`.
+- [ ] 3c.8 gstack `review`(최종 diff 전체) + 다른 계열 적대 보이스 1, 새 발견 0 까지 — `analysis/gstack-review-2.md`.
+
 ## 4. 종결
 
 - [ ] 4.1 PM check, strict validate, archive 와 Story 경로 동기화. 검증된 교훈만 retain.

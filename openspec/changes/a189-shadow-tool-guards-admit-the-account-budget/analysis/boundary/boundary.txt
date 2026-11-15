@@ -1,0 +1,25 @@
+### 3dc0c776b^ (bbe5066ec merge: a166 reconciliation and credential readers) — ./cmd/tossctl/ -run '^TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient$'
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.016s
+### 3dc0c776b (3dc0c776b a166: bind verify and HTTP reader contexts) — ./cmd/tossctl/ -run '^TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient$'
+--- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.00s)
+    console_test.go:755: the orders seam no longer reads through the console's shared client; a resolver of its own is a second /api/v1/accounts read per session
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.012s
+FAIL
+### 9c4bdf4de^ (c412c0e55 Merge commit '7d230c638' into integration/a166-root-publication) — ./internal/app/engine/ -run '^TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange$'
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.028s
+### 9c4bdf4de (9c4bdf4de Classify protective priority and replay origin) — ./internal/app/engine/ -run '^TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange$'
+--- FAIL: TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange (0.02s)
+    a163_judgement_pin_test.go:102: ExitObserver.record renders 0a776329cc53083ba44e4b93e5bce0e384ec88b9e540e317c10f4c28784686d5, want f3458b84adf93b386bf17d6ae42e49d3a7d49e407829a7c7c10ea789efb499ea — a163 must not change a judgement function (design D7)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.023s
+FAIL
+### 5c0aeb2b8^ (20ef25ef5 docs(a087): a165 재대조와 Pre-Edit 기록 [a087 1.0-2.1]) — ./internal/app/engine/ -run '^TestExactlyOneProductionSiteAdmitsIntoTheSeam$'
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.028s
+### 5c0aeb2b8 (5c0aeb2b8 feat(a087): 보호 청산 하한가 지정가 판을 휴면 배선함 [a087 2.2-3.2]) — ./internal/app/engine/ -run '^TestExactlyOneProductionSiteAdmitsIntoTheSeam$'
+--- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.02s)
+    strategy_dispatch_handoff_guard_test.go:669: 경계에 값을 싣는 생산 자리=[dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope type 블록:Admit], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.026s
+FAIL
+rc=0

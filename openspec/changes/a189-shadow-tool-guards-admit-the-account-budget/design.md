@@ -135,6 +135,30 @@ A 의 부수 영향:
   - A112: 허용 경로 밖 시험 파일의 M-B0 참조
 - 다중 적대 리뷰는 `not-applicable`(비례 원칙: High-risk 경로·게이트 판정 직접 변경 아님). gstack `review` 1회.
 
+### D11. 콘솔 orders seam — 문자열 고정을 함수 본문 AST 단언으로 (범위 확장 2, #1)
+
+- 경계 실측(`analysis/boundary/boundary.txt`): `3dc0c776b^` PASS, `3dc0c776b` FAIL(console_test.go:755). 그 커밋이 `consoleBroker.resolve()` 를 `resolve(ctx)` 로 바꿈. 철자 수(`git show <c>:cmd/tossctl/console.go`): 부모 `l.shared.resolve()` 2·`(ctx)` 0, 원인 커밋과 base 는 0·2.
+- **철자 수가 2 인 것이 문제임**: 같은 파일의 `(*lazyHoldings).Holdings` 도 수신자 이름이 `l` 이라 같은 철자를 씀. 그래서 철자만 고치면 `Orders` 가 공유 resolver 를 안 써도 `Holdings` 의 철자로 통과함 — 이 시험이 지키는 「orders seam 이 공유 resolver 로 읽음」을 못 봄.
+- 결정: 파일 전체 `strings.Contains` 를 `(*lazyOrders).Orders` 본문 안에서 `<수신자 이름>.shared.resolve` 선택자 **참조** 수 == 1 로 바꿈(호출이 아니라 참조 — 메서드 값으로 빼도 셈). `Orders` 선언을 못 찾으면 실패. 수신자 이름은 선언에서 읽음(철자 `l` 에 묶지 않음).
+- 변이로 두 판본(철자만 고친 S, AST 판본 A)을 비교해 선택을 잼(`analysis/mutation-2/`). 빌드 횟수 1·`official.New(` 금지는 그대로.
+
+### D12. a163 렌더 해시 — `record` 값 하나 갱신 (범위 확장 2, #2)
+
+- 경계 실측: `9c4bdf4de^` PASS, `9c4bdf4de` FAIL(a163_judgement_pin_test.go:102). 렌더 하네스(`analysis/render-hash/render.go.txt`, 시험과 같은 파싱·렌더)로 `9c4bdf4de^..7d1e3163a` 의 rev-list 전수 135 커밋 + 부모 1 을 잼: `exitloop.go` 의 서로 다른 blob 3개, `record` 해시는 둘뿐(`f3458b84…` 17 커밋, `0a776329…` 119 커밋). 부모 대비 `record` 가 바뀐 커밋은 `9c4bdf4de` 와, 9c4bdf4de 를 둘째 부모로 들여온 병합 둘(`5f681f2a5`·`5b379e08d`)뿐. 그 뒤 base 까지 `record` 불변(`render-at-commits.txt`). 나머지 9개 함수는 경계 세 지점에서 기대값과 같음.
+- 그래서 새 값 `0a776329…` 는 a166 `9c4bdf4de` 의 한 편집임. 편집 요지(`analysis/render-hash/cause-9c4bdf4de-exitloop.diff`): `record` 의 청산 정리 갈래에서 `o.clearTheSymbol(ctx, …)` 에 넘기는 context 를 `accountbudget.WithPriority(ctx, accountbudget.Normal)` 로 만들고, `isProtective(proposal)`(9c4bdf4de 이전부터 있던 술어 — 손절선 이탈·래더 손절)이면 `Critical` 로 바꿈. `WithPriority` 는 `context.WithValue` 한 줄임(transport_linux.go:21·unsupported.go:44).
+- AST 대조(`tools/logic-map`, `analysis/render-hash/record-ast-*.json`·`record-ast-compare.txt`): 편집 전→후 분기 18→19, return 6→6, 호출 24→27, 대입 21→23. 더해진 항목은 정확히 여섯 — 대입 `:=`·`=` 각 1, 호출 `accountbudget.WithPriority` 2·`isProtective` 1, 분기 `if` 1(우선순위 고르기). 빠진 항목 0, 같은 항목 69. `9c4bdf4de`→base 는 75 항목 전부 같음.
+- 판정 불변의 근거는 이 대조뿐임: 새 `if` 는 context 의 우선순위 값만 고르고 return·`orderable`·`judgement` 대입이 없음. 청산 여부·순서를 정하는 기존 분기·return 은 전부 같은 항목으로 맞물림. 우선순위가 계좌 공유 예산의 전송 허가 시점에 주는 영향은 a166 의 계약이고 `record` 의 판정 트리 밖임.
+- 갱신 자리: 가드 주석(「갱신하려면 새 change 가 이유를 적어야 함」)의 바로 그 맵 항목 위에 이유 주석을 둠. 맵은 패키지 수준 변수라 FLM 대상 함수가 아님(`check_analysis` 실측으로 확인).
+
+### D13. dispatch seam Admit 자리 — 경계 패키지의 이름만 세기 (범위 확장 2, #3)
+
+- 경계 실측: `5c0aeb2b8^` PASS, `5c0aeb2b8` FAIL(strategy_dispatch_handoff_guard_test.go:669, `type 블록:Admit`). a087 이 `exit_lower_limit.go:58` 에 `type lowerLimitAdmission interface{ Admit(context.Context) error }` 를 넣음. 이 `Admit` 은 경계(strategyhandoff) 와 무관한 엔진 사설 인터페이스의 메서드 이름임.
+- 결정(Manager 권장 「E」): `admitSites` 가 세는 것을 둘로 좁힘.
+  1. 이 파일의 import 중 경로가 `/strategyhandoff` 로 끝나는 것의 지역 이름(별칭이면 별칭, 아니면 `strategyhandoff`)을 X 로 갖는 선택자 `X.<문 이름>` — 호출이 아니라 **참조**를 셈(함수 값 빼돌리기·합성 리터럴 안 함수 값 포함).
+  2. dot import(어느 경로든)가 있는 파일에서, 선택자의 `Sel` 이 아닌 맨 식별자 `<문 이름>` — 보수적으로 셈(dot import 된 패키지가 무엇이든 맨 이름은 그 패키지 것일 수 있음).
+- 경로를 정확한 모듈 경로가 아니라 끝 원소로 맞추는 이유: 기존 fixture 시험 `TestAdmitCensusSeesEverySpellingItClaims` 가 `sh "example.com/strategyhandoff"` 로 별칭 철자를 재므로, 그 시험 본문을 고치지 않고 그대로 통과해야 함. 끝 원소 비교는 정확 비교보다 넓음(같은 끝 이름의 다른 패키지도 셈 → 실패 쪽으로 틀림). 생산 엔진의 import 는 정확 경로 하나뿐임.
+- 좁힘이 새로 놓치는 모양은 변이로 세어 남은 위험에 적음(R4). 새 fixture 시험은 새 파일(기존 파일 속 새 함수는 logic-map 범위를 늘림).
+
 ## Risks / Trade-offs
 
 - R1 별칭 우회: 두 도구의 가드는 X 식별자 철자로 패키지를 가림. 그래서 `ab "…/accountbudget"` 처럼 별칭으로 import 하면 import 검사는 통과하고 선택자 이름 고정은 비켜 감. `official`·`tossconfig` 도 지금 같은 한계가 있음(기존). (gstack 리뷰로 정정, 2026-11-15) 이 change 는 이 구멍을 새 두 패키지로 **넓힘**: 편집 전에는 두 예산 경로가 import 단계에서 막혔고, 이제 import 는 통과하므로 별칭 쪽 이름은 안 보임. 「본 것 없음」 검사는 **모든** 사용을 별칭으로 바꾼 경우만 잡음(변이 f-alias-runtime) — 정식 이름 사용을 남긴 채 같은 경로를 별칭으로 한 번 더 import 하면(Go 는 허용) 통과함. 막으려면 import 의 지역 이름을 함께 고정해야 함. Manager 결정(2026-11-15)으로 범위 밖.

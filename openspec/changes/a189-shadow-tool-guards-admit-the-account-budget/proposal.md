@@ -16,6 +16,14 @@ main HEAD `7d1e3163a`(= origin/main)에서 `go test ./...` 가 정적 가드 5�
 
 추가로 같은 날 영향 패키지 시험에서 6번째 실패를 찾았음: `internal/accountbudgetruntime` `TestA166WiringCensusBaseline`·`TestA166WiringCensusRejectsBypasses/new-unclassified-http` — `reviewed function shape changed: tools/a128-jev-shadow-probe/main.go||runCommandWithOptions`. base `7d1e3163a` 에서도 같음. a179 입력 프로필(`9abcb631a`, 병합 `d7c078ffc`)이 그 함수를 바꾸면서 a166 census 의 고정 모양(`internal/accountbudgetruntime/testdata/a166-wiring/shapes.json`)을 갱신하지 않았음. 사용자 결정 2026-11-15(「추천대로」): 이 수리를 a189 에 포함.
 
+### 범위 확장 2 — 낡은 시험 가드 3건 (사용자 결정 2026-11-16 「1번 — a189 에 전부 포함」)
+
+a189 의 목적(main 의 `go test ./...` 를 다시 초록으로)을 막는 가드가 셋 더 있음. 셋 다 시험 파일의 고정값·인식기가 운영 코드의 의도된 편집을 따라가지 못한 것임. 각 원인 커밋과 그 부모에서 시험을 실제로 돌려 PASS→FAIL 경계를 확인함(`analysis/boundary/boundary.txt`).
+
+7. `cmd/tossctl` `TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient` — 문자열 고정 `l.shared.resolve()` 가 a166 `3dc0c776b`(resolve 에 `ctx` 인자 추가) 뒤로 소스에 없음.
+8. `internal/app/engine` `TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange` — `ExitObserver.record` 의 렌더 해시. a166 `9c4bdf4de` 가 `record` 에 예산 우선순위 표지를 넣고 고정값을 갱신하지 않음.
+9. `internal/app/engine` `TestExactlyOneProductionSiteAdmitsIntoTheSeam` — 인식기 `admitSites` 가 이름이 `Admit` 인 식별자를 전부 세서 a087 `5c0aeb2b8` 의 인터페이스 메서드 선언 `lowerLimitAdmission.Admit`(exit_lower_limit.go:58)을 경계 자리 `type 블록:Admit` 으로 셈.
+
 ## What Changes
 
 시험 파일의 가드 허용 목록만 고침. 더하는 이름은 지금 비시험 소스가 실제로 쓰는 이름(AST 열거, `analysis/enumeration/selectors-and-imports.txt`)뿐임.
@@ -53,6 +61,12 @@ main HEAD `7d1e3163a`(= origin/main)에서 `go test ./...` 가 정적 가드 5�
 
 - 선택지 A(Manager 결정 2026-11-15, design D4): `a112MBUSReferenceAllowed` 의 마지막 정확 경로 비교에 `internal/accountbudgetruntime/v2_token_test.go` 한 경로를 더함. 접두사·접미사 조건은 그대로임. 그 파일 하나만 통과하고 다른 모든 파일의 판정은 그대로임.
 
+### 낡은 시험 가드 3건 (범위 확장 2, design D11~D13)
+
+- `cmd/tossctl/console_test.go` `TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient`: 파일 전체 문자열 검사 `strings.Contains(src, "l.shared.resolve()")` 를 `(*lazyOrders).Orders` 본문 안의 `<수신자>.shared.resolve` 참조 수 == 1 AST 단언으로 바꿈(D11). 나머지(빌드 횟수 1, `official.New(` 금지)는 그대로.
+- `internal/app/engine/a163_judgement_pin_test.go`: 패키지 수준 `a163JudgementRenderHashes["record"]` 값 하나를 a166 `9c4bdf4de` 의 렌더로 갱신하고, 가드 주석이 요구하는 이유를 그 자리에 적음(D12). 나머지 9개 값과 시험 함수 본문은 그대로.
+- `internal/app/engine/strategy_dispatch_handoff_guard_test.go` `admitSites`: 경계 패키지(import 경로 끝 `/strategyhandoff`)를 가리키는 지역 이름(별칭 포함)의 선택자 참조와, dot import 가 있는 파일의 선택자 아닌 문 이름만 셈(D13). 새 fixture 시험은 새 파일에 둠.
+
 ### 정본 스펙
 
 - `breakout-retest-strategy-lane` 「breakout 그림자 신호 측정은 주문 권위가 없다」를 MODIFIED: 측정 도구가 계좌 공유 요청 예산에 보조 등급으로 참여할 수 있고(허용이지 보장 아님), 우선순위는 보조 등급만 쓰며, 정적 검사가 이름과 우선순위 인자를 고정함. 예산 참여가 요청마다 예산의 관측 상태를 기록하되 그것은 측정 evidence 가 아님을 적음(gstack 발견 9). 주문·계좌·보유·매수 가능 표면 금지는 그대로. 시나리오 하나를 더함.
@@ -82,3 +96,5 @@ main HEAD `7d1e3163a`(= origin/main)에서 `go test ./...` 가 정적 가드 5�
 - 고치는 기존 함수(gate ⑤ FLM 번들 대상): 선택지 A 기준 **5개** — `a112MBUSReferenceAllowed`, a128 `TestNoMutatingOrAccountSurfaceIsNamed`·`TestImportsStayInsideTheAllowlist`, a140 `TestNoMutatingAccountOrWriteSurfaceIsNamed`·`TestImportsStayInsideTheAllowlist`. 편집 전 AST 는 `analysis/pre-edit-ast/`.
 - 판정이 바뀌는 시험: 위 5개와 a166 census 2개(`TestA166WiringCensusBaseline`·`RejectsBypasses`)가 실패 → 통과. 같은 파일의 다른 시험과 가드를 부르는 픽스처 시험(`TestA112MBUSResolvedASTGuard*` 3개)은 판정 불변이어야 함.
 - 런타임·운영 영향 0: 시험 파일만 바뀜. 운영 토글·설정·DB·journal 변경 없음.
+- 범위 확장 2: 시험 파일 3개(`console_test.go`, `a163_judgement_pin_test.go`, `strategy_dispatch_handoff_guard_test.go`)와 새 시험 파일 1개. 운영 Go 파일 0줄. 본문을 고치는 기존 함수는 `TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient`·`admitSites` 둘로 예상함(`a163JudgementRenderHashes` 는 패키지 수준 변수 — 수는 `check_analysis.py` 로 실측). 판정이 바뀌는 시험: 위 세 시험이 실패 → 통과. `ExitObserver.record` 등 운영 청산·주문 진입 경로는 무편집.
+- 스펙: 범위 확장 2 는 시험 가드의 고정값·인식기 정정이라 Requirement 문장을 바꾸지 않음. 정본 스펙에 세 가드를 기술한 문장이 없음(`openspec/specs` 에서 `render hash`·`admitSites`·`ExactlyOneProductionSite`·`orders seam`·`shared resolver` 검색 0건). exit-policy 「브로커 데이터 시각은 보고의 입력이며 청산 판정 자격을 바꾸지 않는다」의 금지는 브로커 시각·보고 토글을 읽는 것에 대한 것이고, 그것을 지키는 금지 census 두 시험은 이 change 에서 무편집임.
