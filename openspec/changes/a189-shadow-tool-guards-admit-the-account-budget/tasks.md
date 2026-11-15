@@ -9,8 +9,8 @@
 
 ## 2. 구현 (RED → GREEN)
 
-- [x] 2.1 RED: 편집 전 다섯 시험이 base 와 같은 문구로 실패함을 이 worktree 에서 원문으로 남김(5개 패키지 시험 지정 실행). 원문 `analysis/tdd/red-2.1.txt`: FAIL 5·PASS 0, 문구는 base 와 같음.
-- [ ] 2.2 GREEN: proposal 「What Changes」의 이름만 더함. 다른 함수 본문은 고치지 않음. 기존 문구·금지 목록 무편집.
+- [x] 2.1 RED: 편집 전 다섯 시험이 base 와 같은 문구로 실패함을 이 worktree 에서 원문으로 남김(3개 패키지, 시험 이름 지정 실행). 원문 `analysis/tdd/red-2.1.txt`: FAIL 5·PASS 0, 문구는 base 와 같음.
+- [x] 2.2 GREEN: proposal 「What Changes」의 이름만 더함. 다른 함수 본문은 고치지 않음. 기존 문구·금지 목록 무편집. 원문 `analysis/tdd/green-2.2.txt`: PASS 5·FAIL 0. a128 import 실패 문구의 괄호 목록도 proposal 대로 두 패키지를 더해 사실에 맞춤.
 - [ ] 2.3 편집 뒤 FLM/BTM 번들(함수 5개, 선택지 B 면 그에 맞게)을 만들고 `check_analysis.py --change a189-shadow-tool-guards-admit-the-account-budget` 를 통과시킴.
 
 ## 3. 검증

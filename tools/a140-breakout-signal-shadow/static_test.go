@@ -82,10 +82,15 @@ func TestNoMutatingAccountOrWriteSurfaceIsNamed(t *testing.T) {
 	}
 	allowed := map[string]map[string]bool{
 		"official": {"New": true, "LoadCredentials": true, "Client": true, "StrictTopOfBook": true, "StrictLastPrice": true,
-			"StrictMinutePage": true, "MarketCalendarResponse": true, "ErrRateLimited": true},
+			"StrictMinutePage": true, "MarketCalendarResponse": true, "ErrRateLimited": true,
+			// a166: 예산에 묶인 클라이언트 생성(factory.NewClient)에 넘기는 옵션 타입뿐임 — With… 생성자는 여전히 목록 밖.
+			"Option": true},
 		"tossconfig": {"NewService": true},
 		// 원장 패키지는 생산 evidence.db 의 자리를 알아내는 데만 씀 — 열기 · 쓰기 이름은 못 나옴.
 		"journal": {"DefaultPath": true, "DBFileName": true},
+		// a166: 계좌 공유 요청 예산 연결 — 예산 시작과 보조 우선순위 표시 이름만 허용함.
+		"accountbudget":        {"WithPriority": true, "Auxiliary": true},
+		"accountbudgetruntime": {"ParseLaunchConfig": true, "Open": true},
 	}
 	saw := map[string]bool{}
 	for _, file := range nonTestSources(t) {
@@ -121,6 +126,8 @@ func TestImportsStayInsideTheAllowlist(t *testing.T) {
 	allowed := map[string]bool{
 		"official": true, "domain": true, "app/paths": true, "config": true, "clock": true, "scheduler": true,
 		"strategyevidence": true, "officialbars": true, "breakoutsignal": true, "breakoutlane": true, "costs": true, "journal": true,
+		// a166: 계좌 공유 요청 예산 연결(쓰는 이름은 위 시험이 고정).
+		"accountbudget": true, "accountbudgetruntime": true,
 	}
 	for _, file := range nonTestSources(t) {
 		for _, spec := range file.Imports {

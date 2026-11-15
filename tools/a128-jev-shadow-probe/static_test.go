@@ -93,8 +93,16 @@ func TestNoMutatingOrAccountSurfaceIsNamed(t *testing.T) {
 	allowedOfficial := map[string]bool{
 		"New": true, "LoadCredentials": true, "Client": true, "Credentials": true,
 		"StrictTopOfBook": true, "MarketCalendarResponse": true, "ErrRateLimited": true, "StrictMinutePage": true,
+		// a166: 예산에 묶인 클라이언트 생성(factory.NewClient)에 넘기는 옵션 타입뿐임 — With… 생성자는 여전히 목록 밖.
+		"Option": true,
 	}
 	allowedConfig := map[string]bool{"NewService": true}
+	// a166: 계좌 공유 요청 예산 연결 — 예산 시작과 보조 우선순위 표시 이름만 허용함.
+	allowedBudget := map[string]map[string]bool{
+		"accountbudget":        {"WithPriority": true, "Auxiliary": true},
+		"accountbudgetruntime": {"ParseLaunchConfig": true, "Open": true},
+	}
+	sawBudget := map[string]bool{}
 	sawOfficial, sawConfig := false, false
 	for _, file := range nonTestSources(t) {
 		ast.Inspect(file, func(node ast.Node) bool {
@@ -117,11 +125,20 @@ func TestNoMutatingOrAccountSurfaceIsNamed(t *testing.T) {
 					t.Errorf("source uses tossconfig.%s, outside the read-only allowlist", selector.Sel.Name)
 				}
 			}
+			if pkg, ok := selector.X.(*ast.Ident); ok && allowedBudget[pkg.Name] != nil {
+				sawBudget[pkg.Name] = true
+				if !allowedBudget[pkg.Name][selector.Sel.Name] {
+					t.Errorf("source uses %s.%s, outside the budget allowlist", pkg.Name, selector.Sel.Name)
+				}
+			}
 			return true
 		})
 	}
 	if !sawOfficial || !sawConfig {
 		t.Fatalf("the guard saw official.* %v / tossconfig.* %v — a side it saw nothing of is measured by nothing", sawOfficial, sawConfig)
+	}
+	if !sawBudget["accountbudget"] || !sawBudget["accountbudgetruntime"] {
+		t.Fatalf("the guard saw accountbudget.* %v / accountbudgetruntime.* %v — a side it saw nothing of is measured by nothing", sawBudget["accountbudget"], sawBudget["accountbudgetruntime"])
 	}
 }
 
@@ -169,12 +186,15 @@ func TestImportsStayInsideTheAllowlist(t *testing.T) {
 		// 1.8: WTS 조회 셋(wts.go — 표면은 아래 시험이 고정)과 그 세션 저장소 읽기.
 		"github.com/JungHoonGhae/tossinvest-cli/internal/client":  true,
 		"github.com/JungHoonGhae/tossinvest-cli/internal/session": true,
+		// a166: 계좌 공유 요청 예산 연결(쓰는 이름은 위 시험이 고정).
+		"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget":        true,
+		"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime": true,
 	}
 	for _, file := range nonTestSources(t) {
 		for _, spec := range file.Imports {
 			path, _ := strconv.Unquote(spec.Path.Value)
 			if strings.Contains(path, ".") && !allowedModule[path] {
-				t.Errorf("import %q is outside the allowlist (stdlib + official/domain/app-paths/config/client/session only)", path)
+				t.Errorf("import %q is outside the allowlist (stdlib + official/domain/app-paths/config/client/session/accountbudget/accountbudgetruntime only)", path)
 			}
 		}
 	}

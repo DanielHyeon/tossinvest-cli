@@ -494,7 +494,8 @@ func a112MBUSReferenceAllowed(path string) bool {
 	if strings.HasPrefix(path, "internal/official/a112_mbus_") && strings.HasSuffix(path, "_test.go") {
 		return true
 	}
-	return path == "internal/official/a112_mbus_read.go" || path == "internal/official/a112_mbus_read_unix.go" || path == "internal/official/a112_mbus_read_unsupported.go"
+	// a166: 복제 전송이 공유 예산에 대기 관측으로 계수됨을 증명하는 런타임 시험 파일 하나만 정확 경로로 허용함.
+	return path == "internal/official/a112_mbus_read.go" || path == "internal/official/a112_mbus_read_unix.go" || path == "internal/official/a112_mbus_read_unsupported.go" || path == "internal/accountbudgetruntime/v2_token_test.go"
 }
 
 func a112MBUSSurfaceName(name string) bool {
