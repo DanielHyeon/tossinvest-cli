@@ -1,0 +1,47 @@
+# 편집 전 원문: tools/gate.sh @ 4d7d15571d4528e4391a5ec2aafa68ad3a447484 (blob 8ab5c54f581c293e6579a086160c7928b65c976f)
+# 1-20행 (머리 주석)
+#!/usr/bin/env sh
+#
+# gate.sh — openspec change 완료 게이트
+#
+# 하나의 change 를 "완료" 로 선언해도 되는지 기계적으로 검사한다. 사람이 눈으로
+# 훑는 대신 아래 10개 조건을 전부 통과해야만 exit 0 이 된다.
+#
+#   1. tasks.md 존재
+#   2. 미완료 체크박스 0개
+#   3. 짝 change (deploy-pair.txt) 도 완료 — 선언이 있을 때만
+#   4. review.md 존재 (gstack 리뷰 기록)
+#   5. Function Logic Map 산출물 완성 또는 명시적 면제
+#   6. make sdd-check 통과
+#   7. make test 통과
+#   8. make test-seams 통과 (tossos_testseams 태그 뒤 테스트 — a118)
+#   9. make test-race 통과 (경합 검출기 — a112 5.7; 그전까지 `-race` 는 이
+#      저장소의 어떤 게이트에서도 돌지 않았다)
+#  10. make vet 통과
+#  11. make validate 통과
+#
+# 54-58행
+# 종료 코드: 0 = PASS, 1 = 게이트 실패, 2 = 사용법 오류
+set -eu
+
+# 전체 게이트 단계 수
+TOTAL_STEPS=11
+# 335-349행 (6~11단계)
+# ---- 6~11. Full SDD / test / test-seams / test-race / vet / validate -------
+
+STEP_NO=6
+for target in sdd-check test test-seams test-race vet validate; do
+	step "$STEP_NO/$TOTAL_STEPS make $target"
+	if ! make "$target"; then
+		fail "make $target 실패"
+	fi
+	echo "OK: make $target"
+	STEP_NO=$((STEP_NO + 1))
+done
+
+echo ""
+echo "GATE PASS: $CHANGE_ID"
+exit 0
+# Makefile 130-131행 @ 같은 커밋
+validate:
+	openspec validate --all --strict --no-interactive

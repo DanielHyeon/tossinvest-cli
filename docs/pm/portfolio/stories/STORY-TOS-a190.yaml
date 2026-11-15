@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a190",
+  "title": "완료 게이트 11단계가 닫는 change 는 strict 로, 저장소 전체는 오류만 보고 판정할 수 없는 validate 는 실패로 친다",
+  "feature": "FEAT-TOS-001",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a190-the-completion-gate-validates-the-closing-change-strictly",
+    "path": "openspec/changes/a190-the-completion-gate-validates-the-closing-change-strictly"
+  },
+  "found_by": {
+    "date": "2026-11-16",
+    "how": "a189 종결 gate 2회차에서 ①~⑩ 은 OK 였고 ⑪ make validate(openspec validate --all --strict) 가 rc 1 — 8 passed, 51 failed (59 items). 실패는 전부 남의 change·main spec 의 strict 경고였고 a189 단독 strict 는 valid 였다. 사용자 결정 2026-11-16 선택지 1: gate ⑪ 을 고치는 작은 change 를 먼저 낸다.",
+    "record": "openspec/changes/a190-the-completion-gate-validates-the-closing-change-strictly/analysis/strict-debt/make-validate-strict.txt"
+  },
+  "acceptance": [
+    "11단계는 닫는 change 의 openspec validate <id> --strict 와 저장소 전체 openspec validate --all(strict 없음)이 둘 다 rc 0 일 때만 통과한다.",
+    "openspec 부재·실행 실패·JSON 아닌 출력·닫는 change 미발견·저장소 전체 0 항목은 11단계 FAIL 이다.",
+    "저장소 전체 strict 합계는 advisory 한 줄로 gate 출력에 남고 그 실패는 gate 를 떨어뜨리지 않는다. make validate 타깃은 그대로다.",
+    "거절 시험은 11단계에서 그 사유로 멈춤을 단언하고, 판정 단위가 gate.sh 에 배선됐음을 실제 gate.sh 로 못 박는다. 변이 원장의 변이는 기대한 시험이 잡는다.",
+    "2026-11-16 의 strict 실패 51 항목 목록이 원문으로 남고 이 change 는 그것을 고치지 않는다. Go·트레이딩 코드 변경은 0 이다."
+  ]
+}
