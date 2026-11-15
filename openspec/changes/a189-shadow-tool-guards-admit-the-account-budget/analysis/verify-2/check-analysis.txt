@@ -1,0 +1,4 @@
+[logic-map] a189-shadow-tool-guards-admit-the-account-budget: base 7d1e3163a704 → working tree (no landed-commit.txt in HEAD) required 5 function(s) — judged at HEAD a16dc8292523
+[logic-map] a189-shadow-tool-guards-admit-the-account-budget: the target is the working tree, so this window also holds 13 commit(s) that landed after the base and every existing function they changed is required here too — run `python3 tools/logic-map/check_analysis.py --change a189-shadow-tool-guards-admit-the-account-budget --record-landing` to let the gate compute `landed-commit.txt` from this change's evidence and record it, which narrows it to this change's own work; if no commit on this history is accepted as the landing, the command says so instead of recording
+[logic-map] a189-shadow-tool-guards-admit-the-account-budget: evidence complete or diff-proven exempt
+rc=0

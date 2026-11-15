@@ -1,0 +1,2 @@
+Change 'a189-shadow-tool-guards-admit-the-account-budget' is valid
+rc=0
