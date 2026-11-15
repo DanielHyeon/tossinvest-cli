@@ -1,0 +1,40 @@
+CODEX_MODEL: gpt-6-astra (exec; source: /home/daniel/.codex/config.toml model)
+sandbox=read-only model=gpt-6-astra
+OUTSIDE_EXIT=0
+Read-only review at `027f7a04f632ff93433c5836e88b30790bbfcf22`. No tests or harnesses executed; bypasses below are source-derived, not compiled reproductions. Existing R4 and backtick-import findings excluded.
+
+1. **An engine-local linker alias escapes the narrowed mint census.** At [strategy_dispatch_handoff_guard_test.go:825](/home/daniel/tossos-work/a189-shadow-guards/internal/app/engine/strategy_dispatch_handoff_guard_test.go:825), bare door identifiers count only in files containing a dot import. This additional production file therefore contributes zero sites:
+
+   ```go
+   package engine
+
+   import (
+       _ "unsafe"
+       sf "github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
+       sh "github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff"
+   )
+
+   //go:linkname Admit github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff.Admit
+   func Admit(bool, []sf.Result) sh.Handoff
+
+   func extraMint(selected []sf.Result) sh.Handoff {
+       return Admit(true, selected)
+   }
+   ```
+
+   The old census counts both bare `Admit` identifiers. The new census ignores both; neither authorized mint site needs modification. The companion importer check permits the engine package ([dependency_closure_test.go:183](/home/daniel/tossos-work/a189-shadow-guards/internal/strategyhandoff/dependency_closure_test.go:183)), so it does not supply the protection documented for R4/l3. Add explicit linker-directive coverage and a compiled mutation before treating the census as complete. Severity: Medium; Blocks: no
+
+2. **A discarded resolver reference defeats the new console assertion.** [console_test.go:771](/home/daniel/tossos-work/a189-shadow-guards/cmd/tossctl/console_test.go:771) counts references without requiring their execution. Add `_ = l.shared.resolve` to the existing `o4-unlocked-cache` mutation: the AST count becomes exactly one while the implementation still reads and writes the shared cache without its lock. The behavioral half invokes `Orders` sequentially three times, so the cached factory still builds once.
+
+   The recorded mutation currently fails solely because its reference count is zero ([mutation2-run3.txt:49](/home/daniel/tossos-work/a189-shadow-guards/openspec/changes/a189-shadow-tool-guards-admit-the-account-budget/analysis/mutation-2/mutation2-run3.txt:49)). This one-line decoy removes that rejection without restoring synchronization. Concurrent first refreshes can consequently race and duplicate account resolution. Add this mutation and a synchronized concurrent-first-use assertion. Severity: Medium; Blocks: no
+
+3. **The AST evidence does not establish unchanged exit judgement semantics.** [compare_record_ast.py:22](/home/daniel/tossos-work/a189-shadow-guards/openspec/changes/a189-shadow-tool-guards-admit-the-account-budget/analysis/render-hash/compare_record_ast.py:22) retains event kinds and available call-name text, discarding conditions, assignment expressions and call arguments. Changing `snapshot.Orderable && !proposal.Zero()` to `snapshot.Orderable || !proposal.Zero()` would leave those compared events unchanged.
+
+   Consequently, the claim that this comparison alone establishes unchanged liquidation decisions and ordering is unsupported ([review.md:189](/home/daniel/tossos-work/a189-shadow-guards/openspec/changes/a189-shadow-tool-guards-admit-the-account-budget/review.md:189)). Direct Git inspection showed only the stated priority-context edit inside `record`; this finding concerns the claimed proof, not an observed hidden judgement change. Compare full function ASTs with only the explicitly approved context transformation normalized. Severity: Low; Blocks: no
+
+Recommendation: Extend the census and mutation suite because an engine-local `//go:linkname Admit` bypasses mint-site counting without modifying either authorized mint site.
+VERDICT: FINDINGS--- stderr tail
+VERDICT: clean
+FINDINGS: P2
+OUTSIDE_USAGE: input=1357267 cached_input=1234304 cache_write_input=0 output=8136 reasoning_output=4082
+OUTSIDE_RC=0
