@@ -1,7 +1,7 @@
 # Function Logic Map: `admitSites` (internal/app/engine)
 
-- Source: `internal/app/engine/strategy_dispatch_handoff_guard_test.go`(편집 뒤 797~833행). 편집 전 logic-map 산출물 `../../pre-edit-ast/engine--admitsites.ast.json`(788~799행, 분기 2: B1 range 790·B2 if 792, return 2).
-- AST evidence: `ast.json`(편집 뒤, 분기 11, return 2 — 829 Inspect 콜백, 832 함수 끝)
+- Source: `internal/app/engine/strategy_dispatch_handoff_guard_test.go`(편집 뒤 799~837행). 편집 전 logic-map 산출물 `../../pre-edit-ast/engine--admitsites.ast.json`(788~799행, 분기 2: B1 range 790·B2 if 792, return 2).
+- AST evidence: `ast.json`(편집 뒤, 분기 11, return 2 — 833 Inspect 콜백, 836 함수 끝)
 - Risk scan: `risk-pattern-report.md`(일치 0)
 - 원인·경계: a087 `5c0aeb2b8` 가 `exit_lower_limit.go:58` 에 `type lowerLimitAdmission interface{ Admit(context.Context) error }` 를 넣음 — 부모 PASS, 원인 커밋 FAIL(`../../boundary/boundary.txt`, 자리 `type 블록:Admit`).
 
@@ -17,19 +17,19 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (800) | `range file.Imports` | — | — | 전부 |
-| B2 (802) | import 갈래 | — | — | 전부 |
-| B3 (803) | dot import(`.`) | `dotted = true` | — | `TestAdmitCensusSeesEverySpellingItClaims`(dottedCall) — 변이 g3 |
-| B4 (805) | 경로 == `strategyhandoff` 또는 `/strategyhandoff` 로 끝남 | 지역 이름 기록 | — | `TestAdmitCensusSees…`(example.com 경로) — 변이 g5 |
-| B5 (807) | 별칭 있음 | 지역 이름 = 별칭 | — | `TestAdmitCensusSees…`(sh) — 변이 g1; 기본 이름은 `TestExactlyOne…`·`TestA189AdmitCensusCountsTheUnaliasedSeamName` — 변이 g7 |
-| B6 (814) | `range file.Decls` | 선언마다 `qualified` 새로 만듦 | — | 전부 |
-| B7 (818) | 노드 type-switch | — | — | 전부 |
-| B8 (819) | `*ast.SelectorExpr` | `qualified[Sel]` 기록 | — | `TestA189AdmitCensusIsConservativeInADotImportedFile`(b.Admit 안 셈) — 변이 g4 |
-| B9 (821) | X 가 경계 지역 이름이고 Sel 이 문 | 자리 추가 | — | `TestExactlyOne…`(생산 두 자리) — 변이 g6, a1·a2·a4·a5·a6 |
-| B10 (824) | `*ast.Ident` | — | — | 전부 |
-| B11 (825) | dot import 파일이고 문 이름이고 선택자 Sel 아님 | 자리 추가 | — | `TestAdmitCensusSees…`(dottedCall)·`TestA189AdmitCensusIsConservative…`(bare·type 블록) — 변이 a3·g3·g4 |
-| return (829) | Inspect 콜백 | — | true(계속 내려감) | — |
-| return (832) | 끝 | — | 자리 목록 | — |
+| B1 (802) | `range file.Imports` | — | — | 전부 |
+| B2 (806) | import 갈래 | — | — | 전부 |
+| B3 (807) | dot import(`.`) | `dotted = true` | — | `TestAdmitCensusSeesEverySpellingItClaims`(dottedCall) — 변이 g3 |
+| B4 (809) | 경로 해독 실패(`strconv.Unquote` 오류 — 경계로 간주) 또는 경로 == `strategyhandoff` 또는 `/strategyhandoff` 로 끝남 | 지역 이름 기록 | — | `TestAdmitCensusSees…`(example.com 경로) — 변이 g5 |
+| B5 (811) | 별칭 있음 | 지역 이름 = 별칭 | — | `TestAdmitCensusSees…`(sh) — 변이 g1; 기본 이름은 `TestExactlyOne…`·`TestA189AdmitCensusCountsTheUnaliasedSeamName` — 변이 g7 |
+| B6 (818) | `range file.Decls` | 선언마다 `qualified` 새로 만듦 | — | 전부 |
+| B7 (822) | 노드 type-switch | — | — | 전부 |
+| B8 (823) | `*ast.SelectorExpr` | `qualified[Sel]` 기록 | — | `TestA189AdmitCensusIsConservativeInADotImportedFile`(b.Admit 안 셈) — 변이 g4 |
+| B9 (825) | X 가 경계 지역 이름이고 Sel 이 문 | 자리 추가 | — | `TestExactlyOne…`(생산 두 자리) — 변이 g6, a1·a2·a4·a5·a6 |
+| B10 (828) | `*ast.Ident` | — | — | 전부 |
+| B11 (829) | dot import 파일이고 문 이름이고 선택자 Sel 아님 | 자리 추가 | — | `TestAdmitCensusSees…`(dottedCall)·`TestA189AdmitCensusIsConservative…`(bare·type 블록) — 변이 a3·g3·g4 |
+| return (833) | Inspect 콜백 | — | true(계속 내려감) | — |
+| return (836) | 끝 | — | 자리 목록 | — |
 
 ## Calls and live bindings
 
@@ -46,6 +46,7 @@
 ## 편집
 
 - 앞 판본(B1 range·B2 if 「이름이 문과 같은 모든 `*ast.Ident`」)을 둘로 좁힘(design D13): 경계 패키지 지역 이름의 선택자 참조(B9)와 dot import 파일의 선택자 아닌 맨 이름(B11).
+- gstack 리뷰 1회차(2026-11-16): 따옴표만 벗기던 경로 해독을 `strconv.Unquote` 로 바꿈(원시 문자열·이스케이프 철자 fail-open, 테스팅 전문가·적대 보이스). `//go:linkname` 우회는 이 함수가 아니라 새 시험 `TestA189EngineProductionNeverImportsUnsafe` 가 막음(변이 a9).
 - 잃는 검출(`analysis/mutation-2/`, design R4): 경계 밖 이름으로 문을 다시 부르는 자리 — 허용 자리 안에서 문 이름 필드로 빼돌린 뒤 다른 자리에서 부름(l1), 엔진 밖 래퍼 패키지의 같은 이름(l3, `TestOnlyTheEngineImportsThisSeam` 이 대신 막음). 다른 이름 필드 빼돌리기(l2)는 앞 판본도 못 잡던 것.
 
 ## Safety conclusion

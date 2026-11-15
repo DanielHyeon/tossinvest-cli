@@ -1,5 +1,5 @@
 // a189 #2 렌더 해시 하네스 — a163_judgement_pin_test.go 의 렌더 방식(주석 미적재 파싱 → go/printer → sha256)을 그대로 옮김.
-// 쓰는 법: go run render.go <파일>... (파일마다 ExitObserver 수신자 메서드와 자유 함수 stableObservationID 의 해시를 찍음)
+// 쓰는 법: go run render.go [-src <함수>] <파일>... (파일마다 ExitObserver 수신자 메서드와 자유 함수 stableObservationID 의 해시를 찍음)
 // 시험과 같은 결과를 내는지는 HEAD 의 exitloop.go 에서 시험 실패 문구의 현재 값과 대조해 확인함(render-at-commits.txt 첫 줄).
 package main
 
@@ -37,7 +37,13 @@ func recv(fd *ast.FuncDecl) string {
 }
 
 func main() {
-	for _, path := range os.Args[1:] {
+	// -src <이름> 이면 해시 대신 그 함수의 렌더 원문을 찍음(전·후 원문 diff 용 — a189 리뷰: AST 항목 대조는 조건식·인자를 안 봄).
+	src := ""
+	args := os.Args[1:]
+	if len(args) > 1 && args[0] == "-src" {
+		src, args = args[1], args[2:]
+	}
+	for _, path := range args {
 		file, err := parser.ParseFile(token.NewFileSet(), path, nil, 0)
 		if err != nil {
 			fmt.Println("PARSE-ERROR", path, err)
@@ -60,6 +66,12 @@ func main() {
 			if err := printer.Fprint(&buf, token.NewFileSet(), fd); err != nil {
 				fmt.Println("RENDER-ERROR", fd.Name.Name, err)
 				os.Exit(2)
+			}
+			if src != "" {
+				if fd.Name.Name == src {
+					fmt.Println(buf.String())
+				}
+				continue
 			}
 			lines = append(lines, fmt.Sprintf("%s %x", fd.Name.Name, sha256.Sum256(buf.Bytes())))
 		}

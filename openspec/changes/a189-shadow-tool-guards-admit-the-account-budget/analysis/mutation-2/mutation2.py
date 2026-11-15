@@ -54,10 +54,12 @@ T3_OUTSIDE = "TestA189AdmitCensusIgnoresSameNamedMembersOutsideTheSeam"
 T3_UNALIASED = "TestA189AdmitCensusCountsTheUnaliasedSeamName"
 T3_DOT = "TestA189AdmitCensusIsConservativeInADotImportedFile"
 T_ONLY_ENGINE = "TestOnlyTheEngineImportsThisSeam"
+T3_LITERAL = "TestA189AdmitCensusDecodesTheImportPathLiteral"
+T3_UNSAFE = "TestA189EngineProductionNeverImportsUnsafe"
 
 PKG1 = ("./cmd/tossctl/", f"^{T1}$")
 PKG2 = ("./internal/app/engine/", f"^{T2}$")
-PKG3 = ("./internal/app/engine/", f"^({T3}|{T3_SPELL}|{T3_OUTSIDE}|{T3_UNALIASED}|{T3_DOT})$")
+PKG3 = ("./internal/app/engine/", f"^({T3}|{T3_SPELL}|{T3_OUTSIDE}|{T3_UNALIASED}|{T3_DOT}|{T3_LITERAL}|{T3_UNSAFE})$")
 PKG_SEAM = ("./internal/strategyhandoff/", f"^{T_ONLY_ENGINE}$")
 
 RESOLVE = "\tbroker, accountRef, err := l.shared.resolve(ctx)\n"
@@ -67,7 +69,7 @@ SEAM_IMPORT = f'"{MOD}internal/strategyhandoff"'
 
 # S: #1 의 AST 단언 블록을 「철자만 고친」 문자열 검사로 바꾼 판본(선택 근거 비교용).
 S_START = "\t// 공유 resolver 사용은 (*lazyOrders).Orders 본문 안에서만 셈"
-S_END = "per session\", found, resolves)\n\t}\n"
+S_END = "read per session\", found, resolves, feeds, rebinds, asserted)\n\t}\n"
 S_BODY = ('\tif !strings.Contains(src, "l.shared.resolve(ctx)") {\n'
           '\t\tt.Error("the orders seam no longer reads through the console\'s shared client; a resolver " +\n'
           '\t\t\t"of its own is a second /api/v1/accounts read per session")\n\t}\n')
@@ -124,6 +126,13 @@ O4 = [(CONSOLE, "once", RESOLVE,
        "\t\tl.shared.client, l.shared.accountRef = b, strings.TrimSpace(ref)\n\t}\n"
        "\tbroker, accountRef, err := l.shared.client, l.shared.accountRef, error(nil)\n")]
 O5 = [(CONSOLE, "once", RESOLVE, "\tresolve := l.shared.resolve\n\tbroker, accountRef, err := resolve(ctx)\n")]
+# 2차 리뷰(2026-11-16): 참조 수만 세던 판본을 뚫던 모양들
+O7 = [(CONSOLE, "once", RESOLVE, O4[0][3] + "\t_ = l.shared.resolve\n")]
+O8 = [(CONSOLE, "once", RESOLVE, O4[0][3].replace("\tbroker, accountRef, err :=", "\t_, _, _ = l.shared.resolve(ctx)\n\tbroker, accountRef, err :="))]
+O9 = [(CONSOLE, "once", RESOLVE, RESOLVE + "\tbroker = l.shared.client\n")]
+O10 = [(CONSOLE, "once", "\treads, ok := broker.(consoleOrdersReader)\n",
+        "\tvar reads consoleOrdersReader\n\tok := false\n\t{\n\t\tvar broker verifylive.Broker = l.shared.client\n"
+        "\t\treads, ok = broker.(consoleOrdersReader)\n\t}\n")]
 O6 = [(CONSOLE, "once", RESOLVE, RESOLVE + "\t_ = official.New(official.Credentials{}, \"\")\n")]
 
 PRIO_CRIT = "\t\t\t\tclearCtx = accountbudget.WithPriority(ctx, accountbudget.Critical)\n"
@@ -147,7 +156,11 @@ MUTANTS = [
     ("o3-own-broker", "", O3, ONE(T1), "Orders 가 자기 consoleBroker 를 새로 만들어 resolve"),
     ("o4-unlocked-cache", "", O4, ONE(T1), "Orders 가 잠금을 건너뛰고 공유 캐시 필드를 직접 채움(빌드 1회 유지)"),
     ("o4-unlocked-cache-S", "S", O4, ONE(T1, "PASS"), "[S 판본] 같은 변이 — Holdings 의 철자로 통과(기대 PASS)"),
-    ("o5-method-value", "", O5, ONE(T1, "PASS"), "resolver 를 메서드 값으로 빼서 한 번 부름 — 같은 동작(기대 PASS: 참조 1)"),
+    ("o5-method-value", "", O5, ONE(T1), "resolver 를 메서드 값으로 빼서 한 번 부름(2차: 직접 호출만 받으므로 기대 FAIL)"),
+    ("o7-dead-reference", "", O7, ONE(T1), "o4 에 안 쓰는 참조 `_ = l.shared.resolve` 한 줄을 더함(1차 판본을 뚫던 모양)"),
+    ("o8-discarded-call", "", O8, ONE(T1), "o4 에 결과를 버리는 직접 호출 `_, _, _ = l.shared.resolve(ctx)` 를 더함"),
+    ("o10-var-shadow", "", O10, ONE(T1), "안쪽 블록의 var broker 로 가린 뒤 그 값을 주문 읽기로 단언"),
+    ("o9-rebind", "", O9, ONE(T1), "공유 resolver 결과를 받은 뒤 broker 를 공유 캐시 필드로 다시 대입"),
     ("o6-official-new", "", O6, ONE(T1), "console.go 가 official.New 로 둘째 클라이언트를 만듦"),
     # #2 a163 렌더 해시
     ("r1-record-priority", "", R1, [(PKG2, T2, "FAIL")], "record 의 보호 청산 우선순위 Critical → Normal"),
@@ -165,6 +178,15 @@ MUTANTS = [
      [(PKG3, T3, "FAIL")], "함수 값으로 빼돌려 부름(f := strategyhandoff.Admit; f(…))"),
     ("a6-package-var", "", [seam_file("var a189Mint = strategyhandoff.Admit\n")],
      [(PKG3, T3, "FAIL")], "패키지 수준 함수 값 var a189Mint = strategyhandoff.Admit"),
+    ("a7-raw-string-import", "", [seam_file("func a189Raw() { _ = sh.Admit(true, nil) }\n", "sh `" + MOD + "internal/strategyhandoff`")],
+     [(PKG3, T3, "FAIL")], "원시 문자열 import 경로(`…`)로 별칭 Admit 호출(2차 리뷰)"),
+    ("a8-escaped-import", "", [seam_file("func a189Esc() { _ = sh.Admit(true, nil) }\n", 'sh "' + MOD + 'internal/strategy\\x68andoff"')],
+     [(PKG3, T3, "FAIL")], "이스케이프 import 경로(\\x68)로 별칭 Admit 호출(2차 리뷰)"),
+    ("a9-linkname", "", [newfile(f'import (\n\t_ "unsafe"\n\n\t"{MOD}internal/strategyflow"\n\t{SEAM_IMPORT}\n)\n\n'
+                                 f'//go:linkname a189Mint {MOD}internal/strategyhandoff.Admit\n'
+                                 'func a189Mint(bool, []strategyflow.Result) strategyhandoff.Handoff\n\n'
+                                 'func a189ViaLink() { _ = a189Mint(true, nil) }\n')],
+     [(PKG3, T3_UNSAFE, "FAIL"), (PKG3, T3, "PASS")], "//go:linkname 으로 문을 다른 이름 몸체 없는 함수에 묶음 — census 는 못 셈(PASS), unsafe 금지가 막음(2차 리뷰)"),
     # #3 무해한 같은 이름(안 잡혀야 함)
     ("b1-benign-method-call", "", [newfile('import "context"\n\nfunc a189Benign(ctx context.Context, b *exitLowerLimitBoard) error {\n'
                                            '\treturn b.admission.Admit(ctx)\n}\n')],
@@ -218,13 +240,17 @@ MUTANTS = [
     ("g6-no-selector-count", "", [(GUARD, "once",
                                    "\t\t\t\t\tsites = append(sites, declName(decl)+\":\"+value.Sel.Name)\n", "")],
      [(PKG3, T3, "FAIL")], "선택자 세기를 지움"),
+    ("g8-trim-instead-of-unquote", "", [(GUARD, "once", "\t\timportPath, err := strconv.Unquote(spec.Path.Value)\n",
+                                         "\t\timportPath, err := strings.Trim(spec.Path.Value, `\"`), error(nil)\n")],
+     [(PKG3, T3_LITERAL, "FAIL")], "경로 해독을 따옴표 벗기기로 되돌림"),
     ("g7-unaliased-default", "", [(GUARD, "once", '\t\t\tlocal := "strategyhandoff"\n', '\t\t\tlocal := ""\n')],
      [(PKG3, T3, "FAIL")], "별칭 없는 import 의 기본 지역 이름을 잃음"),
 ]
 
 CONTROLS = {
     "": [(PKG1, T1, "PASS"), (PKG2, T2, "PASS"), (PKG3, T3, "PASS"), (PKG3, T3_SPELL, "PASS"), (PKG3, T3_OUTSIDE, "PASS"),
-         (PKG3, T3_UNALIASED, "PASS"), (PKG3, T3_DOT, "PASS"), (PKG_SEAM, T_ONLY_ENGINE, "PASS")],
+         (PKG3, T3_UNALIASED, "PASS"), (PKG3, T3_DOT, "PASS"), (PKG3, T3_LITERAL, "PASS"), (PKG3, T3_UNSAFE, "PASS"),
+         (PKG_SEAM, T_ONLY_ENGINE, "PASS")],
     "S": [(PKG1, T1, "PASS")],
     # OLD 판본 대조군은 base 실패가 기대값(type 블록:Admit) — 이 변경이 없으면 생산 census 가 빨갛다는 것을 다시 잼
     "OLD": [(PKG3, T3, "FAIL"), (PKG3, T3_SPELL, "PASS")],

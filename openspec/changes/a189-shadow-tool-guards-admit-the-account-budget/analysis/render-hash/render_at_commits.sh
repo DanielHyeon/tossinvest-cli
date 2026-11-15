@@ -36,11 +36,23 @@ while read -r blob; do
 	echo "blob $blob record=${rec:-NOT-FOUND} decl_lines=$n commits=$users"
 done < "$WORK/blobs.txt"
 
-echo "# 경계 커밋"
+echo "# 경계 커밋 — 엔진 생산 파일 전수(시험과 같은 범위: internal/app/engine/*.go 중 _test.go 아님)를 렌더해 고정 열 함수를 모음"
 for c in "$CAUSE^" "$CAUSE" "$BASE"; do
-	git -C "$REPO" show "$c:$FILE" > "$WORK/f.go"
-	echo "$c ($(git -C "$REPO" rev-parse --short "$c")): $("$WORK/render" "$WORK/f.go" | tr '\n' ' ')"
+	rm -rf "$WORK/eng"; mkdir -p "$WORK/eng"
+	git -C "$REPO" ls-tree --name-only "$c" internal/app/engine/ | grep -E '\.go$' | grep -v '_test\.go$' | while read -r f; do
+		git -C "$REPO" show "$c:$f" > "$WORK/eng/$(basename "$f")"
+	done
+	echo "## $c ($(git -C "$REPO" rev-parse --short "$c")): 파일 $(ls "$WORK/eng" | wc -l)개"
+	"$WORK/render" "$WORK"/eng/*.go | sort
 done
+
+echo "# record 렌더 원문 diff: $CAUSE^ → $CAUSE (주석 없는 go/printer 렌더 — 조건식·인자·대입식 전부 포함)"
+git -C "$REPO" show "$CAUSE^:$FILE" > "$WORK/p.go"; git -C "$REPO" show "$CAUSE:$FILE" > "$WORK/c.go"
+"$WORK/render" -src record "$WORK/p.go" > "$WORK/p.txt"; "$WORK/render" -src record "$WORK/c.go" > "$WORK/c.txt"
+diff -u "$WORK/p.txt" "$WORK/c.txt" | sed '1,2d' || true
+echo "# record 렌더 원문 diff: $CAUSE → $BASE"
+git -C "$REPO" show "$BASE:$FILE" > "$WORK/b.go"; "$WORK/render" -src record "$WORK/b.go" > "$WORK/b.txt"
+if cmp -s "$WORK/c.txt" "$WORK/b.txt"; then echo "동일(0 바이트 차이)"; else diff -u "$WORK/c.txt" "$WORK/b.txt" | sed '1,2d'; fi
 
 echo "# record 해시가 바뀐 커밋(부모 대비) — rev-list 전수, 병합은 첫 부모 대비"
 git -C "$REPO" rev-list "$CAUSE^..$BASE" | while read -r c; do

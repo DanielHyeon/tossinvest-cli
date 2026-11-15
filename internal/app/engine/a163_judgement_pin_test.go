@@ -33,8 +33,9 @@ import (
 //
 // a189 갱신 — "record" 하나(이유): a166 9c4bdf4de 가 청산 정리 갈래의 clearTheSymbol 에 넘기는 context 에 계좌 예산
 // 우선순위 표지를 더함(Normal, isProtective 이면 Critical). 이전 값 f3458b84…efb499ea 는 9c4bdf4de 의 부모 렌더이고, 그 뒤
-// base 7d1e3163a 까지 record 렌더는 새 값 하나뿐임(rev-list 전수). 편집 전·후 logic-map AST 대조: 분기 18→19(우선순위를
-// 고르는 if 하나), return 6→6, 빠진 항목 0 — 청산 여부·순서를 정하는 분기는 그대로임. 나머지 아홉 값은 무변경.
+// base 7d1e3163a 까지 record 렌더는 새 값 하나뿐임(rev-list 전수). 주석 없는 렌더 원문의 전·후 diff 는 clearTheSymbol 에
+// 넘기는 context 를 만드는 네 줄뿐이고(조건식·인자·대입식 포함 나머지 바이트 동일), logic-map AST 대조도 분기 18→19
+// (우선순위를 고르는 if 하나)·return 6→6·빠진 항목 0 임. 나머지 아홉 값은 무변경(엔진 생산 파일 전수 렌더).
 // 근거 원문 openspec/changes/a189-shadow-tool-guards-admit-the-account-budget/analysis/render-hash/.
 var a163JudgementRenderHashes = map[string]string{
 	"judge":                 "a3d5c5625182180a44789e394b3c9a93f0af05e70f37a8f41b004bd1052ab570",
