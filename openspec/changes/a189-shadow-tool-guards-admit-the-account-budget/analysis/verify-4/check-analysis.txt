@@ -1,0 +1,5 @@
+# HEAD d9d6772fce4f50fb873f57c6036f84ddea0e482c
+[logic-map] a189-shadow-tool-guards-admit-the-account-budget: base 7d1e3163a704 → working tree (no landed-commit.txt in HEAD) required 7 function(s) — judged at HEAD d9d6772fce4f
+[logic-map] a189-shadow-tool-guards-admit-the-account-budget: the target is the working tree, so this window also holds 26 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits
+[logic-map] a189-shadow-tool-guards-admit-the-account-budget: evidence complete or diff-proven exempt
+# rc=0

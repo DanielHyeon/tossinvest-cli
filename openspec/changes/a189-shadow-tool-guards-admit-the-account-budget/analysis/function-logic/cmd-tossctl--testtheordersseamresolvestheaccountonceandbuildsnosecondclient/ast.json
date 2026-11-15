@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/console_test.go",
-  "source_sha256": "cd6e0c4d8994f9b21b1196cf595a1789d64bfd1fdb5ffcab2975cc8a78003002",
+  "source_sha256": "177cc4b10a6ad5acce3e62a2a7050a18eddadbd396a679d21a0751a17928d765",
   "package": "main",
   "function": "TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient",
   "signature": "TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient(params=1, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 826,
+    "line": 830,
     "column": 2
   },
   "branches": [
@@ -159,7 +159,7 @@
     },
     {
       "id": "B19",
-      "kind": "range",
+      "kind": "if",
       "at": {
         "line": 801,
         "column": 5
@@ -167,30 +167,38 @@
     },
     {
       "id": "B20",
-      "kind": "if",
+      "kind": "case",
       "at": {
-        "line": 802,
-        "column": 6
+        "line": 804,
+        "column": 4
       }
     },
     {
       "id": "B21",
-      "kind": "case",
+      "kind": "range",
       "at": {
-        "line": 806,
-        "column": 4
+        "line": 805,
+        "column": 5
       }
     },
     {
       "id": "B22",
       "kind": "if",
       "at": {
-        "line": 807,
-        "column": 5
+        "line": 806,
+        "column": 6
       }
     },
     {
       "id": "B23",
+      "kind": "case",
+      "at": {
+        "line": 810,
+        "column": 4
+      }
+    },
+    {
+      "id": "B24",
       "kind": "if",
       "at": {
         "line": 811,
@@ -198,18 +206,26 @@
       }
     },
     {
-      "id": "B24",
+      "id": "B25",
+      "kind": "if",
+      "at": {
+        "line": 815,
+        "column": 5
+      }
+    },
+    {
+      "id": "B26",
       "kind": "else",
       "at": {
-        "line": 813,
+        "line": 817,
         "column": 12
       }
     },
     {
-      "id": "B25",
+      "id": "B27",
       "kind": "if",
       "at": {
-        "line": 820,
+        "line": 824,
         "column": 2
       }
     }
@@ -232,7 +248,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 817,
+        "line": 821,
         "column": 4
       }
     }
@@ -473,7 +489,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 807,
+        "line": 811,
         "column": 25
       },
       "text": "types.ExprString"
@@ -481,7 +497,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 821,
+        "line": 825,
         "column": 3
       },
       "text": "t.Errorf"
@@ -671,30 +687,44 @@
       }
     },
     {
-      "kind": "++",
-      "at": {
-        "line": 803,
-        "column": 7
-      }
-    },
-    {
       "kind": ":=",
       "at": {
-        "line": 811,
+        "line": 801,
         "column": 8
       }
     },
     {
       "kind": "++",
       "at": {
-        "line": 812,
+        "line": 802,
+        "column": 6
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 807,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 815,
+        "column": 8
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 816,
         "column": 6
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 814,
+        "line": 818,
         "column": 6
       }
     }

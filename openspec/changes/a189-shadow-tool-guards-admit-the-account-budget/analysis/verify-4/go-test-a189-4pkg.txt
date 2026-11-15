@@ -1,0 +1,2402 @@
+# HEAD d9d6772fce4f50fb873f57c6036f84ddea0e482c 2026-11-16T07:00:26+09:00
+# rtk proxy go test ./internal/official/... ./internal/accountbudgetruntime/... ./tools/a128-jev-shadow-probe/... ./tools/a140-breakout-signal-shadow/... -count=1 -v
+=== RUN   TestA087ProtectivePriceLimitsPreservesNullableRawFields
+--- PASS: TestA087ProtectivePriceLimitsPreservesNullableRawFields (0.00s)
+=== RUN   TestA087ProtectivePriceLimitsKeepsJSONNullDistinctFromZero
+--- PASS: TestA087ProtectivePriceLimitsKeepsJSONNullDistinctFromZero (0.00s)
+=== RUN   TestA166A112CloneSharesBudget
+    a112_mbus_a166_test.go:36: dialtls=false dial=false next=false tls=false
+--- PASS: TestA166A112CloneSharesBudget (0.53s)
+=== RUN   TestA189MBUSGuardAdmitsOnlyTheExactA166RuntimeTestFile
+--- PASS: TestA189MBUSGuardAdmitsOnlyTheExactA166RuntimeTestFile (0.00s)
+=== RUN   TestA112MBUSCandlePreservesOneAttemptRawEvidenceAndWireHeaders
+--- PASS: TestA112MBUSCandlePreservesOneAttemptRawEvidenceAndWireHeaders (0.00s)
+=== RUN   TestA112MBUSRejectsDeadlineAndConfiguredClientBeforeDataGET
+--- PASS: TestA112MBUSRejectsDeadlineAndConfiguredClientBeforeDataGET (0.00s)
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_absent
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_empty
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_number
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_object
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_array
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/duplicate_rate
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/unauthorized
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/forbidden
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/429
+=== RUN   TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/server_error
+--- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry (0.02s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_absent (0.00s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_empty (0.00s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_number (0.00s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_object (0.00s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/cursor_array (0.00s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/duplicate_rate (0.00s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/unauthorized (0.00s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/forbidden (0.00s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/429 (0.00s)
+    --- PASS: TestA112MBUSHoldsMalformedCursorRateAndStatusWithoutRetry/server_error (0.00s)
+=== RUN   TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8
+=== RUN   TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8/duplicate_top_level_result
+=== RUN   TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8/duplicate_payload_nextBefore
+=== RUN   TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8/invalid_UTF-8_source
+--- PASS: TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8 (0.01s)
+    --- PASS: TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8/duplicate_top_level_result (0.00s)
+    --- PASS: TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8/duplicate_payload_nextBefore (0.00s)
+    --- PASS: TestA112MBUSRejectsDuplicateResultDuplicateCursorAndInvalidUTF8/invalid_UTF-8_source (0.00s)
+=== RUN   TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates
+=== RUN   TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates/unpaired_high_surrogate
+=== RUN   TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates/unpaired_low_surrogate
+=== RUN   TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates/misordered_low_then_high_surrogate
+=== RUN   TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates/valid_surrogate_pair
+--- PASS: TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates (0.01s)
+    --- PASS: TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates/unpaired_high_surrogate (0.00s)
+    --- PASS: TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates/unpaired_low_surrogate (0.00s)
+    --- PASS: TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates/misordered_low_then_high_surrogate (0.00s)
+    --- PASS: TestA112MBUSRejectsUnpairedAndMisorderedCursorSurrogates/valid_surrogate_pair (0.00s)
+=== RUN   TestA112MBUSRejectsCrossClientTokenManagerBinding
+--- PASS: TestA112MBUSRejectsCrossClientTokenManagerBinding (0.00s)
+=== RUN   TestA112MBUSRejectsInvalidInitialCursorBeforeRequest
+--- PASS: TestA112MBUSRejectsInvalidInitialCursorBeforeRequest (0.00s)
+=== RUN   TestA112MBUSOrderbookAndCalendarRejectMissingOrNullResult
+=== RUN   TestA112MBUSOrderbookAndCalendarRejectMissingOrNullResult/{}
+=== RUN   TestA112MBUSOrderbookAndCalendarRejectMissingOrNullResult/{"result":null}
+--- PASS: TestA112MBUSOrderbookAndCalendarRejectMissingOrNullResult (0.01s)
+    --- PASS: TestA112MBUSOrderbookAndCalendarRejectMissingOrNullResult/{} (0.00s)
+    --- PASS: TestA112MBUSOrderbookAndCalendarRejectMissingOrNullResult/{"result":null} (0.00s)
+=== RUN   TestA112MBUSExactOrderbookAndCalendarDescriptors
+--- PASS: TestA112MBUSExactOrderbookAndCalendarDescriptors (0.00s)
+=== RUN   TestA112MBUSDoesNotWidenRawMinuteCandlesUSRefusal
+--- PASS: TestA112MBUSDoesNotWidenRawMinuteCandlesUSRefusal (0.00s)
+=== RUN   TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold
+=== RUN   TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold/cursor_bytes_percent_encoded_once
+=== RUN   TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold/unexpected_gzip
+=== RUN   TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold/unexpected_br
+=== RUN   TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold/chunked_limit_plus_one
+--- PASS: TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold (0.01s)
+    --- PASS: TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold/cursor_bytes_percent_encoded_once (0.00s)
+    --- PASS: TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold/unexpected_gzip (0.00s)
+    --- PASS: TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold/unexpected_br (0.00s)
+    --- PASS: TestA112MBUSCursorBytesBodyBoundsAndContentEncodingHold/chunked_limit_plus_one (0.01s)
+=== RUN   TestA112MBUSRedirectAndUnsafeCacheHoldBeforeRetry
+--- PASS: TestA112MBUSRedirectAndUnsafeCacheHoldBeforeRetry (0.00s)
+=== RUN   TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET
+=== RUN   TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET/cache_miss
+=== RUN   TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET/expired
+=== RUN   TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET/symlink_leaf
+=== RUN   TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET/symlink_ancestor
+--- PASS: TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET (0.00s)
+    --- PASS: TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET/cache_miss (0.00s)
+    --- PASS: TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET/expired (0.00s)
+    --- PASS: TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET/symlink_leaf (0.00s)
+    --- PASS: TestA112MBUSCacheMissExpiryAndSymlinksHoldBeforeDataGET/symlink_ancestor (0.00s)
+=== RUN   TestA112MBUSStaticNoProductCallerOrForbiddenPath
+--- PASS: TestA112MBUSStaticNoProductCallerOrForbiddenPath (0.68s)
+=== RUN   TestA112MBUSResolvedASTGuardCatchesProductSelectorAndTypeReference
+--- PASS: TestA112MBUSResolvedASTGuardCatchesProductSelectorAndTypeReference (0.00s)
+=== RUN   TestA112MBUSResolvedASTGuardCatchesSamePackageUnqualifiedReference
+--- PASS: TestA112MBUSResolvedASTGuardCatchesSamePackageUnqualifiedReference (0.00s)
+=== RUN   TestA112MBUSResolvedASTGuardIgnoresUnrelatedOfficialPackageLocal
+--- PASS: TestA112MBUSResolvedASTGuardIgnoresUnrelatedOfficialPackageLocal (0.00s)
+=== RUN   TestA112MBUSClonedTransportNeverCallsConfiguredProxy
+--- PASS: TestA112MBUSClonedTransportNeverCallsConfiguredProxy (0.00s)
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/2097152
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/2097153
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_valid
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_missing_limit
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_missing_remaining
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_missing_reset
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_malformed
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_negative
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_zero_limit
+=== RUN   TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_success_retry-after
+--- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix (0.02s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/2097152 (0.02s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/2097153 (0.00s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_valid (0.00s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_missing_limit (0.00s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_missing_remaining (0.00s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_missing_reset (0.00s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_malformed (0.00s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_negative (0.00s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_zero_limit (0.00s)
+    --- PASS: TestA112MBUSContentLengthBoundaryAndRateHeaderMatrix/rate_success_retry-after (0.00s)
+=== RUN   TestA112MBUSClockSkewAndDeadlineBoundariesArePrivate
+--- PASS: TestA112MBUSClockSkewAndDeadlineBoundariesArePrivate (0.00s)
+=== RUN   TestA112MBUSReadAtUsesPrivateClockOnlyForDeadlineAndTokenValidation
+--- PASS: TestA112MBUSReadAtUsesPrivateClockOnlyForDeadlineAndTokenValidation (0.00s)
+=== RUN   TestA130TheMinuteCandleIsReadUnadjustedAndOnlyForItsOwnMinute
+--- PASS: TestA130TheMinuteCandleIsReadUnadjustedAndOnlyForItsOwnMinute (0.00s)
+=== RUN   TestA130ARateLimitedCandleReadFailsAfterOneRequest
+--- PASS: TestA130ARateLimitedCandleReadFailsAfterOneRequest (0.00s)
+=== RUN   TestA131AccountsRegistersEveryAccountNumber
+--- PASS: TestA131AccountsRegistersEveryAccountNumber (0.00s)
+=== RUN   TestA163AdaptPricesKeepsTheBrokerTimeVerbatim
+--- PASS: TestA163AdaptPricesKeepsTheBrokerTimeVerbatim (0.00s)
+=== RUN   TestA163PricesCarriesTheBrokerTimeInOneRequest
+--- PASS: TestA163PricesCarriesTheBrokerTimeInOneRequest (0.00s)
+=== RUN   TestA163TheOfficialPricesQuoteJSONCarriesTheBrokerTime
+--- PASS: TestA163TheOfficialPricesQuoteJSONCarriesTheBrokerTime (0.00s)
+=== RUN   TestA163TheOfficialStocksQuoteJSONIsByteIdenticalAndCarriesNoBrokerTime
+--- PASS: TestA163TheOfficialStocksQuoteJSONIsByteIdenticalAndCarriesNoBrokerTime (0.00s)
+=== RUN   TestA165Post401RetryPreservesEncodedBody
+--- PASS: TestA165Post401RetryPreservesEncodedBody (0.00s)
+=== RUN   TestA165PostDoesNotRetryNon401AndFinal401IsAuth
+=== RUN   TestA165PostDoesNotRetryNon401AndFinal401IsAuth/Bad_Request
+=== RUN   TestA165PostDoesNotRetryNon401AndFinal401IsAuth/Too_Many_Requests
+=== RUN   TestA165PostDoesNotRetryNon401AndFinal401IsAuth/Internal_Server_Error
+--- PASS: TestA165PostDoesNotRetryNon401AndFinal401IsAuth (0.00s)
+    --- PASS: TestA165PostDoesNotRetryNon401AndFinal401IsAuth/Bad_Request (0.00s)
+    --- PASS: TestA165PostDoesNotRetryNon401AndFinal401IsAuth/Too_Many_Requests (0.00s)
+    --- PASS: TestA165PostDoesNotRetryNon401AndFinal401IsAuth/Internal_Server_Error (0.00s)
+=== RUN   TestA166RequiredBudgetMissing
+--- PASS: TestA166RequiredBudgetMissing (0.00s)
+=== RUN   TestA166AuthorityAndClientIsolation
+--- PASS: TestA166AuthorityAndClientIsolation (0.03s)
+=== RUN   TestA166ActualClientToken401Redirect
+--- PASS: TestA166ActualClientToken401Redirect (1.97s)
+=== RUN   TestA166CanceledPrewriteIdentity
+--- PASS: TestA166CanceledPrewriteIdentity (0.03s)
+=== RUN   TestA166RejectsNilClient
+--- PASS: TestA166RejectsNilClient (0.03s)
+=== RUN   TestA166OffErrorContract
+--- PASS: TestA166OffErrorContract (0.00s)
+=== RUN   TestA166TokenPrewriteIdentity
+--- PASS: TestA166TokenPrewriteIdentity (0.03s)
+=== RUN   TestA166Prior401IsNotErasedByLaterPrewriteError
+--- PASS: TestA166Prior401IsNotErasedByLaterPrewriteError (0.43s)
+=== RUN   TestA166RequiredCleanupMissing
+--- PASS: TestA166RequiredCleanupMissing (0.03s)
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift/raw_original
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift/other_wrapper
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift/missing_budget
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift/missing_wrapper
+=== RUN   TestA166AuthorityRejectsEnforcingTransportDrift/missing_both_raw
+--- PASS: TestA166AuthorityRejectsEnforcingTransportDrift (0.06s)
+    --- PASS: TestA166AuthorityRejectsEnforcingTransportDrift/raw_original (0.00s)
+    --- PASS: TestA166AuthorityRejectsEnforcingTransportDrift/other_wrapper (0.00s)
+    --- PASS: TestA166AuthorityRejectsEnforcingTransportDrift/missing_budget (0.00s)
+    --- PASS: TestA166AuthorityRejectsEnforcingTransportDrift/missing_wrapper (0.00s)
+    --- PASS: TestA166AuthorityRejectsEnforcingTransportDrift/missing_both_raw (0.00s)
+=== RUN   TestA166UsesAccountBudgetBinding
+=== RUN   TestA166UsesAccountBudgetBinding/none
+=== RUN   TestA166UsesAccountBudgetBinding/unsealed
+=== RUN   TestA166UsesAccountBudgetBinding/not_enforced
+=== RUN   TestA166UsesAccountBudgetBinding/budget_missing
+=== RUN   TestA166UsesAccountBudgetBinding/wrapper_missing
+=== RUN   TestA166UsesAccountBudgetBinding/wrapper_drift
+=== RUN   TestA166UsesAccountBudgetBinding/client_missing
+=== RUN   TestA166UsesAccountBudgetBinding/token_missing
+=== RUN   TestA166UsesAccountBudgetBinding/token_client_drift
+--- PASS: TestA166UsesAccountBudgetBinding (0.08s)
+    --- PASS: TestA166UsesAccountBudgetBinding/none (0.00s)
+    --- PASS: TestA166UsesAccountBudgetBinding/unsealed (0.00s)
+    --- PASS: TestA166UsesAccountBudgetBinding/not_enforced (0.00s)
+    --- PASS: TestA166UsesAccountBudgetBinding/budget_missing (0.00s)
+    --- PASS: TestA166UsesAccountBudgetBinding/wrapper_missing (0.00s)
+    --- PASS: TestA166UsesAccountBudgetBinding/wrapper_drift (0.00s)
+    --- PASS: TestA166UsesAccountBudgetBinding/client_missing (0.00s)
+    --- PASS: TestA166UsesAccountBudgetBinding/token_missing (0.00s)
+    --- PASS: TestA166UsesAccountBudgetBinding/token_client_drift (0.00s)
+=== RUN   TestA166UsesAccountBudgetConcurrentOptionReplay
+--- PASS: TestA166UsesAccountBudgetConcurrentOptionReplay (0.03s)
+=== RUN   TestA166TokenNilContextMatchesOff
+--- PASS: TestA166TokenNilContextMatchesOff (0.00s)
+=== RUN   TestA166AccountsNilContextMatchesOff
+--- PASS: TestA166AccountsNilContextMatchesOff (0.03s)
+=== RUN   TestA169StocksCarriesTheBrokerSecurityTypeVerbatim
+--- PASS: TestA169StocksCarriesTheBrokerSecurityTypeVerbatim (0.00s)
+=== RUN   TestA169UnknownSecurityTypeIsPassedThroughUnjudged
+--- PASS: TestA169UnknownSecurityTypeIsPassedThroughUnjudged (0.00s)
+=== RUN   TestA169TheStocksQuoteJSONWithASecurityTypeIsPinned
+--- PASS: TestA169TheStocksQuoteJSONWithASecurityTypeIsPinned (0.00s)
+=== RUN   TestA169ThePricesQuoteJSONCarriesNoSecurityType
+--- PASS: TestA169ThePricesQuoteJSONCarriesNoSecurityType (0.00s)
+=== RUN   TestA187StrictQuoteReadersAcceptKRAlphanumeric
+=== PAUSE TestA187StrictQuoteReadersAcceptKRAlphanumeric
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms
+=== RUN   TestA187NumericKRAndUSUnchanged
+=== PAUSE TestA187NumericKRAndUSUnchanged
+=== RUN   TestA187StrictLastPriceRefusesKREchoMismatch
+=== PAUSE TestA187StrictLastPriceRefusesKREchoMismatch
+=== RUN   TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce
+=== PAUSE TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce
+=== RUN   TestA187StrictMinuteCandlesStillRefuseOtherKRForms
+=== PAUSE TestA187StrictMinuteCandlesStillRefuseOtherKRForms
+=== RUN   TestAuthoritativeAccountIdentityRejectsConfiguredOriginBeforeHTTP
+--- PASS: TestAuthoritativeAccountIdentityRejectsConfiguredOriginBeforeHTTP (0.00s)
+=== RUN   TestAuthoritativeAccountIdentityReverifiesExactSelectedAccount
+--- PASS: TestAuthoritativeAccountIdentityReverifiesExactSelectedAccount (0.00s)
+=== RUN   TestAuthoritativeAccountIdentityRejectsAmbiguousScope
+=== RUN   TestAuthoritativeAccountIdentityRejectsAmbiguousScope/missing
+=== RUN   TestAuthoritativeAccountIdentityRejectsAmbiguousScope/duplicate
+=== RUN   TestAuthoritativeAccountIdentityRejectsAmbiguousScope/selected_mismatch
+=== RUN   TestAuthoritativeAccountIdentityRejectsAmbiguousScope/noncanonical
+--- PASS: TestAuthoritativeAccountIdentityRejectsAmbiguousScope (0.01s)
+    --- PASS: TestAuthoritativeAccountIdentityRejectsAmbiguousScope/missing (0.00s)
+    --- PASS: TestAuthoritativeAccountIdentityRejectsAmbiguousScope/duplicate (0.00s)
+    --- PASS: TestAuthoritativeAccountIdentityRejectsAmbiguousScope/selected_mismatch (0.00s)
+    --- PASS: TestAuthoritativeAccountIdentityRejectsAmbiguousScope/noncanonical (0.00s)
+=== RUN   TestAdaptBuyingPowerUnit
+--- PASS: TestAdaptBuyingPowerUnit (0.00s)
+=== RUN   TestAdaptBuyingPowerUSD
+--- PASS: TestAdaptBuyingPowerUSD (0.00s)
+=== RUN   TestAdaptBuyingPowerZero
+--- PASS: TestAdaptBuyingPowerZero (0.00s)
+=== RUN   TestBuyingPowerIntegration
+--- PASS: TestBuyingPowerIntegration (0.00s)
+=== RUN   TestBuyingPowerSendsAccountHeader
+--- PASS: TestBuyingPowerSendsAccountHeader (0.00s)
+=== RUN   TestBuyingPowerResolvesAccountSeqLazy
+--- PASS: TestBuyingPowerResolvesAccountSeqLazy (0.00s)
+=== RUN   TestAccountsPrimesTheSequenceForTheNextScopedRead
+--- PASS: TestAccountsPrimesTheSequenceForTheNextScopedRead (0.00s)
+=== RUN   TestAccountsPreservesAnExplicitPositiveSequence
+--- PASS: TestAccountsPreservesAnExplicitPositiveSequence (0.00s)
+=== RUN   TestExplicitNegativeSequenceIsNeverSent
+--- PASS: TestExplicitNegativeSequenceIsNeverSent (0.00s)
+=== RUN   TestDiscoveredNonpositiveSequenceIsNeverSent
+=== RUN   TestDiscoveredNonpositiveSequenceIsNeverSent/0
+=== RUN   TestDiscoveredNonpositiveSequenceIsNeverSent/-7
+--- PASS: TestDiscoveredNonpositiveSequenceIsNeverSent (0.00s)
+    --- PASS: TestDiscoveredNonpositiveSequenceIsNeverSent/0 (0.00s)
+    --- PASS: TestDiscoveredNonpositiveSequenceIsNeverSent/-7 (0.00s)
+=== RUN   TestEmptyDiscoveryCannotProduceAScopedHeader
+--- PASS: TestEmptyDiscoveryCannotProduceAScopedHeader (0.00s)
+=== RUN   TestConcurrentScopedFirstUseSharesOneDiscovery
+--- PASS: TestConcurrentScopedFirstUseSharesOneDiscovery (0.00s)
+=== RUN   TestScopedReadWaitsForAnInflightPublicAccountDiscovery
+--- PASS: TestScopedReadWaitsForAnInflightPublicAccountDiscovery (0.00s)
+=== RUN   TestCachedScopedReadDoesNotWaitForPublicAccountListIO
+--- PASS: TestCachedScopedReadDoesNotWaitForPublicAccountListIO (0.00s)
+=== RUN   TestImplicitAccountSequenceDriftIsRejected
+=== RUN   TestImplicitAccountSequenceDriftIsRejected/different_positive
+=== RUN   TestImplicitAccountSequenceDriftIsRejected/zero
+=== RUN   TestImplicitAccountSequenceDriftIsRejected/negative
+=== RUN   TestImplicitAccountSequenceDriftIsRejected/empty
+--- PASS: TestImplicitAccountSequenceDriftIsRejected (0.00s)
+    --- PASS: TestImplicitAccountSequenceDriftIsRejected/different_positive (0.00s)
+    --- PASS: TestImplicitAccountSequenceDriftIsRejected/zero (0.00s)
+    --- PASS: TestImplicitAccountSequenceDriftIsRejected/negative (0.00s)
+    --- PASS: TestImplicitAccountSequenceDriftIsRejected/empty (0.00s)
+=== RUN   TestCancelledPublicDiscoveryUnlocksTheNextScopedDiscovery
+--- PASS: TestCancelledPublicDiscoveryUnlocksTheNextScopedDiscovery (0.00s)
+=== RUN   TestFailedPublicDiscoveryDoesNotPrimeTheSequence
+--- PASS: TestFailedPublicDiscoveryDoesNotPrimeTheSequence (0.00s)
+=== RUN   TestMalformedPublicDiscoveryDoesNotPrimeTheSequence
+--- PASS: TestMalformedPublicDiscoveryDoesNotPrimeTheSequence (0.00s)
+=== RUN   TestAdaptHoldingsUnit
+--- PASS: TestAdaptHoldingsUnit (0.00s)
+=== RUN   TestAdaptHoldingsEmpty
+--- PASS: TestAdaptHoldingsEmpty (0.00s)
+=== RUN   TestHoldingsIntegration
+--- PASS: TestHoldingsIntegration (0.00s)
+=== RUN   TestHoldingsIntegrationAllSymbols
+--- PASS: TestHoldingsIntegrationAllSymbols (0.00s)
+=== RUN   TestAnAuthRefusalCarriesItsStatusCode
+--- PASS: TestAnAuthRefusalCarriesItsStatusCode (0.00s)
+=== RUN   TestAnAuthRefusalDoesNotCarryTheResponseBody
+--- PASS: TestAnAuthRefusalDoesNotCarryTheResponseBody (0.00s)
+=== RUN   TestNothingDecidesAnAuthRefusalByReadingItsMessage
+--- PASS: TestNothingDecidesAnAuthRefusalByReadingItsMessage (0.00s)
+=== RUN   TestMarketCalendarIntegration
+--- PASS: TestMarketCalendarIntegration (0.00s)
+=== RUN   TestMarketCalendarRejectsBadCountry
+--- PASS: TestMarketCalendarRejectsBadCountry (0.00s)
+=== RUN   TestRawMinuteCandlesPreservesOfficialDecimalAndTimestampStrings
+--- PASS: TestRawMinuteCandlesPreservesOfficialDecimalAndTimestampStrings (0.00s)
+=== RUN   TestRawMinuteCandlesRejectsUnsupportedMarketAndAdjustedStrategyReadRemainsExplicit
+--- PASS: TestRawMinuteCandlesRejectsUnsupportedMarketAndAdjustedStrategyReadRemainsExplicit (0.00s)
+=== RUN   TestAdaptCandlesUnit
+--- PASS: TestAdaptCandlesUnit (0.00s)
+=== RUN   TestAdaptCandlesEmpty
+--- PASS: TestAdaptCandlesEmpty (0.00s)
+=== RUN   TestAdaptCandlesOrdersNewestFirstWireChronologically
+--- PASS: TestAdaptCandlesOrdersNewestFirstWireChronologically (0.00s)
+=== RUN   TestAdaptCandlesBadTimestamp
+--- PASS: TestAdaptCandlesBadTimestamp (0.00s)
+=== RUN   TestCandlesIntegration
+--- PASS: TestCandlesIntegration (0.00s)
+=== RUN   TestGetUnwrapsEnvelopeAndRetriesOn401
+--- PASS: TestGetUnwrapsEnvelopeAndRetriesOn401 (0.00s)
+=== RUN   TestPostSendsJSONAndUnwrapsEnvelope
+--- PASS: TestPostSendsJSONAndUnwrapsEnvelope (0.00s)
+=== RUN   TestClientBaseURL
+--- PASS: TestClientBaseURL (0.00s)
+=== RUN   TestAuthorityOriginRejectsConfiguredTransport
+--- PASS: TestAuthorityOriginRejectsConfiguredTransport (0.00s)
+=== RUN   TestClientConfigurationCannotBeMutatedByRetainedOptionPointer
+--- PASS: TestClientConfigurationCannotBeMutatedByRetainedOptionPointer (0.00s)
+=== RUN   TestClientConfigurationOptionReplayIsRaceFreeAndFailClosed
+--- PASS: TestClientConfigurationOptionReplayIsRaceFreeAndFailClosed (0.00s)
+=== RUN   TestClientDefaultBaseURL
+--- PASS: TestClientDefaultBaseURL (0.00s)
+=== RUN   TestEnsureAccountSeqLazyResolutionAndCaching
+--- PASS: TestEnsureAccountSeqLazyResolutionAndCaching (0.00s)
+=== RUN   TestGetNon2xxReturnsClassifiedError
+--- PASS: TestGetNon2xxReturnsClassifiedError (0.00s)
+=== RUN   TestDeleteAcctRetriesOn401
+--- PASS: TestDeleteAcctRetriesOn401 (0.00s)
+=== RUN   TestAdaptCommissionsUnit
+--- PASS: TestAdaptCommissionsUnit (0.00s)
+=== RUN   TestAdaptCommissionsEmpty
+--- PASS: TestAdaptCommissionsEmpty (0.00s)
+=== RUN   TestCommissionsIntegration
+--- PASS: TestCommissionsIntegration (0.00s)
+=== RUN   TestAdaptConditionalOrderUnit
+--- PASS: TestAdaptConditionalOrderUnit (0.00s)
+=== RUN   TestAdaptConditionalOrderOCO
+--- PASS: TestAdaptConditionalOrderOCO (0.00s)
+=== RUN   TestConditionalOrdersIntegration
+--- PASS: TestConditionalOrdersIntegration (0.00s)
+=== RUN   TestTheRawConditionalReadKeepsAnAbsentValueApartFromAZeroOne
+--- PASS: TestTheRawConditionalReadKeepsAnAbsentValueApartFromAZeroOne (0.00s)
+=== RUN   TestCancelConditionalOrderIntegration
+--- PASS: TestCancelConditionalOrderIntegration (0.00s)
+=== RUN   TestCreateConditionalOrderIntegration
+--- PASS: TestCreateConditionalOrderIntegration (0.00s)
+=== RUN   TestModifyConditionalOrderIntegration
+--- PASS: TestModifyConditionalOrderIntegration (0.00s)
+=== RUN   TestModifyConditionalOrderRefReturnsTheNewIdentifier
+--- PASS: TestModifyConditionalOrderRefReturnsTheNewIdentifier (0.00s)
+=== RUN   TestModifyConditionalOrderStillToleratesANullResult
+--- PASS: TestModifyConditionalOrderStillToleratesANullResult (0.00s)
+=== RUN   TestClassifyStatus
+--- PASS: TestClassifyStatus (0.00s)
+=== RUN   TestShouldFallback
+--- PASS: TestShouldFallback (0.00s)
+=== RUN   TestAdaptExchangeRatePreservesAuthorityFields
+--- PASS: TestAdaptExchangeRatePreservesAuthorityFields (0.00s)
+=== RUN   TestExchangeRatePreservesAuthorityFieldsAcrossHTTPBoundary
+--- PASS: TestExchangeRatePreservesAuthorityFieldsAcrossHTTPBoundary (0.00s)
+=== RUN   TestAuthoritativeExchangeRateRejectsConfiguredClientBeforeHTTP
+--- PASS: TestAuthoritativeExchangeRateRejectsConfiguredClientBeforeHTTP (0.00s)
+=== RUN   TestAuthoritativeExchangeRateKeepsOriginAndReadInOneBoundary
+--- PASS: TestAuthoritativeExchangeRateKeepsOriginAndReadInOneBoundary (0.00s)
+=== RUN   TestAdaptExchangeRateUnit
+--- PASS: TestAdaptExchangeRateUnit (0.00s)
+=== RUN   TestExchangeRateIntegration
+--- PASS: TestExchangeRateIntegration (0.00s)
+=== RUN   TestAdaptPricesUnit
+--- PASS: TestAdaptPricesUnit (0.00s)
+=== RUN   TestAdaptPricesEmpty
+--- PASS: TestAdaptPricesEmpty (0.00s)
+=== RUN   TestPricesIntegration
+--- PASS: TestPricesIntegration (0.00s)
+=== RUN   TestAdaptOrderbookUnit
+--- PASS: TestAdaptOrderbookUnit (0.00s)
+=== RUN   TestOrderbookIntegration
+--- PASS: TestOrderbookIntegration (0.00s)
+=== RUN   TestAdaptTradesUnit
+--- PASS: TestAdaptTradesUnit (0.00s)
+=== RUN   TestAdaptTradesEmpty
+--- PASS: TestAdaptTradesEmpty (0.00s)
+=== RUN   TestTradesIntegration
+--- PASS: TestTradesIntegration (0.00s)
+=== RUN   TestAdaptRankingUnit
+--- PASS: TestAdaptRankingUnit (0.00s)
+=== RUN   TestRankingsIntegration
+--- PASS: TestRankingsIntegration (0.00s)
+=== RUN   TestAdaptMarketIndicatorPricesUnit
+--- PASS: TestAdaptMarketIndicatorPricesUnit (0.00s)
+=== RUN   TestMarketIndicatorPricesIntegration
+--- PASS: TestMarketIndicatorPricesIntegration (0.00s)
+=== RUN   TestAdaptMarketIndicatorCandlesUnit
+--- PASS: TestAdaptMarketIndicatorCandlesUnit (0.00s)
+=== RUN   TestMarketIndicatorCandlesIntegration
+--- PASS: TestMarketIndicatorCandlesIntegration (0.00s)
+=== RUN   TestAdaptInvestorTradingUnit
+--- PASS: TestAdaptInvestorTradingUnit (0.00s)
+=== RUN   TestMarketInvestorTradingIntegration
+--- PASS: TestMarketInvestorTradingIntegration (0.00s)
+=== RUN   TestOrdersPageRawKeepsTheCursorAndTheRawPayload
+--- PASS: TestOrdersPageRawKeepsTheCursorAndTheRawPayload (0.00s)
+=== RUN   TestOrdersPageRawCursorArgumentOverridesTheFilter
+--- PASS: TestOrdersPageRawCursorArgumentOverridesTheFilter (0.00s)
+=== RUN   TestOrdersPageRawPassesEveryFilter
+--- PASS: TestOrdersPageRawPassesEveryFilter (0.00s)
+=== RUN   TestOrderRawByIDReturnsTheUnwrappedOrder
+--- PASS: TestOrderRawByIDReturnsTheUnwrappedOrder (0.00s)
+=== RUN   TestRawReadsClassifyErrorsLikeEveryOtherRead
+=== RUN   TestRawReadsClassifyErrorsLikeEveryOtherRead/rate_limited
+=== RUN   TestRawReadsClassifyErrorsLikeEveryOtherRead/auth
+=== RUN   TestRawReadsClassifyErrorsLikeEveryOtherRead/server
+--- PASS: TestRawReadsClassifyErrorsLikeEveryOtherRead (0.00s)
+    --- PASS: TestRawReadsClassifyErrorsLikeEveryOtherRead/rate_limited (0.00s)
+    --- PASS: TestRawReadsClassifyErrorsLikeEveryOtherRead/auth (0.00s)
+    --- PASS: TestRawReadsClassifyErrorsLikeEveryOtherRead/server (0.00s)
+=== RUN   TestAdaptOrderUnit
+--- PASS: TestAdaptOrderUnit (0.00s)
+=== RUN   TestAdaptOrderFilledExecution
+--- PASS: TestAdaptOrderFilledExecution (0.00s)
+=== RUN   TestAdaptOrderNoOrderedAt
+--- PASS: TestAdaptOrderNoOrderedAt (0.00s)
+=== RUN   TestAdaptOrdersBatch
+--- PASS: TestAdaptOrdersBatch (0.00s)
+=== RUN   TestAdaptOrdersEmpty
+--- PASS: TestAdaptOrdersEmpty (0.00s)
+=== RUN   TestOrdersIntegration
+--- PASS: TestOrdersIntegration (0.00s)
+=== RUN   TestOrdersFilterEmptyOmitsEveryParameterIncludingTheRequiredOne
+--- PASS: TestOrdersFilterEmptyOmitsEveryParameterIncludingTheRequiredOne (0.00s)
+=== RUN   TestTheRawReadsRefuseARequestWithNoStatusGroup
+=== RUN   TestTheRawReadsRefuseARequestWithNoStatusGroup/OrdersRaw/empty
+=== RUN   TestTheRawReadsRefuseARequestWithNoStatusGroup/OrdersRaw/blank
+=== RUN   TestTheRawReadsRefuseARequestWithNoStatusGroup/ConditionalOrdersRaw/empty
+=== RUN   TestTheRawReadsRefuseARequestWithNoStatusGroup/ConditionalOrdersRaw/blank
+--- PASS: TestTheRawReadsRefuseARequestWithNoStatusGroup (0.00s)
+    --- PASS: TestTheRawReadsRefuseARequestWithNoStatusGroup/OrdersRaw/empty (0.00s)
+    --- PASS: TestTheRawReadsRefuseARequestWithNoStatusGroup/OrdersRaw/blank (0.00s)
+    --- PASS: TestTheRawReadsRefuseARequestWithNoStatusGroup/ConditionalOrdersRaw/empty (0.00s)
+    --- PASS: TestTheRawReadsRefuseARequestWithNoStatusGroup/ConditionalOrdersRaw/blank (0.00s)
+=== RUN   TestBothOrderReadsSendTheGroupTheyWereGiven
+=== RUN   TestBothOrderReadsSendTheGroupTheyWereGiven/OPEN
+=== RUN   TestBothOrderReadsSendTheGroupTheyWereGiven/CLOSED
+--- PASS: TestBothOrderReadsSendTheGroupTheyWereGiven (0.00s)
+    --- PASS: TestBothOrderReadsSendTheGroupTheyWereGiven/OPEN (0.00s)
+    --- PASS: TestBothOrderReadsSendTheGroupTheyWereGiven/CLOSED (0.00s)
+=== RUN   TestOrderByIDIntegration
+--- PASS: TestOrderByIDIntegration (0.00s)
+=== RUN   TestTheAdaptedOrderReadCannotTellAnAbsentPriceFromAZeroOne
+--- PASS: TestTheAdaptedOrderReadCannotTellAnAbsentPriceFromAZeroOne (0.00s)
+=== RUN   TestTheRawOrderReadKeepsAnAbsentValueApartFromAZeroOne
+--- PASS: TestTheRawOrderReadKeepsAnAbsentValueApartFromAZeroOne (0.00s)
+=== RUN   TestTheRawOrderReadDerivesTheMarketFromTheCurrency
+--- PASS: TestTheRawOrderReadDerivesTheMarketFromTheCurrency (0.00s)
+=== RUN   TestTheRawOrderReadReportsThatThePageWasTruncated
+--- PASS: TestTheRawOrderReadReportsThatThePageWasTruncated (0.00s)
+=== RUN   TestBuildOrderCreateFractionalBuy
+--- PASS: TestBuildOrderCreateFractionalBuy (0.00s)
+=== RUN   TestBuildOrderCreateFractionalSell
+--- PASS: TestBuildOrderCreateFractionalSell (0.00s)
+=== RUN   TestBuildOrderCreateLimit
+--- PASS: TestBuildOrderCreateLimit (0.00s)
+=== RUN   TestBuildOrderCreateMarket
+--- PASS: TestBuildOrderCreateMarket (0.00s)
+=== RUN   TestBuildOrderCreateCarriesClientOrderID
+=== RUN   TestBuildOrderCreateCarriesClientOrderID/quantity_based
+=== RUN   TestBuildOrderCreateCarriesClientOrderID/amount_based
+--- PASS: TestBuildOrderCreateCarriesClientOrderID (0.00s)
+    --- PASS: TestBuildOrderCreateCarriesClientOrderID/quantity_based (0.00s)
+    --- PASS: TestBuildOrderCreateCarriesClientOrderID/amount_based (0.00s)
+=== RUN   TestPlaceOrderRejectsAForeignClientOrderIDEcho
+--- PASS: TestPlaceOrderRejectsAForeignClientOrderIDEcho (0.00s)
+=== RUN   TestPlaceOrderEchoedClientOrderIDMatches
+--- PASS: TestPlaceOrderEchoedClientOrderIDMatches (0.00s)
+=== RUN   TestPlaceOrder
+--- PASS: TestPlaceOrder (0.00s)
+=== RUN   TestCancelOrder
+--- PASS: TestCancelOrder (0.00s)
+=== RUN   TestModifyOrder
+--- PASS: TestModifyOrder (0.00s)
+=== RUN   TestModifyOrderMarket
+--- PASS: TestModifyOrderMarket (0.00s)
+=== RUN   TestBuildOrderCreateErrors
+=== RUN   TestBuildOrderCreateErrors/fractional_buy_without_amount
+=== RUN   TestBuildOrderCreateErrors/fractional_sell_without_quantity
+=== RUN   TestBuildOrderCreateErrors/non-fractional_without_quantity
+=== RUN   TestBuildOrderCreateErrors/limit_without_price
+--- PASS: TestBuildOrderCreateErrors (0.00s)
+    --- PASS: TestBuildOrderCreateErrors/fractional_buy_without_amount (0.00s)
+    --- PASS: TestBuildOrderCreateErrors/fractional_sell_without_quantity (0.00s)
+    --- PASS: TestBuildOrderCreateErrors/non-fractional_without_quantity (0.00s)
+    --- PASS: TestBuildOrderCreateErrors/limit_without_price (0.00s)
+=== RUN   TestAdaptPriceLimitsUnit
+--- PASS: TestAdaptPriceLimitsUnit (0.00s)
+=== RUN   TestAdaptPriceLimitsNullable
+--- PASS: TestAdaptPriceLimitsNullable (0.00s)
+=== RUN   TestPriceLimitsIntegration
+--- PASS: TestPriceLimitsIntegration (0.00s)
+=== RUN   TestAResponseWithNoRateHeadersIsNotZeroRemaining
+--- PASS: TestAResponseWithNoRateHeadersIsNotZeroRemaining (0.00s)
+=== RUN   TestTheReportedBudgetIsKept
+--- PASS: TestTheReportedBudgetIsKept (0.00s)
+=== RUN   TestTheResetHeaderIsReadBothWaysAndSaysWhich
+=== RUN   TestTheResetHeaderIsReadBothWaysAndSaysWhich/delta_seconds
+=== RUN   TestTheResetHeaderIsReadBothWaysAndSaysWhich/epoch_seconds
+=== RUN   TestTheResetHeaderIsReadBothWaysAndSaysWhich/nonsense
+--- PASS: TestTheResetHeaderIsReadBothWaysAndSaysWhich (0.00s)
+    --- PASS: TestTheResetHeaderIsReadBothWaysAndSaysWhich/delta_seconds (0.00s)
+    --- PASS: TestTheResetHeaderIsReadBothWaysAndSaysWhich/epoch_seconds (0.00s)
+    --- PASS: TestTheResetHeaderIsReadBothWaysAndSaysWhich/nonsense (0.00s)
+=== RUN   TestOnlyAResetHeaderStillCountsAsReported
+--- PASS: TestOnlyAResetHeaderStillCountsAsReported (0.00s)
+=== RUN   TestTheBudgetStoreIsPerPath
+--- PASS: TestTheBudgetStoreIsPerPath (0.00s)
+=== RUN   TestTheBudgetKeyCollapsesObjectIdentifiers
+--- PASS: TestTheBudgetKeyCollapsesObjectIdentifiers (0.00s)
+=== RUN   TestTheBudgetMapDoesNotGrowWithOrderIDs
+--- PASS: TestTheBudgetMapDoesNotGrowWithOrderIDs (0.00s)
+=== RUN   TestAnImplausibleResetIsNotPresentedAsADetermination
+--- PASS: TestAnImplausibleResetIsNotPresentedAsADetermination (0.00s)
+=== RUN   TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries
+=== RUN   TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/canonical_whitespace
+=== RUN   TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/delta_max_ahead_inclusive
+=== RUN   TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/delta_beyond_max_ahead
+=== RUN   TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/exact_threshold_is_epoch
+=== RUN   TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/epoch_max_behind_inclusive
+=== RUN   TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/epoch_beyond_max_behind
+=== RUN   TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/epoch_max_ahead_inclusive
+=== RUN   TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/epoch_beyond_max_ahead
+=== RUN   TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/duration_wrapping_integer
+=== RUN   TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/zero_observed_at
+--- PASS: TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries (0.00s)
+    --- PASS: TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/canonical_whitespace (0.00s)
+    --- PASS: TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/delta_max_ahead_inclusive (0.00s)
+    --- PASS: TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/delta_beyond_max_ahead (0.00s)
+    --- PASS: TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/exact_threshold_is_epoch (0.00s)
+    --- PASS: TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/epoch_max_behind_inclusive (0.00s)
+    --- PASS: TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/epoch_beyond_max_behind (0.00s)
+    --- PASS: TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/epoch_max_ahead_inclusive (0.00s)
+    --- PASS: TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/epoch_beyond_max_ahead (0.00s)
+    --- PASS: TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/duration_wrapping_integer (0.00s)
+    --- PASS: TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries/zero_observed_at (0.00s)
+=== RUN   TestAddResetDeltaRejectsDurationConversionOverflow
+--- PASS: TestAddResetDeltaRejectsDurationConversionOverflow (0.00s)
+=== RUN   TestAdaptAccountsUnit
+--- PASS: TestAdaptAccountsUnit (0.00s)
+=== RUN   TestAdaptAccountsMultiple
+--- PASS: TestAdaptAccountsMultiple (0.00s)
+=== RUN   TestAdaptAccountsEmpty
+--- PASS: TestAdaptAccountsEmpty (0.00s)
+=== RUN   TestAccountsIntegration
+--- PASS: TestAccountsIntegration (0.00s)
+=== RUN   TestAccountsIntegrationEmpty
+--- PASS: TestAccountsIntegrationEmpty (0.00s)
+=== RUN   TestReconcileByIDReadsTheReceiptShapedStatement
+--- PASS: TestReconcileByIDReadsTheReceiptShapedStatement (0.00s)
+=== RUN   TestReconcileByIDTreatsAbsentAndNullOptionalKeysAlike
+--- PASS: TestReconcileByIDTreatsAbsentAndNullOptionalKeysAlike (0.00s)
+=== RUN   TestReconcileByIDClassifiesOnlyTheMeasuredNotFoundAsSilent
+--- PASS: TestReconcileByIDClassifiesOnlyTheMeasuredNotFoundAsSilent (0.00s)
+=== RUN   TestReconcileByIDRefusesEveryOtherOutcome
+=== RUN   TestReconcileByIDRefusesEveryOtherOutcome/404-no-code
+=== RUN   TestReconcileByIDRefusesEveryOtherOutcome/404-unreadable
+=== RUN   TestReconcileByIDRefusesEveryOtherOutcome/404-empty
+=== RUN   TestReconcileByIDRefusesEveryOtherOutcome/400
+=== RUN   TestReconcileByIDRefusesEveryOtherOutcome/401
+=== RUN   TestReconcileByIDRefusesEveryOtherOutcome/429
+=== RUN   TestReconcileByIDRefusesEveryOtherOutcome/500
+=== RUN   TestReconcileByIDRefusesEveryOtherOutcome/503
+=== RUN   TestReconcileByIDRefusesEveryOtherOutcome/404-other-code
+=== RUN   TestReconcileByIDRefusesEveryOtherOutcome/404-code-in-text
+=== RUN   TestReconcileByIDRefusesEveryOtherOutcome/403
+=== RUN   TestReconcileByIDRefusesEveryOtherOutcome/403-ip
+--- PASS: TestReconcileByIDRefusesEveryOtherOutcome (0.01s)
+    --- PASS: TestReconcileByIDRefusesEveryOtherOutcome/404-no-code (0.00s)
+    --- PASS: TestReconcileByIDRefusesEveryOtherOutcome/404-unreadable (0.00s)
+    --- PASS: TestReconcileByIDRefusesEveryOtherOutcome/404-empty (0.00s)
+    --- PASS: TestReconcileByIDRefusesEveryOtherOutcome/400 (0.00s)
+    --- PASS: TestReconcileByIDRefusesEveryOtherOutcome/401 (0.00s)
+    --- PASS: TestReconcileByIDRefusesEveryOtherOutcome/429 (0.00s)
+    --- PASS: TestReconcileByIDRefusesEveryOtherOutcome/500 (0.00s)
+    --- PASS: TestReconcileByIDRefusesEveryOtherOutcome/503 (0.00s)
+    --- PASS: TestReconcileByIDRefusesEveryOtherOutcome/404-other-code (0.00s)
+    --- PASS: TestReconcileByIDRefusesEveryOtherOutcome/404-code-in-text (0.00s)
+    --- PASS: TestReconcileByIDRefusesEveryOtherOutcome/403 (0.00s)
+    --- PASS: TestReconcileByIDRefusesEveryOtherOutcome/403-ip (0.00s)
+=== RUN   TestReconcileByIDRefusesATransportError
+--- PASS: TestReconcileByIDRefusesATransportError (0.00s)
+=== RUN   TestReconcileByIDRefusesSchemaHoles
+=== RUN   TestReconcileByIDRefusesSchemaHoles/first-array
+=== RUN   TestReconcileByIDRefusesSchemaHoles/triggered-order-id-object
+=== RUN   TestReconcileByIDRefusesSchemaHoles/second-string
+=== RUN   TestReconcileByIDRefusesSchemaHoles/second-array
+=== RUN   TestReconcileByIDRefusesSchemaHoles/type-number
+=== RUN   TestReconcileByIDRefusesSchemaHoles/dup-triggered
+=== RUN   TestReconcileByIDRefusesSchemaHoles/result-string
+=== RUN   TestReconcileByIDRefusesSchemaHoles/id-missing
+=== RUN   TestReconcileByIDRefusesSchemaHoles/market-missing
+=== RUN   TestReconcileByIDRefusesSchemaHoles/first-status-missing
+=== RUN   TestReconcileByIDRefusesSchemaHoles/first-status-null
+=== RUN   TestReconcileByIDRefusesSchemaHoles/triggered-order-id-number
+=== RUN   TestReconcileByIDRefusesSchemaHoles/status-missing
+=== RUN   TestReconcileByIDRefusesSchemaHoles/status-null
+=== RUN   TestReconcileByIDRefusesSchemaHoles/market-null
+=== RUN   TestReconcileByIDRefusesSchemaHoles/first-missing
+=== RUN   TestReconcileByIDRefusesSchemaHoles/dup-status
+=== RUN   TestReconcileByIDRefusesSchemaHoles/dup-first
+=== RUN   TestReconcileByIDRefusesSchemaHoles/dup-second
+=== RUN   TestReconcileByIDRefusesSchemaHoles/result-null
+=== RUN   TestReconcileByIDRefusesSchemaHoles/result-array
+=== RUN   TestReconcileByIDRefusesSchemaHoles/id-null
+=== RUN   TestReconcileByIDRefusesSchemaHoles/id-number
+=== RUN   TestReconcileByIDRefusesSchemaHoles/status-bool
+=== RUN   TestReconcileByIDRefusesSchemaHoles/symbol-missing
+=== RUN   TestReconcileByIDRefusesSchemaHoles/symbol-null
+=== RUN   TestReconcileByIDRefusesSchemaHoles/first-status-number
+=== RUN   TestReconcileByIDRefusesSchemaHoles/first-null
+--- PASS: TestReconcileByIDRefusesSchemaHoles (0.02s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/first-array (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/triggered-order-id-object (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/second-string (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/second-array (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/type-number (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/dup-triggered (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/result-string (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/id-missing (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/market-missing (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/first-status-missing (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/first-status-null (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/triggered-order-id-number (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/status-missing (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/status-null (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/market-null (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/first-missing (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/dup-status (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/dup-first (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/dup-second (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/result-null (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/result-array (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/id-null (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/id-number (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/status-bool (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/symbol-missing (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/symbol-null (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/first-status-number (0.00s)
+    --- PASS: TestReconcileByIDRefusesSchemaHoles/first-null (0.00s)
+=== RUN   TestDecodeReconcilePageNamesTheGuardThatRefused
+--- PASS: TestDecodeReconcilePageNamesTheGuardThatRefused (0.00s)
+=== RUN   TestReconcileInstrumentReturnsTheBrokersEchoNotItsInput
+--- PASS: TestReconcileInstrumentReturnsTheBrokersEchoNotItsInput (0.00s)
+=== RUN   TestTheExistingConditionalReadFoldsANullResultIntoAnEmptyPage
+--- PASS: TestTheExistingConditionalReadFoldsANullResultIntoAnEmptyPage (0.00s)
+=== RUN   TestDecodeReconcileConditionalPageRefusesSchemaHoles
+=== RUN   TestDecodeReconcileConditionalPageRefusesSchemaHoles/cursor-missing
+=== RUN   TestDecodeReconcileConditionalPageRefusesSchemaHoles/cursor-number
+=== RUN   TestDecodeReconcileConditionalPageRefusesSchemaHoles/has-next-null-cursor
+=== RUN   TestDecodeReconcileConditionalPageRefusesSchemaHoles/collection-missing
+=== RUN   TestDecodeReconcileConditionalPageRefusesSchemaHoles/collection-object
+=== RUN   TestDecodeReconcileConditionalPageRefusesSchemaHoles/has-next-missing
+=== RUN   TestDecodeReconcileConditionalPageRefusesSchemaHoles/has-next-null
+=== RUN   TestDecodeReconcileConditionalPageRefusesSchemaHoles/has-next-empty-cursor
+=== RUN   TestDecodeReconcileConditionalPageRefusesSchemaHoles/row-null
+=== RUN   TestDecodeReconcileConditionalPageRefusesSchemaHoles/result-null
+=== RUN   TestDecodeReconcileConditionalPageRefusesSchemaHoles/result-empty-object
+=== RUN   TestDecodeReconcileConditionalPageRefusesSchemaHoles/result-array
+=== RUN   TestDecodeReconcileConditionalPageRefusesSchemaHoles/collection-null
+=== RUN   TestDecodeReconcileConditionalPageRefusesSchemaHoles/has-next-string
+--- PASS: TestDecodeReconcileConditionalPageRefusesSchemaHoles (0.00s)
+    --- PASS: TestDecodeReconcileConditionalPageRefusesSchemaHoles/cursor-missing (0.00s)
+    --- PASS: TestDecodeReconcileConditionalPageRefusesSchemaHoles/cursor-number (0.00s)
+    --- PASS: TestDecodeReconcileConditionalPageRefusesSchemaHoles/has-next-null-cursor (0.00s)
+    --- PASS: TestDecodeReconcileConditionalPageRefusesSchemaHoles/collection-missing (0.00s)
+    --- PASS: TestDecodeReconcileConditionalPageRefusesSchemaHoles/collection-object (0.00s)
+    --- PASS: TestDecodeReconcileConditionalPageRefusesSchemaHoles/has-next-missing (0.00s)
+    --- PASS: TestDecodeReconcileConditionalPageRefusesSchemaHoles/has-next-null (0.00s)
+    --- PASS: TestDecodeReconcileConditionalPageRefusesSchemaHoles/has-next-empty-cursor (0.00s)
+    --- PASS: TestDecodeReconcileConditionalPageRefusesSchemaHoles/row-null (0.00s)
+    --- PASS: TestDecodeReconcileConditionalPageRefusesSchemaHoles/result-null (0.00s)
+    --- PASS: TestDecodeReconcileConditionalPageRefusesSchemaHoles/result-empty-object (0.00s)
+    --- PASS: TestDecodeReconcileConditionalPageRefusesSchemaHoles/result-array (0.00s)
+    --- PASS: TestDecodeReconcileConditionalPageRefusesSchemaHoles/collection-null (0.00s)
+    --- PASS: TestDecodeReconcileConditionalPageRefusesSchemaHoles/has-next-string (0.00s)
+=== RUN   TestDecodeReconcileOrderPageRefusesSchemaHoles
+=== RUN   TestDecodeReconcileOrderPageRefusesSchemaHoles/result-empty-object
+=== RUN   TestDecodeReconcileOrderPageRefusesSchemaHoles/collection-null
+=== RUN   TestDecodeReconcileOrderPageRefusesSchemaHoles/has-next-missing
+=== RUN   TestDecodeReconcileOrderPageRefusesSchemaHoles/has-next-null
+=== RUN   TestDecodeReconcileOrderPageRefusesSchemaHoles/row-null
+=== RUN   TestDecodeReconcileOrderPageRefusesSchemaHoles/result-null
+=== RUN   TestDecodeReconcileOrderPageRefusesSchemaHoles/collection-missing
+=== RUN   TestDecodeReconcileOrderPageRefusesSchemaHoles/cursor-missing
+=== RUN   TestDecodeReconcileOrderPageRefusesSchemaHoles/has-next-null-cursor
+=== RUN   TestDecodeReconcileOrderPageRefusesSchemaHoles/has-next-empty-cursor
+--- PASS: TestDecodeReconcileOrderPageRefusesSchemaHoles (0.00s)
+    --- PASS: TestDecodeReconcileOrderPageRefusesSchemaHoles/result-empty-object (0.00s)
+    --- PASS: TestDecodeReconcileOrderPageRefusesSchemaHoles/collection-null (0.00s)
+    --- PASS: TestDecodeReconcileOrderPageRefusesSchemaHoles/has-next-missing (0.00s)
+    --- PASS: TestDecodeReconcileOrderPageRefusesSchemaHoles/has-next-null (0.00s)
+    --- PASS: TestDecodeReconcileOrderPageRefusesSchemaHoles/row-null (0.00s)
+    --- PASS: TestDecodeReconcileOrderPageRefusesSchemaHoles/result-null (0.00s)
+    --- PASS: TestDecodeReconcileOrderPageRefusesSchemaHoles/collection-missing (0.00s)
+    --- PASS: TestDecodeReconcileOrderPageRefusesSchemaHoles/cursor-missing (0.00s)
+    --- PASS: TestDecodeReconcileOrderPageRefusesSchemaHoles/has-next-null-cursor (0.00s)
+    --- PASS: TestDecodeReconcileOrderPageRefusesSchemaHoles/has-next-empty-cursor (0.00s)
+=== RUN   TestDecodeReconcilePagesAcceptWellFormedPages
+--- PASS: TestDecodeReconcilePagesAcceptWellFormedPages (0.00s)
+=== RUN   TestDecodeReconcileConditionalPageKeepsTheSecondLegAndTheTrigger
+--- PASS: TestDecodeReconcileConditionalPageKeepsTheSecondLegAndTheTrigger (0.00s)
+=== RUN   TestReconcileClientReadsRefuseANullResult
+--- PASS: TestReconcileClientReadsRefuseANullResult (0.00s)
+=== RUN   TestReconcileClientReadsSendTheDocumentedGetQueries
+--- PASS: TestReconcileClientReadsSendTheDocumentedGetQueries (0.00s)
+=== RUN   TestAdaptSellableQuantityUnit
+--- PASS: TestAdaptSellableQuantityUnit (0.00s)
+=== RUN   TestAdaptSellableQuantityDecimal
+--- PASS: TestAdaptSellableQuantityDecimal (0.00s)
+=== RUN   TestSellableQuantityIntegration
+--- PASS: TestSellableQuantityIntegration (0.00s)
+=== RUN   TestAdaptStocksUnit
+--- PASS: TestAdaptStocksUnit (0.00s)
+=== RUN   TestAdaptStocksEmpty
+--- PASS: TestAdaptStocksEmpty (0.00s)
+=== RUN   TestStocksIntegration
+--- PASS: TestStocksIntegration (0.00s)
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest
+=== RUN   TestStrictMinuteCandlesSendsTheCanonicalQueryAndReturnsThePage
+=== PAUSE TestStrictMinuteCandlesSendsTheCanonicalQueryAndReturnsThePage
+=== RUN   TestStrictMinuteCandlesAcceptsTheKoreanMarket
+=== PAUSE TestStrictMinuteCandlesAcceptsTheKoreanMarket
+=== RUN   TestStrictMinuteCandlesAcceptsDomesticAlphanumericAndPreservesRequestSymbol
+=== PAUSE TestStrictMinuteCandlesAcceptsDomesticAlphanumericAndPreservesRequestSymbol
+=== RUN   TestStrictMinuteCandlesAcceptsASubMinuteCursor
+=== PAUSE TestStrictMinuteCandlesAcceptsASubMinuteCursor
+=== RUN   TestStrictMinuteCandlesAcceptsAnEmptyPageThatStillCarriesACursor
+=== PAUSE TestStrictMinuteCandlesAcceptsAnEmptyPageThatStillCarriesACursor
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies
+=== RUN   TestStrictMinuteCandlesAcceptsNestingUpToTheBound
+=== PAUSE TestStrictMinuteCandlesAcceptsNestingUpToTheBound
+=== RUN   TestStrictMinuteCandlesRefusesInvalidUTF8
+=== PAUSE TestStrictMinuteCandlesRefusesInvalidUTF8
+=== RUN   TestStrictMinuteCandlesRefusesMoreCandlesThanRequested
+=== PAUSE TestStrictMinuteCandlesRefusesMoreCandlesThanRequested
+=== RUN   TestStrictMinuteCandlesRefusesInstantsNewerThanBefore
+=== PAUSE TestStrictMinuteCandlesRefusesInstantsNewerThanBefore
+=== RUN   TestStrictMinuteCandlesRefusesABodyAboveTwoMebibytes
+=== PAUSE TestStrictMinuteCandlesRefusesABodyAboveTwoMebibytes
+=== RUN   TestStrictMinuteCandlesIgnoresUnknownEnvelopeKeys
+=== PAUSE TestStrictMinuteCandlesIgnoresUnknownEnvelopeKeys
+=== RUN   TestStrictMinuteCandlesUsesTheLastSuccessfulAttemptAndChainsTheOuterObserver
+=== PAUSE TestStrictMinuteCandlesUsesTheLastSuccessfulAttemptAndChainsTheOuterObserver
+=== RUN   TestStrictMinuteCandlesPropagatesTransportClassification
+=== PAUSE TestStrictMinuteCandlesPropagatesTransportClassification
+=== RUN   TestStrictMinuteCandlesReportsTheRateBudgetOfTheSameResponse
+=== PAUSE TestStrictMinuteCandlesReportsTheRateBudgetOfTheSameResponse
+=== RUN   TestStrictMinuteCandlesRefusesANilClient
+=== PAUSE TestStrictMinuteCandlesRefusesANilClient
+=== RUN   TestStrictMinutePageLiteralLivesOnlyInItsOwnFile
+=== PAUSE TestStrictMinutePageLiteralLivesOnlyInItsOwnFile
+=== RUN   TestStrictMinuteCandlesFilesCarryNoSeamIdentifier
+=== PAUSE TestStrictMinuteCandlesFilesCarryNoSeamIdentifier
+=== RUN   TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest
+=== PAUSE TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest
+=== RUN   TestStrictQuoteReadersRefuseANilClient
+=== PAUSE TestStrictQuoteReadersRefuseANilClient
+=== RUN   TestStrictOrderbookTopAsksForExactlyOneSymbol
+=== PAUSE TestStrictOrderbookTopAsksForExactlyOneSymbol
+=== RUN   TestStrictLastPriceAsksForExactlyOneSymbol
+=== PAUSE TestStrictLastPriceAsksForExactlyOneSymbol
+=== RUN   TestStrictOrderbookTopReadsOnlyTheTopOfBook
+=== PAUSE TestStrictOrderbookTopReadsOnlyTheTopOfBook
+=== RUN   TestStrictLastPriceReadsTheOnlyRow
+=== PAUSE TestStrictLastPriceReadsTheOnlyRow
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract
+=== RUN   TestStrictLastPriceRefusesBodiesOutsideTheContract
+=== PAUSE TestStrictLastPriceRefusesBodiesOutsideTheContract
+=== RUN   TestStrictQuoteReadersRefuseANonSuccessfulAttempt
+=== PAUSE TestStrictQuoteReadersRefuseANonSuccessfulAttempt
+=== RUN   TestStrictQuoteRefusalsAreNeverCandleRefusals
+=== PAUSE TestStrictQuoteRefusalsAreNeverCandleRefusals
+=== RUN   TestTwoProcessesSharingOneCacheFileStopBuyingTokensFromEachOther
+--- PASS: TestTwoProcessesSharingOneCacheFileStopBuyingTokensFromEachOther (0.00s)
+=== RUN   TestARefusedProcessAdoptsTheTokenAnotherProcessAlreadyGot
+--- PASS: TestARefusedProcessAdoptsTheTokenAnotherProcessAlreadyGot (0.00s)
+=== RUN   TestARotationThatLandsMidRequestCostsNoToken
+--- PASS: TestARotationThatLandsMidRequestCostsNoToken (0.00s)
+=== RUN   TestARefusedProcessWithNothingToAdoptStillExchanges
+--- PASS: TestARefusedProcessWithNothingToAdoptStillExchanges (0.00s)
+=== RUN   TestAnAdoptedTokenThatIsAlsoRefusedStillEndsOnAMintedOne
+--- PASS: TestAnAdoptedTokenThatIsAlsoRefusedStillEndsOnAMintedOne (0.00s)
+=== RUN   TestASiblingGoroutineThatAlreadyReplacedTheTokenIsNotOutbought
+--- PASS: TestASiblingGoroutineThatAlreadyReplacedTheTokenIsNotOutbought (0.00s)
+=== RUN   TestAReaderNeverSeesAHalfWrittenCacheFile
+--- PASS: TestAReaderNeverSeesAHalfWrittenCacheFile (0.01s)
+=== RUN   TestAdoptionRefusesAnExpiredFileToken
+--- PASS: TestAdoptionRefusesAnExpiredFileToken (0.00s)
+=== RUN   TestAdoptionKeysOnTheTokenItself
+--- PASS: TestAdoptionKeysOnTheTokenItself (0.00s)
+=== RUN   TestTokenExchangeAndCache
+--- PASS: TestTokenExchangeAndCache (0.00s)
+=== RUN   TestTokenRefresh
+--- PASS: TestTokenRefresh (0.00s)
+=== RUN   TestTokenColdLoadFromDiskCache
+--- PASS: TestTokenColdLoadFromDiskCache (0.00s)
+=== RUN   TestTokenEmptyAccessTokenErrors
+--- PASS: TestTokenEmptyAccessTokenErrors (0.00s)
+=== RUN   TestTokenExchangeError
+--- PASS: TestTokenExchangeError (0.00s)
+=== RUN   TestAttemptTracePublicSurfaceIsReadOnly
+--- PASS: TestAttemptTracePublicSurfaceIsReadOnly (0.00s)
+=== RUN   TestAttemptObserverSeesBodyBeforeDecode
+--- PASS: TestAttemptObserverSeesBodyBeforeDecode (0.00s)
+=== RUN   TestAttemptObserverTraces401RefreshThenSuccessfulRetry
+--- PASS: TestAttemptObserverTraces401RefreshThenSuccessfulRetry (0.00s)
+=== RUN   TestAttemptObserverReturnPrecedesDecodeAndCallerReturn
+--- PASS: TestAttemptObserverReturnPrecedesDecodeAndCallerReturn (0.00s)
+=== RUN   TestMarketCalendarReadsRequireExactGregorianDate
+=== RUN   TestMarketCalendarReadsRequireExactGregorianDate/2026-7-03
+=== RUN   TestMarketCalendarReadsRequireExactGregorianDate/2026-07-3
+=== RUN   TestMarketCalendarReadsRequireExactGregorianDate/2026-02-29
+=== RUN   TestMarketCalendarReadsRequireExactGregorianDate/2026-02-30
+=== RUN   TestMarketCalendarReadsRequireExactGregorianDate/_2026-07-03
+=== RUN   TestMarketCalendarReadsRequireExactGregorianDate/2026-07-03_
+=== RUN   TestMarketCalendarReadsRequireExactGregorianDate/2026-07-03T00:00:00Z
+--- PASS: TestMarketCalendarReadsRequireExactGregorianDate (0.00s)
+    --- PASS: TestMarketCalendarReadsRequireExactGregorianDate/2026-7-03 (0.00s)
+    --- PASS: TestMarketCalendarReadsRequireExactGregorianDate/2026-07-3 (0.00s)
+    --- PASS: TestMarketCalendarReadsRequireExactGregorianDate/2026-02-29 (0.00s)
+    --- PASS: TestMarketCalendarReadsRequireExactGregorianDate/2026-02-30 (0.00s)
+    --- PASS: TestMarketCalendarReadsRequireExactGregorianDate/_2026-07-03 (0.00s)
+    --- PASS: TestMarketCalendarReadsRequireExactGregorianDate/2026-07-03_ (0.00s)
+    --- PASS: TestMarketCalendarReadsRequireExactGregorianDate/2026-07-03T00:00:00Z (0.00s)
+=== RUN   TestTypedMarketCalendarPreservesNullableSessions
+--- PASS: TestTypedMarketCalendarPreservesNullableSessions (0.00s)
+=== RUN   TestTypedMarketCalendarRejectsMalformedTime
+--- PASS: TestTypedMarketCalendarRejectsMalformedTime (0.00s)
+=== RUN   TestAdaptWarningsUnit
+--- PASS: TestAdaptWarningsUnit (0.00s)
+=== RUN   TestAdaptWarningsEmpty
+--- PASS: TestAdaptWarningsEmpty (0.00s)
+=== RUN   TestWarningsIntegration
+--- PASS: TestWarningsIntegration (0.00s)
+=== RUN   TestSaveCredentialsTightensExistingFileTo0600
+--- PASS: TestSaveCredentialsTightensExistingFileTo0600 (0.01s)
+=== RUN   TestLoadCredentialsEnvOverridesFile
+--- PASS: TestLoadCredentialsEnvOverridesFile (0.01s)
+=== RUN   TestSaveCredentialsIs0600
+--- PASS: TestSaveCredentialsIs0600 (0.01s)
+=== RUN   TestLoadCredentialsNoneReturnsNil
+--- PASS: TestLoadCredentialsNoneReturnsNil (0.00s)
+=== RUN   TestMaskedKey
+--- PASS: TestMaskedKey (0.00s)
+=== RUN   TestLoadCredentialsMissingEnvFallsBackToFile
+--- PASS: TestLoadCredentialsMissingEnvFallsBackToFile (0.01s)
+=== RUN   TestSaveCredentialsCreatesParentDir
+--- PASS: TestSaveCredentialsCreatesParentDir (0.01s)
+=== RUN   TestDeleteCredentials
+--- PASS: TestDeleteCredentials (0.01s)
+=== RUN   TestLoadCredentialsMalformedReturnsError
+--- PASS: TestLoadCredentialsMalformedReturnsError (0.00s)
+=== RUN   TestMaskedKeyShort
+--- PASS: TestMaskedKeyShort (0.00s)
+=== CONT  TestA187StrictQuoteReadersAcceptKRAlphanumeric
+=== RUN   TestA187StrictQuoteReadersAcceptKRAlphanumeric/0101N0
+=== PAUSE TestA187StrictQuoteReadersAcceptKRAlphanumeric/0101N0
+=== RUN   TestA187StrictQuoteReadersAcceptKRAlphanumeric/00593A
+=== PAUSE TestA187StrictQuoteReadersAcceptKRAlphanumeric/00593A
+=== RUN   TestA187StrictQuoteReadersAcceptKRAlphanumeric/0158S0
+=== PAUSE TestA187StrictQuoteReadersAcceptKRAlphanumeric/0158S0
+=== CONT  TestStrictQuoteReadersRefuseANonSuccessfulAttempt
+=== CONT  TestStrictMinuteCandlesRefusesABodyAboveTwoMebibytes
+=== CONT  TestStrictQuoteReadersRefuseANilClient
+=== CONT  TestStrictMinuteCandlesUsesTheLastSuccessfulAttemptAndChainsTheOuterObserver
+=== CONT  TestStrictMinuteCandlesRefusesMoreCandlesThanRequested
+=== RUN   TestA187StrictQuoteReadersAcceptKRAlphanumeric/18064K
+=== CONT  TestStrictLastPriceReadsTheOnlyRow
+=== CONT  TestStrictLastPriceRefusesBodiesOutsideTheContract
+=== CONT  TestA187StrictLastPriceRefusesKREchoMismatch
+=== CONT  TestStrictMinuteCandlesIgnoresUnknownEnvelopeKeys
+=== RUN   TestStrictLastPriceRefusesBodiesOutsideTheContract/no_rows
+=== PAUSE TestA187StrictQuoteReadersAcceptKRAlphanumeric/18064K
+=== CONT  TestStrictMinuteCandlesRefusesInvalidUTF8
+=== PAUSE TestStrictLastPriceRefusesBodiesOutsideTheContract/no_rows
+=== RUN   TestStrictLastPriceRefusesBodiesOutsideTheContract/two_rows
+=== PAUSE TestStrictLastPriceRefusesBodiesOutsideTheContract/two_rows
+=== RUN   TestStrictLastPriceRefusesBodiesOutsideTheContract/symbol_does_not_echo
+=== CONT  TestStrictQuoteRefusalsAreNeverCandleRefusals
+=== PAUSE TestStrictLastPriceRefusesBodiesOutsideTheContract/symbol_does_not_echo
+=== CONT  TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest
+=== RUN   TestA187StrictQuoteReadersAcceptKRAlphanumeric/A12345
+=== CONT  TestStrictMinuteCandlesAcceptsNestingUpToTheBound
+=== RUN   TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/lower_case_market
+=== PAUSE TestA187StrictQuoteReadersAcceptKRAlphanumeric/A12345
+=== RUN   TestStrictQuoteReadersRefuseANonSuccessfulAttempt/orderbook
+=== PAUSE TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/lower_case_market
+=== CONT  TestStrictMinutePageLiteralLivesOnlyInItsOwnFile
+=== RUN   TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/unknown_market
+=== PAUSE TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/unknown_market
+=== PAUSE TestStrictQuoteReadersRefuseANonSuccessfulAttempt/orderbook
+=== RUN   TestStrictQuoteReadersRefuseANonSuccessfulAttempt/prices
+=== CONT  TestStrictMinuteCandlesReportsTheRateBudgetOfTheSameResponse
+=== CONT  TestStrictMinuteCandlesPropagatesTransportClassification
+=== RUN   TestStrictMinuteCandlesPropagatesTransportClassification/rate_limited
+=== PAUSE TestStrictMinuteCandlesPropagatesTransportClassification/rate_limited
+=== RUN   TestStrictMinuteCandlesPropagatesTransportClassification/server_error
+=== PAUSE TestStrictMinuteCandlesPropagatesTransportClassification/server_error
+=== CONT  TestStrictMinuteCandlesAcceptsTheKoreanMarket
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest
+=== CONT  TestStrictMinuteCandlesRefusesInstantsNewerThanBefore
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/lower_case_market
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/lower_case_market
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/unknown_market
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/unknown_market
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_lowercase
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_lowercase
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_punctuation
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_punctuation
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_whitespace
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_whitespace
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_non-ascii
+=== CONT  TestStrictMinuteCandlesSendsTheCanonicalQueryAndReturnsThePage
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_non-ascii
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_short
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_short
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_long
+--- PASS: TestStrictQuoteReadersRefuseANilClient (0.00s)
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_long
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_lower_case
+=== RUN   TestStrictLastPriceRefusesBodiesOutsideTheContract/result_is_not_an_array
+=== CONT  TestStrictMinuteCandlesFilesCarryNoSeamIdentifier
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_lower_case
+=== RUN   TestA187StrictQuoteReadersAcceptKRAlphanumeric/ABCDEF
+=== RUN   TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/empty_market
+=== PAUSE TestStrictQuoteReadersRefuseANonSuccessfulAttempt/prices
+=== CONT  TestStrictMinuteCandlesRefusesANilClient
+--- PASS: TestStrictQuoteRefusalsAreNeverCandleRefusals (0.00s)
+=== PAUSE TestStrictLastPriceRefusesBodiesOutsideTheContract/result_is_not_an_array
+=== RUN   TestStrictLastPriceRefusesBodiesOutsideTheContract/no_result_key
+=== PAUSE TestStrictLastPriceRefusesBodiesOutsideTheContract/no_result_key
+=== RUN   TestStrictLastPriceRefusesBodiesOutsideTheContract/row_duplicate_key
+=== PAUSE TestStrictLastPriceRefusesBodiesOutsideTheContract/row_duplicate_key
+=== RUN   TestStrictLastPriceRefusesBodiesOutsideTheContract/unknown_row_key
+=== PAUSE TestStrictLastPriceRefusesBodiesOutsideTheContract/unknown_row_key
+=== RUN   TestStrictLastPriceRefusesBodiesOutsideTheContract/missing_row_key
+=== PAUSE TestStrictLastPriceRefusesBodiesOutsideTheContract/missing_row_key
+=== RUN   TestStrictLastPriceRefusesBodiesOutsideTheContract/bare_number_last_price
+=== PAUSE TestStrictLastPriceRefusesBodiesOutsideTheContract/bare_number_last_price
+=== RUN   TestStrictLastPriceRefusesBodiesOutsideTheContract/row_is_not_an_object
+=== PAUSE TestStrictLastPriceRefusesBodiesOutsideTheContract/row_is_not_an_object
+=== RUN   TestStrictLastPriceRefusesBodiesOutsideTheContract/null_timestamp
+=== PAUSE TestStrictLastPriceRefusesBodiesOutsideTheContract/null_timestamp
+=== RUN   TestStrictLastPriceRefusesBodiesOutsideTheContract/zulu_timestamp
+=== PAUSE TestStrictLastPriceRefusesBodiesOutsideTheContract/zulu_timestamp
+=== RUN   TestStrictLastPriceRefusesBodiesOutsideTheContract/currency_is_not_the_market_currency
+=== PAUSE TestStrictLastPriceRefusesBodiesOutsideTheContract/currency_is_not_the_market_currency
+=== RUN   TestStrictLastPriceRefusesBodiesOutsideTheContract/empty_last_price
+=== PAUSE TestStrictLastPriceRefusesBodiesOutsideTheContract/empty_last_price
+=== PAUSE TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/empty_market
+=== RUN   TestStrictLastPriceRefusesBodiesOutsideTheContract/over_long_last_price
+=== PAUSE TestStrictLastPriceRefusesBodiesOutsideTheContract/over_long_last_price
+=== PAUSE TestA187StrictQuoteReadersAcceptKRAlphanumeric/ABCDEF
+=== RUN   TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/kr_symbol_too_short
+=== CONT  TestStrictMinuteCandlesAcceptsAnEmptyPageThatStillCarriesACursor
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_too_long
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_the_envelope
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_too_long
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_leading_digit
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_leading_digit
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/empty_symbol
+=== CONT  TestA187NumericKRAndUSUnchanged
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/empty_symbol
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_zero
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_zero
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_above_the_page_cap
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_above_the_page_cap
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_negative
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_negative
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_a_zulu_offset
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_the_envelope
+=== PAUSE TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/kr_symbol_too_short
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_a_zulu_offset
+=== CONT  TestStrictMinuteCandlesAcceptsASubMinuteCursor
+--- PASS: TestStrictMinuteCandlesRefusesANilClient (0.00s)
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_the_result
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_the_result
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_a_candle
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_a_candle
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/result_absent
+=== CONT  TestStrictMinuteCandlesAcceptsDomesticAlphanumericAndPreservesRequestSymbol
+--- PASS: TestStrictMinuteCandlesFilesCarryNoSeamIdentifier (0.00s)
+=== RUN   TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/us_symbol_lower_case
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/result_absent
+=== PAUSE TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/us_symbol_lower_case
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_without_an_offset
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_without_an_offset
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/result_is_not_an_object
+=== RUN   TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/us_symbol_too_long
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/result_is_not_an_object
+=== PAUSE TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/us_symbol_too_long
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/unknown_result_key
+=== RUN   TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/empty_symbol
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/unknown_result_key
+=== PAUSE TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/empty_symbol
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_four_fractional_digits
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/candles_absent
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/candles_absent
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/candles_is_not_an_array
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_four_fractional_digits
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/candles_is_not_an_array
+--- PASS: TestStrictMinuteCandlesAcceptsNestingUpToTheBound (0.00s)
+=== CONT  TestStrictLastPriceAsksForExactlyOneSymbol
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/candles_is_null
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_a_named_zone
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_a_named_zone
+=== RUN   TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_that_does_not_exist
+=== PAUSE TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_that_does_not_exist
+=== CONT  TestStrictOrderbookTopReadsOnlyTheTopOfBook
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/candles_is_null
+=== RUN   TestStrictOrderbookTopReadsOnlyTheTopOfBook/us_one_level_per_side
+=== PAUSE TestStrictOrderbookTopReadsOnlyTheTopOfBook/us_one_level_per_side
+=== RUN   TestStrictOrderbookTopReadsOnlyTheTopOfBook/kr_ten_levels_per_side
+=== PAUSE TestStrictOrderbookTopReadsOnlyTheTopOfBook/kr_ten_levels_per_side
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101n0
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101n0
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/_0101N0
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/_0101N0
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N0_
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N0_
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N00
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/unknown_candle_key
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/unknown_candle_key
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/missing_candle_key
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/missing_candle_key
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/candle_is_not_an_object
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/candle_is_not_an_object
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/bare_number_price
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/bare_number_price
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/bare_number_volume
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/envelope_duplicate_key
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/envelope_duplicate_key
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/result_duplicate_key
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/result_duplicate_key
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/level_duplicate_key
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/level_duplicate_key
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/bare_number_volume
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/no_result_key
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/null_price
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/no_result_key
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/result_is_not_an_object
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/null_price
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/result_is_not_an_object
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/empty_price_string
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/unknown_result_key
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/empty_price_string
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/unknown_result_key
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/over_long_decimal
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/missing_result_key
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/over_long_decimal
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/missing_result_key
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/foreign_currency
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/unknown_level_key
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/unknown_level_key
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/missing_level_key
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/missing_level_key
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/bare_number_price
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/bare_number_price
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/bare_number_volume
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/foreign_currency
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_without_an_offset
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N00
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/bare_number_volume
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101-0
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/level_is_not_an_object
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_without_an_offset
+--- PASS: TestStrictMinuteCandlesAcceptsTheKoreanMarket (0.01s)
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101-0
+=== CONT  TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/가101N0
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/level_is_not_an_object
+--- PASS: TestStrictMinutePageLiteralLivesOnlyInItsOwnFile (0.01s)
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/asks_is_not_an_array
+=== RUN   TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce/0158S0
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/가101N0
+=== PAUSE TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce/0158S0
+=== CONT  TestStrictOrderbookTopAsksForExactlyOneSymbol
+=== RUN   TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce/A12345
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101.0
+=== PAUSE TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce/A12345
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101.0
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/#00
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/asks_is_not_an_array
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_with_a_zulu_offset
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/empty_asks
+=== RUN   TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce/18064K
+--- PASS: TestA187StrictLastPriceRefusesKREchoMismatch (0.01s)
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_with_a_zulu_offset
+=== PAUSE TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce/18064K
+=== CONT  TestA187StrictMinuteCandlesStillRefuseOtherKRForms
+=== CONT  TestStrictMinuteCandlesPropagatesTransportClassification/rate_limited
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_that_does_not_exist
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_that_does_not_exist
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/ascending_instants
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/ascending_instants
+=== RUN   TestA187StrictMinuteCandlesStillRefuseOtherKRForms/0158s0
+--- PASS: TestStrictMinuteCandlesIgnoresUnknownEnvelopeKeys (0.01s)
+=== CONT  TestStrictMinuteCandlesPropagatesTransportClassification/server_error
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_instants
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_instants
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/empty_asks
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_absent
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/empty_bids
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_absent
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/#00
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_replaced_by_another_key
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_replaced_by_another_key
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N0_#01
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_empty_string
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N0_#01
+=== RUN   TestA187StrictQuoteReadersStillRefuseOtherKRForms/_0101N0#01
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_empty_string
+=== PAUSE TestA187StrictQuoteReadersStillRefuseOtherKRForms/_0101N0#01
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_a_number
+=== CONT  TestStrictQuoteReadersRefuseANonSuccessfulAttempt/orderbook
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_a_number
+--- PASS: TestStrictMinuteCandlesAcceptsASubMinuteCursor (0.01s)
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_object
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_object
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_array
+=== CONT  TestStrictQuoteReadersRefuseANonSuccessfulAttempt/prices
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_array
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_a_boolean
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_a_boolean
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_breaks_the_timestamp_grammar
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_breaks_the_timestamp_grammar
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_not_older_than_the_oldest_bar
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_not_older_than_the_oldest_bar
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_newer_than_the_oldest_bar
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_newer_than_the_oldest_bar
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/trailing_json_value
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/trailing_json_value
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/body_is_not_an_object
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/body_is_not_an_object
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/empty_body
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/empty_body
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_inside_an_ignored_sibling
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_inside_an_ignored_sibling
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/seventeen_levels_of_nesting
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/seventeen_levels_of_nesting
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/instant_with_non-zero_seconds
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/instant_with_non-zero_seconds
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/instant_with_a_fraction
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/instant_with_a_fraction
+=== RUN   TestStrictMinuteCandlesRefusesMalformedBodies/invalid_utf-8_inside_a_price
+=== PAUSE TestStrictMinuteCandlesRefusesMalformedBodies/invalid_utf-8_inside_a_price
+=== CONT  TestStrictLastPriceRefusesBodiesOutsideTheContract/no_rows
+--- PASS: TestStrictMinuteCandlesSendsTheCanonicalQueryAndReturnsThePage (0.01s)
+=== CONT  TestStrictLastPriceRefusesBodiesOutsideTheContract/over_long_last_price
+=== PAUSE TestA187StrictMinuteCandlesStillRefuseOtherKRForms/0158s0
+=== RUN   TestA187StrictMinuteCandlesStillRefuseOtherKRForms/0101N0_
+=== PAUSE TestA187StrictMinuteCandlesStillRefuseOtherKRForms/0101N0_
+--- PASS: TestStrictMinuteCandlesUsesTheLastSuccessfulAttemptAndChainsTheOuterObserver (0.01s)
+=== RUN   TestA187StrictMinuteCandlesStillRefuseOtherKRForms/_0101N0
+=== CONT  TestStrictLastPriceRefusesBodiesOutsideTheContract/empty_last_price
+=== PAUSE TestA187StrictMinuteCandlesStillRefuseOtherKRForms/_0101N0
+=== RUN   TestA187StrictMinuteCandlesStillRefuseOtherKRForms/a12345
+--- PASS: TestStrictMinuteCandlesRefusesInvalidUTF8 (0.01s)
+=== PAUSE TestA187StrictMinuteCandlesStillRefuseOtherKRForms/a12345
+--- PASS: TestStrictMinuteCandlesAcceptsAnEmptyPageThatStillCarriesACursor (0.01s)
+=== CONT  TestStrictLastPriceRefusesBodiesOutsideTheContract/currency_is_not_the_market_currency
+=== CONT  TestStrictLastPriceRefusesBodiesOutsideTheContract/null_timestamp
+--- PASS: TestStrictMinuteCandlesRefusesMoreCandlesThanRequested (0.01s)
+=== CONT  TestStrictLastPriceRefusesBodiesOutsideTheContract/row_is_not_an_object
+=== CONT  TestStrictLastPriceRefusesBodiesOutsideTheContract/zulu_timestamp
+--- PASS: TestStrictLastPriceReadsTheOnlyRow (0.01s)
+=== CONT  TestStrictLastPriceRefusesBodiesOutsideTheContract/bare_number_last_price
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/empty_bids
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/null_timestamp
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/null_timestamp
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/absent_timestamp
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/absent_timestamp
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/zulu_timestamp
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/zulu_timestamp
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/offsetless_timestamp
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/offsetless_timestamp
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/impossible_timestamp
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/impossible_timestamp
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/currency_is_not_the_market_currency
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/currency_is_not_the_market_currency
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/empty_price
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/empty_price
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/over_long_price
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/over_long_price
+=== RUN   TestStrictOrderbookTopRefusesBodiesOutsideTheContract/trailing_json_value
+--- PASS: TestStrictLastPriceAsksForExactlyOneSymbol (0.01s)
+=== PAUSE TestStrictOrderbookTopRefusesBodiesOutsideTheContract/trailing_json_value
+=== CONT  TestStrictLastPriceRefusesBodiesOutsideTheContract/missing_row_key
+--- PASS: TestStrictMinuteCandlesRefusesInstantsNewerThanBefore (0.01s)
+=== CONT  TestStrictLastPriceRefusesBodiesOutsideTheContract/unknown_row_key
+=== CONT  TestStrictLastPriceRefusesBodiesOutsideTheContract/row_duplicate_key
+--- PASS: TestStrictMinuteCandlesReportsTheRateBudgetOfTheSameResponse (0.01s)
+=== CONT  TestStrictLastPriceRefusesBodiesOutsideTheContract/no_result_key
+--- PASS: TestStrictMinuteCandlesAcceptsDomesticAlphanumericAndPreservesRequestSymbol (0.01s)
+=== CONT  TestStrictLastPriceRefusesBodiesOutsideTheContract/result_is_not_an_array
+=== CONT  TestStrictLastPriceRefusesBodiesOutsideTheContract/symbol_does_not_echo
+=== CONT  TestA187StrictQuoteReadersAcceptKRAlphanumeric/0101N0
+=== CONT  TestStrictLastPriceRefusesBodiesOutsideTheContract/two_rows
+--- PASS: TestStrictOrderbookTopAsksForExactlyOneSymbol (0.01s)
+=== CONT  TestA187StrictQuoteReadersAcceptKRAlphanumeric/18064K
+--- PASS: TestStrictMinuteCandlesPropagatesTransportClassification (0.00s)
+    --- PASS: TestStrictMinuteCandlesPropagatesTransportClassification/rate_limited (0.00s)
+    --- PASS: TestStrictMinuteCandlesPropagatesTransportClassification/server_error (0.02s)
+=== CONT  TestA187StrictQuoteReadersAcceptKRAlphanumeric/ABCDEF
+=== CONT  TestA187StrictQuoteReadersAcceptKRAlphanumeric/A12345
+=== CONT  TestA187StrictQuoteReadersAcceptKRAlphanumeric/00593A
+=== CONT  TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/lower_case_market
+=== CONT  TestA187StrictQuoteReadersAcceptKRAlphanumeric/0158S0
+=== CONT  TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/empty_symbol
+=== CONT  TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/us_symbol_too_long
+--- PASS: TestStrictQuoteReadersRefuseANonSuccessfulAttempt (0.00s)
+    --- PASS: TestStrictQuoteReadersRefuseANonSuccessfulAttempt/prices (0.00s)
+    --- PASS: TestStrictQuoteReadersRefuseANonSuccessfulAttempt/orderbook (0.02s)
+=== CONT  TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/us_symbol_lower_case
+=== CONT  TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/kr_symbol_too_short
+=== CONT  TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/empty_market
+=== CONT  TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/unknown_market
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/lower_case_market
+=== CONT  TestStrictOrderbookTopReadsOnlyTheTopOfBook/us_one_level_per_side
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_that_does_not_exist
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_a_named_zone
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_four_fractional_digits
+--- PASS: TestStrictLastPriceRefusesBodiesOutsideTheContract (0.00s)
+    --- PASS: TestStrictLastPriceRefusesBodiesOutsideTheContract/over_long_last_price (0.00s)
+    --- PASS: TestStrictLastPriceRefusesBodiesOutsideTheContract/empty_last_price (0.01s)
+    --- PASS: TestStrictLastPriceRefusesBodiesOutsideTheContract/no_rows (0.01s)
+    --- PASS: TestStrictLastPriceRefusesBodiesOutsideTheContract/symbol_does_not_echo (0.01s)
+    --- PASS: TestStrictLastPriceRefusesBodiesOutsideTheContract/currency_is_not_the_market_currency (0.01s)
+    --- PASS: TestStrictLastPriceRefusesBodiesOutsideTheContract/row_is_not_an_object (0.01s)
+    --- PASS: TestStrictLastPriceRefusesBodiesOutsideTheContract/bare_number_last_price (0.01s)
+    --- PASS: TestStrictLastPriceRefusesBodiesOutsideTheContract/null_timestamp (0.01s)
+    --- PASS: TestStrictLastPriceRefusesBodiesOutsideTheContract/row_duplicate_key (0.01s)
+    --- PASS: TestStrictLastPriceRefusesBodiesOutsideTheContract/result_is_not_an_array (0.01s)
+    --- PASS: TestStrictLastPriceRefusesBodiesOutsideTheContract/missing_row_key (0.01s)
+    --- PASS: TestStrictLastPriceRefusesBodiesOutsideTheContract/unknown_row_key (0.01s)
+    --- PASS: TestStrictLastPriceRefusesBodiesOutsideTheContract/no_result_key (0.01s)
+    --- PASS: TestStrictLastPriceRefusesBodiesOutsideTheContract/zulu_timestamp (0.02s)
+    --- PASS: TestStrictLastPriceRefusesBodiesOutsideTheContract/two_rows (0.00s)
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_without_an_offset
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_negative
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_zero
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_above_the_page_cap
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_a_zulu_offset
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_too_long
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_long
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_short
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_non-ascii
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_whitespace
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/empty_symbol
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_punctuation
+--- PASS: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest (0.00s)
+    --- PASS: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/empty_symbol (0.00s)
+    --- PASS: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/lower_case_market (0.00s)
+    --- PASS: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/us_symbol_too_long (0.00s)
+    --- PASS: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/kr_symbol_too_short (0.00s)
+    --- PASS: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/unknown_market (0.00s)
+    --- PASS: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/empty_market (0.00s)
+    --- PASS: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/us_symbol_lower_case (0.00s)
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_leading_digit
+--- PASS: TestA187NumericKRAndUSUnchanged (0.02s)
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_lowercase
+--- PASS: TestStrictMinuteCandlesRefusesABodyAboveTwoMebibytes (0.03s)
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/unknown_market
+=== CONT  TestStrictOrderbookTopReadsOnlyTheTopOfBook/kr_ten_levels_per_side
+=== CONT  TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce/0158S0
+=== CONT  TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce/A12345
+=== CONT  TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce/18064K
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101n0
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/가101N0
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/_0101N0#01
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N0_#01
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/#00
+=== CONT  TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_lower_case
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101.0
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101-0
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N00
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N0_
+=== CONT  TestA187StrictQuoteReadersStillRefuseOtherKRForms/_0101N0
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_the_envelope
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/ascending_instants
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/invalid_utf-8_inside_a_price
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/instant_with_a_fraction
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/instant_with_non-zero_seconds
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/seventeen_levels_of_nesting
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_inside_an_ignored_sibling
+--- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/lower_case_market (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_that_does_not_exist (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_without_an_offset (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_a_zulu_offset (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_zero (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_above_the_page_cap (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/count_negative (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_whitespace (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_punctuation (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_too_long (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_non-ascii (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_long (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/empty_symbol (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_short (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_four_fractional_digits (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_lowercase (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_leading_digit (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/before_with_a_named_zone (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/unknown_market (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_lower_case (0.00s)
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/empty_body
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/body_is_not_an_object
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/trailing_json_value
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_newer_than_the_oldest_bar
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_not_older_than_the_oldest_bar
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_breaks_the_timestamp_grammar
+--- PASS: TestStrictOrderbookTopReadsOnlyTheTopOfBook (0.00s)
+    --- PASS: TestStrictOrderbookTopReadsOnlyTheTopOfBook/us_one_level_per_side (0.00s)
+    --- PASS: TestStrictOrderbookTopReadsOnlyTheTopOfBook/kr_ten_levels_per_side (0.00s)
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_a_boolean
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_array
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_object
+--- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/가101N0 (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N0_#01 (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101.0 (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/#00 (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/_0101N0#01 (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101n0 (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N0_ (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/_0101N0 (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101-0 (0.00s)
+    --- PASS: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N00 (0.00s)
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_a_number
+--- PASS: TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce (0.00s)
+    --- PASS: TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce/18064K (0.00s)
+    --- PASS: TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce/A12345 (0.00s)
+    --- PASS: TestA187StrictMinuteCandlesAcceptKRAlphanumericOnce/0158S0 (0.00s)
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_empty_string
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_replaced_by_another_key
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/cursor_absent
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_that_does_not_exist
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/candle_is_not_an_object
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_without_an_offset
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_with_a_zulu_offset
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_instants
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/foreign_currency
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/over_long_decimal
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/empty_price_string
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/null_price
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/bare_number_volume
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/result_absent
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/bare_number_price
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_a_candle
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/unknown_result_key
+--- PASS: TestA187StrictQuoteReadersAcceptKRAlphanumeric (0.00s)
+    --- PASS: TestA187StrictQuoteReadersAcceptKRAlphanumeric/0101N0 (0.01s)
+    --- PASS: TestA187StrictQuoteReadersAcceptKRAlphanumeric/00593A (0.00s)
+    --- PASS: TestA187StrictQuoteReadersAcceptKRAlphanumeric/ABCDEF (0.00s)
+    --- PASS: TestA187StrictQuoteReadersAcceptKRAlphanumeric/18064K (0.01s)
+    --- PASS: TestA187StrictQuoteReadersAcceptKRAlphanumeric/A12345 (0.01s)
+    --- PASS: TestA187StrictQuoteReadersAcceptKRAlphanumeric/0158S0 (0.01s)
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/result_is_not_an_object
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_the_result
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/candles_absent
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/candles_is_null
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/candles_is_not_an_array
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/unknown_candle_key
+=== CONT  TestStrictMinuteCandlesRefusesMalformedBodies/missing_candle_key
+=== CONT  TestA187StrictMinuteCandlesStillRefuseOtherKRForms/0158s0
+=== CONT  TestA187StrictMinuteCandlesStillRefuseOtherKRForms/a12345
+=== CONT  TestA187StrictMinuteCandlesStillRefuseOtherKRForms/_0101N0
+=== CONT  TestA187StrictMinuteCandlesStillRefuseOtherKRForms/0101N0_
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/envelope_duplicate_key
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/empty_asks
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/impossible_timestamp
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/trailing_json_value
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/over_long_price
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/empty_price
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/currency_is_not_the_market_currency
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/unknown_level_key
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/asks_is_not_an_array
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/level_is_not_an_object
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/bare_number_volume
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/bare_number_price
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/missing_level_key
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/offsetless_timestamp
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/zulu_timestamp
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/null_timestamp
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/empty_bids
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/result_is_not_an_object
+--- PASS: TestA187StrictMinuteCandlesStillRefuseOtherKRForms (0.00s)
+    --- PASS: TestA187StrictMinuteCandlesStillRefuseOtherKRForms/a12345 (0.00s)
+    --- PASS: TestA187StrictMinuteCandlesStillRefuseOtherKRForms/_0101N0 (0.00s)
+    --- PASS: TestA187StrictMinuteCandlesStillRefuseOtherKRForms/0158s0 (0.00s)
+    --- PASS: TestA187StrictMinuteCandlesStillRefuseOtherKRForms/0101N0_ (0.00s)
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/absent_timestamp
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/missing_result_key
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/unknown_result_key
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/level_duplicate_key
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/result_duplicate_key
+=== CONT  TestStrictOrderbookTopRefusesBodiesOutsideTheContract/no_result_key
+--- PASS: TestStrictMinuteCandlesRefusesMalformedBodies (0.01s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/instant_with_a_fraction (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/ascending_instants (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/body_is_not_an_object (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/instant_with_non-zero_seconds (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/seventeen_levels_of_nesting (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/empty_body (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_the_envelope (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_newer_than_the_oldest_bar (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_breaks_the_timestamp_grammar (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_object (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_inside_an_ignored_sibling (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/trailing_json_value (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_array (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_not_older_than_the_oldest_bar (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/invalid_utf-8_inside_a_price (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_a_boolean (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_absent (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_without_an_offset (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/candle_is_not_an_object (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_that_does_not_exist (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_an_empty_string (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_is_a_number (0.01s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_instants (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/empty_price_string (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/result_absent (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/foreign_currency (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/timestamp_with_a_zulu_offset (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/over_long_decimal (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/bare_number_price (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/result_is_not_an_object (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_a_candle (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/unknown_result_key (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/bare_number_volume (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/candles_is_not_an_array (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/duplicate_key_in_the_result (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/cursor_replaced_by_another_key (0.01s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/null_price (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/missing_candle_key (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/candles_is_null (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/unknown_candle_key (0.00s)
+    --- PASS: TestStrictMinuteCandlesRefusesMalformedBodies/candles_absent (0.01s)
+--- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract (0.01s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/currency_is_not_the_market_currency (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/bare_number_price (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/over_long_price (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/unknown_level_key (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/empty_price (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/impossible_timestamp (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/bare_number_volume (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/envelope_duplicate_key (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/level_is_not_an_object (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/missing_level_key (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/asks_is_not_an_array (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/empty_asks (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/trailing_json_value (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/null_timestamp (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/zulu_timestamp (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/no_result_key (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/empty_bids (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/result_is_not_an_object (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/level_duplicate_key (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/result_duplicate_key (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/absent_timestamp (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/unknown_result_key (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/offsetless_timestamp (0.00s)
+    --- PASS: TestStrictOrderbookTopRefusesBodiesOutsideTheContract/missing_result_key (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	4.305s
+=== RUN   TestA166ConsumerTwoFactoriesPriceLimits
+--- PASS: TestA166ConsumerTwoFactoriesPriceLimits (1.59s)
+=== RUN   TestA166ConsumerPriceLimits401EachWire
+--- PASS: TestA166ConsumerPriceLimits401EachWire (1.58s)
+=== RUN   TestA166ConsumerPriceLimitsBodyOwnership
+=== RUN   TestA166ConsumerPriceLimitsBodyOwnership/eof
+=== RUN   TestA166ConsumerPriceLimitsBodyOwnership/cancel
+--- PASS: TestA166ConsumerPriceLimitsBodyOwnership (2.60s)
+    --- PASS: TestA166ConsumerPriceLimitsBodyOwnership/eof (1.35s)
+    --- PASS: TestA166ConsumerPriceLimitsBodyOwnership/cancel (1.25s)
+=== RUN   TestA166ConsumerTokenSentThenAuxGETRefused
+--- PASS: TestA166ConsumerTokenSentThenAuxGETRefused (0.77s)
+=== RUN   TestA166ConsumerFinishFaultPreservesHTTP429
+--- PASS: TestA166ConsumerFinishFaultPreservesHTTP429 (0.78s)
+=== RUN   TestA166ConsumerToken429CrossFactorySnapshot
+--- PASS: TestA166ConsumerToken429CrossFactorySnapshot (0.40s)
+=== RUN   TestA166ConsumerPriceLimitsTwo401AdoptAndMint
+--- PASS: TestA166ConsumerPriceLimitsTwo401AdoptAndMint (1.53s)
+=== RUN   TestA166WiringCensusBaseline
+--- PASS: TestA166WiringCensusBaseline (0.27s)
+=== RUN   TestA166WiringCensusRejectsBypasses
+=== RUN   TestA166WiringCensusRejectsBypasses/root-error-to-off
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: cmd/tossctl/root_budget.go||newRootOfficialClient
+=== RUN   TestA166WiringCensusRejectsBypasses/required-raw-constructor
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/accountbudgetruntime/runtime_linux.go|Factory|NewClient
+=== RUN   TestA166WiringCensusRejectsBypasses/token-default-http
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/official/token.go|tokenManager|exchange
+=== RUN   TestA166WiringCensusRejectsBypasses/replay-raw-template
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/execgw/replay_transport.go||NewBudgetedHTTPReplay
+=== RUN   TestA166WiringCensusRejectsBypasses/probe-raw-send
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: tools/a087-market-sell-probe/main.go||execute
+=== RUN   TestA166WiringCensusRejectsBypasses/dead-guard-raw-return
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/accountbudgetruntime/runtime_linux.go|Factory|NewClient
+=== RUN   TestA166WiringCensusRejectsBypasses/new-unclassified-http
+    a166_wiring_census_test.go:344: source-copy mutation rejected: callsite inventory count changed: got 117 expected 116
+=== RUN   TestA166WiringCensusRejectsBypasses/escaped-http-method
+    a166_wiring_census_test.go:344: source-copy mutation rejected: unresolved function value: internal/official/token.go Do
+--- PASS: TestA166WiringCensusRejectsBypasses (1.01s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/root-error-to-off (0.02s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/required-raw-constructor (0.03s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/token-default-http (0.17s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/replay-raw-template (0.10s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/probe-raw-send (0.24s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/dead-guard-raw-return (0.03s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/new-unclassified-http (0.27s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/escaped-http-method (0.16s)
+=== RUN   TestA166WiringCensusRejectsDirectorySymlink
+--- PASS: TestA166WiringCensusRejectsDirectorySymlink (0.00s)
+=== RUN   TestA169FenceOfficial401TokenAndSticky
+--- PASS: TestA169FenceOfficial401TokenAndSticky (2.03s)
+=== RUN   TestA169FenceCrossProcessChild
+--- PASS: TestA169FenceCrossProcessChild (0.00s)
+=== RUN   TestA169FenceCrossProcessToken429
+--- PASS: TestA169FenceCrossProcessToken429 (0.79s)
+=== RUN   TestA169FenceOfficialCachedAdoptAndMint
+--- PASS: TestA169FenceOfficialCachedAdoptAndMint (1.66s)
+=== RUN   TestLaunchConfigMatrix
+--- PASS: TestLaunchConfigMatrix (0.00s)
+=== RUN   TestA166OfflineProvisionAndCheck
+--- PASS: TestA166OfflineProvisionAndCheck (0.02s)
+=== RUN   TestA166OfflineRefusesExistingAndNonempty
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/manifest
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/root
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/inside
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/root-symlink
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/parent-symlink
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/parent-mode
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/root-mode
+--- PASS: TestA166OfflineRefusesExistingAndNonempty (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/manifest (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/root (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/inside (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/root-symlink (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/parent-symlink (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/parent-mode (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/root-mode (0.00s)
+=== RUN   TestA166OfflineFaultBoundaries
+=== RUN   TestA166OfflineFaultBoundaries/write
+=== RUN   TestA166OfflineFaultBoundaries/file-sync
+=== RUN   TestA166OfflineFaultBoundaries/close
+=== RUN   TestA166OfflineFaultBoundaries/rename
+=== RUN   TestA166OfflineFaultBoundaries/dir-sync
+--- PASS: TestA166OfflineFaultBoundaries (0.10s)
+    --- PASS: TestA166OfflineFaultBoundaries/write (0.02s)
+    --- PASS: TestA166OfflineFaultBoundaries/file-sync (0.02s)
+    --- PASS: TestA166OfflineFaultBoundaries/close (0.02s)
+    --- PASS: TestA166OfflineFaultBoundaries/rename (0.02s)
+    --- PASS: TestA166OfflineFaultBoundaries/dir-sync (0.02s)
+=== RUN   TestA166OfflineRootReplacementAndCancel
+=== RUN   TestA166OfflineRootReplacementAndCancel/after-provision
+=== RUN   TestA166OfflineRootReplacementAndCancel/before-final-root
+--- PASS: TestA166OfflineRootReplacementAndCancel (0.05s)
+    --- PASS: TestA166OfflineRootReplacementAndCancel/after-provision (0.01s)
+    --- PASS: TestA166OfflineRootReplacementAndCancel/before-final-root (0.02s)
+=== RUN   TestA166OfflineRenameDoesNotReplace
+--- PASS: TestA166OfflineRenameDoesNotReplace (0.03s)
+=== RUN   TestA166OfflineCheckFaultAndDirty
+--- PASS: TestA166OfflineCheckFaultAndDirty (0.03s)
+=== RUN   TestA166OfflineCheckRejectsV1MissingAndCopiedEvent
+--- PASS: TestA166OfflineCheckRejectsV1MissingAndCopiedEvent (0.03s)
+=== RUN   TestA166OfflineCanceledBeforeProvision
+--- PASS: TestA166OfflineCanceledBeforeProvision (0.00s)
+=== RUN   TestA166OfflineNoClientOrHTTPCalls
+--- PASS: TestA166OfflineNoClientOrHTTPCalls (0.00s)
+=== RUN   TestA166OfflineOwnerAndFilesystemValidation
+--- PASS: TestA166OfflineOwnerAndFilesystemValidation (0.00s)
+=== RUN   TestA166OfflineInvalidScopeLeavesRootEmpty
+--- PASS: TestA166OfflineInvalidScopeLeavesRootEmpty (0.00s)
+=== RUN   TestRequiredMissingAndOffContradiction
+--- PASS: TestRequiredMissingAndOffContradiction (0.00s)
+=== RUN   TestFactoryReuseAndIdentity
+--- PASS: TestFactoryReuseAndIdentity (0.02s)
+=== RUN   TestIdentityMismatchFails
+--- PASS: TestIdentityMismatchFails (0.02s)
+=== RUN   TestManifestInvalid
+--- PASS: TestManifestInvalid (0.02s)
+=== RUN   TestEnvMode
+--- PASS: TestEnvMode (0.00s)
+=== RUN   TestChildOpen
+--- PASS: TestChildOpen (0.00s)
+=== RUN   TestSameManifestAcrossProcessesRejectsCopiedRoot
+--- PASS: TestSameManifestAcrossProcessesRejectsCopiedRoot (0.04s)
+=== RUN   TestManifestSymlinkModeAndInsideRoot
+--- PASS: TestManifestSymlinkModeAndInsideRoot (0.02s)
+=== RUN   TestFactoryCloseWithActiveOwner
+--- PASS: TestFactoryCloseWithActiveOwner (0.40s)
+=== RUN   TestTwoRealClientsShareGroup
+--- PASS: TestTwoRealClientsShareGroup (2.06s)
+=== RUN   TestContextAndRequiredCleanup
+--- PASS: TestContextAndRequiredCleanup (0.02s)
+=== RUN   TestParentSymlinkRefused
+--- PASS: TestParentSymlinkRefused (0.02s)
+=== RUN   TestOffFactoryDoesNotSupplyBudget
+--- PASS: TestOffFactoryDoesNotSupplyBudget (0.00s)
+=== RUN   TestFactoryCloseConcurrentCreation
+--- PASS: TestFactoryCloseConcurrentCreation (0.02s)
+=== RUN   TestIncompleteFactoryFailsClosed
+--- PASS: TestIncompleteFactoryFailsClosed (0.00s)
+=== RUN   TestA166RuntimeV2RejectsLegacyManifest
+--- PASS: TestA166RuntimeV2RejectsLegacyManifest (0.02s)
+=== RUN   TestA166RuntimeV2EventPinAndDirty
+--- PASS: TestA166RuntimeV2EventPinAndDirty (0.02s)
+=== RUN   TestA166RuntimeV2StrictEventShape
+--- PASS: TestA166RuntimeV2StrictEventShape (0.02s)
+=== RUN   TestA166RuntimeToken429PreservesPollCollector
+--- PASS: TestA166RuntimeToken429PreservesPollCollector (0.43s)
+=== RUN   TestA166RuntimeEventChild
+--- PASS: TestA166RuntimeEventChild (0.00s)
+=== RUN   TestA166RuntimeToken401AndCached
+--- PASS: TestA166RuntimeToken401AndCached (2.04s)
+=== RUN   TestA166RuntimeV2ReplacedEventLock
+--- PASS: TestA166RuntimeV2ReplacedEventLock (0.03s)
+=== RUN   TestA166RuntimeGet429BodyFailure
+--- PASS: TestA166RuntimeGet429BodyFailure (0.85s)
+=== RUN   TestA166RuntimeTwoClientsShareEvents
+--- PASS: TestA166RuntimeTwoClientsShareEvents (0.82s)
+=== RUN   TestA166RuntimeV2FailureClosesRootFD
+--- PASS: TestA166RuntimeV2FailureClosesRootFD (0.02s)
+=== RUN   TestA166RuntimeToken429FinishFaultPreservesStatus
+--- PASS: TestA166RuntimeToken429FinishFaultPreservesStatus (0.41s)
+=== RUN   TestA166RuntimeV2A112CloneRecordsPending
+--- PASS: TestA166RuntimeV2A112CloneRecordsPending (0.42s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	23.005s
+=== RUN   TestA166JEVRequiredMissingManifest
+--- PASS: TestA166JEVRequiredMissingManifest (0.00s)
+=== RUN   TestA166JEVOffLocalTokenFailure
+ledger /tmp/TestA166JEVOffLocalTokenFailure164962925/001/ledger · markets [KR] · model jev-1.13.0 · interval 10m0s · pool 30 random of top 100 within the order cap (/home/daniel/.config/tossctl/config.json) · finalists 10 by J1 after excluding J2 ≥ 0.5 · rule jev_screen10_of_random30_of_top100_le_order_cap · horizon 60m · restored 0 pending
+input profile compare · cohort 176853f9cf2443d80e198735f0ddc3be · model requests per candidate 2
+WTS read-only inputs (news feed [ALL_HIGHLIGHT SOARING_STOCK] · major indices · KR per-stock investor flows): session loaded
+--- PASS: TestA166JEVOffLocalTokenFailure (1.00s)
+=== RUN   TestA166JEVBusyAuxiliaryNoWire
+ledger /tmp/TestA166JEVBusyAuxiliaryNoWire1543759463/001/ledger · markets [KR] · model jev-1.13.0 · interval 10m0s · pool 30 random of top 100 within the order cap (/home/daniel/.config/tossctl/config.json) · finalists 10 by J1 after excluding J2 ≥ 0.5 · rule jev_screen10_of_random30_of_top100_le_order_cap · horizon 60m · restored 0 pending
+input profile compare · cohort 44a45052d2b363fa74157acf049795bf · model requests per candidate 2
+WTS read-only inputs (news feed [ALL_HIGHLIGHT SOARING_STOCK] · major indices · KR per-stock investor flows): session loaded
+--- PASS: TestA166JEVBusyAuxiliaryNoWire (1.43s)
+=== RUN   TestA166JEVCleanupError
+--- PASS: TestA166JEVCleanupError (0.00s)
+=== RUN   TestLedgerRowSchema
+=== PAUSE TestLedgerRowSchema
+=== RUN   TestLabelComputesRealizedReturn
+=== PAUSE TestLabelComputesRealizedReturn
+=== RUN   TestLabelGapReasons
+=== PAUSE TestLabelGapReasons
+=== RUN   TestRateLimitBackoffThenGapRow
+=== PAUSE TestRateLimitBackoffThenGapRow
+=== RUN   TestOrderbookGapIsCarriedOnTheJudgmentRow
+=== PAUSE TestOrderbookGapIsCarriedOnTheJudgmentRow
+=== RUN   TestJudgmentFailureLeavesAGapRow
+=== PAUSE TestJudgmentFailureLeavesAGapRow
+=== RUN   TestSessionBoundaries
+=== PAUSE TestSessionBoundaries
+=== RUN   TestRestorePendingAfterRestart
+=== PAUSE TestRestorePendingAfterRestart
+=== RUN   TestLedgerIsAppendOnlyAcrossOpens
+=== PAUSE TestLedgerIsAppendOnlyAcrossOpens
+=== RUN   TestIntradayFeaturesOnAHandComputedSession
+=== PAUSE TestIntradayFeaturesOnAHandComputedSession
+=== RUN   TestIntradayFeaturesBoundaries
+=== PAUSE TestIntradayFeaturesBoundaries
+=== RUN   TestDailyFeaturesOnHandComputedBars
+=== PAUSE TestDailyFeaturesOnHandComputedBars
+=== RUN   TestLimitsAndIndexFeatures
+=== PAUSE TestLimitsAndIndexFeatures
+=== RUN   TestAssembleStateCarriesEachNewInputOrNamesItsAbsence
+=== PAUSE TestAssembleStateCarriesEachNewInputOrNamesItsAbsence
+=== RUN   TestCycleReadsTheRicherStateWithinItsCallBudget
+=== PAUSE TestCycleReadsTheRicherStateWithinItsCallBudget
+=== RUN   TestInactiveListingSkipsPerSymbolReads
+=== PAUSE TestInactiveListingSkipsPerSymbolReads
+=== RUN   TestReadFailuresBecomeMissingInputsNotGaps
+=== PAUSE TestReadFailuresBecomeMissingInputsNotGaps
+=== RUN   TestReportSplitsLotsByStateRev
+=== PAUSE TestReportSplitsLotsByStateRev
+=== RUN   TestReportShowsCycleBudgetPerLot
+=== PAUSE TestReportShowsCycleBudgetPerLot
+=== RUN   TestMarketContextGapDoesNotMaskAMissingStockMeta
+=== PAUSE TestMarketContextGapDoesNotMaskAMissingStockMeta
+=== RUN   TestRunRefusesToStartWithoutTheAPIKey
+=== PAUSE TestRunRefusesToStartWithoutTheAPIKey
+=== RUN   TestJudgeSendsTheDocumentedRequestAndReadsNoul
+=== PAUSE TestJudgeSendsTheDocumentedRequestAndReadsNoul
+=== RUN   TestJudgeRetriesTransientStatusesThenGivesUp
+=== PAUSE TestJudgeRetriesTransientStatusesThenGivesUp
+=== RUN   TestJudgeDoesNotRetryClientErrors
+=== PAUSE TestJudgeDoesNotRetryClientErrors
+=== RUN   TestJudgeHonoursRetryAfterSeconds
+=== PAUSE TestJudgeHonoursRetryAfterSeconds
+=== RUN   TestJudgeRefusesContractViolations
+=== PAUSE TestJudgeRefusesContractViolations
+=== RUN   TestManualSessionBypassesCalendarKR
+=== PAUSE TestManualSessionBypassesCalendarKR
+=== RUN   TestManualSessionUsesEasternDateUS
+=== PAUSE TestManualSessionUsesEasternDateUS
+=== RUN   TestCalendarPathUnchangedWithoutOverride
+=== PAUSE TestCalendarPathUnchangedWithoutOverride
+=== RUN   TestParseManualWindowRejects
+=== PAUSE TestParseManualWindowRejects
+=== RUN   TestParseManualWindowAccepts
+=== PAUSE TestParseManualWindowAccepts
+=== RUN   TestCompareCycleSharesCollectionAndLabels
+--- PASS: TestCompareCycleSharesCollectionAndLabels (0.11s)
+=== RUN   TestCompareReportRejectsMismatchesAndDuplicates
+--- PASS: TestCompareReportRejectsMismatchesAndDuplicates (0.00s)
+=== RUN   TestBothProfileFailuresKeepSourceAndAreCounted
+--- PASS: TestBothProfileFailuresKeepSourceAndAreCounted (0.01s)
+=== RUN   TestCompareReportDistinguishesLabelsAndInvalidRows
+--- PASS: TestCompareReportDistinguishesLabelsAndInvalidRows (0.00s)
+=== RUN   TestOneProfileFailureKeepsOtherResult
+--- PASS: TestOneProfileFailureKeepsOtherResult (0.02s)
+=== RUN   TestComparisonRejectsTamperedStoredState
+--- PASS: TestComparisonRejectsTamperedStoredState (0.00s)
+=== RUN   TestDefaultAndExplicitCurrentProduceSameRows
+--- PASS: TestDefaultAndExplicitCurrentProduceSameRows (0.03s)
+=== RUN   TestInitialStateProjectionIsIndependent
+--- PASS: TestInitialStateProjectionIsIndependent (0.00s)
+=== RUN   TestProfileOutputGuard
+--- PASS: TestProfileOutputGuard (0.00s)
+=== RUN   TestProfileFlagsRejectedBeforeCredentials
+--- PASS: TestProfileFlagsRejectedBeforeCredentials (0.00s)
+=== RUN   TestProfileOutputGuardRejectsSymlinkAlias
+--- PASS: TestProfileOutputGuardRejectsSymlinkAlias (0.00s)
+=== RUN   TestSelectionLotSeparatesProfiles
+--- PASS: TestSelectionLotSeparatesProfiles (0.00s)
+=== RUN   TestProfileOutputGuardRejectsLegacyLedger
+--- PASS: TestProfileOutputGuardRejectsLegacyLedger (0.00s)
+=== RUN   TestProfileOutputGuardRejectsDanglingSymlink
+--- PASS: TestProfileOutputGuardRejectsDanglingSymlink (0.00s)
+=== RUN   TestAutomaticProfileOutputRouting
+--- PASS: TestAutomaticProfileOutputRouting (0.00s)
+=== RUN   TestManualSessionExperimentCanRestart
+--- PASS: TestManualSessionExperimentCanRestart (0.00s)
+=== RUN   TestReportHoldsBinsBelowThirtySamples
+=== PAUSE TestReportHoldsBinsBelowThirtySamples
+=== RUN   TestReportJudgesBinsAtThirtySamples
+=== PAUSE TestReportJudgesBinsAtThirtySamples
+=== RUN   TestReportUsesTheQuestionsHitRuleAndExcludesGaps
+=== PAUSE TestReportUsesTheQuestionsHitRuleAndExcludesGaps
+=== RUN   TestReportStatesTheTwoDayLimitAndBinEdges
+=== PAUSE TestReportStatesTheTwoDayLimitAndBinEdges
+=== RUN   TestReportCommandReadsARealLedger
+=== PAUSE TestReportCommandReadsARealLedger
+=== RUN   TestReportSeparatesSelectionLots
+=== PAUSE TestReportSeparatesSelectionLots
+=== RUN   TestReportComparesFinalistsWithTheControlGroup
+=== PAUSE TestReportComparesFinalistsWithTheControlGroup
+=== RUN   TestReportLegacyLotsHaveNoScreenComparison
+=== PAUSE TestReportLegacyLotsHaveNoScreenComparison
+=== RUN   TestJ1J2AreByteIdenticalAndPinned
+=== PAUSE TestJ1J2AreByteIdenticalAndPinned
+=== RUN   TestS4QuestionsRideInTheSameRequest
+=== PAUSE TestS4QuestionsRideInTheSameRequest
+=== RUN   TestScreeningIgnoresJ3J4
+=== PAUSE TestScreeningIgnoresJ3J4
+=== RUN   TestS4HitRuleBoundaries
+=== PAUSE TestS4HitRuleBoundaries
+=== RUN   TestLabelerStoresAnExactOnePercentMoveAsTheBoundary
+=== PAUSE TestLabelerStoresAnExactOnePercentMoveAsTheBoundary
+=== RUN   TestSessionBucketBoundaries
+=== PAUSE TestSessionBucketBoundaries
+=== RUN   TestPreS4LedgerStillReportsTheSameAndAddsTimeOfDay
+=== PAUSE TestPreS4LedgerStillReportsTheSameAndAddsTimeOfDay
+=== RUN   TestUnknownQuestionGetsNoTimeOfDayTable
+=== PAUSE TestUnknownQuestionGetsNoTimeOfDayTable
+=== RUN   TestTimeOfDayTableJudgesAtThirtyLabels
+=== PAUSE TestTimeOfDayTableJudgesAtThirtyLabels
+=== RUN   TestScreenFinalistsRules
+=== PAUSE TestScreenFinalistsRules
+=== RUN   TestScreenQuestionsAreAsked
+=== PAUSE TestScreenQuestionsAreAsked
+=== RUN   TestCycleJudgesTheWholePoolAndFlagsOnlyTheFinalists
+=== PAUSE TestCycleJudgesTheWholePoolAndFlagsOnlyTheFinalists
+=== RUN   TestCycleRecordsFewerFinalistsWhenFewSurvive
+=== PAUSE TestCycleRecordsFewerFinalistsWhenFewSurvive
+=== RUN   TestPoolSamplingDrawsThePoolNotTheTop
+=== PAUSE TestPoolSamplingDrawsThePoolNotTheTop
+=== RUN   TestRunFlagsValidatePoolAgainstTop
+=== PAUSE TestRunFlagsValidatePoolAgainstTop
+=== RUN   TestSelectionCapBoundaryAndUnknownPrices
+=== PAUSE TestSelectionCapBoundaryAndUnknownPrices
+=== RUN   TestSelectionConvertsUSPricesWithTheOfficialRate
+=== PAUSE TestSelectionConvertsUSPricesWithTheOfficialRate
+=== RUN   TestSelectionSeedReproduces
+=== PAUSE TestSelectionSeedReproduces
+=== RUN   TestSelectionFXFailureLeavesAGapAndNoJudgment
+=== PAUSE TestSelectionFXFailureLeavesAGapAndNoJudgment
+=== RUN   TestSelectionNeedsTheConfigCap
+=== PAUSE TestSelectionNeedsTheConfigCap
+=== RUN   TestSelectionWithNoCandidateLeavesAGap
+=== PAUSE TestSelectionWithNoCandidateLeavesAGap
+=== RUN   TestPublicStateKeySetIsPinned
+=== PAUSE TestPublicStateKeySetIsPinned
+=== RUN   TestStateGuardRefusesAccountShapedKeys
+=== PAUSE TestStateGuardRefusesAccountShapedKeys
+=== RUN   TestAccountFieldsInBrokerResponsesNeverReachTypeSafe
+=== PAUSE TestAccountFieldsInBrokerResponsesNeverReachTypeSafe
+=== RUN   TestNewsAbsenceIsExplicitInStateAndRow
+=== PAUSE TestNewsAbsenceIsExplicitInStateAndRow
+=== RUN   TestAssembleStateNamesMissingInputs
+=== PAUSE TestAssembleStateNamesMissingInputs
+=== RUN   TestMarketSourceIsTheReadOnlyGets
+=== PAUSE TestMarketSourceIsTheReadOnlyGets
+=== RUN   TestNoMutatingOrAccountSurfaceIsNamed
+=== PAUSE TestNoMutatingOrAccountSurfaceIsNamed
+=== RUN   TestOutboundBytesPassTheStateGuard
+=== PAUSE TestOutboundBytesPassTheStateGuard
+=== RUN   TestImportsStayInsideTheAllowlist
+=== PAUSE TestImportsStayInsideTheAllowlist
+=== RUN   TestWTSSourceIsTheThreeReads
+=== PAUSE TestWTSSourceIsTheThreeReads
+=== RUN   TestNoPersonalizedNewsScopeInSource
+=== PAUSE TestNoPersonalizedNewsScopeInSource
+=== RUN   TestWTSInputsReachTheStateWithinTheirBudget
+=== PAUSE TestWTSInputsReachTheStateWithinTheirBudget
+=== RUN   TestUSStateCarriesMajorIndicesAndNoStockFlow
+=== PAUSE TestUSStateCarriesMajorIndicesAndNoStockFlow
+=== RUN   TestWTSFailuresBecomeNamedGapsNotFabrications
+=== PAUSE TestWTSFailuresBecomeNamedGapsNotFabrications
+=== RUN   TestWTSSessionRejectionStopsTheCycleWTSReads
+=== PAUSE TestWTSSessionRejectionStopsTheCycleWTSReads
+=== RUN   TestNoSessionStillReadsWhatNeedsNoSession
+=== PAUSE TestNoSessionStillReadsWhatNeedsNoSession
+=== RUN   TestWTSAccountFieldsAndSessionNeverLeave
+=== PAUSE TestWTSAccountFieldsAndSessionNeverLeave
+=== RUN   TestPriorDayFlowsAndClip
+=== PAUSE TestPriorDayFlowsAndClip
+=== RUN   TestReportShowsWTSRequestsInTheCycleBudget
+=== PAUSE TestReportShowsWTSRequestsInTheCycleBudget
+=== RUN   TestFeedWithNoParseableTimeIsAGapNotEmptyNews
+=== PAUSE TestFeedWithNoParseableTimeIsAGapNotEmptyNews
+=== RUN   TestEmptyFeedAndEmptyFlowsAreGaps
+=== PAUSE TestEmptyFeedAndEmptyFlowsAreGaps
+=== RUN   TestConsecutiveServerFailuresStopTheCycleFlowReads
+=== PAUSE TestConsecutiveServerFailuresStopTheCycleFlowReads
+=== RUN   TestHeadlinesApplyTheWindowAtTheirOwnJudgment
+=== PAUSE TestHeadlinesApplyTheWindowAtTheirOwnJudgment
+=== RUN   TestFlowFailureCountIsConsecutive
+=== PAUSE TestFlowFailureCountIsConsecutive
+=== CONT  TestLedgerRowSchema
+=== CONT  TestS4HitRuleBoundaries
+=== CONT  TestJudgeSendsTheDocumentedRequestAndReadsNoul
+=== CONT  TestNewsAbsenceIsExplicitInStateAndRow
+=== CONT  TestRunRefusesToStartWithoutTheAPIKey
+=== CONT  TestSessionBoundaries
+=== CONT  TestReportShowsWTSRequestsInTheCycleBudget
+=== CONT  TestLedgerIsAppendOnlyAcrossOpens
+=== CONT  TestFeedWithNoParseableTimeIsAGapNotEmptyNews
+=== CONT  TestNoSessionStillReadsWhatNeedsNoSession
+=== CONT  TestFlowFailureCountIsConsecutive
+=== CONT  TestRateLimitBackoffThenGapRow
+=== CONT  TestJudgmentFailureLeavesAGapRow
+=== CONT  TestWTSSessionRejectionStopsTheCycleWTSReads
+--- PASS: TestReportShowsWTSRequestsInTheCycleBudget (0.00s)
+=== RUN   TestSessionBoundaries/closed
+=== CONT  TestIntradayFeaturesBoundaries
+=== RUN   TestIntradayFeaturesBoundaries/empty
+=== CONT  TestIntradayFeaturesOnAHandComputedSession
+=== CONT  TestPriorDayFlowsAndClip
+=== CONT  TestWTSAccountFieldsAndSessionNeverLeave
+=== CONT  TestRestorePendingAfterRestart
+=== CONT  TestOrderbookGapIsCarriedOnTheJudgmentRow
+=== CONT  TestDailyFeaturesOnHandComputedBars
+--- PASS: TestS4HitRuleBoundaries (0.00s)
+=== CONT  TestMarketContextGapDoesNotMaskAMissingStockMeta
+--- PASS: TestDailyFeaturesOnHandComputedBars (0.00s)
+=== CONT  TestReportShowsCycleBudgetPerLot
+=== PAUSE TestSessionBoundaries/closed
+=== RUN   TestSessionBoundaries/before_open_without_wait
+=== PAUSE TestSessionBoundaries/before_open_without_wait
+--- PASS: TestReportShowsCycleBudgetPerLot (0.00s)
+=== RUN   TestSessionBoundaries/holiday
+=== CONT  TestReportSplitsLotsByStateRev
+=== PAUSE TestSessionBoundaries/holiday
+=== RUN   TestSessionBoundaries/sampling_window
+=== PAUSE TestSessionBoundaries/sampling_window
+--- PASS: TestPriorDayFlowsAndClip (0.00s)
+=== CONT  TestInactiveListingSkipsPerSymbolReads
+=== CONT  TestReadFailuresBecomeMissingInputsNotGaps
+=== RUN   TestIntradayFeaturesBoundaries/single_bar
+--- PASS: TestReportSplitsLotsByStateRev (0.00s)
+=== CONT  TestCycleReadsTheRicherStateWithinItsCallBudget
+--- PASS: TestIntradayFeaturesOnAHandComputedSession (0.00s)
+=== CONT  TestAssembleStateCarriesEachNewInputOrNamesItsAbsence
+=== RUN   TestIntradayFeaturesBoundaries/zero_volume
+--- PASS: TestFeedWithNoParseableTimeIsAGapNotEmptyNews (0.00s)
+=== CONT  TestLimitsAndIndexFeatures
+--- PASS: TestLimitsAndIndexFeatures (0.00s)
+=== CONT  TestHeadlinesApplyTheWindowAtTheirOwnJudgment
+=== RUN   TestIntradayFeaturesBoundaries/lookback_tolerance_5_minutes
+--- PASS: TestIntradayFeaturesBoundaries (0.01s)
+    --- PASS: TestIntradayFeaturesBoundaries/empty (0.00s)
+    --- PASS: TestIntradayFeaturesBoundaries/single_bar (0.00s)
+    --- PASS: TestIntradayFeaturesBoundaries/zero_volume (0.00s)
+    --- PASS: TestIntradayFeaturesBoundaries/lookback_tolerance_5_minutes (0.00s)
+=== CONT  TestConsecutiveServerFailuresStopTheCycleFlowReads
+--- PASS: TestLedgerIsAppendOnlyAcrossOpens (0.01s)
+=== CONT  TestEmptyFeedAndEmptyFlowsAreGaps
+--- PASS: TestJudgeSendsTheDocumentedRequestAndReadsNoul (0.01s)
+=== CONT  TestRunFlagsValidatePoolAgainstTop
+--- PASS: TestEmptyFeedAndEmptyFlowsAreGaps (0.00s)
+=== CONT  TestWTSFailuresBecomeNamedGapsNotFabrications
+--- PASS: TestFlowFailureCountIsConsecutive (0.01s)
+=== CONT  TestUSStateCarriesMajorIndicesAndNoStockFlow
+--- PASS: TestRunRefusesToStartWithoutTheAPIKey (0.01s)
+=== CONT  TestWTSInputsReachTheStateWithinTheirBudget
+--- PASS: TestAssembleStateCarriesEachNewInputOrNamesItsAbsence (0.01s)
+=== CONT  TestNoPersonalizedNewsScopeInSource
+--- PASS: TestHeadlinesApplyTheWindowAtTheirOwnJudgment (0.01s)
+=== CONT  TestAccountFieldsInBrokerResponsesNeverReachTypeSafe
+--- PASS: TestRunFlagsValidatePoolAgainstTop (0.00s)
+=== CONT  TestWTSSourceIsTheThreeReads
+--- PASS: TestNoPersonalizedNewsScopeInSource (0.01s)
+=== CONT  TestStateGuardRefusesAccountShapedKeys
+--- PASS: TestConsecutiveServerFailuresStopTheCycleFlowReads (0.02s)
+=== CONT  TestImportsStayInsideTheAllowlist
+--- PASS: TestStateGuardRefusesAccountShapedKeys (0.00s)
+=== CONT  TestPublicStateKeySetIsPinned
+--- PASS: TestPublicStateKeySetIsPinned (0.00s)
+=== CONT  TestOutboundBytesPassTheStateGuard
+--- PASS: TestImportsStayInsideTheAllowlist (0.03s)
+=== CONT  TestSelectionWithNoCandidateLeavesAGap
+--- PASS: TestOutboundBytesPassTheStateGuard (0.03s)
+=== CONT  TestSelectionNeedsTheConfigCap
+=== RUN   TestSelectionNeedsTheConfigCap/cap_zero
+=== PAUSE TestSelectionNeedsTheConfigCap/cap_zero
+=== RUN   TestSelectionNeedsTheConfigCap/currency_unknown
+=== PAUSE TestSelectionNeedsTheConfigCap/currency_unknown
+=== RUN   TestSelectionNeedsTheConfigCap/no_source
+=== PAUSE TestSelectionNeedsTheConfigCap/no_source
+=== RUN   TestSelectionNeedsTheConfigCap/config_missing
+=== PAUSE TestSelectionNeedsTheConfigCap/config_missing
+=== CONT  TestSelectionFXFailureLeavesAGapAndNoJudgment
+=== RUN   TestSelectionFXFailureLeavesAGapAndNoJudgment/read_failed
+=== PAUSE TestSelectionFXFailureLeavesAGapAndNoJudgment/read_failed
+=== RUN   TestSelectionFXFailureLeavesAGapAndNoJudgment/pair_reversed
+=== PAUSE TestSelectionFXFailureLeavesAGapAndNoJudgment/pair_reversed
+=== RUN   TestSelectionFXFailureLeavesAGapAndNoJudgment/zero_rate
+=== PAUSE TestSelectionFXFailureLeavesAGapAndNoJudgment/zero_rate
+=== CONT  TestSelectionSeedReproduces
+--- PASS: TestSelectionWithNoCandidateLeavesAGap (0.01s)
+=== CONT  TestSelectionConvertsUSPricesWithTheOfficialRate
+--- PASS: TestMarketContextGapDoesNotMaskAMissingStockMeta (0.07s)
+=== CONT  TestSelectionCapBoundaryAndUnknownPrices
+--- PASS: TestJudgmentFailureLeavesAGapRow (0.08s)
+=== CONT  TestNoMutatingOrAccountSurfaceIsNamed
+--- PASS: TestReadFailuresBecomeMissingInputsNotGaps (0.08s)
+=== CONT  TestMarketSourceIsTheReadOnlyGets
+--- PASS: TestUSStateCarriesMajorIndicesAndNoStockFlow (0.08s)
+=== CONT  TestAssembleStateNamesMissingInputs
+--- PASS: TestAssembleStateNamesMissingInputs (0.00s)
+=== CONT  TestReportHoldsBinsBelowThirtySamples
+--- PASS: TestReportHoldsBinsBelowThirtySamples (0.00s)
+=== CONT  TestPoolSamplingDrawsThePoolNotTheTop
+--- PASS: TestNoMutatingOrAccountSurfaceIsNamed (0.01s)
+=== CONT  TestCycleRecordsFewerFinalistsWhenFewSurvive
+--- PASS: TestMarketSourceIsTheReadOnlyGets (0.01s)
+=== CONT  TestCycleJudgesTheWholePoolAndFlagsOnlyTheFinalists
+--- PASS: TestWTSSourceIsTheThreeReads (0.09s)
+=== CONT  TestScreenQuestionsAreAsked
+--- PASS: TestScreenQuestionsAreAsked (0.00s)
+=== CONT  TestScreenFinalistsRules
+=== RUN   TestScreenFinalistsRules/red_flag_boundary
+=== PAUSE TestScreenFinalistsRules/red_flag_boundary
+=== RUN   TestScreenFinalistsRules/J1_descending_with_a_cut_at_K
+=== PAUSE TestScreenFinalistsRules/J1_descending_with_a_cut_at_K
+=== RUN   TestScreenFinalistsRules/tie_goes_to_the_earlier_ranking
+=== PAUSE TestScreenFinalistsRules/tie_goes_to_the_earlier_ranking
+=== RUN   TestScreenFinalistsRules/fewer_survivors_than_K
+=== PAUSE TestScreenFinalistsRules/fewer_survivors_than_K
+=== RUN   TestScreenFinalistsRules/empty
+=== PAUSE TestScreenFinalistsRules/empty
+=== CONT  TestTimeOfDayTableJudgesAtThirtyLabels
+--- PASS: TestTimeOfDayTableJudgesAtThirtyLabels (0.00s)
+=== CONT  TestUnknownQuestionGetsNoTimeOfDayTable
+--- PASS: TestUnknownQuestionGetsNoTimeOfDayTable (0.00s)
+=== CONT  TestPreS4LedgerStillReportsTheSameAndAddsTimeOfDay
+--- PASS: TestPreS4LedgerStillReportsTheSameAndAddsTimeOfDay (0.00s)
+=== CONT  TestSessionBucketBoundaries
+--- PASS: TestSessionBucketBoundaries (0.00s)
+=== CONT  TestLabelerStoresAnExactOnePercentMoveAsTheBoundary
+--- PASS: TestInactiveListingSkipsPerSymbolReads (0.11s)
+=== CONT  TestScreeningIgnoresJ3J4
+--- PASS: TestNewsAbsenceIsExplicitInStateAndRow (0.11s)
+=== CONT  TestS4QuestionsRideInTheSameRequest
+--- PASS: TestAccountFieldsInBrokerResponsesNeverReachTypeSafe (0.10s)
+=== CONT  TestJ1J2AreByteIdenticalAndPinned
+--- PASS: TestJ1J2AreByteIdenticalAndPinned (0.00s)
+=== CONT  TestReportLegacyLotsHaveNoScreenComparison
+--- PASS: TestReportLegacyLotsHaveNoScreenComparison (0.00s)
+=== CONT  TestReportStatesTheTwoDayLimitAndBinEdges
+--- PASS: TestReportStatesTheTwoDayLimitAndBinEdges (0.00s)
+=== CONT  TestReportCommandReadsARealLedger
+--- PASS: TestLabelerStoresAnExactOnePercentMoveAsTheBoundary (0.02s)
+=== CONT  TestParseManualWindowAccepts
+--- PASS: TestParseManualWindowAccepts (0.00s)
+=== CONT  TestReportComparesFinalistsWithTheControlGroup
+--- PASS: TestOrderbookGapIsCarriedOnTheJudgmentRow (0.12s)
+=== CONT  TestReportUsesTheQuestionsHitRuleAndExcludesGaps
+--- PASS: TestReportUsesTheQuestionsHitRuleAndExcludesGaps (0.00s)
+=== CONT  TestParseManualWindowRejects
+--- PASS: TestReportComparesFinalistsWithTheControlGroup (0.00s)
+=== CONT  TestReportSeparatesSelectionLots
+=== CONT  TestCalendarPathUnchangedWithoutOverride
+--- PASS: TestParseManualWindowRejects (0.00s)
+--- PASS: TestReportSeparatesSelectionLots (0.00s)
+=== CONT  TestManualSessionUsesEasternDateUS
+--- PASS: TestCalendarPathUnchangedWithoutOverride (0.00s)
+=== CONT  TestLabelComputesRealizedReturn
+--- PASS: TestNoSessionStillReadsWhatNeedsNoSession (0.13s)
+=== CONT  TestManualSessionBypassesCalendarKR
+--- PASS: TestWTSAccountFieldsAndSessionNeverLeave (0.13s)
+=== CONT  TestReportJudgesBinsAtThirtySamples
+--- PASS: TestReportJudgesBinsAtThirtySamples (0.00s)
+=== CONT  TestJudgeRefusesContractViolations
+--- PASS: TestManualSessionUsesEasternDateUS (0.01s)
+=== CONT  TestJudgeHonoursRetryAfterSeconds
+--- PASS: TestJudgeHonoursRetryAfterSeconds (0.00s)
+=== CONT  TestJudgeDoesNotRetryClientErrors
+--- PASS: TestJudgeDoesNotRetryClientErrors (0.00s)
+=== CONT  TestJudgeRetriesTransientStatusesThenGivesUp
+--- PASS: TestJudgeRefusesContractViolations (0.00s)
+=== CONT  TestLabelGapReasons
+=== RUN   TestLabelGapReasons/price_missing
+=== PAUSE TestLabelGapReasons/price_missing
+=== RUN   TestLabelGapReasons/rate_limit_gave_up
+=== PAUSE TestLabelGapReasons/rate_limit_gave_up
+=== RUN   TestLabelGapReasons/missed_due_window
+=== PAUSE TestLabelGapReasons/missed_due_window
+=== CONT  TestSessionBoundaries/closed
+--- PASS: TestSelectionConvertsUSPricesWithTheOfficialRate (0.07s)
+=== CONT  TestSessionBoundaries/holiday
+=== CONT  TestSessionBoundaries/sampling_window
+--- PASS: TestRateLimitBackoffThenGapRow (0.14s)
+=== CONT  TestSessionBoundaries/before_open_without_wait
+--- PASS: TestJudgeRetriesTransientStatusesThenGivesUp (0.00s)
+=== CONT  TestSelectionNeedsTheConfigCap/cap_zero
+=== CONT  TestSelectionNeedsTheConfigCap/no_source
+--- PASS: TestManualSessionBypassesCalendarKR (0.01s)
+=== CONT  TestSelectionNeedsTheConfigCap/config_missing
+=== CONT  TestSelectionNeedsTheConfigCap/currency_unknown
+--- PASS: TestSelectionCapBoundaryAndUnknownPrices (0.07s)
+=== CONT  TestSelectionFXFailureLeavesAGapAndNoJudgment/read_failed
+=== CONT  TestSelectionFXFailureLeavesAGapAndNoJudgment/zero_rate
+=== CONT  TestSelectionFXFailureLeavesAGapAndNoJudgment/pair_reversed
+=== CONT  TestScreenFinalistsRules/red_flag_boundary
+=== CONT  TestScreenFinalistsRules/fewer_survivors_than_K
+=== CONT  TestScreenFinalistsRules/empty
+=== CONT  TestScreenFinalistsRules/tie_goes_to_the_earlier_ranking
+=== CONT  TestScreenFinalistsRules/J1_descending_with_a_cut_at_K
+--- PASS: TestScreenFinalistsRules (0.00s)
+    --- PASS: TestScreenFinalistsRules/red_flag_boundary (0.00s)
+    --- PASS: TestScreenFinalistsRules/fewer_survivors_than_K (0.00s)
+    --- PASS: TestScreenFinalistsRules/empty (0.00s)
+    --- PASS: TestScreenFinalistsRules/tie_goes_to_the_earlier_ranking (0.00s)
+    --- PASS: TestScreenFinalistsRules/J1_descending_with_a_cut_at_K (0.00s)
+=== CONT  TestLabelGapReasons/missed_due_window
+=== CONT  TestLabelGapReasons/price_missing
+--- PASS: TestSelectionNeedsTheConfigCap (0.00s)
+    --- PASS: TestSelectionNeedsTheConfigCap/cap_zero (0.00s)
+    --- PASS: TestSelectionNeedsTheConfigCap/config_missing (0.01s)
+    --- PASS: TestSelectionNeedsTheConfigCap/currency_unknown (0.01s)
+    --- PASS: TestSelectionNeedsTheConfigCap/no_source (0.01s)
+=== CONT  TestLabelGapReasons/rate_limit_gave_up
+--- PASS: TestSelectionFXFailureLeavesAGapAndNoJudgment (0.00s)
+    --- PASS: TestSelectionFXFailureLeavesAGapAndNoJudgment/read_failed (0.01s)
+    --- PASS: TestSelectionFXFailureLeavesAGapAndNoJudgment/zero_rate (0.01s)
+    --- PASS: TestSelectionFXFailureLeavesAGapAndNoJudgment/pair_reversed (0.01s)
+--- PASS: TestRestorePendingAfterRestart (0.17s)
+--- PASS: TestLedgerRowSchema (0.17s)
+--- PASS: TestWTSSessionRejectionStopsTheCycleWTSReads (0.18s)
+--- PASS: TestS4QuestionsRideInTheSameRequest (0.07s)
+--- PASS: TestWTSFailuresBecomeNamedGapsNotFabrications (0.18s)
+--- PASS: TestWTSInputsReachTheStateWithinTheirBudget (0.19s)
+--- PASS: TestCycleReadsTheRicherStateWithinItsCallBudget (0.22s)
+--- PASS: TestReportCommandReadsARealLedger (0.12s)
+--- PASS: TestLabelComputesRealizedReturn (0.11s)
+--- PASS: TestLabelGapReasons (0.00s)
+    --- PASS: TestLabelGapReasons/rate_limit_gave_up (0.10s)
+    --- PASS: TestLabelGapReasons/price_missing (0.11s)
+    --- PASS: TestLabelGapReasons/missed_due_window (0.11s)
+--- PASS: TestCycleRecordsFewerFinalistsWhenFewSurvive (0.30s)
+--- PASS: TestSelectionSeedReproduces (0.49s)
+--- PASS: TestScreeningIgnoresJ3J4 (0.72s)
+--- PASS: TestPoolSamplingDrawsThePoolNotTheTop (0.90s)
+--- PASS: TestCycleJudgesTheWholePoolAndFlagsOnlyTheFinalists (1.30s)
+--- PASS: TestSessionBoundaries (0.00s)
+    --- PASS: TestSessionBoundaries/closed (0.00s)
+    --- PASS: TestSessionBoundaries/holiday (0.00s)
+    --- PASS: TestSessionBoundaries/before_open_without_wait (0.00s)
+    --- PASS: TestSessionBoundaries/sampling_window (1.65s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a128-jev-shadow-probe	4.402s
+=== RUN   TestA166BreakoutRequiredMissingManifest
+--- PASS: TestA166BreakoutRequiredMissingManifest (0.00s)
+=== RUN   TestA166BreakoutOffLocalTokenFailure
+--- PASS: TestA166BreakoutOffLocalTokenFailure (0.28s)
+=== RUN   TestA166BreakoutBusyAuxiliaryNoWire
+--- PASS: TestA166BreakoutBusyAuxiliaryNoWire (0.67s)
+=== RUN   TestA166BreakoutCleanupError
+--- PASS: TestA166BreakoutCleanupError (0.00s)
+=== RUN   TestA169SelectionFiltersAndReceipt
+--- PASS: TestA169SelectionFiltersAndReceipt (0.00s)
+=== RUN   TestA169SelectionMetadataAndSize
+--- PASS: TestA169SelectionMetadataAndSize (0.00s)
+=== RUN   TestA169SelectionRejectsInvalidMetadata
+=== RUN   TestA169SelectionRejectsInvalidMetadata/cohort
+=== RUN   TestA169SelectionRejectsInvalidMetadata/type
+=== RUN   TestA169SelectionRejectsInvalidMetadata/count
+=== RUN   TestA169SelectionRejectsInvalidMetadata/caution
+=== RUN   TestA169SelectionRejectsInvalidMetadata/n
+=== RUN   TestA169SelectionRejectsInvalidMetadata/capnan
+=== RUN   TestA169SelectionRejectsInvalidMetadata/capinf
+=== RUN   TestA169SelectionRejectsInvalidMetadata/caplow
+=== RUN   TestA169SelectionRejectsInvalidMetadata/market
+=== RUN   TestA169SelectionRejectsInvalidMetadata/duration
+=== RUN   TestA169SelectionRejectsInvalidMetadata/time
+--- PASS: TestA169SelectionRejectsInvalidMetadata (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/cohort (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/type (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/count (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/caution (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/n (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/capnan (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/capinf (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/caplow (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/market (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/duration (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/time (0.00s)
+=== RUN   TestA169SecurityTypeExact
+--- PASS: TestA169SecurityTypeExact (0.00s)
+=== RUN   TestA169SelectionRejectsRanksDuplicatesAndOver100
+=== RUN   TestA169SelectionRejectsRanksDuplicatesAndOver100/duplicate-symbol
+=== RUN   TestA169SelectionRejectsRanksDuplicatesAndOver100/zero-rank
+=== RUN   TestA169SelectionRejectsRanksDuplicatesAndOver100/rank-tie
+=== RUN   TestA169SelectionRejectsRanksDuplicatesAndOver100/rank-backward
+--- PASS: TestA169SelectionRejectsRanksDuplicatesAndOver100 (0.00s)
+    --- PASS: TestA169SelectionRejectsRanksDuplicatesAndOver100/duplicate-symbol (0.00s)
+    --- PASS: TestA169SelectionRejectsRanksDuplicatesAndOver100/zero-rank (0.00s)
+    --- PASS: TestA169SelectionRejectsRanksDuplicatesAndOver100/rank-tie (0.00s)
+    --- PASS: TestA169SelectionRejectsRanksDuplicatesAndOver100/rank-backward (0.00s)
+=== RUN   TestA169SelectionNonFinitePrices
+--- PASS: TestA169SelectionNonFinitePrices (0.00s)
+=== RUN   TestA169SecurityTypeOpenAPIEnum
+--- PASS: TestA169SecurityTypeOpenAPIEnum (0.00s)
+=== RUN   TestA169U2ScoreBoundaries
+=== RUN   TestA169U2ScoreBoundaries/envelope
+=== RUN   TestA169U2ScoreBoundaries/numerator
+=== RUN   TestA169U2ScoreBoundaries/history
+=== RUN   TestA169U2ScoreBoundaries/at_open
+=== RUN   TestA169U2ScoreBoundaries/fraction
+=== RUN   TestA169U2ScoreBoundaries/excess
+--- PASS: TestA169U2ScoreBoundaries (0.00s)
+    --- PASS: TestA169U2ScoreBoundaries/envelope (0.00s)
+    --- PASS: TestA169U2ScoreBoundaries/numerator (0.00s)
+    --- PASS: TestA169U2ScoreBoundaries/history (0.00s)
+    --- PASS: TestA169U2ScoreBoundaries/at_open (0.00s)
+    --- PASS: TestA169U2ScoreBoundaries/fraction (0.00s)
+    --- PASS: TestA169U2ScoreBoundaries/excess (0.00s)
+=== RUN   TestA169U2ScoreHistoryAndFloors
+--- PASS: TestA169U2ScoreHistoryAndFloors (0.00s)
+=== RUN   TestA169U2ScoreValidationAndOverflow
+=== RUN   TestA169U2ScoreValidationAndOverflow/zero_day
+=== RUN   TestA169U2ScoreValidationAndOverflow/other_open
+=== RUN   TestA169U2ScoreValidationAndOverflow/other_close
+=== RUN   TestA169U2ScoreValidationAndOverflow/reverse
+=== RUN   TestA169U2ScoreValidationAndOverflow/after
+=== RUN   TestA169U2ScoreValidationAndOverflow/too_many
+--- PASS: TestA169U2ScoreValidationAndOverflow (0.00s)
+    --- PASS: TestA169U2ScoreValidationAndOverflow/zero_day (0.00s)
+    --- PASS: TestA169U2ScoreValidationAndOverflow/other_open (0.00s)
+    --- PASS: TestA169U2ScoreValidationAndOverflow/other_close (0.00s)
+    --- PASS: TestA169U2ScoreValidationAndOverflow/reverse (0.00s)
+    --- PASS: TestA169U2ScoreValidationAndOverflow/after (0.00s)
+    --- PASS: TestA169U2ScoreValidationAndOverflow/too_many (0.00s)
+=== RUN   TestA169U2ScoreExactLimitAndLatestTwenty
+--- PASS: TestA169U2ScoreExactLimitAndLatestTwenty (0.00s)
+=== RUN   TestA169U2UnionAnyPassAndVolume
+--- PASS: TestA169U2UnionAnyPassAndVolume (0.00s)
+=== RUN   TestA169U2UnionFullRowsAndShort
+--- PASS: TestA169U2UnionFullRowsAndShort (0.00s)
+=== RUN   TestA169U2UnionMissingTimeTieAndCopy
+--- PASS: TestA169U2UnionMissingTimeTieAndCopy (0.00s)
+=== RUN   TestA169U2UnionTieAndDeterminism
+--- PASS: TestA169U2UnionTieAndDeterminism (0.00s)
+=== RUN   TestA169U2UnionZeroAndInvalidReceipt
+--- PASS: TestA169U2UnionZeroAndInvalidReceipt (0.00s)
+=== RUN   TestKRTickMatchesTheKRXScheduleUsedElsewhere
+=== PAUSE TestKRTickMatchesTheKRXScheduleUsedElsewhere
+=== RUN   TestCostRateIsTheKRRoundTripInPPM
+=== PAUSE TestCostRateIsTheKRRoundTripInPPM
+=== RUN   TestCostRateDropsFloatNoiseButKeepsRealFractions
+=== PAUSE TestCostRateDropsFloatNoiseButKeepsRealFractions
+=== RUN   TestTheTickIsTheOpeningRangeResistanceBand
+=== PAUSE TestTheTickIsTheOpeningRangeResistanceBand
+=== RUN   TestPlanSizingBuildsTheTargetFromTheNetRR
+=== PAUSE TestPlanSizingBuildsTheTargetFromTheNetRR
+=== RUN   TestTheScenarioWalksTheFunnelAndProposesOnAFreshQuote
+=== PAUSE TestTheScenarioWalksTheFunnelAndProposesOnAFreshQuote
+=== RUN   TestAWideQuoteIsRecordedAsSpreadTooWideWithItsMeasurement
+=== PAUSE TestAWideQuoteIsRecordedAsSpreadTooWideWithItsMeasurement
+=== RUN   TestOnlyTheContiguousPrefixFromTheOpenIsEvaluated
+=== PAUSE TestOnlyTheContiguousPrefixFromTheOpenIsEvaluated
+=== RUN   TestTheEvidenceGuardRefusesEveryWayToReachTheProductionFile
+=== PAUSE TestTheEvidenceGuardRefusesEveryWayToReachTheProductionFile
+=== RUN   TestTheLabelerTakesTheFirstTouchAndPrefersTheStopOnATie
+=== PAUSE TestTheLabelerTakesTheFirstTouchAndPrefersTheStopOnATie
+=== RUN   TestTheLabelerIgnoresBarsThatOpenedBeforeTheProposal
+=== PAUSE TestTheLabelerIgnoresBarsThatOpenedBeforeTheProposal
+=== RUN   TestTheReportWithholdsOutcomeVerdictsBelowThirtyAndNamesTheVacuousRR
+=== PAUSE TestTheReportWithholdsOutcomeVerdictsBelowThirtyAndNamesTheVacuousRR
+=== RUN   TestTheReportJudgesALotOnlyAcrossSessionsWithThirtyLabels
+=== PAUSE TestTheReportJudgesALotOnlyAcrossSessionsWithThirtyLabels
+=== RUN   TestRPPMDoesNotOverflowOnLargePrices
+=== PAUSE TestRPPMDoesNotOverflowOnLargePrices
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/top
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/retest
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/quote_age
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/spread
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/drift
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/risk
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/notional
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/cost
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/minimum_RR
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/read_gap
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/retry_delay
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/quote_suspension
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/armed_attempts
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/armed_window
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/gap_persistence
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/label_grace
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/budget_cadence
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/poll_lookback
+--- PASS: TestEffectivePolicyDigestCoversRuntimePolicy (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/top (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/retest (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/quote_age (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/spread (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/drift (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/risk (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/notional (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/cost (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/minimum_RR (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/read_gap (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/retry_delay (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/quote_suspension (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/armed_attempts (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/armed_window (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/gap_persistence (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/label_grace (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/budget_cadence (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/poll_lookback (0.00s)
+=== RUN   TestEffectivePolicyIsCanonicalAndExcludesRuntimeSource
+--- PASS: TestEffectivePolicyIsCanonicalAndExcludesRuntimeSource (0.00s)
+=== RUN   TestEffectivePolicyLotsKeepDifferentSessionsBelowVerdictThreshold
+--- PASS: TestEffectivePolicyLotsKeepDifferentSessionsBelowVerdictThreshold (0.00s)
+=== RUN   TestMarketSourceIsTheFiveReadOnlyGets
+=== PAUSE TestMarketSourceIsTheFiveReadOnlyGets
+=== RUN   TestNoMutatingAccountOrWriteSurfaceIsNamed
+=== PAUSE TestNoMutatingAccountOrWriteSurfaceIsNamed
+=== RUN   TestImportsStayInsideTheAllowlist
+=== PAUSE TestImportsStayInsideTheAllowlist
+=== RUN   TestASessionProposesOnceReadsQuotesOnlyAtStartAndArmedAndLabels
+=== PAUSE TestASessionProposesOnceReadsQuotesOnlyAtStartAndArmedAndLabels
+=== RUN   TestARestartDoesNotProposeTheSameSetupAgainAndStillLabels
+=== PAUSE TestARestartDoesNotProposeTheSameSetupAgainAndStillLabels
+=== RUN   TestArmedRetriesAtMostFiveMinutesThenExpires
+=== PAUSE TestArmedRetriesAtMostFiveMinutesThenExpires
+=== RUN   TestARateLimitOnTheBookSuspendsQuoteReads
+=== PAUSE TestARateLimitOnTheBookSuspendsQuoteReads
+=== RUN   TestThePollLowerBoundKeepsOnePagePerMinute
+=== PAUSE TestThePollLowerBoundKeepsOnePagePerMinute
+=== RUN   TestAGapIsOneRowPerSymbolStageAndMinute
+=== PAUSE TestAGapIsOneRowPerSymbolStageAndMinute
+=== RUN   TestAnArmedSetupExpiresByTimeWhenQuotesKeepFailing
+=== PAUSE TestAnArmedSetupExpiresByTimeWhenQuotesKeepFailing
+=== RUN   TestABarGroupGiveUpSkipsTheRestOfTheMinute
+=== PAUSE TestABarGroupGiveUpSkipsTheRestOfTheMinute
+=== RUN   TestARankingGiveUpLeavesAGapRow
+=== PAUSE TestARankingGiveUpLeavesAGapRow
+=== RUN   TestAnotherLotInTheSameLedgerIsRefused
+=== PAUSE TestAnotherLotInTheSameLedgerIsRefused
+=== RUN   TestALabelSeesPastAGapAfterTheProposal
+=== PAUSE TestALabelSeesPastAGapAfterTheProposal
+=== RUN   TestPolicyChangeRefusesBeforeAnyRestartRead
+=== PAUSE TestPolicyChangeRefusesBeforeAnyRestartRead
+=== RUN   TestSessionIdentityChangeRefusesBeforeAnyRestartRead
+=== PAUSE TestSessionIdentityChangeRefusesBeforeAnyRestartRead
+=== RUN   TestMissingUniverseSessionIdentityFailsClosed
+=== PAUSE TestMissingUniverseSessionIdentityFailsClosed
+=== CONT  TestKRTickMatchesTheKRXScheduleUsedElsewhere
+--- PASS: TestKRTickMatchesTheKRXScheduleUsedElsewhere (0.00s)
+=== CONT  TestMissingUniverseSessionIdentityFailsClosed
+=== CONT  TestNoMutatingAccountOrWriteSurfaceIsNamed
+=== CONT  TestPolicyChangeRefusesBeforeAnyRestartRead
+=== CONT  TestTheLabelerIgnoresBarsThatOpenedBeforeTheProposal
+=== CONT  TestALabelSeesPastAGapAfterTheProposal
+=== CONT  TestABarGroupGiveUpSkipsTheRestOfTheMinute
+--- PASS: TestTheLabelerIgnoresBarsThatOpenedBeforeTheProposal (0.00s)
+=== CONT  TestARankingGiveUpLeavesAGapRow
+=== CONT  TestOnlyTheContiguousPrefixFromTheOpenIsEvaluated
+=== CONT  TestPlanSizingBuildsTheTargetFromTheNetRR
+--- PASS: TestPlanSizingBuildsTheTargetFromTheNetRR (0.00s)
+=== CONT  TestTheScenarioWalksTheFunnelAndProposesOnAFreshQuote
+--- PASS: TestOnlyTheContiguousPrefixFromTheOpenIsEvaluated (0.00s)
+=== CONT  TestAnotherLotInTheSameLedgerIsRefused
+=== CONT  TestCostRateDropsFloatNoiseButKeepsRealFractions
+--- PASS: TestCostRateDropsFloatNoiseButKeepsRealFractions (0.00s)
+=== CONT  TestTheTickIsTheOpeningRangeResistanceBand
+=== CONT  TestTheEvidenceGuardRefusesEveryWayToReachTheProductionFile
+=== CONT  TestCostRateIsTheKRRoundTripInPPM
+--- PASS: TestCostRateIsTheKRRoundTripInPPM (0.00s)
+=== CONT  TestAGapIsOneRowPerSymbolStageAndMinute
+=== CONT  TestArmedRetriesAtMostFiveMinutesThenExpires
+=== CONT  TestRPPMDoesNotOverflowOnLargePrices
+--- PASS: TestRPPMDoesNotOverflowOnLargePrices (0.00s)
+=== CONT  TestSessionIdentityChangeRefusesBeforeAnyRestartRead
+=== CONT  TestThePollLowerBoundKeepsOnePagePerMinute
+=== RUN   TestSessionIdentityChangeRefusesBeforeAnyRestartRead/window
+=== CONT  TestTheReportWithholdsOutcomeVerdictsBelowThirtyAndNamesTheVacuousRR
+--- PASS: TestTheReportWithholdsOutcomeVerdictsBelowThirtyAndNamesTheVacuousRR (0.00s)
+=== CONT  TestARestartDoesNotProposeTheSameSetupAgainAndStillLabels
+--- PASS: TestTheTickIsTheOpeningRangeResistanceBand (0.00s)
+=== RUN   TestPolicyChangeRefusesBeforeAnyRestartRead/risk_budget
+=== CONT  TestTheLabelerTakesTheFirstTouchAndPrefersTheStopOnATie
+=== CONT  TestImportsStayInsideTheAllowlist
+--- PASS: TestTheLabelerTakesTheFirstTouchAndPrefersTheStopOnATie (0.00s)
+=== CONT  TestAWideQuoteIsRecordedAsSpreadTooWideWithItsMeasurement
+=== CONT  TestMarketSourceIsTheFiveReadOnlyGets
+=== CONT  TestTheReportJudgesALotOnlyAcrossSessionsWithThirtyLabels
+=== CONT  TestAnArmedSetupExpiresByTimeWhenQuotesKeepFailing
+--- PASS: TestTheReportJudgesALotOnlyAcrossSessionsWithThirtyLabels (0.00s)
+--- PASS: TestTheEvidenceGuardRefusesEveryWayToReachTheProductionFile (0.00s)
+=== CONT  TestASessionProposesOnceReadsQuotesOnlyAtStartAndArmedAndLabels
+=== CONT  TestARateLimitOnTheBookSuspendsQuoteReads
+--- PASS: TestARateLimitOnTheBookSuspendsQuoteReads (0.00s)
+--- PASS: TestAWideQuoteIsRecordedAsSpreadTooWideWithItsMeasurement (0.00s)
+--- PASS: TestTheScenarioWalksTheFunnelAndProposesOnAFreshQuote (0.00s)
+--- PASS: TestImportsStayInsideTheAllowlist (0.01s)
+--- PASS: TestMarketSourceIsTheFiveReadOnlyGets (0.01s)
+--- PASS: TestNoMutatingAccountOrWriteSurfaceIsNamed (0.01s)
+--- PASS: TestARankingGiveUpLeavesAGapRow (0.06s)
+--- PASS: TestMissingUniverseSessionIdentityFailsClosed (0.06s)
+--- PASS: TestAGapIsOneRowPerSymbolStageAndMinute (0.08s)
+--- PASS: TestABarGroupGiveUpSkipsTheRestOfTheMinute (0.09s)
+=== RUN   TestSessionIdentityChangeRefusesBeforeAnyRestartRead/calendar_version
+=== RUN   TestPolicyChangeRefusesBeforeAnyRestartRead/cost
+--- PASS: TestAnotherLotInTheSameLedgerIsRefused (0.13s)
+--- PASS: TestSessionIdentityChangeRefusesBeforeAnyRestartRead (0.21s)
+    --- PASS: TestSessionIdentityChangeRefusesBeforeAnyRestartRead/window (0.11s)
+    --- PASS: TestSessionIdentityChangeRefusesBeforeAnyRestartRead/calendar_version (0.10s)
+=== RUN   TestPolicyChangeRefusesBeforeAnyRestartRead/label_grace
+--- PASS: TestALabelSeesPastAGapAfterTheProposal (0.31s)
+--- PASS: TestPolicyChangeRefusesBeforeAnyRestartRead (0.32s)
+    --- PASS: TestPolicyChangeRefusesBeforeAnyRestartRead/risk_budget (0.12s)
+    --- PASS: TestPolicyChangeRefusesBeforeAnyRestartRead/cost (0.10s)
+    --- PASS: TestPolicyChangeRefusesBeforeAnyRestartRead/label_grace (0.09s)
+--- PASS: TestASessionProposesOnceReadsQuotesOnlyAtStartAndArmedAndLabels (0.33s)
+--- PASS: TestThePollLowerBoundKeepsOnePagePerMinute (0.35s)
+--- PASS: TestAnArmedSetupExpiresByTimeWhenQuotesKeepFailing (0.36s)
+--- PASS: TestArmedRetriesAtMostFiveMinutesThenExpires (0.39s)
+--- PASS: TestARestartDoesNotProposeTheSameSetupAgainAndStillLabels (0.45s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow	1.403s
+# rc=0

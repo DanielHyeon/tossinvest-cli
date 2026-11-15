@@ -1,0 +1,2 @@
+# HEAD d9d6772fce4f50fb873f57c6036f84ddea0e482c go vet
+# rc=0

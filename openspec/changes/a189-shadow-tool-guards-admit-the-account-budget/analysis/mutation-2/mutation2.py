@@ -58,6 +58,11 @@ T3_LITERAL = "TestA189AdmitCensusDecodesTheImportPathLiteral"
 T3_UNSAFE = "TestA189EngineProductionNeverImportsUnsafe"
 T3_NOLINK = "TestA189NoPackageLinknamesTheSeamDoors"
 LINKPKG = "internal/a189link/link.go"
+RELAY = "internal/app/engine/testdata/a189relay/relay.go"
+SEAMFILE = "internal/strategyhandoff/handoff.go"
+PUSHPKG = "internal/a189push/push.go"
+SYMDIR = "internal/a189sym"
+HIDDEN = "internal/.a189hidden/h.go"
 
 PKG1 = ("./cmd/tossctl/", f"^{T1}$")
 PKG2 = ("./internal/app/engine/", f"^{T2}$")
@@ -141,6 +146,7 @@ O11 = [(CONSOLE, "once", ASSERT, "\tvar reads consoleOrdersReader\n\tok := false
 O12 = [(CONSOLE, "once", ASSERT, "\treads, ok := func(broker verifylive.Broker) (consoleOrdersReader, bool) {\n"
         "\t\tr, ok := broker.(consoleOrdersReader)\n\t\treturn r, ok\n\t}(l.shared.client)\n")]
 O13 = [(CONSOLE, "once", ASSERT, ASSERT + "\tif r2, ok2 := verifylive.Broker(l.shared.client).(consoleOrdersReader); ok2 {\n\t\treads = r2\n\t}\n")]
+O14 = [(CONSOLE, "once", ASSERT, "\talias := &broker\n\t*alias = verifylive.Broker(l.shared.client)\n" + ASSERT)]
 O6 = [(CONSOLE, "once", RESOLVE, RESOLVE + "\t_ = official.New(official.Credentials{}, \"\")\n")]
 
 PRIO_CRIT = "\t\t\t\tclearCtx = accountbudget.WithPriority(ctx, accountbudget.Critical)\n"
@@ -171,6 +177,7 @@ MUTANTS = [
     ("o11-range-shadow", "", O11, ONE(T1), "range 의 broker 로 가린 값을 단언(2회차 리뷰)"),
     ("o12-funclit-param", "", O12, ONE(T1), "함수 리터럴 인자 broker 로 가린 값을 단언(2회차 리뷰)"),
     ("o13-second-assertion", "", O13, ONE(T1), "둘째 단언으로 reads 를 다른 값으로 바꿈(2회차 리뷰)"),
+    ("o14-pointer-write", "", O14, ONE(T1), "&broker 포인터로 broker 를 바꿔 씀(3회차 리뷰)"),
     ("o9-rebind", "", O9, ONE(T1), "공유 resolver 결과를 받은 뒤 broker 를 공유 캐시 필드로 다시 대입"),
     ("o6-official-new", "", O6, ONE(T1), "console.go 가 official.New 로 둘째 클라이언트를 만듦"),
     # #2 a163 렌더 해시
@@ -198,6 +205,24 @@ MUTANTS = [
                                  'func a189Mint(bool, []strategyflow.Result) strategyhandoff.Handoff\n\n'
                                  'func a189ViaLink() { _ = a189Mint(true, nil) }\n')],
      [(PKG3, T3_UNSAFE, "FAIL"), (PKG3, T3, "PASS")], "//go:linkname 으로 문을 다른 이름 몸체 없는 함수에 묶음 — census 는 못 셈(PASS), unsafe 금지가 막음(2차 리뷰)"),
+    ("a11-linkname-testdata-relay", "", [(RELAY, "new", "", f'package a189relay\n\nimport _ "unsafe"\n\n'
+                                         f'//go:linkname door {MOD}internal/strategyhandoff.AdmitEachOwnerScope\n'
+                                         'func door(bool, []struct{}) []struct{}\n\nvar Door = door\n')],
+     [(PKG3, T3_NOLINK, "FAIL")], "testdata 아래 import 가능한 중계 패키지의 linkname(3회차 리뷰 — 2회차 판본은 testdata 를 건너뜀)"),
+    ("a12-linkname-dispatch-target", "", [(LINKPKG, "new", "", 'package a189link\n\nimport _ "unsafe"\n\n'
+                                          f'//go:linkname hand {MOD}internal/app/engine.(*strategyDispatchCycle).dispatch\n'
+                                          'func hand()\n\nvar Hand = hand\n')],
+     [(PKG3, T3_NOLINK, "FAIL")], "엔진 사설 dispatch 를 대상으로 하는 linkname(3회차 리뷰 — 대상 이름 필터를 비켜 감)"),
+    ("a13-push-linkname", "", [("internal/strategyhandoff/zz_a189push.go", "new", "", 'package strategyhandoff\n\nimport _ "unsafe"\n\n'
+                                f'//go:linkname Admit {MOD}internal/a189push.door\n'),
+                               (PUSHPKG, "new", "", 'package a189push\n\nfunc door()\n\nvar Door = door\n'),
+                               ("internal/a189push/empty.s", "new", "", "")],
+     [(PKG3, T3_NOLINK, "FAIL")], "경계 패키지 안에서 문을 다른 패키지 이름으로 밀어내는 linkname(3회차 리뷰)"),
+    ("a14-symlinked-dir", "", [(".a189hiddenreal/h.go", "new", "", "package a189hidden\n"),
+                               (SYMDIR, "symlink", "../.a189hiddenreal", "")],
+     [(PKG3, T3_NOLINK, "FAIL")], "디렉터리 심링크 뒤의 패키지(WalkDir 는 안 따라감 — 만나면 실패)(3회차 리뷰)"),
+    ("b3-hidden-dir-linkname", "", [(HIDDEN, "new", "", 'package h\n\nimport _ "unsafe"\n\n//go:linkname x runtime.nanotime\nfunc x() int64\n')],
+     [(PKG3, T3_NOLINK, "PASS")], "점으로 시작하는 디렉터리(import 불가)는 훑지 않음 — 무해 대조(기대 PASS)"),
     ("a10-linkname-other-package", "", [(LINKPKG, "new", "", f'package a189link\n\nimport (\n\t_ "unsafe"\n\n\t"{MOD}internal/strategyflow"\n)\n\n'
                                        'type look struct{ a, b uintptr }\n\n'
                                        f'//go:linkname door {MOD}internal/strategyhandoff.Admit\n'
@@ -341,6 +366,9 @@ def judge(base: Path, expects, cache: Path) -> tuple[bool, list[str]]:
 
 def write(base: Path, rel: str, text: str | None) -> None:
     p = base / rel
+    if text == "\0symlink":
+        p.unlink()
+        return
     if text is None:
         p.unlink()
         if not any(p.parent.iterdir()):
@@ -365,6 +393,13 @@ def apply(base: Path, edits) -> dict[str, str | None]:
 def _apply_into(base: Path, edits, saved: dict[str, str | None]) -> None:
     for rel, kind, old, new in edits:
         p = base / rel
+        if kind == "symlink":
+            # 디렉터리 심링크(3회차 리뷰): old = 링크가 가리킬 상대 경로
+            check(not p.exists() and not p.is_symlink(), f"심링크 자리가 이미 있음: {rel}")
+            saved.setdefault(rel, "\0symlink")
+            p.parent.mkdir(parents=True, exist_ok=True)
+            os.symlink(old, p)
+            continue
         if kind == "new":
             check(not p.exists() or rel in saved, f"새 파일 자리가 이미 있음: {rel}")
             saved.setdefault(rel, None)
@@ -436,7 +471,9 @@ def main() -> int:
                 restore(base, saved)
                 continue
             # 변이·판본이 닿은 패키지를 전부 시험 파일까지 컴파일함(빌드 실패를 CAUGHT 로 세지 않게)
-            touched = sorted({"./" + str(Path(e[0]).parent) + "/" for e in [*v_edits, *edits]})
+            # 점으로 시작하는 경로(go 도구가 무시)와 심링크 편집은 컴파일 대상이 아님 — 그 둘은 소스 훑기 시험만 잼
+            touched = sorted({"./" + str(Path(e[0]).parent) + "/" for e in [*v_edits, *edits]
+                              if e[1] != "symlink" and not any(part.startswith(".") for part in Path(e[0]).parts)})
             build_ok, bout = True, ""
             for pkg in touched:
                 s, o = go(base, ["test", "-count=1", "-run", "^$", pkg], cache)

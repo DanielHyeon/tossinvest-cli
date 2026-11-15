@@ -169,3 +169,66 @@ Pre-Edit Gate:
 ### 후속 (a166 인계)
 
 - a166 은 a179 같은 병합 때 corpus(`testdata/a166-wiring/shapes.json`) 갱신이 필요하다.
+
+## 범위 확장 2 — 낡은 시험 가드 3건 (사용자 결정 2026-11-16 「1번 — a189 에 전부 포함」)
+
+### 수리 직전 재측정 (구현 팀메이트 Opus, 2026-11-16)
+
+- 워킹트리(HEAD `fc078f1ea`)에서 세 시험 모두 FAIL — 문구는 Manager 조사와 같음(console_test.go:755, a163_judgement_pin_test.go:102 `0a776329… want f3458b84…`, strategy_dispatch_handoff_guard_test.go:669 `type 블록:Admit`).
+- 원인 커밋과 부모에서 **실제 시험**으로 경계를 다시 잼(`analysis/boundary/boundary.sh`·`boundary.txt`, git archive 사본): `3dc0c776b^` ok / `3dc0c776b` FAIL, `9c4bdf4de^` ok / `9c4bdf4de` FAIL, `5c0aeb2b8^` ok / `5c0aeb2b8` FAIL.
+
+### #1 orders seam (D11) — 철자 고정 대신 AST 단언을 고른 이유
+
+- 한 줄: 철자 `l.shared.resolve(ctx)` 는 `(*lazyHoldings).Holdings` 에도 있어 파일 전체 검사로는 `Orders` 를 못 봄 — 변이 `o4-unlocked-cache`(잠금을 건너뛰고 공유 캐시를 직접 채움, 빌드 1회 유지)와 `o1-second-resolve` 가 철자만 고친 S 판본에서 PASS(못 잡음), AST 판본에서 FAIL.
+- 판본 이력(gstack 리뷰): 1차(참조 수만)는 안 쓰는 참조 한 줄로 뚫림(1회차, 보이스 셋 일치) → 직접 호출이 broker 를 채우고 broker 대입은 그 문뿐 → range·함수 리터럴 가림·둘째 단언(2회차) → 단언 대상을 파서가 해소한 객체로 대조하고 단언은 하나만 → `&broker` 포인터 쓰기(3회차) → 다시 대입으로 셈. 최종 판본은 다섯 수(선언·참조·broker 를 채우는 직접 호출·broker 대입·broker 객체에 대한 유일한 단언)가 모두 1 이어야 함.
+- 행동 절반(빌드 1회)·`official.New(` 금지는 무편집. 남는 한계는 design R7(단언 뒤 흐름·다른 파일의 `official.New(` — 편집 전부터 있던 한계).
+
+### #2 a163 렌더 해시 (D12) — 갱신 이유
+
+- 원인: a166 `9c4bdf4de`(「Classify protective priority and replay origin」) 가 `ExitObserver.record` 의 청산 정리 갈래에서 `clearTheSymbol` 에 넘기는 context 를 `accountbudget.WithPriority(ctx, Normal)`, `isProtective(proposal)` 이면 `Critical` 로 만듦(`analysis/render-hash/cause-9c4bdf4de-exitloop.diff`). `WithPriority` 는 `context.WithValue` 한 줄.
+- 새 값의 출처: `9c4bdf4de^..7d1e3163a` rev-list 전수(135 커밋 + 부모 1)에서 `record` 렌더는 둘뿐 — `f3458b84…`(옛 고정값) 17 커밋, `0a776329…` 119 커밋. 부모 대비 바뀐 커밋은 `9c4bdf4de` 와 그것을 둘째 부모로 들인 병합 `5f681f2a5`·`5b379e08d` 뿐(`render-at-commits.txt`). 그래서 새 값 = 그 한 편집.
+- 렌더 원문 diff(주석 없는 go/printer, 조건식·인자·대입식 포함): 차이는 clearCtx 를 만드는 네 줄 추가와 `clearTheSymbol` 호출 첫 인자 `ctx`→`clearCtx` 한 곳뿐. `9c4bdf4de`→base 0 바이트 차이. 판정 불변의 근거는 이 원문 diff 임(AST 항목 대조 — 분기 18→19, return 6→6, 빠진 항목 0 — 는 보조. gstack 1회차 Codex 지적으로 정정).
+- 나머지 9개 고정값: 경계 세 지점에서 엔진 생산 파일 88개 전수 렌더로 기대값과 같음(1차 기록은 exitloop.go 만 렌더해 `noteHeldProposal` 을 안 쟀음 — 1회차 지적으로 정정, 옛 원문 `history-render-at-commits-exitloop-only.txt`).
+- 시험 함수 본문 무편집 — 패키지 수준 변수 값 하나와 그 위 이유 주석(gate ⑤ required 수 변화 0 을 실측: 7 = 앞 로트 5 + #1·#3 둘).
+- 변이: `r1-record-priority`(Critical→Normal)·`r2-record-revert-9c4bdf4de`(부모 모양) 둘 다 새 고정값이 거절.
+
+### #3 admitSites (D13) — 좁힘과 잃은 검출
+
+- 좁힌 뒤에도 잡는 것(전부 FAIL 확인): 둘째 `strategyhandoff.Admit` 호출(a1), 별칭 import 호출(a2), dot import 맨 이름 호출(a3), 둘째 `AdmitEachOwnerScope`(a4), 지역 함수 값(a5), 패키지 수준 함수 값(a6), 원시 문자열·이스케이프 import 경로(a7·a8 — 1회차 리뷰로 `strconv.Unquote`).
+- 안 잡는 무해한 것(PASS 확인): 다른 타입의 같은 이름 메서드 `b.admission.Admit(ctx)`(b1 — 앞 판본은 이것을 자리로 셈, b1-OLD), 사설 인터페이스 메서드 선언(b2).
+- census 밖 길을 막는 새 시험(리뷰로 더함, 새 파일 `strategy_dispatch_admit_census_a189_test.go`): 엔진 생산 파일 `unsafe` import 금지(a9 — 엔진 안 linkname), 모듈 전체 `//go:linkname` 지시어 금지(a10~a14 — 다른 패키지·testdata 중계·엔진 dispatch 대상·push 형태·디렉터리 심링크; 점 디렉터리는 무해 대조 b3).
+- **잃은 검출(앞 판본은 잡고 새 판본은 못 잡음)**:
+  - l1: 허용 자리 `dispatchHandoff` 안에서 문을 문 이름 필드로 빼돌리고 다른 자리에서 부름. 앞 판본은 이름이 같아 우연히 잡음(더해진 자리 4개). **남은 위험**(design R4).
+  - l3: 엔진 밖 래퍼 패키지 `a189wrap` 이 `var Admit = strategyhandoff.Admit` 로 다시 내보냄. 새 판본에서는 strategyhandoff `TestOnlyTheEngineImportsThisSeam` 이 FAIL 로 막음.
+  - 두 판본 다 못 잡는 것(l2): 같은 빼돌리기를 다른 이름(`mint`)으로 — 앞 판본의 l1 검출은 이름 우연이었다는 뜻.
+- 인식기 변이 g1~g8 전부 기대 시험 FAIL.
+- 원문 `analysis/mutation-2/mutation2-run7.txt`: 대조군 3 + 변이 51 = 54 줄 전부 기대대로, 원복 sha 일치, 새 파일 0. 하네스 결함 이력(run1 g1 대상 3회·OLD 대조군 비교 불가, run2 EXTRA 판정이 합계에 안 더해짐, 리뷰 2회차 중간 실패 시 원복)은 원문·이력 파일로 남김.
+
+### gstack 리뷰 (tasks 3c.8) — 3회, 수렴 안 함
+
+- 원문·처리 표 `analysis/gstack-review-2.md`. 보이스: 전문가 6(testing·maintainability·security·performance·simplification·state-machines), red team, Claude 적대 패스, **Codex 적대 패스(다른 계열, read-only 샌드박스)** 1·3회차.
+- 1회차 9건(고침 6·기록 3), 2회차 9건(고침 6·기록 2·Manager 1), 3회차 6건(고침 5·Manager 1). CRITICAL 로 분류된 것은 Manager 결정 대상 하나(별칭/dot import 로 보조 등급 고정 우회 — 앞 로트 범위, design R1).
+- 3회차 수리 뒤 4회차 리뷰는 skill 상한(편집 회차 3)으로 돌리지 않음 — 3회차 수리는 변이(a11~a14·b3·o14)로만 확인했고 **새 발견 0 은 확인되지 않음**.
+
+### not-applicable
+
+- 다중 적대 리뷰: 이번엔 Manager 지시로 생략 불가 — gstack `review` + 다른 계열 보이스(Codex) 를 붙임(위).
+- 스펙 델타: 세 가드를 기술한 정본 문장 없음(proposal Impact) — 무편집.
+- `make gate`·전체 시험·`make test-seams` 전체: 지시대로 안 돌림. 태그 seam 은 바뀐 가드 시험만 `-tags tossos_testseams` 로 돌림(`verify-4/go-test-testseams-targeted.txt`).
+- Exploratory QA: 시험 전용 diff 라 기능 표면 없음 — 대상 패키지 시험·변이 하네스가 판정 근거.
+
+### 후속 (기록 — 두 change 디렉터리는 수정하지 않음)
+
+- a166(`3dc0c776b`, `9c4bdf4de`)과 a087(`5c0aeb2b8`)이 전체 시험 없이 main 에 들어와 시험 가드 3건이 낡은 채 남았음. 같은 기전이 앞 로트의 가드 5건·census 1건(a166 `78d777cfe`·`4d5884cbc`, a179 `9abcb631a`)에도 있었음 — 병합 전 영향 패키지 시험이 빠짐.
+- `TestEveryNameTheEngineTakesFromTheSeamIsClassified`(이 diff 가 안 바꾼 기존 함수)의 import 경로 읽기도 `strings.Trim` — 원시 문자열·이스케이프 철자에 눈멂. 주조 자리는 admitSites 수리로 잡히지만, 분류 검사 자체의 수리는 FLM 번들 하나가 더 드는 별 작업.
+- 앞 로트 `census-repair/falsify.py` 의 HOME 격리 없음(잠재만 — 그 시험은 HOME 을 안 읽음).
+
+### Manager 에게 올림 (범위 확장 2)
+
+1. **(High, 안전 불변식 4) 두 그림자 도구의 보조 등급 고정이 별칭·dot import 로 뚫림**(gstack 2·3회차 red team 실측, design R1 「재검토 필요」). 앞 로트 Manager 결정(2026-11-15, R1 범위 밖)은 보조 등급 고정(ab7023901)보다 앞섬.
+   - (A) a189 에서 고침 — 두 도구의 import 시험에서 accountbudget·accountbudgetruntime(·official·tossconfig) import 의 `spec.Name` 이 nil 이 아니면 실패. 두 시험 함수 본문 편집(번들 갱신), 변이 추가. (추천)
+   - (B) R1 결정 유지, 후속 change.
+2. R4 l1(허용 자리 안 문 이름 필드 빼돌리기): (A) 기록만(현재) (B) 후속 change 로 「경계 문 참조는 호출의 Fun 이어야 함」 — 기존 fixture 시험의 함수 값 철자 셋을 「거절」로 바꾸는 계약 변경.
+3. R5(표지 없는 context 는 Normal)·R6(reflect 이름 우회): 스펙 문장을 가드가 재는 만큼 좁힐지, 런타임 단언을 넓힐지.
+4. gstack 리뷰 비수렴: 4회차(3회차 수리에 대한 재리뷰)를 돌릴지.
+5. Gate 처분 3건(`gstack-review-2.md` 「Gate edits」): 추천 B(Keep — justified, verified).

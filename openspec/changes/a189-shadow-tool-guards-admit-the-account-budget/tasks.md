@@ -37,8 +37,8 @@
 - [x] 3c.4 #3 `admitSites` 좁힘(D13)과 새 파일의 fixture 시험.
 - [x] 3c.5 사본 변이(대조군 GREEN 먼저, 기대 시험 이름 단언) — 하네스·원문 `analysis/mutation-2/`. #3 은 좁힘으로 잃는 검출을 열거해 잼.
 - [x] 3c.6 FLM/BTM 번들, `check_analysis.py` required 수·rc 실측.
-- [ ] 3c.7 대상 패키지 시험·vet·gofmt·strict validate — 원문 `analysis/verify-4/`.
-- [ ] 3c.8 gstack `review`(최종 diff 전체) + 다른 계열 적대 보이스 1, 새 발견 0 까지 — `analysis/gstack-review-2.md`.
+- [x] 3c.7 대상 패키지 시험·vet·gofmt·strict validate — 원문 `analysis/verify-4/`(Go 마지막 커밋 d9d6772fc): cmd/tossctl·engine PASS 최상위 1549·서브 포함 2251, FAIL 0, SKIP 2; a189 앞 로트 4패키지 PASS 485·882, FAIL 0; 태그 seam(바뀐 가드만) PASS 38·47; vet rc 0; gofmt 위반 0(8파일); validate rc 0; check_analysis required 7, rc 0. 리뷰 전 원문은 `verify-4/pre-review/`.
+- [ ] 3c.8 gstack `review`(최종 diff 전체) + 다른 계열 적대 보이스 1, 새 발견 0 까지 — `analysis/gstack-review-2.md`. 3회 돌림(Codex 1·3회차), 회차마다 발견을 고침 — skill 상한 3 에 닿아 **수렴 미확인**. Manager 결정 대기: R1(별칭·dot import 로 보조 등급 고정 우회, High), 4회차 여부, gate 처분 3건(review.md 「Manager 에게 올림 (범위 확장 2)」).
 
 ## 4. 종결
 
