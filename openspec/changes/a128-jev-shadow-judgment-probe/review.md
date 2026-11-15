@@ -30,3 +30,20 @@
 - 판정: 이 change 범위 blocker 0, 고친 것 1(InputTokens 주석). **착지 선행 조건 1**: a145·a147 오프라인 분석기가 「한 state = J1·J2 두 행」을
   가정 — s4 행이 원장에 들어가면 a145 는 `ValueError('unpaired questions')` 로 멈추고 a147 은 전부 `invalid_pair` 로 셈(tasks 5.5).
   같은 날 이 로트에서 수리(J3·J4 행을 짝 판정 전에 빼고 수를 남김 — s4 이전 출력 불변, 변이 5/5, tasks 5.5 영수증).
+
+## a187 반영 경계 — 기록, 2026-11-15
+
+a187(`a187-strict-quote-readers-accept-kr-alphanumeric-symbols`)이 두 엄격 호가 리더의 KR 종목 문법을 `^[A-Z0-9]{6}$` 로 넓힘. 프로브는 systemd 사용자 타이머가 이 공유 트리에서 `go run` 하므로(`run-probe.sh`) 경계는 「코드가 이 체크아웃에 들어온 시점 뒤 첫 기동」임. 읽기 전용으로만 잼(단위 조회·journal·원장 읽기). 이 절은 tasks 체크박스를 바꾸지 않음.
+
+- 반영 커밋: 운영 코드를 바꾼 GREEN 커밋 `305733da1`(커밋 시각 2026-11-12T20:18:10+09:00). 이 커밋은 a187 worktree(`~/tossos-work/a187-quote-symbols`)에서 만들어졌고, 이 공유 체크아웃에는 **2026-11-13 00:12:56 +0900** 에 `be90ea3e7` 로의 fast-forward 로 들어옴(공유 체크아웃 `git reflog`: `be90ea3e7 HEAD@{2026-11-13 00:12:56 +0900}: merge fix/a187-strict-quote-kr-alphanumeric: Fast-forward`, 직전 항목은 2026-11-09 21:12:38 의 `6dbb752f6`). 그 사이 공유 체크아웃 HEAD 는 `6dbb752f6` 이었음.
+- 단위: `tossos-a128-kr.timer`(enabled, `OnCalendar=Mon..Fri 08:50`, `Persistent=false`) → `tossos-a128-kr.service`(`WorkingDirectory=/mnt/D/Axipient/workspace/TossOS`, `ExecStart` 가 `run-probe.sh KR … --pool 45`). `tossos-a128-us.timer` 는 disabled.
+- 반영 뒤 첫 기동: **2026-11-13T08:50:42+09:00**. 근거 `journalctl --user -u tossos-a128-kr.service -u tossos-a128-us.service --since "2026-11-12 20:18:10" -o short-iso` 원문 두 줄(그 뒤 기동 없음 — 11-14·15 는 주말, 다음 예정 2026-11-16 08:50):
+  - `2026-11-13T08:50:42+09:00 rog systemd[1575]: Started tossos-a128-kr.service - TossOS a128 Jev KR shadow measurement.`
+  - `2026-11-13T15:20:15+09:00 rog systemd[1575]: tossos-a128-kr.service: Consumed 26.553s CPU time, 451.4M memory peak, 0B memory swap peak.`
+  - 직전 기동은 `2026-11-12T08:50:12+09:00`(반영 전). 그날 기동 로그 파일 `/tmp/a128-kr-1113.log` 는 재부팅 뒤 남아 있지 않아 컴파일 시점 HEAD 를 로그로는 확인하지 못함 — 기동 시각이 반영 시각 뒤라는 것만이 근거임.
+- 행 교차 확인(원장 `analysis/shadow-ledger-compare/ledger.jsonl`, 마지막 수정 2026-11-13 15:20:15, KR `judgment` 행만, 영문이 섞인 6자리 종목 = `^(?=.*[A-Z])[A-Z0-9]{6}$`; 가격·판단값은 읽지 않음):
+  - 경계(2026-11-13 00:12:56) 전: 영문 섞인 종목 행 5,176 개 **전부** `collection_gaps` 에 `top_of_book: official strict quote: SYMBOL_INVALID …` 가 있음(`current`·`initial` 각 2,588). 그 문구가 있는 마지막 회차 시각 **2026-11-12T14:20:00+09:00**.
+  - 경계 뒤: 영문 섞인 종목 행 792 개(종목 15개, 회차 32개) 중 그 문구 0개, `top_of_book` 결손 자체도 0개. 그 문구가 없는 첫 회차 시각 **2026-11-13T09:10:00+09:00**(그날 첫 KR 회차는 09:00 이고 그 회차에는 영문 섞인 종목 행이 없었음).
+  - 경계 뒤 KR 의 `top_of_book` 결손은 숫자 종목의 `EMPTY_SIDE` 40개뿐(a187 과 무관한 응답 쪽 결손).
+- 바뀌는 것: 영문 섞인 KR 종목의 호가 입력뿐임(`current`·`initial` 두 입력군 모두). 입력 판본은 그대로 — `current` 는 경계 전후 모두 `state_rev` `a128-s3`, `initial` 은 전후 모두 `initial-fields-v1`. 수급 결손(`investor_flows_per_stock`)은 a187 이 바꾸지 않음.
+- 같은 경계에 겹친 변화: 같은 밤 단위에 `--pool 45` 가 붙음(단위 파일 mtime 2026-11-13 00:14:07, a184 2판 전환). 그래서 2026-11-13 부터 KR 판단 행 수도 하루 7,920 → 11,880 으로 바뀜. 두 변화의 경계가 같은 기동(2026-11-13 08:50:42)이라 기동 시각만으로는 둘을 가를 수 없음 — 호가 입력 변화는 영문 섞인 종목 행에만 있고, 판단 수 변화는 모든 행에 걸침.

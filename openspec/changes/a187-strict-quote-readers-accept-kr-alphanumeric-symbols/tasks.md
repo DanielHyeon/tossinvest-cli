@@ -16,10 +16,10 @@
 - [x] 3.2 영향 패키지(`internal/official`, `internal/officialbars`, `internal/orderintent`, `tools/a128-jev-shadow-probe`, `tools/a140-breakout-signal-shadow`, `tools/a112-l1c-quote-probe`) 시험과 `go vet`·gofmt 를 돌리고 원문을 기록한다. 전체 gate 는 사용자가 요청할 때만 실행한다.
 - [x] 3.3 다른 계열 모델의 리뷰와 gstack 리뷰를 받고 처리 결과를 `review.md` 에 기록한다.
   - 다른 계열 리뷰 r1(gpt-6-astra)·gstack 리뷰 처리 완료(review.md 「구현 리뷰 r1 처리」·「gstack 리뷰 처리」).
-- [ ] 3.4 Manager 가 diff, 시험 원문, 변이 결과를 독립 재검증한다.
+- [x] 3.4 Manager 가 diff, 시험 원문, 변이 결과를 독립 재검증한다.
 
 ## 4. 실측과 인계
 
 - [x] 4.1 (2026-11-12 23:44 KST 실행, 정규장 밖 — 사용자 결정, 기록 `analysis/measurement/l1c-0158S0-2026-11-12.md`) 사람 승인 뒤 정규장 안에서 수정 빌드로 `0158S0` 의 호가 1회·현재가 1회를 둘째 키 전용 프로필로 읽는다(GET 2회). 상태 코드와 성공·거절 사유, 본문 digest 만 기록한다.
-- [ ] 4.2 main 반영 커밋·시각과 그 뒤 첫 프로브 기동 시각을 a128 change 기록에 남긴다(프로브 입력은 그 기동부터 달라짐). a184 브랜치에 가져올 수 있게 알린다(a184 tasks 6.8).
+- [x] 4.2 main 반영 커밋·시각과 그 뒤 첫 프로브 기동 시각을 a128 change 기록에 남긴다(프로브 입력은 그 기동부터 달라짐). a184 브랜치에 가져올 수 있게 알린다(a184 tasks 6.8).
 - [ ] 4.3 PM check, strict validate, archive 와 Story 경로 동기화. 검증된 교훈만 retain 한다.

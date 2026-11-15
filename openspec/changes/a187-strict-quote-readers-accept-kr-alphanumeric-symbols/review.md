@@ -114,3 +114,21 @@
 
 - Manager 재확인(3.4), 4.2·4.3, 전체 gate, 공식 API. 후속 항목 10·13·17 은 이 change 에서 하지 않음.
 
+
+## Manager 재검증 (3.4) — 2026-11-15
+
+- 원문(Manager 실행, 그대로 복사): `analysis/verify-manager/go-test-7pkg.txt`, `analysis/verify-manager/mutation-11.txt`. 아래 수치는 팀메이트가 복사본에서 다시 셌고 Manager 값과 같음.
+- 기준 HEAD `be90ea3e7`, base `6dbb752f6`. base..HEAD 19커밋 전부 a187. openspec 밖 변경 파일 10개, 운영 코드 변경은 `internal/official/strict_minute_candles.go` 하나(정규식 변수 2→1, 래퍼 한 줄 위임, 주석). `strictMinuteCandleKRSymbol` 참조 0건, `strictMinuteCheckSymbol` 호출 자리 2곳(래퍼 214행, `strict_quote_reads.go` 201행).
+- 시험(`go test -count=1 -v`, 7개 패키지: `internal/official`, `internal/orderintent`, `internal/officialbars`, `tools/a128-jev-shadow-probe`, `tools/a140-breakout-signal-shadow`, `tools/a112-l1c-quote-probe`, `tools/a087-market-sell-probe`): 최상위 PASS 551, 서브 포함 997, FAIL 5, SKIP 0. `TestA187…` 최상위 9개 모두 PASS. FAIL 5개는 시험 이름과 실패 문구(7줄)가 `analysis/verify/base-failures.txt` 와 같음.
+- 변이(`analysis/mutation/mutation.py`, 사본): 대조군 GREEN(PASS 줄 592), 11/11 CAUGHT. rc 0 과 「실행 뒤 작업 트리 변화 없음」은 Manager 관측이며 원문 파일에는 찍혀 있지 않음(팀메이트 기록 시점 `git status` 는 깨끗했음).
+- `gofmt -l internal/official internal/orderintent` 0줄, `go vet` 두 패키지 rc 0(팀메이트 재실행도 같음), `openspec validate --strict` valid, PM `--check` current.
+- 판정: 구현 완료(tasks 3.4 통과).
+- 남은 문제: 완료 게이트 7단계 `make test`(`go test ./...`)는 base 에서도 실패하는 정적 가드 5개 때문에 지금 main 에서 통과할 수 없음. 위반을 들여온 커밋은 `78d777cfe`(feat(a166): shadow 도구 예산 연결)·`4d5884cbc`(둘 다 2026-10-31). 그래서 4.3(archive)은 이 5개가 처리될 때까지 보류이며 a187 범위에서 가드를 넓히지 않음. (Manager 문장 중 「마지막 archive 시점」 부분은 저장소 실측과 달라 이 기록에서 뺐음 — Manager 확인 대기.)
+- 미실행: 전체 gate·전체 시험·공식 API.
+- gstack 리뷰: `not-applicable` — 문서·증거 기록뿐인 간단한 작업이라 생략(사용자 지시 2026-11-15).
+
+## 4.2 반영 경계 — 2026-11-15
+
+- 운영 코드(GREEN `305733da1`, 2026-11-12T20:18:10+09:00)는 a187 worktree 에서 커밋됐고, 프로브가 `go run` 하는 공유 체크아웃에는 2026-11-13 00:12:56 +0900 `be90ea3e7` fast-forward 로 들어옴(reflog). 그 뒤 첫 프로브 기동은 `tossos-a128-kr.service` 2026-11-13T08:50:42+09:00(journal).
+- 원장 행 교차 확인: 영문 섞인 KR 종목의 `top_of_book: …SYMBOL_INVALID…` 결손이 있는 마지막 회차 2026-11-12T14:20:00+09:00, 없는 첫 회차 2026-11-13T09:10:00+09:00(경계 뒤 그 문구 0건). 입력 판본 불변. 상세는 a128 `review.md` 「a187 반영 경계」.
+- a184 브랜치(`feat/a184-kr-jev-warning-live-lane` @ `2a12b2449`)는 a187 의 네 파일(`strict_minute_candles.go`, `a187_kr_alphanumeric_test.go`, `a187_order_policy_test.go`, `strict_quote_reads_test.go`)이 main(`be90ea3e7`)과 내용이 같음(`git diff` 0줄). 알림은 Manager 가 전달함.
