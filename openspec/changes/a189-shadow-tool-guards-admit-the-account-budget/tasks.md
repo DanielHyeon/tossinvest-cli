@@ -22,6 +22,13 @@
 - [x] 3.3 gstack `review` 1회(다중 적대 리뷰는 not-applicable — 비례 원칙), 처리 결과를 `review.md` 에 기록. 원문 `analysis/gstack-review.md`. Manager 결정 대기 4건(발견 1·9·10, gate G1~G3)은 review.md 「Manager 에게 올림」.
 - [ ] 3.4 Manager 독립 재검증.
 
+## 3b. a166 census 고정 모양 (사용자 결정 2026-11-15 으로 범위 포함)
+
+- [x] 3b.1 읽기 전용 조사(`analysis/census-investigation/`): 고정 모양 = `78d777cfe` 시점, 변화는 a179 입력 프로필뿐, 그 키만 갱신한 사본에서 census 시험 셋 PASS.
+- [x] 3b.2 `shapes.json` 의 키 `tools/a128-jev-shadow-probe/main.go||runCommandWithOptions` 값 하나만 갱신(Manager 리뷰 승인). 키별 비교 원문 `analysis/census-repair/shapes-key-diff.txt`: 바뀐 키 1개, 무변경 89개, `sites.json` 동일.
+- [x] 3b.3 반증(`analysis/census-repair/falsify.txt`): 대조군 GREEN, 고정 함수 안 `http.Get` → 「reviewed function shape changed」, 새 함수 안 `http.Get` → 「callsite inventory count changed: got 117 expected 116」, 둘 다 CAUGHT.
+- [x] 3b.4 영향 패키지 재확인(`analysis/verify-3/`, `tools/a112-mb-us-source` 는 Manager 지시로 제외): 4개 패키지 ok, PASS 최상위 485·서브 포함 882, FAIL 0, SKIP 0. `internal/accountbudgetruntime` 최상위 53·서브 포함 77, census 3개 시험 PASS. vet rc 0.
+
 ## 4. 종결
 
 - [ ] 4.1 PM check, strict validate, archive 와 Story 경로 동기화. 검증된 교훈만 retain.

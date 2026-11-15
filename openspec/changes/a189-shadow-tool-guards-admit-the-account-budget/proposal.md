@@ -14,6 +14,8 @@ main HEAD `7d1e3163a`(= origin/main)에서 `go test ./...` 가 정적 가드 5�
 
 사용자 결정 2026-11-15: 「별도 작은 change 로 가드를 고치고 gstack 리뷰 뒤 a187 을 archive」.
 
+추가로 같은 날 영향 패키지 시험에서 6번째 실패를 찾았음: `internal/accountbudgetruntime` `TestA166WiringCensusBaseline`·`TestA166WiringCensusRejectsBypasses/new-unclassified-http` — `reviewed function shape changed: tools/a128-jev-shadow-probe/main.go||runCommandWithOptions`. base `7d1e3163a` 에서도 같음. a179 입력 프로필(`9abcb631a`, 병합 `d7c078ffc`)이 그 함수를 바꾸면서 a166 census 의 고정 모양(`internal/accountbudgetruntime/testdata/a166-wiring/shapes.json`)을 갱신하지 않았음. 사용자 결정 2026-11-15(「추천대로」): 이 수리를 a189 에 포함.
+
 ## What Changes
 
 시험 파일의 가드 허용 목록만 고침. 더하는 이름은 지금 비시험 소스가 실제로 쓰는 이름(AST 열거, `analysis/enumeration/selectors-and-imports.txt`)뿐임.
@@ -42,6 +44,10 @@ main HEAD `7d1e3163a`(= origin/main)에서 `go test ./...` 가 정적 가드 5�
 
 - 두 도구의 이름 시험이 `accountbudget.WithPriority` 를 직접 호출로만 받고 둘째 인자가 정확히 `accountbudget.Auxiliary` 인지 고정함. 호출이 0 이거나 함수 값 참조가 있으면 실패.
 - 두 도구의 `forbidden` 에 예산 핸들 메서드 7개를 더함: `Budget`, `Acquire`, `EnginePollKey`, `NewObservationFence`, `ObservationSnapshot`, `PollRemaining`, `VerifyIdentity`.
+
+### a166 census 고정 모양 (사용자 결정 2026-11-15)
+
+- `internal/accountbudgetruntime/testdata/a166-wiring/shapes.json` 에서 키 `tools/a128-jev-shadow-probe/main.go||runCommandWithOptions` 의 값 **하나만** 현재 모양으로 갱신함. 다른 89개 키와 `sites.json` 은 무변경.
 
 ### `internal/official/a112_mbus_static_test.go`
 
@@ -72,7 +78,7 @@ main HEAD `7d1e3163a`(= origin/main)에서 `go test ./...` 가 정적 가드 5�
 
 ## Impact
 
-- 편집 파일: 시험 파일 3개(위). `.go` 비시험 파일 0개.
+- 편집 파일: 시험 파일 3개와 새 시험 파일 1개(`a112_mbus_a189_static_test.go`), a166 census corpus `shapes.json` 의 값 하나. `.go` 비시험 파일 0개.
 - 고치는 기존 함수(gate ⑤ FLM 번들 대상): 선택지 A 기준 **5개** — `a112MBUSReferenceAllowed`, a128 `TestNoMutatingOrAccountSurfaceIsNamed`·`TestImportsStayInsideTheAllowlist`, a140 `TestNoMutatingAccountOrWriteSurfaceIsNamed`·`TestImportsStayInsideTheAllowlist`. 편집 전 AST 는 `analysis/pre-edit-ast/`.
-- 판정이 바뀌는 시험: 위 5개가 실패 → 통과. 같은 파일의 다른 시험과 가드를 부르는 픽스처 시험(`TestA112MBUSResolvedASTGuard*` 3개)은 판정 불변이어야 함.
+- 판정이 바뀌는 시험: 위 5개와 a166 census 2개(`TestA166WiringCensusBaseline`·`RejectsBypasses`)가 실패 → 통과. 같은 파일의 다른 시험과 가드를 부르는 픽스처 시험(`TestA112MBUSResolvedASTGuard*` 3개)은 판정 불변이어야 함.
 - 런타임·운영 영향 0: 시험 파일만 바뀜. 운영 토글·설정·DB·journal 변경 없음.

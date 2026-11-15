@@ -109,6 +109,15 @@ A 의 부수 영향:
   - 0건 근거: 두 도구 비시험 소스에서 `\.(Budget|Acquire|EnginePollKey|NewObservationFence|ObservationSnapshot|PollRemaining|VerifyIdentity|Release|Begin|Finish)\b` grep 0건, 보강 뒤 두 시험 PASS.
   - 앞으로 거절하게 될 정상 사용: 다른 패키지의 같은 이름 — a140 이 import 하는 `internal/scheduler` 결정 구조의 `Budget` 필드(`decision.go:39·47`)와 `internal/strategyrouter` `QuotaAuthority.Acquire`(quota.go:205) 를 도구가 언젠가 쓰면 그것도 거절함(이름 단위 금지라 받는 쪽 타입을 안 봄).
 
+### D10. a166 census 고정 모양 갱신을 a189 에 포함 (사용자 결정 2026-11-15)
+
+- 이유: a189 의 목적은 main 의 `go test ./...` 를 다시 초록으로 만들어 a187 archive 를 푸는 것임. census 실패는 그 목적을 막는 같은 종류의 낡은 가드 값이었음 — a179 가 `runCommandWithOptions` 를 바꾸며 a166 의 고정 모양을 갱신하지 않음.
+- 범위: `shapes.json` 의 값 하나. 고정 모양의 의미(그 함수 본문 전체를 리뷰된 모양으로 못 박음)와 다른 89개 키, 호출 자리 분류 `sites.json`, census 코드는 무편집.
+- 리뷰: Manager 가 모양 diff(`analysis/census-investigation/shape-diff.txt`)를 읽고 승인 — 변화는 전부 a179 입력 프로필, 예산 배선 줄 무변화, 새 브로커 HTTP 호출 자리 없음.
+- 생성: 저장소에 corpus 생성 스크립트·`-update` 플래그가 없음(`shapes.json` 을 읽는 곳은 `a166_wiring_census_test.go:35~36` 뿐). census 와 같은 추출(`format.Node`, Doc 제거)로 값을 만들고, Go `encoding/json` 문자열 인코딩으로 기존 값의 표기를 바이트 그대로 재현함을 먼저 단언한 뒤 바꿈.
+- FLM: 비 Go 파일이라 gate ⑤ 대상 아님(required 수 5 그대로).
+- 반증: 사본에서 그 함수 안에 예산을 거치지 않는 `http.Get` 을 넣으면 모양 검사가, 새 함수에 넣으면 호출 자리 수 검사가 여전히 실패함(`analysis/census-repair/falsify.txt`).
+
 ### D6. 고칠 함수와 FLM 번들
 
 - 선택지 A 기준 5개. 편집 전 AST 는 `analysis/pre-edit-ast/` 의 5개 파일이고, B 비교용으로 `optionB-…` 1개를 더 둠. 편집 뒤 번들은 2단계에서 `scaffold_analysis.py` 와 `go run ./tools/logic-map` 으로 만듦.

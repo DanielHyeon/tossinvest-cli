@@ -152,3 +152,20 @@ Pre-Edit Gate:
 - `RejectsBypasses/new-unclassified-http` 실패는 같은 원인의 부수 효과임: 변이가 기대한 「callsite inventory count changed」 보다 모양 검사 실패가 먼저 남.
 - 고치려면: `internal/accountbudgetruntime/testdata/a166-wiring/shapes.json` 의 키 `tools/a128-jev-shadow-probe/main.go||runCommandWithOptions` 값을 현재 모양으로 갱신(사람이 새 모양을 리뷰한 뒤). 다른 파일은 안 바꿔도 됨(사본 실측). 그 파일은 활성 change a166 의 시험 corpus 이고 비 Go 파일이라 gate ⑤ FLM 대상은 아님.
 - 판단: 이 실패는 a179 가 병합 때 a166 의 모양 corpus 를 갱신하지 않아 생긴 것으로, 안전 결함이 아니라 corpus 낡음임(사본에서 다른 단계 전부 통과). 범위 결정은 사용자에게 올라가 있음.
+
+## a166 census 수리 포함 (사용자 결정 2026-11-15 「추천대로」)
+
+### Manager 리뷰 (원문 그대로)
+
+`analysis/census-investigation/shape-diff.txt` 를 읽었다. `runCommandWithOptions` 의 변화는 전부 a179 입력 프로필이다: `--input-profile` 플래그, `--out` 기본값과 `resolveProfileOutput`, `newJudgeClient` 호출을 플래그 파싱 뒤로 옮김, cohort 무작위 토큰, `config{InputProfile, Cohort,…}`, 시작 로그 한 줄. 예산 배선 줄(`ParseLaunchConfig`·`Open`·`factory.NewClient`·`WithPriority(ctx, accountbudget.Auxiliary)`)은 diff 에 없다. 새 브로커 HTTP 호출 자리가 없고, 네 사본 실측에서 호출 자리 116개 분류가 그대로 통과했다. 판정: 모양 갱신 승인(Manager, 2026-11-15).
+
+### 수리 기록 (구현 팀메이트 Opus)
+
+- 갱신(커밋 3af104af9): `internal/accountbudgetruntime/testdata/a166-wiring/shapes.json` 의 키 `tools/a128-jev-shadow-probe/main.go||runCommandWithOptions` 값 하나. 정식 생성 경로가 저장소에 없어 census 와 같은 추출로 만들고, 기존 값의 Go 인코딩 표기를 바이트 그대로 재현함을 먼저 단언함(`analysis/census-repair/enc.go.txt`). `git diff --numstat`: `1 1 shapes.json`. 키별 비교: 키 90/90, 추가·삭제 0, 바뀐 키 그 하나, 무변경 89, `sites.json` 116개 동일(`analysis/census-repair/shapes-key-diff.txt`).
+- 반증(`analysis/census-repair/falsify.py`·`falsify.txt`, 사본·컴파일 확인·기대 문구 단언): 대조군 GREEN. `inside-pinned-function`(고정 함수 안 `http.Get`) → `TestA166WiringCensusBaseline` 「reviewed function shape changed: tools/a128-jev-shadow-probe/main.go||runCommandWithOptions」. `new-unpinned-function`(새 함수 안 `http.Get`) → 「callsite inventory count changed: got 117 expected 116」. 둘 다 CAUGHT — 갱신이 census 를 눈멀게 하지 않음.
+- 시험(`analysis/verify-3/`): 4개 패키지 ok, FAIL 0. `internal/accountbudgetruntime` 최상위 PASS 53·서브 포함 77. `tools/a112-mb-us-source` 는 Manager 지시로 안 돌림(이전 `verify-2` 에서 ok 173s, 그 뒤 그 패키지가 보는 파일은 안 바뀜 — 바뀐 것은 shapes.json·두 도구 static_test.go 이고 측정 소스 신원 집합에는 `a112_mbus_static_test.go` 만 있음).
+- 스펙 델타: census 때문에 바꿀 것 없음 — 무편집.
+
+### 후속 (a166 인계)
+
+- a166 은 a179 같은 병합 때 corpus(`testdata/a166-wiring/shapes.json`) 갱신이 필요하다.

@@ -1,0 +1,12 @@
+기준 HEAD 3af104af9b26d330343b4472d1138b9bfe5845b0, 사본 a189-census-581087-o6expr6m
+control: GREEN (11 PASS 줄)
+inside-pinned-function: CAUGHT — TestA166WiringCensusBaseline
+    a166_wiring_census_test.go:303: reviewed function shape changed: tools/a128-jev-shadow-probe/main.go||runCommandWithOptions
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: cmd/tossctl/root_budget.go||newRootOfficialClient
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/accountbudgetruntime/runtime_linux.go|Factory|NewClient
+new-unpinned-function: CAUGHT — TestA166WiringCensusBaseline
+    a166_wiring_census_test.go:303: callsite inventory count changed: got 117 expected 116
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: cmd/tossctl/root_budget.go||newRootOfficialClient
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/accountbudgetruntime/runtime_linux.go|Factory|NewClient
+끝: 판정 이상 0건
+# rc=0
