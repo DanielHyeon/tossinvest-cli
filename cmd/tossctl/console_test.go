@@ -795,6 +795,12 @@ func TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient(t *testing.T
 						rebinds++
 					}
 				}
+			case *ast.ValueSpec: // 안쪽 블록의 `var broker = …` 가림도 다시 대입으로 셈
+				for _, name := range v.Names {
+					if broker != "" && name.Name == broker {
+						rebinds++
+					}
+				}
 			case *ast.TypeAssertExpr:
 				if id, ok := v.X.(*ast.Ident); ok && broker != "" && id.Name == broker &&
 					types.ExprString(v.Type) == "consoleOrdersReader" {
