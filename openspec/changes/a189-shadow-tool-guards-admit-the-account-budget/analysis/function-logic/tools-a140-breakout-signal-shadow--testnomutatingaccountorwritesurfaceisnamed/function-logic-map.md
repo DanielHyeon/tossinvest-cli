@@ -48,6 +48,8 @@
 - 보강: `forbidden` 에 예산 핸들 메서드 7개, 갈래 B2·B3·B6·B12, import `go/types`. 기존 이름·문구 무편집.
 - 알려진 한계: 별칭 import 는 B2·B6 에 안 잡힘(R1, 범위 밖).
 
+- Manager 결정 1(2026-11-16): 같은 파일 아래쪽 `TestImportsStayInsideTheAllowlist` 편집으로 파일 sha 만 바뀜 — 이 함수의 본문·분기·행은 이전 ast.json 과 같음(sha 밖 항목 전부 동일, 다시 뽑음).
+
 ## Safety conclusion
 
 - Safe edit boundary: 맵 항목·금지 이름 추가와 우선순위 인자 고정.
