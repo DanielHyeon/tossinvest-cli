@@ -782,6 +782,7 @@ func engineFillDetector(ectx *engine.Context, clk clock.Clock,
 		Gate:   ectx.Entry,
 		Clock:  clk,
 		Config: filldetect.Config{Currencies: ectx.SnapshotCurrencies()},
+		Alerts: engineFillAlerts(ectx.Notifier),
 	}, nil
 }
 

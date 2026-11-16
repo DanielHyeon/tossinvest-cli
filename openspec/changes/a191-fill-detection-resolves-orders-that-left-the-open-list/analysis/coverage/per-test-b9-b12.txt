@@ -1,0 +1,29 @@
+# collect B9(if@421)·B11(if@422)·B10(else@426)·B12(if@426) 블록을 밟는 시험 — 시험마다 go test -run '^Name$' -coverprofile, detect.go 421~430행 블록 count>0 만 적음. HEAD a392308e8 + 미커밋 a191 편집, 2026-11-17
+TestA087MarketSellFillPriceIsTheBrokersAverage | 421.15,422.66 422.66,425.5 
+TestA087MarketSellRemainderIsTrackedUntilTheBrokerEndsIt | 421.15,422.66 422.66,425.5 
+TestA191OrderStillInTheOpenListIsNeverLookedUp | 421.15,422.66 422.66,425.5 
+TestA191JustPlacedOrderMissingFromTheOpenListIsNotEscalated | 421.15,422.66 422.66,425.5 
+TestA191OrderThatStaysInTheOpenListIsNeverReported | 421.15,422.66 422.66,425.5 
+TestPollWalksTheOpenListToTheLastPage | 421.15,422.66 
+TestPollReadsTrackedOrdersThatLeftTheOpenList | 421.15,422.66 422.66,425.5 
+TestPollSeparatesReusedOrderIDsByCanonicalScope | 421.15,422.66 422.66,425.5 
+TestPollRejectsIncompleteOpenScopeForATrackedOrder | 426.9,426.48 426.48,430.4 
+TestSLOMeasuresBrokerVisibleToLocalCommit | 421.15,422.66 
+TestSLOFallsBackToThePreviousPollWhenTheBrokerGivesNoFillTime | 421.15,422.66 
+TestSustainedSLOViolationBlocksEntriesAndRecoveryReleasesThem | 421.15,422.66 
+TestEventPayloadIsNeverUsedAsState | 421.15,422.66 
+TestHintShortensDetectionLatency | 421.15,422.66 
+TestTheSameSnapshotFromPollAndSSERefetchAppliesOnce | 421.15,422.66 
+TestOnlyThePositiveDeltaIsReflected | 421.15,422.66 
+TestShrinkingFillBlocksEntries | 421.15,422.66 
+TestUnknownDerivationFailsClosed | 421.15,422.66 
+TestRestartDoesNotReapplyKnownFills | 421.15,422.66 
+TestTerminalOrdersLeaveTheTrackedSet | 421.15,422.66 422.66,425.5 
+TestSnapshotCarriesTheFilledAmount | 421.15,422.66 
+TestSnapshotCarriesCanonicalBrokerOrderScope | 421.15,422.66 
+TestUSSnapshotTradingDayUsesNewYorkRatherThanBrokerTimestampOffset | 421.15,422.66 
+TestFilledAmountKeepsItsDecimalString | 421.15,422.66 
+TestAbsentFilledAmountIsEmptyNotZero | 421.15,422.66 
+TestSnapshotKeepsTheOrderIdVerbatim | 421.15,422.66 
+TestUnobservedStatusFailsClosedAtTheEntryGate | 421.15,422.66 
+TestA191IncompleteOpenOrderNotTrackedIsStillApplied | 426.9,426.48 (조건 1회, 본문 426.48,430.4 = 0 → B12 거짓 갈래)

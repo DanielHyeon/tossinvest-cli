@@ -1,0 +1,12 @@
+=== RUN   TestA191OrderThatLeftTheOpenListAndIsCanceledInTheClosedListIsRecordedTerminal
+    a191_closed_lookup_core_test.go:164: snapshot = {OrderID:o-a191-1 AccountRef:acct-1 Symbol:SYN001 Market:kr TradingDay:2026-03-30 Side:SELL State:OPEN_UNFILLED Terminal:false FailClosed:false Quantity:10 FilledQuantity:0 AveragePrice: FilledAmount: BrokerVisibleAt: ObservedAt:2026-03-30T01:30:00Z CommittedAt:2026-03-30T01:30:01Z ReasonCode: Detail:}, want terminal CANCELLED with 0 filled
+--- FAIL: TestA191OrderThatLeftTheOpenListAndIsCanceledInTheClosedListIsRecordedTerminal (0.32s)
+=== RUN   TestA191TerminalSnapshotLeavesTheReconcileLocalState
+    a191_closed_lookup_core_test.go:200: local open orders after the terminal snapshot = map[o-a191-2:{OrderID:o-a191-2 OriginalOrderID:o-a191-2 AccountRef:acct-1 Symbol:SYN001 Market:kr TradingDay:2026-03-30 Side:SELL}], want none
+--- FAIL: TestA191TerminalSnapshotLeavesTheReconcileLocalState (0.34s)
+=== RUN   TestA191AcceptedClosedRowKeepsTheSingleReadExecution
+    a191_closed_lookup_core_test.go:231: snapshot = {OrderID:o-a191-3 AccountRef:acct-1 Symbol:SYN001 Market:kr TradingDay:2026-03-30 Side:SELL State:OPEN_PARTIALLY_FILLED Terminal:false FailClosed:false Quantity:10 FilledQuantity:4 AveragePrice:1 FilledAmount: BrokerVisibleAt: ObservedAt:2026-03-30T01:30:00Z CommittedAt:2026-03-30T01:30:01Z ReasonCode: Detail:}, want terminal CANCELLED_PARTIALLY_FILLED, 4 filled at the single read's average 1
+--- FAIL: TestA191AcceptedClosedRowKeepsTheSingleReadExecution (0.32s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/filldetect	0.993s
+FAIL

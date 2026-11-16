@@ -1,0 +1,172 @@
+=== RUN   TestA087MarketSellFillPriceIsTheBrokersAverage
+--- PASS: TestA087MarketSellFillPriceIsTheBrokersAverage (0.30s)
+=== RUN   TestA087MarketSellRemainderIsTrackedUntilTheBrokerEndsIt
+--- PASS: TestA087MarketSellRemainderIsTrackedUntilTheBrokerEndsIt (0.28s)
+=== RUN   TestA191OrderThatLeftTheOpenListAndIsCanceledInTheClosedListIsRecordedTerminal
+--- PASS: TestA191OrderThatLeftTheOpenListAndIsCanceledInTheClosedListIsRecordedTerminal (0.25s)
+=== RUN   TestA191TerminalSnapshotLeavesTheReconcileLocalState
+--- PASS: TestA191TerminalSnapshotLeavesTheReconcileLocalState (0.24s)
+=== RUN   TestA191AcceptedClosedRowKeepsTheSingleReadExecution
+--- PASS: TestA191AcceptedClosedRowKeepsTheSingleReadExecution (0.24s)
+=== RUN   TestA191SingleReadPendingAndClosedListSilentKeepsTodaysSnapshot
+--- PASS: TestA191SingleReadPendingAndClosedListSilentKeepsTodaysSnapshot (0.00s)
+=== RUN   TestA191ClosedListFillDisagreementNeverRecordsAFill
+=== RUN   TestA191ClosedListFillDisagreementNeverRecordsAFill/filled_differs
+=== RUN   TestA191ClosedListFillDisagreementNeverRecordsAFill/ordered_quantity_differs
+--- PASS: TestA191ClosedListFillDisagreementNeverRecordsAFill (0.00s)
+    --- PASS: TestA191ClosedListFillDisagreementNeverRecordsAFill/filled_differs (0.00s)
+    --- PASS: TestA191ClosedListFillDisagreementNeverRecordsAFill/ordered_quantity_differs (0.00s)
+=== RUN   TestA191ClosedListReadFailureDoesNotFailTheCycle
+--- PASS: TestA191ClosedListReadFailureDoesNotFailTheCycle (0.00s)
+=== RUN   TestA191ClosedLookupIsThrottledPerOrder
+--- PASS: TestA191ClosedLookupIsThrottledPerOrder (0.00s)
+=== RUN   TestA191ClosedRowFromAnotherScopeIsNotAccepted
+--- PASS: TestA191ClosedRowFromAnotherScopeIsNotAccepted (0.00s)
+=== RUN   TestA191DuplicateClosedRowsForOneIDAreAmbiguous
+--- PASS: TestA191DuplicateClosedRowsForOneIDAreAmbiguous (0.00s)
+=== RUN   TestA191SameScopeRowsWithDifferentPayloadsAreAmbiguous
+=== RUN   TestA191SameScopeRowsWithDifferentPayloadsAreAmbiguous/canceled_first
+=== RUN   TestA191SameScopeRowsWithDifferentPayloadsAreAmbiguous/partial_first
+=== RUN   TestA191SameScopeRowsWithDifferentPayloadsAreAmbiguous/byte-identical_duplicate_counts_once
+--- PASS: TestA191SameScopeRowsWithDifferentPayloadsAreAmbiguous (0.00s)
+    --- PASS: TestA191SameScopeRowsWithDifferentPayloadsAreAmbiguous/canceled_first (0.00s)
+    --- PASS: TestA191SameScopeRowsWithDifferentPayloadsAreAmbiguous/partial_first (0.00s)
+    --- PASS: TestA191SameScopeRowsWithDifferentPayloadsAreAmbiguous/byte-identical_duplicate_counts_once (0.00s)
+=== RUN   TestA191ClosedRowIDMustMatchByteForByte
+--- PASS: TestA191ClosedRowIDMustMatchByteForByte (0.00s)
+=== RUN   TestA191ReplacedWithoutLineageIsNotAccepted
+--- PASS: TestA191ReplacedWithoutLineageIsNotAccepted (0.00s)
+=== RUN   TestA191PartialFilledInTheClosedGroupIsNotTerminal
+--- PASS: TestA191PartialFilledInTheClosedGroupIsNotTerminal (0.00s)
+=== RUN   TestA191UnknownSingleReadIsNeverLookedUp
+--- PASS: TestA191UnknownSingleReadIsNeverLookedUp (0.00s)
+=== RUN   TestA191OrderStillInTheOpenListIsNeverLookedUp
+--- PASS: TestA191OrderStillInTheOpenListIsNeverLookedUp (0.00s)
+=== RUN   TestA191TerminalSingleReadIsNeverLookedUp
+--- PASS: TestA191TerminalSingleReadIsNeverLookedUp (0.00s)
+=== RUN   TestA191ExistingTrackedReadGuardsRunBeforeTheLookup
+--- PASS: TestA191ExistingTrackedReadGuardsRunBeforeTheLookup (0.00s)
+=== RUN   TestA191ClosedQueryNamesTheSymbolAndTheTradingDayWindow
+--- PASS: TestA191ClosedQueryNamesTheSymbolAndTheTradingDayWindow (0.00s)
+=== RUN   TestA191ClosedWalkStopsAtThePageCeiling
+--- PASS: TestA191ClosedWalkStopsAtThePageCeiling (0.00s)
+=== RUN   TestA191ClosedRowWithoutExecutionIsNotAccepted
+=== RUN   TestA191ClosedRowWithoutExecutionIsNotAccepted/null_execution
+=== RUN   TestA191ClosedRowWithoutExecutionIsNotAccepted/null_filled_quantity
+=== RUN   TestA191ClosedRowWithoutExecutionIsNotAccepted/empty_filled_quantity
+=== RUN   TestA191ClosedRowWithoutExecutionIsNotAccepted/no_execution
+--- PASS: TestA191ClosedRowWithoutExecutionIsNotAccepted (0.00s)
+    --- PASS: TestA191ClosedRowWithoutExecutionIsNotAccepted/null_execution (0.00s)
+    --- PASS: TestA191ClosedRowWithoutExecutionIsNotAccepted/null_filled_quantity (0.00s)
+    --- PASS: TestA191ClosedRowWithoutExecutionIsNotAccepted/empty_filled_quantity (0.00s)
+    --- PASS: TestA191ClosedRowWithoutExecutionIsNotAccepted/no_execution (0.00s)
+=== RUN   TestA191OnlyOneClosedLookupPerCycle
+--- PASS: TestA191OnlyOneClosedLookupPerCycle (0.00s)
+=== RUN   TestA191SlowClosedLookupIsCutAtTheDeadline
+--- PASS: TestA191SlowClosedLookupIsCutAtTheDeadline (2.00s)
+=== RUN   TestA191UnresolvedIsReportedOnlyAfterItPersists
+--- PASS: TestA191UnresolvedIsReportedOnlyAfterItPersists (0.00s)
+=== RUN   TestA191JustPlacedOrderMissingFromTheOpenListIsNotEscalated
+--- PASS: TestA191JustPlacedOrderMissingFromTheOpenListIsNotEscalated (0.00s)
+=== RUN   TestA191UnresolvedAlertCarriesOnlyTheInternalIdentifier
+--- PASS: TestA191UnresolvedAlertCarriesOnlyTheInternalIdentifier (0.00s)
+=== RUN   TestPollWalksTheOpenListToTheLastPage
+--- PASS: TestPollWalksTheOpenListToTheLastPage (0.00s)
+=== RUN   TestPollReadsTrackedOrdersThatLeftTheOpenList
+--- PASS: TestPollReadsTrackedOrdersThatLeftTheOpenList (0.00s)
+=== RUN   TestPollSeparatesReusedOrderIDsByCanonicalScope
+--- PASS: TestPollSeparatesReusedOrderIDsByCanonicalScope (0.00s)
+=== RUN   TestPollRejectsIncompleteOpenScopeForATrackedOrder
+--- PASS: TestPollRejectsIncompleteOpenScopeForATrackedOrder (0.00s)
+=== RUN   TestPollRejectsTrackedReadFromAnotherCanonicalScope
+--- PASS: TestPollRejectsTrackedReadFromAnotherCanonicalScope (0.00s)
+=== RUN   TestPollRejectsDuplicateTrackedCanonicalIdentity
+--- PASS: TestPollRejectsDuplicateTrackedCanonicalIdentity (0.00s)
+=== RUN   TestPollSweepsTheAccountEveryCycle
+--- PASS: TestPollSweepsTheAccountEveryCycle (0.00s)
+=== RUN   TestPollStampsQueryFreshness
+--- PASS: TestPollStampsQueryFreshness (0.00s)
+=== RUN   TestBuyingPowerUsesItsOwnSlowerCadence
+--- PASS: TestBuyingPowerUsesItsOwnSlowerCadence (0.00s)
+=== RUN   TestSLOMeasuresBrokerVisibleToLocalCommit
+--- PASS: TestSLOMeasuresBrokerVisibleToLocalCommit (0.00s)
+=== RUN   TestSLOFallsBackToThePreviousPollWhenTheBrokerGivesNoFillTime
+--- PASS: TestSLOFallsBackToThePreviousPollWhenTheBrokerGivesNoFillTime (0.00s)
+=== RUN   TestSustainedSLOViolationBlocksEntriesAndRecoveryReleasesThem
+--- PASS: TestSustainedSLOViolationBlocksEntriesAndRecoveryReleasesThem (0.00s)
+=== RUN   TestRateLimitedPollIsClassifiedAsOutage
+--- PASS: TestRateLimitedPollIsClassifiedAsOutage (0.00s)
+=== RUN   TestTransportOutageIsClassifiedSeparately
+--- PASS: TestTransportOutageIsClassifiedSeparately (0.00s)
+=== RUN   TestOutageDoesNotStampFreshness
+--- PASS: TestOutageDoesNotStampFreshness (0.00s)
+=== RUN   TestMalformedOrderPayloadFailsTheCycle
+--- PASS: TestMalformedOrderPayloadFailsTheCycle (0.00s)
+=== RUN   TestDetectionNeedsNoWTSSession
+--- PASS: TestDetectionNeedsNoWTSSession (0.00s)
+=== RUN   TestRunKeepsPollingThroughAnOutage
+--- PASS: TestRunKeepsPollingThroughAnOutage (0.00s)
+=== RUN   TestDetectorRefusesIncompleteWiring
+--- PASS: TestDetectorRefusesIncompleteWiring (0.00s)
+=== RUN   TestEventBurstCollapsesIntoOneRefetch
+--- PASS: TestEventBurstCollapsesIntoOneRefetch (0.02s)
+=== RUN   TestMinimumIntervalIsEnforcedPerTopic
+--- PASS: TestMinimumIntervalIsEnforcedPerTopic (0.00s)
+=== RUN   TestTopicsCoalesceIndependently
+--- PASS: TestTopicsCoalesceIndependently (0.00s)
+=== RUN   TestUnrelatedEventsAreIgnored
+--- PASS: TestUnrelatedEventsAreIgnored (0.02s)
+=== RUN   TestEventPayloadIsNeverUsedAsState
+--- PASS: TestEventPayloadIsNeverUsedAsState (0.27s)
+=== RUN   TestHintShortensDetectionLatency
+--- PASS: TestHintShortensDetectionLatency (0.23s)
+=== RUN   TestListenConsumesALiveSSEStream
+--- PASS: TestListenConsumesALiveSSEStream (0.00s)
+=== RUN   TestHintsRefuseIncompleteWiring
+--- PASS: TestHintsRefuseIncompleteWiring (0.00s)
+=== RUN   TestTheSameSnapshotFromPollAndSSERefetchAppliesOnce
+--- PASS: TestTheSameSnapshotFromPollAndSSERefetchAppliesOnce (0.25s)
+=== RUN   TestOnlyThePositiveDeltaIsReflected
+--- PASS: TestOnlyThePositiveDeltaIsReflected (0.26s)
+=== RUN   TestShrinkingFillBlocksEntries
+--- PASS: TestShrinkingFillBlocksEntries (0.28s)
+=== RUN   TestUnknownDerivationFailsClosed
+--- PASS: TestUnknownDerivationFailsClosed (0.32s)
+=== RUN   TestRestartDoesNotReapplyKnownFills
+--- PASS: TestRestartDoesNotReapplyKnownFills (0.29s)
+=== RUN   TestTerminalOrdersLeaveTheTrackedSet
+--- PASS: TestTerminalOrdersLeaveTheTrackedSet (0.33s)
+=== RUN   TestJournalTrackedPreservesCanonicalOrderScope
+--- PASS: TestJournalTrackedPreservesCanonicalOrderScope (0.32s)
+=== RUN   TestJournalLedgerRejectsSnapshotFromAnotherAccount
+--- PASS: TestJournalLedgerRejectsSnapshotFromAnotherAccount (0.27s)
+=== RUN   TestSnapshotCarriesTheFilledAmount
+--- PASS: TestSnapshotCarriesTheFilledAmount (0.00s)
+=== RUN   TestSnapshotCarriesCanonicalBrokerOrderScope
+--- PASS: TestSnapshotCarriesCanonicalBrokerOrderScope (0.00s)
+=== RUN   TestUSSnapshotTradingDayUsesNewYorkRatherThanBrokerTimestampOffset
+--- PASS: TestUSSnapshotTradingDayUsesNewYorkRatherThanBrokerTimestampOffset (0.00s)
+=== RUN   TestFilledAmountKeepsItsDecimalString
+--- PASS: TestFilledAmountKeepsItsDecimalString (0.00s)
+=== RUN   TestAbsentFilledAmountIsEmptyNotZero
+=== RUN   TestAbsentFilledAmountIsEmptyNotZero/field_missing
+=== RUN   TestAbsentFilledAmountIsEmptyNotZero/field_null
+--- PASS: TestAbsentFilledAmountIsEmptyNotZero (0.00s)
+    --- PASS: TestAbsentFilledAmountIsEmptyNotZero/field_missing (0.00s)
+    --- PASS: TestAbsentFilledAmountIsEmptyNotZero/field_null (0.00s)
+=== RUN   TestUnreadableFilledAmountFailsTheCycle
+--- PASS: TestUnreadableFilledAmountFailsTheCycle (0.00s)
+=== RUN   TestSnapshotKeepsTheOrderIdVerbatim
+--- PASS: TestSnapshotKeepsTheOrderIdVerbatim (0.00s)
+=== RUN   TestBlankPayloadIdFallsBackToTheTrackedId
+--- PASS: TestBlankPayloadIdFallsBackToTheTrackedId (0.00s)
+=== RUN   TestUnobservedStatusFailsClosedAtTheEntryGate
+=== RUN   TestUnobservedStatusFailsClosedAtTheEntryGate/undocumented_status
+=== RUN   TestUnobservedStatusFailsClosedAtTheEntryGate/cancel_rejected_record
+=== RUN   TestUnobservedStatusFailsClosedAtTheEntryGate/replace_rejected_record
+--- PASS: TestUnobservedStatusFailsClosedAtTheEntryGate (0.85s)
+    --- PASS: TestUnobservedStatusFailsClosedAtTheEntryGate/undocumented_status (0.28s)
+    --- PASS: TestUnobservedStatusFailsClosedAtTheEntryGate/cancel_rejected_record (0.27s)
+    --- PASS: TestUnobservedStatusFailsClosedAtTheEntryGate/replace_rejected_record (0.31s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/filldetect	7.042s

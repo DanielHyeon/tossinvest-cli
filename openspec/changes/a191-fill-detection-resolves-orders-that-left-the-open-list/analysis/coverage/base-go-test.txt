@@ -1,0 +1,1 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/filldetect	5.347s	coverage: 87.8% of statements

@@ -1,0 +1,78 @@
+{
+  "file": "internal/filldetect/closed_lookup.go",
+  "source_sha256": "37be788f05fe985736d90827d0c57961180940c16e5e84afbe4cf410a94b6057",
+  "package": "filldetect",
+  "function": "closedQuantityEqual",
+  "signature": "closedQuantityEqual(params=2, results=1)",
+  "start": {
+    "line": 305,
+    "column": 1
+  },
+  "end": {
+    "line": 308,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 307,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 306,
+        "column": 11
+      },
+      "text": "math.Max"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 306,
+        "column": 23
+      },
+      "text": "math.Max"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 306,
+        "column": 32
+      },
+      "text": "math.Abs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 306,
+        "column": 45
+      },
+      "text": "math.Abs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 307,
+        "column": 9
+      },
+      "text": "math.Abs"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 306,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

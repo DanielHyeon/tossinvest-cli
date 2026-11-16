@@ -1,0 +1,3 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/filldetect_test
+# [github.com/JungHoonGhae/tossinvest-cli/internal/filldetect_test]
+vet: internal/filldetect/a191_closed_lookup_test.go:83:58: undefined: filldetect.UnresolvedReason

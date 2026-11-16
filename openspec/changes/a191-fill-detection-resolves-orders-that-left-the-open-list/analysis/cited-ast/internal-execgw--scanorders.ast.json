@@ -1,0 +1,228 @@
+{
+  "file": "internal/execgw/indoubt.go",
+  "source_sha256": "d220e7df90d725bf116227c892a8f1b6e2a1c7df2f157f5a1eadb0e3217bdbc0",
+  "package": "execgw",
+  "function": "ScanOrders",
+  "signature": "ScanOrders(params=4, results=2)",
+  "start": {
+    "line": 730,
+    "column": 1
+  },
+  "end": {
+    "line": 765,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 731,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 734,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "for",
+      "at": {
+        "line": 743,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 744,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 749,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 755,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 758,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 732,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 745,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 750,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 756,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 759,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 732,
+        "column": 15
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 735,
+        "column": 14
+      },
+      "text": "DefaultResolveConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 745,
+        "column": 16
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 748,
+        "column": 18
+      },
+      "text": "pager.OrdersPageRaw"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 752,
+        "column": 9
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 754,
+        "column": 11
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 759,
+        "column": 16
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 735,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 743,
+        "column": 6
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 743,
+        "column": 19
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 748,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 752,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 754,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 762,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 763,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

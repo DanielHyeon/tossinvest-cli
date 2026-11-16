@@ -41,6 +41,7 @@
 | required engine-poll GET | GET | 같은 논리 Query | **429** | **0회** | 현재 Query는 종료; 유효 ≤30s hint 동안 후속 동종 poll은 wire0 | freshness 성공 0; token429도 Query 종료, poll hint는 생성하지 않음 |
 | OFF/legacy Retrier GET | GET | 기존 동작 유지 | **429** | 기존 MaxAttempts/8s budget 안 | RetryAfterSource가 있으면 상한 검사; 없으면 기존 backoff | 현재 생산 OFF 엔진은 source nil; 과거 '1회 대기' 문구를 실제 보장으로 쓰지 않음 |
 | 별도 비지연 walk GET | GET | soak·verify·IN_DOUBT 스캔 | **429** | 기존 추가 2회 | 기존 15s → 30s | a166에서 호출자 재시도 정책 변경 없음; required wire별 admission/기록 적용 |
+| `/api/v1/orders?status=CLOSED` | GET | a191 체결 감지의 목록 이탈 주문 종결 확인(종목·거래일±1일, limit 100, ≤3페이지) | 전부(429 포함) | **0회** — 같은 주기 재시도 없음 | 같은 주문 30s 간격, 주기당 조회 최대 1건, 조회 전체 2s 취소 시한 | 실패는 그 주문만 「단건 그대로」+ 사유(`closed_list_read_failed`), 주기 실패·freshness 영향 없음 |
 | Retrier에 최종 반환된 오류 | GET | — | **401/403** | **0회** | — | **즉시 신규 진입 차단(latch)** + durable escalation/알림 |
 | 모든 GET | GET | — | 그 외 4xx(permanent) | **0회** | — | 호출자에게 오류 반환, freshness 미갱신 |
 
@@ -90,6 +91,7 @@
 | 잔고 GET | 15s마다 1회 ≈ 0.07 req/s | 3.4 reconcile 스냅샷 |
 | 보유 GET | 15s마다 1회 ≈ 0.07 req/s | 3.4 |
 | 주문 단건 GET | in-flight 주문당 3s마다 1회 (심볼당 in-flight 1건 제한) | 2.7/3.1 |
+| 종결 목록 GET (a191) | 목록 이탈 + 단건 비종결 주문이 있을 때만, 주기(3s)당 최대 1조회 × ≤3페이지 — 정상 0, 상한 ≈1 req/s(대개 1페이지 ≈0.33 req/s), 같은 주문 30s 간격 | a191 D10 |
 | IN_DOUBT 해소 스캔 | 발생 시에만, OPEN+CLOSED 각 페이지 1회 × 안정화 3회 | 2.7 |
 
 위 빈도표는 초기 설계의 평균 추정이며 현재 전체 호출자·token·재전송을 포함한 상한 증거가 아니다. 총 시간 예산 8s만으로 순간 버스트 1.5 req/s 이하를 증명할 수 없다. a166 required의 로컬 요청 시작은 같은 공통 group wire 소유권과 350ms 최소 간격으로 제한한다. 기준은 TLS 연결의 첫 HTTP plaintext Write이며 브로커 도착률·처리 완료·429 미발생을 보장하지 않는다. OFF와 required 미참여 프로세스까지 포함한 운영 총량은 별도 참여자 검증 없이는 주장하지 않는다.

@@ -1,0 +1,34 @@
+# 코드 리뷰 1회차 원문 — Codex(gpt-6-astra), codex exec -s read-only, 2026-11-17
+```
+Adversarial code review (gstack-style, adversarial Eng voice) of a HIGH-RISK change to a live-money Go trading engine's fill detection. You did not write it. Read-only: no file edits, no network, no make, no `go test ./...`. You MAY run `go test ./internal/filldetect/ -run TestA191 -count=1` and `go vet ./internal/filldetect/ ./cmd/tossctl/` (with GOFLAGS=-trimpath and GOCACHE=$HOME/.cache/a191-review-gocache) if useful.
+
+The diff is at openspec/changes/a191-fill-detection-resolves-orders-that-left-the-open-list/analysis/review/code-review-1.diff (tracked edits in internal/filldetect/detect.go, ledger.go, cmd/tossctl/engine.go; new files internal/filldetect/closed_lookup.go, cmd/tossctl/a191_fill_alerts.go and tests). The contract is that change's specs/fill-detection/spec.md and design.md (D1, D3, D4, D5, D6, D11, D12) plus the Manager decisions table in review.md ("Manager 결정 (2026-11-16 …)" and M11–M13 pending). Mutation ledger: analysis/mutation/README.md.
+
+Find real defects, citing file:line:
+1. Any path where a WRONG terminal snapshot can be written (live or differently-filled order closed), or where a state field other than RawStatus/Canceled/CanceledAt/Derived leaks from the CLOSED row into the applied snapshot.
+2. Any path that fails the poll cycle, panics (nil map, nil interface, index out of range — note snaps[c.index]), or leaks goroutines/contexts.
+3. Concurrency: leftOpen/leftOpenCycle are mutated in collect; is every caller under d.poll? Does Health() or anything else read them? Is the *Cycle pointer identity sound for discarding a failed cycle's candidates?
+4. Selection/throttle/report logic in settleLeftOpen and pickClosedLookup vs design D5/D6 (deferred keeps lastLookup; prune; report once; reported reason).
+5. Alert payload: anything forbidden (broker order id, account, symbol, quantity, price) reachable via obs.Notifier (internal/obs/notifier.go) given the Event built in reportUnresolved.
+6. Tests: any test that passes for the wrong reason, any assertion that is vacuous, any mutation in README marked CAUGHT that the named test would not actually catch.
+7. Anything that contradicts the spec/design text.
+Do not propose new guards or policies as defects; if you think one is needed, list it separately under "Policy suggestions (not defects)".
+Output: numbered findings (BLOCKER/MAJOR/MINOR/NIT) with file:line and a concrete fix; then policy suggestions; then one-paragraph verdict. Concise.
+```
+1. **MAJOR — failed collections accumulate candidates indefinitely.** [closed_lookup.go:109](/home/daniel/tossos-work/a191-filldetect-closed-list/internal/filldetect/closed_lookup.go:109) appends candidates; clearing occurs only at `settleLeftOpen` line 121. If order A registers and order B’s single read repeatedly fails at [detect.go:440](/home/daniel/tossos-work/a191-filldetect-closed-list/internal/filldetect/detect.go:440), every poll retains another candidate and its `*Cycle`. Pointer filtering prevents stale indexing, but does not bound memory.
+   **Fix:** clear transient candidates at collection entry or through deferred cleanup on every return; preserve the persistent throttle map. Test repeated failures followed by recovery.
+
+2. **MAJOR — accepting CLOSED evidence prematurely removes the 30-second throttle.** [closed_lookup.go:152](/home/daniel/tossos-work/a191-filldetect-closed-list/internal/filldetect/closed_lookup.go:152) deletes tracking before any ledger application. A subsequent positions/balance failure at [detect.go:312](/home/daniel/tossos-work/a191-filldetect-closed-list/internal/filldetect/detect.go:312) leaves the order tracked and unclosed. The next poll treats it as never queried and performs another CLOSED scan, violating D5/M8’s minimum interval. Repeated failures repeat this indefinitely.
+   **Fix:** retain `lastLookup` after acceptance; prune when a subsequent collection confirms the order is no longer a candidate. Add acceptance → positions failure → poll before 30s coverage.
+
+3. **MINOR — malformed execution quantities receive the wrong reason.** At [closed_lookup.go:219](/home/daniel/tossos-work/a191-filldetect-closed-list/internal/filldetect/closed_lookup.go:219), `parseSnapshot` rejects `"filledQuantity":"garbage"` before `closedRowCarriesFill` runs. Result: `closed_list_row_unreadable`, whereas [design.md:103](/home/daniel/tossos-work/a191-filldetect-closed-list/openspec/changes/a191-fill-detection-resolves-orders-that-left-the-open-list/design.md:103) specifies `closed_list_execution_missing` for unreadable filled quantities. This reason also reaches the alert.
+   **Fix:** classify execution-quantity decoding failures consistently with M6; test nonnumeric strings and wrong JSON types.
+
+4. **MINOR — elapsed-time alert assertion is vacuous.** [a191_closed_lookup_test.go:496](/home/daniel/tossos-work/a191-filldetect-closed-list/internal/filldetect/a191_closed_lookup_test.go:496) advances 40s without polling, then asserts zero alerts. Reporting cannot execute. Furthermore, the order disappeared again at line 490: polling after that advance should produce **one** alert.
+   **Fix:** separately test continued OPEN presence with polling, and a second disappearance across its reset 30s boundary. **m18 remains legitimately CAUGHT** by the query-count assertion at line 493; no false CAUGHT mapping was established.
+
+**Policy suggestions (not defects)**
+
+Resolve existing M11–M13 explicitly: cancellation versus actual return bounds, synchronous notification latency, and retry starvation under continual new candidates. These are already documented in [review.md:133](/home/daniel/tossos-work/a191-filldetect-closed-list/openspec/changes/a191-fill-detection-resolves-orders-that-left-the-open-list/review.md:133), not new implementation findings.
+
+**Verdict:** Request changes for findings 1–2. No additional wrong-terminal or forbidden-field-copy path established: replacement copies only the four permitted fields ([closed_lookup.go:240](/home/daniel/tossos-work/a191-filldetect-closed-list/internal/filldetect/closed_lookup.go:240)). Current callers serialize through `PollOnce`; `Health()` does not read candidate state, and retained nonzero-sized `Cycle` objects make pointer identity sound for rejecting stale indices. No reachable new nil-map/index panic or goroutine/context leak established. The event’s four fields and fixed text introduce no forbidden payload through `Notifier` ([notifier.go:1004](/home/daniel/tossos-work/a191-filldetect-closed-list/internal/obs/notifier.go:1004)). Review was static, including independent test/mutation inspection; tests and vet were not run. No edits or network calls.

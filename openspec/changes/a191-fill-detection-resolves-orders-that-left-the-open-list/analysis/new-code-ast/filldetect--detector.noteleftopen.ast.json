@@ -1,0 +1,79 @@
+{
+  "file": "internal/filldetect/closed_lookup.go",
+  "source_sha256": "37be788f05fe985736d90827d0c57961180940c16e5e84afbe4cf410a94b6057",
+  "package": "filldetect",
+  "function": "noteLeftOpen",
+  "receiver": "Detector",
+  "signature": "Detector.noteLeftOpen(params=5, results=0)",
+  "start": {
+    "line": 105,
+    "column": 1
+  },
+  "end": {
+    "line": 114,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 107,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 20
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 111,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

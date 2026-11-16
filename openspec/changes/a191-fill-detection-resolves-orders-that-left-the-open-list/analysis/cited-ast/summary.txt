@@ -1,0 +1,96 @@
+# 인용 함수 AST 요약 — 생성: python3 astsum.py.txt <ast.json> (각 파일), HEAD a392308e8, logic-map: GOFLAGS=-trimpath go run ./tools/logic-map --file <f> --func <fn>
+## cmd-tossctl--buildreconcileresolveruntime.ast.json
+fn None buildReconcileResolveRuntime cmd/tossctl/engine_reconcile.go 237 - 319 sha 7192c69246ed
+branches B1:if@239 B2:if@243 B3:if@247 B4:if@250 B5:if@255 B6:if@259 B7:if@263 B8:if@269 B9:if@273 B10:if@278 B11:if@283 B12:if@304 B13:range@307 B14:if@308
+returns 14 return@240 return@244 return@248 return@251 return@256 return@260 return@264 return@274 return@280 return@295 return@299 return@305 return@309 return@314
+calls 26 loadConfig@238 resolveOpenAPIPaths@242 official.LoadCredentials@246 fmt.Errorf@248 strings.TrimSpace@250 strings.TrimSpace@250 newRootOfficialClient@254 fmt.Errorf@256 client.Accounts@258 fmt.Errorf@260 reconcileResolveAccountRef@262 strings.TrimSpace@269 filepath.Join@270 journal.Open@272 clock.System@272 fmt.Errorf@274 tracker.Restore@278 j.Close@279 strings.ToUpper@282 strings.TrimSpace@282 clock.System@293 reconcile.LocalStateFromJournal@299 tracker.Blocks@303 len@304 errors.New@305 fmt.Errorf@309
+## cmd-tossctl--enginefilldetector.ast.json
+fn None engineFillDetector cmd/tossctl/engine.go 762 - 786 sha ec77f4d643ec
+branches B1:if@764 B2:if@765
+returns 2 return@766 return@771
+calls 4 hints.Validate@765 fmt.Errorf@766 ectx.AccountSweep@770 ectx.SnapshotCurrencies@784
+## cmd-tossctl--runenginereconcileresolve.ast.json
+fn None runEngineReconcileResolve cmd/tossctl/engine_reconcile.go 107 - 214 sha 7192c69246ed
+branches B1:if@110 B2:if@114 B3:if@118 B4:if@121 B5:if@126 B6:if@130 B7:if@134 B8:if@140 B9:if@145 B10:if@149 B11:if@158 B12:if@162 B13:if@166 B14:if@170 B15:if@172 B16:if@177 B17:if@181 B18:if@185 B19:if@187 B20:if@194 B21:if@198 B22:if@201 B23:if@204 B24:if@207
+returns 21 return@111 return@115 return@119 return@122 return@131 return@135 return@141 return@150 return@159 return@163 return@167 return@175 return@178 return@182 return@190 return@195 return@199 return@202 return@205 return@208 return@213
+calls 46 errors.New@111 strings.TrimSpace@113 errors.New@115 strings.TrimSpace@117 errors.New@119 errors.New@122 cmd.Context@125 context.Background@127 deps.journalDir@129 deps.acquire@133 fmt.Errorf@135 lock.Release@137 deps.build@139 call@144 runtime.close@146 validateReconcileResolveRuntime@149 runtime.collect@157 fmt.Errorf@159 stabiliser.Offer@161 deps.sleep@162 fmt.Errorf@163 runtime.collect@165 fmt.Errorf@167 stabiliser.Offer@169 strings.TrimSpace@171 fmt.Errorf@175 deps.sleep@177 fmt.Errorf@178 runtime.collect@180 fmt.Errorf@182 stabiliser.Offer@184 strings.TrimSpace@186 fmt.Errorf@190 runtime.localState@193 fmt.Errorf@195 runtime.compare@197 diff.BlocksEntry@198 fmt.Errorf@199 diff.Summary@199 runtime.validate@201 runtime.resolve@204 runtime.close@207 fmt.Errorf@208 fmt.Fprintf@212 cmd.OutOrStdout@212 lock.Path@212
+## internal-brokerstate--derive.ast.json
+fn None Derive internal/brokerstate/derive.go 346 - 510 sha 43911775579f
+branches B1:switch@354 B2:case@355 B3:case@358 B4:case@361 B5:case@364 B6:if@378 B7:switch@383 B8:case@384 B9:case@387 B10:switch@388 B11:case@389 B12:case@392 B13:case@395 B14:case@398 B15:case@402 B16:switch@403 B17:case@404 B18:case@407 B19:case@410 B20:case@413 B21:case@416 B22:case@420 B23:case@423 B24:case@426 B25:switch@427 B26:case@428 B27:case@431 B28:case@434 B29:case@437 B30:case@441 B31:switch@442 B32:case@443 B33:case@447 B34:case@450 B35:case@452 B36:case@456 B37:switch@457 B38:case@458 B39:case@461 B40:case@464 B41:case@466 B42:case@470 B43:switch@471 B44:case@472 B45:case@475 B46:case@483 B47:case@487 B48:case@497 B49:case@503 B50:case@506
+returns 35 return@356 return@359 return@362 return@365 return@385 return@390 return@393 return@396 return@399 return@405 return@408 return@411 return@414 return@417 return@421 return@424 return@429 return@432 return@435 return@438 return@444 return@448 return@451 return@453 return@459 return@462 return@465 return@467 return@473 return@480 return@484 return@493 return@499 return@504 return@507
+calls 53 isNotFinite@355 isNotFinite@355 d.unknown@356 fmt.Sprintf@357 d.unknown@359 fmt.Sprintf@360 qtyEqual@361 d.unknown@362 fmt.Sprintf@363 qtyGreater@364 d.unknown@365 fmt.Sprintf@366 strings.TrimSpace@371 qtyEqual@372 qtyEqual@373 strings.ToUpper@382 strings.TrimSpace@382 d.unknown@385 d.unknown@390 d.unknown@393 d.unknown@396 fmt.Sprintf@396 d.settle@399 d.unknown@405 d.unknown@408 d.unknown@411 d.unknown@414 fmt.Sprintf@414 d.settle@417 d.pendingMutation@421 d.pendingMutation@424 d.unknown@429 fmt.Sprintf@429 d.unknown@432 d.unknown@435 d.settle@438 d.unknown@444 d.unknown@448 d.settle@451 d.settle@453 d.unknown@459 d.unknown@462 d.settle@465 d.settle@467 d.unknown@473 d.unknown@480 fmt.Sprintf@480 d.settle@484 d.unknown@493 d.unknown@499 d.deriveGroupLabel@504 d.unknown@507 strconv.Quote@508
+## internal-execgw--resolver.scanboth.ast.json
+fn Resolver scanBoth internal/execgw/indoubt.go 409 - 440 sha d220e7df90d7
+branches B1:range@414 B2:if@416 B3:range@419 B4:if@421 B5:if@426 B6:if@429
+returns 3 return@417 return@424 return@439
+calls 7 ScanOrders@415 fmt.Errorf@417 parseOrderFacts@420 fmt.Errorf@424 m.matches@426 len@435 append@436
+## internal-execgw--scanorders.ast.json
+fn None ScanOrders internal/execgw/indoubt.go 730 - 765 sha d220e7df90d7
+branches B1:if@731 B2:if@734 B3:for@743 B4:if@744 B5:if@749 B6:if@755 B7:if@758
+returns 5 return@732 return@745 return@750 return@756 return@759
+calls 7 errors.New@732 DefaultResolveConfig@735 fmt.Errorf@745 pager.OrdersPageRaw@748 append@752 strings.TrimSpace@754 fmt.Errorf@759
+## internal-filldetect--detector.blocksymbol.ast.json
+fn Detector blockSymbol internal/filldetect/detect.go 669 - 683 sha 544129682682
+branches B1:if@670 B2:if@674 B3:if@678
+returns 1 return@671
+calls 2 fmt.Sprintf@679 d.Gate.Block@682
+## internal-filldetect--detector.polllocked.ast.json
+fn Detector pollLocked internal/filldetect/detect.go 283 - 357 sha 544129682682
+branches B1:if@285 B2:if@294 B3:if@301 B4:if@309 B5:range@316 B6:if@318 B7:if@324 B8:if@329 B9:if@332 B10:if@336
+returns 6 return@286 return@297 return@304 return@312 return@321 return@356
+calls 38 d.ensure@284 d.validate@285 d.Config.withDefaults@288 d.clk@289 clk.Now@290 d.collect@293 d.outage.failure@295 clk.Now@295 clk.Now@296 d.Positions.Positions@300 d.outage.failure@302 clk.Now@302 clk.Now@303 fmt.Errorf@304 len@306 d.sweepBalance@308 d.outage.failure@310 clk.Now@310 clk.Now@311 d.Ledger.Apply@317 d.outage.failure@319 clk.Now@319 clk.Now@320 fmt.Errorf@321 append@323 append@325 d.blockSymbol@326 committed.IsZero@332 clk.Now@333 committed.Sub@335 append@341 d.slo.observe@342 clk.Now@346 d.outage.success@347 d.stampFreshness@348 d.evaluateSLO@349 d.mu.Lock@351 d.mu.Unlock@353
+## internal-filldetect--detector.run.ast.json
+fn Detector Run internal/filldetect/detect.go 515 - 527 sha 544129682682
+branches B1:for@518 B2:if@519 B3:if@523
+returns 2 return@520 return@524
+calls 6 d.Config.withDefaults@516 d.clk@517 ctx.Err@519 ctx.Err@520 d.PollOnce@522 clk.Sleep@523
+## internal-filldetect--journalledger.apply.ast.json
+fn JournalLedger Apply internal/filldetect/ledger.go 36 - 110 sha 75966bf1507d
+branches B1:if@37 B2:if@42 B3:if@45 B4:if@48 B5:if@76 B6:if@81 B7:if@84 B8:if@85 B9:if@97 B10:if@102 B11:if@106
+returns 7 return@38 return@43 return@46 return@49 return@82 return@86 return@109
+calls 17 fmt.Errorf@38 strings.TrimSpace@40 strings.TrimSpace@41 fmt.Errorf@43 fmt.Errorf@46 fmt.Errorf@49 string@60 string@63 decimalString@65 decimalString@66 journal.RFC3339@70 journal.RFC3339@77 l.Journal.RecordFill@80 l.Refresh@85 fmt.Errorf@86 time.Parse@106 ts.UTC@107
+## internal-journal--applyexitfill.ast.json
+fn None ApplyExitFill internal/journal/apply_hook.go 971 - 1041 sha b39d23a138a0
+branches B1:if@973 B2:if@976 B3:if@983 B4:if@988 B5:if@992 B6:if@995 B7:if@999 B8:else@1002 B9:if@1002 B10:if@1003 B11:if@1009 B12:if@1011 B13:if@1014 B14:if@1023 B15:if@1024 B16:if@1036
+returns 11 return@974 return@979 return@986 return@989 return@996 return@1000 return@1004 return@1012 return@1019 return@1025 return@1040
+calls 19 exitContextForFill@972 tx.PendingState@982 errors.Is@983 strings.EqualFold@992 strings.TrimSpace@992 exitpolicy.TakenAfterFill@993 orZero@994 orZero@994 fmt.Errorf@996 riskcalc.CompareDecimal@999 fmt.Errorf@1000 tx.MoveTakenRatioTotal@1003 state.Pending@1009 tx.ResolvePending@1011 appendExitEventFromHook@1014 tx.Now@1017 markExitCompletedTx@1024 freezeTradeOutcomeTx@1036 tx.noteOutcomeRefusal@1037
+## internal-journal--classifyfillrefusal.ast.json
+fn None classifyFillRefusal internal/journal/fills.go 666 - 705 sha 92bc44f947ee
+branches B1:if@668 B2:if@670 B3:if@674 B4:if@679 B5:if@682 B6:if@693
+returns 5 return@677 return@680 return@683 return@696 return@704
+calls 8 nearlyZero@682 fmt.Sprintf@685 orZero@687 orZero@687 nearlyZero@695 fmt.Sprintf@698 orZero@700 orZero@701
+## internal-journal--journal.recordfill.ast.json
+fn Journal RecordFill internal/journal/fills.go 313 - 563 sha 92bc44f947ee
+branches B1:if@314 B2:if@318 B3:if@324 B4:if@328 B5:if@340 B6:switch@346 B7:case@347 B8:case@348 B9:case@350 B10:if@356 B11:if@364 B12:if@368 B13:if@374 B14:if@380 B15:if@385 B16:if@392 B17:if@401 B18:if@405 B19:if@413 B20:if@420 B21:if@421 B22:if@437 B23:if@441 B24:if@442 B25:if@464 B26:if@465 B27:if@504 B28:if@512 B29:if@516 B30:if@526 B31:else@536 B32:if@527 B33:if@530 B34:if@533 B35:if@536 B36:if@550 B37:if@551 B38:if@556
+returns 26 return@315 return@319 return@325 return@329 return@341 return@351 return@357 return@375 return@393 return@402 return@406 return@409 return@422 return@425 return@438 return@459 return@473 return@505 return@517 return@528 return@531 return@534 return@538 return@552 return@557 return@562
+calls 62 strings.TrimSpace@314 fmt.Errorf@315 fillSnapshotScopeOf@317 scope.complete@318 scope.legacyUnscoped@318 fmt.Errorf@319 strconv.ParseFloat@323 strings.TrimSpace@323 orZero@323 fmt.Errorf@325 math.IsNaN@328 math.IsInf@328 fmt.Errorf@329 j.nowString@333 j.db.BeginTx@339 fmt.Errorf@341 tx.Rollback@343 lookupFillSnapshotScoped@345 errors.Is@348 confirmedFillOwners@355 scope.complete@364 journalTimeStrictlyAfter@373 fmt.Errorf@375 strconv.ParseFloat@381 strings.TrimSpace@381 orZero@381 classifyFillRefusal@385 markFillRefused@392 alertsForOrder@400 tx.Commit@405 fmt.Errorf@406 nearlyZero@413 sameSnapshot@420 tx.Commit@421 fmt.Errorf@422 upsertFillSnapshot@437 fmt.Errorf@438 recordExecutionCorrection@442 orZero@453 tx.ExecContext@465 decimalString@471 orZero@471 fmt.Errorf@473 decimalString@475 orZero@488 resolveFillOrigin@502 ownershipHandle.invalidate@503 releaseReservationsForOrder@513 fmt.Sprintf@515 j.applyRiskBucketFillInTx@527 fmt.Errorf@528 j.releaseTerminalRiskBucketOrderInTx@530 fmt.Errorf@531 applyWeeklyReservationLifecycleInTx@533 fmt.Errorf@534 latchRiskBucketFillFailureForScope@536 fmt.Errorf@538 j.runApplyHooks@551 withOutcomeRefusals@551 tx.Commit@556 fmt.Errorf@557 j.reportOutcomeRefusals@560
+## internal-journal--journal.trackedfillorders.ast.json
+fn Journal TrackedFillOrders internal/journal/fills.go 1543 - 1693 sha 92bc44f947ee
+branches B1:if@1545 B2:if@1548 B3:if@1549 B4:if@1655 B5:for@1661 B6:if@1663 B7:if@1669 B8:range@1677 B9:if@1685 B10:if@1688
+returns 6 return@1550 return@1656 return@1665 return@1670 return@1686 return@1692
+calls 18 len@1545 strings.TrimSpace@1546 j.guardTrackedFillIdentity@1549 j.db.QueryContext@1553 string@1652 string@1653 string@1653 string@1654 string@1654 fmt.Errorf@1656 rows.Close@1658 rows.Next@1661 rows.Scan@1663 fmt.Errorf@1665 append@1667 rows.Err@1669 fmt.Errorf@1670 j.ResolveCurrentOrderIDScoped@1678
+## internal-reconcile--blocksfor.ast.json
+fn None blocksFor internal/reconcile/mismatch.go 1402 - 1433 sha f72bcbc7d288
+branches B1:range@1404 B2:range@1418
+returns 1 return@1432
+calls 4 append@1405 fmt.Sprintf@1413 append@1419 fmt.Sprintf@1428
+## internal-reconcile--comparer.compare.ast.json
+fn Comparer Compare internal/reconcile/compare.go 359 - 491 sha 87956731b132
+branches B1:if@361 B2:range@367 B3:range@373 B4:if@374 B5:range@379 B6:if@381 B7:range@388 B8:if@394 B9:switch@407 B10:case@408 B11:case@410 B12:case@418 B13:case@426 B14:case@430 B15:range@440 B16:range@441 B17:if@443 B18:range@456 B19:if@457 B20:if@461 B21:range@468 B22:if@469 B23:range@477 B24:if@478 B25:if@483
+returns 3 return@482 return@487 return@490
+calls 52 snap.AsOf.IsZero@361 Format@362 snap.AsOf.UTC@362 make@366 len@366 strings.ToUpper@368 strings.TrimSpace@368 make@371 len@371 len@371 append@376 strings.ToUpper@380 strings.TrimSpace@380 append@383 sort.Strings@386 canonicalPresentQuantity@392 canonicalPresentQuantity@393 append@399 isZeroDecimal@406 isZeroDecimal@406 isPositiveDecimal@410 append@415 append@422 quantitiesAgree@426 append@427 localOrdersForComparison@437 make@438 len@438 make@439 len@439 brokerOrderIdentityForLocal@442 localOrder.Identity@442 identitiesCompatible@443 localOrder.Identity@443 append@446 make@454 len@454 make@455 len@455 len@457 append@470 make@476 append@479 sort.Slice@482 less@482 missing.Identity@482 missing.Identity@482 len@483 sort.Slice@486 less@487 brokerOrderIdentity@487 brokerOrderIdentity@488
+## internal-reconcile--diff.blocksentry.ast.json
+fn Diff BlocksEntry internal/reconcile/compare.go 312 - 314 sha 87956731b132
+branches 
+returns 1 return@313
+calls 2 len@313 len@313
+## internal-reconcile--localstatefromjournal.ast.json
+fn None LocalStateFromJournal internal/reconcile/compare.go 193 - 238 sha 87956731b132
+branches B1:if@194 B2:if@198 B3:if@202 B4:range@212 B5:if@220
+returns 5 return@195 return@199 return@203 return@223 return@237
+calls 17 fmt.Errorf@195 HeldBySymbol@197 j.TrackedFillOrders@201 make@209 len@209 make@210 len@210 j.ResolveCurrentOrderIDScoped@213 strings.TrimSpace@228 strings.ToUpper@229 strings.TrimSpace@229 strings.ToLower@230 strings.TrimSpace@230 strings.TrimSpace@231 strings.ToUpper@232 strings.TrimSpace@232 order.Identity@234
+## internal-reconcile--tracker.observe.ast.json
+fn Tracker Observe internal/reconcile/mismatch.go 618 - 835 sha f72bcbc7d288
+branches B1:if@624 B2:if@637 B3:else@684 B4:if@643 B5:if@646 B6:range@653 B7:if@654 B8:if@662 B9:if@670 B10:if@689 B11:range@702 B12:if@703 B13:if@711 B14:if@715 B15:if@718 B16:range@719 B17:if@720 B18:if@727 B19:if@738 B20:range@768 B21:if@771 B22:range@776 B23:if@778 B24:range@783 B25:range@802 B26:range@805 B27:if@806 B28:if@820
+returns 3 return@647 return@712 return@834
+calls 61 Now@619 t.clock@619 t.interval@620 t.maxFailures@621 t.mu.Lock@623 symbolsInDispute@633 promotionKeys@634 diff.BlocksEntry@637 t.clearStreaks@642 t.resolvePendingPermanentAuthority@646 t.finishAuthorityError@647 strings.ToUpper@661 strings.TrimSpace@661 creditUsableBy@662 append@667 append@679 append@682 blocksFor@685 t.advanceStreaks@691 t.refuteUsableAdjustmentCredits@697 block.Key@703 block.Key@705 append@706 t.syncGate@710 t.snapshotBlocks@710 t.resolvePendingPermanentAuthority@711 t.finishAuthorityError@712 t.advanceStreaks@716 block.Key@720 block.Key@722 append@723 t.thresholdKey@727 permanentPromotionDetail@736 permanent.Key@738 permanent.Key@743 append@744 sortBlocks@749 sortBlocks@750 sortBlocks@751 t.syncGate@759 t.snapshotBlocks@759 t.pendingBlocksForPersistence@766 t.persist@767 block.Key@770 block.Key@777 delete@784 block.Key@784 hasPermanentQuantityAccountBlock@787 make@801 len@801 strings.ToUpper@803 strings.TrimSpace@803 creditUsableBy@806 hasBlockFor@820 delete@821 len@827 now.Add@828 t.snapshotBlocks@829 t.syncGate@830 t.mu.Unlock@831 sortBlocks@833

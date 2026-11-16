@@ -1,0 +1,140 @@
+{
+  "file": "internal/filldetect/detect.go",
+  "source_sha256": "5441296826821097f82da79215934616d295c31644f24c8c4126d5778594fb2b",
+  "package": "filldetect",
+  "function": "Run",
+  "receiver": "Detector",
+  "signature": "Detector.Run(params=1, results=1)",
+  "start": {
+    "line": 515,
+    "column": 1
+  },
+  "end": {
+    "line": 527,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "for",
+      "at": {
+        "line": 518,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 519,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 523,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 520,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 524,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 516,
+        "column": 9
+      },
+      "text": "d.Config.withDefaults"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 517,
+        "column": 9
+      },
+      "text": "d.clk"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 519,
+        "column": 6
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 520,
+        "column": 11
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 522,
+        "column": 10
+      },
+      "text": "d.PollOnce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 523,
+        "column": 13
+      },
+      "text": "clk.Sleep"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 516,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 517,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 522,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 523,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
