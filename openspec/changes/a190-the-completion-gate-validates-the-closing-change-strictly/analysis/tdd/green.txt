@@ -1,0 +1,55 @@
+# GREEN: 2026-11-16T09:09:55+09:00 · 작업 트리(편집 뒤, 미커밋) · base 59647c493 · openspec 1.16.0
+test_real_openspec_fails_at_step_eleven_on_a_closing_warning (tools.sdd.test_gate_validate_step.GateWiring.test_real_openspec_fails_at_step_eleven_on_a_closing_warning) ... ok
+test_real_openspec_passes_with_strict_warnings_elsewhere (tools.sdd.test_gate_validate_step.GateWiring.test_real_openspec_passes_with_strict_warnings_elsewhere) ... ok
+test_stubbed_closing_failure_stops_the_gate_at_step_eleven (tools.sdd.test_gate_validate_step.GateWiring.test_stubbed_closing_failure_stops_the_gate_at_step_eleven) ... ok
+test_stubbed_pass_reaches_gate_pass_with_this_change_id (tools.sdd.test_gate_validate_step.GateWiring.test_stubbed_pass_reaches_gate_pass_with_this_change_id) ... ok
+test_1_strict_warnings_elsewhere_do_not_fail_the_step (tools.sdd.test_gate_validate_step.RealOpenSpecVerdicts.test_1_strict_warnings_elsewhere_do_not_fail_the_step)
+① 남의 change·main spec 에만 strict 경고 → 통과, advisory 줄은 그 실패를 센다. ... ok
+test_2_a_strict_warning_in_the_closing_change_fails_at_the_closing_check (tools.sdd.test_gate_validate_step.RealOpenSpecVerdicts.test_2_a_strict_warning_in_the_closing_change_fails_at_the_closing_check)
+② 닫는 change 에 strict 경고 → (가)가 V11 로 FAIL, (나)는 OK. ... ok
+test_3_an_error_anywhere_fails_at_the_repository_check (tools.sdd.test_gate_validate_step.RealOpenSpecVerdicts.test_3_an_error_anywhere_fails_at_the_repository_check)
+③ 다른 change 에 오류(delta 없음) → (나)가 V11 로 FAIL, (가)는 OK. ... ok
+test_5_a_change_openspec_cannot_find_fails (tools.sdd.test_gate_validate_step.RealOpenSpecVerdicts.test_5_a_change_openspec_cannot_find_fails)
+⑤ CHANGE_ID 를 openspec 이 못 찾음 → (가) V4(unknown_item), (나) V10(그 change 를 본 적 없음). ... ok
+test_6_a_repository_check_over_zero_items_fails (tools.sdd.test_gate_validate_step.RealOpenSpecVerdicts.test_6_a_repository_check_over_zero_items_fails)
+⑥ (나)가 0 항목을 검사하고 rc 0 → 그래도 FAIL(V9). 전칭 판정은 표본 0 이면 자동으로 참이 된다. ... ok
+test_an_archived_target_fails_and_says_why (tools.sdd.test_gate_validate_step.RealOpenSpecVerdicts.test_an_archived_target_fails_and_says_why)
+아카이브된 change 는 openspec 이 찾지 않는다 — 통과가 아니라 FAIL, 사유에 그 원인을 적는다. ... ok
+test_4_openspec_absent_fails_both_checks (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_4_openspec_absent_fails_both_checks)
+④ PATH 에 openspec 이 없음 → (가)·(나) 둘 다 V1. ... ok
+test_7_an_advisory_that_crashes_never_changes_the_verdict (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_7_an_advisory_that_crashes_never_changes_the_verdict)
+⑦ advisory 명령이 죽어도(rc 2, JSON 아님) 판정은 그대로 통과, 사유 한 줄이 남는다. ... ok
+test_advisory_runs_even_when_the_verdict_fails (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_advisory_runs_even_when_the_verdict_fails) ... ok
+test_all_ok_passes_and_the_three_commands_have_the_decided_shape (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_all_ok_passes_and_the_three_commands_have_the_decided_shape)
+(가)는 id + --strict, (나)는 --all 이고 --strict 없음, advisory 는 --all --strict. 셋 다 저장소 루트에서. ... ok
+test_v10_a_repository_report_that_never_saw_the_closing_change_fails (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v10_a_repository_report_that_never_saw_the_closing_change_fails) ... ok
+test_v12_rc_and_json_must_agree (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v12_rc_and_json_must_agree) ... ok
+test_v3_output_that_is_not_json_fails (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v3_output_that_is_not_json_fails) ... ok
+test_v5_an_error_status_alongside_items_fails (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v5_an_error_status_alongside_items_fails) ... ok
+test_v6_a_report_about_another_root_fails (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v6_a_report_about_another_root_fails) ... ok
+test_v6_a_report_without_a_root_fails (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v6_a_report_without_a_root_fails) ... ok
+test_v7_valid_must_be_the_boolean_true (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v7_valid_must_be_the_boolean_true) ... ok
+test_v8_the_closing_report_must_name_exactly_this_change (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v8_the_closing_report_must_name_exactly_this_change) ... ok
+test_v2_a_command_that_outlives_its_deadline_fails (tools.sdd.test_gate_validate_step.TimeoutVerdict.test_v2_a_command_that_outlives_its_deadline_fails) ... ok
+test_ci_runs_it (tools.sdd.test_race_detector_actually_runs.RaceDetectorActuallyRunsTests.test_ci_runs_it)
+CI 워크플로가 `make test-race` 를 실제로 돈다. ... ok
+test_every_engine_concurrency_test_is_named_in_the_race_filter (tools.sdd.test_race_detector_actually_runs.RaceDetectorActuallyRunsTests.test_every_engine_concurrency_test_is_named_in_the_race_filter)
+이름으로 고른 목록은 **빠뜨릴 수 있다.** 그 빠뜨림을 실패로 만든다. ... ok
+test_the_completion_gate_runs_it (tools.sdd.test_race_detector_actually_runs.RaceDetectorActuallyRunsTests.test_the_completion_gate_runs_it)
+`make gate` 의 타깃 목록에 test-race 가 들어 있다. ... ok
+test_the_engine_race_step_actually_runs (tools.sdd.test_race_detector_actually_runs.RaceDetectorActuallyRunsTests.test_the_engine_race_step_actually_runs)
+recipe 에 줄이 두 개여야 한다. 하나가 사라지면 절반이 조용히 빠진다. ... ok
+test_the_gate_step_count_matches_the_targets_it_runs (tools.sdd.test_race_detector_actually_runs.RaceDetectorActuallyRunsTests.test_the_gate_step_count_matches_the_targets_it_runs)
+단계 수와 실제로 도는 타깃 수가 갈라지면 진행 표시가 거짓말을 한다. ... ok
+test_the_target_exists_and_passes_the_race_flag (tools.sdd.test_race_detector_actually_runs.RaceDetectorActuallyRunsTests.test_the_target_exists_and_passes_the_race_flag)
+`make test-race` 가 실제로 `-race` 를 넘긴다. ... ok
+test_the_target_is_phony (tools.sdd.test_race_detector_actually_runs.RaceDetectorActuallyRunsTests.test_the_target_is_phony)
+`test-race` 라는 파일이 생기면 타깃이 조용히 안 돌게 된다. ... ok
+test_the_target_names_at_least_one_package (tools.sdd.test_race_detector_actually_runs.RaceDetectorActuallyRunsTests.test_the_target_names_at_least_one_package)
+빈 패키지 목록은 아무것도 안 돌면서 초록이 된다. ... ok
+
+----------------------------------------------------------------------
+Ran 31 tests in 7.030s
+
+OK
+# rc=0

@@ -1,0 +1,6 @@
+# 실제 저장소(a190 worktree, HEAD 59647c493 + 미커밋 구현) · 2026-11-16T09:10:13+09:00 · openspec 1.16.0 · OPENSPEC_TELEMETRY=0
+# 명령: python3 tools/sdd/check_openspec_validate.py a187-strict-quote-readers-accept-kr-alphanumeric-symbols
+(가) OK: a187-strict-quote-readers-accept-kr-alphanumeric-symbols strict valid
+(나) OK: 저장소 전체(strict 없음) 오류 0
+advisory — 판정 아님: 저장소 전체 strict 9 passed, 51 failed (60 items) — 목록: make validate
+# rc=0
