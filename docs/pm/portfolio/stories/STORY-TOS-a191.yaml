@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a191-fill-detection-resolves-orders-that-left-the-open-list",
-    "path": "openspec/changes/a191-fill-detection-resolves-orders-that-left-the-open-list"
+    "path": "openspec/changes/archive/2026-11-17-a191-fill-detection-resolves-orders-that-left-the-open-list"
   },
   "found_by": {
     "date": "2026-11-16",
     "how": "운영에서 엔진이 낸 위험 축소 매도가 체결 없이 미체결 목록을 떠났는데 단건 조회가 계속 PENDING(취소 시각 없음)을 돌려줘 체결 감지가 매 주기 「열림·미체결」로 읽었고, 대사가 missing-order 를 반복 관측해 계좌 영구 차단으로 승격했다. reconcile-resolve 는 차이가 남아 거절했다(Manager 보고, 2026-11-16).",
-    "record": "openspec/changes/a191-fill-detection-resolves-orders-that-left-the-open-list/proposal.md"
+    "record": "openspec/changes/archive/2026-11-17-a191-fill-detection-resolves-orders-that-left-the-open-list/proposal.md"
   },
   "acceptance": [
     "미체결 목록에 없고 단건 조회 파생이 비종결인 추적 주문만 종결 목록(status=CLOSED, 종목·거래일 창 필터, 페이지 상한)을 조회한다.",

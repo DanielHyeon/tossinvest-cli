@@ -101,3 +101,72 @@ The durable tracked-order source SHALL return a non-terminal fill snapshot only 
 #### Scenario: External cumulative snapshot precedes a reused local order
 - **WHEN** an external exact-scope snapshot exists before one local order-creating confirmation and a later observation reports that local order's cumulative fill
 - **THEN** the new local sequence starts from zero and applies the full cumulative quantity rather than subtracting the external snapshot
+
+### Requirement: 목록을 떠난 추적 주문은 종결 목록에서 찾는다
+
+체결 감지는 미체결(OPEN) 목록에 없는 추적 주문의 단건 조회 파생이 fail-closed 가 아닌 비종결이면, 그 주문을 종결(CLOSED) 목록에서 찾아야
+한다(SHALL). 단건 파생이 종결이거나 fail-closed 이면 종결 목록을 조회해서는 안 된다(MUST NOT). 질의는 종목과 그 주문 거래일 앞뒤 하루의 주문
+생성일 창으로 좁히고 페이지 상한과 커서 반복 거절을 지켜야 한다(SHALL). 한 주기의 종결 목록 조회는 최대 한 건이어야 하고 그 조회 전체(페이지
+합계)에는 정해진 실시간 시한의 취소 요청이 걸려야 하며(SHALL), 같은 주문은 최소 간격을 지켜야 하고(SHALL) 같은 주기 안에서 재시도해서는 안 된다(MUST NOT).
+
+#### Scenario: 미체결 목록에 있는 주문
+- **WHEN** 추적 주문이 미체결 목록에 있거나, 단건 조회가 이미 종결을 돌려주거나, 단건 파생이 fail-closed 다
+- **THEN** 종결 목록 질의는 일어나지 않고, fail-closed 단건은 오늘과 같이 처리된다
+
+#### Scenario: 목록 이탈 주문이 여럿이다
+- **WHEN** 한 주기에 한 번도 조회되지 않은 후보가 셋이고 후보 집합이 그대로이며 주기가 성공한다
+- **THEN** 그 주기에는 하나만 조회되고 나머지는 다음 주기로 미뤄지며, 세 주기에 걸쳐 하나씩 조회된다
+
+#### Scenario: 종결 목록 응답이 멈춘다
+- **WHEN** 종결 목록 질의가 실시간 시한 안에 끝나지 않고 목록 조회기가 취소를 따른다
+- **THEN** 질의는 시한에서 끊기고 같은 주기의 다른 주문 스냅숏은 그대로 적용된다
+
+### Requirement: 종결 목록 행은 상태만 바꾸며 좁은 조건에서만 받는다
+
+주문번호가 바이트 동일한 종결 목록 행은 raw 바이트가 전부 같을 때만 하나로 세야 한다(SHALL). 그렇게 센 행이 정확히 하나이고, 정규 범위가
+추적 범위와 같고, 누적 체결 수량(`execution.filledQuantity`)이 있고 읽히며, 그 행의 파생이 fail-closed 가 아닌 종결이고, 주문 수량과 누적 체결
+수량이 단건 조회와 같을 때에만 그 주기 단건 스냅숏의 상태 필드(status·취소 여부·취소 시각·파생)를 그 행의 것으로 바꿔야 한다(SHALL).
+수량·평균가·체결금액·체결 시각은 단건 조회의 것을 유지해야 한다(SHALL).
+
+#### Scenario: 앱에서 취소된 주문이 목록을 떠난다
+- **WHEN** 추적 중인 엔진 주문이 미체결 목록에 없고 단건 조회는 `PENDING`·취소 시각 없음·체결 0 을 돌려주며, 종결 목록의 같은 주문번호·같은 범위 행 하나가 `CANCELED`·체결 0 이다
+- **THEN** 그 주기의 스냅숏은 종결 `CANCELLED` 로 기록되고, 그 주문번호에 빈 범위 legacy 스냅숏 행이 없으면 추적 집합과 대사의 로컬 열린 주문에서 빠진다
+
+#### Scenario: 같은 주문번호가 서로 다른 두 행으로 실린다
+- **WHEN** 종결 목록 창에 같은 주문번호를 가진 행이 둘 있고, 정규 범위가 다르거나 범위는 같아도 status·수량이 다르다
+- **THEN** 어느 행도 받아들여지지 않고 사유 `closed_list_ambiguous` 가 남는다
+
+#### Scenario: 종결 목록 행에 체결 수량이 없다
+- **WHEN** 종결 목록 행은 `CANCELED` 이지만 `execution` 이나 `execution.filledQuantity` 가 없다
+- **THEN** 그 행은 받아들여지지 않고 사유 `closed_list_execution_missing` 가 남는다
+
+### Requirement: 종결 목록이 확인하지 못하면 단건 스냅숏을 유지한다
+
+종결 목록이 앞 요구의 조건을 채우지 못하거나 조회되지 않은 주기에는 체결 감지가 단건 조회 스냅숏을 그대로 써야 하며(SHALL), 종결 목록
+행으로 체결 수량이나 종결을 기록해서는 안 되고(MUST NOT), 종결 목록 조회의 실패로 주기 전체를 실패시켜서는 안 된다(MUST NOT).
+
+#### Scenario: 종결 목록에서 찾지 못한다
+- **WHEN** 미체결 목록에 없는 추적 주문의 단건 조회가 비종결이고 종결 목록 창에도 그 주문번호가 없다
+- **THEN** 단건 조회 스냅숏이 그대로 쓰이고 종결 목록 조회가 더하는 종결·체결 기록·진입 래치는 없으며(단건 자체의 체결 증가는 오늘과 같이 처리됨), 주기는 성공하고 사유 `closed_list_not_found` 가 남는다
+
+#### Scenario: 종결 목록과 단건 조회의 체결 수량이 다르다
+- **WHEN** 종결 목록 행은 `FILLED` 이고 단건 조회는 `PENDING`·체결 0 이다
+- **THEN** 체결은 기록되지 않고 단건 조회 스냅숏이 그대로 쓰이며, 사유 `closed_list_quantity_disagrees` 가 남는다
+
+#### Scenario: 종결 목록을 읽지 못한다
+- **WHEN** 종결 목록 질의가 429 또는 전송 실패로 끝난다
+- **THEN** 그 주기는 실패하지 않고 미체결 목록·잔고 신선도는 기록되며, 같은 주기 안의 재조회는 없다
+
+### Requirement: 해결되지 않는 목록 이탈 주문은 지속될 때 한 번 알린다
+
+종결 목록 조회 후보인 목록 이탈 추적 주문이 정해진 시간 이상 확인되지 않으면 그 주문(내부 식별자)과 사유를 운영자 알림 통로에 한 번
+기록·전송 시도해야 하며(SHALL — 전달 보장은 없음, 일반 등급), 그 알림에 브로커 주문번호·계좌·종목·수량·가격을 실어서는 안 되고(MUST NOT), 그 전에 미체결 목록에 다시 나타나거나
+종결되면 알리지 않고 상태를 지워야 한다(SHALL).
+
+#### Scenario: 방금 접수된 주문이 다음 주기에 미체결 목록에 나타난다
+- **WHEN** 한 주기에서 종결 목록에서 찾지 못한 주문이 다음 주기 미체결 목록에 나타난다
+- **THEN** 운영자 알림은 나가지 않고 그 주문의 미해결 상태는 지워진다
+
+#### Scenario: 해결되지 않은 상태가 이어진다
+- **WHEN** 같은 추적 주문이 정해진 시간 이상 종결 목록으로 확인되지 않는다
+- **THEN** 그 주문(내부 식별자)과 시장·사유·지속 시간이 알림 통로에 한 번 넘겨지고, 해결될 때까지 다시 넘기지 않는다

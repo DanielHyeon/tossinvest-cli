@@ -180,4 +180,4 @@
 | `a187-strict-quote-readers-accept-kr-alphanumeric-symbols` | STORY-TOS-a187 | archived |
 | `a189-shadow-tool-guards-admit-the-account-budget` | STORY-TOS-a189 | archived |
 | `a190-the-completion-gate-validates-the-closing-change-strictly` | STORY-TOS-a190 | archived |
-| `a191-fill-detection-resolves-orders-that-left-the-open-list` | STORY-TOS-a191 | implemented |
+| `a191-fill-detection-resolves-orders-that-left-the-open-list` | STORY-TOS-a191 | archived |
