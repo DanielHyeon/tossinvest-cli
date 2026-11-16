@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: 자동화된 완료 게이트
-change 완료 선언은 `make gate CHANGE=<change-id>`(tasks.md 미완료 항목 0건 + review.md 존재 + test·test-seams·vet 통과 + 닫는 change 의 `openspec validate <change-id> --strict` 통과 + 저장소 전체 `openspec validate --all` 오류 0) 성공과 Manager의 diff 리뷰·독립 테스트 재실행 이후에만 가능하다(SHALL). 판정할 수 없는 validate는 실패로 친다(SHALL). 저장소 전체 strict 결과는 판정이 아니지만 gate 출력에 합계가 남아야 한다(SHALL). task 완료 체크는 그 산출물을 만드는 커밋과 같은 커밋에서 수행해야 한다(SHALL). 완료된 change는 `openspec archive`로 확정 스펙에 반영한다.
+change 완료 선언은 `make gate CHANGE=<change-id>`(tasks.md 미완료 항목 0건 + review.md 존재 + sdd-check·test·test-seams·test-race·vet 통과 + 닫는 change 의 `openspec validate <change-id> --strict` 통과 + 저장소 전체 `openspec validate --all` 오류 0) 성공과 Manager의 diff 리뷰·독립 테스트 재실행 이후에만 가능하다(SHALL). 판정할 수 없는 validate는 실패로 친다(SHALL). 저장소 전체 strict 결과는 판정이 아니지만 gate 출력에 그 합계 또는 합계를 얻지 못한 사유가 남아야 한다(SHALL). task 완료 체크는 그 산출물을 만드는 커밋과 같은 커밋에서 수행해야 한다(SHALL). 완료된 change는 `openspec archive`로 확정 스펙에 반영한다.
 
 #### Scenario: 미완료 task가 있는 완료 시도
 - **WHEN** tasks.md에 미완료 체크박스가 남은 상태로 gate를 실행하면

@@ -19,7 +19,7 @@
   (나) `openspec validate --all --no-interactive`(strict 없음) rc 0.
 - 판정은 새 스크립트 `tools/sdd/check_openspec_validate.py <change-id>` 가 `--json` 출력을 읽어 내린다.
   openspec 부재·실행 실패·시한 초과·JSON 아닌 출력·`<CHANGE_ID>` 미발견·(나) 표본 0 은 FAIL 이다(fail-closed).
-- 저장소 전체 strict 결과는 판정에서 빠지되, gate 가 그 합계를 「advisory — 판정 아님」 한 줄로 출력한다. 그 명령이 실패해도 gate 는 계속한다.
+- 저장소 전체 strict 결과는 판정에서 빠지되, gate 가 그 합계(또는 합계를 얻지 못한 사유)를 「advisory — 판정 아님」 한 줄로 항상 출력한다. 그 명령이 실패해도 gate 는 계속한다.
 - `make validate` 타깃은 그대로 둔다(사람이 부채 목록을 보는 명령).
 - `docs/WORKFLOW.md` 의 ⑪ 서술, `tools/gate.sh` 머리 주석, main spec `sdd-workflow` 「자동화된 완료 게이트」를 맞춘다.
 - 오늘의 strict 실패 51 항목 목록을 `analysis/strict-debt/` 에 원문으로 남긴다(고치지 않는다).
@@ -27,7 +27,8 @@
 ## 더는 거부하지 않는 것 / 여전히 거부하는 것
 
 - **더는 거부하지 않음:** 닫는 change 가 아닌 다른 change 와 main spec 의 strict **경고**(오늘 51 항목, 262건).
-- **여전히 거부함:** 저장소 어디서든 **오류**(non-strict 에서 invalid), 닫는 change 의 경고, 판정할 수 없는 validate.
+- **여전히 거부함:** 저장소 어디서든 **오류**(non-strict 에서 invalid — 예: delta 가 아직 없는 남의 새 change 도 남의 gate 를 막는다),
+  닫는 change 의 경고, 판정할 수 없는 validate.
 - **새로 거부함:** 아카이브된 change 를 대상으로 돈 gate(openspec 은 활성 change 만 찾으므로 (가)가 `unknown_item`).
   전에는 ⑪ 이 대상 id 를 보지 않아 통과했다. 닫는 순서는 gate → archive 라 정상 절차에는 영향이 없다(`design.md` D3).
 

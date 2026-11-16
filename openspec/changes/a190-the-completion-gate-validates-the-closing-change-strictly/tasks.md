@@ -3,7 +3,7 @@
 - [x] 1.1 Story `STORY-TOS-a190` 를 registry·`FEAT-TOS-001` 에 등록하고 proposal·design·spec delta·tasks 를 작성한다. `openspec validate <id> --strict` 통과.
 - [x] 1.2 `base-commit.txt` 를 고정하고 CodeGraph·CodeGraphContext 증거와 기억 회고를 `analysis/code-context/` 에 기록한다.
 - [x] 1.3 편집 전 `tools/gate.sh` 해당 구간을 `analysis/pre-edit/gate-before.txt` 에 원문으로 보존하고, 오늘의 strict 부채 목록을 `analysis/strict-debt/` 에 남긴다(D6).
-- [ ] 1.4 계약에 proposal-freeze 리뷰를 돌리고 `review.md` 에 기록한다. D1~D6 을 바꿔야 하는 발견이면 멈추고 Manager 에게 올린다.
+- [x] 1.4 계약에 proposal-freeze 리뷰를 돌리고 `review.md` 에 기록한다. D1~D6 을 바꿔야 하는 발견이면 멈추고 Manager 에게 올린다.
 
 ## 2. 구현 (RED → GREEN)
 
