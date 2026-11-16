@@ -47,5 +47,7 @@
 
 ## 4. 종결
 
-- [ ] 4.1 PM check, strict validate, archive 와 Story 경로 동기화. 검증된 교훈만 retain.
+- [x] 4.1 PM check, strict validate, archive 와 Story 경로 동기화. 검증된 교훈만 retain.
   - 2026-11-16 종결 시도(종결 팀메이트 Opus): gate ② 선행 조건으로 체크했던 것을 되돌림 — 완료 gate 가 ⑪ 에서 FAIL 해 archive 하지 못함. 1회차 ⑦ FAIL(`internal/performance` p95 2.22s > 2s, 부하 — 단독 재실행 p95 596ms), 2회차 ①~⑩ OK · ⑪ `make validate` FAIL(openspec 1.16.0 strict 경고로 51/59 실패, a189·a187 자체는 valid). 원문 `analysis/gate/`, 기록 review.md 「종결 시도 — 2026-11-16」. Manager·사람 결정 대기.
+  - 2026-11-16 재개(종결 팀메이트 Opus): ⑪ 실패의 원인은 a190(gate ⑪ 이 닫는 change 는 strict, 저장소 전체는 오류만 판정 — 사용자 결정 선택지 1)으로 해소됨, a190 archive `ff8282056`. 새 main HEAD 에 격리 gate worktree 를 다시 세워 gate 를 돎. gate ② 선행 조건으로 gate 전에 체크하며 결과·archive·Story 경로 영수증은 PASS 뒤 review.md 「종결 — 2026-11-16 재개」 에 남김.
+  - retain: 2026-11-16 Manager 가 Hindsight bank `tossos-dev-episodes` 에 수행(a187·a189·a190 의 검증된 교훈 7항목, 시크릿·계좌·포지션·금액 없음 — Manager 전달 사실).

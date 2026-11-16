@@ -291,3 +291,8 @@ Manager(Fable) 가 HEAD `974a9c623` 에서 한 독립 재검증. 원문은 `anal
 - gate 2회차(08:14:36~08:42:47 KST, 원문 `analysis/gate/gate2.txt`·`gate2-status.txt`, 전후 HEAD `b1e399001` 동일·dirty 0): ① OK · ② OK(미완료 0) · ③ OK(짝 없음) · ④ OK · ⑤ OK(required 7, evidence complete) · ⑥ OK · ⑦ OK · ⑧ OK · ⑨ OK · ⑩ OK · **⑪ FAIL** — `openspec validate --all --strict --no-interactive`: 「Totals: 8 passed, 51 failed (59 items)」.
 - ⑪ 원인 실측: 실패 51건은 전부 기존 활성 change·main spec 의 strict **경고**(요구 문장 500자 초과, Purpose 자리표시, 첫 `##` 위 텍스트). 이 change(`a189-…`)와 a187 은 목록에 없고 단독 `openspec validate <id> --strict` 는 둘 다 valid. 설치된 openspec 은 1.16.0, 설치 시각 2026-11-04 21:48(`~/.npm-global/lib/node_modules/@fission-ai/openspec/package.json` mtime). 마지막으로 gate 를 거친 archive a164(2026-10-28)는 「openspec validate --all --strict 56/56」 이었음. 저장소에 CLI 판올림 기록은 못 찾음.
 - 판단: a189 의 결함이 아니고 문서·tracker·fingerprint 류로 이 change 안에서 고칠 수도 없음 — 고치려면 (가) 다른 CLI 판을 설치(사람 승인 필요) 또는 (나) 남의 활성 change·main spec 51곳 문장 편집(범위 밖)이 필요함. 그래서 archive·Story 경로 변경을 하지 않고 멈춤. gate ② 선행 조건으로 붙였던 4.1 체크는 거짓이 되므로 되돌림(tracker 도 재생성).
+
+## 종결 — 2026-11-16 재개 (종결 팀메이트 Opus)
+
+- ⑪ 실패의 원인은 a190 으로 해소됨(사용자 결정 선택지 1 — gate ⑪ 이 닫는 change 는 strict, 저장소 전체는 오류만 판정). a190 은 gate 11/11 PASS 뒤 archive 됨(`ff8282056`).
+- 재개 시점 gate ⑤ 단독 판정(HEAD `ff8282056`, 작업 트리): required 7, evidence complete, rc 0 — 앞 회차와 같은 수이므로 landed-commit 기록은 하지 않음(창에 든 a190 커밋은 Go 함수를 바꾸지 않음).
