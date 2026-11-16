@@ -180,6 +180,19 @@ Pre-Edit Gate:
   `make test-race` rc 0(248s, 7 패키지 + 엔진 이름 목록) · 추가 `go test -race -count=1 ./internal/filldetect` rc 0(67.9s, `make test-race` 목록 밖).
   미실행: `make gate`, `make sdd-check`, `make sdd-test`, `make validate`.
 
+## 배포·복구 기록 (Manager 실측 2026-11-17 KST, 사용자 승인 — 계좌·종목·수량·가격·주문번호 미기재)
+
+- main 반영 236a21d71(fast-forward). 이미지 `make image CHANGE=a191-…` rc 0 → `tossos:a191-fill-detection-resolves-orders-that-left-the-open-list-236a21d71`.
+  바이너리 차등(`grep -a -c`): `fill.order_unresolved`·`closed_list_not_found` 새 이미지 각 1, 직전 a187 이미지 각 0. SchemaVersion 36 = 운영 저널 user_version 36.
+  핀: release = a191, rollback = a187-7d1e3163a. 판정 파일 `~/.local/share/tossos-deploy/schema-compatibility-a191-236a21d71.txt`.
+- 교체: httpapi 06:15:57~06:16:03 healthy, 엔진 06:16:03~06:16:10 healthy·engine run 1.
+- **운영 동작**: 06:16:12 KST(2026-11-16T21:16:12Z) 첫 주기들 안에 분쟁 주문의 `scoped_fill_snapshots`·`fill_snapshots` 두 행이 terminal=1·fail_closed=0·
+  `CANCELLED`. `fill.order_unresolved` 0건 → design Q9 한계 ① 운영 실행으로 지지. 그 시점 대사 `blocked` 2·미해제 `reconcile_states` 2(설계대로 저절로 안 풀림).
+- 차단 해제: 엔진 정지 06:16:55 → 장부 백업 → `engine reconcile-resolve --confirm` rc 0(「quantity-mismatch reconcile blocks released after three stable official
+  snapshots」) → 재시작 06:17:08 healthy·engine run 1. 엔진 부재 약 13초. 2026-11-16 같은 명령은 「1 order(s) the account does not show」로 거절됐었다.
+- 복구 확인: 미해제 `reconcile_states` 0, `reconcile.clean` 두 주기 연속 `blocked` 0·`stable` true, 첫 주기 `adopted` 1, `exit.position_adopted` 1건
+  (market kr, 공통 사다리 정책, synthetic stop 이 관측가 아래). 재시작 뒤 WARN/ERROR 0건. **관측 창은 재시작 뒤 약 70초뿐이다.**
+
 ## (기록) 1단계 시점 Manager 결정 요청 — 위 표로 닫힘
 
 

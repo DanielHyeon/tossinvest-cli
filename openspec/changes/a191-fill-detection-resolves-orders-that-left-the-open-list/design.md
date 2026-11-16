@@ -306,7 +306,7 @@ position_projection.go:428~433 **손으로 읽음 — AST 안 만듦**)로 RECON
 - 방법: 운영 콘솔 `/orders` GET 1회(필터 없음, trusted-network 모드라 로그인 없음). 본문은 저장·출력하지 않고 프로세스 안에서 파싱했고, 분쟁 주문 id 는 장부(`mode=ro`)에서 읽어 바이트 비교. 버튼 누름 0.
 - 결과: 그 id 와 같은 행 1건, 그룹 종결, `status` = CANCELED. 체결 수량 칸은 브로커가 보낸 값(대시 아님 — `dashUnlessSent(rec.FilledQuantity)`, `RawOrder.FilledQuantity` ← `o.Execution.FilledQuantity`, orders_reads.go:289 손으로 읽음)이고 0. 주문 수량·체결 수량 모두 장부 `scoped_fill_snapshots` 행(단건 스냅숏, `OPEN_UNFILLED`, terminal=0)과 같음. 같은 시각 장부: 그 주문 미종결, 미해제 `reconcile_states` 2건.
 - 판정: Q3 의 미실측 가정(「단건이 PENDING 인 그 주문이 CLOSED 에 깨끗한 종결로, 같은 수량으로 실려 있다」)은 실측으로 지지됨. M6 = (가) 유지 — 체결 없이 취소된 실제 행이 `execution.filledQuantity` 를 문자열로 실어 보냈다.
-- 이 측정이 증명하지 못하는 것: ① a191 이 쓰는 종목·날짜 필터 조합의 CLOSED 조회에 같은 행이 나오는지 ② `canceledAt` 유무(화면 열 없음) ③ 같은 순간의 단건 응답(읽지 않음, 장부의 마지막 스냅숏으로 대신) ④ 바이트 동일 중복 행 유무(콘솔이 dedupe) ⑤ 종결 목록이 100건 상한에 닿아 있었음(잘림 표시 있음).
+- 이 측정이 증명하지 못하는 것: ① a191 이 쓰는 종목·날짜 필터 조합의 CLOSED 조회에 같은 행이 나오는지 — **운영 실행으로 지지됨(2026-11-17 06:16:12 KST, 배포 뒤 첫 주기들 안에 수용 경로가 그 주문을 종결 CANCELLED 로 기록, `fill.order_unresolved` 0건)** ② `canceledAt` 유무(화면 열 없음) ③ 같은 순간의 단건 응답(읽지 않음, 장부의 마지막 스냅숏으로 대신) ④ 바이트 동일 중복 행 유무(콘솔이 dedupe) ⑤ 종결 목록이 100건 상한에 닿아 있었음(잘림 표시 있음).
 
 ## 5. 시험·변이 계획
 

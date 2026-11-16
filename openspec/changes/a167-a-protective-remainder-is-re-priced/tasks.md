@@ -33,3 +33,5 @@
 - [ ] 3.2 `make sdd-sync` · `make sdd-check`.
 - [ ] 3.3 격리 worktree 에서 `make gate CHANGE=a167-a-protective-remainder-is-re-priced`.
 - [ ] 3.4 PM 동기화 → `openspec archive`.
+
+> 메모(a191, 2026-11-17): 「옛 주문이 종결로 확인됐는가」는 새 판정을 만들지 말고 a191 의 종결 스냅숏(체결 감지가 CLOSED 목록으로 확인해 원장에 쓴 terminal 행)을 재사용할 것 — 판정이 둘이면 서로의 시험을 통과시킨다(a191 design D9).

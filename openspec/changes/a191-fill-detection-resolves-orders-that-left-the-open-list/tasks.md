@@ -51,7 +51,7 @@
 
 ## 5. 종결
 
-- [ ] 5.1 Manager 독립 검증.
-- [ ] 5.2 a167 에 「종결 확인은 a191 스냅숏을 쓴다」 메모, a100 에 「detect.go 줄 번호 재인용」 메모(그 change 파일은 그 change 의 저자가 고침).
-- [ ] 5.3 (사람) 배포·운영 장부 복구 순서 — 엔진 정지 창, `reconcile-resolve` 실행은 사람.
-- [ ] 5.4 archive·Story 경로·PM `--check`, 검증된 교훈 retain(ai-memory·Hindsight).
+- [x] 5.1 Manager 독립 검증 — 2026-11-17: filldetect 75/0·cmd/tossctl TestA191 2 PASS 재실행, 손수 overlay 변이 5개 전부 CAUGHT·대조군 GREEN, openapi 계약 대조, m4 동등 확인, `check_analysis` 지적(B9~B12) 수리 확인; 전체 시험(사용자 요청)은 review.md 검증 기록.
+- [x] 5.2 a167 에 「종결 확인은 a191 스냅숏을 쓴다」 메모, a100 에 「detect.go 줄 번호 재인용」 메모 — 두 change 모두 진행 중이라 각 tasks.md 끝에 메모 한 줄씩만 남김(다른 내용 무편집).
+- [x] 5.3 (사람) 배포·운영 장부 복구 — 2026-11-17 KST Manager 실행·사용자 승인: 이미지 `tossos:a191-…-236a21d71`(release)·rollback a187-7d1e3163a, 교체 06:16:10 healthy, 첫 주기들 안에 분쟁 주문 종결(CANCELLED) 기록, 엔진 정지(약 13초) 속 `reconcile-resolve --confirm` rc 0, 재시작 뒤 미해제 RECONCILE 0·`blocked` 0 두 주기(관측 창 약 70초) — review.md 배포·복구 기록.
+- [x] 5.4 archive·Story 경로·PM `--check`, 검증된 교훈 retain(ai-memory·Hindsight) — gate ② 선행 조건이라 선체크(선례 a187·a189·a190); 실제 수행 결과는 archive 커밋과 종결 보고.
