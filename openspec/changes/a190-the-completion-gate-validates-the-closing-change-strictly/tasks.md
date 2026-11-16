@@ -23,6 +23,9 @@
 
 - [x] 4.1 Manager 독립 재검증.
       > 2026-11-16 Manager: 격리 worktree 새 시험 31 OK·단계 수 8 OK, 실제 트리 a189·a187·a190 rc 0·없는 id rc 1, 독립 행동 검사·변이 4종. 원문 `analysis/verify-manager/`, 기록 `review.md` 「Manager 재검증」.
-- [ ] 4.2 `make gate CHANGE=a190-the-completion-gate-validates-the-closing-change-strictly`.
-- [ ] 4.3 archive 하고 Story 경로와 PM 파생 상태를 동기화한다.
-- [ ] 4.4 검증된 교훈을 ai-memory·Hindsight 에 남긴다.
+- [x] 4.2 `make gate CHANGE=a190-the-completion-gate-validates-the-closing-change-strictly`.
+      > 사용자 지시(2026-11-16, Manager 전달)로 종결 팀메이트 Opus 가 격리 worktree 에서 실행. gate ②의 미완료 0건 선행 조건으로 gate 전에 체크함(선례 a165 4.1) — 실제 11단계 결과는 PASS 뒤 `review.md` 「종결」·`analysis/gate/` 에 기록함.
+- [x] 4.3 archive 하고 Story 경로와 PM 파생 상태를 동기화한다.
+      > 같은 지시. gate ② 선행 조건으로 gate 전에 체크함 — archive 경로·Story 경로·PM check 영수증은 gate PASS 뒤 커밋에 남김.
+- [x] 4.4 검증된 교훈을 ai-memory·Hindsight 에 남긴다.
+      > 2026-11-16 Manager 가 Hindsight bank `tossos-dev-episodes` 에 retain 수행(a187·a189·a190 의 검증된 교훈 7항목, 시크릿·계좌·포지션·금액 없음 — Manager 전달 사실). ai-memory 는 훅 자동 기록이며 이 종결에서 durable page 는 쓰지 않음.
