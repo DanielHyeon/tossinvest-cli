@@ -54,7 +54,8 @@ import json, os, sys, time
 argv = sys.argv[1:]
 mode = "advisory" if ("--all" in argv and "--strict" in argv) else ("repo" if "--all" in argv else "closing")
 with open(os.environ["STUB_OPENSPEC_LOG"], "a", encoding="utf-8") as log:
-    log.write(json.dumps({{"mode": mode, "argv": argv, "cwd": os.getcwd()}}) + "\\n")
+    log.write(json.dumps({{"mode": mode, "argv": argv, "cwd": os.getcwd(),
+                          "telemetry": os.environ.get("OPENSPEC_TELEMETRY"), "marker": os.environ.get("A190_PARENT_MARKER")}}) + "\\n")
 plan = json.load(open(os.environ["STUB_OPENSPEC_PLAN"], encoding="utf-8"))[mode]
 time.sleep(plan.get("sleep", 0))
 if "raw" in plan:  # 깨진 바이트(UTF-8 아님)를 그대로 낸다
@@ -164,7 +165,7 @@ class Sandbox:
             return []
         return [json.loads(line) for line in self.log.read_text(encoding="utf-8").splitlines()]
 
-    def check(self, change_id: str = CLOSING, *, path: str | None = None) -> subprocess.CompletedProcess[str]:
+    def check(self, change_id: str = CLOSING, *, path: str | None = None, extra_env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
         """판정 단위를 직접 부른다. 인터프리터는 절대경로라 PATH 를 비워도 돈다."""
         return subprocess.run(
             [sys.executable, str(self.repo / "tools" / "sdd" / SCRIPT.name), change_id],
@@ -172,7 +173,7 @@ class Sandbox:
             capture_output=True,
             text=True,
             check=False,
-            env=self.env(path=path if path is not None else os.environ.get("PATH", "")),
+            env={**self.env(path=path if path is not None else os.environ.get("PATH", "")), **(extra_env or {})},
             timeout=600,
         )
 
@@ -279,6 +280,17 @@ class StubbedVerdicts(unittest.TestCase):
         for call in calls.values():
             self.assertEqual(str(self.box.repo.resolve()), str(Path(call["cwd"]).resolve()))
         self.assertIn("advisory — 판정 아님: 저장소 전체 strict 1 passed, 1 failed (2 items)", out(result))
+
+    def test_every_openspec_call_runs_with_telemetry_off_and_the_parent_environment(self) -> None:
+        """Manager 결정(2026-11-16): 판정 단위가 부르는 openspec 세 번 모두 OPENSPEC_TELEMETRY=0 으로 돈다.
+        부모 환경이 켜 둔 값(1)을 덮고, 그 밖의 부모 환경(표식 변수)은 그대로 물려준다."""
+        self.box.stub(self.ok_closing, self.ok_repo, self.ok_advisory)
+        result = self.box.check(path=self.box.stub_path(), extra_env={"OPENSPEC_TELEMETRY": "1", "A190_PARENT_MARKER": "keep"})
+        self.assertEqual(0, result.returncode, out(result))
+        calls = self.box.calls()
+        self.assertEqual(["closing", "repo", "advisory"], [c["mode"] for c in calls])
+        self.assertEqual(["0", "0", "0"], [c["telemetry"] for c in calls])
+        self.assertEqual(["keep", "keep", "keep"], [c["marker"] for c in calls])
 
     def test_4_openspec_absent_fails_both_checks(self) -> None:
         """④ PATH 에 openspec 이 없음 → (가)·(나) 둘 다 V1."""

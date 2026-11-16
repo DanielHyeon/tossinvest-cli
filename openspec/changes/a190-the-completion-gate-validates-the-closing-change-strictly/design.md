@@ -103,5 +103,5 @@ main spec `sdd-workflow` 「자동화된 완료 게이트」(validate 를 문장
 - [CI 에 openspec 없음] → 진짜 CLI 시험은 CI 에서 skip. 스텁 시험이 판정 갈래를 CI 에서도 잰다. 로컬 gate 는 openspec 없이는 ⑪ 에서 FAIL 이다.
 - [openspec JSON 모양이 판마다 바뀜] → 모양이 다르면 FAIL(fail-closed). 1.16.0 실측 모양만 받는다.
 - [부채 누적] → advisory 줄과 `make validate` 로 보인다. 판정은 아니다 — 사용자 결정이다.
-- [telemetry] openspec 1.16.0 은 기본으로 사용 통계를 보낸다(`OPENSPEC_TELEMETRY`/`DO_NOT_TRACK` 로 끔). 새 스크립트는 기존 `make validate` 와
-  같이 환경을 바꾸지 않는다. 시험·하네스는 `OPENSPEC_TELEMETRY=0` 으로 돈다. gate 쪽 기본값은 Manager 결정 항목이다.
+- [telemetry] openspec 1.16.0 은 기본으로 사용 통계를 보낸다. Manager 결정(2026-11-16)으로 판정 단위의 openspec 호출 세 번은
+  `OPENSPEC_TELEMETRY=0` 으로 돈다(부모 환경은 그대로 물려주고 이 하나만 덮음). `make validate` 타깃은 손대지 않았다.

@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -38,6 +39,9 @@ def run(args: list[str], root: Path, timeout: float):
             capture_output=True,
             check=False,
             timeout=timeout,
+            # openspec 1.16.0 은 기본으로 사용 통계를 보냄(dist/telemetry/opt-out.js isTelemetryDisabledByEnv).
+            # gate 한 번에 호출이 3회라 끔. 부모 환경은 그대로 물려주고 이 하나만 덮음(Manager 결정 2026-11-16).
+            env={**os.environ, "OPENSPEC_TELEMETRY": "0"},
         )
     except OSError as exc:
         return None, f"[V1] openspec 을 실행할 수 없음: {exc}"

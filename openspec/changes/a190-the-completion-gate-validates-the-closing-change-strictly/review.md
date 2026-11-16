@@ -45,7 +45,7 @@
 | 7 | P3 | 같은 이름 change+spec 은 spec 해소가 아니라 `ambiguous_item` | 수용. D3 부연 정정, 사유에 이름 변경 안내 |
 | 8 | P3 | 아카이브 대상 FAIL 주장은 맞음, 사유가 「Did you mean」뿐 | 수용. unknown_item 사유에 「아카이브된 change 는 openspec 이 검증하지 않는다」 덧붙임(판정 갈래 추가 없음) |
 | 9 | P3 | 시험 갈래 번호가 D3 표와 안 이어짐, 시한 주입 수단 미정 | 수용. D3 행 번호 V1~V13 + 시험 열, 시한은 함수 인자로 주입 |
-| 10 | P3 | telemetry: 1.16.0 은 기본 전송, gate 한 번에 1회→3회 | **Manager 결정 항목.** 스크립트는 환경을 바꾸지 않음(기존 `make validate` 와 같음). 시험·하네스만 `OPENSPEC_TELEMETRY=0` |
+| 10 | P3 | telemetry: 1.16.0 은 기본 전송, gate 한 번에 1회→3회 | **Manager 결정 항목.** 스크립트는 환경을 바꾸지 않음(기존 `make validate` 와 같음). 시험·하네스만 `OPENSPEC_TELEMETRY=0` (→ 이후 Manager 결정 1 로 판정 단위도 끔) |
 | 11 | P3 | (나)는 남의 **오류**(delta 없는 새 change)로 여전히 막힘 — proposal 이 이 잔여를 말하지 않음 | 수용. proposal·design 「여전히 거부함」에 예시 |
 | 12 | P3 | D5 누락: `gate.sh:6` 「10개 조건」(이미 낡음), `Makefile:129` 「(SDD 게이트)」, 요구 문장 괄호에 sdd-check·test-race 없음 | 수용. D5 에 더하고 요구 문장 보강(475자, 500자 경고선 아래) |
 
@@ -99,11 +99,38 @@
 - 변이 원장(R2 수리 뒤): **21개 전부 CAUGHT**, 대조군 앞뒤 GREEN, 원본 바이트 불변, 파일별 sha256 — `analysis/mutation/ledger.txt`.
   이전 판은 `history-run2`(R1 전)·`history-run4`(R1 뒤) 로 보존.
 
+## Manager 결정 (2026-11-16)
+
+1. **텔레메트리 = 끈다.** `run` 이 openspec 을 부를 때 `env={**os.environ, "OPENSPEC_TELEMETRY": "0"}` — 부모 환경을 물려주고 이 하나만 덮는다.
+   이유: gate 한 번에 호출 1→3회, 이 머신 셸에 `DO_NOT_TRACK`·`OPENSPEC_TELEMETRY` 없음(Manager 실측). 변수 이름은 설치본
+   `dist/telemetry/opt-out.js` 의 `isTelemetryDisabledByEnv`. 시험 `test_every_openspec_call_runs_with_telemetry_off_and_the_parent_environment`
+   (부모 `OPENSPEC_TELEMETRY=1` 을 세 호출 모두 `0` 으로 덮고 표식 변수는 물려받음 — 편집 전 스크립트에서 RED, `analysis/tdd/red-telemetry.txt`),
+   변이 M19(그 줄 삭제). 리뷰 재실행 없음(Manager 지시: 한 줄 + 시험 하나).
+2. **아카이브된 대상이 ⑪ 에서 FAIL = 수용.** 닫는 순서는 gate → archive.
+3. **delta 없는 남의 change 가 모든 gate 를 막는 것 = 그대로 둔다.** 편집 전에도 같았다(저장소 전체 strict 는 그 상위집합). D4 「여전히 거부함」에 적혀 있다.
+4. **후속 4건(INFO 구멍 · (나)의 spec 수 대조 · 자기모순 보고 · strict 부채 51 항목) = 기록만.**
+5. **Manager 가 리뷰 루프를 닫음 — 2회차 수리는 시험·변이와 Manager 독립 검증으로 확인.** 3회차 리뷰는 돌리지 않았고 수렴을 주장하지 않는다.
+   gstack review 기록의 `completed:false` 는 그대로 둔다.
+
+## Manager 재검증 (tasks 4.1, 2026-11-16)
+
+원문: `analysis/verify-manager/`(`a190-mgr-newtests.txt` · `a190-mgr-race.txt` · `a190-mgr-mutation.txt` · `a190-mgr-step11-*.txt` 4개, Manager 스크래치패드에서 원문 그대로 복사).
+
+- 격리 worktree(`~/tossos-work/a189-fulltest`, detached `bcccc07fe`)에서: 새 시험 31 OK, 단계 수 시험 8 OK.
+- 실제 트리에서 11단계 판정: a189 · a187 · a190 rc 0(advisory 「9 passed, 51 failed (60 items)」), 없는 id rc 1((가) V4, (나) V10).
+- Manager 독립 행동 검사: 닫는 change(a189) 델타에 THEN 없는 시나리오를 넣으면 a189 rc 1((가) V11) · 같은 트리에서 a187 rc 0(남의 경고는 막지 않음).
+  delta 없는 남의 change 를 만들면 a189 rc 1((나) V11).
+- Manager 독립 변이: (가) `--strict` 제거 → 새 시험 3건 FAIL · (나) `--strict` 추가 → 실제 트리 a189 rc 1, 새 시험 19건 FAIL ·
+  gate.sh 를 옛 `make validate` 로 복귀 → 새 시험 4건 FAIL · V6 비교 무력화 → 새 시험 6건 FAIL. 원복 뒤 dirty 0.
+- 정직 기록: Manager 의 첫 행동 검사(MODIFIED 델타에 500자 넘는 요구 문장)는 a189 rc 0 이었다. openspec 1.16.0 자체가 그 입력에 경고를
+  내지 않았기 때문이고(직접 실행으로 확인), gate 의 구멍이 아니라 검사 입력이 틀린 것이었다.
+- Go 변경 0 파일, 운영 코드 무변경.
+
 ## 후속
 
 - strict 부채 51 항목(경고 262: 요구 문장 500자 초과 235 · Purpose 자리표시 22 · 첫 `##` 위 본문 5) — `analysis/strict-debt/debt-list.md`. 이 change 는 고치지 않는다.
 - (가)의 INFO 구멍(proposal-freeze #1): strict 가 「Archive would refuse this delta」 INFO 를 valid 로 친다. archive 가 따로 거절한다.
 - (나)의 더 강한 표본 검사(proposal-freeze #3): spec·change 수를 디스크 수와 대조.
-- telemetry 기본값(proposal-freeze #10, 최종 R1 #11): gate 의 openspec 호출에 `OPENSPEC_TELEMETRY=0` 을 넣을지 — Manager 결정.
+- ~~telemetry 기본값~~ — Manager 결정 1 로 반영(끔).
 - 자기모순 보고(`valid: true` + ERROR issue) 거부(최종 R1 #9).
-- 남의 delta 없는 새 change 가 (나)로 모든 gate 를 막는 결합(최종 R1 #7) — 사용자 결정 범위, 완화 여부는 Manager.
+- 남의 delta 없는 새 change 가 (나)로 모든 gate 를 막는 결합(최종 R1 #7) — Manager 결정 3: 그대로 둔다.

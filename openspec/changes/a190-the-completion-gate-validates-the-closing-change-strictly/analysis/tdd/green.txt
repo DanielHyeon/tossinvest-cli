@@ -1,4 +1,4 @@
-# GREEN(리뷰 R2 수리 뒤): 2026-11-16T09:35:51+09:00 · HEAD 43c988cd9 + 미커밋 · openspec 1.16.0 · TMPDIR=$HOME/tossos-work/t
+# GREEN(텔레메트리 반영 뒤): 2026-11-16T09:42:35+09:00 · HEAD bcccc07fe + 미커밋 · openspec 1.16.0 · TMPDIR=$HOME/tossos-work/t
 test_real_openspec_fails_at_step_eleven_on_a_closing_warning (tools.sdd.test_gate_validate_step.GateWiring.test_real_openspec_fails_at_step_eleven_on_a_closing_warning) ... ok
 test_real_openspec_passes_with_strict_warnings_elsewhere (tools.sdd.test_gate_validate_step.GateWiring.test_real_openspec_passes_with_strict_warnings_elsewhere) ... ok
 test_stubbed_closing_failure_stops_the_gate_at_step_eleven (tools.sdd.test_gate_validate_step.GateWiring.test_stubbed_closing_failure_stops_the_gate_at_step_eleven) ... ok
@@ -26,6 +26,8 @@ test_broken_utf8_inside_a_json_string_is_v3_not_a_pass (tools.sdd.test_gate_vali
 리뷰 R2(Codex #5): 대체 문자로 읽으면 JSON 문자열 속 깨진 바이트가 유효한 보고서가 되어 통과했다. ... ok
 test_deeply_nested_json_is_v3_not_a_traceback (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_deeply_nested_json_is_v3_not_a_traceback)
 리뷰 R2(적대 F2): json.loads 의 RecursionError 는 ValueError 가 아니라 traceback 으로 (나)·advisory 를 끊었다. ... ok
+test_every_openspec_call_runs_with_telemetry_off_and_the_parent_environment (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_every_openspec_call_runs_with_telemetry_off_and_the_parent_environment)
+Manager 결정(2026-11-16): 판정 단위가 부르는 openspec 세 번 모두 OPENSPEC_TELEMETRY=0 으로 돈다. ... ok
 test_null_issues_still_report_both_checks_and_the_advisory (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_null_issues_still_report_both_checks_and_the_advisory)
 리뷰 R1(adversarial #2, Codex #3): `issues: null` 이 TypeError 로 (나)와 advisory 를 끊었다. ... ok
 test_undecodable_output_is_v3_and_never_breaks_the_advisory_contract (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_undecodable_output_is_v3_and_never_breaks_the_advisory_contract)
@@ -65,7 +67,7 @@ test_the_target_names_at_least_one_package (tools.sdd.test_race_detector_actuall
 빈 패키지 목록은 아무것도 안 돌면서 초록이 된다. ... ok
 
 ----------------------------------------------------------------------
-Ran 39 tests in 8.935s
+Ran 40 tests in 9.385s
 
 OK
 # rc=0

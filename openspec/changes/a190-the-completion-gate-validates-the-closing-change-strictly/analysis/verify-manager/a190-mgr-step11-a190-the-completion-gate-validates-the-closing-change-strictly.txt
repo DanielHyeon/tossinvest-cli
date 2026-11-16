@@ -1,0 +1,3 @@
+(가) OK: a190-the-completion-gate-validates-the-closing-change-strictly strict valid
+(나) OK: 저장소 전체(strict 없음) 오류 0
+advisory — 판정 아님: 저장소 전체 strict 9 passed, 51 failed (60 items) — 목록: make validate

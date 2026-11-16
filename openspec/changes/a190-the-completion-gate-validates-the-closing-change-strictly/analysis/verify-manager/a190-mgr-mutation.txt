@@ -1,0 +1,12 @@
+대조군(무변이): a189 rc=0 a187 rc=0 시험 rc=0 OK
+B1 a189 델타에 긴 요구 문장: a189 rc=0 (기대 1) [] / a187 rc=0 (기대 0 — 남의 경고)
+B2 delta 없는 남의 change: a189 rc=1 (기대 1) [(나) FAIL [V11] change zz-mgr-empty: ERROR file: Change must have at least one delta. No deltas found. Ensure your change has a specs/ dire]
+M1 (가) --strict 제거: 시험 rc=1 FAILED (failures=3) (기대 FAILED)
+M2 (나) --strict 추가 [ 1 file changed, 1 insertion(+), 1 deletion(-)]: 실제 트리 a189 rc=1 (기대 1) / 시험 rc=1 FAILED (failures=19) (기대 FAILED)
+M3 gate.sh 옛 make validate 복귀: 시험 rc=1 FAILED (failures=4) (기대 FAILED) / 단계수 시험 rc=0
+M4 V6 비교 무력화: 시험 rc=1 FAILED (failures=6) (기대 FAILED)
+최종: HEAD=bcccc07fe dirty=0
+B1' 닫는 change(a189)에 strict 경고: a189 rc=1 (기대 1) / a187 rc=0 (기대 0)
+(가) FAIL [V11] change a189-shadow-tool-guards-admit-the-account-budget: WARNING breakout-retest-strategy-lane/spec.md: MODIFIED "breakout 그림자 신호 측정은 주문 권위가 없다": scenari
+(나) OK: 저장소 전체(strict 없음) 오류 0
+(B1 원래 판: MODIFIED 델타의 긴 요구 문장은 openspec 1.16.0 자체가 경고하지 않음 — 검사 입력이 틀렸던 것)

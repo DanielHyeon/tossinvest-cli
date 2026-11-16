@@ -1,0 +1,5 @@
+# RED(텔레메트리 시험): 편집 전 스크립트(HEAD bcccc07fe) + 새 시험, 사본 /home/daniel/tossos-work/a190-telred
+FAIL: test_every_openspec_call_runs_with_telemetry_off_and_the_parent_environment (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_every_openspec_call_runs_with_telemetry_off_and_the_parent_environment)
+AssertionError: Lists differ: ['0', '0', '0'] != ['1', '1', '1']
+Ran 1 test in 0.093s
+FAILED (failures=1)

@@ -21,7 +21,8 @@
 
 ## 4. 종결 (Manager · 사용자 지시 대기)
 
-- [ ] 4.1 Manager 독립 재검증.
+- [x] 4.1 Manager 독립 재검증.
+      > 2026-11-16 Manager: 격리 worktree 새 시험 31 OK·단계 수 8 OK, 실제 트리 a189·a187·a190 rc 0·없는 id rc 1, 독립 행동 검사·변이 4종. 원문 `analysis/verify-manager/`, 기록 `review.md` 「Manager 재검증」.
 - [ ] 4.2 `make gate CHANGE=a190-the-completion-gate-validates-the-closing-change-strictly`.
 - [ ] 4.3 archive 하고 Story 경로와 PM 파생 상태를 동기화한다.
 - [ ] 4.4 검증된 교훈을 ai-memory·Hindsight 에 남긴다.

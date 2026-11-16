@@ -152,6 +152,11 @@ MUTANTS = (
      "    except Exception as exc:  # 판정이 아니므로",
      "    except (TypeError, KeyError) as exc:  # 판정이 아니므로",
      {"test_the_advisory_turns_any_exception_into_a_line"}),
+    # Manager 결정(2026-11-16): openspec 자식 환경에 OPENSPEC_TELEMETRY=0
+    ("M19 텔레메트리 끄기 줄 삭제", SCRIPT,
+     '            env={**os.environ, "OPENSPEC_TELEMETRY": "0"},\n',
+     "",
+     {"test_every_openspec_call_runs_with_telemetry_off_and_the_parent_environment"}),
 )
 
 STEP11_BLOCK = re.compile(r"\n# ---- 11\. openspec validate \(a190\).*?echo \"OK: openspec validate\"\n", re.S)
