@@ -1,0 +1,438 @@
+bash tools/gate.sh a187-strict-quote-readers-accept-kr-alphanumeric-symbols
+GATE: a187-strict-quote-readers-accept-kr-alphanumeric-symbols
+repo: /home/daniel/tossos-work/a187-close
+
+==> 1/11 tasks.md 확인
+OK: openspec/changes/a187-strict-quote-readers-accept-kr-alphanumeric-symbols/tasks.md
+
+==> 2/11 미완료 태스크 확인
+OK: 미완료 태스크 0건
+
+==> 3/11 짝 change 확인 (deploy-pair.txt)
+OK: 짝 선언 없음 — 이 change 는 혼자 배포한다
+
+==> 4/11 gstack 리뷰 기록 확인
+OK: openspec/changes/a187-strict-quote-readers-accept-kr-alphanumeric-symbols/review.md
+
+==> 5/11 Function Logic Map 증거 확인
+[logic-map] a187-strict-quote-readers-accept-kr-alphanumeric-symbols: base 6dbb752f63fe → landed-commit be90ea3e7ed673c4992eda2b584eb65c1d562cf6 required 2 function(s) — judged at HEAD 5141f6245671
+[logic-map] a187-strict-quote-readers-accept-kr-alphanumeric-symbols: evidence complete or diff-proven exempt
+OK: Function Logic Map
+
+==> 6/11 make sdd-check
+make[1]: Entering directory '/home/daniel/tossos-work/a187-close'
+python3 tools/sdd/sdd_doctor.py
+[tools]
+  OK   rtk: rtk 1.1.0
+  OK   openspec: 1.16.0
+  OK   codegraph: 1.6.0
+  OK   codegraphcontext: Usage: codegraphcontext [OPTIONS] COMMAND [ARGS]...                            
+  OK   create-context-graph: create-context-graph, version 0.13.1
+  OK   ast-grep: ast-grep 0.45.0
+  OK   gbrain: gbrain 0.42.51.0
+  OK   docker: Docker version 29.9.2, build a82e528
+[skills]
+  OK   gstack: /home/daniel/.agents/skills/gstack
+  OK   superpowers: /home/daniel/.codex/.tmp/plugins/plugins/superpowers
+[python_modules]
+  OK   typedb-driver: mode=local raw=/home/daniel/tossos-work/a187-close/.sdd/.venv/bin/python resolved=/home/daniel/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/bin/python3.13; typedb-driver 3.11.5
+[files]
+  OK   .mcp.json: present
+  OK   .codex/config.toml: present
+  OK   .codex/hooks.json: present
+  OK   .claude/settings.json: present
+  OK   .githooks/pre-commit: present
+  OK   .githooks/post-commit: present
+  OK   .gbrain-source: present
+  OK   tools/sdd/gbrain_project.py: present
+  OK   tools/sdd-history/refresh_indexes.py: present
+[services]
+  OK   typedb(shared): running
+  OK   neo4j(shared): running
+python3 tools/sdd/check_index_freshness.py
+[index-freshness] WARN: codegraphcontext advisory index is missing or stale
+[index-freshness] WARN: gbrain advisory index is missing or stale
+[index-freshness] CodeGraph hard-evidence index matches the worktree
+make sdd-check-ci
+make[2]: Entering directory '/home/daniel/tossos-work/a187-close'
+python3 tools/sdd/check_agent_config_sync.py
+[agent-config] Claude/Codex safety bootstrap and workflow routing are synchronized
+python3 scripts/memory_index.py check
+valid
+python3 tools/pm/generate_master_tracker.py --check
+[pm] hierarchy and generated trackers are current
+python3 -m compileall -q scripts tools/logic-map tools/sdd tools/sdd-history tools/pm tools/deploy
+make sdd-test
+make[3]: Entering directory '/home/daniel/tossos-work/a187-close'
+python3 -m unittest discover -s scripts -p 'test_*.py'
+...............
+----------------------------------------------------------------------
+Ran 15 tests in 0.362s
+
+OK
+python3 -m unittest discover -s tools/logic-map -p 'test_*.py'
+.......................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 503 tests in 82.818s
+
+OK
+python3 -m unittest discover -s tools/sdd -p 'test_*.py'
+.....................................................................................................source registration failed
+..[gbrain-project] busy: owner pid=456 command='gbrain serve'
+.schema read failed
+........
+----------------------------------------------------------------------
+Ran 112 tests in 8.597s
+
+OK
+[sdd-sync] GBrain source 'tossos-x' is registered at /mnt/D/project/axipient/TossOS, not /home/daniel/tossos-work/a187-close. Sync would read the old path. Repair is destructive (it deletes this source's pages, then re-indexes):
+  python3 /home/daniel/tossos-work/a187-close/tools/sdd/gbrain_project.py sources remove tossos-x --confirm-destructive
+  python3 /home/daniel/tossos-work/a187-close/tools/sdd/gbrain_project.py sources add tossos-x --path /home/daniel/tossos-work/a187-close
++ /usr/bin/python3 /home/daniel/tossos-work/a187-close/tools/sdd/gbrain_project.py sync --source tossos-x --strategy code --no-embed --yes
+SOURCES
+───────
+  default               federated          0 pages  never synced
+  tossos-x              isolated        4261 pages  never synced
+                        /home/daniel/tossos-work/a187-close
+[sdd-sync] WARN: GBrain advisory busy; keeping its previous freshness ([gbrain-project] busy: owner pid=123 command='gbrain serve' home=/tmp/project/.sdd/gbrain-home)
+  codegraphcontext stats timed out
+  codegraphcontext stats timed out
++ /usr/bin/python3 /home/daniel/tossos-work/a187-close/tools/sdd/gbrain_project.py sources add tossos-x --path /home/daniel/tossos-work/a187-close
+[sdd-sync] GBrain source probe failed: schema read failed
++ /usr/bin/python3 /home/daniel/tossos-work/a187-close/tools/sdd/gbrain_project.py sync --source tossos-x --strategy code --no-embed --yes
+[sdd-sync] WARN: GBrain advisory busy; keeping its previous freshness ([gbrain-project] busy: owner pid=456 command='gbrain serve')
++ /usr/bin/python3 /tmp/tmp3kv9kzwv/repo/tools/sdd/gbrain_project.py sources list
+python3 -m unittest discover -s tools/sdd-history -p 'test_*.py'
+...............................[sdd-hook] warning: offline
+...[commit-event] warning: offline
+..[context-graph] CCG adapter failed; its checkpoint was not advanced
+..........
+----------------------------------------------------------------------
+Ran 46 tests in 4.774s
+
+OK
+python3 -m unittest discover -s tools/pm -p 'test_*.py'
+................
+----------------------------------------------------------------------
+Ran 16 tests in 0.028s
+
+OK
+python3 -m unittest discover -s tools/deploy -p 'test_*.py'
+..................
+----------------------------------------------------------------------
+Ran 18 tests in 0.000s
+
+OK
+go test ./tools/logic-map
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/logic-map	(cached)
+make[3]: Leaving directory '/home/daniel/tossos-work/a187-close'
+make[2]: Leaving directory '/home/daniel/tossos-work/a187-close'
+make[1]: Leaving directory '/home/daniel/tossos-work/a187-close'
+OK: make sdd-check
+
+==> 7/11 make test
+make[1]: Entering directory '/home/daniel/tossos-work/a187-close'
+go test -timeout 30m ./...
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	98.638s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	80.372s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	38.492s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app	0.006s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	626.586s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/app/paths	[no test files]
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/attemptthaw	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/attest	0.120s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/audit	0.960s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/auth	0.024s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/binstamp	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.390s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutsignal	0.008s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/brokerstate	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.432s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/candidate	14.695s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/candidatesrc	0.014s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/client	0.069s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.064s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/config	0.068s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	173.212s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane	0.033s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/costs	0.558s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/dailyloss	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/deployguard	0.010s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/doctor	0.006s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/domain	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/enginelock	0.449s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/enginewatch	0.016s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	226.128s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy	0.447s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/exitquarantine	0.006s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/export	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/filldetect	9.535s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/flatten	23.544s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/handoff	0.113s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/httpapi	0.718s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/hybrid	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/i18n	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	903.777s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/localupdate	5.162s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/manualbuy	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/markout	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/mcp	0.087s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/measure	2.730s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/measure/degrade	1.751s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/monitor	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/networkboundary	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/obs	70.413s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	5.633s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialbars	5.176s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialfx	0.386s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/offlinecontinuation	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/onboarding	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/operatorview	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/ops	0.202s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/optimization	8.983s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/optimizationevidence	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/orderintent	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/orderlineage	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/output	0.015s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/performance	32.546s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/performancejournal	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/position	0.064s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positioncampaign	0.012s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc	0.019s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protection	11.420s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionlifecycle	0.016s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionofficial	0.013s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionreadiness	0.430s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/push	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/qr	0.164s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/ratebudget	0.026s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	86.955s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/redact	1.369s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/releaseupdate	0.130s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/replay	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reversallane	0.055s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/risk	0.011s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	0.490s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc	0.003s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/riskrelaxation	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/runlock	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/scheduler	2.700s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/selfupdate	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/session	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/settingmeta	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	7.264s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/soak	0.702s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/strategy	[no test files]
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/strategyaccount	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycandidate	0.006s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycandle	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategydispatch	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyengine	1.038s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyevidence	9.080s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	0.290s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	13.598s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategymarket	0.662s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve	1.495s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	0.561s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc	10.652s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal	7.128s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	6.023s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyruntime	0.011s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow	1.668s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	2.554s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/testenv	0.720s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/trading	0.006s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/tui	0.008s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/updatecheck	0.019s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/verifylive	77.584s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/version	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane	0.113s
+ok  	github.com/JungHoonGhae/tossinvest-cli/openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype	4.888s
+ok  	github.com/JungHoonGhae/tossinvest-cli/openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype	17.340s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a087-market-sell-probe	6.394s
+?   	github.com/JungHoonGhae/tossinvest-cli/tools/a112-family-activation	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-family-shadow	0.006s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-l1c-quote-probe	0.657s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-mb-us-source	353.301s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a128-d2-receipts	0.687s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a128-jev-shadow-probe	8.316s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a130-outcome-backfill	4.652s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a138-held-preimage-check	5.348s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow	2.483s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a155-observe-versioned-strategy-decisions	0.162s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a166-budget-state	0.174s
+?   	github.com/JungHoonGhae/tossinvest-cli/tools/boundarymap	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/logic-map	0.004s
+make[1]: Leaving directory '/home/daniel/tossos-work/a187-close'
+OK: make test
+
+==> 8/11 make test-seams
+make[1]: Entering directory '/home/daniel/tossos-work/a187-close'
+go test -timeout 45m -tags tossos_testseams ./...
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	105.422s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	81.980s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	38.781s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app	0.012s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	825.043s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/app/paths	[no test files]
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/attemptthaw	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/attest	0.110s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/audit	1.636s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/auth	0.021s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/binstamp	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.338s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutsignal	0.006s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/brokerstate	0.009s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/campaignstateevidence	0.373s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/candidate	17.372s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/candidatesrc	0.013s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/client	0.079s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.065s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/config	0.069s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	176.659s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane	0.706s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/costs	0.469s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/dailyloss	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/deployguard	0.010s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/doctor	0.005s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/domain	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/enginelock	0.436s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/enginewatch	0.018s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	324.851s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy	0.372s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/exitquarantine	0.002s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/export	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/filldetect	12.129s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/flatten	26.838s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/handoff	0.384s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/httpapi	1.195s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/hybrid	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/i18n	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	984.474s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/localupdate	4.068s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/manualbuy	0.002s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/markout	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/mcp	0.059s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/measure	3.754s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/measure/degrade	3.146s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/monitor	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/networkboundary	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/obs	71.260s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	6.322s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialbars	4.894s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialfx	0.738s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/offlinecontinuation	0.026s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/onboarding	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/operatorview	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/ops	0.224s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/optimization	13.501s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/optimizationevidence	0.006s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/orderintent	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/orderlineage	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/output	0.017s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/performance	33.941s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/performancejournal	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/position	0.048s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positioncampaign	0.008s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc	0.014s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protection	14.254s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionlifecycle	0.013s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionofficial	0.010s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionreadiness	0.766s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/push	0.006s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/qr	0.144s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/ratebudget	0.022s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	87.748s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/redact	1.445s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/releaseupdate	0.101s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/replay	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reversallane	1.225s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/risk	0.008s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	14.491s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc	0.003s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/riskrelaxation	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/runlock	0.012s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/scheduler	2.711s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/selfupdate	0.002s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/session	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/settingmeta	0.002s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	9.190s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/soak	1.216s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/strategy	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyaccount	0.009s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	0.010s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycandidate	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycandle	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	0.102s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategydispatch	0.006s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyengine	0.825s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyevidence	9.333s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	0.246s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	13.062s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategymarket	0.578s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyobserve	1.513s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	0.568s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc	10.823s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal	14.544s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	6.840s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyruntime	0.009s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow	1.996s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	2.534s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/testenv	1.076s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/trading	0.008s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/tui	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/updatecheck	0.020s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/verifylive	75.998s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/version	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane	0.805s
+ok  	github.com/JungHoonGhae/tossinvest-cli/openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype	5.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype	17.312s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a087-market-sell-probe	6.470s
+?   	github.com/JungHoonGhae/tossinvest-cli/tools/a112-family-activation	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-family-shadow	0.005s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-l1c-quote-probe	0.657s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-mb-us-source	355.380s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a128-d2-receipts	0.697s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a128-jev-shadow-probe	9.130s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a130-outcome-backfill	4.777s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a138-held-preimage-check	5.675s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow	2.644s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a155-observe-versioned-strategy-decisions	0.163s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a166-budget-state	0.195s
+?   	github.com/JungHoonGhae/tossinvest-cli/tools/boundarymap	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/logic-map	0.011s
+make[1]: Leaving directory '/home/daniel/tossos-work/a187-close'
+OK: make test-seams
+
+==> 9/11 make test-race
+make[1]: Entering directory '/home/daniel/tossos-work/a187-close'
+go test -race -timeout 15m -count=1 -tags tossos_testseams ./internal/strategyworker ./internal/strategycoordinator ./internal/strategyhandoff ./internal/strategyarbiter ./internal/strategyrouter ./internal/strategyflow ./internal/clock
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	4.138s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	1.581s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	29.320s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	1.032s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	10.552s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	1.255s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	1.078s
+go test -race -timeout 10m -count=1 -tags tossos_testseams -run 'TestTwoMarketsRideOneAuthorityWaveInsteadOfTakingTurns|TestOnlyOneMarketEverLeadsAWave|TestAFailedWaveReachesEveryMarketAndIsNeverCached|TestAMarketWaitingOnTheWaveLeavesWhenItsOwnCycleIsCancelled|TestTheCacheWindowStillMeasuresFromTheWaveStart|TestAPanickingWaveNeverStrandsTheMarketsWaitingOnIt|TestTheMarketThatLeadsAWaveAlwaysPublishesIt|TestARefreshWithoutAClockRefusesBeforeItCanMintAWave|TestAFailedWaveCarriesNoAssemblyForEitherMarket|TestALatchedLaneComesBackLatchedAfterTheProcessRestarts|TestALatchOnlyReopensForAStrictlyNewerVerifiedActivation|TestARestoredLatchKeepsTheFirstCauseAcrossTheRestart|TestOneLatchedLaneLeavesItsSevenPeersOpenAcrossARestart|TestADurableLatchThatNamesNoLaneInThisBuildStopsTheCycleLoudlyAndCanBeClosed|TestALedgerThatCannotTakeTheLatchStopsTheCycle|TestTheRecoveryGenerationComesFromTheVerifiedActivationAndNothingElse|TestTheProductionStepNeverLatchesSoTheLedgerStaysEmpty|TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther|TestAHungLaneDoesNotDelayItsPeersInTheSameWave|TestAPanicOutsideALaneStepStillReachesTheMarketCycle|TestAProjectedLaneRowIsNeverTorn|TestTheLaneProjectionReadsALaneRowUnderOneLock|TestAStalledRemoteWaveNeverBlocksTheProjectionRead|TestSafetyLoopsKeepTheirCadenceWhileEveryEntryQueueIsSaturated|TestSafetyLoopsKeepTheirCadenceThroughEveryEntryFailureKind|TestTheProductionActivationLoaderRunsAndFindsNoManifest|TestWithoutAVerifiedActivationCoordinationIsUnchanged|TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt|TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading|TestAClosedMarketStillCarriesTheGatesActivation|TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope|TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor|TestAProposalNoLaneOwnsIsStoppedRatherThanPassedThrough|TestTheLanesAreBuiltBeforeTheProposalsAreCollected|TestAGatedFamilyMustNotShrinkTheMarketIntoTheExactlyOneValve|TestTheGateSaysWhichKindOfStopItMade|TestADeclaredActivationThatLapsesRollsItsMarketBackInsteadOfWidening|TestRollingBackLeavesALatchedLaneLatched|TestTheRollbackPathOnlyReads|TestTheOrderLeaseCannotOutliveTheFamilyActivation|TestARolledBackGateClosesTheMarketEvenWithoutLanes|TestAnUndeclaredMarketStaysUndeclaredWhateverItsCalibrationSays|TestAnUnverifiedActivationWithoutAnErrorStillRollsBack|TestADeclaredMarketWhoseCalibrationDoesNotAgreeIsRolledBack|TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires|TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission|TestTheDispatchJudgesFamilyExpiryBeforeAdmissionAndInsideTheFinalCheck|TestTheProductionAssemblyGivesTheDispatchCycleTheRealClock|TestAVerifiedGateWithoutLanesClosesInsteadOfFallingBackToTheLegacyPath|TestADeclaredMarketWhoseCycleIsCancelledRollsBack|TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder|TestAVerifiedPromotionLetsTheOwningLaneEmitThroughTheLaneRuntime|TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten|TestTheRouterRuntimeStaysUnobservedAndOnlyTheProjectionAddsShadow|TestACancelDuringTheProposalLoadClosesTheMarketAtTheDecision|TestARevocationDuringTheProposalLoadClosesTheMarketAtTheDecision|TestAnUndeclaredMarketCancelledDuringTheLoadKeepsTheLegacyPath|TestANilEnvironmentReaderRollsTheGateBackInsteadOfPanicking|TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle|TestTheShadowPinLeavesTheDispatchTraceUnchanged|TestAFailingShadowStepChangesNothingButItsOwnObservation|TestAStuckShadowStepNeitherLatchesNorRefreshesTheOtherMarket|TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive|TestALateNilCycleIsAFailureAtTheLimit|TestTheShadowDeferNeverRewritesAFirstCycleError|TestCentralIntegrityKeepsItsIdentityThroughTheShadowDefer|TestARestartNeverRestoresShadow|TestTheNextWaveClearsAnUnusableShadow|TestWithoutANewWaveExpiryAndAgeStillEndTheShadow|TestTheShadowAgeLimitIsDerivedAndRejectsNoHealthyGap|TestTheGapBetweenRecordAndPublishIsUnobservedByDesign|TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow|TestOnlyOneShadowStepRunsPerMarket|TestNeitherTheStepNorTheProjectionShadowsAnOnLane|TestASuccessfulShadowStepLeavesEveryLaneStatusUnchanged|TestTheProjectionShadowsOnlyAnOffOffObservation|TestA146ASkipIsCountedAndAnnouncedOncePerDayAndSymbol|TestA146ACapZeroEntryIsNotASwallowedFaultOnARefreshOnlyMarket|TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops' ./internal/app/engine
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	202.700s
+make[1]: Leaving directory '/home/daniel/tossos-work/a187-close'
+OK: make test-race
+
+==> 10/11 make vet
+make[1]: Entering directory '/home/daniel/tossos-work/a187-close'
+go vet ./...
+make[1]: Leaving directory '/home/daniel/tossos-work/a187-close'
+OK: make vet
+
+==> 11/11 openspec validate (닫는 change strict + 저장소 전체 오류)
+(가) OK: a187-strict-quote-readers-accept-kr-alphanumeric-symbols strict valid
+(나) OK: 저장소 전체(strict 없음) 오류 0
+advisory — 판정 아님: 저장소 전체 strict 7 passed, 51 failed (58 items) — 목록: make validate
+OK: openspec validate
+
+GATE PASS: a187-strict-quote-readers-accept-kr-alphanumeric-symbols

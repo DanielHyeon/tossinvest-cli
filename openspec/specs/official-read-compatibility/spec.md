@@ -2,7 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change a143-official-read-compatibility. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: General chart ordering is chronological
 
 General official charts SHALL expose oldest-to-newest candle order from newest-first wire responses without changing candle timestamps or values.
@@ -47,18 +49,6 @@ Repository documentation SHALL contain official REST and AsyncAPI snapshots with
 - **WHEN** the compatibility receipt is produced
 - **THEN** it distinguishes stored AsyncAPI evidence from unimplemented WebSocket clients or automated AsyncAPI monitoring
 
-### Requirement: Minute symbol compatibility does not widen quote or order policy
-
-Only the minute-candle reader SHALL accept KR uppercase alphanumeric six-character symbols. The existing shared validator and both strict quote readers MUST retain numeric-only KR validation and reject alphanumeric KR input before a request. Published-description tests MAY reflect the new snapshot wording but MUST NOT widen the a087 executable order probe policy.
-
-#### Scenario: Same alphanumeric input reaches only the minute reader
-- **WHEN** KR 0101N0 is passed to the minute reader and each strict quote reader using offline fixtures
-- **THEN** the minute reader accepts its lexical form while both strict quote readers return their symbol refusal with zero requests
-
-#### Scenario: Updated published symbol wording
-- **WHEN** the a087 request-schema test reads the refreshed snapshot
-- **THEN** it recognizes the current published description while its existing numeric-only production inputs, request body and execution guards remain unchanged
-
 ### Requirement: General price reads preserve the broker data timestamp
 
 The general official price adapter SHALL preserve the `timestamp` of each `/api/v1/prices` row verbatim, as a separate raw broker data time string on the domain quote, without decoding it and without adding any branch that can drop a row or return an error because of that field. The adapter MUST NOT replace, shift or derive the existing received time (`FetchedAt`) from the broker data time. A null or absent `timestamp` SHALL leave the broker data time empty and MUST NOT be filled from a local clock; a malformed `timestamp` SHALL be preserved as received. The domain quote's JSON form SHALL omit the broker data time when it is empty, so that quotes from producers that do not set it serialise byte-for-byte as before. No additional request, retry or rate-budget cost SHALL be introduced.
@@ -79,3 +69,26 @@ The general official price adapter SHALL preserve the `timestamp` of each `/api/
 - **WHEN** a batch of symbols is read
 - **THEN** exactly one `/api/v1/prices` request is made, as before
 
+### Requirement: KR alphanumeric symbol compatibility covers strict reads but not order policy
+
+The minute-candle reader and both strict quote readers SHALL accept KR symbols of exactly six ASCII uppercase alphanumeric characters through one shared lexical predicate. Other forms MUST be refused before any request and MUST NOT be normalized. Order intent normalization, including its numeric-only KR market inference, and the a087 executable order probe policy MUST remain unchanged. No order path, strategy universe or order permission SHALL change.
+
+#### Scenario: Same alphanumeric input reaches every strict reader
+- **WHEN** KR 0101N0 is passed to the minute reader and each strict quote reader using offline fixtures
+- **THEN** each reader sends exactly one request carrying symbol=0101N0 or symbols=0101N0 and returns that exact symbol
+
+#### Scenario: Invalid KR forms are still refused with zero requests
+- **WHEN** KR 0101n0, " 0101N0", 0101N, 0101N00 or 0101-0 is passed to each strict quote reader
+- **THEN** each returns its symbol refusal and the server receives zero requests
+
+#### Scenario: Numeric KR and US symbols are unchanged
+- **WHEN** KR 005930 and US AAPL are passed to each strict quote reader
+- **THEN** request query, returned symbol and currency are the same as before this change
+
+#### Scenario: Order policy is not widened
+- **WHEN** order intent market inference is evaluated with KR 0101N0 and the a087 probe tests run with their existing numeric inputs
+- **THEN** market inference still returns us for 0101N0 and kr only for six digits, and the a087 symbol policy, request body and execution guards are untouched by this change
+
+#### Scenario: Updated published symbol wording
+- **WHEN** the a087 request-schema test reads the refreshed snapshot
+- **THEN** it recognizes the current published description while its existing numeric-only production inputs, request body and execution guards remain unchanged

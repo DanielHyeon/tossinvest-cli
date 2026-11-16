@@ -1,0 +1,10 @@
+uv venv --python 3.13 .sdd/.venv
+Using CPython 3.13.13
+Creating virtual environment at: .sdd/.venv
+Activate with: source .sdd/.venv/bin/activate
+uv pip install --python .sdd/.venv/bin/python -r tools/sdd/requirements.txt
+Using Python 3.13.13 environment at: .sdd/.venv
+Resolved 2 packages in 251ms
+Installed 2 packages in 3ms
+ + parse==1.18.0
+ + typedb-driver==3.11.5

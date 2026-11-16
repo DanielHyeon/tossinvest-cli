@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a187-strict-quote-readers-accept-kr-alphanumeric-symbols",
-    "path": "openspec/changes/a187-strict-quote-readers-accept-kr-alphanumeric-symbols"
+    "path": "openspec/changes/archive/2026-11-16-a187-strict-quote-readers-accept-kr-alphanumeric-symbols"
   },
   "found_by": {
     "date": "2026-11-12",
     "how": "On 2026-11-12 the a184 signal tool dropped KR symbol 0158S0 from its live arm as ask_unavailable although it passed the drop filter: the strict orderbook read refuses alphanumeric KR symbols before any request, a numeric-only rule a143 kept for the two strict quote readers while the published contract documents alphanumeric six-character codes. The user directed a separate change to widen the rule first.",
-    "record": "openspec/changes/a187-strict-quote-readers-accept-kr-alphanumeric-symbols/proposal.md"
+    "record": "openspec/changes/archive/2026-11-16-a187-strict-quote-readers-accept-kr-alphanumeric-symbols/proposal.md"
   },
   "acceptance": [
     "Both strict quote readers accept KR symbols of exactly six ASCII uppercase alphanumeric characters through the same single predicate the minute-candle reader uses.",

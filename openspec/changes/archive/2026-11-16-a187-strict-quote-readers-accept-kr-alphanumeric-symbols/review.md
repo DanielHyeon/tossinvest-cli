@@ -154,3 +154,7 @@
 
 - 착지 기록: main `36560a816`(a189 archive 뒤)에서 gate ⑤ 단독 판정은 base `6dbb752f6` → 작업 트리 창에 형제 커밋 66개가 들어 required 9, rc 1(a189 의 시험 함수 7개 — `cmd/tossctl/console_test.go:TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient` 외 6). 이것은 쌓인 change 의 창 문제이므로 `check_analysis.py --change a187-… --record-landing` 으로 좁힘 — 도구가 이 change 의 번들로 계산한 착지 `be90ea3e7ed673c4992eda2b584eb65c1d562cf6`(저자가 고른 값 아님).
 - gate 격리 worktree 를 세울 「완료 커밋」: `landed-commit.txt` 를 담은 이 종결 커밋. 근거 — 기록은 HEAD 커밋에서 읽으므로 그 커밋이어야 ⑤ 가 a187 자기 창(base→착지)만 보고, ⑥~⑪ 은 저장소 전체 검사라 실제 배포될 현재 main(a189 의 가드 수리 포함) 위에서 돌아야 함. a187 의 옛 코드 커밋(`be90ea3e7`·`7d1e3163a`)에서는 ⑦ 이 다섯 가드로 실패하고 ⑪ 이 a190 이전 판정을 씀.
+- 착지 기록 커밋 뒤 gate ⑤ 단독: base `6dbb752f6` → landed-commit `be90ea3e7`, required 2, evidence complete, rc 0.
+- 격리 gate worktree `~/tossos-work/a187-close`(ext4, detached `5141f6245`): `make sdd-infra` rc 0 → `sdd_sync.py --no-gbrain` rc 1(advisory codegraphcontext 단계, fingerprint 기록됨) → `codegraph status` 0.44초·0.30초 → `make sdd-check` rc 0.
+- `make gate`(11:31:37~12:09:35 KST, 전후 HEAD `5141f6245` 동일·dirty 0): **GATE PASS 11/11, rc 0** — ① OK · ② OK · ③ OK(짝 없음) · ④ OK · ⑤ OK(required 2) · ⑥ OK · ⑦ OK · ⑧ OK · ⑨ OK · ⑩ OK · ⑪ OK(「(가) OK: … strict valid」, 「(나) OK: 저장소 전체(strict 없음) 오류 0」, advisory 「저장소 전체 strict 7 passed, 51 failed (58 items)」). 원문 `analysis/gate/`.
+- 그 뒤 archive·Story 경로(a187, 그리고 a189 Story 의 `found_by.record` 가 가리키던 이 change 의 파일)·PM check(같은 커밋).
