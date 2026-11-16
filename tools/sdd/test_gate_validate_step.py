@@ -57,7 +57,10 @@ with open(os.environ["STUB_OPENSPEC_LOG"], "a", encoding="utf-8") as log:
     log.write(json.dumps({{"mode": mode, "argv": argv, "cwd": os.getcwd()}}) + "\\n")
 plan = json.load(open(os.environ["STUB_OPENSPEC_PLAN"], encoding="utf-8"))[mode]
 time.sleep(plan.get("sleep", 0))
-sys.stdout.write(plan["stdout"])
+if "raw" in plan:  # 깨진 바이트(UTF-8 아님)를 그대로 낸다
+    sys.stdout.flush(); sys.stdout.buffer.write(bytes.fromhex(plan["raw"]))
+else:
+    sys.stdout.write(plan["stdout"])
 sys.exit(plan["rc"])
 '''
 
@@ -132,20 +135,20 @@ class Sandbox:
         self.log = Path(self._tmp.name) / "stub.log"
         self.plan = Path(self._tmp.name) / "plan.json"
 
-    def stub(self, closing: tuple[int, str], repo: tuple[int, str], advisory: tuple[int, str], sleep: float = 0) -> None:
+    def stub(self, closing: tuple, repo: tuple, advisory: tuple, sleep: float = 0) -> None:
+        """각 호출의 (rc, stdout) 또는 (rc, None, 원시 바이트 hex)."""
         stub = self.bin / "openspec"
         stub.write_text(STUB.format(python=sys.executable), encoding="utf-8")
         stub.chmod(0o755)
-        self.plan.write_text(
-            json.dumps(
-                {
-                    "closing": {"rc": closing[0], "stdout": closing[1], "sleep": sleep},
-                    "repo": {"rc": repo[0], "stdout": repo[1]},
-                    "advisory": {"rc": advisory[0], "stdout": advisory[1]},
-                }
-            ),
-            encoding="utf-8",
-        )
+        def entry(spec: tuple) -> dict:
+            body = {"rc": spec[0], "stdout": spec[1]}
+            if len(spec) > 2:
+                body["raw"] = spec[2]
+            return body
+
+        plan = {"closing": entry(closing), "repo": entry(repo), "advisory": entry(advisory)}
+        plan["closing"]["sleep"] = sleep
+        self.plan.write_text(json.dumps(plan), encoding="utf-8")
 
     def env(self, *, path: str) -> dict[str, str]:
         env = dict(os.environ, **QUIET)
@@ -324,6 +327,47 @@ class StubbedVerdicts(unittest.TestCase):
         self.assertIn("(나) FAIL [V6]", out(result))
         self.assertEqual(1, result.returncode)
 
+    def test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository(self) -> None:
+        """리뷰 R1(Codex #2): `Path("").resolve()` 는 cwd 라 빈 root 가 「이 저장소」로 둔갑해 통과했다.
+        NUL 바이트는 resolve() 가 ValueError 로 죽어 (나)·advisory 를 끊었다(Codex #3)."""
+        for label, root_path in (("빈 문자열", ""), ("상대경로", "."), ("NUL", "\x00")):
+            with self.subTest(label):
+                self.box.log.unlink(missing_ok=True)
+                result = self.run_with(closing=(0, report(self.box.repo, [item(CLOSING)], root_path=root_path)))
+                self.assertIn("(가) FAIL [V6]", out(result))
+                self.assertIn("(나) OK:", out(result))
+                self.assertIn("advisory — 판정 아님:", out(result))
+                self.assertEqual(1, result.returncode)
+
+    def test_v11_an_invalid_item_anywhere_fails_the_repository_check(self) -> None:
+        """리뷰 R1(testing): (나)가 남의 오류로 FAIL 하는 갈래를 CI(openspec 없음)에서도 잰다."""
+        bad = (1, report(self.box.repo, [item(CLOSING), item("widget", type_="spec", valid=False)]))
+        result = self.run_with(repo=bad)
+        self.assertIn(f"(가) OK: {CLOSING}", out(result))
+        self.assertIn("(나) FAIL [V11] spec widget", out(result))
+        self.assertEqual(1, result.returncode)
+
+    def test_null_issues_still_report_both_checks_and_the_advisory(self) -> None:
+        """리뷰 R1(adversarial #2, Codex #3): `issues: null` 이 TypeError 로 (나)와 advisory 를 끊었다."""
+        body = json.loads(report(self.box.repo, [item(CLOSING, valid=False)]))
+        body["items"][0]["issues"] = None
+        result = self.run_with(closing=(1, json.dumps(body)))
+        self.assertIn("(가) FAIL [V11]", out(result))
+        self.assertIn("(나) OK:", out(result))
+        self.assertIn("advisory — 판정 아님:", out(result))
+        self.assertNotIn("Traceback", out(result))
+        self.assertEqual(1, result.returncode)
+
+    def test_undecodable_output_is_v3_and_never_breaks_the_advisory_contract(self) -> None:
+        """리뷰 R1(Codex #1, adversarial #3): UTF-8 이 아닌 바이트가 UnicodeDecodeError traceback 으로 통과 판정을 FAIL 로 바꿨다."""
+        result = self.run_with(advisory=(0, None, "ff"))
+        self.assertEqual(0, result.returncode, out(result))
+        self.assertIn("advisory — 판정 아님: 저장소 전체 strict 합계를 얻지 못함", out(result))
+        result = self.run_with(closing=(0, None, "ff"))
+        self.assertIn("(가) FAIL [V3]", out(result))
+        self.assertIn("(나) OK:", out(result))
+        self.assertEqual(1, result.returncode)
+
     def test_v7_valid_must_be_the_boolean_true(self) -> None:
         result = self.run_with(repo=(0, report(self.box.repo, [item(CLOSING), item("widget", type_="spec", valid="true")])))
         self.assertIn("(나) FAIL [V7]", out(result))
@@ -363,6 +407,9 @@ class StubbedVerdicts(unittest.TestCase):
                 result = self.run_with(closing=closing)
                 self.assertIn("(가) FAIL [V12]", out(result))
                 self.assertEqual(1, result.returncode)
+        result = self.run_with(repo=(0, report(self.box.repo, [item(CLOSING), item("widget", type_="spec", valid=False)])))
+        self.assertIn("(나) FAIL [V12]", out(result))
+        self.assertEqual(1, result.returncode)
 
 
 class TimeoutVerdict(unittest.TestCase):
@@ -378,6 +425,17 @@ class TimeoutVerdict(unittest.TestCase):
             verdict, reasons = module.closing_verdict(CLOSING, module.ROOT, timeout=0.5)
         self.assertFalse(verdict)
         self.assertTrue(any(r.startswith("[V2]") for r in reasons), reasons)
+
+    def test_the_advisory_turns_any_exception_into_a_line(self) -> None:
+        """D2 — advisory 는 판정이 아니다. 예상 못 한 예외(여기서는 주입한 RuntimeError)도 사유 한 줄이 된다."""
+        box = Sandbox(self)
+        spec_ = importlib.util.spec_from_file_location("check_openspec_validate_copy2", box.repo / "tools" / "sdd" / SCRIPT.name)
+        module = importlib.util.module_from_spec(spec_)
+        spec_.loader.exec_module(module)
+        with mock.patch.object(module, "run", side_effect=RuntimeError("주입")):
+            line = module.advisory(module.ROOT)
+        self.assertIn("advisory — 판정 아님: 저장소 전체 strict 합계를 얻지 못함", line)
+        self.assertIn("RuntimeError", line)
 
 
 # ---- 배선: 실제 gate.sh -----------------------------------------------------------

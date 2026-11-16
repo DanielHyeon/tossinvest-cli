@@ -1,7 +1,14 @@
-# 2026-11-16T09:12:08+09:00 · python3 mutate.py /home/daniel/tossos-work/a190-gate-validate
-# 원본 /home/daniel/tossos-work/a190-gate-validate HEAD 1bb9a6c1cba3edfd6125c50b5fb07cbce9777927
-# 대상 파일 미커밋 변경: M tools/sdd/test_gate_validate_step.py
-# 사본 /home/daniel/tossos-work/a190-mut-2920292 · TMPDIR /home/daniel/tossos-work/a190-mut-tmp-2920292 · OPENSPEC_TELEMETRY=0 · openspec /home/daniel/.local/bin/openspec
+# 2026-11-16T09:23:14+09:00 · python3 mutate.py /home/daniel/tossos-work/a190-gate-validate (리뷰 R1 수리 뒤, 미커밋 작업 트리)
+# 원본 /home/daniel/tossos-work/a190-gate-validate HEAD 4a29b3e5342f7a63c0f6cba90036cbab057577b5
+# 대상 파일 미커밋 변경: M tools/sdd/check_openspec_validate.py
+ M tools/sdd/test_gate_validate_step.py
+# 사본 /home/daniel/tossos-work/a190-mut-3020521 · TMPDIR /home/daniel/tossos-work/a190-mut-tmp-3020521 · OPENSPEC_TELEMETRY=0 · openspec /home/daniel/.local/bin/openspec
+# sha256 c68c600f804c58a6e2863c922449a4781a1eb46fdfcad92ddf576a4f93291688  tools/gate.sh
+# sha256 79acfc77720294be61fdcd9c368a73e5e08b39ff87013aacdbd55eaf4ced9262  tools/sdd/check_openspec_validate.py
+# sha256 6f7e724563f5828e27ac594d4f869dba9c6bdeb29b117017b3d6afa578cdb495  tools/sdd/test_gate_validate_step.py
+# sha256 b21ac8ac7491dca04c2a6d6eece68c854a328ca4e5828bca13f6067ba7dee1f1  tools/sdd/test_race_detector_actually_runs.py
+# sha256 ef12039d21135302e9f095c731e8d02f2689ed1bae351e2d6b3e87483c260358  Makefile
+# sha256 47af6c5caae51def93ea369108e1a5cca1ab4c92e88219a8a73c6d79e86b5865  .github/workflows/ci.yml
 
 ## 대조군(무변이): rc=0 실패=[]
 OK
@@ -14,17 +21,17 @@ OK
 ## M2 (가) 호출 삭제: CAUGHT (unittest rc=1)
    기대 중 실패: ['test_2_a_strict_warning_in_the_closing_change_fails_at_the_closing_check', 'test_5_a_change_openspec_cannot_find_fails', 'test_all_ok_passes_and_the_three_commands_have_the_decided_shape', 'test_stubbed_closing_failure_stops_the_gate_at_step_eleven']
    기대했으나 통과: []
-   기대 밖 실패: ['test_4_openspec_absent_fails_both_checks', 'test_advisory_runs_even_when_the_verdict_fails', 'test_an_archived_target_fails_and_says_why', 'test_real_openspec_fails_at_step_eleven_on_a_closing_warning', 'test_stubbed_pass_reaches_gate_pass_with_this_change_id', 'test_v12_rc_and_json_must_agree', 'test_v3_output_that_is_not_json_fails', 'test_v5_an_error_status_alongside_items_fails', 'test_v6_a_report_about_another_root_fails', 'test_v8_the_closing_report_must_name_exactly_this_change']
+   기대 밖 실패: ['test_4_openspec_absent_fails_both_checks', 'test_advisory_runs_even_when_the_verdict_fails', 'test_an_archived_target_fails_and_says_why', 'test_null_issues_still_report_both_checks_and_the_advisory', 'test_real_openspec_fails_at_step_eleven_on_a_closing_warning', 'test_stubbed_pass_reaches_gate_pass_with_this_change_id', 'test_undecodable_output_is_v3_and_never_breaks_the_advisory_contract', 'test_v12_rc_and_json_must_agree', 'test_v3_output_that_is_not_json_fails', 'test_v5_an_error_status_alongside_items_fails', 'test_v6_a_report_about_another_root_fails', 'test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository', 'test_v8_the_closing_report_must_name_exactly_this_change']
 
 ## M3 (나) 호출 삭제: CAUGHT (unittest rc=1)
    기대 중 실패: ['test_3_an_error_anywhere_fails_at_the_repository_check', 'test_4_openspec_absent_fails_both_checks', 'test_6_a_repository_check_over_zero_items_fails', 'test_v10_a_repository_report_that_never_saw_the_closing_change_fails']
    기대했으나 통과: []
-   기대 밖 실패: ['test_5_a_change_openspec_cannot_find_fails', 'test_all_ok_passes_and_the_three_commands_have_the_decided_shape', 'test_v3_output_that_is_not_json_fails', 'test_v6_a_report_without_a_root_fails', 'test_v7_valid_must_be_the_boolean_true', 'test_v9_zero_items_fails_even_when_the_closing_check_passes']
+   기대 밖 실패: ['test_5_a_change_openspec_cannot_find_fails', 'test_all_ok_passes_and_the_three_commands_have_the_decided_shape', 'test_v11_an_invalid_item_anywhere_fails_the_repository_check', 'test_v12_rc_and_json_must_agree', 'test_v3_output_that_is_not_json_fails', 'test_v6_a_report_without_a_root_fails', 'test_v7_valid_must_be_the_boolean_true', 'test_v9_zero_items_fails_even_when_the_closing_check_passes']
 
 ## M4 (나)에 --strict 추가: CAUGHT (unittest rc=1) · 실제 저장소 a189 판정 rc=1: (나) FAIL [V11] change a063-align-attestation-renewal-profile: WARNING engine-safety/spec.md: ADDED "deployment acceptance retains actual approved operational evidence": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirement
    기대 중 실패: ['test_1_strict_warnings_elsewhere_do_not_fail_the_step', 'test_all_ok_passes_and_the_three_commands_have_the_decided_shape', 'test_real_openspec_passes_with_strict_warnings_elsewhere']
    기대했으나 통과: []
-   기대 밖 실패: ['test_2_a_strict_warning_in_the_closing_change_fails_at_the_closing_check', 'test_7_an_advisory_that_crashes_never_changes_the_verdict', 'test_stubbed_pass_reaches_gate_pass_with_this_change_id', 'test_v10_a_repository_report_that_never_saw_the_closing_change_fails', 'test_v3_output_that_is_not_json_fails', 'test_v6_a_report_without_a_root_fails', 'test_v7_valid_must_be_the_boolean_true', 'test_v9_zero_items_fails_even_when_the_closing_check_passes']
+   기대 밖 실패: ['test_2_a_strict_warning_in_the_closing_change_fails_at_the_closing_check', 'test_7_an_advisory_that_crashes_never_changes_the_verdict', 'test_null_issues_still_report_both_checks_and_the_advisory', 'test_stubbed_pass_reaches_gate_pass_with_this_change_id', 'test_undecodable_output_is_v3_and_never_breaks_the_advisory_contract', 'test_v10_a_repository_report_that_never_saw_the_closing_change_fails', 'test_v12_rc_and_json_must_agree', 'test_v3_output_that_is_not_json_fails', 'test_v6_a_report_without_a_root_fails', 'test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository', 'test_v7_valid_must_be_the_boolean_true', 'test_v9_zero_items_fails_even_when_the_closing_check_passes']
 
 ## M5 표본 0 검사(V9) 삭제: CAUGHT (unittest rc=1)
    기대 중 실패: ['test_6_a_repository_check_over_zero_items_fails', 'test_v9_zero_items_fails_even_when_the_closing_check_passes']
@@ -39,7 +46,7 @@ OK
 ## M6 advisory 실패를 판정으로 승격: CAUGHT (unittest rc=1)
    기대 중 실패: ['test_1_strict_warnings_elsewhere_do_not_fail_the_step', 'test_7_an_advisory_that_crashes_never_changes_the_verdict', 'test_all_ok_passes_and_the_three_commands_have_the_decided_shape', 'test_real_openspec_passes_with_strict_warnings_elsewhere', 'test_stubbed_pass_reaches_gate_pass_with_this_change_id']
    기대했으나 통과: []
-   기대 밖 실패: []
+   기대 밖 실패: ['test_undecodable_output_is_v3_and_never_breaks_the_advisory_contract']
 
 ## M7a gate.sh: CHANGE_ID 대신 고정 문자열: CAUGHT (unittest rc=1)
    기대 중 실패: ['test_real_openspec_passes_with_strict_warnings_elsewhere', 'test_stubbed_pass_reaches_gate_pass_with_this_change_id']
@@ -76,6 +83,31 @@ OK
    기대했으나 통과: []
    기대 밖 실패: []
 
+## M13 (나) rc·JSON 대조 삭제: CAUGHT (unittest rc=1)
+   기대 중 실패: ['test_3_an_error_anywhere_fails_at_the_repository_check', 'test_v11_an_invalid_item_anywhere_fails_the_repository_check', 'test_v12_rc_and_json_must_agree']
+   기대했으나 통과: []
+   기대 밖 실패: []
+
+## M14 root 절대경로 검사 삭제(Codex R1 #2): CAUGHT (unittest rc=1)
+   기대 중 실패: ['test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository']
+   기대했으나 통과: []
+   기대 밖 실패: []
+
+## M15 issues 목록 아님 처리 삭제(adversarial R1 #2): CAUGHT (unittest rc=1)
+   기대 중 실패: ['test_null_issues_still_report_both_checks_and_the_advisory']
+   기대했으나 통과: []
+   기대 밖 실패: []
+
+## M16 디코딩 errors=replace 삭제(Codex R1 #1): CAUGHT (unittest rc=1)
+   기대 중 실패: ['test_undecodable_output_is_v3_and_never_breaks_the_advisory_contract']
+   기대했으나 통과: []
+   기대 밖 실패: []
+
+## M17 advisory 예외 처리를 옛 (TypeError, KeyError) 로 좁힘: CAUGHT (unittest rc=1)
+   기대 중 실패: ['test_the_advisory_turns_any_exception_into_a_line']
+   기대했으나 통과: []
+   기대 밖 실패: []
+
 ## 대조군(끝, 되돌린 뒤): rc=0 실패=[]
 # 원본 대상 파일 바이트 불변 확인
 
@@ -95,4 +127,9 @@ OK
 | M10 root 대조(V6) 삭제 | CAUGHT | test_v6_a_report_about_another_root_fails |
 | M11 시한 초과(V2) 처리 삭제 | CAUGHT | test_v2_a_command_that_outlives_its_deadline_fails |
 | M12 (가) id·type 대조(V8) 삭제 | CAUGHT | test_v8_the_closing_report_must_name_exactly_this_change |
+| M13 (나) rc·JSON 대조 삭제 | CAUGHT | test_3_an_error_anywhere_fails_at_the_repository_check, test_v11_an_invalid_item_anywhere_fails_the_repository_check, test_v12_rc_and_json_must_agree |
+| M14 root 절대경로 검사 삭제(Codex R1 #2) | CAUGHT | test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository |
+| M15 issues 목록 아님 처리 삭제(adversarial R1 #2) | CAUGHT | test_null_issues_still_report_both_checks_and_the_advisory |
+| M16 디코딩 errors=replace 삭제(Codex R1 #1) | CAUGHT | test_undecodable_output_is_v3_and_never_breaks_the_advisory_contract |
+| M17 advisory 예외 처리를 옛 (TypeError, KeyError) 로 좁힘 | CAUGHT | test_the_advisory_turns_any_exception_into_a_line |
 # rc=0

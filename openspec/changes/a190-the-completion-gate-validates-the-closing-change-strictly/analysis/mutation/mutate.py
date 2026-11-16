@@ -2,7 +2,7 @@
 """a190 변이 원장 하네스.
 
 - 대상은 **사본**이다: `$HOME/tossos-work/a190-mut-<pid>/` 에 필요한 파일만 같은 상대 경로로 복사한다.
-  원본 저장소에는 쓰지 않는다. 시작할 때 원본 HEAD sha 와 대상 파일 blob 을 기록한다.
+  원본 저장소에는 쓰지 않는다. 시작할 때 원본 HEAD sha, 대상 파일의 미커밋 여부, **파일별 sha256**(이 판이 잰 바이트)을 기록한다.
 - 무변이 대조군이 GREEN 이 아니면 멈춘다(형제 파일이 빠진 사본에서 변이가 전부 CAUGHT 로 찍힌 전례).
 - 변이는 문자열 치환이고 원본에서 정확히 1번 나와야 한다(안 닿는 변이 금지). 적용 뒤 내용이 바뀌었는지도 단언한다.
 - CAUGHT = 기대한 시험 이름 중 하나 이상이 FAIL/ERROR. 그 밖의 실패만 있으면 OTHER, 아무것도 안 실패하면 SURVIVED.
@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import os
 import re
 import shutil
@@ -108,7 +109,7 @@ MUTANTS = (
      {"test_stubbed_pass_reaches_gate_pass_with_this_change_id",
       "test_stubbed_closing_failure_stops_the_gate_at_step_eleven"}),
     ("M10 root 대조(V6) 삭제", SCRIPT,
-     '    if Path(reported).resolve() != root.resolve():\n',
+     '    if not same:\n',
      '    if False:\n',
      {"test_v6_a_report_about_another_root_fails"}),
     ("M11 시한 초과(V2) 처리 삭제", SCRIPT,
@@ -119,6 +120,29 @@ MUTANTS = (
      'if len(items) != 1 or items[0].get("id") != change_id or items[0].get("type") != "change":',
      'if len(items) != 1:',
      {"test_v8_the_closing_report_must_name_exactly_this_change"}),
+    # 리뷰 R1 뒤 추가 — testing 전문가: (나)의 V11 갈래가 CI(openspec 없음)에서 무방비였다.
+    ("M13 (나) rc·JSON 대조 삭제", SCRIPT,
+     "    faults = agreement_faults(rc, items)\n    return (not faults), faults\n\n\ndef advisory",
+     "    return True, []\n\n\ndef advisory",
+     {"test_3_an_error_anywhere_fails_at_the_repository_check",
+      "test_v11_an_invalid_item_anywhere_fails_the_repository_check",
+      "test_v12_rc_and_json_must_agree"}),
+    ("M14 root 절대경로 검사 삭제(Codex R1 #2)", SCRIPT,
+     "if not isinstance(reported, str) or not reported or not Path(reported).is_absolute():",
+     "if not isinstance(reported, str):",
+     {"test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository"}),
+    ("M15 issues 목록 아님 처리 삭제(adversarial R1 #2)", SCRIPT,
+     '    if not isinstance(issues, list):\n        return f"issues 를 읽을 수 없음: {issues!r}"\n',
+     "",
+     {"test_null_issues_still_report_both_checks_and_the_advisory"}),
+    ("M16 디코딩 errors=replace 삭제(Codex R1 #1)", SCRIPT,
+     '            errors="replace",\n',
+     "",
+     {"test_undecodable_output_is_v3_and_never_breaks_the_advisory_contract"}),
+    ("M17 advisory 예외 처리를 옛 (TypeError, KeyError) 로 좁힘", SCRIPT,
+     "    except Exception as exc:  # 판정이 아니므로",
+     "    except (TypeError, KeyError) as exc:  # 판정이 아니므로",
+     {"test_the_advisory_turns_any_exception_into_a_line"}),
 )
 
 STEP11_BLOCK = re.compile(r"\n# ---- 11\. openspec validate \(a190\).*?echo \"OK: openspec validate\"\n", re.S)
@@ -145,6 +169,15 @@ def run_tests(copy: Path, env: dict) -> tuple[int, set[str], str]:
 
 
 def main() -> int:
+    try:
+        return _main()
+    finally:
+        # 실패로 끝나도 사본·임시 디렉터리를 남기지 않음(첫 판들이 남겼다).
+        for leftover in (Path.home() / "tossos-work").glob(f"a190-mut*-{os.getpid()}"):
+            shutil.rmtree(leftover, ignore_errors=True)
+
+
+def _main() -> int:
     source = Path(sys.argv[1]).resolve()
     work = Path.home() / "tossos-work"
     copy = work / f"a190-mut-{os.getpid()}"
@@ -160,6 +193,7 @@ def main() -> int:
         (copy / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source / rel, copy / rel)
         originals[rel] = (source / rel).read_bytes()
+        print(f"# sha256 {hashlib.sha256(originals[rel]).hexdigest()}  {rel}")
     tmp.mkdir()
     env = dict(os.environ, TMPDIR=str(tmp), OPENSPEC_TELEMETRY="0", DO_NOT_TRACK="1")
 

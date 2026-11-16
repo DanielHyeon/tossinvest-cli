@@ -32,10 +32,10 @@
 |---|---|---|---|---|
 | V1 | `openspec` 실행 불가(`OSError`, PATH 부재 포함) | FAIL | FAIL | S |
 | V2 | 시한(기본 300초) 초과 `TimeoutExpired` | FAIL | FAIL | U(시한을 인자로 주입, 잠자는 스텁) |
-| V3 | stdout 이 JSON 객체가 아님 | FAIL | FAIL | S |
+| V3 | stdout 이 JSON 객체가 아님(UTF-8 이 아닌 바이트는 대체 문자로 읽어 여기로 떨어짐) | FAIL | FAIL | S |
 | V4 | `items` 가 목록이 아니거나 없음(예: `status[].code = unknown_item` · `ambiguous_item` · `no_openspec_root`) | FAIL, status 문장을 그대로 전함 | FAIL | R |
 | V5 | severity `error` 인 `status` 가 있음(`items` 와 함께 와도) | FAIL | FAIL | S |
-| V6 | `root` 또는 `root.path` 가 없거나, 실경로가 이 저장소 루트의 실경로와 다름 | FAIL | FAIL | S |
+| V6 | `root` 또는 `root.path` 가 없거나·비었거나·절대경로가 아니거나·해석할 수 없거나(NUL 등), 실경로가 이 저장소 루트의 실경로와 다름 | FAIL | FAIL | S |
 | V7 | 항목이 dict 가 아니거나 `valid` 가 bool `True` 가 아님(`"true"` 문자열 포함) | FAIL | FAIL | S |
 | V8 | (가) `items` 가 정확히 1개가 아니거나 그 `id≠CHANGE_ID` 또는 `type≠change` | FAIL | — | S |
 | V9 | (나) `items` 0개 (표본 0) | — | FAIL | R |
@@ -49,7 +49,10 @@
   change 와 spec 에 둘 다 있으면 `ambiguous_item`(V4)으로 FAIL 이다 — 그 change 는 이름을 바꿔야 닫을 수 있다(사유 문장에 적는다).
   2026-11-16 활성·아카이브 change 중 spec 과 이름이 겹치는 것은 0건(proposal-freeze 리뷰 실측).
 - `root.path` 대조(V6)는 openspec 이 nearest 탐색·등록 store 로 **다른 저장소**를 검증하는 경우를 「못 본 것」으로 친다.
-  openspec 은 실경로를 내므로 비교는 양쪽 다 실경로(`Path.resolve()`)로 한다.
+  openspec 은 실경로를 내므로 비교는 양쪽 다 실경로(`Path.resolve()`)로 한다. 빈 문자열·상대경로는 `resolve()` 가 cwd(= 저장소 루트)로
+  바꿔 통과시키므로 절대경로만 받는다(최종 리뷰 R1 Codex #2 가 재현한 fail-open).
+- 비정상 필드(`issues: null` 등)·advisory 의 예상 못 한 예외는 traceback 이 아니라 사유 한 줄이 된다 — (가)(나)를 둘 다 평가하고
+  advisory 를 항상 출력한다는 D1·D2 를 지키기 위함(최종 리뷰 R1).
 - V10 은 D3 「표본 수를 확인할 것」의 최소 적용이다: 0 이 아니어도 닫는 change 가 빠진 저장소 검증은 그 change 를 본 적이 없다.
   spec 수·디스크 수 대조 같은 더 강한 표본 검사는 만들지 않고 「후속」에 적는다.
 - **새로 거부하는 것:** 아카이브된 change 를 대상으로 한 gate 는 (가)가 `unknown_item`(V4)이라 FAIL 이다. openspec 은 활성 change 만

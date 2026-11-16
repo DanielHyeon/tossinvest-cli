@@ -33,7 +33,14 @@ def run(args: list[str], root: Path, timeout: float):
     """
     try:
         proc = subprocess.run(
-            ["openspec", *args], cwd=root, capture_output=True, text=True, check=False, timeout=timeout
+            ["openspec", *args],
+            cwd=root,
+            capture_output=True,
+            # 깨진 바이트는 대체 문자로 — 디코딩 예외가 판정·advisory 를 traceback 으로 끊지 않고 V3 로 떨어지게 함.
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+            timeout=timeout,
         )
     except OSError as exc:
         return None, f"[V1] openspec 을 실행할 수 없음: {exc}"
@@ -59,10 +66,15 @@ def shape_faults(body: dict, root: Path) -> list[str]:
     if errors:
         return ["[V5] openspec 이 오류 status 를 냄 — " + "; ".join(f"{s.get('code')}: {s.get('message')}" for s in errors)]
     reported = body.get("root", {}).get("path") if isinstance(body.get("root"), dict) else None
-    if not isinstance(reported, str):
-        return ["[V6] 보고서에 검증한 저장소(root.path)가 없음"]
+    # 빈 문자열·상대경로는 resolve() 가 cwd 로 바꿔 「이 저장소」로 둔갑함 — 절대경로만 받음.
+    if not isinstance(reported, str) or not reported or not Path(reported).is_absolute():
+        return [f"[V6] 보고서에 검증한 저장소의 절대경로(root.path)가 없음: {reported!r}"]
     # openspec 은 실경로를 냄. 양쪽 다 실경로로 맞춰야 심링크 경로에서 거짓 FAIL 이 안 남.
-    if Path(reported).resolve() != root.resolve():
+    try:
+        same = Path(reported).resolve() == root.resolve()
+    except (OSError, ValueError, RuntimeError) as exc:  # NUL 바이트·심링크 고리 등
+        return [f"[V6] 보고서의 root.path 를 해석할 수 없음: {reported!r} ({exc})"]
+    if not same:
         return [f"[V6] openspec 이 다른 저장소를 검증함: {reported} (이 저장소: {root.resolve()})"]
     bad = [i for i in items if not isinstance(i, dict) or not isinstance(i.get("valid"), bool)]
     if bad:
@@ -71,7 +83,11 @@ def shape_faults(body: dict, root: Path) -> list[str]:
 
 
 def issue_lines(entry: dict) -> str:
-    return "; ".join(f"{i.get('level')} {i.get('path')}: {i.get('message')}" for i in entry.get("issues", []) if isinstance(i, dict))
+    """사유 문장용. `issues` 가 목록이 아니어도(null 등) 진단이 끊기지 않게 빈 목록으로 침."""
+    issues = entry.get("issues")
+    if not isinstance(issues, list):
+        return f"issues 를 읽을 수 없음: {issues!r}"
+    return "; ".join(f"{i.get('level')} {i.get('path')}: {i.get('message')}" for i in issues if isinstance(i, dict))
 
 
 def agreement_faults(rc: int, items: list[dict]) -> list[str]:
@@ -127,12 +143,13 @@ def repository_verdict(change_id: str, root: Path, timeout: float = TIMEOUT_SECO
 
 def advisory(root: Path, timeout: float = TIMEOUT_SECONDS) -> str:
     """저장소 전체 strict 합계 한 줄. 무엇이 일어나도 판정에 쓰지 않음."""
-    rc, body = run(["validate", "--all", "--strict", "--no-interactive", "--json"], root, timeout)
+    rc, body = None, None
     try:
+        rc, body = run(["validate", "--all", "--strict", "--no-interactive", "--json"], root, timeout)
         totals = body["summary"]["totals"]
         return f"{ADVISORY} {totals['passed']} passed, {totals['failed']} failed ({totals['items']} items) — 목록: make validate"
-    except (TypeError, KeyError):
-        return f"{ADVISORY} 합계를 얻지 못함 — rc={rc}, {str(body)[:200]}"
+    except Exception as exc:  # 판정이 아니므로 어떤 실패도 사유 한 줄로만 남김(D2)
+        return f"{ADVISORY} 합계를 얻지 못함 — rc={rc}, {type(exc).__name__}: {str(body)[:200]}"
 
 
 def main(argv: list[str]) -> int:
@@ -147,10 +164,10 @@ def main(argv: list[str]) -> int:
     )
     for label, what, (ok, reasons) in verdicts:
         if ok:
-            print(f"{label} OK: {what}")
+            print(f"{label} OK: {what}", flush=True)
         for reason in reasons:
-            print(f"{label} FAIL {reason}", file=sys.stderr)
-    print(advisory(ROOT))
+            print(f"{label} FAIL {reason}", file=sys.stderr, flush=True)
+    print(advisory(ROOT), flush=True)
     return 0 if all(ok for _, _, (ok, _) in verdicts) else 1
 
 
