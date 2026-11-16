@@ -1,0 +1,64 @@
+# make sdd-test · 2026-11-16T09:35:04+09:00 · HEAD 43c988cd9 + 미커밋 리뷰 R2 수리 · TMPDIR 기본값(/tmp — 시험 임시 디렉터리 기본 구성; $HOME/tossos-work 아래는 두 번 AF_UNIX path too long: history-sdd-test-run1·run2) · OPENSPEC_TELEMETRY=0
+# 범위: Makefile sdd-test = unittest discover scripts, tools/logic-map, tools/sdd, tools/sdd-history, tools/pm, tools/deploy + go test ./tools/logic-map
+python3 -m unittest discover -s scripts -p 'test_*.py'
+...............
+----------------------------------------------------------------------
+Ran 15 tests in 0.359s
+
+OK
+python3 -m unittest discover -s tools/logic-map -p 'test_*.py'
+.......................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 503 tests in 77.142s
+
+OK
+python3 -m unittest discover -s tools/sdd -p 'test_*.py'
+....................................................................................................source registration failed
+..[gbrain-project] busy: owner pid=456 command='gbrain serve'
+.schema read failed
+........
+----------------------------------------------------------------------
+Ran 111 tests in 8.809s
+
+OK
+[sdd-sync] GBrain source 'tossos-x' is registered at /mnt/D/project/axipient/TossOS, not /home/daniel/tossos-work/a190-gate-validate. Sync would read the old path. Repair is destructive (it deletes this source's pages, then re-indexes):
+  python3 /home/daniel/tossos-work/a190-gate-validate/tools/sdd/gbrain_project.py sources remove tossos-x --confirm-destructive
+  python3 /home/daniel/tossos-work/a190-gate-validate/tools/sdd/gbrain_project.py sources add tossos-x --path /home/daniel/tossos-work/a190-gate-validate
++ /usr/bin/python3 /home/daniel/tossos-work/a190-gate-validate/tools/sdd/gbrain_project.py sync --source tossos-x --strategy code --no-embed --yes
+SOURCES
+───────
+  default               federated          0 pages  never synced
+  tossos-x              isolated        4261 pages  never synced
+                        /home/daniel/tossos-work/a190-gate-validate
+[sdd-sync] WARN: GBrain advisory busy; keeping its previous freshness ([gbrain-project] busy: owner pid=123 command='gbrain serve' home=/tmp/project/.sdd/gbrain-home)
+  codegraphcontext stats timed out
+  codegraphcontext stats timed out
++ /usr/bin/python3 /home/daniel/tossos-work/a190-gate-validate/tools/sdd/gbrain_project.py sources add tossos-x --path /home/daniel/tossos-work/a190-gate-validate
+[sdd-sync] GBrain source probe failed: schema read failed
++ /usr/bin/python3 /home/daniel/tossos-work/a190-gate-validate/tools/sdd/gbrain_project.py sync --source tossos-x --strategy code --no-embed --yes
+[sdd-sync] WARN: GBrain advisory busy; keeping its previous freshness ([gbrain-project] busy: owner pid=456 command='gbrain serve')
++ /usr/bin/python3 /tmp/tmptlfauz0r/repo/tools/sdd/gbrain_project.py sources list
+python3 -m unittest discover -s tools/sdd-history -p 'test_*.py'
+...............................[sdd-hook] warning: offline
+...[commit-event] warning: offline
+..[context-graph] CCG adapter failed; its checkpoint was not advanced
+..........
+----------------------------------------------------------------------
+Ran 46 tests in 4.403s
+
+OK
+python3 -m unittest discover -s tools/pm -p 'test_*.py'
+................
+----------------------------------------------------------------------
+Ran 16 tests in 0.032s
+
+OK
+python3 -m unittest discover -s tools/deploy -p 'test_*.py'
+..................
+----------------------------------------------------------------------
+Ran 18 tests in 0.000s
+
+OK
+go test ./tools/logic-map
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/logic-map	0.002s
+# rc=0

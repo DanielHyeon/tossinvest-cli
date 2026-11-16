@@ -14,8 +14,10 @@
 
 ## 3. 검증과 리뷰
 
-- [ ] 3.1 새 시험, `make sdd-test`, 실제 저장소에서 새 11단계 판정만 a189 id 로 돌린 결과를 `analysis/verify/` 에 원문으로 남긴다. `make gate`·`make test` 전체는 돌리지 않는다(Manager).
-- [ ] 3.2 gstack `review` + 다른 계열 적대 보이스 1개를 최종 diff 에 돌리고 발견 표와 처리를 `review.md` 에 기록한다(최대 2회차).
+- [x] 3.1 새 시험, `make sdd-test`, 실제 저장소에서 새 11단계 판정만 a189 id 로 돌린 결과를 `analysis/verify/` 에 원문으로 남긴다. `make gate`·`make test` 전체는 돌리지 않는다(Manager).
+      > 새 시험 39 OK(openspec 있음)·31 OK skip 8(없음, CI 모사) `analysis/tdd/green*.txt`. `make sdd-test` rc 0(기본 TMPDIR — `$HOME/tossos-work` 아래 TMPDIR 두 판은 기존 소켓 시험이 `AF_UNIX path too long`, `history-sdd-test-run1·2`). 새 11단계 a189·a187·a190 모두 rc 0 `analysis/verify/step11-*.txt`. gate ⑤ 단독 required 0 rc 0 `check-analysis.txt`.
+- [x] 3.2 gstack `review` + 다른 계열 적대 보이스 1개를 최종 diff 에 돌리고 발견 표와 처리를 `review.md` 에 기록한다(최대 2회차).
+      > 1회차 Codex CHANGES REQUESTED(P2 둘) + gstack 전문가 3·Claude 적대 → 고침 7. 2회차 Codex CHANGES REQUESTED(신규 P2 둘)·Claude 적대 → 고침 6. 2회차 수리는 3회차 리뷰를 받지 않았다(`review.md`).
 
 ## 4. 종결 (Manager · 사용자 지시 대기)
 

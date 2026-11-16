@@ -81,6 +81,24 @@
 - 변이 원장(수리 뒤): 19개 전부 CAUGHT, 무변이 대조군 앞뒤 GREEN, 원본 바이트 불변 — `analysis/mutation/ledger.txt`(파일별 sha256 포함).
   M10 의 찾을 문자열이 수리로 사라져 한 판이 멈췄다(`history-run3-stale-m10-anchor.txt`) — 하네스가 「안 닿는 변이」를 거부한 결과.
 
+## 최종 diff 리뷰 2회차 (2026-11-16, 수리 범위 `4a29b3e53..43c988cd9`) — 마지막 회차
+
+- 보이스: Codex CLI(다른 계열, 원문 `analysis/review/codex-r2.txt`, 프롬프트 `codex-prompt-r2.md`) — R1 4건 **전부 해소** 판정,
+  신규 P2 둘, **CHANGES REQUESTED**. Claude 적대 서브에이전트 1개 — fail-open 0, 신규 4건.
+- Manager 지시대로 리뷰는 2회차까지다. 아래 고친 것들은 **3회차 리뷰를 받지 않았다**(남은 위험).
+
+| # | 출처 | 심각도 | 발견 | 처리 |
+|---|---|---|---|---|
+| 1 | Codex #5 | P2 | **fail-open**: JSON 문자열 안의 깨진 UTF-8 은 `errors="replace"` 로 유효한 보고서가 되어 통과(R1 수리가 만든 구멍) | **고침.** 바이트로 받아 엄격 디코딩 → V3. 시험 `test_broken_utf8_inside_a_json_string_is_v3_not_a_pass`(43c988cd9 스크립트에서 RED — `analysis/tdd/red-review-r2.txt`), 변이 M16 |
+| 2 | 적대 F1 | Medium | NUL 서브테스트 입력 `"\x00"` 은 상대경로라 새 resolve try/except 에 안 닿음 — 가드가 어떤 시험에도 안 묶임 | **고침(가드 자체를 없앰).** #4 수리로 resolve 를 아예 안 함. 서브테스트는 `"/\x00"` 로 |
+| 3 | 적대 F2 | Low | `json.loads` 의 `RecursionError`(깊은 중첩)가 traceback 으로 (나)·advisory 를 끊음 | **고침.** `(ValueError, RecursionError)` → V3. 시험 `test_deeply_nested_json_is_v3_not_a_traceback`(RED), 변이 M18 |
+| 4 | 적대 F3 | Low(INVESTIGATE) | `/proc/self/cwd` 는 절대경로이면서 cwd 로 풀려 V6 통과 | **고침.** 보고된 문자열을 해석하지 않고 `str(ROOT.resolve())` 와 정확히 비교(openspec 1.16.0 은 실경로 문자열을 냄 — 진짜 CLI 시험들이 이 비교로 통과). 서브테스트 「cwd 우회」(RED), 변이 M14 |
+| 5 | 적대 F4 | Low | `issues` 키가 없는 정상 모양도 「읽을 수 없음」 문장, docstring 불일치 | **고침.** 키 없음 = 빈 목록 |
+| 6 | Codex #6 | P2 | 변이 하네스 `finally` 가 같은 pid 이름의 **미리 있던** 디렉터리도 지움 | **고침.** 이 실행이 만든 경로만 정리 |
+
+- 변이 원장(R2 수리 뒤): **21개 전부 CAUGHT**, 대조군 앞뒤 GREEN, 원본 바이트 불변, 파일별 sha256 — `analysis/mutation/ledger.txt`.
+  이전 판은 `history-run2`(R1 전)·`history-run4`(R1 뒤) 로 보존.
+
 ## 후속
 
 - strict 부채 51 항목(경고 262: 요구 문장 500자 초과 235 · Purpose 자리표시 22 · 첫 `##` 위 본문 5) — `analysis/strict-debt/debt-list.md`. 이 change 는 고치지 않는다.

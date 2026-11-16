@@ -109,9 +109,9 @@ MUTANTS = (
      {"test_stubbed_pass_reaches_gate_pass_with_this_change_id",
       "test_stubbed_closing_failure_stops_the_gate_at_step_eleven"}),
     ("M10 root 대조(V6) 삭제", SCRIPT,
-     '    if not same:\n',
+     '    if reported != expected:\n',
      '    if False:\n',
-     {"test_v6_a_report_about_another_root_fails"}),
+     {"test_v6_a_report_about_another_root_fails", "test_v6_a_report_without_a_root_fails"}),
     ("M11 시한 초과(V2) 처리 삭제", SCRIPT,
      '    except subprocess.TimeoutExpired:\n        return None, f"[V2] openspec 이 {timeout}초 안에 끝나지 않음"\n',
      '',
@@ -127,18 +127,27 @@ MUTANTS = (
      {"test_3_an_error_anywhere_fails_at_the_repository_check",
       "test_v11_an_invalid_item_anywhere_fails_the_repository_check",
       "test_v12_rc_and_json_must_agree"}),
-    ("M14 root 절대경로 검사 삭제(Codex R1 #2)", SCRIPT,
-     "if not isinstance(reported, str) or not reported or not Path(reported).is_absolute():",
-     "if not isinstance(reported, str):",
+    ("M14 root 를 해석해 비교(R1 이전·R1 중간의 resolve 방식, Codex R1 #2·적대 R2 F3)", SCRIPT,
+     "    if reported != expected:\n",
+     "    if not isinstance(reported, str) or str(Path(reported).resolve()) != expected:\n",
      {"test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository"}),
     ("M15 issues 목록 아님 처리 삭제(adversarial R1 #2)", SCRIPT,
      '    if not isinstance(issues, list):\n        return f"issues 를 읽을 수 없음: {issues!r}"\n',
      "",
      {"test_null_issues_still_report_both_checks_and_the_advisory"}),
-    ("M16 디코딩 errors=replace 삭제(Codex R1 #1)", SCRIPT,
-     '            errors="replace",\n',
-     "",
-     {"test_undecodable_output_is_v3_and_never_breaks_the_advisory_contract"}),
+    ("M16 엄격 디코딩을 errors=replace 로 되돌림(Codex R2 #5)", SCRIPT,
+     'json.loads(proc.stdout.decode("utf-8"))',
+     'json.loads(proc.stdout.decode("utf-8", errors="replace"))',
+     {"test_broken_utf8_inside_a_json_string_is_v3_not_a_pass"}),
+    ("M16b 디코딩 예외 처리 삭제(Codex R1 #1)", SCRIPT,
+     "    except (ValueError, RecursionError) as exc:\n",
+     "    except (RecursionError,) as exc:\n",
+     {"test_undecodable_output_is_v3_and_never_breaks_the_advisory_contract",
+      "test_v3_output_that_is_not_json_fails"}),
+    ("M18 RecursionError 처리 삭제(적대 R2 F2)", SCRIPT,
+     "    except (ValueError, RecursionError) as exc:\n",
+     "    except ValueError as exc:\n",
+     {"test_deeply_nested_json_is_v3_not_a_traceback"}),
     ("M17 advisory 예외 처리를 옛 (TypeError, KeyError) 로 좁힘", SCRIPT,
      "    except Exception as exc:  # 판정이 아니므로",
      "    except (TypeError, KeyError) as exc:  # 판정이 아니므로",
@@ -173,8 +182,12 @@ def main() -> int:
         return _main()
     finally:
         # 실패로 끝나도 사본·임시 디렉터리를 남기지 않음(첫 판들이 남겼다).
-        for leftover in (Path.home() / "tossos-work").glob(f"a190-mut*-{os.getpid()}"):
+        # 이 실행이 **만든** 경로만 지움 — 미리 있던 같은 이름 경로는 건드리지 않음(Codex R2 #6).
+        for leftover in CREATED:
             shutil.rmtree(leftover, ignore_errors=True)
+
+
+CREATED: list[Path] = []
 
 
 def _main() -> int:
@@ -183,6 +196,8 @@ def _main() -> int:
     copy = work / f"a190-mut-{os.getpid()}"
     tmp = work / f"a190-mut-tmp-{os.getpid()}"
     assert not copy.exists() and not tmp.exists()
+    copy.mkdir(parents=True)
+    CREATED.append(copy)
     head = subprocess.run(["git", "-C", str(source), "rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
     dirty = subprocess.run(["git", "-C", str(source), "status", "--porcelain", "--", *FILES], capture_output=True, text=True, check=True).stdout
     print(f"# 원본 {source} HEAD {head}")
@@ -195,6 +210,7 @@ def _main() -> int:
         originals[rel] = (source / rel).read_bytes()
         print(f"# sha256 {hashlib.sha256(originals[rel]).hexdigest()}  {rel}")
     tmp.mkdir()
+    CREATED.append(tmp)
     env = dict(os.environ, TMPDIR=str(tmp), OPENSPEC_TELEMETRY="0", DO_NOT_TRACK="1")
 
     rc, failed, log = run_tests(copy, env)

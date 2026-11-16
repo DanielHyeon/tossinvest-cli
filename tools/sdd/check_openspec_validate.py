@@ -36,9 +36,6 @@ def run(args: list[str], root: Path, timeout: float):
             ["openspec", *args],
             cwd=root,
             capture_output=True,
-            # 깨진 바이트는 대체 문자로 — 디코딩 예외가 판정·advisory 를 traceback 으로 끊지 않고 V3 로 떨어지게 함.
-            encoding="utf-8",
-            errors="replace",
             check=False,
             timeout=timeout,
         )
@@ -46,10 +43,13 @@ def run(args: list[str], root: Path, timeout: float):
         return None, f"[V1] openspec 을 실행할 수 없음: {exc}"
     except subprocess.TimeoutExpired:
         return None, f"[V2] openspec 이 {timeout}초 안에 끝나지 않음"
+    # 바이트로 받아 엄격히 디코딩함 — 깨진 UTF-8 은 문자열 안에 숨어 있어도 판정할 수 없는 출력(V3).
+    # (대체 문자로 읽으면 JSON 문자열 속 깨진 바이트가 통과함 — 최종 리뷰 R2 Codex #5.)
+    # RecursionError 는 깊게 중첩된 JSON 에서 나며 ValueError 가 아님(R2 적대 F2).
     try:
-        body = json.loads(proc.stdout)
-    except ValueError:
-        return None, f"[V3] openspec 출력이 JSON 이 아님(rc={proc.returncode}): {proc.stdout[:200]!r} {proc.stderr[:200]!r}"
+        body = json.loads(proc.stdout.decode("utf-8"))
+    except (ValueError, RecursionError) as exc:
+        return None, f"[V3] openspec 출력이 판정할 수 있는 JSON 이 아님(rc={proc.returncode}, {type(exc).__name__}): {proc.stdout[:200]!r} {proc.stderr[:200]!r}"
     if not isinstance(body, dict):
         return None, f"[V3] openspec 출력이 JSON 객체가 아님(rc={proc.returncode})"
     return proc.returncode, body
@@ -66,16 +66,11 @@ def shape_faults(body: dict, root: Path) -> list[str]:
     if errors:
         return ["[V5] openspec 이 오류 status 를 냄 — " + "; ".join(f"{s.get('code')}: {s.get('message')}" for s in errors)]
     reported = body.get("root", {}).get("path") if isinstance(body.get("root"), dict) else None
-    # 빈 문자열·상대경로는 resolve() 가 cwd 로 바꿔 「이 저장소」로 둔갑함 — 절대경로만 받음.
-    if not isinstance(reported, str) or not reported or not Path(reported).is_absolute():
-        return [f"[V6] 보고서에 검증한 저장소의 절대경로(root.path)가 없음: {reported!r}"]
-    # openspec 은 실경로를 냄. 양쪽 다 실경로로 맞춰야 심링크 경로에서 거짓 FAIL 이 안 남.
-    try:
-        same = Path(reported).resolve() == root.resolve()
-    except (OSError, ValueError, RuntimeError) as exc:  # NUL 바이트·심링크 고리 등
-        return [f"[V6] 보고서의 root.path 를 해석할 수 없음: {reported!r} ({exc})"]
-    if not same:
-        return [f"[V6] openspec 이 다른 저장소를 검증함: {reported} (이 저장소: {root.resolve()})"]
+    # openspec 은 실경로 문자열을 냄(1.16.0 실측). 보고된 문자열을 **해석하지 않고** 이 저장소의 실경로와 정확히 비교함 —
+    # 해석하면 빈 문자열·상대경로·`/proc/self/cwd` 가 판정 프로세스의 cwd(= 저장소 루트)로 둔갑함(최종 리뷰 R1·R2).
+    expected = str(root.resolve())
+    if reported != expected:
+        return [f"[V6] 보고서가 이 저장소를 검증했다고 말하지 않음: root.path={reported!r} (이 저장소: {expected})"]
     bad = [i for i in items if not isinstance(i, dict) or not isinstance(i.get("valid"), bool)]
     if bad:
         return [f"[V7] valid 가 bool 이 아닌 항목 {len(bad)}개: {bad[:3]!r}"]
@@ -83,8 +78,8 @@ def shape_faults(body: dict, root: Path) -> list[str]:
 
 
 def issue_lines(entry: dict) -> str:
-    """사유 문장용. `issues` 가 목록이 아니어도(null 등) 진단이 끊기지 않게 빈 목록으로 침."""
-    issues = entry.get("issues")
+    """사유 문장용. 키가 없으면 빈 목록, 목록이 아닌 값(null 등)은 그렇다고 적어 진단이 끊기지 않게 함."""
+    issues = entry.get("issues", [])
     if not isinstance(issues, list):
         return f"issues 를 읽을 수 없음: {issues!r}"
     return "; ".join(f"{i.get('level')} {i.get('path')}: {i.get('message')}" for i in issues if isinstance(i, dict))

@@ -329,8 +329,9 @@ class StubbedVerdicts(unittest.TestCase):
 
     def test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository(self) -> None:
         """리뷰 R1(Codex #2): `Path("").resolve()` 는 cwd 라 빈 root 가 「이 저장소」로 둔갑해 통과했다.
-        NUL 바이트는 resolve() 가 ValueError 로 죽어 (나)·advisory 를 끊었다(Codex #3)."""
-        for label, root_path in (("빈 문자열", ""), ("상대경로", "."), ("NUL", "\x00")):
+        R2: 절대경로 NUL(`/\x00`)은 resolve() 를 ValueError 로 죽였고(적대 F1 — 옛 시험의 `\x00` 은 상대경로라 그 자리에 안 닿았다),
+        `/proc/self/cwd` 는 절대경로이면서 cwd 로 풀렸다(적대 F3). 지금은 문자열을 해석하지 않고 정확히 비교한다."""
+        for label, root_path in (("빈 문자열", ""), ("상대경로", "."), ("절대경로 NUL", "/\x00"), ("cwd 우회", "/proc/self/cwd")):
             with self.subTest(label):
                 self.box.log.unlink(missing_ok=True)
                 result = self.run_with(closing=(0, report(self.box.repo, [item(CLOSING)], root_path=root_path)))
@@ -353,6 +354,27 @@ class StubbedVerdicts(unittest.TestCase):
         body["items"][0]["issues"] = None
         result = self.run_with(closing=(1, json.dumps(body)))
         self.assertIn("(가) FAIL [V11]", out(result))
+        self.assertIn("(나) OK:", out(result))
+        self.assertIn("advisory — 판정 아님:", out(result))
+        self.assertNotIn("Traceback", out(result))
+        self.assertEqual(1, result.returncode)
+
+    def test_broken_utf8_inside_a_json_string_is_v3_not_a_pass(self) -> None:
+        """리뷰 R2(Codex #5): 대체 문자로 읽으면 JSON 문자열 속 깨진 바이트가 유효한 보고서가 되어 통과했다."""
+        good = report(self.box.repo, [item(CLOSING)])
+        marker = '"durationMs": 1'
+        self.assertIn(marker, good)
+        broken = good.replace(marker, '"note": "ZZBROKENZZ", ' + marker).encode("utf-8").replace(b"ZZBROKENZZ", b"\xff").hex()
+        result = self.run_with(closing=(0, None, broken))
+        self.assertIn("(가) FAIL [V3]", out(result))
+        self.assertIn("UnicodeDecodeError", out(result))
+        self.assertEqual(1, result.returncode)
+
+    def test_deeply_nested_json_is_v3_not_a_traceback(self) -> None:
+        """리뷰 R2(적대 F2): json.loads 의 RecursionError 는 ValueError 가 아니라 traceback 으로 (나)·advisory 를 끊었다."""
+        result = self.run_with(closing=(0, "[" * 200000))
+        self.assertIn("(가) FAIL [V3]", out(result))
+        self.assertIn("RecursionError", out(result))
         self.assertIn("(나) OK:", out(result))
         self.assertIn("advisory — 판정 아님:", out(result))
         self.assertNotIn("Traceback", out(result))

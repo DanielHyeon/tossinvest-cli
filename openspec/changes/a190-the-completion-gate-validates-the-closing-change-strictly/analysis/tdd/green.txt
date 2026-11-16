@@ -1,4 +1,4 @@
-# GREEN: 2026-11-16T09:09:55+09:00 · 작업 트리(편집 뒤, 미커밋) · base 59647c493 · openspec 1.16.0
+# GREEN(리뷰 R2 수리 뒤): 2026-11-16T09:35:51+09:00 · HEAD 43c988cd9 + 미커밋 · openspec 1.16.0 · TMPDIR=$HOME/tossos-work/t
 test_real_openspec_fails_at_step_eleven_on_a_closing_warning (tools.sdd.test_gate_validate_step.GateWiring.test_real_openspec_fails_at_step_eleven_on_a_closing_warning) ... ok
 test_real_openspec_passes_with_strict_warnings_elsewhere (tools.sdd.test_gate_validate_step.GateWiring.test_real_openspec_passes_with_strict_warnings_elsewhere) ... ok
 test_stubbed_closing_failure_stops_the_gate_at_step_eleven (tools.sdd.test_gate_validate_step.GateWiring.test_stubbed_closing_failure_stops_the_gate_at_step_eleven) ... ok
@@ -22,14 +22,30 @@ test_7_an_advisory_that_crashes_never_changes_the_verdict (tools.sdd.test_gate_v
 test_advisory_runs_even_when_the_verdict_fails (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_advisory_runs_even_when_the_verdict_fails) ... ok
 test_all_ok_passes_and_the_three_commands_have_the_decided_shape (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_all_ok_passes_and_the_three_commands_have_the_decided_shape)
 (가)는 id + --strict, (나)는 --all 이고 --strict 없음, advisory 는 --all --strict. 셋 다 저장소 루트에서. ... ok
+test_broken_utf8_inside_a_json_string_is_v3_not_a_pass (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_broken_utf8_inside_a_json_string_is_v3_not_a_pass)
+리뷰 R2(Codex #5): 대체 문자로 읽으면 JSON 문자열 속 깨진 바이트가 유효한 보고서가 되어 통과했다. ... ok
+test_deeply_nested_json_is_v3_not_a_traceback (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_deeply_nested_json_is_v3_not_a_traceback)
+리뷰 R2(적대 F2): json.loads 의 RecursionError 는 ValueError 가 아니라 traceback 으로 (나)·advisory 를 끊었다. ... ok
+test_null_issues_still_report_both_checks_and_the_advisory (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_null_issues_still_report_both_checks_and_the_advisory)
+리뷰 R1(adversarial #2, Codex #3): `issues: null` 이 TypeError 로 (나)와 advisory 를 끊었다. ... ok
+test_undecodable_output_is_v3_and_never_breaks_the_advisory_contract (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_undecodable_output_is_v3_and_never_breaks_the_advisory_contract)
+리뷰 R1(Codex #1, adversarial #3): UTF-8 이 아닌 바이트가 UnicodeDecodeError traceback 으로 통과 판정을 FAIL 로 바꿨다. ... ok
 test_v10_a_repository_report_that_never_saw_the_closing_change_fails (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v10_a_repository_report_that_never_saw_the_closing_change_fails) ... ok
+test_v11_an_invalid_item_anywhere_fails_the_repository_check (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v11_an_invalid_item_anywhere_fails_the_repository_check)
+리뷰 R1(testing): (나)가 남의 오류로 FAIL 하는 갈래를 CI(openspec 없음)에서도 잰다. ... ok
 test_v12_rc_and_json_must_agree (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v12_rc_and_json_must_agree) ... ok
 test_v3_output_that_is_not_json_fails (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v3_output_that_is_not_json_fails) ... ok
 test_v5_an_error_status_alongside_items_fails (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v5_an_error_status_alongside_items_fails) ... ok
 test_v6_a_report_about_another_root_fails (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v6_a_report_about_another_root_fails) ... ok
 test_v6_a_report_without_a_root_fails (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v6_a_report_without_a_root_fails) ... ok
+test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository)
+리뷰 R1(Codex #2): `Path("").resolve()` 는 cwd 라 빈 root 가 「이 저장소」로 둔갑해 통과했다. ... ok
 test_v7_valid_must_be_the_boolean_true (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v7_valid_must_be_the_boolean_true) ... ok
 test_v8_the_closing_report_must_name_exactly_this_change (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v8_the_closing_report_must_name_exactly_this_change) ... ok
+test_v9_zero_items_fails_even_when_the_closing_check_passes (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v9_zero_items_fails_even_when_the_closing_check_passes)
+진짜 CLI 로는 (가)가 통과하면서 (나)가 0 항목인 상태를 못 만든다 — 그래서 스텁으로 (나)만 표본 0 을 준다. ... ok
+test_the_advisory_turns_any_exception_into_a_line (tools.sdd.test_gate_validate_step.TimeoutVerdict.test_the_advisory_turns_any_exception_into_a_line)
+D2 — advisory 는 판정이 아니다. 예상 못 한 예외(여기서는 주입한 RuntimeError)도 사유 한 줄이 된다. ... ok
 test_v2_a_command_that_outlives_its_deadline_fails (tools.sdd.test_gate_validate_step.TimeoutVerdict.test_v2_a_command_that_outlives_its_deadline_fails) ... ok
 test_ci_runs_it (tools.sdd.test_race_detector_actually_runs.RaceDetectorActuallyRunsTests.test_ci_runs_it)
 CI 워크플로가 `make test-race` 를 실제로 돈다. ... ok
@@ -49,7 +65,7 @@ test_the_target_names_at_least_one_package (tools.sdd.test_race_detector_actuall
 빈 패키지 목록은 아무것도 안 돌면서 초록이 된다. ... ok
 
 ----------------------------------------------------------------------
-Ran 31 tests in 7.030s
+Ran 39 tests in 8.935s
 
 OK
 # rc=0
