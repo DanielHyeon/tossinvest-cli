@@ -150,7 +150,7 @@
     - STORY-TOS-a141 — MCP honors backend policy and preserves exact JSON numbers [archived] → `a141-mcp-respects-backend-and-exact-numbers`
     - STORY-TOS-a142 — WTS order lists fail closed and watchlists use dedicated reads [archived] → `a142-wts-read-contracts-fail-closed`
     - STORY-TOS-a143 — Official chart reads and public API snapshots remain compatible [archived] → `a143-official-read-compatibility`
-    - STORY-TOS-a187 — 엄격 호가·현재가 조회가 영문자가 섞인 한국 종목 코드를 받는다 [in_progress] → `a187-strict-quote-readers-accept-kr-alphanumeric-symbols`
+    - STORY-TOS-a187 — 엄격 호가·현재가 조회가 영문자가 섞인 한국 종목 코드를 받는다 [implemented] → `a187-strict-quote-readers-accept-kr-alphanumeric-symbols`
 - EPIC-TOS-004 — Candidate discovery and entry quality [active]
   - FEAT-TOS-006 — Candidate discovery and signal refinement [active]
     - STORY-TOS-027 — Add candidate discovery [archived] → `add-candidate-discovery`

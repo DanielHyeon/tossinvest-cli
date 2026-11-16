@@ -22,4 +22,6 @@
 
 - [x] 4.1 (2026-11-12 23:44 KST 실행, 정규장 밖 — 사용자 결정, 기록 `analysis/measurement/l1c-0158S0-2026-11-12.md`) 사람 승인 뒤 정규장 안에서 수정 빌드로 `0158S0` 의 호가 1회·현재가 1회를 둘째 키 전용 프로필로 읽는다(GET 2회). 상태 코드와 성공·거절 사유, 본문 digest 만 기록한다.
 - [x] 4.2 main 반영 커밋·시각과 그 뒤 첫 프로브 기동 시각을 a128 change 기록에 남긴다(프로브 입력은 그 기동부터 달라짐). a184 브랜치에 가져올 수 있게 알린다(a184 tasks 6.8).
-- [ ] 4.3 PM check, strict validate, archive 와 Story 경로 동기화. 검증된 교훈만 retain 한다.
+- [x] 4.3 PM check, strict validate, archive 와 Story 경로 동기화. 검증된 교훈만 retain 한다.
+  - 사용자 지시(2026-11-15·16, Manager 전달)로 종결 팀메이트 Opus 가 수행. gate ②의 미완료 0건 선행 조건으로 gate 전에 체크하며(선례 a165 4.1), gate 결과·archive·Story 경로 영수증은 PASS 뒤 review.md 「종결 — 2026-11-16」 에 남김. 착지 기록 `landed-commit.txt` = `be90ea3e7`.
+  - retain: 2026-11-16 Manager 가 Hindsight bank `tossos-dev-episodes` 에 수행(a187·a189·a190 의 검증된 교훈 7항목, 시크릿·계좌·포지션·금액 없음 — Manager 전달 사실).

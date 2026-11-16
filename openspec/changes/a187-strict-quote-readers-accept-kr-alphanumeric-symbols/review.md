@@ -123,7 +123,7 @@
 - 변이(`analysis/mutation/mutation.py`, 사본): 대조군 GREEN(PASS 줄 592), 11/11 CAUGHT. rc 0 과 「실행 뒤 작업 트리 변화 없음」은 Manager 관측이며 원문 파일에는 찍혀 있지 않음(팀메이트 기록 시점 `git status` 는 깨끗했음).
 - `gofmt -l internal/official internal/orderintent` 0줄, `go vet` 두 패키지 rc 0(팀메이트 재실행도 같음), `openspec validate --strict` valid, PM `--check` current.
 - 판정: 구현 완료(tasks 3.4 통과).
-- 남은 문제: 완료 게이트 7단계 `make test`(`go test ./...`)는 base 에서도 실패하는 정적 가드 5개 때문에 지금 main 에서 통과할 수 없음. 위반을 들여온 커밋은 `78d777cfe`(feat(a166): shadow 도구 예산 연결)·`4d5884cbc`(둘 다 2026-10-31). 그래서 4.3(archive)은 이 5개가 처리될 때까지 보류이며 a187 범위에서 가드를 넓히지 않음. (Manager 문장 중 「마지막 archive 시점」 부분은 저장소 실측과 달라 이 기록에서 뺐음 — Manager 확인 대기.)
+- 남은 문제: 완료 게이트 7단계 `make test`(`go test ./...`)는 base 에서도 실패하는 정적 가드 5개 때문에 지금 main 에서 통과할 수 없음. 위반을 들여온 커밋은 `78d777cfe`(feat(a166): shadow 도구 예산 연결)·`4d5884cbc`(둘 다 2026-10-31). 그래서 4.3(archive)은 이 5개가 처리될 때까지 보류이며 a187 범위에서 가드를 넓히지 않음. (Manager 문장 중 「마지막 archive 시점」 부분은 저장소 실측과 달라 이 기록에서 뺐음 — 2026-11-16 확인해 아래 「마지막 archive 시점 — 확인」 에 사실로 적음.)
 - 미실행: 전체 gate·전체 시험·공식 API.
 - gstack 리뷰: `not-applicable` — 문서·증거 기록뿐인 간단한 작업이라 생략(사용자 지시 2026-11-15).
 
@@ -132,3 +132,25 @@
 - 운영 코드(GREEN `305733da1`, 2026-11-12T20:18:10+09:00)는 a187 worktree 에서 커밋됐고, 프로브가 `go run` 하는 공유 체크아웃에는 2026-11-13 00:12:56 +0900 `be90ea3e7` fast-forward 로 들어옴(reflog). 그 뒤 첫 프로브 기동은 `tossos-a128-kr.service` 2026-11-13T08:50:42+09:00(journal).
 - 원장 행 교차 확인: 영문 섞인 KR 종목의 `top_of_book: …SYMBOL_INVALID…` 결손이 있는 마지막 회차 2026-11-12T14:20:00+09:00, 없는 첫 회차 2026-11-13T09:10:00+09:00(경계 뒤 그 문구 0건). 입력 판본 불변. 상세는 a128 `review.md` 「a187 반영 경계」.
 - a184 브랜치(`feat/a184-kr-jev-warning-live-lane` @ `2a12b2449`)는 a187 의 네 파일(`strict_minute_candles.go`, `a187_kr_alphanumeric_test.go`, `a187_order_policy_test.go`, `strict_quote_reads_test.go`)이 main(`be90ea3e7`)과 내용이 같음(`git diff` 0줄). 알림은 Manager 가 전달함.
+
+## 마지막 archive 시점 — 확인 (종결 팀메이트 Opus, 2026-11-16)
+
+위 「Manager 재검증 (3.4)」 의 「Manager 확인 대기」 를 저장소 실측으로 닫음. 근거는 `openspec/changes/archive/` 목록, `git log`, `git merge-base --is-ancestor`, a179 `review.md`.
+
+- 정적 가드 5개가 빨갛던 동안(a190·a189 archive, 2026-11-16 이전) 마지막 archive 는 `2026-10-31-a179-compare-jev-input-profiles`(커밋 `9abcb631a`, 2026-10-31 01:57:58 +0900)였음.
+- 가드를 깬 a166 커밋 `9c4bdf4de`(2026-10-31 04:16:34)·`3dc0c776b`(04:55:21)는 a179 archive 뒤이고 그 커밋의 조상이 아님. 위에 적은 `78d777cfe`(04:55:26)·`4d5884cbc`(05:26:28)도 같음.
+- a087 커밋 `5c0aeb2b8`(2026-10-29 20:27:39)는 a179 archive 의 조상임. 다만 a179 는 전체 시험·gate 없이 archive 됨(a179 `review.md` 13·39행 「Full repository tests/gates: not run by explicit user scope」).
+- 결론: 가드를 깬 커밋들(a166 `3dc0c776b`·`9c4bdf4de`, a087 `5c0aeb2b8`) 뒤로 **완료 gate 를 거친 archive 가 없었음** — 그래서 그동안 main 전체 시험이 archive 경로에서 돌지 않았음. 그 뒤 첫 archive 는 2026-11-16 의 a190(`ff8282056`)·a189(`36560a816`)이고 둘 다 gate 11/11 을 통과함(a189 가 다섯 가드를 고침).
+
+## 운영 반영 (2026-11-16)
+
+- 2026-11-16 KST 06:15 사용자 승인으로 main `7d1e3163a` 이미지(`tossos:a187-strict-quote-readers-accept-kr-alphanumeric-symbols-7d1e3163a`, digest `sha256:e710978e9f1f…`)로 두 컨테이너를 교체함. 롤백 핀은 a176 이미지(둘 다 journal schema 36).
+- 직후 확인 통과: healthy · engine run 1 · user_version 36 · mutation_attempts 증가 0 · reconcile.clean.
+- Manager 전달 사실을 옮긴 기록이며 종결 팀메이트는 docker·compose·`make image` 를 실행하지 않았음.
+
+## 종결 — 2026-11-16 (종결 팀메이트 Opus)
+
+권한: 사용자 지시(2026-11-15·16, Manager 전달) — main ff 병합·origin/main push·`make gate`·archive.
+
+- 착지 기록: main `36560a816`(a189 archive 뒤)에서 gate ⑤ 단독 판정은 base `6dbb752f6` → 작업 트리 창에 형제 커밋 66개가 들어 required 9, rc 1(a189 의 시험 함수 7개 — `cmd/tossctl/console_test.go:TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient` 외 6). 이것은 쌓인 change 의 창 문제이므로 `check_analysis.py --change a187-… --record-landing` 으로 좁힘 — 도구가 이 change 의 번들로 계산한 착지 `be90ea3e7ed673c4992eda2b584eb65c1d562cf6`(저자가 고른 값 아님).
+- gate 격리 worktree 를 세울 「완료 커밋」: `landed-commit.txt` 를 담은 이 종결 커밋. 근거 — 기록은 HEAD 커밋에서 읽으므로 그 커밋이어야 ⑤ 가 a187 자기 창(base→착지)만 보고, ⑥~⑪ 은 저장소 전체 검사라 실제 배포될 현재 main(a189 의 가드 수리 포함) 위에서 돌아야 함. a187 의 옛 코드 커밋(`be90ea3e7`·`7d1e3163a`)에서는 ⑦ 이 다섯 가드로 실패하고 ⑪ 이 a190 이전 판정을 씀.
