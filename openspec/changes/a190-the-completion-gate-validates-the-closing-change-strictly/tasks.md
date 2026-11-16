@@ -9,8 +9,8 @@
 
 - [x] 2.1 RED: `tools/sdd/test_gate_validate_step.py` 를 쓰고 편집 전 트리에서 실패를 확인한다(원문 `analysis/tdd/red.txt`).
 - [x] 2.2 GREEN: `tools/sdd/check_openspec_validate.py` 를 쓰고 `tools/gate.sh` 11단계를 그것으로 바꾼다. `test_race_detector_actually_runs.py` 단계 수 단언을 고친다.
-- [ ] 2.3 변이 원장: 사본에서 무변이 대조군 GREEN 확인 뒤 7개 이상 변이를 돌린다. 하네스·원문은 `analysis/mutation/`.
-- [ ] 2.4 문서: `docs/WORKFLOW.md` ⑪ 서술 두 곳과 `tools/gate.sh` 머리 주석(D4 두 목록)을 맞춘다.
+- [x] 2.3 변이 원장: 사본에서 무변이 대조군 GREEN 확인 뒤 7개 이상 변이를 돌린다. 하네스·원문은 `analysis/mutation/`.
+- [x] 2.4 문서: `docs/WORKFLOW.md` ⑪ 서술 두 곳과 `tools/gate.sh` 머리 주석(D4 두 목록)을 맞춘다.
 
 ## 3. 검증과 리뷰
 

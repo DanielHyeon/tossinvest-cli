@@ -341,6 +341,14 @@ class StubbedVerdicts(unittest.TestCase):
                 self.assertIn("(가) FAIL [V8]", out(result))
                 self.assertEqual(1, result.returncode)
 
+    def test_v9_zero_items_fails_even_when_the_closing_check_passes(self) -> None:
+        """진짜 CLI 로는 (가)가 통과하면서 (나)가 0 항목인 상태를 못 만든다 — 그래서 스텁으로 (나)만 표본 0 을 준다.
+        V9 를 지워도 V10 이 FAIL 을 지키므로(우연한 둘째 벽) 사유 행까지 단언하고, 둘 다 지우는 변이는 rc 로 잡는다."""
+        result = self.run_with(repo=(0, report(self.box.repo, [])))
+        self.assertIn(f"(가) OK: {CLOSING}", out(result))
+        self.assertIn("(나) FAIL [V9]", out(result))
+        self.assertEqual(1, result.returncode)
+
     def test_v10_a_repository_report_that_never_saw_the_closing_change_fails(self) -> None:
         result = self.run_with(repo=(0, report(self.box.repo, [item("widget", type_="spec")])))
         self.assertIn("(나) FAIL [V10]", out(result))
