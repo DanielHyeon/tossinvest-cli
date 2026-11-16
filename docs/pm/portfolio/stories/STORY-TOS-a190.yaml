@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a190-the-completion-gate-validates-the-closing-change-strictly",
-    "path": "openspec/changes/a190-the-completion-gate-validates-the-closing-change-strictly"
+    "path": "openspec/changes/archive/2026-11-16-a190-the-completion-gate-validates-the-closing-change-strictly"
   },
   "found_by": {
     "date": "2026-11-16",
     "how": "a189 종결 gate 2회차에서 ①~⑩ 은 OK 였고 ⑪ make validate(openspec validate --all --strict) 가 rc 1 — 8 passed, 51 failed (59 items). 실패는 전부 남의 change·main spec 의 strict 경고였고 a189 단독 strict 는 valid 였다. 사용자 결정 2026-11-16 선택지 1: gate ⑪ 을 고치는 작은 change 를 먼저 낸다.",
-    "record": "openspec/changes/a190-the-completion-gate-validates-the-closing-change-strictly/analysis/strict-debt/make-validate-strict.txt"
+    "record": "openspec/changes/archive/2026-11-16-a190-the-completion-gate-validates-the-closing-change-strictly/analysis/strict-debt/make-validate-strict.txt"
   },
   "acceptance": [
     "11단계는 닫는 change 의 openspec validate <id> --strict 와 저장소 전체 openspec validate --all(strict 없음)이 둘 다 rc 0 일 때만 통과한다.",

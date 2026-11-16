@@ -1,0 +1,9 @@
+sdd-infra rc=0
+cgc-warm rc=0
+sdd-sync rc=1 (advisory 실패는 fingerprint 기록에 무관)
+codegraph status 1 rc=0 .417381268s
+codegraph status 2 rc=0 .399152195s
+sdd-check rc=0
+gate start 2026-11-16 09:57:53 +0900 HEAD=5b5526b1ca7e6aa96841b6ca45c424cee4b18eb2 dirty=0
+gate rc=0 end 2026-11-16 10:35:28 +0900 HEAD=5b5526b1ca7e6aa96841b6ca45c424cee4b18eb2 dirty=0
+ALLDONE
