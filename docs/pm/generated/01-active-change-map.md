@@ -178,5 +178,5 @@
 | `a179-compare-jev-input-profiles` | STORY-TOS-a179 | archived |
 | `a180-claude-session-save-hook-repair` | STORY-TOS-a180 | in_progress |
 | `a187-strict-quote-readers-accept-kr-alphanumeric-symbols` | STORY-TOS-a187 | in_progress |
-| `a189-shadow-tool-guards-admit-the-account-budget` | STORY-TOS-a189 | implemented |
+| `a189-shadow-tool-guards-admit-the-account-budget` | STORY-TOS-a189 | archived |
 | `a190-the-completion-gate-validates-the-closing-change-strictly` | STORY-TOS-a190 | archived |

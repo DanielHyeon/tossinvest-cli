@@ -296,3 +296,6 @@ Manager(Fable) 가 HEAD `974a9c623` 에서 한 독립 재검증. 원문은 `anal
 
 - ⑪ 실패의 원인은 a190 으로 해소됨(사용자 결정 선택지 1 — gate ⑪ 이 닫는 change 는 strict, 저장소 전체는 오류만 판정). a190 은 gate 11/11 PASS 뒤 archive 됨(`ff8282056`).
 - 재개 시점 gate ⑤ 단독 판정(HEAD `ff8282056`, 작업 트리): required 7, evidence complete, rc 0 — 앞 회차와 같은 수이므로 landed-commit 기록은 하지 않음(창에 든 a190 커밋은 Go 함수를 바꾸지 않음).
+- 격리 gate worktree `~/tossos-work/a189-close`(ext4, 새로 세움, detached `c1709d6aa`): `make sdd-infra` rc 0 → `sdd_sync.py --no-gbrain` rc 1(advisory codegraphcontext 단계, fingerprint 기록됨) → `codegraph status` 0.44초·0.25초 → `make sdd-check` rc 0.
+- `make gate`(10:45:47~11:22:18 KST, 전후 HEAD `c1709d6aa` 동일·dirty 0): **GATE PASS 11/11, rc 0** — ① OK · ② OK · ③ OK(짝 없음) · ④ OK · ⑤ OK(required 7, evidence complete) · ⑥ OK · ⑦ OK · ⑧ OK · ⑨ OK · ⑩ OK · ⑪ OK(「(가) OK: … strict valid」, 「(나) OK: 저장소 전체(strict 없음) 오류 0」, advisory 「저장소 전체 strict 8 passed, 51 failed (59 items)」). 원문 `analysis/gate/resume-gate.txt`·`resume-status.txt`·`resume-sdd-*.txt`(앞 회차 원문 `gate.txt`·`gate2.txt` 는 그대로 둠).
+- 그 뒤 archive·Story 경로·PM check(같은 커밋).
