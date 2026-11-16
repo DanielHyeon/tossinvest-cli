@@ -219,7 +219,7 @@ CLOSED 26페이지·2,320건을 걸었고 「계정 CLOSED 이력 ≥2,500건」
 
 | 조합 | 영수증 | 상태 |
 |---|---|---|
-| KR 취소 주문이 CLOSED 에서 `CANCELED` | M31: CLOSED+OPEN 197건 중 `CANCELED` 119(계좌 이력 집계, **특정 주문과 단건 응답을 짝지은 관측 아님**) | 집계로만 있음 — 「단건 PENDING 인 바로 그 주문이 CLOSED 에 CANCELED 로 있다」는 **미실측** |
+| KR 취소 주문이 CLOSED 에서 `CANCELED` | M31 집계 + **Manager Q9 실측(2026-11-17, 콘솔 대안)**: 분쟁 주문 id 와 바이트 동일한 행 1건, 종결 그룹, `status` CANCELED, 체결 수량은 브로커가 보낸 값 0(대시 아님), 주문·체결 수량이 장부의 단건 스냅숏(`OPEN_UNFILLED`)과 같음 | **실측으로 지지됨**(아래 Q9 의 한계 ①~⑤ 안에서) |
 | CLOSED `CANCELED` 행의 `canceledAt` 유무 | 없음 | **미실측** — 설계는 의존하지 않음(`Derive` B30 CANCELED → B34 체결 0 → CANCELLED 는 취소 증거를 안 봄) |
 | KR 정정 옛 id 의 CLOSED status | M31 은 `REPLACED` 0건(관측된 값은 셋뿐), M32 는 단건만 `PENDING` | **미실측** |
 | US 정정 옛 id | M28: 단건 `PENDING_REPLACE` | CLOSED 쪽 **미실측** |
@@ -300,6 +300,13 @@ position_projection.go:428~433 **손으로 읽음 — AST 안 만듦**)로 RECON
 - **볼 필드**: 그 id 와 바이트 동일한 행의 개수, `status`, `canceledAt` 유무(값 아님), `quantity`, `execution.filledQuantity`, `orderedAt` 의 날짜,
   같은 순간 단건 응답의 `status`·`execution.filledQuantity`, 그 id 가 OPEN 에 있는지.
 - **가릴 필드**: 계좌번호·계좌 순번, 가격·평균가·금액, 다른 주문의 id·종목·수량, 요청 id, 토큰. 보고에는 「일치 행 수 / status / 수량 일치 여부」만.
+
+**Q9 결과 (Manager 실측 2026-11-17 KST, 사용자 승인 2026-11-17 — 콘솔 대안으로 수행, 정확한 조회 형태는 미수행)**
+
+- 방법: 운영 콘솔 `/orders` GET 1회(필터 없음, trusted-network 모드라 로그인 없음). 본문은 저장·출력하지 않고 프로세스 안에서 파싱했고, 분쟁 주문 id 는 장부(`mode=ro`)에서 읽어 바이트 비교. 버튼 누름 0.
+- 결과: 그 id 와 같은 행 1건, 그룹 종결, `status` = CANCELED. 체결 수량 칸은 브로커가 보낸 값(대시 아님 — `dashUnlessSent(rec.FilledQuantity)`, `RawOrder.FilledQuantity` ← `o.Execution.FilledQuantity`, orders_reads.go:289 손으로 읽음)이고 0. 주문 수량·체결 수량 모두 장부 `scoped_fill_snapshots` 행(단건 스냅숏, `OPEN_UNFILLED`, terminal=0)과 같음. 같은 시각 장부: 그 주문 미종결, 미해제 `reconcile_states` 2건.
+- 판정: Q3 의 미실측 가정(「단건이 PENDING 인 그 주문이 CLOSED 에 깨끗한 종결로, 같은 수량으로 실려 있다」)은 실측으로 지지됨. M6 = (가) 유지 — 체결 없이 취소된 실제 행이 `execution.filledQuantity` 를 문자열로 실어 보냈다.
+- 이 측정이 증명하지 못하는 것: ① a191 이 쓰는 종목·날짜 필터 조합의 CLOSED 조회에 같은 행이 나오는지 ② `canceledAt` 유무(화면 열 없음) ③ 같은 순간의 단건 응답(읽지 않음, 장부의 마지막 스냅숏으로 대신) ④ 바이트 동일 중복 행 유무(콘솔이 dedupe) ⑤ 종결 목록이 100건 상한에 닿아 있었음(잘림 표시 있음).
 
 ## 5. 시험·변이 계획
 

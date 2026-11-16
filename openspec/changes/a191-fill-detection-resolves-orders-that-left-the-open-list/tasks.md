@@ -13,7 +13,7 @@
 - [x] 1.6 proposal·design·spec delta·tasks·review 작성, `openspec validate --strict` 통과.
 - [x] 1.7 proposal 단계 적대 리뷰(작성자와 다른 계열 보이스, 최대 2회차) — `review.md`.
 - [x] 1.8 Manager 1단계 검증(2026-11-16 통과) + 결정 M1(경보 통로)·M2(UNKNOWN 단건 포함)·M3(간격·보고 시한 값)·M4(수량 불일치 처분)·M5(Feature)·M6(execution 존재 요구)·M7(빈 커서 거절)·**M8(지연·총량 상한 — 착수 전 필수)**·M9(freshness)·M10(잘못된 종결 잔여 위험). 결정을 design 에 반영하고 바뀐 Requirement 는 재리뷰.
-- [ ] 1.9 (선택, 사람 승인) design Q9 의 읽기 전용 조회 1회 — 결과로 Q3 의 미실측 행을 갱신.
+- [x] 1.9 (선택, 사람 승인) design Q9 의 읽기 전용 조회 1회 — **콘솔 대안으로 수행 — 정확한 조회 형태는 미수행**(Manager 실측 2026-11-17, 사용자 승인 2026-11-17). 결과로 Q3 의 미실측 행을 갱신(지지됨, 한계 ①~⑤ 는 design Q9 결과).
 
 ## 2. Pre-Edit
 

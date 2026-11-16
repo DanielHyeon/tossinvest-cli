@@ -104,7 +104,7 @@ Pre-Edit Gate:
 | M3 | 30s/30s | D5·D6 |
 | M4 | (가) | D3-6 그대로 |
 | M5 | FEAT-TOS-002 | Story 그대로 |
-| M6 | (가) 요구 — `closed_list_execution_missing` | D3-9, spec R2, 한 함수 `closedRowCarriesFill`·시험·변이 m22 로 격리 |
+| M6 | (가) 요구 — `closed_list_execution_missing` | D3-9, spec R2, 한 함수 `closedRowCarriesFill`·시험·변이 m22 로 격리. **Q9 실측(2026-11-17) 뒤 (가) 유지** — 체결 없이 취소된 실제 행이 `execution.filledQuantity` 를 문자열로 실어 보냄(design Q9 결과) |
 | M7 | 불채택 | D12 잔여 위험 |
 | M8 | (가) 축소판 — 조회 전체 2s(context 는 끊기 용도만, 시각 판정은 주입 Clock), 주기당 1건(안 물은 것 → lastLookup 오래된 순, deferred 는 lastLookup 갱신·삭제 안 함), 질의 재사용 없음, `pollLocked` 무편집 | D5·D10·D11, spec R1, 시험·변이 m23·m24·m26, tasks 4.6 |
 | M9 | 도장 유지, 잔여 위험 | D12 |
@@ -170,6 +170,15 @@ Pre-Edit Gate:
 | M13 | 현행 유지 | 새 후보가 매 주기 들어오면 이미 물은 미해결 주문의 재조회가 밀림 |
 | m4 | 동등 변이로 기록, 새 시험 없음, 방어 검사 유지 | `Derived` 생성자가 바뀌면 이 검사가 유일한 방어가 됨 |
 | 검증 결함 | `check_analysis.py`(Manager 실행) rc 1 — collect BTM 에 B9~B12 누락 | **수리**: 시험별 커버리지 실측으로 행 채움, B12 거짓 갈래를 밟는 시험이 없어 `TestA191IncompleteOpenOrderNotTrackedIsStillApplied` 추가(변이 m33 CAUGHT) |
+
+## Manager 검증 기록 (2026-11-17, 브랜치 커밋 9bf8d5796 뒤)
+
+- **Q9 실측**(사용자 승인 2026-11-17, 콘솔 대안으로 수행 — 정확한 조회 형태는 미수행): 분쟁 주문 id 와 바이트 동일한 행 1건, 종결 그룹,
+  CANCELED, 체결 수량 0(브로커가 보낸 값), 주문·체결 수량이 장부 단건 스냅숏과 같음 → Q3 가정 지지, M6 (가) 유지. 한계 ①~⑤ 는 design Q9 결과.
+- **전체 시험**(사용자 요청 2026-11-17 선택지 1, Manager 실행, 요약만 기록 — 원문 로그는 저장소에 없음), worktree `9bf8d5796`(시작·끝 sha 동일,
+  dirty 0, 캐시 적중 0): `make lint` rc 0(22s) · `make test` rc 0(911s, ok 122 패키지, FAIL 0) · `make test-seams` rc 0(975s, ok 123, FAIL 0) ·
+  `make test-race` rc 0(248s, 7 패키지 + 엔진 이름 목록) · 추가 `go test -race -count=1 ./internal/filldetect` rc 0(67.9s, `make test-race` 목록 밖).
+  미실행: `make gate`, `make sdd-check`, `make sdd-test`, `make validate`.
 
 ## (기록) 1단계 시점 Manager 결정 요청 — 위 표로 닫힘
 
