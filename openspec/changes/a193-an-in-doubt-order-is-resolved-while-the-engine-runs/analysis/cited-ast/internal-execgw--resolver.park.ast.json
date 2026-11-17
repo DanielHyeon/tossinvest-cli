@@ -1,0 +1,108 @@
+{
+  "file": "internal/execgw/indoubt.go",
+  "source_sha256": "d220e7df90d725bf116227c892a8f1b6e2a1c7df2f157f5a1eadb0e3217bdbc0",
+  "package": "execgw",
+  "function": "park",
+  "receiver": "Resolver",
+  "signature": "Resolver.park(params=4, results=2)",
+  "start": {
+    "line": 372,
+    "column": 1
+  },
+  "end": {
+    "line": 384,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 376,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 379,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 377,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 383,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 376,
+        "column": 12
+      },
+      "text": "attempt.ResolveUnresolved"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 380,
+        "column": 3
+      },
+      "text": "r.Gate.Block"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 381,
+        "column": 4
+      },
+      "text": "fmt.Sprintf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 373,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 374,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 375,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 376,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,79 @@
+{
+  "file": "internal/journal/resolution.go",
+  "source_sha256": "f4e27e79f908406568a5aa7a8843927b63715d33000e76dabcceaae1f4c9bd77",
+  "package": "journal",
+  "function": "ResolveConfirmed",
+  "receiver": "Attempt",
+  "signature": "Attempt.ResolveConfirmed(params=4, results=1)",
+  "start": {
+    "line": 48,
+    "column": 1
+  },
+  "end": {
+    "line": 59,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 50,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 52,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 9
+      },
+      "text": "a.transition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 18
+      },
+      "text": "firstNonEmpty"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

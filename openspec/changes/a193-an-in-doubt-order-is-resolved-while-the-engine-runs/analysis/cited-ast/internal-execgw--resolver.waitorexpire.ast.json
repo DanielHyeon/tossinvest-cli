@@ -1,0 +1,79 @@
+{
+  "file": "internal/execgw/indoubt.go",
+  "source_sha256": "d220e7df90d725bf116227c892a8f1b6e2a1c7df2f157f5a1eadb0e3217bdbc0",
+  "package": "execgw",
+  "function": "waitOrExpire",
+  "receiver": "Resolver",
+  "signature": "Resolver.waitOrExpire(params=4, results=1)",
+  "start": {
+    "line": 360,
+    "column": 1
+  },
+  "end": {
+    "line": 365,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 361,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 362,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 364,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 361,
+        "column": 6
+      },
+      "text": "Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 361,
+        "column": 6
+      },
+      "text": "Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 361,
+        "column": 6
+      },
+      "text": "clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 364,
+        "column": 9
+      },
+      "text": "clk.Sleep"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

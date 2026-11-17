@@ -1,0 +1,55 @@
+{
+  "file": "internal/app/engine/runtime.go",
+  "source_sha256": "485dbc57648357c420eb0e599581a6915e5b78fe5af045a2e87f0b41f1089496",
+  "package": "engine",
+  "function": "gracefulStop",
+  "receiver": "Runtime",
+  "signature": "Runtime.gracefulStop(params=2, results=1)",
+  "start": {
+    "line": 387,
+    "column": 1
+  },
+  "end": {
+    "line": 390,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 389,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 388,
+        "column": 11
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 389,
+        "column": 39
+      },
+      "text": "errors.Is"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 388,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
