@@ -1,6 +1,6 @@
 # a193 — 엔진이 도는 동안 IN_DOUBT 주문을 해소한다
 
-> **상태: 1단계(증거·제안·설계·분기 지도·시험 계획), High-risk(주문 해소·알림).** production Go·시험 편집 0. 구현(2단계)은 Manager 지시 뒤.
+> **상태: 2단계(구현·시험·변이·구현 리뷰), High-risk(주문 해소·알림).** 1단계 Manager 검증 통과(2026-11-18, HEAD `0a48e0138`)·처분 반영(design D0). proposal-freeze.
 > Story: `STORY-TOS-a193`(FEAT-TOS-009 — Manager 확인 대상, review.md). base: `791fb6ef1`(`base-commit.txt`).
 
 > **⚠ 이 change 뒤에도 남는 한계 — 먼저 읽을 것.** 엔진 손절(보호 매도) 주문은 제출 전 계좌 기준선(baseline)을 싣지 않는다(`ExitObserver.submit`
@@ -30,7 +30,7 @@
 | IN_DOUBT 를 해소하는 production 호출 자리는 둘뿐이고 둘 다 세션 밖이다 | `Resolver.Resolve` 의 production 호출자: `Recovery.Run`(call@300, B3 순회 안)과 수동 flatten `Saga.resolveStep`(call@428, 자기 취소 attempt 만). `Recovery.Run` 은 `Runtime.Run` B2(if@294 `r.opts.Recover`)에서 **루프보다 먼저 한 번** 돈다 |
 | exit 제출은 IN_DOUBT 를 받으면 발의를 무장한 채 로그 한 줄만 남긴다 | `ExitObserver.submit` B10(case@1577) → `noteExitOrder`(call@1585) → return@1586(nil). `noteExitOrder` 는 대기열 append(append@219) 뿐 — outbox 행 없음 |
 | 그 뒤 판정 진입은 IN_DOUBT 를 침묵으로 지나간다 | `noteHeldProposal`: `ExitIntentAttempts` 판정에서 IN_DOUBT 는 `exitIntentAttemptsQ` B11(case@216 — 소스는 `default:` 절) → live → B15 `ExitIntentLive`. `noteHeldProposal` 의 B4(Unaccepted 해제)·B6(Parked 알림)·B7(Awaiting) 어디에도 안 걸린다 — **IN_DOUBT 를 다루는 갈래 0** |
-| 엔진 정본은 IN_DOUBT 발생을 critical 로 정했다 | engine-safety 「등급화된 알림」 첫 문장(critical: IN_DOUBT·UNRESOLVED_IN_DOUBT 발생). 위 두 줄이 그 요구를 지키지 못했다(Manager 결정 대기 Q-A, review.md) |
+| 엔진 정본은 IN_DOUBT 발생을 critical 로 정했다 | engine-safety 「등급화된 알림」 첫 문장(critical: IN_DOUBT·UNRESOLVED_IN_DOUBT 발생). 위 두 줄이 그 요구를 지키지 못했다 — 이 change 의 처음 봄 알림(Q-A 처분 (b))이 세션 쪽을 닫는다 |
 
 즉 **세션 중에 IN_DOUBT 가 된 주문은 엔진을 다시 띄울 때까지 아무도 해소하지 않고, 그 사이 알림도 없다.** 정본 order-execution 「IN_DOUBT 해소」는
 세션 중 해소를 별도 change 로 미뤘고 그 change 가 **해소 진입점 배선 · 주기와 동시 실행 상한의 실측 · park 가 계정 전역 진입을 차단한다는 공시**
@@ -51,8 +51,10 @@
 3. **오래 남은 IN_DOUBT 알림(D4)**: PLACE attempt 가 `DispatchStartedAt`(없으면 `RecordedAt`)부터 **10분**(= 2 × `DefaultResolveConfig().MaxDuration` 5분)
    이상 IN_DOUBT 면 실행자가 기존 critical 타입 `order.in_doubt` 로, key `order.in_doubt|stale:<attempt id>`, 알림기의 critical 기록 단일 입구
    (`RecordCritical`, 창 0)로 한 번 기록한다. 실행자 자체가 취소 아닌 사유로 멈추면(패닉 포함) `OnStop` 이 같은 입구로 critical 하나를 기록한다.
-   park 의 알림은 기존 `recordParkCause` 가 **무장된 exit 발의의 attempt 에 대해서만** 낸다 — 이 change 는 park 알림을 새로 만들지 않는다(exit 발의가 아닌 PLACE 의
-   park 통지는 Manager 결정 대기 Q-E). 10분 검사는 같은 스윕에서 해소 사이에 돌므로 해소가 길면 늦어진다(Q-F).
+   **처음 봄 알림(Q-A 처분)**: 실행자가 IN_DOUBT PLACE 를 처음 볼 때 critical 1회(key `order.in_doubt|attempt:<id>`).
+   **park 통지(Q-E 처분)**: 무장된 exit 발의의 attempt 는 기존 `recordParkCause` 가, 그 밖의 PLACE 는 실행자가 critical 1회(key `order.unresolved_in_doubt|attempt:<id>`).
+   **원장 읽기 연속 실패(Q-F 처분)**: `PendingAttempts` 가 연속 10분 이상 실패하면 critical 1회. 처음 봄·10분 검사는 스윕 머리에서 해소보다 먼저 돈다(별도 goroutine 없음 —
+   늦어짐은 운영 실측 동시 최대 3 으로 유계, design D0.3).
 4. **바꾸지 않는 것**: `execgw.Resolver` 전체, `Recovery.Run`, exit 관측 루프(`submit`·`noteHeldProposal`), 원장 스키마, a166 배선 census 의 네 함수
    (`buildGateway`·`newGatewayReplay`·`NewContext`·`NewOrderPath`), 알림 이벤트 열거(`internal/obs` 무편집), 설정·토글.
 
@@ -62,7 +64,7 @@
 - 취소·정정(CANCEL·AMEND) attempt 의 세션 중 해소.
 - 재생(`ReplayInDoubt`) 활성화.
 - 외부(사람) 매수 주문 취소, 장 마감 뒤 재제출 억제, 호가 단위(a087), 사고 당일 알림 13시간 지연의 원인(미조사).
-- IN_DOUBT **발생 즉시** critical(정본 「등급화된 알림」 첫 문장과 exit 제출의 차이) — Manager 결정 대기 Q-A.
+- 엔진·flatten 프로세스 사이 「검사 → 기록」 경합(기존 공백, Q-H) — 후속 후보.
 
 ## Capabilities
 

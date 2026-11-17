@@ -91,9 +91,37 @@ CONFIRMED 뒤 추적·발의 유지, park 래치의 계정 전역·프로세스 
 
 회차 상한(2)에 닿았다. 3회차는 Manager 결정 반영분에 대해서만(선례 a192).
 
+## Manager 처분 (2026-11-18 — 1단계 검증 통과, HEAD `0a48e0138`)
+
+- **Q-G 는 실측으로 닫음 — freeze 차단 해제.** 운영 a166 은 ModeOff(실행 중 두 컨테이너 환경에 budget 변수 없음 → `ParseLaunchConfig` = `ModeOff`, Manager 실측). a166 required
+  활성 전에 해소 조회의 임차 점유를 재서 손절 지연 상한을 공시하는 것을 이름 붙인 잔여·후속 조건으로 둔다(design §7-6, 정본 SHALL 아님).
+- 잔여 P1·P2 처분: R2-2(검사 뒤 취소) — 부분 해결 명시로 닫음. R2-3(Q-E 정합) — **Q-E (b)** 채택으로 닫음. Q-A (b), Q-F(스윕 머리 평가 + 원장 연속 실패 10분 critical,
+  별도 goroutine 없음), Q-I 없음, Q-H 후속, Q-B 비목표, Q-C Normal, Q-D FEAT-TOS-009. 리뷰는 2회차로 끝 — **proposal-freeze.**
+- Manager 실측(tasks 1.10): IN_DOUBT 6회 전부 park, 지속 11.9~46.3시간, 동시 최대 3 — 일회 측정, 스크립트 미커밋(design D0.1).
+
+### Pre-Edit 선언 (확정 2026-11-18 — 처분 반영 뒤)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a193-an-in-doubt-order-is-resolved-while-the-engine-runs / 3.11
+- 대상 심볼(패키지.함수): main.engineRuntime(Auxiliary 슬라이스 원소 1), 시험 main.TestProductionRuntimeStartsExactlyOneAlertDeliverer(기대 목록 원소 1).
+  새 파일 internal/app/engine/in_doubt_settle.go(Context.InDoubtSettler · inDoubtSettle 의 새 메서드만). 그 밖 기존 함수 편집 0 — 늘어야 하면 멈추고 보고.
+  무편집: execgw(Resolver·Gateway), reconcile.Recovery, ExitObserver, journal, internal/obs, a166 census 네 함수.
+- CodeGraph definition/callers/callees/impact: analysis/code-context/codegraph-baseline.md(1.6.0) — 편집 직전 재확인: `rg 'AuxiliaryNames\(\)'` 1곳,
+  shapes.json 키에 engineRuntime 없음(Manager 재확인 rg 0)
+- CodeGraphContext 후보와 evidence reconciliation: not-applicable(사유 기록), evidence-reconciliation.md(불일치 0)
+- 기존 동작 파악 근거: design §1·D0(cited-ast 40), 기존 시험 TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess · a098 두 시험 · execgw indoubt 시험
+- Function Logic Map / Branch Test Map: analysis/function-logic/cmd-tossctl--engineruntime, cmd-tossctl--testproductionruntimestartsexactlyonealertdeliverer
+- upstream 상속 테스트 영향: no(엔진 계층)
+- 실패 테스트 선행 작성: yes — RED 원문 analysis/implementation/
+- 설정·DB·journal 변경과 rollback: 없음. 롤백 = 이전 이미지. 원장 쓰기는 기존 해소 전이(기동 복구와 같음) + 알림 outbox 행(기존 입구)뿐.
+- 안전 불변식 §0 위반 여부 검토: 통과 — 손절 경로 무편집·다른 goroutine(§0.3), 새 엔드포인트 없음·빈도 계상 task 4.6(§0.4), 스키마 무변경(§0.6), 토글 없음(§0.7),
+  주문 생성 0(조회만), 손절·사이징 로직 무변경(§0.9). a166 은 운영 ModeOff — 임차 지연 잔여는 design §7-6.
+```
+
 ## Manager 결정 대기
 
-(design §6 과 같은 목록 — 리뷰 회차가 더한 것은 아래 회차 기록에 붙인다)
+(1단계 목록 Q-A~Q-I 는 위 「Manager 처분」으로 전부 결정됨 — 아래는 기록. 2단계 리뷰가 더하는 것은 구현 리뷰 절에 붙인다)
 
 - **Q-A** IN_DOUBT 발생 즉시 critical(정본 「등급화된 알림」 첫 문장 대 exit 제출의 로그 줄) — (a) 비목표로 이름만 / (b) 실행자가 처음 볼 때 critical 1회. 추천 (b).
 - **Q-B** CANCEL·AMEND IN_DOUBT 의 10분 알림 — 추천: 비목표 유지.

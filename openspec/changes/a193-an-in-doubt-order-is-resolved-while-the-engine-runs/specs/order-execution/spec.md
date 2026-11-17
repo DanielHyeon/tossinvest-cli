@@ -94,6 +94,9 @@ park(`UNRESOLVED_IN_DOUBT`)를 끝내는 운영자 명령이 있어야 한다(SH
 - **대상**: 세션 중 해소의 대상은 `IN_DOUBT`이면서 발주인 attempt뿐이다(SHALL). 취소·정정 attempt는 기동이 해소한다. 재시작 복구의 재시작 규칙(RECORDED → NOT_DISPATCHED, DISPATCH_STARTED → IN_DOUBT)을 세션 중에 적용해서는 안 된다(SHALL NOT — 세션 중 그 두 상태는 진행 중인 전송이며, 그것을 재시작 규칙으로 종결시키는 것은 원장 위조다).
 - **종료는 판정이 아니다**: 엔진 정지·재배포로 해소가 취소되면 그 attempt는 `IN_DOUBT`로 남아야 하며(SHALL — 다음 기동의 재시작 복구가 이어받는다), 취소를 이유로 park하거나 진입 게이트를 잠가서는 안 된다(SHALL NOT — 그렇게 하면 배포마다 그 포지션의 손절이 운영자 해동까지 동결된다). 취소 전에 끝난 판정의 기록은 그대로 둔다.
 - **오래 남은 IN_DOUBT**: 실행자가 읽은 발주 attempt가 전송 시작 시각(없으면 기록 시각)부터 **10분**(해소 예산의 두 배) 이상 `IN_DOUBT`로 남아 있으면, 그 attempt를 에피소드로 하는 key(`order.in_doubt|stale:<attempt id>`)의 critical 알림을 알림기의 critical 기록 단일 입구로 재알림 창 0으로 **한 번** 기록해야 한다(SHALL — 해소가 오류로 되풀이되거나 시작되지 못하면 침묵해서는 안 된다; 같은 attempt는 재시작 뒤에도 같은 기록이다). 그 알림은 계좌·수량·가격을 싣지 않아야 한다(SHALL NOT). 실행자가 취소가 아닌 사유로 멈추면 critical 하나를 기록해야 한다(SHALL). 실행자는 이 알림을 기록하기 직전에 컨텍스트가 끝났는지 확인하고 끝났으면 기록하지 않아야 한다(SHALL — 기록 실패가 진입 게이트를 잠그므로; 확인 뒤 기록 중의 취소는 알림 입구의 기존 성질로 남는다).
+- **처음 본 IN_DOUBT**: 실행자는 IN_DOUBT 발주 attempt를 처음 볼 때 그 attempt를 에피소드로 하는 key(`order.in_doubt|attempt:<attempt id>`)의 critical 알림을 critical 기록 단일 입구로 재알림 창 0으로 **한 번** 기록해야 한다(SHALL — 정본 「등급화된 알림」의 IN_DOUBT 발생 critical을 세션 중에 지킨다). 처음 봄 알림과 10분 알림은 한 스윕의 머리에서 그 스윕이 읽은 IN_DOUBT 발주 전부에 대해 해소보다 **먼저** 평가되어야 한다(SHALL).
+- **세션 park의 통지**: 세션 중 해소가 attempt를 park했고 그 attempt의 intent가 무장된 exit 발의의 intent가 아니면, 실행자는 그 attempt를 에피소드로 하는 key(`order.unresolved_in_doubt|attempt:<attempt id>`)의 critical 알림을 한 번 기록해야 한다(SHALL — exit 발의의 attempt는 기존 park 원인 알림이 맡는다; 같은 park를 두 key로 두 번 알려서는 안 된다(SHALL NOT)). 무장된 발의를 읽지 못하면 알려야 한다(SHALL — 모르면 통지 쪽).
+- **원장을 못 읽음**: 실행자가 미종결 attempt 목록을 연속 10분 이상 읽지 못하면 그 연속을 에피소드로 하는 critical 알림을 한 번 기록해야 하며(SHALL), 읽기에 성공하면 연속은 끝난다.
 - **운영 결과의 공시**: 세션 중 park는 기동 중 park와 같이 진입 게이트에 판정 불능 래치를 건다. 이 래치는 **계정 전체의 신규 진입**을 그 엔진 프로세스가 끝날 때까지 막으며(운영자 해동은 원장만 바꾸고 이 래치는 풀지 않는다), 청산은 막지 않는다. park된 attempt가 무장한 발의는 운영자 해동까지 무장된 채 남으므로, 그것이 손절이면 그 포지션의 손절은 해동까지 동결된다. 손절 주문은 제출 전 계정 기준선을 싣지 않으므로 손절의 부재는 세션 중에도 park로 끝난다 — 이 change가 바꾸는 것은 그 결과가 나오는 **시각**이다.
 
 #### Scenario: 종결된 attempt가 발의를 푼다
@@ -211,3 +214,11 @@ park(`UNRESOLVED_IN_DOUBT`)를 끝내는 운영자 명령이 있어야 한다(SH
 #### Scenario: 세션 중에는 진행 중인 전송을 종결하지 않는다
 - **WHEN** 세션 중 해소 실행자가 RECORDED·DISPATCH_STARTED·ACKED 상태이거나 취소·정정인 미종결 attempt를 읽으면
 - **THEN** 그 attempt의 상태는 바뀌지 않고 해소 절차에 넣어지지 않는다
+
+#### Scenario: 처음 본 IN_DOUBT는 한 번 알린다
+- **WHEN** 실행자가 IN_DOUBT 발주 attempt를 처음 읽고, 그 뒤 스윕에서도 그 attempt가 여전히 IN_DOUBT이면
+- **THEN** 그 attempt를 에피소드로 하는 critical이 한 번만 기록된다
+
+#### Scenario: exit 발의가 아닌 발주의 세션 park
+- **WHEN** 세션 중 해소가 무장된 exit 발의와 무관한 발주 attempt를 park하면
+- **THEN** 실행자가 그 attempt를 에피소드로 하는 park critical을 한 번 기록하고, exit 발의의 attempt를 park했을 때는 기록하지 않는다

@@ -4,6 +4,63 @@
 > 40개 전부 rc 0)의 `branches[].id`·`calls[].at.line`·`returns[].at.line` 이다. 요약은 `analysis/cited-ast/summary.txt`. AST 밖(SQL 문자열·상수·복합
 > 리터럴·Go 표준 라이브러리)은 「손으로 읽음」으로 표시하고 `analysis/cited-ast/README.md` 표에 모았다. 운영 사실은 Manager 실측(proposal.md Why)만 쓴다.
 
+## D0. Manager 처분 반영판 (2026-11-18) — 이 절이 아래 본문과 §6 을 이긴다
+
+> 1단계 검증 통과(Manager, HEAD `0a48e0138`) 뒤의 처분과 Manager 실측 둘을 반영한다. 아래 본문은 1단계 기록으로 두고, 어긋나면 이 절이 정본이다.
+
+### D0.1 Manager 실측 (읽기 전용 — 종목·수량·가격·주문번호 없음)
+
+1. **운영 원장의 IN_DOUBT 이력**(tasks 1.10, 운영 저널 사본 2026-07-31~2026-11-17, attempt 13,052건 전부 PLACE): `IN_DOUBT` 진입 **6회**(2026-08 5회 · 2026-10 1회),
+   **6회 전부 다음 상태가 `UNRESOLVED_IN_DOUBT`**, IN_DOUBT 지속 42,782 · 71,326 · 89,574 · 89,856 · 132,356 · 166,684초(11.9~46.3시간), **동시 IN_DOUBT 최대 3**.
+   사본은 측정 뒤 삭제됐다. **Manager 일회 측정, 스크립트 미커밋**.
+2. **a166 운영 상태**: 실행 중 컨테이너 두 개(엔진·httpapi)의 환경에 `TOSSOS_ACCOUNT_BUDGET_MODE`·`TOSSOS_ACCOUNT_BUDGET_MANIFEST` 가 없다(docker inspect,
+   2026-11-18). `ParseLaunchConfig`(launch_config.go:10-13)는 둘 다 없으면 `ModeOff`(Manager 손으로 읽음). → 운영에는 지금 wire 임차 중재가 없다.
+
+### D0.2 처분
+
+| 결정 | 처분 | 설계에 들어간 것 |
+|---|---|---|
+| Q-G | **(c)+(a) — freeze 차단 해제.** 운영 ModeOff 라 지금은 임차 지연이 없다. a166 이 required 로 켜지면 이 지연은 대사·체결 감지의 Normal 조회와 같은 종류의 기존 성질 | **이름 붙인 잔여·후속 조건**: 「a166 required 활성 전에 해소 조회의 임차 점유를 재서 손절 지연 상한을 공시한다」. 정본 SHALL 로 만들지 않음 |
+| Q-A | **(b)** | 실행자가 IN_DOUBT PLACE 를 **처음 볼 때** critical 1회 — `RecordCritical`, 창 0, key `order.in_doubt|attempt:<attempt id>`, 프로세스 내 래치(기록 성공 때만) + 입구의 같은 key dedup(재시작에도 같은 행) |
+| Q-E | **(b)** | 세션 중 park 된 attempt 의 intent 가 **무장된 exit 발의의 intent 가 아닐 때만** critical 1회 — 타입 `order.unresolved_in_doubt`, key `order.unresolved_in_doubt|attempt:<id>`. 판별은 기존 원장 질의 `Journal.ArmedExitProposals(ctx, account)`(새 질의 없음). 그 읽기가 실패하면 **알린다**(모르면 통지 쪽 — 중복 가능성은 잔여) |
+| Q-F | **별도 goroutine 없음** | 스윕 머리에서 미결 전부에 대해 (처음 봄 알림 → 10분 검사)를 먼저 하고, 그 뒤 직렬 해소. `PendingAttempts` 가 **연속 10분 이상** 실패하면 critical 1회(key `order.in_doubt|ledger-unreadable:<연속 id>`, 연속 id = 연속 시작 때 128비트 난수 한 번 — a094 D−7.1), 성공하면 연속 초기화 |
+| Q-I | 두지 않음 | Resolver 무편집 |
+| Q-H | 후속 후보 | §7 |
+| Q-B | 비목표 유지 | — |
+| Q-C | Normal | ctx 에 우선순위 싣지 않음 |
+| Q-D | FEAT-TOS-009 확정 | — |
+
+### D0.3 스윕 (정본 — D2 의사 코드를 대체)
+
+```text
+Run(ctx):  loop { ctx 끝났으면 return ctx.Err(); sweep(ctx) 가 ctx 오류면 return; clk.Sleep(ctx, 5초) 오류면 return ctx.Err() }
+
+sweep(ctx):
+    recs, err ← PendingAttempts(ctx)
+    err 이면: ctx 끝났으면 return ctx.Err(); 연속 실패 기록(처음이면 연속 시작 시각·연속 id) → 연속이 10분 이상이고 아직 안 알렸으면 critical 1회; return nil
+    성공이면 연속 초기화
+    targets ← recs 중 State==IN_DOUBT ∧ Kind==PLACE (recorded_at 순)
+    1단: for rec in targets: ctx 끝났으면 return ctx.Err(); noteFirstSeen(rec); noteStale(rec)   // 원장 읽기(LookupIntent)뿐, 브로커 0
+    2단: for rec in targets: ctx 끝났으면 return ctx.Err(); resolve(rec)
+resolve(rec):
+    res, err ← Resolver.Resolve(ctx, rec.ID)
+    err 이면: ctx 끝났으면 return ctx.Err()   // D3 — res 를 버린다
+              같은 (attempt, 문구) 연속은 로그 1줄; return nil
+    결과 로그 1줄(attempt·종목·상태·사유 코드 — 계좌·수량·가격 없음)
+    res.State == UNRESOLVED_IN_DOUBT 이면 noteParkOutsideExit(res)
+```
+
+**알림의 수(한 에피소드의 정상 경로)**: 처음 봄 1 + (park 이면) park 통지 1 — exit 발의의 attempt 면 기존 `recordParkCause`, 아니면 실행자. 10분 알림은 해소가 못 도는 경우만.
+같은 사실을 두 key 로 두 번 내지 않는다는 것을 시험으로 고정한다(tasks 3.12).
+
+**10분 알림의 늦어짐(한계, 공시)**: 1단은 해소보다 먼저 돌지만, 한 스윕 안에서 2단의 직렬 해소가 끝나야 다음 스윕의 1단이 돈다. 운영 실측 동시 최대 3이므로 정상 경로의
+늦어짐은 ≈ 3 × 5분 + 스캔 시간(강제 상한 없음 — R1-2)이다. 그 사이 처음 봄 알림은 이미 나가 있다.
+
+### D0.4 운영 이력으로 본 이 change 의 효과 (실측 D0.1-1 위에서)
+
+6회 전부 park 로 끝났고 지속이 11.9~46.3시간이었다. 이 change 뒤 같은 모양이면: 처음 봄 critical 이 5초 스윕 안에 나가고, 해소는 정상 경로 ≈1분(부재·안정 3회·45초)에 park
+로 끝나며 park 원인 critical 이 나간다. **결과(park·해동 필요)는 같고 지속이 시간 단위에서 분 단위로 준다.**
+
 ## 1. 지금의 기전
 
 ### 1.1 IN_DOUBT 를 해소하는 자리
@@ -283,7 +340,7 @@ m7 창 0 → 1시간 · m8 key 에서 attempt id 삭제 · m9 래치를 기록 �
 m12 실행자를 Loops 로 옮김(감독 시험) · m13 스윕을 exit 관측 주기에서 동기 호출(비대기 시험) · m14 `ReplayInDoubt` 호출 추가(재생 0 시험) · m15 결과 로그에 수량 필드.
 각 변이는 양성 대조군(닿음) 먼저, 사본 하네스는 무변이 대조군 GREEN 과 시작 sha 단언 뒤(기억 「뮤테이션은 대상에 닿아야 한다」).
 
-## 6. Manager 결정 대기 (review.md 에도 같은 목록)
+## 6. Manager 결정 기록 (1단계 목록 — 처분은 D0.2)
 
 - **Q-A**: 정본 「등급화된 알림」은 IN_DOUBT **발생**을 critical 로 정했는데 exit 제출은 로그 줄만 남긴다(§1.2-2). 선택지 (a) 이 change 밖 — 이름만 붙임(현재 설계),
   (b) 실행자가 IN_DOUBT PLACE 를 **처음 볼 때** critical 한 번(key `order.in_doubt|attempt:<id>`, 창 0) — 10분 알림과 별개. 추천 (b): 비용이 새 함수 하나이고
@@ -316,3 +373,5 @@ m12 실행자를 Loops 로 옮김(감독 시험) · m13 스윕을 exit 관측 �
 3. CANCEL·AMEND 의 세션 중 해소.
 4. 재생(`ReplayInDoubt`)의 세션 사용 — 능력 attestation 실측 뒤.
 5. 사고 당일 알림 13시간 지연의 원인 조사.
+6. **a166 required 활성 전 조건(Q-G 처분, 이름 붙인 잔여)**: 해소 조회가 쥔 wire 임차의 점유 시간을 재서 손절 wire 진입 지연 상한을 공시한다. 오늘 운영은 ModeOff 라 이 지연이 없다(D0.1-2).
+7. 엔진·flatten 프로세스 사이 「검사 → 기록」 원자적 종목 배제(Q-H).

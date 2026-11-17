@@ -13,9 +13,9 @@
 - [x] 1.5 `tools/logic-map` AST: 인용 함수 40개(`analysis/cited-ast/`, 전부 rc 0) + 편집 대상 2개 번들(`analysis/function-logic/`, pre-edit).
 - [x] 1.6 proposal·design·spec delta·tasks·review 작성, `openspec validate --strict` 통과.
 - [x] 1.7 proposal-freeze 적대 리뷰(다른 계열, 최대 2회) — `review.md`(1회차 BLOCK P1 5·P2 3, 2회차 BLOCK P0 1·P1 2·P2 3 — 사실 정정 반영, 판단은 결정 대기).
-- [ ] 1.8 Manager 결정 Q-A~Q-I(**Q-G 는 freeze 차단**) 와 리뷰의 「Manager 결정 대기」 처분 → 반영 개정(필요 시 결정 반영분 리뷰 1회).
-- [ ] 1.9 Manager 의 개정판 검증 — proposal-freeze.
-- [ ] 1.10 (Manager, 읽기 전용) 운영 저널 사본에서 IN_DOUBT PLACE attempt 의 기간별 수와 **동시 최대 수**를 잰다(계좌·종목·수량·가격 미기록) — 정본이 요구한
+- [x] 1.8 Manager 결정 Q-A~Q-I 처분(2026-11-18) 반영 — design D0, proposal, delta(처음 봄·세션 park 통지·원장 못 읽음), review.md. 리뷰는 2회차로 끝(Manager).
+- [x] 1.9 Manager 1단계 검증 통과(HEAD `0a48e0138`) — Q-G 는 실측으로 닫음, proposal-freeze.
+- [x] 1.10 (Manager, 읽기 전용 — 2026-11-18 완료: IN_DOUBT 6회 전부 park, 지속 11.9~46.3시간, 동시 최대 3; 일회 측정·스크립트 미커밋 — design D0.1) 운영 저널 사본에서 IN_DOUBT PLACE attempt 의 기간별 수와 **동시 최대 수**를 잰다(계좌·종목·수량·가격 미기록) — 정본이 요구한
       「주기와 동시 실행 상한의 실측」의 운영 쪽. 결과를 design D2 표 「실측 2」에 적는다.
 
 ## 2. Pre-Edit
@@ -53,6 +53,12 @@
 - [ ] 3.10 배선: `TestA193TheProductionRuntimeStartsTheSettlerAsAuxiliary`(보조 이름에 있고 `LoopNames` 에 없음) + 기존 `TestProductionRuntimeStartsExactlyOneAlertDeliverer`
       기대 목록에 `"in-doubt-settle"`(FLM 번들). `TestA193ASettlerStopRecordsACritical` — Run 의 패닉·nil 배선 → `OnStop` critical 1(key `order.in_doubt|settler-stopped:<실행 id>`).
       `TestA193TheSettlerStartsAfterRecovery` — Recover 가 막혀 있는 동안 스윕 0.
+- [ ] 3.12 알림 수(Q-A·Q-E 처분): `TestA193FirstSightIsAlertedOnce`(스윕 3회에 key `order.in_doubt|attempt:<id>` 1, 기록 실패면 다음 스윕 재시도),
+      `TestA193AParkOutsideAnExitProposalIsAlertedOnce`(무장 발의 없는 PLACE park → `order.unresolved_in_doubt|attempt:<id>` 1),
+      `TestA193AParkOfAnArmedExitProposalIsNotAlertedTwice`(무장 발의의 attempt park → 실행자 park 알림 0, `ExitIntentAttempts.Parked` 에 그 attempt — 기존 `recordParkCause` 의 입력),
+      `TestA193AnArmedProposalReadFailureStillAlerts`, `TestA193AnEpisodeRaisesFirstSightAndParkOnly`(정상 경로 알림 = 처음 봄 1 + park 1, 10분 0).
+- [ ] 3.13 `TestA193AnUnreadableLedgerAlertsAfterTenMinutes`(연속 실패 9분59초 0 · 10분 1 · 계속 1 · 성공 뒤 새 연속은 새 key) ·
+      `TestA193StaleAndFirstSightAreCheckedBeforeResolving`(막힌 해소 앞에서도 1단 알림이 먼저 기록됨).
 - [ ] 3.11 GREEN: 새 파일 `internal/app/engine/in_doubt_settle.go` + `engineRuntime` 원소 1. 편집 뒤 두 번들의 AST·FLM·BTM 재생성(옛/새 ast 정렬로 재번호).
       기존 `TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess` 가 영값 원장으로 보조 실행자를 띄워도 패닉·정지 기록이 없음을 확인(design D2 주의).
 
