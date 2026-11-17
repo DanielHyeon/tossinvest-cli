@@ -139,6 +139,18 @@ Pre-Edit Gate:
 - 실행하지 않음: `make test`·`make gate`·`make sdd-check`·`go test ./...`(Manager 지시 — 사용자 명시 요청 없음), `make test-seams`(시간 — 미실행), `make sdd-sync`(금지).
 - 변이: 26/26 CAUGHT(실패 24 · 시한 초과 2), SURVIVED 0 — `analysis/mutation/README.md`.
 
+## 구현 리뷰 1회차 (2026-11-18)
+
+- 보이스: Codex(codex-cli 0.165.0, `codex exec -s read-only … </dev/null`, 1단계와 같은 안전 프롬프트), 적대적 Eng. 기준 `6be702985 → e391565e5`. 원문 `analysis/review/codex-impl-r1-output.md`.
+  리뷰어 보고: 파일 변경·시험·네트워크·운영 접근 0, 작업 트리 전후 깨끗. 리뷰 뒤 변화: 출력 파일 하나.
+- 판정: **BLOCK**(P0 0 · P1 2 · P2 1).
+
+| # | 지적 | 분류 | 처분 |
+|---|---|---|---|
+| I1-1 [P1] | 기록 실패한 critical 이 attempt 종결(CONFIRMED·park) 뒤 다시 시도되지 않는다 — 특히 비-exit park 알림은 대신할 경로가 없음 | 구현 결함(계약 「다음 스윕이 다시 시도」 위반) | **수리** `10a92b1d0`: 실패한 알림을 `unsent` 에 두고 스윕 머리(원장 읽기 전)에서 재기록, 대기 중 key 는 같은 스윕에서 다시 안 시도(`handled`). RED `analysis/implementation/red-review-r1.txt`(수정 전 FAIL) → 시험 `TestA193AFailedAlertIsRetriedAfterTheAttemptSettles`, `TestA193AFailingRecordIsTriedOncePerSweep`; 변이 M27·M28·M30 |
+| I1-2 [P1] | 해소 오류 로그에 원장 오류 원문(주문 번호 포함 가능)이 실린다 | 구현 결함(design D0.3 「계좌·수량·가격 없음」과 결과 줄의 원칙을 오류 줄이 어김) | **수리**: 원문 대신 분류(`error_class` — not_resolvable · ledger_state_changed · attempt_not_found · broker_order_unreadable · broker_list_incomplete · deadline_exceeded · other)만. RED 관측, 시험 `TestA193AResolutionFailureLogCarriesNoOrderNumber`, 변이 M29. **잔여**: 분류 `other` 의 원인은 로그로 알 수 없다(진단성 대 누출의 선택 — Manager 확인 대상 아래 I-a) |
+| I1-3 [P2] | 비대기 시험이 실제 ExitObserver 제출 경로를 재지 않고 실시간(50ms·5주기)에 의존 | 시험 범위·flaky | **부분 반영**: 시간 의존 제거(주기 도착을 채널로 세고, 시간은 10초 실패 시한으로만; 취소·drain 을 Cleanup 에). **범위는 그대로**(런타임 수준) — 실제 ExitObserver 를 붙인 시험은 새 시험 하네스 작업이라 채택 안 함, 시험 주석과 tasks 2단계 기록에 범위 명시 |
+
 ## Manager 결정 대기
 
 (1단계 목록 Q-A~Q-I 는 위 「Manager 처분」으로 전부 결정됨 — 아래는 기록. 2단계 리뷰가 더하는 것은 구현 리뷰 절에 붙인다)
@@ -152,3 +164,8 @@ Pre-Edit Gate:
 - **Q-G — freeze 차단**(R1-4·R2-1 P0) 해소 조회가 쥔 wire 임차만큼의 손절 지연(점유 길이 미측정) — (a) a166 승인 범위의 기존 성질로 측정·공시 / (b) 해소 조회 점유를 시한으로 짧게 / (c) a166 운영 enforcing 이 아니면 지금은 없음. 추천: a166 운영 상태 먼저 확인 → 아니면 (a) 로 기록, enforcing 이면 Manager·사용자 판단.
 - **Q-H**(R1-5) 프로세스 사이 「검사 → 기록」 경합(기존 공백) — 추천 이 change 밖 후속 후보.
 - **Q-I**(R1-2) Resolver 전체 호출 강제 시한 — 추천 두지 않음(D3 와 충돌).
+
+### 2단계 구현 리뷰가 더한 확인 대상
+
+- **I-a**(I1-2): 해소 오류 로그를 분류만 남기면 `other` 원인은 로그로 진단할 수 없다. 대안: 원문을 남기되 주문 번호 모양을 가림(새 마스킹 규칙 — 범위 확장). 현재: 분류만(누출 0 쪽).
+
