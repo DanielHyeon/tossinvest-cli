@@ -1,0 +1,6 @@
+# HEAD bfbd6a5613a30bd5473b0ec9ce7fb21676cfedd0 — 커밋 bfbd6a561 뒤 check_analysis 원문
+$ python3 tools/logic-map/check_analysis.py --change a192-a-missing-order-block-is-released-by-the-orders-terminal-proof
+[logic-map] a192-a-missing-order-block-is-released-by-the-orders-terminal-proof: base 6277ec34e220 → working tree (no landed-commit.txt in HEAD) required 7 function(s) — judged at HEAD bfbd6a5613a3
+[logic-map] a192-a-missing-order-block-is-released-by-the-orders-terminal-proof: the target is the working tree, so this window also holds 2 commit(s) that landed after the base and every existing function they changed is required here too — run `python3 tools/logic-map/check_analysis.py --change a192-a-missing-order-block-is-released-by-the-orders-terminal-proof --record-landing` to let the gate compute `landed-commit.txt` from this change's evidence and record it, which narrows it to this change's own work; if no commit on this history is accepted as the landing, the command says so instead of recording
+[logic-map] a192-a-missing-order-block-is-released-by-the-orders-terminal-proof: evidence complete or diff-proven exempt
+rc=0
