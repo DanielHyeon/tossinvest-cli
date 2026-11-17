@@ -249,6 +249,10 @@ type ReconcileDriver struct {
 	// supervisor asks both the same question.
 	healthMu sync.Mutex
 	health   LoopStatus
+
+	// terminalHoldLogged 는 종결 증명 해제의 유지 사유를 종목별로 마지막에 쓴 값임(a192 M5) — 같은 사유를 매 주기
+	// 다시 쓰지 않으려는 것. RunOnce 는 직렬이라 잠금 없이 씀.
+	terminalHoldLogged map[string]string
 }
 
 // LoopStatus is a supervised loop's cycle health.
@@ -451,6 +455,8 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
 		return cycle
 	}
 	outcome, err := d.opts.Tracker.Observe(ctx, diff)
+	// 종결 증명 해제마다 계좌 데이터 없는 로그 한 줄(a192 D7). 오류가 있어도 커밋된 해제는 남김.
+	d.logOrderTerminalReleases(outcome)
 	cycle.Blocked = len(d.opts.Tracker.Blocks())
 	cycle.Released = len(outcome.Cleared)
 	cycle.Awaiting = len(outcome.AwaitingAdjustment)

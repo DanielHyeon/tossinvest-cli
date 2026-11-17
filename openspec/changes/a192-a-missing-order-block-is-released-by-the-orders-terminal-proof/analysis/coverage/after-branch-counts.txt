@@ -1,0 +1,76 @@
+Tracker.Observe internal/reconcile/mismatch.go 629-856
+  B1:if@635 cond_line_count=1 body_next_line_count=1
+  B2:if@650 cond_line_count=1 body_next_line_count=1
+  B3:else@703 cond_line_count=1 body_next_line_count=1
+  B4:if@656 cond_line_count=1 body_next_line_count=1
+  B5:if@659 cond_line_count=1 body_next_line_count=1
+  B6:range@666 cond_line_count=1 body_next_line_count=1
+  B7:if@667 cond_line_count=1 body_next_line_count=1
+  B8:if@675 cond_line_count=1 body_next_line_count=1
+  B9:if@682 cond_line_count=1 body_next_line_count=1
+  B10:if@689 cond_line_count=1 body_next_line_count=1
+  B11:if@708 cond_line_count=1 body_next_line_count=1
+  B12:range@721 cond_line_count=1 body_next_line_count=1
+  B13:if@722 cond_line_count=1 body_next_line_count=1
+  B14:if@730 cond_line_count=1 body_next_line_count=1
+  B15:if@734 cond_line_count=1 body_next_line_count=1
+  B16:if@737 cond_line_count=1 body_next_line_count=1
+  B17:range@738 cond_line_count=1 body_next_line_count=1
+  B18:if@739 cond_line_count=1 body_next_line_count=1
+  B19:if@746 cond_line_count=1 body_next_line_count=1
+  B20:if@757 cond_line_count=1 body_next_line_count=1
+  B21:range@787 cond_line_count=1 body_next_line_count=1
+  B22:if@790 cond_line_count=1 body_next_line_count=1
+  B23:range@795 cond_line_count=1 body_next_line_count=1
+  B24:if@797 cond_line_count=1 body_next_line_count=0
+  B25:range@802 cond_line_count=1 body_next_line_count=1
+  B26:range@823 cond_line_count=1 body_next_line_count=1
+  B27:range@826 cond_line_count=1 body_next_line_count=1
+  B28:if@827 cond_line_count=1 body_next_line_count=1
+  B29:if@841 cond_line_count=1 body_next_line_count=1
+Tracker.persist internal/reconcile/mismatch.go 878-954
+  B1:if@879 cond_line_count=1 body_next_line_count=1
+  B2:range@890 cond_line_count=1 body_next_line_count=1
+  B3:if@891 cond_line_count=1 body_next_line_count=1
+  B4:if@908 cond_line_count=1 body_next_line_count=1
+  B5:if@912 cond_line_count=1 body_next_line_count=1
+  B6:range@921 cond_line_count=1 body_next_line_count=1
+  B7:if@922 cond_line_count=1 body_next_line_count=1
+  B8:if@926 cond_line_count=1 body_next_line_count=1
+  B9:if@930 cond_line_count=1 body_next_line_count=1
+  B10:if@942 cond_line_count=1 body_next_line_count=1
+  B11:if@946 cond_line_count=1 body_next_line_count=1
+.blocksFor internal/reconcile/mismatch.go 1439-1472
+  B1:range@1441 cond_line_count=1 body_next_line_count=1
+  B2:range@1455 cond_line_count=1 body_next_line_count=1
+Tracker.Restore internal/reconcile/mismatch.go 966-1012
+  B1:if@967 cond_line_count=1 body_next_line_count=0
+  B2:if@971 cond_line_count=1 body_next_line_count=0
+  B3:range@978 cond_line_count=1 body_next_line_count=1
+  B4:if@979 cond_line_count=1 body_next_line_count=1
+  B5:if@1004 cond_line_count=1 body_next_line_count=1
+  B6:if@1007 cond_line_count=1 body_next_line_count=1
+.ValidReconcileReleaseCause internal/journal/reconcile_states.go 111-119
+  B1:switch@112 cond_line_count=1 body_next_line_count=0
+  B2:case@113 cond_line_count=0 body_next_line_count=1
+  B3:case@116 cond_line_count=1 body_next_line_count=1
+.buildGateway internal/app/engine/gateway.go 250-388
+  B1:if@255 cond_line_count=1 body_next_line_count=0
+  B2:if@279 cond_line_count=1 body_next_line_count=0
+  B3:if@287 cond_line_count=1 body_next_line_count=0
+  B4:if@291 cond_line_count=1 body_next_line_count=0
+  B5:if@315 cond_line_count=1 body_next_line_count=0
+  B6:if@319 cond_line_count=1 body_next_line_count=0
+  B7:if@340 cond_line_count=1 body_next_line_count=0
+  B8:if@348 cond_line_count=1 body_next_line_count=0
+  B9:if@350 cond_line_count=0 body_next_line_count=0
+  B10:if@354 cond_line_count=0 body_next_line_count=0
+ReconcileDriver.RunOnce internal/app/engine/reconcileloop.go 418-472
+  B1:if@422 cond_line_count=1 body_next_line_count=1
+  B2:if@428 cond_line_count=1 body_next_line_count=0
+  B3:if@439 cond_line_count=1 body_next_line_count=0
+  B4:if@445 cond_line_count=1 body_next_line_count=0
+  B5:if@451 cond_line_count=1 body_next_line_count=0
+  B6:if@452 cond_line_count=0 body_next_line_count=0
+  B7:if@463 cond_line_count=1 body_next_line_count=1
+  B8:if@464 cond_line_count=1 body_next_line_count=1

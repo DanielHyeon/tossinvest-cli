@@ -1,0 +1,9 @@
+--- FAIL: TestA192OrderTerminalReleaseCauseIsOneThisBuildWrites (0.00s)
+    a192_order_terminal_release_test.go:68: ORDER_TERMINAL_CONFIRMED must be a release cause this build writes
+--- FAIL: TestA192TheReleaseRereadsTheProofInsideItsTransaction (0.26s)
+    a192_order_terminal_release_test.go:91: release: released=false err=journal: invalid request: RECONCILE release cause "ORDER_TERMINAL_CONFIRMED" is not one this build writes
+--- FAIL: TestA192TheReleaseKeepsTheRowWhenTheVerdictHolds (0.23s)
+    a192_order_terminal_release_test.go:120: held release: released=false err=journal: invalid request: RECONCILE release cause "ORDER_TERMINAL_CONFIRMED" is not one this build writes
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	1.412s
+FAIL

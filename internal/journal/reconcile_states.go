@@ -111,7 +111,7 @@ func ValidReconcileCause(cause string) bool {
 func ValidReconcileReleaseCause(cause string) bool {
 	switch cause {
 	case ReconcileReleaseRecheckMatched, ReconcileReleaseAdjustmentApplied,
-		ReconcileReleaseOperator:
+		ReconcileReleaseOperator, ReconcileReleaseOrderTerminalConfirmed:
 		return true
 	default:
 		return false

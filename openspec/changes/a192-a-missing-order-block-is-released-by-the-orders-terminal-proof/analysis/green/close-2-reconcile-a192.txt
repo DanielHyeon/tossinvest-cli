@@ -1,0 +1,134 @@
+=== RUN   TestA192VerdictArmsThenReleases
+--- PASS: TestA192VerdictArmsThenReleases (0.00s)
+=== RUN   TestA192VerdictRearmsWhenTheProofChanges
+--- PASS: TestA192VerdictRearmsWhenTheProofChanges (0.00s)
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/no_insertion_proof
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/read_failure
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/row_gone
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/row_released
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/another_row_id
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/another_cause
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/market_scoped_row
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/row_of_another_account
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/quantity_dispute_seen
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/no_bound_order
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/blank_side
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/foreign_order_account
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/foreign_comparison_account
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/order_of_another_symbol
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/proof_out_of_step
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/lineage_moved_in_memory
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/replacement_trace
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/no_snapshot
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/not_terminal
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/terminal_but_fail_closed
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/unreadable_commit
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/comparison_at_the_commit
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/comparison_before_the_commit
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/undated_comparison
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/symbol_disputed
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/same_id_still_open
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/comparison_blocks_entry
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/fill_after_the_block
+--- PASS: TestA192VerdictHoldsForEveryFailedCondition (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/no_insertion_proof (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/read_failure (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/row_gone (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/row_released (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/another_row_id (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/another_cause (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/market_scoped_row (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/row_of_another_account (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/quantity_dispute_seen (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/no_bound_order (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/blank_side (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/foreign_order_account (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/foreign_comparison_account (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/order_of_another_symbol (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/proof_out_of_step (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/lineage_moved_in_memory (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/replacement_trace (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/no_snapshot (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/not_terminal (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/terminal_but_fail_closed (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/unreadable_commit (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/comparison_at_the_commit (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/comparison_before_the_commit (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/undated_comparison (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/symbol_disputed (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/same_id_still_open (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/comparison_blocks_entry (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/fill_after_the_block (0.00s)
+=== RUN   TestA192VerdictIDsAreComparedByteForByte
+--- PASS: TestA192VerdictIDsAreComparedByteForByte (0.00s)
+=== RUN   TestA192VerdictRequiresEveryBoundOrder
+--- PASS: TestA192VerdictRequiresEveryBoundOrder (0.00s)
+=== RUN   TestA192VerdictUsesTheLatestTerminalCommit
+--- PASS: TestA192VerdictUsesTheLatestTerminalCommit (0.00s)
+=== RUN   TestA192CandidateRefusesWithoutTerminalOrJournal
+=== RUN   TestA192CandidateRefusesWithoutTerminalOrJournal/no_terminal
+=== RUN   TestA192CandidateRefusesWithoutTerminalOrJournal/no_journal
+--- PASS: TestA192CandidateRefusesWithoutTerminalOrJournal (0.00s)
+    --- PASS: TestA192CandidateRefusesWithoutTerminalOrJournal/no_terminal (0.00s)
+    --- PASS: TestA192CandidateRefusesWithoutTerminalOrJournal/no_journal (0.00s)
+=== RUN   TestA192CandidatePassesTheDisputedSymbolThrough
+--- PASS: TestA192CandidatePassesTheDisputedSymbolThrough (0.00s)
+=== RUN   TestA192MissingOrderBlockArmsThenReleasesAfterTheTerminalProof
+--- PASS: TestA192MissingOrderBlockArmsThenReleasesAfterTheTerminalProof (0.64s)
+=== RUN   TestA192WithoutATerminalReaderTheTrackerBehavesAsToday
+--- PASS: TestA192WithoutATerminalReaderTheTrackerBehavesAsToday (0.61s)
+=== RUN   TestA192ARestartedTrackerNeverReleasesThisWay
+--- PASS: TestA192ARestartedTrackerNeverReleasesThisWay (0.62s)
+=== RUN   TestA192ASameObjectRestoreDropsBindings
+--- PASS: TestA192ASameObjectRestoreDropsBindings (0.61s)
+=== RUN   TestA192ARowAnotherProducerInsertedFirstIsNeverBound
+--- PASS: TestA192ARowAnotherProducerInsertedFirstIsNeverBound (0.59s)
+=== RUN   TestA192AnOverlappingMissingOrderOnAnExistingRowIsNeverBound
+--- PASS: TestA192AnOverlappingMissingOrderOnAnExistingRowIsNeverBound (0.61s)
+=== RUN   TestA192AnUnprovenInsertIsNeverBound
+--- PASS: TestA192AnUnprovenInsertIsNeverBound (0.58s)
+=== RUN   TestA192ARetriedInsertIsNeverBound
+--- PASS: TestA192ARetriedInsertIsNeverBound (0.61s)
+=== RUN   TestA192AQuantityDisputeDisqualifiesTheBinding
+--- PASS: TestA192AQuantityDisputeDisqualifiesTheBinding (0.60s)
+=== RUN   TestA192EveryBoundOrderMustBeTerminal
+--- PASS: TestA192EveryBoundOrderMustBeTerminal (0.67s)
+=== RUN   TestA192AForeignAccountObservationNeverAuthorisesRelease
+--- PASS: TestA192AForeignAccountObservationNeverAuthorisesRelease (0.60s)
+=== RUN   TestA192AnAmendmentAfterBindingKeepsTheBlock
+--- PASS: TestA192AnAmendmentAfterBindingKeepsTheBlock (0.57s)
+=== RUN   TestA192AnOpenOrderWithTheSameIDKeepsTheBlock
+--- PASS: TestA192AnOpenOrderWithTheSameIDKeepsTheBlock (0.63s)
+=== RUN   TestA192AFillAfterTheBlockKeepsIt
+=== RUN   TestA192AFillAfterTheBlockKeepsIt/after_the_insert
+=== RUN   TestA192AFillAfterTheBlockKeepsIt/between_the_watermark_and_the_insert
+--- PASS: TestA192AFillAfterTheBlockKeepsIt (1.33s)
+    --- PASS: TestA192AFillAfterTheBlockKeepsIt/after_the_insert (0.67s)
+    --- PASS: TestA192AFillAfterTheBlockKeepsIt/between_the_watermark_and_the_insert (0.67s)
+=== RUN   TestA192ABindingChangeRearms
+--- PASS: TestA192ABindingChangeRearms (0.66s)
+=== RUN   TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock
+--- PASS: TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock (0.70s)
+=== RUN   TestA192AnAuthorityErrorStillRecordsTheTaint
+--- PASS: TestA192AnAuthorityErrorStillRecordsTheTaint (0.59s)
+=== RUN   TestA192APermanentBlockStaysOperatorOnly
+--- PASS: TestA192APermanentBlockStaysOperatorOnly (0.63s)
+=== RUN   TestA192TheAdjustmentRulesHoldWithTheReaderOn
+=== RUN   TestA192TheAdjustmentRulesHoldWithTheReaderOn/coincidental_agreement
+=== RUN   TestA192TheAdjustmentRulesHoldWithTheReaderOn/credited_release
+--- PASS: TestA192TheAdjustmentRulesHoldWithTheReaderOn (1.11s)
+    --- PASS: TestA192TheAdjustmentRulesHoldWithTheReaderOn/coincidental_agreement (0.55s)
+    --- PASS: TestA192TheAdjustmentRulesHoldWithTheReaderOn/credited_release (0.56s)
+=== RUN   TestA192ReleaseWriteFailureKeepsTheGate
+--- PASS: TestA192ReleaseWriteFailureKeepsTheGate (0.61s)
+=== RUN   TestA192AFillBeforeTheBlockDoesNotKeepIt
+--- PASS: TestA192AFillBeforeTheBlockDoesNotKeepIt (0.67s)
+=== RUN   TestA192ACreditWinsOverTheTerminalProof
+--- PASS: TestA192ACreditWinsOverTheTerminalProof (0.63s)
+=== RUN   TestA192AForeignComparisonDoesNotDropTheBinding
+--- PASS: TestA192AForeignComparisonDoesNotDropTheBinding (0.61s)
+=== RUN   TestA192AFailClosedFlipBetweenVerdictAndReleaseKeepsTheBlock
+--- PASS: TestA192AFailClosedFlipBetweenVerdictAndReleaseKeepsTheBlock (0.63s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	16.109s

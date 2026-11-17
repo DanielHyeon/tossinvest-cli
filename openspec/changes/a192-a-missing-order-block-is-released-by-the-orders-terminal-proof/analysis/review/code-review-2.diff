@@ -1,0 +1,2470 @@
+diff --git a/internal/app/engine/gateway.go b/internal/app/engine/gateway.go
+index c767d23ff..ebcf43da8 100644
+--- a/internal/app/engine/gateway.go
++++ b/internal/app/engine/gateway.go
+@@ -273,6 +273,8 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
+ 		Gate:       entry,
+ 		Journal:    in.journal,
+ 		AccountRef: in.accountRef,
++		// missing-order 종목 차단의 종결 증명 해제(a192) — 같은 장부가 증명을 읽고 해제를 씀.
++		Terminal: in.journal,
+ 	}
+ 	if err := tracker.Restore(ctx); err != nil {
+ 		return engineWiring{}, fmt.Errorf("engine: restoring the RECONCILE projection: %w", err)
+diff --git a/internal/app/engine/reconcileloop.go b/internal/app/engine/reconcileloop.go
+index 8229ceb8f..772158d35 100644
+--- a/internal/app/engine/reconcileloop.go
++++ b/internal/app/engine/reconcileloop.go
+@@ -249,6 +249,10 @@ type ReconcileDriver struct {
+ 	// supervisor asks both the same question.
+ 	healthMu sync.Mutex
+ 	health   LoopStatus
++
++	// terminalHoldLogged 는 종결 증명 해제의 유지 사유를 종목별로 마지막에 쓴 값임(a192 M5) — 같은 사유를 매 주기
++	// 다시 쓰지 않으려는 것. RunOnce 는 직렬이라 잠금 없이 씀.
++	terminalHoldLogged map[string]string
+ }
+ 
+ // LoopStatus is a supervised loop's cycle health.
+@@ -451,6 +455,8 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
+ 		return cycle
+ 	}
+ 	outcome, err := d.opts.Tracker.Observe(ctx, diff)
++	// 종결 증명 해제마다 계좌 데이터 없는 로그 한 줄(a192 D7). 오류가 있어도 커밋된 해제는 남김.
++	d.logOrderTerminalReleases(outcome)
+ 	cycle.Blocked = len(d.opts.Tracker.Blocks())
+ 	cycle.Released = len(outcome.Cleared)
+ 	cycle.Awaiting = len(outcome.AwaitingAdjustment)
+diff --git a/internal/journal/reconcile_states.go b/internal/journal/reconcile_states.go
+index add8d08ca..2b1705d9e 100644
+--- a/internal/journal/reconcile_states.go
++++ b/internal/journal/reconcile_states.go
+@@ -111,7 +111,7 @@ func ValidReconcileCause(cause string) bool {
+ func ValidReconcileReleaseCause(cause string) bool {
+ 	switch cause {
+ 	case ReconcileReleaseRecheckMatched, ReconcileReleaseAdjustmentApplied,
+-		ReconcileReleaseOperator:
++		ReconcileReleaseOperator, ReconcileReleaseOrderTerminalConfirmed:
+ 		return true
+ 	default:
+ 		return false
+diff --git a/internal/reconcile/mismatch.go b/internal/reconcile/mismatch.go
+index d0c6c7ad0..e35f8c4d6 100644
+--- a/internal/reconcile/mismatch.go
++++ b/internal/reconcile/mismatch.go
+@@ -239,6 +239,11 @@ type Block struct {
+ 	// durable EnterReconcile write has not committed yet. It stays enforced and
+ 	// is retried on every matching observation until the journal confirms it.
+ 	pending bool
++	// missing 는 missing-order 가 만든 블록의 주문 신원임(a192). 이 블록의 첫 쓰기가 행을 삽입하면
++	// 결속의 첫 주문이 됨. 수량 블록·복원된 블록에는 없음.
++	missing *boundOrder
++	// terminalRelease 는 1차 판정이 「종결 증명으로 해제」라고 답한 표시와 재판정 입력임(a192).
++	terminalRelease *terminalRelease
+ }
+ 
+ // Key identifies a block for deduplication.
+@@ -339,6 +344,12 @@ type Tracker struct {
+ 	// something this type can check rather than something its caller has to
+ 	// arrange (a083).
+ 	adjusted map[string]string
++
++	// Terminal 은 missing-order 종목 차단의 종결 증명 해제가 쓰는 장부임(a192). nil 이면 오늘과 같은
++	// 행동 — 결속·판정·해제가 없음. production 은 *journal.Journal.
++	Terminal OrderTerminalJournal
++	// terminal 은 이 프로세스가 삽입한 행의 결속 기억임. 재기동·Restore 에서 비워짐(결속은 복원하지 않음).
++	terminal terminalState
+ }
+ 
+ // promotionDisputeKey is deliberately comparable so a current comparison can
+@@ -632,6 +643,8 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
+ 	// and those two facts must never be computed from different sets.
+ 	disputed := symbolsInDispute(diff)
+ 	keys := promotionKeys(diff, t.AccountRef)
++	// 종결 증명 결속(a192): 어느 갈래의 조기 반환보다 먼저 이번 비교의 신원·실격 흔적을 기억에 남김.
++	t.beginOrderTerminalObservation(diff)
+ 
+ 	var out Outcome
+ 	if !diff.BlocksEntry() {
+@@ -664,6 +677,12 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
+ 				// belongs to *this* comparison rather than to one before it. Both are
+ 				// agreement with nothing behind it. See the release rule at the top of
+ 				// the file.
++				// 조정이 없는 블록 중 이 프로세스가 삽입한 missing-order 블록은 종결 증명으로 풀 수 있음(a192) —
++				// 판정이 「해제」면 해제 tx 가 같은 판정을 다시 통과해야 실제로 풀림.
++				if t.orderTerminalCandidate(ctx, &block, diff, disputed) {
++					out.Cleared = append(out.Cleared, block)
++					continue
++				}
+ 				out.AwaitingAdjustment = append(out.AwaitingAdjustment, block)
+ 				continue
+ 			}
+@@ -785,6 +804,8 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
+ 	}
+ 	out.Cleared = persisted.released
+ 	t.permanent = hasPermanentQuantityAccountBlock(t.blocks)
++	// 이번 관측에서 처음 생긴 결속에도 같은 종목의 다른 missing-order·실격 흔적을 더함(a192, 멱등).
++	t.updateOrderTerminalBindings(diff)
+ 
+ 	// Credit accounting. Three outcomes, and which one a credit gets is decided
+ 	// per symbol rather than per comparison (a083):
+@@ -877,7 +898,8 @@ func (t *Tracker) persist(ctx context.Context, out Outcome) (persistResult, erro
+ 			continue
+ 		}
+ 		expectedCause := firstNonEmpty(block.Cause, journal.ReconcileCauseQuantityMismatch)
+-		state, entered, err := t.Journal.EnterReconcile(ctx, journal.EnterReconcileRequest{
++		// 삽입 여부(entered)가 종결 증명 결속의 증명이라 감싼 호출로 씀(a192) — 장부 쓰기는 같음.
++		state, entered, err := t.enterReconcileWithBinding(ctx, block, journal.EnterReconcileRequest{
+ 			AccountRef: firstNonEmpty(block.Account, t.AccountRef),
+ 			Symbol:     block.Symbol,
+ 			Cause:      expectedCause,
+@@ -897,6 +919,19 @@ func (t *Tracker) persist(ctx context.Context, out Outcome) (persistResult, erro
+ 		result.durable = append(result.durable, block)
+ 	}
+ 	for _, block := range out.Cleared {
++		if block.terminalRelease != nil {
++			// 종결 증명 해제는 증명을 같은 tx 안에서 다시 읽어 같은 판정을 통과할 때만 풂(a192 D5).
++			// 재판정이 「유지」면 오류가 아니라 해제 없음 — 블록은 남음.
++			released, err := t.releaseOnOrderTerminal(ctx, block)
++			if err != nil {
++				return result, fmt.Errorf("reconcile: releasing the %s block on %s on its order-terminal proof: %w",
++					block.Reason, scopeLabel(block), err)
++			}
++			if released {
++				result.released = append(result.released, block)
++			}
++			continue
++		}
+ 		_, ok, err := t.Journal.ReleaseReconcile(ctx, journal.ReleaseReconcileRequest{
+ 			AccountRef:  firstNonEmpty(block.Account, t.AccountRef),
+ 			Symbol:      block.Symbol,
+@@ -964,6 +999,8 @@ func (t *Tracker) Restore(ctx context.Context) error {
+ 	// applied an adjustment before the crash is gone, and the first comparison
+ 	// after a restart must not release on its word.
+ 	t.adjusted = nil
++	// 종결 증명 결속·무장도 복원하지 않음 — 복원된 행은 이 프로세스가 삽입했다는 증명이 없음(a192).
++	t.terminal = terminalState{}
+ 	if permanent {
+ 		t.failures = t.maxFailures()
+ 	}
+@@ -1427,6 +1464,8 @@ func blocksFor(diff Diff, accountRef string, now time.Time) []Block {
+ 			Release: ReleaseOnAdjustedReconcile,
+ 			Detail: fmt.Sprintf("order %s on %s is not in the account's open list",
+ 				missing.OrderID, missing.Symbol),
++			// 첫 쓰기가 행을 삽입하면 종결 증명 결속의 첫 주문이 됨(a192).
++			missing: &boundOrder{identity: missing.Identity(), original: missing.OriginalOrderID},
+ 		})
+ 	}
+ 	return out
+--- /dev/null
++++ b/internal/app/engine/a192_gateway_wiring_internal_test.go
+@@ -0,0 +1,24 @@
++package engine
++
++// a192_gateway_wiring_internal_test.go — 운영 조립(buildGateway)이 추적기에 종결 증명 장부를 실제로 넘기는지 고정함
++// (a192 design D11). 이 배선이 빠지면 운영 엔진은 조용히 오늘의 행동(운영자 해제만)으로 돌아감.
++
++import (
++	"context"
++	"testing"
++)
++
++func TestA192TheProductionTrackerReadsTerminalProofFromItsJournal(t *testing.T) {
++	ctx := context.Background()
++	j := openTestJournal(t)
++	if err := bindApplyHooks(j); err != nil {
++		t.Fatal(err)
++	}
++	wiring := a098BuildGateway(t, ctx, j)
++	if wiring.reconcile == nil {
++		t.Fatal("the assembly built no reconcile tracker")
++	}
++	if wiring.reconcile.Terminal != j {
++		t.Fatalf("tracker.Terminal = %v, want the engine's own journal", wiring.reconcile.Terminal)
++	}
++}
+--- /dev/null
++++ b/internal/app/engine/a192_order_terminal_release_log.go
+@@ -0,0 +1,66 @@
++package engine
++
++// a192_order_terminal_release_log.go 는 missing-order 종목 차단이 종결 증명으로 풀린 것을 운영자가 로그에서 볼 수
++// 있게 함(a192 design D7, M6 — 로그만, 알림 없음).
++//
++// 싣는 것은 종목·시장·해제 원인·결속 주문 수뿐임. 계좌번호·주문번호·수량·가격은 싣지 않음 — 그 값들은 장부 행의
++// 근거에 있고, 로그는 「무엇이 언제 풀렸나」만 말하면 됨.
++
++import (
++	"sort"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
++)
++
++// eventReconcileBlockReleased 는 종결 증명 해제 한 건의 로그 이벤트임. a191 선례대로 obs 패키지를 고치지 않고
++// 이 자리의 리터럴로 둠(등급표에 없으므로 normal).
++const eventReconcileBlockReleased obs.EventType = "reconcile.block_released"
++
++// eventReconcileBlockReleaseHeld 는 결속된 차단의 판정 사유가 바뀔 때 한 줄 — 유지된 이유(M5)를 운영자가 봄.
++const eventReconcileBlockReleaseHeld obs.EventType = "reconcile.block_release_held"
++
++// logOrderTerminalReleases 는 이번 관측이 커밋한 해제 중 종결 증명 해제마다 한 줄을 씀.
++func (d *ReconcileDriver) logOrderTerminalReleases(outcome reconcile.Outcome) {
++	if d.opts.Log == nil {
++		return
++	}
++	for _, block := range outcome.Cleared {
++		bound, ok := block.ReleasedByOrderTerminal()
++		if !ok {
++			continue
++		}
++		d.opts.Log.Event(eventReconcileBlockReleased,
++			obs.FieldSymbol, block.Symbol,
++			"market", block.Market,
++			"release_cause", journal.ReconcileReleaseOrderTerminalConfirmed,
++			"bound_orders", bound)
++	}
++	if d.opts.Tracker == nil {
++		return
++	}
++	// 유지 사유는 바뀔 때만 씀. 결속이 사라진 종목은 기억에서 지움(다시 생기면 다시 씀).
++	reasons := d.opts.Tracker.OrderTerminalHoldReasons()
++	if d.terminalHoldLogged == nil {
++		d.terminalHoldLogged = map[string]string{}
++	}
++	logged := d.terminalHoldLogged
++	symbols := make([]string, 0, len(reasons))
++	for symbol := range reasons {
++		symbols = append(symbols, symbol)
++	}
++	sort.Strings(symbols)
++	for _, symbol := range symbols {
++		if logged[symbol] == reasons[symbol] {
++			continue
++		}
++		logged[symbol] = reasons[symbol]
++		d.opts.Log.Event(eventReconcileBlockReleaseHeld, obs.FieldSymbol, symbol, "reason", reasons[symbol])
++	}
++	for symbol := range logged {
++		if _, ok := reasons[symbol]; !ok {
++			delete(logged, symbol)
++		}
++	}
++}
+--- /dev/null
++++ b/internal/app/engine/a192_order_terminal_release_log_test.go
+@@ -0,0 +1,106 @@
++package engine_test
++
++// a192_order_terminal_release_log_test.go 는 대사 구동 루프 끝까지(수집 → 비교 → Observe → 해제 → 로그) missing-order
++// 종목 차단의 종결 증명 해제를 돌리고, 해제 로그에 계좌·주문번호·수량·가격이 없음을 고정함(a192 design D7).
++
++import (
++	"bytes"
++	"context"
++	"strings"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
++)
++
++func TestA192TheReleaseLogCarriesNoAccountOrderQuantityOrPrice(t *testing.T) {
++	var logs bytes.Buffer
++	h := newDriverHarness(t, func(o *engine.ReconcileDriverOptions) {
++		o.Log = obs.NewLogger(obs.LogOptions{Writer: &logs, JSON: true})
++	})
++	h.tracker.Terminal = h.journal
++	ctx := context.Background()
++
++	attempt, err := h.journal.Prepare(ctx, journal.PrepareRequest{
++		Intent: journal.Intent{
++			ID: "intent-o-a192-1", AccountRef: reconcileAccount, Market: "kr", TradingDay: "2026-03-30",
++			Symbol: "SYN001", Side: "SELL", OrderType: "LIMIT", Quantity: "7", Price: "4321",
++			Currency: "KRW", Source: "engine", Fingerprint: "fp-o-a192-1",
++		},
++		Kind: journal.KindPlace, AttemptID: "attempt-o-a192-1",
++	})
++	if err != nil {
++		t.Fatalf("Prepare: %v", err)
++	}
++	if err := attempt.MarkDispatchStarted(ctx); err != nil {
++		t.Fatal(err)
++	}
++	if err := attempt.MarkAcked(ctx, "o-a192-1"); err != nil {
++		t.Fatal(err)
++	}
++	if err := attempt.Settle(ctx, journal.StateConfirmed, journal.ReasonBrokerAcknowledged, "acked"); err != nil {
++		t.Fatal(err)
++	}
++
++	// 1주기: 계좌 open 목록에 없음 → missing-order 블록(이 프로세스가 삽입).
++	if c := h.cycle(); c.Err != nil || c.Blocked != 1 {
++		t.Fatalf("first cycle = %+v, want the missing-order block", c)
++	}
++	h.clk.Advance(time.Minute)
++	if _, err := h.journal.RecordFill(ctx, journal.FillObservation{
++		OrderID: "o-a192-1", Symbol: "SYN001", Market: "kr", TradingDay: "2026-03-30", Side: "SELL",
++		AccountRef: reconcileAccount, State: "CANCELLED", Terminal: true, Quantity: "7", FilledQuantity: "0",
++		ObservedAt: h.clk.Now().UTC().Format(time.RFC3339),
++	}); err != nil {
++		t.Fatalf("RecordFill: %v", err)
++	}
++	h.clk.Advance(time.Minute)
++	if c := h.cycle(); c.Err != nil || c.Released != 0 || c.Blocked != 1 {
++		t.Fatalf("arming cycle = %+v, want the block kept", c)
++	}
++	h.clk.Advance(time.Minute)
++	if c := h.cycle(); c.Err != nil || c.Released != 1 || c.Blocked != 0 {
++		t.Fatalf("releasing cycle = %+v, want the block released", c)
++	}
++
++	var line string
++	for _, l := range strings.Split(logs.String(), "\n") {
++		if strings.Contains(l, "reconcile.block_released") {
++			if line != "" {
++				t.Fatalf("more than one release line:\n%s", logs.String())
++			}
++			line = l
++		}
++	}
++	if line == "" {
++		t.Fatalf("no reconcile.block_released line in:\n%s", logs.String())
++	}
++	for _, want := range []string{"SYN001", journal.ReconcileReleaseOrderTerminalConfirmed, `"bound_orders":1`} {
++		if !strings.Contains(line, want) {
++			t.Errorf("release line lacks %q: %s", want, line)
++		}
++	}
++	for _, leak := range []string{reconcileAccount, "o-a192-1", "4321", `"7"`} {
++		if strings.Contains(line, leak) {
++			t.Errorf("release line carries %q: %s", leak, line)
++		}
++	}
++
++	// 무장 주기의 유지 사유가 한 번 기록됨(M5) — 같은 사유를 매 주기 다시 쓰지 않음.
++	var held []string
++	for _, l := range strings.Split(logs.String(), "\n") {
++		if strings.Contains(l, "reconcile.block_release_held") {
++			held = append(held, l)
++		}
++	}
++	if len(held) != 1 || !strings.Contains(held[0], `"reason":"armed"`) || !strings.Contains(held[0], "SYN001") {
++		t.Fatalf("hold lines = %q, want one armed line for SYN001", held)
++	}
++	for _, leak := range []string{reconcileAccount, "o-a192-1", "4321"} {
++		if strings.Contains(held[0], leak) {
++			t.Errorf("hold line carries %q: %s", leak, held[0])
++		}
++	}
++}
+--- /dev/null
++++ b/internal/journal/a192_order_terminal_release_test.go
+@@ -0,0 +1,248 @@
++package journal
++
++// a192_order_terminal_release_test.go 는 종결 증명 해제의 장부 쪽 절반을 고정함(a192 design D5) —
++// 증명 읽기, 같은 tx 안 재판정, 새 release cause. 픽스처는 합성 값만 씀.
++
++import (
++	"context"
++	"strings"
++	"testing"
++)
++
++func a192ConfirmOrder(t *testing.T, j *Journal, orderID, side string) {
++	t.Helper()
++	ctx := context.Background()
++	attempt, err := j.Prepare(ctx, PrepareRequest{
++		Intent: Intent{
++			ID: "intent-" + orderID, AccountRef: "acct-7", Market: "kr", TradingDay: "2026-03-30",
++			Symbol: "SYN001", Side: side, OrderType: "LIMIT", Quantity: "1", Price: "100",
++			Currency: "KRW", Source: "engine", Fingerprint: "fp-" + orderID,
++		},
++		Kind: KindPlace, AttemptID: "attempt-" + orderID,
++	})
++	if err != nil {
++		t.Fatalf("Prepare: %v", err)
++	}
++	if err := attempt.MarkDispatchStarted(ctx); err != nil {
++		t.Fatal(err)
++	}
++	if err := attempt.MarkAcked(ctx, orderID); err != nil {
++		t.Fatal(err)
++	}
++	if err := attempt.Settle(ctx, StateConfirmed, ReasonBrokerAcknowledged, "acked"); err != nil {
++		t.Fatal(err)
++	}
++}
++
++func a192Scope(orderID, side string) FillSnapshotScope {
++	return FillSnapshotScope{OrderID: orderID, AccountRef: "acct-7", Market: "kr", TradingDay: "2026-03-30",
++		Symbol: "SYN001", Side: side}
++}
++
++func a192Record(t *testing.T, j *Journal, orderID, side, state, filled string) {
++	t.Helper()
++	if _, err := j.RecordFill(context.Background(), FillObservation{
++		OrderID: orderID, Symbol: "SYN001", Market: "kr", TradingDay: "2026-03-30", Side: side,
++		AccountRef: "acct-7", State: state, Terminal: true, Quantity: "1", FilledQuantity: filled,
++		AveragePrice: "100", ObservedAt: "2026-03-30T00:30:00Z",
++	}); err != nil {
++		t.Fatalf("RecordFill: %v", err)
++	}
++}
++
++func a192Row(t *testing.T, j *Journal) ReconcileState {
++	t.Helper()
++	state, entered, err := j.EnterReconcile(context.Background(), EnterReconcileRequest{
++		AccountRef: "acct-7", Symbol: "SYN001", Cause: ReconcileCauseQuantityMismatch,
++		Evidence: "order on SYN001 is not in the account's open list",
++	})
++	if err != nil || !entered {
++		t.Fatalf("EnterReconcile: entered=%v err=%v", entered, err)
++	}
++	return state
++}
++
++// TestA192OrderTerminalReleaseCauseIsOneThisBuildWrites: 새 원인도 상수 집합(쓰기 제약)에 들어 있어야 함.
++func TestA192OrderTerminalReleaseCauseIsOneThisBuildWrites(t *testing.T) {
++	if !ValidReconcileReleaseCause(ReconcileReleaseOrderTerminalConfirmed) {
++		t.Fatalf("%s must be a release cause this build writes", ReconcileReleaseOrderTerminalConfirmed)
++	}
++}
++
++// TestA192TheReleaseRereadsTheProofInsideItsTransaction: 판정이 tx 안에서 읽은 증명을 받고, 참일 때만 그 행을
++// 새 원인으로 해제함.
++func TestA192TheReleaseRereadsTheProofInsideItsTransaction(t *testing.T) {
++	j, _ := openReservationJournal(t)
++	ctx := context.Background()
++	a192ConfirmOrder(t, j, "o-a192-1", "SELL")
++	watermark, err := j.MaxFillEventID(ctx)
++	if err != nil {
++		t.Fatalf("MaxFillEventID: %v", err)
++	}
++	row := a192Row(t, j)
++	a192Record(t, j, "o-a192-1", "SELL", "CANCELLED", "0")
++
++	req := OrderTerminalProofRequest{StateID: row.ID, Symbol: "SYN001", FillWatermark: watermark,
++		Orders: []FillSnapshotScope{a192Scope("o-a192-1", "SELL")}}
++	var seen OrderTerminalProof
++	state, released, err := j.ReleaseReconcileOnOrderTerminalProof(ctx, req, "terminal proof (synthetic)",
++		func(p OrderTerminalProof) bool { seen = p; return true })
++	if err != nil || !released {
++		t.Fatalf("release: released=%v err=%v", released, err)
++	}
++	if !seen.StateFound || seen.State.ID != row.ID || len(seen.Snapshots) != 1 || !seen.Snapshots[0].Found ||
++		!seen.Snapshots[0].Record.Terminal || seen.FillAfterWatermark || seen.ReadErr != nil {
++		t.Fatalf("proof read inside the transaction = %+v", seen)
++	}
++	if state.ReleaseCause != ReconcileReleaseOrderTerminalConfirmed {
++		t.Fatalf("release cause = %q", state.ReleaseCause)
++	}
++	history, err := j.ReconcileStateHistory(ctx, "acct-7")
++	if err != nil || len(history) != 1 || history[0].Active() ||
++		history[0].ReleaseCause != ReconcileReleaseOrderTerminalConfirmed ||
++		!strings.Contains(history[0].Evidence, "terminal proof (synthetic)") {
++		t.Fatalf("history = %+v err=%v, want the row released with its evidence", history, err)
++	}
++	// 이미 풀린 행은 다시 풀리지 않음(id 고정 + released_at IS NULL).
++	if _, again, err := j.ReleaseReconcileOnOrderTerminalProof(ctx, req, "again",
++		func(p OrderTerminalProof) bool { return p.StateFound && p.State.Active() }); err != nil || again {
++		t.Fatalf("second release: released=%v err=%v, want nothing", again, err)
++	}
++}
++
++// TestA192TheReleaseKeepsTheRowWhenTheVerdictHolds: 판정이 거짓이면 오류 없이 해제하지 않음.
++func TestA192TheReleaseKeepsTheRowWhenTheVerdictHolds(t *testing.T) {
++	j, _ := openReservationJournal(t)
++	row := a192Row(t, j)
++	_, released, err := j.ReleaseReconcileOnOrderTerminalProof(context.Background(), OrderTerminalProofRequest{
++		StateID: row.ID, Symbol: "SYN001"}, "evidence", func(OrderTerminalProof) bool { return false })
++	if err != nil || released {
++		t.Fatalf("held release: released=%v err=%v", released, err)
++	}
++	active, err := j.ActiveReconcileStates(context.Background())
++	if err != nil || len(active) != 1 {
++		t.Fatalf("active = %+v err=%v, want the row kept", active, err)
++	}
++}
++
++// TestA192TheProofSeesFillsAfterTheWatermark: 워터마크 뒤 그 종목 체결만 셈.
++func TestA192TheProofSeesFillsAfterTheWatermark(t *testing.T) {
++	j, _ := openReservationJournal(t)
++	ctx := context.Background()
++	a192ConfirmOrder(t, j, "o-a192-buy", "BUY")
++	before, err := j.MaxFillEventID(ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	row := a192Row(t, j)
++	req := OrderTerminalProofRequest{StateID: row.ID, Symbol: "SYN001", FillWatermark: before}
++	if p := j.ReadOrderTerminalProof(ctx, req); p.ReadErr != nil || p.FillAfterWatermark {
++		t.Fatalf("proof before any fill = %+v", p)
++	}
++	a192Record(t, j, "o-a192-buy", "BUY", "FILLED", "1")
++	if p := j.ReadOrderTerminalProof(ctx, req); !p.FillAfterWatermark {
++		t.Fatalf("proof after a fill on the symbol = %+v, want the fill seen", p)
++	}
++	other := req
++	other.Symbol = "SYNX"
++	if p := j.ReadOrderTerminalProof(ctx, other); p.FillAfterWatermark {
++		t.Fatalf("a fill on another symbol counted: %+v", p)
++	}
++	after, err := j.MaxFillEventID(ctx)
++	if err != nil || after <= before {
++		t.Fatalf("watermark %d → %d (err %v), want it to advance", before, after, err)
++	}
++}
++
++// TestA192AnIncompleteScopeNeverReachesTheLegacyLookup: 범위가 불완전하면 스냅숏을 찾지 않음 — 같은 번호의
++// legacy 빈 범위 행이 있어도.
++func TestA192AnIncompleteScopeNeverReachesTheLegacyLookup(t *testing.T) {
++	j, _ := openReservationJournal(t)
++	ctx := context.Background()
++	if _, err := j.db.ExecContext(ctx, `INSERT INTO fill_snapshots
++		(order_id, symbol, market, state, terminal, fail_closed, quantity, filled_quantity, committed_at)
++		VALUES ('o-a192-legacy', 'SYN001', 'kr', 'CANCELLED', 1, 0, '1', '0', '2026-03-30T00:00:00Z')`); err != nil {
++		t.Fatalf("seeding a legacy blank-scope row: %v", err)
++	}
++	row := a192Row(t, j)
++	incomplete := a192Scope("o-a192-legacy", "")
++	p := j.ReadOrderTerminalProof(ctx, OrderTerminalProofRequest{StateID: row.ID, Symbol: "SYN001",
++		Orders: []FillSnapshotScope{incomplete}})
++	if p.ReadErr != nil || len(p.Snapshots) != 1 || p.Snapshots[0].Found {
++		t.Fatalf("proof for an incomplete scope = %+v, want no snapshot", p)
++	}
++	// 대조: 같은 범위로 legacy 조회를 직접 하면 그 행이 잡힘 — 막는 것은 범위 검사임.
++	if _, err := lookupFillSnapshotScoped(ctx, j.db, incomplete); err != nil {
++		t.Fatalf("the legacy lookup itself should find the blank row: %v", err)
++	}
++}
++
++// TestA192AReplacementTraceIsSeen: 그 번호를 겨눈 AMEND 시도가 있으면 Amended.
++func TestA192AReplacementTraceIsSeen(t *testing.T) {
++	j, _ := openReservationJournal(t)
++	ctx := context.Background()
++	a192ConfirmOrder(t, j, "o-a192-1", "SELL")
++	row := a192Row(t, j)
++	req := OrderTerminalProofRequest{StateID: row.ID, Symbol: "SYN001",
++		Orders: []FillSnapshotScope{a192Scope("o-a192-1", "SELL")}}
++	if p := j.ReadOrderTerminalProof(ctx, req); p.ReadErr != nil || p.Snapshots[0].Amended {
++		t.Fatalf("proof before any amend = %+v", p)
++	}
++	if _, err := j.Prepare(ctx, PrepareRequest{
++		Intent: Intent{ID: "intent-amend", AccountRef: "acct-7", Market: "kr", TradingDay: "2026-03-30",
++			Symbol: "SYN001", Side: "SELL", OrderType: "LIMIT", Quantity: "1", Price: "99",
++			Currency: "KRW", Source: "engine", Fingerprint: "fp-amend"},
++		Kind: KindAmend, AttemptID: "attempt-amend", TargetOrderID: "o-a192-1",
++	}); err != nil {
++		t.Fatalf("Prepare(AMEND): %v", err)
++	}
++	if p := j.ReadOrderTerminalProof(ctx, req); !p.Snapshots[0].Amended {
++		t.Fatalf("proof after an amend = %+v, want the trace seen", p)
++	}
++}
++
++// TestA192AReadFailureIsReportedInTheProof: 읽기 실패는 증명의 ReadErr 로 옴(판정이 유지로 읽음).
++func TestA192AReadFailureIsReportedInTheProof(t *testing.T) {
++	j, _ := openReservationJournal(t)
++	row := a192Row(t, j)
++	if err := j.Close(); err != nil {
++		t.Fatal(err)
++	}
++	if p := j.ReadOrderTerminalProof(context.Background(), OrderTerminalProofRequest{StateID: row.ID}); p.ReadErr == nil {
++		t.Fatalf("proof from a closed journal = %+v, want a read error", p)
++	}
++}
++
++// TestA192TheProofCountsUnattributableAndForeignFills: 워터마크 뒤의 종목 없는 체결(legacy 관측)과 다른 계좌의 같은
++// 종목 체결도 「뒤의 체결」로 셈 — 귀속을 증명할 수 없거나 계좌를 가리지 않는 보수 방향(코드 리뷰 1 #1).
++func TestA192TheProofCountsUnattributableAndForeignFills(t *testing.T) {
++	j, _ := openReservationJournal(t)
++	ctx := context.Background()
++	before, err := j.MaxFillEventID(ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	row := a192Row(t, j)
++	req := OrderTerminalProofRequest{StateID: row.ID, Symbol: "SYN001", FillWatermark: before}
++	for name, insert := range map[string]string{
++		"blank symbol": `INSERT INTO fill_events (order_id, symbol, market, delta_quantity, cumulative_quantity, committed_at)
++			VALUES ('o-a192-legacy', '', '', '1', '1', '2026-03-30T00:31:00Z')`,
++		"another account": `INSERT INTO fill_events (order_id, account_ref, symbol, market, trading_day, side, delta_quantity, cumulative_quantity, committed_at)
++			VALUES ('o-a192-other', 'acct-other', 'SYN001', 'kr', '2026-03-30', 'BUY', '1', '1', '2026-03-30T00:31:00Z')`,
++	} {
++		t.Run(name, func(t *testing.T) {
++			if _, err := j.db.ExecContext(ctx, `DELETE FROM fill_events WHERE id > ?`, before); err != nil {
++				t.Fatal(err)
++			}
++			if p := j.ReadOrderTerminalProof(ctx, req); p.FillAfterWatermark {
++				t.Fatalf("control: proof before the insert = %+v", p)
++			}
++			if _, err := j.db.ExecContext(ctx, insert); err != nil {
++				t.Fatalf("seeding: %v", err)
++			}
++			if p := j.ReadOrderTerminalProof(ctx, req); p.ReadErr != nil || !p.FillAfterWatermark {
++				t.Fatalf("proof after the %s fill = %+v, want it counted", name, p)
++			}
++		})
++	}
++}
+--- /dev/null
++++ b/internal/journal/reconcile_order_terminal_release.go
+@@ -0,0 +1,217 @@
++package journal
++
++// reconcile_order_terminal_release.go 는 missing-order 종목 차단을 「그 주문들의 종결 증명」으로 푸는
++// 장부 쪽 절반임(a192 design D2·D5).
++//
++// # 왜 장부 쪽에 따로 두나
++//
++// 해제를 판정한 읽기와 해제 쓰기 사이에 체결 감시가 추적기 잠금 없이 체결·거절·`fail_closed` 갱신을
++// 커밋할 수 있음(`JournalLedger.Apply` 는 `RecordFill` 을 먼저 커밋하고 그 뒤에 `Refresh` 를 부름).
++// 그래서 해제는 증명을 **같은 쓰기 트랜잭션 안에서 다시 읽고** 그 증명으로 판정을 다시 통과할 때만
++// 커밋함. 판정 규칙 자체는 여기 두지 않음 — reconcile 패키지의 판정 함수 하나를 콜백으로 받음(규칙
++// 복제 금지, I7).
++//
++// # tx 안에서 지키는 것
++//
++// 연결이 하나(journal.go `SetMaxOpenConns(1)`)라서 tx 를 쥔 채 `j.db` 를 쓰는 공개 메서드를 부르면 자기
++// 자신을 기다림. 그래서 이 파일의 읽기는 전부 `queryRower` 하나로 함 — tx 밖(1차 판정)과 tx 안(재판정)이
++// 같은 읽기 함수를 씀. lineage 는 공개 `ResolveCurrentOrderIDScoped` 를 쓰지 않음(충돌이면
++// `EnterReconcile` 을 부르는 쓰기 경로) — 대신 「그 번호를 대체하는 흔적이 하나라도 있나」만 쓰기 없이 봄.
++
++import (
++	"context"
++	"errors"
++	"fmt"
++	"strings"
++)
++
++// ReconcileReleaseOrderTerminalConfirmed — missing-order 로 생긴 종목 차단을, 그 차단에 결속된 주문
++// 전부가 장부에 깨끗한 종결로 기록되고 그 뒤의 비교들이 일치했다는 근거로 엔진이 푼 기록임(a192).
++//
++// 조정 크레딧 해제(ADJUSTMENT_APPLIED)와 다른 원인이라 따로 이름 붙임 — 이력이 「무엇이 차단을
++// 닫았나」를 구분해서 말해야 함(spec: 구분되는 release cause).
++const ReconcileReleaseOrderTerminalConfirmed = "ORDER_TERMINAL_CONFIRMED"
++
++// OrderTerminalProofRequest 는 종결 증명을 읽을 대상임.
++type OrderTerminalProofRequest struct {
++	// StateID 는 이 프로세스가 삽입한 reconcile_states 행 id — 해제는 이 id 에 고정함.
++	StateID string
++	// Symbol 은 체결 워터마크 검사의 종목임.
++	Symbol string
++	// Orders 는 결속된 missing-order 의 정규 범위(OrderID = 감지기가 스냅숏을 쓴 원래 번호).
++	Orders []FillSnapshotScope
++	// FillWatermark 는 행 삽입 호출 **전**에 읽은 `max(fill_events.id)` 임.
++	FillWatermark int64
++}
++
++// OrderTerminalSnapshot 은 결속 주문 하나의 장부 증명임.
++type OrderTerminalSnapshot struct {
++	Scope FillSnapshotScope
++	// Found 는 완전한 범위로 스냅숏을 찾았는지임. 범위가 불완전하면 찾지 않음(legacy 빈 범위 행을
++	// 읽지 않으려는 것 — `lookupFillSnapshotScoped` 는 불완전 범위면 legacy 행을 읽음).
++	Found  bool
++	Record FillSnapshotRecord
++	// Amended 는 그 번호를 대체하는 정정 흔적(lineage 간선 또는 AMEND 시도)이 하나라도 있는지임.
++	Amended bool
++}
++
++// OrderTerminalProof 는 판정에 넘기는 장부 증명 전부임.
++type OrderTerminalProof struct {
++	State      ReconcileState
++	StateFound bool
++	Snapshots  []OrderTerminalSnapshot
++	// FillAfterWatermark 는 워터마크 뒤에 그 종목의 체결 이벤트가 하나라도 커밋됐는지임.
++	FillAfterWatermark bool
++	// ReadErr 는 읽기 실패임. 판정은 이것이 있으면 차단을 유지함(오류로 주기를 실패시키지 않음 — M5).
++	ReadErr error
++}
++
++// MaxFillEventID 는 지금까지 커밋된 체결 이벤트의 최대 id 임(없으면 0).
++//
++// 차단 행을 삽입하기 전에 읽어 두면, 그 뒤 그 종목에 커밋된 체결(거절된 투영 포함 — 거절돼도 delta 는
++// `fill_events` 에 남음)을 id 비교로 셀 수 있음. 시각이 아니라 id 를 쓰는 이유: `RecordFill` 의
++// `committed_at` 은 tx 시작 전에 잡은 시각이라 커밋 순서가 아님. SQLite 쓰기는 직렬이라 AUTOINCREMENT
++// id 순서가 커밋 순서임.
++func (j *Journal) MaxFillEventID(ctx context.Context) (int64, error) {
++	var id int64
++	if err := j.db.QueryRowContext(ctx, `SELECT COALESCE(MAX(id), 0) FROM fill_events`).Scan(&id); err != nil {
++		return 0, fmt.Errorf("journal: reading the fill event watermark: %w", err)
++	}
++	return id, nil
++}
++
++// ReadOrderTerminalProof 는 tx 밖에서 종결 증명을 읽음(1차 판정용).
++//
++// 실패는 오류가 아니라 증명의 `ReadErr` 로 돌려줌 — 판정이 그것을 「유지」로 읽음.
++func (j *Journal) ReadOrderTerminalProof(ctx context.Context, req OrderTerminalProofRequest) OrderTerminalProof {
++	return readOrderTerminalProof(ctx, j.db, req)
++}
++
++// ReleaseReconcileOnOrderTerminalProof 는 증명을 같은 쓰기 트랜잭션 안에서 다시 읽어 decide 가 참일 때만
++// 그 행(id 고정, 아직 해제 안 됨)을 ORDER_TERMINAL_CONFIRMED 로 해제함.
++//
++// decide 가 거짓이면 오류가 아니라 「해제 안 함」(false, nil) — 차단은 그대로 남음. decide 는 순수 함수여야
++// 함: tx 를 쥔 동안 공개 Journal 메서드나 추적기 잠금을 부르면 자기 자신을 기다림.
++func (j *Journal) ReleaseReconcileOnOrderTerminalProof(ctx context.Context, req OrderTerminalProofRequest,
++	evidence string, decide func(OrderTerminalProof) bool,
++) (ReconcileState, bool, error) {
++	evidence = strings.TrimSpace(evidence)
++	switch {
++	case strings.TrimSpace(req.StateID) == "":
++		return ReconcileState{}, false, fmt.Errorf("%w: an order-terminal release names the row it releases", ErrInvalidRequest)
++	case evidence == "":
++		return ReconcileState{}, false, fmt.Errorf("%w: releasing a RECONCILE state requires the evidence that it is over", ErrInvalidRequest)
++	case decide == nil:
++		return ReconcileState{}, false, fmt.Errorf("%w: an order-terminal release needs its verdict", ErrInvalidRequest)
++	case !ValidReconcileReleaseCause(ReconcileReleaseOrderTerminalConfirmed):
++		// 상수 집합이 제약임 — 이 판본이 쓰는 원인으로 등록되지 않았으면 쓰지 않음.
++		return ReconcileState{}, false, fmt.Errorf(
++			"%w: RECONCILE release cause %q is not one this build writes", ErrInvalidRequest, ReconcileReleaseOrderTerminalConfirmed)
++	}
++
++	tx, err := j.db.BeginTx(ctx, nil)
++	if err != nil {
++		return ReconcileState{}, false, fmt.Errorf("journal: starting the order-terminal release: %w", err)
++	}
++	defer tx.Rollback()
++
++	proof := readOrderTerminalProof(ctx, tx, req)
++	if !decide(proof) {
++		return proof.State, false, nil
++	}
++
++	now := j.clk.Now().UTC()
++	nowText := formatJournalTime(now)
++	result, err := tx.ExecContext(ctx,
++		`UPDATE reconcile_states SET released_at = ?, release_cause = ?, evidence = ?
++		 WHERE id = ? AND released_at IS NULL`,
++		nowText, ReconcileReleaseOrderTerminalConfirmed, proof.State.Evidence+" | released: "+evidence, req.StateID)
++	if err != nil {
++		return ReconcileState{}, false, fmt.Errorf("journal: releasing RECONCILE state %s on its order-terminal proof: %w", req.StateID, err)
++	}
++	changed, err := result.RowsAffected()
++	if err != nil {
++		return ReconcileState{}, false, fmt.Errorf("journal: verifying the order-terminal release of %s: %w", req.StateID, err)
++	}
++	if changed != 1 {
++		// 같은 tx 에서 활성으로 읽은 행이 갱신되지 않았다는 것은 판정 근거가 무너졌다는 뜻 — 오류로 알림.
++		return ReconcileState{}, false, fmt.Errorf("journal: order-terminal release of %s updated %d rows, want one", req.StateID, changed)
++	}
++	if err := tx.Commit(); err != nil {
++		return ReconcileState{}, false, fmt.Errorf("journal: committing the order-terminal release of %s: %w", req.StateID, err)
++	}
++	released := proof.State
++	released.ReleasedAt = now
++	released.ReleaseCause = ReconcileReleaseOrderTerminalConfirmed
++	released.Evidence = proof.State.Evidence + " | released: " + evidence
++	return released, true, nil
++}
++
++// readOrderTerminalProof 는 tx 안팎이 같이 쓰는 읽기 하나임. 첫 실패에서 멈추고 `ReadErr` 에 담음.
++func readOrderTerminalProof(ctx context.Context, q queryRower, req OrderTerminalProofRequest) OrderTerminalProof {
++	var proof OrderTerminalProof
++	state, err := scanReconcileState(q.QueryRowContext(ctx, reconcileSelect+" WHERE id = ?", req.StateID))
++	switch {
++	case err == nil:
++		proof.State, proof.StateFound = state, true
++	case errors.Is(err, ErrReconcileStateNotFound):
++		// 행이 없으면 판정이 「행이 바뀜」으로 읽음 — 읽기 실패가 아님.
++	default:
++		proof.ReadErr = err
++		return proof
++	}
++
++	proof.Snapshots = make([]OrderTerminalSnapshot, 0, len(req.Orders))
++	for _, scope := range req.Orders {
++		snapshot := OrderTerminalSnapshot{Scope: scope}
++		canonical := canonicalFillSnapshotScope(scope)
++		if canonical.complete() {
++			record, err := lookupFillSnapshotScoped(ctx, q, canonical)
++			switch {
++			case err == nil:
++				snapshot.Found, snapshot.Record = true, record
++			case errors.Is(err, ErrFillNotFound):
++			default:
++				proof.ReadErr = fmt.Errorf("journal: reading the terminal proof of order %s: %w", scope.OrderID, err)
++				return proof
++			}
++		}
++		amended, err := orderHasReplacementTrace(ctx, q, scope.OrderID)
++		if err != nil {
++			proof.ReadErr = err
++			return proof
++		}
++		snapshot.Amended = amended
++		proof.Snapshots = append(proof.Snapshots, snapshot)
++	}
++
++	// 그 종목의 체결 **또는 종목이 비어 귀속할 수 없는 체결**(schema-v15 legacy 관측은 종목 없이 들어올 수 있음 —
++	// `legacyUnscoped`)이 워터마크 뒤에 있으면 「뒤의 체결」로 셈. 계좌는 보지 않음 — 다른 계좌의 같은 종목 체결도
++	// 유지 쪽으로 세는 보수 방향(코드 리뷰 1 #1).
++	var after int
++	if err := q.QueryRowContext(ctx,
++		`SELECT EXISTS(SELECT 1 FROM fill_events WHERE id > ? AND (UPPER(TRIM(symbol)) = ? OR TRIM(symbol) = ''))`,
++		req.FillWatermark, normaliseSymbol(req.Symbol)).Scan(&after); err != nil {
++		proof.ReadErr = fmt.Errorf("journal: reading fills after the order-terminal watermark: %w", err)
++		return proof
++	}
++	proof.FillAfterWatermark = after != 0
++	return proof
++}
++
++// orderHasReplacementTrace 는 그 번호를 부모로 하는 대체 간선이나 그 번호를 겨눈 AMEND 시도가 하나라도
++// 있는지임.
++//
++// 범위·확정 여부를 따지지 않는 넓은 존재 검사 — 정정 lineage 해석 규칙(`scopedLineageChildren`)을 여기
++// 다시 쓰지 않으려는 것(규칙 복제 금지). 넓게 보는 쪽은 차단을 유지하는 쪽이라 보수 방향임.
++func orderHasReplacementTrace(ctx context.Context, q queryRower, orderID string) (bool, error) {
++	var found int
++	if err := q.QueryRowContext(ctx, `SELECT
++		EXISTS(SELECT 1 FROM scoped_lineage_edges WHERE parent_order_id = ? AND relation = ?)
++		OR EXISTS(SELECT 1 FROM lineage_edges WHERE parent_order_id = ? AND relation = ?)
++		OR EXISTS(SELECT 1 FROM mutation_attempts WHERE kind = ? AND target_order_id = ?)`,
++		orderID, RelationReplaces, orderID, RelationReplaces, string(KindAmend), orderID).Scan(&found); err != nil {
++		return false, fmt.Errorf("journal: reading the replacement trace of order %s: %w", orderID, err)
++	}
++	return found != 0, nil
++}
+--- /dev/null
++++ b/internal/reconcile/a192_order_terminal_release_test.go
+@@ -0,0 +1,873 @@
++package reconcile_test
++
++// a192_order_terminal_release_test.go 는 missing-order 종목 차단의 종결 증명 해제를 실 journal 로 끝까지 돌림
++// (a192 design D2~D6, spec 「missing-order 종목 차단은 …」). 픽스처는 합성 값만 씀.
++
++import (
++	"context"
++	"errors"
++	"path/filepath"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
++)
++
++const (
++	a192Account = "acct-7"
++	a192Symbol  = "SYN001"
++	a192Day     = "2026-03-30"
++)
++
++var errA192Injected = errors.New("a192: injected storage failure")
++
++// a192Store 는 실 journal 앞에서 EnterReconcile 결과를 세고, 지정한 실패를 끼워 넣음.
++type a192Store struct {
++	reconcile.ReconcileStore
++	entered         []bool
++	failNext        string // "before"(쓰기 없이 실패) | "after"(쓰고 나서 실패)
++	beforeInsert    func()
++	failAccountWide bool
++	failActive      bool
++}
++
++func (s *a192Store) EnterReconcile(ctx context.Context, req journal.EnterReconcileRequest) (journal.ReconcileState, bool, error) {
++	if s.failAccountWide && req.Symbol == "" {
++		return journal.ReconcileState{}, false, errA192Injected
++	}
++	if s.beforeInsert != nil {
++		hook := s.beforeInsert
++		s.beforeInsert = nil
++		hook()
++	}
++	switch s.failNext {
++	case "before":
++		s.failNext = ""
++		return journal.ReconcileState{}, false, errA192Injected
++	case "after":
++		s.failNext = ""
++		state, entered, err := s.ReconcileStore.EnterReconcile(ctx, req)
++		s.entered = append(s.entered, entered)
++		if err != nil {
++			return state, entered, err
++		}
++		return journal.ReconcileState{}, false, errA192Injected
++	}
++	state, entered, err := s.ReconcileStore.EnterReconcile(ctx, req)
++	s.entered = append(s.entered, entered)
++	return state, entered, err
++}
++
++func (s *a192Store) ActiveReconcileStates(ctx context.Context) ([]journal.ReconcileState, error) {
++	if s.failActive {
++		return nil, errA192Injected
++	}
++	return s.ReconcileStore.ActiveReconcileStates(ctx)
++}
++
++// a192Interleaving 은 해제 트랜잭션 직전에 다른 쓰기를 끼워 넣는 Terminal 임.
++type a192Interleaving struct {
++	*journal.Journal
++	beforeRelease func()
++	fail          error
++	calls         int
++}
++
++func (w *a192Interleaving) ReleaseReconcileOnOrderTerminalProof(ctx context.Context, req journal.OrderTerminalProofRequest,
++	evidence string, decide func(journal.OrderTerminalProof) bool) (journal.ReconcileState, bool, error) {
++	w.calls++
++	if w.beforeRelease != nil {
++		w.beforeRelease()
++	}
++	if w.fail != nil {
++		return journal.ReconcileState{}, false, w.fail
++	}
++	return w.Journal.ReleaseReconcileOnOrderTerminalProof(ctx, req, evidence, decide)
++}
++
++type a192World struct {
++	t       *testing.T
++	ctx     context.Context
++	clk     *clock.Fake
++	journal *journal.Journal
++	gate    *execgw.EntryGate
++	tracker *reconcile.Tracker
++}
++
++func newA192World(t *testing.T, mutate func(*reconcile.Tracker)) *a192World {
++	t.Helper()
++	clk := clock.NewFake(time.Date(2026, 3, 30, 1, 30, 0, 0, time.UTC))
++	j, err := journal.Open(context.Background(), journal.Options{
++		Path:     filepath.Join(t.TempDir(), "journal.db"),
++		Clock:    clk,
++		FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}),
++	})
++	if err != nil {
++		t.Fatalf("journal.Open: %v", err)
++	}
++	t.Cleanup(func() { _ = j.Close() })
++	if err := j.SetApplyHooks(journal.ApplyHooks{Project: journal.ProjectPosition}); err != nil {
++		t.Fatalf("SetApplyHooks: %v", err)
++	}
++	gate := noStaleGate(clk)
++	tracker := &reconcile.Tracker{
++		Clock: clk, Gate: gate, Journal: j, Terminal: j,
++		MinInterval: 30 * time.Second, MaxFailures: 3, AccountRef: a192Account,
++	}
++	if mutate != nil {
++		mutate(tracker)
++	}
++	return &a192World{t: t, ctx: context.Background(), clk: clk, journal: j, gate: gate, tracker: tracker}
++}
++
++func (w *a192World) now() string { return w.clk.Now().UTC().Format(time.RFC3339) }
++
++func (w *a192World) tick() { w.clk.Advance(time.Minute) }
++
++func (w *a192World) order(orderID, side string) {
++	w.t.Helper()
++	confirmScopedOrder(w.t, w.journal, "intent-"+orderID, "attempt-"+orderID, a192Account, "kr", a192Day,
++		a192Symbol, side, orderID)
++}
++
++func a192Missing(orderID string) reconcile.LocalOrder {
++	return reconcile.LocalOrder{OrderID: orderID, OriginalOrderID: orderID, AccountRef: a192Account,
++		Symbol: a192Symbol, Market: "kr", TradingDay: a192Day, Side: "SELL"}
++}
++
++func (w *a192World) missing(orders ...reconcile.LocalOrder) reconcile.Diff {
++	return reconcile.Diff{AsOf: w.now(), AccountRef: a192Account, MissingOrders: orders}
++}
++
++func (w *a192World) clean() reconcile.Diff {
++	return reconcile.Diff{AsOf: w.now(), AccountRef: a192Account}
++}
++
++func (w *a192World) observe(diff reconcile.Diff) reconcile.Outcome {
++	w.t.Helper()
++	out, err := w.tracker.Observe(w.ctx, diff)
++	if err != nil {
++		w.t.Fatalf("Observe: %v", err)
++	}
++	return out
++}
++
++// cancel 은 감지기가 종결 목록으로 확인한 취소를 장부에 적는 것과 같은 기록임(체결 0).
++func (w *a192World) cancel(orderID, side string) {
++	w.t.Helper()
++	if _, err := w.journal.RecordFill(w.ctx, journal.FillObservation{
++		OrderID: orderID, Symbol: a192Symbol, Market: "kr", TradingDay: a192Day, Side: side,
++		AccountRef: a192Account, State: "CANCELLED", Terminal: true,
++		Quantity: "1", FilledQuantity: "0", ObservedAt: w.now(),
++	}); err != nil {
++		w.t.Fatalf("RecordFill(cancel %s): %v", orderID, err)
++	}
++}
++
++// fill 은 그 종목의 체결 하나(체결 이벤트가 생김)임.
++func (w *a192World) fill(orderID, side string) {
++	w.t.Helper()
++	if _, err := w.journal.RecordFill(w.ctx, journal.FillObservation{
++		OrderID: orderID, Symbol: a192Symbol, Market: "kr", TradingDay: a192Day, Side: side,
++		AccountRef: a192Account, State: "FILLED", Terminal: true,
++		Quantity: "1", FilledQuantity: "1", AveragePrice: "100", ObservedAt: w.now(),
++	}); err != nil {
++		w.t.Fatalf("RecordFill(fill %s): %v", orderID, err)
++	}
++}
++
++func (w *a192World) symbolRow() (journal.ReconcileState, bool) {
++	w.t.Helper()
++	history, err := w.journal.ReconcileStateHistory(w.ctx, a192Account)
++	if err != nil {
++		w.t.Fatalf("ReconcileStateHistory: %v", err)
++	}
++	for _, state := range history {
++		if state.Symbol == a192Symbol {
++			return state, true
++		}
++	}
++	return journal.ReconcileState{}, false
++}
++
++func (w *a192World) assertStillBlocked(label string) {
++	w.t.Helper()
++	state, ok := w.symbolRow()
++	if !ok || !state.Active() {
++		w.t.Fatalf("%s: symbol row = %+v (found=%v), want it still active", label, state, ok)
++	}
++	if w.tracker.EntryAllowed("kr", a192Symbol) == nil {
++		w.t.Fatalf("%s: entries on %s are open, want the block kept", label, a192Symbol)
++	}
++}
++
++// twoCleanComparisons 는 종결 기록 뒤 무장·해제 두 비교를 돌리고 두 결과를 돌려줌.
++func (w *a192World) twoCleanComparisons() (reconcile.Outcome, reconcile.Outcome) {
++	w.t.Helper()
++	w.tick()
++	first := w.observe(w.clean())
++	w.tick()
++	second := w.observe(w.clean())
++	return first, second
++}
++
++// TestA192MissingOrderBlockArmsThenReleasesAfterTheTerminalProof 는 주 흐름: 이 프로세스가 삽입한 missing-order
++// 행은 종결 기록 뒤 첫 일치 비교에서 무장만 하고, 그보다 나중의 일치 비교에서 ORDER_TERMINAL_CONFIRMED 로 풀림.
++func TestA192MissingOrderBlockArmsThenReleasesAfterTheTerminalProof(t *testing.T) {
++	w := newA192World(t, nil)
++	w.order("o-a192-1", "SELL")
++	if out := w.observe(w.missing(a192Missing("o-a192-1"))); len(out.Added) != 1 {
++		t.Fatalf("added = %+v, want the missing-order symbol block", out.Added)
++	}
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++
++	first, second := w.twoCleanComparisons()
++	if len(first.Cleared) != 0 || len(first.AwaitingAdjustment) != 1 {
++		t.Fatalf("first agreeing comparison = %+v, want the block kept (armed only)", first)
++	}
++	if len(second.Cleared) != 1 || second.Cleared[0].Symbol != a192Symbol {
++		t.Fatalf("second agreeing comparison = %+v, want the block released", second)
++	}
++	if n, ok := second.Cleared[0].ReleasedByOrderTerminal(); !ok || n != 1 {
++		t.Fatalf("released block marker = (%d, %v), want one bound order", n, ok)
++	}
++	state, ok := w.symbolRow()
++	if !ok || state.Active() || state.ReleaseCause != journal.ReconcileReleaseOrderTerminalConfirmed {
++		t.Fatalf("symbol row = %+v, want it released with %s", state, journal.ReconcileReleaseOrderTerminalConfirmed)
++	}
++	if rejected := w.tracker.EntryAllowed("kr", a192Symbol); rejected != nil {
++		t.Fatalf("entries on %s still refused after the release: %v", a192Symbol, rejected)
++	}
++	if rejected := w.gate.CheckEntryFor("kr", a192Symbol); rejected != nil {
++		t.Fatalf("the entry gate still latches %s: %v", a192Symbol, rejected)
++	}
++}
++
++// TestA192WithoutATerminalReaderTheTrackerBehavesAsToday: Terminal 이 nil 이면 같은 흐름에서 해제가 없고
++// 오늘처럼 「조정 대기」로만 남음.
++func TestA192WithoutATerminalReaderTheTrackerBehavesAsToday(t *testing.T) {
++	w := newA192World(t, func(tr *reconcile.Tracker) { tr.Terminal = nil })
++	w.order("o-a192-1", "SELL")
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	first, second := w.twoCleanComparisons()
++	for i, out := range []reconcile.Outcome{first, second} {
++		if len(out.Cleared) != 0 || len(out.AwaitingAdjustment) != 1 || !out.Blocked {
++			t.Fatalf("comparison %d = %+v, want today's awaiting-adjustment outcome", i+1, out)
++		}
++	}
++	w.assertStillBlocked("no terminal reader")
++}
++
++// TestA192ARestartedTrackerNeverReleasesThisWay: 결속은 프로세스 기억 — 재기동한 추적기는 남은 행을 이 경로로
++// 풀지 않음(운영자 해제로 돌아감).
++func TestA192ARestartedTrackerNeverReleasesThisWay(t *testing.T) {
++	w := newA192World(t, nil)
++	w.order("o-a192-1", "SELL")
++	w.observe(w.missing(a192Missing("o-a192-1")))
++
++	// 차단이 걸린 채 재기동 — 그 뒤에도 주문은 한동안 missing 으로 보이다가 종결됨(실제 순서).
++	restarted := &reconcile.Tracker{
++		Clock: w.clk, Gate: noStaleGate(w.clk), Journal: w.journal, Terminal: w.journal,
++		MinInterval: 30 * time.Second, MaxFailures: 3, AccountRef: a192Account,
++	}
++	if err := restarted.Restore(w.ctx); err != nil {
++		t.Fatalf("Restore: %v", err)
++	}
++	w.tracker, w.gate = restarted, restarted.Gate
++	w.tick()
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	first, second := w.twoCleanComparisons()
++	if len(first.Cleared)+len(second.Cleared) != 0 {
++		t.Fatalf("a restarted tracker released %+v / %+v; the binding must not survive a restart", first.Cleared, second.Cleared)
++	}
++	w.assertStillBlocked("restarted")
++}
++
++// TestA192ASameObjectRestoreDropsBindings: 같은 추적기에 Restore 가 다시 불려도 결속·무장은 남지 않음.
++func TestA192ASameObjectRestoreDropsBindings(t *testing.T) {
++	w := newA192World(t, nil)
++	w.order("o-a192-1", "SELL")
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	w.tick()
++	if first := w.observe(w.clean()); len(first.Cleared) != 0 {
++		t.Fatalf("first comparison released %+v, want arming only", first.Cleared)
++	}
++	if err := w.tracker.Restore(w.ctx); err != nil {
++		t.Fatalf("Restore: %v", err)
++	}
++	first, second := w.twoCleanComparisons()
++	if len(first.Cleared)+len(second.Cleared) != 0 {
++		t.Fatalf("released after Restore: %+v / %+v", first.Cleared, second.Cleared)
++	}
++	w.assertStillBlocked("same-object restore")
++}
++
++// TestA192ARowAnotherProducerInsertedFirstIsNeverBound 는 Manager 필수 조건 1: 투영 거절이 행을 먼저 만들고,
++// 추적기가 Refresh 전에 같은 종목의 missing-order 로 기억에 새 블록을 만들어도 장부는 「삽입 안 함」이라 결속이 없음.
++func TestA192ARowAnotherProducerInsertedFirstIsNeverBound(t *testing.T) {
++	store := &a192Store{}
++	w := newA192World(t, func(tr *reconcile.Tracker) {
++		store.ReconcileStore = tr.Journal
++		tr.Journal = store
++	})
++	w.order("o-a192-1", "SELL")
++	// 다른 생산자(투영 거절)가 같은 cause 로 먼저 만든 행 — 추적기는 아직 Refresh 하지 않음.
++	if _, entered, err := w.journal.EnterReconcile(w.ctx, journal.EnterReconcileRequest{
++		AccountRef: a192Account, Symbol: a192Symbol, Cause: journal.ReconcileCauseQuantityMismatch,
++		Evidence: "position projection refused transition (synthetic)",
++	}); err != nil || !entered {
++		t.Fatalf("seeding the other producer's row: entered=%v err=%v", entered, err)
++	}
++	if out := w.observe(w.missing(a192Missing("o-a192-1"))); len(out.Added) != 1 {
++		t.Fatalf("added = %+v, want the tracker to believe it raised the block", out.Added)
++	}
++	// 대조: 추적기의 쓰기는 실제로 「기존 행」을 만났음.
++	if len(store.entered) != 1 || store.entered[0] {
++		t.Fatalf("EnterReconcile results = %v, want exactly one write that inserted nothing", store.entered)
++	}
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	first, second := w.twoCleanComparisons()
++	if len(first.Cleared)+len(second.Cleared) != 0 {
++		t.Fatalf("another producer's row was released: %+v / %+v", first.Cleared, second.Cleared)
++	}
++	w.assertStillBlocked("other producer first")
++}
++
++// TestA192AnOverlappingMissingOrderOnAnExistingRowIsNeverBound: 추적기가 이미 아는 행(Refresh 로 들어옴)에
++// 겹친 missing-order 는 쓰기 자체가 없어 결속이 없음.
++func TestA192AnOverlappingMissingOrderOnAnExistingRowIsNeverBound(t *testing.T) {
++	store := &a192Store{}
++	w := newA192World(t, func(tr *reconcile.Tracker) {
++		store.ReconcileStore = tr.Journal
++		tr.Journal = store
++	})
++	w.order("o-a192-1", "SELL")
++	if _, _, err := w.journal.EnterReconcile(w.ctx, journal.EnterReconcileRequest{
++		AccountRef: a192Account, Symbol: a192Symbol, Cause: journal.ReconcileCauseQuantityMismatch,
++		Evidence: "an earlier process raised this",
++	}); err != nil {
++		t.Fatal(err)
++	}
++	if err := w.tracker.Refresh(w.ctx); err != nil {
++		t.Fatalf("Refresh: %v", err)
++	}
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	if len(store.entered) != 0 {
++		t.Fatalf("EnterReconcile results = %v, want no write for a block the tracker already holds", store.entered)
++	}
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	first, second := w.twoCleanComparisons()
++	if len(first.Cleared)+len(second.Cleared) != 0 {
++		t.Fatalf("an overlapping row was released: %+v / %+v", first.Cleared, second.Cleared)
++	}
++	w.assertStillBlocked("overlap")
++}
++
++// TestA192AnUnprovenInsertIsNeverBound: 삽입이 커밋된 뒤 오류가 돌아오면 삽입 증명이 없음 — 재시도는 기존 행을 만남.
++func TestA192AnUnprovenInsertIsNeverBound(t *testing.T) {
++	store := &a192Store{failNext: "after"}
++	w := newA192World(t, func(tr *reconcile.Tracker) {
++		store.ReconcileStore = tr.Journal
++		tr.Journal = store
++	})
++	w.order("o-a192-1", "SELL")
++	if _, err := w.tracker.Observe(w.ctx, w.missing(a192Missing("o-a192-1"))); !errors.Is(err, errA192Injected) {
++		t.Fatalf("first Observe err = %v, want the injected failure", err)
++	}
++	w.tick()
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	if len(store.entered) != 2 || !store.entered[0] || store.entered[1] {
++		t.Fatalf("EnterReconcile results = %v, want [inserted-but-unacknowledged, existing]", store.entered)
++	}
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	first, second := w.twoCleanComparisons()
++	if len(first.Cleared)+len(second.Cleared) != 0 {
++		t.Fatalf("an unproven insert was released: %+v / %+v", first.Cleared, second.Cleared)
++	}
++	w.assertStillBlocked("unproven insert")
++}
++
++// TestA192ARetriedInsertIsNeverBound(M14): 첫 쓰기가 실패해 pending 으로 남았다가 나중 관측에서 삽입된 블록은
++// 결속하지 않음 — 그 사이의 관측(둘째 주문·수량 흔적)이 결속에 없기 때문.
++func TestA192ARetriedInsertIsNeverBound(t *testing.T) {
++	store := &a192Store{failNext: "before"}
++	w := newA192World(t, func(tr *reconcile.Tracker) {
++		store.ReconcileStore = tr.Journal
++		tr.Journal = store
++	})
++	w.order("o-a192-1", "SELL")
++	if _, err := w.tracker.Observe(w.ctx, w.missing(a192Missing("o-a192-1"))); !errors.Is(err, errA192Injected) {
++		t.Fatalf("first Observe err = %v, want the injected failure", err)
++	}
++	w.tick()
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	// 대조: 재시도는 실제로 행을 삽입함.
++	if len(store.entered) != 1 || !store.entered[0] {
++		t.Fatalf("EnterReconcile results = %v, want the retry to insert the row", store.entered)
++	}
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	first, second := w.twoCleanComparisons()
++	if len(first.Cleared)+len(second.Cleared) != 0 {
++		t.Fatalf("a retried insert was released: %+v / %+v", first.Cleared, second.Cleared)
++	}
++	w.assertStillBlocked("retried insert")
++}
++
++// TestA192AQuantityDisputeDisqualifiesTheBinding: 행이 살아 있는 동안 같은 종목 수량 불일치가 한 번이라도
++// 보이면 이 경로로는 풀리지 않음(수량 규칙이 지배 — I2).
++func TestA192AQuantityDisputeDisqualifiesTheBinding(t *testing.T) {
++	w := newA192World(t, nil)
++	w.order("o-a192-1", "SELL")
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	w.tick()
++	diff := w.missing(a192Missing("o-a192-1"))
++	diff.Quantities = []reconcile.QuantityMismatch{{Symbol: a192Symbol, Local: "1", Broker: "0"}}
++	w.observe(diff)
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	first, second := w.twoCleanComparisons()
++	if len(first.Cleared)+len(second.Cleared) != 0 {
++		t.Fatalf("a binding that saw a quantity dispute was released: %+v / %+v", first.Cleared, second.Cleared)
++	}
++	w.assertStillBlocked("quantity dispute")
++}
++
++// TestA192EveryBoundOrderMustBeTerminal: 같은 종목 주문 둘이 결속되면 둘 다 종결돼야 풀림.
++func TestA192EveryBoundOrderMustBeTerminal(t *testing.T) {
++	w := newA192World(t, nil)
++	w.order("o-a192-1", "SELL")
++	w.order("o-a192-2", "SELL")
++	w.observe(w.missing(a192Missing("o-a192-1"), a192Missing("o-a192-2")))
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	first, second := w.twoCleanComparisons()
++	if len(first.Cleared)+len(second.Cleared) != 0 {
++		t.Fatalf("released with one bound order still open: %+v / %+v", first.Cleared, second.Cleared)
++	}
++	w.tick()
++	w.cancel("o-a192-2", "SELL")
++	first, second = w.twoCleanComparisons()
++	if len(first.Cleared) != 0 || len(second.Cleared) != 1 {
++		t.Fatalf("after both cancels = %+v / %+v, want arm then release", first.Cleared, second.Cleared)
++	}
++}
++
++// TestA192AForeignAccountObservationNeverAuthorisesRelease: 다른 계좌의 missing-order 로 걸린 블록은 차단은
++// 하되 해제 근거가 되지 않음.
++func TestA192AForeignAccountObservationNeverAuthorisesRelease(t *testing.T) {
++	w := newA192World(t, nil)
++	confirmScopedOrder(t, w.journal, "intent-foreign", "attempt-foreign", "acct-other", "kr", a192Day,
++		a192Symbol, "SELL", "o-a192-foreign")
++	foreign := a192Missing("o-a192-foreign")
++	foreign.AccountRef = "acct-other"
++	if out := w.observe(w.missing(foreign)); len(out.Added) != 1 {
++		t.Fatalf("added = %+v, want the fail-closed block", out.Added)
++	}
++	w.tick()
++	if _, err := w.journal.RecordFill(w.ctx, journal.FillObservation{
++		OrderID: "o-a192-foreign", Symbol: a192Symbol, Market: "kr", TradingDay: a192Day, Side: "SELL",
++		AccountRef: "acct-other", State: "CANCELLED", Terminal: true, Quantity: "1", FilledQuantity: "0",
++		ObservedAt: w.now(),
++	}); err != nil {
++		t.Fatalf("RecordFill: %v", err)
++	}
++	first, second := w.twoCleanComparisons()
++	if len(first.Cleared)+len(second.Cleared) != 0 {
++		t.Fatalf("a foreign-account observation released the block: %+v / %+v", first.Cleared, second.Cleared)
++	}
++	w.assertStillBlocked("foreign account")
++}
++
++// TestA192AnAmendmentAfterBindingKeepsTheBlock: 결속 뒤 그 번호를 겨눈 정정이 생기면 유지(lineage 는 판정 때 다시 봄).
++func TestA192AnAmendmentAfterBindingKeepsTheBlock(t *testing.T) {
++	w := newA192World(t, nil)
++	w.order("o-a192-1", "SELL")
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	if _, err := w.journal.Prepare(w.ctx, journal.PrepareRequest{
++		Intent: journal.Intent{
++			ID: "intent-amend", AccountRef: a192Account, Market: "kr", TradingDay: a192Day,
++			Symbol: a192Symbol, Side: "SELL", OrderType: "LIMIT", Quantity: "1", Price: "99",
++			Currency: "KRW", Source: "engine", Fingerprint: "fp-intent-amend",
++		},
++		Kind: journal.KindAmend, AttemptID: "attempt-amend", TargetOrderID: "o-a192-1",
++	}); err != nil {
++		t.Fatalf("Prepare(AMEND): %v", err)
++	}
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	first, second := w.twoCleanComparisons()
++	if len(first.Cleared)+len(second.Cleared) != 0 {
++		t.Fatalf("an amended order released the block: %+v / %+v", first.Cleared, second.Cleared)
++	}
++	w.assertStillBlocked("amended")
++}
++
++// TestA192AnOpenOrderWithTheSameIDKeepsTheBlock: 장부는 종결인데 브로커 open 목록에 같은 번호가 보이면 유지.
++// 공백이 다른 번호는 다른 주문이라 막지 않음(대조).
++func TestA192AnOpenOrderWithTheSameIDKeepsTheBlock(t *testing.T) {
++	w := newA192World(t, nil)
++	w.order("o-a192-1", "SELL")
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	withOpen := func(id string) reconcile.Diff {
++		d := w.clean()
++		d.ExternalOrd = []reconcile.ExternalOrder{{BrokerOrder: reconcile.BrokerOrder{OrderID: id, Symbol: a192Symbol},
++			Provenance: reconcile.ProvenanceExternal}}
++		return d
++	}
++	for i := 0; i < 2; i++ {
++		w.tick()
++		if out := w.observe(withOpen("o-a192-1")); len(out.Cleared) != 0 {
++			t.Fatalf("released while the broker still shows the order open: %+v", out.Cleared)
++		}
++	}
++	w.tick()
++	first := w.observe(withOpen(" o-a192-1"))
++	w.tick()
++	second := w.observe(withOpen(" o-a192-1"))
++	if len(first.Cleared) != 0 || len(second.Cleared) != 1 {
++		t.Fatalf("a differently spelled open id = %+v / %+v, want arm then release", first.Cleared, second.Cleared)
++	}
++}
++
++// TestA192AFillAfterTheBlockKeepsIt: 행을 삽입하기 전 워터마크 뒤에 그 종목 체결이 커밋되면 유지 —
++// 삽입 뒤의 체결과, 워터마크 읽기와 삽입 사이의 체결 둘 다.
++func TestA192AFillAfterTheBlockKeepsIt(t *testing.T) {
++	t.Run("after the insert", func(t *testing.T) {
++		w := newA192World(t, nil)
++		w.order("o-a192-1", "SELL")
++		w.order("o-a192-buy", "BUY")
++		w.observe(w.missing(a192Missing("o-a192-1")))
++		w.tick()
++		w.fill("o-a192-buy", "BUY")
++		w.cancel("o-a192-1", "SELL")
++		first, second := w.twoCleanComparisons()
++		if len(first.Cleared)+len(second.Cleared) != 0 {
++			t.Fatalf("released after a later fill: %+v / %+v", first.Cleared, second.Cleared)
++		}
++		w.assertStillBlocked("fill after insert")
++	})
++	t.Run("between the watermark and the insert", func(t *testing.T) {
++		store := &a192Store{}
++		w := newA192World(t, func(tr *reconcile.Tracker) {
++			store.ReconcileStore = tr.Journal
++			tr.Journal = store
++		})
++		w.order("o-a192-1", "SELL")
++		w.order("o-a192-buy", "BUY")
++		filled := false
++		store.beforeInsert = func() { w.fill("o-a192-buy", "BUY"); filled = true }
++		w.observe(w.missing(a192Missing("o-a192-1")))
++		if !filled {
++			t.Fatal("the interleaved fill did not run")
++		}
++		w.tick()
++		w.cancel("o-a192-1", "SELL")
++		first, second := w.twoCleanComparisons()
++		if len(first.Cleared)+len(second.Cleared) != 0 {
++			t.Fatalf("released after a fill between watermark and insert: %+v / %+v", first.Cleared, second.Cleared)
++		}
++		w.assertStillBlocked("fill before insert")
++	})
++}
++
++// TestA192ABindingChangeRearms: 무장 뒤 결속에 주문이 늘면 다시 무장해야 하고 한 주기 일찍 풀리지 않음.
++func TestA192ABindingChangeRearms(t *testing.T) {
++	w := newA192World(t, nil)
++	w.order("o-a192-1", "SELL")
++	w.order("o-a192-2", "SELL")
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	w.tick()
++	if out := w.observe(w.clean()); len(out.Cleared) != 0 {
++		t.Fatalf("armed comparison released %+v", out.Cleared)
++	}
++	w.tick()
++	w.observe(w.missing(a192Missing("o-a192-2")))
++	w.tick()
++	w.cancel("o-a192-2", "SELL")
++	first, second := w.twoCleanComparisons()
++	if len(first.Cleared) != 0 {
++		t.Fatalf("released on the first comparison after the binding grew: %+v", first.Cleared)
++	}
++	if len(second.Cleared) != 1 {
++		t.Fatalf("second comparison after re-arming = %+v, want the release", second.Cleared)
++	}
++}
++
++// TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock: 1차 판정 뒤·해제 tx 앞에 그 종목 체결이 커밋되면
++// tx 안의 재판정이 해제를 거절함.
++func TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock(t *testing.T) {
++	interleave := &a192Interleaving{}
++	w := newA192World(t, func(tr *reconcile.Tracker) {
++		interleave.Journal = tr.Terminal.(*journal.Journal)
++		tr.Terminal = interleave
++	})
++	w.order("o-a192-1", "SELL")
++	w.order("o-a192-buy", "BUY")
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	interleave.beforeRelease = func() { w.fill("o-a192-buy", "BUY"); interleave.beforeRelease = nil }
++	first, second := w.twoCleanComparisons()
++	if interleave.calls != 1 {
++		t.Fatalf("release attempts = %d, want the release path reached exactly once", interleave.calls)
++	}
++	if len(first.Cleared)+len(second.Cleared) != 0 {
++		t.Fatalf("a stale verdict released the block: %+v / %+v", first.Cleared, second.Cleared)
++	}
++	w.tick()
++	if out := w.observe(w.clean()); len(out.Cleared) != 0 {
++		t.Fatalf("released after the interleaved fill: %+v", out.Cleared)
++	}
++	w.assertStillBlocked("interleaved fill")
++}
++
++// TestA192AnAuthorityErrorStillRecordsTheTaint: 외부 포지션만 있는 비교(깨끗한 갈래)가 영구 보류 권위 읽기
++// 실패로 일찍 돌아가도 실격 흔적은 남음.
++func TestA192AnAuthorityErrorStillRecordsTheTaint(t *testing.T) {
++	store := &a192Store{}
++	w := newA192World(t, func(tr *reconcile.Tracker) {
++		store.ReconcileStore = tr.Journal
++		tr.Journal = store
++		tr.MaxFailures = 2
++	})
++	w.order("o-a192-1", "SELL")
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	// 같은 분쟁 둘째 관측이 영구 승격을 만들고, 그 쓰기를 실패시켜 pending 영구를 남김.
++	store.failAccountWide = true
++	w.tick()
++	if _, err := w.tracker.Observe(w.ctx, w.missing(a192Missing("o-a192-1"))); !errors.Is(err, errA192Injected) {
++		t.Fatalf("threshold Observe err = %v, want the injected permanent write failure", err)
++	}
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	// 권위 읽기가 실패하는 동안, 그 종목의 외부 포지션만 있는 비교.
++	store.failActive = true
++	w.tick()
++	external := w.clean()
++	external.ExternalPos = []reconcile.ExternalPosition{{Holding: reconcile.Holding{Symbol: a192Symbol, Quantity: "1"},
++		Provenance: reconcile.ProvenanceExternal}}
++	if _, err := w.tracker.Observe(w.ctx, external); !errors.Is(err, errA192Injected) {
++		t.Fatalf("external-only Observe err = %v, want the authority read failure", err)
++	}
++	store.failActive, store.failAccountWide = false, false
++	first, second := w.twoCleanComparisons()
++	if len(first.Cleared)+len(second.Cleared) != 0 {
++		t.Fatalf("the taint was lost behind the authority error: %+v / %+v", first.Cleared, second.Cleared)
++	}
++	w.assertStillBlocked("authority error")
++}
++
++// TestA192APermanentBlockStaysOperatorOnly: 같은 missing-order 분쟁 3회로 생긴 계좌 영구 행은 종결 증명으로
++// 풀리지 않음 — 종목 행만 풀릴 수 있음(P3).
++func TestA192APermanentBlockStaysOperatorOnly(t *testing.T) {
++	w := newA192World(t, nil)
++	w.order("o-a192-1", "SELL")
++	for i := 0; i < 3; i++ {
++		if i > 0 {
++			w.tick()
++		}
++		w.observe(w.missing(a192Missing("o-a192-1")))
++	}
++	if !w.tracker.Permanent() {
++		t.Fatal("three observations of the same missing order must promote the account block")
++	}
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	_, second := w.twoCleanComparisons()
++	if len(second.Cleared) != 1 || second.Cleared[0].Symbol != a192Symbol {
++		t.Fatalf("second comparison = %+v, want only the symbol row released", second.Cleared)
++	}
++	if !w.tracker.Permanent() || w.tracker.EntryAllowed("kr", "SYNX") == nil {
++		t.Fatal("the account-wide permanent block must stay until an operator clears it")
++	}
++}
++
++// TestA192TheAdjustmentRulesHoldWithTheReaderOn 은 판정을 켠 추적기로 기존 안전 흐름을 다시 돌림(a083):
++// 조정 없는 수량 일치는 풀지 않고, 조정 크레딧 해제는 여전히 ADJUSTMENT_APPLIED 임.
++func TestA192TheAdjustmentRulesHoldWithTheReaderOn(t *testing.T) {
++	t.Run("coincidental agreement", func(t *testing.T) {
++		w := newA192World(t, nil)
++		diff := w.clean()
++		diff.Quantities = []reconcile.QuantityMismatch{{Symbol: a192Symbol, Local: "10", Broker: "7"}}
++		w.observe(diff)
++		first, second := w.twoCleanComparisons()
++		if len(first.Cleared)+len(second.Cleared) != 0 {
++			t.Fatalf("an agreement nobody wrote anything for released: %+v / %+v", first.Cleared, second.Cleared)
++		}
++	})
++	t.Run("credited release", func(t *testing.T) {
++		w := newA192World(t, nil)
++		diff := w.clean()
++		diff.Quantities = []reconcile.QuantityMismatch{{Symbol: a192Symbol, Local: "10", Broker: "7"}}
++		w.observe(diff)
++		w.tracker.AdjustmentApplied(diff.AsOf, a192Symbol)
++		w.tick()
++		out := w.observe(w.clean())
++		if len(out.Cleared) != 1 {
++			t.Fatalf("credited comparison = %+v, want the adjustment release", out)
++		}
++		if _, byTerminal := out.Cleared[0].ReleasedByOrderTerminal(); byTerminal {
++			t.Fatal("a credited release must not be marked as an order-terminal release")
++		}
++		state, ok := w.symbolRow()
++		if !ok || state.ReleaseCause != journal.ReconcileReleaseAdjustmentApplied {
++			t.Fatalf("symbol row = %+v, want ADJUSTMENT_APPLIED", state)
++		}
++	})
++}
++
++// TestA192ReleaseWriteFailureKeepsTheGate: 종결 증명 해제의 장부 기록이 실패하면 Observe 가 오류를 돌려주고
++// 블록·게이트는 그대로 남음(spec 「해제 기록이 실패한다」 — 편입 판정으로 가지 않는 것은 RunOnce 의 기존 오류 갈래).
++func TestA192ReleaseWriteFailureKeepsTheGate(t *testing.T) {
++	interleave := &a192Interleaving{fail: errA192Injected}
++	w := newA192World(t, func(tr *reconcile.Tracker) {
++		interleave.Journal = tr.Terminal.(*journal.Journal)
++		tr.Terminal = interleave
++	})
++	w.order("o-a192-1", "SELL")
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	w.tick()
++	w.observe(w.clean())
++	w.tick()
++	out, err := w.tracker.Observe(w.ctx, w.clean())
++	if !errors.Is(err, errA192Injected) {
++		t.Fatalf("Observe err = %v, want the injected release failure", err)
++	}
++	if interleave.calls != 1 || len(out.Cleared) != 0 {
++		t.Fatalf("calls = %d, cleared = %+v; want one failed attempt and nothing released", interleave.calls, out.Cleared)
++	}
++	w.assertStillBlocked("release write failure")
++	if rejected := w.gate.CheckEntryFor("kr", a192Symbol); rejected == nil {
++		t.Fatal("the entry gate opened although the release did not commit")
++	}
++}
++
++// TestA192AFillBeforeTheBlockDoesNotKeepIt: 행을 삽입하기 **전**에 커밋된 그 종목 체결은 해제를 막지 않음 —
++// 워터마크는 삽입 전 값이라 그 체결을 「뒤」로 세지 않음(정상 입력).
++func TestA192AFillBeforeTheBlockDoesNotKeepIt(t *testing.T) {
++	w := newA192World(t, nil)
++	w.order("o-a192-1", "SELL")
++	w.order("o-a192-buy", "BUY")
++	w.fill("o-a192-buy", "BUY")
++	w.tick()
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	first, second := w.twoCleanComparisons()
++	if len(first.Cleared) != 0 || len(second.Cleared) != 1 {
++		t.Fatalf("with a fill committed before the block = %+v / %+v, want arm then release", first.Cleared, second.Cleared)
++	}
++}
++
++// TestA192ACreditWinsOverTheTerminalProof: 같은 블록에 쓸 수 있는 조정 크레딧이 있으면 수량 규칙이 먼저 —
++// 해제 원인은 ADJUSTMENT_APPLIED 임(I2).
++func TestA192ACreditWinsOverTheTerminalProof(t *testing.T) {
++	w := newA192World(t, nil)
++	w.order("o-a192-1", "SELL")
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	w.tick()
++	if out := w.observe(w.clean()); len(out.Cleared) != 0 {
++		t.Fatalf("arming comparison released %+v", out.Cleared)
++	}
++	w.tracker.AdjustmentApplied(w.now(), a192Symbol)
++	w.tick()
++	out := w.observe(w.clean())
++	if len(out.Cleared) != 1 {
++		t.Fatalf("credited comparison = %+v, want a release", out.Cleared)
++	}
++	if _, byTerminal := out.Cleared[0].ReleasedByOrderTerminal(); byTerminal {
++		t.Fatal("the credit must win over the terminal proof")
++	}
++	state, ok := w.symbolRow()
++	if !ok || state.ReleaseCause != journal.ReconcileReleaseAdjustmentApplied {
++		t.Fatalf("symbol row = %+v, want ADJUSTMENT_APPLIED", state)
++	}
++}
++
++// TestA192AForeignComparisonDoesNotDropTheBinding: 계좌가 다른 비교는 해제 근거가 아니지만 결속을 버리지도 않음 —
++// 그 뒤 제 계좌의 비교들은 정상대로 무장·해제함(판정에 넘기는 계좌는 추적기 계좌임).
++func TestA192AForeignComparisonDoesNotDropTheBinding(t *testing.T) {
++	w := newA192World(t, nil)
++	w.order("o-a192-1", "SELL")
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	w.tick()
++	foreign := w.clean()
++	foreign.AccountRef = "acct-other"
++	if out := w.observe(foreign); len(out.Cleared) != 0 {
++		t.Fatalf("a foreign-account comparison released %+v", out.Cleared)
++	}
++	first, second := w.twoCleanComparisons()
++	if len(first.Cleared) != 0 || len(second.Cleared) != 1 {
++		t.Fatalf("own-account comparisons after a foreign one = %+v / %+v, want arm then release", first.Cleared, second.Cleared)
++	}
++}
++
++// TestA192AFailClosedFlipBetweenVerdictAndReleaseKeepsTheBlock: 1차 판정 뒤·해제 tx 앞에 결속 주문이 체결 이벤트 없이
++// fail_closed 로 바뀌어도(브로커 상태 모호) tx 안의 재판정이 해제를 거절하고, 그 사유를 남김(코드 리뷰 1 #2·#3).
++func TestA192AFailClosedFlipBetweenVerdictAndReleaseKeepsTheBlock(t *testing.T) {
++	interleave := &a192Interleaving{}
++	w := newA192World(t, func(tr *reconcile.Tracker) {
++		interleave.Journal = tr.Terminal.(*journal.Journal)
++		tr.Terminal = interleave
++	})
++	w.order("o-a192-1", "SELL")
++	w.observe(w.missing(a192Missing("o-a192-1")))
++	w.tick()
++	w.cancel("o-a192-1", "SELL")
++	before, err := w.journal.MaxFillEventID(w.ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	interleave.beforeRelease = func() {
++		interleave.beforeRelease = nil
++		_, _ = w.journal.RecordFill(w.ctx, journal.FillObservation{
++			OrderID: "o-a192-1", Symbol: a192Symbol, Market: "kr", TradingDay: a192Day, Side: "SELL",
++			AccountRef: a192Account, State: "UNKNOWN_BROKER_STATE", FailClosed: true, Reason: "synthetic",
++			Quantity: "1", FilledQuantity: "0", ObservedAt: w.now(),
++		})
++	}
++	first, second := w.twoCleanComparisons()
++	if interleave.calls != 1 {
++		t.Fatalf("release attempts = %d, want the release path reached once", interleave.calls)
++	}
++	// 대조: 끼워 넣은 쓰기는 체결 이벤트 없이 fail_closed 만 세웠음.
++	record, err := w.journal.LookupFillScoped(w.ctx, journal.FillSnapshotScope{OrderID: "o-a192-1", AccountRef: a192Account,
++		Market: "kr", TradingDay: a192Day, Symbol: a192Symbol, Side: "SELL"})
++	if err != nil || !record.Terminal || !record.FailClosed {
++		t.Fatalf("snapshot after the flip = %+v err=%v, want terminal and fail_closed", record, err)
++	}
++	if after, err := w.journal.MaxFillEventID(w.ctx); err != nil || after != before {
++		t.Fatalf("fill events %d → %d (err %v), want none added", before, after, err)
++	}
++	if len(first.Cleared)+len(second.Cleared) != 0 {
++		t.Fatalf("a stale verdict released the block: %+v / %+v", first.Cleared, second.Cleared)
++	}
++	if reason := w.tracker.OrderTerminalHoldReasons()[a192Symbol]; reason != "tx_not_clean_terminal" {
++		t.Fatalf("hold reason = %q, want the in-transaction reason recorded", reason)
++	}
++	w.assertStillBlocked("fail-closed flip")
++}
+--- /dev/null
++++ b/internal/reconcile/a192_order_terminal_verdict_internal_test.go
+@@ -0,0 +1,315 @@
++package reconcile
++
++// a192_order_terminal_verdict_internal_test.go 는 종결 증명 해제의 판정 함수 하나를 조건(C1~C13)마다
++// 직접 찌름(a192 design D3). 픽스처는 합성 값만 씀.
++
++import (
++	"context"
++	"errors"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
++)
++
++const (
++	a192Account = "acct-7"
++	a192Symbol  = "SYN001"
++	a192Row     = "rec-a192-row"
++)
++
++func a192Order(id string) boundOrder {
++	return boundOrder{
++		identity: OrderIdentity{AccountRef: a192Account, Market: "kr", TradingDay: "2026-03-30",
++			Symbol: a192Symbol, Side: "SELL", OrderID: id},
++		original: id,
++	}
++}
++
++// a192Binding 은 통과하는 결속 하나(무장 안 함).
++func a192Binding(orders ...boundOrder) terminalBinding {
++	b := terminalBinding{rowID: a192Row, symbol: a192Symbol, orders: map[boundOrder]struct{}{}, fillWatermark: 5}
++	for _, order := range orders {
++		b.orders[order] = struct{}{}
++	}
++	return b
++}
++
++func a192Proof(b terminalBinding) journal.OrderTerminalProof {
++	proof := journal.OrderTerminalProof{
++		StateFound: true,
++		State: journal.ReconcileState{ID: a192Row, AccountRef: a192Account, Symbol: a192Symbol,
++			Cause: journal.ReconcileCauseQuantityMismatch, Evidence: "order on SYN001 is not in the account's open list"},
++	}
++	for _, order := range sortedBoundOrders(b) {
++		proof.Snapshots = append(proof.Snapshots, journal.OrderTerminalSnapshot{
++			Scope: journal.FillSnapshotScope{OrderID: order.original}, Found: true,
++			Record: journal.FillSnapshotRecord{OrderID: order.original, State: "CANCELLED", Terminal: true,
++				FilledQuantity: "0", CommittedAt: "2026-03-30T01:31:00Z"},
++		})
++	}
++	return proof
++}
++
++func a192Comparison(asOf string) terminalComparison {
++	return terminalComparison{trackerAccount: a192Account, diffAccount: a192Account, asOf: asOf,
++		externalIDs: map[string]bool{}}
++}
++
++// TestA192VerdictArmsThenReleases: 모두 통과하면 처음엔 무장, 같은 증명으로 더 나중 비교면 해제.
++func TestA192VerdictArmsThenReleases(t *testing.T) {
++	b := a192Binding(a192Order("o-a192-1"))
++	proof := a192Proof(b)
++	first := orderTerminalReleaseVerdict(b, a192Comparison("2026-03-30T01:32:00Z"), proof)
++	if first.outcome != terminalArm || first.reason != "armed" || first.digest == "" {
++		t.Fatalf("first passing verdict = %+v, want armed with a digest", first)
++	}
++	b.armed, b.armAsOf, b.armDigest = true, first.asOf, first.digest
++	same := orderTerminalReleaseVerdict(b, a192Comparison("2026-03-30T01:32:00Z"), proof)
++	if same.outcome != terminalHold || same.reason != "arm_not_later" {
++		t.Fatalf("same-instant verdict = %+v, want arm_not_later", same)
++	}
++	later := orderTerminalReleaseVerdict(b, a192Comparison("2026-03-30T01:33:00Z"), proof)
++	if later.outcome != terminalReleaseOutcome || later.boundOrders != 1 || later.latestCommit != "2026-03-30T01:31:00Z" {
++		t.Fatalf("later verdict = %+v, want release of one bound order", later)
++	}
++}
++
++// TestA192VerdictRearmsWhenTheProofChanges: 무장 뒤 증명(스냅숏·결속)이 바뀌면 해제하지 않고 다시 무장함.
++func TestA192VerdictRearmsWhenTheProofChanges(t *testing.T) {
++	b := a192Binding(a192Order("o-a192-1"))
++	proof := a192Proof(b)
++	first := orderTerminalReleaseVerdict(b, a192Comparison("2026-03-30T01:32:00Z"), proof)
++	b.armed, b.armAsOf, b.armDigest = true, first.asOf, first.digest
++
++	changed := a192Proof(b)
++	changed.Snapshots[0].Record.CommittedAt = "2026-03-30T01:31:30Z"
++	again := orderTerminalReleaseVerdict(b, a192Comparison("2026-03-30T01:33:00Z"), changed)
++	if again.outcome != terminalArm || again.digest == first.digest {
++		t.Fatalf("verdict after a rewritten snapshot = %+v, want a fresh arm", again)
++	}
++
++	grown := a192Binding(a192Order("o-a192-1"), a192Order("o-a192-2"))
++	grown.armed, grown.armAsOf, grown.armDigest = true, first.asOf, first.digest
++	added := orderTerminalReleaseVerdict(grown, a192Comparison("2026-03-30T01:33:00Z"), a192Proof(grown))
++	if added.outcome != terminalArm {
++		t.Fatalf("verdict after a new bound order = %+v, want a fresh arm", added)
++	}
++}
++
++// TestA192VerdictHoldsForEveryFailedCondition 은 조건마다 처음 실패한 사유를 고정함.
++func TestA192VerdictHoldsForEveryFailedCondition(t *testing.T) {
++	base := func() (terminalBinding, terminalComparison, journal.OrderTerminalProof) {
++		b := a192Binding(a192Order("o-a192-1"))
++		return b, a192Comparison("2026-03-30T01:32:00Z"), a192Proof(b)
++	}
++	cases := []struct {
++		name   string
++		mutate func(*terminalBinding, *terminalComparison, *journal.OrderTerminalProof)
++		reason string
++	}{
++		{"no insertion proof", func(b *terminalBinding, _ *terminalComparison, _ *journal.OrderTerminalProof) {
++			b.rowID = ""
++		}, "not_inserted_by_this_process"},
++		{"read failure", func(_ *terminalBinding, _ *terminalComparison, p *journal.OrderTerminalProof) {
++			p.ReadErr = errors.New("disk")
++		}, "terminal_read_failed"},
++		{"row gone", func(_ *terminalBinding, _ *terminalComparison, p *journal.OrderTerminalProof) {
++			p.StateFound = false
++		}, "row_changed"},
++		{"row released", func(_ *terminalBinding, _ *terminalComparison, p *journal.OrderTerminalProof) {
++			p.State.ReleaseCause = journal.ReconcileReleaseOperator
++		}, "row_changed"},
++		{"another row id", func(_ *terminalBinding, _ *terminalComparison, p *journal.OrderTerminalProof) {
++			p.State.ID = "rec-other"
++		}, "row_changed"},
++		{"another cause", func(_ *terminalBinding, _ *terminalComparison, p *journal.OrderTerminalProof) {
++			p.State.Cause = journal.ReconcileCauseIdentifierConflict
++		}, "row_changed"},
++		{"market scoped row", func(_ *terminalBinding, _ *terminalComparison, p *journal.OrderTerminalProof) {
++			p.State.ScopeMarket = "KR"
++		}, "row_changed"},
++		{"row of another account", func(_ *terminalBinding, _ *terminalComparison, p *journal.OrderTerminalProof) {
++			p.State.AccountRef = "acct-other"
++		}, "row_changed"},
++		{"quantity dispute seen", func(b *terminalBinding, _ *terminalComparison, _ *journal.OrderTerminalProof) {
++			b.tainted = true
++		}, "quantity_dispute_seen"},
++		{"no bound order", func(b *terminalBinding, _ *terminalComparison, p *journal.OrderTerminalProof) {
++			b.orders = map[boundOrder]struct{}{}
++			p.Snapshots = nil
++		}, "identity_incomplete"},
++		{"blank side", func(b *terminalBinding, _ *terminalComparison, _ *journal.OrderTerminalProof) {
++			order := a192Order("o-a192-1")
++			order.identity.Side = ""
++			b.orders = map[boundOrder]struct{}{order: {}}
++		}, "identity_incomplete"},
++		{"foreign order account", func(b *terminalBinding, _ *terminalComparison, _ *journal.OrderTerminalProof) {
++			order := a192Order("o-a192-1")
++			order.identity.AccountRef = "acct-other"
++			b.orders = map[boundOrder]struct{}{order: {}}
++		}, "account_mismatch"},
++		{"foreign comparison account", func(_ *terminalBinding, c *terminalComparison, _ *journal.OrderTerminalProof) {
++			c.diffAccount = ""
++		}, "account_mismatch"},
++		{"order of another symbol", func(b *terminalBinding, _ *terminalComparison, _ *journal.OrderTerminalProof) {
++			order := a192Order("o-a192-1")
++			order.identity.Symbol = "SYNX"
++			b.orders = map[boundOrder]struct{}{order: {}}
++		}, "account_mismatch"},
++		{"proof out of step", func(_ *terminalBinding, _ *terminalComparison, p *journal.OrderTerminalProof) {
++			p.Snapshots[0].Scope.OrderID = "o-a192-x"
++		}, "proof_mismatch"},
++		{"lineage moved in memory", func(b *terminalBinding, _ *terminalComparison, _ *journal.OrderTerminalProof) {
++			order := a192Order("o-a192-1")
++			order.identity.OrderID = "o-a192-child"
++			b.orders = map[boundOrder]struct{}{order: {}}
++		}, "lineage_moved"},
++		{"replacement trace", func(_ *terminalBinding, _ *terminalComparison, p *journal.OrderTerminalProof) {
++			p.Snapshots[0].Amended = true
++		}, "lineage_moved"},
++		{"no snapshot", func(_ *terminalBinding, _ *terminalComparison, p *journal.OrderTerminalProof) {
++			p.Snapshots[0].Found = false
++		}, "terminal_not_found"},
++		{"not terminal", func(_ *terminalBinding, _ *terminalComparison, p *journal.OrderTerminalProof) {
++			p.Snapshots[0].Record.Terminal = false
++		}, "not_clean_terminal"},
++		{"terminal but fail closed", func(_ *terminalBinding, _ *terminalComparison, p *journal.OrderTerminalProof) {
++			p.Snapshots[0].Record.FailClosed = true
++		}, "not_clean_terminal"},
++		{"unreadable commit", func(_ *terminalBinding, _ *terminalComparison, p *journal.OrderTerminalProof) {
++			p.Snapshots[0].Record.CommittedAt = "soon"
++		}, "comparison_not_after_terminal"},
++		{"comparison at the commit", func(_ *terminalBinding, c *terminalComparison, _ *journal.OrderTerminalProof) {
++			c.asOf = "2026-03-30T01:31:00Z"
++		}, "comparison_not_after_terminal"},
++		{"comparison before the commit", func(_ *terminalBinding, c *terminalComparison, _ *journal.OrderTerminalProof) {
++			c.asOf = "2026-03-30T01:30:00Z"
++		}, "comparison_not_after_terminal"},
++		{"undated comparison", func(_ *terminalBinding, c *terminalComparison, _ *journal.OrderTerminalProof) {
++			c.asOf = ""
++		}, "comparison_not_after_terminal"},
++		{"symbol disputed", func(_ *terminalBinding, c *terminalComparison, _ *journal.OrderTerminalProof) {
++			c.disputed = true
++		}, "symbol_disputed"},
++		{"same id still open", func(_ *terminalBinding, c *terminalComparison, _ *journal.OrderTerminalProof) {
++			c.externalIDs["o-a192-1"] = true
++		}, "terminal_order_still_open"},
++		{"comparison blocks entry", func(_ *terminalBinding, c *terminalComparison, _ *journal.OrderTerminalProof) {
++			c.blocksEntry = true
++		}, "comparison_blocks_entry"},
++		{"fill after the block", func(_ *terminalBinding, _ *terminalComparison, p *journal.OrderTerminalProof) {
++			p.FillAfterWatermark = true
++		}, "fill_after_block"},
++	}
++	for _, tc := range cases {
++		t.Run(tc.name, func(t *testing.T) {
++			b, c, p := base()
++			tc.mutate(&b, &c, &p)
++			got := orderTerminalReleaseVerdict(b, c, p)
++			if got.outcome != terminalHold || got.reason != tc.reason {
++				t.Fatalf("verdict = %+v, want hold %q", got, tc.reason)
++			}
++		})
++	}
++	// 대조군: 손대지 않은 입력은 통과(무장)해야 위의 사유들이 의미가 있음.
++	b, c, p := base()
++	if got := orderTerminalReleaseVerdict(b, c, p); got.outcome != terminalArm {
++		t.Fatalf("unmutated verdict = %+v, want armed", got)
++	}
++}
++
++// TestA192VerdictIDsAreComparedByteForByte: 공백이 다른 외부 주문 번호는 같은 주문이 아님(불투명 식별자).
++func TestA192VerdictIDsAreComparedByteForByte(t *testing.T) {
++	b := a192Binding(a192Order("o-a192-1"))
++	c := a192Comparison("2026-03-30T01:32:00Z")
++	c.externalIDs[" o-a192-1"] = true
++	if got := orderTerminalReleaseVerdict(b, c, a192Proof(b)); got.outcome != terminalArm {
++		t.Fatalf("verdict with a differently spelled open id = %+v, want armed", got)
++	}
++}
++
++// TestA192VerdictRequiresEveryBoundOrder: 결속 주문 둘 중 하나만 종결이면 유지.
++func TestA192VerdictRequiresEveryBoundOrder(t *testing.T) {
++	b := a192Binding(a192Order("o-a192-1"), a192Order("o-a192-2"))
++	proof := a192Proof(b)
++	if len(proof.Snapshots) != 2 {
++		t.Fatalf("snapshots = %d, want two bound orders", len(proof.Snapshots))
++	}
++	proof.Snapshots[1].Record.Terminal = false
++	if got := orderTerminalReleaseVerdict(b, a192Comparison("2026-03-30T01:32:00Z"), proof); got.reason != "not_clean_terminal" {
++		t.Fatalf("verdict with one open bound order = %+v, want not_clean_terminal", got)
++	}
++}
++
++// TestA192VerdictUsesTheLatestTerminalCommit: as-of 는 가장 늦은 종결 기록보다 나중이어야 함.
++func TestA192VerdictUsesTheLatestTerminalCommit(t *testing.T) {
++	b := a192Binding(a192Order("o-a192-1"), a192Order("o-a192-2"))
++	proof := a192Proof(b)
++	proof.Snapshots[1].Record.CommittedAt = "2026-03-30T01:35:00Z"
++	got := orderTerminalReleaseVerdict(b, a192Comparison("2026-03-30T01:32:00Z"), proof)
++	if got.reason != "comparison_not_after_terminal" {
++		t.Fatalf("verdict before the later commit = %+v, want comparison_not_after_terminal", got)
++	}
++	if _, err := time.Parse(time.RFC3339, proof.Snapshots[1].Record.CommittedAt); err != nil {
++		t.Fatal(err)
++	}
++}
++
++// a192FakeTerminal 은 늘 통과하는 증명을 돌려주는 장부 대역 — 호출자 배관만 재려는 것.
++type a192FakeTerminal struct{ proof journal.OrderTerminalProof }
++
++func (f a192FakeTerminal) MaxFillEventID(context.Context) (int64, error) { return 0, nil }
++func (f a192FakeTerminal) ReadOrderTerminalProof(context.Context, journal.OrderTerminalProofRequest) journal.OrderTerminalProof {
++	return f.proof
++}
++func (f a192FakeTerminal) ReleaseReconcileOnOrderTerminalProof(context.Context, journal.OrderTerminalProofRequest,
++	string, func(journal.OrderTerminalProof) bool) (journal.ReconcileState, bool, error) {
++	return journal.ReconcileState{}, false, nil
++}
++
++// a192NoopStore 는 Journal 이 nil 이 아님만 만족시키는 대역.
++type a192NoopStore struct{ ReconcileStore }
++
++// TestA192CandidateRefusesWithoutTerminalOrJournal 은 후보 판정의 첫 가드를 못 박음: 결속이 기억에 있어도 Terminal 이나
++// Journal 이 없으면 판정하지 않음. (운영에서는 결속 생성이 둘 다를 요구해 이 가드가 겹쳐 있음 — 그 우연에 기대지 않게 고정.)
++func TestA192CandidateRefusesWithoutTerminalOrJournal(t *testing.T) {
++	b := a192Binding(a192Order("o-a192-1"))
++	for name, tr := range map[string]*Tracker{
++		"no terminal": {AccountRef: a192Account, Journal: a192NoopStore{}},
++		"no journal":  {AccountRef: a192Account, Terminal: a192FakeTerminal{proof: a192Proof(b)}},
++	} {
++		t.Run(name, func(t *testing.T) {
++			copied := b
++			tr.terminal.bindings = map[string]*terminalBinding{a192Symbol: &copied}
++			block := Block{Symbol: a192Symbol}
++			diff := Diff{AsOf: "2026-03-30T01:32:00Z", AccountRef: a192Account}
++			if tr.orderTerminalCandidate(context.Background(), &block, diff, map[string]bool{}) {
++				t.Fatal("the candidate judged without its journal")
++			}
++			if copied.armed {
++				t.Fatal("the candidate armed without its journal")
++			}
++		})
++	}
++}
++
++// TestA192CandidatePassesTheDisputedSymbolThrough 는 호출자 배관을 못 박음: Observe 가 넘긴 분쟁 집합이 판정에 그대로
++// 감 — 그 종목이 분쟁 중이면 무장하지 않음.
++func TestA192CandidatePassesTheDisputedSymbolThrough(t *testing.T) {
++	b := a192Binding(a192Order("o-a192-1"))
++	tr := &Tracker{AccountRef: a192Account, Journal: a192NoopStore{}, Terminal: a192FakeTerminal{proof: a192Proof(b)}}
++	copied := b
++	tr.terminal.bindings = map[string]*terminalBinding{a192Symbol: &copied}
++	block := Block{Symbol: a192Symbol}
++	diff := Diff{AsOf: "2026-03-30T01:32:00Z", AccountRef: a192Account}
++	tr.orderTerminalCandidate(context.Background(), &block, diff, map[string]bool{a192Symbol: true})
++	if copied.armed {
++		t.Fatal("a disputed symbol was armed — the disputed set did not reach the verdict")
++	}
++	// 대조: 분쟁이 없으면 같은 입력이 무장함(판정 경로가 산다).
++	tr.orderTerminalCandidate(context.Background(), &block, diff, map[string]bool{})
++	if !copied.armed {
++		t.Fatal("the undisputed control did not arm")
++	}
++}
+--- /dev/null
++++ b/internal/reconcile/order_terminal_release.go
+@@ -0,0 +1,439 @@
++package reconcile
++
++// order_terminal_release.go 는 missing-order 종목 차단을 「그것을 만든 주문들의 종결 증명」으로 푸는
++// 추적기 쪽 절반임(a192 design D2~D5).
++//
++// # 결속은 프로세스 기억이고, 삽입 증명으로만 생김
++//
++// 조정 크레딧처럼 결속도 프로세스 기억임 — 재기동하면 사라지고 남은 행은 운영자 해제로 돌아감(fail-closed).
++// 결속은 이 프로세스의 missing-order 관측이 장부 행을 **실제로 삽입했다**는 증명이 있을 때만 생김:
++// `EnterReconcile` 은 삽입한 경우에만 `entered = true` 와 그 행 id 를 돌려주므로 그 반환값이 증명임.
++// 이미 있던 행(투영 거절이 먼저 만든 행, 이전 프로세스의 행)에 겹친 관측은 `entered = false` 라 결속이
++// 없고, 그 행은 이 경로로 풀리지 않음. 처음 만들어진 관측의 첫 쓰기에서 삽입되지 않은(재시도로 삽입된)
++// 블록도 결속하지 않음 — 그 사이의 관측이 결속에 안 들어 있기 때문(M14).
++//
++// # 판정은 하나
++//
++// `orderTerminalReleaseVerdict` 하나가 1차 판정(Observe 의 깨끗한 갈래)과 해제 트랜잭션 안의 재판정을 둘 다
++// 맡음. 호출자는 얼린 비교 입력·결속·장부 증명을 인자로 넘길 뿐 규칙을 따로 갖지 않음.
++//
++// # 무장-후-해제
++//
++// `RecordFill` 의 `committed_at` 은 tx 시작 전 시각이라 「비교 as-of > 종결 기록 시각」만으로는 그 비교의 로컬
++// 읽기가 종결을 반영했다는 보장이 없음. 그래서 처음 통과한 비교는 무장(as-of 와 증명 digest 기억)만 하고,
++// 같은 digest 로 그보다 나중 as-of 의 비교가 다시 통과할 때 해제함. 주기는 직렬이고 각 주기는 수집 뒤에
++// 로컬을 읽으므로, 무장 뒤 비교의 로컬 읽기는 무장 때 이미 읽은 종결 커밋을 반영함.
++
++import (
++	"context"
++	"crypto/sha256"
++	"encoding/hex"
++	"fmt"
++	"sort"
++	"strings"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
++)
++
++// OrderTerminalJournal 은 종결 증명 해제가 쓰는 장부 쪽 세 메서드임. production 은 *journal.Journal.
++//
++// 비어 있으면(nil) 추적기는 오늘과 같은 행동을 함 — 결속도, 판정도, 해제도 없음.
++type OrderTerminalJournal interface {
++	MaxFillEventID(ctx context.Context) (int64, error)
++	ReadOrderTerminalProof(ctx context.Context, req journal.OrderTerminalProofRequest) journal.OrderTerminalProof
++	ReleaseReconcileOnOrderTerminalProof(ctx context.Context, req journal.OrderTerminalProofRequest,
++		evidence string, decide func(journal.OrderTerminalProof) bool) (journal.ReconcileState, bool, error)
++}
++
++// boundOrder 는 결속된 missing-order 하나 — 정규 신원과 원래(추적) 번호임.
++type boundOrder struct {
++	identity OrderIdentity
++	original string
++}
++
++// terminalBinding 은 이 프로세스가 삽입한 행 하나의 결속임.
++type terminalBinding struct {
++	rowID         string
++	symbol        string
++	orders        map[boundOrder]struct{}
++	tainted       bool
++	fillWatermark int64
++	armed         bool
++	armAsOf       time.Time
++	armDigest     string
++	// reason 은 마지막 판정(1차·tx 재판정)의 사유 코드임 — 「유지 + 사유」(M5)를 운영자가 볼 수 있게 남김.
++	reason string
++}
++
++// terminalState 는 추적기의 결속 기억 전부임. 영값이 「결속 없음」이고 `Restore` 가 영값으로 되돌림.
++type terminalState struct {
++	bindings map[string]*terminalBinding
++	// seen 은 이번 Observe 가 시작될 때 이미 있던 블록 키임 — 이번 관측에서 처음 만들어진 블록만 결속함.
++	seen map[string]bool
++}
++
++// terminalComparison 은 판정에 넘기는 얼린 비교 입력임.
++type terminalComparison struct {
++	trackerAccount string
++	diffAccount    string
++	asOf           string
++	disputed       bool
++	blocksEntry    bool
++	externalIDs    map[string]bool
++}
++
++// terminalRelease 는 1차 판정이 「해제」라고 답한 블록에 다는 표시 — 해제 tx 가 같은 입력으로 재판정함.
++type terminalRelease struct {
++	binding      terminalBinding
++	comparison   terminalComparison
++	request      journal.OrderTerminalProofRequest
++	boundOrders  int
++	latestCommit string
++}
++
++type terminalOutcome int
++
++const (
++	terminalHold terminalOutcome = iota
++	terminalArm
++	terminalReleaseOutcome
++)
++
++// terminalVerdict 는 판정 결과임. reason 은 유지·무장 사유 코드(시험·진단용).
++type terminalVerdict struct {
++	outcome      terminalOutcome
++	reason       string
++	digest       string
++	asOf         time.Time
++	boundOrders  int
++	latestCommit string
++}
++
++// ReleasedByOrderTerminal 은 이 블록이 종결 증명으로 해제된 것인지와 결속 주문 수를 알려 줌(로그용).
++func (b Block) ReleasedByOrderTerminal() (int, bool) {
++	if b.terminalRelease == nil {
++		return 0, false
++	}
++	return b.terminalRelease.boundOrders, true
++}
++
++// sortedBoundOrders 는 결속 주문을 정해진 순서로 늘어놓음 — 요청과 판정이 같은 순서로 짝지어야 함.
++func sortedBoundOrders(b terminalBinding) []boundOrder {
++	out := make([]boundOrder, 0, len(b.orders))
++	for order := range b.orders {
++		out = append(out, order)
++	}
++	sort.Slice(out, func(i, j int) bool {
++		if out[i].identity != out[j].identity {
++			return out[i].identity.less(out[j].identity)
++		}
++		return out[i].original < out[j].original
++	})
++	return out
++}
++
++// orderTerminalRequest 는 결속으로 장부 증명 요청을 만듦. 스냅숏은 감지기가 쓴 원래 번호로 찾음.
++func orderTerminalRequest(b terminalBinding) journal.OrderTerminalProofRequest {
++	orders := sortedBoundOrders(b)
++	req := journal.OrderTerminalProofRequest{
++		StateID: b.rowID, Symbol: b.symbol, FillWatermark: b.fillWatermark,
++		Orders: make([]journal.FillSnapshotScope, 0, len(orders)),
++	}
++	for _, order := range orders {
++		req.Orders = append(req.Orders, journal.FillSnapshotScope{
++			OrderID: order.original, AccountRef: order.identity.AccountRef, Market: order.identity.Market,
++			TradingDay: order.identity.TradingDay, Symbol: order.identity.Symbol, Side: order.identity.Side,
++		})
++	}
++	return req
++}
++
++// orderTerminalComparison 은 이 비교에서 판정이 쓰는 값만 얼림.
++func orderTerminalComparison(trackerAccount string, diff Diff, disputed bool) terminalComparison {
++	external := make(map[string]bool, len(diff.ExternalOrd))
++	for _, order := range diff.ExternalOrd {
++		// 바이트 그대로 — 주문번호는 불투명 식별자라 정규화하지 않음.
++		external[order.OrderID] = true
++	}
++	return terminalComparison{
++		trackerAccount: strings.TrimSpace(trackerAccount), diffAccount: strings.TrimSpace(diff.AccountRef),
++		asOf: diff.AsOf, disputed: disputed, blocksEntry: diff.BlocksEntry(), externalIDs: external,
++	}
++}
++
++// orderTerminalReleaseVerdict 는 종결 증명 해제의 유일한 판정임(design D3 C1~C13).
++//
++// 처음 실패한 조건의 사유로 「유지」를 돌려줌. 모두 통과하면 무장이 없거나 증명이 바뀐 경우 「무장」,
++// 같은 증명으로 무장보다 나중 비교면 「해제」.
++func orderTerminalReleaseVerdict(b terminalBinding, cmp terminalComparison, proof journal.OrderTerminalProof) terminalVerdict {
++	hold := func(reason string) terminalVerdict { return terminalVerdict{outcome: terminalHold, reason: reason} }
++
++	// C1 — 이 프로세스의 삽입 증명이 만든 결속인가.
++	if strings.TrimSpace(b.rowID) == "" {
++		return hold("not_inserted_by_this_process")
++	}
++	// 읽기 실패는 판정 불가 — 유지(M5).
++	if proof.ReadErr != nil {
++		return hold("terminal_read_failed")
++	}
++	// C2 — 활성 행이 그 id 그대로이고 추적기 종목 범위 행인가.
++	state := proof.State
++	if !proof.StateFound || !state.Active() || state.ID != b.rowID ||
++		strings.ToUpper(strings.TrimSpace(state.Symbol)) != b.symbol ||
++		state.Cause != journal.ReconcileCauseQuantityMismatch || strings.TrimSpace(state.ScopeMarket) != "" ||
++		cmp.trackerAccount == "" || strings.TrimSpace(state.AccountRef) != cmp.trackerAccount {
++		return hold("row_changed")
++	}
++	// C3 — 수량 불일치·외부 포지션 흔적이 있으면 그 행은 조정 규칙만 풂(I2).
++	if b.tainted {
++		return hold("quantity_dispute_seen")
++	}
++	// C4 — 결속 주문이 있고 신원이 완전하며 계좌·종목이 모두 같은가.
++	orders := sortedBoundOrders(b)
++	if len(orders) == 0 {
++		// 빈 표본의 전칭 판정은 자동 참이 되므로 따로 막음.
++		return hold("identity_incomplete")
++	}
++	for _, order := range orders {
++		id := order.identity
++		if id.AccountRef == "" || id.Market == "" || id.TradingDay == "" || id.Symbol == "" || id.Side == "" ||
++			strings.TrimSpace(id.OrderID) == "" {
++			return hold("identity_incomplete")
++		}
++		if id.AccountRef != cmp.trackerAccount || cmp.diffAccount != cmp.trackerAccount || id.Symbol != b.symbol {
++			return hold("account_mismatch")
++		}
++	}
++	// 증명이 요청과 같은 순서·범위로 왔는지 — 짝이 어긋나면 판정하지 않음.
++	if len(proof.Snapshots) != len(orders) {
++		return hold("proof_mismatch")
++	}
++	latest := time.Time{}
++	latestText := ""
++	for i, order := range orders {
++		snapshot := proof.Snapshots[i]
++		if snapshot.Scope.OrderID != order.original {
++			return hold("proof_mismatch")
++		}
++		// C5 — 정정 lineage 이동 없음(현재 번호 = 원래 번호, 대체 흔적 없음).
++		if order.identity.OrderID != order.original || snapshot.Amended {
++			return hold("lineage_moved")
++		}
++		// C6 — 스냅숏이 있는가.
++		if !snapshot.Found {
++			return hold("terminal_not_found")
++		}
++		// C7 — 깨끗한 종결인가(실패 갱신은 terminal 을 두고 fail_closed 만 세움).
++		if !snapshot.Record.Terminal || snapshot.Record.FailClosed {
++			return hold("not_clean_terminal")
++		}
++		committed, err := time.Parse(time.RFC3339, strings.TrimSpace(snapshot.Record.CommittedAt))
++		if err != nil {
++			return hold("comparison_not_after_terminal")
++		}
++		if committed.After(latest) {
++			latest, latestText = committed, snapshot.Record.CommittedAt
++		}
++	}
++	// C8 — 비교 as-of 가 모든 종결 기록보다 엄격히 나중인가.
++	asOf, err := time.Parse(time.RFC3339, strings.TrimSpace(cmp.asOf))
++	if err != nil || !asOf.After(latest) {
++		return hold("comparison_not_after_terminal")
++	}
++	// C9 — 이 비교가 그 종목에 차이를 보지 않는가.
++	if cmp.disputed {
++		return hold("symbol_disputed")
++	}
++	// C10 — 장부는 종결인데 브로커 open 목록에 같은 번호가 남아 있으면 모순 — 유지(M4).
++	for _, order := range orders {
++		if cmp.externalIDs[order.identity.OrderID] || cmp.externalIDs[order.original] {
++			return hold("terminal_order_still_open")
++		}
++	}
++	// C11 — 비교 전체가 진입을 막지 않는가(호출 자리가 보장하지만 판정도 확인함).
++	if cmp.blocksEntry {
++		return hold("comparison_blocks_entry")
++	}
++	// C12 — 행 삽입 전 워터마크 뒤에 그 종목 체결이 커밋됐으면 유지(행 뒤의 투영 거절을 가리는 길 — M11).
++	if proof.FillAfterWatermark {
++		return hold("fill_after_block")
++	}
++	// C13 — 무장-후-해제(M12). digest 가 바뀌면 다시 무장함.
++	digest := orderTerminalDigest(b.rowID, orders, proof.Snapshots)
++	verdict := terminalVerdict{digest: digest, asOf: asOf, boundOrders: len(orders), latestCommit: latestText}
++	if !b.armed || b.armDigest != digest {
++		verdict.outcome, verdict.reason = terminalArm, "armed"
++		return verdict
++	}
++	if !asOf.After(b.armAsOf) {
++		verdict.outcome, verdict.reason = terminalHold, "arm_not_later"
++		return verdict
++	}
++	verdict.outcome, verdict.reason = terminalReleaseOutcome, "released"
++	return verdict
++}
++
++// orderTerminalDigest 는 무장이 묶이는 증명의 지문 — 행 id, 결속 신원, 결속 주문의 스냅숏 상태.
++func orderTerminalDigest(rowID string, orders []boundOrder, snapshots []journal.OrderTerminalSnapshot) string {
++	h := sha256.New()
++	write := func(parts ...string) {
++		for _, part := range parts {
++			fmt.Fprintf(h, "%d:%s|", len(part), part)
++		}
++	}
++	write(rowID)
++	for i, order := range orders {
++		id := order.identity
++		write(id.AccountRef, id.Market, id.TradingDay, id.Symbol, id.Side, id.OrderID, order.original)
++		record := snapshots[i].Record
++		write(record.State, fmt.Sprint(record.Terminal), fmt.Sprint(record.FailClosed),
++			record.FilledQuantity, record.CommittedAt)
++	}
++	return hex.EncodeToString(h.Sum(nil))
++}
++
++// beginOrderTerminalObservation 은 Observe 가 갈래를 나누기 전에 부름: 이번 관측 시작 때 있던 블록 키를
++// 적고(이번에 처음 만들어진 블록만 결속), 기존 결속에 이번 비교의 신원·흔적을 더함. 호출자가 t.mu 를 쥠.
++//
++// 갈래를 나누기 전인 이유: 깨끗한 갈래(외부 포지션만 있는 비교)와 blocking 갈래 둘 다 영구 보류 권위 읽기
++// 실패로 일찍 돌아갈 수 있고, 그 전에 흔적을 남겨야 실격이 사라지지 않음.
++func (t *Tracker) beginOrderTerminalObservation(diff Diff) {
++	if t.Terminal == nil {
++		return
++	}
++	t.terminal.seen = make(map[string]bool, len(t.blocks))
++	for key := range t.blocks {
++		t.terminal.seen[key] = true
++	}
++	t.updateOrderTerminalBindings(diff)
++}
++
++// updateOrderTerminalBindings 는 결속이 있는 종목마다 이번 비교의 missing-order 신원을 더하고, 수량
++// 불일치·외부 포지션이 보이면 실격 흔적을 세움. 멱등 — persist 뒤에 한 번 더 불러 같은 비교에서 처음 생긴
++// 결속에도 같은 종목의 다른 missing-order 를 더함. 호출자가 t.mu 를 쥠.
++func (t *Tracker) updateOrderTerminalBindings(diff Diff) {
++	if t.Terminal == nil || len(t.terminal.bindings) == 0 {
++		return
++	}
++	for _, missing := range diff.MissingOrders {
++		if b := t.terminal.bindings[strings.ToUpper(strings.TrimSpace(missing.Symbol))]; b != nil {
++			b.orders[boundOrder{identity: missing.Identity(), original: missing.OriginalOrderID}] = struct{}{}
++		}
++	}
++	for _, mismatch := range diff.Quantities {
++		if b := t.terminal.bindings[strings.ToUpper(strings.TrimSpace(mismatch.Symbol))]; b != nil {
++			b.tainted = true
++		}
++	}
++	for _, external := range diff.ExternalPos {
++		if b := t.terminal.bindings[strings.ToUpper(strings.TrimSpace(external.Symbol))]; b != nil {
++			b.tainted = true
++		}
++	}
++}
++
++// enterReconcileWithBinding 은 persist 의 `EnterReconcile` 호출을 감쌈: 이번 관측에서 처음 만들어진
++// missing-order 블록이면 삽입 전에 체결 워터마크를 읽고, 장부가 「삽입했다」(entered)고 답할 때만 결속을
++// 만듦. 장부 쓰기 자체는 그대로 — Terminal 이 nil 이면 `EnterReconcile` 한 번과 같음. 호출자가 t.mu 를 쥠.
++func (t *Tracker) enterReconcileWithBinding(ctx context.Context, block Block,
++	req journal.EnterReconcileRequest) (journal.ReconcileState, bool, error) {
++	bindable := t.Terminal != nil && block.missing != nil && !t.terminal.seen[block.Key()]
++	var watermark int64
++	if bindable {
++		w, err := t.Terminal.MaxFillEventID(ctx)
++		if err != nil {
++			// 워터마크가 없으면 C12 를 못 따지므로 결속하지 않음 — 유지 쪽.
++			bindable = false
++		}
++		watermark = w
++	}
++	state, entered, err := t.Journal.EnterReconcile(ctx, req)
++	if err == nil && entered && bindable && strings.TrimSpace(state.ID) != "" {
++		if t.terminal.bindings == nil {
++			t.terminal.bindings = map[string]*terminalBinding{}
++		}
++		symbol := strings.ToUpper(strings.TrimSpace(block.Symbol))
++		t.terminal.bindings[symbol] = &terminalBinding{
++			rowID: state.ID, symbol: symbol, fillWatermark: watermark,
++			orders: map[boundOrder]struct{}{*block.missing: {}},
++		}
++	}
++	return state, entered, err
++}
++
++// orderTerminalCandidate 는 Observe 깨끗한 갈래에서 크레딧이 없는 블록에 1차 판정을 물음. 「무장」이면 무장만
++// 기억하고 거짓, 「해제」면 블록에 재판정 입력을 달고 참. 호출자가 t.mu 를 쥠.
++func (t *Tracker) orderTerminalCandidate(ctx context.Context, block *Block, diff Diff, disputed map[string]bool) bool {
++	if t.Terminal == nil || t.Journal == nil {
++		return false
++	}
++	symbol := strings.ToUpper(strings.TrimSpace(block.Symbol))
++	b := t.terminal.bindings[symbol]
++	if b == nil {
++		return false
++	}
++	request := orderTerminalRequest(*b)
++	comparison := orderTerminalComparison(t.AccountRef, diff, disputed[symbol])
++	verdict := orderTerminalReleaseVerdict(*b, comparison, t.Terminal.ReadOrderTerminalProof(ctx, request))
++	b.reason = verdict.reason
++	switch verdict.outcome {
++	case terminalArm:
++		b.armed, b.armAsOf, b.armDigest = true, verdict.asOf, verdict.digest
++		return false
++	case terminalReleaseOutcome:
++		block.terminalRelease = &terminalRelease{
++			binding: *b, comparison: comparison, request: request,
++			boundOrders: verdict.boundOrders, latestCommit: verdict.latestCommit,
++		}
++		return true
++	default:
++		if verdict.reason == "row_changed" {
++			// 그 행이 다른 길로 풀렸거나 바뀜 — 이 결속은 더 쓸 데가 없음.
++			delete(t.terminal.bindings, symbol)
++		}
++		return false
++	}
++}
++
++// releaseOnOrderTerminal 은 persist 가 종결 증명 블록을 풀 때 부름: 같은 판정을 해제 tx 안에서 다시 통과할
++// 때만 장부가 해제함. 해제되면 결속을 지움. 호출자가 t.mu 를 쥠 — 콜백은 순수 함수라 잠금을 다시 잡지 않음.
++func (t *Tracker) releaseOnOrderTerminal(ctx context.Context, block Block) (bool, error) {
++	release := block.terminalRelease
++	evidence := fmt.Sprintf(
++		"missing-order terminal proof — %d bound order(s) terminal, latest terminal commit %s, comparison as-of %s",
++		release.boundOrders, release.latestCommit, release.comparison.asOf)
++	binding, comparison := release.binding, release.comparison
++	// 콜백은 순수 함수 — 판정 결과만 지역 변수에 남기고 잠금·장부를 다시 부르지 않음.
++	reason := ""
++	_, released, err := t.Terminal.ReleaseReconcileOnOrderTerminalProof(ctx, release.request, evidence,
++		func(proof journal.OrderTerminalProof) bool {
++			verdict := orderTerminalReleaseVerdict(binding, comparison, proof)
++			reason = verdict.reason
++			return verdict.outcome == terminalReleaseOutcome
++		})
++	if err != nil {
++		return false, err
++	}
++	if released {
++		delete(t.terminal.bindings, binding.symbol)
++	} else if b := t.terminal.bindings[binding.symbol]; b != nil {
++		// tx 안 재판정이 유지 — 그 사유를 남김(M5).
++		b.reason = "tx_" + reason
++	}
++	return released, nil
++}
++
++// OrderTerminalHoldReasons 는 지금 결속이 있는 종목마다 마지막 판정 사유를 돌려줌(M5 「유지 + 사유」 — 로그용).
++// 계좌·주문번호·수량을 담지 않음.
++func (t *Tracker) OrderTerminalHoldReasons() map[string]string {
++	t.mu.Lock()
++	defer t.mu.Unlock()
++	out := make(map[string]string, len(t.terminal.bindings))
++	for symbol, b := range t.terminal.bindings {
++		if b.reason != "" {
++			out[symbol] = b.reason
++		}
++	}
++	return out
++}

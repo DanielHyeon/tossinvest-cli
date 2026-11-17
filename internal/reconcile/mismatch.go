@@ -239,6 +239,11 @@ type Block struct {
 	// durable EnterReconcile write has not committed yet. It stays enforced and
 	// is retried on every matching observation until the journal confirms it.
 	pending bool
+	// missing 는 missing-order 가 만든 블록의 주문 신원임(a192). 이 블록의 첫 쓰기가 행을 삽입하면
+	// 결속의 첫 주문이 됨. 수량 블록·복원된 블록에는 없음.
+	missing *boundOrder
+	// terminalRelease 는 1차 판정이 「종결 증명으로 해제」라고 답한 표시와 재판정 입력임(a192).
+	terminalRelease *terminalRelease
 }
 
 // Key identifies a block for deduplication.
@@ -339,6 +344,12 @@ type Tracker struct {
 	// something this type can check rather than something its caller has to
 	// arrange (a083).
 	adjusted map[string]string
+
+	// Terminal 은 missing-order 종목 차단의 종결 증명 해제가 쓰는 장부임(a192). nil 이면 오늘과 같은
+	// 행동 — 결속·판정·해제가 없음. production 은 *journal.Journal.
+	Terminal OrderTerminalJournal
+	// terminal 은 이 프로세스가 삽입한 행의 결속 기억임. 재기동·Restore 에서 비워짐(결속은 복원하지 않음).
+	terminal terminalState
 }
 
 // promotionDisputeKey is deliberately comparable so a current comparison can
@@ -632,6 +643,8 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 	// and those two facts must never be computed from different sets.
 	disputed := symbolsInDispute(diff)
 	keys := promotionKeys(diff, t.AccountRef)
+	// 종결 증명 결속(a192): 어느 갈래의 조기 반환보다 먼저 이번 비교의 신원·실격 흔적을 기억에 남김.
+	t.beginOrderTerminalObservation(diff)
 
 	var out Outcome
 	if !diff.BlocksEntry() {
@@ -664,6 +677,12 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 				// belongs to *this* comparison rather than to one before it. Both are
 				// agreement with nothing behind it. See the release rule at the top of
 				// the file.
+				// 조정이 없는 블록 중 이 프로세스가 삽입한 missing-order 블록은 종결 증명으로 풀 수 있음(a192) —
+				// 판정이 「해제」면 해제 tx 가 같은 판정을 다시 통과해야 실제로 풀림.
+				if t.orderTerminalCandidate(ctx, &block, diff, disputed) {
+					out.Cleared = append(out.Cleared, block)
+					continue
+				}
 				out.AwaitingAdjustment = append(out.AwaitingAdjustment, block)
 				continue
 			}
@@ -785,6 +804,8 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 	}
 	out.Cleared = persisted.released
 	t.permanent = hasPermanentQuantityAccountBlock(t.blocks)
+	// 이번 관측에서 처음 생긴 결속에도 같은 종목의 다른 missing-order·실격 흔적을 더함(a192, 멱등).
+	t.updateOrderTerminalBindings(diff)
 
 	// Credit accounting. Three outcomes, and which one a credit gets is decided
 	// per symbol rather than per comparison (a083):
@@ -877,7 +898,8 @@ func (t *Tracker) persist(ctx context.Context, out Outcome) (persistResult, erro
 			continue
 		}
 		expectedCause := firstNonEmpty(block.Cause, journal.ReconcileCauseQuantityMismatch)
-		state, entered, err := t.Journal.EnterReconcile(ctx, journal.EnterReconcileRequest{
+		// 삽입 여부(entered)가 종결 증명 결속의 증명이라 감싼 호출로 씀(a192) — 장부 쓰기는 같음.
+		state, entered, err := t.enterReconcileWithBinding(ctx, block, journal.EnterReconcileRequest{
 			AccountRef: firstNonEmpty(block.Account, t.AccountRef),
 			Symbol:     block.Symbol,
 			Cause:      expectedCause,
@@ -897,6 +919,19 @@ func (t *Tracker) persist(ctx context.Context, out Outcome) (persistResult, erro
 		result.durable = append(result.durable, block)
 	}
 	for _, block := range out.Cleared {
+		if block.terminalRelease != nil {
+			// 종결 증명 해제는 증명을 같은 tx 안에서 다시 읽어 같은 판정을 통과할 때만 풂(a192 D5).
+			// 재판정이 「유지」면 오류가 아니라 해제 없음 — 블록은 남음.
+			released, err := t.releaseOnOrderTerminal(ctx, block)
+			if err != nil {
+				return result, fmt.Errorf("reconcile: releasing the %s block on %s on its order-terminal proof: %w",
+					block.Reason, scopeLabel(block), err)
+			}
+			if released {
+				result.released = append(result.released, block)
+			}
+			continue
+		}
 		_, ok, err := t.Journal.ReleaseReconcile(ctx, journal.ReleaseReconcileRequest{
 			AccountRef:  firstNonEmpty(block.Account, t.AccountRef),
 			Symbol:      block.Symbol,
@@ -964,6 +999,8 @@ func (t *Tracker) Restore(ctx context.Context) error {
 	// applied an adjustment before the crash is gone, and the first comparison
 	// after a restart must not release on its word.
 	t.adjusted = nil
+	// 종결 증명 결속·무장도 복원하지 않음 — 복원된 행은 이 프로세스가 삽입했다는 증명이 없음(a192).
+	t.terminal = terminalState{}
 	if permanent {
 		t.failures = t.maxFailures()
 	}
@@ -1427,6 +1464,8 @@ func blocksFor(diff Diff, accountRef string, now time.Time) []Block {
 			Release: ReleaseOnAdjustedReconcile,
 			Detail: fmt.Sprintf("order %s on %s is not in the account's open list",
 				missing.OrderID, missing.Symbol),
+			// 첫 쓰기가 행을 삽입하면 종결 증명 결속의 첫 주문이 됨(a192).
+			missing: &boundOrder{identity: missing.Identity(), original: missing.OriginalOrderID},
 		})
 	}
 	return out

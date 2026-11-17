@@ -1,0 +1,5 @@
+--- FAIL: TestA192TheReleaseLogCarriesNoAccountOrderQuantityOrPrice (0.27s)
+    a192_order_terminal_release_log_test.go:65: releasing cycle = {Collected:2 Stable:true Folded:0 Converged:0 Closed:0 Blocked:1 Released:0 Awaiting:1 Unmanaged:0 Adopted:0 Deferred:0 Err:<nil>}, want the block released
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.276s
+FAIL

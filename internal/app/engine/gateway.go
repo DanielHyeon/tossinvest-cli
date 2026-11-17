@@ -273,6 +273,8 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 		Gate:       entry,
 		Journal:    in.journal,
 		AccountRef: in.accountRef,
+		// missing-order 종목 차단의 종결 증명 해제(a192) — 같은 장부가 증명을 읽고 해제를 씀.
+		Terminal: in.journal,
 	}
 	if err := tracker.Restore(ctx); err != nil {
 		return engineWiring{}, fmt.Errorf("engine: restoring the RECONCILE projection: %w", err)

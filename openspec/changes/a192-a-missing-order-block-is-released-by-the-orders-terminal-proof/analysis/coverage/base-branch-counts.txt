@@ -1,0 +1,72 @@
+Tracker.Observe internal/reconcile/mismatch.go 618-835
+  B1:if@624 cond_line_count=1 body_next_line_count=1
+  B2:if@637 cond_line_count=1 body_next_line_count=1
+  B3:else@684 cond_line_count=1 body_next_line_count=1
+  B4:if@643 cond_line_count=1 body_next_line_count=1
+  B5:if@646 cond_line_count=1 body_next_line_count=1
+  B6:range@653 cond_line_count=1 body_next_line_count=1
+  B7:if@654 cond_line_count=1 body_next_line_count=1
+  B8:if@662 cond_line_count=1 body_next_line_count=1
+  B9:if@670 cond_line_count=1 body_next_line_count=1
+  B10:if@689 cond_line_count=1 body_next_line_count=1
+  B11:range@702 cond_line_count=1 body_next_line_count=1
+  B12:if@703 cond_line_count=1 body_next_line_count=1
+  B13:if@711 cond_line_count=1 body_next_line_count=1
+  B14:if@715 cond_line_count=1 body_next_line_count=1
+  B15:if@718 cond_line_count=1 body_next_line_count=1
+  B16:range@719 cond_line_count=1 body_next_line_count=1
+  B17:if@720 cond_line_count=1 body_next_line_count=1
+  B18:if@727 cond_line_count=1 body_next_line_count=1
+  B19:if@738 cond_line_count=1 body_next_line_count=1
+  B20:range@768 cond_line_count=1 body_next_line_count=1
+  B21:if@771 cond_line_count=1 body_next_line_count=1
+  B22:range@776 cond_line_count=1 body_next_line_count=1
+  B23:if@778 cond_line_count=1 body_next_line_count=0
+  B24:range@783 cond_line_count=1 body_next_line_count=1
+  B25:range@802 cond_line_count=1 body_next_line_count=1
+  B26:range@805 cond_line_count=1 body_next_line_count=1
+  B27:if@806 cond_line_count=1 body_next_line_count=1
+  B28:if@820 cond_line_count=1 body_next_line_count=1
+Tracker.persist internal/reconcile/mismatch.go 857-919
+  B1:if@858 cond_line_count=1 body_next_line_count=1
+  B2:range@869 cond_line_count=1 body_next_line_count=1
+  B3:if@870 cond_line_count=1 body_next_line_count=1
+  B4:if@886 cond_line_count=1 body_next_line_count=1
+  B5:if@890 cond_line_count=1 body_next_line_count=1
+  B6:range@899 cond_line_count=1 body_next_line_count=1
+  B7:if@907 cond_line_count=1 body_next_line_count=1
+  B8:if@911 cond_line_count=1 body_next_line_count=1
+.blocksFor internal/reconcile/mismatch.go 1402-1433
+  B1:range@1404 cond_line_count=1 body_next_line_count=1
+  B2:range@1418 cond_line_count=1 body_next_line_count=1
+Tracker.Restore internal/reconcile/mismatch.go 931-975
+  B1:if@932 cond_line_count=1 body_next_line_count=0
+  B2:if@936 cond_line_count=1 body_next_line_count=0
+  B3:range@943 cond_line_count=1 body_next_line_count=1
+  B4:if@944 cond_line_count=1 body_next_line_count=1
+  B5:if@967 cond_line_count=1 body_next_line_count=1
+  B6:if@970 cond_line_count=1 body_next_line_count=1
+.ValidReconcileReleaseCause internal/journal/reconcile_states.go 111-119
+  B1:switch@112 cond_line_count=1 body_next_line_count=0
+  B2:case@113 cond_line_count=0 body_next_line_count=1
+  B3:case@116 cond_line_count=1 body_next_line_count=1
+.buildGateway internal/app/engine/gateway.go 250-386
+  B1:if@255 cond_line_count=1 body_next_line_count=0
+  B2:if@277 cond_line_count=1 body_next_line_count=0
+  B3:if@285 cond_line_count=1 body_next_line_count=0
+  B4:if@289 cond_line_count=1 body_next_line_count=0
+  B5:if@313 cond_line_count=1 body_next_line_count=0
+  B6:if@317 cond_line_count=1 body_next_line_count=0
+  B7:if@338 cond_line_count=1 body_next_line_count=0
+  B8:if@346 cond_line_count=1 body_next_line_count=0
+  B9:if@348 cond_line_count=0 body_next_line_count=0
+  B10:if@352 cond_line_count=0 body_next_line_count=0
+ReconcileDriver.RunOnce internal/app/engine/reconcileloop.go 414-466
+  B1:if@418 cond_line_count=1 body_next_line_count=0
+  B2:if@424 cond_line_count=1 body_next_line_count=0
+  B3:if@435 cond_line_count=1 body_next_line_count=0
+  B4:if@441 cond_line_count=1 body_next_line_count=0
+  B5:if@447 cond_line_count=1 body_next_line_count=0
+  B6:if@448 cond_line_count=0 body_next_line_count=0
+  B7:if@457 cond_line_count=1 body_next_line_count=0
+  B8:if@458 cond_line_count=0 body_next_line_count=0

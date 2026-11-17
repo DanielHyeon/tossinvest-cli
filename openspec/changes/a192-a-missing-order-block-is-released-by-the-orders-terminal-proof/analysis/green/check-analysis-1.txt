@@ -1,0 +1,11 @@
+[logic-map] a192-a-missing-order-block-is-released-by-the-orders-terminal-proof: base 6277ec34e220 → working tree (no landed-commit.txt in HEAD) required 7 function(s) — judged at HEAD 6277ec34e220
+[logic-map] a192-a-missing-order-block-is-released-by-the-orders-terminal-proof: the target is the working tree, so this window also holds 0 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: no landing recorded — no ordinary commit on this history adds the pinning evidence — commit the bundles in an ordinary commit (a merge commit's own changes are not read)
+[logic-map] internal-journal--validreconcilereleasecause: branch test map cites TestA192OrderTerminalReleaseCauseIsOneThisBuildWrites, which is not a Go test function in any tracked file
+[logic-map] internal-reconcile--blocksfor: branch test map cites TestA192MissingOrderBlockArmsThenReleasesAfterTheTerminalProof, which is not a Go test function in any tracked file
+[logic-map] internal-reconcile--tracker.observe: branch test map cites TestA192MissingOrderBlockArmsThenReleasesAfterTheTerminalProof, which is not a Go test function in any tracked file
+[logic-map] internal-reconcile--tracker.observe: branch test map cites TestA192TheAdjustmentRulesHoldWithTheReaderOn, which is not a Go test function in any tracked file
+[logic-map] internal-reconcile--tracker.persist: branch test map cites TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock, which is not a Go test function in any tracked file
+[logic-map] internal-reconcile--tracker.persist: branch test map cites TestA192AnUnprovenInsertIsNeverBound, which is not a Go test function in any tracked file
+[logic-map] internal-reconcile--tracker.persist: branch test map cites TestA192MissingOrderBlockArmsThenReleasesAfterTheTerminalProof, which is not a Go test function in any tracked file
+[logic-map] internal-reconcile--tracker.persist: branch test map cites TestA192ReleaseWriteFailureKeepsTheGate, which is not a Go test function in any tracked file
+[logic-map] internal-reconcile--tracker.restore: branch test map cites TestA192APermanentBlockStaysOperatorOnly, which is not a Go test function in any tracked file

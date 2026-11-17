@@ -1,0 +1,217 @@
+15c15
+< index 8229ceb8f..f4505de48 100644
+---
+> index 8229ceb8f..772158d35 100644
+18c18,29
+< @@ -451,6 +451,8 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
+---
+> @@ -249,6 +249,10 @@ type ReconcileDriver struct {
+>  	// supervisor asks both the same question.
+>  	healthMu sync.Mutex
+>  	health   LoopStatus
+> +
+> +	// terminalHoldLogged 는 종결 증명 해제의 유지 사유를 종목별로 마지막에 쓴 값임(a192 M5) — 같은 사유를 매 주기
+> +	// 다시 쓰지 않으려는 것. RunOnce 는 직렬이라 잠금 없이 씀.
+> +	terminalHoldLogged map[string]string
+>  }
+>  
+>  // LoopStatus is a supervised loop's cycle health.
+> @@ -451,6 +455,8 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
+177c188
+< @@ -0,0 +1,35 @@
+---
+> @@ -0,0 +1,66 @@
+186a198,199
+> +	"sort"
+> +
+195a209,211
+> +// eventReconcileBlockReleaseHeld 는 결속된 차단의 판정 사유가 바뀔 때 한 줄 — 유지된 이유(M5)를 운영자가 봄.
+> +const eventReconcileBlockReleaseHeld obs.EventType = "reconcile.block_release_held"
+> +
+211a228,253
+> +	if d.opts.Tracker == nil {
+> +		return
+> +	}
+> +	// 유지 사유는 바뀔 때만 씀. 결속이 사라진 종목은 기억에서 지움(다시 생기면 다시 씀).
+> +	reasons := d.opts.Tracker.OrderTerminalHoldReasons()
+> +	if d.terminalHoldLogged == nil {
+> +		d.terminalHoldLogged = map[string]string{}
+> +	}
+> +	logged := d.terminalHoldLogged
+> +	symbols := make([]string, 0, len(reasons))
+> +	for symbol := range reasons {
+> +		symbols = append(symbols, symbol)
+> +	}
+> +	sort.Strings(symbols)
+> +	for _, symbol := range symbols {
+> +		if logged[symbol] == reasons[symbol] {
+> +			continue
+> +		}
+> +		logged[symbol] = reasons[symbol]
+> +		d.opts.Log.Event(eventReconcileBlockReleaseHeld, obs.FieldSymbol, symbol, "reason", reasons[symbol])
+> +	}
+> +	for symbol := range logged {
+> +		if _, ok := reasons[symbol]; !ok {
+> +			delete(logged, symbol)
+> +		}
+> +	}
+215c257
+< @@ -0,0 +1,90 @@
+---
+> @@ -0,0 +1,106 @@
+304a347,362
+> +
+> +	// 무장 주기의 유지 사유가 한 번 기록됨(M5) — 같은 사유를 매 주기 다시 쓰지 않음.
+> +	var held []string
+> +	for _, l := range strings.Split(logs.String(), "\n") {
+> +		if strings.Contains(l, "reconcile.block_release_held") {
+> +			held = append(held, l)
+> +		}
+> +	}
+> +	if len(held) != 1 || !strings.Contains(held[0], `"reason":"armed"`) || !strings.Contains(held[0], "SYN001") {
+> +		t.Fatalf("hold lines = %q, want one armed line for SYN001", held)
+> +	}
+> +	for _, leak := range []string{reconcileAccount, "o-a192-1", "4321"} {
+> +		if strings.Contains(held[0], leak) {
+> +			t.Errorf("hold line carries %q: %s", leak, held[0])
+> +		}
+> +	}
+308c366
+< @@ -0,0 +1,214 @@
+---
+> @@ -0,0 +1,248 @@
+522a581,614
+> +
+> +// TestA192TheProofCountsUnattributableAndForeignFills: 워터마크 뒤의 종목 없는 체결(legacy 관측)과 다른 계좌의 같은
+> +// 종목 체결도 「뒤의 체결」로 셈 — 귀속을 증명할 수 없거나 계좌를 가리지 않는 보수 방향(코드 리뷰 1 #1).
+> +func TestA192TheProofCountsUnattributableAndForeignFills(t *testing.T) {
+> +	j, _ := openReservationJournal(t)
+> +	ctx := context.Background()
+> +	before, err := j.MaxFillEventID(ctx)
+> +	if err != nil {
+> +		t.Fatal(err)
+> +	}
+> +	row := a192Row(t, j)
+> +	req := OrderTerminalProofRequest{StateID: row.ID, Symbol: "SYN001", FillWatermark: before}
+> +	for name, insert := range map[string]string{
+> +		"blank symbol": `INSERT INTO fill_events (order_id, symbol, market, delta_quantity, cumulative_quantity, committed_at)
+> +			VALUES ('o-a192-legacy', '', '', '1', '1', '2026-03-30T00:31:00Z')`,
+> +		"another account": `INSERT INTO fill_events (order_id, account_ref, symbol, market, trading_day, side, delta_quantity, cumulative_quantity, committed_at)
+> +			VALUES ('o-a192-other', 'acct-other', 'SYN001', 'kr', '2026-03-30', 'BUY', '1', '1', '2026-03-30T00:31:00Z')`,
+> +	} {
+> +		t.Run(name, func(t *testing.T) {
+> +			if _, err := j.db.ExecContext(ctx, `DELETE FROM fill_events WHERE id > ?`, before); err != nil {
+> +				t.Fatal(err)
+> +			}
+> +			if p := j.ReadOrderTerminalProof(ctx, req); p.FillAfterWatermark {
+> +				t.Fatalf("control: proof before the insert = %+v", p)
+> +			}
+> +			if _, err := j.db.ExecContext(ctx, insert); err != nil {
+> +				t.Fatalf("seeding: %v", err)
+> +			}
+> +			if p := j.ReadOrderTerminalProof(ctx, req); p.ReadErr != nil || !p.FillAfterWatermark {
+> +				t.Fatalf("proof after the %s fill = %+v, want it counted", name, p)
+> +			}
+> +		})
+> +	}
+> +}
+525c617
+< @@ -0,0 +1,214 @@
+---
+> @@ -0,0 +1,217 @@
+712a805,807
+> +	// 그 종목의 체결 **또는 종목이 비어 귀속할 수 없는 체결**(schema-v15 legacy 관측은 종목 없이 들어올 수 있음 —
+> +	// `legacyUnscoped`)이 워터마크 뒤에 있으면 「뒤의 체결」로 셈. 계좌는 보지 않음 — 다른 계좌의 같은 종목 체결도
+> +	// 유지 쪽으로 세는 보수 방향(코드 리뷰 1 #1).
+715c810
+< +		`SELECT EXISTS(SELECT 1 FROM fill_events WHERE id > ? AND UPPER(TRIM(symbol)) = ?)`,
+---
+> +		`SELECT EXISTS(SELECT 1 FROM fill_events WHERE id > ? AND (UPPER(TRIM(symbol)) = ? OR TRIM(symbol) = ''))`,
+742c837
+< @@ -0,0 +1,827 @@
+---
+> @@ -0,0 +1,873 @@
+1569a1665,1710
+> +
+> +// TestA192AFailClosedFlipBetweenVerdictAndReleaseKeepsTheBlock: 1차 판정 뒤·해제 tx 앞에 결속 주문이 체결 이벤트 없이
+> +// fail_closed 로 바뀌어도(브로커 상태 모호) tx 안의 재판정이 해제를 거절하고, 그 사유를 남김(코드 리뷰 1 #2·#3).
+> +func TestA192AFailClosedFlipBetweenVerdictAndReleaseKeepsTheBlock(t *testing.T) {
+> +	interleave := &a192Interleaving{}
+> +	w := newA192World(t, func(tr *reconcile.Tracker) {
+> +		interleave.Journal = tr.Terminal.(*journal.Journal)
+> +		tr.Terminal = interleave
+> +	})
+> +	w.order("o-a192-1", "SELL")
+> +	w.observe(w.missing(a192Missing("o-a192-1")))
+> +	w.tick()
+> +	w.cancel("o-a192-1", "SELL")
+> +	before, err := w.journal.MaxFillEventID(w.ctx)
+> +	if err != nil {
+> +		t.Fatal(err)
+> +	}
+> +	interleave.beforeRelease = func() {
+> +		interleave.beforeRelease = nil
+> +		_, _ = w.journal.RecordFill(w.ctx, journal.FillObservation{
+> +			OrderID: "o-a192-1", Symbol: a192Symbol, Market: "kr", TradingDay: a192Day, Side: "SELL",
+> +			AccountRef: a192Account, State: "UNKNOWN_BROKER_STATE", FailClosed: true, Reason: "synthetic",
+> +			Quantity: "1", FilledQuantity: "0", ObservedAt: w.now(),
+> +		})
+> +	}
+> +	first, second := w.twoCleanComparisons()
+> +	if interleave.calls != 1 {
+> +		t.Fatalf("release attempts = %d, want the release path reached once", interleave.calls)
+> +	}
+> +	// 대조: 끼워 넣은 쓰기는 체결 이벤트 없이 fail_closed 만 세웠음.
+> +	record, err := w.journal.LookupFillScoped(w.ctx, journal.FillSnapshotScope{OrderID: "o-a192-1", AccountRef: a192Account,
+> +		Market: "kr", TradingDay: a192Day, Symbol: a192Symbol, Side: "SELL"})
+> +	if err != nil || !record.Terminal || !record.FailClosed {
+> +		t.Fatalf("snapshot after the flip = %+v err=%v, want terminal and fail_closed", record, err)
+> +	}
+> +	if after, err := w.journal.MaxFillEventID(w.ctx); err != nil || after != before {
+> +		t.Fatalf("fill events %d → %d (err %v), want none added", before, after, err)
+> +	}
+> +	if len(first.Cleared)+len(second.Cleared) != 0 {
+> +		t.Fatalf("a stale verdict released the block: %+v / %+v", first.Cleared, second.Cleared)
+> +	}
+> +	if reason := w.tracker.OrderTerminalHoldReasons()[a192Symbol]; reason != "tx_not_clean_terminal" {
+> +		t.Fatalf("hold reason = %q, want the in-transaction reason recorded", reason)
+> +	}
+> +	w.assertStillBlocked("fail-closed flip")
+> +}
+1890c2031
+< @@ -0,0 +1,415 @@
+---
+> @@ -0,0 +1,439 @@
+1954a2096,2097
+> +	// reason 은 마지막 판정(1차·tx 재판정)의 사유 코드임 — 「유지 + 사유」(M5)를 운영자가 볼 수 있게 남김.
+> +	reason string
+2266a2410
+> +	b.reason = verdict.reason
+2293a2438,2439
+> +	// 콜백은 순수 함수 — 판정 결과만 지역 변수에 남기고 잠금·장부를 다시 부르지 않음.
+> +	reason := ""
+2296c2442,2444
+< +			return orderTerminalReleaseVerdict(binding, comparison, proof).outcome == terminalReleaseOutcome
+---
+> +			verdict := orderTerminalReleaseVerdict(binding, comparison, proof)
+> +			reason = verdict.reason
+> +			return verdict.outcome == terminalReleaseOutcome
+2302a2451,2453
+> +	} else if b := t.terminal.bindings[binding.symbol]; b != nil {
+> +		// tx 안 재판정이 유지 — 그 사유를 남김(M5).
+> +		b.reason = "tx_" + reason
+2304a2456,2469
+> +}
+> +
+> +// OrderTerminalHoldReasons 는 지금 결속이 있는 종목마다 마지막 판정 사유를 돌려줌(M5 「유지 + 사유」 — 로그용).
+> +// 계좌·주문번호·수량을 담지 않음.
+> +func (t *Tracker) OrderTerminalHoldReasons() map[string]string {
+> +	t.mu.Lock()
+> +	defer t.mu.Unlock()
+> +	out := make(map[string]string, len(t.terminal.bindings))
+> +	for symbol, b := range t.terminal.bindings {
+> +		if b.reason != "" {
+> +			out[symbol] = b.reason
+> +		}
+> +	}
+> +	return out

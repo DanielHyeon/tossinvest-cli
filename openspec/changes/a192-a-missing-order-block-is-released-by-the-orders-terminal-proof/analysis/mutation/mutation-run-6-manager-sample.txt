@@ -1,0 +1,22 @@
+repo /home/daniel/tossos-work/a192-missing-order-block-release
+head 6277ec34e22059084f6789279e9334371f86f123
+targets internal/app/engine/a192_order_terminal_release_log.go=328c58e7cd65 internal/app/engine/gateway.go=92c70f28eb70 internal/app/engine/reconcileloop.go=cb2e95a4ccbd internal/journal/reconcile_order_terminal_release.go=f03a12d5f6a7 internal/journal/reconcile_states.go=1591e0153868 internal/reconcile/mismatch.go=9895f31184e5 internal/reconcile/order_terminal_release.go=e323a12c4552
+m0 control ./internal/app/engine/ -run TestA192: rc=0
+m0 control ./internal/journal/ -run TestA192: rc=0
+m0 control ./internal/reconcile/ -run TestA192: rc=0
+m0 control ./internal/reconcile/ ./internal/journal/ -run TestA192: rc=0
+m0 control ./internal/reconcile/ ./internal/journal/ ./internal/app/engine/ -run TestA192: rc=0
+m34 CAUGHT — Manager 표본 g1 — C2: 이미 해제된 행 검사 삭제 — rc=1 18.1s --- FAIL: TestA192VerdictHoldsForEveryFailedCondition (0.00s); FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	16.574s
+m35 CAUGHT — Manager 표본 g2 — C2: 시장 범위 행 검사 삭제 — rc=1 18.6s --- FAIL: TestA192VerdictHoldsForEveryFailedCondition (0.00s); FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	17.067s
+m36 CAUGHT — Manager 표본 g3 — C2: 행 계좌 = 추적기 계좌 검사 삭제 — rc=1 18.7s --- FAIL: TestA192VerdictHoldsForEveryFailedCondition (0.00s); FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	17.090s
+m37 CAUGHT — Manager 표본 g4 — C4: 비교 계좌 = 추적기 계좌 검사 삭제 — rc=1 19.1s --- FAIL: TestA192VerdictHoldsForEveryFailedCondition (0.00s); --- FAIL: TestA192AForeignComparisonDoesNotDropTheBinding (0.61s); FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	17.566s
+m38 CAUGHT — Manager 표본 g5 — C11: 비교가 진입을 막는지 검사 삭제 — rc=1 18.5s --- FAIL: TestA192VerdictHoldsForEveryFailedCondition (0.00s); FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	16.916s
+m39 CAUGHT — Manager 표본 g6 — C13: 무장보다 나중 비교 검사 삭제 — rc=1 18.6s --- FAIL: TestA192VerdictArmsThenReleases (0.00s); FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	16.879s
+m40 CAUGHT — Manager 표본 g7 — 읽기 실패 = 유지 삭제 — rc=1 18.4s --- FAIL: TestA192VerdictHoldsForEveryFailedCondition (0.00s); FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	16.584s
+m41 CAUGHT — Manager 표본 g8 — 해제 UPDATE 의 released_at IS NULL 고정 삭제 — rc=1 20.2s --- FAIL: TestA192TheReleaseNeverOverwritesARowAlreadyReleased (0.61s); FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	5.099s
+m42 CAUGHT — Manager 표본 g9 — RowsAffected == 1 검사 삭제 — rc=1 20.0s --- FAIL: TestA192TheReleaseNeverOverwritesARowAlreadyReleased (0.59s); FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	4.998s
+m43 CAUGHT — Manager 표본 g10 — persist: tx 재판정이 유지여도 추적기 기억에서 블록 삭제 — rc=1 18.3s --- FAIL: TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock (0.68s); --- FAIL: TestA192AFailClosedFlipBetweenVerdictAndReleaseKeepsTheBlock (0.70s); FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	16.795s
+m44 CAUGHT — Manager 표본 g11 — 수량 블록의 삽입도 결속 — rc=1 14.0s --- FAIL: TestA192APermanentBlockStaysOperatorOnly (0.62s); panic: runtime error: invalid memory address or nil pointer dereference [recovered, repanicked]; FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	12.495s
+m45 CAUGHT — Manager 표본 g12 — 수량 불일치 실격 흔적 삭제 — rc=1 18.2s --- FAIL: TestA192AQuantityDisputeDisqualifiesTheBinding (0.63s); FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	16.701s
+tally CAUGHT=12 SURVIVED=0 NOT_REACHED=0
+original tree unchanged (sha256 re-checked)

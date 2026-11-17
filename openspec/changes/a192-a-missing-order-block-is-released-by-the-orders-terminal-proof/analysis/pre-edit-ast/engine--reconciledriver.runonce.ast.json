@@ -1,0 +1,401 @@
+{
+  "file": "internal/app/engine/reconcileloop.go",
+  "source_sha256": "b8e9b21373ea820b086a5eb2e201c4d245de9544c731121fded7746ef5e61d27",
+  "package": "engine",
+  "function": "RunOnce",
+  "receiver": "ReconcileDriver",
+  "signature": "ReconcileDriver.RunOnce(params=1, results=1)",
+  "start": {
+    "line": 414,
+    "column": 1
+  },
+  "end": {
+    "line": 466,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 418,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 424,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 435,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 441,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 447,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 448,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 457,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 458,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 419,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 426,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 451,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 461,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 465,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 415,
+        "column": 8
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 415,
+        "column": 17
+      },
+      "text": "d.note"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 417,
+        "column": 18
+      },
+      "text": "d.stabilise"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 16
+      },
+      "text": "reconcile.LocalStateFromJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 425,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 428,
+        "column": 10
+      },
+      "text": "Compare"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 434,
+        "column": 17
+      },
+      "text": "d.ingest.IngestExternalPositions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 438,
+        "column": 17
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 440,
+        "column": 20
+      },
+      "text": "d.opts.Converge.ConvergeQuantities"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 20
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 447,
+        "column": 12
+      },
+      "text": "d.opts.Tracker.Refresh"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 453,
+        "column": 18
+      },
+      "text": "d.opts.Tracker.Observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 454,
+        "column": 18
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 454,
+        "column": 22
+      },
+      "text": "d.opts.Tracker.Blocks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 455,
+        "column": 19
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 456,
+        "column": 19
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 464,
+        "column": 2
+      },
+      "text": "d.judgeHoldings"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 417,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 421,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 423,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 425,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 428,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 434,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 436,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 438,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 440,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 442,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 444,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 445,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 447,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 449,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 453,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 454,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 455,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 456,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 459,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 415,
+        "column": 2
+      }
+    }
+  ]
+}
