@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a193-an-in-doubt-order-is-resolved-while-the-engine-runs",
-    "path": "openspec/changes/a193-an-in-doubt-order-is-resolved-while-the-engine-runs"
+    "path": "openspec/changes/archive/2026-11-18-a193-an-in-doubt-order-is-resolved-while-the-engine-runs"
   },
   "found_by": {
     "date": "2026-11-18",
     "how": "2026-10-29 손절 매도 제출 하나가 23:57 KST 에 HTTP 5xx 로 IN_DOUBT 가 됐고, 엔진 재시작(10-31 12:43)까지 36.8시간 해소도 알림도 없었다. 그동안 두 거래일이 손절 없이 지나갔다(Manager 실측, 운영 저널 사본·엔진 로그).",
-    "record": "openspec/changes/a193-an-in-doubt-order-is-resolved-while-the-engine-runs/proposal.md"
+    "record": "openspec/changes/archive/2026-11-18-a193-an-in-doubt-order-is-resolved-while-the-engine-runs/proposal.md"
   },
   "acceptance": [
     "엔진이 도는 동안 IN_DOUBT 가 된 발주 attempt 는 기동 복구가 끝난 뒤 시작하는 보조 실행자가 5초 주기·직렬로 기존 해소 함수(조회 대조)에 넣는다. 증명 규칙은 바뀌지 않고 재생은 부르지 않는다.",

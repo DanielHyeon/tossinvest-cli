@@ -1,0 +1,52 @@
+┌  Initializing CodeGraph
+│
+◆  Initialized in /home/daniel/tossos-work/a193-close-gate
+│
+Scanning files...
+Parsing code...
+Resolving refs...
+Linking dynamic dispatch...
+│
+◆  Indexed 3,228 files
+│
+●  55,943 nodes, 206,330 edges in 3.6s
+│
+└  Done
+
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+Starting indexing for: /home/daniel/tossos-work/a193-close-gate
+
+Skipped 352 unresolved call relationship(s): ambiguous_function_target=352
+┏━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Call                    ┃ Reason                  ┃ Location                 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ goBinary.commandPath    │ ambiguous_function_tar… │ /home/daniel/tossos-work │
+│                         │                         │ /a193-close-gate/tools/a │
+│                         │                         │ 112-mb-us-source/identit │
+│                         │                         │ y.go:435                 │
+│ g.execution.close       │ ambiguous_function_tar… │ /home/daniel/tossos-work │
+│                         │                         │ /a193-close-gate/tools/a │
+│                         │                         │ 112-mb-us-source/identit │
+│                         │                         │ y.go:145                 │
+│ g.execution.commandPath │ ambiguous_function_tar… │ /home/daniel/tossos-work │
+│                         │                         │ /a193-close-gate/tools/a │
+│                         │                         │ 112-mb-us-source/identit │
+│                         │                         │ y.go:138                 │
+│ goBinary.revalidate     │ ambiguous_function_tar… │ /home/daniel/tossos-work │
+│                         │                         │ /a193-close-gate/tools/a │
+│                         │                         │ 112-mb-us-source/identit │
+│                         │                         │ y.go:222                 │
+│ g.execution.close       │ ambiguous_function_tar… │ /home/daniel/tossos-work │
+│                         │                         │ /a193-close-gate/tools/a │
+│                         │                         │ 112-mb-us-source/identit │
+│                         │                         │ y.go:114                 │
+└─────────────────────────┴─────────────────────────┴──────────────────────────┘
+Successfully finished indexing: . in 216.01 seconds
++ codegraph init .
++ codegraphcontext index .
+[sdd-sync] all indexes current
+rc=0

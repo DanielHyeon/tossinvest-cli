@@ -1,0 +1,8 @@
+# 단독 재실행 — gate worktree detached 6db094d99, 2026-11-17T22:10:58Z
+# go test -count=1 -run '^TestMaximumAttributionGenerationIntegrityScanMeetsP95Target$' -v ./internal/performance/
+=== RUN   TestMaximumAttributionGenerationIntegrityScanMeetsP95Target
+    attribution_persistence_test.go:48: 10k-row attribution integrity scan p95=622.878366ms runs=[599.858806ms 608.090796ms 609.173459ms 611.493926ms 611.938381ms 618.793035ms 622.878366ms]
+--- PASS: TestMaximumAttributionGenerationIntegrityScanMeetsP95Target (5.44s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/performance	5.447s
+rc=0

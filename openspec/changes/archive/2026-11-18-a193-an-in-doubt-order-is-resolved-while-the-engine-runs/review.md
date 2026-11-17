@@ -179,6 +179,18 @@ Pre-Edit Gate:
 - 재실행(`GOFLAGS=-trimpath`): 엔진 `-run TestA193` rc 0 37/0/0, 같은 것 `-race` rc 0 37/0/0, cmd 선택 rc 0 9/0/0, `make lint` rc 0, `openspec validate --strict` valid, `check_analysis` rc 0.
   구현 리뷰는 다시 돌리지 않음(Manager 지시 — 시험 추가뿐).
 
+## 종결 (2026-11-18 KST — 사용자 승인 「종결(main 착지·push·완료 게이트·archive) + 오늘 창에서 운영 반영」, Manager 지시)
+
+- 종결 선행: tasks 5.1 체크, 5.2·5.3 선체크(gate ② 선행 조건 — 배포·기억 retain 은 Manager 몫), tracker 재생성, `--record-landing` → `landed-commit.txt` = `53b4f0512`(도구 계산).
+- 착지: 주 저장소 main `791fb6ef1` → `6db094d99` **fast-forward**(merge 커밋 없음). **`git push origin main` 은 팀메이트 세션의 권한 분류기가 거부(「Unsanctioned Communication」) —
+  push 는 Manager/사용자 몫으로 넘김.**
+- `make sdd-sync`(주 저장소): rc 2 — CodeGraph sync 성공(9 파일), advisory codegraphcontext update(300s)·gbrain project sync(1800s) 시한 초과로 incomplete. HEAD 무이동.
+- 완료 게이트(격리 worktree `~/tossos-work/a193-close-gate`, ext4 홈, detached `6db094d99`, `.sdd/.venv` 는 uv 오프라인 캐시로 준비, `sdd_sync.py --no-gbrain` rc 0, codegraph status 0.3s):
+  - **1회차 rc 2**: ①~⑥ OK, ⑦ `make test` 에서 `TestMaximumAttributionGenerationIntegrityScanMeetsP95Target`(internal/performance) 하나만 FAIL —
+    `10k-row attribution integrity scan p95=2.016934692s target<=2s`. 단독 재실행 rc 0(p95 622.9ms). a193 은 internal/performance·journal 무편집(diff 0) → 병렬 부하 아래 시간 임계 초과로 판단.
+  - **2회차 rc 0 — 11/11 GATE PASS**(22:11:09Z~22:39:35Z). ⑦ 패키지 ok 122 · FAIL 0. 원문 `analysis/close/`.
+- archive: 아래 커밋. 정본 order-execution 「IN_DOUBT 해소」 갱신(MODIFIED).
+
 ## Manager 결정 대기
 
 (1단계 목록 Q-A~Q-I 는 위 「Manager 처분」으로 전부 결정됨 — 아래는 기록. 2단계 리뷰가 더하는 것은 구현 리뷰 절에 붙인다)

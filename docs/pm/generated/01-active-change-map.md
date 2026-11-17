@@ -182,4 +182,4 @@
 | `a190-the-completion-gate-validates-the-closing-change-strictly` | STORY-TOS-a190 | archived |
 | `a191-fill-detection-resolves-orders-that-left-the-open-list` | STORY-TOS-a191 | archived |
 | `a192-a-missing-order-block-is-released-by-the-orders-terminal-proof` | STORY-TOS-a192 | archived |
-| `a193-an-in-doubt-order-is-resolved-while-the-engine-runs` | STORY-TOS-a193 | implemented |
+| `a193-an-in-doubt-order-is-resolved-while-the-engine-runs` | STORY-TOS-a193 | archived |

@@ -144,7 +144,7 @@
     - STORY-TOS-a135 — Capability attestation expiry and scope loss are announced before a restart [archived] → `a135-attestation-expiry-is-announced`
     - STORY-TOS-a163 — 시세의 브로커 데이터 시각을 보존하고 보고하되 손절 판정 자격은 바꾸지 않는다 [archived] → `a163-quote-freshness-uses-trade-time`
     - STORY-TOS-a167 — A protective-exit remainder that stays live is re-priced and re-ordered [in_progress] → `a167-a-protective-remainder-is-re-priced`
-    - STORY-TOS-a193 — 엔진이 도는 동안 IN_DOUBT 가 된 발주는 다음 재시작을 기다리지 않고 조회 대조로 해소되고, 못 풀고 오래 남으면 critical 로 알린다 [implemented] → `a193-an-in-doubt-order-is-resolved-while-the-engine-runs`
+    - STORY-TOS-a193 — 엔진이 도는 동안 IN_DOUBT 가 된 발주는 다음 재시작을 기다리지 않고 조회 대조로 해소되고, 못 풀고 오래 남으면 critical 로 알린다 [archived] → `a193-an-in-doubt-order-is-resolved-while-the-engine-runs`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`
