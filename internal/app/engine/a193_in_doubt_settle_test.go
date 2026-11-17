@@ -559,11 +559,15 @@ func TestA193TheExitObserverDoesNotWaitForAResolution(t *testing.T) {
 	done := make(chan error, 1)
 	go func() { done <- rt.Run(ctx) }()
 	t.Cleanup(func() { cancel(); <-done })
-	<-res.entered // 해소가 막힘 — 아래 주기는 전부 그 뒤
-	for len(cycles) > 0 {
+	deadline := time.After(10 * time.Second) // 실패 시한일 뿐 — 성공은 주기 도착으로 판정(준비 단계부터 적용)
+	select {
+	case <-res.entered: // 해소가 막힘 — 아래 주기는 전부 그 뒤
+	case <-deadline:
+		t.Fatal("the resolution never started")
+	}
+	for n := len(cycles); n > 0; n-- { // 진입 시점에 쌓인 것만 비움
 		<-cycles
 	}
-	deadline := time.After(10 * time.Second) // 실패 시한일 뿐 — 성공은 주기 도착으로 판정
 	for i := 0; i < 5; i++ {
 		select {
 		case <-cycles:

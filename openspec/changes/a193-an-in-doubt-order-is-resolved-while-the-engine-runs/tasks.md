@@ -68,7 +68,7 @@
 - [x] 4.2 선택 시험(codegraph-baseline.md 「선택 시험」): `./internal/app/engine -run 'A193|Auxiliary|Runtime'`, `./cmd/tossctl -run 'A193|A098|EngineRuntime|ProductionRuntime'`,
       `./internal/execgw -run 'Resolve|InDoubt'`, `./internal/journal -run 'Resolve|Pending'`. `-race` 는 `./internal/app/engine -run A193` 만. 미실행 범위 기록.
 - [x] 4.3 `make lint`(진입점), `openspec validate a193-… --strict`, `python3 tools/logic-map/check_analysis.py --change a193-…`.
-- [ ] 4.4 gstack review(코드) — 적대적 Eng 보이스 포함, 작성자와 다른 계열, 최대 2회차. 새 가드·범위 확대 제안은 Manager 결정 전 채택 금지.
+- [x] 4.4 gstack review(코드) — 적대적 Eng 보이스 포함, 작성자와 다른 계열, 최대 2회차. 새 가드·범위 확대 제안은 Manager 결정 전 채택 금지.
 - [x] 4.5 `docs/operations.md` 에 「세션 중 IN_DOUBT 해소와 park」 절: 로그 줄 이름, 10분 알림의 뜻, park 뒤 계정 전역 진입 래치가 프로세스 수명이라는 것, 해동 절차.
 - [x] 4.6 (처리 변경) retry matrix 문서(`openspec/changes/verify-execution-capability/analysis/retry-matrix-slo-2026-10-22.md`)에 세션 해소 조회 빈도 계상 한 줄(정본 §0.4).
 

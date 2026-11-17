@@ -127,9 +127,9 @@ Pre-Edit Gate:
 
 | 명령 | rc | PASS / FAIL / SKIP | 비고 |
 |---|---|---|---|
-| `go test ./internal/app/engine -run TestA193 -v` | 0 | 29 / 0 / 0 | `green-engine-a193.txt` |
-| 같은 것 `-race` | 0 | (요약 출력) | `green-engine-a193-race.txt` |
-| `go test ./internal/app/engine/ -v`(패키지 전체, 900s) | 1 | 869 / 6 / 1 | `verify-engine-pkg.txt`(구현 커밋 직전 판). 실패 6 = `-trimpath` 계측 결함(경로 기반 시험) — 옵션 없이 6/6 PASS `verify-engine-6-notrimpath.txt`(a192 와 같은 6) |
+| `go test ./internal/app/engine -run TestA193 -v` | 0 | 32 / 0 / 0 | `green-engine-a193.txt`(최종 — 구현 리뷰 2회차 수리 뒤) |
+| 같은 것 `-race -v` | 0 | 32 / 0 / 0 | `green-engine-a193-race.txt` |
+| `go test ./internal/app/engine/ -v`(패키지 전체, 900s) | 1 | 875 / 6 / 1 | `verify-engine-pkg.txt`(HEAD `2338d468f` — 비대기 시험 준비 시한 수리 전 판). 실패 6 = `-trimpath` 계측 결함(경로 기반 시험) — 옵션 없이 6/6 PASS `verify-engine-6-notrimpath.txt`(a192 와 같은 6) |
 | `go test ./cmd/tossctl -run 'TestA193\|TestA098\|TestProductionRuntime\|TestTheAlertDeliverer\|TestEngineRuntime\|TestTheRestartRecovery\|TestTheLoopSet' -v` | 0 | 9 / 0 / 0 | `green-cmd.txt` |
 | `go test ./internal/execgw/ -v`(패키지 전체) | 1 | 327 / 1 / 1 | 실패 1 `TestA166OrderableActionCoverage` = `-trimpath`(GOROOT 미설정 타입 검사) — 옵션 없이 PASS `verify-execgw-1-notrimpath.txt` |
 | `go test ./internal/journal/ -run 'Resolve\|Pending\|Unresolved\|InDoubt\|Recover\|ArmedExit\|ExitIntentAttempts' -v` | 0 | 55 / 0 / 0 | `verify-journal-sel.txt` |
@@ -150,6 +150,17 @@ Pre-Edit Gate:
 | I1-1 [P1] | 기록 실패한 critical 이 attempt 종결(CONFIRMED·park) 뒤 다시 시도되지 않는다 — 특히 비-exit park 알림은 대신할 경로가 없음 | 구현 결함(계약 「다음 스윕이 다시 시도」 위반) | **수리** `10a92b1d0`: 실패한 알림을 `unsent` 에 두고 스윕 머리(원장 읽기 전)에서 재기록, 대기 중 key 는 같은 스윕에서 다시 안 시도(`handled`). RED `analysis/implementation/red-review-r1.txt`(수정 전 FAIL) → 시험 `TestA193AFailedAlertIsRetriedAfterTheAttemptSettles`, `TestA193AFailingRecordIsTriedOncePerSweep`; 변이 M27·M28·M30 |
 | I1-2 [P1] | 해소 오류 로그에 원장 오류 원문(주문 번호 포함 가능)이 실린다 | 구현 결함(design D0.3 「계좌·수량·가격 없음」과 결과 줄의 원칙을 오류 줄이 어김) | **수리**: 원문 대신 분류(`error_class` — not_resolvable · ledger_state_changed · attempt_not_found · broker_order_unreadable · broker_list_incomplete · deadline_exceeded · other)만. RED 관측, 시험 `TestA193AResolutionFailureLogCarriesNoOrderNumber`, 변이 M29. **잔여**: 분류 `other` 의 원인은 로그로 알 수 없다(진단성 대 누출의 선택 — Manager 확인 대상 아래 I-a) |
 | I1-3 [P2] | 비대기 시험이 실제 ExitObserver 제출 경로를 재지 않고 실시간(50ms·5주기)에 의존 | 시험 범위·flaky | **부분 반영**: 시간 의존 제거(주기 도착을 채널로 세고, 시간은 10초 실패 시한으로만; 취소·drain 을 Cleanup 에). **범위는 그대로**(런타임 수준) — 실제 ExitObserver 를 붙인 시험은 새 시험 하네스 작업이라 채택 안 함, 시험 주석과 tasks 2단계 기록에 범위 명시 |
+
+## 구현 리뷰 2회차 (2026-11-18, 마지막)
+
+- 보이스: Codex(같은 설정), 범위 = 1회차 수리·M13 원인·남은 안전. 기준 `e391565e5 → 2338d468f`. 원문 `analysis/review/codex-impl-r2-output.md`. 리뷰 뒤 변화: 출력 파일 하나(+ 진행 중이던 내 시험 원문 파일 — 리뷰어가 「전후 동일」 확인).
+- 판정: **PASS-with-findings**(P0 0 · P1 0 · P2 1). 1회차 P1 두 건 「닫힘」 확인. **M13 원인 서술 타당 — 시험 공백 아님**(단 성공 뒤 래치를 지우면 재기록이 되풀이되므로 남겨야 함 — 코드 무변경).
+
+| # | 지적 | 처분 |
+|---|---|---|
+| I2-1 [P2] | 비대기 시험의 준비 구간(`<-res.entered`·채널 비우기)이 실패 시한 밖 | **반영**: 시한을 준비 단계부터, 비우기는 진입 시점 길이만큼. `TestA193` 32/0(-race 포함) |
+
+회차 상한(2)에 닿았다.
 
 ## Manager 결정 대기
 
