@@ -1,5 +1,19 @@
 # a193 변이 원장
 
+> **최신 판(정본): run-2 + run-3 — 구현 리뷰 1회차 수리 뒤.** run-2 는 커밋 `10a92b1d0`(30 변이: 29 CAUGHT · M13·M30 SURVIVED), run-3 은 `40b11ee55`(M30 의 못을 더한 뒤 M13·M30 만:
+> M30 CAUGHT, M13 SURVIVED). 합: **30 변이 — CAUGHT 29(실패 27 · 시한 초과 2), SURVIVED 1(M13), BUILD_FAIL 0, NOT_REACHED 0.** `run-2-aborted-anchor.txt` 는 M07 앵커가
+> 수리로 바뀌어 M07 에서 멈춘 판(M01~M06 결과는 run-2 와 같음) — 하네스에 시작 전 앵커 사전 검사를 더했다.
+>
+> | id | 변이 | 판정 | 원인 / 잡은 시험 |
+> |---|---|---|---|
+> | M27 | 못 보낸 알림 재시도 삭제 | CAUGHT | `TestA193AFailedAlertIsRetriedAfterTheAttemptSettles` 외 |
+> | M28 | 기록 실패를 unsent 에 두지 않음 | CAUGHT | `TestA193AFailedAlertIsRetriedAfterTheAttemptSettles` |
+> | M29 | 해소 오류 원문을 로그에 다시 실음 | CAUGHT | `TestA193AResolutionFailureLogCarriesNoOrderNumber` |
+> | M30 | 재시도 대기 중인 key 를 같은 스윕에서 또 시도 | run-2 SURVIVED → 시험 `TestA193AFailingRecordIsTriedOncePerSweep` 추가 → run-3 CAUGHT | 원인: 같은 스윕의 중복 시도 수를 재는 시험이 없었음(결과는 같은 key 라 해는 중복 실패 쓰기뿐) |
+> | **M13** | 기록 실패에도 래치(`recorded` 를 기록 전에 세움) | **SURVIVED** | **원인**: 수리(P1-1) 뒤 실패 알림의 재기록은 `unsent` 가 맡고, `retryUnsent → record` 는 `recorded` 를 보지 않는다. 그래서 앞당긴 `recorded` 는 재시도를 막지 못하고, `handled` 는 `unsent` 로 이미 참이라 알림 함수의 건너뜀도 같다 — **현재 구조에서 관측 가능한 차이가 없다**(래치의 「실패 뒤 재시도」 책임이 `unsent` 로 옮겨 갔고 그것은 M27·M28 이 잡는다). 처분: 시험을 더하지 않음(재는 행동이 없음). 코드에서 `recorded` 의 성공 뒤 설정을 지울지는 구현 리뷰 2회차 판단에 맡김 |
+>
+> 아래는 run-1(구현 커밋 `839a95c90`, 26 변이 26 CAUGHT) 기록이다 — M01~M26 의 run-2 판정은 M13 을 빼고 같다(run-2.txt).
+
 - 기준: 구현 커밋 `839a95c90`. 하네스 `harness.py.txt`(이 디렉터리 — 커밋된 원본, `python3 -I harness.py.txt <worktree> <sha>` 로 재실행). 원문 `run-1.txt`(잘리지 않음, 끝의 JSON 이 원장).
 - 방법: 사본 = `git worktree add --detach ~/tossos-work/a193-mut-<pid> <sha>`(한 판, 끝나면 `worktree remove` — 실행 뒤 `git worktree list` 에 없음 확인). 시작 sha 단언 ·
   **무변이 대조군 2개 GREEN**(엔진 `-run TestA193`, cmd 선택 시험) 뒤 진행 · 변이마다 앵커 정확히 1회 + `git diff --stat` 비어 있지 않음(적용 = 닿음의 1차 대조) ·
