@@ -1,0 +1,9 @@
+# RED(구현 리뷰 1회차 P1) — 수정 전 구현 e391565e5 + 새 시험 파일
+    a193_in_doubt_settle_test.go:1079: after the attempt settled, retried alerts = [], want [order.in_doubt|attempt:att-a193-1 order.unresolved_in_doubt|attempt:att-a193-1]
+--- FAIL: TestA193AFailedAlertIsRetriedAfterTheAttemptSettles (0.28s)
+    a193_in_doubt_settle_test.go:1101: the settler logged the raw resolution error with an order number: time=2026-03-30T14:00:00.000Z level=WARN msg=order.in_doubt event=order.in_doubt subject=order severity=critical attempt_id=att-a193-1 error="journal: reading prior evidence for confirmed order ord-synthetic-secret-77: journal: attempt is not in the expected state" detail="the in-doubt settler could not resolve this attempt; it retries on the next sweep"
+--- FAIL: TestA193AResolutionFailureLogCarriesNoOrderNumber (0.22s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.511s
+FAIL
+rc=1

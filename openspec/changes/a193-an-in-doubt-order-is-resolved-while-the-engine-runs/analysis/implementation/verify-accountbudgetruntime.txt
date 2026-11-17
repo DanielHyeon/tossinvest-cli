@@ -5,19 +5,19 @@
 === RUN   TestA166ConsumerPriceLimitsBodyOwnership
 === RUN   TestA166ConsumerPriceLimitsBodyOwnership/eof
 === RUN   TestA166ConsumerPriceLimitsBodyOwnership/cancel
---- PASS: TestA166ConsumerPriceLimitsBodyOwnership (2.52s)
+--- PASS: TestA166ConsumerPriceLimitsBodyOwnership (2.50s)
     --- PASS: TestA166ConsumerPriceLimitsBodyOwnership/eof (1.26s)
-    --- PASS: TestA166ConsumerPriceLimitsBodyOwnership/cancel (1.26s)
+    --- PASS: TestA166ConsumerPriceLimitsBodyOwnership/cancel (1.25s)
 === RUN   TestA166ConsumerTokenSentThenAuxGETRefused
---- PASS: TestA166ConsumerTokenSentThenAuxGETRefused (0.78s)
+--- PASS: TestA166ConsumerTokenSentThenAuxGETRefused (0.80s)
 === RUN   TestA166ConsumerFinishFaultPreservesHTTP429
---- PASS: TestA166ConsumerFinishFaultPreservesHTTP429 (0.79s)
+--- PASS: TestA166ConsumerFinishFaultPreservesHTTP429 (0.82s)
 === RUN   TestA166ConsumerToken429CrossFactorySnapshot
---- PASS: TestA166ConsumerToken429CrossFactorySnapshot (0.40s)
+--- PASS: TestA166ConsumerToken429CrossFactorySnapshot (0.39s)
 === RUN   TestA166ConsumerPriceLimitsTwo401AdoptAndMint
 --- PASS: TestA166ConsumerPriceLimitsTwo401AdoptAndMint (1.55s)
 === RUN   TestA166WiringCensusBaseline
---- PASS: TestA166WiringCensusBaseline (0.31s)
+--- PASS: TestA166WiringCensusBaseline (0.32s)
 === RUN   TestA166WiringCensusRejectsBypasses
 === RUN   TestA166WiringCensusRejectsBypasses/root-error-to-off
     a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: cmd/tossctl/root_budget.go||newRootOfficialClient
@@ -35,25 +35,25 @@
     a166_wiring_census_test.go:344: source-copy mutation rejected: callsite inventory count changed: got 117 expected 116
 === RUN   TestA166WiringCensusRejectsBypasses/escaped-http-method
     a166_wiring_census_test.go:344: source-copy mutation rejected: unresolved function value: internal/official/token.go Do
---- PASS: TestA166WiringCensusRejectsBypasses (1.12s)
+--- PASS: TestA166WiringCensusRejectsBypasses (1.19s)
     --- PASS: TestA166WiringCensusRejectsBypasses/root-error-to-off (0.02s)
     --- PASS: TestA166WiringCensusRejectsBypasses/required-raw-constructor (0.03s)
     --- PASS: TestA166WiringCensusRejectsBypasses/token-default-http (0.18s)
-    --- PASS: TestA166WiringCensusRejectsBypasses/replay-raw-template (0.11s)
-    --- PASS: TestA166WiringCensusRejectsBypasses/probe-raw-send (0.27s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/replay-raw-template (0.12s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/probe-raw-send (0.28s)
     --- PASS: TestA166WiringCensusRejectsBypasses/dead-guard-raw-return (0.03s)
-    --- PASS: TestA166WiringCensusRejectsBypasses/new-unclassified-http (0.30s)
-    --- PASS: TestA166WiringCensusRejectsBypasses/escaped-http-method (0.17s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/new-unclassified-http (0.32s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/escaped-http-method (0.20s)
 === RUN   TestA166WiringCensusRejectsDirectorySymlink
 --- PASS: TestA166WiringCensusRejectsDirectorySymlink (0.00s)
 === RUN   TestA169FenceOfficial401TokenAndSticky
---- PASS: TestA169FenceOfficial401TokenAndSticky (2.04s)
+--- PASS: TestA169FenceOfficial401TokenAndSticky (2.03s)
 === RUN   TestA169FenceCrossProcessChild
 --- PASS: TestA169FenceCrossProcessChild (0.00s)
 === RUN   TestA169FenceCrossProcessToken429
---- PASS: TestA169FenceCrossProcessToken429 (0.79s)
+--- PASS: TestA169FenceCrossProcessToken429 (0.80s)
 === RUN   TestA169FenceOfficialCachedAdoptAndMint
---- PASS: TestA169FenceOfficialCachedAdoptAndMint (1.65s)
+--- PASS: TestA169FenceOfficialCachedAdoptAndMint (1.64s)
 === RUN   TestLaunchConfigMatrix
 --- PASS: TestLaunchConfigMatrix (0.00s)
 === RUN   TestA166OfflineProvisionAndCheck
@@ -80,10 +80,10 @@
 === RUN   TestA166OfflineFaultBoundaries/close
 === RUN   TestA166OfflineFaultBoundaries/rename
 === RUN   TestA166OfflineFaultBoundaries/dir-sync
---- PASS: TestA166OfflineFaultBoundaries (0.11s)
+--- PASS: TestA166OfflineFaultBoundaries (0.10s)
     --- PASS: TestA166OfflineFaultBoundaries/write (0.02s)
     --- PASS: TestA166OfflineFaultBoundaries/file-sync (0.02s)
-    --- PASS: TestA166OfflineFaultBoundaries/close (0.03s)
+    --- PASS: TestA166OfflineFaultBoundaries/close (0.02s)
     --- PASS: TestA166OfflineFaultBoundaries/rename (0.02s)
     --- PASS: TestA166OfflineFaultBoundaries/dir-sync (0.02s)
 === RUN   TestA166OfflineRootReplacementAndCancel
@@ -143,7 +143,7 @@
 === RUN   TestA166RuntimeV2StrictEventShape
 --- PASS: TestA166RuntimeV2StrictEventShape (0.02s)
 === RUN   TestA166RuntimeToken429PreservesPollCollector
---- PASS: TestA166RuntimeToken429PreservesPollCollector (0.43s)
+--- PASS: TestA166RuntimeToken429PreservesPollCollector (0.42s)
 === RUN   TestA166RuntimeEventChild
 --- PASS: TestA166RuntimeEventChild (0.00s)
 === RUN   TestA166RuntimeToken401AndCached
@@ -159,7 +159,7 @@
 === RUN   TestA166RuntimeToken429FinishFaultPreservesStatus
 --- PASS: TestA166RuntimeToken429FinishFaultPreservesStatus (0.41s)
 === RUN   TestA166RuntimeV2A112CloneRecordsPending
---- PASS: TestA166RuntimeV2A112CloneRecordsPending (0.42s)
+--- PASS: TestA166RuntimeV2A112CloneRecordsPending (0.43s)
 PASS
-ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	22.963s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	23.062s
 rc=0

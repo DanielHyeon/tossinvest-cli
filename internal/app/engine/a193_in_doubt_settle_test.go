@@ -6,6 +6,7 @@ package engine
 // 기록자로 셈. 값은 전부 합성(실제 종목·수량·가격·주문번호·계좌 아님). 브로커 호출 0 — 목록·계좌는 메모리 가짜.
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -14,6 +15,7 @@ import (
 	"go/parser"
 	"go/token"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -532,21 +534,19 @@ func (r *a193BlockingResolver) Resolve(ctx context.Context, id string) (execgw.R
 }
 
 func TestA193TheExitObserverDoesNotWaitForAResolution(t *testing.T) {
+	// 범위: 런타임 수준 — 해소가 막혀 있는 동안 다른 감독 루프의 주기가 계속 도는가(실제 ExitObserver 의 제출 경로는 재지 않음 — review.md 구현 리뷰 1회차 P2).
 	f := newA193Fixture(t)
 	f.attempt("SELL", journal.KindPlace, journal.StateInDoubt, false)
 	res := newA193BlockingResolver()
-	cycles := atomic.Int32{}
+	cycles := make(chan struct{}, 64)
 	rt, err := NewRuntime(RuntimeOptions{
-		// 손절 판정 루프 자리 — 실 시계 대신 채널 없이 바로 도는 주기를 셈.
 		Loops: []SupervisedLoop{{Name: "exit", Run: func(ctx context.Context) error {
 			for {
 				select {
 				case <-ctx.Done():
 					return ctx.Err()
-				default:
+				case cycles <- struct{}{}:
 				}
-				cycles.Add(1)
-				time.Sleep(time.Millisecond)
 			}
 		}}},
 		Auxiliary: []AuxiliaryExecutor{f.settler(nil, res).executor()},
@@ -558,14 +558,19 @@ func TestA193TheExitObserverDoesNotWaitForAResolution(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
 	go func() { done <- rt.Run(ctx) }()
-	<-res.entered // 해소가 막혀 있음
-	start := cycles.Load()
-	time.Sleep(50 * time.Millisecond)
-	if cycles.Load()-start < 5 {
-		t.Fatalf("the exit loop advanced %d cycles while a resolution was blocked", cycles.Load()-start)
+	t.Cleanup(func() { cancel(); <-done })
+	<-res.entered // 해소가 막힘 — 아래 주기는 전부 그 뒤
+	for len(cycles) > 0 {
+		<-cycles
 	}
-	cancel()
-	<-done
+	deadline := time.After(10 * time.Second) // 실패 시한일 뿐 — 성공은 주기 도착으로 판정
+	for i := 0; i < 5; i++ {
+		select {
+		case <-cycles:
+		case <-deadline:
+			t.Fatalf("the loop completed only %d cycle(s) while a resolution was blocked", i)
+		}
+	}
 }
 
 func TestA193AttemptsAreResolvedOneAtATime(t *testing.T) {
@@ -1046,5 +1051,56 @@ func TestA193ACancelledContextIsNeverRecorded(t *testing.T) {
 	s.onStop(ctx, errors.New("synthetic"))
 	if n := f.crit.calls(); n != 0 {
 		t.Fatalf("%d critical record(s) attempted on a cancelled context — a failed record latches the entry gate", n)
+	}
+}
+
+// --- 구현 리뷰 1회차 P1 의 못 -------------------------------------------------
+
+func TestA193AFailedAlertIsRetriedAfterTheAttemptSettles(t *testing.T) {
+	f := newA193Fixture(t)
+	id := f.attempt("SELL", journal.KindPlace, journal.StateInDoubt, false)
+	s := f.settler(nil, nil)
+	f.crit.err = errors.New("synthetic outbox failure")
+	if err := f.sweepDriven(s); err != nil {
+		t.Fatal(err)
+	}
+	if got := f.state(id).State; got != journal.StateUnresolvedInDoubt {
+		t.Fatalf("state = %s, want parked", got)
+	}
+	f.crit.err = nil
+	if err := s.sweep(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	got := f.crit.keys()
+	want := []string{string(obs.EventOrderInDoubt) + "|attempt:" + id, string(obs.EventOrderUnresolved) + "|attempt:" + id}
+	slices.Sort(got)
+	slices.Sort(want)
+	if !slices.Equal(got, want) {
+		t.Fatalf("after the attempt settled, retried alerts = %v, want %v", got, want)
+	}
+	_ = s.sweep(context.Background())
+	if n := len(f.crit.keys()); n != 2 {
+		t.Fatalf("a retried alert was recorded again (%d)", n)
+	}
+}
+
+func TestA193AResolutionFailureLogCarriesNoOrderNumber(t *testing.T) {
+	f := newA193Fixture(t)
+	f.attempt("SELL", journal.KindPlace, journal.StateInDoubt, false)
+	res := newA193BlockingResolver()
+	close(res.release)
+	res.err = fmt.Errorf("journal: reading prior evidence for confirmed order %s: %w", "ord-synthetic-secret-77", journal.ErrUnexpectedState)
+	var buf bytes.Buffer
+	s := f.settler(nil, res)
+	s.deps.Log = obs.NewLogger(obs.LogOptions{Writer: &buf, Clock: f.clk})
+	if err := s.sweep(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if strings.Contains(out, "ord-synthetic-secret-77") {
+		t.Fatalf("the settler logged the raw resolution error with an order number: %s", out)
+	}
+	if !strings.Contains(out, "ledger_state_changed") {
+		t.Fatalf("the failure class is missing from the log: %s", out)
 	}
 }

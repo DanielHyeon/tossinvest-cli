@@ -72,6 +72,8 @@ type inDoubtSettle struct {
 
 	// recorded 는 기록에 성공한 알림 key 임 — 프로세스 안 중복 적재를 막는 래치(재시작 뒤 같은 key 는 입구가 같은 행으로 받음).
 	recorded map[string]bool
+	// unsent 는 기록에 실패한 알림임 — attempt 가 그사이 종결돼 스윕 대상에서 빠져도 다음 스윕 머리에서 다시 기록함(구현 리뷰 1회차 P1-1).
+	unsent map[string]obs.Event
 	// unreadableSince · unreadableID 는 원장 목록 읽기 연속 실패의 시작과 에피소드 id 임. 성공하면 비움.
 	unreadableSince time.Time
 	unreadableID    string
@@ -124,6 +126,7 @@ func newInDoubtSettle(deps inDoubtSettleDeps) *inDoubtSettle {
 		bound:       2 * deps.ResolveBudget,
 		runID:       deps.NewID(),
 		recorded:    map[string]bool{},
+		unsent:      map[string]obs.Event{},
 		lastFailure: map[string]string{},
 	}
 }
@@ -154,6 +157,8 @@ func (s *inDoubtSettle) Run(ctx context.Context) error {
 // sweep 은 한 번의 순회임: 원장 읽기 → (1단) 미결 전부의 처음 봄 · 10분 알림 → (2단) 직렬 해소.
 // 오류는 ctx 취소일 때만 돌려줌 — 나머지 실패는 다음 스윕이 다시 함.
 func (s *inDoubtSettle) sweep(ctx context.Context) error {
+	// 먼저 못 보낸 알림 — 원장 읽기 실패와 무관하게, 대상이 종결돼 사라졌어도.
+	s.retryUnsent(ctx)
 	recs, err := s.deps.Ledger.PendingAttempts(ctx)
 	if err != nil {
 		if ctx.Err() != nil {
@@ -194,11 +199,12 @@ func (s *inDoubtSettle) resolve(ctx context.Context, rec journal.AttemptRecord) 
 			// 메모리 결과(UNRESOLVED 일 수 있음)는 원장에 없음 — 같은 취소된 ctx 의 원장 쓰기가 실패했으므로 버림(design D3).
 			return ctx.Err()
 		}
-		msg := obs.MaskAccount(err, s.deps.Account).Error()
-		if s.lastFailure[rec.ID] != msg {
-			s.lastFailure[rec.ID] = msg
+		// 원문 오류는 싣지 않음 — 원장 오류가 주문 번호를 품을 수 있음(구현 리뷰 1회차 P1-2). 분류만 남김.
+		class := resolveFailureClass(err)
+		if s.lastFailure[rec.ID] != class {
+			s.lastFailure[rec.ID] = class
 			s.deps.Log.Warn(obs.EventOrderInDoubt,
-				obs.FieldAttemptID, rec.ID, obs.FieldError, msg,
+				obs.FieldAttemptID, rec.ID, "error_class", class,
 				obs.FieldDetail, "the in-doubt settler could not resolve this attempt; it retries on the next sweep")
 		}
 		return nil
@@ -218,7 +224,7 @@ func (s *inDoubtSettle) resolve(ctx context.Context, rec journal.AttemptRecord) 
 // noteFirstSight 는 IN_DOUBT 발주를 처음 볼 때 critical 한 번(Q-A 처분 — 정본 「등급화된 알림」의 IN_DOUBT 발생).
 func (s *inDoubtSettle) noteFirstSight(ctx context.Context, rec journal.AttemptRecord) {
 	key := string(obs.EventOrderInDoubt) + "|attempt:" + rec.ID
-	if s.recorded[key] {
+	if s.handled(key) {
 		return
 	}
 	symbol := s.symbolOf(ctx, rec)
@@ -237,7 +243,7 @@ func (s *inDoubtSettle) noteFirstSight(ctx context.Context, rec journal.AttemptR
 // 직렬 대기열에 밀린 경우만 남(건강한 경로는 그 전에 종결됨).
 func (s *inDoubtSettle) noteStale(ctx context.Context, rec journal.AttemptRecord) {
 	key := string(obs.EventOrderInDoubt) + "|stale:" + rec.ID
-	if s.recorded[key] {
+	if s.handled(key) {
 		return
 	}
 	stamp := strings.TrimSpace(rec.DispatchStartedAt)
@@ -274,7 +280,7 @@ func (s *inDoubtSettle) noteStale(ctx context.Context, rec journal.AttemptRecord
 // exit 발의의 attempt 는 기존 recordParkCause 가 알리므로 여기서 또 알리지 않음. 발의 목록을 못 읽으면 알림(모르면 통지 쪽).
 func (s *inDoubtSettle) noteParkOutsideExit(ctx context.Context, res execgw.Resolution) {
 	key := string(obs.EventOrderUnresolved) + "|attempt:" + res.AttemptID
-	if s.recorded[key] {
+	if s.handled(key) {
 		return
 	}
 	armed, err := s.deps.Ledger.ArmedExitProposals(ctx, s.deps.Account)
@@ -310,7 +316,7 @@ func (s *inDoubtSettle) noteUnreadable(ctx context.Context, err error) {
 		return
 	}
 	key := string(obs.EventOrderInDoubt) + "|ledger-unreadable:" + s.unreadableID
-	if s.recorded[key] {
+	if s.handled(key) {
 		return
 	}
 	s.record(ctx, key, obs.Event{
@@ -335,9 +341,11 @@ func (s *inDoubtSettle) onStop(ctx context.Context, err error) {
 	})
 }
 
-// record 는 critical 하나를 단일 입구로 창 0 기록함. 취소된 ctx 면 기록하지 않음(실패가 진입 게이트를 잠그므로). 성공했을 때만 래치.
+// record 는 critical 하나를 단일 입구로 창 0 기록함. 취소된 ctx 면 기록하지 않음(실패가 진입 게이트를 잠그므로). 성공했을 때만
+// 래치하고, 실패한 알림은 unsent 에 두어 다음 스윕 머리에서 다시 기록함(취소로 못 한 것도 같음 — 다음 기동이 아니라 같은 프로세스의 다음 스윕).
 func (s *inDoubtSettle) record(ctx context.Context, key string, e obs.Event) bool {
 	if ctx.Err() != nil {
+		s.unsent[key] = e
 		return false
 	}
 	if s.deps.Critical == nil {
@@ -345,12 +353,50 @@ func (s *inDoubtSettle) record(ctx context.Context, key string, e obs.Event) boo
 		return false
 	}
 	if err := s.deps.Critical.RecordCritical(ctx, e, 0); err != nil {
+		s.unsent[key] = e
 		s.deps.Log.Warn(e.Type, obs.FieldError, obs.MaskAccount(err, s.deps.Account).Error(),
 			obs.FieldDetail, "the critical alert could not be recorded; the next sweep retries")
 		return false
 	}
+	delete(s.unsent, key)
 	s.recorded[key] = true
 	return true
+}
+
+// retryUnsent 는 기록에 실패했던 알림을 다시 기록함. 기록 순서는 정해 두지 않음(key 마다 한 행이라 순서가 결과를 바꾸지 않음).
+func (s *inDoubtSettle) retryUnsent(ctx context.Context) {
+	for key, e := range s.unsent {
+		s.record(ctx, key, e)
+	}
+}
+
+// handled 는 그 key 가 이미 기록됐거나 재시도 대기 중인가임 — 대기 중인 것은 retryUnsent 가 맡으므로 같은 스윕에서 두 번 시도하지 않음.
+func (s *inDoubtSettle) handled(key string) bool {
+	if s.recorded[key] {
+		return true
+	}
+	_, waiting := s.unsent[key]
+	return waiting
+}
+
+// resolveFailureClass 는 해소 오류의 분류임 — 로그에 원문 대신 남김(원장 오류는 주문 번호를 품을 수 있음).
+func resolveFailureClass(err error) string {
+	switch {
+	case errors.Is(err, execgw.ErrNotResolvable):
+		return "not_resolvable"
+	case errors.Is(err, journal.ErrUnexpectedState):
+		return "ledger_state_changed"
+	case errors.Is(err, journal.ErrAttemptNotFound):
+		return "attempt_not_found"
+	case errors.Is(err, execgw.ErrMalformedOrder):
+		return "broker_order_unreadable"
+	case errors.Is(err, execgw.ErrTooManyPages), errors.Is(err, execgw.ErrCursorLoop):
+		return "broker_list_incomplete"
+	case errors.Is(err, context.DeadlineExceeded):
+		return "deadline_exceeded"
+	default:
+		return "other"
+	}
 }
 
 // symbolOf 는 알림 제목용 종목임. 못 읽으면 빈 값 — 알림을 막지 않음.

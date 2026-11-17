@@ -23,5 +23,5 @@
 === RUN   TestTheRestartRecoveryRunsBeforeTheLoops
 --- PASS: TestTheRestartRecoveryRunsBeforeTheLoops (0.00s)
 PASS
-ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.030s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.034s
 rc=0
