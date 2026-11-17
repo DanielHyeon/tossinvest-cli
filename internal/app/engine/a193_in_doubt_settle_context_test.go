@@ -6,11 +6,13 @@ package engine_test
 // 실 원장(exitHarness) + 실 execgw.Resolver(가짜 목록) + 실 obs.Notifier(원장 outbox) 로 조립함. 값은 합성(종목·계좌·주문번호 아님).
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -41,7 +43,12 @@ func (p *a193CtxPager) OrdersPageRaw(_ context.Context, q execgw.OrderQuery, _ s
 
 // a193ContextSettler 는 production 조립 함수로 실행자를 만듦 — 시험이 조종석에 앉지 않게 Context 만 채움.
 func a193ContextSettler(h *exitHarness, account string, pager execgw.OrderPager, cfg execgw.ResolveConfig) engine.AuxiliaryExecutor {
+	return a193ContextSettlerLogged(h, account, pager, cfg, nil)
+}
+
+func a193ContextSettlerLogged(h *exitHarness, account string, pager execgw.OrderPager, cfg execgw.ResolveConfig, log *obs.Logger) engine.AuxiliaryExecutor {
 	ectx := &engine.Context{
+		Log:        log,
 		Journal:    h.journal,
 		Resolver:   &execgw.Resolver{Journal: h.journal, Orders: pager, Order: nil, Clock: h.clk, Gate: h.gate, Config: cfg},
 		Notifier:   &obs.Notifier{Journal: h.journal, Gate: h.gate, AccountRef: exitAccount},
@@ -149,8 +156,33 @@ func TestA193TheContextSettlerResolvesTheAttempt(t *testing.T) {
 	id := a193InDoubtSell(h, "exit-a193-ctx-2")
 	order := json.RawMessage(fmt.Sprintf(`{"orderId":"ord-synthetic-ctx","symbol":%q,"side":"SELL","status":"PENDING","quantity":"10","price":"67000","orderedAt":%q}`,
 		a193CtxSymbol, h.clk.Now().UTC().Format(time.RFC3339)))
-	done := a193RunSettler(t, a193ContextSettler(h, exitAccount, &a193CtxPager{open: []json.RawMessage{order}}, execgw.ResolveConfig{}))
+	var buf a193SyncBuffer
+	log := obs.NewLogger(obs.LogOptions{Writer: &buf, Clock: h.clk})
+	done := a193RunSettler(t, a193ContextSettlerLogged(h, exitAccount, &a193CtxPager{open: []json.RawMessage{order}}, execgw.ResolveConfig{}, log))
 	a193WaitFor(t, h, done, true, "the attempt to settle", func() bool { return a193AttemptState(t, h, id) == journal.StateConfirmed })
+	// 조립이 엔진 로거를 실어야 결과 줄이 운영 로그에 남음(변이 M36).
+	a193WaitFor(t, h, done, false, "the resolution log line", func() bool {
+		out := buf.String()
+		return strings.Contains(out, "settled_state=CONFIRMED") && strings.Contains(out, id)
+	})
+}
+
+// a193SyncBuffer 는 실행자 goroutine 이 쓰고 시험이 읽는 로그 버퍼임.
+type a193SyncBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (b *a193SyncBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(p)
+}
+
+func (b *a193SyncBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.String()
 }
 
 func TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount(t *testing.T) {
