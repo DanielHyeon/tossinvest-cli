@@ -54,6 +54,26 @@ Pre-Edit Gate:
 - 프롬프트에 `set -euo pipefail`·`git -C <worktree 절대경로>`·toplevel 단언을 넣는다(기억 「리뷰 픽스처가 실제 저장소에 떨어졌다」). 원문: `analysis/review/`.
 - 리뷰가 제안한 새 가드·새 정책·범위 확대는 설계에 넣지 않고 아래 「Manager 결정 대기」에 적는다. 사실 오류(인용·기전)만 문서에 반영한다.
 
+## proposal-freeze 리뷰 1회차 (2026-11-18)
+
+- 보이스: Codex(codex-cli 0.165.0, `codex exec -s read-only -C <worktree> … </dev/null`), 적대적 Eng. 기준 HEAD `490e94f9d`. 원문 `analysis/review/codex-r1-output.md`.
+  리뷰어 보고: 파일 쓰기·Go 시험·네트워크·브로커·운영 저널·docker·tossctl 실행 0. 리뷰 뒤 `git status` 로 확인한 변화: 출력 파일 하나(`analysis/review/`)뿐.
+- 판정: **BLOCK**(P0 0 · P1 5 · P2 3).
+
+| # | 지적 | 분류 | 처분 |
+|---|---|---|---|
+| R1-1 [P1] | 직렬 해소가 5초 스윕과 10분 검사를 함께 늦춘다; `PendingAttempts` 연속 실패는 침묵 | 사실(설계 문장의 과장) + 설계 판단 | **사실 정정 반영**: design D2 표 「스윕 간격」·직렬 대기 문단, D4 「원장 읽기 연속 실패의 침묵」, proposal What Changes 1·3, delta 「주기와 상한」(「직전 스윕 뒤 5초」). **구조 변경(10분 검사 분리·연속 실패 승격)은 채택 안 함 → Q-F** |
+| R1-2 [P1] | Resolver 는 전체 호출 5분 상한을 강제하지 않는다(기한은 다음 대기 여부에서만) | 사실 오류 | **반영**: design D2 「해소 하나의 길이」 정정, delta 의 「5분을 넘어 계속되어서는 안 된다(SHALL NOT)」를 「기동과 같은 예산·기한 규칙(SHALL), 새 상한 없음」으로, tasks 3.9 에 벽시계 측정 추가. 강제 시한 추가는 채택 안 함 → Q-I |
+| R1-3 [P1] | 「park 알림은 기존 것이 낸다」는 exit 발의의 attempt 에만 성립 | 사실 오류 | **반영**: design D4 「중복 없음」·D5 표, proposal 3, delta 의 「park 결과를 따로 알려서는 안 된다(SHALL NOT)」 문장 삭제(결정 전 금지 규범을 두지 않음). 새 통지 경로는 채택 안 함 → Q-E |
+| R1-4 [P1] | Critical 우선은 이미 wire 임차를 쥔 해소 조회를 선점하지 못한다 | 사실 오류(과장) | **반영**: design D2 예산 문단 정정(「함께 대기 중이면 Critical 먼저; 쥔 요청 하나만큼 늦을 수 있음 ≤ 15초」), delta 는 「대기 우선순위」로 좁힘. 측정·선점 정책 → Q-G |
+| R1-5 [P1] | 프로세스 사이(엔진·flatten) 「검사 → 기록」 경합이 있어 D6 의 절대 배제 주장이 성립하지 않음 | 사실 오류(주장 과장), 기존 공백 | **반영**: design D6 에 주장 철회와 경합 순서·해소 쪽 결과(오염 → park, 2건 → park, **같은 지문 1건이면 오귀속 CONFIRMED 가능**) 서술. 원자적 배제 → Q-H |
+| R1-6 [P2] | D3 의 좁은 주장은 맞으나 커밋 진입 검사 뒤 취소 경계·`noteStale` 이 ctx 검사보다 먼저인 문제 | 경계 누락 + 설계 결함 | **반영**: D3 「남는 경계」 보강(원인 → 검사 순서 논증, 드라이버 원문 미확인 명시), **설계 수정** — 스윕이 `noteStale` 앞에서 ctx 검사(취소로 `ReasonAlertUndelivered` 래치가 서는 길을 닫음; 검사·기록 사이 경합은 기존 입구 성질로 잔여), delta 에 「취소된 컨텍스트로 이 알림을 기록하려 해서는 안 된다(SHALL NOT)」, tasks 3.4 하위 시험. 이 수정은 새 가드가 아니라 실행자 자기 순서 정정이다(Resolver·알림 입구 무편집) |
+| R1-7 [P2] | 정본의 실측 조건이 delta 에서 사라짐, `>`/`>=` 불일치, 재생 순서 범위 | 규범 누락 | **반영**: delta 에 「실측」 항목(배포 전 SHALL), 「해소 순서」에 「기동의 해소 — 세션은 2~4만」, 10분 「이상」 통일, proposal 「실측은 계획」 명시 |
+| R1-8 [P2] | `B11(default@216)` 은 AST 상 `case@216`; tasks 3.4 「다섯 자리」 는 네 자리 | 사실 오류 | **반영**: design·proposal 인용 정정, tasks 3.4 정정 |
+
+리뷰어가 확인하고 문제없다고 한 것(원문 끝): 복구 뒤 보조 실행자 시작·drain, 패닉 회수, flatten 직접 Resolver 호출 대상 불겹침, 운영자 해소의 출발 상태 요구,
+CONFIRMED 뒤 추적·발의 유지, park 래치의 계정 전역·프로세스 수명 공시, stale key·입구·창 0, 재생 미호출·재시작 규칙 미적용, 조회 해소 경로의 mutator 0.
+
 ## Manager 결정 대기
 
 (design §6 과 같은 목록 — 리뷰 회차가 더한 것은 아래 회차 기록에 붙인다)
@@ -62,3 +82,8 @@ Pre-Edit Gate:
 - **Q-B** CANCEL·AMEND IN_DOUBT 의 10분 알림 — 추천: 비목표 유지.
 - **Q-C** 해소 읽기 예산 우선순위 Normal 대 Auxiliary — 추천: Normal.
 - **Q-D** Story 의 Feature — FEAT-TOS-009 로 둠(대안 FEAT-TOS-005).
+- **Q-E**(R1-3) exit 발의가 아닌 PLACE 의 세션 park 통지 — (a) 잔여 / (b) intent 가 무장 exit 발의가 아닐 때만 critical 1회(key `order.unresolved_in_doubt|attempt:<id>`). 추천 (b).
+- **Q-F**(R1-1) 10분 검사를 직렬 해소와 분리(같은 실행자 안 별도 goroutine, 원장 읽기만) + `PendingAttempts` 연속 실패 승격. 추천 둘 다 예.
+- **Q-G**(R1-4) 해소 조회가 쥔 wire 임차만큼의 손절 지연 — (a) 시험으로 재고 잔여 공시 / (b) 해소 조회 시한. 추천 (a), a166 운영 enforcing 여부 먼저 확인.
+- **Q-H**(R1-5) 프로세스 사이 「검사 → 기록」 경합(기존 공백) — 추천 이 change 밖 후속 후보.
+- **Q-I**(R1-2) Resolver 전체 호출 강제 시한 — 추천 두지 않음(D3 와 충돌).

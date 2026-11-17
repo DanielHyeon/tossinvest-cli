@@ -22,7 +22,7 @@ CodeGraph 1.6.0 `callers Resolve`(이름 단위, 15건)에서 `execgw.Resolver.R
 2. 결과 IN_DOUBT → B10(case@1577) → B11(if@1582 UNRESOLVED 면 타입만 바꿈) → `noteExitOrder`(call@1585) → return@1586 nil. `noteExitOrder` 는 B1(if@199)·B2(if@202
    거절 아님)를 지나 대기열 append(append@219) — **구조화 로그 줄**이고 outbox 행이 아니다.
 3. 발의는 무장된 채다. 다음 주기 판정 진입의 `noteHeldProposal`: B1(if@127 무장)·B2(if@130 intent 있음) → `ExitIntentAttempts`(call@135) →
-   `exitIntentAttemptsQ` 에서 IN_DOUBT 는 B7(switch@210) 의 B11(default@216) → `live` → B14(switch@228) B15(case@229) `ExitIntentLive`. 그래서 `noteHeldProposal`
+   `exitIntentAttemptsQ` 에서 IN_DOUBT 는 B7(switch@210) 의 B11(case@216 — 소스는 `default:` 절, AST 종류 표기는 case) → `live` → B14(switch@228) B15(case@229) `ExitIntentLive`. 그래서 `noteHeldProposal`
    B4(if@140 Unaccepted) 아님, B6(range@148 Parked) 0회, B7(range@154 Awaiting) 0회, B10(range@166) 은 미체결 매도의 취소 대기만 봄 → return@172 false.
    **IN_DOUBT 를 알리거나 해소하는 갈래가 0이다.**
 4. 같은 종목의 새 mutation 은 게이트웨이가 막는다: `Gateway.checkSymbolFree` → `unsettledFor`(call@804) → B2(if@808) → `reject(ReasonSymbolInFlight)`(call@810).
@@ -112,8 +112,8 @@ func (c *Context) InDoubtSettler(clk clock.Clock) AuxiliaryExecutor
 (s *inDoubtSettle) sweep(ctx) error
     recs ← Journal.PendingAttempts(ctx)        // 실패: 로그 1줄(같은 문구 연속은 1회) 후 nil — 다음 주기 재시도
     for rec in recs where rec.State==IN_DOUBT && rec.Kind==PLACE (recorded_at 순):
+        if ctx.Err() != nil { return ctx.Err() }   // 알림 기록 **전에** — 아래 D3 「알림 기록과 취소」
         s.noteStale(ctx, rec)                  // D4
-        if ctx.Err() != nil { return ctx.Err() }
         res, err ← Resolver.Resolve(ctx, rec.ID)
         if err != nil:
             if ctx.Err() != nil { return ctx.Err() }   // D3 — res 를 버린다(메모리의 UNRESOLVED 는 원장에 없다)
@@ -126,22 +126,25 @@ func (c *Context) InDoubtSettler(clk clock.Clock) AuxiliaryExecutor
 
 | 항목 | 값 | 근거 |
 |---|---|---|
-| 스윕 주기 | **5초** = `DefaultResolveConfig().PollInterval` | indoubt.go:160(상수, 손으로 읽음). 새 설정 없음 |
+| 스윕 간격 | 직전 스윕이 **끝난 뒤** **5초** = `DefaultResolveConfig().PollInterval` | indoubt.go:160(상수, 손으로 읽음). 새 설정 없음. **스윕 안에서 해소가 돌면 다음 원장 읽기는 그 해소들이 끝날 때까지 늦어진다**(리뷰 1회차 R1-1) |
 | 미결 0건일 때 비용 | 원장 질의 1회/5초, **브로커 호출 0** | `PendingAttempts` 만 |
 | 동시 해소 상한 | **1**(직렬, goroutine 하나) | 한 번에 `Resolve` 하나 |
-| 해소 하나의 길이 | 증명되면 짧고(부재: 안정 3회·45초 이상), 못 하면 **최대 `MaxDuration` 5분 + 마지막 스캔** | indoubt.go:158-161; `Resolve` B23(if@336)·`waitOrExpire` B1(if@361) |
+| 해소 하나의 길이 | 증명되면 짧다(부재: 안정 3회·45초 이상). 기한 `MaxDuration` 5분은 **다음 대기를 할지에서만** 검사된다(`waitOrExpire` B1 if@361) — 스캔 하나(`scanBoth` 의 `ScanOrders` OPEN·CLOSED 각 최대 50쪽, 요청당 HTTP 시한 15초)와 부재 교차 확인 읽기는 기한을 받지 않는다. 그래서 **전체 길이에 강제 상한은 없다**: 정상(1쪽·빠른 응답) 경로는 ≈5분 + 마지막 스캔, 병적 경로(여러 쪽·느린 응답)는 스캔 하나만으로 5분을 넘을 수 있다(리뷰 1회차 R1-2 — 사실 정정) | indoubt.go:158-161; `Resolve` B23(if@336)·`waitOrExpire` B1(if@361); `scanBoth` call@415 |
 | 해소 하나의 브로커 요청(정상 1페이지) | 스캔마다 목록 2(OPEN·CLOSED), 부재 증명 경로는 + 보유·매수가능 2 | `scanBoth` B1(range@414) `ScanOrders`(call@415); `absenceCorroborated` call@467·@475. 부재 경로 ≈ 10스캔 × 2 + 2 = **22**, 기한 소진 경로 ≤ 61스캔 × 2 = **122**(5분, ≈0.41 req/s) |
 | 페이지 상한 | 목록 1회 `MaxPages` 50 | indoubt.go:162 |
 | 실측 1(시험) | 위 요청 수를 가짜 브로커로 센다 | tasks 3.9 `TestA193ResolutionRequestsAreBounded` |
 | 실측 2(운영, 사람) | 운영 저널 사본에서 기간별 IN_DOUBT PLACE 수·동시 최대 수(같은 순간 IN_DOUBT 인 attempt 수) | tasks 1.10 — Manager 읽기 전용(계좌 필드 미기록). 1단계에서는 **안 잼**(지시상 운영 저널 읽기 금지) |
 
 동시에 IN_DOUBT 인 attempt 의 수는 종목 수로 묶인다 — 게이트웨이가 종목당 미종결 하나만 허용한다(`checkSymbolFree` B2 if@808). 직렬이라 k 번째 attempt 는 앞의
-k−1 개가 끝날 때까지 기다린다(최악 (k−1) × 5분) — D4 의 10분 상한이 그 대기를 드러낸다.
+k−1 개가 끝날 때까지 기다린다(정상 경로 최악 ≈(k−1) × 5분, 강제 상한 없음). **D4 의 10분 검사도 같은 스윕 안에서 해소 사이에 도므로 그만큼 늦어진다** —
+「10분에 알린다」는 보장이 아니라 「해소가 돌지 않는 동안 10분 뒤 첫 스윕에 알린다」이다(리뷰 1회차 R1-1, Manager 결정 대기 Q-F).
 
 **예산(a166)과 손절 우선.** 해소의 브로커 읽기는 같은 공식 클라이언트(`OfficialOrders`·`OfficialAccount{Client: in.official}`, gateway.go:259-260 — 손으로 읽음)로
 나간다. ctx 에 우선순위를 싣지 않으므로 `accountbudget.PriorityFromContext` 의 기본값 **Normal**(transport_linux.go:24-29, 손으로 읽음)이다 — 기동 복구와 같다.
 a166 이 enforcing 이면 대기열은 Critical 티켓을 먼저 고른다(budget_linux.go:551 의 선택식 — 손으로 읽음), 보호 청산 제출은 `submit` B6(if@1553)에서 Critical 을 싣는다.
-그래서 해소 읽기는 손절 제출을 **앞지르지 못한다**(같은 Normal 끼리는 순번). a166 이 꺼져 있으면 중재가 없고 해소 읽기는 기존 retry matrix 의 조회 몫이다
+그래서 **함께 대기 중이면** 손절 제출이 해소 읽기보다 먼저 나간다(같은 Normal 끼리는 순번). **이미 wire 임차를 쥔 해소 읽기는 선점하지 못한다** — 임차는 응답 body 가
+끝날 때까지 유지되므로(transport_linux.go:459 부근, 손으로 읽음) 손절의 wire 진입이 그 요청 하나만큼(요청당 HTTP 시한 15초 + 간격 350ms 이내) 늦을 수 있다(리뷰 1회차 R1-4 —
+「앞지르지 못한다」 는 과장이었다; 측정은 Manager 결정 대기 Q-G). a166 이 꺼져 있으면 중재가 없고 해소 읽기는 기존 retry matrix 의 조회 몫이다
 (정본 §0.4 — 새 엔드포인트 없음, 빈도만 는다: tasks 4.6 이 matrix 문서에 계상을 적는다). 보조(Auxiliary) 우선순위는 고르지 않았다 — 대기열이 비어 있을
 때만 나가므로 부하가 있으면 해소가 굶는다(Manager 결정 대기 Q-C).
 
@@ -170,14 +173,22 @@ a166 이 enforcing 이면 대기열은 Critical 티켓을 먼저 고른다(budge
 가짜 시계로 `waitOrExpire` 의 Sleep 중 취소 → 원장 상태 IN_DOUBT, 게이트 래치 0, critical 0, 실행자 반환 `context.Canceled`)와 그 변이(m3: park 쓰기 ctx 를
 `WithoutCancel` 로 → 시험 FAIL 이어야 함, m4: 실행자의 `ctx.Err()` 검사 삭제 → 결과 로그/알림이 나가 FAIL).
 
-**남는 경계**: 취소가 park 의 **커밋 뒤**에 오면 park 는 남는다 — 취소 전에 끝난 판정이므로 맞다. 「취소와 기한 소진이 같은 갈래」라는 AST 사실은 그대로이고, 원장
+**남는 경계**: 취소가 park 의 **커밋 진입 검사 뒤**에 오면(`Tx.Commit` 의 ctx 검사 통과 뒤) park 는 남는다. 그 park 의 원인은 취소가 아니다 — 취소가 원인이면
+취소는 `waitOrExpire` 의 Sleep·스캔 오류보다 **먼저** 일어났고, 한 번 닫힌 `ctx.Done()` 은 다시 열리지 않으므로 `BeginTx` 검사가 이미 그것을 본다. 그래서 커밋 진입 뒤의 취소와
+겹치는 park 는 취소 전에 내린 판정(기한 소진·부재 미증명·2건 일치)이다. 이 「원인 → 검사」 순서는 위 표준 라이브러리 읽기에 기대고 드라이버 원문은 보지 않았다(리뷰 1회차
+R1-6 — 경계 서술 보강).
+
+**알림 기록과 취소(리뷰 1회차 R1-6 — 설계 수정)**: 알림기의 단일 입구는 원장 기록이 실패하면 진입 게이트에 `ReasonAlertUndelivered` 래치를 건다(record_only.go 의
+`recordCritical` — `RecordAlert` 실패 → `n.Gate.Block`, 손으로 읽음). 취소된 ctx 로 `noteStale` 이 기록하면 그 래치가 선다. 그래서 스윕은 `noteStale` **앞에서** ctx 를
+검사한다(위 의사 코드). 검사와 기록 사이의 취소 경합은 남는다 — 이것은 같은 입구를 쓰는 모든 기록자(exit 관측 포함)의 기존 성질이며 이 change 가 넓히지 않는다
+(이름 붙인 잔여). 「취소와 기한 소진이 같은 갈래」라는 AST 사실은 그대로이고, 원장
 쓰기의 ctx 결속이 그 둘을 가른다.
 
 ### D4. 오래 남은 IN_DOUBT 알림
 
 - **조건**: 스윕이 읽은 PLACE attempt 가 아직 `IN_DOUBT` 이고, `DispatchStartedAt`(빈 값이면 `RecordedAt` — `windowContaminated` B1 if@516 과 같은 규칙) 부터
   지금까지 **10분 이상**. 10분 = 2 × `DefaultResolveConfig().MaxDuration`(5분): 해소 하나의 전체 예산 + 직렬 대기열에서 앞선 해소 하나. 건강한 실행자에서 단독
-  attempt 는 5분 안에 종결(CONFIRMED·FAILED·park)되므로 이 알림은 **해소가 오류로 끝나 되풀이되거나, 대기열이 밀렸거나, 해소가 시작되지 못한** 경우에만 난다.
+  attempt 는 정상 경로(1쪽·빠른 응답)면 약 5분 안에 종결(CONFIRMED·FAILED·park)되므로 이 알림은 **해소가 오류로 끝나 되풀이되거나, 대기열이 밀렸거나, 해소가 시작되지 못한** 경우에만 난다.
   `Resolver.Config.MaxDuration` 이 0 이 아니면 그 값에서 유도한다(오늘 production 은 0 → 기본값).
 - **알림**: 기존 critical 타입 `obs.EventOrderInDoubt`(`order.in_doubt` — event.go:55, 등급표 event.go:364 에 이미 critical; 손으로 읽음). 새 타입 없음 → `internal/obs`
   무편집. key = `order.in_doubt|stale:<attempt id>` — 에피소드 = attempt(원장 행, 재시작에도 같은 행; 선례 `acked_boot.go:77` 의 `order.in_doubt|acked:<id>`).
@@ -188,8 +199,13 @@ a166 이 enforcing 이면 대기열은 Critical 티켓을 먼저 고른다(budge
 - **실행자 정지**: `OnStop(ctx, err)` 이 key `order.in_doubt|settler-stopped:<실행 id>`(실행 id = 실행자 생성 때 128비트 난수 한 번 — a094 D−7.1 의 연속 id 와 같은 이유:
   벽시계 key 는 역행에 흡수된다)로 critical 하나: 「세션 중 IN_DOUBT 해소가 멈췄다 — 엔진 재시작 전까지 새 IN_DOUBT 는 해소되지 않는다」. 정상 정지(취소)에서는
   `runAuxiliary` B1(if@92)이 먼저 돌아가 `OnStop` 을 안 부른다.
-- **중복 없음**: park 로 끝난 attempt 는 종결이라 스윕 대상이 아니다 → 이 알림 0. park 의 알림은 기존 `recordParkCause`(key `order.unresolved_in_doubt|<position>|attempt:<id>`)
-  가 무장 발의를 가진 포지션에 대해 낸다(`noteHeldProposal` B6). 두 key 는 겹치지 않는다.
+- **중복 없음 — 단, 덮는 범위는 exit 발의뿐(리뷰 1회차 R1-3 — 사실 정정)**: park 로 끝난 attempt 는 종결이라 스윕 대상이 아니다 → 이 알림 0. park 의 알림은 기존
+  `recordParkCause`(key `order.unresolved_in_doubt|<position>|attempt:<id>`)가 **무장된 exit 발의의 intent 에 속한 attempt** 에 대해서만 낸다(`noteHeldProposal`
+  B1 if@127·B2 if@130 → `ExitIntentAttempts(m.state.PendingIntentID)` call@135 → B6). 전략 진입·수동 flatten 청산 매도의 PLACE 가 세션 중 park 되면 **critical 이 없다**
+  — 계정 전역 진입 래치만 선다(기동 복구의 park 도 같다 — D5). 그 통지를 이 change 에 넣을지는 Manager 결정 대기 Q-E. 운영 원장의 intent 는 전부 엔진 매도
+  (Manager 실측 13,052/13,052)라 오늘 실제로 이 공백에 드는 모양은 exit 발의가 아닌 엔진 매도(flatten 청산)뿐이다.
+- **원장 읽기 연속 실패의 침묵(리뷰 1회차 R1-1)**: `PendingAttempts` 가 계속 실패하면 스윕은 로그만 남기고 실행자는 살아 있다 — `noteStale` 도 `OnStop` 도 안 돈다.
+  승격(연속 N회 → critical)은 Manager 결정 대기 Q-F.
 - **덮지 못하는 것(이름 붙인 잔여)**: 실행자가 살아 있으나 한 호출 안에서 멈춘 경우(브로커 HTTP 는 `defaultTimeout` 15초 — official/client.go:22, 원장은
   `busy_timeout` — journal.go:224; 둘 다 유한이라 「영원히」는 아니다 — 손으로 읽음). exit 관측 루프가 아닌 실행자가 알리므로 실행자의 생존에 기댄다 — 정지는
   `OnStop` 이 덮는다.
@@ -200,7 +216,7 @@ a166 이 enforcing 이면 대기열은 Critical 티켓을 먼저 고른다(budge
 |---|---|---|---|
 | **CONFIRMED**(목록에 정확히 1) | `ResolveConfirmed` 가 broker_order_id 를 기록 → 추적 주문 SQL(`TrackedFillOrders` 의 `state = CONFIRMED AND kind IN ('PLACE','AMEND') AND broker_order_id <> ''` — fills.go:1554-1559, 손으로 읽음)에 들어감 → 체결 감지(a191)가 다음 주기부터 그 주문의 체결·종결을 기록. 발의는 해제하지 않음(`exitIntentAttemptsQ` B10 case@214 confirmed → 종결 기록 전 B17 `AwaitingClose`, 뒤 B18 `OrdersClosed`) — 정본 「CONFIRMED 면 해제 금지」 | 체결 감지 + 기존 exit 경로 | 없음 — 기동 복구의 CONFIRMED 와 같은 원장 상태 |
 | **FAILED_CONFIRMED**(부재 증명) | 기준선이 있어야만 가능(`absenceCorroborated` B3 return@464). 그 attempt 가 exit 발의의 것이면 다음 판정에서 `noteHeldProposal` B4(if@140) → `ReleaseUnacceptedExitProposal`(call@141) → 해제 → 재발의 | 기존 exit 경로 | **엔진 손절에는 도달 불가** — 손절 요청에 기준선이 없다(§1.2-1). 오늘 기준선을 싣는 production 자리는 전략 진입(`PlaceClaimedStrategy` → `g.place`, call@64) 뿐. 이 change 의 비목표 |
-| **UNRESOLVED_IN_DOUBT**(park) | `park` B2 `Gate.Block(ReasonUnresolvedInDoubt)`(call@380) — **계정 전체 신규 진입 차단**(`EntryGate.Block` 은 이유별 래치, 종목 구분 없음 — B1 if@561). 다음 판정의 `noteHeldProposal` B6(range@148) → `recordParkCause`(call@149) critical(창 0, key 에피소드 = attempt). 종목 단위: `checkSymbolFree` B3(if@814)·B5(range@821)·B7(if@826) — 노출을 늘리는 mutation 만 그 종목에서 거절. 발의는 무장 유지(정본) → 손절은 운영자 해동까지 동결 | 실행자(park) + exit 루프(알림) | 아래 공시 |
+| **UNRESOLVED_IN_DOUBT**(park) | `park` B2 `Gate.Block(ReasonUnresolvedInDoubt)`(call@380) — **계정 전체 신규 진입 차단**(`EntryGate.Block` 은 이유별 래치, 종목 구분 없음 — B1 if@561). 다음 판정의 `noteHeldProposal` B6(range@148) → `recordParkCause`(call@149) critical(창 0, key 에피소드 = attempt). 종목 단위: `checkSymbolFree` B3(if@814)·B5(range@821)·B7(if@826) — 노출을 늘리는 mutation 만 그 종목에서 거절. 발의는 무장 유지(정본) → 손절은 운영자 해동까지 동결 | 실행자(park) + exit 루프(알림 — **무장된 exit 발의의 attempt 일 때만**, 리뷰 R1-3) | 아래 공시; exit 발의가 아닌 PLACE 의 park 통지 없음(Q-E) |
 
 **기동 복구의 `blockedSymbol`·report 가 하던 일**: `blockedSymbol`(B1 if@425)은 ACKED attempt 의 보고용 값만 만든다(부작용 0). `Report.Unresolved`·`Resolutions` 의
 production 소비자는 `engineRecoveryObserver` 가 돌려주는 클로저(return@102)인데 그것은 `RateLimitWaits` 만 본다(B1 if@103 ≤ 0 이면 return@104, 아니면 경고 로그
@@ -228,6 +244,14 @@ call@106 하나) — **기동 복구도 park 를 알리지 않는다**.
 | 실행자 자신 | 같은 attempt 두 번 | goroutine 하나·직렬. 그래도 겹치면(시험·미래 편집) 원장 전이가 `from` 상태를 tx 안에서 다시 읽어 거절(`transition` call@560 → `checkTransitionAllowed` call@567 → B4 if@567 return@568) | `transition` |
 
 **같은 attempt 를 두 번 해소하지 않는다**는 위 마지막 줄 두 층(직렬 + 전이 가드)으로 선다. 시험 3.6 이 직렬을, 기존 전이 시험이 가드를 잰다.
+
+**프로세스 사이의 종목 배제는 절대적이지 않다(리뷰 1회차 R1-5 — 주장 철회).** `claimSymbol` 은 게이트웨이 인스턴스 안의 잠금이고 flatten 은 자기 게이트웨이를 만든다;
+`checkSymbolFree` 의 원장 검사와 attempt 기록(`Prepare`)은 다른 트랜잭션이다(gateway.go:522·529·548, durability.go:383 — 손으로 읽음). 그래서 「엔진 제출이 빈 원장을
+확인 → flatten 제출이 IN_DOUBT 기록 → 실행자가 해소 시작 → 앞서 검사를 통과한 엔진 제출이 기록·전송」 순서가 가능하다. 위 표의 「게이트웨이」 행은 **이미 IN_DOUBT 가
+보이는 뒤의 새 호출**에 대해서만 맞다. 이 경합은 **기존 제출 경로의 공백**이고(기동 복구의 해소도 같은 순서에 노출된다) 이 change 가 만들거나 넓히지 않는다. 그 경우
+해소 쪽 결과: 끼어든 mutation 이 관측 창 안에 원장에 기록되면 `windowContaminated`(B3 if@525)가 부재 증명을 막아 park; 같은 지문의 주문이 목록에 둘이면 park(B19);
+**끼어든 주문이 같은 지문으로 하나만 보이면 그것을 이 attempt 의 주문으로 CONFIRMED 할 수 있다**(지문은 종목·방향·수량·가격·제출 시각 창 — 다른 프로세스가 같은 값으로
+낼 때만). 프로세스 사이 원자적 배제는 Manager 결정 대기 Q-H.
 
 **앞으로의 제약(이름 붙여 둠)**: a171(진입 접수 결과 불명의 8초 창 재전송 — 아직 착수 전)처럼 **게이트웨이가 IN_DOUBT 를 기록한 뒤 같은 `Place` 안에서 그 attempt 를
 다시 만지는 단계**가 생기면, 세션 해소와의 순서(예: 그 창이 끝날 때까지 해소 보류)를 그 change 가 정해야 한다. 오늘은 `journal.Dispatch` 의 IN_DOUBT 전이
@@ -265,6 +289,18 @@ m12 실행자를 Loops 로 옮김(감독 시험) · m13 스윕을 exit 관측 �
 - **Q-C**: 해소 읽기의 예산 우선순위 Normal(기동 복구와 같음) 대 Auxiliary(대기열이 빌 때만). 추천: Normal — 손절 제출은 Critical 이라 이미 앞서고, Auxiliary 는
   부하 때 해소를 굶겨 손절 동결을 길게 한다.
 - **Q-D**: Story 의 Feature — FEAT-TOS-009(a094, exit line truth) 로 둠. 지시의 「a094·a192 가 속한 Feature」가 둘(009·005)이라 하나를 골랐다.
+- **Q-E**(리뷰 R1-3): exit 발의가 아닌 PLACE(전략 진입·flatten 청산 매도)의 세션 중 park 는 critical 이 없다(기동도 같다). (a) 이름 붙인 잔여 / (b) 실행자가 park 결과를
+  받으면, 그 attempt 의 intent 가 무장된 exit 발의의 intent 가 **아닐 때만** critical 1회(key `order.unresolved_in_doubt|attempt:<id>`, 창 0 — exit 쪽 알림과 겹치지 않게).
+  추천 (b): 세션 park 는 계정 전역 진입을 막는 사건인데 통지가 없으면 「공시」가 문서에만 있다. 범위 확장이라 결정 필요.
+- **Q-F**(리뷰 R1-1): (1) 10분 검사를 직렬 해소에서 떼어 같은 실행자 안의 별도 goroutine(5초 간격, 원장 읽기만)으로 — 「10분에 알린다」를 참으로 만든다;
+  (2) `PendingAttempts` 연속 실패 `obs.DefaultCriticalAttempts` 회 → critical 1회(에피소드 = 연속 id, a094 D−7.1). 추천 둘 다 예 — 새 함수만, 브로커 호출 0.
+  고르지 않으면 문서의 약속을 「해소가 돌지 않는 동안」으로 좁힌 현재 문장이 남는다.
+- **Q-G**(리뷰 R1-4): 해소 읽기가 쥔 wire 임차만큼 손절 wire 진입이 늦을 수 있다(요청 하나, ≤ 15초). (a) 시험으로 지연을 재고 잔여로 공시(선점 정책 없음) /
+  (b) 해소 읽기에 별도 짧은 시한. 추천 (a) — a166 이 운영에서 enforcing 인지부터 확인 필요(이 change 는 a166 미완료 상태를 바꾸지 않는다).
+- **Q-H**(리뷰 R1-5): 엔진·flatten 프로세스 사이 「검사 → 기록」 경합(기존 공백). 추천: 이 change 밖 — 이름 붙인 후속 후보. 세션 해소가 그 결과를 더 나쁘게 만들지 않는다
+  (기동 복구와 같은 해소 함수).
+- **Q-I**(리뷰 R1-2): Resolver 전체 호출에 강제 시한을 둘지. 추천: 두지 않음 — 단순 `WithTimeout` 은 D3 에 따라 기한 소진 park 대신 IN_DOUBT 잔류를 만든다(해소 예산
+  만료와 엔진 종료 취소의 처분을 가르는 Resolver 수리가 필요해지고 그것은 비례 원칙상 이 change 밖).
 
 ## 7. 후속 후보 (이 change 밖)
 

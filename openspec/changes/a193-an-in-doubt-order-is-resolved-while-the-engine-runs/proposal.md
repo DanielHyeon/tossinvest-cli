@@ -29,17 +29,18 @@
 |---|---|
 | IN_DOUBT 를 해소하는 production 호출 자리는 둘뿐이고 둘 다 세션 밖이다 | `Resolver.Resolve` 의 production 호출자: `Recovery.Run`(call@300, B3 순회 안)과 수동 flatten `Saga.resolveStep`(call@428, 자기 취소 attempt 만). `Recovery.Run` 은 `Runtime.Run` B2(if@294 `r.opts.Recover`)에서 **루프보다 먼저 한 번** 돈다 |
 | exit 제출은 IN_DOUBT 를 받으면 발의를 무장한 채 로그 한 줄만 남긴다 | `ExitObserver.submit` B10(case@1577) → `noteExitOrder`(call@1585) → return@1586(nil). `noteExitOrder` 는 대기열 append(append@219) 뿐 — outbox 행 없음 |
-| 그 뒤 판정 진입은 IN_DOUBT 를 침묵으로 지나간다 | `noteHeldProposal`: `ExitIntentAttempts` 판정에서 IN_DOUBT 는 `exitIntentAttemptsQ` B11(default@216) → live → B15 `ExitIntentLive`. `noteHeldProposal` 의 B4(Unaccepted 해제)·B6(Parked 알림)·B7(Awaiting) 어디에도 안 걸린다 — **IN_DOUBT 를 다루는 갈래 0** |
+| 그 뒤 판정 진입은 IN_DOUBT 를 침묵으로 지나간다 | `noteHeldProposal`: `ExitIntentAttempts` 판정에서 IN_DOUBT 는 `exitIntentAttemptsQ` B11(case@216 — 소스는 `default:` 절) → live → B15 `ExitIntentLive`. `noteHeldProposal` 의 B4(Unaccepted 해제)·B6(Parked 알림)·B7(Awaiting) 어디에도 안 걸린다 — **IN_DOUBT 를 다루는 갈래 0** |
 | 엔진 정본은 IN_DOUBT 발생을 critical 로 정했다 | engine-safety 「등급화된 알림」 첫 문장(critical: IN_DOUBT·UNRESOLVED_IN_DOUBT 발생). 위 두 줄이 그 요구를 지키지 못했다(Manager 결정 대기 Q-A, review.md) |
 
 즉 **세션 중에 IN_DOUBT 가 된 주문은 엔진을 다시 띄울 때까지 아무도 해소하지 않고, 그 사이 알림도 없다.** 정본 order-execution 「IN_DOUBT 해소」는
 세션 중 해소를 별도 change 로 미뤘고 그 change 가 **해소 진입점 배선 · 주기와 동시 실행 상한의 실측 · park 가 계정 전역 진입을 차단한다는 공시**
-셋을 모두 가져야 한다고 적었다(SHALL). 이 change 가 그 셋을 가진다.
+셋을 모두 가져야 한다고 적었다(SHALL). 이 change 는 배선과 공시를 가지고, 실측은 **시험 측정(tasks 3.9)과 배포 전 운영 측정(tasks 1.10)** 으로 가진다 — 정본 delta 는
+실측 기록을 운영 활성(배포)의 선행 조건으로 남긴다. 1단계 현재 실측은 **계획**이다.
 
 ## What Changes
 
 1. **세션 중 해소(D1·D2)**: 새 보조 실행자(Auxiliary) `in-doubt-settle` 가 기동 복구가 끝난 뒤(`Runtime.Run` 의 B2 다음, 보조 실행자 시작 B4) 시작해 5초마다
-   원장의 미종결 attempt 를 읽고 **`IN_DOUBT` 이면서 `PLACE` 인 것만** 하나씩 기존 `execgw.Resolver.Resolve` 로 해소한다. 동시 실행 상한 1(직렬). 증명
+   원장의 미종결 attempt 를 읽고(직전 스윕이 끝난 뒤 5초 — 해소가 도는 동안 다음 읽기는 늦어진다) **`IN_DOUBT` 이면서 `PLACE` 인 것만** 하나씩 기존 `execgw.Resolver.Resolve` 로 해소한다. 동시 실행 상한 1(직렬). 증명
    규칙(목록 대조·dedup·안정 관찰·부재 교차 확인·오염 창)은 한 글자도 바꾸지 않는다. 재생(`ReplayInDoubt`)은 부르지 않는다. 재시작 규칙(RECORDED→NOT_DISPATCHED,
    DISPATCH_STARTED→IN_DOUBT)은 세션 중 적용하지 않는다(정본 SHALL NOT 그대로). exit 관측 루프는 해소를 기다리지 않는다(다른 goroutine).
 2. **종료는 park 가 아니다(D3)**: 엔진 정지로 ctx 가 취소되면 attempt 는 IN_DOUBT 로 남는다. **Resolver 를 고치지 않는다** — AST 로는 취소가 park 갈래로
@@ -50,7 +51,8 @@
 3. **오래 남은 IN_DOUBT 알림(D4)**: PLACE attempt 가 `DispatchStartedAt`(없으면 `RecordedAt`)부터 **10분**(= 2 × `DefaultResolveConfig().MaxDuration` 5분)
    넘게 IN_DOUBT 면 실행자가 기존 critical 타입 `order.in_doubt` 로, key `order.in_doubt|stale:<attempt id>`, 알림기의 critical 기록 단일 입구
    (`RecordCritical`, 창 0)로 한 번 기록한다. 실행자 자체가 취소 아닌 사유로 멈추면(패닉 포함) `OnStop` 이 같은 입구로 critical 하나를 기록한다.
-   park 의 알림은 기존 `recordParkCause` 가 낸다 — 이 change 는 park 알림을 새로 만들지 않는다.
+   park 의 알림은 기존 `recordParkCause` 가 **무장된 exit 발의의 attempt 에 대해서만** 낸다 — 이 change 는 park 알림을 새로 만들지 않는다(exit 발의가 아닌 PLACE 의
+   park 통지는 Manager 결정 대기 Q-E). 10분 검사는 같은 스윕에서 해소 사이에 돌므로 해소가 길면 늦어진다(Q-F).
 4. **바꾸지 않는 것**: `execgw.Resolver` 전체, `Recovery.Run`, exit 관측 루프(`submit`·`noteHeldProposal`), 원장 스키마, a166 배선 census 의 네 함수
    (`buildGateway`·`newGatewayReplay`·`NewContext`·`NewOrderPath`), 알림 이벤트 열거(`internal/obs` 무편집), 설정·토글.
 

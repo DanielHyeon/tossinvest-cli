@@ -37,7 +37,8 @@
       실행자 자신의 critical 0(중복 없음).
 - [ ] 3.3 `TestA193AnInDoubtBuyProvenAbsentIsFailedConfirmed` — 기준선 있는 PLACE(전략 진입 모양), 부재 + 보유·매수가능 무변 → FAILED_CONFIRMED(증명 규칙 무변경의 회귀 확인).
 - [ ] 3.4 `TestA193ACancelledResolutionLeavesTheAttemptInDoubt` — 가짜 시계의 Sleep 대기 중 ctx 취소 → 원장 상태 IN_DOUBT·settled_at 빈 값, 진입 게이트 래치 0, critical 0,
-      결과 로그 0, `Run` 반환 `context.Canceled`. 하위 시험: 스캔(HTTP) 도중 취소 · 부재 교차 확인 읽기 도중 취소 — park 로 가는 다섯 자리 중 셋 이상을 덮음.
+      결과 로그 0, `Run` 반환 `context.Canceled`. 하위 시험: 스캔(HTTP) 도중 취소 · 부재 교차 확인 읽기 도중 취소 — `Resolve` 에서 park 를 부르는 네 return 자리(299·325·348·351) 중 취소가 닿는 셋을 덮음.
+      하위 시험(리뷰 R1-6): 10분 넘은 attempt 의 스윕 중 취소 → `noteStale` 미호출·`ReasonAlertUndelivered` 래치 0.
 - [ ] 3.5 `TestA193AShutdownMidResolutionIsAGracefulAuxiliaryStop` — `Runtime.Run` 에 실행자를 보조로 넣고 해소 중 취소 → `OnStop` 미호출, `Run` nil, 원장 IN_DOUBT.
 - [ ] 3.6 `TestA193TheExitObserverDoesNotWaitForAResolution` — 막혀 있는 가짜 해소기(채널로 붙잡음) 동안 다른 포지션의 exit 관측 주기가 끝나고 손절 제출이 나감;
       `TestA193AttemptsAreResolvedOneAtATime` — IN_DOUBT 둘(다른 종목), 동시에 진행 중인 `Resolve` 최대 1(계측);
@@ -47,7 +48,8 @@
       기록 실패면 래치 안 서고 다음 스윕이 다시 시도. `TestA193TheStaleAlertCarriesNoAccountQuantityOrPrice`(제목·본문·필드에 합성 계좌·수량·가격 문자열 0).
 - [ ] 3.8 `TestA193OnlyInDoubtPlaceAttemptsAreTouched` — RECORDED·DISPATCH_STARTED·ACKED PLACE, IN_DOUBT CANCEL·AMEND → 상태 무변·`Resolve` 호출 0·브로커 호출 0;
       `TestA193TheSettlerNeverReplays` — 재생 진입점 호출 0(가짜 Replayer 계측); `TestA193NoInDoubtMeansNoBrokerCall` — 미결 0 이면 스윕 N회에 브로커 요청 0.
-- [ ] 3.9 `TestA193ResolutionRequestsAreBounded` — 가짜 브로커로 요청 수를 셈: 발견 경로, 부재 증명 경로(≈22), 기한 소진 경로(≤122), 페이지 상한. 결과를 design D2 「실측 1」에 적음.
+- [ ] 3.9 `TestA193ResolutionRequestsAreBounded` — 가짜 브로커로 요청 수를 셈: 발견 경로, 부재 증명 경로(≈22), 기한 소진 경로(정상 1쪽 ≤122), 페이지 상한.
+      여러 쪽·느린 응답 경로의 **벽시계 길이**도 잼(리뷰 R1-2 — 강제 상한이 없음을 수치로). 결과를 design D2 「실측 1」에 적음.
 - [ ] 3.10 배선: `TestA193TheProductionRuntimeStartsTheSettlerAsAuxiliary`(보조 이름에 있고 `LoopNames` 에 없음) + 기존 `TestProductionRuntimeStartsExactlyOneAlertDeliverer`
       기대 목록에 `"in-doubt-settle"`(FLM 번들). `TestA193ASettlerStopRecordsACritical` — Run 의 패닉·nil 배선 → `OnStop` critical 1(key `order.in_doubt|settler-stopped:<실행 id>`).
       `TestA193TheSettlerStartsAfterRecovery` — Recover 가 막혀 있는 동안 스윕 0.
