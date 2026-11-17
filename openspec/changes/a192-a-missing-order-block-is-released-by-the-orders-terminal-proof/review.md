@@ -263,3 +263,19 @@ released_at·evidence 그대로). 12개를 `mutate.py` 의 m34~m45 로 옮겨 �
   - (b) 옛 값 대 새 값: `16a17,18` — 빈 줄 하나(주석 줄이 mode 0 파싱에서 빠진 자리) + `Terminal: in.journal,` 한 줄. 그 밖의 차이 없음.
   - (c) 반증: 갱신 뒤 `go test -count=1 -v ./internal/accountbudgetruntime/` rc 0(`analysis/census-repair/go-test-after.txt` — Baseline PASS,
     RejectsBypasses 변이 8개 전부 PASS). 갱신 전 값에서는 Baseline 이 실패함 — 게이트 1회차 원문이 그 실행이다.
+
+## 완료 게이트 2회차 ⑧ FAIL (2026-11-17)
+
+- 격리 worktree(저장소 밖, detached cc3dfd256), 03:58:05Z~04:22:34Z, rc 2. ①~⑦ OK(⑦ `make test` OK — census 수리 확인), **⑧ `make test-seams` FAIL**, ⑨~⑪ 미실행.
+  원문 `analysis/close/gate-2-cc3dfd256.txt`. 실패 줄:
+  ```
+  --- FAIL: TestA131NoLoggerOrAppendWriterBypassesRedaction (0.03s)
+      a131_structure_test.go:134: lstat /home/daniel/tossos-work/a192-close-gate/internal/accountbudgetruntime/.openapi-token-1744300367.tmp: no such file or directory
+  FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/redact	0.936s
+  GATE FAIL: a192-a-missing-order-block-is-released-by-the-orders-terminal-proof — make test-seams 실패
+  ```
+- 단독 재실행 `go test -count=1 -tags tossos_testseams ./internal/redact/` rc 0(`analysis/close/redact-alone-cc3dfd256.txt`).
+- 판단: **시험 간 경합으로 추정(미재현)** — 134행은 저장소를 훑는 자리(`files := productionFiles(t)`)이고, 사라진 파일은 `internal/official/token.go` 의
+  `os.CreateTemp(dir, ".openapi-token-*.tmp")` 가 병렬로 돌던 `internal/accountbudgetruntime` 시험 중 그 패키지 디렉터리에 만든 임시 토큰 파일. a192·census
+  수리가 건드린 코드가 아님. Manager 승인으로 게이트 3회차.
+- a192 범위 밖 후속 후보: 구조 시험의 트리 순회가 다른 시험이 패키지 디렉터리에 만드는 임시 파일을 밟음(순회 중 사라진 파일 처리 또는 시험의 임시 디렉터리 위치).
