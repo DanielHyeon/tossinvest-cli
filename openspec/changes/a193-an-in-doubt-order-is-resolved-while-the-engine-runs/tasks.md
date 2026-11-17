@@ -74,9 +74,9 @@
 
 ## 5. 종결
 
-- [ ] 5.1 Manager 독립 검증(diff·선택 시험 재실행·변이 표본).
-- [ ] 5.2 (사람) 배포 — 이미지 교체(스키마 변경 없음). 배포 순간 IN_DOUBT attempt 가 있으면 기동 복구가 먼저 해소(종전과 같음).
-- [ ] 5.3 archive·Story 경로·PM `--check`, 검증된 교훈 retain(ai-memory·Hindsight).
+- [x] 5.1 Manager 독립 검증(diff·선택 시험 재실행·변이 표본) — 2026-11-18: 1차 반려(조립 경로 시험 공백 g3·g4·g5 SURVIVED) → 시험 5 추가 뒤 HEAD `fd7d7df56` 통과(Manager 변이 표본 6/6 CAUGHT 재확인). 엔진 패키지 881/0/1 등 `-trimpath` 없이 독립 재실행 rc 0 — review.md 「Manager 검증 반려 1회차」.
+- [x] 5.2 (사람) 배포 — 이미지 교체(스키마 변경 없음). 배포 순간 IN_DOUBT attempt 가 있으면 기동 복구가 먼저 해소(종전과 같음). **선체크(gate ② 선행 조건)** — 사용자 승인 2026-11-18(「종결 + 오늘 창에서 운영 반영」), 이미지 빌드·엔진 교체는 Manager 가 완료 게이트 PASS 뒤 수행하고 그 기록은 Manager 몫(이 change 의 archive 뒤).
+- [x] 5.3 archive·Story 경로·PM `--check`, 검증된 교훈 retain(ai-memory·Hindsight) — **선체크(gate ② 선행 조건, 선례 a187·a189·a190·a191·a192)**: archive·Story·PM 은 팀메이트가 gate PASS 뒤 수행, 기억 retain 은 팀메이트 금지 범위라 Manager 몫.
 
 ## 2단계 기록 (2026-11-18)
 
