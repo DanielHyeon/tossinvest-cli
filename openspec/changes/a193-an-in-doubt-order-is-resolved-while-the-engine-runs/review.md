@@ -119,6 +119,26 @@ Pre-Edit Gate:
   주문 생성 0(조회만), 손절·사이징 로직 무변경(§0.9). a166 은 운영 ModeOff — 임차 지연 잔여는 design §7-6.
 ```
 
+## 2단계 구현 기록 (구현 팀메이트 Opus, 2026-11-18)
+
+- 구현 커밋 `839a95c90`. 새 파일 `internal/app/engine/in_doubt_settle.go`, 시험 `internal/app/engine/a193_in_doubt_settle_test.go`(29), `cmd/tossctl/a193_in_doubt_settle_wiring_test.go`(1).
+  기존 함수 편집 둘(`engineRuntime`, `TestProductionRuntimeStartsExactlyOneAlertDeliverer`) — Pre-Edit 대로, 늘지 않음. census 네 함수·Resolver·exit 루프·journal·obs 무편집.
+- 선택 시험(원문 `analysis/implementation/`, 전부 `GOFLAGS=-trimpath` · 전용 GOCACHE, rc 는 파일 끝):
+
+| 명령 | rc | PASS / FAIL / SKIP | 비고 |
+|---|---|---|---|
+| `go test ./internal/app/engine -run TestA193 -v` | 0 | 29 / 0 / 0 | `green-engine-a193.txt` |
+| 같은 것 `-race` | 0 | (요약 출력) | `green-engine-a193-race.txt` |
+| `go test ./internal/app/engine/ -v`(패키지 전체, 900s) | 1 | 869 / 6 / 1 | `verify-engine-pkg.txt`(구현 커밋 직전 판). 실패 6 = `-trimpath` 계측 결함(경로 기반 시험) — 옵션 없이 6/6 PASS `verify-engine-6-notrimpath.txt`(a192 와 같은 6) |
+| `go test ./cmd/tossctl -run 'TestA193\|TestA098\|TestProductionRuntime\|TestTheAlertDeliverer\|TestEngineRuntime\|TestTheRestartRecovery\|TestTheLoopSet' -v` | 0 | 9 / 0 / 0 | `green-cmd.txt` |
+| `go test ./internal/execgw/ -v`(패키지 전체) | 1 | 327 / 1 / 1 | 실패 1 `TestA166OrderableActionCoverage` = `-trimpath`(GOROOT 미설정 타입 검사) — 옵션 없이 PASS `verify-execgw-1-notrimpath.txt` |
+| `go test ./internal/journal/ -run 'Resolve\|Pending\|Unresolved\|InDoubt\|Recover\|ArmedExit\|ExitIntentAttempts' -v` | 0 | 55 / 0 / 0 | `verify-journal-sel.txt` |
+| `go test ./internal/accountbudgetruntime/ -v`(census) | 0 | 53 / 0 / 0 | `verify-accountbudgetruntime.txt` — 첫 판 FAIL(116→120, D0.5 census 함정) 뒤 이름 수정 |
+| `make lint` | 0 | — | `verify-make-lint.txt` |
+
+- 실행하지 않음: `make test`·`make gate`·`make sdd-check`·`go test ./...`(Manager 지시 — 사용자 명시 요청 없음), `make test-seams`(시간 — 미실행), `make sdd-sync`(금지).
+- 변이: 26/26 CAUGHT(실패 24 · 시한 초과 2), SURVIVED 0 — `analysis/mutation/README.md`.
+
 ## Manager 결정 대기
 
 (1단계 목록 Q-A~Q-I 는 위 「Manager 처분」으로 전부 결정됨 — 아래는 기록. 2단계 리뷰가 더하는 것은 구현 리뷰 절에 붙인다)

@@ -61,6 +61,27 @@ resolve(rec):
 6회 전부 park 로 끝났고 지속이 11.9~46.3시간이었다. 이 change 뒤 같은 모양이면: 처음 봄 critical 이 5초 스윕 안에 나가고, 해소는 정상 경로 ≈1분(부재·안정 3회·45초)에 park
 로 끝나며 park 원인 critical 이 나간다. **결과(park·해동 필요)는 같고 지속이 시간 단위에서 분 단위로 준다.**
 
+### D0.5 구현 결과 (2단계, 2026-11-18)
+
+- 새 파일 `internal/app/engine/in_doubt_settle.go` 하나. 기존 함수 편집은 계획한 둘뿐(`engineRuntime` 원소 1, 시험 기대 목록 원소 1) — FLM 번들 편집 후 판.
+- **census 함정(사실 정정)**: D2 는 「새 파일은 census 선택자를 쓰지 않는다」고 적었지만, census 는 패키지와 무관하게 **이름이 `Budget` 인 모든 선택자**를 센다
+  (a166_wiring_census_test.go:86). 처음 구현의 배선 필드 `deps.Budget` 4곳이 `TestA166WiringCensusBaseline`(116 → 120)을 깼고, 필드 이름을 `ResolveBudget` 으로 바꿔 닫았다
+  (census 무편집·재기준화 없음).
+- 1단(알림) 머리의 ctx 검사와 2단 머리의 ctx 검사는 **지웠다** — 앞은 `record` 가, 뒤는 `resolve` 가 같은 것을 막아 서로를 가리는 중복이었다(변이 원장 README).
+- **실측 1(시험, 가짜 브로커 · 가짜 시계 — `TestA193ResolutionRequestsAreBounded` 로그)**:
+
+| 경로 | 목록 요청 | 계좌 읽기 | 결과 | 가짜 경과 |
+|---|---|---|---|---|
+| 목록에 1건(발견) | 2 | 0 | CONFIRMED | 0초 |
+| 부재 증명(기준선 있는 매수) | 20 | 2 | FAILED_CONFIRMED | 45초 |
+| 스캔이 매번 실패 | 60 | 0 | UNRESOLVED_IN_DOUBT | 4분 55초 |
+| 50쪽 · 쪽당 20초(느린 응답) | 100 | 0 | UNRESOLVED_IN_DOUBT | **33분 20초** — 강제 상한 없음(R1-2)의 수치 |
+
+- 실측 2(운영)는 D0.1-1. 동시 해소 최대 1(시험 `TestA193AttemptsAreResolvedOneAtATime`), 스윕 간격 = 직전 스윕 끝 + 5초(코드 상수 `PollInterval`).
+- **retry matrix 계상(§0.4, tasks 4.6)**: 새 엔드포인트 0 — 쓰는 것은 기동 복구가 이미 쓰는 주문 목록(OPEN·CLOSED)·보유·매수가능 조회뿐. 빈도는 IN_DOUBT 발주가 있을 때만,
+  해소 하나당 위 표(정상 경로 2~22 요청, 기한 소진 경로 ≤ 61 스캔), 동시 최대 1. 운영 이력(D0.1-1) 기준 2026-07-31~11-17(109일)에 6회.
+- 운영 안내: `docs/operations.md` 「세션 중 IN_DOUBT 해소와 park (a193)」.
+
 ## 1. 지금의 기전
 
 ### 1.1 IN_DOUBT 를 해소하는 자리
