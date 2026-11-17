@@ -49,7 +49,7 @@
    `database/sql` 의 ctx 검사는 손으로 읽음). 호출자(새 실행자)는 오류 + `ctx.Err() != nil` 이면 결과를 버리고 멈춘다. 이 「우연이 지키는 안전」은 시험으로
    못 박는다(tasks 3.4). 기동 복구 경로도 같은 성질이다(`Recovery.Run` B9 → `Runtime.Run` B2 return@295).
 3. **오래 남은 IN_DOUBT 알림(D4)**: PLACE attempt 가 `DispatchStartedAt`(없으면 `RecordedAt`)부터 **10분**(= 2 × `DefaultResolveConfig().MaxDuration` 5분)
-   넘게 IN_DOUBT 면 실행자가 기존 critical 타입 `order.in_doubt` 로, key `order.in_doubt|stale:<attempt id>`, 알림기의 critical 기록 단일 입구
+   이상 IN_DOUBT 면 실행자가 기존 critical 타입 `order.in_doubt` 로, key `order.in_doubt|stale:<attempt id>`, 알림기의 critical 기록 단일 입구
    (`RecordCritical`, 창 0)로 한 번 기록한다. 실행자 자체가 취소 아닌 사유로 멈추면(패닉 포함) `OnStop` 이 같은 입구로 critical 하나를 기록한다.
    park 의 알림은 기존 `recordParkCause` 가 **무장된 exit 발의의 attempt 에 대해서만** 낸다 — 이 change 는 park 알림을 새로 만들지 않는다(exit 발의가 아닌 PLACE 의
    park 통지는 Manager 결정 대기 Q-E). 10분 검사는 같은 스윕에서 해소 사이에 돌므로 해소가 길면 늦어진다(Q-F).

@@ -12,8 +12,8 @@
 - [x] 1.4 CodeGraphContext·GBrain — not-applicable 사유 기록(`codegraphcontext-context.md`).
 - [x] 1.5 `tools/logic-map` AST: 인용 함수 40개(`analysis/cited-ast/`, 전부 rc 0) + 편집 대상 2개 번들(`analysis/function-logic/`, pre-edit).
 - [x] 1.6 proposal·design·spec delta·tasks·review 작성, `openspec validate --strict` 통과.
-- [ ] 1.7 proposal-freeze 적대 리뷰(다른 계열, 최대 2회) — `review.md`.
-- [ ] 1.8 Manager 결정 Q-A~Q-D 와 리뷰의 「Manager 결정 대기」 처분 → 반영 개정(필요 시 결정 반영분 리뷰 1회).
+- [x] 1.7 proposal-freeze 적대 리뷰(다른 계열, 최대 2회) — `review.md`(1회차 BLOCK P1 5·P2 3, 2회차 BLOCK P0 1·P1 2·P2 3 — 사실 정정 반영, 판단은 결정 대기).
+- [ ] 1.8 Manager 결정 Q-A~Q-I(**Q-G 는 freeze 차단**) 와 리뷰의 「Manager 결정 대기」 처분 → 반영 개정(필요 시 결정 반영분 리뷰 1회).
 - [ ] 1.9 Manager 의 개정판 검증 — proposal-freeze.
 - [ ] 1.10 (Manager, 읽기 전용) 운영 저널 사본에서 IN_DOUBT PLACE attempt 의 기간별 수와 **동시 최대 수**를 잰다(계좌·종목·수량·가격 미기록) — 정본이 요구한
       「주기와 동시 실행 상한의 실측」의 운영 쪽. 결과를 design D2 표 「실측 2」에 적는다.
