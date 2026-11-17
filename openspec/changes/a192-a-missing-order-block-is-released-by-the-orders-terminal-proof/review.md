@@ -208,3 +208,29 @@ released_at·evidence 그대로). 12개를 `mutate.py` 의 m34~m45 로 옮겨 �
   `TrackedFillOrders` 행에서 온다. 둘이 같아야 스냅숏을 찾는다 — 다르면 `terminal_not_found` 로 유지(안전 쪽)이고 운영자 해제로 돌아간다. 감지기 →
   장부 → 대사를 한 시험에서 잇는 실행은 없다(엔진 시험은 `RecordFill` 을 손으로 부름).
 - 코드 리뷰 2회차 #1 반영분(사라진 블록의 결속 버리기)은 재리뷰 없이 변이 m33 으로만 확인.
+
+## Manager 독립 검증 5.1 기록 (Manager 실측 2026-11-17 — 계좌 데이터 없음)
+
+- diff 대조: 기존 함수 편집 7곳 = D11. production 3파일 sha256 을 검증 뒤 커밋본과 대조해 같음.
+- 독립 재실행(사본, `-trimpath`): reconcile 패키지 PASS 209 / FAIL 0(A192 32), journal 선택 PASS 160 / FAIL 0(A192 8, 시험 추가 전),
+  engine 패키지 PASS 843 / FAIL 6 / SKIP 1 — 실패 6(A087 4·A111 2)은 소스 경로를 읽는 시험이 `-trimpath` 사본에서 「no such file」로 실패한
+  계측 결함이고, 같은 6개를 worktree 에서 옵션 없이 돌려 6/6 PASS. cmd 선택 rc 0. 커밋 뒤 journal `-run TestA192` 9/9 PASS.
+- 변이 표본 12: 1회차 CAUGHT 10·SURVIVED 2(g8·g9) → 시험 추가 뒤 12/12(원장 m34~m45).
+- 운영 장부 읽기 전용 집계(개수만): `fill_events` 105행 중 종목 빈 행 0, `mutation_attempts.kind` 는 PLACE 뿐(AMEND 0).
+- 결정 M15·M16·유지 사유 로그 수용(위 절).
+- 전체 시험은 배포 전 미실행 — 실행이 권한 규칙에 막힘(사용자 명시 요청이 있을 때만 허용).
+
+## 배포 기록 (Manager 실측 2026-11-17, 사용자 승인 「지금 다해」 — 계좌·종목·수량·가격·주문번호 미기재)
+
+- KR 정규장 중 교체 — 엔진 정지 창 밖임을 사용자에게 고지한 뒤 승인.
+- main f269c68f8(fast-forward). `make image CHANGE=a192-…` rc 0 → 핀 `tossos:a192-a-missing-order-block-is-released-by-the-orders-terminal-proof-f269c68f8`
+  = sha256:702524e4da9a672b7ca71449b42225d7160d1f7d7d8e83fb673e3ea6fe5b9afd. 롤백 핀 = a191(sha256:c34d7391…). 둘 다 SchemaVersion 36,
+  운영 저널 user_version 36(교체 직전 실측) → 마이그레이션 없음. 판정 파일 schema-compatibility-a192-f269c68f8.txt(운영 deploy 디렉터리).
+- 빌드 판정(`grep -ac`): 새 바이너리에 `ORDER_TERMINAL_CONFIRMED`·`reconcile.block_release_held` 각 1건, 옛 바이너리 0건.
+- 교체: httpapi → healthy 약 9초 → tossos. tossos 컨테이너 시작 03:22:35.8Z, 옛 엔진 마지막 로그 03:22:35.57Z, 새 엔진 started_at 03:22:40.54Z
+  (`engine.operating_mode`), 첫 `reconcile.clean` 03:22:45Z(`blocked` 0). 엔진 부재 약 5초. 두 컨테이너 실행 digest = 702524e4…, healthy, 엔진 프로세스 1.
+- 교체 뒤: 03:23:47Z 대사 주기 1회 실패(`reconcile.mismatch` — 「snapshot discarded after a partial read … official: rate limited」, 기존 유형 —
+  로그 전체에서 하루 3~10건), 03:24:50Z 다음 주기 `reconcile.clean` `blocked` 0. 미해제 reconcile 행 0.
+- 배포 순간 활성 missing-order 행 0 → 운영자 해제 불필요, 운영 장부 수리 없음.
+- **미관측**: 새 해제 경로의 운영 동작(무장 → 해제, `reconcile.block_released`, `reconcile.block_release_held`)은 운영에서 관측된 적 없다 —
+  배포 뒤 missing-order 차단이 생긴 적이 없기 때문. 운영 확인이 아니라 미관측이다.

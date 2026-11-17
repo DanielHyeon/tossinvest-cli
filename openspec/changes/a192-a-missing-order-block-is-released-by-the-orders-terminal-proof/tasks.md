@@ -48,6 +48,6 @@
 
 ## 5. 종결
 
-- [ ] 5.1 Manager 독립 검증(diff·선택 시험 재실행·변이 표본).
-- [ ] 5.2 (사람) 배포 — 이미지 교체(스키마 변경 없음). 배포 순간 활성 missing-order 행은 운영자 해제(결속 없음). 운영 장부 수리 없음.
-- [ ] 5.3 archive·Story 경로·PM `--check`, 검증된 교훈 retain(ai-memory·Hindsight).
+- [x] 5.1 Manager 독립 검증(diff·선택 시험 재실행·변이 표본) — 2026-11-17: 기존 함수 편집 7곳 = D11, production 3파일 sha256 일치, reconcile 209/0·journal 선택 160/0·engine 843/6/1(실패 6 은 `-trimpath` 계측 결함, 옵션 없이 6/6 PASS)·cmd 선택 rc 0, 변이 표본 10/12 → 시험 추가 뒤 12/12, M15·M16·유지 사유 로그 수용; 전체 시험 미실행(권한 규칙) — review.md 「Manager 독립 검증 5.1 기록」.
+- [x] 5.2 (사람) 배포 — 이미지 교체(스키마 변경 없음). 배포 순간 활성 missing-order 행은 운영자 해제(결속 없음). 운영 장부 수리 없음. — 2026-11-17 Manager 실행·사용자 승인: 핀 `tossos:a192-…-f269c68f8`(release)·rollback a191, SchemaVersion 36 = 운영 user_version 36, 엔진 부재 약 5초, 교체 뒤 `reconcile.clean` `blocked` 0·미해제 행 0, 배포 순간 활성 missing-order 행 0(운영자 해제 불필요). 새 해제 경로의 운영 동작은 **미관측** — review.md 「배포 기록」.
+- [x] 5.3 archive·Story 경로·PM `--check`, 검증된 교훈 retain(ai-memory·Hindsight) — gate ② 선행 조건이라 선체크(선례 a187·a189·a190·a191); 실제 수행 결과는 archive 커밋과 종결 보고.
