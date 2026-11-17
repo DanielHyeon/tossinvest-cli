@@ -1,0 +1,425 @@
+{
+  "file": "internal/reconcile/mismatch.go",
+  "source_sha256": "f72bcbc7d2889c97fa4db4e0bce40f77cad12bdd907749e86d56ac99a1481539",
+  "package": "reconcile",
+  "function": "persist",
+  "receiver": "Tracker",
+  "signature": "Tracker.persist(params=2, results=2)",
+  "start": {
+    "line": 857,
+    "column": 1
+  },
+  "end": {
+    "line": 919,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 858,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 869,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 870,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 886,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 890,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 899,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 907,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 911,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 859,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 887,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 893,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 908,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 912,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 918,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 860,
+        "column": 14
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 860,
+        "column": 21
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 861,
+        "column": 14
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 861,
+        "column": 21
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 865,
+        "column": 13
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 865,
+        "column": 30
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 866,
+        "column": 13
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 866,
+        "column": 30
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 870,
+        "column": 6
+      },
+      "text": "unrepresentableOrdinaryQuantityBlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 875,
+        "column": 25
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 879,
+        "column": 20
+      },
+      "text": "firstNonEmpty"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 880,
+        "column": 26
+      },
+      "text": "t.Journal.EnterReconcile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 881,
+        "column": 16
+      },
+      "text": "firstNonEmpty"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 887,
+        "column": 19
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 888,
+        "column": 19
+      },
+      "text": "scopeLabel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 891,
+        "column": 21
+      },
+      "text": "blockFromReconcileState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 892,
+        "column": 27
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 893,
+        "column": 19
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 895,
+        "column": 19
+      },
+      "text": "scopeLabel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 895,
+        "column": 38
+      },
+      "text": "firstNonEmpty"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 897,
+        "column": 20
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 900,
+        "column": 17
+      },
+      "text": "t.Journal.ReleaseReconcile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 901,
+        "column": 17
+      },
+      "text": "firstNonEmpty"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 905,
+        "column": 17
+      },
+      "text": "firstNonEmpty"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 908,
+        "column": 19
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 909,
+        "column": 19
+      },
+      "text": "scopeLabel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 912,
+        "column": 19
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 914,
+        "column": 19
+      },
+      "text": "scopeLabel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 916,
+        "column": 21
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 864,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 875,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 879,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 880,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 891,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 892,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 897,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 900,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 916,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

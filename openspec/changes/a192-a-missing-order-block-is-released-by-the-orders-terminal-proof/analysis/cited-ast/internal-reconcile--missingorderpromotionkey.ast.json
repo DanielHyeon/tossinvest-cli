@@ -1,0 +1,100 @@
+{
+  "file": "internal/reconcile/mismatch.go",
+  "source_sha256": "f72bcbc7d2889c97fa4db4e0bce40f77cad12bdd907749e86d56ac99a1481539",
+  "package": "reconcile",
+  "function": "missingOrderPromotionKey",
+  "signature": "missingOrderPromotionKey(params=3, results=2)",
+  "start": {
+    "line": 407,
+    "column": 1
+  },
+  "end": {
+    "line": 421,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 411,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 414,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 416,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 19
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 409,
+        "column": 16
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 410,
+        "column": 14
+      },
+      "text": "order.Identity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 51
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 408,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 409,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 410,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

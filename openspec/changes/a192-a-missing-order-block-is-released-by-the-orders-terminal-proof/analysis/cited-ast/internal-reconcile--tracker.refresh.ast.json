@@ -1,0 +1,368 @@
+{
+  "file": "internal/reconcile/mismatch.go",
+  "source_sha256": "f72bcbc7d2889c97fa4db4e0bce40f77cad12bdd907749e86d56ac99a1481539",
+  "package": "reconcile",
+  "function": "Refresh",
+  "receiver": "Tracker",
+  "signature": "Tracker.Refresh(params=1, results=1)",
+  "start": {
+    "line": 982,
+    "column": 1
+  },
+  "end": {
+    "line": 1047,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 983,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 991,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 997,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 998,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1002,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 1011,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 1012,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 1013,
+        "column": 4
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "range",
+      "at": {
+        "line": 1020,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 1021,
+        "column": 3
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 1029,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 1033,
+        "column": 2
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 1040,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 984,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 993,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1046,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 989,
+        "column": 2
+      },
+      "text": "t.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 990,
+        "column": 17
+      },
+      "text": "t.Journal.ActiveReconcileStates"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 992,
+        "column": 3
+      },
+      "text": "t.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 993,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1001,
+        "column": 12
+      },
+      "text": "blockFromReconcileState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1024,
+        "column": 12
+      },
+      "text": "blockFromReconcileState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1025,
+        "column": 10
+      },
+      "text": "block.Key"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1028,
+        "column": 16
+      },
+      "text": "hasPermanentQuantityAccountBlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1038,
+        "column": 3
+      },
+      "text": "t.clearStreaks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1040,
+        "column": 33
+      },
+      "text": "t.maxFailures"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1041,
+        "column": 16
+      },
+      "text": "t.maxFailures"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1043,
+        "column": 12
+      },
+      "text": "t.snapshotBlocks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1044,
+        "column": 2
+      },
+      "text": "t.syncGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1045,
+        "column": 2
+      },
+      "text": "t.mu.Unlock"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 990,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 996,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1001,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1003,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1007,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1010,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1017,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1024,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1025,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1027,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1028,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1030,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1031,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1041,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1043,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

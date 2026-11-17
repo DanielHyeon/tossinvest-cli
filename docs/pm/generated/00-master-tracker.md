@@ -112,6 +112,7 @@
     - STORY-TOS-a083 — Let a reconciliation quantity block release itself after the adjustment it earned [archived] → `a083-a-block-releases-itself`
     - STORY-TOS-a110 — Only the same unresolved reconciliation dispute becomes permanent [archived] → `a110-only-the-same-dispute-becomes-permanent`
     - STORY-TOS-a130 — An adopted trade whose quantity grew after adoption still freezes its outcome [archived] → `a130-an-adopted-trade-keeps-its-outcome`
+    - STORY-TOS-a192 — missing-order 종목 차단은 그것을 만든 주문들이 브로커 근거로 종결 확인되고 그 뒤의 대사가 그 종목에 차이를 보지 않을 때 엔진이 스스로 풀고 근거를 장부에 남긴다 [in_progress] → `a192-a-missing-order-block-is-released-by-the-orders-terminal-proof`
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
     - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [archived] → `a041-complete-exit-line-contract`
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [archived] → `a042-persist-exit-line-snapshots`

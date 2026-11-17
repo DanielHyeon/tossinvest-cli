@@ -181,3 +181,4 @@
 | `a189-shadow-tool-guards-admit-the-account-budget` | STORY-TOS-a189 | archived |
 | `a190-the-completion-gate-validates-the-closing-change-strictly` | STORY-TOS-a190 | archived |
 | `a191-fill-detection-resolves-orders-that-left-the-open-list` | STORY-TOS-a191 | archived |
+| `a192-a-missing-order-block-is-released-by-the-orders-terminal-proof` | STORY-TOS-a192 | in_progress |

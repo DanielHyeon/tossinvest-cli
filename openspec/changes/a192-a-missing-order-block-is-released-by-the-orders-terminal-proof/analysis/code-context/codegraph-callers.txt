@@ -1,0 +1,1065 @@
+# codegraph 1.6.0 callers — worktree index (codegraph init -y . , 2026-11-17, HEAD 6277ec34e). 명령: codegraph callers <name> -p . -l 50
+=== callers Tracker.Observe
+
+Callers of "Tracker.Observe" (34):
+
+function    a110MissingObserve
+  internal/reconcile/a110_missing_order_incident_test.go:32
+
+function    a110Observe
+  internal/reconcile/a110_promotion_identity_test.go:30
+
+function    a110ObserveError
+  internal/reconcile/a110_promotion_identity_test.go:39
+
+function    TestA110ComparerRejectsIdenticalInvalidQuantityStrings
+  internal/reconcile/a110_promotion_identity_test.go:342
+
+function    TestA110UnreadableExternalBrokerQuantityFailsClosed
+  internal/reconcile/a110_promotion_identity_test.go:381
+
+function    TestA110BlankRawQuantityPathsFailClosedWithoutPromotion
+  internal/reconcile/a110_promotion_identity_test.go:465
+
+function    TestA110CollectorPreservesUnreadableRawHoldingQuantity
+  internal/reconcile/a110_promotion_identity_test.go:506
+
+function    TestA110BlankSymbolJournalStateNeverRestoresAsPermanent
+  internal/reconcile/a110_promotion_identity_test.go:751
+
+function    TestA110BlankSymbolGuardDoesNotStarveValidSiblingPersistence
+  internal/reconcile/a110_promotion_identity_test.go:800
+
+function    TestA110BlankSymbolPendingDoesNotStarveValidSiblingRelease
+  internal/reconcile/a110_promotion_identity_test.go:854
+
+function    TestA110OperatorCanResolveKnownNondurableBlankSymbolGuard
+  internal/reconcile/a110_promotion_identity_test.go:948
+
+function    TestA110DualPendingPersistsPermanentBeforeRetryingOrdinary
+  internal/reconcile/a110_promotion_identity_test.go:1377
+
+function    TestA110CommitThenTimeoutCannotBeWithdrawnByDirectCleanObservation
+  internal/reconcile/a110_promotion_identity_test.go:1473
+
+function    TestA110AuthorityReadFailureKeepsUncommittedPendingPermanentFailClosed
+  internal/reconcile/a110_promotion_identity_test.go:1507
+
+function    TestA110AuthorityOutageDoesNotEraseObservedContinuityBreak
+  internal/reconcile/a110_promotion_identity_test.go:1545
+
+function    TestA110RefreshDoesNotManufacturePermanentFromContinuityBrokenPendingProposal
+  internal/reconcile/a110_promotion_identity_test.go:1602
+
+function    TestA110AuthorityOutageStillProjectsCurrentDifferentOrdinaryMismatch
+  internal/reconcile/a110_promotion_identity_test.go:1662
+
+function    TestA110AuthorityOutageStillRefutesUsableAdjustmentCredit
+  internal/reconcile/a110_promotion_identity_test.go:1755
+
+function    TestConvergenceMakesTheBlockReleasable
+  internal/reconcile/converge_test.go:120
+
+function    TestACoincidentalAgreementStillDoesNotRelease
+  internal/reconcile/converge_test.go:153
+
+function    TestExternalOrderObservationCannotBecomeMissingLocalExposure
+  internal/reconcile/external_order_ownership_test.go:14
+
+function    observe
+  internal/reconcile/mismatch_test.go:40
+
+function    TestARestartKeepsTheReconcileBlock
+  internal/reconcile/restore_test.go:139
+
+function    TestARestartKeepsAPermanentMismatchPermanent
+  internal/reconcile/restore_test.go:190
+
+function    TestAnOperatorResolutionSurvivesARestart
+  internal/reconcile/restore_test.go:237
+
+function    TestRefreshCannotOverwriteABlockPersistedByObserve
+  internal/reconcile/restore_test.go:268
+
+function    TestRestoreProjectsStatesThisTrackerDidNotEnter
+  internal/reconcile/restore_test.go:316
+
+function    TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails
+  internal/reconcile/restore_test.go:425
+
+function    TestObservePublishesOnlyDurablePartialReleasesAndRetriesTheRemainder
+  internal/reconcile/restore_test.go:476
+
+function    TestPermanentPromotionDoesNotOverwriteAnAccountWideForeignCause
+  internal/reconcile/restore_test.go:565
+
+function    TestEnterConflictReplacesTheProposalWithTheDurableCause
+  internal/reconcile/restore_test.go:601
+
+function    TestFailedEnterIsRetriedUntilTheBlockIsDurable
+  internal/reconcile/restore_test.go:631
+
+function    TestNewMismatchLatchesTheGateBeforeJournalIO
+  internal/reconcile/restore_test.go:670
+
+function    TestWriteThroughRecordsTheStateWithItsEvidence
+  internal/reconcile/restore_test.go:715
+
+=== callers Observe
+
+Callers of "Observe" (49):
+
+function    TestEventBurstCollapsesIntoOneRefetch
+  internal/filldetect/hints_test.go:93
+
+function    TestMinimumIntervalIsEnforcedPerTopic
+  internal/filldetect/hints_test.go:136
+
+function    TestTopicsCoalesceIndependently
+  internal/filldetect/hints_test.go:163
+
+function    TestUnrelatedEventsAreIgnored
+  internal/filldetect/hints_test.go:195
+
+function    TestEventPayloadIsNeverUsedAsState
+  internal/filldetect/hints_test.go:220
+
+function    TestHintShortensDetectionLatency
+  internal/filldetect/hints_test.go:259
+
+function    TestBudgetArithmeticFailsClosedForInvalidBounds
+  internal/scheduler/budget_test.go:85
+
+function    TestLegLedgerAggregateCapAndCalculationFailureAreFailClosedAtomic
+  internal/positioncampaign/review_regression_test.go:91
+
+function    TestOrderWatermarksReplacementAndLateTerminalFill
+  internal/positioncampaign/watermark_test.go:5
+
+function    TestOrderWatermarkCapExcessAndAmbiguousLineagePreserveDelta
+  internal/positioncampaign/watermark_test.go:52
+
+method      RunOnce
+  internal/app/engine/reconcileloop.go:414
+
+function    TestA134TheVerdictTable
+  internal/enginewatch/a134_watch_test.go:86
+
+function    TestA134AnUnreadableMarkerIsNotAbsence
+  internal/enginewatch/a134_watch_test.go:123
+
+function    TestA134TheRealMarkerLifecycleIsWhatTheWatcherReads
+  internal/enginewatch/a134_watch_test.go:507
+
+method      Run
+  internal/enginewatch/watch.go:211
+
+function    a110MissingObserve
+  internal/reconcile/a110_missing_order_incident_test.go:32
+
+function    a110Observe
+  internal/reconcile/a110_promotion_identity_test.go:30
+
+function    a110ObserveError
+  internal/reconcile/a110_promotion_identity_test.go:39
+
+function    TestA110ComparerRejectsIdenticalInvalidQuantityStrings
+  internal/reconcile/a110_promotion_identity_test.go:342
+
+function    TestA110UnreadableExternalBrokerQuantityFailsClosed
+  internal/reconcile/a110_promotion_identity_test.go:381
+
+function    TestA110BlankRawQuantityPathsFailClosedWithoutPromotion
+  internal/reconcile/a110_promotion_identity_test.go:465
+
+function    TestA110CollectorPreservesUnreadableRawHoldingQuantity
+  internal/reconcile/a110_promotion_identity_test.go:506
+
+function    TestA110BlankSymbolJournalStateNeverRestoresAsPermanent
+  internal/reconcile/a110_promotion_identity_test.go:751
+
+function    TestA110BlankSymbolGuardDoesNotStarveValidSiblingPersistence
+  internal/reconcile/a110_promotion_identity_test.go:800
+
+function    TestA110BlankSymbolPendingDoesNotStarveValidSiblingRelease
+  internal/reconcile/a110_promotion_identity_test.go:854
+
+function    TestA110OperatorCanResolveKnownNondurableBlankSymbolGuard
+  internal/reconcile/a110_promotion_identity_test.go:948
+
+function    TestA110DualPendingPersistsPermanentBeforeRetryingOrdinary
+  internal/reconcile/a110_promotion_identity_test.go:1377
+
+function    TestA110CommitThenTimeoutCannotBeWithdrawnByDirectCleanObservation
+  internal/reconcile/a110_promotion_identity_test.go:1473
+
+function    TestA110AuthorityReadFailureKeepsUncommittedPendingPermanentFailClosed
+  internal/reconcile/a110_promotion_identity_test.go:1507
+
+function    TestA110AuthorityOutageDoesNotEraseObservedContinuityBreak
+  internal/reconcile/a110_promotion_identity_test.go:1545
+
+function    TestA110RefreshDoesNotManufacturePermanentFromContinuityBrokenPendingProposal
+  internal/reconcile/a110_promotion_identity_test.go:1602
+
+function    TestA110AuthorityOutageStillProjectsCurrentDifferentOrdinaryMismatch
+  internal/reconcile/a110_promotion_identity_test.go:1662
+
+function    TestA110AuthorityOutageStillRefutesUsableAdjustmentCredit
+  internal/reconcile/a110_promotion_identity_test.go:1755
+
+function    TestConvergenceMakesTheBlockReleasable
+  internal/reconcile/converge_test.go:120
+
+function    TestACoincidentalAgreementStillDoesNotRelease
+  internal/reconcile/converge_test.go:153
+
+function    TestExternalOrderObservationCannotBecomeMissingLocalExposure
+  internal/reconcile/external_order_ownership_test.go:14
+
+function    observe
+  internal/reconcile/mismatch_test.go:40
+
+function    TestARestartKeepsTheReconcileBlock
+  internal/reconcile/restore_test.go:139
+
+function    TestARestartKeepsAPermanentMismatchPermanent
+  internal/reconcile/restore_test.go:190
+
+function    TestAnOperatorResolutionSurvivesARestart
+  internal/reconcile/restore_test.go:237
+
+function    TestRefreshCannotOverwriteABlockPersistedByObserve
+  internal/reconcile/restore_test.go:268
+
+function    TestRestoreProjectsStatesThisTrackerDidNotEnter
+  internal/reconcile/restore_test.go:316
+
+function    TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails
+  internal/reconcile/restore_test.go:425
+
+function    TestObservePublishesOnlyDurablePartialReleasesAndRetriesTheRemainder
+  internal/reconcile/restore_test.go:476
+
+function    TestPermanentPromotionDoesNotOverwriteAnAccountWideForeignCause
+  internal/reconcile/restore_test.go:565
+
+function    TestEnterConflictReplacesTheProposalWithTheDurableCause
+  internal/reconcile/restore_test.go:601
+
+function    TestFailedEnterIsRetriedUntilTheBlockIsDurable
+  internal/reconcile/restore_test.go:631
+
+function    TestNewMismatchLatchesTheGateBeforeJournalIO
+  internal/reconcile/restore_test.go:670
+
+function    TestWriteThroughRecordsTheStateWithItsEvidence
+  internal/reconcile/restore_test.go:715
+
+=== callers blocksFor
+
+Callers of "blocksFor" (1):
+
+method      Observe
+  internal/reconcile/mismatch.go:618
+
+=== callers Restore
+
+Callers of "Restore" (24):
+
+method      collectMarket
+  internal/app/engine/strategy_schedule_authority.go:163
+
+function    activationFor
+  internal/scheduler/decision_test.go:69
+
+function    TestAutoResumeRequiresExactUnexpiredUnrevokedManifest
+  internal/scheduler/desired_test.go:172
+
+function    TestRestoreRejectsFutureApproval
+  internal/scheduler/desired_test.go:226
+
+function    TestRestoreHonorsCanceledContext
+  internal/scheduler/desired_test.go:261
+
+function    TestAutoResumeWithoutA047VerifierFailsClosed
+  internal/scheduler/desired_test.go:275
+
+function    RestorePairedProduction
+  internal/scheduler/production_activation.go:260
+
+function    buildReconcileResolveRuntime
+  cmd/tossctl/engine_reconcile.go:237
+
+function    TestEngineReconcileResolveIntegratesCorrectedJournalStateAndAtomicRelease
+  cmd/tossctl/engine_reconcile_test.go:321
+
+function    buildGateway
+  internal/app/engine/gateway.go:250
+
+function    TestA110TransientStreakIsNeverReconstructedFromDurableOrdinaryRows
+  internal/reconcile/a110_missing_order_incident_test.go:363
+
+function    TestA110BlankSymbolJournalStateNeverRestoresAsPermanent
+  internal/reconcile/a110_promotion_identity_test.go:751
+
+function    TestA110BlankSymbolGuardDoesNotStarveValidSiblingPersistence
+  internal/reconcile/a110_promotion_identity_test.go:800
+
+function    TestA110BlankSymbolPendingDoesNotStarveValidSiblingRelease
+  internal/reconcile/a110_promotion_identity_test.go:854
+
+function    TestARestartKeepsTheReconcileBlock
+  internal/reconcile/restore_test.go:139
+
+function    TestARestartKeepsAPermanentMismatchPermanent
+  internal/reconcile/restore_test.go:190
+
+function    TestAnOperatorResolutionSurvivesARestart
+  internal/reconcile/restore_test.go:237
+
+function    TestRestoreProjectsStatesThisTrackerDidNotEnter
+  internal/reconcile/restore_test.go:316
+
+function    TestRestoreProjectsEveryActiveCauseForTheConfiguredAccount
+  internal/reconcile/restore_test.go:362
+
+function    TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails
+  internal/reconcile/restore_test.go:425
+
+function    TestObservePublishesOnlyDurablePartialReleasesAndRetriesTheRemainder
+  internal/reconcile/restore_test.go:476
+
+function    TestResolveKeepsTheRefusedCauseBlocked
+  internal/reconcile/restore_test.go:533
+
+function    TestPermanentPromotionDoesNotOverwriteAnAccountWideForeignCause
+  internal/reconcile/restore_test.go:565
+
+function    TestSuccessfulForeignCauseResolutionClearsItsSymbolGate
+  internal/reconcile/restore_test.go:686
+
+=== callers Refresh
+
+Callers of "Refresh" (11):
+
+method      RunOnce
+  internal/app/engine/reconcileloop.go:414
+
+function    TestHTTPAPISnapshotCacheRefreshesOnlyOnServerSchedule
+  cmd/tossctl/httpapi_snapshot_test.go:63
+
+function    Hold
+  internal/runlock/runlock.go:170
+
+function    TestRefreshKeepsALongRunAlive
+  internal/runlock/runlock_test.go:77
+
+function    TestRefreshAfterReleaseDoesNotResurrectTheFile
+  internal/runlock/runlock_test.go:99
+
+function    buildGateway
+  internal/app/engine/gateway.go:250
+
+function    TestACreditIsSpentByTheFirstComparisonThatCouldUseIt
+  internal/reconcile/a083b_credit_scope_test.go:123
+
+function    TestA110RefreshDoesNotManufacturePermanentFromContinuityBrokenPendingProposal
+  internal/reconcile/a110_promotion_identity_test.go:1602
+
+function    TestA110AuthorityOutageStillProjectsCurrentDifferentOrdinaryMismatch
+  internal/reconcile/a110_promotion_identity_test.go:1662
+
+function    TestA110AuthorityOutageStillRefutesUsableAdjustmentCredit
+  internal/reconcile/a110_promotion_identity_test.go:1755
+
+function    TestRefreshCannotOverwriteABlockPersistedByObserve
+  internal/reconcile/restore_test.go:268
+
+=== callers Resolve
+
+Callers of "Resolve" (15):
+
+function    TestRecordAndResolveFollowRolloverChain
+  internal/orderlineage/service_test.go:8
+
+function    TestResolveReturnsNoAliasWhenUnchanged
+  internal/orderlineage/service_test.go:31
+
+function    main
+  cmd/tossctl/main.go:13
+
+function    TestResolvePrecedence
+  internal/i18n/catalog_test.go:46
+
+function    TestResolveIsIdempotent
+  internal/execgw/indoubt_test.go:452
+
+method      resolveStep
+  internal/flatten/flatten.go:423
+
+function    ResolvePaths
+  internal/app/app.go:186
+
+function    NewOrderPath
+  internal/app/engine/engine.go:365
+
+function    runCommandWithOptions
+  tools/a140-breakout-signal-shadow/main.go:74
+
+function    TestA110OperatorCanResolveKnownNondurableBlankSymbolGuard
+  internal/reconcile/a110_promotion_identity_test.go:948
+
+function    TestOperatorResolutionClearsAPermanentMismatch
+  internal/reconcile/mismatch_test.go:315
+
+method      Run
+  internal/reconcile/recovery.go:247
+
+function    TestAnOperatorResolutionSurvivesARestart
+  internal/reconcile/restore_test.go:237
+
+function    TestResolveKeepsTheRefusedCauseBlocked
+  internal/reconcile/restore_test.go:533
+
+function    TestSuccessfulForeignCauseResolutionClearsItsSymbolGate
+  internal/reconcile/restore_test.go:686
+
+=== callers AdjustmentApplied
+
+Callers of "AdjustmentApplied" (23):
+
+method      ConvergeQuantities
+  internal/reconcile/converge.go:142
+
+function    TestTheSameComparisonNeitherSpendsNorDiscardsACredit
+  internal/reconcile/a083_credit_lifetime_test.go:28
+
+function    TestAnUndatedComparisonCannotSpendACredit
+  internal/reconcile/a083_credit_lifetime_test.go:62
+
+function    TestACreditFromALaterComparisonIsNotSpent
+  internal/reconcile/a083_credit_lifetime_test.go:84
+
+function    TestAnUnrelatedMismatchDoesNotDiscardAnAnsweredCredit
+  internal/reconcile/a083_credit_lifetime_test.go:111
+
+function    TestARefutedCreditIsDiscardedPerSymbol
+  internal/reconcile/a083_credit_lifetime_test.go:161
+
+function    TestAReclassifiedDisagreementDoesNotReleaseTheBlock
+  internal/reconcile/a083b_credit_scope_test.go:65
+
+function    TestAReclassifiedDisagreementRefutesTheCredit
+  internal/reconcile/a083b_credit_scope_test.go:91
+
+function    TestACreditIsSpentByTheFirstComparisonThatCouldUseIt
+  internal/reconcile/a083b_credit_scope_test.go:123
+
+function    TestACreditWithNothingLeftToAnswerIsDiscarded
+  internal/reconcile/a083b_credit_scope_test.go:174
+
+function    TestAnUnrelatedMismatchStillDoesNotDiscardAnAnsweredCredit
+  internal/reconcile/a083b_credit_scope_test.go:204
+
+function    TestA110IncidentChangingSymbolsReleaseOrdinaryBlocksWithoutPermanent
+  internal/reconcile/a110_missing_order_incident_test.go:307
+
+function    TestA110BlankSymbolPendingDoesNotStarveValidSiblingRelease
+  internal/reconcile/a110_promotion_identity_test.go:854
+
+function    TestA110AuthorityOutageStillRefutesUsableAdjustmentCredit
+  internal/reconcile/a110_promotion_identity_test.go:1755
+
+function    TestAnAdjustmentAndAMatchingRecheckRelease
+  internal/reconcile/mismatch_test.go:148
+
+function    TestAnAdjustmentIsSpentByTheRecheckItAnswers
+  internal/reconcile/mismatch_test.go:177
+
+function    TestAnAdjustmentOnAnotherSymbolDoesNotRelease
+  internal/reconcile/mismatch_test.go:202
+
+function    TestAnAdjustmentDoesNotReleaseAPermanentMismatch
+  internal/reconcile/mismatch_test.go:223
+
+function    TestRestoreProjectsStatesThisTrackerDidNotEnter
+  internal/reconcile/restore_test.go:316
+
+function    TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails
+  internal/reconcile/restore_test.go:425
+
+function    TestObservePublishesOnlyDurablePartialReleasesAndRetriesTheRemainder
+  internal/reconcile/restore_test.go:476
+
+function    TestWriteThroughRecordsTheStateWithItsEvidence
+  internal/reconcile/restore_test.go:715
+
+method      AdjustmentApplied
+  internal/reconcile/converge.go:80
+
+=== callers EntryAllowed
+
+Callers of "EntryAllowed" (16):
+
+method      blocked
+  internal/app/engine/adoption.go:196
+
+function    TestAnUndatedComparisonCannotSpendACredit
+  internal/reconcile/a083_credit_lifetime_test.go:62
+
+function    TestACreditFromALaterComparisonIsNotSpent
+  internal/reconcile/a083_credit_lifetime_test.go:84
+
+function    TestARefutedCreditIsDiscardedPerSymbol
+  internal/reconcile/a083_credit_lifetime_test.go:161
+
+function    TestA110CanonicalMissingOrderIdentityControlsPromotion
+  internal/reconcile/a110_missing_order_incident_test.go:58
+
+function    TestA110ComparerRejectsIdenticalInvalidQuantityStrings
+  internal/reconcile/a110_promotion_identity_test.go:342
+
+function    TestA110UnreadableExternalBrokerQuantityFailsClosed
+  internal/reconcile/a110_promotion_identity_test.go:381
+
+function    TestA110NegativeBrokerOnlyHoldingFailsClosedWithoutPromotion
+  internal/reconcile/a110_promotion_identity_test.go:434
+
+function    TestA110BlankSymbolJournalStateNeverRestoresAsPermanent
+  internal/reconcile/a110_promotion_identity_test.go:751
+
+function    TestA110BlankSymbolGuardDoesNotStarveValidSiblingPersistence
+  internal/reconcile/a110_promotion_identity_test.go:800
+
+function    TestA110OperatorCanResolveKnownNondurableBlankSymbolGuard
+  internal/reconcile/a110_promotion_identity_test.go:948
+
+function    TestA110RefreshDoesNotManufacturePermanentFromContinuityBrokenPendingProposal
+  internal/reconcile/a110_promotion_identity_test.go:1602
+
+function    TestAnAdjustmentIsSpentByTheRecheckItAnswers
+  internal/reconcile/mismatch_test.go:177
+
+function    TestAnAdjustmentOnAnotherSymbolDoesNotRelease
+  internal/reconcile/mismatch_test.go:202
+
+function    TestBlockScopes
+  internal/reconcile/mismatch_test.go:390
+
+function    TestARestartKeepsTheReconcileBlock
+  internal/reconcile/restore_test.go:139
+
+=== callers Permanent
+
+Callers of "Permanent" (33):
+
+method      blocked
+  internal/app/engine/adoption.go:196
+
+function    TestA110CanonicalMissingOrderIdentityControlsPromotion
+  internal/reconcile/a110_missing_order_incident_test.go:58
+
+function    TestA110OpaqueOrderIDIsBytePreservingPromotionEvidence
+  internal/reconcile/a110_missing_order_incident_test.go:124
+
+function    TestA110ForeignMissingOrderAccountCannotEarnThisTrackerPermanent
+  internal/reconcile/a110_missing_order_incident_test.go:160
+
+function    TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount
+  internal/reconcile/a110_missing_order_incident_test.go:187
+
+function    TestA110IncompleteMissingOrderIdentityNeverPromotes
+  internal/reconcile/a110_missing_order_incident_test.go:248
+
+function    TestA110IncidentChangingSymbolsReleaseOrdinaryBlocksWithoutPermanent
+  internal/reconcile/a110_missing_order_incident_test.go:307
+
+function    TestA110TransientStreakIsNeverReconstructedFromDurableOrdinaryRows
+  internal/reconcile/a110_missing_order_incident_test.go:363
+
+function    a110AssertNoTransientAccountPermanent
+  internal/reconcile/a110_promotion_identity_test.go:79
+
+function    TestA110ChangingQuantityDisputesNeverPoolIntoPermanent
+  internal/reconcile/a110_promotion_identity_test.go:97
+
+function    TestA110QuantityPromotionRejectsBlankOrForeignDiffAccount
+  internal/reconcile/a110_promotion_identity_test.go:126
+
+function    TestA110QuantityTupleIdentityIsExactAndCanonical
+  internal/reconcile/a110_promotion_identity_test.go:157
+
+function    TestA110ComparerPreservesExactLargeQuantityPromotionIdentity
+  internal/reconcile/a110_promotion_identity_test.go:217
+
+function    TestA110ComparerRejectsIdenticalInvalidQuantityStrings
+  internal/reconcile/a110_promotion_identity_test.go:342
+
+function    TestA110UnreadableExternalBrokerQuantityFailsClosed
+  internal/reconcile/a110_promotion_identity_test.go:381
+
+function    TestA110NegativeBrokerOnlyHoldingFailsClosedWithoutPromotion
+  internal/reconcile/a110_promotion_identity_test.go:434
+
+function    TestA110BlankRawQuantityPathsFailClosedWithoutPromotion
+  internal/reconcile/a110_promotion_identity_test.go:465
+
+function    TestA110CollectorPreservesUnreadableRawHoldingQuantity
+  internal/reconcile/a110_promotion_identity_test.go:506
+
+function    TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence
+  internal/reconcile/a110_promotion_identity_test.go:660
+
+function    TestA110BlankSymbolJournalStateNeverRestoresAsPermanent
+  internal/reconcile/a110_promotion_identity_test.go:751
+
+function    TestA110OperatorCanResolveKnownNondurableBlankSymbolGuard
+  internal/reconcile/a110_promotion_identity_test.go:948
+
+function    TestA110ExactThresholdCreatesDurableOperatorOnlyPermanent
+  internal/reconcile/a110_promotion_identity_test.go:984
+
+function    TestA110CommitThenTimeoutCannotBeWithdrawnByDirectCleanObservation
+  internal/reconcile/a110_promotion_identity_test.go:1473
+
+function    TestA110AuthorityReadFailureKeepsUncommittedPendingPermanentFailClosed
+  internal/reconcile/a110_promotion_identity_test.go:1507
+
+function    TestA110AuthorityOutageDoesNotEraseObservedContinuityBreak
+  internal/reconcile/a110_promotion_identity_test.go:1545
+
+function    TestA110RefreshDoesNotManufacturePermanentFromContinuityBrokenPendingProposal
+  internal/reconcile/a110_promotion_identity_test.go:1602
+
+function    TestA110AuthorityOutageStillProjectsCurrentDifferentOrdinaryMismatch
+  internal/reconcile/a110_promotion_identity_test.go:1662
+
+function    TestA110AuthorityOutageStillRefutesUsableAdjustmentCredit
+  internal/reconcile/a110_promotion_identity_test.go:1755
+
+function    TestAnAdjustmentDoesNotReleaseAPermanentMismatch
+  internal/reconcile/mismatch_test.go:223
+
+function    TestACleanReconcileDoesNotReleaseAPermanentMismatch
+  internal/reconcile/mismatch_test.go:293
+
+function    TestOperatorResolutionClearsAPermanentMismatch
+  internal/reconcile/mismatch_test.go:315
+
+function    TestARestartKeepsAPermanentMismatchPermanent
+  internal/reconcile/restore_test.go:190
+
+function    TestPermanentPromotionDoesNotOverwriteAnAccountWideForeignCause
+  internal/reconcile/restore_test.go:565
+
+=== callers blocked
+
+Callers of "blocked" (1):
+
+method      judgeHoldings
+  internal/app/engine/adoption.go:107
+
+=== callers judgeHoldings
+
+Callers of "judgeHoldings" (1):
+
+method      RunOnce
+  internal/app/engine/reconcileloop.go:414
+
+=== callers ConfirmedFloor
+
+Callers of "ConfirmedFloor" (20):
+
+function    a091Zero
+  internal/app/engine/a091_stop_sold_nothing_test.go:90
+
+function    a091Failing
+  internal/app/engine/a091_stop_sold_nothing_test.go:96
+
+function    TestA091APartialCapIsUnchanged
+  internal/app/engine/a091_stop_sold_nothing_test.go:314
+
+function    TestA091OnlyACancellationOnlyFailureIsSuppressed
+  internal/app/engine/a091_stop_sold_nothing_test.go:361
+
+function    TestA091TheOutcomeIsUnchanged
+  internal/app/engine/a091_stop_sold_nothing_test.go:653
+
+function    TestA091AnAuthRefusalOnTheFloorReadRecordsTwo
+  internal/app/engine/a091_stop_sold_nothing_test.go:802
+
+function    TestA091TheRowKeepsTheFirstCauseAndTheLogKeepsEach
+  internal/app/engine/a091_stop_sold_nothing_test.go:827
+
+function    TestA091AShutdownLeavesOnlyALine
+  internal/app/engine/a091_stop_sold_nothing_test.go:960
+
+method      ConfirmedFloor
+  internal/app/engine/a150_exit_protection_test.go:24
+
+method      applyFloor
+  internal/app/engine/exitloop.go:1756
+
+method      ConfirmedFloor
+  internal/app/engine/exitloop_test.go:155
+
+method      ConfirmedFloor
+  internal/app/engine/exitwiring.go:192
+
+function    ConfirmedFloorQuantity
+  internal/riskcalc/confirmed_floor.go:129
+
+function    zeroFloor
+  internal/riskcalc/confirmed_floor.go:236
+
+method      ConfirmedFloor
+  internal/app/engine/a091_replay_test.go:369
+
+method      ConfirmedFloor
+  internal/app/engine/a091_stop_sold_nothing_test.go:86
+
+method      ConfirmedFloor
+  internal/app/engine/a129_exit_order_log_test.go:112
+
+function    classifyZero
+  internal/app/engine/exit_stop_sold_nothing.go:53
+
+function    floor
+  internal/riskcalc/confirmed_floor_test.go:25
+
+method      ConfirmedFloor
+  internal/app/engine/exitloop.go:167
+
+=== callers applyFloor
+
+Callers of "applyFloor" (1):
+
+method      submit
+  internal/app/engine/exitloop.go:1495
+
+=== callers EnterReconcile
+
+Callers of "EnterReconcile" (7):
+
+function    TestA066KRUSFailureIsolation
+  internal/journal/a066_integration_5_6_contract_test.go:201
+
+function    TestA066SubmitRevalidationRefusesALatchTakenAfterIssuance
+  internal/journal/a066_review_fixes_test.go:39
+
+function    TestA138ReconcileScopesMatchExactlyWhatTheyCover
+  internal/journal/a138_open_positions_test.go:389
+
+method      guardTrackedFillIdentity
+  internal/journal/fills.go:1695
+
+method      recordScopedLineageConflict
+  internal/journal/lineage.go:442
+
+method      EnterReconcile
+  internal/reconcile/mismatch.go:293
+
+method      persist
+  internal/reconcile/mismatch.go:857
+
+=== callers ReleaseReconcile
+
+Callers of "ReleaseReconcile" (3):
+
+function    TestA138ReconcileScopesMatchExactlyWhatTheyCover
+  internal/journal/a138_open_positions_test.go:389
+
+method      ReleaseReconcile
+  internal/reconcile/mismatch.go:294
+
+method      persist
+  internal/reconcile/mismatch.go:857
+
+=== callers ReleaseReconciles
+
+Callers of "ReleaseReconciles" (2):
+
+method      Resolve
+  internal/reconcile/mismatch.go:1315
+
+method      ReleaseReconciles
+  internal/reconcile/mismatch.go:295
+
+=== callers ValidReconcileReleaseCause
+
+Callers of "ValidReconcileReleaseCause" (3):
+
+method      ReleaseReconcile
+  internal/journal/reconcile_states.go:257
+
+method      ReleaseReconciles
+  internal/journal/reconcile_states.go:320
+
+function    TestUnknownReleaseCauseIsRefused
+  internal/journal/reconcile_states_test.go:334
+
+=== callers LocalStateFromJournal
+
+Callers of "LocalStateFromJournal" (24):
+
+function    buildReconcileResolveRuntime
+  cmd/tossctl/engine_reconcile.go:237
+
+function    TestEngineReconcileResolveIntegratesCorrectedJournalStateAndAtomicRelease
+  cmd/tossctl/engine_reconcile_test.go:321
+
+method      RunOnce
+  internal/app/engine/reconcileloop.go:414
+
+function    TestA191TerminalSnapshotLeavesTheReconcileLocalState
+  internal/filldetect/a191_closed_lookup_core_test.go:177
+
+function    TestLocalStateNetsBuysAgainstSells
+  internal/reconcile/compare_test.go:251
+
+function    TestLocalStateResolvesLineageBeforeComparing
+  internal/reconcile/compare_test.go:281
+
+function    TestFailClosedSnapshotsAreExcludedFromLocalBelief
+  internal/reconcile/compare_test.go:346
+
+function    TestLocalStateReadsTheProjectionNotTheFills
+  internal/reconcile/compare_test.go:378
+
+function    TestClosedInstancesAreNotHeld
+  internal/reconcile/compare_test.go:429
+
+function    TestTheProjectionIsSummedAtSymbolLevel
+  internal/reconcile/compare_test.go:467
+
+function    TestAnotherAccountsProjectionIsNotThisAccountsBelief
+  internal/reconcile/compare_test.go:503
+
+function    TestAQuantityMismatchConvergesToTheAccount
+  internal/reconcile/converge_test.go:54
+
+function    TestAStaleAdjustmentStopsThePass
+  internal/reconcile/converge_test.go:194
+
+function    TestExternalOrderObservationCannotBecomeMissingLocalExposure
+  internal/reconcile/external_order_ownership_test.go:14
+
+function    TestAnotherAccountsLiveOrderCannotEnterThisAccountsLocalState
+  internal/reconcile/external_order_ownership_test.go:58
+
+function    TestPriorTradingDayLineageCannotMakeRecoveryComparisonFalseClean
+  internal/reconcile/external_order_ownership_test.go:105
+
+function    TestAnExternalHoldingIsFoldedIntoTheProjection
+  internal/reconcile/external_test.go:60
+
+method      Run
+  internal/reconcile/recovery.go:247
+
+function    TestOrderedAtWithoutMarketUsesCandidateMarketTradingDay
+  internal/reconcile/scoped_order_identity_test.go:33
+
+function    TestBrokerOrderInAnotherScopeCannotHideMissingOwnedOrder
+  internal/reconcile/scoped_order_identity_test.go:89
+
+function    TestEveryCanonicalScopeDimensionRejectsAReusedID
+  internal/reconcile/scoped_order_identity_test.go:112
+
+function    TestPartialBrokerEvidenceCannotResolveTwoScopedOwners
+  internal/reconcile/scoped_order_identity_test.go:152
+
+function    TestCompleteBrokerScopeSelectsExactlyOneReusedIdentity
+  internal/reconcile/scoped_order_identity_test.go:176
+
+function    TestOlderNonterminalReusedTradingDayCannotDisappearFromLocalComparison
+  internal/reconcile/scoped_order_identity_test.go:201
+
+=== callers LookupFillScoped
+
+Callers of "LookupFillScoped" (6):
+
+method      followExitFills
+  internal/app/engine/exit_order_log.go:273
+
+function    TestTrackedFillOrdersSelectLatestTradingDayWhenAnAccountReusesAnOrderID
+  internal/journal/fills_test.go:573
+
+function    TestRecordFillRejectsPartialScopeWithoutOverwritingOrRepeatingDelta
+  internal/journal/fills_test.go:699
+
+function    TestRecordFillKeepsReusedOrderIDSnapshotsInTheirCanonicalScopes
+  internal/journal/fills_test.go:731
+
+function    TestDirectLegacyBlankSnapshotIsNotAWildcardAcrossReusedDays
+  internal/journal/fills_test.go:833
+
+function    TestMigrationV16ToV17AddsScopedSnapshotsWithoutRewritingLegacyRows
+  internal/journal/migration_v17_test.go:9
+
+=== callers TrackedFillOrders
+
+Callers of "TrackedFillOrders" (21):
+
+method      TrackedOrders
+  internal/filldetect/ledger.go:125
+
+function    TestAFailingApplyHookRollsBackTheFill
+  internal/journal/apply_hook_test.go:146
+
+function    TestTrackedFillOrders
+  internal/journal/fills_test.go:462
+
+function    TestTrackedFillOrdersExcludeExternalSnapshots
+  internal/journal/fills_test.go:494
+
+function    TestTrackedFillOrdersRejectSnapshotIdentityMismatch
+  internal/journal/fills_test.go:514
+
+function    TestTrackedFillOrdersScopeReusedOrderIDsByAccount
+  internal/journal/fills_test.go:537
+
+function    TestTrackedFillOrdersSelectLatestTradingDayWhenAnAccountReusesAnOrderID
+  internal/journal/fills_test.go:573
+
+function    TestTrackedAndLiveOrdersKeepTwoNonterminalReusedTradingDays
+  internal/journal/fills_test.go:635
+
+function    TestScopedTerminalStateDoesNotHideAnotherAccountsLiveReusedOrder
+  internal/journal/fills_test.go:774
+
+function    TestTrackedAndLiveOrdersAllowReusedIDInDifferentSymbolAndSideScopes
+  internal/journal/fills_test.go:930
+
+function    TestLegacySnapshotCannotTerminateOrOwnAFutureReusedOrder
+  internal/journal/fills_test.go:1073
+
+function    TestScopedExternalSnapshotCannotTerminateOrOwnAFutureOrder
+  internal/journal/fills_test.go:1108
+
+function    TestOrderIDLatestDayPartitionKeepsBothMarketsInTheSameAccount
+  internal/journal/fills_test.go:1143
+
+function    TestTrackedFillOrdersIncludesConfirmedAttemptsNotYetObserved
+  internal/journal/fills_test.go:1195
+
+function    TestTrackedFillOrdersCarryLineage
+  internal/journal/fills_test.go:1234
+
+function    TestTrackedFillOrdersScopeReusedLineageEndpointByAccount
+  internal/journal/fills_test.go:1301
+
+function    TestTrackedFillOrdersRejectMalformedLegacyLineageOwnership
+  internal/journal/fills_test.go:1355
+
+function    TestTrackedFillOrdersUseScopedLineageWhenTheSamePairIsReused
+  internal/journal/fills_test.go:1383
+
+function    TestTrackedFillOrdersDoNotBindLegacyLineageSnapshotAcrossReusedDays
+  internal/journal/fills_test.go:1417
+
+function    TestLegacySnapshotWithCrossAccountOrSideOwnersFailsClosed
+  internal/journal/fills_test.go:1441
+
+function    LocalStateFromJournal
+  internal/reconcile/compare.go:193
+
+=== callers persist
+
+Callers of "persist" (4):
+
+method      Acquire
+  internal/accountbudget/budget_linux.go:469
+
+method      tryAux
+  internal/accountbudget/budget_linux.go:612
+
+method      Observe
+  internal/reconcile/mismatch.go:618
+
+method      Record
+  internal/measure/degrade/degrade.go:145
+
+=== callers syncGate
+
+Callers of "syncGate" (4):
+
+method      Observe
+  internal/reconcile/mismatch.go:618
+
+method      Refresh
+  internal/reconcile/mismatch.go:982
+
+method      finishAuthorityError
+  internal/reconcile/mismatch.go:1186
+
+method      Resolve
+  internal/reconcile/mismatch.go:1315
+
+=== callers RebuildReconcileProjection
+
+Callers of "RebuildReconcileProjection" (10):
+
+function    TestNothingButThatReasonsClearMovesItsEpoch
+  internal/execgw/a124_clear_epoch_internal_test.go:61
+
+function    TestEveryEntryBlockingConditionReachesTheChain
+  internal/execgw/entrylatch_test.go:35
+
+function    TestARebuiltProjectionBlocksTheScopesTheJournalCarries
+  internal/execgw/reconcile_projection_test.go:40
+
+function    TestASymbolStateBlocksEveryMarket
+  internal/execgw/reconcile_projection_test.go:69
+
+function    TestAnAccountWideStateBlocksEverything
+  internal/execgw/reconcile_projection_test.go:81
+
+function    TestTheProjectionReplacesRatherThanMerges
+  internal/execgw/reconcile_projection_test.go:97
+
+function    TestTheProjectionLeavesOtherProducersAlone
+  internal/execgw/reconcile_projection_test.go:115
+
+function    TestReconcileAndUnresolvedAreNotConflated
+  internal/execgw/reconcile_projection_test.go:168
+
+function    TestAReleasedStateIsNotProjected
+  internal/execgw/reconcile_projection_test.go:205
+
+method      Restore
+  internal/reconcile/mismatch.go:931
+
+=== callers enterReconcileScopeInTx
+
+Callers of "enterReconcileScopeInTx" (5):
+
+function    ApplyPositionCampaignFill
+  internal/journal/position_campaign.go:974
+
+function    latchAmbiguousCampaignFill
+  internal/journal/position_campaign.go:1247
+
+function    resolveFillOrigin
+  internal/journal/position_projection.go:133
+
+function    enterReconcileInTx
+  internal/journal/position_projection.go:370
+
+function    sweepOrphanedTerminals
+  internal/journal/reservation_release.go:535
+
+=== callers thresholdKey
+
+Callers of "thresholdKey" (1):
+
+method      Observe
+  internal/reconcile/mismatch.go:618
+
+=== callers permanentPromotionDetail
+
+Callers of "permanentPromotionDetail" (1):
+
+method      Observe
+  internal/reconcile/mismatch.go:618
+

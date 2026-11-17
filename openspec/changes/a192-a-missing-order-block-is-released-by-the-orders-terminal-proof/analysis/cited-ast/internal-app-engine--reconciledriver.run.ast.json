@@ -1,0 +1,139 @@
+{
+  "file": "internal/app/engine/reconcileloop.go",
+  "source_sha256": "b8e9b21373ea820b086a5eb2e201c4d245de9544c731121fded7746ef5e61d27",
+  "package": "engine",
+  "function": "Run",
+  "receiver": "ReconcileDriver",
+  "signature": "ReconcileDriver.Run(params=1, results=1)",
+  "start": {
+    "line": 392,
+    "column": 1
+  },
+  "end": {
+    "line": 407,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 394,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "for",
+      "at": {
+        "line": 397,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 398,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 403,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 399,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 404,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 398,
+        "column": 13
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 401,
+        "column": 12
+      },
+      "text": "d.RunOnce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 402,
+        "column": 3
+      },
+      "text": "d.logCycle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 403,
+        "column": 13
+      },
+      "text": "d.clk.Sleep"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 393,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 395,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 398,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 401,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 403,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
