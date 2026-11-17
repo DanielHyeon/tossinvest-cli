@@ -234,3 +234,32 @@ released_at·evidence 그대로). 12개를 `mutate.py` 의 m34~m45 로 옮겨 �
 - 배포 순간 활성 missing-order 행 0 → 운영자 해제 불필요, 운영 장부 수리 없음.
 - **미관측**: 새 해제 경로의 운영 동작(무장 → 해제, `reconcile.block_released`, `reconcile.block_release_held`)은 운영에서 관측된 적 없다 —
   배포 뒤 missing-order 차단이 생긴 적이 없기 때문. 운영 확인이 아니라 미관측이다.
+
+## 완료 게이트 1회차 FAIL 과 census 수리 (2026-11-17)
+
+- 게이트 1회차: 격리 worktree(저장소 밖, detached d8e37f6a7), 03:35:20Z~03:52:25Z, rc 2. ①~⑥ OK, **⑦ `make test` FAIL**, ⑧~⑪ 미실행.
+  원문 `analysis/close/gate-1-d8e37f6a7.txt`. 실패 줄:
+  ```
+  --- FAIL: TestA166WiringCensusBaseline (0.37s)
+      a166_wiring_census_test.go:303: reviewed function shape changed: internal/app/engine/gateway.go||buildGateway
+  --- FAIL: TestA166WiringCensusRejectsBypasses (0.83s)
+      --- FAIL: TestA166WiringCensusRejectsBypasses/new-unclassified-http (0.10s)
+      --- FAIL: TestA166WiringCensusRejectsBypasses/escaped-http-method (0.10s)
+  FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	34.693s
+  GATE FAIL: a192-a-missing-order-block-is-released-by-the-orders-terminal-proof — make test 실패
+  ```
+  실패 패키지는 이것 하나(`internal/app/engine` ok 622.9s, `cmd/tossctl` ok).
+- 원인: a192 의 `buildGateway` 편집(Tracker 리터럴에 `Terminal: in.journal,` 과 그 주석 한 줄)이 a166 census 가 통째로 고정한 함수 모양
+  (`internal/accountbudgetruntime/testdata/a166-wiring/shapes.json` 의 키 `internal/app/engine/gateway.go||buildGateway`)을 바꿈. 선택 시험 범위(4.2)에
+  `internal/accountbudgetruntime` 가 없었고 배포 전 전체 시험이 돌지 않아 배포 뒤 게이트에서 드러남.
+- 운영 영향 판단: production 코드는 배포본(f269c68f8)과 같고 고친 것은 testdata 하나뿐 — 이미지 재빌드 없음. 더해진 것은 journal 을 넘기는
+  필드 하나이고 HTTP 클라이언트·official 호출 자리는 새로 생기지 않음 — 이것은 손으로 읽은 판단이며, 수리 뒤 baseline 시험이 호출 자리 개수 검사
+  (sites.json 무변경)까지 통과한 것으로 확인함.
+- 수리(Manager 리뷰 승인, 선례 a189 3af104af9): shapes.json 의 그 키 값 하나만 census 와 같은 추출(`analysis/census-repair/shape.go.txt`, parser mode 0 ·
+  `format.Node` · Doc 제거)과 Go JSON 문자열 인코딩(`enc.go.txt`)으로 다시 만듦. base 6277ec34e 에서 같은 추출이 기존 고정값과 같고, 인코딩이 기존 표기를
+  파일 안에서 정확히 1회 재현함을 먼저 단언함. 다른 키·sites.json·시험 코드·production 코드 무변경.
+  - (a) 키별 비교(`analysis/census-repair/shapes-key-diff.txt`): `shapes.json: keys HEAD 90 now 90, added [], removed [], changed ['internal/app/engine/gateway.go||buildGateway'], unchanged 89`,
+    `sites.json: entries HEAD 116 now 116, identical True`.
+  - (b) 옛 값 대 새 값: `16a17,18` — 빈 줄 하나(주석 줄이 mode 0 파싱에서 빠진 자리) + `Terminal: in.journal,` 한 줄. 그 밖의 차이 없음.
+  - (c) 반증: 갱신 뒤 `go test -count=1 -v ./internal/accountbudgetruntime/` rc 0(`analysis/census-repair/go-test-after.txt` — Baseline PASS,
+    RejectsBypasses 변이 8개 전부 PASS). 갱신 전 값에서는 Baseline 이 실패함 — 게이트 1회차 원문이 그 실행이다.
