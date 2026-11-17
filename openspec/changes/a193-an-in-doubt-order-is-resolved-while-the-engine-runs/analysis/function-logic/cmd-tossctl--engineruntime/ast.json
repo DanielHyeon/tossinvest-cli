@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/engine.go",
-  "source_sha256": "2365d757c29dfa08a0ce1db9bd6862c4bfc2d450114562479bc34f18f7d4b0eb",
+  "source_sha256": "27513e682d3bee3ea304ba884e8d66345577b51c3ff7160424742f27fd0cd7cd",
   "package": "main",
   "function": "engineRuntime",
   "signature": "engineRuntime(params=5, results=2)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 752,
+    "line": 753,
     "column": 2
   },
   "branches": [
@@ -221,7 +221,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 748,
+        "line": 749,
         "column": 56
       },
       "text": "ectx.NormalAlertRelayExecutor"
@@ -229,7 +229,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 748,
+        "line": 749,
         "column": 89
       },
       "text": "ectx.AttestationWatch"
@@ -237,7 +237,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 749,
+        "line": 750,
         "column": 4
       },
       "text": "ectx.ManualBuyRefresher"
@@ -245,10 +245,18 @@
     {
       "kind": "call",
       "at": {
-        "line": 749,
+        "line": 750,
         "column": 34
       },
       "text": "ectx.ExitLowerLimitRefresher"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 750,
+        "column": 69
+      },
+      "text": "ectx.InDoubtSettler"
     }
   ],
   "assignments": [

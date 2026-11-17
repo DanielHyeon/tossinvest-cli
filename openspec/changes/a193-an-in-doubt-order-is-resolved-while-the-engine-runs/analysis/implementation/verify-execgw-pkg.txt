@@ -1,0 +1,1070 @@
+=== RUN   TestCanonicalProtectionQuantityRejectsFractionalNonFiniteAndUnsafeFloatValues
+--- PASS: TestCanonicalProtectionQuantityRejectsFractionalNonFiniteAndUnsafeFloatValues (0.00s)
+=== RUN   TestA087NonfractionalMarketShapeRejected
+--- PASS: TestA087NonfractionalMarketShapeRejected (0.00s)
+=== RUN   TestA087AnEmptyIntentPriceMatchesAnyBrokerPrice
+--- PASS: TestA087AnEmptyIntentPriceMatchesAnyBrokerPrice (0.00s)
+=== RUN   TestA087AnEmptyIntentPriceHasNoNotional
+--- PASS: TestA087AnEmptyIntentPriceHasNoNotional (0.00s)
+=== RUN   TestA092AProjectionReplacesTheModeLatch
+--- PASS: TestA092AProjectionReplacesTheModeLatch (0.00s)
+=== RUN   TestA092AStaleProjectionIsNotApplied
+--- PASS: TestA092AStaleProjectionIsNotApplied (0.00s)
+=== RUN   TestA092TheModeRevisionMovesOnlyWhenPresenceChanges
+--- PASS: TestA092TheModeRevisionMovesOnlyWhenPresenceChanges (0.00s)
+=== RUN   TestA092NoCheckSeesAGapDuringReplacement
+--- PASS: TestA092NoCheckSeesAGapDuringReplacement (0.01s)
+=== RUN   TestA092ProjectionTakesTheGateLockOnce
+--- PASS: TestA092ProjectionTakesTheGateLockOnce (0.00s)
+=== RUN   TestEveryClearRequestAdvancesTheReasonsEpoch
+--- PASS: TestEveryClearRequestAdvancesTheReasonsEpoch (0.00s)
+=== RUN   TestNothingButThatReasonsClearMovesItsEpoch
+--- PASS: TestNothingButThatReasonsClearMovesItsEpoch (0.00s)
+=== RUN   TestAConditionalBlockAfterAClearChangesNothing
+--- PASS: TestAConditionalBlockAfterAClearChangesNothing (0.00s)
+=== RUN   TestAConditionalBlockOnTheCurrentEpochFollowsTheBlockRule
+--- PASS: TestAConditionalBlockOnTheCurrentEpochFollowsTheBlockRule (0.00s)
+=== RUN   TestTheEpochComparisonAndTheLatchAreOneStep
+--- PASS: TestTheEpochComparisonAndTheLatchAreOneStep (0.00s)
+=== RUN   TestOnlyTheAcknowledgementClearsTheUndeliveredReason
+--- PASS: TestOnlyTheAcknowledgementClearsTheUndeliveredReason (0.25s)
+=== RUN   TestTheEpochMethodsCallNothingUnderTheLock
+--- PASS: TestTheEpochMethodsCallNothingUnderTheLock (0.00s)
+=== RUN   TestA137TheLedgerLossRefusesAZeroCallerAndEscalates
+--- PASS: TestA137TheLedgerLossRefusesAZeroCallerAndEscalates (0.23s)
+=== RUN   TestA137ALargerValidCallerValueWins
+--- PASS: TestA137ALargerValidCallerValueWins (0.23s)
+=== RUN   TestA137AnInvalidCallerValueIsNotReplaced
+--- PASS: TestA137AnInvalidCallerValueIsNotReplaced (0.21s)
+=== RUN   TestA137AMeasurementFailureNeverFallsBackToTheCaller
+--- PASS: TestA137AMeasurementFailureNeverFallsBackToTheCaller (0.21s)
+=== RUN   TestA137TheKillSwitchReasonSurvivesAMeasurementFailure
+--- PASS: TestA137TheKillSwitchReasonSurvivesAMeasurementFailure (0.21s)
+=== RUN   TestA137RiskReductionNeverMeasures
+--- PASS: TestA137RiskReductionNeverMeasures (0.21s)
+=== RUN   TestA137APrecheckMeasurementMustBeThisGuardiansFreshTodaysOne
+--- PASS: TestA137APrecheckMeasurementMustBeThisGuardiansFreshTodaysOne (0.42s)
+=== RUN   TestA137OnlyTheAutomaticDailyLossModeIsAQuietAccountBlock
+--- PASS: TestA137OnlyTheAutomaticDailyLossModeIsAQuietAccountBlock (0.00s)
+=== RUN   TestA137TheFinalGateFenceMarksOnlyTheDailyLossChange
+--- PASS: TestA137TheFinalGateFenceMarksOnlyTheDailyLossChange (0.00s)
+=== RUN   TestA137EscalationSucceedsAsABlockAndFailsLoudly
+--- PASS: TestA137EscalationSucceedsAsABlockAndFailsLoudly (0.21s)
+=== RUN   TestA137AnInvalidEquityWithAMeasurementFailureStaysUnmarked
+--- PASS: TestA137AnInvalidEquityWithAMeasurementFailureStaysUnmarked (0.25s)
+=== RUN   TestA137TheQuietMarkersAreMadeOnlyInTheirOwnFile
+--- PASS: TestA137TheQuietMarkersAreMadeOnlyInTheirOwnFile (0.23s)
+=== RUN   TestA165AlreadyProcessingRequiresHTTP409
+--- PASS: TestA165AlreadyProcessingRequiresHTTP409 (0.00s)
+=== RUN   TestA165CancelRefusalDoesNotOverrideNonAmbiguousDispatch
+--- PASS: TestA165CancelRefusalDoesNotOverrideNonAmbiguousDispatch (0.00s)
+=== RUN   TestA165RealTimeoutKeepsFirstAmbiguousAsCancelled
+--- PASS: TestA165RealTimeoutKeepsFirstAmbiguousAsCancelled (0.03s)
+=== RUN   TestA165CancelRefusalUsesOnlyInjectedClockForJudgement
+--- PASS: TestA165CancelRefusalUsesOnlyInjectedClockForJudgement (0.00s)
+=== RUN   TestA165SubmitSettlesWithItsCallerContext
+--- PASS: TestA165SubmitSettlesWithItsCallerContext (0.00s)
+=== RUN   TestA165LatchCheckFollowsTheExposureReturn
+--- PASS: TestA165LatchCheckFollowsTheExposureReturn (0.00s)
+=== RUN   TestA165RetryDeadlineKeepsFirstAmbiguousAsCancelled
+--- PASS: TestA165RetryDeadlineKeepsFirstAmbiguousAsCancelled (0.03s)
+=== RUN   TestA166EnginePollActual429StopsAndSharesHint
+--- PASS: TestA166EnginePollActual429StopsAndSharesHint (1.61s)
+=== RUN   TestA166EnginePollTokenFinishFaultStopsGET
+--- PASS: TestA166EnginePollTokenFinishFaultStopsGET (0.42s)
+=== RUN   TestA166EnginePoll401FinishFaultStopsRefresh
+--- PASS: TestA166EnginePoll401FinishFaultStopsRefresh (0.42s)
+=== RUN   TestA166EnginePollToken429DoesNotCreatePriceHint
+--- PASS: TestA166EnginePollToken429DoesNotCreatePriceHint (0.42s)
+=== RUN   TestA166EnginePollConcurrentCollectorIsolation
+--- PASS: TestA166EnginePollConcurrentCollectorIsolation (0.82s)
+=== RUN   TestA166EnginePollInvalidHintNoRetryOrSlot
+--- PASS: TestA166EnginePollInvalidHintNoRetryOrSlot (2.06s)
+=== RUN   TestA166EnginePollHTTPDateHint
+--- PASS: TestA166EnginePollHTTPDateHint (0.83s)
+=== RUN   TestA166EnginePoll429BodyErrorStillRateLimited
+--- PASS: TestA166EnginePoll429BodyErrorStillRateLimited (0.83s)
+=== RUN   TestA166EnginePoll503RetriesWithout429Event
+--- PASS: TestA166EnginePoll503RetriesWithout429Event (1.23s)
+=== RUN   TestA166EnginePollHintExpiryRestoresFreshness
+--- PASS: TestA166EnginePollHintExpiryRestoresFreshness (2.35s)
+=== RUN   TestA166EnginePollRejectsUnbound
+--- PASS: TestA166EnginePollRejectsUnbound (0.00s)
+=== RUN   TestA166ReplayOriginClassification
+=== RUN   TestA166ReplayOriginClassification/entry
+=== RUN   TestA166ReplayOriginClassification/entry-contradiction
+=== RUN   TestA166ReplayOriginClassification/flatten
+=== RUN   TestA166ReplayOriginClassification/stop
+=== RUN   TestA166ReplayOriginClassification/baseline
+=== RUN   TestA166ReplayOriginClassification/ratchet
+=== RUN   TestA166ReplayOriginClassification/ladder
+=== RUN   TestA166ReplayOriginClassification/profit
+=== RUN   TestA166ReplayOriginClassification/unknown
+=== RUN   TestA166ReplayOriginClassification/other-source
+--- PASS: TestA166ReplayOriginClassification (0.31s)
+    --- PASS: TestA166ReplayOriginClassification/entry (0.00s)
+    --- PASS: TestA166ReplayOriginClassification/entry-contradiction (0.01s)
+    --- PASS: TestA166ReplayOriginClassification/flatten (0.00s)
+    --- PASS: TestA166ReplayOriginClassification/stop (0.01s)
+    --- PASS: TestA166ReplayOriginClassification/baseline (0.01s)
+    --- PASS: TestA166ReplayOriginClassification/ratchet (0.01s)
+    --- PASS: TestA166ReplayOriginClassification/ladder (0.01s)
+    --- PASS: TestA166ReplayOriginClassification/profit (0.01s)
+    --- PASS: TestA166ReplayOriginClassification/unknown (0.01s)
+    --- PASS: TestA166ReplayOriginClassification/other-source (0.01s)
+=== RUN   TestA166OrderableActionCoverage
+    a166_origin_internal_test.go:93: ../exitpolicy/ratchet.go:52:2: could not import errors (can't find import: "errors": cannot find package "errors" in any of:
+        	($GOROOT not set)
+        	/home/daniel/go/src/errors (from $GOPATH))
+--- FAIL: TestA166OrderableActionCoverage (0.00s)
+=== RUN   TestA166ReplayOriginDBErrorPropagates
+--- PASS: TestA166ReplayOriginDBErrorPropagates (0.22s)
+=== RUN   TestA166AckReadInheritsPriorityAndDeadline
+--- PASS: TestA166AckReadInheritsPriorityAndDeadline (0.00s)
+=== RUN   TestA166OrderableUnusedReferenceIsRejected
+--- PASS: TestA166OrderableUnusedReferenceIsRejected (0.00s)
+=== RUN   TestA166ReplayRequiredNilFailsClosed
+--- PASS: TestA166ReplayRequiredNilFailsClosed (0.00s)
+=== RUN   TestA166ReplayTokenAndStoredBodyShareBudget
+--- PASS: TestA166ReplayTokenAndStoredBodyShareBudget (0.77s)
+=== RUN   TestA166ReplayRejectsForeignBudgetAndEndpointBeforeHeaders
+--- PASS: TestA166ReplayRejectsForeignBudgetAndEndpointBeforeHeaders (0.03s)
+=== RUN   TestA166ReplayEnforcingRefusesRedirectAndPreservesCallerClient
+--- PASS: TestA166ReplayEnforcingRefusesRedirectAndPreservesCallerClient (0.77s)
+=== RUN   TestA166ReplayDirectPostCannotBypassHeldBudget
+--- PASS: TestA166ReplayDirectPostCannotBypassHeldBudget (0.89s)
+=== RUN   TestA166ReplayRequiredNilTransportRejectedBeforeHeaders
+--- PASS: TestA166ReplayRequiredNilTransportRejectedBeforeHeaders (0.01s)
+=== RUN   TestA166ReplayOffNilTransportStillWorks
+--- PASS: TestA166ReplayOffNilTransportStillWorks (0.00s)
+=== RUN   TestA166ReplayRuntimeV2ObservesTokenAndPost
+--- PASS: TestA166ReplayRuntimeV2ObservesTokenAndPost (0.83s)
+=== RUN   TestA165CancelRefusalPoliciesAreExact
+--- PASS: TestA165CancelRefusalPoliciesAreExact (0.00s)
+=== RUN   TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode
+=== RUN   TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode/top-level_code
+=== RUN   TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode/nested_code_and_retry_after
+=== RUN   TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode/matching_codes
+=== RUN   TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode/contradictory_codes
+=== RUN   TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode/missing_code
+=== RUN   TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode/status_only
+=== RUN   TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode/non-numeric_retry
+--- PASS: TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode (0.00s)
+    --- PASS: TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode/top-level_code (0.00s)
+    --- PASS: TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode/nested_code_and_retry_after (0.00s)
+    --- PASS: TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode/matching_codes (0.00s)
+    --- PASS: TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode/contradictory_codes (0.00s)
+    --- PASS: TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode/missing_code (0.00s)
+    --- PASS: TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode/status_only (0.00s)
+    --- PASS: TestA165AlreadyProcessingRefusalRequiresAnUnambiguousCode/non-numeric_retry (0.00s)
+=== RUN   TestA165EngineAlreadyProcessingIsOneConfirmedRefusalWithoutDelay
+--- PASS: TestA165EngineAlreadyProcessingIsOneConfirmedRefusalWithoutDelay (0.00s)
+=== RUN   TestA165FlattenRetriesWithinCumulativeBudget
+--- PASS: TestA165FlattenRetriesWithinCumulativeBudget (0.00s)
+=== RUN   TestA165WindowStartsBeforeFirstDispatch
+--- PASS: TestA165WindowStartsBeforeFirstDispatch (0.00s)
+=== RUN   TestA165CallerCancellationStopsRetry
+--- PASS: TestA165CallerCancellationStopsRetry (0.00s)
+=== RUN   TestA165FlattenRetryNotSentKeepsTheFirstAmbiguousOutcome
+--- PASS: TestA165FlattenRetryNotSentKeepsTheFirstAmbiguousOutcome (0.00s)
+=== RUN   TestA165FlattenExhaustionKeepsTheFirstAmbiguousOutcome
+--- PASS: TestA165FlattenExhaustionKeepsTheFirstAmbiguousOutcome (0.00s)
+=== RUN   TestA165NilPolicyAndNonCancelKeepTheOriginalOutcome
+=== RUN   TestA165NilPolicyAndNonCancelKeepTheOriginalOutcome/nil_policy_cancel
+=== RUN   TestA165NilPolicyAndNonCancelKeepTheOriginalOutcome/flatten_policy_place
+=== RUN   TestA165NilPolicyAndNonCancelKeepTheOriginalOutcome/flatten_policy_amend
+--- PASS: TestA165NilPolicyAndNonCancelKeepTheOriginalOutcome (0.00s)
+    --- PASS: TestA165NilPolicyAndNonCancelKeepTheOriginalOutcome/nil_policy_cancel (0.00s)
+    --- PASS: TestA165NilPolicyAndNonCancelKeepTheOriginalOutcome/flatten_policy_place (0.00s)
+    --- PASS: TestA165NilPolicyAndNonCancelKeepTheOriginalOutcome/flatten_policy_amend (0.00s)
+=== RUN   TestStrategyEntryGateAuthorityRejectsAllowedBlockedAllowedABAKRUS
+=== RUN   TestStrategyEntryGateAuthorityRejectsAllowedBlockedAllowedABAKRUS/kr
+=== RUN   TestStrategyEntryGateAuthorityRejectsAllowedBlockedAllowedABAKRUS/us
+--- PASS: TestStrategyEntryGateAuthorityRejectsAllowedBlockedAllowedABAKRUS (0.00s)
+    --- PASS: TestStrategyEntryGateAuthorityRejectsAllowedBlockedAllowedABAKRUS/kr (0.00s)
+    --- PASS: TestStrategyEntryGateAuthorityRejectsAllowedBlockedAllowedABAKRUS/us (0.00s)
+=== RUN   TestStrategyDecisionLineagePayloadPreservesCompleteDecisionRecord
+--- PASS: TestStrategyDecisionLineagePayloadPreservesCompleteDecisionRecord (0.00s)
+=== RUN   TestEntryGateRefreshesDurableAuthorityBeforeEveryEntryDecision
+--- PASS: TestEntryGateRefreshesDurableAuthorityBeforeEveryEntryDecision (0.00s)
+=== RUN   TestEntryGateFailsClosedWhenDurableAuthorityCannotBeRead
+--- PASS: TestEntryGateFailsClosedWhenDurableAuthorityCannotBeRead (0.00s)
+=== RUN   TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket
+=== RUN   TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/control:_no_lock_admits_KR_SHORT
+=== RUN   TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/control:_no_lock_admits_KR_MEDIUM
+=== RUN   TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/KR_MEDIUM_lock_does_not_reach_KR_SHORT
+=== RUN   TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/KR_SHORT_lock_refuses_KR_SHORT
+=== RUN   TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/KR_MEDIUM_lock_refuses_KR_MEDIUM
+=== RUN   TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/US_locks_do_not_reach_KR
+--- PASS: TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket (1.29s)
+    --- PASS: TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/control:_no_lock_admits_KR_SHORT (0.23s)
+    --- PASS: TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/control:_no_lock_admits_KR_MEDIUM (0.21s)
+    --- PASS: TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/KR_MEDIUM_lock_does_not_reach_KR_SHORT (0.22s)
+    --- PASS: TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/KR_SHORT_lock_refuses_KR_SHORT (0.21s)
+    --- PASS: TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/KR_MEDIUM_lock_refuses_KR_MEDIUM (0.21s)
+    --- PASS: TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/US_locks_do_not_reach_KR (0.22s)
+=== RUN   TestA066DecisionIssuedBeforeLockIsRefusedAtSubmit
+=== RUN   TestA066DecisionIssuedBeforeLockIsRefusedAtSubmit/control:_no_lock_submits_the_pre-issued_KR_SHORT_decision
+=== RUN   TestA066DecisionIssuedBeforeLockIsRefusedAtSubmit/KR_MEDIUM_lock_does_not_refuse_a_KR_SHORT_decision
+=== RUN   TestA066DecisionIssuedBeforeLockIsRefusedAtSubmit/KR_SHORT_lock_after_issuance_refuses_the_KR_SHORT_submit
+--- PASS: TestA066DecisionIssuedBeforeLockIsRefusedAtSubmit (0.72s)
+    --- PASS: TestA066DecisionIssuedBeforeLockIsRefusedAtSubmit/control:_no_lock_submits_the_pre-issued_KR_SHORT_decision (0.25s)
+    --- PASS: TestA066DecisionIssuedBeforeLockIsRefusedAtSubmit/KR_MEDIUM_lock_does_not_refuse_a_KR_SHORT_decision (0.25s)
+    --- PASS: TestA066DecisionIssuedBeforeLockIsRefusedAtSubmit/KR_SHORT_lock_after_issuance_refuses_the_KR_SHORT_submit (0.22s)
+=== RUN   TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths
+--- PASS: TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths (0.31s)
+=== RUN   TestA066LockActivatedAfterInitialCheckIsRefusedAtTheLastMoment
+--- PASS: TestA066LockActivatedAfterInitialCheckIsRefusedAtTheLastMoment (0.23s)
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/IssueEntry_callers
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/IssueStrategyEntry_callers
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/NewTracer_callers
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/GuardianAdapter_construction
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_IssueEntry
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_IssueStrategyEntry
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_NewTracer
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_Tracer
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_GuardianAdapter
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/exposure-raising_decision_producers
+--- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly (2.75s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/IssueEntry_callers (0.25s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/IssueStrategyEntry_callers (0.24s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/NewTracer_callers (0.26s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/GuardianAdapter_construction (0.25s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_IssueEntry (0.26s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_IssueStrategyEntry (0.25s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_NewTracer (0.25s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_Tracer (0.24s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_GuardianAdapter (0.26s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/exposure-raising_decision_producers (0.24s)
+=== RUN   TestA066LedgerUsageHasOneComputation
+=== RUN   TestA066LedgerUsageHasOneComputation/readProductionRiskUsage
+=== RUN   TestA066LedgerUsageHasOneComputation/aggregateProductionRiskUsage
+=== RUN   TestA066LedgerUsageHasOneComputation/ReadJournalBucketUsage
+=== RUN   TestA066LedgerUsageHasOneComputation/riskBucketSharedUsage
+=== RUN   TestA066LedgerUsageHasOneComputation/refuseStaleBucketUsage
+=== RUN   TestA066LedgerUsageHasOneComputation/latchedUsageRefusal
+=== RUN   TestA066LedgerUsageHasOneComputation/ensureRiskBucketEntryScopeClean
+--- PASS: TestA066LedgerUsageHasOneComputation (1.75s)
+    --- PASS: TestA066LedgerUsageHasOneComputation/readProductionRiskUsage (0.24s)
+    --- PASS: TestA066LedgerUsageHasOneComputation/aggregateProductionRiskUsage (0.27s)
+    --- PASS: TestA066LedgerUsageHasOneComputation/ReadJournalBucketUsage (0.25s)
+    --- PASS: TestA066LedgerUsageHasOneComputation/riskBucketSharedUsage (0.25s)
+    --- PASS: TestA066LedgerUsageHasOneComputation/refuseStaleBucketUsage (0.25s)
+    --- PASS: TestA066LedgerUsageHasOneComputation/latchedUsageRefusal (0.25s)
+    --- PASS: TestA066LedgerUsageHasOneComputation/ensureRiskBucketEntryScopeClean (0.25s)
+=== RUN   TestA066IssuedEntryIsRefusedAtSubmitWhenItsScopeLatchedAfterIssuance
+=== RUN   TestA066IssuedEntryIsRefusedAtSubmitWhenItsScopeLatchedAfterIssuance/control:_no_latch_submits
+=== RUN   TestA066IssuedEntryIsRefusedAtSubmitWhenItsScopeLatchedAfterIssuance/active_reconcile_after_issuance_refuses_the_submit
+--- PASS: TestA066IssuedEntryIsRefusedAtSubmitWhenItsScopeLatchedAfterIssuance (0.46s)
+    --- PASS: TestA066IssuedEntryIsRefusedAtSubmitWhenItsScopeLatchedAfterIssuance/control:_no_latch_submits (0.23s)
+    --- PASS: TestA066IssuedEntryIsRefusedAtSubmitWhenItsScopeLatchedAfterIssuance/active_reconcile_after_issuance_refuses_the_submit (0.23s)
+=== RUN   TestNonIntegralOrUnsafeProtectionQuantityStopsBeforeProviderAndBroker
+--- PASS: TestNonIntegralOrUnsafeProtectionQuantityStopsBeforeProviderAndBroker (0.21s)
+=== RUN   TestProductionDefaultRefusesKRAndUSBuyBeforeBroker
+=== RUN   TestProductionDefaultRefusesKRAndUSBuyBeforeBroker/kr
+=== RUN   TestProductionDefaultRefusesKRAndUSBuyBeforeBroker/us
+--- PASS: TestProductionDefaultRefusesKRAndUSBuyBeforeBroker (0.43s)
+    --- PASS: TestProductionDefaultRefusesKRAndUSBuyBeforeBroker/kr (0.22s)
+    --- PASS: TestProductionDefaultRefusesKRAndUSBuyBeforeBroker/us (0.22s)
+=== RUN   TestReductionNeverReadsReadinessProvider
+=== RUN   TestReductionNeverReadsReadinessProvider/sell_place
+=== RUN   TestReductionNeverReadsReadinessProvider/cancel
+=== RUN   TestReductionNeverReadsReadinessProvider/reducing_amend
+--- PASS: TestReductionNeverReadsReadinessProvider (0.67s)
+    --- PASS: TestReductionNeverReadsReadinessProvider/sell_place (0.22s)
+    --- PASS: TestReductionNeverReadsReadinessProvider/cancel (0.22s)
+    --- PASS: TestReductionNeverReadsReadinessProvider/reducing_amend (0.23s)
+=== RUN   TestKRDriftDoesNotBlockValidUSAndDispatchDriftCallsNoBroker
+--- PASS: TestKRDriftDoesNotBlockValidUSAndDispatchDriftCallsNoBroker (0.45s)
+=== RUN   TestA087KRMarketSellWireBodyCarriesNoPriceOrTIF
+=== RUN   TestA087KRMarketSellWireBodyCarriesNoPriceOrTIF/kr_market_sell
+=== RUN   TestA087KRMarketSellWireBodyCarriesNoPriceOrTIF/kr_market_sell_with_a_stray_price
+--- PASS: TestA087KRMarketSellWireBodyCarriesNoPriceOrTIF (0.00s)
+    --- PASS: TestA087KRMarketSellWireBodyCarriesNoPriceOrTIF/kr_market_sell (0.00s)
+    --- PASS: TestA087KRMarketSellWireBodyCarriesNoPriceOrTIF/kr_market_sell_with_a_stray_price (0.00s)
+=== RUN   TestA092AnUnannouncedCredentialTighteningIsReportedAsTightened
+--- PASS: TestA092AnUnannouncedCredentialTighteningIsReportedAsTightened (0.24s)
+=== RUN   TestA092AnUnannouncedDailyLossTighteningIsReportedAsTightened
+--- PASS: TestA092AnUnannouncedDailyLossTighteningIsReportedAsTightened (0.22s)
+=== RUN   TestA094TheReadBackNeedsANamedSymbol
+=== RUN   TestA094TheReadBackNeedsANamedSymbol/no_symbol_field
+=== RUN   TestA094TheReadBackNeedsANamedSymbol/null_symbol
+=== RUN   TestA094TheReadBackNeedsANamedSymbol/empty_symbol
+=== RUN   TestA094TheReadBackNeedsANamedSymbol/blank_symbol
+--- PASS: TestA094TheReadBackNeedsANamedSymbol (0.92s)
+    --- PASS: TestA094TheReadBackNeedsANamedSymbol/no_symbol_field (0.23s)
+    --- PASS: TestA094TheReadBackNeedsANamedSymbol/null_symbol (0.24s)
+    --- PASS: TestA094TheReadBackNeedsANamedSymbol/empty_symbol (0.23s)
+    --- PASS: TestA094TheReadBackNeedsANamedSymbol/blank_symbol (0.23s)
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.1_production_409_with_error.code
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.2_contract_422_with_the_same_code
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.5b_code_at_the_top_level
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.5c_upper_case_is_the_same_code
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/both_places_carry_the_same_code
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.3_409_request-in-progress_stays_ambiguous
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.4_409_without_a_code_stays_ambiguous
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.5_the_phrase_only_in_message_is_not_a_code
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.5c_a_suffixed_value_is_not_the_code
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.5c_a_padded_value_is_not_the_code
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.5d_not_JSON
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.5d_empty_code
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.5d_null_code
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.5d_a_code_that_is_not_a_string_beside_a_listed_code
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.5e_a_non-string_code_beside_a_listed_code_is_contradictory_on_a_422
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.5g_a_lone_non-string_code_is_no_verdict_(422_stays_definitive_by_status)
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.5g_no_verdict_on_a_422_keeps_the_definitive_status
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.5e_contradictory_places_on_a_409
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.5f_contradictory_places_on_a_422
+=== RUN   TestA094RefusalCodeClassifiesTheAttempt/2.5f_contradictory,_neither_listed,_on_a_422
+--- PASS: TestA094RefusalCodeClassifiesTheAttempt (4.96s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.1_production_409_with_error.code (0.22s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.2_contract_422_with_the_same_code (0.23s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.5b_code_at_the_top_level (0.22s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.5c_upper_case_is_the_same_code (0.21s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/both_places_carry_the_same_code (0.23s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.3_409_request-in-progress_stays_ambiguous (0.25s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.4_409_without_a_code_stays_ambiguous (0.22s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.5_the_phrase_only_in_message_is_not_a_code (0.23s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.5c_a_suffixed_value_is_not_the_code (0.27s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.5c_a_padded_value_is_not_the_code (0.27s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.5d_not_JSON (0.26s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.5d_empty_code (0.27s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.5d_null_code (0.30s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.5d_a_code_that_is_not_a_string_beside_a_listed_code (0.27s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.5e_a_non-string_code_beside_a_listed_code_is_contradictory_on_a_422 (0.26s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.5g_a_lone_non-string_code_is_no_verdict_(422_stays_definitive_by_status) (0.27s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.5g_no_verdict_on_a_422_keeps_the_definitive_status (0.25s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.5e_contradictory_places_on_a_409 (0.24s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.5f_contradictory_places_on_a_422 (0.24s)
+    --- PASS: TestA094RefusalCodeClassifiesTheAttempt/2.5f_contradictory,_neither_listed,_on_a_422 (0.25s)
+=== RUN   TestA094ExistingRefusalCodesAreUnchanged
+=== RUN   TestA094ExistingRefusalCodesAreUnchanged/trade_auth
+=== RUN   TestA094ExistingRefusalCodesAreUnchanged/fx_consent
+=== RUN   TestA094ExistingRefusalCodesAreUnchanged/funding
+--- PASS: TestA094ExistingRefusalCodesAreUnchanged (0.70s)
+    --- PASS: TestA094ExistingRefusalCodesAreUnchanged/trade_auth (0.22s)
+    --- PASS: TestA094ExistingRefusalCodesAreUnchanged/fx_consent (0.24s)
+    --- PASS: TestA094ExistingRefusalCodesAreUnchanged/funding (0.24s)
+=== RUN   TestA094TheStatusTableIsUnchanged
+--- PASS: TestA094TheStatusTableIsUnchanged (0.00s)
+=== RUN   TestA094TheReplayClassifierNeverReadsTheRefusalCode
+--- PASS: TestA094TheReplayClassifierNeverReadsTheRefusalCode (0.00s)
+=== RUN   TestTheSenderDownReasonIsRegisteredInTheEnumeration
+--- PASS: TestTheSenderDownReasonIsRegisteredInTheEnumeration (0.00s)
+=== RUN   TestTheSenderDownReasonIsNotTheUndeliveredReason
+--- PASS: TestTheSenderDownReasonIsNotTheUndeliveredReason (0.00s)
+=== RUN   TestTheSenderDownReasonHasADeterministicLatchPrecedence
+--- PASS: TestTheSenderDownReasonHasADeterministicLatchPrecedence (0.00s)
+=== RUN   TestTheStrategyCentralIntegrityLatchReadsBeforeTheModeAndAfterSenderDown
+--- PASS: TestTheStrategyCentralIntegrityLatchReadsBeforeTheModeAndAfterSenderDown (0.00s)
+=== RUN   TestA136IssueEntryRefusesTheBuyThatReachesTheDailyCeiling
+--- PASS: TestA136IssueEntryRefusesTheBuyThatReachesTheDailyCeiling (0.23s)
+=== RUN   TestA136QFinalEntryRefusesTheBuyThatReachesTheDailyCeiling
+--- PASS: TestA136QFinalEntryRefusesTheBuyThatReachesTheDailyCeiling (0.23s)
+=== RUN   TestA136TheLimitsDigestBindsTheDailyBuyCeiling
+--- PASS: TestA136TheLimitsDigestBindsTheDailyBuyCeiling (0.44s)
+=== RUN   TestA136AManualBuyOutsideTheEngineCountsTowardTheDay
+--- PASS: TestA136AManualBuyOutsideTheEngineCountsTowardTheDay (0.21s)
+=== RUN   TestA136IssueEntryRefusesWhenForeignManualBuysCannotBeConverted
+--- PASS: TestA136IssueEntryRefusesWhenForeignManualBuysCannotBeConverted (0.22s)
+=== RUN   TestA138IssueEntryRefusesTheEntryThatExceedsTheMaximum
+--- PASS: TestA138IssueEntryRefusesTheEntryThatExceedsTheMaximum (0.42s)
+=== RUN   TestA138QFinalEntryRefusesTheEntryThatExceedsTheMaximum
+--- PASS: TestA138QFinalEntryRefusesTheEntryThatExceedsTheMaximum (0.21s)
+=== RUN   TestA138TheLimitsDigestBindsTheOpenPositionMaximum
+--- PASS: TestA138TheLimitsDigestBindsTheOpenPositionMaximum (0.41s)
+=== RUN   TestA139AZeroGuardianCapIsTheExistingGuardianCapRefusal
+--- PASS: TestA139AZeroGuardianCapIsTheExistingGuardianCapRefusal (0.21s)
+=== RUN   TestA157DailyLossRefusalKindOfTable
+--- PASS: TestA157DailyLossRefusalKindOfTable (0.00s)
+=== RUN   TestA157ThePrecheckJudgesTheBindingOnceAndBeforeSizing
+--- PASS: TestA157ThePrecheckJudgesTheBindingOnceAndBeforeSizing (0.00s)
+=== RUN   TestA165RealFirstDispatchDelayDoesNotDriveRetryWindowJudgement
+--- PASS: TestA165RealFirstDispatchDelayDoesNotDriveRetryWindowJudgement (0.27s)
+=== RUN   TestA165RetryInvokesTheBrokerWithTheWindowContext
+--- PASS: TestA165RetryInvokesTheBrokerWithTheWindowContext (0.22s)
+=== RUN   TestA165EngineCancelLatchBlocksOnlyNewEntryUntilJournalledRelease
+--- PASS: TestA165EngineCancelLatchBlocksOnlyNewEntryUntilJournalledRelease (0.28s)
+=== RUN   TestA165LatchDoesNotBlockACancel
+--- PASS: TestA165LatchDoesNotBlockACancel (0.24s)
+=== RUN   TestA165LatchDoesNotBlockAReduceOnlySell
+--- PASS: TestA165LatchDoesNotBlockAReduceOnlySell (0.25s)
+=== RUN   TestA165TerminalEvidenceReleasesTheCancelLatch
+--- PASS: TestA165TerminalEvidenceReleasesTheCancelLatch (0.25s)
+=== RUN   TestA165PolicyDoesNotChangeNilOrNonCancelAmbiguousOutcomes
+=== RUN   TestA165PolicyDoesNotChangeNilOrNonCancelAmbiguousOutcomes/nil_policy_cancel
+=== RUN   TestA165PolicyDoesNotChangeNilOrNonCancelAmbiguousOutcomes/engine_policy_place
+=== RUN   TestA165PolicyDoesNotChangeNilOrNonCancelAmbiguousOutcomes/engine_policy_amend
+--- PASS: TestA165PolicyDoesNotChangeNilOrNonCancelAmbiguousOutcomes (0.68s)
+    --- PASS: TestA165PolicyDoesNotChangeNilOrNonCancelAmbiguousOutcomes/nil_policy_cancel (0.24s)
+    --- PASS: TestA165PolicyDoesNotChangeNilOrNonCancelAmbiguousOutcomes/engine_policy_place (0.22s)
+    --- PASS: TestA165PolicyDoesNotChangeNilOrNonCancelAmbiguousOutcomes/engine_policy_amend (0.22s)
+=== RUN   TestA165EnginePolicyLeavesOther409Ambiguous
+--- PASS: TestA165EnginePolicyLeavesOther409Ambiguous (0.22s)
+=== RUN   TestA166CancelRetryAdmissionRefusalPreservesFirstAmbiguous
+--- PASS: TestA166CancelRetryAdmissionRefusalPreservesFirstAmbiguous (0.22s)
+=== RUN   TestA166Official401TokenInheritsCritical
+--- PASS: TestA166Official401TokenInheritsCritical (1.90s)
+=== RUN   TestA166RequiredReplayUnknownOriginFallsBack
+--- PASS: TestA166RequiredReplayUnknownOriginFallsBack (0.64s)
+=== RUN   TestA166FlattenReplayQueuesCritical
+--- PASS: TestA166FlattenReplayQueuesCritical (1.39s)
+=== RUN   TestA166ReplayAdmissionRefusalPreservesInDoubtJournal
+--- PASS: TestA166ReplayAdmissionRefusalPreservesInDoubtJournal (1.15s)
+=== RUN   TestCancelInDoubtWithDocumentedStatuses
+=== RUN   TestCancelInDoubtWithDocumentedStatuses/CANCELED_with_nothing_filled
+=== RUN   TestCancelInDoubtWithDocumentedStatuses/CANCELED_after_a_partial_fill
+=== RUN   TestCancelInDoubtWithDocumentedStatuses/FILLED_—_the_cancel_lost_the_race
+=== RUN   TestCancelInDoubtWithDocumentedStatuses/REJECTED_—_the_broker_refused_the_order_itself
+=== RUN   TestCancelInDoubtWithDocumentedStatuses/PENDING_throughout_—_the_cancel_never_landed
+=== RUN   TestCancelInDoubtWithDocumentedStatuses/PENDING_CANCEL_throughout_—_in_flight_is_not_an_answer
+=== RUN   TestCancelInDoubtWithDocumentedStatuses/CANCEL_REJECTED_record_—_shape_unmeasured,_so_it_blocks
+--- PASS: TestCancelInDoubtWithDocumentedStatuses (1.97s)
+    --- PASS: TestCancelInDoubtWithDocumentedStatuses/CANCELED_with_nothing_filled (0.23s)
+    --- PASS: TestCancelInDoubtWithDocumentedStatuses/CANCELED_after_a_partial_fill (0.23s)
+    --- PASS: TestCancelInDoubtWithDocumentedStatuses/FILLED_—_the_cancel_lost_the_race (0.22s)
+    --- PASS: TestCancelInDoubtWithDocumentedStatuses/REJECTED_—_the_broker_refused_the_order_itself (0.23s)
+    --- PASS: TestCancelInDoubtWithDocumentedStatuses/PENDING_throughout_—_the_cancel_never_landed (0.27s)
+    --- PASS: TestCancelInDoubtWithDocumentedStatuses/PENDING_CANCEL_throughout_—_in_flight_is_not_an_answer (0.54s)
+    --- PASS: TestCancelInDoubtWithDocumentedStatuses/CANCEL_REJECTED_record_—_shape_unmeasured,_so_it_blocks (0.25s)
+=== RUN   TestAmendInDoubtReplacedOriginalFindsSuccessor
+--- PASS: TestAmendInDoubtReplacedOriginalFindsSuccessor (0.22s)
+=== RUN   TestAmendInDoubtReplacedOriginalWithoutSuccessorParks
+--- PASS: TestAmendInDoubtReplacedOriginalWithoutSuccessorParks (0.25s)
+=== RUN   TestAmendInDoubtPendingReplaceIsNotEvidence
+--- PASS: TestAmendInDoubtPendingReplaceIsNotEvidence (0.55s)
+=== RUN   TestAmendInDoubtRejectedOriginalIsFailed
+--- PASS: TestAmendInDoubtRejectedOriginalIsFailed (0.25s)
+=== RUN   TestCancelInDoubtResolvesFromTheOriginalOrder
+=== RUN   TestCancelInDoubtResolvesFromTheOriginalOrder/cancelled_with_nothing_filled
+=== RUN   TestCancelInDoubtResolvesFromTheOriginalOrder/cancelled_after_a_partial_fill
+=== RUN   TestCancelInDoubtResolvesFromTheOriginalOrder/already_fully_filled_—_the_cancel_lost_the_race
+=== RUN   TestCancelInDoubtResolvesFromTheOriginalOrder/still_open_after_stabilisation_—_the_cancel_never_landed
+=== RUN   TestCancelInDoubtResolvesFromTheOriginalOrder/contradictory_payload_—_closed_with_an_unexplained_remainder
+--- PASS: TestCancelInDoubtResolvesFromTheOriginalOrder (1.24s)
+    --- PASS: TestCancelInDoubtResolvesFromTheOriginalOrder/cancelled_with_nothing_filled (0.24s)
+    --- PASS: TestCancelInDoubtResolvesFromTheOriginalOrder/cancelled_after_a_partial_fill (0.24s)
+    --- PASS: TestCancelInDoubtResolvesFromTheOriginalOrder/already_fully_filled_—_the_cancel_lost_the_race (0.25s)
+    --- PASS: TestCancelInDoubtResolvesFromTheOriginalOrder/still_open_after_stabilisation_—_the_cancel_never_landed (0.27s)
+    --- PASS: TestCancelInDoubtResolvesFromTheOriginalOrder/contradictory_payload_—_closed_with_an_unexplained_remainder (0.23s)
+=== RUN   TestCancelInDoubtUnreadableOrderParks
+--- PASS: TestCancelInDoubtUnreadableOrderParks (0.55s)
+=== RUN   TestAmendInDoubtFindsSuccessorAndRecordsLineage
+--- PASS: TestAmendInDoubtFindsSuccessorAndRecordsLineage (0.24s)
+=== RUN   TestAmendInDoubtStillOpenIsFailed
+--- PASS: TestAmendInDoubtStillOpenIsFailed (0.28s)
+=== RUN   TestAmendInDoubtClosedWithoutSuccessorParks
+--- PASS: TestAmendInDoubtClosedWithoutSuccessorParks (0.23s)
+=== RUN   TestAmendInDoubtAmbiguousSuccessorParks
+--- PASS: TestAmendInDoubtAmbiguousSuccessorParks (0.23s)
+=== RUN   TestLineageChainResolvesToTheCurrentOrder
+--- PASS: TestLineageChainResolvesToTheCurrentOrder (0.23s)
+=== RUN   TestLineageCycleIsRefused
+--- PASS: TestLineageCycleIsRefused (0.24s)
+=== RUN   TestStatusOfReadsWrappedSentinels
+=== RUN   TestStatusOfReadsWrappedSentinels/bare_auth
+=== RUN   TestStatusOfReadsWrappedSentinels/auth_carrying_its_status_code
+=== RUN   TestStatusOfReadsWrappedSentinels/address_refusal_carrying_its_status_code
+=== RUN   TestStatusOfReadsWrappedSentinels/rate_limited_maps_to_429,_which_the_journal_treats_as_ambiguous
+=== RUN   TestStatusOfReadsWrappedSentinels/api_error_keeps_its_own_code
+=== RUN   TestStatusOfReadsWrappedSentinels/unrelated_error_is_unknown
+--- PASS: TestStatusOfReadsWrappedSentinels (0.00s)
+    --- PASS: TestStatusOfReadsWrappedSentinels/bare_auth (0.00s)
+    --- PASS: TestStatusOfReadsWrappedSentinels/auth_carrying_its_status_code (0.00s)
+    --- PASS: TestStatusOfReadsWrappedSentinels/address_refusal_carrying_its_status_code (0.00s)
+    --- PASS: TestStatusOfReadsWrappedSentinels/rate_limited_maps_to_429,_which_the_journal_treats_as_ambiguous (0.00s)
+    --- PASS: TestStatusOfReadsWrappedSentinels/api_error_keeps_its_own_code (0.00s)
+    --- PASS: TestStatusOfReadsWrappedSentinels/unrelated_error_is_unknown (0.00s)
+=== RUN   TestDecisionReferenceCarriesNoRiskData
+--- PASS: TestDecisionReferenceCarriesNoRiskData (0.00s)
+=== RUN   TestSwappedStopPriceIsRefused
+--- PASS: TestSwappedStopPriceIsRefused (0.23s)
+=== RUN   TestForeignIdempotencyKeyIsRefused
+--- PASS: TestForeignIdempotencyKeyIsRefused (0.25s)
+=== RUN   TestExpiryIsRecheckedOnAFreshRowBeforeTheBrokerCall
+--- PASS: TestExpiryIsRecheckedOnAFreshRowBeforeTheBrokerCall (0.23s)
+=== RUN   TestRevokedDecisionIsRefusedAtTheLastMoment
+--- PASS: TestRevokedDecisionIsRefusedAtTheLastMoment (0.24s)
+=== RUN   TestExitOverTheOrderLimitIsNotRefused
+--- PASS: TestExitOverTheOrderLimitIsNotRefused (0.23s)
+=== RUN   TestExitAboveItsCeilingIsRefused
+--- PASS: TestExitAboveItsCeilingIsRefused (0.22s)
+=== RUN   TestSmallerExitThanAuthorisedIsAllowed
+--- PASS: TestSmallerExitThanAuthorisedIsAllowed (0.23s)
+=== RUN   TestCancelWithAnEntryDecisionIsRefused
+--- PASS: TestCancelWithAnEntryDecisionIsRefused (0.22s)
+=== RUN   TestEntryWithoutALimitSnapshotIsRefused
+--- PASS: TestEntryWithoutALimitSnapshotIsRefused (0.24s)
+=== RUN   TestExitCarryingLimitsIsRefused
+--- PASS: TestExitCarryingLimitsIsRefused (0.24s)
+=== RUN   TestAttemptRecordsTheDecisionBindingAndTheWireBody
+--- PASS: TestAttemptRecordsTheDecisionBindingAndTheWireBody (0.23s)
+=== RUN   TestCancelRecordsNoKeyOrWireBody
+--- PASS: TestCancelRecordsNoKeyOrWireBody (0.22s)
+=== RUN   TestStoredWireBodyIsWhatTheBrokerReceived
+--- PASS: TestStoredWireBodyIsWhatTheBrokerReceived (0.24s)
+=== RUN   TestResubmittingASpentDecisionIsRefusedAcrossProcesses
+--- PASS: TestResubmittingASpentDecisionIsRefusedAcrossProcesses (0.23s)
+=== RUN   TestSpentDecisionIsRefusedAfterAJournalRestart
+--- PASS: TestSpentDecisionIsRefusedAfterAJournalRestart (0.23s)
+=== RUN   TestPartialLimitSnapshotIsRefused
+--- PASS: TestPartialLimitSnapshotIsRefused (0.23s)
+=== RUN   TestLimitsValidate
+=== RUN   TestLimitsValidate/quantity_unset
+=== RUN   TestLimitsValidate/notional_unset
+=== RUN   TestLimitsValidate/total_exposure_unset
+=== RUN   TestLimitsValidate/daily_loss_amount_unset
+=== RUN   TestLimitsValidate/daily_loss_ratio_unset
+=== RUN   TestLimitsValidate/zero
+=== RUN   TestLimitsValidate/negative
+=== RUN   TestLimitsValidate/NaN
+=== RUN   TestLimitsValidate/Inf
+=== RUN   TestLimitsValidate/ratio_above_one
+=== RUN   TestLimitsValidate/no_currency
+--- PASS: TestLimitsValidate (0.00s)
+    --- PASS: TestLimitsValidate/quantity_unset (0.00s)
+    --- PASS: TestLimitsValidate/notional_unset (0.00s)
+    --- PASS: TestLimitsValidate/total_exposure_unset (0.00s)
+    --- PASS: TestLimitsValidate/daily_loss_amount_unset (0.00s)
+    --- PASS: TestLimitsValidate/daily_loss_ratio_unset (0.00s)
+    --- PASS: TestLimitsValidate/zero (0.00s)
+    --- PASS: TestLimitsValidate/negative (0.00s)
+    --- PASS: TestLimitsValidate/NaN (0.00s)
+    --- PASS: TestLimitsValidate/Inf (0.00s)
+    --- PASS: TestLimitsValidate/ratio_above_one (0.00s)
+    --- PASS: TestLimitsValidate/no_currency (0.00s)
+=== RUN   TestLimitCurrencyMustMatchTheOrder
+--- PASS: TestLimitCurrencyMustMatchTheOrder (0.25s)
+=== RUN   TestNonceIsSpentBeforeTheBrokerCall
+--- PASS: TestNonceIsSpentBeforeTheBrokerCall (0.24s)
+=== RUN   TestPlaceWireBodyShapes
+=== RUN   TestPlaceWireBodyShapes/kr_limit_buy
+=== RUN   TestPlaceWireBodyShapes/us_market_sell
+=== RUN   TestPlaceWireBodyShapes/fractional_buy
+--- PASS: TestPlaceWireBodyShapes (0.00s)
+    --- PASS: TestPlaceWireBodyShapes/kr_limit_buy (0.00s)
+    --- PASS: TestPlaceWireBodyShapes/us_market_sell (0.00s)
+    --- PASS: TestPlaceWireBodyShapes/fractional_buy (0.00s)
+=== RUN   TestEveryEntryBlockingConditionReachesTheChain
+=== RUN   TestEveryEntryBlockingConditionReachesTheChain/401/403
+=== RUN   TestEveryEntryBlockingConditionReachesTheChain/SLO
+=== RUN   TestEveryEntryBlockingConditionReachesTheChain/RECONCILE
+=== RUN   TestEveryEntryBlockingConditionReachesTheChain/recovery
+--- PASS: TestEveryEntryBlockingConditionReachesTheChain (0.00s)
+    --- PASS: TestEveryEntryBlockingConditionReachesTheChain/401/403 (0.00s)
+    --- PASS: TestEveryEntryBlockingConditionReachesTheChain/SLO (0.00s)
+    --- PASS: TestEveryEntryBlockingConditionReachesTheChain/RECONCILE (0.00s)
+    --- PASS: TestEveryEntryBlockingConditionReachesTheChain/recovery (0.00s)
+=== RUN   TestStalenessReachesTheChainToo
+--- PASS: TestStalenessReachesTheChainToo (0.00s)
+=== RUN   TestTheLatchClearsThroughTheGatesOwnRules
+--- PASS: TestTheLatchClearsThroughTheGatesOwnRules (0.00s)
+=== RUN   TestSymbolScopeSurvivesTheProjection
+--- PASS: TestSymbolScopeSurvivesTheProjection (0.00s)
+=== RUN   TestTheLatchSurfaceNeverDisagreesWithTheGate
+--- PASS: TestTheLatchSurfaceNeverDisagreesWithTheGate (0.00s)
+=== RUN   TestAuthClassificationStillLatchesThroughTheSentinel
+--- PASS: TestAuthClassificationStillLatchesThroughTheSentinel (0.00s)
+=== RUN   TestARejectedCredentialTightensTheOperatingMode
+--- PASS: TestARejectedCredentialTightensTheOperatingMode (0.22s)
+=== RUN   TestTheRetrierWithoutAnEscalatorStillLatches
+--- PASS: TestTheRetrierWithoutAnEscalatorStillLatches (0.00s)
+=== RUN   TestOnlyTheCredentialFailureEscalates
+=== RUN   TestOnlyTheCredentialFailureEscalates/rate_limited
+=== RUN   TestOnlyTheCredentialFailureEscalates/transient
+=== RUN   TestOnlyTheCredentialFailureEscalates/permanent
+--- PASS: TestOnlyTheCredentialFailureEscalates (0.64s)
+    --- PASS: TestOnlyTheCredentialFailureEscalates/rate_limited (0.21s)
+    --- PASS: TestOnlyTheCredentialFailureEscalates/transient (0.21s)
+    --- PASS: TestOnlyTheCredentialFailureEscalates/permanent (0.21s)
+=== RUN   TestAFailedEscalationIsNotSwallowed
+--- PASS: TestAFailedEscalationIsNotSwallowed (0.00s)
+=== RUN   TestReachingTheDailyLossLimitTightensTheOperatingMode
+--- PASS: TestReachingTheDailyLossLimitTightensTheOperatingMode (0.23s)
+=== RUN   TestAnAccountWithNoCapitalTightensTheSameWay
+--- PASS: TestAnAccountWithNoCapitalTightensTheSameWay (0.22s)
+=== RUN   TestOtherChainRefusalsAreNotTriggers
+=== RUN   TestOtherChainRefusalsAreNotTriggers/a_symbol_nobody_allowed
+=== RUN   TestOtherChainRefusalsAreNotTriggers/a_reward:risk_under_the_floor
+=== RUN   TestOtherChainRefusalsAreNotTriggers/not_enough_cash
+--- PASS: TestOtherChainRefusalsAreNotTriggers (0.21s)
+    --- PASS: TestOtherChainRefusalsAreNotTriggers/a_symbol_nobody_allowed (0.00s)
+    --- PASS: TestOtherChainRefusalsAreNotTriggers/a_reward:risk_under_the_floor (0.00s)
+    --- PASS: TestOtherChainRefusalsAreNotTriggers/not_enough_cash (0.00s)
+=== RUN   TestReasonCodeEnumIsStable
+--- PASS: TestReasonCodeEnumIsStable (0.00s)
+=== RUN   TestPreflightRejectsUnsupportedOrderTypes
+=== RUN   TestPreflightRejectsUnsupportedOrderTypes/unknown_market
+=== RUN   TestPreflightRejectsUnsupportedOrderTypes/non-fractional_market_order
+=== RUN   TestPreflightRejectsUnsupportedOrderTypes/KR_order_priced_in_USD
+=== RUN   TestPreflightRejectsUnsupportedOrderTypes/limit_order_without_a_price
+=== RUN   TestPreflightRejectsUnsupportedOrderTypes/non-positive_quantity
+--- PASS: TestPreflightRejectsUnsupportedOrderTypes (0.00s)
+    --- PASS: TestPreflightRejectsUnsupportedOrderTypes/unknown_market (0.00s)
+    --- PASS: TestPreflightRejectsUnsupportedOrderTypes/non-fractional_market_order (0.00s)
+    --- PASS: TestPreflightRejectsUnsupportedOrderTypes/KR_order_priced_in_USD (0.00s)
+    --- PASS: TestPreflightRejectsUnsupportedOrderTypes/limit_order_without_a_price (0.00s)
+    --- PASS: TestPreflightRejectsUnsupportedOrderTypes/non-positive_quantity (0.00s)
+=== RUN   TestPreflightRejectsKRWFundedUSBuy
+--- PASS: TestPreflightRejectsKRWFundedUSBuy (0.00s)
+=== RUN   TestPreflightRejectsInsufficientBalance
+--- PASS: TestPreflightRejectsInsufficientBalance (0.00s)
+=== RUN   TestPreflightFailsClosedWhenTheBalanceIsUnreadable
+--- PASS: TestPreflightFailsClosedWhenTheBalanceIsUnreadable (0.00s)
+=== RUN   TestPreflightLetsSellsThrough
+--- PASS: TestPreflightLetsSellsThrough (0.00s)
+=== RUN   TestBrokerBranchesMapToStableReasonCodes
+=== RUN   TestBrokerBranchesMapToStableReasonCodes/interactive_trade_auth
+=== RUN   TestBrokerBranchesMapToStableReasonCodes/interactive_challenge_in_the_body
+=== RUN   TestBrokerBranchesMapToStableReasonCodes/fx_consent_branch
+=== RUN   TestBrokerBranchesMapToStableReasonCodes/fx_consent_in_the_body
+=== RUN   TestBrokerBranchesMapToStableReasonCodes/funding_branch
+=== RUN   TestBrokerBranchesMapToStableReasonCodes/plain_auth_rejection
+=== RUN   TestBrokerBranchesMapToStableReasonCodes/auth_rejection_carrying_its_status_code
+=== RUN   TestBrokerBranchesMapToStableReasonCodes/address_rejection_carrying_its_status_code
+--- PASS: TestBrokerBranchesMapToStableReasonCodes (0.00s)
+    --- PASS: TestBrokerBranchesMapToStableReasonCodes/interactive_trade_auth (0.00s)
+    --- PASS: TestBrokerBranchesMapToStableReasonCodes/interactive_challenge_in_the_body (0.00s)
+    --- PASS: TestBrokerBranchesMapToStableReasonCodes/fx_consent_branch (0.00s)
+    --- PASS: TestBrokerBranchesMapToStableReasonCodes/fx_consent_in_the_body (0.00s)
+    --- PASS: TestBrokerBranchesMapToStableReasonCodes/funding_branch (0.00s)
+    --- PASS: TestBrokerBranchesMapToStableReasonCodes/plain_auth_rejection (0.00s)
+    --- PASS: TestBrokerBranchesMapToStableReasonCodes/auth_rejection_carrying_its_status_code (0.00s)
+    --- PASS: TestBrokerBranchesMapToStableReasonCodes/address_rejection_carrying_its_status_code (0.00s)
+=== RUN   TestGatewayRefusesFailClosedBranchesBeforeDispatch
+--- PASS: TestGatewayRefusesFailClosedBranchesBeforeDispatch (0.23s)
+=== RUN   TestGatewayNeverAutoApprovesABranch
+--- PASS: TestGatewayNeverAutoApprovesABranch (0.25s)
+=== RUN   TestPlaceHappyPathConfirms
+--- PASS: TestPlaceHappyPathConfirms (0.23s)
+=== RUN   TestGuardianRefusalsNeverReachBroker
+=== RUN   TestGuardianRefusalsNeverReachBroker/no_decision_at_all
+=== RUN   TestGuardianRefusalsNeverReachBroker/a_decision_nobody_persisted
+=== RUN   TestGuardianRefusalsNeverReachBroker/preimage_of_a_different_order
+=== RUN   TestGuardianRefusalsNeverReachBroker/preimage_with_a_different_entry_price
+=== RUN   TestGuardianRefusalsNeverReachBroker/a_buy_wearing_a_RISK_REDUCING_class
+=== RUN   TestGuardianRefusalsNeverReachBroker/expired_before_submission
+=== RUN   TestGuardianRefusalsNeverReachBroker/quantity_over_the_snapshot_limit
+=== RUN   TestGuardianRefusalsNeverReachBroker/notional_over_the_snapshot_limit
+--- PASS: TestGuardianRefusalsNeverReachBroker (1.80s)
+    --- PASS: TestGuardianRefusalsNeverReachBroker/no_decision_at_all (0.22s)
+    --- PASS: TestGuardianRefusalsNeverReachBroker/a_decision_nobody_persisted (0.21s)
+    --- PASS: TestGuardianRefusalsNeverReachBroker/preimage_of_a_different_order (0.22s)
+    --- PASS: TestGuardianRefusalsNeverReachBroker/preimage_with_a_different_entry_price (0.23s)
+    --- PASS: TestGuardianRefusalsNeverReachBroker/a_buy_wearing_a_RISK_REDUCING_class (0.22s)
+    --- PASS: TestGuardianRefusalsNeverReachBroker/expired_before_submission (0.22s)
+    --- PASS: TestGuardianRefusalsNeverReachBroker/quantity_over_the_snapshot_limit (0.23s)
+    --- PASS: TestGuardianRefusalsNeverReachBroker/notional_over_the_snapshot_limit (0.25s)
+=== RUN   TestNonceIsOneShot
+--- PASS: TestNonceIsOneShot (0.24s)
+=== RUN   TestNonceIsOneShotUnderRace
+--- PASS: TestNonceIsOneShotUnderRace (0.23s)
+=== RUN   TestJournalFailureBlocksSubmission
+--- PASS: TestJournalFailureBlocksSubmission (0.21s)
+=== RUN   TestPolicyRefusalIsNotDispatched
+--- PASS: TestPolicyRefusalIsNotDispatched (0.23s)
+=== RUN   TestCancelAndAmendGoThroughTheSameGate
+--- PASS: TestCancelAndAmendGoThroughTheSameGate (0.25s)
+=== RUN   TestAmendRaisingQuantityIsLimitChecked
+--- PASS: TestAmendRaisingQuantityIsLimitChecked (0.22s)
+=== RUN   TestTransportOutcomeTable
+=== RUN   TestTransportOutcomeTable/accepted
+=== RUN   TestTransportOutcomeTable/bad_request
+=== RUN   TestTransportOutcomeTable/unauthorized
+=== RUN   TestTransportOutcomeTable/rate_limited
+=== RUN   TestTransportOutcomeTable/server_error
+=== RUN   TestTransportOutcomeTable/gateway_timeout
+--- PASS: TestTransportOutcomeTable (1.37s)
+    --- PASS: TestTransportOutcomeTable/accepted (0.22s)
+    --- PASS: TestTransportOutcomeTable/bad_request (0.23s)
+    --- PASS: TestTransportOutcomeTable/unauthorized (0.23s)
+    --- PASS: TestTransportOutcomeTable/rate_limited (0.23s)
+    --- PASS: TestTransportOutcomeTable/server_error (0.23s)
+    --- PASS: TestTransportOutcomeTable/gateway_timeout (0.23s)
+=== RUN   TestUnreachableBrokerIsNotDispatched
+--- PASS: TestUnreachableBrokerIsNotDispatched (0.24s)
+=== RUN   TestGatewayExposesNoRawMutator
+--- PASS: TestGatewayExposesNoRawMutator (0.00s)
+=== RUN   TestAPreMintedIntentIDIsTheOneRecorded
+--- PASS: TestAPreMintedIntentIDIsTheOneRecorded (0.26s)
+=== RUN   TestAnOmittedIntentIDStillMintsOne
+--- PASS: TestAnOmittedIntentIDStillMintsOne (0.23s)
+=== RUN   TestAReusedIntentIDIsARecoveryAndNotASecondIntent
+--- PASS: TestAReusedIntentIDIsARecoveryAndNotASecondIntent (0.25s)
+=== RUN   TestWriteReasonCodeGolden
+    gen_golden_test.go:17: set TOSSOS_UPDATE_GOLDEN=1 to regenerate the reason-code fixture
+--- SKIP: TestWriteReasonCodeGolden (0.00s)
+=== RUN   TestPartialFillInBothListsResolvesByDedup
+--- PASS: TestPartialFillInBothListsResolvesByDedup (0.23s)
+=== RUN   TestTwoDistinctOrdersStillPark
+--- PASS: TestTwoDistinctOrdersStillPark (0.23s)
+=== RUN   TestContaminatedWindowParksInsteadOfFailing
+--- PASS: TestContaminatedWindowParksInsteadOfFailing (0.30s)
+=== RUN   TestAnUnsentMutationDoesNotContaminate
+--- PASS: TestAnUnsentMutationDoesNotContaminate (0.36s)
+=== RUN   TestResolveFindsOrderOnSecondPage
+--- PASS: TestResolveFindsOrderOnSecondPage (0.29s)
+=== RUN   TestResolveFindsOrderInClosedList
+--- PASS: TestResolveFindsOrderInClosedList (0.27s)
+=== RUN   TestSingleAbsentScanIsNotAFailure
+--- PASS: TestSingleAbsentScanIsNotAFailure (0.30s)
+=== RUN   TestAbsenceNeedsStableObservationsAndDelta
+--- PASS: TestAbsenceNeedsStableObservationsAndDelta (0.31s)
+=== RUN   TestAbsenceRefusedWhenHoldingsMoved
+--- PASS: TestAbsenceRefusedWhenHoldingsMoved (0.28s)
+=== RUN   TestAbsenceRefusedWithoutBaseline
+--- PASS: TestAbsenceRefusedWithoutBaseline (0.28s)
+=== RUN   TestAmbiguousMatchIsUnresolved
+--- PASS: TestAmbiguousMatchIsUnresolved (0.23s)
+=== RUN   TestUnresolvedBlocksTheSymbolUntilAnOperatorResolves
+--- PASS: TestUnresolvedBlocksTheSymbolUntilAnOperatorResolves (0.29s)
+=== RUN   TestOperatorResolveRejectsNonTerminalTargets
+--- PASS: TestOperatorResolveRejectsNonTerminalTargets (0.27s)
+=== RUN   TestResolverNeverResubmits
+--- PASS: TestResolverNeverResubmits (0.28s)
+=== RUN   TestResolveIsIdempotent
+--- PASS: TestResolveIsIdempotent (0.23s)
+=== RUN   TestOneInFlightMutationPerSymbol
+--- PASS: TestOneInFlightMutationPerSymbol (0.27s)
+=== RUN   TestConcurrentMutationsOnOneSymbolSerialise
+--- PASS: TestConcurrentMutationsOnOneSymbolSerialise (0.24s)
+=== RUN   TestScanOrdersWalksEveryPage
+=== RUN   TestScanOrdersWalksEveryPage/walks_to_the_end
+=== RUN   TestScanOrdersWalksEveryPage/repeated_cursor
+=== RUN   TestScanOrdersWalksEveryPage/page_limit
+--- PASS: TestScanOrdersWalksEveryPage (0.00s)
+    --- PASS: TestScanOrdersWalksEveryPage/walks_to_the_end (0.00s)
+    --- PASS: TestScanOrdersWalksEveryPage/repeated_cursor (0.00s)
+    --- PASS: TestScanOrdersWalksEveryPage/page_limit (0.00s)
+=== RUN   TestAnAutomaticTighteningRefusesTheNextPlace
+--- PASS: TestAnAutomaticTighteningRefusesTheNextPlace (0.25s)
+=== RUN   TestHaltAllStillPermitsAnExit
+--- PASS: TestHaltAllStillPermitsAnExit (0.22s)
+=== RUN   TestARelaxationClearsTheLatch
+--- PASS: TestARelaxationClearsTheLatch (0.26s)
+=== RUN   TestTheRestartRebuildsTheModeLatch
+--- PASS: TestTheRestartRebuildsTheModeLatch (0.24s)
+=== RUN   TestTheModeLatchIsReplacedRatherThanAccumulated
+--- PASS: TestTheModeLatchIsReplacedRatherThanAccumulated (0.25s)
+=== RUN   TestTheModeSnapshotIsTheSharedView
+--- PASS: TestTheModeSnapshotIsTheSharedView (0.23s)
+=== RUN   TestAReductionIsNotObserved
+--- PASS: TestAReductionIsNotObserved (0.23s)
+=== RUN   TestOnlyEntriesReachTheObservationTable
+--- PASS: TestOnlyEntriesReachTheObservationTable (0.22s)
+=== RUN   TestTheRiskPackageStaysFreeOfTheJournal
+--- PASS: TestTheRiskPackageStaysFreeOfTheJournal (0.00s)
+=== RUN   TestTheObservationIsBuiltOutsideTheChain
+--- PASS: TestTheObservationIsBuiltOutsideTheChain (0.00s)
+=== RUN   TestARefusalIsRecordedForTheFirstTime
+--- PASS: TestARefusalIsRecordedForTheFirstTime (0.22s)
+=== RUN   TestAnIssuedVerdictIsRecordedWithItsDecision
+--- PASS: TestAnIssuedVerdictIsRecordedWithItsDecision (0.22s)
+=== RUN   TestChainAllowFollowedByIssuanceRefusalIsItsOwnOutcome
+--- PASS: TestChainAllowFollowedByIssuanceRefusalIsItsOwnOutcome (0.22s)
+=== RUN   TestTheCostBasisIsRecordedWithEveryRow
+--- PASS: TestTheCostBasisIsRecordedWithEveryRow (0.22s)
+=== RUN   TestADifferentRateSetIsADifferentFingerprint
+--- PASS: TestADifferentRateSetIsADifferentFingerprint (0.45s)
+=== RUN   TestASlowObservationDoesNotDelayTheIssuance
+--- PASS: TestASlowObservationDoesNotDelayTheIssuance (0.45s)
+=== RUN   TestAFailedObservationDoesNotChangeTheVerdict
+--- PASS: TestAFailedObservationDoesNotChangeTheVerdict (0.22s)
+=== RUN   TestALostRefusalIsCountedAsUnrecoverable
+--- PASS: TestALostRefusalIsCountedAsUnrecoverable (0.21s)
+=== RUN   TestAFullQueueDropsRatherThanBlocks
+--- PASS: TestAFullQueueDropsRatherThanBlocks (0.00s)
+=== RUN   TestAGuardianWithNoObserverIssuesAsBefore
+--- PASS: TestAGuardianWithNoObserverIssuesAsBefore (0.22s)
+=== RUN   TestObservationsReachTheJournalEndToEnd
+--- PASS: TestObservationsReachTheJournalEndToEnd (0.24s)
+=== RUN   TestScanOrdersWalksARealPaginatedEndpoint
+--- PASS: TestScanOrdersWalksARealPaginatedEndpoint (0.00s)
+=== RUN   TestScanOrdersRefusesARepeatingCursor
+--- PASS: TestScanOrdersRefusesARepeatingCursor (0.00s)
+=== RUN   TestScanOrdersStopsAtThePageCeiling
+--- PASS: TestScanOrdersStopsAtThePageCeiling (0.00s)
+=== RUN   TestScanOrdersPropagatesBrokerErrors
+--- PASS: TestScanOrdersPropagatesBrokerErrors (0.00s)
+=== RUN   TestOfficialAccountReadsHoldingsAndBuyingPower
+--- PASS: TestOfficialAccountReadsHoldingsAndBuyingPower (0.00s)
+=== RUN   TestARaisingMutationIsRefusedWhileProtectionIsUnwired
+--- PASS: TestARaisingMutationIsRefusedWhileProtectionIsUnwired (0.24s)
+=== RUN   TestAReducingMutationIsAdmittedWhileProtectionIsUnwired
+--- PASS: TestAReducingMutationIsAdmittedWhileProtectionIsUnwired (0.25s)
+=== RUN   TestNoShippedFileClaimsProtection
+=== PAUSE TestNoShippedFileClaimsProtection
+=== RUN   TestTheBuildMarkerIsAConstant
+=== PAUSE TestTheBuildMarkerIsAConstant
+=== RUN   TestARebuiltProjectionBlocksTheScopesTheJournalCarries
+--- PASS: TestARebuiltProjectionBlocksTheScopesTheJournalCarries (0.00s)
+=== RUN   TestASymbolStateBlocksEveryMarket
+--- PASS: TestASymbolStateBlocksEveryMarket (0.00s)
+=== RUN   TestAnAccountWideStateBlocksEverything
+--- PASS: TestAnAccountWideStateBlocksEverything (0.00s)
+=== RUN   TestTheProjectionReplacesRatherThanMerges
+--- PASS: TestTheProjectionReplacesRatherThanMerges (0.00s)
+=== RUN   TestTheProjectionLeavesOtherProducersAlone
+--- PASS: TestTheProjectionLeavesOtherProducersAlone (0.00s)
+=== RUN   TestOperatorOnlyCausesProjectToTheOperatorOnlyReason
+--- PASS: TestOperatorOnlyCausesProjectToTheOperatorOnlyReason (0.00s)
+=== RUN   TestReconcileAndUnresolvedAreNotConflated
+--- PASS: TestReconcileAndUnresolvedAreNotConflated (0.00s)
+=== RUN   TestAReleasedStateIsNotProjected
+--- PASS: TestAReleasedStateIsNotProjected (0.00s)
+=== RUN   TestReplaySendsExactlyTheStoredBody
+--- PASS: TestReplaySendsExactlyTheStoredBody (0.24s)
+=== RUN   TestReplayStoresTheIdentifierVerbatim
+--- PASS: TestReplayStoresTheIdentifierVerbatim (0.25s)
+=== RUN   TestReplayIsOffWithoutAttestation
+--- PASS: TestReplayIsOffWithoutAttestation (0.23s)
+=== RUN   TestReplayIsRefusedWithoutAnAttestationHook
+--- PASS: TestReplayIsRefusedWithoutAnAttestationHook (0.23s)
+=== RUN   TestReplayIsRefusedOutsideTheKeyWindow
+--- PASS: TestReplayIsRefusedOutsideTheKeyWindow (0.23s)
+=== RUN   TestSecondReplayRechecksTheWindow
+--- PASS: TestSecondReplayRechecksTheWindow (0.24s)
+=== RUN   TestReplayStopsAtTheCap
+--- PASS: TestReplayStopsAtTheCap (0.26s)
+=== RUN   TestReplayKeepsTheMinimumInterval
+--- PASS: TestReplayKeepsTheMinimumInterval (0.25s)
+=== RUN   TestReplayRefusesASettledAttempt
+--- PASS: TestReplayRefusesASettledAttempt (0.25s)
+=== RUN   TestReplayRefusesACancel
+--- PASS: TestReplayRefusesACancel (0.23s)
+=== RUN   TestReplayBodyCannotBeBuiltOutsideThePackage
+--- PASS: TestReplayBodyCannotBeBuiltOutsideThePackage (0.00s)
+=== RUN   TestReplayUsesTheStoredBodyEvenAfterASerializerChange
+--- PASS: TestReplayUsesTheStoredBodyEvenAfterASerializerChange (0.26s)
+=== RUN   TestReplay409DoesNotConsumeTheCap
+--- PASS: TestReplay409DoesNotConsumeTheCap (0.24s)
+=== RUN   TestReplay422KeyConflictParksAndNeverFails
+--- PASS: TestReplay422KeyConflictParksAndNeverFails (0.24s)
+=== RUN   TestReplayKeyConflictEnqueuesTheCriticalAlert
+--- PASS: TestReplayKeyConflictEnqueuesTheCriticalAlert (0.24s)
+=== RUN   TestReplayEchoingADifferentKeyParks
+--- PASS: TestReplayEchoingADifferentKeyParks (0.24s)
+=== RUN   TestReplayOther422IsNotAFailure
+--- PASS: TestReplayOther422IsNotAFailure (0.27s)
+=== RUN   TestReplayWithNoAnswerCountsAndFallsBack
+--- PASS: TestReplayWithNoAnswerCountsAndFallsBack (0.25s)
+=== RUN   TestReplayStopsWaitingOnAPermanent409
+--- PASS: TestReplayStopsWaitingOnAPermanent409 (0.26s)
+=== RUN   TestAnEntryDecisionWithNoHeldReservationIsRefused
+--- PASS: TestAnEntryDecisionWithNoHeldReservationIsRefused (0.23s)
+=== RUN   TestAReleasedReservationNoLongerAuthorisesTheEntry
+--- PASS: TestAReleasedReservationNoLongerAuthorisesTheEntry (0.23s)
+=== RUN   TestAnExitNeedsNoReservation
+--- PASS: TestAnExitNeedsNoReservation (0.22s)
+=== RUN   TestACancelNeedsNoReservation
+--- PASS: TestACancelNeedsNoReservation (0.23s)
+=== RUN   TestTheGuardiansOwnIssuanceSubmits
+--- PASS: TestTheGuardiansOwnIssuanceSubmits (0.23s)
+=== RUN   TestClassifyQueryError
+=== RUN   TestClassifyQueryError/nil
+=== RUN   TestClassifyQueryError/transport
+=== RUN   TestClassifyQueryError/server_5xx
+=== RUN   TestClassifyQueryError/rate_limited
+=== RUN   TestClassifyQueryError/auth
+=== RUN   TestClassifyQueryError/ip_not_allowed
+=== RUN   TestClassifyQueryError/auth_carrying_its_status_code
+=== RUN   TestClassifyQueryError/ip_not_allowed_carrying_its_status_code
+=== RUN   TestClassifyQueryError/bad_request
+=== RUN   TestClassifyQueryError/not_found
+=== RUN   TestClassifyQueryError/context_canceled
+=== RUN   TestClassifyQueryError/deadline
+=== RUN   TestClassifyQueryError/unknown
+--- PASS: TestClassifyQueryError (0.00s)
+    --- PASS: TestClassifyQueryError/nil (0.00s)
+    --- PASS: TestClassifyQueryError/transport (0.00s)
+    --- PASS: TestClassifyQueryError/server_5xx (0.00s)
+    --- PASS: TestClassifyQueryError/rate_limited (0.00s)
+    --- PASS: TestClassifyQueryError/auth (0.00s)
+    --- PASS: TestClassifyQueryError/ip_not_allowed (0.00s)
+    --- PASS: TestClassifyQueryError/auth_carrying_its_status_code (0.00s)
+    --- PASS: TestClassifyQueryError/ip_not_allowed_carrying_its_status_code (0.00s)
+    --- PASS: TestClassifyQueryError/bad_request (0.00s)
+    --- PASS: TestClassifyQueryError/not_found (0.00s)
+    --- PASS: TestClassifyQueryError/context_canceled (0.00s)
+    --- PASS: TestClassifyQueryError/deadline (0.00s)
+    --- PASS: TestClassifyQueryError/unknown (0.00s)
+=== RUN   TestQueryRetriesTransientThenSucceeds
+--- PASS: TestQueryRetriesTransientThenSucceeds (0.00s)
+=== RUN   TestQueryStopsAtTheAttemptBudget
+--- PASS: TestQueryStopsAtTheAttemptBudget (0.00s)
+=== RUN   TestQueryDoesNotRetryPermanentOrAuth
+=== RUN   TestQueryDoesNotRetryPermanentOrAuth/permanent_400
+=== RUN   TestQueryDoesNotRetryPermanentOrAuth/auth_401
+--- PASS: TestQueryDoesNotRetryPermanentOrAuth (0.00s)
+    --- PASS: TestQueryDoesNotRetryPermanentOrAuth/permanent_400 (0.00s)
+    --- PASS: TestQueryDoesNotRetryPermanentOrAuth/auth_401 (0.00s)
+=== RUN   TestAuthFailureLatchesEntryImmediately
+--- PASS: TestAuthFailureLatchesEntryImmediately (0.00s)
+=== RUN   TestRetryAfterIsHonouredUpToTheCap
+=== RUN   TestRetryAfterIsHonouredUpToTheCap/within_the_cap
+=== RUN   TestRetryAfterIsHonouredUpToTheCap/beyond_the_cap
+--- PASS: TestRetryAfterIsHonouredUpToTheCap (0.00s)
+    --- PASS: TestRetryAfterIsHonouredUpToTheCap/within_the_cap (0.00s)
+    --- PASS: TestRetryAfterIsHonouredUpToTheCap/beyond_the_cap (0.00s)
+=== RUN   TestRetryAfterTransportCapturesTheHeader
+=== RUN   TestRetryAfterTransportCapturesTheHeader/seconds
+=== RUN   TestRetryAfterTransportCapturesTheHeader/http_date
+=== RUN   TestRetryAfterTransportCapturesTheHeader/garbage
+--- PASS: TestRetryAfterTransportCapturesTheHeader (0.00s)
+    --- PASS: TestRetryAfterTransportCapturesTheHeader/seconds (0.00s)
+    --- PASS: TestRetryAfterTransportCapturesTheHeader/http_date (0.00s)
+    --- PASS: TestRetryAfterTransportCapturesTheHeader/garbage (0.00s)
+=== RUN   TestStalenessBlocksAndAutoClears
+--- PASS: TestStalenessBlocksAndAutoClears (0.00s)
+=== RUN   TestGatewayBlocksNewEntryButNotExits
+--- PASS: TestGatewayBlocksNewEntryButNotExits (0.27s)
+=== RUN   TestMutationsAreNeverRetried
+--- PASS: TestMutationsAreNeverRetried (0.27s)
+=== RUN   TestDefaultsMatchThePublishedMatrix
+--- PASS: TestDefaultsMatchThePublishedMatrix (0.00s)
+=== RUN   TestJitterStaysBounded
+--- PASS: TestJitterStaysBounded (0.00s)
+=== RUN   TestQFinalAccountBaseFXRefusalMatrixKRUS
+=== RUN   TestQFinalAccountBaseFXRefusalMatrixKRUS/KR/missing
+=== RUN   TestQFinalAccountBaseFXRefusalMatrixKRUS/KR/stale
+=== RUN   TestQFinalAccountBaseFXRefusalMatrixKRUS/KR/wrong-pair
+=== RUN   TestQFinalAccountBaseFXRefusalMatrixKRUS/KR/cross-market-owner
+=== RUN   TestQFinalAccountBaseFXRefusalMatrixKRUS/US/missing
+=== RUN   TestQFinalAccountBaseFXRefusalMatrixKRUS/US/stale
+=== RUN   TestQFinalAccountBaseFXRefusalMatrixKRUS/US/wrong-pair
+=== RUN   TestQFinalAccountBaseFXRefusalMatrixKRUS/US/cross-market-owner
+--- PASS: TestQFinalAccountBaseFXRefusalMatrixKRUS (1.83s)
+    --- PASS: TestQFinalAccountBaseFXRefusalMatrixKRUS/KR/missing (0.26s)
+    --- PASS: TestQFinalAccountBaseFXRefusalMatrixKRUS/KR/stale (0.23s)
+    --- PASS: TestQFinalAccountBaseFXRefusalMatrixKRUS/KR/wrong-pair (0.23s)
+    --- PASS: TestQFinalAccountBaseFXRefusalMatrixKRUS/KR/cross-market-owner (0.21s)
+    --- PASS: TestQFinalAccountBaseFXRefusalMatrixKRUS/US/missing (0.22s)
+    --- PASS: TestQFinalAccountBaseFXRefusalMatrixKRUS/US/stale (0.22s)
+    --- PASS: TestQFinalAccountBaseFXRefusalMatrixKRUS/US/wrong-pair (0.22s)
+    --- PASS: TestQFinalAccountBaseFXRefusalMatrixKRUS/US/cross-market-owner (0.25s)
+=== RUN   TestQFinalPrecheckCapsKRByGuardianAndAllMonetaryBucketsBeforeAtomicIssuance
+--- PASS: TestQFinalPrecheckCapsKRByGuardianAndAllMonetaryBucketsBeforeAtomicIssuance (0.24s)
+=== RUN   TestQFinalPrecheckUSUSDWithKRWGuardianFailsCurrencyUnresolvedAndCollectsNothing
+--- PASS: TestQFinalPrecheckUSUSDWithKRWGuardianFailsCurrencyUnresolvedAndCollectsNothing (0.29s)
+=== RUN   TestQFinalPrecheckRejectsCrossedMarketCurrencyPairs
+--- PASS: TestQFinalPrecheckRejectsCrossedMarketCurrencyPairs (0.25s)
+=== RUN   TestQFinalPrecheckRejectsCallerConstructedFXEvidenceWithoutOpaqueAuthority
+--- PASS: TestQFinalPrecheckRejectsCallerConstructedFXEvidenceWithoutOpaqueAuthority (0.23s)
+=== RUN   TestQFinalPrecheckSealsValidSameQFinalEvidenceSubstitution
+--- PASS: TestQFinalPrecheckSealsValidSameQFinalEvidenceSubstitution (0.27s)
+=== RUN   TestQFinalFinalIssuanceRechecksExpiredEvidenceAtGuardianClock
+--- PASS: TestQFinalFinalIssuanceRechecksExpiredEvidenceAtGuardianClock (0.22s)
+=== RUN   TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker
+--- PASS: TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker (0.22s)
+=== RUN   TestGatewayLastMomentQFinalBarrierRefusesHoldReleaseAfterInitialAdmissionCheck
+--- PASS: TestGatewayLastMomentQFinalBarrierRefusesHoldReleaseAfterInitialAdmissionCheck (0.23s)
+=== RUN   TestConcurrentIssuancesCannotExceedTheAggregateLimit
+--- PASS: TestConcurrentIssuancesCannotExceedTheAggregateLimit (0.23s)
+=== RUN   TestATighteningBetweenIssuanceAndSubmissionIsRefusedAtTheGateway
+--- PASS: TestATighteningBetweenIssuanceAndSubmissionIsRefusedAtTheGateway (0.22s)
+=== RUN   TestRiskGuardianIssueStrategyEntryRejectsInvalidOpaqueDecisionBeforeCollection
+--- PASS: TestRiskGuardianIssueStrategyEntryRejectsInvalidOpaqueDecisionBeforeCollection (0.22s)
+=== RUN   TestRiskGuardianIssueEntryRejectsMissingCollectorBeforeIssuingAuthority
+--- PASS: TestRiskGuardianIssueEntryRejectsMissingCollectorBeforeIssuingAuthority (0.22s)
+=== RUN   TestTheGuardianIssuesTheDecisionAndItsReservationTogether
+--- PASS: TestTheGuardianIssuesTheDecisionAndItsReservationTogether (0.21s)
+=== RUN   TestTheDecisionCarriesThePolicysOwnLimits
+--- PASS: TestTheDecisionCarriesThePolicysOwnLimits (0.22s)
+=== RUN   TestTheDefaultPolicyStatesTheSmallLiveSet
+--- PASS: TestTheDefaultPolicyStatesTheSmallLiveSet (0.00s)
+=== RUN   TestAChainRefusalIssuesNothing
+--- PASS: TestAChainRefusalIssuesNothing (0.21s)
+=== RUN   TestARefusedReservationLeavesNoSubmittableDecision
+--- PASS: TestARefusedReservationLeavesNoSubmittableDecision (0.22s)
+=== RUN   TestTheIssuanceReasonsAreDistinguishable
+=== RUN   TestTheIssuanceReasonsAreDistinguishable/LIMIT_REACHED
+=== RUN   TestTheIssuanceReasonsAreDistinguishable/SNAPSHOT_RECOLLECTION_EXHAUSTED
+=== RUN   TestTheIssuanceReasonsAreDistinguishable/DECISION_EXPIRED
+--- PASS: TestTheIssuanceReasonsAreDistinguishable (0.67s)
+    --- PASS: TestTheIssuanceReasonsAreDistinguishable/LIMIT_REACHED (0.23s)
+    --- PASS: TestTheIssuanceReasonsAreDistinguishable/SNAPSHOT_RECOLLECTION_EXHAUSTED (0.22s)
+    --- PASS: TestTheIssuanceReasonsAreDistinguishable/DECISION_EXPIRED (0.22s)
+=== RUN   TestReCollectionDoesNotReRunTheChain
+--- PASS: TestReCollectionDoesNotReRunTheChain (0.22s)
+=== RUN   TestAReductionIsIssuedWithNoLimitsAndNoReservation
+--- PASS: TestAReductionIsIssuedWithNoLimitsAndNoReservation (0.21s)
+=== RUN   TestAReductionBeyondTheHoldingIsRefused
+--- PASS: TestAReductionBeyondTheHoldingIsRefused (0.21s)
+=== RUN   TestAGuardianRefusesToExistWithoutWhatItNeeds
+=== RUN   TestAGuardianRefusesToExistWithoutWhatItNeeds/no_journal
+=== RUN   TestAGuardianRefusesToExistWithoutWhatItNeeds/no_account
+=== RUN   TestAGuardianRefusesToExistWithoutWhatItNeeds/no_policy_version
+=== RUN   TestAGuardianRefusesToExistWithoutWhatItNeeds/no_cost_model
+=== RUN   TestAGuardianRefusesToExistWithoutWhatItNeeds/an_unusable_policy
+=== RUN   TestAGuardianRefusesToExistWithoutWhatItNeeds/a_policy_with_no_currency
+--- PASS: TestAGuardianRefusesToExistWithoutWhatItNeeds (0.22s)
+    --- PASS: TestAGuardianRefusesToExistWithoutWhatItNeeds/no_journal (0.00s)
+    --- PASS: TestAGuardianRefusesToExistWithoutWhatItNeeds/no_account (0.00s)
+    --- PASS: TestAGuardianRefusesToExistWithoutWhatItNeeds/no_policy_version (0.00s)
+    --- PASS: TestAGuardianRefusesToExistWithoutWhatItNeeds/no_cost_model (0.00s)
+    --- PASS: TestAGuardianRefusesToExistWithoutWhatItNeeds/an_unusable_policy (0.00s)
+    --- PASS: TestAGuardianRefusesToExistWithoutWhatItNeeds/a_policy_with_no_currency (0.00s)
+=== RUN   TestTheDraftAuthorizeRefusesBothClasses
+--- PASS: TestTheDraftAuthorizeRefusesBothClasses (0.21s)
+=== RUN   TestTheGuardianRefusesAnIntentForAnotherAccount
+--- PASS: TestTheGuardianRefusesAnIntentForAnotherAccount (0.22s)
+=== RUN   TestPlaceRoundTripConfirmsTheCreatedOrder
+--- PASS: TestPlaceRoundTripConfirmsTheCreatedOrder (0.23s)
+=== RUN   TestPlaceRoundTripFailuresLeaveInDoubt
+=== RUN   TestPlaceRoundTripFailuresLeaveInDoubt/the_order_cannot_be_read_back_at_all
+=== RUN   TestPlaceRoundTripFailuresLeaveInDoubt/the_read-back_names_a_different_order
+=== RUN   TestPlaceRoundTripFailuresLeaveInDoubt/the_read-back_differs_only_by_whitespace
+=== RUN   TestPlaceRoundTripFailuresLeaveInDoubt/the_identifier_turns_up_on_another_symbol
+--- PASS: TestPlaceRoundTripFailuresLeaveInDoubt (0.97s)
+    --- PASS: TestPlaceRoundTripFailuresLeaveInDoubt/the_order_cannot_be_read_back_at_all (0.25s)
+    --- PASS: TestPlaceRoundTripFailuresLeaveInDoubt/the_read-back_names_a_different_order (0.25s)
+    --- PASS: TestPlaceRoundTripFailuresLeaveInDoubt/the_read-back_differs_only_by_whitespace (0.23s)
+    --- PASS: TestPlaceRoundTripFailuresLeaveInDoubt/the_identifier_turns_up_on_another_symbol (0.24s)
+=== RUN   TestCancelIsNotRoundTripped
+--- PASS: TestCancelIsNotRoundTripped (0.24s)
+=== RUN   TestBrokerOrderIDIsStoredVerbatim
+--- PASS: TestBrokerOrderIDIsStoredVerbatim (0.23s)
+=== RUN   TestBlankBrokerOrderIDIsNotAnAck
+--- PASS: TestBlankBrokerOrderIDIsNotAnAck (0.23s)
+=== RUN   TestNoIdentifierShapeValidation
+--- PASS: TestNoIdentifierShapeValidation (0.99s)
+=== RUN   TestResolveConfirmedStoresTheIdentifierVerbatim
+--- PASS: TestResolveConfirmedStoresTheIdentifierVerbatim (0.47s)
+=== RUN   TestPairedStrategyReadBudgetsRemainMarketLocal
+--- PASS: TestPairedStrategyReadBudgetsRemainMarketLocal (0.00s)
+=== RUN   TestSymbolBlockStopsOnlyThatSymbol
+--- PASS: TestSymbolBlockStopsOnlyThatSymbol (0.00s)
+=== RUN   TestCheckEntryStaysAccountWide
+--- PASS: TestCheckEntryStaysAccountWide (0.00s)
+=== RUN   TestAccountBlockCoversEveryTradableSymbol
+--- PASS: TestAccountBlockCoversEveryTradableSymbol (0.00s)
+=== RUN   TestAccountReasonWinsOverSymbolReason
+--- PASS: TestAccountReasonWinsOverSymbolReason (0.00s)
+=== RUN   TestMarketlessBlockAppliesEverywhere
+--- PASS: TestMarketlessBlockAppliesEverywhere (0.00s)
+=== RUN   TestBlockSymbolWithoutASymbolLatchesTheAccount
+--- PASS: TestBlockSymbolWithoutASymbolLatchesTheAccount (0.00s)
+=== RUN   TestReblockingKeepsTheOriginalObservation
+--- PASS: TestReblockingKeepsTheOriginalObservation (0.00s)
+=== RUN   TestClearSymbolReleasesOnlyThatBlock
+--- PASS: TestClearSymbolReleasesOnlyThatBlock (0.00s)
+=== RUN   TestClearSymbolReason
+--- PASS: TestClearSymbolReason (0.00s)
+=== RUN   TestStalenessStillAppliesToTheNarrowQuestion
+--- PASS: TestStalenessStillAppliesToTheNarrowQuestion (0.00s)
+=== RUN   TestGatewayAsksTheSymbolQuestion
+--- PASS: TestGatewayAsksTheSymbolQuestion (0.24s)
+=== RUN   TestGatewayNeverGatesAnExitOnASymbolBlock
+--- PASS: TestGatewayNeverGatesAnExitOnASymbolBlock (0.22s)
+=== RUN   TestSymbolBlocksAreConcurrencySafe
+--- PASS: TestSymbolBlocksAreConcurrencySafe (0.00s)
+=== CONT  TestNoShippedFileClaimsProtection
+=== CONT  TestTheBuildMarkerIsAConstant
+--- PASS: TestTheBuildMarkerIsAConstant (0.00s)
+--- PASS: TestNoShippedFileClaimsProtection (0.10s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	89.805s
+FAIL
+rc=1

@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/a098_the_engine_registers_a_sender_test.go",
-  "source_sha256": "a626861e1479fde89301ff26b0dc4af80f0647498d3cd1bfc9805b7eb94b4387",
+  "source_sha256": "0084b4e6f4ac39db0e677c5ade76d535fb48928c1df59be5317d92d399ac0c79",
   "package": "main",
   "function": "TestProductionRuntimeStartsExactlyOneAlertDeliverer",
   "signature": "TestProductionRuntimeStartsExactlyOneAlertDeliverer(params=1, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 31,
+    "line": 32,
     "column": 2
   },
   "branches": [
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 28,
+        "line": 29,
         "column": 2
       }
     }
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 28,
+        "line": 29,
         "column": 12
       },
       "text": "runtime.AuxiliaryNames"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 28,
+        "line": 29,
         "column": 39
       },
       "text": "reflect.DeepEqual"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 29,
+        "line": 30,
         "column": 3
       },
       "text": "t.Fatalf"
@@ -108,14 +108,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 27,
+        "line": 28,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 28,
+        "line": 29,
         "column": 5
       }
     }

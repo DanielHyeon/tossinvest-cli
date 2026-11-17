@@ -1,0 +1,10 @@
+=== RUN   TestProductionRuntimeStartsExactlyOneAlertDeliverer
+    a098_the_engine_registers_a_sender_test.go:30: production auxiliary names=[alert-delivery normal-alert-relay attestation-watch manual-buy-refresh exit-lower-limit-refresh] want=[alert-delivery normal-alert-relay attestation-watch manual-buy-refresh exit-lower-limit-refresh in-doubt-settle] — 밀린 알림을 보내는 주체가 없다
+--- FAIL: TestProductionRuntimeStartsExactlyOneAlertDeliverer (0.00s)
+=== RUN   TestA193TheProductionRuntimeStartsTheSettlerAsAuxiliary
+    a193_in_doubt_settle_wiring_test.go:19: auxiliary executors [alert-delivery normal-alert-relay attestation-watch manual-buy-refresh exit-lower-limit-refresh] do not include the in-doubt settler
+--- FAIL: TestA193TheProductionRuntimeStartsTheSettlerAsAuxiliary (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.011s
+FAIL
+rc=1

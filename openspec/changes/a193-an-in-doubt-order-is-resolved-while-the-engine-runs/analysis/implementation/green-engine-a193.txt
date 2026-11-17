@@ -1,0 +1,73 @@
+=== RUN   TestA193AnInDoubtPlaceFoundInTheListIsConfirmedWhileTheEngineRuns
+--- PASS: TestA193AnInDoubtPlaceFoundInTheListIsConfirmedWhileTheEngineRuns (0.24s)
+=== RUN   TestA193AnInDoubtSellWithoutBaselineParksAndTheParkCauseAlertsOnce
+--- PASS: TestA193AnInDoubtSellWithoutBaselineParksAndTheParkCauseAlertsOnce (0.24s)
+=== RUN   TestA193AnInDoubtBuyProvenAbsentIsFailedConfirmed
+--- PASS: TestA193AnInDoubtBuyProvenAbsentIsFailedConfirmed (0.25s)
+=== RUN   TestA193ACancelledResolutionLeavesTheAttemptInDoubt
+=== RUN   TestA193ACancelledResolutionLeavesTheAttemptInDoubt/during_the_poll_sleep
+=== RUN   TestA193ACancelledResolutionLeavesTheAttemptInDoubt/during_a_list_scan
+=== RUN   TestA193ACancelledResolutionLeavesTheAttemptInDoubt/during_the_absence_cross-check
+=== RUN   TestA193ACancelledResolutionLeavesTheAttemptInDoubt/a_stale_attempt_swept_with_a_cancelled_context_records_nothing
+--- PASS: TestA193ACancelledResolutionLeavesTheAttemptInDoubt (0.89s)
+    --- PASS: TestA193ACancelledResolutionLeavesTheAttemptInDoubt/during_the_poll_sleep (0.22s)
+    --- PASS: TestA193ACancelledResolutionLeavesTheAttemptInDoubt/during_a_list_scan (0.21s)
+    --- PASS: TestA193ACancelledResolutionLeavesTheAttemptInDoubt/during_the_absence_cross-check (0.25s)
+    --- PASS: TestA193ACancelledResolutionLeavesTheAttemptInDoubt/a_stale_attempt_swept_with_a_cancelled_context_records_nothing (0.21s)
+=== RUN   TestA193AShutdownMidResolutionIsAGracefulAuxiliaryStop
+--- PASS: TestA193AShutdownMidResolutionIsAGracefulAuxiliaryStop (0.21s)
+=== RUN   TestA193TheExitObserverDoesNotWaitForAResolution
+--- PASS: TestA193TheExitObserverDoesNotWaitForAResolution (0.26s)
+=== RUN   TestA193AttemptsAreResolvedOneAtATime
+--- PASS: TestA193AttemptsAreResolvedOneAtATime (0.25s)
+=== RUN   TestA193TheSameAttemptIsNotResolvedTwice
+--- PASS: TestA193TheSameAttemptIsNotResolvedTwice (0.33s)
+=== RUN   TestA193AnAttemptInDoubtPastTheBoundAlertsOnce
+--- PASS: TestA193AnAttemptInDoubtPastTheBoundAlertsOnce (0.27s)
+=== RUN   TestA193StaleFallsBackToTheRecordedTime
+--- PASS: TestA193StaleFallsBackToTheRecordedTime (0.24s)
+=== RUN   TestA193AFailedStaleRecordIsRetried
+--- PASS: TestA193AFailedStaleRecordIsRetried (0.28s)
+=== RUN   TestA193TheStaleAlertCarriesNoAccountQuantityOrPrice
+--- PASS: TestA193TheStaleAlertCarriesNoAccountQuantityOrPrice (0.24s)
+=== RUN   TestA193OnlyInDoubtPlaceAttemptsAreTouched
+--- PASS: TestA193OnlyInDoubtPlaceAttemptsAreTouched (0.24s)
+=== RUN   TestA193NoInDoubtMeansNoBrokerCall
+--- PASS: TestA193NoInDoubtMeansNoBrokerCall (0.23s)
+=== RUN   TestA193TheSettlerNeverReplays
+--- PASS: TestA193TheSettlerNeverReplays (0.00s)
+=== RUN   TestA193ResolutionRequestsAreBounded
+    a193_in_doubt_settle_test.go:809: a193 실측 1: found                lists=2 account=0 state=CONFIRMED fake-elapsed=0s
+    a193_in_doubt_settle_test.go:809: a193 실측 1: absent proven        lists=20 account=2 state=FAILED_CONFIRMED fake-elapsed=45s
+    a193_in_doubt_settle_test.go:809: a193 실측 1: scan always fails    lists=60 account=0 state=UNRESOLVED_IN_DOUBT fake-elapsed=4m55s
+    a193_in_doubt_settle_test.go:809: a193 실측 1: 50 pages, 20s each   lists=100 account=0 state=UNRESOLVED_IN_DOUBT fake-elapsed=33m20s
+--- PASS: TestA193ResolutionRequestsAreBounded (1.03s)
+=== RUN   TestA193ASettlerStopRecordsACritical
+--- PASS: TestA193ASettlerStopRecordsACritical (0.23s)
+=== RUN   TestA193AnUnwiredSettlerStopsLoudly
+--- PASS: TestA193AnUnwiredSettlerStopsLoudly (0.00s)
+=== RUN   TestA193TheSettlerStartsAfterRecovery
+--- PASS: TestA193TheSettlerStartsAfterRecovery (0.23s)
+=== RUN   TestA193FirstSightIsAlertedOnce
+--- PASS: TestA193FirstSightIsAlertedOnce (0.21s)
+=== RUN   TestA193AParkOutsideAnExitProposalIsAlertedOnce
+--- PASS: TestA193AParkOutsideAnExitProposalIsAlertedOnce (0.26s)
+=== RUN   TestA193AParkOfAnArmedExitProposalIsNotAlertedTwice
+--- PASS: TestA193AParkOfAnArmedExitProposalIsNotAlertedTwice (0.25s)
+=== RUN   TestA193AnArmedProposalReadFailureStillAlerts
+--- PASS: TestA193AnArmedProposalReadFailureStillAlerts (0.24s)
+=== RUN   TestA193AnEpisodeRaisesFirstSightAndParkOnly
+--- PASS: TestA193AnEpisodeRaisesFirstSightAndParkOnly (0.30s)
+=== RUN   TestA193AnUnreadableLedgerAlertsAfterTenMinutes
+--- PASS: TestA193AnUnreadableLedgerAlertsAfterTenMinutes (0.20s)
+=== RUN   TestA193StaleAndFirstSightAreCheckedBeforeResolving
+--- PASS: TestA193StaleAndFirstSightAreCheckedBeforeResolving (0.22s)
+=== RUN   TestA193StaleIsMeasuredFromDispatch
+--- PASS: TestA193StaleIsMeasuredFromDispatch (0.21s)
+=== RUN   TestA193ACancelledRunTouchesNothing
+--- PASS: TestA193ACancelledRunTouchesNothing (0.21s)
+=== RUN   TestA193ACancelledContextIsNeverRecorded
+--- PASS: TestA193ACancelledContextIsNeverRecorded (0.21s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	7.983s
+rc=0
