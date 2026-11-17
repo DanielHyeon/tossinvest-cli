@@ -1,39 +1,39 @@
 === RUN   TestA193AnInDoubtPlaceFoundInTheListIsConfirmedWhileTheEngineRuns
---- PASS: TestA193AnInDoubtPlaceFoundInTheListIsConfirmedWhileTheEngineRuns (3.67s)
+--- PASS: TestA193AnInDoubtPlaceFoundInTheListIsConfirmedWhileTheEngineRuns (3.42s)
 === RUN   TestA193AnInDoubtSellWithoutBaselineParksAndTheParkCauseAlertsOnce
---- PASS: TestA193AnInDoubtSellWithoutBaselineParksAndTheParkCauseAlertsOnce (3.36s)
+--- PASS: TestA193AnInDoubtSellWithoutBaselineParksAndTheParkCauseAlertsOnce (3.49s)
 === RUN   TestA193AnInDoubtBuyProvenAbsentIsFailedConfirmed
---- PASS: TestA193AnInDoubtBuyProvenAbsentIsFailedConfirmed (3.97s)
+--- PASS: TestA193AnInDoubtBuyProvenAbsentIsFailedConfirmed (3.68s)
 === RUN   TestA193ACancelledResolutionLeavesTheAttemptInDoubt
 === RUN   TestA193ACancelledResolutionLeavesTheAttemptInDoubt/during_the_poll_sleep
 === RUN   TestA193ACancelledResolutionLeavesTheAttemptInDoubt/during_a_list_scan
 === RUN   TestA193ACancelledResolutionLeavesTheAttemptInDoubt/during_the_absence_cross-check
 === RUN   TestA193ACancelledResolutionLeavesTheAttemptInDoubt/a_stale_attempt_swept_with_a_cancelled_context_records_nothing
---- PASS: TestA193ACancelledResolutionLeavesTheAttemptInDoubt (13.80s)
-    --- PASS: TestA193ACancelledResolutionLeavesTheAttemptInDoubt/during_the_poll_sleep (3.47s)
-    --- PASS: TestA193ACancelledResolutionLeavesTheAttemptInDoubt/during_a_list_scan (3.44s)
-    --- PASS: TestA193ACancelledResolutionLeavesTheAttemptInDoubt/during_the_absence_cross-check (3.38s)
-    --- PASS: TestA193ACancelledResolutionLeavesTheAttemptInDoubt/a_stale_attempt_swept_with_a_cancelled_context_records_nothing (3.51s)
+--- PASS: TestA193ACancelledResolutionLeavesTheAttemptInDoubt (14.19s)
+    --- PASS: TestA193ACancelledResolutionLeavesTheAttemptInDoubt/during_the_poll_sleep (3.38s)
+    --- PASS: TestA193ACancelledResolutionLeavesTheAttemptInDoubt/during_a_list_scan (3.47s)
+    --- PASS: TestA193ACancelledResolutionLeavesTheAttemptInDoubt/during_the_absence_cross-check (3.64s)
+    --- PASS: TestA193ACancelledResolutionLeavesTheAttemptInDoubt/a_stale_attempt_swept_with_a_cancelled_context_records_nothing (3.71s)
 === RUN   TestA193AShutdownMidResolutionIsAGracefulAuxiliaryStop
---- PASS: TestA193AShutdownMidResolutionIsAGracefulAuxiliaryStop (3.73s)
+--- PASS: TestA193AShutdownMidResolutionIsAGracefulAuxiliaryStop (3.51s)
 === RUN   TestA193TheExitObserverDoesNotWaitForAResolution
---- PASS: TestA193TheExitObserverDoesNotWaitForAResolution (3.53s)
+--- PASS: TestA193TheExitObserverDoesNotWaitForAResolution (3.64s)
 === RUN   TestA193AttemptsAreResolvedOneAtATime
---- PASS: TestA193AttemptsAreResolvedOneAtATime (3.95s)
+--- PASS: TestA193AttemptsAreResolvedOneAtATime (3.61s)
 === RUN   TestA193TheSameAttemptIsNotResolvedTwice
---- PASS: TestA193TheSameAttemptIsNotResolvedTwice (3.46s)
+--- PASS: TestA193TheSameAttemptIsNotResolvedTwice (3.52s)
 === RUN   TestA193AnAttemptInDoubtPastTheBoundAlertsOnce
---- PASS: TestA193AnAttemptInDoubtPastTheBoundAlertsOnce (3.91s)
+--- PASS: TestA193AnAttemptInDoubtPastTheBoundAlertsOnce (3.68s)
 === RUN   TestA193StaleFallsBackToTheRecordedTime
---- PASS: TestA193StaleFallsBackToTheRecordedTime (3.36s)
+--- PASS: TestA193StaleFallsBackToTheRecordedTime (3.39s)
 === RUN   TestA193AFailedStaleRecordIsRetried
---- PASS: TestA193AFailedStaleRecordIsRetried (3.52s)
+--- PASS: TestA193AFailedStaleRecordIsRetried (3.32s)
 === RUN   TestA193TheStaleAlertCarriesNoAccountQuantityOrPrice
---- PASS: TestA193TheStaleAlertCarriesNoAccountQuantityOrPrice (3.42s)
+--- PASS: TestA193TheStaleAlertCarriesNoAccountQuantityOrPrice (3.47s)
 === RUN   TestA193OnlyInDoubtPlaceAttemptsAreTouched
---- PASS: TestA193OnlyInDoubtPlaceAttemptsAreTouched (3.44s)
+--- PASS: TestA193OnlyInDoubtPlaceAttemptsAreTouched (3.39s)
 === RUN   TestA193NoInDoubtMeansNoBrokerCall
---- PASS: TestA193NoInDoubtMeansNoBrokerCall (3.64s)
+--- PASS: TestA193NoInDoubtMeansNoBrokerCall (3.59s)
 === RUN   TestA193TheSettlerNeverReplays
 --- PASS: TestA193TheSettlerNeverReplays (0.00s)
 === RUN   TestA193ResolutionRequestsAreBounded
@@ -41,39 +41,57 @@
     a193_in_doubt_settle_test.go:818: a193 실측 1: absent proven        lists=20 account=2 state=FAILED_CONFIRMED fake-elapsed=45s
     a193_in_doubt_settle_test.go:818: a193 실측 1: scan always fails    lists=60 account=0 state=UNRESOLVED_IN_DOUBT fake-elapsed=4m55s
     a193_in_doubt_settle_test.go:818: a193 실측 1: 50 pages, 20s each   lists=100 account=0 state=UNRESOLVED_IN_DOUBT fake-elapsed=33m20s
---- PASS: TestA193ResolutionRequestsAreBounded (14.00s)
+--- PASS: TestA193ResolutionRequestsAreBounded (14.12s)
 === RUN   TestA193ASettlerStopRecordsACritical
---- PASS: TestA193ASettlerStopRecordsACritical (3.71s)
+--- PASS: TestA193ASettlerStopRecordsACritical (3.65s)
 === RUN   TestA193AnUnwiredSettlerStopsLoudly
 --- PASS: TestA193AnUnwiredSettlerStopsLoudly (0.00s)
 === RUN   TestA193TheSettlerStartsAfterRecovery
---- PASS: TestA193TheSettlerStartsAfterRecovery (3.48s)
+--- PASS: TestA193TheSettlerStartsAfterRecovery (3.30s)
 === RUN   TestA193FirstSightIsAlertedOnce
---- PASS: TestA193FirstSightIsAlertedOnce (3.33s)
+--- PASS: TestA193FirstSightIsAlertedOnce (3.46s)
 === RUN   TestA193AParkOutsideAnExitProposalIsAlertedOnce
---- PASS: TestA193AParkOutsideAnExitProposalIsAlertedOnce (3.49s)
+--- PASS: TestA193AParkOutsideAnExitProposalIsAlertedOnce (3.43s)
 === RUN   TestA193AParkOfAnArmedExitProposalIsNotAlertedTwice
---- PASS: TestA193AParkOfAnArmedExitProposalIsNotAlertedTwice (3.37s)
+--- PASS: TestA193AParkOfAnArmedExitProposalIsNotAlertedTwice (3.49s)
 === RUN   TestA193AnArmedProposalReadFailureStillAlerts
---- PASS: TestA193AnArmedProposalReadFailureStillAlerts (3.78s)
+--- PASS: TestA193AnArmedProposalReadFailureStillAlerts (3.61s)
 === RUN   TestA193AnEpisodeRaisesFirstSightAndParkOnly
---- PASS: TestA193AnEpisodeRaisesFirstSightAndParkOnly (3.51s)
+--- PASS: TestA193AnEpisodeRaisesFirstSightAndParkOnly (3.45s)
 === RUN   TestA193AnUnreadableLedgerAlertsAfterTenMinutes
 --- PASS: TestA193AnUnreadableLedgerAlertsAfterTenMinutes (3.50s)
 === RUN   TestA193StaleAndFirstSightAreCheckedBeforeResolving
---- PASS: TestA193StaleAndFirstSightAreCheckedBeforeResolving (3.65s)
+--- PASS: TestA193StaleAndFirstSightAreCheckedBeforeResolving (3.50s)
 === RUN   TestA193StaleIsMeasuredFromDispatch
---- PASS: TestA193StaleIsMeasuredFromDispatch (3.64s)
+--- PASS: TestA193StaleIsMeasuredFromDispatch (3.57s)
 === RUN   TestA193ACancelledRunTouchesNothing
---- PASS: TestA193ACancelledRunTouchesNothing (3.64s)
+--- PASS: TestA193ACancelledRunTouchesNothing (3.42s)
 === RUN   TestA193ACancelledContextIsNeverRecorded
---- PASS: TestA193ACancelledContextIsNeverRecorded (3.49s)
+--- PASS: TestA193ACancelledContextIsNeverRecorded (3.43s)
 === RUN   TestA193AFailedAlertIsRetriedAfterTheAttemptSettles
---- PASS: TestA193AFailedAlertIsRetriedAfterTheAttemptSettles (3.48s)
+--- PASS: TestA193AFailedAlertIsRetriedAfterTheAttemptSettles (3.43s)
 === RUN   TestA193AResolutionFailureLogCarriesNoOrderNumber
 --- PASS: TestA193AResolutionFailureLogCarriesNoOrderNumber (3.39s)
 === RUN   TestA193AFailingRecordIsTriedOncePerSweep
---- PASS: TestA193AFailingRecordIsTriedOncePerSweep (3.67s)
+--- PASS: TestA193AFailingRecordIsTriedOncePerSweep (3.73s)
+=== RUN   TestA193TheContextSettlerRecordsFirstSightInTheOutbox
+--- PASS: TestA193TheContextSettlerRecordsFirstSightInTheOutbox (3.67s)
+=== RUN   TestA193TheContextSettlerResolvesTheAttempt
+--- PASS: TestA193TheContextSettlerResolvesTheAttempt (3.65s)
+=== RUN   TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount
+=== RUN   TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount/the_engine_account_finds_the_proposal
+=== RUN   TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount/an_empty_account_cannot_find_it
+--- PASS: TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount (7.24s)
+    --- PASS: TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount/the_engine_account_finds_the_proposal (3.66s)
+    --- PASS: TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount/an_empty_account_cannot_find_it (3.58s)
+=== RUN   TestA193TheContextSettlerDerivesTheBoundFromTheResolverBudget
+=== RUN   TestA193TheContextSettlerDerivesTheBoundFromTheResolverBudget/a_one-minute_budget_makes_the_bound_two_minutes
+=== RUN   TestA193TheContextSettlerDerivesTheBoundFromTheResolverBudget/the_default_budget_keeps_ten_minutes
+--- PASS: TestA193TheContextSettlerDerivesTheBoundFromTheResolverBudget (7.49s)
+    --- PASS: TestA193TheContextSettlerDerivesTheBoundFromTheResolverBudget/a_one-minute_budget_makes_the_bound_two_minutes (4.00s)
+    --- PASS: TestA193TheContextSettlerDerivesTheBoundFromTheResolverBudget/the_default_budget_keeps_ten_minutes (3.49s)
+=== RUN   TestA193TheContextSettlerStopsLoudlyWhenTheContextIsUnwired
+--- PASS: TestA193TheContextSettlerStopsLoudlyWhenTheContextIsUnwired (0.00s)
 PASS
-ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	128.938s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	149.469s
 rc=0

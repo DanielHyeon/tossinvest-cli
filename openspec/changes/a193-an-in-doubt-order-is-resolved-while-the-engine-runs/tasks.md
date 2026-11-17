@@ -90,3 +90,7 @@
   돌려 key 를 세는 시험은 a094 의 기존 시험이 맡는다.
 - 4.6: 다른 change(`verify-execution-capability`)의 분석 파일은 고치지 않고, 계상은 design D0.5 에 적었다(새 엔드포인트 0, 해소당 요청 수 실측).
 
+## Manager 검증 반려 1회차 (2026-11-18)
+
+- [x] 5.1a 조립 경로 시험 공백(g3·g4·g5 SURVIVED) — `a193_in_doubt_settle_context_test.go` 5 시험 추가(production 코드 무변경), 변이 M31~M36 전부 CAUGHT(M36 은 단언 추가 뒤), 선택 시험 재실행 rc 0 — review.md 「Manager 검증 반려 1회차」.
+

@@ -1,0 +1,91 @@
+M31 CAUGHT ['TestA193TheContextSettlerDerivesTheBoundFromTheResolverBudget', 'TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount', 'TestA193TheContextSettlerRecordsFirstSightInTheOutbox']
+M32 CAUGHT ['TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount']
+M33 CAUGHT ['TestA193TheContextSettlerDerivesTheBoundFromTheResolverBudget', 'TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount', 'TestA193TheContextSettlerRecordsFirstSightInTheOutbox', 'TestA193TheContextSettlerResolvesTheAttempt']
+M34 CAUGHT ['TestA193TheContextSettlerDerivesTheBoundFromTheResolverBudget', 'TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount', 'TestA193TheContextSettlerRecordsFirstSightInTheOutbox', 'TestA193TheContextSettlerResolvesTheAttempt']
+M35 CAUGHT ['TestA193TheContextSettlerDerivesTheBoundFromTheResolverBudget']
+M36 SURVIVED []
+[
+ {
+  "id": "CONTROL",
+  "pkg": "./internal/app/engine",
+  "result": "PASS"
+ },
+ {
+  "id": "CONTROL",
+  "pkg": "./cmd/tossctl",
+  "result": "PASS"
+ },
+ {
+  "id": "M31",
+  "what": "조립: 알림기 배선 삭제(Manager g3)",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193TheContextSettlerDerivesTheBoundFromTheResolverBudget",
+   "TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount",
+   "TestA193TheContextSettlerRecordsFirstSightInTheOutbox"
+  ],
+  "seconds": 59.5
+ },
+ {
+  "id": "M32",
+  "what": "조립: 계좌 배선 삭제(Manager g4)",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount"
+  ],
+  "seconds": 14.3
+ },
+ {
+  "id": "M33",
+  "what": "조립: 해소기 배선 삭제(Manager g5)",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193TheContextSettlerDerivesTheBoundFromTheResolverBudget",
+   "TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount",
+   "TestA193TheContextSettlerRecordsFirstSightInTheOutbox",
+   "TestA193TheContextSettlerResolvesTheAttempt"
+  ],
+  "seconds": 76.2
+ },
+ {
+  "id": "M34",
+  "what": "조립: 원장 배선 삭제",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193TheContextSettlerDerivesTheBoundFromTheResolverBudget",
+   "TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount",
+   "TestA193TheContextSettlerRecordsFirstSightInTheOutbox",
+   "TestA193TheContextSettlerResolvesTheAttempt"
+  ],
+  "seconds": 76.2
+ },
+ {
+  "id": "M35",
+  "what": "조립: 해소 예산 유도 삭제",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193TheContextSettlerDerivesTheBoundFromTheResolverBudget"
+  ],
+  "seconds": 16.6
+ },
+ {
+  "id": "M36",
+  "what": "조립: 로거 배선 삭제",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "SURVIVED",
+  "failing": [],
+  "seconds": 16.2
+ }
+]
+rc=0

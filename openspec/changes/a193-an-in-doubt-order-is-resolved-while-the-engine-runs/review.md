@@ -162,6 +162,23 @@ Pre-Edit Gate:
 
 회차 상한(2)에 닿았다.
 
+## Manager 검증 반려 1회차 (2026-11-18): 조립 경로 시험 공백 → 처분
+
+- 반려 사유(Manager, HEAD `d783cba4a`, `-trimpath` 없이 독립 재실행 — 엔진 패키지 881/0/1 등 전부 rc 0): 변이 표본 g3(알림기 배선 삭제)·g4(계좌 배선 삭제)·g5(해소기 배선 삭제)가 **SURVIVED**.
+  원인 = `Context.InDoubtSettler` 를 부르는 시험 0건(`rg 'InDoubtSettler\(' -g '*_test.go'`) — 모든 TestA193 이 `newInDoubtSettle(deps)` 로 직접 조립, cmd 배선 시험은 이름만 봄.
+- I-a 처분(Manager): 해소 오류 로그는 분류만(현재안 유지), 새 마스킹 규칙 없음.
+- **처분(시험만 추가 — production 코드 무변경)**: 새 파일 `internal/app/engine/a193_in_doubt_settle_context_test.go`(package `engine_test`) — 실 원장(exitHarness) + 실 `execgw.Resolver`(가짜 목록) +
+  실 `obs.Notifier`(원장 outbox)로 채운 `engine.Context` 의 `InDoubtSettler(clk)` 를 실제로 돌림:
+  - `TestA193TheContextSettlerRecordsFirstSightInTheOutbox` — 처음 봄 critical 이 **outbox 행**(key `order.in_doubt|attempt:<id>`)으로 남음.
+  - `TestA193TheContextSettlerResolvesTheAttempt` — 목록에 1건 → 원장 CONFIRMED, 결과 줄이 Context 의 로거에 남음.
+  - `TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount` — 무장 exit 발의의 attempt park: 엔진 계좌면 실행자 park 알림 **없음**, 빈 계좌면 **있음**(두 경우가 구별됨을 대조군으로 확인).
+  - `TestA193TheContextSettlerDerivesTheBoundFromTheResolverBudget` — `Resolver.Config.MaxDuration` 1분 → 2분에 10분 알림 발생, 기본 예산 → 2분에 없음.
+  - `TestA193TheContextSettlerStopsLoudlyWhenTheContextIsUnwired` — 빈 Context 면 Run 이 바로 「no journal or resolver」.
+- 이빨(변이 원장 run-4·run-5): M31 알림기 배선 삭제(g3) · M32 계좌 배선 삭제(g4) · M33 해소기 배선 삭제(g5) · M34 원장 배선 삭제 · M35 예산 유도 삭제 → **전부 CAUGHT**.
+  M36 로거 배선 삭제는 run-4 에서 SURVIVED(원인: 조립 경로에서 로그를 재는 시험 없음) → 결과 줄 단언을 더한 뒤 run-5 CAUGHT.
+- 재실행(`GOFLAGS=-trimpath`): 엔진 `-run TestA193` rc 0 37/0/0, 같은 것 `-race` rc 0 37/0/0, cmd 선택 rc 0 9/0/0, `make lint` rc 0, `openspec validate --strict` valid, `check_analysis` rc 0.
+  구현 리뷰는 다시 돌리지 않음(Manager 지시 — 시험 추가뿐).
+
 ## Manager 결정 대기
 
 (1단계 목록 Q-A~Q-I 는 위 「Manager 처분」으로 전부 결정됨 — 아래는 기록. 2단계 리뷰가 더하는 것은 구현 리뷰 절에 붙인다)
@@ -178,5 +195,5 @@ Pre-Edit Gate:
 
 ### 2단계 구현 리뷰가 더한 확인 대상
 
-- **I-a**(I1-2): 해소 오류 로그를 분류만 남기면 `other` 원인은 로그로 진단할 수 없다. 대안: 원문을 남기되 주문 번호 모양을 가림(새 마스킹 규칙 — 범위 확장). 현재: 분류만(누출 0 쪽).
+- **I-a**(I1-2) — **결정됨(Manager 2026-11-18): 현재안(분류만) 유지, 새 마스킹 규칙 없음.** 해소 오류 로그를 분류만 남기면 `other` 원인은 로그로 진단할 수 없다. 대안: 원문을 남기되 주문 번호 모양을 가림(새 마스킹 규칙 — 범위 확장). 현재: 분류만(누출 0 쪽).
 

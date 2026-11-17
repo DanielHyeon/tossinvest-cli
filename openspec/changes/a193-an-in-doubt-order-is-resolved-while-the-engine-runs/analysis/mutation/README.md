@@ -1,5 +1,8 @@
 # a193 변이 원장
 
+> **Manager 검증 반려 1회차 추가판(조립 경로)**: run-4(`53b4f0512`, M31~M36) — M31 알림기 · M32 계좌 · M33 해소기 · M34 원장 · M35 예산 유도 배선 삭제 **CAUGHT**
+> (`TestA193TheContextSettler…`), M36 로거 배선 삭제 SURVIVED(조립 경로의 로그 단언 없음) → 단언 추가 뒤 run-5(M36 만) **CAUGHT**. 누적: **36 변이 — CAUGHT 35, SURVIVED 1(M13 — 아래 원인)**.
+
 > **최신 판(정본): run-2 + run-3 — 구현 리뷰 1회차 수리 뒤.** run-2 는 커밋 `10a92b1d0`(30 변이: 29 CAUGHT · M13·M30 SURVIVED), run-3 은 `40b11ee55`(M30 의 못을 더한 뒤 M13·M30 만:
 > M30 CAUGHT, M13 SURVIVED). 합: **30 변이 — CAUGHT 29(실패 27 · 시한 초과 2), SURVIVED 1(M13), BUILD_FAIL 0, NOT_REACHED 0.** `run-2-aborted-anchor.txt` 는 M07 앵커가
 > 수리로 바뀌어 M07 에서 멈춘 판(M01~M06 결과는 run-2 와 같음) — 하네스에 시작 전 앵커 사전 검사를 더했다.

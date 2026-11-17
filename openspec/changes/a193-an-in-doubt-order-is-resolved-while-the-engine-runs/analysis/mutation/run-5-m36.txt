@@ -1,0 +1,25 @@
+M36 CAUGHT ['TestA193TheContextSettlerResolvesTheAttempt']
+[
+ {
+  "id": "CONTROL",
+  "pkg": "./internal/app/engine",
+  "result": "PASS"
+ },
+ {
+  "id": "CONTROL",
+  "pkg": "./cmd/tossctl",
+  "result": "PASS"
+ },
+ {
+  "id": "M36",
+  "what": "조립: 로거 배선 삭제",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193TheContextSettlerResolvesTheAttempt"
+  ],
+  "seconds": 28.2
+ }
+]
+rc=0
