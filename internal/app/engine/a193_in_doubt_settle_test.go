@@ -1104,3 +1104,20 @@ func TestA193AResolutionFailureLogCarriesNoOrderNumber(t *testing.T) {
 		t.Fatalf("the failure class is missing from the log: %s", out)
 	}
 }
+
+func TestA193AFailingRecordIsTriedOncePerSweep(t *testing.T) {
+	// 재시도 대기 중인 key 는 스윕 머리의 재시도가 맡음 — 같은 스윕에서 알림 함수가 또 시도하지 않음(변이 M30).
+	f := newA193Fixture(t)
+	f.attempt("SELL", journal.KindPlace, journal.StateInDoubt, false)
+	res := newA193BlockingResolver()
+	close(res.release)
+	res.err = errors.New("synthetic")
+	s := f.settler(nil, res)
+	f.crit.err = errors.New("synthetic outbox failure")
+	_ = s.sweep(context.Background()) // 처음 봄 1회 시도
+	before := f.crit.calls()
+	_ = s.sweep(context.Background()) // 재시도 1회만
+	if n := f.crit.calls() - before; n != 1 {
+		t.Fatalf("a failing alert was tried %d times in one sweep, want 1", n)
+	}
+}
