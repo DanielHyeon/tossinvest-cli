@@ -191,6 +191,23 @@ Pre-Edit Gate:
   - **2회차 rc 0 — 11/11 GATE PASS**(22:11:09Z~22:39:35Z). ⑦ 패키지 ok 122 · FAIL 0. 원문 `analysis/close/`.
 - archive: 아래 커밋. 정본 order-execution 「IN_DOUBT 해소」 갱신(MODIFIED).
 
+## 운영 반영 (Manager 실행·실측, 2026-11-18 KST — 종목·수량·가격·계좌 미기재)
+
+- 사용자 승인: 「2」(종결 + 오늘 창에서 운영 반영, 04:3x KST). push 는 별도로 「푸시해」(07:5x KST) 뒤 Manager 가 `git push origin main` 실행 — `791fb6ef1..bdab4e7b7`
+  fast-forward. 팀메이트 세션의 push 는 자동 모드 분류기가 두 번 거부(「Unsanctioned Communication」).
+- 순서: 완료 게이트 2회차 PASS(22:39:35Z) **뒤에** 빌드·교체.
+- 이미지: `make image CHANGE=a193-an-in-doubt-order-is-resolved-while-the-engine-runs` rc 0(주 저장소 main `6db094d99`, 빌드 전후 HEAD 동일·작업 트리 clean).
+  핀 `tossos:a193-an-in-doubt-order-is-resolved-while-the-engine-runs-6db094d99` → `sha256:2b84ca930510ff5a59354ba027c5dc2aa98cdaaeb9be2b6cd358b48abde4bddb`.
+- 빌드 판정: 바이너리 `grep -ac 'in-doubt-settle'` 새 이미지 4 · 직전 이미지(`702524e4da9a`) 0.
+- 핀: release = 위 digest, rollback = a192 `sha256:702524e4da9a672b7ca71449b42225d7160d1f7d7d8e83fb673e3ea6fe5b9afd`, 둘 다 SchemaVersion 36(a193 은 internal/journal diff 0).
+  override 백업 `*.bak-20261117T224130Z`, 판정 파일 `schema-compatibility-a193-6db094d99.txt`(`~/.local/share/tossos-deploy/`).
+- 교체: `up -d --no-deps --no-build httpapi` 07:41:40 → healthy 07:41:46, `tossos` 07:41:56 → healthy, 두 컨테이너 digest 일치·restarts 0. 엔진 프로세스 1, 새
+  `engine.operating_mode` 22:42:02Z — 엔진 부재 약 6초(컨테이너 시작 22:41:57Z 기준; 옛 엔진의 마지막 로그 줄은 22:41:07Z 의 대사 줄이라 부재의 하한이 아님).
+- 교체 뒤 점검: `reconcile.clean` 2주기(22:42:07Z·22:43:09Z) 모두 blocked 0 · unmanaged 0. 엔진 로그·컨테이너 로그에 in-doubt-settle 정지·패닉·오류 줄 0.
+- **미관측**: 세션 중 해소의 운영 동작(처음 봄 critical · 해소 결과 줄)은 IN_DOUBT 발주가 생겨야 나타난다 — 배포 시점에 원장의 IN_DOUBT 는 0(과거 6건 모두 종결)이라
+  아직 본 적 없다. 운영 확인이 아니라 미관측이다.
+- 창: KST 07:41, 양 시장 정규장 밖. 단 KR NXT 프리마켓은 08:00 개장 — 다음부터 창의 끝은 08:00 으로 본다.
+
 ## Manager 결정 대기
 
 (1단계 목록 Q-A~Q-I 는 위 「Manager 처분」으로 전부 결정됨 — 아래는 기록. 2단계 리뷰가 더하는 것은 구현 리뷰 절에 붙인다)
