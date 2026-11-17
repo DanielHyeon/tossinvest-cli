@@ -47,6 +47,12 @@ M = [
  ("M28", "기록 실패를 unsent 에 두지 않음(P1-1)", F, "\t\ts.unsent[key] = e\n\t\ts.deps.Log.Warn(e.Type, obs.FieldError", "\t\ts.deps.Log.Warn(e.Type, obs.FieldError", ENGINE),
  ("M29", "해소 오류 원문을 로그에 다시 실음(P1-2)", F, "obs.FieldAttemptID, rec.ID, \"error_class\", class,", "obs.FieldAttemptID, rec.ID, \"error_class\", class, obs.FieldError, err.Error(),", ENGINE),
  ("M30", "재시도 대기 중인 key 를 같은 스윕에서 또 시도", F, "\t_, waiting := s.unsent[key]\n\treturn waiting", "\treturn false", ENGINE),
+ ("M31", "조립: 알림기 배선 삭제(Manager g3)", F, "\t\tif c.Notifier != nil {\n\t\t\tdeps.Critical = c.Notifier\n\t\t}\n", "", ENGINE),
+ ("M32", "조립: 계좌 배선 삭제(Manager g4)", F, "\t\tdeps.Account = c.AccountRef\n", "", ENGINE),
+ ("M33", "조립: 해소기 배선 삭제(Manager g5)", F, "\t\t\tdeps.Resolver = c.Resolver\n", "\t\t\t_ = c.Resolver\n", ENGINE),
+ ("M34", "조립: 원장 배선 삭제", F, "\t\t\tdeps.Ledger = c.Journal\n", "\t\t\t_ = c.Journal\n", ENGINE),
+ ("M35", "조립: 해소 예산 유도 삭제", F, "\t\t\t\tdeps.ResolveBudget = c.Resolver.Config.MaxDuration\n", "\t\t\t\t_ = c.Resolver.Config.MaxDuration\n", ENGINE),
+ ("M36", "조립: 로거 배선 삭제", F, "\t\tdeps.Log = c.Log\n", "", ENGINE),
 ]
 EXTRA = {"M24": ("cmd/tossctl/engine.go", "\t\t\tstrategyEntry.SupervisedLoop(),\n", "\t\t\tstrategyEntry.SupervisedLoop(),\n\t\t\t{Name: \"in-doubt-settle\", Run: ectx.InDoubtSettler(clk).Run},\n")}
 def run_tests(pkg, pat):
