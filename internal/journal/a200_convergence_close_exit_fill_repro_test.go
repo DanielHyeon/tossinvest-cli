@@ -216,7 +216,7 @@ func TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutco
 
 // TestA200CurrentBehaviourAStopFillStraddlingTheConvergenceIsAnAttributionFailure 는 design §2 가 이름으로 적은 「이 change 가
 // 거절하는 정상 입력」: 손절 31 의 부분 체결 10 이 조정 **전에** 투영에 반영(31→21)되고, 수렴이 21→0 으로 닫은 뒤 나머지 21 이 옴.
-// 상태 없는 판정 (라)는 그 intent 주문의 누적 합 31 을 감소분 21 과 견주므로 인정하지 않음 — 구현 뒤에도 ATTRIBUTION_FAILED 로 남아야 함.
+// 상태 없는 판정 (라)는 그 intent 의 주문 수량 31 을 감소분 21 과 견주므로 인정하지 않음 — 구현 뒤에도 ATTRIBUTION_FAILED 로 남아야 함.
 func TestA200CurrentBehaviourAStopFillStraddlingTheConvergenceIsAnAttributionFailure(t *testing.T) {
 	j, clk := a200Journal(t)
 	entry, _ := openedPosition(t, j, "31")

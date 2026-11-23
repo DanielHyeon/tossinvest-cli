@@ -1,0 +1,8 @@
+# impl-r1 처분 뒤 선택 시험 — HEAD d939e8795, 2026-11-24T07:37:52+09:00
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	123.862s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	32.691s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	36.468s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	26.558s
+## -race A200
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	59.187s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	36.880s

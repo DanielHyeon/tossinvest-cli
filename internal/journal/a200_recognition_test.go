@@ -170,6 +170,21 @@ func TestA200ASmallOrderStraddlingTheConvergenceIsRecognised(t *testing.T) {
 	a200AssertRecognised(t, got, 1)
 }
 
+// TestA200AFillAfterATwoStepConvergenceIsRecognised 는 조정 행이 둘인 원장(gstack r1 testing): 31→28 뒤 같은 초에 28→0.
+// 같은 created_at 이라 (나)의 「마지막 행」 은 rowid 순서로만 갈림 — readRecognitionFacts 의 정렬을 실제 원장으로 잼.
+// 손절 주문 28 ≤ 닫는 조정의 감소분 28 이므로 인정됨.
+func TestA200AFillAfterATwoStepConvergenceIsRecognised(t *testing.T) {
+	j, clk, p, sell := a200ManagedStop(t, "28")
+	a200Converge(t, j, "005930", "31", "28", clk.Now())
+	a200Converge(t, j, "005930", "28", "0", clk.Now())
+	if _, err := j.RecordFill(context.Background(), terminalFill(sell, "28", "67900")); err != nil {
+		t.Fatalf("RecordFill(stop): %v", err)
+	}
+	got := readA200Ledger(t, j, p.ID)
+	got.log(t, "두 단계 수렴")
+	a200AssertRecognised(t, got, 1)
+}
+
 // --- 계속 거절해야 하는 입력(design §2) — 편집 전에도 통과, 편집 뒤에도 통과해야 함 -------------
 
 // TestA200AFillFromAnotherIntentStaysAnAttributionFailure: 체결 주문이 그 인스턴스의 청산 발의가 아님((다)).

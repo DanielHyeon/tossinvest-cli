@@ -25,7 +25,10 @@ MUTANTS = [
     ("M17", "원장 읽기 앞 거절 유형 조기 반환 삭제(impl-r1 P2-1)", F,
      "if !recognisableRefusal(outcome.Refusal) || !instance.Held", "if !instance.Held"),
     ("M18", "(라) 「주문 수량 > 0」 삭제(impl-r1 P2-2)", F,
-     "if err != nil || positive <= 0 {", "if err != nil {"),
+     "if err != nil || positive <= 0 {", "if err != nil || (positive <= 0 && false) {"),
+    # gstack r1 testing: (나)의 「마지막 행」 은 조정 행 정렬에 기댐 — 정렬을 뒤집으면 두 단계 수렴 원장 시험이 잡아야 함.
+    ("M19", "조정 행 정렬 뒤집기(created_at, rowid → DESC)", F,
+     "WHERE position_id = ? ORDER BY created_at, rowid`", "WHERE position_id = ? ORDER BY created_at DESC, rowid DESC`"),
     ("M2", "(나) 「0 조정 정확히 하나」 삭제", F,
      "if zeroRows != 1 || !lastZero ||", "if !lastZero ||"),
     ("M3", "(나) 「마지막 조정 행」 삭제", F,

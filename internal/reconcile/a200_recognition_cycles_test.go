@@ -86,6 +86,22 @@ func (w *a200World) assertNoAttributionFailure(label string) {
 	}
 }
 
+// recognitionMarkers 는 그 포지션의 인정 표지(ADJUSTMENT_CLOSE_FILL_RECOGNISED) 행 수를 셈.
+func (w *a200World) recognitionMarkers(positionID string) int {
+	w.t.Helper()
+	events, err := w.journal.ExitEvents(w.ctx, positionID)
+	if err != nil {
+		w.t.Fatalf("ExitEvents: %v", err)
+	}
+	n := 0
+	for _, e := range events {
+		if e.Action == journal.ExitEventAdjustmentCloseFillRecognised {
+			n++
+		}
+	}
+	return n
+}
+
 // assertOpenAfterOneCleanCycle 은 다음 일치 비교 한 번에서 수량 불일치가 풀리고 그 종목 진입이 열리는 것을 봄.
 func (w *a200World) assertOpenAfterOneCleanCycle(label string) {
 	w.t.Helper()
@@ -145,9 +161,11 @@ func TestA200W5AManagedStopFillLeavesNoBlock(t *testing.T) {
 }
 
 // TestA200W6AManagedStopFillIsUnchanged: 수량 불일치 행이 선 뒤 체결 — 오늘과 같은 결과(귀속 실패 없음 · 다음 일치에서 해제).
+// 판정은 활성 차단 확인(enterReconcileScopeInTx 의 F10)보다 앞이라, 차단이 선 채로도 네 조건이 맞으면 표지 1 이 남고 그 차단은
+// 건드리지 않음(gstack r1 state-machines) — 표지 수와 「활성은 수량 불일치 하나뿐」 을 함께 못 박음.
 func TestA200W6AManagedStopFillIsUnchanged(t *testing.T) {
 	w := newA200World(t)
-	w.holdManaged()
+	id := w.holdManaged()
 	diff := w.mismatch("31", "0")
 	if _, err := w.converge(diff); err != nil {
 		t.Fatalf("converge: %v", err)
@@ -160,6 +178,12 @@ func TestA200W6AManagedStopFillIsUnchanged(t *testing.T) {
 	}
 	w.fill("o-stop", "SELL", "31", "31", true) // W6
 	w.assertNoAttributionFailure("W6")
+	if n := w.recognitionMarkers(id); n != 1 {
+		t.Fatalf("W6 표지 %d 개, 활성 차단이 있어도 네 조건이 맞으면 표지 1", n)
+	}
+	if got := w.activeCauses(); len(got) != 1 || got[0] != journal.ReconcileCauseQuantityMismatch {
+		t.Fatalf("W6 체결 직후 활성 = %q, 이미 선 수량 불일치 하나뿐이어야 함(인정은 차단을 건드리지 않음)", got)
+	}
 	w.assertOpenAfterOneCleanCycle("W6")
 }
 
@@ -189,6 +213,9 @@ func TestA200ARestartAfterARecognisedFillLeavesTheQuantityBlockAwaiting(t *testi
 	w.conv.Credit = restarted
 	out, err := w.cleanCycle()
 	w.logCycle("재기동 뒤 일치", out, err)
+	if err != nil {
+		t.Fatalf("재기동 뒤 일치 Observe: %v", err)
+	}
 	w.assertNoAttributionFailure("재기동")
 	if got := w.activeCauses(); len(got) != 1 || got[0] != journal.ReconcileCauseQuantityMismatch {
 		t.Fatalf("재기동 뒤 활성 = %q, 오늘처럼 수량 불일치가 조정 대기로 남음(공시된 한계)", got)
