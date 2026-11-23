@@ -103,7 +103,9 @@ func recognitionVerdict(f recognitionFacts) bool {
 // 호출자는 차단을 쓰지 않고 투영도 쓰지 않음. 원장 읽기 오류는 그대로 돌려줌(체결 tx 롤백 — 오늘의 차단 쓰기 오류와 같은 방향).
 func recogniseAdjustmentCloseFill(ctx context.Context, tx *ApplyTx, origin fillOrigin,
 	instance projectedInstance, outcome position.Outcome) (bool, error) {
-	if outcome.Refusal != position.RefusalSellOnClosed || !instance.Held || instance.ID == "" {
+	// 인스턴스 행이 없으면(FLAT — 매도면 UNATTRIBUTED_SELL) 읽을 조정 · exit 상태가 없음. 거절 유형 판정은 recognitionVerdict
+	// 한 곳에만 둠(판정이 둘이면 한쪽 변이가 다른 쪽에 가려 살아남음).
+	if !instance.Held || instance.ID == "" {
 		return false, nil
 	}
 	facts, err := readRecognitionFacts(ctx, tx, origin, instance, outcome)
