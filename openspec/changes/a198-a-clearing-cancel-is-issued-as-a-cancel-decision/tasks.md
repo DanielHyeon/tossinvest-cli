@@ -65,8 +65,8 @@
 
 main 반영은 Manager 가 사용자 결정(design §6 의 「보강 2 뒤에도 남는 것」 1~6 과 flatten 잔여의 수용)을 받은 뒤다.
 
-- [ ] 5.1 Manager 검증(diff·시험 원문 재실행).
-- [ ] 5.2 완료 게이트(격리 worktree) → archive → Story 경로 갱신 → push.
+- [x] 5.1 Manager 검증(diff·시험 원문 재실행). — Manager 검증 통과 2026-11-24(review.md 「Manager 검증·종결」).
+- [x] 5.2 완료 게이트(격리 worktree) → archive → Story 경로 갱신 → push. **선체크(gate ② 선행 조건, 선례 a193·a194·a195·a196)** — 게이트·archive·Story·push 는 종결 에이전트가 이 체크 뒤 수행하고 결과는 `review.md` 「Manager 검증·종결」 절.
 
 ## 6. 종결 뒤 (사람 승인 — 이 change 의 종결 조건 아님)
 

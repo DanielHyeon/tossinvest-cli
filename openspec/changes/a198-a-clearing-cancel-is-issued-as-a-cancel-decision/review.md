@@ -286,3 +286,25 @@ Pre-Edit Gate:
 - 커밋: RED `85bb791b4` · GREEN `8babd42e7`. 편집 기존 함수 `endExitOrderCycle` 한 줄(`o.flushClearCancelFailures()`) + 관측기 구조체 필드 1(선언). `ObserveOnce`·a129 줄 타입·래치·`writeExitOrder`·`noteExitOrder` 무편집. a166 census·a163 핀·a129 구조 시험에 `endExitOrderCycle`·exit_order_log.go·a198_clear_cancel_log.go 적중 0.
 - 변이 4/4 CAUGHT(`analysis/mutation/ledger.md` 「gstack review r2 G1 변이」).
 - 검증(`analysis/verify/4d-*.txt`, `8babd42e7`+문서, GOFLAGS 없음): engine `-run 'A198|A129|A193|ExitClear|ExitObserver|ExitOrder|InDoubt'` ok 44.3s · 구조 `-run 'A087|A111'` ok 16.4s · journal `-run A198` ok 6.0s · `-race -run 'A198|A129'` ok 306.7s · `make lint` rc 0 · `validate --strict` valid · check_analysis 「evidence complete」. execgw·reconcile·flatten 은 Go 무변이라 생략.
+
+## Manager 검증·종결 (2026-11-24)
+
+### Manager 검증 (Fable — tasks 5.1)
+
+- HEAD `693f6ad16`, GOFLAGS 비움. engine `-run 'A198|A129|A193|A094|ExitClear|ExitObserver|ExitOrder|InDoubt|Recovery|A087|A111'` ok 76.1s · execgw ok 29.6s · journal ok 69.5s · reconcile ok 6.3s · flatten ok 9.8s · accountbudgetruntime(a166 census) ok 23.5s · A198 시험 48 PASS / FAIL 0 · vet rc 0 · `openspec validate --strict` valid · `check_analysis` 「evidence complete」 required 6(작업 트리 창).
+- 판정: **통과 2026-11-24**. 종결 진행.
+
+### 사용자 공시 (Manager 결정 — 완료 보고에 그대로 싣는다)
+
+- (가) gstack review r2 의 gate-edit 질문(a094 시험 `TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed` 의 단언 뒤집기 두 hunk)은 사람의 답이 없어 **Manager 가 「유지」로 닫았다**. 근거: 정본 delta MODIFIED 「IN_DOUBT 해소」 의 D9 시나리오(기록 번호 있는 ACKED 취소는 기동이 그 번호로 접수 확정)가 그 새 행동을 요구하고, 번호 없는 PLACE 쪽 단언은 그대로다.
+- (나) 열린 기록(코드 무변): G2 운영 로그 쓰기 오류 시 취소 실패 줄 유실 가능 · G4 미국 ET 자정 창의 거래일 결속(빈도 미측정) · G5 D10 의 판독 전 쓰기 잠금 시간(미측정) · legacy 종결 행 + scoped 미종결 행 공존 시의 판정식(base 에도 있던 기존 성질, r3 P2-1) · design §6 「여전히 이전보다 나쁜 경우」 여섯 잔여(1~6) · 엔진 취소가 미종결로 남은 종목은 수동 flatten 의 취소·매도도 보류(그 종목만, 엔진 재기동이 푼다).
+- (다) a087 은 종결 때 `exit_order_log.go`·`exitloop.go` 의 FLM 번들을 재생성해야 한다(a198 이 `endExitOrderCycle` 등 같은 파일의 함수를 편집).
+
+### 종결 (종결 에이전트 Opus — 사용자 요청 「archive(완료 게이트 포함)」)
+
+- 착지 먼저: `693f6ad16`(base `e1eaf720c` 위 그대로)에서 `--record-landing` → `landed-commit.txt` = `8babd42e7`(도구 계산 — 그 뒤 커밋은 `.go` 무편집), 단독 커밋 `1ee13eff4`.
+- main 따라가기: rebase 대신 `origin/main` `9738a0c32`(a195·a196·a194 archive 포함)를 merge(`3f3b836b6`, 충돌 0). 이유: a194·a196 선례 — rebase 하면 형제 Go 커밋이 base 와 착지 사이에 들어와 ⑤ 창이 형제 함수를 요구한다. merge 뒤 `check_analysis --change` rc 0(required 6, 증거 완전, HEAD `3f3b836b6`), `base-commit.txt`(`e1eaf720c`) 는 HEAD 의 조상(확인).
+- merge 뒤 정본 대조: base 이후 형제가 바꾼 정본은 engine-safety·exit-policy·reconciliation 뿐이고 order-execution 은 무변. `analysis/modified-delta/make_modified.py` 재실행 rc 0 — 단언 통과(치환 블록 2개, 의도 편집 외 차이 0), 산출물 3개 git 무변(멱등). exit-policy delta(ADDED 뿐)는 a194 반영 정본 위에서 `openspec validate --strict` valid. `generate_master_tracker.py --check` 현재.
+- merge 뒤 선택 시험(`analysis/close/merge-selected-tests.txt`, HEAD `3f3b836b6`, GOFLAGS 비움, 순차): engine 위 묶음 ok 76.3s · execgw `-run 'Cancel|Refusal|A165|A198|Resolve|Acked|Recovery'` ok 24.7s · journal `-run 'A198|Resolve|Pending|Terminal|Prepare|Decision'` ok 38.3s · reconcile `-run 'A094|A198|Recovery'` ok 7.0s · flatten ok 10.6s · accountbudgetruntime ok 25.3s · `--- PASS` 859 / `--- FAIL` 0(최상위 TestA198 48 PASS) · go vet(6 패키지) rc 0 · `make lint` rc 0.
+  - 절차 기록: 첫 시도는 journal·execgw 를 필터 없는 전체 패키지로 돌렸고 journal 이 기본 `-timeout 10m` 에 걸려 panic(`--- FAIL` 0, 부하 load≈5 — Makefile 의 `make test` 가 30m 을 쓰는 이유와 같음). 그 판을 중단하고 Manager 묶음 필터·`-timeout 30m` 로 위 원문을 처음부터 다시 받았다. 전체 패키지는 완료 게이트 ⑦ 이 돈다.
+- tasks: 5.1 체크(위 Manager 검증), 5.2 **선체크(gate ② 선행 조건)** — 게이트·archive·Story·push 는 이 체크 뒤 수행. 「6. 종결 뒤(사람 승인)」 문단은 원래 체크박스 밖(무변). 운영 반영 안 함 — 이 change 는 미배포로 끝난다.
