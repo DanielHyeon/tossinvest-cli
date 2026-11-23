@@ -54,3 +54,17 @@
 | N8 | gstack review 시험 specialist | 만료가 기한인 통지도 감독 증거 문구로(`if v.DeadlineKind == deadlineProof` → `if true`) | CAUGHT | `TestA196WithoutSupervisedProofCountsTheExpiry`(제목·본문 단언 추가 뒤) |
 
 - run-3 은 M01~N7 을 재실행해 같은 결과(CAUGHT 18·동등 생존 3). run-3 직후 `restartDeadline` 주석 한 줄을 고쳤다(코드 무변경 — 주석만).
+
+## Manager 결정 G12·G10 으로 더한 변이 (run-4)
+
+| # | 결정 | 변이 | 결과 | 죽인 시험 |
+|---|---|---|---|---|
+| E1 | G12 | 에피소드 시작을 key 에서 빼기 | CAUGHT | `TestA196RecurrenceAfterRecoveryReachesTheRealOutbox`(실제 알림기 + 실제 원장 — 둘째 전송이 정산된 행에 삼켜짐) · `TestA196RestartedWatchStartsANewRejectionEpisode` |
+| E2 | G12 | 에피소드를 매 판정 새로 시작(`if true`) | CAUGHT | `TestA196ScopeLossOncePerDayAcrossReissues` 외 4(같은 날 재발급이 다시 알림) |
+| E3 | G10 | 할 일에서 엔진 정지 문장 삭제 | CAUGHT | `TestA196ReverifyRemedyTellsTheEngineMustStop` |
+
+- run-4 결과: M01~E3 25판 — CAUGHT 21, 생존 4(M12·N4·N7 동등 — 위 사유, **N2 는 이번에 생존으로 바뀜**).
+- N2 동등 사유(run-4 부터): 에피소드 시작이 거절 key 에 들어가고, 날수 key 에는 기한이, 지남 key 에는 기한 + 날짜 + 에피소드가 있으므로 모든 key 가 자기 상태를 스스로 가린다.
+  그래서 기한 변경 때의 「보냄」 재설정(prepare B3)은 행동이 아니라 메모리 크기만 정한다 — 재설정을 첫 호출로만 줄여도 알림 결과는 같다. 살아 있는 한 `sent` 에 하루 몇 개씩 key 가 쌓일 뿐이다.
+  run-3 까지 N2 를 죽이던 `TestA196RejectionAfterAHealthyFileIsAnnouncedAgain` 는 이제 에피소드로 통과한다(통과 이유가 바뀐 시험 — 기록).
+- 시험 이름 변경: `TestA196RestartedWatchReusesTheRejectionKey` → `TestA196RestartedWatchStartsANewRejectionEpisode`(G12 로 재시작 = 새 에피소드 = 새 key). run-1~3 원문의 옛 이름은 그때의 기록이라 고치지 않음.

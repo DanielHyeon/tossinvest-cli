@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/attestation_watch.go",
-  "source_sha256": "292dab380cb7273b0a42307786fb72e3511e08859e38c5e8dae785cdd4932bf3",
+  "source_sha256": "9b71a387860c809bc6ee8f80528cd5cc1446fdd8dd080eac14164d7548eae1f6",
   "package": "engine",
   "function": "stageKey",
   "signature": "stageKey(params=2, results=1)",
   "start": {
-    "line": 340,
+    "line": 358,
     "column": 1
   },
   "end": {
-    "line": 353,
+    "line": 372,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "switch",
       "at": {
-        "line": 343,
+        "line": 362,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "case",
       "at": {
-        "line": 344,
+        "line": 363,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "case",
       "at": {
-        "line": 346,
+        "line": 365,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "case",
       "at": {
-        "line": 348,
+        "line": 367,
         "column": 2
       }
     }
@@ -50,28 +50,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 345,
+        "line": 364,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 347,
+        "line": 366,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 350,
+        "line": 369,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 352,
+        "line": 371,
         "column": 2
       }
     }
@@ -80,7 +80,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 341,
+        "line": 360,
         "column": 9
       },
       "text": "Format"
@@ -88,7 +88,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 341,
+        "line": 360,
         "column": 9
       },
       "text": "now.In"
@@ -96,7 +96,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 342,
+        "line": 360,
+        "column": 50
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 360,
+        "column": 50
+      },
+      "text": "v.EpisodeAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 361,
         "column": 14
       },
       "text": "Format"
@@ -104,7 +120,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 342,
+        "line": 361,
         "column": 14
       },
       "text": "v.Deadline.UTC"
@@ -112,7 +128,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 345,
+        "line": 364,
         "column": 10
       },
       "text": "fmt.Sprintf"
@@ -120,7 +136,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 347,
+        "line": 366,
         "column": 10
       },
       "text": "string"
@@ -128,7 +144,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 350,
+        "line": 369,
         "column": 10
       },
       "text": "string"
@@ -136,7 +152,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 350,
+        "line": 369,
         "column": 34
       },
       "text": "strings.Join"
@@ -144,7 +160,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 352,
+        "line": 371,
         "column": 9
       },
       "text": "string"
@@ -154,14 +170,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 341,
+        "line": 360,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 342,
+        "line": 361,
         "column": 2
       }
     }

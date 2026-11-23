@@ -79,6 +79,8 @@ type attestationVerdict struct {
 	// Verify 를 통과한 판정에서만 채워짐 — 거절 단계는 기한 없이 날짜로 셈.
 	Deadline     time.Time
 	DeadlineKind string
+	// EpisodeAt 은 거절 에피소드의 시작 시각임(G12) — 판정이 아니라 감시(prepare)가 채움. 거절 단계 key 에만 쓰임.
+	EpisodeAt time.Time
 }
 
 // critical 은 재시작이 거절될 상태이거나 이틀 안에 그렇게 될 상태인지임.
@@ -208,6 +210,9 @@ type attestationWatch struct {
 
 	identity string          // 마지막으로 본 기한(a196 — 파일의 발급 시각이 아님, 거절 단계는 기한 없음)
 	sent     map[string]bool // 이 신원에서 이미 알린 단계 키
+
+	episode   string    // 직전 판정의 거절 신원(단계 + 누락 집합 + 기한, 거절이 아니면 "")
+	episodeAt time.Time // 그 거절 에피소드가 시작된 판정 시각 — 프로세스 메모리뿐이라 재시작하면 새로 시작함
 }
 
 // newAttestationWatch 는 엔진 Context 에서 감시를 만듦.
@@ -324,6 +329,19 @@ func (w *attestationWatch) prepare() (event obs.Event, key string, ok bool) {
 		w.identity = identity
 		w.sent = map[string]bool{}
 	}
+	// 거절 에피소드: 거절 신원이 직전 판정과 다르면(직전이 거절이 아니었던 경우 포함) 이번 판정 시각에 새 에피소드를 시작함.
+	// 에피소드 시작이 key 에 들어가므로 회복 뒤 같은 날 재발은 새 outbox 행임 — 옛 행의 재알림 창(1시간)에 삼켜져 「보냄」으로
+	// 적히고 그날 침묵하지 않게(gstack review G12). 같은 에피소드 안의 재발급은 같은 key 라 하루 한 번이 유지됨.
+	episode := ""
+	switch v.Stage {
+	case stageHealthy, stageNotice, stageImminent:
+	default:
+		episode = string(v.Stage) + "|" + strings.Join(v.Missing, ",") + "|" + v.Deadline.UTC().Format(time.RFC3339Nano)
+	}
+	if episode != w.episode {
+		w.episode, w.episodeAt = episode, now
+	}
+	v.EpisodeAt = w.episodeAt
 	if v.Stage == stageHealthy {
 		return obs.Event{}, "", false
 	}
@@ -338,7 +356,8 @@ func (w *attestationWatch) prepare() (event obs.Event, key string, ok bool) {
 // 날수 단계는 단계 + 날수 + 기한(D-7 과 D-6 은 다른 키라 하루 한 번씩). 기한이 지난 상태는 단계 + 기한 + KST 날짜, 재시작이 거절될 상태
 // (만료 · 범위 상실 · 계좌 불일치 · 무효)는 단계 (+ 범위 상실이면 누락 endpoint 집합) + KST 날짜 — 고칠 때까지 하루 한 번.
 func stageKey(v attestationVerdict, now time.Time) string {
-	day := now.In(kst).Format("2006-01-02")
+	// 거절 단계 · 지남은 KST 날짜 + 에피소드 시작까지 — 날짜가 바뀌면 다음 날 재알림, 에피소드가 바뀌면(회복 뒤 재발 · 재시작) 새 알림.
+	day := now.In(kst).Format("2006-01-02") + ":" + v.EpisodeAt.UTC().Format(time.RFC3339)
 	deadline := v.Deadline.UTC().Format(time.RFC3339Nano)
 	switch v.Stage {
 	case stageNotice, stageImminent:
@@ -377,7 +396,11 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event 
 	const consequence = "재시작이 거부되면 청산(손절 · 익절) 관측 루프가 돌지 않아 자동 손절이 멈춘다. 지금 실행 중인 엔진은 계속 돈다."
 	// 날수 · 지남 통지는 「지금 도는 엔진의 손절」이 아니라 「재시작이 거부된 뒤」를 말함(구현 리뷰 P2-5).
 	const afterRefusal = "재시작이 거부되면 그때부터 자동 손절이 돌지 않는다. 지금 실행 중인 엔진은 계속 돈다."
-	const reverify = "할 일: 터미널에서 `tossctl verify run` 으로 감독하 실주문 검증을 다시 하고, 다음 갱신(타이머 또는 `tossctl soak attest`)을 기다린다."
+	// 감독 검증은 엔진과 같은 실행 잠금을 잡으므로 엔진을 멈춰야 돎 — 그 사실과 그동안 손절이 없다는 것을 숨기지 않음(gstack review G10).
+	const reverifySteps = "감독하 실주문 검증을 다시 해야 한다. 이 검증은 엔진과 같은 잠금을 써서 엔진을 멈춰야 실행되고, 멈춘 동안에는 " +
+		"자동 손절이 돌지 않는다. 보유 종목의 시장이 닫힌 시간에 엔진을 멈추고, 터미널에서 `tossctl verify run`(주문을 받는 시장을 " +
+		"`--market` 으로) → `tossctl soak attest` → 엔진 재시작 순서로 하라."
+	const reverify = "할 일: " + reverifySteps
 	const renew = "할 일: 갱신(`tossctl soak attest`)이 왜 실패하는지 확인한다 — 갱신에는 soak 통과와 유효 기간 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다."
 
 	var title, body string
@@ -386,7 +409,7 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event 
 		if v.DeadlineKind == deadlineProof {
 			title = fmt.Sprintf("감독하 실주문 검증 만료 D-%d — 그 뒤 엔진 재시작이 거부될 수 있다", v.DaysLeft)
 			body = fmt.Sprintf("감독하 실주문 검증(POST 주문 · 취소 증거)이 D-%d(%s)에 만료된다. 다른 유효한 감독 증거가 없으면 그 뒤 첫 갱신부터 "+
-				"엔진 재시작이 거부된다. %s attestation 자체의 만료는 %s 이다. %s", v.DaysLeft, deadline, afterRefusal, expires, reverify)
+				"엔진 재시작이 거부된다. %s attestation 자체의 만료는 %s 이다. 할 일: 기한 전에 %s", v.DaysLeft, deadline, afterRefusal, expires, reverifySteps)
 		} else {
 			title = fmt.Sprintf("자동매매 검증서(attestation) 만료 D-%d", v.DaysLeft)
 			body = fmt.Sprintf("capability attestation 이 D-%d(%s)에 만료된다. 그 뒤 엔진 재시작이 거부된다. %s %s",
@@ -416,7 +439,7 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event 
 			title = refused + " — 엔진이 쓰는 endpoint 가 attestation 에 없다"
 			remedy := "할 일: 빠진 endpoint 를 덮는 능력 검증을 다시 실행해 attestation 을 재발급하라."
 			if mutations > 0 {
-				remedy += " 주문 실행 endpoint 는 터미널의 `tossctl verify run`(감독하 실주문 검증)으로만 덮인다."
+				remedy += " 주문 실행 endpoint 는 감독하 실주문 검증으로만 덮인다 — " + reverifySteps
 			}
 			body = fmt.Sprintf("%s. 현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: %s. %s %s", refused, missing, consequence, remedy)
 		}

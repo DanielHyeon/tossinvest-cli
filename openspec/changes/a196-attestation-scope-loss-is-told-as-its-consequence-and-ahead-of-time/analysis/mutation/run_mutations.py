@@ -53,6 +53,11 @@ MUTANTS = [
     ("N7", "P2-3 overdue key 에서 기한 삭제", W, 'return string(v.Stage) + ":" + deadline + ":" + day', 'return string(v.Stage) + ":" + day'),
     # gstack review(시험 specialist) 로 더함 — run-3 부터.
     ("N8", "만료가 기한인 통지도 감독 증거 문구로(갈래 무시)", W, "if v.DeadlineKind == deadlineProof {", "if true {"),
+    # Manager 결정 G12·G10(2026-11-23)으로 더함 — run-4 부터.
+    ("E1", "G12 에피소드 시작을 key 에서 빼기", W, 'day := now.In(kst).Format("2006-01-02") + ":" + v.EpisodeAt.UTC().Format(time.RFC3339)',
+     'day := now.In(kst).Format("2006-01-02")'),
+    ("E2", "G12 에피소드를 매 판정 새로 시작", W, "if episode != w.episode {", "if true {"),
+    ("E3", "G10 할 일에서 엔진 정지 문장 삭제", W, "이 검증은 엔진과 같은 잠금을 써서 엔진을 멈춰야 실행되고, 멈춘 동안에는 ", ""),
 ]
 
 def sha(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()

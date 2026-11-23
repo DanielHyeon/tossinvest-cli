@@ -152,5 +152,19 @@ Pre-Edit Gate:
 - Manager 결정 대기(그 밖): G5(시장 이름), G7(IssuedAt 0 가드), G11(콘솔 표시). 기록만: G2·G3·G8·G9.
 - 재실행: 선택 시험 ok(최상위 PASS 47), `make lint` rc 0, strict validate valid, `check_analysis` rc 0. 변이 run-3: CAUGHT 18, 동등 생존 3(M12·N4·N7).
 
+## G12·G10 수리 (Manager 결정 2026-11-23, 마지막 수리 회차)
+
+- **G12(에피소드)**: 감시가 거절 에피소드의 시작 시각을 메모리에 듦(`attestationWatch.episode`·`episodeAt`, verdict `EpisodeAt`). 거절 신원(단계 + 누락 집합 + 기한)이 직전 판정과 다르면 이번 판정 시각에 새 에피소드.
+  거절 단계·`proof_overdue` 의 key = 단계 + (누락 집합 또는 기한) + KST 날짜 + 에피소드 시작. 편집은 `prepare`(분기 4 추가)·`stageKey`(날짜 문자열)·`eventFor` 안. `checkOnce` 무편집.
+  예: `attestation-watch:scope_lost:POST /api/v1/orders:2026-10-14:2026-10-14T03:00:00Z`, `attestation-watch:proof_overdue:2026-10-14T02:00:00Z:2026-10-14:2026-10-14T03:00:00Z`.
+  시험 `TestA196RecurrenceAfterRecoveryReachesTheRealOutbox`(실제 `obs.Notifier` + 실제 원장 임시 경로, 전송 2 → 같은 에피소드 재발급 0 → 다음 날 1), `TestA196RestartedWatchStartsANewRejectionEpisode`(이름 변경, 재시작 = 새 key). 앞서 잔여로 둔 「A→B→A 의 마지막 A 억제」 해소.
+  spec delta 본문 한 문장 + Scenario 「회복 뒤 같은 날 재발」 — 의도 편집 17, Scenario 18(`analysis/spec-edit-intent.md`).
+- **G10(할 일)**: 감독 증거가 관련된 세 알림(범위 상실 POST 갈래 · 감독 증거 날수 통지(「기한 전에」) · `proof_overdue`, 그리고 POST 가 섞인 GET 갈래의 덧붙임)의 할 일 =
+  「감독하 실주문 검증을 다시 해야 한다. 이 검증은 엔진과 같은 잠금을 써서 엔진을 멈춰야 실행되고, 멈춘 동안에는 자동 손절이 돌지 않는다. 보유 종목의 시장이 닫힌 시간에 엔진을 멈추고,
+  터미널에서 `tossctl verify run`(주문을 받는 시장을 `--market` 으로) → `tossctl soak attest` → 엔진 재시작 순서로 하라.」 `--resume`/`--redo` 미사용. 시험 `TestA196ReverifyRemedyTellsTheEngineMustStop`. design D7·§6 갱신.
+- 기록만(후속 후보, design §6): G5(시장 이름) · G7(`IssuedAt` 0 가드) · G11(콘솔이 만료만 표시). G2·G3·G8·G9 기록만(앞 절).
+- 변이 run-4: E1·E2·E3 CAUGHT. **N2 가 생존으로 바뀜 — 동등(에피소드가 key 를 스스로 가려 「보냄」 재설정은 메모리 크기만 정함)**, 사유 mutation/README.
+- 재실행: 선택 시험 engine·soak ok(최상위 PASS 49), `make lint` rc 0, strict validate valid, `check_analysis` rc 0. 번들 4(production) 재생성 + prepare 분기 9.
+
 ### 안 한 것
 - (1단계 당시) 리뷰 2회차 — 결정 반영 뒤 1.6b 로 실시. `codegraph affected`, CodeGraphContext·GBrain, 전체 시험·게이트, `make sdd-sync`. 운영 파일(`~/.config/tossctl`)은 안 읽음 — 실제 운영에 US 기록이 있는지 모름(Q1 의 현실 영향 미확인).

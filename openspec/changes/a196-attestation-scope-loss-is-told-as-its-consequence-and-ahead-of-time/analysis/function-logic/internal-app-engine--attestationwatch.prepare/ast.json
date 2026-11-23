@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/attestation_watch.go",
-  "source_sha256": "292dab380cb7273b0a42307786fb72e3511e08859e38c5e8dae785cdd4932bf3",
+  "source_sha256": "9b71a387860c809bc6ee8f80528cd5cc1446fdd8dd080eac14164d7548eae1f6",
   "package": "engine",
   "function": "prepare",
   "receiver": "attestationWatch",
   "signature": "attestationWatch.prepare(params=0, results=3)",
   "start": {
-    "line": 304,
+    "line": 309,
     "column": 1
   },
   "end": {
-    "line": 335,
+    "line": 353,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 306,
+        "line": 311,
         "column": 3
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 308,
+        "line": 313,
         "column": 4
       }
     },
@@ -34,23 +34,55 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 323,
+        "line": 328,
         "column": 2
       }
     },
     {
       "id": "B4",
-      "kind": "if",
+      "kind": "switch",
       "at": {
-        "line": 327,
+        "line": 336,
         "column": 2
       }
     },
     {
       "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 337,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 338,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
       "kind": "if",
       "at": {
-        "line": 331,
+        "line": 341,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 345,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 349,
         "column": 2
       }
     }
@@ -59,21 +91,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 328,
+        "line": 346,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 332,
+        "line": 350,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 334,
+        "line": 352,
         "column": 2
       }
     }
@@ -82,14 +114,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 305,
+        "line": 310,
         "column": 8
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 306,
+        "line": 311,
         "column": 13
       },
       "text": "recover"
@@ -97,7 +129,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 309,
+        "line": 314,
         "column": 5
       },
       "text": "w.log.Warn"
@@ -105,7 +137,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 316,
+        "line": 321,
         "column": 14
       },
       "text": "w.load"
@@ -113,7 +145,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 317,
+        "line": 322,
         "column": 9
       },
       "text": "w.clock.Now"
@@ -121,7 +153,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 318,
+        "line": 323,
         "column": 7
       },
       "text": "judgeAttestation"
@@ -129,7 +161,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 322,
+        "line": 327,
         "column": 14
       },
       "text": "Format"
@@ -137,7 +169,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 322,
+        "line": 327,
         "column": 14
       },
       "text": "v.Deadline.UTC"
@@ -145,7 +177,39 @@
     {
       "kind": "call",
       "at": {
-        "line": 330,
+        "line": 339,
+        "column": 13
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 339,
+        "column": 37
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 339,
+        "column": 74
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 339,
+        "column": 74
+      },
+      "text": "v.Deadline.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 348,
         "column": 8
       },
       "text": "stageKey"
@@ -153,7 +217,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 334,
+        "line": 352,
         "column": 9
       },
       "text": "w.eventFor"
@@ -163,35 +227,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 306,
+        "line": 311,
         "column": 6
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 307,
+        "line": 312,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 316,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 317,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 318,
+        "line": 321,
         "column": 2
       }
     },
@@ -203,16 +253,23 @@
       }
     },
     {
-      "kind": "=",
+      "kind": ":=",
       "at": {
-        "line": 324,
-        "column": 3
+        "line": 323,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 327,
+        "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 325,
+        "line": 329,
         "column": 3
       }
     },
@@ -220,6 +277,41 @@
       "kind": "=",
       "at": {
         "line": 330,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 335,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 339,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 342,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 344,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 348,
         "column": 2
       }
     }
@@ -229,7 +321,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 305,
+        "line": 310,
         "column": 2
       }
     }

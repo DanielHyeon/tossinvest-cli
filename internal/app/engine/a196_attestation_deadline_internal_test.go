@@ -11,13 +11,17 @@ package engine
 // 픽스처는 전부 합성 값(a135 의 계좌 · 시각 상수 재사용).
 
 import (
+	"context"
 	"fmt"
+	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 )
 
@@ -249,9 +253,9 @@ func TestA196ScopeLossOncePerDayAcrossReissues(t *testing.T) {
 	}
 }
 
-// TestA196RestartedWatchReusesTheRejectionKey: 재시작한 감시가 같은 날 같은 거절 상태를 다시 판정하면 outbox Key 가 같음 —
-// 가짜 알림기는 중복을 거르지 않으므로 건수가 아니라 Key 문자열로 잼(R2-3 i). 실제 outbox 는 이 Key 로 같은 행을 찾음.
-func TestA196RestartedWatchReusesTheRejectionKey(t *testing.T) {
+// TestA196RestartedWatchStartsANewRejectionEpisode: outbox Key 는 거절 에피소드마다 하나 — 같은 감시 안의 재발급은 같은 Key(하루 한 번),
+// 재시작(새 감시 객체)은 새 에피소드라 새 Key, 누락 집합이 다르면 다른 Key. 가짜 알림기는 중복을 거르지 않으므로 Key 문자열로 잼(R2-3 i, G12).
+func TestA196RestartedWatchStartsANewRejectionEpisode(t *testing.T) {
 	keyOf := func(att attest.Attestation, at time.Time) string {
 		n := &a135Notifier{}
 		w := a135Watch(clock.NewFake(at), n, true, &att)
@@ -264,18 +268,136 @@ func TestA196RestartedWatchReusesTheRejectionKey(t *testing.T) {
 	}
 	lost := without(a196ProofDue(a135Now, 20*a196Day), "POST /api/v1/orders")
 	k1 := keyOf(lost, a135Now)
-	k2 := keyOf(a196Reissued(lost, a135Now.Add(6*time.Hour)), a135Now.Add(6*time.Hour))
-	if k1 != k2 {
-		t.Fatalf("a reissue of the same scope loss got a new outbox key: %q vs %q", k1, k2)
+	if want := "attestation-watch:scope_lost:POST /api/v1/orders:2026-10-14:" + a135Now.UTC().Format(time.RFC3339); k1 != want {
+		t.Fatalf("scope-loss key = %q, want %q", k1, want)
+	}
+	// 재시작 흉내: 새 감시 객체가 6시간 뒤 같은 결함의 재발급을 처음 판정 — 새 에피소드, 새 Key.
+	if k2 := keyOf(a196Reissued(lost, a135Now.Add(6*time.Hour)), a135Now.Add(6*time.Hour)); k2 == k1 {
+		t.Fatalf("a restarted watch reused the previous episode's outbox key %q", k1)
 	}
 	both := without(lost, "POST /api/v1/orders/{id}/cancel")
 	if k3 := keyOf(both, a135Now); k3 == k1 {
 		t.Fatalf("a different missing set reused outbox key %q", k1)
 	}
-	expA := a135Attestation(-time.Hour)
-	expB := a135Attestation(-2 * time.Hour)
-	if ka, kb := keyOf(expA, a135Now), keyOf(expB, a135Now); ka != kb {
-		t.Fatalf("two expired files on the same day got different outbox keys: %q vs %q", ka, kb)
+
+	// 같은 감시 안에서는 재발급이 같은 에피소드 — 사건이 더 나오지 않음(하루 한 번).
+	clk := clock.NewFake(a135Now)
+	n := &a135Notifier{}
+	att := lost
+	w := a135Watch(clk, n, true, &att)
+	w.checkOnce(t.Context())
+	clk.Advance(6 * time.Hour)
+	att = a196Reissued(lost, clk.Now())
+	w.checkOnce(t.Context())
+	if got := n.got(); len(got) != 1 || got[0].Key != k1 {
+		t.Fatalf("same watch, same episode: %+v, want one event with key %q", got, k1)
+	}
+}
+
+// a196Publisher 는 실제 알림기가 부르는 전송 자리의 기록기임 — outbox 판정을 지난 것만 여기 닿음.
+type a196Publisher struct {
+	mu   sync.Mutex
+	sent []obs.Notification
+}
+
+func (p *a196Publisher) Publish(_ context.Context, n obs.Notification) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.sent = append(p.sent, n)
+	return nil
+}
+
+func (p *a196Publisher) count() int {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return len(p.sent)
+}
+
+// TestA196RecurrenceAfterRecoveryReachesTheRealOutbox: 실제 알림기 + 실제 원장(임시 경로)에서 「범위 상실 알림 전달 → healthy →
+// 1시간 안에 같은 범위 상실 재발」의 둘째 알림이 새 outbox 행으로 실제 전송됨(G12). 에피소드가 key 에 없으면 옛 행이 재알림 창(1시간)
+// 안이라 정산된 행으로 삼켜지고, 감시는 그것을 「보냄」으로 적어 그날 침묵함 — 가짜 알림기로는 이 경로를 못 잼.
+// 같은 에피소드의 재발급은 그날 0, 다음 날 1.
+func TestA196RecurrenceAfterRecoveryReachesTheRealOutbox(t *testing.T) {
+	clk := clock.NewFake(a135Now)
+	j, err := journal.Open(context.Background(), journal.Options{
+		Path:     filepath.Join(t.TempDir(), journal.DBFileName),
+		FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}),
+		Clock:    clk,
+	})
+	if err != nil {
+		t.Fatalf("open journal: %v", err)
+	}
+	t.Cleanup(func() { _ = j.Close() })
+	pub := &a196Publisher{}
+	notifier := &obs.Notifier{Publisher: pub, Journal: j, Clock: clk, Attempts: 1, RetryDelay: time.Millisecond}
+
+	good := a196ProofDue(a135Now, 20*a196Day)
+	att := without(good, "POST /api/v1/orders")
+	w := a135Watch(clk, nil, true, &att)
+	w.notifier = notifier
+	ctx := t.Context()
+
+	w.checkOnce(ctx) // 범위 상실 — 전달
+	if pub.count() != 1 {
+		t.Fatalf("first scope loss: %d publishes, want 1", pub.count())
+	}
+	clk.Advance(20 * time.Minute)
+	att = good // 회복
+	w.checkOnce(ctx)
+	clk.Advance(20 * time.Minute)
+	att = without(a196Reissued(good, clk.Now()), "POST /api/v1/orders") // 첫 전달 40분 뒤 같은 결함 재발
+	w.checkOnce(ctx)
+	if pub.count() != 2 {
+		t.Fatalf("recurrence after recovery within the reminder window: %d publishes, want 2 — the outbox swallowed it", pub.count())
+	}
+	clk.Advance(3 * time.Hour)
+	att = a196Reissued(att, clk.Now()) // 같은 에피소드의 재발급
+	w.checkOnce(ctx)
+	if pub.count() != 2 {
+		t.Fatalf("a reissue inside the same episode was published again: %d", pub.count())
+	}
+	clk.Set(a135Now.Add(a196Day)) // 다음 날 — 같은 에피소드라도 날짜가 바뀌면 다시
+	w.checkOnce(ctx)
+	if pub.count() != 3 {
+		t.Fatalf("next day: %d publishes, want 3", pub.count())
+	}
+}
+
+// TestA196ReverifyRemedyTellsTheEngineMustStop: 감독 증거가 관련된 알림(범위 상실 POST 갈래 · 감독 증거 날수 · 지남)의 할 일은
+// 검증에 엔진 정지가 필요하고 그동안 손절이 없다는 것, 시장이 닫힌 시간, verify → attest → 재기동 순서를 말함(G10).
+func TestA196ReverifyRemedyTellsTheEngineMustStop(t *testing.T) {
+	cases := map[string]attest.Attestation{
+		"scope_lost(POST)": without(a196ProofDue(a135Now, 20*a196Day), "POST /api/v1/orders"),
+		"notice(proof)":    a196ProofDue(a135Now, 5*a196Day),
+		"proof_overdue":    a196ProofDue(a135Now, -time.Hour),
+	}
+	for name, att := range cases {
+		t.Run(name, func(t *testing.T) {
+			n := &a135Notifier{}
+			w := a135Watch(clock.NewFake(a135Now), n, true, &att)
+			w.checkOnce(t.Context())
+			got := n.got()
+			if len(got) != 1 {
+				t.Fatalf("events=%+v", got)
+			}
+			body := got[0].Body
+			for _, want := range []string{"엔진을 멈춰야", "자동 손절이 돌지 않는다", "시장이 닫힌 시간", "`tossctl verify run`", "`tossctl soak attest`", "엔진 재시작"} {
+				if !strings.Contains(body, want) {
+					t.Errorf("remedy lacks %q: %s", want, body)
+				}
+			}
+			if !(strings.Index(body, "tossctl verify run") < strings.Index(body, "tossctl soak attest")) {
+				t.Errorf("remedy order is not verify → attest: %s", body)
+			}
+			for _, bad := range []string{"--resume", "--redo"} {
+				if strings.Contains(body, bad) {
+					t.Errorf("remedy names unverified flag %s: %s", bad, body)
+				}
+			}
+			if name == "notice(proof)" && !strings.Contains(body, "기한 전에") {
+				t.Errorf("notice remedy lacks 「기한 전에」: %s", body)
+			}
+		})
 	}
 }
 

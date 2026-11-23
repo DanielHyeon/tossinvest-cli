@@ -2,8 +2,8 @@
 
 > **편집 후 지도 — 2단계 GREEN 뒤(2026-11-23).** 편집 전 원본 `../../pre-edit-ast/internal-app-engine--stagekey.ast.json`, 재번호 `renumber.txt`(옛/새 분기를 (종류, 줄 문장)으로 difflib 정렬 — 생성기 `../../renumber.py.txt`).
 
-- Source: `internal/app/engine/attestation_watch.go` (340-353)
-- AST evidence: `ast.json` — branches **4** / returns **4** / calls **9**, source SHA-256 `292dab380cb7273b0a42307786fb72e3511e08859e38c5e8dae785cdd4932bf3`(파일 단위, 편집 후).
+- Source: `internal/app/engine/attestation_watch.go` (358-372)
+- AST evidence: `ast.json` — branches **4** / returns **4** / calls **11**, source SHA-256 `9b71a387860c809bc6ee8f80528cd5cc1446fdd8dd080eac14164d7548eae1f6`(파일 단위, 편집 후).
   명령 `GOFLAGS=-trimpath go run ./tools/logic-map --file internal/app/engine/attestation_watch.go --func stageKey`.
 - Risk scan: `risk-pattern-report.md`.
 - a166 census: `attestation_watch.go`·`a135_attestation_watch_internal_test.go` 0건(1.4).
@@ -20,11 +20,11 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (switch@343) | 단계 | — | — | — |
-| B2 (case@344) | notice·imminent | 없음 | return@345 `stage:days:기한` | `TestA196SameProofReissueIsNotAnnouncedAgain`(D-7→D-6 Key 다름) · `TestA135WatchAnnouncesEachStageOnce` |
-| B3 (case@346) | proof_overdue | 없음 | return@347 `stage:기한:KST날짜` | `TestA196OverdueIsCriticalOncePerDay` |
-| B4 (case@348) | scope_lost | 없음 | return@350 `stage:누락,집합:KST날짜` | `TestA196RestartedWatchReusesTheRejectionKey` · `TestA196ScopeLossOncePerDayAcrossReissues` |
-| (끝) | 그 밖 거절 단계 | 없음 | return@352 `stage:KST날짜` | `TestA196RejectionDayIsTheKSTDate` · `TestA135InvalidStatesAreRemindedDaily` · `TestA196ScopeLossThenExpiryAreTwoAlerts` |
+| B1 (switch@362) | 단계 | — | — | — |
+| B2 (case@363) | notice·imminent | 없음 | return@364 `stage:days:기한` | `TestA196SameProofReissueIsNotAnnouncedAgain`(D-7→D-6 Key 다름) · `TestA135WatchAnnouncesEachStageOnce` |
+| B3 (case@365) | proof_overdue | 없음 | return@366 `stage:기한:KST날짜:에피소드시작` | `TestA196OverdueIsCriticalOncePerDay` |
+| B4 (case@367) | scope_lost | 없음 | return@369 `stage:누락,집합:KST날짜:에피소드시작` | `TestA196RestartedWatchStartsANewRejectionEpisode` · `TestA196ScopeLossOncePerDayAcrossReissues` |
+| (끝) | 그 밖 거절 단계 | 없음 | return@371 `stage:KST날짜:에피소드시작` | `TestA196RejectionDayIsTheKSTDate` · `TestA135InvalidStatesAreRemindedDaily` · `TestA196ScopeLossThenExpiryAreTwoAlerts` |
 
 ## Calls and live bindings
 

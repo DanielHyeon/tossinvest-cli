@@ -1,14 +1,14 @@
 # judgeAttestation: 옛 분기 12 → 새 분기 13 (base 064f59fd9)
-same    B1(if@88) -> B1(if@99)  if loadErr != nil {
-same    B2(if@93) -> B2(if@104)  if err := att.Verify(now, accountRef, required); err != nil {
-same    B3(switch@94) -> B3(switch@105)  switch {
-same    B4(case@95) -> B4(case@106)  case errors.Is(err, attest.ErrExpired):
-same    B5(case@97) -> B5(case@108)  case errors.Is(err, attest.ErrEndpointNotAttested):
-same    B6(case@100) -> B6(case@111)  case errors.Is(err, attest.ErrAccountMismatch):
-same    B7(case@102) -> B7(case@113)  case errors.Is(err, attest.ErrIncomplete):
-same    B8(case@104) -> B8(case@115)  default:
-added   -> B9(if@125)  if remaining <= 0 {
-same    B9(switch@113) -> B10(switch@133)  switch {
-same    B10(case@114) -> B11(case@134)  case v.DaysLeft > attestationNoticeDays:
-same    B11(case@116) -> B12(case@136)  case v.DaysLeft > attestationCriticalDays:
-same    B12(case@118) -> B13(case@138)  default:
+same    B1(if@88) -> B1(if@101)  if loadErr != nil {
+same    B2(if@93) -> B2(if@106)  if err := att.Verify(now, accountRef, required); err != nil {
+same    B3(switch@94) -> B3(switch@107)  switch {
+same    B4(case@95) -> B4(case@108)  case errors.Is(err, attest.ErrExpired):
+same    B5(case@97) -> B5(case@110)  case errors.Is(err, attest.ErrEndpointNotAttested):
+same    B6(case@100) -> B6(case@113)  case errors.Is(err, attest.ErrAccountMismatch):
+same    B7(case@102) -> B7(case@115)  case errors.Is(err, attest.ErrIncomplete):
+same    B8(case@104) -> B8(case@117)  default:
+added   -> B9(if@127)  if remaining <= 0 {
+same    B9(switch@113) -> B10(switch@135)  switch {
+same    B10(case@114) -> B11(case@136)  case v.DaysLeft > attestationNoticeDays:
+same    B11(case@116) -> B12(case@138)  case v.DaysLeft > attestationCriticalDays:
+same    B12(case@118) -> B13(case@140)  default:
