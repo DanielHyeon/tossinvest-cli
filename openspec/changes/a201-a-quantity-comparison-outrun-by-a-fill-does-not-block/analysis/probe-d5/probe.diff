@@ -1,0 +1,136 @@
+diff --git a/internal/app/engine/a201_stale_quantity_comparison_repro_test.go b/internal/app/engine/a201_stale_quantity_comparison_repro_test.go
+index 9cc7c72a7..13f6c2b9e 100644
+--- a/internal/app/engine/a201_stale_quantity_comparison_repro_test.go
++++ b/internal/app/engine/a201_stale_quantity_comparison_repro_test.go
+@@ -294,11 +294,9 @@ func (w *a201World) start(symbol string) {
+ func (w *a201World) assertStuck(symbol string) {
+ 	w.t.Helper()
+ 	if got := w.activeCauses(symbol); len(got) != 1 || got[0] != journal.ReconcileCauseQuantityMismatch {
+-		w.t.Fatalf("active rows for %s = %q, want one QUANTITY_MISMATCH (current behaviour)", symbol, got)
+-	}
+-	if w.tracker.EntryAllowed("kr", symbol) == nil {
+-		w.t.Fatalf("entry for %s allowed; current behaviour keeps it refused", symbol)
++		w.t.Logf("PROBE active rows for %s = %q (all rows %q)", symbol, got, w.rows(symbol))
+ 	}
++	w.t.Logf("PROBE %s active=%q entry_refused=%v", symbol, w.activeCauses(symbol), w.tracker.EntryAllowed("kr", symbol) != nil)
+ }
+ 
+ // rebuyRefused 는 사람이 앱으로 그 종목을 다시 사 계좌가 5 주를 보유했을 때 편입되지 않음(자동 손절 없음)을 기록함.
+@@ -311,7 +309,7 @@ func (w *a201World) rebuyRefused(symbol string) {
+ 		w.t.Fatalf("rebuy cycle: %v", c.Err)
+ 	}
+ 	if c.Adopted != 0 || w.position(symbol).Adopted() {
+-		w.t.Fatalf("re-bought holding adopted (adopted=%d); current behaviour refuses it under the block", c.Adopted)
++		w.t.Logf("PROBE re-bought holding adopted=%d", c.Adopted)
+ 	}
+ }
+ 
+@@ -421,9 +419,7 @@ func TestA201CurrentBehaviourAnEarlierCreditIsRefutedByTheStaleComparison(t *tes
+ 	w.converge.fire = func() { w.stopFills(symbol, "20") }
+ 	c = w.next()
+ 	w.logCycle("W2 주기(로컬 20 · 계좌 0)", symbol, c)
+-	if c.Err != nil || c.Converged != 0 || c.Released != 0 {
+-		t.Fatalf("W2 cycle = %+v, want no convergence and no release", c)
+-	}
++	t.Logf("PROBE W2-on-credit cycle released=%d", c.Released)
+ 	w.settleClean(symbol, 5)
+ 	w.assertStuck(symbol)
+ }
+diff --git a/internal/app/engine/reconcileloop.go b/internal/app/engine/reconcileloop.go
+index f1afbcc36..e30e58c40 100644
+--- a/internal/app/engine/reconcileloop.go
++++ b/internal/app/engine/reconcileloop.go
+@@ -431,6 +431,7 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
+ 	}
+ 	cycle.Stable = true
+ 
++	probeBefore, probeErr := d.opts.Journal.MaxFillEventID(ctx)
+ 	local, err := reconcile.LocalStateFromJournal(ctx, d.opts.Journal, d.opts.AccountRef)
+ 	if err != nil {
+ 		cycle.Err = fmt.Errorf("engine: reading the local state for reconciliation: %w", err)
+@@ -461,6 +462,17 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
+ 		}
+ 		return cycle
+ 	}
++	if probeErr == nil {
++		adjusted := map[string]bool{}
++		for _, c := range converged.Converged {
++			adjusted[strings.ToUpper(c.Symbol)] = true
++		}
++		var dropped []string
++		diff, dropped = reconcile.ProbeRejudge(ctx, d.opts.Journal, d.opts.AccountRef, diff, probeBefore, adjusted)
++		if len(dropped) > 0 && d.opts.Log != nil {
++			d.opts.Log.Event("reconcile.probe_dropped", "symbols", strings.Join(dropped, ","))
++		}
++	}
+ 	outcome, err := d.opts.Tracker.Observe(ctx, diff)
+ 	// 종결 증명 해제마다 계좌 데이터 없는 로그 한 줄(a192 D7). 오류가 있어도 커밋된 해제는 남김.
+ 	d.logOrderTerminalReleases(outcome)
+diff --git a/internal/reconcile/a201_probe.go b/internal/reconcile/a201_probe.go
+new file mode 100644
+index 000000000..6d2e940e0
+--- /dev/null
++++ b/internal/reconcile/a201_probe.go
+@@ -0,0 +1,62 @@
++package reconcile
++
++// a201 1.5 (e)(f) 탐침 — scratch 사본 전용. 추적 파일 아님. design D3 의 세 조건을 최소로 흉내 냄.
++
++import (
++	"context"
++	"os"
++	"strings"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
++)
++
++// ProbeRejudge 는 diff 에서 (가)(나)(다)를 만족하는 수량 불일치를 뺀 사본을 돌려줌. PROBE_D5=1 이면 그 종목의 missing-order 중
++// 다시 읽은 로컬에서 추적 대상이 아닌 것도 뺌.
++func ProbeRejudge(ctx context.Context, j *journal.Journal, account string, diff Diff, before int64,
++	adjusted map[string]bool) (Diff, []string) {
++	held, err := HeldBySymbol(ctx, j, account)
++	if err != nil {
++		return diff, nil
++	}
++	var dropped []string
++	kept := make([]QuantityMismatch, 0, len(diff.Quantities))
++	for _, m := range diff.Quantities {
++		symbol := strings.ToUpper(strings.TrimSpace(m.Symbol))
++		wm, err := j.FillWatermark(ctx, symbol)
++		if err != nil || wm <= before || adjusted[symbol] {
++			kept = append(kept, m)
++			continue
++		}
++		local, present := held[symbol]
++		reread, ok := canonicalPresentQuantity(local, present)
++		if !ok || !quantitiesAgree(reread, m.Broker) {
++			kept = append(kept, m)
++			continue
++		}
++		dropped = append(dropped, symbol)
++	}
++	out := diff
++	out.Quantities = kept
++	if os.Getenv("PROBE_D5") == "1" && len(dropped) > 0 {
++		tracked, err := j.TrackedFillOrders(ctx, account)
++		if err == nil {
++			live := map[string]bool{}
++			for _, t := range tracked {
++				live[t.OrderID] = true
++			}
++			drop := map[string]bool{}
++			for _, s := range dropped {
++				drop[s] = true
++			}
++			var missing []LocalOrder
++			for _, o := range diff.MissingOrders {
++				if drop[strings.ToUpper(o.Symbol)] && !live[o.OriginalOrderID] {
++					continue
++				}
++				missing = append(missing, o)
++			}
++			out.MissingOrders = missing
++		}
++	}
++	return out, dropped
++}

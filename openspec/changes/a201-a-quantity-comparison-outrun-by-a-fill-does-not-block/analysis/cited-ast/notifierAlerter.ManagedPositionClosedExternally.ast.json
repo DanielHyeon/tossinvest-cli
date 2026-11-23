@@ -1,0 +1,102 @@
+{
+  "file": "internal/app/engine/exitwiring.go",
+  "source_sha256": "e8f131a312ece6fbaadecd1c71131d7db892c9ab64ac2f9254d56ec1936c8c30",
+  "package": "engine",
+  "function": "ManagedPositionClosedExternally",
+  "receiver": "notifierAlerter",
+  "signature": "notifierAlerter.ManagedPositionClosedExternally(params=2, results=1)",
+  "start": {
+    "line": 132,
+    "column": 1
+  },
+  "end": {
+    "line": 160,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 134,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 135,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 141,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 9
+      },
+      "text": "a.notifier.Notify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 8
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 4
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 10
+      },
+      "text": "a.names.Label"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 139,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

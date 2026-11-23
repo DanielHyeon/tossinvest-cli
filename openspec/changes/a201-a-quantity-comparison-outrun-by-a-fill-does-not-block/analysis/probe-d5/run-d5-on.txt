@@ -1,0 +1,83 @@
+=== RUN   TestA201CurrentBehaviourW2FillAfterTheLocalReadBeforeConvergencePositions
+    a201_stale_quantity_comparison_repro_test.go:320: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:325: [W2 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:332: PROBE active rows for SYN201 = [] (all rows [])
+    a201_stale_quantity_comparison_repro_test.go:332: PROBE SYN201 active=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:333: [일치 주기 1] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:333: [일치 주기 2] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:333: [일치 주기 3] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:333: [일치 주기 4] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:333: [일치 주기 5] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:334: PROBE active rows for SYN201 = [] (all rows [])
+    a201_stale_quantity_comparison_repro_test.go:334: PROBE SYN201 active=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:335: [재매수 주기(계좌 5 · 로컬 0)] err=<nil> stable=true folded=1 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:335: PROBE re-bought holding adopted=1
+    a201_stale_quantity_comparison_repro_test.go:336: PROBE active rows for SYN201 = [] (all rows [])
+    a201_stale_quantity_comparison_repro_test.go:336: PROBE SYN201 active=[] entry_refused=false
+--- PASS: TestA201CurrentBehaviourW2FillAfterTheLocalReadBeforeConvergencePositions (0.50s)
+=== RUN   TestA201CurrentBehaviourW3aFillAfterConvergencePositionsIsAQuantityStale
+    a201_stale_quantity_comparison_repro_test.go:343: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:348: [W3-a 주기] err=reconcile: the quantity mismatch on SYN201 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201 expected quantity 31 but found 0; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:352: PROBE active rows for SYN201 = [] (all rows [])
+    a201_stale_quantity_comparison_repro_test.go:352: PROBE SYN201 active=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:353: [일치 주기 1] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:353: [일치 주기 2] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:353: [일치 주기 3] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:353: [일치 주기 4] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:353: [일치 주기 5] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:354: PROBE active rows for SYN201 = [] (all rows [])
+    a201_stale_quantity_comparison_repro_test.go:354: PROBE SYN201 active=[] entry_refused=false
+--- PASS: TestA201CurrentBehaviourW3aFillAfterConvergencePositionsIsAQuantityStale (0.47s)
+=== RUN   TestA201CurrentBehaviourAQuantityFillJustBeforeTheAdjustmentTxIsStillAQuantityStale
+    a201_stale_quantity_comparison_repro_test.go:362: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:367: [tx 직전 체결 주기] err=reconcile: the quantity mismatch on SYN201 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201 expected quantity 31 but found 0; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:371: PROBE active rows for SYN201 = [] (all rows [])
+    a201_stale_quantity_comparison_repro_test.go:371: PROBE SYN201 active=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:372: [일치 주기 1] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:372: [일치 주기 2] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:372: [일치 주기 3] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:372: [일치 주기 4] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:372: [일치 주기 5] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:373: PROBE active rows for SYN201 = [] (all rows [])
+    a201_stale_quantity_comparison_repro_test.go:373: PROBE SYN201 active=[] entry_refused=false
+--- PASS: TestA201CurrentBehaviourAQuantityFillJustBeforeTheAdjustmentTxIsStillAQuantityStale (0.50s)
+=== RUN   TestA201CurrentBehaviourW3bWatermarkOnlyStaleThenTheFillBeforeObserve
+    a201_stale_quantity_comparison_repro_test.go:383: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:391: [W3-b 주기] err=reconcile: the quantity mismatch on SYN201 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201 expected fill watermark 1 but found 2; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:398: PROBE active rows for SYN201 = [] (all rows [])
+    a201_stale_quantity_comparison_repro_test.go:398: PROBE SYN201 active=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:399: [일치 주기 1] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:399: [일치 주기 2] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:399: [일치 주기 3] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:399: [일치 주기 4] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:399: [일치 주기 5] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:400: PROBE active rows for SYN201 = [] (all rows [])
+    a201_stale_quantity_comparison_repro_test.go:400: PROBE SYN201 active=[] entry_refused=false
+--- PASS: TestA201CurrentBehaviourW3bWatermarkOnlyStaleThenTheFillBeforeObserve (0.53s)
+=== RUN   TestA201CurrentBehaviourAnEarlierCreditIsRefutedByTheStaleComparison
+    a201_stale_quantity_comparison_repro_test.go:409: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:413: [외부 매도 주기(로컬 31 · 계좌 20)] err=<nil> stable=true folded=0 converged=1 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_stale_quantity_comparison_repro_test.go:421: [W2 주기(로컬 20 · 계좌 0)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:422: PROBE W2-on-credit cycle released=1
+    a201_stale_quantity_comparison_repro_test.go:423: [일치 주기 1] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:423: [일치 주기 2] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:423: [일치 주기 3] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:423: [일치 주기 4] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:423: [일치 주기 5] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:424: PROBE active rows for SYN201 = [] (all rows ["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"])
+    a201_stale_quantity_comparison_repro_test.go:424: PROBE SYN201 active=[] entry_refused=false
+--- PASS: TestA201CurrentBehaviourAnEarlierCreditIsRefutedByTheStaleComparison (0.47s)
+=== RUN   TestA201CurrentBehaviourAStaleStopsTheTrailingSymbolWhoseFillLandsAfterObserve
+    a201_stale_quantity_comparison_repro_test.go:448: [A stale 주기] err=reconcile: the quantity mismatch on SYN201A was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201A expected quantity 31 but found 0; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201A)=[] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:449: [A stale 주기] err=reconcile: the quantity mismatch on SYN201A was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201A expected quantity 31 but found 0; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_stale_quantity_comparison_repro_test.go:455: [일치 주기 1] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_stale_quantity_comparison_repro_test.go:455: [일치 주기 2] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_stale_quantity_comparison_repro_test.go:455: [일치 주기 3] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_stale_quantity_comparison_repro_test.go:455: [일치 주기 4] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_stale_quantity_comparison_repro_test.go:455: [일치 주기 5] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_stale_quantity_comparison_repro_test.go:456: PROBE active rows for SYN201A = [] (all rows [])
+    a201_stale_quantity_comparison_repro_test.go:456: PROBE SYN201A active=[] entry_refused=false
+    a201_stale_quantity_comparison_repro_test.go:457: PROBE SYN201B active=["QUANTITY_MISMATCH"] entry_refused=true
+--- PASS: TestA201CurrentBehaviourAStaleStopsTheTrailingSymbolWhoseFillLandsAfterObserve (0.67s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	3.159s

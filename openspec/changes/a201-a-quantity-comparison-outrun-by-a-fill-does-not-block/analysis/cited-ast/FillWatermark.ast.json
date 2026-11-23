@@ -1,0 +1,87 @@
+{
+  "file": "internal/journal/position_adjustments.go",
+  "source_sha256": "d4af875851e00c9333be22cad13685549d80a74d19c365a32840d31bdc6c555d",
+  "package": "journal",
+  "function": "FillWatermark",
+  "receiver": "Journal",
+  "signature": "Journal.FillWatermark(params=2, results=2)",
+  "start": {
+    "line": 190,
+    "column": 1
+  },
+  "end": {
+    "line": 198,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 195,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 197,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 12
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 12
+      },
+      "text": "j.db.QueryRowContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 3
+      },
+      "text": "normaliseSymbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 13
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 192,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

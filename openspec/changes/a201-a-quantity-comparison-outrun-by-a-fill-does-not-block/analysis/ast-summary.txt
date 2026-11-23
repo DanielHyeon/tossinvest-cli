@@ -1,0 +1,146 @@
+== Journal ApplyPositionAdjustment internal/journal/position_adjustments.go 202 - 372 sha d4af875851e0
+ B: B1(if@204) B2(if@210) B3(switch@219) B4(case@220) B5(if@222) B6(case@226) B7(case@227) B8(switch@236) B9(case@237) B10(if@239) B11(case@246) B12(case@247) B13(if@251) B14(else@253) B15(if@253) B16(if@261) B17(if@267) B18(if@284) B19(if@286) B20(if@318) B21(if@319) B22(if@332) B23(if@345) B24(if@346) B25(if@357) B26(if@363) B27(if@366)
+ R: @205 @211 @223 @225 @228 @248 @252 @254 @264 @268 @327 @341 @351 @358 @364 @367 @371
+ C: req.normalised@203 j.nowString@207 j.db.BeginTx@209 fmt.Errorf@211 tx.Rollback@213 scanAdjustment@218 tx.QueryRowContext@218 scanPosition@221 tx.QueryRowContext@221 errors.Is@226 scanPosition@232 tx.QueryRowContext@232 errors.Is@246 sameDecimal@251 Scan@261 tx.QueryRowContext@261 fmt.Errorf@264 fmt.Sprintf@270 fmt.Sprintf@271 int64@285 PositionID@290 firstNonEmpty@312 tx.ExecContext@319 convergedState@325 closedStamp@326 fmt.Errorf@327 tx.ExecContext@332 fmt.Errorf@341 tx.ExecContext@346 convergedState@349 closedStamp@350 fmt.Errorf@351 closeExitStateOnAdjustmentTx@356 scanPosition@362 tx.QueryRowContext@362 tx.Commit@366 fmt.Errorf@367
+ defers: @213
+==  blockFromReconcileState internal/reconcile/mismatch.go 1398 - 1424 sha 9895f31184e5
+ B: B1(if@1411) B2(if@1414) B3(if@1417)
+ R: @1423
+ C: execgw.ReconcileReasonFor@1399 state.AccountWide@1414
+==  blocksFor internal/reconcile/mismatch.go 1439 - 1472 sha 9895f31184e5
+ B: B1(range@1441) B2(range@1455)
+ R: @1471
+ C: append@1442 fmt.Sprintf@1450 append@1456 fmt.Sprintf@1465 missing.Identity@1468
+==  canonicalPresentQuantity internal/reconcile/compare.go 497 - 507 sha 87956731b132
+ B: B1(if@498) B2(if@503)
+ R: @499 @504 @506
+ C: strings.TrimSpace@501 riskcalc.CanonicalDecimal@502
+== Comparer Compare internal/reconcile/compare.go 359 - 491 sha 87956731b132
+ B: B1(if@361) B2(range@367) B3(range@373) B4(if@374) B5(range@379) B6(if@381) B7(range@388) B8(if@394) B9(switch@407) B10(case@408) B11(case@410) B12(case@418) B13(case@426) B14(case@430) B15(range@440) B16(range@441) B17(if@443) B18(range@456) B19(if@457) B20(if@461) B21(range@468) B22(if@469) B23(range@477) B24(if@478) B25(if@483)
+ R: @482 @487 @490
+ C: snap.AsOf.IsZero@361 Format@362 snap.AsOf.UTC@362 make@366 len@366 strings.ToUpper@368 strings.TrimSpace@368 make@371 len@371 len@371 append@376 strings.ToUpper@380 strings.TrimSpace@380 append@383 sort.Strings@386 canonicalPresentQuantity@392 canonicalPresentQuantity@393 append@399 isZeroDecimal@406 isZeroDecimal@406 isPositiveDecimal@410 append@415 append@422 quantitiesAgree@426 append@427 localOrdersForComparison@437 make@438 len@438 make@439 len@439 brokerOrderIdentityForLocal@442 localOrder.Identity@442 identitiesCompatible@443 localOrder.Identity@443 append@446 make@454 len@454 make@455 len@455 len@457 append@470 make@476 append@479 sort.Slice@482 less@482 missing.Identity@482 missing.Identity@482 len@483 sort.Slice@486 less@487 brokerOrderIdentity@487 brokerOrderIdentity@488
+== Converger ConvergeQuantities internal/reconcile/converge.go 142 - 273 sha 00a784b3f6b3
+ B: B1(if@144) B2(if@147) B3(if@152) B4(if@156) B5(if@173) B6(if@178) B7(if@194) B8(range@197) B9(if@200) B10(if@206) B11(if@228) B12(if@233) B13(if@244) B14(if@251) B15(if@254)
+ R: @145 @148 @153 @157 @174 @195 @207 @229 @234 @272
+ C: len@144 errors.New@148 strings.TrimSpace@151 firstNonEmpty@151 errors.New@153 strings.TrimSpace@155 fmt.Errorf@157 ?@172 len@173 sort.Strings@176 c.Credit.AdjustmentApplied@189 c.Journal.Positions@193 strings.ToUpper@198 strings.TrimSpace@198 soleLiveMarket@199 c.Journal.FillWatermark@205 c.Journal.ApplyPositionAdjustment@209 string@213 position.Classify@213 mismatch.Authority@218 fmt.Sprintf@223 errors.Is@228 fmt.Errorf@229 fmt.Errorf@234 append@237 append@242 c.Alert.ManagedPositionClosedExternally@254 result.Position.Adopted@259 append@261 fmt.Errorf@261 errors.Join@272
+ defers: @172
+==  creditUsableBy internal/reconcile/mismatch.go 509 - 519 sha 9895f31184e5
+ B: B1(if@511) B2(if@515)
+ R: @512 @516 @518
+ C: creditStampAt@510 time.Parse@514 strings.TrimSpace@514 observedAt.After@518
+== Journal FillWatermark internal/journal/position_adjustments.go 190 - 198 sha d4af875851e0
+ B: B1(if@192)
+ R: @195 @197
+ C: Scan@192 j.db.QueryRowContext@192 normaliseSymbol@194 fmt.Errorf@195
+==  hasBlockFor internal/reconcile/mismatch.go 556 - 567 sha 9895f31184e5
+ B: B1(range@557) B2(if@558) B3(if@562)
+ R: @563 @566
+ C: strings.ToUpper@562 strings.TrimSpace@562
+==  HeldBySymbol internal/reconcile/compare.go 148 - 179 sha 87956731b132
+ B: B1(if@150) B2(range@154) B3(if@155) B4(if@160) B5(if@164) B6(if@168)
+ R: @151 @172 @178
+ C: p.Positions@149 make@153 len@153 strings.ToUpper@158 strings.TrimSpace@158 strings.TrimSpace@163 riskcalc.AddDecimal@167 fmt.Errorf@172
+== Ingestor IngestExternalPositions internal/reconcile/external.go 183 - 297 sha df79472e469f
+ B: B1(if@185) B2(if@188) B3(if@193) B4(if@197) B5(range@204) B6(if@207) B7(if@210) B8(if@218) B9(if@240) B10(if@245) B11(if@258) B12(if@278) B13(if@281)
+ R: @186 @189 @194 @198 @211 @219 @241 @246 @272 @296
+ C: len@185 fmt.Errorf@189 strings.TrimSpace@192 firstNonEmpty@192 fmt.Errorf@194 strings.TrimSpace@196 fmt.Errorf@198 strings.ToUpper@205 strings.TrimSpace@205 strings.ToLower@206 strings.TrimSpace@206 strings.ToLower@208 strings.TrimSpace@208 fmt.Errorf@211 in.Journal.FillWatermark@217 in.Journal.ApplyPositionAdjustment@222 string@226 fmt.Sprintf@235 errors.Is@240 fmt.Errorf@241 fmt.Errorf@246 result.Position.ExitEligible@255 result.Position.Adopted@256 strings.TrimSpace@258 fmt.Errorf@272 append@276 in.Alert.ExternalPositionFound@281 append@290 fmt.Errorf@290 errors.Join@296
+==  LocalStateFromJournal internal/reconcile/compare.go 193 - 238 sha 87956731b132
+ B: B1(if@194) B2(if@198) B3(if@202) B4(range@212) B5(if@220)
+ R: @195 @199 @203 @223 @237
+ C: fmt.Errorf@195 HeldBySymbol@197 j.TrackedFillOrders@201 make@209 len@209 make@210 len@210 j.ResolveCurrentOrderIDScoped@213 strings.TrimSpace@228 strings.ToUpper@229 strings.TrimSpace@229 strings.ToLower@230 strings.TrimSpace@230 strings.TrimSpace@231 strings.ToUpper@232 strings.TrimSpace@232 order.Identity@234
+== ReconcileDriver logOrderTerminalReleases internal/app/engine/a192_order_terminal_release_log.go 25 - 66 sha 328c58e7cd65
+ B: B1(if@26) B2(range@29) B3(if@31) B4(if@40) B5(if@45) B6(range@50) B7(range@54) B8(if@55) B9(range@61) B10(if@62)
+ R: @27 @41
+ C: block.ReleasedByOrderTerminal@30 d.opts.Log.Event@34 d.opts.Tracker.OrderTerminalHoldReasons@44 make@49 len@49 append@51 sort.Strings@53 d.opts.Log.Event@59 delete@63
+== Journal MaxFillEventID internal/journal/reconcile_order_terminal_release.go 75 - 81 sha f03a12d5f6a7
+ B: B1(if@77)
+ R: @78 @80
+ C: Scan@77 j.db.QueryRowContext@77 fmt.Errorf@78
+== notifierAlerter ManagedPositionClosedExternally internal/app/engine/exitwiring.go 132 - 160 sha e8f131a312ec
+ B: B1(if@134) B2(if@138)
+ R: @135 @141
+ C: a.notifier.Notify@141 string@143 strings.TrimSpace@144 a.names.Label@145
+== Notifier Notify internal/obs/notifier.go 149 - 158 sha 780cd20d29ec
+ B: B1(if@153)
+ R: @155 @157
+ C: SeverityOf@150 n.logEvent@151 n.publishBestEffort@154 n.notifyCritical@157
+== Notifier publishBestEffort internal/obs/notifier.go 180 - 193 sha 780cd20d29ec
+ B: B1(if@181) B2(if@184)
+ R: @182
+ C: n.Publisher.Publish@184 notificationFor@184 n.Log.Warn@188 string@189 string@190 err.Error@191
+== Journal Positions internal/journal/position_projection.go 468 - 489 sha 5b62d380b860
+ B: B1(if@472) B2(for@478) B3(if@480) B4(if@485)
+ R: @473 @481 @486 @488
+ C: j.db.QueryContext@469 strings.TrimSpace@471 fmt.Errorf@473 rows.Close@475 rows.Next@478 scanPosition@479 append@483 rows.Err@485 fmt.Errorf@486
+ defers: @475
+==  promotionKeys internal/reconcile/mismatch.go 380 - 393 sha 9895f31184e5
+ B: B1(range@382) B2(if@383) B3(range@387) B4(if@388)
+ R: @392
+ C: make@381 len@381 len@381 quantityPromotionKey@383 missingOrderPromotionKey@388
+==  quantitiesAgree internal/reconcile/compare.go 645 - 666 sha 87956731b132
+ B: B1(if@648) B2(if@651) B3(if@656) B4(if@659)
+ R: @649 @652 @657 @663 @665
+ C: riskcalc.CanonicalDecimal@646 riskcalc.CanonicalDecimal@647 strconv.ParseFloat@654 strconv.ParseFloat@655 binaryRoundTripArtifact@665
+== ReconcileDriver Run internal/app/engine/reconcileloop.go 403 - 418 sha 4e21e03de561
+ B: B1(if@405) B2(for@408) B3(if@409) B4(if@414)
+ R: @410 @415
+ C: ctx.Err@409 d.RunOnce@412 d.logCycle@413 d.clk.Sleep@414
+== ReconcileDriver RunOnce internal/app/engine/reconcileloop.go 425 - 479 sha 4e21e03de561
+ B: B1(if@429) B2(if@435) B3(if@446) B4(if@452) B5(if@458) B6(if@459) B7(if@470) B8(if@471)
+ R: @430 @437 @462 @474 @478
+ C: ?@426 d.note@426 d.stabilise@428 reconcile.LocalStateFromJournal@434 fmt.Errorf@436 Compare@439 d.ingest.IngestExternalPositions@445 len@449 d.opts.Converge.ConvergeQuantities@451 len@455 d.opts.Tracker.Refresh@458 d.opts.Tracker.Observe@464 d.logOrderTerminalReleases@466 len@467 d.opts.Tracker.Blocks@467 len@468 len@469 d.judgeHoldings@477
+ defers: @426
+==  soleLiveMarket internal/reconcile/converge.go 277 - 308 sha 00a784b3f6b3
+ B: B1(range@279) B2(if@280) B3(if@283) B4(switch@288) B5(case@289) B6(range@290) B7(case@294) B8(case@297) B9(range@299)
+ R: @291 @293 @295 @303
+ C: strings.ToUpper@280 strings.TrimSpace@280 strings.ToLower@286 strings.TrimSpace@286 len@288 make@298 len@298 append@300 sort.Strings@302 fmt.Sprintf@303 strings.Join@306
+==  symbolsInDispute internal/reconcile/mismatch.go 576 - 595 sha 9895f31184e5
+ B: B1(range@579) B2(range@582) B3(range@591)
+ R: @594
+ C: make@577 len@578 len@578 len@578 strings.ToUpper@580 strings.TrimSpace@580 strings.ToUpper@583 strings.TrimSpace@583 strings.ToUpper@592 strings.TrimSpace@592
+== Tracker AdjustmentApplied internal/reconcile/mismatch.go 484 - 497 sha 9895f31184e5
+ B: B1(if@487) B2(range@490) B3(if@492)
+ R: 
+ C: t.mu.Lock@485 t.mu.Unlock@486 strings.ToUpper@491 strings.TrimSpace@491 strings.TrimSpace@495
+ defers: @486
+== Tracker advanceStreaks internal/reconcile/mismatch.go 1089 - 1101 sha 9895f31184e5
+ B: B1(range@1092) B2(if@1095)
+ R: 
+ C: make@1090 len@1090
+== Tracker beginOrderTerminalObservation internal/reconcile/order_terminal_release.go 301 - 310 sha e323a12c4552
+ B: B1(if@302) B2(range@306)
+ R: @303
+ C: make@305 len@305 t.updateOrderTerminalBindings@309
+== Tracker clearStreaks internal/reconcile/mismatch.go 1103 - 1106 sha 9895f31184e5
+ B: 
+ R: 
+ C: 
+== Tracker Observe internal/reconcile/mismatch.go 629 - 856 sha 9895f31184e5
+ B: B1(if@635) B2(if@650) B3(else@703) B4(if@656) B5(if@659) B6(range@666) B7(if@667) B8(if@675) B9(if@682) B10(if@689) B11(if@708) B12(range@721) B13(if@722) B14(if@730) B15(if@734) B16(if@737) B17(range@738) B18(if@739) B19(if@746) B20(if@757) B21(range@787) B22(if@790) B23(range@795) B24(if@797) B25(range@802) B26(range@823) B27(range@826) B28(if@827) B29(if@841)
+ R: @660 @731 @855
+ C: Now@630 t.clock@630 t.interval@631 t.maxFailures@632 t.mu.Lock@634 symbolsInDispute@644 promotionKeys@645 t.beginOrderTerminalObservation@647 diff.BlocksEntry@650 t.clearStreaks@655 t.resolvePendingPermanentAuthority@659 t.finishAuthorityError@660 strings.ToUpper@674 strings.TrimSpace@674 creditUsableBy@675 t.orderTerminalCandidate@682 append@683 append@686 append@698 append@701 blocksFor@704 t.advanceStreaks@710 t.refuteUsableAdjustmentCredits@716 block.Key@722 block.Key@724 append@725 t.syncGate@729 t.snapshotBlocks@729 t.resolvePendingPermanentAuthority@730 t.finishAuthorityError@731 t.advanceStreaks@735 block.Key@739 block.Key@741 append@742 t.thresholdKey@746 permanentPromotionDetail@755 permanent.Key@757 permanent.Key@762 append@763 sortBlocks@768 sortBlocks@769 sortBlocks@770 t.syncGate@778 t.snapshotBlocks@778 t.pendingBlocksForPersistence@785 t.persist@786 block.Key@789 block.Key@796 delete@803 block.Key@803 hasPermanentQuantityAccountBlock@806 t.updateOrderTerminalBindings@808 make@822 len@822 strings.ToUpper@824 strings.TrimSpace@824 creditUsableBy@827 hasBlockFor@841 delete@842 len@848 now.Add@849 t.snapshotBlocks@850 t.syncGate@851 t.mu.Unlock@852 sortBlocks@854
+== Tracker orderTerminalCandidate internal/reconcile/order_terminal_release.go 374 - 404 sha e323a12c4552
+ B: B1(if@375) B2(if@380) B3(switch@387) B4(case@388) B5(case@391) B6(case@397) B7(if@398)
+ R: @376 @381 @390 @396 @402
+ C: strings.ToUpper@378 strings.TrimSpace@378 orderTerminalRequest@383 orderTerminalComparison@384 orderTerminalReleaseVerdict@385 t.Terminal.ReadOrderTerminalProof@385 delete@400
+== Tracker Permanent internal/reconcile/mismatch.go 1314 - 1318 sha 9895f31184e5
+ B: 
+ R: @1317
+ C: t.mu.Lock@1315 t.mu.Unlock@1316
+ defers: @1316
+== Tracker persist internal/reconcile/mismatch.go 878 - 954 sha 9895f31184e5
+ B: B1(if@879) B2(range@890) B3(if@891) B4(if@908) B5(if@912) B6(range@921) B7(if@922) B8(if@926) B9(if@930) B10(if@942) B11(if@946)
+ R: @880 @909 @915 @927 @943 @947 @953
+ C: append@881 ?@881 append@882 ?@882 make@886 len@886 make@887 len@887 unrepresentableOrdinaryQuantityBlock@891 fmt.Errorf@896 firstNonEmpty@900 t.enterReconcileWithBinding@902 firstNonEmpty@903 fmt.Errorf@909 scopeLabel@910 blockFromReconcileState@913 append@914 fmt.Errorf@915 scopeLabel@917 firstNonEmpty@917 append@919 t.releaseOnOrderTerminal@925 fmt.Errorf@927 scopeLabel@928 append@931 t.Journal.ReleaseReconcile@935 firstNonEmpty@936 firstNonEmpty@940 fmt.Errorf@943 scopeLabel@944 fmt.Errorf@947 scopeLabel@949 append@951
+== Tracker Refresh internal/reconcile/mismatch.go 1019 - 1084 sha 9895f31184e5
+ B: B1(if@1020) B2(if@1028) B3(range@1034) B4(if@1035) B5(if@1039) B6(range@1048) B7(if@1049) B8(if@1050) B9(range@1057) B10(if@1058) B11(if@1066) B12(if@1070) B13(if@1077)
+ R: @1021 @1030 @1083
+ C: t.mu.Lock@1026 t.Journal.ActiveReconcileStates@1027 t.mu.Unlock@1029 fmt.Errorf@1030 blockFromReconcileState@1038 blockFromReconcileState@1061 block.Key@1062 hasPermanentQuantityAccountBlock@1065 t.clearStreaks@1075 t.maxFailures@1077 t.maxFailures@1078 t.snapshotBlocks@1080 t.syncGate@1081 t.mu.Unlock@1082
+== Tracker refuteUsableAdjustmentCredits internal/reconcile/mismatch.go 525 - 531 sha 9895f31184e5
+ B: B1(range@526) B2(if@527)
+ R: 
+ C: creditUsableBy@527 delete@528
+== Tracker updateOrderTerminalBindings internal/reconcile/order_terminal_release.go 315 - 341 sha e323a12c4552
+ B: B1(if@316) B2(range@321) B3(if@322) B4(range@326) B5(if@327) B6(range@331) B7(if@332) B8(range@336) B9(if@337)
+ R: @317
+ C: len@316 hasBlockFor@322 delete@323 strings.ToUpper@327 strings.TrimSpace@327 missing.Identity@328 strings.ToUpper@332 strings.TrimSpace@332 strings.ToUpper@337 strings.TrimSpace@337
