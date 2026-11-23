@@ -11,3 +11,9 @@ ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	35.736s
 
 $ go test ./internal/accountbudgetruntime -count=1 -timeout 30m
 ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	30.054s
+
+## 재실행(REFACTOR 8560c2622 · 시험 보강 8d0655294 뒤) — HEAD 8d0655294, 2026-11-23T22:10:22Z
+$ go test ./internal/journal -run 'A200|Project|Position|Adjustment|ExitFill|Reconcile|Guarded|A130|A066' -count=1 -timeout 30m
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	152.547s
+$ go test ./internal/reconcile -run 'A200|A192|A195|Converge|Tracker|Observe' -count=1 -timeout 30m
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	26.668s
