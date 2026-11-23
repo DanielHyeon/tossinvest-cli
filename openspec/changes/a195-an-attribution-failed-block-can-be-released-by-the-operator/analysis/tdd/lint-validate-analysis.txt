@@ -1,4 +1,4 @@
-# (구현 적대 리뷰 r1 반영 뒤 재실행, HEAD b7aeb035c)
+# (gstack review 1회차 시험 추가 뒤 재실행)
 # make lint
 go vet ./...
 go vet -tags tossos_testseams ./...
@@ -7,7 +7,7 @@ rc=0
 Change 'a195-an-attribution-failed-block-can-be-released-by-the-operator' is valid
 rc=0
 # python3 tools/logic-map/check_analysis.py --change a195-an-attribution-failed-block-can-be-released-by-the-operator
-[logic-map] a195-an-attribution-failed-block-can-be-released-by-the-operator: base 064f59fd99c1 → working tree (no landed-commit.txt in HEAD) required 3 function(s) — judged at HEAD b7aeb035ca55
-[logic-map] a195-an-attribution-failed-block-can-be-released-by-the-operator: the target is the working tree, so this window also holds 8 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits
+[logic-map] a195-an-attribution-failed-block-can-be-released-by-the-operator: base 064f59fd99c1 → working tree (no landed-commit.txt in HEAD) required 3 function(s) — judged at HEAD 72927ba00a1e
+[logic-map] a195-an-attribution-failed-block-can-be-released-by-the-operator: the target is the working tree, so this window also holds 9 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits
 [logic-map] a195-an-attribution-failed-block-can-be-released-by-the-operator: evidence complete or diff-proven exempt
 rc=0

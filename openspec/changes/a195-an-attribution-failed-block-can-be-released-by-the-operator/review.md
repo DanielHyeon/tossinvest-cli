@@ -93,3 +93,14 @@ Pre-Edit Gate:
 
 - 재실행(`analysis/tdd/selected-tests.txt`, `lint-validate-analysis.txt`, HEAD b7aeb035c): 선택 시험 3묶음 ok · `make lint` rc 0 · strict validate valid · `check_analysis` rc 0(required 3). 커버리지 `analysis/coverage/after-engine_reconcile-blocks.txt` 재측정.
 - 변이 원장 누계: M1~M9 중 8 CAUGHT, M7b SURVIVED(동등 — 기록).
+
+## gstack review 1회차 (2026-11-23, Manager 지시로 1회차에서 끝냄)
+- 원문 `analysis/review/gstack-review-r1.md`. 전문가 6(testing·maintainability·security·performance·simplification·state-machines) + red-team + Claude 적대 패스. Codex outside 패스는 이번에 안 돌림(구현 적대 리뷰 r1 에서 codex 0.165.0 이 같은 diff 를 봄 — 이 기록으로는 outside coverage 없음). 실 CLI probe 는 blocked(tossctl 금지), smoke 는 저장소 시험 명령 2건 exit 0.
+- 반영(시험 전용): 원인 표에 SNAPSHOT_UNAVAILABLE·SNAPSHOT_STALE 거절 행, `TestA195AccountWideQuantityMismatchStillReleases`(계좌 전체 QM 운영자 해제 — 기존 동작 고정). 선택 시험 3묶음·`make lint`·strict validate·`check_analysis` 재실행 통과(원문 갱신).
+- gate: shapes.json(RH-3?) — **open**, 권고 「Keep — justified: design D6 Manager 결정(verified)」. Manager 확정 필요.
+- **Manager 결정 대기**(production 문구·범위라 구현 안 함):
+  1. 계좌 전체 AF 거절 문구의 종목 자리가 빈칸(`on  requires …`) — maintainability + 적대 패스 둘 다 지적. D5 「거절 문구는 종전 문구」 결정과 맞물림.
+  2. 블록은 build 때 읽고 약 4초 뒤 해제 — 잠금 밖 writer 가 그 사이 더한 행은 안 풀리는데(안전) 원인 중립 성공 문장은 개수 없이 「active RECONCILE blocks released」. 개수/대상 표시 여부(N2 결정과 맞물림).
+  3. 실제 투영 writer(`enterReconcileScopeInTx`)의 AF 행 scope_market NULL 을 고정하는 journal 시험 없음(범위 확장).
+  4. 사고 실장부 상태에서 해제 성공은 미증명 — 거부된 매도 주문이 여전히 추적되면 MissingOrders 로 거절될 수 있음(운영 장부 읽기 필요 — 사람 승인 사항).
+- COMPLETED: false(실 CLI blocked · Codex outside 미실행 · 편집 뒤 재리뷰 없음), converged: false, cycles 1.

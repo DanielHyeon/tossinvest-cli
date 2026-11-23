@@ -54,6 +54,8 @@ func TestA195RefusedCauseTable(t *testing.T) {
 		// 허용 목록 밖은 기본 거절 — 종목 범위여도 원인을 봐야 하고, 빈 원인을 수량 불일치로 치지 않음.
 		{"symbol-scoped identifier conflict", []reconcile.Block{a195Block(journal.ReconcileCauseIdentifierConflict, "SYMD")}, journal.ReconcileCauseIdentifierConflict},
 		{"symbol-scoped empty cause", []reconcile.Block{a195Block("", "SYME")}, "SYME"},
+		{"snapshot unavailable", []reconcile.Block{a195Block(journal.ReconcileCauseSnapshotUnavailable, "SYMF")}, journal.ReconcileCauseSnapshotUnavailable},
+		{"snapshot stale", []reconcile.Block{a195Block(journal.ReconcileCauseSnapshotStale, "SYMG")}, journal.ReconcileCauseSnapshotStale},
 		{"empty list is left to the caller", nil, ""},
 	}
 	for _, tc := range cases {
@@ -231,6 +233,19 @@ func TestA195MismatchAndAttributionReleaseTogether(t *testing.T) {
 	states := a195States(t, path, account)
 	a195AssertOperatorReleased(t, states["SYMA|"+journal.ReconcileCauseQuantityMismatch])
 	a195AssertOperatorReleased(t, states["SYMB|"+journal.ReconcileCauseAttributionFailed])
+}
+
+// 계좌 전체 수량 불일치(영구)는 종전대로 운영자 해제를 받음 — 허용 목록 개편이 이 기존 동작을 깨지 않음을 고정함.
+func TestA195AccountWideQuantityMismatchStillReleases(t *testing.T) {
+	rt, account, path := a195ProductionRuntime(t, []a195Seed{{"", journal.ReconcileCauseQuantityMismatch}}, nil)
+	if _, err := a195Run(t, rt); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	states := a195States(t, path, account)
+	a195AssertOperatorReleased(t, states["|"+journal.ReconcileCauseQuantityMismatch])
+	if got := states["__restored_blocks__"].Evidence; got != "0" {
+		t.Fatalf("restored blocks after release = %s, want 0", got)
+	}
 }
 
 func TestA195IdentifierConflictKeepsEveryRowBlocked(t *testing.T) {
