@@ -2,8 +2,8 @@
 
 > **편집 후 지도(post-edit) — 2단계 GREEN 뒤, 2026-11-24, base `603046a23`.** 분기 표는 AST 열거(`../../harness/build_bundles.py --post`). 편집 전 원본 AST 는 `../../pre-edit-ast/internal-app-engine--runinterlock.ast.json`.
 
-- Source: `internal/app/engine/interlock.go` (402-437)
-- AST evidence: `ast.json` — branches **4** / returns **5** / calls **9**, source SHA-256 `ed64648db576432a0100a9c8310b17ee18bd3f7f24067368acea4637759deb75`(파일 단위).
+- Source: `internal/app/engine/interlock.go` (405-440)
+- AST evidence: `ast.json` — branches **4** / returns **5** / calls **9**, source SHA-256 `7d2ce7348681c518284279c217092c1f7ad4cc9662ceadf37df3221341497099`(파일 단위).
   명령 `go run ./tools/logic-map --file internal/app/engine/interlock.go --func runInterlock`.
 - Risk scan: `risk-pattern-report.md`.
 - 의도: 게이트 OFF 면 즉시 반환, ON 이면 verifyGate → 거절(감사 · 로그) 또는 수락(Verified · EntryPermitted · 감사 · 로그).
@@ -20,10 +20,10 @@
 
 | Branch | Condition (소스 그 줄) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (if@405) | `if !gate.Enabled {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B2 (if@412) | `if err := verifyGate(&status, facts); err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B3 (if@417) | `if status.ExitOnly {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B4 (if@426) | `if err := log.Record(audit.Entry{` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B1 (if@408) | `if !gate.Enabled {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B2 (if@415) | `if err := verifyGate(&status, facts); err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B3 (if@420) | `if status.ExitOnly {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B4 (if@429) | `if err := log.Record(audit.Entry{` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
 
 ## Calls and live bindings
 

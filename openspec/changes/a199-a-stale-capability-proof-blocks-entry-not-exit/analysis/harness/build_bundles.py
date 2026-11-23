@@ -150,6 +150,13 @@ FUNCS = [
          mutation="없음.",
          a199="접두 단언(「기동이 거부된다」)을 청산 전용 귀결로.",
          tests="`TestA196ScopeLossWordingFollowsTheMissingKind`"),
+    # gstack review G2(Manager 결정 대안 5, 2026-11-24)로 편집 목록에 더해진 시험 헬퍼.
+    dict(file="internal/app/engine/a135_attestation_watch_internal_test.go", func="a135Watch", cover=None,
+         purpose="a135 · a196 · a199 감시 시험의 감시 조립(가짜 시계 · 기록 알림기 · 바꿔 끼우는 파일).",
+         inputs=[("`att`", "nil 이면 ErrMissing", "시험"), ("불변식", "생산 감시와 같은 칸 집합", "attestationWatch")],
+         mutation="없음(감시 값 하나를 돌려줌).",
+         a199="G2: `proof` 칸에 「이 계좌로 엔진 주문이 확정된 기록 있음」을 넣음 — 기존 시험의 귀결 문장 무변, 기록 없는 설치는 a199 시험이 바꿔 끼움.",
+         tests="a135 · a196 · a199 감시 시험 전부"),
 ]
 
 

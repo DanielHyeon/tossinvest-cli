@@ -14,10 +14,12 @@ package engine
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
@@ -47,7 +49,15 @@ func TestA199TheStaleLatchStopsTheRealStrategyDispatchBeforeTheBroker(t *testing
 			fixture := newA112TradingFixture(t, a112TradingOptions{})
 			gate := execgw.NewEntryGate(clock.NewFake(fixture.now), map[execgw.RequiredQuery]time.Duration{})
 			if tc.latch {
-				gate.Block(execgw.ReasonCapabilityAttestationStale, "capability attestation is stale (expired)")
+				// 래치는 기동의 청산 전용 갈래(exitOnlyStart)가 세운 것 그대로 — 시험이 직접 세우지 않음(G3 · 변이 M24 가 살던 틈).
+				log, err := audit.Open(audit.Options{Path: filepath.Join(t.TempDir(), "audit.log"), Clock: clock.NewFake(fixture.now), Subject: "t"})
+				if err != nil {
+					t.Fatal(err)
+				}
+				status := AutomationStatus{Enabled: true, ExitOnly: true, AttestationStale: "expired"}
+				if _, err := exitOnlyStart(status, a199Gate(), log, nil, gate); err != nil {
+					t.Fatalf("exitOnlyStart: %v", err)
+				}
 			}
 			real, err := execgw.New(execgw.Options{Journal: fixture.journal, Trading: trading.NewService(config.Trading{}, nil),
 				Clock: clock.NewFake(fixture.now), AccountRef: "acct-risk-loader", Source: "a199-r1", Entry: gate})

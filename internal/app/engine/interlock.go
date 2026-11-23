@@ -391,6 +391,9 @@ type gateFacts struct {
 	transport trading.Broker
 	// entry 는 게이트웨이의 진입 게이트임 — 청산 전용 기동의 래치를 세울 곳(a199 D4).
 	entry *execgw.EntryGate
+	// orderProof 는 「이 계좌로 엔진이 낸 주문이 확정된 적이 있는가」의 원장 질의 하나임 — 낡은 attestation 을 청산 전용으로 내릴
+	// 근거(a199 G2). nil 이면 증거 없음(낡으면 거절).
+	orderProof orderPathProof
 	// now is the instant the attestation's expiry is judged against.
 	now time.Time
 }
@@ -558,7 +561,7 @@ func verifyGate(status *AutomationStatus, facts gateFacts) error {
 	// 6. Expiry, account match and endpoint coverage, in one verification.
 	//    a199: 판정은 감시와 같은 classifyAttestation — 낡음(만료 · 누락)만이면 반환하지 않고 표지로 들고 뒤 조항을 끝까지
 	//    검사함(D2). 뒤 조항이 실패하면 그 조항의 오류만 돌아감(낡음은 싣지 않음, Manager 결정 10). 그 밖은 지금처럼 거절.
-	stale, err := classifyAttestation(att, facts.now, accountRef, RequiredEndpoints())
+	stale, err := classifyAttestation(att, facts.now, accountRef, RequiredEndpoints(), facts.orderProof)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrAutomationGateRefused, err)
 	}

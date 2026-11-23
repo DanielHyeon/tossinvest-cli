@@ -150,10 +150,25 @@ type a199Stack struct {
 }
 
 // a199OpenExitOnly 는 낡은 attestation(mutate 가 정함)과 설정(cfg 가 고침)으로 생산 조립을 엶 — 청산 전용이어야 함.
+// 원장에는 이 계좌로 엔진 주문이 확정된 기록이 있음(a199 G2 — a199IsolateWithEngineOrder).
 func a199OpenExitOnly(t *testing.T, mutate func(a *attest.Attestation, now time.Time), cfg func(*config.File), protectionReady bool) a199Stack {
 	t.Helper()
 	broker, srv := newA199Broker(t)
-	dir := isolate(t)
+	s, err := a199Boot(t, a199IsolateWithEngineOrder(t), broker, srv, mutate, cfg, protectionReady)
+	if err != nil {
+		t.Fatalf("a stale attestation must start exit-only: %v", err)
+	}
+	if s.eng.Automation.Verified || !s.eng.Automation.ExitOnly {
+		t.Fatalf("automation = %+v, want an exit-only start", s.eng.Automation)
+	}
+	return s
+}
+
+// a199Boot 은 dir 의 설정 · 원장으로 생산 조립을 한 번 엶(같은 dir 로 다시 부르면 재기동).
+func a199Boot(t *testing.T, dir string, broker *a199Broker, srv *httptest.Server, mutate func(a *attest.Attestation, now time.Time),
+	cfg func(*config.File), protectionReady bool,
+) (a199Stack, error) {
+	t.Helper()
 	file := config.DefaultFile()
 	file.Trading = openTradingPolicy()
 	file.Engine.AutomationGate = smallLiveGate()
@@ -183,13 +198,10 @@ func a199OpenExitOnly(t *testing.T, mutate func(a *attest.Attestation, now time.
 	}
 	eng, err := engine.New(opts)
 	if err != nil {
-		t.Fatalf("a stale attestation must start exit-only: %v", err)
+		return a199Stack{}, err
 	}
 	t.Cleanup(func() { _ = eng.Close() })
-	if eng.Automation.Verified || !eng.Automation.ExitOnly {
-		t.Fatalf("automation = %+v, want an exit-only start", eng.Automation)
-	}
-	return a199Stack{broker: broker, eng: eng, clk: clk, logs: logs, logger: logger}
+	return a199Stack{broker: broker, eng: eng, clk: clk, logs: logs, logger: logger}, nil
 }
 
 // run 은 기동 복구 뒤 loops 를 돌리고 cond 가 참이 되거나 30초가 지나면 멈춤. 런타임이 먼저 끝나면 그 오류로 실패(hang 없음 — 처분 4).

@@ -24,6 +24,7 @@ package engine
 // 충족)은 바꾸지 않음 — 청산 쪽 소비자만 RunsExitSide 를 읽음. 놓친 소비자는 엄격한 쪽(Verified)에 남아 진입을 열지 못함.
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -33,6 +34,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 )
 
@@ -64,9 +66,47 @@ func (s attestationStaleness) code() string {
 	return strings.Join(parts, ",")
 }
 
+// ErrOrderPathUnproven 은 attestation 이 낡았는데(그 밖은 청산 전용 조건을 다 갖춤) 이 계좌로 엔진이 낸 주문이 확정된 기록이
+// 원장에 없거나 그 기록을 읽지 못했다는 거절임(a199 G2). 낡음은 「한때 동작한 경로의 증명이 낡았다」일 때만 청산 전용의 근거이고,
+// 그 기록이 없으면 낡음은 미증명(감독 검증을 한 번도 안 한 GET 만의 파일)과 구별되지 않음 — 지금처럼 기동 거절.
+var ErrOrderPathUnproven = errors.New("the capability attestation is stale and the ledger holds no confirmed engine order " +
+	"for this account, so the staleness cannot be told apart from an order path that was never proven")
+
+// orderPathProof 는 「이 계좌로 엔진이 낸 PLACE 가 확정된 적이 있는가」를 묻는 좁은 함수임 — 인터록과 감시가 같은 것을 받음.
+type orderPathProof func(accountRef string) (bool, error)
+
+// engineOrderProof 는 원장의 그 질의 하나(HasConfirmedPlace)를 엔진 게이트웨이의 source 로 묶음. 원장이 없으면 nil — 증거 없음으로 읽힘.
+func engineOrderProof(ctx context.Context, j *journal.Journal) orderPathProof {
+	if j == nil {
+		return nil
+	}
+	return func(accountRef string) (bool, error) { return j.HasConfirmedPlace(ctx, accountRef, engineSource) }
+}
+
+// unprovenStaleError 는 낡았지만 주문 경로의 기록이 없는 거절임. 낡음의 종류는 감시가 단계(만료 · 범위 상실)를 정하려고 들고 다니지만
+// 오류 사슬에는 ErrOrderPathUnproven 만 실림 — 낡음 sentinel(ErrExpired · ErrEndpointNotAttested)은 싣지 않음(거절의 모양은 그대로).
+type unprovenStaleError struct {
+	stale   attestationStaleness
+	readErr error
+}
+
+func (e *unprovenStaleError) Error() string {
+	if e.readErr != nil {
+		return fmt.Sprintf("%v (%s): reading the ledger for a confirmed engine order failed (%v)",
+			ErrOrderPathUnproven, e.stale.code(), e.readErr)
+	}
+	return fmt.Sprintf("%v (%s) — re-run the supervised check (`tossctl verify run` → `tossctl soak attest`)",
+		ErrOrderPathUnproven, e.stale.code())
+}
+
+func (e *unprovenStaleError) Unwrap() error { return ErrOrderPathUnproven }
+
 // classifyAttestation 은 attestation 이 정상 / 청산 전용(낡음) / 거절 중 무엇인지 판정함(인터록 · 감시 공용, 판정 하나).
 // 반환: (nil, nil) 정상 · (낡음, nil) 청산 전용 · (nil, 오류) 거절. 오류는 attest 의 sentinel 을 감쌈.
-func classifyAttestation(att attest.Attestation, now time.Time, accountRef string, required []string) (*attestationStaleness, error) {
+// proof 는 낡음 갈래의 맨 끝에서만 부름 — 유효한 attestation 의 경로에는 원장 읽기가 없음(a199 G2).
+func classifyAttestation(att attest.Attestation, now time.Time, accountRef string, required []string,
+	proof orderPathProof,
+) (*attestationStaleness, error) {
 	verr := att.Verify(now, accountRef, required)
 	if verr == nil {
 		// 유효함 — 지금과 같은 수락. 낡음 가드는 「청산 전용으로 내릴지」에만 걸리므로 여기서 타지 않음(Manager Q-B).
@@ -77,9 +117,8 @@ func classifyAttestation(att attest.Attestation, now time.Time, accountRef strin
 		// 불완전 · 계좌 불일치 등 낡음 밖의 결함 — 지금처럼 거절.
 		return nil, verr
 	}
-	// 아래 셋은 「파일이 온전하고 이 계좌의 것」을 거르는 것뿐임 — 「이 계좌에서 한때 주문 실행(POST)까지 증명됐다」는 파일에
-	// 남지 않아 여기서 검사하지 못함(감독 증거가 한 번도 없던 GET 만의 파일도 범위 상실로 청산 전용이 됨 — gstack review 공시).
-	// 셋 중 하나라도 아니면 거절.
+	// 아래 셋은 「파일이 온전하고 이 계좌의 것」을 거름. 「이 계좌에서 한때 주문 경로가 동작했다」는 파일에 남지 않으므로 맨 끝에서
+	// 원장의 확정된 엔진 PLACE 로 따로 물음(a199 G2). 셋 중 하나라도 아니면 거절.
 	if att.FormatVersion < 1 || att.FormatVersion > attest.FormatVersion {
 		return nil, fmt.Errorf("%w: format_version %d is not a version this build accepts, so a stale attestation "+
 			"cannot stand as the proof an exit-only start rests on (%v)", attest.ErrMalformed, att.FormatVersion, verr)
@@ -95,7 +134,16 @@ func classifyAttestation(att attest.Attestation, now time.Time, accountRef strin
 		return nil, fmt.Errorf("%w: it attests %s but the credentials resolve to %s (and it has expired)",
 			attest.ErrAccountMismatch, attest.Mask(att.AccountRef), attest.Mask(accountRef))
 	}
-	return &attestationStaleness{expired: expired, missing: att.MissingEndpoints(required)}, nil
+	stale := attestationStaleness{expired: expired, missing: att.MissingEndpoints(required)}
+	// a199 G2: 「한때 동작했다」의 기록 — 이 계좌로 엔진이 낸 PLACE 의 확정. 없거나 못 읽으면 낡음이 아니라 미증명으로 보고 거절.
+	proven, readErr := false, error(nil)
+	if proof != nil {
+		proven, readErr = proof(accountRef)
+	}
+	if readErr != nil || !proven {
+		return nil, &unprovenStaleError{stale: stale, readErr: readErr}
+	}
+	return &stale, nil
 }
 
 // RunsExitSide 는 청산 쪽 루프(대사 · exit 관측 · 그 Guardian · 런타임 조립)를 돌려도 되는지임 — 검증됐거나 청산 전용이면 참.
@@ -111,6 +159,8 @@ func exitOnlyStart(status AutomationStatus, gate config.AutomationGate, log *aud
 	status.EntryPermitted = false
 	if entry == nil {
 		// 래치가 진입 차단의 유일한 집행이므로, 세울 게이트가 없으면 청산 전용으로 세울 수 없음 — 거절(fail-closed).
+		// 거절 줄은 거절의 문장만 — 청산 전용 표지를 지워 보호 수명 문장이 실리지 않게 함(gstack review G9).
+		status.ExitOnly, status.AttestationStale, status.AttestationMissing = false, "", ""
 		err := fmt.Errorf("%w: %w: the entry gate that carries the exit-only latch is not wired",
 			ErrAutomationGateRefused, ErrGatewayRequired)
 		_ = refuseStartup(log, gate, err)

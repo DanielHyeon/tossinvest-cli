@@ -579,12 +579,13 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 	// and it runs *after* construction so that "a gateway exists" is something it
 	// verifies rather than assumes.
 	automation, err := runInterlock(status, gate, auditLog, opts.Logger, gateFacts{
-		guardian:  guardian,
-		trading:   cfg.Trading,
-		gateway:   wiring.gateway,
-		transport: path.broker,
-		entry:     wiring.entry,
-		now:       clk.Now(),
+		guardian:   guardian,
+		trading:    cfg.Trading,
+		gateway:    wiring.gateway,
+		transport:  path.broker,
+		entry:      wiring.entry,
+		orderProof: engineOrderProof(ctx, jrn),
+		now:        clk.Now(),
 	})
 	if err != nil {
 		_ = jrn.Close()

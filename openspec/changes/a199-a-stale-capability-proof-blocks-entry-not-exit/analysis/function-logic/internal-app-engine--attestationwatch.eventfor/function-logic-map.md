@@ -2,8 +2,8 @@
 
 > **편집 후 지도(post-edit) — 2단계 GREEN 뒤, 2026-11-24, base `603046a23`.** 분기 표는 AST 열거(`../../harness/build_bundles.py --post`). 편집 전 원본 AST 는 `../../pre-edit-ast/internal-app-engine--attestationwatch.eventfor.ast.json`.
 
-- Source: `internal/app/engine/attestation_watch.go` (403-525)
-- AST evidence: `ast.json` — branches **27** / returns **1** / calls **29**, source SHA-256 `8a807bf0277f4b1a25136c65ee00ab92161240654f2355d06ff6bfc7b537d6ab`(파일 단위).
+- Source: `internal/app/engine/attestation_watch.go` (437-570)
+- AST evidence: `ast.json` — branches **28** / returns **1** / calls **29**, source SHA-256 `85663d710d3b71b71b99efc3a3e60849154d430713ce898d154af5cf0f0e7510`(파일 단위).
   명령 `go run ./tools/logic-map --file internal/app/engine/attestation_watch.go --func attestationWatch.eventFor`.
 - Risk scan: `risk-pattern-report.md`.
 - 의도: 판정을 알림 하나로 — 제목 · 본문 한국어 고정 문구, 계좌 · 경로 · 원문 오류 없음.
@@ -19,33 +19,34 @@
 
 | Branch | Condition (소스 그 줄) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (if@405) | `if v.critical() && w.critical {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B2 (if@410) | `if !v.ExpiresAt.IsZero() {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B3 (switch@430) | `switch v.Stage {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B4 (case@431) | `case stageNotice, stageImminent:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B5 (if@432) | `if v.DeadlineKind == deadlineProof {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B6 (else@436) | `} else {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B7 (case@441) | `case stageProofOverdue:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B8 (case@445) | `case stageExpired:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B9 (case@448) | `case stageScopeLost:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B10 (range@452) | `for _, e := range v.Missing {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B11 (if@453) | `if mutationEndpoint(e) {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B12 (if@457) | `if mutations == len(v.Missing) {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B13 (else@461) | `} else {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B14 (if@464) | `if mutations > 0 {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B15 (case@469) | `case stageIncomplete:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B16 (case@472) | `case stageAccountMismatch:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B17 (case@476) | `case stageHealthy:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B18 (case@482) | `default:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B19 (if@488) | `if w.exitOnly && v.Stage != stageHealthy {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B20 (switch@489) | `switch v.Stage {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B21 (case@490) | `case stageNotice, stageImminent, stageProofOverdue:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B22 (case@492) | `default:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B23 (if@500) | `if !v.ExpiresAt.IsZero() {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B24 (if@503) | `if v.Stage == stageNotice \|\| v.Stage == stageImminent {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B25 (if@506) | `if len(v.Missing) > 0 {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B26 (if@509) | `if !v.ProofAt.IsZero() {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B27 (if@512) | `if !v.Deadline.IsZero() {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B1 (if@439) | `if v.critical() && w.critical {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B2 (if@444) | `if !v.ExpiresAt.IsZero() {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B3 (if@468) | `if v.Unproven {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B4 (switch@475) | `switch v.Stage {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B5 (case@476) | `case stageNotice, stageImminent:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B6 (if@477) | `if v.DeadlineKind == deadlineProof {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B7 (else@481) | `} else {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B8 (case@486) | `case stageProofOverdue:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B9 (case@490) | `case stageExpired:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B10 (case@493) | `case stageScopeLost:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B11 (range@497) | `for _, e := range v.Missing {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B12 (if@498) | `if mutationEndpoint(e) {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B13 (if@502) | `if mutations == len(v.Missing) {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B14 (else@506) | `} else {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B15 (if@509) | `if mutations > 0 {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B16 (case@514) | `case stageIncomplete:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B17 (case@517) | `case stageAccountMismatch:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B18 (case@521) | `case stageHealthy:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B19 (case@527) | `default:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B20 (if@533) | `if w.exitOnly && v.Stage != stageHealthy {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B21 (switch@534) | `switch v.Stage {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B22 (case@535) | `case stageNotice, stageImminent, stageProofOverdue:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B23 (case@537) | `default:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B24 (if@545) | `if !v.ExpiresAt.IsZero() {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B25 (if@548) | `if v.Stage == stageNotice \|\| v.Stage == stageImminent {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B26 (if@551) | `if len(v.Missing) > 0 {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B27 (if@554) | `if !v.ProofAt.IsZero() {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B28 (if@557) | `if !v.Deadline.IsZero() {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
 
 ## Calls and live bindings
 

@@ -1,1 +1,1 @@
-ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	8.714s	coverage: 31.4% of statements
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	7.837s	coverage: 31.4% of statements

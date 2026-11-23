@@ -3,7 +3,7 @@
 > **편집 후 지도(post-edit) — 2단계 GREEN 뒤, 2026-11-24, base `603046a23`.** 분기 표는 AST 열거(`../../harness/build_bundles.py --post`). 편집 전 원본 AST 는 `../../pre-edit-ast/cmd-tossctl--runsoakattest.ast.json`.
 
 - Source: `cmd/tossctl/soak.go` (477-583)
-- AST evidence: `ast.json` — branches **20** / returns **10** / calls **49**, source SHA-256 `8a2f2c95036a4c9f6fef573913aea049bc8822d6f30758bd429f1a589a6040d2`(파일 단위).
+- AST evidence: `ast.json` — branches **20** / returns **10** / calls **49**, source SHA-256 `bc42d1a9d9e997a28ddfb70c88999dd42c4a7ec35c93464a6a6bc3a0a4eaf354`(파일 단위).
   명령 `go run ./tools/logic-map --file cmd/tossctl/soak.go --func runSoakAttest`.
 - Risk scan: `risk-pattern-report.md`.
 - 의도: `tossctl soak attest` — attestation 발급 · 저장 · 범위 상실 안내 출력.

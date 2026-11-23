@@ -2,8 +2,8 @@
 
 > **편집 후 지도(post-edit) — 2단계 GREEN 뒤, 2026-11-24, base `603046a23`.** 분기 표는 AST 열거(`../../harness/build_bundles.py --post`). 편집 전 원본 AST 는 `../../pre-edit-ast/internal-app-engine--verifygate.ast.json`.
 
-- Source: `internal/app/engine/interlock.go` (519-610)
-- AST evidence: `ast.json` — branches **12** / returns **12** / calls **24**, source SHA-256 `ed64648db576432a0100a9c8310b17ee18bd3f7f24067368acea4637759deb75`(파일 단위).
+- Source: `internal/app/engine/interlock.go` (522-613)
+- AST evidence: `ast.json` — branches **12** / returns **12** / calls **24**, source SHA-256 `7d2ce7348681c518284279c217092c1f7ad4cc9662ceadf37df3221341497099`(파일 단위).
   명령 `go run ./tools/logic-map --file internal/app/engine/interlock.go --func verifyGate`.
 - Risk scan: `risk-pattern-report.md`.
 - 의도: 게이트 ON 기동의 조항 1~8 검사. 첫 실패에서 반환(AST 11 갈래가 전부 오류 반환).
@@ -20,18 +20,18 @@
 
 | Branch | Condition (소스 그 줄) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (if@521) | `if facts.guardian == nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B2 (if@529) | `if err := status.Limits.Validate(); err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B3 (if@536) | `if err := checkTradingPolicy(facts.trading); err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B4 (if@542) | `if err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B5 (if@554) | `if accountRef == "" {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B6 (if@562) | `if err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B7 (if@568) | `if err := checkGuardianLimits(facts.guardian, status.Limits); err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B8 (if@572) | `if err := checkGuardianDailyBuyLimit(facts.guardian, *status); err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B9 (if@576) | `if err := checkGuardianOpenPositionLimit(facts.guardian, *status); err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B10 (if@581) | `if err := checkGateway(facts.gateway); err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B11 (if@584) | `if err := checkKeyCapableTransport(facts.transport); err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B12 (if@603) | `if stale != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B1 (if@524) | `if facts.guardian == nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B2 (if@532) | `if err := status.Limits.Validate(); err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B3 (if@539) | `if err := checkTradingPolicy(facts.trading); err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B4 (if@545) | `if err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B5 (if@557) | `if accountRef == "" {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B6 (if@565) | `if err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B7 (if@571) | `if err := checkGuardianLimits(facts.guardian, status.Limits); err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B8 (if@575) | `if err := checkGuardianDailyBuyLimit(facts.guardian, *status); err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B9 (if@579) | `if err := checkGuardianOpenPositionLimit(facts.guardian, *status); err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B10 (if@584) | `if err := checkGateway(facts.gateway); err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B11 (if@587) | `if err := checkKeyCapableTransport(facts.transport); err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B12 (if@606) | `if stale != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
 
 ## Calls and live bindings
 

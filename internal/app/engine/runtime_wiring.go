@@ -224,6 +224,7 @@ var interlockClauses = []struct {
 	{attest.ErrFormatTooNew, "4. capability attestation — 이 빌드보다 새로운 형식이다"},
 	{attest.ErrIncomplete, "4. capability attestation — 내용이 불완전하다"},
 	{attest.ErrAccountMismatch, "4. capability attestation — 다른 계좌의 것이다"},
+	{ErrOrderPathUnproven, "4. capability attestation — 낡았고, 이 계좌로 엔진이 낸 주문이 확정된 기록이 없다(낡음과 미증명을 가를 수 없음)"},
 	// a199: 만료(ErrExpired) · endpoint 누락(ErrEndpointNotAttested) 줄은 지움 — 낡음은 거절이 아니라 청산 전용 기동이고, 거절의
 	// 오류 사슬에 두 sentinel 이 실리는 입력이 없음(TestA199NoRefusalCarriesAStaleSentinel). 열거할 수 없는 조항을 열거하지 않음.
 	{ErrAccountUnresolved, "5. 계좌 확인 — 자격증명이 어느 계좌인지 해석되지 않았다"},

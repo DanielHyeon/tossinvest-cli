@@ -65,10 +65,11 @@ func a199StaleStatus(t *testing.T) AutomationStatus {
 func TestA199StaleWithAnUnwiredGatewayRefusesByTheGatewayClauseOnly(t *testing.T) {
 	status := a199StaleStatus(t)
 	err := verifyGate(&status, gateFacts{
-		guardian: a199LimitGuardian{limits: status.Limits},
-		trading:  config.Trading{Place: true, Sell: true, Cancel: true, AllowLiveOrderActions: true},
-		gateway:  nil,
-		now:      a199Now,
+		guardian:   a199LimitGuardian{limits: status.Limits},
+		trading:    config.Trading{Place: true, Sell: true, Cancel: true, AllowLiveOrderActions: true},
+		gateway:    nil,
+		orderProof: a199Proven, // 증거 있음 — 거절이 증거 아닌 게이트웨이 조항 때문임을 봄
+		now:        a199Now,
 	})
 	if !errors.Is(err, ErrGatewayRequired) {
 		t.Fatalf("err = %v, want the gateway clause", err)
@@ -89,11 +90,12 @@ func TestA199StaleWithAKeylessTransportRefusesByTheTransportClauseOnly(t *testin
 		t.Fatalf("execgw.New: %v", err)
 	}
 	err = verifyGate(&status, gateFacts{
-		guardian:  a199LimitGuardian{limits: status.Limits},
-		trading:   config.Trading{Place: true, Sell: true, Cancel: true, AllowLiveOrderActions: true},
-		gateway:   gw,
-		transport: keylessBroker{},
-		now:       a199Now,
+		guardian:   a199LimitGuardian{limits: status.Limits},
+		trading:    config.Trading{Place: true, Sell: true, Cancel: true, AllowLiveOrderActions: true},
+		gateway:    gw,
+		transport:  keylessBroker{},
+		orderProof: a199Proven,
+		now:        a199Now,
 	})
 	if !errors.Is(err, ErrKeylessTransport) {
 		t.Fatalf("err = %v, want the transport clause", err)

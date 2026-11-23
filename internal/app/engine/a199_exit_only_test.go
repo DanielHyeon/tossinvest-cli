@@ -11,6 +11,8 @@ package engine_test
 //   8. 재기동: 낡은 채면 래치가 다시 서고, 유효한 attestation 이면 attestation 사유의 래치가 없고 감사는 수락.
 //
 // 사유 · 감사 action 은 철자(계약값)로 단언함 — 원장 · 알림에 그 문자열이 남기 때문.
+// a199 G2: 모든 기동은 「이 계좌로 엔진 주문이 확정된 기록」이 있는 원장으로 함(a199IsolateWithEngineOrder) — 기록 없는 설치의
+// 거절은 a199_order_path_test.go · a199_order_path_internal_test.go 가 잼.
 
 import (
 	"bytes"
@@ -45,7 +47,7 @@ func a199Expired(a *attest.Attestation) {
 // a199OpenProduction 은 생산 Guardian 으로 게이트 ON 엔진을 엶(exit 관측이 Guardian 의 위험 감소 발급을 요구하므로).
 func a199OpenProduction(t *testing.T, mutate func(*attest.Attestation)) (*engine.Context, string, error) {
 	t.Helper()
-	dir := isolate(t)
+	dir := a199IsolateWithEngineOrder(t)
 	writeGateConfig(t, dir, smallLiveGate())
 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
 	writeAttestation(t, dir, mutate)
@@ -141,7 +143,7 @@ func TestA199RefusalsStayRefusals(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			dir := isolate(t)
+			dir := a199IsolateWithEngineOrder(t)
 			writeGateConfig(t, dir, smallLiveGate())
 			writeCredentials(t, dir, "test-api-key-000000", "test-secret")
 			if tc.write {
@@ -209,7 +211,7 @@ func TestA199NoRefusalCarriesAStaleSentinel(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			dir := isolate(t)
+			dir := a199IsolateWithEngineOrder(t)
 			srv, _ := interlockServer(t, tc.account)
 			writeCredentials(t, dir, "test-api-key-000000", "test-secret")
 			var (
@@ -252,7 +254,7 @@ func TestA199StaleWithAnotherClauseRefusesByThatClauseOnly(t *testing.T) {
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			dir := isolate(t)
+			dir := a199IsolateWithEngineOrder(t)
 			writeGateConfig(t, dir, fullGate())
 			writeCredentials(t, dir, "test-api-key-000000", "test-secret")
 			writeAttestation(t, dir, a199Expired)
@@ -274,7 +276,7 @@ func TestA199StaleWithAnotherClauseRefusesByThatClauseOnly(t *testing.T) {
 type engineGuardianCase struct{ guardian stubGuardian }
 
 func TestA199ARestartRederivesTheLatchFromTheFile(t *testing.T) {
-	dir := isolate(t)
+	dir := a199IsolateWithEngineOrder(t)
 	writeGateConfig(t, dir, smallLiveGate())
 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
 	writeAttestation(t, dir, a199Expired)
@@ -317,7 +319,7 @@ func TestA199ARestartRederivesTheLatchFromTheFile(t *testing.T) {
 }
 
 func TestA199TheExitOnlyStartSaysWhatItIs(t *testing.T) {
-	dir := isolate(t)
+	dir := a199IsolateWithEngineOrder(t)
 	writeGateConfig(t, dir, fullGate())
 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
 	writeAttestation(t, dir, a199Expired)
@@ -352,7 +354,7 @@ func TestA199TheExitOnlyFieldIsAbsentFromOtherStarts(t *testing.T) {
 		"gate off":          {func() config.AutomationGate { return config.AutomationGate{} }, nil},
 	} {
 		t.Run(name, func(t *testing.T) {
-			dir := isolate(t)
+			dir := a199IsolateWithEngineOrder(t)
 			writeGateConfig(t, dir, tc.gate())
 			writeCredentials(t, dir, "test-api-key-000000", "test-secret")
 			writeAttestation(t, dir, nil)

@@ -82,6 +82,9 @@ type attestationVerdict struct {
 	DeadlineKind string
 	// EpisodeAt 은 거절 에피소드의 시작 시각임(G12) — 판정이 아니라 감시(prepare)가 채움. 거절 단계 key 에만 쓰임.
 	EpisodeAt time.Time
+	// Unproven 은 이 계좌로 엔진이 낸 주문이 확정된 기록이 원장에 없거나 읽지 못했다는 뜻임(a199 G2) — 낡은 파일로 재시작하면(지금
+	// 낡았든 기한 뒤든) 청산 전용이 아니라 기동 거부. 낡음 단계(expired · scope_lost)와 날수 · 지남 단계에서만 채워짐.
+	Unproven bool
 }
 
 // critical 은 재시작이 거절될 상태이거나 이틀 안에 그렇게 될 상태인지임.
@@ -99,13 +102,27 @@ func (v attestationVerdict) critical() bool {
 // loadErr 는 attest.Load 의 오류임 — 없는 파일 · 깨진 파일 모두 재시작 거절이므로 unreadable 로 묶음.
 // 만료와 범위 상실이 겹치면 만료로 보고됨. a199: 어느 결함이 청산 전용(낡음)이고 어느 결함이 거부인지는 인터록과 **같은 함수**
 // (classifyAttestation)로 판정함 — 만료가 가린 다른 계좌 · 빈 endpoint 항목 · 무효 형식은 인터록처럼 거부 단계로 읽힘.
-func judgeAttestation(att attest.Attestation, loadErr error, now time.Time, accountRef string) attestationVerdict {
+//
+// proof(a199 G2)는 하나만 받음 — 가변 인자인 것은 단계만 재는 기존 판정 시험의 호출을 그대로 두려는 것뿐이고, 없으면 증거 없음(Unproven).
+// 단계(Stage)는 증거와 무관함 — 증거는 귀결 문장만 가름.
+func judgeAttestation(att attest.Attestation, loadErr error, now time.Time, accountRef string,
+	proofs ...orderPathProof,
+) attestationVerdict {
+	var proof orderPathProof
+	if len(proofs) > 0 {
+		proof = proofs[0]
+	}
 	if loadErr != nil {
 		return attestationVerdict{Stage: stageUnreadable}
 	}
 	v := attestationVerdict{IssuedAt: att.IssuedAt, ExpiresAt: att.ExpiresAt, ProofAt: binding(att.SupervisedBy)}
 	required := RequiredEndpoints()
-	stale, err := classifyAttestation(att, now, accountRef, required)
+	stale, err := classifyAttestation(att, now, accountRef, required, proof)
+	// a199 G2: 낡았지만 엔진 주문 기록이 없는 거절 — 단계는 낡음 그대로(만료 · 범위 상실), 귀결은 기동 거부.
+	var unproven *unprovenStaleError
+	if errors.As(err, &unproven) {
+		stale, err, v.Unproven = &unproven.stale, nil, true
+	}
 	if stale != nil {
 		if stale.expired {
 			v.Stage = stageExpired
@@ -135,6 +152,7 @@ func judgeAttestation(att attest.Attestation, loadErr error, now time.Time, acco
 		// 기한 정각은 이미 지난 것(발급자는 나이 == 유효 기간인 증거를 뺌). 만료는 Verify 가 걸렀으므로 여기 오는 것은 감독 증거의 기한뿐.
 		// 날수 단계로 접으면 같은 키가 하루 넘게 이어져 침묵하므로 별도 단계로 하루 한 번 알림.
 		v.Stage = stageProofOverdue
+		v.Unproven = !orderPathProven(proof, accountRef)
 		return v
 	}
 	// 하루 단위 올림: 6.5일 남음 = D-7, 정확히 7일 = D-7, 7일 1초 = D-8. remaining 은 여기서 양수.
@@ -147,7 +165,20 @@ func judgeAttestation(att attest.Attestation, loadErr error, now time.Time, acco
 	default:
 		v.Stage = stageImminent
 	}
+	if v.Stage != stageHealthy {
+		// 기한 뒤 재시작의 귀결 예측 — 인터록이 낡음 갈래에서 묻는 것과 같은 질의(healthy 는 알림이 없으므로 묻지 않음).
+		v.Unproven = !orderPathProven(proof, accountRef)
+	}
 	return v
+}
+
+// orderPathProven 은 감시의 예측용 — 기록이 있고 읽기가 성공했을 때만 참(못 읽으면 거부 쪽으로 말함).
+func orderPathProven(proof orderPathProof, accountRef string) bool {
+	if proof == nil {
+		return false
+	}
+	ok, err := proof(accountRef)
+	return err == nil && ok
 }
 
 // restartDeadline 은 재시작이 거절되기 시작할 시각과 그 출처를 돌려줌(a196 D1).
@@ -217,6 +248,8 @@ type attestationWatch struct {
 	// exitOnly 는 이 엔진이 낡은 attestation 으로 청산 전용 기동했는지(기동 표지, a199) — 읽기만 함(a135 D4: 엔진 상태 쓰기 0).
 	// 실행 중에는 바뀌지 않으므로(D6) 「지금 청산 전용으로 돌고 있다」의 출처로 충분함.
 	exitOnly bool
+	// proof 는 인터록과 같은 원장 질의(a199 G2) — 낡음 · 기한 뒤의 귀결(청산 전용 / 기동 거부)을 가름. nil 이면 증거 없음.
+	proof orderPathProof
 
 	identity string          // 마지막으로 본 기한(a196 — 파일의 발급 시각이 아님, 거절 단계는 기한 없음)
 	sent     map[string]bool // 이 신원에서 이미 알린 단계 키
@@ -236,6 +269,7 @@ func newAttestationWatch(c *Context, clk clock.Clock) *attestationWatch {
 	}
 	w.enabled = c.Automation.Enabled
 	w.exitOnly = c.Automation.ExitOnly // a199: 알림 조건은 파일이 아니라 기동 표지(Manager Q-A)
+	w.proof = engineOrderProof(context.Background(), c.Journal)
 	w.path = c.Automation.AttestationFile
 	w.accountRef = c.AccountRef
 	w.critical = c.Config.Engine.Notifications.Enabled
@@ -331,7 +365,7 @@ func (w *attestationWatch) prepare() (event obs.Event, key string, ok bool) {
 
 	att, err := w.load(w.path)
 	now := w.clock.Now()
-	v := judgeAttestation(att, err, now, w.accountRef)
+	v := judgeAttestation(att, err, now, w.accountRef, w.proof)
 
 	// 기한이 바뀌면(새 감독 증거 · 실린 증거 교체 · 만료가 기한인 파일의 갱신) 이미 알린 단계를 잊음. a196: 같은 감독 증거를 실은
 	// 재발급은 기한이 같으므로 새로 세지 않음 — 파일 신원으로 세면 6시간 갱신마다 같은 통지가 다시 나감.
@@ -425,26 +459,37 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event 
 		"`--market` 으로) → `tossctl soak attest` → 엔진 재시작 순서로 하라."
 	const reverify = "할 일: " + reverifySteps
 	const renew = "할 일: 갱신(`tossctl soak attest`)이 왜 실패하는지 확인한다 — 갱신에는 soak 통과와 유효 기간 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다."
+	// a199 G2: 이 계좌로 엔진 주문이 확정된 기록이 없으면(또는 못 읽으면) 낡은 파일로의 재시작은 청산 전용이 아니라 기동 거부 —
+	// 낡음 단계와 날수 · 지남 단계의 귀결 문장을 a199 이전 문장으로 되돌림(그쪽이 참).
+	onRestart, restartConsequence := exitOnlyOnRestart, exitOnlyConsequence
+	laterTitle, later, laterShort, after :=
+		"그 뒤 엔진을 재시작하면 청산 전용으로 뜰 수 있다", "엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다",
+		"엔진을 재시작하면 청산 전용으로 뜬다", afterRefusal
+	if v.Unproven {
+		onRestart, restartConsequence = refused, consequence
+		laterTitle, later, laterShort = "그 뒤 엔진 재시작이 거부될 수 있다", "엔진 재시작이 거부된다", "엔진 재시작이 거부된다"
+		after = "재시작이 거부되면 그때부터 자동 손절이 돌지 않는다. 지금 실행 중인 엔진은 계속 돈다."
+	}
 
 	var title, body string
 	switch v.Stage {
 	case stageNotice, stageImminent:
 		if v.DeadlineKind == deadlineProof {
-			title = fmt.Sprintf("감독하 실주문 검증 만료 D-%d — 그 뒤 엔진을 재시작하면 청산 전용으로 뜰 수 있다", v.DaysLeft)
+			title = fmt.Sprintf("감독하 실주문 검증 만료 D-%d — %s", v.DaysLeft, laterTitle)
 			body = fmt.Sprintf("감독하 실주문 검증(POST 주문 · 취소 증거)이 D-%d(%s)에 만료된다. 다른 유효한 감독 증거가 없으면 그 뒤 첫 갱신부터 "+
-				"엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다. %s attestation 자체의 만료는 %s 이다. 할 일: 기한 전에 %s", v.DaysLeft, deadline, afterRefusal, expires, reverifySteps)
+				"%s. %s attestation 자체의 만료는 %s 이다. 할 일: 기한 전에 %s", v.DaysLeft, deadline, later, after, expires, reverifySteps)
 		} else {
 			title = fmt.Sprintf("자동매매 검증서(attestation) 만료 D-%d", v.DaysLeft)
-			body = fmt.Sprintf("capability attestation 이 D-%d(%s)에 만료된다. 그 뒤 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다. %s %s",
-				v.DaysLeft, expires, afterRefusal, renew)
+			body = fmt.Sprintf("capability attestation 이 D-%d(%s)에 만료된다. 그 뒤 %s. %s %s",
+				v.DaysLeft, expires, later, after, renew)
 		}
 	case stageProofOverdue:
 		title = "감독하 실주문 검증의 기한이 지났다 — 지금 감독 검증을 다시 해야 한다"
-		body = fmt.Sprintf("감독하 실주문 검증의 기한이 지났다(%s). 다른 유효한 감독 증거가 없으면 다음 갱신부터 엔진을 재시작하면 청산 전용으로 뜬다 — "+
-			"갱신이 실패하고 있으면 이 파일의 만료(%s)부터 그렇다. %s %s", deadline, expires, afterRefusal, reverify)
+		body = fmt.Sprintf("감독하 실주문 검증의 기한이 지났다(%s). 다른 유효한 감독 증거가 없으면 다음 갱신부터 %s — "+
+			"갱신이 실패하고 있으면 이 파일의 만료(%s)부터 그렇다. %s %s", deadline, laterShort, expires, after, reverify)
 	case stageExpired:
-		title = exitOnlyOnRestart + " — 자동매매 검증서(attestation)가 만료되었다"
-		body = fmt.Sprintf("%s. capability attestation 이 %s 에 만료되었다. %s %s", exitOnlyOnRestart, expires, exitOnlyConsequence, renew)
+		title = onRestart + " — 자동매매 검증서(attestation)가 만료되었다"
+		body = fmt.Sprintf("%s. capability attestation 이 %s 에 만료되었다. %s %s", onRestart, expires, restartConsequence, renew)
 	case stageScopeLost:
 		// 원인 · 할 일은 빠진 endpoint 의 종류로 가름(구현 리뷰 P1-2) — 감독하 실주문 검증이 덮는 것은 주문 실행(POST)뿐임.
 		missing := strings.Join(v.Missing, ", ")
@@ -455,16 +500,16 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event 
 			}
 		}
 		if mutations == len(v.Missing) {
-			title = exitOnlyOnRestart + " — 주문 실행 검증이 attestation 에 없다"
+			title = onRestart + " — 주문 실행 검증이 attestation 에 없다"
 			body = fmt.Sprintf("%s. 현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: %s. 갱신이 유효 기간 안의 감독하 실주문 검증 증거 없이 쓰였다. %s %s",
-				exitOnlyOnRestart, missing, exitOnlyConsequence, reverify)
+				onRestart, missing, restartConsequence, reverify)
 		} else {
-			title = exitOnlyOnRestart + " — 엔진이 쓰는 endpoint 가 attestation 에 없다"
+			title = onRestart + " — 엔진이 쓰는 endpoint 가 attestation 에 없다"
 			remedy := "할 일: 빠진 endpoint 를 덮는 능력 검증을 다시 실행해 attestation 을 재발급하라."
 			if mutations > 0 {
 				remedy += " 주문 실행 endpoint 는 감독하 실주문 검증으로만 덮인다 — " + reverifySteps
 			}
-			body = fmt.Sprintf("%s. 현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: %s. %s %s", exitOnlyOnRestart, missing, exitOnlyConsequence, remedy)
+			body = fmt.Sprintf("%s. 현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: %s. %s %s", onRestart, missing, restartConsequence, remedy)
 		}
 	case stageIncomplete:
 		title = refused + " — 자동매매 검증서(attestation)에 필수 칸이 비어 있다"

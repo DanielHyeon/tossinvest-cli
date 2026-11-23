@@ -12,6 +12,7 @@ package engine
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"go/ast"
@@ -28,6 +29,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
 
@@ -65,13 +67,16 @@ func a199WiredFacts(t *testing.T, status AutomationStatus, entry *execgw.EntryGa
 	if err != nil {
 		t.Fatalf("execgw.New: %v", err)
 	}
+	// a199 G2: 이 계좌로 엔진 주문이 확정된 기록 하나(생산 쓰기 경로로) — 증거 없는 사례는 시험이 orderProof 를 바꿈.
+	SeedEngineOrderForTest(t, j, "wired-facts", "123-45", "engine", journal.KindPlace, journal.DispatchAcked)
 	return gateFacts{
-		guardian:  a199LimitGuardian{limits: status.Limits},
-		trading:   config.Trading{Place: true, Sell: true, Cancel: true, AllowLiveOrderActions: true},
-		gateway:   gw,
-		transport: &officialBroker{},
-		entry:     entry,
-		now:       a199Now,
+		guardian:   a199LimitGuardian{limits: status.Limits},
+		trading:    config.Trading{Place: true, Sell: true, Cancel: true, AllowLiveOrderActions: true},
+		gateway:    gw,
+		transport:  &officialBroker{},
+		entry:      entry,
+		orderProof: engineOrderProof(context.Background(), j),
+		now:        a199Now,
 	}
 }
 
@@ -105,8 +110,9 @@ func TestA199NoEntryGateMeansNoExitOnlyStart(t *testing.T) {
 	if !errors.Is(err, ErrAutomationGateRefused) || !errors.Is(err, ErrGatewayRequired) {
 		t.Fatalf("err = %v, want a gateway-clause refusal — no gate to carry the latch", err)
 	}
-	if got.Verified || got.EntryPermitted {
-		t.Fatalf("status = %+v, want neither verified nor entry-permitted", got)
+	// G9: 거절된 기동은 청산 전용 표지를 들지 않음(거절 줄에 보호 수명 문장이 실리지 않게).
+	if got.Verified || got.EntryPermitted || got.ExitOnly || got.RunsExitSide() {
+		t.Fatalf("status = %+v, want neither verified, entry-permitted nor exit-only", got)
 	}
 	for _, e := range a199AuditLines(t, filepath.Join(dir, "audit.log")) {
 		if e.Action == audit.ActionGateExitOnly || e.Action == audit.ActionGateAccepted {

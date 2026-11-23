@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/soak.go",
-  "source_sha256": "8a2f2c95036a4c9f6fef573913aea049bc8822d6f30758bd429f1a589a6040d2",
+  "source_sha256": "bc42d1a9d9e997a28ddfb70c88999dd42c4a7ec35c93464a6a6bc3a0a4eaf354",
   "package": "main",
   "function": "runSoakAttest",
   "signature": "runSoakAttest(params=3, results=1)",
