@@ -44,9 +44,16 @@ MUTANTS = [
     ("M8", "(라) 접수 확정 상태 검사 삭제", F,
      " ||\n\t\tf.OrderAttempts[0].State != string(StateConfirmed) {", " {"),
     ("M9", "(라) 상한 비교 삭제", F,
-     "\treturn cmp <= 0\n}", "\treturn cmp <= 0 || true\n}"),
+     "if err != nil || cmp > 0 {", "if err != nil || (cmp > 0 && false) {"),
     ("M10", "(라) 상한 비교를 < 로", F,
-     "\treturn cmp <= 0\n}", "\treturn cmp < 0\n}"),
+     "if err != nil || cmp > 0 {", "if err != nil || cmp >= 0 {"),
+    # gstack r1 G1(Manager 2026-11-24): 이 체결이 들고 온 누적 · 주문 수량 상한.
+    ("M20", "(라) 체결 누적 상한 비교 삭제", F,
+     "if err != nil || cumulative > 0 {", "if err != nil || (cumulative > 0 && false) {"),
+    ("M21", "(라) 체결 누적 상한을 < 로", F,
+     "if err != nil || cumulative > 0 {", "if err != nil || cumulative >= 0 {"),
+    ("M22", "(라) 체결 주문 수량 상한 비교 삭제", F,
+     "if err != nil || ordered > 0 {", "if err != nil || (ordered > 0 && false) {"),
     ("M11", "(라) 감소분 대신 new_quantity", F,
      "riskcalc.SubDecimal(closing.PrevQuantity, closing.NewQuantity)", "riskcalc.SubDecimal(closing.NewQuantity, \"0\")"),
     ("M12", "(라) 감소분의 prev 열을 다른 열(prev_avg_price)로", F,
@@ -62,7 +69,7 @@ MUTANTS = [
      "err != nil || recognised {\n\t\t\treturn err\n\t\t}",
      "err != nil {\n\t\t\treturn err\n\t\t} else if recognised {\n\t\t\t_ = recognised\n\t\t}"),
     ("M16", "판정 호출 삭제(오늘 동작으로 되돌림)", P,
-     "if recognised, err := recogniseAdjustmentCloseFill(ctx, tx, origin, instance, outcome); err != nil || recognised {",
+     "if recognised, err := recogniseAdjustmentCloseFill(ctx, tx, origin, instance, outcome, fill); err != nil || recognised {",
      "if recognised, err := false, error(nil); err != nil || recognised {"),
 ]
 

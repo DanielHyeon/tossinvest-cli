@@ -245,6 +245,22 @@ func TestA200AnAmendedStopStaysAnAttributionFailure(t *testing.T) {
 	a200AssertRefused(t, readA200Ledger(t, j, p.ID))
 }
 
+// TestA200ABrokerFillLargerThanTheIntentStaysAnAttributionFailure 는 gstack r1 G1(Manager 2026-11-24): intent 31 · 조정 31→0 인데
+// 브로커 관측이 주문 40 · 누적 40 으로 온 체결(어댑터 · 브로커 결함 모양). intent 수량은 감소분 안이지만 이 체결이 들고 온 누적이
+// 감소분을 넘으므로 인정하지 않음 — 오늘과 같은 ATTRIBUTION_FAILED.
+func TestA200ABrokerFillLargerThanTheIntentStaysAnAttributionFailure(t *testing.T) {
+	j, clk, p, sell := a200ManagedStop(t, "31")
+	a200Converge(t, j, "005930", "31", "0", clk.Now())
+	obs := terminalFill(sell, "40", "67900")
+	obs.Quantity = "40"
+	if _, err := j.RecordFill(context.Background(), obs); err != nil {
+		t.Fatalf("RecordFill(브로커 40): %v", err)
+	}
+	got := readA200Ledger(t, j, p.ID)
+	got.log(t, "브로커 수량 > intent")
+	a200AssertRefused(t, got)
+}
+
 // TestA200ASecondPlaceAttemptStaysAnAttributionFailure: 한 intent 에 PLACE attempt 가 둘(재시도 · 재제출 — 전제 (iii)).
 func TestA200ASecondPlaceAttemptStaysAnAttributionFailure(t *testing.T) {
 	j, clk, p, sell := a200ManagedStop(t, "31")

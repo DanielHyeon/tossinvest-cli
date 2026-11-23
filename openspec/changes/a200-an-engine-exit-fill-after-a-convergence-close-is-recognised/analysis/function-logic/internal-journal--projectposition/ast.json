@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/position_projection.go",
-  "source_sha256": "e7e7d30f6153577221550f64202b330b558f09d6691472e7c7294c56be83edbd",
+  "source_sha256": "c5b92aea58b6d08a5e2db716afc95fafa5627ad1230f25ee46dfafc360613580",
   "package": "journal",
   "function": "ProjectPosition",
   "signature": "ProjectPosition(params=3, results=1)",

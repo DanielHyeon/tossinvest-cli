@@ -20,6 +20,8 @@ func a200GoodFacts() recognitionFacts {
 		PendingIntentID: "i-stop",
 		OrderAttempts:   []recognitionAttempt{{Kind: "PLACE", State: "CONFIRMED"}},
 		IntentQuantity:  "31",
+		FillCumulative:  "31",
+		FillOrdered:     "31",
 	}
 }
 
@@ -75,6 +77,15 @@ func TestA200TheVerdictRecognisesTheIncidentShapeAndRefusesEachBrokenCondition(t
 		}, false},
 		{"(라) 못 읽는 주문 수량", func(f *recognitionFacts) { f.IntentQuantity = "" }, false},
 		{"(라) 못 읽는 prev_quantity", func(f *recognitionFacts) { f.Adjustments[0].PrevQuantity = "x" }, false},
+		// gstack r1 G1: 이 체결이 들고 온 브로커 값의 상한(intent 수량은 감소분 안이어도).
+		{"(라) 체결 누적 = 감소분(경계)", func(f *recognitionFacts) { f.FillCumulative = "31" }, true},
+		{"(라) 체결 누적 < 감소분", func(f *recognitionFacts) { f.FillCumulative = "10" }, true},
+		{"(라) 체결 누적 > 감소분, intent ≤ 감소분", func(f *recognitionFacts) { f.FillCumulative = "40" }, false},
+		{"(라) 체결 누적 비었음", func(f *recognitionFacts) { f.FillCumulative = "" }, false},
+		{"(라) 체결 누적 못 읽음", func(f *recognitionFacts) { f.FillCumulative = "x" }, false},
+		{"(라) 관측 주문 수량 > 감소분, 누적 ≤ 감소분", func(f *recognitionFacts) { f.FillOrdered = "40" }, false},
+		{"(라) 관측 주문 수량 실리지 않음 → 누적만", func(f *recognitionFacts) { f.FillOrdered = "" }, true},
+		{"(라) 관측 주문 수량 못 읽음", func(f *recognitionFacts) { f.FillOrdered = "x" }, false},
 	}
 	for _, c := range cases {
 		f := a200GoodFacts()

@@ -101,7 +101,7 @@ func ProjectPosition(ctx context.Context, tx *ApplyTx, fill AppliedFill) error {
 	if outcome.Reconcile() {
 		// a200: 수렴 조정이 먼저 닫은 인스턴스에 늦게 닿은 그 인스턴스 청산 발의의 체결이면 거절 대신 인정함 — 수량은 조정이 이미
 		// 뺐으므로 투영을 쓰지 않고, 차단도 쓰지 않음(표지 한 줄만). 인정이 아니면 오늘과 같은 차단 경로.
-		if recognised, err := recogniseAdjustmentCloseFill(ctx, tx, origin, instance, outcome); err != nil || recognised {
+		if recognised, err := recogniseAdjustmentCloseFill(ctx, tx, origin, instance, outcome, fill); err != nil || recognised {
 			return err
 		}
 		return enterReconcileInTx(ctx, tx, origin, outcome, fill)

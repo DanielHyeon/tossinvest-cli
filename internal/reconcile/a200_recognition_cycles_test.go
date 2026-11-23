@@ -187,6 +187,42 @@ func TestA200W6AManagedStopFillIsUnchanged(t *testing.T) {
 	w.assertOpenAfterOneCleanCycle("W6")
 }
 
+// TestA200AnUnrecognisedW6FillWritesNoNewRow 는 gstack r1 state-machines 의 미시험 칸(Manager 2026-11-24): 수량 불일치 차단이
+// 이미 선 창(W6)에 (라)가 깨진 체결(같은 intent 에 PLACE attempt 둘)이 오면 인정하지 않고, 차단 경로의 F10 이 새 행을 쓰지 않음 —
+// base 와 같은 결과(표지 0 · 귀속 실패 0 · 활성은 수량 불일치 하나뿐). (나) 실패도 같은 F10 경로.
+func TestA200AnUnrecognisedW6FillWritesNoNewRow(t *testing.T) {
+	w := newA200World(t)
+	id := w.holdManaged()
+	if _, err := w.journal.Prepare(w.ctx, journal.PrepareRequest{
+		Intent: journal.Intent{
+			ID: "intent-stop", AccountRef: a200Account, Market: "kr", TradingDay: a200Day, Symbol: a200Symbol,
+			Side: "SELL", OrderType: "LIMIT", Quantity: "31", Price: "94", Currency: "KRW", Source: "engine",
+			Fingerprint: "fp-intent-stop",
+		},
+		Kind: journal.KindPlace, AttemptID: "attempt-stop-2",
+	}); err != nil {
+		t.Fatalf("둘째 PLACE attempt: %v", err)
+	}
+	diff := w.mismatch("31", "0")
+	if _, err := w.converge(diff); err != nil {
+		t.Fatalf("converge: %v", err)
+	}
+	if err := w.refresh(); err != nil {
+		t.Fatalf("Refresh: %v", err)
+	}
+	if _, err := w.observe(diff); err != nil {
+		t.Fatalf("Observe: %v", err)
+	}
+	w.fill("o-stop", "SELL", "31", "31", true) // W6, (라) 실패
+	w.assertNoAttributionFailure("W6 (라) 실패")
+	if n := w.recognitionMarkers(id); n != 0 {
+		t.Fatalf("표지 %d 개, (라)가 깨진 체결은 인정하지 않음", n)
+	}
+	if got := w.activeCauses(); len(got) != 1 || got[0] != journal.ReconcileCauseQuantityMismatch {
+		t.Fatalf("활성 = %q, 이미 선 수량 불일치 하나뿐이어야 함(F10 — 새 행 없음)", got)
+	}
+}
+
 // TestA200ARestartAfterARecognisedFillLeavesTheQuantityBlockAwaiting 는 공시 시험(design D6, codex r1 P2-2): 인정 뒤 다음 일치 전에
 // 재기동하면 조정 반영 근거(프로세스 기억)를 잃어 수량 불일치가 오늘처럼 조정 대기로 남음 — 귀속 실패는 여전히 없음.
 func TestA200ARestartAfterARecognisedFillLeavesTheQuantityBlockAwaiting(t *testing.T) {

@@ -43,6 +43,9 @@ type recognitionFacts struct {
 	OrderAttempts []recognitionAttempt
 	// IntentQuantity 는 그 intent 의 주문 수량(intents.quantity — 브로커에 나간 수량과 같음, claim-check 전제 (i)).
 	IntentQuantity string
+	// FillCumulative · FillOrdered 는 지금 적용 중인 체결 관측이 들고 온 브로커 값(AppliedFill 의 CumulativeQuantity ·
+	// OrderedQuantity) — 원장에서 읽지 않음. FillOrdered 는 관측에 실리지 않으면 빈 문자열.
+	FillCumulative, FillOrdered string
 }
 
 type recognitionAdjustment struct {
@@ -104,16 +107,29 @@ func recognitionVerdict(f recognitionFacts) bool {
 		return false
 	}
 	cmp, err := riskcalc.CompareDecimal(f.IntentQuantity, decrease)
-	if err != nil {
+	if err != nil || cmp > 0 {
 		return false
 	}
-	return cmp <= 0
+	// 같은 상한을 이 체결이 들고 온 브로커 값에도 검 — intent 와 다른 수량으로 접수 · 체결된 결함(어댑터 · 브로커)이 감소분을 넘는
+	// 체결을 인정받지 못하게 함(gstack r1 G1). 정상에선 누적 ≤ 주문 수량 = intent 수량 ≤ 감소분이라 거절하는 정상 입력 없음.
+	// 누적이 비었거나 못 읽으면 아님. 주문 수량은 관측에 실렸을 때만 봄.
+	cumulative, err := riskcalc.CompareDecimal(f.FillCumulative, decrease)
+	if err != nil || cumulative > 0 {
+		return false
+	}
+	if strings.TrimSpace(f.FillOrdered) != "" {
+		ordered, err := riskcalc.CompareDecimal(f.FillOrdered, decrease)
+		if err != nil || ordered > 0 {
+			return false
+		}
+	}
+	return true
 }
 
 // recogniseAdjustmentCloseFill 은 ProjectPosition 의 거절 갈래에서 차단을 쓰기 직전에 한 번 불림. 인정이면 표지 행을 쓰고 true —
 // 호출자는 차단을 쓰지 않고 투영도 쓰지 않음. 원장 읽기 오류는 그대로 돌려줌(체결 tx 롤백 — 오늘의 차단 쓰기 오류와 같은 방향).
 func recogniseAdjustmentCloseFill(ctx context.Context, tx *ApplyTx, origin fillOrigin,
-	instance projectedInstance, outcome position.Outcome) (bool, error) {
+	instance projectedInstance, outcome position.Outcome, fill AppliedFill) (bool, error) {
 	// 이 경합이 아닌 거절(OVERSELL · ENTRY_WHILE_CLOSING 등)은 원장을 읽지 않고 돌아감 — 그 거절들에 새 읽기 실패 경로를 만들지 않음.
 	// (가)의 정의는 recognisableRefusal 한 곳. 인스턴스 행이 없으면(FLAT) 읽을 조정 · exit 상태도 없음.
 	if !recognisableRefusal(outcome.Refusal) || !instance.Held || instance.ID == "" {
@@ -123,6 +139,7 @@ func recogniseAdjustmentCloseFill(ctx context.Context, tx *ApplyTx, origin fillO
 	if err != nil {
 		return false, err
 	}
+	facts.FillCumulative, facts.FillOrdered = fill.CumulativeQuantity, fill.OrderedQuantity
 	if !recognitionVerdict(facts) {
 		return false, nil
 	}

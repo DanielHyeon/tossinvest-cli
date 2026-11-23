@@ -1,6 +1,6 @@
 # Function Logic Map: `ProjectPosition` (편집 뒤 판)
 
-- Source: `internal/journal/position_projection.go` (65-110), 작업 트리 source sha256 `e7e7d30f6153…`. 편집 전: `../../pre-edit-ast/internal-journal--projectposition.ast.json`(65-105, sha `5b62d380b860`, 분기 5).
+- Source: `internal/journal/position_projection.go` (65-110), 작업 트리 source sha256 `c5b92aea58b6…`(gstack r1 G1 — Manager 2026-11-24 승인: 같은 줄 104 의 호출에 인자 `fill` 하나 추가. 다시 뽑은 ast 의 분기 6 · 호출 · 반환 · 부수효과가 앞 판 `e7e7d30f6153` 과 같음 — 표 무변). 편집 전: `../../pre-edit-ast/internal-journal--projectposition.ast.json`(65-105, sha `5b62d380b860`, 분기 5).
 - AST evidence: `ast.json`(분기 6, return 7: 68 · 75 · 80 · 98 · 105 · 107 · 109). 명령 `go run ./tools/logic-map --file internal/journal/position_projection.go --func ProjectPosition`.
 - Risk scan: `risk-pattern-report.md`(일치 0).
 - 커버리지: 편집 전 `../../coverage/pre-edit-ProjectPosition-blocks.txt`, 편집 뒤 `../../coverage/after-ProjectPosition-blocks.txt`.
