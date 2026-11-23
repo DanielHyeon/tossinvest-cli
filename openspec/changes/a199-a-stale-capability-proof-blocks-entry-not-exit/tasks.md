@@ -14,7 +14,7 @@
 - [x] 1.8 편집 표면 · 고정 장치 표(`analysis/edit-surface.md`): 편집할 기존 함수 목록, a166 census 키 적중(`NewContext` 예상 1), 소스를 여는 시험, 감독 루프 순서 시험, 봉인 시험, 진행 중 change(a063 · verify-execution-capability · a105 · a107)와의 파일 겹침
 - [x] 1.9 편집할 기존 함수마다 FLM/BTM pre-edit 번들(`tools/logic-map`) — 뒤집히는 기존 시험 함수 포함
 - [x] 1.10 claim check: proposal · design 의 분기 주장을 AST 열거와 대조(`analysis/claim-check.md`)
-- [ ] 1.11 제안 동결 적대 리뷰(작성자와 다른 계열 — codex, 최대 2회차) → `review.md`
+- [x] 1.11 제안 동결 적대 리뷰(작성자와 다른 계열 — codex, 최대 2회차) → `review.md`
 - [ ] 1.12 Manager 결정 · freeze
 
 ## 2. 구현

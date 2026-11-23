@@ -60,3 +60,32 @@ worktree `~/tossos-work/a199-impl`, 브랜치 `feat/a199-stale-proof-exit-only`.
 
 ### 1.10 claim check
 - `analysis/claim-check.md`. 거짓 · 부분 · 미확인은 아래 「Manager 에게 묻는 것」으로. 사실 정정 3을 design 에 반영(「가림」 예시, 「두 사례」→셋, §5 verifyGate 이름).
+
+### 1.11 proposal-freeze 적대 리뷰 (2026-11-24)
+- 보이스: codex-cli 0.165.0, `codex exec --sandbox read-only`(stdin `</dev/null`), 작성자(Opus)와 다른 계열. 프롬프트 `analysis/review/prompt-r1.md`, 원문 `analysis/review/proposal-freeze-r1-codex.md`(기준 HEAD 483d0bbce).
+- 1회차: **P0 0 · P1 3 · P2 3.** 인용 파일:줄은 팀메이트가 소스로 재확인(attest.go:218 `len(a.Endpoints)==0` · Load:174 `FormatVersion > FormatVersion` · engine-safety 522·534 · alertdelivery.go 의 래치 + `EscalateOperatingMode` · runtime.go:294 Recover 선행).
+- 2회차: 미실시 — 1회차 발견이 전부 Manager 결정 대상이라 처분 뒤(freeze 전) 돌리는 것이 의미 있음.
+
+| # | 등급 | 발견(요약) | 처분 제안 |
+|---|---|---|---|
+| R1 | P1 | 닫힌 집합 경계: `endpoints: [""]`·`["   "]` 는 `ErrIncomplete`(길이만 봄)를 지나 `ErrEndpointNotAttested` → 청산 전용. `format_version` 음수는 Load 통과(`>` 현재 판만 거절) — delta 「알 수 없는 형식은 거부」와 어긋남 | **Manager 결정(Q3)** — 사실 확인됨. 추천: 공용 판정(새 함수)에서 「정규화 뒤 빈 endpoint 가 있으면 불완전」·「형식 < 1 은 알 수 없는 형식」으로 거부(attest 기존 함수 무편집) + 교차 시험 |
+| R2 | P1 | D6 「도는 엔진은 진입 권한 유지」가 정본 「자동 진입은 모든 안전 권한의 교집합이다」(522, Scenario 534: decision 뒤 attestation digest 변경 → 신규 attempt 거절)와 충돌하게 읽힘 | **Manager 결정(Q4)** — 추천: D6·delta 문장을 「감시는 기동 표지·루프를 전환하지 않는다」로 한정, 주문별 manifest 재검증(전략 진입 — 오늘 휴면)은 그대로라고 명시(문구만, 행동 무변) |
+| R3 | P1 | `logGateDecision` 479 「보호는 프로세스 수명」 문장이 청산 전용 기동에서 빠짐 — 정본 「보호 미배선 기동」 SHALL, P11 이 조건부 | **반영 권고(Q5)** — P11 필수화. claim-check D3-b 와 같은 발견 |
+| R4 | P2 | 감시 문장: notice/imminent/proof_overdue 의 「그 뒤 재시작 거부」가 거짓이 됨, 파일 회복 뒤 청산 전용 엔진은 healthy → 침묵 | **Manager 결정(Q6 · Q7)** — claim-check D7-b · D7-c 와 같은 발견 |
+| R5 | P2 | 「유효한 attestation 으로 재기동 → 래치 없음」은 **attestation 사유 래치만** 참 — 청산 전용 중 알림 전달 실패가 `ReasonAlertUndelivered` + `ENTRY_BLOCKED` 승격을 남기면 재기동 뒤에도 차단(원장 복원) | **사실 정정 권고(Q8)** — design §3-8 · delta Scenario 「attestation 을 갱신한 뒤의 재기동」 THEN 을 「attestation 사유의 진입 차단은 …」로 한정. 다른 차단은 자동으로 풀지 않음(안전 방향). delta 문장이라 Manager 확인 뒤 생성 스크립트로 반영 |
+| R6 | P2 | 생성자 성공 ≠ 루프 실행: `Runtime.Run` 은 Recover 성공 전 어떤 루프도 안 띄움 — 시험 뼈대가 「exit 관측이 돈다」를 입증 못함 | **반영 권고(Q9)** — 2단계 RED 에 「청산 전용 Context → Recover → exit 한 사이클 → Guardian 발급 → Gateway 매도 제출」 연결 시험 1 추가. Recover 실패 시 미가동은 기존 성질로 기록 |
+| — | 정보 | 문제없음: 래치가 Context 반환 전이면 늦은 창 없음 · 매수/증가 정정만 checkEntry · worker 휴면 · Replay 비활성 · D1a 방향 · EXIT_ONLY 무충돌 · 열거 표면 포함 | 기록만 |
+
+### Manager 에게 묻는 것
+- **Q1** a198 이 `Context.ExitObserver` 를 편집 중 — 착지 뒤 origin/main merge + 사람 승인 base 재고정(이 change 의 자기 Go 커밋 0).
+- **Q2** delta 의 intent 밖 조정 2자리(B3-1 기한 이름, B3-6 Scenario THEN) 수용 여부.
+- **Q3**(R1) 닫힌 집합 경계 — 빈 endpoint 문자열 · 형식 < 1 을 거부로.
+- **Q4**(R2) D6 문구 한정.
+- **Q5**(R3) P11 필수화.
+- **Q6**(R4①) 날수 · 지남 단계 문장도 「청산 전용」 귀결로(eventFor 같은 함수).
+- **Q7**(R4②) 파일 회복 · 엔진 청산 전용 상태의 알림 — 새 단계 vs Story limits.
+- **Q8**(R5) 재기동 Scenario 문장 한정.
+- **Q9**(R6) 연결 시험 추가.
+- **Q10** 낡음 + 다른 조항 실패의 오류에 낡음 sentinel 동반 여부(`UnmetInterlockClauses` 두 줄).
+- **Q11** 래치 자리(runInterlock 권고 vs NewContext), P12 soak.go 문구 포함 여부.
+- **Q12** design §2 「가림」 예시 삭제(사실 정정 반영됨) 확인.
