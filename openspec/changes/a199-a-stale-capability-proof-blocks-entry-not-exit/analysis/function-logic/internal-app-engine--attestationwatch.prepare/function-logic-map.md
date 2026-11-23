@@ -1,9 +1,9 @@
 # Function Logic Map: `attestationWatch.prepare`
 
-> **편집 전 지도(pre-edit) — 1단계, 2026-11-24, HEAD `e4165fa3d`(코드 = `9738a0c32`).** 분기 표는 AST 열거(`../../harness/build_bundles.py`), 2단계 GREEN 뒤 다시 만든다.
+> **편집 후 지도(post-edit) — 2단계 GREEN 뒤, 2026-11-24, base `603046a23`.** 분기 표는 AST 열거(`../../harness/build_bundles.py --post`). 편집 전 원본 AST 는 `../../pre-edit-ast/internal-app-engine--attestationwatch.prepare.ast.json`.
 
-- Source: `internal/app/engine/attestation_watch.go` (309-353)
-- AST evidence: `ast.json` — branches **9** / returns **3** / calls **14**, source SHA-256 `9b71a387860c809bc6ee8f80528cd5cc1446fdd8dd080eac14164d7548eae1f6`(파일 단위).
+- Source: `internal/app/engine/attestation_watch.go` (319-372)
+- AST evidence: `ast.json` — branches **11** / returns **3** / calls **16**, source SHA-256 `be8b45222d70996e0008e4fc2fe04ba983dbdd2132342a7f6c99e4577836bab2`(파일 단위).
   명령 `go run ./tools/logic-map --file internal/app/engine/attestation_watch.go --func attestationWatch.prepare`.
 - Risk scan: `risk-pattern-report.md`.
 - 의도: 읽기 · 판정 · 중복 확인 · 문구 — healthy 면 알림 없이 반환(B8@345).
@@ -19,21 +19,23 @@
 
 | Branch | Condition (소스 그 줄) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (if@311) | `if rec := recover(); rec != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B2 (if@313) | `if w.log != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B3 (if@328) | `if identity != w.identity \|\| w.sent == nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B4 (switch@336) | `switch v.Stage {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B5 (case@337) | `case stageHealthy, stageNotice, stageImminent:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B6 (case@338) | `default:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B7 (if@341) | `if episode != w.episode {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B8 (if@345) | `if v.Stage == stageHealthy {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B9 (if@349) | `if w.sent[key] {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B1 (if@321) | `if rec := recover(); rec != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B2 (if@323) | `if w.log != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B3 (if@338) | `if identity != w.identity \|\| w.sent == nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B4 (range@343) | `for k := range w.sent {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B5 (if@344) | `if strings.HasPrefix(k, string(stageHealthy)+":") {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B6 (switch@354) | `switch v.Stage {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B7 (case@355) | `case stageHealthy, stageNotice, stageImminent:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B8 (case@356) | `default:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B9 (if@359) | `if episode != w.episode {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B10 (if@363) | `if v.Stage == stageHealthy && !w.exitOnly {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B11 (if@368) | `if w.sent[key] {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| AST calls 14개(`ast.json` 의 calls) | 위 분기 표의 조건 · 반환이 부르는 것 | 반환 오류는 분기 표대로 | AST |
+| AST calls 16개(`ast.json` 의 calls) | 위 분기 표의 조건 · 반환이 부르는 것 | 반환 오류는 분기 표대로 | AST |
 
 ## State mutations and fallbacks
 
@@ -41,6 +43,6 @@
 
 ## Safety conclusion
 
-- a199 편집(예정): 결정 7: 기동 표지가 청산 전용이면 healthy 여도 하루 한 번 알림 — 조건을 파일이 아니라 기동 표지에.
-- Safe edit boundary: 위 편집 칸 밖의 분기는 무편집이 목표 — 2단계 post-edit 지도가 옛/새 AST 를 정렬해 확인.
+- a199 편집(적용됨): 결정 7: 기동 표지가 청산 전용이면 healthy 여도 하루 한 번 알림 — 조건을 파일이 아니라 기동 표지에.
+- Safe edit boundary: 편집 전 AST(`../../pre-edit-ast/`)와 비교해 위 편집 칸 밖의 분기는 무편집. 행동 고정은 a199 시험 · 변이 원장(`../../mutation/`).
 - High-risk impact: yes — 기동 인터록 · 주문 권한 · 손절 경로 가용성(안전 부트스트랩 5)

@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/soak.go",
-  "source_sha256": "3c1263d5d690d192265d0b255e91840620dae6c25e1d1b7fa8c3080b6e50162c",
+  "source_sha256": "8a2f2c95036a4c9f6fef573913aea049bc8822d6f30758bd429f1a589a6040d2",
   "package": "main",
   "function": "newSoakAttestCmd",
   "signature": "newSoakAttestCmd(params=2, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 241,
+    "line": 242,
     "column": 2
   },
   "branches": null,
@@ -17,14 +17,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 225,
+        "line": 226,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 240,
+        "line": 241,
         "column": 2
       }
     }
@@ -41,7 +41,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 225,
+        "line": 226,
         "column": 11
       },
       "text": "runSoakAttest"
@@ -49,7 +49,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 228,
+        "line": 229,
         "column": 2
       },
       "text": "StringVar"
@@ -57,7 +57,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 228,
+        "line": 229,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -65,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 229,
+        "line": 230,
         "column": 2
       },
       "text": "IntVar"
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 229,
+        "line": 230,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 230,
+        "line": 231,
         "column": 2
       },
       "text": "DurationVar"
@@ -89,23 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 230,
-        "column": 2
-      },
-      "text": "cmd.Flags"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 232,
-        "column": 2
-      },
-      "text": "StringVar"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 232,
+        "line": 231,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -146,6 +130,22 @@
       "kind": "call",
       "at": {
         "line": 235,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
         "column": 2
       },
       "text": "BoolVar"
@@ -153,7 +153,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 235,
+        "line": 236,
         "column": 2
       },
       "text": "cmd.Flags"
@@ -161,7 +161,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 237,
+        "line": 238,
         "column": 2
       },
       "text": "StringSliceVar"
@@ -169,7 +169,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 237,
+        "line": 238,
         "column": 2
       },
       "text": "cmd.Flags"

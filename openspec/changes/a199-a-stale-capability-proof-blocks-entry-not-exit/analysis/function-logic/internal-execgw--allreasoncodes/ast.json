@@ -1,6 +1,6 @@
 {
   "file": "internal/execgw/failclosed.go",
-  "source_sha256": "fbe97b79db74c5e7801fd3e1c6301d13f261d0d6c5e880308b36323ca328ebd4",
+  "source_sha256": "fc611661e639d79b5c75bd90cbed98d13e468004d69a8d142ac3ab885eb39acb",
   "package": "execgw",
   "function": "AllReasonCodes",
   "signature": "AllReasonCodes(params=0, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 311,
+    "line": 314,
     "column": 2
   },
   "branches": null,
@@ -17,14 +17,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 309,
+        "line": 312,
         "column": 42
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 310,
+        "line": 313,
         "column": 2
       }
     }
@@ -33,7 +33,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 309,
+        "line": 312,
         "column": 2
       },
       "text": "sort.Slice"

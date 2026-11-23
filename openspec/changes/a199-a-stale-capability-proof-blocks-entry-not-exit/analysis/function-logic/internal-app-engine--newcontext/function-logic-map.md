@@ -1,9 +1,9 @@
 # Function Logic Map: `NewContext`
 
-> **편집 전 지도(pre-edit) — 1단계, 2026-11-24, HEAD `e4165fa3d`(코드 = `9738a0c32`).** 분기 표는 AST 열거(`../../harness/build_bundles.py`), 2단계 GREEN 뒤 다시 만든다.
+> **편집 후 지도(post-edit) — 2단계 GREEN 뒤, 2026-11-24, base `603046a23`.** 분기 표는 AST 열거(`../../harness/build_bundles.py --post`). 편집 전 원본 AST 는 `../../pre-edit-ast/internal-app-engine--newcontext.ast.json`.
 
-- Source: `internal/app/engine/engine.go` (451-631)
-- AST evidence: `ast.json` — branches **17** / returns **12** / calls **38**, source SHA-256 `b6347e9a3cf527dd06dc2bb8c0b2dec3d799c29648849c4b187c779c253a2fca`(파일 단위).
+- Source: `internal/app/engine/engine.go` (451-632)
+- AST evidence: `ast.json` — branches **17** / returns **12** / calls **39**, source SHA-256 `6db4b2eb9434d9f52d31b9ac03c80e5484e4e24fafaea178a75d2c418d17178b`(파일 단위).
   명령 `go run ./tools/logic-map --file internal/app/engine/engine.go --func NewContext`.
 - Risk scan: `risk-pattern-report.md`.
 - 의도: 엔진 프로필 조립: 계좌 → journal → 게이트웨이 → Guardian → 인터록 → Context.
@@ -34,15 +34,15 @@
 | B12 (if@560) | `if gate.Enabled && guardian == nil && !opts.disableProductionGuardian {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
 | B13 (if@562) | `if factory == nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
 | B14 (if@568) | `if err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B15 (if@588) | `if err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B16 (if@592) | `if !automation.Verified {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B17 (if@597) | `if err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B15 (if@589) | `if err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B16 (if@593) | `if !automation.RunsExitSide() { // a199: 청산 전용 기동도 Guardian 을 둠 — exit 관측이 그 위험 감소 발급을 씀` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B17 (if@598) | `if err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| AST calls 38개(`ast.json` 의 calls) | 위 분기 표의 조건 · 반환이 부르는 것 | 반환 오류는 분기 표대로 | AST |
+| AST calls 39개(`ast.json` 의 calls) | 위 분기 표의 조건 · 반환이 부르는 것 | 반환 오류는 분기 표대로 | AST |
 
 ## State mutations and fallbacks
 
@@ -50,6 +50,6 @@
 
 ## Safety conclusion
 
-- a199 편집(예정): B16@592 Guardian 유지 조건을 청산 쪽 표지로(D3). 래치를 runInterlock 에 두면 `gateFacts` 에 진입 게이트 한 칸. census 키 1 갱신.
-- Safe edit boundary: 위 편집 칸 밖의 분기는 무편집이 목표 — 2단계 post-edit 지도가 옛/새 AST 를 정렬해 확인.
+- a199 편집(적용됨): B16@592 Guardian 유지 조건을 청산 쪽 표지로(D3). 래치를 runInterlock 에 두면 `gateFacts` 에 진입 게이트 한 칸. census 키 1 갱신.
+- Safe edit boundary: 편집 전 AST(`../../pre-edit-ast/`)와 비교해 위 편집 칸 밖의 분기는 무편집. 행동 고정은 a199 시험 · 변이 원장(`../../mutation/`).
 - High-risk impact: yes — 기동 인터록 · 주문 권한 · 손절 경로 가용성(안전 부트스트랩 5)

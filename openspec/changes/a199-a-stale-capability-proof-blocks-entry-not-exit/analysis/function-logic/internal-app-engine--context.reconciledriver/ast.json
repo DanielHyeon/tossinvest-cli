@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/reconcileloop.go",
-  "source_sha256": "4e21e03de5619d5493799201640fb333e9c2b21f55255ecdfcdeafd14a19c7d3",
+  "source_sha256": "d46294519a168357533865cdb24fa5c47da524818bdfa596c7ad6508c1ed78f7",
   "package": "engine",
   "function": "ReconcileDriver",
   "receiver": "Context",
@@ -94,6 +94,14 @@
     }
   ],
   "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 6
+      },
+      "text": "c.Automation.RunsExitSide"
+    },
     {
       "kind": "call",
       "at": {

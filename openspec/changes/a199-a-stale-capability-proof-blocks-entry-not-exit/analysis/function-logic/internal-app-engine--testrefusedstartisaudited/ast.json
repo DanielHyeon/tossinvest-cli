@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/interlock_test.go",
-  "source_sha256": "23dc2525546a616531f0e55d28ff2d05fc352ad351efff108d47fb150c92cf47",
+  "source_sha256": "d2c0c7aec58bfbb4138e89e776ec80beba0738d2e781dbcdcdc7e23ba2ee0fdb",
   "package": "engine_test",
   "function": "TestRefusedStartIsAudited",
   "signature": "TestRefusedStartIsAudited(params=1, results=0)",
   "start": {
-    "line": 649,
+    "line": 626,
     "column": 1
   },
   "end": {
-    "line": 668,
+    "line": 646,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 656,
+        "line": 634,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 662,
+        "line": 640,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 665,
+        "line": 643,
         "column": 2
       }
     }
@@ -43,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 650,
+        "line": 627,
         "column": 9
       },
       "text": "isolate"
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 651,
+        "line": 628,
         "column": 2
       },
       "text": "writeGateConfig"
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 651,
+        "line": 628,
         "column": 26
       },
       "text": "fullGate"
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 652,
+        "line": 629,
         "column": 2
       },
       "text": "writeCredentials"
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 653,
+        "line": 630,
         "column": 2
       },
       "text": "writeAttestation"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 653,
+        "line": 630,
         "column": 71
       },
       "text": "interlockNow.Add"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 654,
+        "line": 632,
         "column": 12
       },
       "text": "interlockServer"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 656,
+        "line": 634,
         "column": 15
       },
       "text": "openGateEngine"
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 656,
+        "line": 634,
         "column": 43
       },
       "text": "matchedGuardian"
@@ -115,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 657,
+        "line": 635,
         "column": 3
       },
       "text": "t.Fatal"
@@ -123,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 660,
+        "line": 638,
         "column": 13
       },
       "text": "readAudit"
@@ -131,7 +131,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 660,
+        "line": 638,
         "column": 26
       },
       "text": "filepath.Join"
@@ -139,7 +139,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 661,
+        "line": 639,
         "column": 13
       },
       "text": "lastEntryFor"
@@ -147,7 +147,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 663,
+        "line": 641,
         "column": 3
       },
       "text": "t.Fatalf"
@@ -155,7 +155,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 665,
+        "line": 643,
         "column": 6
       },
       "text": "strings.Contains"
@@ -163,7 +163,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 666,
+        "line": 644,
         "column": 3
       },
       "text": "t.Errorf"
@@ -173,42 +173,42 @@
     {
       "kind": ":=",
       "at": {
-        "line": 650,
+        "line": 627,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 653,
+        "line": 630,
         "column": 57
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 654,
+        "line": 632,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 656,
+        "line": 634,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 660,
+        "line": 638,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 661,
+        "line": 639,
         "column": 2
       }
     }

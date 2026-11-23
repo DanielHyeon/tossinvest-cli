@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/interlock.go",
-  "source_sha256": "d018e5cf62544eef99ad68fadebdbe0de63f4677d0bea51d39a33ccc18f037e1",
+  "source_sha256": "aeb1d5bfb16e7474988061044ae805209ed7a2a76db61c31bf88977a1a11acac",
   "package": "engine",
   "function": "logGateDecision",
   "signature": "logGateDecision(params=3, results=0)",
   "start": {
-    "line": 456,
+    "line": 472,
     "column": 1
   },
   "end": {
-    "line": 489,
+    "line": 512,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 479,
+        "line": 497,
         "column": 2
       }
     },
@@ -25,7 +25,15 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 484,
+        "line": 502,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 506,
         "column": 2
       }
     }
@@ -34,7 +42,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 486,
+        "line": 504,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 509,
         "column": 3
       }
     }
@@ -43,7 +58,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 459,
+        "line": 475,
         "column": 21
       },
       "text": "status.MaskedAccount"
@@ -51,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 463,
+        "line": 479,
         "column": 17
       },
       "text": "string"
@@ -59,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 465,
+        "line": 482,
         "column": 25
       },
       "text": "limitString"
@@ -67,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 466,
+        "line": 483,
         "column": 25
       },
       "text": "limitString"
@@ -75,7 +90,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 467,
+        "line": 484,
         "column": 25
       },
       "text": "limitString"
@@ -83,7 +98,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 468,
+        "line": 485,
         "column": 28
       },
       "text": "limitString"
@@ -91,7 +106,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 469,
+        "line": 486,
         "column": 27
       },
       "text": "limitString"
@@ -99,7 +114,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 480,
+        "line": 497,
+        "column": 5
+      },
+      "text": "status.RunsExitSide"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
         "column": 12
       },
       "text": "append"
@@ -107,7 +130,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 485,
+        "line": 503,
         "column": 3
       },
       "text": "logger.Warn"
@@ -115,7 +138,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 485,
+        "line": 503,
         "column": 39
       },
       "text": "append"
@@ -123,7 +146,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 485,
+        "line": 503,
         "column": 71
       },
       "text": "refusal.Error"
@@ -131,7 +154,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 488,
+        "line": 508,
+        "column": 3
+      },
+      "text": "logger.Warn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 508,
+        "column": 39
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 508,
+        "column": 71
+      },
+      "text": "exitOnlyReason"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 511,
         "column": 2
       },
       "text": "logger.Event"
@@ -141,21 +188,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 457,
+        "line": 473,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 458,
+        "line": 474,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 480,
+        "line": 498,
         "column": 3
       }
     }

@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/interlock_test.go",
-  "source_sha256": "23dc2525546a616531f0e55d28ff2d05fc352ad351efff108d47fb150c92cf47",
+  "source_sha256": "d2c0c7aec58bfbb4138e89e776ec80beba0738d2e781dbcdcdc7e23ba2ee0fdb",
   "package": "engine_test",
   "function": "TestGateDecisionIsLoggedStructurally",
   "signature": "TestGateDecisionIsLoggedStructurally(params=1, results=0)",
   "start": {
-    "line": 771,
+    "line": 749,
     "column": 1
   },
   "end": {
-    "line": 841,
+    "line": 819,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 780,
+        "line": 758,
         "column": 3
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 785,
+        "line": 763,
         "column": 3
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 788,
+        "line": 766,
         "column": 3
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 791,
+        "line": 769,
         "column": 3
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 794,
+        "line": 772,
         "column": 3
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 809,
+        "line": 787,
         "column": 3
       }
     },
@@ -65,7 +65,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 814,
+        "line": 792,
         "column": 3
       }
     },
@@ -73,7 +73,7 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 817,
+        "line": 795,
         "column": 3
       }
     },
@@ -81,7 +81,7 @@
       "id": "B9",
       "kind": "if",
       "at": {
-        "line": 821,
+        "line": 799,
         "column": 3
       }
     },
@@ -89,7 +89,7 @@
       "id": "B10",
       "kind": "if",
       "at": {
-        "line": 833,
+        "line": 811,
         "column": 3
       }
     },
@@ -97,7 +97,7 @@
       "id": "B11",
       "kind": "if",
       "at": {
-        "line": 837,
+        "line": 815,
         "column": 3
       }
     }
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 772,
+        "line": 750,
         "column": 2
       },
       "text": "t.Run"
@@ -115,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 773,
+        "line": 751,
         "column": 10
       },
       "text": "isolate"
@@ -123,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 774,
+        "line": 752,
         "column": 3
       },
       "text": "writeGateConfig"
@@ -131,7 +131,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 774,
+        "line": 752,
         "column": 27
       },
       "text": "fullGate"
@@ -139,7 +139,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 775,
+        "line": 753,
         "column": 3
       },
       "text": "writeCredentials"
@@ -147,7 +147,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 776,
+        "line": 754,
         "column": 3
       },
       "text": "writeAttestation"
@@ -155,7 +155,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 777,
+        "line": 755,
         "column": 13
       },
       "text": "interlockServer"
@@ -163,7 +163,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 780,
+        "line": 758,
         "column": 16
       },
       "text": "openProtectedGateEngineLogging"
@@ -171,7 +171,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 780,
+        "line": 758,
         "column": 60
       },
       "text": "matchedGuardian"
@@ -179,7 +179,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 781,
+        "line": 759,
         "column": 4
       },
       "text": "t.Fatalf"
@@ -187,7 +187,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 783,
+        "line": 761,
         "column": 11
       },
       "text": "decodeLastLog"
@@ -195,7 +195,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 783,
+        "line": 761,
         "column": 28
       },
       "text": "logs.String"
@@ -203,7 +203,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 785,
+        "line": 763,
         "column": 23
       },
       "text": "string"
@@ -211,7 +211,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 786,
+        "line": 764,
         "column": 4
       },
       "text": "t.Errorf"
@@ -219,7 +219,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 789,
+        "line": 767,
         "column": 4
       },
       "text": "t.Errorf"
@@ -227,7 +227,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 792,
+        "line": 770,
         "column": 4
       },
       "text": "t.Errorf"
@@ -235,7 +235,127 @@
     {
       "kind": "call",
       "at": {
-        "line": 795,
+        "line": 773,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 777,
+        "column": 2
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 778,
+        "column": 10
+      },
+      "text": "isolate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 779,
+        "column": 3
+      },
+      "text": "writeGateConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 779,
+        "column": 27
+      },
+      "text": "fullGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 780,
+        "column": 3
+      },
+      "text": "writeCredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 781,
+        "column": 3
+      },
+      "text": "writeAttestation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 782,
+        "column": 18
+      },
+      "text": "interlockNow.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 784,
+        "column": 13
+      },
+      "text": "interlockServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 787,
+        "column": 16
+      },
+      "text": "openGateEngineLogging"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 787,
+        "column": 51
+      },
+      "text": "matchedGuardian"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 788,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 790,
+        "column": 11
+      },
+      "text": "decodeLastLog"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 790,
+        "column": 28
+      },
+      "text": "logs.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 793,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 796,
         "column": 4
       },
       "text": "t.Errorf"
@@ -244,126 +364,6 @@
       "kind": "call",
       "at": {
         "line": 799,
-        "column": 2
-      },
-      "text": "t.Run"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 800,
-        "column": 10
-      },
-      "text": "isolate"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 801,
-        "column": 3
-      },
-      "text": "writeGateConfig"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 801,
-        "column": 27
-      },
-      "text": "fullGate"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 802,
-        "column": 3
-      },
-      "text": "writeCredentials"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 803,
-        "column": 3
-      },
-      "text": "writeAttestation"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 804,
-        "column": 18
-      },
-      "text": "interlockNow.Add"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 806,
-        "column": 13
-      },
-      "text": "interlockServer"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 809,
-        "column": 16
-      },
-      "text": "openGateEngineLogging"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 809,
-        "column": 51
-      },
-      "text": "matchedGuardian"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 810,
-        "column": 4
-      },
-      "text": "t.Fatal"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 812,
-        "column": 11
-      },
-      "text": "decodeLastLog"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 812,
-        "column": 28
-      },
-      "text": "logs.String"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 815,
-        "column": 4
-      },
-      "text": "t.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 818,
-        "column": 4
-      },
-      "text": "t.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 821,
         "column": 7
       },
       "text": "strings.Contains"
@@ -371,7 +371,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 822,
+        "line": 800,
         "column": 4
       },
       "text": "t.Errorf"
@@ -379,7 +379,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 826,
+        "line": 804,
         "column": 2
       },
       "text": "t.Run"
@@ -387,7 +387,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 827,
+        "line": 805,
         "column": 10
       },
       "text": "isolate"
@@ -395,7 +395,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 828,
+        "line": 806,
         "column": 3
       },
       "text": "writeGateConfig"
@@ -403,7 +403,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 829,
+        "line": 807,
         "column": 3
       },
       "text": "writeCredentials"
@@ -411,7 +411,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 830,
+        "line": 808,
         "column": 13
       },
       "text": "interlockServer"
@@ -419,7 +419,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 833,
+        "line": 811,
         "column": 16
       },
       "text": "openGateEngineLogging"
@@ -427,7 +427,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 834,
+        "line": 812,
         "column": 4
       },
       "text": "t.Fatalf"
@@ -435,7 +435,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 836,
+        "line": 814,
         "column": 11
       },
       "text": "decodeLastLog"
@@ -443,7 +443,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 836,
+        "line": 814,
         "column": 28
       },
       "text": "logs.String"
@@ -451,7 +451,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 838,
+        "line": 816,
         "column": 4
       },
       "text": "t.Errorf"
@@ -461,105 +461,105 @@
     {
       "kind": ":=",
       "at": {
-        "line": 773,
+        "line": 751,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 777,
+        "line": 755,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 780,
+        "line": 758,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 783,
+        "line": 761,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 794,
+        "line": 772,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 800,
+        "line": 778,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 804,
+        "line": 782,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 806,
+        "line": 784,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 809,
+        "line": 787,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 812,
+        "line": 790,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 820,
+        "line": 798,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 827,
+        "line": 805,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 830,
+        "line": 808,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 833,
+        "line": 811,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 836,
+        "line": 814,
         "column": 3
       }
     }

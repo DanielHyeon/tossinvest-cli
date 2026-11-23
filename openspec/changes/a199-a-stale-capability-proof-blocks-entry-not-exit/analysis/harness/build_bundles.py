@@ -191,8 +191,13 @@ def body_count(blocks, line: int, col: int) -> str:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--bin", required=True)
+    ap.add_argument("--post", action="store_true", help="편집 후(post-edit) 지도 — after-cover-*.out 을 읽음")
     args = ap.parse_args()
+    post = args.post
     for f in FUNCS:
+        f = dict(f)
+        if post and f["cover"]:
+            f["cover"] = f["cover"].replace("base-cover-", "after-cover-")
         src, func = f["file"], f["func"]
         out = bundle_dir(src, func)
         ast_text = run([args.bin, "--file", src, "--func", func])
@@ -221,7 +226,10 @@ def main() -> None:
         flm = [
             f"# Function Logic Map: `{name}`",
             "",
-            f"> **편집 전 지도(pre-edit) — 1단계, 2026-11-24, HEAD `e4165fa3d`(코드 = `9738a0c32`).** 분기 표는 AST 열거(`../../harness/build_bundles.py`), 2단계 GREEN 뒤 다시 만든다.",
+            (f"> **편집 후 지도(post-edit) — 2단계 GREEN 뒤, 2026-11-24, base `603046a23`.** 분기 표는 AST 열거(`../../harness/build_bundles.py --post`). "
+             f"편집 전 원본 AST 는 `../../pre-edit-ast/{bundle_dir(src, func).name}.ast.json`."
+             if post else
+             "> **편집 전 지도(pre-edit) — 1단계, 2026-11-24, HEAD `e4165fa3d`(코드 = `9738a0c32`).** 분기 표는 AST 열거(`../../harness/build_bundles.py`), 2단계 GREEN 뒤 다시 만든다."),
             "",
             f"- Source: `{src}` ({start}-{end})",
             f"- AST evidence: `ast.json` — branches **{len(branches)}** / returns **{len(returns)}** / calls **{len(calls)}**, source SHA-256 `{ast['source_sha256']}`(파일 단위).",
@@ -256,26 +264,31 @@ def main() -> None:
             "",
             "## Safety conclusion",
             "",
-            f"- a199 편집(예정): {f['a199']}",
-            "- Safe edit boundary: 위 편집 칸 밖의 분기는 무편집이 목표 — 2단계 post-edit 지도가 옛/새 AST 를 정렬해 확인.",
+            f"- a199 편집({'적용됨' if post else '예정'}): {f['a199']}",
+            ("- Safe edit boundary: 편집 전 AST(`../../pre-edit-ast/`)와 비교해 위 편집 칸 밖의 분기는 무편집. 행동 고정은 a199 시험 · 변이 원장(`../../mutation/`)."
+             if post else
+             "- Safe edit boundary: 위 편집 칸 밖의 분기는 무편집이 목표 — 2단계 post-edit 지도가 옛/새 AST 를 정렬해 확인."),
             f"- High-risk impact: {'no(시험 함수)' if is_test else 'yes — 기동 인터록 · 주문 권한 · 손절 경로 가용성(안전 부트스트랩 5)'}",
             "",
         ]
         (out / "function-logic-map.md").write_text("\n".join(flm), encoding="utf-8")
 
+        stage = "편집 후(GREEN)" if post else "편집 전"
+        rc_where = "GREEN 뒤 선택 실행" if post else "base"
         if is_test:
-            head = f"- 편집 전. 이 시험은 base 에서 rc 0({ENGINE_SEL}). 시험 함수라 커버 대상이 아님 — 분기는 시험 자신의 사례 · 단언 갈래."
+            head = f"- {stage}. 이 시험은 {rc_where} 에서 rc 0. 시험 함수라 커버 대상이 아님 — 분기는 시험 자신의 사례 · 단언 갈래."
         else:
-            head = f"- 편집 전. 커버: `../../implementation/{f['cover']}`(set 모드, 선택 실행 rc 0). 칸의 count 는 선택 집합 전체 실측 — 시험별 귀속 아님. 대표 시험: {f['tests']}."
+            head = f"- {stage}. 커버: `../../implementation/{f['cover']}`(set 모드, 선택 실행 rc 0). 칸의 count 는 선택 집합 전체 실측 — 시험별 귀속 아님. 대표 시험: {f['tests']}."
         btm = [f"# Branch Test Map: `{name}`", "", head, "",
                "| Branch | Scenario | Test | RED observed | GREEN observed |",
                "|---|---|---|---|---|"]
         for b in branches:
             ln = b["at"]["line"]
-            green = "yes — 시험 rc 0(base)" if is_test else body_count(blocks, ln, b["at"]["column"])
-            btm.append(f"| {b['id']} | {b['kind']}@{ln} | 선택 집합(머리) | 해당 없음(기존 분기) | {green} |")
+            green = f"yes — 시험 rc 0({rc_where})" if is_test else body_count(blocks, ln, b["at"]["column"])
+            red = "red-1 · red-2(`../../tdd/red.txt`) — 분기별 귀속은 변이 원장" if post else "해당 없음(기존 분기)"
+            btm.append(f"| {b['id']} | {b['kind']}@{ln} | 선택 집합(머리) | {red} | {green} |")
         if not branches:
-            green = "yes — 시험 rc 0(base)" if is_test else body_count(blocks, start, 0)
+            green = f"yes — 시험 rc 0({rc_where})" if is_test else body_count(blocks, start, 0)
             btm.append(f"| B1 | branchless happy path {start}-{end} | 선택 집합(머리) | 해당 없음 | {green} |")
         (out / "branch-test-map.md").write_text("\n".join(btm) + "\n", encoding="utf-8")
         print(f"{out.name}: branches {len(branches)}")

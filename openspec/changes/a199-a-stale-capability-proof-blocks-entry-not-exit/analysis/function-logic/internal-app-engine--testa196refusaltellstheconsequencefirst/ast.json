@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/a196_attestation_deadline_internal_test.go",
-  "source_sha256": "1cd44b304b287c353b6ec200163e414bc025ff1f0f33c57bccab35fb6d9210af",
+  "source_sha256": "1a3a3148ee8fb55b56efc8657f28e703cc51912273747e3a92eae7919a519dd2",
   "package": "engine",
   "function": "TestA196RefusalTellsTheConsequenceFirst",
   "signature": "TestA196RefusalTellsTheConsequenceFirst(params=1, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 482,
+    "line": 487,
     "column": 2
   },
   "branches": [
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 464,
+        "line": 466,
         "column": 4
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 467,
+        "line": 469,
         "column": 4
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 470,
+        "line": 472,
         "column": 4
       }
     },
@@ -57,23 +57,31 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 473,
+        "line": 475,
         "column": 4
       }
     },
     {
       "id": "B7",
-      "kind": "range",
+      "kind": "if",
       "at": {
-        "line": 474,
-        "column": 5
+        "line": 478,
+        "column": 4
       }
     },
     {
       "id": "B8",
+      "kind": "range",
+      "at": {
+        "line": 479,
+        "column": 5
+      }
+    },
+    {
+      "id": "B9",
       "kind": "if",
       "at": {
-        "line": 475,
+        "line": 480,
         "column": 6
       }
     }
@@ -187,7 +195,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 464,
+        "line": 469,
         "column": 8
       },
       "text": "strings.Contains"
@@ -195,7 +203,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 464,
+        "line": 469,
         "column": 50
       },
       "text": "strings.Contains"
@@ -203,7 +211,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 465,
+        "line": 470,
         "column": 5
       },
       "text": "t.Errorf"
@@ -211,7 +219,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 467,
+        "line": 472,
         "column": 8
       },
       "text": "strings.HasPrefix"
@@ -219,31 +227,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 468,
-        "column": 5
-      },
-      "text": "t.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 470,
-        "column": 8
-      },
-      "text": "strings.Contains"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 470,
-        "column": 47
-      },
-      "text": "strings.Contains"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 471,
+        "line": 473,
         "column": 5
       },
       "text": "t.Errorf"
@@ -252,7 +236,15 @@
       "kind": "call",
       "at": {
         "line": 475,
-        "column": 10
+        "column": 8
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 475,
+        "column": 47
       },
       "text": "strings.Contains"
     },
@@ -260,6 +252,22 @@
       "kind": "call",
       "at": {
         "line": 476,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 480,
+        "column": 10
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 481,
         "column": 7
       },
       "text": "t.Errorf"
@@ -327,6 +335,20 @@
       "at": {
         "line": 463,
         "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 465,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 467,
+        "column": 5
       }
     }
   ],

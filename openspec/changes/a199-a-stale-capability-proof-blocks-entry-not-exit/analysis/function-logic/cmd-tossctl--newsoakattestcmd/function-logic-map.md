@@ -1,9 +1,9 @@
 # Function Logic Map: `newSoakAttestCmd`
 
-> **편집 전 지도(pre-edit) — 1단계, 2026-11-24, HEAD `e4165fa3d`(코드 = `9738a0c32`).** 분기 표는 AST 열거(`../../harness/build_bundles.py`), 2단계 GREEN 뒤 다시 만든다.
+> **편집 후 지도(post-edit) — 2단계 GREEN 뒤, 2026-11-24, base `603046a23`.** 분기 표는 AST 열거(`../../harness/build_bundles.py --post`). 편집 전 원본 AST 는 `../../pre-edit-ast/cmd-tossctl--newsoakattestcmd.ast.json`.
 
-- Source: `cmd/tossctl/soak.go` (199-241)
-- AST evidence: `ast.json` — branches **0** / returns **2** / calls **18**, source SHA-256 `3c1263d5d690d192265d0b255e91840620dae6c25e1d1b7fa8c3080b6e50162c`(파일 단위).
+- Source: `cmd/tossctl/soak.go` (199-242)
+- AST evidence: `ast.json` — branches **0** / returns **2** / calls **18**, source SHA-256 `8a2f2c95036a4c9f6fef573913aea049bc8822d6f30758bd429f1a589a6040d2`(파일 단위).
   명령 `go run ./tools/logic-map --file cmd/tossctl/soak.go --func newSoakAttestCmd`.
 - Risk scan: `risk-pattern-report.md`.
 - 의도: `soak attest` 명령 정의 — Long 도움말.
@@ -18,7 +18,7 @@
 
 | Branch | Condition (소스 그 줄) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| (분기 없음) | 한 갈래(happy path 199-241) | — | — | 아래 BTM B1 |
+| (분기 없음) | 한 갈래(happy path 199-242) | — | — | 아래 BTM B1 |
 
 ## Calls and live bindings
 
@@ -32,6 +32,6 @@
 
 ## Safety conclusion
 
-- a199 편집(예정): 결정 11: 도움말 「the gate will still refuse」 문구를 새 귀결로.
-- Safe edit boundary: 위 편집 칸 밖의 분기는 무편집이 목표 — 2단계 post-edit 지도가 옛/새 AST 를 정렬해 확인.
+- a199 편집(적용됨): 결정 11: 도움말 「the gate will still refuse」 문구를 새 귀결로.
+- Safe edit boundary: 편집 전 AST(`../../pre-edit-ast/`)와 비교해 위 편집 칸 밖의 분기는 무편집. 행동 고정은 a199 시험 · 변이 원장(`../../mutation/`).
 - High-risk impact: yes — 기동 인터록 · 주문 권한 · 손절 경로 가용성(안전 부트스트랩 5)

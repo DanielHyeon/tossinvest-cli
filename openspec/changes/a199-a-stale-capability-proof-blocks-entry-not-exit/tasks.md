@@ -24,7 +24,7 @@
 - [x] 2.3 GREEN 최소 구현 — 닫힌 집합 판정 함수 하나(인터록과 감시가 같이 부름, 형식 하한 · 빈 endpoint 항목 · 만료 시 계좌 확인 포함) · `AutomationStatus` 새 표지 · `verifyGate`/`runInterlock`(래치는 runInterlock) · 청산 쪽 소비자 넷 · `logGateDecision` 보호 수명 문장 · 래치 · 감사 action · 기동 출력 · 감시(문장 · 기동 표지 조건 알림). 새 설정 키·새 운영 모드·새 outbox 타입 금지. 주석은 한글로 「왜」
 - [x] 2.4 a166 census 키 갱신(`NewContext` 를 편집했으면 그 키 하나, a192 `census-repair` 절차) — 다른 키 무변 단언 — `analysis/census-repair/`(changed 1 · unchanged 89 · sites 동일, accountbudgetruntime ok)
 - [x] 2.5 인터록 머리 주석 정정(D9) · `cmd/tossctl/soak.go` 의 낡은 출력 문구(565 · 577 「clause 9」 · 도움말 220)를 새 귀결로(Manager 결정 11)
-- [ ] 2.6 post-edit 번들 재생성 · `check_analysis`
+- [x] 2.6 post-edit 번들 재생성 · `check_analysis` — required 20(= 번들 20), rc 0 `analysis/verify/check-analysis-post.txt`. 편집 전 AST `analysis/pre-edit-ast/`
 - [ ] 2.7 변이 원장(design §3-12, 사본에서 · 시작 sha 단언 · 무변이 대조군 GREEN · 닿음 먼저)
 - [ ] 2.8 선택 시험 · `-race`(해당 시험) · `make lint` · strict validate · tracker `--check` — 원문 `analysis/verify/`. 미실행 범위 기록
 
