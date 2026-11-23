@@ -145,3 +145,21 @@ delta 재생성(`analysis/modified-delta/run.txt`): A 5 편집 각 1회 적중(A
 - 편집한 기존 함수 = 승인 목록 14 그대로(`critical` · `stageKey` 무편집). 새 파일 2(`internal/attest/account_match.go` · `internal/app/engine/exit_only_start.go`).
 - 뒤집힌 기존 시험 = design §3-6 의 여섯 그대로. 그 밖 기존 시험 깨짐 0(선택 범위 안).
 - **결정에 없던 가드 하나(Manager 확인 필요):** `exitOnlyStart` 가 래치를 세울 `gateFacts.entry` 가 nil 이면 기동을 거절함(게이트웨이 조항 오류). 생산에서는 `wiring.entry` 가 늘 비-nil 이라 도달하지 않는 fail-closed — 래치가 진입 차단의 유일한 집행이라 넣음. 빼라면 빼겠음.
+
+## 구현 적대 리뷰 r1 (HEAD `815e378dd`, codex) — 조건부 통과, Manager 처분 반영
+
+원문 `analysis/review/impl-r1/`. 처분 반영 커밋 `723554957`, 추가 변이 원장 `analysis/mutation/run-r1.txt`.
+
+1. **P1 정정 — 진입을 막는 것은 `Verified` 가 아니라 래치 하나.** 실제 런타임 전략 worker(`NewRefreshingPairedStrategyEntrySupervisor` → `runProductionStrategyMarketCycle` → `fresh.dispatch`)는 `Verified` 를 안 읽는다. design · claim-check · verified-census 정정, 실제 dispatch 경로 시험 `TestA199TheStaleLatchStopsTheRealStrategyDispatch`(태그 `tossos_testseams` — 래치 없는 대조 주문 1, 래치 있으면 주문 0 · 오류에 `capability_attestation_stale`), 구조 시험 이름을 `TestA199TheProjectionAssemblyWorkerConditionStillReadsVerified` 로.
+2. **nil 진입 게이트 가드 유지** — 시험 `TestA199NoEntryGateMeansNoExitOnlyStart`, 근거 design D4. 변이 M21 CAUGHT.
+3. **청산 전용 감사 실패 → 기동 거절**(수락 경로와 같은 정책) — 시험 `TestA199AnUnrecordableExitOnlyStartIsRefused`, 근거 design D8, Story limits 한 줄. codex 는 이를 「P0 consequence」로 표기했고 **Manager 가 P2 로 확정**(설정 감사가 먼저 거절하므로 남는 것은 두 기록 사이의 일시 실패뿐 — 엔진 밖 heartbeat 감시가 「엔진 down」을 알림). 변이 M22 CAUGHT.
+4. 런타임 연결 시험 hang 수리 — 헬퍼 `a199OpenExitOnly` · `a199Stack.run`(끝남 표지로 정리).
+5. `gate_exit_only` 칸은 청산 전용 줄에만 — 차등 시험 `TestA199TheExitOnlyFieldIsAbsentFromOtherStarts`. 변이 M23 CAUGHT.
+6. **도달 불가 조항 두 줄 삭제** — 삭제 전 확인: 거절 입력 9 사례(`TestA199NoRefusalCarriesAStaleSentinel`) 어느 것도 거절 사슬에 `ErrExpired` · `ErrEndpointNotAttested` 가 안 실림(판정 함수는 Verify 오류를 `%v` 로만 감쌈) · 「미상 조항」 줄 0. 대조 변이 M26(줄을 되살림) SURVIVED = 줄의 유무가 행동을 안 바꿈.
+7. 시험 (a)~(i) — 감사 Detail(누락 endpoint 있음 · 계좌 · 경로 · 원오류 없음) · 기동 출력의 복구 순서 · sentinel 단언 · 다른 해제(알림 확인 · mode-release · 다른 사유 Clear · 심볼 해제 · 조회 성공)가 래치를 안 지움 · 올리는 정정 거절/취소 통과 · **(f) endpoint 누락 전체 조립에서 매수 거절 + 손절 제출** · **(g) 청산 전용 런타임이 보유를 편입하고 보호** · 같은 판정 함수 AST 구조 · 불완전 세 갈래.
+   - (f) 단서: 엔진 조립은 생산과 같이 보호 UNWIRED 라 매수는 보호 검사가 먼저 거절한다(사유 `protection_not_wired`). 래치가 그 뒤에 서 있음은 `eng.Entry.CheckEntryFor` 로 직접 단언. `SetProtectionReadyForTest` 는 보고 필드만 바꾸고 게이트웨이를 WIRED 로 만들지 않음.
+8. 발급 시각 > 만료 시각 · 발급 시각 없음도 청산 전용으로 내려감 — 가드 없음, design §4 · Story limits 공시.
+9. 콘솔 문구(`templates.go:846` · `templates.go:853` · `settings_tabs.go:361`)는 바꾸지 않음 — Story limits 에 자리 기록.
+10. **미실행 범위:** filldetect 를 포함한 전체 조립 런타임(체결 감지 루프까지 띄운 청산 전용 엔진), a198 의 정리 CANCEL e2e(취소가 래치를 통과함은 게이트웨이 단위 시험으로만), IN_DOUBT 해소 경로의 청산 전용 결합 — 셋 다 이 change 에서 돌리지 않음.
+
+추가 변이(`run-r1.txt`, 시작 sha `723554957`): M21 · M22 · M23 · M25 CAUGHT, M24(래치 삭제를 전략 dispatch 시험만으로) SURVIVED — 그 시험은 자기 래치를 직접 세우므로 예상된 결과(「기동이 래치를 세운다」는 M25 가 잼), M26 대조 SURVIVED(예상).

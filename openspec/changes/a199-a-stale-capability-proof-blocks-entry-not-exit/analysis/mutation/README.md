@@ -26,3 +26,18 @@
 | M18 runEngineRun 이 청산 전용을 게이트 OFF 로 | AnExitOnlyContextReachesTheRuntimeAndSaysSo |
 | M19 latchOrder 에서 새 사유 빼기 | TheStaleAttestationLatchReadsBeforeTheModeAndAfterStrategyCentral |
 | M20 NamesAccount 를 가림 허용 규칙으로 | NamesAccountIsVerifysAccountComparison |
+
+※ M11 의 시험은 구현 리뷰 r1 처분 1 로 `TestA199TheProjectionAssemblyWorkerConditionStillReadsVerified` 로 이름이 바뀌었다(투영용 조립의 worker 조건 — 실제 런타임 전략 worker 는 Verified 를 안 읽고 래치가 막는다).
+
+## 추가분 (구현 리뷰 r1 처분 뒤)
+
+- 하네스 `run_mutations_r1.py`, 원문 `run-r1.txt`. 같은 규율 — 시작 sha `723554957` 단언, 무변이 대조군 세 묶음(`-run A199` · `A199|TestEachInterlockClauseHasALine` · 태그 `tossos_testseams` 전략 dispatch 시험) rc 0, 원복 뒤 사본 깨끗, 사본 제거.
+
+| 변이 | 결과 |
+|---|---|
+| M21 nil 진입 게이트 가드 삭제(처분 2) | CAUGHT — NoEntryGateMeansNoExitOnlyStart |
+| M22 청산 전용 감사 실패 무시(처분 3) | CAUGHT — AnUnrecordableExitOnlyStartIsRefused |
+| M23 gate_exit_only 를 모든 줄에(처분 5) | CAUGHT — TheExitOnlyFieldIsAbsentFromOtherStarts |
+| M24 래치 세우기 삭제 — 전략 dispatch 시험만 돌림 | **SURVIVED(예상)** — 그 시험은 `exitOnlyStart` 를 거치지 않고 자기 EntryGate 에 래치를 직접 세운다. 그 시험이 재는 것은 「래치가 서 있으면 실제 dispatch 경로가 브로커 주문 0」이고(래치 없는 대조 사례는 주문 1), 「청산 전용 기동이 래치를 세운다」는 M25 가 잰다 |
+| M25 래치 세우기 삭제 — A199 시험 전체 | CAUGHT — ARestartRederivesTheLatchFromTheFile · AScopeLostRuntimeRefusesABuyAndSubmitsTheStopLoss · AStaleAttestationStartsExitOnly · AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss |
+| M26 지운 `ErrExpired` 조항 줄을 되살림(대조) | SURVIVED(예상) — 거절 사슬에 그 sentinel 이 실리는 입력이 0 이라(처분 6, `TestA199NoRefusalCarriesAStaleSentinel` 9 사례) 줄의 유무가 행동을 안 바꾼다는 확인 |

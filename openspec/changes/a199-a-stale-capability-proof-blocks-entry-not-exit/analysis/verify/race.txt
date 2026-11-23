@@ -1,4 +1,4 @@
-ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	212.940s
-ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	9.935s
-ok  	github.com/JungHoonGhae/tossinvest-cli/internal/attest	1.022s
-ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	1.162s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	236.316s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	14.930s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/attest	1.020s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	1.158s
