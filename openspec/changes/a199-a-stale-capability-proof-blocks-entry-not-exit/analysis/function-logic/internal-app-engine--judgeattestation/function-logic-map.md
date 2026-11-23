@@ -2,8 +2,8 @@
 
 > **편집 후 지도(post-edit) — 2단계 GREEN 뒤, 2026-11-24, base `603046a23`.** 분기 표는 AST 열거(`../../harness/build_bundles.py --post`). 편집 전 원본 AST 는 `../../pre-edit-ast/internal-app-engine--judgeattestation.ast.json`.
 
-- Source: `internal/app/engine/attestation_watch.go` (101-150)
-- AST evidence: `ast.json` — branches **14** / returns **5** / calls **8**, source SHA-256 `be8b45222d70996e0008e4fc2fe04ba983dbdd2132342a7f6c99e4577836bab2`(파일 단위).
+- Source: `internal/app/engine/attestation_watch.go` (102-151)
+- AST evidence: `ast.json` — branches **14** / returns **5** / calls **8**, source SHA-256 `8a807bf0277f4b1a25136c65ee00ab92161240654f2355d06ff6bfc7b537d6ab`(파일 단위).
   명령 `go run ./tools/logic-map --file internal/app/engine/attestation_watch.go --func judgeAttestation`.
 - Risk scan: `risk-pattern-report.md`.
 - 의도: 감시의 판정 — Load 오류 → unreadable, Verify 첫 실패 → 단계, 통과면 기한까지 날수.
@@ -19,20 +19,20 @@
 
 | Branch | Condition (소스 그 줄) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (if@102) | `if loadErr != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B2 (if@108) | `if stale != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B3 (if@109) | `if stale.expired {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B4 (else@111) | `} else {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B5 (if@117) | `if err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B6 (switch@118) | `switch {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B7 (case@119) | `case errors.Is(err, attest.ErrAccountMismatch):` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B8 (case@121) | `case errors.Is(err, attest.ErrIncomplete):` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B9 (case@123) | `default:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B10 (if@133) | `if remaining <= 0 {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B11 (switch@141) | `switch {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B12 (case@142) | `case v.DaysLeft > attestationNoticeDays:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B13 (case@144) | `case v.DaysLeft > attestationCriticalDays:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B14 (case@146) | `default:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B1 (if@103) | `if loadErr != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B2 (if@109) | `if stale != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B3 (if@110) | `if stale.expired {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B4 (else@112) | `} else {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B5 (if@118) | `if err != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B6 (switch@119) | `switch {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B7 (case@120) | `case errors.Is(err, attest.ErrAccountMismatch):` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B8 (case@122) | `case errors.Is(err, attest.ErrIncomplete):` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B9 (case@124) | `default:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B10 (if@134) | `if remaining <= 0 {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B11 (switch@142) | `switch {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B12 (case@143) | `case v.DaysLeft > attestationNoticeDays:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B13 (case@145) | `case v.DaysLeft > attestationCriticalDays:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B14 (case@147) | `default:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
 
 ## Calls and live bindings
 

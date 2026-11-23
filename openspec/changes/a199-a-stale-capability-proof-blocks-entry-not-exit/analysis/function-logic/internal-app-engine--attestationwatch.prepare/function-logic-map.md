@@ -2,8 +2,8 @@
 
 > **편집 후 지도(post-edit) — 2단계 GREEN 뒤, 2026-11-24, base `603046a23`.** 분기 표는 AST 열거(`../../harness/build_bundles.py --post`). 편집 전 원본 AST 는 `../../pre-edit-ast/internal-app-engine--attestationwatch.prepare.ast.json`.
 
-- Source: `internal/app/engine/attestation_watch.go` (319-372)
-- AST evidence: `ast.json` — branches **11** / returns **3** / calls **16**, source SHA-256 `be8b45222d70996e0008e4fc2fe04ba983dbdd2132342a7f6c99e4577836bab2`(파일 단위).
+- Source: `internal/app/engine/attestation_watch.go` (320-373)
+- AST evidence: `ast.json` — branches **11** / returns **3** / calls **16**, source SHA-256 `8a807bf0277f4b1a25136c65ee00ab92161240654f2355d06ff6bfc7b537d6ab`(파일 단위).
   명령 `go run ./tools/logic-map --file internal/app/engine/attestation_watch.go --func attestationWatch.prepare`.
 - Risk scan: `risk-pattern-report.md`.
 - 의도: 읽기 · 판정 · 중복 확인 · 문구 — healthy 면 알림 없이 반환(B8@345).
@@ -19,17 +19,17 @@
 
 | Branch | Condition (소스 그 줄) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (if@321) | `if rec := recover(); rec != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B2 (if@323) | `if w.log != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B3 (if@338) | `if identity != w.identity \|\| w.sent == nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B4 (range@343) | `for k := range w.sent {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B5 (if@344) | `if strings.HasPrefix(k, string(stageHealthy)+":") {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B6 (switch@354) | `switch v.Stage {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B7 (case@355) | `case stageHealthy, stageNotice, stageImminent:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B8 (case@356) | `default:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B9 (if@359) | `if episode != w.episode {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B10 (if@363) | `if v.Stage == stageHealthy && !w.exitOnly {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B11 (if@368) | `if w.sent[key] {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B1 (if@322) | `if rec := recover(); rec != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B2 (if@324) | `if w.log != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B3 (if@339) | `if identity != w.identity \|\| w.sent == nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B4 (range@344) | `for k := range w.sent {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B5 (if@345) | `if strings.HasPrefix(k, string(stageHealthy)+":") {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B6 (switch@355) | `switch v.Stage {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B7 (case@356) | `case stageHealthy, stageNotice, stageImminent:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B8 (case@357) | `default:` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B9 (if@360) | `if episode != w.episode {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B10 (if@364) | `if v.Stage == stageHealthy && !w.exitOnly {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B11 (if@369) | `if w.sent[key] {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
 
 ## Calls and live bindings
 

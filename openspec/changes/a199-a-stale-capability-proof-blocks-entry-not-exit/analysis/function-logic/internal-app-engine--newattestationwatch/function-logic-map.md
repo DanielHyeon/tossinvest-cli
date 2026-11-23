@@ -2,8 +2,8 @@
 
 > **편집 후 지도(post-edit) — 2단계 GREEN 뒤, 2026-11-24, base `603046a23`.** 분기 표는 AST 열거(`../../harness/build_bundles.py --post`). 편집 전 원본 AST 는 `../../pre-edit-ast/internal-app-engine--newattestationwatch.ast.json`.
 
-- Source: `internal/app/engine/attestation_watch.go` (228-247)
-- AST evidence: `ast.json` — branches **3** / returns **2** / calls **1**, source SHA-256 `be8b45222d70996e0008e4fc2fe04ba983dbdd2132342a7f6c99e4577836bab2`(파일 단위).
+- Source: `internal/app/engine/attestation_watch.go` (229-248)
+- AST evidence: `ast.json` — branches **3** / returns **2** / calls **1**, source SHA-256 `8a807bf0277f4b1a25136c65ee00ab92161240654f2355d06ff6bfc7b537d6ab`(파일 단위).
   명령 `go run ./tools/logic-map --file internal/app/engine/attestation_watch.go --func newAttestationWatch`.
 - Risk scan: `risk-pattern-report.md`.
 - 의도: 엔진 Context 에서 감시를 만듦(게이트 · 파일 · 계좌 · 알림기).
@@ -18,9 +18,9 @@
 
 | Branch | Condition (소스 그 줄) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (if@230) | `if c == nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B2 (if@233) | `if w.clock == nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B3 (if@243) | `if c.Notifier != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B1 (if@231) | `if c == nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B2 (if@234) | `if w.clock == nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B3 (if@244) | `if c.Notifier != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
 
 ## Calls and live bindings
 

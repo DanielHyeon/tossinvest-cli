@@ -3,7 +3,7 @@
 > **편집 후 지도(post-edit) — 2단계 GREEN 뒤, 2026-11-24, base `603046a23`.** 분기 표는 AST 열거(`../../harness/build_bundles.py --post`). 편집 전 원본 AST 는 `../../pre-edit-ast/internal-app-engine--context.reconciledriver.ast.json`.
 
 - Source: `internal/app/engine/reconcileloop.go` (364-395)
-- AST evidence: `ast.json` — branches **6** / returns **4** / calls **5**, source SHA-256 `d46294519a168357533865cdb24fa5c47da524818bdfa596c7ad6508c1ed78f7`(파일 단위).
+- AST evidence: `ast.json` — branches **6** / returns **4** / calls **5**, source SHA-256 `52a738a58082867262d05c8955ec5694c7ed8f193fb4f7cfd56986527a0c4b07`(파일 단위).
   명령 `go run ./tools/logic-map --file internal/app/engine/reconcileloop.go --func Context.ReconcileDriver`.
 - Risk scan: `risk-pattern-report.md`.
 - 의도: 대사 + 편입 루프 조립 — 미검증 게이트면 거절.
