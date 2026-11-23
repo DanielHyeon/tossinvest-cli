@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/position_projection.go",
-  "source_sha256": "5b62d380b860e67884ceb5f5e217a12fa0d8a190c54190f370ae711133002748",
+  "source_sha256": "e7e7d30f6153577221550f64202b330b558f09d6691472e7c7294c56be83edbd",
   "package": "journal",
   "function": "ProjectPosition",
   "signature": "ProjectPosition(params=3, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 105,
+    "line": 110,
     "column": 2
   },
   "branches": [
@@ -52,6 +52,14 @@
         "line": 101,
         "column": 2
       }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
     }
   ],
   "returns": [
@@ -86,14 +94,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 102,
+        "line": 105,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 107,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 104,
+        "line": 109,
         "column": 2
       }
     }
@@ -142,7 +157,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 102,
+        "line": 104,
+        "column": 25
+      },
+      "text": "recogniseAdjustmentCloseFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
         "column": 10
       },
       "text": "enterReconcileInTx"
@@ -150,7 +173,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 104,
+        "line": 109,
         "column": 9
       },
       "text": "writeProjection"
@@ -176,6 +199,13 @@
       "at": {
         "line": 83,
         "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 104,
+        "column": 6
       }
     }
   ],

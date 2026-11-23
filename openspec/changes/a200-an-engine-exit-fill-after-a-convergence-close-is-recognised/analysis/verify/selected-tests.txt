@@ -1,0 +1,13 @@
+# 선택 시험 — HEAD a5ca7b08a + GREEN 작업 트리, 2026-11-23T21:49:31Z
+
+$ go test ./internal/journal -run 'A200|Project|Position|Adjustment|ExitFill|Reconcile|Guarded|A130|A066' -count=1 -timeout 30m
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	131.608s
+
+$ go test ./internal/reconcile -run 'A200|A192|A195|Converge|Tracker|Observe' -count=1 -timeout 30m
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	28.756s
+
+$ go test ./internal/app/engine -run 'A200|A194|Adoption|Reconcile' -count=1 -timeout 30m
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	35.736s
+
+$ go test ./internal/accountbudgetruntime -count=1 -timeout 30m
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	30.054s
