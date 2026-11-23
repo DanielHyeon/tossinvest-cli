@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a198-a-clearing-cancel-is-issued-as-a-cancel-decision",
-    "path": "openspec/changes/a198-a-clearing-cancel-is-issued-as-a-cancel-decision"
+    "path": "openspec/changes/archive/2026-11-24-a198-a-clearing-cancel-is-issued-as-a-cancel-decision"
   },
   "found_by": {
     "date": "2026-11-23",
     "how": "a197 1단계의 probe 가 실제 게이트웨이로 재현했다 — 손절 루프가 취소에 싣는 결정이 주문 생성 종류라 원장이 요청을 거절하고 브로커 취소가 0 건이다. 기존 시험은 가짜 제출자를 써서 이 결합을 지난 적이 없다. 운영에서 발현한 증거는 없다(잠복 결함).",
-    "record": "openspec/changes/a198-a-clearing-cancel-is-issued-as-a-cancel-decision/proposal.md"
+    "record": "openspec/changes/archive/2026-11-24-a198-a-clearing-cancel-is-issued-as-a-cancel-decision/proposal.md"
   },
   "acceptance": [
     "길 치우기가 엔진 귀속 주문을 취소할 때 싣는 결정은 취소 종류·위험 감소 등급이고 방향과 수량이 그 주문의 것이며, 실제 게이트웨이와 원장을 지나 브로커에 취소가 나간다.",
