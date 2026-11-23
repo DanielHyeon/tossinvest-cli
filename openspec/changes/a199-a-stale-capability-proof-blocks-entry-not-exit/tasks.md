@@ -5,15 +5,15 @@
 ## 1. 등록 · 증거 (1단계)
 
 - [x] 1.1 change 디렉터리 등록: `.openspec.yaml` · proposal · design · tasks · `specs/engine-safety/spec.md`(spec-delta-intent 대로 조립, MODIFIED 는 생성 스크립트 + 역치환 단언) · Story `STORY-TOS-a199.yaml` · `_registry.yaml` · tracker 재생성. `openspec validate --strict` valid
-- [ ] 1.2 `base-commit.txt`(change 루트 — `tools/sdd/capture_change_base.py` 가 쓰는 자리; 초안의 `analysis/` 는 1단계 사실 정정)
-- [ ] 1.3 사전 증거를 현재 HEAD 로 재확인해 `analysis/evidence-phase0.md` 로 옮김(scratch 의 `a199-evidence/` — 줄 번호·AST 분기 재추출, 달라진 곳 표)
-- [ ] 1.4 CodeGraph hard evidence(버전 기재): `verifyGate` · `runInterlock` · `NewContext` · `runEngineRun` · `ExitObserver` 생성 · `ReconcileDriver` 생성 · `judgeAttestation` 의 호출자와 호출 **자리 수**
-- [ ] 1.5 **`Automation.Verified` 를 읽는 자리 전수**(자리 수, 파일:줄, 진입 쪽/청산 쪽/보고 분류) — D3 의 편집 표면을 여기서 확정. `EntryPermitted` 도 같이
-- [ ] 1.6 계좌 일치 비교의 공개 진입점 유무(`internal/attest`) — D1a 의 구현 자리 확정. `Verify` 본문 무편집으로 되는지
-- [ ] 1.7 `EntryGate` 래치 API(Block · 사유 상수 · 닫힌 사유 목록이 정본·시험에 있는지) — D4 의 자리와 새 사유 이름 확정. 래치를 세울 함수(`NewContext` 안인지 `runInterlock` 안인지)와 census 영향
-- [ ] 1.8 편집 표면 · 고정 장치 표(`analysis/edit-surface.md`): 편집할 기존 함수 목록, a166 census 키 적중(`NewContext` 예상 1), 소스를 여는 시험, 감독 루프 순서 시험, 봉인 시험, 진행 중 change(a063 · verify-execution-capability · a105 · a107)와의 파일 겹침
-- [ ] 1.9 편집할 기존 함수마다 FLM/BTM pre-edit 번들(`tools/logic-map`) — 뒤집히는 기존 시험 함수 포함
-- [ ] 1.10 claim check: proposal · design 의 분기 주장을 AST 열거와 대조(`analysis/claim-check.md`)
+- [x] 1.2 `base-commit.txt`(change 루트 — `tools/sdd/capture_change_base.py` 가 쓰는 자리; 초안의 `analysis/` 는 1단계 사실 정정)
+- [x] 1.3 사전 증거를 현재 HEAD 로 재확인해 `analysis/evidence-phase0.md` 로 옮김(scratch 의 `a199-evidence/` — 줄 번호·AST 분기 재추출, 달라진 곳 표)
+- [x] 1.4 CodeGraph hard evidence(버전 기재): `verifyGate` · `runInterlock` · `NewContext` · `runEngineRun` · `ExitObserver` 생성 · `ReconcileDriver` 생성 · `judgeAttestation` 의 호출자와 호출 **자리 수**
+- [x] 1.5 **`Automation.Verified` 를 읽는 자리 전수**(자리 수, 파일:줄, 진입 쪽/청산 쪽/보고 분류) — D3 의 편집 표면을 여기서 확정. `EntryPermitted` 도 같이
+- [x] 1.6 계좌 일치 비교의 공개 진입점 유무(`internal/attest`) — D1a 의 구현 자리 확정. `Verify` 본문 무편집으로 되는지
+- [x] 1.7 `EntryGate` 래치 API(Block · 사유 상수 · 닫힌 사유 목록이 정본·시험에 있는지) — D4 의 자리와 새 사유 이름 확정. 래치를 세울 함수(`NewContext` 안인지 `runInterlock` 안인지)와 census 영향
+- [x] 1.8 편집 표면 · 고정 장치 표(`analysis/edit-surface.md`): 편집할 기존 함수 목록, a166 census 키 적중(`NewContext` 예상 1), 소스를 여는 시험, 감독 루프 순서 시험, 봉인 시험, 진행 중 change(a063 · verify-execution-capability · a105 · a107)와의 파일 겹침
+- [x] 1.9 편집할 기존 함수마다 FLM/BTM pre-edit 번들(`tools/logic-map`) — 뒤집히는 기존 시험 함수 포함
+- [x] 1.10 claim check: proposal · design 의 분기 주장을 AST 열거와 대조(`analysis/claim-check.md`)
 - [ ] 1.11 제안 동결 적대 리뷰(작성자와 다른 계열 — codex, 최대 2회차) → `review.md`
 - [ ] 1.12 Manager 결정 · freeze
 

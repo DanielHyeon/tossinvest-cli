@@ -32,7 +32,7 @@
 **거부해서는 안 되는 정상 입력**(시험으로 고정):
 - 유효한 attestation → 지금과 똑같이 `Verified`, 래치 없음, 문장 무변.
 - 만료 + endpoint 누락이 **함께** 있는 파일 → 청산 전용(둘 다 낡음).
-- 계좌 번호 표기만 다른 같은 계좌(가림·하이픈 — `Verify` 의 비교가 같다고 보는 것) → 청산 전용.
+- 계좌 번호 표기만 다른 같은 계좌(하이픈 — `Verify` 의 비교가 같다고 보는 것) → 청산 전용. *(1단계 사실 정정: 초안의 「가림」은 `Verify` 의 비교(숫자열 동일, attest.go:296)가 다르다고 본다 — `claim-check.md` §2-a)*
 
 **통과시켜서는 안 되는 것**(시험으로 고정):
 - 만료됐고 **다른 계좌**를 가리키는 파일 → 거절(D1a — `Verify` 순서 때문에 `ErrExpired` 로만 보이는 경우).
@@ -45,7 +45,7 @@
 3. 그 게이트웨이에 매수 → 새 사유로 거절(브로커 호출 0), 매도·취소 → 통과(실제 게이트웨이, 보호 검사와 독립임을 보이기 위해 보호가 WIRED 인 조립에서도).
 4. 거절 유지 다섯 종(없음 · 파싱 불가 · 새 형식 · 불완전 3 · 계좌 불일치) + **만료이면서 다른 계좌** → 기동 거절, 오류 sentinel 무변.
 5. 낡음 + 다른 조항 실패(한도 단일 출처 · 7b · 7c · 게이트웨이 · transport 각각) → 그 조항의 sentinel 로 거절.
-6. 유효한 attestation · 게이트 OFF → 편집 전과 같은 결과(기존 시험이 한 글자도 안 바뀌고 통과 — `TestGateOnRefusals` 의 「attestation expired」「misses an endpoint」 두 사례만 계획대로 뒤집힌다).
+6. 유효한 attestation · 게이트 OFF → 편집 전과 같은 결과(기존 시험이 한 글자도 안 바뀌고 통과 — `TestGateOnRefusals` 의 「attestation expired」「misses an endpoint」「predates the price read」 세 사례가 계획대로 뒤집힌다 — 그 밖에 뒤집히는 기존 시험 함수는 `analysis/edit-surface.md` §2). *(1단계 사실 정정: 초안 「두 사례만」)*
 7. `runEngineRun`: 청산 전용 Context 는 `errEngineGateOff` 가 아니라 런타임 조립으로 가고 출력 한 줄을 낸다.
 8. 재기동: 낡은 채 다시 기동 → 래치가 다시 선다. attestation 을 유효한 것으로 바꾸고 기동 → 래치 없음(원장에 남는 것 없음).
 9. 감시 문장: `expired` · `scope_lost` 의 제목·첫 문장이 새 귀결을, `account_mismatch` · `unreadable` · `incomplete` 는 옛 귀결을 말한다. 「내려가는 단계」 판정이 인터록과 같은 함수임을 구조 시험으로.
@@ -61,7 +61,7 @@
 
 ## 5. 순서 · 결합
 
-- a166 census: `NewContext` 는 본문 동결 키다. 편집하면 a192 `analysis/census-repair/` 절차로 **그 키 하나**를 갱신한다. `verifyGate` · `runInterlock` 은 키가 아니지만 `NewContext` 본문에 이름이 있다 — 이름을 바꾸지 않는다.
+- a166 census: `NewContext` 는 본문 동결 키다. 편집하면 a192 `analysis/census-repair/` 절차로 **그 키 하나**를 갱신한다. `runInterlock` · `refuseStartup` · `newAutomationStatus` · `gateFacts` 는 키가 아니지만 `NewContext` 본문에 이름이 있다 — 이름을 바꾸지 않는다(`verifyGate` 는 NewContext 본문에 없음 — 1단계 사실 정정).
 - `TestProtectionReadinessIsAbsentFromExitReconcileAndFillLoopSources`: exitwiring.go · reconcileloop.go 에 금지 문자열을 넣지 않는다.
 - 감독 루프 4개의 집합·순서 고정 시험: 루프 집합을 바꾸지 않는다.
 - a063 · verify-execution-capability · a105 · a107(진행 중, 같은 영역): 편집 파일이 겹치는지 1단계가 확인한다. a107 은 봉인 시험 파일을 같이 편집하므로 그 파일들을 건드리지 않는다.
