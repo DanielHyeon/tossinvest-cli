@@ -1,0 +1,152 @@
+{
+  "file": "internal/execgw/refusal_code.go",
+  "source_sha256": "4e885e54a90205d2195edb230c9fd113112fdab667bbd886168b4e85c9214dee",
+  "package": "execgw",
+  "function": "refusalCodes",
+  "signature": "refusalCodes(params=1, results=3)",
+  "start": {
+    "line": 91,
+    "column": 1
+  },
+  "end": {
+    "line": 106,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 99,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 94,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 101,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 12
+      },
+      "text": "json.Unmarshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 27
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 8
+      },
+      "text": "readCode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 40
+      },
+      "text": "isJSONNull"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 13
+      },
+      "text": "json.Unmarshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 12
+      },
+      "text": "readCode"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 93,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 97,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 103,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

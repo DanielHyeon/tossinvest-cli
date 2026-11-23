@@ -29,7 +29,18 @@
 
 - [x] 4.1 변이 원장(`analysis/mutation/`) — design §4 의 변이 전부, 닿음 확인·무변이 대조군 GREEN 뒤.
 - [x] 4.2 선택 시험 원문(design §4), `make lint`, `openspec validate --strict`, `check_analysis.py --change a198-…`. 미실행 범위 기록.
-- [ ] 4.3 구현 적대 리뷰(다른 컨텍스트) → gstack review 1회 — `review.md`.
+- [ ] 4.3 구현 적대 리뷰(다른 컨텍스트) → gstack review 1회 — `review.md`. (r1 은 2026-11-24 실시 — P0-1 발견으로 4b 보강, 보강 뒤 재리뷰가 이 task 를 닫는다.)
+
+## 4b. 보강 — D7·D8·D4a (구현 리뷰 r1, Manager 결정 2026-11-24)
+
+- [x] 4b.1 증거: 계약 원문·분류 사슬 AST·사유 코드/골든·a165 순서·flatten/기동 복구 영향·D8 분기 — `analysis/d7-d8-evidence.md`.
+- [x] 4b.2 문서: design D7·D8·D4a·§2-5 정정·§3·§4(10~16)·변이·§6, proposal, 정본 delta 둘(`specs/order-execution/spec.md` 새 파일, exit-policy ADDED), Story acceptance.
+- [x] 4b.3 보강분 freeze 리뷰 1회(codex) — `analysis/review/delta-freeze-r1-codex.md`, `review.md`.
+- [ ] 4b.4 Manager 보강분 freeze.
+- [ ] 4b.5 Pre-Edit 갱신(`withCancelRefusal` 추가) · `Gateway.withCancelRefusal` FLM/BTM pre-edit 번들 · (새 사유 코드면 `AllReasonCodes` 번들).
+- [ ] 4b.6 RED — design §4-10~16(리뷰 탐침 P1·P2·P3 포함)을 현재 코드에서 단언 실패로, 원문 `analysis/tdd/red-4b.txt`.
+- [ ] 4b.7 GREEN — `withCancelRefusal` + 새 판정 함수(새 파일) · `clearTheSymbol`(D8 · B9 실패 줄 · 표시를 쓰기 뒤로). 편집 뒤 번들 재생성(재번호).
+- [ ] 4b.8 변이 원장 보강(design §4 보강 변이 전부) · 선택 시험(`./internal/execgw -run 'Cancel|A165|Refusal|A094'` 추가) · `make lint` · validate · check_analysis.
 
 ## 5. 종결
 

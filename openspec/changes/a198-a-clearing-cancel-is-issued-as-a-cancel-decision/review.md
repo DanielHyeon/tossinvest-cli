@@ -81,3 +81,36 @@ Pre-Edit Gate:
   - `make lint` rc 0 · `openspec validate --strict` valid · `check_analysis.py` 「evidence complete」 rc 0
 - 미실행: 전체 스위트 · `make gate` · `make sdd-sync` · `make sdd-check` · `make test-seams` · 패키지 전체(internal/app/engine 의 선택 밖 시험) · cmd/tossctl 시험 · post-edit 커버리지 재측정 · 4.3 리뷰(Manager 가 붙임).
 - 남은 위험: 사전 단건 조회 GET 의 호출 수를 결합 시험이 세지 않음(가짜 브로커 되읽기 미계수) · 실패 줄 쓰기가 루프 안 동기(쓰기 대상이 막히면 같은 주기 뒤 포지션 판정이 늦어질 수 있음 — a129 는 주기 끝 대기열로 피함) · `clearCancelLogged` 는 접수 확정 때만 지워져, 종결로 사라진 주문의 항목은 프로세스 수명 동안 남음(주문 수만큼, 작음) · M7 의 실제-게이트웨이 시험 부재 · design §6 의 잔여(ACKED/IN_DOUBT 보류, 전일 결속, 매수 재취소).
+
+## 구현 적대 리뷰 r1 (2026-11-24)
+- 보이스: 별도 컨텍스트 Opus + codex 둘째 보이스(Manager 가 붙임). 탐침 원문 `analysis/review/impl-r1-probe_test.go.txt`(버리는 파일 사본).
+
+| # | 발견 | 처분 |
+|---|---|---|
+| P0-1 | 취소 대상이 이미 끝난 주문이면 계약상 409 `already-filled·canceled·rejected·modified` → 409 는 확정 status 목록(journal/dispatch.go:351) 밖, code 는 `definitiveRefusalCodes`(refusal_code.go:46) 밖 → CANCEL attempt IN_DOUBT → B3·`checkSymbolFree` 가 그 종목 모든 변경을 막고 CANCEL 은 세션 해소 대상 밖 → **재시작까지 손절 막힘**. 탐침 P1(이미 체결)·P2(접수 뒤 손절 반대 미체결 → 재취소 409)·P3(둘 중 하나 400 → 접수된 쪽 재취소 409) 세 모양 실측, 편집 전 base 에서는 셋 다 통과 | **Manager 결정 2026-11-24: 범위에 넣음** — design D7(이미 끝난 주문의 취소 거절은 확정 거절, CANCEL 만) · D8(접수 확정 매수 재취소 금지), §2-5 정정, 정본 delta 둘. 증거 `analysis/d7-d8-evidence.md`. 구현은 보강분 freeze 뒤(tasks 4b) |
+| P1-2 | 「결정 발행 실패에도 cleared 유지」 변이(N10) 생존 — 시험의 원장 트리거가 손절 자신의 결정까지 막아 손절이 어차피 안 나감 | 반영(구현 단계): 취소 결정만 실패시키는 주입으로 시험 보강 — design §4-15 |
+| P2 | 수량·가격 해석 실패 갈래(B9) 무기록 — Requirement 문언과의 틈 | 반영: design D4a(B9 에도 실패 줄 한 번) |
+| P2 | 접수 확정 뒤 표시 정리·수량 해석 실패의 시험 부재(N6·N9) | 반영: design §4-16 |
+| P2 | 중복 억제 표시를 로그 쓰기 **앞에** 세워, 쓰기 패닉을 삼키면 그 실패가 다시 기록되지 않음 | 반영: design D4a(표시를 쓰기 뒤에) |
+| P2 | withPending=false 매도 경로를 실제 게이트웨이로 재는 시험 없음(M7 이 A198 만으로 생존한 이유와 같은 공백) | 반영: design §4-16 |
+| P2 | 최대 수량 ×2 변이(N2) 생존 — 결정 최대 수량이 정확히 주문 수량임을 단언하지 않음 | 반영: design §4-16(원장 preimage `max_quantity` 단언) |
+| P2 | 정정 주문의 낡은 수량·가격 | 기록만(엔진에 정정 경로 없음 — design §6) |
+| P2 | 확정 거절(400·404·422)의 매 주기 재시도가 결정·attempt 행을 쌓음 | 기록만 — 잔여(design §6) |
+| P2 | 픽스처 `005930` 은 실제 종목 코드 | design §4 문장 정정: 「계좌·주문번호·수량·가격은 합성, 종목 코드는 저장소 관례」(101 개 시험 파일) |
+
+## 보강분 문서 (2026-11-24, 팀메이트 Opus)
+- 증거 `analysis/d7-d8-evidence.md`(계약 원문 · 분류 사슬 AST · 사유 코드/골든 · a165 순서 · flatten/기동 복구 · D8 분기 · 편집 표면 · 정본 충돌). 새 AST: classifyMutation · classifyRefusalCode · refusalCodes · ClassifyBrokerRefusal · ClassifyHTTPMutation · isDefinitiveRejection · alreadyProcessingRefusal · Resolver.Resolve · Resolver.resolveCancel · classifyCancel · Saga.resolveStep · Recovery.Run.
+- 문서: design D7·D8·D4a, §2-5 정정·§2-6, §3, §4-10~17, 변이 보강, §6 · proposal What Changes 4·5·Impact·Capabilities(`order-execution` 추가) · 정본 delta `specs/order-execution/spec.md`(새 파일, ADDED 본문 328자) · exit-policy ADDED 「엔진의 취소가 접수 확정된 매수는 다시 취소하지 않는다」(239자) · tasks 4b · Story acceptance 1 문장(tracker `--check` rc 0).
+- `openspec validate a198-a-clearing-cancel-is-issued-as-a-cancel-decision --strict`: valid (rc 0, 2026-11-24).
+
+## 보강분 freeze 리뷰 r1 (2026-11-24, 1회차·마지막)
+- 보이스: codex-cli 0.165.0 read-only `</dev/null`. 원문 `analysis/review/delta-freeze-r1-codex.md`, 프롬프트 `delta-freeze-r1-prompt.txt`. 판정 「동결 불가 — P1 1, P2 5, P0 미입증」.
+
+| # | 발견 | 대조 | 처분 |
+|---|---|---|---|
+| P1-1 | `already-modified` 를 확정 거절로 두면 flatten 은 `Failed` 로 종결되고 `UnsettledCancelSymbols`(journal/flatten.go:324 — 리뷰 인용)가 `Failed` 를 매도 보류에서 빼 청산을 허용, 엔진은 옛 번호의 종결 기록 뒤 원장에 없는 후계 매도 주문을 치우지 못한 채 손절 — 후계가 살아 있는 매도면 추가 매도 경로. 기동 해소는 REPLACED 를 일부러 park(amend_indoubt.go:145) | 증거 §5 와 같은 우려, flatten 매도 보류 해제는 새 사실 | **Manager 결정 대기**(already-modified 를 D7 에서 뺄지 — 결정 변경) |
+| P2-2 | flatten 재전송 묶음(`already-processing → already-canceled`)에서 마지막 거절을 attempt 전체의 「취소 미성립」으로 일반화 — 앞선 전송의 취소가 성립했을 수 있음, 재개·기동 복구가 종결 attempt 를 다시 보지 않음 | 증거 §4 의 우려와 같음 | **Manager 결정 대기**(재전송 결과에 D7 을 적용할지 — 결정 변경) |
+| P2-3 | 정본 order-execution Scenario 「다른 사유의 409」(spec.md:590-592 — already-processing 이 아닌 취소 409 는 결과 불명)와 새 delta 가 같은 입력에 반대 결과 → ADDED 만으로는 둘 다 만족 불가. delta 는 정책·status 제한이 없는데 증거 안 (가)는 「모호인 409·정책 있음」 | 직접 확인 — 사실 | **Manager 결정 대기**(MODIFIED delta 필요, 적용 범위 하나로 확정). 증거 §8 에 사실 기록 |
+| P2-4 | D8 체결 경합 설명 오류 — 손절 접수 뒤(CLOSING) 매수 체결은 E31~E33 `ENTRY_WHILE_CLOSING` 거절로 RECONCILE, 「다음 주기 프로젝션이 보호」는 틀림 | table.go:78-80 직접 확인 | **사실 정정 반영**: design §2-5, 증거 §6. 경합 시험은 결정 뒤 |
+| P2-5 | §4-10~16·변이의 공백(네 code 각각, AMEND·nil 정책·읽을 수 없는 code, D8 범위 결속·조회 오류, 가격 해석 실패, 쓰기 패닉 뒤 재기록, 마지막 Scenario 의 전제) | 사실 | **반영**(결정에 묶이지 않는 것만): design §4-17, exit-policy Scenario 에 「다른 미치움 주문·미종결 attempt 없음」 전제. already-modified·재전송 묶음·늦은 체결 시험은 결정 뒤 |
+| P2-6 | 증거가 인용한 `cited-ast/ExitObserver_clearTheSymbol.ast.json` 은 편집 전 판 — 현재 소스와 sha 불일치 | 사실(의도된 pre-edit 판이었으나 증거 머리말이 「같은 작업 트리」로 적음) | **사실 정정 반영**: 증거 머리말에 판 구분과 post-edit 번들 경로 |
