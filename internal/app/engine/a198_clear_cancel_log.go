@@ -22,6 +22,9 @@ const exitClearCancelDecisionFailed = "cancel_decision_failed"
 // exitClearCancelOrderUnreadable 는 치울 주문의 수량 · 가격을 읽지 못했다는 고정 사유 코드임(a198 D4a).
 const exitClearCancelOrderUnreadable = "working_order_unreadable"
 
+// exitClearCancelLookupFailed 는 그 주문의 엔진 취소 접수 여부를 원장에서 읽지 못했다는 고정 사유 코드임(a198 r2).
+const exitClearCancelLookupFailed = "cancel_lookup_failed"
+
 // noteClearCancelFailure 는 취소 하나의 실패를 한 줄 씀. 같은 주문의 같은 결과(상태 · 사유)가 주기마다 반복되면 처음 한 번만 —
 // 관측 주기마다 같은 줄을 쓰는 것은 관측이 아님(a074). 결과가 바뀌면 다시 씀.
 func (o *ExitObserver) noteClearCancelFailure(m managed, order journal.LiveOrder, state journal.AttemptState, reason string) {

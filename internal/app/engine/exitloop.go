@@ -1672,6 +1672,8 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 		_, accepted, err := o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
 		if err != nil {
 			o.warnEpisode(obs.EventExitLiquidationDelayed, err, "reading the engine cancel of order "+order.OrderID)
+			// 운영에서 warnEpisode 는 무기록이라(opts.Log nil) 원인을 운영 로그에도 남김 — 원문 오류는 싣지 않음(a198 r2).
+			o.noteClearCancelFailure(m, order, "", exitClearCancelLookupFailed)
 			res.cleared = false
 			continue
 		}

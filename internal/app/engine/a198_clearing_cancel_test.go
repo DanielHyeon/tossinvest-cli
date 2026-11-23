@@ -822,8 +822,8 @@ func TestA198AnUnreadableWorkingOrderIsLoggedOnce(t *testing.T) {
 				t.Fatalf("broker sells = %v over an unreadable working buy", f.sells())
 			}
 			lines := f.failureLines()
-			if len(lines) != 1 || lines[0]["order_id"] != "W-BUY-1" || lines[0]["reason"] == "" {
-				t.Fatalf("failure lines = %v, want one line with a fixed reason for W-BUY-1", lines)
+			if len(lines) != 1 || lines[0]["order_id"] != "W-BUY-1" || lines[0]["reason"] != "working_order_unreadable" {
+				t.Fatalf("failure lines = %v, want one working_order_unreadable line for W-BUY-1", lines)
 			}
 		})
 	}

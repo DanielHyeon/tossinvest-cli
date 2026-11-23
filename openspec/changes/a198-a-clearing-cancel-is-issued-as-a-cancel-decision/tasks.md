@@ -44,6 +44,8 @@
 
 ## 5. 종결
 
+main 반영은 Manager 가 사용자 결정(design §6 의 「이 change 가 남기는 회귀」 수용 또는 후속 change 「취소 attempt 의 미종결 복구」와 함께 반영)을 받은 뒤다.
+
 - [ ] 5.1 Manager 검증(diff·시험 원문 재실행).
 - [ ] 5.2 완료 게이트(격리 worktree) → archive → Story 경로 갱신 → push.
 

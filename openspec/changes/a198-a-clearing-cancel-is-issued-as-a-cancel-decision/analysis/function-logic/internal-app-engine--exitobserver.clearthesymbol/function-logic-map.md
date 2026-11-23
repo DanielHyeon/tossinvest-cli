@@ -1,7 +1,7 @@
 # Function Logic Map: `ExitObserver.clearTheSymbol`
 
-- Source: `internal/app/engine/exitloop.go:1651-1751`
-- AST evidence: `ast.json` (**post-edit 2판 — 보강 4b.7 뒤**, source_sha256 `985bec39…`, 분기 17). 1판(GREEN 09bb9e8c1) sha `6ffb1ec1…`, pre-edit 판은 base `e1eaf720c` 의 `analysis/cited-ast/ExitObserver_clearTheSymbol.ast.json`(sha `bc81b5fd…`).
+- Source: `internal/app/engine/exitloop.go:1651-1753`
+- AST evidence: `ast.json` (**post-edit 3판 — 구현 리뷰 r2 반영 뒤**, source_sha256 `9a6b2599…`, 분기 17 — 2판과 분기 번호·종류 동일, B5 본문에 실패 줄 호출 1 추가). 2판 sha `985bec39…`. 1판(GREEN 09bb9e8c1) sha `6ffb1ec1…`, pre-edit 판은 base `e1eaf720c` 의 `analysis/cited-ast/ExitObserver_clearTheSymbol.ast.json`(sha `bc81b5fd…`).
 - Risk scan: `risk-pattern-report.md`
 - 재번호 1판(base → 1판, difflib): B1~B8 동일 · 옛 B10(해석 실패) → B9 · 옛 B9(발행 실패) → B10 · B11~B17 동일.
 - **재번호 2판(1판 → 2판, difflib)**: B1~B4 동일 · 1판 B6(`ConfirmedCancelOf` 오류) → **B5**(이제 매수·매도 공통) · 1판 B7(waiting) → **B6 `accepted`**(매수·매도 공통, D8) · 1판 B5(`!buy`) → **B7**(accepted 안의 매도 판정) · 1판 B8(`!withPending`) → **B8 `!buy && !withPending`** · B9~B17 동일(B9 에 D4a 실패 줄 추가). 분기 수 17 → 17.
@@ -9,7 +9,7 @@
 
 | 2판 | 조건 | 결과 |
 |---|---|---|
-| B5 L1673 | `ConfirmedCancelOf` 오류(매수·매도) | warnEpisode(운영 무기록), cleared=false, continue — 치움 미완료 |
+| B5 L1673 | `ConfirmedCancelOf` 오류(매수·매도) | warnEpisode(운영 무기록) + `noteClearCancelFailure(…, "", cancel_lookup_failed)`(3판, r2 반영 1), cleared=false, continue — 치움 미완료 |
 | B6 L1678 | 엔진 취소 접수 확정 있음(매수·매도) | continue — 다시 취소하지 않음 |
 | B7 L1679 | (B6 안) 매도 | cleared=false, awaitingClose(종결 증거 대기). 매수는 cleared 무변(D8) |
 | B8 L1684 | 매도 && !withPending | continue(대상 아님) |

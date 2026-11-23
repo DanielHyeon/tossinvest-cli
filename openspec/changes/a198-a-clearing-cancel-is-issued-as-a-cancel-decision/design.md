@@ -72,8 +72,14 @@ D7 이 **모호 → 확정 거절**로 바꾸는 응답(이것만): **엔진 취
 
 ## 6. 잔여·후속
 
+**이 change 가 남기는 회귀 — 이전보다 나쁜 경우(구현 적대 리뷰 r2 실측, Manager 처분 2026-11-24: a198 안에서 수리하지 않음, main 반영은 사용자 결정 뒤).** 이 change 뒤, 길 치우기의 취소가 미종결로 남는 경우(5xx·전송 불명으로 IN_DOUBT, `already-modified` 로 IN_DOUBT, 접수 뒤 최종 쓰기 전 충돌로 ACKED 고착)에는 그 종목의 손절이 대상 주문의 종결 기록이 들어와도 엔진 재시작(ACKED·`already-modified` 는 그 뒤)까지 보류된다. 이 change 이전에는 취소가 나가지 않았으므로 그 경우에도 종결 기록 뒤에 손절이 나갔다 — **그 경우에 한해 이전보다 나쁘다**(리뷰 2회차 실측). 지연 경보와 연속 실패 경보는 나가며(ACKED 는 지연 경보만), 운영자가 할 수 있는 일은 안전한 창에서의 엔진 재시작이나 앱에서의 수동 매도다. 일반 경로(취소 접수, 이미 끝난 주문의 409)는 이전보다 낫다: 이전에는 엔진 미체결 주문이 있는 종목의 손절이 그 주문이 체결되거나 만료될 때까지 언제나 보류됐다. 닫는 change: 「취소 attempt 의 미종결 복구」(후속, a197 재개의 선행이기도 하다). (사실: 공식 클라이언트는 5xx·429 를 `APIError` 가 아닌 오류로 바꿔 D7 에 닿지 않는다 — internal/official/errors.go:54, 리뷰 인용.)
+
+- **시험 공백(r2 반영 1)**: `ConfirmedCancelOf` 조회 오류 갈래(B5)는 이제 실패 줄(`cancel_lookup_failed`)을 남기지만, 그 갈래를 시험으로 구동하지 못했다 — 주입 시도: ① 접수 확정 CANCEL 행의 `generation` 을 문자열로 → `mutation_attempts` 는 STRICT 라 「cannot store TEXT value in INTEGER column」 으로 거절 ② 문자열 열을 NULL 로 → 전 열 `NOT NULL` ③ 열 삭제·표 이름 변경 → 그 앞의 미체결·미종결 판독(B1·B2)이 먼저 실패 ④ 원장 판독을 가짜로 바꿀 이음매 없음(`opts.Journal` 은 `*journal.Journal`). 그래서 리뷰 생존 변이 R13(「오류여도 치움 유지」)은 범위 안 시험으로 죽지 않는다(변이 원장 기록).
+- 유니코드 대소문자 접기: code 비교는 `strings.EqualFold`/`ToLower` — refusal_code.go 와 같은 규칙(안전측, 기록만).
+- a165 시계 구조 시험(`TestA165CancelRefusalUsesOnlyInjectedClockForJudgement`)은 cancel_refusal.go 만 읽고 새 파일 a198_settled_cancel_refusal.go 는 읽지 않는다 — 새 파일에 시계 호출 0(기록만).
+- withPending=false 매도 경로의 실제 게이트웨이 시험 공백: 가짜 제출자 A094 시험이 덮고, 변이 V8 은 무장 매도 경로에서 독립 규칙 `ReleaseClearedExitProposal` 이 막는다(기록만).
 - §2-3 · ACKED(Manager 결정 2026-11-23 — 범위 밖, 이름 붙인 잔여): 취소가 ACKED 또는 IN_DOUBT 로 남으면 그 종목의 손절은 보류되고, ACKED 는 연속 실패 계수에서도 빠진다(정확히는: 같은 종목의 미종결 attempt 가 치울 대상 **전부**의 진행 중 취소뿐일 때 — `onlyEngineCancelsInFlight`; 대상이 종결 기록으로 빠지거나 다른 대상이 남으면 다시 센다). 지연 경보(30 초)는 나간다. 지금 빌드에는 ACKED 로 남은 취소를 닫는 운영자 경로가 없다 — 후속 change 『CANCEL attempt 의 복구 계약(IN_DOUBT·ACKED)』의 대상이고, a197 재개의 선행이기도 하다. (근거: 기동 복구 internal/reconcile/acked_boot.go:51 「CANCEL/AMEND … stays ACKED」, 운영자 해소 internal/journal/resolution.go:143 은 UNRESOLVED_IN_DOUBT 에서만, 세션 해소는 PLACE 만.)
-- 전일 주문의 거래일 결속(범위 밖 — **알려진 정본 미충족 잔여**: 정본의 「확정된 취소를 다시 내지 않는다」와 delta 의 「한 번 나간다」를 이 경우 충족하지 않는다): `ConfirmedCancelOf` 는 취소 intent 의 거래일 = 주문 거래일을 요구한다 — 전일 주문을 오늘 취소하면 대기가 성립하지 않아 확정된 취소가 주기마다 다시 나간다. 엔진 주문은 당일 주문이라 거래일을 넘겨 원장에 「살아 있는」 주문은 브로커에서 이미 만료됐을 가능성이 높고, 그 정리는 체결 감지(a191)의 영역이다. 고치지 않는다.
+- 전일 주문의 거래일 결속(범위 밖 — **알려진 정본 미충족 잔여**: 정본의 「확정된 취소를 다시 내지 않는다」와 delta 의 「한 번 나간다」를 이 경우 충족하지 않는다): `ConfirmedCancelOf` 는 취소 intent 의 거래일 = 주문 거래일을 요구한다 — 전일 주문을 오늘 취소하면 대기가 성립하지 않아 확정된 취소가 주기마다 다시 나간다. 엔진 주문은 당일 주문이라 거래일을 넘겨 원장에 「살아 있는」 주문은 브로커에서 이미 만료됐을 가능성이 높고, 그 정리는 체결 감지(a191)의 영역이다. 고치지 않는다. 그 재취소가 5xx·전송 불명을 받으면 위 「이 change 가 남기는 회귀」 로 이어진다.
 - 매수 취소 접수 뒤 재취소(§2-5): **D8 로 대체(2026-11-24)** — 재취소는 없어지고, 남는 것은 브로커가 취소를 반영할 때까지 손절의 반대 미체결 거절 반복과, 취소 접수 뒤 체결 경합의 과소 보호(미측정).
 - D7 의 근거는 계약 문서뿐이다 — `already-*` 409 의 실물 응답은 저장소에 측정 기록 0(d7-d8-evidence.md §1).
 - 확정 거절(400·404·422·D7 의 409)은 매 주기 재시도되어 그 주문의 종결 기록이 올 때까지 주기마다 결정 행·CANCEL attempt 행이 쌓인다(구현 리뷰 r1 — 기록만).
