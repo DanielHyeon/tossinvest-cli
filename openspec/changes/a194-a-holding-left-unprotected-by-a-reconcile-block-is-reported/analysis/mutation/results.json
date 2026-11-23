@@ -1,5 +1,5 @@
 {
- "head": "e26831d5a1c875e1c9e115908b340e9f1b5a4386",
+ "head": "62e008bec6aefa42c5ff372e66e61ea8fd9e0ca6",
  "control_green": true,
  "rows": [
   {
@@ -18,6 +18,7 @@
     "TestA194AnAccountWideBlockIsOneReport",
     "TestA194AtMostThreeHoldingReportsPerCycle",
     "TestA194EarlierExcludedHoldingsAreReportedFirst",
+    "TestA194EveryReleaseGuideSaysTheStopsPauseWhileTheEngineIsDown",
     "TestA194NotificationsOffNeverRecordsACritical",
     "TestA194NotificationsOffNeverRecordsACritical/off_with_the_topic_kept",
     "TestA194NotificationsOffNeverRecordsACritical/off_without_a_topic",
@@ -91,7 +92,7 @@
    "id": "M5",
    "desc": "차단 보고 key 에서 날짜 삭제",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 213,
+   "line": 214,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -119,7 +120,7 @@
    "id": "M7",
    "desc": "차단 보고 래치를 Notify 앞에(결과 무시)",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 214,
+   "line": 215,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -131,7 +132,7 @@
    "id": "M8",
    "desc": "KST 날짜를 UTC 날짜로",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 206,
+   "line": 207,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -209,7 +210,7 @@
    "id": "M7b",
    "desc": "stale 본문에서 할 일 문장 삭제",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 175,
+   "line": 176,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -218,10 +219,32 @@
    ]
   },
   {
+   "id": "M25",
+   "desc": "운영자 전용 안내에서 엔진 정지·자동 손절 경고 삭제",
+   "file": "internal/app/engine/reconcile_block_report.go",
+   "line": 272,
+   "reached": false,
+   "verdict": "CAUGHT",
+   "killed_by": [
+    "TestA194EveryReleaseGuideSaysTheStopsPauseWhileTheEngineIsDown"
+   ]
+  },
+  {
+   "id": "M26",
+   "desc": "stale 안내에서 엔진 정지·자동 손절 경고 삭제",
+   "file": "internal/app/engine/reconcile_block_report.go",
+   "line": 175,
+   "reached": true,
+   "verdict": "CAUGHT",
+   "killed_by": [
+    "TestA194EveryReleaseGuideSaysTheStopsPauseWhileTheEngineIsDown"
+   ]
+  },
+  {
    "id": "M12r",
    "desc": "알림기 없음을 보낸 것으로 셈",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 244,
+   "line": 245,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -232,7 +255,7 @@
    "id": "M19",
    "desc": "제목에서 label 대신 코드",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 190,
+   "line": 191,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -243,7 +266,7 @@
    "id": "M23",
    "desc": "풀린 차단의 래치 key 유지",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 218,
+   "line": 219,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [

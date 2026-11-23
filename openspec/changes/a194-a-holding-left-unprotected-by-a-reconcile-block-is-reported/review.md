@@ -151,3 +151,4 @@
 - 시험: `TestA194EveryReleaseGuideSaysTheStopsPauseWhileTheEngineIsDown`(세 본문 모두 「엔진을 멈춰야」·「자동 손절이 돌지 않」, 차단 보고의 단정 문장 부재), 기존 단언을 새 문장에 맞춤(운영자 전용 본문 「이 차단은 스스로 풀리지 않는다」·「거절하며 그 사유를 말한다」, stale 에 그 단정 문장이 없음은 계속 고정). 변이 M25(운영자 전용 경고 삭제)·M26(stale 경고 삭제) 추가, M7a·M7b 를 새 문장에 맞춤.
 - (3) pending 영구 승격 블록의 즉시 보고, (4) 차단 보고의 주기당 상한 없음: 기록만(design §6). gstack 수리 1(차례 공백)과 「기록만」 처분 승인.
 - `judgeHoldings` 무편집 — production 편집은 새 파일의 문장(상수 `operatorReleaseGuide`)뿐.
+- 재검증(2026-11-24, HEAD 62e008bec): 변이 최종 4판 22/22 CAUGHT, SURVIVED 0(M25 는 상수 선언이라 커버로 닿음을 못 재고 CAUGHT 가 닿음을 보임 — `analysis/mutation/ledger.md`). 선택 시험 PASS 54 · FAIL 0, `-race -run A194` ok(144 s), `make lint` rc 0, strict valid, `check_analysis` rc 0. 알림 문장 원문 갱신 `analysis/verify/alert-sentences.txt`.

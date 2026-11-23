@@ -1,1 +1,1 @@
-ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	133.297s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	144.015s
