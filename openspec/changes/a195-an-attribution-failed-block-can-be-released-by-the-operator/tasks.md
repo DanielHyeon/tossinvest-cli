@@ -27,8 +27,8 @@
 
 ## 4. 검증
 
-- [ ] 4.1 변이 원장(`analysis/mutation/`) — design §3 의 변이 6개(기존 4 + 첫 허용 원인에서 즉시 통과 + 클로저가 헬퍼 결과 무시 — 마지막은 `TestA166WiringCensusBaseline` 으로 실제로 죽음을 확인하고 구조 검출로 적음), 변이마다 닿음(양성 대조군) 먼저, 사본 하네스는 무변이 대조군 GREEN·시작 sha 단언 후.
-- [ ] 4.2 선택 시험(design §3: `./cmd/tossctl -run 'TestA166EngineReconcile|TestEngineReconcileResolve|A195'`, `./internal/accountbudgetruntime`, `./internal/reconcile -run 'Resolve|Restore|Observe'`) 원문, `make lint`, `openspec validate --strict`, `python3 tools/logic-map/check_analysis.py --change a195-…`. 미실행 범위 기록.
+- [x] 4.1 변이 원장(`analysis/mutation/`) — design §3 의 변이 6개(기존 4 + 첫 허용 원인에서 즉시 통과 + 클로저가 헬퍼 결과 무시 — 마지막은 `TestA166WiringCensusBaseline` 으로 실제로 죽음을 확인하고 구조 검출로 적음), 변이마다 닿음(양성 대조군) 먼저, 사본 하네스는 무변이 대조군 GREEN·시작 sha 단언 후.
+- [x] 4.2 선택 시험(design §3: `./cmd/tossctl -run 'TestA166EngineReconcile|TestEngineReconcileResolve|A195'`, `./internal/accountbudgetruntime`, `./internal/reconcile -run 'Resolve|Restore|Observe'`) 원문, `make lint`, `openspec validate --strict`, `python3 tools/logic-map/check_analysis.py --change a195-…`. 미실행 범위 기록.
 - [ ] 4.3 구현 적대 리뷰(다른 컨텍스트) → gstack review 1회 — `review.md`.
 
 ## 5. 종결

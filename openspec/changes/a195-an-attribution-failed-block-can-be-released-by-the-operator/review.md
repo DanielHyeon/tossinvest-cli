@@ -68,3 +68,14 @@ Pre-Edit Gate:
 - 안전 불변식 §0 위반 여부 검토: 통과 — 주문 side effect 0(브로커 쓰기 핸들 없음 유지), 토글 무관, 손절·청산 즉시성 무변경,
   영구 차단은 여전히 운영자 명령만 풂, IDENTIFIER_CONFLICT·계좌 전체 AF 는 거절 유지(design D1·D5).
 ```
+
+## 2단계 구현·검증 (2026-11-23, 팀메이트 Opus)
+- 커밋: `5633b721f`(freeze·Pre-Edit) → `4441d8935`(3.1 RED) → `39ee1ed6c`(3.2·3.2b·3.3 GREEN) → 이 커밋(4.1·4.2).
+- RED(`analysis/tdd/red.txt`): 헬퍼를 「모든 입력 거절」 빈 껍데기로 먼저 둬서 컴파일 실패가 아닌 단언 실패로 만듦. FAIL 5(원인 표, AF 해제, QM+AF, 외부 보유, 원인 중립 문구), PASS 5(기존 동작 고정 — 차이 남음·IC·계좌 전체 AF·활성 0·Observe 자동 해제 금지).
+- GREEN: `reconcileResolveRefusedCause`(새 파일 cmd/tossctl/reconcile_resolve_causes.go), validate 클로저 원인 순회 8줄 → 1줄, 도움말·성공 문구 원인 중립. census 키 하나 갱신(`analysis/census-repair/shapes-key-diff.txt`: base 재현 True·인코딩 1회, 90 키 중 변경 1, sites.json 무변경).
+- 시험 하네스: 통합 시험은 production `buildReconcileResolveRuntime` 이 돌려준 런타임(validate·resolve·localState·compare 그대로, 공식 스냅숏 수집만 가짜, 로컬 TLS 가짜 서버)을 production `runEngineReconcileResolve` 로 구동 — r1 R3·r2 R3 의 「builder 가 돌려준 validate 를 실행하는 시험 0」이 해소됨(커버리지 `analysis/coverage/after-engine_reconcile-blocks.txt`: 클로저 306·309 hit=1).
+- 외부 보유 시험은 장부에 그 종목 인스턴스가 없는 입력으로 만듦 — CLOSED 인스턴스만 있는 장부와 `HeldBySymbol`(compare.go:155) 이 같은 비교 입력을 만든다는 근거(실제 CLOSED 인스턴스로는 재지 않음).
+- 변이 원장(`analysis/mutation/ledger.md`, 하네스 `mutate.py` — git archive 사본, 시작 sha 단언, 무변이 대조군 GREEN, 원복 sha256 단언): 6/6 CAUGHT. M6(결과 무시)은 census 와 행동 시험 둘 다로 죽음. 약한 자리: M5 는 원인 표의 한 하위 시험만 죽임.
+- 4.2(`analysis/tdd/selected-tests.txt`, `analysis/tdd/lint-validate-analysis.txt`): `./cmd/tossctl -run 'TestA166EngineReconcile|TestEngineReconcileResolve|A195'` ok · `./internal/accountbudgetruntime` ok · `./internal/reconcile -run 'Resolve|Restore|Observe'` ok · `make lint` rc 0(gofmt + vet 무태그·tossos_testseams) · `openspec validate --strict` valid · `check_analysis.py --change` rc 0(required 3, 증거 완전).
+- 미실행 범위: `make test`(전체 스위트)·`make test-seams`·`make test-race`·`make gate`·`make sdd-check`·`make sdd-sync` — 지시대로 안 돌림. `./cmd/tossctl`·`./internal/reconcile` 는 `-run` 선택분만. `--record-landing` 안 함. 실계좌·운영 장부·tossctl 실행 없음.
+- 4.3(구현 적대 리뷰·gstack review): 미실시 — Manager 지시로 보류.
