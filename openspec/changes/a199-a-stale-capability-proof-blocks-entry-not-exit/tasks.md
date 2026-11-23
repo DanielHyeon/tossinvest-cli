@@ -19,8 +19,8 @@
 
 ## 2. 구현
 
-- [ ] 2.1 Pre-Edit 선언(High-risk): 바꾸는 것 · 바꾸지 않는 것 · 되돌리는 법
-- [ ] 2.2 RED — design §3 의 1~11 (실제 게이트웨이 · 실제 원장 · 실제 감사 로그 · 실제 런타임 조립으로; production 무편집에서 실패 원문 `analysis/tdd/red.txt`). 뒤집히는 기존 시험 함수는 design §3-6 의 여섯뿐 — 그 밖이 깨지면 멈춤
+- [x] 2.1 Pre-Edit 선언(High-risk): 바꾸는 것 · 바꾸지 않는 것 · 되돌리는 법 — `analysis/pre-edit.md`
+- [x] 2.2 RED — design §3 의 1~11 (실제 게이트웨이 · 실제 원장 · 실제 감사 로그 · 실제 런타임 조립으로; production 무편집에서 실패 원문 `analysis/tdd/red.txt`). 뒤집히는 기존 시험 함수는 design §3-6 의 여섯뿐 — 그 밖이 깨지면 멈춤
 - [ ] 2.3 GREEN 최소 구현 — 닫힌 집합 판정 함수 하나(인터록과 감시가 같이 부름, 형식 하한 · 빈 endpoint 항목 · 만료 시 계좌 확인 포함) · `AutomationStatus` 새 표지 · `verifyGate`/`runInterlock`(래치는 runInterlock) · 청산 쪽 소비자 넷 · `logGateDecision` 보호 수명 문장 · 래치 · 감사 action · 기동 출력 · 감시(문장 · 기동 표지 조건 알림). 새 설정 키·새 운영 모드·새 outbox 타입 금지. 주석은 한글로 「왜」
 - [ ] 2.4 a166 census 키 갱신(`NewContext` 를 편집했으면 그 키 하나, a192 `census-repair` 절차) — 다른 키 무변 단언
 - [ ] 2.5 인터록 머리 주석 정정(D9) · `cmd/tossctl/soak.go` 의 낡은 출력 문구(565 · 577 「clause 9」 · 도움말 220)를 새 귀결로(Manager 결정 11)
