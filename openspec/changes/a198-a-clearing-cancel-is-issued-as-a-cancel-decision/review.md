@@ -150,3 +150,37 @@ Pre-Edit Gate:
 - 변이(analysis/mutation/ledger.md 「4b」): 13/13 CAUGHT. V8(D8 을 매도에도 — 초과 매도 방향)은 A094 가짜 제출자 시험 1개만 죽임(실제 게이트웨이 시험은 ReleaseClearedExitProposal 이 대신 막아 못 죽임).
 - 선택 시험(GOFLAGS 없음): engine `-run 'A198|A094|ExitClear|ExitObserver'` ok 48.9s · execgw `-run 'Cancel|RiskGuardian|Issue|Refusal|A165'` ok 57.3s(a165 구조 고정 `TestA165CancelRefusalUsesOnlyInjectedClockForJudgement` 포함) · `./internal/flatten` 전체 ok 20.6s · journal `-run 'Prepare|Decision'` ok · `-race -run A198` ok 124.4s · `make lint` rc 0 · strict validate valid · check_analysis 「evidence complete」.
 - 미실행: 전체 스위트 · `make gate`·`sdd-sync`·`sdd-check`·`test-seams` · engine 패키지의 선택 밖 시험 · cmd/tossctl 시험 · post-edit 커버리지 재측정 · `ConfirmedCancelOf` 조회 오류 시험(읽기 오류 주입 수단 없음) · withPending=false 매도 경로의 실제 게이트웨이 시험(구성 미완 — A094 가짜 제출자 시험이 그 분기를 덮음).
+
+## 구현 적대 리뷰 r2 (2026-11-24, 마지막 회차 — Opus 별도 컨텍스트 + codex)
+
+- **닫힌 것**: 1회차 P0-1 — 리뷰어 자기 탐침으로 재확인(매수 P1·P2·P3, 매도 변형 `already-filled`·`already-canceled` — 종결 기록 전 초과 매도 없음, 기록 뒤 손절). flatten·a165·정책 없는 게이트웨이 무변, MODIFIED 블록 생성기 재실행 바이트 동일, 변이 11 CAUGHT.
+- **남은 회귀(리뷰 기준 P0, codex P1) — Manager 처분: a198 안에서 수리하지 않음, 사실 그대로 공시, main 반영은 사용자 결정 뒤.** 공시 위치: design §6 맨 위 문단 · proposal 「이 change 가 하지 않는 것」 첫 항목 · Story limits 셋째 문장 · tasks 5 머리 문장.
+
+| 취소 결과 | 다음 주기 | 손절이 막히는 기간 | 경보 | 이전(base) 대비 |
+|---|---|---|---|---|
+| 접수(CONFIRMED) — 매수 | 재취소 0(D8), 손절 제출 | 0(브로커가 취소를 늦게 반영하면 반대 미체결 거절 반복) | — | **나음**(base: 그 주문 종결까지 언제나 보류) |
+| 접수(CONFIRMED) — 매도 | 종결 증거 대기 | 그 주문의 종결 기록까지 | 지연 경보·연속 실패 | **나음**(base: 종결까지 보류 — 같음 또는 나음) |
+| 409 already-filled·canceled·rejected | 확정 거절 → 다음 주기 재시도(종결 기록 전까지) | 그 주문의 종결 기록까지 | 실패 줄·지연·연속 실패 | **같음**(base 도 종결 기록 뒤 손절) — 재시도 행 누적은 잔여 |
+| 400·404·422 확정 거절 | 재시도 | 종결 기록까지 | 실패 줄·지연·연속 실패 | 같음 |
+| **5xx·전송 불명 → IN_DOUBT** | 미종결 가드로 보류 | **종결 기록이 와도 엔진 재시작(기동 해소)까지** | 지연·연속 실패 | **나쁨**(base: 종결 기록 뒤 손절) |
+| **409 already-modified → IN_DOUBT** | 같음 | **재시작 뒤에도(기동 해소가 REPLACED 를 park)** | 지연·연속 실패 | **나쁨** |
+| **ACKED 고착**(접수 뒤 최종 쓰기 전 충돌) | 같음, 연속 실패 계수 제외 | **재시작 뒤에도(기동은 CANCEL ACKED 를 해소 안 함)** | 지연 경보만 | **나쁨** |
+
+- 리뷰어 최종 판단 요지: 「기대값으로는 이전보다 안전하므로 출시 가능, 단 잔여를 후속 change(『취소 attempt 의 미종결 복구』)와 운영 절차(안전한 창의 엔진 재시작·앱 수동 매도)로 명시하는 조건 — 조건 없이 회귀 없음으로 기록해서는 안 된다」.
+
+| r2 P2 | 처분 |
+|---|---|
+| `ConfirmedCancelOf` 조회 오류 갈래가 운영에서 무기록(warnEpisode → opts.Log nil), 이번 편집으로 매수도 탐 | **반영 1**: 같은 갈래에 실패 줄 `cancel_lookup_failed`(중복 억제 같음), `warnEpisode` 그대로. 시험: **주입 불가** — ① `generation` 문자열 → STRICT 거절 「cannot store TEXT value in INTEGER column mutation_attempts.generation」 ② 문자열 열 NULL → 전 열 NOT NULL ③ 열 삭제·표 이름 변경 → 앞선 B1·B2 판독이 먼저 실패 ④ 원장 판독 이음매 없음. R13(오류여도 치움 유지) **생존** — 변이 원장·design §6 「시험 공백」 |
+| 해석 실패 시험이 사유 값을 단언하지 않음(R3 생존) | **반영 2**: `working_order_unreadable` 단언 → R3 CAUGHT |
+| 전일 주문 거래일 결속 | 기록만 — design §6 에 「재취소가 5xx 를 받으면 위 회귀로 이어진다」 추가 |
+| 유니코드 대소문자 접기 | 기록만(refusal_code.go 와 같은 규칙) |
+| a165 시계 구조 시험이 새 파일을 읽지 않음 | 기록만(새 파일에 시계 호출 0) |
+| withPending=false 매도 경로의 실제 게이트웨이 시험 공백 | 기록만(A094 가짜 제출자 시험이 덮음, V8 은 `ReleaseClearedExitProposal` 이 막음) |
+
+## gstack review r1 (2026-11-24, 1회차·마지막)
+
+- 원문·처분 전부: `analysis/review/gstack-review-r1.md`. 4 specialist(testing·maintainability·security·simplification) + Claude 적대 패스. state-machines·red-team·codex 바깥 패스·Step 4.7 smoke 는 실행하지 않음(누락 커버리지). Gate edits: none detected.
+- **반영(명백한 결함)**: 실패 줄의 이벤트 이름이 나갔을 수 있는 attempt(ACKED·UNRESOLVED·상태 없이 기록)를 `order.not_dispatched` 로 적던 것 → submit 과 같은 갈래(`recorded` 인자). 시험이 IN_DOUBT·발행 실패·해석 실패 줄의 이벤트 이름을 단언.
+- **Manager 결정 대기**: A1 확정 거절 뒤 백오프 없음(종결 기록까지 5 초마다 결정·attempt·취소 POST, Critical 예산 — 다른 종목 손절 429 위험) · A4/S1 `settledCancelRefusal` 의 409 한정(설계 D7 은 code 판정).
+- 반영 뒤 재검증(`analysis/verify/r2-*.txt`, 381f229de+작업트리, GOFLAGS 없음): engine `-run 'A198|A094|ExitClear|ExitObserver'` ok 73.952s · execgw `-run 'Cancel|RiskGuardian|Issue|Refusal|A165'` ok 55.266s · flatten ok 18.648s · journal `-run 'Prepare|Decision'` ok 44.821s · `-race -run A198` engine ok 103.442s · `make lint` rc 0 · `openspec validate --strict` valid · `check_analysis.py` 「evidence complete or diff-proven exempt」. 미실행: 전체 스위트 · `make gate` · `make sdd-sync`.
+- 기록만: A3(D8 늦은 매수 체결 → RECONCILE, 공시 잔여) · A5(정정 원주문의 실제 답 미측정) · A6(재분류 Detail 문구·사유 코드 차이) · A7(표시 맵 누수·lookup 표시 미해제) · A8(Guardian 경로 문서와의 어긋남 — D2 결정).

@@ -1673,7 +1673,7 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 		if err != nil {
 			o.warnEpisode(obs.EventExitLiquidationDelayed, err, "reading the engine cancel of order "+order.OrderID)
 			// 운영에서 warnEpisode 는 무기록이라(opts.Log nil) 원인을 운영 로그에도 남김 — 원문 오류는 싣지 않음(a198 r2).
-			o.noteClearCancelFailure(m, order, "", exitClearCancelLookupFailed)
+			o.noteClearCancelFailure(m, order, "", exitClearCancelLookupFailed, false)
 			res.cleared = false
 			continue
 		}
@@ -1690,7 +1690,7 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 		price, perr := workingOrderPrice(order.Price)
 		if qerr != nil || perr != nil {
 			// a198 D4a: 읽을 수 없는 주문도 치우지 못한 사실을 운영 로그에 한 번 남김(원문 오류는 싣지 않음).
-			o.noteClearCancelFailure(m, order, "", exitClearCancelOrderUnreadable)
+			o.noteClearCancelFailure(m, order, "", exitClearCancelOrderUnreadable, false)
 			res.cleared = false
 			continue
 		}
@@ -1707,7 +1707,7 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 					strings.ToUpper(strings.TrimSpace(order.Side)), order.OrderID, m.position.ID),
 			})
 		if err != nil {
-			o.noteClearCancelFailure(m, order, "", exitClearCancelDecisionFailed)
+			o.noteClearCancelFailure(m, order, "", exitClearCancelDecisionFailed, false)
 			res.cleared = false
 			continue
 		}
@@ -1723,7 +1723,7 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 			Decision: decision,
 		})
 		if err != nil || out.State != journal.StateConfirmed {
-			o.noteClearCancelFailure(m, order, out.State, string(out.Reason))
+			o.noteClearCancelFailure(m, order, out.State, string(out.Reason), out.AttemptID != "")
 			res.cleared = false
 			continue
 		}

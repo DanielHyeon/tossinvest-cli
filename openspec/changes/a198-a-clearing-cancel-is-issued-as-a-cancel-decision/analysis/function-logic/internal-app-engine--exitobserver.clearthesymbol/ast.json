@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "9a6b259947795bb075a760eb471a0220300fb58f5fd577e7fe2a4fc9c8aea727",
+  "source_sha256": "d090c3f70d6b647d164a0014a68b5bc7a4a2a9709ecda4a4d3c7f1136bdd5a16",
   "package": "engine",
   "function": "clearTheSymbol",
   "receiver": "ExitObserver",

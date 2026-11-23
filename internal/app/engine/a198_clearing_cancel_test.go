@@ -466,7 +466,7 @@ func TestA198ARefusedCancelIsLoggedOnceWithoutAccountQuantityPriceOrDetail(t *te
 	f.broker.refuseCancels(http.StatusInternalServerError)
 	f.breach()
 	lines = f.failureLines()
-	if len(lines) != 2 || lines[1]["to_state"] != string(journal.StateInDoubt) {
+	if len(lines) != 2 || lines[1]["to_state"] != string(journal.StateInDoubt) || lines[1]["event"] != string(obs.EventOrderInDoubt) {
 		t.Fatalf("failure lines = %v, want a second line once the outcome changed to IN_DOUBT", lines)
 	}
 	raw := f.sink.String()
@@ -496,7 +496,8 @@ func TestA198AnUnrecordableCancelDecisionIsLoggedOnce(t *testing.T) {
 		t.Fatalf("broker sells = %v, a stop went out over an uncleared buy", f.sells())
 	}
 	lines := f.failureLines()
-	if len(lines) != 1 || lines[0]["reason"] != "cancel_decision_failed" || lines[0]["to_state"] != "" {
+	if len(lines) != 1 || lines[0]["reason"] != "cancel_decision_failed" || lines[0]["to_state"] != "" ||
+		lines[0]["event"] != string(obs.EventOrderNotDispatched) {
 		t.Fatalf("failure lines = %v, want one cancel_decision_failed line with no state", lines)
 	}
 	t.Logf("failure lines (raw):\n%s", f.sink.String())
@@ -822,7 +823,8 @@ func TestA198AnUnreadableWorkingOrderIsLoggedOnce(t *testing.T) {
 				t.Fatalf("broker sells = %v over an unreadable working buy", f.sells())
 			}
 			lines := f.failureLines()
-			if len(lines) != 1 || lines[0]["order_id"] != "W-BUY-1" || lines[0]["reason"] != "working_order_unreadable" {
+			if len(lines) != 1 || lines[0]["order_id"] != "W-BUY-1" || lines[0]["reason"] != "working_order_unreadable" ||
+				lines[0]["event"] != string(obs.EventOrderNotDispatched) {
 				t.Fatalf("failure lines = %v, want one working_order_unreadable line for W-BUY-1", lines)
 			}
 		})

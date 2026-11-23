@@ -50,6 +50,12 @@ MUTANTS = [
      "		o.noteClearCancelConfirmed(m, order)\n", "", None),
     ("N9 해석 실패 줄 삭제", EXIT,
      "			o.noteClearCancelFailure(m, order, \"\", exitClearCancelOrderUnreadable)\n", "", None),
+    ("R13 조회 오류여도 치움 유지(r2)", EXIT,
+     "			o.noteClearCancelFailure(m, order, \"\", exitClearCancelLookupFailed)\n			res.cleared = false\n",
+     "			o.noteClearCancelFailure(m, order, \"\", exitClearCancelLookupFailed)\n", None),
+    ("R3 해석 실패 사유 값 바꾸기(r2)", EXIT,
+     "			o.noteClearCancelFailure(m, order, \"\", exitClearCancelOrderUnreadable)\n",
+     "			o.noteClearCancelFailure(m, order, \"\", exitClearCancelDecisionFailed)\n", None),
     ("N11 표시를 쓰기 앞에", LOG,
      "	// 쓰기 대상이 패닉해도 손절 루프는 계속 돎",
      "	if o.clearCancelLogged == nil {\n		o.clearCancelLogged = map[string]string{}\n	}\n	o.clearCancelLogged[key] = mark\n	// 쓰기 대상이 패닉해도 손절 루프는 계속 돎", None),
@@ -77,7 +83,10 @@ try:
     emit(step="control", rc=control.returncode, tail=control.stdout.strip().splitlines()[-2:])
     if control.returncode != 0:
         raise SystemExit("control is not GREEN — stop")
+    only = os.environ.get("A198_ONLY", "")
     for name, rel, old, new, marker in MUTANTS:
+        if only and not any(name.startswith(p) for p in only.split(",")):
+            continue
         path = os.path.join(copy, rel)
         src = open(path).read()
         if src.count(old) != 1:

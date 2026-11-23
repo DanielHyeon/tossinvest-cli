@@ -27,7 +27,8 @@ const exitClearCancelLookupFailed = "cancel_lookup_failed"
 
 // noteClearCancelFailure 는 취소 하나의 실패를 한 줄 씀. 같은 주문의 같은 결과(상태 · 사유)가 주기마다 반복되면 처음 한 번만 —
 // 관측 주기마다 같은 줄을 쓰는 것은 관측이 아님(a074). 결과가 바뀌면 다시 씀.
-func (o *ExitObserver) noteClearCancelFailure(m managed, order journal.LiveOrder, state journal.AttemptState, reason string) {
+// recorded 는 그 취소의 attempt 가 원장에 기록됐는지임 — 상태 없이 기록된 attempt(종결 쓰기 실패)는 나갔을 수 있음.
+func (o *ExitObserver) noteClearCancelFailure(m managed, order journal.LiveOrder, state journal.AttemptState, reason string, recorded bool) {
 	logger := o.opts.ExitOrderLog
 	if logger == nil {
 		return
@@ -39,12 +40,16 @@ func (o *ExitObserver) noteClearCancelFailure(m managed, order journal.LiveOrder
 		return
 	}
 
-	// 이벤트 이름은 submit 의 청산 주문 줄과 같은 기준(exitloop.go submit): 브로커 거부 · 결과 미상 · 그 밖(브로커 전 거절).
+	// 이벤트 이름은 submit 의 청산 주문 줄과 같은 기준(exitloop.go submit): 브로커 거부 · 미해소 · 나갔을 수 있는 기록된
+	// attempt(IN_DOUBT · ACKED · 전송 시작 · 상태 미상) · 그 밖(브로커 전 거절). 나갔을 수 있는 것을 「안 나감」으로 적지 않음(gstack review).
 	event := obs.EventOrderNotDispatched
-	switch state {
-	case journal.StateFailedConfirmed:
+	switch {
+	case state == journal.StateFailedConfirmed:
 		event = obs.EventOrderRejected
-	case journal.StateInDoubt:
+	case state == journal.StateUnresolvedInDoubt:
+		event = obs.EventOrderUnresolved
+	case state == journal.StateNotDispatched:
+	case state != "" || recorded:
 		event = obs.EventOrderInDoubt
 	}
 	// 쓰기 대상이 패닉해도 손절 루프는 계속 돎(writeExitOrder 와 같은 규율).

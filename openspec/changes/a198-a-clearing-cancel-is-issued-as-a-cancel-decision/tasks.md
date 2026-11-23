@@ -29,7 +29,7 @@
 
 - [x] 4.1 변이 원장(`analysis/mutation/`) — design §4 의 변이 전부, 닿음 확인·무변이 대조군 GREEN 뒤.
 - [x] 4.2 선택 시험 원문(design §4), `make lint`, `openspec validate --strict`, `check_analysis.py --change a198-…`. 미실행 범위 기록.
-- [ ] 4.3 구현 적대 리뷰(다른 컨텍스트) → gstack review 1회 — `review.md`. (r1 은 2026-11-24 실시 — P0-1 발견으로 4b 보강, 보강 뒤 재리뷰가 이 task 를 닫는다.)
+- [x] 4.3 구현 적대 리뷰(다른 컨텍스트) → gstack review 1회 — `review.md`. (r1 은 2026-11-24 실시 — P0-1 발견으로 4b 보강. r2(마지막) 2026-11-24 — 남은 회귀는 공시·사용자 결정 대기, gstack review 1회 `analysis/review/gstack-review-r1.md`.)
 
 ## 4b. 보강 — D7·D8·D4a (구현 리뷰 r1, Manager 결정 2026-11-24)
 
