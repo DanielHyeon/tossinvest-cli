@@ -1,0 +1,211 @@
+# codegraph 1.6.0 · worktree 884be2a740d5f794a3493c75bff3c9fbfc35509b · 2026-11-23T21:00:55Z
+
+CodeGraph Status
+
+Project: /home/daniel/tossos-work/a200-impl
+
+Index Statistics:
+  Files:     3,255
+  Nodes:     56,297
+  Edges:     207,790
+  DB Size:   203.98 MB
+  Backend:   node:sqlite — built-in (full WAL)
+  Journal:   wal
+
+## callers ProjectPosition
+
+Callers of "ProjectPosition" (2):
+
+function    TestTheProjectionAndTheFillAreOneCommit
+  internal/journal/position_projection_test.go:564
+
+function    TestTheProjectionCarriesThePreviousSnapshotForItsCostBasis
+  internal/journal/position_projection_test.go:595
+
+
+## callers enterReconcileInTx
+
+Callers of "enterReconcileInTx" (1):
+
+function    ProjectPosition
+  internal/journal/position_projection.go:65
+
+
+## callers enterReconcileScopeInTx
+
+Callers of "enterReconcileScopeInTx" (5):
+
+function    ApplyPositionCampaignFill
+  internal/journal/position_campaign.go:974
+
+function    latchAmbiguousCampaignFill
+  internal/journal/position_campaign.go:1247
+
+function    resolveFillOrigin
+  internal/journal/position_projection.go:133
+
+function    enterReconcileInTx
+  internal/journal/position_projection.go:370
+
+function    sweepOrphanedTerminals
+  internal/journal/reservation_release.go:535
+
+
+## callers ApplyExitFill
+
+Callers of "ApplyExitFill" (1):
+
+function    TestA130ARolledBackCloseReportsNothing
+  internal/journal/a130_adopted_outcome_test.go:429
+
+
+## callers freezeTradeOutcomeTx
+
+Callers of "freezeTradeOutcomeTx" (1):
+
+function    ApplyExitFill
+  internal/journal/apply_hook.go:971
+
+
+## callers computeTradeOutcome
+
+Callers of "computeTradeOutcome" (11):
+
+function    TestA130AGrownPositionPricesEachLotAtItsMinuteBar
+  internal/journal/a130_adopted_outcome_test.go:229
+
+function    TestA130AMissingOrWrongMinuteBarIsRefused
+  internal/journal/a130_adopted_outcome_test.go:254
+
+function    TestA130EachReachableRefusalSiteNamesItsOwnReason
+  internal/journal/a130_adopted_outcome_test.go:657
+
+function    TestA130ALaterInstanceFlattenIsNotThisTripsSell
+  internal/journal/a130_adopted_outcome_test.go:827
+
+function    TestA130AZeroCloseBarIsRefused
+  internal/journal/a130_adopted_outcome_test.go:885
+
+function    TestA130JournalCopyCensus
+  internal/journal/a130_journal_copy_census_test.go:30
+
+method      backfillPlannedOutcome
+  internal/journal/trade_outcome_backfill.go:150
+
+function    tradeOutcomeBackfillPlan
+  internal/journal/trade_outcome_backfill.go:230
+
+function    freezeTradeOutcomeTx
+  internal/journal/trade_outcomes.go:129
+
+method      BackfillTradeOutcome
+  internal/journal/trade_outcomes.go:889
+
+function    probeFreeze
+  internal/journal/a200_convergence_close_exit_fill_repro_test.go:187
+
+
+## callers adoptionEpoch
+
+Callers of "adoptionEpoch" (5):
+
+function    a130Prices
+  internal/journal/a130_adopted_outcome_test.go:195
+
+function    TestA130BarPricedRowsAreDerivableFromTheLedger
+  internal/journal/a130_trade_outcome_backfill_test.go:236
+
+function    intakeLotsForBackfill
+  internal/journal/trade_outcome_backfill.go:100
+
+function    tradeOutcomeBackfillPlan
+  internal/journal/trade_outcome_backfill.go:230
+
+function    adoptedRoundTripLegs
+  internal/journal/trade_outcomes.go:520
+
+
+## callers adoptedRoundTripLegs
+
+Callers of "adoptedRoundTripLegs" (1):
+
+function    computeTradeOutcome
+  internal/journal/trade_outcomes.go:169
+
+
+## callers roundTripLegs
+
+Callers of "roundTripLegs" (1):
+
+function    computeTradeOutcome
+  internal/journal/trade_outcomes.go:169
+
+
+## callers closeExitStateOnAdjustmentTx
+
+Callers of "closeExitStateOnAdjustmentTx" (1):
+
+method      ApplyPositionAdjustment
+  internal/journal/position_adjustments.go:202
+
+
+## callers currentInstance
+
+Callers of "currentInstance" (1):
+
+function    ProjectPosition
+  internal/journal/position_projection.go:65
+
+
+## callers exitContextForFill
+
+Callers of "exitContextForFill" (1):
+
+function    ApplyExitFill
+  internal/journal/apply_hook.go:971
+
+
+## callers markExitCompletedTx
+
+Callers of "markExitCompletedTx" (2):
+
+function    ApplyExitFill
+  internal/journal/apply_hook.go:971
+
+function    TestReadoptedGenerationFillAndCompletionEventsStayGenerationTwo
+  internal/journal/position_policy_test.go:264
+
+
+## callers appendExitEventFromHook
+
+Callers of "appendExitEventFromHook" (3):
+
+function    ApplyExitFill
+  internal/journal/apply_hook.go:971
+
+function    markExitCompletedTx
+  internal/journal/exit_state.go:963
+
+function    TestReadoptedGenerationFillAndCompletionEventsStayGenerationTwo
+  internal/journal/position_policy_test.go:264
+
+
+## callers runApplyHooks
+
+Callers of "runApplyHooks" (5):
+
+function    TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill
+  internal/journal/a066_owner_bind_delta_gap_test.go:17
+
+method      RecordFill
+  internal/journal/fills.go:313
+
+function    TestRiskBucketFillHookLatchesBindGapWithoutReturningError
+  internal/journal/risk_bucket_owner_test.go:277
+
+function    TestRunApplyHooksBindsRiskBucketOwnerAfterCampaignInSameTransaction
+  internal/journal/risk_bucket_owner_test.go:334
+
+method      backfillConfirmedStrategyFillTx
+  internal/journal/strategy_dispatch_runtime.go:1297
+

@@ -6,15 +6,15 @@
 
 - [ ] 1.1 change 디렉터리 등록: `.openspec.yaml` · proposal · design · tasks · spec delta(아래 1.9 뒤에 조립) · Story `STORY-TOS-a200.yaml` · `_registry.yaml` · tracker 재생성
 - [ ] 1.2 `analysis/base-commit.txt`(a198 착지 뒤의 origin/main 을 merge 한 다음 고정)
-- [ ] 1.3 사전 증거를 현재 HEAD 로 재확인해 `analysis/evidence-phase0.md` 로(scratch `a200-evidence/` — AST 재추출, 달라진 곳 표) + 운영 집계 요약(Manager 제공 — 건수·종류·날짜만)
-- [ ] 1.4 **재현**: 조정 tx 뒤 엔진 매도 체결(W4)을 실제 원장·실제 훅으로 만드는 시험을 쓰고 편집 전 코드에서 돌려 `ATTRIBUTION_FAILED` 행 1 · `COMPLETED` 0 · 성과 0 을 확인(원문 `analysis/repro/w4.txt`). W5·W6 은 실제 `Tracker` 로
-- [ ] 1.5 **범위 밖 재현 시도**(결과만 보고, 수리 안 함): W2·W3 의 수량 불일치 고착, 부분 조정 뒤 초과 체결 — 재현됨/안 됨/판정 불가와 그 근거(`analysis/repro/out-of-scope.md`)
-- [ ] 1.6 design 전제 확인(하나라도 거짓이면 멈춤): (a) `SELL_ON_CLOSED` 는 `resolveFillOrigin` 통과 뒤에만 생긴다 (b) `exit_events.action` 에 스키마 제약이 없다(DDL 인용) (c) Project 훅 시점에 `pending_intent_id` 가 살아 있다(부분·종결 체결 모두) (d) `pending_intent_id` 를 쓰는 경로 전수(exit 제출 · flatten · 운영자 매도 · 편입) (e) 조정 `kind` 값 전수와 수렴이 쓰는 값 (f) 체결이 「주문이 결속된 인스턴스」를 찾는 방법 — 재매수로 새 인스턴스가 생긴 뒤에도 옛 인스턴스를 가리키는가
-- [ ] 1.7 CodeGraph hard evidence(버전 기재): `ProjectPosition` · `enterReconcileInTx` · `ApplyExitFill` · 성과 동결 함수 · `closeExitStateOnAdjustmentTx` 의 호출자와 호출 **자리 수**
-- [ ] 1.8 편집 표면 · 고정 장치 표(`analysis/edit-surface.md`): 편집할 기존 함수(목표 둘), 구조 시험·census·허용 목록 적중, `exit_events.action` 을 열거하는 소비자(콘솔 · 분석 · 백필 모집단 · 편입 성과)와 새 action 이 그들에게 미치는 영향, 진행 중 change 와의 파일 겹침(a197 · a087 · a167 · a171)
+- [x] 1.3 사전 증거를 현재 HEAD 로 재확인해 `analysis/evidence-phase0.md` 로(scratch `a200-evidence/` — AST 재추출, 달라진 곳 표) + 운영 집계 요약(Manager 제공 — 건수·종류·날짜만)
+- [x] 1.4 **재현**: 조정 tx 뒤 엔진 매도 체결(W4)을 실제 원장·실제 훅으로 만드는 시험을 쓰고 편집 전 코드에서 돌려 `ATTRIBUTION_FAILED` 행 1 · `COMPLETED` 0 · 성과 0 을 확인(원문 `analysis/repro/w4.txt`). W5·W6 은 실제 `Tracker` 로
+- [x] 1.5 **범위 밖 재현 시도**(결과만 보고, 수리 안 함): W2·W3 의 수량 불일치 고착, 부분 조정 뒤 초과 체결 — 재현됨/안 됨/판정 불가와 그 근거(`analysis/repro/out-of-scope.md`)
+- [x] 1.6 design 전제 확인(하나라도 거짓이면 멈춤): (a) `SELL_ON_CLOSED` 는 `resolveFillOrigin` 통과 뒤에만 생긴다 (b) `exit_events.action` 에 스키마 제약이 없다(DDL 인용) (c) Project 훅 시점에 `pending_intent_id` 가 살아 있다(부분·종결 체결 모두) (d) `pending_intent_id` 를 쓰는 경로 전수(exit 제출 · flatten · 운영자 매도 · 편입) (e) 조정 `kind` 값 전수와 수렴이 쓰는 값 (f) 체결이 「주문이 결속된 인스턴스」를 찾는 방법 — 재매수로 새 인스턴스가 생긴 뒤에도 옛 인스턴스를 가리키는가
+- [x] 1.7 CodeGraph hard evidence(버전 기재): `ProjectPosition` · `enterReconcileInTx` · `ApplyExitFill` · 성과 동결 함수 · `closeExitStateOnAdjustmentTx` 의 호출자와 호출 **자리 수**
+- [x] 1.8 편집 표면 · 고정 장치 표(`analysis/edit-surface.md`): 편집할 기존 함수(목표 둘), 구조 시험·census·허용 목록 적중, `exit_events.action` 을 열거하는 소비자(콘솔 · 분석 · 백필 모집단 · 편입 성과)와 새 action 이 그들에게 미치는 영향, 진행 중 change 와의 파일 겹침(a197 · a087 · a167 · a171)
 - [ ] 1.9 정본 delta 조립: position-ledger ADDED(인정 규칙 — design D2 의 넷과 §2 의 경계), trade-analytics(인정된 청산의 성과 — D5), reconciliation 「귀속 실패 …」 에 Scenario(인정된 체결은 차단을 만들지 않는다 · 조건이 어긋난 체결은 지금처럼 차단). 기존 Requirement·Scenario 가 새 규칙과 모순되면 그 Requirement 를 MODIFIED(생성 스크립트 + 역치환 단언). ADDED 본문 500자 이하. `openspec validate --strict` valid
 - [ ] 1.10 편집할 기존 함수마다 FLM/BTM pre-edit 번들
-- [ ] 1.11 claim check(`analysis/claim-check.md`)
+- [x] 1.11 claim check(`analysis/claim-check.md`)
 - [ ] 1.12 제안 동결 적대 리뷰(codex, 최대 2회차) → `review.md`
 - [ ] 1.13 Manager 결정 · freeze
 
