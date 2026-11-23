@@ -1,2 +1,4 @@
 Change 'a199-a-stale-capability-proof-blocks-entry-not-exit' is valid
+validate rc=0
 [pm] hierarchy and generated trackers are current
+tracker rc=0

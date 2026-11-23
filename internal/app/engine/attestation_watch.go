@@ -4,15 +4,16 @@ package engine
 //
 // # 왜 필요한가
 //
-// 게이트가 켜진 엔진은 기동할 때만 attestation 을 읽음(verifyGate 4~6). 만료되었거나 필요한 endpoint 를 잃은 파일로
-// 재시작하면 기동이 거절되고, 그때는 청산 관측 루프도 돌지 않음 — 보호 주문이 UNWIRED 인 지금 손절이 없어짐.
+// 게이트가 켜진 엔진은 기동할 때만 attestation 을 읽음(verifyGate 4~6). a199 이후 만료되었거나 필요한 endpoint 를 잃은
+// 파일로 재시작하면 새 진입이 막힌 청산 전용으로 뜨고(손절 · 청산 · 대사는 돎), 그 밖의 결함(없음 · 깨짐 · 불완전 · 다른 계좌)
+// 이면 기동이 거절되어 청산 관측 루프도 돌지 않음 — 보호 주문이 UNWIRED 인 지금 손절이 없어짐.
 // engine-safety 「등급화된 알림」은 「자격증명 만료 임박」을 critical 로 정했지만 그 알림을 내는 곳이 없었음.
 //
 // # 판정은 인터록의 것을 그대로 씀
 //
-// 「지금 재시작하면 무장하는가」는 attest.Attestation.Verify + RequiredEndpoints() + 엔진 자격 증명의 계좌로 묻는 인터록의
-// 술어 그대로임. 여기서 규칙을 다시 쓰면 두 판정이 갈릴 수 있으므로 사본을 두지 않음. 이 파일이 더하는 것은 「통과했다면
-// 며칠 남았나」 하나뿐임.
+// 「지금 재시작하면 무엇으로 뜨는가(정상 · 청산 전용 · 거절)」는 인터록과 같은 classifyAttestation(Verify + RequiredEndpoints()
+// + 엔진 자격 증명의 계좌, 낡음의 닫힌 집합)으로 물음. 여기서 규칙을 다시 쓰면 두 판정이 갈릴 수 있으므로 사본을 두지 않음.
+// 이 파일이 더하는 것은 「통과했다면 며칠 남았나」와, 청산 전용으로 뜬 엔진의 덧붙임 문장 · 회복 안내(a199)뿐임.
 //
 // # 엔진을 해치지 않는 구조
 //
@@ -48,7 +49,7 @@ const (
 type attestationStage string
 
 const (
-	stageHealthy         attestationStage = "healthy"          // D-8 이상 — 알릴 것 없음
+	stageHealthy         attestationStage = "healthy"          // D-8 이상 — 알릴 것 없음(a199: 청산 전용으로 뜬 엔진이면 회복 안내 하루 한 번, normal)
 	stageNotice          attestationStage = "notice"           // D-7 ~ D-3 — normal
 	stageImminent        attestationStage = "imminent"         // D-2 ~ D-1 — critical
 	stageExpired         attestationStage = "expired"          // 만료 — critical

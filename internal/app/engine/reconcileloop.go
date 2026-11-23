@@ -64,11 +64,11 @@ package engine
 //
 // # The execution predicate
 //
-// `AutomationStatus.Verified`. The loop writes adjustments and, with adoption on,
-// opens protection states that place sell orders without a human present — which
-// is what the automation gate is the master switch for. Interlock clause 6 makes
-// a verified gate unreachable in this build, so in production this refuses to be
-// constructed until 2c. That is the design, not a gap.
+// `AutomationStatus.RunsExitSide()` — 검증된 기동이거나 청산 전용 기동(a199, 낡은 attestation)이면 참.
+// The loop writes adjustments and, with adoption on, opens protection states that
+// place sell orders without a human present — which is what the automation gate is
+// the master switch for. 청산 전용 기동도 대사 · 편입(보호 매도)을 돌림 — 청산 쪽이기 때문임(a199).
+// 게이트 OFF 이거나 기동이 거절되면 이 driver 는 만들어지지 않음.
 
 import (
 	"context"

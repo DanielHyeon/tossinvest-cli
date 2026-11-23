@@ -162,4 +162,27 @@ delta 재생성(`analysis/modified-delta/run.txt`): A 5 편집 각 1회 적중(A
 9. 콘솔 문구(`templates.go:846` · `templates.go:853` · `settings_tabs.go:361`)는 바꾸지 않음 — Story limits 에 자리 기록.
 10. **미실행 범위:** filldetect 를 포함한 전체 조립 런타임(체결 감지 루프까지 띄운 청산 전용 엔진), a198 의 정리 CANCEL e2e(취소가 래치를 통과함은 게이트웨이 단위 시험으로만), IN_DOUBT 해소 경로의 청산 전용 결합 — 셋 다 이 change 에서 돌리지 않음.
 
-추가 변이(`run-r1.txt`, 시작 sha `723554957`): M21 · M22 · M23 · M25 CAUGHT, M24(래치 삭제를 전략 dispatch 시험만으로) SURVIVED — 그 시험은 자기 래치를 직접 세우므로 예상된 결과(「기동이 래치를 세운다」는 M25 가 잼), M26 대조 SURVIVED(예상).
+추가 변이 원장(`run-r1.txt`, 시작 sha `723554957`): M21 · M22 · M23 · M25 CAUGHT, M24(래치 삭제를 전략 dispatch 시험만으로) SURVIVED — 그 시험은 자기 래치를 직접 세우므로 예상된 결과(「기동이 래치를 세운다」는 M25 가 잼), M26 대조 SURVIVED(예상).
+
+## gstack review (1회, 대상 `603046a23..6c30b91b3`, 2026-11-24)
+
+원문 `analysis/review/gstack/`(diff-code.patch · codex-adversarial.md · state-machines.md). 패스: 핵심 checklist · 전문가 6(testing · maintainability · security · performance · simplification · state-machines) · red-team · Claude 적대 · codex 외부(read-only, stdin 은 프롬프트 파일). security · performance · simplification 은 NO FINDINGS. smoke: **못 돌림** — 실행 표면이 `tossctl engine run`(실계좌 · tossctl 금지 지시)이라, 대신 가짜 브로커 런타임 연결 시험 3종 · 기동 출력 시험을 선택 시험으로 돌림. `gstack-state-matrix check` 는 incomplete(이 기계는 그 도구의 kind×owner 형식이 아님) — 세 표를 코드 근거로 대신 작성(state-machines.md). codex structured 패스는 1회 상한으로 안 돌림(adversarial 1회만).
+
+분류: 런타임 오류(blocker) / 수정 권장(Manager 결정) / 기록 / 반영.
+
+| # | 출처 | 발견 | 분류 | 처분 |
+|---|---|---|---|---|
+| G1 | codex(Medium, Blocks:yes) + Claude 적대(Low) | Verify 통과 파일의 형식 0 · 공백 endpoint 항목은 기한 전 통지가 「청산 전용으로 뜬다」고 예측하지만 만료 뒤 같은 가드로 거절 — 손으로 고친 파일만 | 수정 권장(런타임 오류 아님) | 코드 편집 필요 → **Manager 결정 대기**. design §4 공시 |
+| G2 | red-team | 감독 검증을 한 번도 안 한 GET 만의 파일도 범위 상실로 청산 전용 — 실측 안 된 POST 로 매도 · 취소. D1 근거 「한때 증명됐다」는 검사 불가 | 수정 권장(정책) | **Manager 결정 대기**(지속 표지 = 새 가드). 주석 정정(exit_only_start.go) · design §4 공시 |
+| G3 | Claude 적대 | 래치를 세우는 `facts.entry` 와 게이트웨이가 읽는 게이트가 같은 포인터인지 단언 없음(지금은 같음) | 기록 | 새 가드 → Manager 판단 |
+| G4 | Claude 적대 | 앞 실행이 남긴 미체결 매수는 청산 전용 중에도 체결 가능(퇴보 아님) | 기록 | design §4 공시 |
+| G5 | Claude 적대 | exit_only_start.go 주석 「한때 온전히 증명됐다」 과장 | 반영 | 주석 정정 |
+| G6 | Claude 적대 | soak 출력 「a gate-on engine starts verified」 는 계좌 · 전체 endpoint 를 안 보고 말함 | 기록 | 생산 문자열 → Manager 판단 |
+| G7 | Claude 적대 | 긴 청산 전용 동안 critical 알림이 하루 하나씩 — 전달 실패 시 alert_undelivered 차단이 재기동 뒤 남음 | 기록 | design §4 공시 |
+| G8 | maintainability | 낡은 주석(reconcileloop.go 실행 술어 · attestation_watch.go 머리 · stageHealthy) · 상수 이름 `afterRefusal` | 반영(주석) / 기록(식별자) | 주석 정정, 이름은 남김 |
+| G9 | maintainability + state-machines | nil 진입 게이트 거절 갈래가 ExitOnly=true 로 로그 → 거절 줄에 보호 수명 문장(생산 도달 불가) | 기록 | 코드 편집 → Manager 판단 |
+| G10 | testing | 감독 증거 통지 · proof_overdue 의 청산 전용 문구 무시험 | 반영 | 표에 두 행(`TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence`) |
+| G11 | testing | `soak attest` 출력 두 문장 무시험, soak_test.go:460 주석 낡음 | 반영 / 기록 | 새 파일 `cmd/tossctl/a199_soak_attest_output_test.go`(시험 2). 기존 시험 함수의 주석은 본문 편집이라 FLM 번들이 필요해 남김 |
+
+게이트 스캔: `listed=21 eligible=11 inspected=11 unread=0`, 표지 RH-3? 2(shapes.json 의 NewContext 키 — `analysis/census-repair/shapes-key-diff.txt` changed 1 · unchanged 89, Manager 결정 11 — verified), 뒤집힌 a196 시험(design §3-6 계획분). 둘 다 Manager 처분 열림.
+런타임 오류 blocker 0. 반영 뒤 선택 시험(`analysis/verify/post-gstack-*.txt`) · make lint rc 0.

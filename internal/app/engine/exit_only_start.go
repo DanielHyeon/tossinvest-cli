@@ -77,7 +77,9 @@ func classifyAttestation(att attest.Attestation, now time.Time, accountRef strin
 		// 불완전 · 계좌 불일치 등 낡음 밖의 결함 — 지금처럼 거절.
 		return nil, verr
 	}
-	// 낡음으로 내려가려면 「이 계좌에서 한때 온전히 증명됐다」가 성립해야 함. 아래 셋 중 하나라도 아니면 그 근거가 없으므로 거절.
+	// 아래 셋은 「파일이 온전하고 이 계좌의 것」을 거르는 것뿐임 — 「이 계좌에서 한때 주문 실행(POST)까지 증명됐다」는 파일에
+	// 남지 않아 여기서 검사하지 못함(감독 증거가 한 번도 없던 GET 만의 파일도 범위 상실로 청산 전용이 됨 — gstack review 공시).
+	// 셋 중 하나라도 아니면 거절.
 	if att.FormatVersion < 1 || att.FormatVersion > attest.FormatVersion {
 		return nil, fmt.Errorf("%w: format_version %d is not a version this build accepts, so a stale attestation "+
 			"cannot stand as the proof an exit-only start rests on (%v)", attest.ErrMalformed, att.FormatVersion, verr)

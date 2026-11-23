@@ -60,6 +60,9 @@ func TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence(t *testing.T) {
 	cases := map[string]attest.Attestation{
 		"notice (expiry)":   a135Attestation(5 * 24 * time.Hour),
 		"imminent (expiry)": a135Attestation(36 * time.Hour),
+		// gstack review(testing): 감독 증거 기한의 통지 · 지남 단계도 같은 귀결을 말해야 함(attestation_watch.go 의 proof 갈래).
+		"notice (proof)": a196ProofDue(a135Now, 5*a196Day),
+		"proof_overdue":  a196ProofDue(a135Now, -time.Hour),
 	}
 	for name, att := range cases {
 		t.Run(name, func(t *testing.T) {
