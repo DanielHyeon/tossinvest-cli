@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"slices"
-	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -32,7 +31,7 @@ func TestMaximumAttributionGenerationIntegrityScanMeetsP95Target(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	durations := make([]time.Duration, 7)
+	durations := make([]time.Duration, p95Samples)
 	for index := range durations {
 		started := time.Now()
 		got, err := store.AttributionRows(context.Background(), "acct-maximum", AttributionQuery{
@@ -43,8 +42,9 @@ func TestMaximumAttributionGenerationIntegrityScanMeetsP95Target(t *testing.T) {
 		}
 		durations[index] = time.Since(started)
 	}
-	sort.Slice(durations, func(i, j int) bool { return durations[i] < durations[j] })
-	p95 := durations[(len(durations)*95+99)/100-1]
+	// 헬퍼가 제자리 정렬하므로 측정 순서 사본을 먼저 남김 — 2초 초과값이 첫 회차(워밍업)인지 무작위인지 가르기 위함
+	t.Logf("10k-row attribution integrity scan chronological runs=%v", slices.Clone(durations))
+	p95 := nearestRankP95(durations)
 	t.Logf("10k-row attribution integrity scan p95=%s runs=%v", p95, durations)
 	if p95 > 2*time.Second {
 		t.Fatalf("10k-row attribution integrity scan p95=%s target<=2s runs=%v", p95, durations)
