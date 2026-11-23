@@ -53,6 +53,27 @@ MUTANTS = [
      "\t\t\t_ = reconcileResolveRefusedCause(blocks)\n\t\t\treturn nil\n"),
 ]
 
+RECONCILE = "internal/reconcile/mismatch.go"
+OBSERVE_GUARD = ("for _, block := range t.blocks {\n\t\t\tif block.Cause != journal.ReconcileCauseQuantityMismatch ||\n"
+                 "\t\t\t\tblock.Release != ReleaseOnAdjustedReconcile {\n")
+MUTANTS2 = [
+    ("M7 Observe 원인 거름 완화 — AF 도 자동 해제 후보(원인·해제 조건 둘 다)", RECONCILE, OBSERVE_GUARD,
+     OBSERVE_GUARD.replace("if block.Cause != journal.ReconcileCauseQuantityMismatch ||\n\t\t\t\tblock.Release != ReleaseOnAdjustedReconcile {",
+                           "if (block.Cause != journal.ReconcileCauseQuantityMismatch ||\n\t\t\t\tblock.Release != ReleaseOnAdjustedReconcile) && block.Cause != journal.ReconcileCauseAttributionFailed {")),
+    ("M7b Observe 원인 거름만 완화(해제 조건 Release 검사는 남김)", RECONCILE, OBSERVE_GUARD,
+     OBSERVE_GUARD.replace("if block.Cause != journal.ReconcileCauseQuantityMismatch ||",
+                           "if block.Cause != journal.ReconcileCauseQuantityMismatch && block.Cause != journal.ReconcileCauseAttributionFailed ||")),
+    ("M8 원인을 보지 않고 종목 범위면 통과(R11)", CAUSES,
+     "case block.Cause == journal.ReconcileCauseAttributionFailed &&",
+     "case true &&"),
+    ("M9 빈 원인을 수량 불일치로 취급(R9)", CAUSES,
+     "case block.Cause == journal.ReconcileCauseQuantityMismatch:",
+     "case block.Cause == journal.ReconcileCauseQuantityMismatch || block.Cause == \"\":"),
+]
+if os.environ.get("A195_MUT_SET") == "2":
+    MUTANTS = MUTANTS2
+    SUITES.append(["go", "test", "./internal/reconcile", "-run", "Resolve|Restore|Observe", "-count=1"])
+
 lines = [f"# a195 변이 원장 — 시작 sha {expected}(단언 통과), 사본 {copy}, GOFLAGS='-trimpath -buildvcs=false'",
          "# 스위트: " + " ; ".join(" ".join(c) for c in SUITES)]
 control = run_suites()
@@ -60,7 +81,7 @@ lines.append("## 무변이 대조군: " + ", ".join(f"{name} rc={rc}" for name, 
 if any(rc != 0 for _, rc, _, _ in control):
     lines.append("대조군 GREEN 아님 — 중단")
     for *_, out in control: lines.append(out)
-    open(ledger, "w").write("\n".join(lines) + "\n"); sys.exit(1)
+    open(ledger, "a" if os.environ.get("A195_MUT_SET") == "2" else "w").write("\n".join(lines) + "\n"); sys.exit(1)
 
 for name, rel, old, new in MUTANTS:
     path = os.path.join(copy, rel)
@@ -86,6 +107,6 @@ for name, rel, old, new in MUTANTS:
 
 final = run_suites()
 lines.append("## 원복 뒤 대조군: " + ", ".join(f"{n} rc={rc}" for n, rc, _, _ in final))
-open(ledger, "w").write("\n".join(lines) + "\n")
+open(ledger, "a" if os.environ.get("A195_MUT_SET") == "2" else "w").write("\n".join(lines) + "\n")
 shutil.rmtree(copy)
 print("\n".join(lines))
