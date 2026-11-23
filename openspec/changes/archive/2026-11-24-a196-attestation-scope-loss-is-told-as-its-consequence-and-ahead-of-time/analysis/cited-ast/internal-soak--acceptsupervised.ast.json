@@ -1,0 +1,277 @@
+{
+  "file": "internal/soak/attest.go",
+  "source_sha256": "d693c9dbd9583789b6372aa63a126e7e4817df874c74ff76c597633eb60d29d5",
+  "package": "soak",
+  "function": "acceptSupervised",
+  "signature": "acceptSupervised(params=4, results=2)",
+  "start": {
+    "line": 301,
+    "column": 1
+  },
+  "end": {
+    "line": 343,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 305,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 311,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 313,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 317,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 324,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 332,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 335,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 318,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 325,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 342,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 305,
+        "column": 20
+      },
+      "text": "LiveOnlyEndpoints"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 306,
+        "column": 11
+      },
+      "text": "normaliseEndpoint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 312,
+        "column": 15
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 312,
+        "column": 28
+      },
+      "text": "strings.Fields"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 312,
+        "column": 43
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 316,
+        "column": 10
+      },
+      "text": "normaliseEndpoint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 318,
+        "column": 16
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 15
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 28
+      },
+      "text": "LiveOnlyEndpoints"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 7
+      },
+      "text": "attest.SameAccountMasked"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 16
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 329,
+        "column": 29
+      },
+      "text": "attest.Mask"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 10
+      },
+      "text": "now.Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 340,
+        "column": 14
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 304,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 306,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 310,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 312,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 316,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 331,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 338,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 339,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 340,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

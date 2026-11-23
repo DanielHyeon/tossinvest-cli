@@ -1,0 +1,32 @@
+# a196 mutation run — repo HEAD 527c419ba32b27570d77baac9607578a0464b091, copy /home/daniel/tossos-work/a196-mut-709846, 2026-11-23T13:43:35Z
+start sha256 internal/app/engine/attestation_watch.go 587249217d6328264ddd0ce53b3614496265a12c223003f3e20d17dd6bc89272
+start sha256 internal/soak/attest.go d693c9dbd9583789b6372aa63a126e7e4817df874c74ff76c597633eb60d29d5
+start sha256 internal/attest/attest.go d90c812d31fae77f3baa2e8a2db61d3e18a67f02f675cb1e4548e10847e72b23
+CONTROL engine rc=0 soak rc=0
+M01 CAUGHT engine_rc=1 soak_rc=0 — ① 기한을 만료로만 계산
+    killed by: TestA135SameStageOnANewAttestationIsAnnouncedAgain, TestA135StageBoundaries, TestA196DeadlineBoundaries, TestA196NewAlertsCarryNoAccount, TestA196NewSupervisedProofRestartsTheCount, TestA196NotificationsOffDowngradesOverdue, TestA196OverdueIsCriticalOncePerDay, TestA196ProofDeadlineGovernsTheDayCount, TestA196SameProofReissueIsNotAnnouncedAgain
+M02 CAUGHT engine_rc=1 soak_rc=0 — ② min 을 max 로
+    killed by: TestA135SameStageOnANewAttestationIsAnnouncedAgain, TestA135StageBoundaries, TestA196DeadlineBoundaries, TestA196NewAlertsCarryNoAccount, TestA196NewSupervisedProofRestartsTheCount, TestA196NotificationsOffDowngradesOverdue, TestA196OverdueIsCriticalOncePerDay, TestA196ProofDeadlineGovernsTheDayCount, TestA196SameProofReissueIsNotAnnouncedAgain
+M03 CAUGHT engine_rc=1 soak_rc=0 — ③ 날수 신원에 발급 시각 되돌리기
+    killed by: TestA135SameStageOnANewAttestationIsAnnouncedAgain, TestA196OverdueIsCriticalOncePerDay, TestA196SameProofReissueIsNotAnnouncedAgain, TestA196ScopeLossOncePerDayAcrossReissues
+M04 CAUGHT engine_rc=1 soak_rc=0 — ④ 거절 key(outbox)에 발급 신원 되돌리기
+    killed by: TestA196RestartedWatchReusesTheRejectionKey
+M05 CAUGHT engine_rc=1 soak_rc=0 — ⑤ 누락 집합을 key 에서 빼기
+    killed by: TestA196RestartedWatchReusesTheRejectionKey, TestA196ScopeLossOncePerDayAcrossReissues
+M06 CAUGHT engine_rc=1 soak_rc=0 — ⑥ D-2 경계 한 칸 밀기
+    killed by: TestA135RenewalResetsAndScopeLossIsImmediate, TestA135StageBoundaries, TestA135WatchAnnouncesEachStageOnce, TestA196DeadlineBoundaries
+M07 CAUGHT engine_rc=0 soak_rc=1 — ⑦ 수용 경계 >= → >(soak)
+    killed by: TestA196SupervisedEvidenceLeavesExactlyAtTheDeadline, TestA196TheFileDeadlineIsWhenTheIssuerStopsCarryingTheProof
+M08a CAUGHT engine_rc=1 soak_rc=0 — ⑧ 기한을 가장 늦은 증거로(binding 최소 → 최대)
+    killed by: TestA135SupervisedProofAtIsTheBindingProof, TestA196DeadlineBoundaries, TestA196NewAlertsCarryNoAccount, TestA196OverdueIsCriticalOncePerDay, TestA196ProofDeadlineGovernsTheDayCount, TestA196SameProofReissueIsNotAnnouncedAgain
+M08b CAUGHT engine_rc=1 soak_rc=0 — ⑧ binding 우회 — 목록 첫 증거로 기한 계산
+    killed by: TestA196DeadlineBoundaries, TestA196NewAlertsCarryNoAccount, TestA196OverdueIsCriticalOncePerDay, TestA196ProofDeadlineGovernsTheDayCount, TestA196SameProofReissueIsNotAnnouncedAgain
+M09 CAUGHT engine_rc=1 soak_rc=0 — ⑨ 0 이하 잔여를 imminent 로 접기
+    killed by: TestA135StageBoundaries, TestA196DeadlineBoundaries, TestA196OverdueIsCriticalOncePerDay
+M10 CAUGHT engine_rc=1 soak_rc=0 — ⑩ KST 날짜를 UTC 로
+    killed by: TestA196RejectionDayIsTheKSTDate
+M11 CAUGHT engine_rc=1 soak_rc=0 — ⑪ 거절 단계 key 에서 KST 날짜 삭제
+    killed by: TestA135InvalidStatesAreRemindedDaily, TestA196RejectionDayIsTheKSTDate
+M12 SURVIVED engine_rc=0 soak_rc=0 — ⑫ 누락 집합 정렬 삭제(MissingEndpoints)
+    killed by: -
+final: copy files equal repo files (sha256)

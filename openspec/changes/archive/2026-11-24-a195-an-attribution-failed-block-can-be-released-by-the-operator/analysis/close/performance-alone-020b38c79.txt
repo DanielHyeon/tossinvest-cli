@@ -1,0 +1,7 @@
+=== RUN   TestMaximumAttributionGenerationIntegrityScanMeetsP95Target
+    attribution_persistence_test.go:46: 10k-row attribution integrity scan chronological runs=[741.935525ms 747.04546ms 788.771196ms 771.833057ms 770.967924ms 726.562023ms 701.106625ms 737.549149ms 705.783315ms 726.081968ms 660.377741ms 665.807775ms 666.228502ms 672.821338ms 769.677464ms 698.268016ms 942.998431ms 758.502888ms 781.540388ms 701.286686ms]
+    attribution_persistence_test.go:48: 10k-row attribution integrity scan p95=788.771196ms runs=[660.377741ms 665.807775ms 666.228502ms 672.821338ms 698.268016ms 701.106625ms 701.286686ms 705.783315ms 726.081968ms 726.562023ms 737.549149ms 741.935525ms 747.04546ms 758.502888ms 769.677464ms 770.967924ms 771.833057ms 781.540388ms 788.771196ms 942.998431ms]
+--- PASS: TestMaximumAttributionGenerationIntegrityScanMeetsP95Target (16.44s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/performance	16.447s
+rc=0

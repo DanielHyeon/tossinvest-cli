@@ -1,0 +1,241 @@
+# GREEN (a195 3.2/3.2b) — 작업 트리(HEAD 4441d8935 + 편집)
+# rtk proxy go test ./cmd/tossctl -run 'TestA166EngineReconcile|TestEngineReconcileResolve|A195' -count=1 -v
+=== RUN   TestA166EngineReconcileOptionsGuard
+--- PASS: TestA166EngineReconcileOptionsGuard (0.00s)
+=== RUN   TestA166EngineReconcileLocalTLS
+--- PASS: TestA166EngineReconcileLocalTLS (0.65s)
+=== RUN   TestA195RefusedCauseTable
+=== RUN   TestA195RefusedCauseTable/quantity_mismatch_only
+=== RUN   TestA195RefusedCauseTable/symbol_attribution_failure_only
+=== RUN   TestA195RefusedCauseTable/mismatch_then_attribution
+=== RUN   TestA195RefusedCauseTable/attribution_then_mismatch
+=== RUN   TestA195RefusedCauseTable/identifier_conflict_only
+=== RUN   TestA195RefusedCauseTable/attribution_then_identifier_conflict
+=== RUN   TestA195RefusedCauseTable/identifier_conflict_then_attribution
+=== RUN   TestA195RefusedCauseTable/account-wide_attribution_failure
+=== RUN   TestA195RefusedCauseTable/empty_list_is_left_to_the_caller
+--- PASS: TestA195RefusedCauseTable (0.00s)
+    --- PASS: TestA195RefusedCauseTable/quantity_mismatch_only (0.00s)
+    --- PASS: TestA195RefusedCauseTable/symbol_attribution_failure_only (0.00s)
+    --- PASS: TestA195RefusedCauseTable/mismatch_then_attribution (0.00s)
+    --- PASS: TestA195RefusedCauseTable/attribution_then_mismatch (0.00s)
+    --- PASS: TestA195RefusedCauseTable/identifier_conflict_only (0.00s)
+    --- PASS: TestA195RefusedCauseTable/attribution_then_identifier_conflict (0.00s)
+    --- PASS: TestA195RefusedCauseTable/identifier_conflict_then_attribution (0.00s)
+    --- PASS: TestA195RefusedCauseTable/account-wide_attribution_failure (0.00s)
+    --- PASS: TestA195RefusedCauseTable/empty_list_is_left_to_the_caller (0.00s)
+=== RUN   TestA195OperatorReleasesASymbolAttributionFailure
+--- PASS: TestA195OperatorReleasesASymbolAttributionFailure (0.27s)
+=== RUN   TestA195BlockingDiffStillRefusesAnAttributionFailure
+--- PASS: TestA195BlockingDiffStillRefusesAnAttributionFailure (0.26s)
+=== RUN   TestA195MismatchAndAttributionReleaseTogether
+--- PASS: TestA195MismatchAndAttributionReleaseTogether (0.29s)
+=== RUN   TestA195IdentifierConflictKeepsEveryRowBlocked
+--- PASS: TestA195IdentifierConflictKeepsEveryRowBlocked (0.28s)
+=== RUN   TestA195AccountWideAttributionFailureIsRefused
+--- PASS: TestA195AccountWideAttributionFailureIsRefused (0.27s)
+=== RUN   TestA195ExternalHoldingDoesNotRefuseTheRelease
+--- PASS: TestA195ExternalHoldingDoesNotRefuseTheRelease (0.28s)
+=== RUN   TestA195NoActiveBlockIsRefused
+--- PASS: TestA195NoActiveBlockIsRefused (0.24s)
+=== RUN   TestA195ObserveNeverReleasesAnAttributionFailure
+--- PASS: TestA195ObserveNeverReleasesAnAttributionFailure (0.21s)
+=== RUN   TestA195HelpAndSuccessOutputAreCauseNeutral
+--- PASS: TestA195HelpAndSuccessOutputAreCauseNeutral (0.27s)
+=== RUN   TestEngineReconcileResolveIsRegisteredAsOfficialReadOnly
+--- PASS: TestEngineReconcileResolveIsRegisteredAsOfficialReadOnly (0.00s)
+=== RUN   TestEngineReconcileResolveProductionWiringHasNoBrokerMutationOrHTTPDoor
+--- PASS: TestEngineReconcileResolveProductionWiringHasNoBrokerMutationOrHTTPDoor (0.00s)
+=== RUN   TestEngineReconcileResolveRequiresExplicitConfirmationIdentityAndNote
+=== RUN   TestEngineReconcileResolveRequiresExplicitConfirmationIdentityAndNote/confirmation
+=== RUN   TestEngineReconcileResolveRequiresExplicitConfirmationIdentityAndNote/operator
+=== RUN   TestEngineReconcileResolveRequiresExplicitConfirmationIdentityAndNote/note
+--- PASS: TestEngineReconcileResolveRequiresExplicitConfirmationIdentityAndNote (0.00s)
+    --- PASS: TestEngineReconcileResolveRequiresExplicitConfirmationIdentityAndNote/confirmation (0.00s)
+    --- PASS: TestEngineReconcileResolveRequiresExplicitConfirmationIdentityAndNote/operator (0.00s)
+    --- PASS: TestEngineReconcileResolveRequiresExplicitConfirmationIdentityAndNote/note (0.00s)
+=== RUN   TestEngineReconcileResolveAcquiresTheEngineLockBeforeAssembly
+--- PASS: TestEngineReconcileResolveAcquiresTheEngineLockBeforeAssembly (0.00s)
+=== RUN   TestEngineReconcileResolveRefusesUnstableSnapshots
+--- PASS: TestEngineReconcileResolveRefusesUnstableSnapshots (0.00s)
+=== RUN   TestEngineReconcileResolveRefusesABlockingCorrectedComparison
+--- PASS: TestEngineReconcileResolveRefusesABlockingCorrectedComparison (0.00s)
+=== RUN   TestEngineReconcileResolveRefusesAFinalSnapshotThatChanged
+--- PASS: TestEngineReconcileResolveRefusesAFinalSnapshotThatChanged (0.00s)
+=== RUN   TestEngineReconcileResolveRefusesNonQuantityCauses
+--- PASS: TestEngineReconcileResolveRefusesNonQuantityCauses (0.00s)
+=== RUN   TestEngineReconcileResolveRecordsDurableReleaseBeforeSuccess
+--- PASS: TestEngineReconcileResolveRecordsDurableReleaseBeforeSuccess (0.00s)
+=== RUN   TestEngineReconcileResolveDoesNotReportSuccessWhenPersistenceFails
+--- PASS: TestEngineReconcileResolveDoesNotReportSuccessWhenPersistenceFails (0.00s)
+=== RUN   TestEngineReconcileResolveIntegratesCorrectedJournalStateAndAtomicRelease
+--- PASS: TestEngineReconcileResolveIntegratesCorrectedJournalStateAndAtomicRelease (0.26s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	3.297s
+rc=0
+# rtk proxy go test ./internal/accountbudgetruntime -count=1 -v
+=== RUN   TestA166ConsumerTwoFactoriesPriceLimits
+--- PASS: TestA166ConsumerTwoFactoriesPriceLimits (1.54s)
+=== RUN   TestA166ConsumerPriceLimits401EachWire
+--- PASS: TestA166ConsumerPriceLimits401EachWire (1.55s)
+=== RUN   TestA166ConsumerPriceLimitsBodyOwnership
+=== RUN   TestA166ConsumerPriceLimitsBodyOwnership/eof
+=== RUN   TestA166ConsumerPriceLimitsBodyOwnership/cancel
+--- PASS: TestA166ConsumerPriceLimitsBodyOwnership (2.53s)
+    --- PASS: TestA166ConsumerPriceLimitsBodyOwnership/eof (1.26s)
+    --- PASS: TestA166ConsumerPriceLimitsBodyOwnership/cancel (1.27s)
+=== RUN   TestA166ConsumerTokenSentThenAuxGETRefused
+--- PASS: TestA166ConsumerTokenSentThenAuxGETRefused (0.80s)
+=== RUN   TestA166ConsumerFinishFaultPreservesHTTP429
+--- PASS: TestA166ConsumerFinishFaultPreservesHTTP429 (0.79s)
+=== RUN   TestA166ConsumerToken429CrossFactorySnapshot
+--- PASS: TestA166ConsumerToken429CrossFactorySnapshot (0.41s)
+=== RUN   TestA166ConsumerPriceLimitsTwo401AdoptAndMint
+--- PASS: TestA166ConsumerPriceLimitsTwo401AdoptAndMint (1.56s)
+=== RUN   TestA166WiringCensusBaseline
+--- PASS: TestA166WiringCensusBaseline (0.41s)
+=== RUN   TestA166WiringCensusRejectsBypasses
+=== RUN   TestA166WiringCensusRejectsBypasses/root-error-to-off
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: cmd/tossctl/root_budget.go||newRootOfficialClient
+=== RUN   TestA166WiringCensusRejectsBypasses/required-raw-constructor
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/accountbudgetruntime/runtime_linux.go|Factory|NewClient
+=== RUN   TestA166WiringCensusRejectsBypasses/token-default-http
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/official/token.go|tokenManager|exchange
+=== RUN   TestA166WiringCensusRejectsBypasses/replay-raw-template
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/execgw/replay_transport.go||NewBudgetedHTTPReplay
+=== RUN   TestA166WiringCensusRejectsBypasses/probe-raw-send
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: tools/a087-market-sell-probe/main.go||execute
+=== RUN   TestA166WiringCensusRejectsBypasses/dead-guard-raw-return
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/accountbudgetruntime/runtime_linux.go|Factory|NewClient
+=== RUN   TestA166WiringCensusRejectsBypasses/new-unclassified-http
+    a166_wiring_census_test.go:344: source-copy mutation rejected: callsite inventory count changed: got 117 expected 116
+=== RUN   TestA166WiringCensusRejectsBypasses/escaped-http-method
+    a166_wiring_census_test.go:344: source-copy mutation rejected: unresolved function value: internal/official/token.go Do
+--- PASS: TestA166WiringCensusRejectsBypasses (1.25s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/root-error-to-off (0.02s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/required-raw-constructor (0.04s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/token-default-http (0.20s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/replay-raw-template (0.14s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/probe-raw-send (0.29s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/dead-guard-raw-return (0.03s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/new-unclassified-http (0.33s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/escaped-http-method (0.20s)
+=== RUN   TestA166WiringCensusRejectsDirectorySymlink
+--- PASS: TestA166WiringCensusRejectsDirectorySymlink (0.00s)
+=== RUN   TestA169FenceOfficial401TokenAndSticky
+--- PASS: TestA169FenceOfficial401TokenAndSticky (2.08s)
+=== RUN   TestA169FenceCrossProcessChild
+--- PASS: TestA169FenceCrossProcessChild (0.00s)
+=== RUN   TestA169FenceCrossProcessToken429
+--- PASS: TestA169FenceCrossProcessToken429 (0.82s)
+=== RUN   TestA169FenceOfficialCachedAdoptAndMint
+--- PASS: TestA169FenceOfficialCachedAdoptAndMint (1.67s)
+=== RUN   TestLaunchConfigMatrix
+--- PASS: TestLaunchConfigMatrix (0.00s)
+=== RUN   TestA166OfflineProvisionAndCheck
+--- PASS: TestA166OfflineProvisionAndCheck (0.03s)
+=== RUN   TestA166OfflineRefusesExistingAndNonempty
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/manifest
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/root
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/inside
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/root-symlink
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/parent-symlink
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/parent-mode
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/root-mode
+--- PASS: TestA166OfflineRefusesExistingAndNonempty (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/manifest (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/root (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/inside (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/root-symlink (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/parent-symlink (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/parent-mode (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/root-mode (0.00s)
+=== RUN   TestA166OfflineFaultBoundaries
+=== RUN   TestA166OfflineFaultBoundaries/write
+=== RUN   TestA166OfflineFaultBoundaries/file-sync
+=== RUN   TestA166OfflineFaultBoundaries/close
+=== RUN   TestA166OfflineFaultBoundaries/rename
+=== RUN   TestA166OfflineFaultBoundaries/dir-sync
+--- PASS: TestA166OfflineFaultBoundaries (0.12s)
+    --- PASS: TestA166OfflineFaultBoundaries/write (0.02s)
+    --- PASS: TestA166OfflineFaultBoundaries/file-sync (0.02s)
+    --- PASS: TestA166OfflineFaultBoundaries/close (0.05s)
+    --- PASS: TestA166OfflineFaultBoundaries/rename (0.02s)
+    --- PASS: TestA166OfflineFaultBoundaries/dir-sync (0.02s)
+=== RUN   TestA166OfflineRootReplacementAndCancel
+=== RUN   TestA166OfflineRootReplacementAndCancel/after-provision
+=== RUN   TestA166OfflineRootReplacementAndCancel/before-final-root
+--- PASS: TestA166OfflineRootReplacementAndCancel (0.05s)
+    --- PASS: TestA166OfflineRootReplacementAndCancel/after-provision (0.01s)
+    --- PASS: TestA166OfflineRootReplacementAndCancel/before-final-root (0.02s)
+=== RUN   TestA166OfflineRenameDoesNotReplace
+--- PASS: TestA166OfflineRenameDoesNotReplace (0.02s)
+=== RUN   TestA166OfflineCheckFaultAndDirty
+--- PASS: TestA166OfflineCheckFaultAndDirty (0.02s)
+=== RUN   TestA166OfflineCheckRejectsV1MissingAndCopiedEvent
+--- PASS: TestA166OfflineCheckRejectsV1MissingAndCopiedEvent (0.02s)
+=== RUN   TestA166OfflineCanceledBeforeProvision
+--- PASS: TestA166OfflineCanceledBeforeProvision (0.00s)
+=== RUN   TestA166OfflineNoClientOrHTTPCalls
+--- PASS: TestA166OfflineNoClientOrHTTPCalls (0.00s)
+=== RUN   TestA166OfflineOwnerAndFilesystemValidation
+--- PASS: TestA166OfflineOwnerAndFilesystemValidation (0.00s)
+=== RUN   TestA166OfflineInvalidScopeLeavesRootEmpty
+--- PASS: TestA166OfflineInvalidScopeLeavesRootEmpty (0.00s)
+=== RUN   TestRequiredMissingAndOffContradiction
+--- PASS: TestRequiredMissingAndOffContradiction (0.00s)
+=== RUN   TestFactoryReuseAndIdentity
+--- PASS: TestFactoryReuseAndIdentity (0.02s)
+=== RUN   TestIdentityMismatchFails
+--- PASS: TestIdentityMismatchFails (0.02s)
+=== RUN   TestManifestInvalid
+--- PASS: TestManifestInvalid (0.02s)
+=== RUN   TestEnvMode
+--- PASS: TestEnvMode (0.00s)
+=== RUN   TestChildOpen
+--- PASS: TestChildOpen (0.00s)
+=== RUN   TestSameManifestAcrossProcessesRejectsCopiedRoot
+--- PASS: TestSameManifestAcrossProcessesRejectsCopiedRoot (0.04s)
+=== RUN   TestManifestSymlinkModeAndInsideRoot
+--- PASS: TestManifestSymlinkModeAndInsideRoot (0.02s)
+=== RUN   TestFactoryCloseWithActiveOwner
+--- PASS: TestFactoryCloseWithActiveOwner (0.39s)
+=== RUN   TestTwoRealClientsShareGroup
+--- PASS: TestTwoRealClientsShareGroup (2.07s)
+=== RUN   TestContextAndRequiredCleanup
+--- PASS: TestContextAndRequiredCleanup (0.02s)
+=== RUN   TestParentSymlinkRefused
+--- PASS: TestParentSymlinkRefused (0.02s)
+=== RUN   TestOffFactoryDoesNotSupplyBudget
+--- PASS: TestOffFactoryDoesNotSupplyBudget (0.00s)
+=== RUN   TestFactoryCloseConcurrentCreation
+--- PASS: TestFactoryCloseConcurrentCreation (0.02s)
+=== RUN   TestIncompleteFactoryFailsClosed
+--- PASS: TestIncompleteFactoryFailsClosed (0.00s)
+=== RUN   TestA166RuntimeV2RejectsLegacyManifest
+--- PASS: TestA166RuntimeV2RejectsLegacyManifest (0.02s)
+=== RUN   TestA166RuntimeV2EventPinAndDirty
+--- PASS: TestA166RuntimeV2EventPinAndDirty (0.02s)
+=== RUN   TestA166RuntimeV2StrictEventShape
+--- PASS: TestA166RuntimeV2StrictEventShape (0.02s)
+=== RUN   TestA166RuntimeToken429PreservesPollCollector
+--- PASS: TestA166RuntimeToken429PreservesPollCollector (0.43s)
+=== RUN   TestA166RuntimeEventChild
+--- PASS: TestA166RuntimeEventChild (0.00s)
+=== RUN   TestA166RuntimeToken401AndCached
+--- PASS: TestA166RuntimeToken401AndCached (2.05s)
+=== RUN   TestA166RuntimeV2ReplacedEventLock
+--- PASS: TestA166RuntimeV2ReplacedEventLock (0.02s)
+=== RUN   TestA166RuntimeGet429BodyFailure
+--- PASS: TestA166RuntimeGet429BodyFailure (0.83s)
+=== RUN   TestA166RuntimeTwoClientsShareEvents
+--- PASS: TestA166RuntimeTwoClientsShareEvents (0.82s)
+=== RUN   TestA166RuntimeV2FailureClosesRootFD
+--- PASS: TestA166RuntimeV2FailureClosesRootFD (0.02s)
+=== RUN   TestA166RuntimeToken429FinishFaultPreservesStatus
+--- PASS: TestA166RuntimeToken429FinishFaultPreservesStatus (0.41s)
+=== RUN   TestA166RuntimeV2A112CloneRecordsPending
+--- PASS: TestA166RuntimeV2A112CloneRecordsPending (0.42s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	23.364s
+rc=0

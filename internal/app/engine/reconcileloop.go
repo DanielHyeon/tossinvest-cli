@@ -253,6 +253,13 @@ type ReconcileDriver struct {
 	// terminalHoldLogged 는 종결 증명 해제의 유지 사유를 종목별로 마지막에 쓴 값임(a192 M5) — 같은 사유를 매 주기
 	// 다시 쓰지 않으려는 것. RunOnce 는 직렬이라 잠금 없이 씀.
 	terminalHoldLogged map[string]string
+
+	// a194 대사 차단 보고의 메모리 상태 — 맵은 reconcile_block_report.go 의 함수가 처음 쓸 때 만듦. RunOnce 는 직렬이라 잠금 없음.
+	// blockedSince 는 편입 후보가 차단으로 처음 빠진 시각(유예 시계), blockedRound 는 주기 상한의 이번 차례에 시도한 포지션,
+	// blockReported 는 차단 보고의 하루 한 번 래치(기록 성공 뒤에만 섬).
+	blockedSince  map[string]time.Time
+	blockedRound  map[string]bool
+	blockReported map[string]bool
 }
 
 // LoopStatus is a supervised loop's cycle health.

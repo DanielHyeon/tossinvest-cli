@@ -1,0 +1,9 @@
+$ rtk proxy openspec validate a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time --strict
+Change 'a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time' is valid
+rc=0
+
+$ python3 tools/logic-map/check_analysis.py --change a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time
+[logic-map] a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time: base 064f59fd99c1 → working tree (no landed-commit.txt in HEAD) required 6 function(s) — judged at HEAD 1ff50243e665
+[logic-map] a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time: the target is the working tree, so this window also holds 7 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits
+[logic-map] a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time: evidence complete or diff-proven exempt
+rc=0

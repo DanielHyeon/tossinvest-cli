@@ -1,0 +1,62 @@
+{
+  "file": "internal/app/engine/attestation_watch.go",
+  "source_sha256": "29252ace6e7338abe7fa91bf9a7cfe894b8edde2c87657e60e9f54e1e9c7d68d",
+  "package": "engine",
+  "function": "daysLeftCeil",
+  "signature": "daysLeftCeil(params=1, results=1)",
+  "start": {
+    "line": 125,
+    "column": 1
+  },
+  "end": {
+    "line": 132,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 128,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 131,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 10
+      },
+      "text": "int"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 127,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 129,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

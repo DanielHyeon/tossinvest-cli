@@ -1,0 +1,141 @@
+{
+  "file": "internal/app/engine/a135_attestation_watch_internal_test.go",
+  "source_sha256": "e097c1707e7a80769865f2b46dc0b98a7801632c78dff7725d507bb0075c55c9",
+  "package": "engine",
+  "function": "TestA135StageBoundaries",
+  "signature": "TestA135StageBoundaries(params=1, results=0)",
+  "start": {
+    "line": 64,
+    "column": 1
+  },
+  "end": {
+    "line": 103,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 92,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 95,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 98,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 9
+      },
+      "text": "judgeAttestation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 26
+      },
+      "text": "a135Attestation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 7
+      },
+      "text": "v.critical"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 37
+      },
+      "text": "v.critical"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 65,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 68,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 91,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

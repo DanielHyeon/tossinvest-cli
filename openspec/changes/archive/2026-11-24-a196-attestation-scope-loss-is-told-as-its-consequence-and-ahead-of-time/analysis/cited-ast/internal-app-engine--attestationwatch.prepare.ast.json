@@ -1,0 +1,253 @@
+{
+  "file": "internal/app/engine/attestation_watch.go",
+  "source_sha256": "29252ace6e7338abe7fa91bf9a7cfe894b8edde2c87657e60e9f54e1e9c7d68d",
+  "package": "engine",
+  "function": "prepare",
+  "receiver": "attestationWatch",
+  "signature": "attestationWatch.prepare(params=0, results=3)",
+  "start": {
+    "line": 269,
+    "column": 1
+  },
+  "end": {
+    "line": 299,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 271,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 273,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 287,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 291,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 295,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 292,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 296,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 298,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 8
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 13
+      },
+      "text": "recover"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 274,
+        "column": 5
+      },
+      "text": "w.log.Warn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 14
+      },
+      "text": "w.load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 9
+      },
+      "text": "w.clock.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 283,
+        "column": 7
+      },
+      "text": "judgeAttestation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 14
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 14
+      },
+      "text": "v.IssuedAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 64
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 64
+      },
+      "text": "v.ExpiresAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 294,
+        "column": 8
+      },
+      "text": "stageKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 298,
+        "column": 9
+      },
+      "text": "w.eventFor"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 271,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 272,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 281,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 282,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 283,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 286,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 288,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 289,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 294,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 270,
+        "column": 2
+      }
+    }
+  ]
+}

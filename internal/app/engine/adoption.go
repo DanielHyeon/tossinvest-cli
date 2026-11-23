@@ -115,6 +115,7 @@ func (d *ReconcileDriver) judgeHoldings(ctx context.Context, snapshot reconcile.
 	var (
 		candidates []candidate
 		unmanaged  []journal.Position
+		held       []blockedHolding // 차단으로 빠진 보유 — 끝에서 a194 보고가 판정함
 	)
 	for _, holding := range snapshot.Holdings {
 		market := strings.ToLower(strings.TrimSpace(holding.Market))
@@ -149,7 +150,9 @@ func (d *ReconcileDriver) judgeHoldings(ctx context.Context, snapshot reconcile.
 		}
 
 		// --- transition states: silent -------------------------------------
+		// RECONCILE 은 편입하지 않음(그대로). 다만 그 침묵이 전이 상태일 때만 정당하므로 보유를 모아 끝에서 판정함(a194).
 		if d.blocked(market, symbol) {
+			held = append(held, blockedHolding{position: p, market: market, symbol: symbol})
 			continue
 		}
 		if !fresh {
@@ -190,6 +193,8 @@ func (d *ReconcileDriver) judgeHoldings(ctx context.Context, snapshot reconcile.
 		// 후보가 아닌 보유(제외 · 꺼짐 · 설정 거부)는 결과 map 에 없어 영값(연기)을 받지만, 그 셋의 조건 칸은 결과를 읽지 않음.
 		d.alertUnmanaged(ctx, p, results[p.ID])
 	}
+	// 끝에서 냄 — 이 보고의 동기 전송이 이번 주기의 편입 · 무관리 보고를 밀지 않게(a194 design D3).
+	d.reportBlocked(ctx, held)
 }
 
 // blocked reports that the symbol is under RECONCILE.

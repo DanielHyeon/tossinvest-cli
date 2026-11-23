@@ -1,0 +1,46 @@
+# a196 mutation run — repo HEAD ccde7b99f304a90b1d4d73f0350c3f323f28ea00, copy /home/daniel/tossos-work/a196-mut-831324, 2026-11-23T14:02:13Z
+start sha256 internal/app/engine/attestation_watch.go b3b8bb818e6e8837eb836cbd1be2a741004f7c114ba4282a13c44c4a99941bb8
+start sha256 internal/soak/attest.go d693c9dbd9583789b6372aa63a126e7e4817df874c74ff76c597633eb60d29d5
+start sha256 internal/attest/attest.go d90c812d31fae77f3baa2e8a2db61d3e18a67f02f675cb1e4548e10847e72b23
+CONTROL engine rc=0 soak rc=0
+M01 CAUGHT engine_rc=1 soak_rc=0 — ① 기한을 만료로만 계산
+    killed by: TestA135SameStageOnANewAttestationIsAnnouncedAgain, TestA135StageBoundaries, TestA196DeadlineBoundaries, TestA196ImminentProofNoticeTellsTheProofDeadline, TestA196NewAlertsCarryNoAccount, TestA196NewSupervisedProofRestartsTheCount, TestA196NotificationsOffDowngradesOverdue, TestA196OverdueIsCriticalOncePerDay, TestA196ProofDeadlineGovernsTheDayCount, TestA196SameProofReissueIsNotAnnouncedAgain
+M02 CAUGHT engine_rc=1 soak_rc=0 — ② min 을 max 로
+    killed by: TestA135SameStageOnANewAttestationIsAnnouncedAgain, TestA135StageBoundaries, TestA196DeadlineBoundaries, TestA196ImminentProofNoticeTellsTheProofDeadline, TestA196NewAlertsCarryNoAccount, TestA196NewSupervisedProofRestartsTheCount, TestA196NotificationsOffDowngradesOverdue, TestA196OverdueIsCriticalOncePerDay, TestA196ProofDeadlineGovernsTheDayCount, TestA196SameProofReissueIsNotAnnouncedAgain
+M03 CAUGHT engine_rc=1 soak_rc=0 — ③ 날수 신원에 발급 시각 되돌리기
+    killed by: TestA135SameStageOnANewAttestationIsAnnouncedAgain, TestA196OverdueIsCriticalOncePerDay, TestA196RejectionAfterAHealthyFileIsAnnouncedAgain, TestA196SameProofReissueIsNotAnnouncedAgain, TestA196ScopeLossOncePerDayAcrossReissues
+M04 CAUGHT engine_rc=1 soak_rc=0 — ④ 거절 key(outbox)에 발급 신원 되돌리기
+    killed by: TestA196RestartedWatchReusesTheRejectionKey
+M05 CAUGHT engine_rc=1 soak_rc=0 — ⑤ 누락 집합을 key 에서 빼기
+    killed by: TestA196RestartedWatchReusesTheRejectionKey, TestA196ScopeLossOncePerDayAcrossReissues
+M06 CAUGHT engine_rc=1 soak_rc=0 — ⑥ D-2 경계 한 칸 밀기
+    killed by: TestA135RenewalResetsAndScopeLossIsImmediate, TestA135StageBoundaries, TestA135WatchAnnouncesEachStageOnce, TestA196DeadlineBoundaries, TestA196ImminentProofNoticeTellsTheProofDeadline
+M07 CAUGHT engine_rc=0 soak_rc=1 — ⑦ 수용 경계 >= → >(soak)
+    killed by: TestA196ANonDefaultValidityMovesBothValues, TestA196SupervisedEvidenceLeavesExactlyAtTheDeadline, TestA196TheFileDeadlineIsWhenTheIssuerStopsCarryingTheProof
+M08a CAUGHT engine_rc=1 soak_rc=0 — ⑧ 기한을 가장 늦은 증거로(binding 최소 → 최대)
+    killed by: TestA135SupervisedProofAtIsTheBindingProof, TestA196DeadlineBoundaries, TestA196ImminentProofNoticeTellsTheProofDeadline, TestA196NewAlertsCarryNoAccount, TestA196OverdueIsCriticalOncePerDay, TestA196ProofDeadlineGovernsTheDayCount, TestA196SameProofReissueIsNotAnnouncedAgain
+M08b CAUGHT engine_rc=1 soak_rc=0 — ⑧ binding 우회 — 목록 첫 증거로 기한 계산
+    killed by: TestA196DeadlineBoundaries, TestA196ImminentProofNoticeTellsTheProofDeadline, TestA196NewAlertsCarryNoAccount, TestA196OverdueIsCriticalOncePerDay, TestA196ProofDeadlineGovernsTheDayCount, TestA196SameProofReissueIsNotAnnouncedAgain
+M09 CAUGHT engine_rc=1 soak_rc=0 — ⑨ 0 이하 잔여를 imminent 로 접기
+    killed by: TestA135StageBoundaries, TestA196DeadlineBoundaries, TestA196OverdueIsCriticalOncePerDay
+M10 CAUGHT engine_rc=1 soak_rc=0 — ⑩ KST 날짜를 UTC 로
+    killed by: TestA196RejectionDayIsTheKSTDate
+M11 CAUGHT engine_rc=1 soak_rc=0 — ⑪ 거절 단계 key 에서 KST 날짜 삭제
+    killed by: TestA135InvalidStatesAreRemindedDaily, TestA196RejectionDayIsTheKSTDate
+M12 SURVIVED engine_rc=0 soak_rc=0 — ⑫ 누락 집합 정렬 삭제(MissingEndpoints)
+    killed by: -
+N1 CAUGHT engine_rc=1 soak_rc=0 — P1-1 imminent 를 만료 문구로(감독 증거 갈래를 notice 에만)
+    killed by: TestA196ImminentProofNoticeTellsTheProofDeadline
+N2 CAUGHT engine_rc=1 soak_rc=0 — P2-1 「보냄」 재설정을 첫 호출에만(기한 비교 삭제)
+    killed by: TestA196RejectionAfterAHealthyFileIsAnnouncedAgain
+N3 CAUGHT engine_rc=1 soak_rc=0 — P2-2 유효 기간 > 0 가드 삭제
+    killed by: TestA196NoProofDeadlineWithoutAValidityWindow
+N4 SURVIVED engine_rc=0 soak_rc=0 — R1 만료 무시(증거가 있으면 늘 감독 증거를 기한으로)
+    killed by: -
+N5 CAUGHT engine_rc=0 soak_rc=1 — P2-4 soak 수용 기간을 30일로 박기
+    killed by: TestA196ANonDefaultValidityMovesBothValues
+N6 CAUGHT engine_rc=1 soak_rc=0 — P1-2 범위 상실을 늘 주문 실행 갈래로
+    killed by: TestA196ScopeLossWordingFollowsTheMissingKind
+N7 SURVIVED engine_rc=0 soak_rc=0 — P2-3 overdue key 에서 기한 삭제
+    killed by: -
+final: copy files equal repo files (sha256)

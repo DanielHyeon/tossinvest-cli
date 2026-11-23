@@ -1,0 +1,181 @@
+######## callers judgeHoldings
+
+Callers of "judgeHoldings" (1):
+
+method      RunOnce
+  internal/app/engine/reconcileloop.go:418
+
+######## callers blocked
+
+Callers of "blocked" (1):
+
+method      judgeHoldings
+  internal/app/engine/adoption.go:107
+
+######## callers alertUnmanaged
+
+Callers of "alertUnmanaged" (3):
+
+function    TestA095TheExitObserverReportStaysNormalAndKeyedApart
+  internal/app/engine/a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:409
+
+method      workingSet
+  internal/app/engine/exitloop.go:573
+
+method      judgeHoldings
+  internal/app/engine/adoption.go:107
+
+######## callers alertAdoptionFailed
+
+Callers of "alertAdoptionFailed" (1):
+
+method      alertUnmanaged
+  internal/app/engine/adoption.go:449
+
+######## callers reconcileUnmanagedKey
+
+Callers of "reconcileUnmanagedKey" (2):
+
+method      alertUnmanaged
+  internal/app/engine/adoption.go:449
+
+method      alertAdoptionFailed
+  internal/app/engine/adoption.go:486
+
+######## callers unmanagedFact
+
+Callers of "unmanagedFact" (1):
+
+method      alertUnmanaged
+  internal/app/engine/adoption.go:449
+
+######## callers RunOnce
+
+Callers of "RunOnce" (1):
+
+method      Run
+  internal/app/engine/reconcileloop.go:396
+
+######## callers Blocks
+
+Callers of "Blocks" (20):
+
+method      Runtime
+  internal/app/engine/position_policy_command.go:121
+
+method      RunOnce
+  internal/app/engine/reconcileloop.go:418
+
+function    buildReconcileResolveRuntime
+  cmd/tossctl/engine_reconcile.go:237
+
+function    TestEngineReconcileResolveIntegratesCorrectedJournalStateAndAtomicRelease
+  cmd/tossctl/engine_reconcile_test.go:321
+
+function    TestAnUnrelatedMismatchDoesNotDiscardAnAnsweredCredit
+  internal/reconcile/a083_credit_lifetime_test.go:111
+
+function    TestA110IncidentChangingSymbolsReleaseOrdinaryBlocksWithoutPermanent
+  internal/reconcile/a110_missing_order_incident_test.go:307
+
+function    a110AssertNoTransientAccountPermanent
+  internal/reconcile/a110_promotion_identity_test.go:79
+
+function    TestA110ChangingQuantityDisputesNeverPoolIntoPermanent
+  internal/reconcile/a110_promotion_identity_test.go:97
+
+function    TestA110ComparerPreservesExactLargeQuantityPromotionIdentity
+  internal/reconcile/a110_promotion_identity_test.go:217
+
+function    TestA110NegativeBrokerOnlyHoldingFailsClosedWithoutPromotion
+  internal/reconcile/a110_promotion_identity_test.go:434
+
+function    TestA110BlankSymbolGuardDoesNotStarveValidSiblingPersistence
+  internal/reconcile/a110_promotion_identity_test.go:800
+
+function    TestA110BlankSymbolPendingDoesNotStarveValidSiblingRelease
+  internal/reconcile/a110_promotion_identity_test.go:854
+
+function    TestA110OperatorCanResolveKnownNondurableBlankSymbolGuard
+######## callers EntryAllowed
+
+Callers of "EntryAllowed" (16):
+
+method      blocked
+  internal/app/engine/adoption.go:196
+
+function    TestAnUndatedComparisonCannotSpendACredit
+  internal/reconcile/a083_credit_lifetime_test.go:62
+
+function    TestACreditFromALaterComparisonIsNotSpent
+  internal/reconcile/a083_credit_lifetime_test.go:84
+
+function    TestARefutedCreditIsDiscardedPerSymbol
+  internal/reconcile/a083_credit_lifetime_test.go:161
+
+function    TestA110CanonicalMissingOrderIdentityControlsPromotion
+  internal/reconcile/a110_missing_order_incident_test.go:58
+
+function    TestA110ComparerRejectsIdenticalInvalidQuantityStrings
+  internal/reconcile/a110_promotion_identity_test.go:342
+
+function    TestA110UnreadableExternalBrokerQuantityFailsClosed
+  internal/reconcile/a110_promotion_identity_test.go:381
+
+function    TestA110NegativeBrokerOnlyHoldingFailsClosedWithoutPromotion
+  internal/reconcile/a110_promotion_identity_test.go:434
+
+function    TestA110BlankSymbolJournalStateNeverRestoresAsPermanent
+  internal/reconcile/a110_promotion_identity_test.go:751
+
+function    TestA110BlankSymbolGuardDoesNotStarveValidSiblingPersistence
+  internal/reconcile/a110_promotion_identity_test.go:800
+
+function    TestA110OperatorCanResolveKnownNondurableBlankSymbolGuard
+  internal/reconcile/a110_promotion_identity_test.go:948
+
+function    TestA110RefreshDoesNotManufacturePermanentFromContinuityBrokenPendingProposal
+  internal/reconcile/a110_promotion_identity_test.go:1602
+
+function    TestAnAdjustmentIsSpentByTheRecheckItAnswers
+######## callers Permanent
+
+Callers of "Permanent" (20):
+
+method      blocked
+  internal/app/engine/adoption.go:196
+
+function    TestA110CanonicalMissingOrderIdentityControlsPromotion
+  internal/reconcile/a110_missing_order_incident_test.go:58
+
+function    TestA110OpaqueOrderIDIsBytePreservingPromotionEvidence
+  internal/reconcile/a110_missing_order_incident_test.go:124
+
+function    TestA110ForeignMissingOrderAccountCannotEarnThisTrackerPermanent
+  internal/reconcile/a110_missing_order_incident_test.go:160
+
+function    TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount
+  internal/reconcile/a110_missing_order_incident_test.go:187
+
+function    TestA110IncompleteMissingOrderIdentityNeverPromotes
+  internal/reconcile/a110_missing_order_incident_test.go:248
+
+function    TestA110IncidentChangingSymbolsReleaseOrdinaryBlocksWithoutPermanent
+  internal/reconcile/a110_missing_order_incident_test.go:307
+
+function    TestA110TransientStreakIsNeverReconstructedFromDurableOrdinaryRows
+  internal/reconcile/a110_missing_order_incident_test.go:363
+
+function    a110AssertNoTransientAccountPermanent
+  internal/reconcile/a110_promotion_identity_test.go:79
+
+function    TestA110ChangingQuantityDisputesNeverPoolIntoPermanent
+  internal/reconcile/a110_promotion_identity_test.go:97
+
+function    TestA110QuantityPromotionRejectsBlankOrForeignDiffAccount
+  internal/reconcile/a110_promotion_identity_test.go:126
+
+function    TestA110QuantityTupleIdentityIsExactAndCanonical
+  internal/reconcile/a110_promotion_identity_test.go:157
+
+function    TestA110ComparerPreservesExactLargeQuantityPromotionIdentity
