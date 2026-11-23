@@ -34,6 +34,9 @@
 
 ## 5. 종결
 
-- [ ] 5.1 Manager 검증(diff·시험 원문 재실행).
-- [ ] 5.2 완료 게이트(격리 worktree) → archive → Story 경로 갱신 → push.
-- [ ] 5.3 (사람 승인) 운영 반영, 엔진 생존 감시 타이머 설치(design §4-1) — 결과는 `review.md` 에 시각·상태만.
+- [x] 5.1 Manager 검증(diff·시험 원문 재실행).
+- [x] 5.2 완료 게이트(격리 worktree) → archive → Story 경로 갱신 → push. **선체크(gate ② 선행 조건, 선례 a193·a195)** — 게이트·archive·Story·push 는 종결 에이전트가 이 체크 뒤 수행하고 결과는 `review.md` 「종결」 절.
+
+## 6. 종결 뒤 (사람 승인 — 이 change 의 종결 조건 아님)
+
+5.3 이던 항목: (사람 승인) 운영 반영, 엔진 생존 감시 타이머 설치(design §4-1 — `deploy/systemd/tossos-heartbeat.{service,timer}` 를 사용자 systemd 에 설치·활성). 운영 반영과 타이머 설치는 별도 승인이며, 결과는 archive 된 `review.md` 에 시각·상태만 추가한다. 운영 반영을 하지 않은 채 체크하는 것을 피하려고 체크박스에서 뺐다.

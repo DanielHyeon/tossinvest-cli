@@ -168,3 +168,15 @@ Pre-Edit Gate:
 
 ### 안 한 것
 - (1단계 당시) 리뷰 2회차 — 결정 반영 뒤 1.6b 로 실시. `codegraph affected`, CodeGraphContext·GBrain, 전체 시험·게이트, `make sdd-sync`. 운영 파일(`~/.config/tossctl`)은 안 읽음 — 실제 운영에 US 기록이 있는지 모름(Q1 의 현실 영향 미확인).
+
+## Manager 검증 (2026-11-24, Fable — tasks 5.1)
+- HEAD 4b333f01c. production diff(attestation_watch.go 한 파일)를 직접 읽음: restartDeadline(만료와 감독 증거 기한 중 이른 쪽 — 파일 값만으로), 새 단계 proof_overdue, 날수 신원 = 기한 시각, 거절 단계 key = 단계 + (누락 집합 또는 기한) + KST 날짜 + 에피소드 시작(발급 신원 없음), 범위 상실 문장의 POST/GET 갈래, 재검증 할 일 문장(엔진 정지 필요·그동안 손절 없음·verify → attest → 재기동).
+- 독립 재실행: ./internal/app/engine -run 'A196|A135|Attestation' → PASS 35 · FAIL 0(ok 0.653s); ./internal/soak -run 'A196|Supervised|BuildAttestation' → ok; -race ./internal/app/engine -run A196 → ok 4.829s; go vet 두 패키지 rc 0; openspec validate --strict valid; check_analysis evidence complete.
+- 구현 적대 리뷰 r1(P1 2·P2 8)과 gstack review r1(G12 회복 뒤 같은 날 재발의 침묵, G10 할 일이 엔진 정지를 숨김)의 처분 반영을 확인. 잔여: 제목의 기기 표시 미실측, 재검증 플래그 조합 미확인, 두 시장 기록이면 경보가 이른 쪽, 거절 상태에서 재시작마다 알림 1회.
+- 판정: 통과. 종결 진행.
+
+## 종결 (2026-11-24, 종결 에이전트 — 사용자 요청 「커밋·push·archive(완료 게이트 포함)」)
+- 첫 시도(rebase): `origin/main` `6ec2664c5` 위로 rebase(충돌 0, 새 HEAD `28234eb6a`), rebase 뒤 선택 시험 통과(`analysis/close/rebase-selected-tests.txt`), 착지 `28234eb6a` 기록, 종결 선행 `7376314a7` 에서 게이트 1회차 → **⑤ FAIL**(`analysis/close/gate-1-7376314a7.txt`): base `064f59fd9` → 착지 창이 rebase 로 끼어든 a195 의 Go 커밋까지 담아 `cmd/tossctl/engine_reconcile.go` 의 `newEngineReconcileResolveCmdWithDeps`·`runEngineReconcileResolve`·`buildReconcileResolveRuntime`(a195 의 함수)을 요구 — required 9. ⑤ 에서 멈춰 ⑥~⑪ 은 돌지 않음. Go·시험 내용의 실패가 아니라 절차(창 구성) 문제.
+- 처분(절차 수리, Go 편집·base 재고정 없음): 브랜치를 rebase 전 `4b333f01c` 로 되돌리고(rebase 판은 로컬 `backup/a196-rebased-7376314a7` 에 보존), 그 위에서 `--record-landing` → `landed-commit.txt` = `4b333f01c`(도구 계산), 단독 커밋 `cbdd4b38e`. 그 뒤 `origin/main` 을 merge(`30171e63f`, 충돌 0) — 병합 커밋은 조건 8 의 「비병합 커밋」에 들지 않고, 창은 base..`4b333f01c` 로 이 change 의 작업만 담는다. merge 뒤 `check_analysis --change` rc 0(required 6, 증거 완전). `base-commit.txt`(`064f59fd9`) 는 HEAD 의 조상(확인).
+- merge 뒤 선택 시험 재실행(`analysis/close/merge-selected-tests.txt`, HEAD 30171e63f): ./internal/app/engine -run 'A196|A135|Attestation' -v → PASS 35 · FAIL 0(ok 0.307s); ./internal/soak -run 'A196|Supervised|BuildAttestation' ok; -race ./internal/app/engine -run A196 ok 4.452s; go vet 두 패키지 rc 0.
+- tasks: 5.1 체크(위 Manager 검증), 5.2 **선체크(gate ② 선행 조건, 선례 a193·a195)** — 게이트·archive·Story·push 는 이 체크 뒤 수행. 옛 5.3(운영 반영·엔진 생존 감시 타이머 설치)은 체크박스에서 빼 「6. 종결 뒤(사람 승인)」 문단으로 옮김.

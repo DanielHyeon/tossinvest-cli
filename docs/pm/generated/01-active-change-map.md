@@ -185,6 +185,6 @@
 | `a193-an-in-doubt-order-is-resolved-while-the-engine-runs` | STORY-TOS-a193 | archived |
 | `a194-a-holding-left-unprotected-by-a-reconcile-block-is-reported` | STORY-TOS-a194 | in_progress |
 | `a195-an-attribution-failed-block-can-be-released-by-the-operator` | STORY-TOS-a195 | archived |
-| `a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time` | STORY-TOS-a196 | in_progress |
+| `a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time` | STORY-TOS-a196 | implemented |
 | `a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled` | STORY-TOS-a197 | in_progress |
 | `a198-a-clearing-cancel-is-issued-as-a-cancel-decision` | STORY-TOS-a198 | in_progress |
