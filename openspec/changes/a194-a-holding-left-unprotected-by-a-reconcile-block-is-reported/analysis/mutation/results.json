@@ -1,5 +1,5 @@
 {
- "head": "5a547f80d229593ff92a248bc8032b2ee22c7942",
+ "head": "f0465bdfda55c9deab5c57242c882d65a8aa3498",
  "control_green": true,
  "rows": [
   {
@@ -23,6 +23,7 @@
     "TestA194OnlyAdoptionCandidatesAreReported",
     "TestA194OnlyAdoptionCandidatesAreReported/designated_with_adoption_off",
     "TestA194OperatorOnlyBlockedHoldingIsReportedOnTheFirstCycle",
+    "TestA194TheEarliestCoveringOperatorBlockIsNamed",
     "TestA194TheReportComesAfterTheCyclesAdoptions",
     "TestA194TheReportsCarryNoAccountQuantityOrPrice"
    ]
@@ -38,7 +39,8 @@
     "TestA194ABlockTheTrackerNoLongerListsTakesTheGracePath",
     "TestA194ASelfReleasingBlockIsReportedAfterTenMinutes",
     "TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/10m_is_no_longer_a_transition",
-    "TestA194ASkippedCycleDoesNotResetTheGraceClock"
+    "TestA194ASkippedCycleDoesNotResetTheGraceClock",
+    "TestA194TwoFailedCyclesAtSixMinutesDoNotBreakTheRun"
    ]
   },
   {
@@ -49,12 +51,14 @@
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
+    "TestA194ABlockClearedInsideTheGraceAdoptsSilently",
     "TestA194ABlockTheTrackerNoLongerListsTakesTheGracePath",
     "TestA194ASelfReleasingBlockIsReportedAfterTenMinutes",
     "TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/10m_is_no_longer_a_transition",
     "TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/9m59s_is_still_a_transition",
     "TestA194ASkippedCycleDoesNotResetTheGraceClock",
     "TestA194TheGraceClockIsClearedWhenTheHoldingIsNotExcluded",
+    "TestA194TwoFailedCyclesAtSixMinutesDoNotBreakTheRun",
     "TestAdoptionIsSilentUnderReconcile"
    ]
   },
@@ -86,7 +90,7 @@
    "id": "M5",
    "desc": "차단 보고 key 에서 날짜 삭제",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 200,
+   "line": 202,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -113,18 +117,19 @@
    "id": "M7",
    "desc": "차단 보고 래치를 Notify 앞에(결과 무시)",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 201,
+   "line": 203,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
-    "TestA194AFailedBlockReportIsRetriedNextCycle"
+    "TestA194AFailedBlockReportIsRetriedNextCycle",
+    "TestA194NoAlerterIsNotARecordedBlockReport"
    ]
   },
   {
    "id": "M8",
    "desc": "KST 날짜를 UTC 날짜로",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 193,
+   "line": 195,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -173,6 +178,73 @@
    "verdict": "CAUGHT",
    "killed_by": [
     "TestA194EarlierExcludedHoldingsAreReportedFirst"
+   ]
+  },
+  {
+   "id": "M3r",
+   "desc": "덮는 블록 중 첫 것(가장 이른 Since 아님)",
+   "file": "internal/app/engine/reconcile_block_report.go",
+   "line": 145,
+   "reached": true,
+   "verdict": "CAUGHT",
+   "killed_by": [
+    "TestA194TheEarliestCoveringOperatorBlockIsNamed"
+   ]
+  },
+  {
+   "id": "M7a",
+   "desc": "운영자 전용 본문에서 할 일 문장 삭제",
+   "file": "internal/app/engine/reconcile_block_report.go",
+   "line": 160,
+   "reached": true,
+   "verdict": "CAUGHT",
+   "killed_by": [
+    "TestA194OperatorOnlyBlockedHoldingIsReportedOnTheFirstCycle"
+   ]
+  },
+  {
+   "id": "M7b",
+   "desc": "stale 본문에서 할 일 문장 삭제",
+   "file": "internal/app/engine/reconcile_block_report.go",
+   "line": 164,
+   "reached": true,
+   "verdict": "CAUGHT",
+   "killed_by": [
+    "TestA194ASelfReleasingBlockIsReportedAfterTenMinutes",
+    "TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/10m_is_no_longer_a_transition"
+   ]
+  },
+  {
+   "id": "M12r",
+   "desc": "알림기 없음을 보낸 것으로 셈",
+   "file": "internal/app/engine/reconcile_block_report.go",
+   "line": 233,
+   "reached": true,
+   "verdict": "CAUGHT",
+   "killed_by": [
+    "TestA194NoAlerterIsNotARecordedBlockReport"
+   ]
+  },
+  {
+   "id": "M19",
+   "desc": "제목에서 label 대신 코드",
+   "file": "internal/app/engine/reconcile_block_report.go",
+   "line": 179,
+   "reached": true,
+   "verdict": "CAUGHT",
+   "killed_by": [
+    "TestA194TheTitlesUseTheInstrumentLabel"
+   ]
+  },
+  {
+   "id": "M23",
+   "desc": "풀린 차단의 래치 key 유지",
+   "file": "internal/app/engine/reconcile_block_report.go",
+   "line": 207,
+   "reached": true,
+   "verdict": "CAUGHT",
+   "killed_by": [
+    "TestA194ABlockRaisedAgainTheSameDayIsReportedAgain"
    ]
   }
  ]

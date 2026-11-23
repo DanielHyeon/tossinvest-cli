@@ -802,3 +802,33 @@ func TestA194AManagedHoldingIsNotAProtectionMissingReport(t *testing.T) {
 		t.Errorf("block reports = %d, want 1 (the block itself is still reported)", n)
 	}
 }
+
+// gstack review — 차례 도중 남은 보유가 빠지면(편입) 다음 주기가 빈손이 되지 않고 새 차례를 시작함.
+func TestA194ARoundWhoseRestLeftStartsAgainNextCycle(t *testing.T) {
+	f := newA194(t)
+	symbols := []string{"SYNF01", "SYNF02", "SYNF03", "SYNF04"}
+	for _, s := range symbols {
+		f.holds(s, a194Qty, a194Price)
+		f.block(s, journal.ReconcileCauseAttributionFailed)
+	}
+	f.cycle()
+	if n := len(f.cap.blockedReports()); n != 3 {
+		t.Fatalf("first cycle reports = %d, want 3", n)
+	}
+	reported := map[string]bool{}
+	for _, e := range f.cap.blockedReports() {
+		reported[fmt.Sprint(e.Fields["position_id"])] = true
+	}
+	for _, s := range symbols { // 아직 보고되지 않은 넷째를 풀어 편입시킴
+		if !reported[f.position(s).ID] {
+			f.release(s, journal.ReconcileCauseAttributionFailed)
+		}
+	}
+	f.clk.Advance(time.Minute)
+	if c := f.cycle(); c.Adopted != 1 {
+		t.Fatalf("arrangement: adopted = %d, want the released fourth holding", c.Adopted)
+	}
+	if n := len(f.cap.blockedReports()); n != 6 {
+		t.Errorf("reports after the second cycle = %d, want 6 — the three still blocked must be attempted again", n)
+	}
+}

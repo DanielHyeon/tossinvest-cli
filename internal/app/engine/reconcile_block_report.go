@@ -111,6 +111,17 @@ func (d *ReconcileDriver) reportBlockedHoldings(ctx context.Context, held []bloc
 	})
 	// 주기 상한은 차례(round)로 셈: 이번 차례에 시도한 보유는 차례의 모두를 한 번씩 시도할 때까지 다시 시도하지 않음.
 	// 셋 이하면 매 주기 전원 시도(critical 은 매 관측 기록 시도 — 메모리 억제가 아님), 넘으면 남은 보유가 다음 주기에 나감.
+	// 차례에 남은 보유가 모두 빠졌으면(편입 · 해제) 이번 주기에 새 차례를 시작함 — 한 주기를 빈손으로 보내지 않게(gstack review).
+	left := false
+	for _, r := range due {
+		if !d.blockedRound[r.position.ID] && (d.opts.NotificationsEnabled || !d.unmanaged[r.position.ID][r.fact]) {
+			left = true
+			break
+		}
+	}
+	if !left {
+		d.blockedRound = map[string]bool{}
+	}
 	attempted, more := 0, false
 	for _, r := range due {
 		if d.blockedRound[r.position.ID] {

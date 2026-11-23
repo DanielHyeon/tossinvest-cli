@@ -63,6 +63,8 @@ MUTANTS = [
     ("M23", "풀린 차단의 래치 key 유지", NEW,
      "\td.blockReported = next\n",
      "\tif d.blockReported == nil {\n\t\td.blockReported = next\n\t} else {\n\t\tfor k := range next {\n\t\t\td.blockReported[k] = true\n\t\t}\n\t}\n"),
+    ("M24", "차례가 빈 주기에 새 차례를 시작하지 않음(gstack review 수리 되돌림)", NEW,
+     "\tif !left {\n\t\td.blockedRound = map[string]bool{}\n\t}\n", "\t_ = left\n"),
 ]
 # M6 는 latch 를 꺼짐에서만 세우므로 켜짐에서도 세우는 짝 자리를 함께 바꿈(두 자리 변이).
 M6_PAIR = ("\tif !d.opts.NotificationsEnabled {\n\t\tt = obs.EventExitPositionUnmanaged\n",
