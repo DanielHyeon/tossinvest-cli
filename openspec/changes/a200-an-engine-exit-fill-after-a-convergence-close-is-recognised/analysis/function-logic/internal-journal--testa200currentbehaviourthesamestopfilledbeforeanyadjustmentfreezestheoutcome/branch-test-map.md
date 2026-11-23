@@ -1,6 +1,6 @@
 # Branch Test Map: `TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome`
 
-- Source: `internal/journal/a200_convergence_close_exit_fill_repro_test.go` (197-214), 작업 트리.
+- Source: `internal/journal/a200_convergence_close_exit_fill_repro_test.go` (198-215), 작업 트리.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|

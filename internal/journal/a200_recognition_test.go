@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/position"
 )
 
 // a200Marker 는 인정 표지 action 의 계약 이름(design D3). 생산 상수와 같은지는 구조 시험이 봄.
@@ -148,6 +149,25 @@ func TestA200APartialTakeProfitBelowTheDecreaseIsRecognised(t *testing.T) {
 		t.Fatalf("RecordFill: %v", err)
 	}
 	a200AssertRecognised(t, readA200Ledger(t, j, p.ID), 1)
+}
+
+// TestA200ASmallOrderStraddlingTheConvergenceIsRecognised 는 주문 수량 ≤ 감소분인 부분 청산 주문이 조정을 사이에 두고 체결되는
+// 모양(구현 적대 리뷰 impl-r1 P1-1 의 탐침 TestRevA200ProbeStraddleSmallOrder 를 계약으로): 보유 31 · 손절 주문 10 · 조정 전 체결 3
+// (31→28) → 조정 28→0 → 나머지 7. 주문 수량 10 ≤ 감소분 28 이므로 조정 뒤 체결은 인정됨 — 남은 7 이 체결돼야 계좌가 0 이 되므로 수량상 옳음.
+func TestA200ASmallOrderStraddlingTheConvergenceIsRecognised(t *testing.T) {
+	j, clk, p, sell := a200ManagedStop(t, "10")
+	ctx := context.Background()
+	if _, err := j.RecordFill(ctx, fillOf(sell, "3", "67900")); err != nil {
+		t.Fatalf("RecordFill(조정 전 부분): %v", err)
+	}
+	clk.Advance(time.Second)
+	a200Converge(t, j, "005930", "28", "0", clk.Now())
+	if _, err := j.RecordFill(ctx, terminalFill(sell, "10", "67900")); err != nil {
+		t.Fatalf("RecordFill(조정 뒤 나머지): %v", err)
+	}
+	got := readA200Ledger(t, j, p.ID)
+	got.log(t, "작은 주문이 조정을 사이에 둠")
+	a200AssertRecognised(t, got, 1)
 }
 
 // --- 계속 거절해야 하는 입력(design §2) — 편집 전에도 통과, 편집 뒤에도 통과해야 함 -------------
@@ -326,5 +346,61 @@ func TestA200TheRecognitionIsCalledOnceAndReadsNoFillLedger(t *testing.T) {
 	}
 	if len(calls) != 1 || calls["position_projection.go:ProjectPosition"] != 1 {
 		t.Fatalf("recogniseAdjustmentCloseFill 생산 호출 = %v, ProjectPosition 한 자리여야 함", calls)
+	}
+}
+
+// TestA200OtherRefusalsReadNothingBeforeTheRefusalCheck 는 구현 적대 리뷰 impl-r1 P2-1: SELL_ON_CLOSED 가 아닌 거절(OVERSELL 등)은
+// 판정의 원장 읽기를 하지 않아야 함 — 그 읽기가 실패하면 무관한 거절의 체결 tx 까지 롤백됨. ApplyTx 에 읽기 계수기가 없어 구조로 잼:
+// recogniseAdjustmentCloseFill 의 첫 문장이 recognisableRefusal 을 부르는 if 이고 그 갈래가 바로 반환하며, readRecognitionFacts 호출은
+// 그 뒤에만 있음. (가)의 정의는 recognisableRefusal 한 곳(recognitionVerdict 도 그것을 부름).
+func TestA200OtherRefusalsReadNothingBeforeTheRefusalCheck(t *testing.T) {
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, a200RecognitionFile, nil, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	calls := func(n ast.Node, name string) []token.Pos {
+		var at []token.Pos
+		ast.Inspect(n, func(x ast.Node) bool {
+			if call, ok := x.(*ast.CallExpr); ok {
+				if id, ok := call.Fun.(*ast.Ident); ok && id.Name == name {
+					at = append(at, call.Pos())
+				}
+			}
+			return true
+		})
+		return at
+	}
+	var recognise, verdict *ast.FuncDecl
+	for _, decl := range file.Decls {
+		if fn, ok := decl.(*ast.FuncDecl); ok {
+			switch fn.Name.Name {
+			case "recogniseAdjustmentCloseFill":
+				recognise = fn
+			case "recognitionVerdict":
+				verdict = fn
+			}
+		}
+	}
+	if recognise == nil || verdict == nil {
+		t.Fatal("recogniseAdjustmentCloseFill · recognitionVerdict 가 없음")
+	}
+	first, ok := recognise.Body.List[0].(*ast.IfStmt)
+	if !ok || len(calls(first.Cond, "recognisableRefusal")) != 1 {
+		t.Fatal("recogniseAdjustmentCloseFill 의 첫 문장이 recognisableRefusal 을 부르는 if 가 아님 — 다른 거절에서 원장을 읽게 됨")
+	}
+	if _, ok := first.Body.List[len(first.Body.List)-1].(*ast.ReturnStmt); !ok {
+		t.Fatal("거절 유형 검사 갈래가 반환하지 않음")
+	}
+	reads := calls(recognise.Body, "readRecognitionFacts")
+	if len(reads) != 1 || reads[0] < first.End() {
+		t.Fatalf("readRecognitionFacts 호출 %v — 거절 유형 검사(끝 %v) 뒤에 한 번이어야 함", reads, first.End())
+	}
+	if len(calls(verdict.Body, "recognisableRefusal")) != 1 {
+		t.Fatal("recognitionVerdict 가 (가)를 recognisableRefusal 로 판정하지 않음 — 정의가 둘이 됨")
+	}
+	if !recognisableRefusal(position.RefusalSellOnClosed) || recognisableRefusal(position.RefusalOversell) ||
+		recognisableRefusal(position.RefusalEntryWhileClosing) || recognisableRefusal(position.RefusalUnattributedSell) {
+		t.Fatal("recognisableRefusal 은 SELL_ON_CLOSED 만 참이어야 함")
 	}
 }

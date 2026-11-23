@@ -1,6 +1,6 @@
 # Function Logic Map: `TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome` (자리만 옮겨진 판)
 
-- Source: `internal/journal/a200_convergence_close_exit_fill_repro_test.go` (197-214), 작업 트리, source sha256 `3ce6979c84ac…`.
+- Source: `internal/journal/a200_convergence_close_exit_fill_repro_test.go` (198-215), 작업 트리, source sha256 `c2a7d5ea698a…`.
 - AST evidence: `ast.json`(revision: current, 분기 2).
 - Risk scan: `risk-pattern-report.md`.
 - 처분: W0(조정 없이 체결 먼저) 정상 청산 기준 — 본문 무변, 앞의 함수를 지워 자리(줄)만 옮겨짐. 뒤를 잇는 시험 `TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome`(internal/journal/a200_recognition_test.go 또는 같은 파일).
@@ -15,8 +15,8 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 if@204 | 단언 조건(원장 관측값) | 없음 | 참이면 t.Fatalf / t.Logf | 시험 자신 |
-| B2 if@209 | 단언 조건(원장 관측값) | 없음 | 참이면 t.Fatalf / t.Logf | 시험 자신 |
+| B1 if@205 | 단언 조건(원장 관측값) | 없음 | 참이면 t.Fatalf / t.Logf | 시험 자신 |
+| B2 if@210 | 단언 조건(원장 관측값) | 없음 | 참이면 t.Fatalf / t.Logf | 시험 자신 |
 
 ## Calls and live bindings
 

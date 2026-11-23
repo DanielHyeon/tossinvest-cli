@@ -1,11 +1,13 @@
 package reconcile_test
 
-// a200_convergence_close_exit_fill_windows_test.go 는 a200 1단계(1.4 W4·W5·W6, 1.5 범위 밖 둘)의 재현 시험임 — 편집 전 코드의
-// **현재 동작**을 기록함. 실제 원장(임시 DB) · 운영 배선과 같은 훅 리터럴 · 실제 Converger · 실제 Tracker(운영 조립
+// a200_convergence_close_exit_fill_cycles_test.go 는 a200 1단계(1.4 W4·W5·W6, 1.5 범위 밖 둘)의 재현 시험임 — 편집 전 코드의
+// 동작을 기록했고, 이 파일의 시험은 a200 뒤에도 그대로 맞는 계약임. 실제 원장(임시 DB) · 운영 배선과 같은 훅 리터럴 · 실제 Converger · 실제 Tracker(운영 조립
 // gateway.go:271 과 같은 필드 — Terminal 포함)로 ReconcileDriver.RunOnce 의 순서(수렴 → Refresh → Observe, reconcileloop.go:451-464)를
 // 손으로 밟고, 엔진 손절 매도의 체결 커밋을 그 순서의 어느 틈에 넣느냐로 창(W2 · W3 · W4 · W5 · W6)을 만듦.
 //
-// 이름의 「CurrentBehaviour」 는 지금 동작을 못 박는다는 뜻임 — 구현 단계가 W4 · W5 를 RED 로 뒤집음. 픽스처는 합성 값만 씀.
+// 이 하네스의 hold 는 **무관리** 포지션(exit 상태 · 발의 없음)을 만듦 — 그래서 W4 · W5 는 a200 뒤에도 귀속 실패로 남고(인정 조건 (다)),
+// 관리 포지션의 인정은 a200_recognition_cycles_test.go 가 잼. 이름의 「CurrentBehaviour」 는 편집 전부터 같은 동작(W2 · W3 · W6 ·
+// 부분 조정)을 뜻함. 픽스처는 합성 값만 씀.
 
 import (
 	"context"
@@ -194,8 +196,9 @@ func (w *a200World) activeCauses() []string {
 	return out
 }
 
-// TestA200CurrentBehaviourW4FillBetweenConvergenceAndRefresh: 수렴 조정 커밋 뒤 · Refresh 전 체결 커밋.
-func TestA200CurrentBehaviourW4FillBetweenConvergenceAndRefresh(t *testing.T) {
+// TestA200AnUnmanagedW4FillStaysAnAttributionFailure: 수렴 조정 커밋 뒤 · Refresh 전 체결 커밋. 이 하네스의 hold 는 무관리 포지션
+// (exit 상태 · 발의 없음)이라 인정 조건 (다)를 못 지나 a200 뒤에도 귀속 실패로 남음 — 그것이 맞는 계약(design §2 계속 거절 3).
+func TestA200AnUnmanagedW4FillStaysAnAttributionFailure(t *testing.T) {
 	w := newA200World(t)
 	w.hold("31")
 	diff := w.mismatch("31", "0")
@@ -216,8 +219,9 @@ func TestA200CurrentBehaviourW4FillBetweenConvergenceAndRefresh(t *testing.T) {
 	}
 }
 
-// TestA200CurrentBehaviourW5FillBetweenRefreshAndPersist: Refresh 뒤 · Observe 의 persist 전 체결 커밋.
-func TestA200CurrentBehaviourW5FillBetweenRefreshAndPersist(t *testing.T) {
+// TestA200AnUnmanagedW5FillStaysAnAttributionFailure: Refresh 뒤 · Observe 의 persist 전 체결 커밋 — 무관리 포지션이라 a200 뒤에도
+// 오늘과 같음(Observe 오류 F13 · 귀속 실패 고착).
+func TestA200AnUnmanagedW5FillStaysAnAttributionFailure(t *testing.T) {
 	w := newA200World(t)
 	w.hold("31")
 	diff := w.mismatch("31", "0")

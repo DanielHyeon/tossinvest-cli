@@ -53,10 +53,16 @@ type recognitionAttempt struct {
 	Kind, State string
 }
 
+// recognisableRefusal 은 조건 (가)의 정의 한 곳임 — 닫힌 인스턴스의 매도 거절만 이 경합임. 순수 판정과 원장 읽기 앞의 조기 반환이
+// 같은 술어를 부름(복사하면 판정이 둘이 되어 한쪽 변이가 다른 쪽에 가려짐).
+func recognisableRefusal(r position.Refusal) bool {
+	return r == position.RefusalSellOnClosed
+}
+
 // recognitionVerdict 는 인정 조건 넷(design D2)이 모두 참인지 판정함. 읽을 수 없는 decimal 은 「아님」(오늘의 귀속 실패로 남김).
 func recognitionVerdict(f recognitionFacts) bool {
 	// (가) 닫힌 인스턴스의 매도 거절만 — 다른 거절 유형은 이 경합이 아님.
-	if f.Refusal != position.RefusalSellOnClosed {
+	if !recognisableRefusal(f.Refusal) {
 		return false
 	}
 	// (나) 그 인스턴스를 닫은 것이 수렴 조정: 수량 0 조정 행이 정확히 하나이고 그것이 마지막 행이며 수렴의 kind.
@@ -92,6 +98,11 @@ func recognitionVerdict(f recognitionFacts) bool {
 	if err != nil {
 		return false
 	}
+	// 주문 수량은 양수여야 함 — 0 · 음수는 브로커가 접수하지 않으므로 생산에선 도달하지 않지만, 상한 비교만으로는 참이 되어 버림.
+	positive, err := riskcalc.CompareDecimal(f.IntentQuantity, "0")
+	if err != nil || positive <= 0 {
+		return false
+	}
 	cmp, err := riskcalc.CompareDecimal(f.IntentQuantity, decrease)
 	if err != nil {
 		return false
@@ -103,9 +114,9 @@ func recognitionVerdict(f recognitionFacts) bool {
 // 호출자는 차단을 쓰지 않고 투영도 쓰지 않음. 원장 읽기 오류는 그대로 돌려줌(체결 tx 롤백 — 오늘의 차단 쓰기 오류와 같은 방향).
 func recogniseAdjustmentCloseFill(ctx context.Context, tx *ApplyTx, origin fillOrigin,
 	instance projectedInstance, outcome position.Outcome) (bool, error) {
-	// 인스턴스 행이 없으면(FLAT — 매도면 UNATTRIBUTED_SELL) 읽을 조정 · exit 상태가 없음. 거절 유형 판정은 recognitionVerdict
-	// 한 곳에만 둠(판정이 둘이면 한쪽 변이가 다른 쪽에 가려 살아남음).
-	if !instance.Held || instance.ID == "" {
+	// 이 경합이 아닌 거절(OVERSELL · ENTRY_WHILE_CLOSING 등)은 원장을 읽지 않고 돌아감 — 그 거절들에 새 읽기 실패 경로를 만들지 않음.
+	// (가)의 정의는 recognisableRefusal 한 곳. 인스턴스 행이 없으면(FLAT) 읽을 조정 · exit 상태도 없음.
+	if !recognisableRefusal(outcome.Refusal) || !instance.Held || instance.ID == "" {
 		return false, nil
 	}
 	facts, err := readRecognitionFacts(ctx, tx, origin, instance, outcome)

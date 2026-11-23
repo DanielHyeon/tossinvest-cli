@@ -7,4 +7,7 @@
 |---|---|---|---|
 | 1 회차 | `8560c2622` | 16 중 CAUGHT 14 · **SURVIVED 1(M2 「0 조정 정확히 하나」 삭제)** · 빌드 실패 1(M3 — 미사용 변수, 가짜 CAUGHT) | `ledger-run1.md` |
 | 처분 | `8d0655294` | M2: 판정 시험 「0 조정 둘」 사례의 둘째 행 prev 가 0 이라 (라)(감소분 0)가 대신 거절하고 있었음 — prev 31 로 고쳐 「정확히 하나」 자체를 잼(범위 안 시험). M3: 변이를 `(!lastZero && false)` 로 다시 씀 | 커밋 메시지 |
-| 2 회차 | `8d0655294` | **16 / 16 CAUGHT**, 무변이 대조군 GREEN, 생존 0 | `ledger.md` |
+| 2 회차 | `8d0655294` | **16 / 16 CAUGHT**, 무변이 대조군 GREEN, 생존 0 | `ledger-run2.md` |
+| 3 회차(impl-r1 처분 뒤) | 이 README 를 담은 커밋 | M1 앵커를 `recognisableRefusal` 로 갱신, M17(조기 반환 삭제) · M18(「> 0」 삭제) 추가 | `ledger.md` |
+
+- M1 주석: 조건 (가)는 도달 가능한 상태에서 (나)에 함의된다(CLOSED 에서 거절되는 매도는 `SELL_ON_CLOSED` 뿐 — 전이표 X58~X60). 그래서 (가) 삭제는 원장 시험이 아니라 순수 판정 시험(`TestA200TheVerdictRecognisesTheIncidentShapeAndRefusesEachBrokenCondition`)만 잡는다 — 순수 판정의 조건별 시험이 그 조건을 따로 고정함.

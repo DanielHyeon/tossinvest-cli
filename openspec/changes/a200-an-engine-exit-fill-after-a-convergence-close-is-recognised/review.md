@@ -97,3 +97,16 @@ reconciliation delta 는 **ADDED Requirement** 로 만들었다(Manager 승인 2
 - (i) 주문 수량 = `intents.quantity`(schema.go:212) — `Gateway.prepareRequest` decimalString@1053 ← `Gateway.place` :374 `intent.Quantity`, 브로커 호출 `g.trading.Place@400` 은 같은 intent 복사본, intent 행 불변(`Journal.Prepare` B6 if@392 `ErrIntentMutated`).
 - (ii) 청산 주문 수량 ≤ 인스턴스 수량: `ExitObserver.submit` `IssueReduction@1517`(`HeldQuantity: m.position.Quantity`) → `risk.Evaluate` → `evaluateReduction` B4(if@241) `SellExceedsHoldings`.
 - (iii) 한 intent 에 attempt 여러 개 가능(`attempt_no` per intent, schema.go:229) → 「PLACE · AMEND attempt 상태 무관 정확히 하나 · CONFIRMED PLACE」 를 조건에 넣음.
+
+## 구현 적대 리뷰 impl-r1 (Manager 실행, 별도 문맥 Opus + codex, HEAD 8ad6c3e79 대 base 28680af3d)
+
+판정 조건부 통과 — P0 없음(base 와 표 전체 덤프 차등에서 달라진 것은 차단 행과 표지 행뿐). 원문 · 탐침 `analysis/review/impl-r1/`(탐침 시험은 `.go.txt` — 저장소 빌드에 들지 않게).
+
+| # | 등급 | 요지 | 처분(Manager) · 반영 |
+|---|---|---|---|
+| P1-1 | 문서 | 구현은 주문 수량 ≤ 감소분이면 조정 전 일부 체결이 있어도 인정하는데 문서는 「조정 뒤 첫 체결부터 거절」 로 단정 | 문서를 구현에 맞춤: ledger Scenario WHEN 을 「주문 수량이 감소분보다 큰」 으로 좁히고 새 Scenario 「감소분 이하의 부분 청산 주문이 조정을 사이에 둔다 → 인정」, design §2 (가) · §4, Story limits. 계약 시험 `TestA200ASmallOrderStraddlingTheConvergenceIsRecognised` |
+| P2-1 | 코드 | 보유 인스턴스의 모든 거절이 판정의 원장 읽기를 돌아 무관한 거절에 새 실패 경로 | `recogniseAdjustmentCloseFill` 첫머리에서 (가)를 먼저 — 정의는 `recognisableRefusal` 한 곳(순수 판정도 그것을 부름). 구조 시험 `TestA200OtherRefusalsReadNothingBeforeTheRefusalCheck`, 변이 M17. `ProjectPosition` 무편집 |
+| P2-2 | 코드 | 0 · 음수 주문 수량이 참 | (라)에 「주문 수량 > 0」, 판정 시험 「0」 · 「-1」, 변이 M18 |
+| P2-3 | 주석 · 이름 | reconcile 재현 파일 머리 · `CurrentBehaviour` 이름 · 없는 `…_windows_test.go` 참조 | 머리 주석 두 파일 정정, 무관리 W4 · W5 이름을 `TestA200AnUnmanagedW4/W5FillStaysAnAttributionFailure` 로(본문 무변, 옛 이름은 revision base 번들) |
+| P2-4 | spec · 공시 | MODIFIED 의 「인정한 체결 하나뿐」, provenance 「judged …」 문구 | 「인정한 체결뿐이며(체결마다 인정한다)」 로, provenance 문구는 Story limits · design §4 에 한 줄(표시 문구) |
+| 확인 | — | (가)는 도달 가능한 상태에서 (나)에 함의 · a199 청산 전용 기동에서도 작동 | design §5 · 변이 원장 주석 |

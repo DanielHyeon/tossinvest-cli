@@ -67,6 +67,8 @@ func TestA200TheVerdictRecognisesTheIncidentShapeAndRefusesEachBrokenCondition(t
 		{"(라) 주문 수량 > 감소분", func(f *recognitionFacts) { f.IntentQuantity = "32" }, false},
 		{"(라) 주문 수량 = 감소분(경계)", func(f *recognitionFacts) { f.IntentQuantity = "31" }, true},
 		{"(라) 주문 수량 < 감소분", func(f *recognitionFacts) { f.IntentQuantity = "10" }, true},
+		{"(라) 주문 수량 0", func(f *recognitionFacts) { f.IntentQuantity = "0" }, false},
+		{"(라) 주문 수량 음수", func(f *recognitionFacts) { f.IntentQuantity = "-1" }, false},
 		{"(라) 감소분은 prev − new", func(f *recognitionFacts) {
 			f.Adjustments[0].PrevQuantity = "21"
 			f.IntentQuantity = "31"

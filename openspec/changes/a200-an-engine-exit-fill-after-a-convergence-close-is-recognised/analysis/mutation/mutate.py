@@ -19,8 +19,13 @@ F = "internal/journal/a200_adjustment_close_fill_recognition.go"
 P = "internal/journal/position_projection.go"
 
 MUTANTS = [
-    ("M1", "(가) 거절 유형 검사 삭제", F,
-     "\tif f.Refusal != position.RefusalSellOnClosed {\n\t\treturn false\n\t}\n", ""),
+    # (가)는 도달 가능한 상태에서 (나)에 함의됨(CLOSED 에서 거절되는 매도는 SELL_ON_CLOSED 뿐) — 이 변이는 순수 판정 시험만 잡는다.
+    ("M1", "(가) 거절 유형 검사 삭제(순수 판정)", F,
+     "\tif !recognisableRefusal(f.Refusal) {\n\t\treturn false\n\t}\n", ""),
+    ("M17", "원장 읽기 앞 거절 유형 조기 반환 삭제(impl-r1 P2-1)", F,
+     "if !recognisableRefusal(outcome.Refusal) || !instance.Held", "if !instance.Held"),
+    ("M18", "(라) 「주문 수량 > 0」 삭제(impl-r1 P2-2)", F,
+     "if err != nil || positive <= 0 {", "if err != nil {"),
     ("M2", "(나) 「0 조정 정확히 하나」 삭제", F,
      "if zeroRows != 1 || !lastZero ||", "if !lastZero ||"),
     ("M3", "(나) 「마지막 조정 행」 삭제", F,

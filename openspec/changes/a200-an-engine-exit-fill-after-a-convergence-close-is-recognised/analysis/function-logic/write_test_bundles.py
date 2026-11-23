@@ -25,13 +25,21 @@ BUNDLES = {
     "TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome": (
         "current", "TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome",
         "W0(조정 없이 체결 먼저) 정상 청산 기준 — 본문 무변, 앞의 함수를 지워 자리(줄)만 옮겨짐"),
+    # impl-r1 P2-3: reconcile 재현 파일의 무관리 W4 · W5 는 a200 뒤에도 맞는 계약이라 이름만 사실대로 바꿈(본문 무변).
+    "TestA200CurrentBehaviourW4FillBetweenConvergenceAndRefresh": (
+        "base", "TestA200AnUnmanagedW4FillStaysAnAttributionFailure",
+        "무관리 W4 의 귀속 실패 — 이름만 바꿈(본문 무변, 새 이름 시험이 같은 단언)"),
+    "TestA200CurrentBehaviourW5FillBetweenRefreshAndPersist": (
+        "base", "TestA200AnUnmanagedW5FillStaysAnAttributionFailure",
+        "무관리 W5 의 귀속 실패 · Observe 오류 — 이름만 바꿈(본문 무변)"),
 }
 
 
 def main() -> None:
     for fn, (revision, successor, why) in BUNDLES.items():
-        target = HERE / f"internal-journal--{fn.lower()}"
+        target = next(HERE.glob(f"*--{fn.lower()}"))
         ast = json.loads((target / "ast.json").read_text(encoding="utf-8"))
+        SOURCE = ast["file"]
         assert ast.get("revision", "current") == revision, (fn, ast.get("revision"))
         start, end = ast["start"]["line"], ast["end"]["line"]
         branches = ast.get("branches") or []

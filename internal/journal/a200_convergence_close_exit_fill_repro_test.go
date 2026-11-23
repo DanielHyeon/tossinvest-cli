@@ -6,9 +6,10 @@ package journal
 // 주문(exit_states.pending_intent_id 에 붙은 intent)의 매도 체결이 도착하는 순서를 임시 원장과 운영 배선과 같은 훅 리터럴
 // (app/engine bindApplyHooks: Project · Campaign · Exit · Costs)로 만듦. 조정 요청은 reconcile.Converger.ConvergeQuantities
 // (converge.go:209-227)가 보내는 값과 같은 모양으로 직접 씀 — journal 패키지 내부 시험은 reconcile 을 들일 수 없어서임
-// (실제 Converger · Tracker 로 도는 창 재현은 internal/reconcile/a200_convergence_close_exit_fill_windows_test.go).
+// (실제 Converger · Tracker 로 도는 창 재현은 internal/reconcile/a200_convergence_close_exit_fill_cycles_test.go).
 //
-// 이름의 「CurrentBehaviour」 는 이 시험이 지금 동작을 못 박는다는 뜻임 — a200 구현 단계(2.2)가 인정 갈래에서 RED 로 뒤집음.
+// 이름의 「CurrentBehaviour」 는 편집 전부터 같은 동작을 뜻함 — 이 파일에 남은 시험(W0 · 조정을 사이에 둔 큰 주문 · 재매수 둘 ·
+// 체결로 닫힌 뒤 둘째 매도)은 a200 뒤에도 그대로 맞는 계약임. 뒤집힌 셋은 a200_recognition_test.go 로 옮겨 갔음.
 // 픽스처는 합성 값만 씀(계좌 · 종목 · 주문 번호 · 가격 모두 지어낸 값).
 
 import (

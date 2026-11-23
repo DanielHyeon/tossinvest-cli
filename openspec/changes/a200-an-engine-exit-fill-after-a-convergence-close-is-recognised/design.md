@@ -43,7 +43,7 @@
 5. 주문 수량 < 감소분(부분 익절 주문 — 사다리 · 래칫 부분).
 
 **이 change 가 거절하는 정상 입력(대가, 이름으로)**:
-- (가) **그 주문의 체결 일부가 조정보다 먼저 투영에 반영된 경합** — 조정이 그만큼 작은 보유(31 → 21)를 닫았으므로 주문 수량(31) > 감소분(21) 이고, **조정 뒤 첫 체결부터** `ATTRIBUTION_FAILED` 다. 정확히 가르려면 「어느 체결이 조정 뒤였는가」 의 원장 기록이 필요한데 그 열이 없다(스키마 36). 재현 `TestA200CurrentBehaviourAStopFillStraddlingTheConvergenceIsAnAttributionFailure`. γ 를 다시 열 첫 후보.
+- (가) **주문 수량이 감소분보다 큰 주문**(= 전량 청산 주문의 일부가 조정보다 먼저 투영에 반영된 경합) — 조정이 그만큼 작은 보유(31 → 21)를 닫았으므로 주문 수량(31) > 감소분(21) 이고, **조정 뒤 첫 체결부터** `ATTRIBUTION_FAILED` 다. 주문 수량이 감소분 **이하**인 부분 청산 주문은 조정 전에 일부가 체결됐어도 조정 뒤 체결이 인정된다(구현 적대 리뷰 impl-r1 P1-1 — 보유 31 · 주문 10 · 조정 전 3 → 조정 28→0 → 나머지 7 인정. 남은 7 이 체결돼야 계좌가 0 이 되므로 수량상 옳음, 시험 `TestA200ASmallOrderStraddlingTheConvergenceIsRecognised`). 정확히 가르려면 「어느 체결이 조정 뒤였는가」 의 원장 기록이 필요한데 그 열이 없다(스키마 36). 재현 `TestA200CurrentBehaviourAStopFillStraddlingTheConvergenceIsAnAttributionFailure`. γ 를 다시 열 첫 후보.
 - (나) **정정된 청산 주문의 체결**(그 intent 에 AMEND attempt 가 생긴 뒤에 온 체결 전부 — 정정 전에 인정된 체결은 그대로). 지금 exit 관측은 청산을 정정하지 않는다. a167(보호 잔량 재호가, 착수 전)이 착지하면 이 범위가 넓어진다.
 
 **범위 밖 사실(판정에 닿지 않음)**: 체결 투영과 Exit 훅은 (계좌 · 시장 · 종목)의 최신 인스턴스를 읽는다(`currentInstance` · `exitContextForFill`). 조정 뒤 재매수로 새 인스턴스가 생긴 다음에 온 옛 주문의 체결은 `SELL_ON_CLOSED` 에 오지 않으므로 인정 판정에 닿지 않는다 — 전량이면 OVERSELL → 수량 불일치, 부분이면 차단 없이 새 인스턴스를 줄인다(재현, `analysis/repro/out-of-scope.md`, 별도 Story 후보).
@@ -56,12 +56,13 @@
 3. **정상 입력** — §2 의 1~5 각각: 차단 행 0 · 표지(인정된 체결 수만큼).
 4. **실제 `Tracker`**(1단계 `…_cycles_test.go` 의 하네스): W4 · W5 는 그 주기 귀속 실패 행 0, W5 의 Observe 오류 없음, 다음 일치 비교에서 수량 불일치가 `ADJUSTMENT_APPLIED` 로 풀리고 그 종목 `EntryAllowed` = nil(편입 경로가 그 종목을 차단 보유로 거르지 않음). W6 은 무변(오늘과 같은 결과 + 표지). 재기동 판: W4 인정 뒤 Tracker 를 새로 만들어 `Restore` 하면 수량 불일치가 「조정 대기」 로 남는 것(오늘 동작 — 공시 시험, codex r1 P2-2).
 5. **구조**: 인정 판정 함수의 생산 호출 자리 1(`ProjectPosition`), 새 파일에 `pending_intent_id` 철자 0(기존 구조 시험), 판정이 `resolveFillOrigin` 을 부르지 않음, `fill_events` · `fill_snapshots` 를 읽지 않음.
-6. **변이**(사본): (가) · (나) · (다) · (라) 각각 삭제, (나)의 「정확히 하나 · 마지막」 삭제, kind 검사 삭제, 상한 비교를 `<` 로(같은 수량인 본 사고가 거절돼야 잡힘), 상한 비교 삭제, AMEND 검사 삭제, PLACE 유일 검사 삭제, 감소분 대신 `new_quantity` 만(또는 `prev_quantity` 대신 다른 열), 인정 뒤 투영 쓰기(수량 다시 빼기), 판정을 거절 유형 무관하게 부르기.
+6. **변이**(사본): (가) · (나) · (다) · (라) 각각 삭제, (나)의 「정확히 하나 · 마지막」 삭제, kind 검사 삭제, 상한 비교를 `<` 로(같은 수량인 본 사고가 거절돼야 잡힘), 상한 비교 삭제, AMEND 검사 삭제, PLACE 유일 검사 삭제, 감소분 대신 `new_quantity` 만(또는 `prev_quantity` 대신 다른 열), 인정 뒤 투영 쓰기(수량 다시 빼기), 판정을 거절 유형 무관하게 부르기, 원장 읽기 앞 거절 유형 조기 반환 삭제 · 「주문 수량 > 0」 삭제(impl-r1).
 
 ## 4. 잔여 · 공시
 
 - 성과(F15) 없음 — 인정된 손절도 성과에 잡히지 않는다. 후속 Story 후보.
-- 거절하는 정상 입력 (가) 조정을 사이에 둔 부분 체결 · (나) 정정된 청산 주문(§2). a167 착지 뒤 (나)가 넓어진다.
+- 거절하는 정상 입력 (가) 주문 수량이 감소분보다 큰 주문(전량 청산 주문의 일부가 조정보다 먼저 반영) · (나) 정정된 청산 주문(§2). a167 착지 뒤 (나)가 넓어진다.
+- provenance 화면은 표지 행도 다른 exit 이벤트처럼 「judged …」 문구로 보여 준다 — 표시 문구이고 판정이 아니다(고치지 않음, Story limits).
 - 인과는 증명하지 않는다(§2 「인과는 …」) — 뒷받침은 M29 · M33 · M30, 앱 매도 · 부분 체결 잔량 · 보유 조회 지연은 미측정 가정. 틀리면 그 종목의 차단 하나를 잃고 표지 · 체결 기록에 남는다.
 - 재기동이 끼면 그 주기의 수량 불일치는 지금처럼 조정 대기(D6).
 - 재매수 뒤 옛 주문의 체결은 판정에 닿지 않는다(§2, 별도 Story 후보).
@@ -77,3 +78,5 @@
 - 고정 장치: `TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook`(새 파일은 `PendingState` 로 읽음), `adoptionIDReaders` · `eligibilitySpellers`(새 파일은 그 열을 안 읽음), 전이표 census · `ValidReconcileCause` · `TradeOutcomeRefusalReasons`(새 값 없음 — 무적중), a166 census(배선 무편집 — 무적중), a130 `bindApplyHooks` 인자 수(무편집).
 - a167(착수 전)은 `ApplyExitFill` 을 FLM 대상으로 적었으나 이 change 는 `ApplyExitFill` 무편집 — 편집 겹침 없음. 다만 a167 이 청산을 정정하면 그 체결은 이 인정의 (나)로 거절된다. a199 와 편집 파일 겹침은 Manager 대조.
 - base 재고정은 a198 착지 · merge 뒤(Manager 승인 2026-11-24, `review.md`).
+- a199(인터록)의 청산 전용 기동에서도 대사가 돌므로 이 인정은 그 모드에서도 같은 자리(체결 투영)에서 작동한다(구현 적대 리뷰 impl-r1 확인).
+- 조건 (가)는 도달 가능한 상태에서 (나)에 함의된다(CLOSED 에서 거절되는 매도는 `SELL_ON_CLOSED` 뿐 — 전이표 X58~X60) — 그래서 (가) 삭제 변이는 순수 판정 시험만 잡는다(변이 원장 주석). 원장 읽기 앞의 조기 반환도 같은 술어 `recognisableRefusal` 을 부른다(impl-r1 P2-1). (라)에 「주문 수량 > 0」(impl-r1 P2-2 — 생산에선 도달 불가, 거부할 정상 입력 없음).

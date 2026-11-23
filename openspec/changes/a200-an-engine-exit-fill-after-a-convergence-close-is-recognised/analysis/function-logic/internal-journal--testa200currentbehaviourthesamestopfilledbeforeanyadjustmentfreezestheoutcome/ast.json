@@ -1,15 +1,15 @@
 {
   "file": "internal/journal/a200_convergence_close_exit_fill_repro_test.go",
-  "source_sha256": "3ce6979c84ac1bc4ec7a61f17a651f4d062938357b0d8e7cf0c713d7f307b499",
+  "source_sha256": "c2a7d5ea698ad97a7dac126577f7fc78b6ca1c8b253c87aedee6e4d4cd20c695",
   "package": "journal",
   "function": "TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome",
   "signature": "TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome(params=1, results=0)",
   "start": {
-    "line": 197,
+    "line": 198,
     "column": 1
   },
   "end": {
-    "line": 214,
+    "line": 215,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 204,
+        "line": 205,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 209,
+        "line": 210,
         "column": 2
       }
     }
@@ -35,7 +35,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 198,
+        "line": 199,
         "column": 12
       },
       "text": "a200Journal"
@@ -43,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 199,
+        "line": 200,
         "column": 14
       },
       "text": "openedPosition"
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 200,
+        "line": 201,
         "column": 7
       },
       "text": "currentPosition"
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 201,
+        "line": 202,
         "column": 10
       },
       "text": "a200ArmStop"
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 203,
+        "line": 204,
         "column": 2
       },
       "text": "clk.Advance"
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 205,
         "column": 15
       },
       "text": "j.RecordFill"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 205,
         "column": 28
       },
       "text": "context.Background"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 205,
         "column": 50
       },
       "text": "terminalFill"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 205,
+        "line": 206,
         "column": 3
       },
       "text": "t.Fatalf"
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 207,
+        "line": 208,
         "column": 9
       },
       "text": "readA200Ledger"
@@ -115,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 208,
+        "line": 209,
         "column": 2
       },
       "text": "got.log"
@@ -123,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 209,
+        "line": 210,
         "column": 5
       },
       "text": "len"
@@ -131,7 +131,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 209,
+        "line": 210,
         "column": 32
       },
       "text": "countOf"
@@ -139,7 +139,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 210,
+        "line": 211,
         "column": 3
       },
       "text": "t.Fatalf"
@@ -147,7 +147,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 212,
+        "line": 213,
         "column": 12
       },
       "text": "outcomeOf"
@@ -155,7 +155,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 213,
+        "line": 214,
         "column": 2
       },
       "text": "t.Logf"
@@ -165,13 +165,6 @@
     {
       "kind": ":=",
       "at": {
-        "line": 198,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
         "line": 199,
         "column": 2
       }
@@ -193,21 +186,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 204,
-        "column": 5
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 207,
+        "line": 202,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 212,
+        "line": 205,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 208,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 213,
         "column": 2
       }
     }

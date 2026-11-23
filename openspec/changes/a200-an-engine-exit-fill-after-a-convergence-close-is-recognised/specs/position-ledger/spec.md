@@ -16,13 +16,17 @@
 - **THEN** 지금처럼 거절되어 귀속 실패 RECONCILE 이 되고 표지는 남지 않는다
 
 #### Scenario: 조정을 사이에 둔 부분 체결
-- **WHEN** 손절 주문의 체결 일부가 조정 전에 투영에 반영되고 나머지가 조정 뒤에 오면
-- **THEN** 조정이 닫은 수량이 주문 수량보다 작으므로 조정 뒤 첫 체결부터 인정하지 않고 귀속 실패 RECONCILE 이 된다
+- **WHEN** 주문 수량이 조정의 감소분보다 큰 청산 주문의 체결 일부가 조정 전에 투영에 반영되고 나머지 체결이 조정 뒤에 도착하면
+- **THEN** 조정 뒤 첫 체결부터 인정하지 않고 귀속 실패 RECONCILE 이 된다
+
+#### Scenario: 감소분 이하의 부분 청산 주문이 조정을 사이에 둔다
+- **WHEN** 주문 수량이 조정의 감소분 이하인 부분 청산 주문의 체결 일부가 조정 전에 반영되고 나머지 체결이 조정 뒤에 도착하면
+- **THEN** 조정 뒤의 체결은 인정되어 차단 행이 생기지 않고 투영은 CLOSED · 0 그대로이며 표지가 남는다
 
 ## MODIFIED Requirements
 
 ### Requirement: 포지션 상태기계
-Position은 FLAT → OPENING → OPEN → (SCALING | CLOSING) → CLOSED 상태를 가지며(SHALL) 전이는 `(현재 상태, 주문 역할, 누적 delta, lineage)`의 **완전한 전이표**로 결정론적으로 정의된다(SHALL — 전이표 전체는 design 산출물이며 태스크는 표의 전 행을 테스트한다). 표는 즉시 전량체결(FLAT→OPEN 직행 허용), OPENING 종료 판단(원주문 수량), SCALING 진입·종료, 정정 교체 주문의 lineage 승계, 매도 체결 귀속, CLOSED 종결성을 다룬다. 허용되지 않은 전이는 오류이며 RECONCILE로 전이한다(SHALL — 산식 보정 금지). 예외는 「수렴 조정이 닫은 인스턴스에 늦게 닿은 엔진 청산 체결은 인정된다」 가 인정한 체결 하나뿐이며 그때도 투영 수량은 바뀌지 않는다(SHALL).
+Position은 FLAT → OPENING → OPEN → (SCALING | CLOSING) → CLOSED 상태를 가지며(SHALL) 전이는 `(현재 상태, 주문 역할, 누적 delta, lineage)`의 **완전한 전이표**로 결정론적으로 정의된다(SHALL — 전이표 전체는 design 산출물이며 태스크는 표의 전 행을 테스트한다). 표는 즉시 전량체결(FLAT→OPEN 직행 허용), OPENING 종료 판단(원주문 수량), SCALING 진입·종료, 정정 교체 주문의 lineage 승계, 매도 체결 귀속, CLOSED 종결성을 다룬다. 허용되지 않은 전이는 오류이며 RECONCILE로 전이한다(SHALL — 산식 보정 금지). 예외는 「수렴 조정이 닫은 인스턴스에 늦게 닿은 엔진 청산 체결은 인정된다」 가 인정한 체결뿐이며(체결마다 인정한다) 그때도 투영 수량은 바뀌지 않는다(SHALL).
 
 #### Scenario: 부분 청산 중 추가 체결
 - **WHEN** CLOSING 상태에서 청산 주문의 부분체결이 반영되면
