@@ -1,41 +1,42 @@
 # Function Logic Map: `stageKey`
 
-> **편집 전 지도(pre-edit) — 1단계, 2026-11-23, base `064f59fd9`.** 2단계 GREEN 뒤 AST·지도를 다시 만든다.
+> **편집 후 지도 — 2단계 GREEN 뒤(2026-11-23).** 편집 전 원본 `../../pre-edit-ast/internal-app-engine--stagekey.ast.json`, 재번호 `renumber.txt`(옛/새 분기를 (종류, 줄 문장)으로 difflib 정렬 — 생성기 `../../renumber.py.txt`).
 
-- Source: `internal/app/engine/attestation_watch.go` (303-308)
-- AST evidence: `ast.json` — branches **1** / returns **2** / calls **4**, source SHA-256 `29252ace6e7338abe7fa91bf9a7cfe894b8edde2c87657e60e9f54e1e9c7d68d`(파일 단위).
+- Source: `internal/app/engine/attestation_watch.go` (340-353)
+- AST evidence: `ast.json` — branches **4** / returns **4** / calls **9**, source SHA-256 `587249217d6328264ddd0ce53b3614496265a12c223003f3e20d17dd6bc89272`(파일 단위, 편집 후).
   명령 `GOFLAGS=-trimpath go run ./tools/logic-map --file internal/app/engine/attestation_watch.go --func stageKey`.
-- Risk scan: `risk-pattern-report.md`(일치 0). a166 census 0건. 호출자: `attestationWatch.prepare`(call stageKey@294) 1(CodeGraph 1.6.0 + grep).
+- Risk scan: `risk-pattern-report.md`.
+- a166 census: `attestation_watch.go`·`a135_attestation_watch_internal_test.go` 0건(1.4).
 
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| `v.Stage`·`v.DaysLeft` | judge 결과 | `judgeAttestation` | — |
-| `now` | 감시 시계 | prepare call@282 | — |
-| `kst` | `time.FixedZone("KST", 9h)`(:311) — tz 데이터 무관 | 전역 | — |
-| 불변식 | 키에 계좌·경로 없음(`TestA135AlertCarriesNoAccount` 가 Key 까지 검사) | engine-safety | — |
+| `v.Stage`·`v.DaysLeft`·`v.Deadline`·`v.Missing` | judge 결과(Missing 은 MissingEndpoints 가 정렬) | `judgeAttestation` | — |
+| `now`·`kst` | 감시 시계, 고정 +9h | — | — |
+| 불변식 | 키 = outbox Key 본체(eventFor 가 접두어만 붙임) — 발급 신원 없음, 계좌·경로 없음 | design D5 | — |
 
 ## Branches and early returns
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (if@304) | `notice \|\| imminent` | 없음 | return@305 `fmt.Sprintf("%s:%d", Stage, DaysLeft)` — 예 `notice:7` | `TestA135WatchAnnouncesEachStageOnce` |
-| (끝) | 거절 단계·healthy(healthy 는 prepare B4 가 먼저 걸러 여기 안 옴) | 없음 | return@307 `string(Stage)+":"+now.In(kst).Format("2006-01-02")` — 예 `scope_lost:2026-11-23` | `TestA135InvalidStatesAreRemindedDaily` |
+| B1 (switch@343) | 단계 | — | — | — |
+| B2 (case@344) | notice·imminent | 없음 | return@345 `stage:days:기한` | `TestA196SameProofReissueIsNotAnnouncedAgain`(D-7→D-6 Key 다름) · `TestA135WatchAnnouncesEachStageOnce` |
+| B3 (case@346) | proof_overdue | 없음 | return@347 `stage:기한:KST날짜` | `TestA196OverdueIsCriticalOncePerDay` |
+| B4 (case@348) | scope_lost | 없음 | return@350 `stage:누락,집합:KST날짜` | `TestA196RestartedWatchReusesTheRejectionKey` · `TestA196ScopeLossOncePerDayAcrossReissues` |
+| (끝) | 그 밖 거절 단계 | 없음 | return@352 `stage:KST날짜` | `TestA196RejectionDayIsTheKSTDate` · `TestA135InvalidStatesAreRemindedDaily` · `TestA196ScopeLossThenExpiryAreTwoAlerts` |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `fmt.Sprintf`(call@305)·`now.In(kst).Format`(call@307) | 문자열 조립 | 순수 | AST |
+| `now.In(kst).Format`·`v.Deadline.UTC().Format`·`fmt.Sprintf`·`strings.Join` | 문자열 조립 | 순수 | AST calls 9 |
 
 ## State mutations and fallbacks
 
-- 없음(순수). **키 자체에는 발급 신원이 없다** — 발급 신원은 prepare B3(「보냄」 재설정)와 eventFor L370(outbox Key 접미사)에 있다.
-- Manager 결정 2026-11-23 Q4: `proof_overdue` 키 = 단계 + 기한 시각 + KST 날짜(B1 의 날수 갈래가 아니라 날짜 갈래 쪽).
-- a196 편집 예정(D5): 범위 상실 키에 정렬된 누락 endpoint 집합을 더한다(`v.Missing` 은 judge B5 에서 이미 정렬됨). 날수 키(D4)는 「보냄」 재설정의 신원이 기한 시각으로 바뀌면 그대로 둘 수 있다 — 어느 쪽으로 구현할지는 2단계.
+- 없음(순수). 편집 전 `if` 하나 → `switch` 셋 갈래(renumber: changed — 구조 교체).
 
 ## Safety conclusion
 
-- Safe edit boundary: 반환 문자열 조립 두 줄.
-- High-risk impact: no.
+- Safe edit boundary: 함수 전체(순수 키 조립).
+- High-risk impact: no — 단 키가 outbox 중복 판정 입력이라 변이 ④⑤⑩⑪ 로 고정.

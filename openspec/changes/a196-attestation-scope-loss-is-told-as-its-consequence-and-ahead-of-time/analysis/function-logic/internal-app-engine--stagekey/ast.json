@@ -1,23 +1,47 @@
 {
   "file": "internal/app/engine/attestation_watch.go",
-  "source_sha256": "29252ace6e7338abe7fa91bf9a7cfe894b8edde2c87657e60e9f54e1e9c7d68d",
+  "source_sha256": "587249217d6328264ddd0ce53b3614496265a12c223003f3e20d17dd6bc89272",
   "package": "engine",
   "function": "stageKey",
   "signature": "stageKey(params=2, results=1)",
   "start": {
-    "line": 303,
+    "line": 340,
     "column": 1
   },
   "end": {
-    "line": 308,
+    "line": 353,
     "column": 2
   },
   "branches": [
     {
       "id": "B1",
-      "kind": "if",
+      "kind": "switch",
       "at": {
-        "line": 304,
+        "line": 343,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 344,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 346,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 348,
         "column": 2
       }
     }
@@ -26,14 +50,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 305,
+        "line": 345,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 307,
+        "line": 347,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 350,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 352,
         "column": 2
       }
     }
@@ -42,7 +80,39 @@
     {
       "kind": "call",
       "at": {
-        "line": 305,
+        "line": 341,
+        "column": 9
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 341,
+        "column": 9
+      },
+      "text": "now.In"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 342,
+        "column": 14
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 342,
+        "column": 14
+      },
+      "text": "v.Deadline.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 345,
         "column": 10
       },
       "text": "fmt.Sprintf"
@@ -50,29 +120,52 @@
     {
       "kind": "call",
       "at": {
-        "line": 307,
-        "column": 9
+        "line": 347,
+        "column": 10
       },
       "text": "string"
     },
     {
       "kind": "call",
       "at": {
-        "line": 307,
-        "column": 33
+        "line": 350,
+        "column": 10
       },
-      "text": "Format"
+      "text": "string"
     },
     {
       "kind": "call",
       "at": {
-        "line": 307,
-        "column": 33
+        "line": 350,
+        "column": 34
       },
-      "text": "now.In"
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 352,
+        "column": 9
+      },
+      "text": "string"
     }
   ],
-  "assignments": null,
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 341,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 342,
+        "column": 2
+      }
+    }
+  ],
   "go_statements": null,
   "defers": null
 }

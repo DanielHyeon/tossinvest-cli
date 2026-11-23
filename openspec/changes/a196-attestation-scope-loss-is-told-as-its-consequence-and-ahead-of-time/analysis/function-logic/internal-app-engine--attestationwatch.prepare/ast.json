@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/attestation_watch.go",
-  "source_sha256": "29252ace6e7338abe7fa91bf9a7cfe894b8edde2c87657e60e9f54e1e9c7d68d",
+  "source_sha256": "587249217d6328264ddd0ce53b3614496265a12c223003f3e20d17dd6bc89272",
   "package": "engine",
   "function": "prepare",
   "receiver": "attestationWatch",
   "signature": "attestationWatch.prepare(params=0, results=3)",
   "start": {
-    "line": 269,
+    "line": 304,
     "column": 1
   },
   "end": {
-    "line": 299,
+    "line": 335,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 271,
+        "line": 306,
         "column": 3
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 273,
+        "line": 308,
         "column": 4
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 287,
+        "line": 323,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 291,
+        "line": 327,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 295,
+        "line": 331,
         "column": 2
       }
     }
@@ -59,21 +59,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 292,
+        "line": 328,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 296,
+        "line": 332,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 298,
+        "line": 334,
         "column": 2
       }
     }
@@ -82,14 +82,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 270,
+        "line": 305,
         "column": 8
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 271,
+        "line": 306,
         "column": 13
       },
       "text": "recover"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 274,
+        "line": 309,
         "column": 5
       },
       "text": "w.log.Warn"
@@ -105,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 281,
+        "line": 316,
         "column": 14
       },
       "text": "w.load"
@@ -113,7 +113,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 282,
+        "line": 317,
         "column": 9
       },
       "text": "w.clock.Now"
@@ -121,7 +121,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 283,
+        "line": 318,
         "column": 7
       },
       "text": "judgeAttestation"
@@ -129,7 +129,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 286,
+        "line": 322,
         "column": 14
       },
       "text": "Format"
@@ -137,31 +137,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 286,
+        "line": 322,
         "column": 14
       },
-      "text": "v.IssuedAt.UTC"
+      "text": "v.Deadline.UTC"
     },
     {
       "kind": "call",
       "at": {
-        "line": 286,
-        "column": 64
-      },
-      "text": "Format"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 286,
-        "column": 64
-      },
-      "text": "v.ExpiresAt.UTC"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 294,
+        "line": 330,
         "column": 8
       },
       "text": "stageKey"
@@ -169,7 +153,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 298,
+        "line": 334,
         "column": 9
       },
       "text": "w.eventFor"
@@ -179,63 +163,63 @@
     {
       "kind": ":=",
       "at": {
-        "line": 271,
+        "line": 306,
         "column": 6
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 272,
+        "line": 307,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 281,
+        "line": 316,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 282,
+        "line": 317,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 283,
+        "line": 318,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 286,
+        "line": 322,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 288,
+        "line": 324,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 289,
+        "line": 325,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 294,
+        "line": 330,
         "column": 2
       }
     }
@@ -245,7 +229,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 270,
+        "line": 305,
         "column": 2
       }
     }

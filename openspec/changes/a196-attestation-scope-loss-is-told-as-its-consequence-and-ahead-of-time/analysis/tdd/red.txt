@@ -1,0 +1,120 @@
+# RED — HEAD 05545202a(production 무편집), 2026-11-23T13:37:26Z
+# 껍데기 없음: 새 시험은 기존 API(judgeAttestation·a135Watch·checkOnce·Event.Key/Fields)와 문자열 단계 코드만 써서 구현 전에도 컴파일됨
+$ GOFLAGS=-trimpath go test -count=1 -run "TestA196" -v ./internal/app/engine
+=== RUN   TestA196ProofDeadlineGovernsTheDayCount
+    a196_attestation_deadline_internal_test.go:72: proof deadline in 7d, expiry in 30d: stage=healthy days=30, want notice D-7
+--- FAIL: TestA196ProofDeadlineGovernsTheDayCount (0.00s)
+=== RUN   TestA196SameProofReissueIsNotAnnouncedAgain
+    a196_attestation_deadline_internal_test.go:106: a reissue carrying the same proof was announced again: []
+--- FAIL: TestA196SameProofReissueIsNotAnnouncedAgain (0.00s)
+=== RUN   TestA196DeadlineBoundaries
+=== RUN   TestA196DeadlineBoundaries/2일_1초_=_D-3
+    a196_attestation_deadline_internal_test.go:137: stage=healthy days=30, want notice 3
+=== RUN   TestA196DeadlineBoundaries/정확히_2일_=_D-2
+    a196_attestation_deadline_internal_test.go:137: stage=healthy days=30, want imminent 2
+=== RUN   TestA196DeadlineBoundaries/정확히_1일_=_D-1
+    a196_attestation_deadline_internal_test.go:137: stage=healthy days=30, want imminent 1
+=== RUN   TestA196DeadlineBoundaries/증거_나이_V−1ns_=_1ns_남음_=_D-1
+    a196_attestation_deadline_internal_test.go:137: stage=healthy days=30, want imminent 1
+=== RUN   TestA196DeadlineBoundaries/증거_나이_정확히_V_=_기한_정각_=_지남
+    a196_attestation_deadline_internal_test.go:137: stage=healthy days=30, want proof_overdue 0
+=== RUN   TestA196DeadlineBoundaries/증거_나이_V+1ns_=_지남
+    a196_attestation_deadline_internal_test.go:137: stage=healthy days=30, want proof_overdue 0
+=== RUN   TestA196DeadlineBoundaries/하루_반_지남
+    a196_attestation_deadline_internal_test.go:137: stage=healthy days=30, want proof_overdue 0
+--- FAIL: TestA196DeadlineBoundaries (0.00s)
+    --- FAIL: TestA196DeadlineBoundaries/2일_1초_=_D-3 (0.00s)
+    --- FAIL: TestA196DeadlineBoundaries/정확히_2일_=_D-2 (0.00s)
+    --- FAIL: TestA196DeadlineBoundaries/정확히_1일_=_D-1 (0.00s)
+    --- FAIL: TestA196DeadlineBoundaries/증거_나이_V−1ns_=_1ns_남음_=_D-1 (0.00s)
+    --- FAIL: TestA196DeadlineBoundaries/증거_나이_정확히_V_=_기한_정각_=_지남 (0.00s)
+    --- FAIL: TestA196DeadlineBoundaries/증거_나이_V+1ns_=_지남 (0.00s)
+    --- FAIL: TestA196DeadlineBoundaries/하루_반_지남 (0.00s)
+=== RUN   TestA196OverdueIsCriticalOncePerDay
+    a196_attestation_deadline_internal_test.go:160: first overdue day: [], want one critical proof_overdue
+--- FAIL: TestA196OverdueIsCriticalOncePerDay (0.00s)
+=== RUN   TestA196NewSupervisedProofRestartsTheCount
+    a196_attestation_deadline_internal_test.go:191: a fresh supervised proof was announced: []
+--- FAIL: TestA196NewSupervisedProofRestartsTheCount (0.00s)
+=== RUN   TestA196WithoutSupervisedProofCountsTheExpiry
+    a196_attestation_deadline_internal_test.go:210: expiry-only D-7: [{Type:broker.credential_expiry_notice Key:attestation-watch:notice:7:2026-09-21T03:00:00Z|2026-10-21T03:00:00Z Title:자동매매 검증서(attestation) 만료 D-7 Body:capability attestation 이 2026-10-21 12:00 KST 에 만료된다(7일 남음). 만료되거나 무효인 attestation 으로 엔진이 재시작하면 자동화 게이트가 무장하지 않고 청산(손절) 관측 루프도 돌지 않는다. 지금 실행 중인 엔진은 영향받지 않는다. 갱신에는 soak 통과와, 유효 기간(30일) 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다. Fields:map[days_left:7 expires_at:2026-10-21T03:00:00Z reason:notice]}]
+--- FAIL: TestA196WithoutSupervisedProofCountsTheExpiry (0.00s)
+=== RUN   TestA196ScopeLossOncePerDayAcrossReissues
+    a196_attestation_deadline_internal_test.go:228: scope loss re-announced on reissue within the day: [{Type:broker.credential_expiring Key:attestation-watch:scope_lost:2026-10-14:2026-10-14T03:00:00Z|2026-11-13T03:00:00Z Title:자동매매 검증서(attestation)에 필요한 주문 권한이 없다 Body:현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: POST /api/v1/orders. 갱신이 감독 증거 없이 쓰였을 수 있다. 만료되거나 무효인 attestation 으로 엔진이 재시작하면 자동화 게이트가 무장하지 않고 청산(손절) 관측 루프도 돌지 않는다. 지금 실행 중인 엔진은 영향받지 않는다. 갱신에는 soak 통과와, 유효 기간(30일) 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다. Fields:map[expires_at:2026-11-13T03:00:00Z missing_endpoints:POST /api/v1/orders reason:scope_lost supervised_proof_at:2026-10-04T03:00:00Z]} {Type:broker.credential_expiring Key:attestation-watch:scope_lost:2026-10-14:2026-10-14T06:00:00Z|2026-11-13T06:00:00Z Title:자동매매 검증서(attestation)에 필요한 주문 권한이 없다 Body:현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: POST /api/v1/orders. 갱신이 감독 증거 없이 쓰였을 수 있다. 만료되거나 무효인 attestation 으로 엔진이 재시작하면 자동화 게이트가 무장하지 않고 청산(손절) 관측 루프도 돌지 않는다. 지금 실행 중인 엔진은 영향받지 않는다. 갱신에는 soak 통과와, 유효 기간(30일) 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다. Fields:map[expires_at:2026-11-13T06:00:00Z missing_endpoints:POST /api/v1/orders reason:scope_lost supervised_proof_at:2026-10-04T03:00:00Z]} {Type:broker.credential_expiring Key:attestation-watch:scope_lost:2026-10-14:2026-10-14T09:00:00Z|2026-11-13T09:00:00Z Title:자동매매 검증서(attestation)에 필요한 주문 권한이 없다 Body:현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: POST /api/v1/orders. 갱신이 감독 증거 없이 쓰였을 수 있다. 만료되거나 무효인 attestation 으로 엔진이 재시작하면 자동화 게이트가 무장하지 않고 청산(손절) 관측 루프도 돌지 않는다. 지금 실행 중인 엔진은 영향받지 않는다. 갱신에는 soak 통과와, 유효 기간(30일) 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다. Fields:map[expires_at:2026-11-13T09:00:00Z missing_endpoints:POST /api/v1/orders reason:scope_lost supervised_proof_at:2026-10-04T03:00:00Z]}]
+--- FAIL: TestA196ScopeLossOncePerDayAcrossReissues (0.00s)
+=== RUN   TestA196RestartedWatchReusesTheRejectionKey
+    a196_attestation_deadline_internal_test.go:262: a reissue of the same scope loss got a new outbox key: "attestation-watch:scope_lost:2026-10-14:2026-10-14T03:00:00Z|2026-11-13T03:00:00Z" vs "attestation-watch:scope_lost:2026-10-14:2026-10-14T09:00:00Z|2026-11-13T09:00:00Z"
+--- FAIL: TestA196RestartedWatchReusesTheRejectionKey (0.00s)
+=== RUN   TestA196RejectionDayIsTheKSTDate
+--- PASS: TestA196RejectionDayIsTheKSTDate (0.00s)
+=== RUN   TestA196ScopeLossThenExpiryAreTwoAlerts
+--- PASS: TestA196ScopeLossThenExpiryAreTwoAlerts (0.00s)
+=== RUN   TestA196RefusalTellsTheConsequenceFirst
+=== RUN   TestA196RefusalTellsTheConsequenceFirst/expired
+    a196_attestation_deadline_internal_test.go:336: title does not state the refusal as a fact: "자동매매 검증서(attestation) 만료됨"
+    a196_attestation_deadline_internal_test.go:339: body's first sentence is not the refusal: "capability attestation 이 2026-10-14 11:00 KST 에 만료되었다. 만료되거나 무효인 attestation 으로 엔진이 재시작하면 자동화 게이트가 무장하지 않고 청산(손절) 관측 루프도 돌지 않는다. 지금 실행 중인 엔진은 영향받지 않는다. 갱신에는 soak 통과와, 유효 기간(30일) 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다."
+    a196_attestation_deadline_internal_test.go:342: body lacks the stop-loss consequence or the remedy: "capability attestation 이 2026-10-14 11:00 KST 에 만료되었다. 만료되거나 무효인 attestation 으로 엔진이 재시작하면 자동화 게이트가 무장하지 않고 청산(손절) 관측 루프도 돌지 않는다. 지금 실행 중인 엔진은 영향받지 않는다. 갱신에는 soak 통과와, 유효 기간(30일) 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다."
+=== RUN   TestA196RefusalTellsTheConsequenceFirst/incomplete
+    a196_attestation_deadline_internal_test.go:336: title does not state the refusal as a fact: "자동매매 검증서(attestation)에 필수 칸이 비어 있다"
+    a196_attestation_deadline_internal_test.go:339: body's first sentence is not the refusal: "엔진이 읽는 attestation 에 계좌 · 만료 · 검증된 endpoint 중 비어 있는 칸이 있다. 만료되거나 무효인 attestation 으로 엔진이 재시작하면 자동화 게이트가 무장하지 않고 청산(손절) 관측 루프도 돌지 않는다. 지금 실행 중인 엔진은 영향받지 않는다. 갱신에는 soak 통과와, 유효 기간(30일) 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다."
+    a196_attestation_deadline_internal_test.go:342: body lacks the stop-loss consequence or the remedy: "엔진이 읽는 attestation 에 계좌 · 만료 · 검증된 endpoint 중 비어 있는 칸이 있다. 만료되거나 무효인 attestation 으로 엔진이 재시작하면 자동화 게이트가 무장하지 않고 청산(손절) 관측 루프도 돌지 않는다. 지금 실행 중인 엔진은 영향받지 않는다. 갱신에는 soak 통과와, 유효 기간(30일) 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다."
+=== RUN   TestA196RefusalTellsTheConsequenceFirst/account_mismatch
+    a196_attestation_deadline_internal_test.go:336: title does not state the refusal as a fact: "자동매매 검증서(attestation)가 엔진의 계좌와 다르다"
+    a196_attestation_deadline_internal_test.go:339: body's first sentence is not the refusal: "현재 attestation 이 엔진 자격 증명의 계좌와 다른 계좌를 가리킨다. 만료되거나 무효인 attestation 으로 엔진이 재시작하면 자동화 게이트가 무장하지 않고 청산(손절) 관측 루프도 돌지 않는다. 지금 실행 중인 엔진은 영향받지 않는다."
+    a196_attestation_deadline_internal_test.go:342: body lacks the stop-loss consequence or the remedy: "현재 attestation 이 엔진 자격 증명의 계좌와 다른 계좌를 가리킨다. 만료되거나 무효인 attestation 으로 엔진이 재시작하면 자동화 게이트가 무장하지 않고 청산(손절) 관측 루프도 돌지 않는다. 지금 실행 중인 엔진은 영향받지 않는다."
+=== RUN   TestA196RefusalTellsTheConsequenceFirst/unreadable
+    a196_attestation_deadline_internal_test.go:336: title does not state the refusal as a fact: "자동매매 검증서(attestation)를 쓸 수 없다"
+    a196_attestation_deadline_internal_test.go:339: body's first sentence is not the refusal: "엔진이 읽는 attestation 파일이 없거나 읽을 수 없다. 만료되거나 무효인 attestation 으로 엔진이 재시작하면 자동화 게이트가 무장하지 않고 청산(손절) 관측 루프도 돌지 않는다. 지금 실행 중인 엔진은 영향받지 않는다. 갱신에는 soak 통과와, 유효 기간(30일) 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다."
+    a196_attestation_deadline_internal_test.go:342: body lacks the stop-loss consequence or the remedy: "엔진이 읽는 attestation 파일이 없거나 읽을 수 없다. 만료되거나 무효인 attestation 으로 엔진이 재시작하면 자동화 게이트가 무장하지 않고 청산(손절) 관측 루프도 돌지 않는다. 지금 실행 중인 엔진은 영향받지 않는다. 갱신에는 soak 통과와, 유효 기간(30일) 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다."
+=== RUN   TestA196RefusalTellsTheConsequenceFirst/scope_lost
+    a196_attestation_deadline_internal_test.go:336: title does not state the refusal as a fact: "자동매매 검증서(attestation)에 필요한 주문 권한이 없다"
+    a196_attestation_deadline_internal_test.go:339: body's first sentence is not the refusal: "현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: POST /api/v1/orders. 갱신이 감독 증거 없이 쓰였을 수 있다. 만료되거나 무효인 attestation 으로 엔진이 재시작하면 자동화 게이트가 무장하지 않고 청산(손절) 관측 루프도 돌지 않는다. 지금 실행 중인 엔진은 영향받지 않는다. 갱신에는 soak 통과와, 유효 기간(30일) 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다."
+    a196_attestation_deadline_internal_test.go:342: body lacks the stop-loss consequence or the remedy: "현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: POST /api/v1/orders. 갱신이 감독 증거 없이 쓰였을 수 있다. 만료되거나 무효인 attestation 으로 엔진이 재시작하면 자동화 게이트가 무장하지 않고 청산(손절) 관측 루프도 돌지 않는다. 지금 실행 중인 엔진은 영향받지 않는다. 갱신에는 soak 통과와, 유효 기간(30일) 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다."
+    a196_attestation_deadline_internal_test.go:347: scope-loss body lacks "tossctl verify run": "현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: POST /api/v1/orders. 갱신이 감독 증거 없이 쓰였을 수 있다. 만료되거나 무효인 attestation 으로 엔진이 재시작하면 자동화 게이트가 무장하지 않고 청산(손절) 관측 루프도 돌지 않는다. 지금 실행 중인 엔진은 영향받지 않는다. 갱신에는 soak 통과와, 유효 기간(30일) 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다."
+--- FAIL: TestA196RefusalTellsTheConsequenceFirst (0.00s)
+    --- FAIL: TestA196RefusalTellsTheConsequenceFirst/expired (0.00s)
+    --- FAIL: TestA196RefusalTellsTheConsequenceFirst/incomplete (0.00s)
+    --- FAIL: TestA196RefusalTellsTheConsequenceFirst/account_mismatch (0.00s)
+    --- FAIL: TestA196RefusalTellsTheConsequenceFirst/unreadable (0.00s)
+    --- FAIL: TestA196RefusalTellsTheConsequenceFirst/scope_lost (0.00s)
+=== RUN   TestA196NewAlertsCarryNoAccount
+=== RUN   TestA196NewAlertsCarryNoAccount/notice
+    a196_attestation_deadline_internal_test.go:368: events=[]
+=== RUN   TestA196NewAlertsCarryNoAccount/imminent
+    a196_attestation_deadline_internal_test.go:368: events=[]
+=== RUN   TestA196NewAlertsCarryNoAccount/overdue
+    a196_attestation_deadline_internal_test.go:368: events=[]
+--- FAIL: TestA196NewAlertsCarryNoAccount (0.00s)
+    --- FAIL: TestA196NewAlertsCarryNoAccount/notice (0.00s)
+    --- FAIL: TestA196NewAlertsCarryNoAccount/imminent (0.00s)
+    --- FAIL: TestA196NewAlertsCarryNoAccount/overdue (0.00s)
+=== RUN   TestA196NotificationsOffDowngradesOverdue
+    a196_attestation_deadline_internal_test.go:387: notifications off: [], want one normal event
+--- FAIL: TestA196NotificationsOffDowngradesOverdue (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.006s
+FAIL
+rc=1
+
+$ GOFLAGS=-trimpath go test -count=1 -run "TestA196" -v ./internal/soak
+=== RUN   TestA196SupervisedEvidenceLeavesExactlyAtTheDeadline
+=== RUN   TestA196SupervisedEvidenceLeavesExactlyAtTheDeadline/나이_V−1ns_는_실림
+=== RUN   TestA196SupervisedEvidenceLeavesExactlyAtTheDeadline/정확히_V_는_빠짐(기한_정각은_이미_지난_것)
+=== RUN   TestA196SupervisedEvidenceLeavesExactlyAtTheDeadline/V+1ns_는_빠짐
+--- PASS: TestA196SupervisedEvidenceLeavesExactlyAtTheDeadline (0.00s)
+    --- PASS: TestA196SupervisedEvidenceLeavesExactlyAtTheDeadline/나이_V−1ns_는_실림 (0.00s)
+    --- PASS: TestA196SupervisedEvidenceLeavesExactlyAtTheDeadline/정확히_V_는_빠짐(기한_정각은_이미_지난_것) (0.00s)
+    --- PASS: TestA196SupervisedEvidenceLeavesExactlyAtTheDeadline/V+1ns_는_빠짐 (0.00s)
+=== RUN   TestA196TheFileDeadlineIsWhenTheIssuerStopsCarryingTheProof
+=== RUN   TestA196TheFileDeadlineIsWhenTheIssuerStopsCarryingTheProof/기한_1ns_전_발급
+=== RUN   TestA196TheFileDeadlineIsWhenTheIssuerStopsCarryingTheProof/기한_정각_발급
+--- PASS: TestA196TheFileDeadlineIsWhenTheIssuerStopsCarryingTheProof (0.00s)
+    --- PASS: TestA196TheFileDeadlineIsWhenTheIssuerStopsCarryingTheProof/기한_1ns_전_발급 (0.00s)
+    --- PASS: TestA196TheFileDeadlineIsWhenTheIssuerStopsCarryingTheProof/기한_정각_발급 (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/soak	0.004s
+rc=0
+
+# 해설: engine 26 하위 시험 중 FAIL 은 a196 의 새 동작(기한 기준·proof_overdue·거절 문장·Key)을 단언하는 것들.
+# PASS 2 — TestA196RejectionDayIsTheKSTDate·TestA196ScopeLossThenExpiryAreTwoAlerts 는 base 가 이미 지키는 성질(KST 날짜 키, 단계별 키)을
+#   새 Key 규칙 아래에서도 고정하는 회귀 핀(변이 ⑩·전이 R2-3 iii). soak 2 시험은 발급자 전제 고정이라 base 에서 통과가 정답 — 실패는 변이 ⑦ 로 확인(4.1).

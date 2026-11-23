@@ -1,41 +1,40 @@
 # Function Logic Map: `TestA135SameStageOnANewAttestationIsAnnouncedAgain`
 
-> **편집 전 지도(pre-edit) — 1단계, 2026-11-23, base `064f59fd9`.** 시험 함수 — 이 change 의 D4·D5 와 정면으로 반대되는 단언을 가진다.
+> **편집 후 지도 — 2단계 GREEN 뒤(2026-11-23).** 편집 전 원본 `../../pre-edit-ast/internal-app-engine--testa135samestageonanewattestationisannouncedagain.ast.json`, 재번호 `renumber.txt`(옛/새 분기를 (종류, 줄 문장)으로 difflib 정렬 — 생성기 `../../renumber.py.txt`).
 
-- Source: `internal/app/engine/a135_attestation_watch_internal_test.go` (467-496)
-- AST evidence: `ast.json` — branches **3** / returns **0** / calls **23**, source SHA-256 `d48d3091352d1daae0c579962f39930fcda7d315f67ffe71d350d9c867e57e1d`(파일 단위).
+- Source: `internal/app/engine/a135_attestation_watch_internal_test.go` (471-504)
+- AST evidence: `ast.json` — branches **4** / returns **0** / calls **29**, source SHA-256 `e097c1707e7a80769865f2b46dc0b98a7801632c78dff7725d507bb0075c55c9`(파일 단위, 편집 후).
   명령 `GOFLAGS=-trimpath go run ./tools/logic-map --file internal/app/engine/a135_attestation_watch_internal_test.go --func TestA135SameStageOnANewAttestationIsAnnouncedAgain`.
-- Risk scan: `risk-pattern-report.md` — go-panic 2건은 이 함수 밖(:376·:539).
+- Risk scan: `risk-pattern-report.md`.
+- a166 census: `attestation_watch.go`·`a135_attestation_watch_internal_test.go` 0건(1.4).
 
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| 전반: 만료된 A(`a135Attestation(-1h)`) → 만료된 B(`-2h`) | 같은 날·같은 단계·다른 발급/만료 | L470·L474 | — |
-| 후반: D-5 의 A → `IssuedAt` 만 +1분(만료 그대로) | L488·L491 | — | — |
+| 전반: 만료된 A → 만료된 B 같은 날 | a196 D5 | 이 함수 | — |
+| 후반: D-5 A → 발급·만료 +6h(같은 증거) → 증거 +1분(기한 변경) | a196 D4 | 이 함수 | — |
 
 ## Branches and early returns
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (if@478) | 전반 사건 수 ≠ 2 | `t.Fatalf`(@479) 「different expired attestation … swallowed」 | — | (자기 자신) |
-| B2 (if@481) | 전반 두 Key 같음 | `t.Fatalf`(@482) | — | — |
-| B3 (if@493) | 후반 사건 수 ≠ 2 또는 Key 같음 | `t.Fatalf`(@494) 「issued-at change was not a new identity」 | — | — |
+| B1 (if@480) | 전반 사건 ≠ 1 | Fatalf | — | (자기 자신) |
+| B2 (if@493) | 같은 증거 재발급 뒤 사건 ≠ 1 | Fatalf | — | — |
+| B3 (range@497) | 증거 시각 +1분 | 픽스처 변경 | — | — |
+| B4 (if@501) | 기한 변경 뒤 사건 ≠ 2 또는 Key 같음 | Fatalf | — | — |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `a135Watch`·`checkOnce`(call@471·@472·@476·@489·@490·@492) | 실행자 경유 | — | AST |
+| `a135Watch`·`checkOnce`·`n.got` | 실행자 경유 | — | AST calls 29 |
 
 ## State mutations and fallbacks
 
-- **a196 편집 뒤**:
-  - 전반(B1·B2): D5 는 거절 신원에서 발급 신원을 뺀다 → 같은 날 같은 `expired` 는 1건, Key 같음 → **B1 에서 FAIL 예상**. 이 change 가 의도해 뒤집는 단언(design §5-11).
-  - 후반(B3): D1 식은 유효 기간을 `ExpiresAt − IssuedAt` 로 읽으므로 `IssuedAt` 만 +1분 하면 유효 기간이 1분 줄고 감독 증거의 기한도 1분 당겨진다 → 신원(기한 시각)이 바뀌어 **2건·다른 Key 로 우연히 통과한다.** 실제 갱신(발급·만료가 같이 6시간 이동, 같은 감독 증거)에서는 D4 로 0건이어야 하므로, 이 후반의 이름·의도(「발급만 달라도 새 신원」)는 D4 와 반대다. 통과 이유가 바뀐 시험(기억 「통과는 증거가 아니다」).
-- 편집 경로 — Manager 결정 2026-11-23 Q5: **재작성**(같은 감독 증거의 재발급 → 다시 안 알림, 기한이 바뀐 새 attestation → 다시 알림). 검토했던 선택지: 함수 전체를 a196 의 의미로 바꾼다(전반 → 같은 날 1건, 후반 → 발급·만료 동시 이동 + 같은 감독 증거 → 추가 0건), 또는 삭제하고 design §5-2·§5-6 새 시험으로 대체.
+- 재작성(Q5): 종전 단언(같은 날 다른 만료 파일 2건, 발급만 +1분이면 새 신원)은 a196 D4·D5 와 반대 → 새 규칙으로. renumber: 전반 B1·B2 changed, 후반 B3→B4 same.
+- 통과 이유가 바뀐 부분(design §5-12): 종전 후반은 D1 식이 유효 기간을 1분 줄여 통과했음 → 이제 발급·만료를 함께 밀어 유효 기간을 지키고, 기한 변경은 증거 시각으로 명시.
 
 ## Safety conclusion
 
-- Safe edit boundary: 시험 전체.
-- High-risk impact: no — 시험.
+- Safe edit boundary: 시험 전체. High-risk impact: no — 시험.

@@ -1,9 +1,11 @@
-# Branch Test Map: `stageKey`
+# Branch Test Map: `stagekey`
 
-- 편집 전(pre-edit). 커버: `../../implementation/base-cover-attestation_watch.out`(`-run 'TestA135'`, HEAD `064f59fd9`, rc 0).
+- 편집 후. 커버: `../../implementation/after-cover-attestation_watch.out`(`GOFLAGS=-trimpath go test -count=1 -run 'A196|A135' -covermode=set ./internal/app/engine`, rc 0). RED 원문 `../../tdd/red.txt`.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | 날수 단계 → `stage:days` | `TestA135WatchAnnouncesEachStageOnce`(D-7·D-6·D-3·D-2·D-1 키가 서로 다름) | 해당 없음(기존 분기) | yes — 304.56-306.3 count 1 |
-| (끝) | 거절 단계 → `stage:KST날짜` | `TestA135InvalidStatesAreRemindedDaily`(같은 날 1, 다음 날 2) | 해당 없음 | yes — 307.2-307.65 count 1 |
-| (a196) | 누락 집합이 키에 들어감: 같은 날 하나 더 빠지면 새 알림 | design §5-6, 변이 「누락 집합을 key 에서 빼기」 | 2단계 | 2단계 |
+| B1 | 단계 switch | 아래 | 해당 없음(새 구조) | yes — 340.59-343.17 count 1 |
+| B2 | 날수 키에 기한 | `TestA196SameProofReissueIsNotAnnouncedAgain` | yes — red.txt | yes — 344.34-345.64 count 1 |
+| B3 | 지남 키 = 기한 + KST 날짜 | `TestA196OverdueIsCriticalOncePerDay` | yes — red.txt | yes — 346.25-347.54 count 1 |
+| B4 | 범위 상실 키 = 누락 집합 + KST 날짜 | `TestA196RestartedWatchReusesTheRejectionKey` | yes — red.txt(재발급 Key 다름 FAIL) | yes — 348.22-350.74 count 1 |
+| (끝) | 거절 단계 = KST 날짜 | `TestA196RejectionDayIsTheKSTDate` · `TestA135InvalidStatesAreRemindedDaily` | base 에서도 PASS(회귀 핀) | yes — 352.2-352.36 count 1 |

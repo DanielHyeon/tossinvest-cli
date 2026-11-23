@@ -22,9 +22,9 @@
 
 ## 3. RED → GREEN
 
-- [ ] 3.1 RED: `internal/app/engine/a196_attestation_deadline_internal_test.go` — design §5 의 1~9·12(`proof_overdue` 포함), engine 쪽 기한 경계 계산 시험. D2 전제 시험(10)은 `internal/soak` 외부 시험(V−1ns 실림 · V 빠짐 · V+1ns 빠짐).
-- [ ] 3.2 GREEN: 기한 계산 새 함수 + 새 단계 상수 `proof_overdue` + `judgeAttestation`·`stageKey`/`prepare`·`eventFor` 편집(4함수). `attestationVerdict.critical`·`daysLeftCeil`·`checkOnce` 무편집 — 편집하게 되면 번들 추가.
-- [ ] 3.3 a135 시험 두 함수(`TestA135StageBoundaries` 표 · `TestA135SameStageOnANewAttestationIsAnnouncedAgain` 재작성)를 번들과 함께 고치고(design §5-11, 헬퍼 무편집), 편집 뒤 번들 6개의 AST·FLM·BTM 재생성.
+- [x] 3.1 RED: `internal/app/engine/a196_attestation_deadline_internal_test.go` — design §5 의 1~9·12(`proof_overdue` 포함), engine 쪽 기한 경계 계산 시험. D2 전제 시험(10)은 `internal/soak` 외부 시험(V−1ns 실림 · V 빠짐 · V+1ns 빠짐).
+- [x] 3.2 GREEN: 기한 계산 새 함수 + 새 단계 상수 `proof_overdue` + `judgeAttestation`·`stageKey`/`prepare`·`eventFor` 편집(4함수). `attestationVerdict.critical`·`daysLeftCeil`·`checkOnce` 무편집 — 편집하게 되면 번들 추가.
+- [x] 3.3 a135 시험 두 함수(`TestA135StageBoundaries` 표 · `TestA135SameStageOnANewAttestationIsAnnouncedAgain` 재작성)를 번들과 함께 고치고(design §5-11, 헬퍼 무편집), 편집 뒤 번들 6개의 AST·FLM·BTM 재생성.
 
 ## 4. 검증
 

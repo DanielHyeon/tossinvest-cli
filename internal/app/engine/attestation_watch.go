@@ -56,6 +56,13 @@ const (
 	stageAccountMismatch attestationStage = "account_mismatch" // 다른 계좌의 attestation — critical
 	stageUnreadable      attestationStage = "unreadable"       // 없음 · 깨짐 · 형식 초과 — critical
 	stageIncomplete      attestationStage = "incomplete"       // 읽혔지만 계좌 · 만료 · endpoint 칸이 빔 — critical
+	stageProofOverdue    attestationStage = "proof_overdue"    // a196: 감독 증거의 기한은 지났지만 파일은 아직 통과 — critical, 하루 한 번
+)
+
+// 기한의 종류(알림 필드 deadline_kind 값). a196: 재시작이 거절되기 시작할 시각이 무엇에서 왔는지 운영자가 읽는 칸.
+const (
+	deadlineExpiry = "expiry"           // attestation 자신의 만료
+	deadlineProof  = "supervised_proof" // 실린 POST 감독 증거가 유효 기간을 벗어나는 시각
 )
 
 // attestationVerdict 는 판정 한 번의 결과임. 계좌는 담지 않음.
@@ -68,6 +75,10 @@ type attestationVerdict struct {
 	// ProofAt 은 POST endpoint 마다의 가장 새 감독 증거 중 가장 이른 것임 — 갱신이 POST 를 유지하려면 이 증거가 유효 기간
 	// 안이어야 하므로 운영자가 「언제 감독 검증을 다시 해야 하나」를 읽는 칸. 판정에는 쓰지 않음.
 	ProofAt time.Time
+	// Deadline 은 재시작이 거절되기 시작할 시각(만료와 감독 증거의 기한 중 이른 쪽), DeadlineKind 는 그 출처임(a196).
+	// Verify 를 통과한 판정에서만 채워짐 — 거절 단계는 기한 없이 날짜로 셈.
+	Deadline     time.Time
+	DeadlineKind string
 }
 
 // critical 은 재시작이 거절될 상태이거나 이틀 안에 그렇게 될 상태인지임.
@@ -108,8 +119,17 @@ func judgeAttestation(att attest.Attestation, loadErr error, now time.Time, acco
 		return v
 	}
 
-	// Verify 를 통과했으므로 남은 시간은 양수임. 하루 단위 올림: 6.5일 남음 = D-7, 정확히 7일 = D-7, 7일 1초 = D-8.
-	v.DaysLeft = daysLeftCeil(att.ExpiresAt.Sub(now))
+	// a196: 날수는 만료가 아니라 기한(만료와 감독 증거의 기한 중 이른 쪽)까지 셈. 6시간 갱신이 만료를 계속 밀어도 감독 증거는 늙음.
+	v.Deadline, v.DeadlineKind = restartDeadline(att, v.ProofAt)
+	remaining := v.Deadline.Sub(now)
+	if remaining <= 0 {
+		// 기한 정각은 이미 지난 것(발급자는 나이 == 유효 기간인 증거를 뺌). 만료는 Verify 가 걸렀으므로 여기 오는 것은 감독 증거의 기한뿐.
+		// 날수 단계로 접으면 같은 키가 하루 넘게 이어져 침묵하므로 별도 단계로 하루 한 번 알림.
+		v.Stage = stageProofOverdue
+		return v
+	}
+	// 하루 단위 올림: 6.5일 남음 = D-7, 정확히 7일 = D-7, 7일 1초 = D-8. remaining 은 여기서 양수.
+	v.DaysLeft = daysLeftCeil(remaining)
 	switch {
 	case v.DaysLeft > attestationNoticeDays:
 		v.Stage = stageHealthy
@@ -119,6 +139,21 @@ func judgeAttestation(att attest.Attestation, loadErr error, now time.Time, acco
 		v.Stage = stageImminent
 	}
 	return v
+}
+
+// restartDeadline 은 재시작이 거절되기 시작할 시각과 그 출처를 돌려줌(a196 D1).
+//
+// 감독 증거의 기한 = 실린 증거 중 가장 이른 것 + (만료 − 발급). 발급자는 같은 유효 기간 값으로 만료와 증거 수용을 정하므로(soak 시험이
+// 고정) 파일 값만으로 계산하고 발급자 규칙은 복제하지 않음. 증거가 없거나 유효 기간이 0 이하면 만료만 셈.
+// 기한은 「실린」 증거 기준 — 다른 시장의 더 새 증거가 검증 기록에 있으면 실제 상실은 더 늦을 수 있음(이른 경보 쪽, 놓치는 쪽 아님).
+func restartDeadline(att attest.Attestation, proofAt time.Time) (time.Time, string) {
+	deadline, kind := att.ExpiresAt, deadlineExpiry
+	if validity := att.ExpiresAt.Sub(att.IssuedAt); !proofAt.IsZero() && validity > 0 {
+		if due := proofAt.Add(validity); due.Before(deadline) {
+			deadline, kind = due, deadlineProof
+		}
+	}
+	return deadline, kind
 }
 
 // daysLeftCeil 은 남은 시간을 하루 단위로 올림함. remaining 은 양수로 들어옴.
@@ -171,7 +206,7 @@ type attestationWatch struct {
 	interval   time.Duration
 	load       func(string) (attest.Attestation, error)
 
-	identity string          // 마지막으로 본 attestation 의 신원(발급 · 만료 시각)
+	identity string          // 마지막으로 본 기한(a196 — 파일의 발급 시각이 아님, 거절 단계는 기한 없음)
 	sent     map[string]bool // 이 신원에서 이미 알린 단계 키
 }
 
@@ -282,8 +317,9 @@ func (w *attestationWatch) prepare() (event obs.Event, key string, ok bool) {
 	now := w.clock.Now()
 	v := judgeAttestation(att, err, now, w.accountRef)
 
-	// 신원이 바뀌면(갱신 · 파일 교체 · 사라짐) 이미 알린 단계를 잊음 — 새 파일의 단계는 새로 셈.
-	identity := v.IssuedAt.UTC().Format(time.RFC3339Nano) + "|" + v.ExpiresAt.UTC().Format(time.RFC3339Nano)
+	// 기한이 바뀌면(새 감독 증거 · 실린 증거 교체 · 만료가 기한인 파일의 갱신) 이미 알린 단계를 잊음. a196: 같은 감독 증거를 실은
+	// 재발급은 기한이 같으므로 새로 세지 않음 — 파일 신원으로 세면 6시간 갱신마다 같은 통지가 다시 나감.
+	identity := v.Deadline.UTC().Format(time.RFC3339Nano)
 	if identity != w.identity || w.sent == nil {
 		w.identity = identity
 		w.sent = map[string]bool{}
@@ -298,13 +334,22 @@ func (w *attestationWatch) prepare() (event obs.Event, key string, ok bool) {
 	return w.eventFor(v, key), key, true
 }
 
-// stageKey 는 중복 방지 키임. 날수 단계는 단계 + 날수(D-7 과 D-6 은 다른 키라 하루 한 번씩). 재시작이 거절될 상태
-// (만료 · 범위 상실 · 계좌 불일치 · 무효)는 단계 + KST 날짜 — 고칠 때까지 하루 한 번 다시 알림(한 번 알리고 침묵하지 않게).
+// stageKey 는 중복 방지 키이자 outbox 키임(a196 — 파일의 발급 신원을 담지 않음, 재발급이 새 행을 만들지 않게).
+// 날수 단계는 단계 + 날수 + 기한(D-7 과 D-6 은 다른 키라 하루 한 번씩). 기한이 지난 상태는 단계 + 기한 + KST 날짜, 재시작이 거절될 상태
+// (만료 · 범위 상실 · 계좌 불일치 · 무효)는 단계 (+ 범위 상실이면 누락 endpoint 집합) + KST 날짜 — 고칠 때까지 하루 한 번.
 func stageKey(v attestationVerdict, now time.Time) string {
-	if v.Stage == stageNotice || v.Stage == stageImminent {
-		return fmt.Sprintf("%s:%d", v.Stage, v.DaysLeft)
+	day := now.In(kst).Format("2006-01-02")
+	deadline := v.Deadline.UTC().Format(time.RFC3339Nano)
+	switch v.Stage {
+	case stageNotice, stageImminent:
+		return fmt.Sprintf("%s:%d:%s", v.Stage, v.DaysLeft, deadline)
+	case stageProofOverdue:
+		return string(v.Stage) + ":" + deadline + ":" + day
+	case stageScopeLost:
+		// 누락 집합은 MissingEndpoints 가 정렬해 둠 — 같은 집합이면 같은 키.
+		return string(v.Stage) + ":" + strings.Join(v.Missing, ",") + ":" + day
 	}
-	return string(v.Stage) + ":" + now.In(kst).Format("2006-01-02")
+	return string(v.Stage) + ":" + day
 }
 
 // kst 는 운영자가 읽는 시각대임. tz 데이터 없이도 같은 값이 나오게 고정 오프셋으로 둠.
@@ -321,31 +366,46 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event 
 	if !v.ExpiresAt.IsZero() {
 		expires = v.ExpiresAt.In(kst).Format("2006-01-02 15:04 KST")
 	}
-	const consequence = "만료되거나 무효인 attestation 으로 엔진이 재시작하면 자동화 게이트가 무장하지 않고 청산(손절) 관측 루프도 돌지 않는다. " +
-		"지금 실행 중인 엔진은 영향받지 않는다."
-	const remedy = "갱신에는 soak 통과와, 유효 기간(30일) 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다."
+	deadline := v.Deadline.In(kst).Format("2006-01-02 15:04 KST")
+	// a196: 재시작이 거절될 상태는 결과를 제목과 본문 첫 문장 둘 다에서 단정함 — 기기의 제목 표시를 저장소로 검증할 수 없어서.
+	const refused = "지금 엔진을 재시작하면 기동이 거부된다"
+	const consequence = "재시작이 거부되면 청산(손절 · 익절) 관측 루프가 돌지 않아 자동 손절이 멈춘다. 지금 실행 중인 엔진은 계속 돈다."
+	const reverify = "할 일: 터미널에서 `tossctl verify run` 으로 감독하 실주문 검증을 다시 하고, 다음 갱신(타이머 또는 `tossctl soak attest`)을 기다린다."
+	const renew = "할 일: 갱신(`tossctl soak attest`)이 왜 실패하는지 확인한다 — 갱신에는 soak 통과와 유효 기간 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다."
 
 	var title, body string
 	switch v.Stage {
 	case stageNotice, stageImminent:
-		title = fmt.Sprintf("자동매매 검증서(attestation) 만료 D-%d", v.DaysLeft)
-		body = fmt.Sprintf("capability attestation 이 %s 에 만료된다(%d일 남음). %s %s", expires, v.DaysLeft, consequence, remedy)
+		if v.DeadlineKind == deadlineProof {
+			title = fmt.Sprintf("감독하 실주문 검증 만료 D-%d — 그 뒤 엔진 재시작이 거부될 수 있다", v.DaysLeft)
+			body = fmt.Sprintf("감독하 실주문 검증(POST 주문 · 취소 증거)이 %d일 뒤(%s) 만료된다. 다른 유효한 감독 증거가 없으면 그 뒤 첫 갱신부터 "+
+				"엔진 재시작이 거부되고, 그동안 자동 손절이 돌지 않는다. attestation 자체의 만료는 %s 이다. %s", v.DaysLeft, deadline, expires, reverify)
+		} else {
+			title = fmt.Sprintf("자동매매 검증서(attestation) 만료 D-%d", v.DaysLeft)
+			body = fmt.Sprintf("capability attestation 이 %s 에 만료된다(%d일 남음). 그 뒤 엔진 재시작이 거부되고, 그동안 자동 손절이 돌지 않는다. %s",
+				expires, v.DaysLeft, renew)
+		}
+	case stageProofOverdue:
+		title = "감독하 실주문 검증의 기한이 지났다 — 지금 감독 검증을 다시 해야 한다"
+		body = fmt.Sprintf("감독하 실주문 검증의 기한이 지났다(%s). 다른 유효한 감독 증거가 없으면 그 뒤 첫 갱신부터 엔진 재시작이 거부된다 — "+
+			"갱신이 실패하고 있으면 이 파일의 만료(%s)에 거부된다. 지금 감독 검증을 다시 하라. %s", deadline, expires, reverify)
 	case stageExpired:
-		title = "자동매매 검증서(attestation) 만료됨"
-		body = fmt.Sprintf("capability attestation 이 %s 에 만료되었다. %s %s", expires, consequence, remedy)
+		title = refused + " — 자동매매 검증서(attestation)가 만료되었다"
+		body = fmt.Sprintf("%s. capability attestation 이 %s 에 만료되었다. %s %s", refused, expires, consequence, renew)
 	case stageScopeLost:
-		title = "자동매매 검증서(attestation)에 필요한 주문 권한이 없다"
-		body = fmt.Sprintf("현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: %s. 갱신이 감독 증거 없이 쓰였을 수 있다. %s %s",
-			strings.Join(v.Missing, ", "), consequence, remedy)
+		title = refused + " — 주문 · 취소 검증이 attestation 에 없다"
+		body = fmt.Sprintf("%s. 현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: %s. 갱신이 유효 기간 안의 감독하 실주문 검증 증거(POST 주문 · 취소) 없이 쓰였다. %s %s",
+			refused, strings.Join(v.Missing, ", "), consequence, reverify)
 	case stageIncomplete:
-		title = "자동매매 검증서(attestation)에 필수 칸이 비어 있다"
-		body = "엔진이 읽는 attestation 에 계좌 · 만료 · 검증된 endpoint 중 비어 있는 칸이 있다. " + consequence + " " + remedy
+		title = refused + " — 자동매매 검증서(attestation)에 필수 칸이 비어 있다"
+		body = refused + ". 엔진이 읽는 attestation 에 계좌 · 만료 · 검증된 endpoint 중 비어 있는 칸이 있다. " + consequence + " " + renew
 	case stageAccountMismatch:
-		title = "자동매매 검증서(attestation)가 엔진의 계좌와 다르다"
-		body = "현재 attestation 이 엔진 자격 증명의 계좌와 다른 계좌를 가리킨다. " + consequence
+		title = refused + " — 자동매매 검증서(attestation)가 엔진의 계좌와 다르다"
+		body = refused + ". 현재 attestation 이 엔진 자격 증명의 계좌와 다른 계좌를 가리킨다. " + consequence +
+			" 할 일: 엔진 자격 증명의 계좌로 attestation 을 다시 발급한다."
 	default:
-		title = "자동매매 검증서(attestation)를 쓸 수 없다"
-		body = "엔진이 읽는 attestation 파일이 없거나 읽을 수 없다. " + consequence + " " + remedy
+		title = refused + " — 자동매매 검증서(attestation)를 쓸 수 없다"
+		body = refused + ". 엔진이 읽는 attestation 파일이 없거나 읽을 수 없다. " + consequence + " " + renew
 	}
 
 	fields := map[string]any{
@@ -363,11 +423,15 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event 
 	if !v.ProofAt.IsZero() {
 		fields["supervised_proof_at"] = v.ProofAt.UTC().Format(time.RFC3339)
 	}
+	if !v.Deadline.IsZero() {
+		fields["deadline_at"] = v.Deadline.UTC().Format(time.RFC3339)
+		fields["deadline_kind"] = v.DeadlineKind
+	}
 
 	return obs.Event{
 		Type: kind,
-		// outbox 키는 신원 · 단계마다 하나 — 다른 단계를 같은 조건으로 읽어 「이미 보냄」으로 삼키지 않게.
-		Key:    "attestation-watch:" + key + ":" + w.identity,
+		// outbox 키 = 단계 키(a196 — 발급 신원 없음). 재발급 · 재시작이 같은 상태를 같은 행으로 읽게 하고, 단계 · 날짜 · 기한이 다르면 다른 행.
+		Key:    "attestation-watch:" + key,
 		Title:  title,
 		Body:   body,
 		Fields: fields,

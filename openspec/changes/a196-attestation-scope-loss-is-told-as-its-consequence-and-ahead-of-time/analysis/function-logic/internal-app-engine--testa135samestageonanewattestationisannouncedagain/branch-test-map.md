@@ -1,9 +1,10 @@
-# Branch Test Map: `TestA135SameStageOnANewAttestationIsAnnouncedAgain`
+# Branch Test Map: `testa135samestageonanewattestationisannouncedagain`
 
-- 시험 함수 자신. base 실행: `-run 'TestA135'` rc 0(`../../implementation/base-a135-run.txt`) — 이 함수 PASS.
+- 편집 후. 커버: `../../implementation/after-cover-attestation_watch.out`(`GOFLAGS=-trimpath go test -count=1 -run 'A196|A135' -covermode=set ./internal/app/engine`, rc 0). RED 원문 `../../tdd/red.txt`.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | 전반 사건 수 ≠ 2 보고 | 자기 자신(실패 경로) | 2단계: D5 편집 뒤 FAIL 예상 | 미측정 |
-| B2 | 전반 Key 같음 보고 | 자기 자신(실패 경로) | — | 미측정 |
-| B3 | 후반 신원 보고 | 자기 자신(실패 경로) | D1 식 때문에 통과 예상(통과 이유가 바뀜) | 미측정 |
+| B1 | 전반 보고 | 자기 자신(실패 경로) | 편집 전 판이 GREEN 구현 뒤 FAIL(`../../tdd/green-before-a135-fix.txt`) | 통과 실행에서 안 탐(정상) — PASS |
+| B2 | 같은 증거 재발급 보고 | 자기 자신(실패 경로) | — | 통과 실행에서 안 탐 |
+| B3 | 증거 시각 변경 | 자기 자신 | — | yes — 실행됨(PASS 경로) |
+| B4 | 기한 변경 보고 | 자기 자신(실패 경로) | — | 통과 실행에서 안 탐 |

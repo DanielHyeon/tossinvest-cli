@@ -1,0 +1,18 @@
+# eventFor: 옛 분기 13 → 새 분기 17 (base 064f59fd9)
+same    B1(if@316) -> B1(if@361)  if v.critical() && w.critical {
+same    B2(if@321) -> B2(if@366)  if !v.ExpiresAt.IsZero() {
+same    B3(switch@329) -> B3(switch@377)  switch v.Stage {
+same    B4(case@330) -> B4(case@378)  case stageNotice, stageImminent:
+added   -> B5(if@379)  if v.DeadlineKind == deadlineProof {
+added   -> B6(else@383)  } else {
+added   -> B7(case@388)  case stageProofOverdue:
+same    B5(case@333) -> B8(case@392)  case stageExpired:
+same    B6(case@336) -> B9(case@395)  case stageScopeLost:
+same    B7(case@340) -> B10(case@399)  case stageIncomplete:
+same    B8(case@343) -> B11(case@402)  case stageAccountMismatch:
+same    B9(case@346) -> B12(case@406)  default:
+same    B10(if@354) -> B13(if@414)  if !v.ExpiresAt.IsZero() {
+same    B11(if@357) -> B14(if@417)  if v.Stage == stageNotice || v.Stage == stageImminent {
+same    B12(if@360) -> B15(if@420)  if len(v.Missing) > 0 {
+same    B13(if@363) -> B16(if@423)  if !v.ProofAt.IsZero() {
+added   -> B17(if@426)  if !v.Deadline.IsZero() {

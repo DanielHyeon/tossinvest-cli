@@ -1,0 +1,6 @@
+# prepare: 옛 분기 5 → 새 분기 5 (base 064f59fd9)
+same    B1(if@271) -> B1(if@306)  if rec := recover(); rec != nil {
+same    B2(if@273) -> B2(if@308)  if w.log != nil {
+same    B3(if@287) -> B3(if@323)  if identity != w.identity || w.sent == nil {
+same    B4(if@291) -> B4(if@327)  if v.Stage == stageHealthy {
+same    B5(if@295) -> B5(if@331)  if w.sent[key] {
