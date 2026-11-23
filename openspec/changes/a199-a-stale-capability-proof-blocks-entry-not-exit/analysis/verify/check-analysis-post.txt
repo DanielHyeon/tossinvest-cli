@@ -1,4 +1,4 @@
-[logic-map] a199-a-stale-capability-proof-blocks-entry-not-exit: base 603046a23b4a → working tree (no landed-commit.txt in HEAD) required 20 function(s) — judged at HEAD 6c30b91b3f5f
-[logic-map] a199-a-stale-capability-proof-blocks-entry-not-exit: the target is the working tree, so this window also holds 7 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits
+[logic-map] a199-a-stale-capability-proof-blocks-entry-not-exit: base 603046a23b4a → working tree (no landed-commit.txt in HEAD) required 20 function(s) — judged at HEAD 227d9537db15
+[logic-map] a199-a-stale-capability-proof-blocks-entry-not-exit: the target is the working tree, so this window also holds 9 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits
 [logic-map] a199-a-stale-capability-proof-blocks-entry-not-exit: evidence complete or diff-proven exempt
 check_analysis rc=0
