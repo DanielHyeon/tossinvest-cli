@@ -188,3 +188,4 @@
 | `a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time` | STORY-TOS-a196 | archived |
 | `a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled` | STORY-TOS-a197 | in_progress |
 | `a198-a-clearing-cancel-is-issued-as-a-cancel-decision` | STORY-TOS-a198 | archived |
+| `a201-a-quantity-comparison-outrun-by-a-fill-does-not-block` | STORY-TOS-a201 | in_progress |
