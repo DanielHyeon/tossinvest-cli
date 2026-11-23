@@ -12,7 +12,7 @@
 - [x] 1.4 편집 표면 세기: `judgeHoldings` 를 고정하는 구조 시험·census 유무, 알림 수를 단언하는 기존 시험 전수(`reconcileloop_test.go` 등), `exit.position_adoption_failed` 의 사실 값을 열거하는 시험·골든 유무.
 - [x] 1.5 `judgeHoldings` 의 FLM/BTM 번들(pre-edit 판).
 - [x] 1.6 `openspec validate a194-… --strict` 통과, proposal-freeze 적대 리뷰(다른 계열, 최대 2회) — `review.md`.
-- [ ] 1.7 Manager 1단계 검증·freeze. (Manager 결정 2026-11-23 반영 → proposal-freeze r2 → freeze 판정)
+- [x] 1.7 Manager 1단계 검증·freeze — Manager freeze 2026-11-23(커밋 `ba41f0059`), 남은 두 건(R2-2 주기 상한·R2-3(a) E5) 반영.
 
 ## 2. Pre-Edit
 

@@ -90,3 +90,6 @@
 | R2-5 | P2 | 「실패 주기 무보고」 공시가 코드보다 넓음 — ingest·converge 오류는 `cycle.Err` 에 남고 주기 계속(reconcileloop.go:438-449) | **반영(사실 정정)** — design §6·proposal 을 조기 반환 넷으로 좁히고 `cycle.Err` 를 침묵 조건으로 쓰지 않는다고 적음 |
 
 - 리뷰 회차 상한 도달. freeze 판정은 Manager(1.7).
+
+### Manager 1단계 검증·freeze 2026-11-23
+- Manager 1단계 검증·freeze 2026-11-23(커밋 `ba41f0059` 를 Manager 가 직접 읽고 strict validate 재실행). 남은 두 건: R2-2 — 동기 전송 수용 + 보고를 `judgeHoldings` 끝에서·주기당 보유 보고 `Notify` 최대 3(design D3, 시험 13a·13b, 변이 2 추가); R2-3(a) — MODIFIED E5 허용(생성기 치환, `analysis/spec-delta/edits.md`, 되돌리면 정본과 같음 True·True, 그 밖 차이 0). R2-1·R2-4·R2-5·R2-2 사실 반영 승인.
