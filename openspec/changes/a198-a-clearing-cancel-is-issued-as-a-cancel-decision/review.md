@@ -125,3 +125,19 @@ Pre-Edit Gate:
   4. D7 편집 계획 = `Gateway.withCancelRefusal` 1 + 새 파일의 새 함수. flatten 패키지·`internal/journal`·`classifyMutation`/`classifyRefusalCode`/`refusalCodes`·`AllReasonCodes` 무편집 — ✓(계획; 구현 diff 로 재확인)
   5. a166 census: shapes.json·sites.json 에 `cancel_refusal` 0 — ✓. 구조 고정: `TestA165CancelRefusalUsesOnlyInjectedClockForJudgement`(a165_clock_judgement_test.go:48)가 cancel_refusal.go **원문**에서 `time.Now(`·`time.Since(`·`context.WithDeadline(` 금지와 `context.WithTimeout(dctx, policy.Window)` 1회를 센다 — 계획한 편집은 새 함수 호출 1줄로 그 문자열을 바꾸지 않아 시험 무편집으로 통과 예상(걸림 아님으로 판단, 구현 뒤 실행으로 확인). 그 밖에 `withCancelRefusal` 를 부르는 시험 4 파일은 동작 시험(정책 nil·flatten 정책) — ✓
 - 결론: 조건 (1)~(5) 충족 → 보강 구현(4b.5~)으로 진행.
+
+## Pre-Edit 선언 갱신 (tasks 4b.5, 2026-11-24 — High-risk, 면제 없음)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a198-a-clearing-cancel-is-issued-as-a-cancel-decision / 4b.5 → 4b.6·4b.7
+- 대상 심볼: execgw.Gateway.withCancelRefusal(기존, 새로 편집) · engine.ExitObserver.clearTheSymbol(기존, 추가 편집 — D8·D4a). 새 코드: execgw 새 파일의 D7 판정 함수 1, a198_clear_cancel_log.go 의 기존 새 함수 수정(D4a 표시 순서). 무편집: classifyMutation·classifyRefusalCode·refusalCodes·alreadyProcessingRefusal·AllReasonCodes·Gateway.submit·internal/journal·internal/flatten·cmd/tossctl.
+- CodeGraph/AST: analysis/d7-d8-evidence.md §2(withCancelRefusal 호출 자리 gateway.go:733 1, CANCEL 만 가르는 유일한 기존 자리) · analysis/function-logic/internal-execgw--gateway.withcancelrefusal/(pre-edit, 분기 13) · clearTheSymbol post-edit 번들(분기 17).
+- CodeGraphContext: not-applicable(1단계와 같은 사유).
+- 기존 동작 파악 근거: a165 시험 24(cancel_refusal_test.go · a165_*_test.go) · 리뷰 탐침(analysis/review/impl-r1-probe_test.go.txt) · openapi 409 계약 원문.
+- Function Logic Map / Branch Test Map: 위 두 번들.
+- upstream 상속 테스트 영향: no.
+- 실패 테스트 선행 작성: yes — 4b.6 RED(analysis/tdd/red-4b.txt).
+- 설정·DB·journal 변경과 rollback: 없음 — 사유 코드 재사용(골든 무편집), 스키마 0. rollback = 이전 이미지.
+- 안전 불변식 §0: 통과 — LIVE 0, 손절 즉시성 강화 방향(재시작까지 막힘 → 종결 기록 대기), 새 API 호출 0, 토글 0, flatten 동작 무변.
+```

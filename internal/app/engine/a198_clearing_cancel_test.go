@@ -7,8 +7,10 @@ package engine_test
 // 무편집으로 재사용하고, 브로커만 취소 끝점을 답하도록 감쌈. 픽스처는 합성 값만.
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"io"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -33,6 +35,56 @@ type a198Broker struct {
 	cmu          sync.Mutex
 	cancelled    []string // 취소 요청을 받은 주문 번호(순서대로)
 	cancelStatus int      // 0 이면 200, 아니면 그 HTTP 상태로 답함
+	// cancelBody 는 거절 본문임 — 비면 합성 본문. 계약 모양(`{"error":{…,"code":…}}`)을 시험이 넣음.
+	cancelBody string
+	// cancelPlan 은 주문 번호별 다음 취소 응답(상태, 본문)의 대기열임 — 비면 cancelStatus·cancelBody.
+	cancelPlan map[string][]a198Reply
+	// sellRefusals 는 다음 매도 발주를 그 수만큼 409 opposite-pending-order-exists 로 거절함(리뷰 탐침 P2).
+	sellRefusals int
+}
+
+// a198Reply 는 취소 응답 하나임(status 0 = 접수).
+type a198Reply struct {
+	status int
+	body   string
+}
+
+// a198AlreadyBody 는 계약(openapi 409 예시)과 같은 모양의 거절 본문임 — code 는 `error.code` 자리.
+func a198AlreadyBody(code string) string {
+	return `{"error":{"requestId":"r-a198","code":"` + code + `","message":"synthetic"}}`
+}
+
+func (b *a198Broker) planCancel(orderID string, replies ...a198Reply) {
+	b.cmu.Lock()
+	defer b.cmu.Unlock()
+	if b.cancelPlan == nil {
+		b.cancelPlan = map[string][]a198Reply{}
+	}
+	b.cancelPlan[orderID] = append(b.cancelPlan[orderID], replies...)
+}
+
+func (b *a198Broker) refuseSells(n int) {
+	b.cmu.Lock()
+	defer b.cmu.Unlock()
+	b.sellRefusals = n
+}
+
+// serveCreateA198 는 매도 발주 거절 대기열이 있으면 409 opposite-pending 으로 답하고, 아니면 e2eBroker 의 발주로 넘김.
+func (b *a198Broker) serveCreateA198(t *testing.T, w http.ResponseWriter, r *http.Request) {
+	raw, _ := io.ReadAll(r.Body)
+	b.cmu.Lock()
+	refuse := b.sellRefusals > 0 && strings.Contains(string(raw), `"side":"SELL"`)
+	if refuse {
+		b.sellRefusals--
+	}
+	b.cmu.Unlock()
+	if refuse {
+		w.WriteHeader(http.StatusConflict)
+		_, _ = w.Write([]byte(a198AlreadyBody("opposite-pending-order-exists")))
+		return
+	}
+	r.Body = io.NopCloser(bytes.NewReader(raw))
+	b.serveCreate(t, w, r)
 }
 
 func newA198Broker(t *testing.T) (*a198Broker, *httptest.Server) {
@@ -48,7 +100,7 @@ func newA198Broker(t *testing.T) (*a198Broker, *httptest.Server) {
 		case r.URL.Path == "/api/v1/prices":
 			b.servePrices(w, r)
 		case r.URL.Path == "/api/v1/orders" && r.Method == http.MethodPost:
-			b.serveCreate(t, w, r)
+			b.serveCreateA198(t, w, r)
 		case r.URL.Path == "/api/v1/orders" && r.Method == http.MethodGet:
 			_, _ = w.Write([]byte(`{"result":{"orders":[],"nextCursor":"","hasNext":false}}`))
 		case strings.HasPrefix(r.URL.Path, "/api/v1/orders/") && strings.HasSuffix(r.URL.Path, "/cancel") && r.Method == http.MethodPost:
@@ -67,11 +119,18 @@ func (b *a198Broker) serveCancel(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/v1/orders/"), "/cancel")
 	b.cmu.Lock()
 	b.cancelled = append(b.cancelled, id)
-	status := b.cancelStatus
+	status, body := b.cancelStatus, b.cancelBody
+	if plan := b.cancelPlan[id]; len(plan) > 0 {
+		status, body = plan[0].status, plan[0].body
+		b.cancelPlan[id] = plan[1:]
+	}
 	b.cmu.Unlock()
 	if status != 0 {
+		if body == "" {
+			body = `{"error":{"code":"a198-synthetic","message":"synthetic refusal"}}`
+		}
 		w.WriteHeader(status)
-		_, _ = w.Write([]byte(`{"error":{"code":"a198-synthetic","message":"synthetic refusal"}}`))
+		_, _ = w.Write([]byte(body))
 		return
 	}
 	_ = json.NewEncoder(w).Encode(map[string]any{"result": map[string]any{"orderId": "C-" + id}})
@@ -558,5 +617,251 @@ func TestA198TheProductionAssemblyCancelsTheWorkingBuyAndPlacesTheStop(t *testin
 	}
 	if sells != 1 {
 		t.Fatalf("broker sells = %d under the production assembly, want the stop", sells)
+	}
+}
+
+// --- 보강(4b, D7·D8·D4a) -------------------------------------------------------------------------------------
+
+// attemptRows 는 원장의 모든 attempt 를 「종류|상태|대상|사유」 로 돌려줌.
+func (f *a198Fixture) attemptRows() []string {
+	f.t.Helper()
+	rows, err := f.db().Query(`SELECT kind, state, coalesce(target_order_id,''), coalesce(reason_code,'')
+		FROM mutation_attempts ORDER BY rowid`)
+	if err != nil {
+		f.t.Fatalf("query attempts: %v", err)
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var k, s, tgt, r string
+		if err := rows.Scan(&k, &s, &tgt, &r); err != nil {
+			f.t.Fatal(err)
+		}
+		out = append(out, k+"|"+s+"|"+tgt+"|"+r)
+	}
+	return out
+}
+
+// cancelStates 는 CANCEL attempt 의 「상태|사유」 목록임.
+func (f *a198Fixture) cancelStates() []string {
+	var out []string
+	for _, row := range f.attemptRows() {
+		parts := strings.Split(row, "|")
+		if parts[0] == "CANCEL" {
+			out = append(out, parts[1]+"|"+parts[3])
+		}
+	}
+	return out
+}
+
+// terminal 은 체결 감지가 쓰는 입구로 그 주문의 종결 체결 기록을 남김.
+func (f *a198Fixture) terminal(orderID, side, state, ordered, filled string) {
+	f.t.Helper()
+	if _, err := f.s.engine.Journal.RecordFill(context.Background(), journal.FillObservation{
+		OrderID: orderID, AccountRef: f.s.engine.AccountRef, Symbol: "005930", Market: "kr",
+		TradingDay: "2026-03-30", Side: side, State: state, Terminal: true,
+		Quantity: ordered, FilledQuantity: filled, AveragePrice: "69000",
+		ObservedAt: f.s.clk.Now().Format(time.RFC3339),
+	}); err != nil {
+		f.t.Fatalf("RecordFill(%s): %v", orderID, err)
+	}
+}
+
+// next 는 다음 관측 주기(시계를 조금 움직이고 손절선 아래 관측)임.
+func (f *a198Fixture) next() {
+	f.t.Helper()
+	f.s.clk.Advance(6 * time.Second)
+	f.breach()
+}
+
+// §4-10 (리뷰 탐침 P1): 손절 발의 때 그 매수가 이미 체결 → 409 already-filled → 확정 거절, 종결 기록 뒤 손절.
+func TestA198AnAlreadyFilledBuyIsADefinitiveRefusalAndTheStopFollowsItsClosingRecord(t *testing.T) {
+	f := newA198Fixture(t)
+	f.openWithWorkingBuy()
+	f.broker.planCancel("W-BUY-1", a198Reply{status: http.StatusConflict, body: a198AlreadyBody("already-filled")})
+	f.breach()
+	if got := f.cancelStates(); len(got) != 1 || got[0] != string(journal.StateFailedConfirmed)+"|"+journal.ReasonDispatchRejected {
+		t.Fatalf("cancel attempts = %v (all %v), want one FAILED_CONFIRMED|%s — an already-filled cancel is not in doubt",
+			got, f.attemptRows(), journal.ReasonDispatchRejected)
+	}
+	if len(f.sells()) != 0 {
+		t.Fatalf("broker sells = %v before the buy's closing record", f.sells())
+	}
+	f.terminal("W-BUY-1", "BUY", "FILLED", "3", "3")
+	f.next()
+	if len(f.sells()) != 1 {
+		t.Fatalf("broker sells = %v after the buy's closing record, want the stop — attempts %v", f.sells(), f.attemptRows())
+	}
+}
+
+// §4-11 (P2) · §4-14 (D8): 매수 취소 접수 → 손절이 반대 미체결로 거절 → 다음 주기 재취소 0 · 손절 재제출.
+func TestA198AnAcceptedBuyCancelIsNotSentAgainAndTheStopIsResubmitted(t *testing.T) {
+	f := newA198Fixture(t)
+	f.openWithWorkingBuy()
+	f.broker.refuseSells(1)
+	f.breach()
+	if got := f.broker.cancels(); len(got) != 1 {
+		t.Fatalf("broker cancels = %v, want the first cancel", got)
+	}
+	if len(f.sells()) != 0 {
+		t.Fatalf("broker sells = %v, the refused stop must not be recorded as placed", f.sells())
+	}
+	f.broker.planCancel("W-BUY-1", a198Reply{status: http.StatusConflict, body: a198AlreadyBody("already-canceled")})
+	f.next()
+	if got := f.broker.cancels(); len(got) != 1 {
+		t.Fatalf("broker cancels = %v on the next cycle, want still one — an accepted buy cancel is not sent again (D8)", got)
+	}
+	if len(f.sells()) != 1 {
+		t.Fatalf("broker sells = %v, want the stop resubmitted on the next cycle — attempts %v", f.sells(), f.attemptRows())
+	}
+}
+
+// §4-12 (P3): 매수 둘 — 하나 400 · 하나 접수 → 다음 주기 거절된 쪽만 재시도, 접수된 쪽 재취소 0.
+func TestA198OnlyTheRefusedBuyIsCancelledAgain(t *testing.T) {
+	f := newA198Fixture(t)
+	f.p = f.s.entry("005930", "10", "70000", "68000")
+	a198WorkingOrder(t, f.s, f.broker, "005930", "BUY", "W-BUY-1", "3", "69000")
+	a198WorkingOrder(t, f.s, f.broker, "005930", "BUY", "W-BUY-2", "2", "68500")
+	f.broker.quote("005930", "70100")
+	f.s.observe()
+	f.broker.planCancel("W-BUY-1", a198Reply{status: http.StatusBadRequest})
+	f.broker.planCancel("W-BUY-2", a198Reply{status: 0}, a198Reply{status: http.StatusConflict, body: a198AlreadyBody("already-canceled")})
+	f.breach()
+	if len(f.sells()) != 0 {
+		t.Fatalf("broker sells = %v with W-BUY-1 still live", f.sells())
+	}
+	f.next()
+	if got := f.broker.cancels(); strings.Join(got, ",") != "W-BUY-1,W-BUY-2,W-BUY-1" {
+		t.Fatalf("broker cancels = %v, want W-BUY-1,W-BUY-2,W-BUY-1 — the accepted W-BUY-2 is not cancelled again", got)
+	}
+	if len(f.sells()) != 1 {
+		t.Fatalf("broker sells = %v, want the stop once both buys are cleared — attempts %v", f.sells(), f.attemptRows())
+	}
+}
+
+// §4-13b: 엔진 취소 already-processing → 다음 주기 재취소 already-canceled → 확정 거절 → 종결 기록 뒤 손절.
+func TestA198AnAlreadyCanceledAfterAlreadyProcessingIsDefinitive(t *testing.T) {
+	f := newA198Fixture(t)
+	f.openWithWorkingBuy()
+	f.broker.planCancel("W-BUY-1",
+		a198Reply{status: http.StatusConflict, body: `{"error":{"code":"already-processing","data":{"retryAfterSeconds":1}}}`},
+		a198Reply{status: http.StatusConflict, body: a198AlreadyBody("already-canceled")})
+	f.breach()
+	f.next()
+	got := f.cancelStates()
+	if len(got) != 2 || !strings.HasPrefix(got[0], string(journal.StateFailedConfirmed)+"|") ||
+		got[1] != string(journal.StateFailedConfirmed)+"|"+journal.ReasonDispatchRejected {
+		t.Fatalf("cancel attempts = %v, want already-processing then already-canceled both FAILED_CONFIRMED (the second %s)",
+			got, journal.ReasonDispatchRejected)
+	}
+	if len(f.sells()) != 0 {
+		t.Fatalf("broker sells = %v before the buy's closing record", f.sells())
+	}
+	f.terminal("W-BUY-1", "BUY", "CANCELLED", "3", "0")
+	f.next()
+	if len(f.sells()) != 1 {
+		t.Fatalf("broker sells = %v after the closing record, want the stop", f.sells())
+	}
+}
+
+// §4-6/13: already-modified 는 종전대로 결과 불명 — 정정의 후계 주문은 원장이 모름.
+func TestA198AnAlreadyModifiedCancelStaysInDoubt(t *testing.T) {
+	f := newA198Fixture(t)
+	f.openWithWorkingBuy()
+	f.broker.planCancel("W-BUY-1", a198Reply{status: http.StatusConflict, body: a198AlreadyBody("already-modified")})
+	f.breach()
+	if got := f.cancelStates(); len(got) != 1 || !strings.HasPrefix(got[0], string(journal.StateInDoubt)+"|") {
+		t.Fatalf("cancel attempts = %v, want IN_DOUBT for already-modified", got)
+	}
+}
+
+// §4-15 (리뷰 P1-2): 취소 결정만 실패(손절의 결정은 기록됨) → 손절 미제출.
+func TestA198OnlyTheCancelDecisionFailingStillWithholdsTheStop(t *testing.T) {
+	f := newA198Fixture(t)
+	f.openWithWorkingBuy()
+	// 취소 결정은 키가 없고 손절 결정은 키가 있음 — 키 없는 위험 감소 결정만 막음.
+	if _, err := f.db().Exec(`CREATE TRIGGER a198_refuse_cancel_decisions BEFORE INSERT ON decisions
+		WHEN NEW.safety_class = 'RISK_REDUCING' AND NEW.client_order_id IS NULL
+		BEGIN SELECT RAISE(ABORT, 'a198 injected cancel decision failure'); END`); err != nil {
+		t.Fatalf("install trigger: %v", err)
+	}
+	f.breach()
+	if len(f.sells()) != 0 {
+		t.Fatalf("broker sells = %v — a stop went out although the working buy was never cancelled", f.sells())
+	}
+	if got := f.broker.cancels(); len(got) != 0 {
+		t.Fatalf("broker cancels = %v without a recorded cancel decision", got)
+	}
+}
+
+// §4-16: 결정의 최대 수량은 정확히 그 주문의 수량.
+func TestA198TheCancelDecisionCeilingIsTheOrderQuantity(t *testing.T) {
+	f := newA198Fixture(t)
+	f.openWithWorkingBuy()
+	f.breach()
+	if a := f.cancelAttempts(); len(a) != 1 || !strings.Contains(a[0], `"max_quantity":"3"`) {
+		t.Fatalf("cancel attempts = %v, want the decision's max_quantity to be the order's 3", a)
+	}
+}
+
+// §4-16 · D4a: 수량·가격 해석 실패 갈래도 실패 줄 한 번.
+func TestA198AnUnreadableWorkingOrderIsLoggedOnce(t *testing.T) {
+	for _, column := range []string{"quantity", "price"} {
+		t.Run(column, func(t *testing.T) {
+			f := newA198Fixture(t)
+			f.openWithWorkingBuy()
+			if _, err := f.db().Exec(`UPDATE intents SET `+column+` = 'not-a-number' WHERE id = 'i-a198-W-BUY-1'`); err != nil {
+				t.Fatalf("corrupt %s: %v", column, err)
+			}
+			f.breach()
+			f.next()
+			if len(f.sells()) != 0 {
+				t.Fatalf("broker sells = %v over an unreadable working buy", f.sells())
+			}
+			lines := f.failureLines()
+			if len(lines) != 1 || lines[0]["order_id"] != "W-BUY-1" || lines[0]["reason"] == "" {
+				t.Fatalf("failure lines = %v, want one line with a fixed reason for W-BUY-1", lines)
+			}
+		})
+	}
+}
+
+// §4-16 · D4a: 첫 로그 쓰기가 패닉하면 표시가 남지 않아 다음 주기에 다시 씀.
+func TestA198AFailureLineWhoseWritePanickedIsWrittenNextCycle(t *testing.T) {
+	f := newA198Fixture(t)
+	f.openWithWorkingBuy()
+	f.broker.refuseCancels(http.StatusBadRequest)
+	f.sink.mu.Lock()
+	f.sink.panics = true
+	f.sink.mu.Unlock()
+	f.breach()
+	f.sink.mu.Lock()
+	f.sink.panics = false
+	f.sink.mu.Unlock()
+	f.next()
+	if lines := f.failureLines(); len(lines) != 1 {
+		t.Fatalf("failure lines = %d after the panicked write, want the failure written on the next cycle", len(lines))
+	}
+}
+
+// §4-16: 접수 확정 뒤 표시 정리 — 같은 주문이 나중에 다시 실패하면 줄이 다시 나감.
+func TestA198AConfirmedCancelClearsTheFailureMark(t *testing.T) {
+	f := newA198Fixture(t)
+	f.openWithWorkingBuy()
+	f.broker.planCancel("W-BUY-1", a198Reply{status: http.StatusBadRequest}, a198Reply{status: 0}, a198Reply{status: http.StatusBadRequest})
+	f.broker.refuseSells(1)
+	f.breach() // 400 → 줄 1
+	f.next()   // 접수 → 표시 삭제, 손절은 반대 미체결로 거절
+	// 접수 확정 증거를 다른 거래일로 옮겨 D8 이 보지 못하게 함(전일 결속 잔여의 모양) — 다음 주기가 다시 취소하고 400.
+	if _, err := f.db().Exec(`UPDATE intents SET trading_day = '2026-03-27'
+		WHERE id IN (SELECT intent_id FROM mutation_attempts WHERE kind = 'CANCEL' AND state = 'CONFIRMED')`); err != nil {
+		t.Fatalf("move the confirmed cancel: %v", err)
+	}
+	f.next()
+	if got := f.broker.cancels(); len(got) != 3 {
+		t.Fatalf("broker cancels = %v, want the third cancel once the confirmation is out of D8's scope", got)
+	}
+	if lines := f.failureLines(); len(lines) != 2 {
+		t.Fatalf("failure lines = %d, want a second line after the mark was cleared by the confirmed cancel", len(lines))
 	}
 }
