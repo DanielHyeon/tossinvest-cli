@@ -20,7 +20,7 @@
 
 ## 3. RED → GREEN
 
-- [ ] 3.1 RED: 새 시험 파일 `cmd/tossctl/a195_reconcile_resolve_attribution_test.go` — design §3 의 1~6(헬퍼 원인 표 · 실제 헬퍼를 부르는 validate 로 production `runEngineReconcileResolve` 를 구동하는 원장 통합 · 실제 `Comparer` 외부 보유 입력 · 활성 0 · `Observe` 자동 해제 금지 · 원인 중립 문구).
+- [x] 3.1 RED: 새 시험 파일 `cmd/tossctl/a195_reconcile_resolve_attribution_test.go` — design §3 의 1~6(헬퍼 원인 표 · 실제 헬퍼를 부르는 validate 로 production `runEngineReconcileResolve` 를 구동하는 원장 통합 · 실제 `Comparer` 외부 보유 입력 · 활성 0 · `Observe` 자동 해제 금지 · 원인 중립 문구).
 - [ ] 3.2 GREEN: 새 파일의 원인 판정 함수 + validate 클로저의 원인 순회(B13~B14)를 그 호출 한 줄로(design D3). 같은 커밋에서 a166 census `shapes.json` 의 키 `cmd/tossctl/engine_reconcile.go||buildReconcileResolveRuntime` 하나만 갱신(design D6 — census 와 같은 추출·JSON 인코딩, base 재현 단언 먼저, 키별 비교·`sites.json` 무변경 기록, 선례 a189 `3af104af9`·a192 `analysis/census-repair/`).
 - [ ] 3.2b GREEN: 도움말(`newEngineReconcileResolveCmdWithDeps` `Long`)·성공 출력(`runEngineReconcileResolve` :212)을 원인 중립으로(design D7 — 금지 토큰 안 씀, 「released」 유지).
 - [ ] 3.3 편집 뒤 번들 3개(`buildReconcileResolveRuntime`·`runEngineReconcileResolve`·`newEngineReconcileResolveCmdWithDeps`)의 AST·FLM·BTM 재생성(옛/새 ast 정렬로 재번호).
