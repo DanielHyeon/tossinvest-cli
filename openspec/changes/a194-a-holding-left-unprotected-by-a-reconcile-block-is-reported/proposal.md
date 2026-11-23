@@ -1,7 +1,7 @@
 # a194 — 대사 차단 때문에 손절이 걸리지 않은 보유는 알려진다
 
 > **상태: 1단계(계약·증거), High-risk(대사·편입·알림).** Story `STORY-TOS-a194`(FEAT-TOS-005). 작성: Manager(2026-11-23).
-> 분기 주장의 AST 는 조사 산출물(세션 스크래치 `inv-D/*.ast.json`, HEAD `a9dd53400`)에서 인용했고, 이 change 안 사본과 현재 HEAD 재확인은 tasks 1.3 이다 — 그 전까지 「조사 인용」이다.
+> 분기 주장의 AST 는 tasks 1.3 에서 이 change 안 `analysis/cited-ast/`(HEAD `064f59fd9`)로 다시 뽑아 대조했다 — 각 줄의 근거 표시가 그 사본을 가리킨다. 대조 기록은 `review.md` 「1.3 주장 대조」.
 
 ## Why
 
@@ -15,11 +15,11 @@
 
 | 사실 | 근거 |
 |---|---|
-| 차단 종목의 보유는 편입 판정에서 조용히 빠지고 무관리 보고에도 들어가지 않는다 | `internal/app/engine/adoption.go` `ReconcileDriver.judgeHoldings` if@152 → continue@153; 빠진 보유는 `unmanaged` 에 없어 range@188 의 `alertUnmanaged` 에 닿지 않는다(조사 인용 F1) |
+| 차단 종목의 보유는 편입 판정에서 조용히 빠지고 무관리 보고에도 들어가지 않는다 | `internal/app/engine/adoption.go` `ReconcileDriver.judgeHoldings` if@152 → continue@153; 빠진 보유는 `unmanaged` 에 없어 range@188 의 `alertUnmanaged` 에 닿지 않는다(AST: analysis/cited-ast/judgeHoldings.ast.json B10 if@152 · B16 range@188 — continue@153 은 소스, logic-map 은 continue 를 return 으로 세지 않음) |
 | 그 침묵은 정본의 요구다 — 전제는 「전이 상태는 스스로 풀린다」 | exit-policy 「외부 취득 포지션의 자동 편입」 알림 문단·Scenario 「RECONCILE 중 편입 시도 … (전이 상태 — 무알림)」, adopt-external-positions design A4 |
-| 그 전제가 거짓인 차단이 있다 — 운영자만 풀 수 있는 원인 | `blockFromReconcileState` 는 `QUANTITY_MISMATCH` 만 자동 해제 대상이고 나머지는 `ReleaseOperatorOnly`·`Permanent`(`internal/reconcile/mismatch.go:1398-1412`, 조사 인용 F5) |
-| 차단이 걸리는 순간 알림을 내는 자리가 없다 | `reconcile_states` 를 쓰는 8 자리 어디에도 알림 호출이 없다(조사 인용 F6, grep) |
-| critical 로 정의된 `reconcile.mismatch_permanent` 를 내는 production 코드가 0 곳이다 | `internal/obs/event.go` 에 정의만 있다(조사 인용 F7, grep) |
+| 그 전제가 거짓인 차단이 있다 — 운영자만 풀 수 있는 원인 | `blockFromReconcileState` 는 종목 범위 `QUANTITY_MISMATCH` 만 자동 해제(`ReleaseOnAdjustedReconcile`)이고 나머지 원인은 전부 `ReleaseOperatorOnly` 다. `Permanent` 는 사유가 `ReasonReconcilePermanent` 인 원인(IDENTIFIER_CONFLICT·ATTRIBUTION_FAILED·알 수 없는 원인, 그리고 계좌 범위 QUANTITY_MISMATCH)만 참이고 SNAPSHOT_UNAVAILABLE·SNAPSHOT_STALE 은 operator_only 이면서 Permanent 거짓이다 — 그 둘은 생산 쓰기 자리가 0 이다(AST: analysis/cited-ast/blockFromReconcileState.ast.json B1 if@1411 · B2 if@1414 · B3 if@1417, analysis/cited-ast/ReconcileReasonFor.ast.json B2 case@159 · B3 case@163; 원인별 표는 analysis/code-context/evidence-reconciliation.md) |
+| 차단이 걸리는 순간 알림을 내는 자리가 없다 | `reconcile_states` 를 쓰는 자리 어디에도 알림 호출이 없다 — 쓰기는 `internal/journal`(obs 를 import 하지 않음 — obs 가 journal 을 import)과 `internal/reconcile`(알림 호출은 `acked_boot.go:98` ACKED attempt 보고 하나)에만 있다(grep, 자리 목록은 analysis/code-context/evidence-reconciliation.md) |
+| critical 로 정의된 `reconcile.mismatch_permanent` 를 내는 production 코드가 0 곳이다 | `internal/obs/event.go:95`(`EventReconcilePermanent`)·`:370`(critical 표)에 정의만 있다 — 그 밖의 참조는 obs 시험 두 파일뿐(grep, 2026-11-23 HEAD `064f59fd9`) |
 
 즉 **운영자만 풀 수 있는 차단은 걸려도 아무도 모르고, 그 종목에 보유가 생겨 손절이 빠져도 아무도 모른다.**
 
@@ -47,6 +47,6 @@
 ## Impact
 
 - 기존 함수 본문 편집(gate ⑤ FLM 대상): `ReconcileDriver.judgeHoldings`. 가능하면 이 하나로 끝낸다(새 판정·보고 함수는 새 파일). 차단 보고를 다른 기존 함수(`RunOnce` 등)에 걸어야 하면 그 함수의 번들도 만든다.
-- a166 census·a163 판정 핀 밖(조사 인용). 기존 시험 `TestAdoptionIsSilentUnderReconcile`(수량 불일치, 10 분 전)는 그대로 통과해야 한다.
+- a166 census·a163 판정 핀 밖(1.4 확인 — analysis/code-context/codegraph-baseline.md 「구조 고정·census」). 기존 시험 `TestAdoptionIsSilentUnderReconcile`(수량 불일치, 10 분 전)는 그대로 통과해야 한다.
 - 브로커 호출 추가 0. 원장 스키마 변경 없음. 알림 수: 운영자 전용 차단당 하루 1 건, 보호 없는 보유당 재알림 창(기본 1 시간)마다 1 건.
-- 알림이 켜진 엔진에서 critical 이 전달되지 못하면 기존 규칙대로 진입이 잠긴다 — 새 동작이 아니라 critical 의 기존 성질이다.
+- 알림이 켜진 엔진에서 critical 이 전달되지 못하면 기존 규칙대로 계좌 전체 진입이 잠기고, 지속되면 운영 모드가 승격된다(사람의 mode-release 로만 풀림 — `internal/app/engine/alertdelivery.go` 머리 주석 「지속 실패의 주인 (a124)」) — 새 동작이 아니라 critical 의 기존 성질이다.

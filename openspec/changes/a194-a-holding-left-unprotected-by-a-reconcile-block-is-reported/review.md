@@ -3,5 +3,70 @@
 ## 계약 작성 (2026-11-23)
 - 작성: Manager(Fable). 근거 조사: 읽기 전용 조사원(Opus) — 분기 주장의 AST 는 세션 스크래치 산출물 인용이며 change 안 사본·HEAD 재확인은 tasks 1.3.
 - `openspec validate a194-a-holding-left-unprotected-by-a-reconcile-block-is-reported --strict`: valid (rc 0, 2026-11-23 HEAD 1ea261100).
-- proposal-freeze 리뷰: 미실시(tasks 1.6~1.7).
 - Function Logic Map: 편집 대상 기존 함수의 번들은 tasks 1.5 에서 만든다.
+
+## 1단계 계약·증거 (팀메이트 Opus, 2026-11-23, 격리 worktree `~/tossos-work/a194-impl`, 브랜치 `fix/a194-unprotected-holding-report`)
+
+- 1.1 `base-commit.txt` = `064f59fd99c11ea3a19adcdb804bbcdfed2470cb`(`capture_change_base.py` rc 0). `generate_master_tracker.py --check` rc 0. Story `STORY-TOS-a194` → feature `FEAT-TOS-005`(docs/pm/portfolio/stories/STORY-TOS-a194.yaml:4).
+- 1.2 `analysis/code-context/` 세 파일(CodeGraph 1.6.0, worktree 에서 `codegraph init .`; CodeGraphContext·GBrain 은 `not-applicable` 사유 기록).
+- 1.3 `analysis/cited-ast/` 17개(HEAD `064f59fd9`). 대조는 아래 표.
+- 1.4 편집 표면은 아래 「1.4」.
+- 1.5 `analysis/function-logic/internal-app-engine--reconciledriver.judgeholdings/`(pre-edit). `check_analysis.py --change a194-…` rc 0(required 0 — Go 편집 전).
+- 1.6 strict validate valid. proposal-freeze 리뷰는 아래 「proposal-freeze 리뷰」.
+
+### 1.3 주장 대조 (proposal·design 의 코드 주장 → AST)
+
+| 주장(출처) | AST·근거 | 판정 |
+|---|---|---|
+| 차단 종목 보유는 if@152 → continue@153 으로 빠지고 range@188 의 `alertUnmanaged` 에 안 닿음(proposal F1) | `cited-ast/judgeHoldings.ast.json` B10 if@152 · B16 range@188(continue 는 logic-map 이 세지 않아 소스로 확인) | 참 — 표시만 AST 로 바꿈 |
+| 그 침묵은 정본 요구(proposal F2) | openspec/specs/exit-policy/spec.md:137 「전이 상태(RECONCILE 대기·…)만 무알림」 · :159 Scenario | 참(문서 근거) |
+| `QUANTITY_MISMATCH` 만 자동 해제, 나머지 `ReleaseOperatorOnly`·`Permanent`(proposal F5) | `cited-ast/blockFromReconcileState.ast.json` B1 if@1411 · B2 if@1414 · B3 if@1417, `cited-ast/ReconcileReasonFor.ast.json` B2 case@159 · B3 case@163 | **정정함** — SNAPSHOT_UNAVAILABLE·SNAPSHOT_STALE 은 operator_only 이지만 Permanent 거짓(생산 쓰기 0). 결론(운영자 전용 차단이 있다)은 불변 |
+| `reconcile_states` 를 쓰는 8 자리에 알림 없음(proposal F6) | grep — journal 은 obs 를 import 하지 않음, reconcile 의 알림 호출은 acked_boot.go:98 하나 | 결론 참, 「8 자리」는 재현 못 함 → 숫자 빼고 근거로 바꿈 |
+| `reconcile.mismatch_permanent` 생산 0(proposal F7) | grep — event.go:95·:370 정의, obs 시험 2파일만 | 참 |
+| critical 미전달 → 진입 잠김(proposal Impact) | alertdelivery.go 머리 주석(a124): 차단 + 운영 모드 승격 | **정정함** — 운영 모드 승격을 더 적음 |
+| `TestAdoptionIsSilentUnderReconcile` 그대로 통과(proposal Impact) | reconcileloop_test.go:358-381 — QUANTITY_MISMATCH, 한 주기, `Unmanaged`·`exit.position_unmanaged` 0 단언 | 참(10 분 유예 안) |
+| a166 census·a163 핀 밖(proposal Impact) | `analysis/code-context/codegraph-baseline.md` 「구조 고정·census」 | 참 |
+| `Tracker.Permanent()` = 계좌 전체(design D1) | `cited-ast/Permanent.ast.json`(return@1317), `cited-ast/Refresh.ast.json`, mismatch.go:1065 `hasPermanentQuantityAccountBlock` | **정정함** — 계좌 전체 **수량** 영구 승격만. 다른 원인 계좌 행은 `EntryAllowed` 의 계좌 범위 `Covers`(mismatch.go:264-267)가 잡음 |
+| `EntryAllowed` 사유가 `ReasonReconcilePermanent` 로 운영자 전용을 가름(design D1) | `cited-ast/EntryAllowed.ast.json` B1 range@1327 → B2 if@1328 → return@1329 `&RejectedError{Reason: block.Reason, Detail: block.Detail}` | 사유는 실림. 오늘 생산 원인에서는 판정이 맞음. **결정 필요**: 반환에 Cause·Since 가 없어 D6 본문(원인·시각)을 못 만듦, SNAPSHOT_* 는 Release 와 사유가 갈림 |
+| 대사 주기 약 62 초(design D2) | reconcileloop.go:95 `DefaultReconcilePeriod = 60s` + 안정화 2s(snapshot.go:376) | 참 |
+| 운영 장부 수량 불일치 133 행 전부 해제(design D2) | 운영 장부 접근 금지(지시) | 미검증 |
+| key = 타입·`reconcile`·사실·포지션(design D3) | `cited-ast/reconcileUnmanagedKey.ast.json` return@543 | 참 |
+| critical 은 메모리 래치 앞에서 반환(design D3) | `cited-ast/alertUnmanaged.ast.json` B1 if@451 → return@453, 래치 B2 if@455 | 참 |
+| `exit.position_adoption_failed` critical(design D3) | internal/obs/event.go:386 `criticalEvents` | 참 |
+| 편입 꺼짐∧미지정·제외 판정 재사용(design D4) | `cited-ast/judgeHoldings.ast.json` B12 if@163 `Adoption.Excludes` · B13 if@171 `!Enabled ∧ !Included` — 순수 함수(config/engine.go:135-142), 거부된 블록은 0 으로 만들어져 B13 에 듦(config/engine.go:127-131) | 참 — B10 안에서 같은 술어를 부를 수 있음 |
+| `reconcile.mismatch_permanent` critical(design D5) | event.go:370 | 참 |
+| 재알림 창 0 으로 하루 한 번(design D5) | 드라이버 옵션 `Alerts ExitAlerter` 는 `Notify` 만(exitloop.go:147-149). `Notify` 는 `claimAndDeliver` 에서 `n.remindAfter()`(기본 1시간, notifier.go:60·:301) | **결정 필요** — 지금 배선으로는 창 0 불가(같은 날 시간마다 재무장) |
+| `label` 로 종목 표시(design D7) | reconcileloop.go:566 | 참 |
+| `judgeHoldings` 는 `Observe` 성공 주기의 마지막 단계(design §2) | `cited-ast/RunOnce.ast.json` B7 if@463 → return@467, call@470 | 참. 그 밖에 B1 if@422 · B2 if@428 · B5 if@451 도 그 전에 반환 — design §2 에 더 적음 |
+| a090 시험이 workingSet 이탈 11 개 고정(design §2 B) | a090_workingset_exits_test.go:22-35 | 참 |
+
+### 1.4 편집 표면
+
+- 고칠 기존 함수: `ReconcileDriver.judgeHoldings`(확정). 결정에 따라 더: `Context.ReconcileDriver`(D5 를 `RecordCritical` 배선으로 하면 — reconcileloop.go:357-388, census 밖), `NewReconcileDriver`(새 맵 필드를 생성자에서 만들면 — 새 파일에서 늦게 만들면 불필요).
+- census·구조 고정: a166 0건, a163 0건, a090 은 exit 루프만. 새 파일이 지켜야 할 소스 스캔 둘 — `TestExitEligibilityHasOneSpelling`(eligibility_drift_test.go, `EntryDecisionID`·`AdoptionID` 류 철자 금지), `TestProtectionReadinessIsAbsentFromExitReconcileAndFillLoopSources`(a071_readiness_assembly_test.go:27, reconcileloop.go 대상).
+- 알림 수·셈을 단언하는 기존 driver 시험(grep 전수 — reconcileloop_test.go 11곳, adoption_include_test.go 5곳, a085_alert_text_test.go 4곳, a095 8곳 중 차단이 끼는 것):
+  - `TestAdoptionIsSilentUnderReconcile`(reconcileloop_test.go:358): `Adopted`·`Unmanaged`·`exit.position_unmanaged` 0 단언. 수량 불일치·한 주기 → 깨지지 않음.
+  - `TestActiveForeignCauseIsCountedAndBlocksBeforePriceRead`(:383): `Blocked == 1`·`Adopted == 0`·시세 읽기 0 만 단언(알림 수 단언 없음). IDENTIFIER_CONFLICT 는 운영자 전용이라 a194 뒤 이 주기에 새 보고가 나가지만 단언은 안 깨짐(새 보고가 시세를 읽지 않는 한).
+  - **`TestUSIncludedSymbolWaitsUnderAccountWidePermanentReconcile`(adoption_include_test.go:109)**: 계좌 전체 영구 + include 종목 → 133 행 `cycle.Unmanaged != 0` 이면 Fatal. 새 보고가 `cycle.Unmanaged` 를 올리면 **깨진다**.
+  - `exit.position_adoption_failed` 사실 값을 열거하는 switch·시험·골든: 없음. 사실 값은 adoption.go:95-103 상수와 `unmanagedFact` 의 생산뿐이고, a095 시험은 특정 값의 key 를 리터럴로 찾을 뿐 전수를 단언하지 않음. obs 시험(a091_stop_sold_nothing_test.go:40-44, obs_test.go:141)은 타입 단위라 새 사실 값과 무관.
+
+## proposal-freeze 리뷰
+
+### 1회차 (2026-11-23) — codex-cli 0.165.0, 읽기 전용(`--sandbox read-only`, `</dev/null`), 적대적 Eng 관점
+
+- 원문: `analysis/review/proposal-freeze-r1-codex.md`. 판정 「계약 freeze 보류 — P0 0, P1 4, P2 4」.
+- 처분 규칙(위임 지시): 사실 오류 정정은 반영, 새 가드·새 정책·범위 확장·결정 변경은 **Manager 결정 대기**.
+
+| # | 등급 | 발견 요약 | 처분 |
+|---|---|---|---|
+| R1-1 | P1 | 알림 꺼짐 → 일반 등급으로 내리는 경로가 없다. 두 타입(`exit.position_adoption_failed`·`reconcile.mismatch_permanent`)은 표에서 항상 critical(event.go:370·:386)이고 `Notify` 는 타입으로만 등급을 정함(notifier.go:149-157) → 꺼진 엔진에도 outbox 행·진입 래치·모드 승격(alertdelivery.go:315-325·:446-471). 꺼짐·topic 잔존·topic 없음 각각에서 새 행·래치·전이 0 시험 요구 | **Manager 결정 대기** — 꺼짐일 때의 타입·기록 경로(D3 는 기존 `exit.position_unmanaged` 갈래로 내려갈 수 있으나 D5 는 대응 일반 타입이 없음). 팀메이트 1.3 도 같은 결론 |
+| R1-2 | P1 | D5 하루 한 번은 `Notify` 배선으로 불가 — `Notify` 는 `remindAfter()` 기본 1시간(notifier.go:301·:395-399) → 같은 날 시간마다 재무장. `RecordCritical(ctx,e,0)` 배선을 확정해야 함. 공유 Notifier 의 창 변경은 대안이 아님 | **Manager 결정 대기**(배선: 새 옵션 + `Context.ReconcileDriver` 편집 → FLM 번들 추가, census 밖) |
+| R1-3 | P1 | D6 본문의 현재형(「걸려 있지 않다」「해제 전까지 직접 관리」)은 해소 뒤 늦게 배달되면 거짓 — 정본 engine-safety(:1905-1907)·기존 `alertAdoptionFailed` 는 관측 시각 + 과거형. `blocked_stale` 에 운영자 해제가 필수인 듯 안내하면 안 됨. PENDING → 해제·편입 → 지연 배달 시험 요구 | **Manager 결정 대기** — D6 문구·본문에 실을 시각(무보호 관측 시각)을 바꾸는 결정. 사실 지적 자체는 참(adoption.go:481-505 확인) |
+| R1-4 | P1 | ADDED 만으로는 정본 exit-policy Scenario 「RECONCILE 중 편입 시도 … 무알림」(:159-161 — 모든 RECONCILE 무결정 보유)을 좁힐 수 없다. engine-safety 「무관리 보유 보고의 등급은 사실이 정한다」(:1885)는 「시도했으나 실패」를 critical 로 정의 — 시도하지 않은 두 사실을 critical 로 더하는 것은 등급 계약 확장 | **Manager 결정 대기** — MODIFIED delta·engine-safety delta 추가는 범위 변경. 팀메이트 확인: 정본 reconciliation :83(「수량 불일치 감지 … 알림이 발송된다」)·engine-safety :199(영구 불일치 critical)도 이미 있음 |
+| R1-5 | P2 | 성공한 대사 주기에만 보고 → 안정화 미수렴·로컬 상태·Refresh·Observe 실패가 이어지면 영구 차단의 일일 보고도 무기한 침묵(reconcileloop.go:422-470). 미수렴은 `reconcile.clean` 로그. 포지션 조회 실패(adoption.go:129-134)는 차단 분기 앞에서 빠짐, 드라이버는 ingest 알림을 끔(reconcileloop.go:342-347) | **Manager 결정 대기**(범위). design §2 에 다른 반환 셋과 「미수렴은 오류 로그 줄도 없음」은 사실로 적음 |
+| R1-6 | P2 | D1 은 `operator_only` 전체를 못 가름(SNAPSHOT_* 는 operator_only + `ReasonReconcileMismatch`), 「생산 쓰기 0」은 복원 행에도 맞는다는 증명이 아님(Refresh 가 활성 행 그대로 복원). `EntryAllowed` 반환에 Cause·Since 없음 | **Manager 결정 대기** — `Blocks()` 의 Release·Cause·Since 를 쓸지 / 지원 원인을 한정할지. 사실은 proposal F5·evidence-reconciliation 「F5 상세」에 정정 반영 |
+| R1-7 | P2 | 시험 전략 공백: 창 0 → 1시간 변이는 행 수 1 그대로(outbox UPDATE, journal/outbox.go:334-346) — 실제 발송 수를 봐야 함; 래치 변이에 기록 실패·회복 RED 없음; KST/UTC 자정 분리 없음; 하네스는 `NotificationsEnabled=false`·`fakeAlerts` — 실제 Notifier·outbox·배달 실행자 필요; 선택 정규식이 a095 전체를 못 잡음(`TestA095NotificationsOffNeverRecordsACritical` 빠짐); §4-1 「critical 1」이 어느 타입인지 불명 | **Manager 결정 대기**(시험 전략 변경). 정규식 누락은 사실(`A194|Adoption|ReconcileLoop|Unmanaged` 는 `TestA095NotificationsOff…` 에 안 맞음) |
+| R1-8 | P2 | design §3·delta 의 「이미 편입된(ExitEligible) 보유 — 청산이 계속 나간다 / 이미 보호된다」는 과장 — `ExitEligible` 은 자격이고 exit state 개설을 보증하지 않음(position_projection.go:515-518, adoptOne 보호 미개설 경계) | **반영(사실 정정)** — design §3 문장 고침. delta `specs/exit-policy/spec.md` 의 Requirement 괄호 「이미 보호된다」는 Requirement 문장 수정이라 리뷰 재실행 대상 → **Manager 결정 대기** |
+
+- 2회차: **실시하지 않음.** 8건 중 7건이 결정·범위 변경이라 문서가 거의 바뀌지 않았고, 같은 문서를 다시 보내면 같은 발견만 돌아온다. Manager 결정 뒤 requirement 변경 리뷰로 재실시할 것.
+- freeze 판정: 보류(1.7 Manager 몫).

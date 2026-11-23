@@ -6,12 +6,12 @@
 
 ## 1. 계약과 증거 (production Go·시험 편집 0)
 
-- [ ] 1.1 Story `STORY-TOS-a194`(FEAT-TOS-005) 등록 확인, `base-commit.txt` 고정.
-- [ ] 1.2 CodeGraph hard evidence(버전 명기): `judgeHoldings`·`blocked`·`alertUnmanaged`·`alertAdoptionFailed`·`reconcileUnmanagedKey`·`RunOnce`·`Tracker.Blocks`·`Tracker.EntryAllowed`·`Tracker.Permanent` — `analysis/code-context/`.
-- [ ] 1.3 `tools/logic-map` AST 를 `analysis/cited-ast/` 에 현재 HEAD 로 뽑고 proposal 표의 「조사 인용」 다섯 줄과 design D1·D3·§2 의 주장(`EntryAllowed` 사유로 운영자 전용을 가를 수 있는가, `alertAdoptionFailed` 의 key·등급·기록 입구, `RunOnce` 가 `Observe` 실패 시 `judgeHoldings` 를 건너뛰는가)을 대조한다. 틀리면 문서를 고치고 Manager 에게 보고.
-- [ ] 1.4 편집 표면 세기: `judgeHoldings` 를 고정하는 구조 시험·census 유무, 알림 수를 단언하는 기존 시험 전수(`reconcileloop_test.go` 등), `exit.position_adoption_failed` 의 사실 값을 열거하는 시험·골든 유무.
-- [ ] 1.5 `judgeHoldings` 의 FLM/BTM 번들(pre-edit 판).
-- [ ] 1.6 `openspec validate a194-… --strict` 통과, proposal-freeze 적대 리뷰(다른 계열, 최대 2회) — `review.md`.
+- [x] 1.1 Story `STORY-TOS-a194`(FEAT-TOS-005) 등록 확인, `base-commit.txt` 고정.
+- [x] 1.2 CodeGraph hard evidence(버전 명기): `judgeHoldings`·`blocked`·`alertUnmanaged`·`alertAdoptionFailed`·`reconcileUnmanagedKey`·`RunOnce`·`Tracker.Blocks`·`Tracker.EntryAllowed`·`Tracker.Permanent` — `analysis/code-context/`.
+- [x] 1.3 `tools/logic-map` AST 를 `analysis/cited-ast/` 에 현재 HEAD 로 뽑고 proposal 표의 「조사 인용」 다섯 줄과 design D1·D3·§2 의 주장(`EntryAllowed` 사유로 운영자 전용을 가를 수 있는가, `alertAdoptionFailed` 의 key·등급·기록 입구, `RunOnce` 가 `Observe` 실패 시 `judgeHoldings` 를 건너뛰는가)을 대조한다. 틀리면 문서를 고치고 Manager 에게 보고.
+- [x] 1.4 편집 표면 세기: `judgeHoldings` 를 고정하는 구조 시험·census 유무, 알림 수를 단언하는 기존 시험 전수(`reconcileloop_test.go` 등), `exit.position_adoption_failed` 의 사실 값을 열거하는 시험·골든 유무.
+- [x] 1.5 `judgeHoldings` 의 FLM/BTM 번들(pre-edit 판).
+- [x] 1.6 `openspec validate a194-… --strict` 통과, proposal-freeze 적대 리뷰(다른 계열, 최대 2회) — `review.md`.
 - [ ] 1.7 Manager 1단계 검증·freeze.
 
 ## 2. Pre-Edit

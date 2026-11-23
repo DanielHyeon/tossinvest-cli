@@ -4,7 +4,7 @@
 
 | # | 결정 | 근거 |
 |---|---|---|
-| D1 | 「운영자만 풀 수 있는 차단」의 판정은 기존 재료만 쓴다: `Tracker.Permanent()`(계좌 전체) 또는 `Tracker.EntryAllowed(시장, 종목)` 의 사유가 `execgw.ReasonReconcilePermanent`. 새 Tracker 메서드를 만들지 않는다 | 조사 인용(§2-A). 판정을 둘로 두지 않는다 — 편입을 막는 판정(`blocked`)과 같은 출처 |
+| D1 | 「운영자만 풀 수 있는 차단」의 판정은 기존 재료만 쓴다: `Tracker.Permanent()`(계좌 전체 **수량** 영구 승격 — 다른 원인의 계좌 행은 `EntryAllowed` 의 계좌 범위가 잡는다, AST: analysis/cited-ast/Permanent.ast.json · Refresh.ast.json) 또는 `Tracker.EntryAllowed(시장, 종목)` 의 사유가 `execgw.ReasonReconcilePermanent`. 새 Tracker 메서드를 만들지 않는다 | analysis/code-context/evidence-reconciliation.md 「F5 상세」. 판정을 둘로 두지 않는다 — 편입을 막는 판정(`blocked`)과 같은 출처 |
 | D2 | 스스로 풀리는 차단의 유예 = **10 분**(상수 하나). 포지션별 「처음 빠진 시각」을 드라이버 메모리에 두고, 그 주기에 빠지지 않으면(편입·해제·청산) 지운다. 재시작하면 시계가 다시 0 이다 | 대사 주기 약 62 초 × 10. 수량 불일치는 조정 뒤 한두 주기에 풀리는 것이 정상이고(운영 장부의 수량 불일치 133 행 전부 해제됨), 10 분을 넘기면 「스스로 풀린다」는 전제가 이미 깨진 것이다. 재시작 뒤 시계 초기화는 공시한다 — 운영자 전용 차단은 유예가 없으므로 재시작에 가려지지 않는다 |
 | D3 | 보유 보고는 기존 critical 타입 `exit.position_adoption_failed` 를 쓰고, 사실 칸에 새 값 둘(`blocked_operator_only`, `blocked_stale`)을 둔다. key 는 기존 `reconcileUnmanagedKey` 형식(타입·`reconcile`·사실·포지션) | 보호를 기대한 보유가 보호되지 않는다는 같은 사실이다. `internal/obs` 무편집. critical 은 메모리 래치를 거치지 않고 매 관측 기록을 시도하며 중복은 outbox key 와 재알림 창이 맡는다(a095 원칙) |
 | D4 | 알림이 꺼진 엔진·편입이 꺼지고 그 종목이 지정되지도 않은 엔진의 등급은 기존 표를 따른다: 알림 꺼짐 → 일반 등급. **편입 꺼짐 ∧ 미지정 종목은 이 보고의 대상이 아니다** — 그 보유는 차단이 없어도 편입되지 않으므로 「차단 때문에 보호가 빠졌다」가 거짓이다. 그 경우는 기존 무관리 보고(일반 등급)가 차단 해제 뒤에 나간다 | engine-safety 「무관리 보유 보고의 등급은 사실이 정한다」의 표와 같은 방향. 판정 순서: 제외 목록·꺼짐∧미지정이면 대상 아님 → 그 밖의 차단 보유만 |
@@ -15,15 +15,15 @@
 ## 2. 편집 자리
 
 - A(채택): `judgeHoldings` 의 차단 분기(if@152)에서 `continue` 하기 전에 그 보유를 모으고, 순회 뒤 새 파일(`internal/app/engine/reconcile_block_report.go`)의 새 함수들이 판정·기록한다. 차단 보고(D5)도 같은 자리에서 부른다 — `judgeHoldings` 는 `Observe` 가 성공한 주기의 마지막 단계라 블록 목록이 그 주기의 것이다.
-- B(기각): exit 루프 `workingSet` 에서 보고 — `a090_workingset_exits_test.go` 가 그 루프의 이탈 11 개를 고정한다(조사 인용).
+- B(기각): exit 루프 `workingSet` 에서 보고 — `a090_workingset_exits_test.go:22-35`(`a090FrozenWorkingSetExits`)가 그 루프의 이탈 11 개를 고정한다.
 
-`Observe` 가 실패한 주기에는 `judgeHoldings` 가 돌지 않는다(조사 인용 F2: RunOnce if@463 → return@467). 그 주기는 보고도 없다 — 대사 실패 자체의 기존 보고(`reconcile.mismatch`)가 있다. 유예 시계는 그런 주기에 지우지 않는다(빠지지 않았다는 관측이 아니다).
+`Observe` 가 실패한 주기에는 `judgeHoldings` 가 돌지 않는다(AST: analysis/cited-ast/RunOnce.ast.json B7 if@463 → return@467). 같은 호출 전에 반환하는 갈래가 셋 더 있다 — 안정화 실패·미수렴 B1 if@422 → return@423, 로컬 상태 읽기 실패 B2 if@428 → return@430, `Tracker.Refresh` 실패 B5 if@451 → return@455. 그 주기는 보고도 없다 — 대사 실패 자체의 기존 보고(`reconcile.mismatch` — `logCycle` 의 ERROR 로그 줄(reconcileloop.go:546)이고 알림이 아니다. 안정화 미수렴 주기는 오류가 아니라 이 줄도 없다)가 있다. 유예 시계는 그런 주기에 지우지 않는다(빠지지 않았다는 관측이 아니다).
 
 ## 3. 거절·침묵하는 정상 입력
 
 - 수량 불일치로 막 차단된 보유: 10 분 전까지 침묵(정본의 전이 상태). 사람이 방금 산 종목의 정상 경로다.
 - 편입 꺼짐 ∧ 미지정 종목의 차단 보유: 이 보고 없음(D4).
-- 이미 편입된(ExitEligible) 보유: 이 보고 없음 — 청산이 계속 나간다.
+- 이미 exit 자격을 가진(`ExitEligible` — 진입 결정 또는 편입 기록이 있는, internal/journal/position_projection.go:515-518) 보유: 이 보고 없음. 자격은 exit state 가 실제로 열렸음을 보증하지 않는다 — 편입 커밋 뒤 보호 미개설 보유(adoption.go `adoptOne`, 정본 engine-safety 「편입 기록이 커밋됐는데 보호가 아직 열리지 않은 보유」 경계)는 이 change 범위 밖이다.
 
 ## 4. 시험 전략 (RED 먼저)
 
