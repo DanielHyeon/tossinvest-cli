@@ -287,6 +287,8 @@ type ExitObserver struct {
 	clearStreak map[string]*clearStreak
 	// episodeRecorded 는 a094 의 명명 critical 을 한 프로세스에서 다시 적재하지 않게 하는 래치임(적재 중복 최적화).
 	episodeRecorded map[string]bool
+	// clearCancelLogged 는 a198 의 길 치우기 취소 실패 줄 중복 억제 표시임(key 포지션|주문 → 상태|사유). 메모리 — 재시작하면 다시 씀.
+	clearCancelLogged map[string]string
 	// observationSequence distinguishes fallback observations when the quote
 	// source supplies no FetchedAt and a test/frozen clock does not advance.
 	observationSequence atomic.Uint64
@@ -1681,25 +1683,26 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 				continue
 			}
 		}
-		issued, err := o.opts.Issuer.IssueReduction(ctx, execgw.ReductionIssuance{
-			Intent: risk.Intent{
-				AccountRef: o.opts.AccountRef,
-				Market:     costs.Market(strings.ToLower(strings.TrimSpace(order.Market))),
-				Symbol:     order.Symbol,
-				Side:       risk.SideSell,
-				Quantity:   order.Quantity,
-			},
-			Account: risk.AccountState{HeldQuantity: order.Quantity},
-			Reason: fmt.Sprintf("cancelling the working %s order %s before liquidating position %s",
-				strings.ToUpper(strings.TrimSpace(order.Side)), order.OrderID, m.position.ID),
-		})
-		if err != nil {
-			res.cleared = false
-			continue
-		}
 		quantity, qerr := floatOf("working order quantity", order.Quantity)
 		price, perr := workingOrderPrice(order.Price)
 		if qerr != nil || perr != nil {
+			res.cleared = false
+			continue
+		}
+		// 취소 결정은 수동 flatten 과 같은 발행 함수로 냄(a198 D2) — 주문 생성 결정(멱등 키)을 실으면 원장이 취소를 거절함.
+		// 방향 · 수량은 취소할 그 주문의 것이고, 시계는 운영에서 게이트웨이와 같은 관측기 시계임.
+		decision, err := (&execgw.Issuer{Journal: o.opts.Journal, Clock: o.clk, AccountRef: o.opts.AccountRef}).
+			IssueReduction(ctx, execgw.ReductionRequest{
+				Kind:        journal.KindCancel,
+				Market:      strings.ToLower(strings.TrimSpace(order.Market)),
+				Symbol:      order.Symbol,
+				Side:        strings.ToUpper(strings.TrimSpace(order.Side)),
+				MaxQuantity: quantity,
+				Reason: fmt.Sprintf("cancelling the working %s order %s before liquidating position %s",
+					strings.ToUpper(strings.TrimSpace(order.Side)), order.OrderID, m.position.ID),
+			})
+		if err != nil {
+			o.noteClearCancelFailure(m, order, "", exitClearCancelDecisionFailed)
 			res.cleared = false
 			continue
 		}
@@ -1712,12 +1715,14 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 				Price:    price,
 				Currency: order.Currency,
 			},
-			Decision: issued.Decision,
+			Decision: decision,
 		})
 		if err != nil || out.State != journal.StateConfirmed {
+			o.noteClearCancelFailure(m, order, out.State, string(out.Reason))
 			res.cleared = false
 			continue
 		}
+		o.noteClearCancelConfirmed(m, order)
 		if !buy {
 			// 매도의 취소 접수는 치움의 증거가 아님 — 취소 전에 얼마나 체결됐는지는 종결 체결 기록만 말함(D−4.3).
 			res.cleared, res.awaitingClose = false, true
