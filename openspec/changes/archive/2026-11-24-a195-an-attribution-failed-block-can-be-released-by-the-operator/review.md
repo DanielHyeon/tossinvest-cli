@@ -117,3 +117,5 @@ Pre-Edit Gate:
 - rebase 뒤 선택 시험 재실행(GOFLAGS=-trimpath): ./cmd/tossctl -run 'TestA166EngineReconcile|TestEngineReconcileResolve|A195' → PASS 24 · FAIL 0(ok 4.294s); ./internal/accountbudgetruntime ok 23.621s; ./internal/reconcile -run 'Resolve|Restore|Observe' ok 4.075s.
 - 착지: `--record-landing` → `landed-commit.txt` = `836244854`(도구 계산), 단독 커밋 `969d04e13`.
 - tasks: 5.1 체크(위 Manager 검증), 5.2 **선체크(gate ② 선행 조건, 선례 a193)** — 게이트·archive·Story·push 는 이 체크 뒤 수행. 옛 5.3(운영 반영·해제 명령 실행)은 체크박스에서 빼 「6. 종결 뒤(사람 승인)」 문단으로 옮김(운영 반영 없이 체크하는 것을 피함).
+- 완료 게이트(격리 worktree `~/tossos-work/a195-close-gate`, ext4 홈, detached `020b38c79`, `SDD_PYTHON` = worktree 밖 venv): **1회차 rc 0 — 11/11 GATE PASS**(14:47:57Z~15:32:05Z). ⑤ landed `836244854` required 3, ⑦ 패키지 FAIL 0(internal/performance ok 51.9s, p95 시험 포함), ⑪ 닫는 change strict valid. `make sdd-sync` 는 rc 2(advisory codegraphcontext·gbrain 시한, CodeGraph 성공, HEAD 무이동), `--no-gbrain` 재실행 rc 1(codegraphcontext 시한) — CodeGraph hard-evidence fingerprint 는 일치(⑥ OK). 원문 `analysis/close/`.
+- archive: 아래 커밋. 정본 reconciliation 에 ADDED Requirement 2.

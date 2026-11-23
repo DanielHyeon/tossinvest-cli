@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a195-an-attribution-failed-block-can-be-released-by-the-operator",
-    "path": "openspec/changes/a195-an-attribution-failed-block-can-be-released-by-the-operator"
+    "path": "openspec/changes/archive/2026-11-24-a195-an-attribution-failed-block-can-be-released-by-the-operator"
   },
   "found_by": {
     "date": "2026-11-23",
     "how": "2026-11-20 엔진 손절 매도의 체결이 대사의 수렴 조정과 경합해 귀속 실패 차단이 걸렸고, 운영자 해제 명령이 이 원인을 구조적으로 거절해 어떤 경로로도 풀 수 없었다(Manager 실측 + 코드 조사 2026-11-23).",
-    "record": "openspec/changes/a195-an-attribution-failed-block-can-be-released-by-the-operator/proposal.md"
+    "record": "openspec/changes/archive/2026-11-24-a195-an-attribution-failed-block-can-be-released-by-the-operator/proposal.md"
   },
   "acceptance": [
     "운영자 해제 명령은 종목 범위의 귀속 실패 차단을 수량 불일치 차단과 같은 조건(엔진 잠금·명령의 재조회 일치·운영자 신원과 확인 내용)으로 해제한다.",
