@@ -110,8 +110,16 @@
 | 설정 영향 | 없음(새 설정 0). 동작은 기존 `notifications.enabled`·`adoption.*` 를 읽기만 함 |
 
 ### 3.2 GREEN · 3.3 (2026-11-23)
-- 새 파일 `internal/app/engine/reconcile_block_report.go`(새 함수 7: `reportBlocked` · `reportBlockedWith` · `reportBlockedHoldings` · `earliestCoveringBlock` · `alertBlockedHolding` · `reportOperatorOnlyBlocks` · `recordOperatorOnlyBlock` · `blockSinceText`), `ReconcileDriver` 구조체 새 필드 3, `judgeHoldings` 편집(지역 선언 1 · B10 안 append 1 · 끝 호출 1 + 주석). `kst` 는 기존 `attestation_watch.go:311` 의 것을 재사용(새로 선언했다가 중복으로 빌드 실패 → 제거).
+- 새 파일 `internal/app/engine/reconcile_block_report.go`(새 함수 8: `reportBlocked` · `reportBlockedWith` · `reportBlockedHoldings` · `earliestCoveringBlock` · `alertBlockedHolding` · `reportOperatorOnlyBlocks` · `recordOperatorOnlyBlock` · `blockSinceText`), `ReconcileDriver` 구조체 새 필드 3, `judgeHoldings` 편집(지역 선언 1 · B10 안 append 1 · 끝 호출 1 + 주석). `kst` 는 기존 `attestation_watch.go:311` 의 것을 재사용(새로 선언했다가 중복으로 빌드 실패 → 제거).
 - RED 뒤 시험 수정 1건: `TestA194NotificationsOffNeverRecordsACritical` 의 로그 세기가 한 줄 안의 `msg`·`event` 두 칸을 둘로 셌음 → `"event":"reconcile.mismatch_permanent"` 로 셈(단언 완화 아님 — 기대값 1 그대로).
 - GREEN 뒤 시험 추가 1건: `TestA194EarlierExcludedHoldingsAreReportedFirst`(편집 후 커버에서 정렬의 시각 갈래가 미실행이라 더함).
 - 무편집 통과: `TestAdoptionIsSilentUnderReconcile` · `TestActiveForeignCauseIsCountedAndBlocksBeforePriceRead` · `TestUSIncludedSymbolWaitsUnderAccountWidePermanentReconcile` · `TestA095NotificationsOffNeverRecordsACritical` · `TestExitEligibilityHasOneSpelling` · `TestProtectionReadinessIsAbsentFromExitReconcileAndFillLoopSources` · TestA095*·TestA085*·TestA163*·`TestA092TheCriticalRecordersAreEnumerated` 전부 PASS.
 - 번들 재생성: `ast.json`(편집 후), `renumber.txt`(difflib equal 16/16 — 분기 추가 0), FLM·BTM 편집 후 판, 편집 후 커버 `analysis/implementation/after-cover.out`.
+
+### 4.1 변이 원장 · 4.2 검증 (2026-11-23)
+- 변이 13개 전부 닿음·CAUGHT, SURVIVED 0(`analysis/mutation/ledger.md`, 시작 sha 5a547f80d, 사본 하네스 `run_mutations.py`). design §4 의 변이 9 + Manager 추가 2(주기 상한 삭제 M10 · adopt 앞으로 M11) + 경계 분리 M2a/M2b + 순서 M12.
+- 선택 시험: `GOFLAGS=-trimpath rtk proxy go test ./internal/app/engine -count=1 -run 'A194|Adoption|ReconcileLoop|Unmanaged|TestA095NotificationsOff|TestUSIncludedSymbolWaits' -v` → ok, PASS 44 · FAIL 0(`analysis/verify/selected-tests.txt`). `TestActiveForeignCauseIsCountedAndBlocksBeforePriceRead` 는 이 정규식에 안 걸려 따로 돌림 → PASS(3.3 기록).
+- `-race`: `go test ./internal/app/engine -count=1 -race -run 'A194'` → ok(103 s, `analysis/verify/race-a194.txt`).
+- `make lint` rc 0(gofmt · go vet · tags vet, `analysis/verify/lint.txt`). `openspec validate --strict` valid. `check_analysis.py --change a194-…` rc 0 — required 1(judgeHoldings) evidence complete(`analysis/verify/check-analysis.txt`). 착지 기록(`--record-landing`)은 하지 않음(5단계 몫).
+- 실제 알림 문장 원문: `analysis/verify/alert-sentences.txt`(사본에서 일회 시험으로 뽑음, 그 시험 파일은 사본에서 지움).
+- 미실행: 전체 스위트(`make test`·`go test ./...`), `make test-seams`·`make test-race` 전체, `make gate`·`make sdd-check`·`make sdd-sync`, engine 패키지의 나머지 시험, cmd/tossctl 시험, 운영 반영. 구현 적대 리뷰·gstack review(4.3)는 Manager 지시로 하지 않음.

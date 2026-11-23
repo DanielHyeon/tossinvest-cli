@@ -1,0 +1,114 @@
+=== RUN   TestA095AnAdoptionLookupFailureStaysSilent
+--- PASS: TestA095AnAdoptionLookupFailureStaysSilent (0.35s)
+=== RUN   TestA095AFailedAdoptionIsCriticalAndDurable
+=== RUN   TestA095AFailedAdoptionIsCriticalAndDurable/category_①_refused_before_adopting
+=== RUN   TestA095AFailedAdoptionIsCriticalAndDurable/category_②_the_adoption_transaction_failed
+=== RUN   TestA095AFailedAdoptionIsCriticalAndDurable/category_①_on_a_symbol_that_is_also_designated
+--- PASS: TestA095AFailedAdoptionIsCriticalAndDurable (0.86s)
+    --- PASS: TestA095AFailedAdoptionIsCriticalAndDurable/category_①_refused_before_adopting (0.29s)
+    --- PASS: TestA095AFailedAdoptionIsCriticalAndDurable/category_②_the_adoption_transaction_failed (0.30s)
+    --- PASS: TestA095AFailedAdoptionIsCriticalAndDurable/category_①_on_a_symbol_that_is_also_designated (0.27s)
+=== RUN   TestA095NotificationsOffNeverRecordsACritical
+--- PASS: TestA095NotificationsOffNeverRecordsACritical (0.27s)
+=== RUN   TestA095AnAdoptionWithoutItsExitStateIsTheNamedBoundary
+--- PASS: TestA095AnAdoptionWithoutItsExitStateIsTheNamedBoundary (0.30s)
+=== RUN   TestA194OperatorOnlyBlockedHoldingIsReportedOnTheFirstCycle
+--- PASS: TestA194OperatorOnlyBlockedHoldingIsReportedOnTheFirstCycle (0.31s)
+=== RUN   TestA194ASelfReleasingBlockIsReportedAfterTenMinutes
+=== RUN   TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/9m59s_is_still_a_transition
+=== RUN   TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/10m_is_no_longer_a_transition
+--- PASS: TestA194ASelfReleasingBlockIsReportedAfterTenMinutes (0.59s)
+    --- PASS: TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/9m59s_is_still_a_transition (0.28s)
+    --- PASS: TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/10m_is_no_longer_a_transition (0.31s)
+=== RUN   TestA194TheGraceClockIsClearedWhenTheHoldingIsNotExcluded
+--- PASS: TestA194TheGraceClockIsClearedWhenTheHoldingIsNotExcluded (0.30s)
+=== RUN   TestA194ASkippedCycleDoesNotResetTheGraceClock
+--- PASS: TestA194ASkippedCycleDoesNotResetTheGraceClock (0.30s)
+=== RUN   TestA194OnlyAdoptionCandidatesAreReported
+=== RUN   TestA194OnlyAdoptionCandidatesAreReported/adoption_off_and_not_designated
+=== RUN   TestA194OnlyAdoptionCandidatesAreReported/excluded
+=== RUN   TestA194OnlyAdoptionCandidatesAreReported/designated_with_adoption_off
+--- PASS: TestA194OnlyAdoptionCandidatesAreReported (0.76s)
+    --- PASS: TestA194OnlyAdoptionCandidatesAreReported/adoption_off_and_not_designated (0.24s)
+    --- PASS: TestA194OnlyAdoptionCandidatesAreReported/excluded (0.27s)
+    --- PASS: TestA194OnlyAdoptionCandidatesAreReported/designated_with_adoption_off (0.26s)
+=== RUN   TestA194ASnapshotCauseIsOperatorOnlyByItsRelease
+--- PASS: TestA194ASnapshotCauseIsOperatorOnlyByItsRelease (0.30s)
+=== RUN   TestA194NotificationsOffNeverRecordsACritical
+=== RUN   TestA194NotificationsOffNeverRecordsACritical/off_with_the_topic_kept
+=== RUN   TestA194NotificationsOffNeverRecordsACritical/off_without_a_topic
+--- PASS: TestA194NotificationsOffNeverRecordsACritical (0.58s)
+    --- PASS: TestA194NotificationsOffNeverRecordsACritical/off_with_the_topic_kept (0.31s)
+    --- PASS: TestA194NotificationsOffNeverRecordsACritical/off_without_a_topic (0.27s)
+=== RUN   TestA194AnOperatorOnlyBlockIsReportedOncePerDay
+--- PASS: TestA194AnOperatorOnlyBlockIsReportedOncePerDay (0.30s)
+=== RUN   TestA194AnAccountWideBlockIsOneReport
+--- PASS: TestA194AnAccountWideBlockIsOneReport (0.30s)
+=== RUN   TestA194TheDayIsTheKoreanCalendarDay
+--- PASS: TestA194TheDayIsTheKoreanCalendarDay (0.30s)
+=== RUN   TestA194AFailedBlockReportIsRetriedNextCycle
+--- PASS: TestA194AFailedBlockReportIsRetriedNextCycle (0.30s)
+=== RUN   TestA194AFailedHoldingReportIsRecordedOnTheNextObservation
+--- PASS: TestA194AFailedHoldingReportIsRecordedOnTheNextObservation (0.29s)
+=== RUN   TestA194ADeliveredHoldingReportIsRemindedAfterTheWindow
+--- PASS: TestA194ADeliveredHoldingReportIsRemindedAfterTheWindow (0.31s)
+=== RUN   TestA194ASelfReleasingBlockIsNotABlockReport
+--- PASS: TestA194ASelfReleasingBlockIsNotABlockReport (0.27s)
+=== RUN   TestA194ABlockTheTrackerNoLongerListsTakesTheGracePath
+--- PASS: TestA194ABlockTheTrackerNoLongerListsTakesTheGracePath (0.28s)
+=== RUN   TestA194ALateDeliveredReportIsStillTrue
+--- PASS: TestA194ALateDeliveredReportIsStillTrue (0.33s)
+=== RUN   TestA194TheReportsCarryNoAccountQuantityOrPrice
+--- PASS: TestA194TheReportsCarryNoAccountQuantityOrPrice (0.32s)
+=== RUN   TestA194AtMostThreeHoldingReportsPerCycle
+--- PASS: TestA194AtMostThreeHoldingReportsPerCycle (0.41s)
+=== RUN   TestA194TheReportComesAfterTheCyclesAdoptions
+--- PASS: TestA194TheReportComesAfterTheCyclesAdoptions (0.29s)
+=== RUN   TestA194EarlierExcludedHoldingsAreReportedFirst
+--- PASS: TestA194EarlierExcludedHoldingsAreReportedFirst (0.34s)
+=== RUN   TestTheUnmanagedAlertNamesTheStockInKorean
+--- PASS: TestTheUnmanagedAlertNamesTheStockInKorean (0.29s)
+=== RUN   TestA090R14UnmanagedAndCompletedPositionsAreNotCounted
+--- PASS: TestA090R14UnmanagedAndCompletedPositionsAreNotCounted (0.47s)
+=== RUN   TestA110ChangingReconcileDisputesDoNotSuppressAnUncoveredAdoption
+--- PASS: TestA110ChangingReconcileDisputesDoNotSuppressAnUncoveredAdoption (0.30s)
+=== RUN   TestAdoptionToggleIsAudited
+--- PASS: TestAdoptionToggleIsAudited (0.37s)
+=== RUN   TestARefusedAdoptionBlockIsAudited
+--- PASS: TestARefusedAdoptionBlockIsAudited (0.33s)
+=== RUN   TestAdoptionStaysOffOnAGateOffEngine
+--- PASS: TestAdoptionStaysOffOnAGateOffEngine (0.31s)
+=== RUN   TestUSAdoptionRefusesWrongOrEmptyQuoteCurrency
+=== RUN   TestUSAdoptionRefusesWrongOrEmptyQuoteCurrency/currency=KRW
+=== RUN   TestUSAdoptionRefusesWrongOrEmptyQuoteCurrency/currency=
+--- PASS: TestUSAdoptionRefusesWrongOrEmptyQuoteCurrency (0.57s)
+    --- PASS: TestUSAdoptionRefusesWrongOrEmptyQuoteCurrency/currency=KRW (0.29s)
+    --- PASS: TestUSAdoptionRefusesWrongOrEmptyQuoteCurrency/currency= (0.28s)
+=== RUN   TestUSIncludedSymbolWaitsUnderAccountWidePermanentReconcile
+--- PASS: TestUSIncludedSymbolWaitsUnderAccountWidePermanentReconcile (0.26s)
+=== RUN   TestTheFirstObservationAfterAdoptionAppliesTheRatchetNormally
+--- PASS: TestTheFirstObservationAfterAdoptionAppliesTheRatchetNormally (0.30s)
+=== RUN   TestAnAdoptedWinnerRatchetsFromTheAdoptionPrice
+--- PASS: TestAnAdoptedWinnerRatchetsFromTheAdoptionPrice (0.33s)
+=== RUN   TestAnAdoptedPositionIsNotReportedUnmanaged
+--- PASS: TestAnAdoptedPositionIsNotReportedUnmanaged (0.25s)
+=== RUN   TestTheAdoptionTransactionProposesNothing
+--- PASS: TestTheAdoptionTransactionProposesNothing (0.31s)
+=== RUN   TestAdoptionIsSilentUnderReconcile
+--- PASS: TestAdoptionIsSilentUnderReconcile (0.30s)
+=== RUN   TestTrackerReleaseFailureStopsBeforePriceAndAdoption
+--- PASS: TestTrackerReleaseFailureStopsBeforePriceAndAdoption (0.26s)
+=== RUN   TestIncludeOnlyAdoptionRequiresAPriceReader
+--- PASS: TestIncludeOnlyAdoptionRequiresAPriceReader (0.25s)
+=== RUN   TestTheUnmanagedAlertSurvivesAdoptionBeingOff
+--- PASS: TestTheUnmanagedAlertSurvivesAdoptionBeingOff (0.26s)
+=== RUN   TestAdoptionPricesEveryCandidateInOneCall
+--- PASS: TestAdoptionPricesEveryCandidateInOneCall (0.27s)
+=== RUN   TestAStalePriceDefersTheAdoption
+--- PASS: TestAStalePriceDefersTheAdoption (0.27s)
+=== RUN   TestCrashBetweenAdoptionAndExitStateIsCompleted
+--- PASS: TestCrashBetweenAdoptionAndExitStateIsCompleted (0.25s)
+=== RUN   TestAnExternalIncreaseAfterAdoptionIsReported
+--- PASS: TestAnExternalIncreaseAfterAdoptionIsReported (0.32s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	15.235s
