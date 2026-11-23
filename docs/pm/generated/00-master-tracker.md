@@ -71,6 +71,7 @@
     - STORY-TOS-a144 — Trigger verification does not require a TTL-edge measurement [archived] → `a144-separate-trigger-ttl-prerequisite`
     - STORY-TOS-a146 — A strategy entry the Guardian cannot size even one unit for is skipped, not treated as a lane fault [archived] → `a146-guardian-cap-zero-skips-the-entry`
     - STORY-TOS-a157 — A strategy first-leg binding defect is refused before Guardian sizing, so a zero cap cannot hide it [archived] → `a157-first-leg-binding-before-sizing`
+    - STORY-TOS-a196 — 능력 검증의 주문 범위 상실은 「재시작하면 기동이 거부된다」는 결과로 하루 한 번 알려지고, 감독 검증의 만료는 7일 전부터 미리 알려진다 [in_progress] → `a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [archived] → `console-click-approval`
@@ -113,6 +114,8 @@
     - STORY-TOS-a110 — Only the same unresolved reconciliation dispute becomes permanent [archived] → `a110-only-the-same-dispute-becomes-permanent`
     - STORY-TOS-a130 — An adopted trade whose quantity grew after adoption still freezes its outcome [archived] → `a130-an-adopted-trade-keeps-its-outcome`
     - STORY-TOS-a192 — missing-order 종목 차단은 그것을 만든 주문들이 브로커 근거로 종결 확인되고 그 뒤의 대사가 그 종목에 차이를 보지 않을 때 엔진이 스스로 풀고 근거를 장부에 남긴다 [archived] → `a192-a-missing-order-block-is-released-by-the-orders-terminal-proof`
+    - STORY-TOS-a194 — 대사 차단 때문에 편입되지 못해 손절이 걸리지 않은 보유와, 운영자만 풀 수 있는 차단 자체가 운영자에게 알려진다 [in_progress] → `a194-a-holding-left-unprotected-by-a-reconcile-block-is-reported`
+    - STORY-TOS-a195 — 귀속 실패(ATTRIBUTION_FAILED) 종목 차단은 재조회 일치를 근거로 운영자 해제 명령이 풀 수 있다 [in_progress] → `a195-an-attribution-failed-block-can-be-released-by-the-operator`
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
     - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [archived] → `a041-complete-exit-line-contract`
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [archived] → `a042-persist-exit-line-snapshots`
@@ -145,6 +148,7 @@
     - STORY-TOS-a163 — 시세의 브로커 데이터 시각을 보존하고 보고하되 손절 판정 자격은 바꾸지 않는다 [archived] → `a163-quote-freshness-uses-trade-time`
     - STORY-TOS-a167 — A protective-exit remainder that stays live is re-priced and re-ordered [in_progress] → `a167-a-protective-remainder-is-re-priced`
     - STORY-TOS-a193 — 엔진이 도는 동안 IN_DOUBT 가 된 발주는 다음 재시작을 기다리지 않고 조회 대조로 해소되고, 못 풀고 오래 남으면 critical 로 알린다 [archived] → `a193-an-in-doubt-order-is-resolved-while-the-engine-runs`
+    - STORY-TOS-a197 — 브로커가 반대 미체결을 이유로 보호 손절을 거절하면, 기본 꺼진 토글이 켜진 엔진은 그 종목의 외부 매수 미체결을 취소해 손절이 나가게 한다 [in_progress] → `a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`

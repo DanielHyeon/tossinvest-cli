@@ -1,0 +1,25 @@
+{
+  "id": "STORY-TOS-a195",
+  "title": "귀속 실패(ATTRIBUTION_FAILED) 종목 차단은 재조회 일치를 근거로 운영자 해제 명령이 풀 수 있다",
+  "feature": "FEAT-TOS-005",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a195-an-attribution-failed-block-can-be-released-by-the-operator",
+    "path": "openspec/changes/a195-an-attribution-failed-block-can-be-released-by-the-operator"
+  },
+  "found_by": {
+    "date": "2026-11-23",
+    "how": "2026-11-20 엔진 손절 매도의 체결이 대사의 수렴 조정과 경합해 귀속 실패 차단이 걸렸고, 운영자 해제 명령이 이 원인을 구조적으로 거절해 어떤 경로로도 풀 수 없었다(Manager 실측 + 코드 조사 2026-11-23).",
+    "record": "openspec/changes/a195-an-attribution-failed-block-can-be-released-by-the-operator/proposal.md"
+  },
+  "acceptance": [
+    "운영자 해제 명령은 종목 범위의 귀속 실패 차단을 수량 불일치 차단과 같은 조건(엔진 잠금·명령의 재조회 일치·운영자 신원과 확인 내용)으로 해제한다.",
+    "해제 근거가 정의되지 않은 원인(식별자 충돌 등)이 하나라도 활성이면 아무것도 해제하지 않고 그 원인을 이름으로 말하며 거절한다.",
+    "해제 기록 형식·원장 스키마는 바뀌지 않고, 귀속 실패는 자동으로 풀리지 않는다.",
+    "High-risk 의무(Pre-Edit·FLM/BTM·RED/GREEN·변이·적대 리뷰)를 거치고 실계좌 주문을 내는 자동 시험이 없다. 픽스처는 합성 값만 쓴다."
+  ],
+  "limits": [
+    "차단이 생기지 않게 하는 경합 수리, 엔진을 세우지 않는 해제, 자동 해제는 포함하지 않는다 — design 의 후속 후보.",
+    "운영 장부의 해제 실행·배포는 별도 사람 승인이다."
+  ]
+}

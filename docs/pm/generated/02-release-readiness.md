@@ -183,3 +183,7 @@
 | STORY-TOS-a191 | 5 |
 | STORY-TOS-a192 | 5 |
 | STORY-TOS-a193 | 6 |
+| STORY-TOS-a194 | 4 |
+| STORY-TOS-a195 | 4 |
+| STORY-TOS-a196 | 4 |
+| STORY-TOS-a197 | 5 |

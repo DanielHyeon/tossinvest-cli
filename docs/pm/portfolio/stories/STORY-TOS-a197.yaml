@@ -1,0 +1,27 @@
+{
+  "id": "STORY-TOS-a197",
+  "title": "브로커가 반대 미체결을 이유로 보호 손절을 거절하면, 기본 꺼진 토글이 켜진 엔진은 그 종목의 외부 매수 미체결을 취소해 손절이 나가게 한다",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled",
+    "path": "openspec/changes/a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled"
+  },
+  "found_by": {
+    "date": "2026-11-23",
+    "how": "2026-10-29 손절이 사람 매수 미체결 때문에 6,206회 거절된 끝에 나가지 못했고, 2026-11-16 다른 손절이 같은 이유로 3분 15초 늦었다(Manager 실측). 사용자 결정 2026-11-23: 「엔진이 그 매수 주문을 취소하고 손절을 낸다」.",
+    "record": "openspec/changes/a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled/proposal.md"
+  },
+  "acceptance": [
+    "토글이 켜진 엔진은 보호 손절이 반대 미체결로 확정 거절된 뒤에만 미체결 목록을 읽어 엔진에 귀속되지 않는 매수 주문을 취소하고, 취소마다 원장 기록과 운영자 알림을 남긴다.",
+    "매도 주문은 취소하지 않는다. 목록을 다 읽지 못했거나 식별할 수 없는 주문이 있으면 아무것도 취소하지 않는다. 조회는 유한한 시한을 가진다.",
+    "토글이 꺼진 엔진은 이전과 동일하게 동작한다(조회 0·취소 0). 토글 변경은 audit 되고 사람이 승인한다.",
+    "반대 미체결로 거절된 청산의 알림은 원인과 할 일을 말하고, 브로커 거절을 「닿기 전 거부」로 말하지 않는다.",
+    "High-risk 의무(Pre-Edit·FLM/BTM·RED/GREEN·변이·적대 리뷰)를 거치고 실계좌 주문·취소를 내는 자동 시험이 없다. 픽스처는 합성 값만 쓴다."
+  ],
+  "limits": [
+    "익절을 막는 외부 주문, 외부 매도 주문, 재제출 간격, 장 마감 뒤 재제출 억제는 포함하지 않는다.",
+    "브로커가 거절했는데 미체결 목록에 매수가 보이지 않는 경우는 취소 0 으로 남는다.",
+    "운영 반영과 토글 flip 은 별도 사람 승인이다."
+  ]
+}
