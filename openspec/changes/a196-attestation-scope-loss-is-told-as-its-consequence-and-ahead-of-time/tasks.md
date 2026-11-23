@@ -30,7 +30,7 @@
 
 - [x] 4.1 변이 원장(`analysis/mutation/`) — design §5 의 변이 12개(⑦ 은 `internal/soak` — D2 전제 시험이 죽여야 함).
 - [x] 4.2 선택 시험 원문, `make lint`, `openspec validate --strict`, `check_analysis.py --change a196-…`. 미실행 범위 기록.
-- [ ] 4.3 구현 적대 리뷰(다른 컨텍스트) → gstack review 1회 — `review.md`.
+- [x] 4.3 구현 적대 리뷰(다른 컨텍스트) → gstack review 1회 — `review.md`.
 
 ## 5. 종결
 

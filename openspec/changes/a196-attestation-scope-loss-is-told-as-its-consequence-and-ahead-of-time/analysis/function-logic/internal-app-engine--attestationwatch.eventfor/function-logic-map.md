@@ -4,7 +4,7 @@
 > 재번호 `renumber.txt`(difflib — 생성기 `../../renumber.py.txt`).
 
 - Source: `internal/app/engine/attestation_watch.go` (364-463)
-- AST evidence: `ast.json` — branches **22** / returns **1** / calls **29**, source SHA-256 `b3b8bb818e6e8837eb836cbd1be2a741004f7c114ba4282a13c44c4a99941bb8`(파일 단위).
+- AST evidence: `ast.json` — branches **22** / returns **1** / calls **29**, source SHA-256 `292dab380cb7273b0a42307786fb72e3511e08859e38c5e8dae785cdd4932bf3`(파일 단위).
   명령 `GOFLAGS=-trimpath go run ./tools/logic-map --file internal/app/engine/attestation_watch.go --func attestationWatch.eventFor`.
 - Risk scan: `risk-pattern-report.md`. a166 census 0건.
 

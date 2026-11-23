@@ -144,5 +144,13 @@ Pre-Edit Gate:
 - 상태 전이(리뷰가 실측한 요지, Manager 전달): 날수 ↔ 지남 ↔ 거절, 거절 단계 사이, 기록 실패 재시도, 재시작 — 하루 넘게 삼켜지는 경로 없음.
 - 재실행: 선택 시험 engine·soak ok(최상위 PASS 47), `make lint` rc 0, strict validate valid, `check_analysis` rc 0(required 6) — `analysis/verify/`. 변이 run-2: CAUGHT 17, 동등 생존 3(M12·N4·N7). 알림 문장 `analysis/verify/alert-texts.txt` 갱신.
 
+## gstack review r1 (2026-11-23, tasks 4.3)
+
+- 원문 `analysis/review/gstack-review-r1.md`(처분 표), Codex 외부 적대 원문 `analysis/review/gstack-review-r1-codex-adversarial.md`. 1회차로 종료.
+- 반영: G1(주석)·G6(주석 + design §6 잔여)·G4(만료 기한 통지 문구 시험, 변이 N8 CAUGHT). production 동작 무변경(주석만).
+- **Manager 결정 대기(우선 2)**: G12 — 회복 뒤 같은 날 같은 거절 재발이 ack/1시간 창 안이면 outbox 가 삼키고 그날 침묵(D5 key 의 회귀, journal/outbox.go:382-410 확인). G10 — 할 일 `tossctl verify run` 은 엔진 잠금 때문에 엔진이 도는 동안 실행 불가(verify.go:440·engine.go:209 확인) → 문구가 엔진 정지(손절 없음)를 숨김.
+- Manager 결정 대기(그 밖): G5(시장 이름), G7(IssuedAt 0 가드), G11(콘솔 표시). 기록만: G2·G3·G8·G9.
+- 재실행: 선택 시험 ok(최상위 PASS 47), `make lint` rc 0, strict validate valid, `check_analysis` rc 0. 변이 run-3: CAUGHT 18, 동등 생존 3(M12·N4·N7).
+
 ### 안 한 것
 - (1단계 당시) 리뷰 2회차 — 결정 반영 뒤 1.6b 로 실시. `codegraph affected`, CodeGraphContext·GBrain, 전체 시험·게이트, `make sdd-sync`. 운영 파일(`~/.config/tossctl`)은 안 읽음 — 실제 운영에 US 기록이 있는지 모름(Q1 의 현실 영향 미확인).

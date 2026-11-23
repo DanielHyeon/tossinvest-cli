@@ -73,7 +73,7 @@ type attestationVerdict struct {
 	ExpiresAt time.Time
 	Missing   []string // scope_lost 의 누락 endpoint(정렬됨)
 	// ProofAt 은 POST endpoint 마다의 가장 새 감독 증거 중 가장 이른 것임 — 갱신이 POST 를 유지하려면 이 증거가 유효 기간
-	// 안이어야 하므로 운영자가 「언제 감독 검증을 다시 해야 하나」를 읽는 칸. 판정에는 쓰지 않음.
+	// 안이어야 하므로 운영자가 「언제 감독 검증을 다시 해야 하나」를 읽는 칸. a196: 판정 입력이기도 함 — restartDeadline 이 이 값 + (만료 − 발급) 으로 기한을 정함.
 	ProofAt time.Time
 	// Deadline 은 재시작이 거절되기 시작할 시각(만료와 감독 증거의 기한 중 이른 쪽), DeadlineKind 는 그 출처임(a196).
 	// Verify 를 통과한 판정에서만 채워짐 — 거절 단계는 기한 없이 날짜로 셈.
@@ -145,7 +145,7 @@ func judgeAttestation(att attest.Attestation, loadErr error, now time.Time, acco
 //
 // 감독 증거의 기한 = 실린 증거 중 가장 이른 것 + (만료 − 발급). 발급자는 같은 유효 기간 값으로 만료와 증거 수용을 정하므로(soak 시험이
 // 고정) 파일 값만으로 계산하고 발급자 규칙은 복제하지 않음. 증거가 없거나 유효 기간이 0 이하면 만료만 셈.
-// 기한은 「실린」 증거 기준 — 다른 시장의 더 새 증거가 검증 기록에 있으면 실제 상실은 더 늦을 수 있음(이른 경보 쪽, 놓치는 쪽 아님).
+// 기한은 「실린」 증거 기준 — 다른 시장의 더 새 증거가 있으면 실제 상실은 더 늦음(이른 경보 쪽). 예외: 기본값보다 긴 `--validity` 로 손수 발급한 파일은 기본값 갱신 타이머가 이 기한보다 먼저 증거를 뺌(늦은 경보 쪽).
 func restartDeadline(att attest.Attestation, proofAt time.Time) (time.Time, string) {
 	deadline, kind := att.ExpiresAt, deadlineExpiry
 	if validity := att.ExpiresAt.Sub(att.IssuedAt); !proofAt.IsZero() && validity > 0 {

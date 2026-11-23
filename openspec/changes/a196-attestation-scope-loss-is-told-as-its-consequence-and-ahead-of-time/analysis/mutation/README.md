@@ -46,3 +46,11 @@
   손으로 쓴 「발급 뒤 시각의 증거」 파일에서만 갈린다(Manager 처분: 동등으로 기록).
 - N7 동등 사유: 기한이 지난 증거는 발급자가 싣지 않으므로 같은 KST 날짜 안에서 proof_overdue 의 기한이 바뀌는 경우는 「갱신이 실패하는 동안 같은 파일」뿐이고 그때 기한은 같다.
   새 증거가 실리면 기한이 미래가 되어 단계 자체가 바뀐다(Manager 처분: 기록만).
+
+## gstack review 로 더한 변이 (run-3)
+
+| # | 출처 | 변이 | 결과 | 죽인 시험 |
+|---|---|---|---|---|
+| N8 | gstack review 시험 specialist | 만료가 기한인 통지도 감독 증거 문구로(`if v.DeadlineKind == deadlineProof` → `if true`) | CAUGHT | `TestA196WithoutSupervisedProofCountsTheExpiry`(제목·본문 단언 추가 뒤) |
+
+- run-3 은 M01~N7 을 재실행해 같은 결과(CAUGHT 18·동등 생존 3). run-3 직후 `restartDeadline` 주석 한 줄을 고쳤다(코드 무변경 — 주석만).

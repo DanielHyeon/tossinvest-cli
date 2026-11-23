@@ -51,6 +51,8 @@ MUTANTS = [
      "acceptSupervised(s.AccountRef, now, 30*24*time.Hour, supervised)"),
     ("N6", "P1-2 범위 상실을 늘 주문 실행 갈래로", W, "if mutations == len(v.Missing) {", "if true {"),
     ("N7", "P2-3 overdue key 에서 기한 삭제", W, 'return string(v.Stage) + ":" + deadline + ":" + day', 'return string(v.Stage) + ":" + day'),
+    # gstack review(시험 specialist) 로 더함 — run-3 부터.
+    ("N8", "만료가 기한인 통지도 감독 증거 문구로(갈래 무시)", W, "if v.DeadlineKind == deadlineProof {", "if true {"),
 ]
 
 def sha(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()

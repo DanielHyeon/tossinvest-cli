@@ -209,6 +209,13 @@ func TestA196WithoutSupervisedProofCountsTheExpiry(t *testing.T) {
 	if len(got) != 1 || got[0].Fields["days_left"] != 7 || got[0].Fields["deadline_kind"] != "expiry" {
 		t.Fatalf("expiry-only D-7: %+v", got)
 	}
+	// 어느 기한을 세는지를 문구로도 말함(정본) — 만료가 기한인 통지가 감독 증거 문구로 새지 않게(gstack review 시험 보강).
+	if !strings.Contains(got[0].Title, "검증서(attestation) 만료 D-7") || strings.Contains(got[0].Title, "감독하 실주문 검증") {
+		t.Errorf("expiry notice title=%q", got[0].Title)
+	}
+	if !strings.Contains(got[0].Body, att.ExpiresAt.In(kst).Format("2006-01-02 15:04 KST")) || strings.Contains(got[0].Body, "tossctl verify run") {
+		t.Errorf("expiry notice body does not tell the expiry deadline: %s", got[0].Body)
+	}
 }
 
 // TestA196ScopeLossOncePerDayAcrossReissues: 범위 상실은 재발급을 넘겨 하루 한 번, 누락 집합이 바뀌면 같은 날에도 알림(§5-6).
