@@ -4,8 +4,10 @@ package engine
 //
 //   - 낡음 + 게이트웨이 배선 결함 · 키 못 싣는 transport → 그 조항의 오류만(NewContext 로는 만들 수 없는 조항이라 verifyGate 를 직접 부름).
 //   - 감시 판정은 인터록과 같은 닫힌 집합: 만료가 가린 다른 계좌는 expired 가 아니라 account_mismatch(D7 · D1a).
-//   - 전략 진입 worker 는 청산 전용에서도 만들어지지 않음 — Guardian 이 비-nil 이 되므로 조건의 `c.Automation.Verified` 항이
-//     유일한 차단이 됨. 그 항을 구조로 못 박음(변이 「worker 조건에서 Verified 삭제」를 잡는 자리).
+//   - **투영용 조립**(NewPairedStrategyEntryProductionAssembly → productionStrategyWorker)의 worker 조건에 `c.Automation.Verified`
+//     항이 남아 있음을 구조로 못 박음. 이 조립은 상태 투영용이고 실행되는 런타임 worker 가 아님(구현 리뷰 r1 처분 1 정정) —
+//     실제 런타임 worker(NewRefreshingPairedStrategyEntrySupervisor)는 Verified 를 읽지 않고, 청산 전용에서 진입을 막는 것은
+//     진입 래치 하나다(a199_strategy_dispatch_latch_test.go 가 실제 dispatch 경로로 잼).
 
 import (
 	"context"
@@ -114,7 +116,9 @@ func TestA199TheWatchJudgesAnExpiredForeignAttestationAsTheInterlockDoes(t *test
 	}
 }
 
-func TestA199TheStrategyWorkerStillRequiresAVerifiedGate(t *testing.T) {
+// TestA199TheProjectionAssemblyWorkerConditionStillReadsVerified 는 투영용 조립의 조건만 잰다 — 실행되는 런타임 worker 의 차단이
+// 아님(그것은 진입 래치, a199_strategy_dispatch_latch_test.go).
+func TestA199TheProjectionAssemblyWorkerConditionStillReadsVerified(t *testing.T) {
 	src, err := os.ReadFile("strategy_entry_supervisor.go")
 	if err != nil {
 		t.Fatal(err)
@@ -152,7 +156,7 @@ func TestA199TheStrategyWorkerStillRequiresAVerifiedGate(t *testing.T) {
 		})
 	}
 	if !found {
-		t.Fatal("productionStrategyWorker's wiringReady no longer requires c.Automation.Verified — on an exit-only start " +
-			"the Guardian is non-nil, so that term is the only thing keeping the entry worker dormant")
+		t.Fatal("the projection assembly's productionStrategyWorker no longer requires c.Automation.Verified — on an exit-only " +
+			"start the Guardian is non-nil, so the projected worker would be reported as wired (the runtime worker is stopped by the latch)")
 	}
 }

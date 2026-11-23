@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/interlock_test.go",
-  "source_sha256": "d2c0c7aec58bfbb4138e89e776ec80beba0738d2e781dbcdcdc7e23ba2ee0fdb",
+  "source_sha256": "b564dfcd90d2a19953783d191ce6793b97258eace99b95c36ac2d4805f12881f",
   "package": "engine_test",
   "function": "TestRefusedStartIsAudited",
   "signature": "TestRefusedStartIsAudited(params=1, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 646,
+    "line": 647,
     "column": 2
   },
   "branches": [
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 643,
+        "line": 644,
         "column": 2
       }
     }
@@ -155,7 +155,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 643,
+        "line": 644,
         "column": 6
       },
       "text": "strings.Contains"
@@ -164,6 +164,14 @@
       "kind": "call",
       "at": {
         "line": 644,
+        "column": 39
+      },
+      "text": "attest.ErrAccountMismatch.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 645,
         "column": 3
       },
       "text": "t.Errorf"

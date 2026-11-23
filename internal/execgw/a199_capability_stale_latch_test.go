@@ -9,6 +9,7 @@ package execgw_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -121,5 +122,63 @@ func TestA199AnUnwiredGatewayStillRefusesABuyForProtectionFirst(t *testing.T) {
 	}
 	if places, _, _ := broker.totals(); places != 0 {
 		t.Fatalf("broker place calls = %d, want 0", places)
+	}
+}
+
+// 구현 리뷰 r1 처분 7(e): 청산 전용에서 수량 · 가격을 올리는 정정은 거절(브로커 정정 0), 취소는 통과(a198 의 정리 취소도 이 길).
+func TestA199AWiredExitOnlyGatewayRefusesRaisingAmendsAndAdmitsACancel(t *testing.T) {
+	broker := &fakeBroker{result: domain.MutationResult{OrderID: "O-9", CurrentOrderID: "O-9"}}
+	gw, j, clk := a199Gateway(t, broker, a199StaleGate(), true)
+	ctx := context.Background()
+	order := execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"}
+
+	price := 70500.0
+	qty := 3.0
+	for name, req := range map[string]execgw.AmendRequest{
+		"price up": {Intent: orderintent.AmendIntent{OrderID: "O-1", Price: &price}, Symbol: "005930", Order: order,
+			Decision: raisingDecision(t, j, clk, journal.KindAmend, "kr", "005930", "BUY", 2, price, testLimits())},
+		"quantity up": {Intent: orderintent.AmendIntent{OrderID: "O-2", Quantity: &qty}, Symbol: "000660", Order: order,
+			Decision: raisingDecision(t, j, clk, journal.KindAmend, "kr", "000660", "BUY", qty, 70000, testLimits())},
+	} {
+		_, err := gw.Amend(ctx, req)
+		var rejected *execgw.RejectedError
+		if !errors.As(err, &rejected) || rejected.Reason != execgw.ReasonCapabilityAttestationStale {
+			t.Errorf("%s amend: err = %v, want the stale-attestation refusal", name, err)
+		}
+	}
+	if _, _, amends := broker.totals(); amends != 0 {
+		t.Fatalf("broker amend calls = %d, want 0", amends)
+	}
+
+	out, err := gw.Cancel(ctx, execgw.CancelRequest{
+		Intent:   orderintent.CancelIntent{OrderID: "O-3", Symbol: "035720"},
+		Order:    order,
+		Decision: exitDecision(t, j, clk, journal.KindCancel, "kr", "035720", "BUY", 2),
+	})
+	if err != nil || out.State != journal.StateConfirmed {
+		t.Fatalf("a cancel must pass the stale-attestation latch: state=%s err=%v (%s)", out.State, err, out.Detail)
+	}
+}
+
+// 구현 리뷰 r1 처분 7(d): 다른 해제 — 알림 확인(Clear 알림 미전달) · mode-release(NORMAL 투영) · 다른 사유의 Clear · 심볼 해제 ·
+// 조회 성공 · 다른 사유의 세대 전진 — 가 이 래치를 지우지 않는다. 이 사유를 푸는 운영 명령은 없다(재기동이 파일에서 다시 판정).
+func TestA199OtherReleasesDoNotClearTheStaleLatch(t *testing.T) {
+	g := a199StaleGate()
+	g.Block(execgw.ReasonAlertUndelivered, "1 critical alert undelivered")
+	// engine alert-ack 이 하는 해제, 그리고 mode-release(NORMAL 투영).
+	g.Clear(execgw.ReasonAlertUndelivered)
+	g.ProjectOperatingMode(journal.OperatingModeRecord{Mode: journal.ModeNormal, Actor: "operator", Seq: 7})
+	for _, reason := range []execgw.ReasonCode{execgw.ReasonFillDetectionSLO, execgw.ReasonRecoveryIncomplete,
+		execgw.ReasonReconcileMismatch, execgw.ReasonReconcilePermanent, execgw.ReasonOperatingModeBlocked} {
+		g.Clear(reason)
+		_ = g.ClearEpoch(reason)
+	}
+	g.ClearSymbolReason(execgw.ReasonReconcileMismatch)
+	g.RecordSuccess(execgw.QueryOpenOrders)
+	if _, latched := g.Blocks()[execgw.ReasonCapabilityAttestationStale]; !latched {
+		t.Fatalf("latches = %v — another release cleared the stale-attestation latch", g.Blocks())
+	}
+	if r := g.CheckEntry(); r == nil || r.Reason != execgw.ReasonCapabilityAttestationStale {
+		t.Fatalf("CheckEntry = %v, want the stale-attestation refusal", r)
 	}
 }

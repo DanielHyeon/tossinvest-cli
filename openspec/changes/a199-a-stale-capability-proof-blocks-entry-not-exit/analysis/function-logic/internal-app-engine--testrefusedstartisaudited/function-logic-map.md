@@ -2,8 +2,8 @@
 
 > **편집 후 지도(post-edit) — 2단계 GREEN 뒤, 2026-11-24, base `603046a23`.** 분기 표는 AST 열거(`../../harness/build_bundles.py --post`). 편집 전 원본 AST 는 `../../pre-edit-ast/internal-app-engine--testrefusedstartisaudited.ast.json`.
 
-- Source: `internal/app/engine/interlock_test.go` (626-646)
-- AST evidence: `ast.json` — branches **3** / returns **0** / calls **16**, source SHA-256 `d2c0c7aec58bfbb4138e89e776ec80beba0738d2e781dbcdcdc7e23ba2ee0fdb`(파일 단위).
+- Source: `internal/app/engine/interlock_test.go` (626-647)
+- AST evidence: `ast.json` — branches **3** / returns **0** / calls **17**, source SHA-256 `b564dfcd90d2a19953783d191ce6793b97258eace99b95c36ac2d4805f12881f`(파일 단위).
   명령 `go run ./tools/logic-map --file internal/app/engine/interlock_test.go --func TestRefusedStartIsAudited`.
 - Risk scan: `risk-pattern-report.md`.
 - 의도: 거절된 기동의 감사 1줄.
@@ -20,13 +20,13 @@
 |---|---|---|---|---|
 | B1 (if@634) | `if _, err := openGateEngine(t, dir, srv, matchedGuardian()); err == nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
 | B2 (if@640) | `if refused == nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B3 (if@643) | `if !strings.Contains(refused.Detail, "expired") {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B3 (if@644) | `if !strings.Contains(refused.Detail, attest.ErrAccountMismatch.Error()) {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| AST calls 16개(`ast.json` 의 calls) | 위 분기 표의 조건 · 반환이 부르는 것 | 반환 오류는 분기 표대로 | AST |
+| AST calls 17개(`ast.json` 의 calls) | 위 분기 표의 조건 · 반환이 부르는 것 | 반환 오류는 분기 표대로 | AST |
 
 ## State mutations and fallbacks
 

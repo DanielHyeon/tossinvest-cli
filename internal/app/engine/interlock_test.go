@@ -640,8 +640,9 @@ func TestRefusedStartIsAudited(t *testing.T) {
 	if refused == nil {
 		t.Fatalf("the refusal was not recorded; entries = %+v", entries)
 	}
-	if !strings.Contains(refused.Detail, "expired") {
-		t.Errorf("refusal detail = %q, want the cause in it", refused.Detail)
+	// a199 구현 리뷰 r1 처분 7(c): 오류 꼬리의 「(and it has expired)」로 우연히 통과하지 않게 거절 사유의 sentinel 문구를 단언.
+	if !strings.Contains(refused.Detail, attest.ErrAccountMismatch.Error()) {
+		t.Errorf("refusal detail = %q, want the cause (%v) in it", refused.Detail, attest.ErrAccountMismatch)
 	}
 }
 
@@ -796,8 +797,9 @@ func TestGateDecisionIsLoggedStructurally(t *testing.T) {
 			t.Errorf("gate_verified = %v, want false", line["gate_verified"])
 		}
 		reason, _ := line["reason"].(string)
-		if !strings.Contains(reason, "expired") {
-			t.Errorf("reason = %q, want the cause in it", reason)
+		// a199 처분 7(c): sentinel 문구를 단언 — 「expired」 꼬리로 우연히 통과하지 않게.
+		if !strings.Contains(reason, attest.ErrAccountMismatch.Error()) {
+			t.Errorf("reason = %q, want the cause (%v) in it", reason, attest.ErrAccountMismatch)
 		}
 	})
 

@@ -3,7 +3,7 @@
 > **편집 후 지도(post-edit) — 2단계 GREEN 뒤, 2026-11-24, base `603046a23`.** 분기 표는 AST 열거(`../../harness/build_bundles.py --post`). 편집 전 원본 AST 는 `../../pre-edit-ast/internal-app-engine--runinterlock.ast.json`.
 
 - Source: `internal/app/engine/interlock.go` (402-437)
-- AST evidence: `ast.json` — branches **4** / returns **5** / calls **9**, source SHA-256 `aeb1d5bfb16e7474988061044ae805209ed7a2a76db61c31bf88977a1a11acac`(파일 단위).
+- AST evidence: `ast.json` — branches **4** / returns **5** / calls **9**, source SHA-256 `ed64648db576432a0100a9c8310b17ee18bd3f7f24067368acea4637759deb75`(파일 단위).
   명령 `go run ./tools/logic-map --file internal/app/engine/interlock.go --func runInterlock`.
 - Risk scan: `risk-pattern-report.md`.
 - 의도: 게이트 OFF 면 즉시 반환, ON 이면 verifyGate → 거절(감사 · 로그) 또는 수락(Verified · EntryPermitted · 감사 · 로그).

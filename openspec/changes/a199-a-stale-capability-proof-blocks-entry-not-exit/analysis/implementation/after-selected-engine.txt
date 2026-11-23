@@ -1,1 +1,1 @@
-ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	38.505s	coverage: 34.3% of statements
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	43.278s	coverage: 34.9% of statements

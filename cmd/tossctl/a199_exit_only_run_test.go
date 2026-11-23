@@ -26,6 +26,11 @@ func TestA199AnExitOnlyContextReachesTheRuntimeAndSaysSo(t *testing.T) {
 	if !strings.Contains(out, "청산 전용") || !strings.Contains(out, "새 진입") {
 		t.Errorf("stdout does not tell the operator the engine is exit-only:\n%s", out)
 	}
+	// 구현 리뷰 r1 처분 7(b): 복구 순서(검증 재실행 → attestation 재발급 → 재시작)를 그 순서로 말함.
+	verify, reissue, restart := strings.Index(out, "tossctl verify run"), strings.Index(out, "tossctl soak attest"), strings.Index(out, "재시작")
+	if verify < 0 || reissue < 0 || restart < 0 || verify >= reissue || reissue >= restart {
+		t.Errorf("stdout does not give the recovery order verify run → soak attest → restart:\n%s", out)
+	}
 }
 
 func TestA199AGateOnUnverifiedContextThatIsNotExitOnlyStillRefuses(t *testing.T) {

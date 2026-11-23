@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/interlock.go",
-  "source_sha256": "aeb1d5bfb16e7474988061044ae805209ed7a2a76db61c31bf88977a1a11acac",
+  "source_sha256": "ed64648db576432a0100a9c8310b17ee18bd3f7f24067368acea4637759deb75",
   "package": "engine",
   "function": "logGateDecision",
   "signature": "logGateDecision(params=3, results=0)",
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 497,
+        "line": 496,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 502,
+        "line": 501,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 506,
+        "line": 505,
         "column": 2
       }
     }
@@ -42,7 +42,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 504,
+        "line": 503,
         "column": 3
       }
     },
@@ -74,6 +74,14 @@
     {
       "kind": "call",
       "at": {
+        "line": 481,
+        "column": 25
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
         "line": 482,
         "column": 25
       },
@@ -91,14 +99,6 @@
       "kind": "call",
       "at": {
         "line": 484,
-        "column": 25
-      },
-      "text": "limitString"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 485,
         "column": 28
       },
       "text": "limitString"
@@ -106,7 +106,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 486,
+        "line": 485,
         "column": 27
       },
       "text": "limitString"
@@ -114,7 +114,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 497,
+        "line": 496,
         "column": 5
       },
       "text": "status.RunsExitSide"
@@ -122,7 +122,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 498,
+        "line": 497,
         "column": 12
       },
       "text": "append"
@@ -130,7 +130,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 503,
+        "line": 502,
         "column": 3
       },
       "text": "logger.Warn"
@@ -138,7 +138,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 503,
+        "line": 502,
         "column": 39
       },
       "text": "append"
@@ -146,7 +146,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 503,
+        "line": 502,
         "column": 71
       },
       "text": "refusal.Error"
@@ -171,7 +171,7 @@
       "kind": "call",
       "at": {
         "line": 508,
-        "column": 71
+        "column": 95
       },
       "text": "exitOnlyReason"
     },
@@ -202,7 +202,7 @@
     {
       "kind": "=",
       "at": {
-        "line": 498,
+        "line": 497,
         "column": 3
       }
     }

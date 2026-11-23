@@ -478,7 +478,6 @@ func logGateDecision(logger *obs.Logger, status AutomationStatus, refusal error)
 		"limit_currency", l.Currency,
 		"protection", string(status.Protection),
 		"entry_permitted", status.EntryPermitted,
-		"gate_exit_only", status.ExitOnly,
 		"max_order_quantity", limitString(l.MaxQuantity.Value),
 		"max_order_notional", limitString(l.MaxNotional.Value),
 		"max_total_exposure", limitString(l.MaxTotalExposure.Value),
@@ -504,8 +503,9 @@ func logGateDecision(logger *obs.Logger, status AutomationStatus, refusal error)
 		return
 	}
 	if status.ExitOnly {
-		// a199: 청산 전용 기동은 일상이 아님 — Warn 과 사유(D8).
-		logger.Warn(obs.EventOperatingMode, append(fields, obs.FieldReason, exitOnlyReason(status))...)
+		// a199: 청산 전용 기동은 일상이 아님 — Warn 과 사유(D8). `gate_exit_only` 칸은 이 갈래에만 실음 — 유효 · 게이트 OFF ·
+		// 거절 경로의 줄은 base 와 바이트가 같아야 함(구현 리뷰 r1 처분 5).
+		logger.Warn(obs.EventOperatingMode, append(fields, "gate_exit_only", true, obs.FieldReason, exitOnlyReason(status))...)
 		return
 	}
 	logger.Event(obs.EventOperatingMode, fields...)

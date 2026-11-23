@@ -24,8 +24,10 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/costs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
 
@@ -176,6 +178,71 @@ func TestA199AnInvalidFormatVersionDoesNotGoExitOnly(t *testing.T) {
 	}
 }
 
+// TestA199NoRefusalCarriesAStaleSentinel 는 구현 리뷰 r1 처분 6 의 확인이다: 기동 **거절**의 오류 사슬에 ErrExpired ·
+// ErrEndpointNotAttested 가 실리는 입력이 있는가. 낡음은 거절이 아니라 청산 전용이 되고, 낡음과 겹친 결함은 그 결함의 sentinel
+// 만 싣는다. 이 표의 모든 거절에서 두 sentinel 이 0 이면 interlockClauses 의 두 줄은 도달할 수 없는 열거다(지움).
+// 처분 7(i): 불완전(ErrIncomplete)의 세 갈래(계좌 칸 · 만료 칸 · endpoint 목록)가 낡음으로 내려가지 않음도 여기서 잼.
+func TestA199NoRefusalCarriesAStaleSentinel(t *testing.T) {
+	cases := []struct {
+		name    string
+		mutate  func(*attest.Attestation)
+		account string
+		guard   *stubGuardian
+		want    error
+	}{
+		{"expired and another account", a199Expired, "999-99", nil, attest.ErrAccountMismatch},
+		{"expired with an empty endpoint item", func(a *attest.Attestation) {
+			a199Expired(a)
+			a.Endpoints = append(engine.RequiredEndpoints(), "")
+		}, "123-45", nil, attest.ErrIncomplete},
+		{"scope lost with a blank endpoint item", func(a *attest.Attestation) {
+			a.Endpoints = append(withoutEndpoint("POST /api/v1/orders"), " ")
+		}, "123-45", nil, attest.ErrIncomplete},
+		{"expired with format_version -1", func(a *attest.Attestation) { a199Expired(a); a.FormatVersion = -1 }, "123-45", nil, attest.ErrMalformed},
+		{"incomplete: no account (expired)", func(a *attest.Attestation) { a199Expired(a); a.AccountRef = "" }, "123-45", nil, attest.ErrIncomplete},
+		{"incomplete: no expiry", func(a *attest.Attestation) { a.ExpiresAt = time.Time{} }, "123-45", nil, attest.ErrIncomplete},
+		{"incomplete: no endpoints (expired)", func(a *attest.Attestation) { a199Expired(a); a.Endpoints = nil }, "123-45", nil, attest.ErrIncomplete},
+		{"expired and the limits source differs", a199Expired, "123-45",
+			&stubGuardian{limits: gateLimitsWith(func(l *execgw.Limits) { l.MaxQuantity = execgw.Bound(9) })}, engine.ErrGuardianLimitsMismatch},
+		{"scope lost and the limits source differs", func(a *attest.Attestation) { a.Endpoints = withoutEndpoint("POST /api/v1/orders") }, "123-45",
+			&stubGuardian{limits: gateLimitsWith(func(l *execgw.Limits) { l.MaxQuantity = execgw.Bound(9) })}, engine.ErrGuardianLimitsMismatch},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := isolate(t)
+			srv, _ := interlockServer(t, tc.account)
+			writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+			var (
+				eng *engine.Context
+				err error
+			)
+			if tc.guard != nil {
+				writeGateConfig(t, dir, fullGate())
+				writeAttestation(t, dir, tc.mutate)
+				eng, err = openGateEngine(t, dir, srv, *tc.guard)
+			} else {
+				writeGateConfig(t, dir, smallLiveGate())
+				writeAttestation(t, dir, tc.mutate)
+				eng, err = openGateWithGuardianOptions(t, dir, srv, false, nil)
+			}
+			if err == nil || eng != nil {
+				t.Fatalf("start = (%v, %v), want a refusal", eng != nil, err)
+			}
+			if !errors.Is(err, tc.want) {
+				t.Errorf("err = %v, want sentinel %v", err, tc.want)
+			}
+			if errors.Is(err, attest.ErrExpired) || errors.Is(err, attest.ErrEndpointNotAttested) {
+				t.Errorf("a refusal carries a stale sentinel: %v", err)
+			}
+			for _, line := range engine.UnmetInterlockClauses(err) {
+				if strings.Contains(line, "미상 조항") {
+					t.Errorf("the refusal enumerates as an unknown clause: %v", engine.UnmetInterlockClauses(err))
+				}
+			}
+		})
+	}
+}
+
 func TestA199StaleWithAnotherClauseRefusesByThatClauseOnly(t *testing.T) {
 	cases := map[string]engineGuardianCase{
 		"limits source": {guardian: stubGuardian{limits: gateLimitsWith(func(l *execgw.Limits) { l.MaxQuantity = execgw.Bound(9) })}},
@@ -269,5 +336,38 @@ func TestA199TheExitOnlyStartSaysWhatItIs(t *testing.T) {
 	}
 	if detail, _ := line["detail"].(string); !strings.Contains(detail, "프로세스가 죽으면 보호도 사라진다") {
 		t.Errorf("detail = %q — an exit-only start is a protection-unwired runtime and must say so (보호 미배선 기동)", detail)
+	}
+	if line["gate_exit_only"] != true {
+		t.Errorf("gate_exit_only = %v, want true on an exit-only start", line["gate_exit_only"])
+	}
+}
+
+// 구현 리뷰 r1 처분 5: `gate_exit_only` 칸은 청산 전용 기동에만 실린다 — 유효 · 게이트 OFF 경로의 로그 줄은 base 와 같은 칸 집합.
+func TestA199TheExitOnlyFieldIsAbsentFromOtherStarts(t *testing.T) {
+	for name, tc := range map[string]struct {
+		gate     func() config.AutomationGate
+		guardian execgw.Guardian
+	}{
+		"valid attestation": {fullGate, matchedGuardian()},
+		"gate off":          {func() config.AutomationGate { return config.AutomationGate{} }, nil},
+	} {
+		t.Run(name, func(t *testing.T) {
+			dir := isolate(t)
+			writeGateConfig(t, dir, tc.gate())
+			writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+			writeAttestation(t, dir, nil)
+			srv, _ := interlockServer(t, "123-45")
+			var logs bytes.Buffer
+			if _, err := openGateEngineLogging(t, dir, srv, tc.guardian, &logs); err != nil {
+				t.Fatalf("start: %v", err)
+			}
+			line := decodeLastLog(t, logs.String())
+			if _, present := line["gate_exit_only"]; present {
+				t.Errorf("gate_exit_only present on a %s start: %v — the line must match base", name, line)
+			}
+			if line["event"] != string(obs.EventOperatingMode) {
+				t.Fatalf("last line is not the gate decision: %v", line)
+			}
+		})
 	}
 }

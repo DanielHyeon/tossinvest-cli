@@ -3,7 +3,7 @@
 > **편집 후 지도(post-edit) — 2단계 GREEN 뒤, 2026-11-24, base `603046a23`.** 분기 표는 AST 열거(`../../harness/build_bundles.py --post`). 편집 전 원본 AST 는 `../../pre-edit-ast/internal-app-engine--testgateonrefusals.ast.json`.
 
 - Source: `internal/app/engine/interlock_test.go` (342-573)
-- AST evidence: `ast.json` — branches **10** / returns **1** / calls **54**, source SHA-256 `d2c0c7aec58bfbb4138e89e776ec80beba0738d2e781dbcdcdc7e23ba2ee0fdb`(파일 단위).
+- AST evidence: `ast.json` — branches **10** / returns **1** / calls **54**, source SHA-256 `b564dfcd90d2a19953783d191ce6793b97258eace99b95c36ac2d4805f12881f`(파일 단위).
   명령 `go run ./tools/logic-map --file internal/app/engine/interlock_test.go --func TestGateOnRefusals`.
 - Risk scan: `risk-pattern-report.md`.
 - 의도: 게이트 ON 거절 사례 표(조항별 sentinel · 문구).

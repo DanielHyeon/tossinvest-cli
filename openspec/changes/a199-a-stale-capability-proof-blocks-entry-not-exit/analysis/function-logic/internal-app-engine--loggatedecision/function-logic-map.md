@@ -3,7 +3,7 @@
 > **편집 후 지도(post-edit) — 2단계 GREEN 뒤, 2026-11-24, base `603046a23`.** 분기 표는 AST 열거(`../../harness/build_bundles.py --post`). 편집 전 원본 AST 는 `../../pre-edit-ast/internal-app-engine--loggatedecision.ast.json`.
 
 - Source: `internal/app/engine/interlock.go` (472-512)
-- AST evidence: `ast.json` — branches **3** / returns **2** / calls **16**, source SHA-256 `aeb1d5bfb16e7474988061044ae805209ed7a2a76db61c31bf88977a1a11acac`(파일 단위).
+- AST evidence: `ast.json` — branches **3** / returns **2** / calls **16**, source SHA-256 `ed64648db576432a0100a9c8310b17ee18bd3f7f24067368acea4637759deb75`(파일 단위).
   명령 `go run ./tools/logic-map --file internal/app/engine/interlock.go --func logGateDecision`.
 - Risk scan: `risk-pattern-report.md`.
 - 의도: 기동마다 구조 로그 한 줄(`engine.operating_mode`) — 거절이면 Warn + reason.
@@ -19,9 +19,9 @@
 
 | Branch | Condition (소스 그 줄) | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (if@497) | `if status.RunsExitSide() && status.Protection != ProtectionWired {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B2 (if@502) | `if refusal != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
-| B3 (if@506) | `if status.ExitOnly {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B1 (if@496) | `if status.RunsExitSide() && status.Protection != ProtectionWired {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B2 (if@501) | `if refusal != nil {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
+| B3 (if@505) | `if status.ExitOnly {` | — | AST 열거 | 2단계 RED 에서 이름 확정 |
 
 ## Calls and live bindings
 
