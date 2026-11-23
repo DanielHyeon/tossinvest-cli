@@ -126,18 +126,20 @@
 
 ### 구현 적대 리뷰 r1 (2026-11-23, Opus 별도 컨텍스트 + codex 0.165.0)
 - 판정(Manager 전달): **통과 — P0·P1 없음, P2 7건.** 리뷰어가 실 원장 + 실 Notifier 프로브로 2026-11-23 사고 모양을 재현: 편입 켜짐·include 지정 각각 보유 보고 critical 1 + 차단 보고 1, 진입 래치·모드 승격 없음 / 알림 꺼짐 일반 등급 1, outbox 0. 편집 전후 AST 분기 16 대 16, 새 필드는 대사 goroutine 하나에서만 쓰임.
-- 처분(Manager 결정, 반영 커밋 ): P2-2 차단 보고 본문 과거형·조건형 + 「늦게 도착했다면」(늦은 배달 시험을 차단 보고까지) · P2-7 세 보고 본문 시각 KST(, 기존 ;  필드는 RFC3339 UTC, 형제  는 UTC 그대로 — 잔여) · P2-5 blocked_stale 에 「해제가 필요할 수 있다」(단정 금지 — 「이 차단은 운영자만 풀 수 있다」가 stale 에 없음을 시험이 고정) · P2-4 같은 날 풀렸다 다시 걸린 차단은 다시 알림(delta 문장 「풀리지 않고 이어진 같은 차단」 + Scenario, 시험·M23) · P2-6 reconciliation delta 문장 정리(진입 잠금은 critical 의 기존 규칙) · P2-3 design 9a 정정 · **P2-1 반영 안 함**(잔여 — design §6).
-- 추가 시험: (M23) · (M3r) · (M12r) · (M19) · 두 보유 본문의 할 일 문장 단언(M7a/b) · Scenario 셋  · (보유 읽기 실패 주기 2회, 시나리오 수치) · . 변이 2판 19/19 CAUGHT.
+- 처분(Manager 결정, 반영 커밋 `f0465bdfd`): P2-2 차단 보고 본문 과거형·조건형 + 「늦게 도착했다면」(늦은 배달 시험을 차단 보고까지) · P2-7 세 보고 본문 시각 KST(`2006-01-02 15:04 KST`, 기존 `kst`; `observed_at` 필드는 RFC3339 UTC, 형제 `alertAdoptionFailed` 는 UTC 그대로 — 잔여) · P2-5 blocked_stale 에 「해제가 필요할 수 있다」(단정 금지 — 「이 차단은 운영자만 풀 수 있다」가 stale 에 없음을 시험이 고정) · P2-4 같은 날 풀렸다 다시 걸린 차단은 다시 알림(delta 문장 「풀리지 않고 이어진 같은 차단」 + Scenario, 시험·M23) · P2-6 reconciliation delta 문장 정리(진입 잠금은 critical 의 기존 규칙) · P2-3 design 9a 정정 · **P2-1 반영 안 함**(잔여 — design §6).
+- 추가 시험: `TestA194ABlockRaisedAgainTheSameDayIsReportedAgain`(M23) · `TestA194TheEarliestCoveringOperatorBlockIsNamed`(M3r) · `TestA194NoAlerterIsNotARecordedBlockReport`(M12r) · `TestA194TheTitlesUseTheInstrumentLabel`(M19) · 두 보유 본문의 할 일 문장 단언(M7a/b) · Scenario 셋 `TestA194ABlockClearedInsideTheGraceAdoptsSilently` · `TestA194TwoFailedCyclesAtSixMinutesDoNotBreakTheRun`(보유 읽기 실패 주기 2회, 시나리오 수치) · `TestA194AManagedHoldingIsNotAProtectionMissingReport`. 변이 2판 19/19 CAUGHT.
 - reconciliation ADDED 본문은 495자(500 이하 유지 — 「스스로 풀리는 차단은 대상이 아니다」 한 문장은 같은 뜻의 Scenario 가 있어 뺌).
 
 ### gstack review 1회차 (2026-11-23)
-- 원문·표: . 전문가 5 + native adversarial + red team. Codex 외부 패스는 이 회차에서 돌리지 않음(외부 coverage 없음).
-- 수리 1: native adversarial #5 — 차례 도중 남은 보유가 빠지면 다음 주기가 빈손 → 루프 전 남은 보유가 없으면 차례를 비움(, , 되돌림 변이 M24 CAUGHT).
-- **Manager 결정 대기**: (1) **red team CRITICAL** — 보유·차단 보고가 안내하는  는 비-QUANTITY_MISMATCH 활성 블록이 있으면 거절한다(cmd/tossctl/engine_reconcile.go:308-310 직접 확인). ATTRIBUTION_FAILED 사고에서 운영자가 안내대로 엔진을 세우면 모든 보호 포지션의 손절을 잃고 명령은 거절된다. 원인별 안내 또는 a195 와의 순서 결정 필요. (2) red team INFO — 「엔진 정지 필요」에 정지 = 손절 없음·안전 창 안내가 없음. (3) adversarial #2 — pending 영구 승격 블록을 운영자 전용으로 즉시 보고(Block 의 pending 노출은 reconcile 편집). (4) 차단 보고의 주기당 Notify 상한(performance·adversarial #4) — 현재 Manager 결정 「블록 수만큼」 그대로.
+- 원문·표: `analysis/review/gstack-review-r1.md`. 전문가 5 + native adversarial + red team. Codex 외부 패스는 이 회차에서 돌리지 않음(외부 coverage 없음).
+- 수리 1: native adversarial #5 — 차례 도중 남은 보유가 빠지면 다음 주기가 빈손 → 루프 전 남은 보유가 없으면 차례를 비움(`e26831d5a`, `TestA194ARoundWhoseRestLeftStartsAgainNextCycle`, 되돌림 변이 M24 CAUGHT).
+- **Manager 결정 대기**: (1) **red team CRITICAL** — 보유·차단 보고가 안내하는 `tossctl engine reconcile-resolve` 는 비-QUANTITY_MISMATCH 활성 블록이 있으면 거절한다(cmd/tossctl/engine_reconcile.go:308-310 직접 확인). ATTRIBUTION_FAILED 사고에서 운영자가 안내대로 엔진을 세우면 모든 보호 포지션의 손절을 잃고 명령은 거절된다. 원인별 안내 또는 a195 와의 순서 결정 필요. (2) red team INFO — 「엔진 정지 필요」에 정지 = 손절 없음·안전 창 안내가 없음. (3) adversarial #2 — pending 영구 승격 블록을 운영자 전용으로 즉시 보고(Block 의 pending 노출은 reconcile 편집). (4) 차단 보고의 주기당 Notify 상한(performance·adversarial #4) — 현재 Manager 결정 「블록 수만큼」 그대로.
 - 기록만: maintainability 「10분」 리터럴 · adversarial #1(Q7 범위 밖) · #3(공시된 기존 성질) · #6(꺼짐 래치 = 결정) · #7(시장 범위 미도달) · #8 · #9(a195 주의).
 
 ### 4.3 뒤 재검증 (2026-11-23)
-- 변이 최종 3판(e26831d5a): 20/20 닿음·CAUGHT, SURVIVED 0().
-- 선택 시험(넓힌 정규식 ): ok, PASS 53 · FAIL 0.  ok(133 s). go vet ./...
-go vet -tags tossos_testseams ./... rc 0. strict valid.  rc 0(required 1, evidence complete).  본문은 GREEN 뒤 무편집(base 대비 +5줄 그대로) — 번들 재생성 불필요.
-- 알림 문장 원문 갱신: .
+- 변이 최종 3판(e26831d5a): 20/20 닿음·CAUGHT, SURVIVED 0(`analysis/mutation/ledger.md`).
+- 선택 시험(넓힌 정규식 `A194|Adoption|ReconcileLoop|Unmanaged|TestA095NotificationsOff|TestUSIncludedSymbolWaits|TestActiveForeignCause`): ok, PASS 53 · FAIL 0. `-race -run A194` ok(133 s). `make lint` rc 0. strict valid. `check_analysis` rc 0(required 1, evidence complete). `judgeHoldings` 본문은 GREEN 뒤 무편집(base 대비 +5줄 그대로) — 번들 재생성 불필요.
+- 알림 문장 원문 갱신: `analysis/verify/alert-sentences.txt`.
+
+### 사고 기록 — 문서 기록 중 `tossctl` 가 실행됨 (2026-11-23)
+- review.md 를 덧붙이는 셸 명령이 따옴표 없는 heredoc(`<<EOF`)이라 본문의 백틱이 명령 치환으로 실행됐다. 그중 `tossctl engine reconcile-resolve` 가 실제 바이너리로 돌았고, 필수 플래그(`--confirm`·`--note`·`--operator`)가 없어 「required flag(s) … not set」 로 종료했다. 그 전에 설정 스키마 경고(`~/.config/tossctl/config.json` 을 읽음)를 출력했다. 해제·엔진 정지·원장 쓰기는 일어나지 않은 것으로 보이나(플래그 검증 단계 종료) 직접 확인하지 않았다 — 운영 디렉터리 접근 금지라 원장을 열지 않았다. 지시 위반(「tossctl 실행 금지」「운영 디렉터리 접근 금지」)이며 Manager 에게 보고한다. 망가진 review.md 문단은 이 커밋에서 바로잡았다.
