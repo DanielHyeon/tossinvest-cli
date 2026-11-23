@@ -1,0 +1,202 @@
+{
+  "file": "internal/execgw/gateway.go",
+  "source_sha256": "c304e32a62e42759ad1ffb857ca90461068301707dadb5ca7bd8c46dba8af2de",
+  "package": "execgw",
+  "function": "checkDecisionUnspent",
+  "receiver": "Gateway",
+  "signature": "Gateway.checkDecisionUnspent(params=3, results=2)",
+  "start": {
+    "line": 978,
+    "column": 1
+  },
+  "end": {
+    "line": 1003,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 981,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 983,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 984,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 987,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 991,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 995,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 998,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 985,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 988,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 992,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 996,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 999,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1002,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 982,
+        "column": 15
+      },
+      "text": "g.journal.AttemptForClientOrderID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 985,
+        "column": 11
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 987,
+        "column": 9
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 988,
+        "column": 16
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 994,
+        "column": 16
+      },
+      "text": "g.journal.NonceSpent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 996,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 999,
+        "column": 10
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1000,
+        "column": 37
+      },
+      "text": "short"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 982,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 994,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
