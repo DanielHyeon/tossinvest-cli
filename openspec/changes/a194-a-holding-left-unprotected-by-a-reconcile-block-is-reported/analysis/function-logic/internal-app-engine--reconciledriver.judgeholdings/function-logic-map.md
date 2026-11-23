@@ -67,4 +67,4 @@
 
 - Safe edit boundary: B10 본문(모으기) + 순회 뒤 새 함수 호출 한 곳. B1~B9·B11~B16 의 조건·순서·continue 불변. `adopt` 앞에 새 브로커 호출 0.
 - High-risk impact: yes — 대사·편입·알림. 새 보고가 critical 이면 알림 켜진 엔진에서 전달 실패가 계좌 전체 진입 래치·운영 모드 승격으로 이어진다(정본 「배달 실행자는 지속 실패를 진입 차단과 운영 모드 승격으로 잇는다」).
-- 편집 전 결정 필요(1.4 판명): 새 보고에서 `cycle.Unmanaged` 를 올리면 `TestUSIncludedSymbolWaitsUnderAccountWidePermanentReconcile`(adoption_include_test.go:133 `cycle.Unmanaged != 0` → Fatal)이 깨진다 — Manager 결정 대기.
+- Manager 결정 2026-11-23(Q4): 새 보고는 `cycle.Unmanaged` 를 올리지 않는다 — B16 의 셈은 불변이고 `TestUSIncludedSymbolWaitsUnderAccountWidePermanentReconcile`(adoption_include_test.go:133)은 무편집 통과해야 한다. D1 판정 재료는 `Tracker.Blocks()`(B10 의 `blocked` 는 그대로 두고, 덮는 블록을 못 찾으면 유예 길). 편집하는 기존 함수 본문은 이 함수 하나(Q2: 새 배선 없음).

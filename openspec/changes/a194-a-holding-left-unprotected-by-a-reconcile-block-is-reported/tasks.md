@@ -12,7 +12,7 @@
 - [x] 1.4 편집 표면 세기: `judgeHoldings` 를 고정하는 구조 시험·census 유무, 알림 수를 단언하는 기존 시험 전수(`reconcileloop_test.go` 등), `exit.position_adoption_failed` 의 사실 값을 열거하는 시험·골든 유무.
 - [x] 1.5 `judgeHoldings` 의 FLM/BTM 번들(pre-edit 판).
 - [x] 1.6 `openspec validate a194-… --strict` 통과, proposal-freeze 적대 리뷰(다른 계열, 최대 2회) — `review.md`.
-- [ ] 1.7 Manager 1단계 검증·freeze.
+- [ ] 1.7 Manager 1단계 검증·freeze. (Manager 결정 2026-11-23 반영 → proposal-freeze r2 → freeze 판정)
 
 ## 2. Pre-Edit
 
@@ -20,13 +20,13 @@
 
 ## 3. RED → GREEN
 
-- [ ] 3.1 RED: `internal/app/engine/a194_reconcile_block_report_test.go` — design §4 의 1~9.
-- [ ] 3.2 GREEN: 새 파일 `internal/app/engine/reconcile_block_report.go` + `judgeHoldings` 편집(차단 분기에서 보유를 모으고 순회 뒤 보고 호출).
-- [ ] 3.3 design §4-10 의 기존 시험 무편집 통과 확인. 편집 뒤 번들 AST·FLM·BTM 재생성.
+- [ ] 3.1 RED: `internal/app/engine/a194_reconcile_block_report_test.go` — design §4 의 1~13(「한 번」「창」은 `Notify` 호출 수·전달 시도 수로, 보유 보고의 중복 방지는 실 Notifier + 실 원장 outbox 하네스로).
+- [ ] 3.2 GREEN: 새 파일 `internal/app/engine/reconcile_block_report.go` + `judgeHoldings` 편집(차단 분기에서 보유를 모으고 순회 뒤 보고 호출) + 드라이버 구조체 새 필드(유예 시계·차단 보고 래치, 맵은 새 함수 안에서 생성). 편집하는 기존 함수 본문은 `judgeHoldings` 하나 — `NewReconcileDriver`·`Context.ReconcileDriver`·`RunOnce`·`alertUnmanaged` 무편집.
+- [ ] 3.3 design §4-14 의 기존 시험 무편집 통과 확인. 편집 뒤 번들 AST·FLM·BTM 재생성.
 
 ## 4. 검증
 
-- [ ] 4.1 변이 원장(`analysis/mutation/`) — design §4 의 변이 6개, 닿음 확인·무변이 대조군 GREEN 뒤.
+- [ ] 4.1 변이 원장(`analysis/mutation/`) — design §4 의 변이 9개, 닿음 확인·무변이 대조군 GREEN 뒤.
 - [ ] 4.2 선택 시험 원문(design §4), `make lint`, `openspec validate --strict`, `check_analysis.py --change a194-…`. 미실행 범위 기록.
 - [ ] 4.3 구현 적대 리뷰(다른 컨텍스트) → gstack review 1회 — `review.md`.
 

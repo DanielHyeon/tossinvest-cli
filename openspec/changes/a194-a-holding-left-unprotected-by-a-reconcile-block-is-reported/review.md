@@ -70,3 +70,23 @@
 
 - 2회차: **실시하지 않음.** 8건 중 7건이 결정·범위 변경이라 문서가 거의 바뀌지 않았고, 같은 문서를 다시 보내면 같은 발견만 돌아온다. Manager 결정 뒤 requirement 변경 리뷰로 재실시할 것.
 - freeze 판정: 보류(1.7 Manager 몫).
+
+### Manager 결정 반영 (2026-11-23)
+
+- Q1~Q7·R1-7·정본 공백 문단을 proposal·design(결정 표 「Manager 결정 2026-11-23」)·spec delta·tasks 에 반영. engine-safety MODIFIED 새 파일. 두 MODIFIED 는 `analysis/spec-delta/make_modified.py` 가 정본 블록을 떠서 치환 4건(E1·E2·S1·S2)만 적용 — 생성물(그리고 delta 파일의 MODIFIED 절)에서 편집을 되돌리면 정본 블록과 같음(True·True), diff hunk 각 2, 그 밖 차이 0(`analysis/spec-delta/edits.md`).
+- R1-1~R1-8 처분: 위 1회차 표의 「Manager 결정 대기」는 이 결정으로 닫힘. R1-8 의 delta 괄호는 「이미 exit 관리 대상이다」로 고침.
+- 편집 대상 기존 함수 재계산: `judgeHoldings` 하나(드라이버 구조체 새 필드는 함수 본문이 아님, 맵은 새 함수 안에서 생성, `NewReconcileDriver`·`Context.ReconcileDriver`·`RunOnce`·`alertUnmanaged` 무편집) — 번들 추가 없음, `check_analysis.py` rc 0.
+
+### 2회차 (2026-11-23, 마지막) — codex-cli 0.165.0, 읽기 전용
+
+- 원문: `analysis/review/proposal-freeze-r2-codex.md`. 판정 「freeze 보류 권고 — P0 0, P1 2, P2 3」. 1회차 처분 중 R1-1 타입 분리·R1-6 `Covers ∧ ReleaseOperatorOnly`·`cycle.Unmanaged` 비증가는 코드와 부합한다고 확인. MODIFIED 는 의도한 E1·E2·S1·S2 외 차이 없음을 독립 확인.
+
+| # | 등급 | 발견 요약 | 처분 |
+|---|---|---|---|
+| R2-1 | P1 | `d.alert` 는 반환값이 없고 오류를 로그로 삼킴(reconcileloop.go:568-576) → 그 경로 뒤 래치는 기록 실패를 성공으로 셈 | **반영(호출 경로 명확화)** — design D5: 새 함수가 `d.opts.Alerts.Notify` 반환값을 직접 보고 `Alerts == nil` 은 성공으로 세지 않음. 기존 함수 편집 범위 불변 |
+| R2-2 | P1 | `Notify` critical 은 동기 전송(notifier.go:354, 보고당 네트워크·대기 최대 약 34 초) — 계좌 전체 차단 아래 보유 N 개면 첫 주기에 N+1 건 직렬(10 개면 약 6 분), 다음 대사·편입이 밀림. PENDING 행은 창과 무관하게 매 관측 재전송(outbox.go:379) → 「보유당 1시간마다 1건」은 정산된 행에 한함 | 사실 부분 **반영**(proposal Impact 알림 수 문장). 동기 지연을 받아들일지 / 기록·전송 분리를 허용할지는 **Manager 결정 대기** |
+| R2-3 | P2 | 완성 계약의 모순 셋: (a) engine-safety MODIFIED 의 유지 문장 「critical 무관리 보고의 본문은 편입 시도가 실패한 시각의 사건」이 시도 없는 차단 보고까지 덮음 (b) exit-policy·reconciliation ADDED Scenario 가 알림 켜짐 전제 없이 critical (c) 「10분 넘게」 vs 「10분 이상」 | (b) **반영** — 세 Scenario WHEN 에 알림 켜짐 전제. (c) **반영** — S1 을 「10분 이상」으로(생성기 수정 뒤 재생성·재검증). (a) 그 문장은 Manager 지시상 「한 글자도 바꾸지 않는」 기존 문장이라 **Manager 결정 대기**(S1 이 「본문은 차단을 관측한 시각의 사건」을 더했지만 유지 문장과의 범위 충돌은 남음) |
+| R2-4 | P2 | 추가 변이를 죽일 입력 부족: `EntryAllowed` 사유 변이는 SNAPSHOT_* 입력이 있어야 갈림; 보유 보고 래치 변이는 보유 보고의 기록 실패→재관측→성공 시험이 따로 필요; 전달 완료 1시간 뒤 재전송 | **반영(시험 계획 보완)** — design §4 에 4a·9a·9b |
+| R2-5 | P2 | 「실패 주기 무보고」 공시가 코드보다 넓음 — ingest·converge 오류는 `cycle.Err` 에 남고 주기 계속(reconcileloop.go:438-449) | **반영(사실 정정)** — design §6·proposal 을 조기 반환 넷으로 좁히고 `cycle.Err` 를 침묵 조건으로 쓰지 않는다고 적음 |
+
+- 리뷰 회차 상한 도달. freeze 판정은 Manager(1.7).
