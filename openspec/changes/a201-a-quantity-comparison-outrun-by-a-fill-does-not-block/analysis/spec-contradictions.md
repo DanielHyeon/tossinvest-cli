@@ -2,6 +2,8 @@
 
 정본: `openspec/specs/reconciliation/spec.md`(HEAD `86a131a51`). delta: `../specs/reconciliation/spec.md`(ADDED 1, 본문 384자, Scenario 6). `openspec validate a201-… --strict` → valid.
 
+**Manager 결정 반영(2026-11-24)**: 결정 2 로 D5 를 ADDED 에 되살리고, 결정 4 로 해석 셋에 대한 이 change 의 읽기를 ADDED 본문 한 문장 「재판정은 그 주기의 비교를 다시 하는 것이며, 재판정을 거친 비교가 그 주기의 비교다」로 고정함(본문 399자, strict valid). MODIFIED 없음. 아래는 1단계 당시 판정 원문.
+
 ADDED 본문은 design D3(조건 셋) · D4(빼면 차단 · 승격 횟수 없음) · D8(읽기 실패면 안 뺌) · D7(로그) · §2(계속 차단 · 정상 입력)만 옮김. D5(missing-order 같이 빼기)는 1단계 측정(evidence-phase0.md §3 (f))이 design 자신의 기준(「2주기 안에 풀리면 D5 를 뺀다」)을 충족해 **넣지 않음** — Manager 결정 대기(질문 2).
 
 ## 대조 결과 — 문언상 모순 0, 해석에 걸린 문장 4
