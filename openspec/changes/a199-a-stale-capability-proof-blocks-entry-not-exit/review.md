@@ -137,3 +137,11 @@ delta 재생성(`analysis/modified-delta/run.txt`): A 5 편집 각 1회 적중(A
 - **R2-3** 은 2단계에서 시험으로 고정하고 고침(회복 안내 키 = 날짜 · 에피소드).
 - 편집 표면 14 함수 + 새 파일 2 승인(`critical` · `stageKey` 가 들어가면 번들 추가 · 보고). codex 3회차 없음.
 - delta 재생성: 15 편집 전부 1회 적중, 역치환 바이트 동일, Scenario A 12→18 · B 18→21, strict valid.
+
+## 2단계 — 구현 (팀메이트 Opus, 2026-11-24)
+
+- merge origin/main `7fec501f1`(a198) → `603046a23`(충돌 PM generated 2 — 재생성). base 재고정 `e4165fa3d`→`603046a23` 단독 커밋 `ae7764bc2`(영수증 커밋 메시지, 자기 Go 커밋 0, 옛 base required 6 전부 a198 몫). a198 은 `Context.ExitObserver` 를 편집하지 않음 — 번들 · 줄 번호 무변(`analysis/rebase/`).
+- 2.1 `analysis/pre-edit.md` · 2.2 RED `analysis/tdd/red.txt`(행동 FAIL 9 + 컴파일 RED) · 2.3 GREEN `3445403ee` · 2.4 census(NewContext 키 하나, `analysis/census-repair/`) · 2.5 머리 주석 · soak 문구 · 2.6 post-edit 번들 20(check_analysis rc 0, required 20) · 2.7 변이 20/20 CAUGHT · 2.8 `analysis/verify/README.md`.
+- 편집한 기존 함수 = 승인 목록 14 그대로(`critical` · `stageKey` 무편집). 새 파일 2(`internal/attest/account_match.go` · `internal/app/engine/exit_only_start.go`).
+- 뒤집힌 기존 시험 = design §3-6 의 여섯 그대로. 그 밖 기존 시험 깨짐 0(선택 범위 안).
+- **결정에 없던 가드 하나(Manager 확인 필요):** `exitOnlyStart` 가 래치를 세울 `gateFacts.entry` 가 nil 이면 기동을 거절함(게이트웨이 조항 오류). 생산에서는 `wiring.entry` 가 늘 비-nil 이라 도달하지 않는 fail-closed — 래치가 진입 차단의 유일한 집행이라 넣음. 빼라면 빼겠음.

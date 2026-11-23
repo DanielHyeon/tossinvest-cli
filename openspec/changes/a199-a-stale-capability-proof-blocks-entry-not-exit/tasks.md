@@ -25,8 +25,8 @@
 - [x] 2.4 a166 census 키 갱신(`NewContext` 를 편집했으면 그 키 하나, a192 `census-repair` 절차) — 다른 키 무변 단언 — `analysis/census-repair/`(changed 1 · unchanged 89 · sites 동일, accountbudgetruntime ok)
 - [x] 2.5 인터록 머리 주석 정정(D9) · `cmd/tossctl/soak.go` 의 낡은 출력 문구(565 · 577 「clause 9」 · 도움말 220)를 새 귀결로(Manager 결정 11)
 - [x] 2.6 post-edit 번들 재생성 · `check_analysis` — required 20(= 번들 20), rc 0 `analysis/verify/check-analysis-post.txt`. 편집 전 AST `analysis/pre-edit-ast/`
-- [ ] 2.7 변이 원장(design §3-12, 사본에서 · 시작 sha 단언 · 무변이 대조군 GREEN · 닿음 먼저)
-- [ ] 2.8 선택 시험 · `-race`(해당 시험) · `make lint` · strict validate · tracker `--check` — 원문 `analysis/verify/`. 미실행 범위 기록
+- [x] 2.7 변이 원장(design §3-12, 사본에서 · 시작 sha 단언 · 무변이 대조군 GREEN · 닿음 먼저) — 20/20 CAUGHT `analysis/mutation/`
+- [x] 2.8 선택 시험 · `-race`(해당 시험) · `make lint` · strict validate · tracker `--check` — 원문 `analysis/verify/`. 미실행 범위 기록
 
 ## 3. 리뷰 · 검증
 

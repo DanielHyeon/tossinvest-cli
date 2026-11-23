@@ -1,0 +1,27 @@
+start sha b856fdc08ae5f24dbf9d0484cf955c8f10d471de  copy /home/daniel/tossos-work/a199-mut-scratch/a199-mut-3255756
+control ./cmd/tossctl: rc=0
+control ./internal/app/engine: rc=0
+control ./internal/attest: rc=0
+control ./internal/execgw: rc=0
+M1 만료 시 계좌 확인 삭제: CAUGHT by TestA199RefusalsStayRefusals, TestA199TheWatchJudgesAnExpiredForeignAttestationAsTheInterlockDoes
+M2 닫힌 집합 넓히기(불완전도 낡음으로): CAUGHT by TestA199RefusalsStayRefusals
+M3 빈 endpoint 항목 가드 삭제: CAUGHT by TestA199RefusalsStayRefusals, TestA199TheWatchJudgesAnExpiredForeignAttestationAsTheInterlockDoes
+M4 형식 하한 삭제: CAUGHT by TestA199AnInvalidFormatVersionDoesNotGoExitOnly
+M5 뒤 조항 검사 생략(낡음이면 바로 통과): CAUGHT by TestA199StaleWithAKeylessTransportRefusesByTheTransportClauseOnly, TestA199StaleWithAnUnwiredGatewayRefusesByTheGatewayClauseOnly, TestA199StaleWithAnotherClauseRefusesByThatClauseOnly
+M6 래치 세우기 삭제: CAUGHT by TestA199ARestartRederivesTheLatchFromTheFile, TestA199AStaleAttestationStartsExitOnly, TestA199AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss
+M7 Verified 를 true 로: CAUGHT by TestA199AStaleAttestationStartsExitOnly, TestA199AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss
+M8 Guardian nil 유지(청산 쪽 판정 대신 Verified): CAUGHT by TestA199AStaleAttestationStartsExitOnly, TestA199AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss
+M9 감사 action 을 수락으로: CAUGHT by TestA199ARestartRederivesTheLatchFromTheFile, TestA199AStaleAttestationStartsExitOnly
+M10 감시 판정을 따로 두기(Verify 첫 실패 그대로): CAUGHT by TestA199TheWatchJudgesAnExpiredForeignAttestationAsTheInterlockDoes
+M11 worker 조건에서 Verified 항 삭제: CAUGHT by TestA199TheStrategyWorkerStillRequiresAVerifiedGate
+M12 감시 알림 조건을 파일 판정으로: CAUGHT by TestA199AHealthyFileOnAnExitOnlyEngineIsAnnouncedOncePerDay
+M13 보호 수명 문장 조건에서 청산 전용 삭제: CAUGHT by TestA199TheExitOnlyStartSaysWhatItIs
+M14 exit 관측 생성을 Verified 로: CAUGHT by TestA199AStaleAttestationStartsExitOnly, TestA199AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss
+M15 대사 생성을 Verified 로: CAUGHT by TestA199AStaleAttestationStartsExitOnly
+M16 회복 안내 키 보존 삭제(R2-3): CAUGHT by TestA199AHealthyFileOnAnExitOnlyEngineIsAnnouncedOncePerDay
+M17 낡음 표지 안 세움(verifyGate 끝): CAUGHT by TestA199ARestartRederivesTheLatchFromTheFile, TestA199AStaleAttestationStartsExitOnly, TestA199AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss, TestA199TheExitOnlyStartSaysWhatItIs
+M18 runEngineRun 이 청산 전용을 게이트 OFF 로: CAUGHT by TestA199AnExitOnlyContextReachesTheRuntimeAndSaysSo
+M19 latchOrder 에서 새 사유 빼기: CAUGHT by TestA199TheStaleAttestationLatchReadsBeforeTheModeAndAfterStrategyCentral
+M20 NamesAccount 를 가림 허용 규칙으로: CAUGHT by TestA199NamesAccountIsVerifysAccountComparison
+copy clean after all restores: True
+copy removed: True
