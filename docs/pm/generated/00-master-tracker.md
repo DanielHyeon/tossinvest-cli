@@ -116,6 +116,7 @@
     - STORY-TOS-a192 — missing-order 종목 차단은 그것을 만든 주문들이 브로커 근거로 종결 확인되고 그 뒤의 대사가 그 종목에 차이를 보지 않을 때 엔진이 스스로 풀고 근거를 장부에 남긴다 [archived] → `a192-a-missing-order-block-is-released-by-the-orders-terminal-proof`
     - STORY-TOS-a194 — 대사 차단 때문에 편입되지 못해 손절이 걸리지 않은 보유와, 운영자만 풀 수 있는 차단 자체가 운영자에게 알려진다 [archived] → `a194-a-holding-left-unprotected-by-a-reconcile-block-is-reported`
     - STORY-TOS-a195 — 귀속 실패(ATTRIBUTION_FAILED) 종목 차단은 재조회 일치를 근거로 운영자 해제 명령이 풀 수 있다 [archived] → `a195-an-attribution-failed-block-can-be-released-by-the-operator`
+    - STORY-TOS-a200 — 수렴 조정이 닫은 포지션에 뒤늦게 닿은 엔진 청산 체결은 그 조정의 설명으로 인정되어 귀속 실패 차단을 만들지 않고, 전부 설명되면 엔진 청산의 성과로 남는다 [in_progress] → `a200-an-engine-exit-fill-after-a-convergence-close-is-recognised`
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
     - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [archived] → `a041-complete-exit-line-contract`
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [archived] → `a042-persist-exit-line-snapshots`
