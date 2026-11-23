@@ -15,7 +15,7 @@
 - [x] 1.9 편집할 기존 함수마다 FLM/BTM pre-edit 번들(`tools/logic-map`) — 뒤집히는 기존 시험 함수 포함
 - [x] 1.10 claim check: proposal · design 의 분기 주장을 AST 열거와 대조(`analysis/claim-check.md`)
 - [x] 1.11 제안 동결 적대 리뷰(작성자와 다른 계열 — codex, 최대 2회차) → `review.md`
-- [ ] 1.12 Manager 결정 · freeze — **Manager 조건부 freeze 2026-11-24.** 남은 조건: a198 착지 뒤 origin/main merge · 사람 승인 base 재고정(승인 기록 review.md 「Manager 결정」 1, 실행은 착지 뒤 — `docs/WORKFLOW.md` 세 요건, `base-commit.txt` 단독 커밋 + 영수증) · `Context.ExitObserver` 번들 재추출 · codex 2회차에 P0/P1 없음. 체크는 Manager 가 구현 지시 때 확정
+- [x] 1.12 Manager 결정 · freeze — **Manager freeze 2026-11-24**(review.md 「Manager freeze」 — codex 2회차 P1 2건 처분: Q-A 수용 · Q-B 기각 · Q-C 수용). base 재고정 승인(review.md 「Manager 결정」 1) — 실행은 2단계 착수 첫 단계(a198 착지 `7fec501f1` merge 뒤)
 
 ## 2. 구현
 
