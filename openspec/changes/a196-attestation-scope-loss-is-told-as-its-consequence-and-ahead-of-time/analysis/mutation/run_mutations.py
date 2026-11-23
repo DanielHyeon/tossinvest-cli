@@ -41,6 +41,16 @@ MUTANTS = [
     ("M10", "⑩ KST 날짜를 UTC 로", W, 'day := now.In(kst).Format("2006-01-02")', 'day := now.UTC().Format("2006-01-02")'),
     ("M11", "⑪ 거절 단계 key 에서 KST 날짜 삭제", W, '	return string(v.Stage) + ":" + day\n}', '	return string(v.Stage)\n}'),
     ("M12", "⑫ 누락 집합 정렬 삭제(MissingEndpoints)", A, "	sort.Strings(missing)\n", "	_ = sort.Strings\n"),
+    # 구현 적대 리뷰 r1 처분(2026-11-23)으로 더함 — run-2 부터.
+    ("N1", "P1-1 imminent 를 만료 문구로(감독 증거 갈래를 notice 에만)", W, "if v.DeadlineKind == deadlineProof {",
+     "if v.DeadlineKind == deadlineProof && v.Stage == stageNotice {"),
+    ("N2", "P2-1 「보냄」 재설정을 첫 호출에만(기한 비교 삭제)", W, "if identity != w.identity || w.sent == nil {", "if w.sent == nil {"),
+    ("N3", "P2-2 유효 기간 > 0 가드 삭제", W, "!proofAt.IsZero() && validity > 0", "!proofAt.IsZero()"),
+    ("N4", "R1 만료 무시(증거가 있으면 늘 감독 증거를 기한으로)", W, "due.Before(deadline)", "true || due.Before(deadline)"),
+    ("N5", "P2-4 soak 수용 기간을 30일로 박기", S, "acceptSupervised(s.AccountRef, now, c.Validity, supervised)",
+     "acceptSupervised(s.AccountRef, now, 30*24*time.Hour, supervised)"),
+    ("N6", "P1-2 범위 상실을 늘 주문 실행 갈래로", W, "if mutations == len(v.Missing) {", "if true {"),
+    ("N7", "P2-3 overdue key 에서 기한 삭제", W, 'return string(v.Stage) + ":" + deadline + ":" + day', 'return string(v.Stage) + ":" + day'),
 ]
 
 def sha(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()

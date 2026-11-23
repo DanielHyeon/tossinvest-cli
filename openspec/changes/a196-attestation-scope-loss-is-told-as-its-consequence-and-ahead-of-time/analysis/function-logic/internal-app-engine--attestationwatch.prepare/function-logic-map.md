@@ -3,7 +3,7 @@
 > **편집 후 지도 — 2단계 GREEN 뒤(2026-11-23).** 편집 전 원본 `../../pre-edit-ast/internal-app-engine--attestationwatch.prepare.ast.json`, 재번호 `renumber.txt`(옛/새 분기를 (종류, 줄 문장)으로 difflib 정렬 — 생성기 `../../renumber.py.txt`).
 
 - Source: `internal/app/engine/attestation_watch.go` (304-335)
-- AST evidence: `ast.json` — branches **5** / returns **3** / calls **10**, source SHA-256 `587249217d6328264ddd0ce53b3614496265a12c223003f3e20d17dd6bc89272`(파일 단위, 편집 후).
+- AST evidence: `ast.json` — branches **5** / returns **3** / calls **10**, source SHA-256 `b3b8bb818e6e8837eb836cbd1be2a741004f7c114ba4282a13c44c4a99941bb8`(파일 단위, 편집 후).
   명령 `GOFLAGS=-trimpath go run ./tools/logic-map --file internal/app/engine/attestation_watch.go --func attestationWatch.prepare`.
 - Risk scan: `risk-pattern-report.md`.
 - a166 census: `attestation_watch.go`·`a135_attestation_watch_internal_test.go` 0건(1.4).

@@ -74,3 +74,32 @@ func TestA196TheFileDeadlineIsWhenTheIssuerStopsCarryingTheProof(t *testing.T) {
 		})
 	}
 }
+
+// TestA196ANonDefaultValidityMovesBothValues: `--validity` 로 기본값이 아닌 유효 기간을 줘도 만료와 증거 수용이 같은 값을 씀
+// (구현 리뷰 P2-4 — 수용 기간을 30일로 박는 변이가 죽어야 함).
+func TestA196ANonDefaultValidityMovesBothValues(t *testing.T) {
+	now := soakStart.AddDate(0, 0, 3)
+	c := criteria()
+	c.Validity = 10 * 24 * time.Hour
+	for _, tc := range []struct {
+		name string
+		age  time.Duration
+		kept bool
+	}{
+		{"10일 − 1ns 는 실림", c.Validity - time.Nanosecond, true},
+		{"정확히 10일은 빠짐", c.Validity, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a, err := soak.BuildAttestation(soak.Summarize(threeCleanDays()), c, now, "tester", "", supervisedProofs(now.Add(-tc.age)))
+			if err != nil {
+				t.Fatalf("BuildAttestation: %v", err)
+			}
+			if got := a.ExpiresAt.Sub(a.IssuedAt); got != c.Validity {
+				t.Fatalf("ExpiresAt−IssuedAt = %s, want %s", got, c.Validity)
+			}
+			if kept := len(a.SupervisedBy) > 0; kept != tc.kept {
+				t.Fatalf("supervised kept=%v, want %v", kept, tc.kept)
+			}
+		})
+	}
+}

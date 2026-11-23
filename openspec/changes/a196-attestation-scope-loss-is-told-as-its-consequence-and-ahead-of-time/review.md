@@ -124,5 +124,25 @@ Pre-Edit Gate:
   다른 시험(보조 실행자 배선 등 `-run` 밖), `cmd/tossctl` 시험, internal/obs·journal 시험은 안 돌림(무편집 패키지). 실제 outbox(journal)와의 결합은 Key 문자열 단언으로
   대신했고 journal 위에서 돌려 보지 않음. ntfy 기기의 한글 제목 표시는 미실측(Q3). 4.3(구현 적대 리뷰·gstack review)은 Manager 지시로 보류.
 
+## 구현 적대 리뷰 r1 (2026-11-23, Opus 별도 컨텍스트 + codex 0.165.0)
+
+- 판정(Manager 전달): P0 0 · P1 2 · P2 8. 알림이 영구히 삼켜지는 경로 0, 감시·인터록 불일치 0. 리뷰 원문은 Manager 쪽 컨텍스트에 있고 이 worktree 에는 처분만 받았다.
+
+| # | 발견 | 처분 |
+|---|---|---|
+| P1-1 | 감독 증거가 기한인 imminent 본문을 고정하는 시험 없음 — `&& v.Stage == stageNotice` 변이 생존(D-2·D-1 이 만료·`soak attest` 를 말함) | **반영** — 시험 `TestA196ImminentProofNoticeTellsTheProofDeadline`, 변이 N1 CAUGHT. production 무편집 |
+| P1-2 | 범위 상실 문장이 누락 종류와 무관하게 「주문 · 취소」·원인·`verify run` 단정(GET 만 빠지면 거짓) | **반영** — eventFor 를 누락 집합으로 가름(전부 POST: 「주문 실행 검증이 attestation 에 없다」·원인·`verify run` / GET 섞임: 「엔진이 쓰는 endpoint 가 attestation 에 없다」·원인 없음·재발급, POST 가 섞이면 `verify run` 덧붙임). 판정은 새 함수 `mutationEndpoint`(메서드 접두). 시험 `TestA196ScopeLossWordingFollowsTheMissingKind`(4입력), 변이 N6 CAUGHT. 번들 재생성 |
+| P2-1 | prepare 의 「보냄」 재설정 미고정 | **반영** — 시험 `TestA196RejectionAfterAHealthyFileIsAnnouncedAgain`, N2 CAUGHT. 잔여: 같은 날 A→B→A(누락 집합 왕복)의 마지막 A 는 억제됨(하루 한 번 범위 안, 수리 안 함) |
+| P2-2 | `restartDeadline` 의 `ExpiresAt ≤ IssuedAt` 조항 미고정 | **반영** — 시험 `TestA196NoProofDeadlineWithoutAValidityWindow`, N3 CAUGHT. 「만료 무시」 R1 = N4 생존 — 동등(사유 mutation/README) |
+| P2-3 | overdue key 에서 기한 삭제 변이 생존 | 기록만 — N7 실행해 생존 확인, 동등 사유 기록 |
+| P2-4 | soak 전제 시험이 기본 유효 기간만 씀 | **반영** — 10일 유효 기간 행 `TestA196ANonDefaultValidityMovesBothValues`, N5 CAUGHT |
+| P2-5 | 날수 통지가 지금 도는 엔진의 손절까지 멈추는 것처럼 읽힘, 「N일 뒤」 와 시각이 최대 하루 어긋남 | **반영** — 「…그 뒤 첫 갱신부터 엔진 재시작이 거부된다. 재시작이 거부되면 그때부터 자동 손절이 돌지 않는다. 지금 실행 중인 엔진은 계속 돈다.」, 날수는 「D-N(<기한> KST)」, proof_overdue 도 같은 기준 |
+| P2-6 | 만료가 기한인 통지의 할 일 삭제 변이 | 기록만 — 정본 요구 아님 |
+| P2-7 | notice → unreadable → 같은 기한 notice 에서 일반 통지 1회 추가 | 기록만 — base 동작, 회귀 아님 |
+| P2-8 | 만료 기준 날수 경계가 더는 고정되지 않음 | 잔여 — 발급자 파일에서는 만료가 기한이 되지 않고 계산 경로(`daysLeftCeil`)가 같음 |
+
+- 상태 전이(리뷰가 실측한 요지, Manager 전달): 날수 ↔ 지남 ↔ 거절, 거절 단계 사이, 기록 실패 재시도, 재시작 — 하루 넘게 삼켜지는 경로 없음.
+- 재실행: 선택 시험 engine·soak ok(최상위 PASS 47), `make lint` rc 0, strict validate valid, `check_analysis` rc 0(required 6) — `analysis/verify/`. 변이 run-2: CAUGHT 17, 동등 생존 3(M12·N4·N7). 알림 문장 `analysis/verify/alert-texts.txt` 갱신.
+
 ### 안 한 것
 - (1단계 당시) 리뷰 2회차 — 결정 반영 뒤 1.6b 로 실시. `codegraph affected`, CodeGraphContext·GBrain, 전체 시험·게이트, `make sdd-sync`. 운영 파일(`~/.config/tossctl`)은 안 읽음 — 실제 운영에 US 기록이 있는지 모름(Q1 의 현실 영향 미확인).

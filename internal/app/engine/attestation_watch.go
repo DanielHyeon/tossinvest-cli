@@ -352,6 +352,11 @@ func stageKey(v attestationVerdict, now time.Time) string {
 	return string(v.Stage) + ":" + day
 }
 
+// mutationEndpoint 는 endpoint 가 주문 실행(POST)인지임 — 메서드 접두로만 판정(internal/soak 를 import 하지 않음).
+func mutationEndpoint(e string) bool {
+	return strings.HasPrefix(strings.ToUpper(strings.TrimSpace(e)), "POST ")
+}
+
 // kst 는 운영자가 읽는 시각대임. tz 데이터 없이도 같은 값이 나오게 고정 오프셋으로 둠.
 var kst = time.FixedZone("KST", 9*60*60)
 
@@ -370,6 +375,8 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event 
 	// a196: 재시작이 거절될 상태는 결과를 제목과 본문 첫 문장 둘 다에서 단정함 — 기기의 제목 표시를 저장소로 검증할 수 없어서.
 	const refused = "지금 엔진을 재시작하면 기동이 거부된다"
 	const consequence = "재시작이 거부되면 청산(손절 · 익절) 관측 루프가 돌지 않아 자동 손절이 멈춘다. 지금 실행 중인 엔진은 계속 돈다."
+	// 날수 · 지남 통지는 「지금 도는 엔진의 손절」이 아니라 「재시작이 거부된 뒤」를 말함(구현 리뷰 P2-5).
+	const afterRefusal = "재시작이 거부되면 그때부터 자동 손절이 돌지 않는다. 지금 실행 중인 엔진은 계속 돈다."
 	const reverify = "할 일: 터미널에서 `tossctl verify run` 으로 감독하 실주문 검증을 다시 하고, 다음 갱신(타이머 또는 `tossctl soak attest`)을 기다린다."
 	const renew = "할 일: 갱신(`tossctl soak attest`)이 왜 실패하는지 확인한다 — 갱신에는 soak 통과와 유효 기간 안의 감독하 실주문 검증(POST 주문 · 취소 증거)이 함께 필요하다."
 
@@ -378,24 +385,41 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event 
 	case stageNotice, stageImminent:
 		if v.DeadlineKind == deadlineProof {
 			title = fmt.Sprintf("감독하 실주문 검증 만료 D-%d — 그 뒤 엔진 재시작이 거부될 수 있다", v.DaysLeft)
-			body = fmt.Sprintf("감독하 실주문 검증(POST 주문 · 취소 증거)이 %d일 뒤(%s) 만료된다. 다른 유효한 감독 증거가 없으면 그 뒤 첫 갱신부터 "+
-				"엔진 재시작이 거부되고, 그동안 자동 손절이 돌지 않는다. attestation 자체의 만료는 %s 이다. %s", v.DaysLeft, deadline, expires, reverify)
+			body = fmt.Sprintf("감독하 실주문 검증(POST 주문 · 취소 증거)이 D-%d(%s)에 만료된다. 다른 유효한 감독 증거가 없으면 그 뒤 첫 갱신부터 "+
+				"엔진 재시작이 거부된다. %s attestation 자체의 만료는 %s 이다. %s", v.DaysLeft, deadline, afterRefusal, expires, reverify)
 		} else {
 			title = fmt.Sprintf("자동매매 검증서(attestation) 만료 D-%d", v.DaysLeft)
-			body = fmt.Sprintf("capability attestation 이 %s 에 만료된다(%d일 남음). 그 뒤 엔진 재시작이 거부되고, 그동안 자동 손절이 돌지 않는다. %s",
-				expires, v.DaysLeft, renew)
+			body = fmt.Sprintf("capability attestation 이 D-%d(%s)에 만료된다. 그 뒤 엔진 재시작이 거부된다. %s %s",
+				v.DaysLeft, expires, afterRefusal, renew)
 		}
 	case stageProofOverdue:
 		title = "감독하 실주문 검증의 기한이 지났다 — 지금 감독 검증을 다시 해야 한다"
-		body = fmt.Sprintf("감독하 실주문 검증의 기한이 지났다(%s). 다른 유효한 감독 증거가 없으면 그 뒤 첫 갱신부터 엔진 재시작이 거부된다 — "+
-			"갱신이 실패하고 있으면 이 파일의 만료(%s)에 거부된다. 지금 감독 검증을 다시 하라. %s", deadline, expires, reverify)
+		body = fmt.Sprintf("감독하 실주문 검증의 기한이 지났다(%s). 다른 유효한 감독 증거가 없으면 다음 갱신부터 엔진 재시작이 거부된다 — "+
+			"갱신이 실패하고 있으면 이 파일의 만료(%s)에 거부된다. %s %s", deadline, expires, afterRefusal, reverify)
 	case stageExpired:
 		title = refused + " — 자동매매 검증서(attestation)가 만료되었다"
 		body = fmt.Sprintf("%s. capability attestation 이 %s 에 만료되었다. %s %s", refused, expires, consequence, renew)
 	case stageScopeLost:
-		title = refused + " — 주문 · 취소 검증이 attestation 에 없다"
-		body = fmt.Sprintf("%s. 현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: %s. 갱신이 유효 기간 안의 감독하 실주문 검증 증거(POST 주문 · 취소) 없이 쓰였다. %s %s",
-			refused, strings.Join(v.Missing, ", "), consequence, reverify)
+		// 원인 · 할 일은 빠진 endpoint 의 종류로 가름(구현 리뷰 P1-2) — 감독하 실주문 검증이 덮는 것은 주문 실행(POST)뿐임.
+		missing := strings.Join(v.Missing, ", ")
+		mutations := 0
+		for _, e := range v.Missing {
+			if mutationEndpoint(e) {
+				mutations++
+			}
+		}
+		if mutations == len(v.Missing) {
+			title = refused + " — 주문 실행 검증이 attestation 에 없다"
+			body = fmt.Sprintf("%s. 현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: %s. 갱신이 유효 기간 안의 감독하 실주문 검증 증거 없이 쓰였다. %s %s",
+				refused, missing, consequence, reverify)
+		} else {
+			title = refused + " — 엔진이 쓰는 endpoint 가 attestation 에 없다"
+			remedy := "할 일: 빠진 endpoint 를 덮는 능력 검증을 다시 실행해 attestation 을 재발급하라."
+			if mutations > 0 {
+				remedy += " 주문 실행 endpoint 는 터미널의 `tossctl verify run`(감독하 실주문 검증)으로만 덮인다."
+			}
+			body = fmt.Sprintf("%s. 현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: %s. %s %s", refused, missing, consequence, remedy)
+		}
 	case stageIncomplete:
 		title = refused + " — 자동매매 검증서(attestation)에 필수 칸이 비어 있다"
 		body = refused + ". 엔진이 읽는 attestation 에 계좌 · 만료 · 검증된 endpoint 중 비어 있는 칸이 있다. " + consequence + " " + renew

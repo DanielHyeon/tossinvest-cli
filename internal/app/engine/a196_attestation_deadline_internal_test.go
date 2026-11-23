@@ -387,3 +387,119 @@ func TestA196NotificationsOffDowngradesOverdue(t *testing.T) {
 		t.Fatalf("notifications off: %+v, want one normal event", got)
 	}
 }
+
+// TestA196ImminentProofNoticeTellsTheProofDeadline: 감독 증거가 기한인 D-2 · D-1 critical 도 감독 증거의 기한 시각과 할 일
+// `tossctl verify run` 을 말함 — 만료 문구로 새지 않게(구현 리뷰 P1-1).
+func TestA196ImminentProofNoticeTellsTheProofDeadline(t *testing.T) {
+	for _, left := range []time.Duration{2 * a196Day, a196Day} {
+		att := a196ProofDue(a135Now, left)
+		n := &a135Notifier{}
+		w := a135Watch(clock.NewFake(a135Now), n, true, &att)
+		w.checkOnce(t.Context())
+		got := n.got()
+		if len(got) != 1 || got[0].Type != obs.EventCredentialExpiring {
+			t.Fatalf("left=%s: %+v, want one critical", left, got)
+		}
+		deadline := a135Now.Add(left).In(kst).Format("2006-01-02 15:04 KST")
+		for _, want := range []string{"감독하 실주문 검증", deadline, "tossctl verify run", "다른 유효한 감독 증거가 없으면"} {
+			if !strings.Contains(got[0].Title+"\n"+got[0].Body, want) {
+				t.Errorf("left=%s: imminent proof alert lacks %q:\n%s\n%s", left, want, got[0].Title, got[0].Body)
+			}
+		}
+	}
+}
+
+// TestA196ScopeLossWordingFollowsTheMissingKind: 범위 상실의 제목 · 원인 · 할 일은 빠진 endpoint 의 종류로 갈림(구현 리뷰 P1-2).
+func TestA196ScopeLossWordingFollowsTheMissingKind(t *testing.T) {
+	const (
+		order  = "POST /api/v1/orders"
+		cancel = "POST /api/v1/orders/{id}/cancel"
+		read   = "GET /api/v1/holdings"
+		cause  = "감독하 실주문 검증 증거 없이 쓰였다"
+		redo   = "빠진 endpoint 를 덮는 능력 검증을 다시 실행해 attestation 을 재발급하라"
+	)
+	cases := []struct {
+		name                string
+		drop                []string
+		title               string
+		cause, verify, redo bool
+	}{
+		{"POST 둘", []string{order, cancel}, "주문 실행 검증이 attestation 에 없다", true, true, false},
+		{"POST 하나", []string{cancel}, "주문 실행 검증이 attestation 에 없다", true, true, false},
+		{"GET 하나", []string{read}, "엔진이 쓰는 endpoint 가 attestation 에 없다", false, false, true},
+		{"POST+GET", []string{order, read}, "엔진이 쓰는 endpoint 가 attestation 에 없다", false, true, true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			att := a196ProofDue(a135Now, 20*a196Day)
+			for _, e := range tc.drop {
+				att = without(att, e)
+			}
+			n := &a135Notifier{}
+			w := a135Watch(clock.NewFake(a135Now), n, true, &att)
+			w.checkOnce(t.Context())
+			got := n.got()
+			if len(got) != 1 {
+				t.Fatalf("events=%+v", got)
+			}
+			e := got[0]
+			if !strings.Contains(e.Title, a196Refused) || !strings.Contains(e.Title, tc.title) {
+				t.Errorf("title=%q, want %q", e.Title, tc.title)
+			}
+			if !strings.HasPrefix(e.Body, a196Refused+".") {
+				t.Errorf("body's first sentence is not the refusal: %q", e.Body)
+			}
+			for _, d := range tc.drop {
+				if !strings.Contains(e.Body, d) {
+					t.Errorf("body does not name %s: %q", d, e.Body)
+				}
+			}
+			for _, want := range []string{"자동 손절이 멈춘다", "지금 실행 중인 엔진은 계속 돈다"} {
+				if !strings.Contains(e.Body, want) {
+					t.Errorf("body lacks %q: %q", want, e.Body)
+				}
+			}
+			if strings.Contains(e.Body, cause) != tc.cause || strings.Contains(e.Body, "tossctl verify run") != tc.verify ||
+				strings.Contains(e.Body, redo) != tc.redo {
+				t.Errorf("cause=%v verify=%v redo=%v, want %v %v %v: %q", strings.Contains(e.Body, cause),
+					strings.Contains(e.Body, "tossctl verify run"), strings.Contains(e.Body, redo), tc.cause, tc.verify, tc.redo, e.Body)
+			}
+		})
+	}
+}
+
+// TestA196RejectionAfterAHealthyFileIsAnnouncedAgain: 거절 → 고쳐짐(healthy) → 같은 날 같은 거절 재발은 다시 알림 —
+// prepare 의 「보냄」 재설정이 기한 변화로 일어남을 고정(구현 리뷰 P2-1).
+func TestA196RejectionAfterAHealthyFileIsAnnouncedAgain(t *testing.T) {
+	clk := clock.NewFake(a135Now)
+	n := &a135Notifier{}
+	good := a196ProofDue(a135Now, 20*a196Day)
+	att := without(good, "POST /api/v1/orders")
+	w := a135Watch(clk, n, true, &att)
+	w.checkOnce(t.Context())
+	clk.Advance(time.Hour)
+	att = good
+	w.checkOnce(t.Context())
+	clk.Advance(time.Hour)
+	att = without(good, "POST /api/v1/orders")
+	w.checkOnce(t.Context())
+	if got := n.got(); len(got) != 2 {
+		t.Fatalf("scope loss → healthy → same scope loss on the same day: %d events, want 2: %+v", len(got), got)
+	}
+}
+
+// TestA196NoProofDeadlineWithoutAValidityWindow: 만료 ≤ 발급인 파일은 감독 증거의 기한을 세지 않음 — 유효 기간이 0 이하면
+// 「증거 + 0」 이 과거라 거짓 proof_overdue 가 나감(구현 리뷰 P2-2, design D1).
+func TestA196NoProofDeadlineWithoutAValidityWindow(t *testing.T) {
+	for name, shift := range map[string]time.Duration{"만료 = 발급": 0, "만료 < 발급": time.Hour} {
+		t.Run(name, func(t *testing.T) {
+			att := a196ProofDue(a135Now, 5*a196Day)
+			att.ExpiresAt = a135Now.Add(20 * a196Day)
+			att.IssuedAt = att.ExpiresAt.Add(shift)
+			v := judgeAttestation(att, nil, a135Now, a135Account)
+			if v.Stage != stageHealthy || v.DeadlineKind != deadlineExpiry || v.DaysLeft != 20 {
+				t.Fatalf("stage=%s kind=%s days=%d, want healthy expiry D-20", v.Stage, v.DeadlineKind, v.DaysLeft)
+			}
+		})
+	}
+}

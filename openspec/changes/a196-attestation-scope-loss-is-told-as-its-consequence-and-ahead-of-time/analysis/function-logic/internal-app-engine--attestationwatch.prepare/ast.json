@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/attestation_watch.go",
-  "source_sha256": "587249217d6328264ddd0ce53b3614496265a12c223003f3e20d17dd6bc89272",
+  "source_sha256": "b3b8bb818e6e8837eb836cbd1be2a741004f7c114ba4282a13c44c4a99941bb8",
   "package": "engine",
   "function": "prepare",
   "receiver": "attestationWatch",
