@@ -17,11 +17,11 @@
 
 ## 2. Pre-Edit
 
-- [ ] 2.1 Pre-Edit 선언을 `review.md` 에 확정.
+- [x] 2.1 Pre-Edit 선언을 `review.md` 에 확정.
 
 ## 3. RED → GREEN
 
-- [ ] 3.1 RED: `internal/app/engine/a198_clearing_cancel_test.go` — design §4-1(현재 HEAD 에서 결함 재현, 원문 `analysis/tdd/red.txt`)과 2~8.
+- [x] 3.1 RED: `internal/app/engine/a198_clearing_cancel_test.go` — design §4-1(현재 HEAD 에서 결함 재현, 원문 `analysis/tdd/red.txt`)과 2~8.
 - [ ] 3.2 GREEN(design D2 (가-B)·D4, Manager 결정 2026-11-23): `clearTheSymbol` 편집(관측기 안에서 `execgw.Issuer` 로 취소 결정 발행 · B9·B11 에서 실패 기록 호출) + 새 파일의 실패 기록 함수 + 관측기 구조체 새 필드. `Context.ExitObserver`·a129 함수 무편집.
 - [ ] 3.3 기존 a094·a087·a129·exit 시험 무편집 통과 확인(design §4-9 — 하네스 변경 0). 편집 뒤 `clearTheSymbol` 번들 AST·FLM·BTM 재생성.
 

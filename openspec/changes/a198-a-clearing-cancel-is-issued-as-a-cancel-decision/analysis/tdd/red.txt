@@ -1,0 +1,31 @@
+# RED — HEAD e92aface3751f9c561fe2037c8f976dd6ed08118 의 production 코드(편집 전) + 새 시험 파일만, go version go1.26.5 linux/amd64, 2026-11-23T23:18:44+09:00
+# cmd: go test ./internal/app/engine -run A198 -count=1 -v
+=== RUN   TestA198AWorkingEngineBuyIsCancelledAndTheStopFollowsInTheSameCycle
+    a198_clearing_cancel_test.go:303: broker cancels = [], want exactly one for W-BUY-1 — the clearing cancel never reached the broker; cancel attempts in the ledger: []
+--- FAIL: TestA198AWorkingEngineBuyIsCancelledAndTheStopFollowsInTheSameCycle (0.48s)
+=== RUN   TestA198AnArmedSellIsCancelledOnceAndTheStopWaitsForItsClosingRecord
+    a198_clearing_cancel_test.go:350: broker cancels = [], want one for the armed sell BO-1; cancel attempts: []
+--- FAIL: TestA198AnArmedSellIsCancelledOnceAndTheStopWaitsForItsClosingRecord (0.45s)
+=== RUN   TestA198ARefusedCancelIsLoggedOnceWithoutAccountQuantityPriceOrDetail
+    a198_clearing_cancel_test.go:394: failure lines = [] (sink ""), want exactly one
+--- FAIL: TestA198ARefusedCancelIsLoggedOnceWithoutAccountQuantityPriceOrDetail (0.45s)
+=== RUN   TestA198AnUnrecordableCancelDecisionIsLoggedOnce
+    a198_clearing_cancel_test.go:440: failure lines = [], want one cancel_decision_failed line with no state
+--- FAIL: TestA198AnUnrecordableCancelDecisionIsLoggedOnce (0.49s)
+=== RUN   TestA198AnInDoubtCancelHoldsTheStopAndBothAlertsFire
+    a198_clearing_cancel_test.go:459: broker cancels = [], want one — an ambiguous cancel is not re-sent in session
+--- FAIL: TestA198AnInDoubtCancelHoldsTheStopAndBothAlertsFire (0.50s)
+=== RUN   TestA198AnAckedCancelHoldsTheStopAndTheDelayAlertStillFires
+--- PASS: TestA198AnAckedCancelHoldsTheStopAndTheDelayAlertStillFires (0.46s)
+=== RUN   TestA198TheProductionAssemblyCancelsTheWorkingBuyAndPlacesTheStop
+    a198_clearing_cancel_test.go:549: broker cancels = [] under the production assembly, want one for W-BUY-1 (lines "")
+--- FAIL: TestA198TheProductionAssemblyCancelsTheWorkingBuyAndPlacesTheStop (0.47s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	3.316s
+FAIL
+
+# 원장 거절 문구: HEAD 의 clearTheSymbol 은 B9·B11 에서 아무것도 남기지 않으므로(실패 기록이 이 change 의 대상) 위 시험 출력에는 그 문구가 나오지 않음.
+# 같은 HEAD·같은 결정 모양으로 게이트웨이 취소를 직접 부른 probe 원문(analysis/probe/probe-output.txt):
+    zz_a197_probe_test.go:54: PROBE side=BUY path=riskguardian-like-clearTheSymbol state= reason=invalid_mutation_request broker_cancels=0 err=execgw: recording the intent (nothing was submitted): journal: invalid request: CANCEL carries no idempotency key — only order creation does detail=journal: invalid request: CANCEL carries no idempotency key — only order creation does
+    zz_a197_probe_test.go:54: PROBE side=SELL path=riskguardian-like-clearTheSymbol state= reason=invalid_mutation_request broker_cancels=0 err=execgw: recording the intent (nothing was submitted): journal: invalid request: CANCEL carries no idempotency key — only order creation does detail=journal: invalid request: CANCEL carries no idempotency key — only order creation does
+# 참고: TestA198AnAckedCancelHoldsTheStopAndTheDelayAlertStillFires 는 HEAD 에서도 PASS — 기존 규칙(미종결 가드·지연 경보)의 특성 시험이며 RED 대상이 아님.

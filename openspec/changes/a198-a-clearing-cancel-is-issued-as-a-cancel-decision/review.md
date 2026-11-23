@@ -51,3 +51,19 @@
 - r2-2·r2-3·r2-4·r2-5 사실 정정 반영: 승인.
 - tasks 5.3 ↔ Story limits 충돌 → 5.3 을 체크박스에서 빼 「## 6. 종결 뒤 (사람 승인 — 이 change 의 종결 조건 아님)」로 이동(a195 와 같은 처리). Story 무변경.
 - **Manager 1단계 검증·freeze 2026-11-23** (커밋 `94dec8ae4` 읽고 strict validate 재확인 뒤). tasks 1.8 [x].
+
+## Pre-Edit 선언 (tasks 2.1, 2026-11-23 — High-risk, 면제 없음)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a198-a-clearing-cancel-is-issued-as-a-cancel-decision / 2.1 → 3.1·3.2
+- 대상 심볼(패키지.함수): engine.ExitObserver.clearTheSymbol(기존, 본문 편집 — 유일). 새 코드: 새 파일의 engine.(*ExitObserver).noteClearCancelFailure, 관측기 구조체 새 필드 1(중복 억제 맵). 무편집: submit·record·NewExitObserver·Context.ExitObserver·a129 함수 4·internal/execgw·internal/journal production.
+- CodeGraph definition/callers/callees/impact: analysis/code-context/codegraph-baseline.md (codegraph 1.6.0, base e1eaf720c) — clearTheSymbol 호출자 record 1 자리(exitloop.go:1395); 편집 자리 :1684(발행)·:1696(B9)·:1717(B11).
+- CodeGraphContext 후보와 evidence reconciliation: not-applicable(미색인 — codegraphcontext-context.md), evidence-reconciliation.md 미해소 불일치 0.
+- 기존 동작 파악 근거: HEAD AST analysis/cited-ast/ExitObserver_clearTheSymbol.ast.json(분기 17), probe 재실행 analysis/probe/(취소가 원장에서 거절, flatten 모양은 접수), 기존 시험 a094_exit_clear*·exitloop_test(가짜 제출자)·exit_e2e(진짜 게이트웨이, 취소 미도달), 호출부 1.
+- Function Logic Map / Branch Test Map: analysis/function-logic/internal-app-engine--exitobserver.clearthesymbol/ (pre-edit; 편집 뒤 재생성·재번호).
+- upstream 상속 테스트 영향: no — internal/trading·official 무편집.
+- 실패 테스트 선행 작성: yes — internal/app/engine/a198_clearing_cancel_test.go RED 를 HEAD 코드에서 먼저 실행(analysis/tdd/red.txt).
+- 설정·DB·journal 변경과 rollback: 없음 — 스키마·설정·토글 0. 새로 쓰이는 행은 flatten 이 이미 쓰는 CANCEL attempt·위험 감소 결정 형식. rollback = 이전 이미지.
+- 안전 불변식 §0 위반 여부 검토: 통과 — LIVE 주문 0(가짜 브로커 httptest), 손절 즉시성 약화 없음(판정 무변화, 막혀 있던 취소가 나가 손절이 나갈 수 있게 됨), 새 API 호출 종류 없음(retry matrix 행 31·33·37), 운영 토글 무변화, 로그에 계좌·수량·가격·Detail 없음.
+```
