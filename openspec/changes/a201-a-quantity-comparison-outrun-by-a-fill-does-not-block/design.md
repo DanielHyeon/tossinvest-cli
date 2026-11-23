@@ -52,8 +52,8 @@
 - 운영 이력에 이 고착의 흔적은 0 이다 — 효과는 운영에서 「일어나지 않음」과 `stale_local_read` 로그로만 보인다.
 - **`reconcile.clean` 은 차이 없음이 아니다** — 같은 주기의 `stale_local_read` 줄이 있으면 그 주기는 판정을 미룬 것이다(D7' (β)).
 - **`Observe` 없이 성공으로 센 주기가 푸는 것**(Manager 결정 1 의 확인, AST): `note` B1 if@301 → `Consecutive = 0` · `Since` · `LastError` 비움(reconcileloop.go:301-305) → `Runtime.CheckHealth` B4 if@422 → `clearLatch`@426(runtime.go:494-498 — `escalated[loop]` 삭제: 다음 연속 실패 때 같은 열화 알림을 다시 낼 수 있게 할 뿐). 운영 모드는 풀지 않는다(`escalate` 는 강화만 하고 완화는 사람 — runtime.go:424-426 주석, :442-). `Health()` 의 다른 생산 소비자는 0. 오늘도 같은 것을 푸는 주기가 있다 — 불안정 주기(B1 return@430, `Err` 없음). **새로 푸는 종류는 없다.** 다만 보류 주기는 오늘이라면 `Observe` 쓰기 실패(B7)나 편입 판정의 오류(adoption.go:225)로 실패였을 주기 자리에 올 수 있다 — 그때 연속 실패 계수가 0 으로 돌아간다. 연속 상한 1 이라 보류는 많아야 한 주기 걸러 한 번이고, 불안정 주기가 오늘 같은 일을 한다.
-- 잔여 (iii) 의 전략 진입 backfill 경로는 운영에서 켜져 있는지 미확인이다(운영의 진입은 지금 보호 미배선으로 막혀 있다고 Manager 가 전함 — 이 change 가 확인하지 않음). `position.Apply` 의 delta 0 새 인스턴스 갈래도 미확인.
-- R1-1 탐침의 「그다음 주기에도 차단 유지」는 구현 단계에서 base 와 나란히 돌려 원인을 밝힌다(v2 만의 고착이면 멈춤).
+- 잔여 (iii) 의 전략 진입 backfill 경로는 운영에서 켜져 있는지 미확인이다(운영의 진입은 지금 보호 미배선으로 막혀 있다고 Manager 가 전함 — 이 change 가 확인하지 않음). `position.Apply` 의 delta 0 관측은 새 인스턴스를 만들지 않는다(새 인스턴스 행은 전부 `MoveAdds`, delta 0 은 `MoveNone` — codex r2 로 확인).
+- R1-1 탐침의 「그다음 주기에도 차단 유지」: base(편집 전)에서 같은 순서를 돌려도 남는다 — 원인은 **픽스처**(시험 도우미 `stopOpenAtBroker` 가 계좌 열린 주문 목록에 같은 주문을 거듭 덧붙여 중복 행이 되고, 비교가 짝을 거절해 그 주문이 missing-order 로 3회 연속 → 계좌 영구 차단). v2 가 만든 고착 아님. 구현 시험은 목록을 비우고 다시 채운다.
 
 ## 5. 순서 · 결합
 
