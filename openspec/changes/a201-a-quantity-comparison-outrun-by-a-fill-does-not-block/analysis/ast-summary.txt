@@ -3,6 +3,10 @@
  R: @205 @211 @223 @225 @228 @248 @252 @254 @264 @268 @327 @341 @351 @358 @364 @367 @371
  C: req.normalised@203 j.nowString@207 j.db.BeginTx@209 fmt.Errorf@211 tx.Rollback@213 scanAdjustment@218 tx.QueryRowContext@218 scanPosition@221 tx.QueryRowContext@221 errors.Is@226 scanPosition@232 tx.QueryRowContext@232 errors.Is@246 sameDecimal@251 Scan@261 tx.QueryRowContext@261 fmt.Errorf@264 fmt.Sprintf@270 fmt.Sprintf@271 int64@285 PositionID@290 firstNonEmpty@312 tx.ExecContext@319 convergedState@325 closedStamp@326 fmt.Errorf@327 tx.ExecContext@332 fmt.Errorf@341 tx.ExecContext@346 convergedState@349 closedStamp@350 fmt.Errorf@351 closeExitStateOnAdjustmentTx@356 scanPosition@362 tx.QueryRowContext@362 tx.Commit@366 fmt.Errorf@367
  defers: @213
+== Journal backfillConfirmedStrategyFillTx internal/journal/strategy_dispatch_runtime.go 1297 - 1385 sha 2b82ef970b73
+ B: B1(if@1307) B2(if@1310) B3(if@1313) B4(if@1320) B5(if@1321) B6(if@1327) B7(if@1330) B8(if@1338) B9(if@1344) B10(if@1348) B11(if@1358) B12(if@1361) B13(if@1364) B14(if@1374) B15(if@1379)
+ R: @1308 @1311 @1314 @1324 @1328 @1331 @1345 @1349 @1359 @1362 @1369 @1375 @1381 @1384
+ C: Scan@1302 tx.QueryRowContext@1302 strings.ToLower@1305 string@1305 errors.Is@1307 fmt.Errorf@1314 strings.ToLower@1317 string@1317 releaseReservationsForOrder@1321 fmt.Sprintf@1323 j.applyRiskBucketFillInTx@1327 j.releaseTerminalRiskBucketOrderInTx@1330 parseJournalTime@1335 parseJournalTime@1336 committedAt.After@1337 journalTimeStrictlyAfter@1343 j.runApplyHooks@1348 tx.ExecContext@1354 strings.ToLower@1357 string@1357 requireStrategyDispatchExactRows@1361 tx.ExecContext@1364 strings.ToLower@1367 string@1367 j.applyMu.RLock@1371 j.applyMu.RUnlock@1373 ApplyPositionCampaignFill@1379 handle.invalidate@1380 handle.invalidate@1383 j.applyRiskBucketOwnerBindingInTx@1384
 ==  blockFromReconcileState internal/reconcile/mismatch.go 1398 - 1424 sha 9895f31184e5
  B: B1(if@1411) B2(if@1414) B3(if@1417)
  R: @1423
@@ -48,6 +52,10 @@
  B: B1(if@194) B2(if@198) B3(if@202) B4(range@212) B5(if@220)
  R: @195 @199 @203 @223 @237
  C: fmt.Errorf@195 HeldBySymbol@197 j.TrackedFillOrders@201 make@209 len@209 make@210 len@210 j.ResolveCurrentOrderIDScoped@213 strings.TrimSpace@228 strings.ToUpper@229 strings.TrimSpace@229 strings.ToLower@230 strings.TrimSpace@230 strings.TrimSpace@231 strings.ToUpper@232 strings.TrimSpace@232 order.Identity@234
+== ReconcileDriver logCycle internal/app/engine/reconcileloop.go 548 - 569 sha 4e21e03de561
+ B: B1(if@549) B2(if@552)
+ R: @550 @556
+ C: d.opts.Log.Error@553 d.opts.Log.Event@558
 == ReconcileDriver logOrderTerminalReleases internal/app/engine/a192_order_terminal_release_log.go 25 - 66 sha 328c58e7cd65
  B: B1(if@26) B2(range@29) B3(if@31) B4(if@40) B5(if@45) B6(range@50) B7(range@54) B8(if@55) B9(range@61) B10(if@62)
  R: @27 @41
@@ -56,6 +64,11 @@
  B: B1(if@77)
  R: @78 @80
  C: Scan@77 j.db.QueryRowContext@77 fmt.Errorf@78
+== ReconcileDriver note internal/app/engine/reconcileloop.go 297 - 312 sha 4e21e03de561
+ B: B1(if@301) B2(if@307)
+ R: @305
+ C: d.healthMu.Lock@298 d.healthMu.Unlock@299 d.clk.Now@308
+ defers: @299
 == notifierAlerter ManagedPositionClosedExternally internal/app/engine/exitwiring.go 132 - 160 sha e8f131a312ec
  B: B1(if@134) B2(if@138)
  R: @135 @141
@@ -90,10 +103,18 @@
  R: @430 @437 @462 @474 @478
  C: ?@426 d.note@426 d.stabilise@428 reconcile.LocalStateFromJournal@434 fmt.Errorf@436 Compare@439 d.ingest.IngestExternalPositions@445 len@449 d.opts.Converge.ConvergeQuantities@451 len@455 d.opts.Tracker.Refresh@458 d.opts.Tracker.Observe@464 d.logOrderTerminalReleases@466 len@467 d.opts.Tracker.Blocks@467 len@468 len@469 d.judgeHoldings@477
  defers: @426
+== Runtime CheckHealth internal/app/engine/runtime.go 415 - 435 sha 485dbc576483
+ B: B1(range@416) B2(if@417) B3(if@421) B4(if@422) B5(if@430)
+ R: 
+ C: loop.Health.ConsecutiveFailures@420 r.clearLatch@426 r.takeLatch@430 r.escalate@433
 ==  soleLiveMarket internal/reconcile/converge.go 277 - 308 sha 00a784b3f6b3
  B: B1(range@279) B2(if@280) B3(if@283) B4(switch@288) B5(case@289) B6(range@290) B7(case@294) B8(case@297) B9(range@299)
  R: @291 @293 @295 @303
  C: strings.ToUpper@280 strings.TrimSpace@280 strings.ToLower@286 strings.TrimSpace@286 len@288 make@298 len@298 append@300 sort.Strings@302 fmt.Sprintf@303 strings.Join@306
+== ReconcileDriver stabilise internal/app/engine/reconcileloop.go 508 - 546 sha 4e21e03de561
+ B: B1(if@510) B2(if@515) B3(if@523) B4(if@529) B5(if@536)
+ R: @517 @525 @531 @540 @545
+ C: d.opts.Collector.Collect@514 d.learnNames@520 d.stabiliser.Offer@521 d.clk.Sleep@523 d.opts.Collector.Collect@528 d.learnNames@534 d.stabiliser.Offer@535 d.stabiliser.Reset@544
 ==  symbolsInDispute internal/reconcile/mismatch.go 576 - 595 sha 9895f31184e5
  B: B1(range@579) B2(range@582) B3(range@591)
  R: @594

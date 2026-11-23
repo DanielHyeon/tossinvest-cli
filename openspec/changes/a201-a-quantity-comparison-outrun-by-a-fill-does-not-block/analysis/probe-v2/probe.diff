@@ -1,0 +1,191 @@
+diff --git a/internal/app/engine/a201_probe_state.go b/internal/app/engine/a201_probe_state.go
+new file mode 100644
+index 000000000..89619c43f
+--- /dev/null
++++ b/internal/app/engine/a201_probe_state.go
+@@ -0,0 +1,7 @@
++package engine
++
++// a201 v2 탐침 전용(scratch) — 보류 상태를 시험이 읽게 함.
++var (
++	ProbeLastHeld bool
++	ProbeHolds    int
++)
+diff --git a/internal/app/engine/a201_stale_quantity_comparison_repro_test.go b/internal/app/engine/a201_stale_quantity_comparison_repro_test.go
+index 9cc7c72a7..168475c5a 100644
+--- a/internal/app/engine/a201_stale_quantity_comparison_repro_test.go
++++ b/internal/app/engine/a201_stale_quantity_comparison_repro_test.go
+@@ -141,6 +141,7 @@ func newA201World(t *testing.T) *a201World {
+ 		t.Fatalf("NewReconcileDriver: %v", err)
+ 	}
+ 	h.driver = driver
++	engine.ProbeLastHeld, engine.ProbeHolds = false, 0
+ 	return &a201World{driverHarness: h, ctx: ctx, converge: conv, store: store}
+ }
+ 
+@@ -293,12 +294,9 @@ func (w *a201World) start(symbol string) {
+ // assertStuck 은 「그 종목 QM 행 1 이 미해제 · 진입 거절」 을 단언함(현재 동작).
+ func (w *a201World) assertStuck(symbol string) {
+ 	w.t.Helper()
+-	if got := w.activeCauses(symbol); len(got) != 1 || got[0] != journal.ReconcileCauseQuantityMismatch {
+-		w.t.Fatalf("active rows for %s = %q, want one QUANTITY_MISMATCH (current behaviour)", symbol, got)
+-	}
+-	if w.tracker.EntryAllowed("kr", symbol) == nil {
+-		w.t.Fatalf("entry for %s allowed; current behaviour keeps it refused", symbol)
+-	}
++	w.t.Logf("PROBE %s rows=%q active=%q entry_refused=%v holds=%d", symbol, w.rows(symbol), w.activeCauses(symbol),
++		w.tracker.EntryAllowed("kr", symbol) != nil, engine.ProbeHolds)
++	_ = journal.ReconcileCauseQuantityMismatch
+ }
+ 
+ // rebuyRefused 는 사람이 앱으로 그 종목을 다시 사 계좌가 5 주를 보유했을 때 편입되지 않음(자동 손절 없음)을 기록함.
+@@ -311,7 +309,7 @@ func (w *a201World) rebuyRefused(symbol string) {
+ 		w.t.Fatalf("rebuy cycle: %v", c.Err)
+ 	}
+ 	if c.Adopted != 0 || w.position(symbol).Adopted() {
+-		w.t.Fatalf("re-bought holding adopted (adopted=%d); current behaviour refuses it under the block", c.Adopted)
++		w.t.Logf("PROBE re-bought holding adopted=%d", c.Adopted)
+ 	}
+ }
+ 
+@@ -460,3 +458,98 @@ func TestA201CurrentBehaviourAStaleStopsTheTrailingSymbolWhoseFillLandsAfterObse
+ 	w.assertStuck(a)
+ 	w.assertStuck(b)
+ }
++
++// PROBE: 판 중단 뒤 종목 B 의 체결이 다음 주기 뒤에야 옴 — 다음 주기 수렴이 B 를 조정하는가.
++func TestA201ProbeTrailingSymbolFillArrivesAfterTheNextCycle(t *testing.T) {
++	const a, b = "SYN201A", "SYN201B"
++	w := newA201World(t)
++	w.hold(a, "31")
++	w.hold(b, "17")
++	w.holds(a, "31", "100", 100)
++	w.holds(b, "17", "100", 100)
++	w.stopOpenAtBroker(a, "31")
++	w.stopOpenAtBroker(b, "17")
++	if c := w.next(); c.Err != nil {
++		t.Fatalf("start cycle = %+v", c)
++	}
++	w.accountSold()
++	w.converge.at = a201AfterPositions
++	w.converge.fire = func() { w.stopFills(a, "31") }
++	c := w.next()
++	w.logCycle("A stale 주기", b, c)
++	c = w.next()
++	w.logCycle("다음 주기(B 체결 아직)", b, c)
++	w.clk.Advance(10 * time.Second)
++	w.stopFills(b, "17")
++	w.settleClean(b, 3)
++	w.assertStuck(a)
++	w.assertStuck(b)
++}
++
++// PROBE: codex R1-1 의 순서 — 앞 크레딧 · QM 위에 사람 5 매도(스냅숏 15), 스냅숏 뒤 엔진 매도 5 가 창 안에 커밋(실제 10).
++func TestA201ProbeR11SnapshotOlderThanTheFill(t *testing.T) {
++	const symbol = "SYN201"
++	w := newA201World(t)
++	w.start(symbol) // 로컬 31 · 계좌 31, 엔진 매도 o-stop 열림
++	w.holds(symbol, "20", "100", 100)
++	w.stopOpenAtBroker(symbol, "31")
++	c := w.next()
++	w.logCycle("외부 매도 11(로컬 31 · 계좌 20) — 조정 · 크레딧 · QM", symbol, c)
++	// 사람이 5 더 매도 → 스냅숏 15. 엔진 매도(o-stop 의 부분 5)는 스냅숏 뒤 체결, 로컬 읽기 뒤 커밋.
++	w.holdings.items = nil
++	w.holds(symbol, "15", "100", 100)
++	w.stopOpenAtBroker(symbol, "31")
++	w.converge.at = a201BeforePositions
++	w.converge.fire = func() {
++		if _, err := w.journal.RecordFill(w.ctx, journal.FillObservation{
++			OrderID: "o-stop-" + symbol, Symbol: symbol, Market: "kr", TradingDay: a201Day, Side: "SELL",
++			AccountRef: reconcileAccount, State: "OPEN_PARTIALLY_FILLED", Terminal: false,
++			Quantity: "31", FilledQuantity: "5", AveragePrice: "100", ObservedAt: w.now(),
++		}); err != nil {
++			t.Fatalf("partial fill: %v", err)
++		}
++	}
++	c = w.next()
++	w.logCycle("R1-1 주기(스냅숏 15 · 로컬 읽기 20 · 체결 뒤 로컬 15)", symbol, c)
++	w.holdings.items = nil
++	w.holds(symbol, "10", "100", 100) // 실제 계좌 10
++	w.stopOpenAtBroker(symbol, "31")
++	c = w.next()
++	w.logCycle("다음 주기(계좌 10 · 로컬 15)", symbol, c)
++	c = w.next()
++	w.logCycle("그다음 주기", symbol, c)
++	w.assertStuck(symbol)
++}
++
++// PROBE: 연속 둘째 주기 — S1 의 W2 로 보류한 다음 주기에 S2 의 W2 가 오면 보류하지 않음.
++func TestA201ProbeSecondConsecutiveWindowIsJudged(t *testing.T) {
++	const s1, s2 = "SYN201A", "SYN201B"
++	w := newA201World(t)
++	w.hold(s1, "31")
++	w.hold(s2, "17")
++	w.holds(s1, "31", "100", 100)
++	w.holds(s2, "17", "100", 100)
++	w.stopOpenAtBroker(s1, "31")
++	w.stopOpenAtBroker(s2, "17")
++	if c := w.next(); c.Err != nil {
++		t.Fatalf("start cycle = %+v", c)
++	}
++	// 주기 1: 계좌가 S1 만 매도 반영, S1 체결은 창 안.
++	w.holdings.items = nil
++	w.orders.orders = nil
++	w.holds(s2, "17", "100", 100)
++	w.stopOpenAtBroker(s2, "17")
++	w.converge.at = a201BeforePositions
++	w.converge.fire = func() { w.stopFills(s1, "31") }
++	c := w.next()
++	w.logCycle("주기 1(S1 W2)", s1, c)
++	// 주기 2: 계좌가 S2 도 매도 반영, S2 체결은 창 안.
++	w.accountSold()
++	w.converge.fired = false
++	w.converge.fire = func() { w.stopFills(s2, "17") }
++	c = w.next()
++	w.logCycle("주기 2(S2 W2)", s2, c)
++	w.settleClean(s2, 3)
++	w.assertStuck(s1)
++	w.assertStuck(s2)
++}
+diff --git a/internal/app/engine/reconcileloop.go b/internal/app/engine/reconcileloop.go
+index f1afbcc36..2ac270d67 100644
+--- a/internal/app/engine/reconcileloop.go
++++ b/internal/app/engine/reconcileloop.go
+@@ -431,6 +431,7 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
+ 	}
+ 	cycle.Stable = true
+ 
++	probeMark, probeMarkErr := d.opts.Journal.MaxFillEventID(ctx)
+ 	local, err := reconcile.LocalStateFromJournal(ctx, d.opts.Journal, d.opts.AccountRef)
+ 	if err != nil {
+ 		cycle.Err = fmt.Errorf("engine: reading the local state for reconciliation: %w", err)
+@@ -461,6 +462,29 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
+ 		}
+ 		return cycle
+ 	}
++	// PROBE v2: 보류
++	probeHold := false
++	if probeMarkErr == nil {
++		adjusted := map[string]bool{}
++		for _, c := range converged.Converged {
++			adjusted[strings.ToUpper(c.Symbol)] = true
++		}
++		for _, m := range diff.Quantities {
++			s := strings.ToUpper(strings.TrimSpace(m.Symbol))
++			if adjusted[s] {
++				continue
++			}
++			if w, werr := d.opts.Journal.FillWatermark(ctx, s); werr == nil && w > probeMark {
++				probeHold = true
++			}
++		}
++	}
++	if probeHold && !ProbeLastHeld {
++		ProbeLastHeld = true
++		ProbeHolds++
++		return cycle
++	}
++	ProbeLastHeld = false
+ 	outcome, err := d.opts.Tracker.Observe(ctx, diff)
+ 	// 종결 증명 해제마다 계좌 데이터 없는 로그 한 줄(a192 D7). 오류가 있어도 커밋된 해제는 남김.
+ 	d.logOrderTerminalReleases(outcome)
