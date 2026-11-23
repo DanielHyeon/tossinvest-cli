@@ -1,5 +1,5 @@
 {
- "head": "f0465bdfda55c9deab5c57242c882d65a8aa3498",
+ "head": "e26831d5a1c875e1c9e115908b340e9f1b5a4386",
  "control_green": true,
  "rows": [
   {
@@ -13,6 +13,7 @@
     "TestA194ADeliveredHoldingReportIsRemindedAfterTheWindow",
     "TestA194AFailedHoldingReportIsRecordedOnTheNextObservation",
     "TestA194ALateDeliveredReportIsStillTrue",
+    "TestA194ARoundWhoseRestLeftStartsAgainNextCycle",
     "TestA194ASnapshotCauseIsOperatorOnlyByItsRelease",
     "TestA194AnAccountWideBlockIsOneReport",
     "TestA194AtMostThreeHoldingReportsPerCycle",
@@ -90,7 +91,7 @@
    "id": "M5",
    "desc": "차단 보고 key 에서 날짜 삭제",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 202,
+   "line": 213,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -102,12 +103,13 @@
    "id": "M6",
    "desc": "보유 보고 critical 앞에 메모리 래치",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 119,
+   "line": 130,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
     "TestA194ADeliveredHoldingReportIsRemindedAfterTheWindow",
     "TestA194AFailedHoldingReportIsRecordedOnTheNextObservation",
+    "TestA194ARoundWhoseRestLeftStartsAgainNextCycle",
     "TestA194AnAccountWideBlockIsOneReport",
     "TestA194EarlierExcludedHoldingsAreReportedFirst",
     "TestA194OperatorOnlyBlockedHoldingIsReportedOnTheFirstCycle"
@@ -117,7 +119,7 @@
    "id": "M7",
    "desc": "차단 보고 래치를 Notify 앞에(결과 무시)",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 203,
+   "line": 214,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -129,7 +131,7 @@
    "id": "M8",
    "desc": "KST 날짜를 UTC 날짜로",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 195,
+   "line": 206,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -140,7 +142,7 @@
    "id": "M9",
    "desc": "Blocks().Release 대신 EntryAllowed 사유(Permanent)로 판정",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 142,
+   "line": 153,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -151,10 +153,11 @@
    "id": "M10",
    "desc": "주기 상한 삭제",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 122,
+   "line": 133,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
+    "TestA194ARoundWhoseRestLeftStartsAgainNextCycle",
     "TestA194AtMostThreeHoldingReportsPerCycle"
    ]
   },
@@ -184,7 +187,7 @@
    "id": "M3r",
    "desc": "덮는 블록 중 첫 것(가장 이른 Since 아님)",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 145,
+   "line": 156,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -195,7 +198,7 @@
    "id": "M7a",
    "desc": "운영자 전용 본문에서 할 일 문장 삭제",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 160,
+   "line": 171,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -206,7 +209,7 @@
    "id": "M7b",
    "desc": "stale 본문에서 할 일 문장 삭제",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 164,
+   "line": 175,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -218,7 +221,7 @@
    "id": "M12r",
    "desc": "알림기 없음을 보낸 것으로 셈",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 233,
+   "line": 244,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -229,7 +232,7 @@
    "id": "M19",
    "desc": "제목에서 label 대신 코드",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 179,
+   "line": 190,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
@@ -240,11 +243,22 @@
    "id": "M23",
    "desc": "풀린 차단의 래치 key 유지",
    "file": "internal/app/engine/reconcile_block_report.go",
-   "line": 207,
+   "line": 218,
    "reached": true,
    "verdict": "CAUGHT",
    "killed_by": [
     "TestA194ABlockRaisedAgainTheSameDayIsReportedAgain"
+   ]
+  },
+  {
+   "id": "M24",
+   "desc": "차례가 빈 주기에 새 차례를 시작하지 않음(gstack review 수리 되돌림)",
+   "file": "internal/app/engine/reconcile_block_report.go",
+   "line": 122,
+   "reached": true,
+   "verdict": "CAUGHT",
+   "killed_by": [
+    "TestA194ARoundWhoseRestLeftStartsAgainNextCycle"
    ]
   }
  ]

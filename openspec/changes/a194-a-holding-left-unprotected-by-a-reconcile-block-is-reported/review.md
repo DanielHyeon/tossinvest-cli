@@ -123,3 +123,21 @@
 - `make lint` rc 0(gofmt · go vet · tags vet, `analysis/verify/lint.txt`). `openspec validate --strict` valid. `check_analysis.py --change a194-…` rc 0 — required 1(judgeHoldings) evidence complete(`analysis/verify/check-analysis.txt`). 착지 기록(`--record-landing`)은 하지 않음(5단계 몫).
 - 실제 알림 문장 원문: `analysis/verify/alert-sentences.txt`(사본에서 일회 시험으로 뽑음, 그 시험 파일은 사본에서 지움).
 - 미실행: 전체 스위트(`make test`·`go test ./...`), `make test-seams`·`make test-race` 전체, `make gate`·`make sdd-check`·`make sdd-sync`, engine 패키지의 나머지 시험, cmd/tossctl 시험, 운영 반영. 구현 적대 리뷰·gstack review(4.3)는 Manager 지시로 하지 않음.
+
+### 구현 적대 리뷰 r1 (2026-11-23, Opus 별도 컨텍스트 + codex 0.165.0)
+- 판정(Manager 전달): **통과 — P0·P1 없음, P2 7건.** 리뷰어가 실 원장 + 실 Notifier 프로브로 2026-11-23 사고 모양을 재현: 편입 켜짐·include 지정 각각 보유 보고 critical 1 + 차단 보고 1, 진입 래치·모드 승격 없음 / 알림 꺼짐 일반 등급 1, outbox 0. 편집 전후 AST 분기 16 대 16, 새 필드는 대사 goroutine 하나에서만 쓰임.
+- 처분(Manager 결정, 반영 커밋 ): P2-2 차단 보고 본문 과거형·조건형 + 「늦게 도착했다면」(늦은 배달 시험을 차단 보고까지) · P2-7 세 보고 본문 시각 KST(, 기존 ;  필드는 RFC3339 UTC, 형제  는 UTC 그대로 — 잔여) · P2-5 blocked_stale 에 「해제가 필요할 수 있다」(단정 금지 — 「이 차단은 운영자만 풀 수 있다」가 stale 에 없음을 시험이 고정) · P2-4 같은 날 풀렸다 다시 걸린 차단은 다시 알림(delta 문장 「풀리지 않고 이어진 같은 차단」 + Scenario, 시험·M23) · P2-6 reconciliation delta 문장 정리(진입 잠금은 critical 의 기존 규칙) · P2-3 design 9a 정정 · **P2-1 반영 안 함**(잔여 — design §6).
+- 추가 시험: (M23) · (M3r) · (M12r) · (M19) · 두 보유 본문의 할 일 문장 단언(M7a/b) · Scenario 셋  · (보유 읽기 실패 주기 2회, 시나리오 수치) · . 변이 2판 19/19 CAUGHT.
+- reconciliation ADDED 본문은 495자(500 이하 유지 — 「스스로 풀리는 차단은 대상이 아니다」 한 문장은 같은 뜻의 Scenario 가 있어 뺌).
+
+### gstack review 1회차 (2026-11-23)
+- 원문·표: . 전문가 5 + native adversarial + red team. Codex 외부 패스는 이 회차에서 돌리지 않음(외부 coverage 없음).
+- 수리 1: native adversarial #5 — 차례 도중 남은 보유가 빠지면 다음 주기가 빈손 → 루프 전 남은 보유가 없으면 차례를 비움(, , 되돌림 변이 M24 CAUGHT).
+- **Manager 결정 대기**: (1) **red team CRITICAL** — 보유·차단 보고가 안내하는  는 비-QUANTITY_MISMATCH 활성 블록이 있으면 거절한다(cmd/tossctl/engine_reconcile.go:308-310 직접 확인). ATTRIBUTION_FAILED 사고에서 운영자가 안내대로 엔진을 세우면 모든 보호 포지션의 손절을 잃고 명령은 거절된다. 원인별 안내 또는 a195 와의 순서 결정 필요. (2) red team INFO — 「엔진 정지 필요」에 정지 = 손절 없음·안전 창 안내가 없음. (3) adversarial #2 — pending 영구 승격 블록을 운영자 전용으로 즉시 보고(Block 의 pending 노출은 reconcile 편집). (4) 차단 보고의 주기당 Notify 상한(performance·adversarial #4) — 현재 Manager 결정 「블록 수만큼」 그대로.
+- 기록만: maintainability 「10분」 리터럴 · adversarial #1(Q7 범위 밖) · #3(공시된 기존 성질) · #6(꺼짐 래치 = 결정) · #7(시장 범위 미도달) · #8 · #9(a195 주의).
+
+### 4.3 뒤 재검증 (2026-11-23)
+- 변이 최종 3판(e26831d5a): 20/20 닿음·CAUGHT, SURVIVED 0().
+- 선택 시험(넓힌 정규식 ): ok, PASS 53 · FAIL 0.  ok(133 s). go vet ./...
+go vet -tags tossos_testseams ./... rc 0. strict valid.  rc 0(required 1, evidence complete).  본문은 GREEN 뒤 무편집(base 대비 +5줄 그대로) — 번들 재생성 불필요.
+- 알림 문장 원문 갱신: .

@@ -28,10 +28,13 @@
 
 - [x] 4.1 변이 원장(`analysis/mutation/`) — design §4 의 변이 9개, 닿음 확인·무변이 대조군 GREEN 뒤.
 - [x] 4.2 선택 시험 원문(design §4), `make lint`, `openspec validate --strict`, `check_analysis.py --change a194-…`. 미실행 범위 기록.
-- [ ] 4.3 구현 적대 리뷰(다른 컨텍스트) → gstack review 1회 — `review.md`.
+- [x] 4.3 구현 적대 리뷰(다른 컨텍스트) → gstack review 1회 — `review.md`.
 
 ## 5. 종결
 
 - [ ] 5.1 Manager 검증(diff·시험 원문 재실행).
 - [ ] 5.2 완료 게이트(격리 worktree) → archive → Story 경로 갱신 → push.
-- [ ] 5.3 (사람 승인) 운영 반영. 반영 뒤 첫 대사 주기에 활성 운영자 전용 차단의 알림이 나가는지 `alert_outbox` 로 확인(시각·타입만) — `review.md`.
+
+## 6. 종결 뒤 (사람 승인 — 이 change 의 종결 조건 아님)
+
+운영 반영은 사람 승인 뒤에 한다. 반영 뒤 첫 대사 주기에 활성 운영자 전용 차단의 알림이 나가는지 `alert_outbox` 로 확인(시각·타입만)하고 `review.md` 에 적는다. 체크박스로 두지 않는다 — 운영 반영을 하지 않은 채 체크하는 것을 피하려는 것.
