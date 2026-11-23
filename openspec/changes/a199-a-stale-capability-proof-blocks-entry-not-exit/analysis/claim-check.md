@@ -49,7 +49,7 @@ HEAD `e4165fa3d`(코드 = `9738a0c32`). 근거 AST 는 `cited-ast/`(줄·분기 
 ## B2. Manager 결정 3 의 가드가 거부할 정상 입력 (2026-11-24)
 
 - **없다 — 발급자가 만들지 않는다.** `soak.BuildAttestation`(internal/soak/attest.go:229-239)은 soak 성공 endpoint 를 하나씩 `strings.HasPrefix(ToUpper(TrimSpace(e)), "GET ")` 로 검사해 아니면 발급을 거절하고(빈 문자열 · 공백만인 항목은 여기서 거절), 감독 증거 endpoint 는 `LiveOnlyEndpoints()` 닫힌 집합에서만 옴(같은 파일 305 순회). 형식 번호는 `FormatVersion: attest.FormatVersion`(262, 값 1 — internal/attest/attest.go:53)이고 `attest.Save` 는 0 을 1 로 채움(186-187). 그래서 형식 < 1 이나 빈 endpoint 항목은 손으로 쓴 · 깨진 파일에서만 나온다.
-- 이 가드는 **낡은 파일을 청산 전용으로 내릴지**에만 걸린다 — 유효한 파일(`Verify` 통과)의 판정은 바꾸지 않는다.
+- ~~이 가드는 낡은 파일을 청산 전용으로 내릴지에만 걸린다 — 유효한 파일(`Verify` 통과)의 판정은 바꾸지 않는다.~~ **철회(codex r2 P1-2)**: 결정 3 은 그 범위를 정하지 않았고, design §2 는 「만료 · 미만료와 교차해 거절」, delta 는 「기동을 거부한다」라 적어 이 문장과 어긋난다. `Verify` 를 통과하는 파일(필요 endpoint 전부 + `""` 항목 하나, 또는 형식 0 · -1 + 미만료)도 거절할지는 **Manager 결정 대기(r2 Q-B)** — 거절하면 「유효한 attestation 의 동작은 무변」(design §2 · Story)과 부딪히지만, 위 발급자 인용대로 그런 파일은 발급자가 만들지 않는다.
 
 ## C. 지시서 (a)~(f) 질문에 대한 답
 
