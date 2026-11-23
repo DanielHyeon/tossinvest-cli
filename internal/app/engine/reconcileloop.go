@@ -365,7 +365,7 @@ func (c *Context) ReconcileDriver(opts ReconcileDriverOptions) (*ReconcileDriver
 	if c == nil {
 		return nil, ErrReconcileDriverUnavailable
 	}
-	if !c.Automation.Verified {
+	if !c.Automation.RunsExitSide() { // a199: 청산 전용 기동도 대사 · 편입(보호 매도)을 돌림
 		return nil, fmt.Errorf("%w: the automation gate is not verified", ErrReconcileDriverUnavailable)
 	}
 	opts.Journal = c.Journal

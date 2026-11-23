@@ -510,16 +510,17 @@ func TestGateOnRefusals(t *testing.T) {
 			accountNo: "123-45",
 			wantErr:   attest.ErrMissing,
 		},
+		// a199: 만료 · endpoint 누락(낡음)만으로는 더는 거절이 아님 — 청산 전용 기동(a199_exit_only_test.go 의
+		// TestA199AStaleAttestationStartsExitOnly 가 「attestation expired」·「misses an endpoint」·「predates the price
+		// read」 세 사례를 청산 전용 기대로 가짐). 여기 남는 낡음 관련 거절은 만료가 가린 다른 계좌.
 		{
-			name:        "attestation expired",
+			name:        "attestation expired and is for another account",
 			gate:        fullGate(),
 			writeAtt:    true,
 			attestation: func(a *attest.Attestation) { a.ExpiresAt = interlockNow.Add(-time.Hour) },
 			guardian:    matchedGuardian(),
-			accountNo:   "123-45",
-			wantErr:     attest.ErrExpired,
-			// engine-safety's scenario: "기동이 거부되고 재검증 안내가 출력된다".
-			wantMessage: "verify-execution-capability",
+			accountNo:   "999-99",
+			wantErr:     attest.ErrAccountMismatch,
 		},
 		{
 			name:      "attestation is for another account",
@@ -528,30 +529,6 @@ func TestGateOnRefusals(t *testing.T) {
 			guardian:  matchedGuardian(),
 			accountNo: "999-99",
 			wantErr:   attest.ErrAccountMismatch,
-		},
-		{
-			name:        "attestation misses an endpoint the engine calls",
-			gate:        fullGate(),
-			writeAtt:    true,
-			attestation: func(a *attest.Attestation) { a.Endpoints = []string{"GET /api/v1/accounts"} },
-			guardian:    matchedGuardian(),
-			accountNo:   "123-45",
-			wantErr:     attest.ErrEndpointNotAttested,
-		},
-		{
-			// The list grew in task 5.2 (the exit policy observes the latest
-			// price), and an attestation written before that covers everything
-			// *except* the new call. That is the shape the drift guard exists for,
-			// so it gets its own case rather than being covered by the
-			// one-endpoint attestation above.
-			name:        "attestation predates the price read",
-			gate:        fullGate(),
-			writeAtt:    true,
-			attestation: func(a *attest.Attestation) { a.Endpoints = withoutEndpoint("GET /api/v1/prices") },
-			guardian:    matchedGuardian(),
-			accountNo:   "123-45",
-			wantErr:     attest.ErrEndpointNotAttested,
-			wantMessage: "prices",
 		},
 	}
 
@@ -651,7 +628,8 @@ func TestRefusedStartIsAudited(t *testing.T) {
 	writeGateConfig(t, dir, fullGate())
 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
 	writeAttestation(t, dir, func(a *attest.Attestation) { a.ExpiresAt = interlockNow.Add(-time.Hour) })
-	srv, _ := interlockServer(t, "123-45")
+	// a199: 만료만으로는 청산 전용 기동이므로, 거절이 유지되는 모양(만료가 가린 다른 계좌)으로 자격 증명의 계좌를 바꿈.
+	srv, _ := interlockServer(t, "999-99")
 
 	if _, err := openGateEngine(t, dir, srv, matchedGuardian()); err == nil {
 		t.Fatal("startup must be refused")
@@ -803,7 +781,7 @@ func TestGateDecisionIsLoggedStructurally(t *testing.T) {
 		writeAttestation(t, dir, func(a *attest.Attestation) {
 			a.ExpiresAt = interlockNow.Add(-time.Hour)
 		})
-		srv, _ := interlockServer(t, "123-45")
+		srv, _ := interlockServer(t, "999-99") // a199: 만료 + 다른 계좌 — 거절이 유지되는 모양
 
 		var logs bytes.Buffer
 		if _, err := openGateEngineLogging(t, dir, srv, matchedGuardian(), &logs); err == nil {

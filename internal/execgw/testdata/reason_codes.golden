@@ -2,6 +2,7 @@ broker_accepted
 broker_auth_rejected
 broker_outcome_unknown
 broker_rejected
+capability_attestation_stale
 critical_alert_sender_down
 critical_alert_undelivered
 currency_balance_insufficient

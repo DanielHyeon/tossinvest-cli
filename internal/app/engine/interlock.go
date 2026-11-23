@@ -26,12 +26,15 @@ package engine
 //	    its order reader wired                     — see execgw.Gateway.Wiring
 //	 7. the order transport can carry an
 //	    idempotency key                            — the replay procedure assumes it did
-//	 8. broker-resident protective execution is
-//	    wired                                      — ProtectionReadiness, below
 //
-// Any failure is a startup refusal with a message that says what to do about it,
-// not a warning. There is no degraded mode: an engine that trades with an
-// unverified capability is the thing this interlock exists to prevent.
+// (옛 8항 「broker-resident protective execution is wired」 는 이제 기동 조항이 아님 — interlock-gates-entry-not-exit 이후
+// 노출을 늘리는 mutation 하나하나에 걸리는 게이트웨이 거부다. ProtectionReadiness 는 보고용으로만 남음.)
+//
+// Any other failure is a startup refusal with a message that says what to do about
+// it, not a warning. 예외 하나(a199): 4 의 실패가 **낡음(만료 · 필요 endpoint 누락)뿐**이고 나머지가 전부 충족되면 기동을
+// 거절하지 않고 **청산 전용**으로 세움 — 진입 래치로 노출 증가만 막고 손절 · 청산 · 대사는 돈다(exit_only_start.go).
+// 증명 안 된 능력으로 **진입**하는 엔진을 막는 것이 이 인터록의 목적이고, 낡은 증명으로 **청산**하는 엔진은 그 목적에 걸리지
+// 않음(거절하면 손절이 통째로 사라진다).
 //
 // # Why the account comes from the broker and not the config
 //
@@ -275,6 +278,13 @@ type AutomationStatus struct {
 	// mutation's own shape; this field exists so an operator surface can say so
 	// without issuing an order to find out.
 	EntryPermitted bool
+	// ExitOnly 는 낡은(만료 · 필요 endpoint 누락) attestation 으로 청산 전용 기동했다는 표지임(a199). 참이면 Verified 는 거짓 —
+	// 청산 쪽 소비자는 RunsExitSide 를, 진입 쪽은 Verified 를 읽음. 기동 때 한 번 정해지고 실행 중에는 바뀌지 않음(D6).
+	ExitOnly bool
+	// AttestationStale 은 청산 전용 기동의 낡음 종류(expired · scope_lost · 둘 다), AttestationMissing 은 빠진 endpoint 이름
+	// (쉼표 목록). 감사 · 로그 · 기동 출력이 읽음. 비교 가능한 값으로 두려고 문자열로 운반함.
+	AttestationStale   string
+	AttestationMissing string
 }
 
 // MaskedAccount renders the account for logs and operator output.
@@ -379,6 +389,8 @@ type gateFacts struct {
 	gateway *execgw.Gateway
 	// transport is the order mutator underneath the trading service.
 	transport trading.Broker
+	// entry 는 게이트웨이의 진입 게이트임 — 청산 전용 기동의 래치를 세울 곳(a199 D4).
+	entry *execgw.EntryGate
 	// now is the instant the attestation's expiry is judged against.
 	now time.Time
 }
@@ -401,6 +413,10 @@ func runInterlock(status AutomationStatus, gate config.AutomationGate,
 		_ = refuseStartup(log, gate, err)
 		logGateDecision(logger, status, err)
 		return status, err
+	}
+	if status.ExitOnly {
+		// a199: 낡음만 남고 나머지 조항은 전부 충족 — 거절이 아니라 청산 전용 기동(래치 · 감사 · 로그).
+		return exitOnlyStart(status, gate, log, logger, facts.entry)
 	}
 
 	status.Verified = true
@@ -462,6 +478,7 @@ func logGateDecision(logger *obs.Logger, status AutomationStatus, refusal error)
 		"limit_currency", l.Currency,
 		"protection", string(status.Protection),
 		"entry_permitted", status.EntryPermitted,
+		"gate_exit_only", status.ExitOnly,
 		"max_order_quantity", limitString(l.MaxQuantity.Value),
 		"max_order_notional", limitString(l.MaxNotional.Value),
 		"max_total_exposure", limitString(l.MaxTotalExposure.Value),
@@ -476,13 +493,19 @@ func logGateDecision(logger *obs.Logger, status AutomationStatus, refusal error)
 	// process makes, and it stops being made when the process stops.
 	//
 	// A sentence, not a prompt. No typed confirmation, no extra approval.
-	if status.Verified && status.Protection != ProtectionWired {
+	// a199: 청산 전용 기동도 보호 미배선 런타임이므로 같은 문장을 냄(정본 「보호 미배선 기동」 SHALL).
+	if status.RunsExitSide() && status.Protection != ProtectionWired {
 		fields = append(fields, obs.FieldDetail,
 			"보호는 이 프로세스가 살아 있는 동안만 유효하다 — 브로커에 손절 주문이 남지 않으므로 "+
 				"프로세스가 죽으면 보호도 사라진다. 노출을 늘리는 주문은 게이트웨이에서 거부된다")
 	}
 	if refusal != nil {
 		logger.Warn(obs.EventOperatingMode, append(fields, obs.FieldReason, refusal.Error())...)
+		return
+	}
+	if status.ExitOnly {
+		// a199: 청산 전용 기동은 일상이 아님 — Warn 과 사유(D8).
+		logger.Warn(obs.EventOperatingMode, append(fields, obs.FieldReason, exitOnlyReason(status))...)
 		return
 	}
 	logger.Event(obs.EventOperatingMode, fields...)
@@ -533,7 +556,10 @@ func verifyGate(status *AutomationStatus, facts gateFacts) error {
 	}
 
 	// 6. Expiry, account match and endpoint coverage, in one verification.
-	if err := att.Verify(facts.now, accountRef, RequiredEndpoints()); err != nil {
+	//    a199: 판정은 감시와 같은 classifyAttestation — 낡음(만료 · 누락)만이면 반환하지 않고 표지로 들고 뒤 조항을 끝까지
+	//    검사함(D2). 뒤 조항이 실패하면 그 조항의 오류만 돌아감(낡음은 싣지 않음, Manager 결정 10). 그 밖은 지금처럼 거절.
+	stale, err := classifyAttestation(att, facts.now, accountRef, RequiredEndpoints())
+	if err != nil {
 		return fmt.Errorf("%w: %w", ErrAutomationGateRefused, err)
 	}
 
@@ -574,6 +600,12 @@ func verifyGate(status *AutomationStatus, facts gateFacts) error {
 	// is computed from the mutation's own shape (execgw/protection.go). It is not
 	// weaker: it is asked once per order instead of once per start, and it cannot
 	// be skipped by a code path that never called the interlock.
+	if stale != nil {
+		// a199: 낡음 밖의 조항은 전부 충족 — 청산 전용. 실제 래치 · 감사는 runInterlock 이 함.
+		status.ExitOnly = true
+		status.AttestationStale = stale.code()
+		status.AttestationMissing = strings.Join(stale.missing, ", ")
+	}
 	return nil
 }
 

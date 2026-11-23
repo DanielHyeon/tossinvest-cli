@@ -583,13 +583,14 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		trading:   cfg.Trading,
 		gateway:   wiring.gateway,
 		transport: path.broker,
+		entry:     wiring.entry,
 		now:       clk.Now(),
 	})
 	if err != nil {
 		_ = jrn.Close()
 		return nil, err
 	}
-	if !automation.Verified {
+	if !automation.RunsExitSide() { // a199: 청산 전용 기동도 Guardian 을 둠 — exit 관측이 그 위험 감소 발급을 씀
 		guardian = nil
 	}
 

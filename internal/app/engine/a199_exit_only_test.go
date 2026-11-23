@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	a199StaleReason  = execgw.ReasonCode("capability_attestation_stale")
+	a199StaleReason   = execgw.ReasonCode("capability_attestation_stale")
 	a199ExitOnlyAudit = "automation_gate.exit_only"
 )
 

@@ -6,14 +6,13 @@ package engine_test
 // 조립은 생산과 같은 길: engine.New(게이트 ON · 생산 Guardian · 실제 원장 · 실제 게이트웨이) → Context.Recovery →
 // Context.ExitObserver → engine.NewRuntime{Recover, exit 루프}. 브로커만 httptest. 브로커가 받는 매도 한 건이 관측 대상이다.
 //
-// 시계: 공식 클라이언트는 시세의 FetchedAt 을 벽시계로 찍고 exit 관측은 「아직 오지 않은 시세」를 거름(exitloop quoteUsable).
-// 그래서 가짜 시계를 벽시계보다 1분 앞에 둠 — 시세는 과거(유효), 리스는 가짜 시계로 셈.
+// 시계: 공식 클라이언트는 시세의 FetchedAt 을 벽시계로 찍고 exit 관측은 「아직 오지 않은 시세」와 15초보다 오래된 시세를 거름
+// (exitloop observe · quoteUsable). 그래서 가짜 시계를 벽시계보다 2초 앞에 두고 벽시계를 따라가게 함.
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -94,6 +93,24 @@ func newA199Broker(t *testing.T) (*a199Broker, *httptest.Server) {
 	return b, srv
 }
 
+// syncBuffer 는 런타임 goroutine 들이 함께 쓰는 로그 버퍼(경합 없이 읽게).
+type syncBuffer struct {
+	mu  sync.Mutex
+	buf strings.Builder
+}
+
+func (s *syncBuffer) Write(p []byte) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.buf.Write(p)
+}
+
+func (s *syncBuffer) String() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.buf.String()
+}
+
 func (b *a199Broker) sells() []map[string]any {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -111,16 +128,18 @@ func TestA199AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss(t *testing.T) {
 	dir := isolate(t)
 	writeGateConfig(t, dir, smallLiveGate())
 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
-	clk := clock.NewFake(time.Now().UTC().Add(time.Minute))
+	clk := clock.NewFake(time.Now().UTC().Add(2 * time.Second))
 	writeAttestation(t, dir, func(a *attest.Attestation) {
 		a.IssuedAt = clk.Now().Add(-31 * 24 * time.Hour)
 		a.ExpiresAt = clk.Now().Add(-time.Hour) // 낡음: 만료(계좌 일치)
 	})
 
+	var logs syncBuffer
+	logger := obs.NewLogger(obs.LogOptions{Writer: &logs, JSON: true, Clock: clk})
 	opts := engine.Options{
 		ConfigDir: dir, Clock: clk,
 		OfficialOptions: []official.Option{official.WithBaseURL(srv.URL), official.WithHTTPClient(srv.Client())},
-		Logger:          obs.NewLogger(obs.LogOptions{Writer: io.Discard, Clock: clk}),
+		Logger:          logger,
 	}
 	opts.SetJournalProberForTest(journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}))
 	eng, err := engine.New(opts)
@@ -136,7 +155,7 @@ func TestA199AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss(t *testing.T) {
 	stack := &e2eStack{t: t, engine: eng, clk: clk}
 	stack.entry("005930", "10", "70000", "68000")
 
-	observer, err := eng.ExitObserver(engine.ExitObserverOptions{Clock: clk, Costs: costs.DefaultModel()})
+	observer, err := eng.ExitObserver(engine.ExitObserverOptions{Clock: clk, Costs: costs.DefaultModel(), Log: logger})
 	if err != nil {
 		t.Fatalf("ExitObserver: %v", err)
 	}
@@ -147,7 +166,7 @@ func TestA199AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss(t *testing.T) {
 	recovered := make(chan struct{})
 	rt, err := engine.NewRuntime(engine.RuntimeOptions{
 		AccountRef: eng.AccountRef, Clock: clk,
-		Log: obs.NewLogger(obs.LogOptions{Writer: io.Discard, Clock: clk}),
+		Log: logger,
 		Recover: func(ctx context.Context) error {
 			_, err := recovery.Run(ctx)
 			if err == nil {
@@ -180,8 +199,9 @@ func TestA199AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss(t *testing.T) {
 			t.Fatalf("runtime ended before the stop was submitted: %v", err)
 		default:
 		}
-		clk.Advance(5 * time.Second)
-		time.Sleep(20 * time.Millisecond)
+		// 가짜 시계를 벽시계 + 2초로 따라가게 함 — 시세 증거(벽시계 FetchedAt)가 15초 창 안에 들게(exitloop observe).
+		clk.Set(time.Now().UTC().Add(2 * time.Second))
+		time.Sleep(50 * time.Millisecond)
 	}
 	select {
 	case <-recovered:
@@ -190,7 +210,7 @@ func TestA199AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss(t *testing.T) {
 	}
 	sells := broker.sells()
 	if len(sells) == 0 {
-		t.Fatal("no stop-loss sell reached the broker from the exit-only runtime")
+		t.Fatalf("no stop-loss sell reached the broker from the exit-only runtime; engine log:\n%s", logs.String())
 	}
 	if fmt.Sprint(sells[0]["symbol"]) != "005930" {
 		t.Fatalf("sell = %+v, want 005930", sells[0])

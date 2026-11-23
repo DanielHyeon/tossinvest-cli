@@ -96,20 +96,26 @@ func (v attestationVerdict) critical() bool {
 // judgeAttestation 은 엔진이 지금 재시작하면 이 attestation 으로 무장하는지, 무장한다면 며칠 남았는지 판정함.
 //
 // loadErr 는 attest.Load 의 오류임 — 없는 파일 · 깨진 파일 모두 재시작 거절이므로 unreadable 로 묶음.
-// Verify 의 순서(필수 칸 → 만료 → 계좌 → endpoint)를 그대로 따르므로 만료와 범위 상실이 겹치면 만료로 보고됨.
+// 만료와 범위 상실이 겹치면 만료로 보고됨. a199: 어느 결함이 청산 전용(낡음)이고 어느 결함이 거부인지는 인터록과 **같은 함수**
+// (classifyAttestation)로 판정함 — 만료가 가린 다른 계좌 · 빈 endpoint 항목 · 무효 형식은 인터록처럼 거부 단계로 읽힘.
 func judgeAttestation(att attest.Attestation, loadErr error, now time.Time, accountRef string) attestationVerdict {
 	if loadErr != nil {
 		return attestationVerdict{Stage: stageUnreadable}
 	}
 	v := attestationVerdict{IssuedAt: att.IssuedAt, ExpiresAt: att.ExpiresAt, ProofAt: binding(att.SupervisedBy)}
 	required := RequiredEndpoints()
-	if err := att.Verify(now, accountRef, required); err != nil {
-		switch {
-		case errors.Is(err, attest.ErrExpired):
+	stale, err := classifyAttestation(att, now, accountRef, required)
+	if stale != nil {
+		if stale.expired {
 			v.Stage = stageExpired
-		case errors.Is(err, attest.ErrEndpointNotAttested):
+		} else {
 			v.Stage = stageScopeLost
-			v.Missing = att.MissingEndpoints(required)
+			v.Missing = stale.missing
+		}
+		return v
+	}
+	if err != nil {
+		switch {
 		case errors.Is(err, attest.ErrAccountMismatch):
 			v.Stage = stageAccountMismatch
 		case errors.Is(err, attest.ErrIncomplete):
@@ -207,6 +213,9 @@ type attestationWatch struct {
 	clock      clock.Clock
 	interval   time.Duration
 	load       func(string) (attest.Attestation, error)
+	// exitOnly 는 이 엔진이 낡은 attestation 으로 청산 전용 기동했는지(기동 표지, a199) — 읽기만 함(a135 D4: 엔진 상태 쓰기 0).
+	// 실행 중에는 바뀌지 않으므로(D6) 「지금 청산 전용으로 돌고 있다」의 출처로 충분함.
+	exitOnly bool
 
 	identity string          // 마지막으로 본 기한(a196 — 파일의 발급 시각이 아님, 거절 단계는 기한 없음)
 	sent     map[string]bool // 이 신원에서 이미 알린 단계 키
@@ -225,6 +234,7 @@ func newAttestationWatch(c *Context, clk clock.Clock) *attestationWatch {
 		w.clock = c.clock()
 	}
 	w.enabled = c.Automation.Enabled
+	w.exitOnly = c.Automation.ExitOnly // a199: 알림 조건은 파일이 아니라 기동 표지(Manager Q-A)
 	w.path = c.Automation.AttestationFile
 	w.accountRef = c.AccountRef
 	w.critical = c.Config.Engine.Notifications.Enabled
@@ -327,7 +337,15 @@ func (w *attestationWatch) prepare() (event obs.Event, key string, ok bool) {
 	identity := v.Deadline.UTC().Format(time.RFC3339Nano)
 	if identity != w.identity || w.sent == nil {
 		w.identity = identity
-		w.sent = map[string]bool{}
+		// a199(codex r2 R2-3): 청산 전용 엔진의 회복 안내(healthy 단계 키)는 기한이 아니라 날짜 · 에피소드로 셈 — 같은 날 재발급이
+		// 기한을 바꿔도 그날 다시 나가지 않게, 그 키만 남김.
+		kept := map[string]bool{}
+		for k := range w.sent {
+			if strings.HasPrefix(k, string(stageHealthy)+":") {
+				kept[k] = true
+			}
+		}
+		w.sent = kept
 	}
 	// 거절 에피소드: 거절 신원이 직전 판정과 다르면(직전이 거절이 아니었던 경우 포함) 이번 판정 시각에 새 에피소드를 시작함.
 	// 에피소드 시작이 key 에 들어가므로 회복 뒤 같은 날 재발은 새 outbox 행임 — 옛 행의 재알림 창(1시간)에 삼켜져 「보냄」으로
@@ -342,7 +360,8 @@ func (w *attestationWatch) prepare() (event obs.Event, key string, ok bool) {
 		w.episode, w.episodeAt = episode, now
 	}
 	v.EpisodeAt = w.episodeAt
-	if v.Stage == stageHealthy {
+	if v.Stage == stageHealthy && !w.exitOnly {
+		// 청산 전용 엔진이면 healthy 여도 회복 안내를 하루 한 번 냄(a199 Manager Q-A) — 조건은 파일이 아니라 기동 표지.
 		return obs.Event{}, "", false
 	}
 	key = stageKey(v, now)
@@ -394,8 +413,11 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event 
 	// a196: 재시작이 거절될 상태는 결과를 제목과 본문 첫 문장 둘 다에서 단정함 — 기기의 제목 표시를 저장소로 검증할 수 없어서.
 	const refused = "지금 엔진을 재시작하면 기동이 거부된다"
 	const consequence = "재시작이 거부되면 청산(손절 · 익절) 관측 루프가 돌지 않아 자동 손절이 멈춘다. 지금 실행 중인 엔진은 계속 돈다."
-	// 날수 · 지남 통지는 「지금 도는 엔진의 손절」이 아니라 「재시작이 거부된 뒤」를 말함(구현 리뷰 P2-5).
-	const afterRefusal = "재시작이 거부되면 그때부터 자동 손절이 돌지 않는다. 지금 실행 중인 엔진은 계속 돈다."
+	// a199: 낡음(만료 · 범위 상실)은 재시작 거부가 아니라 청산 전용 기동이 됨 — 그 결과를 사실대로 말함.
+	const exitOnlyOnRestart = "지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다"
+	const exitOnlyConsequence = "청산 전용으로 뜨면 손절 · 익절 · 대사는 돌고 새 진입만 막힌다. 지금 실행 중인 엔진은 계속 돈다."
+	// 날수 · 지남 통지는 「지금 도는 엔진」이 아니라 「기한 뒤 재시작」을 말함(구현 리뷰 P2-5). a199: 그 결과도 청산 전용임.
+	const afterRefusal = "그 뒤 재시작하면 손절 · 익절은 돌고 새 진입만 막힌다. 지금 실행 중인 엔진은 계속 돈다."
 	// 감독 검증은 엔진과 같은 실행 잠금을 잡으므로 엔진을 멈춰야 돎 — 그 사실과 그동안 손절이 없다는 것을 숨기지 않음(gstack review G10).
 	const reverifySteps = "감독하 실주문 검증을 다시 해야 한다. 이 검증은 엔진과 같은 잠금을 써서 엔진을 멈춰야 실행되고, 멈춘 동안에는 " +
 		"자동 손절이 돌지 않는다. 보유 종목의 시장이 닫힌 시간에 엔진을 멈추고, 터미널에서 `tossctl verify run`(주문을 받는 시장을 " +
@@ -407,21 +429,21 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event 
 	switch v.Stage {
 	case stageNotice, stageImminent:
 		if v.DeadlineKind == deadlineProof {
-			title = fmt.Sprintf("감독하 실주문 검증 만료 D-%d — 그 뒤 엔진 재시작이 거부될 수 있다", v.DaysLeft)
+			title = fmt.Sprintf("감독하 실주문 검증 만료 D-%d — 그 뒤 엔진을 재시작하면 청산 전용으로 뜰 수 있다", v.DaysLeft)
 			body = fmt.Sprintf("감독하 실주문 검증(POST 주문 · 취소 증거)이 D-%d(%s)에 만료된다. 다른 유효한 감독 증거가 없으면 그 뒤 첫 갱신부터 "+
-				"엔진 재시작이 거부된다. %s attestation 자체의 만료는 %s 이다. 할 일: 기한 전에 %s", v.DaysLeft, deadline, afterRefusal, expires, reverifySteps)
+				"엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다. %s attestation 자체의 만료는 %s 이다. 할 일: 기한 전에 %s", v.DaysLeft, deadline, afterRefusal, expires, reverifySteps)
 		} else {
 			title = fmt.Sprintf("자동매매 검증서(attestation) 만료 D-%d", v.DaysLeft)
-			body = fmt.Sprintf("capability attestation 이 D-%d(%s)에 만료된다. 그 뒤 엔진 재시작이 거부된다. %s %s",
+			body = fmt.Sprintf("capability attestation 이 D-%d(%s)에 만료된다. 그 뒤 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다. %s %s",
 				v.DaysLeft, expires, afterRefusal, renew)
 		}
 	case stageProofOverdue:
 		title = "감독하 실주문 검증의 기한이 지났다 — 지금 감독 검증을 다시 해야 한다"
-		body = fmt.Sprintf("감독하 실주문 검증의 기한이 지났다(%s). 다른 유효한 감독 증거가 없으면 다음 갱신부터 엔진 재시작이 거부된다 — "+
-			"갱신이 실패하고 있으면 이 파일의 만료(%s)에 거부된다. %s %s", deadline, expires, afterRefusal, reverify)
+		body = fmt.Sprintf("감독하 실주문 검증의 기한이 지났다(%s). 다른 유효한 감독 증거가 없으면 다음 갱신부터 엔진을 재시작하면 청산 전용으로 뜬다 — "+
+			"갱신이 실패하고 있으면 이 파일의 만료(%s)부터 그렇다. %s %s", deadline, expires, afterRefusal, reverify)
 	case stageExpired:
-		title = refused + " — 자동매매 검증서(attestation)가 만료되었다"
-		body = fmt.Sprintf("%s. capability attestation 이 %s 에 만료되었다. %s %s", refused, expires, consequence, renew)
+		title = exitOnlyOnRestart + " — 자동매매 검증서(attestation)가 만료되었다"
+		body = fmt.Sprintf("%s. capability attestation 이 %s 에 만료되었다. %s %s", exitOnlyOnRestart, expires, exitOnlyConsequence, renew)
 	case stageScopeLost:
 		// 원인 · 할 일은 빠진 endpoint 의 종류로 가름(구현 리뷰 P1-2) — 감독하 실주문 검증이 덮는 것은 주문 실행(POST)뿐임.
 		missing := strings.Join(v.Missing, ", ")
@@ -432,16 +454,16 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event 
 			}
 		}
 		if mutations == len(v.Missing) {
-			title = refused + " — 주문 실행 검증이 attestation 에 없다"
+			title = exitOnlyOnRestart + " — 주문 실행 검증이 attestation 에 없다"
 			body = fmt.Sprintf("%s. 현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: %s. 갱신이 유효 기간 안의 감독하 실주문 검증 증거 없이 쓰였다. %s %s",
-				refused, missing, consequence, reverify)
+				exitOnlyOnRestart, missing, exitOnlyConsequence, reverify)
 		} else {
-			title = refused + " — 엔진이 쓰는 endpoint 가 attestation 에 없다"
+			title = exitOnlyOnRestart + " — 엔진이 쓰는 endpoint 가 attestation 에 없다"
 			remedy := "할 일: 빠진 endpoint 를 덮는 능력 검증을 다시 실행해 attestation 을 재발급하라."
 			if mutations > 0 {
 				remedy += " 주문 실행 endpoint 는 감독하 실주문 검증으로만 덮인다 — " + reverifySteps
 			}
-			body = fmt.Sprintf("%s. 현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: %s. %s %s", refused, missing, consequence, remedy)
+			body = fmt.Sprintf("%s. 현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: %s. %s %s", exitOnlyOnRestart, missing, exitOnlyConsequence, remedy)
 		}
 	case stageIncomplete:
 		title = refused + " — 자동매매 검증서(attestation)에 필수 칸이 비어 있다"
@@ -450,9 +472,25 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event 
 		title = refused + " — 자동매매 검증서(attestation)가 엔진의 계좌와 다르다"
 		body = refused + ". 현재 attestation 이 엔진 자격 증명의 계좌와 다른 계좌를 가리킨다. " + consequence +
 			" 할 일: 엔진 자격 증명의 계좌로 attestation 을 다시 발급한다."
+	case stageHealthy:
+		// a199(Manager Q-A · Q-C): 파일은 판정을 통과하는데 이 엔진은 청산 전용으로 뜬 프로세스 — 회복 안내(일반 등급).
+		// prepare 가 기동 표지가 청산 전용일 때만 여기로 보냄.
+		title = exitOnlyRecovered
+		body = exitOnlyRecovered + ". 그때까지 이 엔진은 청산 전용으로 돈다 — 손절 · 익절 · 대사는 돌고 새 진입은 막혀 있다. " +
+			"할 일: 보유 종목의 시장이 닫힌 시간에 엔진을 재시작한다."
 	default:
 		title = refused + " — 자동매매 검증서(attestation)를 쓸 수 없다"
 		body = refused + ". 엔진이 읽는 attestation 파일이 없거나 읽을 수 없다. " + consequence + " " + renew
+	}
+	// a199(Manager Q-A): 청산 전용으로 뜬 엔진이면 파일 단계 알림(단계 · 등급 · 키 그대로)에 지금의 사실 한 문장을 덧붙임 —
+	// 파일이 지금 판정을 통과하는 단계면 회복 문장, 아니면 「청산 전용으로 돌고 있다」. healthy 는 위에서 이미 그 안내임.
+	if w.exitOnly && v.Stage != stageHealthy {
+		switch v.Stage {
+		case stageNotice, stageImminent, stageProofOverdue:
+			body += " 지금 이 엔진은 청산 전용으로 돌고 있다 — " + exitOnlyRecovered + "."
+		default:
+			body += " 지금 이 엔진은 청산 전용으로 돌고 있다 — 손절 · 익절 · 대사는 돌고 새 진입은 막혀 있다."
+		}
 	}
 
 	fields := map[string]any{
