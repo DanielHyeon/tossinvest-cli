@@ -81,5 +81,32 @@ Manager 결정(Q1~Q6)을 문서에만 반영. production·시험 Go 편집 0.
 | R2-2 | P2 | D7 의 날수 통지 「그 뒤 첫 갱신부터 재시작이 거부된다」·`proof_overdue` 「다음 갱신부터 거부된다」 가 Q1 의 조건(「다른 유효한 감독 증거가 없으면」)을 빠뜨리고 단정 | **Manager 결정 대기** — Q4 본문은 Manager 지정 문구이고 D7 은 「뜻은 고정」이라 바꾸지 않음 |
 | R2-3 | P2 | 변이 12 중 시험 계획이 못 죽일 수 있는 것: ④·⑤(outbox Key 만 변형 — 가짜 notifier 는 outbox 중복 억제가 없어 건수로 못 잼, Key 비교 단언 필요), ⑧(binding 을 우회하는 새 기한 계산 — endpoint 별 시각이 다른 입력 미명시), ⑩(KST 날짜만 바뀌는 시각 쌍 없음 — 기존 시험은 25시간 전진), ⑪(scope_lost→expired 전이 시험 없음, 누락 집합이 남으면 단계 제거로도 key 가 갈려 변이 자체가 충돌을 보장 못 함), ⑫(`MissingEndpoints` 가 이미 정렬 — 동등 변이일 수 있음) | **Manager 결정 대기** — 시험 전략·변이 정의 변경 |
 
+### Manager 1단계 검증·freeze 2026-11-23
+- Manager 가 커밋 `0d93cfd2b` 의 MODIFIED 본문·Scenario 17개를 직접 읽고 strict validate 재실행 — freeze. 남은 결정: R2-2 조건 삽입(D7), R2-3 시험 보강(i)~(iv)·변이 ⑪ 재정의·⑫ 동등 처리, Q2 이름 유지 승인 — design 반영.
+
+## 2단계 — Pre-Edit 선언 (확정 2026-11-23, tasks 2.1)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time / 3.1~3.3
+- 대상 심볼(패키지.함수): engine.judgeAttestation · engine.(*attestationWatch).prepare · engine.stageKey · engine.(*attestationWatch).eventFor(production 4),
+  시험 engine.TestA135StageBoundaries · engine.TestA135SameStageOnANewAttestationIsAnnouncedAgain(2). 같은 파일의 새 함수(restartDeadline 등)·새 단계 상수·
+  verdict 필드 추가, 새 시험 파일 internal/app/engine/a196_attestation_deadline_internal_test.go · internal/soak/a196_supervised_deadline_test.go.
+  무편집: attestationVerdict.critical · daysLeftCeil · checkOnce · binding · 헬퍼 a135Attestation · internal/obs · internal/attest · internal/soak production ·
+  cmd/tossctl. 늘어야 하면 멈추고 보고.
+- CodeGraph definition/callers/callees/impact: analysis/code-context/codegraph-baseline.md(1.6.0) — production 호출 자리 각 1(prepare←checkOnce@232,
+  judgeAttestation←prepare@283, stageKey←prepare@294, eventFor←prepare@298), a166 census 적중 0
+- CodeGraphContext 후보와 evidence reconciliation: not-applicable(사유 기록), evidence-reconciliation.md(불일치 1 — CodeGraph 의 prepare 호출자 누락, grep 으로 해소)
+- 기존 동작 파악 근거: analysis/cited-ast(22) · function-logic 6 번들 · 커버(base-cover-attestation_watch.out) · a135 시험 전수(1.4)
+- Function Logic Map / Branch Test Map: analysis/function-logic/internal-app-engine--{judgeattestation,attestationwatch.prepare,stagekey,attestationwatch.eventfor,
+  testa135stageboundaries,testa135samestageonanewattestationisannouncedagain}
+- upstream 상속 테스트 영향: no(엔진 감시는 TossOS 계층, a135)
+- 실패 테스트 선행 작성: yes — RED 원문 analysis/tdd/red.txt
+- 설정·DB·journal 변경과 rollback: 없음(attestation 파일 형식·원장 스키마·obs 타입 열거 무변경). outbox Key 문자열 모양만 바뀜 — 옛 이미지로 롤백하면
+  옛 Key 로 같은 상태를 한 번 더 알릴 수 있음(무해). 롤백 = 이전 이미지.
+- 안전 불변식 §0 위반 여부 검토: 통과 — 관측 전용(브로커 호출 0, 진입·청산·손절·운영 모드·게이트 무접촉), 주문 0, 토글 없음, 손절·사이징 무변경.
+  critical 알림 수 증가(proof_overdue 하루 1)는 기존 알림기 경로 — 알림 꺼진 엔진은 일반 등급으로 강등(eventFor B1 그대로).
+```
+
 ### 안 한 것
 - (1단계 당시) 리뷰 2회차 — 결정 반영 뒤 1.6b 로 실시. `codegraph affected`, CodeGraphContext·GBrain, 전체 시험·게이트, `make sdd-sync`. 운영 파일(`~/.config/tossctl`)은 안 읽음 — 실제 운영에 US 기록이 있는지 모름(Q1 의 현실 영향 미확인).

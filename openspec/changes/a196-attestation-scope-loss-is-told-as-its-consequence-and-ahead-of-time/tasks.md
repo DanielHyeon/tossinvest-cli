@@ -14,11 +14,11 @@
 - [x] 1.5 편집 대상 기존 함수들의 FLM/BTM 번들(pre-edit 판).
 - [x] 1.6 `openspec validate a196-… --strict` 통과, proposal-freeze 리뷰(다른 계열, 최대 2회) — `review.md`.
 - [x] 1.6b proposal-freeze r2(codex, 읽기 전용, 마지막 회차) — Manager 결정 2026-11-23(Q1~Q6) 반영 뒤, r1 발견 5건과 처분을 넣어 — `analysis/review/proposal-freeze-r2-codex.md`, `review.md`.
-- [ ] 1.7 Manager 1단계 검증·freeze.
+- [x] 1.7 Manager 1단계 검증·freeze — 2026-11-23, 커밋 `0d93cfd2b`.
 
 ## 2. Pre-Edit
 
-- [ ] 2.1 Pre-Edit 선언을 `review.md` 에 확정.
+- [x] 2.1 Pre-Edit 선언을 `review.md` 에 확정.
 
 ## 3. RED → GREEN
 
