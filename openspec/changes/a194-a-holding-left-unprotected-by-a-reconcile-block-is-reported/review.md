@@ -93,3 +93,18 @@
 
 ### Manager 1단계 검증·freeze 2026-11-23
 - Manager 1단계 검증·freeze 2026-11-23(커밋 `ba41f0059` 를 Manager 가 직접 읽고 strict validate 재실행). 남은 두 건: R2-2 — 동기 전송 수용 + 보고를 `judgeHoldings` 끝에서·주기당 보유 보고 `Notify` 최대 3(design D3, 시험 13a·13b, 변이 2 추가); R2-3(a) — MODIFIED E5 허용(생성기 치환, `analysis/spec-delta/edits.md`, 되돌리면 정본과 같음 True·True, 그 밖 차이 0). R2-1·R2-4·R2-5·R2-2 사실 반영 승인.
+
+## 2단계 (팀메이트 Opus, 2026-11-23)
+
+### 2.1 Pre-Edit 선언
+
+| 항목 | 내용 |
+|---|---|
+| 대상 심볼 | 편집: `ReconcileDriver.judgeHoldings`(adoption.go:107-193) 본문 — B10 안 모으기 1줄 + 끝에서 `reportBlocked` 호출 1줄. `ReconcileDriver` 구조체(reconcileloop.go:218-256)에 메모리 필드 셋(선언만 — 함수 본문 아님). 새 파일 `internal/app/engine/reconcile_block_report.go`(새 함수 전부). 무편집: `internal/obs` 타입 열거 · `NewReconcileDriver` · `Context.ReconcileDriver` · `RunOnce` · `alertUnmanaged` · `alertAdoptionFailed` · `unmanagedFact` · `blocked` |
+| 호출부 | `judgeHoldings` ← `RunOnce`(reconcileloop.go:470) 1자리, `RunOnce` ← `Run` 1자리(CodeGraph 1.6.0 + grep, `analysis/code-context/codegraph-baseline.md`) |
+| 기존 테스트(무편집 통과) | `TestAdoptionIsSilentUnderReconcile` · `TestActiveForeignCauseIsCountedAndBlocksBeforePriceRead`(reconcileloop_test.go) · `TestUSIncludedSymbolWaitsUnderAccountWidePermanentReconcile`(adoption_include_test.go:109, `cycle.Unmanaged` 0) · `TestA095NotificationsOffNeverRecordsACritical` · `TestExitEligibilityHasOneSpelling` · `TestProtectionReadinessIsAbsentFromExitReconcileAndFillLoopSources` |
+| 불변식 | 차단 종목 편입 0(B10 continue 유지) · 새 보고는 `adopt`·기존 무관리 보고 **뒤** · 브로커 호출 추가 0 · `cycle.Unmanaged` 불변 · 알림 꺼진 엔진에 critical 타입 `Notify` 0 · 보유 보고 critical 앞 메모리 래치 없음 · 차단 보고 래치는 `Notify` nil 뒤에만 · 계좌 정보 0 |
+| 실패 테스트(RED) | `internal/app/engine/a194_reconcile_block_report_internal_test.go` — design §4 의 1~13b(a095 실 Notifier·실 원장 하네스 재사용). 원문 `analysis/tdd/red.txt` |
+| 주기 상한의 구현 해석 | 「한 주기 보유 보고 `Notify` 최대 3, 넘는 보유는 다음 주기」를 **차례(round)** 로 구현: 이번 차례에 시도한 포지션은 차례가 끝날 때까지 다시 시도하지 않고, 차례의 모두를 한 번씩 시도하면 차례를 비운다. N≤3 이면 매 주기 전원 시도(D3 「매 관측」 그대로), 5 개면 3·2·3·2… — 어떤 보유도 ceil(N/3) 주기를 넘게 밀리지 않음. 기록 실패도 다음 차례에 다시 시도되므로 억제 래치가 아님 |
+| rollback | 새 파일 삭제 + `judgeHoldings` 2줄·구조체 필드 3개 되돌림. 원장 스키마·설정·토글 변경 없음 |
+| 설정 영향 | 없음(새 설정 0). 동작은 기존 `notifications.enabled`·`adoption.*` 를 읽기만 함 |

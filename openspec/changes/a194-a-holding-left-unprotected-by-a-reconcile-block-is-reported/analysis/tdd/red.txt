@@ -1,0 +1,51 @@
+# a194 3.1 RED — 2026-11-23T13:41:10Z, worktree HEAD 0516c3a06
+# 명령: GOFLAGS=-trimpath rtk proxy go test ./internal/app/engine -count=1 -run 'TestA194'
+# 구현 전 상태: 새 파일은 이름만 둔 껍데기(상수 · blockedHolding 타입 · 빈 reportBlockedWith), judgeHoldings 미편집 — 컴파일 실패가 아니라 단언 실패가 되게 함.
+# 통과한 2개(TestA194TheGraceClockIsClearedWhenTheHoldingIsNotExcluded · TestA194ASelfReleasingBlockIsNotABlockReport)는 「보고 0」을 단언하는 시험이라 껍데기에서 자명하게 통과 — 변이 원장이 그 둘을 잼.
+
+--- FAIL: TestA194OperatorOnlyBlockedHoldingIsReportedOnTheFirstCycle (0.25s)
+    a194_reconcile_block_report_internal_test.go:140: blocked_operator_only critical Notify calls = 0, want 1; events = []
+--- FAIL: TestA194ASelfReleasingBlockIsReportedAfterTenMinutes (0.48s)
+    --- FAIL: TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/10m_is_no_longer_a_transition (0.24s)
+        a194_reconcile_block_report_internal_test.go:191: blocked_stale reports = 0, want 1
+--- FAIL: TestA194ASkippedCycleDoesNotResetTheGraceClock (0.26s)
+    a194_reconcile_block_report_internal_test.go:255: blocked_stale reports = 0, want 1 — a cycle that never judged is not an observation that the holding left
+--- FAIL: TestA194OnlyAdoptionCandidatesAreReported (0.90s)
+    --- FAIL: TestA194OnlyAdoptionCandidatesAreReported/designated_with_adoption_off (0.31s)
+        a194_reconcile_block_report_internal_test.go:276: blocked reports = 0, want 1
+--- FAIL: TestA194ASnapshotCauseIsOperatorOnlyByItsRelease (0.24s)
+    a194_reconcile_block_report_internal_test.go:289: blocked_operator_only reports = 0, want 1 on the first cycle
+--- FAIL: TestA194NotificationsOffNeverRecordsACritical (0.50s)
+    --- FAIL: TestA194NotificationsOffNeverRecordsACritical/off_with_the_topic_kept (0.25s)
+        a194_reconcile_block_report_internal_test.go:313: normal blocked_operator_only reports = 0 over two cycles, want 1 (latched)
+        a194_reconcile_block_report_internal_test.go:320: block report log lines = 0 over two cycles, want 1:
+    --- FAIL: TestA194NotificationsOffNeverRecordsACritical/off_without_a_topic (0.25s)
+        a194_reconcile_block_report_internal_test.go:313: normal blocked_operator_only reports = 0 over two cycles, want 1 (latched)
+        a194_reconcile_block_report_internal_test.go:320: block report log lines = 0 over two cycles, want 1:
+--- FAIL: TestA194AnOperatorOnlyBlockIsReportedOncePerDay (0.26s)
+    a194_reconcile_block_report_internal_test.go:334: block report Notify calls = 0 over two cycles of one day, want 1
+--- FAIL: TestA194AnAccountWideBlockIsOneReport (0.29s)
+    a194_reconcile_block_report_internal_test.go:366: block reports = 0, want 1 for one account-wide block
+    a194_reconcile_block_report_internal_test.go:369: holding reports = 0 over two cycles, want 4 (two holdings, every observation)
+--- FAIL: TestA194TheDayIsTheKoreanCalendarDay (0.29s)
+    a194_reconcile_block_report_internal_test.go:381: reports by 23:59 KST = 0, want 1
+--- FAIL: TestA194AFailedBlockReportIsRetriedNextCycle (0.28s)
+    a194_reconcile_block_report_internal_test.go:404: block report Notify calls = 0, want 2 (failed, retried, then latched)
+    a194_reconcile_block_report_internal_test.go:413: outbox rows for the block report = 0, want 1 after the retry
+--- FAIL: TestA194AFailedHoldingReportIsRecordedOnTheNextObservation (0.28s)
+    a194_reconcile_block_report_internal_test.go:432: outbox rows for the holding report = 0 after a failed then a retried record, want 1
+--- FAIL: TestA194ADeliveredHoldingReportIsRemindedAfterTheWindow (0.25s)
+    a194_reconcile_block_report_internal_test.go:444: sends inside the window = 0, want 1
+--- FAIL: TestA194ABlockTheTrackerNoLongerListsTakesTheGracePath (0.22s)
+    a194_reconcile_block_report_internal_test.go:484: blocked_stale reports = 0, want 1 — a disagreement between the two reads must not be a silent skip
+--- FAIL: TestA194ALateDeliveredReportIsStillTrue (0.26s)
+    a194_reconcile_block_report_internal_test.go:518: late-delivered body = ""; it must speak of the moment 2026-09-30T01:00:02Z in the past tense
+--- FAIL: TestA194TheReportsCarryNoAccountQuantityOrPrice (0.23s)
+    a194_reconcile_block_report_internal_test.go:530: reports = 0, want the holding report and the block report
+--- FAIL: TestA194AtMostThreeHoldingReportsPerCycle (0.26s)
+    a194_reconcile_block_report_internal_test.go:565: first cycle reported [], want [pos-13965e58c9aef2c3965172e5 pos-354167a0bc7309f17ae8f135 pos-4bd787991310086b3edf05a9] (at most three, by position id)
+--- FAIL: TestA194TheReportComesAfterTheCyclesAdoptions (0.27s)
+    a194_reconcile_block_report_internal_test.go:592: report seen false, the other candidate adopted at that moment false — the report must come after adopt
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	6.010s
+FAIL
