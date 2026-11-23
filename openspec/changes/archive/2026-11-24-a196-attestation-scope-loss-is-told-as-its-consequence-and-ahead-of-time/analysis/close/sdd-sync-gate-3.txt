@@ -1,0 +1,14 @@
+┌  Syncing CodeGraph
+│
+Scanning files...
+│
+●  Already up to date
+│
+└  Done
+
++ codegraph sync .
+  codegraphcontext stats timed out
+[sdd-sync] incomplete:
+  - codegraphcontext
+rc=1
+0f01d3abfe120a1ba09a1439880162165df011ee

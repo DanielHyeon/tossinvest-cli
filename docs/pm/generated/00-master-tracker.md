@@ -71,7 +71,7 @@
     - STORY-TOS-a144 — Trigger verification does not require a TTL-edge measurement [archived] → `a144-separate-trigger-ttl-prerequisite`
     - STORY-TOS-a146 — A strategy entry the Guardian cannot size even one unit for is skipped, not treated as a lane fault [archived] → `a146-guardian-cap-zero-skips-the-entry`
     - STORY-TOS-a157 — A strategy first-leg binding defect is refused before Guardian sizing, so a zero cap cannot hide it [archived] → `a157-first-leg-binding-before-sizing`
-    - STORY-TOS-a196 — 능력 검증의 주문 범위 상실은 「재시작하면 기동이 거부된다」는 결과로 하루 한 번 알려지고, 감독 검증의 만료는 7일 전부터 미리 알려진다 [implemented] → `a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time`
+    - STORY-TOS-a196 — 능력 검증의 주문 범위 상실은 「재시작하면 기동이 거부된다」는 결과로 하루 한 번 알려지고, 감독 검증의 만료는 7일 전부터 미리 알려진다 [archived] → `a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [archived] → `console-click-approval`
