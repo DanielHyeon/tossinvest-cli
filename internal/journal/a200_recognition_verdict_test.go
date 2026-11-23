@@ -39,8 +39,9 @@ func TestA200TheVerdictRecognisesTheIncidentShapeAndRefusesEachBrokenCondition(t
 		{"(가) UNATTRIBUTED_SELL", func(f *recognitionFacts) { f.Refusal = position.RefusalUnattributedSell }, false},
 		{"(가) ENTRY_WHILE_CLOSING", func(f *recognitionFacts) { f.Refusal = position.RefusalEntryWhileClosing }, false},
 		{"(나) 조정 행 없음", func(f *recognitionFacts) { f.Adjustments = nil }, false},
+		// 둘째 0 행의 prev 를 31 로 둬서 (라)(감소분)가 이 사례를 대신 막지 않게 함 — 「정확히 하나」 자체를 잼(변이 M2).
 		{"(나) 0 조정 둘", func(f *recognitionFacts) {
-			f.Adjustments = append(f.Adjustments, recognitionAdjustment{Kind: "UNKNOWN", PrevQuantity: "0", NewQuantity: "0"})
+			f.Adjustments = append(f.Adjustments, recognitionAdjustment{Kind: "UNKNOWN", PrevQuantity: "31", NewQuantity: "0"})
 		}, false},
 		{"(나) 0 조정이 마지막이 아님", func(f *recognitionFacts) {
 			f.Adjustments = append(f.Adjustments, recognitionAdjustment{Kind: "EXTERNAL", PrevQuantity: "0", NewQuantity: "5"})
