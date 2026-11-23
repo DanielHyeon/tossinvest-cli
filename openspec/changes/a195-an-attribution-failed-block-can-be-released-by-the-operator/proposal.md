@@ -24,9 +24,10 @@
 
 ## What Changes
 
-1. `tossctl engine reconcile-resolve` 가 **종목 범위의 `ATTRIBUTION_FAILED` 차단**도 해제 대상으로 받는다. 받는 조건은 지금 `QUANTITY_MISMATCH` 에 요구하는 것과 같다 — 엔진 잠금, 명령 자신의 안정 재조회가 차이를 보지 않음, 운영자 신원과 확인 내용(note), `--confirm`.
+1. `tossctl engine reconcile-resolve` 가 **종목 범위의 `ATTRIBUTION_FAILED` 차단**도 해제 대상으로 받는다. 받는 조건은 지금 `QUANTITY_MISMATCH` 에 요구하는 것과 같다 — 엔진 잠금, 명령 자신의 안정 재조회 비교가 진입을 막는 차이(수량 불일치, 원장에만 있는 주문)를 보지 않음, 운영자 신원과 확인 내용(note), `--confirm`. 투영 거절 세 유형(`UNATTRIBUTED_SELL`·`SELL_ON_CLOSED`·`ENTRY_WHILE_CLOSING`)을 모두 받고, 해제 대상 종목의 외부 보유·외부 주문은 종전처럼 거절 사유가 아니다(design D1·D2, Manager 결정 2026-11-23).
 2. 그 밖의 원인(`IDENTIFIER_CONFLICT` 등)은 종전 문구로 거절한다. 거절 대상은 「해제 근거가 정의되지 않은 원인」이고 그 목록이 코드 한 곳에 있다.
 3. 해제 기록은 종전 형식 그대로다(release cause `OPERATOR`, 근거 `operator <신원>: <note>`). 원장 스키마·release cause 집합 변경 없음.
+4. 명령의 도움말과 성공 출력을 원인 중립 문장으로 고친다 — 지금은 「quantity-mismatch」만 말해 이 change 뒤 거짓이 된다(design D7).
 
 ## 이 change 가 하지 않는 것
 
@@ -41,11 +42,11 @@
 
 ### Modified Capabilities
 
-- `reconciliation`: 운영자 해제가 받는 원인에 종목 범위 `ATTRIBUTION_FAILED` 를 더하고 그 근거(명령 자신의 재조회 일치)를 요구로 적는다.
+- `reconciliation`: 운영자 해제가 받는 원인에 종목 범위 `ATTRIBUTION_FAILED` 를 더하고 그 근거(명령 자신의 재조회 비교가 진입을 막는 차이를 보지 않음)를 요구로 적는다.
 
 ## Impact
 
-- 기존 함수 본문 편집(gate ⑤ FLM 대상): `cmd/tossctl/engine_reconcile.go` `buildReconcileResolveRuntime`(validate 클로저의 원인 판정을 새 함수 호출로 바꿈). 기존 시험 중 `ATTRIBUTION_FAILED` 거절을 단언하는 것이 있으면 그 시험 함수도 대상이다(tasks 1.4 에서 센다).
-- 새 함수는 새 파일에 둔다. `buildReconcileResolveRuntime` 이 a166 census(`internal/accountbudgetruntime` shapes.json)에 고정돼 있으면 **편집 전에** Manager 에게 돌아온다(tasks 1.4).
+- 기존 함수 본문 편집(gate ⑤ FLM 대상, 번들 3 — pre-edit 판은 `analysis/function-logic/`): `cmd/tossctl/engine_reconcile.go` 의 `buildReconcileResolveRuntime`(validate 클로저의 원인 순회를 새 함수 호출로 바꿈), `runEngineReconcileResolve`(성공 출력 문장), `newEngineReconcileResolveCmdWithDeps`(도움말 문장). `ATTRIBUTION_FAILED` 거절을 단언하는 기존 시험은 0(tasks 1.4).
+- 새 함수는 새 파일에 둔다. `buildReconcileResolveRuntime` 은 a166 census 가 본문 전체를 고정한다 — `internal/accountbudgetruntime/testdata/a166-wiring/shapes.json` 의 그 키 하나를 같은 커밋에서 갱신한다(design D6, Manager 결정 2026-11-23). 나머지 두 함수는 census 키가 아니고, 파일 텍스트 시험의 금지 토큰과 「released」 단언만 지킨다(design D7).
 - 브로커 호출 추가 0. 명령이 이미 하는 재조회만 쓴다.
 - 롤백 = 이전 이미지. 이 change 가 쓴 해제 행은 종전 형식의 `OPERATOR` 해제라 옛 이미지가 그대로 읽는다.

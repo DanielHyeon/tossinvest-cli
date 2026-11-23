@@ -26,3 +26,19 @@
 
 - 사실 오류 정정을 요구한 발견: 0(리뷰의 「문제 없음」 목록은 1단계 정정과 일치). 문서 반영 없음.
 - r2: 미실시 — r1 발견이 전부 결정 대기라 문서가 바뀌지 않았다. Manager 결정 반영 뒤 r2(1회 남음).
+
+## Manager 결정 (2026-11-23) — r1 처분 확정
+- R1 기각(D2 근거 (1)~(3)), spec 「차이」→「진입을 막는 차이(수량 불일치, 원장에만 있는 주문)」로 정정 + 외부 보유 Scenario 추가.
+- R2 기각(D1 — 세 유형 모두, 문구 파싱 금지). R3·R4 수용(design §3 보강, 변이 6). R5 수용(D6 — shapes.json 키 하나, 선례 a189 `3af104af9`·a192 census-repair 절차). R6 수용(D7 — 두 함수 FLM 번들 pre-edit 추가: `analysis/function-logic/cmd-tossctl--runenginereconcileresolve`, `…--newenginereconcileresolvecmdwithdeps`; 둘 다 census 키 아님, 파일 텍스트 시험은 금지 토큰·「released」 단언만).
+- 반영 문서: proposal(What Changes 1·4, Capabilities, Impact), design(D1·D2·D3 갱신, D6·D7 신설, §2·§3·§4·§5), spec delta, tasks(1.6b, 3.1·3.2·3.2b·3.3·4.1·4.2). `openspec validate --strict` valid. `check_analysis.py --change` rc 0(required 0, 번들 3).
+
+## proposal-freeze 리뷰 r2 (2026-11-23, 마지막 회차)
+- 보이스: Codex(codex-cli 0.165.0, `codex exec --sandbox read-only --ephemeral … </dev/null`), 적대적 Eng. 원문 `analysis/review/proposal-freeze-r2-codex.md`. 판정: P1 1·P2 1, P0 없음.
+- r1 처분 재검토: R1 기각 취지 동의(근거 (2)만 부분 반박 → N1), R2 동의, R3 동의(단 builder 가 돌려준 validate 를 실행하는 시험은 아님 — 그 연결부는 D6 census 가 보완한다는 처분으로 이해), R4 동의(CAUGHT 미확인), R5 동의, R6 동의(N2).
+
+| # | 등급 | 발견 | 처분 |
+|---|---|---|---|
+| N1 | P1 | D2 근거 (2) 「다음 대사에서 손절이 걸린다」는 조건부다 — 제외 목록·편입 설정(adoption.go:163), 가격 누락·노후(230-246), exit state 생성 실패(394-400)면 미보호, 미편입은 exit 관측 밖(exitloop.go:592). 팀메이트가 네 자리를 HEAD 로 확인 | **반영(사실 정정, 결정 불변)** — D2 근거 (2)를 「정상 편입 경로를 다시 열며, 편입 조건·보호 상태 생성이 성공하면 손절 관리 대상」으로, §4 에 편입 제외·설정·exit state 확인을 추가 |
+| N2 | P2 | 「해제한 원인을 출력」은 현재 runtime 인터페이스로 불가(validate·resolve 가 `error` 만, tracker 는 builder 지역, 해제 뒤 블록 비움) — 편집 범위 「문장만」과 모순 | **Manager 결정 대기** — 원인 중립 문장만 / 원인 목록 데이터 경로(범위 확장). 문서는 모순만 지움(D7·§3.6 에 결정 대기 표시) |
+
+- 리뷰 회차 상한 도달 — r3 없음.
