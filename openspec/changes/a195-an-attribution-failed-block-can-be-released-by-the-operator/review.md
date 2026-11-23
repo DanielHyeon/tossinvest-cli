@@ -79,3 +79,17 @@ Pre-Edit Gate:
 - 4.2(`analysis/tdd/selected-tests.txt`, `analysis/tdd/lint-validate-analysis.txt`): `./cmd/tossctl -run 'TestA166EngineReconcile|TestEngineReconcileResolve|A195'` ok · `./internal/accountbudgetruntime` ok · `./internal/reconcile -run 'Resolve|Restore|Observe'` ok · `make lint` rc 0(gofmt + vet 무태그·tossos_testseams) · `openspec validate --strict` valid · `check_analysis.py --change` rc 0(required 3, 증거 완전).
 - 미실행 범위: `make test`(전체 스위트)·`make test-seams`·`make test-race`·`make gate`·`make sdd-check`·`make sdd-sync` — 지시대로 안 돌림. `./cmd/tossctl`·`./internal/reconcile` 는 `-run` 선택분만. `--record-landing` 안 함. 실계좌·운영 장부·tossctl 실행 없음.
 - 4.3(구현 적대 리뷰·gstack review): 미실시 — Manager 지시로 보류.
+
+## 구현 적대 리뷰 r1 (2026-11-23, Opus 별도 컨텍스트 + codex 0.165.0)
+- 리뷰는 Manager 가 붙였고 원문은 Manager 쪽에 있음. 이 절은 Manager 전달문(판정 P0 0 · P1 1 · P2 4, production 판정 결함 0)과 처분을 적음. 리뷰어의 「결함 없음」 목록 상세는 전달받지 못해 여기 옮기지 않음.
+
+| # | 등급 | 발견 | 처분 |
+|---|---|---|---|
+| P1 | P1 | `TestA195ObserveNeverReleasesAnAttributionFailure` 가 조정 크레딧 없이 clean diff 만 넣어 QM 도 안 풀리는 조건 — 아무것도 고정 못 함(리뷰어가 사본에서 QM 으로 바꿔도 PASS, mismatch.go:667-668 원인 거름 완화 변이 생존 확인) | **반영** — 루프마다 `tracker.AdjustmentApplied(직전 비교 시각, SYMA, SYMB)` 뒤 `Observe`, 같은 조건의 QM(SYMA)이 `ADJUSTMENT_APPLIED` 로 풀리는 양성 대조군 단언 + AF(SYMB) 행 활성 단언. 변이 M7 CAUGHT(이 시험이 죽임). M7b(원인 거름만 완화)는 SURVIVED — Release 검사가 막는 동등 변이(ledger 참고) |
+| P2-1 | P2 | 허용 목록의 기본 거절이 표에 없음 | **반영** — 원인 표에 「종목 범위 IDENTIFIER_CONFLICT → 거절」「빈 원인 종목 블록 → 거절」. M8(R11 원인 무시)·M9(R9 빈 원인=QM) CAUGHT |
+| P2-2 | P2 | Scope 와 Symbol 이 어긋난 합성 행 | **기록만** — production 에서 만들 수 없는 모양(blockFromReconcileState 가 Symbol 빈 행을 ScopeAccount 로 만듦)이고 두 검사가 동치 |
+| P2-3 | P2 | Contains·HasPrefix·EqualFold 변이 | **기록만** — 닫힌 대문자 상수 집합에서 동등 변이 |
+| P2-4 | P2 | 도움말 「agree with the corrected local journal projection」이 전체 일치를 암시 | **반영** — 「진입을 막는 차이(수량 불일치·원장에만 있는 주문) 없음, 외부 보유·외부 주문·평단 차이는 거절 사유 아님」으로 정정. 금지 토큰 없음, 「released」 유지. 번들 3 재생성(도움말 +3줄로 줄 이동) |
+
+- 재실행(`analysis/tdd/selected-tests.txt`, `lint-validate-analysis.txt`, HEAD b7aeb035c): 선택 시험 3묶음 ok · `make lint` rc 0 · strict validate valid · `check_analysis` rc 0(required 3). 커버리지 `analysis/coverage/after-engine_reconcile-blocks.txt` 재측정.
+- 변이 원장 누계: M1~M9 중 8 CAUGHT, M7b SURVIVED(동등 — 기록).
