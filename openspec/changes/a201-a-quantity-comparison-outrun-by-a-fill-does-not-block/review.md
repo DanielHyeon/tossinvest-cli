@@ -42,3 +42,15 @@
 | 기타 | — | 조건 (나): 부분 커밋 · Applied=false · 알림 실패에서 `Converged` 유지, ApplyPositionAdjustment 는 Commit 뒤 오류를 내는 후속 연산 없음(position_adjustments.go:366). 오류 처리: Refresh 실패는 재판정 전에 반환, `cycle.Err` 는 R1-1 의 안전장치가 아님. a192: 결속된 같은 종목은 뒤 체결 워터마크 검사로 해제 거절(order_terminal_release.go:258) — 크레딧 경로는 이 검사를 안 거침. D2 의 id = 커밋 순서 반례 없음 | — | — |
 
 - 처분: **반영하지 않고 멈춤**(Manager 지시 — 결정급 P1). freeze 안 함, tasks 1.12 · 1.13 미체크, 구현(2.x) 미착수, origin/main merge 미실행.
+
+## Manager 결정 v2(2026-11-24) — 「체결이 지나간 주기는 판정하지 않고 다음 주기에 다시 본다」
+
+- v1(빼기 · 다시 읽은 로컬 대 옛 스냅숏 · D5 · 같은 주기 해제)을 폐기. 사유는 R1-1 · R1-2(design 「기각한 대안」).
+- 문서 v2 개정(커밋 `651516ebe`): proposal · design · ADDED(본문 344자, strict valid, MODIFIED 없음 — 「체결이 지나간 비교는 확인된 불일치가 아니다」) · Story · tasks 1.14.
+- 전제(`analysis/claim-check-v2.md`):
+  - (p1) **거짓(좁은 반례)** — 체결 행 없이 투영만 나중에 쓰는 전략 진입 backfill(strategy_dispatch_runtime.go:1348)이 수량 stale 을 내면 보류 조건이 안 걸림(지금 동작 그대로). `position.Apply` 의 delta 0 새 인스턴스 갈래는 미확인.
+  - (p2) **참.**
+  - (p3) **실패도 성공도 아닌 기존 표현 없음** — 소비자는 `note`(건강 계수 → `Runtime.CheckHealth`)와 `logCycle` 둘, 둘 다 `cycle.Err` 유무로만 가름.
+  - (p4) **거짓(D7' 그대로라면)** — 「깨끗함 로그에 안 들어감」에 `logCycle` 편집 필요(2 함수).
+- 「판 중단 뒤 B」 v2 탐침: B 의 체결이 보류 주기 뒤 · 다음 주기 전 → 행 0. 다음 주기 뒤 → 다음 주기 수렴이 B 를 조정해 기존 경로. 남는 모양 = 연속 둘째 주기(재현).
+- 처분: 멈춤 조건((p1) · (p4) 거짓)에 걸려 **codex 2회차(마지막)는 돌리지 않음** — D7' 판본이 정해진 뒤에 돌려야 마지막 회차가 최종 설계를 본다. freeze · 구현 미착수.
