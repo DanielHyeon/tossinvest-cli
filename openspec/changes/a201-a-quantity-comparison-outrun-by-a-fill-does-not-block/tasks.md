@@ -1,6 +1,8 @@
-# a201 tasks — 체결이 지나간 뒤의 낡은 수량 비교의 재판정
+# a201 tasks — 체결이 지나간 뒤의 낡은 수량 비교
 
 위험 등급 High-risk. 단계를 건너뛰지 않는다. 각 체크는 그 산출물과 같은 커밋에서 한다.
+
+> **보류(Manager 결정 2026-11-24)** — 「세우지 않는다」 쪽 설계 둘(v1 · v2)이 codex 동결 리뷰의 결정급 P1 로 기각됐다. 사유 · 재개 방향 · 재개 조건은 `issues.md` I1 과 design §6. 1.13 이후는 [blocked].
 
 ## 1. 등록 · 증거 (1단계)
 
@@ -15,30 +17,30 @@
 - [x] 1.9 정본 delta: reconciliation ADDED(재판정 규칙 — design D3·D4·D8, §2 경계). :53 · :77 · :79 · :91 · a192 Requirement 의 문장과 대조해 모순이면 그 Requirement 를 MODIFIED(생성 스크립트 + 역치환 단언). ADDED 본문 500자 이하. `openspec validate --strict` valid
 - [x] 1.10 편집할 기존 함수마다 FLM/BTM pre-edit 번들
 - [x] 1.11 claim check(`analysis/claim-check.md`)
-- [ ] 1.12 제안 동결 적대 리뷰(codex, 최대 2회차) → `review.md` (r1 = v1 판본 · P1 2 로 v1 기각, r2 = v2 판본 — 미실행)
-- [ ] 1.13 Manager 결정 · freeze
+- [ ] 1.12 제안 동결 적대 리뷰(codex, 최대 2회차) → `review.md` — **2회 실행, P1 미해소**: r1(v1 판본) P1 2 · r2(v2 판본) P1 2 · P2 3. 회차 소진(재개 때 새로 센다)
+- [ ] 1.13 [blocked] Manager 결정 · freeze — 보류(issues.md I1, design §6)
 - [x] 1.14 v2(주기 보류) 개정 — proposal · design(v1 을 기각한 대안으로) · ADDED · Story, 전제 (p1)~(p4)(`analysis/claim-check-v2.md`), 「판 중단 뒤 B」 재현(`analysis/probe-v2/`)
 
 ## 2. 구현
 
-- [ ] 2.1 Pre-Edit 선언(High-risk)
-- [ ] 2.2 RED — design §3 의 1~8
-- [ ] 2.3 GREEN 최소 구현 — 보류 판정(새 파일) · `RunOnce` 워터마크 1문장 + 보류 1자리 · 드라이버 필드(직전 보류). `Observe` · `ConvergeQuantities` · `Compare` · 해제 규칙 · 스키마 무편집. 주석은 한글로 「왜」
-- [ ] 2.4 post-edit 번들 · `check_analysis`
-- [ ] 2.5 변이 원장(design §3-9)
-- [ ] 2.6 선택 시험 · `-race`(해당) · `make lint` · strict validate · tracker `--check`
+- [ ] 2.1 [blocked] Pre-Edit 선언(High-risk) — 보류(설계 미확정)
+- [ ] 2.2 [blocked] RED — 재개 때의 RED 재료는 1단계 재현 시험 6(「현재 동작」)
+- [ ] 2.3 [blocked] GREEN 최소 구현 — 보류
+- [ ] 2.4 [blocked] post-edit 번들 · `check_analysis` — 보류
+- [ ] 2.5 [blocked] 변이 원장 — 보류
+- [ ] 2.6 [blocked] 선택 시험 · `-race`(해당) · `make lint` · strict validate · tracker `--check` — 보류
 
 ## 3. 리뷰 · 검증
 
-- [ ] 3.1 구현 적대 리뷰(별도 문맥, Opus + codex, 최대 2회차) — 초점: 보류가 늦추는 차단 · 해제의 상한 · 연속 상한의 우회 · 보류 조건이 과하게/모자라게 걸리는 입력 · 보류 주기의 계수
-- [ ] 3.2 처분 반영
-- [ ] 3.3 gstack `review` 1회
-- [ ] 3.4 Manager 검증
+- [ ] 3.1 [blocked] 구현 적대 리뷰(별도 문맥, Opus + codex) — 보류
+- [ ] 3.2 [blocked] 처분 반영 — 보류
+- [ ] 3.3 [blocked] gstack `review` 1회 — 보류
+- [ ] 3.4 [blocked] Manager 검증 — 보류
 
 ## 4. 종결
 
-- [ ] 4.1 착지 기록 → `origin/main` merge(rebase 금지) → 완료 게이트(격리 worktree) → archive → Story 경로 → push
+- [ ] 4.1 [blocked] 착지 기록 → `origin/main` merge(rebase 금지) → 완료 게이트(격리 worktree) → archive → Story 경로 → push — 보류(이 브랜치는 main 에 합치지 않는다)
 
 ## 5. 종결 뒤 (사람 승인 — 체크박스 아님)
 
-- 운영 반영은 사람이 승인한다. 반영 뒤 확인은 관측으로: 운영 로그의 `stale_local_read` 줄과, 그 다음 주기에 그 종목에 차단 행이 없는 것.
+- 재개 · 운영 반영은 사람이 승인한다.

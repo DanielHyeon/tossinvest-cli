@@ -7,7 +7,7 @@ HEAD `9722f2220`(v2 문서 개정 전), production Go 는 base 와 동일. AST `
 | 전제 | 판정 | 한 줄 |
 |---|---|---|
 | (p1) 판 중단 stale 은 언제나 보류 조건과 함께 온다 | **거짓(좁은 반례 1)** | 엔진 안 투영 쓰기 중 체결 행 없이 수량을 바꾸는 길이 하나 있다 — 전략 진입 체결의 뒤늦은 투영 적용 |
-| (p2) `Observe` 한 주기 생략이 추적기 불변식을 안 깬다 | **참** | Observe 없는 주기는 지금도 있고, 크레딧 · a192 무장 · 연속 횟수 · 진입 게이트 신선도 모두 다음 주기에 이어진다(탐침 확인) |
+| (p2) `Observe` 한 주기 생략이 추적기 불변식을 안 깬다 | **거짓(codex r2 로 정정, 2026-11-24)** | 「다음 주기에 이어진다」는 참이지만, **그 주기의 관측이 남겼어야 할 증거가 빠진다**를 놓쳤다 — 아래 「(p2) 정정」 |
 | (p3) 보류를 실패로도 깨끗함으로도 안 세는 기존 표현 | **없음** | 결과 소비자는 `note`(건강 계수)와 `logCycle`(로그) 둘이고, 둘 다 `cycle.Err` 의 유무 둘로만 가른다 |
 | (p4) 편집할 기존 함수는 `RunOnce` 하나 | **거짓(D7' 그대로라면)** | 「깨끗함 로그에 안 들어감」은 `logCycle` 편집 없이는 못 한다 |
 
@@ -29,7 +29,16 @@ HEAD `9722f2220`(v2 문서 개정 전), production Go 는 base 와 동일. AST `
 - a192 결속 · 무장: `beginOrderTerminalObservation`(call@647) · `orderTerminalCandidate`(call@682) · `updateOrderTerminalBindings`(call@808) 모두 `Observe` 안 — 보류하면 메모리 그대로 한 주기 늦게 이어짐. `Restore` 는 부르지 않으므로 결속이 버려지지 않음.
 - `t.lastAt` · `t.observed`(mismatch.go:638-639)는 `Due` · `NextDueAt`(:1276-1293)만 읽고 그 둘의 생산 소비자는 0(grep).
 - 진입 게이트의 신선도 요구(execgw/retry.go:196-203 `DefaultStaleness`)는 브로커 조회(열린 주문 · 매수가능 · 보유 · 가격)이고 수집은 보류 전에 끝남 — `Observe` 생략과 무관.
-- 판정: **참**.
+- 판정(당시): 참. **→ 정정: 거짓.**
+
+### (p2) 정정 — codex r2 R2-1(2026-11-24)
+
+위 열거는 「한 주기 건너뛴 상태가 다음 주기에 이어지는가」만 봤다. `Observe` 는 그 주기의 관측으로 **증거를 남기기도** 하므로, 생략하면 그 증거가 빠진다:
+
+1. **a192 결속 누락**: 종목 B 에 이 프로세스가 주문 O1 의 missing-order 로 만든 차단이 있고 O1 은 종결 · 무장됨. 같은 B 의 비종결 주문 O2 가 이번 스냅숏에서 누락돼 `MissingOrders` 에 들어옴 → 기존이면 `beginOrderTerminalObservation`(call@647) → `updateOrderTerminalBindings`(order_terminal_release.go:326)가 O2 를 결속에 더해 O2 비종결로 해제를 막음(:228). 무관한 A 의 W2 로 그 주기를 보류하면 O2 가 결속에 안 들어가고, 다음 주기에 O2 가 다시 정상 매칭되면 O1 만 보고 `ORDER_TERMINAL_CONFIRMED` 해제 가능(B 에 뒤 체결이 없으면 워터마크 실격도 안 걸림). 정본 :381 「행 생존 중 관측된 missing-order 전부」와 충돌.
+2. **비연속 영구 승격**: B 의 같은 missing-order 가 2회 연속 관측 → 보류 주기(그 사이 B 는 정상 매칭 — 기존이면 `advanceStreaks`(mismatch.go:1089)가 B 의 streak 를 지웠을 관측) → 다시 missing → streak 2 가 남아 비연속 3회로 영구 승격(정본 :53 「한 comparison 에서 사라지면 다시 1부터」와 충돌).
+
+같은 뿌리로 크레딧 반박(`refuteUsableAdjustmentCredits`)과 건강 계수(R2-2)도 「생략된 관측이 남겼어야 할 것」이다. 두 반례는 정적 추론이고 시험으로 재현하지 않았다.
 
 ## (p3) — `RunOnce` 결과의 소비자 전수
 

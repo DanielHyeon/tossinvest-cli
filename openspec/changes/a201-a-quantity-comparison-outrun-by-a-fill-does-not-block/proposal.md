@@ -1,5 +1,7 @@
 # a201 — 체결이 지나간 뒤의 낡은 수량 비교는 차단을 세우지 않는다
 
+> **보류(Manager 결정 2026-11-24)** — 이 proposal 과 delta(`specs/reconciliation/spec.md`)는 기각된 v2 의 것이며 재개 때 다시 쓴다. 사유 · 재개 방향(해제 쪽) · 재개 조건은 `issues.md` I1 과 design §6.
+
 - change id: `a201-a-quantity-comparison-outrun-by-a-fill-does-not-block`
 - 위험 등급: **High-risk** (대사 · 진입/편입 차단 판정 — 안전 부트스트랩 5)
 - 사용자 승인: 2026-11-24 「네 진행하세요」(후속 1·2 를 올리는 것) · 「a201 일어날 확률이 있는거 아닌가」에 대한 Manager 재검토로 착수
