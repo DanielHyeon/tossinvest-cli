@@ -5,7 +5,7 @@
 
 | 원문 | 명령 | 결과 |
 |---|---|---|
-| `w4.txt` | `go test ./internal/journal -run 'TestA200' -count=1 -v` | 7 PASS |
+| `w4.txt` | `go test ./internal/journal -run 'TestA200' -count=1 -v` | 8 PASS(범위 개정 뒤 「조정을 사이에 둔 부분 체결」 추가 — design §2 의 대가, 구현 뒤에도 AF 로 남아야 함) |
 | `cycles.txt` | `go test ./internal/reconcile -run 'TestA200' -count=1 -v` | 6 PASS |
 
 ## W4 원장 관측(본 사고 모양 — `w4.txt` 첫 시험)

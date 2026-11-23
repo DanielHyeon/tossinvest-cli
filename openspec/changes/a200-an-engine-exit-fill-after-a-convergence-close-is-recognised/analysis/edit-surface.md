@@ -1,4 +1,4 @@
-# a200 1.7 · 1.8 — 호출 자리와 편집 표면
+# a200 1.7 · 1.8 — 호출 자리와 편집 표면 (범위 개정 2026-11-24 판)
 
 CodeGraph **1.6.0**, 이 worktree 에서 새로 색인(파일 3,255 · 노드 56,297 · 엣지 207,790, 원문 `code-context/codegraph-callers.txt`).
 CodeGraph 는 훅 값 배선(gateway.go:202 · 204 — 함수 값 대입)을 호출로 못 잡음 → 자리 수는 grep + AST 로 셈.
@@ -7,50 +7,57 @@ CodeGraph 는 훅 값 배선(gateway.go:202 · 204 — 함수 값 대입)을 호
 
 | 함수 | 생산 호출 자리 | 비고 |
 |---|---|---|
-| `ProjectPosition` | 배선 1(gateway.go:202) · 실행 1(`runApplyHooks` Project@284) | `runApplyHooks` 생산 호출 2: fills.go:551 RecordFill, strategy_dispatch_runtime.go:1348(BUY 만) |
+| `ProjectPosition` | 배선 1(gateway.go:202) · 실행 1(`runApplyHooks` Project@284) | `runApplyHooks` 생산 호출 2: fills.go:551 RecordFill, strategy_dispatch_runtime.go:1348(BUY 만 — 매도 거절에 안 닿음) |
 | `enterReconcileInTx` | 1(ProjectPosition@102) | |
-| `ApplyExitFill` | 배선 1(gateway.go:204) · 실행 1(`runApplyHooks` Exit@298) | |
-| `freezeTradeOutcomeTx` | 1(ApplyExitFill@1036) | |
-| `computeTradeOutcome` | 4(freezeTradeOutcomeTx:130 · BackfillTradeOutcome:898 · backfillPlannedOutcome:165 · tradeOutcomeBackfillPlan:239) | |
-| `adoptionEpoch` | 3(adoptedRoundTripLegs:529 · intakeLotsForBackfill:107 · tradeOutcomeBackfillPlan:240) | D5 편입을 살리면 편집 대상 |
-| `closeExitStateOnAdjustmentTx` | 1(ApplyPositionAdjustment:356) | 무편집 목표 |
-| `currentInstance` | 1(ProjectPosition@78) | (f) |
-| `exitContextForFill` | 1(ApplyExitFill@972) | (f) |
-| `ExitProposalForIntent`(journal) | 1(execgw/a166_replay_origin.go:47) | 인정 행이 `proposed_intent_id` 를 실으면 영향 |
+| `ApplyExitFill` | 배선 1(gateway.go:204) · 실행 1(`runApplyHooks` Exit@298) | **무편집** |
+| `freezeTradeOutcomeTx` | 1(ApplyExitFill@1036) | 무편집 |
+| `computeTradeOutcome` | 4 | 무편집 |
+| `adoptionEpoch` | 3 | 무편집(성과 비목표) |
+| `closeExitStateOnAdjustmentTx` | 1(ApplyPositionAdjustment:356) | 무편집 |
+| `currentInstance` · `exitContextForFill` | 각 1 | 무편집((f) 범위 밖) |
+| `appendExitEventFromHook` | ApplyExitFill:1014 · markExitCompletedTx:969 | 표지 쓰기에 **그대로 호출**(무편집) |
+| `ApplyTx.PendingState` | ApplyExitFill:982 · MoveTakenRatioTotal:430 | 판정이 그대로 호출(무편집) |
 
-## 1.8 편집할 기존 함수
+## 1.8 확정 편집 표면
 
-| 함수 | 왜 | 고정 장치 적중 | 본문을 바꾸면 깨질 수 있는 시험(이름) |
+| 함수 | 왜 | 고정 장치 적중 | 본문을 바꾸면 깨질 수 있는 시험 |
 |---|---|---|---|
-| `ProjectPosition`(position_projection.go) | 거절 갈래 B5 1 자리 | a166 census 0 · 정적 허용 목록: `adoptionIDReaders`(adoption_static_test.go:43 — 파일 단위, 이미 등재) | `TestTheProjectionAndTheFillAreOneCommit` · `TestTheProjectionCarriesThePreviousSnapshotForItsCostBasis`(CodeGraph 가 본 직접 호출 시험), position_projection_test.go 의 거절 → RECONCILE 시험군, 이 change 의 재현 시험 2 개(의도된 RED) |
-| `ApplyExitFill`(apply_hook.go) | 완결 · 성과 조건 B14 | `TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook`(apply_hook_test.go:567 — 새 파일이 `pending_intent_id` 등 4 열을 언급하면 실패) · a166 census 0 | exit_state_test.go 의 fill 경로 시험군, trade_outcomes_test.go 동결 시험군, `TestA130ARolledBackCloseReportsNothing`, `TestReadoptedGenerationFillAndCompletionEventsStayGenerationTwo` |
-| (조건부) `adoptionEpoch` | D5 를 편입 포지션까지 | `TestA130BarPricedRowsAreDerivableFromTheLedger` · `a130Prices` 하네스 · `TestA130JournalCopyCensus`(trade_outcome 사본 census) · 백필 계획 2 자리가 같이 바뀜 | a130_adopted_outcome_test.go 의 `post_adoption_disposal` 시험들 |
-| (조건부) `ExitProposalForIntent` | 인정 행이 `proposed_intent_id` 를 실을 때 | `TestA166ExactExitOrigin` · `TestA166OriginRejectsForeignRowsAndBound`(journal/a166_replay_origin_test.go) | 같음 |
-| (조건부) `currentInstance` · `exitContextForFill` | (f) 를 고칠 때만 | 투영 전체 | position_projection_test.go 전부 |
+| `ProjectPosition`(position_projection.go) — **유일한 기존 함수** | B5(if@101) 안, enterReconcileInTx@102 직전 판정 1 자리 | a166 census 0 · `adoptionIDReaders`(파일 단위, 이미 등재 — 새 파일은 그 열을 안 읽음) | `TestAnOversellFreezesTheProjectionAndBlocksTheSymbol` · `TestASellWithNothingHeldIsAttributionFailure` · `TestTheProjectionAndTheFillAreOneCommit` · `TestTheProjectionCarriesThePreviousSnapshotForItsCostBasis`, 재현 시험 `…AConvergenceCloseThenTheStopFillIsAnAttributionFailure` 와 cycles 의 W4 · W5(의도된 RED) |
+| 새 파일(판정 · 표지) | design D2 · D2a · D3 | `TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook` — 새 파일에 `pending_intent_id` 등 4 열 철자 금지 → `PendingState` 로 읽음. `fill_events` · `mutation_attempts` · `position_adjustments` 읽기를 막는 정적 목록 없음(grep) | — |
 
-새 파일(인정 판정 · 기록)은 기존 함수 수에 안 들어감. 단 판정이 `pending_intent_id` 를 읽으려면 `ApplyTx.PendingState` 를 써야 함(위 구조 시험).
-`bindApplyHooks` · gateway 배선은 바꿀 필요 없음(a166 census `gateway.go||buildGateway` · `newGatewayReplay` 는 배선을 바꿀 때만, a130 인자 수 2 단언).
-전이표 census(`TestTheTableCoversEveryReachableCombination`) · `ValidReconcileCause` · `TradeOutcomeRefusalReasons` 는 새 값을 안 더하면 무적중.
+FLM/BTM pre-edit 번들: `function-logic/internal-journal--projectposition/`(check_analysis: required 0 · 번들 검증 통과).
 
-## `exit_events.action` 소비자와 새 action 의 영향
+## 표지 행 — `exit_events` 소비자 전수와 영향
 
-| 소비자 | 자리 | 새 action 영향 |
-|---|---|---|
-| exit 출처 판정(a166 예산 우선순위) | journal/a166_replay_origin.go:17-38 → execgw/a166_replay_origin.go:47 | 행에 `proposed_intent_id` 가 있으면 **오분류**(수명 목록 밖 → invalid → 손절 intent 가 Critical 을 잃음). 없으면 무시됨 |
-| 보호 청산 시도 존재(a087) | journal/a087_protective_exit_attempt.go:29 `e.action IN (보호 action)` | 무시됨 |
-| 성과 매도 귀속(편입) | trade_outcomes.go `engineSellOrders` 598-637 (`proposed_intent_id` 결합, action 무관) | `proposed_intent_id` 를 실으면 같은 intent 중복(DISTINCT 로 흡수) — 무해 |
-| 백필 모집단 | trade_outcome_backfill.go:202-210 `action = COMPLETED` | 새 action 은 무시. 단 D5 가 `COMPLETED` 를 쓰면 편입 포지션이 모집단에 들어옴(배타성 주석 :12-16 거짓) |
-| 콘솔 · httpapi 이력 | account_views.go:311 · 452, provenance.go:282 | 문자열 그대로 표시(라벨 매핑 없음 — internal/console 에 action 리터럴 0) |
-| 평가 증거 검증 | exit_snapshot.go:376-417 | 증거 열을 하나라도 채우면 **깨짐**(그 포지션 `ExitEvents` 가 corrupt) — 수량을 `projected_quantity` 에 실을 수 없음 |
-| 일일 손실(a137) | journal/a137_daily_loss_rows.go:137 · dailyloss/measure.go:124 | action 은 안 읽음(조정 행을 읽음). 수렴으로 닫힌 관리 포지션 + 엔진 매도 발송 = 측정 불가 — a200 뒤에도 그대로 |
-| 분석 SQL(a087 진행 중) | a087/analysis/exit-slippage-3.8/exit_slippage.sql | action 필터 — 무시됨 |
-| 골든 · 시험 데이터 | 저장소 루트 `analysis/` · `internal/*/testdata` 에 `ADJUSTMENT_CLOSED` · `PROPOSAL_FILLED` · `exit_events` 리터럴 0(grep) | 무관 |
+표지 모양: `position_id` · `action`(새 상수) · `created_at` · `lifecycle_generation`(appendExitEventFromHook 이 exit 상태에서 복사)만 채움. `proposed_intent_id` · `decision_id` · 가격 · 레벨 · 평가 증거 열 전부 NULL.
+생산 코드의 `exit_events` 읽기 전수(grep `exit_events` — 비시험 Go, internal · cmd · tools)를 행마다 대조.
+
+| 소비자 | 자리 | 영향 | 근거 |
+|---|---|---|---|
+| exit 출처(a166 예산 우선순위) | journal/a166_replay_origin.go:17-18 · :59 | **무시됨** | `WHERE proposed_intent_id = ?` — NULL 행은 안 잡힘 |
+| 보호 청산 시도 존재(a087) | a087_protective_exit_attempt.go:26 | **무시됨** | `JOIN … ON e.proposed_intent_id = i.id` |
+| 편입 성과 매도 귀속 | trade_outcomes.go:614 `engineSellOrders` | **무시됨** | `JOIN … a.intent_id = e.proposed_intent_id` + `coalesce(…) <> ''` |
+| 백필 모집단 | trade_outcome_backfill.go:209 | **무시됨** | `e.action = 'COMPLETED'` |
+| 결정 중복 검사 | exit_state.go:494 | **무시됨** | `WHERE decision_id = ?` — NULL |
+| provenance exit intent | provenance.go:240 | **무시됨** | `proposed_intent_id IS NOT NULL AND <> ''` |
+| provenance 사건 목록 | provenance.go:284 | **원문 표시만** | 행 하나가 `EXIT_EVENT`(action 문자열)로 나열됨 — 판정 없음 |
+| 콘솔 이력(포트폴리오 · 개요) | account_views.go:319 → console/portfolio.go:738 · overview.go:580 | **원문 표시만** | action 문자열 그대로, 가격 칸 「—」. 라벨 매핑 · action 분기 0(internal/console grep) |
+| 콘솔 intent 별 행 | account_views.go:450 · 467-468 | **무시됨** | intent 키 |
+| 평가 증거 검증 | exit_snapshot.go:376-417(`hydrateExitEventEvidence`) | **무시됨** | 증거 열이 모두 NULL → `any()` 거짓 → legacy 갈래(오류 없음) |
+| `Journal.ExitEvents` | exit_state.go:881 | 생산 호출 0 | grep |
+| readonly 표 목록 | readonly.go:79-92 | 무관 | 읽기 전용 연결의 표 · 열 목록 |
+| 일일 손실(a137) | — | 무관 | exit_events 를 안 읽음(조정 행을 읽음) |
+| 분석 SQL(a087 진행 중) | a087/analysis/exit-slippage-3.8/exit_slippage.sql | **무시됨** | intent 결합 + action 필터 |
+| 골든 · 시험 데이터 | 루트 `analysis/` · `internal/*/testdata` | 무관 | 리터럴 0(grep) |
+
+**판정: 오분류 0 · 깨짐 0** — 판정에 닿는 소비자는 전부 무시, 화면 둘은 원문을 한 줄 더 보여 줄 뿐 → Manager 결정 3 에 따라 **표지 행을 쓴다.**
+(「원문 표시」 를 「무시됨」 으로 본 것은 1단계의 판단이다. 다르게 보면 표지를 빼고 「인정은 `ADJUSTMENT_CLOSED` 뒤의 체결 기록과 차단 행 부재로만 읽힌다」 로 돌아간다.)
 
 ## 진행 중 change 와의 겹침
 
 | change | 겹침 |
 |---|---|
-| a167(보호 잔량 재가격, 착수 전) | proposal 「FLM/BTM 필수」 에 `journal.ApplyExitFill` — **같은 함수 편집 후보**. 착수 조건이 a087 Phase 2 라 지금 활성 편집 없음 |
-| a087(보호 청산 시장가) | `ApplyExitFill` · `position_projection.go` 를 인용만(편집 아님) |
+| a167(보호 잔량 재가격, 착수 전) | `ApplyExitFill` 을 FLM 대상으로 적음 — a200 은 `ApplyExitFill` **무편집**이라 겹침 없음 |
+| a087(보호 청산 시장가) | `ApplyExitFill` · `position_projection.go` 를 인용만(편집 아님). a087 의 `exit_slippage.sql` 은 표지를 무시 |
 | a197(보류) · a171 · a198 | 후보 함수 · 파일 언급 0 |
-| a199(인터록, 다른 팀메이트) | 이 1단계에서 읽지 않음(worktree 접근 금지) — Manager 가 대조 |
+| a199(인터록) | 이 단계에서 읽지 않음(worktree 접근 금지) — Manager 대조 |

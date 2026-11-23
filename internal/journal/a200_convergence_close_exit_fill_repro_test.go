@@ -332,6 +332,35 @@ func TestA200CurrentBehaviourPartialStopFillsAfterAConvergenceClose(t *testing.T
 	}
 }
 
+// TestA200CurrentBehaviourAStopFillStraddlingTheConvergenceIsAnAttributionFailure 는 design §2 가 이름으로 적은 「이 change 가
+// 거절하는 정상 입력」: 손절 31 의 부분 체결 10 이 조정 **전에** 투영에 반영(31→21)되고, 수렴이 21→0 으로 닫은 뒤 나머지 21 이 옴.
+// 상태 없는 판정 (라)는 그 intent 주문의 누적 합 31 을 감소분 21 과 견주므로 인정하지 않음 — 구현 뒤에도 ATTRIBUTION_FAILED 로 남아야 함.
+func TestA200CurrentBehaviourAStopFillStraddlingTheConvergenceIsAnAttributionFailure(t *testing.T) {
+	j, clk := a200Journal(t)
+	entry, _ := openedPosition(t, j, "31")
+	p := currentPosition(t, j, entry)
+	sell := a200ArmStop(t, j, p.ID, order{intentID: "i-stop", attemptID: "a-stop", orderID: "o-stop",
+		side: "SELL", quantity: "31"})
+	clk.Advance(time.Second)
+	if _, err := j.RecordFill(context.Background(), fillOf(sell, "10", "67900")); err != nil {
+		t.Fatalf("RecordFill(partial before the adjustment): %v", err)
+	}
+	clk.Advance(time.Second)
+	a200Converge(t, j, "005930", "21", "0", clk.Now())
+	if _, err := j.RecordFill(context.Background(), terminalFill(sell, "31", "67900")); err != nil {
+		t.Fatalf("RecordFill(rest after the adjustment): %v", err)
+	}
+	got := readA200Ledger(t, j, p.ID)
+	got.log(t, "조정을 사이에 둔 부분 체결")
+	if len(got.Reconcile) != 1 || !strings.Contains(got.Reconcile[0], "X59 (SELL_ON_CLOSED)") ||
+		!strings.HasPrefix(got.Reconcile[0], ReconcileCauseAttributionFailed+"|") {
+		t.Fatalf("reconcile_states = %q, 현재 동작은 ATTRIBUTION_FAILED(X59) 1", got.Reconcile)
+	}
+	if len(got.Adjustments) != 1 || !strings.HasPrefix(got.Adjustments[0], AdjustmentUnknown+"|21→0|") {
+		t.Fatalf("adjustments = %q, 수렴 조정 21→0 하나", got.Adjustments)
+	}
+}
+
 // TestA200CurrentBehaviourAStopFillAfterAReBuyLandsOnTheNewInstance 는 전제 (f) — 체결 투영은 주문이 결속된 인스턴스가 아니라
 // (계좌 · 시장 · 종목)의 최신 인스턴스(currentInstance)를 읽는가. 수렴이 31→0 으로 닫은 뒤 사람의 재매수 5주가 새 EXTERNAL
 // 인스턴스로 접히고, 그 다음에 옛 손절 매도의 체결이 옴.

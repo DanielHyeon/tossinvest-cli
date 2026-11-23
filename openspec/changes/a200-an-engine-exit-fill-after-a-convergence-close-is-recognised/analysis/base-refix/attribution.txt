@@ -1,0 +1,13 @@
+# 귀속 실측(base 재고정 요건 1) — 2026-11-23T21:28:13Z, base 884be2a740d5f794a3493c75bff3c9fbfc35509b, HEAD b62dd4cfd63e94467c7d416054fca02cba14d3b1 + 작업 트리
+
+## git diff --name-status 884be2a740d5f794a3493c75bff3c9fbfc35509b -- '*.go' (작업 트리 포함)
+A	internal/journal/a200_convergence_close_exit_fill_repro_test.go
+A	internal/reconcile/a200_convergence_close_exit_fill_cycles_test.go
+
+## base..HEAD 의 .go 를 고친 비병합 커밋
+b62dd4cfd test(a200): 1단계 재현 · 증거 — W4 귀속 실패 재현, W2·W3 고착 재현, 전제 (f) 거짓, 편
+
+## check_analysis
+[logic-map] a200-an-engine-exit-fill-after-a-convergence-close-is-recognised: base 884be2a740d5 → working tree (no landed-commit.txt in HEAD) required 0 function(s) — judged at HEAD b62dd4cfd63e
+[logic-map] a200-an-engine-exit-fill-after-a-convergence-close-is-recognised: the target is the working tree, so this window also holds 1 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: no landing recorded — no ordinary commit on this history adds the pinning evidence — commit the bundles in an ordinary commit (a merge commit's own changes are not read)
+[logic-map] a200-an-engine-exit-fill-after-a-convergence-close-is-recognised: evidence complete or diff-proven exempt
