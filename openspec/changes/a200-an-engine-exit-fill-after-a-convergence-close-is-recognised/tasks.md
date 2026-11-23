@@ -6,7 +6,7 @@
 ## 1. 등록 · 증거 (1단계)
 
 - [x] 1.1 change 디렉터리 등록: `.openspec.yaml` · proposal · design · tasks · spec delta(아래 1.9 뒤에 조립) · Story `STORY-TOS-a200.yaml` · `_registry.yaml` · tracker 재생성
-- [ ] 1.2 `base-commit.txt`(change 루트 — `capture_change_base.py` 가 쓰는 자리). 1단계 값은 a198 착지 전 `884be2a74`. a198 착지 · `origin/main` merge 뒤 「사람 승인 base 재고정」(Manager 승인 2026-11-24 — 귀속 실측 · 승인 기록 · 단독 커밋 + 영수증)
+- [x] 1.2 `base-commit.txt`(change 루트 — `capture_change_base.py` 가 쓰는 자리). 1단계 값은 a198 착지 전 `884be2a74`. a198 착지 · `origin/main` merge 뒤 「사람 승인 base 재고정」(Manager 승인 2026-11-24 — 귀속 실측 · 승인 기록 · 단독 커밋 + 영수증) — `189367808`(884be2a74 → 28680af3d, 단독 커밋), 실측 `analysis/base-refix/attribution.txt`
 - [x] 1.3 사전 증거를 현재 HEAD 로 재확인해 `analysis/evidence-phase0.md` 로(scratch `a200-evidence/` — AST 재추출, 달라진 곳 표) + 운영 집계 요약(Manager 제공 — 건수·종류·날짜만)
 - [x] 1.4 **재현**: 조정 tx 뒤 엔진 매도 체결(W4)을 실제 원장·실제 훅으로 만드는 시험을 쓰고 편집 전 코드에서 돌려 `ATTRIBUTION_FAILED` 행 1 · `COMPLETED` 0 · 성과 0 을 확인(원문 `analysis/repro/w4.txt`). W5·W6 은 실제 `Tracker` 로
 - [x] 1.5 **범위 밖 재현 시도**(결과만 보고, 수리 안 함): W2·W3 의 수량 불일치 고착, 부분 조정 뒤 초과 체결 — 재현됨/안 됨/판정 불가와 그 근거(`analysis/repro/out-of-scope.md`)
@@ -21,8 +21,8 @@
 
 ## 2. 구현
 
-- [ ] 2.1 Pre-Edit 선언(High-risk)
-- [ ] 2.2 RED — design §3 의 1~5(1.4 의 본 사고 재현 시험을 차단 0 기대로 뒤집는 것이 첫 줄, 「조정을 사이에 둔 부분 체결」 재현 시험은 그대로 PASS) — 원문 `analysis/tdd/red.txt`
+- [x] 2.1 Pre-Edit 선언(High-risk) — `analysis/tdd/pre-edit.md`
+- [x] 2.2 RED — design §3 의 1~5(1.4 의 본 사고 재현 시험을 차단 0 기대로 뒤집는 것이 첫 줄, 「조정을 사이에 둔 부분 체결」 재현 시험은 그대로 PASS) — 원문 `analysis/tdd/red.txt`
 - [ ] 2.3 GREEN 최소 구현 — 새 파일(인정 판정 · 표지 쓰기) · `ProjectPosition` B5 1 자리. `ApplyExitFill` · 전이표 · 수렴 · 대사 해제 규칙 · 스키마 무편집. 주석은 한글로 「왜」
 - [ ] 2.4 post-edit 번들 · `check_analysis`
 - [ ] 2.5 변이 원장(design §3-6)

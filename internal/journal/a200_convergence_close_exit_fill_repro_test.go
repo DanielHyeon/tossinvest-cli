@@ -189,59 +189,9 @@ func probeFreeze(t *testing.T, j *Journal, positionID string) (TradeOutcome, Tra
 	return computeTradeOutcome(context.Background(), journalReader{j: j}, positionID, costs.DefaultModel(), nil)
 }
 
-// TestA200CurrentBehaviourAConvergenceCloseThenTheStopFillIsAnAttributionFailure 는 본 사고 모양(W4 · W5 의 원장 결과):
-// 엔진 진입 · 관리 포지션 31주, 손절 발의 무장 + 매도 주문 붙임, 수렴 조정 31→0 커밋, 그 뒤 같은 초에 그 매도 31주 종결 체결.
-func TestA200CurrentBehaviourAConvergenceCloseThenTheStopFillIsAnAttributionFailure(t *testing.T) {
-	j, clk := a200Journal(t)
-	entry, _ := openedPosition(t, j, "31")
-	p := currentPosition(t, j, entry)
-	sell := a200ArmStop(t, j, p.ID, order{intentID: "i-stop", attemptID: "a-stop", orderID: "o-stop",
-		side: "SELL", quantity: "31"})
-
-	clk.Advance(time.Second)
-	result := a200Converge(t, j, "005930", "31", "0", clk.Now())
-	if !result.ClosedExitState || result.Position.State != PositionClosed {
-		t.Fatalf("수렴 조정 결과 = %+v, 관리 인스턴스를 닫아야 함", result)
-	}
-	afterAdjustment := readA200Ledger(t, j, p.ID)
-	afterAdjustment.log(t, "조정 직후")
-
-	// 같은 초(시계를 움직이지 않음)에 그 매도의 종결 체결.
-	if _, err := j.RecordFill(context.Background(), terminalFill(sell, "31", "67900")); err != nil {
-		t.Fatalf("RecordFill(stop): %v", err)
-	}
-	got := readA200Ledger(t, j, p.ID)
-	got.log(t, "체결 뒤")
-
-	if len(got.Reconcile) != 1 || !strings.HasPrefix(got.Reconcile[0], ReconcileCauseAttributionFailed+"|") ||
-		!strings.Contains(got.Reconcile[0], "X59 (SELL_ON_CLOSED)") || !strings.HasSuffix(got.Reconcile[0], "|active") {
-		t.Fatalf("reconcile_states = %q, 현재 동작은 ATTRIBUTION_FAILED(X59 SELL_ON_CLOSED) 활성 행 1", got.Reconcile)
-	}
-	if got.State != PositionClosed || got.Quantity != "0" {
-		t.Fatalf("투영 = %s/%s, 현재 동작은 CLOSED/0 그대로", got.State, got.Quantity)
-	}
-	if countOf(got.ExitActions, ExitEventAdjustmentClosed) != 1 || countOf(got.ExitActions, ExitEventCompleted) != 0 {
-		t.Fatalf("exit_events = %q, 현재 동작은 ADJUSTMENT_CLOSED 1 · COMPLETED 0", got.ExitActions)
-	}
-	if countOf(got.ExitActions, ExitEventProposalFilled) != 1 || got.PendingID != "" {
-		t.Fatalf("exit_events = %q pending=%q, 현재 동작은 PROPOSAL_FILLED 1(종결 체결이 발의를 해소)", got.ExitActions, got.PendingID)
-	}
-	if got.Outcomes != 0 {
-		t.Fatalf("trade_outcomes = %d, 현재 동작은 0", got.Outcomes)
-	}
-	if len(got.Adjustments) != 1 || !strings.HasPrefix(got.Adjustments[0], AdjustmentUnknown+"|31→0|") {
-		t.Fatalf("adjustments = %q, 수렴 조정 UNKNOWN 31→0 하나", got.Adjustments)
-	}
-	if adjAt, fillAt := strings.Split(got.Adjustments[0], "|")[2], got.Fills[len(got.Fills)-1]; !strings.HasSuffix(fillAt, "|"+adjAt) {
-		t.Logf("조정 시각 %s 와 체결 커밋 시각이 다른 초임: %s", adjAt, fillAt)
-	} else {
-		t.Logf("조정 created_at 과 체결 committed_at 이 같은 초(%s) — D1 의 「시각 비교 불가」 모양", adjAt)
-	}
-
-	// D5 실현 가능성 탐침: 지금 이 원장에서 동결하면 무엇이 나오는가(엔진 진입 포지션).
-	outcome, reason := probeFreeze(t, j, p.ID)
-	t.Logf("[성과 탐침 · 엔진 진입] reason=%q outcome=%+v", reason, outcome)
-}
+// (a200 2.2) 1단계의 본 사고 모양 · 편입 · 부분 체결 「현재 동작」 시험 셋은 새 계약으로 뒤집혀
+// a200_recognition_test.go 의 TestA200AStopFillAfterAConvergenceCloseIsRecognised · …AnAdoptedStopFillIsRecognisedWithoutAnOutcome ·
+// …PartialStopFillsAfterAConvergenceCloseAreEachRecognised 로 옮겨 갔다. 편집 전 기대는 analysis/repro/w4.txt 원문에 남는다.
 
 // TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome 은 같은 입력의 정상 순서(W0) — 성과 값 비교 기준.
 func TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome(t *testing.T) {
@@ -261,75 +211,6 @@ func TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutco
 	}
 	frozen := outcomeOf(t, j, p.ID)
 	t.Logf("[W0 성과] %+v", frozen)
-}
-
-// TestA200CurrentBehaviourAnAdoptedPositionsOutcomeIsRefusedAsAPostAdoptionDisposal 은 편입 포지션의 같은 모양 —
-// D5(편입 · 엔진 진입 둘 다 성과 동결)의 실현 가능성을 탐침으로 잼.
-func TestA200CurrentBehaviourAnAdoptedPositionsOutcomeIsRefusedAsAPostAdoptionDisposal(t *testing.T) {
-	j, clk := a200Journal(t)
-	ctx := context.Background()
-	adoptable(t, j, "p-ext")
-	if _, err := j.AdoptPosition(ctx, sampleAdoption("p-ext")); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := j.OpenAdoptedExitState(ctx, "p-ext"); err != nil {
-		t.Fatal(err)
-	}
-	clk.Advance(time.Second)
-	sell := a200ArmStop(t, j, "p-ext", order{intentID: "i-stop", attemptID: "a-stop", orderID: "o-stop",
-		side: "SELL", quantity: "10"})
-	clk.Advance(time.Second)
-	a200Converge(t, j, "005930", "10", "0", clk.Now())
-	if _, err := j.RecordFill(ctx, terminalFill(sell, "10", "67900")); err != nil {
-		t.Fatalf("RecordFill(stop): %v", err)
-	}
-	got := readA200Ledger(t, j, "p-ext")
-	got.log(t, "편입 W4")
-	if len(got.Reconcile) != 1 || !strings.HasPrefix(got.Reconcile[0], ReconcileCauseAttributionFailed+"|") {
-		t.Fatalf("reconcile_states = %q, 편입 포지션도 현재 동작은 ATTRIBUTION_FAILED", got.Reconcile)
-	}
-	outcome, reason := probeFreeze(t, j, "p-ext")
-	t.Logf("[성과 탐침 · 편입] reason=%q outcome=%+v", reason, outcome)
-	if reason != OutcomeRefusalPostAdoptionDisposal {
-		t.Fatalf("편입 포지션 성과 탐침 사유 = %q, 현재 산식은 수렴 조정(편입 뒤 감소)을 %q 로 거절함", reason,
-			OutcomeRefusalPostAdoptionDisposal)
-	}
-}
-
-// TestA200CurrentBehaviourPartialStopFillsAfterAConvergenceClose 는 D4 의 부분 체결 모양: 31주 매도가 20(Working) 뒤 31(Done)로
-// 옴. 첫 거절이 행을 쓰고 둘째는 활성 행 때문에 아무것도 안 씀(F10).
-func TestA200CurrentBehaviourPartialStopFillsAfterAConvergenceClose(t *testing.T) {
-	j, clk := a200Journal(t)
-	entry, _ := openedPosition(t, j, "31")
-	p := currentPosition(t, j, entry)
-	sell := a200ArmStop(t, j, p.ID, order{intentID: "i-stop", attemptID: "a-stop", orderID: "o-stop",
-		side: "SELL", quantity: "31"})
-	clk.Advance(time.Second)
-	a200Converge(t, j, "005930", "31", "0", clk.Now())
-
-	if _, err := j.RecordFill(context.Background(), fillOf(sell, "20", "67900")); err != nil {
-		t.Fatalf("RecordFill(working): %v", err)
-	}
-	first := readA200Ledger(t, j, p.ID)
-	first.log(t, "부분 체결 1(Working)")
-	if first.PendingID != "i-stop" {
-		t.Fatalf("Working 체결 뒤 pending=%q, 발의는 종결 체결 전까지 살아 있어야 함(D4 전제)", first.PendingID)
-	}
-	clk.Advance(time.Second)
-	if _, err := j.RecordFill(context.Background(), terminalFill(sell, "31", "67900")); err != nil {
-		t.Fatalf("RecordFill(done): %v", err)
-	}
-	second := readA200Ledger(t, j, p.ID)
-	second.log(t, "부분 체결 2(Done)")
-	if len(first.Reconcile) != 1 || !strings.Contains(first.Reconcile[0], "X58 (SELL_ON_CLOSED)") {
-		t.Fatalf("첫 체결 reconcile_states = %q, 현재 동작은 X58 SELL_ON_CLOSED 행 1", first.Reconcile)
-	}
-	if len(second.Reconcile) != 1 {
-		t.Fatalf("둘째 체결 뒤 reconcile_states = %q, 활성 행이 있으면 더 쓰지 않음(F10)", second.Reconcile)
-	}
-	if len(second.Fills) != 3 {
-		t.Fatalf("fill_events = %q, 매수 1 + 거절된 매도 2 가 모두 기록됨(F11)", second.Fills)
-	}
 }
 
 // TestA200CurrentBehaviourAStopFillStraddlingTheConvergenceIsAnAttributionFailure 는 design §2 가 이름으로 적은 「이 change 가
