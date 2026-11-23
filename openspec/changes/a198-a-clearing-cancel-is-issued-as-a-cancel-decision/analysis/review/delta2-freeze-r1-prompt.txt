@@ -1,0 +1,17 @@
+TossOS change a198 에 더해진 보강 2(D9·D10)와 정본 delta 를 적대적 Eng 관점으로 리뷰하라. 1회차이자 마지막이다.
+
+대상: openspec/changes/a198-a-clearing-cancel-is-issued-as-a-cancel-decision/ 의 design.md(D9·D10, §2-7, §3 「보강 2」 두 문단, §4 의 18~30 과 보강 2 변이, §6 맨 위 「미종결 취소의 회귀 — 보강 2 뒤에도 남는 것」), proposal.md(What Changes 6·7, 「하지 않는 것」 첫 항목, Impact 보강 2), specs/order-execution/spec.md(MODIFIED 「IN_DOUBT 해소」 — 생성기 analysis/modified-delta/make_modified.py·compare.diff, ADDED 「세션은 IN_DOUBT 로 남은 취소를 대상 주문의 종결 기록으로 닫는다」), analysis/d9-d10-evidence.md. 정본: openspec/specs/order-execution/spec.md(「IN_DOUBT 해소」 전체 — 특히 기동 ACKED 문단과 「세션 중 해소」 묶음), openspec/specs/exit-policy/spec.md(「보호 청산의 길 치우기는 엔진 귀속 주문만 다룬다」와 「같은 종목에 미종결 attempt가 있으면 치우기는 완료가 아니다」). 선례: openspec/changes/archive/2026-09-30-a094-a-stop-clears-what-blocks-it/design.md 의 D−4.2(353-378 줄)·572-576 줄. 계약: docs/migration/openapi.latest.json 의 components.schemas.OrderOperationResponse(취소 응답 orderId).
+
+현재 소스로 직접 확인할 것: internal/reconcile/{acked_boot.go,recovery.go,a094_acked_boot_test.go}, internal/app/engine/{in_doubt_settle.go,a193_in_doubt_settle_test.go,exitloop.go(clearTheSymbol),a198_clear_cancel_log.go}, internal/journal/{exit_proposal_release.go(confirmedOrderTerminalEvidence·ConfirmedCancelOf·intentOrdersAwaitingCloseQ),fills.go(allFillSnapshotsCTE·LiveOrdersForSymbol·upsertFillSnapshot·updateFillSnapshotRefusal·markFillRefused),lineage.go,resolution.go,durability.go(transition·MarkAcked·Settle),dispatch.go(DispatchVerified),lifecycle.go,recovery.go,cancel_refusal_latch.go,reservation_release.go}, internal/execgw/{amend_indoubt.go(resolveCancel),indoubt.go(Resolve),gateway.go(Cancel·checkSymbolFree),a094_shared_judgements.go,roundtrip.go,cancel_refusal_latch.go}, internal/brokerstate/derive.go, internal/filldetect/ledger.go, internal/flatten/{flatten.go,liquidate.go}, cmd/tossctl/flatten.go.
+
+맥락: 실제 돈을 다루는 손절 경로. a198 은 길 치우기의 엔진 주문 취소가 처음 실제로 나가게 했고, 구현 리뷰 r2 가 「취소가 미종결(IN_DOUBT·ACKED)로 남으면 대상 주문의 종결 기록이 들어와도 그 종목의 손절이 재시작까지 막힌다 — 이전에는 취소가 안 나가 종결 기록 뒤 손절이 나갔다」 회귀를 실측했다. 보강 2: D10 은 세션 해소 실행자가 IN_DOUBT 취소를 대상 주문의 원장 종결 기록(길 치우기와 같은 술어, 소유 PLACE/AMEND intent 범위, 소유 유일, fail_closed 아님)으로 한 트랜잭션 안에서 닫는다(브로커 호출 없음, 판정 표는 resolveCancel 의 CANCELLED*→CONFIRMED · FILLED/REJECTED*→FAILED_CONFIRMED, REPLACED·비종결은 무변). D9 는 기동이 기록 번호가 있는 ACKED 취소를 그 번호로 CONFIRMED 로 마친다(읽기 없음).
+
+찾을 것(P0/P1/P2, 파일:줄 근거, 사실과 추측 구분):
+1. 원장의 종결 기록만으로 취소 attempt 를 닫는 것이 살아 있는 주문 위에 손절(초과 매도·이중 매도)을 내게 하는 경로 — 종결 표현의 반례: 부분 체결 뒤 잔량, 정정(REPLACED·already-modified), 주문 번호 재사용(다른 날·다른 계좌·다른 방향), fail_closed, 소유 모호, legacy 빈 범위 스냅숏, lineage 로 바뀐 현재 번호(target_order_id)와 소유 attempt 의 broker_order_id 의 관계.
+2. 기동이 ACKED 취소를 CONFIRMED 로 마치는 것이 틀린 주문 번호를 확정하거나 살아 있는 주문을 치움으로 읽게 하는 경로(a094 가 PLACE 에서 철회한 이유가 CANCEL 에도 해당하는가; D8 의 매수 치움과 결합; CANCEL_REJECTED 레코드).
+3. 세션 실행자와 디스패치·체결 감지·길 치우기·flatten 프로세스의 resolveCancel 사이의 경합(같은 attempt 를 두 곳이 종결, 판독과 쓰기 사이의 창, 한 트랜잭션 설계가 실제로 닫는가).
+4. flatten(Saga.settleStep·classifyCancel·resolveStep·planLiquidation)과 기동 복구(Recovery.Run·confirmAcked·resolveCancel)·a165 latch·예약 해제에 주는 영향, 비상 청산의 즉시성.
+5. 정본 MODIFIED 가 기존 문장(같은 Requirement 의 다른 문단·시나리오, exit-policy)과 모순되는 곳, ADDED 의 Scenario 가 시험 가능한가.
+6. design §6 의 「여전히 이전보다 나쁜 경우」 목록이 빠뜨린 경우, 「이전과 같다」 주장(base clearTheSymbol 기준)의 오류.
+7. 시험(design §4-18~30)·변이 목록의 공백, 판정 표 동치 시험이 실제로 두 표를 묶는가.
+파일을 수정하지 말 것. 읽기 전용 명령만(git 상태 변경·빌드·시험 실행 금지).

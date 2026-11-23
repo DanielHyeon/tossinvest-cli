@@ -184,3 +184,26 @@ Pre-Edit Gate:
 - **Manager 결정 대기**: A1 확정 거절 뒤 백오프 없음(종결 기록까지 5 초마다 결정·attempt·취소 POST, Critical 예산 — 다른 종목 손절 429 위험) · A4/S1 `settledCancelRefusal` 의 409 한정(설계 D7 은 code 판정).
 - 반영 뒤 재검증(`analysis/verify/r2-*.txt`, 381f229de+작업트리, GOFLAGS 없음): engine `-run 'A198|A094|ExitClear|ExitObserver'` ok 73.952s · execgw `-run 'Cancel|RiskGuardian|Issue|Refusal|A165'` ok 55.266s · flatten ok 18.648s · journal `-run 'Prepare|Decision'` ok 44.821s · `-race -run A198` engine ok 103.442s · `make lint` rc 0 · `openspec validate --strict` valid · `check_analysis.py` 「evidence complete or diff-proven exempt」. 미실행: 전체 스위트 · `make gate` · `make sdd-sync`.
 - 기록만: A3(D8 늦은 매수 체결 → RECONCILE, 공시 잔여) · A5(정정 원주문의 실제 답 미측정) · A6(재분류 Detail 문구·사유 코드 차이) · A7(표시 맵 누수·lookup 표시 미해제) · A8(Guardian 경로 문서와의 어긋남 — D2 결정).
+
+## 보강 2 문서 — D9·D10 (2026-11-24, 팀메이트 Opus, production·시험 Go 편집 0)
+
+- 증거: `analysis/d9-d10-evidence.md`(AST 34 개 `analysis/cited-ast/d2_*.ast.json`, 생성 스크립트 `analysis/d9-d10-ast.sh` — 커밋 뒤 재실행 rc 0). 조사 F 항목 **틀린 것 없음**, 보강 1(ACKED 취소의 번호는 취소가 새로 받은 식별자 — 계약 `OrderOperationResponse.orderId`)과 새 사실 3(REPLACED = 잔량이 후계에 살아 있는 terminal · terminal+fail_closed 공존 · 엔진 미종결 취소가 flatten 을 `SymbolInFlight` 로 막음).
+- 「이전에도 보류였다」 두 문장: base `clearTheSymbol` 로 **둘 다 참**(취소를 시도하는 주문이 원장 미체결 목록에 있는 동안 base 는 언제나 `cleared=false`).
+- 편집 표면: 기존 함수 `confirmAcked`·`inDoubtSettle.sweep` + 뒤집히는 시험 `TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed` 1. a193 시험 뒤집힘 0, a166 census·a163 핀 적중 0.
+- 정본 delta: MODIFIED 「IN_DOUBT 해소」(생성기 확장, 편집 6, 역치환 단언 — 그 밖 차이 0) + ADDED 「세션은 IN_DOUBT 로 남은 취소를 대상 주문의 종결 기록으로 닫는다」. `openspec validate --strict` valid. tracker `--check` current.
+
+## 보강 2 freeze 리뷰 r1 (2026-11-24, codex, 1회차·마지막)
+
+원문 `analysis/review/delta2-freeze-r1-codex.md`(프롬프트 `delta2-freeze-r1-prompt.txt`). 판정: 「현재 설계대로 확정하면 안 됨 — P1 3·P2 4, P0(실제 초과 매도) 입증 없음」. D9 의 번호 덮어쓰기 결함 없음, 한 트랜잭션·a165 꼬리표·예약 해제 결함 없음, MODIFIED·compare.diff 일치 확인.
+
+| # | 발견 | 처분 |
+|---|---|---|
+| 1 P1 | 같은 소유자에 legacy 종결 행 + scoped 비종결·fail_closed 행이 공존하면 terminal 행만 보는 D10 이 닫음(fills.go:775·888) | **Manager 결정 대기(Q6)** — 「관련 행 전부」로 좁히면 길 치우기 술어(「같은 정의」 지시)보다 좁아짐 |
+| 2 P1 | 번호 재사용: 어제 종결된 엔진 주문과 같은 번호의 오늘 외부 주문을 겨눈 IN_DOUBT 취소(flatten)를 어제 종결 기록으로 닫음 — 증거 문서 「외부 주문이면 후보 0」 반례 | 증거 문서 문장 **정정**. 결속은 **Manager 결정 대기(Q7)** — 추천: 종결 행 `committed_at` > 취소 attempt 기록 시각 |
+| 3 P1 | 「종결 뒤 최대 5 초」 거짓 — 스윕 끝난 뒤 5 초 + 직렬 PLACE 해소(건당 5 분) | 문서 **정정**(§2-7·D10 근거·§6 「같은 경우」에서 뺌, §6-5 「이전보다 나쁜 경우」로). 별도 처리 기회·지연 상한은 **Manager 결정 대기(Q5)**. 시험 23 에 지연 측정 추가 |
+| 4 P2 | ADDED Scenario 「그 스윕은 브로커 요청 0」 이 같은 스윕의 PLACE 조회 의무와 충돌 | **반영**(명백한 문구 결함): 「그 취소의 판독·종결은 요청 0(같은 스윕의 발주 해소는 종전대로)」. 시험 23 에 혼합 스윕 |
+| 5 P2 | 세션 중 `DISPATCH_STARTED` 고착(MarkAcked·MarkInDoubt 쓰기 실패)이 잔여 목록에 없음 | **반영**: §6-4 · proposal ⑤ · Story limits. 시험 23c(관측점) |
+| 6 P2 | D10 이 게이트웨이 차단을 풀어도 이미 HELD 인 flatten 단계는 같은 saga 에서 안 풀림 | **반영**: §2-7③·§6 flatten 항목·증거 §6 정정(「flatten 재실행 필요」), 시험 23b |
+| 7 P2 | 시험 27 이 「첫 관찰」 과 `Resolve` 최종 결과를 혼동 | **반영**: 종결 5 값은 최종 결과 비교, 비종결은 첫 대기에서 멈춰 전이 없음 관찰, REPLACED·UNKNOWN 은 명시적 차이(park vs IN_DOUBT 유지) |
+
+- 리뷰가 덧붙인 것(기록): 시험 25 에 별도 원장 연결·체결 기록 writer 경합, 전이 행·예약 해제 실패 시 전체 rollback 관측 — 구현 단계 시험 설계에 반영 예정(새 가드 아님).

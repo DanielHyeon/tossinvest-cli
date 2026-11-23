@@ -42,9 +42,21 @@
 - [x] 4b.7 GREEN — `withCancelRefusal` + 새 판정 함수(새 파일) · `clearTheSymbol`(D8 · B9 실패 줄 · 표시를 쓰기 뒤로). 편집 뒤 번들 재생성(재번호).
 - [x] 4b.8 변이 원장 보강(design §4 보강 변이 전부) · 선택 시험(`./internal/execgw -run 'Cancel|A165|Refusal|A094'` 추가) · `make lint` · validate · check_analysis.
 
+## 4c. 보강 2 — D9·D10 (구현 리뷰 r2 의 회귀를 a198 안에서 닫음, Manager 결정 2026-11-24)
+
+- [x] 4c.1 증거: F 항목 재확인·(a)~(f)·base 확인·편집 표면 — `analysis/d9-d10-evidence.md`, AST `analysis/cited-ast/d2_*.ast.json`.
+- [x] 4c.2 문서: design D9·D10·§2-7·§3·§4(18~30)·변이·§6 재작성, proposal, 정본 delta(order-execution 「IN_DOUBT 해소」 MODIFIED + ADDED 하나 — 생성기 확장), Story limits.
+- [x] 4c.3 보강 2 freeze 리뷰 1회(codex) — `analysis/review/delta2-freeze-r1-codex.md`, `review.md`.
+- [ ] 4c.4 Manager 보강 2 freeze.
+- [ ] 4c.5 Pre-Edit 갱신(`confirmAcked`·`inDoubtSettle.sweep`·`TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed` 추가) · 그 셋의 FLM/BTM pre-edit 번들.
+- [ ] 4c.6 RED — design §4-18~30(18 은 r2 탐침 모양), 원문 `analysis/tdd/red-4c.txt`.
+- [ ] 4c.7 GREEN — 원장 새 함수·판정 표 순수 함수(새 파일) · 상수 분리 · `confirmAcked` · `sweep` · 인터페이스. 편집 뒤 번들 재생성.
+- [ ] 4c.8 변이 원장(design §4 보강 2 변이 전부) · 선택 시험(design §4) · `make lint` · validate · check_analysis.
+- [ ] 4c.9 구현 적대 리뷰(보강 2 분, 다른 컨텍스트) → gstack review 1회.
+
 ## 5. 종결
 
-main 반영은 Manager 가 사용자 결정(design §6 의 「이 change 가 남기는 회귀」 수용 또는 후속 change 「취소 attempt 의 미종결 복구」와 함께 반영)을 받은 뒤다.
+main 반영은 Manager 가 사용자 결정(design §6 의 「보강 2 뒤에도 남는 것」 1~6 과 flatten 잔여의 수용)을 받은 뒤다.
 
 - [ ] 5.1 Manager 검증(diff·시험 원문 재실행).
 - [ ] 5.2 완료 게이트(격리 worktree) → archive → Story 경로 갱신 → push.

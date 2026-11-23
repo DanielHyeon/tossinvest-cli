@@ -28,12 +28,14 @@
 3. **결합을 지나는 시험**: 실제 게이트웨이와 실제 원장(임시 경로), 가짜 브로커로 길 치우기 → 취소 → 손절 제출을 끝까지 잇는 시험을 둔다. 운영 조립(`Context.ExitObserver`)으로 만든 관측기가 그 시험 가운데 하나를 구동한다.
 4. **(보강 2026-11-24, 구현 리뷰 r1 P0-1) 이미 끝난 주문의 취소 거절은 확정 거절**: 엔진 게이트웨이의 취소가 409 `already-filled`·`already-canceled`·`already-rejected` 로 거절되면 그 CANCEL attempt 를 IN_DOUBT 가 아니라 확정 거절(기존 사유 코드 `dispatch_rejected_by_broker`)로 종결한다(code 필드 판정, 엔진 취소 정책에만 — `already-modified`·CLI flatten·발주·정정은 무변, design D7). 정본 「취소의 일시적 거절 처리」 의 Scenario 「다른 사유의 409」 를 이 예외에 맞춰 MODIFIED 로 고친다. 없으면 그 종목의 손절이 재시작까지 막힌다(이 change 가 취소를 처음 내보내면서 생긴 회귀, 리뷰 탐침 실측).
 5. **(보강) 접수 확정된 매수는 다시 취소하지 않는다**: 엔진의 취소가 이미 접수 확정된 매수는 치워진 것으로 본다(design D8).
+6. **(보강 2, 2026-11-24 — 구현 리뷰 r2 의 회귀를 이 change 안에서 닫음) 세션은 IN_DOUBT 로 남은 취소를 대상 주문의 원장 종결 기록으로 닫는다**: 세션 해소 실행자가 스윕마다 IN_DOUBT 인 취소 attempt 의 대상 주문이 원장에 종결 기록(길 치우기와 같은 정의, 대상의 소유 주문 범위)을 가지면 취소로 끝났으면 CONFIRMED, 체결·거부로 끝났으면 FAILED_CONFIRMED 로 닫는다 — 브로커 호출 없음, 판정 표는 기동 해소 `resolveCancel` 과 같고 동치 시험으로 묶음(design D10).
+7. **(보강 2) 기동은 ACKED 로 남은 취소의 쓰기를 마친다**: 기록 번호가 있는 ACKED 취소를 그 번호로 CONFIRMED 로 종결한다 — 디스패치가 하려던 쓰기 그대로, 읽기·추론 없음(design D9). 정본 「IN_DOUBT 해소」 의 기동 ACKED 문단·세션 해소 대상 문단을 MODIFIED, ADDED 하나.
 
 ## 이 change 가 하지 않는 것
 
-- **취소 attempt 의 미종결 복구 — 그래서 남는 회귀(구현 적대 리뷰 r2, Manager 처분 2026-11-24 — main 반영은 사용자 결정 뒤).** 이 change 뒤, 길 치우기의 취소가 미종결로 남는 경우(5xx·전송 불명으로 IN_DOUBT, `already-modified` 로 IN_DOUBT, 접수 뒤 최종 쓰기 전 충돌로 ACKED 고착)에는 그 종목의 손절이 대상 주문의 종결 기록이 들어와도 엔진 재시작(ACKED·`already-modified` 는 그 뒤)까지 보류된다. 이 change 이전에는 취소가 나가지 않았으므로 그 경우에도 종결 기록 뒤에 손절이 나갔다 — **그 경우에 한해 이전보다 나쁘다**(리뷰 2회차 실측). 지연 경보와 연속 실패 경보는 나가며(ACKED 는 지연 경보만), 운영자가 할 수 있는 일은 안전한 창에서의 엔진 재시작이나 앱에서의 수동 매도다. 일반 경로(취소 접수, 이미 끝난 주문의 409)는 이전보다 낫다: 이전에는 엔진 미체결 주문이 있는 종목의 손절이 그 주문이 체결되거나 만료될 때까지 언제나 보류됐다. 닫는 change: 「취소 attempt 의 미종결 복구」(후속, a197 재개의 선행이기도 하다). design §6.
+- **미종결 취소 가운데 보강 2 로도 닫히지 않는 것 — 그래서 남는 회귀(design §6, main 반영은 Manager 가 사용자 결정을 받은 뒤).** r2 가 잰 회귀(미종결 취소가 대상의 종결 기록 뒤에도 손절을 재시작까지 막음)는 D9·D10 으로 닫히고, 다음은 **여전히 이 change 이전보다 나쁘다**: ① 세션 중 ACKED 고착(접수 뒤 최종 쓰기 실패, 프로세스 생존 — 엔진 재시작까지 보류, 지연 경보만) ② 종결 행이 `fail_closed` 인 대상 ③ `REPLACED`(후계 있음)로 끝난 대상(도달 거의 불가) ④ 소유가 거래일을 건너 모호하거나 범위가 맞지 않는 대상 ⑤ 세션 중 `DISPATCH_STARTED` 고착(전송 뒤 상태 쓰기 실패, 프로세스 생존) ⑥ D10 의 닫힘 지연(앞 스윕의 직렬 발주 해소 — 건당 예산 5 분 — 뒤 다음 스윕) — 이전에는 종결 기록 뒤 손절이 나갔고 이제는 재시작까지 보류된다. `already-modified` 와 대상이 살아 있는 동안의 보류는 이전과 같다. 엔진이 멈춘 동안 엔진의 미종결 취소가 있는 종목은 수동 flatten 에서 보류되고, 이미 보류된 flatten 단계는 D9·D10 뒤에도 flatten 을 다시 실행해야 풀린다. 확정 거절의 매 주기 재취소 억제(gstack A1)는 넣지 않는다. 운영자 조치: 안전한 창에서의 엔진 재시작(D9) 또는 앱에서의 수동 매도. design §6.
 - 엔진에 귀속되지 않는(사람의) 주문의 취소 — a197(보류 중, 이 change 가 선행).
-- 세션 중 `CANCEL` 의 IN_DOUBT 해소(a193 design §7-3 후속)와 ACKED 로 남은 `CANCEL` 의 복구. 공시: 취소가 ACKED 또는 IN_DOUBT 로 남으면 그 종목의 손절은 보류되고, ACKED 는 연속 실패 계수에서도 빠진다(대상 전부가 그 진행 중 취소일 때 — design §6). 지연 경보(30 초)는 나간다. 지금 빌드에는 ACKED 로 남은 취소를 닫는 운영자 경로가 없다 — 후속 change 『CANCEL attempt 의 복구 계약(IN_DOUBT·ACKED)』의 대상이고, a197 재개의 선행이기도 하다.
+- 세션 중 `CANCEL` 의 **브로커 조회 해소**와 세션 중 ACKED 의 종결(D10 은 원장 종결 기록만, D9 는 기동에서만). 세션 중 `AMEND` 의 해소.
 - 전일 주문의 거래일 결속(design §6). 매수 취소 접수 뒤 재취소는 D8 이 없앤다(design §2-5).
 - 길 치우기의 판정 규칙(매도 취소의 종결 증거 대기, 미종결 attempt 가드, 연속 실패 트리거)·재제출 시점·알림 key 의 변경.
 - 운영에서 과거에 이 실패가 실제로 손절을 막았는지의 소급 조사(장부에 흔적이 없다 — 위 표).
@@ -43,13 +45,14 @@
 ### Modified Capabilities
 
 - `exit-policy`: 길 치우기의 취소가 주문 경로가 받아들이는 취소 결정으로 발행되어야 하고, 그 결합이 실제 주문 경로를 지나는 시험으로 고정되어야 하며, 발행·제출 실패가 조용히 넘어가서는 안 된다는 요구 추가. 엔진의 취소가 접수 확정된 매수는 다시 취소하지 않는다는 요구 추가(D8).
-- `order-execution`: 엔진 취소가 이미 끝난 주문을 이유로 거절되면(409 `already-filled`·`already-canceled`·`already-rejected`) 확정 거절로 분류한다는 요구 추가(D7), 「취소의 일시적 거절 처리」 의 Scenario 「다른 사유의 409」 를 그 예외에 맞춰 수정(MODIFIED — analysis/modified-delta/ 의 생성기·대조 diff).
+- `order-execution`: 엔진 취소가 이미 끝난 주문을 이유로 거절되면(409 `already-filled`·`already-canceled`·`already-rejected`) 확정 거절로 분류한다는 요구 추가(D7), 「취소의 일시적 거절 처리」 의 Scenario 「다른 사유의 409」 를 그 예외에 맞춰 수정(MODIFIED — analysis/modified-delta/ 의 생성기·대조 diff). 보강 2: 「IN_DOUBT 해소」 의 기동 ACKED 문단(D9)·세션 해소 「대상」 문단과 시나리오 「세션 중에는 진행 중인 전송을 종결하지 않는다」(D10)를 MODIFIED, 「세션은 IN_DOUBT 로 남은 취소를 대상 주문의 종결 기록으로 닫는다」 ADDED.
 
 ## Impact
 
 - 기존 함수 본문 편집(gate ⑤ FLM 대상, analysis/edit-surface.md): `ExitObserver.clearTheSymbol` 하나(취소 결정 발행 호출과 실패 기록 호출). `Context.ExitObserver`·`RiskGuardian.IssueReduction`·a129 함수·시험 하네스는 무편집. a166 census·a163 렌더 해시 적중 0.
 - 새 코드: 실패 기록 함수(새 파일, `ExitOrderLog` 에 직접 한 줄 — design D4)와 그 중복 억제 맵(관측기 구조체 새 필드), 시험 파일.
 - 보강(D7·D8, analysis/d7-d8-evidence.md §7): 기존 함수 편집 +1 `Gateway.withCancelRefusal`(internal/execgw — CANCEL 만 가를 수 있는 유일한 기존 자리) + 새 판정 함수(새 파일). `clearTheSymbol` 은 D8·D4a 로 추가 편집. 사유 코드는 기존 `dispatch_rejected_by_broker` 재사용 — `AllReasonCodes`·골든 무편집(Manager 결정 2026-11-24). `Gateway.submit`·`classifyMutation`·journal·flatten 패키지 무편집. D7 은 엔진 취소 정책에만 걸려 CLI flatten 의 동작은 바뀌지 않는다(Manager 결정 2026-11-24).
+- 보강 2(D9·D10, analysis/d9-d10-evidence.md §8): 기존 함수 편집 +2 `Recovery.confirmAcked`(internal/reconcile)·`inDoubtSettle.sweep`(internal/app/engine) + 뒤집히는 시험 1 `TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed`. 새 코드는 새 파일: 원장의 판독+종결 한 트랜잭션 함수, 판정 표 순수 함수. 선언 편집(함수 아님): `inDoubtLedger` 인터페이스 메서드 1, `confirmedOrderTerminalEvidence` 상수를 일치 조건 상수로 분리(결합 문자열 바이트 동일), reconcile 사유 상수 1. `resolveCancel`·`Attempt.transition`·`ResolveConfirmed/Failed`·`LiveOrdersForSymbol`·flatten 무편집. a166 census·a163 핀 적중 0. 브로커 호출 증가 0(D10 원장만, D9 읽기 없음).
 - 브로커 호출: 길 치우기가 원래 내려던 취소가 이제 실제로 나간다 — 취소 1건 = 사전 단건 조회 1 + 취소 요청 1, 둘 다 관측 루프 안에서 동기(retry matrix 행 31·33·37, analysis/rate-limit.md). 대상 주문 수 × (사전 조회 시한 2s + 취소 HTTP 시한 15s) 는 HTTP 시간 예산이며, 토큰 잠금 대기·401 재전송·계좌 예산 admission 을 더한 전체 최악 지연은 미확정 — design §2-4. 새 호출 종류가 아니다.
 - 원장: 취소 attempt(`kind=CANCEL`)가 처음으로 기록되기 시작한다. 스키마 변경 없음 — 수동 flatten 이 이미 쓰는 형식.
 - 설정·토글 없음. 정본이 이미 요구하는 동작의 수리이므로 토글 뒤에 두지 않는다.
