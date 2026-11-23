@@ -1,0 +1,2 @@
+Change 'a198-a-clearing-cancel-is-issued-as-a-cancel-decision' is valid
+rc=0

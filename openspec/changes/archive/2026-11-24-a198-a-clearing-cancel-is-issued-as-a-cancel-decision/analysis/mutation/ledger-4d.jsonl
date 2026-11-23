@@ -1,0 +1,12 @@
+{"step": "copy", "path": "/home/daniel/tossos-work/a198-mut4d-2521480", "sha": "8babd42e749dd58e29e45f1851f5ecabb4f44b4f"}
+{"step": "control", "rc": 0, "tail": ["ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/app/engine\t28.768s"]}
+{"mutant": "X1 넣지 않고 바로 쓰기(이전 구현)", "applied": true, "file": "internal/app/engine/a198_clear_cancel_log.go", "line": 71, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198TheCancelFailureLineIsWrittenAfterTheCyclesSubmissions", "TestA198ABlockedLogWriterDoesNotHoldTheNextPositionsStop", "TestA198ARefusedCancelIsLoggedOnceWithoutAccountQuantityPriceOrDetail", "TestA198AnUnrecordableCancelDecisionIsLoggedOnce", "TestA198AnUnreadableWorkingOrderIsLoggedOnce"]}
+{"mutant": "X1 넣지 않고 바로 쓰기(이전 구현)", "restored": true}
+{"mutant": "X2 표시를 쓰기 앞에", "applied": true, "file": "internal/app/engine/a198_clear_cancel_log.go", "line": 97, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198AFailureLineWhoseWritePanickedIsWrittenNextCycle"]}
+{"mutant": "X2 표시를 쓰기 앞에", "restored": true}
+{"mutant": "X3 비우기 호출 삭제", "applied": true, "file": "internal/app/engine/exit_order_log.go", "line": 244, "reached": 0, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198TheCancelFailureLineIsWrittenAfterTheCyclesSubmissions", "TestA198TheCancelFailureQueueIsFlushedByTheCycleEnd", "TestA198ARefusedCancelIsLoggedOnceWithoutAccountQuantityPriceOrDetail", "TestA198AnUnrecordableCancelDecisionIsLoggedOnce", "TestA198AnUnreadableWorkingOrderIsLoggedOnce", "TestA198AFailureLineWhoseWritePanickedIsWrittenNextCycle", "TestA198AConfirmedCancelClearsTheFailureMark"]}
+{"mutant": "X3 비우기 호출 삭제", "restored": true}
+{"mutant": "X4 대기열을 비우지 않고 다시 씀", "applied": true, "file": "internal/app/engine/a198_clear_cancel_log.go", "line": 90, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198ARefusedCancelIsLoggedOnceWithoutAccountQuantityPriceOrDetail", "TestA198AnUnrecordableCancelDecisionIsLoggedOnce", "TestA198AnUnreadableWorkingOrderIsLoggedOnce", "TestA198AConfirmedCancelClearsTheFailureMark"]}
+{"mutant": "X4 대기열을 비우지 않고 다시 씀", "restored": true}
+{"step": "final-control", "rc": 0}
+{"step": "cleanup", "removed": true}

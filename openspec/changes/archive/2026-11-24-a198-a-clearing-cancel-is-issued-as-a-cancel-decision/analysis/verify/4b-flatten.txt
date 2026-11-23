@@ -1,0 +1,3 @@
+# HEAD e92b7621b · 2026-11-24T00:39:58+09:00 · cmd: go test ./internal/flatten -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/flatten	20.574s
+rc=0

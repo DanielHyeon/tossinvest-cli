@@ -241,6 +241,7 @@ func (o *ExitObserver) endExitOrderCycle(ctx context.Context) {
 	for _, q := range queue {
 		o.writeExitOrder(q.event, q.warn, q.line)
 	}
+	o.flushClearCancelFailures()
 	// 이 주기에 거절이 없던 포지션의 래치는 풂 — 래치는 연속한 주기의 같은 거절만 묶음.
 	for id := range o.exitOrderRefused {
 		if !o.exitOrderRefusedNow[id] {

@@ -1,0 +1,155 @@
+{
+  "file": "internal/risk/chain.go",
+  "source_sha256": "43b2ef76b276cc56f96071de62bea02df21bc509ea0cfc08db82a3f3729216fc",
+  "package": "risk",
+  "function": "Evaluate",
+  "signature": "Evaluate(params=1, results=1)",
+  "start": {
+    "line": 131,
+    "column": 1
+  },
+  "end": {
+    "line": 144,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 132,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 139,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 133,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 136,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 140,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 143,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 10
+      },
+      "text": "preflight"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 133,
+        "column": 10
+      },
+      "text": "at"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 10
+      },
+      "text": "at"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 28
+      },
+      "text": "evaluateReduction"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 11
+      },
+      "text": "s.eval"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 11
+      },
+      "text": "at"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 9
+      },
+      "text": "allow"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 132,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 139,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

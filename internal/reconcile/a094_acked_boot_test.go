@@ -177,14 +177,19 @@ func TestA094AnUnconfirmedAckedPlaceStaysAndIsNamed(t *testing.T) {
 	}
 }
 
-// 4.N4b — CANCEL ACKED 와 번호 없는 PLACE ACKED: 읽기 0, 상태 무변경, 알림 1.
+// 4.N4b — 번호 없는 PLACE ACKED·AMEND ACKED: 읽기 0, 상태 무변경, 알림 1. a198 D9: 번호 있는 CANCEL ACKED 는 기동이 그 번호로
+// 쓰기를 마침 — 읽기 0, CONFIRMED, 알림 0(발주 확정 성공과 대칭).
 func TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed(t *testing.T) {
 	for _, tc := range []struct {
 		name  string
 		kind  journal.MutationKind
 		order string
+		want  journal.AttemptState
 	}{
-		{"cancel", journal.KindCancel, "O-target"},
+		{"cancel", journal.KindCancel, "C-O-target", journal.StateConfirmed},
+		{"amend", journal.KindAmend, "O-successor", journal.StateAcked},
+		{"numberless place", journal.KindPlace, "", journal.StateAcked},
+		{"numberless cancel", journal.KindCancel, "", journal.StateAcked},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "journal.db")
@@ -193,8 +198,14 @@ func TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed(t *testing.T) {
 			alerts := &a094Alerts{}
 			j, _ := a094Recover(t, path, orders, alerts)
 			stored, _ := j.LookupAttempt(context.Background(), "attempt-acked")
-			if stored.State != journal.StateAcked || orders.reads != 0 {
-				t.Fatalf("state %s reads %d, want ACKED and no read", stored.State, orders.reads)
+			if stored.State != tc.want || orders.reads != 0 {
+				t.Fatalf("state %s reads %d, want %s and no read", stored.State, orders.reads, tc.want)
+			}
+			if tc.want == journal.StateConfirmed {
+				if len(alerts.events) != 0 || stored.BrokerOrderID != tc.order {
+					t.Fatalf("alerts %v order %q, want none and the recorded number %q", alerts.events, stored.BrokerOrderID, tc.order)
+				}
+				return
 			}
 			a094AssertNamed(t, alerts, "attempt-acked")
 			if alerts.events[0].Fields[obs.FieldSymbol] != "AAPL" {

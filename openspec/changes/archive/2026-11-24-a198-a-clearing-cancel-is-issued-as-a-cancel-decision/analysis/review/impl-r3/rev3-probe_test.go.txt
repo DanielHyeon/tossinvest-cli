@@ -1,0 +1,161 @@
+package engine_test
+
+// 리뷰 3회차(보강 2) 사본 전용 탐침 — 커밋하지 않음.
+
+import (
+	"fmt"
+	"net/http"
+	"testing"
+	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+)
+
+// journalFillLegacy 는 계좌·거래일·방향 없이(legacy 모양) 종결 관측을 만듦.
+func journalFillLegacy(f *a198Fixture, orderID string) journal.FillObservation {
+	return journal.FillObservation{
+		OrderID: orderID, Symbol: "005930", Market: "kr",
+		State: "CANCELLED", Terminal: true, Quantity: "4", FilledQuantity: "1", AveragePrice: "72000",
+		ObservedAt: f.s.clk.Now().Format(time.RFC3339),
+	}
+}
+
+func rev3ArmedSellInDoubt(t *testing.T) (*a198Fixture, string) {
+	f := newA198Fixture(t)
+	f.p = f.s.entry("005930", "10", "70000", "68000")
+	for _, px := range []string{"70100", "71000", "72000"} {
+		f.broker.quote("005930", px)
+		f.s.observe()
+	}
+	if len(f.sells()) != 1 {
+		t.Fatalf("want armed partial")
+	}
+	partial := f.s.lastBrokerOrder()
+	f.broker.refuseCancels(http.StatusInternalServerError)
+	f.broker.quote("005930", "67000")
+	f.s.observe()
+	f.broker.refuseCancels(0)
+	return f, partial
+}
+
+func rev3After(t *testing.T, f *a198Fixture, label string) {
+	for i := 0; i < 3; i++ {
+		f.s.clk.Advance(6 * time.Second)
+		f.s.observe()
+	}
+	t.Logf("%s: cancels=%v attempts=%v sells=%s pos=%s", label, f.cancelStates(), f.attemptRows(), rev2Sells(f), f.s.position(f.p.ID).Quantity)
+}
+
+// 부분 체결 뒤 취소로 끝난 매도: 손절 수량이 남은 보유(8)를 넘지 않는가.
+func TestRev3SellCancelledAfterPartialFill(t *testing.T) {
+	f, partial := rev3ArmedSellInDoubt(t)
+	f.fill(partial, "SELL", "2026-03-30", "CANCELLED_PARTIALLY_FILLED", true, false, "4", "2")
+	f.sweep()
+	rev3After(t, f, "partial")
+	sells := f.sells()
+	if len(sells) == 2 && fmt.Sprint(sells[1]["quantity"]) != "8" {
+		t.Errorf("OVERSELL? stop quantity %v after 2 of 4 sold", sells[1]["quantity"])
+	}
+}
+
+// 체결로 끝난 매도: 취소는 FAILED, 손절 6.
+func TestRev3SellFilled(t *testing.T) {
+	f, partial := rev3ArmedSellInDoubt(t)
+	f.fill(partial, "SELL", "2026-03-30", "FILLED", true, false, "4", "4")
+	f.sweep()
+	rev3After(t, f, "filled")
+}
+
+// 같은 번호의 반대 방향 종결 행: 닫지 않아야 하고, 손절도 나가지 않아야 함(대상은 살아 있음).
+func TestRev3OppositeSideTerminalRow(t *testing.T) {
+	f, partial := rev3ArmedSellInDoubt(t)
+	f.fill(partial, "BUY", "2026-03-30", "CANCELLED", true, false, "4", "0")
+	f.sweep()
+	rev3After(t, f, "opposite-side")
+	if len(f.sells()) != 1 {
+		t.Errorf("OVERSELL: a stop went out while the armed sell %s is live (opposite-side row only)", partial)
+	}
+}
+
+// 같은 번호의 다른 거래일 종결 행: 닫지 않아야 함.
+func TestRev3OtherDayTerminalRow(t *testing.T) {
+	f, partial := rev3ArmedSellInDoubt(t)
+	f.fill(partial, "SELL", "2026-03-27", "CANCELLED", true, false, "4", "0")
+	f.sweep()
+	rev3After(t, f, "other-day")
+	if len(f.sells()) != 1 {
+		t.Errorf("OVERSELL: a stop went out while the armed sell %s is live (other-day row only)", partial)
+	}
+}
+
+// 비종결 관측(부분 체결 진행 중): 닫지 않음.
+func TestRev3OpenPartialRow(t *testing.T) {
+	f, partial := rev3ArmedSellInDoubt(t)
+	f.fill(partial, "SELL", "2026-03-30", "OPEN_PARTIALLY_FILLED", false, false, "4", "1")
+	f.sweep()
+	rev3After(t, f, "open-partial")
+	if len(f.sells()) != 1 {
+		t.Errorf("OVERSELL: a stop went out while the armed sell %s is open", partial)
+	}
+}
+
+// already-modified 로 IN_DOUBT 인 매도 취소 + 대상의 brokerstate 종결 기록(CANCELLED) + 스윕.
+func TestRev3SellAlreadyModifiedThenCancelledWithSweep(t *testing.T) {
+	f := newA198Fixture(t)
+	f.p = f.s.entry("005930", "10", "70000", "68000")
+	for _, px := range []string{"70100", "71000", "72000"} {
+		f.broker.quote("005930", px)
+		f.s.observe()
+	}
+	partial := f.s.lastBrokerOrder()
+	f.broker.cmu.Lock()
+	f.broker.cancelStatus, f.broker.cancelBody = http.StatusConflict, `{"error":{"code":"already-modified"}}`
+	f.broker.cmu.Unlock()
+	f.broker.quote("005930", "67000")
+	f.s.observe()
+	f.broker.refuseCancels(0)
+	f.fill(partial, "SELL", "2026-03-30", "CANCELLED", true, false, "4", "0")
+	f.sweep()
+	rev3After(t, f, "already-modified+CANCELLED+sweep")
+	if len(f.sells()) != 2 {
+		t.Errorf("STOP BLOCKED")
+	}
+}
+
+// codex 주장: scoped OPEN 행 + 범위 없는 legacy terminal 행 공존 → D10 이 닫고 길 치우기도 매도를 치워진 것으로 봄.
+func TestRev3LegacyTerminalBesideScopedOpen(t *testing.T) {
+	f, partial := rev3ArmedSellInDoubt(t)
+	f.fill(partial, "SELL", "2026-03-30", "OPEN_PARTIALLY_FILLED", false, false, "4", "1")
+	if _, err := f.s.engine.Journal.RecordFill(t.Context(), journalFillLegacy(f, partial)); err != nil {
+		t.Logf("legacy-shaped RecordFill refused: %v", err)
+	}
+	f.sweep()
+	rev3After(t, f, "legacy-beside-scoped")
+	if len(f.sells()) != 1 {
+		t.Errorf("OVERSELL path: stop went out while the scoped row says the sell %s is open", partial)
+	}
+}
+
+// 매수 5xx → 종결(CANCELLED) → 스윕 → 손절(base 대비 비교용).
+func TestRev3BuyInDoubtThenClosedWithSweep(t *testing.T) {
+	f := newA198Fixture(t)
+	f.inDoubtBuyCancel()
+	f.fill("W-BUY-1", "BUY", "2026-03-30", "CANCELLED", true, false, "3", "0")
+	f.sweep()
+	rev3After(t, f, "buy-5xx-closed")
+	if len(f.sells()) == 0 {
+		t.Errorf("STOP BLOCKED")
+	}
+}
+
+// 매수 5xx → 체결로 종결 → 스윕 → 손절 13.
+func TestRev3BuyInDoubtThenFilledWithSweep(t *testing.T) {
+	f := newA198Fixture(t)
+	f.inDoubtBuyCancel()
+	f.fill("W-BUY-1", "BUY", "2026-03-30", "FILLED", true, false, "3", "3")
+	f.sweep()
+	rev3After(t, f, "buy-5xx-filled")
+	if len(f.sells()) == 0 {
+		t.Errorf("STOP BLOCKED")
+	}
+}

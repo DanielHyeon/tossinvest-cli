@@ -1,0 +1,8 @@
+{"step": "copy", "path": "/home/daniel/tossos-work/a198-mut4b-1692877", "sha": "381f229de7f8127db11462a137a585350e1a2bd6"}
+{"step": "control", "rc": 0, "tail": ["ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/app/engine\t79.369s", "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/execgw\t26.907s"]}
+{"mutant": "R13 조회 오류여도 치움 유지(r2)", "applied": true, "line": 1676, "reached": 0, "rc": 0, "caught": false, "build_error": false, "failed": []}
+{"mutant": "R13 조회 오류여도 치움 유지(r2)", "restored": true}
+{"mutant": "R3 해석 실패 사유 값 바꾸기(r2)", "applied": true, "line": 1693, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198AnUnreadableWorkingOrderIsLoggedOnce"]}
+{"mutant": "R3 해석 실패 사유 값 바꾸기(r2)", "restored": true}
+{"step": "final-control", "rc": 0}
+{"step": "cleanup", "removed": true}

@@ -1,0 +1,138 @@
+package engine_test
+
+// 리뷰 사본 전용 탐침 — 저장소에 커밋하지 않음.
+
+import (
+	"context"
+	"net/http"
+	"testing"
+	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+)
+
+func revAllAttempts(f *a198Fixture) []string {
+	rows, err := f.db().Query(`SELECT a.kind, a.state, coalesce(a.target_order_id,''), coalesce(a.reason_code,'') FROM mutation_attempts a ORDER BY a.rowid`)
+	if err != nil {
+		f.t.Fatal(err)
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var k, s, t, r string
+		_ = rows.Scan(&k, &s, &t, &r)
+		out = append(out, k+"|"+s+"|"+t+"|"+r)
+	}
+	return out
+}
+
+func revTerminalBuy(f *a198Fixture, orderID, state, filled string) {
+	if _, err := f.s.engine.Journal.RecordFill(context.Background(), journal.FillObservation{
+		OrderID: orderID, AccountRef: f.s.engine.AccountRef, Symbol: "005930", Market: "kr",
+		TradingDay: "2026-03-30", Side: "BUY", State: state, Terminal: true,
+		Quantity: "3", FilledQuantity: filled, AveragePrice: "69000",
+		ObservedAt: f.s.clk.Now().Format(time.RFC3339),
+	}); err != nil {
+		f.t.Logf("RecordFill: %v", err)
+	}
+}
+
+// P1: 브로커에서 이미 체결된 매수 — 계약상 409 already-filled.
+func TestRevP1AlreadyFilledBuy(t *testing.T) {
+	f := newA198Fixture(t)
+	f.openWithWorkingBuy()
+	f.broker.cmu.Lock()
+	f.broker.cancelStatus = http.StatusConflict
+	f.broker.cancelBody = `{"error":{"requestId":"r","code":"already-filled","message":"m"}}`
+	f.broker.cmu.Unlock()
+	f.breach()
+	t.Logf("after breach: attempts=%v cancels=%v sells=%d lines=%v", revAllAttempts(f), f.broker.cancels(), len(f.sells()), f.failureLines())
+	// 체결 감지가 그 매수의 종결(체결)을 기록함.
+	revTerminalBuy(f, "W-BUY-1", "FILLED", "3")
+	for i := 0; i < 5; i++ {
+		f.s.clk.Advance(11 * time.Second)
+		f.breach()
+	}
+	t.Logf("after terminal + 5 cycles: attempts=%v cancels=%v sells=%d", revAllAttempts(f), f.broker.cancels(), len(f.sells()))
+	t.Logf("alerts=%v critical=%v", f.alerts.keys(), f.critical.keys())
+	if len(f.sells()) == 0 {
+		t.Errorf("STOP BLOCKED after the buy's closing record")
+	}
+}
+
+// P2: 매수 취소 접수 → 같은 주기 손절이 409 opposite-pending → 다음 주기 재취소가 409 already-canceled.
+func TestRevP2ReCancelAfterOppositePending(t *testing.T) {
+	f := newA198Fixture(t)
+	f.openWithWorkingBuy()
+	f.broker.cmu.Lock()
+	f.broker.sellStatus = http.StatusConflict
+	f.broker.sellBody = `{"error":{"requestId":"r","code":"opposite-pending-order-exists","message":"m"}}`
+	f.broker.cmu.Unlock()
+	f.breach()
+	t.Logf("cycle1: attempts=%v cancels=%v refusedSells=%d", revAllAttempts(f), f.broker.cancels(), f.broker.sellRefused)
+	f.broker.cmu.Lock()
+	f.broker.sellStatus = 0
+	f.broker.cancelStatus = http.StatusConflict
+	f.broker.cancelBody = `{"error":{"requestId":"r","code":"already-canceled","message":"m"}}`
+	f.broker.cmu.Unlock()
+	f.s.clk.Advance(6 * time.Second)
+	f.breach()
+	t.Logf("cycle2: attempts=%v cancels=%v sells=%d", revAllAttempts(f), f.broker.cancels(), len(f.sells()))
+	revTerminalBuy(f, "W-BUY-1", "CANCELED", "0")
+	for i := 0; i < 5; i++ {
+		f.s.clk.Advance(11 * time.Second)
+		f.breach()
+	}
+	t.Logf("after terminal + 5: attempts=%v cancels=%v sells=%d", revAllAttempts(f), f.broker.cancels(), len(f.sells()))
+	if len(f.sells()) == 0 {
+		t.Errorf("STOP BLOCKED after the buy's closing record")
+	}
+}
+
+// P3: 매수 두 건 — 첫째 취소 400 거절, 둘째 접수 → 다음 주기 둘째를 다시 취소(409 already-canceled 가 계약상 답).
+func TestRevP3TwoBuysOneRefused(t *testing.T) {
+	f := newA198Fixture(t)
+	f.p = f.s.entry("005930", "10", "70000", "68000")
+	a198WorkingOrder(f.t, f.s, f.broker, "005930", "BUY", "W-BUY-1", "3", "69000")
+	a198WorkingOrder(f.t, f.s, f.broker, "005930", "BUY", "W-BUY-2", "2", "68500")
+	f.broker.quote("005930", "70100")
+	f.s.observe()
+	f.broker.cmu.Lock()
+	f.broker.cancelPlan = []int{400, 0}
+	f.broker.cmu.Unlock()
+	f.breach()
+	t.Logf("cycle1: attempts=%v cancels=%v sells=%d", revAllAttempts(f), f.broker.cancels(), len(f.sells()))
+	// 다음 주기: W-BUY-1 재시도는 접수, W-BUY-2 재취소는 계약상 409 already-canceled.
+	f.broker.cmu.Lock()
+	f.broker.cancelPlan = []int{0, 409}
+	f.broker.cancelBody = `{"error":{"requestId":"r","code":"already-canceled","message":"m"}}`
+	f.broker.cmu.Unlock()
+	f.s.clk.Advance(6 * time.Second)
+	f.breach()
+	t.Logf("cycle2: attempts=%v cancels=%v sells=%d", revAllAttempts(f), f.broker.cancels(), len(f.sells()))
+	revTerminalBuy(f, "W-BUY-1", "CANCELED", "0")
+	revTerminalBuy(f, "W-BUY-2", "CANCELED", "0")
+	for i := 0; i < 5; i++ {
+		f.s.clk.Advance(11 * time.Second)
+		f.breach()
+	}
+	t.Logf("after terminal + 5: attempts=%v cancels=%v sells=%d", revAllAttempts(f), f.broker.cancels(), len(f.sells()))
+	if len(f.sells()) == 0 {
+		t.Errorf("STOP BLOCKED after both buys' closing records")
+	}
+}
+
+// P4: 기준선 — 400 거절이 반복된 뒤 종결 기록이 오면 손절이 나가는가(일시 보류 확인).
+func TestRevP4Refused400ThenTerminal(t *testing.T) {
+	f := newA198Fixture(t)
+	f.openWithWorkingBuy()
+	f.broker.refuseCancels(http.StatusBadRequest)
+	f.breach()
+	revTerminalBuy(f, "W-BUY-1", "FILLED", "3")
+	f.s.clk.Advance(6 * time.Second)
+	f.breach()
+	t.Logf("attempts=%v sells=%d", revAllAttempts(f), len(f.sells()))
+	if len(f.sells()) == 0 {
+		t.Errorf("STOP BLOCKED after terminal (400 baseline)")
+	}
+}

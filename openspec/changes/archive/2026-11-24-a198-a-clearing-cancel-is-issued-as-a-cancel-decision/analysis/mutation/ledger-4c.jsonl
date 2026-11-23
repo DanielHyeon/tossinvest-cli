@@ -1,0 +1,40 @@
+{"step": "copy", "path": "/home/daniel/tossos-work/a198-mut4c-2075439", "sha": "e4f00a72046f7bf94eec7b078cfe4c03ec084546"}
+{"step": "control", "rc": 0, "tail": ["ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/app/engine\t139.491s", "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/journal\t29.626s", "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/execgw\t28.462s", "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/reconcile\t12.841s"]}
+{"mutant": "W1 종결 아닌 대상에도 닫기(terminal 조건 삭제)", "applied": true, "file": "internal/journal/a198_cancel_target_close.go", "line": 104, "reached": 1, "rc": 0, "caught": false, "build_error": false, "failed": []}
+{"mutant": "W1 종결 아닌 대상에도 닫기(terminal 조건 삭제)", "restored": true}
+{"mutant": "W2 범위 결속 삭제(거래일)", "applied": true, "file": "internal/journal/a198_cancel_target_close.go", "line": 104, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198AnInDoubtCancelStaysWhileItsTargetIsNotClosed", "TestA198ACancelIsNotClosedOutsideItsTargetsOwnScope"]}
+{"mutant": "W2 범위 결속 삭제(거래일)", "restored": true}
+{"mutant": "W3 소유 범위 삭제(계좌)", "applied": true, "file": "internal/journal/a198_cancel_target_close.go", "line": 59, "reached": 0, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198ACancelIsNotClosedOutsideItsTargetsOwnScope"]}
+{"mutant": "W3 소유 범위 삭제(계좌)", "restored": true}
+{"mutant": "W3b 소유 범위 삭제(방향)", "applied": true, "file": "internal/journal/a198_cancel_target_close.go", "line": 60, "reached": 0, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198ACancelIsNotClosedOutsideItsTargetsOwnScope"]}
+{"mutant": "W3b 소유 범위 삭제(방향)", "restored": true}
+{"mutant": "W4 소유 유일 조건 삭제", "applied": true, "file": "internal/journal/a198_cancel_target_close.go", "line": 98, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198AnInDoubtCancelWithTwoOwnersIsNotClosed", "TestA198ACancelIsNotClosedOutsideItsTargetsOwnScope"]}
+{"mutant": "W4 소유 유일 조건 삭제", "restored": true}
+{"mutant": "W5 판정 표 뒤집기(취소로 끝남 → 확정 거절)", "applied": true, "file": "internal/journal/a198_cancel_target_close.go", "line": 43, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198TheSettlerClosesAnEngineCancelWithoutBrokerOrAlert", "TestA198TheCancelIsClosedBeforeThePlaceResolution", "TestA198AnInDoubtBuyCancelClosesOnItsClosingRecordAndTheStopFollows", "TestA198AnInDoubtSellCancelClosesOnItsClosingRecordAndTheStopFollows", "TestA198TheClosingRecordDecidesTheSettledCancel", "TestA198AnInDoubtCancelOfAPreviousDayOrderClosesOnThatDaysRecord", "TestA198CancelVerdictCoversEveryBrokerState", "TestA198AnEngineCancelClosesOnItsTargetsClosingRecord", "TestA198APreviousDayOrdersCancelClosesOnThatDaysRecord", "TestA198TheCloseWritesWhatTheResolveAPIWrites", "TestA198AFailedTransitionRowRollsTheCloseBack", "TestA198TheSessionVerdictMatchesTheBootCancelResolution"]}
+{"mutant": "W5 판정 표 뒤집기(취소로 끝남 → 확정 거절)", "restored": true}
+{"mutant": "W6 fail_closed 행도 닫기", "applied": true, "file": "internal/journal/a198_cancel_target_close.go", "line": 119, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198AnInDoubtCancelStaysWhileItsTargetIsNotClosed", "TestA198ACancelIsNotClosedOutsideItsTargetsOwnScope"]}
+{"mutant": "W6 fail_closed 행도 닫기", "restored": true}
+{"mutant": "W7 REPLACED 를 닫기", "applied": true, "file": "internal/journal/a198_cancel_target_close.go", "line": 42, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198AnInDoubtCancelStaysWhileItsTargetIsNotClosed", "TestA198CancelVerdictCoversEveryBrokerState", "TestA198ACancelIsNotClosedOutsideItsTargetsOwnScope", "TestA198TheSessionVerdictMatchesTheBootCancelResolution"]}
+{"mutant": "W7 REPLACED 를 닫기", "restored": true}
+{"mutant": "W8 세션에서 ACKED 도 닫기", "applied": true, "file": "internal/app/engine/in_doubt_settle.go", "line": 182, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198TheSettlerLeavesFlattenAndAckedCancelsAlone"]}
+{"mutant": "W8 세션에서 ACKED 도 닫기", "restored": true}
+{"mutant": "W9 D9 를 AMEND 에도", "applied": true, "file": "internal/reconcile/acked_boot.go", "line": 56, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed"]}
+{"mutant": "W9 D9 를 AMEND 에도", "restored": true}
+{"mutant": "W10 D10 이 PLACE 를 건드리기", "applied": true, "file": "internal/app/engine/in_doubt_settle.go", "line": 180, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA193AnInDoubtPlaceFoundInTheListIsConfirmedWhileTheEngineRuns", "TestA193AnInDoubtSellWithoutBaselineParksAndTheParkCauseAlertsOnce", "TestA193AnInDoubtBuyProvenAbsentIsFailedConfirmed", "TestA193ACancelledResolutionLeavesTheAttemptInDoubt", "TestA193AShutdownMidResolutionIsAGracefulAuxiliaryStop", "TestA193TheExitObserverDoesNotWaitForAResolution"]}
+{"mutant": "W10 D10 이 PLACE 를 건드리기", "restored": true}
+{"mutant": "W11 닫기를 발주 해소 뒤로", "applied": true, "file": "internal/app/engine/in_doubt_settle.go", "line": 193, "reached": 0, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198TheCancelIsClosedBeforeThePlaceResolution"]}
+{"mutant": "W11 닫기를 발주 해소 뒤로", "restored": true}
+{"mutant": "W12 source 한정 삭제", "applied": true, "file": "internal/journal/a198_cancel_target_close.go", "line": 87, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198TheSettlerLeavesFlattenAndAckedCancelsAlone", "TestA198ACancelIsNotClosedOutsideItsTargetsOwnScope"]}
+{"mutant": "W12 source 한정 삭제", "restored": true}
+{"mutant": "W13 D9 쓰기 실패를 true 로", "applied": true, "file": "internal/reconcile/acked_boot.go", "line": 63, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198AFailedAckedCancelWriteLeavesTheAckAndNamesIt"]}
+{"mutant": "W13 D9 쓰기 실패를 true 로", "restored": true}
+{"mutant": "W14 D9 삭제", "applied": true, "file": "internal/reconcile/acked_boot.go", "line": 56, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed", "TestA198AnAckedCancelIsCompletedAtBoot", "TestA198AFailedAckedCancelWriteLeavesTheAckAndNamesIt"]}
+{"mutant": "W14 D9 삭제", "restored": true}
+{"mutant": "W15 스윕이 브로커(해소기)를 부르기", "applied": true, "file": "internal/app/engine/a198_in_doubt_cancel_close.go", "line": 19, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA193OnlyInDoubtPlaceAttemptsAreTouched", "TestA198TheSettlerClosesAnEngineCancelWithoutBrokerOrAlert", "TestA198TheCancelIsClosedBeforeThePlaceResolution", "TestA198TheSettlerLeavesFlattenAndAckedCancelsAlone", "TestA198AnInDoubtBuyCancelClosesOnItsClosingRecordAndTheStopFollows", "TestA198AnInDoubtSellCancelClosesOnItsClosingRecordAndTheStopFollows", "TestA198TheClosingRecordDecidesTheSettledCancel", "TestA198AnInDoubtCancelStaysWhileItsTargetIsNotClosed", "TestA198AnInDoubtCancelWithTwoOwnersIsNotClosed", "TestA198AnInDoubtCancelOfAPreviousDayOrderClosesOnThatDaysRecord"]}
+{"mutant": "W15 스윕이 브로커(해소기)를 부르기", "restored": true}
+{"mutant": "W16 CANCEL 에 처음 봄 알림", "applied": true, "file": "internal/app/engine/in_doubt_settle.go", "line": 193, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA193OnlyInDoubtPlaceAttemptsAreTouched", "TestA198TheSettlerClosesAnEngineCancelWithoutBrokerOrAlert"]}
+{"mutant": "W16 CANCEL 에 처음 봄 알림", "restored": true}
+{"mutant": "W17 D10 삭제(취소를 고르지 않음)", "applied": true, "file": "internal/app/engine/in_doubt_settle.go", "line": 182, "reached": 0, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198TheSettlerClosesAnEngineCancelWithoutBrokerOrAlert", "TestA198TheCancelIsClosedBeforeThePlaceResolution", "TestA198AnInDoubtBuyCancelClosesOnItsClosingRecordAndTheStopFollows", "TestA198AnInDoubtSellCancelClosesOnItsClosingRecordAndTheStopFollows", "TestA198TheClosingRecordDecidesTheSettledCancel", "TestA198AnInDoubtCancelOfAPreviousDayOrderClosesOnThatDaysRecord"]}
+{"mutant": "W17 D10 삭제(취소를 고르지 않음)", "restored": true}
+{"step": "final-control", "rc": 0}
+{"step": "cleanup", "removed": true}

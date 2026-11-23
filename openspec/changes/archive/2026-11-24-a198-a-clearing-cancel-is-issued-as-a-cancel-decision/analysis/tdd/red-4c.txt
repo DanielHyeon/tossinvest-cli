@@ -1,0 +1,61 @@
+# HEAD eab3b095b + RED 시험 파일(production 무편집) · 2026-11-24T02:33:23+09:00
+## engine: go test ./internal/app/engine -run 'A198AnInDoubt|A198TheClosingRecord|A198AClosedCancel|A198TheSettler|A198TheCancelIsClosed' -count=1 -v (요약 줄만)
+    a198_in_doubt_cancel_settle_test.go:91: cancel a-a198-cancel-1 is IN_DOUBT|dispatch_outcome_unknown, want CONFIRMED|in_doubt_resolved_found
+--- FAIL: TestA198TheSettlerClosesAnEngineCancelWithoutBrokerOrAlert (0.25s)
+    a198_in_doubt_cancel_settle_test.go:116: cancel a-a198-cancel-2 is IN_DOUBT while the place resolution blocks, want CONFIRMED — closing comes first
+--- FAIL: TestA198TheCancelIsClosedBeforeThePlaceResolution (0.26s)
+--- PASS: TestA198TheSettlerLeavesFlattenAndAckedCancelsAlone (0.29s)
+--- PASS: TestA198AnInDoubtCancelHoldsTheStopAndBothAlertsFire (0.37s)
+    a198_in_doubt_cancel_close_test.go:82: cancel attempts after the sweep = [IN_DOUBT|dispatch_outcome_unknown] (all [PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|IN_DOUBT|W-BUY-1|dispatch_outcome_unknown]), want CONFIRMED|in_doubt_resolved_found — the target's closing record settles the cancel
+--- FAIL: TestA198AnInDoubtBuyCancelClosesOnItsClosingRecordAndTheStopFollows (0.39s)
+    a198_in_doubt_cancel_close_test.go:120: cancel attempts after the sweep = [IN_DOUBT|dispatch_outcome_unknown], want CONFIRMED|in_doubt_resolved_found
+--- FAIL: TestA198AnInDoubtSellCancelClosesOnItsClosingRecordAndTheStopFollows (0.39s)
+    a198_in_doubt_cancel_close_test.go:147: cancel attempts = [IN_DOUBT|dispatch_outcome_unknown], want CONFIRMED|in_doubt_resolved_found
+    a198_in_doubt_cancel_close_test.go:147: cancel attempts = [IN_DOUBT|dispatch_outcome_unknown], want CONFIRMED|in_doubt_resolved_found
+    a198_in_doubt_cancel_close_test.go:147: cancel attempts = [IN_DOUBT|dispatch_outcome_unknown], want FAILED_CONFIRMED|in_doubt_resolved_absent
+    a198_in_doubt_cancel_close_test.go:147: cancel attempts = [IN_DOUBT|dispatch_outcome_unknown], want FAILED_CONFIRMED|in_doubt_resolved_absent
+    a198_in_doubt_cancel_close_test.go:147: cancel attempts = [IN_DOUBT|dispatch_outcome_unknown], want FAILED_CONFIRMED|in_doubt_resolved_absent
+--- FAIL: TestA198TheClosingRecordDecidesTheSettledCancel (1.74s)
+    --- FAIL: TestA198TheClosingRecordDecidesTheSettledCancel/CANCELLED (0.33s)
+    --- FAIL: TestA198TheClosingRecordDecidesTheSettledCancel/CANCELLED_PARTIALLY_FILLED (0.37s)
+    --- FAIL: TestA198TheClosingRecordDecidesTheSettledCancel/FILLED (0.35s)
+    --- FAIL: TestA198TheClosingRecordDecidesTheSettledCancel/REJECTED (0.35s)
+    --- FAIL: TestA198TheClosingRecordDecidesTheSettledCancel/REJECTED_PARTIALLY_FILLED (0.34s)
+--- PASS: TestA198AnInDoubtCancelStaysWhileItsTargetIsNotClosed (2.87s)
+    --- PASS: TestA198AnInDoubtCancelStaysWhileItsTargetIsNotClosed/no_closing_record (0.33s)
+    --- PASS: TestA198AnInDoubtCancelStaysWhileItsTargetIsNotClosed/open_unfilled (0.34s)
+    --- PASS: TestA198AnInDoubtCancelStaysWhileItsTargetIsNotClosed/open_partially_filled (0.34s)
+    --- PASS: TestA198AnInDoubtCancelStaysWhileItsTargetIsNotClosed/cancel_pending (0.34s)
+    --- PASS: TestA198AnInDoubtCancelStaysWhileItsTargetIsNotClosed/unknown_(already-modified_shape) (0.34s)
+    --- PASS: TestA198AnInDoubtCancelStaysWhileItsTargetIsNotClosed/replaced_with_a_successor (0.34s)
+    --- PASS: TestA198AnInDoubtCancelStaysWhileItsTargetIsNotClosed/terminal_row_that_later_failed_closed (0.40s)
+    --- PASS: TestA198AnInDoubtCancelStaysWhileItsTargetIsNotClosed/closing_record_of_another_trading_day (0.44s)
+--- PASS: TestA198AnInDoubtCancelWithTwoOwnersIsNotClosed (0.41s)
+    a198_in_doubt_cancel_close_test.go:233: cancel attempts = [IN_DOUBT|dispatch_outcome_unknown], want CONFIRMED — the owner's trading day is the previous day
+--- FAIL: TestA198AnInDoubtCancelOfAPreviousDayOrderClosesOnThatDaysRecord (0.35s)
+--- PASS: TestA198AClosedCancelStillLeavesTheStopToTheSameClearingJudgement (1.13s)
+    --- PASS: TestA198AClosedCancelStillLeavesTheStopToTheSameClearingJudgement/sell_closed_CONFIRMED_without_closing_evidence (0.36s)
+    --- PASS: TestA198AClosedCancelStillLeavesTheStopToTheSameClearingJudgement/sell_closed_FAILED_while_it_lives (0.40s)
+    --- PASS: TestA198AClosedCancelStillLeavesTheStopToTheSameClearingJudgement/buy_closed_CONFIRMED_is_cleared_by_D8 (0.37s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	8.478s
+FAIL
+rc=1
+## journal·execgw·reconcile: go vet(컴파일 — 새 API 없음)
+# github.com/JungHoonGhae/tossinvest-cli/internal/reconcile_test
+# [github.com/JungHoonGhae/tossinvest-cli/internal/reconcile_test]
+vet: internal/reconcile/a198_acked_cancel_boot_test.go:29:34: undefined: reconcile.ReasonBootAckedCancelCompleted
+# github.com/JungHoonGhae/tossinvest-cli/internal/execgw_test
+# [github.com/JungHoonGhae/tossinvest-cli/internal/execgw_test]
+vet: internal/execgw/a198_cancel_verdict_equivalence_test.go:40:36: undefined: journal.CancelVerdictForClosedTarget
+# github.com/JungHoonGhae/tossinvest-cli/internal/journal [github.com/JungHoonGhae/tossinvest-cli/internal/journal.test]
+internal/journal/a198_cancel_target_close_test.go:88:22: undefined: CancelVerdictForClosedTarget
+internal/journal/a198_cancel_target_close_test.go:138:18: j.CloseInDoubtCancelOnTargetClose undefined (type *Journal has no field or method CloseInDoubtCancelOnTargetClose)
+internal/journal/a198_cancel_target_close_test.go:233:18: j.CloseInDoubtCancelOnTargetClose undefined (type *Journal has no field or method CloseInDoubtCancelOnTargetClose)
+internal/journal/a198_cancel_target_close_test.go:250:16: j.CloseInDoubtCancelOnTargetClose undefined (type *Journal has no field or method CloseInDoubtCancelOnTargetClose)
+internal/journal/a198_cancel_target_close_test.go:266:16: j.CloseInDoubtCancelOnTargetClose undefined (type *Journal has no field or method CloseInDoubtCancelOnTargetClose)
+internal/journal/a198_cancel_target_close_test.go:274:19: j.CloseInDoubtCancelOnTargetClose undefined (type *Journal has no field or method CloseInDoubtCancelOnTargetClose)
+internal/journal/a198_cancel_target_close_test.go:277:17: j.CloseInDoubtCancelOnTargetClose undefined (type *Journal has no field or method CloseInDoubtCancelOnTargetClose)
+internal/journal/a198_cancel_target_close_test.go:298:21: j.CloseInDoubtCancelOnTargetClose undefined (type *Journal has no field or method CloseInDoubtCancelOnTargetClose)
+internal/journal/a198_cancel_target_close_test.go:369:19: j.CloseInDoubtCancelOnTargetClose undefined (type *Journal has no field or method CloseInDoubtCancelOnTargetClose)
+rc=1

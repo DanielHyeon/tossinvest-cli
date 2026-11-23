@@ -1,0 +1,56 @@
+    zz_rev2_probe_test.go:56: after breach: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|FAILED_CONFIRMED|W-BUY-1|dispatch_rejected_by_broker] cancels=[W-BUY-1] sells=[]
+    zz_rev2_probe_test.go:62: after terminal+5: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|FAILED_CONFIRMED|W-BUY-1|dispatch_rejected_by_broker PLACE|CONFIRMED||broker_accepted] cancels=1 sells=[13]
+--- PASS: TestRev2P1AlreadyFilledBuy (0.41s)
+    zz_rev2_probe_test.go:73: cycle1: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|CONFIRMED|W-BUY-1|broker_accepted PLACE|FAILED_CONFIRMED||opposite_pending_order_exists] cancels=[W-BUY-1]
+    zz_rev2_probe_test.go:79: cycle2: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|CONFIRMED|W-BUY-1|broker_accepted PLACE|FAILED_CONFIRMED||opposite_pending_order_exists PLACE|CONFIRMED||broker_accepted] cancels=[W-BUY-1] sells=[10]
+    zz_rev2_probe_test.go:85: after terminal+5: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|CONFIRMED|W-BUY-1|broker_accepted PLACE|FAILED_CONFIRMED||opposite_pending_order_exists PLACE|CONFIRMED||broker_accepted] cancels=1 sells=[10]
+--- PASS: TestRev2P2ReCancelAfterOppositePending (0.44s)
+    zz_rev2_probe_test.go:101: cycle1: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|FAILED_CONFIRMED|W-BUY-1|dispatch_rejected_by_broker CANCEL|CONFIRMED|W-BUY-2|broker_accepted] cancels=[W-BUY-1 W-BUY-2] sells=[]
+    zz_rev2_probe_test.go:104: cycle2: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|FAILED_CONFIRMED|W-BUY-1|dispatch_rejected_by_broker CANCEL|CONFIRMED|W-BUY-2|broker_accepted CANCEL|CONFIRMED|W-BUY-1|broker_accepted PLACE|CONFIRMED||broker_accepted] cancels=[W-BUY-1 W-BUY-2 W-BUY-1] sells=[10]
+    zz_rev2_probe_test.go:111: after terminal+5: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|FAILED_CONFIRMED|W-BUY-1|dispatch_rejected_by_broker CANCEL|CONFIRMED|W-BUY-2|broker_accepted CANCEL|CONFIRMED|W-BUY-1|broker_accepted PLACE|CONFIRMED||broker_accepted] cancels=3 sells=[10]
+--- PASS: TestRev2P3TwoBuysOneRefused (0.54s)
+    zz_rev2_probe_test.go:143: already-filled before closing: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|FAILED_CONFIRMED|BO-1|dispatch_rejected_by_broker CANCEL|FAILED_CONFIRMED|BO-1|dispatch_rejected_by_broker CANCEL|FAILED_CONFIRMED|BO-1|dispatch_rejected_by_broker CANCEL|FAILED_CONFIRMED|BO-1|dispatch_rejected_by_broker] cancels=4 sells=[4]
+    zz_rev2_probe_test.go:152: already-filled after closing: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|FAILED_CONFIRMED|BO-1|dispatch_rejected_by_broker CANCEL|FAILED_CONFIRMED|BO-1|dispatch_rejected_by_broker CANCEL|FAILED_CONFIRMED|BO-1|dispatch_rejected_by_broker CANCEL|FAILED_CONFIRMED|BO-1|dispatch_rejected_by_broker PLACE|CONFIRMED||broker_accepted] cancels=4 sells=[4 6] pos=6
+--- PASS: TestRev2SellAlreadyFilled (0.61s)
+    zz_rev2_probe_test.go:143: already-canceled before closing: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|FAILED_CONFIRMED|BO-1|dispatch_rejected_by_broker CANCEL|FAILED_CONFIRMED|BO-1|dispatch_rejected_by_broker CANCEL|FAILED_CONFIRMED|BO-1|dispatch_rejected_by_broker CANCEL|FAILED_CONFIRMED|BO-1|dispatch_rejected_by_broker] cancels=4 sells=[4]
+    zz_rev2_probe_test.go:152: already-canceled after closing: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|FAILED_CONFIRMED|BO-1|dispatch_rejected_by_broker CANCEL|FAILED_CONFIRMED|BO-1|dispatch_rejected_by_broker CANCEL|FAILED_CONFIRMED|BO-1|dispatch_rejected_by_broker CANCEL|FAILED_CONFIRMED|BO-1|dispatch_rejected_by_broker PLACE|CONFIRMED||broker_accepted] cancels=4 sells=[4 10] pos=10
+--- PASS: TestRev2SellAlreadyCanceled (0.63s)
+    zz_rev2_probe_test.go:143: already-modified before closing: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|IN_DOUBT|BO-1|dispatch_outcome_unknown] cancels=1 sells=[4]
+    zz_rev2_probe_test.go:152: already-modified after closing: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|IN_DOUBT|BO-1|dispatch_outcome_unknown] cancels=1 sells=[4] pos=10
+    zz_rev2_probe_test.go:154: STOP BLOCKED after the sell's closing record
+--- FAIL: TestRev2SellAlreadyModified (0.44s)
+    zz_rev2_probe_test.go:170: status 500 body {"error":{"code":"already-canceled"}} → attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|IN_DOUBT|W-BUY-1|dispatch_outcome_unknown] sells=[]
+--- PASS: TestRev2Status500AlreadyCanceled (0.35s)
+    zz_rev2_probe_test.go:170: status 429 body {"error":{"code":"already-filled"}} → attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|IN_DOUBT|W-BUY-1|dispatch_outcome_unknown] sells=[]
+--- PASS: TestRev2Status429AlreadyFilled (0.33s)
+    zz_rev2_probe_test.go:170: status 409 body {"code":"Already-Filled"} → attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|FAILED_CONFIRMED|W-BUY-1|dispatch_rejected_by_broker] sells=[]
+--- PASS: TestRev2Status409TopOnly (0.35s)
+    zz_rev2_probe_test.go:170: status 409 body {"error":{"code":" already-filled "}} → attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|IN_DOUBT|W-BUY-1|dispatch_outcome_unknown] sells=[]
+--- PASS: TestRev2Status409Padded (0.36s)
+    zz_rev2_probe_test.go:170: status 409 body {"code":"already-filled","error":{"code":"already-modified"}} → attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|IN_DOUBT|W-BUY-1|broker_outcome_unknown] sells=[]
+--- PASS: TestRev2Status409Contradict (0.39s)
+    zz_rev2_probe_test.go:170: status 409 body [{"code":"already-filled"}] → attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|IN_DOUBT|W-BUY-1|dispatch_outcome_unknown] sells=[]
+--- PASS: TestRev2Status409Array (0.35s)
+    zz_rev2_probe_test.go:170: status 409 body {"code":7,"error":{"code":"already-filled"}} → attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|IN_DOUBT|W-BUY-1|broker_outcome_unknown] sells=[]
+--- PASS: TestRev2Status409Number (0.34s)
+    zz_rev2_probe_test.go:170: status 409 body {"error":{"code":"ALREADY-FİLLED"}} → attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|FAILED_CONFIRMED|W-BUY-1|dispatch_rejected_by_broker] sells=[]
+--- PASS: TestRev2Status409Unicode (0.35s)
+    zz_rev2_probe_test.go:170: status 409 body {"error":{"code":"already-processing"}} → attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|FAILED_CONFIRMED|W-BUY-1|broker_rejected] sells=[]
+--- PASS: TestRev2Status409AlreadyProcessing (0.34s)
+    zz_rev3_probe_test.go:35: partial: cancels=[CONFIRMED|in_doubt_resolved_found] attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|CONFIRMED|BO-1|in_doubt_resolved_found PLACE|CONFIRMED||broker_accepted] sells=[4 8] pos=8
+--- PASS: TestRev3SellCancelledAfterPartialFill (0.42s)
+    zz_rev3_probe_test.go:35: filled: cancels=[FAILED_CONFIRMED|in_doubt_resolved_absent] attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|FAILED_CONFIRMED|BO-1|in_doubt_resolved_absent PLACE|CONFIRMED||broker_accepted] sells=[4 6] pos=6
+--- PASS: TestRev3SellFilled (0.46s)
+    zz_rev3_probe_test.go:33: observation cycle: engine: reading the working orders of 005930: journal: tracked fill order identity conflict: broker snapshot symbol or market contradicts the confirmed intent: order BO-1, expected kr/005930
+--- FAIL: TestRev3OppositeSideTerminalRow (0.38s)
+    zz_rev3_probe_test.go:35: other-day: cancels=[IN_DOUBT|dispatch_outcome_unknown] attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|IN_DOUBT|BO-1|dispatch_outcome_unknown] sells=[4] pos=10
+--- PASS: TestRev3OtherDayTerminalRow (0.46s)
+    zz_rev3_probe_test.go:35: open-partial: cancels=[IN_DOUBT|dispatch_outcome_unknown] attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|IN_DOUBT|BO-1|dispatch_outcome_unknown] sells=[4] pos=9
+--- PASS: TestRev3OpenPartialRow (0.46s)
+    zz_rev3_probe_test.go:35: buy-5xx-closed: cancels=[CONFIRMED|in_doubt_resolved_found] attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|CONFIRMED|W-BUY-1|in_doubt_resolved_found PLACE|CONFIRMED||broker_accepted] sells=[10] pos=10
+--- PASS: TestRev3BuyInDoubtThenClosedWithSweep (0.45s)
+    zz_rev3_probe_test.go:35: buy-5xx-filled: cancels=[FAILED_CONFIRMED|in_doubt_resolved_absent] attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|FAILED_CONFIRMED|W-BUY-1|in_doubt_resolved_absent PLACE|CONFIRMED||broker_accepted] sells=[13] pos=13
+--- PASS: TestRev3BuyInDoubtThenFilledWithSweep (0.45s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	9.318s
+FAIL

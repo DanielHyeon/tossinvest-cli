@@ -1,0 +1,20 @@
+{"step": "copy", "path": "/home/daniel/tossos-work/a198-mut-1000254", "sha": "09bb9e8c1f4e57b2490340a7a0d64edd9481416d"}
+{"step": "control", "rc": 0, "tail": ["ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/app/engine\t2.682s"]}
+{"mutant": "M1 결함 복원(RiskGuardian 매도·PLACE 결정)", "applied": true, "line": 1694, "reached": 1, "rc": 1, "caught": true, "failed": ["--- FAIL: TestA198AWorkingEngineBuyIsCancelledAndTheStopFollowsInTheSameCycle (0.34s)", "--- FAIL: TestA198AnArmedSellIsCancelledOnceAndTheStopWaitsForItsClosingRecord (0.39s)", "--- FAIL: TestA198ARefusedCancelIsLoggedOnceWithoutAccountQuantityPriceOrDetail (0.34s)", "--- FAIL: TestA198AnInDoubtCancelHoldsTheStopAndBothAlertsFire (0.37s)", "--- FAIL: TestA198TheProductionAssemblyCancelsTheWorkingBuyAndPlacesTheStop (0.32s)"], "build_error": false}
+{"mutant": "M1 결함 복원(RiskGuardian 매도·PLACE 결정)", "restored": true}
+{"mutant": "M2 결정 방향을 매도로 고정", "applied": true, "line": 1699, "reached": 1, "rc": 1, "caught": true, "failed": ["--- FAIL: TestA198AWorkingEngineBuyIsCancelledAndTheStopFollowsInTheSameCycle (0.37s)", "--- FAIL: TestA198ARefusedCancelIsLoggedOnceWithoutAccountQuantityPriceOrDetail (0.34s)", "--- FAIL: TestA198AnInDoubtCancelHoldsTheStopAndBothAlertsFire (0.39s)", "--- FAIL: TestA198TheProductionAssemblyCancelsTheWorkingBuyAndPlacesTheStop (0.36s)"], "build_error": false}
+{"mutant": "M2 결정 방향을 매도로 고정", "restored": true}
+{"mutant": "M3 결정에 멱등 키가 붙는 발행(KindPlace)", "applied": true, "line": 1696, "reached": 1, "rc": 1, "caught": true, "failed": ["--- FAIL: TestA198AWorkingEngineBuyIsCancelledAndTheStopFollowsInTheSameCycle (0.37s)", "--- FAIL: TestA198AnArmedSellIsCancelledOnceAndTheStopWaitsForItsClosingRecord (0.35s)", "--- FAIL: TestA198ARefusedCancelIsLoggedOnceWithoutAccountQuantityPriceOrDetail (0.31s)", "--- FAIL: TestA198AnInDoubtCancelHoldsTheStopAndBothAlertsFire (0.37s)", "--- FAIL: TestA198TheProductionAssemblyCancelsTheWorkingBuyAndPlacesTheStop (0.35s)"], "build_error": false}
+{"mutant": "M3 결정에 멱등 키가 붙는 발행(KindPlace)", "restored": true}
+{"mutant": "M4 실패 기록 삭제(두 호출)", "applied": true, "line": 1720, "reached": 1, "rc": 1, "caught": true, "failed": ["--- FAIL: TestA198ARefusedCancelIsLoggedOnceWithoutAccountQuantityPriceOrDetail (0.37s)"], "build_error": false}
+{"mutant": "M4 실패 기록 삭제(두 호출)", "restored": true}
+{"mutant": "M4b 발행 실패 기록 삭제", "applied": true, "line": 1704, "reached": 1, "rc": 1, "caught": true, "failed": ["--- FAIL: TestA198AnUnrecordableCancelDecisionIsLoggedOnce (0.36s)"], "build_error": false}
+{"mutant": "M4b 발행 실패 기록 삭제", "restored": true}
+{"mutant": "M5 실패 기록의 중복 억제 삭제(매 주기 한 줄)", "applied": true, "line": 31, "reached": 1, "rc": 1, "caught": true, "failed": ["--- FAIL: TestA198ARefusedCancelIsLoggedOnceWithoutAccountQuantityPriceOrDetail (0.40s)", "--- FAIL: TestA198AnUnrecordableCancelDecisionIsLoggedOnce (0.34s)"], "build_error": false}
+{"mutant": "M5 실패 기록의 중복 억제 삭제(매 주기 한 줄)", "restored": true}
+{"mutant": "M6 실패 줄에 원문 싣기(LiveOrder 전체)", "applied": true, "line": 60, "reached": 1, "rc": 1, "caught": true, "failed": ["--- FAIL: TestA198ARefusedCancelIsLoggedOnceWithoutAccountQuantityPriceOrDetail (0.49s)"], "build_error": false}
+{"mutant": "M6 실패 줄에 원문 싣기(LiveOrder 전체)", "restored": true}
+{"mutant": "M7 매도 취소 접수를 치움으로 판정", "applied": true, "line": 364, "reached": 0, "rc": 0, "caught": false, "failed": [], "build_error": false}
+{"mutant": "M7 매도 취소 접수를 치움으로 판정", "restored": true}
+{"step": "final-control", "rc": 0}
+{"step": "cleanup", "removed": true}

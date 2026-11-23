@@ -49,6 +49,12 @@ func (g *Gateway) withCancelRefusal(plan mutationPlan, dispatch journal.Dispatch
 	return func(dctx context.Context, a *journal.Attempt) journal.DispatchOutcome {
 		start := g.clk.Now()
 		first := dispatch(dctx, a)
+		// a198 D7: 엔진 정책에서만 — 이미 끝난 주문을 이유로 한 거절은 취소 미성립이 확정이라 모호(IN_DOUBT)로 두지 않음.
+		if policy.Definitive {
+			if settled, isSettled := settledCancelRefusal(first); isSettled {
+				return settled
+			}
+		}
 		wait, ok := alreadyProcessingRefusal(first.Err)
 		if !ok || first.Class != journal.DispatchAmbiguous {
 			return first
