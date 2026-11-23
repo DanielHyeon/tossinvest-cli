@@ -270,3 +270,19 @@ Pre-Edit Gate:
 - 정정 한 줄(red-team G16): 보강 2 가 닫은 회귀는 「대상의 종결 기록이 들어온 **뒤**에도 재시작까지 보류」이다. 대상이 살아 있는 동안의 보류(5xx 가 브로커에 안 닿은 IN_DOUBT 포함)는 이 change 이전과 같고 D10 은 손대지 않는다(design §6 「이전과 같은 경우」).
 - Gate edits: 2 listed-eligible, 2 read, 1 finding(a094 시험의 D9 뒤집기 두 hunk) — 추천 B(유지, 근거 design §4-29·D9·FLM 번들), 사람 답 없어 **open**.
 - 검증 원문(`analysis/verify/r3-*.txt`, `fa8771ed3`+작업트리, GOFLAGS 없음): smoke 3 PASS · journal `-run A198` ok 5.3s · journal 묶음 ok 40.1s · engine 묶음 ok 47.8s · reconcile 묶음 ok 7.4s · `-race -run 'A198|A193'` ok 311.8s · `make lint` rc 0 · `validate --strict` valid · check_analysis 「evidence complete」. execgw·flatten 은 Go 무변이라 재실행하지 않음.
+
+## gstack review r2 처분 (Manager 2026-11-24) — G1·G6 수리, 나머지 기록 (tasks 4d)
+
+| # | 처분 | 근거·자리 |
+|---|---|---|
+| G1 취소 실패 줄의 루프 안 동기 쓰기(codex P1) | **수리 — D4 재결정** | 정본 exit-policy:689 는 「엔진이 낸 청산 주문은 운영 로그에 … 줄을 남긴다」 Requirement 안 — 문언은 청산 **주문** 줄이라 취소 실패 줄은 **문언상 밖**으로 판단, 같은 전용 로거·같은 루프·불변식 4 라 수리하고 a198 exit-policy delta 에 「그 줄은 그 주기의 모든 판정·제출·해제 뒤에 쓴다」를 넣음. 구현: 대기열 + `flushClearCancelFailures`, 기존 함수 편집 `endExitOrderCycle` 한 줄. RED `analysis/tdd/red-4d.txt`(포지션 둘 — 줄 쓰는 순간 뒤 포지션 손절 0, 막힌 writer 에서 손절 0, 구조) → GREEN. design D4 행 |
+| G2 쓰기 오류를 성공으로 기억(codex P2) | 기록만 | 기존 `obs.Logger` API 성질, 판정 무영향, 후속 후보 — design §6 |
+| G3 `settledCancelRefusal` 409 미요구 | 기록만(요구하지 않음 — r1 A4/S1 도 닫음) | 409 한정이 거부할 정상 입력·통과하는 입력의 귀결 — design §6 |
+| G4 `ConfirmedCancelOf` 거래일 결속의 ET 자정 창 | 기록만 | 손절 보류 방향, base 보다 나쁘지 않음, 빈도 미측정 — design §6 「전일 결속」 |
+| G5 D10 판독 전 쓰기 잠금 | 기록만 | 연결 1개·같은 방식·Q1 — 잠금 시간 미측정, design §6 |
+| G6 D10 닫음 줄에 종목 없음 | **수리** | `CancelTargetClose.Symbol` + 줄에 `obs.FieldSymbol`(대상 번호는 싣지 않음 — a193 해소 줄과 같게). 시험 `TestA198TheCancelClosedLineNamesTheSymbol` |
+| Gate edits(a094 시험의 D9 뒤집기 두 hunk) | **Manager 가 B(유지)로 닫음** | 뒤집힌 단언은 정본 delta MODIFIED 「IN_DOUBT 해소」 의 D9 시나리오가 요구하는 새 행동이고 번호 없는 PLACE 쪽 단언은 유지됨. 사람의 답 없음 → Manager 결정으로 닫음 — 사용자에게는 완료 보고에서 공시 |
+
+- 커밋: RED `85bb791b4` · GREEN `8babd42e7`. 편집 기존 함수 `endExitOrderCycle` 한 줄(`o.flushClearCancelFailures()`) + 관측기 구조체 필드 1(선언). `ObserveOnce`·a129 줄 타입·래치·`writeExitOrder`·`noteExitOrder` 무편집. a166 census·a163 핀·a129 구조 시험에 `endExitOrderCycle`·exit_order_log.go·a198_clear_cancel_log.go 적중 0.
+- 변이 4/4 CAUGHT(`analysis/mutation/ledger.md` 「gstack review r2 G1 변이」).
+- 검증(`analysis/verify/4d-*.txt`, `8babd42e7`+문서, GOFLAGS 없음): engine `-run 'A198|A129|A193|ExitClear|ExitObserver|ExitOrder|InDoubt'` ok 44.3s · 구조 `-run 'A087|A111'` ok 16.4s · journal `-run A198` ok 6.0s · `-race -run 'A198|A129'` ok 306.7s · `make lint` rc 0 · `validate --strict` valid · check_analysis 「evidence complete」. execgw·reconcile·flatten 은 Go 무변이라 생략.

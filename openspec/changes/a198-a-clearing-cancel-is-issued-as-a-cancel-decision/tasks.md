@@ -59,7 +59,7 @@
 - [x] 4d.1 G1(D4 재결정): 정본 exit-policy:689 범위 판단 · `endExitOrderCycle` pre-edit 번들 · RED(`analysis/tdd/red-4d.txt`) · GREEN(대기열 + 주기 끝 비우기, 기존 함수 한 줄) · exit-policy delta 문장 · design D4 행·a087 순서 절.
 - [x] 4d.2 G6: `CancelTargetClose.Symbol`, D10 닫음 줄에 종목.
 - [x] 4d.3 G2·G3·G4·G5·gate 처분 기록(design §6, review.md).
-- [ ] 4d.4 변이(G1 넷) · 선택 시험 · lint · validate · check_analysis.
+- [x] 4d.4 변이(G1 넷) · 선택 시험 · lint · validate · check_analysis.
 
 ## 5. 종결
 

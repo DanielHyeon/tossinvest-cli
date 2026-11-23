@@ -76,3 +76,14 @@
 | W15 스윕이 해소기(브로커 경로)를 부르기 | a198_in_doubt_cancel_close.go:19 · 1 | CAUGHT | A193OnlyInDoubtPlaceAttemptsAreTouched · TheSettlerClosesAnEngineCancelWithoutBrokerOrAlert · TheCancelIsClosedBeforeThePlaceResolution |
 | W16 CANCEL 에 처음 봄 알림 | in_doubt_settle.go:193 · 1 | CAUGHT | A193OnlyInDoubtPlaceAttemptsAreTouched · TheSettlerClosesAnEngineCancelWithoutBrokerOrAlert |
 | W17 D10 삭제(취소를 고르지 않음) | in_doubt_settle.go:182 · 0 | CAUGHT | TheSettlerClosesAnEngineCancelWithoutBrokerOrAlert · TheCancelIsClosedBeforeThePlaceResolution · AnInDoubtBuyCancelClosesOnItsClosingRecordAndTheStopFollows … |
+
+## gstack review r2 G1 변이 (2026-11-24, tasks 4d.4 — 취소 실패 줄을 주기 끝에)
+
+- 하네스 `a198_mutate_4d.py`(같은 절차), 대상 sha `8babd42e7`, 시험 `go test ./internal/app/engine -run 'A198|A129'`. 원장 `ledger-4d.jsonl` — 대조군 rc 0(28.8s) → 4 변이 → 끝 대조군 rc 0 → 사본 제거 확인.
+
+| 변이 | 자리 · 닿음 | 결과 | 죽인 시험 |
+|---|---|---|---|
+| X1 넣지 않고 바로 쓰기(이전 구현) | a198_clear_cancel_log.go:71 · 1 | CAUGHT | TheCancelFailureLineIsWrittenAfterTheCyclesSubmissions · ABlockedLogWriterDoesNotHoldTheNextPositionsStop · (표시 미설정으로) 줄 1 회 시험 셋 |
+| X2 표시를 쓰기 앞에 | :97 · 1 | CAUGHT | AFailureLineWhoseWritePanickedIsWrittenNextCycle(D4a 시험 — 통과 이유가 「쓰기 뒤 표시」로 그대로임을 확인) |
+| X3 비우기 호출 삭제 | exit_order_log.go:244 · 0(삭제된 줄) | CAUGHT | TheCancelFailureLineIsWrittenAfterTheCyclesSubmissions · TheCancelFailureQueueIsFlushedByTheCycleEnd · 줄 시험 다수 |
+| X4 대기열을 비우지 않고 다시 씀 | a198_clear_cancel_log.go:90 · 1 | CAUGHT | ARefusedCancelIsLoggedOnce… · AnUnrecordableCancelDecisionIsLoggedOnce · AnUnreadableWorkingOrderIsLoggedOnce · AConfirmedCancelClearsTheFailureMark |
