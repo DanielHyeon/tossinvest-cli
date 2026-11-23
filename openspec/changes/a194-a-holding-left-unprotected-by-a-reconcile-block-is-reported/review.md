@@ -143,3 +143,11 @@
 
 ### 사고 기록 — 문서 기록 중 `tossctl` 가 실행됨 (2026-11-23)
 - review.md 를 덧붙이는 셸 명령이 따옴표 없는 heredoc(`<<EOF`)이라 본문의 백틱이 명령 치환으로 실행됐다. 그중 `tossctl engine reconcile-resolve` 가 실제 바이너리로 돌았고, 필수 플래그(`--confirm`·`--note`·`--operator`)가 없어 「required flag(s) … not set」 로 종료했다. 그 전에 설정 스키마 경고(`~/.config/tossctl/config.json` 을 읽음)를 출력했다. 해제·엔진 정지·원장 쓰기는 일어나지 않은 것으로 보이나(플래그 검증 단계 종료) 직접 확인하지 않았다 — 운영 디렉터리 접근 금지라 원장을 열지 않았다. 지시 위반(「tossctl 실행 금지」「운영 디렉터리 접근 금지」)이며 Manager 에게 보고한다. 망가진 review.md 문단은 이 커밋에서 바로잡았다.
+- **Manager 확인(2026-11-23, 읽기 전용)**: `journal.db` mtime 19:42:41 · `-wal` 19:59:13(사고 이전 그대로), 미해제 대사 행 1 건 그대로, 가장 최근 해제 2026-11-20, `engine.lock` 무변. 세 필수 플래그는 cobra 가 실행 함수 앞에서 검증한다(`engine_reconcile.go:101-103`). 판정: **운영 상태 변화 없음** — 사용자에게 보고.
+- 재발 방지(Manager 지시): 이 뒤로 파일 내용은 Write/Edit 도구로만 쓴다. 셸 heredoc·`echo` 로 백틱이 든 문장을 쓰지 않는다.
+
+### gstack review 처분 · 마지막 수리 회차 (Manager 결정 2026-11-23)
+- (1)·(2) red team: 안내 문장을 명령의 성질대로 고침 — 원인 목록은 복제하지 않고, 해제 명령이 엔진 정지를 요구하며 그동안 모든 포지션의 자동 손절이 돌지 않는다는 것, 시장이 닫힌 시간에 실행하라는 것, 명령이 받지 않는 원인은 거절하며 사유를 말한다는 것을 운영자 전용 보유 보고·차단 보고에 싣는다. 차단 보고의 「…로만 풀 수 있는 원인이었다」 단정은 뺌. blocked_stale 도 같은 경고를 가능성 문장으로. design D6 · §6 · proposal Impact 에 **배포 선행**(a194 의 운영 반영은 a195 를 포함한 빌드).
+- 시험: `TestA194EveryReleaseGuideSaysTheStopsPauseWhileTheEngineIsDown`(세 본문 모두 「엔진을 멈춰야」·「자동 손절이 돌지 않」, 차단 보고의 단정 문장 부재), 기존 단언을 새 문장에 맞춤(운영자 전용 본문 「이 차단은 스스로 풀리지 않는다」·「거절하며 그 사유를 말한다」, stale 에 그 단정 문장이 없음은 계속 고정). 변이 M25(운영자 전용 경고 삭제)·M26(stale 경고 삭제) 추가, M7a·M7b 를 새 문장에 맞춤.
+- (3) pending 영구 승격 블록의 즉시 보고, (4) 차단 보고의 주기당 상한 없음: 기록만(design §6). gstack 수리 1(차례 공백)과 「기록만」 처분 승인.
+- `judgeHoldings` 무편집 — production 편집은 새 파일의 문장(상수 `operatorReleaseGuide`)뿐.

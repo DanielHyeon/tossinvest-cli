@@ -146,7 +146,8 @@ func TestA194OperatorOnlyBlockedHoldingIsReportedOnTheFirstCycle(t *testing.T) {
 		t.Errorf("key = %q, want %q", e.Key, want)
 	}
 	for _, want := range []string{kstText(observed) + " 대사에서", "편입하지 못했다", "걸려 있지 않았다",
-		journal.ReconcileCauseAttributionFailed, "reconcile-resolve", "이 차단은 운영자만 풀 수 있다", "앱에서 직접 관리하라",
+		journal.ReconcileCauseAttributionFailed, "reconcile-resolve", "이 차단은 스스로 풀리지 않는다", "앱에서 직접 관리하라",
+		"거절하며 그 사유를 말한다",
 		"늦게 도착했다면"} {
 		if !strings.Contains(e.Body, want) {
 			t.Errorf("body lacks %q: %q", want, e.Body)
@@ -194,7 +195,7 @@ func TestA194ASelfReleasingBlockIsReportedAfterTenMinutes(t *testing.T) {
 			}
 			if tc.want == 1 {
 				// 스스로 풀리는 차단에는 「운영자만 풀 수 있다」고 단정하지 않고, 해제가 필요할 수 있다고만 말함(D6, 구현 리뷰 P2-5).
-				if strings.Contains(got[0].Body, "이 차단은 운영자만 풀 수 있다") {
+				if strings.Contains(got[0].Body, "이 차단은 스스로 풀리지 않는다") {
 					t.Errorf("a self-releasing block must not be called operator-only: %q", got[0].Body)
 				}
 				for _, want := range []string{"필요할 수 있다", "reconcile-resolve", "앱에서 직접 관리하라"} {
@@ -830,5 +831,39 @@ func TestA194ARoundWhoseRestLeftStartsAgainNextCycle(t *testing.T) {
 	}
 	if n := len(f.cap.blockedReports()); n != 6 {
 		t.Errorf("reports after the second cycle = %d, want 6 — the three still blocked must be attempted again", n)
+	}
+}
+
+// Manager 결정 2026-11-23 — 세 본문 모두 해제 명령이 엔진 정지를 요구하고 그동안 모든 포지션의 자동 손절이 멈춘다고 말함.
+func TestA194EveryReleaseGuideSaysTheStopsPauseWhileTheEngineIsDown(t *testing.T) {
+	f := newA194(t)
+	f.holds("SYNA01", a194Qty, a194Price)
+	f.block("SYNA01", journal.ReconcileCauseAttributionFailed)
+	f.holds("SYNA02", a194Qty, a194Price)
+	f.block("SYNA02", journal.ReconcileCauseQuantityMismatch)
+	f.cycle()
+	f.clk.Advance(blockedHoldingGrace)
+	f.cycle()
+	bodies := map[string]string{}
+	for _, e := range f.cap.blockedReports() {
+		bodies[fmt.Sprint(e.Fields["fact"])] = e.Body
+	}
+	if blocks := f.cap.of(obs.EventReconcilePermanent, ""); len(blocks) > 0 {
+		bodies["block report"] = blocks[0].Body
+	}
+	for _, name := range []string{factBlockedOperatorOnly, factBlockedStale, "block report"} {
+		body, ok := bodies[name]
+		if !ok {
+			t.Fatalf("no %s body; reports = %+v", name, f.cap.events)
+		}
+		for _, want := range []string{"엔진을 멈춰야", "자동 손절이 돌지 않"} {
+			if !strings.Contains(body, want) {
+				t.Errorf("%s body lacks %q: %q", name, want, body)
+			}
+		}
+	}
+	if !strings.Contains(bodies["block report"], "거절하며 그 사유를 말한다") ||
+		strings.Contains(bodies["block report"], "로만 풀 수 있는 원인이었다") {
+		t.Errorf("block report guide = %q; it must defer to the command's own refusal and not assert the cause", bodies["block report"])
 	}
 }

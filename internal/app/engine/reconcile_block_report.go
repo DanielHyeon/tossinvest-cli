@@ -168,11 +168,12 @@ func (d *ReconcileDriver) alertBlockedHolding(ctx context.Context, r dueBlockedR
 	body := fmt.Sprintf("%s 대사에서 이 종목은 대사 차단(원인 %s, %s) 아래에 있어 편입하지 못했다. "+
 		"그 시각 손절·익절이 걸려 있지 않았다.\n", kstText(now), r.cause, blockSinceText(r.since))
 	if r.fact == factBlockedOperatorOnly {
-		body += "이 차단은 운영자만 풀 수 있다 — 운영자 해제(`tossctl engine reconcile-resolve`, 엔진 정지 필요) 전까지 앱에서 직접 관리하라."
+		body += operatorReleaseGuide + " 그 전까지 이 종목은 앱에서 직접 관리하라."
 	} else {
 		// 재시작 뒤 복원된 수량 불일치 블록은 조정 크레딧이 없어 일치만으로 안 풀릴 수 있음 — 단정이 아니라 가능성으로 안내(D6).
-		body += "차단이 10분 넘게 풀리지 않았다. 스스로 풀리지 않으면 운영자 해제(`tossctl engine reconcile-resolve`, 엔진 정지 필요)가 " +
-			"필요할 수 있다. 엔진 로그의 대사 상태를 확인하고 그 전까지 앱에서 직접 관리하라."
+		body += "차단이 10분 넘게 풀리지 않았다. 스스로 풀리지 않으면 운영자 해제(`tossctl engine reconcile-resolve`)가 필요할 수 있다 — " +
+			"그 명령은 엔진을 멈춰야 실행되고 멈춘 동안에는 모든 포지션의 자동 손절이 돌지 않는다. " +
+			"엔진 로그의 대사 상태를 확인하고 그 전까지 이 종목은 앱에서 직접 관리하라."
 	}
 	body += "\n이 알림이 늦게 도착했다면 그 사이 상태가 바뀌었을 수 있으니 콘솔에서 현재 상태를 확인하라."
 
@@ -229,7 +230,7 @@ func (d *ReconcileDriver) recordOperatorOnlyBlock(ctx context.Context, b reconci
 	// 본문은 관측 시각의 사건으로 씀 — 늦게 배달돼도 참이게(D6).
 	body := fmt.Sprintf("%s 대사에서 %s에 운영자만 풀 수 있는 대사 차단(원인 %s, %s)이 활성이었다. "+
 		"그 시각 그 범위의 신규 진입은 막혀 있었고, 그 범위에 보유가 있었다면 엔진이 편입하지 않아 손절·익절이 걸려 있지 않았다.\n"+
-		"그 차단은 운영자 해제(`tossctl engine reconcile-resolve`, 엔진 정지 필요)로만 풀 수 있는 원인이었다. 풀리지 않은 동안 하루(KST) 한 번 알린다.\n"+
+		operatorReleaseGuide+" 풀리지 않은 동안 하루(KST) 한 번 알린다.\n"+
 		"이 알림이 늦게 도착했다면 그 사이 상태가 바뀌었을 수 있으니 콘솔에서 현재 상태를 확인하라.",
 		kstText(now), target, b.Cause, blockSinceText(b.Since))
 	if !d.opts.NotificationsEnabled {
@@ -264,6 +265,12 @@ func (d *ReconcileDriver) recordOperatorOnlyBlock(ctx context.Context, b reconci
 	}
 	return true
 }
+
+// operatorReleaseGuide 는 운영자 전용 차단의 할 일 문장임. 해제 명령이 받는 원인 목록은 명령 쪽이 정하므로 여기 복제하지 않고,
+// 엔진 정지가 모든 포지션의 자동 손절을 멈춘다는 사실을 숨기지 않음(Manager 결정 2026-11-23).
+const operatorReleaseGuide = "이 차단은 스스로 풀리지 않는다. 풀려면 운영자 해제(`tossctl engine reconcile-resolve`)가 필요하다 — " +
+	"이 명령은 엔진을 멈춰야 실행되고 멈춘 동안에는 모든 포지션의 자동 손절이 돌지 않으므로, 보유 종목의 시장이 닫힌 시간에 실행하라. " +
+	"명령이 이 원인을 받지 않으면 거절하며 그 사유를 말한다."
 
 // blockSinceText 는 차단이 걸린 시각 문구임 — 모르면 그렇다고 말함.
 func blockSinceText(since time.Time) string {
