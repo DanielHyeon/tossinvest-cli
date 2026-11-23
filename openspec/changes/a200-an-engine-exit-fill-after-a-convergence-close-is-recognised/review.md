@@ -153,3 +153,14 @@ reconciliation delta 는 **ADDED Requirement** 로 만들었다(Manager 승인 2
 1. G1: (라)에 관측 수량 상한(`OrderedQuantity` · `CumulativeQuantity` ≤ 감소분)을 더할지 — 더 엄격해지기만 하고 정상 입력은 그대로 통과(두 리뷰어 판단, 미측정).
 2. G2: 인정된 주문이 종결될 때까지 그 종목 진입을 닫을지, 종결 체결만 인정할지, 공시로 둘지.
 3. G5: (다)에 `PendingAction != ""` 를 더할지(도달 불가 방어).
+
+### gstack r1 처분 — G1 수리 · G2 · G5 공시(Manager 2026-11-24)
+
+- **G1 수리**: (라)에 이 체결 관측이 들고 온 `CumulativeQuantity` ≤ 감소분, `OrderedQuantity` 가 비어 있지 않으면 그것도 ≤ 감소분(못 읽거나 빈 누적 · 못 읽는 주문 수량 → 아님). 첫 시도는 멈춤 조건(판정에 `fill` 이 닿지 않음)으로 멈췄고, Manager 가 (A) — 이미 편집한 `ProjectPosition` 호출 줄 :104 에 인자 `fill` 하나 — 를 승인. 원장 읽기 없음(구조 시험 `TestA200TheRecognitionIsCalledOnceAndReadsNoFillLedger` 는 표 이름 철자와 호출 자리만 보므로 인자 받기는 읽기로 세지 않음, PASS). `ProjectPosition` ast 재생성: 분기 6 · 호출 · 반환 · 부수효과가 앞 판과 같음.
+  - `AppliedFill` 생산 자리 둘: fills.go:478-497(`OrderedQuantity` = 관측 `Quantity`, `orZero` 없음 → 빈 문자열 가능 → 누적만), strategy_dispatch_runtime.go:1319(매수 backfill → (가)에서 탈락). design D2 · D2a.
+  - 시험: 판정 경계 8 사례(누적 = 감소분 인정 · 누적 < 감소분 인정 · 누적 > 감소분이고 intent ≤ 감소분 거절 · 누적 비었음 · 못 읽음 거절 · 관측 주문 수량 > 감소분 거절 · 실리지 않음은 누적만 · 못 읽음 거절), 원장 `TestA200ABrokerFillLargerThanTheIntentStaysAnAttributionFailure`(intent 31 · 조정 31→0 · 브로커 40/40 → `ATTRIBUTION_FAILED` X59 활성 1 · 표지 0). 기존 A200 시험 전부 PASS — 거절된 정상 입력 없음.
+  - spec delta(ledger ADDED 조건 문장 · 거절 Scenario) 재생성, strict valid.
+- **G2 공시**: design §4 · Story limits 에 「오늘은 첫 늦은 조각이 세우는 차단이 그 종목의 엔진 진입과 편입을 막았다 — 사람의 재매수 자체와 그 뒤 조각이 새 보유를 줄이는 것은 오늘도 못 막는다」. 진입 닫기 가드는 넣지 않음.
+- **G5 공시**: design §4 한 줄(도달 불가).
+- G3 · G4 · G6 · G7 · G8 공시 승인. 「(라) 실패 × 활성 차단 → 새 행 없음」 시험 `TestA200AnUnrecognisedW6FillWritesNoNewRow`(PASS — 같은 모양의 W6 관리 시험은 표지 1, 이 시험은 PLACE 둘이라 표지 0 · 활성 수량 불일치 하나뿐). (나) 쪽은 같은 F10 경로라 시험 없음. 판정 읽기 DB 오류 경로는 미실행 범위.
+- 변이 5 회차(`4f6337a1e`) **22 / 22 CAUGHT**, 빌드 실패 0. 검증(HEAD `4f6337a1e`): 선택 시험 4 패키지 ok · `-race` A200 ok · `make lint` rc 0 · strict valid · check_analysis evidence complete · tracker current — `analysis/verify/selected-tests-g1.txt`.

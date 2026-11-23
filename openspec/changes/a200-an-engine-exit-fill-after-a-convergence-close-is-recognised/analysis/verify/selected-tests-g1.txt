@@ -1,0 +1,20 @@
+# gstack r1 G1 뒤 선택 시험 — HEAD 4f6337a1e, 2026-11-24T08:08:05+09:00
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	119.401s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	29.777s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	36.247s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	30.189s
+## -race A200
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	72.459s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	45.197s
+## make lint
+go vet ./...
+go vet -tags tossos_testseams ./...
+lint_rc=0
+## openspec strict
+Change 'a200-an-engine-exit-fill-after-a-convergence-close-is-recognised' is valid
+## check_analysis
+[logic-map] a200-an-engine-exit-fill-after-a-convergence-close-is-recognised: base 28680af3d428 → working tree (no landed-commit.txt in HEAD) required 7 function(s) — judged at HEAD 4f6337a1e81b
+[logic-map] a200-an-engine-exit-fill-after-a-convergence-close-is-recognised: the target is the working tree, so this window also holds 11 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits
+[logic-map] a200-an-engine-exit-fill-after-a-convergence-close-is-recognised: evidence complete or diff-proven exempt
+## tracker
+[pm] hierarchy and generated trackers are current
