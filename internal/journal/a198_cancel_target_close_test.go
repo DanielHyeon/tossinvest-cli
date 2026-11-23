@@ -295,12 +295,23 @@ func TestA198TheCloseWritesWhatTheResolveAPIWrites(t *testing.T) {
 	}{
 		{"CANCELLED", "0", StateConfirmed},
 		{"REJECTED", "0", StateFailedConfirmed},
+		{"FILLED", "10", StateFailedConfirmed},
 	} {
 		t.Run(tc.state, func(t *testing.T) {
 			j := openTestJournal(t)
 			a198Owner(t, j, "a", "O-1", "2026-03-30")
 			viaClose := a198InDoubtCancel(t, j, "a", "O-1", nil)
 			viaAPI := a198InDoubtCancel(t, j, "b", "O-1", nil)
+			// 예약을 하나씩 심어 두 경로가 같은 해제 행을 남기는지 봄(취소 결정은 보통 예약이 없음 — 「0 = 0」 비교를 피함).
+			insertDecision(t, j, "d-a198-res", "nonce-a198-res")
+			for _, a := range []*Attempt{viaClose, viaAPI} {
+				if _, err := j.db.Exec(`INSERT INTO risk_reservations
+					(id, decision_id, attempt_id, account_ref, kind, amount, currency, snapshot_as_of)
+					VALUES (?, 'd-a198-res', ?, 'acct-1', ?, '100', 'USD', '2026-03-30T00:29:55Z')`,
+					"r-"+a.ID(), a.ID(), ReservationKindCash); err != nil {
+					t.Fatalf("planting a reservation: %v", err)
+				}
+			}
 			a198Fill(t, j, "O-1", "2026-03-30", "BUY", tc.state, true, tc.filled)
 			if got, err := j.CloseInDoubtCancelOnTargetClose(ctx, viaClose.ID(), a198Source); err != nil || !got.Closed {
 				t.Fatalf("close = %+v err %v", got, err)
@@ -321,8 +332,32 @@ func TestA198TheCloseWritesWhatTheResolveAPIWrites(t *testing.T) {
 			if a, b := a198Transitions(t, j, viaClose.ID()), a198Transitions(t, j, viaAPI.ID()); a != b {
 				t.Fatalf("transition rows differ:\nclose %s\napi   %s", a, b)
 			}
+			a, b := a198Reservation(t, j, viaClose.ID()), a198Reservation(t, j, viaAPI.ID())
+			if a != b {
+				t.Fatalf("reservation rows differ:\nclose %s\napi   %s", a, b)
+			}
+			// 확정 거절은 그 attempt 의 예약을 풀고, 접수 확정은 풀지 않음(transition 과 같은 규칙).
+			want := ReservationHeld + "||released=no"
+			if tc.want == StateFailedConfirmed {
+				want = ReservationReleased + "|" + ReleaseReasonBrokerTerminal + "|released=yes"
+			}
+			if a != want {
+				t.Fatalf("reservation after the close = %s, want %s", a, want)
+			}
 		})
 	}
+}
+
+// a198Reservation 은 attempt 에 묶인 예약 행의 상태·해제 사유·해제 시각 유무임.
+func a198Reservation(t *testing.T, j *Journal, attemptID string) string {
+	t.Helper()
+	var state string
+	var reason, at sql.NullString
+	if err := j.db.QueryRow(`SELECT state, release_reason, released_at FROM risk_reservations WHERE attempt_id = ?`, attemptID).
+		Scan(&state, &reason, &at); err != nil {
+		t.Fatal(err)
+	}
+	return state + "|" + reason.String + "|released=" + boolText(at.Valid && at.String != "")
 }
 
 // a198Row 는 attempt 행에서 id·시각을 뺀 칸들(settled_at 은 있음/없음만).

@@ -177,6 +177,8 @@ Pre-Edit Gate:
 | a165 시계 구조 시험이 새 파일을 읽지 않음 | 기록만(새 파일에 시계 호출 0) |
 | withPending=false 매도 경로의 실제 게이트웨이 시험 공백 | 기록만(A094 가짜 제출자 시험이 덮음, V8 은 `ReleaseClearedExitProposal` 이 막음) |
 
+- **정정(구현 리뷰 r3, 2026-11-24)**: r2 탐침의 「already-modified 매도가 종결 기록 뒤에도 막힘」은 탐침 결함이었다 — 종결 기록의 state 를 `CANCELED`(L 하나, 브로커 raw status 어휘)로 넣어 brokerstate 어휘(`CANCELLED`)가 아니었다. `CANCELLED` 로는 보강 2 뒤 D10 이 닫고 손절이 나간다(r3 탐침 `analysis/review/impl-r3/probe-head.txt`: `TestRev3SellCancelledAfterPartialFill` `cancels=[CONFIRMED|in_doubt_resolved_found] … PASS`).
+
 ## gstack review r1 (2026-11-24, 1회차·마지막)
 
 - 원문·처분 전부: `analysis/review/gstack-review-r1.md`. 4 specialist(testing·maintainability·security·simplification) + Claude 적대 패스. state-machines·red-team·codex 바깥 패스·Step 4.7 smoke 는 실행하지 않음(누락 커버리지). Gate edits: none detected.
@@ -246,3 +248,15 @@ Pre-Edit Gate:
 - 검증 원문(`analysis/verify/4c-*.txt`, `fcd5fa77b`+ledger.md, GOFLAGS 없음): engine `-run 'A198|A193|A094|ExitClear|ExitObserver|InDoubt|Recovery'` ok 69.8s · execgw `-run 'Cancel|Refusal|A165|A198|Resolve|Acked|Recovery'` ok 40.8s · journal `-run 'A198|Resolve|Pending|Terminal|Prepare|Decision'` ok 72.6s · reconcile `-run 'A094|A198|Recovery'` ok 11.7s · flatten ok 12.3s · `-race -run 'A198|A193'` ok 292.3s · `make lint` rc 0 · `openspec validate --strict` valid · check_analysis 「evidence complete」.
 - 기존 시험 무변: a193 전부(engine 선택 묶음 안 — `TestA193OnlyInDoubtPlaceAttemptsAreTouched` 포함) · a165(execgw 묶음) · flatten 전부 PASS. 뒤집힌 기존 시험은 계획한 1 개뿐.
 - 미실행: 전체 스위트 · `make gate` · `make sdd-sync` · cmd/tossctl 시험 · 선택 밖 패키지.
+
+## 구현 적대 리뷰 r3 (2026-11-24, 보강 2 한정·마지막 — HEAD `e6383786d`)
+
+- 판정: **통과 — 새 P0·P1 없음, P2 4건**(Manager 판정). 원문·탐침: `analysis/review/impl-r3/`(`codex-final.md` · `codex-prompt.txt` · `rev3-probe_test.go.txt` · `probe-head.txt` · `probe-base.txt` · `direct.txt` — 리뷰어 사본의 선택 시험 ok). 탐침은 HEAD 와 base `e1eaf720c` 양쪽에서 돌렸다.
+- 리뷰어의 규칙 위반 2건이 있었다(사본 worktree 안의 편집, 원복 확인 — Manager 전달). 실제 작업 트리·커밋에는 영향 없음.
+
+| # | 발견 | 처분 |
+|---|---|---|
+| P2-1 | legacy terminal 행 + scoped OPEN 행 공존 → D10 이 닫고 열린 매도 위에 손절(codex 는 **P0** 주장) | **기록만, 코드 무변**(Manager 가 P2 로 내림): (가) base 에서도 같은 원장 상태면 같은 손절(`TestRev3LegacyTerminalBesideScopedOpen` HEAD·base 모두 `sells=[4 8]` — Manager 전달, 출력 파일에는 그 줄 없음) — 공유 판정식의 기존 성질, D10 은 HEAD 에만 있던 추가 차단을 풀 뿐 (나) 생산 작성자로는 그 행을 못 만듦(filldetect/ledger.go:44-46 계좌 빈 관측 거절, `RecordFill` 의 partial canonical scope 거절 fills.go:318-322) (다) Q6 유지. design §6 에 기록·후속 후보 한 줄 |
+| P2-2 | D9 는 source 를 보지 않아 flatten 의 ACKED 취소도 확정 | **의도된 비대칭으로 확정, 코드·delta 무변** — 이유는 design D9 행, 남는 창(flatten `MarkAcked`→`Settle` 사이 + 엔진 기동, 추론·미재현)은 §6 |
+| P2-3 | 쓰기 동치 시험이 CANCELLED·REJECTED 둘뿐 | **시험 보강**: FILLED 사례 추가 + 두 attempt 에 예약을 하나씩 심어 해제 행(state·release_reason·released_at 유무)까지 두 경로 동일 비교 — FAILED 는 `RELEASED|BROKER_TERMINAL`, CONFIRMED 는 `HELD` |
+| P2-4 | closeCancel 의 ctx 취소 갈래(sweep B9) 시험 없음 | **기록만** — BTM 그 행에 `not-covered` 사유(BeginTx(ctx) 롤백으로 원자적, ctx 오류는 스윕 종료뿐) |
