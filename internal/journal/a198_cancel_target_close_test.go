@@ -165,6 +165,13 @@ func TestA198ACancelIsNotClosedOutsideItsTargetsOwnScope(t *testing.T) {
 			a198Fill(t, j, "O-1", "2026-03-30", "BUY", "OPEN_PARTIALLY_FILLED", false, "3")
 			return c
 		}, a198Source},
+		{"closing state without the terminal flag", func(t *testing.T, j *Journal) *Attempt {
+			// 미체결 목록이 살아 있다고 보는 행(terminal 0) — state 문자열만으로 닫지 않음(같은 정의).
+			a198Owner(t, j, "a", "O-1", "2026-03-30")
+			c := a198InDoubtCancel(t, j, "a", "O-1", nil)
+			a198Fill(t, j, "O-1", "2026-03-30", "BUY", "CANCELLED", false, "0")
+			return c
+		}, a198Source},
 		{"replaced with a successor", func(t *testing.T, j *Journal) *Attempt {
 			a198Owner(t, j, "a", "O-1", "2026-03-30")
 			c := a198InDoubtCancel(t, j, "a", "O-1", nil)
