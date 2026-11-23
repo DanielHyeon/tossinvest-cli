@@ -3,7 +3,7 @@
 - Source: `internal/app/engine/exitloop.go:1649-1743`
 - AST evidence: `ast.json` (Pre-Edit HEAD `e1eaf720c`, source_sha256 `bc81b5fd…`, 분기 17 · return 8 · 호출 25)
 - Risk scan: `risk-pattern-report.md` (적중 1: exitloop.go:2046 panic — 이 함수 밖)
-- 판: **pre-edit**. 편집 범위(design D1·D2 (가-B)·D4, Manager 결정 2026-11-23): B9 앞의 결정 발행 호출(L1684-1695)을 관측기 안에서 만든 `execgw.Issuer{Journal: o.opts.Journal, Clock: o.clk, AccountRef: o.opts.AccountRef}` 의 `IssueReduction`(종류 CANCEL, 방향·수량 = 주문)으로, B9·B11 의 실패 갈래에 `noteExitOrder` 줄 추가(B10 은 기록 없음). 판정(`res.cleared=false; continue`)과 다른 분기는 무편집.
+- 판: **pre-edit**. 편집 범위(design D1·D2 (가-B)·D4, Manager 결정 2026-11-23): B9 앞의 결정 발행 호출(L1684-1695)을 관측기 안에서 만든 `execgw.Issuer{Journal: o.opts.Journal, Clock: o.clk, AccountRef: o.opts.AccountRef}` 의 `IssueReduction`(종류 CANCEL, 방향·수량 = 주문)으로, B9·B11 의 실패 갈래에 새 함수 `noteClearCancelFailure` 호출 추가(B10 은 기록 없음, D4 재결정). 판정(`res.cleared=false; continue`)과 다른 분기는 무편집.
 
 ## Inputs and invariants
 
@@ -62,5 +62,5 @@
 
 ## Safety conclusion
 
-- Safe edit boundary: L1684-1695(발행 호출 인자·발행기) 와 B9·B11 본문에 `noteExitOrder` 한 줄씩. `res.cleared=false; continue` 와 B1-B8·B12-B17 은 무편집.
+- Safe edit boundary: L1684-1695(발행 호출 인자·발행기) 와 B9·B11 본문에 `noteClearCancelFailure` 호출 한 줄씩. `res.cleared=false; continue` 와 B1-B8·B12-B17 은 무편집.
 - High-risk impact: **yes** — 손절 제출을 막는 판정 함수이고, 이 편집으로 브로커 취소가 처음 나간다(claim-check §2-1 재취소 위험 포함).

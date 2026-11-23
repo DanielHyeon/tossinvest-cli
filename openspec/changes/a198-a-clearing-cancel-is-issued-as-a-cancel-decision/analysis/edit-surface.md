@@ -36,7 +36,7 @@
 | D3(배선 누락이 기동 오류) | Context.ExitObserver 단언으로 성립 | 성립 | **대상 소멸** — 이미 필수인 Journal·AccountRef 에서 유도되므로 누락할 배선이 없다. spec Scenario 「취소 결정 발행기가 조립에 없다」가 공집합 — **Manager 결정 필요** |
 | 시계 | RiskGuardian 시계(게이트웨이와 같은 Context 에서) | Context 가 넣는 시계 | 관측기 시계 `o.clk`(운영 = engineRuntime 의 clk — 게이트웨이 시계와 같은 값, claim-check 「D2 선행 확인」에서 확인) — Issuer 주석 issue.go:36-37 「게이트웨이가 검증하는 시계와 같아야 한다」 |
 
-**Manager 결정 2026-11-23: (가-B) 채택**(D3 삭제, 조립 Scenario 삭제). D4 경로 편집으로 `exitOrderLine.args` 1 이 추가돼 최종 편집 대상 기존 함수 = `clearTheSymbol` · `exitOrderLine.args` 2(claim-check 「D4 경로 실현 가능성」).
+**Manager 결정 2026-11-23: (가-B) 채택**(D3 삭제, 조립 Scenario 삭제). D4 재결정(r2-1 뒤 — 새 함수가 `ExitOrderLog` 에 직접 씀)으로 최종 편집 대상 기존 함수 = **`clearTheSymbol` 하나**.
 
 당시 권고: **(가-B)** — 편집 함수 최소(1~2), 하네스 편집 0, 결정 기록이 flatten 과 같은 함수, K18 자동 포함. 단 D3 와 spec 의 조립 Scenario 를 바꾸는 결정이고 시계 동일성 확인이 선행이라 문서는 고치지 않았다(Manager 결정 대기). (나) 를 유지하면 a092 K18 시드 확장과 하네스 9~10 개 번들이 3.3 범위에 들어온다.
 

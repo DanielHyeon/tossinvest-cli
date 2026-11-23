@@ -13,7 +13,7 @@
 - [x] 1.5 rate limit 계상: retry matrix 문서의 취소 항목이 길 치우기의 취소를 이미 계상하는지 대조.
 - [x] 1.6 편집 대상 기존 함수의 FLM/BTM 번들(pre-edit 판).
 - [x] 1.7 `openspec validate a198-… --strict` 통과, proposal-freeze 적대 리뷰(다른 계열, 최대 2회, 적대적 Eng 관점 필수) — `review.md`.
-- [ ] 1.8 Manager 1단계 검증·freeze.
+- [x] 1.8 Manager 1단계 검증·freeze(2026-11-23, 커밋 `94dec8ae4` 확인 뒤 결정 — review.md).
 
 ## 2. Pre-Edit
 
@@ -22,12 +22,12 @@
 ## 3. RED → GREEN
 
 - [ ] 3.1 RED: `internal/app/engine/a198_clearing_cancel_test.go` — design §4-1(현재 HEAD 에서 결함 재현, 원문 `analysis/tdd/red.txt`)과 2~8.
-- [ ] 3.2 GREEN(design D2 (가-B)·D4, Manager 결정 2026-11-23): `clearTheSymbol` 편집(관측기 안에서 `execgw.Issuer` 로 취소 결정 발행 · B9·B11 에 운영 로그 줄) + `exitOrderLine.args` 편집(취소 줄의 종류·방향) + 새 파일(취소 줄 helper·사유 코드). `Context.ExitObserver` 무편집.
-- [ ] 3.3 기존 a094·a129 시험 무편집 통과 확인(design §4-9 — (가-B)는 하네스 변경 0). 편집 뒤 번들(`clearTheSymbol`·`exitOrderLine.args`) AST·FLM·BTM 재생성.
+- [ ] 3.2 GREEN(design D2 (가-B)·D4, Manager 결정 2026-11-23): `clearTheSymbol` 편집(관측기 안에서 `execgw.Issuer` 로 취소 결정 발행 · B9·B11 에서 실패 기록 호출) + 새 파일의 실패 기록 함수 + 관측기 구조체 새 필드. `Context.ExitObserver`·a129 함수 무편집.
+- [ ] 3.3 기존 a094·a087·a129·exit 시험 무편집 통과 확인(design §4-9 — 하네스 변경 0). 편집 뒤 `clearTheSymbol` 번들 AST·FLM·BTM 재생성.
 
 ## 4. 검증
 
-- [ ] 4.1 변이 원장(`analysis/mutation/`) — design §4 의 변이 6개, 닿음 확인·무변이 대조군 GREEN 뒤.
+- [ ] 4.1 변이 원장(`analysis/mutation/`) — design §4 의 변이 전부, 닿음 확인·무변이 대조군 GREEN 뒤.
 - [ ] 4.2 선택 시험 원문(design §4), `make lint`, `openspec validate --strict`, `check_analysis.py --change a198-…`. 미실행 범위 기록.
 - [ ] 4.3 구현 적대 리뷰(다른 컨텍스트) → gstack review 1회 — `review.md`.
 
@@ -35,4 +35,7 @@
 
 - [ ] 5.1 Manager 검증(diff·시험 원문 재실행).
 - [ ] 5.2 완료 게이트(격리 worktree) → archive → Story 경로 갱신 → push.
-- [ ] 5.3 (사람 승인) 운영 반영 — design §5.
+
+## 6. 종결 뒤 (사람 승인 — 이 change 의 종결 조건 아님)
+
+운영 반영 — design §5. 운영 반영을 하지 않은 채 체크하지 않도록 체크박스에서 뺐다(Manager 결정 2026-11-23, a195 와 같은 처리).

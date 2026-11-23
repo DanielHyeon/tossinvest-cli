@@ -45,3 +45,9 @@
 | r2-3 P2 | ACKED 계수 제외는 조건부(onlyEngineCancelsInFlight), 지연 경보는 다음 관측 주기에서만 | 코드 재확인 — 사실 | **사실 정정 반영**: design §6·proposal·Story 에 조건 괄호, §4-6 에 「전체 관측 주기 반복으로 단언」 |
 | r2-4 P2 | 전일 결속은 「알려진 정본 미충족 잔여」로 · 문서 간 불일치(rate-limit·edit-surface·review·tasks 5.3 대 Story limits 「운영 반영 제외」) | 사실 | design §6 문구·rate-limit·edit-surface·review(이 절) 반영. **tasks 5.3(사람 승인 운영 반영) 대 Story limits(운영 반영 포함 안 함)는 Manager 작성 문장 간 충돌 — 미편집, Manager 결정 대기** |
 | r2-5 P2 | r1 파일의 프롬프트 블록이 a196 리뷰 문안 | 사실 — 공유 스크래치 경로를 병행 작업이 덮어씀 | r1 파일에 「정정」 절로 실제 프롬프트 덧붙임(원본 보존) |
+
+## r2 처분 확정과 freeze (Manager, 2026-11-23)
+- r2-1 → **D4 재결정**: a129 대기열·래치·줄 타입을 쓰지 않고 새 파일의 새 함수가 `ExitOrderLog` 에 직접 한 줄, 자기 중복 억제(key = 포지션·대상 주문·상태·사유 코드; 접수 확정 시 그 주문 표시 삭제). 편집 기존 함수 = `clearTheSymbol` 하나. `exitOrderLine.args` 번들 삭제. design D4·§4-4·4-5·4-7·4-9·변이·§6(a087 — exit_order_log.go 충돌 소멸), proposal Impact·What Changes 2, tasks 3.2·3.3·4.1 반영.
+- r2-2·r2-3·r2-4·r2-5 사실 정정 반영: 승인.
+- tasks 5.3 ↔ Story limits 충돌 → 5.3 을 체크박스에서 빼 「## 6. 종결 뒤 (사람 승인 — 이 change 의 종결 조건 아님)」로 이동(a195 와 같은 처리). Story 무변경.
+- **Manager 1단계 검증·freeze 2026-11-23** (커밋 `94dec8ae4` 읽고 strict validate 재확인 뒤). tasks 1.8 [x].

@@ -89,3 +89,5 @@
 - 고칠 기존 함수: `exitOrderLine.args` **1**(+ 호출 자리 `clearTheSymbol`, 이미 편집 대상). `noteExitOrder`·`endExitOrderCycle`·`writeExitOrder`·`exitOrderToken` 무편집. 구조체 필드 추가는 타입 편집(함수 아님). 기준 「2 개 초과면 멈춤」 이내 → 채택.
 - 필드 규율: 수량·가격 칸은 비움, 사유는 `exitOrderToken`(영문자·밑줄만) 통과 코드, 상태는 `journal.AttemptState`. a129 시험은 부분 키 대조(`a129Want`, a129_exit_order_log_test.go:204) — 새 키가 취소 줄에만 붙으면 기존 시험 무편집.
 - 사건 이름: 발행 실패·브로커 전 거절 → `obs.EventOrderNotDispatched`, `FAILED_CONFIRMED` → `obs.EventOrderRejected`, IN_DOUBT → `obs.EventOrderInDoubt`(submit 의 기존 매핑 exitloop.go:1599·1608-1610 과 같은 규칙). B10(수량·가격 해석 실패)은 Manager 결정 문장 밖 — 기록하지 않음(판정 무변화).
+
+> **대체(Manager 재결정 2026-11-23, r2-1 뒤)**: 위 「D4 경로 실현 가능성」의 a129 경로 채택은 철회됐다. D4 는 새 파일의 새 함수가 `opts.ExitOrderLog`(exitloop.go:223 `*obs.Logger`)에 직접 쓰고 자기 중복 억제 맵을 가진다 — a129 함수 4 개(`noteExitOrder`·`endExitOrderCycle`·`writeExitOrder`·`exitOrderLine.args`) 무편집. 편집하는 기존 함수 = `clearTheSymbol` 하나(design D4).
