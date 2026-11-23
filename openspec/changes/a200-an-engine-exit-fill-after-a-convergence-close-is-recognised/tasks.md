@@ -25,8 +25,8 @@
 - [x] 2.2 RED — design §3 의 1~5(1.4 의 본 사고 재현 시험을 차단 0 기대로 뒤집는 것이 첫 줄, 「조정을 사이에 둔 부분 체결」 재현 시험은 그대로 PASS) — 원문 `analysis/tdd/red.txt`
 - [x] 2.3 GREEN 최소 구현 — 새 파일(인정 판정 · 표지 쓰기) · `ProjectPosition` B5 1 자리. `ApplyExitFill` · 전이표 · 수렴 · 대사 해제 규칙 · 스키마 무편집. 주석은 한글로 「왜」 — 원문 `analysis/tdd/green.txt`
 - [x] 2.4 post-edit 번들 · `check_analysis` — `ProjectPosition`(revision current) + 재현 시험 파일의 지운 시험 3(revision base) · 자리만 옮겨진 1(revision current), `analysis/verify/check-analysis.txt`(evidence complete)
-- [ ] 2.5 변이 원장(design §3-6)
-- [ ] 2.6 선택 시험 · `-race`(해당) · `make lint` · strict validate · tracker `--check` — 원문 `analysis/verify/`
+- [x] 2.5 변이 원장(design §3-6) — 16/16 CAUGHT(2 회차), 1 회차 M2 생존은 범위 안 시험 보강으로 처분(`analysis/mutation/`)
+- [x] 2.6 선택 시험 · `-race`(해당) · `make lint` · strict validate · tracker `--check` — 원문 `analysis/verify/`
 
 ## 3. 리뷰 · 검증
 
