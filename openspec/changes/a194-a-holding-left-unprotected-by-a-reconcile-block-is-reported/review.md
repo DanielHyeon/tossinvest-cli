@@ -152,3 +152,16 @@
 - (3) pending 영구 승격 블록의 즉시 보고, (4) 차단 보고의 주기당 상한 없음: 기록만(design §6). gstack 수리 1(차례 공백)과 「기록만」 처분 승인.
 - `judgeHoldings` 무편집 — production 편집은 새 파일의 문장(상수 `operatorReleaseGuide`)뿐.
 - 재검증(2026-11-24, HEAD 62e008bec): 변이 최종 4판 22/22 CAUGHT, SURVIVED 0(M25 는 상수 선언이라 커버로 닿음을 못 재고 CAUGHT 가 닿음을 보임 — `analysis/mutation/ledger.md`). 선택 시험 PASS 54 · FAIL 0, `-race -run A194` ok(144 s), `make lint` rc 0, strict valid, `check_analysis` rc 0. 알림 문장 원문 갱신 `analysis/verify/alert-sentences.txt`.
+
+## Manager 검증 (2026-11-24, Fable — tasks 5.1)
+- HEAD fb413d04d. production 을 직접 읽음: reconcile_block_report.go(보유 보고 — 운영자 전용 차단 즉시·스스로 풀리는 차단 10분 뒤, 주기당 Notify 3건 차례, 알림 꺼짐이면 일반 등급 래치 / 차단 보고 — 하루(KST) 한 번, 기록 성공 뒤에만 표시, 풀리면 표시 삭제), judgeHoldings +5줄(차단 분기에서 보유 수집, 끝에서 reportBlocked), ReconcileDriver 필드 3.
+- 독립 재실행: ./internal/app/engine -run 'A194|Adoption|ReconcileLoop|Unmanaged|TestA095NotificationsOff|TestUSIncludedSymbolWaits|TestActiveForeignCause|TestAdoptionIsSilentUnderReconcile|TestExitEligibilityHasOneSpelling' → PASS 54 · FAIL 0(ok 42.008s); go vet rc 0; openspec validate --strict valid; check_analysis evidence complete.
+- 구현 적대 리뷰 r1(통과 — P0·P1 없음, P2 7; 사고 모양을 실 원장·실 Notifier 로 재현)과 gstack review r1 의 처분 반영을 확인. 운영 반영 선행: a195 를 포함한 빌드(같은 main 에 a195 가 먼저 착지 — 6ec2664c5).
+- 사고 기록: 1단계 문서 작업 중 따옴표 없는 heredoc 으로 tossctl engine reconcile-resolve 가 플래그 없이 1회 실행됨 — Manager 가 운영 장부·잠금 무변을 확인(review.md 기존 기록).
+- 판정: 통과. 종결 진행.
+
+## 종결 (2026-11-24, 종결 에이전트 — 사용자 요청 「커밋·push·archive(완료 게이트 포함)」)
+- 착지 먼저: `fb413d04d`(base `064f59fd9` 위 그대로)에서 `--record-landing` → `landed-commit.txt` = `62e008bec`(도구 계산 — `fb413d04d` 는 `.go` 를 고치지 않은 문서·시험 원문 커밋), 단독 커밋 `100454380`.
+- main 따라가기: rebase 대신 `origin/main` `6c895144a`(a195·a196 archive 포함)를 merge(`f431b6899`, 충돌 0). 이유: rebase 하면 형제(a195·a196) Go 커밋이 base 와 착지 사이에 들어와 ⑤ 창이 형제 함수를 요구한다 — 같은 날 a196 gate 1회차가 그렇게 ⑤ FAIL(a196 `analysis/close/gate-1-7376314a7.txt`). 병합 커밋은 착지 조건 8 의 「비병합 커밋」에 들지 않는다. merge 뒤 `check_analysis --change` rc 0(required 1, 증거 완전). `base-commit.txt`(`064f59fd9`) 는 HEAD 의 조상(확인).
+- merge 뒤 선택 시험 재실행(`analysis/close/merge-selected-tests.txt`, HEAD f431b6899): 위 Manager 의 -run 묶음 -v → PASS 54 · FAIL 0(ok 15.319s); go vet ./internal/app/engine rc 0.
+- tasks: 5.1 체크(위 Manager 검증), 5.2 **선체크(gate ② 선행 조건)** — 게이트·archive·Story·push 는 이 체크 뒤 수행. 「6. 종결 뒤(사람 승인)」 문단은 원래 있음(무변).

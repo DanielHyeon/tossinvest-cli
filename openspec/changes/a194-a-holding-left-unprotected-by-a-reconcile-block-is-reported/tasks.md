@@ -32,8 +32,8 @@
 
 ## 5. 종결
 
-- [ ] 5.1 Manager 검증(diff·시험 원문 재실행).
-- [ ] 5.2 완료 게이트(격리 worktree) → archive → Story 경로 갱신 → push.
+- [x] 5.1 Manager 검증(diff·시험 원문 재실행).
+- [x] 5.2 완료 게이트(격리 worktree) → archive → Story 경로 갱신 → push. **선체크(gate ② 선행 조건, 선례 a193·a195·a196)** — 게이트·archive·Story·push 는 종결 에이전트가 이 체크 뒤 수행하고 결과는 `review.md` 「종결」 절.
 
 ## 6. 종결 뒤 (사람 승인 — 이 change 의 종결 조건 아님)
 
