@@ -89,3 +89,26 @@ worktree `~/tossos-work/a199-impl`, 브랜치 `feat/a199-stale-proof-exit-only`.
 - **Q10** 낡음 + 다른 조항 실패의 오류에 낡음 sentinel 동반 여부(`UnmetInterlockClauses` 두 줄).
 - **Q11** 래치 자리(runInterlock 권고 vs NewContext), P12 soak.go 문구 포함 여부.
 - **Q12** design §2 「가림」 예시 삭제(사실 정정 반영됨) 확인.
+
+## Manager 결정 (2026-11-24) — 반영
+
+| # | 결정 | 반영 자리 |
+|---|---|---|
+| 1 | **base 재고정 승인(Manager, 2026-11-24).** 실행은 a198 착지 · merge 뒤. 요건: (1) 귀속 실측 — 옛 base `e4165fa3d` 이후 이 change 의 자기 Go 커밋(비병합 · `.go` 변경) 수를 원문으로, (2) 이 승인 기록(여기와 tasks 1.12), (3) `base-commit.txt` 한 파일 단독 커밋 + 영수증(옛→새 sha, 실측, 옛 base 에서의 required 수, 형제 착지 몫 = a198) | tasks 1.12, design §5. **아직 실행 안 함** |
+| 2 | B3-1 · B3-6 조정 수용 | delta B(변경 없음 — 이미 반영) |
+| 3 | 빈 endpoint 문자열 · 형식 번호 < 1 → 청산 전용 아님(기동 거절), 공용 판정 함수가 거름 | design D1 · §2 · §3-4 · §3-12, delta A2 문단(온전함 정의 · 결함 목록) + Scenario 「빈 endpoint 항목이 있는 만료된 attestation」, proposal What Changes 1, claim-check B2(발급자 인용 — 거부할 정상 입력 없음), Story acceptance |
+| 4 | D6 한정 — 감시 · 재읽기는 기동 표지 · 루프 · 래치를 실행 중 바꾸지 않음, 「진입 권한 유지」 문장 삭제 | design D6 · §4, delta A2 마지막 bullet, proposal 비목표, Story limits |
+| 5 | `logGateDecision` 편집 필수 | design D3 근거 칸, delta A2 bullet(「보호 미배선 절의 규칙대로」), edit-surface P11 확정, tasks 2.3 |
+| 6 | 날수 · 지남 문장도 청산 전용 귀결 | design D7(2), delta B6 삽입(1자리 — 정본에는 그 단계의 「거부」 귀결 문장이 없어 치환할 자리가 0, 삽입 1), edit-surface P8 |
+| 7 | 「청산 전용으로 돌고 있다」 알림은 기동 표지 조건, 회복이면 일반 등급 · 「재시작하면 정상으로 뜬다」, 새 단계 · 타입 없음, a135 D4 무위반 | design D7(3), delta B2 문장 연장 + Scenario 「증명이 회복된 뒤에도 청산 전용으로 도는 엔진」, design §3-10, edit-surface P9 · P13(`prepare` 편집 — 초안의 「prepare 무편집」 폐기) · P14 |
+| 8 | 재기동 Scenario 를 attestation 사유 래치로 한정 | delta Scenario 「attestation 을 갱신한 뒤의 재기동」 THEN, design §3-8 · §4, Story |
+| 9 | Recover → exit 관측 연결 시험 | design §3-11, tasks 2.2, Story acceptance |
+| 10 | 낡음 + 다른 조항 → 그 조항 오류만 | design D2 · §3-5, delta A2 bullet(「그 조항의 결함으로」) |
+| 11 | 래치는 `runInterlock`, soak.go 문구 포함 | design D4 · D9, edit-surface P12 확정, tasks 2.5 |
+| 12 | 「가림」 정정 확인, `NamesAccount` 류가 `sameAccount` 호출 | design D1a |
+| + | worker 시험 고정(§3-2), 새 래치 시험은 WIRED 조립 + UNWIRED 무변 사례(§3-3), 뒤집힐 시험 6 이름으로(§3-6) | design §3 |
+
+codex R1~R6 처분 확정: R1 → 결정 3, R2 → 결정 4, R3 → 결정 5, R4 → 결정 6 · 7, R5 → 결정 8, R6 → 결정 9.
+
+delta 재생성(`analysis/modified-delta/run.txt`): A 5 편집 각 1회 적중(A2 문단 · 추가 Scenario 내용만 바뀜), Scenario 12→**18**; B 10 편집 각 1회 적중(**B6 삽입 1 새로**, B2 문장 연장), Scenario 18→**21**. 역치환 바이트 동일 둘 다. strict valid.
+편집 표면 확정본: 기존 함수 14(P1~P13, P12 는 둘) + 2단계 확인 1(P14), 새 파일 2(attest 계좌 비교 · engine 공용 판정). pre-edit 번들 20(생산 14 · 시험 6).

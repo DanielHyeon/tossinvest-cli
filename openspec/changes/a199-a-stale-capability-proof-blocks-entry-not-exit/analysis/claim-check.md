@@ -46,6 +46,11 @@ HEAD `e4165fa3d`(코드 = `9738a0c32`). 근거 AST 는 `cited-ast/`(줄·분기 
 | §4 | 「초과 매도는 Guardian 의 위험 감소 발급과 브로커의 보유 한도가 막는다」 | Guardian 발급 내부 미열람(1단계 범위 밖) | 미확인 |
 | §5 | `verifyGate`·`runInterlock` 은 census 키가 아니지만 `NewContext` 본문에 이름이 있다 | shapes.json 키 90 중 engine.go 2(NewContext · NewOrderPath) · interlock.go 0; NewContext 동결 본문에 `runInterlock`·`refuseStartup`·`newAutomationStatus` 문자열 | 부분 — `verifyGate` 는 NewContext 본문에 없음(runInterlock 안에서만 호출). 이름 고정은 runInterlock · refuseStartup · newAutomationStatus |
 
+## B2. Manager 결정 3 의 가드가 거부할 정상 입력 (2026-11-24)
+
+- **없다 — 발급자가 만들지 않는다.** `soak.BuildAttestation`(internal/soak/attest.go:229-239)은 soak 성공 endpoint 를 하나씩 `strings.HasPrefix(ToUpper(TrimSpace(e)), "GET ")` 로 검사해 아니면 발급을 거절하고(빈 문자열 · 공백만인 항목은 여기서 거절), 감독 증거 endpoint 는 `LiveOnlyEndpoints()` 닫힌 집합에서만 옴(같은 파일 305 순회). 형식 번호는 `FormatVersion: attest.FormatVersion`(262, 값 1 — internal/attest/attest.go:53)이고 `attest.Save` 는 0 을 1 로 채움(186-187). 그래서 형식 < 1 이나 빈 endpoint 항목은 손으로 쓴 · 깨진 파일에서만 나온다.
+- 이 가드는 **낡은 파일을 청산 전용으로 내릴지**에만 걸린다 — 유효한 파일(`Verify` 통과)의 판정은 바꾸지 않는다.
+
 ## C. 지시서 (a)~(f) 질문에 대한 답
 
 - **(a)** D2 는 verifyGate 를 「첫 실패 반환」에서 「낡음은 표지 후 계속」으로 바꾸는 편집을 요구한다(B6 갈래). 낡음 + 뒤 조항 실패의 오류에 낡음 sentinel 을 같이 실을지는 결정 사항(Q).

@@ -3,7 +3,9 @@
 HEAD `e4165fa3d`(코드 = `9738a0c32`), a198 **미착지**(origin/main 미전진 — 2026-11-24 1단계 끝에 재확인). 근거: AST `cited-ast/`, 타입 전수 `verified-census/`,
 CodeGraph `code-context/codegraph-callers.txt`(1.6.0), grep 원문은 이 파일의 표 안 `파일:줄`.
 
-## 1. 편집할 기존 함수 (확정안 — 「조건부」는 Manager 결정에 달림)
+## 1. 편집할 기존 함수 (확정본 — Manager 결정 2026-11-24 반영: 확정 14 = P1~P13, 2단계 확인 1 = P14)
+
+> pre-edit 번들 20 = 생산 14(P1~P13 — P12 는 함수 둘) + 시험 6(`analysis/function-logic/`, 생성기 `analysis/harness/build_bundles.py`). P12 · soak 은 선택 실행을 안 해서 GREEN 칸이 「미측정」. P14 는 2단계에서 편집하면 그때 번들. `Context.ExitObserver` 번들은 a198 착지 뒤 재추출.
 
 | # | 함수 | 파일 | 무엇 때문에 | a166 census | 소스를 여는 시험 · 핀 | 비고 |
 |---|---|---|---|---|---|---|
@@ -14,18 +16,22 @@ CodeGraph `code-context/codegraph-callers.txt`(1.6.0), grep 원문은 이 파일
 | P5 | `Context.ExitObserver` | internal/app/engine/exitwiring.go | B2@323 새 표지로 | 0 | `a163_judgement_pin_test.go:259`(이 함수 안 덮어쓰기 1건 — 무관), `a071_readiness_assembly_test.go`(금지 문자열 `ProtectionReadiness`·`ReadinessAdapter`·`checkProtection`), `a092_structure_pins_test.go`(exitwiring.go 의 다른 함수) | **a198 이 같은 함수를 편집 중**(design D2/D3 — Guardian 을 `CancelIssuer` 로 단언). a198 착지 뒤에 편집 → 순차, 동시 아님. base 를 a198 착지 뒤로 잡아야 ⑤ 창에 a198 몫이 안 들어옴 |
 | P6 | `Context.ReconcileDriver` | internal/app/engine/reconcileloop.go | B2@368 새 표지로 | 0 | `a071_readiness_assembly_test.go`(금지 문자열) | |
 | P7 | `judgeAttestation` | internal/app/engine/attestation_watch.go | 낡음/거부 판정을 인터록과 **같은 함수**로(D7) — 지금은 `Verify` 첫 실패만 보므로 「만료 + 다른 계좌」를 `expired` 로 판정(인터록은 D1a 로 거부) | 0 | 없음 | claim-check C7 |
-| P8 | `attestationWatch.eventFor` | 같은 파일 | 낡음 단계 문장(D7), 청산 전용으로 돌고 있음 문장 | 0 | 없음 | 날수 · 지남 단계 문장(「그 뒤 엔진 재시작이 거부된다」)은 D7 밖 — Q |
-| P9 | `newAttestationWatch` | 같은 파일 | 「지금 청산 전용으로 돌고 있다」의 출처 = 기동 때 `c.Automation` 의 새 표지 | 0 | 없음 | 구조체 `attestationWatch` 에 칸 하나(함수 아님) |
+| P8 | `attestationWatch.eventFor` | 같은 파일 | 낡음 단계 문장 + 날수 · 지남 단계(notice B4@408 · imminent · proof_overdue B7@418)의 기한 뒤 귀결(Manager 결정 6), 「청산 전용으로 돌고 있다」 · 「증명은 회복됐다 — 재시작하면 정상으로 뜬다」 문장과 그 등급(결정 7) | 0 | 없음 | |
+| P9 | `newAttestationWatch` | 같은 파일 | **감시가 기동 표지를 읽는 통로** = 이 함수가 이미 읽는 `c.Automation`(227-228)에서 새 표지를 감시 구조체 칸으로 옮김(읽기만 — a135 D4 무위반, 결정 7) | 0 | 없음 | 구조체 `attestationWatch` 에 칸 하나(함수 아님) |
+| P13 | `attestationWatch.prepare` | 같은 파일 | 결정 7: 지금 B8@345 가 healthy 면 알림 없이 반환 → 기동 표지가 청산 전용이면 healthy 여도 하루 한 번 알림(조건을 파일이 아니라 기동 표지에). 키 규칙(하루 한 번 · 에피소드)은 a196 그대로 | 0 | 없음 | 1단계 초안의 「prepare 무편집」은 결정 7 로 폐기. `stageKey` 는 기본 갈래(`stage:KST날짜:에피소드`)로 덮이면 무편집 — 2단계에서 AST 로 확인 |
+| P14(2단계 확인) | `attestationVerdict.critical` · `stageKey` | 같은 파일 | 결정 7 의 등급(파일 회복이면 일반) · 키를 새 함수로 풀 수 있으면 무편집, 못 풀면 편집 | 0 | 없음 | 편집하면 번들 추가 |
 | P10 | `AllReasonCodes` | internal/execgw/failclosed.go | 새 사유 코드 등록(닫힌 목록) | 0 | `a098_sender_down_reason_test.go`(failclosed.go 를 열고 길이·소속 단언), `failclosed_test.go`(golden) | 분기 0 함수지만 본문 편집이라 gate ⑤ 번들 필요 |
-| P11(조건부) | `logGateDecision` | interlock.go | 청산 전용 기동에도 「보호는 프로세스 수명」 문장(정본 「보호 미배선 기동」) + 새 표지 필드 | 0 | 없음 | verified-census ⑦ — Q |
-| P12(조건부) | `runSoakAttest` · `newSoakAttestCmd` | cmd/tossctl/soak.go | 「The automation gate will refuse to start」(565) · 「The gate will still refuse to start … protective」(577 — interlock-gates-entry-not-exit 이후 이미 거짓) · Long 도움말(220) | 0 | soak 시험(문구 단언 여부 2단계 확인) | tasks 2.5. verify-execution-capability 의 미완 task 는 soak.go 를 편집 대상으로 적지 않음(1.10·1.11 은 완료) |
+| P11 | `logGateDecision` | interlock.go | 청산 전용 기동에도 「보호는 프로세스 수명」 문장(B1@479 조건, 정본 「보호 미배선 기동」 SHALL) + 새 표지 필드 — **Manager 결정 5 로 확정** | 0 | 없음 | verified-census ⑦ |
+| P12 | `runSoakAttest` · `newSoakAttestCmd` | cmd/tossctl/soak.go | **Manager 결정 11 로 확정.** 「The automation gate will refuse to start」(565) · 「The gate will still refuse to start … protective」(577 — interlock-gates-entry-not-exit 이후 이미 거짓) · Long 도움말(220) | 0 | soak 시험(문구 단언 여부 2단계 확인) | tasks 2.5. verify-execution-capability 의 미완 task 는 soak.go 를 편집 대상으로 적지 않음(1.10·1.11 은 완료) |
 
 **편집하지 않는 것(근거):** `Gateway.submit`·`checkEntry`(B1@860 이 이미 `raisesExposure` 일 때만 래치를 읽음), `EntryGate` 메서드(`Block` 그대로 씀),
-`refuseStartup`, `UnmetInterlockClauses`(표 `interlockClauses` 는 패키지 변수), `attest.Attestation.Verify`(D1a 는 새 메서드로 — 1.6), `stageKey`·`prepare`(키 규칙 무변 — D7),
-`productionStrategyWorker`(엄격 유지), `engineRuntime`(루프 집합 무변).
+`refuseStartup`, `UnmetInterlockClauses`(표 `interlockClauses` 는 패키지 변수 — 낡음 + 다른 조항은 그 조항 오류만, 결정 10), `attest.Attestation.Verify` · `attest.Load`(D1a · 형식 하한 · 빈 항목은 공용 판정이 거름 — 결정 3 · 12),
+`productionStrategyWorker`(엄격 유지 — 시험으로 고정), `engineRuntime`(루프 집합 무변).
 
-**새 함수(새 파일 권고 — gate ⑤ required 를 늘리지 않음):** `attest.Attestation.NamesAccount`(1.6), 닫힌 집합 판정 하나(인터록 · 감시 공용), 청산 쪽 판정 메서드
-(`AutomationStatus` 의 「청산 루프를 돌려도 되는가」), 감사 Detail 조립, 기동 출력 문장.
+**새 파일 · 새 함수(gate ⑤ required 를 늘리지 않음):**
+- `internal/attest/` 새 파일 — `Attestation.NamesAccount` 류(비공개 `sameAccount` 를 부름, 결정 12).
+- `internal/app/engine/` 새 파일 — **공용 낡음 판정 함수**(Load 결과 + 형식 하한 + 빈 endpoint 항목 + `Verify` + 만료 시 계좌 확인 → 「정상 / 청산 전용(만료 · 누락 목록) / 거부(오류)」). `verifyGate` B6 자리와 `judgeAttestation` B2 자리가 이것을 부름(판정 하나).
+- 같은 새 파일 또는 interlock 쪽 새 파일 — `AutomationStatus` 의 청산 쪽 판정 메서드(「청산 루프를 돌려도 되는가」 = `Verified ‖ 청산 전용`), 감사 Detail 조립, 기동 출력 문장, 래치 detail.
 
 **패키지 변수 편집(함수 아님 — 번들 불요):** `execgw.latchOrder`(새 사유를 `ReasonStrategyCentralIntegrity` 뒤 · `ReasonOperatingModeBlocked` 앞에 — 머리말 규칙
 「appended, never inserted … ahead of the operating mode」), `reason.go` 상수, `audit.ActionGate…` 상수, `attestationWatch` 구조체 칸, `AutomationStatus` 칸,

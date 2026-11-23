@@ -15,17 +15,17 @@
 - [x] 1.9 편집할 기존 함수마다 FLM/BTM pre-edit 번들(`tools/logic-map`) — 뒤집히는 기존 시험 함수 포함
 - [x] 1.10 claim check: proposal · design 의 분기 주장을 AST 열거와 대조(`analysis/claim-check.md`)
 - [x] 1.11 제안 동결 적대 리뷰(작성자와 다른 계열 — codex, 최대 2회차) → `review.md`
-- [ ] 1.12 Manager 결정 · freeze
+- [ ] 1.12 Manager 결정 · freeze — **Manager 조건부 freeze 2026-11-24.** 남은 조건: a198 착지 뒤 origin/main merge · 사람 승인 base 재고정(승인 기록 review.md 「Manager 결정」 1, 실행은 착지 뒤 — `docs/WORKFLOW.md` 세 요건, `base-commit.txt` 단독 커밋 + 영수증) · `Context.ExitObserver` 번들 재추출 · codex 2회차에 P0/P1 없음. 체크는 Manager 가 구현 지시 때 확정
 
 ## 2. 구현
 
 - [ ] 2.1 Pre-Edit 선언(High-risk): 바꾸는 것 · 바꾸지 않는 것 · 되돌리는 법
-- [ ] 2.2 RED — design §3 의 1~9 (실제 게이트웨이 · 실제 원장 · 실제 감사 로그로; production 무편집에서 실패 원문 `analysis/tdd/red.txt`)
-- [ ] 2.3 GREEN 최소 구현 — 닫힌 집합 판정 함수 하나(인터록과 감시가 같이 부름) · `AutomationStatus` 새 표지 · `verifyGate`/`runInterlock` · 청산 쪽 소비자 넷 · 래치 · 감사 action · 기동 출력 · 감시 문장. 새 설정 키·새 운영 모드·새 outbox 타입 금지. 주석은 한글로 「왜」
+- [ ] 2.2 RED — design §3 의 1~11 (실제 게이트웨이 · 실제 원장 · 실제 감사 로그 · 실제 런타임 조립으로; production 무편집에서 실패 원문 `analysis/tdd/red.txt`). 뒤집히는 기존 시험 함수는 design §3-6 의 여섯뿐 — 그 밖이 깨지면 멈춤
+- [ ] 2.3 GREEN 최소 구현 — 닫힌 집합 판정 함수 하나(인터록과 감시가 같이 부름, 형식 하한 · 빈 endpoint 항목 · 만료 시 계좌 확인 포함) · `AutomationStatus` 새 표지 · `verifyGate`/`runInterlock`(래치는 runInterlock) · 청산 쪽 소비자 넷 · `logGateDecision` 보호 수명 문장 · 래치 · 감사 action · 기동 출력 · 감시(문장 · 기동 표지 조건 알림). 새 설정 키·새 운영 모드·새 outbox 타입 금지. 주석은 한글로 「왜」
 - [ ] 2.4 a166 census 키 갱신(`NewContext` 를 편집했으면 그 키 하나, a192 `census-repair` 절차) — 다른 키 무변 단언
-- [ ] 2.5 인터록 머리 주석 정정(D9) · 낡은 출력 문구(`cmd/tossctl/soak.go` 의 「gate will refuse to start」류)가 새 귀결과 어긋나면 사실대로
+- [ ] 2.5 인터록 머리 주석 정정(D9) · `cmd/tossctl/soak.go` 의 낡은 출력 문구(565 · 577 「clause 9」 · 도움말 220)를 새 귀결로(Manager 결정 11)
 - [ ] 2.6 post-edit 번들 재생성 · `check_analysis`
-- [ ] 2.7 변이 원장(design §3-10, 사본에서 · 시작 sha 단언 · 무변이 대조군 GREEN · 닿음 먼저)
+- [ ] 2.7 변이 원장(design §3-12, 사본에서 · 시작 sha 단언 · 무변이 대조군 GREEN · 닿음 먼저)
 - [ ] 2.8 선택 시험 · `-race`(해당 시험) · `make lint` · strict validate · tracker `--check` — 원문 `analysis/verify/`. 미실행 범위 기록
 
 ## 3. 리뷰 · 검증

@@ -17,15 +17,15 @@
 
 ## What Changes
 
-1. **attestation 의 낡음(만료 · 필요 endpoint 누락)은 기동 거절이 아니라 「청산 전용 기동」이 된다.** 조건은 닫힌 집합이다: 파일이 읽히고(없음·파싱 불가·새 형식 아님), 온전하고(계좌·만료·endpoint 목록이 비지 않음), **해석된 계좌를 가리키고**, 실패가 만료와 endpoint 누락뿐일 때. 그 밖의 attestation 실패(없음 · 무효 · 불완전 · 새 형식 · 계좌 불일치)와 **다른 모든 인터록 조항**은 지금처럼 기동을 거절한다.
+1. **attestation 의 낡음(만료 · 필요 endpoint 누락)은 기동 거절이 아니라 「청산 전용 기동」이 된다.** 조건은 닫힌 집합이다: 파일이 읽히고(없음·파싱 불가·새 형식 아님), 형식 번호가 이 빌드가 아는 유효한 값이고(1 이상), 온전하고(계좌·만료·endpoint 목록이 비지 않고 **목록의 항목이 전부 비지 않은 문자열**), **해석된 계좌를 `Verify` 와 같은 비교로 가리키고**, 실패가 만료와 endpoint 누락뿐일 때(판정은 인터록과 감시가 함께 부르는 공용 함수 하나). 그 밖의 attestation 실패(없음 · 무효 · 불완전 · 빈 endpoint 항목 · 형식 번호 무효 · 새 형식 · 계좌 불일치 — 만료가 계좌 불일치를 가리는 경우 포함)와 **다른 모든 인터록 조항**은 지금처럼 기동을 거절한다.
 2. **청산 전용 기동에서 도는 것**: 감독 루프 집합은 그대로(reconcile driver + 편입 · exit observer · 체결 감지 · 휴면 strategy-entry 외곽), 보조 실행자도 그대로. Guardian 은 위험 감소 발급을 위해 존재한다.
 3. **청산 전용 기동에서 막히는 것**: 노출을 증가시키는 mutation 전부. 집행은 기존의 한 곳(`Gateway` 의 진입 검사 — `EntryGate` 래치)에 **새 사유 하나**로 건다. 래치는 매 기동마다 attestation 에서 다시 유도되므로 재시작으로 풀리지 않는다. 전략 진입 worker 는 `Verified` 를 계속 요구하므로 만들어지지 않는다. `Verified` 의 뜻(인터록 전 조항 충족)은 바꾸지 않는다 — 청산 쪽 소비자만 새 표지를 읽는다.
-4. **운영자에게 알린다**: 청산 전용 기동은 감사 기록(새 action) · 구조 로그 · 기동 출력 한 줄을 남기고, attestation 감시(a135·a196)가 그 상태를 **사실대로** 말한다 — 「지금 재시작하면 기동이 거부된다」는 낡음에 대해 더는 참이 아니므로 「새 진입이 막힌 청산 전용으로 뜬다(돌고 있다)」로 바꾼다. 거절이 유지되는 상태(계좌 불일치 · 무효 · 없음)의 문장은 그대로다.
-5. 인터록 파일 머리 주석의 낡은 서술(8항 Protection, "no degraded mode")을 정본에 맞춘다.
+4. **운영자에게 알린다**: 청산 전용 기동은 감사 기록(새 action) · 구조 로그 · 기동 출력 한 줄을 남기고, attestation 감시(a135·a196)가 그 상태를 **사실대로** 말한다 — 「지금 재시작하면 기동이 거부된다」는 낡음에 대해 더는 참이 아니므로 「새 진입이 막힌 청산 전용으로 뜬다(돌고 있다)」로 바꾼다 — 날수 · 지남 통지의 「그 뒤 재시작이 거부된다」도 같다. 「지금 청산 전용으로 돌고 있다」 알림은 파일이 아니라 엔진의 기동 표지에 걸려, 파일이 회복된 뒤에도 재시작 전까지 「증명은 회복됐다 — 재시작하면 정상으로 뜬다」(일반 등급)로 하루 한 번 나간다. 거절이 유지되는 상태(계좌 불일치 · 무효 · 없음)의 문장은 그대로다. 「보호가 프로세스 수명에 묶여 있다」는 기동 문장은 청산 전용 기동에서도 나간다.
+5. 인터록 파일 머리 주석의 낡은 서술(8항 Protection, "no degraded mode")과 `soak attest` 의 낡은 출력 문구(「gate will refuse to start」류)를 정본에 맞춘다.
 
 ## 비목표 (하지 않는 것)
 
-- **실행 중인 엔진의 동작 변경.** attestation 이 도는 중에 낡아도 그 엔진은 지금처럼 그대로 돈다(정본 「실행 중인 엔진의 동작은 바뀌지 않는다」 유지). 판정은 기동 시점뿐이다.
+- **실행 중 전환.** 감시와 attestation 재읽기는 기동 표지 · 루프 집합 · 진입 래치를 실행 중에 바꾸지 않는다(정본 「실행 중인 엔진의 동작은 바뀌지 않는다」 유지). 판정은 기동 시점뿐이다. 주문마다의 진입 권한은 정본 「자동 진입은 모든 안전 권한의 교집합이다」가 정하며 이 change 는 그것을 바꾸지 않는다.
 - 운영 모드(원장 `operating_modes`)에 새 트리거·새 모드를 더하지 않는다. `EXIT_ONLY` 를 재도입하지 않는다(add-core-domain: 「ENTRY_BLOCKED 와 행동 동일」) — 이 상태는 원장이 아니라 attestation 파일에서 매 기동 유도된다.
 - 새 설정 키·토글 없음. 게이트 OFF 경로는 한 글자도 바뀌지 않는다(불변식 3).
 - 거절이 유지되는 기동(계좌 불일치 등)에 ntfy 알림을 더하는 것 — 엔진 밖 heartbeat 감시(a134)가 「엔진 down」을 알린다. 사유를 싣는 것은 후속 후보.
@@ -36,5 +36,5 @@
 ## 영향
 
 - 정본: engine-safety 「자동화 게이트 기동 인터록」 MODIFIED(조항 2 의 귀결 분리 + Scenario 「attestation 만료 상태 기동」 수정 + Scenario 추가), 「capability attestation 의 만료와 범위 상실은 재시작 전에 알려진다」 MODIFIED(낡음의 귀결 문장). ADDED 없음 — 「낡은 증명」 문단이 「자동화 게이트 기동 인터록」 안에서 strict 를 통과한다(intent C; 1단계 사실 정정 — 초안은 「ADDED 2~3」).
-- 코드(예상 — 1단계가 확정): `internal/app/engine/interlock.go`(`verifyGate` · `runInterlock` · `AutomationStatus`), `engine.go`(`NewContext` — **a166 census 키**, 한 키 갱신 필요), `exitwiring.go`(`ExitObserver` 생성 조건), `reconcileloop.go`(`ReconcileDriver` 생성 조건), `attestation_watch.go`(문장), `cmd/tossctl/engine.go`(`runEngineRun` B7), `internal/audit`(action 상수), `internal/execgw`(래치 사유 상수), 필요하면 `internal/attest` 에 계좌 일치 판정의 공개 진입점(사본 금지).
+- 코드(1단계 확정 — `analysis/edit-surface.md`): 기존 함수 13 — `verifyGate` · `runInterlock` · `logGateDecision`(interlock.go), `NewContext`(engine.go — **a166 census 키 1**), `runEngineRun`(cmd/tossctl/engine.go), `Context.ExitObserver`(exitwiring.go — a198 착지 뒤), `Context.ReconcileDriver`(reconcileloop.go), `judgeAttestation` · `attestationWatch.eventFor` · `newAttestationWatch`(attestation_watch.go), `AllReasonCodes`(execgw/failclosed.go), `runSoakAttest` · `newSoakAttestCmd`(cmd/tossctl/soak.go 문구). 새 파일: `internal/attest` 계좌 비교 메서드, `internal/app/engine` 공용 낡음 판정. 상수 · 패키지 변수: `internal/audit` action, `internal/execgw` 사유 · `latchOrder` · golden.
 - 운영: 배포 뒤 낡은 attestation 으로 재시작하면 엔진이 청산 전용으로 뜬다. 정상 모드로 돌아가려면 지금과 같다 — `verify run` → `soak attest` → 재시작.
