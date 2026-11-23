@@ -1,0 +1,71 @@
+{
+  "file": "internal/reconcile/mismatch.go",
+  "source_sha256": "9895f31184e50dd33f1416bf1b420fb1e855cdb604b58c95308105cecf9734fe",
+  "package": "reconcile",
+  "function": "Blocks",
+  "receiver": "Tracker",
+  "signature": "Tracker.Blocks(params=0, results=1)",
+  "start": {
+    "line": 1296,
+    "column": 1
+  },
+  "end": {
+    "line": 1302,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1301,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1297,
+        "column": 2
+      },
+      "text": "t.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1298,
+        "column": 12
+      },
+      "text": "t.snapshotBlocks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1299,
+        "column": 2
+      },
+      "text": "t.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1300,
+        "column": 2
+      },
+      "text": "sortBlocks"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1298,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

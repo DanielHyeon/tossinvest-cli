@@ -1,0 +1,102 @@
+{
+  "file": "internal/app/engine/a135_attestation_watch_internal_test.go",
+  "source_sha256": "d48d3091352d1daae0c579962f39930fcda7d315f67ffe71d350d9c867e57e1d",
+  "package": "engine",
+  "function": "a135Attestation",
+  "signature": "a135Attestation(params=1, results=1)",
+  "start": {
+    "line": 36,
+    "column": 1
+  },
+  "end": {
+    "line": 50,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 38,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 12
+      },
+      "text": "Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 12
+      },
+      "text": "a135Now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 18
+      },
+      "text": "a135Now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 18
+      },
+      "text": "RequiredEndpoints"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 42
+      },
+      "text": "issued.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 78
+      },
+      "text": "attest.Mask"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 54
+      },
+      "text": "issued.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 90
+      },
+      "text": "attest.Mask"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

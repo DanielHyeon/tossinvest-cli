@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time",
-    "path": "openspec/changes/a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time"
+    "path": "openspec/changes/archive/2026-11-24-a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time"
   },
   "found_by": {
     "date": "2026-11-23",
     "how": "2026-11-18 감독 실주문 검증 증거가 30일을 넘겨 attestation 에서 주문·취소가 빠졌고, 5일 동안 21건의 critical 이 전달됐지만 운영자는 재시작 불가로 읽지 못했다. 11-23 호스트 재부팅 뒤 엔진이 기동을 거부해 자동 손절이 전부 멈췄다(Manager 실측).",
-    "record": "openspec/changes/a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time/proposal.md"
+    "record": "openspec/changes/archive/2026-11-24-a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time/proposal.md"
   },
   "acceptance": [
     "감시는 재시작이 거절되기 시작할 시각을 attestation 만료와 감독 증거의 기한 중 이른 쪽으로 세어 D-7 부터 일반 등급, D-2 이하 critical 로 알린다. 감독 증거의 기한은 attestation 파일에 실린 값만으로 계산한다.",

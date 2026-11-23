@@ -1,0 +1,21 @@
+┌  Syncing CodeGraph
+│
+Scanning files...
+│
+●  Already up to date
+│
+└  Done
+
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+Starting indexing for: /home/daniel/tossos-work/a196-close-gate
++ codegraph sync .
++ codegraphcontext index .
+  failed: Command '['codegraphcontext', 'index', '.']' timed out after 299.9999793010029 seconds
+[sdd-sync] incomplete:
+  - codegraphcontext
+rc=1
+7376314a7ff67e9c52e55df4cebedfea348e5993

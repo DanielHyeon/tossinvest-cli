@@ -1,0 +1,22 @@
+# a195 census 고정값 갱신 — 키별 비교 원문, HEAD 4441d8935 대 작업 트리, 2026-11-23T22:29:13+09:00
+# 값은 census 와 같은 추출(shape.go.txt: parser mode 0, format.Node, Doc 제거)로 만들고, base 064f59fd9 의 engine_reconcile.go 에서 같은 추출이 기존 고정값과 같음(True)과
+# Go encoding/json 문자열 인코딩(enc.go.txt)이 기존 값 표기를 shapes.json 안에서 정확히 1회 재현함(1)을 먼저 단언한 뒤 그 값 하나만 바꿈.
+## git diff --numstat
+1	1	internal/accountbudgetruntime/testdata/a166-wiring/shapes.json
+## 키별 비교
+shapes.json: keys HEAD 90 now 90, added [], removed [], changed ['cmd/tossctl/engine_reconcile.go||buildReconcileResolveRuntime'], unchanged 89
+sites.json: entries HEAD 116 now 116, identical True
+## sites.json 바이트 비교
+sites.json 무변경(git diff --quiet rc 0)
+## 옛 값 대 새 값 (diff old-shape new-shape 원문)
+71,78c71
+< 			for _, block := range blocks {
+< 				if block.Cause != journal.ReconcileCauseQuantityMismatch {
+< 					return fmt.Errorf(
+< 						"engine reconcile-resolve: active cause %s on %s requires cause-specific recovery evidence",
+< 						block.Cause, block.Symbol)
+< 				}
+< 			}
+< 			return nil
+---
+> 			return reconcileResolveRefusedCause(blocks)
