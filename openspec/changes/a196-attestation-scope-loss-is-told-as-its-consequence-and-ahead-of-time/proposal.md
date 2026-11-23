@@ -25,9 +25,9 @@
 
 ## What Changes
 
-1. **미리 알림**: 감시가 「재시작이 거절되기 시작할 시각」을 attestation 만료와 **감독 증거의 기한** 중 이른 쪽으로 센다. 감독 증거의 기한 = 가장 먼저 기간을 벗어날 POST 감독 증거의 시각 + 그 attestation 의 유효 기간(발급~만료). 파일에 실린 값만으로 계산하므로 발급자 규칙을 복제하지 않는다(a135 D6 의 우려를 지키는 방식). D-7~D-3 일반 등급, D-2 이하 critical — 기존 날수 규칙 그대로.
-2. **결과로 말하기**: 거절 상태 알림의 제목이 「지금 엔진을 재시작하면 기동이 거부된다」를 사실로 말하고, 본문이 자동 손절이 멈춘다는 것과 할 일(`tossctl verify run` 재실행)을 말한다. 타입은 그대로 둔다.
-3. **하루 한 번**: 거절 상태는 파일이 다시 발급되어도 같은 상태면 그날 다시 알리지 않는다. 날수 단계는 파일이 아니라 기한을 신원으로 센다.
+1. **미리 알림**: 감시가 「재시작이 거절되기 시작할 시각」을 attestation 만료와 **감독 증거의 기한** 중 이른 쪽으로 센다. 감독 증거의 기한 = 가장 먼저 기간을 벗어날 POST 감독 증거의 시각 + 그 attestation 의 유효 기간(발급~만료). 파일에 실린 값만으로 계산하므로 발급자 규칙을 복제하지 않는다(a135 D6 의 우려를 지키는 방식). D-7~D-3 일반 등급, D-2·D-1 critical — 기존 날수 규칙 그대로. 기한이 지났는데 파일이 아직 판정을 통과하면(갱신 전·갱신 실패 중) 새 단계로 하루 한 번 critical(Manager 결정 2026-11-23 Q4). 기한은 파일에 **실린** 증거 기준이라, 다른 시장의 더 새 증거가 검증 기록에 있으면 경보가 이르게 나올 수 있다 — 놓치는 방향이 아니므로 받아들인다(Q1).
+2. **결과로 말하기**: 거절 상태 알림의 제목과 본문 첫 문장이 「지금 엔진을 재시작하면 기동이 거부된다」를 사실로 말하고(Q3 — 기기의 제목 표시는 미실측), 본문이 자동 손절이 멈춘다는 것과 할 일(`tossctl verify run` 재실행)을 말한다. 타입은 그대로 둔다.
+3. **하루 한 번**: 거절 상태는 파일이 다시 발급되어도 같은 상태면 그날 다시 알리지 않는다. 날수 단계는 파일이 아니라 기한을 신원으로 센다. 보냄 상태는 프로세스 수명 안에서만 유지되어 재시작 뒤 현재 단계를 한 번 더 알릴 수 있음을 정본에 적는다(Q6).
 
 ## 이 change 가 하지 않는 것
 
@@ -40,11 +40,11 @@
 
 ### Modified Capabilities
 
-- `engine-safety`: 「capability attestation 의 만료와 범위 상실은 재시작 전에 알려진다」 — 날수의 기준에 감독 증거의 기한을 더하고, 거절 상태 알림의 문장과 중복 방지 신원을 고친다. Scenario 6 개 추가.
+- `engine-safety`: 「capability attestation 의 만료와 범위 상실은 재시작 전에 알려진다」 — 날수의 기준에 감독 증거의 기한을 더하고, 기한 경과·파일 통과 상태를 하루 한 번 critical 로, 거절 상태 알림의 문장과 중복 방지 신원을 고친다. 「만료 N일」 Scenario 4 개를 「기한」 기준으로 고치고 Scenario 6 개 추가(의도한 편집 16 — `analysis/spec-edit-intent.md`).
 
 ## Impact
 
-- 기존 함수 본문 편집(gate ⑤ FLM 대상, 전부 `internal/app/engine/attestation_watch.go`): `judgeAttestation`(기한 계산), `eventFor`(문장·key), `stageKey`·`attestationWatch.prepare`(신원). 정확한 목록은 tasks 1.4 에서 센다. 새 계산은 새 함수로.
-- a166 census 밖(조사 인용). 기존 시험 `a135_attestation_watch_internal_test.go` 는 본문의 endpoint 이름과 계좌 누출을 고정한다 — 유지.
+- 기존 함수 본문 편집(gate ⑤ FLM 대상): production 4 — `internal/app/engine/attestation_watch.go` 의 `judgeAttestation`(기한 계산·새 단계), `attestationWatch.eventFor`(문장·key), `stageKey`·`attestationWatch.prepare`(신원). 시험 2 — `a135_attestation_watch_internal_test.go` 의 `TestA135StageBoundaries`(표를 기한 기준으로)·`TestA135SameStageOnANewAttestationIsAnnouncedAgain`(새 규칙으로 재작성). `attestationVerdict.critical`·`daysLeftCeil`·헬퍼 `a135Attestation` 은 무편집(tasks 1.4, AST). 새 계산은 새 함수로.
+- a166 census 밖(1.4 실측 0건). 나머지 a135 시험(endpoint 이름·계좌 누출 고정 등)은 그대로 통과해야 한다.
 - 관측 전용: 브로커 호출 0, 진입·청산·운영 모드에 닿지 않는다(정본 그대로). 원장 스키마·attestation 파일 형식 변경 없음 — 옛 이미지가 같은 파일을 그대로 읽는다.
-- 알림 수: 범위 상실 하루 4 건 → 1 건. 감독 증거 만료 전 7 일 동안 하루 1 건(마지막 이틀은 critical).
+- 알림 수: 범위 상실 하루 4 건 → 1 건. 감독 증거 만료 전 7 일 동안 하루 1 건(마지막 이틀은 critical), 기한이 지났는데 갱신이 실패하는 동안 하루 1 건 critical. 엔진 재시작마다 현재 단계 1 건이 더 나갈 수 있다.

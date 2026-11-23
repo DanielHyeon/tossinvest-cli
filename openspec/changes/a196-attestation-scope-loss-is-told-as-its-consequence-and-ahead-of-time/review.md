@@ -55,5 +55,31 @@ worktree `~/tossos-work/a196-impl`, 브랜치 `fix/a196-attestation-deadline-not
 - **Q5(R5)**: a135 시험 수리 경로(StageBoundaries 표 수정 vs 헬퍼 `a135Attestation` 증거 시각 = 발급 시각), SameStage 시험의 재작성·삭제, 변이 목록 확장 여부.
 - **Q6(R4)**: 정본에 「재시작 직후 현재 단계를 한 번 더 알릴 수 있다」(a135 D2 의 허용)를 적을지.
 
+## 1단계 — Manager 결정 반영 (2026-11-23)
+
+Manager 결정(Q1~Q6)을 문서에만 반영. production·시험 Go 편집 0.
+
+| Q | 결정 | 반영 자리 |
+|---|---|---|
+| Q1 | 이른 경보 수용, 발급자 무편집. 기한 = 파일에 **실린** 증거 기준, 정각 = 이미 지남 | spec E2 문장 교체, design D1·D2(V−1ns·V·V+1ns)·D4 근거·§6 잔여, proposal What Changes 1 |
+| Q2 | 「만료 N일」 Scenario 4개를 「기한」 기준으로 | spec S1~S4, 중복 초안 「감독 증거의 기한 2일 전」 은 S3 에 합침. **이름은 유지** — `openspec validate --strict` 가 MODIFIED 블록의 정본 Scenario 이름 누락을 거절(「omits scenario(s) the current spec still has」)해서 이름은 그대로 두고 WHEN/THEN 만 고침. 「감독 증거의 기한 7일 전」 은 S2 와 합치지 않음(이른 쪽이 감독 증거일 때의 할 일을 고정 — intent 파일에 사유) |
+| Q3 | 결과 문장을 제목과 본문 첫 문장 둘 다 | spec E5·S10, design D7·§5-7·§6(제목 표시 미실측), proposal |
+| Q4 | 남은 시간 ≤ 0 → 새 단계 `proof_overdue`, 단계+기한 시각+KST 날짜, 하루 한 번 critical, `daysLeftCeil` 양수에만 | spec E1(「D-2 와 D-1」 로 되돌림)·E4·S8, design D3·D5·D7·§2·§5-3, proposal. AST: `attestationVerdict.critical` 은 default(B3 case@78 → return@79 true)가 새 단계를 흡수 → **무편집·번들 없음** |
+| Q5 | 시험 함수 2개만 고침(헬퍼 무편집), 「통과 이유가 바뀐 시험」 목록, 변이 6 → 12, D2 자리 = soak 외부 시험 + engine 계산 시험 | design §5-10·11·12·변이, tasks 3.1·3.3·4.1·머리말, FLM 번들 메모 |
+| Q6 | 재시작 뒤 1회 재알림을 정본에 | spec E6 끝 문장, design D5·§6 |
+
+- 정본 대조: `analysis/spec-edit-intent.md` — 의도한 편집 16(본문 6 · Scenario 고침 4 · 추가 6), diff 원문 첨부, 그 밖 글자 변화 0. Scenario 11 → 17.
+- 최종 편집 대상: production 4(`judgeAttestation`·`attestationWatch.prepare`·`stageKey`·`attestationWatch.eventFor`) + 시험 2(`TestA135StageBoundaries`·`TestA135SameStageOnANewAttestationIsAnnouncedAgain`) = 번들 6(변동 없음). 새 단계 상수는 const 블록.
+- `openspec validate --strict` valid, `check_analysis` rc 0, PM `--check` rc 0.
+
+### 1.6b proposal-freeze r2 (마지막 회차)
+- codex-cli 0.165.0 read-only, 원문 `analysis/review/proposal-freeze-r2-codex.md`. **P0 0 · P1 0 · P2 3.** r1 처분(Q1~Q6)에 대한 반박 0 — Q4 는 r1 의 48시간 침묵을 해소, 알림 꺼진 엔진에서 `proof_overdue` 도 일반 등급으로 강등됨(eventFor B1), 전이·재시도에서 새 침묵 반례 없음, `spec-edit-intent.md` 의 diff·16 목록이 실제와 완전 일치 확인.
+
+| # | 등급 | 발견 | 처분 |
+|---|---|---|---|
+| R2-1 | P2 | Scenario 「감독 증거의 기한을 세는 동안 파일이 다시 발급된다」 의 「그날 알림은 더 나가지 않는다」 와 §5-2 「같은 날」 이, 같은 날 안에서 날수가 하나 주는 정상 전이(D-6→D-5)까지 금지 — 본문의 억제 단위는 「같은 기한의 같은 날수 단계」 | **반영**(결정 무변경 문장 정합): Scenario WHEN 「남은 날수가 여전히 6일인 동안」·THEN 「그 재발급으로 알림이 더 나가지는 않는다」, design §5-2 「같은 날수 단계 안에서」. intent 파일 S6 갱신, validate valid |
+| R2-2 | P2 | D7 의 날수 통지 「그 뒤 첫 갱신부터 재시작이 거부된다」·`proof_overdue` 「다음 갱신부터 거부된다」 가 Q1 의 조건(「다른 유효한 감독 증거가 없으면」)을 빠뜨리고 단정 | **Manager 결정 대기** — Q4 본문은 Manager 지정 문구이고 D7 은 「뜻은 고정」이라 바꾸지 않음 |
+| R2-3 | P2 | 변이 12 중 시험 계획이 못 죽일 수 있는 것: ④·⑤(outbox Key 만 변형 — 가짜 notifier 는 outbox 중복 억제가 없어 건수로 못 잼, Key 비교 단언 필요), ⑧(binding 을 우회하는 새 기한 계산 — endpoint 별 시각이 다른 입력 미명시), ⑩(KST 날짜만 바뀌는 시각 쌍 없음 — 기존 시험은 25시간 전진), ⑪(scope_lost→expired 전이 시험 없음, 누락 집합이 남으면 단계 제거로도 key 가 갈려 변이 자체가 충돌을 보장 못 함), ⑫(`MissingEndpoints` 가 이미 정렬 — 동등 변이일 수 있음) | **Manager 결정 대기** — 시험 전략·변이 정의 변경 |
+
 ### 안 한 것
-- 리뷰 2회차, `codegraph affected`, CodeGraphContext·GBrain, 전체 시험·게이트, `make sdd-sync`. 운영 파일(`~/.config/tossctl`)은 안 읽음 — 실제 운영에 US 기록이 있는지 모름(Q1 의 현실 영향 미확인).
+- (1단계 당시) 리뷰 2회차 — 결정 반영 뒤 1.6b 로 실시. `codegraph affected`, CodeGraphContext·GBrain, 전체 시험·게이트, `make sdd-sync`. 운영 파일(`~/.config/tossctl`)은 안 읽음 — 실제 운영에 US 기록이 있는지 모름(Q1 의 현실 영향 미확인).

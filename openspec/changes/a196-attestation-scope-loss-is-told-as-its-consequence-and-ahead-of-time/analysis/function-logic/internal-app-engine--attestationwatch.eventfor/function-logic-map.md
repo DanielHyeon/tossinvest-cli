@@ -52,5 +52,6 @@
 
 ## Safety conclusion
 
+- Manager 결정 2026-11-23: B3 switch 에 `proof_overdue` case 하나 추가(Q4), 거절 상태 결과 문장은 제목과 본문 첫 문장 둘 다(Q3).
 - Safe edit boundary: B4·B6 의 제목·본문(D7), L370 의 Key 접미사(D5), 날수 본문에 기한 종류·시각(spec 「어느 기한을 세는지」). Type 선택(B1)·필드 이름은 바꾸지 않는다(D6·D8).
 - High-risk impact: no — 문구·키. 단 critical Key 가 outbox 중복 판정의 입력이므로 Key 를 줄이면 알림을 삼킬 수 있다(변이 「거절 key 에 발급 신원 되돌리기」의 반대 방향 — 누락 집합 빠뜨리기가 그것).

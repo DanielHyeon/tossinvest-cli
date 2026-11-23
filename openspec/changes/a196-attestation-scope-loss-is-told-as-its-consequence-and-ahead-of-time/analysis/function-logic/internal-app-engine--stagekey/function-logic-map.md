@@ -32,6 +32,7 @@
 ## State mutations and fallbacks
 
 - 없음(순수). **키 자체에는 발급 신원이 없다** — 발급 신원은 prepare B3(「보냄」 재설정)와 eventFor L370(outbox Key 접미사)에 있다.
+- Manager 결정 2026-11-23 Q4: `proof_overdue` 키 = 단계 + 기한 시각 + KST 날짜(B1 의 날수 갈래가 아니라 날짜 갈래 쪽).
 - a196 편집 예정(D5): 범위 상실 키에 정렬된 누락 endpoint 집합을 더한다(`v.Missing` 은 judge B5 에서 이미 정렬됨). 날수 키(D4)는 「보냄」 재설정의 신원이 기한 시각으로 바뀌면 그대로 둘 수 있다 — 어느 쪽으로 구현할지는 2단계.
 
 ## Safety conclusion

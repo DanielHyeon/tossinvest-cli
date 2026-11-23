@@ -52,7 +52,7 @@
 
 - 지역 `v` 만 만든다. 수신자·전역 쓰기 0, 브로커·파일 호출 0(Load 는 호출자 몫).
 - fallback: 알 수 없는 Verify 오류 → unreadable(B8).
-- a196 편집 예정: L112 의 기준 시각, verdict 에 기한 종류·시각 필드 추가(구조체 선언은 함수 본문 밖). D3 의 「남은 시간 ≤ 0 → imminent」를 `daysLeftCeil` 로 넘기면 그 함수도 편집 대상이 된다(tasks 1.4 조건부).
+- a196 편집 예정: L112 의 기준 시각, verdict 에 기한 종류·시각 필드 추가(구조체 선언은 함수 본문 밖). Manager 결정 2026-11-23 Q4: 남은 시간 ≤ 0 은 새 단계 `proof_overdue` 로 `daysLeftCeil` 호출 **전에** 가른다 → `daysLeftCeil` 무편집. 새 단계는 `attestationVerdict.critical` 의 default(B3 case@78 → return@79 true)가 흡수 → `critical` 무편집, 번들 없음.
 
 ## Safety conclusion
 
