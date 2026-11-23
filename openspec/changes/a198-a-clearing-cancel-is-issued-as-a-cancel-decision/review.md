@@ -141,3 +141,12 @@ Pre-Edit Gate:
 - 설정·DB·journal 변경과 rollback: 없음 — 사유 코드 재사용(골든 무편집), 스키마 0. rollback = 이전 이미지.
 - 안전 불변식 §0: 통과 — LIVE 0, 손절 즉시성 강화 방향(재시작까지 막힘 → 종결 기록 대기), 새 API 호출 0, 토글 0, flatten 동작 무변.
 ```
+
+## 보강 RED → GREEN → 검증 (tasks 4b.6~4b.8, 2026-11-24, 팀메이트 Opus)
+- 커밋: RED `4f32233d4` · GREEN `e92b7621b` · 검증 기록(이 절). push 없음.
+- 편집 기존 함수: `Gateway.withCancelRefusal`(엔진 정책 갈래에 D7 판정 호출 1) · `ExitObserver.clearTheSymbol`(D8 · D4a). 새 함수: `settledCancelRefusal`(새 파일 internal/execgw/a198_settled_cancel_refusal.go). 수정한 a198 새 함수: `noteClearCancelFailure`(표시를 쓰기 뒤로). `check_analysis` required **2**(위 둘) — flatten·journal·classifyMutation·refusalCodes·AllReasonCodes 무편집(`git diff e1eaf720c --stat -- internal` 6 파일). 생성기 재실행 뒤 delta diff 0.
+- RED(analysis/tdd/red-4b.txt, 1판 production): 엔진 A198 새 시험 6 FAIL — P1 `cancel attempts = [IN_DOUBT|dispatch_outcome_unknown]` · P2 `broker cancels = [W-BUY-1 W-BUY-1]` · P3 `[W-BUY-1 W-BUY-2 W-BUY-1 W-BUY-2]` · 13b `[FAILED_CONFIRMED|broker_rejected IN_DOUBT|dispatch_outcome_unknown]` · 해석 실패 줄 0(quantity·price) · 패닉 뒤 줄 0. execgw `TestA198EngineSettledOrderRefusalsAreDefinitive` 6 본문 전부 AMBIGUOUS.
+- GREEN(원문 verify/4b-*.txt 와 시험 로그): P1 `CANCEL|FAILED_CONFIRMED|W-BUY-1|dispatch_rejected_by_broker`, 종결 기록 뒤 주기에 손절 1 · P2 `CANCEL|CONFIRMED|W-BUY-1` → 손절 `FAILED_CONFIRMED|opposite_pending_order_exists` → 다음 주기 취소 0·손절 `CONFIRMED` · P3 취소 `W-BUY-1(400) W-BUY-2(접수) W-BUY-1(접수)` → 둘째 주기 손절 1 · 13b already-processing `FAILED_CONFIRMED|broker_rejected` → 재취소 already-canceled `FAILED_CONFIRMED|dispatch_rejected_by_broker` → 종결 기록 뒤 손절 · already-modified `IN_DOUBT`.
+- 변이(analysis/mutation/ledger.md 「4b」): 13/13 CAUGHT. V8(D8 을 매도에도 — 초과 매도 방향)은 A094 가짜 제출자 시험 1개만 죽임(실제 게이트웨이 시험은 ReleaseClearedExitProposal 이 대신 막아 못 죽임).
+- 선택 시험(GOFLAGS 없음): engine `-run 'A198|A094|ExitClear|ExitObserver'` ok 48.9s · execgw `-run 'Cancel|RiskGuardian|Issue|Refusal|A165'` ok 57.3s(a165 구조 고정 `TestA165CancelRefusalUsesOnlyInjectedClockForJudgement` 포함) · `./internal/flatten` 전체 ok 20.6s · journal `-run 'Prepare|Decision'` ok · `-race -run A198` ok 124.4s · `make lint` rc 0 · strict validate valid · check_analysis 「evidence complete」.
+- 미실행: 전체 스위트 · `make gate`·`sdd-sync`·`sdd-check`·`test-seams` · engine 패키지의 선택 밖 시험 · cmd/tossctl 시험 · post-edit 커버리지 재측정 · `ConfirmedCancelOf` 조회 오류 시험(읽기 오류 주입 수단 없음) · withPending=false 매도 경로의 실제 게이트웨이 시험(구성 미완 — A094 가짜 제출자 시험이 그 분기를 덮음).

@@ -17,3 +17,26 @@
 
 - M7 생존 이유(A198 만): 실제 게이트웨이 시험 3(ArmedSell)에서는 그 매도가 무장된 발의 자신의 주문이라, B12 를 지워도 뒤의 `ReleaseClearedExitProposal`(B14→B17)이 「그 intent 의 접수 확정 주문에 종결 증거 없음」으로 해제를 거절해 같은 주기 손절이 여전히 막힌다 — 다른 가드가 대신 지킴. B12 가 유일한 벽이 되는 모양(다른 intent 의 매도 · 발의 해제 뒤의 매도)은 기존 A094 시험 2 개가 가짜 제출자로 죽인다. 실제 게이트웨이로 그 모양을 재는 시험은 이 change 에 없음(보고).
 - 끝 대조군: 두 판 모두 rc 0, 사본 제거 확인.
+
+## 4b 보강 변이 (2026-11-24, tasks 4b.8)
+
+- 하네스 `a198_mutate_4b.py`(같은 절차). 대상 sha `e92b7621b`(보강 GREEN). 시험 = `go test ./internal/app/engine ./internal/execgw -run 'A198|A094|A165' -count=1`. 원장 `ledger-4b.jsonl`. 대조군 rc 0 → 13 변이 → 끝 대조군 rc 0 → 사본 제거.
+
+| 변이 | 닿음(줄·계수) | 결과 | 죽인 시험 |
+|---|---|---|---|
+| V1 D7 을 PLACE·AMEND 에도(kind 검사 삭제) | cancel_refusal.go:45 · 1 | CAUGHT | TestA198OtherAnswersKeepTheirOutcome · TestA165NilPolicyAndNonCancelKeepTheOriginalOutcome · TestA165PolicyDoesNotChangeNilOrNonCancelAmbiguousOutcomes |
+| V2 부분문자열(접두) 일치로 완화 | a198_settled_cancel_refusal.go:46 · 1 | CAUGHT | TestA198OtherAnswersKeepTheirOutcome |
+| V3 status 409 전체를 확정 거절로 | :38 · 1 | CAUGHT | AnAlreadyModified · OtherAnswers · AlreadyProcessingKeepsTheA165Path · A165 엔진 시험 다수 |
+| V4 already-modified 를 D7 에 | :25(맵 리터럴 — 계수 0, 패키지 초기화라 블록 계수 밖) | CAUGHT | TestA198AnAlreadyModifiedCancelStaysInDoubt · OtherAnswers |
+| V5 D7 을 flatten 정책에도 | cancel_refusal.go:53 · 1 | CAUGHT | TestA198OtherAnswersKeepTheirOutcome(flatten 정책 케이스) |
+| V6 D7 삭제 | :53 · 1 | CAUGHT | AnAlreadyFilledBuy… · AnAlreadyCanceledAfterAlreadyProcessing · EngineSettledOrderRefusalsAreDefinitive |
+| V7 D8 삭제 | exitloop.go:1678 · 1 | CAUGHT | AnAcceptedBuyCancelIsNotSentAgain… · OnlyTheRefusedBuyIsCancelledAgain |
+| **V8 D8 을 매도에도 「치움」(초과 매도 방향)** | :1678 · 1 | **CAUGHT** — 단 A094(가짜 제출자) 시험 1개만 죽임 | TestA094ACancelledSellStillHoldsTheStopAfterTheProposalIsReleased |
+| N10 발행 실패에도 cleared 유지 | :1708 · 1 | CAUGHT | OnlyTheCancelDecisionFailingStillWithholdsTheStop |
+| N2 최대 수량 ×2 | :1703 · 1 | CAUGHT | TheCancelDecisionCeilingIsTheOrderQuantity |
+| N6 접수 확정 뒤 표시 정리 삭제 | :1727(삭제 앞 줄 — `}` 라 계수 0) | CAUGHT | AConfirmedCancelClearsTheFailureMark |
+| N9 해석 실패 줄 삭제 | :1690 · 1 | CAUGHT | AnUnreadableWorkingOrderIsLoggedOnce |
+| N11 표시를 쓰기 앞에 | a198_clear_cancel_log.go:47 · 1 | CAUGHT | AFailureLineWhoseWritePanickedIsWrittenNextCycle |
+
+- 계수 0 인 두 줄(V4 맵 리터럴·N6 삭제 앞 `}`)은 닿음 측정 방식의 한계 — 두 변이 모두 지목한 시험이 죽였으므로 닿음은 결과로 확인됨.
+- V8(초과 매도 방향)을 실제 게이트웨이 시험은 죽이지 못한다: A198 의 무장된 매도 시험에서는 뒤의 `ReleaseClearedExitProposal` 이 대신 막는다(1판 M7 과 같은 구조). 죽이는 것은 A094 의 가짜 제출자 시험 1개 — 범위 안(선택 시험 묶음) 시험이다.
