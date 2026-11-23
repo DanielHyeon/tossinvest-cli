@@ -27,8 +27,8 @@
 
 ## 4. 검증
 
-- [ ] 4.1 변이 원장(`analysis/mutation/`) — design §4 의 변이 전부, 닿음 확인·무변이 대조군 GREEN 뒤.
-- [ ] 4.2 선택 시험 원문(design §4), `make lint`, `openspec validate --strict`, `check_analysis.py --change a198-…`. 미실행 범위 기록.
+- [x] 4.1 변이 원장(`analysis/mutation/`) — design §4 의 변이 전부, 닿음 확인·무변이 대조군 GREEN 뒤.
+- [x] 4.2 선택 시험 원문(design §4), `make lint`, `openspec validate --strict`, `check_analysis.py --change a198-…`. 미실행 범위 기록.
 - [ ] 4.3 구현 적대 리뷰(다른 컨텍스트) → gstack review 1회 — `review.md`.
 
 ## 5. 종결

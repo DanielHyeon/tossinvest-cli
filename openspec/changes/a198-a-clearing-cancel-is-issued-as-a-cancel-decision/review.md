@@ -67,3 +67,17 @@ Pre-Edit Gate:
 - 설정·DB·journal 변경과 rollback: 없음 — 스키마·설정·토글 0. 새로 쓰이는 행은 flatten 이 이미 쓰는 CANCEL attempt·위험 감소 결정 형식. rollback = 이전 이미지.
 - 안전 불변식 §0 위반 여부 검토: 통과 — LIVE 주문 0(가짜 브로커 httptest), 손절 즉시성 약화 없음(판정 무변화, 막혀 있던 취소가 나가 손절이 나갈 수 있게 됨), 새 API 호출 종류 없음(retry matrix 행 31·33·37), 운영 토글 무변화, 로그에 계좌·수량·가격·Detail 없음.
 ```
+
+## 2단계 RED → GREEN → 검증 (tasks 3.1~4.2, 2026-11-23, 팀메이트 Opus)
+- 커밋: RED `459287086`(시험 + red.txt + Pre-Edit) · GREEN `09bb9e8c1`(production 2 파일 + 번들). push 없음.
+- 편집 기존 함수: `ExitObserver.clearTheSymbol` 하나(수량·가격 해석을 발행 앞으로 이동 — 결정에 최대 수량을 싣기 위함, 해석 실패 시 결정 행을 안 남기는 것 외 판정 동일; 발행을 관측기 안 `execgw.Issuer` CANCEL 로; B10·B11 실패 기록 호출; 접수 확정 시 표시 삭제). 구조체 필드 1(`clearCancelLogged`). 새 파일 `a198_clear_cancel_log.go`(새 함수 2). submit·record·NewExitObserver·Context.ExitObserver·a129 함수·execgw·journal production 무편집. `check_analysis` required 1 = clearTheSymbol(번들 post-edit, 옛 B9↔B10 재번호).
+- RED(analysis/tdd/red.txt): HEAD production 에서 A198 7 중 6 FAIL — 브로커 취소 0 · 원장 CANCEL attempt 0 · 실패 줄 0. ACKED 특성 시험은 HEAD 에서도 PASS(기존 규칙).
+- 결합 시험이 잰 것(GREEN): 매수 미체결 → 브로커 취소 1(W-BUY-1), 원장 CANCEL attempt 1 = `CONFIRMED|W-BUY-1|key=false|…"side":"BUY"`, 같은 주기 손절 SELL 10 1건, 손절 결정은 멱등 키 있음. 무장된 매도 → 취소 1(SELL, 키 없음), 그 주기·다음 주기 손절 0·취소 여전히 1, 종결 기록(CANCELLED, 무체결) 뒤 주기 손절 10. 거절 400 → 줄 1(order.rejected · FAILED_CONFIRMED · dispatch_rejected_by_broker), 반복 1, 500 으로 바뀌면 2(order.in_doubt · IN_DOUBT · dispatch_outcome_unknown). 발행 실패(원장 트리거) → 취소 0 · 줄 1(cancel_decision_failed, 상태 빈 값). IN_DOUBT → 취소 1 · 손절 0 · 지연 경보·연속 실패 경보 둘 다. ACKED 고착 → 취소 0 · 손절 0 · **지연 경보 나감** · 연속 실패 경보 없음. 운영 조립(Context.ExitObserver, ExitOrderLog non-nil) → 취소 1 · 손절 1. design §2 의 기존 규칙과 어긋남 관측 없음.
+- 4.1 변이: analysis/mutation/ledger.md — 8 중 7 CAUGHT(A198), M7(매도 취소 접수를 치움으로)은 A198 만으로 생존(뒤의 ReleaseClearedExitProposal 이 대신 막음), A198+A094 로 CAUGHT(A094 기존 시험 2, 가짜 제출자).
+- 4.2 선택 시험(원문 analysis/verify/):
+  - t1 `go test ./internal/app/engine -run 'A198|A094|ExitClear|ExitObserver' -count=1`(GOFLAGS=-trimpath) ok 53.5s
+  - t2 같은 패키지 `-run 'A087|A129|A163|A092|A090|A091|A150|A159|Exit|Clear|Observer|Exits'`(-trimpath) → FAIL 5: 전부 runtime.Caller·패키지 경로로 소스를 여는 구조 시험이 -trimpath 에서 「no such file」(a087 ×4, a111 ×1). t2b 같은 묶음 GOFLAGS 없이 → ok 260.5s(HEAD 09bb9e8c1). → -trimpath 는 이 패키지의 구조 시험과 충돌(환경 결함, 이 change 무관)
+  - t3 `./internal/execgw -run 'Cancel|RiskGuardian|Issue'` ok · t4 `./internal/journal -run 'Prepare|Decision'` ok · t5 `-race ./internal/app/engine -run A198` ok
+  - `make lint` rc 0 · `openspec validate --strict` valid · `check_analysis.py` 「evidence complete」 rc 0
+- 미실행: 전체 스위트 · `make gate` · `make sdd-sync` · `make sdd-check` · `make test-seams` · 패키지 전체(internal/app/engine 의 선택 밖 시험) · cmd/tossctl 시험 · post-edit 커버리지 재측정 · 4.3 리뷰(Manager 가 붙임).
+- 남은 위험: 사전 단건 조회 GET 의 호출 수를 결합 시험이 세지 않음(가짜 브로커 되읽기 미계수) · 실패 줄 쓰기가 루프 안 동기(쓰기 대상이 막히면 같은 주기 뒤 포지션 판정이 늦어질 수 있음 — a129 는 주기 끝 대기열로 피함) · `clearCancelLogged` 는 접수 확정 때만 지워져, 종결로 사라진 주문의 항목은 프로세스 수명 동안 남음(주문 수만큼, 작음) · M7 의 실제-게이트웨이 시험 부재 · design §6 의 잔여(ACKED/IN_DOUBT 보류, 전일 결속, 매수 재취소).

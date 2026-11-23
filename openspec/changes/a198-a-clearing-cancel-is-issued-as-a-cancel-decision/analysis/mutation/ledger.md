@@ -1,0 +1,19 @@
+# a198 변이 원장 (tasks 4.1, 2026-11-23)
+
+- 하네스: `a198_mutate.py`(이 디렉터리). 사본 = `git worktree add --detach ~/tossos-work/a198-mut-<pid> <sha>`, 시작 sha 단언, 무변이 대조군 GREEN 뒤 변이마다 적용 확인(표식·앵커 1회) → 닿음(변이 판 coverprofile 의 변이 줄 블록 계수) → 시험 → 원복(원문 바이트 비교 + `git diff --quiet`) → 끝 대조군 GREEN → 사본 제거. 한 번에 한 판. `GOFLAGS` 는 사본에서 끔(-trimpath 가 runtime.Caller 경로 시험을 깨뜨림 — 4.2 관찰).
+- 대상 sha `09bb9e8c1`(GREEN 커밋). 1판 시험 = `go test ./internal/app/engine -run A198 -count=1`(ledger-r1.jsonl). 2판 = M7 만, `-run 'A198|A094'`(ledger-r2-m7.jsonl).
+- 1판 하네스 결함(정정): 닿음 줄을 「변이 새 글의 첫 줄을 변이 파일에서 처음 찾은 자리」로 계산해 M7 이 exitloop.go:364(엉뚱한 `}`)를 재고 0 을 냈다. 2판은 원문 앵커 위치로 계산(1728, 계수 1). 다른 변이의 줄은 실제 편집 자리와 일치(아래 표).
+
+| 변이 | 적용 | 닿음(줄·계수) | 결과 | 죽인 시험 |
+|---|---|---|---|---|
+| M1 결함 복원(RiskGuardian 매도·PLACE 결정) | ✓ | exitloop.go:1694 · 1 | **CAUGHT** | A198 AWorkingEngineBuy · ArmedSell · ARefusedCancel · …(7 중 다수) |
+| M2 결정 방향을 매도로 고정 | ✓ | :1699 · 1 | **CAUGHT** | AWorkingEngineBuy · ARefusedCancel · AnInDoubt · ProductionAssembly |
+| M3 결정에 멱등 키가 붙는 발행(KindPlace) | ✓ | :1696 · 1 | **CAUGHT** | AWorkingEngineBuy · ArmedSell · ARefusedCancel · … |
+| M4 비확정 취소 실패 기록 삭제 | ✓ | :1720 · 1 | **CAUGHT** | ARefusedCancel |
+| M4b 발행 실패 기록 삭제 | ✓ | :1704 · 1 | **CAUGHT** | AnUnrecordableCancelDecision |
+| M5 실패 기록의 중복 억제 삭제(매 주기 한 줄) | ✓ | a198_clear_cancel_log.go:31 · 1 | **CAUGHT** | ARefusedCancel · AnUnrecordableCancelDecision |
+| M6 실패 줄에 원문 싣기(LiveOrder 전체 — 계좌·수량·가격) | ✓ | a198_clear_cancel_log.go:60 · 1 | **CAUGHT** | ARefusedCancel |
+| M7 매도 취소 접수를 치움으로 판정 | ✓ | :1728 · 1 | A198 만: **생존** · A198+A094: **CAUGHT** | TestA094ACancelledSellStillHoldsTheStopAfterTheProposalIsReleased · TestA094AnotherIntentsCancelledSellStillHoldsTheStop(가짜 제출자 기존 시험) |
+
+- M7 생존 이유(A198 만): 실제 게이트웨이 시험 3(ArmedSell)에서는 그 매도가 무장된 발의 자신의 주문이라, B12 를 지워도 뒤의 `ReleaseClearedExitProposal`(B14→B17)이 「그 intent 의 접수 확정 주문에 종결 증거 없음」으로 해제를 거절해 같은 주기 손절이 여전히 막힌다 — 다른 가드가 대신 지킴. B12 가 유일한 벽이 되는 모양(다른 intent 의 매도 · 발의 해제 뒤의 매도)은 기존 A094 시험 2 개가 가짜 제출자로 죽인다. 실제 게이트웨이로 그 모양을 재는 시험은 이 change 에 없음(보고).
+- 끝 대조군: 두 판 모두 rc 0, 사본 제거 확인.
