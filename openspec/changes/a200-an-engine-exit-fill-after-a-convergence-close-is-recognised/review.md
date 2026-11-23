@@ -164,3 +164,28 @@ reconciliation delta 는 **ADDED Requirement** 로 만들었다(Manager 승인 2
 - **G5 공시**: design §4 한 줄(도달 불가).
 - G3 · G4 · G6 · G7 · G8 공시 승인. 「(라) 실패 × 활성 차단 → 새 행 없음」 시험 `TestA200AnUnrecognisedW6FillWritesNoNewRow`(PASS — 같은 모양의 W6 관리 시험은 표지 1, 이 시험은 PLACE 둘이라 표지 0 · 활성 수량 불일치 하나뿐). (나) 쪽은 같은 F10 경로라 시험 없음. 판정 읽기 DB 오류 경로는 미실행 범위.
 - 변이 5 회차(`4f6337a1e`) **22 / 22 CAUGHT**, 빌드 실패 0. 검증(HEAD `4f6337a1e`): 선택 시험 4 패키지 ok · `-race` A200 ok · `make lint` rc 0 · strict valid · check_analysis evidence complete · tracker current — `analysis/verify/selected-tests-g1.txt`.
+
+## Manager 검증·종결 (2026-11-24)
+
+### Manager 검증 (Fable — tasks 3.4)
+
+- HEAD `687ee4d70`, GOFLAGS 비움. journal `-run 'A200|Project|Position|Adjustment|ExitFill|Guarded|A130|A066'` ok 65.4s · reconcile `-run 'A200|A192|A195|Converge|Tracker|Observe'` ok 11.7s · app/engine `-run 'A200|A194|Adoption|Reconcile'` ok 17.3s · accountbudgetruntime ok 25.4s · A200 시험 32 PASS / FAIL 0 · vet rc 0 · `openspec validate --strict` valid · `check_analysis` 「evidence complete」.
+- 판정: **통과 2026-11-24**. 종결 진행.
+
+### 사용자 공시 (Manager 결정 — 완료 보고에 그대로 싣는다)
+
+- (가) 이 change 는 「인정」(차단을 만들지 않음)만 하고 성과 기록(F15)은 하지 않는다 — 운영의 경합 두 건(11-16 · 11-20)은 성과가 빈 채다.
+- (나) 여전히 차단되는 정상 입력: 주문 수량이 조정 감소분보다 큰 주문(전량 청산 주문의 일부가 조정보다 먼저 반영된 경우) · 정정된 청산 주문 · flatten/운영자 매도.
+- (다) 인과는 미증명 — 근거는 측정 M29 · M33 이고, 사람의 앱 매도 · 부분 체결 잔량 · 보유 조회 지연은 미측정 가정이다.
+- (라) 재매수로 새 인스턴스가 생긴 뒤의 옛 체결은 새 인스턴스에 닿는다(별도 결함 후보, out-of-scope S1).
+- (마) 체결이 먼저인 창의 수량 불일치 고착(W2 · W3)은 재현됐고 a201 이 보류 상태다.
+- (바) γ(자동 해제)는 사용자 결정으로 보류.
+- (사) 판정의 원장 읽기 실패 경로는 시험이 없다.
+
+### 종결 (종결 에이전트 Opus — 사용자 요청 「archive(완료 게이트 포함)」)
+
+- 착지 먼저: `687ee4d70`(base `28680af3d` 위 그대로)에서 `--record-landing` → `landed-commit.txt` = `4f6337a1e`(도구 계산 — 그 뒤 커밋은 `.go` 무편집), 단독 커밋 `efa1ec403`. 그 뒤 `check_analysis --change` 「evidence complete」 required 7(HEAD `efa1ec403`).
+- main 따라가기: `git fetch origin` 뒤 `origin/main` = `7fec501f1`(a198 archive) — base 재고정 때 이미 merge 한 커밋이라 `git merge origin/main` 은 「Already up to date」, merge 커밋 없음.
+- merge 뒤 정본 대조: `analysis/modified-delta/build_delta.py` 재실행 rc 0 — position-ledger 「포지션 상태기계」 치환 1 · 역치환 원문 일치 · Scenario 2, ADDED 본문 453자 · reconciliation ADDED 369자, 산출물 git 무변(멱등). base 이후 정본 `openspec/specs` 무변. `openspec validate --strict` valid.
+- merge 뒤 선택 시험(`analysis/close/merge-selected-tests.txt`, HEAD `efa1ec403`, GOFLAGS 비움, `-count=1 -timeout 30m`, 순차): journal 위 묶음 ok 91.9s · reconcile ok 23.8s · app/engine ok 31.9s · accountbudgetruntime ok 29.3s · `--- PASS` 550 / `--- FAIL` 0(최상위 TestA200 32 PASS, SKIP 1 = `TestA130JournalCopyCensus` — 사람이 지정한 읽기 전용 사본이 있을 때만 도는 시험) · `go vet ./internal/journal ./internal/reconcile` rc 0 · `make lint` rc 0. 부하 load≈7~8(다른 세션 시험)로 Manager 수치보다 느림.
+- tasks: 3.4 체크(위 Manager 검증), 4.1 **선체크(gate ② 선행 조건)** — 게이트·archive·Story·push 는 이 체크 뒤 수행. 「5. 종결 뒤(사람 승인)」 는 원래 체크박스 밖(무변). 운영 반영 안 함 — 이 change 는 미배포로 끝난다.
