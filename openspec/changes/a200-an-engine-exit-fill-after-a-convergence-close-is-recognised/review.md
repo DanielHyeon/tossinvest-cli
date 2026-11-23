@@ -110,3 +110,46 @@ reconciliation delta 는 **ADDED Requirement** 로 만들었다(Manager 승인 2
 | P2-3 | 주석 · 이름 | reconcile 재현 파일 머리 · `CurrentBehaviour` 이름 · 없는 `…_windows_test.go` 참조 | 머리 주석 두 파일 정정, 무관리 W4 · W5 이름을 `TestA200AnUnmanagedW4/W5FillStaysAnAttributionFailure` 로(본문 무변, 옛 이름은 revision base 번들) |
 | P2-4 | spec · 공시 | MODIFIED 의 「인정한 체결 하나뿐」, provenance 「judged …」 문구 | 「인정한 체결뿐이며(체결마다 인정한다)」 로, provenance 문구는 Story limits · design §4 에 한 줄(표시 문구) |
 | 확인 | — | (가)는 도달 가능한 상태에서 (나)에 함의 · a199 청산 전용 기동에서도 작동 | design §5 · 변이 원장 주석 |
+
+## gstack review r1 (팀메이트 실행, 한 번 — 상한, HEAD d939e8795 대 base 28680af3d)
+
+판정: **blocker 0**(지금 입력으로 시험 실패 · 생산 고장 · 데이터 손실을 내는 발견 없음). 코드 편집 0 · 새 가드 0 — 코드를 바꿔야 하는 발견은 아래 「Manager 에게 묻는 것」. 원문 `analysis/review/gstack-r1/`(codex 프롬프트 · 출력, state matrix).
+
+실행한 갈래(침묵 생략 없음): gate scan(`listed=9 eligible=6 inspected=6 unread=0 tagged={RH-1:2}` — RH-1 둘은 뒤집힌 시험 셋 삭제 · 무관리 W4/W5 이름 바꿈, 결정이 diff 에 보여 finding 아님) · banned terms(`none`) · specialist 6(testing 3 · maintainability 1 · security 0 · performance 0 · simplification 0 · state-machines 2, 별도 문맥, 읽기 전용) · red-team(diff > 200 줄) 2 + 인용 줄 1 · Claude adversarial(시험 파일 요약 모드) 막는 것 없음 · codex 외부 목소리(프롬프트 파일을 stdin 으로, `read-only` sandbox) `VERDICT: FINDINGS` High 1 · Medium 2 · smoke(`-run TestA200` 두 패키지 ok, 아래 검증). state matrix check rc=1 은 미시험 칸 4 를 INFORMATIONAL 로 적은 탓(도구는 CRITICAL 요구) — 그 넷은 a200 이 행동을 바꾸지 않는 칸.
+
+**상태기계 — CLOSED + 매도 체결의 세 결과 × 네 조건**(판정은 `ProjectPosition` :104 에서 `enterReconcileInTx` 의 F10 활성 차단 확인 :406-411 보다 **앞**):
+
+| 조건 | 활성 차단 없음 | 활성 차단 있음 |
+|---|---|---|
+| 넷 다 성립 | 인정(표지 1 · 차단 0) | 인정 — 표지 1, 기존 차단은 건드리지 않음(W6, 이번에 단언 추가) |
+| (가)만 실패 | 도달 불가(CLOSED 의 매도 거절은 X58~X60 `SELL_ON_CLOSED` 뿐, 판정 시험만) | 도달 불가 |
+| (나)만 실패 | `ATTRIBUTION_FAILED` | 새 행 없음(F10, a200 무변 · 무시험) |
+| (다)만 실패 | `ATTRIBUTION_FAILED` | 새 행 없음(무관리 W6 시험) |
+| (라)만 실패 | `ATTRIBUTION_FAILED` | 새 행 없음(a200 무변 · 무시험) |
+
+표지 행은 어느 exit 상태기계 전이에도 들지 않음: `exit_events` 독자 전수 — `ExitEvents`(생산 호출 0) · `AccountExitEvents` → 콘솔 표시(원문 action 표시, 창 한 칸 차지) · provenance 표시(「judged …」, design §4) · `proposed_intent_id`/`decision_id`/`action = COMPLETED` 로 거르는 독자(account_views · a166 · a087 · trade_outcomes · backfill · exit_state:494 · provenance exit_intent)는 NULL/다른 값이라 제외. `ApplyExitFill` 은 `exit_states` 만 읽음(완료 플래그는 ADJUSTMENT_CLOSED 가 이미 세움 → COMPLETED · 성과 없음). `action` 에 CHECK · 트리거 없음.
+
+| # | 출처 | 요지 | 4분류 | 처분 |
+|---|---|---|---|---|
+| G1 | adversarial A1 + codex C1(두 출처 독립 일치) | (라)는 `intents.quantity` 만 감소분과 견줌 — 브로커가 다른 수량으로 접수 · 체결(어댑터 · 브로커 결함)하면 감소분을 넘는 체결도 인정. 제안: 관측의 `OrderedQuantity` · `CumulativeQuantity` ≤ 감소분(빈 값 · 파싱 실패면 거절) | should(전제 (i) — intent 행 불변 · 브로커 호출은 같은 intent 복사본 — 이 깨져야 도달) | **Manager 대기**(새 가드). design §4 공시 |
+| G2 | red-team R1 | 인정이 「같은 주문의 늦은 체결 조각 사이」 진입 차단을 없앰 → 수량 불일치가 풀린 뒤 재매수가 끼면 늦은 조각이 새 인스턴스를 줄임. 오늘은 첫 늦은 체결의 차단이 진입을 닫아 둠 | should(재매수 + 다조각 지연이 겹쳐야, 다음 비교가 계좌 값으로 다시 맞춤) | **Manager 대기**(가드 「인정된 주문 종결 전 진입 닫기」 또는 「종결 체결만 인정」). design §2 「범위 밖 사실」 을 「a200 이 닿게 만듦」 으로 정정 |
+| G3 | codex C2 | `Gateway.Amend` 는 새 intent id — 원 intent 에 AMEND attempt 가 없어 (라) 우회 | nit(생산 호출 0 확인 — `ops/write_operations.go` 는 trading.Service 직접) | design §4 공시(a167 착지 때 계보 · `target_order_id` 로 재검토) |
+| G4 | codex C3 | `created_at` 벽시계 역행이면 닫는 조정이 마지막이 아니게 정렬 → 거절 | nit(보수 방향 = 오늘 동작) | design §4 공시. 정렬 자체는 시험 T1 · M19 로 고정 |
+| G5 | adversarial A3 | (다)가 `PendingAction` 빈 값은 안 봄 | nit(쓰는 쪽 불변식상 도달 불가) | **Manager 대기**(코드), 지금은 기록만 |
+| G6 | adversarial A2 | 표지에 주문 · intent · 수량 없음 | nit(D3 결정 — intent 키 소비자 회피) | design §4 공시, 바꾸려면 Manager |
+| G7 | red-team R2 | 가정 ② 가 틀리면 남은 보유가 EXTERNAL 로 접혀 손절 · a194 보고 없음 | 문서 | design §4 에 구체 대가로 |
+| G8 | adversarial A4 · testing T3 | 판정 읽기 DB 오류면 체결 tx 롤백, 오류 경로 무시험 | 문서 | design §4(오류 주입 seam 없음) |
+| T1 | testing | 원장 시험이 전부 조정 행 하나 — 정렬 무시험 | 시험 보강 | `TestA200AFillAfterATwoStepConvergenceIsRecognised`(31→28 · 같은 초 28→0) + 변이 M19 CAUGHT |
+| T2 | testing | 재기동 시험이 `cleanCycle` 오류를 단언 안 함 | 시험 보강 | `t.Fatalf` 추가, PASS |
+| S1 | state-machines | W6 에서 표지가 남는 칸 미단언 | 시험 보강 | W6 관리 시험에 표지 1 · 활성은 수량 불일치 하나뿐 단언, PASS |
+| S2 | state-machines | (나)·(라) × 활성 차단 칸 무시험 | nit | a200 무변 경로(같은 F10) — 시험 안 넣음 |
+| M1 | maintainability | 재현 시험 doc 주석이 기각된 「누적 합」 을 말함 | 주석 | 「주문 수량」 으로(본문 무변, W0 번들 ast 재생성) |
+| R3 | red-team | design `exitloop.go:1839` → 지금 1850 | 문서 | 정정 |
+
+변이: 3 회차의 M18 은 빌드 실패(가짜 CAUGHT) → 다시 써서 4 회차 **19 / 19 CAUGHT**(`analysis/mutation/README.md`). 검증(HEAD 25d9aea2d): 선택 시험 4 패키지 ok · `-race` A200 ok · `make lint` rc 0 · strict valid · check_analysis evidence complete · tracker `--check` current — `analysis/verify/selected-tests-gstack-r1.txt`.
+
+### Manager 에게 묻는 것 (gstack r1)
+
+1. G1: (라)에 관측 수량 상한(`OrderedQuantity` · `CumulativeQuantity` ≤ 감소분)을 더할지 — 더 엄격해지기만 하고 정상 입력은 그대로 통과(두 리뷰어 판단, 미측정).
+2. G2: 인정된 주문이 종결될 때까지 그 종목 진입을 닫을지, 종결 체결만 인정할지, 공시로 둘지.
+3. G5: (다)에 `PendingAction != ""` 를 더할지(도달 불가 방어).

@@ -1,0 +1,18 @@
+# gstack r1 보강 뒤 선택 시험 — HEAD 25d9aea2d, 2026-11-24T07:53:58+09:00
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	142.495s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	30.655s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	35.309s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	30.708s
+## -race A200
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	72.504s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	42.318s
+## make lint
+go vet ./...
+go vet -tags tossos_testseams ./...
+lint_rc=0
+## openspec strict
+Change 'a200-an-engine-exit-fill-after-a-convergence-close-is-recognised' is valid
+## check_analysis
+[logic-map] a200-an-engine-exit-fill-after-a-convergence-close-is-recognised: base 28680af3d428 → working tree (no landed-commit.txt in HEAD) required 7 function(s) — judged at HEAD 25d9aea2d9c7
+[logic-map] a200-an-engine-exit-fill-after-a-convergence-close-is-recognised: the target is the working tree, so this window also holds 9 commit(s) that landed after the base and every existing function they changed is required here too — run `python3 tools/logic-map/check_analysis.py --change a200-an-engine-exit-fill-after-a-convergence-close-is-recognised --record-landing` to let the gate compute `landed-commit.txt` from this change's evidence and record it, which narrows it to this change's own work; if no commit on this history is accepted as the landing, the command says so instead of recording
+[logic-map] a200-an-engine-exit-fill-after-a-convergence-close-is-recognised: evidence complete or diff-proven exempt
