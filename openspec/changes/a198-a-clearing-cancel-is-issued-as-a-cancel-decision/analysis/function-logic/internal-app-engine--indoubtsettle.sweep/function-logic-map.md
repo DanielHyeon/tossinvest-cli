@@ -1,7 +1,8 @@
 # Function Logic Map: `inDoubtSettle.sweep`
 
-- Source: `internal/app/engine/in_doubt_settle.go:159-192`
-- AST evidence: `ast.json` (**pre-edit**, HEAD `a7639378e` — source_sha256 `247eedff…`, 분기 7). 편집 뒤 재생성·재번호.
+- Source: `internal/app/engine/in_doubt_settle.go:161-205`(post-edit)
+- AST evidence: `ast.json` (**post-edit**, 4c.7 뒤 — source_sha256 `f7852d63…`, 분기 11). Pre-edit 판은 HEAD `a7639378e`(sha `247eedff…`, 분기 7 — 아래 표의 번호, `analysis/cited-ast/d2_inDoubtSettle_sweep.ast.json`).
+- **재번호(pre → post)**: B1·B2·B3 동일 · 옛 B4 `if IN_DOUBT && PLACE` → 새 B4 `switch` + B5 `case IN_DOUBT && PLACE` + **새 B6 `case IN_DOUBT && CANCEL`** · 옛 B5(1단) → B7 · **새 B8 `range cancels`·B9 `closeCancel` 오류**(2단 앞) · 옛 B6·B7 → B10·B11. 아래 표는 pre-edit 번호다(BTM 은 post-edit 번호).
 - Risk scan: `risk-pattern-report.md` (적중 0)
 - 편집 범위(design D10, Manager 결정 2026-11-24): B4 의 대상 고르기에 갈래 하나 — IN_DOUBT·CANCEL 이면 별도 목록. 1단 알림 뒤·2단 발주 해소 앞에서 그 목록을 새 함수(`closeCancel`, 새 파일)로 닫음. 알림(1단)·발주 해소(2단)·원장 읽기 실패 경로 무편집.
 
@@ -39,3 +40,9 @@
 
 - 실행자 메모리: `unreadableSince`·`unreadableID`(성공 시 비움). 원장 전이는 `resolve` 안의 해소기만.
 - High-risk: yes(원장 전이 — 해소). 편집 뒤에는 원장 함수가 CANCEL attempt 를 전이함.
+
+## Safety conclusion
+
+- Edit boundary(실제): 대상 거름을 switch 로(PLACE 갈래 조건 무변) + CANCEL 갈래 + 1단 뒤·2단 앞의 취소 닫기 루프. 1단 알림·2단 해소·읽기 실패 경로 무편집.
+- 닫기는 `closeCancel`(새 파일) → `journal.CloseInDoubtCancelOnTargetClose(엔진 source)` — 원장만, 브로커 0, 알림 0. 오류는 ctx 취소만 반환(나머지는 분류 로그 한 번·다음 스윕).
+- 안전 논증: 닫기는 미종결 가드만 풂 — 손절은 그 뒤 길 치우기가 같은 종결 정의로 다시 판정(design D10, Manager Q6, 시험 31).

@@ -38,11 +38,13 @@ const inDoubtSettleName = "in-doubt-settle"
 // errInDoubtSettleUnwired 는 원장이나 해소기가 없는 실행자임 — 조용히 쉬지 않고 정지로 드러냄(OnStop 이 critical).
 var errInDoubtSettleUnwired = errors.New("engine: the in-doubt settler has no journal or resolver")
 
-// inDoubtLedger 는 실행자가 읽는 원장 면임 — 전부 기존 질의(새 질의 없음). *journal.Journal 이 구현함.
+// inDoubtLedger 는 실행자가 쓰는 원장 면임. *journal.Journal 이 구현함. 원장에 쓰는 것은 결과 불명 취소의 닫기 하나뿐(a198 D10 —
+// 대상 주문의 원장 종결 기록으로, 브로커 호출 없음).
 type inDoubtLedger interface {
 	PendingAttempts(ctx context.Context) ([]journal.AttemptRecord, error)
 	LookupIntent(ctx context.Context, id string) (journal.Intent, error)
 	ArmedExitProposals(ctx context.Context, accountRef string) ([]journal.ArmedExitProposal, error)
+	CloseInDoubtCancelOnTargetClose(ctx context.Context, attemptID, source string) (journal.CancelTargetClose, error)
 }
 
 // inDoubtResolver 는 기존 해소 함수임. *execgw.Resolver 가 구현함.
@@ -170,17 +172,28 @@ func (s *inDoubtSettle) sweep(ctx context.Context) error {
 	s.unreadableSince, s.unreadableID = time.Time{}, ""
 
 	targets := make([]journal.AttemptRecord, 0, len(recs))
+	var cancels []journal.AttemptRecord
 	for _, rec := range recs {
-		// 대상 거름: 결과 불명인 발주만. 취소 · 정정은 기동이 해소하고, 진행 중 전송(RECORDED · DISPATCH_STARTED)과 ACKED 는 손대지 않음.
-		if rec.State == journal.StateInDoubt && rec.Kind == journal.KindPlace {
+		// 대상 거름: 조회 대조 해소는 결과 불명인 발주만. 결과 불명인 취소는 원장 종결 기록으로만 닫음(a198 D10). 정정은 기동이 해소하고,
+		// 진행 중 전송(RECORDED · DISPATCH_STARTED)과 ACKED 는 손대지 않음.
+		switch {
+		case rec.State == journal.StateInDoubt && rec.Kind == journal.KindPlace:
 			targets = append(targets, rec)
+		case rec.State == journal.StateInDoubt && rec.Kind == journal.KindCancel:
+			cancels = append(cancels, rec)
 		}
 	}
 	// 1단: 알림을 해소보다 먼저 — 한 해소가 분 단위로 걸려도 다른 attempt 의 알림이 그 뒤에 밀리지 않게 함(Q-F 처분).
-	// 취소 뒤의 기록은 record 가 막음(기록 실패가 진입 게이트를 잠그므로).
+	// 취소 뒤의 기록은 record 가 막음(기록 실패가 진입 게이트를 잠그므로). 취소에는 알림을 내지 않음(길 치우기의 경보가 맡음).
 	for _, rec := range targets {
 		s.noteFirstSight(ctx, rec)
 		s.noteStale(ctx, rec)
+	}
+	// 취소 닫기를 발주 해소보다 먼저 — 원장만 읽어 빠르고, 분 단위 해소 뒤로 밀리면 그만큼 손절이 늦어짐(Manager Q5).
+	for _, rec := range cancels {
+		if err := s.closeCancel(ctx, rec); err != nil {
+			return err
+		}
 	}
 	// 2단: 직렬 해소 — 동시 해소 상한 1. 취소면 resolve 가 ctx 오류를 돌려줌.
 	for _, rec := range targets {

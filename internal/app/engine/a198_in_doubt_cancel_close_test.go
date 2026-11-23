@@ -119,6 +119,7 @@ func TestA198AnInDoubtSellCancelClosesOnItsClosingRecordAndTheStopFollows(t *tes
 	if got := f.cancelStates(); len(got) != 1 || got[0] != string(journal.StateConfirmed)+"|"+journal.ReasonResolvedFound {
 		t.Fatalf("cancel attempts after the sweep = %v, want CONFIRMED|%s", got, journal.ReasonResolvedFound)
 	}
+	f.s.clk.Advance(6 * time.Second)
 	f.s.observe()
 	if sells := f.sells(); len(sells) != 2 || fmt.Sprint(sells[1]["quantity"]) != "10" {
 		t.Fatalf("broker sells = %v, want the stop of 10 after the sweep — attempts %v", sells, f.attemptRows())

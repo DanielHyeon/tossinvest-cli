@@ -20,23 +20,27 @@ func TestA198TheSessionVerdictMatchesTheBootCancelResolution(t *testing.T) {
 	const at, cancelledAt = "2026-03-30T10:20:00+09:00", "2026-03-30T10:30:01+09:00"
 	for _, tc := range []struct {
 		name, status, cancelled, filled string
-		park                            bool // Resolve 가 park(UNRESOLVED) 로 끝나는 판정 불능
+		state                           brokerstate.State // 그 응답의 파생 상태(픽스처가 의도한 갈래를 실제로 타는지)
+		park                            bool              // Resolve 가 park(UNRESOLVED) 로 끝나는 판정 불능
 	}{
-		{"cancelled", "CANCELED", cancelledAt, "0", false},
-		{"cancelled after a partial fill", "CANCELED", cancelledAt, "1", false},
-		{"filled", "FILLED", "", "2", false},
-		{"rejected", "REJECTED", "", "0", false},
-		{"rejected after a partial fill", "REJECTED", "", "1", false},
-		{"open", "PENDING", "", "0", false},
-		{"open partially filled", "PARTIAL_FILLED", "", "1", false},
-		{"cancel pending", "PENDING_CANCEL", "", "0", false},
-		{"replace pending", "PENDING_REPLACE", "", "0", false},
-		{"unknown", "", "", "0", true},
+		{"cancelled", "CANCELED", cancelledAt, "0", brokerstate.StateCancelled, false},
+		{"cancelled after a partial fill", "CANCELED", cancelledAt, "1", brokerstate.StateCancelledPartiallyFilled, false},
+		{"filled", "FILLED", "", "2", brokerstate.StateFilled, false},
+		{"rejected", "REJECTED", "", "0", brokerstate.StateRejected, false},
+		{"rejected after a partial fill", "REJECTED", "", "1", brokerstate.StateRejectedPartiallyFilled, false},
+		{"open", "PENDING", "", "0", brokerstate.StateOpenUnfilled, false},
+		{"open partially filled", "PARTIAL_FILLED", "", "1", brokerstate.StateOpenPartiallyFilled, false},
+		{"cancel pending", "PENDING_CANCEL", "", "0", brokerstate.StateCancelPending, false},
+		{"replace pending", "PENDING_REPLACE", "", "0", brokerstate.StateReplacePending, false},
+		{"unknown", "", "", "0", brokerstate.StateUnknown, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			body := cancellableOrderJSON("O-1", "005930", "BUY", tc.status, "2", "70000", at, tc.cancelled, tc.filled)
 			// 해소기가 쓰는 파생 입구 그대로(amend_indoubt.go deriveOrder — lineage 없음).
 			derived := brokerstate.DeriveOfficialOrder(json.RawMessage(body), brokerstate.Lineage{})
+			if derived.State != tc.state {
+				t.Fatalf("fixture derives %s (%s), want %s", derived.State, derived.Detail, tc.state)
+			}
 			want, reason, closes := journal.CancelVerdictForClosedTarget(string(derived.State))
 
 			f := newDoubtFixture(t)

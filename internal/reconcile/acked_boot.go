@@ -41,12 +41,29 @@ type CriticalRecorder interface {
 // ReasonBootAckedConfirmed 는 기동이 ACKED 발주를 기록 번호의 바이트 일치로 확정했음을 뜻하는 전이 사유임.
 const ReasonBootAckedConfirmed = "boot_acked_readback_confirmed"
 
+// ReasonBootAckedCancelCompleted 는 기동이 ACKED 로 남은 취소의 최종 쓰기를 기록 번호로 마쳤음을 뜻하는 전이 사유임(a198 D9).
+const ReasonBootAckedCancelCompleted = "boot_acked_cancel_completed"
+
 // confirmAcked 는 ACKED attempt 하나를 다룸. true 면 CONFIRMED 로 종결됐음(더는 미종결이 아님).
 func (r *Recovery) confirmAcked(ctx context.Context, rec journal.AttemptRecord) bool {
 	intent, err := r.opts.Journal.LookupIntent(ctx, rec.IntentID)
 	if err != nil {
 		r.alertAcked(ctx, rec, "", fmt.Sprintf("the intent could not be read: %v", err))
 		return false
+	}
+	// a198 D9: 취소의 ACKED 는 브로커가 접수를 답했고(번호 기록) 최종 쓰기만 남은 상태임 — 취소에는 접수 뒤 확인 읽기가 없음.
+	// 디스패치가 하려던 쓰기(같은 상태·같은 번호)를 마칠 뿐 읽기·추론이 없음. 그 번호는 취소가 새로 받은 식별자라 대상 판정에 안 쓰임.
+	if rec.Kind == journal.KindCancel && strings.TrimSpace(rec.BrokerOrderID) != "" {
+		attempt, err := r.opts.Journal.Resume(ctx, rec.ID)
+		if err == nil {
+			err = attempt.ResolveConfirmed(ctx, rec.BrokerOrderID, ReasonBootAckedCancelCompleted,
+				"restart recovery completed the acknowledged cancel's final write with its recorded order number")
+		}
+		if err != nil {
+			r.alertAcked(ctx, rec, intent.Symbol, fmt.Sprintf("completing the acknowledged cancel: the ledger write failed: %v", err))
+			return false
+		}
+		return true
 	}
 	if rec.Kind != journal.KindPlace {
 		r.alertAcked(ctx, rec, intent.Symbol, "a CANCEL/AMEND acknowledgement has no read-back rule; it stays ACKED")

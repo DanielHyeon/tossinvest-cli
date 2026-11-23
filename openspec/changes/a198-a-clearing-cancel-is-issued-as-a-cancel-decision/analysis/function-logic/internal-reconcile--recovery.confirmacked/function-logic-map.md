@@ -1,7 +1,8 @@
 # Function Logic Map: `Recovery.confirmAcked`
 
-- Source: `internal/reconcile/acked_boot.go:45-73`
-- AST evidence: `ast.json` (**pre-edit**, HEAD `a7639378e` — source_sha256 `4919ea34…`, 분기 6). 편집 뒤 재생성·재번호.
+- Source: `internal/reconcile/acked_boot.go:48-90`(post-edit)
+- AST evidence: `ast.json` (**post-edit**, 4c.7 뒤 — source_sha256 `ac42ae8e…`, 분기 9). Pre-edit 판은 HEAD `a7639378e`(sha `4919ea34…`, 분기 6 — 아래 표의 번호, `analysis/cited-ast/d2_Recovery_confirmAcked.ast.json`).
+- **재번호(pre → post)**: B1 동일(L50) · **새 B2 L56 `Kind == CANCEL && 번호 있음` · 새 B3 L58 `Resume` 성공 · 새 B4 L62 쓰기 실패**(D9) · 옛 B2~B6 → 새 B5~B9(조건·반환 무변). 아래 표는 pre-edit 번호다(BTM 은 post-edit 번호).
 - Risk scan: `risk-pattern-report.md` (적중 0)
 - 편집 범위(design D9, Manager 결정 2026-11-24): B1 뒤·B2 앞에 갈래 하나 — 종류 CANCEL 이고 기록 번호가 비어 있지 않으면 `Resume` → `ResolveConfirmed(기록 번호, ReasonBootAckedCancelCompleted, 상세)`, 성공이면 true(알림 0), 쓰기 실패면 명명 알림·false. 그 밖 분기 무편집.
 
@@ -38,3 +39,9 @@
 
 - 원장: ACKED → CONFIRMED(B5 경로만). 그 밖은 알림 기록뿐. 폴백 없음 — 실패는 ACKED 유지 + 알림, 복구는 계속.
 - High-risk: yes(기동 복구·원장 전이).
+
+## Safety conclusion
+
+- Edit boundary(실제): B1 뒤에 갈래 하나(B2~B4) — CANCEL + 기록 번호면 `Resume`·`ResolveConfirmed(기록 번호, boot_acked_cancel_completed)`, 실패면 기존과 같은 명명 알림·false. 옛 분기(B5~B9) 무편집, 브로커 호출 0 추가.
+- 귀결: ACKED 취소는 디스패치가 하려던 쓰기 그대로 CONFIRMED — 매도는 종결 증거 대기, 매수는 D8 로 치움(정상 CONFIRMED 와 같음). 실패는 ACKED 유지·알림·복구 성공(복구를 실패시키지 않음 — 불변식 그대로).
+- 남은 위험: 접수 확정은 취소 완료 증명이 아님(CANCEL_REJECTED 가능성은 정상 경로와 같음). design §6.
