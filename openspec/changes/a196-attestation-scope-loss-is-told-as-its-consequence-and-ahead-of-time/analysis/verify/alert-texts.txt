@@ -1,0 +1,18 @@
+== notice(감독 증거 D-7)
+type: broker.credential_expiry_notice
+key: attestation-watch:notice:7:2026-10-21T03:00:00Z
+title: 감독하 실주문 검증 만료 D-7 — 그 뒤 엔진 재시작이 거부될 수 있다
+body: 감독하 실주문 검증(POST 주문 · 취소 증거)이 7일 뒤(2026-10-21 12:00 KST) 만료된다. 다른 유효한 감독 증거가 없으면 그 뒤 첫 갱신부터 엔진 재시작이 거부되고, 그동안 자동 손절이 돌지 않는다. attestation 자체의 만료는 2026-11-13 12:00 KST 이다. 할 일: 터미널에서 `tossctl verify run` 으로 감독하 실주문 검증을 다시 하고, 다음 갱신(타이머 또는 `tossctl soak attest`)을 기다린다.
+
+== proof_overdue
+type: broker.credential_expiring
+key: attestation-watch:proof_overdue:2026-10-14T02:00:00Z:2026-10-14
+title: 감독하 실주문 검증의 기한이 지났다 — 지금 감독 검증을 다시 해야 한다
+body: 감독하 실주문 검증의 기한이 지났다(2026-10-14 11:00 KST). 다른 유효한 감독 증거가 없으면 그 뒤 첫 갱신부터 엔진 재시작이 거부된다 — 갱신이 실패하고 있으면 이 파일의 만료(2026-11-13 12:00 KST)에 거부된다. 지금 감독 검증을 다시 하라. 할 일: 터미널에서 `tossctl verify run` 으로 감독하 실주문 검증을 다시 하고, 다음 갱신(타이머 또는 `tossctl soak attest`)을 기다린다.
+
+== scope_lost
+type: broker.credential_expiring
+key: attestation-watch:scope_lost:POST /api/v1/orders:2026-10-14
+title: 지금 엔진을 재시작하면 기동이 거부된다 — 주문 · 취소 검증이 attestation 에 없다
+body: 지금 엔진을 재시작하면 기동이 거부된다. 현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: POST /api/v1/orders. 갱신이 유효 기간 안의 감독하 실주문 검증 증거(POST 주문 · 취소) 없이 쓰였다. 재시작이 거부되면 청산(손절 · 익절) 관측 루프가 돌지 않아 자동 손절이 멈춘다. 지금 실행 중인 엔진은 계속 돈다. 할 일: 터미널에서 `tossctl verify run` 으로 감독하 실주문 검증을 다시 하고, 다음 갱신(타이머 또는 `tossctl soak attest`)을 기다린다.
+

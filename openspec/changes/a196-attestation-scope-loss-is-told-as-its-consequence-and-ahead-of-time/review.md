@@ -108,5 +108,21 @@ Pre-Edit Gate:
   critical 알림 수 증가(proof_overdue 하루 1)는 기존 알림기 경로 — 알림 꺼진 엔진은 일반 등급으로 강등(eventFor B1 그대로).
 ```
 
+## 2단계 — 구현·검증 (팀메이트 Opus, 2026-11-23)
+
+- 3.1 RED: `analysis/tdd/red.txt` — 껍데기 없이(새 시험은 기존 API + 문자열 단계 코드만 씀) 구현 전 컴파일·단언 실패. engine 13 시험 중 11 FAIL,
+  2 PASS(KST 날짜 키·단계별 키 — base 가 이미 지키는 성질의 회귀 핀). soak 2 시험은 발급자 전제 고정이라 base 에서 PASS 가 정답, 실패는 변이 M07 로 확인.
+- 3.2 GREEN: `attestation_watch.go` — 새 함수 `restartDeadline`, 새 상수 `stageProofOverdue`·`deadlineExpiry`·`deadlineProof`, verdict 필드 2,
+  기존 함수 편집 4(`judgeAttestation`·`prepare`·`stageKey`·`eventFor`). `critical`·`daysLeftCeil`·`checkOnce`·`binding` 무편집. internal/obs·attest·soak production 무편집.
+- 3.3: GREEN 직후 a135 실패는 예상대로 두 함수뿐(`analysis/tdd/green-before-a135-fix.txt` — StageBoundaries 3행·SameStage). 두 함수만 고침, 헬퍼 무편집.
+  번들 6 편집 후 판 + `renumber.txt`(difflib), 편집 전 AST 는 `analysis/pre-edit-ast/`.
+- 4.1 변이 원장 `analysis/mutation/`: 13 판(⑧ 을 a·b 둘로) — CAUGHT 12, SURVIVED 1(M12 — 동등 변이, 사유 README). 사본 하네스·대조군 GREEN·닿음 전수 1·sha256 원복.
+- 4.2: 선택 시험 `analysis/verify/selected-tests.txt`(engine `-run 'A196|A135|Attestation'` ok, soak `-run 'A196|Supervised|BuildAttestation'` ok, 최상위 PASS 42),
+  `make lint` rc 0(`analysis/verify/make-lint.txt` — gofmt + go vet 무태그·`tossos_testseams`), `openspec validate --strict` valid, `check_analysis` rc 0
+  (required 6 = 번들 6, 「evidence complete」) — `analysis/verify/validate-and-analysis.txt`. 실제 알림 문장 `analysis/verify/alert-texts.txt`(overlay, 저장소 무편집).
+- **미실행 범위**: 전체 스위트(`make test`)·`make test-seams`·`make test-race`·`make gate`·`make sdd-sync`·`codegraph affected` — 지시대로 안 돌림. engine 패키지의
+  다른 시험(보조 실행자 배선 등 `-run` 밖), `cmd/tossctl` 시험, internal/obs·journal 시험은 안 돌림(무편집 패키지). 실제 outbox(journal)와의 결합은 Key 문자열 단언으로
+  대신했고 journal 위에서 돌려 보지 않음. ntfy 기기의 한글 제목 표시는 미실측(Q3). 4.3(구현 적대 리뷰·gstack review)은 Manager 지시로 보류.
+
 ### 안 한 것
 - (1단계 당시) 리뷰 2회차 — 결정 반영 뒤 1.6b 로 실시. `codegraph affected`, CodeGraphContext·GBrain, 전체 시험·게이트, `make sdd-sync`. 운영 파일(`~/.config/tossctl`)은 안 읽음 — 실제 운영에 US 기록이 있는지 모름(Q1 의 현실 영향 미확인).
