@@ -207,3 +207,28 @@ Pre-Edit Gate:
 | 7 P2 | 시험 27 이 「첫 관찰」 과 `Resolve` 최종 결과를 혼동 | **반영**: 종결 5 값은 최종 결과 비교, 비종결은 첫 대기에서 멈춰 전이 없음 관찰, REPLACED·UNKNOWN 은 명시적 차이(park vs IN_DOUBT 유지) |
 
 - 리뷰가 덧붙인 것(기록): 시험 25 에 별도 원장 연결·체결 기록 writer 경합, 전이 행·예약 해제 실패 시 전체 rollback 관측 — 구현 단계 시험 설계에 반영 예정(새 가드 아님).
+
+## 보강 2 Manager 조건부 freeze 2026-11-24 — 조건 (1)~(5) 확인값
+
+- 결정: Q1 새 함수 한 트랜잭션 + 쓰기 동치 시험 · Q2 fail_closed 종결 행 닫지 않음 · Q3 D9 성공 알림 0 · Q4 REPLACED 무변(park 안 함) · Q5 별도 기회 없이 「취소 닫기를 발주 해소보다 먼저」 + 지연 상한 공시 · Q6 정의 좁히지 않음(안전 논증 + 시험 31) · Q7 시각 결속 없음, **가르는 칸 있음 → 엔진 취소로 한정**: `intents.source`(schema.go:215 「what produced the intent」) — 엔진 게이트웨이 `Source: engineSource = "engine"`(internal/app/engine/gateway.go:64·327), CLI flatten `Source: "flatten-all"`(cmd/tossctl/flatten.go:249), 게이트웨이가 그 값을 intent 에 씀(internal/execgw/gateway.go:1056). 엔진의 취소 호출 자리는 `clearTheSymbol`(exitloop.go:1714) 하나 — flatten 재실행 시험 대신 시험 32(flatten source 무변).
+- (1) 반영: design D9·D10 행·§2-7·§3·§4(18~32, 23b·23c 는 공시만으로 축소)·변이·§6(flatten 문단을 맨 위에, 「이전보다 나쁜 것」 여섯을 언제·무엇이 푸는가·경보 한 줄씩)·Q 결정 줄 / proposal What Changes 6·하지 않는 것 / tasks 4c / delta(MODIFIED 「대상」 문단에 「엔진이 낸」·「발주 해소보다 먼저」·flatten 은 flatten 이 해소, ADDED 본문 346 자·Scenario 6 — 「flatten 이 낸 취소」 추가) / Story limits.
+- (2) `rtk proxy openspec validate a198-a-clearing-cancel-is-issued-as-a-cancel-decision --strict` → `Change '…' is valid`.
+- (3) 생성기 두 번 재실행 `ok [('… 취소의 일시적 거절 처리', 2, 2), ('… IN_DOUBT 해소', 6, 10)]` — 역치환 단언으로 의도 편집 외 차이 0, 두 판 바이트 동일.
+- (4) 편집할 기존 함수: `Recovery.confirmAcked` · `inDoubtSettle.sweep` + 시험 `TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed`. 그 밖은 선언(`inDoubtLedger` 인터페이스 · `confirmedOrderTerminalEvidence` 상수 분리 · reconcile 사유 상수)과 새 파일. `resolveCancel`·`Resolver.Resolve`·flatten 패키지·`buildGateway` 무편집(계획 — GREEN 뒤 `git diff` 로 재확인).
+- (5) a166 `shapes.json`·`sites.json` 에 acked_boot·in_doubt_settle·confirmAcked·inDoubtSettle·exit_proposal_release·a198_ 적중 0, a163 시험 파일에 대상 파일 이름 0.
+- 판정: 조건 충족 → 구현으로 간다.
+
+## Pre-Edit 선언 갱신 (tasks 4c.5, 2026-11-24 — High-risk, 면제 없음)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a198-a-clearing-cancel-is-issued-as-a-cancel-decision / 4c.5 → 4c.6·4c.7
+- 대상 심볼(기존, 본문 편집): reconcile.(*Recovery).confirmAcked(D9 — 호출자 Recovery.Run recovery.go:279 하나) · engine.(*inDoubtSettle).sweep(D10 — 호출자 inDoubtSettle.Run 하나) · 시험 reconcile_test.TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed.
+  새 코드(새 파일): journal.CancelVerdictForClosedTarget(판정 표 순수 함수) · journal.(*Journal).CloseInDoubtCancelOnTargetClose(판독+종결 한 트랜잭션) · engine.(*inDoubtSettle).closeCancel. 선언: inDoubtLedger 메서드 1, confirmedOrderTerminalMatch 상수(결합 문자열 바이트 동일), reconcile.ReasonBootAckedCancelCompleted.
+- 기존 동작 파악 근거: analysis/d9-d10-evidence.md(AST cited-ast/d2_*) · FLM/BTM pre-edit 번들 analysis/function-logic/{internal-reconcile--recovery.confirmacked, internal-app-engine--indoubtsettle.sweep, internal-reconcile--testa094anackedcancelornumberlessplaceisonlynamed}/.
+- CodeGraphContext: not-applicable(미색인 — 1단계와 같음). 호출자는 rg 전수.
+- upstream 상속 테스트 영향: no.
+- 실패 테스트 선행 작성: yes — analysis/tdd/red-4c.txt.
+- 설정·DB·journal 변경과 rollback: 스키마·설정·토글 0. 새로 쓰이는 행 = 기존 전이 형식(CANCEL attempt 의 IN_DOUBT→CONFIRMED/FAILED_CONFIRMED, ACKED→CONFIRMED). rollback = 이전 이미지(D9·D10 없음 — IN_DOUBT/ACKED 취소는 다시 재시작까지 남음).
+- 안전 불변식 검토: LIVE 주문 0(가짜 브로커), 손절 즉시성 — 미종결 가드를 원장 종결 증거로 푸는 쪽(약화 아님, Q6 논증), 손절·사이징 판정 무편집, 브로커 호출 증가 0.
+```
