@@ -17,12 +17,12 @@
 - [x] 1.10 편집할 기존 함수마다 FLM/BTM pre-edit 번들(`ProjectPosition`)
 - [x] 1.11 claim check(`analysis/claim-check.md`)
 - [x] 1.12 제안 동결 적대 리뷰(codex, 최대 2회차) → `review.md`
-- [ ] 1.13 Manager 조건부 freeze 2026-11-24 — 남은 조건: a198 착지 뒤 merge · base 재고정 · codex 에 P0/P1 없음
+- [x] 1.13 Manager freeze 2026-11-24 — (라) 수량 상한, codex 2회차 P1 2건은 출처 교체로 해소, 전제 (i)~(iii) 확인(`review.md`). a198 merge · base 재고정은 1.2
 
 ## 2. 구현
 
 - [ ] 2.1 Pre-Edit 선언(High-risk)
-- [ ] 2.2 RED — design §3 의 1~5(1.4 의 본 사고 재현 시험을 차단 0 기대로 뒤집는 것이 첫 줄, 「조정을 사이에 둔 부분 체결」 재현 시험은 그대로 PASS)
+- [ ] 2.2 RED — design §3 의 1~5(1.4 의 본 사고 재현 시험을 차단 0 기대로 뒤집는 것이 첫 줄, 「조정을 사이에 둔 부분 체결」 재현 시험은 그대로 PASS) — 원문 `analysis/tdd/red.txt`
 - [ ] 2.3 GREEN 최소 구현 — 새 파일(인정 판정 · 표지 쓰기) · `ProjectPosition` B5 1 자리. `ApplyExitFill` · 전이표 · 수렴 · 대사 해제 규칙 · 스키마 무편집. 주석은 한글로 「왜」
 - [ ] 2.4 post-edit 번들 · `check_analysis`
 - [ ] 2.5 변이 원장(design §3-6)

@@ -84,3 +84,16 @@ reconciliation delta 는 **ADDED Requirement** 로 만들었다(Manager 승인 2
 - (B) 세 출처의 최댓값(`scoped_fill_snapshots` · `fill_snapshots` · `fill_events` 합 · 이번 관측)을 decimal 로 — R2-2(덮어쓴 감소)를 막지 못한다.
 - (C) 인정 포기.
 - 추천 (A). 결정되면 design D2 (라) · D2a · §2 · §3 · ledger delta · claim-check 를 고치고 codex 를 다시 돌릴지(3회차) 정해 주길 바란다 — 2회 상한을 넘으므로 Manager 승인이 필요하다.
+
+### Manager 결정 3 (2026-11-24) — (라) 수량 상한, codex 3회차 없음
+
+- (라) = 「그 intent 의 PLACE · AMEND attempt 가 정확히 하나(CONFIRMED PLACE) ∧ `intents.quantity` ≤ 조정 감소분」. 반영: design D2 · D2a · §2 · §3 · §4 · §5, proposal, ledger delta(조건 · Scenario 2 개 문장 — 생성 스크립트 재실행, 역치환 단언, strict valid), claim-check C-D2a · C-§2 대가 · C-종결 뒤 · 전제 (i)~(iii), Story acceptance · limits, edit-surface(a167 줄).
+- R2-3 반영: 「종결 관측이 pending 을 비운 뒤 온 체결」 을 계속 거절 3 에. R2-4 반영: 보유 조회 지연을 미측정 가정으로 design §2 · Story limits.
+- **3회차를 하지 않은 이유**: (라)가 원장 누적을 읽지 않는 정적 상한으로 바뀌어 1 · 2회차의 P1 넷이 지목한 출처(`fill_events` 합 · `fill_snapshots` · 원문 누적의 덮어쓰기) 자체가 판정에서 없어졌다. 단순해진 설계의 반례 탐색은 구현 적대 리뷰(tasks 3.1)가 맡는다.
+
+## Manager freeze 2026-11-24
+
+(라) 수량 상한. codex 2회차 P1 2건은 출처 교체로 해소. 전제 확인값(claim-check 「전제 (i)~(iii)」):
+- (i) 주문 수량 = `intents.quantity`(schema.go:212) — `Gateway.prepareRequest` decimalString@1053 ← `Gateway.place` :374 `intent.Quantity`, 브로커 호출 `g.trading.Place@400` 은 같은 intent 복사본, intent 행 불변(`Journal.Prepare` B6 if@392 `ErrIntentMutated`).
+- (ii) 청산 주문 수량 ≤ 인스턴스 수량: `ExitObserver.submit` `IssueReduction@1517`(`HeldQuantity: m.position.Quantity`) → `risk.Evaluate` → `evaluateReduction` B4(if@241) `SellExceedsHoldings`.
+- (iii) 한 intent 에 attempt 여러 개 가능(`attempt_no` per intent, schema.go:229) → 「PLACE · AMEND attempt 상태 무관 정확히 하나 · CONFIRMED PLACE」 를 조건에 넣음.

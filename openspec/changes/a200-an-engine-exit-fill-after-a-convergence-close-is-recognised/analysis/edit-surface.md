@@ -23,7 +23,7 @@ CodeGraph 는 훅 값 배선(gateway.go:202 · 204 — 함수 값 대입)을 호
 | 함수 | 왜 | 고정 장치 적중 | 본문을 바꾸면 깨질 수 있는 시험 |
 |---|---|---|---|
 | `ProjectPosition`(position_projection.go) — **유일한 기존 함수** | B5(if@101) 안, enterReconcileInTx@102 직전 판정 1 자리 | a166 census 0 · `adoptionIDReaders`(파일 단위, 이미 등재 — 새 파일은 그 열을 안 읽음) | `TestAnOversellFreezesTheProjectionAndBlocksTheSymbol` · `TestASellWithNothingHeldIsAttributionFailure` · `TestTheProjectionAndTheFillAreOneCommit` · `TestTheProjectionCarriesThePreviousSnapshotForItsCostBasis`, 재현 시험 `…AConvergenceCloseThenTheStopFillIsAnAttributionFailure` 와 cycles 의 W4 · W5(의도된 RED) |
-| 새 파일(판정 · 표지) | design D2 · D2a · D3 | `TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook` — 새 파일에 `pending_intent_id` 등 4 열 철자 금지 → `PendingState` 로 읽음. `fill_events` · `mutation_attempts` · `position_adjustments` 읽기를 막는 정적 목록 없음(grep) | — |
+| 새 파일(판정 · 표지) | design D2 · D2a · D3 | `TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook` — 새 파일에 `pending_intent_id` 등 4 열 철자 금지 → `PendingState` 로 읽음. 판정이 읽는 표는 `position_adjustments` · `mutation_attempts` · `intents`(체결 누적 표는 안 읽음 — Manager 결정 3). 그 읽기를 막는 정적 목록 없음(grep) | — |
 
 FLM/BTM pre-edit 번들: `function-logic/internal-journal--projectposition/`(check_analysis: required 0 · 번들 검증 통과).
 
@@ -50,14 +50,13 @@ FLM/BTM pre-edit 번들: `function-logic/internal-journal--projectposition/`(che
 | 분석 SQL(a087 진행 중) | a087/analysis/exit-slippage-3.8/exit_slippage.sql | **무시됨** | intent 결합 + action 필터 |
 | 골든 · 시험 데이터 | 루트 `analysis/` · `internal/*/testdata` | 무관 | 리터럴 0(grep) |
 
-**판정: 오분류 0 · 깨짐 0** — 판정에 닿는 소비자는 전부 무시, 화면 둘은 원문을 한 줄 더 보여 줄 뿐 → Manager 결정 3 에 따라 **표지 행을 쓴다.**
-(「원문 표시」 를 「무시됨」 으로 본 것은 1단계의 판단이다. 다르게 보면 표지를 빼고 「인정은 `ADJUSTMENT_CLOSED` 뒤의 체결 기록과 차단 행 부재로만 읽힌다」 로 돌아간다.)
+**판정: 오분류 0 · 깨짐 0** — 판정에 닿는 소비자는 전부 무시, 화면 둘은 원문을 한 줄 더 보여 줄 뿐 → **표지 행을 쓴다**(Manager 승인 2026-11-24 — 원문 표시는 판정에 쓰이지 않으므로 「무시됨」).
 
 ## 진행 중 change 와의 겹침
 
 | change | 겹침 |
 |---|---|
-| a167(보호 잔량 재가격, 착수 전) | `ApplyExitFill` 을 FLM 대상으로 적음 — a200 은 `ApplyExitFill` **무편집**이라 겹침 없음 |
+| a167(보호 잔량 재가격, 착수 전) | `ApplyExitFill` 을 FLM 대상으로 적음 — a200 은 `ApplyExitFill` **무편집**이라 편집 겹침 없음. 단 a167 이 청산을 정정(AMEND)하면 그 체결은 a200 판정 (라)의 「PLACE · AMEND 하나」 에서 거절된다 — 거절하는 정상 입력 (나)가 넓어짐 |
 | a087(보호 청산 시장가) | `ApplyExitFill` · `position_projection.go` 를 인용만(편집 아님). a087 의 `exit_slippage.sql` 은 표지를 무시 |
 | a197(보류) · a171 · a198 | 후보 함수 · 파일 언급 0 |
 | a199(인터록) | 이 단계에서 읽지 않음(worktree 접근 금지) — Manager 대조 |
