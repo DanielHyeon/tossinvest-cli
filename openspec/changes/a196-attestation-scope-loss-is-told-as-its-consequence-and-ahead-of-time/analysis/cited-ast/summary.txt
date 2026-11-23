@@ -1,0 +1,127 @@
+== cmd-tossctl--runsoakattest.ast.json
+fn None runSoakAttest cmd/tossctl/soak.go 476 - 581 sha 3c1263d5d690
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@479 B2:if@480 B3:if@484 B4:if@492 B5:if@495 B6:else@497 B7:if@501 B8:if@507 B9:if@510 B10:if@515 B11:if@521 B12:if@526 B13:if@532 B14:if@535 B15:if@539 B16:if@542 B17:range@554 B18:if@556 B19:if@564 B20:range@567
+returns 10 return@481 return@485 return@508 return@522 return@528 return@536 return@540 return@543 return@570 return@580
+calls 49 strings.TrimSpace@480 strings.TrimSpace@480 fmt.Errorf@481 resolveAttestationPath@483 soak.RenewalStatusPath@488 UTC@489 time.Now@489 call@490 renewalStatusForResult@491 attest.Load@495 fmt.Errorf@496 saveRenewalStatus@501 fmt.Errorf@502 loadSoakSummary@506 soakSurveyedBase@515 cmd.Context@515 strings.TrimSpace@516 UTC@519 time.Now@519 supervisedProofs@520 soak.BuildAttestation@525 resolveAttestationPath@534 os.MkdirAll@539 filepath.Dir@539 fmt.Errorf@540 filepath.Dir@540 attest.Save@542 cmd.OutOrStdout@546 fmt.Fprintf@547 fmt.Fprintf@548 fmt.Fprintf@549 fmt.Fprintf@550 attestation.ExpiresAt.Format@550 fmt.Fprintf@551 strings.Join@551 fmt.Fprintf@552 fmt.Fprintf@559 Format@560 p.At.UTC@560 attestation.MissingEndpoints@563 soak.LiveOnlyEndpoints@563 len@564 fmt.Fprintln@565 fmt.Fprintln@566 fmt.Fprintf@568 fmt.Fprintln@576 fmt.Fprintln@577 fmt.Fprintln@578 fmt.Fprintln@579
+== cmd-tossctl--supervisedproofs.ast.json
+fn None supervisedProofs cmd/tossctl/soak.go 405 - 474 sha 3c1263d5d690
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@411 B2:else@417 B3:range@412 B4:if@413 B5:range@418 B6:if@420 B7:range@428 B8:if@430 B9:if@431 B10:if@439 B11:if@446 B12:range@449 B13:range@463 B14:range@467 B15:if@468
+returns 5 return@421 return@436 return@440 return@472 return@473
+calls 21 len@411 strings.TrimSpace@413 append@414 resolveVerifyRecordFor@419 fmt.Errorf@421 append@423 verifylive.LoadEntries@429 errors.Is@431 fmt.Errorf@436 verifylive.SucceededEndpoints@438 len@439 fmt.Errorf@440 strings.Join@443 len@446 append@450 filepath.Base@454 soak.LiveOnlyEndpoints@463 strings.ToUpper@464 strings.ToUpper@468 append@469 sort.Slice@472
+== internal-app-engine--a135attestation.ast.json
+fn None a135Attestation internal/app/engine/a135_attestation_watch_internal_test.go 36 - 50 sha d48d3091352d
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches 
+returns 1 return@38
+calls 8 Add@37 a135Now.Add@37 a135Now.Add@42 RequiredEndpoints@44 issued.Add@46 attest.Mask@46 issued.Add@47 attest.Mask@47
+== internal-app-engine--attestationverdict.critical.ast.json
+fn attestationVerdict critical internal/app/engine/attestation_watch.go 74 - 81 sha 29252ace6e73
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:switch@75 B2:case@76 B3:case@78
+returns 2 return@77 return@79
+== internal-app-engine--attestationwatch.checkonce.ast.json
+fn attestationWatch checkOnce internal/app/engine/attestation_watch.go 231 - 258 sha 29252ace6e73
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@233 B2:if@236 B3:if@238 B4:if@244 B5:if@248 B6:if@250
+returns 4 return@234 return@242 return@246 return@255
+calls 5 w.prepare@232 w.log.Warn@239 ctx.Err@244 w.notifyOutsideRecovery@248 w.log.Error@251
+== internal-app-engine--attestationwatch.eventfor.ast.json
+fn attestationWatch eventFor internal/app/engine/attestation_watch.go 314 - 375 sha 29252ace6e73
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@316 B2:if@321 B3:switch@329 B4:case@330 B5:case@333 B6:case@336 B7:case@340 B8:case@343 B9:case@346 B10:if@354 B11:if@357 B12:if@360 B13:if@363
+returns 1 return@367
+calls 18 v.critical@316 v.ExpiresAt.IsZero@321 Format@322 v.ExpiresAt.In@322 fmt.Sprintf@331 fmt.Sprintf@332 fmt.Sprintf@335 fmt.Sprintf@338 strings.Join@339 string@352 v.ExpiresAt.IsZero@354 Format@355 v.ExpiresAt.UTC@355 len@360 strings.Join@361 v.ProofAt.IsZero@363 Format@364 v.ProofAt.UTC@364
+== internal-app-engine--attestationwatch.prepare.ast.json
+fn attestationWatch prepare internal/app/engine/attestation_watch.go 269 - 299 sha 29252ace6e73
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@271 B2:if@273 B3:if@287 B4:if@291 B5:if@295
+returns 3 return@292 return@296 return@298
+calls 12 call@270 recover@271 w.log.Warn@274 w.load@281 w.clock.Now@282 judgeAttestation@283 Format@286 v.IssuedAt.UTC@286 Format@286 v.ExpiresAt.UTC@286 stageKey@294 w.eventFor@298
+== internal-app-engine--binding.ast.json
+fn None binding internal/app/engine/attestation_watch.go 136 - 154 sha 29252ace6e73
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:range@138 B2:if@140 B3:if@143 B4:range@148 B5:if@149
+returns 1 return@153
+calls 7 strings.Join@139 strings.Fields@139 strings.ToUpper@139 p.At.IsZero@140 p.At.After@143 earliest.IsZero@149 at.Before@149
+== internal-app-engine--daysleftceil.ast.json
+fn None daysLeftCeil internal/app/engine/attestation_watch.go 125 - 132 sha 29252ace6e73
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@128
+returns 1 return@131
+calls 1 int@127
+== internal-app-engine--judgeattestation.ast.json
+fn None judgeAttestation internal/app/engine/attestation_watch.go 87 - 122 sha 29252ace6e73
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@88 B2:if@93 B3:switch@94 B4:case@95 B5:case@97 B6:case@100 B7:case@102 B8:case@104 B9:switch@113 B10:case@114 B11:case@116 B12:case@118
+returns 3 return@89 return@108 return@121
+calls 10 binding@91 RequiredEndpoints@92 att.Verify@93 errors.Is@95 errors.Is@97 att.MissingEndpoints@99 errors.Is@100 errors.Is@102 daysLeftCeil@112 att.ExpiresAt.Sub@112
+== internal-app-engine--stagekey.ast.json
+fn None stageKey internal/app/engine/attestation_watch.go 303 - 308 sha 29252ace6e73
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@304
+returns 2 return@305 return@307
+calls 4 fmt.Sprintf@305 string@307 Format@307 now.In@307
+== internal-app-engine--testa135renewalresetsandscopelossisimmediate.ast.json
+fn None TestA135RenewalResetsAndScopeLossIsImmediate internal/app/engine/a135_attestation_watch_internal_test.go 250 - 286 sha d48d3091352d
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@258 B2:if@268 B3:if@280 B4:if@283
+calls 30 clock.NewFake@251 a135Attestation@253 a135Watch@254 t.Context@255 w.checkOnce@257 n.got@258 len@258 t.Fatalf@259 clk.Advance@263 a135Attestation@264 clk.Now@265 Add@266 clk.Now@266 w.checkOnce@267 n.got@268 len@268 t.Fatalf@269 clk.Advance@273 without@274 a135Attestation@274 clk.Now@275 Add@276 clk.Now@276 w.checkOnce@277 w.checkOnce@278 n.got@279 len@280 t.Fatalf@281 strings.Contains@283 t.Errorf@284
+== internal-app-engine--testa135samestageonanewattestationisannouncedagain.ast.json
+fn None TestA135SameStageOnANewAttestationIsAnnouncedAgain internal/app/engine/a135_attestation_watch_internal_test.go 467 - 496 sha d48d3091352d
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@478 B2:if@481 B3:if@493
+calls 23 clock.NewFake@468 a135Attestation@470 a135Watch@471 w.checkOnce@472 t.Context@472 a135Attestation@474 w.checkOnce@476 t.Context@476 n.got@477 len@478 t.Fatalf@479 t.Fatalf@482 clock.NewFake@486 a135Attestation@488 a135Watch@489 w2.checkOnce@490 t.Context@490 a.IssuedAt.Add@491 w2.checkOnce@492 t.Context@492 n2.got@493 len@493 t.Fatalf@494
+== internal-app-engine--testa135stageboundaries.ast.json
+fn None TestA135StageBoundaries internal/app/engine/a135_attestation_watch_internal_test.go 64 - 100 sha d48d3091352d
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:range@86 B2:if@89 B3:if@92 B4:if@95
+calls 8 t.Run@87 judgeAttestation@88 a135Attestation@88 t.Fatalf@90 t.Fatalf@93 v.critical@95 t.Fatalf@96 v.critical@96
+== internal-app-engine--testa135watchannounceseachstageonce.ast.json
+fn None TestA135WatchAnnouncesEachStageOnce internal/app/engine/a135_attestation_watch_internal_test.go 185 - 248 sha d48d3091352d
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@193 B2:if@202 B3:if@205 B4:if@232 B5:range@236 B6:if@237 B7:if@240 B8:if@245
+calls 46 clock.NewFake@186 a135Attestation@188 a135Watch@189 t.Context@190 w.checkOnce@192 n.got@193 len@193 t.Fatalf@194 len@194 clk.Advance@197 w.checkOnce@198 clk.Advance@199 w.checkOnce@200 n.got@201 len@202 t.Fatalf@203 obs.SeverityOf@205 t.Fatalf@206 obs.SeverityOf@206 clk.Set@209 att.ExpiresAt.Add@209 w.checkOnce@210 w.checkOnce@211 clk.Set@212 att.ExpiresAt.Add@212 w.checkOnce@213 clk.Set@214 att.ExpiresAt.Add@214 w.checkOnce@215 clk.Set@216 att.ExpiresAt.Add@216 w.checkOnce@217 w.checkOnce@218 clk.Set@219 w.checkOnce@220 w.checkOnce@221 n.got@223 len@232 len@232 t.Fatalf@233 len@233 len@233 t.Errorf@238 t.Errorf@241 obs.SeverityOf@245 t.Fatal@246
+== internal-attest--attestation.verify.ast.json
+fn Attestation Verify internal/attest/attest.go 211 - 238 sha d90c812d31fa
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:switch@212 B2:case@213 B3:case@215 B4:case@218 B5:if@222 B6:if@228 B7:if@233
+returns 7 return@214 return@216 return@219 return@223 return@229 return@234 return@237
+calls 20 strings.TrimSpace@213 fmt.Errorf@214 a.ExpiresAt.IsZero@215 fmt.Errorf@216 len@218 fmt.Errorf@219 now.Before@222 fmt.Errorf@223 Format@225 a.ExpiresAt.UTC@225 Format@225 now.UTC@225 sameAccount@228 fmt.Errorf@229 Mask@230 Mask@230 a.MissingEndpoints@233 len@233 fmt.Errorf@234 strings.Join@235
+== internal-obs--notificationfor.ast.json
+fn None notificationFor internal/obs/notifier.go 1004 - 1014 sha 780cd20d29ec
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@1006 B2:if@1010
+returns 1 return@1013
+calls 5 strings.TrimSpace@1005 string@1007 len@1010 strings.TrimSpace@1011 renderFields@1011
+== internal-obs--notifier.eventkey.ast.json
+fn Notifier eventKey internal/obs/notifier.go 991 - 1002 sha 780cd20d29ec
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@992 B2:range@996 B3:if@997
+returns 2 return@993 return@1001
+calls 5 strings.TrimSpace@992 string@995 append@998 fmt.Sprint@998 strings.Join@1001
+== internal-obs--ntfy.publish.ast.json
+fn Ntfy Publish internal/obs/ntfy.go 85 - 142 sha 0c451499c6b6
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@90 B2:if@94 B3:if@99 B4:if@107 B5:if@113 B6:if@120 B7:if@125 B8:if@129 B9:if@137
+returns 5 return@91 return@108 return@130 return@138 return@141
+calls 30 redactForTransport@88 strings.TrimSpace@89 strings.TrimRight@93 strings.TrimSpace@93 context.WithTimeout@102 cancel@103 http.NewRequestWithContext@105 bytes.NewReader@106 call@106 fmt.Errorf@108 strings.TrimSpace@113 req.Header.Set@114 append@116 string@116 req.Header.Set@117 strings.Join@117 req.Header.Set@118 strconv.Itoa@118 priorityFor@118 req.Header.Set@119 strings.TrimSpace@120 req.Header.Set@121 client.Do@128 fmt.Errorf@130 resp.Body.Close@132 io.ReadAll@135 io.LimitReader@135 fmt.Errorf@138 strings.TrimSpace@139 string@139
+== internal-soak--acceptsupervised.ast.json
+fn None acceptSupervised internal/soak/attest.go 301 - 343 sha d693c9dbd958
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:range@305 B2:range@311 B3:if@313 B4:if@317 B5:if@324 B6:if@332 B7:if@335
+returns 3 return@318 return@325 return@342
+calls 14 LiveOnlyEndpoints@305 normaliseEndpoint@306 strings.Join@312 strings.Fields@312 strings.TrimSpace@312 normaliseEndpoint@316 fmt.Errorf@318 strings.Join@322 LiveOnlyEndpoints@322 attest.SameAccountMasked@324 fmt.Errorf@325 attest.Mask@329 now.Sub@331 append@340
+== internal-soak--buildattestation.ast.json
+fn None BuildAttestation internal/soak/attest.go 220 - 273 sha d693c9dbd958
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@225 B2:range@234 B3:if@235 B4:if@243 B5:range@246 B6:if@257
+returns 4 return@226 return@236 return@244 return@261
+calls 22 c.withDefaults@222 s.evaluateIssues@224 len@225 s.Window.SuccessfulEndpoints@229 strings.HasPrefix@235 strings.ToUpper@235 strings.TrimSpace@235 fmt.Errorf@236 acceptSupervised@242 append@247 fmt.Sprintf@250 Format@254 s.WindowStart.UTC@254 Format@254 s.LastAt.UTC@254 mutationNote@256 strings.TrimSpace@257 strings.TrimSpace@258 now.UTC@264 Add@265 now.UTC@265 strings.TrimSpace@269
+== internal-verifylive--succeededendpoints.ast.json
+fn None SucceededEndpoints internal/verifylive/endpoints.go 75 - 112 sha ece4db249c27
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:range@82 B2:if@83 B3:range@86 B4:if@88 B5:if@92 B6:if@97 B7:if@101 B8:range@107
+returns 1 return@111
+calls 10 strings.TrimSpace@83 strings.Join@87 strings.Fields@87 strings.TrimSpace@87 strings.TrimSpace@88 now.Sub@91 normaliseEndpoint@95 c.At.After@101 append@108 sort.Strings@110

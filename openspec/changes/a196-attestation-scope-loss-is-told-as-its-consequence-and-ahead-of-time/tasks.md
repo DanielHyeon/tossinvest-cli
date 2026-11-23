@@ -7,12 +7,12 @@
 
 ## 1. 계약과 증거 (production Go·시험 편집 0)
 
-- [ ] 1.1 Story `STORY-TOS-a196`(FEAT-TOS-003) 등록 확인, `base-commit.txt` 고정.
-- [ ] 1.2 CodeGraph hard evidence(버전 명기): `judgeAttestation`·`binding`·`stageKey`·`attestationWatch.prepare`·`eventFor`·`checkOnce`, `soak` 의 발급 함수와 `acceptSupervised` — `analysis/code-context/`.
-- [ ] 1.3 `tools/logic-map` AST 를 `analysis/cited-ast/` 에 현재 HEAD 로 뽑고 proposal 표 여섯 줄을 대조한다(특히 key 구성과 「발급자가 같은 유효 기간 값을 두 곳에 쓴다」). 틀리면 문서를 고치고 Manager 에게 보고.
-- [ ] 1.4 편집 표면 세기: 고칠 기존 함수 목록 확정, a135 시험 중 뒤집히는 단언을 가진 시험 함수 수, D2 전제 시험을 둘 패키지(import 순환 확인), census·구조 고정 유무.
-- [ ] 1.5 편집 대상 기존 함수들의 FLM/BTM 번들(pre-edit 판).
-- [ ] 1.6 `openspec validate a196-… --strict` 통과, proposal-freeze 리뷰(다른 계열, 최대 2회) — `review.md`.
+- [x] 1.1 Story `STORY-TOS-a196`(FEAT-TOS-003) 등록 확인, `base-commit.txt` 고정.
+- [x] 1.2 CodeGraph hard evidence(버전 명기): `judgeAttestation`·`binding`·`stageKey`·`attestationWatch.prepare`·`eventFor`·`checkOnce`, `soak` 의 발급 함수와 `acceptSupervised` — `analysis/code-context/`.
+- [x] 1.3 `tools/logic-map` AST 를 `analysis/cited-ast/` 에 현재 HEAD 로 뽑고 proposal 표 여섯 줄을 대조한다(특히 key 구성과 「발급자가 같은 유효 기간 값을 두 곳에 쓴다」). 틀리면 문서를 고치고 Manager 에게 보고.
+- [x] 1.4 편집 표면 세기: 고칠 기존 함수 목록 확정, a135 시험 중 뒤집히는 단언을 가진 시험 함수 수, D2 전제 시험을 둘 패키지(import 순환 확인), census·구조 고정 유무.
+- [x] 1.5 편집 대상 기존 함수들의 FLM/BTM 번들(pre-edit 판).
+- [x] 1.6 `openspec validate a196-… --strict` 통과, proposal-freeze 리뷰(다른 계열, 최대 2회) — `review.md`.
 - [ ] 1.7 Manager 1단계 검증·freeze.
 
 ## 2. Pre-Edit

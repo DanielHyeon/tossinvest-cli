@@ -1,0 +1,29 @@
+package soak
+
+import (
+	"fmt"
+	"testing"
+	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
+)
+
+// 측정 전용: acceptSupervised 경계와 같은 endpoint 의 두 증거(KR 먼저·US 나중) 중 무엇이 실리는가.
+func TestZZA196SoakProbe(t *testing.T) {
+	now := time.Date(2026, 11, 23, 0, 0, 0, 0, time.UTC)
+	v := 30 * 24 * time.Hour
+	acct := "987-65-432109"
+	for _, age := range []time.Duration{v - time.Nanosecond, v, v + time.Nanosecond, 0, -time.Nanosecond} {
+		got, err := acceptSupervised(acct, now, v, []attest.Proof{{Endpoint: "POST /api/v1/orders", At: now.Add(-age), AccountRef: attest.Mask(acct)}})
+		fmt.Printf("age=%v accepted=%d err=%v\n", age, len(got), err)
+	}
+	kr := now.Add(-20 * 24 * time.Hour)
+	us := now.Add(-2 * 24 * time.Hour)
+	got, _ := acceptSupervised(acct, now, v, []attest.Proof{
+		{Endpoint: "POST /api/v1/orders", At: kr, AccountRef: attest.Mask(acct), Market: "KR"},
+		{Endpoint: "POST /api/v1/orders", At: us, AccountRef: attest.Mask(acct), Market: "US"},
+	})
+	for _, p := range got {
+		fmt.Printf("dual-market accepted: market=%s at=%s (KR=%s US=%s)\n", p.Market, p.At.Format(time.RFC3339), kr.Format(time.RFC3339), us.Format(time.RFC3339))
+	}
+}

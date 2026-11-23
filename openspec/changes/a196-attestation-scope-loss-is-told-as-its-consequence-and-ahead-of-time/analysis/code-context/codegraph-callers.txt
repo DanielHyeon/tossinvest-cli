@@ -1,0 +1,288 @@
+### codegraph 1.6.0 callers judgeAttestation (HEAD 064f59fd9)
+
+Callers of "judgeAttestation" (4):
+
+function    TestA135StageBoundaries
+  internal/app/engine/a135_attestation_watch_internal_test.go:64
+
+function    TestA135ScopeLossIsCritical
+  internal/app/engine/a135_attestation_watch_internal_test.go:102
+
+function    TestA135UnusableAttestationsAreCritical
+  internal/app/engine/a135_attestation_watch_internal_test.go:115
+
+method      prepare
+  internal/app/engine/attestation_watch.go:269
+
+
+### codegraph 1.6.0 callers binding (HEAD 064f59fd9)
+
+Callers of "binding" (11):
+
+function    TestRawFirstLegBindingMismatchMatrixRejectsKRAndUS
+  internal/journal/strategy_first_leg_atomic_test.go:571
+
+function    validateAndOrderBuckets
+  internal/riskbucket/admission.go:127
+
+function    TestAdmissionFailsClosedForUnknownDimensionAndStaleBucket
+  internal/riskbucket/reserve_test.go:163
+
+function    TestAdmissionRejectsMissingOrMismatchedAuthoritativeProvenance
+  internal/riskbucket/reserve_test.go:187
+
+function    testBuckets
+  internal/riskbucket/reserve_test.go:293
+
+function    reattestSnapshot
+  internal/riskbucket/reserve_test.go:327
+
+function    digestRiskSnapshotMaterialEntry
+  internal/riskbucket/snapshot_authority_bundle.go:332
+
+function    TestA135SupervisedProofAtIsTheBindingProof
+  internal/app/engine/a135_attestation_watch_internal_test.go:518
+
+function    judgeAttestation
+  internal/app/engine/attestation_watch.go:87
+
+function    newRegistry
+  internal/strategyflow/registry.go:90
+
+method      lookup
+  internal/strategyflow/registry.go:98
+
+
+### codegraph 1.6.0 callers stageKey (HEAD 064f59fd9)
+
+Callers of "stageKey" (1):
+
+method      prepare
+  internal/app/engine/attestation_watch.go:269
+
+
+### codegraph 1.6.0 callers prepare (HEAD 064f59fd9)
+
+Callers of "prepare" (8):
+
+method      collect
+  internal/app/engine/strategy_schedule_authority.go:111
+
+method      collectMarket
+  internal/app/engine/strategy_schedule_authority.go:163
+
+method      Preview
+  internal/app/engine/position_policy_command.go:160
+
+function    TestA131PrepareSealKeyRefusesANewKeyForASealedRecord
+  internal/redact/redact_test.go:81
+
+function    TestA131SealRecordLineRoundTrips
+  internal/redact/redact_test.go:208
+
+function    TestA131OpenAccountFailsClosedWithoutTheKey
+  internal/redact/redact_test.go:259
+
+function    TestA131AFusedOrTrailingLineIsNotRewritten
+  internal/redact/redact_test.go:300
+
+function    TestA131PrepareSealKeyLooksAtSiblingRecords
+  internal/redact/redact_test.go:316
+
+
+### codegraph 1.6.0 callers eventFor (HEAD 064f59fd9)
+
+Callers of "eventFor" (1):
+
+method      prepare
+  internal/app/engine/attestation_watch.go:269
+
+
+### codegraph 1.6.0 callers checkOnce (HEAD 064f59fd9)
+
+Callers of "checkOnce" (10):
+
+function    TestA135WatchAnnouncesEachStageOnce
+  internal/app/engine/a135_attestation_watch_internal_test.go:185
+
+function    TestA135RenewalResetsAndScopeLossIsImmediate
+  internal/app/engine/a135_attestation_watch_internal_test.go:250
+
+function    TestA135NotificationsOffNeverRaisesCritical
+  internal/app/engine/a135_attestation_watch_internal_test.go:288
+
+function    TestA135FailedRecordIsRetried
+  internal/app/engine/a135_attestation_watch_internal_test.go:300
+
+function    TestA135AlertCarriesNoAccount
+  internal/app/engine/a135_attestation_watch_internal_test.go:314
+
+function    TestA135UnreadableAlertCarriesNoAccountOrPath
+  internal/app/engine/a135_attestation_watch_internal_test.go:450
+
+function    TestA135SameStageOnANewAttestationIsAnnouncedAgain
+  internal/app/engine/a135_attestation_watch_internal_test.go:467
+
+function    TestA135InvalidStatesAreRemindedDaily
+  internal/app/engine/a135_attestation_watch_internal_test.go:499
+
+function    TestA135NotifyPanicIsNotRecovered
+  internal/app/engine/a135_attestation_watch_internal_test.go:545
+
+method      Run
+  internal/app/engine/attestation_watch.go:211
+
+
+### codegraph 1.6.0 callers daysLeftCeil (HEAD 064f59fd9)
+
+Callers of "daysLeftCeil" (1):
+
+function    judgeAttestation
+  internal/app/engine/attestation_watch.go:87
+
+
+### codegraph 1.6.0 callers newAttestationWatch (HEAD 064f59fd9)
+
+Callers of "newAttestationWatch" (2):
+
+function    TestA135ProductionExecutorShape
+  internal/app/engine/a135_attestation_watch_internal_test.go:422
+
+method      AttestationWatch
+  internal/app/engine/attestation_watch.go:201
+
+
+### codegraph 1.6.0 callers BuildAttestation (HEAD 064f59fd9)
+
+Callers of "BuildAttestation" (15):
+
+function    runSoakAttest
+  cmd/tossctl/soak.go:476
+
+function    TestA131SealedSoakRecordStillAttestsTheSameAccount
+  internal/soak/a131_seal_test.go:53
+
+function    TestBuildAttestationPassesTheEngineInterlock
+  internal/soak/attest_test.go:182
+
+function    TestBuildAttestationNeverClaimsAnEndpointItDidNotExercise
+  internal/soak/attest_test.go:212
+
+function    TestBuildAttestationRefusesAnIncompleteSoak
+  internal/soak/attest_test.go:233
+
+function    TestBuildAttestationCarriesTheMeasuredRate
+  internal/soak/attest_test.go:266
+
+function    TestAProbedEndpointReachesTheAttestationWithoutBeingRequired
+  internal/soak/protection_probe_test.go:300
+
+function    TestSupervisedEvidenceCompletesTheEnginesRequiredSet
+  internal/soak/supervised_test.go:39
+
+function    TestSupervisedEvidenceCannotStandInForTheSoak
+  internal/soak/supervised_test.go:62
+
+function    TestSupervisedEvidenceIsClosedToOtherMutations
+  internal/soak/supervised_test.go:82
+
+function    TestSupervisedEvidenceFromAnotherAccountRefusesTheIssue
+  internal/soak/supervised_test.go:100
+
+function    TestSupervisedEvidenceOlderThanTheValidityIsNotEvidence
+  internal/soak/supervised_test.go:114
+
+function    TestSupervisedEvidenceFromTheFutureIsNotEvidence
+  internal/soak/supervised_test.go:132
+
+function    TestWithoutSupervisedEvidenceTheGateStillRefuses
+  internal/soak/supervised_test.go:148
+
+function    TestTheNoteSaysWhichMutationsAreStillUnproven
+  internal/soak/supervised_test.go:166
+
+
+### codegraph 1.6.0 callers acceptSupervised (HEAD 064f59fd9)
+
+Callers of "acceptSupervised" (1):
+
+function    BuildAttestation
+  internal/soak/attest.go:220
+
+
+### codegraph 1.6.0 callers supervisedProofs (HEAD 064f59fd9)
+
+Callers of "supervisedProofs" (10):
+
+function    TestSupervisedEvidenceCompletesTheEnginesRequiredSet
+  internal/soak/supervised_test.go:39
+
+function    TestSupervisedEvidenceCannotStandInForTheSoak
+  internal/soak/supervised_test.go:62
+
+function    TestSupervisedEvidenceIsClosedToOtherMutations
+  internal/soak/supervised_test.go:82
+
+function    TestSupervisedEvidenceFromAnotherAccountRefusesTheIssue
+  internal/soak/supervised_test.go:100
+
+function    TestSupervisedEvidenceOlderThanTheValidityIsNotEvidence
+  internal/soak/supervised_test.go:114
+
+function    TestSupervisedEvidenceFromTheFutureIsNotEvidence
+  internal/soak/supervised_test.go:132
+
+function    TestTheNoteSaysWhichMutationsAreStillUnproven
+  internal/soak/supervised_test.go:166
+
+function    runSoakAttest
+  cmd/tossctl/soak.go:476
+
+function    TestExpiryReconcileCommandAppendsWithOnlyGetReadsAndLeavesProofsUnchanged
+  cmd/tossctl/verify_reconcile_expired_seams_test.go:30
+
+function    TestReconcileLineDoesNotChangeSupervisedProofs
+  cmd/tossctl/verify_reconcile_seams_test.go:235
+
+
+### codegraph 1.6.0 callers SucceededEndpoints (HEAD 064f59fd9)
+
+Callers of "SucceededEndpoints" (12):
+
+function    supervisedProofs
+  cmd/tossctl/soak.go:405
+
+function    TestA131SealedVerifyProofStillBinds
+  internal/verifylive/a131_seal_test.go:52
+
+function    TestSucceededEndpointsTakesTheCallsThatWorked
+  internal/verifylive/endpoints_test.go:34
+
+function    TestSucceededEndpointsIgnoresACallThatFailed
+  internal/verifylive/endpoints_test.go:51
+
+function    TestSucceededEndpointsKeepsTheNewestSuccess
+  internal/verifylive/endpoints_test.go:68
+
+function    TestSucceededEndpointsDropsEvidenceOlderThanTheWindow
+  internal/verifylive/endpoints_test.go:85
+
+function    TestSucceededEndpointsWindowBoundary
+  internal/verifylive/endpoints_test.go:96
+
+function    TestSucceededEndpointsRefusesEvidenceFromTheFuture
+  internal/verifylive/endpoints_test.go:113
+
+function    TestSucceededEndpointsReportsEveryAccountItSaw
+  internal/verifylive/endpoints_test.go:123
+
+function    TestSucceededEndpointsOnAnEmptyRecord
+  internal/verifylive/endpoints_test.go:134
+
+function    TestExpiryReconcileLineNeverBecomesEndpointEvidence
+  internal/verifylive/reconcile_expired_test.go:643
+
+function    TestReconcileLineNeverBecomesEndpointEvidence
+  internal/verifylive/reconcile_projection_test.go:116
+
+

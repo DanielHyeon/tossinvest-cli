@@ -18,7 +18,7 @@
 |---|---|
 | 알림의 타입(ntfy 첫 태그)은 `broker.credential_expiring`, 제목은 「자동매매 검증서(attestation)에 필요한 주문 권한이 없다」, 본문은 원인을 「…쓰였을 수 있다」로, 결과를 조건문(「만료되거나 무효인 attestation 으로 엔진이 재시작하면…」)으로 말하고 할 일이 없다 | `internal/app/engine/attestation_watch.go` `eventFor`(:337-339 부근 문자열, 조사 인용) |
 | 중복 방지 key 가 발급 신원(발급·만료 시각)을 담아, 6 시간 갱신마다 새 행이 생긴다 — 「하루 한 번」이 하루 네 번이 된다 | `stageKey`(:303-308)·`prepare` if@287·outbox key `"attestation-watch:"+key+":"+identity`(:370, 조사 인용). 정본 engine-safety 「파일이 바뀌면 단계를 새로 센다」가 이 동작을 허용한다 |
-| 날수 사전 통지는 attestation 자신의 만료만 센다. 6 시간 갱신이 만료를 매번 30 일 뒤로 밀어 사실상 발화하지 않는다 | `judgeAttestation` 의 `daysLeftCeil(att.ExpiresAt.Sub(now))`(직접 읽음, :118) |
+| 날수 사전 통지는 attestation 자신의 만료만 센다. 6 시간 갱신이 만료를 매번 30 일 뒤로 밀어 사실상 발화하지 않는다 | `judgeAttestation` 의 `daysLeftCeil(att.ExpiresAt.Sub(now))`(AST: call daysLeftCeil@112 — 종전 표기 :118 은 B12 case@118 이었음, 1.3 정정) |
 | 감독 증거의 시각은 이미 계산되지만 판정에 쓰이지 않는다 | `judgeAttestation` 의 `ProofAt: binding(att.SupervisedBy)`(:91), `binding`(:134-154, 직접 읽음) |
 | 발급자는 같은 유효 기간 값으로 attestation 만료와 감독 증거 수용을 정한다 | `internal/soak/attest.go` `acceptSupervised(…, c.Validity, …)`(:242)·`ExpiresAt: now.UTC().Add(c.Validity)`(:265, 직접 읽음) |
 | a135 는 감독 증거 기한의 사전 통지를 일부러 뺐다 — 이유는 「발급자 수용 규칙의 사본이 된다」 | a135 design D6(조사 인용) |

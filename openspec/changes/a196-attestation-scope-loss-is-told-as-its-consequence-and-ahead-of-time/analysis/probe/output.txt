@@ -1,0 +1,26 @@
+=== RUN   TestZZA196Probe
+expiry_remaining=168h0m1s proof_deadline_remaining=167h0m1s daysLeftCeil=7 (expiry-only=8)
+expiry_remaining=720h0m0s proof_deadline_remaining=719h0m0s daysLeftCeil=30 (expiry-only=30)
+expiry_remaining=168h0m0s proof_deadline_remaining=167h0m0s daysLeftCeil=7 (expiry-only=7)
+expiry_remaining=156h0m0s proof_deadline_remaining=155h0m0s daysLeftCeil=7 (expiry-only=7)
+expiry_remaining=72h0m0s proof_deadline_remaining=71h0m0s daysLeftCeil=3 (expiry-only=3)
+expiry_remaining=48h0m1s proof_deadline_remaining=47h0m1s daysLeftCeil=2 (expiry-only=3)
+expiry_remaining=48h0m0s proof_deadline_remaining=47h0m0s daysLeftCeil=2 (expiry-only=2)
+expiry_remaining=36h0m0s proof_deadline_remaining=35h0m0s daysLeftCeil=2 (expiry-only=2)
+expiry_remaining=24h0m0s proof_deadline_remaining=23h0m0s daysLeftCeil=1 (expiry-only=1)
+expiry_remaining=1s proof_deadline_remaining=-59m59s daysLeftCeil=1 (expiry-only=1)
+expiry_remaining=192h0m0s proof_deadline_remaining=191h0m0s daysLeftCeil=8 (expiry-only=8)
+expiry_remaining=120h0m0s proof_deadline_remaining=119h0m0s daysLeftCeil=5 (expiry-only=5)
+--- PASS: TestZZA196Probe (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.006s
+=== RUN   TestZZA196SoakProbe
+age=719h59m59.999999999s accepted=1 err=<nil>
+age=720h0m0s accepted=0 err=<nil>
+age=720h0m0.000000001s accepted=0 err=<nil>
+age=0s accepted=1 err=<nil>
+age=-1ns accepted=0 err=<nil>
+dual-market accepted: market=KR at=2026-11-03T00:00:00Z (KR=2026-11-03T00:00:00Z US=2026-11-21T00:00:00Z)
+--- PASS: TestZZA196SoakProbe (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/soak	0.003s
