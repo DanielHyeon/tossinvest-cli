@@ -1,7 +1,8 @@
 # Function Logic Map: `Gateway.withCancelRefusal`
 
-- Source: `internal/execgw/cancel_refusal.go:44-106`
-- AST evidence: `ast.json` (**pre-edit**, HEAD `25eb0c933` = base 와 같은 파일 — source_sha256 `acd4d7de…`, 분기 13)
+- Source: `internal/execgw/cancel_refusal.go:44-112`
+- AST evidence: `ast.json` (**post-edit**, 4b.7 뒤 — source_sha256 `36d892ae…`, 분기 15). Pre-edit 판은 base 와 같은 파일(sha `acd4d7de…`, 분기 13 — 아래 표의 번호).
+- **재번호(pre → post, difflib)**: B1 동일 · **새 B2 L53 `if policy.Definitive`·새 B3 L54 `settledCancelRefusal(first)` 삽입**(D7 — 참이면 확정 거절 `dispatch_rejected_by_broker` 반환) · 옛 B2~B13 → 새 B4~B15(조건·반환 무변). 아래 표는 pre-edit 번호다.
 - Risk scan: `risk-pattern-report.md` (적중 1: cancel_refusal.go:154 float64 변환 — `retryAfter` 안, 이 함수 밖)
 - 판: **pre-edit**. 편집 범위(design D7, Manager 결정 2026-11-24): 첫 dispatch 결과 직후, **엔진 정책(`policy.Definitive`)일 때만** 새 판정 함수(새 파일)를 불러 `already-filled`·`already-canceled`·`already-rejected` 의 모호 결과를 확정 거절(`dispatch_rejected_by_broker`)로 반환. B1(정책 없음·비취소)·a165 흐름(B2~B13) 무편집.
 

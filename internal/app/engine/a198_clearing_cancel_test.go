@@ -10,9 +10,9 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
-	"io"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -692,6 +692,7 @@ func TestA198AnAlreadyFilledBuyIsADefinitiveRefusalAndTheStopFollowsItsClosingRe
 	if len(f.sells()) != 1 {
 		t.Fatalf("broker sells = %v after the buy's closing record, want the stop — attempts %v", f.sells(), f.attemptRows())
 	}
+	t.Logf("P1 attempts=%v cancels=%v sells=%d", f.attemptRows(), f.broker.cancels(), len(f.sells()))
 }
 
 // §4-11 (P2) · §4-14 (D8): 매수 취소 접수 → 손절이 반대 미체결로 거절 → 다음 주기 재취소 0 · 손절 재제출.
@@ -714,6 +715,7 @@ func TestA198AnAcceptedBuyCancelIsNotSentAgainAndTheStopIsResubmitted(t *testing
 	if len(f.sells()) != 1 {
 		t.Fatalf("broker sells = %v, want the stop resubmitted on the next cycle — attempts %v", f.sells(), f.attemptRows())
 	}
+	t.Logf("P2 attempts=%v cancels=%v sells=%d", f.attemptRows(), f.broker.cancels(), len(f.sells()))
 }
 
 // §4-12 (P3): 매수 둘 — 하나 400 · 하나 접수 → 다음 주기 거절된 쪽만 재시도, 접수된 쪽 재취소 0.
@@ -737,6 +739,7 @@ func TestA198OnlyTheRefusedBuyIsCancelledAgain(t *testing.T) {
 	if len(f.sells()) != 1 {
 		t.Fatalf("broker sells = %v, want the stop once both buys are cleared — attempts %v", f.sells(), f.attemptRows())
 	}
+	t.Logf("P3 attempts=%v cancels=%v sells=%d", f.attemptRows(), f.broker.cancels(), len(f.sells()))
 }
 
 // §4-13b: 엔진 취소 already-processing → 다음 주기 재취소 already-canceled → 확정 거절 → 종결 기록 뒤 손절.
@@ -810,7 +813,7 @@ func TestA198AnUnreadableWorkingOrderIsLoggedOnce(t *testing.T) {
 		t.Run(column, func(t *testing.T) {
 			f := newA198Fixture(t)
 			f.openWithWorkingBuy()
-			if _, err := f.db().Exec(`UPDATE intents SET `+column+` = 'not-a-number' WHERE id = 'i-a198-W-BUY-1'`); err != nil {
+			if _, err := f.db().Exec(`UPDATE intents SET ` + column + ` = 'not-a-number' WHERE id = 'i-a198-W-BUY-1'`); err != nil {
 				t.Fatalf("corrupt %s: %v", column, err)
 			}
 			f.breach()

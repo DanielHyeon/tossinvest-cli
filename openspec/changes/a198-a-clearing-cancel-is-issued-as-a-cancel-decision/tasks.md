@@ -39,7 +39,7 @@
 - [x] 4b.4 Manager 보강분 조건부 freeze(2026-11-24) — 결정 반영(D7 엔진 정책·세 code·기존 사유 코드, `already-modified`·flatten 제외, MODIFIED delta) 과 조건 (1)~(5) 확인값은 review.md.
 - [x] 4b.5 Pre-Edit 갱신(`withCancelRefusal` 추가) · `Gateway.withCancelRefusal` FLM/BTM pre-edit 번들. (사유 코드 재사용 — `AllReasonCodes` 무편집.)
 - [x] 4b.6 RED — design §4-10~17·13b(리뷰 탐침 P1·P2·P3 포함)을 현재 코드에서 단언 실패로, 원문 `analysis/tdd/red-4b.txt`.
-- [ ] 4b.7 GREEN — `withCancelRefusal` + 새 판정 함수(새 파일) · `clearTheSymbol`(D8 · B9 실패 줄 · 표시를 쓰기 뒤로). 편집 뒤 번들 재생성(재번호).
+- [x] 4b.7 GREEN — `withCancelRefusal` + 새 판정 함수(새 파일) · `clearTheSymbol`(D8 · B9 실패 줄 · 표시를 쓰기 뒤로). 편집 뒤 번들 재생성(재번호).
 - [ ] 4b.8 변이 원장 보강(design §4 보강 변이 전부) · 선택 시험(`./internal/execgw -run 'Cancel|A165|Refusal|A094'` 추가) · `make lint` · validate · check_analysis.
 
 ## 5. 종결

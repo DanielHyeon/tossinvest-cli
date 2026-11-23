@@ -19,6 +19,9 @@ import (
 // exitClearCancelDecisionFailed 는 취소 결정을 원장에 기록하지 못했다는 고정 사유 코드임 — 오류 원문 대신 실음.
 const exitClearCancelDecisionFailed = "cancel_decision_failed"
 
+// exitClearCancelOrderUnreadable 는 치울 주문의 수량 · 가격을 읽지 못했다는 고정 사유 코드임(a198 D4a).
+const exitClearCancelOrderUnreadable = "working_order_unreadable"
+
 // noteClearCancelFailure 는 취소 하나의 실패를 한 줄 씀. 같은 주문의 같은 결과(상태 · 사유)가 주기마다 반복되면 처음 한 번만 —
 // 관측 주기마다 같은 줄을 쓰는 것은 관측이 아님(a074). 결과가 바뀌면 다시 씀.
 func (o *ExitObserver) noteClearCancelFailure(m managed, order journal.LiveOrder, state journal.AttemptState, reason string) {
@@ -32,10 +35,6 @@ func (o *ExitObserver) noteClearCancelFailure(m managed, order journal.LiveOrder
 	if o.clearCancelLogged[key] == mark {
 		return
 	}
-	if o.clearCancelLogged == nil {
-		o.clearCancelLogged = map[string]string{}
-	}
-	o.clearCancelLogged[key] = mark
 
 	// 이벤트 이름은 submit 의 청산 주문 줄과 같은 기준(exitloop.go submit): 브로커 거부 · 결과 미상 · 그 밖(브로커 전 거절).
 	event := obs.EventOrderNotDispatched
@@ -58,6 +57,11 @@ func (o *ExitObserver) noteClearCancelFailure(m managed, order journal.LiveOrder
 		obs.FieldToState, exitOrderToken(string(state)),
 		obs.FieldReason, reason,
 	)
+	// 표시는 쓰기가 끝난 뒤에 세움(a198 D4a) — 쓰기가 패닉해 삼켜지면 표시가 남지 않아 다음 주기에 다시 씀.
+	if o.clearCancelLogged == nil {
+		o.clearCancelLogged = map[string]string{}
+	}
+	o.clearCancelLogged[key] = mark
 }
 
 // noteClearCancelConfirmed 는 취소가 접수 확정된 주문의 표시를 지움 — 그 주문이 나중에 다시 실패하면 다시 씀.

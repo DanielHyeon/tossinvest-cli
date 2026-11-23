@@ -1,9 +1,19 @@
 # Function Logic Map: `ExitObserver.clearTheSymbol`
 
-- Source: `internal/app/engine/exitloop.go:1651-1748`
-- AST evidence: `ast.json` (**post-edit**, 작업 트리 — source_sha256 `6ffb1ec1…`, 분기 17 · return 8 · 호출 30). Pre-edit 판은 HEAD `e1eaf720c` 의 `analysis/cited-ast/ExitObserver_clearTheSymbol.ast.json`(sha `bc81b5fd…`).
+- Source: `internal/app/engine/exitloop.go:1651-1751`
+- AST evidence: `ast.json` (**post-edit 2판 — 보강 4b.7 뒤**, source_sha256 `985bec39…`, 분기 17). 1판(GREEN 09bb9e8c1) sha `6ffb1ec1…`, pre-edit 판은 base `e1eaf720c` 의 `analysis/cited-ast/ExitObserver_clearTheSymbol.ast.json`(sha `bc81b5fd…`).
 - Risk scan: `risk-pattern-report.md`
-- 재번호(옛/새 ast 분기를 difflib 으로 정렬): B1~B8 동일 · 옛 B10(수량·가격 해석 실패) → **새 B9**(발행 앞으로 이동) · 옛 B9(결정 발행 실패) → **새 B10** · B11~B17 동일. 분기 수 17 → 17.
+- 재번호 1판(base → 1판, difflib): B1~B8 동일 · 옛 B10(해석 실패) → B9 · 옛 B9(발행 실패) → B10 · B11~B17 동일.
+- **재번호 2판(1판 → 2판, difflib)**: B1~B4 동일 · 1판 B6(`ConfirmedCancelOf` 오류) → **B5**(이제 매수·매도 공통) · 1판 B7(waiting) → **B6 `accepted`**(매수·매도 공통, D8) · 1판 B5(`!buy`) → **B7**(accepted 안의 매도 판정) · 1판 B8(`!withPending`) → **B8 `!buy && !withPending`** · B9~B17 동일(B9 에 D4a 실패 줄 추가). 분기 수 17 → 17.
+- **2판 아래 표가 현재 분기**다. B5·B6·B7·B8 행이 2판 정의이고, B9 는 실패 줄을 쓴다(D4a).
+
+| 2판 | 조건 | 결과 |
+|---|---|---|
+| B5 L1673 | `ConfirmedCancelOf` 오류(매수·매도) | warnEpisode(운영 무기록), cleared=false, continue — 치움 미완료 |
+| B6 L1678 | 엔진 취소 접수 확정 있음(매수·매도) | continue — 다시 취소하지 않음 |
+| B7 L1679 | (B6 안) 매도 | cleared=false, awaitingClose(종결 증거 대기). 매수는 cleared 무변(D8) |
+| B8 L1684 | 매도 && !withPending | continue(대상 아님) |
+| B9 L1689 | 수량·가격 해석 실패 | `noteClearCancelFailure(…, "", working_order_unreadable)`, cleared=false |
 - 편집(design D1·D2 (가-B)·D4, Manager 결정 2026-11-23): ① 수량·가격 해석을 결정 발행 앞으로 옮김(최대 수량을 결정에 싣기 위함 — 해석 실패 시 결정 행을 남기지 않는 것 외에 판정 동일) ② 결정 발행을 `RiskGuardian.IssueReduction`(매도·PLACE) 에서 관측기 안의 `execgw.Issuer{Journal, Clock: o.clk, AccountRef}.IssueReduction`(CANCEL, 주문 방향·수량)으로 ③ 새 B10·B11 에 `noteClearCancelFailure` ④ 취소 접수 확정 뒤 `noteClearCancelConfirmed`. `res.cleared` 판정·`continue`·다른 분기 무편집.
 
 ## Inputs and invariants

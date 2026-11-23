@@ -1666,26 +1666,29 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 	res := clearResult{cleared: true, countable: true}
 	for _, order := range live {
 		buy := strings.EqualFold(strings.TrimSpace(order.Side), "BUY")
-		if !buy {
-			// 엔진 취소가 이미 접수 확정된 매도 — 종결 증거를 기다리는 중이며 다시 취소하지 않음. 발의 유무와 무관함(D−4.3-1):
-			// 발의가 풀린 뒤의 주기(withPending=false)에도 그 매도가 취소 전에 얼마나 체결됐는지 모르는 채 손절을 낼 수 없음.
-			_, waiting, err := o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
-			if err != nil {
-				o.warnEpisode(obs.EventExitLiquidationDelayed, err, "reading the engine cancel of order "+order.OrderID)
-				res.cleared = false
-				continue
-			}
-			if waiting {
+		// 엔진 취소가 이미 접수 확정된 주문은 다시 취소하지 않음. 매도는 종결 증거를 기다림 — 발의 유무와 무관함(D−4.3-1):
+		// 발의가 풀린 뒤의 주기(withPending=false)에도 그 매도가 취소 전에 얼마나 체결됐는지 모르는 채 손절을 낼 수 없음.
+		// 매수는 취소 접수로 치워짐(a198 D8) — 다시 취소하면 계약상 409 already-canceled 가 오고, 치움 판정은 그대로 둠.
+		_, accepted, err := o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
+		if err != nil {
+			o.warnEpisode(obs.EventExitLiquidationDelayed, err, "reading the engine cancel of order "+order.OrderID)
+			res.cleared = false
+			continue
+		}
+		if accepted {
+			if !buy {
 				res.cleared, res.awaitingClose = false, true
-				continue
 			}
-			if !withPending {
-				continue
-			}
+			continue
+		}
+		if !buy && !withPending {
+			continue
 		}
 		quantity, qerr := floatOf("working order quantity", order.Quantity)
 		price, perr := workingOrderPrice(order.Price)
 		if qerr != nil || perr != nil {
+			// a198 D4a: 읽을 수 없는 주문도 치우지 못한 사실을 운영 로그에 한 번 남김(원문 오류는 싣지 않음).
+			o.noteClearCancelFailure(m, order, "", exitClearCancelOrderUnreadable)
 			res.cleared = false
 			continue
 		}
