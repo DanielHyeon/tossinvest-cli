@@ -5,12 +5,12 @@
 
 ## 1. 계약과 증거 (production Go·시험 편집 0)
 
-- [ ] 1.1 Story `STORY-TOS-a195`(FEAT-TOS-005) 등록 확인, `base-commit.txt` 고정(`tools/sdd/capture_change_base.py`).
-- [ ] 1.2 CodeGraph hard evidence(버전 명기): `buildReconcileResolveRuntime`·`runEngineReconcileResolve`·`Tracker.Resolve`·`Tracker.Blocks` 의 definition/callers — `analysis/code-context/`.
-- [ ] 1.3 `tools/logic-map` AST: proposal·design 이 인용한 함수(`buildReconcileResolveRuntime`, `runEngineReconcileResolve`, `Tracker.Resolve`, `Tracker.Observe`, `blockFromReconcileState`)를 `analysis/cited-ast/` 에 현재 HEAD 로 뽑고, proposal 표의 「조사 인용」 네 줄을 그 AST 와 대조해 틀린 줄은 문서를 고친다(틀리면 Manager 에게 보고).
-- [ ] 1.4 편집 표면 세기: `buildReconcileResolveRuntime` 이 a166 census(`internal/accountbudgetruntime` 의 shapes.json·sites.json)나 다른 AST 구조 고정 시험에 있는지, `ATTRIBUTION_FAILED` 거절을 단언하는 기존 시험이 몇 개인지(`cmd/tossctl/engine_reconcile_test.go` 등). census 에 있으면 **멈추고 Manager 에게 돌아온다**.
-- [ ] 1.5 편집 대상 기존 함수의 FLM/BTM 번들(pre-edit 판) — `analysis/function-logic/`.
-- [ ] 1.6 `openspec validate a195-… --strict` 통과, proposal-freeze 적대 리뷰(작성자와 다른 계열, 최대 2회) — `review.md`.
+- [x] 1.1 Story `STORY-TOS-a195`(FEAT-TOS-005) 등록 확인, `base-commit.txt` 고정(`tools/sdd/capture_change_base.py`).
+- [x] 1.2 CodeGraph hard evidence(버전 명기): `buildReconcileResolveRuntime`·`runEngineReconcileResolve`·`Tracker.Resolve`·`Tracker.Blocks` 의 definition/callers — `analysis/code-context/`.
+- [x] 1.3 `tools/logic-map` AST: proposal·design 이 인용한 함수(`buildReconcileResolveRuntime`, `runEngineReconcileResolve`, `Tracker.Resolve`, `Tracker.Observe`, `blockFromReconcileState`)를 `analysis/cited-ast/` 에 현재 HEAD 로 뽑고, proposal 표의 「조사 인용」 네 줄을 그 AST 와 대조해 틀린 줄은 문서를 고친다(틀리면 Manager 에게 보고).
+- [x] 1.4 편집 표면 세기: `buildReconcileResolveRuntime` 이 a166 census(`internal/accountbudgetruntime` 의 shapes.json·sites.json)나 다른 AST 구조 고정 시험에 있는지, `ATTRIBUTION_FAILED` 거절을 단언하는 기존 시험이 몇 개인지(`cmd/tossctl/engine_reconcile_test.go` 등). census 에 있으면 **멈추고 Manager 에게 돌아온다**. → 적중(shapes.json 키 `cmd/tossctl/engine_reconcile.go||buildReconcileResolveRuntime`), 2026-11-23 Manager 에게 보고, 편집 전 결정 대기.
+- [x] 1.5 편집 대상 기존 함수의 FLM/BTM 번들(pre-edit 판) — `analysis/function-logic/`.
+- [x] 1.6 `openspec validate a195-… --strict` 통과, proposal-freeze 적대 리뷰(작성자와 다른 계열, 최대 2회) — `review.md`.
 - [ ] 1.7 Manager 1단계 검증·freeze.
 
 ## 2. Pre-Edit

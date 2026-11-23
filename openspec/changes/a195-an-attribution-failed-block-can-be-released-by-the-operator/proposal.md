@@ -1,7 +1,7 @@
 # a195 — 귀속 실패(ATTRIBUTION_FAILED) 종목 차단을 운영자가 풀 수 있다
 
 > **상태: 1단계(계약·증거), High-risk(대사 해제).** Story `STORY-TOS-a195`(FEAT-TOS-005). 작성: Manager(2026-11-23).
-> 분기 주장의 AST 는 조사 산출물(세션 스크래치 `inv-D/*.ast.json`, HEAD `a9dd53400`)에서 인용했고, 이 change 안 사본과 현재 HEAD 재확인은 tasks 1.3 이다 — 그 전까지 「조사 인용」이다.
+> 분기 주장의 AST 는 tasks 1.3 에서 base `064f59fd9` 로 다시 뽑아 `analysis/cited-ast/` 에 두었다(2026-11-23). 표의 인용은 그 산출물이다.
 
 ## Why
 
@@ -15,10 +15,10 @@
 
 | 사실 | 근거 |
 |---|---|
-| 운영자 해제 명령은 `QUANTITY_MISMATCH` 가 아닌 활성 원인이 하나라도 있으면 거절한다 | `cmd/tossctl/engine_reconcile.go` `buildReconcileResolveRuntime` 의 validate 클로저 — range@307 → if@308 → return@309, 문구 `active cause … requires cause-specific recovery evidence`(조사 인용) |
-| 그 거절은 엔진 잠금과 스냅숏 수집 뒤에 난다 — 엔진을 세워도 실패한다 | `runEngineReconcileResolve` if@201(조사 인용) |
-| `ATTRIBUTION_FAILED` 를 푸는 다른 자리는 없다 | 자동 해제 둘(`Tracker.Observe` 해제 루프, a192 종결 증명)은 `QUANTITY_MISMATCH` 만 본다(조사 인용: Observe range@666 → if@667 continue, `order_terminal_release.go:184`) |
-| 해제 기록 자체는 원인을 가리지 않는다 | `Tracker.Resolve` 가 블록마다 `ExpectCause: block.Cause`, `Cause: OPERATOR` 로 요청을 만든다(`internal/reconcile/mismatch.go:1352-1396`, 손으로 읽음) |
+| 운영자 해제 명령은 `QUANTITY_MISMATCH` 가 아닌 활성 원인이 하나라도 있으면 거절한다 | `cmd/tossctl/engine_reconcile.go` `buildReconcileResolveRuntime` 의 validate 클로저 — range@307 → if@308 → return@309, 문구 `active cause … requires cause-specific recovery evidence`(AST: analysis/cited-ast/buildReconcileResolveRuntime.ast.json B13·B14, return@309) |
+| 그 거절은 엔진 잠금과 스냅숏 수집 뒤에 난다 — 엔진을 세워도 실패한다 | `runEngineReconcileResolve` if@201(AST: analysis/cited-ast/runEngineReconcileResolve.ast.json B22; 잠금 B7 if@134, 스냅숏 B11~B19, 비교 B21 if@198 이 앞선다) |
+| `ATTRIBUTION_FAILED` 를 푸는 다른 자리는 없다 | 자동 해제 둘(`Tracker.Observe` 해제 루프, a192 종결 증명)은 `QUANTITY_MISMATCH` 만 본다(AST: analysis/cited-ast/Tracker.Observe.ast.json B6 range@666 → B7 if@667 continue; analysis/cited-ast/orderTerminalReleaseVerdict.ast.json B3 if@182 — 원인 조건은 그 if 의 줄 184). 해제 쓰기 자리는 이 둘과 운영자 해제(`Tracker.Resolve`)뿐이다(HEAD grep, `analysis/code-context/codegraph-baseline.md`) |
+| 해제 기록 자체는 원인을 가리지 않는다 | `Tracker.Resolve` 가 블록마다 `ExpectCause: firstNonEmpty(block.Cause, QUANTITY_MISMATCH)`, `Cause: OPERATOR` 로 요청을 만든다(`ScopeMarket` 는 비움 — `ATTRIBUTION_FAILED` 행은 scope_market NULL 로만 쓰인다, position_projection.go:409). 장부는 활성 행의 원인이 `ExpectCause` 와 같을 때만 푼다(reconcile_states.go:383) (AST: analysis/cited-ast/Tracker.Resolve.ast.json B4 range@1363, B5 if@1364 — 영속되지 않은 빈 종목 수량 블록만 건너뜀) |
 
 즉 **이 차단은 지금 빌드에서 어떤 자동 경로로도, 어떤 운영자 명령으로도 풀리지 않는다.** 정본 reconciliation 은 영구 불일치의 해제를 「운영자 확인」으로 정했는데, 이 원인에는 그 확인을 받는 경로가 없다. 막고 있는 것은 validate 의 원인 목록 한 줄이다.
 

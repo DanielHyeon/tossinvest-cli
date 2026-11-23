@@ -7,8 +7,8 @@
 | D1 | 해제 가능한 원인 = `QUANTITY_MISMATCH`, 그리고 **종목 범위**(symbol 비어 있지 않음)의 `ATTRIBUTION_FAILED`. 그 밖은 종전 거절 | 이번 사고의 원인이 이것 하나이고, 나머지 원인의 해제 근거는 아무도 정의하지 않았다(모르는 것을 풀지 않는다) |
 | D2 | `ATTRIBUTION_FAILED` 의 해제 근거 = **명령 자신의 안정 재조회가 차이를 보지 않음** + 운영자 신원·note. 새 증거 종류·새 플래그·새 확인 문구를 만들지 않는다 | 이 차단의 목적은 「장부와 계좌가 그 종목에서 어긋났을 수 있다」는 불확실성 동안 진입을 막는 것이다. 명령은 이미 엔진 잠금 아래 재조회·비교를 하고 차이가 남으면 거절한다 — 그 일치가 불확실성의 해소 증거다. 사람 확인은 note 로 장부에 남는다 |
 | D3 | 원인 판정은 새 파일의 새 함수 하나(예: `reconcileResolveRefusedCause(blocks) error`)로 빼고 validate 클로저는 그것을 부른다. 허용 원인 목록은 그 함수 한 곳 | 목록이 한 곳에 있어야 다음 원인을 더할 때 자리를 세지 않는다. 기존 본문 편집을 한 줄로 줄인다 |
-| D4 | 해제 기록 형식 무변경 — `Tracker.Resolve` 를 고치지 않는다 | `ExpectCause: block.Cause` 가 이미 원인별로 맞춘다(proposal 표 4행). tasks 1.3 에서 AST 로 재확인 |
-| D5 | 계좌 전체(symbol 빈) `ATTRIBUTION_FAILED` 는 거절 | 저장소에 그 모양을 쓰는 자리가 없다고 조사됐고(조사 인용 F6: 계좌 전체는 `IDENTIFIER_CONFLICT`), 없는 모양에 해제 규칙을 만들지 않는다. 거절 문구는 종전 문구 |
+| D4 | 해제 기록 형식 무변경 — `Tracker.Resolve` 를 고치지 않는다 | `ExpectCause: firstNonEmpty(block.Cause, QUANTITY_MISMATCH)` 가 이미 원인별로 맞춘다(proposal 표 4행; AST: analysis/cited-ast/Tracker.Resolve.ast.json B4·B5) |
+| D5 | 계좌 전체(symbol 빈) `ATTRIBUTION_FAILED` 는 거절 | 저장소에 그 모양을 쓰는 자리가 없고(HEAD grep: 빈 symbol 로 쓰는 6자리 전부 `IDENTIFIER_CONFLICT` — `analysis/code-context/evidence-reconciliation.md`), 없는 모양에 해제 규칙을 만들지 않는다. 거절 문구는 종전 문구 |
 
 ## 2. 거절하는 정상 입력 (fail-closed 가 무엇을 거부하는지)
 
