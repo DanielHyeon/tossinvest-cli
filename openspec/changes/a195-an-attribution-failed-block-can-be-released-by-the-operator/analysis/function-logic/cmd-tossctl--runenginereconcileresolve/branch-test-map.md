@@ -1,6 +1,6 @@
-# Branch Test Map: `runEngineReconcileResolve` (pre-edit 판)
+# Branch Test Map: `runEngineReconcileResolve` (편집 뒤 판)
 
-- Source: `cmd/tossctl/engine_reconcile.go` (107-214), base `064f59fd9`.
+- Source: `cmd/tossctl/engine_reconcile.go` (109-216), 작업 트리. 재번호 `renumber.txt`(B1~B24 유지). 편집 뒤 커버: `../../coverage/after-engine_reconcile-blocks.txt` — 분기 블록 hit 는 편집 전과 같은 블록이 줄 +2 로 옮겨 같은 값.
 - 커버 측정: `../../coverage/pre-edit-runEngineReconcileResolve-and-cmd-blocks.txt`(선택 시험 `./cmd/tossctl -run 'TestA166EngineReconcile|TestEngineReconcileResolve'`, covermode=set, PASS). 시험 이름은 읽어서 그 분기를 단언함을 확인한 것만 적는다.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
@@ -29,4 +29,4 @@
 | B22 | validate 거절 | `TestEngineReconcileResolveRefusesNonQuantityCauses`(스텁 validate) | 해당 없음(기존 분기) | yes — 201.43 hit=1 |
 | B23 | 해제 실패 | `TestEngineReconcileResolveDoesNotReportSuccessWhenPersistenceFails` | 해당 없음(기존 분기) | yes — 204.61 hit=1 |
 | B24 | close 실패 | 없음 | 해당 없음(기존 분기) | 미실행 — 207.40 hit=0 |
-| (성공 :212) | 성공 문장 | `TestEngineReconcileResolveRecordsDurableReleaseBeforeSuccess` · `TestEngineReconcileResolveIntegratesCorrectedJournalStateAndAtomicRelease`(`released` 포함 단언) | 문장 변경은 2단계 RED 대상 | yes — 210.2 hit=1 |
+| (성공 :214) | 원인 중립 성공 문장 | `TestA195HelpAndSuccessOutputAreCauseNeutral` · `TestEngineReconcileResolveRecordsDurableReleaseBeforeSuccess` · `TestEngineReconcileResolveIntegratesCorrectedJournalStateAndAtomicRelease`(`released` 포함 단언) | yes — `TestA195HelpAndSuccessOutputAreCauseNeutral` 이 RED 에서 실패(red.txt) | yes — 212.2 hit=1 |

@@ -1,9 +1,9 @@
-# Function Logic Map: `newEngineReconcileResolveCmdWithDeps` (pre-edit 판)
+# Function Logic Map: `newEngineReconcileResolveCmdWithDeps` (편집 뒤 판)
 
-- Source: `cmd/tossctl/engine_reconcile.go` (76-105), base `064f59fd9`, source sha256 `7192c69246ed…`.
-- AST evidence: `ast.json`(분기 0, return 2 — return@94 는 RunE 클로저, return@104 는 함수). 명령 `GOFLAGS=-trimpath go run ./tools/logic-map --file cmd/tossctl/engine_reconcile.go --func newEngineReconcileResolveCmdWithDeps`.
+- Source: `cmd/tossctl/engine_reconcile.go` (76-107), 작업 트리 sha `d5b36622a940…`. 편집 전 `../../pre-edit-ast/cmd-tossctl--newenginereconcileresolvecmdwithdeps.ast.json`(76-105). 재번호 `renumber.txt`(분기 0 → 0, 표 없음).
+- AST evidence: `ast.json`(분기 0, return 2 — return@96 는 RunE 클로저, return@106 은 함수). 명령 `GOFLAGS=-trimpath go run ./tools/logic-map --file cmd/tossctl/engine_reconcile.go --func newEngineReconcileResolveCmdWithDeps`.
 - Risk scan: `risk-pattern-report.md`(일치 0). 커버리지: `../../coverage/pre-edit-runEngineReconcileResolve-and-cmd-blocks.txt`(76~105 전 블록 hit=1).
-- 편집 범위(Manager 결정 Q5): `Long` 도움말(:81-89)의 「quantity-mismatch」 문장을 원인 중립으로. 플래그·Annotations·RunE 무변경. a166 census 키 없음.
+- 편집(Manager 결정 Q5): `Long` 도움말(:81-91)을 원인 중립으로 — 받는 원인(수량 불일치, 종목 범위 귀속 실패)과 그 밖의 원인은 전체 거절임을 적음. 플래그·Annotations·RunE 무변경. a166 census 키 없음.
 
 ## Inputs and invariants
 
@@ -18,8 +18,8 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| (분기 없음) | — | cobra 명령 생성, 플래그 3·필수 표시 3 | return@104 cmd | 편집은 문자열 리터럴만 |
-| (return@94, RunE) | — | `runEngineReconcileResolve` 호출 | 그 결과 | 편집 무관 |
+| (분기 없음) | — | cobra 명령 생성, 플래그 3·필수 표시 3 | return@106 cmd | 편집은 문자열 리터럴만 |
+| (return@96, RunE) | — | `runEngineReconcileResolve` 호출 | 그 결과 | 편집 무관 |
 
 ## Calls and live bindings
 
@@ -35,5 +35,5 @@
 
 ## Safety conclusion
 
-- Safe edit boundary: `Long` 리터럴 안의 문장만. 금지 토큰을 쓰지 않는다(불변식 3).
+- Edit boundary(실제): `Long` 리터럴 안의 문장만. 금지 토큰을 쓰지 않는다(불변식 3).
 - High-risk impact: no(도움말 문장) — 단 대사 해제 명령의 운영자 설명이라 거짓이 되면 운영 판단을 그르친다.
