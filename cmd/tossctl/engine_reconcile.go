@@ -79,9 +79,14 @@ func newEngineReconcileResolveCmdWithDeps(root *rootOptions, deps reconcileResol
 		Use:   "reconcile-resolve",
 		Short: "Release reconcile blocks after a fresh official comparison",
 		Long: strings.TrimSpace(`
-Release active quantity-mismatch RECONCILE blocks only after three identical
-official account snapshots, each taken at least two seconds apart, agree with the corrected local
-journal projection.
+Release active RECONCILE blocks only after three identical official account
+snapshots, each taken at least two seconds apart, show no entry-blocking
+difference from the corrected local journal projection (no quantity mismatch and
+no order the journal holds that the account does not show). External holdings,
+external orders and average-price deviations do not refuse the release.
+Only causes with a defined operator release are accepted
+(quantity mismatch, and a symbol-scoped attribution failure); any other active
+cause refuses the whole release.
 
 The automated engine must be stopped: this command takes the same exclusive lock
 before it opens the journal or reads the account. It never places, previews,
@@ -209,7 +214,7 @@ func runEngineReconcileResolve(cmd *cobra.Command, root *rootOptions, opts *reco
 	}
 	closed = true
 
-	fmt.Fprintf(cmd.OutOrStdout(), "quantity-mismatch reconcile blocks released after three stable official snapshots (lock %s)\n", lock.Path())
+	fmt.Fprintf(cmd.OutOrStdout(), "active RECONCILE blocks released after three stable official snapshots (lock %s)\n", lock.Path())
 	return nil
 }
 
@@ -304,14 +309,7 @@ func buildReconcileResolveRuntime(ctx context.Context, root *rootOptions) (recon
 			if len(blocks) == 0 {
 				return errors.New("engine reconcile-resolve: no active RECONCILE block exists")
 			}
-			for _, block := range blocks {
-				if block.Cause != journal.ReconcileCauseQuantityMismatch {
-					return fmt.Errorf(
-						"engine reconcile-resolve: active cause %s on %s requires cause-specific recovery evidence",
-						block.Cause, block.Symbol)
-				}
-			}
-			return nil
+			return reconcileResolveRefusedCause(blocks)
 		},
 		resolve: tracker.Resolve,
 		close:   j.Close,

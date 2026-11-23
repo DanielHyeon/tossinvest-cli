@@ -1,0 +1,14 @@
+B1:if@239 -> B1:if@244
+B2:if@243 -> B2:if@248
+B3:if@247 -> B3:if@252
+B4:if@250 -> B4:if@255
+B5:if@255 -> B5:if@260
+B6:if@259 -> B6:if@264
+B7:if@263 -> B7:if@268
+B8:if@269 -> B8:if@274
+B9:if@273 -> B9:if@278
+B10:if@278 -> B10:if@283
+B11:if@283 -> B11:if@288
+B12:if@304 -> B12:if@309
+B13:range@307 -> (removed/changed, delete)  | for _, block := range blocks {
+B14:if@308 -> (removed/changed, delete)  | if block.Cause != journal.ReconcileCauseQuantityMismatch {

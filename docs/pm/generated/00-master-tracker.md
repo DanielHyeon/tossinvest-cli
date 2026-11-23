@@ -115,7 +115,7 @@
     - STORY-TOS-a130 — An adopted trade whose quantity grew after adoption still freezes its outcome [archived] → `a130-an-adopted-trade-keeps-its-outcome`
     - STORY-TOS-a192 — missing-order 종목 차단은 그것을 만든 주문들이 브로커 근거로 종결 확인되고 그 뒤의 대사가 그 종목에 차이를 보지 않을 때 엔진이 스스로 풀고 근거를 장부에 남긴다 [archived] → `a192-a-missing-order-block-is-released-by-the-orders-terminal-proof`
     - STORY-TOS-a194 — 대사 차단 때문에 편입되지 못해 손절이 걸리지 않은 보유와, 운영자만 풀 수 있는 차단 자체가 운영자에게 알려진다 [in_progress] → `a194-a-holding-left-unprotected-by-a-reconcile-block-is-reported`
-    - STORY-TOS-a195 — 귀속 실패(ATTRIBUTION_FAILED) 종목 차단은 재조회 일치를 근거로 운영자 해제 명령이 풀 수 있다 [in_progress] → `a195-an-attribution-failed-block-can-be-released-by-the-operator`
+    - STORY-TOS-a195 — 귀속 실패(ATTRIBUTION_FAILED) 종목 차단은 재조회 일치를 근거로 운영자 해제 명령이 풀 수 있다 [archived] → `a195-an-attribution-failed-block-can-be-released-by-the-operator`
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
     - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [archived] → `a041-complete-exit-line-contract`
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [archived] → `a042-persist-exit-line-snapshots`
@@ -149,6 +149,7 @@
     - STORY-TOS-a167 — A protective-exit remainder that stays live is re-priced and re-ordered [in_progress] → `a167-a-protective-remainder-is-re-priced`
     - STORY-TOS-a193 — 엔진이 도는 동안 IN_DOUBT 가 된 발주는 다음 재시작을 기다리지 않고 조회 대조로 해소되고, 못 풀고 오래 남으면 critical 로 알린다 [archived] → `a193-an-in-doubt-order-is-resolved-while-the-engine-runs`
     - STORY-TOS-a197 — 브로커가 반대 미체결을 이유로 보호 손절을 거절하면, 기본 꺼진 토글이 켜진 엔진은 그 종목의 외부 매수 미체결을 취소해 손절이 나가게 한다 [in_progress] → `a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled`
+    - STORY-TOS-a198 — 보호 청산의 길 치우기가 내는 취소는 주문 경로가 받아들이는 취소 결정으로 발행되어 실제로 나가고, 실패하면 원인과 함께 기록된다 [in_progress] → `a198-a-clearing-cancel-is-issued-as-a-cancel-decision`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`
