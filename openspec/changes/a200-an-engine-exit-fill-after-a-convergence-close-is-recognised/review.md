@@ -26,7 +26,15 @@
 | 10 | base 재고정 승인 — 실행은 a198 착지 · merge 뒤 | 아래 「base 재고정」 · tasks 1.2 |
 | 11 | γ 보류 확정 + 다시 여는 조건 | proposal 「γ」 절 |
 
-reconciliation delta 는 결정 본문의 「귀속 실패 … Requirement 에 Scenario 추가」 대신 **ADDED Requirement** 로 만들었다. 그 Requirement(「귀속 실패 종목 차단은 … 운영자가 해제할 수 있다」)의 본문이 「이 요구는 … 차단을 거는 조건 … 을 바꾸지 않는다(SHALL NOT)」 이라, 차단을 거는 조건이 바뀌는 Scenario 를 그 안에 넣으면 같은 Requirement 안에서 모순이 된다. 내용(인정된 체결은 차단을 안 만듦 · 어긋나면 지금처럼)은 같다.
+reconciliation delta 는 **ADDED Requirement** 로 만들었다(Manager 승인 2026-11-24). 이유: 기존 Requirement(「귀속 실패 종목 차단은 … 운영자가 해제할 수 있다」)의 「**이 요구는** … 차단을 거는 조건 … 을 바꾸지 않는다」 는 그 Requirement 자신의 범위를 말할 뿐 다른 Requirement 를 금하지 않는다 — 그래서 모순은 없고, 「차단을 거는 조건」 의 변화는 별도 ADDED 가 자기 이름으로 진다. ADDED 본문에 「귀속 실패 차단의 해제 규칙(운영자 해제)은 바꾸지 않는다」 를 넣었다.
+
+### Manager 결정 2 (2026-11-24, 1단계 보고 2 뒤)
+
+1. codex r1 P1-2(인과 미증명) — **(A) 받아들이고 공시**. design §2 「인과는 …」 · §4, Story limits. 뒷받침 측정 M29 · M33(미체결 지정가 매도가 매도가능수량 예약), 앱 매도 · 부분 체결 잔량은 미측정 가정.
+2. reconciliation ADDED — 승인(위 이유).
+3. 표지 행 — 승인, action `ADJUSTMENT_CLOSE_FILL_RECOGNISED`(design D3).
+4. 누적 출처(주문별 원문 누적) — 승인, 정정 계보 이중 계산 없음을 시험 한 사례로(design §3-3).
+5. codex P2 셋 반영 — 승인.
 
 ### base 재고정 (Manager 승인 2026-11-24 — 실행은 a198 착지 · merge 뒤)
 
@@ -55,4 +63,24 @@ reconciliation delta 는 결정 본문의 「귀속 실패 … Requirement 에 S
 - (A) 받아들이고 근거를 적는다 — 미체결 엔진 매도가 묶은 수량은 브로커가 사람의 앱 매도에서 빼므로(매도가능수량) 「외부 처분이 엔진 주문의 수량을 판다」 는 일어나기 어렵다(미측정). 틀려도 수량은 계좌 값이라 맞고, 잃는 것은 그 종목의 차단 하나(귀속)다.
 - (B) 「주문 접수가 조정보다 앞섬」 조건 추가 — 반례의 주문도 조정 전에 있었으므로 효과 없음.
 - (C) 인정하지 않는다(β 포기).
-- 추천 (A) + 공시.
+- 추천 (A) + 공시. → **Manager (A) 결정**(위 「Manager 결정 2」).
+
+### 제안 동결 적대 리뷰 — codex r2(마지막), 2026-11-24
+
+보이스 r1 과 같음. 프롬프트 `analysis/review/proposal-freeze-r2-prompt.md`, 원문 `analysis/review/proposal-freeze-r2-codex.md`. 대상 HEAD `b15a1f489` + 작업 트리(Manager 결정 2 반영판). codex 는 시험을 돌리지 않음.
+결과: **P0 0 · P1 2 · P2 2.** P1 둘 다 D2a(Manager 가 승인한 누적 출처)에 닿는다 → 지시대로 **반영하지 않고 멈춤. freeze 안 함, merge · base 재고정 · 구현 착수 안 함.**
+
+| # | 등급 | 요지 | 처분 |
+|---|---|---|---|
+| R2-1 | P1 | `fill_snapshots` 는 `order_id` 기본키 호환 표라 범위가 다른 같은 번호의 최신 누적이 없을 수 있다(다른 거래일 같은 번호 P 의 옛 0 행이 남고 오늘 P 의 10 은 `scoped_fill_snapshots` 에만, fills.go:730-799) → 부모 0 + 자식 21 = 21 로 인정, 실제 31 | **Manager 결정 필요** |
+| R2-2 | P1 | 최신 원문 스냅숏도 `nearlyZero` 범위의 작은 **감소** 재관측으로 덮어써져(fills.go:413 · :437 · :742) 관측 이력의 최댓값보다 작아질 수 있다 — 「남는 오차는 더 세는 쪽뿐」 반증(합성 소수 경계) | **Manager 결정 필요** |
+| R2-3 | P2 | 정정 계보 정상 시험 계획이 부모의 `REPLACED`(종결) 관측 순서를 빠뜨림 — 그 관측의 Exit 훅이 pending 을 비우므로(ApplyExitFill:1009, successor 검사 없음) 자식 체결은 (다)에서 거절 | 기록만(멈춤) — 반영안: 「부모 종결 관측이 자식 체결보다 앞서면 거절」 을 limits 로, 시험 사례 추가 |
+| R2-4 | P2 | M29 · M33 은 보유 조회와 주문 서비스 사이의 일관성(지연된 0 응답)을 배제하지 않음 | 기록만 — 반영안: design §2 「인과는 …」 · Story limits 에 미측정 가정 한 줄 |
+
+### Manager 에게 묻는 것 (R2-1 · R2-2)
+
+「주문별 원문 누적의 현재 값」 은 두 길(호환 표의 범위 충돌 · 작은 감소 덮어쓰기)로 과소 계상될 수 있다. 관측 이력 최댓값은 원장에 보존되지 않는다(스냅숏은 덮어쓰고 `fill_events` 는 float 차를 0 으로 버림).
+- (A) **수량 상한으로 바꾼다**: (라)를 「그 intent 의 주문 수량(원주문 수량) ≤ 조정 감소분」 으로. 누적 체결은 원주문 수량을 넘을 수 없으므로 과소 계상 경로가 없다. 출처 후보: `intents.quantity`(intent 하나에 하나, 엔진 손절은 보유 전량) — 단 정정이 수량을 **늘리면** 상한이 깨지므로 정정 계보가 있으면(그 intent 의 CONFIRMED AMEND attempt 존재) 인정하지 않는다. 대가: 조정을 사이에 둔 부분 체결은 조정 뒤 첫 체결부터 거절(지금 문서의 「넘는 체결부터」 보다 엄격), 정정 계보는 전부 거절, 부분 익절(주문 수량 < 보유)은 영향 없음.
+- (B) 세 출처의 최댓값(`scoped_fill_snapshots` · `fill_snapshots` · `fill_events` 합 · 이번 관측)을 decimal 로 — R2-2(덮어쓴 감소)를 막지 못한다.
+- (C) 인정 포기.
+- 추천 (A). 결정되면 design D2 (라) · D2a · §2 · §3 · ledger delta · claim-check 를 고치고 codex 를 다시 돌릴지(3회차) 정해 주길 바란다 — 2회 상한을 넘으므로 Manager 승인이 필요하다.

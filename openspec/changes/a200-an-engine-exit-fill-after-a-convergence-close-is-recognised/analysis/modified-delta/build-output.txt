@@ -1,4 +1,4 @@
 MODIFIED openspec/specs/position-ledger/spec.md 「포지션 상태기계」: 치환 1 · 역치환 원문 일치 · Scenario 2
 position-ledger ADDED 본문 393자
-reconciliation ADDED 본문 324자
+reconciliation ADDED 본문 369자
 wrote openspec/changes/a200-an-engine-exit-fill-after-a-convergence-close-is-recognised/specs/position-ledger/spec.md openspec/changes/a200-an-engine-exit-fill-after-a-convergence-close-is-recognised/specs/reconciliation/spec.md

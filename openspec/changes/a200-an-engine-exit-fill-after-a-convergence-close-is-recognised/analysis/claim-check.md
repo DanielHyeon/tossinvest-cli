@@ -30,14 +30,14 @@ base `884be2a74`. AST 좌표는 `analysis/cited-ast/*.ast.json`(`B<n>(kind@줄)`
 | C-D5 | Exit 훅 · 성과 무변, 인정된 청산은 `ADJUSTMENT_CLOSED` + 표지 + `PROPOSAL_FILLED` | **참** | `ApplyExitFill` 무편집. 오늘 W4 원장의 exit_events 가 `ADJUSTMENT_CLOSED · PROPOSAL_FILLED`(재현) — 표지는 Project 훅에서 그 사이에 들어감 |
 | C-D6 | 인정돼도 수량 불일치 차단은 크레딧으로 다음 일치에서 풀림 | **참(등가 재현)** | 인정 뒤 Observe 시점 원장 = W6 의 상태(AF 행 없음 + 조정 · 크레딧). W6 재현에서 첫 일치에 `ADJUSTMENT_APPLIED`, 진입 열림. 단 크레딧은 프로세스 기억 — 재기동이 끼면 「조정 대기」 로 남음(codex r1 P2-2, `Tracker.Restore` mismatch.go:998) → design D6 · delta 에 조건으로 적음. 수정 후 코드로 W4 · W5 를 돈 것은 구현 단계(design §3-4) |
 | C-§2 대가 | 조정을 사이에 둔 부분 체결은 **누적이 감소분을 넘는 체결부터** AF(결국 AF) | **참(r1 뒤 정정)** | 첫 개정판 「모두 거절」 은 거짓이었음(codex r1 P2-1: 조정 뒤 1 · 20 으로 나누면 첫 체결은 누적 11 ≤ 21 로 인정). 재현 `…StraddlingTheConvergence…`(나머지 21 한 번) → X59 AF, 합 31 > 21. 주문이 끝까지 체결되면 누적 = 원주문 > 감소분이라 마지막 체결은 반드시 AF |
-| C-인과 | D2 를 통과한 체결은 그 조정의 감소를 일으킨 매도다 | **미확인 — Manager 결정 필요** | codex r1 P1-2 반례: 엔진 매도 대기 중 외부 처분으로 조정 31→0, 재매수 31 이 원장에 접히기 **전에** 옛 엔진 매도 31 체결 → D2 전부 통과하지만 그 매도는 재매수분의 처분. 원장에는 조정 스냅숏과 체결의 인과를 가를 열이 없음. 실현 가능성은 브로커가 미체결 매도에 묶인 수량의 외부 매도를 허용하는지에 달림(미측정) |
+| C-인과 | D2 를 통과한 체결은 그 조정의 감소를 일으킨 매도다 | **주장하지 않음 — Manager (A) 받아들이고 공시**(design §2 「인과는 …」, 뒷받침 M29 · M33, 앱 매도 · 잔량은 미측정 가정) | codex r1 P1-2 반례: 엔진 매도 대기 중 외부 처분으로 조정 31→0, 재매수 31 이 원장에 접히기 **전에** 옛 엔진 매도 31 체결 → D2 전부 통과하지만 그 매도는 재매수분의 처분. 원장에는 조정 스냅숏과 체결의 인과를 가를 열이 없음. 실현 가능성은 브로커가 미체결 매도에 묶인 수량의 외부 매도를 허용하는지에 달림(미측정) |
 | C-W6 예외 | 「어긋나면 AF 를 만든다」 | **참(r1 뒤 정정)** | 활성 행이 있으면 안 씀(F10, position_projection.go:401) — reconciliation delta 를 그 조건으로 좁힘(codex r1 P2-3) |
 | C-§2 정상 1~4 | 같은 초 · 조정 뒤 부분 여러 번 · `MissingOrders` 동반 · W6 | **참** | 같은 초(재현), 부분 여러 번은 원문 누적이 20 → 31 로 감소분 31 이하(재현), `MissingOrders` 는 체결 쪽 판정과 무관(재현 비교에 포함), W6 은 판정이 같고 차단은 원래 F10 으로 안 씀 |
 | C-§5 | 편집할 기존 함수 하나(`ProjectPosition`) | **참** | 판정 · 표지는 새 파일. 쓰는 기존 함수(`PendingState` · `appendExitEventFromHook` · `ApplyTx.Query`)는 호출만. pre-edit 번들 `function-logic/internal-journal--projectposition/` |
 | C-정본 | 정본과 모순 없음 | **참(delta 뒤)** | position-ledger 「포지션 상태기계」 의 「허용되지 않은 전이는 … RECONCILE」 이 유일한 모순 → MODIFIED(예외 한 문장, `modified-delta/build_delta.py` 역치환 단언). 성과 문장(「외부 매도로 수량 0 … trade_outcome 행은 생성되지 않는다」 · trade-analytics)은 인정된 청산도 성과 0 이라 모순 없음. reconciliation 「귀속 실패는 스스로 풀리지 않는다」 는 인정이 차단을 **안 만들 뿐** 풀지 않으므로 모순 없음. risk-management:654(투영 거절 종목 세기) · multi-horizon-risk-buckets:118(late sell owner)은 표현 대상이 다름 — 무변 |
 | C-비목표 | W2 · W3 재현됨, a137 측정 불가 그대로, 운영 로그 없음 | **참** | `out-of-scope.md` · dailyloss/measure.go:124-128 · a130 사유 집합 닫힘(`TestA130TheReasonSetIsClosedAndTokenShaped`) |
 
-**잔여 거짓: 0. 미확인 1(C-인과 — codex r1 P1-2, Manager 결정).**
+**잔여 거짓: 0. 미확인 0(C-인과는 Manager 결정으로 공시한 가정).**
 
 ## 이력 — 첫 판(개정 전) 대조에서 거짓이던 것과 처분
 
