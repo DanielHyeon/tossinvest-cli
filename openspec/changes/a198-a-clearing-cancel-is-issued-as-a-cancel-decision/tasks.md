@@ -54,6 +54,13 @@
 - [x] 4c.8 변이 원장(design §4 보강 2 변이 전부) · 선택 시험(design §4) · `make lint` · validate · check_analysis.
 - [x] 4c.9 구현 적대 리뷰(보강 2 분, 다른 컨텍스트) → gstack review 1회. (r3 통과 — P2 4건 처분, gstack review r2 보완 — B 6건 Manager 결정 대기, review.md)
 
+## 4d. gstack review r2 처분 — G1·G6 수리, G2~G5·gate 기록 (Manager 2026-11-24)
+
+- [x] 4d.1 G1(D4 재결정): 정본 exit-policy:689 범위 판단 · `endExitOrderCycle` pre-edit 번들 · RED(`analysis/tdd/red-4d.txt`) · GREEN(대기열 + 주기 끝 비우기, 기존 함수 한 줄) · exit-policy delta 문장 · design D4 행·a087 순서 절.
+- [x] 4d.2 G6: `CancelTargetClose.Symbol`, D10 닫음 줄에 종목.
+- [x] 4d.3 G2·G3·G4·G5·gate 처분 기록(design §6, review.md).
+- [ ] 4d.4 변이(G1 넷) · 선택 시험 · lint · validate · check_analysis.
+
 ## 5. 종결
 
 main 반영은 Manager 가 사용자 결정(design §6 의 「보강 2 뒤에도 남는 것」 1~6 과 flatten 잔여의 수용)을 받은 뒤다.

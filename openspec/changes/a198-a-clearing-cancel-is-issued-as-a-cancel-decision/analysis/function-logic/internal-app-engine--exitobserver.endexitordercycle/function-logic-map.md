@@ -1,7 +1,7 @@
 # Function Logic Map: `ExitObserver.endExitOrderCycle`
 
-- Source: `internal/app/engine/exit_order_log.go:235-254`
-- AST evidence: `ast.json` (**pre-edit**, HEAD `1ee5ab86a` — source_sha256 `419352e9…`, 분기 4). 편집 뒤 재생성.
+- Source: `internal/app/engine/exit_order_log.go:235-255`(post-edit)
+- AST evidence: `ast.json` (**post-edit** — source_sha256 `506a8124…`, 분기 4, 번호·종류 무변; B2 뒤 줄 L244 `o.flushClearCancelFailures()` 추가로 B3·B4 가 한 줄 밀림). Pre-edit 판은 HEAD `1ee5ab86a`(sha `419352e9…` — 아래 표의 줄).
 - Risk scan: `risk-pattern-report.md` (적중 0)
 - 편집 범위(design D4 재결정, Manager 2026-11-24 — gstack r2 G1): a129 대기열 쓰기(B2) 뒤에 한 줄 — `o.flushClearCancelFailures()`(새 파일 a198_clear_cancel_log.go 의 새 함수)로 길 치우기 취소 실패 줄 대기열을 비우며 씀. B1(로거 nil 이면 즉시 반환)·래치 정리(B3·B4)·체결 따라가기 무편집.
 
@@ -34,3 +34,8 @@
 
 - 대기열 비움, 래치 정리. 원장 쓰기·브로커 호출 0.
 - 호출 자리: `ObserveOnce` 의 첫 문장 `defer o.endExitOrderCycle(ctx)`(exitloop.go:481) — 모든 return 경로와 패닉 언와인딩에서 돎.
+
+## Safety conclusion
+
+- Edit boundary(실제): B2 루프 뒤 한 줄 `o.flushClearCancelFailures()`. B1(로거 nil 즉시 반환 — 그때 취소 실패 대기열은 note 쪽 nil 검사로 늘 비어 있음)·래치·체결 따라가기 무편집, 브로커 호출 0.
+- 효과: 길 치우기 취소 실패 줄이 판정 경로가 아니라 주기 끝에서 a129 줄 뒤에 쓰임 — 막힌 로그 싱크가 뒤 포지션의 손절 판정·제출을 늦추지 않음(시험 TestA198ABlockedLogWriterDoesNotHoldTheNextPositionsStop). 쓰기 패닉은 줄 하나 단위 recover, 표시는 쓰기 뒤(D4a).

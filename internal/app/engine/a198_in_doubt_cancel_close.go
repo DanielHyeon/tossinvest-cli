@@ -34,7 +34,7 @@ func (s *inDoubtSettle) closeCancel(ctx context.Context, rec journal.AttemptReco
 	delete(s.lastFailure, rec.ID)
 	if res.Closed {
 		s.deps.Log.Event(obs.EventOrderInDoubt,
-			obs.FieldAttemptID, rec.ID, "settled_state", string(res.State), obs.FieldReason, res.Reason,
+			obs.FieldAttemptID, rec.ID, obs.FieldSymbol, res.Symbol, "settled_state", string(res.State), obs.FieldReason, res.Reason,
 			obs.FieldDetail, "the in-doubt settler closed this engine cancel from its target's closing record")
 	}
 	return nil

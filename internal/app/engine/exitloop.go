@@ -288,7 +288,8 @@ type ExitObserver struct {
 	// episodeRecorded 는 a094 의 명명 critical 을 한 프로세스에서 다시 적재하지 않게 하는 래치임(적재 중복 최적화).
 	episodeRecorded map[string]bool
 	// clearCancelLogged 는 a198 의 길 치우기 취소 실패 줄 중복 억제 표시임(key 포지션|주문 → 상태|사유). 메모리 — 재시작하면 다시 씀.
-	clearCancelLogged map[string]string
+	clearCancelLogged  map[string]string
+	clearCancelPending []clearCancelLine // 이 주기의 취소 실패 줄 — 주기 끝(endExitOrderCycle)에 씀(a198 D4 재결정)
 	// observationSequence distinguishes fallback observations when the quote
 	// source supplies no FetchedAt and a test/frozen clock does not advance.
 	observationSequence atomic.Uint64

@@ -28,11 +28,13 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/brokerstate"
 )
 
-// CancelTargetClose 는 닫기 한 번의 결과임. Closed 가 거짓이면 attempt 는 바뀌지 않았음.
+// CancelTargetClose 는 닫기 한 번의 결과임. Closed 가 거짓이면 attempt 는 바뀌지 않았음(Symbol 도 빈 값).
+// Symbol 은 닫은 취소 intent 의 종목(같은 트랜잭션에서 읽은 값) — 운영 줄이 풀린 손절과 이어지게 함(gstack review r2 G6).
 type CancelTargetClose struct {
 	Closed bool
 	State  AttemptState
 	Reason string
+	Symbol string
 }
 
 // CancelVerdictForClosedTarget 은 대상 주문의 종결 state 로 취소 attempt 의 종결을 정함 — resolveCancel(amend_indoubt.go)의
@@ -120,7 +122,7 @@ func (j *Journal) CloseInDoubtCancelOnTargetClose(ctx context.Context, attemptID
 			rows.Close()
 			return CancelTargetClose{}, nil
 		}
-		verdict, closedAs, seen = CancelTargetClose{Closed: true, State: to, Reason: reason}, fillState, true
+		verdict, closedAs, seen = CancelTargetClose{Closed: true, State: to, Reason: reason, Symbol: symbol}, fillState, true
 	}
 	if err := rows.Err(); err != nil {
 		rows.Close()

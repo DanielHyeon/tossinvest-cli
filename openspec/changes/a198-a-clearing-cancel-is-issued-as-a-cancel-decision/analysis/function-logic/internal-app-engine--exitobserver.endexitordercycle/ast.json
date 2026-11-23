@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/exit_order_log.go",
-  "source_sha256": "419352e976848c9e210a08cf897d3495f84029e8ca54ed2bfcb79fbc2c2bd7b1",
+  "source_sha256": "506a812448bf931022a3be98b29f2b1cd9d987fc9c87166bfe8a9b5d95488840",
   "package": "engine",
   "function": "endExitOrderCycle",
   "receiver": "ExitObserver",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 254,
+    "line": 255,
     "column": 2
   },
   "branches": [
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "range",
       "at": {
-        "line": 245,
+        "line": 246,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 246,
+        "line": 247,
         "column": 3
       }
     }
@@ -68,7 +68,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 247,
+        "line": 244,
+        "column": 2
+      },
+      "text": "o.flushClearCancelFailures"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
         "column": 4
       },
       "text": "delete"
@@ -76,7 +84,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 251,
+        "line": 252,
         "column": 19
       },
       "text": "context.WithTimeout"
@@ -84,7 +92,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 252,
+        "line": 253,
         "column": 8
       },
       "text": "cancel"
@@ -92,7 +100,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 253,
+        "line": 254,
         "column": 2
       },
       "text": "o.followExitFills"
@@ -116,14 +124,14 @@
     {
       "kind": "=",
       "at": {
-        "line": 250,
+        "line": 251,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 251,
+        "line": 252,
         "column": 2
       }
     }
@@ -133,7 +141,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 252,
+        "line": 253,
         "column": 2
       },
       "text": "cancel"

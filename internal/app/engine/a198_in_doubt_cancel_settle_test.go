@@ -85,6 +85,43 @@ func (f *a193Fixture) engineCancel(orderID, source string, to journal.AttemptSta
 	return id
 }
 
+// gstack review r2 G6 — D10 의 「닫음」 줄은 종목을 실음(a193 해소 줄과 같은 필드), 대상 주문 번호는 싣지 않음.
+func TestA198TheCancelClosedLineNamesTheSymbol(t *testing.T) {
+	f := newA193Fixture(t)
+	id := f.engineCancel("O-a198-8", engineSource, journal.StateInDoubt, true)
+	var lines bytes.Buffer
+	s := f.settler(nil, nil)
+	s.deps.Log = obs.NewLogger(obs.LogOptions{Writer: &lines, JSON: true, Clock: f.clk})
+	if err := s.sweep(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	var closed string
+	for _, l := range strings.Split(lines.String(), "\n") {
+		if strings.Contains(l, id) && strings.Contains(l, "closed this engine cancel") {
+			closed = l
+		}
+	}
+	if closed == "" || !strings.Contains(closed, `"`+obs.FieldSymbol+`":"`+a193Symbol+`"`) {
+		t.Fatalf("closed line %q does not name symbol %s (log %s)", closed, a193Symbol, lines.String())
+	}
+	if strings.Contains(closed, "O-a198-8") {
+		t.Fatalf("closed line carries the target order number: %s", closed)
+	}
+}
+
+// D4 재결정(gstack review r2 G1) — 전용 로거가 없으면 취소 실패 줄 대기열은 늘 비어 있음.
+func TestA198WithoutTheDedicatedLoggerTheCancelQueueStaysEmpty(t *testing.T) {
+	o := &ExitObserver{}
+	o.noteClearCancelFailure(managed{}, journal.LiveOrder{OrderID: "O-x"}, journal.StateFailedConfirmed, "x", true)
+	if n := len(o.clearCancelPending); n != 0 {
+		t.Fatalf("%d queued line(s) without a dedicated logger", n)
+	}
+	o.flushClearCancelFailures()
+	if len(o.clearCancelLogged) != 0 {
+		t.Fatalf("marks set without a dedicated logger: %v", o.clearCancelLogged)
+	}
+}
+
 // §4-23 — 닫기는 브로커를 부르지 않고 실행자 알림도 내지 않음.
 func TestA198TheSettlerClosesAnEngineCancelWithoutBrokerOrAlert(t *testing.T) {
 	f := newA193Fixture(t)
