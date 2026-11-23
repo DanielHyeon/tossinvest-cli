@@ -1,0 +1,3 @@
+# fcd5fa77b+작업트리 · 2026-11-24T03:30:41+09:00 · cmd: go test ./internal/journal -run A198|Resolve|Pending|Terminal|Prepare|Decision -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	72.636s
+rc=0

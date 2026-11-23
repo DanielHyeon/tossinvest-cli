@@ -232,3 +232,17 @@ Pre-Edit Gate:
 - 설정·DB·journal 변경과 rollback: 스키마·설정·토글 0. 새로 쓰이는 행 = 기존 전이 형식(CANCEL attempt 의 IN_DOUBT→CONFIRMED/FAILED_CONFIRMED, ACKED→CONFIRMED). rollback = 이전 이미지(D9·D10 없음 — IN_DOUBT/ACKED 취소는 다시 재시작까지 남음).
 - 안전 불변식 검토: LIVE 주문 0(가짜 브로커), 손절 즉시성 — 미종결 가드를 원장 종결 증거로 푸는 쪽(약화 아님, Q6 논증), 손절·사이징 판정 무편집, 브로커 호출 증가 0.
 ```
+
+## 보강 2 RED → GREEN → 검증 (tasks 4c.6~4c.8, 2026-11-24, 팀메이트 Opus)
+
+- 커밋: 문서·freeze `eab3b095b` · RED `9c9b36937` · GREEN `e4f00a720` · W1 시험 보강·하네스 `fcd5fa77b`. push 없음.
+- 편집 기존 함수: `Recovery.confirmAcked`(D9 갈래) · `inDoubtSettle.sweep`(취소 고르기·발주 해소 앞 닫기) · 시험 `TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed`(뒤집힘 1 — 취소 행 CONFIRMED·알림 0, AMEND·번호 없는 PLACE 행 추가). 선언: `inDoubtLedger` 메서드 1 · `confirmedOrderTerminalMatch` 분리 · `ReasonBootAckedCancelCompleted`. 새 파일: `journal/a198_cancel_target_close.go`(`CancelVerdictForClosedTarget` · `CloseInDoubtCancelOnTargetClose`) · `engine/a198_in_doubt_cancel_close.go`(`closeCancel`). `resolveCancel`·`Resolver.Resolve`·flatten 패키지·`buildGateway` 무편집(`git diff e1eaf720c --stat -- internal` 로 확인).
+- Q7: 가르는 칸 있음 — `intents.source`(엔진 `engine`, flatten `flatten-all`), 실행자가 `engineSource` 를 넘김. 시험 32 = `TestA198TheSettlerLeavesFlattenAndAckedCancelsAlone` + 원장 `ACancelIsNotClosedOutsideItsTargetsOwnScope/a_cancel_from_another_producer`.
+- RED(`analysis/tdd/red-4c.txt`, production 무편집): engine 7 FAIL(닫힘·순서·전일·판정 표 — 예: 「cancel attempts after the sweep = [IN_DOUBT|dispatch_outcome_unknown] …, want CONFIRMED|in_doubt_resolved_found」), 무변 모양·Q6·flatten/ACKED 시험은 HEAD 에서도 PASS(기존 성질), journal·execgw·reconcile 은 새 API 미정의 컴파일 RED.
+- GREEN 탐침 모양(r2): 매수 — 취소 5xx IN_DOUBT → `CANCELLED` 종결 기록 → 스윕 1 회 → 취소 `CONFIRMED|in_doubt_resolved_found`, `broker_order_id` = 대상 `W-BUY-1` → 다음 관측 주기 손절 SELL 1. 매도(무장 익절 지정가) — 같은 모양, 스윕 뒤 다음 주기 손절 10.
+- 시험 조정 2(production 무관): 엔진 「다른 방향의 같은 번호 종결 기록」 하위 시험은 원장 신원 충돌 가드가 관측 주기 전체를 막아 원장 단위 시험으로 옮김 · 매도 시험의 손절 주기에 시계 진행(6s) 추가.
+- 동치 시험: 판정 표 — `TestA198TheSessionVerdictMatchesTheBootCancelResolution` 10 상태(파생 상태 단언 포함) PASS, REPLACED 는 표 밖(명시적 차이) · 쓰기 — `TestA198TheCloseWritesWhatTheResolveAPIWrites`(CONFIRMED·FAILED_CONFIRMED, 행·전이 행 동일) PASS · 상수 분리 바이트 동일 PASS · rollback(전이 행 거절 트리거) PASS.
+- 변이(`analysis/mutation/ledger.md` 「보강 2 변이」): 18 중 17 CAUGHT, W1(terminal 조건 삭제) 1판 생존 → terminal 0 인 종결 state 행 시험 추가 → 2판 CAUGHT. 대조군·끝 대조군 rc 0, 사본 제거.
+- 검증 원문(`analysis/verify/4c-*.txt`, `fcd5fa77b`+ledger.md, GOFLAGS 없음): engine `-run 'A198|A193|A094|ExitClear|ExitObserver|InDoubt|Recovery'` ok 69.8s · execgw `-run 'Cancel|Refusal|A165|A198|Resolve|Acked|Recovery'` ok 40.8s · journal `-run 'A198|Resolve|Pending|Terminal|Prepare|Decision'` ok 72.6s · reconcile `-run 'A094|A198|Recovery'` ok 11.7s · flatten ok 12.3s · `-race -run 'A198|A193'` ok 292.3s · `make lint` rc 0 · `openspec validate --strict` valid · check_analysis 「evidence complete」.
+- 기존 시험 무변: a193 전부(engine 선택 묶음 안 — `TestA193OnlyInDoubtPlaceAttemptsAreTouched` 포함) · a165(execgw 묶음) · flatten 전부 PASS. 뒤집힌 기존 시험은 계획한 1 개뿐.
+- 미실행: 전체 스위트 · `make gate` · `make sdd-sync` · cmd/tossctl 시험 · 선택 밖 패키지.

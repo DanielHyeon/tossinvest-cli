@@ -49,3 +49,30 @@
 |---|---|---|---|
 | R13 조회 오류여도 치움 유지 | exitloop.go:1676 · 0(그 갈래를 어느 시험도 실행하지 않음) | **생존** | 없음 — 조회 오류 주입 수단 없음(design §6 「시험 공백」) |
 | R3 해석 실패 사유 값 바꾸기 | :1693 · 1 | CAUGHT | TestA198AnUnreadableWorkingOrderIsLoggedOnce(사유 값 단언 추가 뒤) |
+
+## 보강 2 변이 (2026-11-24, tasks 4c.8 — D9·D10)
+
+- 하네스 `a198_mutate_4c.py`(같은 절차 — 사본 worktree · 시작 sha 단언 · 무변이 대조군 GREEN · 변이마다 닿음(coverprofile) · 원복 바이트 비교 + `git diff --quiet` · 끝 대조군 · 사본 제거, 한 변이가 여러 자리를 고칠 수 있음). 시험 = `go test ./internal/app/engine ./internal/journal ./internal/execgw ./internal/reconcile -run 'A198|A193|A094' -count=1`(GOFLAGS 없음).
+- 1판: 대상 sha `e4f00a720`(GREEN), 원장 `ledger-4c.jsonl` — 대조군 rc 0(engine 139.5s · journal 29.6s · execgw 28.5s · reconcile 12.8s) → 18 변이 → 끝 대조군 rc 0 → 사본 제거 확인. W1 생존 → 시험 추가(`TestA198ACancelIsNotClosedOutsideItsTargetsOwnScope/closing_state_without_the_terminal_flag`) 뒤 2판 W1 만 재측정(`ledger-4c-w1.jsonl`).
+- 닿음 0 인 줄(W3·W3b·W11·W17)은 SQL 원문 문자열·삭제된 줄·`case` 머리라 블록 계수 밖 — 지목한 시험이 죽였으므로 결과로 닿음 확인(4b 와 같은 한계).
+
+| 변이 | 자리 · 닿음 | 결과 | 죽인 시험 |
+|---|---|---|---|
+| W1 종결 아닌 대상에도 닫기(terminal 조건 삭제) | a198_cancel_target_close.go:104 · 1 | 1판 **생존** → 2판(sha `fcd5fa77b`, 대조군·끝 대조군 rc 0) **CAUGHT** | 1판 없음 — 판정 표가 state 로 다시 거르고, 운영 쓰기는 state 와 terminal 을 함께 씀(filldetect/ledger.go:60-61). terminal 0 인 종결 state 행(호출자가 넘긴 관측) 시험 추가 뒤 ACancelIsNotClosedOutsideItsTargetsOwnScope |
+| W2 범위 결속 삭제(거래일) | :104 · 1 | CAUGHT | AnInDoubtCancelStaysWhileItsTargetIsNotClosed · ACancelIsNotClosedOutsideItsTargetsOwnScope |
+| W3 소유 범위 삭제(계좌) | :59 · 0 | CAUGHT | ACancelIsNotClosedOutsideItsTargetsOwnScope |
+| W3b 소유 범위 삭제(방향) | :60 · 0 | CAUGHT | ACancelIsNotClosedOutsideItsTargetsOwnScope |
+| W4 소유 유일 조건 삭제 | :98 · 1 | CAUGHT | AnInDoubtCancelWithTwoOwnersIsNotClosed · ACancelIsNotClosedOutsideItsTargetsOwnScope |
+| W5 판정 표 뒤집기(취소로 끝남 → 확정 거절) | :43 · 1 | CAUGHT | TheSettlerClosesAnEngineCancelWithoutBrokerOrAlert · TheCancelIsClosedBeforeThePlaceResolution · AnInDoubtBuyCancelClosesOnItsClosingRecordAndTheStopFollows … |
+| W6 fail_closed 행도 닫기 | :119 · 1 | CAUGHT | AnInDoubtCancelStaysWhileItsTargetIsNotClosed · ACancelIsNotClosedOutsideItsTargetsOwnScope |
+| W7 REPLACED 를 닫기 | :42 · 1 | CAUGHT | AnInDoubtCancelStaysWhileItsTargetIsNotClosed · CancelVerdictCoversEveryBrokerState · ACancelIsNotClosedOutsideItsTargetsOwnScope |
+| W8 세션에서 ACKED 도 닫기 | in_doubt_settle.go:182 · 1 | CAUGHT | TheSettlerLeavesFlattenAndAckedCancelsAlone |
+| W9 D9 를 AMEND 에도 | acked_boot.go:56 · 1 | CAUGHT | TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed(amend 행) |
+| W10 D10 이 PLACE 를 건드리기 | in_doubt_settle.go:180 · 1 | CAUGHT | A193AnInDoubtPlaceFoundInTheListIsConfirmedWhileTheEngineRuns · A193AnInDoubtSellWithoutBaselineParks… · A193AnInDoubtBuyProvenAbsentIsFailedConfirmed … |
+| W11 닫기를 발주 해소 뒤로 | in_doubt_settle.go:193 · 0 | CAUGHT | TheCancelIsClosedBeforeThePlaceResolution |
+| W12 source 한정 삭제 | a198_cancel_target_close.go:87 · 1 | CAUGHT | TheSettlerLeavesFlattenAndAckedCancelsAlone · ACancelIsNotClosedOutsideItsTargetsOwnScope |
+| W13 D9 쓰기 실패를 true 로 | acked_boot.go:63 · 1 | CAUGHT | A198AFailedAckedCancelWriteLeavesTheAckAndNamesIt |
+| W14 D9 삭제 | acked_boot.go:56 · 1 | CAUGHT | A094AnAckedCancelOrNumberlessPlaceIsOnlyNamed · A198AnAckedCancelIsCompletedAtBoot · A198AFailedAckedCancelWriteLeavesTheAckAndNamesIt |
+| W15 스윕이 해소기(브로커 경로)를 부르기 | a198_in_doubt_cancel_close.go:19 · 1 | CAUGHT | A193OnlyInDoubtPlaceAttemptsAreTouched · TheSettlerClosesAnEngineCancelWithoutBrokerOrAlert · TheCancelIsClosedBeforeThePlaceResolution |
+| W16 CANCEL 에 처음 봄 알림 | in_doubt_settle.go:193 · 1 | CAUGHT | A193OnlyInDoubtPlaceAttemptsAreTouched · TheSettlerClosesAnEngineCancelWithoutBrokerOrAlert |
+| W17 D10 삭제(취소를 고르지 않음) | in_doubt_settle.go:182 · 0 | CAUGHT | TheSettlerClosesAnEngineCancelWithoutBrokerOrAlert · TheCancelIsClosedBeforeThePlaceResolution · AnInDoubtBuyCancelClosesOnItsClosingRecordAndTheStopFollows … |
