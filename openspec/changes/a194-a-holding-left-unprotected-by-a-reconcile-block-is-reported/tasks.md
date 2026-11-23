@@ -21,8 +21,8 @@
 ## 3. RED → GREEN
 
 - [x] 3.1 RED: `internal/app/engine/a194_reconcile_block_report_test.go` — design §4 의 1~13(「한 번」「창」은 `Notify` 호출 수·전달 시도 수로, 보유 보고의 중복 방지는 실 Notifier + 실 원장 outbox 하네스로).
-- [ ] 3.2 GREEN: 새 파일 `internal/app/engine/reconcile_block_report.go` + `judgeHoldings` 편집(차단 분기에서 보유를 모으고 순회 뒤 보고 호출) + 드라이버 구조체 새 필드(유예 시계·차단 보고 래치, 맵은 새 함수 안에서 생성). 편집하는 기존 함수 본문은 `judgeHoldings` 하나 — `NewReconcileDriver`·`Context.ReconcileDriver`·`RunOnce`·`alertUnmanaged` 무편집.
-- [ ] 3.3 design §4-14 의 기존 시험 무편집 통과 확인. 편집 뒤 번들 AST·FLM·BTM 재생성.
+- [x] 3.2 GREEN: 새 파일 `internal/app/engine/reconcile_block_report.go` + `judgeHoldings` 편집(차단 분기에서 보유를 모으고 순회 뒤 보고 호출) + 드라이버 구조체 새 필드(유예 시계·차단 보고 래치, 맵은 새 함수 안에서 생성). 편집하는 기존 함수 본문은 `judgeHoldings` 하나 — `NewReconcileDriver`·`Context.ReconcileDriver`·`RunOnce`·`alertUnmanaged` 무편집.
+- [x] 3.3 design §4-14 의 기존 시험 무편집 통과 확인. 편집 뒤 번들 AST·FLM·BTM 재생성.
 
 ## 4. 검증
 

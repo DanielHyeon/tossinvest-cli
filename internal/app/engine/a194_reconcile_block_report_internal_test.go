@@ -316,7 +316,7 @@ func TestA194NotificationsOffNeverRecordsACritical(t *testing.T) {
 				t.Errorf("critical-typed Notify calls = %d on a notifications-off engine, want 0", n)
 			}
 			f.assertNoCriticalConsequence(t)
-			if n := strings.Count(buf.String(), string(obs.EventReconcilePermanent)); n != 1 {
+			if n := strings.Count(buf.String(), `"event":"`+string(obs.EventReconcilePermanent)+`"`); n != 1 {
 				t.Errorf("block report log lines = %d over two cycles, want 1:\n%s", n, buf.String())
 			}
 		})
@@ -590,5 +590,36 @@ func TestA194TheReportComesAfterTheCyclesAdoptions(t *testing.T) {
 	}
 	if !sawReport || !adoptedAtReport {
 		t.Errorf("report seen %v, the other candidate adopted at that moment %v — the report must come after adopt", sawReport, adoptedAtReport)
+	}
+}
+
+// §4-13a — 순서는 처음 빠진 시각이 먼저, 같을 때만 포지션 id: 먼저 막힌 보유가 id 가 더 커도 앞에 섬.
+func TestA194EarlierExcludedHoldingsAreReportedFirst(t *testing.T) {
+	f := newA194(t)
+	f.holds("SYNE01", a194Qty, a194Price)
+	f.holds("SYNE02", a194Qty, a194Price)
+	f.prices.mu.Lock()
+	delete(f.prices.last, "SYNE01")
+	delete(f.prices.last, "SYNE02")
+	f.prices.mu.Unlock()
+	f.cycle() // 두 포지션 인스턴스만 만듦(편입 연기)
+	a, b := f.position("SYNE01"), f.position("SYNE02")
+	early, late := a, b // early 는 id 가 더 큰 쪽 — 시각 순서와 id 순서가 갈리게
+	if a.ID < b.ID {
+		early, late = b, a
+	}
+	f.block(early.Symbol, journal.ReconcileCauseAttributionFailed)
+	f.clk.Advance(time.Minute)
+	f.cycle()
+	f.block(late.Symbol, journal.ReconcileCauseAttributionFailed)
+	f.clk.Advance(time.Minute)
+	f.cycle()
+	var order []string
+	for _, e := range f.cap.blockedReports() {
+		order = append(order, fmt.Sprint(e.Fields["position_id"]))
+	}
+	want := []string{early.ID, early.ID, late.ID} // 둘째 주기 early, 셋째 주기 early → late
+	if strings.Join(order, ",") != strings.Join(want, ",") {
+		t.Errorf("report order = %v, want %v (earlier exclusion first)", order, want)
 	}
 }

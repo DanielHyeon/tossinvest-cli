@@ -1,0 +1,19 @@
+# judgeHoldings 재번호 — 편집 전(pre-edit-ast) ↔ 편집 후(ast.json), 분기 (종류) 열을 difflib 으로 정렬
+# old sha 3d66976f07a5 107-193 분기 16 / new sha 2a60c39990e2 107-198 분기 16
+# opcodes: [('equal', 0, 16, 0, 16)]
+B1 if@110 -> B1 if@110 (equal)
+B2 range@119 -> B2 range@120 (equal)
+B3 if@121 -> B3 if@122 (equal)
+B4 if@125 -> B4 if@126 (equal)
+B5 if@130 -> B5 if@131 (equal)
+B6 if@136 -> B6 if@137 (equal)
+B7 if@140 -> B7 if@141 (equal)
+B8 if@143 -> B8 if@144 (equal)
+B9 else@145 -> B9 else@146 (equal)
+B10 if@152 -> B10 if@154 (equal)
+B11 if@155 -> B11 if@158 (equal)
+B12 if@163 -> B12 if@166 (equal)
+B13 if@171 -> B13 if@174 (equal)
+B14 range@179 -> B14 range@182 (equal)
+B15 if@180 -> B15 if@183 (equal)
+B16 range@188 -> B16 range@191 (equal)

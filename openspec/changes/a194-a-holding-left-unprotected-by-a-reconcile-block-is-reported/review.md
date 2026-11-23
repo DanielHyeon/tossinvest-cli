@@ -108,3 +108,10 @@
 | 주기 상한의 구현 해석 | 「한 주기 보유 보고 `Notify` 최대 3, 넘는 보유는 다음 주기」를 **차례(round)** 로 구현: 이번 차례에 시도한 포지션은 차례가 끝날 때까지 다시 시도하지 않고, 차례의 모두를 한 번씩 시도하면 차례를 비운다. N≤3 이면 매 주기 전원 시도(D3 「매 관측」 그대로), 5 개면 3·2·3·2… — 어떤 보유도 ceil(N/3) 주기를 넘게 밀리지 않음. 기록 실패도 다음 차례에 다시 시도되므로 억제 래치가 아님 |
 | rollback | 새 파일 삭제 + `judgeHoldings` 2줄·구조체 필드 3개 되돌림. 원장 스키마·설정·토글 변경 없음 |
 | 설정 영향 | 없음(새 설정 0). 동작은 기존 `notifications.enabled`·`adoption.*` 를 읽기만 함 |
+
+### 3.2 GREEN · 3.3 (2026-11-23)
+- 새 파일 `internal/app/engine/reconcile_block_report.go`(새 함수 7: `reportBlocked` · `reportBlockedWith` · `reportBlockedHoldings` · `earliestCoveringBlock` · `alertBlockedHolding` · `reportOperatorOnlyBlocks` · `recordOperatorOnlyBlock` · `blockSinceText`), `ReconcileDriver` 구조체 새 필드 3, `judgeHoldings` 편집(지역 선언 1 · B10 안 append 1 · 끝 호출 1 + 주석). `kst` 는 기존 `attestation_watch.go:311` 의 것을 재사용(새로 선언했다가 중복으로 빌드 실패 → 제거).
+- RED 뒤 시험 수정 1건: `TestA194NotificationsOffNeverRecordsACritical` 의 로그 세기가 한 줄 안의 `msg`·`event` 두 칸을 둘로 셌음 → `"event":"reconcile.mismatch_permanent"` 로 셈(단언 완화 아님 — 기대값 1 그대로).
+- GREEN 뒤 시험 추가 1건: `TestA194EarlierExcludedHoldingsAreReportedFirst`(편집 후 커버에서 정렬의 시각 갈래가 미실행이라 더함).
+- 무편집 통과: `TestAdoptionIsSilentUnderReconcile` · `TestActiveForeignCauseIsCountedAndBlocksBeforePriceRead` · `TestUSIncludedSymbolWaitsUnderAccountWidePermanentReconcile` · `TestA095NotificationsOffNeverRecordsACritical` · `TestExitEligibilityHasOneSpelling` · `TestProtectionReadinessIsAbsentFromExitReconcileAndFillLoopSources` · TestA095*·TestA085*·TestA163*·`TestA092TheCriticalRecordersAreEnumerated` 전부 PASS.
+- 번들 재생성: `ast.json`(편집 후), `renumber.txt`(difflib equal 16/16 — 분기 추가 0), FLM·BTM 편집 후 판, 편집 후 커버 `analysis/implementation/after-cover.out`.
