@@ -72,3 +72,20 @@
 | 결정 발행 실패 | B9 참 → cleared=false, 기록 없음 | 다음 주기 재시도 |
 
 지금까지 이 판독들이 읽은 CANCEL 행은 시험이 원장에 직접 쓴 것뿐이다(a094_exit_clear_test.go:105 `a094RecordCancelOn`). 게이트웨이가 쓰는 행은 intent 를 새로 만들고(prepareRequest: side=주문 방향, quantity=주문 수량, trading_day=**취소 시점** 거래일) 그 intent 의 시장·거래일·종목으로 ConfirmedCancelOf 가 대조한다(:158 `i.trading_day = order.TradingDay`) — 주문 거래일과 취소 거래일이 다르면(전일 주문의 당일 취소) 대기가 성립하지 않는다. 시험이 쓴 행과 같은 결과인지는 3.1 결합 시험이 처음 잰다.
+
+## D2 선행 확인 (Manager 결정 2026-11-23 — (가-B))
+
+| 질문 | 답 | 근거 |
+|---|---|---|
+| 관측기 시계 = 게이트웨이가 결정 만료를 판정하는 시계(운영) | **같다** — 한 값 | cmd/tossctl/engine.go:217 `clk := clock.System()` → `engineAssemble(…, clk, …)`(:219) → cmd/tossctl/engine_assembly.go:33 `Clock: clk` → internal/app/engine/engine.go:463 `clk := opts.Clock` → :537 `clock: clk` → gateway.go:325 `execgw.New{Clock: in.clock}`. 같은 `clk` 를 `engineRuntimeFactory(ctx, ectx, clk, …)`(engine.go:277) → `ExitObserverOptions{Clock: clk}`(:672) → 관측기 `o.clk`(exitloop.go:366-375). 시험 하네스는 관측기·게이트웨이에 각자 시계를 넘기므로 같은 가짜 시계를 넘겨야 함 |
+| 결정 TTL 을 flatten 과 같은 출처로 | **값은 같고 출처는 다르다** | flatten 은 `flatten.DecisionTTL = 60s`(flatten.go:63)를 넘김. Issuer 에 TTL 을 비우면 `execgw.DefaultDecisionTTL = 60s`(issue.go:30, record :139-141). 둘 다 리터럴 `60 * time.Second` — 같은 상수가 아님. engine 이 flatten 패키지를 import 하지 않으려면 execgw 기본값이 자연스러움 |
+| ID 생성 | **다르다(접두만)** | flatten 은 `"flatten-" + flatten.randomID()`(flatten.go:665, 12바이트). Issuer 에 NewID 를 비우면 `execgw.randomID`(gateway.go:1117, 16바이트). 관측기 `opts.NewID`(운영 `randomExitID` 16바이트, 시험은 순차 문자열)를 넘길 수도 있으나 시험의 순차 ID 가 결정 ID·nonce 에 들어감 — 기본값(비움) 권고 |
+| 결정 행 모양 | flatten 과 같음 | 같은 함수 `Issuer.IssueReduction`(issue.go:86) → `record`(:137): SafetyClass 위험 감소, ReductionIntent(account·market·symbol·side·max_quantity·reason), Generation 0, nonce, TTL |
+
+## D4 경로 실현 가능성 (Manager 결정 2026-11-23)
+
+- 경로: `noteExitOrder`(exit_order_log.go:198, 분기 9: B1 `ExitOrderLog == nil` → 반환, B2 refusal 래치, B7 follow 아님 → 반환) → 주기 끝 `endExitOrderCycle`(:235, ObserveOnce defer) → `writeExitOrder`(:258, recover) → `opts.ExitOrderLog`(운영 cmd/tossctl/engine.go:680 `ExitOrderLog: logger`).
+- 줄 타입 `exitOrderLine` 은 종류 필드가 없고 `args()`(exit_order_log.go:138-168, 분기 1 B1 `l.fill`)가 `side "SELL"`(:143)·`order_type "LIMIT"`(:144)을 고정 출력 — 그대로는 매수 주문의 취소를 「매도 지정가」로 적는다. 취소를 표현하려면 `args` 본문 1 곳 편집(종류가 취소일 때만 종류·주문 방향을 내보내고 다른 줄은 바이트 동일)이 필요.
+- 고칠 기존 함수: `exitOrderLine.args` **1**(+ 호출 자리 `clearTheSymbol`, 이미 편집 대상). `noteExitOrder`·`endExitOrderCycle`·`writeExitOrder`·`exitOrderToken` 무편집. 구조체 필드 추가는 타입 편집(함수 아님). 기준 「2 개 초과면 멈춤」 이내 → 채택.
+- 필드 규율: 수량·가격 칸은 비움, 사유는 `exitOrderToken`(영문자·밑줄만) 통과 코드, 상태는 `journal.AttemptState`. a129 시험은 부분 키 대조(`a129Want`, a129_exit_order_log_test.go:204) — 새 키가 취소 줄에만 붙으면 기존 시험 무편집.
+- 사건 이름: 발행 실패·브로커 전 거절 → `obs.EventOrderNotDispatched`, `FAILED_CONFIRMED` → `obs.EventOrderRejected`, IN_DOUBT → `obs.EventOrderInDoubt`(submit 의 기존 매핑 exitloop.go:1599·1608-1610 과 같은 규칙). B10(수량·가격 해석 실패)은 Manager 결정 문장 밖 — 기록하지 않음(판정 무변화).

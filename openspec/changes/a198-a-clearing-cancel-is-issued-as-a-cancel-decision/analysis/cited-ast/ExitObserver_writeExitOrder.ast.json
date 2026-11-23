@@ -1,0 +1,125 @@
+{
+  "file": "internal/app/engine/exit_order_log.go",
+  "source_sha256": "419352e976848c9e210a08cf897d3495f84029e8ca54ed2bfcb79fbc2c2bd7b1",
+  "package": "engine",
+  "function": "writeExitOrder",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.writeExitOrder(params=3, results=0)",
+  "start": {
+    "line": 258,
+    "column": 1
+  },
+  "end": {
+    "line": 269,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 260,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 264,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 261,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 266,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 263,
+        "column": 8
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 263,
+        "column": 21
+      },
+      "text": "recover"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 3
+      },
+      "text": "logger.Warn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 18
+      },
+      "text": "line.args"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 2
+      },
+      "text": "logger.Event"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 18
+      },
+      "text": "line.args"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 259,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 263,
+        "column": 17
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 263,
+        "column": 2
+      }
+    }
+  ]
+}

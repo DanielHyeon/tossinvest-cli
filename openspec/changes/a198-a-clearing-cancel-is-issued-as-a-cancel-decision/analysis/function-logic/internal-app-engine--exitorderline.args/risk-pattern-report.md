@@ -1,4 +1,4 @@
-# Risk Pattern Report: `internal/app/engine/exitwiring.go`
+# Risk Pattern Report: `internal/app/engine/exit_order_log.go`
 
 | Rule | Location | Message |
 |---|---|---|

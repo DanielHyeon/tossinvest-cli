@@ -34,13 +34,15 @@
 | 결정 기록이 flatten 과 같은가 | 같은 열 구성을 **손으로** 다시 씀(RecordDecision 직접 — riskguardian.go:609 와 같은 방식). TTL = g.ttl, ID = g.newID | **같은 함수**(issue.go:86 → record :137) — ID 접두만 다름(flatten 은 `flatten-`), TTL 기본 60s | (가-A) 와 같음 |
 | 새 인터페이스를 채워야 하는 기존 시험 하네스 | 필드 필수 검증 시: §2 직접 10 중 9(:1229 는 Journal nil 이 먼저) + `stubIssuer` 류 1 = 대략 **9~10 함수**(각 FLM 번들). 선택 필드면 최소 `newExitHarness` 1 + 직접 리터럴 중 길 치우기에 닿는 것(미측정) | (나) 와 같음 | **0** |
 | D3(배선 누락이 기동 오류) | Context.ExitObserver 단언으로 성립 | 성립 | **대상 소멸** — 이미 필수인 Journal·AccountRef 에서 유도되므로 누락할 배선이 없다. spec Scenario 「취소 결정 발행기가 조립에 없다」가 공집합 — **Manager 결정 필요** |
-| 시계 | RiskGuardian 시계(게이트웨이와 같은 Context 에서) | Context 가 넣는 시계 | 관측기 시계 `o.clk`(운영 = engineRuntime 의 clk; 게이트웨이 시계와 같은지 미확인) — Issuer 주석 issue.go:36-37 「게이트웨이가 검증하는 시계와 같아야 한다」 |
+| 시계 | RiskGuardian 시계(게이트웨이와 같은 Context 에서) | Context 가 넣는 시계 | 관측기 시계 `o.clk`(운영 = engineRuntime 의 clk — 게이트웨이 시계와 같은 값, claim-check 「D2 선행 확인」에서 확인) — Issuer 주석 issue.go:36-37 「게이트웨이가 검증하는 시계와 같아야 한다」 |
 
-권고: **(가-B)** — 편집 함수 최소(1~2), 하네스 편집 0, 결정 기록이 flatten 과 같은 함수, K18 자동 포함. 단 D3 와 spec 의 조립 Scenario 를 바꾸는 결정이고 시계 동일성 확인이 선행이라 문서는 고치지 않았다(Manager 결정 대기). (나) 를 유지하면 a092 K18 시드 확장과 하네스 9~10 개 번들이 3.3 범위에 들어온다.
+**Manager 결정 2026-11-23: (가-B) 채택**(D3 삭제, 조립 Scenario 삭제). D4 경로 편집으로 `exitOrderLine.args` 1 이 추가돼 최종 편집 대상 기존 함수 = `clearTheSymbol` · `exitOrderLine.args` 2(claim-check 「D4 경로 실현 가능성」).
+
+당시 권고: **(가-B)** — 편집 함수 최소(1~2), 하네스 편집 0, 결정 기록이 flatten 과 같은 함수, K18 자동 포함. 단 D3 와 spec 의 조립 Scenario 를 바꾸는 결정이고 시계 동일성 확인이 선행이라 문서는 고치지 않았다(Manager 결정 대기). (나) 를 유지하면 a092 K18 시드 확장과 하네스 9~10 개 번들이 3.3 범위에 들어온다.
 
 ## 4. 진행 중 change 와의 겹침
 
 | change | 상태 | 겹침 |
 |---|---|---|
-| a087-a-protective-exit-is-a-market-order | 열림, `landed-commit.txt` **없음**, base `102d4e996`, 남은 task 9(4.4·5.4·5.5·6.1-6.6) | a087 의 **현재(revision current) 번들에 `Context.ExitObserver` 가 있다**(`analysis/function-logic/internal-app-engine--context.exitobserver/ast.json` source_sha256 `e8f131a3…` = HEAD 의 그 함수). a198 이 그 함수를 고치면 a087 의 그 번들이 낡아 a087 gate ⑤ 가 막히고, a087 창(base→워킹트리)에 a198 의 `clearTheSymbol` 편집도 새 필수 함수로 들어간다. → a087 이 착지를 먼저 기록하거나(`--record-landing`) a198 이 a087 종결 뒤 착지해야 함. (가-B) 는 Context.ExitObserver 를 건드리지 않아 앞의 충돌은 없앰(clearTheSymbol 은 남음) |
+| a087-a-protective-exit-is-a-market-order | 열림, `landed-commit.txt` **없음**, base `102d4e996`, 남은 task 9(4.4·5.4·5.5·6.1-6.6) | a087 의 **현재(revision current) 번들에 `Context.ExitObserver` 가 있다**(`analysis/function-logic/internal-app-engine--context.exitobserver/ast.json` source_sha256 `e8f131a3…` = HEAD 의 그 함수). a198 이 그 함수를 고치면 a087 의 그 번들이 낡아 a087 gate ⑤ 가 막히고, a087 창(base→워킹트리)에 a198 의 `clearTheSymbol` 편집도 새 필수 함수로 들어간다. → (당시 분석) a087 이 착지를 먼저 기록하거나 a198 이 a087 종결 뒤 착지. **Manager 결정 2026-11-23: a198 은 기다리지 않는다**(design §6 — a087 종결 쪽의 기존 비용). (가-B) 는 Context.ExitObserver 를 건드리지 않아 앞의 충돌은 없앰(clearTheSymbol 은 남음) |
 | a167-a-protective-remainder-is-re-priced | 등록 단계(0.x 전부 미착수, 코드 0) | 같은 파일 exitloop.go 의 `record`·`submit` 예정. a198 은 `record` 무편집 계획 — 함수 단위 겹침 0. 단 a163 렌더 해시가 `record` 를 고정하므로 a167 이 그것을 건드림(a198 과 무관) |

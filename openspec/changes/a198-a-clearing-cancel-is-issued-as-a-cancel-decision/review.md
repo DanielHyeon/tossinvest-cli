@@ -27,3 +27,21 @@
 
 - 사실 오류 정정 반영: 없음(모든 발견이 결정·범위·시험 전략 사안). 리뷰가 제안한 시험 표(원문 하단)는 미반영 — 새 가드·범위 확장 금지 규칙.
 - r2: 미실시 — r1 발견이 전부 Manager 결정 대기라 반영한 수정이 없음(재리뷰할 변경 없음).
+
+## Manager 결정 반영 (2026-11-23)
+- r1 처분 갱신(위 표의 「Manager 결정 대기」를 대체): P1-1 → D4 를 a129 운영 로그 경로(`noteExitOrder`→`ExitOrderLog`)로 변경 · P1-2 → 범위 밖·이름 붙인 잔여(proposal·design §6·Story limits 공시, 시험 6 ACKED 변형) · P1-3 → 범위 밖 잔여(design §6) · P1-4 → 정본 범위 안으로 해석, 비용 공시(design §2-4) · P2-5 → D2 (가-B)·D3 삭제·조립 Scenario 삭제 · P2-6 → §4 단언·변이 수정. 매수 재취소 → §2-5·§6 공시, a087 → 기다리지 않음(§6).
+- 문서: proposal(What Changes 1·2·3, 하지 않는 것, Impact) · design(D2·D3·D4, §2-4·§2-5, §3, §4-2·4-4~4-7·4-9·변이, §6) · spec delta(첫 Requirement 끝 문장·조립 Scenario 삭제, 셋째 Requirement 「운영 로그에 계좌 정보 없이」) · tasks 3.2·3.3 · Story acceptance 2문장·limits 1문장. tracker 재생성 `--check` rc 0.
+- 편집 대상 기존 함수: `ExitObserver.clearTheSymbol` · `exitOrderLine.args`(새 pre-edit 번들). `Context.ExitObserver` 번들 삭제(무편집). `check_analysis.py` 「evidence complete or diff-proven exempt」.
+- 선행 확인(claim-check 「D2 선행 확인」·「D4 경로 실현 가능성」): 운영 시계 동일 · TTL 값 60s 동일(상수는 별개) · ID 접두만 다름 · D4 경로 기존 함수 편집 1(`args`).
+- `openspec validate a198-a-clearing-cancel-is-issued-as-a-cancel-decision --strict`: valid (rc 0, 2026-11-23, 반영 뒤). ADDED 본문 길이 206·239·259자.
+
+## proposal-freeze 리뷰 r2 (2026-11-23, 마지막 회차)
+- 보이스: codex-cli 0.165.0 read-only `</dev/null`. 원문 `analysis/review/proposal-freeze-r2-codex.md`. 판정 「freeze 불가 — P1 2, P2 3, P0 없음」. 반박 없음으로 확인된 처분: (가-B) 시계 동일, TTL 60s, D3 삭제, D4 계좌 비노출 방향, P2-6 단언.
+
+| # | 발견 | 대조 | 처분 |
+|---|---|---|---|
+| r2-1 P1 | `noteExitOrder` 래치 서명(exit_order_log.go:203 `event·action·level·reason·state`, 키 positionID)에 대상 주문이 없어, 같은 포지션의 두 취소가 같은 사유로 실패하면 같은 주기 안에서 둘째가 버려지고, 사유가 다르면 서로 덮어 주기마다 반복 → 「무기록 금지」와 「연속 한 번」을 동시에 못 지킴. 「args 1개면 충분」 불성립 | 코드 재확인 — 사실 | **Manager 결정 대기**(D4 채택 조건 재판단 — `noteExitOrder` 편집 또는 래치 미사용·주기마다 줄, 어느 쪽이든 결정 변경). design D4 의 「같은 결과가 연속 주기에 이어지면 한 번」 문장은 고치지 않음. 수량·가격 **키 부재**는 args 안의 취소 분기로 가능 — D4 문장에 명시(사실 보강) |
+| r2-2 P1 | 사전 조회 2s 는 반환 상한이 아님(client.go:336 → token.go:63 끊기지 않는 `mu.Lock()`), 401 재전송(client.go:359) — `N×17s` 는 최악 지연이 아님 | 코드 재확인 — 사실 | **사실 정정 반영**: design §2-4·proposal Impact 를 「HTTP 시간 예산, 전체 최악 지연 미확정」으로, rate-limit.md 를 논리/물리 호출 구분으로. 토큰 경로 수리는 범위 밖 |
+| r2-3 P2 | ACKED 계수 제외는 조건부(onlyEngineCancelsInFlight), 지연 경보는 다음 관측 주기에서만 | 코드 재확인 — 사실 | **사실 정정 반영**: design §6·proposal·Story 에 조건 괄호, §4-6 에 「전체 관측 주기 반복으로 단언」 |
+| r2-4 P2 | 전일 결속은 「알려진 정본 미충족 잔여」로 · 문서 간 불일치(rate-limit·edit-surface·review·tasks 5.3 대 Story limits 「운영 반영 제외」) | 사실 | design §6 문구·rate-limit·edit-surface·review(이 절) 반영. **tasks 5.3(사람 승인 운영 반영) 대 Story limits(운영 반영 포함 안 함)는 Manager 작성 문장 간 충돌 — 미편집, Manager 결정 대기** |
+| r2-5 P2 | r1 파일의 프롬프트 블록이 a196 리뷰 문안 | 사실 — 공유 스크래치 경로를 병행 작업이 덮어씀 | r1 파일에 「정정」 절로 실제 프롬프트 덧붙임(원본 보존) |

@@ -22,8 +22,8 @@
 ## 3. RED → GREEN
 
 - [ ] 3.1 RED: `internal/app/engine/a198_clearing_cancel_test.go` — design §4-1(현재 HEAD 에서 결함 재현, 원문 `analysis/tdd/red.txt`)과 2~8.
-- [ ] 3.2 GREEN: 취소 결정 발행 새 함수 + `clearTheSymbol` 편집(발행 호출·실패 기록) + `Context.ExitObserver` 공급.
-- [ ] 3.3 기존 a094 시험 하네스의 새 인터페이스 대응(design §4-9, 번들과 함께). 편집 뒤 번들 AST·FLM·BTM 재생성.
+- [ ] 3.2 GREEN(design D2 (가-B)·D4, Manager 결정 2026-11-23): `clearTheSymbol` 편집(관측기 안에서 `execgw.Issuer` 로 취소 결정 발행 · B9·B11 에 운영 로그 줄) + `exitOrderLine.args` 편집(취소 줄의 종류·방향) + 새 파일(취소 줄 helper·사유 코드). `Context.ExitObserver` 무편집.
+- [ ] 3.3 기존 a094·a129 시험 무편집 통과 확인(design §4-9 — (가-B)는 하네스 변경 0). 편집 뒤 번들(`clearTheSymbol`·`exitOrderLine.args`) AST·FLM·BTM 재생성.
 
 ## 4. 검증
 

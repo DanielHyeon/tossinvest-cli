@@ -3,7 +3,7 @@
 - Source: `internal/app/engine/exitloop.go:1649-1743`
 - AST evidence: `ast.json` (Pre-Edit HEAD `e1eaf720c`, source_sha256 `bc81b5fd…`, 분기 17 · return 8 · 호출 25)
 - Risk scan: `risk-pattern-report.md` (적중 1: exitloop.go:2046 panic — 이 함수 밖)
-- 판: **pre-edit**. 편집 범위(design D1·D4, D2 안 미정): B9 앞의 결정 발행 호출(L1684-1695)을 취소 결정으로, B9·B10·B11 의 실패 갈래에 기록 추가. 판정(`res.cleared=false; continue`)과 다른 분기는 무편집.
+- 판: **pre-edit**. 편집 범위(design D1·D2 (가-B)·D4, Manager 결정 2026-11-23): B9 앞의 결정 발행 호출(L1684-1695)을 관측기 안에서 만든 `execgw.Issuer{Journal: o.opts.Journal, Clock: o.clk, AccountRef: o.opts.AccountRef}` 의 `IssueReduction`(종류 CANCEL, 방향·수량 = 주문)으로, B9·B11 의 실패 갈래에 `noteExitOrder` 줄 추가(B10 은 기록 없음). 판정(`res.cleared=false; continue`)과 다른 분기는 무편집.
 
 ## Inputs and invariants
 
@@ -13,7 +13,8 @@
 | `withPending` | `snapshot.CancelPendingFirst` | record L1395 | 거짓이면 매도는 대상 아님(B8) |
 | `live` | 엔진 귀속 CONFIRMED PLACE/AMEND 중 종결 증거 없는 주문(`LiveOrdersForSymbol`, fills.go:1854). `Quantity` = intent 수량(원/정정 후, 잔량 아님) | 원장 | 읽기 실패 → 오류 반환(B1) |
 | `unsettled` | 같은 시장·종목의 RECORDED·DISPATCH_STARTED·ACKED·IN_DOUBT attempt(`Submit.UnsettledOnSymbol` = 게이트웨이 `unsettledFor`) | 원장 | 읽기 실패 → 오류 반환(B2) |
-| `o.opts.Issuer` | 운영 = `RiskGuardian`(exitwiring.go:339) | 조립 | 발행 실패 → 그 주문 미치움(B9) |
+| `o.opts.Issuer` | 운영 = `RiskGuardian`(exitwiring.go:339) — 편집 뒤 이 함수에서는 안 씀(submit 만) | 조립 | 발행 실패 → 그 주문 미치움(B9) |
+| `o.opts.Journal`·`o.clk`·`o.opts.AccountRef` | 편집 뒤 취소 결정 발행기의 재료. 운영에서 `o.clk` = 게이트웨이 시계(claim-check 「D2 선행 확인」) | NewExitObserver | — |
 | `o.opts.Submit` | 운영 = `*execgw.Gateway` | 조립 | 오류·비확정 → 미치움(B11) |
 | 불변식 | 하나라도 확정 취소에 실패하면 cleared=false(정본). 매도 취소 접수는 치움이 아님. 매수 취소 접수는 치움. 같은 종목 미종결 attempt 가 있으면 미완료 | exit-policy 정본 | — |
 
@@ -61,5 +62,5 @@
 
 ## Safety conclusion
 
-- Safe edit boundary: L1684-1695(발행 호출 인자·발행기) 와 B9·B11(·B10 여부 미정) 본문에 기록 한 줄씩. `res.cleared=false; continue` 와 B1-B8·B12-B17 은 무편집.
+- Safe edit boundary: L1684-1695(발행 호출 인자·발행기) 와 B9·B11 본문에 `noteExitOrder` 한 줄씩. `res.cleared=false; continue` 와 B1-B8·B12-B17 은 무편집.
 - High-risk impact: **yes** — 손절 제출을 막는 판정 함수이고, 이 편집으로 브로커 취소가 처음 나간다(claim-check §2-1 재취소 위험 포함).

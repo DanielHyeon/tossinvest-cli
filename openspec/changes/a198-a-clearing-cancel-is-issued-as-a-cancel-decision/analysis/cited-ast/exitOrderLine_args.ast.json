@@ -1,0 +1,87 @@
+{
+  "file": "internal/app/engine/exit_order_log.go",
+  "source_sha256": "419352e976848c9e210a08cf897d3495f84029e8ca54ed2bfcb79fbc2c2bd7b1",
+  "package": "engine",
+  "function": "args",
+  "receiver": "exitOrderLine",
+  "signature": "exitOrderLine.args(params=0, results=1)",
+  "start": {
+    "line": 138,
+    "column": 1
+  },
+  "end": {
+    "line": 168,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 19
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 21
+      },
+      "text": "exitOrderToken"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 20
+      },
+      "text": "exitOrderToken"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 10
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 139,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 161,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

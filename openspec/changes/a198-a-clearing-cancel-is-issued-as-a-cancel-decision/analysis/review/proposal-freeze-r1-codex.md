@@ -117,3 +117,25 @@ Git 명령 없이 HEAD 참조 파일에서 `e1eaf720c5fa1622321b98e73a792d2e5762
 
 파일 수정·Git 명령·빌드·시험·캐시 생성은 하지 않았습니다. ai-memory CLI 조회는 네트워크 권한 오류로 실패했습니다. CodeGraph/AST 재생성도 실행하지 않았으며, 기존 AST 해시 대조와 직접 소스 추적으로 검토했습니다. `impeccable: N/A — backend/documentation-only`, UI 변경 없음. 위 판정은 정적 설계 리뷰이며 운영 재현·전체 감사·배포 승인을 뜻하지 않습니다.
 
+
+## 정정 (2026-11-23, r2 P2-5 지적)
+
+위 「프롬프트」 블록은 **a198 이 아니다** — 같은 세션 스크래치 경로(`codex-prompt.txt`)를 병행 작업(a196 구현 리뷰)이 실행 뒤 덮어쓴 것을 이 파일로 옮겼다. r1 실행에 실제로 넘긴 프롬프트(이 세션의 기록에서 옮김)는 아래이며, 「원문(마지막 메시지)」은 a198 설계 리뷰 결과 그대로다(본문 내용이 a198 문서·소스를 가리키는 것으로 확인).
+
+```text
+TossOS change a198 의 proposal·design·spec delta·tasks 를 적대적 Eng 관점으로 리뷰하라.
+대상 문서: openspec/changes/a198-a-clearing-cancel-is-issued-as-a-cancel-decision/{proposal.md,design.md,tasks.md,specs/exit-policy/spec.md}
+정본: openspec/specs/exit-policy/spec.md 의 「보호 청산의 길 치우기는 엔진 귀속 주문만 다룬다」, openspec/specs/order-execution/spec.md.
+관련 소스(현재 HEAD 로 직접 확인할 것): internal/app/engine/exitloop.go(ExitObserver.clearTheSymbol·record·noteDelay·NewExitObserver), internal/app/engine/exit_held_proposal.go, internal/app/engine/exitwiring.go(Context.ExitObserver), internal/execgw/{riskguardian.go,issue.go,gateway.go,guardian.go,cancel_refusal.go,a094_shared_judgements.go}, internal/journal/{durability.go,decision.go,fills.go,exit_proposal_release.go}, internal/flatten/flatten.go, internal/trading/service.go, internal/app/engine/{broker.go,precheck.go}, cmd/tossctl/engine.go(engineRuntime).
+실측: analysis/probe/probe-output.txt, probe-ext-output.txt.
+
+맥락: 실제 돈을 다루는 손절 경로에서, 지금까지 원장이 거절해 한 번도 나가지 않던 **엔진 주문 취소**가 처음으로 실제로 나가게 하는 수리다.
+현재 소스로 직접 확인하고 다음을 찾아라:
+1. 취소가 처음 나가면서 새로 열리는 위험 — 잘못된 주문 취소, 살아 있는 매도 위에 두 번째 매도, 부분 체결 수량 불일치, 모호한 취소가 손절을 막는 경로, rate limit.
+2. 결정 종류·방향을 바꾸는 것이 다른 검사(preimage·멱등 키·replay·복구)와 어긋나는 곳.
+3. 조립 실패가 기동을 막아 손절 전체를 멈추는 부작용.
+4. 정본 spec 과의 모순.
+5. 시험 전략(design §4)이 놓치는 변이.
+각 발견을 P0/P1/P2 로 매기고, 파일:줄 근거와 함께 적어라. 사실과 추측을 구분하라.
+파일을 수정하지 말 것. 명령은 읽기 전용만 실행할 것(git·go 빌드 캐시 쓰기·시험 실행 금지).
+```
