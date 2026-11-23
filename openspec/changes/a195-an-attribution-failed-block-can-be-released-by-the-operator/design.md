@@ -10,7 +10,7 @@
 | D4 | 해제 기록 형식 무변경 — `Tracker.Resolve` 를 고치지 않는다 | `ExpectCause: firstNonEmpty(block.Cause, QUANTITY_MISMATCH)` 가 이미 원인별로 맞춘다(proposal 표 4행; AST: analysis/cited-ast/Tracker.Resolve.ast.json B4·B5) |
 | D5 | 계좌 전체(symbol 빈) `ATTRIBUTION_FAILED` 는 거절 | 저장소에 그 모양을 쓰는 자리가 없고(HEAD grep: 빈 symbol 로 쓰는 6자리 전부 `IDENTIFIER_CONFLICT` — `analysis/code-context/evidence-reconciliation.md`), 없는 모양에 해제 규칙을 만들지 않는다. 거절 문구는 종전 문구 |
 | D6 | a166 census 갱신 — `internal/accountbudgetruntime/testdata/a166-wiring/shapes.json` 의 키 `cmd/tossctl/engine_reconcile.go||buildReconcileResolveRuntime` **하나만**, 그 함수 편집과 같은 커밋에서 갱신(Manager 결정 2026-11-23) | 판정이 그 클로저 안에 있어 본문 편집이 불가피하다. 저장소에 corpus 생성 도구·`-update` 플래그는 없다(`shapes.json` 을 읽는 곳은 a166_wiring_census_test.go:35-36 뿐). 절차는 선례 a189 `3af104af9`(design D10)·a192 `analysis/census-repair/`(`shape.go.txt`·`enc.go.txt`·`shapes-key-diff.txt`)를 따른다: census 와 같은 추출(parser mode 0 · Doc 제거 · `format.Node`)과 Go `encoding/json` 문자열 인코딩으로 값을 만들고, base 에서 같은 추출이 기존 값을 바이트 그대로 재현함을 먼저 단언한 뒤 바꾼다. 키별 비교로 그 키 하나만 바뀌고 `sites.json` 무변경임을 기록한다. 손으로 값을 고치지 않는다 |
-| D7 | 도움말(`newEngineReconcileResolveCmdWithDeps` 의 `Long`, :81-89)과 성공 출력(`runEngineReconcileResolve` :212)을 원인 중립 문장으로(예: 「활성 RECONCILE 차단」) 고친다(Manager 결정 2026-11-23). 「해제한 차단의 원인 목록」을 출력하려면 runtime 에 원인 목록을 넘길 데이터 경로가 필요하다(validate·resolve 는 `error` 만 반환, tracker 는 builder 지역 변수, 해제 뒤 블록이 비워짐 — engine_reconcile.go:43·277, mismatch.go:1391) — 그 선택은 Manager 결정 대기(r2 N2) | 「quantity-mismatch」만 말하는 문장은 이 change 뒤 거짓이 된다. 두 함수 모두 a166 census 키가 아니다(shapes.json 의 engine_reconcile.go 키는 `buildReconcileResolveRuntime` 하나). 파일 텍스트 시험(`TestEngineReconcileResolveProductionWiringHasNoBrokerMutationOrHTTPDoor`)의 금지 토큰(`PlaceOrder`·`CancelOrder`·`AmendPendingOrder`·`ModifyOrder` 등, 대소문자 구분)을 쓰지 않고, 성공 문장에 「released」를 남긴다(engine_reconcile_test.go:291·:394 포함 단언, :316 실패 시 부재 단언) |
+| D7 | 도움말(`newEngineReconcileResolveCmdWithDeps` 의 `Long`, :81-89)과 성공 출력(`runEngineReconcileResolve` :212)을 원인 중립 문장으로(예: 「활성 RECONCILE 차단」) 고친다(Manager 결정 2026-11-23). 성공 출력은 **원인 중립 문장만** 쓰고 해제한 원인 목록은 출력하지 않는다 — 목록을 넘기는 데이터 경로(runtime 구조체·클로저·census 확장)를 만들지 않는다(Manager 결정 2026-11-23, r2 N2) | 「quantity-mismatch」만 말하는 문장은 이 change 뒤 거짓이 된다. 두 함수 모두 a166 census 키가 아니다(shapes.json 의 engine_reconcile.go 키는 `buildReconcileResolveRuntime` 하나). 파일 텍스트 시험(`TestEngineReconcileResolveProductionWiringHasNoBrokerMutationOrHTTPDoor`)의 금지 토큰(`PlaceOrder`·`CancelOrder`·`AmendPendingOrder`·`ModifyOrder` 등, 대소문자 구분)을 쓰지 않고, 성공 문장에 「released」를 남긴다(engine_reconcile_test.go:291·:394 포함 단언, :316 실패 시 부재 단언) |
 
 ## 2. 거절하는 정상 입력 (fail-closed 가 무엇을 거부하는지)
 
@@ -32,7 +32,7 @@
 3. **외부 보유 입력(D2 고정)** — 실제 `reconcile.Comparer` 와 `reconcile.LocalStateFromJournal` 로 만든 diff: AF 종목의 인스턴스가 CLOSED 이고 계좌에 그 종목 양수 보유(→ `ExternalPos`, `BlocksEntry()` 거짓) → 해제가 진행됨.
 4. **활성 블록 0** → 종전 문구 거절(회귀).
 5. **자동 해제 금지 회귀** — AF 행 + 차이 없는 비교를 `Tracker.Observe` 에 여러 번 → 미해제(기존 동작 고정, spec 「귀속 실패는 스스로 풀리지 않는다」).
-6. **문구(D7)** — 성공 출력이 원인 중립이고 「released」를 포함(원인 목록 출력은 D7 의 Manager 결정 대기 — 택하면 QM만·AF만·혼합 출력을 각각 시험).
+6. **문구(D7)** — 성공 출력이 원인 중립이고 「released」를 포함.
 
 변이(전부 CAUGHT 여야 함, 변이마다 닿음 확인, 사본 하네스는 무변이 대조군 GREEN·시작 sha 단언 후): 원인 판정 삭제 · 허용 목록에 `IDENTIFIER_CONFLICT` 추가 · 종목 범위 조건 삭제(= 계좌 전체 AF 허용) · `ATTRIBUTION_FAILED` 를 목록에서 빼기(1·2a·2c 가 죽어야 함) · 순회 중 첫 허용 원인에서 즉시 통과 반환 · **클로저가 헬퍼 결과를 무시** — 이것은 census 가 그 함수 본문을 고정하므로 `TestA166WiringCensusBaseline` 이 죽이는 것으로 보고, 변이 원장에서 census 시험으로 실제로 죽음을 확인한다(구조 검출임을 원장에 적는다).
 

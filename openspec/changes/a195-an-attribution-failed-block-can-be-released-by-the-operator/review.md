@@ -42,3 +42,29 @@
 | N2 | P2 | 「해제한 원인을 출력」은 현재 runtime 인터페이스로 불가(validate·resolve 가 `error` 만, tracker 는 builder 지역, 해제 뒤 블록 비움) — 편집 범위 「문장만」과 모순 | **Manager 결정 대기** — 원인 중립 문장만 / 원인 목록 데이터 경로(범위 확장). 문서는 모순만 지움(D7·§3.6 에 결정 대기 표시) |
 
 - 리뷰 회차 상한 도달 — r3 없음.
+
+## Manager 1단계 검증·freeze 2026-11-23
+- proposal-freeze(커밋 `a2e469411`, Manager 가 spec delta·design 직접 확인, strict validate 재실행). N2: 원인 중립 문장만(D7 갱신). N1: 승인.
+
+## Pre-Edit 선언 (tasks 2.1, 2026-11-23)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a195-an-attribution-failed-block-can-be-released-by-the-operator / 3.1·3.2·3.2b
+- 대상 심볼(패키지.함수):
+  편집 — main.buildReconcileResolveRuntime(validate 클로저 원인 순회 B13~B14 → 새 함수 호출),
+         main.runEngineReconcileResolve(:212 성공 문장만), main.newEngineReconcileResolveCmdWithDeps(Long 문장만)
+  신규 — main.reconcileResolveRefusedCause(새 파일 cmd/tossctl/reconcile_resolve_causes.go)
+  데이터 — internal/accountbudgetruntime/testdata/a166-wiring/shapes.json 키 cmd/tossctl/engine_reconcile.go||buildReconcileResolveRuntime 하나
+- CodeGraph definition/callers/callees/impact: analysis/code-context/codegraph-baseline.md (1.6.0, production 호출 자리:
+  build 1 · run 1 · Tracker.Resolve 1 · runtime.validate() 1). impact 가 못 보는 결속 3(census·파일 텍스트 시험·OptionsGuard AST).
+- CodeGraphContext 후보와 evidence reconciliation: not-applicable(analysis/code-context/codegraphcontext-context.md), 조정 evidence-reconciliation.md.
+- 기존 동작 파악 근거: HEAD 064f59fd9 의 cited-ast 8개, engine_reconcile_test.go 13 시험·a166_reconcile_safety_test.go 2 시험·
+  a166_wiring_census_test.go, 선택 시험 커버리지(analysis/coverage/). validate 클로저를 실행하는 기존 시험 0.
+- Function Logic Map / Branch Test Map: analysis/function-logic/cmd-tossctl--{buildreconcileresolveruntime,runenginereconcileresolve,newenginereconcileresolvecmdwithdeps}/
+- upstream 상속 테스트 영향: no — reconcile-resolve 는 TossOS 전용 명령. 뒤집힐 기존 단언 0, census 키 하나는 D6 절차로 갱신.
+- 실패 테스트 선행 작성: yes — 3.1 RED(analysis/tdd/red.txt) 후 GREEN.
+- 설정·DB·journal 변경과 rollback: 없음 — 원장 스키마·release cause·설정·토글 무변경. 해제 행은 종전 OPERATOR 형식이라 롤백 = 이전 이미지.
+- 안전 불변식 §0 위반 여부 검토: 통과 — 주문 side effect 0(브로커 쓰기 핸들 없음 유지), 토글 무관, 손절·청산 즉시성 무변경,
+  영구 차단은 여전히 운영자 명령만 풂, IDENTIFIER_CONFLICT·계좌 전체 AF 는 거절 유지(design D1·D5).
+```
