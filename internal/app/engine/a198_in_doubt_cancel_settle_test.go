@@ -4,12 +4,16 @@ package engine
 // 브로커 요청 0 · 실행자 알림 0 · 발주 해소보다 먼저 · 엔진이 낸 취소만(flatten 의 것은 무변) · ACKED 무변.
 
 import (
+	"bytes"
 	"context"
+	"database/sql"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 )
 
 // engineCancel 은 엔진 귀속 발주(소유 PLACE, 접수 확정 번호 orderID)와 그 주문을 겨눈 취소 attempt(state 까지)를 남기고,
@@ -51,10 +55,13 @@ func (f *a193Fixture) engineCancel(orderID, source string, to journal.AttemptSta
 	if err != nil {
 		f.t.Fatalf("Prepare(cancel): %v", err)
 	}
-	if err := c.MarkDispatchStarted(ctx); err != nil {
-		f.t.Fatal(err)
+	if to != journal.StateRecorded {
+		if err := c.MarkDispatchStarted(ctx); err != nil {
+			f.t.Fatal(err)
+		}
 	}
 	switch to {
+	case journal.StateRecorded, journal.StateDispatchStarted:
 	case journal.StateInDoubt:
 		if err := c.MarkInDoubt(ctx, journal.ReasonDispatchAmbiguous, "5xx"); err != nil {
 			f.t.Fatal(err)
@@ -126,6 +133,9 @@ func TestA198TheSettlerLeavesFlattenAndAckedCancelsAlone(t *testing.T) {
 	f := newA193Fixture(t)
 	flat := f.engineCancel("O-a198-3", "flatten-all", journal.StateInDoubt, true)
 	acked := f.engineCancel("O-a198-4", engineSource, journal.StateAcked, true)
+	// gstack review r2 state-machines: 진행 중 전송(RECORDED·DISPATCH_STARTED)인 엔진 취소도 대상이 종결이어도 무변.
+	recorded := f.engineCancel("O-a198-5", engineSource, journal.StateRecorded, true)
+	started := f.engineCancel("O-a198-6", engineSource, journal.StateDispatchStarted, true)
 	s := f.settler(nil, nil)
 	if err := s.sweep(context.Background()); err != nil {
 		t.Fatal(err)
@@ -135,5 +145,55 @@ func TestA198TheSettlerLeavesFlattenAndAckedCancelsAlone(t *testing.T) {
 	}
 	if got := f.state(acked).State; got != journal.StateAcked {
 		t.Fatalf("ACKED cancel %s moved to %s — the session never finishes an ACKED write", acked, got)
+	}
+	for id, want := range map[string]journal.AttemptState{recorded: journal.StateRecorded, started: journal.StateDispatchStarted} {
+		if got := f.state(id).State; got != want {
+			t.Fatalf("in-flight cancel %s moved %s → %s — the session never ends a transmission in progress", id, want, got)
+		}
+	}
+}
+
+// gstack review r2 testing — 원장 닫기가 실패해도 스윕은 발주 해소로 계속 가고(오류 반환 없음), 같은 실패는 한 번만 경고하며,
+// 원장이 회복되면 다음 스윕에서 닫힘.
+func TestA198AFailedCancelCloseDoesNotStopThePlaceResolution(t *testing.T) {
+	f := newA193Fixture(t)
+	place := f.attempt("SELL", journal.KindPlace, journal.StateInDoubt, false)
+	id := f.engineCancel("O-a198-7", engineSource, journal.StateInDoubt, true)
+	db, err := sql.Open("sqlite", "file:"+f.journal.Path())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	if _, err := db.Exec(`CREATE TRIGGER a198_refuse_cancel_close BEFORE UPDATE OF state ON mutation_attempts
+		WHEN NEW.kind = 'CANCEL' BEGIN SELECT RAISE(ABORT, 'a198 fixture: the ledger refuses the cancel close'); END`); err != nil {
+		t.Fatal(err)
+	}
+	var lines bytes.Buffer
+	res := newA193BlockingResolver()
+	close(res.release)
+	s := f.settler(nil, res)
+	s.deps.Log = obs.NewLogger(obs.LogOptions{Writer: &lines, JSON: true, Clock: f.clk})
+	for i := 0; i < 2; i++ {
+		if err := s.sweep(context.Background()); err != nil {
+			t.Fatalf("sweep %d returned %v — a failed cancel close must not stop the sweep", i, err)
+		}
+	}
+	if got := f.state(id).State; got != journal.StateInDoubt {
+		t.Fatalf("cancel %s is %s while the ledger refuses the close", id, got)
+	}
+	if res.calls[place] == 0 {
+		t.Fatalf("the IN_DOUBT place was never resolved behind the failed cancel close (calls %v)", res.calls)
+	}
+	if n := strings.Count(lines.String(), id); n != 1 {
+		t.Fatalf("%d warning line(s) name cancel %s over two sweeps, want exactly one:\n%s", n, id, lines.String())
+	}
+	if _, err := db.Exec(`DROP TRIGGER a198_refuse_cancel_close`); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.sweep(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if got := f.state(id).State; got != journal.StateConfirmed {
+		t.Fatalf("cancel %s is %s after the ledger recovered, want CONFIRMED", id, got)
 	}
 }

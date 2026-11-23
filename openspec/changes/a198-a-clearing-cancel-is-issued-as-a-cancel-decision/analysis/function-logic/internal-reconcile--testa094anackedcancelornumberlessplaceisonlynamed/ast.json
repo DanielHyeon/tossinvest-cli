@@ -1,6 +1,6 @@
 {
   "file": "internal/reconcile/a094_acked_boot_test.go",
-  "source_sha256": "26cff7743b5ff24fc310eb1048281cabc69165516b44c9f70051b4647a1ff7e0",
+  "source_sha256": "4b4849661e18bb0bce3dee85f54feaeeb5f45225be58fdd326d9d3d44d3a482a",
   "package": "reconcile_test",
   "function": "TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed",
   "signature": "TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed(params=1, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 215,
+    "line": 216,
     "column": 2
   },
   "branches": [
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 200,
+        "line": 201,
         "column": 4
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 203,
+        "line": 204,
         "column": 4
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 204,
+        "line": 205,
         "column": 5
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 210,
+        "line": 211,
         "column": 4
       }
     }
@@ -58,7 +58,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 207,
+        "line": 208,
         "column": 5
       }
     }
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 193,
+        "line": 194,
         "column": 3
       },
       "text": "t.Run"
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 194,
+        "line": 195,
         "column": 12
       },
       "text": "filepath.Join"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 194,
+        "line": 195,
         "column": 26
       },
       "text": "t.TempDir"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 195,
+        "line": 196,
         "column": 4
       },
       "text": "a094CrashAfterAck"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 198,
+        "line": 199,
         "column": 12
       },
       "text": "a094Recover"
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 199,
+        "line": 200,
         "column": 17
       },
       "text": "j.LookupAttempt"
@@ -115,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 199,
+        "line": 200,
         "column": 33
       },
       "text": "context.Background"
@@ -123,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 201,
+        "line": 202,
         "column": 5
       },
       "text": "t.Fatalf"
@@ -131,7 +131,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 205,
         "column": 8
       },
       "text": "len"
@@ -139,7 +139,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 205,
+        "line": 206,
         "column": 6
       },
       "text": "t.Fatalf"
@@ -147,7 +147,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 209,
+        "line": 210,
         "column": 4
       },
       "text": "a094AssertNamed"
@@ -155,7 +155,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 211,
+        "line": 212,
         "column": 5
       },
       "text": "t.Errorf"
@@ -165,14 +165,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 194,
-        "column": 4
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 196,
+        "line": 195,
         "column": 4
       }
     },
@@ -194,6 +187,13 @@
       "kind": ":=",
       "at": {
         "line": 199,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 200,
         "column": 4
       }
     }

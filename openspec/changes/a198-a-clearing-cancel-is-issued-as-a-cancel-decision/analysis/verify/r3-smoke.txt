@@ -1,0 +1,10 @@
+# fa8771ed3+작업트리 · 2026-11-24T04:09:56+09:00 · cmd: go test ./internal/app/engine -run A198AnInDoubtBuyCancelCloses|A198AFailedCancelClose|A198TheSettlerLeaves -count=1 -v
+=== RUN   TestA198TheSettlerLeavesFlattenAndAckedCancelsAlone
+--- PASS: TestA198TheSettlerLeavesFlattenAndAckedCancelsAlone (0.33s)
+=== RUN   TestA198AFailedCancelCloseDoesNotStopThePlaceResolution
+--- PASS: TestA198AFailedCancelCloseDoesNotStopThePlaceResolution (0.36s)
+=== RUN   TestA198AnInDoubtBuyCancelClosesOnItsClosingRecordAndTheStopFollows
+--- PASS: TestA198AnInDoubtBuyCancelClosesOnItsClosingRecordAndTheStopFollows (0.46s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	1.164s
+rc=0

@@ -127,7 +127,7 @@ type PriceReader interface {
 // It is the Guardian path and not the plain issuer on purpose: exit-policy
 // requires a proposal to travel "Guardian 위험 감소 경로 경유", which is what
 // checks the one thing an exit can get wrong — selling more than the account
-// holds.
+// holds. Working-order cancels are minted by the plain execgw.Issuer instead, like manual flatten (a198 D2).
 type ReductionIssuer interface {
 	IssueReduction(ctx context.Context, req execgw.ReductionIssuance) (execgw.Issued, error)
 }
@@ -176,7 +176,7 @@ type ExitObserverOptions struct {
 	// Retrier runs that read under the matrix and stamps its freshness.
 	// Required — see the file header on QUERY_STALE.
 	Retrier *execgw.Retrier
-	// Issuer mints the reduction decisions. Required.
+	// Issuer mints the sell-submission reduction decisions (clearing cancels use execgw.Issuer — a198 D2). Required.
 	Issuer ReductionIssuer
 	// Submit is the order surface. Required.
 	Submit ExitSubmitter
@@ -1645,7 +1645,7 @@ func (o *ExitObserver) release(ctx context.Context, m managed, intentID string, 
 //
 //   - 같은 종목에 미종결 attempt 가 있으면 치움 미완료(D−4.7). 판정은 주문 경로와 같은 함수(Submit.UnsettledOnSymbol).
 //   - 매도의 취소 접수는 치움이 아님(D−4.3). 그 매도가 종결 체결 기록으로 미체결 목록에서 빠질 때까지 미완료이고, 엔진
-//     취소가 이미 접수 확정된 매도는 다시 취소하지 않음. 매수 취소는 종전대로 접수로 치움.
+//     취소가 이미 접수 확정된 주문은 매도·매수 모두 다시 취소하지 않음(매수는 a198 D8). 매수 취소는 종전대로 접수로 치움.
 //   - 발의 해제는 원장 판정(ReleaseClearedExitProposal)이 함(D−3.2) — 그 intent 의 attempt 가 살아 있을 수 있거나 park
 //     이거나 종결 증거를 기다리면 해제하지 않고 치움 미완료임.
 func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPending bool) (clearResult, error) {

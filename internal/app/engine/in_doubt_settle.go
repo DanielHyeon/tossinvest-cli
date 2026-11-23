@@ -11,7 +11,8 @@ package engine
 // # 지키는 것
 //
 //   - 보조 실행자임 — 손절 판정 goroutine 밖에서 돌고, 정지·패닉이 다른 루프를 내리지 않음(auxiliary.go). 기동 복구 뒤에 시작됨.
-//   - 대상은 IN_DOUBT 이면서 발주(PLACE)인 attempt 뿐임. RECORDED · DISPATCH_STARTED 는 진행 중인 전송이라 손대지 않음(재시작 규칙 금지).
+//   - 조회 대조 해소의 대상은 IN_DOUBT 이면서 발주(PLACE)인 attempt 뿐임. 엔진이 낸 IN_DOUBT 취소는 대상 주문의 원장 종결 기록으로만
+//     닫음(a198 D10 — 브로커 호출 없음, 발주 해소보다 먼저). RECORDED · DISPATCH_STARTED 는 진행 중인 전송이라 손대지 않음(재시작 규칙 금지).
 //   - 재생(같은 본문 재전송)은 부르지 않음 — 조회만 함. 주문을 내는 경로가 이 파일에 없음.
 //   - 엔진 정지로 해소가 취소되면 결과를 버림 — 원장 쓰기도 같은 취소된 ctx 를 받아 실패하므로 attempt 는 IN_DOUBT 로 남음(design D3).
 //   - 알림은 전부 알림기의 critical 기록 단일 입구로 창 0 한 번(에피소드 = attempt 또는 연속 id). 취소된 ctx 로는 기록하지 않음
@@ -156,7 +157,8 @@ func (s *inDoubtSettle) Run(ctx context.Context) error {
 	}
 }
 
-// sweep 은 한 번의 순회임: 원장 읽기 → (1단) 미결 전부의 처음 봄 · 10분 알림 → (2단) 직렬 해소.
+// sweep 은 한 번의 순회임: 원장 읽기 → (1단) 미결 발주 전부의 처음 봄 · 10분 알림 → 엔진 IN_DOUBT 취소 닫기(a198 D10, 원장만) →
+// (2단) 직렬 해소.
 // 오류는 ctx 취소일 때만 돌려줌 — 나머지 실패는 다음 스윕이 다시 함.
 func (s *inDoubtSettle) sweep(ctx context.Context) error {
 	// 먼저 못 보낸 알림 — 원장 읽기 실패와 무관하게, 대상이 종결돼 사라졌어도.

@@ -1,7 +1,7 @@
 # Function Logic Map: `TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed`
 
-- Source: `internal/reconcile/a094_acked_boot_test.go:182-215`(post-edit)
-- AST evidence: `ast.json` (**post-edit** — source_sha256 `26cff774…`, 분기 5). Pre-edit 판은 HEAD `a7639378e`(sha `3b783a36…`, 분기 3 — 아래 표의 번호).
+- Source: `internal/reconcile/a094_acked_boot_test.go:182-216`(post-edit)
+- AST evidence: `ast.json` (**post-edit** — source_sha256 `4b484966…`, 분기 5; gstack review r2 state-machines 로 표 행 `numberless cancel`(ACKED·알림 1) 추가 — 분기 무변, 그 전 `26cff774…`). Pre-edit 판은 HEAD `a7639378e`(sha `3b783a36…`, 분기 3 — 아래 표의 번호).
 - **재번호(pre → post)**: B1·B2 동일 · **새 B3 `tc.want == CONFIRMED` · 새 B4 알림·번호 단언** · 옛 B3 → B5.
 - Risk scan: `risk-pattern-report.md` (적중 0)
 - 편집 범위(design §4-29, D9 로 뒤집힘): 표 행마다 기대(상태·읽기·알림)를 싣는다 — 취소 행은 CONFIRMED·읽기 0·알림 0, 정정(AMEND) 행과 번호 없는 PLACE 행은 ACKED·읽기 0·명명 알림 1(종전 단언 유지).

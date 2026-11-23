@@ -260,3 +260,13 @@ Pre-Edit Gate:
 | P2-2 | D9 는 source 를 보지 않아 flatten 의 ACKED 취소도 확정 | **의도된 비대칭으로 확정, 코드·delta 무변** — 이유는 design D9 행, 남는 창(flatten `MarkAcked`→`Settle` 사이 + 엔진 기동, 추론·미재현)은 §6 |
 | P2-3 | 쓰기 동치 시험이 CANCELLED·REJECTED 둘뿐 | **시험 보강**: FILLED 사례 추가 + 두 attempt 에 예약을 하나씩 심어 해제 행(state·release_reason·released_at 유무)까지 두 경로 동일 비교 — FAILED 는 `RELEASED|BROKER_TERMINAL`, CONFIRMED 는 `HELD` |
 | P2-4 | closeCancel 의 ctx 취소 갈래(sweep B9) 시험 없음 | **기록만** — BTM 그 행에 `not-covered` 사유(BeginTx(ctx) 롤백으로 원자적, ctx 오류는 스윕 종료뿐) |
+
+- 검증(P2-3 뒤): `go test ./internal/journal -run 'A198'` ok 5.3s(`analysis/verify/r3-journal-a198.txt`) — 쓰기 동치 3 사례 PASS.
+
+## gstack review r2 (2026-11-24, 보완 1회 — change 전체 `e1eaf720c..fa8771ed3`)
+
+- 원문·패스별 실행·발견 표: `analysis/review/gstack-review-r2.md`, codex 원문 `analysis/review/gstack-r2-codex.md`(프롬프트 `gstack-r2-codex-prompt.txt`). 지난번 빠진 **state-machines(`STATE_MATRIX_CHECK: ok machines=3` — D7·D9·D10 전이가 `ValidateTransition` 표와 일치)·red-team·codex 바깥 목소리·smoke(3 PASS)** 를 이번에 전부 돌렸다. data-migration·api-contract·design 은 not-applicable(변경 없음).
+- 4분류 결과: A(런타임 오류) 0 · **B(코드 편집 필요 — Manager 결정 대기) 6**: G1 취소 실패 줄의 루프 안 동기 쓰기(codex P1 — D4 재검토) · G2 쓰기 오류를 성공으로 기억(codex P2) · G3 `settledCancelRefusal` 의 409 미요구(r1 A4/S1 과 같음) · G4 `ConfirmedCancelOf` 의 거래일 결속이 미국 ET 자정 횡단에도 걸림(red-team — 전일 결속 잔여 확대) · G5 D10 이 읽기 전에 `BEGIN IMMEDIATE` 로 잠금(red-team) · G6 D10 닫음 로그에 종목·대상 없음 · C(시험 보강) 3 반영(G7 원장 오류 갈래, G8 RECORDED·DISPATCH_STARTED 취소 무변, G9 번호 없는 ACKED CANCEL) · D(문서·기록) 반영 2(G10·G11 주석 — 본문 무변, 번들 해시·줄 갱신) · 기록만 5(G12~G16, 전부 기존 잔여).
+- 정정 한 줄(red-team G16): 보강 2 가 닫은 회귀는 「대상의 종결 기록이 들어온 **뒤**에도 재시작까지 보류」이다. 대상이 살아 있는 동안의 보류(5xx 가 브로커에 안 닿은 IN_DOUBT 포함)는 이 change 이전과 같고 D10 은 손대지 않는다(design §6 「이전과 같은 경우」).
+- Gate edits: 2 listed-eligible, 2 read, 1 finding(a094 시험의 D9 뒤집기 두 hunk) — 추천 B(유지, 근거 design §4-29·D9·FLM 번들), 사람 답 없어 **open**.
+- 검증 원문(`analysis/verify/r3-*.txt`, `fa8771ed3`+작업트리, GOFLAGS 없음): smoke 3 PASS · journal `-run A198` ok 5.3s · journal 묶음 ok 40.1s · engine 묶음 ok 47.8s · reconcile 묶음 ok 7.4s · `-race -run 'A198|A193'` ok 311.8s · `make lint` rc 0 · `validate --strict` valid · check_analysis 「evidence complete」. execgw·flatten 은 Go 무변이라 재실행하지 않음.

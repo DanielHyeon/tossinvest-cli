@@ -189,6 +189,7 @@ func TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed(t *testing.T) {
 		{"cancel", journal.KindCancel, "C-O-target", journal.StateConfirmed},
 		{"amend", journal.KindAmend, "O-successor", journal.StateAcked},
 		{"numberless place", journal.KindPlace, "", journal.StateAcked},
+		{"numberless cancel", journal.KindCancel, "", journal.StateAcked},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "journal.db")

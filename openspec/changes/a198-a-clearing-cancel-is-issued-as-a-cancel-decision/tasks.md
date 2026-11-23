@@ -52,7 +52,7 @@
 - [x] 4c.6 RED — design §4-18~32(18 은 r2 탐침 모양), 원문 `analysis/tdd/red-4c.txt`.
 - [x] 4c.7 GREEN — 원장 새 함수·판정 표 순수 함수(새 파일) · 상수 분리 · `confirmAcked` · `sweep` · 인터페이스. 편집 뒤 번들 재생성.
 - [x] 4c.8 변이 원장(design §4 보강 2 변이 전부) · 선택 시험(design §4) · `make lint` · validate · check_analysis.
-- [ ] 4c.9 구현 적대 리뷰(보강 2 분, 다른 컨텍스트) → gstack review 1회.
+- [x] 4c.9 구현 적대 리뷰(보강 2 분, 다른 컨텍스트) → gstack review 1회. (r3 통과 — P2 4건 처분, gstack review r2 보완 — B 6건 Manager 결정 대기, review.md)
 
 ## 5. 종결
 
