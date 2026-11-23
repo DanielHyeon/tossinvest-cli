@@ -51,6 +51,9 @@ func TestA195RefusedCauseTable(t *testing.T) {
 		{"attribution then identifier conflict", []reconcile.Block{af, ic}, journal.ReconcileCauseIdentifierConflict},
 		{"identifier conflict then attribution", []reconcile.Block{ic, af}, journal.ReconcileCauseIdentifierConflict},
 		{"account-wide attribution failure", []reconcile.Block{accountAF}, journal.ReconcileCauseAttributionFailed},
+		// 허용 목록 밖은 기본 거절 — 종목 범위여도 원인을 봐야 하고, 빈 원인을 수량 불일치로 치지 않음.
+		{"symbol-scoped identifier conflict", []reconcile.Block{a195Block(journal.ReconcileCauseIdentifierConflict, "SYMD")}, journal.ReconcileCauseIdentifierConflict},
+		{"symbol-scoped empty cause", []reconcile.Block{a195Block("", "SYME")}, "SYME"},
 		{"empty list is left to the caller", nil, ""},
 	}
 	for _, tc := range cases {
@@ -284,7 +287,9 @@ func TestA195NoActiveBlockIsRefused(t *testing.T) {
 	_ = rt.close()
 }
 
-// 귀속 실패는 대사의 차이 없는 비교로 스스로 풀리지 않음 — 기존 동작을 고정함.
+// 귀속 실패는 대사의 자동 해제로 풀리지 않음 — 기존 동작을 고정함.
+// 조정 크레딧을 넣어 자동 해제가 실제로 일어나는 조건을 만들고, 같은 조건의 수량 불일치 블록이
+// 풀리는 것을 양성 대조군으로 둠(대조군이 안 풀리면 이 시험은 아무것도 재지 못한 것임).
 func TestA195ObserveNeverReleasesAnAttributionFailure(t *testing.T) {
 	ctx := context.Background()
 	path := filepath.Join(t.TempDir(), journal.DBFileName)
@@ -293,10 +298,15 @@ func TestA195ObserveNeverReleasesAnAttributionFailure(t *testing.T) {
 		t.Fatalf("open journal: %v", err)
 	}
 	defer j.Close()
-	if _, _, err := j.EnterReconcile(ctx, journal.EnterReconcileRequest{
-		AccountRef: "acct-a195", Symbol: "SYMB", Cause: journal.ReconcileCauseAttributionFailed, Evidence: "synthetic a195 evidence",
-	}); err != nil {
-		t.Fatalf("seed: %v", err)
+	for _, seed := range []a195Seed{
+		{"SYMA", journal.ReconcileCauseQuantityMismatch},
+		{"SYMB", journal.ReconcileCauseAttributionFailed},
+	} {
+		if _, _, err := j.EnterReconcile(ctx, journal.EnterReconcileRequest{
+			AccountRef: "acct-a195", Symbol: seed.symbol, Cause: seed.cause, Evidence: "synthetic a195 evidence",
+		}); err != nil {
+			t.Fatalf("seed %s: %v", seed.symbol, err)
+		}
 	}
 	tracker := &reconcile.Tracker{Journal: j, AccountRef: "acct-a195"}
 	if err := tracker.Restore(ctx); err != nil {
@@ -304,18 +314,30 @@ func TestA195ObserveNeverReleasesAnAttributionFailure(t *testing.T) {
 	}
 	at := time.Date(2026, 8, 3, 4, 0, 0, 0, time.UTC)
 	for i := 0; i < 5; i++ {
-		clean := reconcile.Diff{AccountRef: "acct-a195", AsOf: at.Add(time.Duration(i) * time.Minute).Format(time.RFC3339)}
+		// 직전 비교 시각의 조정 크레딧 — 다음 비교(엄격히 뒤)가 쓸 수 있는 크레딧임.
+		tracker.AdjustmentApplied(at.Add(time.Duration(i)*time.Minute).Format(time.RFC3339), "SYMA", "SYMB")
+		clean := reconcile.Diff{AccountRef: "acct-a195", AsOf: at.Add(time.Duration(i+1) * time.Minute).Format(time.RFC3339)}
 		if _, err := tracker.Observe(ctx, clean); err != nil {
 			t.Fatalf("observe %d: %v", i, err)
 		}
 	}
 	blocks := tracker.Blocks()
-	if len(blocks) != 1 || blocks[0].Cause != journal.ReconcileCauseAttributionFailed {
-		t.Fatalf("blocks after clean observations = %+v, want the attribution failure", blocks)
+	if len(blocks) != 1 || blocks[0].Cause != journal.ReconcileCauseAttributionFailed || blocks[0].Symbol != "SYMB" {
+		t.Fatalf("blocks after credited clean observations = %+v, want only the attribution failure", blocks)
 	}
-	active, err := j.ActiveReconcileStates(ctx)
-	if err != nil || len(active) != 1 {
-		t.Fatalf("active rows = %+v err=%v, want the attribution failure row", active, err)
+	history, err := j.ReconcileStateHistory(ctx, "acct-a195")
+	if err != nil {
+		t.Fatalf("history: %v", err)
+	}
+	for _, state := range history {
+		switch state.Symbol {
+		case "SYMA": // 양성 대조군 — 같은 조건에서 수량 불일치는 자동 해제됨
+			if state.Active() || state.ReleaseCause != journal.ReconcileReleaseAdjustmentApplied {
+				t.Fatalf("positive control: quantity mismatch = %+v, want ADJUSTMENT_APPLIED release", state)
+			}
+		case "SYMB":
+			a195AssertActive(t, state)
+		}
 	}
 }
 

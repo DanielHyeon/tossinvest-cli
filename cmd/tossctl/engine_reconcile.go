@@ -80,8 +80,11 @@ func newEngineReconcileResolveCmdWithDeps(root *rootOptions, deps reconcileResol
 		Short: "Release reconcile blocks after a fresh official comparison",
 		Long: strings.TrimSpace(`
 Release active RECONCILE blocks only after three identical official account
-snapshots, each taken at least two seconds apart, agree with the corrected local
-journal projection. Only causes with a defined operator release are accepted
+snapshots, each taken at least two seconds apart, show no entry-blocking
+difference from the corrected local journal projection (no quantity mismatch and
+no order the journal holds that the account does not show). External holdings,
+external orders and average-price deviations do not refuse the release.
+Only causes with a defined operator release are accepted
 (quantity mismatch, and a symbol-scoped attribution failure); any other active
 cause refuses the whole release.
 
