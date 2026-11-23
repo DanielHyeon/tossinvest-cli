@@ -114,3 +114,14 @@ Pre-Edit Gate:
 | P2-4 | D8 체결 경합 설명 오류 — 손절 접수 뒤(CLOSING) 매수 체결은 E31~E33 `ENTRY_WHILE_CLOSING` 거절로 RECONCILE, 「다음 주기 프로젝션이 보호」는 틀림 | table.go:78-80 직접 확인 | **사실 정정 반영**: design §2-5, 증거 §6. 경합 시험은 결정 뒤 |
 | P2-5 | §4-10~16·변이의 공백(네 code 각각, AMEND·nil 정책·읽을 수 없는 code, D8 범위 결속·조회 오류, 가격 해석 실패, 쓰기 패닉 뒤 재기록, 마지막 Scenario 의 전제) | 사실 | **반영**(결정에 묶이지 않는 것만): design §4-17, exit-policy Scenario 에 「다른 미치움 주문·미종결 attempt 없음」 전제. already-modified·재전송 묶음·늦은 체결 시험은 결정 뒤 |
 | P2-6 | 증거가 인용한 `cited-ast/ExitObserver_clearTheSymbol.ast.json` 은 편집 전 판 — 현재 소스와 sha 불일치 | 사실(의도된 pre-edit 판이었으나 증거 머리말이 「같은 작업 트리」로 적음) | **사실 정정 반영**: 증거 머리말에 판 구분과 post-edit 번들 경로 |
+
+## 보강분 Manager 결정 반영과 조건부 freeze (2026-11-24)
+- 결정: D7 = 엔진 취소 정책에만 · 세 code(`already-filled`·`already-canceled`·`already-rejected`) · `already-modified`·flatten·정책 없음·PLACE·AMEND 무변 · 사유 코드 기존 `dispatch_rejected_by_broker` · 재시도 뒤 결과에도 같은 분류 · 정본 Scenario 「다른 사유의 409」 MODIFIED · D8 그대로 · P2-4 정정·P2-5 시험 전부.
+- **사실 정정(결정 불변)**: 엔진 정책은 같은 attempt 안에서 재전송하지 않는다(정본 order-execution:531, `withCancelRefusal` B3 `Definitive` 즉시 반환) — 「already-processing 뒤 재전송」 은 엔진에서는 **다음 주기의 새 취소**다. design D7·§4-13b 를 그 모양으로 적었다(already-processing → FAILED_CONFIRMED → 다음 주기 재취소 already-canceled → D7 확정 거절 → 종결 기록 뒤 손절).
+- **보강분 Manager 조건부 freeze 2026-11-24 — 조건 확인값**:
+  1. 반영: design D7·§3·§4-13·13b·17·변이·§2-6·§6, proposal What Changes 4·Capabilities·Impact, tasks 4b.4~4b.6, delta 둘(order-execution MODIFIED+ADDED, exit-policy ADDED) — ✓
+  2. `openspec validate a198-a-clearing-cancel-is-issued-as-a-cancel-decision --strict`: valid — ✓
+  3. MODIFIED 블록: `analysis/modified-delta/make_modified.py` 가 정본을 떠서 치환 1건(원문 1회 단언), 대조 diff `compare.diff` = 바뀐 줄 2→2, 그 밖의 차이 0(스크립트 단언), 재실행 두 번 sha256 동일(멱등) — ✓. ADDED 본문 358자.
+  4. D7 편집 계획 = `Gateway.withCancelRefusal` 1 + 새 파일의 새 함수. flatten 패키지·`internal/journal`·`classifyMutation`/`classifyRefusalCode`/`refusalCodes`·`AllReasonCodes` 무편집 — ✓(계획; 구현 diff 로 재확인)
+  5. a166 census: shapes.json·sites.json 에 `cancel_refusal` 0 — ✓. 구조 고정: `TestA165CancelRefusalUsesOnlyInjectedClockForJudgement`(a165_clock_judgement_test.go:48)가 cancel_refusal.go **원문**에서 `time.Now(`·`time.Since(`·`context.WithDeadline(` 금지와 `context.WithTimeout(dctx, policy.Window)` 1회를 센다 — 계획한 편집은 새 함수 호출 1줄로 그 문자열을 바꾸지 않아 시험 무편집으로 통과 예상(걸림 아님으로 판단, 구현 뒤 실행으로 확인). 그 밖에 `withCancelRefusal` 를 부르는 시험 4 파일은 동작 시험(정책 nil·flatten 정책) — ✓
+- 결론: 조건 (1)~(5) 충족 → 보강 구현(4b.5~)으로 진행.

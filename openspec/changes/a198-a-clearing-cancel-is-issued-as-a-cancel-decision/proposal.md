@@ -26,7 +26,7 @@
 1. **취소 결정의 발행**: 길 치우기가 엔진 귀속 주문을 취소할 때 싣는 결정을 취소 종류(`CANCEL`)·위험 감소 등급·그 주문의 방향과 수량으로 발행한다 — 수동 flatten 과 **같은 발행 함수**(`execgw.Issuer.IssueReduction`)를 관측기가 이미 가진 원장·시계·계좌로 불러 발행한다(design D2, Manager 결정 2026-11-23). 손절·익절 **제출**의 결정 발행(`IssueReduction`)은 바꾸지 않는다.
 2. **실패를 기록한다**: 취소 결정 발행이나 취소 제출이 실패하면(오류·비확정) 그 사실을 운영 로그 싱크(`ExitOrderLog`)에 계좌 정보 없이 한 줄로 남긴다(종류 취소·결과 상태·사유 코드, 같은 실패 반복은 한 번 — design D4). 판정(치움 미완료 → 보호 청산 미제출)은 종전 그대로다.
 3. **결합을 지나는 시험**: 실제 게이트웨이와 실제 원장(임시 경로), 가짜 브로커로 길 치우기 → 취소 → 손절 제출을 끝까지 잇는 시험을 둔다. 운영 조립(`Context.ExitObserver`)으로 만든 관측기가 그 시험 가운데 하나를 구동한다.
-4. **(보강 2026-11-24, 구현 리뷰 r1 P0-1) 이미 끝난 주문의 취소 거절은 확정 거절**: 취소가 409 `already-filled`·`already-canceled`·`already-rejected`·`already-modified` 로 거절되면 그 CANCEL attempt 를 IN_DOUBT 가 아니라 확정 거절로 종결한다(code 필드 판정, 취소에만 — design D7). 없으면 그 종목의 손절이 재시작까지 막힌다(이 change 가 취소를 처음 내보내면서 생긴 회귀, 리뷰 탐침 실측).
+4. **(보강 2026-11-24, 구현 리뷰 r1 P0-1) 이미 끝난 주문의 취소 거절은 확정 거절**: 엔진 게이트웨이의 취소가 409 `already-filled`·`already-canceled`·`already-rejected` 로 거절되면 그 CANCEL attempt 를 IN_DOUBT 가 아니라 확정 거절(기존 사유 코드 `dispatch_rejected_by_broker`)로 종결한다(code 필드 판정, 엔진 취소 정책에만 — `already-modified`·CLI flatten·발주·정정은 무변, design D7). 정본 「취소의 일시적 거절 처리」 의 Scenario 「다른 사유의 409」 를 이 예외에 맞춰 MODIFIED 로 고친다. 없으면 그 종목의 손절이 재시작까지 막힌다(이 change 가 취소를 처음 내보내면서 생긴 회귀, 리뷰 탐침 실측).
 5. **(보강) 접수 확정된 매수는 다시 취소하지 않는다**: 엔진의 취소가 이미 접수 확정된 매수는 치워진 것으로 본다(design D8).
 
 ## 이 change 가 하지 않는 것
@@ -42,13 +42,13 @@
 ### Modified Capabilities
 
 - `exit-policy`: 길 치우기의 취소가 주문 경로가 받아들이는 취소 결정으로 발행되어야 하고, 그 결합이 실제 주문 경로를 지나는 시험으로 고정되어야 하며, 발행·제출 실패가 조용히 넘어가서는 안 된다는 요구 추가. 엔진의 취소가 접수 확정된 매수는 다시 취소하지 않는다는 요구 추가(D8).
-- `order-execution`: 취소가 이미 끝난 주문을 이유로 거절되면(409 `already-*` code) 확정 거절로 분류한다는 요구 추가(D7 — 취소에만).
+- `order-execution`: 엔진 취소가 이미 끝난 주문을 이유로 거절되면(409 `already-filled`·`already-canceled`·`already-rejected`) 확정 거절로 분류한다는 요구 추가(D7), 「취소의 일시적 거절 처리」 의 Scenario 「다른 사유의 409」 를 그 예외에 맞춰 수정(MODIFIED — analysis/modified-delta/ 의 생성기·대조 diff).
 
 ## Impact
 
 - 기존 함수 본문 편집(gate ⑤ FLM 대상, analysis/edit-surface.md): `ExitObserver.clearTheSymbol` 하나(취소 결정 발행 호출과 실패 기록 호출). `Context.ExitObserver`·`RiskGuardian.IssueReduction`·a129 함수·시험 하네스는 무편집. a166 census·a163 렌더 해시 적중 0.
 - 새 코드: 실패 기록 함수(새 파일, `ExitOrderLog` 에 직접 한 줄 — design D4)와 그 중복 억제 맵(관측기 구조체 새 필드), 시험 파일.
-- 보강(D7·D8, analysis/d7-d8-evidence.md §7): 기존 함수 편집 +1 `Gateway.withCancelRefusal`(internal/execgw — CANCEL 만 가를 수 있는 유일한 기존 자리) + 새 판정 함수(새 파일). `clearTheSymbol` 은 D8·D4a 로 추가 편집. 새 사유 코드를 만들면 `AllReasonCodes`·골든 1줄(Manager 결정 대기). `Gateway.submit`·`classifyMutation`·journal 무편집. 영향: 운영 게이트웨이 둘(엔진·flatten) 다 취소 정책이 있어 둘 다 D7 을 받는다 — flatten 의 `already-*` 단계는 오늘 IN_DOUBT → 관측 해소(Done/Pending)에서 D7 뒤 `Failed` 로 바뀐다(d7-d8-evidence.md §5).
+- 보강(D7·D8, analysis/d7-d8-evidence.md §7): 기존 함수 편집 +1 `Gateway.withCancelRefusal`(internal/execgw — CANCEL 만 가를 수 있는 유일한 기존 자리) + 새 판정 함수(새 파일). `clearTheSymbol` 은 D8·D4a 로 추가 편집. 사유 코드는 기존 `dispatch_rejected_by_broker` 재사용 — `AllReasonCodes`·골든 무편집(Manager 결정 2026-11-24). `Gateway.submit`·`classifyMutation`·journal·flatten 패키지 무편집. D7 은 엔진 취소 정책에만 걸려 CLI flatten 의 동작은 바뀌지 않는다(Manager 결정 2026-11-24).
 - 브로커 호출: 길 치우기가 원래 내려던 취소가 이제 실제로 나간다 — 취소 1건 = 사전 단건 조회 1 + 취소 요청 1, 둘 다 관측 루프 안에서 동기(retry matrix 행 31·33·37, analysis/rate-limit.md). 대상 주문 수 × (사전 조회 시한 2s + 취소 HTTP 시한 15s) 는 HTTP 시간 예산이며, 토큰 잠금 대기·401 재전송·계좌 예산 admission 을 더한 전체 최악 지연은 미확정 — design §2-4. 새 호출 종류가 아니다.
 - 원장: 취소 attempt(`kind=CANCEL`)가 처음으로 기록되기 시작한다. 스키마 변경 없음 — 수동 flatten 이 이미 쓰는 형식.
 - 설정·토글 없음. 정본이 이미 요구하는 동작의 수리이므로 토글 뒤에 두지 않는다.

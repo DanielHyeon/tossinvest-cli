@@ -1,0 +1,11 @@
+--- canonical
++++ modified
+@@ -70,6 +70,6 @@
+ 
+ #### Scenario: 다른 사유의 409
+ 
+-- **WHEN** 게이트웨이의 취소가 409 로 거절되고 본문 code 가 `already-processing` 이 아니거나 두 code 자리가 다르면
+-- **THEN** 이 처리 이전과 같이 결과 불명으로 기록된다
++- **WHEN** 게이트웨이의 취소가 409 로 거절되고 본문 code 가 `already-processing` 이 아니거나 두 code 자리가 다르면(엔진 게이트웨이의 취소가 `already-filled`·`already-canceled`·`already-rejected` 로 거절되는 경우는 「취소가 이미 끝난 주문을 이유로 거절되면 확정 거절로 분류한다」가 정한다)
++- **THEN** 그 밖의 경우는 이 처리 이전과 같이 결과 불명으로 기록된다
+ 
