@@ -17,8 +17,10 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 )
 
 const (
@@ -143,9 +145,9 @@ func TestA194OperatorOnlyBlockedHoldingIsReportedOnTheFirstCycle(t *testing.T) {
 	if want := reconcileUnmanagedKey(obs.EventExitPositionAdoptionFailed, factBlockedOperatorOnly, p.ID); e.Key != want {
 		t.Errorf("key = %q, want %q", e.Key, want)
 	}
-	moment := journal.RFC3339(observed)
-	for _, want := range []string{moment + "(UTC)", "편입하지 못했다", "걸려 있지 않았다", journal.ReconcileCauseAttributionFailed,
-		"reconcile-resolve"} {
+	for _, want := range []string{kstText(observed) + " 대사에서", "편입하지 못했다", "걸려 있지 않았다",
+		journal.ReconcileCauseAttributionFailed, "reconcile-resolve", "이 차단은 운영자만 풀 수 있다", "앱에서 직접 관리하라",
+		"늦게 도착했다면"} {
 		if !strings.Contains(e.Body, want) {
 			t.Errorf("body lacks %q: %q", want, e.Body)
 		}
@@ -191,8 +193,14 @@ func TestA194ASelfReleasingBlockIsReportedAfterTenMinutes(t *testing.T) {
 				t.Fatalf("blocked_stale reports = %d, want %d", len(got), tc.want)
 			}
 			if tc.want == 1 {
-				if strings.Contains(got[0].Body, "reconcile-resolve") {
-					t.Errorf("a self-releasing block must not send the operator to the release command: %q", got[0].Body)
+				// 스스로 풀리는 차단에는 「운영자만 풀 수 있다」고 단정하지 않고, 해제가 필요할 수 있다고만 말함(D6, 구현 리뷰 P2-5).
+				if strings.Contains(got[0].Body, "이 차단은 운영자만 풀 수 있다") {
+					t.Errorf("a self-releasing block must not be called operator-only: %q", got[0].Body)
+				}
+				for _, want := range []string{"필요할 수 있다", "reconcile-resolve", "앱에서 직접 관리하라"} {
+					if !strings.Contains(got[0].Body, want) {
+						t.Errorf("stale body lacks %q: %q", want, got[0].Body)
+					}
 				}
 				if !strings.Contains(got[0].Body, "10분") || !strings.Contains(got[0].Body, journal.ReconcileCauseQuantityMismatch) {
 					t.Errorf("body must say the block outlived the grace and name its cause: %q", got[0].Body)
@@ -337,7 +345,7 @@ func TestA194AnOperatorOnlyBlockIsReportedOncePerDay(t *testing.T) {
 		journal.ReconcileCauseAttributionFailed, "2026-09-30"}, "|"); got[0].Key != want {
 		t.Errorf("key = %q, want %q", got[0].Key, want)
 	}
-	if !strings.Contains(got[0].Body, "(UTC) 대사에서") || !strings.Contains(got[0].Body, "reconcile-resolve") {
+	if !strings.Contains(got[0].Body, " KST 대사에서") || !strings.Contains(got[0].Body, "reconcile-resolve") {
 		t.Errorf("body must carry the observation moment and the release command: %q", got[0].Body)
 	}
 
@@ -495,7 +503,7 @@ func TestA194ALateDeliveredReportIsStillTrue(t *testing.T) {
 	f.holds("SYNA01", a194Qty, a194Price)
 	f.block("SYNA01", journal.ReconcileCauseAttributionFailed)
 	f.cycle()
-	moment := journal.RFC3339(f.clk.Now())
+	moment := kstText(f.clk.Now())
 
 	f.release("SYNA01", journal.ReconcileCauseAttributionFailed)
 	f.clk.Advance(time.Minute)
@@ -507,15 +515,29 @@ func TestA194ALateDeliveredReportIsStillTrue(t *testing.T) {
 		t.Fatalf("deliverer cycle: %v", err)
 	}
 	f.pub.mu.Lock()
-	var body string
+	var body, blockBody string
 	for _, s := range f.pub.sent {
-		if s.Type == obs.EventExitPositionAdoptionFailed {
+		switch s.Type {
+		case obs.EventExitPositionAdoptionFailed:
 			body = s.Body
+		case obs.EventReconcilePermanent:
+			blockBody = s.Body
 		}
 	}
 	f.pub.mu.Unlock()
 	if !strings.Contains(body, moment) || !strings.Contains(body, "걸려 있지 않았다") {
 		t.Errorf("late-delivered body = %q; it must speak of the moment %s in the past tense", body, moment)
+	}
+	// 차단 보고도 늦게 배달되면 관측 시각의 과거형이어야 함(구현 리뷰 P2-2).
+	for _, want := range []string{moment, "활성이었다", "막혀 있었고", "걸려 있지 않았다", "늦게 도착했다면"} {
+		if !strings.Contains(blockBody, want) {
+			t.Errorf("late-delivered block report lacks %q: %q", want, blockBody)
+		}
+	}
+	for _, present := range []string{"막혀 있고", "걸리지 않는다.", "로만 풀린다"} {
+		if strings.Contains(blockBody, present) {
+			t.Errorf("late-delivered block report speaks in the present tense (%q): %q", present, blockBody)
+		}
 	}
 }
 
@@ -621,5 +643,162 @@ func TestA194EarlierExcludedHoldingsAreReportedFirst(t *testing.T) {
 	want := []string{early.ID, early.ID, late.ID} // 둘째 주기 early, 셋째 주기 early → late
 	if strings.Join(order, ",") != strings.Join(want, ",") {
 		t.Errorf("report order = %v, want %v (earlier exclusion first)", order, want)
+	}
+}
+
+// 구현 리뷰 P2-4 — 같은 날 풀렸다 다시 걸린 차단은 다른 차단이라 다시 알림. 풀린 차단의 래치 key 는 지워짐(생존 변이 M23).
+func TestA194ABlockRaisedAgainTheSameDayIsReportedAgain(t *testing.T) {
+	f := newA194(t)
+	f.block("SYNB01", journal.ReconcileCauseAttributionFailed)
+	f.cycle()
+	f.release("SYNB01", journal.ReconcileCauseAttributionFailed)
+	f.clk.Advance(time.Minute)
+	f.cycle()
+	if n := len(f.cap.of(obs.EventReconcilePermanent, "")); n != 1 {
+		t.Fatalf("block reports after the release = %d, want 1", n)
+	}
+	f.block("SYNB01", journal.ReconcileCauseAttributionFailed)
+	f.clk.Advance(time.Minute)
+	f.cycle()
+	f.cycle()
+	if n := len(f.cap.of(obs.EventReconcilePermanent, "")); n != 2 {
+		t.Errorf("block reports after the same-day re-block = %d, want 2 — a block raised again is another block", n)
+	}
+}
+
+// 구현 리뷰 M3 — 덮는 운영자 전용 블록이 둘이면 가장 이른 Since 의 원인·시각이 본문에 실림(목록 순서와 무관).
+func TestA194TheEarliestCoveringOperatorBlockIsNamed(t *testing.T) {
+	f := newA194(t)
+	f.holds("SYNA01", a194Qty, a194Price)
+	f.block("SYNA01", journal.ReconcileCauseAttributionFailed) // 먼저 — Blocks() 정렬에서는 계좌 행 뒤에 섬
+	earliest := f.clk.Now()
+	f.clk.Advance(time.Minute)
+	f.block("", journal.ReconcileCauseIdentifierConflict)
+	f.cycle()
+	got := f.cap.of(obs.EventExitPositionAdoptionFailed, factBlockedOperatorOnly)
+	if len(got) != 1 {
+		t.Fatalf("holding reports = %d, want 1", len(got))
+	}
+	want := "원인 " + journal.ReconcileCauseAttributionFailed + ", " + kstText(earliest) + "부터"
+	if !strings.Contains(got[0].Body, want) {
+		t.Errorf("body = %q, want the earliest covering block %q", got[0].Body, want)
+	}
+}
+
+// 구현 리뷰 M12 — 알림기가 없으면 보낸 것으로 세지 않음: 다음 주기에 알림기가 생기면 그날 보고가 나감.
+func TestA194NoAlerterIsNotARecordedBlockReport(t *testing.T) {
+	f := newA194(t)
+	f.block("SYNB01", journal.ReconcileCauseAttributionFailed)
+	f.d.opts.Alerts = nil
+	f.cycle()
+	f.d.opts.Alerts = f.cap
+	f.cycle()
+	if n := len(f.cap.of(obs.EventReconcilePermanent, "")); n != 1 {
+		t.Errorf("block reports once an alerter exists = %d, want 1", n)
+	}
+}
+
+// 구현 리뷰 M19 — 제목의 종목 표시는 기존 label(이름(코드)).
+func TestA194TheTitlesUseTheInstrumentLabel(t *testing.T) {
+	f := newA194(t)
+	f.opts.Names.Learn("SYNA01", "합성종목가")
+	f.holds("SYNA01", a194Qty, a194Price)
+	f.block("SYNA01", journal.ReconcileCauseAttributionFailed)
+	f.cycle()
+	label := f.opts.Names.Label("SYNA01")
+	if !strings.Contains(label, "합성종목가") {
+		t.Fatalf("arrangement: label = %q", label)
+	}
+	for _, e := range append(f.cap.blockedReports(), f.cap.of(obs.EventReconcilePermanent, "")...) {
+		if !strings.HasPrefix(e.Title, label+" ") {
+			t.Errorf("%s title = %q, want it to start with the label %q", e.Type, e.Title, label)
+		}
+	}
+}
+
+// exit-policy Scenario 「스스로 풀리는 차단이 유예 안에 풀린다」 — 보호 누락 알림 없음, 편입 이벤트 통지.
+func TestA194ABlockClearedInsideTheGraceAdoptsSilently(t *testing.T) {
+	f := newA194(t)
+	f.holds("SYNA01", a194Qty, a194Price)
+	f.block("SYNA01", journal.ReconcileCauseQuantityMismatch)
+	f.cycle()
+	f.release("SYNA01", journal.ReconcileCauseQuantityMismatch)
+	f.clk.Advance(5 * time.Minute)
+	if c := f.cycle(); c.Adopted != 1 {
+		t.Fatalf("adopted = %d after the block cleared", c.Adopted)
+	}
+	if n := len(f.cap.blockedReports()); n != 0 {
+		t.Errorf("protection-missing reports = %d, want 0 inside the grace", n)
+	}
+	if n := len(f.cap.of(obs.EventExitPositionAdopted, "")); n != 1 {
+		t.Errorf("adoption events = %d, want 1", n)
+	}
+}
+
+// a194FlakyHoldings 는 fail 이 참인 동안 보유 읽기를 실패시킴 — 대사 주기 자체의 실패.
+type a194FlakyHoldings struct {
+	inner *a095Holdings
+	fail  bool
+}
+
+func (h *a194FlakyHoldings) Positions(ctx context.Context) ([]domain.Position, error) {
+	if h.fail {
+		return nil, errors.New("a194 synthetic holdings outage")
+	}
+	return h.inner.Positions(ctx)
+}
+
+func (h *a194FlakyHoldings) PositionsRaw(ctx context.Context) ([]reconcile.RawHolding, error) {
+	if h.fail {
+		return nil, errors.New("a194 synthetic holdings outage")
+	}
+	return h.inner.PositionsRaw(ctx)
+}
+
+// reconciliation 의 exit-policy Scenario 「대사 주기 실패는 연속을 끊지 않는다」 — 빠진 지 6분 뒤 두 번 실패, 10분 되는 주기에 기록.
+func TestA194TwoFailedCyclesAtSixMinutesDoNotBreakTheRun(t *testing.T) {
+	f := newA194(t)
+	flaky := &a194FlakyHoldings{inner: f.holdings}
+	f.opts.Collector.Positions = flaky
+	f.rebuild()
+	f.holds("SYNA01", a194Qty, a194Price)
+	f.block("SYNA01", journal.ReconcileCauseQuantityMismatch)
+	f.cycle()
+	first := f.clk.Now()
+
+	f.clk.Advance(6 * time.Minute)
+	flaky.fail = true
+	for i := 0; i < 2; i++ {
+		if c := f.d.RunOnce(context.Background()); c.Err == nil {
+			t.Fatalf("arrangement: cycle %d must fail", i+1)
+		}
+		f.clk.Advance(time.Minute)
+	}
+	flaky.fail = false
+	f.clk.Advance(first.Add(blockedHoldingGrace).Sub(f.clk.Now()) - reconcile.DefaultStabilisationInterval)
+	f.cycle() // 판정 시각 = 처음 빠진 시각 + 10분
+	if !f.clk.Now().Equal(first.Add(blockedHoldingGrace)) {
+		t.Fatalf("arrangement: judged at %s, want %s", f.clk.Now(), first.Add(blockedHoldingGrace))
+	}
+	if n := len(f.cap.of(obs.EventExitPositionAdoptionFailed, factBlockedStale)); n != 1 {
+		t.Errorf("blocked_stale reports = %d, want 1 on the cycle ten minutes after the first exclusion", n)
+	}
+}
+
+// exit-policy Scenario 「이미 exit 관리 중인 보유」 — 대상이 아님(차단 보고는 따로 나감).
+func TestA194AManagedHoldingIsNotAProtectionMissingReport(t *testing.T) {
+	f := newA194(t)
+	f.holds("SYNA01", a194Qty, a194Price)
+	if c := f.cycle(); c.Adopted != 1 {
+		t.Fatalf("arrangement: adopted = %d", c.Adopted)
+	}
+	f.block("SYNA01", journal.ReconcileCauseAttributionFailed)
+	f.clk.Advance(time.Minute)
+	f.cycle()
+	if n := len(f.cap.blockedReports()); n != 0 {
+		t.Errorf("protection-missing reports = %d for a holding already under exit management, want 0", n)
+	}
+	if n := len(f.cap.of(obs.EventReconcilePermanent, "")); n != 1 {
+		t.Errorf("block reports = %d, want 1 (the block itself is still reported)", n)
 	}
 }

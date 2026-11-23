@@ -154,12 +154,14 @@ func earliestCoveringBlock(blocks []reconcile.Block, market, symbol string, oper
 func (d *ReconcileDriver) alertBlockedHolding(ctx context.Context, r dueBlockedReport, now time.Time) {
 	p := r.position
 	moment := journal.RFC3339(now)
-	body := fmt.Sprintf("%s(UTC) 대사에서 이 종목은 대사 차단(원인 %s, %s) 아래에 있어 편입하지 못했다. "+
-		"그 시각 손절·익절이 걸려 있지 않았다.\n", moment, r.cause, blockSinceText(r.since))
+	body := fmt.Sprintf("%s 대사에서 이 종목은 대사 차단(원인 %s, %s) 아래에 있어 편입하지 못했다. "+
+		"그 시각 손절·익절이 걸려 있지 않았다.\n", kstText(now), r.cause, blockSinceText(r.since))
 	if r.fact == factBlockedOperatorOnly {
 		body += "이 차단은 운영자만 풀 수 있다 — 운영자 해제(`tossctl engine reconcile-resolve`, 엔진 정지 필요) 전까지 앱에서 직접 관리하라."
 	} else {
-		body += "차단이 10분 넘게 풀리지 않았다. 엔진 로그의 대사 상태를 확인하고 그 전까지 앱에서 직접 관리하라."
+		// 재시작 뒤 복원된 수량 불일치 블록은 조정 크레딧이 없어 일치만으로 안 풀릴 수 있음 — 단정이 아니라 가능성으로 안내(D6).
+		body += "차단이 10분 넘게 풀리지 않았다. 스스로 풀리지 않으면 운영자 해제(`tossctl engine reconcile-resolve`, 엔진 정지 필요)가 " +
+			"필요할 수 있다. 엔진 로그의 대사 상태를 확인하고 그 전까지 앱에서 직접 관리하라."
 	}
 	body += "\n이 알림이 늦게 도착했다면 그 사이 상태가 바뀌었을 수 있으니 콘솔에서 현재 상태를 확인하라."
 
@@ -213,10 +215,12 @@ func (d *ReconcileDriver) recordOperatorOnlyBlock(ctx context.Context, b reconci
 		target = d.label(symbol)
 	}
 	moment := journal.RFC3339(now)
-	body := fmt.Sprintf("%s(UTC) 대사에서 %s에 운영자만 풀 수 있는 대사 차단(원인 %s, %s)이 활성이었다. "+
-		"그 범위의 신규 진입은 막혀 있고, 그 범위에 보유가 생기면 엔진이 편입하지 않아 손절·익절이 걸리지 않는다.\n"+
-		"운영자 해제(`tossctl engine reconcile-resolve`, 엔진 정지 필요)로만 풀린다. 풀릴 때까지 하루(KST) 한 번 알린다.",
-		moment, target, b.Cause, blockSinceText(b.Since))
+	// 본문은 관측 시각의 사건으로 씀 — 늦게 배달돼도 참이게(D6).
+	body := fmt.Sprintf("%s 대사에서 %s에 운영자만 풀 수 있는 대사 차단(원인 %s, %s)이 활성이었다. "+
+		"그 시각 그 범위의 신규 진입은 막혀 있었고, 그 범위에 보유가 있었다면 엔진이 편입하지 않아 손절·익절이 걸려 있지 않았다.\n"+
+		"그 차단은 운영자 해제(`tossctl engine reconcile-resolve`, 엔진 정지 필요)로만 풀 수 있는 원인이었다. 풀리지 않은 동안 하루(KST) 한 번 알린다.\n"+
+		"이 알림이 늦게 도착했다면 그 사이 상태가 바뀌었을 수 있으니 콘솔에서 현재 상태를 확인하라.",
+		kstText(now), target, b.Cause, blockSinceText(b.Since))
 	if !d.opts.NotificationsEnabled {
 		// 알림이 꺼진 엔진은 critical 을 만들지 않음 — 로그 한 줄만(D5).
 		if d.opts.Log != nil {
@@ -255,5 +259,8 @@ func blockSinceText(since time.Time) string {
 	if since.IsZero() {
 		return "걸린 시각 미상"
 	}
-	return journal.RFC3339(since) + "(UTC)부터"
+	return kstText(since) + "부터"
 }
+
+// kstText 는 운영자가 읽는 본문 시각임(한국 시간). 기계가 읽는 observed_at 필드는 RFC3339 UTC 그대로.
+func kstText(t time.Time) string { return t.In(kst).Format("2006-01-02 15:04 KST") }

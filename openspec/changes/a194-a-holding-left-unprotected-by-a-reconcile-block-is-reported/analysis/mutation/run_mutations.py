@@ -48,6 +48,21 @@ MUTANTS = [
      "\td.reportBlocked(ctx, held)\n\tresults := d.adopt(ctx, candidates, cycle)\n"),
     ("M12", "순서를 포지션 id 만으로", NEW,
      "\t\tif !due[i].first.Equal(due[j].first) {\n\t\t\treturn due[i].first.Before(due[j].first)\n\t\t}\n", ""),
+    # 구현 적대 리뷰 r1 의 생존 변이를 죽이는 시험을 더한 뒤(2026-11-23)
+    ("M3r", "덮는 블록 중 첫 것(가장 이른 Since 아님)", NEW,
+     "if !found || b.Since.Before(best.Since) {", "if !found {"),
+    ("M7a", "운영자 전용 본문에서 할 일 문장 삭제", NEW,
+     "body += \"이 차단은 운영자만 풀 수 있다 — 운영자 해제(`tossctl engine reconcile-resolve`, 엔진 정지 필요) 전까지 앱에서 직접 관리하라.\"",
+     "body += \"이 차단은 운영자만 풀 수 있다.\""),
+    ("M7b", "stale 본문에서 할 일 문장 삭제", NEW,
+     "\"필요할 수 있다. 엔진 로그의 대사 상태를 확인하고 그 전까지 앱에서 직접 관리하라.\"", "\"필요할 수 있다.\""),
+    ("M12r", "알림기 없음을 보낸 것으로 셈", NEW,
+     "return false // 기록할 곳이 없으면 알린 것으로 세지 않음", "return true"),
+    ("M19", "제목에서 label 대신 코드", NEW,
+     "Title: d.label(p.Symbol) + \" 대사 차단으로", "Title: p.Symbol + \" 대사 차단으로"),
+    ("M23", "풀린 차단의 래치 key 유지", NEW,
+     "\td.blockReported = next\n",
+     "\tif d.blockReported == nil {\n\t\td.blockReported = next\n\t} else {\n\t\tfor k := range next {\n\t\t\td.blockReported[k] = true\n\t\t}\n\t}\n"),
 ]
 # M6 는 latch 를 꺼짐에서만 세우므로 켜짐에서도 세우는 짝 자리를 함께 바꿈(두 자리 변이).
 M6_PAIR = ("\tif !d.opts.NotificationsEnabled {\n\t\tt = obs.EventExitPositionUnmanaged\n",
