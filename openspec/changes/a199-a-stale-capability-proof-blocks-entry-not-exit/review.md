@@ -186,3 +186,17 @@ delta 재생성(`analysis/modified-delta/run.txt`): A 5 편집 각 1회 적중(A
 
 게이트 스캔: `listed=21 eligible=11 inspected=11 unread=0`, 표지 RH-3? 2(shapes.json 의 NewContext 키 — `analysis/census-repair/shapes-key-diff.txt` changed 1 · unchanged 89, Manager 결정 11 — verified), 뒤집힌 a196 시험(design §3-6 계획분). 둘 다 Manager 처분 열림.
 런타임 오류 blocker 0. 반영 뒤 선택 시험(`analysis/verify/post-gstack-*.txt`) · make lint rc 0.
+
+## Manager 처분 — gstack review 결정 대기분 (2026-11-24)
+
+- **G2 → 대안 5(원장 증거)로 수리.** 첫 처분(감사 로그의 수락 줄)은 확인 단계에서 멈춤: 수락 줄의 계좌는 a131 치환으로 `[account]` 라 계좌에 묶이지 않고(`internal/audit/a131_audit_redact_test.go:44`), 같은 기계에서 계좌를 바꾼 뒤 새 GET 만의 attestation 이 옛 계좌의 수락 줄로 통과하는 반례가 있음 → Manager 가 대안 1 기각, 대안 5 결정. 대안 1~4 의 기각 사유는 design §2 G2 항목.
+  - 증거: `journal.HasConfirmedPlace(ctx, account, "engine")` — `SELECT 1 FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id WHERE a.state = 'CONFIRMED' AND a.kind = 'PLACE' AND i.source = ? AND TRIM(i.account_ref) = ? LIMIT 1`. 계획 `SEARCH a USING INDEX idx_attempts_state (state=?)` → `SEARCH i USING INDEX sqlite_autoindex_intents_1 (id=?)`(시험 고정). 비용 = CONFIRMED attempt 수에 비례(일치가 있으면 첫 행에서 멈춤), 기동 때 한 번 · 감시는 날수 · 지남 단계에서 시간당 한 번. 같은 뜻의 기존 질의 없음(`EngineBrokerOrderIDs` 는 source · 상태를 거르지 않음).
+  - 멈출 조건 확인: 원장에서 `source="engine"` 을 쓰는 생산자는 엔진 게이트웨이 하나(gateway.go:327 — 다른 `execgw.New` 는 flatten.go:244 `flatten-all`) · 계좌 칸은 해석된 계좌를 그대로 씀(execgw gateway.go:1031 `g.accountRef`, 다른 범위 질의와 같은 TRIM) · census 는 NewContext 키 하나(`analysis/census-repair/shapes-key-diff-g2.txt`) · 기존 A199 시험은 원장에 증거를 심어 그대로 통과 · 유효 경로에 원장 읽기 없음.
+  - 편집한 기존 함수(목록 대비): verifyGate · NewContext · judgeAttestation(가변 인자 — 단계만 재는 기존 판정 시험 7곳을 편집하지 않으려고) · newAttestationWatch · prepare · eventFor · runSoakAttest · newSoakAttestCmd(전부 기존 목록) + **a135Watch(시험 헬퍼, 새로 — 번들 추가, required 21)**. 타입: gateFacts · attestationVerdict · attestationWatch. 변수: interlockClauses(줄 하나).
+- **G1** 공시(코드 무변) · **G4 · G7** 공시 승인 — design §4 · Story limits.
+- **G3** 시험: `TestA199TheBootLatchIsTheGateTheAssembledGatewayChecks`(조립된 Context 의 게이트웨이 진입 관문이 기동의 래치로 거절, 보호 보고 칸 둘 다). 엔진 조립에서 게이트웨이를 WIRED 로 만드는 길은 없음 — WIRED 의 매수 거절은 execgw 시험이 잼. 전략 dispatch 시험은 래치를 `exitOnlyStart` 로 세움 → M24 가 CAUGHT 로 바뀜.
+- **G6** soak 문구를 사실대로(「This file covers every endpoint …; the account and the other clauses are judged at engine start.」), G2 로 범위 상실 문구 · 도움말도 「거절, 또는 엔진 주문 기록이 있으면 청산 전용」으로.
+- **G9** nil 진입 게이트 거절 갈래가 청산 전용 표지를 지움(거절 줄은 거절의 문장만).
+- **게이트 스캔의 열린 둘은 Manager 가 유지로 닫음** — census 는 키 하나의 갱신이 `analysis/census-repair/` 로 검증됐고, a196 시험의 뒤집힘은 정본 delta B 가 요구하는 새 문장이다. **사용자에게는 완료 보고에서 공시**한다.
+- **smoke 를 못 돌린 사유와 state-matrix 도구 부적합은 기록 승인** — 실행 표면이 `tossctl engine run`(금지)이라, 가짜 브로커 런타임 시험이 대신한 범위: 생산 조립(engine.New · 실제 원장 · 실제 게이트웨이 · 생산 Guardian) → 기동 복구 → exit 관측의 손절 제출 · 대사의 편입 · 매수 거절, 그리고 G2 의 「검증된 기동의 실제 손절 → 낡은 뒤 재기동이 청산 전용」. 빠진 것: 실제 브로커 · 체결 감지 루프 · 실행 파일의 프로세스 수명.
+- 변이 추가분 `analysis/mutation/run-g2.txt` · `run-g2-m27.txt`, 검증 원문 `analysis/verify/`.

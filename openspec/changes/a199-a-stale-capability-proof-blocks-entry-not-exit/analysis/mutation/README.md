@@ -41,3 +41,23 @@
 | M24 래치 세우기 삭제 — 전략 dispatch 시험만 돌림 | **SURVIVED(예상)** — 그 시험은 `exitOnlyStart` 를 거치지 않고 자기 EntryGate 에 래치를 직접 세운다. 그 시험이 재는 것은 「래치가 서 있으면 실제 dispatch 경로가 브로커 주문 0」이고(래치 없는 대조 사례는 주문 1), 「청산 전용 기동이 래치를 세운다」는 M25 가 잰다 |
 | M25 래치 세우기 삭제 — A199 시험 전체 | CAUGHT — ARestartRederivesTheLatchFromTheFile · AScopeLostRuntimeRefusesABuyAndSubmitsTheStopLoss · AStaleAttestationStartsExitOnly · AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss |
 | M26 지운 `ErrExpired` 조항 줄을 되살림(대조) | SURVIVED(예상) — 거절 사슬에 그 sentinel 이 실리는 입력이 0 이라(처분 6, `TestA199NoRefusalCarriesAStaleSentinel` 9 사례) 줄의 유무가 행동을 안 바꾼다는 확인 |
+
+## 추가분 (gstack review G2 · G3 · G9 — Manager 처분 2026-11-24)
+
+- 하네스 `run_mutations_g2.py`, 원문 `run-g2.txt`(전체) · `run-g2-m27.txt`(M27 재실행). 시작 sha `fadd2fc4c` 단언, 무변이 대조군 넷(engine `A199` · engine 조립 G3 시험 · 태그 dispatch 시험 · journal `A199`) rc 0, 원복 뒤 사본 깨끗, 사본 제거. 빌드 실패는 CAUGHT 로 세지 않음.
+- 첫 판의 M27(`if false`)은 `proven` 미사용으로 **빌드 실패 — CAUGHT 로 세지 않음**. 컴파일되는 같은 뜻(`(readErr != nil || !proven) && false`)으로 재실행.
+- 중간에 접두 인자 없는 옛 하네스로 잘못 띄운 재실행 하나를 중단하고 그 사본을 `git worktree remove --force` 로 지움(원장에 결과 없음).
+
+| 변이 | 결과 |
+|---|---|
+| M27 증거 검사 삭제(낡으면 늘 내림) | CAUGHT — AStaleAttestationWithoutAnEngineOrderIsRefused · AnInstallWithoutAnEngineOrderRefusesAStaleStartUntilAnOrderIsRecorded · TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder |
+| M28 SQL 계좌 조건 삭제 | CAUGHT — HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount |
+| M29 SQL source 조건 삭제 | CAUGHT — 같은 시험 |
+| M30 SQL 상태 조건을 CONFIRMED 밖으로 | CAUGHT — 같은 시험 |
+| M31 SQL kind 조건 삭제(CANCEL 도 셈) | CAUGHT — 같은 시험 |
+| M32 읽기 실패 시 내림 | CAUGHT — AStaleAttestationWithoutAnEngineOrderIsRefused · TheWatchTellsARefusal… |
+| M33 유효 경로에서도 원장 읽기 | CAUGHT — AValidOrGateOffStartReadsNoLedger · TheWatchForecast…AndAHealthyFileReadsNoLedger |
+| M34 감시의 기한 뒤 예측을 증거와 무관하게 | CAUGHT — TheWatchForecastFollowsTheEvidence… |
+| M35 G9 거절 갈래의 표지 지우기 삭제 | CAUGHT — NoEntryGateMeansNoExitOnlyStart |
+| M24' 래치 세우기 삭제 — 전략 dispatch 시험만(이제 exitOnlyStart 를 거침) | **CAUGHT** — TheStaleLatchStopsTheRealStrategyDispatchBeforeTheBroker(r1 의 M24 SURVIVED 를 메움) |
+| M36 래치 세우기 삭제 — 조립된 게이트웨이 시험만(G3) | CAUGHT — TheBootLatchIsTheGateTheAssembledGatewayChecks |
