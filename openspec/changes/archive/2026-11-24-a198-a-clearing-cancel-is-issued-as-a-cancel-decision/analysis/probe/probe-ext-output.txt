@@ -1,0 +1,32 @@
+# HEAD e1eaf720c5fa1622321b98e73a792d2e5762b3d2 · go version go1.26.5 linux/amd64 · 2026-11-23T22:39:59+09:00
+# cmd: go test ./internal/execgw -run TestA197Probe -v -count=1 (a197 probe + a198 (b) extension appended to the same uncommitted file in throwaway worktree ~/tossos-work/a198-probe)
+=== RUN   TestA197ProbeExitClearCancelDecision
+=== RUN   TestA197ProbeExitClearCancelDecision/BUY/riskguardian-like-clearTheSymbol
+    zz_a197_probe_test.go:54: PROBE side=BUY path=riskguardian-like-clearTheSymbol state= reason=invalid_mutation_request broker_cancels=0 err=execgw: recording the intent (nothing was submitted): journal: invalid request: CANCEL carries no idempotency key — only order creation does detail=journal: invalid request: CANCEL carries no idempotency key — only order creation does
+=== RUN   TestA197ProbeExitClearCancelDecision/BUY/issuer-like-flatten
+    zz_a197_probe_test.go:54: PROBE side=BUY path=issuer-like-flatten state=CONFIRMED reason=broker_accepted broker_cancels=1 err=<nil> detail=
+=== RUN   TestA197ProbeExitClearCancelDecision/SELL/riskguardian-like-clearTheSymbol
+    zz_a197_probe_test.go:54: PROBE side=SELL path=riskguardian-like-clearTheSymbol state= reason=invalid_mutation_request broker_cancels=0 err=execgw: recording the intent (nothing was submitted): journal: invalid request: CANCEL carries no idempotency key — only order creation does detail=journal: invalid request: CANCEL carries no idempotency key — only order creation does
+=== RUN   TestA197ProbeExitClearCancelDecision/SELL/issuer-like-flatten
+    zz_a197_probe_test.go:54: PROBE side=SELL path=issuer-like-flatten state=CONFIRMED reason=broker_accepted broker_cancels=1 err=<nil> detail=
+--- PASS: TestA197ProbeExitClearCancelDecision (1.09s)
+    --- PASS: TestA197ProbeExitClearCancelDecision/BUY/riskguardian-like-clearTheSymbol (0.28s)
+    --- PASS: TestA197ProbeExitClearCancelDecision/BUY/issuer-like-flatten (0.27s)
+    --- PASS: TestA197ProbeExitClearCancelDecision/SELL/riskguardian-like-clearTheSymbol (0.26s)
+    --- PASS: TestA197ProbeExitClearCancelDecision/SELL/issuer-like-flatten (0.27s)
+=== RUN   TestA197ProbeA198CancelShape
+=== RUN   TestA197ProbeA198CancelShape/BUY-order/decision-SELL/no-key
+    zz_a197_probe_test.go:86: PROBE-A198 BUY-order/decision-SELL/no-key state=NOT_DISPATCHED reason=guardian_intent_hash_mismatch broker_cancels=0 err=execgw: rejected (guardian_intent_hash_mismatch): decision 37da4b19b2e0 authorises side SELL but the mutation carries BUY
+=== RUN   TestA197ProbeA198CancelShape/BUY-order/qty10/decmax7
+    zz_a197_probe_test.go:86: PROBE-A198 BUY-order/qty10/decmax7 state=NOT_DISPATCHED reason=guardian_intent_hash_mismatch broker_cancels=0 err=execgw: rejected (guardian_intent_hash_mismatch): decision b21261f2e355 authorises at most quantity 7 but the mutation carries 10
+=== RUN   TestA197ProbeA198CancelShape/BUY-order/qty7/decmax10
+    zz_a197_probe_test.go:86: PROBE-A198 BUY-order/qty7/decmax10 state=CONFIRMED reason=broker_accepted broker_cancels=1 err=<nil>
+=== RUN   TestA197ProbeA198CancelShape/SELL-order/qty10/decmax10
+    zz_a197_probe_test.go:86: PROBE-A198 SELL-order/qty10/decmax10 state=CONFIRMED reason=broker_accepted broker_cancels=1 err=<nil>
+--- PASS: TestA197ProbeA198CancelShape (1.08s)
+    --- PASS: TestA197ProbeA198CancelShape/BUY-order/decision-SELL/no-key (0.26s)
+    --- PASS: TestA197ProbeA198CancelShape/BUY-order/qty10/decmax7 (0.27s)
+    --- PASS: TestA197ProbeA198CancelShape/BUY-order/qty7/decmax10 (0.29s)
+    --- PASS: TestA197ProbeA198CancelShape/SELL-order/qty10/decmax10 (0.26s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	2.174s

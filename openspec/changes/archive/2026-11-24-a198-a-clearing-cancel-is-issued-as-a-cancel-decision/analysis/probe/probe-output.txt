@@ -1,0 +1,18 @@
+# HEAD e1eaf720c5fa1622321b98e73a792d2e5762b3d2 · go version go1.26.5 linux/amd64 · 2026-11-23T22:33:51+09:00
+# cmd: go test ./internal/execgw -run TestA197Probe -v -count=1 (probe file copied to internal/execgw/ in a throwaway worktree ~/tossos-work/a198-probe, uncommitted)
+=== RUN   TestA197ProbeExitClearCancelDecision
+=== RUN   TestA197ProbeExitClearCancelDecision/BUY/riskguardian-like-clearTheSymbol
+    zz_a197_probe_test.go:54: PROBE side=BUY path=riskguardian-like-clearTheSymbol state= reason=invalid_mutation_request broker_cancels=0 err=execgw: recording the intent (nothing was submitted): journal: invalid request: CANCEL carries no idempotency key — only order creation does detail=journal: invalid request: CANCEL carries no idempotency key — only order creation does
+=== RUN   TestA197ProbeExitClearCancelDecision/BUY/issuer-like-flatten
+    zz_a197_probe_test.go:54: PROBE side=BUY path=issuer-like-flatten state=CONFIRMED reason=broker_accepted broker_cancels=1 err=<nil> detail=
+=== RUN   TestA197ProbeExitClearCancelDecision/SELL/riskguardian-like-clearTheSymbol
+    zz_a197_probe_test.go:54: PROBE side=SELL path=riskguardian-like-clearTheSymbol state= reason=invalid_mutation_request broker_cancels=0 err=execgw: recording the intent (nothing was submitted): journal: invalid request: CANCEL carries no idempotency key — only order creation does detail=journal: invalid request: CANCEL carries no idempotency key — only order creation does
+=== RUN   TestA197ProbeExitClearCancelDecision/SELL/issuer-like-flatten
+    zz_a197_probe_test.go:54: PROBE side=SELL path=issuer-like-flatten state=CONFIRMED reason=broker_accepted broker_cancels=1 err=<nil> detail=
+--- PASS: TestA197ProbeExitClearCancelDecision (1.18s)
+    --- PASS: TestA197ProbeExitClearCancelDecision/BUY/riskguardian-like-clearTheSymbol (0.30s)
+    --- PASS: TestA197ProbeExitClearCancelDecision/BUY/issuer-like-flatten (0.29s)
+    --- PASS: TestA197ProbeExitClearCancelDecision/SELL/riskguardian-like-clearTheSymbol (0.28s)
+    --- PASS: TestA197ProbeExitClearCancelDecision/SELL/issuer-like-flatten (0.31s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	1.185s

@@ -127,7 +127,7 @@ type PriceReader interface {
 // It is the Guardian path and not the plain issuer on purpose: exit-policy
 // requires a proposal to travel "Guardian 위험 감소 경로 경유", which is what
 // checks the one thing an exit can get wrong — selling more than the account
-// holds.
+// holds. Working-order cancels are minted by the plain execgw.Issuer instead, like manual flatten (a198 D2).
 type ReductionIssuer interface {
 	IssueReduction(ctx context.Context, req execgw.ReductionIssuance) (execgw.Issued, error)
 }
@@ -176,7 +176,7 @@ type ExitObserverOptions struct {
 	// Retrier runs that read under the matrix and stamps its freshness.
 	// Required — see the file header on QUERY_STALE.
 	Retrier *execgw.Retrier
-	// Issuer mints the reduction decisions. Required.
+	// Issuer mints the sell-submission reduction decisions (clearing cancels use execgw.Issuer — a198 D2). Required.
 	Issuer ReductionIssuer
 	// Submit is the order surface. Required.
 	Submit ExitSubmitter
@@ -287,6 +287,9 @@ type ExitObserver struct {
 	clearStreak map[string]*clearStreak
 	// episodeRecorded 는 a094 의 명명 critical 을 한 프로세스에서 다시 적재하지 않게 하는 래치임(적재 중복 최적화).
 	episodeRecorded map[string]bool
+	// clearCancelLogged 는 a198 의 길 치우기 취소 실패 줄 중복 억제 표시임(key 포지션|주문 → 상태|사유). 메모리 — 재시작하면 다시 씀.
+	clearCancelLogged  map[string]string
+	clearCancelPending []clearCancelLine // 이 주기의 취소 실패 줄 — 주기 끝(endExitOrderCycle)에 씀(a198 D4 재결정)
 	// observationSequence distinguishes fallback observations when the quote
 	// source supplies no FetchedAt and a test/frozen clock does not advance.
 	observationSequence atomic.Uint64
@@ -1643,7 +1646,7 @@ func (o *ExitObserver) release(ctx context.Context, m managed, intentID string, 
 //
 //   - 같은 종목에 미종결 attempt 가 있으면 치움 미완료(D−4.7). 판정은 주문 경로와 같은 함수(Submit.UnsettledOnSymbol).
 //   - 매도의 취소 접수는 치움이 아님(D−4.3). 그 매도가 종결 체결 기록으로 미체결 목록에서 빠질 때까지 미완료이고, 엔진
-//     취소가 이미 접수 확정된 매도는 다시 취소하지 않음. 매수 취소는 종전대로 접수로 치움.
+//     취소가 이미 접수 확정된 주문은 매도·매수 모두 다시 취소하지 않음(매수는 a198 D8). 매수 취소는 종전대로 접수로 치움.
 //   - 발의 해제는 원장 판정(ReleaseClearedExitProposal)이 함(D−3.2) — 그 intent 의 attempt 가 살아 있을 수 있거나 park
 //     이거나 종결 증거를 기다리면 해제하지 않고 치움 미완료임.
 func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPending bool) (clearResult, error) {
@@ -1664,42 +1667,48 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 	res := clearResult{cleared: true, countable: true}
 	for _, order := range live {
 		buy := strings.EqualFold(strings.TrimSpace(order.Side), "BUY")
-		if !buy {
-			// 엔진 취소가 이미 접수 확정된 매도 — 종결 증거를 기다리는 중이며 다시 취소하지 않음. 발의 유무와 무관함(D−4.3-1):
-			// 발의가 풀린 뒤의 주기(withPending=false)에도 그 매도가 취소 전에 얼마나 체결됐는지 모르는 채 손절을 낼 수 없음.
-			_, waiting, err := o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
-			if err != nil {
-				o.warnEpisode(obs.EventExitLiquidationDelayed, err, "reading the engine cancel of order "+order.OrderID)
-				res.cleared = false
-				continue
-			}
-			if waiting {
-				res.cleared, res.awaitingClose = false, true
-				continue
-			}
-			if !withPending {
-				continue
-			}
-		}
-		issued, err := o.opts.Issuer.IssueReduction(ctx, execgw.ReductionIssuance{
-			Intent: risk.Intent{
-				AccountRef: o.opts.AccountRef,
-				Market:     costs.Market(strings.ToLower(strings.TrimSpace(order.Market))),
-				Symbol:     order.Symbol,
-				Side:       risk.SideSell,
-				Quantity:   order.Quantity,
-			},
-			Account: risk.AccountState{HeldQuantity: order.Quantity},
-			Reason: fmt.Sprintf("cancelling the working %s order %s before liquidating position %s",
-				strings.ToUpper(strings.TrimSpace(order.Side)), order.OrderID, m.position.ID),
-		})
+		// 엔진 취소가 이미 접수 확정된 주문은 다시 취소하지 않음. 매도는 종결 증거를 기다림 — 발의 유무와 무관함(D−4.3-1):
+		// 발의가 풀린 뒤의 주기(withPending=false)에도 그 매도가 취소 전에 얼마나 체결됐는지 모르는 채 손절을 낼 수 없음.
+		// 매수는 취소 접수로 치워짐(a198 D8) — 다시 취소하면 계약상 409 already-canceled 가 오고, 치움 판정은 그대로 둠.
+		_, accepted, err := o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
 		if err != nil {
+			o.warnEpisode(obs.EventExitLiquidationDelayed, err, "reading the engine cancel of order "+order.OrderID)
+			// 운영에서 warnEpisode 는 무기록이라(opts.Log nil) 원인을 운영 로그에도 남김 — 원문 오류는 싣지 않음(a198 r2).
+			o.noteClearCancelFailure(m, order, "", exitClearCancelLookupFailed, false)
 			res.cleared = false
+			continue
+		}
+		if accepted {
+			if !buy {
+				res.cleared, res.awaitingClose = false, true
+			}
+			continue
+		}
+		if !buy && !withPending {
 			continue
 		}
 		quantity, qerr := floatOf("working order quantity", order.Quantity)
 		price, perr := workingOrderPrice(order.Price)
 		if qerr != nil || perr != nil {
+			// a198 D4a: 읽을 수 없는 주문도 치우지 못한 사실을 운영 로그에 한 번 남김(원문 오류는 싣지 않음).
+			o.noteClearCancelFailure(m, order, "", exitClearCancelOrderUnreadable, false)
+			res.cleared = false
+			continue
+		}
+		// 취소 결정은 수동 flatten 과 같은 발행 함수로 냄(a198 D2) — 주문 생성 결정(멱등 키)을 실으면 원장이 취소를 거절함.
+		// 방향 · 수량은 취소할 그 주문의 것이고, 시계는 운영에서 게이트웨이와 같은 관측기 시계임.
+		decision, err := (&execgw.Issuer{Journal: o.opts.Journal, Clock: o.clk, AccountRef: o.opts.AccountRef}).
+			IssueReduction(ctx, execgw.ReductionRequest{
+				Kind:        journal.KindCancel,
+				Market:      strings.ToLower(strings.TrimSpace(order.Market)),
+				Symbol:      order.Symbol,
+				Side:        strings.ToUpper(strings.TrimSpace(order.Side)),
+				MaxQuantity: quantity,
+				Reason: fmt.Sprintf("cancelling the working %s order %s before liquidating position %s",
+					strings.ToUpper(strings.TrimSpace(order.Side)), order.OrderID, m.position.ID),
+			})
+		if err != nil {
+			o.noteClearCancelFailure(m, order, "", exitClearCancelDecisionFailed, false)
 			res.cleared = false
 			continue
 		}
@@ -1712,12 +1721,14 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 				Price:    price,
 				Currency: order.Currency,
 			},
-			Decision: issued.Decision,
+			Decision: decision,
 		})
 		if err != nil || out.State != journal.StateConfirmed {
+			o.noteClearCancelFailure(m, order, out.State, string(out.Reason), out.AttemptID != "")
 			res.cleared = false
 			continue
 		}
+		o.noteClearCancelConfirmed(m, order)
 		if !buy {
 			// 매도의 취소 접수는 치움의 증거가 아님 — 취소 전에 얼마나 체결됐는지는 종결 체결 기록만 말함(D−4.3).
 			res.cleared, res.awaitingClose = false, true

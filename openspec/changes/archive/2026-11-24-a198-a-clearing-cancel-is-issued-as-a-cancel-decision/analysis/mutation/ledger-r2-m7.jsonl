@@ -1,0 +1,6 @@
+{"step": "copy", "path": "/home/daniel/tossos-work/a198-mut-1012968", "sha": "09bb9e8c1f4e57b2490340a7a0d64edd9481416d"}
+{"step": "control", "rc": 0, "tail": ["ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/app/engine\t32.214s"]}
+{"mutant": "M7 매도 취소 접수를 치움으로 판정", "applied": true, "line": 1728, "reached": 1, "rc": 1, "caught": true, "failed": ["--- FAIL: TestA094ACancelledSellStillHoldsTheStopAfterTheProposalIsReleased (0.46s)", "--- FAIL: TestA094AnotherIntentsCancelledSellStillHoldsTheStop (0.42s)"], "build_error": false}
+{"mutant": "M7 매도 취소 접수를 치움으로 판정", "restored": true}
+{"step": "final-control", "rc": 0}
+{"step": "cleanup", "removed": true}

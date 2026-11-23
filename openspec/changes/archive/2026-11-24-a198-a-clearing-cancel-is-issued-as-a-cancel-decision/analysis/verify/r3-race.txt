@@ -1,0 +1,3 @@
+# fa8771ed3+작업트리 · 2026-11-24T04:11:45+09:00 · cmd: go test -race ./internal/app/engine -run A198|A193 -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	311.785s
+rc=0

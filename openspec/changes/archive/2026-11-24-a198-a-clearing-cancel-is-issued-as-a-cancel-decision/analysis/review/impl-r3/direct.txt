@@ -1,0 +1,9 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	7.596s
+== reconcile
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	4.275s
+== execgw
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	11.812s
+== engine
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	47.531s
+== vet
+vet-rc=0

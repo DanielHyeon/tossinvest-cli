@@ -1,0 +1,5 @@
+# 381f229de+작업트리(r2·gstack 수정) · 2026-11-24T01:42:26+09:00 · cmd: python3 tools/logic-map/check_analysis.py --change a198-a-clearing-cancel-is-issued-as-a-cancel-decision
+[logic-map] a198-a-clearing-cancel-is-issued-as-a-cancel-decision: base e1eaf720c5fa → working tree (no landed-commit.txt in HEAD) required 2 function(s) — judged at HEAD 381f229de7f8
+[logic-map] a198-a-clearing-cancel-is-issued-as-a-cancel-decision: the target is the working tree, so this window also holds 12 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits
+[logic-map] a198-a-clearing-cancel-is-issued-as-a-cancel-decision: evidence complete or diff-proven exempt
+rc=0

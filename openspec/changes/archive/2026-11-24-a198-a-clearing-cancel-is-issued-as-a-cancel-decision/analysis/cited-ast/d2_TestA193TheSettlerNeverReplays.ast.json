@@ -1,0 +1,141 @@
+{
+  "file": "internal/app/engine/a193_in_doubt_settle_test.go",
+  "source_sha256": "e96d11fd09faa424230dfd05e329a32cd1b5a60308daf3f09af55655608d3a77",
+  "package": "engine",
+  "function": "TestA193TheSettlerNeverReplays",
+  "signature": "TestA193TheSettlerNeverReplays(params=1, results=0)",
+  "start": {
+    "line": 761,
+    "column": 1
+  },
+  "end": {
+    "line": 777,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 765,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 769,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "switch",
+      "at": {
+        "line": 770,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 771,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 775,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 763,
+        "column": 10
+      },
+      "text": "token.NewFileSet"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 764,
+        "column": 15
+      },
+      "text": "parser.ParseFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 766,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 768,
+        "column": 2
+      },
+      "text": "ast.Inspect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 772,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 772,
+        "column": 67
+      },
+      "text": "fset.Position"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 772,
+        "column": 81
+      },
+      "text": "sel.Pos"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 763,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 764,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 769,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

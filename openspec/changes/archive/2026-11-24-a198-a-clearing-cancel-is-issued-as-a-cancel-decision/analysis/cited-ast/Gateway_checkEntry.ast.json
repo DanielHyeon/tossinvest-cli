@@ -1,0 +1,86 @@
+{
+  "file": "internal/execgw/gateway.go",
+  "source_sha256": "c304e32a62e42759ad1ffb857ca90461068301707dadb5ca7bd8c46dba8af2de",
+  "package": "execgw",
+  "function": "checkEntry",
+  "receiver": "Gateway",
+  "signature": "Gateway.checkEntry(params=1, results=1)",
+  "start": {
+    "line": 859,
+    "column": 1
+  },
+  "end": {
+    "line": 869,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 860,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 864,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 861,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 866,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 868,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 863,
+        "column": 14
+      },
+      "text": "g.entry.CheckEntryFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 866,
+        "column": 10
+      },
+      "text": "g.entry.markStrategyRefusal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 863,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

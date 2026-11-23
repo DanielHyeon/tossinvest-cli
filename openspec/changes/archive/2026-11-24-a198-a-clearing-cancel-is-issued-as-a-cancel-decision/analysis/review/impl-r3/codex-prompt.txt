@@ -1,0 +1,12 @@
+You are an adversarial code reviewer. DO NOT modify any file, DO NOT change git state, DO NOT run go test/make/tossctl. Read-only. Reply in Korean, under 50 lines.
+
+Target: worktree /home/daniel/tossos-work/a198-impl, HEAD e6383786d. The diff under review (Go only) is saved at /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/6ba8fcd4-b024-437e-a4c2-ebe621826fe5/scratchpad/rev-a198-r3/d2.diff (equivalently `git diff a7639378e..e6383786d -- internal`). Design: openspec/changes/a198-a-clearing-cancel-is-issued-as-a-cancel-decision/design.md rows D9 and D10 and section 6.
+
+Summary: D9 — boot recovery confirmAcked (internal/reconcile/acked_boot.go) completes an ACKED CANCEL with a recorded broker number as CONFIRMED. D10 — the session in-doubt settler sweep (internal/app/engine/in_doubt_settle.go, a198_in_doubt_cancel_close.go) closes IN_DOUBT CANCEL attempts whose intent source is "engine" using the target order's terminal fill snapshot in the ledger (internal/journal/a198_cancel_target_close.go, same match predicate as the clearing path's confirmedOrderTerminalEvidence in exit_proposal_release.go): CANCELLED* -> CONFIRMED, FILLED/REJECTED* -> FAILED_CONFIRMED, otherwise no change. No broker call.
+
+Questions (file:line evidence, grade P0 money/oversell/stop-blocking, P1 contract violation/regression, P2 other):
+1. Oversell / double sell: after D9/D10 closes, can a protective stop go out over a sell (engine or human) that is actually live? Consider wrong terminal records, partial fill then cancel, same order number on another trading day/market/side, legacy rows without scope alongside scoped rows, two owner intents, AMEND-owned numbers.
+2. Wrong-direction close (filled closed as CONFIRMED or vice versa) and the effect on journal.ConfirmedCancelOf (D8), reservation release, quantity books.
+3. The single-transaction claim: can another writer interleave between the read and the update (other connections, boot recovery vs session, Resolver vs D10 on the same attempt)? Is there a from-state guard? Partial writes?
+4. intents.source trust: places outside the engine writing "engine", engine cancels with other source, NULL/empty, old rows; can D10 close a flatten cancel?
+5. D9: the recorded broker number of an ACKED CANCEL is the cancel's identifier, not the target's. After CONFIRMED, if the target is actually live, what is sent (sell target vs buy target)? Lost alerts vs the a094 "name it only" contract? Write-failure path? Does D9 also confirm flatten-source ACKED cancels, contrary to the Q7 rationale used for D10?

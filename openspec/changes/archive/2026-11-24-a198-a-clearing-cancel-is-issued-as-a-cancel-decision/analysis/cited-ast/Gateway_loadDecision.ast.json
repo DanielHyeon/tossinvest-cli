@@ -1,0 +1,149 @@
+{
+  "file": "internal/execgw/guardian.go",
+  "source_sha256": "8f9073c05d4b3b7b5a55db9d8d3df9769832679c20b653ebd0984753a229126b",
+  "package": "execgw",
+  "function": "loadDecision",
+  "receiver": "Gateway",
+  "signature": "Gateway.loadDecision(params=2, results=2)",
+  "start": {
+    "line": 204,
+    "column": 1
+  },
+  "end": {
+    "line": 220,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 205,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 210,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 215,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 206,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 211,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 216,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 219,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 5
+      },
+      "text": "ref.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 30
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 14
+      },
+      "text": "g.journal.LookupDecision"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 44
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 5
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 30
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 4
+      },
+      "text": "short"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 30
+      },
+      "text": "reject"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 209,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

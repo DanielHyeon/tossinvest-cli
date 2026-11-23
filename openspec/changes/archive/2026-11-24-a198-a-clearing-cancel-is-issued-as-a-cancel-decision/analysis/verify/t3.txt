@@ -1,0 +1,2 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	26.715s
+rc=0

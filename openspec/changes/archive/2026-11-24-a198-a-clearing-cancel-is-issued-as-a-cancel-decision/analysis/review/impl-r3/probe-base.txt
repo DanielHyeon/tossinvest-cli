@@ -1,0 +1,37 @@
+    zz_rev2_probe_test.go:56: after breach: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] cancels=[] sells=[]
+    zz_rev2_probe_test.go:62: after terminal+5: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] cancels=0 sells=[13]
+--- PASS: TestRev2P1AlreadyFilledBuy (0.43s)
+    zz_rev2_probe_test.go:73: cycle1: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] cancels=[]
+    zz_rev2_probe_test.go:79: cycle2: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] cancels=[] sells=[]
+    zz_rev2_probe_test.go:85: after terminal+5: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted PLACE|FAILED_CONFIRMED||opposite_pending_order_exists PLACE|CONFIRMED||broker_accepted] cancels=0 sells=[10]
+--- PASS: TestRev2P2ReCancelAfterOppositePending (0.44s)
+    zz_rev2_probe_test.go:101: cycle1: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] cancels=[] sells=[]
+    zz_rev2_probe_test.go:104: cycle2: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] cancels=[] sells=[]
+    zz_rev2_probe_test.go:111: after terminal+5: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] cancels=0 sells=[10]
+--- PASS: TestRev2P3TwoBuysOneRefused (0.48s)
+    zz_rev2_probe_test.go:143: already-filled before closing: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] cancels=0 sells=[4]
+    zz_rev2_probe_test.go:152: already-filled after closing: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] cancels=0 sells=[4 6] pos=6
+--- PASS: TestRev2SellAlreadyFilled (0.47s)
+    zz_rev2_probe_test.go:143: already-canceled before closing: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] cancels=0 sells=[4]
+    zz_rev2_probe_test.go:152: already-canceled after closing: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] cancels=0 sells=[4 10] pos=10
+--- PASS: TestRev2SellAlreadyCanceled (0.48s)
+    zz_rev2_probe_test.go:143: already-modified before closing: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] cancels=0 sells=[4]
+    zz_rev2_probe_test.go:152: already-modified after closing: attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] cancels=0 sells=[4 10] pos=10
+--- PASS: TestRev2SellAlreadyModified (0.49s)
+    zz_rev3_probe_test.go:35: partial: cancels=[] attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] sells=[4 8] pos=8
+--- PASS: TestRev3SellCancelledAfterPartialFill (0.43s)
+    zz_rev3_probe_test.go:35: filled: cancels=[] attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] sells=[4 6] pos=6
+--- PASS: TestRev3SellFilled (0.44s)
+    zz_rev3_probe_test.go:33: observation cycle: engine: reading the working orders of 005930: journal: tracked fill order identity conflict: broker snapshot symbol or market contradicts the confirmed intent: order BO-1, expected kr/005930
+--- FAIL: TestRev3OppositeSideTerminalRow (0.37s)
+    zz_rev3_probe_test.go:35: other-day: cancels=[] attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] sells=[4] pos=10
+--- PASS: TestRev3OtherDayTerminalRow (0.43s)
+    zz_rev3_probe_test.go:35: open-partial: cancels=[] attempts=[PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted] sells=[4] pos=9
+--- PASS: TestRev3OpenPartialRow (0.46s)
+    zz_rev3_probe_test.go:94: cancel attempts = [], want one IN_DOUBT from the 5xx
+--- FAIL: TestRev3BuyInDoubtThenClosedWithSweep (0.36s)
+    zz_rev3_probe_test.go:106: cancel attempts = [], want one IN_DOUBT from the 5xx
+--- FAIL: TestRev3BuyInDoubtThenFilledWithSweep (0.39s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	5.681s
+FAIL

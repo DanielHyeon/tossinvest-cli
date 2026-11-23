@@ -1,0 +1,30 @@
+
+// a198 1.3 (b) 확장 probe — 커밋하지 않음(버리는 worktree, 위 a197 probe 와 같은 파일 끝에 덧붙임).
+// 취소 결정의 모양(방향 · 최대 수량)이 게이트웨이 취소 요청의 방향 · 수량과 어떻게 비교되는지 잼.
+// 결정은 flatten 과 같은 execgw.Issuer(Kind CANCEL) — 키 없음. 요청 수량 = 길 치우기가 넘기는 LiveOrder.Quantity 자리.
+func TestA197ProbeA198CancelShape(t *testing.T) {
+	cases := []struct {
+		name               string
+		orderSide, decSide string
+		orderQty, decMax   float64
+	}{
+		{"BUY-order/decision-SELL/no-key", "BUY", "SELL", 2, 2},
+		{"BUY-order/qty10/decmax7", "BUY", "BUY", 10, 7},
+		{"BUY-order/qty7/decmax10", "BUY", "BUY", 7, 10},
+		{"SELL-order/qty10/decmax10", "SELL", "SELL", 10, 10},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			broker := &fakeBroker{result: domain.MutationResult{OrderID: "O-1", CurrentOrderID: "O-1"}}
+			gw, j, clk := newGateway(t, broker)
+			dec := exitDecision(t, j, clk, journal.KindCancel, "kr", "005930", c.decSide, c.decMax)
+			out, err := gw.Cancel(context.Background(), execgw.CancelRequest{
+				Intent:   orderintent.CancelIntent{OrderID: "O-1", Symbol: "005930"},
+				Order:    execgw.OrderRef{Market: "kr", Side: c.orderSide, Quantity: c.orderQty, Price: 70000, Currency: "KRW"},
+				Decision: dec,
+			})
+			_, cancels, _ := broker.totals()
+			t.Logf("PROBE-A198 %s state=%s reason=%s broker_cancels=%d err=%v", c.name, out.State, out.Reason, cancels, err)
+		})
+	}
+}
