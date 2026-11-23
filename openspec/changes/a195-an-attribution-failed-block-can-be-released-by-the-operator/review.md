@@ -104,3 +104,16 @@ Pre-Edit Gate:
   3. 실제 투영 writer(`enterReconcileScopeInTx`)의 AF 행 scope_market NULL 을 고정하는 journal 시험 없음(범위 확장).
   4. 사고 실장부 상태에서 해제 성공은 미증명 — 거부된 매도 주문이 여전히 추적되면 MissingOrders 로 거절될 수 있음(운영 장부 읽기 필요 — 사람 승인 사항).
 - COMPLETED: false(실 CLI blocked · Codex outside 미실행 · 편집 뒤 재리뷰 없음), converged: false, cycles 1.
+
+## Manager 검증 (2026-11-23, Fable — tasks 5.1)
+- HEAD 2c048a101. production diff 를 직접 읽음: 새 함수 reconcileResolveRefusedCause(허용 = QUANTITY_MISMATCH, 종목 범위 ATTRIBUTION_FAILED), validate 클로저의 원인 순회 8줄 → 호출 1줄, 도움말·성공 문장 원인 중립, shapes.json 키 1.
+- 독립 재실행(GOFLAGS=-trimpath): ./cmd/tossctl -run 'TestA166EngineReconcile|TestEngineReconcileResolve|A195' → PASS 24 · FAIL 0(ok 4.105s); ./internal/accountbudgetruntime → ok 24.092s; ./internal/reconcile -run 'Resolve|Restore|Observe' → ok 4.447s; go vet ./cmd/tossctl/ ./internal/reconcile/ rc 0; openspec validate --strict valid; check_analysis evidence complete.
+- gstack review r1 의 Manager 결정 대기 4건 처분: (1) 계좌 전체 범위 거절 문구의 종목 자리 빈칸 — 종전 문구 유지(D5), 기록만. (2) build 와 해제 사이에 잠금 밖 writer 가 더한 행 — 이 명령은 엔진 잠금을 쥐고 돌므로 실질 writer 가 없다, 기록만. (3) 귀속 실패 행의 scope_market NULL 고정 시험 — 시장 범위 행이 생기면 Tracker.Resolve 배치가 「not active」로 거절(fail-closed)하므로 안전측, 후속 후보로 기록. (4) 사고 당시 장부에서의 성공 여부 — 운영 엔진 로그가 2026-11-20 12:56 이후 2026-11-23 19:58 까지 매분 reconcile.clean(blocked 1)을 찍었다(Manager 실측, 시각·이벤트명만) = 엔진 자신의 비교가 그 기간 진입을 막는 차이를 보지 않았다. 명령의 비교도 같은 함수이므로 통과가 예상된다 — 확정은 운영 실행(사람 승인) 때.
+- shapes.json gate(open): Keep — design D6·Manager 결정, census 시험 통과로 검증.
+- 판정: 통과. 종결 진행.
+
+## 종결 (2026-11-23, 종결 에이전트 — 사용자 요청 「커밋·push·archive(완료 게이트 포함)」)
+- main 따라가기: `origin/main` `e1eaf720c`(a198 계약 등록 — 문서만, Go 0) 위로 rebase, 충돌 0. 옛 HEAD `2c048a101` → 새 `836244854`. `base-commit.txt`(`064f59fd9`) 는 HEAD 의 조상(확인).
+- rebase 뒤 선택 시험 재실행(GOFLAGS=-trimpath): ./cmd/tossctl -run 'TestA166EngineReconcile|TestEngineReconcileResolve|A195' → PASS 24 · FAIL 0(ok 4.294s); ./internal/accountbudgetruntime ok 23.621s; ./internal/reconcile -run 'Resolve|Restore|Observe' ok 4.075s.
+- 착지: `--record-landing` → `landed-commit.txt` = `836244854`(도구 계산), 단독 커밋 `969d04e13`.
+- tasks: 5.1 체크(위 Manager 검증), 5.2 **선체크(gate ② 선행 조건, 선례 a193)** — 게이트·archive·Story·push 는 이 체크 뒤 수행. 옛 5.3(운영 반영·해제 명령 실행)은 체크박스에서 빼 「6. 종결 뒤(사람 승인)」 문단으로 옮김(운영 반영 없이 체크하는 것을 피함).

@@ -115,7 +115,7 @@
     - STORY-TOS-a130 — An adopted trade whose quantity grew after adoption still freezes its outcome [archived] → `a130-an-adopted-trade-keeps-its-outcome`
     - STORY-TOS-a192 — missing-order 종목 차단은 그것을 만든 주문들이 브로커 근거로 종결 확인되고 그 뒤의 대사가 그 종목에 차이를 보지 않을 때 엔진이 스스로 풀고 근거를 장부에 남긴다 [archived] → `a192-a-missing-order-block-is-released-by-the-orders-terminal-proof`
     - STORY-TOS-a194 — 대사 차단 때문에 편입되지 못해 손절이 걸리지 않은 보유와, 운영자만 풀 수 있는 차단 자체가 운영자에게 알려진다 [in_progress] → `a194-a-holding-left-unprotected-by-a-reconcile-block-is-reported`
-    - STORY-TOS-a195 — 귀속 실패(ATTRIBUTION_FAILED) 종목 차단은 재조회 일치를 근거로 운영자 해제 명령이 풀 수 있다 [in_progress] → `a195-an-attribution-failed-block-can-be-released-by-the-operator`
+    - STORY-TOS-a195 — 귀속 실패(ATTRIBUTION_FAILED) 종목 차단은 재조회 일치를 근거로 운영자 해제 명령이 풀 수 있다 [implemented] → `a195-an-attribution-failed-block-can-be-released-by-the-operator`
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
     - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [archived] → `a041-complete-exit-line-contract`
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [archived] → `a042-persist-exit-line-snapshots`
