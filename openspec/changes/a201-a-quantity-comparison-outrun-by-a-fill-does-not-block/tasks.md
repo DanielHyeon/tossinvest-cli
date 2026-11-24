@@ -23,7 +23,7 @@
 - [x] 2.2 RED — design §3 의 1~14(1단계 재현 6 을 v3 계약으로 뒤집는 것이 첫 줄, V4b 조정 · 체결 두 판, V5 「가로채지 않음」, V5b 등식) — 원문 `analysis/tdd/red.txt`. 1단 25 시험(편집 전 API 로 컴파일) FAIL 12 · PASS 13(편집 전에도 통과해야 하는 고정 — pre-edit.md 의 분류 그대로), 2단 새 API 시험 8(`internal/reconcile/a201_fill_credit_test.go`) build failed(undefined). 1단계 재현 6 은 지우고(revision base 번들 6) 새 파일로 옮김. 3-15 변이는 2.5
 - [x] 2.3 GREEN 최소 구현 — 새 파일 둘 · `RunOnce` 2 자리 · `Observe` 2 자리(Cleared 직전 원인 표지 · 깨끗한 갈래 권위 오류 반환 직전 반박 V4b) · `persist` 원인 갈래 · `ValidReconcileReleaseCause` case 1. 주석은 한글로 「왜」 — 원문 `analysis/tdd/green.txt`(a201 시험 33 PASS · FAIL 0). 새 파일 `internal/reconcile/a201_fill_credit.go` · `internal/journal/a201_fill_applied.go`, 구조체 칸 `Tracker.filled` · `Block.releasedByFill`. 설계 이탈 없음
 - [x] 2.4 post-edit 번들 · `check_analysis`(Observe 는 옛/새 ast 정렬 재번호) — 네 함수 재추출 · `analysis/function-logic/renumber.py`(difflib 정렬) 원문 `renumber-output.txt`(Observe equal 29 · RunOnce equal 8 · Valid equal 3 · persist 새 B10 1 + 뒤 둘 밀림), 커버 `analysis/coverage/post-*.txt`(mode set, 새 문장 전부 실행), 지운 시험 6 은 revision base. 도구가 계산한 required 10(`analysis/function-logic/required-functions.txt` — 생산 4 + 지운 시험 6), `check_analysis` rc 0 「evidence complete」
-- [ ] 2.5 변이 원장(design §3-15)
+- [x] 2.5 변이 원장(design §3-15) — `analysis/mutation/ledger.md`(하네스 `run_mutant.sh`, 원문 `raw/`). 사본 worktree, 무변이 대조군 GREEN 먼저, 한 번에 한 판 · 판마다 원복 확인. 변이 16(§3-15 의 15 + 목록 밖 1): reached 16 · CAUGHT 16 · SURVIVED 0(최종). 첫 판에서 M14 는 구조 시험만, M15(곁 맵 정리 삭제)는 SURVIVED → 행동 고정 시험 2 추가(`77c690c22` · `ea6b2011b`) 뒤 다시 돌려 CAUGHT
 - [ ] 2.6 선택 시험 · `-race`(해당) · `make lint` · strict validate · tracker `--check`
 
 ## 3. 리뷰 · 검증
