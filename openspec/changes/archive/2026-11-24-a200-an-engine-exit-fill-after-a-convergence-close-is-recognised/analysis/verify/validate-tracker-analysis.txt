@@ -1,0 +1,8 @@
+Change 'a200-an-engine-exit-fill-after-a-convergence-close-is-recognised' is valid
+rc=0
+[pm] hierarchy and generated trackers are current
+rc=0
+[logic-map] a200-an-engine-exit-fill-after-a-convergence-close-is-recognised: base 28680af3d428 → working tree (no landed-commit.txt in HEAD) required 5 function(s) — judged at HEAD 8d0655294d7e
+[logic-map] a200-an-engine-exit-fill-after-a-convergence-close-is-recognised: the target is the working tree, so this window also holds 5 commit(s) that landed after the base and every existing function they changed is required here too — run `python3 tools/logic-map/check_analysis.py --change a200-an-engine-exit-fill-after-a-convergence-close-is-recognised --record-landing` to let the gate compute `landed-commit.txt` from this change's evidence and record it, which narrows it to this change's own work; if no commit on this history is accepted as the landing, the command says so instead of recording
+[logic-map] a200-an-engine-exit-fill-after-a-convergence-close-is-recognised: evidence complete or diff-proven exempt
+rc=0

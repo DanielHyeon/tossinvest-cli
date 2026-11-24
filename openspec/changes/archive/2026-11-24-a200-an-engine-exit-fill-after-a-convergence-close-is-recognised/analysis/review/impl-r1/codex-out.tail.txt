@@ -1,0 +1,300 @@
+  1858	
+  1859	func (o *ExitObserver) alertUnmanaged(ctx context.Context, p journal.Position) {
+  1860		if o.unmanaged[p.ID] {
+   175		// caller mints the next instance_seq and a new entry_decision_id rather than
+   176		// writing into the row that is already there.
+   177		NewInstance bool
+   178		// Refusal is empty for an allowed transition.
+   179		Refusal Refusal
+   180		// Reason is the human sentence for the refusal, empty otherwise.
+   181		Reason string
+   182	}
+   183	
+   184	// Reconcile reports whether the outcome is a refusal that must raise the
+   185	// durable RECONCILE state.
+   186	func (o Outcome) Reconcile() bool { return o.Refusal != RefusalNone }
+   187	
+   188	// Closed reports whether the instance reached its terminal state.
+   189	func (o Outcome) Closed() bool { return o.Next == Closed && !o.Reconcile() }
+   190	
+   191	// Apply runs one event against one instance and returns what the transition
+   192	// table says happens.
+   193	//
+   194	// It never panics and it never corrects arithmetic. A transition the table does
+   195	// not allow comes back as a refusal with the instance untouched, because the
+   196	// account — not this package — is the authority on a quantity the projection
+   197	// cannot derive (position-ledger: 허용되지 않은 전이는 오류이며 RECONCILE로
+   198	// 전이한다, 산식 보정 금지).
+   199	func Apply(inst Instance, ev Event) (Outcome, error) {
+   200		state := inst.State
+   201		if state == "" {
+   202			state = Flat
+   203		}
+   204		if !ValidState(state) {
+   205			return Outcome{}, fmt.Errorf("%w: %q is not a position state", ErrInvalidEvent, inst.State)
+   206		}
+   207		if ev.Role != Entry && ev.Role != Exit {
+   208			return Outcome{}, fmt.Errorf("%w: %q is not an order role", ErrInvalidEvent, ev.Role)
+   209		}
+   210	
+   211		quantity, err := nonNegative("instance quantity", orZero(inst.Quantity))
+   212		if err != nil {
+   213			return Outcome{}, err
+   214		}
+   215		delta, err := nonNegative("fill delta", orZero(ev.Delta))
+   216		if err != nil {
+   217			return Outcome{}, err
+   218		}
+   219	
+   220		movement, err := classifyMovement(ev.Role, delta, quantity)
+   221		if err != nil {
+   222			return Outcome{}, err
+   223		}
+   224		disposition, err := classifyDisposition(ev)
+   225		if err != nil {
+   226			return Outcome{}, err
+   227		}
+   228	
+   229		row, found := Lookup(state, ev.Role, movement, disposition)
+   230		if !found {
+   231			// Structurally unreachable: the table has a row for every combination
+   232			// classifyMovement and classifyDisposition can produce, and
+   233			// TestTheTableCoversEveryReachableCombination proves it. Reported rather
+   234			// than assumed away, because an unhandled state must not become a silent
+   235			// no-op on a live account.
+   236			return Outcome{}, fmt.Errorf(
+   237				"%w: no transition row for (%s, %s, %s, %s)",
+   238				ErrInvalidEvent, state, ev.Role, movement, disposition)
+   239		}
+   240	
+   241		out := Outcome{
+   242			Row:         row.ID,
+   243			Movement:    movement,
+   244			Disposition: disposition,
+   245			Next:        state,
+   246			Quantity:    quantity,
+   247			AvgPrice:    inst.AvgPrice,
+   248		}
+   249		if row.Refusal != RefusalNone {
+   250			out.Refusal = row.Refusal
+   251			out.Reason = refusalReason(row.Refusal, ev.Role, delta, quantity, state)
+   252			return out, nil
+   253		}
+   254	
+   255		base := Instance{State: state, Quantity: quantity, AvgPrice: inst.AvgPrice}
+   256		if row.NewInstance {
+   257			// A re-entry starts its own cost basis. Carrying the closed instance's
+   258			// average forward would price the new position with the old one's trades.
+   259			base = Instance{State: Flat, Quantity: "0", AvgPrice: Unknown}
+   260		}
+   261	
+   262		out.Next = row.Next
+   263		out.NewInstance = row.NewInstance
+   264	
+   265		switch ev.Role {
+   266		case Entry:
+   267			next, err := riskcalc.AddDecimal(base.Quantity, delta)
+   268			if err != nil {
+   269				return Outcome{}, fmt.Errorf("%w: adding the fill delta: %v", ErrInvalidEvent, err)
+   270			}
+   271			avg, err := reaverage(base, next, ev)
+   272			if err != nil {
+   273				return Outcome{}, err
+   274			}
+   275			out.Quantity, out.AvgPrice = next, avg
+   276		case Exit:
+   277			next, err := riskcalc.SubDecimal(base.Quantity, delta)
+   278			if err != nil {
+   279				return Outcome{}, fmt.Errorf("%w: subtracting the fill delta: %v", ErrInvalidEvent, err)
+   280			}
+   281			// A sell realises P&L; it does not move the unit cost of what is left.
+   282			out.Quantity, out.AvgPrice = next, base.AvgPrice
+   283		}
+   284		return out, nil
+   285	}
+# Function Logic Map: `ProjectPosition` (편집 뒤 판)
+
+- Source: `internal/journal/position_projection.go` (65-110), 작업 트리 source sha256 `e7e7d30f6153…`. 편집 전: `../../pre-edit-ast/internal-journal--projectposition.ast.json`(65-105, sha `5b62d380b860`, 분기 5).
+- AST evidence: `ast.json`(분기 6, return 7: 68 · 75 · 80 · 98 · 105 · 107 · 109). 명령 `go run ./tools/logic-map --file internal/journal/position_projection.go --func ProjectPosition`.
+- Risk scan: `risk-pattern-report.md`(일치 0).
+- 커버리지: 편집 전 `../../coverage/pre-edit-ProjectPosition-blocks.txt`, 편집 뒤 `../../coverage/after-ProjectPosition-blocks.txt`.
+- 재번호: B1~B5 번호 · 줄 유지, 새 B6 if@104(B5 안). 옛 return@102 → return@107, 옛 return@104 → return@109.
+
+## Inputs and invariants
+
+| Input/state | Valid range | Source of truth | Failure behavior |
+|---|---|---|---|
+| `tx *ApplyTx` | 체결 tx 안에서만 살아 있는 핸들 | `runApplyHooks` 280 | 닫힌 핸들이면 첫 읽기(resolveFillOrigin)가 오류 → B1 |
+| `fill AppliedFill` | RecordFill 이 만든 값. 이 체결의 `fill_events` 행(delta>0)은 이미 같은 tx 에 INSERT 됨(fills.go:466 → 훅 :551) | fills.go | 못 읽는 decimal → B4 |
+| 생산 진입 조건 | RecordFill 은 `locallyOwned`(소유 확정)일 때만 훅을 부름(fills.go:550) | fills.go | 외부 주문은 이 함수에 안 옴 |
+| 불변식 1 | 투영은 (계좌 · 시장 · 종목)의 최신 인스턴스(`currentInstance`)만 움직임 | position_projection.go:275-306 | — |
+| 불변식 2 | 거절이면 투영을 쓰지 않음(수량 그대로) — 인정이어도 같음 | B5 → return@105 · @107 | — |
+| 불변식 3(a200) | 인정은 차단을 쓰지 않고 표지 한 줄만, 인정이 아니면 오늘의 차단 경로 그대로 | B6 if@104 | 판정 읽기 오류는 tx 오류(체결 롤백) |
+
+## Branches and early returns
+
+| Branch | Condition | Mutation/side effect | Return/error | Required test |
+|---|---|---|---|---|
+| B1 if@67 | `resolveFillOrigin` 오류 | 없음(IC 행은 resolveFillOrigin 안에서) | return@68 err | 편집 무관 |
+| B2 if@70 | 소유 intent 없음(외부 · IC) | 없음 | return@75 nil | 편집 무관(RecordFill 경로에선 도달 안 함 — 커버 hit 0) |
+| B3 if@79 | `currentInstance` 오류 | 없음 | return@80 err | 편집 무관 |
+| B4 if@94 | `position.Apply` 오류(못 읽는 decimal) | 없음 | return@98 감싼 err | 편집 무관 |
+| B5 if@101 | `outcome.Reconcile()` — 전이표 거절 | 아래 B6 또는 `reconcile_states` 종목 행 INSERT(활성 행 없을 때) | return@107 `enterReconcileInTx` 결과 | 편집 지점 — 인정 아니면 오늘과 같음 |
+| B6 if@104 | 판정 읽기 오류 또는 인정(`recogniseAdjustmentCloseFill`) | 인정이면 표지 `exit_events` 한 줄(새 파일 안) | return@105 err(인정이면 nil) | 새 갈래 — 인정 · 오류 |
+| (return@109) | 허용 전이 | `positions` UPDATE/INSERT | `writeProjection` 결과 | 편집 무관 |
+
+## Calls and live bindings
+
+| Callee | Why called | Error/timeout/retry contract | Evidence |
+|---|---|---|---|
+| `resolveFillOrigin`@66 | 소유 intent · 범위 · 방향 | 오류 그대로. 인정 판정은 이 결과(`origin.IntentID`)를 받고 다시 유도하지 않음 | CodeGraph + AST |
+| `currentInstance`@78 | 최신 인스턴스 | 오류 그대로 | CodeGraph + AST |
+| `position.Apply`@83 | 전이표 판정 | 오류 감쌈 | AST |
+| `fmt.Errorf`@98 | B4 감쌈 | — | AST |
+| `outcome.Reconcile`@101 | 거절 여부 | 순수 | AST |
+| `recogniseAdjustmentCloseFill`@104 | 인정 판정 · 표지 쓰기(새 파일 a200_adjustment_close_fill_recognition.go) | 읽기 · 쓰기 오류를 그대로 돌려줌 — B6 이 tx 오류로 올림 | 구조 시험 `TestA200TheRecognitionIsCalledOnceAndReadsNoFillLedger`(생산 호출 이 한 자리) |
+| `enterReconcileInTx`@107 | 거절 → 차단 행 | 쓰기 오류면 tx 롤백 | CodeGraph(호출자 1) |
+| `writeProjection`@109 | 허용 전이 쓰기 | 쓰기 오류면 tx 롤백 | AST |
+| live config | 없음 | — | — |
+
+## State mutations and fallbacks
+
+- 쓰기 셋: B6 의 표지 행(인정일 때만), B5 의 차단 행(인정 아닐 때 · 활성 행이 있으면 쓰지 않음), return@109 의 투영 행. 전부 체결 tx 안이라 실패하면 체결 스냅숏까지 롤백.
+- fallback 없음: 판정이 「아님」이면 오늘의 차단 경로 그대로(문구 · 원인 무변).
+
+## Safety conclusion
+
+- Safe edit boundary: B5 안 한 자리(B6). 판정 조건 넷(design D2)과 사실 읽기는 새 파일. `pending_intent_id` 철자 · 체결 누적 표 읽기 · `resolveFillOrigin` 재호출 0(구조 시험).
+- High-risk impact: yes — 체결 투영 · 대사 차단(안전 부트스트랩 5). 인정은 차단을 만들지 않는 쪽으로만 바뀌고 수량은 바꾸지 않음.
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+/bin/bash -lc "rg -n 'Kind:|Classify|ApplyPositionAdjustment|PositionClosed' internal/reconcile/converge.go; rg -n 'quantity|Quantity' internal/journal/intents.go | head -25; rg -n 'impeccable|search-first' openspec/changes/a200-an-engine-exit-fill-after-a-convergence-close-is-recognised/review.md; nl -ba internal/riskcalc/decimal.go | sed -n '50,89p'" in /home/daniel/tossos-work/a200-impl
+ succeeded in 0ms:
+45:// `UNKNOWN`, from internal/position.Classify: the engine has an instance, so it
+209:		result, err := c.Journal.ApplyPositionAdjustment(ctx, journal.AdjustmentRequest{
+213:			Kind: string(position.Classify(position.ProvenanceInputs{
+254:			if err := c.Alert.ManagedPositionClosedExternally(ctx, ManagedCloseAlert{
+283:		if p.State == journal.PositionClosed {
+rg: internal/journal/intents.go: IO error for operation on internal/journal/intents.go: No such file or directory (os error 2)
+    50	func AddDecimal(a, b string) (string, error) {
+    51		x, y, err := parseOperands(a, b)
+    52		if err != nil {
+    53			return "", err
+    54		}
+    55		return addDecimals(x, y).String(), nil
+    56	}
+    57	
+    58	// SubDecimal returns a − b exactly. The result may be negative; callers that
+    59	// need a floor at zero use MaxDecimal("0", …) so the clamp is visible at the
+    60	// call site rather than hidden in the arithmetic.
+    61	func SubDecimal(a, b string) (string, error) {
+    62		x, y, err := parseOperands(a, b)
+    63		if err != nil {
+    64			return "", err
+    65		}
+    66		return addDecimals(x, y.negated()).String(), nil
+    67	}
+    68	
+    69	// CompareDecimal returns -1, 0 or +1 as a is less than, equal to or greater
+    70	// than b.
+    71	func CompareDecimal(a, b string) (int, error) {
+    72		x, y, err := parseOperands(a, b)
+    73		if err != nil {
+    74			return 0, err
+    75		}
+    76		return compareDecimals(x, y), nil
+    77	}
+    78	
+    79	// MinDecimal returns the smaller of the two, in its canonical spelling.
+    80	func MinDecimal(a, b string) (string, error) {
+    81		cmp, err := CompareDecimal(a, b)
+    82		if err != nil {
+    83			return "", err
+    84		}
+    85		if cmp <= 0 {
+    86			return CanonicalDecimal(a)
+    87		}
+    88		return CanonicalDecimal(b)
+    89	}
+
+hook: PostToolUse
+hook: PostToolUse Completed
+codex
+**확인된 회귀 1건: 인정 대상이 아닌 거절도 새 조회 오류 때문에 체결 전체가 롤백됩니다.** 네 조건을 모두 만족하는 **생산 도달 가능한 오인정 반례는 이번 정적 검토에서 확정하지 못했습니다.** 아래는 소스 확인 결과이며 테스트·장애 주입은 실행하지 않았습니다.
+
+**[P2] 인정 대상이 아닌 거절에도 불필요한 조회와 롤백 경로 추가**
+
+- `ENTRY_WHILE_CLOSING`도 인스턴스가 있으면 조정·exit state·attempt·intent 수량을 모두 읽습니다. `SELL_ON_CLOSED` 검사는 조회 **이후**입니다. 따라서 조정 조회 오류만으로 기존 차단 기록 경로에 도달하지 못합니다. 근거: `internal/journal/a200_adjustment_close_fill_recognition.go:108–115,131–192`.
+- 오류는 Project 훅에서 전파되어 **이번 snapshot 갱신·fill_events 삽입·예약 해제까지 롤백**합니다. 이전 기록은 보존되지만 이번 관측은 저장되지 않습니다. 재관측되면 다시 처리할 수 있으며, 영구 유실 여부는 이번 검토로 확정할 수 없습니다. 근거: `internal/journal/position_projection.go:104–107`; `internal/journal/fills.go:343,437–439,464–474,512–519,550–557`.
+- 제안: 거절 유형을 조회 전에 걸러내고, 명백한 불일치부터 단락 평가하십시오. 생산 호출 경로는 확인했으나 실제 DB 오류 발생은 미검증입니다.
+
+**1. 반례 후보 판정**
+
+| 후보 | 확인 결과·생산 도달성 |
+|---|---|
+| 잘못된 인스턴스·재개방 | 최신 인스턴스를 선택하는 기존 위험은 있습니다. 다만 재매수와 CLOSED 이후 조정은 **새 인스턴스**를 만들므로 “같은 인스턴스 재개방” 반례는 성립하지 않습니다. 새 인스턴스의 pending까지 옛 intent와 같아지는 생산 경로는 확인하지 못했습니다. `internal/journal/position_projection.go:275–305`; `internal/position/table.go:83–85`; `internal/journal/position_adjustments.go:275–298` |
+| 조정과 체결 순서 | 판정은 브로커 체결 시각과 조정의 인과를 비교하지 않습니다. “옛 매도가 살아 있는 상태에서 0 조정 → 원장에 반영되지 않은 재매수 → 옛 매도 체결”은 네 조건을 통과할 수 있는 **조건부 반례**입니다. 실제 브로커 도달성은 미검증이며 설계도 이를 수용한 가정으로 명시합니다. `internal/journal/a200_adjustment_close_fill_recognition.go:57–99`; `openspec/changes/a200-an-engine-exit-fill-after-a-convergence-close-is-recognised/design.md:24–28` |
+| 조정 전 부분 체결 | 전량 주문 31, 선행 체결 10, 조정 21→0이면 `31 > 21`로 거절합니다. 그러나 부분 주문 10, 선행 체결 3, 보유 31→28, 조정 28→0, 잔여 체결 7이면 `10 ≤ 28`로 **인정합니다**. 이것 자체는 과대 인정의 증거가 아니지만, “조정을 가로지른 부분 체결은 모두 거절”이라는 일반화는 틀립니다. `internal/journal/a200_adjustment_close_fill_recognition.go:91–99`; `internal/position/position.go:276–282`; `design.md:43–46` |
+| pending 변경 | 다른 intent로 바뀌면 조건 (c)에서 거절합니다. 기존 pending을 다른 intent로 덮어쓰는 것도 `AttachExitIntent`가 막습니다. `internal/journal/a200_adjustment_close_fill_recognition.go:81–83`; `internal/journal/apply_hook.go:789–796` |
+| 혼합 attempt 상태·정정 자식 | PLACE/AMEND는 상태 필터 없이 모두 셉니다. CONFIRMED PLACE + RECORDED/IN_DOUBT PLACE 또는 AMEND면 인정하지 않습니다. CANCEL은 세지 않지만 주문을 추가하는 attempt로 취급되지 않습니다. `internal/journal/a200_adjustment_close_fill_recognition.go:87–89,163–164` |
+| decimal | 상한 비교는 정확한 decimal 연산입니다. 파싱 실패는 거절합니다. 다만 순수 판정에 `quantity > 0` 검사는 없어 합성 입력 `quantity=-1, 감소분=31`은 통과합니다. 이를 정상 엔진 주문으로 만드는 생산 경로는 미검증이므로 확정 결함으로 세지 않았습니다. `internal/journal/a200_adjustment_close_fill_recognition.go:91–99`; `internal/riskcalc/decimal.go:61–76,151–176` |
+| BUY | BUY가 `ENTRY_WHILE_CLOSING`으로 **조회 함수에는 들어갈 수 있지만**, `SELL_ON_CLOSED` 조건을 통과하지 못합니다. `internal/position/table.go:78–80,162–164`; `internal/journal/a200_adjustment_close_fill_recognition.go:59–60` |
+
+**2. 수량·부분 체결·멱등성**
+
+- **인정된 양수 delta:** positions 행 전체와 position_adjustments는 변경하지 않습니다. 표지 삽입 후 `writeProjection`을 건너뜁니다. 다만 Exit 훅은 계속 실행되어 `taken_ratio_total`을 갱신하고, 종결 관측이면 pending을 비웁니다. 남은 수량이 0이므로 첫 양수 체결에서 taken ratio는 1이 됩니다. `internal/journal/position_projection.go:104–109`; `internal/journal/a200_adjustment_close_fill_recognition.go:118–123`; `internal/journal/apply_hook.go:992–1020`; `internal/exitpolicy/ratchet.go:559–565`.
+- **Working 누적 20 → Done 누적 31:** delta 20·11 각각 인정되어 표지 2개입니다. Working에서는 pending 유지, Done에서는 Project 인정 후 Exit가 pending을 해소합니다. `internal/journal/fills.go:412–415`; `internal/journal/apply_hook.go:283–300,1009–1020`.
+- **Working 누적 20 → Done 누적 20:** delta 0이라 인정 분기가 아닙니다. 표지는 추가되지 않지만 기존 허용 전이에서 `positions.closed_at`을 새 커밋 시각으로 덮어씁니다. 수량은 0, 조정 행은 그대로입니다. 이는 **기존 동작**입니다. `internal/position/table.go:106–108`; `internal/journal/position_projection.go:109,321–329`.
+- **동일 관측 재적용:** snapshot 동등성 검사에서 훅 전에 반환하므로 표지 중복 없습니다. 단순 broker timestamp 변경만으로도 표지를 추가하지 않습니다. `internal/journal/fills.go:420–425,864–877`.
+- **fill_events / fill_snapshots:** 성공적으로 커밋한 경우 기존 **투영 거절** 경로와 동일합니다. snapshot upsert와 양수 delta 이벤트 삽입은 Project보다 앞서 수행됩니다. 새 조회 오류가 발생한 경우만 위 롤백 차이가 생깁니다. `internal/journal/fills.go:437–439,464–474,550–557`.
+
+**3. “거절 동작 무변”의 정확한 범위**
+
+- **조회가 성공하고 인정되지 않으면**, 같은 입력·기존 DB 상태·커밋 시각에 대해 차단의 cause·evidence·ID·시각은 기존과 같습니다. 기존 활성 차단이 있으면 새 행을 쓰지 않는 것도 같습니다. 다만 새 조회 실패까지 포함하면 동작 무변은 아닙니다. `internal/journal/position_projection.go:107,375–382,390–418`.
+- **추가 SELECT 수:** 인스턴스가 없는 `UNATTRIBUTED_SELL`은 **0회**. 인스턴스가 있는 미인정 `SELL_ON_CLOSED`, `ENTRY_WHILE_CLOSING`은 정상 조회 완료 기준 **4회**입니다. 조정 전체 조회, PendingState, PLACE/AMEND 전체 조회, intent 수량 조회이며 조정·attempt 조회에는 LIMIT이 없습니다. `internal/journal/a200_adjustment_close_fill_recognition.go:108–110,131–132,150,163–164,182`; `internal/journal/apply_hook.go:378–382`.
+
+검토 한계: ai-memory CLI 조회는 연결 권한 오류로 실패했습니다. 판단은 제공 diff와 현재 소스에 근거합니다.
+hook: Stop
+hook: Stop
+hook: Stop Completed
+hook: Stop Failed
+tokens used
+94,655
+**확인된 회귀 1건: 인정 대상이 아닌 거절도 새 조회 오류 때문에 체결 전체가 롤백됩니다.** 네 조건을 모두 만족하는 **생산 도달 가능한 오인정 반례는 이번 정적 검토에서 확정하지 못했습니다.** 아래는 소스 확인 결과이며 테스트·장애 주입은 실행하지 않았습니다.
+
+**[P2] 인정 대상이 아닌 거절에도 불필요한 조회와 롤백 경로 추가**
+
+- `ENTRY_WHILE_CLOSING`도 인스턴스가 있으면 조정·exit state·attempt·intent 수량을 모두 읽습니다. `SELL_ON_CLOSED` 검사는 조회 **이후**입니다. 따라서 조정 조회 오류만으로 기존 차단 기록 경로에 도달하지 못합니다. 근거: `internal/journal/a200_adjustment_close_fill_recognition.go:108–115,131–192`.
+- 오류는 Project 훅에서 전파되어 **이번 snapshot 갱신·fill_events 삽입·예약 해제까지 롤백**합니다. 이전 기록은 보존되지만 이번 관측은 저장되지 않습니다. 재관측되면 다시 처리할 수 있으며, 영구 유실 여부는 이번 검토로 확정할 수 없습니다. 근거: `internal/journal/position_projection.go:104–107`; `internal/journal/fills.go:343,437–439,464–474,512–519,550–557`.
+- 제안: 거절 유형을 조회 전에 걸러내고, 명백한 불일치부터 단락 평가하십시오. 생산 호출 경로는 확인했으나 실제 DB 오류 발생은 미검증입니다.
+
+**1. 반례 후보 판정**
+
+| 후보 | 확인 결과·생산 도달성 |
+|---|---|
+| 잘못된 인스턴스·재개방 | 최신 인스턴스를 선택하는 기존 위험은 있습니다. 다만 재매수와 CLOSED 이후 조정은 **새 인스턴스**를 만들므로 “같은 인스턴스 재개방” 반례는 성립하지 않습니다. 새 인스턴스의 pending까지 옛 intent와 같아지는 생산 경로는 확인하지 못했습니다. `internal/journal/position_projection.go:275–305`; `internal/position/table.go:83–85`; `internal/journal/position_adjustments.go:275–298` |
+| 조정과 체결 순서 | 판정은 브로커 체결 시각과 조정의 인과를 비교하지 않습니다. “옛 매도가 살아 있는 상태에서 0 조정 → 원장에 반영되지 않은 재매수 → 옛 매도 체결”은 네 조건을 통과할 수 있는 **조건부 반례**입니다. 실제 브로커 도달성은 미검증이며 설계도 이를 수용한 가정으로 명시합니다. `internal/journal/a200_adjustment_close_fill_recognition.go:57–99`; `openspec/changes/a200-an-engine-exit-fill-after-a-convergence-close-is-recognised/design.md:24–28` |
+| 조정 전 부분 체결 | 전량 주문 31, 선행 체결 10, 조정 21→0이면 `31 > 21`로 거절합니다. 그러나 부분 주문 10, 선행 체결 3, 보유 31→28, 조정 28→0, 잔여 체결 7이면 `10 ≤ 28`로 **인정합니다**. 이것 자체는 과대 인정의 증거가 아니지만, “조정을 가로지른 부분 체결은 모두 거절”이라는 일반화는 틀립니다. `internal/journal/a200_adjustment_close_fill_recognition.go:91–99`; `internal/position/position.go:276–282`; `design.md:43–46` |
+| pending 변경 | 다른 intent로 바뀌면 조건 (c)에서 거절합니다. 기존 pending을 다른 intent로 덮어쓰는 것도 `AttachExitIntent`가 막습니다. `internal/journal/a200_adjustment_close_fill_recognition.go:81–83`; `internal/journal/apply_hook.go:789–796` |
+| 혼합 attempt 상태·정정 자식 | PLACE/AMEND는 상태 필터 없이 모두 셉니다. CONFIRMED PLACE + RECORDED/IN_DOUBT PLACE 또는 AMEND면 인정하지 않습니다. CANCEL은 세지 않지만 주문을 추가하는 attempt로 취급되지 않습니다. `internal/journal/a200_adjustment_close_fill_recognition.go:87–89,163–164` |
+| decimal | 상한 비교는 정확한 decimal 연산입니다. 파싱 실패는 거절합니다. 다만 순수 판정에 `quantity > 0` 검사는 없어 합성 입력 `quantity=-1, 감소분=31`은 통과합니다. 이를 정상 엔진 주문으로 만드는 생산 경로는 미검증이므로 확정 결함으로 세지 않았습니다. `internal/journal/a200_adjustment_close_fill_recognition.go:91–99`; `internal/riskcalc/decimal.go:61–76,151–176` |
+| BUY | BUY가 `ENTRY_WHILE_CLOSING`으로 **조회 함수에는 들어갈 수 있지만**, `SELL_ON_CLOSED` 조건을 통과하지 못합니다. `internal/position/table.go:78–80,162–164`; `internal/journal/a200_adjustment_close_fill_recognition.go:59–60` |
+
+**2. 수량·부분 체결·멱등성**
+
+- **인정된 양수 delta:** positions 행 전체와 position_adjustments는 변경하지 않습니다. 표지 삽입 후 `writeProjection`을 건너뜁니다. 다만 Exit 훅은 계속 실행되어 `taken_ratio_total`을 갱신하고, 종결 관측이면 pending을 비웁니다. 남은 수량이 0이므로 첫 양수 체결에서 taken ratio는 1이 됩니다. `internal/journal/position_projection.go:104–109`; `internal/journal/a200_adjustment_close_fill_recognition.go:118–123`; `internal/journal/apply_hook.go:992–1020`; `internal/exitpolicy/ratchet.go:559–565`.
+- **Working 누적 20 → Done 누적 31:** delta 20·11 각각 인정되어 표지 2개입니다. Working에서는 pending 유지, Done에서는 Project 인정 후 Exit가 pending을 해소합니다. `internal/journal/fills.go:412–415`; `internal/journal/apply_hook.go:283–300,1009–1020`.
+- **Working 누적 20 → Done 누적 20:** delta 0이라 인정 분기가 아닙니다. 표지는 추가되지 않지만 기존 허용 전이에서 `positions.closed_at`을 새 커밋 시각으로 덮어씁니다. 수량은 0, 조정 행은 그대로입니다. 이는 **기존 동작**입니다. `internal/position/table.go:106–108`; `internal/journal/position_projection.go:109,321–329`.
+- **동일 관측 재적용:** snapshot 동등성 검사에서 훅 전에 반환하므로 표지 중복 없습니다. 단순 broker timestamp 변경만으로도 표지를 추가하지 않습니다. `internal/journal/fills.go:420–425,864–877`.
+- **fill_events / fill_snapshots:** 성공적으로 커밋한 경우 기존 **투영 거절** 경로와 동일합니다. snapshot upsert와 양수 delta 이벤트 삽입은 Project보다 앞서 수행됩니다. 새 조회 오류가 발생한 경우만 위 롤백 차이가 생깁니다. `internal/journal/fills.go:437–439,464–474,550–557`.
+
+**3. “거절 동작 무변”의 정확한 범위**
+
+- **조회가 성공하고 인정되지 않으면**, 같은 입력·기존 DB 상태·커밋 시각에 대해 차단의 cause·evidence·ID·시각은 기존과 같습니다. 기존 활성 차단이 있으면 새 행을 쓰지 않는 것도 같습니다. 다만 새 조회 실패까지 포함하면 동작 무변은 아닙니다. `internal/journal/position_projection.go:107,375–382,390–418`.
+- **추가 SELECT 수:** 인스턴스가 없는 `UNATTRIBUTED_SELL`은 **0회**. 인스턴스가 있는 미인정 `SELL_ON_CLOSED`, `ENTRY_WHILE_CLOSING`은 정상 조회 완료 기준 **4회**입니다. 조정 전체 조회, PendingState, PLACE/AMEND 전체 조회, intent 수량 조회이며 조정·attempt 조회에는 LIMIT이 없습니다. `internal/journal/a200_adjustment_close_fill_recognition.go:108–110,131–132,150,163–164,182`; `internal/journal/apply_hook.go:378–382`.
+
+검토 한계: ai-memory CLI 조회는 연결 권한 오류로 실패했습니다. 판단은 제공 diff와 현재 소스에 근거합니다.

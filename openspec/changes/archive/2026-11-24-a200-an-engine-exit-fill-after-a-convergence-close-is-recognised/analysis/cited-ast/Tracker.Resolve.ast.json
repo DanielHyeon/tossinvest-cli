@@ -1,0 +1,333 @@
+{
+  "file": "internal/reconcile/mismatch.go",
+  "source_sha256": "9895f31184e50dd33f1416bf1b420fb1e855cdb604b58c95308105cecf9734fe",
+  "package": "reconcile",
+  "function": "Resolve",
+  "receiver": "Tracker",
+  "signature": "Tracker.Resolve(params=3, results=1)",
+  "start": {
+    "line": 1352,
+    "column": 1
+  },
+  "end": {
+    "line": 1396,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1353,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1356,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1360,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 1363,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1364,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 1379,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 1380,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1354,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1357,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1381,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1395,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1353,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1354,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1356,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1357,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1361,
+        "column": 13
+      },
+      "text": "t.Blocks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1362,
+        "column": 15
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1362,
+        "column": 58
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1364,
+        "column": 24
+      },
+      "text": "unrepresentableOrdinaryQuantityBlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1371,
+        "column": 15
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1372,
+        "column": 18
+      },
+      "text": "firstNonEmpty"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1375,
+        "column": 32
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1375,
+        "column": 69
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1376,
+        "column": 18
+      },
+      "text": "firstNonEmpty"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1379,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1380,
+        "column": 17
+      },
+      "text": "t.Journal.ReleaseReconciles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1381,
+        "column": 12
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1386,
+        "column": 2
+      },
+      "text": "t.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1388,
+        "column": 2
+      },
+      "text": "t.clearStreaks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1393,
+        "column": 2
+      },
+      "text": "t.syncGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1394,
+        "column": 2
+      },
+      "text": "t.mu.Unlock"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1361,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1362,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1371,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1380,
+        "column": 7
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1387,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1389,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1390,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1391,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1392,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

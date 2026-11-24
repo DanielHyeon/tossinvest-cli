@@ -1,0 +1,14 @@
+You are an adversarial reviewer of a Go change in a real-money trading engine. Read-only. Answer in Korean, concise, cite file:line for every claim.
+
+Inputs (read them):
+- Diff: /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/6ba8fcd4-b024-437e-a4c2-ebe621826fe5/scratchpad/rev-a200/a200.diff
+- Design: /home/daniel/tossos-work/a200-impl/openspec/changes/a200-an-engine-exit-fill-after-a-convergence-close-is-recognised/design.md
+- Code tree: /home/daniel/tossos-work/a200-impl (internal/journal/a200_adjustment_close_fill_recognition.go, internal/journal/position_projection.go ProjectPosition, internal/journal/position_adjustments.go ApplyPositionAdjustment, internal/journal/exit_state.go ApplyExitFill, internal/journal/fills.go RecordFill, internal/journal/apply_hook.go)
+
+Change summary: when the transition table refuses a sell fill on a CLOSED position instance (SELL_ON_CLOSED), instead of writing an ATTRIBUTION_FAILED reconcile block, the fill is "recognised" (marker row in exit_events, no block, projected quantity stays 0) if all four hold: (a) refusal is SELL_ON_CLOSED; (b) the instance has exactly one adjustment row with new_quantity 0, it is the last adjustment row, and its kind is the convergence kind UNKNOWN; (c) the fill's owning intent equals exit_states.pending_intent_id of that instance; (d) that intent has exactly one PLACE/AMEND attempt (any state) and it is a CONFIRMED PLACE, and intents.quantity <= (prev_quantity - new_quantity) of that zero adjustment.
+
+Questions:
+1. Find concrete inputs that satisfy all four conditions but where recognising is wrong (wrong instance, wrong ordering of adjustment vs fill, an instance reopened, partial fills before the adjustment, pending switched to another intent, mixed attempt states, decimal edge cases, buy side reaching this branch). For each, say whether it is reachable in production code paths and why.
+2. Quantities: after recognition, do the projection, positions row, adjustment rows stay unchanged? What happens on Working then Done partial fills, and on re-application of the same fill observation (idempotent path) — duplicate marker rows? Do fill_events / fill_snapshots differ from the pre-change refusal path?
+3. "Unchanged refusal": for refusals that are not recognised (SELL_ON_CLOSED not matching, UNATTRIBUTED_SELL, ENTRY_WHILE_CLOSING), is the written block byte-identical to before? If the new ledger reads fail, what happens to the fill transaction (is the fill record lost)? How many extra reads per refused fill?
+Only report findings you verified in the source. Mark anything unverified as such.

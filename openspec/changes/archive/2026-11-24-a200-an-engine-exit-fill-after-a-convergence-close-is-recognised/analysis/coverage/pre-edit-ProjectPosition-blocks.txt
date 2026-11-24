@@ -1,0 +1,12 @@
+# go test ./internal/journal -run '<위 8 개 패턴>' -count=1 -covermode=set (base 884be2a74 + 재현 시험), position_projection.go 65-105 블록
+github.com/JungHoonGhae/tossinvest-cli/internal/journal/position_projection.go:65.80,67.16 2 1
+github.com/JungHoonGhae/tossinvest-cli/internal/journal/position_projection.go:67.16,69.3 1 0
+github.com/JungHoonGhae/tossinvest-cli/internal/journal/position_projection.go:70.2,70.12 1 1
+github.com/JungHoonGhae/tossinvest-cli/internal/journal/position_projection.go:70.12,76.3 1 0
+github.com/JungHoonGhae/tossinvest-cli/internal/journal/position_projection.go:78.2,79.16 2 1
+github.com/JungHoonGhae/tossinvest-cli/internal/journal/position_projection.go:79.16,81.3 1 0
+github.com/JungHoonGhae/tossinvest-cli/internal/journal/position_projection.go:83.2,94.16 2 1
+github.com/JungHoonGhae/tossinvest-cli/internal/journal/position_projection.go:94.16,99.3 1 0
+github.com/JungHoonGhae/tossinvest-cli/internal/journal/position_projection.go:101.2,101.25 1 1
+github.com/JungHoonGhae/tossinvest-cli/internal/journal/position_projection.go:101.25,103.3 1 1
+github.com/JungHoonGhae/tossinvest-cli/internal/journal/position_projection.go:104.2,104.66 1 1

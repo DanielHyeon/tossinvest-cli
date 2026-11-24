@@ -1,0 +1,153 @@
+# RED — production 무편집(HEAD 189367808 + 새 시험 파일), 2026-11-23T21:46:51Z
+$ go test ./internal/journal -run TestA200 -count=1 -v
+=== RUN   TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome
+    a200_convergence_close_exit_fill_repro_test.go:208: [W0] reconcile_states=[]
+    a200_convergence_close_exit_fill_repro_test.go:208: [W0] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:208: [W0] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "PROPOSAL_FILLED" "COMPLETED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_convergence_close_exit_fill_repro_test.go:208: [W0] trade_outcomes=1 adjustments=[]
+    a200_convergence_close_exit_fill_repro_test.go:208: [W0] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|31|31|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:213: [W0 성과] {PositionID:pos-668d39bcb2748489d79dd251 RealizedPnLAfterCosts:-75689.6 RealizedR:-1.2208 InitialRisk:2000 InitialQuantity:31 CostTotal:0x3263a088d530 HeldSeconds:0 ExitRatchetLevel:NONE ExitRung:-1 ClosedAt:2026-03-30T00:30:01Z}
+--- PASS: TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome (0.38s)
+=== RUN   TestA200CurrentBehaviourAStopFillStraddlingTheConvergenceIsAnAttributionFailure
+    a200_convergence_close_exit_fill_repro_test.go:235: [조정을 사이에 둔 부분 체결] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 21 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 21, cumulative 31]|active"]
+    a200_convergence_close_exit_fill_repro_test.go:235: [조정을 사이에 둔 부분 체결] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:02Z
+    a200_convergence_close_exit_fill_repro_test.go:235: [조정을 사이에 둔 부분 체결] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_convergence_close_exit_fill_repro_test.go:235: [조정을 사이에 둔 부분 체결] trade_outcomes=0 adjustments=["UNKNOWN|21→0|2026-03-30T00:30:02Z"]
+    a200_convergence_close_exit_fill_repro_test.go:235: [조정을 사이에 둔 부분 체결] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|10|10|2026-03-30T00:30:01Z" "3|o-stop|21|31|2026-03-30T00:30:02Z"]
+--- PASS: TestA200CurrentBehaviourAStopFillStraddlingTheConvergenceIsAnAttributionFailure (0.40s)
+=== RUN   TestA200CurrentBehaviourAStopFillAfterAReBuyLandsOnTheNewInstance
+    a200_convergence_close_exit_fill_repro_test.go:280: [옛 인스턴스] reconcile_states=["QUANTITY_MISMATCH|position projection refused transition X50 (OVERSELL): a sell of 31 filled against a held quantity of 5; the projection will not invent the difference [order o-stop, delta 31, cumulative 31]|active"]
+    a200_convergence_close_exit_fill_repro_test.go:280: [옛 인스턴스] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:280: [옛 인스턴스] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED"] completed=true pending_intent_id="i-stop" taken_ratio_total=0
+    a200_convergence_close_exit_fill_repro_test.go:280: [옛 인스턴스] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:280: [옛 인스턴스] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|31|31|2026-03-30T00:30:02Z"]
+    a200_convergence_close_exit_fill_repro_test.go:286: [새 인스턴스] id=pos-166eadeb4c4c3a185f5319df seq=2 state=OPEN quantity=5
+--- PASS: TestA200CurrentBehaviourAStopFillAfterAReBuyLandsOnTheNewInstance (0.40s)
+=== RUN   TestA200CurrentBehaviourAPartialStopFillAfterAReBuyReducesTheNewInstance
+    a200_convergence_close_exit_fill_repro_test.go:322: [옛 인스턴스] reconcile_states=[]
+    a200_convergence_close_exit_fill_repro_test.go:322: [옛 인스턴스] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:322: [옛 인스턴스] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED"] completed=true pending_intent_id="i-stop" taken_ratio_total=0
+    a200_convergence_close_exit_fill_repro_test.go:322: [옛 인스턴스] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:322: [옛 인스턴스] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|3|3|2026-03-30T00:30:02Z"]
+    a200_convergence_close_exit_fill_repro_test.go:328: [새 인스턴스] state=CLOSING quantity=2
+--- PASS: TestA200CurrentBehaviourAPartialStopFillAfterAReBuyReducesTheNewInstance (0.43s)
+=== RUN   TestA200CurrentBehaviourASecondEngineSellOnAFillClosedInstance
+    a200_convergence_close_exit_fill_repro_test.go:352: [체결로 닫힌 뒤 둘째 매도] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 31 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-dup, delta 31, cumulative 31]|active"]
+    a200_convergence_close_exit_fill_repro_test.go:352: [체결로 닫힌 뒤 둘째 매도] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:352: [체결로 닫힌 뒤 둘째 매도] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "PROPOSAL_FILLED" "COMPLETED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_convergence_close_exit_fill_repro_test.go:352: [체결로 닫힌 뒤 둘째 매도] trade_outcomes=1 adjustments=[]
+    a200_convergence_close_exit_fill_repro_test.go:352: [체결로 닫힌 뒤 둘째 매도] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|31|31|2026-03-30T00:30:01Z" "3|o-dup|31|31|2026-03-30T00:30:01Z"]
+--- PASS: TestA200CurrentBehaviourASecondEngineSellOnAFillClosedInstance (0.40s)
+=== RUN   TestA200AStopFillAfterAConvergenceCloseIsRecognised
+    a200_recognition_test.go:77: [본 사고 모양] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 31 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 31, cumulative 31]|active"]
+    a200_recognition_test.go:77: [본 사고 모양] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_recognition_test.go:77: [본 사고 모양] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_recognition_test.go:77: [본 사고 모양] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_recognition_test.go:77: [본 사고 모양] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|31|31|2026-03-30T00:30:01Z"]
+    a200_recognition_test.go:78: reconcile_states = ["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 31 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 31, cumulative 31]|active"], 인정된 체결은 차단을 만들지 않아야 함
+--- FAIL: TestA200AStopFillAfterAConvergenceCloseIsRecognised (0.41s)
+=== RUN   TestA200AnAdoptedStopFillIsRecognisedWithoutAnOutcome
+    a200_recognition_test.go:116: [편입 인정] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 10 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 10, cumulative 10]|active"]
+    a200_recognition_test.go:116: [편입 인정] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:02Z
+    a200_recognition_test.go:116: [편입 인정] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_recognition_test.go:116: [편입 인정] trade_outcomes=0 adjustments=["UNKNOWN|10→0|2026-03-30T00:30:02Z"]
+    a200_recognition_test.go:116: [편입 인정] fill_events=["1|o-stop|10|10|2026-03-30T00:30:02Z"]
+    a200_recognition_test.go:117: reconcile_states = ["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 10 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 10, cumulative 10]|active"], 인정된 체결은 차단을 만들지 않아야 함
+--- FAIL: TestA200AnAdoptedStopFillIsRecognisedWithoutAnOutcome (0.37s)
+=== RUN   TestA200PartialStopFillsAfterAConvergenceCloseAreEachRecognised
+    a200_recognition_test.go:139: [부분 체결 둘] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X58 (SELL_ON_CLOSED): a sell of 20 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 20, cumulative 20]|active"]
+    a200_recognition_test.go:139: [부분 체결 둘] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_recognition_test.go:139: [부분 체결 둘] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_recognition_test.go:139: [부분 체결 둘] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_recognition_test.go:139: [부분 체결 둘] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|20|20|2026-03-30T00:30:01Z" "3|o-stop|11|31|2026-03-30T00:30:02Z"]
+    a200_recognition_test.go:140: reconcile_states = ["ATTRIBUTION_FAILED|position projection refused transition X58 (SELL_ON_CLOSED): a sell of 20 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 20, cumulative 20]|active"], 인정된 체결은 차단을 만들지 않아야 함
+--- FAIL: TestA200PartialStopFillsAfterAConvergenceCloseAreEachRecognised (0.46s)
+=== RUN   TestA200APartialTakeProfitBelowTheDecreaseIsRecognised
+    a200_recognition_test.go:150: reconcile_states = ["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 10 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 10, cumulative 10]|active"], 인정된 체결은 차단을 만들지 않아야 함
+--- FAIL: TestA200APartialTakeProfitBelowTheDecreaseIsRecognised (0.71s)
+=== RUN   TestA200AFillFromAnotherIntentStaysAnAttributionFailure
+--- PASS: TestA200AFillFromAnotherIntentStaysAnAttributionFailure (0.77s)
+=== RUN   TestA200AFillAfterThePendingWasResolvedStaysAnAttributionFailure
+--- PASS: TestA200AFillAfterThePendingWasResolvedStaysAnAttributionFailure (0.71s)
+=== RUN   TestA200AnAmendedStopStaysAnAttributionFailure
+--- PASS: TestA200AnAmendedStopStaysAnAttributionFailure (0.63s)
+=== RUN   TestA200ASecondPlaceAttemptStaysAnAttributionFailure
+--- PASS: TestA200ASecondPlaceAttemptStaysAnAttributionFailure (0.57s)
+=== RUN   TestA200AManualKindCloseStaysAnAttributionFailure
+--- PASS: TestA200AManualKindCloseStaysAnAttributionFailure (0.47s)
+=== RUN   TestA200AnUnmanagedInstanceStaysAnAttributionFailure
+--- PASS: TestA200AnUnmanagedInstanceStaysAnAttributionFailure (0.48s)
+=== RUN   TestA200TheRecognitionIsCalledOnceAndReadsNoFillLedger
+    a200_recognition_test.go:285: 판정 파일 a200_adjustment_close_fill_recognition.go: open a200_adjustment_close_fill_recognition.go: no such file or directory
+--- FAIL: TestA200TheRecognitionIsCalledOnceAndReadsNoFillLedger (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	7.615s
+FAIL
+
+$ go test ./internal/reconcile -run TestA200 -count=1 -v
+=== RUN   TestA200CurrentBehaviourW4FillBetweenConvergenceAndRefresh
+    a200_convergence_close_exit_fill_cycles_test.go:203: [수렴] converged=1 refused=map[] credited=[SYN200] err=<nil>
+    a200_convergence_close_exit_fill_cycles_test.go:209: [W4 주기] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:210: [일치 주기 1] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:210: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:210: [일치 주기 3] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+--- PASS: TestA200CurrentBehaviourW4FillBetweenConvergenceAndRefresh (0.67s)
+=== RUN   TestA200CurrentBehaviourW5FillBetweenRefreshAndPersist
+    a200_convergence_close_exit_fill_cycles_test.go:232: [W5 주기] err=reconcile: persisting the reconciliation_mismatch block on SYN200: durable scope is already owned by cause ATTRIBUTION_FAILED added=1 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:236: [일치 주기 1] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:236: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:236: [일치 주기 3] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+--- PASS: TestA200CurrentBehaviourW5FillBetweenRefreshAndPersist (0.52s)
+=== RUN   TestA200CurrentBehaviourW6FillAfterTheQuantityBlockPersisted
+    a200_convergence_close_exit_fill_cycles_test.go:254: [W6 주기(체결 전)] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:256: [W6 체결 뒤] rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"]
+    a200_convergence_close_exit_fill_cycles_test.go:257: [일치 주기 1] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+    a200_convergence_close_exit_fill_cycles_test.go:257: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+--- PASS: TestA200CurrentBehaviourW6FillAfterTheQuantityBlockPersisted (0.59s)
+=== RUN   TestA200CurrentBehaviourW2FillBeforeTheConvergenceRead
+    a200_convergence_close_exit_fill_cycles_test.go:276: [수렴] converged=0 refused=map[SYN200:the projection holds no live instance of this symbol; a holding with no local instance is the external-position path, not a quantity mismatch] credited=[] err=<nil>
+    a200_convergence_close_exit_fill_cycles_test.go:281: [W2 주기] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:282: [일치 주기 1] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:282: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:282: [일치 주기 3] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:282: [일치 주기 4] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:282: [일치 주기 5] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:283: [W2 결과] 일치 5 주기 뒤 활성 = ["QUANTITY_MISMATCH"]
+--- PASS: TestA200CurrentBehaviourW2FillBeforeTheConvergenceRead (0.64s)
+=== RUN   TestA200CurrentBehaviourW3FillInsideTheConvergenceWindow
+    a200_convergence_close_exit_fill_cycles_test.go:314: [수렴] converged=0 refused=map[] credited=[] err=reconcile: the quantity mismatch on SYN200 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-7/SYN200 expected quantity 31 but found 0; discarded for re-collection
+    a200_convergence_close_exit_fill_cycles_test.go:320: [W3 주기] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:321: [일치 주기 1] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:321: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:321: [일치 주기 3] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:321: [일치 주기 4] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:321: [일치 주기 5] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:322: [W3 결과] 일치 5 주기 뒤 활성 = ["QUANTITY_MISMATCH"]
+--- PASS: TestA200CurrentBehaviourW3FillInsideTheConvergenceWindow (0.51s)
+=== RUN   TestA200CurrentBehaviourAPartialIntermediateConvergenceThenOverfill
+    a200_convergence_close_exit_fill_cycles_test.go:335: [수렴 31→11] converged=[{Market:kr Symbol:SYN200 Local:31 Quantity:11 PositionID:pos-5eaedca1bcc0afdd8da0498b Applied:true ClosedExitState:false}] err=<nil>
+    a200_convergence_close_exit_fill_cycles_test.go:341: [부분 조정 주기] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|position projection refused transition X49 (OVERSELL): a sel"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:343: [투영] positions=map[SYN200:11] err=<nil>
+    a200_convergence_close_exit_fill_cycles_test.go:344: [일치 주기 1] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|position projection refused transition X49 (OVERSELL): a sel"] blocks=[] entry_refused=false
+    a200_convergence_close_exit_fill_cycles_test.go:344: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|position projection refused transition X49 (OVERSELL): a sel"] blocks=[] entry_refused=false
+    a200_convergence_close_exit_fill_cycles_test.go:348: [잔량 체결 뒤 투영] positions=map[] err=<nil> rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|position projection refused transition X49 (OVERSELL): a sel"]
+    a200_convergence_close_exit_fill_cycles_test.go:349: [부분 조정 결과] 활성 = []
+--- PASS: TestA200CurrentBehaviourAPartialIntermediateConvergenceThenOverfill (0.68s)
+=== RUN   TestA200W4AManagedStopFillLeavesNoBlock
+    a200_recognition_cycles_test.go:118: [W4 주기] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_recognition_cycles_test.go:122: W4: rows = ["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"], 인정된 체결은 귀속 실패 차단을 만들지 않아야 함
+--- FAIL: TestA200W4AManagedStopFillLeavesNoBlock (0.63s)
+=== RUN   TestA200W5AManagedStopFillLeavesNoBlock
+    a200_recognition_cycles_test.go:139: [W5 주기] err=reconcile: persisting the reconciliation_mismatch block on SYN200: durable scope is already owned by cause ATTRIBUTION_FAILED added=1 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_recognition_cycles_test.go:141: W5 Observe 오류: reconcile: persisting the reconciliation_mismatch block on SYN200: durable scope is already owned by cause ATTRIBUTION_FAILED — 인정되면 persist 가 부딪칠 귀속 실패 행이 없어야 함
+--- FAIL: TestA200W5AManagedStopFillLeavesNoBlock (0.45s)
+=== RUN   TestA200W6AManagedStopFillIsUnchanged
+    a200_recognition_cycles_test.go:163: [W6 다음 일치] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+--- PASS: TestA200W6AManagedStopFillIsUnchanged (0.41s)
+=== RUN   TestA200ARestartAfterARecognisedFillLeavesTheQuantityBlockAwaiting
+    a200_recognition_cycles_test.go:191: [재기동 뒤 일치] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_recognition_cycles_test.go:192: 재기동: rows = ["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"], 인정된 체결은 귀속 실패 차단을 만들지 않아야 함
+--- FAIL: TestA200ARestartAfterARecognisedFillLeavesTheQuantityBlockAwaiting (0.41s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	5.534s
+FAIL

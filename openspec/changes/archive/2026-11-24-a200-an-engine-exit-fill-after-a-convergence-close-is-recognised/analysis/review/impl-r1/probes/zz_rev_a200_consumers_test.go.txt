@@ -1,0 +1,50 @@
+package journal
+
+// 리뷰 탐침(커밋 대상 아님): 본 사고 모양 원장에서 exit_events 소비자 함수를 실제로 불러 결과를 찍음. base · head 공용.
+
+import (
+	"context"
+	"fmt"
+	"testing"
+	"time"
+)
+
+func TestRevA200ProbeConsumers(t *testing.T) {
+	j, clk := a200Journal(t)
+	ctx := context.Background()
+	entry, _ := openedPosition(t, j, "31")
+	p := currentPosition(t, j, entry)
+	sell := a200ArmStop(t, j, p.ID, order{intentID: "i-stop", attemptID: "a-stop", orderID: "o-stop", side: "SELL", quantity: "31"})
+	clk.Advance(time.Second)
+	a200Converge(t, j, "005930", "31", "0", clk.Now())
+	if _, err := j.RecordFill(ctx, terminalFill(sell, "31", "67900")); err != nil {
+		t.Fatal(err)
+	}
+	out := func(name string, v ...any) { t.Logf("REVCONS|%s|%s", name, fmt.Sprint(v...)) }
+
+	prov, err := j.PositionProvenance(ctx, p.ID)
+	out("PositionProvenance", fmt.Sprintf("%+v", prov), " err=", err)
+	prop, ok, err := j.ExitProposalForIntent(ctx, testIntentFor(sell))
+	out("ExitProposalForIntent", prop, " ", ok, " err=", err)
+	has, err := j.HasExitEventForIntent(ctx, "i-stop")
+	out("HasExitEventForIntent", has, " err=", err)
+	prot, err := j.HasProtectiveExitAttempt(ctx, sell.account, sell.market, sell.tradingDay, sell.symbol,
+		[]string{"BASELINE_BREACH_EXIT"})
+	out("HasProtectiveExitAttempt", prot, " err=", err)
+	pop, err := backfillPopulation(ctx, journalReader{j: j})
+	out("backfillPopulation", fmt.Sprintf("%+v", pop), " err=", err)
+	orders, okSell := engineSellOrders(ctx, journalReader{j: j}, p.ID, sell.account, sell.market, sell.symbol)
+	out("engineSellOrders", fmt.Sprintf("%+v", orders), " ", okSell)
+	outcome, reason := probeFreeze(t, j, p.ID)
+	out("computeTradeOutcome", fmt.Sprintf("%+v", outcome), " reason=", reason)
+	ro := &ReadOnly{db: j.db}
+	events, err := ro.AccountExitEvents(ctx, sell.account, 50)
+	for _, e := range events {
+		out("AccountExitEvents", e.Event.Action, " intent=", e.Event.ProposedIntentID,
+			" unknown=", e.Event.Evaluation.Effective.UnknownReason)
+	}
+	out("AccountExitEvents.err", err)
+	links, err := ro.BrokerOrderExitLinks(ctx, []BrokerOrderScope{{BrokerOrderID: "o-stop", AccountRef: sell.account,
+		Market: sell.market, TradingDay: sell.tradingDay}})
+	out("BrokerOrderExitLinks", fmt.Sprintf("%+v", links), " err=", err)
+}
