@@ -1,7 +1,7 @@
 # Function Logic Map: `Tracker.Observe` (reconcile) — post-edit(v3)
 
-- Source: `internal/reconcile/mismatch.go` (635-868), GREEN `ffd9dc6d6`.
-- AST evidence: `ast.json`(sha 0facba7489a3, 분기 29 — 편집 전 29, 추가 0, return@669 @743 @867). 명령 `go run ./tools/logic-map --file internal/reconcile/mismatch.go --func Tracker.Observe`.
+- Source: `internal/reconcile/mismatch.go` (635-868), GREEN `ffd9dc6d6` + 구현 리뷰 r1 R1(같은 파일 `persist` 의 근거 문자열만 — 이 함수 무변, 파일 sha 만 바뀜).
+- AST evidence: `ast.json`(sha 5c37807cf358, 분기 29 — 편집 전 29, 추가 0, return@669 @743 @867). 명령 `go run ./tools/logic-map --file internal/reconcile/mismatch.go --func Tracker.Observe`.
 - 재번호: 편집 전 번들(sha 9895f31184e5, 629-856)과 옛/새 ast 를 `../renumber.py`(분기마다 (종류, 그 줄 소스)를 difflib 정렬)로 맞춤 — 29 개 모두 같은 번호로 대응(equal), 사라짐 · 새 분기 0, 좌표만 이동(구조체 칸 2 줄 · 주석 · 편집 문장 때문). 원문 `../renumber-output.txt`(옛 ast 는 `422fad72d` 의 이 번들 ast.json).
 - Risk scan: `risk-pattern-report.md`(일치 0).
 - 커버: `../../coverage/post-internal-reconcile--tracker.observe.txt`(mode set, 선택 시험 세 프로파일 합집합).
@@ -26,7 +26,7 @@
 | B4 (if@662) | 깨끗함 ∧ `pendingPermanent` | `pendingPermanentKey` 비움 | — | 기존 a110 · V4b 시험 |
 | B5 (if@665) | 권위 확인 오류(깨끗한 갈래) | **a201 V4b: 반환 직전 `refuteUsableAdjustmentCredits(disputed, diff.AsOf)`(call@668)** — 분쟁 종목의 usable credit(조정 · 체결) 삭제 | return@669 `finishAuthorityError` | `TestA201AnAuthorityErrorOnACleanComparisonRefutesAnAdjustmentCredit` · `TestA201AnAuthorityErrorOnACleanComparisonRefutesAFillCredit` |
 | B6 (range@675) | 활성 블록마다 | — | — | 기존 |
-| B7 (if@676) | QM ∧ adjusted_reconcile 아님 | — | continue | 기존 — 운영자 전용 · 다른 원인 블록은 체결 credit 으로도 안 풀림(`TestA201AConvergedSymbolGetsNoFillCredit`) |
+| B7 (if@676) | QM ∧ adjusted_reconcile 아님 | — | continue | `TestA201AFillCreditDoesNotReleaseAnOperatorOnlyBlock`(그 종목에 쓸 수 있는 체결 credit 이 있어도 운영자 전용 원인 블록은 안 풀림 — 구현 리뷰 r1 R5) |
 | B8 (if@684) | `!creditUsableBy(t.adjusted[종목], AsOf)` — 쓸 credit 없음 | B9 거짓이면 Awaiting | continue | `TestA201AFillCreditIsSpentOnlyByAStrictlyLaterCleanComparison` · `TestA201ALaterDisputeRefutesTheFillCredit` |
 | B9 (if@691) | credit 없는 블록의 a192 `orderTerminalCandidate` 참 | `terminalRelease` 표시 · Cleared append@692 | continue | `TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit` · 기존 a192 |
 | B10 (if@698) | credit 있음 ∧ `disputed[종목]` | Awaiting append | continue | V4b 대조 `TestA201WithoutTheAuthorityErrorTheSameInputIsUnchanged` · 기존 |

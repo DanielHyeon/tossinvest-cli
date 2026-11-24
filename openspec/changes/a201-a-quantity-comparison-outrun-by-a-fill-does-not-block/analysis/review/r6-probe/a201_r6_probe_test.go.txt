@@ -1,0 +1,47 @@
+package reconcile_test
+
+// a201 R6 탐침(커밋하지 않음) — 시장 범위 QM 행이 활성인 종목에 쓸 수 있는 credit 이 서면 깨끗한 주기마다 무슨 일이 나는가.
+
+import (
+	"testing"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
+)
+
+func a201R6Run(t *testing.T, before, after func(w *a192World, at string)) {
+	w := newA192World(t, nil)
+	if _, _, err := w.journal.EnterReconcile(w.ctx, journal.EnterReconcileRequest{
+		AccountRef: a192Account, Symbol: a192Symbol, ScopeMarket: "KR",
+		Cause: journal.ReconcileCauseQuantityMismatch, Evidence: "late fill observed for a released risk owner (probe)",
+	}); err != nil {
+		t.Fatalf("EnterReconcile(scope KR): %v", err)
+	}
+	if err := w.tracker.Refresh(w.ctx); err != nil {
+		t.Fatalf("Refresh: %v", err)
+	}
+	t.Logf("after Refresh blocks=%+v", w.tracker.Blocks())
+	diff := reconcile.Diff{AsOf: w.now(), AccountRef: a192Account, Quantities: []reconcile.QuantityMismatch{{Symbol: a192Symbol, Local: "1", Broker: "0"}}}
+	if before != nil {
+		before(w, diff.AsOf)
+	}
+	out, err := w.tracker.Observe(w.ctx, diff)
+	t.Logf("mismatch cycle err=%v added=%d blocks=%d", err, len(out.Added), len(w.tracker.Blocks()))
+	if after != nil {
+		after(w, diff.AsOf)
+	}
+	for i := 1; i <= 3; i++ {
+		w.tick()
+		out, err := w.tracker.Observe(w.ctx, w.clean())
+		t.Logf("clean cycle %d err=%v cleared=%d awaiting=%d blocks=%d", i, err, len(out.Cleared), len(out.AwaitingAdjustment), len(w.tracker.Blocks()))
+	}
+	history, _ := w.journal.ReconcileStateHistory(w.ctx, a192Account)
+	for _, s := range history {
+		t.Logf("row symbol=%s scope_market=%q cause=%s active=%v release=%q", s.Symbol, s.ScopeMarket, s.Cause, s.Active(), s.ReleaseCause)
+	}
+}
+
+// (가) 조정 credit 판 — 수렴이 그 종목을 조정(Observe 앞).
+func TestA201R6ProbeAdjustmentCredit(t *testing.T) {
+	a201R6Run(t, func(w *a192World, at string) { w.tracker.AdjustmentApplied(at, a192Symbol) }, nil)
+}

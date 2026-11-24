@@ -1,7 +1,7 @@
 # Function Logic Map: `Tracker.persist` (reconcile) — post-edit(v3)
 
-- Source: `internal/reconcile/mismatch.go` (890-973), GREEN `ffd9dc6d6`.
-- AST evidence: `ast.json`(sha 0facba7489a3, 분기 12 — 편집 전 11 + 1, return@892 @921 @927 @939 @962 @966 @972). 명령 `go run ./tools/logic-map --file internal/reconcile/mismatch.go --func Tracker.persist`.
+- Source: `internal/reconcile/mismatch.go` (890-973), GREEN `ffd9dc6d6` + 구현 리뷰 r1 R1(B10 참 쪽 근거 문자열을 `"a fill committed after the mark read before the local read stood in for the adjustment and the reconciliation after it agreed"` 로 — 분기 · 좌표 무변).
+- AST evidence: `ast.json`(sha 5c37807cf358, 분기 12 — 편집 전 11 + 1, return@892 @921 @927 @939 @962 @966 @972). 명령 `go run ./tools/logic-map --file internal/reconcile/mismatch.go --func Tracker.persist`.
 - 재번호: 편집 전 번들(sha 9895f31184e5, 878-954)과 `../renumber.py` 정렬 — B1~B9 equal(같은 번호), **새 분기 B10 if@950**(`block.releasedByFill`), 옛 B10 if@942 → 새 B11 if@961, 옛 B11 if@946 → 새 B12 if@965.
 - Risk scan: `risk-pattern-report.md`(일치 0).
 - 커버: `../../coverage/post-internal-reconcile--tracker.persist.txt`.

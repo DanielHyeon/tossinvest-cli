@@ -32,7 +32,7 @@ func TestA201FillAppliedIsAReleaseCauseThisBuildWrites(t *testing.T) {
 	}
 	state, ok, err := j.ReleaseReconcile(ctx, ReleaseReconcileRequest{
 		AccountRef: "acct-1", Symbol: "005930", Cause: a201FillApplied,
-		Evidence:    "a fill committed after the local read stood in for the adjustment and the reconciliation after it agreed",
+		Evidence:    "a fill committed after the mark read before the local read stood in for the adjustment and the reconciliation after it agreed",
 		ExpectCause: ReconcileCauseQuantityMismatch,
 	})
 	if err != nil || !ok || state.ReleaseCause != a201FillApplied {

@@ -10,7 +10,7 @@
 | B4 | 깨끗함 ∧ 대기 승격 | `TestA201AnAuthorityErrorOnACleanComparisonRefutesAnAdjustmentCredit` · 기존 a110 | 해당 없음(기존 분기) | yes — body=1 |
 | B5 | 권위 확인 오류(깨끗함) → V4b 반박 | `TestA201AnAuthorityErrorOnACleanComparisonRefutesAnAdjustmentCredit` · `TestA201AnAuthorityErrorOnACleanComparisonRefutesAFillCredit` | yes — 조정 판 FAIL(편집 전 credit 이 살아 해제), 체결 판 build failed(새 API) | yes — body=1, PASS |
 | B6 | 활성 블록 순회 | 기존 | 해당 없음(기존 분기) | yes — body=1 |
-| B7 | QM ∧ adjusted_reconcile 아님 | `TestA201AConvergedSymbolGetsNoFillCredit` | 해당 없음(편집 전에도 통과하는 고정) | yes — body=1, PASS |
+| B7 | QM ∧ adjusted_reconcile 아님(쓸 수 있는 체결 credit 이 있어도) | `TestA201AFillCreditDoesNotReleaseAnOperatorOnlyBlock` | 해당 없음(구현 리뷰 r1 R5 로 추가한 고정 — 변이 M19 로 B7 의존 확인) | yes — body=1, PASS |
 | B8 | 쓸 credit 없음 → 대기 | `TestA201AFillCreditIsSpentOnlyByAStrictlyLaterCleanComparison` · `TestA201ALaterDisputeRefutesTheFillCredit` | 해당 없음(같은 as-of 대기는 편집 전 동작) | yes — body=1, PASS |
 | B9 | a192 종결 증명 후보 | `TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit` | 해당 없음(편집 전에도 통과하는 고정) | yes — body=1, PASS |
 | B10 | credit 있음 ∧ 분쟁 → 대기 | `TestA201WithoutTheAuthorityErrorTheSameInputIsUnchanged` | 해당 없음(편집 전에도 통과하는 고정) | yes — body=1, PASS |

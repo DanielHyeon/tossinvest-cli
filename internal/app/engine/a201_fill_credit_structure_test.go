@@ -114,8 +114,9 @@ func TestA201TheFillCreditIsGrantedAtOneSiteAfterASuccessfulObserve(t *testing.T
 		}
 	}
 	mark, local := a201TopIndex(fn, "MarkBeforeLocalRead"), a201TopIndex(fn, "LocalStateFromJournal")
-	if mark < 0 || local < 0 || mark >= local {
-		t.Fatalf("the fill mark (statement %d) must be read before the local read (statement %d)", mark, local)
+	// 바로 다음 문장이어야 함 — 표식과 로컬 읽기 사이가 벌어지면(예: stabilise 앞으로 옮김) 그 사이 체결이 전부 「표식 뒤」가 됨.
+	if mark < 0 || local < 0 || local != mark+1 {
+		t.Fatalf("the fill mark (statement %d) must be the statement right before the local read (statement %d)", mark, local)
 	}
 	observe, grant, judge := a201TopIndex(fn, "Observe"), a201TopIndex(fn, "FillsOutranAdjustment"), a201TopIndex(fn, "judgeHoldings")
 	if observe < 0 || grant < 0 || judge < 0 || !(observe < grant && grant < judge) {

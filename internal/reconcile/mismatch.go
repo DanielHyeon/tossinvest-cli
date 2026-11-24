@@ -949,7 +949,7 @@ func (t *Tracker) persist(ctx context.Context, out Outcome) (persistResult, erro
 			"an adjustment converged the projection and the reconciliation after it agreed"
 		if block.releasedByFill {
 			cause, evidence = journal.ReconcileReleaseFillApplied,
-				"a fill committed after the local read stood in for the adjustment and the reconciliation after it agreed"
+				"a fill committed after the mark read before the local read stood in for the adjustment and the reconciliation after it agreed"
 		}
 		_, ok, err := t.Journal.ReleaseReconcile(ctx, journal.ReleaseReconcileRequest{
 			AccountRef:  firstNonEmpty(block.Account, t.AccountRef),

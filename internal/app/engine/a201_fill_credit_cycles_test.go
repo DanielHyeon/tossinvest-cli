@@ -294,7 +294,8 @@ func TestA201AnOffsettingExternalTradeReleasesAsFillApplied(t *testing.T) {
 }
 
 // TestA201ALaterDisputeRefutesTheFillCredit: design §3-4 — 체결 credit 뒤의 비교가 그 종목을 분쟁(외부 포지션)으로
-// 보면 credit 이 소멸하고, 그 뒤 첫 일치 주기에는 풀리지 않음. 해제는 그 뒤 새 조정 credit 으로만(ADJUSTMENT_APPLIED).
+// 보면 credit 이 소멸하고, 그 뒤 일치 주기에는 풀리지 않음. 일치 주기는 체결 · 조정 없이 계좌 = 로컬(접힌 5 주)로 만들어
+// 조정 credit 이 덮어쓰는 경로 없이 반박 자체를 잼(구현 리뷰 r1 R2).
 func TestA201ALaterDisputeRefutesTheFillCredit(t *testing.T) {
 	const symbol = "SYN201"
 	w := newA201World(t)
@@ -311,19 +312,15 @@ func TestA201ALaterDisputeRefutesTheFillCredit(t *testing.T) {
 	if c.Err != nil || c.Released != 0 || c.Awaiting != 1 {
 		t.Fatalf("dispute cycle = %+v, want the block awaiting and nothing released", c)
 	}
-	w.holdings.items = nil
-	c = w.next()
-	w.logCycle("다시 비움 주기", symbol, c)
-	if c.Err != nil || c.Released != 0 {
-		t.Fatalf("cycle after the dispute = %+v, want no release — the fill credit was refuted", c)
+	// 계좌 5 주 그대로 — 외부 포지션 주기에 접힌 5 주와 같아 체결 · 조정 없이 일치함.
+	for i := 1; i <= 2; i++ {
+		c = w.next()
+		w.logCycle("계좌 = 로컬 주기", symbol, c)
+		if c.Err != nil || c.Converged != 0 || c.Released != 0 {
+			t.Fatalf("agreeing cycle %d = %+v, want no convergence and no release — the fill credit was refuted", i, c)
+		}
+		w.assertStuck(symbol)
 	}
-	w.assertStuck(symbol)
-	c = w.next()
-	w.logCycle("그 뒤 일치 주기", symbol, c)
-	if c.Err != nil || c.Released != 1 {
-		t.Fatalf("cycle = %+v, want the new adjustment's release", c)
-	}
-	w.releasedAs(symbol, journal.ReconcileReleaseAdjustmentApplied)
 }
 
 // TestA201ARestartDropsTheFillCredit: design §3-6 — 체결 credit 은 조정 credit 처럼 프로세스 기억이라 Restore 뒤에는

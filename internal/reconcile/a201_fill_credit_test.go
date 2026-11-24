@@ -160,6 +160,36 @@ func TestA201AFillCreditIsSpentOnlyByAStrictlyLaterCleanComparison(t *testing.T)
 	}
 }
 
+// TestA201AFillCreditDoesNotReleaseAnOperatorOnlyBlock: Observe B7 — 그 종목에 쓸 수 있는 체결 credit 이 남아 있어도
+// 그 종목의 블록이 다른 원인(운영자 전용)이면 credit 으로 풀지 않음(체결 credit 은 QM ∧ adjusted_reconcile 블록만 품).
+func TestA201AFillCreditDoesNotReleaseAnOperatorOnlyBlock(t *testing.T) {
+	w := newA192World(t, nil)
+	at := a201Blocked(t, w, a192Symbol)
+	w.tracker.FillsOutranAdjustment(at, a192Symbol)
+	// 같은 종목의 QM 행이 다른 길로 풀리고 운영자 전용 원인의 행이 섬 — 메모리의 credit 은 그대로 남음.
+	if _, ok, err := w.journal.ReleaseReconcile(w.ctx, journal.ReleaseReconcileRequest{
+		AccountRef: a192Account, Symbol: a192Symbol, Cause: journal.ReconcileReleaseOperator,
+		Evidence: "operator", ExpectCause: journal.ReconcileCauseQuantityMismatch,
+	}); err != nil || !ok {
+		t.Fatalf("ReleaseReconcile ok=%v err=%v", ok, err)
+	}
+	if _, _, err := w.journal.EnterReconcile(w.ctx, journal.EnterReconcileRequest{
+		AccountRef: a192Account, Symbol: a192Symbol, Cause: journal.ReconcileCauseAttributionFailed, Evidence: "attribution failed",
+	}); err != nil {
+		t.Fatalf("EnterReconcile: %v", err)
+	}
+	if err := w.tracker.Refresh(w.ctx); err != nil {
+		t.Fatalf("Refresh: %v", err)
+	}
+	w.tick()
+	if out := w.observe(w.clean()); len(out.Cleared) != 0 {
+		t.Fatalf("cleared=%+v — an operator-only block must not be released by a fill credit", out.Cleared)
+	}
+	if got := a201ReleaseCauses(t, w, a192Symbol); !reflect.DeepEqual(got, []string{journal.ReconcileReleaseOperator, "active"}) {
+		t.Fatalf("release causes = %q, want the operator release and the attribution row still active", got)
+	}
+}
+
 // TestA201AnAuthorityErrorOnACleanComparisonRefutesAFillCredit: V4b 체결 credit 판(조정 credit 판은
 // a201_authority_refute_test.go) — 같은 맵 · 같은 반박 호출이라 체결 credit 도 같은 자리에서 소멸함.
 func TestA201AnAuthorityErrorOnACleanComparisonRefutesAFillCredit(t *testing.T) {
